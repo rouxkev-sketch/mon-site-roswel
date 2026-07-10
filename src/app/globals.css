@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+/*
+ * Les couleurs ne sont PAS définies ici : elles viennent du fichier
+ * de réglages central (src/config/roswel.ts) et sont injectées dans
+ * la page par src/app/layout.tsx sous forme de variables --rw-*.
+ *
+ * Ce bloc les rend simplement utilisables dans les classes Tailwind :
+ * ex. "bg-primaire", "text-encre", "border-bordure", etc.
+ */
+@theme inline {
+  --color-primaire: var(--rw-primaire);
+  --color-primaire-fonce: var(--rw-primaire-fonce);
+  --color-primaire-clair: var(--rw-primaire-clair);
+  --color-degrade-debut: var(--rw-degrade-debut);
+  --color-degrade-fin: var(--rw-degrade-fin);
+  --color-fond: var(--rw-fond);
+  --color-fond-doux: var(--rw-fond-doux);
+  --color-encre: var(--rw-encre);
+  --color-encre-douce: var(--rw-encre-douce);
+  --color-bordure: var(--rw-bordure);
+  --color-pastille-recommande: var(--rw-pastille-recommande);
+  --color-pastille-top: var(--rw-pastille-top);
+  --color-succes: var(--rw-succes);
+  --color-alerte: var(--rw-alerte);
+  --color-erreur: var(--rw-erreur);
+
+  --font-sans: var(--font-geist-sans);
+}
+
+body {
+  background: var(--rw-fond);
+  color: var(--rw-encre);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  /* Évite les surprises de zoom/défilement horizontal sur mobile */
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}

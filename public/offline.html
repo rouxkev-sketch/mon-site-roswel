@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hors ligne · Roswel</title>
+  <!--
+    Page affichée quand la connexion est coupée.
+    Fichier autonome : les couleurs reprennent celles du fichier
+    de réglages central (src/config/roswel.ts).
+  -->
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #FFFFFF;
+      color: #101B33;
+      font-family: system-ui, sans-serif;
+      text-align: center;
+      padding: 24px;
+    }
+    .carte { max-width: 320px; }
+    .icone {
+      width: 72px;
+      height: 72px;
+      border-radius: 18px;
+      background: linear-gradient(160deg, #FB7BA2, #EC3A6E);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    h1 { font-size: 20px; margin: 0 0 8px; }
+    p { color: #5B6472; font-size: 15px; line-height: 1.5; margin: 0 0 24px; }
+    button {
+      background: #EE3D6F;
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      padding: 14px 28px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      min-height: 44px; /* zone tactile confortable */
+    }
+  </style>
+</head>
+<body>
+  <div class="carte">
+    <div class="icone">
+      <svg width="40" height="40" viewBox="0 0 512 512">
+        <path d="M136 270 L224 354 L376 176" fill="none" stroke="#fff"
+          stroke-width="58" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <h1>Vous êtes hors ligne</h1>
+    <p>Impossible de joindre Roswel pour le moment. Vérifiez votre connexion internet puis réessayez.</p>
+    <button onclick="location.reload()">Réessayer</button>
+  </div>
+</body>
+</html>
