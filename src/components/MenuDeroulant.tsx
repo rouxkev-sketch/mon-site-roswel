@@ -302,12 +302,25 @@ export function MenuDeroulant({
   const sousEnteteVisible = (option: OptionMenu) =>
     repliable && (!option.groupe || option.groupe === groupeDeplie);
 
+  /** LA LISTE QUI DÉFILE — pour la remonter en haut (5B, nº 139). Une
+      seule référence : un seul habillage est monté à la fois. */
+  const listeDeroulante = useRef<HTMLUListElement>(null);
+
   function basculerGroupe(groupe: string) {
-    setGroupeDeplie((courant) => (courant === groupe ? null : groupe));
+    const ouvre = groupeDeplie !== groupe;
+    setGroupeDeplie(ouvre ? groupe : null);
     //  Changer de catégorie remet la sous-section sur celle du choix
     //  courant : on ne garde pas ouverte la famille d'une autre
     //  catégorie par simple inertie.
     setSousGroupeDeplie(sousGroupeDuChoix);
+    //  ⚠️ OUVRIR UNE CATÉGORIE REMONTE LA LISTE EN HAUT (5B). Le cas
+    //  vécu : on défile jusqu'à « Flashs », tout en bas, on l'ouvre —
+    //  et sa liste s'est dépliée AU-DESSUS du point où l'on est :
+    //  l'écran ne bouge pas, le clic semble mort. La liste repart du
+    //  haut, où la catégorie ouverte commence.
+    //  (Pas pour une SOUS-section : elle se déplie SOUS sa porte,
+    //  déjà sous les yeux — remonter la cacherait.)
+    if (ouvre) listeDeroulante.current?.scrollTo({ top: 0, behavior: "instant" });
   }
 
   function basculerSousGroupe(sousGroupe: string) {
@@ -399,6 +412,24 @@ export function MenuDeroulant({
     );
   }
 
+  /**
+   * ⚠️ L'ENCADRÉ BLANC AU SURVOL (bug nº 139-5A) — LA CAUSE EXACTE.
+   * `OPTION_LISTE` (champs-recherche.ts) porte `hover:bg-fond-doux` :
+   * le BLANC CASSÉ du produit artisans, pour ses menus clairs. Sur le
+   * panneau SOMBRE, les options y échappaient par accident — la
+   * surcouche `hover:bg-sombre-eleve` gagnait à l'ordre de la feuille
+   * CSS — mais la PORTE « Traditionnel ethnique » recevait la classe
+   * NUE : au survol, un pavé blanc sous la typographie blanche.
+   * On ne s'en remet plus à l'ordre de la feuille : en sombre, les
+   * classes claires sont RETIRÉES avant d'être remplacées.
+   */
+  const optionSombre = (base: string) =>
+    sombre
+      ? `${base
+          .replace("hover:bg-fond-doux", "")
+          .replace("active:bg-primaire-clair", "")} hover:bg-sombre-eleve active:bg-sombre-eleve`
+      : base;
+
   return (
     <div ref={conteneur} className={sansBordure ? "relative h-full" : "relative"}>
       <button
@@ -446,11 +477,21 @@ export function MenuDeroulant({
           // descend jusqu'au bas de l'écran — vingt-deux styles, pas
           // quatre.
           style={stylePanneau(cadre, ouvreVersLeHaut, hauteurMax)}
-          className={`${listeClassique} ${
-            sombre ? "border-sombre-bordure bg-sombre-carte text-sombre-texte" : ""
-          }`}
+          //  ⚠️ EN SOMBRE, LES CLASSES CLAIRES SONT RETIRÉES, pas
+          //  recouvertes (même règle que `optionSombre`) — et le
+          //  panneau suit la charte : ni contour ni ombre, le fond
+          //  carte seul (la robe des fenêtres depuis la nº 130).
+          className={
+            sombre
+              ? `${listeClassique
+                  .replace("border border-bordure", "")
+                  .replace("bg-fond", "")
+                  .replace(/shadow-\[[^\]]*\]/, "")} bg-sombre-carte text-sombre-texte`
+              : listeClassique
+          }
         >
           <ul
+            ref={listeDeroulante}
             role="listbox"
             aria-label={ariaLabel}
             // C'est la LISTE qui défile dans le plafond de hauteur du
@@ -469,7 +510,7 @@ export function MenuDeroulant({
                 {/* Porte de sous-section — à la place d'une option */}
                 {sousEntete &&
                   sousEnteteVisible(option) &&
-                  porteSousSection(sousEntete, OPTION_LISTE)}
+                  porteSousSection(sousEntete, optionSombre(OPTION_LISTE))}
                 {optionVisible(option) && (
                 <button
                   type="button"
@@ -502,11 +543,14 @@ export function MenuDeroulant({
                   //  qui tranche — pas l'ordre d'écriture. Ajoutée,
                   //  `pl-9` perdait contre le `px-4` d'OPTION_LISTE et
                   //  le retrait ne se voyait pas (mesuré au banc).
-                  className={`${
+                  //  ⚠️ `optionSombre` RETIRE les classes claires au
+                  //  lieu de les recouvrir : le survol sombre ne doit
+                  //  rien à l'ordre de la feuille CSS (voir 5A).
+                  className={optionSombre(
                     option.sousGroupe
                       ? OPTION_LISTE.replace("px-4", "pr-4 pl-9")
                       : OPTION_LISTE
-                  } ${sombre ? "hover:bg-sombre-eleve active:bg-sombre-eleve" : ""}`}
+                  )}
                 >
                   {option.label}
                 </button>
@@ -554,7 +598,10 @@ export function MenuDeroulant({
             <h2 className="px-5 pb-3 text-lg font-bold text-left">
               {titreFeuille ?? "Choisissez une option"}
             </h2>
-            <ul className="overflow-y-auto px-2 pb-2 defilement-visible">
+            <ul
+              ref={listeDeroulante}
+              className="overflow-y-auto px-2 pb-2 defilement-visible"
+            >
               {optionsAvecEntetes.map(({ option, entete, sousEntete }) => {
                 const { value, label } = option;
                 const choisi = value === valeur;

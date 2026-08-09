@@ -2,14 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { IconeCroix } from "@/components/Icones";
+import { IconeCroix, IconeLoupe } from "@/components/Icones";
 import {
   entreeDejaPosee,
   lireDefilementResultats,
   marquerEntreePosee,
   memoriserDefilementResultats,
   prendreLEntree,
-  type VueRecherche,
 } from "@/lib/recherche-mobile";
 
 /**
@@ -147,29 +146,20 @@ const COURBE_GLISSADE = "cubic-bezier(0.32, 0.72, 0, 1)";
 /** Où en est la page. « posée » est le seul état où l'on saisit. */
 type Phase = "arrive" | "posee" | "part";
 
-const VUES_RECHERCHE = [
-  { cle: "recherche" as const, label: "Recherche" },
-  { cle: "filtres" as const, label: "Filtres" },
-];
+/*  ⚠️ LA BASCULE « Recherche / Filtres » A DISPARU (nº 139) : la page
+    n'a plus qu'UN écran, lu de haut en bas. Le titre la remplace. */
 
 export function PageRechercheMobile({
-  vue,
-  surVue,
-  filtresEteints,
   onValider,
   onAbandonner,
   onEffacer,
   children,
 }: {
-  vue: VueRecherche;
-  surVue: (vue: VueRecherche) => void;
-  /** Combien d'interrupteurs sont éteints (pastille de la bascule). */
-  filtresEteints: number;
   /** « Valider » : la SEULE porte qui lance la recherche. */
   onValider: () => void;
   /** La croix et le retour arrière : on referme sans rien appliquer. */
   onAbandonner: () => void;
-  /** Remet à zéro LA VUE AFFICHÉE (page ouverte, sans chercher). */
+  /** Remet la page à zéro (page ouverte, sans chercher). */
   onEffacer: () => void;
   children: React.ReactNode;
 }) {
@@ -338,65 +328,31 @@ export function PageRechercheMobile({
           s'en charge, rien n'est mesuré ni déplacé à la main.
           Le fond opaque est obligatoire : sans lui, le contenu
           défilerait en transparence derrière la croix. */}
+      {/*  L'EN-TÊTE (nº 139) — LE TITRE « Recherche » avec sa LOUPE à
+           gauche, la croix à droite. Il remplace la bascule : la page
+           n'a plus qu'un écran. La croix est à la charte : plus de
+           contour, le fond parle. La ligne reste COLLANTE : quand le
+           champ de localité remonte la page, la sortie reste
+           atteignable. */}
       <div
         className="sticky top-0 z-10 bg-sombre-fond
-                   flex items-center justify-end px-4 pb-1
+                   flex items-center justify-between gap-3 px-4 pb-2
                    pt-[max(12px,env(safe-area-inset-top))]"
       >
+        <h1 className="flex items-center gap-2.5 text-[19px] font-bold tracking-tight text-sombre-texte">
+          <IconeLoupe taille={20} classe="shrink-0 text-sombre-texte/80" />
+          Recherche
+        </h1>
         <button
           type="button"
           onClick={() => fermer(false)}
           aria-label="Fermer la recherche"
           className="flex h-11 w-11 items-center justify-center rounded-full
-                     border border-sombre-bordure bg-sombre-eleve
-                     text-sombre-texte active:border-primaire transition-colors"
+                     bg-sombre-eleve text-sombre-texte
+                     active:bg-sombre-eleve-clair transition-colors"
         >
-          <IconeCroix taille={16} />
+          <IconeCroix taille={18} />
         </button>
-      </div>
-
-      {/* LA BASCULE — deux moitiés dans une même piste arrondie,
-          l'active en rose plein. Inchangée : elle a toujours bien
-          fonctionné, seul son contenant change.
-          Une PASTILLE ROSE sur « Filtres » signale des interrupteurs
-          éteints rangés derrière la vue qu'on ne regarde pas. */}
-      <div
-        role="tablist"
-        aria-label="Recherche ou filtres"
-        className="mx-4 flex gap-1 rounded-full border border-sombre-bordure
-                   bg-sombre-eleve p-1"
-      >
-        {VUES_RECHERCHE.map((onglet) => {
-          const actif = onglet.cle === vue;
-          const pastille = onglet.cle === "filtres" && filtresEteints > 0;
-          return (
-            <button
-              key={onglet.cle}
-              type="button"
-              role="tab"
-              aria-selected={actif}
-              aria-controls="page-recherche-vue"
-              onClick={() => surVue(onglet.cle)}
-              className={`flex flex-1 items-center justify-center gap-1.5
-                         rounded-full min-h-[42px] text-[15px] font-semibold
-                         transition-colors ${
-                           actif
-                             ? "bg-primaire text-white"
-                             : "text-sombre-texte-doux active:text-sombre-texte"
-                         }`}
-            >
-              {onglet.label}
-              {pastille && (
-                <span
-                  aria-hidden="true"
-                  className={`h-[7px] w-[7px] rounded-full ${
-                    actif ? "bg-white" : "bg-primaire"
-                  }`}
-                />
-              )}
-            </button>
-          );
-        })}
       </div>
 
       {/* LA VUE — elle prend toute la hauteur restante, et s'allonge
@@ -416,11 +372,7 @@ export function PageRechercheMobile({
           la place : la vue s'allonge donc quand la liste s'ouvre, le
           document devient défilable, et `scrollIntoView` peut amener
           le champ en haut. */}
-      <div
-        id="page-recherche-vue"
-        role="tabpanel"
-        className="flex grow flex-col gap-5 px-4 pt-5"
-      >
+      <div className="flex grow flex-col gap-4 px-4 pt-3">
         {children}
       </div>
 
@@ -435,15 +387,18 @@ export function PageRechercheMobile({
           page — on les rejoint en défilant, comme dans n'importe quel
           formulaire. */}
       <div
-        className="flex items-center justify-between px-4 pt-6
-                   pb-[max(20px,env(safe-area-inset-bottom))]"
+        className="flex items-center justify-between px-4 pt-4
+                   pb-[max(16px,env(safe-area-inset-bottom))]"
       >
+        {/*  « Effacer » à la charte (nº 139) : une capsule NATURELLE —
+             la blanche pleine se lisait comme l'action principale,
+             qu'elle n'est pas. */}
         <button
           type="button"
           onClick={onEffacer}
           className="rounded-full px-6 min-h-[44px] text-[15px] font-semibold
-                     bg-sombre-texte text-sombre-fond active:opacity-85
-                     transition-opacity"
+                     bg-sombre-eleve text-sombre-texte active:bg-sombre-eleve-clair
+                     transition-colors"
         >
           Effacer
         </button>

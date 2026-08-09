@@ -707,8 +707,10 @@ export function ChampLocalisation({
             // panneau au-dessus du champ — au pire il le raccourcit.
             // C'est toute la différence avec les versions d'avant.
             style={{ maxHeight: hauteurMax ? `${hauteurMax}px` : undefined }}
-            className="mt-1.5 flex min-h-0 flex-1 flex-col rounded-2xl border
-                       border-sombre-bordure bg-sombre-carte text-sombre-texte
+            //  À LA CHARTE (nº 139) : plus de contour — le panneau se
+            //  dit par son fond carte, comme toutes les fenêtres.
+            className="mt-1.5 flex min-h-0 flex-1 flex-col rounded-2xl
+                       bg-sombre-carte text-sombre-texte
                        overflow-hidden"
             onPointerDown={() => {
               interactionPanneau.current = true;
@@ -726,9 +728,9 @@ export function ChampLocalisation({
             // POSÉ DANS <body>, en coordonnées d'écran : la fenêtre du
             // moteur ne le découpe plus (web).
             style={stylePanneau(cadre, ouvreVersLeHaut, hauteurMax)}
-            className="z-[80] flex flex-col rounded-2xl border
-                       border-sombre-bordure bg-sombre-carte text-sombre-texte
-                       shadow-[0_16px_50px_rgba(0,0,0,0.5)] overflow-hidden"
+            //  À LA CHARTE (nº 139) : ni contour ni ombre.
+            className="z-[80] flex flex-col rounded-2xl
+                       bg-sombre-carte text-sombre-texte overflow-hidden"
             onPointerDown={() => {
               interactionPanneau.current = true;
               window.setTimeout(() => {

@@ -14,8 +14,8 @@ import {
 } from "@/config/tatouage";
 import { ligneMoteur } from "@/lib/adresse";
 import { ChampLocalisation } from "@/components/ChampLocalisation";
-import { Interrupteur } from "@/components/Interrupteur";
 import { MenuDeroulant } from "@/components/MenuDeroulant";
+import { OngletsLigne } from "@/components/OngletsLigne";
 import { PageRechercheMobile } from "@/components/PageRechercheMobile";
 import {
   IconeDeuxColonnes,
@@ -36,7 +36,6 @@ import {
   lireRechercheServeur,
   ouvrirRecherche,
   poserBrouillon,
-  poserVueRecherche,
   souscrireRecherche,
 } from "@/lib/recherche-mobile";
 import type { LieuTrouve } from "@/lib/geocodage";
@@ -228,9 +227,12 @@ export function MoteurTatouage({
    *   coup. La croix, le retour arrière et Échap les ABANDONNENT.
    *   `null` = page fermée, le moteur lit les vrais critères.
    */
+  //  ⚠️ LA « VUE » A DISPARU AVEC LA BASCULE (nº 139) : la page de
+  //  recherche n'a plus qu'un seul écran. Le module recherche-mobile
+  //  garde son champ `vue` pour ne rien casser ; plus personne ne le
+  //  lit ici.
   const {
     ouverte: pageOuverte,
-    vue: vuePage,
     brouillon,
   } = useSyncExternalStore(
     souscrireRecherche,
@@ -313,84 +315,161 @@ export function MoteurTatouage({
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }
 
-  /** « EFFACER » N'EFFACE QUE CE QUI EST SOUS LES YEUX — jamais les
-      deux vues d'un coup. Sur « Recherche » il remet le style, le lieu
-      et le rayon au défaut et laisse les interrupteurs tels quels ; sur
-      « Filtres » il rallume tous les interrupteurs et ne touche pas à
-      la recherche. C'est la règle la moins surprenante : on efface ce
-      qu'on voit, pas ce qu'on ne voit pas. */
+  /** « EFFACER » EFFACE TOUT (nº 139) — la page n'a plus qu'UNE vue,
+      la règle « on efface ce qu'on voit » couvre donc style, lieu,
+      rayon ET badges d'un seul geste. Il ne CHERCHE toujours pas :
+      les résultats ne bougent pas tant que « Valider » n'a pas été
+      pressé. */
   function effacerLaVue() {
-    if (vuePage === "filtres") {
-      poserDansLeBrouillon({ exclure: [] });
-      return;
-    }
     setEffacements((n) => n + 1);
-    // ⚠️ « EFFACER » NE CHERCHE PAS NON PLUS : il vide la vue, et
-    // c'est tout. Les résultats ne bougent pas tant que « Valider »
-    // n'a pas été pressé.
-    poserBrouillon({ ...criteresComplets(), exclure: enFenetre.exclure });
+    poserBrouillon(criteresComplets());
   }
 
-  /** Bascule un interrupteur : l'éteindre = l'ajouter aux exclusions.
-      `valeurs` et `poser` disent SUR QUOI l'on travaille — les vrais
-      critères (web, qui cherche à chaque geste) ou le brouillon de la
-      fenêtre (mobile, qui attend « Valider »). */
-  function basculerInterrupteur(
+  /*  ⚠️ PLUS D'INTERRUPTEURS DANS LE MOTEUR (nº 139) : les filtres
+      sont des BADGES — voir `basculerBadge` plus bas, qui parle
+      toujours le même `exclure` à la base. */
+
+  /**
+   * LES FILTRES EN BADGES (refonte nº 139) — et la règle qui les fait
+   * parler le langage de la base SANS Y CHANGER UN MOT.
+   * ==================================================================
+   * ⚠️ LA BASE NE CONNAÎT QUE `exclure` (les slugs écartés), et cette
+   * passe N'Y TOUCHE PAS. Ce qui change est la LECTURE :
+   *  · un interrupteur disait « j'écarte ce que je ne veux pas » ;
+   *  · un badge dit « je sélectionne ce que je cherche ».
+   * Les deux sont la même chose, lue dans l'autre sens :
+   *  · AUCUN badge sélectionné  = rien d'écarté  = pas de filtrage ;
+   *  · des badges sélectionnés = tous les AUTRES slugs du groupe sont
+   *    écartés — c'est exactement l'`exclure` d'hier ;
+   *  · TOUS les badges d'un groupe sélectionnés = plus rien d'écarté :
+   *    on retombe d'aplomb sur « pas de filtrage », comme avant.
+   * Une adresse partagée d'avant la passe (`exclure=…`) se lit donc
+   * telle quelle : les slugs restants s'affichent sélectionnés.
+   */
+  function slugsDuGroupe(groupe: (typeof GROUPES_FILTRES)[number]): string[] {
+    return groupe.options.map((option) => option.slug);
+  }
+
+  function selectionDuGroupe(
+    groupe: (typeof GROUPES_FILTRES)[number],
+    exclure: string[]
+  ): string[] {
+    const exclus = slugsDuGroupe(groupe).filter((slug) =>
+      exclure.includes(slug)
+    );
+    //  Rien d'écarté : aucun badge allumé — « pas de filtre » ne
+    //  s'affiche pas comme « tout coché », il s'affiche comme RIEN.
+    if (exclus.length === 0) return [];
+    return slugsDuGroupe(groupe).filter((slug) => !exclure.includes(slug));
+  }
+
+  function basculerBadge(
+    groupe: (typeof GROUPES_FILTRES)[number],
     slug: string,
     valeurs: CritèresTatouage,
     poser: (suivant: Partial<CritèresTatouage>) => void
   ) {
+    const tous = slugsDuGroupe(groupe);
+    const selection = selectionDuGroupe(groupe, valeurs.exclure);
+    const suivante = selection.includes(slug)
+      ? selection.filter((s) => s !== slug)
+      : [...selection, slug];
+    //  Tout sélectionné, ou plus rien : le groupe n'écarte plus rien.
+    const exclusDuGroupe =
+      suivante.length === 0 || suivante.length === tous.length
+        ? []
+        : tous.filter((s) => !suivante.includes(s));
     poser({
-      exclure: valeurs.exclure.includes(slug)
-        ? valeurs.exclure.filter((s) => s !== slug)
-        : [...valeurs.exclure, slug],
+      exclure: [
+        ...valeurs.exclure.filter((s) => !tous.includes(s)),
+        ...exclusDuGroupe,
+      ],
     });
   }
 
-  /** LES TROIS GROUPES D'INTERRUPTEURS — le même bloc sur web et sur
-      mobile : Profil, Où il tatoue, Technique, Types de projets,
-      Besoins, Rendu — l'ordre de GROUPES_FILTRES, jamais recopié ici.
-      Deux colonnes : les libellés sont courts, la liste reste compacte
-      sans devenir un mur de lignes. UN FILET SÉPARE LES GROUPES (sauf
-      avant le premier) : passé trois groupes, les seuls titres ne
-      suffisaient plus à faire lire la liste par blocs. Le filet est
-      porté par une enveloppe et non par le <fieldset> — un <legend>
-      découpe la bordure de son propre fieldset, le trait aurait été
-      troué.
-      DEUX JEUX DE VALEURS possibles — voir `basculerInterrupteur` :
-      le web pose sur les vrais critères, la fenêtre sur son
-      brouillon. */
-  const listeInterrupteurs = (
+  /** UN GROUPE DE BADGES — le titre, puis les capsules en drapeau.
+      Sélectionné : ROSE PLEIN (on cherche ça). Au repos : un cran plus
+      clair que le bloc. AUCUNE ligne de séparation entre les groupes —
+      l'espacement et la typographie suffisent (charte). */
+  const groupeDeBadges = (
+    groupe: (typeof GROUPES_FILTRES)[number],
+    titre: string,
+    valeurs: CritèresTatouage,
+    poser: (suivant: Partial<CritèresTatouage>) => void
+  ) => {
+    const selection = selectionDuGroupe(groupe, valeurs.exclure);
+    return (
+      <fieldset key={groupe.groupe}>
+        <legend className="text-[12px] font-semibold uppercase tracking-wide text-sombre-texte-doux">
+          {titre}
+        </legend>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {groupe.options.map((option) => {
+            const choisi = selection.includes(option.slug);
+            return (
+              <button
+                key={option.slug}
+                type="button"
+                aria-pressed={choisi}
+                onClick={() => basculerBadge(groupe, option.slug, valeurs, poser)}
+                className={`rounded-full px-3.5 min-h-[36px] text-[13.5px] font-semibold
+                           transition-colors ${
+                             choisi
+                               ? "bg-primaire text-white"
+                               : "bg-sombre-eleve text-sombre-texte hover:bg-sombre-eleve-clair"
+                           }`}
+              >
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
+      </fieldset>
+    );
+  };
+
+  /**
+   * LE BLOC DES FILTRES — LE MÊME sur web et sur mobile (nº 139).
+   * Un SÉLECTEUR à deux positions (la grammaire de la charte : mots
+   * côte à côte, ligne fine, segment actif rose), puis les groupes de
+   * la position choisie :
+   *   · TYPE DE PROFIL   — Profil · Technique · Rendu ;
+   *   · OÙ TATOUE-T-IL ? — les modes d'activité.
+   * ⚠️ COMPOSITION ET BESOINS NE S'AFFICHENT PLUS ICI — ils ne sont
+   * PAS supprimés : leurs groupes vivent toujours dans GROUPES_FILTRES,
+   * la base et les adresses `exclure=` les comprennent comme avant, et
+   * une passe ultérieure les réintégrera. Simplement, aucun badge ne
+   * les propose dans cette version.
+   */
+  const [voletFiltres, setVoletFiltres] = useState<"profil" | "lieu">("profil");
+
+  const parGroupe = new Map(GROUPES_FILTRES.map((g) => [g.groupe, g]));
+
+  const blocFiltres = (
     valeurs: CritèresTatouage,
     poser: (suivant: Partial<CritèresTatouage>) => void
   ) => (
-    <div className="flex flex-col">
-      {GROUPES_FILTRES.map((groupe, rang) => (
-        <div
-          key={groupe.groupe}
-          className={
-            rang > 0 ? "mt-4 pt-4 border-t border-sombre-bordure/50" : ""
-          }
-        >
-          <fieldset>
-            <legend className="text-[12px] font-semibold uppercase tracking-wide text-sombre-texte-doux">
-              {groupe.titre}
-            </legend>
-            <div className="mt-2 grid grid-cols-2 gap-x-5 gap-y-0.5">
-              {groupe.options.map((option) => (
-                <Interrupteur
-                  key={option.slug}
-                  allume={!valeurs.exclure.includes(option.slug)}
-                  surBascule={() =>
-                    basculerInterrupteur(option.slug, valeurs, poser)
-                  }
-                  libelle={option.label}
-                />
-              ))}
-            </div>
-          </fieldset>
-        </div>
-      ))}
+    //  gap-4, pas gap-5 : le rythme resserré qui fait tenir la page
+    //  mobile sur un écran court (voir la mesure §3 au compte rendu).
+    <div className="flex flex-col gap-4">
+      <OngletsLigne
+        ariaLabel="Famille de filtres"
+        cleActive={voletFiltres}
+        surChoix={(cle) => setVoletFiltres(cle as "profil" | "lieu")}
+        options={[
+          { cle: "profil", label: "Type de profil" },
+          { cle: "lieu", label: "Où tatoue-t-il ?" },
+        ]}
+      />
+      {voletFiltres === "profil" ? (
+        <>
+          {groupeDeBadges(parGroupe.get("type")!, "Profil", valeurs, poser)}
+          {groupeDeBadges(parGroupe.get("technique")!, "Technique", valeurs, poser)}
+          {groupeDeBadges(parGroupe.get("rendu")!, "Rendu", valeurs, poser)}
+        </>
+      ) : (
+        groupeDeBadges(parGroupe.get("mode")!, "Mode d'activité", valeurs, poser)
+      )}
     </div>
   );
 
@@ -503,7 +582,10 @@ export function MoteurTatouage({
       champ garde le focus, le panneau reste ouvert — on peut ajuster
       plusieurs fois. */
   const piedRayon = rayonActif ? (
-    <div className="border-t border-sombre-bordure px-4 py-3">
+    //  À LA CHARTE (nº 139) : plus de trait au-dessus — l'espacement
+    //  sépare — et les pilules deviennent des BADGES : l'actif en rose
+    //  plein, les autres sur le fond un cran plus clair.
+    <div className="px-4 pb-3 pt-1">
       <p className="text-[12.5px] font-medium text-sombre-texte-doux">
         Rayon autour de {criteres.lieu?.intitule}
       </p>
@@ -518,10 +600,10 @@ export function MoteurTatouage({
               annoncer({ rayonKm: palier });
             }}
             className={`rounded-full px-3 min-h-[32px] text-[13px] font-semibold
-                       border transition-colors ${
+                       transition-colors ${
                          palier === criteres.rayonKm
-                           ? "border-primaire bg-primaire/15 text-primaire"
-                           : "border-sombre-bordure text-sombre-texte hover:border-primaire hover:text-primaire"
+                           ? "bg-primaire text-white"
+                           : "bg-sombre-eleve text-sombre-texte hover:bg-sombre-eleve-clair"
                        }`}
           >
             {palier} km
@@ -588,14 +670,18 @@ export function MoteurTatouage({
     );
   };
 
-  /** L'encadré style + ville du WEB — épuré : le panneau du champ
-      ville porte le RAYON en pied et reste ouvert après le choix. */
+  /** L'encadré style + ville du WEB — à la charte (nº 139) : AUCUN
+      contour, AUCUN halo. Le champ se dit par son fond, et le focus
+      l'éclaircit d'un cran — la grammaire de tous les champs du site.
+      Le fin trait vertical ENTRE les deux champs reste : ce n'est pas
+      un contour, c'est la ligne qui sépare deux champs d'un même
+      encadré — la parente de celle des sélecteurs. */
   function encadreChamps(identifiant: string) {
     return (
       <div
-        className="flex items-stretch rounded-2xl border border-sombre-bordure
+        className="flex items-stretch rounded-2xl
                    bg-sombre-eleve overflow-visible
-                   focus-within:border-primaire focus-within:ring-2 focus-within:ring-primaire/25
+                   focus-within:bg-sombre-eleve-clair
                    transition-colors"
       >
         <div className="flex-1 min-w-0 basis-1/2">
@@ -672,27 +758,29 @@ export function MoteurTatouage({
             title="Filtres"
             // LE ROSE NE DIT QU'UNE CHOSE : « le panneau est OUVERT ».
             // Fermé, le bouton reprend sa robe par défaut — même avec
-            // des filtres éteints, même la souris dessus (aucun survol
-            // rose : après un aller-retour dans le panneau, le bouton
-            // semblait rester allumé).
-            className={`relative shrink-0 w-[46px] h-[46px] rounded-full border
+            // des filtres actifs, même la souris dessus. À LA CHARTE
+            // (nº 139) : plus de contour, le fond parle seul.
+            className={`relative shrink-0 w-[46px] h-[46px] rounded-full
                        flex items-center justify-center transition-colors ${
                          filtresOuverts
-                           ? "border-primaire text-primaire bg-primaire/10"
-                           : "border-sombre-bordure bg-sombre-eleve text-sombre-texte hover:border-sombre-texte-doux"
+                           ? "bg-primaire/15 text-primaire"
+                           : "bg-sombre-eleve text-sombre-texte hover:bg-sombre-eleve-clair"
                        }`}
           >
             <IconeReglages taille={20} />
           </button>
 
           {filtresOuverts && (
+            //  LE PANNEAU — la robe des fenêtres du site depuis la
+            //  nº 130 : fond carte, ni contour ni ombre. Dedans, LE
+            //  MÊME bloc que la page mobile : sélecteur à deux
+            //  positions, badges.
             <div
               className="absolute top-full right-0 z-30 mt-2
                          w-[min(420px,calc(100vw-32px))] rounded-2xl
-                         border border-sombre-bordure bg-sombre-carte p-5
-                         shadow-[0_16px_50px_rgba(0,0,0,0.5)]"
+                         bg-sombre-carte p-5"
             >
-              {listeInterrupteurs(criteres, annoncer)}
+              {blocFiltres(criteres, annoncer)}
             </div>
           )}
         </div>
@@ -725,8 +813,8 @@ export function MoteurTatouage({
               : `Rechercher — ${libelleQuoi || "tout"}, ${libelleOu}`
           }
           className="flex flex-1 min-w-0 items-center gap-3 text-left
-                     rounded-full border border-sombre-bordure bg-sombre-eleve
-                     px-5 min-h-[52px] active:border-primaire transition-colors"
+                     rounded-full bg-sombre-eleve
+                     px-5 min-h-[52px] active:bg-sombre-eleve-clair transition-colors"
         >
           <IconeLoupe taille={18} classe="shrink-0 text-sombre-texte-doux" />
           <span
@@ -773,8 +861,8 @@ export function MoteurTatouage({
               ? "Afficher une image par ligne"
               : "Afficher deux colonnes"
           }
-          className="shrink-0 w-[52px] h-[52px] rounded-full border
-                     border-sombre-bordure bg-sombre-eleve text-sombre-texte
+          className="shrink-0 w-[52px] h-[52px] rounded-full
+                     bg-sombre-eleve text-sombre-texte
                      flex items-center justify-center active:opacity-80
                      transition-opacity"
         >
@@ -787,87 +875,76 @@ export function MoteurTatouage({
       </div>
 
       {pageOuverte && (
+        /*  UNE SEULE PAGE (nº 139) — plus de bascule Recherche /
+            Filtres : tout se lit de haut en bas, dans l'ordre du
+            brief : Explorer · localité · rayon · le sélecteur à deux
+            positions · les badges. */
         <PageRechercheMobile
-          vue={vuePage}
-          surVue={poserVueRecherche}
-          filtresEteints={enFenetre.exclure.length}
           onValider={validerLaPage}
           onAbandonner={abandonnerLaPage}
           onEffacer={effacerLaVue}
         >
-          {vuePage === "recherche" ? (
-            <>
-              {/* 1. LE STYLE — le menu déroulant seul : son fantôme
-                  (« Explorer ») dit déjà tout, aucun titre.
-                  IL NE DIT PLUS RIEN À PERSONNE en s'ouvrant : il n'y a
-                  plus de fenêtre à lever. Son panneau s'ouvre en
-                  coordonnées d'écran, comme sur le web, et la page ne
-                  bouge pas dessous. */}
-              <div>
-                <MenuDeroulant
-                  valeur={valeurExplorer(enFenetre.nature, enFenetre.style)}
-                  surChangement={(valeur) =>
-                    choisirDansExplorer(valeur, poserDansLeBrouillon)
-                  }
-                  options={options}
-                  ariaLabel="Explorer"
-                  placeholder="Explorer"
-                  hauteur="min-h-[54px]"
-                  taillePolice="text-[16px]"
-                  sombre
-                  repliable
-                />
-              </div>
+          {/* 1. LE STYLE — le menu déroulant seul : son fantôme
+              (« Explorer ») dit déjà tout, aucun titre.
+              IL NE DIT PLUS RIEN À PERSONNE en s'ouvrant : il n'y a
+              plus de fenêtre à lever. Son panneau s'ouvre en
+              coordonnées d'écran, comme sur le web, et la page ne
+              bouge pas dessous. */}
+          <div>
+            <MenuDeroulant
+              valeur={valeurExplorer(enFenetre.nature, enFenetre.style)}
+              surChangement={(valeur) =>
+                choisirDansExplorer(valeur, poserDansLeBrouillon)
+              }
+              options={options}
+              ariaLabel="Explorer"
+              placeholder="Explorer"
+              hauteur="min-h-[54px]"
+              taillePolice="text-[16px]"
+              sombre
+              repliable
+            />
+          </div>
 
-              {/* 2. LA LOCALITÉ — dessous, sans titre non plus : son
-                  fantôme (« Où ? ») parle pour elle. */}
-              <div>
-                <ChampLocalisation
-                  pourLeMoteur
-                  // « EFFACER » REMONTE LE CHAMP À ZÉRO : sa clé change,
-                  // le champ est reconstruit sur « aucun lieu ». Sans
-                  // ça, il continuerait d'afficher « Lyon » alors que la
-                  // recherche est redevenue mondiale.
-                  key={`${id}-fenetre-lieu-${effacements}`}
-                  id={`${id}-fenetre-lieu`}
-                  etiquette={null}
-                  texteIndicatif={TEXTES_TATOUAGE.ouLabel}
-                  lieuInitial={enFenetre.lieu}
-                  croixEffacement
-                  viderSiAbandon
-                  suffixeLieu={suffixeRayon(enFenetre)}
-                  surChoix={(choisi) => poserDansLeBrouillon({ lieu: choisi })}
-                  // ⚠️ LA LISTE EST DANS LE FLUX, ET C'EST TOUT L'INTÉRÊT
-                  // DE LA REFONTE. Elle était posée dans <body> à des
-                  // coordonnées d'écran parce qu'une fenêtre flottante ne
-                  // pouvait pas la contenir sans changer de hauteur à
-                  // chaque image du clavier. Dans une PAGE, elle est
-                  // simplement le frère suivant du champ : le navigateur
-                  // la place, l'allonge, et fait défiler le document pour
-                  // la montrer. Aucune mesure, aucun repère à convertir.
-                  // C'est exactement ce que fait déjà le FORMULAIRE.
-                  panneauDansLeFlux
-                  // ET LE CHAMP MONTE EN HAUT DE LA PAGE au premier
-                  // toucher — par un défilement de DOCUMENT (scrollBy),
-                  // le geste le plus ordinaire qui soit. Toute la hauteur
-                  // libérée passe alors sous le champ : c'est ce qui
-                  // garantit que la liste reste entière au-dessus des
-                  // touches. Même mécanique que le formulaire.
-                  remonterAuToucher
-                />
-              </div>
+          {/* 2. LA LOCALITÉ — dessous, sans titre non plus : son
+              fantôme (« Où ? ») parle pour elle. */}
+          <div>
+            <ChampLocalisation
+              pourLeMoteur
+              // « EFFACER » REMONTE LE CHAMP À ZÉRO : sa clé change,
+              // le champ est reconstruit sur « aucun lieu ». Sans
+              // ça, il continuerait d'afficher « Lyon » alors que la
+              // recherche est redevenue mondiale.
+              key={`${id}-fenetre-lieu-${effacements}`}
+              id={`${id}-fenetre-lieu`}
+              etiquette={null}
+              texteIndicatif={TEXTES_TATOUAGE.ouLabel}
+              lieuInitial={enFenetre.lieu}
+              croixEffacement
+              viderSiAbandon
+              suffixeLieu={suffixeRayon(enFenetre)}
+              surChoix={(choisi) => poserDansLeBrouillon({ lieu: choisi })}
+              // ⚠️ LA LISTE EST DANS LE FLUX, ET C'EST TOUT L'INTÉRÊT
+              // DE LA REFONTE (nº 121). Dans une PAGE, elle est
+              // simplement le frère suivant du champ : le navigateur
+              // la place, l'allonge, et fait défiler le document pour
+              // la montrer. Même mécanique que le formulaire.
+              panneauDansLeFlux
+              // ET LE CHAMP MONTE EN HAUT DE LA PAGE au premier
+              // toucher — par un défilement de DOCUMENT (scrollBy).
+              remonterAuToucher
+            />
+          </div>
 
-              {/* 3. LE RAYON — dessous, inactif sans point de départ. */}
-              {curseurRayon(enFenetre, poserDansLeBrouillon)}
-            </>
-          ) : (
-            /* LA VUE « FILTRES » : tous les groupes d'interrupteurs,
-               tous allumés par défaut. Le PROFIL (ce qu'est la fiche)
-               et OÙ IL TATOUE (ce que fait l'artiste) sont deux
-               groupes distincts depuis la passe B — mélangés, ils
-               s'annulaient. */
-            listeInterrupteurs(enFenetre, poserDansLeBrouillon)
-          )}
+          {/* 3. LE RAYON — dessous, inactif sans point de départ. */}
+          {curseurRayon(enFenetre, poserDansLeBrouillon)}
+
+          {/* 4. LES FILTRES — le sélecteur à deux positions, puis les
+              badges de la position choisie. Les mêmes que le panneau
+              du web, au mot près. */}
+          <div className="pt-1">
+            {blocFiltres(enFenetre, poserDansLeBrouillon)}
+          </div>
         </PageRechercheMobile>
       )}
     </div>
