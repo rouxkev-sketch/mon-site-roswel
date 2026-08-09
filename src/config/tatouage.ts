@@ -1170,6 +1170,14 @@ export const COULEURS_SOMBRE = {
   eleveClair: "#35353B",
   /** Les traits : présents, jamais visibles avant qu'on les cherche. */
   bordure: "#38383F",
+  /** LE HAUT DE L'ÉCHELLE (passe nº 144). Les fenêtres du web ont été
+      éclaircies d'un cran (`carte` → `eleve`) pour mieux se détacher
+      de la page : tout ce qui est POSÉ SUR ELLES devait grimper
+      d'autant, et l'échelle manquait d'un barreau au-dessus de
+      `bordure`. C'est lui — jamais employé ailleurs que comme dernier
+      niveau d'un empilement (sélecteur ouvert dans « Mon compte »,
+      badge sélectionné dans le panneau des filtres). */
+  haut: "#414149",
   /** Le texte principal. */
   texte: "#F2F2F4",
   /** Le texte discret (ville, styles, mentions). */

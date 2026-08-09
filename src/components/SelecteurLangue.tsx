@@ -139,7 +139,7 @@ export function SelecteurLangue({
             className={`w-full flex items-center gap-3 min-h-[46px] px-3 rounded-xl
                         text-left text-[14.5px] transition-colors ${
                           langue.actif
-                            ? "text-sombre-texte hover:bg-sombre-eleve font-semibold"
+                            ? "text-sombre-texte hover:bg-sombre-eleve-clair font-semibold"
                             : "text-sombre-texte-doux/50 cursor-not-allowed"
                         }`}
           >
@@ -183,7 +183,7 @@ export function SelecteurLangue({
           aria-expanded={ouvert}
           className="flex w-full items-center gap-3 rounded-xl px-3 min-h-[46px]
                      text-left text-[14.5px] font-semibold text-sombre-texte
-                     hover:bg-sombre-eleve transition-colors"
+                     hover:bg-sombre-eleve-clair transition-colors"
         >
           <span className="flex w-[22px] shrink-0 justify-center text-sombre-texte/80">
             <IconeMonde taille={22} />
@@ -205,16 +205,17 @@ export function SelecteurLangue({
           // MÊME HAUTEUR que le bouton rose à sa droite : la barre garde
           // une seule ligne d'appui, sans décalage d'un pixel.
           style={{ height: hauteur, width: hauteur }}
-          // OUVERT, LE GLOBE PASSE EN ROSE : on voit d'un coup d'œil
-          // que la fenêtre affichée est LA SIENNE — même langage que
-          // l'icône de compte, rose quand on est connecté.
+          //  ⚠️ PLUS DE ROSE OUVERT (nº 144-§2) : le rose est réservé
+          //  aux accents forts, et une fenêtre ouverte n'en est pas
+          //  un. Ouvert, le FOND S'ÉCLAIRCIT — le même traitement que
+          //  le bouton de filtres — et le globe reste blanc.
           className={`shrink-0 flex items-center justify-center rounded-full
-                     transition-colors hover:bg-sombre-eleve
+                     transition-colors text-sombre-texte
                      focus-visible:outline-2 focus-visible:outline-offset-2
                      focus-visible:outline-primaire ${
                        ouvert
-                         ? "text-primaire"
-                         : "text-sombre-texte hover:text-primaire"
+                         ? "bg-sombre-eleve-clair"
+                         : "hover:bg-sombre-eleve"
                      }`}
         >
           {/* LE GLOBE DESSINÉ — celui du code, en `currentColor`.
@@ -236,7 +237,7 @@ export function SelecteurLangue({
           role="dialog"
           aria-label="Choisir la langue"
           className="absolute top-full right-0 z-30 mt-2 w-[290px]
-                     rounded-2xl bg-sombre-carte"
+                     rounded-2xl bg-sombre-eleve"
         >
           <div className="px-2 py-2">{liste}</div>
         </div>

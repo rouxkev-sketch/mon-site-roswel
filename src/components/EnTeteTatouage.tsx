@@ -134,13 +134,33 @@ export function EnTeteTatouage({
     ? "Se connecter"
     : TEXTES_TATOUAGE.lienInscription;
 
+  /** LA BARRE SE POSE AU DÉFILEMENT (passe nº 144-§1). Le trait qui la
+      séparait du contenu était LE DERNIER CONTOUR du site : il a
+      disparu. À sa place, la règle de la charte — les niveaux se
+      distinguent par leur CLARTÉ : en haut de page la barre est
+      TRANSPARENTE (elle appartient à la page) ; dès que du contenu
+      passe dessous, son fond s'éclaircit d'un cran et se floute, et
+      c'est cette nuance qui la détache. Le seuil de 8 px évite le
+      clignotement sur les micro-défilements élastiques. */
+  const [posee, setPosee] = useState(false);
+  useEffect(() => {
+    const lire = () => setPosee(window.scrollY > 8);
+    lire();
+    window.addEventListener("scroll", lire, { passive: true });
+    return () => window.removeEventListener("scroll", lire);
+  }, []);
+
   return (
     <header
       // Le repère du haut de l'écran : la mosaïque s'en sert pour
       // remettre sous les yeux la même carte après un changement de
       // disposition (voir src/lib/carte-du-haut.ts).
       data-barre-fixe=""
-      className="sticky top-0 z-50 bg-sombre-fond/95 backdrop-blur border-b border-sombre-bordure"
+      className={`sticky top-0 z-50 transition-colors duration-200 ${
+        posee
+          ? "bg-sombre-carte/90 backdrop-blur"
+          : "bg-transparent"
+      }`}
     >
       <div
         className="mx-auto w-full max-w-[1760px] px-4 sm:px-6
@@ -184,13 +204,18 @@ export function EnTeteTatouage({
             au milieu dès qu'il y en a. `moteurMobile` faux : il
             disparaît sous 768 px — sur une page sans recherche, un
             moteur dans la barre n'est que du bruit. */}
+        {/*  ⚠️ ÉLARGI (nº 144-§4) : 520 px laissaient à peine 200 px à
+             chacun des deux champs alors que la barre avait de la
+             place. 680 px — la juste mesure : les champs respirent,
+             et le moteur reste une PILULE au centre de la barre, pas
+             une barre dans la barre. */}
         <div
-          className={`order-3 lg:order-2 basis-full lg:basis-[520px] lg:shrink lg:grow-0
+          className={`order-3 lg:order-2 basis-full lg:basis-[680px] lg:shrink lg:grow-0
                       min-w-0 justify-center ${
                         moteurMobile ? "flex" : "hidden md:flex"
                       }`}
         >
-          <div className="w-full max-w-[560px]">
+          <div className="w-full max-w-[720px]">
             <MoteurTatouage criteres={valeur} surChangement={chercher} />
           </div>
         </div>

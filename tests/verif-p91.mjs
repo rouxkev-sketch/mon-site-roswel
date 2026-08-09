@@ -278,16 +278,15 @@ await mob.locator('button[aria-haspopup="dialog"]').first().click();
 await mob.waitForTimeout(1200);
 const ecran = mob.locator('[role="dialog"][aria-label="Rechercher un tatoueur"]');
 verif("l'écran de recherche s'ouvre", (await ecran.count()) === 1);
-//  ⚠️ LA BASCULE EST REVENUE À LA PASSE Nº 141 : la page unique de la
-//  passe nº 139 débordait à 320 px, le propriétaire a tranché. En tête,
-//  plus de titre « Recherche » — le sélecteur Recherche/Filtres
-//  (grammaire OngletsLigne, `radiogroup`) occupe sa place, et la vue
-//  Recherche (Explorer, localité, rayon) s'affiche à l'ouverture.
+//  ⚠️ L'EN-TÊTE DE LA PASSE Nº 144 : le titre « Recherche » (avec sa
+//  loupe) est REVENU au-dessus de la bascule, dont l'onglet s'appelle
+//  désormais « Explorer ». La vue Explorer (styles, localité, rayon)
+//  s'affiche à l'ouverture.
 verif(
-  "la bascule Recherche/Filtres tient l'en-tête (nº 141)",
-  (await ecran.locator("h1").count()) === 0 &&
+  "le titre « Recherche » et la bascule Explorer/Filtres (nº 144)",
+  (await ecran.locator("h1", { hasText: "Recherche" }).count()) === 1 &&
     (await ecran
-      .locator('[role="radiogroup"][aria-label="Recherche ou filtres"]')
+      .locator('[role="radiogroup"][aria-label="Explorer ou filtres"]')
       .count()) === 1
 );
 

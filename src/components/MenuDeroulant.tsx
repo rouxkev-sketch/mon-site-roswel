@@ -481,7 +481,10 @@ export function MenuDeroulant({
           // ne le découpe. Il déborde donc de la fenêtre du moteur et
           // descend jusqu'au bas de l'écran — vingt-deux styles, pas
           // quatre.
-          style={stylePanneau(cadre, ouvreVersLeHaut, hauteurMax)}
+          //  ⚠️ LARGEUR AU CONTENU (nº 144-§5) : le champ n'est plus
+          //  qu'un plancher — le panneau s'élargit jusqu'au style le
+          //  plus long, et plus aucune entrée ne revient à la ligne.
+          style={stylePanneau(cadre, ouvreVersLeHaut, hauteurMax, true)}
           //  ⚠️ EN SOMBRE, LES CLASSES CLAIRES SONT RETIRÉES, pas
           //  recouvertes (même règle que `optionSombre`) — et le
           //  panneau suit la charte : ni contour ni ombre, le fond

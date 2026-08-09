@@ -273,17 +273,29 @@ export function usePlacementMenu(
 }
 
 /** Le style d'un panneau POSÉ DANS <body> : coordonnées d'écran,
-    largeur du champ, hauteur plafonnée à la place disponible. */
+    largeur du champ, hauteur plafonnée à la place disponible.
+    ⚠️ `largeurAuContenu` (nº 144-§5) : le menu « Explorer » calait sa
+    largeur sur SON CHAMP, et la moitié des styles passaient sur deux
+    lignes. Avec ce drapeau, la largeur du champ devient un PLANCHER :
+    le panneau s'élargit jusqu'au style le plus long — jamais au-delà
+    du bord de l'écran (16 px de marge gardés). */
 export function stylePanneau(
   cadre: CadreMenu | null,
   ouvreVersLeHaut: boolean,
-  hauteurMax: number | null
+  hauteurMax: number | null,
+  largeurAuContenu = false
 ): React.CSSProperties | undefined {
   if (!cadre) return undefined;
   return {
     position: "fixed",
     left: cadre.gauche,
-    width: cadre.largeur,
+    ...(largeurAuContenu
+      ? {
+          minWidth: cadre.largeur,
+          width: "max-content",
+          maxWidth: `calc(100vw - ${Math.round(cadre.gauche) + 16}px)`,
+        }
+      : { width: cadre.largeur }),
     ...(ouvreVersLeHaut ? { bottom: cadre.bas } : { top: cadre.haut }),
     maxHeight: hauteurMax ? `${hauteurMax}px` : undefined,
   };

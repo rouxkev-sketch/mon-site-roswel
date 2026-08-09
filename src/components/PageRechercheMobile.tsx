@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { IconeCroix } from "@/components/Icones";
+import { IconeCroix, IconeLoupe } from "@/components/Icones";
 import { OngletsLigne } from "@/components/OngletsLigne";
 import {
   entreeDejaPosee,
@@ -338,38 +338,49 @@ export function PageRechercheMobile({
           s'en charge, rien n'est mesuré ni déplacé à la main.
           Le fond opaque est obligatoire : sans lui, le contenu
           défilerait en transparence derrière la croix. */}
-      {/*  L'EN-TÊTE (nº 141) — LA BASCULE « Recherche / Filtres », de
-           retour dans la grammaire de la charte, et la CROIX NUE à sa
-           droite : plus de cercle autour d'elle (nº 141-2A) — le
-           dessin seul, la zone tactile de 44 px reste, invisible.
-           La ligne reste COLLANTE : quand le champ de localité remonte
-           la page, la sortie et la bascule restent atteignables. */}
+      {/*  L'EN-TÊTE (refait à la nº 144-§10) — DEUX LIGNES :
+            1. le TITRE « Recherche », précédé de sa LOUPE, et la CROIX
+               NUE à droite (plus de cercle depuis la nº 141-2A — le
+               dessin seul, la zone tactile de 44 px reste, invisible) ;
+            2. dessous, la BASCULE « Explorer / Filtres » — DESCENDUE
+               du bord de l'écran auquel elle collait, l'espace du
+               titre respire au-dessus d'elle.
+           « Recherche » est redevenu le NOM DE LA PAGE : l'onglet, lui,
+           s'appelle « Explorer » (§10C) — c'est le geste, pas la page.
+           Le bloc entier reste COLLANT : quand le champ de localité
+           remonte la page, la sortie et la bascule restent
+           atteignables. */}
       <div
-        className="sticky top-0 z-10 bg-sombre-fond
-                   flex items-end justify-between gap-4 px-4 pb-1
+        className="sticky top-0 z-10 bg-sombre-fond px-4 pb-1
                    pt-[max(12px,env(safe-area-inset-top))]"
       >
-        <div className="min-w-0 flex-1 max-w-[260px]">
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="flex items-center gap-2.5 text-[17px] font-bold text-sombre-texte">
+            <IconeLoupe taille={18} classe="shrink-0 text-sombre-texte-doux" />
+            Recherche
+          </h1>
+          <button
+            type="button"
+            onClick={() => fermer(false)}
+            aria-label="Fermer la recherche"
+            className="flex h-11 w-11 -mr-2 items-center justify-center
+                       text-sombre-texte-doux active:text-sombre-texte
+                       transition-colors"
+          >
+            <IconeCroix taille={18} />
+          </button>
+        </div>
+        <div className="mt-1 max-w-[260px]">
           <OngletsLigne
-            ariaLabel="Recherche ou filtres"
+            ariaLabel="Explorer ou filtres"
             cleActive={vue}
             surChoix={(cle) => surVue(cle as VueRecherche)}
             options={[
-              { cle: "recherche", label: "Recherche" },
+              { cle: "recherche", label: "Explorer" },
               { cle: "filtres", label: "Filtres" },
             ]}
           />
         </div>
-        <button
-          type="button"
-          onClick={() => fermer(false)}
-          aria-label="Fermer la recherche"
-          className="flex h-11 w-11 -mr-2 mb-1 items-center justify-center
-                     text-sombre-texte-doux active:text-sombre-texte
-                     transition-colors"
-        >
-          <IconeCroix taille={18} />
-        </button>
       </div>
 
       {/* LA VUE — elle prend toute la hauteur restante, et s'allonge
@@ -389,7 +400,11 @@ export function PageRechercheMobile({
           la place : la vue s'allonge donc quand la liste s'ouvre, le
           document devient défilable, et `scrollIntoView` peut amener
           le champ en haut. */}
-      <div className="flex grow flex-col gap-4 px-4 pt-3">
+      {/*  pt-2 et pied pt-3 (nº 144-§10) : le titre ajouté au-dessus de la
+     bascule coûtait 8 px à la vue Filtres sur l'écran le plus court
+     (320×568). Repris ici, mesuré : les deux vues tiennent de
+     nouveau exactement. */}
+      <div className="flex grow flex-col gap-4 px-4 pt-2">
         {children}
       </div>
 
@@ -404,7 +419,7 @@ export function PageRechercheMobile({
           page — on les rejoint en défilant, comme dans n'importe quel
           formulaire. */}
       <div
-        className="flex items-center justify-between px-4 pt-4
+        className="flex items-center justify-between px-4 pt-3
                    pb-[max(16px,env(safe-area-inset-bottom))]"
       >
         {/*  « Effacer » EN TEXTE BRUT (nº 141-2C) : c'est une action

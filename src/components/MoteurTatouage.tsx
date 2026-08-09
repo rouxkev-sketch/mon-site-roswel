@@ -18,6 +18,7 @@ import { MenuDeroulant } from "@/components/MenuDeroulant";
 import { PageRechercheMobile } from "@/components/PageRechercheMobile";
 import {
   IconeCartes,
+  IconeCocheListe,
   IconeDeuxColonnes,
   IconeLoupe,
   IconePhoto,
@@ -416,16 +417,31 @@ export function MoteurTatouage({
   }
 
   /** UN GROUPE DE BADGES — le titre, puis les capsules en drapeau.
-      Sélectionné : ROSE PLEIN (on cherche ça). Au repos : un cran plus
-      clair que le bloc. AUCUNE ligne de séparation entre les groupes —
-      l'espacement et la typographie suffisent (charte). */
+      ⚠️ FINI LE ROSE PLEIN (nº 144-§7). Depuis que tout est
+      sélectionné au départ (nº 143-2B), une rangée de badges roses
+      faisait un MUR rose. Le sélectionné se dit désormais par TROIS
+      signes discrets : un fond UN CRAN PLUS CLAIR, une petite COCHE
+      rose — le seul rose qui reste, à sa juste place —, et le texte
+      en BLANC. Le retiré s'assombrit et grise : c'est LUI qui
+      s'écarte du lot, comme dans la donnée (`exclure`).
+      AUCUNE ligne de séparation entre les groupes — l'espacement et
+      la typographie suffisent (charte).
+      `surPanneau` : posés sur le panneau web éclairci (nº 144-§3),
+      les badges grimpent d'un cran pour garder le même contraste. */
   const groupeDeBadges = (
     groupe: (typeof GROUPES_FILTRES)[number],
     titre: string,
     valeurs: CritèresTatouage,
-    poser: (suivant: Partial<CritèresTatouage>) => void
+    poser: (suivant: Partial<CritèresTatouage>) => void,
+    surPanneau = false
   ) => {
     const selection = selectionDuGroupe(groupe, valeurs.exclure);
+    const robeChoisie = surPanneau
+      ? "bg-sombre-bordure text-sombre-texte"
+      : "bg-sombre-eleve-clair text-sombre-texte";
+    const robeRetiree = surPanneau
+      ? "bg-sombre-eleve-clair/60 text-sombre-texte-doux hover:bg-sombre-eleve-clair"
+      : "bg-sombre-eleve/70 text-sombre-texte-doux hover:bg-sombre-eleve";
     return (
       <fieldset key={groupe.groupe}>
         <legend className="text-[12px] font-semibold uppercase tracking-wide text-sombre-texte-doux">
@@ -440,13 +456,13 @@ export function MoteurTatouage({
                 type="button"
                 aria-pressed={choisi}
                 onClick={() => basculerBadge(groupe, option.slug, valeurs, poser)}
-                className={`rounded-full px-3.5 min-h-[36px] text-[13.5px] font-semibold
-                           transition-colors ${
-                             choisi
-                               ? "bg-primaire text-white"
-                               : "bg-sombre-eleve text-sombre-texte hover:bg-sombre-eleve-clair"
-                           }`}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3.5
+                           min-h-[36px] text-[13.5px] font-semibold
+                           transition-colors ${choisi ? robeChoisie : robeRetiree}`}
               >
+                {choisi && (
+                  <IconeCocheListe taille={14} classe="shrink-0 text-primaire" />
+                )}
                 {option.label}
               </button>
             );
@@ -485,7 +501,11 @@ export function MoteurTatouage({
 
   const blocFiltres = (
     valeurs: CritèresTatouage,
-    poser: (suivant: Partial<CritèresTatouage>) => void
+    poser: (suivant: Partial<CritèresTatouage>) => void,
+    /** VRAI dans le panneau web (nº 144-§3) : le panneau ayant grimpé
+        à `eleve`, tout ce qui est posé dessus grimpe d'un cran, et la
+        première légende respire davantage (nº 144-§8). */
+    surPanneau = false
   ) => {
     const volets = [
       { cle: "profil" as const, titre: "Type de profil" },
@@ -494,9 +514,12 @@ export function MoteurTatouage({
     const ouvert = volets.find((v) => v.cle === voletFiltres) ?? volets[0];
     return (
       <div>
-        {/* LES DEUX RECTANGLES — le motif du formulaire : fond un cran
-            plus clair au repos, teinté de rose quand le volet est
-            ouvert, AUCUN contour. Rien d'autre : plus de point (§4). */}
+        {/* LES DEUX RECTANGLES — le motif du formulaire, dans la
+            langue de la charte (nº 144-§6) : l'OUVERT a le fond UN
+            CRAN PLUS CLAIR et le texte BLANC — plus de rose sur rose,
+            le rose ne teinte plus ni le fond ni la typographie. Le
+            fermé garde le fond du niveau et grise son titre. AUCUN
+            contour. Rien d'autre : plus de point (§4). */}
         <div className="grid grid-cols-2 gap-2">
           {volets.map((volet) => {
             const actif = volet.cle === voletFiltres;
@@ -508,13 +531,17 @@ export function MoteurTatouage({
                 aria-expanded={actif}
                 className={`rounded-xl px-3 py-2.5 text-left transition-colors ${
                   actif
-                    ? "bg-primaire/15"
-                    : "bg-sombre-eleve hover:bg-primaire/10"
+                    ? surPanneau
+                      ? "bg-sombre-bordure"
+                      : "bg-sombre-eleve-clair"
+                    : surPanneau
+                      ? "bg-sombre-eleve-clair/60 hover:bg-sombre-eleve-clair"
+                      : "bg-sombre-eleve/70 hover:bg-sombre-eleve"
                 }`}
               >
                 <span
                   className={`block text-[14px] font-semibold ${
-                    actif ? "text-primaire" : "text-sombre-texte"
+                    actif ? "text-sombre-texte" : "text-sombre-texte-doux"
                   }`}
                 >
                   {volet.titre}
@@ -524,8 +551,11 @@ export function MoteurTatouage({
           })}
         </div>
 
-        {/* LES GROUPES DU VOLET OUVERT — et la MARGE RESPIRE (nº 141-
-            §3) : 20 px sous les rectangles, comme entre les groupes.
+        {/* LES GROUPES DU VOLET OUVERT — et la MARGE RESPIRE : 20 px
+            sous les rectangles sur smartphone (où chaque pixel de
+            hauteur compte à 320), 28 px sur le panneau web (nº 144-
+            §8), où « Profil » et « Mode d'activité » collaient aux
+            rectangles.
             ⚠️ TECHNIQUE ET RENDU SONT SOUS LES DEUX VOLETS (nº 143-§3).
             Ils décrivent la PRATIQUE : la question se pose aussi bien
             en cherchant un type de profil qu'un lieu d'exercice. Ce
@@ -533,17 +563,36 @@ export function MoteurTatouage({
             si bien qu'un retrait fait d'un côté se voit de l'autre :
             il n'y a pas deux réglages à tenir d'accord, il n'y en a
             qu'un, montré à deux endroits. */}
-        <div className="mt-5 flex flex-col gap-5">
+        <div className={`${surPanneau ? "mt-7" : "mt-5"} flex flex-col gap-5`}>
           {ouvert.cle === "profil"
-            ? groupeDeBadges(parGroupe.get("type")!, "Profil", valeurs, poser)
+            ? groupeDeBadges(
+                parGroupe.get("type")!,
+                "Profil",
+                valeurs,
+                poser,
+                surPanneau
+              )
             : groupeDeBadges(
                 parGroupe.get("mode")!,
                 "Mode d'activité",
                 valeurs,
-                poser
+                poser,
+                surPanneau
               )}
-          {groupeDeBadges(parGroupe.get("technique")!, "Technique", valeurs, poser)}
-          {groupeDeBadges(parGroupe.get("rendu")!, "Rendu", valeurs, poser)}
+          {groupeDeBadges(
+            parGroupe.get("technique")!,
+            "Technique",
+            valeurs,
+            poser,
+            surPanneau
+          )}
+          {groupeDeBadges(
+            parGroupe.get("rendu")!,
+            "Rendu",
+            valeurs,
+            poser,
+            surPanneau
+          )}
         </div>
       </div>
     );
@@ -814,14 +863,16 @@ export function MoteurTatouage({
             aria-expanded={filtresOuverts}
             aria-label="Filtres"
             title="Filtres"
-            // LE ROSE NE DIT QU'UNE CHOSE : « le panneau est OUVERT ».
-            // Fermé, le bouton reprend sa robe par défaut — même avec
-            // des filtres actifs, même la souris dessus. À LA CHARTE
-            // (nº 139) : plus de contour, le fond parle seul.
+            //  ⚠️ PLUS DE ROSE OUVERT (nº 144-§2) : le rose est réservé
+            //  aux accents forts, et une fenêtre ouverte n'en est pas
+            //  un. Ouvert, le FOND S'ÉCLAIRCIT d'un cran — la même
+            //  langue que le focus d'un champ — et l'icône reste
+            //  blanche. Fermé, la robe par défaut, même avec des
+            //  filtres actifs.
             className={`relative shrink-0 w-[46px] h-[46px] rounded-full
                        flex items-center justify-center transition-colors ${
                          filtresOuverts
-                           ? "bg-primaire/15 text-primaire"
+                           ? "bg-sombre-eleve-clair text-sombre-texte"
                            : "bg-sombre-eleve text-sombre-texte hover:bg-sombre-eleve-clair"
                        }`}
           >
@@ -852,16 +903,17 @@ export function MoteurTatouage({
           </button>
 
           {filtresOuverts && (
-            //  LE PANNEAU — la robe des fenêtres du site depuis la
-            //  nº 130 : fond carte, ni contour ni ombre. Dedans, LE
-            //  MÊME bloc que la page mobile : sélecteur à deux
-            //  positions, badges.
+            //  LE PANNEAU — la robe des fenêtres du web depuis la
+            //  nº 144-§3 : fond ÉCLAIRCI D'UN CRAN (`eleve`), ni
+            //  contour ni ombre — c'est la clarté qui le détache de la
+            //  page. Dedans, LE MÊME bloc que la page mobile, recalé
+            //  d'un niveau (`surPanneau`).
             <div
               className="absolute top-full right-0 z-30 mt-2
                          w-[min(420px,calc(100vw-32px))] rounded-2xl
-                         bg-sombre-carte p-5"
+                         bg-sombre-eleve p-5"
             >
-              {blocFiltres(criteres, annoncer)}
+              {blocFiltres(criteres, annoncer, true)}
             </div>
           )}
         </div>

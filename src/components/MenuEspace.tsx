@@ -296,9 +296,11 @@ export function MenuEspace({
       et les libellés partent d'un pixel différent — c'est ce qui
       faisait « bouger » Modification et Ma fiche par rapport à
       Sécurité et Déconnexion. */
+  //  ⚠️ LE SURVOL A GRIMPÉ D'UN CRAN (nº 144-§3) : la fenêtre web est
+  //  passée de `carte` à `eleve`, un survol `eleve` y serait invisible.
   const classeEntree =
     "flex w-full items-center gap-3 rounded-xl px-3 min-h-[46px] text-left " +
-    "text-[14.5px] font-semibold text-sombre-texte hover:bg-sombre-eleve " +
+    "text-[14.5px] font-semibold text-sombre-texte hover:bg-sombre-eleve-clair " +
     "transition-colors";
   // LES ICÔNES SORTENT DU GRIS DOUX : à 22 px, sur fond anthracite,
   // elles se devinaient plus qu'elles ne se lisaient. Elles prennent
@@ -407,7 +409,10 @@ export function MenuEspace({
            menu revient de lui-même à ses quatre entrées. */}
       {fiches.length > 0 && (
       <div
-        className="my-1.5 bg-sombre-eleve/70
+        //  ⚠️ `eleve-clair/70` depuis la nº 144-§3 : posé sur la fenêtre
+        //  `eleve`, l'ancien `eleve/70` disparaissait. Le contraste
+        //  relatif est LE MÊME qu'avant (≈ 6 points), mesuré.
+        className="my-1.5 bg-sombre-eleve-clair/70
                    px-2 py-2.5 flex flex-col gap-1"
       >
         {/* PAS DE TITRE DE GROUPE. « La fiche choisie » nommait ce que
@@ -441,8 +446,8 @@ export function MenuEspace({
             className={`flex w-full items-center gap-3 rounded-xl px-3
                        min-h-[54px] text-left transition-colors ${
                          selecteurOuvert
-                           ? "bg-sombre-bordure"
-                           : "bg-sombre-eleve-clair hover:bg-sombre-bordure"
+                           ? "bg-sombre-haut"
+                           : "bg-sombre-bordure hover:bg-sombre-haut"
                        }`}
           >
             <span className="min-w-0 flex-1">
@@ -459,12 +464,13 @@ export function MenuEspace({
                 </span>
               </span>
             </span>
+            {/*  ⚠️ LE CHEVRON NE ROSIT PLUS OUVERT (nº 144-§2) : la
+                 ROTATION dit déjà l'état, et le rose est réservé aux
+                 accents forts — pas aux fenêtres ouvertes. */}
             <IconeChevronBas
               taille={16}
-              classe={`shrink-0 transition-transform ${
-                selecteurOuvert
-                  ? "rotate-180 text-primaire"
-                  : "text-sombre-texte-doux"
+              classe={`shrink-0 transition-transform text-sombre-texte-doux ${
+                selecteurOuvert ? "rotate-180" : ""
               }`}
             />
           </button>
@@ -474,7 +480,7 @@ export function MenuEspace({
             //  elle le prolonge, elle ne peut pas être plus sombre.
             <div
               className="absolute left-0 right-0 top-full z-20 mt-1
-                         rounded-xl bg-sombre-bordure overflow-hidden"
+                         rounded-xl bg-sombre-haut overflow-hidden"
             >
               <ul className="max-h-[220px] overflow-y-auto overscroll-contain">
                 {fiches.map((entree) => {
@@ -628,12 +634,17 @@ export function MenuEspace({
           habillages (web sous le bouton, smartphone au centre). */}
       {ouvert && (
         <>
-          {/* WEB : la fenêtre sous le bouton, comme avant. */}
+          {/* WEB : la fenêtre sous le bouton, comme avant.
+              ⚠️ ÉCLAIRCIE D'UN CRAN (nº 144-§3) : `carte` se détachait
+              mal de la page — c'est l'ÉCLAIRCISSEMENT qui doit la
+              détacher, jamais un contour ni une ombre. Tout ce qui est
+              posé dessus a grimpé d'autant (bloc du portfolio,
+              sélecteur, survols). */}
           <div
             role="dialog"
             aria-label="Mon espace"
             className="mobile:hidden absolute top-full right-0 z-30 mt-2 w-[290px]
-                       rounded-2xl bg-sombre-carte"
+                       rounded-2xl bg-sombre-eleve"
           >
             {contenuMenu}
           </div>
