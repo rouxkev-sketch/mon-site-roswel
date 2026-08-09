@@ -3,12 +3,26 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node outils/demarrer.mjs",
+    "dev:brut": "next dev",
+    "verifier-installation": "node outils/verifier-installation.mjs",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:public": "node tests/pages-publiques.mjs",
+    "test:retour": "node tests/retour-liste.mjs",
+    "verif:p90": "node tests/verif-p90.mjs",
+    "verif:p91": "node tests/verif-p91.mjs",
+    "verif:p93": "node tests/verif-p93.mjs",
+    "verif:tout": "node tests/pages-publiques.mjs; node tests/verif-p90.mjs; node tests/verif-p91.mjs; node tests/verif-p93.mjs; node tests/retour-liste.mjs",
+    "archives:p92": "node tests/archives/verif-p92.mjs",
+    "archives:ipad": "node tests/archives/ipad-graphique.mjs",
+    "archives:web-double": "node tests/archives/mode-double-web.mjs",
+    "archives:cartes": "node tests/archives/cartes-artisan.mjs"
   },
   "dependencies": {
+    "@supabase/ssr": "0.12.0",
+    "@supabase/supabase-js": "2.110.2",
     "next": "16.2.10",
     "react": "19.2.4",
     "react-dom": "19.2.4"

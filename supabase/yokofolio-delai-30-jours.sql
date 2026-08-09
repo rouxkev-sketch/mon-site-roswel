@@ -1,0 +1,43 @@
+-- ============================================================
+--  YOKOFOLIO — LE DÉLAI DE SUPPRESSION PASSE À 30 JOURS
+--  (migration nº 23 — à passer APRÈS yokofolio-suppression-differee.sql)
+-- ============================================================
+--  À COLLER dans l'éditeur SQL de Supabase, puis « Run ».
+--  Se relance sans risque.
+--
+--  CE QUI CHANGE — ET CE QUI NE CHANGE PAS
+--  ----------------------------------------
+--  Le délai avant l'effacement définitif d'un compte passe de 21 à
+--  30 JOURS : c'est le standard du secteur, et il laisse un mois
+--  entier pour revenir sur une décision prise sur un coup de tête.
+--
+--  ⚠️ AUCUNE STRUCTURE NE BOUGE ICI. Le délai n'a jamais été écrit
+--  dans la base : chaque demande de suppression enregistre SA PROPRE
+--  échéance (`suppressions_comptes.purge_le`), calculée au moment de
+--  la demande par le code (DELAI_SUPPRESSION_JOURS, dans
+--  src/config/tatouage.ts). La vue `comptes_a_purger` se contente de
+--  comparer cette échéance à l'heure qu'il est.
+--
+--  CONSÉQUENCE VOULUE : les demandes DÉJÀ EN COURS gardent l'échéance
+--  qui a été ANNONCÉE à la personne (21 jours). On ne rallonge pas
+--  dans leur dos un délai déjà communiqué — les nouvelles demandes,
+--  elles, partent sur 30 jours.
+--
+--  Il ne reste donc qu'une chose à rectifier en base : le COMMENTAIRE
+--  de la vue, qui citait encore « 21 jours ». Un commentaire faux est
+--  un piège pour la prochaine personne qui lira le schéma.
+-- ============================================================
+
+comment on view public.comptes_a_purger is
+  'Les comptes dont le délai de suppression (30 jours pour les demandes faites à partir de cette migration) est écoulé — lus par /api/cron/purge-comptes.';
+
+-- ------------------------------------------------------------
+--  VÉRIFICATION (facultatif)
+-- ------------------------------------------------------------
+--  -- Le commentaire est-il bien à jour ?
+--  select obj_description('public.comptes_a_purger'::regclass, 'pg_class');
+--
+--  -- Les suppressions en cours et leur échéance (inchangées) :
+--  select courriel, demandee_le, purge_le,
+--         purge_le - now() as il_reste
+--    from public.suppressions_comptes order by purge_le;

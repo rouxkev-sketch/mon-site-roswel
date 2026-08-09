@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Hors ligne · Roswel</title>
+  <title>Hors ligne · YokoFolio</title>
   <!--
     Page affichée quand la connexion est coupée.
     Fichier autonome : les couleurs reprennent celles du fichier
-    de réglages central (src/config/roswel.ts).
+    de réglages central (src/config/tatouage.ts).
   -->
   <style>
     body {
@@ -23,14 +23,9 @@
       padding: 24px;
     }
     .carte { max-width: 320px; }
-    .icone {
+    .icone img {
       width: 72px;
       height: 72px;
-      border-radius: 18px;
-      background: linear-gradient(160deg, #FB7BA2, #EC3A6E);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
       margin-bottom: 20px;
     }
     h1 { font-size: 20px; margin: 0 0 8px; }
@@ -51,13 +46,12 @@
 <body>
   <div class="carte">
     <div class="icone">
-      <svg width="40" height="40" viewBox="0 0 512 512">
-        <path d="M136 270 L224 354 L376 176" fill="none" stroke="#fff"
-          stroke-width="58" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
+      <!-- Le logo définitif, mis en cache par le service worker
+           pour rester visible même sans connexion -->
+      <img src="/yokofolio-icone.png" alt="" width="72" height="72" />
     </div>
     <h1>Vous êtes hors ligne</h1>
-    <p>Impossible de joindre Roswel pour le moment. Vérifiez votre connexion internet puis réessayez.</p>
+    <p>Impossible de joindre YokoFolio pour le moment. Vérifiez votre connexion internet puis réessayez.</p>
     <button onclick="location.reload()">Réessayer</button>
   </div>
 </body>

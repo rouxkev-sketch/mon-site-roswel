@@ -1,0 +1,22 @@
+IMAGES DU SITE VITRINE (agence IA)
+==================================
+Déposer ici les fichiers ci-dessous. L'extension est libre :
+.png, .jpg, .jpeg ou .webp — le site trouve tout seul.
+
+  audit-ia-schema        Bloc « Analysez, optimisez, progressez. »
+  solutions-ia           Bloc « Des solutions conçues pour vous. »
+  formations-ia          Bloc « Des formations taillées pour vos équipes. »
+
+Exemple : public/images/agence/audit-ia-schema.png
+
+Tant qu'un fichier manque, le bloc affiche un cadre d'attente qui
+rappelle le nom exact — la mise en page ne bouge pas.
+
+Format conseillé : environ 1200 x 900 px (4:3) ou 1200 x 800 px (3:2).
+Les images sont affichées en pleine largeur de leur colonne, avec des
+coins arrondis ; une image plus haute que large passerait mal.
+
+PORTRAITS DE L'ÉQUIPE (facultatif)
+Même dossier. Renseigner le nom du fichier, sans extension, dans le
+champ `portrait` de EQUIPE.membres (src/config/agence.ts).
+Sans portrait, l'emplacement affiche les initiales. Format 4:5.

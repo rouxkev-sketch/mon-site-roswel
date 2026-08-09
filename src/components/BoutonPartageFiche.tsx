@@ -1,0 +1,569 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { EnteteModale, FenetreModale } from "@/components/FenetreModale";
+import {
+  IconeBulleMessage,
+  IconeEnveloppe,
+  IconeFacebook,
+  IconeLien,
+  IconePartage,
+  IconePartageIOS,
+  IconeWhatsApp,
+} from "@/components/Icones";
+import { COULEURS, MARQUE } from "@/config/roswel";
+
+/**
+ * VRAI APPAREIL MOBILE ?
+ * ----------------------
+ * La question n'est PAS « la fenêtre est-elle étroite ? » ni « le
+ * navigateur connaît-il navigator.share ? » : macOS connaît le partage
+ * natif, et un MacBook dont on rétrécit la fenêtre affiche la mise en
+ * page smartphone tout en restant un ordinateur. Deux conditions donc,
+ * et les deux à la fois :
+ *
+ *  1. une SIGNATURE DE NAVIGATEUR mobile (iOS, iPadOS, Android…) ;
+ *     l'iPad se déclare « Macintosh » depuis iPadOS 13 — seul son
+ *     nombre de points de contact le trahit ;
+ *  2. un POINTEUR PRINCIPAL TACTILE. Un PC portable à écran tactile
+ *     garde sa souris comme pointeur principal : il n'est donc jamais
+ *     pris pour un mobile.
+ *
+ * Aucune largeur de fenêtre n'intervient.
+ */
+function surAppareilMobile(): boolean {
+  if (typeof navigator === "undefined" || typeof window === "undefined") {
+    return false;
+  }
+  const signature = navigator.userAgent;
+  const mobileConnu =
+    /Android|iPhone|iPod|iPad|Windows Phone|IEMobile|BlackBerry|Opera Mini|Mobile/i.test(
+      signature
+    );
+  // iPadOS 13+ : se présente comme un Mac, mais un vrai Mac n'a AUCUN
+  // point de contact (il en annonce 0). Le second garde-fou ci-dessous
+  // écarte de toute façon un éventuel Mac relié à un écran tactile :
+  // sa souris resterait le pointeur principal.
+  const iPadDeguiseEnMac =
+    /Macintosh/i.test(signature) && navigator.maxTouchPoints > 0;
+  if (!mobileConnu && !iPadDeguiseEnMac) return false;
+
+  return (
+    navigator.maxTouchPoints > 0 &&
+    window.matchMedia("(pointer: coarse)").matches
+  );
+}
+
+/**
+ * LE BOUTON PARTAGE
+ * -----------------
+ * Le comportement dépend de l'APPAREIL RÉEL, jamais de la largeur de
+ * la fenêtre :
+ * - TÉLÉPHONE ou TABLETTE (iOS, iPadOS, Android) : ouvre la feuille de
+ *   partage NATIVE du système (Web Share API) — SMS, WhatsApp, Mail,
+ *   AirDrop… C'est le geste attendu là-bas, quel que soit l'affichage.
+ * - ORDINATEUR (macOS, Windows, Linux), Y COMPRIS en fenêtre étroite
+ *   affichant la mise en page smartphone : JAMAIS de fenêtre de
+ *   partage. Le lien est copié dans le presse-papiers et une petite
+ *   bulle « Lien copié ! » le confirme (2 s).
+ * Sur mobile, si la feuille native ÉCHOUE (partage refusé par le
+ * navigateur, données non partageables…), on ne laisse pas la personne
+ * les mains vides : repli sur la copie du lien. Une ANNULATION
+ * volontaire, elle, ne déclenche rien — c'est un choix, pas une panne.
+ *
+ * Deux habillages :
+ * - « fiche » : disque blanc posé sur la photo (comme le bouton retour) ;
+ *   partage la PAGE COURANTE (on est déjà sur la fiche) ;
+ * - « carte » : bouton carré aux coins arrondis, MÊME gabarit que les
+ *   boutons Appeler / Whatsapp (48 px, fond blanc, contour gris fin),
+ *   icône grise ; partage l'URL de la fiche indiquée par `cheminFiche`
+ *   (ex. « /artisan/hugo-blanc-plombier-ecully »), résolue sur
+ *   l'origine du site.
+ */
+/**
+ * À PARTIR DE CETTE LARGEUR, le partage passe par NOTRE fenêtre.
+ * 560 px : la même charnière que le bandeau de la fiche artisan, où
+ * la fenêtre de partage est née.
+ */
+export const LARGEUR_FENETRE_PARTAGE = 560;
+
+export function BoutonPartageFiche({
+  nomArtisan,
+  cheminFiche,
+  variante = "fiche",
+  couleurContour = COULEURS.bordureCarte,
+  sansContour = false,
+  bulleEnDessous = false,
+  avecFenetre = false,
+  metier,
+  commune,
+  marque = MARQUE.nom,
+  sombre = false,
+  contour = false,
+}: {
+  nomArtisan: string;
+  /** Chemin de la fiche à partager (variante « carte ») ; à défaut, la
+      page courante (variante « fiche »). */
+  cheminFiche?: string;
+  variante?: "fiche" | "carte";
+  couleurContour?: string;
+  /** AUCUN contour (variante « carte ») : fond blanc seul — le rendu du
+      bandeau de la fiche artisan ≥ 768 px. Les CARTES gardent le leur. */
+  sansContour?: boolean;
+  /** Bulle « Lien copié ! » SOUS le bouton au lieu d'au-dessus. Utile
+      quand le bouton est déjà tout en haut de son encadré (bandeau de
+      la fiche) : au-dessus, la bulle sortirait de la fiche. */
+  bulleEnDessous?: boolean;
+  /** OUVRE LA FENÊTRE DE PARTAGE — mais SEULEMENT à partir de
+      LARGEUR_FENETRE_PARTAGE (560 px). En dessous, le comportement
+      d'origine est conservé : feuille de partage du système sur
+      téléphone, sinon copie du lien. Le seuil est vérifié AU CLIC,
+      jamais au rendu : un même bouton peut ainsi servir sur toutes les
+      largeurs (c'est le cas de celui des cartes). */
+  avecFenetre?: boolean;
+  /** Métier et commune de l'artisan : ils nourrissent le message
+      pré-rempli du SMS et de l'e-mail. */
+  metier?: string;
+  commune?: string;
+  /** LE NOM DE MARQUE cité dans le message partagé. Par défaut celui
+      des artisans ; yokofolio passe le sien — un site ne partage pas
+      une fiche « sur » un produit qui n'est pas le sien. */
+  marque?: string;
+  /** Habillage SOMBRE (yokofolio) : disque anthracite translucide qui
+      tient aussi posé sur une photo — même famille que les boutons de
+      la barre. Les fiches artisans ne passent jamais cette option. */
+  sombre?: boolean;
+  /** Habillage CONTOUR (yokofolio, web) : cercle blanc autour de
+      l'icône blanche, fond de la couleur du site — le pendant exact du
+      bouton retour « contour » posé devant le fil d'Ariane. Au survol,
+      cercle et icône passent en rose. Prime sur `sombre`. */
+  contour?: boolean;
+}) {
+  const [copie, setCopie] = useState(false);
+  /** « Copié ! » du bouton intégré au champ de lien (fenêtre sombre). */
+  const [copieChamp, setCopieChamp] = useState(false);
+  const [fenetreOuverte, setFenetreOuverte] = useState(false);
+  // Le retour visuel DANS la fenêtre : « Lien copié » ou « Message
+  // copié », au même endroit dans les deux cas.
+  const [retour, setRetour] = useState<string | null>(null);
+  const declencheur = useRef<HTMLButtonElement>(null);
+
+  /** L'URL PUBLIQUE de la fiche : le chemin résolu sur l'origine du
+      site (https://roswel.fr/artisan/…), sinon la page courante. */
+  function urlFiche() {
+    return cheminFiche
+      ? new URL(cheminFiche, window.location.origin).href
+      : window.location.href;
+  }
+
+  /** Le message pré-rempli du SMS et de l'e-mail : nom, métier,
+      commune et lien — dans cet ordre. */
+  function messagePartage() {
+    const qualite = [metier, commune ? `à ${commune}` : null]
+      .filter(Boolean)
+      .join(" ");
+    return `${nomArtisan}${qualite ? ` — ${qualite}` : ""} sur ${marque} : ${urlFiche()}`;
+  }
+
+  /** Copie un texte dans le presse-papiers (lien ou message) */
+  async function copierTexte(texte: string) {
+    try {
+      await navigator.clipboard.writeText(texte);
+    } catch {
+      // navigateur trop ancien : sélection de secours
+      const zone = document.createElement("textarea");
+      zone.value = texte;
+      document.body.appendChild(zone);
+      zone.select();
+      document.execCommand("copy");
+      zone.remove();
+    }
+  }
+
+  /** Copie le lien et affiche la bulle « Lien copié ! » (2 s) —
+      le comportement historique, hors fenêtre. */
+  async function copierLeLien(url: string) {
+    await copierTexte(url);
+    setCopie(true);
+    setTimeout(() => setCopie(false), 2000);
+  }
+
+  /** Ouvre la fenêtre (et garde sous la main le bouton à qui rendre
+      le focus en la refermant). */
+  function ouvrirFenetre(evenement?: React.MouseEvent) {
+    evenement?.preventDefault();
+    evenement?.stopPropagation();
+    declencheur.current?.focus();
+    setRetour(null);
+    setFenetreOuverte(true);
+  }
+
+  function fermerFenetre() {
+    setFenetreOuverte(false);
+    setTimeout(() => setRetour(null), 200);
+  }
+
+  /** Un onglet neuf, sans lien retour vers notre page (sécurité) */
+  function ouvrirOnglet(adresse: string) {
+    window.open(adresse, "_blank", "noopener,noreferrer");
+  }
+
+  /** SMS : on tente d'ouvrir l'application de messages. Sur un
+      ORDINATEUR, ce type de lien ne mène souvent nulle part — aucune
+      application n'y est associée. On observe donc si la page perd la
+      main dans la seconde : si rien ne s'est passé, on copie le message
+      et on l'annonce au même endroit que « Lien copié ». */
+  function ouvrirSms() {
+    const texte = messagePartage();
+    let partie = false;
+    const marquer = () => {
+      partie = true;
+    };
+    window.addEventListener("blur", marquer, { once: true });
+    document.addEventListener("visibilitychange", marquer, { once: true });
+    window.location.href = `sms:?&body=${encodeURIComponent(texte)}`;
+    setTimeout(async () => {
+      window.removeEventListener("blur", marquer);
+      document.removeEventListener("visibilitychange", marquer);
+      if (partie) return;
+      await copierTexte(texte);
+      setRetour("Message copié");
+    }, 900);
+  }
+
+  /** E-mail : objet et corps pré-remplis */
+  function ouvrirEmail() {
+    const objet = `${nomArtisan} sur ${marque}`;
+    window.location.href = `mailto:?subject=${encodeURIComponent(
+      objet
+    )}&body=${encodeURIComponent(messagePartage())}`;
+  }
+
+  async function partager(evenement?: React.MouseEvent) {
+    // Le bouton peut vivre dans une zone cliquable : ne jamais ouvrir
+    // la fiche ni déclencher une navigation parente.
+    evenement?.preventDefault();
+    evenement?.stopPropagation();
+
+    // FENÊTRE DE PARTAGE (≥ 560 px) : elle remplace aussi bien la
+    // feuille du système que la copie silencieuse. Sous ce seuil —
+    // smartphone — rien ne change : la feuille native reste ce qu'il y
+    // a de mieux, elle donne accès à TOUTES les applications du
+    // téléphone. La mesure se fait ici, au clic, et non au rendu : le
+    // serveur ne connaît pas la largeur de l'écran, et un affichage
+    // qui en dépendrait provoquerait une incohérence au chargement.
+    if (avecFenetre && window.innerWidth >= LARGEUR_FENETRE_PARTAGE) {
+      ouvrirFenetre(evenement);
+      return;
+    }
+
+    const url = urlFiche();
+    const donnees = {
+      title: `${nomArtisan} sur ${marque}`,
+      text: `Découvrez ${nomArtisan} sur ${marque}`,
+      url,
+    };
+
+    // TÉLÉPHONE / TABLETTE uniquement : la feuille du système.
+    // Sur ordinateur, on ne la propose JAMAIS — même si le navigateur
+    // sait la faire (c'est le cas de macOS) et même en fenêtre étroite.
+    if (
+      surAppareilMobile() &&
+      navigator.share &&
+      navigator.canShare?.(donnees)
+    ) {
+      try {
+        await navigator.share(donnees);
+        return;
+      } catch (erreur) {
+        // ANNULATION volontaire : la personne a refermé la feuille,
+        // c'est un choix — on ne fait rien de plus.
+        if (erreur instanceof DOMException && erreur.name === "AbortError") {
+          return;
+        }
+        // Tout autre échec : on enchaîne sur la copie du lien.
+      }
+    }
+
+    // Ordinateur, ou repli après un partage natif en échec
+    await copierLeLien(url);
+  }
+
+
+  /** Les CINQ moyens de partage — partagés par les deux habillages de
+      la fenêtre (clair artisans, sombre yokofolio). `court` : le
+      libellé bref sous les icônes rondes de la fenêtre sombre. */
+  const actionsPartage = [
+    {
+      cle: "lien",
+      libelle: "Copier le lien",
+      court: "Copier",
+      icone: <IconeLien taille={20} />,
+      action: async () => {
+        await copierTexte(urlFiche());
+        setRetour("Lien copié");
+      },
+    },
+    {
+      cle: "whatsapp",
+      libelle: "WhatsApp",
+      court: "WhatsApp",
+      icone: <IconeWhatsApp taille={20} />,
+      action: () =>
+        ouvrirOnglet(`https://wa.me/?text=${encodeURIComponent(messagePartage())}`),
+    },
+    { cle: "sms", libelle: "SMS", court: "SMS", icone: <IconeBulleMessage taille={20} />, action: ouvrirSms },
+    { cle: "email", libelle: "E-mail", court: "E-mail", icone: <IconeEnveloppe taille={20} />, action: ouvrirEmail },
+    {
+      cle: "facebook",
+      libelle: "Facebook",
+      court: "Facebook",
+      icone: <IconeFacebook taille={20} />,
+      action: () =>
+        ouvrirOnglet(
+          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(urlFiche())}`
+        ),
+    },
+  ];
+
+  /** La fenêtre yokofolio ferme aussi à Échap (la coque claire des
+      artisans le fait via FenetreModale ; ici, la coque est à nous). */
+  const fenetreSombreActive = fenetreOuverte && avecFenetre && (sombre || contour);
+  useEffect(() => {
+    if (!fenetreSombreActive) return;
+    const surTouche = (evenement: KeyboardEvent) => {
+      if (evenement.key === "Escape") fermerFenetre();
+    };
+    window.addEventListener("keydown", surTouche);
+    return () => window.removeEventListener("keydown", surTouche);
+     
+  }, [fenetreSombreActive]);
+
+  /* ----- LA FENÊTRE DE PARTAGE, CHARTE SOMBRE (yokofolio) -----
+     L'ESPRIT YOUTUBE : titre + croix ; une RANGÉE HORIZONTALE
+     d'icônes rondes (Copier, WhatsApp, SMS, E-mail, Facebook) avec
+     leur libellé court dessous ; et SOUS la rangée, le lien complet
+     dans un champ avec son bouton « Copier » intégré — « Copié ! »
+     s'affiche sur place. Épuré, sombre, à nous. */
+  const fenetreSombre = fenetreSombreActive ? (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="titre-partage-sombre"
+      className="fixed inset-0 z-[70] flex items-center justify-center p-5"
+      onClick={fermerFenetre}
+    >
+      <div aria-hidden="true" className="absolute inset-0 bg-black/80" />
+      <div
+        onClick={(evenement) => evenement.stopPropagation()}
+        className="relative w-full max-w-[480px] rounded-2xl bg-sombre-carte p-6
+                   shadow-[0_24px_80px_rgba(0,0,0,0.6)]
+                   opacity-100 transition-opacity duration-200 starting:opacity-0"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <h2
+            id="titre-partage-sombre"
+            className="text-[17px] font-bold text-sombre-texte"
+          >
+            Partager cette fiche
+          </h2>
+          <button
+            type="button"
+            aria-label="Fermer"
+            onClick={fermerFenetre}
+            className="w-9 h-9 -mr-1.5 rounded-full flex items-center justify-center
+                       text-sombre-texte-doux hover:text-primaire transition-colors"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        {/* LA RANGÉE HORIZONTALE — une icône ronde par moyen, le
+            libellé court dessous. */}
+        <div className="mt-6 flex items-start justify-between gap-1">
+          {actionsPartage.map(({ cle, court, icone, action }) => (
+            <button
+              key={cle}
+              type="button"
+              onClick={action}
+              className="group flex w-[76px] flex-col items-center gap-2"
+            >
+              <span
+                className="w-12 h-12 rounded-full bg-sombre-eleve flex items-center
+                           justify-center text-white group-hover:text-primaire
+                           group-hover:bg-sombre-bordure/60 transition-colors"
+              >
+                {icone}
+              </span>
+              <span className="text-[11.5px] leading-tight text-sombre-texte-doux group-hover:text-sombre-texte transition-colors">
+                {court}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* LE LIEN COMPLET — dans son champ, bouton « Copier »
+            intégré : « Copié ! » s'affiche sur place. */}
+        <div
+          className="mt-6 flex items-center gap-2 rounded-xl border border-sombre-bordure
+                     bg-sombre-eleve pl-4 pr-1.5 py-1.5"
+        >
+          <span
+            className="min-w-0 flex-1 truncate text-[13px] text-sombre-texte-doux"
+            title={typeof window === "undefined" ? undefined : urlFiche()}
+          >
+            {typeof window === "undefined" ? "" : urlFiche()}
+          </span>
+          <button
+            type="button"
+            onClick={async () => {
+              await copierTexte(urlFiche());
+              setRetour("Lien copié");
+              setCopieChamp(true);
+              setTimeout(() => setCopieChamp(false), 2000);
+            }}
+            className="shrink-0 rounded-full bg-primaire hover:bg-primaire-fonce
+                       px-4 min-h-[36px] text-[13px] font-semibold text-white
+                       transition-colors"
+          >
+            {copieChamp ? "Copié !" : "Copier"}
+          </button>
+        </div>
+
+        <p
+          role="status"
+          aria-live="polite"
+          className="mt-3 h-5 text-center text-xs text-sombre-texte-doux"
+        >
+          {retour}
+        </p>
+      </div>
+    </div>
+  ) : null;
+
+  /* ----- LA FENÊTRE DE PARTAGE, CHARTE CLAIRE (artisans) -----
+     Même coque que « Signaler » (FenetreModale) : voile, encadré,
+     arrondis, ombre, largeur, Échap, clic extérieur, focus et blocage
+     du défilement. Seul le contenu diffère. */
+  const fenetre = avecFenetre && !(sombre || contour) ? (
+    <FenetreModale
+      ouvert={fenetreOuverte}
+      surFermeture={fermerFenetre}
+      idTitre="titre-partage"
+      largeur="moyenne"
+    >
+      <>
+        <EnteteModale
+          idTitre="titre-partage"
+          titre="Partager cette fiche"
+          surFermeture={fermerFenetre}
+        />
+
+        {/* Les cinq moyens de partage, dans cet ordre. Même gabarit
+            pour les cinq : contour fin, coins arrondis, fond blanc,
+            icône puis libellé, le tout aligné à gauche. La boîte de
+            l'icône a une largeur FIXE : les libellés tombent donc tous
+            sur la même verticale. Aucune couleur de marque — le gris
+            du site, comme le reste de la fiche. */}
+        <div className="mt-6 flex flex-col gap-3">
+          {actionsPartage.map(({ cle, libelle, icone, action }) => (
+            <button
+              key={cle}
+              type="button"
+              onClick={action}
+              className="w-full min-h-[52px] rounded-2xl border border-bordure bg-fond flex items-center gap-3 px-4 text-sm font-semibold text-encre hover:bg-fond-doux transition-colors"
+            >
+              <span className="w-5 shrink-0 flex justify-center text-encre-douce">
+                {icone}
+              </span>
+              {libelle}
+            </button>
+          ))}
+        </div>
+
+        {/* Le retour visuel — « Lien copié » comme « Message copié »
+            s'affichent ICI, au même endroit. La fenêtre reste ouverte :
+            on doit pouvoir lire la confirmation. */}
+        <p
+          role="status"
+          aria-live="polite"
+          className="mt-4 h-5 text-center text-xs text-encre-douce"
+        >
+          {retour}
+        </p>
+      </>
+    </FenetreModale>
+  ) : null;
+
+  if (variante === "carte") {
+    return (
+      <div className="relative shrink-0">
+        <button
+          ref={declencheur}
+          type="button"
+          onClick={partager}
+          aria-haspopup={avecFenetre ? "dialog" : undefined}
+          aria-label={`Partager la fiche de ${nomArtisan}`}
+          className={`w-12 h-12 rounded-xl bg-fond flex items-center justify-center text-encre-douce hover:bg-fond-doux active:scale-95 transition ${
+            sansContour ? "" : "border"
+          }`}
+          style={sansContour ? undefined : { borderColor: couleurContour }}
+        >
+          <IconePartageIOS taille={20} />
+        </button>
+
+        {copie && (
+          <span
+            role="status"
+            className={`absolute right-0 whitespace-nowrap rounded-full bg-encre text-white text-xs font-medium px-3 py-1.5 shadow-lg z-20 ${
+              bulleEnDessous ? "top-full mt-2" : "bottom-full mb-2"
+            }`}
+          >
+            Lien copié !
+          </span>
+        )}
+        {fenetre}
+        {fenetreSombre}
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative flex flex-col items-center">
+      {/* Un disque, trois habillages : blanc ombré (artisans), NOIR
+          TRANSLUCIDE (yokofolio, posé sur la photo — la recette EXACTE
+          des flèches du carrousel, pour que photo, flèches et partage
+          parlent d'une seule voix) ou cercle blanc sur le fond du site
+          (yokofolio, web). */}
+      <button
+        ref={declencheur}
+        type="button"
+        onClick={partager}
+        aria-haspopup={avecFenetre ? "dialog" : undefined}
+        aria-label={`Partager la fiche de ${nomArtisan}`}
+        className={
+          contour
+            ? "w-10 h-10 rounded-full border border-white bg-sombre-fond flex items-center justify-center text-white hover:border-primaire hover:text-primaire transition-colors"
+            : sombre
+              ? "w-10 h-10 rounded-full bg-sombre-fond/55 backdrop-blur flex items-center justify-center text-sombre-texte hover:bg-sombre-eleve/75 transition-colors"
+              : "w-11 h-11 rounded-full bg-white/95 shadow-md flex items-center justify-center text-encre active:scale-95 transition-transform"
+        }
+      >
+        <IconePartage taille={20} />
+      </button>
+
+      {copie && (
+        <span
+          role="status"
+          className="absolute top-12 right-0 whitespace-nowrap rounded-full bg-encre text-white text-xs font-medium px-3 py-1.5 shadow-lg"
+        >
+          Lien copié !
+        </span>
+      )}
+      {fenetre}
+      {fenetreSombre}
+    </div>
+  );
+}

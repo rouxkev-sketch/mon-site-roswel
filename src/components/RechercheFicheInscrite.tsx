@@ -1,0 +1,421 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { IconeCroix, IconeLoupe } from "@/components/Icones";
+import { sansRemplissageAuto } from "@/lib/champs-sans-remplissage";
+import { ligneCarte } from "@/lib/adresse";
+
+/**
+ * LA RECHERCHE INTERNE — « ton salon est-il déjà sur yokofolio ? »
+ * ================================================================
+ * Une barre posée AU-DESSUS du champ d'adresse. On y tape un nom ; la
+ * liste des fiches inscrites s'ouvre dessous ; on en choisit une, et
+ * l'adresse n'est plus à saisir — elle vient du salon.
+ *
+ * MÊME RYTHME QUE LE CHAMP DE LOCALISATION, et c'est voulu : deux
+ * caractères au minimum, une PAUSE DE FRAPPE avant d'interroger le
+ * serveur, la requête précédente annulée. Deux barres de recherche qui
+ * se répondent doivent se comporter pareil.
+ *
+ * LE PANNEAU RESTE DANS LE FLUX — pas de portail, pas de coordonnées :
+ * il est le frère suivant du champ, le navigateur le place dessous.
+ * C'est la leçon du menu de localité, appliquée d'emblée ici : rien
+ * ne peut passer par-dessus le champ, ni sortir de l'écran.
+ *
+ * RIEN N'EST OBLIGATOIRE : ne rien trouver est un cas NORMAL, pas un
+ * échec. La phrase le dit, et le champ d'adresse en dessous prend le
+ * relais.
+ */
+
+export type FicheInscrite = {
+  id: string;
+  nom: string;
+  slug: string;
+  ville_nom: string | null;
+  photo_profil: string | null;
+  /** L'adresse publique de la fiche : elle situe le mode d'exercice
+      de celui qui la choisit, sans qu'il ait rien à ressaisir. */
+  adresse?: string | null;
+  code_postal?: string | null;
+  region?: string | null;
+  pays?: string | null;
+  code_pays?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  lieu_id?: string | null;
+};
+
+/** Deux lettres : en dessous, la liste ne veut rien dire. */
+const SAISIE_MINIMUM = 2;
+/** La même pause que le champ de localisation — on ne cherche pas à
+    chaque lettre. */
+const PAUSE_FRAPPE_MS = 300;
+
+export function RechercheFicheInscrite({
+  type,
+  etablissement,
+  etiquette,
+  texteIndicatif,
+  choisie,
+  surChoix,
+  id,
+  exclure,
+  libelleExclu = "Déjà rattaché",
+  messageVide,
+  enErreur = false,
+}: {
+  /** « salon » quand on cherche un LIEU (salon ou studio privé) ;
+      « artiste » pour le chemin inverse, depuis le formulaire d'un
+      salon. C'est la colonne `type_fiche`. */
+  type: "salon" | "artiste";
+  /** ⚠️ LA NATURE DU LIEU (passe nº 121) — la colonne `etablissement`.
+      `type_fiche = 'salon'` désigne TOUS les lieux : un salon comme un
+      studio privé. Le mode « En studio » ne doit proposer QUE des
+      studios, « En salon » QUE des salons ; le guest et l'autre
+      adresse acceptent les deux, et ne passent donc rien ici. */
+  etablissement?: "salon" | "prive";
+  etiquette: string;
+  texteIndicatif: string;
+  /** La fiche déjà retenue, s'il y en a une. */
+  choisie: FicheInscrite | null;
+  surChoix: (fiche: FicheInscrite | null) => void;
+  id: string;
+  /** LES FICHES DÉJÀ RETENUES AILLEURS — elles restent VISIBLES dans
+      la liste, mais inertes, avec un mot qui dit pourquoi. Les faire
+      disparaître ferait croire qu'elles ne sont pas inscrites, et l'on
+      chercherait deux fois le même nom sans comprendre. */
+  exclure?: string[];
+  /** Ce mot, justement. ⚠️ « Déjà rattaché » PARTOUT (passe nº 121) :
+      l'équipe disait « déjà dans l'équipe » — avec une apostrophe mal
+      encodée, en prime. Deux listes qui font le même geste doivent
+      porter le même mot. */
+  libelleExclu?: string;
+  /** LA PHRASE QUAND ON NE TROUVE RIEN (passe nº 121) — elle nomme ce
+      qu'on cherchait : « Aucun studio trouvé », « Aucun artiste
+      trouvé »… Sans elle, un repli générique s'affiche. */
+  messageVide?: string;
+  /** LE MANQUE DU BLOC 1 (passe nº 116) : « Je confirme » sans lieu
+      encadre ce champ de ROUGE — il s'éteint dès qu'une réponse est
+      donnée (recherche OU adresse manuelle). */
+  enErreur?: boolean;
+}) {
+  const [texte, setTexte] = useState("");
+  const [resultats, setResultats] = useState<FicheInscrite[]>([]);
+  const [ouverte, setOuverte] = useState(false);
+  const [cherche, setCherche] = useState(false);
+  const requete = useRef(0);
+  /** LA ZONE « champ + panneau » — elle sert à savoir ce qui est
+      DEDANS quand on clique DEHORS (passe nº 121). */
+  const zone = useRef<HTMLDivElement>(null);
+
+  /* ---------- CLIQUER À CÔTÉ REFERME (passe nº 121) ----------
+     Le panneau de résultats restait ouvert indéfiniment : ni le clic
+     ailleurs, ni le toucher, ni Échap ne le fermaient — seul un choix
+     ou une nouvelle frappe. Tous les autres menus du site le font
+     (localité, menus déroulants) ; celui-ci avait été oublié.
+     `pointerdown` couvre la souris ET le doigt d'un seul écouteur. */
+  useEffect(() => {
+    if (!ouverte) return;
+    function auPointeurDehors(evenement: PointerEvent) {
+      if (!zone.current) return;
+      if (zone.current.contains(evenement.target as Node)) return;
+      setOuverte(false);
+    }
+    function auClavier(evenement: KeyboardEvent) {
+      if (evenement.key === "Escape") setOuverte(false);
+    }
+    document.addEventListener("pointerdown", auPointeurDehors);
+    document.addEventListener("keydown", auClavier);
+    return () => {
+      document.removeEventListener("pointerdown", auPointeurDehors);
+      document.removeEventListener("keydown", auClavier);
+    };
+  }, [ouverte]);
+
+  useEffect(() => {
+    const saisie = texte.trim();
+    // Trop court : on referme, mais PAS dans le corps de l'effet
+    // (React déconseille d'y poser un état — voir la règle
+    // react-hooks/set-state-in-effect). Le même minuteur s'en charge.
+    const minuteur = setTimeout(async () => {
+      if (saisie.length < SAISIE_MINIMUM) {
+        setResultats([]);
+        setOuverte(false);
+        return;
+      }
+      const numero = ++requete.current;
+      setCherche(true);
+      try {
+        const reponse = await fetch(
+          `/api/tatoueur/recherche-fiches?type=${type}` +
+            //  LA NATURE DU LIEU, quand elle est demandée (nº 121).
+            (etablissement ? `&etablissement=${etablissement}` : "") +
+            `&q=${encodeURIComponent(saisie)}`
+        );
+        const donnees = (await reponse.json()) as {
+          ok: boolean;
+          fiches?: FicheInscrite[];
+        };
+        if (numero !== requete.current) return; // réponse dépassée
+        setResultats(donnees.fiches ?? []);
+        setOuverte(true);
+      } catch {
+        if (numero === requete.current) {
+          setResultats([]);
+          setOuverte(true);
+        }
+      }
+      if (numero === requete.current) setCherche(false);
+    }, PAUSE_FRAPPE_MS);
+    return () => clearTimeout(minuteur);
+  }, [texte, type, etablissement]);
+
+  /* LA FICHE RETENUE — plus de champ, une pastille qui la nomme, et
+     une croix pour revenir en arrière. On ne laisse pas coexister
+     « ce que j'ai choisi » et « ce que je tape » : ce serait deux
+     vérités à l'écran. */
+  if (choisie) {
+    return (
+      <div>
+        {/* ⚠️ mb-3, ET SEULEMENT SI L'ÉTIQUETTE EXISTE (passe nº 106) :
+            « Ton équipe est-elle sur YokoFolio ? » collait à son champ,
+            et une étiquette vide laissait traîner sa marge. */}
+        {etiquette && (
+          <p className="mb-3 text-sm font-medium text-sombre-texte">{etiquette}</p>
+        )}
+        {/* ⚠️ NI CONTOUR NI TEINTE (passe nº 117, point 3). Cette
+            pastille portait un cadre rose à 45 % et un fond rose à
+            10 % : sur l'anthracite, un encadré cerné ET rempli de
+            rouge — exactement le dessin d'une erreur. On la choisit
+            juste après avoir vu les champs rougir, et l'on croyait que
+            le manque n'était pas levé. Il l'était : c'est le DESSIN
+            qui mentait. La charte tranche — aucun contour, un fond
+            d'un cran plus clair, le rose réservé aux badges
+            sélectionnés, au bouton final et à la ligne du sélecteur. */}
+        <div className="flex items-center gap-3 rounded-xl bg-sombre-eleve px-3 py-2.5">
+          <span
+            className="flex h-9 w-9 shrink-0 items-center justify-center
+                       overflow-hidden rounded-full bg-sombre-eleve"
+          >
+            {choisie.photo_profil ? (
+              /* eslint-disable-next-line @next/next/no-img-element --
+                 photo déposée par la fiche, servie telle quelle. */
+              <img
+                src={choisie.photo_profil}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <span aria-hidden="true" className="text-[13px] font-bold text-sombre-texte-doux">
+                {choisie.nom.trim().charAt(0).toUpperCase()}
+              </span>
+            )}
+          </span>
+          {/* ⚠️ LE NOM SEUL, SUR UNE LIGNE (passe nº 121). L'adresse
+              s'affichait dessous — elle avait DÉJÀ servi : c'est elle
+              qui a permis de distinguer les homonymes DANS LA LISTE de
+              résultats. Une fois le choix fait, elle ne décide plus
+              rien et casse l'alignement du nom avec le portrait. Le
+              nom est donc seul, et centré verticalement à côté de la
+              photo (`items-center` du contenant). */}
+          <span className="min-w-0 flex-1 truncate text-[14.5px] font-semibold text-sombre-texte">
+            {choisie.nom}
+          </span>
+          <button
+            type="button"
+            aria-label="Retirer ce choix"
+            title="Retirer ce choix"
+            onClick={() => {
+              surChoix(null);
+              setTexte("");
+              setResultats([]);
+              setOuverte(false);
+            }}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full
+                       text-sombre-texte-doux transition-colors
+                       hover:bg-sombre-eleve hover:text-sombre-texte"
+          >
+            <IconeCroix taille={15} />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative" ref={zone}>
+      {/* Même règle qu'au-dessus : mb-3, et pas d'étiquette vide. */}
+      {etiquette && (
+        <label
+          htmlFor={id}
+          className="mb-3 block text-sm font-medium text-sombre-texte"
+        >
+          {etiquette}
+        </label>
+      )}
+      <div className="relative">
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2
+                     text-sombre-texte-doux"
+        >
+          <IconeLoupe taille={17} />
+        </span>
+        <input
+          id={id}
+          type="text"
+          // LE REMPLISSAGE AUTOMATIQUE EST NEUTRALISÉ ICI AUSSI : un
+          // champ nommé « chercher un artiste » attirait la fiche de
+          // contact du navigateur par-dessus nos suggestions.
+          {...sansRemplissageAuto(id)}
+          value={texte}
+          placeholder={texteIndicatif}
+          onChange={(evenement) => setTexte(evenement.target.value)}
+          onFocus={() => {
+            if (resultats.length > 0) setOuverte(true);
+          }}
+          //  ⚠️ PLUS DE CONTOUR NI D'ANNEAU AU FOCUS (passe nº 116) —
+          //  ce champ avait échappé à la règle de la nº 112 : le fond
+          //  s'éclaircit au focus, et la bordure (dans la boîte, donc
+          //  sans décalage) ne s'allume qu'en ROUGE, pour un manque.
+          //  ⚠️ `pr-11` (passe nº 121) : la croix de vidage occupe la
+          //  droite du champ — le texte ne doit jamais passer dessous.
+          className={`w-full min-h-[48px] rounded-xl border
+                     bg-sombre-eleve pl-10 pr-11 text-base text-sombre-texte
+                     placeholder:text-sombre-texte-doux outline-none
+                     transition-colors focus:bg-sombre-eleve-clair ${
+                       enErreur ? "border-erreur" : "border-transparent"
+                     }`}
+        />
+        {/* ---------- LA CROIX DE VIDAGE (passe nº 121) ----------
+            Une recherche infructueuse s'effaçait LETTRE PAR LETTRE, au
+            doigt, sur un clavier qui masque la moitié de l'écran. La
+            croix n'apparaît qu'une fois quelque chose de tapé, vide le
+            champ ET referme le panneau d'un seul geste. Traitement
+            discret : ni capsule, ni rose — le gris doux des icônes,
+            qui s'éclaircit au survol. */}
+        {texte.length > 0 && (
+          <button
+            type="button"
+            aria-label="Vider la recherche"
+            title="Vider la recherche"
+            onClick={() => {
+              setTexte("");
+              setResultats([]);
+              setOuverte(false);
+              document.getElementById(id)?.focus();
+            }}
+            className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2
+                       items-center justify-center rounded-full
+                       text-sombre-texte-doux transition-colors
+                       hover:text-sombre-texte"
+          >
+            <IconeCroix taille={14} />
+          </button>
+        )}
+      </div>
+
+      {ouverte && (
+        <div
+          className="mt-1.5 max-h-[280px] overflow-y-auto overscroll-contain
+                     rounded-xl border border-sombre-bordure bg-sombre-carte
+                     defilement-visible"
+        >
+          {resultats.length === 0 ? (
+            //  ⚠️ LE MESSAGE NOMME CE QU'ON CHERCHAIT (passe nº 121) :
+            //  « Aucun studio trouvé », « Aucun salon trouvé »,
+            //  « Aucun artiste trouvé »… Il était écrit une fois pour
+            //  toutes et parlait de « studio » même en cherchant un
+            //  artiste. Chaque appelant fournit le sien ; le repli ne
+            //  sert qu'aux cas non nommés.
+            <p className="px-4 py-3 text-[13px] leading-relaxed text-sombre-texte-doux">
+              {cherche
+                ? "Recherche en cours…"
+                : (messageVide ??
+                  (type === "salon"
+                    ? "Aucun studio / salon trouvé"
+                    : "Aucun artiste trouvé"))}
+            </p>
+          ) : (
+            <ul>
+              {resultats.map((fiche) => {
+                const deja = (exclure ?? []).includes(fiche.id);
+                return (
+                <li key={fiche.id}>
+                  <button
+                    type="button"
+                    disabled={deja}
+                    onClick={() => {
+                      surChoix(fiche);
+                      setOuverte(false);
+                      setTexte("");
+                    }}
+                    //  ⚠️ PLUS DE FLASH ROSE À L'APPUI (passe nº 121).
+                    //  `active:bg-primaire/20` colorait la ligne en
+                    //  rose au toucher — et le rose RESTAIT une seconde
+                    //  sur téléphone, là où le web ne montrait rien.
+                    //  Le rose est réservé aux badges sélectionnés, au
+                    //  bouton final et à la ligne du sélecteur : une
+                    //  ligne de liste qu'on effleure n'est aucun des
+                    //  trois. L'appui éclaircit le fond d'un cran,
+                    //  comme le survol, ni plus ni moins.
+                    className={`flex w-full items-center gap-3 px-3 py-2.5 text-left
+                               transition-colors ${
+                                 deja
+                                   ? "opacity-45 cursor-not-allowed"
+                                   : "hover:bg-sombre-eleve active:bg-sombre-eleve"
+                               }`}
+                  >
+                    <span
+                      className="flex h-9 w-9 shrink-0 items-center justify-center
+                                 overflow-hidden rounded-full bg-sombre-eleve"
+                    >
+                      {fiche.photo_profil ? (
+                        /* eslint-disable-next-line @next/next/no-img-element --
+                           photo déposée par la fiche, servie telle quelle. */
+                        <img
+                          src={fiche.photo_profil}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <span
+                          aria-hidden="true"
+                          className="text-[13px] font-bold text-sombre-texte-doux"
+                        >
+                          {fiche.nom.trim().charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[14.5px] font-medium text-sombre-texte">
+                        {fiche.nom}
+                      </span>
+                      {ligneCarte(fiche) && (
+                        <span className="block truncate text-[12.5px] text-sombre-texte-doux">
+                          {ligneCarte(fiche)}
+                        </span>
+                      )}
+                    </span>
+                    {deja && (
+                      //  ⚠️ SANS CONTOUR (charte) : le fond d'un cran
+                      //  plus clair suffit à détacher le mot.
+                      <span
+                        className="shrink-0 rounded-full bg-sombre-eleve
+                                   px-2.5 py-[3px] text-[11.5px] font-semibold
+                                   text-sombre-texte-doux"
+                      >
+                        {libelleExclu}
+                      </span>
+                    )}
+                  </button>
+                </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

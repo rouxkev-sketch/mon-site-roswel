@@ -1,0 +1,33 @@
+CE DOSSIER CONTIENT LES IMAGES OFFICIELLES DU SITE
+==================================================
+
+1) LES DEUX LOGOS DÉFINITIFS (fichiers INTOUCHABLES)
+----------------------------------------------------
+    roswel-logo.png    → le logo complet (icône + nom « roswel »)
+    roswel-icone.png   → l'icône seule (carré rose, coche blanche)
+
+Les pages du produit ARTISANS les utilisent automatiquement :
+menu, pages légales, pages admin. L'ONGLET DU NAVIGATEUR (favicon),
+l'écran d'accueil du téléphone (PWA) et la page « hors ligne »
+affichent, eux, l'icône de yokofolio (public/yokofolio-icone.png) :
+c'est yokofolio qui occupe la racine du site.
+
+RÈGLE PERMANENTE : ces deux fichiers ne doivent JAMAIS être
+régénérés, remplacés ou modifiés par un outil ou une livraison
+(même règle que .env.local). Les zips de livraison ne les
+contiennent pas : vos fichiers locaux font foi. Pensez simplement
+à les inclure quand vous envoyez le projet sur GitHub, pour que
+le site en ligne les affiche.
+
+2) LA PHOTO D'ACCUEIL
+---------------------
+Enregistrer la photo de l'équipe d'artisans (l'image « Accueil »)
+dans ce dossier, avec EXACTEMENT ce nom :
+
+    equipe-artisans.jpg
+
+Le site l'affichera automatiquement en haut de la page d'accueil.
+(Tant qu'elle n'est pas là, un fond beige assorti prend sa place.)
+
+Conseil : une largeur d'environ 1300 à 1600 pixels suffit — plus
+lourd ralentirait le chargement mobile.

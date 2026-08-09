@@ -1,0 +1,448 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { DELAI_SUPPRESSION_JOURS } from "@/config/tatouage";
+import { sansRemplissageAuto } from "@/lib/champs-sans-remplissage";
+import {
+  chargerFichesDuCompte,
+  type FicheDuCompte,
+} from "@/lib/fiches-compte";
+import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
+import { Patience, SqueletteLignes } from "@/components/Squelette";
+
+/**
+ * LES SUPPRESSIONS — en bas de la page Sécurité
+ * =====================================================
+ * DEUX ACTIONS, et il ne faut jamais les confondre :
+ *
+ *  1. SUPPRIMER UNE FICHE — on choisit LAQUELLE. Elle disparaît du
+ *     public tout de suite ; l'effacement définitif attend 30 jours.
+ *     ⚠️ LA MODIFIER N'ANNULE PLUS RIEN (passe nº 133) : la
+ *     suppression se défaisait toute seule au premier enregistrement,
+ *     un geste destructeur annulé par un geste anodin, sans que rien
+ *     ne le dise. Deux portes désormais, toutes deux explicites :
+ *     « Annuler la suppression » ici, ou le bouton « Réactiver mon
+ *     portfolio » qui attend sur la fiche désactivée.
+ *     Le compte, lui, n'est pas touché : les autres fiches vivent.
+ *
+ *  2. SUPPRIMER LE COMPTE — le même délai de 30 jours, la même
+ *     réactivation automatique à la reconnexion, et il emporte
+ *     TOUTES les fiches.
+ *
+ * TANT QUE LE DÉLAI COURT, « ANNULER LA SUPPRESSION » est visible ici
+ * — et une notification en garde la trace. Rien ne se joue en
+ * silence.
+ *
+ * L'ENCADRÉ N'EST PLUS ROUGE (passe nº 129). Il portait un liseré et
+ * un fond rouge dilués, une pastille et une corbeille, et deux filets
+ * de séparation : beaucoup de signaux pour une zone où l'on ne clique
+ * de toute façon rien sans confirmer par écrit. Il prend la robe des
+ * autres blocs de la page. Le rouge reste là où il désigne vraiment
+ * un geste irréversible : le mot « Supprimer » des boutons, et la
+ * fenêtre de confirmation.
+ */
+export function BlocSuppressions() {
+  const { fiches, recharger, chargement } = useFichesDuCompte();
+
+  /** Quelle fiche est en cours de suppression ? (une seule fenêtre à
+      la fois — celle de la fiche, ou celle du compte). */
+  const [ficheAConfirmer, setFicheAConfirmer] = useState<FicheDuCompte | null>(
+    null
+  );
+  const [compteAConfirmer, setCompteAConfirmer] = useState(false);
+  const [enCours, setEnCours] = useState(false);
+  const [erreur, setErreur] = useState<string | null>(null);
+  const [confirmation, setConfirmation] = useState("");
+
+  const enSuppression = fiches.filter((f) => f.purge_le);
+
+  async function demanderSuppressionFiche(id: string, annuler: boolean) {
+    setEnCours(true);
+    setErreur(null);
+    try {
+      const reponse = await fetch("/api/tatoueur/supprimer-fiche", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, annuler }),
+      });
+      const donnees = (await reponse.json().catch(() => null)) as {
+        ok?: boolean;
+        message?: string;
+      } | null;
+      if (!reponse.ok || !donnees?.ok) {
+        throw new Error(donnees?.message ?? "L'opération n'a pas abouti.");
+      }
+      setFicheAConfirmer(null);
+      setConfirmation("");
+      await recharger();
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : "L'opération n'a pas abouti.");
+    } finally {
+      setEnCours(false);
+    }
+  }
+
+  async function supprimerLeCompte() {
+    if (confirmation.trim().toUpperCase() !== "SUPPRIMER") return;
+    setEnCours(true);
+    setErreur(null);
+    try {
+      const reponse = await fetch("/api/tatoueur/supprimer-compte", {
+        method: "POST",
+      });
+      const donnees = (await reponse.json().catch(() => null)) as {
+        ok?: boolean;
+        message?: string;
+      } | null;
+      if (!reponse.ok || !donnees?.ok) {
+        throw new Error(donnees?.message ?? "La suppression n'a pas abouti.");
+      }
+      try {
+        await creerClientSupabaseNavigateur().auth.signOut();
+      } catch {
+        // Session déjà invalide : c'est le but.
+      }
+      setCompteAConfirmer(false);
+      window.location.assign("/");
+    } catch (e) {
+      setErreur(
+        e instanceof Error ? e.message : "La suppression n'a pas abouti."
+      );
+    } finally {
+      setEnCours(false);
+    }
+  }
+
+  return (
+    <section>
+      {/* PLUS DE CORBEILLE NI DE PHRASE D'INTRODUCTION (nº 129) ; et
+          depuis la nº 130 le TITRE VIT AU-DESSUS de l'encadré, comme
+          tous ceux de la page — aligné sur le texte de la carte, à la
+          grammaire de Section (formulaire, nº 125/128). */}
+      <div className="px-4 sm:px-7">
+        <h2 className="text-[18px] font-semibold tracking-tight text-sombre-texte">
+          Supprimer
+        </h2>
+      </div>
+      {/* UNE SEULE COLONNE, UN SEUL ÉCART (passe nº 134) : 16 px entre
+          chaque ligne — exactement la marge qui sépare deux champs du
+          bloc « Changer de mot de passe » (gap-4). Les intertitres
+          « Supprimer un portfolio » et « Supprimer le compte » ont
+          disparu : chaque ligne porte son nom, le titre du bloc suffit. */}
+      <div className="mt-3 flex flex-col gap-4 bg-sombre-carte rounded-2xl px-4 py-6 sm:rounded-3xl sm:px-7 sm:py-7">
+
+      {/* ---------- LES SUPPRESSIONS EN COURS ----------
+          En tête, parce que c'est ce qui presse : le délai court.
+          SEULES LIGNES À DEUX ÉTAGES : la date de l'effacement
+          définitif est une information qu'on ne peut pas taire. */}
+      {enSuppression.length > 0 && (
+        <div className="flex flex-col gap-4">
+          {enSuppression.map((fiche) => (
+            <div
+              key={fiche.id}
+              className="flex flex-wrap items-center gap-x-4 gap-y-2
+                         rounded-xl bg-sombre-eleve px-4 py-2.5 min-h-[54px]"
+            >
+              <span className="min-w-0 flex-1">
+                <span className="block text-[14px] font-semibold text-sombre-texte">
+                  {fiche.nom}
+                </span>
+                <span className="block text-[12.5px] text-sombre-texte-doux">
+                  Suppression définitive le{" "}
+                  {new Date(fiche.purge_le as string).toLocaleDateString(
+                    "fr-FR"
+                  )}
+                </span>
+              </span>
+              <button
+                type="button"
+                disabled={enCours}
+                onClick={() => demanderSuppressionFiche(fiche.id, true)}
+                className="rounded-full bg-sombre-eleve-clair px-4 min-h-[38px]
+                           text-[13px] font-semibold text-sombre-texte
+                           hover:text-primaire
+                           transition-colors disabled:opacity-50"
+              >
+                Annuler la suppression
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ---------- LES PORTFOLIOS, UN PAR LIGNE ----------
+          LE NOM, ET RIEN D'AUTRE (nº 134) : la pastille et l'état
+          (« En validation », « En ligne ») encombraient une ligne dont
+          le seul enjeu est DE QUEL portfolio on parle — l'état se lit
+          dans le menu « Mon espace ». Chaque ligne prend la hauteur
+          des champs du bloc « Méthode de connexion » (54 px). */}
+      {chargement ? (
+        //  La silhouette des lignes qui viennent (passe nº 118) —
+        //  `eleve` : on est DANS une carte, le ton monte d'un cran.
+        <Patience>
+          <SqueletteLignes nombre={2} ton="eleve" />
+        </Patience>
+      ) : fiches.length === 0 ? (
+        <p className="text-[13px] text-sombre-texte-doux">
+          Aucun portfolio à supprimer.
+        </p>
+      ) : (
+        <ul className="flex flex-col gap-4">
+          {fiches.map((fiche) => (
+            <li
+              key={fiche.id}
+              className="flex items-center gap-x-4
+                         rounded-xl bg-sombre-eleve px-4 min-h-[54px]"
+            >
+              <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-sombre-texte">
+                {fiche.nom}
+              </span>
+              <button
+                type="button"
+                disabled={Boolean(fiche.purge_le)}
+                onClick={() => {
+                  setErreur(null);
+                  setFicheAConfirmer(fiche);
+                }}
+                className="shrink-0 rounded-full px-4 min-h-[38px] text-[13px] font-semibold
+                           text-erreur/85 hover:text-erreur transition-colors
+                           disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Supprimer
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* ---------- LE COMPTE — LA MÊME LIGNE QUE LES PORTFOLIOS ----
+          (nº 134) : même encadré, même hauteur, le titre à gauche et
+          « Supprimer » à l'opposé. Les deux phrases d'explication ont
+          disparu — ce qui se passe (le délai, l'annulation) se lit
+          dans la fenêtre de confirmation, au moment où ça compte. */}
+      <div
+        className="flex items-center gap-x-4
+                   rounded-xl bg-sombre-eleve px-4 min-h-[54px]"
+      >
+        <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-sombre-texte">
+          Supprimer le compte
+        </span>
+        <button
+          type="button"
+          onClick={() => {
+            setConfirmation("");
+            setErreur(null);
+            setCompteAConfirmer(true);
+          }}
+          className="shrink-0 rounded-full px-4 min-h-[38px] text-[13px] font-semibold
+                     text-erreur/85 hover:text-erreur transition-colors"
+        >
+          Supprimer
+        </button>
+      </div>
+
+      {erreur && (
+        <p
+          role="alert"
+          className="rounded-xl border border-erreur/50 bg-erreur/10
+                     px-4 py-3 text-[13px] leading-relaxed text-sombre-texte"
+        >
+          {erreur}
+        </p>
+      )}
+      </div>
+
+      {/* ---------- LA CONFIRMATION D'UNE FICHE ---------- */}
+      {ficheAConfirmer && (
+        <FenetreConfirmation
+          titre={`Supprimer « ${ficheAConfirmer.nom} » ?`}
+          onFermer={() => setFicheAConfirmer(null)}
+        >
+          {/*  ⚠️ « OU SUR LA FICHE DE TON PORTFOLIO » — PLUS « modifie
+               simplement » (passe nº 133) : modifier un portfolio ne
+               réactive plus rien. La seule autre porte est le bouton
+               « Réactiver mon portfolio », qui attend sur la fiche
+               désactivée (voir FormulaireFiche). */}
+          <p className="mt-2 text-[14px] leading-relaxed text-sombre-texte-doux">
+            Le portfolio disparaît du public tout de suite, et sera
+            définitivement supprimé dans {DELAI_SUPPRESSION_JOURS} jours —
+            photos comprises.
+          </p>
+          <p className="mt-2 text-[14px] leading-relaxed text-sombre-texte-doux">
+            Tu changes d&apos;avis&nbsp;? Annule ici, ou sur la fiche de ton
+            portfolio&nbsp;: la suppression s&apos;arrête d&apos;elle-même.
+          </p>
+          <p className="mt-2 text-[14px] leading-relaxed text-sombre-texte-doux">
+            Ton compte et tes autres portfolios ne bougent pas.
+          </p>
+          {/* LA RÈGLE POSITIF/NÉGATIF (nº 130, comme la fenêtre de
+              retour) : l'action de la fenêtre en CAPSULE PLEINE
+              LARGEUR — rouge, c'est une destruction — et « Annuler »
+              en TEXTE BRUT dessous. Plus de deux capsules côte à
+              côte qui se disputaient le geste. */}
+          <button
+            type="button"
+            disabled={enCours}
+            onClick={() =>
+              demanderSuppressionFiche(ficheAConfirmer.id, false)
+            }
+            className="mt-6 inline-flex w-full items-center justify-center
+                       min-h-[50px] rounded-full bg-erreur text-white
+                       font-semibold transition-opacity disabled:opacity-40"
+          >
+            {enCours ? "Un instant…" : "Supprimer le portfolio"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setFicheAConfirmer(null)}
+            className="mt-3 inline-flex w-full items-center justify-center
+                       min-h-[44px] text-[14px] text-sombre-texte-doux
+                       hover:text-sombre-texte transition-colors"
+          >
+            Annuler
+          </button>
+        </FenetreConfirmation>
+      )}
+
+      {/* ---------- LA CONFIRMATION DU COMPTE — écrire SUPPRIMER ---- */}
+      {compteAConfirmer && (
+        <FenetreConfirmation
+          titre="Supprimer ton compte ?"
+          onFermer={() => setCompteAConfirmer(false)}
+        >
+          {/* TROIS PHRASES COURTES (nº 129) : ce qui se passe, comment
+              revenir en arrière, ce qu'il faut taper. Le MÉCANISME ne
+              change pas — il faut toujours écrire SUPPRIMER. */}
+          <p className="mt-2 text-[14px] leading-relaxed text-sombre-texte-doux">
+            Ton compte et tes portfolios seront masqués immédiatement, puis
+            supprimés définitivement dans {DELAI_SUPPRESSION_JOURS} jours.
+          </p>
+          <p className="mt-2 text-[14px] leading-relaxed text-sombre-texte-doux">
+            Tu peux annuler en te reconnectant avant ce délai.
+          </p>
+          <p className="mt-2 text-[14px] leading-relaxed text-sombre-texte-doux">
+            Saisis <strong className="text-sombre-texte">SUPPRIMER</strong> pour
+            confirmer.
+          </p>
+          <input
+            type="text"
+            {...sansRemplissageAuto("confirmation-suppression")}
+            value={confirmation}
+            onChange={(e) => setConfirmation(e.target.value)}
+            placeholder="SUPPRIMER"
+            aria-label="Écris SUPPRIMER pour confirmer"
+            className="mt-4 w-full min-h-[48px] rounded-xl border border-transparent
+                       bg-sombre-eleve px-4 text-base text-sombre-texte
+                       placeholder:text-sombre-texte-doux outline-none
+                       transition-colors focus:bg-sombre-eleve-clair"
+          />
+          <button
+            type="button"
+            onClick={supprimerLeCompte}
+            disabled={
+              enCours || confirmation.trim().toUpperCase() !== "SUPPRIMER"
+            }
+            className="mt-6 inline-flex w-full items-center justify-center
+                       min-h-[50px] rounded-full bg-erreur text-white
+                       font-semibold transition-opacity
+                       disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {enCours ? "Un instant…" : "Supprimer"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setCompteAConfirmer(false)}
+            className="mt-3 inline-flex w-full items-center justify-center
+                       min-h-[44px] text-[14px] text-sombre-texte-doux
+                       hover:text-sombre-texte transition-colors"
+          >
+            Annuler
+          </button>
+        </FenetreConfirmation>
+      )}
+    </section>
+  );
+}
+
+/** La fenêtre de confirmation — une seule robe pour les deux gestes. */
+function FenetreConfirmation({
+  titre,
+  onFermer,
+  children,
+}: {
+  titre: string;
+  onFermer: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={titre}
+      className="fixed inset-0 z-[80] flex items-center justify-center p-5"
+    >
+      <div
+        aria-hidden="true"
+        onClick={onFermer}
+        className="absolute inset-0 bg-black/80"
+      />
+      <div className="relative w-full max-w-[440px] rounded-2xl bg-sombre-carte p-6 sm:p-7 text-left">
+        <h2 className="text-lg font-bold text-sombre-texte">{titre}</h2>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/** Les fiches du compte, rechargeables — la liste que les deux
+    actions consultent. La lecture est ASYNCHRONE (elle ne pose son
+    résultat qu'au retour du serveur) : rien n'est écrit dans le corps
+    de l'effet, ce que React déconseille. */
+function useFichesDuCompte() {
+  const [fiches, setFiches] = useState<FicheDuCompte[]>([]);
+  const [chargement, setChargement] = useState(true);
+
+  const recharger = useCallback(async () => {
+    try {
+      const supabase = creerClientSupabaseNavigateur();
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) {
+        setFiches([]);
+        return;
+      }
+      setFiches(await chargerFichesDuCompte(supabase, data.user.id));
+    } catch {
+      setFiches([]);
+    } finally {
+      setChargement(false);
+    }
+  }, []);
+
+  // La première lecture, à l'ouverture de la page. On passe par une
+  // fonction asynchrone : rien n'est posé dans le corps de l'effet,
+  // tout attend la réponse du serveur.
+  useEffect(() => {
+    let abandonne = false;
+    (async () => {
+      try {
+        const supabase = creerClientSupabaseNavigateur();
+        const { data } = await supabase.auth.getUser();
+        if (abandonne) return;
+        const liste = data.user
+          ? await chargerFichesDuCompte(supabase, data.user.id)
+          : [];
+        if (!abandonne) {
+          setFiches(liste);
+          setChargement(false);
+        }
+      } catch {
+        if (!abandonne) setChargement(false);
+      }
+    })();
+    return () => {
+      abandonne = true;
+    };
+  }, []);
+
+  return { fiches, recharger, chargement };
+}

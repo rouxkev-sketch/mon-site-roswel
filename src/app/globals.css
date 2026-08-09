@@ -8,6 +8,31 @@
  * Ce bloc les rend simplement utilisables dans les classes Tailwind :
  * ex. "bg-primaire", "text-encre", "border-bordure", etc.
  */
+/* LE PALIER DES TRÈS GRANDS ÉCRANS — 104 rem, soit 1664 px.
+   Deux précautions, et les deux comptent :
+   1. c'est un palier NOMMÉ, pas un palier improvisé dans les classes
+      (min-[1664px]:…) — ceux-là sortent AVANT tous les autres dans la
+      feuille de style, donc la règle « 2xl » repassait après eux ;
+   2. il est exprimé en REM, comme les paliers d'origine (40rem…96rem).
+      Mélanger les unités empêche Tailwind de les ranger par largeur —
+      et le palier retombait avant « 2xl », sans effet.
+   Sans ces deux points, la sixième colonne de cartes n'apparaissait
+   jamais sur les très grands écrans. */
+@theme {
+  --breakpoint-3xl: 104rem;
+}
+
+/* L'AFFICHAGE MOBILE EST RÉSERVÉ AUX VRAIS MOBILES (yokofolio).
+   La bascule ne se fait plus par LARGEUR de fenêtre mais par APPAREIL :
+   un petit script de la mise en page (tatouage) pose, avant la
+   peinture, `data-appareil="mobile"` (pointeur grossier — téléphones,
+   tablettes) ou `data-appareil="web"` (souris) sur <html>. La variante
+   `mobile:` s'applique alors quel que soit le rétrécissement de la
+   fenêtre : en web étroit, l'interface WEB s'adapte, elle ne se
+   déguise plus en smartphone. Sans JavaScript, l'attribut manque et
+   c'est l'interface web qui s'affiche (le meilleur défaut). */
+@custom-variant mobile (&:where([data-appareil="mobile"], [data-appareil="mobile"] *));
+
 @theme inline {
   --color-primaire: var(--rw-primaire);
   --color-primaire-fonce: var(--rw-primaire-fonce);
@@ -16,23 +41,519 @@
   --color-degrade-fin: var(--rw-degrade-fin);
   --color-fond: var(--rw-fond);
   --color-fond-doux: var(--rw-fond-doux);
+  --color-fond-page: var(--rw-fond-page);
+  --color-bordure-carte-claire: var(--rw-bordure-carte-claire);
+  --color-bordure-carte: var(--rw-bordure-carte);
   --color-encre: var(--rw-encre);
   --color-encre-douce: var(--rw-encre-douce);
   --color-bordure: var(--rw-bordure);
+  --color-bordure-champ: var(--rw-bordure-champ);
+  --color-pastille-excellence: var(--rw-pastille-excellence);
   --color-pastille-recommande: var(--rw-pastille-recommande);
-  --color-pastille-top: var(--rw-pastille-top);
   --color-succes: var(--rw-succes);
   --color-alerte: var(--rw-alerte);
   --color-erreur: var(--rw-erreur);
 
+  /* Le fond sombre du produit tatouage (voir COULEURS_SOMBRE dans
+     src/config/tatouage.ts). Aucune page artisan ne les emploie. */
+  --color-sombre-fond: var(--rw-sombre-fond);
+  --color-sombre-carte: var(--rw-sombre-carte);
+  --color-sombre-eleve: var(--rw-sombre-eleve);
+  --color-sombre-eleve-clair: var(--rw-sombre-eleve-clair);
+  --color-sombre-bordure: var(--rw-sombre-bordure);
+  --color-sombre-texte: var(--rw-sombre-texte);
+  --color-sombre-texte-doux: var(--rw-sombre-texte-doux);
+
   --font-sans: var(--font-geist-sans);
 }
 
-body {
+/* ⚠️ LE FOND DE BASE EST SUR <html>, ET PLUS SUR LE CORPS — C'EST
+   L'ÉCRAN BLANC DU GESTE DE RETOUR.
+   Le corps portait le fond du produit ARTISANS, qui est BLANC. Tant
+   que le grand <div> anthracite de yokofolio est peint par-dessus, on
+   ne le voit pas ; mais pendant une transition de retour, le
+   navigateur peint le document AVANT que React n'ait rendu quoi que ce
+   soit. Il ne restait alors que ce rectangle blanc, plein écran — la
+   seconde de blanc vue sur iPhone au balayage depuis le bord.
+   En posant la couleur sur <html>, le canevas la prend ; le corps,
+   lui, ne peint plus rien du tout, et il n'y a plus de rectangle à
+   découvrir. Les pages artisans ne changent pas d'un pixel : ce blanc
+   se propageait déjà du corps au canevas.
+   (Les fonds PARTICULIERS restent sur le corps — voir
+   `body:has(main.accueil-large)` plus bas : ceux-là sont voulus, et
+   ils peignent par-dessus le canevas.) */
+html {
   background: var(--rw-fond);
+}
+
+body {
   color: var(--rw-encre);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   /* Évite les surprises de zoom/défilement horizontal sur mobile */
   overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* LE FOND DE YOKOFOLIO DOIT ATTEINDRE LE CANEVAS, PAS SEULEMENT LE
+   CORPS.
+   ---------------------------------------------------------------
+   L'anthracite est posé sur le grand <div> de la mise en page
+   (`bg-sombre-fond`). Tant que le corps couvre l'écran, on ne voit que
+   lui — mais dès qu'une zone du canevas se découvre (l'élastique de
+   fin de défilement d'iOS, la barre du navigateur), c'est le fond du
+   CORPS qui s'y propage : `--rw-fond`, BLANC. D'où les éclairs de
+   blanc mesurés au pixel.
+   En donnant un fond à <html>, la propagation s'arrête et le canevas
+   prend l'anthracite.
+
+   ⚠️ CETTE RÈGLE EST UN DOUBLAGE : la vraie garantie est le script
+   bloquant de src/app/(tatouage)/layout.tsx, qui écrit la couleur EN
+   DUR sur <html> avant la première peinture, sans aucun sélecteur à
+   satisfaire. Sur iPhone, la règle CSS seule n'avait pas suffi.
+
+   ⚠️ ET RIEN N'EST ÉCRIT SUR LE CORPS, JAMAIS. React rend <body> :
+   toute couleur (ou tout attribut) qu'un script y pose avant
+   l'hydratation devient un ÉCART D'HYDRATATION — mesuré, il ouvre le
+   panneau d'erreur du mode développement, et React prévient qu'il ne
+   le rattrapera pas. Le corps n'a donc plus de fond du tout (voir plus
+   haut) : il n'y a rien à repeindre, et donc rien à corriger dans la
+   précipitation avant la première peinture. */
+html:has([data-fond="sombre"]) {
+  background-color: var(--rw-sombre-fond);
+}
+
+/* LA PAGE DE RECHERCHE (smartphone) EST UNE VRAIE PAGE — ET C'EST
+   CETTE RÈGLE QUI LE REND VRAI.
+   -------------------------------------------------------------------
+   Tant qu'elle est ouverte, le reste de yokofolio QUITTE LE FLUX. Le
+   document ne contient donc plus qu'elle : il défile pour elle seule,
+   et le navigateur peut faire ce qu'il fait le mieux — remonter le
+   champ actif au-dessus du clavier, tout seul, sur iOS comme sur
+   Android. C'est ce qui remplace dix passes de placement à la main
+   (paliers, recollage, compensation du corps) : voir
+   src/components/PageRechercheMobile.tsx.
+
+   POURQUOI VISER `[data-fond="sombre"]` ET NON `body > *` : les MENUS
+   DÉROULANTS (styles, villes) se posent eux aussi dans <body>, par
+   portail. Les cacher tous fermerait le menu des styles en même temps
+   que le site. On ne retire du flux que l'enveloppe du site — la page
+   de recherche et les menus, qui sont ses frères, restent visibles. */
+html[data-recherche="ouverte"] [data-fond="sombre"] {
+  display: none;
+}
+
+/* L'AIR LAISSÉ AU-DESSUS D'UN CHAMP QUI REMONTE — EN CSS, PAS EN
+   JAVASCRIPT.
+   -------------------------------------------------------------------
+   Quand on touche un champ de localité, la page défile pour l'amener
+   EN HAUT DE L'ÉCRAN : toute la hauteur libérée passe alors sous lui,
+   au menu de suggestions. Sans cela, le navigateur se contente de
+   poser le champ JUSTE au-dessus du clavier — assez pour saisir, mais
+   il ne reste alors que quelques dizaines de pixels à la liste.
+
+   ⚠️ LE DÉFILEMENT EST NATIF (`scrollIntoView`, voir
+   ChampLocalisation) : aucune position n'est calculée nulle part.
+   `scroll-margin-top` est la propriété prévue pour cela — elle dit au
+   navigateur combien d'air garder au-dessus de l'élément quand il
+   l'amène en haut. C'est LUI qui fait l'arithmétique, et il la fait
+   juste sur iOS comme sur Android.
+
+   DEUX CONTEXTES, DEUX MARGES, ZÉRO CONDITION EN JAVASCRIPT :
+    · dans un FORMULAIRE, il faut dégager la barre du site (collante,
+      ~64 px) et l'étiquette qui nomme le champ ;
+    · dans la PAGE DE RECHERCHE, il faut dégager la seule chose qui y
+      reste collée en haut : la ligne de la croix. La bascule
+      Recherche / Filtres, elle, a le droit de sortir par le haut — on
+      ne s'en sert pas pendant qu'on écrit une ville, et chaque pixel
+      rendu à la liste compte. */
+[data-remonte-au-toucher] {
+  scroll-margin-top: 92px;
+}
+[data-page-recherche] [data-remonte-au-toucher] {
+  scroll-margin-top: calc(max(12px, env(safe-area-inset-top)) + 56px);
+}
+
+/* Le fond de page reste BLANC PARTOUT (accueil, fiche, contact, etc.).
+   Le gris très clair (--rw-fond-page) n'est PAS appliqué globalement :
+   il n'habille QUE la zone des résultats de recherche (les cartes), via
+   la classe « md:bg-fond-page » sur la liste (voir EcranRecherche).
+   Sur smartphone, aucun gris nulle part. */
+
+/* La fiche artisan (mobile) a une barre de contact FIXE en bas
+   d'écran (badges posés dessus) : le pied de page commun (posé par
+   le layout) est rééquilibré — de l'air AU-DESSUS (il ne colle plus
+   au dernier accordéon) et, EN DESSOUS, juste l'espace qu'il faut
+   pour que la barre ne recouvre jamais les liens en fin de
+   défilement. */
+main.avec-barre-contact ~ footer {
+  padding-top: 48px;
+  padding-bottom: 112px;
+}
+
+/* PAGE DE RÉSULTATS (toutes tailles) : le haut de page (logo +
+   moteur compact + filtres) reste STATIQUE — seule la zone de
+   contenu (à partir du titre) défile, à l'intérieur de la colonne.
+   Le pied de page du layout est masqué : il vit dans la zone
+   défilante (mobile) ou dans la colonne de la fiche (mode double). */
+body:has(main.recherche-fixe) {
+  height: 100%;
+  overflow: hidden;
+}
+main.recherche-fixe ~ footer {
+  display: none;
+}
+
+/* FICHE (mode simple) DÈS 480 px + MODE DOUBLE (dès 1024 px) : la
+   fenêtre ne défile plus — la fiche forme UN bloc autonome qui défile
+   à l'intérieur (comme la colonne de droite du mode double), avec son
+   bandeau de contact intégré au bas. Le pied de page du layout est
+   masqué (il vit DANS la fiche). Ainsi, sur iPad/web en mode simple,
+   la fiche est un seul bloc continu jusqu'en bas — plus de zone
+   blanche au milieu, plus de fiche « coupée en deux ». Sous 480 px
+   (smartphone) : la fenêtre défile normalement, bandeau fixe. */
+@media (min-width: 480px) {
+  body:has(main.mode-double) {
+    height: 100%;
+    overflow: hidden;
+  }
+  main.mode-double ~ footer {
+    display: none;
+  }
+}
+
+/* BARRE DE DÉFILEMENT DES CARTES (768–1023 px, résultats sur une
+   colonne) : elle reste VISIBLE, comme demandé — sans elle, rien
+   n'indique qu'il y a d'autres artisans plus bas.
+   `div.colonne-defilante` et non `.colonne-defilante` tout court : la
+   FICHE porte la même classe, et sa barre à elle doit rester invisible
+   (elle apparaîtrait à l'intérieur de l'encadré, collée à son bord
+   arrondi). Les cartes sont un <div>, la fiche une <section>. */
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  div.colonne-defilante {
+    scrollbar-width: thin;
+    scrollbar-color: var(--rw-bordure-carte) transparent;
+  }
+}
+
+/* PLUS D'EXCEPTION DE 768 À 1023 px.
+   Cette plage a longtemps fait défiler la PAGE au lieu de la fiche, pour
+   que la barre de défilement soit celle du navigateur, à l'extrême droite.
+   Ce régime À PART est la source de tous les défauts du BAS de l'encadré :
+   quand c'est la page qui défile, atteindre le bas du contour dépend de la
+   hauteur du document, des marges, du modèle de hauteur du <body> — autant
+   de choses qui se comportent différemment d'un navigateur à l'autre.
+   Les deux autres présentations (480–767 px et ≥ 1024 px) n'ont jamais eu
+   le moindre défaut parce qu'elles font l'inverse : la fenêtre ne défile
+   pas, l'encadré est un CADRE FIXE dont seul le contenu défile — son bord
+   inférieur est donc toujours à l'écran, par construction.
+   Cette plage suit désormais la même règle qu'elles (voir le bloc
+   « dès 480 px » ci-dessus) : un seul comportement pour toutes les
+   largeurs, plus aucun cas particulier. Aucune barre n'apparaît dans
+   l'encadré : la règle universelle plus bas les masque toutes. */
+
+/* EN-TÊTE — le menu suit le CONTENU, sous son plafond la largeur suit la
+   fenêtre (logo au bord gauche du contenu, icônes au bord droit).
+   • Accueil (≥ 768) : contenu plafonné à 1160 px (max-width 1192 = 1160 + 2×16). */
+@media (min-width: 768px) {
+  body:has(main.accueil-large) .interieur-entete {
+    max-width: 1192px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+/* Résultats / fiche :
+   • 768–1023 px (UNE colonne bornée ~700 px, centrée) : en-tête PLEINE
+     LARGEUR — logo collé au bord GAUCHE de l'écran, icônes au bord DROIT.
+     L'en-tête ne suit JAMAIS la largeur bornée du contenu : le contenu est
+     centré et borné, mais la barre du haut reste bord à bord.
+   • ≥ 1024 px (DEUX colonnes) : aligné sur le contenu (1192 = EXACTEMENT la
+     même largeur/marges que l'accueil). */
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  body:has(main.mode-double) .interieur-entete,
+  body:has(main.recherche-fixe) .interieur-entete {
+    max-width: none;
+  }
+}
+@media (min-width: 1024px) {
+  body:has(main.mode-double) .interieur-entete,
+  body:has(main.recherche-fixe) .interieur-entete {
+    max-width: 1192px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* PAGE D'ACCUEIL : fond gris clair (le même que la zone de résultats),
+   à TOUTES les tailles — y compris sur smartphone. Les encadrés
+   (moteur, modules, cartes) sont blancs par-dessus ; le menu du haut
+   reste blanc (barre sticky opaque). Les autres pages gardent le fond
+   blanc : la règle ne vise que « main.accueil-large ». */
+body:has(main.accueil-large) {
+  background: var(--rw-fond-page);
+}
+
+/* AUCUNE barre de défilement visible, sur AUCUN conteneur ni aucune
+   largeur (iPad Safari compris) : liste, fiche, page, menus… Le
+   défilement reste pleinement fonctionnel (molette, doigt, clavier).
+   Règle globale demandée : jamais d'ascenseur affiché.
+   SEULE EXCEPTION : les listes « .defilement-visible » (menus
+   déroulants), écartées de la règle — voir plus bas. L'exclusion doit
+   être faite ICI, dans le sélecteur : il ne suffirait pas de
+   redéclarer plus bas, car dès que `scrollbar-width` est posé sur un
+   élément, Chrome IGNORE tout l'habillage ::-webkit-scrollbar de cet
+   élément — et c'est précisément cet habillage qui force, sur macOS,
+   une barre CLASSIQUE toujours affichée au lieu de la barre flottante
+   masquée au repos. */
+*:not(.defilement-visible) {
+  scrollbar-width: none; /* Firefox, Safari 18.2+ */
+}
+*:not(.defilement-visible)::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge, anciens WebKit iPad */
+  width: 0;
+  height: 0;
+}
+/* Conservée pour compatibilité (mêmes effets) */
+.defilement-discret {
+  scrollbar-width: none;
+}
+.defilement-discret::-webkit-scrollbar {
+  display: none;
+  width: 0;
+}
+
+/* MENUS DÉROULANTS — barre de défilement VISIBLE.
+   Quand la liste des choix ne tient pas dans la hauteur disponible,
+   la barre doit se voir IMMÉDIATEMENT : sans elle, rien n'indique
+   qu'il reste des métiers plus bas. macOS (et iOS) masquent au repos
+   leur barre « flottante » ; dessiner explicitement ::-webkit-scrollbar
+   rétablit la barre CLASSIQUE, toujours affichée.
+   C'est l'EXCEPTION assumée à la règle « jamais d'ascenseur affiché »
+   ci-dessus : elle ne vaut QUE pour la liste des menus déroulants, où
+   l'absence de barre cachait qu'il restait des choix. Le `display:
+   block` est indispensable — sans lui, le `display: none` de la règle
+   universelle continuerait de s'appliquer. */
+/* Chrome / Safari / Edge : l'habillage ::-webkit-scrollbar suffit — et
+   il ne faut SURTOUT PAS poser `scrollbar-width` ici, sinon Chrome
+   bascule sur la barre flottante et ignore tout ce qui suit. */
+.defilement-visible::-webkit-scrollbar {
+  display: block;
+  width: 11px;
+}
+.defilement-visible::-webkit-scrollbar-track {
+  background: transparent;
+}
+.defilement-visible::-webkit-scrollbar-thumb {
+  background-color: var(--rw-bordure-carte);
+  border-radius: 999px;
+  /* Un liseré transparent affine le curseur sans le coller au bord */
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+.defilement-visible::-webkit-scrollbar-thumb:hover {
+  background-color: var(--rw-encre-douce);
+  background-clip: content-box;
+}
+/* Firefox ne connaît pas ::-webkit-scrollbar : il lui faut les
+   propriétés standard. Elles sont enfermées dans un test propre à
+   Firefox pour ne pas neutraliser l'habillage ci-dessus sur Chrome. */
+@supports (-moz-appearance: none) {
+  .defilement-visible {
+    scrollbar-width: thin;
+    scrollbar-color: var(--rw-bordure-carte) transparent;
+  }
+}
+
+/* CŒUR FAVORI — animation au clic (façon X/Instagram/Airbnb) :
+   un « pop » avec léger rebond, et un éclat de particules discret
+   à l'activation. Respecte « prefers-reduced-motion ». */
+@keyframes rw-coeur-pop {
+  0% { transform: scale(1); }
+  25% { transform: scale(0.82); }
+  55% { transform: scale(1.28); }
+  100% { transform: scale(1); }
+}
+.rw-coeur-anime {
+  animation: rw-coeur-pop 0.42s cubic-bezier(0.2, 0.7, 0.3, 1.5);
+}
+@keyframes rw-particule {
+  0% { transform: translate(0, 0) scale(1); opacity: 0.9; }
+  100% {
+    transform: translate(var(--rw-dx), var(--rw-dy)) scale(0.2);
+    opacity: 0;
+  }
+}
+.rw-particule {
+  animation: rw-particule 0.5s ease-out forwards;
+}
+/* Montée de la feuille glissante mobile (menu métier) depuis le bas */
+@keyframes rw-feuille-monte {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rw-coeur-anime { animation: none; }
+  .rw-particule { display: none; }
+}
+
+/* COLONNE UNIQUE (768–1023 px) : barre de défilement VISIBLE à droite.
+   Sur cette plage, la page n'affiche QU'UNE colonne — la liste des
+   cartes, ou la fiche seule — et rien n'indiquait qu'il restait du
+   contenu plus bas. Elle reste MASQUÉE partout ailleurs : sur
+   smartphone, et en mode DEUX colonnes (≥ 1024) où deux barres
+   côte à côte alourdiraient l'écran.
+   `scrollbar-width: thin` plutôt qu'un habillage ::-webkit-scrollbar :
+   dès que cette propriété est posée sur un élément, Chrome ignore tout
+   l'habillage webkit de cet élément — on s'en remet donc à la barre
+   native, fine, que Chrome comme Firefox savent dessiner.
+   Cette règle est PLACÉE EN FIN DE FEUILLE à dessein : elle a la même
+   spécificité que la règle universelle qui masque les barres et que
+   `.defilement-discret` ; c'est l'ordre qui la fait gagner. */
+
+/* ------------------------------------------------------------------
+   LE CURSEUR DE RAYON (index des tatoueurs)
+   ------------------------------------------------------------------
+   Un `input[type=range]` natif est gris clair sur fond clair : posé
+   sur l'anthracite, il devient invisible. On habille donc la barre et
+   la poignée aux couleurs de la charte — rose pour la poignée, qui
+   est l'élément actif.
+   Les deux syntaxes (WebKit et Firefox) sont nécessaires : aucune des
+   deux ne comprend l'autre.
+------------------------------------------------------------------ */
+.curseur-sombre {
+  -webkit-appearance: none;
+  appearance: none;
+  /* LA POIGNÉE S'ATTRAPE DU PREMIER COUP
+     -------------------------------------
+     Le doigt n'a pas la précision de la souris : viser une bande de
+     22 px de haut, c'est la rater une fois sur deux. La zone qui
+     REÇOIT LE DOIGT monte donc à 44 px — la cible minimale
+     recommandée aussi bien par Apple que par Google — SANS QUE RIEN
+     NE BOUGE À L'ÉCRAN :
+      · `height: 44px` agrandit la boîte sensible ;
+      · `margin-block: -11px` lui rend sa place d'avant dans la mise
+        en page (44 − 11 − 11 = 22) : la ligne « Rayon … km » garde
+        exactement la même hauteur, et les 11 px gagnés en haut et en
+        bas débordent sur le vide des marges voisines (20 px de
+        chaque côté, rien à y toucher) ;
+      · la piste et la poignée restent CENTRÉES dans cette boîte,
+        donc au pixel près là où elles étaient.
+     `touch-action: pan-y` termine le travail : le navigateur cesse
+     d'attendre de savoir si le geste est un défilement avant de le
+     transmettre — le glissement part au premier pixel, comme dans
+     une application. Le défilement vertical, lui, reste possible. */
+  height: 44px;
+  margin-block: -11px;
+  touch-action: pan-y;
+  background: transparent;
+  cursor: pointer;
+}
+.curseur-sombre::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 9999px;
+  background: var(--rw-sombre-bordure);
+}
+.curseur-sombre::-moz-range-track {
+  height: 4px;
+  border-radius: 9999px;
+  background: var(--rw-sombre-bordure);
+}
+.curseur-sombre::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -7px;
+  border-radius: 9999px;
+  background: var(--rw-primaire);
+  border: 2px solid var(--rw-sombre-fond);
+}
+.curseur-sombre::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--rw-sombre-fond);
+  border-radius: 9999px;
+  background: var(--rw-primaire);
+}
+.curseur-sombre:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px rgb(238 61 111 / 0.35);
+}
+.curseur-sombre:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 4px rgb(238 61 111 / 0.35);
+}
+
+/* ------------------------------------------------------------------
+   LE SITE VITRINE DE L'AGENCE
+   ------------------------------------------------------------------ */
+
+/* LE RYTHME DE LECTURE DES PAGES JURIDIQUES.
+   Pas de plugin de mise en forme : quatre règles suffisent à rendre
+   un texte long lisible. */
+.prose-juridique h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-top: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+.prose-juridique p {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: rgb(0 0 0 / 0.6);
+  margin-bottom: 1rem;
+}
+.prose-juridique > :first-child {
+  margin-top: 0;
+}
+
+/* Le défilement DOUX des ancres du menu, y compris quand le
+   navigateur y va tout seul (lien #services ouvert depuis
+   l'extérieur). Respecté : « limiter les animations » du système. */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+/* =====================================================================
+   LA SILHOUETTE DU CARNET D'ADRESSES — retirée des champs qui la
+   refusent
+   =====================================================================
+   AUCUN ATTRIBUT HTML NE LA FAIT DISPARAÎTRE : WebKit (Safari, et les
+   navigateurs de l'iPhone) dessine LUI-MÊME ce petit bonhomme dans le
+   coin du champ dès qu'il croit reconnaître une entrée de contact —
+   un nom, une adresse, une ville. C'est un pseudo-élément de la
+   feuille de style du navigateur ; seul du CSS l'atteint.
+
+   LA PRISE : `data-sans-remplissage`, posé par le module
+   src/lib/champs-sans-remplissage.ts. Les champs qui ne l'ont pas —
+   l'adresse e-mail et le mot de passe d'une connexion, le formulaire
+   de contact — GARDENT leur bouton : là, le remplissage automatique
+   rend service, et le retirer serait une gêne, pas une correction.
+
+   Les trois pseudo-éléments couvrent les trois boutons que WebKit
+   peut poser : les contacts, les identifiants enregistrés, et le
+   témoin de verrouillage des majuscules. */
+input[data-sans-remplissage]::-webkit-contacts-auto-fill-button,
+input[data-sans-remplissage]::-webkit-credentials-auto-fill-button,
+input[data-sans-remplissage]::-webkit-caps-lock-indicator {
+  visibility: hidden;
+  display: none !important;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  /* `width: 0` seul suffirait à Safari 16 ; les trois lignes
+     ci-dessus couvrent les versions qui ignorent l'une ou l'autre. */
+  width: 0;
+  height: 0;
+  margin: 0;
+}
+
+/* LE FOND JAUNE DU REMPLISSAGE, lui aussi : quand le navigateur
+   remplit malgré tout (extension, réglage système), il repeint le
+   champ en jaune pâle — illisible sur notre anthracite. On lui rend
+   nos couleurs, sans rien interdire. */
+input[data-sans-remplissage]:-webkit-autofill,
+input[data-sans-remplissage]:-webkit-autofill:hover,
+input[data-sans-remplissage]:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--rw-sombre-texte, #ECECEE);
+  -webkit-box-shadow: 0 0 0 1000px var(--rw-sombre-eleve, #212126) inset;
+  transition: background-color 9999s ease-in-out 0s;
 }

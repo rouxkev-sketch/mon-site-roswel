@@ -1,38 +1,42 @@
 import type { MetadataRoute } from "next";
-import { COULEURS, MARQUE } from "@/config/roswel";
+import {
+  COULEURS_SOMBRE,
+  MARQUE_YOKOFOLIO,
+  TEXTES_TATOUAGE,
+} from "@/config/tatouage";
 
 /**
- * Le "manifest" est la carte d'identité de l'application :
- * c'est lui qui permet d'installer Roswel sur l'écran d'accueil
- * d'un téléphone, comme une vraie application (PWA).
+ * LA CARTE D'IDENTITÉ DE L'APPLICATION
+ * =====================================
+ * C'est ce fichier qui donne son nom et son icône au site quand on
+ * l'installe sur l'écran d'accueil d'un téléphone.
+ *
+ * IL Y EN A UN SEUL PAR ADRESSE DE SITE, et c'est celui de YOKOFOLIO —
+ * le site à la racine. Il y en avait deux : celui-ci, aux couleurs d'un
+ * ancien produit, et un second pour yokofolio. Le premier était servi à
+ * toutes les pages qui ne réclamaient pas le second, et il ramenait son
+ * icône dans l'onglet. Un seul, désormais.
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: `${MARQUE.nom} — ${MARQUE.slogan}`,
-    short_name: MARQUE.nom,
-    description: MARQUE.description,
+    name: `${MARQUE_YOKOFOLIO.nom} — ${MARQUE_YOKOFOLIO.slogan}`,
+    short_name: MARQUE_YOKOFOLIO.nom,
+    description: TEXTES_TATOUAGE.descriptionSite,
     lang: "fr",
     start_url: "/",
+    scope: "/",
     display: "standalone", // plein écran, sans la barre du navigateur
-    background_color: COULEURS.fond,
-    theme_color: COULEURS.fond,
-    // Icônes provisoires en SVG (dessin vectoriel).
-    // Quand le vrai logo sera fourni, les remplacer par des PNG :
-    // icon-192.png (192x192), icon-512.png (512x512),
-    // icon-maskable-512.png (512x512, plein cadre) et
-    // apple-touch-icon.png (180x180) dans public/icons/.
+    background_color: COULEURS_SOMBRE.fond,
+    theme_color: COULEURS_SOMBRE.fond,
+    // Le CŒUR de yokofolio, déposé à la main par le propriétaire. Le
+    // téléphone lit lui-même les dimensions du fichier.
     icons: [
+      { src: MARQUE_YOKOFOLIO.icone, type: "image/png" },
       {
-        src: "/icons/icon.svg",
-        sizes: "any",
-        type: "image/svg+xml",
-      },
-      {
-        // Version "maskable" : l'icône remplit tout le carré,
-        // le téléphone applique lui-même la forme (rond, arrondi…)
-        src: "/icons/icon-maskable.svg",
-        sizes: "any",
-        type: "image/svg+xml",
+        // Version « maskable » : le téléphone applique lui-même la
+        // forme (rond, arrondi…) sur la même image.
+        src: MARQUE_YOKOFOLIO.icone,
+        type: "image/png",
         purpose: "maskable",
       },
     ],

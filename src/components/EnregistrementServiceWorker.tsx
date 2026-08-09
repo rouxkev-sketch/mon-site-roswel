@@ -17,7 +17,14 @@ export function EnregistrementServiceWorker() {
     if (!("serviceWorker" in navigator)) return;
 
     if (process.env.NODE_ENV === "production") {
-      navigator.serviceWorker.register("/sw.js").catch(() => {
+      // ⚠️ L'EMPREINTE DE COMPILATION DANS L'ADRESSE. Sans elle,
+      // `/sw.js` est identique d'une mise en ligne à l'autre : le
+      // navigateur garde l'ancien service worker, et donc son ancien
+      // cache. Avec elle, chaque mise en ligne installe un service
+      // worker neuf, qui efface tous les caches précédents en
+      // s'activant (voir public/sw.js).
+      const version = process.env.NEXT_PUBLIC_VERSION_SITE ?? "1";
+      navigator.serviceWorker.register(`/sw.js?v=${version}`).catch(() => {
         // Si l'activation échoue, le site fonctionne quand même
         // normalement : on ne bloque rien.
       });

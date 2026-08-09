@@ -1,4 +1,5 @@
 import { COULEURS } from "@/config/roswel";
+import { COULEURS_SOMBRE } from "@/config/tatouage";
 
 /**
  * Transforme les couleurs du fichier de réglages central en
@@ -17,14 +18,30 @@ export function variablesCssCouleurs(): string {
     "--rw-degrade-fin": COULEURS.degradeFin,
     "--rw-fond": COULEURS.fond,
     "--rw-fond-doux": COULEURS.fondDoux,
+    "--rw-fond-page": COULEURS.fondPage,
+    "--rw-bordure-carte-claire": COULEURS.bordureCarteClaire,
+    "--rw-bordure-carte": COULEURS.bordureCarte,
     "--rw-encre": COULEURS.encre,
     "--rw-encre-douce": COULEURS.encreDouce,
     "--rw-bordure": COULEURS.bordure,
+    "--rw-bordure-champ": COULEURS.bordureChamp,
+    "--rw-pastille-excellence": COULEURS.pastilleExcellence,
     "--rw-pastille-recommande": COULEURS.pastilleRecommande,
-    "--rw-pastille-top": COULEURS.pastilleTop,
     "--rw-succes": COULEURS.succes,
     "--rw-alerte": COULEURS.alerte,
     "--rw-erreur": COULEURS.erreur,
+
+    // Le fond sombre du produit TATOUAGE. Ces variables existent sur
+    // toutes les pages, mais ne sont utilisées que par les classes
+    // `sombre-*` des pages tatouage : les pages artisans restent
+    // blanches, à l'identique.
+    "--rw-sombre-fond": COULEURS_SOMBRE.fond,
+    "--rw-sombre-carte": COULEURS_SOMBRE.carte,
+    "--rw-sombre-eleve": COULEURS_SOMBRE.eleve,
+    "--rw-sombre-eleve-clair": COULEURS_SOMBRE.eleveClair,
+    "--rw-sombre-bordure": COULEURS_SOMBRE.bordure,
+    "--rw-sombre-texte": COULEURS_SOMBRE.texte,
+    "--rw-sombre-texte-doux": COULEURS_SOMBRE.texteDoux,
   };
 
   const lignes = Object.entries(variables)

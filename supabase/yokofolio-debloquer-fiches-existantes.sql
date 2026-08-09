@@ -1,0 +1,80 @@
+-- ============================================================
+--  YOKOFOLIO — DÉBLOQUER LES FICHES PRISES AU PIÈGE DU VERROU
+--  (migration nº 29 — à passer APRÈS yokofolio-verrou-exercice.sql)
+-- ============================================================
+--  À COLLER dans l'éditeur SQL de Supabase, puis « Run ».
+--  Se relance sans risque.
+--
+--  CE QUI S'EST PASSÉ
+--  ------------------
+--  La migration nº 28 a posé le verrou du bloc 1 en laissant les
+--  fiches existantes à `false` : elles devaient voir l'avertissement
+--  à leur prochaine visite, confirmer, et se verrouiller elles-mêmes.
+--  L'intention était bonne. Le résultat ne l'a pas été.
+--
+--  Sur une fiche EN LIGNE, le formulaire envoie ses modifications en
+--  BROUILLON, en attendant la relecture — et `exercice_verrouille`
+--  partait avec. La colonne restait donc à `false`, la relecture ne
+--  la lisait jamais (elle lit la ligne, pas le brouillon), et
+--  l'encadré « Confirme ce premier bloc » revenait à chaque visite.
+--  Ces fiches n'étaient ni confirmables, ni modifiables.
+--  Le code est corrigé : la confirmation s'écrit désormais
+--  DIRECTEMENT sur la ligne, jamais dans le brouillon.
+--
+--  ⚠️ LE DÉCLENCHEUR N'Y ÉTAIT POUR RIEN. Il ne se réveille que si
+--  la fiche est DÉJÀ verrouillée (`if old.exercice_verrouille then`) :
+--  il n'a jamais empêché le passage de false à true. Il reste donc
+--  tel quel, et il doit le rester — c'est lui qui interdit à un
+--  propriétaire de changer le type d'une fiche confirmée ou de lever
+--  son propre verrou.
+--
+--  LA DÉCISION, ET POURQUOI
+--  ------------------------
+--  Les fiches qui existent aujourd'hui sont marquées CONFIRMÉES.
+--  C'est l'inverse de ce qui avait été décidé à la nº 28, et c'est
+--  assumé : cette décision-là partait du principe que confirmer
+--  fonctionnerait. Ce n'était pas le cas, et elle a enfermé des gens
+--  dehors.
+--  Corriger le code aurait suffi à débloquer — mais aurait imposé à
+--  chaque propriétaire de répondre à une question DÉFINITIVE sur une
+--  fiche qu'il a déjà publiée, avant de pouvoir corriger une virgule
+--  de sa bio. Ce n'est pas une confirmation, c'est un péage.
+--  Or ces fiches ont déjà fait leur choix : elles ont un type, une
+--  adresse, parfois une équipe et des rattachements validés qui en
+--  dépendent. Les marquer confirmées ne leur retire rien qu'elles
+--  faisaient encore — et si l'une s'est trompée de type, la
+--  réouverture par l'administration existe, avec sa trace et sa
+--  notification (voir /api/admin/yokofolio/deverrouiller-exercice).
+--
+--  Elles redeviennent donc modifiables IMMÉDIATEMENT, sans un clic.
+-- ============================================================
+
+-- ------------------------------------------------------------
+-- 1) TOUTES LES FICHES EXISTANTES SONT CONSIDÉRÉES CONFIRMÉES
+-- ------------------------------------------------------------
+--  Pourquoi « toutes celles qui sont à false » et pas un filtre sur
+--  la date : depuis la nº 28, AUCUNE fiche n'a pu être créée (le
+--  bouton « Je confirme » ne s'activait jamais) ni verrouillée (le
+--  brouillon avalait la colonne). Toute ligne encore à `false` est
+--  donc, sans exception, une fiche d'avant — ou une victime du bug.
+--
+--  ⚠️ LA CLÉ DE SERVICE DE L'ÉDITEUR SQL PASSE LE DÉCLENCHEUR
+--  (`auth.uid()` est null hors session authentifiée) : cette mise à
+--  jour aboutit, là où la même requête depuis un navigateur serait
+--  ignorée.
+update public.tatoueurs
+   set exercice_verrouille = true
+ where exercice_verrouille = false;
+
+-- ------------------------------------------------------------
+--  VÉRIFICATION (facultatif)
+-- ------------------------------------------------------------
+--  -- Plus personne ne doit rester à false :
+--  select count(*) filter (where exercice_verrouille) as confirmees,
+--         count(*) filter (where not exercice_verrouille) as en_attente
+--    from public.tatoueurs;
+--
+--  -- Et le garde-fou tient toujours (à jouer DANS UNE SESSION
+--  -- authentifiée, pas ici : le type doit rester inchangé) :
+--  -- update public.tatoueurs set type_fiche = 'salon'
+--  --  where slug = 'une-fiche-verrouillee';
