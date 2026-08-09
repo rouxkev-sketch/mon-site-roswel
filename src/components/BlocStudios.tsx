@@ -149,7 +149,7 @@ export function BlocStudios({
                              opacity-40 transition-opacity hover:opacity-100
                              focus-visible:opacity-100"
                 >
-                  <IconeCroix taille={15} />
+                  <IconeCroix taille={16} />
                 </button>
               )}
               {/* ⚠️ PLUS DE PARAGRAPHE VIDE SUR LE STUDIO PRINCIPAL

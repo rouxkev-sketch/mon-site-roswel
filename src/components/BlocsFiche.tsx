@@ -54,10 +54,10 @@ function pastilleDuMode(mode: ModeExerciceFiche) {
       />
     );
   }
-  if (mode.genre === "guest") return <IconeAvion taille={17} />;
-  if (mode.genre === "domicile") return <IconeUtilisateur taille={17} />;
-  if (mode.genre === "prive") return <IconeCadenas taille={17} />;
-  return <IconeAncre taille={17} />;
+  if (mode.genre === "guest") return <IconeAvion taille={16} />;
+  if (mode.genre === "domicile") return <IconeUtilisateur taille={16} />;
+  if (mode.genre === "prive") return <IconeCadenas taille={16} />;
+  return <IconeAncre taille={16} />;
 }
 
 /**

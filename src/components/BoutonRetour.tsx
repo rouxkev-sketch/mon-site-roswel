@@ -72,7 +72,7 @@ export function BoutonRetour({
                    hover:border-primaire hover:text-primaire
                    transition-colors shrink-0"
       >
-        <IconeFlecheRetour taille={19} />
+        <IconeFlecheRetour taille={20} />
       </button>
     );
   }
@@ -87,7 +87,7 @@ export function BoutonRetour({
                    flex items-center justify-center text-white
                    hover:bg-white/25 transition-colors shrink-0"
       >
-        <IconeFlecheRetour taille={19} />
+        <IconeFlecheRetour taille={20} />
       </button>
     );
   }

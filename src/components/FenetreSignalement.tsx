@@ -95,7 +95,7 @@ export function FenetreSignalement({
         className="mr-auto flex w-fit items-center gap-1.5 text-[13px]
                    text-sombre-texte-doux hover:text-primaire transition-colors"
       >
-        <IconeDrapeau taille={14} classe="shrink-0" />
+        <IconeDrapeau taille={16} classe="shrink-0" />
         Signaler cette fiche
       </button>
 

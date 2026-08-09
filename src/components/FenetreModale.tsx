@@ -193,7 +193,7 @@ export function EnteteModale({
         aria-label="Fermer"
         className="-mr-2 -mt-2 w-10 h-10 shrink-0 rounded-full flex items-center justify-center text-encre-douce hover:bg-fond-doux transition-colors"
       >
-        <IconeCroix taille={20} />
+        <IconeCroix taille={18} />
       </button>
     </div>
   );

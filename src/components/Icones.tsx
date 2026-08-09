@@ -86,7 +86,7 @@ export function IconeRouleau({ taille = 26, classe = "" }: ProprietesIcone) {
       <path
         d="M15.5 7.2h2.7A1.8 1.8 0 0 1 20 9v1.3a1.8 1.8 0 0 1-1.8 1.8H12.4A1.4 1.4 0 0 0 11 13.5V15"
         stroke="currentColor"
-        strokeWidth="1.7"
+        strokeWidth="1.8"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -215,7 +215,7 @@ export function IconeFlecheDiagonale({
       <path
         d="M7 17 17 7m0 0H9.5M17 7v7.5"
         stroke="currentColor"
-        strokeWidth="2"
+        strokeWidth="1.8"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -317,7 +317,7 @@ export function IconeFlecheRetour({ taille = 20, classe = "" }: ProprietesIcone)
       <path
         d="M19 12H5m0 0 6-6m-6 6 6 6"
         stroke="currentColor"
-        strokeWidth="2"
+        strokeWidth="1.8"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -329,7 +329,7 @@ export function IconeFlecheRetour({ taille = 20, classe = "" }: ProprietesIcone)
 export function IconeChevronBas({ taille = 18, classe = "" }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
-      <path d="m5 9 7 7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="m5 9 7 7 7-7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -337,8 +337,8 @@ export function IconeChevronBas({ taille = 18, classe = "" }: ProprietesIcone) {
 export function IconeLoupe({ taille = 20, classe = "" }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
-      <circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" strokeWidth="2" />
-      <path d="m15.5 15.5 5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" strokeWidth="1.8" />
+      <path d="m15.5 15.5 5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }
@@ -716,12 +716,12 @@ export function IconeCadenas({ taille = 20, classe = "" }: ProprietesIcone) {
         height="10"
         rx="2.4"
         stroke="currentColor"
-        strokeWidth="1.7"
+        strokeWidth="1.8"
       />
       <path
         d="M8 10.5V7.8a4 4 0 1 1 8 0v2.7"
         stroke="currentColor"
-        strokeWidth="1.7"
+        strokeWidth="1.8"
         strokeLinecap="round"
       />
       <circle cx="12" cy="15.5" r="1.4" fill="currentColor" />
@@ -881,7 +881,7 @@ export function IconeFlecheAdresse({ taille = 14, classe = "" }: ProprietesIcone
       <path
         d="M4 20 20 4m0 0H10.5M20 4v9.5"
         stroke="currentColor"
-        strokeWidth="2"
+        strokeWidth="1.8"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -922,7 +922,7 @@ export function IconePlus({ taille = 18, classe = "" }: ProprietesIcone) {
       <path
         d="M12 5v14M5 12h14"
         stroke="currentColor"
-        strokeWidth="2"
+        strokeWidth="1.8"
         strokeLinecap="round"
       />
     </svg>
@@ -977,7 +977,7 @@ export function IconeAvion({ taille = 20, classe = "" }: ProprietesIcone) {
       <path
         d="M10.6 3.6a1.4 1.4 0 0 1 2.8 0v5.6l6.9 3.9v2.1l-6.9-2.1v4l2.3 1.7v1.6L12 19.6l-3.7.8v-1.6l2.3-1.7v-4L3.7 15.2v-2.1l6.9-3.9V3.6Z"
         stroke="currentColor"
-        strokeWidth="1.6"
+        strokeWidth="1.8"
         strokeLinejoin="round"
       />
     </svg>

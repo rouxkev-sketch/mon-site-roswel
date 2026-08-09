@@ -537,7 +537,9 @@ verif(
   Boolean(dansLeLien?.masque?.includes("/icone-world.png")),
   dansLeLien?.masque ?? "(rien)"
 );
-verif("à la taille voulue (17 px)", dansLeLien?.taille === "17×17", dansLeLien?.taille);
+//  ⚠️ 16 px DEPUIS LA PASSE Nº 138 : le rang « inline » de l'échelle
+//  d'icônes — toutes les icônes des lignes d'info de fiche l'ont pris.
+verif("à la taille voulue (16 px)", dansLeLien?.taille === "16×16", dansLeLien?.taille);
 verif(
   "plus aucune image site.png sur la fiche",
   (await pub.locator('img[src="/site.png"]').count()) === 0

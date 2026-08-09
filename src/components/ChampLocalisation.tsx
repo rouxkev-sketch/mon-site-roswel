@@ -675,7 +675,7 @@ export function ChampLocalisation({
                      hover:bg-sombre-eleve hover:text-sombre-texte
                      active:bg-sombre-eleve"
         >
-          <IconeCroix taille={15} />
+          <IconeCroix taille={16} />
         </button>
       )}
       </div>

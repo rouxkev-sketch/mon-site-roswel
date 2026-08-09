@@ -257,7 +257,7 @@ export function BlocHorairesStudio({
                                      justify-center rounded-full text-sombre-texte-doux
                                      transition-colors hover:text-erreur"
                         >
-                          <IconeCroix taille={14} />
+                          <IconeCroix taille={16} />
                         </button>
                       </div>
                     ))}

@@ -199,33 +199,49 @@ export default async function MiseEnPageTatouage({
         <FournisseurStyles styles={stylesAjoutes}>{children}</FournisseurStyles>
       </FournisseurSession>
 
-      {/* LE PIED DE PAGE — deux mises en page, un seul contenu.
-          SMARTPHONE (< 640 px) : tout est CENTRÉ et empilé — la marque,
-          puis les liens sur leur propre ligne, espacés régulièrement.
-          ⚠️ LE BAS EST RESSERRÉ (passe nº 134) : après la ligne des
-          liens, la page se terminait sur 40 px de vide — la dernière
-          chose qu'on voyait était une marge. 24 px suffisent à
-          détacher les liens du bord ; le haut passe à 32 px et
-          l'écart marque → liens à 20 px, pour que l'ensemble reste
-          équilibré sans finir sur du vide.
-          WEB (≥ 640 px) : la présentation d'origine, inchangée — la
-          marque à gauche, les liens à droite, sur une ligne. */}
-      <footer className="border-t border-sombre-bordure mt-auto">
+      {/* LE PIED DE PAGE — refondu à la charte (passe nº 138).
+          ⚠️ LE TRAIT DE SÉPARATION A DISPARU : c'était le dernier
+          contour du site. Le pied se dit désormais comme tout le
+          reste, PAR SON FOND — un cran plus clair que la page, d'un
+          bord à l'autre de l'écran.
+
+          LA HIÉRARCHIE, enfin : la MARQUE en blanc doux, son slogan en
+          gris dessous — deux lignes, deux voix — puis les liens dans
+          un seul et même traitement (gris doux, blanc au survol).
+          L'ancienne ligne unique « YokoFolio — slogan. » mêlait tout
+          au même gris que les liens : rien ne se détachait.
+
+          SMARTPHONE : tout centré et empilé — la marque, puis les
+          liens espacés régulièrement. ⚠️ LE BAS RESTE COURT (leçon de
+          la passe nº 134, jamais confirmée sur l'iPhone du
+          propriétaire) : 24 px sous les liens, plus la marge de
+          sécurité des écrans à encoche — la page ne finit pas sur du
+          vide.
+          WEB : la marque à gauche, les liens à droite, alignés sur la
+          ligne de base de la marque. */}
+      <footer className="mt-auto bg-sombre-carte">
         <div
-          className="mx-auto w-full max-w-[1760px] px-4 sm:px-6 text-[13px] text-sombre-texte-doux
-                     pt-8 pb-6 flex flex-col items-center gap-5 text-center
-                     sm:py-8 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6 sm:gap-y-2 sm:text-left"
+          className="mx-auto w-full max-w-[1760px] px-4 sm:px-6
+                     pt-8 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-9
+                     flex flex-col items-center gap-6 text-center
+                     sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-6 sm:gap-y-3 sm:text-left"
         >
-          <p>
-            {MARQUE_YOKOFOLIO.nom} — {MARQUE_YOKOFOLIO.slogan}.
+          <p className="leading-snug">
+            <span className="block text-[14px] font-semibold text-sombre-texte">
+              {MARQUE_YOKOFOLIO.nom}
+            </span>
+            <span className="mt-1 block text-[12.5px] text-sombre-texte-doux">
+              {MARQUE_YOKOFOLIO.slogan}.
+            </span>
           </p>
           {/* Discrets, mais TOUJOURS accessibles : les mentions légales
               sont obligatoires et doivent être joignables de n'importe
               quelle page. */}
           <nav
             aria-label="Liens du pied de page"
-            className="flex flex-wrap justify-center gap-x-10 gap-y-3
-                       sm:ml-auto sm:justify-end sm:gap-x-5 sm:gap-y-2"
+            className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3
+                       text-[13px] text-sombre-texte-doux
+                       sm:ml-auto sm:justify-end sm:gap-x-6 sm:gap-y-2"
           >
             <Link
               href="/qui-sommes-nous"
@@ -250,6 +266,7 @@ export default async function MiseEnPageTatouage({
                 survol. L'icône est prise en `monochrome` pour cela : le
                 dégradé officiel, à côté de trois liens gris, aurait
                 fait tache dans un pied de page qui se veut discret.
+                16 px : le rang « badge » de l'échelle d'icônes (nº 138).
                 Nouvel onglet : on quitte le site, on ne l'abandonne
                 pas. `noreferrer` va avec `_blank` — la page ouverte ne
                 doit pas garder la main sur la nôtre. */}
@@ -260,7 +277,7 @@ export default async function MiseEnPageTatouage({
               className="inline-flex items-center gap-1.5
                          hover:text-sombre-texte transition-colors"
             >
-              <IconeInstagram taille={15} monochrome />
+              <IconeInstagram taille={16} monochrome />
               Instagram
             </a>
           </nav>

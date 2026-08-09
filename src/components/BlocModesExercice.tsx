@@ -755,7 +755,7 @@ export function BlocModesExercice({
                    hover:bg-sombre-eleve hover:text-primaire
                    active:bg-sombre-eleve active:text-primaire"
       >
-        <IconeCroix taille={15} />
+        <IconeCroix taille={16} />
       </button>
     );
   }

@@ -3163,7 +3163,7 @@ export function FormulaireFiche() {
               className="mx-auto flex w-14 h-14 items-center justify-center
                          rounded-full bg-primaire/15 text-primaire"
             >
-              <IconeCocheListe taille={26} />
+              <IconeCocheListe taille={24} />
             </span>
             <h2
               id="titre-retour-compte"
@@ -3229,7 +3229,7 @@ export function FormulaireFiche() {
               className="mx-auto flex w-14 h-14 items-center justify-center
                          rounded-full bg-primaire/15 text-primaire"
             >
-              <IconeHorloge taille={26} />
+              <IconeHorloge taille={24} />
             </span>
             {!ficheChargee?.publie && !horsLigne ? (
               <>

@@ -138,7 +138,7 @@ export function BoutonSignalement({
             onClick={() => setOuvert(true)}
             className="inline-flex items-center gap-1.5 text-xs text-encre-douce hover:underline underline-offset-2"
           >
-            <IconeDrapeau taille={14} />
+            <IconeDrapeau taille={16} />
             Signaler cette fiche
           </button>
         </div>

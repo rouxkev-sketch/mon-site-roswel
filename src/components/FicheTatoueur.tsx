@@ -310,9 +310,9 @@ export function FicheTatoueur({
     <img
       src={fichier}
       alt=""
-      width={17}
-      height={17}
-      className="w-[17px] h-[17px] shrink-0 invert opacity-60"
+      width={16}
+      height={16}
+      className="w-4 h-4 shrink-0 invert opacity-60"
     />
   );
 
@@ -541,7 +541,7 @@ export function FicheTatoueur({
                     couleur de la ligne — donc elle passe au rose avec
                     le texte au survol, ce que l'ancienne image ne
                     faisait pas. */}
-                <IconeWorld taille={17} />
+                <IconeWorld taille={16} />
                 {/* LE TITRE CHOISI PAR LE TATOUEUR (passe nº 116) —
                     et, pour une fiche d'avant la migration nº 51, le
                     libellé d'avant (service ou domaine). */}
@@ -563,7 +563,7 @@ export function FicheTatoueur({
                 className="flex w-fit items-center gap-2.5 text-[15px] leading-snug
                            text-sombre-texte-doux hover:text-primaire transition-colors"
               >
-                <IconeWorld taille={17} />
+                <IconeWorld taille={16} />
                 {tatoueur.titre_page_de_liens ||
                   libelleDuLien(tatoueur.page_de_liens)}
               </a>

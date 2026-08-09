@@ -808,7 +808,7 @@ export function BlocPortfolio({
                          text-sombre-texte-doux opacity-60 transition-opacity
                          hover:opacity-100 focus-visible:opacity-100"
             >
-              <IconeCroix taille={15} />
+              <IconeCroix taille={16} />
             </button>
           </div>
 
@@ -1091,7 +1091,7 @@ export function BlocPortfolio({
                              text-sombre-texte-doux transition-colors
                              hover:bg-sombre-eleve hover:text-sombre-texte"
                 >
-                  <IconeCroix taille={15} />
+                  <IconeCroix taille={16} />
                 </button>
               </div>
               <ul
@@ -1234,7 +1234,7 @@ export function BlocPortfolio({
                                    hover:bg-sombre-bordure hover:text-sombre-texte
                                    active:bg-sombre-bordure"
                       >
-                        <IconeCroix taille={13} />
+                        <IconeCroix taille={16} />
                       </button>
                     )}
                   </div>

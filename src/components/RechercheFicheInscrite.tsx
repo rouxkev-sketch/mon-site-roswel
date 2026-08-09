@@ -235,7 +235,7 @@ export function RechercheFicheInscrite({
                        text-sombre-texte-doux transition-colors
                        hover:bg-sombre-eleve hover:text-sombre-texte"
           >
-            <IconeCroix taille={15} />
+            <IconeCroix taille={16} />
           </button>
         </div>
       </div>
@@ -259,7 +259,7 @@ export function RechercheFicheInscrite({
           className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2
                      text-sombre-texte-doux"
         >
-          <IconeLoupe taille={17} />
+          <IconeLoupe taille={16} />
         </span>
         <input
           id={id}
@@ -310,7 +310,7 @@ export function RechercheFicheInscrite({
                        text-sombre-texte-doux transition-colors
                        hover:text-sombre-texte"
           >
-            <IconeCroix taille={14} />
+            <IconeCroix taille={16} />
           </button>
         )}
       </div>

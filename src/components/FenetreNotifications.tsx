@@ -290,7 +290,7 @@ export function FenetreNotifications({
                          text-sombre-texte-doux hover:text-primaire
                          transition-colors"
             >
-              <IconeDoubleCoche taille={19} />
+              <IconeDoubleCoche taille={18} />
               <span className="hidden sm:inline text-[13px] font-medium">
                 Tout marquer comme lu
               </span>
@@ -305,7 +305,7 @@ export function FenetreNotifications({
                        hover:text-sombre-texte hover:bg-sombre-eleve
                        transition-colors"
           >
-            <IconeCroix taille={16} />
+            <IconeCroix taille={18} />
           </button>
         </div>
 

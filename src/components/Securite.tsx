@@ -291,7 +291,7 @@ export function Securite() {
           ouverte. Même gris à 80 % que les icônes du menu. */}
       <h1 className="flex items-center gap-2.5 text-[clamp(1.5rem,4vw,1.9rem)] font-bold text-sombre-texte">
         <IconeBouclierTrait
-          taille={26}
+          taille={24}
           classe="shrink-0 text-sombre-texte/80"
         />
         Sécurité
@@ -305,7 +305,7 @@ export function Securite() {
           {/* L'ADRESSE EN COURS — un fond élevé, sans contour : c'est
               un badge d'information, le niveau au-dessus de la carte. */}
           <div className="flex items-center gap-3 rounded-xl bg-sombre-eleve px-4 py-3">
-            <IconeEnveloppe taille={19} classe="shrink-0 text-sombre-texte-doux" />
+            <IconeEnveloppe taille={20} classe="shrink-0 text-sombre-texte-doux" />
             <span className="min-w-0 flex-1 truncate text-[15px] text-sombre-texte">
               {utilisateur?.email ?? "—"}
             </span>

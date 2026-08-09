@@ -140,7 +140,7 @@ export function LienLibre({
                    bg-sombre-eleve px-4"
       >
         <span aria-hidden="true" className="shrink-0 text-sombre-texte-doux">
-          <IconeLien taille={19} />
+          <IconeLien taille={20} />
         </span>
         <span
           className="min-w-0 flex-1 truncate text-base font-semibold
@@ -158,7 +158,7 @@ export function LienLibre({
                      rounded-full text-sombre-texte-doux transition-colors
                      hover:bg-sombre-eleve-clair hover:text-sombre-texte"
         >
-          <IconeCroix taille={15} />
+          <IconeCroix taille={16} />
         </button>
       </div>
     );

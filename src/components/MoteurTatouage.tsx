@@ -682,7 +682,7 @@ export function MoteurTatouage({
                            : "border-sombre-bordure bg-sombre-eleve text-sombre-texte hover:border-sombre-texte-doux"
                        }`}
           >
-            <IconeReglages taille={19} />
+            <IconeReglages taille={20} />
           </button>
 
           {filtresOuverts && (
@@ -728,7 +728,7 @@ export function MoteurTatouage({
                      rounded-full border border-sombre-bordure bg-sombre-eleve
                      px-5 min-h-[52px] active:border-primaire transition-colors"
         >
-          <IconeLoupe taille={19} classe="shrink-0 text-sombre-texte-doux" />
+          <IconeLoupe taille={18} classe="shrink-0 text-sombre-texte-doux" />
           <span
             aria-hidden="true"
             className="min-w-0 flex-1 truncate text-[15px] leading-tight"
@@ -779,9 +779,9 @@ export function MoteurTatouage({
                      transition-opacity"
         >
           {disposition === "deux" ? (
-            <IconeUneColonne taille={21} />
+            <IconeUneColonne taille={20} />
           ) : (
-            <IconeDeuxColonnes taille={21} />
+            <IconeDeuxColonnes taille={20} />
           )}
         </button>
       </div>

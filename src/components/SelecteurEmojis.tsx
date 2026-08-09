@@ -83,7 +83,7 @@ export function SelecteurEmojis({
                        : "text-sombre-texte-doux hover:text-primaire hover:bg-sombre-eleve"
                    }`}
       >
-        <IconeEmoji taille={19} />
+        <IconeEmoji taille={20} />
       </button>
 
       {ouvert && (
@@ -97,7 +97,7 @@ export function SelecteurEmojis({
           {/* LA RECHERCHE — en tête, toujours visible. */}
           <div className="p-2.5 border-b border-sombre-bordure">
             <div className="flex items-center gap-2 rounded-xl bg-sombre-eleve px-3">
-              <IconeLoupe taille={15} classe="shrink-0 text-sombre-texte-doux" />
+              <IconeLoupe taille={16} classe="shrink-0 text-sombre-texte-doux" />
               <input
                 type="text"
                 {...sansRemplissageAuto("recherche-emoji")}

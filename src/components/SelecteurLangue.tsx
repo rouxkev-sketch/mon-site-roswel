@@ -8,68 +8,96 @@ import { IconeCroix, IconeMonde } from "@/components/Icones";
 /**
  * LE SÉLECTEUR DE LANGUE
  * =======================
- * Le globe de la barre fixe. Il ouvre la liste des langues :
- *  - WEB / iPad (≥ 768 px) : une FENÊTRE posée au centre de l'écran ;
- *  - SMARTPHONE (< 768 px) : un PANNEAU QUI MONTE DU BAS.
- * Un seul composant, un seul état : les deux habillages affichent
- * rigoureusement la même liste — impossible qu'ils divergent.
+ * Deux déclencheurs, une seule liste :
+ *  - `barre` : le globe rond de la barre fixe (visiteur non connecté) ;
+ *  - `entree` : une ligne du menu « Mon compte » — c'est là que le
+ *    globe vit une fois connecté, la barre gardant le cœur des
+ *    favoris (passe nº 137).
+ *
+ * LA FENÊTRE (refonte nº 138, à la charte — plus de contour, plus
+ * d'ombre, plus de phrase explicative) :
+ *  - WEB, depuis la barre : posée SOUS LA BARRE FIXE, alignée sur le
+ *    globe — l'habillage EXACT de la fenêtre « Mon compte » (290 px,
+ *    coins 2xl, fond carte) ;
+ *  - SMARTPHONE, et depuis le menu sur les deux appareils : une
+ *    FENÊTRE SUPERPOSÉE centrée derrière son voile — le traitement de
+ *    toutes les fenêtres du site (notifications, tatoueurs suivis).
+ *    ⚠️ LE PANNEAU QUI MONTAIT DU BAS A DISPARU, et sa poignée de
+ *    glissement avec lui : c'était le dernier écran à le faire.
+ *
+ * QUEL HABILLAGE POUR QUEL APPAREIL : la détection C1
+ * (`dataset.appareil`), jamais la largeur de fenêtre — un iPhone
+ * tourné reste un téléphone. La question ne se pose qu'au clic
+ * d'ouverture, côté navigateur : aucune discordance d'hydratation.
  *
  * ⚠️ RIEN N'EST BRANCHÉ, ET C'EST VOULU. Seul le français est actif ;
  * les autres langues sont grisées et NON CLIQUABLES (`disabled`, et
- * `aria-disabled` pour les lecteurs d'écran). Proposer une langue
- * qu'on ne sert pas serait une promesse en l'air. La structure, elle,
- * est prête : voir LANGUES_YOKOFOLIO dans src/config/tatouage.ts.
+ * `aria-disabled` pour les lecteurs d'écran) avec la mention
+ * « bientôt » — c'est elle qui explique, plus aucune phrase
+ * au-dessus de la liste. La structure est prête : voir
+ * LANGUES_YOKOFOLIO dans src/config/tatouage.ts.
  *
- * FERMETURE : la croix, la touche Échap, un clic sur le fond, ou —
- * sur smartphone — un glissement vers le bas. Le focus revient sur le
- * globe : on ne perd jamais le fil au clavier.
+ * FERMETURE : Échap partout ; un clic hors de la fenêtre (web sous la
+ * barre) ; le voile ou la croix (superposée). Le focus revient sur le
+ * déclencheur.
  */
 export function SelecteurLangue({
   hauteur = 40,
   variante = "barre",
 }: {
   hauteur?: number;
-  /** `barre` : le globe rond de la barre fixe (visiteur non connecté).
-      `entree` : une LIGNE du menu « Mon compte » — c'est là que le
-      globe vit une fois connecté, la barre gardant le cœur des
-      favoris (passe nº 137). Un seul composant, une seule fenêtre. */
   variante?: "barre" | "entree";
 }) {
   const [ouvert, setOuvert] = useState(false);
+  /** L'habillage choisi AU CLIC : superposée, ou sous la barre.
+      Depuis le menu, toujours superposée ; depuis la barre, seulement
+      sur un vrai mobile (C1). */
+  const [superposee, setSuperposee] = useState(false);
   const globe = useRef<HTMLButtonElement>(null);
   const panneau = useRef<HTMLDivElement>(null);
+  const zone = useRef<HTMLDivElement>(null);
 
   const langueActive =
     LANGUES_YOKOFOLIO.find((langue) => langue.actif) ?? LANGUES_YOKOFOLIO[0];
+
+  function ouvrir() {
+    setSuperposee(
+      variante === "entree" ||
+        document.documentElement.dataset.appareil === "mobile"
+    );
+    setOuvert(true);
+  }
 
   function fermer() {
     setOuvert(false);
     globe.current?.focus();
   }
 
-  // Échap ferme, et la page derrière ne défile plus tant que la
-  // fenêtre est ouverte.
+  // Échap ferme ; la page ne défile plus derrière la SUPERPOSÉE (la
+  // fenêtre sous la barre, elle, laisse la page vivre — comme le menu
+  // de compte). Un clic hors de la fenêtre sous la barre ferme aussi.
   useEffect(() => {
     if (!ouvert) return;
-    const avant = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
     function auClavier(evenement: KeyboardEvent) {
-      if (evenement.key === "Escape") {
-        setOuvert(false);
-        globe.current?.focus();
-      }
+      if (evenement.key === "Escape") fermer();
     }
+    function auPointeur(evenement: MouseEvent) {
+      if (superposee) return; // Là-bas, c'est le voile qui ferme.
+      if (!zone.current?.contains(evenement.target as Node)) setOuvert(false);
+    }
+    const defilementAvant = document.body.style.overflow;
+    if (superposee) document.body.style.overflow = "hidden";
     document.addEventListener("keydown", auClavier);
+    document.addEventListener("mousedown", auPointeur);
     return () => {
-      document.body.style.overflow = avant;
       document.removeEventListener("keydown", auClavier);
+      document.removeEventListener("mousedown", auPointeur);
+      if (superposee) document.body.style.overflow = defilementAvant;
     };
-  }, [ouvert]);
+  }, [ouvert, superposee]);
 
-  // Le focus ENTRE dans le panneau à l'ouverture et y TOURNE EN ROND :
-  // sans ça, la tabulation partirait à l'aveugle dans la page cachée
-  // derrière la fenêtre.
+  // Le focus ENTRE dans la fenêtre à l'ouverture et y TOURNE EN ROND :
+  // sans ça, la tabulation partirait à l'aveugle dans la page derrière.
   useEffect(() => {
     if (!ouvert) return;
     const boite = panneau.current;
@@ -78,53 +106,25 @@ export function SelecteurLangue({
       ...boite.querySelectorAll<HTMLElement>("button:not([disabled])"),
     ];
     focusables()[0]?.focus();
-
     function auTab(evenement: KeyboardEvent) {
       if (evenement.key !== "Tab") return;
-      const cibles = focusables();
-      if (cibles.length === 0) return;
-      const debut = cibles[0];
-      const fin = cibles[cibles.length - 1];
-      if (evenement.shiftKey && document.activeElement === debut) {
+      const liste = focusables();
+      if (liste.length === 0) return;
+      const premier = liste[0];
+      const dernier = liste[liste.length - 1];
+      if (evenement.shiftKey && document.activeElement === premier) {
         evenement.preventDefault();
-        fin.focus();
-      } else if (!evenement.shiftKey && document.activeElement === fin) {
+        dernier.focus();
+      } else if (!evenement.shiftKey && document.activeElement === dernier) {
         evenement.preventDefault();
-        debut.focus();
+        premier.focus();
       }
     }
     document.addEventListener("keydown", auTab);
     return () => document.removeEventListener("keydown", auTab);
   }, [ouvert]);
 
-  // GLISSEMENT VERS LE BAS pour fermer (smartphone) — même geste que
-  // les feuilles du reste du site.
-  const [glisse, setGlisse] = useState(0);
-  const [enGlissement, setEnGlissement] = useState(false);
-  const depart = useRef<number | null>(null);
-
-  function glissementDebut(evenement: React.PointerEvent) {
-    depart.current = evenement.clientY;
-    setEnGlissement(true);
-    try {
-      evenement.currentTarget.setPointerCapture(evenement.pointerId);
-    } catch {
-      // Navigateur sans capture de pointeur : le glissement marche
-      // quand même tant que le doigt reste sur la poignée.
-    }
-  }
-  function glissementBouge(evenement: React.PointerEvent) {
-    if (depart.current === null) return;
-    setGlisse(Math.max(0, evenement.clientY - depart.current));
-  }
-  function glissementFin() {
-    if (glisse > 70) fermer();
-    depart.current = null;
-    setEnGlissement(false);
-    setGlisse(0);
-  }
-
-  /** La liste — écrite UNE fois, affichée dans les deux habillages. */
+  /** La liste — écrite UNE fois, posée dans les deux habillages. */
   const liste = (
     <ul className="flex flex-col gap-0.5">
       {LANGUES_YOKOFOLIO.map((langue) => (
@@ -136,24 +136,25 @@ export function SelecteurLangue({
             aria-disabled={!langue.actif}
             aria-current={langue.actif ? "true" : undefined}
             onClick={langue.actif ? fermer : undefined}
-            className={`w-full flex items-center gap-3 min-h-[48px] px-3 rounded-xl
-                        text-left text-base transition-colors ${
+            className={`w-full flex items-center gap-3 min-h-[46px] px-3 rounded-xl
+                        text-left text-[14.5px] transition-colors ${
                           langue.actif
                             ? "text-sombre-texte hover:bg-sombre-eleve font-semibold"
                             : "text-sombre-texte-doux/50 cursor-not-allowed"
                         }`}
           >
             {/* La puce ronde désigne la langue en cours — le seul
-                repère, puisque aucune autre n'est cliquable. */}
+                repère, puisque aucune autre n'est cliquable. Le rose
+                est ici l'état d'un choix : un de ses emplois réservés. */}
             <span
               aria-hidden
-              className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+              className={`w-2 h-2 rounded-full shrink-0 ${
                 langue.actif ? "bg-primaire" : "bg-sombre-bordure"
               }`}
             />
             {langue.label}
             {!langue.actif && (
-              <span className="ml-auto text-[12px] uppercase tracking-wide">
+              <span className="ml-auto text-[11.5px] uppercase tracking-wide">
                 bientôt
               </span>
             )}
@@ -164,20 +165,19 @@ export function SelecteurLangue({
   );
 
   return (
-    <>
+    <div
+      ref={zone}
+      className={variante === "entree" ? "" : "relative shrink-0"}
+    >
       {variante === "entree" ? (
         /* ---- LE GLOBE COMME ENTRÉE DE MENU (passe nº 137) ----
-           Connecté, la barre fixe donne sa place au CŒUR des favoris ;
-           le globe déménage dans la fenêtre « Mon compte », au-dessus
-           de Sécurité. Il y prend le costume des autres entrées —
-           même hauteur, même graisse, même boîte d'icône à largeur
-           fixe — sinon la ligne des langues « bougerait » par rapport
-           à ses voisines. La FENÊTRE, elle, ne change pas d'un pixel :
-           c'est le même composant, le même état, la même liste. */
+           Même costume que les autres entrées : hauteur, graisse,
+           boîte d'icône à largeur fixe. La langue courante s'écrit à
+           droite, en clair. */
         <button
           ref={globe}
           type="button"
-          onClick={() => setOuvert(true)}
+          onClick={ouvrir}
           aria-haspopup="dialog"
           aria-expanded={ouvert}
           className="flex w-full items-center gap-3 rounded-xl px-3 min-h-[46px]
@@ -188,9 +188,6 @@ export function SelecteurLangue({
             <IconeMonde taille={22} />
           </span>
           <span className="flex-1">Langue</span>
-          {/* LA LANGUE COURANTE, à droite — la même information que
-              l'info-bulle du globe de la barre, écrite en clair
-              puisqu'il y a la place. */}
           <span className="shrink-0 text-[12.5px] font-medium uppercase tracking-wide text-sombre-texte-doux">
             {langueActive.code ?? langueActive.label}
           </span>
@@ -199,7 +196,7 @@ export function SelecteurLangue({
         <button
           ref={globe}
           type="button"
-          onClick={() => setOuvert(true)}
+          onClick={ouvrir}
           aria-haspopup="dialog"
           aria-expanded={ouvert}
           aria-label={`Langue : ${langueActive.label}`}
@@ -207,10 +204,9 @@ export function SelecteurLangue({
           // MÊME HAUTEUR que le bouton rose à sa droite : la barre garde
           // une seule ligne d'appui, sans décalage d'un pixel.
           style={{ height: hauteur, width: hauteur }}
-          // OUVERT, LE GLOBE PASSE EN ROSE (la couleur primaire de la
-          // charte, #EE3D6F) : on voit d'un coup d'œil que l'écran des
-          // langues affiché est LE SIEN — même langage que l'icône de
-          // compte, rose quand on est connecté.
+          // OUVERT, LE GLOBE PASSE EN ROSE : on voit d'un coup d'œil
+          // que la fenêtre affichée est LA SIENNE — même langage que
+          // l'icône de compte, rose quand on est connecté.
           className={`shrink-0 flex items-center justify-center rounded-full
                      transition-colors hover:bg-sombre-eleve
                      focus-visible:outline-2 focus-visible:outline-offset-2
@@ -220,94 +216,81 @@ export function SelecteurLangue({
                          : "text-sombre-texte hover:text-primaire"
                      }`}
         >
-          {/* LE GLOBE DESSINÉ — celui du code, en `currentColor` : il
-              suit les couleurs ci-dessus, gris au repos et rose une
-              fois la fenêtre ouverte.
+          {/* LE GLOBE DESSINÉ — celui du code, en `currentColor`.
               ⚠️ CE N'EST PAS `icone-world.png`. Une passe l'avait
               remplacé ici ; l'image du propriétaire ne sert QU'AU lien
               « Site internet ou Linktree » de la fiche publique. */}
-          <IconeMonde taille={Math.round(hauteur * 0.55)} />
+          <IconeMonde taille={22} />
         </button>
       )}
 
-      {/* ⚠️ POSÉ DIRECTEMENT DANS LA PAGE (createPortal), et non dans
-          la barre. Pourquoi : la barre porte un flou d'arrière-plan
-          (`backdrop-blur`), et un élément flouté devient le REPÈRE de
-          tous ses descendants « fixes ». La fenêtre se serait donc
-          calée sur la barre — 110 px de haut — au lieu de l'écran, et
-          serait sortie par le haut. Le portail la sort de la barre :
-          elle retrouve l'écran entier pour repère. */}
-      {ouvert &&
-        createPortal(
+      {/* ---- LA FENÊTRE SOUS LA BARRE (web, depuis le globe) ----
+          L'habillage EXACT de la fenêtre « Mon compte » : 290 px sous
+          le déclencheur, alignée à droite, fond carte, AUCUN contour,
+          AUCUNE ombre. Ni titre ni croix — comme elle : la liste se
+          suffit, Échap et le clic extérieur ferment. */}
+      {ouvert && !superposee && (
         <div
+          ref={panneau}
           role="dialog"
-          aria-modal="true"
           aria-label="Choisir la langue"
-          className="fixed inset-0 z-[80] flex flex-col justify-end md:items-center md:justify-center"
+          className="absolute top-full right-0 z-30 mt-2 w-[290px]
+                     rounded-2xl bg-sombre-carte"
         >
-          {/* Le fond : un clic dessus ferme. */}
-          <button
-            type="button"
-            aria-label="Fermer"
-            onClick={fermer}
-            className="absolute inset-0 bg-black/60 md:bg-black/50 cursor-default"
-          />
-
-          <div
-            ref={panneau}
-            style={{
-              transform: glisse ? `translateY(${glisse}px)` : undefined,
-              transition: enGlissement ? "none" : "transform .25s ease",
-            }}
-            className="relative w-full md:w-[380px] md:max-w-[92vw]
-                       rounded-t-3xl md:rounded-3xl
-                       bg-sombre-carte text-sombre-texte
-                       border-t md:border border-sombre-bordure
-                       shadow-2xl
-                       pb-[max(1rem,env(safe-area-inset-bottom))] md:pb-4
-                       animate-[rw-feuille-monte_.25s_ease] md:animate-none"
-          >
-            {/* La poignée de glissement — smartphone uniquement. */}
-            <div
-              className="md:hidden pt-3 pb-1 flex justify-center cursor-grab touch-none"
-              onPointerDown={glissementDebut}
-              onPointerMove={glissementBouge}
-              onPointerUp={glissementFin}
-              onPointerCancel={glissementFin}
-            >
-              <span
-                aria-hidden
-                className="w-10 h-1.5 rounded-full bg-sombre-bordure"
-              />
-            </div>
-
-            <div className="flex items-center justify-between gap-3 px-4 pt-2 md:pt-4 pb-2">
-              <h2 className="text-lg font-bold">Langue</h2>
-              <button
-                type="button"
-                onClick={fermer}
-                aria-label="Fermer"
-                className="w-10 h-10 -mr-1 flex items-center justify-center rounded-full
-                           text-sombre-texte-doux hover:text-sombre-texte
-                           hover:bg-sombre-eleve transition-colors"
-              >
-                <IconeCroix taille={22} />
-              </button>
-            </div>
-
-            {/* LA PHRASE, JUSTE SOUS LE TITRE : elle explique pourquoi
-                six langues sur sept sont éteintes, et il faut l'avoir
-                lue AVANT de parcourir la liste. Discrète, sans encadré
-                ni couleur — une explication, pas une alerte. */}
-            <p className="px-4 pt-1 pb-5 text-[13.5px] leading-relaxed text-sombre-texte-doux">
-              Pour le moment, YokoFolio parle français.
-            </p>
-
-            <div className="px-2 pb-4">{liste}</div>
-          </div>
-        </div>,
-        document.body
+          <div className="px-2 py-2">{liste}</div>
+        </div>
       )}
-    </>
+
+      {/* ---- LA FENÊTRE SUPERPOSÉE (smartphone, et depuis le menu) --
+          Le traitement de toutes les fenêtres du site : voile sombre,
+          fenêtre centrée au fond carte, titre et croix en tête, la
+          ligne d'en-tête d'un bord à l'autre.
+          ⚠️ POSÉE DANS <body> (portail) : le flou d'arrière-plan de la
+          barre ferait sinon d'elle le repère des éléments fixes.
+          z-[85] : au-dessus du menu « Mon compte » (z-[70]), d'où elle
+          peut être ouverte. */}
+      {ouvert &&
+        superposee &&
+        createPortal(
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Choisir la langue"
+            className="fixed inset-0 z-[85] flex items-center justify-center px-8 py-6"
+          >
+            <button
+              type="button"
+              aria-label="Fermer"
+              onClick={fermer}
+              className="absolute inset-0 bg-black/60 cursor-default"
+            />
+            <div
+              ref={panneau}
+              className="relative w-full max-w-[320px] max-h-[min(88dvh,640px)]
+                         flex flex-col rounded-3xl bg-sombre-carte overflow-hidden
+                         opacity-100 transition-opacity duration-200 starting:opacity-0"
+            >
+              <div className="flex items-center gap-3 px-4 py-3.5 border-b border-sombre-bordure/60">
+                <h2 className="flex-1 min-w-0 text-[17px] font-bold tracking-tight text-sombre-texte">
+                  Langue
+                </h2>
+                <button
+                  type="button"
+                  onClick={fermer}
+                  aria-label="Fermer"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full
+                             text-sombre-texte-doux transition-colors hover:text-sombre-texte"
+                >
+                  <IconeCroix taille={18} />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto overscroll-contain px-2 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+                {liste}
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+    </div>
   );
 }

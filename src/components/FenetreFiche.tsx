@@ -524,10 +524,10 @@ export function FenetreFiche({
                      icône déposée par le propriétaire, telle quelle. */
                   <img
                     src="/adresse.png"
-                    width={17}
-                    height={17}
+                    width={16}
+                    height={16}
                     alt=""
-                    className="mt-[3px] w-[17px] h-[17px] shrink-0 invert opacity-60"
+                    className="mt-[3px] w-4 h-4 shrink-0 invert opacity-60"
                   />
                 )}
                 <div className="min-w-0 flex flex-col gap-1">
@@ -555,7 +555,7 @@ export function FenetreFiche({
                   {/* L'ICÔNE « WORLD » remplace site.png, à la même
                       taille : posée en masque, elle prend la couleur
                       de la ligne et passe au rose avec elle. */}
-                  <IconeWorld taille={17} />
+                  <IconeWorld taille={16} />
                   {/* Le titre choisi (passe nº 116), sinon le libellé
                       d'avant — même règle que la page de fiche. */}
                   {tatoueur.titre_site_web || libelleDuLien(tatoueur.site_web)}
@@ -573,7 +573,7 @@ export function FenetreFiche({
                   className="flex w-fit items-center gap-2.5 text-[15px] leading-snug
                              text-sombre-texte-doux hover:text-primaire transition-colors"
                 >
-                  <IconeWorld taille={17} />
+                  <IconeWorld taille={16} />
                   {tatoueur.titre_page_de_liens ||
                     libelleDuLien(tatoueur.page_de_liens)}
                 </a>

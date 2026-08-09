@@ -121,7 +121,7 @@ export function BoutonHorsLigne({
         className="flex w-fit items-center gap-1.5 text-[13px]
                    text-erreur/80 hover:text-erreur transition-colors"
       >
-        <IconeHorsLigne taille={14} classe="shrink-0" />
+        <IconeHorsLigne taille={16} classe="shrink-0" />
         Mettre la fiche hors ligne
       </button>
 

@@ -1650,7 +1650,7 @@ export function TableauProspection({
                             className="text-primaire underline inline-flex items-center gap-1 break-all"
                           >
                             {domaineSeul(ligne.site_internet)}
-                            <IconeLienExterne taille={12} />
+                            <IconeLienExterne taille={14} />
                           </a>
                         ) : (
                           <span className="text-encre-douce">—</span>
@@ -1667,7 +1667,7 @@ export function TableauProspection({
                             className="text-primaire underline inline-flex items-center gap-1 break-all"
                           >
                             {compteInstagram(ligne.lien_instagram)}
-                            <IconeLienExterne taille={12} />
+                            <IconeLienExterne taille={14} />
                           </a>
                         ) : (
                           <span className="text-encre-douce">—</span>
@@ -1735,7 +1735,7 @@ export function TableauProspection({
                                   title="Noter la relance faite par le formulaire — hors quota"
                                   className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-primaire underline disabled:opacity-60"
                                 >
-                                  <IconeEnveloppe taille={14} />
+                                  <IconeEnveloppe taille={16} />
                                   {formulaireEnCours === ligne.id
                                     ? "Enregistrement…"
                                     : "Relancé par formulaire"}
@@ -1756,7 +1756,7 @@ export function TableauProspection({
                               }
                               className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-semibold text-primaire underline disabled:opacity-60"
                             >
-                              <IconeEnveloppe taille={14} />
+                              <IconeEnveloppe taille={16} />
                               {formulaireEnCours === ligne.id
                                 ? "Enregistrement…"
                                 : "Contacté par formulaire"}
