@@ -16,10 +16,10 @@ import { PiedAgence } from "@/components/agence/PiedAgence";
  * c'est un groupe de mise en page, pas un dossier d'URL. La vitrine
  * reste « /agence », le rendez-vous « /rendez-vous ».
  *
- * L'en-tête et le pied de page des autres produits du dépôt sont
- * écartés ici par CadreSitePublic (src/components) : ils vivent dans
- * la mise en page racine, qu'une mise en page imbriquée ne peut pas
- * remplacer.
+ * L'en-tête et le pied de page des autres produits du dépôt ne peuvent
+ * plus atteindre ces pages (passe nº 145-§1) : chaque produit pose le
+ * sien dans la mise en page de SON groupe, la racine n'impose plus
+ * rien à personne.
  */
 
 export const metadata: Metadata = {

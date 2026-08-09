@@ -119,8 +119,14 @@ export function BoutonCoeurPhoto({
       onClick={basculer}
       onAnimationEnd={() => setPulse(false)}
       aria-pressed={enregistree}
+      //  ⚠️ LE MOT SUIT LA PAGE (nº 145-§3) : on retire « de ma
+      //  sélection », plus « des favoris » — c'est le seul endroit du
+      //  site où le cœur prononçait encore l'ancien mot. LE DESSIN, LUI,
+      //  RESTE UN CŒUR : sur une photo, il dit un goût, pas un rangement.
       aria-label={
-        enregistree ? "Retirer cette photo des favoris" : "Enregistrer cette photo"
+        enregistree
+          ? "Retirer cette photo de ma sélection"
+          : "Enregistrer cette photo"
       }
       title={enregistree ? "Enregistrée" : "Enregistrer"}
       //  ⚠️ `relative z-10` — ET LES DEUX MOTS COMPTENT. La carte est

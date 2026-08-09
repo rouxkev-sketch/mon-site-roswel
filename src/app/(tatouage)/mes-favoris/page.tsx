@@ -26,7 +26,11 @@ import { PageFavoris } from "@/components/PageFavoris";
  * ⚠️ JAMAIS INDEXÉE ni mise en cache : c'est une page personnelle.
  */
 export const metadata: Metadata = {
-  title: "Mes favoris",
+  //  ⚠️ « MA SÉLECTION » (nº 145-§3) — le titre d'onglet suit le titre
+  //  de la page. L'ADRESSE, elle, ne change pas : /mes-favoris reste
+  //  /mes-favoris, pour ne casser aucun lien déjà partagé ni aucune
+  //  redirection après connexion.
+  title: "Ma sélection",
   robots: { index: false, follow: false },
 };
 

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { lieuVersParametres } from "@/lib/geocodage";
 import { MARQUE_YOKOFOLIO, TEXTES_TATOUAGE } from "@/config/tatouage";
-import { IconeCoeur, IconeUtilisateur } from "@/components/Icones";
+import { IconeFanion, IconeUtilisateur } from "@/components/Icones";
 import { LogoYokofolio } from "@/components/LogoYokofolio";
 import { MenuEspace } from "@/components/MenuEspace";
 import { SelecteurLangue } from "@/components/SelecteurLangue";
@@ -241,8 +241,8 @@ export function EnTeteTatouage({
           {connecte && utilisateur ? (
             <Link
               href="/mes-favoris"
-              aria-label="Mes favoris"
-              title="Mes favoris"
+              aria-label="Ma sélection"
+              title="Ma sélection"
               style={{ height: HAUTEUR_ACTIONS, width: HAUTEUR_ACTIONS }}
               className="shrink-0 flex items-center justify-center rounded-full
                          transition-colors hover:bg-sombre-eleve
@@ -250,7 +250,11 @@ export function EnTeteTatouage({
                          focus-visible:outline-primaire
                          text-sombre-texte hover:text-primaire"
             >
-              <IconeCoeur taille={Math.round(HAUTEUR_ACTIONS * 0.55)} />
+              {/* ⚠️ LE FANION, ET PLUS LE CŒUR (nº 145-§3) : cette
+                  icône désigne LA PAGE « Ma sélection », pas le geste
+                  d'aimer une photo. Le cœur reste, lui, sur les cartes
+                  et les fiches. Même taille qu'avant. */}
+              <IconeFanion taille={Math.round(HAUTEUR_ACTIONS * 0.55)} />
             </Link>
           ) : (
             <SelecteurLangue hauteur={HAUTEUR_ACTIONS} />

@@ -25,6 +25,35 @@ export function IconeCoeur({ taille = 24, classe = "" }: ProprietesIcone) {
   );
 }
 
+/**
+ * LE FANION — « MA SÉLECTION » (passe nº 145-§3)
+ * ----------------------------------------------
+ * Le signet que l'on pose sur ce qu'on veut retrouver. Il remplace le
+ * cœur AUX DEUX ENDROITS QUI DÉSIGNENT LA PAGE : l'entrée « Ma
+ * sélection » de la fenêtre « Mon compte », et l'icône de la barre
+ * fixe.
+ *
+ * ⚠️ IL NE REMPLACE PAS LE CŒUR DES PHOTOS NI DES FICHES. Là, le cœur
+ * dit un GESTE — « celle-ci me plaît » — et il reste un cœur. Le
+ * fanion, lui, ne dit pas un goût : il dit un ENDROIT, la pochette où
+ * l'on range. Deux idées, deux dessins.
+ *
+ * Dessiné comme les autres : trait de 1.8, viewBox de 24, angles
+ * arrondis — un rectangle ouvert en bas, échancré en V.
+ */
+export function IconeFanion({ taille = 24, classe = "" }: ProprietesIcone) {
+  return (
+    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
+      <path
+        d="M6.5 4.5h11a1 1 0 0 1 1 1v14l-6.5-4.4L5.5 19.5v-14a1 1 0 0 1 1-1Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function IconeUtilisateur({ taille = 24, classe = "" }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>

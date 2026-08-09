@@ -26,6 +26,7 @@ import {
 } from "@/lib/mosaique-session";
 import { estHydrate } from "@/lib/navigation-session";
 import { sans } from "@/lib/interrupteurs-mesure";
+import { useUtilisateur } from "@/lib/use-utilisateur";
 
 /** useLayoutEffect côté navigateur, useEffect côté serveur (silencieux) */
 const useEffetAvantPeinture =
@@ -116,6 +117,18 @@ export function IndexTatoueurs({
    * vide. Le travail était fait trois fois pour un seul résultat.
    */
   const [restituee] = useState(() => mosaiqueRestituee(premiers));
+
+  /**
+   * QUI REGARDE ? — pour l'appel aux tatoueurs, en bas de page
+   * (passe nº 145-§2). Il ne s'affiche QUE pour un visiteur qui n'a
+   * pas de compte : une fois connecté, on n'a plus rien à faire dans
+   * une invitation à s'inscrire.
+   * ⚠️ AUCUN CLIGNOTEMENT À CRAINDRE : la session est lue par le
+   * SERVEUR dans la mise en page du groupe (FournisseurSession) et
+   * transmise par le contexte — le HTML envoyé porte donc déjà la
+   * bonne réponse, et l'hydratation n'a rien à corriger.
+   */
+  const { utilisateur } = useUtilisateur();
 
   const [tatoueurs, setTatoueurs] = useState<Tatoueur[]>(
     () => restituee?.tatoueurs ?? premiers
@@ -406,7 +419,15 @@ export function IndexTatoueurs({
             ce que le site fait de leur travail. Elle n'a rien à faire
             dans la barre, qui n'a pas la place — et quatre visiteurs
             sur cinq arrivent par le téléphone.
-            DEUX LIGNES, PAS UNE DE PLUS : une question, un bouton. */}
+            DEUX LIGNES, PAS UNE DE PLUS : une question, un bouton.
+
+            ⚠️ POUR LES VISITEURS SANS COMPTE, ET EUX SEULS (passe
+            nº 145-§2). Un connecté a déjà franchi cette porte : lui
+            redemander « Tu es tatoueur ? » en bas de chaque page
+            d'accueil ne lui apprend rien et le traite en inconnu. La
+            réponse vient du serveur avec la page, l'appel n'apparaît
+            donc jamais pour disparaître ensuite. */}
+        {!utilisateur && (
         <section className="mt-14 rounded-2xl bg-sombre-carte px-5 py-8 text-center">
           <h2 className="text-[19px] font-bold tracking-tight text-sombre-texte">
             {TEXTES_TATOUAGE.titreAppelTatoueur}
@@ -441,6 +462,7 @@ export function IndexTatoueurs({
             {TEXTES_TATOUAGE.boutonAppelTatoueur}
           </Link>
         </section>
+        )}
       </main>
     </>
   );

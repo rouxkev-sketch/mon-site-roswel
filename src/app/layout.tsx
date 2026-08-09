@@ -1,18 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { headers } from "next/headers";
 import { Geist } from "next/font/google";
 import { COULEURS } from "@/config/roswel";
 import { MARQUE_YOKOFOLIO, TEXTES_TATOUAGE } from "@/config/tatouage";
-import { ENTETE_CHEMIN, habillageClairVisible } from "@/lib/habillage-public";
 import { adresseDuSite } from "@/lib/site";
 import { variablesCssCouleurs } from "@/lib/theme";
 import { EnregistrementServiceWorker } from "@/components/EnregistrementServiceWorker";
-import { BandeauCookies } from "@/components/BandeauCookies";
-import { CadreSitePublic } from "@/components/CadreSitePublic";
 import { DefinitionsIcones } from "@/components/Icones";
-import { EnTete } from "@/components/EnTete";
 import { MemoireNavigation } from "@/components/MemoireNavigation";
-import { PiedDePage } from "@/components/PiedDePage";
 import "./globals.css";
 
 // Police du site (moderne et très lisible sur mobile)
@@ -71,20 +65,26 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default async function RootLayout({
+/**
+ * ⚠️ CETTE MISE EN PAGE NE PORTE PLUS AUCUN HABILLAGE DE PRODUIT
+ * (passe nº 145-§1). Elle ne contient que ce qui appartient VRAIMENT à
+ * tout le monde : la balise <html>, la police, les couleurs, le
+ * journal de navigation et le mode application.
+ *
+ * L'en-tête blanc, le pied de page et le bandeau cookies du produit
+ * ARTISANS vivaient ici et s'appliquaient donc partout par défaut ;
+ * une liste d'adresses tenue à la main devait ensuite les retirer des
+ * pages de yokofolio — et trois adresses nées après cette liste
+ * (/mes-favoris, /apres-connexion, /rejoindre/<jeton>) n'y figuraient
+ * pas : elles affichaient la barre fixe de l'ancien produit. L'habillage
+ * est descendu dans src/app/(artisans)/layout.tsx, où il ne peut plus
+ * atteindre que les pages de ce groupe.
+ */
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // L'ADRESSE DE LA PAGE, posée par le proxy (src/proxy.ts). Elle sert
-  // à ne PAS RENDRE DU TOUT l'habillage clair du produit artisans sur
-  // les pages qui ont le leur — yokofolio, l'agence, les outils de
-  // /admin. Le masquer au navigateur ne suffisait pas : le serveur le
-  // rendait quand même, et le navigateur allait chercher le logo
-  // Roswel sur chaque page de yokofolio.
-  const chemin = (await headers()).get(ENTETE_CHEMIN);
-  const habillageClair = habillageClairVisible(chemin);
-
   return (
     // `suppressHydrationWarning` : le détecteur d'appareil de yokofolio
     // (src/app/(tatouage)/layout.tsx) pose `data-appareil` sur <html>
@@ -126,24 +126,12 @@ export default async function RootLayout({
         {/* Dégradés SVG partagés (icône Instagram…), définis une
             seule fois hors de tout sous-arbre masqué */}
         <DefinitionsIcones />
-        {/* Menu commun aux pages du produit ARTISANS (collé en haut).
-            Absent partout ailleurs — yokofolio, site vitrine, outils de
-            /admin ont chacun le leur. CadreSitePublic reste en filet
-            de sécurité côté navigateur. */}
-        {habillageClair && (
-          <CadreSitePublic>
-            <EnTete />
-          </CadreSitePublic>
-        )}
+        {/* CHAQUE PRODUIT POSE SON PROPRE HABILLAGE, dans la mise en
+            page de SON groupe : (artisans) l'en-tête blanc et le pied
+            complet, (tatouage) le fond sombre et son pied discret,
+            (agence) sa barre de site vitrine. La racine, elle,
+            n'impose plus rien à personne. */}
         {children}
-        {habillageClair && (
-          <CadreSitePublic>
-            {/* Pied de page commun aux pages du produit artisans */}
-            <PiedDePage />
-            {/* Information cookies (RGPD) */}
-            <BandeauCookies />
-          </CadreSitePublic>
-        )}
         {/* Journal de navigation (bouton retour de la fiche) */}
         <MemoireNavigation />
         {/* Active le mode "application installable" (PWA) */}

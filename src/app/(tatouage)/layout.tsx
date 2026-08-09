@@ -11,10 +11,12 @@
  * « /tatoueur/nom ». Les parenthèses servent uniquement à donner un
  * habillage commun à ces pages-là, sans toucher aux autres produits.
  *
- * L'en-tête et le pied de page BLANCS du produit artisans sont écartés
- * pour ces adresses par CadreSitePublic (src/components) : ils vivent
- * dans la mise en page racine, une mise en page imbriquée ne peut donc
- * pas les remplacer — il faut décider à la racine.
+ * L'en-tête et le pied de page BLANCS du produit artisans ne peuvent
+ * PLUS atteindre ces adresses (passe nº 145-§1) : ils ne vivent plus
+ * dans la mise en page racine — donc partout par défaut, à retirer
+ * ensuite d'une liste d'adresses — mais dans celle de LEUR groupe,
+ * src/app/(artisans)/layout.tsx. Une page de yokofolio ne peut plus
+ * les porter par oubli.
  *
  * ⚠️ AUCUN LIEN VERS UN AUTRE PRODUIT. Les fichiers des artisans et de
  * l'agence restent dans le code, mais aucune page de yokofolio ne les

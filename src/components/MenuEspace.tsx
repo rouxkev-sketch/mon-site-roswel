@@ -8,7 +8,7 @@ import {
   IconeBouclierTrait,
   IconeChevronBas,
   IconeCloche,
-  IconeCoeur,
+  IconeFanion,
   IconePlus,
   IconeReglages,
   IconeSortie,
@@ -339,20 +339,25 @@ export function MenuEspace({
           )}
         </button>
 
-        {/* ---------- 2. FAVORIS (passe nº 137) — SOUS Notifications.
+        {/* ---------- 2. MA SÉLECTION (passe nº 137, renommée à la
+            nº 145-§3) — SOUS Notifications.
             L'entrée du compte ouvert à tous : les photos gardées et
             les tatoueurs suivis. Elle vient AVANT « Ajouter un
             portfolio », parce qu'elle concerne tout le monde quand la
-            suivante ne concerne que ceux qui veulent se montrer. */}
+            suivante ne concerne que ceux qui veulent se montrer.
+            ⚠️ LE FANION, ET PLUS LE CŒUR : ici l'icône désigne un
+            ENDROIT — la pochette où l'on range — quand le cœur des
+            photos désigne un GESTE. Le cœur, lui, ne bouge pas des
+            cartes ni des fiches. Taille et graisse inchangées. */}
         <Link
           href="/mes-favoris"
           onClick={() => setOuvert(false)}
           className={classeEntree}
         >
           <span className={boiteIcone}>
-            <IconeCoeur taille={22} />
+            <IconeFanion taille={22} />
           </span>
-          <span className="flex-1">Favoris</span>
+          <span className="flex-1">Ma sélection</span>
         </Link>
 
         {/* ---------- 3. AJOUTER UN PORTFOLIO — une entrée du MENU, et

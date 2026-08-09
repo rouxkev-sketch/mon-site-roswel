@@ -166,8 +166,11 @@ export function PageFavoris({
     <main className="flex-1 mx-auto w-full max-w-[1400px] px-4 sm:px-6 pt-6 pb-16">
       {/* ---------- LE TITRE, ET LES SUIVIS ---------- */}
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+        {/* ⚠️ « MA SÉLECTION », ET PLUS « Mes favoris » (nº 145-§3) —
+            le mot du site pour la pochette où l'on range ce qu'on
+            veut retrouver. Même graisse, même taille. */}
         <h1 className="text-[22px] font-bold tracking-tight text-sombre-texte">
-          Mes favoris
+          Ma sélection
         </h1>
 
         {/* LE BOUTON DES SUIVIS — DISCRET, et il porte le compte.
