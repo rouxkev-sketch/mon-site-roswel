@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { arriveeQuiRestitue } from "@/lib/navigation-session";
 import { positionDejaPosee } from "@/lib/restitution-position";
@@ -39,7 +39,22 @@ import { positionDejaPosee } from "@/lib/restitution-position";
  *
  * Posé une seule fois, dans la mise en page du groupe (tatouage) :
  * il couvre toutes les pages de yokofolio, et n'affiche rien.
+ *
+ * ⚠️ LA REMONTÉE SE FAIT AVANT LA PEINTURE (passe nº 143-§5), et c'est
+ * la seule façon de garantir qu'aucune image ne montre la page
+ * ailleurs qu'en haut. Avec un `useEffect` ordinaire, la correction
+ * arrive APRÈS le premier affichage de la nouvelle page : le navigateur
+ * a le droit de peindre une image intermédiaire, et c'est exactement ce
+ * qui se voit comme « la page s'ouvre légèrement décalée ». Un effet de
+ * mise en page (`useLayoutEffect`) s'exécute entre la pose du DOM et la
+ * peinture — il n'y a plus d'intervalle où quoi que ce soit puisse
+ * s'afficher de travers.
  */
+
+/** useLayoutEffect côté navigateur, useEffect côté serveur (silencieux) */
+const useEffetAvantPeinture =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
 export function DefilementEnHaut() {
   const chemin = usePathname();
   // Vrai uniquement entre un retour/avant du navigateur et le rendu
@@ -59,7 +74,7 @@ export function DefilementEnHaut() {
     return () => window.removeEventListener("popstate", marquer);
   }, []);
 
-  useEffect(() => {
+  useEffetAvantPeinture(() => {
     const versLAdresseDuRetour =
       retourNavigateur.current &&
       adresseRetour.current === chemin + window.location.search;

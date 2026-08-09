@@ -416,7 +416,19 @@ export function IndexTatoueurs({
               arrive sur le formulaire vierge ; un visiteur passe
               d'abord par la création de compte, et y revient (c'est
               le rôle de `?suite=`). */}
+          {/* ⚠️ ON REMONTE AVANT DE PARTIR (nº 143-§5). Ce bouton est
+              le SEUL du site qu'on touche depuis le BAS d'une page très
+              longue : la mosaïque fait plusieurs milliers de pixels, et
+              la page d'après en fait quelques centaines. Remonter au
+              départ, plutôt qu'à l'arrivée, ne laisse aucune chance à
+              une image intermédiaire — la nouvelle page naît en haut.
+              (DefilementEnHaut tient déjà le cas général, désormais
+              avant peinture ; ici, c'est ceinture et bretelles pour le
+              chemin le plus exposé.) */}
           <Link
+            onClick={() =>
+              window.scrollTo({ top: 0, left: 0, behavior: "instant" })
+            }
             href={`/devenir-tatoueur?suite=${encodeURIComponent(
               "/devenir-tatoueur/fiche?fiche=nouvelle"
             )}`}

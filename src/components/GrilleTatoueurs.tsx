@@ -16,6 +16,7 @@ import {
   type ContexteFenetreFiche,
 } from "@/components/RetourFenetreFiche";
 import { reposerLaCarteDuHaut } from "@/lib/carte-du-haut";
+import { ficheComplete } from "@/lib/fiche-complete";
 import {
   lirePhototheque,
   lirePhototequeServeur,
@@ -78,42 +79,6 @@ const useEffetAvantPeinture =
  */
 const CARTES_PRIORITAIRES = 4;
 
-/**
- * LA FICHE COMPLÈTE, DEMANDÉE À L'OUVERTURE DE LA FENÊTRE
- * ========================================================
- * Depuis la passe « performance », la mosaïque ne reçoit QU'UNE photo
- * par fiche — celle que la carte affiche. La fenêtre, elle, montre
- * tout le portfolio, les adresses et l'équipe : elle les demande au
- * moment où on l'ouvre, et pour cette fiche-là seulement.
- *
- * Le résultat est GARDÉ : rouvrir la même fiche ne redemande rien. Et
- * le survol la demande d'avance (voir `precharger`) — quand le clic
- * arrive, elle est déjà là.
- *
- * ⚠️ ÇA NE SE VOIT PAS : la fenêtre s'ouvre TOUT DE SUITE avec ce que
- * la carte savait déjà — la photo est même déjà dans le cache du
- * navigateur. Ce qui arrive ensuite ne fait qu'ajouter.
- */
-const fichesCompletes = new Map<string, Tatoueur>();
-const demandesEnCours = new Map<string, Promise<Tatoueur | null>>();
-
-function ficheComplete(slug: string): Promise<Tatoueur | null> {
-  const deja = fichesCompletes.get(slug);
-  if (deja) return Promise.resolve(deja);
-  const enCours = demandesEnCours.get(slug);
-  if (enCours) return enCours;
-  const demande = fetch(`/api/tatoueur/${encodeURIComponent(slug)}`)
-    .then((reponse) => (reponse.ok ? reponse.json() : null))
-    .then((donnees: { tatoueur?: Tatoueur } | null) => {
-      const fiche = donnees?.tatoueur ?? null;
-      if (fiche) fichesCompletes.set(slug, fiche);
-      return fiche;
-    })
-    .catch(() => null)
-    .finally(() => demandesEnCours.delete(slug));
-  demandesEnCours.set(slug, demande);
-  return demande;
-}
 
 export function GrilleTatoueurs({
   tatoueurs,

@@ -1,8 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
-import { libelleStyle, libelleTypeFiche } from "@/config/tatouage";
+import { usePathname } from "next/navigation";
+import {
+  libelleStyle,
+  libelleTypeFiche,
+  PORTRAIT_ROND,
+} from "@/config/tatouage";
 import {
   libelleNature,
   libelleRendu,
@@ -11,9 +16,16 @@ import {
 import { IconeChevronBas } from "@/components/Icones";
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import { FenetreTatoueursSuivis } from "@/components/FenetreTatoueursSuivis";
+import { FenetreFiche } from "@/components/FenetreFiche";
 import { OngletsLigne } from "@/components/OngletsLigne";
+import {
+  CLE_FENETRE_FICHE,
+  type ContexteFenetreFiche,
+} from "@/components/RetourFenetreFiche";
 import { useEtatFavori } from "@/lib/favoris-yokofolio";
+import { ficheComplete } from "@/lib/fiche-complete";
 import type { PhotoFavorite, TatoueurSuivi } from "@/lib/favoris-serveur";
+import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
  * MES FAVORIS — les photos gardées, et les tatoueurs suivis
@@ -51,6 +63,72 @@ export function PageFavoris({
   const [nature, setNature] = useState(TOUS);
   const [menuOuvert, setMenuOuvert] = useState(false);
   const [fenetreSuivis, setFenetreSuivis] = useState(false);
+
+  /* ================================================================
+   * LA FICHE EN FENÊTRE SUPERPOSÉE (nº 143-6B)
+   * ================================================================
+   * Une carte de favori mène à une fiche EXACTEMENT comme une carte de
+   * la mosaïque : sur le web, elle s'ouvre PAR-DESSUS la page, sans la
+   * quitter. Elle naviguait, et l'on perdait sa place dans une liste
+   * qu'on est précisément en train de parcourir.
+   *
+   * ⚠️ LA MÊME MÉCANIQUE QUE LA MOSAÏQUE, à la lettre — `pushState`
+   * vers /tatoueur/…, le drapeau `data-fenetre-fiche` posé AVANT lui
+   * (DefilementEnHaut le lit à ce moment-là), la note de rechargement,
+   * et la fenêtre qui ne vit que tant que l'adresse est la sienne. Le
+   * bouton « précédent » la referme sans une ligne de plus.
+   *
+   * ⚠️ UNE SEULE DIFFÉRENCE, et elle est dans la donnée : la mosaïque
+   * tient déjà une fiche (allégée) pour chaque carte et ouvre donc
+   * INSTANTANÉMENT ; ici, on n'a que le slug de la photo. On demande
+   * la fiche — mais le survol l'a presque toujours déjà rapportée
+   * (`ficheComplete` garde ses réponses), si bien que le clic ouvre
+   * sans attendre. Base injoignable : on laisse le lien faire son
+   * travail, et la page de fiche s'ouvre normalement.
+   */
+  const pathname = usePathname();
+  const [ficheOuverte, setFicheOuverte] = useState<Tatoueur | null>(null);
+  const [positionPage, setPositionPage] = useState(0);
+  const [styleOuvert, setStyleOuvert] = useState("");
+  const visible =
+    ficheOuverte !== null && pathname === `/tatoueur/${ficheOuverte.slug}`;
+
+  const ouvrirLaFiche = useCallback(
+    async (slug: string, styleDeLaPhoto: string, adresse: string) => {
+      const fiche = await ficheComplete(slug);
+      if (!fiche) {
+        //  Rien à montrer : on s'efface devant la navigation normale.
+        window.location.assign(adresse);
+        return;
+      }
+      try {
+        const note: ContexteFenetreFiche = {
+          slug,
+          retour: window.location.pathname + window.location.search,
+          defilement: window.scrollY,
+        };
+        sessionStorage.setItem(CLE_FENETRE_FICHE, JSON.stringify(note));
+      } catch {
+        // Stockage indisponible : le rechargement servira la page.
+      }
+      setPositionPage(window.scrollY);
+      setStyleOuvert(styleDeLaPhoto);
+      document.documentElement.setAttribute("data-fenetre-fiche", "1");
+      window.history.pushState({ fenetreFiche: true }, "", `/tatoueur/${slug}`);
+      setFicheOuverte(fiche);
+    },
+    []
+  );
+
+  const fermerLaFiche = useCallback(() => {
+    document.documentElement.removeAttribute("data-fenetre-fiche");
+    try {
+      sessionStorage.removeItem(CLE_FENETRE_FICHE);
+    } catch {
+      // Sans importance : la note ne sert qu'au rechargement.
+    }
+    setFicheOuverte(null);
+  }, []);
 
   /** LES STYLES RÉELLEMENT ENREGISTRÉS, avec leur nombre — dans
       l'ordre d'arrivée des photos (la plus récente d'abord), donc le
@@ -235,7 +313,11 @@ export function PageFavoris({
                          grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
             >
               {visibles.map((photo) => (
-                <CartePhotoFavorite key={photo.id} photo={photo} />
+                <CartePhotoFavorite
+                  key={photo.id}
+                  photo={photo}
+                  surOuverture={ouvrirLaFiche}
+                />
               ))}
             </ul>
           )}
@@ -248,6 +330,16 @@ export function PageFavoris({
           onFermer={() => setFenetreSuivis(false)}
         />
       )}
+
+      {/* `key` : chaque ouverture repart de la photo du style gardé,
+          jamais de l'état d'une fiche précédente. */}
+      <FenetreFiche
+        key={ficheOuverte?.id ?? "fermee"}
+        tatoueur={visible ? ficheOuverte : null}
+        styleRecherche={styleOuvert}
+        positionGrille={positionPage}
+        surFermeture={fermerLaFiche}
+      />
     </main>
   );
 }
@@ -261,13 +353,49 @@ export function PageFavoris({
  * bon style (`?style=…`) : on retombe exactement sur ce qu'on
  * regardait.
  */
-function CartePhotoFavorite({ photo }: { photo: PhotoFavorite }) {
+function CartePhotoFavorite({
+  photo,
+  surOuverture,
+}: {
+  photo: PhotoFavorite;
+  /** WEB : ouvre la fiche PAR-DESSUS la page (nº 143-6B). */
+  surOuverture: (
+    slug: string,
+    style: string,
+    adresse: string
+  ) => Promise<void>;
+}) {
   //  ⚠️ ON LIT L'ÉTAT PARTAGÉ ICI AUSSI : retirer une photo la fait
   //  PÂLIR sans la faire disparaître (voir l'en-tête du fichier).
   const gardee = useEtatFavori("photo", photo.id, true);
 
+  const adresse = `/tatoueur/${photo.tatoueurSlug}?style=${photo.style}`;
+
+  /** Le survol demande la fiche d'avance : au clic, elle est là. */
+  function surApproche() {
+    if (document.documentElement.dataset.appareil === "mobile") return;
+    void ficheComplete(photo.tatoueurSlug);
+  }
+
+  function auClic(evenement: React.MouseEvent) {
+    //  Nouvel onglet, clic du milieu… : on ne touche à rien.
+    if (
+      evenement.metaKey ||
+      evenement.ctrlKey ||
+      evenement.shiftKey ||
+      evenement.altKey
+    ) {
+      return;
+    }
+    //  SMARTPHONE : une vraie navigation, comme depuis la mosaïque —
+    //  la fenêtre superposée est un geste d'écran large.
+    if (document.documentElement.dataset.appareil === "mobile") return;
+    evenement.preventDefault();
+    void surOuverture(photo.tatoueurSlug, photo.style, adresse);
+  }
+
   return (
-    <li className="group relative flex flex-col">
+    <li className="group relative flex flex-col" onPointerEnter={surApproche}>
       <div
         className={`relative w-full aspect-4/5 overflow-hidden bg-sombre-eleve
                     transition-opacity ${gardee ? "" : "opacity-40"}`}
@@ -301,25 +429,59 @@ function CartePhotoFavorite({ photo }: { photo: PhotoFavorite }) {
         </div>
       </div>
 
-      <div className="pt-2.5 px-0.5 min-w-0">
-        <p className="truncate text-[14px] font-semibold text-sombre-texte leading-[19px]">
-          <Link
-            href={`/tatoueur/${photo.tatoueurSlug}?style=${photo.style}`}
-            className="outline-none after:absolute after:inset-0 after:content-['']
-                       focus-visible:underline"
-          >
-            {photo.tatoueurNom}
-          </Link>
-        </p>
-        <p className="truncate text-[12.5px] text-sombre-texte-doux leading-[19px]">
-          {[
-            libelleStyle(photo.style),
-            photo.rendu ? libelleRendu(photo.rendu) : "",
-            photo.nature === "flash" ? libelleNature("flash") : "",
-          ]
-            .filter(Boolean)
-            .join(" · ")}
-        </p>
+      {/* SOUS LA CARTE — LE PORTRAIT, puis les deux lignes de texte :
+          le calage exact de la mosaïque (nº 143-6A). Il manquait ici,
+          et c'est justement l'élément qui dit DE QUI est la photo d'un
+          coup d'œil, dans une page qui mélange les tatoueurs.
+          Le repli des fiches sans portrait est le même partout :
+          l'initiale, sur le fond élevé. */}
+      <div className="pt-2.5 px-0.5 min-w-0 flex items-center gap-2.5">
+        <span
+          className="shrink-0 h-10 w-10 flex items-center justify-center
+                     overflow-hidden rounded-full bg-sombre-eleve"
+        >
+          {photo.photoProfil ? (
+            /* eslint-disable-next-line @next/next/no-img-element --
+               photo déposée par le tatoueur, servie telle quelle. */
+            <img
+              src={photo.photoProfil}
+              alt=""
+              loading="lazy"
+              width={PORTRAIT_ROND}
+              height={PORTRAIT_ROND}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <span
+              aria-hidden="true"
+              className="text-[13px] font-bold text-sombre-texte-doux"
+            >
+              {photo.tatoueurNom.trim().charAt(0).toUpperCase()}
+            </span>
+          )}
+        </span>
+
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[14px] font-semibold text-sombre-texte leading-[19px]">
+            <Link
+              href={adresse}
+              onClick={auClic}
+              className="outline-none after:absolute after:inset-0 after:content-['']
+                         focus-visible:underline"
+            >
+              {photo.tatoueurNom}
+            </Link>
+          </p>
+          <p className="truncate text-[12.5px] text-sombre-texte-doux leading-[19px]">
+            {[
+              libelleStyle(photo.style),
+              photo.rendu ? libelleRendu(photo.rendu) : "",
+              photo.nature === "flash" ? libelleNature("flash") : "",
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
+        </div>
       </div>
     </li>
   );

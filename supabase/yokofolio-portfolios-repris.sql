@@ -37,13 +37,36 @@
 --  montre les mêmes images, dans le même ordre. Rien ne bouge à
 --  l'écran — sauf le cœur, qui apparaît.
 --
---  ⚠️ AUCUN TAG INVENTÉ. `zone` et `rendu` restent NULS : deviner
---  « avant-bras » ou « couleur » sur une image qu'on n'a pas vue
---  produirait des données fausses, et les filtres rendraient
---  n'importe quoi. `nature` prend son défaut (« tatouage »), qui est
---  déjà ce que le code lit pour une nature absente (migration nº 49).
---  Le propriétaire de la fiche complétera ses tags à sa prochaine
---  visite, sans que rien ne le bloque — c'est la règle de la nº 31.
+--  ⚠️ LE RENDU EST OBLIGATOIRE, ET C'EST TOUT LE SUJET DE CETTE
+--  VERSION-CI. La première mouture de ce fichier laissait `rendu` à
+--  NULL, « pour ne rien inventer ». Elle ne pouvait pas passer : la
+--  migration nº 48 a rendu la colonne NOT NULL et l'a bornée à deux
+--  valeurs (`black_and_grey`, `color`). Une photo SANS rendu n'existe
+--  plus — il n'y a pas de troisième case « on ne sait pas ».
+--
+--      ERROR: 23502: null value in column "rendu" of relation
+--      "photos_tatoueur" violates not-null constraint
+--
+--  IL FAUT DONC CHOISIR, et le choix est `black_and_grey` :
+--   · c'est le rendu MAJORITAIRE du tatouage, donc celui qui se
+--     trompe le moins souvent ;
+--   · il ne fait entrer AUCUNE fiche dans un résultat où elle n'a
+--     rien à faire : chercher « Couleur » ne remontera pas ces
+--     photos-là. Le défaut inverse — tout marquer « color » — aurait
+--     fait apparaître des photos en noir et gris dans une recherche
+--     de couleur, c'est-à-dire le « mensonge d'affichage » que le
+--     moteur combat depuis la passe nº 110 ;
+--   · il se corrige d'un geste : le tatoueur rouvre son portfolio et
+--     retague ses photos, et la requête de la fin de ce fichier
+--     permet de rectifier un lot d'un coup si besoin.
+--  Ce choix est INEXACT pour les quelques images de démonstration qui
+--  sont en couleur. C'est assumé : sans lui, il n'y a pas de cœur
+--  du tout.
+--
+--  ⚠️ ON N'INVENTE RIEN D'AUTRE. `nature` prend son défaut
+--  (« tatouage »), qui est déjà ce que le code lit pour une nature
+--  absente (migration nº 49). `miniature` reste nul : on retombe sur
+--  la pleine résolution, exactement comme aujourd'hui.
 --
 --  ⚠️ UNE FICHE SANS AUCUN STYLE DÉCLARÉ N'EST PAS TOUCHÉE. Il n'y
 --  aurait aucun style honnête à écrire, et `photos_tatoueur.style`
@@ -81,14 +104,18 @@ $etat$;
 --  Un portfolio déposé par son tatoueur — même incomplet, même à un
 --  seul style — n'est jamais complété d'office par cette migration, et
 --  relancer le fichier ne crée aucun doublon.
-insert into public.photos_tatoueur (tatoueur_id, style, url, ordre)
+insert into public.photos_tatoueur (tatoueur_id, style, url, ordre, rendu)
 select t.id,
        s.style,
        coalesce(
          nullif(t.photos_styles ->> s.style, ''),
          nullif(t.photo_principale, '')
        ),
-       s.rang - 1
+       s.rang - 1,
+       --  LE RENDU PAR DÉFAUT — voir l'en-tête : la colonne est
+       --  obligatoire depuis la nº 48, et « noir et gris » est le
+       --  choix qui se trompe le moins.
+       'black_and_grey'
   from public.tatoueurs t
   cross join lateral unnest(t.styles) with ordinality as s(style, rang)
  where not exists (
@@ -132,8 +159,13 @@ $bilan$;
 --   order by t.nom;
 --
 --  -- Le portfolio d'une fiche reprise, dans l'ordre :
---  select p.style, p.zone, p.rendu, p.nature, p.ordre, p.url
+--  select p.style, p.rendu, p.nature, p.ordre, p.url
 --    from public.photos_tatoueur p
 --    join public.tatoueurs t on t.id = p.tatoueur_id
 --   where t.slug = 'atelier-corvus'
 --   order by p.ordre;
+--
+--  -- CORRIGER LE RENDU d'une photo reprise à tort (une, ou un lot) :
+--  update public.photos_tatoueur
+--     set rendu = 'color'
+--   where url like '%/nom-du-fichier%';

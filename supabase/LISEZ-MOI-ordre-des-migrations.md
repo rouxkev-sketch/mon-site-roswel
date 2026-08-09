@@ -147,7 +147,7 @@ repasse.
 52. **`yokofolio-suggestions-styles.sql`** — Les styles proposés par les tatoueurs (⚠️ une ligne **acceptée** EST un style du site)
 53. **`yokofolio-favoris-photos.sql`** — Les photos enregistrées (le cœur)
 54. **`yokofolio-tatoueurs-suivis.sql`** — Les tatoueurs suivis (« Suivre »)
-55. **`yokofolio-portfolios-repris.sql`** — Les portfolios que la nº 31 avait oubliés (⚠️ **sans elle, aucun cœur ne s'affiche** sur les fiches dont les images vivent dans `photo_principale`)
+55. **`yokofolio-portfolios-repris.sql`** — Les portfolios que la nº 31 avait oubliés (⚠️ **sans elle, aucun cœur ne s'affiche** sur les fiches dont les images vivent dans `photo_principale`. Les photos reprises reçoivent le rendu **noir et gris** : la colonne est obligatoire depuis la nº 48, et c'est le choix qui se trompe le moins — voir l'en-tête du fichier pour le corriger au cas par cas)
 
 ---
 

@@ -40,6 +40,9 @@ export type PhotoFavorite = {
       `libelleTypeFiche` qui en fait un mot. */
   typeFiche: string;
   etablissement: string;
+  /** LE PORTRAIT DU TATOUEUR — la carte de la mosaïque le pose sous
+      l'image ; celle des favoris ne le portait pas (nº 143-6A). */
+  photoProfil: string | null;
 };
 
 /** UN TATOUEUR SUIVI, tel que la fenêtre le montre. */
@@ -177,6 +180,7 @@ export async function lireLesFavoris(
         //  fiche d'avant la migration nº 38 n'a ni l'une ni l'autre.
         typeFiche: fiche.type_fiche ?? "salon",
         etablissement: fiche.etablissement ?? "salon",
+        photoProfil: fiche.photo_profil,
       });
     }
 

@@ -355,13 +355,23 @@ export function MoteurTatouage({
    *  · un interrupteur disait « j'écarte ce que je ne veux pas » ;
    *  · un badge dit « je sélectionne ce que je cherche ».
    * Les deux sont la même chose, lue dans l'autre sens :
-   *  · AUCUN badge sélectionné  = rien d'écarté  = pas de filtrage ;
+   *  · TOUS les badges sélectionnés = rien d'écarté = pas de filtrage ;
    *  · des badges sélectionnés = tous les AUTRES slugs du groupe sont
-   *    écartés — c'est exactement l'`exclure` d'hier ;
-   *  · TOUS les badges d'un groupe sélectionnés = plus rien d'écarté :
-   *    on retombe d'aplomb sur « pas de filtrage », comme avant.
+   *    écartés — c'est exactement l'`exclure` d'hier.
    * Une adresse partagée d'avant la passe (`exclure=…`) se lit donc
    * telle quelle : les slugs restants s'affichent sélectionnés.
+   *
+   * ⚠️ AU DÉPART, TOUT EST SÉLECTIONNÉ (nº 143-2B). C'est le sens de
+   * la recherche : sans filtre, on cherche PARTOUT. On retire ce qu'on
+   * ne veut pas, on n'ajoute pas ce qu'on veut.
+   *
+   * ⚠️ ET C'EST CE QUI RÉPARE LE BADGE QUI « REFUSAIT DE S'ACTIVER »
+   * (nº 143-2A). `exclure = []` dit UNE chose — « rien n'est écarté » —
+   * et l'ancien code la lisait « AUCUN badge allumé ». Sur un groupe de
+   * trois, cocher le troisième ramenait donc `exclure` à vide… et
+   * éteignait les trois d'un coup. Vu de l'écran : « le troisième ne
+   * s'active pas ». La même valeur se lit désormais « TOUS allumés »,
+   * et la boucle se referme correctement.
    */
   function slugsDuGroupe(groupe: (typeof GROUPES_FILTRES)[number]): string[] {
     return groupe.options.map((option) => option.slug);
@@ -371,12 +381,8 @@ export function MoteurTatouage({
     groupe: (typeof GROUPES_FILTRES)[number],
     exclure: string[]
   ): string[] {
-    const exclus = slugsDuGroupe(groupe).filter((slug) =>
-      exclure.includes(slug)
-    );
-    //  Rien d'écarté : aucun badge allumé — « pas de filtre » ne
-    //  s'affiche pas comme « tout coché », il s'affiche comme RIEN.
-    if (exclus.length === 0) return [];
+    //  UNE SEULE LECTURE, sans cas particulier : est sélectionné tout
+    //  ce qui n'est pas écarté. `exclure` vide ⇒ tout est sélectionné.
     return slugsDuGroupe(groupe).filter((slug) => !exclure.includes(slug));
   }
 
@@ -391,7 +397,12 @@ export function MoteurTatouage({
     const suivante = selection.includes(slug)
       ? selection.filter((s) => s !== slug)
       : [...selection, slug];
-    //  Tout sélectionné, ou plus rien : le groupe n'écarte plus rien.
+    //  TOUT SÉLECTIONNÉ : le groupe n'écarte rien — `exclure` vide.
+    //  PLUS RIEN DE SÉLECTIONNÉ : on revient à « partout ». Décocher le
+    //  dernier badge d'un groupe ne veut pas dire « ne me montre rien »
+    //  (une recherche sans aucun type de profil ne rendrait aucune
+    //  fiche) : cela veut dire qu'on abandonne ce critère. Le groupe se
+    //  rallume donc en entier — le seul état que la base sache dire.
     const exclusDuGroupe =
       suivante.length === 0 || suivante.length === tous.length
         ? []
@@ -465,42 +476,30 @@ export function MoteurTatouage({
 
   const parGroupe = new Map(GROUPES_FILTRES.map((g) => [g.groupe, g]));
 
-  type NomGroupe = (typeof GROUPES_FILTRES)[number]["groupe"];
-
-  /** Ce volet porte-t-il des filtres actifs ? (la pastille du
-      rectangle — le langage de l'ancienne bascule, conservé) */
-  const voletActif = (groupes: readonly NomGroupe[], exclure: string[]) =>
-    groupes.some((nom) =>
-      parGroupe.get(nom)!.options.some((option) => exclure.includes(option.slug))
-    );
+  /*  ⚠️ PLUS DE POINT SUR LES TITRES (nº 143-§4). Un point rose
+      apparaissait à droite du titre d'un rectangle dès qu'un de ses
+      groupes écartait quelque chose. Il est retiré dans TOUS les cas :
+      les badges du volet disent déjà, en clair et en toutes lettres,
+      ce qui est retenu et ce qui ne l'est pas — un second signal, plus
+      petit et sans légende, ne faisait que poser une question. */
 
   const blocFiltres = (
     valeurs: CritèresTatouage,
     poser: (suivant: Partial<CritèresTatouage>) => void
   ) => {
     const volets = [
-      {
-        cle: "profil" as const,
-        titre: "Type de profil",
-        groupes: ["type"] as const,
-      },
-      {
-        cle: "lieu" as const,
-        titre: "Où tatoue-t-il ?",
-        groupes: ["mode", "technique", "rendu"] as const,
-      },
+      { cle: "profil" as const, titre: "Type de profil" },
+      { cle: "lieu" as const, titre: "Où tatoue-t-il ?" },
     ];
     const ouvert = volets.find((v) => v.cle === voletFiltres) ?? volets[0];
     return (
       <div>
         {/* LES DEUX RECTANGLES — le motif du formulaire : fond un cran
             plus clair au repos, teinté de rose quand le volet est
-            ouvert, AUCUN contour. Le point rose discret signale des
-            filtres actifs rangés dans un volet. */}
+            ouvert, AUCUN contour. Rien d'autre : plus de point (§4). */}
         <div className="grid grid-cols-2 gap-2">
           {volets.map((volet) => {
             const actif = volet.cle === voletFiltres;
-            const porteDesFiltres = voletActif(volet.groupes, valeurs.exclure);
             return (
               <button
                 key={volet.cle}
@@ -514,17 +513,11 @@ export function MoteurTatouage({
                 }`}
               >
                 <span
-                  className={`flex items-center gap-1.5 text-[14px] font-semibold ${
+                  className={`block text-[14px] font-semibold ${
                     actif ? "text-primaire" : "text-sombre-texte"
                   }`}
                 >
                   {volet.titre}
-                  {porteDesFiltres && (
-                    <span
-                      aria-hidden="true"
-                      className="h-[7px] w-[7px] shrink-0 rounded-full bg-primaire"
-                    />
-                  )}
                 </span>
               </button>
             );
@@ -532,17 +525,25 @@ export function MoteurTatouage({
         </div>
 
         {/* LES GROUPES DU VOLET OUVERT — et la MARGE RESPIRE (nº 141-
-            §3) : 20 px sous les rectangles, comme entre les groupes. */}
+            §3) : 20 px sous les rectangles, comme entre les groupes.
+            ⚠️ TECHNIQUE ET RENDU SONT SOUS LES DEUX VOLETS (nº 143-§3).
+            Ils décrivent la PRATIQUE : la question se pose aussi bien
+            en cherchant un type de profil qu'un lieu d'exercice. Ce
+            sont LES MÊMES badges — un seul et même `exclure` derrière —
+            si bien qu'un retrait fait d'un côté se voit de l'autre :
+            il n'y a pas deux réglages à tenir d'accord, il n'y en a
+            qu'un, montré à deux endroits. */}
         <div className="mt-5 flex flex-col gap-5">
-          {ouvert.cle === "profil" ? (
-            groupeDeBadges(parGroupe.get("type")!, "Profil", valeurs, poser)
-          ) : (
-            <>
-              {groupeDeBadges(parGroupe.get("mode")!, "Mode d'activité", valeurs, poser)}
-              {groupeDeBadges(parGroupe.get("technique")!, "Technique", valeurs, poser)}
-              {groupeDeBadges(parGroupe.get("rendu")!, "Rendu", valeurs, poser)}
-            </>
-          )}
+          {ouvert.cle === "profil"
+            ? groupeDeBadges(parGroupe.get("type")!, "Profil", valeurs, poser)
+            : groupeDeBadges(
+                parGroupe.get("mode")!,
+                "Mode d'activité",
+                valeurs,
+                poser
+              )}
+          {groupeDeBadges(parGroupe.get("technique")!, "Technique", valeurs, poser)}
+          {groupeDeBadges(parGroupe.get("rendu")!, "Rendu", valeurs, poser)}
         </div>
       </div>
     );
