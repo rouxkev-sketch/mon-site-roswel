@@ -306,8 +306,11 @@ export function AdminDemarchage() {
                                   }`}
                     >
                       {/* LA CASE — c'est elle qui groupe : on coche les
-                          fiches d'un MÊME tatoueur, puis on valide. */}
-                      <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-3">
+                          fiches d'un MÊME tatoueur, puis on valide.
+                          Sur l'étroit, l'identité prend TOUTE la rangée
+                          (w-full) : interrupteur, état et date se replient
+                          dessous au lieu d'écraser le nom. */}
+                      <label className="flex w-full min-w-0 cursor-pointer items-center gap-3 sm:w-auto sm:flex-1">
                         <input
                           type="checkbox"
                           checked={choisie}
@@ -391,8 +394,9 @@ export function AdminDemarchage() {
                   >
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
                       {/* LES FICHES EMPILÉES — photos et noms, l'une
-                          sous l'autre : c'est UN envoi, pas trois. */}
-                      <ul className="min-w-0 flex-1 flex flex-col gap-2">
+                          sous l'autre : c'est UN envoi, pas trois. Même
+                          repli que la liste À envoyer sur l'étroit. */}
+                      <ul className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:flex-1">
                         {groupe.fiches.map((fiche) => (
                           <li
                             key={fiche.id}

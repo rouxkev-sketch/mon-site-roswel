@@ -107,6 +107,17 @@ type BrouillonDecision = {
 
 type SectionCle = (typeof SECTIONS)[number]["cle"];
 
+/** LA GRAMMAIRE DES CHAMPS (passe nº 136) — la même que le formulaire
+    et la page Sécurité : pas de contour, le focus ÉCLAIRCIT le fond.
+    ⚠️ `border border-transparent` réserve l'épaisseur : sans elle, le
+    texte bougerait d'un pixel au focus sur certains navigateurs. */
+const CHAMP =
+  "w-full rounded-xl border border-transparent bg-sombre-eleve px-4 text-sombre-texte placeholder:text-sombre-texte-doux outline-none transition-colors focus:bg-sombre-eleve-clair";
+
+/** L'ENCADRÉ D'ERREUR — la SEULE exception au « zéro contour ». */
+const ERREUR =
+  "rounded-xl border border-erreur/50 bg-erreur/10 px-4 py-3 text-[13px] leading-relaxed text-sombre-texte";
+
 function dateCourte(iso: string | null | undefined): string {
   if (!iso) return "";
   try {
@@ -485,13 +496,8 @@ export function AdminYokofolio() {
             <h1 className="text-[22px] font-bold text-sombre-texte">
               Fiches à valider
             </h1>
-            <p className="mt-1 text-[13.5px] text-sombre-texte-doux">
-              Par ordre d&apos;arrivée — la plus ancienne d&apos;abord.
-            </p>
             {erreurFiches && (
-              <p className="mt-4 rounded-xl border border-erreur/50 bg-erreur/10 px-4 py-3 text-sm text-sombre-texte">
-                {erreurFiches}
-              </p>
+              <p className={`mt-4 ${ERREUR}`}>{erreurFiches}</p>
             )}
             <div className="mt-5 flex flex-col gap-2.5">
               {fiches === null && (
@@ -500,7 +506,7 @@ export function AdminYokofolio() {
                 </Patience>
               )}
               {fiches?.length === 0 && !erreurFiches && (
-                <p className="rounded-xl border border-sombre-bordure bg-sombre-carte px-4 py-5 text-sombre-texte-doux">
+                <p className="rounded-2xl bg-sombre-carte px-4 py-5 text-sombre-texte-doux">
                   Aucune fiche en attente — tout est à jour.
                 </p>
               )}
@@ -514,8 +520,8 @@ export function AdminYokofolio() {
                     setMotifsCoches([]);
                     setNoteMotif("");
                   }}
-                  className="w-full rounded-2xl border border-sombre-bordure bg-sombre-carte
-                             px-5 py-4 text-left hover:border-primaire transition-colors
+                  className="w-full rounded-2xl bg-sombre-carte px-5 py-4 text-left
+                             hover:bg-sombre-eleve transition-colors
                              flex items-center justify-between gap-4"
                 >
                   <span className="min-w-0">
@@ -530,7 +536,7 @@ export function AdminYokofolio() {
                   </span>
                   <span className="shrink-0 flex items-center gap-2.5">
                     {fiche.modification && (
-                      <span className="rounded-full border border-primaire/40 bg-primaire/10 px-2.5 min-h-[24px] inline-flex items-center text-[12px] font-medium text-sombre-texte">
+                      <span className="rounded-full bg-primaire/15 px-2.5 min-h-[24px] inline-flex items-center text-[12px] font-medium text-sombre-texte">
                         Modification d&apos;une fiche en ligne
                       </span>
                     )}
@@ -579,7 +585,7 @@ export function AdminYokofolio() {
             </div>
 
             {ficheOuverte.bio && (
-              <p className="mt-4 max-w-[640px] rounded-xl border border-sombre-bordure bg-sombre-carte px-4 py-3 text-[14.5px] leading-relaxed text-sombre-texte whitespace-pre-line [overflow-wrap:anywhere]">
+              <p className="mt-4 max-w-[640px] rounded-xl bg-sombre-carte px-4 py-3 text-[14.5px] leading-relaxed text-sombre-texte whitespace-pre-line [overflow-wrap:anywhere]">
                 {ficheOuverte.bio}
               </p>
             )}
@@ -594,7 +600,7 @@ export function AdminYokofolio() {
                 ].map((slug) => (
                   <li
                     key={slug}
-                    className="rounded-full border border-sombre-bordure/70 px-2.5 min-h-[26px]
+                    className="rounded-full bg-sombre-carte px-2.5 min-h-[26px]
                                inline-flex items-center text-[12.5px] text-sombre-texte-doux"
                   >
                     {libelleFiltre(slug)}
@@ -614,7 +620,7 @@ export function AdminYokofolio() {
                     <img
                       src={url}
                       alt={`Photo du style ${libelleStyle(slug)}`}
-                      className="w-full aspect-[4/5] object-cover rounded-xl border border-sombre-bordure"
+                      className="w-full aspect-[4/5] object-cover rounded-xl"
                     />
                     <figcaption className="mt-1 text-[12.5px] text-sombre-texte-doux">
                       {libelleStyle(slug)}
@@ -625,9 +631,7 @@ export function AdminYokofolio() {
             </div>
 
             {erreurFiches && (
-              <p className="mt-4 rounded-xl border border-erreur/50 bg-erreur/10 px-4 py-3 text-sm text-sombre-texte">
-                {erreurFiches}
-              </p>
+              <p className={`mt-4 ${ERREUR}`}>{erreurFiches}</p>
             )}
 
             {/* LES DEUX ACTIONS. */}
@@ -647,8 +651,8 @@ export function AdminYokofolio() {
                 onClick={() => setRefusOuvert((etat) => !etat)}
                 aria-expanded={refusOuvert}
                 className="inline-flex items-center justify-center rounded-full px-7 min-h-[48px]
-                           border border-sombre-bordure text-sombre-texte
-                           hover:border-erreur hover:text-erreur transition-colors"
+                           bg-sombre-eleve text-sombre-texte
+                           hover:bg-sombre-eleve-clair transition-colors"
               >
                 Demander des modifications
               </button>
@@ -663,8 +667,8 @@ export function AdminYokofolio() {
                 onClick={deverrouillerExercice}
                 disabled={envoiDecision}
                 className="inline-flex items-center justify-center rounded-full px-7 min-h-[48px]
-                           border border-sombre-bordure text-sombre-texte-doux
-                           hover:border-primaire hover:text-primaire
+                           bg-sombre-eleve text-sombre-texte-doux
+                           hover:bg-sombre-eleve-clair
                            transition-colors disabled:opacity-60"
               >
                 Rouvrir le premier bloc (artiste / studio)
@@ -673,10 +677,9 @@ export function AdminYokofolio() {
 
             {/* LE REFUS MOTIVÉ — bloqué tant qu'aucun motif n'est coché. */}
             {refusOuvert && (
-              <div className="mt-4 max-w-[560px] rounded-2xl border border-sombre-bordure bg-sombre-carte p-5">
+              <div className="mt-4 max-w-[560px] rounded-2xl bg-sombre-carte p-5">
                 <p className="text-[14px] font-semibold text-sombre-texte">
-                  Pourquoi ? Coche au moins un motif — il part avec la
-                  décision.
+                  Pourquoi&nbsp;?
                 </p>
                 <div className="mt-3 flex flex-col gap-1">
                   {MOTIFS_MODERATION.map((motif) => (
@@ -708,10 +711,7 @@ export function AdminYokofolio() {
                     maxLength={600}
                     placeholder="Précise en quelques mots…"
                     aria-label="Préciser le motif"
-                    className="mt-3 w-full rounded-xl border border-sombre-bordure bg-sombre-eleve
-                               px-4 py-3 text-[14.5px] text-sombre-texte outline-none resize-y
-                               placeholder:text-sombre-texte-doux
-                               focus:border-primaire focus:ring-2 focus:ring-primaire/25"
+                    className={`mt-3 py-3 text-[14.5px] resize-y ${CHAMP}`}
                   />
                 )}
                 <button
@@ -734,13 +734,8 @@ export function AdminYokofolio() {
             <h1 className="text-[22px] font-bold text-sombre-texte">
               Signalements
             </h1>
-            <p className="mt-1 text-[13.5px] text-sombre-texte-doux">
-              Reçus des visiteurs — archive-les une fois traités.
-            </p>
             {erreurSignalements && (
-              <p className="mt-4 rounded-xl border border-erreur/50 bg-erreur/10 px-4 py-3 text-sm text-sombre-texte">
-                {erreurSignalements}
-              </p>
+              <p className={`mt-4 ${ERREUR}`}>{erreurSignalements}</p>
             )}
             <div className="mt-5 flex flex-col gap-2.5">
               {signalements === null && (
@@ -749,17 +744,17 @@ export function AdminYokofolio() {
                 </Patience>
               )}
               {signalements?.length === 0 && !erreurSignalements && (
-                <p className="rounded-xl border border-sombre-bordure bg-sombre-carte px-4 py-5 text-sombre-texte-doux">
+                <p className="rounded-2xl bg-sombre-carte px-4 py-5 text-sombre-texte-doux">
                   Aucun signalement — tant mieux.
                 </p>
               )}
               {signalements?.map((s) => (
                 <article
                   key={s.id}
-                  className={`rounded-2xl border px-5 py-4 ${
+                  className={`rounded-2xl px-5 py-4 ${
                     s.traite
-                      ? "border-sombre-bordure/50 bg-sombre-carte/50 opacity-70"
-                      : "border-sombre-bordure bg-sombre-carte"
+                      ? "bg-sombre-carte/50 opacity-70"
+                      : "bg-sombre-carte"
                   }`}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
@@ -797,7 +792,7 @@ export function AdminYokofolio() {
                   {/* LA NOTE DE TRAITEMENT — écrite ici, RELUE ici,
                       avant comme après archivage. */}
                   {s.note && noteEnCours?.id !== s.id && (
-                    <p className="mt-3 rounded-xl border border-sombre-bordure bg-sombre-eleve px-3.5 py-2.5 text-[13.5px] leading-relaxed text-sombre-texte whitespace-pre-line [overflow-wrap:anywhere]">
+                    <p className="mt-3 rounded-xl bg-sombre-eleve px-3.5 py-2.5 text-[13.5px] leading-relaxed text-sombre-texte whitespace-pre-line [overflow-wrap:anywhere]">
                       <span className="block text-[11.5px] font-semibold uppercase tracking-wide text-sombre-texte-doux">
                         Note
                       </span>
@@ -815,17 +810,14 @@ export function AdminYokofolio() {
                         maxLength={600}
                         placeholder="Ce que tu as constaté, ce que tu as fait…"
                         aria-label="Note de traitement"
-                        className="w-full rounded-xl border border-sombre-bordure bg-sombre-eleve
-                                   px-3.5 py-2.5 text-[14px] text-sombre-texte outline-none resize-y
-                                   placeholder:text-sombre-texte-doux
-                                   focus:border-primaire focus:ring-2 focus:ring-primaire/25"
+                        className={`py-2.5 text-[14px] resize-y ${CHAMP}`}
                       />
                       <div className="mt-2 flex gap-3">
                         <button
                           type="button"
                           onClick={enregistrerNote}
-                          className="rounded-full bg-primaire hover:bg-primaire-fonce px-4 min-h-[36px]
-                                     text-[13.5px] font-semibold text-white transition-colors"
+                          className="rounded-full bg-sombre-eleve hover:bg-sombre-eleve-clair px-4 min-h-[36px]
+                                     text-[13.5px] font-semibold text-sombre-texte transition-colors"
                         >
                           Enregistrer la note
                         </button>
@@ -887,14 +879,8 @@ export function AdminYokofolio() {
             <h1 className="text-[22px] font-bold text-sombre-texte">
               Suggestions de styles
             </h1>
-            <p className="mt-1 text-[13.5px] text-sombre-texte-doux">
-              Accepter ajoute le style au catalogue du site. Le tatoueur est
-              prévenu dans les deux cas.
-            </p>
             {erreurSuggestions && (
-              <p className="mt-4 rounded-xl border border-erreur/50 bg-erreur/10 px-4 py-3 text-sm text-sombre-texte">
-                {erreurSuggestions}
-              </p>
+              <p className={`mt-4 ${ERREUR}`}>{erreurSuggestions}</p>
             )}
             <div className="mt-5 flex flex-col gap-2.5">
               {suggestions === null && (
@@ -903,7 +889,7 @@ export function AdminYokofolio() {
                 </Patience>
               )}
               {suggestions?.length === 0 && !erreurSuggestions && (
-                <p className="rounded-xl border border-sombre-bordure bg-sombre-carte px-4 py-5 text-sombre-texte-doux">
+                <p className="rounded-2xl bg-sombre-carte px-4 py-5 text-sombre-texte-doux">
                   Aucune suggestion pour l&apos;instant.
                 </p>
               )}
@@ -913,10 +899,10 @@ export function AdminYokofolio() {
                 return (
                   <article
                     key={demande.id}
-                    className={`rounded-2xl border px-5 py-4 ${
+                    className={`rounded-2xl px-5 py-4 ${
                       enAttente
-                        ? "border-sombre-bordure bg-sombre-carte"
-                        : "border-sombre-bordure/50 bg-sombre-carte/50 opacity-80"
+                        ? "bg-sombre-carte"
+                        : "bg-sombre-carte/50 opacity-80"
                     }`}
                   >
                     {/* LE STYLE PROPOSÉ, LE DEMANDEUR, LA DATE */}
@@ -1093,9 +1079,7 @@ export function AdminYokofolio() {
                                     label: e.target.value,
                                   })
                                 }
-                                className="h-11 rounded-xl bg-sombre-eleve px-3 text-[15px]
-                                           text-sombre-texte outline-none transition-colors
-                                           focus:bg-sombre-eleve-clair"
+                                className={`min-h-[48px] text-[15px] ${CHAMP}`}
                               />
                             </label>
                             <div className="flex flex-col gap-1.5">
@@ -1159,9 +1143,7 @@ export function AdminYokofolio() {
                                 message: e.target.value,
                               })
                             }
-                            className="rounded-xl bg-sombre-eleve px-3 py-2.5 text-[14px]
-                                       leading-relaxed text-sombre-texte outline-none
-                                       transition-colors focus:bg-sombre-eleve-clair"
+                            className={`py-2.5 text-[14px] leading-relaxed ${CHAMP}`}
                           />
                         </label>
                         <div className="flex flex-wrap items-center justify-end gap-2">
