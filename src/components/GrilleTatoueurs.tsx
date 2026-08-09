@@ -17,6 +17,11 @@ import {
 } from "@/components/RetourFenetreFiche";
 import { reposerLaCarteDuHaut } from "@/lib/carte-du-haut";
 import {
+  lirePhototheque,
+  lirePhototequeServeur,
+  souscrirePhototheque,
+} from "@/lib/vue-phototheque";
+import {
   lireDisposition,
   lireDispositionServeur,
   souscrireDisposition,
@@ -133,6 +138,13 @@ export function GrilleTatoueurs({
     souscrireDisposition,
     lireDisposition,
     lireDispositionServeur
+  );
+  /** LA VUE PHOTOTHÈQUE (nº 140) — les images pures. Indépendante de
+      la disposition : les deux se combinent librement. */
+  const phototheque = useSyncExternalStore(
+    souscrirePhototheque,
+    lirePhototheque,
+    lirePhototequeServeur
   );
   /**
    * LA CARTE QU'ON REGARDE SURVIT À LA BASCULE DE DISPOSITION.
@@ -309,10 +321,21 @@ export function GrilleTatoueurs({
         // ne peut la contredire. Seuls les vrais mobiles y accèdent :
         // le bouton n'existe pas ailleurs.
         style={disposition === "une" ? { gridTemplateColumns: "1fr" } : undefined}
+        // EN PHOTOTHÈQUE (nº 140), L'ÉCART HORIZONTAL EST REPORTÉ À LA
+        // VERTICALE : une grille régulière dans les deux sens. Sur le
+        // web l'écart des deux axes était déjà le même (gap-5) — c'est
+        // la disparition des textes sous l'image qui rend l'écart
+        // vertical VISUEL égal à l'horizontal. Sur smartphone, les
+        // rangées reprennent l'interstice d'UNE ligne des colonnes
+        // (2 px), en deux colonnes comme en pleine largeur.
         className={`grid gap-4 sm:gap-5 mobile:-mx-4 transition-opacity ${
-          disposition === "une"
-            ? "mobile:gap-y-8"
-            : "mobile:gap-x-[2px] mobile:gap-y-4"
+          phototheque
+            ? disposition === "une"
+              ? "mobile:gap-y-[2px]"
+              : "mobile:gap-[2px]"
+            : disposition === "une"
+              ? "mobile:gap-y-8"
+              : "mobile:gap-x-[2px] mobile:gap-y-4"
         } ${
           estompee ? "opacity-60" : "opacity-100"
         } grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6`}
@@ -324,6 +347,7 @@ export function GrilleTatoueurs({
             styleRecherche={styleRecherche}
             renduRecherche={renduRecherche}
             prioritaire={rang < CARTES_PRIORITAIRES}
+            phototheque={phototheque}
             surApproche={() => precharger(tatoueur.slug)}
             surOuverture={() => ouvrir(tatoueur)}
           />

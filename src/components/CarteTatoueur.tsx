@@ -54,9 +54,14 @@ export function CarteTatoueur({
   styleRecherche = "",
   renduRecherche = "",
   prioritaire = false,
+  phototheque = false,
   surOuverture,
   surApproche,
 }: {
+  /** LA VUE PHOTOTHÈQUE (nº 140) : la photo seule — ni badge, ni
+      portrait, ni nom, ni adresse. SEUL LE CŒUR des favoris reste,
+      dans l'angle. Le clic mène à la fiche, comme toujours. */
+  phototheque?: boolean;
   tatoueur: Tatoueur;
   /** Le style demandé dans le moteur, s'il y en a un. */
   styleRecherche?: string;
@@ -284,25 +289,47 @@ export function CarteTatoueur({
             verticalement — les 10 px de retrait sont exactement les
             mêmes à gauche et à droite, et la hauteur de ligne ne
             décale plus le mot vers le haut. */}
-        <span
-          className="absolute bottom-2 right-2 inline-flex h-[22px]
-                     items-center justify-center rounded-full
-                     bg-black/38 backdrop-blur-md
-                     px-2.5 text-[11.5px] font-semibold leading-none
-                     text-white pointer-events-none select-none"
-        >
-          {libelleTypeFiche(tatoueur.type_fiche, tatoueur.etablissement)}
-        </span>
+        {!phototheque && (
+          <span
+            className="absolute bottom-2 right-2 inline-flex h-[22px]
+                       items-center justify-center rounded-full
+                       bg-black/38 backdrop-blur-md
+                       px-2.5 text-[11.5px] font-semibold leading-none
+                       text-white pointer-events-none select-none"
+          >
+            {libelleTypeFiche(tatoueur.type_fiche, tatoueur.etablissement)}
+          </span>
+        )}
 
         {/* LE CŒUR — DANS l'image, angle HAUT DROIT : l'angle opposé
             au badge, celui que tous les sites d'images réservent à ce
             geste. Il est posé APRÈS le lien étiré dans l'ordre du
             document et porte `z-10` : le doigt le trouve avant la
-            carte, et n'ouvre donc jamais la fiche par erreur. */}
+            carte, et n'ouvre donc jamais la fiche par erreur.
+            ⚠️ C'EST LE SEUL ÉLÉMENT QUE LA PHOTOTHÈQUE CONSERVE. */}
         {photoEnregistrable && (
           <div className="absolute top-2 right-2">
             <BoutonCoeurPhoto photoId={photoEnregistrable.id} />
           </div>
+        )}
+
+        {/* EN PHOTOTHÈQUE, LE LIEN DE FICHE RECOUVRE L'IMAGE : le bloc
+            de texte qui portait le lien étiré est masqué, la photo
+            doit rester cliquable. Même clic, même mécanique (fenêtre
+            sur le web, navigation de document sur mobile), même
+            préchargement — c'est `auClic` qui décide, comme pour le
+            lien du nom. z-[1] : sous le cœur (z-10), au-dessus de la
+            photo. */}
+        {phototheque && (
+          <Link
+            href={adresseFiche}
+            aria-label={`Voir la fiche de ${tatoueur.nom}`}
+            prefetch={essaiDocument ? false : undefined}
+            onClick={auClic}
+            className="absolute inset-0 z-[1] outline-none
+                       focus-visible:outline-2 focus-visible:-outline-offset-2
+                       focus-visible:outline-primaire"
+          />
         )}
       </div>
 
@@ -335,6 +362,7 @@ export function CarteTatoueur({
           très long tronqué, la mesure ne bouge pas.
           EN DEUX COLONNES SUR SMARTPHONE, il disparaît : la carte n'y
           fait que 190 px de large, le portrait mangerait le nom. */}
+      {!phototheque && (
       <div className="pt-3 px-0.5 mobile:px-4 mobile:pt-2.5 flex items-center gap-2.5">
         <span
           className={`shrink-0 h-10 w-10 flex items-center
@@ -415,6 +443,7 @@ export function CarteTatoueur({
         </p>
         </div>
       </div>
+      )}
     </article>
   );
 }

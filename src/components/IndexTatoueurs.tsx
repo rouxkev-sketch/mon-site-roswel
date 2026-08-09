@@ -314,28 +314,41 @@ export function IndexTatoueurs({
       <main
         className={`flex-1 mx-auto w-full ${LARGEUR_SITE} px-4 sm:px-6 pb-16`}
       >
-        {/* Les interrupteurs éteints n'ont AUCUN badge ici : leur seul
-            témoin est le compteur porté par le moteur (pastille du
-            bouton rond sur le web, de l'encadré sur smartphone). Qui a
-            éteint quelque chose sait où le rallumer. */}
-        <LigneResultats
-          lieu={
-            affiches.lieu
-              ? affiches.lieu.intitule
-              : TEXTES_TATOUAGE.partoutLabel
-          }
-          //  LE TITRE DIT LA RECHERCHE ENTIÈRE (passe nº 110) :
-          //  « Flashs · Réalisme », et plus seulement « Réalisme » —
-          //  la ligne de résultats doit répondre à la question posée,
-          //  pas à la moitié.
-          titre={
+        {/* LE TITRE DIT LA RECHERCHE (nº 140) — la pilule de la barre
+            dit toujours « Recherche », c'est donc ICI que les critères
+            se lisent. LA RÈGLE : le QUOI en titre (« Flashs ·
+            Réalisme », « Tous les flashs », « Réalisme ») ; un lieu
+            SEUL devient le titre ; les deux → le quoi en titre, le
+            lieu derrière le compte. Sans recherche : « Explorer toutes
+            les créations », sans sous-titre. */}
+        {(() => {
+          const quoi =
             libelleExplorer(affiches.nature, affiches.style) ||
-            (affiches.style
-              ? libelleStyleChoisi(affiches.style)
-              : "Tous les tatoueurs")
+            (affiches.style ? libelleStyleChoisi(affiches.style) : "");
+          const lieu = affiches.lieu
+            ? `${affiches.lieu.intitule}${
+                affiches.lieu.precision === "ville" ||
+                affiches.lieu.precision === "adresse"
+                  ? ` ${affiches.rayonKm} km`
+                  : ""
+              }`
+            : "";
+          const compte = `${enTout} création${enTout > 1 ? "s" : ""}`;
+          if (!quoi && !lieu) {
+            return (
+              <LigneResultats
+                titre="Explorer toutes les créations"
+                sousTitre={null}
+              />
+            );
           }
-          nombre={enTout}
-        />
+          return (
+            <LigneResultats
+              titre={quoi || affiches.lieu!.intitule}
+              sousTitre={quoi && lieu ? `${compte} · ${lieu}` : compte}
+            />
+          );
+        })()}
 
         {demonstration && message && (
           <p className="mb-6 rounded-xl border border-primaire/40 bg-primaire/10 px-4 py-3 text-sm text-sombre-texte">

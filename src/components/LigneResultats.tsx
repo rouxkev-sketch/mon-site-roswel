@@ -1,40 +1,49 @@
 /**
- * LA LIGNE DE RÉSULTATS
- * =====================
- * Sous la barre fixe, au-dessus des cartes. Elle dit, en deux lignes,
- * ce qu'on est en train de regarder :
+ * LA LIGNE DE RÉSULTATS (refonte nº 140)
+ * =======================================
+ * Sous la barre fixe, au-dessus des cartes. C'est ELLE qui dit la
+ * recherche en cours — la pilule de la barre, elle, dit toujours
+ * « Recherche » (nº 140-§6).
  *
- *    Réalisme                       Tous les tatoueurs
- *    Lyon · 14 tatoueurs            Partout · 14 tatoueurs
+ * SANS RECHERCHE ACTIVE :
  *
- * Ligne 1 — GRANDE ET GRASSE, c'est le titre de la page (h1) : LE
- * STYLE choisi, seul (« Réalisme ») — c'est lui qu'on est venu
- * comparer. Sans style choisi : « Tous les tatoueurs ».
+ *    Explorer toutes les créations
  *
- * Ligne 2 — la localité et le compte, réunis d'un point médian :
- * « Lyon · 14 tatoueurs ». Un cran sous le titre (plus petit, gris
- * doux), mais assez grande pour se lire sans effort.
+ *  — le titre seul, AUCUN sous-titre : la page invite, elle ne rend
+ *  pas compte d'une question que personne n'a posée.
+ *
+ * AVEC UNE RECHERCHE ACTIVE :
+ *
+ *    Réalisme                        Lyon
+ *    20 créations · Lyon 5 km       20 créations
+ *
+ *  — le titre est CE QUI A ÉTÉ CHERCHÉ, le sous-titre porte le
+ *  compte. LA RÈGLE DU TITRE : le QUOI l'emporte — « Flashs ·
+ *  Réalisme » (catégorie + style), « Tous les flashs » (catégorie
+ *  seule), « Réalisme » (style seul) ; un LIEU SEUL devient lui-même
+ *  le titre (« Lyon ») ; quand les deux existent, le quoi est le
+ *  titre et le lieu rejoint le sous-titre, derrière le compte. La
+ *  règle vit dans IndexTatoueurs (`titreEtSousTitre`).
  */
 export function LigneResultats({
-  lieu,
   titre,
-  nombre,
+  sousTitre,
 }: {
-  /** « Partout » (aucun lieu choisi), « Allemagne » ou « Lyon »
-      (SANS le rayon). */
-  lieu: string;
-  /** « Tous les tatoueurs » ou le style choisi (« Réalisme »). */
+  /** « Explorer toutes les créations », ou ce qui a été cherché. */
   titre: string;
-  nombre: number;
+  /** « 20 créations · Lyon 5 km » — null sans recherche active. */
+  sousTitre: string | null;
 }) {
   return (
     <div className="pt-6 pb-5 sm:pt-8 sm:pb-6">
       <h1 className="text-[clamp(1.25rem,2.4vw,1.65rem)] font-bold leading-tight text-sombre-texte">
         {titre}
       </h1>
-      <p className="mt-1.5 text-[15.5px] sm:text-[16px] text-sombre-texte-doux">
-        {lieu} · {nombre} tatoueur{nombre > 1 ? "s" : ""}
-      </p>
+      {sousTitre && (
+        <p className="mt-1.5 text-[15.5px] sm:text-[16px] text-sombre-texte-doux">
+          {sousTitre}
+        </p>
+      )}
     </div>
   );
 }

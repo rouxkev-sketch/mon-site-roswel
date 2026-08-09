@@ -768,6 +768,21 @@ export function IconeCroix({ taille = 20, classe = "" }: ProprietesIcone) {
 }
 
 /** Quatre carreaux — la disposition en DEUX colonnes (mosaïque). */
+/** LA GRILLE D'IMAGES — l'icône de la vue photothèque (passe nº 140) :
+    quatre carrés aux coins doux, la mosaïque réduite à son dessin.
+    Distincte des DEUX COLONNES (deux rectangles hauts) : ici c'est la
+    GRILLE qui parle, pas le nombre de colonnes. */
+export function IconeGrilleImages({ taille = 20, classe = "" }: ProprietesIcone) {
+  return (
+    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
+      <rect x="3.5" y="3.5" width="7.2" height="7.2" rx="1.6" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="13.3" y="3.5" width="7.2" height="7.2" rx="1.6" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="3.5" y="13.3" width="7.2" height="7.2" rx="1.6" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="13.3" y="13.3" width="7.2" height="7.2" rx="1.6" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
 export function IconeDeuxColonnes({ taille = 20, classe = "" }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>

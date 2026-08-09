@@ -19,6 +19,7 @@ import { OngletsLigne } from "@/components/OngletsLigne";
 import { PageRechercheMobile } from "@/components/PageRechercheMobile";
 import {
   IconeDeuxColonnes,
+  IconeGrilleImages,
   IconeLoupe,
   IconeReglages,
   IconeUneColonne,
@@ -30,6 +31,12 @@ import {
   lireDispositionServeur,
   souscrireDisposition,
 } from "@/lib/disposition-grille";
+import {
+  basculerPhototheque,
+  lirePhototheque,
+  lirePhototequeServeur,
+  souscrirePhototheque,
+} from "@/lib/vue-phototheque";
 import {
   fermerRecherche,
   lireRecherche,
@@ -250,6 +257,12 @@ export function MoteurTatouage({
     souscrireDisposition,
     lireDisposition,
     lireDispositionServeur
+  );
+  /** La vue photothèque (nº 140) — mémorisée de la même façon. */
+  const phototheque = useSyncExternalStore(
+    souscrirePhototheque,
+    lirePhototheque,
+    lirePhototequeServeur
   );
 
   // Le panneau des filtres du web : Échap et clic ailleurs referment.
@@ -544,29 +557,11 @@ export function MoteurTatouage({
       résultat à résumer — elle INVITE, elle ne rend pas compte. */
   const rechercheVierge =
     !criteres.style && !criteres.nature && !criteres.lieu;
-  /** La localité, quand il y en a une : « Lyon 5 km », « Allemagne ».
-      Le rayon suit la ville sans point médian — un seul séparateur
-      dans la ligne, celui qui compte, entre le style et le lieu. */
-  const resumeLieu = criteres.lieu
-    ? `${ligneMoteur(criteres.lieu)}${
-        rayonApplicable(criteres.lieu) && criteres.rayonKm > 0
-          ? ` ${criteres.rayonKm} km`
-          : ""
-      }`
-    : "";
-
-  /** LA BARRE FIXE NE DIT QUE CE QU'ON A DEMANDÉ.
-      Elle affichait « Partout » derrière le style, même quand
-      personne n'avait choisi de lieu : une réponse à une question que
-      l'on n'avait pas posée. Désormais, quatre cas et rien de plus —
-      et le PREMIER MOT est toujours l'information principale, en
-      blanc et en gras (la typographie du titre au-dessus des cartes) :
-        · rien cherché    → « Rechercher »
-        · une nature seule → « Tous les flashs »
-        · un lieu seul    → « Lyon 5 km » (c'est LUI le sujet)
-        · les deux        → « Flashs · Réalisme » + « · Lyon 5 km ». */
-  const resumePrincipal = libelleQuoi || resumeLieu;
-  const resumeSecondaire = libelleQuoi && resumeLieu ? ` · ${resumeLieu}` : "";
+  /*  ⚠️ LE RÉSUMÉ DE LA PILULE A DISPARU (nº 140) : la barre dit
+      toujours « Recherche », et les critères en cours se lisent dans
+      le TITRE au-dessus de la mosaïque. Seul l'aria-label garde le
+      détail (`libelleQuoi`, `libelleOu`) — un lecteur d'écran ne voit
+      pas ce titre à côté de la pilule. */
 
   // LE RAYON N'EST UTILISABLE QU'AUTOUR D'UN POINT (ville, adresse).
   // Sans lieu, ou sur une RÉGION / un PAYS, il reste EXACTEMENT à sa
@@ -770,6 +765,29 @@ export function MoteurTatouage({
             <IconeReglages taille={20} />
           </button>
 
+          {/* LA VUE PHOTOTHÈQUE (nº 140) — à côté du bouton de
+              filtres, MÊME taille (46 px) et ronde comme lui. */}
+          <button
+            type="button"
+            onClick={() => {
+              noterLaCarteDuHaut();
+              basculerPhototheque();
+            }}
+            aria-pressed={phototheque}
+            aria-label={
+              phototheque ? "Revenir aux cartes" : "Voir les images seules"
+            }
+            title={phototheque ? "Revenir aux cartes" : "Images seules"}
+            className={`relative shrink-0 w-[46px] h-[46px] rounded-full
+                       flex items-center justify-center transition-colors ${
+                         phototheque
+                           ? "bg-primaire/15 text-primaire"
+                           : "bg-sombre-eleve text-sombre-texte hover:bg-sombre-eleve-clair"
+                       }`}
+          >
+            <IconeGrilleImages taille={20} />
+          </button>
+
           {filtresOuverts && (
             //  LE PANNEAU — la robe des fenêtres du site depuis la
             //  nº 130 : fond carte, ni contour ni ombre. Dedans, LE
@@ -816,25 +834,19 @@ export function MoteurTatouage({
                      rounded-full bg-sombre-eleve
                      px-5 min-h-[52px] active:bg-sombre-eleve-clair transition-colors"
         >
+          {/*  ⚠️ TOUJOURS LE MÊME MOT (passe nº 140) : la loupe et
+               « Recherche », qu'une recherche soit active ou non. Les
+               critères en cours se lisent désormais dans le TITRE de
+               la page, au-dessus de la mosaïque — la pilule est une
+               PORTE, plus un résumé. L'aria-label, lui, garde le
+               détail : un lecteur d'écran ne voit pas le titre à côté. */}
           <IconeLoupe taille={18} classe="shrink-0 text-sombre-texte-doux" />
           <span
             aria-hidden="true"
-            className="min-w-0 flex-1 truncate text-[15px] leading-tight"
+            className="min-w-0 flex-1 truncate text-[15px] leading-tight
+                       font-semibold text-sombre-texte"
           >
-            {rechercheVierge ? (
-              <span className="font-semibold text-sombre-texte">Rechercher</span>
-            ) : (
-              <>
-                <span className="font-semibold text-sombre-texte">
-                  {resumePrincipal}
-                </span>
-                {resumeSecondaire && (
-                  <span className="text-sombre-texte-doux">
-                    {resumeSecondaire}
-                  </span>
-                )}
-              </>
-            )}
+            Recherche
           </span>
         </button>
 
@@ -871,6 +883,35 @@ export function MoteurTatouage({
           ) : (
             <IconeDeuxColonnes taille={20} />
           )}
+        </button>
+
+        {/* LA VUE PHOTOTHÈQUE (nº 140) — à DROITE du bouton de
+            disposition : les images pures, sans badge, sans nom, sans
+            adresse — seul le cœur des favoris reste. ACTIVE, le bouton
+            passe en rose voilé : c'est un ÉTAT qui persiste, le même
+            langage que le bouton de filtres ouvert. Elle se combine
+            librement avec les deux dispositions. */}
+        <button
+          type="button"
+          onClick={() => {
+            //  Même précaution que la disposition : on retient la
+            //  carte du haut — masquer les textes change la hauteur
+            //  des rangées, la position seule ne suffirait pas.
+            noterLaCarteDuHaut();
+            basculerPhototheque();
+          }}
+          aria-pressed={phototheque}
+          aria-label={
+            phototheque ? "Revenir aux cartes" : "Voir les images seules"
+          }
+          className={`shrink-0 w-[52px] h-[52px] rounded-full
+                     flex items-center justify-center transition-colors ${
+                       phototheque
+                         ? "bg-primaire/15 text-primaire"
+                         : "bg-sombre-eleve text-sombre-texte active:bg-sombre-eleve-clair"
+                     }`}
+        >
+          <IconeGrilleImages taille={20} />
         </button>
       </div>
 
