@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { libelleStyle } from "@/config/tatouage";
+import { libelleStyle, libelleTypeFiche } from "@/config/tatouage";
 import {
   libelleNature,
   libelleRendu,
@@ -280,6 +280,22 @@ function CartePhotoFavorite({ photo }: { photo: PhotoFavorite }) {
           loading="lazy"
           className="h-full w-full object-cover"
         />
+        {/* LE BADGE « Artiste » / « Salon » / « Studio » — angle BAS
+            DROIT, dans l'image : le MÊME traitement qu'en mosaïque, au
+            pixel près (pastille noire à 38 %, flou d'arrière-plan,
+            hauteur fixe, texte blanc). Il manquait ici (passe nº 142),
+            et deux cartes qui se ressemblent doivent dire la même
+            chose — sinon on croit regarder deux objets différents. */}
+        <span
+          className="absolute bottom-2 right-2 inline-flex h-[22px]
+                     items-center justify-center rounded-full
+                     bg-black/38 backdrop-blur-md
+                     px-2.5 text-[11.5px] font-semibold leading-none
+                     text-white pointer-events-none select-none"
+        >
+          {libelleTypeFiche(photo.typeFiche, photo.etablissement)}
+        </span>
+
         <div className="absolute top-2 right-2">
           <BoutonCoeurPhoto photoId={photo.id} enregistreeAuDepart />
         </div>

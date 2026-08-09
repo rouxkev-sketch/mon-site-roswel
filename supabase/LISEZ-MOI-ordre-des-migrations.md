@@ -84,6 +84,12 @@ repasse.
 | 47 | `yokofolio-suppression-formulaire-demande.sql` | aucun objet (supprime 1 colonne) |
 | 48 | `yokofolio-fin-des-zones.sql` | aucun objet (vide les photos, supprime 1 colonne, 2 index, resserre 1 contrainte) |
 | 49 | `yokofolio-flash-nature-photo.sql` | 1 colonne, 1 contrainte, 1 index, 1 fonction (la recherche, refaite — **et réparée**) |
+| 50 | `yokofolio-styles-de-a-a-z.sql` | aucun objet (élargit le catalogue de styles) |
+| 51 | `yokofolio-liens-libres.sql` | 2 colonnes |
+| 52 | `yokofolio-suggestions-styles.sql` | 1 table, 2 index, 4 politiques |
+| 53 | `yokofolio-favoris-photos.sql` | 1 table, 2 index, 4 politiques |
+| 54 | `yokofolio-tatoueurs-suivis.sql` | 1 table, 2 index, 4 politiques |
+| 55 | `yokofolio-portfolios-repris.sql` | aucun objet (catalogue les photos que la nº 31 avait laissées) |
 
 ## Ce que chaque fichier apporte
 
@@ -139,6 +145,9 @@ repasse.
 50. **`yokofolio-styles-de-a-a-z.sql`** — Les trente-huit styles, et les démonstrations au diapason
 51. **`yokofolio-liens-libres.sql`** — Les titres du site et de la page de liens
 52. **`yokofolio-suggestions-styles.sql`** — Les styles proposés par les tatoueurs (⚠️ une ligne **acceptée** EST un style du site)
+53. **`yokofolio-favoris-photos.sql`** — Les photos enregistrées (le cœur)
+54. **`yokofolio-tatoueurs-suivis.sql`** — Les tatoueurs suivis (« Suivre »)
+55. **`yokofolio-portfolios-repris.sql`** — Les portfolios que la nº 31 avait oubliés (⚠️ **sans elle, aucun cœur ne s'affiche** sur les fiches dont les images vivent dans `photo_principale`)
 
 ---
 

@@ -124,8 +124,20 @@ export function FenetreTatoueursSuivis({
               >
                 {/* LE TRAITEMENT DES CARTES — portrait rond, nom, lieu
                     dessous. Une liste qui ne ressemble pas aux cartes
-                    du site obligerait à réapprendre à lire. */}
-                <span
+                    du site obligerait à réapprendre à lire.
+                    ⚠️ LE PORTRAIT EST UN LIEN (passe nº 142) : il ne
+                    l'était pas, et c'était le seul endroit du site où
+                    l'on peut toucher le visage de quelqu'un sans que
+                    rien n'arrive. Il mène là où mène le nom, ferme la
+                    fenêtre comme lui — et reste MUET pour les lecteurs
+                    d'écran (`aria-hidden` + `tabindex -1`) : deux liens
+                    voisins vers la même fiche feraient lire deux fois
+                    la même chose. */}
+                <Link
+                  href={`/tatoueur/${tatoueur.slug}`}
+                  onClick={onFermer}
+                  aria-hidden="true"
+                  tabIndex={-1}
                   className="flex h-10 w-10 shrink-0 items-center justify-center
                              overflow-hidden rounded-full bg-sombre-eleve"
                 >
@@ -140,14 +152,11 @@ export function FenetreTatoueursSuivis({
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <span
-                      aria-hidden="true"
-                      className="text-[13px] font-bold text-sombre-texte-doux"
-                    >
+                    <span className="text-[13px] font-bold text-sombre-texte-doux">
                       {tatoueur.nom.trim().charAt(0).toUpperCase()}
                     </span>
                   )}
-                </span>
+                </Link>
 
                 <Link
                   href={`/tatoueur/${tatoueur.slug}`}

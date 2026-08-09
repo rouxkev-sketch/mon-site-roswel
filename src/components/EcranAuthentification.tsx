@@ -435,11 +435,24 @@ export function EcranAuthentification({
         ))}
       </div>
 
-      {/* « ou » — le mot seul, sans filets : plus aucun trait décoratif
-          sur cet écran (charte). L'espace et le mot suffisent. */}
-      <p className="mt-6 text-center text-[13px] text-sombre-texte-doux" aria-hidden="true">
+      {/* « ou » — LE MOT ENTRE DEUX FILETS (passe nº 142). Ils avaient
+          été retirés au nom du « plus aucun contour » ; mais un
+          contour ENTOURE un objet, alors qu'une ligne de division
+          SÉPARE deux blocs — c'est le rôle que le mot « ou » tient
+          déjà, et les filets ne font que le rendre visible. Le trait
+          est celui des séparations du site (`sombre-bordure`), d'un
+          seul pixel, et il ne touche jamais le mot : `gap-3` de part
+          et d'autre.
+          `aria-hidden` : « ou » n'apporte rien à un lecteur d'écran,
+          qui annonce déjà les deux groupes l'un après l'autre. */}
+      <div
+        className="mt-6 flex items-center gap-3 text-[13px] text-sombre-texte-doux"
+        aria-hidden="true"
+      >
+        <span className="h-px flex-1 bg-sombre-bordure" />
         ou
-      </p>
+        <span className="h-px flex-1 bg-sombre-bordure" />
+      </div>
 
       {/* ---------- …puis l'e-mail ----------
           LES INTITULÉS SONT DANS LES CHAMPS (charte, nº 134) : les

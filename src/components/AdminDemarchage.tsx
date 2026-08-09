@@ -3,12 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import {
-  IconeAvion,
-  IconeCocheListe,
-  IconeFlecheRetour,
-  IconeLienExterne,
-} from "@/components/Icones";
+import { IconeCocheListe, IconeLienExterne } from "@/components/Icones";
+import { OngletsLigne } from "@/components/OngletsLigne";
 import { Patience, SqueletteLignes } from "@/components/Squelette";
 import {
   COULEUR_ETAT_DEMARCHAGE,
@@ -48,6 +44,9 @@ import {
  * réel — jamais d'une case à cocher.
  */
 
+/** LES DEUX POSITIONS DU SÉLECTEUR (passe nº 142). */
+type Vue = "a_envoyer" | "envoye";
+
 type FicheLigne = {
   id: string;
   nom: string;
@@ -61,7 +60,13 @@ type FicheLigne = {
 };
 
 type Groupe = {
+  /** Vide tant que l'envoi n'existe pas en base (brouillon). */
   id: string;
+  /** VRAI : composé, pas encore validé — rien n'est écrit nulle part. */
+  brouillon: boolean;
+  /** Le jeton du lien. Rendu au serveur à la validation, pour que le
+      message déjà copié reste exact (voir la route). */
+  jeton: string;
   etat: EtatLigne;
   envoyeLe: string;
   rattacheLe: string | null;
@@ -70,6 +75,11 @@ type Groupe = {
   fiches: FicheLigne[];
   message: string;
 };
+
+/** L'ERREUR — la seule exception de la charte : l'encadré rouge. */
+const ERREUR =
+  "rounded-xl border border-erreur/50 bg-erreur/10 px-4 py-3 " +
+  "text-[13.5px] leading-relaxed text-sombre-texte";
 
 function dateCourte(iso: string | null | undefined): string {
   if (!iso) return "—";
@@ -134,6 +144,10 @@ export function AdminDemarchage() {
   const [enCours, setEnCours] = useState<string | null>(null);
   /** L'écran du message — ouvert, il remplace le tableau. */
   const [ouvert, setOuvert] = useState<Groupe | null>(null);
+  /** LA LISTE REGARDÉE — « À envoyer » ou « Envoyé ». */
+  const [vue, setVue] = useState<Vue>("a_envoyer");
+  /** L'envoi dont on demande la confirmation d'annulation. */
+  const [aAnnuler, setAAnnuler] = useState<string | null>(null);
 
   const charger = useCallback(async () => {
     setErreur(null);
@@ -214,8 +228,11 @@ export function AdminDemarchage() {
     }
   }
 
-  /** VALIDER LA SÉLECTION : un jeton naît, le message s'ouvre. */
-  async function validerLaSelection() {
+  /** COMPOSER LE MESSAGE — et RIEN DE PLUS (passe nº 142).
+      Le serveur tire le jeton et écrit le texte ; aucune ligne n'est
+      créée. L'envoi n'existera qu'au « Valider l'envoi » de l'écran
+      suivant — d'ici là, « Retour » ne laisse aucune trace. */
+  async function composerLeMessage() {
     if (cochees.length === 0) return;
     setEnCours("selection");
     setErreur(null);
@@ -223,7 +240,7 @@ export function AdminDemarchage() {
       const reponse = await fetch("/api/admin/yokofolio/demarchage", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fiches: cochees }),
+        body: JSON.stringify({ fiches: cochees, apercu: true }),
       });
       const donnees = (await reponse.json().catch(() => null)) as {
         ok?: boolean;
@@ -231,13 +248,67 @@ export function AdminDemarchage() {
         groupe?: Groupe;
       } | null;
       if (!reponse.ok || !donnees?.ok || !donnees.groupe) {
-        throw new Error(donnees?.message ?? "Création impossible.");
+        throw new Error(donnees?.message ?? "Composition impossible.");
       }
-      setCochees([]);
       setOuvert(donnees.groupe);
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : "Composition impossible.");
+    } finally {
+      setEnCours(null);
+    }
+  }
+
+  /** VALIDER L'ENVOI : c'est ICI, et nulle part avant, que l'envoi
+      naît. Le jeton du brouillon est repris tel quel — le message déjà
+      copié reste donc juste au caractère près. */
+  async function validerLEnvoi(brouillon: Groupe) {
+    const reponse = await fetch("/api/admin/yokofolio/demarchage", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fiches: brouillon.fiches.map((f) => f.id),
+        jeton: brouillon.jeton,
+      }),
+    });
+    const donnees = (await reponse.json().catch(() => null)) as {
+      ok?: boolean;
+      message?: string;
+      groupe?: Groupe;
+    } | null;
+    if (!reponse.ok || !donnees?.ok) {
+      throw new Error(donnees?.message ?? "Validation impossible.");
+    }
+    setCochees([]);
+    setOuvert(null);
+    //  ON REVIENT SUR LA LISTE OÙ LES LIGNES VIENNENT D'ATTERRIR : le
+    //  geste s'appelle « Valider l'envoi », son résultat est un envoi —
+    //  on le montre, plutôt que de laisser deviner qu'il a eu lieu.
+    setVue("envoye");
+    await charger();
+  }
+
+  /** ANNULER UN ENVOI — la ligne disparaît, ses fiches reviennent dans
+      « À envoyer ». La confirmation est demandée par la ligne
+      elle-même (voir `LigneEnvoi`) : on n'arrive ici qu'après. */
+  async function annulerLEnvoi(groupe: Groupe) {
+    setEnCours(groupe.id);
+    setErreur(null);
+    try {
+      const reponse = await fetch("/api/admin/yokofolio/demarchage", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: groupe.id }),
+      });
+      const donnees = (await reponse.json().catch(() => null)) as {
+        ok?: boolean;
+        message?: string;
+      } | null;
+      if (!reponse.ok || !donnees?.ok) {
+        throw new Error(donnees?.message ?? "Annulation impossible.");
+      }
       await charger();
     } catch (e) {
-      setErreur(e instanceof Error ? e.message : "Création impossible.");
+      setErreur(e instanceof Error ? e.message : "Annulation impossible.");
     } finally {
       setEnCours(null);
     }
@@ -248,7 +319,13 @@ export function AdminDemarchage() {
    * vérification d'une fiche remplace la file d'attente.
    * ============================================================== */
   if (ouvert) {
-    return <EcranMessage groupe={ouvert} onRetour={() => setOuvert(null)} />;
+    return (
+      <EcranMessage
+        groupe={ouvert}
+        onRetour={() => setOuvert(null)}
+        onValider={ouvert.brouillon ? validerLEnvoi : undefined}
+      />
+    );
   }
 
   const enLigneCount = (aEnvoyer ?? []).filter((f) => f.enLigne).length;
@@ -258,11 +335,7 @@ export function AdminDemarchage() {
       <h1 className="text-[22px] font-bold text-sombre-texte">Démarchage</h1>
 
       {erreur && (
-        <p
-          role="status"
-          className="mt-4 rounded-xl border border-erreur/50 bg-erreur/10 px-4 py-3
-                     text-[13.5px] leading-relaxed text-sombre-texte"
-        >
+        <p role="status" className={`mt-4 ${ERREUR}`}>
           {erreur}
         </p>
       )}
@@ -279,20 +352,70 @@ export function AdminDemarchage() {
           Aucune fiche créée depuis un compte administrateur.
         </p>
       ) : (
-        <div className="mt-6 flex flex-col gap-8">
+        <div className="mt-6 flex flex-col gap-5">
+          {/* LE SÉLECTEUR À DEUX POSITIONS (passe nº 142) — la grammaire
+              du site : les mots côte à côte, la ligne fine grise, le
+              segment actif épais et rose. Les deux listes se
+              succédaient l'une sous l'autre ; sur un tableau qui
+              grandit, il fallait défiler tout « À envoyer » pour
+              atteindre « Envoyé ». Elles occupent désormais la même
+              place, et l'on choisit celle qu'on regarde.
+              PLUS DE TITRES DE SECTION : le segment actif les dit. */}
+          <div className="max-w-[360px]">
+            <OngletsLigne
+              options={[
+                { cle: "a_envoyer", label: "À envoyer" },
+                { cle: "envoye", label: "Envoyé" },
+              ]}
+              cleActive={vue}
+              surChoix={(cle) => setVue(cle as Vue)}
+              ariaLabel="À envoyer ou envoyés"
+            />
+          </div>
+
           {/* ---------- LES FICHES À ENVOYER ---------- */}
-          {(aEnvoyer.length > 0 || cochees.length > 0) && (
+          {vue === "a_envoyer" && (
             <section>
-              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-1">
-                <h2 className="text-[16px] font-semibold tracking-tight text-sombre-texte">
-                  À envoyer
-                </h2>
-                <span className="text-[13px] text-sombre-texte-doux">
-                  {enLigneCount} en ligne sur {aEnvoyer.length}
-                </span>
+              {aEnvoyer.length === 0 ? (
+                <p className="rounded-2xl bg-sombre-carte px-4 py-6 text-center
+                              text-[14px] text-sombre-texte-doux">
+                  Rien à envoyer.
+                </p>
+              ) : (
+              <>
+              {/* LA PLACE DU HAUT REVIENT À L'ACTION (passe nº 142) :
+                  c'est le bouton qui s'y tient, là où se lisait
+                  « N en ligne sur M ». Le compte, lui, descend sous le
+                  tableau — c'est un CONSTAT, pas un geste, et un
+                  constat se lit après ce qu'il compte. */}
+              <div className="flex justify-end px-1">
+                {/* L'ACTION FINALE DE L'ÉCRAN : capsule pleine rose, une
+                    seule — et elle ne s'allume qu'avec une sélection.
+                    ⚠️ SANS L'AVION (passe nº 142) : le libellé dit déjà
+                    tout, et le dessin d'un avion promettait un envoi
+                    que ce bouton ne fait pas — il compose un message,
+                    c'est l'écran suivant qui envoie. */}
+                <button
+                  type="button"
+                  disabled={cochees.length === 0 || enCours === "selection"}
+                  onClick={() => void composerLeMessage()}
+                  className={`inline-flex w-full items-center justify-center
+                             rounded-full min-h-[50px] text-[15px] font-semibold
+                             transition-colors sm:w-auto sm:px-8 ${
+                               cochees.length > 0
+                                 ? "bg-primaire hover:bg-primaire-fonce text-white"
+                                 : "bg-sombre-eleve text-sombre-texte-doux cursor-not-allowed"
+                             }`}
+                >
+                  {enCours === "selection"
+                    ? "Un instant…"
+                    : cochees.length > 1
+                      ? `Générer le message (${cochees.length} fiches)`
+                      : "Générer le message"}
+                </button>
               </div>
 
-              <ul className="mt-3 flex flex-col gap-2">
+              <ul className="mt-4 flex flex-col gap-2">
                 {aEnvoyer.map((fiche) => {
                   const choisie = cochees.includes(fiche.id);
                   return (
@@ -354,39 +477,25 @@ export function AdminDemarchage() {
                 })}
               </ul>
 
-              {/* L'ACTION FINALE DE L'ÉCRAN : capsule pleine rose, une
-                  seule — et elle ne s'allume qu'avec une sélection. */}
-              <button
-                type="button"
-                disabled={cochees.length === 0 || enCours === "selection"}
-                onClick={() => void validerLaSelection()}
-                className={`mt-4 inline-flex w-full items-center justify-center gap-2
-                           rounded-full min-h-[50px] text-[15px] font-semibold
-                           transition-colors sm:w-auto sm:px-8 ${
-                             cochees.length > 0
-                               ? "bg-primaire hover:bg-primaire-fonce text-white"
-                               : "bg-sombre-eleve text-sombre-texte-doux cursor-not-allowed"
-                           }`}
-              >
-                <IconeAvion taille={18} />
-                {enCours === "selection"
-                  ? "Un instant…"
-                  : cochees.length > 1
-                    ? `Générer le message (${cochees.length} fiches)`
-                    : "Générer le message"}
-              </button>
+              {/* LE COMPTE, EN BAS À DROITE — sous ce qu'il compte. */}
+              <p className="mt-3 px-1 text-right text-[13px] text-sombre-texte-doux">
+                {enLigneCount} en ligne sur {aEnvoyer.length}
+              </p>
+              </>
+              )}
             </section>
           )}
 
           {/* ---------- LES ENVOIS — les lignes fusionnées ---------- */}
-          {groupes.length > 0 && (
+          {vue === "envoye" && (
             <section>
-              <div className="px-1">
-                <h2 className="text-[16px] font-semibold tracking-tight text-sombre-texte">
-                  Envoyés
-                </h2>
-              </div>
-              <ul className="mt-3 flex flex-col gap-2">
+              {groupes.length === 0 ? (
+                <p className="rounded-2xl bg-sombre-carte px-4 py-6 text-center
+                              text-[14px] text-sombre-texte-doux">
+                  Aucun envoi.
+                </p>
+              ) : (
+              <ul className="flex flex-col gap-2">
                 {groupes.map((groupe) => (
                   <li
                     key={groupe.id}
@@ -474,6 +583,61 @@ export function AdminDemarchage() {
                       </code>
                     </div>
 
+                    {/* ANNULER L'ENVOI (passe nº 142) — un message
+                        généré par erreur n'avait aucune issue : la
+                        ligne restait « Envoyée » à jamais, et la seule
+                        sortie était de toucher la base à la main.
+                        TEXTE BRUT, comme toute action qui défait, et
+                        une CONFIRMATION, parce que le jeton meurt avec
+                        la ligne : le lien déjà envoyé cesse de mener
+                        quelque part.
+                        Seulement sur un envoi que personne n'a encore
+                        touché — un rattachement ou un retrait est le
+                        geste de quelqu'un d'autre, on ne le réécrit
+                        pas (la route le refuse aussi). */}
+                    {groupe.etat === "envoye" &&
+                      (aAnnuler === groupe.id ? (
+                        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                          <p className="text-[13.5px] font-semibold text-sombre-texte">
+                            Annuler cet envoi&nbsp;?
+                          </p>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setAAnnuler(null)}
+                              className="px-2 min-h-[38px] text-[13.5px] font-semibold
+                                         text-sombre-texte-doux transition-colors
+                                         hover:text-sombre-texte"
+                            >
+                              Non
+                            </button>
+                            <button
+                              type="button"
+                              disabled={enCours === groupe.id}
+                              onClick={() => {
+                                setAAnnuler(null);
+                                void annulerLEnvoi(groupe);
+                              }}
+                              className="px-2 min-h-[38px] text-[13.5px] font-semibold
+                                         text-erreur transition-opacity
+                                         hover:opacity-75 disabled:opacity-40"
+                            >
+                              {enCours === groupe.id ? "Annulation…" : "Annuler l'envoi"}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setAAnnuler(groupe.id)}
+                          className="mt-2 px-2 -ml-2 min-h-[38px] text-[13px] font-semibold
+                                     text-sombre-texte-doux transition-colors
+                                     hover:text-erreur"
+                        >
+                          Annuler l&apos;envoi
+                        </button>
+                      ))}
+
                     {/* CE QUI RESTE À COURIR — dit une fois, en clair. */}
                     {groupe.etat !== "envoye" && (
                       <p className="mt-2 text-[12px] text-sombre-texte-doux">
@@ -485,6 +649,7 @@ export function AdminDemarchage() {
                   </li>
                 ))}
               </ul>
+              )}
             </section>
           )}
         </div>
@@ -550,12 +715,30 @@ function Interrupteur({
 function EcranMessage({
   groupe,
   onRetour,
+  onValider,
 }: {
   groupe: Groupe;
   onRetour: () => void;
+  /** Absent quand on RELIT un envoi déjà fait : il n'y a plus rien à
+      valider, l'écran n'est alors qu'une lecture. */
+  onValider?: (groupe: Groupe) => Promise<void>;
 }) {
   const [texte, setTexte] = useState(groupe.message);
   const [copie, setCopie] = useState(false);
+  const [envoiEnCours, setEnvoiEnCours] = useState(false);
+  const [erreur, setErreur] = useState<string | null>(null);
+
+  async function valider() {
+    if (!onValider) return;
+    setEnvoiEnCours(true);
+    setErreur(null);
+    try {
+      await onValider(groupe);
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : "Validation impossible.");
+      setEnvoiEnCours(false);
+    }
+  }
 
   async function copier() {
     try {
@@ -572,19 +755,12 @@ function EcranMessage({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={onRetour}
-        className="inline-flex items-center gap-2 min-h-[40px] text-[14px]
-                   text-sombre-texte-doux hover:text-sombre-texte transition-colors"
-      >
-        <IconeFlecheRetour taille={18} />
-        Retour au tableau
-      </button>
-
-      <h1 className="mt-2 text-[22px] font-bold text-sombre-texte">
-        Le message
-      </h1>
+      {/* ⚠️ PLUS DE « Retour au tableau » EN TÊTE (passe nº 142) :
+          l'écran a maintenant SES DEUX BOUTONS en bas — « Retour » et
+          « Valider l'envoi ». Deux retours à deux endroits, dont l'un
+          au-dessus du titre, laissaient croire qu'ils ne faisaient pas
+          la même chose. */}
+      <h1 className="text-[22px] font-bold text-sombre-texte">Le message</h1>
 
       {/* LES FICHES DE L'ENVOI — de quoi on parle, en tête. */}
       <ul className="mt-4 flex flex-col gap-2">
@@ -626,17 +802,54 @@ function EcranMessage({
                    [font-family:inherit] resize-y"
       />
 
-      <button
-        type="button"
-        onClick={() => void copier()}
-        className="mt-4 inline-flex w-full items-center justify-center gap-2
-                   rounded-full min-h-[50px] bg-primaire hover:bg-primaire-fonce
-                   text-[15px] font-semibold text-white transition-colors
-                   sm:w-auto sm:px-8"
-      >
-        <IconeCocheListe taille={18} />
-        {copie ? "Copié" : "Copier le message"}
-      </button>
+      {erreur && <p role="status" className={`mt-4 ${ERREUR}`}>{erreur}</p>}
+
+      {/* LES TROIS GESTES DE L'ÉCRAN, dans l'ordre de la charte :
+          « Retour » en TEXTE BRUT (il défait, il ne crée rien),
+          « Copier le message » en capsule NATURELLE (geste
+          intermédiaire — on copie, puis on valide), et
+          « Valider l'envoi » en CAPSULE PLEINE ROSE : c'est l'action
+          finale, la seule qui écrive quelque chose.
+          ⚠️ AVANT LA PASSE Nº 142, L'ENVOI ÉTAIT DÉJÀ CRÉÉ à l'arrivée
+          sur cet écran : « Retour » laissait une ligne derrière lui, et
+          rien ne demandait confirmation. Désormais, tant qu'on n'a pas
+          touché « Valider l'envoi », rien n'existe. */}
+      <div className="mt-5 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={onRetour}
+          className="px-2 -ml-2 min-h-[50px] text-[14.5px] font-semibold
+                     text-sombre-texte-doux transition-colors
+                     hover:text-sombre-texte"
+        >
+          Retour
+        </button>
+
+        <button
+          type="button"
+          onClick={() => void copier()}
+          className="inline-flex items-center justify-center gap-2 rounded-full
+                     min-h-[50px] px-6 bg-sombre-eleve hover:bg-sombre-eleve-clair
+                     text-[14.5px] font-semibold text-sombre-texte transition-colors"
+        >
+          <IconeCocheListe taille={18} />
+          {copie ? "Copié" : "Copier le message"}
+        </button>
+
+        {onValider && (
+          <button
+            type="button"
+            disabled={envoiEnCours}
+            onClick={() => void valider()}
+            className="inline-flex flex-1 items-center justify-center rounded-full
+                       min-h-[50px] bg-primaire hover:bg-primaire-fonce
+                       text-[15px] font-semibold text-white transition-colors
+                       disabled:opacity-60 sm:flex-none sm:px-8"
+          >
+            {envoiEnCours ? "Un instant…" : "Valider l'envoi"}
+          </button>
+        )}
+      </div>
 
       <p className="mt-4 text-[12.5px] text-sombre-texte-doux">
         Lien de rattachement&nbsp;: <code>{groupe.lien}</code>

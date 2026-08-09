@@ -442,7 +442,13 @@ export function AdminYokofolio() {
 
   /* ---------- L'ADMIN ---------- */
   return (
-    <main className="flex-1 mx-auto w-full max-w-[1400px] px-4 sm:px-6 py-6 flex flex-col lg:flex-row gap-6">
+    /*  ⚠️ LA MÊME LARGEUR QUE LE RESTE DU SITE (passe nº 142) : 1760 px
+        et les mêmes marges (`px-4 sm:px-6`) que le contenu de
+        `(tatouage)/layout.tsx`. L'admin s'arrêtait à 1400 px et se
+        détachait donc de toutes les autres pages — sur un grand écran,
+        le tableau de démarchage était visiblement plus étroit que la
+        mosaïque, sans qu'aucune raison ne le justifie. */
+    <main className="flex-1 mx-auto w-full max-w-[1760px] px-4 sm:px-6 py-6 flex flex-col lg:flex-row gap-6">
       {/* ---- LA BARRE LATÉRALE — extensible ---- */}
       <aside className="lg:w-[230px] shrink-0">
         <div className="flex items-center gap-2.5 px-1">

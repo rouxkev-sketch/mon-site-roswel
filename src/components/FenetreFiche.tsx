@@ -170,10 +170,11 @@ export function FenetreFiche({
   const photo = photosDuStyleAffiche[rang];
   /** LA PHOTO QUE LE CŒUR ENREGISTRE — celle qu'on regarde. `cle` est
       l'identifiant de base pour un portfolio catalogué (nº 31) ; les
-      fiches d'avant portent une clé fabriquée, sans ligne en face :
-      pas de cœur pour elles. */
-  const photoEnregistrable =
-    (tatoueur?.galerie?.length ?? 0) > 0 ? photo?.cle : undefined;
+      fiches d'avant portent une clé fabriquée, sans ligne en face.
+      ⚠️ PLUS DE VERDICT SUR LA FICHE ENTIÈRE (passe nº 142) : c'est
+      `BoutonCoeurPhoto` qui juge CETTE image-ci, comme sur la page de
+      fiche — voir le commentaire jumeau dans FicheTatoueur.tsx. */
+  const photoEnregistrable = photo?.cle;
   /** LA SUIVANTE — sa miniature part discrètement en avance : le
       passage à la photo d'après n'a plus rien à attendre. */
   const suivante = photosDuStyleAffiche[rang + 1];

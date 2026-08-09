@@ -32,6 +32,14 @@ export type PhotoFavorite = {
   /** Le tatoueur à qui elle appartient — la carte le nomme. */
   tatoueurNom: string;
   tatoueurSlug: string;
+  /** DE QUI VIENT LA PHOTO — « Artiste », « Salon », « Studio ».
+      La carte de la mosaïque le dit dans l'image ; celle des favoris
+      le disait pas (passe nº 142), et deux cartes identiques qui ne
+      portent pas la même information se lisent comme deux objets
+      différents. Les deux colonnes voyagent ensemble : c'est
+      `libelleTypeFiche` qui en fait un mot. */
+  typeFiche: string;
+  etablissement: string;
 };
 
 /** UN TATOUEUR SUIVI, tel que la fenêtre le montre. */
@@ -117,7 +125,10 @@ export async function lireLesFavoris(
         ? await supabase
             .from("tatoueurs")
             .select(
-              "id, nom, slug, ville_nom, region, pays, code_pays, photo_profil"
+              "id, nom, slug, ville_nom, region, pays, code_pays, photo_profil, " +
+                //  LE BADGE DE LA CARTE (passe nº 142) — les deux
+                //  colonnes que `libelleTypeFiche` croise.
+                "type_fiche, etablissement"
             )
             .in("id", idsFiches)
             .eq("publie", true)
@@ -132,6 +143,8 @@ export async function lireLesFavoris(
       pays: string | null;
       code_pays: string | null;
       photo_profil: string | null;
+      type_fiche: string | null;
+      etablissement: string | null;
     };
     const parFiche = new Map<string, LigneFiche>();
     for (const ligne of (fiches.error ? [] : (fiches.data ?? [])) as unknown as
@@ -160,6 +173,10 @@ export async function lireLesFavoris(
         nature: natureConnue(photo.nature),
         tatoueurNom: fiche.nom,
         tatoueurSlug: fiche.slug,
+        //  LES MÊMES REPLIS QUE `normaliser` dans lib/tatoueurs : une
+        //  fiche d'avant la migration nº 38 n'a ni l'une ni l'autre.
+        typeFiche: fiche.type_fiche ?? "salon",
+        etablissement: fiche.etablissement ?? "salon",
       });
     }
 

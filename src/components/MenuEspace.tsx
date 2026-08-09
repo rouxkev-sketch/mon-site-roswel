@@ -126,40 +126,74 @@ export function MenuEspace({
     [fiche]
   );
 
-  // LES FICHES ET LES NOUVELLES — relues à CHAQUE ouverture : léger,
-  // et toujours vrai au moment où l'on regarde.
-  useEffect(() => {
-    if (!ouvert) return;
-    let abandonne = false;
-    (async () => {
-      try {
-        const supabase = creerClientSupabaseNavigateur();
-        const liste = await chargerFichesDuCompte(supabase, idUtilisateur);
-        if (abandonne) return;
-        setFiches(liste);
-        // On recale le choix : la fiche mémorisée peut avoir disparu.
-        const retenue = ficheActive(liste, idFiche);
-        setIdFiche(retenue?.id ?? null);
-      } catch {
-        if (!abandonne) setFiches([]);
-      }
-      try {
-        const reponse = await fetch("/api/tatoueur/notifications");
-        const donnees = (await reponse.json().catch(() => null)) as {
-          notifications?: Notification[];
-        } | null;
-        if (!abandonne) setNotifications(donnees?.notifications ?? []);
-      } catch {
-        // Pas de nouvelles : le menu vit très bien sans.
-      }
+  /** LES FICHES ET LES NOUVELLES — une lecture, les deux ensemble.
+      ⚠️ ELLE N'EST JAMAIS LANCÉE AU MONTAGE, et ce n'est pas un
+      oubli : une lecture authentifiée sur CHAQUE page, pour un menu
+      que la plupart des visites n'ouvrent jamais, coûte une requête à
+      chaque affichage — et fait rejouer la session du client Supabase
+      hors de tout geste (mesuré : la liste des favoris s'en trouvait
+      perdue). On lit quand on ouvre, et seulement là. */
+  const lireLeCompte = useCallback(async () => {
+    try {
+      const supabase = creerClientSupabaseNavigateur();
+      const liste = await chargerFichesDuCompte(supabase, idUtilisateur);
+      setFiches(liste);
+      // On recale le choix : la fiche mémorisée peut avoir disparu.
+      setIdFiche((courant) => ficheActive(liste, courant)?.id ?? null);
+    } catch {
+      //  ⚠️ ON NE VIDE PAS LA LISTE (passe nº 142). Une lecture qui
+      //  échoue — réseau coupé le temps d'un geste — faisait
+      //  disparaître le bloc du portfolio d'un menu déjà ouvert. On
+      //  garde ce qu'on montrait : seule une lecture RÉUSSIE change
+      //  ce qui est à l'écran.
+    }
+    try {
+      const reponse = await fetch("/api/tatoueur/notifications");
+      const donnees = (await reponse.json().catch(() => null)) as {
+        notifications?: Notification[];
+      } | null;
+      setNotifications(donnees?.notifications ?? []);
+    } catch {
+      // Pas de nouvelles : le menu vit très bien sans.
+    }
+  }, [idUtilisateur]);
+
+  /**
+   * OUVRIR — ET N'OUVRIR QU'UNE FOIS LE CONTENU PRÊT (passe nº 142)
+   * ================================================================
+   * La fenêtre s'affichait EN DEUX TEMPS : ses quatre entrées de base
+   * d'abord, puis — la lecture revenue — le sélecteur de portfolios,
+   * « Modification » et « Mon portfolio » qui s'insèrent et poussent
+   * tout le reste vers le bas. Sur smartphone, où la fenêtre occupe
+   * l'écran, le saut se voit en entier.
+   *
+   * LE REMÈDE N'EST NI UN SQUELETTE NI UNE RÉSERVE DE PLACE : on
+   * n'ouvre pas une fenêtre à moitié. La PREMIÈRE ouverture attend sa
+   * lecture — le temps d'un aller-retour —, puis la fenêtre paraît
+   * COMPLÈTE, d'un seul coup. Les suivantes sont immédiates : ce
+   * qu'on sait déjà s'affiche tel quel, pendant qu'une relecture
+   * silencieuse le remet à jour derrière.
+   */
+  const dejaLu = useRef(false);
+
+  const basculerLeMenu = useCallback(() => {
+    if (ouvert) {
+      setOuvert(false);
+      return;
+    }
+    if (dejaLu.current) {
+      //  On sait déjà : la fenêtre s'ouvre tout de suite, et se remet
+      //  à jour derrière sans jamais se vider.
+      setOuvert(true);
+      void lireLeCompte();
+      return;
+    }
+    void (async () => {
+      await lireLeCompte();
+      dejaLu.current = true;
+      setOuvert(true);
     })();
-    return () => {
-      abandonne = true;
-    };
-    // `idFiche` volontairement absent : on ne relit pas la base à
-    // chaque changement de fiche, seulement à l'ouverture du menu.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ouvert, idUtilisateur]);
+  }, [ouvert, lireLeCompte]);
 
   /** Choisir une fiche : on la retient pour la prochaine fois. */
   function choisirFiche(id: string) {
@@ -558,7 +592,7 @@ export function MenuEspace({
       {/* ÉCRAN ÉTROIT : l'icône personnage, ROSE (connecté). */}
       <button
         type="button"
-        onClick={() => setOuvert(!ouvert)}
+        onClick={basculerLeMenu}
         aria-haspopup="dialog"
         aria-expanded={ouvert}
         aria-label={`Mon espace — ${nom}`}
@@ -575,7 +609,7 @@ export function MenuEspace({
       {/* ÉCRAN LARGE : le bouton rose « Mon espace ». */}
       <button
         type="button"
-        onClick={() => setOuvert(!ouvert)}
+        onClick={basculerLeMenu}
         aria-haspopup="dialog"
         aria-expanded={ouvert}
         aria-label={`Mon espace — ${nom}`}

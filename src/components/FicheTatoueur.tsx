@@ -133,10 +133,16 @@ export function FicheTatoueur({
       ⚠️ `cle` N'EST L'IDENTIFIANT DE BASE QUE POUR UN PORTFOLIO
       CATALOGUÉ (migration nº 31). Les fiches d'avant portent une clé
       FABRIQUÉE (« style-adresse ») qui ne désigne aucune ligne :
-      enregistrer serait impossible, le cœur ne s'affiche donc pas. */
-  const portfolioCatalogue = (tatoueur.galerie?.length ?? 0) > 0;
-  const photoCourante = photosDuCarrousel[indicePhoto] ?? photosDuCarrousel[0];
-  const photoAffichee = portfolioCatalogue ? photoCourante : undefined;
+      enregistrer serait impossible.
+      ⚠️ ON NE JUGE PLUS LA FICHE ENTIÈRE (passe nº 142) : le test se
+      faisait sur `galerie.length`, donc une seule photo non cataloguée
+      suffisait à priver TOUT le carrousel de son cœur. C'est
+      `BoutonCoeurPhoto` qui tranche, PHOTO PAR PHOTO — la seule
+      question qui vaille étant « CETTE image-ci existe-t-elle en
+      base ? ». (La migration nº 55 catalogue les portfolios que la
+      nº 31 avait laissés de côté : après elle, la réponse est oui
+      partout.) */
+  const photoAffichee = photosDuCarrousel[indicePhoto] ?? photosDuCarrousel[0];
 
   /** LE SÉLECTEUR — un menu dès qu'il y a deux styles, un simple
       badge quand il n'y en a qu'un. Il ne s'efface jamais. */

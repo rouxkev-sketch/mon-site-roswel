@@ -20,8 +20,19 @@ import {
  *        écrites à personne (« à envoyer »), et les ENVOIS déjà faits,
  *        chacun avec ses fiches empilées, son statut, ses liens et son
  *        message.
- * POST : { fiches: string[] } — on coche, on valide. Un jeton naît, un
- *        envoi est créé, le message est rendu prêt à copier.
+ * POST : DEUX TEMPS DEPUIS LA PASSE Nº 142.
+ *        · { fiches, apercu: true } — on COMPOSE. Le jeton est tiré, le
+ *          message est écrit, et RIEN N'EST ÉCRIT EN BASE. C'est ce que
+ *          « Générer le message » demande : un brouillon qu'on relit.
+ *        · { fiches, jeton } — on VALIDE. L'envoi est créé pour de bon,
+ *          avec le jeton exact du brouillon qu'on vient de relire (le
+ *          message déjà copié reste donc juste), et les lignes passent
+ *          en « Envoyé ».
+ *        Avant, le premier geste créait déjà l'envoi : le message
+ *        s'ouvrait sur un fait accompli, sans confirmation possible.
+ * DELETE : { id } — ANNULER UN ENVOI. La ligne disparaît, ses fiches
+ *        redeviennent « à envoyer ». Réservé aux envois que personne
+ *        n'a encore touchés (voir plus bas).
  *
  * ⚠️ LE JETON EST TIRÉ ICI, ET NULLE PART AILLEURS.
  * `randomBytes(32)` : 256 bits d'entropie, écrits en base64url (43
@@ -231,6 +242,11 @@ export async function GET() {
         const lien = lienDeRattachement(adresse, envoi.jeton);
         return {
           id: envoi.id,
+          //  UN ENVOI LU EN BASE N'EST JAMAIS UN BROUILLON : il existe.
+          //  Le champ n'est là que pour que l'écran du message pose la
+          //  même question aux deux (« dois-je proposer de valider ? »).
+          brouillon: false,
+          jeton: envoi.jeton,
           etat: etatDeLEnvoi(envoi),
           envoyeLe: envoi.envoye_le,
           rattacheLe: envoi.rattache_le,
@@ -281,7 +297,11 @@ export async function POST(requete: NextRequest) {
   }
 
   try {
-    const corps = (await requete.json()) as { fiches?: string[] };
+    const corps = (await requete.json()) as {
+      fiches?: string[];
+      apercu?: boolean;
+      jeton?: string;
+    };
     const demandees = Array.isArray(corps.fiches) ? corps.fiches : [];
     if (demandees.length === 0) {
       return NextResponse.json(
@@ -289,6 +309,7 @@ export async function POST(requete: NextRequest) {
         { status: 400 }
       );
     }
+    const enApercu = corps.apercu === true;
 
     const admin = creerClientSupabaseAdmin();
     const comptes = await identifiantsAdmin();
@@ -353,7 +374,56 @@ export async function POST(requete: NextRequest) {
 
     //  LE JETON. 32 octets tirés au sort, en base64url : 43
     //  caractères, 256 bits. Rien dedans ne vient de la fiche.
-    const jeton = randomBytes(32).toString("base64url");
+    //  ⚠️ EN VALIDATION, C'EST CELUI DU BROUILLON QU'ON REPREND (passe
+    //  nº 142) : le message a pu être copié avant qu'on ne confirme, et
+    //  un jeton tiré une seconde fois rendrait ce texte faux. Il est
+    //  passé au crible — 43 caractères de l'alphabet base64url, et rien
+    //  d'autre : un jeton court ou choisi à la main serait une serrure
+    //  ouverte sur la page de rattachement.
+    const JETON_ATTENDU = /^[A-Za-z0-9_-]{43}$/;
+    const repris = typeof corps.jeton === "string" ? corps.jeton : "";
+    if (!enApercu && repris && !JETON_ATTENDU.test(repris)) {
+      return NextResponse.json(
+        { ok: false, message: "Jeton mal formé." },
+        { status: 400 }
+      );
+    }
+    const jeton = repris || randomBytes(32).toString("base64url");
+
+    //  L'ORDRE DES FICHES DANS LE MESSAGE suit l'ordre coché : la
+    //  première nommée est celle à qui l'on parle.
+    const dansLOrdre = demandees
+      .map((id) => fiches.find((f) => f.id === id))
+      .filter((f): f is LigneFiche => Boolean(f))
+      .map(fichePourEcran);
+    const lien = lienDeRattachement(adresse, jeton);
+    const message = messageDemarchage(
+      dansLOrdre.map((f) => ({ nom: f.nom, slug: f.slug, type: f.type })),
+      lien,
+      adresse
+    );
+
+    //  LE BROUILLON — on rend le message SANS RIEN ÉCRIRE. Tant que
+    //  l'administrateur n'a pas confirmé, ce lien ne mène nulle part
+    //  et aucune fiche n'a bougé : « Retour » ne laisse donc aucune
+    //  trace à nettoyer.
+    if (enApercu) {
+      return NextResponse.json({
+        ok: true,
+        groupe: {
+          id: "",
+          brouillon: true,
+          jeton,
+          etat: "envoye" as EtatLigne,
+          envoyeLe: new Date().toISOString(),
+          rattacheLe: null,
+          retireLe: null,
+          lien,
+          fiches: dansLOrdre,
+          message,
+        },
+      });
+    }
 
     const creation = await admin
       .from("demarchages")
@@ -374,29 +444,19 @@ export async function POST(requete: NextRequest) {
       throw new Error(rattachement.error.message);
     }
 
-    //  L'ORDRE DES FICHES DANS LE MESSAGE suit l'ordre coché : la
-    //  première nommée est celle à qui l'on parle.
-    const dansLOrdre = demandees
-      .map((id) => fiches.find((f) => f.id === id))
-      .filter((f): f is LigneFiche => Boolean(f))
-      .map(fichePourEcran);
-    const lien = lienDeRattachement(adresse, envoi.jeton);
-
     return NextResponse.json({
       ok: true,
       groupe: {
         id: envoi.id,
+        brouillon: false,
+        jeton: envoi.jeton,
         etat: "envoye" as EtatLigne,
         envoyeLe: envoi.envoye_le,
         rattacheLe: null,
         retireLe: null,
         lien,
         fiches: dansLOrdre,
-        message: messageDemarchage(
-          dansLOrdre.map((f) => ({ nom: f.nom, slug: f.slug, type: f.type })),
-          lien,
-          adresse
-        ),
+        message,
       },
     });
   } catch (e) {
@@ -404,6 +464,95 @@ export async function POST(requete: NextRequest) {
       {
         ok: false,
         message: e instanceof Error ? e.message : "Création impossible.",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * ANNULER UN ENVOI — le geste qui manquait (passe nº 142)
+ * ========================================================
+ * Un message généré par erreur n'avait AUCUNE issue depuis l'écran :
+ * la ligne restait « Envoyée » pour toujours, et la seule sortie était
+ * d'aller supprimer la ligne à la main dans la base. Ce n'est pas une
+ * solution : ce qu'on peut faire d'un clic doit pouvoir se défaire
+ * d'un clic.
+ *
+ * CE QUE ÇA EFFACE : la ligne de `demarchages`, et elle seule. Ses
+ * liens vers les fiches partent avec elle (`on delete cascade`), et
+ * les fiches — que rien n'a touchées — redeviennent des lignes seules
+ * dans « À envoyer ». LE JETON MEURT AVEC : le lien déjà copié ne
+ * mène plus nulle part, ce qui est exactement le but quand on annule.
+ *
+ * ⚠️ SEULEMENT CE QUE PERSONNE N'A ENCORE TOUCHÉ. Un envoi rattaché
+ * (le tatoueur a créé son compte) ou retiré (il a refusé) porte la
+ * trace d'un geste RÉEL, fait par quelqu'un d'autre : l'effacer
+ * réécrirait son histoire, et la fiche ne reviendrait de toute façon
+ * pas dans « À envoyer » — elle ne nous appartient plus. Ces deux
+ * états-là s'effacent tout seuls, au bout de leurs délais.
+ */
+export async function DELETE(requete: NextRequest) {
+  const refus = await verifierAdmin();
+  if (refus) {
+    return NextResponse.json(
+      { ok: false, message: refus.message },
+      { status: refus.statut }
+    );
+  }
+
+  try {
+    const corps = (await requete.json()) as { id?: string };
+    const id = typeof corps.id === "string" ? corps.id.trim() : "";
+    if (!id) {
+      return NextResponse.json(
+        { ok: false, message: "Envoi non désigné." },
+        { status: 400 }
+      );
+    }
+
+    const admin = creerClientSupabaseAdmin();
+    const lecture = await admin
+      .from("demarchages")
+      .select("id, jeton, statut, envoye_le, rattache_le, retire_le")
+      .eq("id", id)
+      .maybeSingle();
+    if (lecture.error) {
+      if (tableAbsente(lecture.error.message)) {
+        return NextResponse.json(
+          { ok: false, message: SANS_MIGRATION },
+          { status: 409 }
+        );
+      }
+      throw new Error(lecture.error.message);
+    }
+    const envoi = lecture.data as unknown as LigneEnvoi | null;
+    if (!envoi) {
+      return NextResponse.json(
+        { ok: false, message: "Cet envoi n'existe plus." },
+        { status: 404 }
+      );
+    }
+    if (etatDeLEnvoi(envoi) !== "envoye") {
+      return NextResponse.json(
+        {
+          ok: false,
+          message:
+            "Cet envoi a déjà été suivi d'un geste du tatoueur : il ne s'annule plus.",
+        },
+        { status: 409 }
+      );
+    }
+
+    const suppression = await admin.from("demarchages").delete().eq("id", id);
+    if (suppression.error) throw new Error(suppression.error.message);
+
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: e instanceof Error ? e.message : "Annulation impossible.",
       },
       { status: 500 }
     );
