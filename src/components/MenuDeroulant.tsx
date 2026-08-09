@@ -142,15 +142,20 @@ export function MenuDeroulant({
       le menu avant que le clic n'arrive. */
   const panneau = useRef<HTMLDivElement>(null);
 
+  //  ⚠️ EN SOMBRE, LE CHAMP SUIT LA CHARTE (nº 141-2B) : ni contour,
+  //  ni halo — OUVERT, LE FOND S'ÉCLAIRCIT D'UN CRAN, c'est tout. Le
+  //  liseré rose à l'ouverture (border-primaire + ring) se lisait
+  //  comme un encadrement d'alerte. Le mode CLAIR (produit artisans)
+  //  garde son habillage historique.
   const habillage = sansBordure
     ? "bg-transparent"
-    : `rounded-2xl border ${sombre ? "bg-sombre-eleve" : "bg-fond"} ${
-        ouvert
-          ? "border-primaire ring-2 ring-primaire/25"
-          : sombre
-            ? "border-sombre-bordure"
-            : "border-bordure-champ"
-      }`;
+    : sombre
+      ? `rounded-2xl transition-colors ${
+          ouvert ? "bg-sombre-eleve-clair" : "bg-sombre-eleve"
+        }`
+      : `rounded-2xl border bg-fond ${
+          ouvert ? "border-primaire ring-2 ring-primaire/25" : "border-bordure-champ"
+        }`;
 
   const libelleChoisi =
     libelleValeur || options.find((o) => o.value === valeur)?.label;

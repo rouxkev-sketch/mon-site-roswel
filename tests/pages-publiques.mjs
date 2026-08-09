@@ -92,9 +92,12 @@ verif(
   (await lienInsta.first().getAttribute("target")) === "_blank" &&
     (await lienInsta.first().getAttribute("rel"))?.includes("noopener")
 );
+//  ⚠️ nº 141-8 : plus de SVG maison — le pied porte le glyphe
+//  `icone-instagram.png` déposé par le propriétaire, éclairci par
+//  `invert` (jamais retouché), dans un cercle gris.
 verif(
-  "il porte l'icône Instagram",
-  (await lienInsta.first().locator("svg").count()) === 1
+  "il porte l'icône Instagram du propriétaire",
+  (await lienInsta.first().locator('img[src="/icone-instagram.png"]').count()) === 1
 );
 
 /* ================================================================

@@ -673,24 +673,16 @@ export function IconeEnveloppe({ taille = 20, classe = "" }: ProprietesIcone) {
 
 /** Facebook — le « f » dans son cadre, tracé au même trait que le
     reste : ni aplat bleu, ni logo officiel. */
+/** LE « f » DE FACEBOOK, SEUL (nº 141-§9) : le glyphe nu, en plein —
+    l'encadré arrondi qui l'entourait datait. Même langage que les
+    logos Google et Apple des boutons voisins : la marque, rien
+    autour. */
 export function IconeFacebook({ taille = 20, classe = "" }: ProprietesIcone) {
   return (
-    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
-      <rect
-        x="3.5"
-        y="3.5"
-        width="17"
-        height="17"
-        rx="4.5"
-        stroke="currentColor"
-        strokeWidth="1.8"
-      />
+    <svg width={taille} height={taille} viewBox="0 0 24 24" className={classe} aria-hidden>
       <path
-        d="M14.6 8.2h-1.1c-1 0-1.6.6-1.6 1.6v1.4m0 0h-1.9m1.9 0h2.2m-2.2 0v5.6"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        d="M14.3 4.5h2.2V1.6A28 28 0 0 0 13.3 1.5c-3.2 0-5.4 2-5.4 5.7v3.2H4.4v4.1h3.5v10h4.3v-10h3.5l.6-4.1h-4.1V7.7c0-1.2.3-2 2.1-2Z"
+        fill="currentColor"
       />
     </svg>
   );
@@ -768,17 +760,38 @@ export function IconeCroix({ taille = 20, classe = "" }: ProprietesIcone) {
 }
 
 /** Quatre carreaux — la disposition en DEUX colonnes (mosaïque). */
-/** LA GRILLE D'IMAGES — l'icône de la vue photothèque (passe nº 140) :
-    quatre carrés aux coins doux, la mosaïque réduite à son dessin.
-    Distincte des DEUX COLONNES (deux rectangles hauts) : ici c'est la
-    GRILLE qui parle, pas le nombre de colonnes. */
-export function IconeGrilleImages({ taille = 20, classe = "" }: ProprietesIcone) {
+/** LA PHOTO — l'icône de la vue photothèque au repos (nº 141-4A) :
+    UN CADRE, UNE MONTAGNE, UN SOLEIL — le pictogramme universel de
+    l'image. Redessinée : la grille 2×2 de la nº 140 se confondait
+    avec l'icône de disposition (quatre carrés elle aussi). Comme le
+    bouton de disposition, le dessin montre la vue VERS LAQUELLE on
+    bascule : celui-ci dit « passe aux images seules ». */
+export function IconePhoto({ taille = 20, classe = "" }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
-      <rect x="3.5" y="3.5" width="7.2" height="7.2" rx="1.6" stroke="currentColor" strokeWidth="1.8" />
-      <rect x="13.3" y="3.5" width="7.2" height="7.2" rx="1.6" stroke="currentColor" strokeWidth="1.8" />
-      <rect x="3.5" y="13.3" width="7.2" height="7.2" rx="1.6" stroke="currentColor" strokeWidth="1.8" />
-      <rect x="13.3" y="13.3" width="7.2" height="7.2" rx="1.6" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="3.5" y="4.5" width="17" height="15" rx="2" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="9" cy="9.5" r="1.7" fill="currentColor" />
+      <path
+        d="m6 19 5.2-5.6a1.4 1.4 0 0 1 2 0l2 2.1 1.6-1.7a1.4 1.4 0 0 1 2 0l1.7 1.8"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** LA CARTE — l'icône de la photothèque ACTIVE (nº 141-4B) : une
+    image et ses DEUX LIGNES DE TEXTE dessous — le dessin de la carte
+    complète, vers laquelle le bouton ramène. L'état se lit par le
+    DESSIN, jamais par une couleur (même règle que la disposition). */
+export function IconeCartes({ taille = 20, classe = "" }: ProprietesIcone) {
+  return (
+    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
+      <rect x="3.5" y="3.5" width="17" height="11" rx="2" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M3.5 18h11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M3.5 21h7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }

@@ -278,15 +278,16 @@ await mob.locator('button[aria-haspopup="dialog"]').first().click();
 await mob.waitForTimeout(1200);
 const ecran = mob.locator('[role="dialog"][aria-label="Rechercher un tatoueur"]');
 verif("l'écran de recherche s'ouvre", (await ecran.count()) === 1);
-//  ⚠️ LA BASCULE A DISPARU À LA PASSE Nº 139 : la page n'a plus
-//  qu'UN écran — le titre « Recherche » en tête, et le sélecteur à
-//  deux positions (« Type de profil » / « Où tatoue-t-il ? ») au
-//  milieu. C'est CE contrat qu'on vérifie désormais.
+//  ⚠️ LA BASCULE EST REVENUE À LA PASSE Nº 141 : la page unique de la
+//  passe nº 139 débordait à 320 px, le propriétaire a tranché. En tête,
+//  plus de titre « Recherche » — le sélecteur Recherche/Filtres
+//  (grammaire OngletsLigne, `radiogroup`) occupe sa place, et la vue
+//  Recherche (Explorer, localité, rayon) s'affiche à l'ouverture.
 verif(
-  "la page unique porte son titre et son sélecteur (nº 139)",
-  (await ecran.locator("h1", { hasText: "Recherche" }).count()) === 1 &&
+  "la bascule Recherche/Filtres tient l'en-tête (nº 141)",
+  (await ecran.locator("h1").count()) === 0 &&
     (await ecran
-      .locator('[role="radiogroup"][aria-label="Famille de filtres"]')
+      .locator('[role="radiogroup"][aria-label="Recherche ou filtres"]')
       .count()) === 1
 );
 

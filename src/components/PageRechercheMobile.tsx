@@ -2,13 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { IconeCroix, IconeLoupe } from "@/components/Icones";
+import { IconeCroix } from "@/components/Icones";
+import { OngletsLigne } from "@/components/OngletsLigne";
 import {
   entreeDejaPosee,
   lireDefilementResultats,
   marquerEntreePosee,
   memoriserDefilementResultats,
   prendreLEntree,
+  type VueRecherche,
 } from "@/lib/recherche-mobile";
 
 /**
@@ -146,20 +148,28 @@ const COURBE_GLISSADE = "cubic-bezier(0.32, 0.72, 0, 1)";
 /** Où en est la page. « posée » est le seul état où l'on saisit. */
 type Phase = "arrive" | "posee" | "part";
 
-/*  ⚠️ LA BASCULE « Recherche / Filtres » A DISPARU (nº 139) : la page
-    n'a plus qu'UN écran, lu de haut en bas. Le titre la remplace. */
+/*  ⚠️ LA BASCULE « Recherche / Filtres » EST DE RETOUR (nº 141) — la
+    page unique de la nº 139 était trop chargée, le propriétaire l'a
+    constaté sur son téléphone. Elle revient dans la GRAMMAIRE DE LA
+    CHARTE : les mots côte à côte sur la ligne fine au segment rose
+    (OngletsLigne), plus jamais la piste à fond rose plein d'avant. */
 
 export function PageRechercheMobile({
+  vue,
+  surVue,
   onValider,
   onAbandonner,
   onEffacer,
   children,
 }: {
+  /** La vue affichée — « recherche » ou « filtres ». */
+  vue: VueRecherche;
+  surVue: (vue: VueRecherche) => void;
   /** « Valider » : la SEULE porte qui lance la recherche. */
   onValider: () => void;
   /** La croix et le retour arrière : on referme sans rien appliquer. */
   onAbandonner: () => void;
-  /** Remet la page à zéro (page ouverte, sans chercher). */
+  /** Remet à zéro LA VUE AFFICHÉE (page ouverte, sans chercher). */
   onEffacer: () => void;
   children: React.ReactNode;
 }) {
@@ -328,28 +338,35 @@ export function PageRechercheMobile({
           s'en charge, rien n'est mesuré ni déplacé à la main.
           Le fond opaque est obligatoire : sans lui, le contenu
           défilerait en transparence derrière la croix. */}
-      {/*  L'EN-TÊTE (nº 139) — LE TITRE « Recherche » avec sa LOUPE à
-           gauche, la croix à droite. Il remplace la bascule : la page
-           n'a plus qu'un écran. La croix est à la charte : plus de
-           contour, le fond parle. La ligne reste COLLANTE : quand le
-           champ de localité remonte la page, la sortie reste
-           atteignable. */}
+      {/*  L'EN-TÊTE (nº 141) — LA BASCULE « Recherche / Filtres », de
+           retour dans la grammaire de la charte, et la CROIX NUE à sa
+           droite : plus de cercle autour d'elle (nº 141-2A) — le
+           dessin seul, la zone tactile de 44 px reste, invisible.
+           La ligne reste COLLANTE : quand le champ de localité remonte
+           la page, la sortie et la bascule restent atteignables. */}
       <div
         className="sticky top-0 z-10 bg-sombre-fond
-                   flex items-center justify-between gap-3 px-4 pb-2
+                   flex items-end justify-between gap-4 px-4 pb-1
                    pt-[max(12px,env(safe-area-inset-top))]"
       >
-        <h1 className="flex items-center gap-2.5 text-[19px] font-bold tracking-tight text-sombre-texte">
-          <IconeLoupe taille={20} classe="shrink-0 text-sombre-texte/80" />
-          Recherche
-        </h1>
+        <div className="min-w-0 flex-1 max-w-[260px]">
+          <OngletsLigne
+            ariaLabel="Recherche ou filtres"
+            cleActive={vue}
+            surChoix={(cle) => surVue(cle as VueRecherche)}
+            options={[
+              { cle: "recherche", label: "Recherche" },
+              { cle: "filtres", label: "Filtres" },
+            ]}
+          />
+        </div>
         <button
           type="button"
           onClick={() => fermer(false)}
           aria-label="Fermer la recherche"
-          className="flex h-11 w-11 items-center justify-center rounded-full
-                     bg-sombre-eleve text-sombre-texte
-                     active:bg-sombre-eleve-clair transition-colors"
+          className="flex h-11 w-11 -mr-2 mb-1 items-center justify-center
+                     text-sombre-texte-doux active:text-sombre-texte
+                     transition-colors"
         >
           <IconeCroix taille={18} />
         </button>
@@ -390,14 +407,14 @@ export function PageRechercheMobile({
         className="flex items-center justify-between px-4 pt-4
                    pb-[max(16px,env(safe-area-inset-bottom))]"
       >
-        {/*  « Effacer » à la charte (nº 139) : une capsule NATURELLE —
-             la blanche pleine se lisait comme l'action principale,
-             qu'elle n'est pas. */}
+        {/*  « Effacer » EN TEXTE BRUT (nº 141-2C) : c'est une action
+             négative — jamais de capsule. La zone tactile de 44 px
+             demeure, invisible. */}
         <button
           type="button"
           onClick={onEffacer}
-          className="rounded-full px-6 min-h-[44px] text-[15px] font-semibold
-                     bg-sombre-eleve text-sombre-texte active:bg-sombre-eleve-clair
+          className="min-h-[44px] px-2 -ml-2 text-[15px] font-semibold
+                     text-sombre-texte-doux active:text-sombre-texte
                      transition-colors"
         >
           Effacer

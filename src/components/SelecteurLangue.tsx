@@ -144,12 +144,13 @@ export function SelecteurLangue({
                         }`}
           >
             {/* La puce ronde désigne la langue en cours — le seul
-                repère, puisque aucune autre n'est cliquable. Le rose
-                est ici l'état d'un choix : un de ses emplois réservés. */}
+                repère, puisque aucune autre n'est cliquable. BLANCHE
+                (nº 141-§5) : le rose est réservé aux accents forts,
+                et une langue active n'en est pas un. */}
             <span
               aria-hidden
               className={`w-2 h-2 rounded-full shrink-0 ${
-                langue.actif ? "bg-primaire" : "bg-sombre-bordure"
+                langue.actif ? "bg-white" : "bg-sombre-bordure"
               }`}
             />
             {langue.label}

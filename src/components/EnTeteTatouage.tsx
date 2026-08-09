@@ -197,7 +197,9 @@ export function EnTeteTatouage({
 
         <nav
           aria-label="Langue et compte"
-          className="order-2 lg:order-3 ml-auto lg:flex-1 shrink-0 flex items-center justify-end gap-1.5"
+          //  gap-3 (nº 141-§7) : le cœur — ou le globe — respirait mal
+          //  contre « Mon espace ».
+          className="order-2 lg:order-3 ml-auto lg:flex-1 shrink-0 flex items-center justify-end gap-3"
         >
           {/* ⚠️ LA PLACE À GAUCHE DU COMPTE CHANGE DE MAIN SELON QU'ON
               EST CONNECTÉ (passe nº 137) :

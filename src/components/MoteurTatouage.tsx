@@ -15,12 +15,12 @@ import {
 import { ligneMoteur } from "@/lib/adresse";
 import { ChampLocalisation } from "@/components/ChampLocalisation";
 import { MenuDeroulant } from "@/components/MenuDeroulant";
-import { OngletsLigne } from "@/components/OngletsLigne";
 import { PageRechercheMobile } from "@/components/PageRechercheMobile";
 import {
+  IconeCartes,
   IconeDeuxColonnes,
-  IconeGrilleImages,
   IconeLoupe,
+  IconePhoto,
   IconeReglages,
   IconeUneColonne,
 } from "@/components/Icones";
@@ -43,6 +43,7 @@ import {
   lireRechercheServeur,
   ouvrirRecherche,
   poserBrouillon,
+  poserVueRecherche,
   souscrireRecherche,
 } from "@/lib/recherche-mobile";
 import type { LieuTrouve } from "@/lib/geocodage";
@@ -234,12 +235,11 @@ export function MoteurTatouage({
    *   coup. La croix, le retour arrière et Échap les ABANDONNENT.
    *   `null` = page fermée, le moteur lit les vrais critères.
    */
-  //  ⚠️ LA « VUE » A DISPARU AVEC LA BASCULE (nº 139) : la page de
-  //  recherche n'a plus qu'un seul écran. Le module recherche-mobile
-  //  garde son champ `vue` pour ne rien casser ; plus personne ne le
-  //  lit ici.
+  //  LA « VUE » EST DE RETOUR AVEC LA BASCULE (nº 141) — le module
+  //  recherche-mobile ne l'avait jamais perdue.
   const {
     ouverte: pageOuverte,
+    vue: vuePage,
     brouillon,
   } = useSyncExternalStore(
     souscrireRecherche,
@@ -328,14 +328,18 @@ export function MoteurTatouage({
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }
 
-  /** « EFFACER » EFFACE TOUT (nº 139) — la page n'a plus qu'UNE vue,
-      la règle « on efface ce qu'on voit » couvre donc style, lieu,
-      rayon ET badges d'un seul geste. Il ne CHERCHE toujours pas :
-      les résultats ne bougent pas tant que « Valider » n'a pas été
-      pressé. */
+  /** « EFFACER » N'EFFACE QUE CE QUI EST SOUS LES YEUX (règle
+      historique, de retour avec la bascule — nº 141) : sur
+      « Recherche », le style, le lieu et le rayon ; sur « Filtres »,
+      les badges. Il ne CHERCHE toujours pas : rien ne bouge tant que
+      « Valider » n'a pas été pressé. */
   function effacerLaVue() {
+    if (vuePage === "filtres") {
+      poserDansLeBrouillon({ exclure: [] });
+      return;
+    }
     setEffacements((n) => n + 1);
-    poserBrouillon(criteresComplets());
+    poserBrouillon({ ...criteresComplets(), exclure: enFenetre.exclure });
   }
 
   /*  ⚠️ PLUS D'INTERRUPTEURS DANS LE MOTEUR (nº 139) : les filtres
@@ -442,49 +446,107 @@ export function MoteurTatouage({
   };
 
   /**
-   * LE BLOC DES FILTRES — LE MÊME sur web et sur mobile (nº 139).
-   * Un SÉLECTEUR à deux positions (la grammaire de la charte : mots
-   * côte à côte, ligne fine, segment actif rose), puis les groupes de
-   * la position choisie :
-   *   · TYPE DE PROFIL   — Profil · Technique · Rendu ;
-   *   · OÙ TATOUE-T-IL ? — les modes d'activité.
-   * ⚠️ COMPOSITION ET BESOINS NE S'AFFICHENT PLUS ICI — ils ne sont
-   * PAS supprimés : leurs groupes vivent toujours dans GROUPES_FILTRES,
-   * la base et les adresses `exclure=` les comprennent comme avant, et
-   * une passe ultérieure les réintégrera. Simplement, aucun badge ne
-   * les propose dans cette version.
+   * LE BLOC DES FILTRES — LE MÊME sur web et sur mobile (nº 141).
+   * DEUX BLOCS RECTANGULAIRES côte à côte — le motif exact du
+   * formulaire de portfolio (les rectangles « Noir et gris /
+   * Couleur » du bloc des styles) : un clic sur l'un ouvre SES
+   * groupes de badges dessous.
+   *   · TYPE DE PROFIL   — Profil ;
+   *   · OÙ TATOUE-T-IL ? — Mode d'activité · Technique · Rendu.
+   * ⚠️ TECHNIQUE ET RENDU ONT CHANGÉ DE MAISON (nº 141-§3) : ils
+   * décrivent la PRATIQUE, pas l'identité — leur place est avec les
+   * modes d'activité. « Type de profil » ne trie plus que le profil.
+   * ⚠️ COMPOSITION ET BESOINS NE S'AFFICHENT TOUJOURS PAS — ils ne
+   * sont PAS supprimés : leurs groupes vivent dans GROUPES_FILTRES,
+   * la base et les adresses `exclure=` les comprennent comme avant,
+   * et une passe ultérieure les réintégrera.
    */
   const [voletFiltres, setVoletFiltres] = useState<"profil" | "lieu">("profil");
 
   const parGroupe = new Map(GROUPES_FILTRES.map((g) => [g.groupe, g]));
 
+  type NomGroupe = (typeof GROUPES_FILTRES)[number]["groupe"];
+
+  /** Ce volet porte-t-il des filtres actifs ? (la pastille du
+      rectangle — le langage de l'ancienne bascule, conservé) */
+  const voletActif = (groupes: readonly NomGroupe[], exclure: string[]) =>
+    groupes.some((nom) =>
+      parGroupe.get(nom)!.options.some((option) => exclure.includes(option.slug))
+    );
+
   const blocFiltres = (
     valeurs: CritèresTatouage,
     poser: (suivant: Partial<CritèresTatouage>) => void
-  ) => (
-    //  gap-4, pas gap-5 : le rythme resserré qui fait tenir la page
-    //  mobile sur un écran court (voir la mesure §3 au compte rendu).
-    <div className="flex flex-col gap-4">
-      <OngletsLigne
-        ariaLabel="Famille de filtres"
-        cleActive={voletFiltres}
-        surChoix={(cle) => setVoletFiltres(cle as "profil" | "lieu")}
-        options={[
-          { cle: "profil", label: "Type de profil" },
-          { cle: "lieu", label: "Où tatoue-t-il ?" },
-        ]}
-      />
-      {voletFiltres === "profil" ? (
-        <>
-          {groupeDeBadges(parGroupe.get("type")!, "Profil", valeurs, poser)}
-          {groupeDeBadges(parGroupe.get("technique")!, "Technique", valeurs, poser)}
-          {groupeDeBadges(parGroupe.get("rendu")!, "Rendu", valeurs, poser)}
-        </>
-      ) : (
-        groupeDeBadges(parGroupe.get("mode")!, "Mode d'activité", valeurs, poser)
-      )}
-    </div>
-  );
+  ) => {
+    const volets = [
+      {
+        cle: "profil" as const,
+        titre: "Type de profil",
+        groupes: ["type"] as const,
+      },
+      {
+        cle: "lieu" as const,
+        titre: "Où tatoue-t-il ?",
+        groupes: ["mode", "technique", "rendu"] as const,
+      },
+    ];
+    const ouvert = volets.find((v) => v.cle === voletFiltres) ?? volets[0];
+    return (
+      <div>
+        {/* LES DEUX RECTANGLES — le motif du formulaire : fond un cran
+            plus clair au repos, teinté de rose quand le volet est
+            ouvert, AUCUN contour. Le point rose discret signale des
+            filtres actifs rangés dans un volet. */}
+        <div className="grid grid-cols-2 gap-2">
+          {volets.map((volet) => {
+            const actif = volet.cle === voletFiltres;
+            const porteDesFiltres = voletActif(volet.groupes, valeurs.exclure);
+            return (
+              <button
+                key={volet.cle}
+                type="button"
+                onClick={() => setVoletFiltres(volet.cle)}
+                aria-expanded={actif}
+                className={`rounded-xl px-3 py-2.5 text-left transition-colors ${
+                  actif
+                    ? "bg-primaire/15"
+                    : "bg-sombre-eleve hover:bg-primaire/10"
+                }`}
+              >
+                <span
+                  className={`flex items-center gap-1.5 text-[14px] font-semibold ${
+                    actif ? "text-primaire" : "text-sombre-texte"
+                  }`}
+                >
+                  {volet.titre}
+                  {porteDesFiltres && (
+                    <span
+                      aria-hidden="true"
+                      className="h-[7px] w-[7px] shrink-0 rounded-full bg-primaire"
+                    />
+                  )}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* LES GROUPES DU VOLET OUVERT — et la MARGE RESPIRE (nº 141-
+            §3) : 20 px sous les rectangles, comme entre les groupes. */}
+        <div className="mt-5 flex flex-col gap-5">
+          {ouvert.cle === "profil" ? (
+            groupeDeBadges(parGroupe.get("type")!, "Profil", valeurs, poser)
+          ) : (
+            <>
+              {groupeDeBadges(parGroupe.get("mode")!, "Mode d'activité", valeurs, poser)}
+              {groupeDeBadges(parGroupe.get("technique")!, "Technique", valeurs, poser)}
+              {groupeDeBadges(parGroupe.get("rendu")!, "Rendu", valeurs, poser)}
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   /**
    * LES ENTRÉES DU MENU « EXPLORER » (passe nº 110)
@@ -765,8 +827,10 @@ export function MoteurTatouage({
             <IconeReglages taille={20} />
           </button>
 
-          {/* LA VUE PHOTOTHÈQUE (nº 140) — à côté du bouton de
-              filtres, MÊME taille (46 px) et ronde comme lui. */}
+          {/* LA VUE PHOTOTHÈQUE — à côté du bouton de filtres, même
+              taille (46 px), ronde. ⚠️ AUCUNE COULEUR D'ÉTAT (nº 141-
+              4C) : robe constante, le DESSIN dit l'état — comme le
+              bouton de disposition. */}
           <button
             type="button"
             onClick={() => {
@@ -778,14 +842,12 @@ export function MoteurTatouage({
               phototheque ? "Revenir aux cartes" : "Voir les images seules"
             }
             title={phototheque ? "Revenir aux cartes" : "Images seules"}
-            className={`relative shrink-0 w-[46px] h-[46px] rounded-full
-                       flex items-center justify-center transition-colors ${
-                         phototheque
-                           ? "bg-primaire/15 text-primaire"
-                           : "bg-sombre-eleve text-sombre-texte hover:bg-sombre-eleve-clair"
-                       }`}
+            className="relative shrink-0 w-[46px] h-[46px] rounded-full
+                       bg-sombre-eleve text-sombre-texte
+                       flex items-center justify-center
+                       hover:bg-sombre-eleve-clair transition-colors"
           >
-            <IconeGrilleImages taille={20} />
+            {phototheque ? <IconeCartes taille={20} /> : <IconePhoto taille={20} />}
           </button>
 
           {filtresOuverts && (
@@ -885,12 +947,12 @@ export function MoteurTatouage({
           )}
         </button>
 
-        {/* LA VUE PHOTOTHÈQUE (nº 140) — à DROITE du bouton de
-            disposition : les images pures, sans badge, sans nom, sans
-            adresse — seul le cœur des favoris reste. ACTIVE, le bouton
-            passe en rose voilé : c'est un ÉTAT qui persiste, le même
-            langage que le bouton de filtres ouvert. Elle se combine
-            librement avec les deux dispositions. */}
+        {/* LA VUE PHOTOTHÈQUE — à DROITE du bouton de disposition.
+            ⚠️ AUCUNE COULEUR D'ÉTAT (nº 141-4C) : exactement le
+            traitement du bouton de disposition — la robe ne bouge
+            pas, c'est le DESSIN qui change et montre la vue VERS
+            LAQUELLE on bascule (la photo → images seules ; la carte →
+            retour aux cartes). */}
         <button
           type="button"
           onClick={() => {
@@ -904,27 +966,31 @@ export function MoteurTatouage({
           aria-label={
             phototheque ? "Revenir aux cartes" : "Voir les images seules"
           }
-          className={`shrink-0 w-[52px] h-[52px] rounded-full
-                     flex items-center justify-center transition-colors ${
-                       phototheque
-                         ? "bg-primaire/15 text-primaire"
-                         : "bg-sombre-eleve text-sombre-texte active:bg-sombre-eleve-clair"
-                     }`}
+          className="shrink-0 w-[52px] h-[52px] rounded-full
+                     bg-sombre-eleve text-sombre-texte
+                     flex items-center justify-center active:opacity-80
+                     transition-opacity"
         >
-          <IconeGrilleImages taille={20} />
+          {phototheque ? <IconeCartes taille={20} /> : <IconePhoto taille={20} />}
         </button>
       </div>
 
       {pageOuverte && (
-        /*  UNE SEULE PAGE (nº 139) — plus de bascule Recherche /
-            Filtres : tout se lit de haut en bas, dans l'ordre du
-            brief : Explorer · localité · rayon · le sélecteur à deux
-            positions · les badges. */
+        /*  LA BASCULE EST DE RETOUR (nº 141) : « Recherche » (style,
+            localité, rayon) et « Filtres » (les deux rectangles et
+            leurs badges) — la page unique de la nº 139 était trop
+            chargée. */
         <PageRechercheMobile
+          vue={vuePage}
+          surVue={poserVueRecherche}
           onValider={validerLaPage}
           onAbandonner={abandonnerLaPage}
           onEffacer={effacerLaVue}
         >
+          {vuePage === "filtres" ? (
+            blocFiltres(enFenetre, poserDansLeBrouillon)
+          ) : (
+            <>
           {/* 1. LE STYLE — le menu déroulant seul : son fantôme
               (« Explorer ») dit déjà tout, aucun titre.
               IL NE DIT PLUS RIEN À PERSONNE en s'ouvrant : il n'y a
@@ -979,13 +1045,8 @@ export function MoteurTatouage({
 
           {/* 3. LE RAYON — dessous, inactif sans point de départ. */}
           {curseurRayon(enFenetre, poserDansLeBrouillon)}
-
-          {/* 4. LES FILTRES — le sélecteur à deux positions, puis les
-              badges de la position choisie. Les mêmes que le panneau
-              du web, au mot près. */}
-          <div className="pt-1">
-            {blocFiltres(enFenetre, poserDansLeBrouillon)}
-          </div>
+            </>
+          )}
         </PageRechercheMobile>
       )}
     </div>

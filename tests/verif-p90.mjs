@@ -110,7 +110,12 @@ verif(
   (await lienInsta.first().getAttribute("target")) === "_blank" &&
     (await lienInsta.first().getAttribute("rel"))?.includes("noopener")
 );
-verif("il porte l'icône Instagram", (await lienInsta.first().locator("svg").count()) === 1);
+//  ⚠️ nº 141-8 : plus de SVG maison — le glyphe `icone-instagram.png`
+//  du propriétaire, éclairci par `invert`, dans un cercle gris.
+verif(
+  "il porte l'icône Instagram du propriétaire",
+  (await lienInsta.first().locator('img[src="/icone-instagram.png"]').count()) === 1
+);
 
 /* ================================================================
  * 5 · RETIRÉE — LA FENÊTRE DE RECHERCHE SUPERPOSÉE N'EXISTE PLUS

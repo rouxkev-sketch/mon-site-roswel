@@ -131,19 +131,27 @@ export function BoutonCoeurPhoto({
       //  de la passe). `relative` le positionne, `z-10` le fait passer
       //  devant — et il porte les deux lui-même, pour qu'aucun endroit
       //  où on le pose n'ait à s'en souvenir.
-      className={`${gabarit} relative z-10 inline-flex items-center justify-center rounded-full
-                  bg-black/38 backdrop-blur-md transition-[background-color,transform]
-                  hover:bg-black/55 active:scale-95
+      //  ⚠️ LE CERCLE A DISPARU (nº 141-6A) : le cœur vit NU sur la
+      //  photo, comme sur Instagram. La zone tactile, elle, garde son
+      //  gabarit — invisible. L'OMBRE PORTÉE du trait (drop-shadow)
+      //  n'est pas un contour ni une ombre de bloc : sans elle, un
+      //  trait blanc disparaît sur une photo claire — c'est la
+      //  lisibilité du glyphe, décision notée au compte rendu.
+      className={`${gabarit} relative z-10 inline-flex items-center justify-center
+                  transition-transform active:scale-95
                   focus-visible:outline-2 focus-visible:outline-offset-2
                   focus-visible:outline-primaire ${pulse ? "rw-coeur-anime" : ""}`}
     >
       <IconeCoeur
-        taille={variante === "carte" ? 19 : 21}
-        classe={
+        taille={variante === "carte" ? 20 : 22}
+        classe={`[filter:drop-shadow(0_1px_2px_rgba(0,0,0,0.55))] ${
           enregistree
-            ? "fill-primaire text-primaire"
+            ? //  ⚠️ BLANC PLEIN une fois enregistré (nº 141-6B) — plus
+              //  jamais de rouge ni de rose : la couleur signalait un
+              //  état là où le REMPLISSAGE suffit à le dire.
+              "fill-white text-white"
             : "fill-none text-white"
-        }
+        }`}
       />
     </button>
   );
