@@ -3,7 +3,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ARRIVEE_APRES_CONNEXION, MARQUE_YOKOFOLIO } from "@/config/tatouage";
+import { ARRIVEE_APRES_CONNEXION } from "@/config/tatouage";
 import {
   IconeApple,
   IconeFacebook,
@@ -16,6 +16,7 @@ import {
   lireDejaConnecteServeur,
   souscrireStockage,
 } from "@/lib/deja-connecte";
+import { suiteSure } from "@/lib/favoris-yokofolio";
 import { LONGUEUR_MINIMALE, evaluerMotDePasse } from "@/lib/mot-de-passe";
 import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
 import { useUtilisateur } from "@/lib/use-utilisateur";
@@ -108,7 +109,15 @@ const ERREUR =
 
 export function EcranAuthentification({
   rattachement,
+  suite,
 }: {
+  /** LE CHEMIN DU RETOUR (passe nº 137) — d'où l'on vient quand un
+      cœur ou un « Suivre » a mené ici sans compte. Une fois connecté,
+      on y retourne : la page qu'on regardait n'est pas perdue.
+      Il est PASSÉ AU CRIBLE (`suiteSure`) : seul un chemin interne est
+      accepté — un lien fabriqué ne peut pas expédier quelqu'un hors du
+      site après sa connexion. */
+  suite?: string;
   /** LA PAGE DE RATTACHEMENT (passe nº 135) réutilise CET écran, tel
       quel, à une différence près : le sélecteur disparaît. On ne
       demande pas à quelqu'un qui vient récupérer son portfolio s'il
@@ -125,7 +134,7 @@ export function EcranAuthentification({
       passe nº 131. */
   const arrivee = rattachement
     ? `/rejoindre/${rattachement.jeton}`
-    : ARRIVEE_APRES_CONNEXION;
+    : (suiteSure(suite) ?? ARRIVEE_APRES_CONNEXION);
   const { utilisateur, pret } = useUtilisateur();
 
   /** LE MODE PAR DÉFAUT SUIT LE VISITEUR : un navigateur qui a déjà
@@ -265,8 +274,12 @@ export function EcranAuthentification({
           enRattachement
             ? arrivee
             : rétabli
-              ? `${ARRIVEE_APRES_CONNEXION}&bienvenue=1`
-              : ARRIVEE_APRES_CONNEXION
+              ? //  ⚠️ « ? » ET NON « & » (passe nº 137) : l'adresse
+                //  d'arrivée est désormais l'aiguillage, qui n'a aucun
+                //  paramètre à lui. Il fait suivre « bienvenue » à la
+                //  fiche.
+                `${ARRIVEE_APRES_CONNEXION}?bienvenue=1`
+              : arrivee
         );
       }
     } catch (erreur) {
@@ -318,9 +331,12 @@ export function EcranAuthentification({
   //  quoi montrer — cet écran n'est qu'un de ses morceaux.
   useEffect(() => {
     if (!enRattachement && pret && utilisateur) {
-      router.replace(ARRIVEE_APRES_CONNEXION);
+      //  DÉJÀ CONNECTÉ, avec un chemin de retour : on y va. C'est le
+      //  cas de qui revient sur cette page par le bouton « précédent »
+      //  après s'être connecté ailleurs.
+      router.replace(arrivee);
     }
-  }, [enRattachement, pret, utilisateur, router]);
+  }, [enRattachement, pret, utilisateur, router, arrivee]);
 
   if (!enRattachement && pret && utilisateur) {
     return <main className="flex-1" aria-hidden="true" />;
@@ -338,13 +354,24 @@ export function EcranAuthentification({
             ? "Crée ton compte"
             : "Content de te revoir"}
       </h1>
-      <p className="mt-2 text-center text-[15px] text-sombre-texte-doux">
-        {enRattachement
-          ? "Tes fiches te seront rattachées aussitôt."
-          : creer
-            ? `Ton travail a sa place sur ${MARQUE_YOKOFOLIO.nom}.`
+      {/* ⚠️ PLUS DE SOUS-TITRE À LA CRÉATION DE COMPTE (passe nº 137).
+          « Ton travail a sa place sur YokoFolio » ne s'adressait qu'aux
+          PROFESSIONNELS — or n'importe qui crée désormais un compte
+          ici, pour garder des photos et suivre des tatoueurs. Le titre
+          « Crée ton compte » se suffit ; les deux autres cas gardent
+          leur ligne, qui dit chacune quelque chose d'utile. */}
+      {!creer && (
+        <p className="mt-2 text-center text-[15px] text-sombre-texte-doux">
+          {enRattachement
+            ? "Tes fiches te seront rattachées aussitôt."
             : "Connecte-toi pour retrouver ton compte."}
-      </p>
+        </p>
+      )}
+      {enRattachement && creer && (
+        <p className="mt-2 text-center text-[15px] text-sombre-texte-doux">
+          Tes fiches te seront rattachées aussitôt.
+        </p>
+      )}
 
       {/* ⚠️ LE SÉLECTEUR DISPARAÎT EN RATTACHEMENT (passe nº 135) —
           c'est LA différence avec la page de connexion ordinaire. On

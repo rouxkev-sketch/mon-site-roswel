@@ -24,7 +24,17 @@ import { IconeCroix, IconeMonde } from "@/components/Icones";
  * sur smartphone — un glissement vers le bas. Le focus revient sur le
  * globe : on ne perd jamais le fil au clavier.
  */
-export function SelecteurLangue({ hauteur = 40 }: { hauteur?: number }) {
+export function SelecteurLangue({
+  hauteur = 40,
+  variante = "barre",
+}: {
+  hauteur?: number;
+  /** `barre` : le globe rond de la barre fixe (visiteur non connecté).
+      `entree` : une LIGNE du menu « Mon compte » — c'est là que le
+      globe vit une fois connecté, la barre gardant le cœur des
+      favoris (passe nº 137). Un seul composant, une seule fenêtre. */
+  variante?: "barre" | "entree";
+}) {
   const [ouvert, setOuvert] = useState(false);
   const globe = useRef<HTMLButtonElement>(null);
   const panneau = useRef<HTMLDivElement>(null);
@@ -155,38 +165,70 @@ export function SelecteurLangue({ hauteur = 40 }: { hauteur?: number }) {
 
   return (
     <>
-      <button
-        ref={globe}
-        type="button"
-        onClick={() => setOuvert(true)}
-        aria-haspopup="dialog"
-        aria-expanded={ouvert}
-        aria-label={`Langue : ${langueActive.label}`}
-        title={`Langue : ${langueActive.label}`}
-        // MÊME HAUTEUR que le bouton rose à sa droite : la barre garde
-        // une seule ligne d'appui, sans décalage d'un pixel.
-        style={{ height: hauteur, width: hauteur }}
-        // OUVERT, LE GLOBE PASSE EN ROSE (la couleur primaire de la
-        // charte, #EE3D6F) : on voit d'un coup d'œil que l'écran des
-        // langues affiché est LE SIEN — même langage que l'icône de
-        // compte, rose quand on est connecté.
-        className={`shrink-0 flex items-center justify-center rounded-full
-                   transition-colors hover:bg-sombre-eleve
-                   focus-visible:outline-2 focus-visible:outline-offset-2
-                   focus-visible:outline-primaire ${
-                     ouvert
-                       ? "text-primaire"
-                       : "text-sombre-texte hover:text-primaire"
-                   }`}
-      >
-        {/* LE GLOBE DESSINÉ — celui du code, en `currentColor` : il
-            suit les couleurs ci-dessus, gris au repos et rose une
-            fois la fenêtre ouverte.
-            ⚠️ CE N'EST PAS `icone-world.png`. Une passe l'avait
-            remplacé ici ; l'image du propriétaire ne sert QU'AU lien
-            « Site internet ou Linktree » de la fiche publique. */}
-        <IconeMonde taille={Math.round(hauteur * 0.55)} />
-      </button>
+      {variante === "entree" ? (
+        /* ---- LE GLOBE COMME ENTRÉE DE MENU (passe nº 137) ----
+           Connecté, la barre fixe donne sa place au CŒUR des favoris ;
+           le globe déménage dans la fenêtre « Mon compte », au-dessus
+           de Sécurité. Il y prend le costume des autres entrées —
+           même hauteur, même graisse, même boîte d'icône à largeur
+           fixe — sinon la ligne des langues « bougerait » par rapport
+           à ses voisines. La FENÊTRE, elle, ne change pas d'un pixel :
+           c'est le même composant, le même état, la même liste. */
+        <button
+          ref={globe}
+          type="button"
+          onClick={() => setOuvert(true)}
+          aria-haspopup="dialog"
+          aria-expanded={ouvert}
+          className="flex w-full items-center gap-3 rounded-xl px-3 min-h-[46px]
+                     text-left text-[14.5px] font-semibold text-sombre-texte
+                     hover:bg-sombre-eleve transition-colors"
+        >
+          <span className="flex w-[22px] shrink-0 justify-center text-sombre-texte/80">
+            <IconeMonde taille={22} />
+          </span>
+          <span className="flex-1">Langue</span>
+          {/* LA LANGUE COURANTE, à droite — la même information que
+              l'info-bulle du globe de la barre, écrite en clair
+              puisqu'il y a la place. */}
+          <span className="shrink-0 text-[12.5px] font-medium uppercase tracking-wide text-sombre-texte-doux">
+            {langueActive.code ?? langueActive.label}
+          </span>
+        </button>
+      ) : (
+        <button
+          ref={globe}
+          type="button"
+          onClick={() => setOuvert(true)}
+          aria-haspopup="dialog"
+          aria-expanded={ouvert}
+          aria-label={`Langue : ${langueActive.label}`}
+          title={`Langue : ${langueActive.label}`}
+          // MÊME HAUTEUR que le bouton rose à sa droite : la barre garde
+          // une seule ligne d'appui, sans décalage d'un pixel.
+          style={{ height: hauteur, width: hauteur }}
+          // OUVERT, LE GLOBE PASSE EN ROSE (la couleur primaire de la
+          // charte, #EE3D6F) : on voit d'un coup d'œil que l'écran des
+          // langues affiché est LE SIEN — même langage que l'icône de
+          // compte, rose quand on est connecté.
+          className={`shrink-0 flex items-center justify-center rounded-full
+                     transition-colors hover:bg-sombre-eleve
+                     focus-visible:outline-2 focus-visible:outline-offset-2
+                     focus-visible:outline-primaire ${
+                       ouvert
+                         ? "text-primaire"
+                         : "text-sombre-texte hover:text-primaire"
+                     }`}
+        >
+          {/* LE GLOBE DESSINÉ — celui du code, en `currentColor` : il
+              suit les couleurs ci-dessus, gris au repos et rose une
+              fois la fenêtre ouverte.
+              ⚠️ CE N'EST PAS `icone-world.png`. Une passe l'avait
+              remplacé ici ; l'image du propriétaire ne sert QU'AU lien
+              « Site internet ou Linktree » de la fiche publique. */}
+          <IconeMonde taille={Math.round(hauteur * 0.55)} />
+        </button>
+      )}
 
       {/* ⚠️ POSÉ DIRECTEMENT DANS LA PAGE (createPortal), et non dans
           la barre. Pourquoi : la barre porte un flou d'arrière-plan

@@ -11,6 +11,8 @@ import {
 import { villeAffichee } from "@/lib/adresse";
 import { BoutonHorsLigne } from "@/components/BoutonHorsLigne";
 import { BoutonPartageFiche } from "@/components/BoutonPartageFiche";
+import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
+import { BoutonSuivre } from "@/components/BoutonSuivre";
 import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
 import { FenetreSignalement } from "@/components/FenetreSignalement";
 import { SelecteurStyleFiche } from "@/components/SelecteurStyleFiche";
@@ -124,6 +126,17 @@ export function FicheTatoueur({
   const groupeAffiche =
     groupes.find((groupe) => groupe.slug === styleAffiche) ?? groupes[0];
   const photosDuCarrousel = groupeAffiche?.photos ?? [];
+
+  /** LA PHOTO SOUS LES YEUX — celle que le cœur enregistre. Elle suit
+      le carrousel : changer de photo change ce qu'on enregistre, et le
+      cœur se rallume (ou s'éteint) selon que CELLE-CI est déjà gardée.
+      ⚠️ `cle` N'EST L'IDENTIFIANT DE BASE QUE POUR UN PORTFOLIO
+      CATALOGUÉ (migration nº 31). Les fiches d'avant portent une clé
+      FABRIQUÉE (« style-adresse ») qui ne désigne aucune ligne :
+      enregistrer serait impossible, le cœur ne s'affiche donc pas. */
+  const portfolioCatalogue = (tatoueur.galerie?.length ?? 0) > 0;
+  const photoCourante = photosDuCarrousel[indicePhoto] ?? photosDuCarrousel[0];
+  const photoAffichee = portfolioCatalogue ? photoCourante : undefined;
 
   /** LE SÉLECTEUR — un menu dès qu'il y a deux styles, un simple
       badge quand il n'y en a qu'un. Il ne s'efface jamais. */
@@ -388,12 +401,32 @@ export function FicheTatoueur({
               surChangement={setIndicePhoto}
               selecteur={selecteurStyle}
             >
-              {/* WEB : le PARTAGE dans la photo, angle haut droit —
-                  la page rejoint la fenêtre. Pas d'aperçu : l'espace
-                  tatoueur montre la fiche sans bouton de partage. */}
+              {/* WEB : le CŒUR puis le PARTAGE dans la photo, angle
+                  haut droit — la page rejoint la fenêtre. Le cœur est
+                  À GAUCHE du partage (passe nº 137) : enregistrer est
+                  le geste courant, partager l'exception.
+                  Pas d'aperçu : l'espace tatoueur montre la fiche sans
+                  ces boutons. */}
               {!apercu && (
-                <div className="mobile:hidden absolute top-3 right-3">
+                <div className="mobile:hidden absolute top-3 right-3 flex items-center gap-2">
+                  {photoAffichee && (
+                    <BoutonCoeurPhoto
+                      photoId={photoAffichee.cle}
+                      variante="fiche"
+                    />
+                  )}
                   {boutonPartage}
+                </div>
+              )}
+
+              {/* SMARTPHONE : le cœur DANS l'image, angle BAS DROIT —
+                  au pouce, et loin de la barre fixe du haut. */}
+              {!apercu && photoAffichee && (
+                <div className="hidden mobile:block absolute bottom-3 right-3">
+                  <BoutonCoeurPhoto
+                    photoId={photoAffichee.cle}
+                    variante="fiche"
+                  />
                 </div>
               )}
             </CarrouselPortfolio>
@@ -437,6 +470,20 @@ export function FicheTatoueur({
               </p>
             </div>
           </div>
+
+          {/* « SUIVRE » — juste sous l'identité, avant tout le reste
+              (passe nº 137). L'emplacement était libre : c'est celui
+              que prennent tous les profils, parce que c'est là qu'on
+              décide si l'on veut garder quelqu'un. Absent de l'aperçu :
+              on ne se suit pas soi-même. */}
+          {!apercu && (
+            <div className="mt-5">
+              <BoutonSuivre
+                tatoueurId={tatoueur.id}
+                nomTatoueur={tatoueur.nom}
+              />
+            </div>
+          )}
 
           {/* 2-3. OÙ, puis LE SITE. À DROITE DE L'ICÔNE : LA
               LOCALISATION ELLE-MÊME. Le mot « adresse » y figurait —

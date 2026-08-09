@@ -1094,33 +1094,43 @@ export const CARTES_PAR_PAGE = 24;
 export const DELAI_SUPPRESSION_JOURS = 30;
 
 /**
- * OÙ L'ON ARRIVE APRÈS S'ÊTRE CONNECTÉ (passe nº 131)
- * ====================================================
- * SUR « MA FICHE » — l'aperçu PUBLIC du portfolio, pas le formulaire.
- * On se connecte pour VOIR son portfolio ; le modifier est un second
- * geste, à un clic dans le menu.
+ * OÙ L'ON ARRIVE APRÈS S'ÊTRE CONNECTÉ
+ * =====================================
+ * ⚠️ LA RÈGLE A CHANGÉ À LA PASSE Nº 137, et elle REMPLACE celle de
+ * la nº 131 (« toujours Ma fiche ») : le site ne s'adresse plus aux
+ * seuls tatoueurs.
  *
- * ⚠️ UNE SEULE CONSTANTE POUR TOUS LES CHEMINS : formulaire de
- * connexion, lien de réinitialisation, retour d'un lien d'e-mail,
- * reprise de session. Cette adresse était recopiée à cinq endroits ;
- * la cinquième aurait fini par diverger.
+ *   · le compte a AU MOINS UN PORTFOLIO → sa fiche, comme avant ;
+ *   · le compte n'en a AUCUN → ses FAVORIS.
  *
- * ⚠️ ET ELLE VIT DANS LA CONFIG, PAS DANS `lib/fiches-compte` : ce
- * dernier est marqué « use client » (il lit la mémoire locale), or la
- * route /auth/callback tourne sur le SERVEUR. Une constante partagée
- * par les deux mondes n'a rien à faire dans un module de navigateur.
+ * ELLE VAUT AUSSI JUSTE APRÈS LA CRÉATION DU COMPTE — et c'est ce qui
+ * la rend juste : quelqu'un qui vient d'ouvrir un compte pour garder
+ * des photos n'a rien à faire devant un formulaire de portfolio.
  *
- * AUCUN IDENTIFIANT DE FICHE DANS L'ADRESSE, ET C'EST VOULU : sans
- * paramètre `fiche`, `ficheActive()` prend celle qui est RETENUE (le
- * choix du sélecteur, gardé en mémoire locale), et à défaut la
- * première. C'est exactement la règle demandée.
+ * ⚠️ POURQUOI UNE ADRESSE D'AIGUILLAGE, ET PAS UN CHOIX DANS L'ÉCRAN
+ * DE CONNEXION ? Parce que la réponse demande de LIRE LA BASE (« ce
+ * compte a-t-il un portfolio ? »), et que la question se pose à cinq
+ * endroits : le formulaire de connexion, la création de compte, le
+ * retour d'un lien d'e-mail (/auth/callback, côté serveur), le
+ * nouveau mot de passe, et la reprise de session. Une page qui tranche
+ * une fois pour toutes vaut mieux que cinq lectures à tenir d'accord —
+ * et /auth/callback, qui tourne sur le serveur, ne pourrait de toute
+ * façon pas interroger un magasin de navigateur.
  *
- * ET S'IL N'Y A AUCUNE FICHE ? `vue=apercu` ne s'applique qu'à une
- * fiche CHARGÉE (voir `vue` dans FormulaireFiche) : sans fiche, la
- * page retombe d'elle-même sur le FORMULAIRE DE CRÉATION. Rien à
- * décider ici, la règle est déjà dans le composant.
+ * `?bienvenue=1` (retour d'un compte dont la suppression est annulée)
+ * traverse l'aiguillage sans être touché.
  */
-export const ARRIVEE_APRES_CONNEXION = "/devenir-tatoueur/fiche?vue=apercu";
+export const ARRIVEE_APRES_CONNEXION = "/apres-connexion";
+
+/** LA PAGE DU PORTFOLIO — l'une des deux sorties de l'aiguillage.
+    AUCUN IDENTIFIANT DE FICHE DANS L'ADRESSE, ET C'EST VOULU : sans
+    paramètre `fiche`, `ficheActive()` prend celle qui est RETENUE (le
+    choix du sélecteur, gardé en mémoire locale), et à défaut la
+    première. */
+export const ARRIVEE_AVEC_PORTFOLIO = "/devenir-tatoueur/fiche?vue=apercu";
+
+/** L'AUTRE SORTIE — les favoris, pour qui n'a pas de portfolio. */
+export const ARRIVEE_SANS_PORTFOLIO = "/mes-favoris";
 
 /**
  * LA BIO DU TATOUEUR — FACULTATIVE, plafonnée.
@@ -1188,15 +1198,24 @@ export const TEXTES_TATOUAGE = {
   /** Le libellé au-dessus des champs, à droite de l'icône rose. */
   titreRecherche: "Chercher un tatoueur",
   /**
-   * LE BOUTON D'INSCRIPTION de la barre fixe — une formule à nous.
-   * « Montrer mon travail » : c'est exactement ce que le site fait
-   * (une image par style), et ça parle au tatoueur à la première
-   * personne. Deux remplaçantes prêtes, si le ton doit changer :
-   *   « Je tatoue »        (la revendication, très courte)
-   *   « Exposer mes styles » (colle au modèle une-photo-par-style)
-   * Une fois CONNECTÉ, le bouton affiche le nom du compte à la place.
+   * LE BOUTON D'APPEL de la barre fixe.
+   * ⚠️ « REJOINDRE », ET PLUS « Montrer mon travail » (passe nº 137).
+   * L'ancienne formule ne s'adressait qu'aux PROFESSIONNELS — elle
+   * datait d'un site où seuls les tatoueurs avaient une raison de
+   * créer un compte. Le compte est désormais ouvert à tous : garder
+   * des photos, suivre des tatoueurs. « Rejoindre » n'exclut personne
+   * et ne promet rien de faux.
+   * L'appel aux tatoueurs, lui, n'a pas disparu : il vit en BAS DE
+   * L'ACCUEIL, après la mosaïque (« Tu es tatoueur ? »), là où il
+   * s'adresse à quelqu'un qui a vu ce que le site fait.
+   * Une fois CONNECTÉ, le bouton affiche « Mon espace » à la place.
    */
-  lienInscription: "Montrer mon travail",
+  lienInscription: "Rejoindre",
+  /** L'APPEL AUX TATOUEURS — en bas de l'accueil, après la mosaïque.
+      Pas dans la barre fixe : elle n'a pas la place, et quatre
+      visiteurs sur cinq arrivent par le téléphone. */
+  titreAppelTatoueur: "Tu es tatoueur ?",
+  boutonAppelTatoueur: "Créer mon portfolio",
   /**
    * LA LOCALITÉ PAR DÉFAUT, quand aucun lieu n'est choisi.
    * « Partout », et plus « Toute la France » : depuis la refonte de la

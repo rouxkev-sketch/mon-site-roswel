@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { lieuVersParametres } from "@/lib/geocodage";
 import { MARQUE_YOKOFOLIO, TEXTES_TATOUAGE } from "@/config/tatouage";
-import { IconeUtilisateur } from "@/components/Icones";
+import { IconeCoeur, IconeUtilisateur } from "@/components/Icones";
 import { LogoYokofolio } from "@/components/LogoYokofolio";
 import { MenuEspace } from "@/components/MenuEspace";
 import { SelecteurLangue } from "@/components/SelecteurLangue";
@@ -34,7 +34,7 @@ import {
  * lui laisser la place.
  *
  * LE COMPTE, trois états :
- *  - jamais venu : « Montrer mon travail » (web) / l'icône personnage
+ *  - jamais venu : « Rejoindre » (web) / l'icône personnage
  *    grise, du même poids visuel que le globe (smartphone) — la
  *    formule d'invitation est réservée à qui n'a jamais eu de compte
  *    ici ;
@@ -199,8 +199,35 @@ export function EnTeteTatouage({
           aria-label="Langue et compte"
           className="order-2 lg:order-3 ml-auto lg:flex-1 shrink-0 flex items-center justify-end gap-1.5"
         >
-          {/* LE GLOBE — même hauteur que le bouton à sa droite. */}
-          <SelecteurLangue hauteur={HAUTEUR_ACTIONS} />
+          {/* ⚠️ LA PLACE À GAUCHE DU COMPTE CHANGE DE MAIN SELON QU'ON
+              EST CONNECTÉ (passe nº 137) :
+               · DÉCONNECTÉ — le GLOBE des langues, comme toujours ;
+               · CONNECTÉ — le CŒUR des favoris. Le globe, lui,
+                 déménage dans la fenêtre « Mon compte », au-dessus de
+                 Sécurité.
+              Pourquoi un échange et non un ajout : la barre du
+              smartphone tient trois éléments (logo, moteur, compte) et
+              pas un de plus. Entre un sélecteur de langue qui ne
+              propose qu'une langue et l'accès à ses propres photos, le
+              choix se fait tout seul — et le globe reste à un geste,
+              dans le menu. */}
+          {connecte && utilisateur ? (
+            <Link
+              href="/mes-favoris"
+              aria-label="Mes favoris"
+              title="Mes favoris"
+              style={{ height: HAUTEUR_ACTIONS, width: HAUTEUR_ACTIONS }}
+              className="shrink-0 flex items-center justify-center rounded-full
+                         transition-colors hover:bg-sombre-eleve
+                         focus-visible:outline-2 focus-visible:outline-offset-2
+                         focus-visible:outline-primaire
+                         text-sombre-texte hover:text-primaire"
+            >
+              <IconeCoeur taille={Math.round(HAUTEUR_ACTIONS * 0.55)} />
+            </Link>
+          ) : (
+            <SelecteurLangue hauteur={HAUTEUR_ACTIONS} />
+          )}
 
           {connecte && utilisateur ? (
             /* CONNECTÉ : « Mon espace » — le menu de compte (état de

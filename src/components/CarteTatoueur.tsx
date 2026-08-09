@@ -8,7 +8,8 @@ import {
   lireDispositionServeur,
   souscrireDisposition,
 } from "@/lib/disposition-grille";
-import { legendeDeCarte, photoPourStyle } from "@/lib/photo-tatoueur";
+import { legendeDeCarte, photoChoisie, photoPourStyle } from "@/lib/photo-tatoueur";
+import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import { ligneCarte } from "@/lib/adresse";
 import { pincementRecent, usePincement } from "@/components/ZoomPincement";
 import type { Tatoueur } from "@/lib/tatoueurs";
@@ -78,6 +79,16 @@ export function CarteTatoueur({
   surApproche?: () => void;
 }) {
   const photo = photoPourStyle(tatoueur, styleRecherche, renduRecherche);
+  /** LA PHOTO EXACTE QU'ON REGARDE — c'est ELLE que le cœur
+      enregistre, pas « une photo de ce tatoueur ». Absente quand la
+      galerie est vide (fiche d'avant le portfolio catalogué, ou fiche
+      de démonstration) : le cœur ne s'affiche alors pas — enregistrer
+      une image qui n'existe pas en base n'aurait aucun sens. */
+  const photoEnregistrable = photoChoisie(
+    tatoueur,
+    styleRecherche,
+    renduRecherche
+  );
   /** En « une colonne » (bouton de disposition, vrais mobiles), le
       nom et la localité GRANDISSENT sous la grande image. */
   const disposition = useSyncExternalStore(
@@ -282,6 +293,17 @@ export function CarteTatoueur({
         >
           {libelleTypeFiche(tatoueur.type_fiche, tatoueur.etablissement)}
         </span>
+
+        {/* LE CŒUR — DANS l'image, angle HAUT DROIT : l'angle opposé
+            au badge, celui que tous les sites d'images réservent à ce
+            geste. Il est posé APRÈS le lien étiré dans l'ordre du
+            document et porte `z-10` : le doigt le trouve avant la
+            carte, et n'ouvre donc jamais la fiche par erreur. */}
+        {photoEnregistrable && (
+          <div className="absolute top-2 right-2">
+            <BoutonCoeurPhoto photoId={photoEnregistrable.id} />
+          </div>
+        )}
       </div>
 
       {/* SOUS LA CARTE : le portrait, puis deux lignes de texte.

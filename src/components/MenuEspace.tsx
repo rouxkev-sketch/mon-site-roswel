@@ -8,11 +8,13 @@ import {
   IconeBouclierTrait,
   IconeChevronBas,
   IconeCloche,
+  IconeCoeur,
   IconePlus,
   IconeReglages,
   IconeSortie,
   IconeUtilisateur,
 } from "@/components/Icones";
+import { SelecteurLangue } from "@/components/SelecteurLangue";
 import { FenetreNotifications } from "@/components/FenetreNotifications";
 import { FenetreNonEnregistre } from "@/components/GardeSaisie";
 import {
@@ -301,7 +303,23 @@ export function MenuEspace({
           )}
         </button>
 
-        {/* ---------- 2. AJOUTER UN PORTFOLIO — une entrée du MENU, et
+        {/* ---------- 2. FAVORIS (passe nº 137) — SOUS Notifications.
+            L'entrée du compte ouvert à tous : les photos gardées et
+            les tatoueurs suivis. Elle vient AVANT « Ajouter un
+            portfolio », parce qu'elle concerne tout le monde quand la
+            suivante ne concerne que ceux qui veulent se montrer. */}
+        <Link
+          href="/mes-favoris"
+          onClick={() => setOuvert(false)}
+          className={classeEntree}
+        >
+          <span className={boiteIcone}>
+            <IconeCoeur taille={22} />
+          </span>
+          <span className="flex-1">Favoris</span>
+        </Link>
+
+        {/* ---------- 3. AJOUTER UN PORTFOLIO — une entrée du MENU, et
             la SEULE : elle a disparu du pied du déroulant. Créer une fiche relève du
             COMPTE, pas de la fiche qu'on regarde : sa place est ici,
             juste sous « Notifications ».
@@ -504,6 +522,13 @@ export function MenuEspace({
 
       {/* ---------- LE COMPTE, hors du bloc : sur le fond normal. */}
       <nav aria-label="Mon compte" className="px-2 flex flex-col gap-0.5">
+        {/* LA LANGUE — AU-DESSUS DE SÉCURITÉ (passe nº 137). Le globe
+            a quitté la barre fixe, où le CŒUR des favoris a pris sa
+            place une fois connecté : une barre de smartphone n'a pas
+            de quoi porter les deux. Il ouvre EXACTEMENT la même
+            fenêtre qu'avant — c'est le même composant. */}
+        <SelecteurLangue variante="entree" />
+
         <Link
           href="/devenir-tatoueur/securite"
           onClick={() => setOuvert(false)}

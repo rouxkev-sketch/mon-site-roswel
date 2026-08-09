@@ -11,6 +11,8 @@ import {
 } from "@/config/tatouage";
 import { BoutonHorsLigne } from "@/components/BoutonHorsLigne";
 import { BoutonPartageFiche } from "@/components/BoutonPartageFiche";
+import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
+import { BoutonSuivre } from "@/components/BoutonSuivre";
 import { FenetreSignalement } from "@/components/FenetreSignalement";
 import { PhotoProgressive } from "@/components/PhotoProgressive";
 import { SelecteurStyleFiche } from "@/components/SelecteurStyleFiche";
@@ -166,6 +168,12 @@ export function FenetreFiche({
 
   const rang = Math.min(indice, Math.max(0, n - 1));
   const photo = photosDuStyleAffiche[rang];
+  /** LA PHOTO QUE LE CŒUR ENREGISTRE — celle qu'on regarde. `cle` est
+      l'identifiant de base pour un portfolio catalogué (nº 31) ; les
+      fiches d'avant portent une clé fabriquée, sans ligne en face :
+      pas de cœur pour elles. */
+  const photoEnregistrable =
+    (tatoueur?.galerie?.length ?? 0) > 0 ? photo?.cle : undefined;
   /** LA SUIVANTE — sa miniature part discrètement en avance : le
       passage à la photo d'après n'a plus rien à attendre. */
   const suivante = photosDuStyleAffiche[rang + 1];
@@ -347,8 +355,16 @@ export function FenetreFiche({
               />
             )}
 
-            {/* Le PARTAGE — dans la photo, angle haut droit. */}
-            <div className="absolute top-3 right-3">
+            {/* Le CŒUR puis le PARTAGE — dans la photo, angle haut
+                droit. Le cœur À GAUCHE du partage (passe nº 137),
+                exactement comme sur la page de fiche. */}
+            <div className="absolute top-3 right-3 flex items-center gap-2">
+              {photoEnregistrable && (
+                <BoutonCoeurPhoto
+                  photoId={photoEnregistrable}
+                  variante="fiche"
+                />
+              )}
               <BoutonPartageFiche
                 nomArtisan={tatoueur.nom}
                 cheminFiche={`/tatoueur/${tatoueur.slug}`}
@@ -478,6 +494,16 @@ export function FenetreFiche({
                   {sousLeNom(tatoueur)}
                 </p>
               </div>
+            </div>
+
+            {/* « SUIVRE » — sous l'identité, comme sur la page de
+                fiche : les deux écrans montrent la même chose au même
+                endroit (passe nº 137). */}
+            <div className="mt-5">
+              <BoutonSuivre
+                tatoueurId={tatoueur.id}
+                nomTatoueur={tatoueur.nom}
+              />
             </div>
 
             {/* 3-4. OÙ, puis LE SITE. À DROITE DE L'ICÔNE : LA

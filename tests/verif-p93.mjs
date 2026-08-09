@@ -477,7 +477,21 @@ verif(
  * globe dessiné à la barre fixe.
  */
 titre("8 · Le globe dessiné dans la barre, l'icône world dans la fiche");
-const globe = pub.locator('button[aria-label^="Langue"]');
+//  ⚠️ DEPUIS LA PASSE Nº 137, LE GLOBE DE LA BARRE EST L'AFFAIRE DES
+//  VISITEURS NON CONNECTÉS : une fois connecté, la barre porte le
+//  cœur des favoris et le globe vit dans le menu « Mon compte ». Or
+//  le socle pose un cookie de session — on regarde donc la barre
+//  DÉCONNECTÉE, dans un contexte vierge : c'est là que le globe
+//  dessiné doit être, et c'est le même composant que celui du menu.
+const ctxAnonyme = await nav.newContext({ viewport: { width: 1440, height: 950 } });
+const pubAnonyme = await ctxAnonyme.newPage();
+await pubAnonyme.goto(`${BASE}/tatoueur/atelier-corvus-lyon-1er`, {
+  waitUntil: "domcontentloaded",
+  timeout: 120000,
+});
+await pubAnonyme.locator("h1").first().waitFor({ timeout: 60000 });
+await pubAnonyme.waitForTimeout(800);
+const globe = pubAnonyme.locator('button[aria-label^="Langue"]');
 verif("le sélecteur de langue est là", (await globe.count()) >= 1);
 const masqueDansLaBarre = await globe.first().evaluate((b) =>
   Boolean(b.querySelector("span[style*='mask']"))

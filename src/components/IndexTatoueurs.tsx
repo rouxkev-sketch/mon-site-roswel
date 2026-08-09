@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   LARGEUR_SITE,
@@ -383,6 +384,38 @@ export function IndexTatoueurs({
             </p>
           </div>
         )}
+
+        {/* ---------- L'APPEL AUX TATOUEURS (passe nº 137) ----------
+            EN BAS DE L'ACCUEIL, APRÈS LA MOSAÏQUE — et nulle part
+            ailleurs. La barre fixe s'adresse maintenant à tout le
+            monde (« Rejoindre ») : l'invitation aux professionnels
+            descend ici, où elle rencontre quelqu'un qui vient de voir
+            ce que le site fait de leur travail. Elle n'a rien à faire
+            dans la barre, qui n'a pas la place — et quatre visiteurs
+            sur cinq arrivent par le téléphone.
+            DEUX LIGNES, PAS UNE DE PLUS : une question, un bouton. */}
+        <section className="mt-14 rounded-2xl bg-sombre-carte px-5 py-8 text-center">
+          <h2 className="text-[19px] font-bold tracking-tight text-sombre-texte">
+            {TEXTES_TATOUAGE.titreAppelTatoueur}
+          </h2>
+          {/* LE BOUTON MÈNE DROIT À LA CRÉATION DE PORTFOLIO — pas à
+              une page de présentation. Un compte déjà connecté y
+              arrive sur le formulaire vierge ; un visiteur passe
+              d'abord par la création de compte, et y revient (c'est
+              le rôle de `?suite=`). */}
+          <Link
+            href={`/devenir-tatoueur?suite=${encodeURIComponent(
+              "/devenir-tatoueur/fiche?fiche=nouvelle"
+            )}`}
+            className="mt-4 inline-flex min-h-[48px] items-center justify-center
+                       rounded-full bg-primaire px-7 text-[15px] font-semibold
+                       text-white transition-colors hover:bg-primaire-fonce
+                       focus-visible:outline-2 focus-visible:outline-offset-2
+                       focus-visible:outline-primaire"
+          >
+            {TEXTES_TATOUAGE.boutonAppelTatoueur}
+          </Link>
+        </section>
       </main>
     </>
   );

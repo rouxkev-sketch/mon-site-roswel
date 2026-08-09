@@ -16,11 +16,12 @@ import { ARRIVEE_APRES_CONNEXION } from "@/config/tatouage";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  //  Page vers laquelle revenir après connexion. LE DÉFAUT EST « MA
-  //  FICHE » (passe nº 131) : ce chemin ne sert qu'à des retours de
-  //  CONNEXION (fournisseur externe, lien d'e-mail), et la règle est
-  //  la même pour tous — on arrive sur l'aperçu de son portfolio, ou
-  //  sur le formulaire de création si l'on n'a pas encore de fiche.
+  //  Page vers laquelle revenir après connexion. LE DÉFAUT EST
+  //  L'AIGUILLAGE (passe nº 137, il remplace la règle de la nº 131) :
+  //  ce chemin ne sert qu'à des retours de CONNEXION (fournisseur
+  //  externe, lien d'e-mail), et la règle est la même pour tous — la
+  //  page /apres-connexion demande à la base si ce compte a un
+  //  portfolio, puis mène à sa fiche ou à ses favoris.
   //  L'accueil était un défaut hérité, jamais choisi.
   const suite = searchParams.get("next") ?? ARRIVEE_APRES_CONNEXION;
 

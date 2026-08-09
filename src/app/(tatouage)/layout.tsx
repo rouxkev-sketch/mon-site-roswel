@@ -30,6 +30,7 @@ import {
   TEXTES_TATOUAGE,
 } from "@/config/tatouage";
 import { DefilementEnHaut } from "@/components/DefilementEnHaut";
+import { ChargeurFavoris } from "@/components/ChargeurFavoris";
 import { FournisseurSession } from "@/components/FournisseurSession";
 import { FournisseurStyles } from "@/components/FournisseurStyles";
 import { GardeSaisie } from "@/components/GardeSaisie";
@@ -191,6 +192,10 @@ export default async function MiseEnPageTatouage({
           « Modifications non enregistrées ». Inerte partout ailleurs. */}
       <GardeSaisie />
       <FournisseurSession utilisateur={utilisateur}>
+        {/* LES CŒURS DÉJÀ POSÉS (passe nº 137) — une seule demande par
+            page, qui allume d'un coup toute la mosaïque. Il n'affiche
+            rien ; sans session, il ne demande même pas. */}
+        <ChargeurFavoris />
         <FournisseurStyles styles={stylesAjoutes}>{children}</FournisseurStyles>
       </FournisseurSession>
 
