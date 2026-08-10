@@ -405,9 +405,24 @@ export function MoteurTatouage({
    * « Lieu » (les établissements, groupe `type`) sont les deux moitiés
    * d'une même question. On peut abandonner l'une, jamais les deux :
    * le dernier badge allumé des deux réunis ne se retire pas.
-   * Technique et Rendu ne sont pas concernés — eux se vident librement.
    */
   const GROUPES_INSEPARABLES: string[] = ["type", "mode"];
+
+  /**
+   * LES DEUX GROUPES QUI GARDENT TOUJOURS UN BADGE (passe nº 151-§3).
+   * « Technique » (Handpoke · Tebori · Machine) et « Rendu » (Noir et
+   * gris · Couleur) décrivent DES IMAGES, pas des personnes : chaque
+   * photo du site a forcément une technique et un rendu. Vider l'un de
+   * ces deux groupes reviendrait donc à demander une photo qui n'est ni
+   * en noir et gris ni en couleur — une question sans réponse possible.
+   *
+   * LA RÈGLE : retirer le DERNIER badge allumé d'un de ces groupes est
+   * refusé, et LE GROUPE ENTIER SE RÉACTIVE. Chacun des deux est jugé
+   * pour lui-même — c'est là toute la différence avec « Artiste + Lieu »
+   * ci-dessus, où les deux groupes forment un seul ensemble et où l'un
+   * peut se vider tant que l'autre garde un badge.
+   */
+  const GROUPES_INDIVISIBLES: string[] = ["technique", "rendu"];
 
   function selectionDuGroupe(
     groupe: (typeof GROUPES_FILTRES)[number],
@@ -439,8 +454,11 @@ export function MoteurTatouage({
     //  Un groupe VIDE ne veut pas dire « ne me montre rien » : il veut
     //  dire QU'ON ABANDONNE CE CRITÈRE — la base ne reçoit alors aucun
     //  filtre pour lui (voir `allumesDuGroupe`, src/lib/tatoueurs.ts).
-    //  On peut donc vider librement Technique et Rendu : la recherche
-    //  s'élargit, elle ne se vide pas.
+    //
+    //  ⚠️ DEUX GROUPES NE SE VIDENT PLUS DU TOUT (passe nº 151-§3) :
+    //  TECHNIQUE et RENDU gardent chacun au moins un badge allumé —
+    //  retirer le dernier RÉACTIVE LE GROUPE ENTIER. Ils décrivent des
+    //  images, et toute image a une technique et un rendu.
     //
     //  SAUF POUR L'ENSEMBLE « ARTISTE + LIEU » (GROUPES_INSEPARABLES),
     //  qui dit QUI l'on cherche et OÙ. Les deux forment un tout : on
@@ -451,6 +469,10 @@ export function MoteurTatouage({
     //  rallume en entier — jamais l'autre, qui n'a rien demandé.
     //  ============================================================
     let selectionFinale = suivante;
+    //  TECHNIQUE ET RENDU : chacun pour soi, et jamais vide.
+    if (suivante.length === 0 && GROUPES_INDIVISIBLES.includes(groupe.groupe)) {
+      selectionFinale = visibles;
+    }
     if (suivante.length === 0 && GROUPES_INSEPARABLES.includes(groupe.groupe)) {
       const restantAilleurs = GROUPES_FILTRES.filter(
         (autre) =>

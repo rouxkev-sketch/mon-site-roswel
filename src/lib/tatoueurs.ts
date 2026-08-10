@@ -23,7 +23,6 @@ import {
 import type { LieuTrouve } from "@/lib/geocodage/types";
 import {
   natureConnue,
-  NATURE_PAR_DEFAUT,
   SLUGS_NATURES,
   type PhotoTatoueur,
 } from "@/lib/photos-tatoueur";
@@ -756,41 +755,50 @@ function filtrer(
   // rien perdre (voir `supprime_le`).
   let retenus = liste.filter((t) => t.publie && !t.supprime_le);
 
+  //  ============================================================
+  //  LE STYLE SE LIT DANS LES PHOTOS (passe nº 151, migration nº 58)
+  //  ------------------------------------------------------------
+  //  AVANT : `t.styles.includes(style)` — la DÉCLARATION de la fiche.
+  //  Un style annoncé et jamais rempli remontait donc dans une
+  //  photothèque, pour n'y rien montrer.
+  //  MAINTENANT : il faut une PHOTO CATALOGUÉE de ce style. Un style
+  //  n'existe pour la recherche que s'il porte au moins une image.
+  //  ⚠️ LE MÊME TEST QU'EN BASE, mot pour mot : ce chemin-ci sert
+  //  quand la recherche en base ne peut pas se faire, et deux chemins
+  //  qui ne disent pas la même chose valent un défaut qui n'apparaît
+  //  qu'une fois sur dix.
+  //  Une fiche sans catalogue du tout (portfolio pas encore repris)
+  //  ne répond donc plus à un style : c'est ce que la migration nº 57
+  //  corrige en cataloguant ses images.
+  //  ============================================================
   const style = styleConnu(filtres.style);
-  if (style) retenus = retenus.filter((t) => t.styles.includes(style));
+  if (style) {
+    retenus = retenus.filter((t) =>
+      (t.galerie ?? []).some((photo) => photo.style === style)
+    );
+  }
 
   //  LA NATURE (tatouage / flash) SE LIT DANS LES PHOTOS, jamais dans
   //  une déclaration : c'est là toute la différence avec l'ancienne
   //  case « Flash ». Combinée au style quand il y en a un — « des
   //  flashs EN réalisme », et pas « des flashs ET du réalisme ».
   //
-  //  ⚠️ AVEC LE REPLI SUR LE STYLE DÉCLARÉ (passe nº 148, migration
-  //  nº 56) — LE MÊME QU'EN BASE, et c'est indispensable : ce chemin-ci
-  //  sert quand la recherche en base ne peut pas se faire, et deux
-  //  chemins qui ne disent pas la même chose valent un défaut qui
-  //  n'apparaît qu'une fois sur dix.
-  //  La règle : quand la fiche N'A AUCUNE PHOTO CATALOGUÉE pour le
-  //  style cherché, on n'a rien à lui opposer — son style déclaré,
-  //  déjà vérifié au-dessus, fait foi, et elle répond à la nature par
-  //  défaut (« tatouage »). Un FLASH, lui, se déclare : on n'en invente
-  //  jamais, et le croisement voulu tient — un tatoueur qui a des
-  //  photos en japonais et des flashs old-school ne répond pas à
-  //  « Flashs · Japonais ».
+  //  ⚠️ LE REPLI DE LA PASSE Nº 148 A ÉTÉ RETIRÉ (passe nº 151,
+  //  migration nº 58). Il gardait la fiche « quand on n'avait rien à
+  //  lui opposer » — aucune photo cataloguée sur le style cherché,
+  //  donc le style déclaré faisait foi. C'est cette règle-là que le
+  //  propriétaire a annulée : un style sans photo n'a rien à montrer.
+  //  La nature redevient une simple lecture des photos, sans
+  //  exception — et sans rattrapage.
   const nature = natureCherchee(filtres.nature);
   if (nature) {
-    retenus = retenus.filter((t) => {
-      const galerie = t.galerie ?? [];
-      const correspond = galerie.some(
+    retenus = retenus.filter((t) =>
+      (t.galerie ?? []).some(
         (photo) =>
           natureConnue(photo.nature) === nature &&
           (!style || photo.style === style)
-      );
-      if (correspond) return true;
-      if (nature !== NATURE_PAR_DEFAUT) return false;
-      //  Rien de catalogué sur ce style (ou rien du tout si l'on ne
-      //  cherche pas de style) : le style déclaré fait foi.
-      return !galerie.some((photo) => !style || photo.style === style);
-    });
+      )
+    );
   }
 
   // LA VILLE D'UNE PAGE DE RÉFÉRENCEMENT — le slug de l'adresse, tel

@@ -92,6 +92,7 @@ repasse.
 | 55 | `yokofolio-portfolios-repris.sql` | aucun objet (catalogue les photos que la nº 31 avait laissées) |
 | 56 | `yokofolio-recherche-styles-declares.sql` | 1 fonction (la recherche, refaite — **et réparée**) |
 | 57 | `yokofolio-catalogue-complet.sql` | aucun objet (complète le catalogue, style par style) |
+| 58 | `yokofolio-style-avec-photo.sql` | 1 fonction (la recherche, refaite — **un style sans photo n'existe plus**) |
 
 ## Ce que chaque fichier apporte
 

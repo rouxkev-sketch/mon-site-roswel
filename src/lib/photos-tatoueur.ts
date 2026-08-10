@@ -38,6 +38,15 @@ export type SlugRendu = (typeof RENDUS_PHOTO)[number]["slug"];
 
 export const SLUGS_RENDUS = new Set<string>(RENDUS_PHOTO.map((r) => r.slug));
 
+/** LE RENDU PAR DÉFAUT — celui qu'on prête à une ligne qui n'en porte
+    pas : photo d'avant la migration nº 48, ou ligne écrite par les
+    migrations nº 55 et 57, qui font le même choix. « Noir et gris » est
+    celui qui se trompe le moins, et deux gestes le corrigent.
+    ⚠️ IL SERT À MONTRER, JAMAIS À CACHER : une photo sans rendu doit
+    apparaître dans le formulaire comme sur la fiche — l'écarter
+    revenait à l'effacer au premier enregistrement (passe nº 151). */
+export const RENDU_PAR_DEFAUT: SlugRendu = "black_and_grey";
+
 /**
  * LA NATURE D'UNE PHOTO — tatouage, ou flash (passe nº 110)
  * ==========================================================

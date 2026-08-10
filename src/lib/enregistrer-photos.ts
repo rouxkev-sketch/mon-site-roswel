@@ -10,9 +10,20 @@ import { CONNEXIONS_SIMULTANEES, enPool } from "@/lib/televerser-photos";
  * ⚠️ ON NE VIDE PAS POUR REMPLIR, exactement comme pour les modes
  * d'exercice : on travaille PAR IDENTITÉ. Les lignes de l'écran qui
  * ont un `id` sont mises à jour, celles qui n'en ont pas sont
- * insérées, et celles de la base qui ne sont plus à l'écran sont
- * supprimées. Effacer tout pour tout réécrire ferait perdre les
+ * insérées. Effacer tout pour tout réécrire ferait perdre les
  * identifiants à chaque enregistrement — donc l'ordre, et l'historique.
+ *
+ * ⚠️ ON NE SUPPRIME QUE CE QUI A ÉTÉ RETIRÉ À L'ÉCRAN (passe nº 151),
+ * et c'est une correction importante. La suppression visait jusqu'ici
+ * « tout ce qui n'est plus à l'écran » : une ligne que le formulaire
+ * n'avait pas su afficher — une photo sans rendu, par exemple — était
+ * donc DÉTRUITE au premier envoi, alors que personne ne l'avait
+ * retirée. Et comme les styles de la fiche se déduisent de ses photos,
+ * le style partait avec elle : l'image disparaissait de la recherche ET
+ * de la fiche, sans laisser de trace.
+ * On applique donc la règle du « studio fantôme » (passe nº 104) : la
+ * page dit explicitement CE QU'ELLE A CHARGÉ PUIS RETIRÉ, et rien
+ * d'autre n'est touché.
  *
  * ⚠️ LES PHOTOS PARTENT AVANT, dans le stockage, et par PAIRES :
  * la pleine résolution ET sa miniature. C'est le formulaire qui les
@@ -47,18 +58,26 @@ export type PhotoAEcrire = {
 export async function enregistrerPhotos(
   supabase: SupabaseClient,
   ficheId: string,
-  photos: PhotoAEcrire[]
+  photos: PhotoAEcrire[],
+  /** LES PHOTOS CHARGÉES PUIS RETIRÉES À L'ÉCRAN — leurs identifiants,
+      et EUX SEULS, partent de la base. Vide à la création d'une fiche :
+      il n'y avait rien à retirer. */
+  retirees: string[] = []
 ): Promise<void> {
   try {
-    // 1) CE QUI DISPARAÎT — les lignes de la base absentes de l'écran.
-    const gardes = photos.map((photo) => photo.id).filter(Boolean) as string[];
-    const suppression = supabase
-      .from("photos_tatoueur")
-      .delete()
-      .eq("tatoueur_id", ficheId);
-    await (gardes.length > 0
-      ? suppression.not("id", "in", `(${gardes.join(",")})`)
-      : suppression);
+    // 1) CE QUI DISPARAÎT — ce que la personne a retiré, et rien
+    //    d'autre : une ligne que l'écran n'a jamais montrée n'est pas
+    //    une ligne qu'on a voulu supprimer.
+    const aSupprimer = retirees.filter(
+      (id) => !photos.some((photo) => photo.id === id)
+    );
+    if (aSupprimer.length > 0) {
+      await supabase
+        .from("photos_tatoueur")
+        .delete()
+        .eq("tatoueur_id", ficheId)
+        .in("id", aSupprimer);
+    }
 
     // 2) CE QUI RESTE ET CE QUI ARRIVE — dans l'ordre de la galerie.
     const lignes = photos.map((photo, rang) => ({

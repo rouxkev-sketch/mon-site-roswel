@@ -43,7 +43,11 @@ import {
   type StudioEnSaisie,
   type StudioFiche,
 } from "@/lib/modes-exercice";
-import { natureConnue, stylesDuPortfolio } from "@/lib/photos-tatoueur";
+import {
+  natureConnue,
+  RENDU_PAR_DEFAUT,
+  stylesDuPortfolio,
+} from "@/lib/photos-tatoueur";
 import { enregistrerPhotos } from "@/lib/enregistrer-photos";
 import { televerserPhotos } from "@/lib/televerser-photos";
 import { FenetreEnvoi } from "@/components/FenetreEnvoi";
@@ -648,6 +652,16 @@ async function chargerStudios(
  * couple style + rendu — elles n'auraient nulle part où s'afficher.
  * La migration nº 48 efface de toute façon les photos de l'ancien
  * système (fiches de test uniquement, décision du propriétaire).
+ *
+ * ⚠️ PLUS AUCUNE LIGNE N'EST ÉCARTÉE À LA LECTURE (passe nº 151).
+ * Une ligne SANS RENDU était jusqu'ici tout simplement ignorée — et
+ * comme l'enregistrement supprime « ce qui n'est plus à l'écran », elle
+ * était DÉTRUITE au premier envoi suivant, en emportant son style : le
+ * formulaire déduit les styles de la fiche de ses photos. Une image
+ * déposée pouvait donc disparaître du site sans que personne ne la
+ * retire. Elle est désormais MONTRÉE, avec le rendu par défaut (noir et
+ * gris) — le même choix que les migrations nº 55 et 57, celui qui se
+ * trompe le moins, et que deux gestes corrigent.
  */
 async function chargerPortfolio(
   supabase: ReturnType<typeof creerClientSupabaseNavigateur>,
@@ -672,12 +686,14 @@ async function chargerPortfolio(
           url: string; miniature: string | null; ordre: number;
         }>
       )
-        .filter((ligne) => Boolean(ligne.rendu))
         .map((ligne, rang) => ({
           cle: cleNeuve("photo"),
           id: ligne.id,
           style: ligne.style,
-          rendu: ligne.rendu as string,
+          //  Sans rendu (ligne d'avant la nº 48, ou écrite par une
+          //  migration) : « noir et gris ». Voir l'avertissement
+          //  ci-dessus — l'écarter revenait à l'effacer.
+          rendu: ligne.rendu ?? RENDU_PAR_DEFAUT,
           //  ⚠️ TOUTE PHOTO D'AVANT LA Nº 49 EST UN TATOUAGE : c'était
           //  le seul sens possible avant que le flash existe.
           nature: natureConnue(ligne.nature),
@@ -756,6 +772,12 @@ export function FormulaireFiche() {
       l'enregistrement, tout id présent ici mais absent de l'écran a
       été RETIRÉ par la personne, et doit l'être aussi en base. */
   const idsStudiosCharges = useRef<string[]>([]);
+  /** LES IDENTIFIANTS DES PHOTOS TELLES QUE CHARGÉES DE LA BASE — la
+      même mémoire que ci-dessus, pour la même raison (passe nº 151) :
+      seule une photo CHARGÉE PUIS RETIRÉE à l'écran est supprimée. Une
+      ligne que le formulaire n'a pas montrée ne doit jamais être
+      effacée par un enregistrement. */
+  const idsPhotosChargees = useRef<string[]>([]);
   /** LE BLOC 1 EST-IL CONFIRMÉ ?
       Tant qu'il ne l'est pas, le reste du formulaire n'existe pas à
       l'écran : on ne demande pas une bio à quelqu'un qui n'a pas
@@ -1298,7 +1320,15 @@ export function FormulaireFiche() {
           // fiche qui n'y a rien encore repart de `photos_styles` :
           // rien n'est perdu, et le prochain enregistrement l'écrira
           // dans le nouveau modèle.
-          setPhotosPortfolio(await chargerPortfolio(supabase, String(ligne.id)));
+          const portfolioLu = await chargerPortfolio(supabase, String(ligne.id));
+          //  CE QUI ÉTAIT EN BASE À L'OUVERTURE : à l'enregistrement,
+          //  tout identifiant présent ici mais absent de l'écran a été
+          //  RETIRÉ par la personne — et lui seul part de la base
+          //  (même règle que les studios, passe nº 104).
+          idsPhotosChargees.current = portfolioLu
+            .map((photo) => photo.id)
+            .filter(Boolean) as string[];
+          setPhotosPortfolio(portfolioLu);
           setInstagram(String(source.lien_instagram ?? ""));
           setTiktok(String(source.lien_tiktok ?? ""));
           //  LES LIENS LIBRES, relus depuis leurs colonnes. Une fiche
@@ -2048,7 +2078,12 @@ export function FormulaireFiche() {
       await enregistrerPhotos(
         supabase,
         String(ficheChargee.id),
-        galerieAEcrire
+        galerieAEcrire,
+        //  LES PHOTOS RETIRÉES À L'ÉCRAN — chargées puis supprimées par
+        //  la personne : elles seules partent de la base (passe nº 151).
+        idsPhotosChargees.current.filter(
+          (id) => !galerieAEcrire.some((photo) => photo.id === id)
+        )
       );
 
       // Même retour que la création : l'espace rechargé, encadré
