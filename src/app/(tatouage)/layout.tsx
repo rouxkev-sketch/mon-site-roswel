@@ -42,6 +42,7 @@ import { chargerStylesAjoutes } from "@/lib/styles-ajoutes";
 import { SondeClavier } from "@/components/SondeClavier";
 import { SondeNavigation } from "@/components/SondeNavigation";
 import { SondeFiltres } from "@/components/SondeFiltres";
+import { SondeVerre } from "@/components/SondeVerre";
 import { SondeRetour } from "@/components/SondeRetour";
 import { COMPTES_YOKOFOLIO } from "@/config/tatouage";
 import { utilisateurDepuisCookies } from "@/lib/session-cookie";
@@ -167,6 +168,12 @@ export default async function MiseEnPageTatouage({
         Pour la retirer : cette ligne, son import, et le fichier
         src/components/SondeFiltres.tsx. */}
     <SondeFiltres />
+    {/* ⚠️ TEMPORAIRE — LA SONDE DU VERRE (`?sonde-verre=1`). Elle dit
+        pourquoi le flou de la barre est annulé chez le propriétaire :
+        elle déroule la chaîne des parents et signale ce qui isole.
+        Pour la retirer : cette ligne, son import, et le fichier
+        src/components/SondeVerre.tsx. */}
+    <SondeVerre />
     {/* ⚠️ L'ÉCOUTEUR GLOBAL DE REMONTÉE EST SUPPRIMÉ (nº 162-§1). La
         règle de la nº 155-§1 — « TOUS les champs du site remontent » —
         est annulée : la remontée ne sert qu'à dégager de la place SOUS

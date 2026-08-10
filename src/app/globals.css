@@ -151,11 +151,22 @@ html:has([data-fond="sombre"]) {
     la couleur du site (COULEURS_SOMBRE.fond, #1A1A1D), et une opacité
     variable demande les canaux séparés. */
 :root {
-  --rw-verre: 0.4;
+  /*  ⚠️ 0,75 ET PLUS 0,40 (nº 169-§3c) : les valeurs basses étaient trop
+      claires pour le propriétaire. Le commutateur `?verre=` reste. */
+  --rw-verre: 0.75;
+  /*  LE FLOU, RÉGLABLE LUI AUSSI (nº 169-§3b) : `?flou=0` … `?flou=80`,
+      en pixels. 40 par défaut — la valeur de la nº 163. */
+  --rw-flou: 40px;
 }
 @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
   [data-barre-fixe] {
     background-color: rgb(26 26 29 / var(--rw-verre));
+    /*  ⚠️ LE FLOU EST ÉCRIT ICI, ET PLUS EN CLASSES (nº 169-§3b) : une
+        classe Tailwind ne sait pas lire une variable réglable. Les deux
+        écritures — préfixée et non préfixée — sont posées, comme
+        Tailwind le faisait. La saturation (1,5) ne change pas. */
+    -webkit-backdrop-filter: blur(var(--rw-flou)) saturate(1.5);
+    backdrop-filter: blur(var(--rw-flou)) saturate(1.5);
   }
 }
 

@@ -79,12 +79,19 @@ function relever(): Releve | null {
   if (!panneau) return null;
   const boite = panneau.getBoundingClientRect();
   const bloc = panneau.querySelector<HTMLElement>("[data-source-fichier]");
-  const groupes = [...panneau.querySelectorAll<HTMLElement>("fieldset")];
+  //  ⚠️ LES GROUPES NE SONT PLUS DES `fieldset` (nº 169-§1) : ils
+  //  portent `data-groupe-filtres`. Le repli sur `fieldset` reste, au
+  //  cas où la sonde tournerait sur une version plus ancienne.
+  const groupes = [
+    ...panneau.querySelectorAll<HTMLElement>(
+      "[data-groupe-filtres], fieldset"
+    ),
+  ];
   const dernier = groupes[groupes.length - 1] ?? null;
   const badges = [...panneau.querySelectorAll<HTMLElement>("button")];
   const premier = badges[0]?.getBoundingClientRect() ?? null;
   const ultime = badges[badges.length - 1]?.getBoundingClientRect() ?? null;
-  const titre = panneau.querySelector<HTMLElement>("legend");
+  const titre = panneau.querySelector<HTMLElement>("[data-groupe-filtres] p, legend");
   const encre = titre ? hautDeLEncre(titre) : null;
   const styleDernier = dernier ? getComputedStyle(dernier) : null;
   const conteneur = dernier?.parentElement ?? null;
@@ -155,6 +162,7 @@ export function SondeFiltres() {
       seconde, et un rendu à chaque fois ferait peser la sonde sur ce
       qu'elle mesure. On écrit directement dans son propre nœud. */
   const zone = useRef<HTMLDivElement>(null);
+  const dernier = useRef<string>("");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -170,8 +178,12 @@ export function SondeFiltres() {
     const ecrire = () => {
       const noeud = zone.current;
       if (!noeud) return;
+      const releve = lignes(relever());
+      dernier.current = releve
+        .map(([nom, valeur]) => `${nom} : ${valeur}`)
+        .join("\n");
       noeud.textContent = "";
-      for (const [nom, valeur] of lignes(relever())) {
+      for (const [nom, valeur] of releve) {
         const ligne = document.createElement("div");
         ligne.style.cssText = "display:flex;gap:8px;align-items:baseline";
         const cle = document.createElement("span");
@@ -193,7 +205,6 @@ export function SondeFiltres() {
 
   return (
     <div
-      aria-hidden="true"
       style={{
         position: "fixed",
         left: 8,
@@ -202,7 +213,6 @@ export function SondeFiltres() {
         //  Au-dessus de TOUT : la barre est à 50, le panneau à 30, les
         //  fenêtres à 80. La sonde doit rester lisible par-dessus.
         zIndex: 2147483647,
-        pointerEvents: "none",
         background: "#000000",
         border: "2px solid #EE3D6F",
         borderRadius: 12,
@@ -213,8 +223,36 @@ export function SondeFiltres() {
         overflow: "auto",
       }}
     >
-      <div style={{ color: "#EE3D6F", fontWeight: 700, marginBottom: 6 }}>
-        SONDE FILTRES · ?sonde-filtres=1
+      <div
+        style={{
+          display: "flex",
+          gap: 10,
+          alignItems: "center",
+          marginBottom: 6,
+        }}
+      >
+        <span style={{ color: "#EE3D6F", fontWeight: 700 }}>
+          SONDE FILTRES · ?sonde-filtres=1
+        </span>
+        <button
+          type="button"
+          onClick={() => {
+            void navigator.clipboard?.writeText(dernier.current);
+          }}
+          style={{
+            background: "#EE3D6F",
+            color: "#FFFFFF",
+            border: 0,
+            borderRadius: 8,
+            padding: "4px 12px",
+            font: "inherit",
+            fontWeight: 700,
+            cursor: "pointer",
+            pointerEvents: "auto",
+          }}
+        >
+          Copier
+        </button>
       </div>
       <div ref={zone} />
     </div>

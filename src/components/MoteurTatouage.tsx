@@ -525,11 +525,36 @@ export function MoteurTatouage({
     const robeRetiree = surPanneau
       ? "bg-sombre-eleve-clair/60 text-sombre-texte-doux hover:bg-sombre-eleve-clair"
       : "bg-sombre-eleve/70 text-sombre-texte-doux hover:bg-sombre-eleve";
+    //  ⚠️ PLUS DE `<fieldset>` NI DE `<legend>` (nº 169-§1, huitième
+    //  signalement). Le relevé de la sonde, chez le propriétaire :
+    //  dernier groupe HAUT DE 84 px pour un contenu de 66 — titre 18,
+    //  écart 10, rangée 38 — soit 18 px de vide en fin de groupe, ni
+    //  marge ni rembourrage (mb 0, pb 0). Ces 18 px sont EXACTEMENT la
+    //  hauteur de la légende : c'est le rendu NATIF du couple
+    //  fieldset/legend qui les fabrique — la légende est extraite du
+    //  flux et posée sur la bordure, et le fieldset lui réserve EN PLUS
+    //  une boîte de sa hauteur. Le comportement diffère d'un moteur à
+    //  l'autre (invisible ici, bien présent chez lui) : aucune marge
+    //  rognée n'aurait pu le corriger partout.
+    //  UN GROUPE EST DONC UNE BOÎTE ORDINAIRE, dont la hauteur vaut
+    //  exactement celle de son contenu. L'accessibilité est conservée
+    //  à l'identique : `role="group"` et un titre qui NOMME le groupe
+    //  (`aria-labelledby`) disent au lecteur d'écran ce que disaient
+    //  fieldset et legend.
+    const idTitre = `${groupe.groupe}-titre`;
     return (
-      <fieldset key={groupe.groupe}>
-        <legend className="text-[12px] font-semibold uppercase tracking-wide text-sombre-texte-doux">
+      <div
+        key={groupe.groupe}
+        role="group"
+        aria-labelledby={idTitre}
+        data-groupe-filtres=""
+      >
+        <p
+          id={idTitre}
+          className="text-[12px] font-semibold uppercase tracking-wide text-sombre-texte-doux"
+        >
           {titre}
-        </legend>
+        </p>
         <div className="mt-2.5 flex flex-wrap gap-2">
           {/*  Seules les options VISIBLES ont un badge (nº 149-§6) :
                « Artistes » du groupe Lieu n'en a plus. */}
@@ -582,7 +607,7 @@ export function MoteurTatouage({
             );
           })}
         </div>
-      </fieldset>
+      </div>
     );
   };
 
@@ -643,8 +668,9 @@ export function MoteurTatouage({
         surPanneau ? "MoteurTatouage · blocFiltres (panneau web)" : "MoteurTatouage · blocFiltres (page mobile)"
       }
       className="flex flex-col
-                 [&>fieldset+fieldset]:mt-4
-                 [&>fieldset:last-child]:mb-0 [&>fieldset:last-child]:pb-0"
+                 [&>[data-groupe-filtres]+[data-groupe-filtres]]:mt-4
+                 [&>[data-groupe-filtres]:last-child]:mb-0
+                 [&>[data-groupe-filtres]:last-child]:pb-0"
     >
       {groupeDeBadges(parGroupe.get("mode")!, "Artiste", valeurs, poser, surPanneau)}
       {groupeDeBadges(parGroupe.get("type")!, "Lieu", valeurs, poser, surPanneau)}

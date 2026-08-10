@@ -3,7 +3,6 @@
 import {
   useEffect,
   useLayoutEffect,
-  useRef,
   useState,
   useSyncExternalStore,
 } from "react";
@@ -105,11 +104,14 @@ export function EnTeteTatouage({
   /**
    * LA DENSITÉ DE TEINTE DU VERRE SE RÈGLE PAR L'ADRESSE (nº 167-§1)
    * ================================================================
-   * `?verre=30`, `?verre=40`, `?verre=50`, `?verre=85`… — la valeur est
+   * `?verre=30`, `?verre=50`, `?verre=75`, `?verre=85`… — la valeur est
    * un POURCENTAGE d'opacité de l'anthracite du site. SANS paramètre :
-   * 40. UNE SEULE variable bouge : le FLOU (40 px) et la SATURATION
-   * (1,5) ne changent pas, et la déclaration est la même sur web et sur
-   * smartphone — le paramètre agit donc sur les deux.
+   * 75 (nº 169-§3c — les valeurs basses étaient trop claires ; le
+   * commutateur, lui, reste en place).
+   * ⚠️ ET LE FLOU SE RÈGLE AUSSI (nº 169-§3b) : `?flou=0`, `?flou=20`,
+   * `?flou=40`, `?flou=60`, `?flou=80`, en PIXELS — 40 par défaut. Les
+   * deux réglages sont indépendants, et la déclaration est la même sur
+   * web et sur smartphone : ils agissent sur les deux.
    *
    * Elle est posée sur <html> (`--rw-verre`), et c'est une règle de
    * globals.css qui la donne à la barre, sous `@supports` : sans
@@ -121,14 +123,24 @@ export function EnTeteTatouage({
    * deux serait un écart d'hydratation.
    */
   useEffect(() => {
-    const demande = new URLSearchParams(window.location.search).get("verre");
-    if (demande === null) return;
-    const pourcent = Number(demande);
-    if (!Number.isFinite(pourcent) || pourcent < 0 || pourcent > 100) return;
-    document.documentElement.style.setProperty(
-      "--rw-verre",
-      String(pourcent / 100)
-    );
+    const params = new URLSearchParams(window.location.search);
+    const teinte = params.get("verre");
+    if (teinte !== null) {
+      const pourcent = Number(teinte);
+      if (Number.isFinite(pourcent) && pourcent >= 0 && pourcent <= 100) {
+        document.documentElement.style.setProperty(
+          "--rw-verre",
+          String(pourcent / 100)
+        );
+      }
+    }
+    const flou = params.get("flou");
+    if (flou !== null) {
+      const pixels = Number(flou);
+      if (Number.isFinite(pixels) && pixels >= 0 && pixels <= 200) {
+        document.documentElement.style.setProperty("--rw-flou", `${pixels}px`);
+      }
+    }
   }, []);
 
   // État interne, utilisé UNIQUEMENT quand la page ne pilote rien
@@ -165,69 +177,27 @@ export function EnTeteTatouage({
   }
 
   /**
-   * LES DEUX CÔTÉS RÉSERVENT LA MÊME LARGEUR (passe nº 168)
-   * ========================================================
-   * CE QUI CENTRE LE BLOC : la réserve de gauche et celle de droite
-   * valent toutes deux LA PLUS LARGE DES DEUX. Le bloc du milieu se
-   * retrouve alors au centre de la barre, sans qu'on lui ait rien pris.
+   * LES ESPACES AUTOUR DU BLOC CENTRAL SONT ÉGAUX (passe nº 169-§4)
+   * ==============================================================
+   * ⚠️ LA RÉSERVE SYMÉTRIQUE DE LA Nº 168 EST SUPPRIMÉE — variable
+   * `--cote-barre` et ResizeObserver compris. Elle centrait le bloc
+   * dans LA PAGE ; ce n'est pas ce qui est demandé, et elle laissait
+   * tout l'espace libre s'entasser derrière le compte (mesuré chez le
+   * propriétaire : 268 px perdus à droite, 20,5 px seulement entre le
+   * titre et le bloc).
    *
-   * ⚠️ ET IL NE RÉTRÉCIT JAMAIS (`lg:shrink-0`). La nº 165 avait acheté
-   * le centrage en le comprimant — 680 → 632 → 456 selon la fenêtre :
-   * le centrage était juste, le moyen était faux. Sa largeur est
-   * désormais figée à sa largeur naturelle, à toutes les largeurs où il
-   * tient sur une ligne.
-   *
-   * ⚠️ POURQUOI UNE MESURE, ET PAS DU CSS. « La plus large des deux »
-   * n'est pas exprimable en CSS : `1fr 1fr` égalise le RESTE, jamais
-   * deux contenus. On mesure donc ce que chaque côté demande vraiment
-   * — la somme de ses enfants, à leur taille naturelle — et l'on pose
-   * la plus grande des deux en variable (`--cote-barre`). Les côtés ne
-   * grandissent ni ne rétrécissent : ils font exactement cette réserve.
-   *
-   * AUCUNE BOUCLE : la mesure porte sur les ENFANTS (dont la taille ne
-   * dépend pas de la réserve), et la variable n'est réécrite que si sa
-   * valeur change.
+   * LA RÈGLE, DÉSORMAIS, EST ARITHMÉTIQUE ET SANS AUCUNE MESURE :
+   *  · les deux côtés gardent leur largeur NATURELLE et ne se
+   *    compriment pas (`lg:flex-none`) ;
+   *  · le bloc central porte une MARGE AUTOMATIQUE de chaque côté
+   *    (`lg:mx-auto`). En disposition flexible, deux marges `auto` se
+   *    partagent l'espace libre À ÉGALITÉ — c'est le navigateur qui
+   *    fait le calcul, il n'y a rien à observer ni à recalculer ;
+   *  · le côté droit se retrouve donc ancré AU BORD DROIT, à la même
+   *    marge de page que le logo à gauche (`px-4 sm:px-6`).
+   * Le bloc central, lui, ne bouge pas d'un pixel : 680 px,
+   * incompressible (acquis de la nº 168).
    */
-  const rangee = useRef<HTMLDivElement>(null);
-  const coteLogo = useRef<HTMLDivElement>(null);
-  const coteActions = useRef<HTMLElement>(null);
-  useEffect(() => {
-    const hote = rangee.current;
-    if (!hote) return;
-    let posee = "";
-    const largeurDemandee = (bloc: HTMLElement | null) => {
-      if (!bloc) return 0;
-      const enfants = [...bloc.children].filter(
-        (enfant) => enfant.getClientRects().length > 0
-      );
-      if (enfants.length === 0) return 0;
-      const ecart = parseFloat(getComputedStyle(bloc).columnGap) || 0;
-      const somme = enfants.reduce(
-        (total, enfant) => total + enfant.getBoundingClientRect().width,
-        0
-      );
-      return somme + ecart * (enfants.length - 1);
-    };
-    const poser = () => {
-      const reserve = Math.ceil(
-        Math.max(
-          largeurDemandee(coteLogo.current),
-          largeurDemandee(coteActions.current)
-        )
-      );
-      const valeur = reserve > 0 ? `${reserve}px` : "";
-      if (valeur === posee) return;
-      posee = valeur;
-      if (valeur) hote.style.setProperty("--cote-barre", valeur);
-      else hote.style.removeProperty("--cote-barre");
-    };
-    poser();
-    const observateur = new ResizeObserver(poser);
-    observateur.observe(hote);
-    if (coteLogo.current) observateur.observe(coteLogo.current);
-    if (coteActions.current) observateur.observe(coteActions.current);
-    return () => observateur.disconnect();
-  }, [connecte, nom, dejaConnecte]);
 
   /** Déconnecté : « Se connecter » pour qui est déjà venu, la formule
       d'invitation pour les autres. Le même libellé sert d'info-bulle à
@@ -397,11 +367,16 @@ export function EnTeteTatouage({
       //  ⚠️ UN SEUL ÉTAT, PERMANENT : les deux états de la nº 156-§2
       //  restent supprimés (nº 161) — une apparence qui ne varie pas
       //  ne peut pas clignoter. Toujours AUCUN trait : c'est un acquis.
-      className="sticky top-0 z-50 bg-sombre-fond
-                 backdrop-blur-2xl backdrop-saturate-150"
+      //  ⚠️ D'OÙ VIENT CE FOND (nº 169-§2) : la sonde du verre lit ces
+      //  deux attributs dans le DOM et les affiche.
+      data-source-fichier="src/components/EnTeteTatouage.tsx"
+      data-source-composant="EnTeteTatouage · barre fixe (header)"
+      //  ⚠️ LE FLOU ET LA TEINTE VIVENT DANS globals.css (nº 169-§3b) :
+      //  ils sont réglables par l'adresse, donc portés par des
+      //  variables — une classe Tailwind ne saurait pas les lire.
+      className="sticky top-0 z-50 bg-sombre-fond"
     >
       <div
-        ref={rangee}
         //  ⚠️ PLUS DE gap-y (nº 147-§7) : l'espace au-dessus de la
         //  rangée du moteur vit DANS la rangée (`pt-3` de son
         //  enveloppe), pour disparaître AVEC elle quand elle se
@@ -435,11 +410,11 @@ export function EnTeteTatouage({
              la règle de la nº 146-§2 — seul le moteur cède, jamais le
              logo. */}
         <div
-          ref={coteLogo}
-          //  ⚠️ LA RÉSERVE (nº 168) : `lg:flex-none` + la largeur posée
-          //  par la mesure. Sous `lg`, rien ne change — le logo cède
-          //  encore avant que la barre ne casse (nº 154-§4).
-          className="min-w-0 basis-0 grow shrink order-1 lg:flex-none lg:basis-auto lg:w-[var(--cote-barre,auto)]"
+          //  ⚠️ SA LARGEUR NATURELLE, ET RIEN D'AUTRE (nº 169-§4) : le
+          //  côté du logo ne grandit plus et ne se comprime plus au-delà
+          //  de `lg`. Sous `lg`, rien ne change — le logo cède encore
+          //  avant que la barre ne casse (nº 154-§4).
+          className="min-w-0 basis-0 grow shrink order-1 lg:flex-none lg:basis-auto"
         >
           {/* LE LOGO RAMÈNE À L'ACCUEIL — un lien NATIF, exprès. La
               navigation douce de Next a déjà avalé ce clic deux fois
@@ -506,7 +481,7 @@ export function EnTeteTatouage({
              rangée, jamais après. */}
         <div
           data-rangee-moteur=""
-          className={`order-3 lg:order-2 basis-full lg:basis-[680px] lg:shrink-0 lg:grow-0
+          className={`order-3 lg:order-2 basis-full lg:basis-[680px] lg:shrink-0 lg:grow-0 lg:mx-auto
                       min-w-0 justify-center ${
                         surAccueil
                           ? `max-lg:grid max-lg:grid-cols-[minmax(0,1fr)]
@@ -546,10 +521,11 @@ export function EnTeteTatouage({
           aria-label="Langue et compte"
           //  gap-3 (nº 141-§7) : le cœur — ou le globe — respirait mal
           //  contre « Mon espace ».
-          ref={coteActions}
-          //  ⚠️ LA MÊME RÉSERVE QU'À GAUCHE (nº 168) : c'est
-          //  l'égalité des deux qui centre le bloc du milieu.
-          className="order-2 lg:order-3 ml-auto lg:ml-0 lg:flex-none lg:w-[var(--cote-barre,auto)] shrink-0 flex items-center justify-end gap-3"
+          //  ⚠️ ANCRÉ AU BORD DROIT (nº 169-§4) : ce sont les marges
+          //  automatiques du bloc central qui l'y poussent, en absorbant
+          //  tout l'espace libre à égalité. `lg:ml-0` : sous `lg`, le
+          //  `ml-auto` d'origine tient toujours.
+          className="order-2 lg:order-3 ml-auto lg:ml-0 lg:flex-none shrink-0 flex items-center justify-end gap-3"
         >
           {/* LA LOUPE (nº 150-§3) — smartphone et écrans étroits
               seulement : elle mène à la recherche PARTOUT où la rangée
