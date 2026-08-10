@@ -613,11 +613,11 @@ export function MoteurTatouage({
         les groupes respirent un peu plus. */
     surPanneau = false
   ) => (
-    //  ⚠️ 20 px ENTRE LES GROUPES, PARTOUT (nº 155-§3 et §4A) : les
-    //  24 (mobile) et 28 (panneau web) faisaient des titres qui
-    //  flottaient loin de leurs badges, et une liste trop longue pour
-    //  le petit viewport d'un iPhone (barre d'outils dépliée).
-    <div className={surPanneau ? "flex flex-col gap-5" : "flex flex-col gap-4"}>
+    //  ⚠️ 16 px ENTRE LES GROUPES, PARTOUT (nº 163-§3B, quatrième
+    //  demande) : la nº 155 avait posé 20 sur le panneau web — encore
+    //  trop. Le web s'aligne sur la valeur mobile de la nº 157 : 16 px
+    //  au-dessus des titres LIEU, TECHNIQUE et RENDU, des deux côtés.
+    <div className="flex flex-col gap-4">
       {groupeDeBadges(parGroupe.get("mode")!, "Artiste", valeurs, poser, surPanneau)}
       {groupeDeBadges(parGroupe.get("type")!, "Lieu", valeurs, poser, surPanneau)}
       {groupeDeBadges(
@@ -951,10 +951,20 @@ export function MoteurTatouage({
             //  contour ni ombre — c'est la clarté qui le détache de la
             //  page. Dedans, LE MÊME bloc que la page mobile, recalé
             //  d'un niveau (`surPanneau`).
+            //  ⚠️ LES DEUX MARGES SONT ÉGALES À L'ŒIL, PAS EN VALEURS
+            //  DÉCLARÉES (nº 163-§3A, quatrième demande). En bas, le
+            //  bord d'une capsule COLORÉE touche le rembourrage : la
+            //  distance réelle est le rembourrage, tout rond. En haut,
+            //  le titre « ARTISTE » est du TEXTE NU : sa boîte de ligne
+            //  (18 px pour des capitales de ~9) pose ~5 px d'air
+            //  invisible AU-DESSUS de l'encre — mesuré au DOM : 25 px
+            //  réels en haut pour 20 en bas, avec `p-5` partout. Le
+            //  rembourrage haut descend donc à 15 px : l'encre du titre
+            //  est à 20 px du bord, comme la capsule du bas.
             <div
               className="absolute top-full right-0 z-30 mt-2
                          w-[min(420px,calc(100vw-32px))] rounded-2xl
-                         bg-sombre-eleve p-5"
+                         bg-sombre-eleve px-5 pb-5 pt-[15px]"
             >
               {blocFiltres(criteres, annoncer, true)}
             </div>

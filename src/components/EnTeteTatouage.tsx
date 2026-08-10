@@ -142,25 +142,23 @@ export function EnTeteTatouage({
     : TEXTES_TATOUAGE.lienInscription;
 
   /**
-   * LA BARRE NE CHANGE PLUS JAMAIS DE COULEUR (passe nº 161)
+   * LA BARRE EST UN VERRE DÉPOLI, ET NE CHANGE JAMAIS D'ÉTAT
+   * (passe nº 161, refaite par la nº 163-§2)
    * =========================================================
-   * ⚠️ LES DEUX ÉTATS DE LA Nº 156-§2 SONT SUPPRIMÉS, à la demande du
-   * propriétaire : la barre prenait un fond PLUS CLAIR que le fond du
-   * site dès qu'on défilait — « ce n'est pas ce qui se fait en 2026 ».
+   * ⚠️ LES DEUX ÉTATS DE LA Nº 156-§2 RESTENT SUPPRIMÉS : la barre a
+   * UN SEUL traitement, permanent, à toutes les positions de
+   * défilement — une apparence qui ne varie pas ne peut ni clignoter
+   * (nº 154-§3), ni sauter (nº 156-§2), ni arriver « dans un second
+   * temps ». Plus d'état `posee`, plus d'hystérésis 8 px / 2 px. Le
+   * repli de la rangée, lui, n'a pas bougé d'une ligne.
    *
-   * LA RÈGLE, DÉSORMAIS : la barre a EXACTEMENT la couleur du fond du
-   * site (`bg-sombre-fond`, #1A1A1D), à toutes les positions de
-   * défilement, et elle est PLEINEMENT OPAQUE — rien ne se voit à
-   * travers elle, jamais (acquis nº 147-§2). Ce n'est plus la barre
-   * qui se pose sur le contenu : c'est le CONTENU qui s'efface sous
-   * elle — voir le VOILE DE FONDU au bas de la barre, plus bas.
-   *
-   * CE QUE CETTE SIMPLIFICATION EMPORTE AVEC ELLE, sans regret : plus
-   * d'état `posee`, plus d'hystérésis 8 px / 2 px, plus de bascule à
-   * surveiller avant la peinture — une couleur qui ne change pas ne
-   * peut ni clignoter (nº 154-§3), ni sauter (nº 156-§2), ni arriver
-   * « dans un second temps ». Le repli de la rangée, lui, n'a pas
-   * bougé d'une ligne.
+   * LE TRAITEMENT (nº 163-§2) : un VERRE DÉPOLI — teinte anthracite
+   * dense (le fond du site à 85 %) sur un flou d'arrière-plan FORT
+   * (40 px). Le contenu qui passe derrière n'est plus que des masses
+   * de couleur diffuses : on devine qu'il y a quelque chose, on ne
+   * distingue rien. La barre reste anthracite — ce qui passe derrière
+   * la nuance à peine. Le VOILE de dégradé de la nº 161 (lu comme une
+   * ombre portée) est supprimé (nº 163-§1).
    */
   /** LA LIGNE DE RECHERCHE SE RÉTRACTE (passe nº 147-§7, smartphone).
       En DESCENDANT dans les cartes, la rangée du moteur se replie et
@@ -289,15 +287,24 @@ export function EnTeteTatouage({
       // remettre sous les yeux la même carte après un changement de
       // disposition (voir src/lib/carte-du-haut.ts).
       data-barre-fixe=""
-      //  ⚠️ OPAQUE, TOUT À FAIT (nº 147-§2, troisième signalement) : à
-      //  90 puis 95 %, le contenu transparaissait encore derrière la
-      //  barre. Le fond est PLEIN — plus rien ne passe, et le flou
-      //  d'arrière-plan n'a plus rien à flouter : retiré.
-      //  ⚠️ UNE SEULE COULEUR, CELLE DU FOND DU SITE (nº 161) : les
-      //  deux états de la nº 156-§2 sont supprimés — voir le
-      //  commentaire au-dessus du composant. Toujours AUCUN trait :
-      //  c'est un acquis.
-      className="sticky top-0 z-50 bg-sombre-fond"
+      //  ⚠️ LE VERRE DÉPOLI (nº 163-§2) — YouTube, iOS, macOS. Le
+      //  contenu qui passe derrière est FORTEMENT flouté (40 px, un
+      //  cran de saturation en plus pour que les couleurs vivent) :
+      //  il n'en reste que des masses diffuses — aucune forme, aucun
+      //  texte, aucun visage. La teinte anthracite à 85 % garde la
+      //  barre dans la couleur du site : ce qui passe derrière ne fait
+      //  que la nuancer.
+      //  ⚠️ PAS LE FLOU DE LA Nº 147 : lui était trop FAIBLE (8 px) et
+      //  le fond trop transparent — on lisait le contenu. Ici le flou
+      //  est cinq fois plus fort, et la teinte reste dense. Sans
+      //  `backdrop-filter` (navigateur ancien), le fond redevient
+      //  PLEIN : jamais de contenu lisible à travers (nº 147-§2).
+      //  ⚠️ UN SEUL ÉTAT, PERMANENT : les deux états de la nº 156-§2
+      //  restent supprimés (nº 161) — une apparence qui ne varie pas
+      //  ne peut pas clignoter. Toujours AUCUN trait : c'est un acquis.
+      className="sticky top-0 z-50 bg-sombre-fond
+                 supports-[backdrop-filter]:bg-sombre-fond/85
+                 backdrop-blur-2xl backdrop-saturate-150"
     >
       <div
         //  ⚠️ PLUS DE gap-y (nº 147-§7) : l'espace au-dessus de la
@@ -553,26 +560,10 @@ export function EnTeteTatouage({
           )}
         </nav>
       </div>
-      {/* LE VOILE DE FONDU (passe nº 161) — le contenu s'efface SOUS
-          la barre, ce n'est pas la barre qui se pose sur lui.
-          Une bande de 28 px accrochée au bas de la barre, dégradée de
-          la couleur du fond vers le transparent : tout ce qui remonte
-          vers la barre s'y atténue sur ses derniers pixels, et passe
-          dessous déjà éteint — la barre, elle, ne change jamais de
-          teinte. C'est le traitement des interfaces soignées
-          d'aujourd'hui quand la barre EST le fond : pas de flou
-          (retiré à la nº 147-§2), pas de trait (charte), une
-          disparition.
-          `top-full` : le voile suit le bas de la barre, rangée du
-          moteur dépliée comme repliée — il ne mesure rien.
-          `pointer-events-none` : il ne prend aucun doigt ; en haut de
-          page, dégradé du fond posé sur le fond, il est invisible. */}
-      <div
-        aria-hidden="true"
-        data-voile-barre=""
-        className="pointer-events-none absolute inset-x-0 top-full h-7
-                   bg-gradient-to-b from-sombre-fond to-transparent"
-      />
+      {/* ⚠️ LE VOILE DE FONDU DE LA Nº 161 EST SUPPRIMÉ (nº 163-§1) :
+          son dégradé se lisait comme une OMBRE PORTÉE sur le contenu —
+          pas voulu. C'est désormais le VERRE DÉPOLI de la barre qui
+          éteint ce qui passe derrière (voir la classe du <header>). */}
     </header>
   );
 }
