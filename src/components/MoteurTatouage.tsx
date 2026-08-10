@@ -617,7 +617,27 @@ export function MoteurTatouage({
     //  demande) : la nº 155 avait posé 20 sur le panneau web — encore
     //  trop. Le web s'aligne sur la valeur mobile de la nº 157 : 16 px
     //  au-dessus des titres LIEU, TECHNIQUE et RENDU, des deux côtés.
-    <div className="flex flex-col gap-4">
+    //
+    //  ⚠️ ET CET ESPACEMENT NE VIT PLUS APRÈS LE DERNIER BLOC
+    //  (nº 166-§3, septième signalement). Relevé du propriétaire, au
+    //  pixel : marge gauche 20, marge haute 20, MARGE BASSE 38 —
+    //  l'espacement de fin de section du dernier groupe (RENDU) reste
+    //  appliqué, et sa boîte est plus haute que son contenu.
+    //  LA CORRECTION EST STRUCTURELLE, pas un réglage : l'espacement
+    //  ne se déclare plus sur le CONTENEUR (`gap`, qui sépare mais
+    //  qu'un enfant supplémentaire ou une boîte trop haute peut faire
+    //  déborder), il est porté PAR CHAQUE GROUPE SAUF LE PREMIER
+    //  (`fieldset + fieldset`). Rien ne peut donc plus s'ajouter après
+    //  le dernier : il n'y a aucune règle qui le suive. Le dernier
+    //  groupe voit en outre toute marge et tout rembourrage de fin
+    //  remis à zéro — du bas de son dernier badge au bord du panneau,
+    //  il ne reste que le rembourrage du panneau : 20 px, comme à
+    //  gauche et en haut. */
+    <div
+      className="flex flex-col
+                 [&>fieldset+fieldset]:mt-4
+                 [&>fieldset:last-child]:mb-0 [&>fieldset:last-child]:pb-0"
+    >
       {groupeDeBadges(parGroupe.get("mode")!, "Artiste", valeurs, poser, surPanneau)}
       {groupeDeBadges(parGroupe.get("type")!, "Lieu", valeurs, poser, surPanneau)}
       {groupeDeBadges(
