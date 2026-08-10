@@ -547,12 +547,28 @@ export function MoteurTatouage({
                 //  ⚠️ 44 px DE ZONE TACTILE (nº 149-§6) : les 36 px
                 //  d'avant passaient sous le minimum tactile — la
                 //  liste unique a la place, les capsules la prennent.
-                className={`inline-flex items-center gap-1.5 rounded-full px-4
-                           min-h-[44px] text-[13.5px] font-semibold
-                           transition-colors ${choisi ? robeChoisie : robeRetiree}`}
+                //  ⚠️ LA LARGEUR NE BOUGE JAMAIS (nº 153-§1). La coche
+                //  vivait DANS le flux du badge : sélectionné, il
+                //  s'élargissait de vingt pixels. Or TOUT est
+                //  sélectionné à l'ouverture — chaque rangée pliait
+                //  plus tôt, la liste s'allongeait, « Effacer /
+                //  Valider » passait sous le bord de l'écran… et le
+                //  premier clic, en retirant une coche, « contractait »
+                //  la page. La coche est désormais DESSINÉE DANS LE
+                //  REMBOURRAGE (`absolute`, hors flux) : le badge a la
+                //  même largeur coché ou non, et la mise en page est
+                //  JUSTE DÈS L'OUVERTURE — plus rien ne bouge au clic.
+                className={`relative inline-flex items-center justify-center
+                           rounded-full px-5 min-h-[44px] text-[13.5px]
+                           font-semibold transition-colors ${
+                             choisi ? robeChoisie : robeRetiree
+                           }`}
               >
                 {choisi && (
-                  <IconeCocheListe taille={14} classe="shrink-0 text-primaire" />
+                  <IconeCocheListe
+                    taille={12}
+                    classe="absolute left-1.5 top-1/2 -translate-y-1/2 text-primaire"
+                  />
                 )}
                 {option.label}
               </button>

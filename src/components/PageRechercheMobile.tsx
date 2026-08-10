@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { IconeCroix, IconeLoupe } from "@/components/Icones";
 import { OngletsLigne } from "@/components/OngletsLigne";
@@ -138,12 +138,26 @@ function poserLEntree() {
   window.history.pushState({ rechercheMobile: true }, "");
 }
 
-/** La durée de la glissade — et EXACTEMENT celle de la transition CSS
-    plus bas. Un seul chiffre : les deux ne peuvent pas se désaccorder. */
-const DUREE_GLISSADE_MS = 320;
+/**
+ * LES DEUX GLISSADES (nº 153-§3) — deux durées, deux courbes.
+ * L'ARRIVÉE arrive vite et SE POSE : décélération appuyée, 380 ms —
+ * la page franchit l'essentiel du chemin en un tiers de seconde puis
+ * s'installe sans rebond. LA SORTIE, elle, S'ARRACHE : accélération
+ * franche, 240 ms — elle s'incline puis file, sans traîner au bord de
+ * l'écran. Ce sont les courbes de mouvement des grandes interfaces
+ * (Material « emphasized », même famille que les feuilles d'iOS).
+ * ⚠️ CES DURÉES NE COMMANDENT PLUS LA FIN : c'est `transitionend` qui
+ * la dit (voir plus bas). Elles ne règlent QUE la vitesse.
+ */
+const DUREE_ARRIVEE_MS = 380;
+const COURBE_ARRIVEE = "cubic-bezier(0.05, 0.7, 0.1, 1)";
+const DUREE_SORTIE_MS = 240;
+const COURBE_SORTIE = "cubic-bezier(0.3, 0, 0.8, 0.15)";
 
-/** La courbe des feuilles d'iOS : départ franc, arrivée posée. */
-const COURBE_GLISSADE = "cubic-bezier(0.32, 0.72, 0, 1)";
+/** LE FILET DES FINS DE GLISSADE : si `transitionend` ne vient jamais
+    (onglet en arrière-plan, mouvement réduit), la fin est prononcée
+    quand même — un peu après la durée nominale, jamais avant. */
+const MARGE_FILET_MS = 160;
 
 /** Où en est la page. « posée » est le seul état où l'on saisit. */
 type Phase = "arrive" | "posee" | "part";
@@ -190,6 +204,56 @@ export function PageRechercheMobile({
   const [phase, setPhase] = useState<Phase>("arrive");
   /** Vrai = la page est à sa place ; faux = hors écran, par le haut. */
   const [enPlace, setEnPlace] = useState(false);
+  /** LE CONTENEUR — c'est lui qui glisse, et c'est sur LUI qu'on
+      écoute la fin de la transition (nº 153-§3). */
+  const conteneur = useRef<HTMLDivElement>(null);
+  /** LE DÉFILEMENT DE LA PAGE AU MOMENT DE LA SORTIE (nº 153-§2).
+      La page posée est EN FLUX : quand on la regardait défilée de
+      `s` pixels, la refixer en haut de l'écran ferait SAUTER son
+      contenu de `s` pixels avant la glissade — le fond repartait du
+      haut pendant que les badges changeaient de place. On fige donc
+      la page LÀ OÙ L'ŒIL LA VOYAIT (`top: -s`), et tout part d'un
+      seul geste. Posé AVEC le passage en phase « part » : React
+      groupe les deux, un seul rendu, aucun état intermédiaire. */
+  const [decalageSortie, setDecalageSortie] = useState(0);
+  /** La sortie en cours valide-t-elle la recherche ? Lu par l'effet
+      avant peinture qui rend le site au flux (position à restituer). */
+  const [validerEnSortant, setValiderEnSortant] = useState(false);
+
+  /**
+   * LA FIN D'UNE GLISSADE, DITE PAR LA TRANSITION ELLE-MÊME
+   * (nº 153-§3) — et plus par un minuteur.
+   * ⚠️ C'ÉTAIT LA CAUSE DU « COUP SEC » : le minuteur partait au
+   * changement d'état React, mais la transition ne démarre qu'une à
+   * deux images plus tard (double `requestAnimationFrame`). Le
+   * minuteur sonnait donc AVANT la fin de la course : l'arrivée
+   * sautait ses derniers pixels d'un coup, et la sortie était
+   * DÉMONTÉE en plein vol (mesuré : coupée à −567 px sur −717).
+   * `transitionend` dit la vraie fin ; le minuteur ne reste qu'en
+   * FILET, un peu plus long, pour les cas où la transition ne joue
+   * pas (mouvement réduit, onglet caché).
+   */
+  function aLaFinDeLaGlissade(duree: number, faire: () => void) {
+    const element = conteneur.current;
+    let fait = false;
+    const conclure = () => {
+      if (fait) return;
+      fait = true;
+      element?.removeEventListener("transitionend", surFin);
+      faire();
+    };
+    function surFin(evenement: TransitionEvent) {
+      if (evenement.target !== element) return;
+      if (evenement.propertyName !== "transform") return;
+      conclure();
+    }
+    element?.addEventListener("transitionend", surFin);
+    const filet = window.setTimeout(conclure, duree + MARGE_FILET_MS);
+    return () => {
+      window.clearTimeout(filet);
+      element?.removeEventListener("transitionend", surFin);
+    };
+  }
 
   /** Les sorties changent d'un rendu à l'autre : on les lit dans une
       référence, jamais dans les dépendances d'un effet (l'effet se
@@ -214,17 +278,27 @@ export function PageRechercheMobile({
     if (!entreeDejaPosee()) memoriserDefilementResultats(window.scrollY);
     poserLEntree();
 
-    const image = requestAnimationFrame(() => setEnPlace(true));
-    const poser = window.setTimeout(() => {
+    //  ⚠️ DEUX IMAGES, PAS UNE (nº 153-§3) : une seule laissait le
+    //  navigateur regrouper l'état de départ (−100 %) et l'état
+    //  d'arrivée (0) dans la même peinture — aucune transition, la
+    //  page APPARAISSAIT d'un coup. La première image peint la page
+    //  hors écran, la seconde lance la glissade. C'est déjà la règle
+    //  de la sortie, l'arrivée la suit enfin.
+    let imageSuivante = 0;
+    const image = requestAnimationFrame(() => {
+      imageSuivante = requestAnimationFrame(() => setEnPlace(true));
+    });
+    const rompre = aLaFinDeLaGlissade(DUREE_ARRIVEE_MS, () => {
       document.documentElement.dataset.recherche = "ouverte";
       setPhase("posee");
       // Le document ne contient plus qu'elle : on repart de son haut.
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-    }, DUREE_GLISSADE_MS);
+    });
 
     return () => {
       cancelAnimationFrame(image);
-      window.clearTimeout(poser);
+      cancelAnimationFrame(imageSuivante);
+      rompre();
       // FILET DE SÉCURITÉ : quel que soit le chemin de démontage, le
       // site retrouve son flux. Sans lui, un démontage imprévu
       // laisserait la page blanche.
@@ -239,25 +313,47 @@ export function PageRechercheMobile({
       lit depuis sa première carte, pas depuis le milieu de l'ancienne. */
   function glisserDehors(valider: boolean) {
     if (phase === "part") return;
-    delete document.documentElement.dataset.recherche;
+    //  ⚠️ LE DÉFILEMENT EST PRIS AVANT TOUT LE RESTE (nº 153-§2) : la
+    //  page part de LÀ OÙ L'ŒIL LA VOYAIT — `top: -s` sur le conteneur
+    //  refixé, et plus jamais du haut du document. Sans cela, le
+    //  contenu SAUTAIT de `s` pixels (mesuré : badge 432 → 581) avant
+    //  de glisser : deux mouvements au lieu d'un.
+    setDecalageSortie(phase === "posee" ? window.scrollY : 0);
+    setValiderEnSortant(valider);
     setPhase("part");
-    window.scrollTo({
-      top: valider ? 0 : lireDefilementResultats(),
-      left: 0,
-      behavior: "instant",
-    });
     // Deux images : la première peint la page redevenue fixe à sa
     // place, la seconde lance la transition. Une seule, et le
     // navigateur regrouperait les deux valeurs — aucun mouvement.
     requestAnimationFrame(() =>
       requestAnimationFrame(() => setEnPlace(false))
     );
-    window.setTimeout(() => {
+    aLaFinDeLaGlissade(DUREE_SORTIE_MS, () => {
       const { onValider: valide, onAbandonner: abandonne } = sorties.current;
       if (valider) valide();
       else abandonne();
-    }, DUREE_GLISSADE_MS);
+    });
   }
+
+  /**
+   * LE SITE REVIENT DANS LE FLUX **AVEC** LA PAGE REFIXÉE — dans le
+   * même effet avant peinture, jamais entre deux (nº 153-§2).
+   * ⚠️ Faire ces deux gestes DANS `glisserDehors` ouvrait une fenêtre :
+   * le site rendu au flux tout de suite, la page encore en flux
+   * derrière lui jusqu'au rendu suivant — un instant où le document
+   * mesurait site + page empilés. Chromium ne le peignait pas ; rien
+   * ne garantissait que Safari en fasse autant. Ici, React a DÉJÀ posé
+   * la page en `fixed` quand l'effet s'exécute, et la peinture
+   * n'arrive qu'après : les deux états sont indissociables à l'écran.
+   */
+  useLayoutEffect(() => {
+    if (phase !== "part") return;
+    delete document.documentElement.dataset.recherche;
+    window.scrollTo({
+      top: validerEnSortant ? 0 : lireDefilementResultats(),
+      left: 0,
+      behavior: "instant",
+    });
+  }, [phase, validerEnSortant]);
 
   /** LA CROIX ET « VALIDER » — ils dépilent NOTRE étape eux-mêmes,
       puis glissent. Le `popstate` qui suit trouve le drapeau baissé et
@@ -304,11 +400,20 @@ export function PageRechercheMobile({
       role="dialog"
       aria-modal="true"
       aria-label="Rechercher un tatoueur"
+      ref={conteneur}
       style={
         enGlissade
           ? {
               transform: enPlace ? "translateY(0)" : "translateY(-100%)",
-              transition: `transform ${DUREE_GLISSADE_MS}ms ${COURBE_GLISSADE}`,
+              transition: `transform ${
+                phase === "part"
+                  ? `${DUREE_SORTIE_MS}ms ${COURBE_SORTIE}`
+                  : `${DUREE_ARRIVEE_MS}ms ${COURBE_ARRIVEE}`
+              }`,
+              //  LA SORTIE PART DE LÀ OÙ L'ŒIL ÉTAIT (nº 153-§2) : la
+              //  page refixée garde le décalage qu'elle avait en flux.
+              //  À l'arrivée il vaut zéro — la page couvre l'écran.
+              top: phase === "part" ? -decalageSortie : 0,
             }
           : undefined
       }
@@ -317,7 +422,13 @@ export function PageRechercheMobile({
           ? // LA GLISSADE : par-dessus les résultats, le temps de les
             // couvrir. Seul `transform` bouge — aucune mise en page à
             // recalculer, le navigateur peint sur le compositeur.
-            "fixed inset-0 z-[70] will-change-transform"
+            // ⚠️ PLUS DE `bottom: 0` (nº 153-§2) : borner la hauteur à
+            // l'écran faisait SAUTER un contenu plus grand que lui au
+            // moment de refixer. La hauteur reste celle du CONTENU
+            // (comme en flux, au pixel près), le plancher couvre
+            // l'écran, et « −100 % » veut dire « toute sa hauteur » —
+            // la page sort entière, jamais coupée.
+            "fixed inset-x-0 z-[70] min-h-[100dvh] will-change-transform"
           : // POSÉE : une PAGE, en flux normal. Aucune position, aucun
             // repère d'écran — le navigateur fait défiler le document
             // pour dégager le champ du clavier, et c'est tout.
