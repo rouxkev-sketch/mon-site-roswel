@@ -35,7 +35,7 @@ export default async function PageCompte({
   const { suite } = await searchParams;
   return (
     <>
-      <EnTeteTatouage moteurMobile={false} />
+      <EnTeteTatouage />
       <EcranAuthentification suite={suite} />
     </>
   );

@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 export default function PageContactTatouage() {
   return (
     <>
-      <EnTeteTatouage moteurMobile={false} />
+      <EnTeteTatouage />
       <main className="flex-1 mx-auto w-full max-w-[560px] px-5 sm:px-6 pt-10 sm:pt-14 pb-24">
         <h1 className="text-[clamp(1.6rem,4.5vw,2.1rem)] font-bold leading-tight text-sombre-texte">
           Écris-nous

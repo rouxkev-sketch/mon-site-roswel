@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 export default function PageSecurite() {
   return (
     <>
-      <EnTeteTatouage moteurMobile={false} />
+      <EnTeteTatouage />
       <Securite />
     </>
   );

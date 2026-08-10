@@ -73,7 +73,7 @@ function Section({
 export default function PageMentionsLegales() {
   return (
     <>
-      <EnTeteTatouage moteurMobile={false} />
+      <EnTeteTatouage />
 
       <main className="flex-1 mx-auto w-full max-w-[760px] px-4 sm:px-6 pt-10 pb-20">
         <h1 className="text-[clamp(1.8rem,4.5vw,2.4rem)] font-bold leading-tight text-sombre-texte">

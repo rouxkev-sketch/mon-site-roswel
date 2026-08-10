@@ -86,6 +86,16 @@
    ils peignent par-dessus le canevas.) */
 html {
   background: var(--rw-fond);
+  /* ⚠️ PLUS D'ANCRAGE DE DÉFILEMENT (nº 150-§5). Quand la rangée du
+     moteur se déplie dans la barre fixe, le document s'allonge par le
+     haut : l'ancrage « compensait » en défilant tout seul de la même
+     hauteur — un faux geste vers le bas, que la barre rétractable
+     prenait pour une descente et qui la faisait osciller. L'ancrage
+     est fait pour du contenu qui bouge SOUS la fenêtre, pas pour les
+     barres qui changent de hauteur : on le coupe à la racine. Aucun
+     autre mécanisme du site ne s'appuie dessus (la restitution de
+     position se fait par `scrollTo`, mesuré). */
+  overflow-anchor: none;
 }
 
 body {

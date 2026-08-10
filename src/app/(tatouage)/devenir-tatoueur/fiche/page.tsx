@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 export default function PageCreationFiche() {
   return (
     <>
-      <EnTeteTatouage moteurMobile={false} />
+      <EnTeteTatouage />
       {/* Suspense : le formulaire lit l'adresse (useSearchParams —
           ?vue=apercu choisit la vue), et Next demande cette frontière
           pour rendre la page sans bloquer sur ce paramètre.

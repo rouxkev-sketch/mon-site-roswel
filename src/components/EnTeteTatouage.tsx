@@ -1,17 +1,11 @@
 "use client";
 
-import {
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { lieuVersParametres } from "@/lib/geocodage";
 import { MARQUE_YOKOFOLIO, TEXTES_TATOUAGE } from "@/config/tatouage";
-import { IconeFanion, IconeSilhouette } from "@/components/Icones";
+import { IconeFanion, IconeLoupe, IconeSilhouette } from "@/components/Icones";
 import { LogoYokofolio } from "@/components/LogoYokofolio";
 import { MenuEspace } from "@/components/MenuEspace";
 import { SelecteurLangue } from "@/components/SelecteurLangue";
@@ -27,6 +21,7 @@ import {
   MoteurTatouage,
   type CritèresTatouage,
 } from "@/components/MoteurTatouage";
+import { ouvrirRecherche } from "@/lib/recherche-mobile";
 
 /**
  * LA BARRE FIXE DE YOKOFOLIO
@@ -69,23 +64,15 @@ import {
 /** Hauteur du globe et du bouton de compte : ils s'alignent au pixel. */
 const HAUTEUR_ACTIONS = 40;
 
-/** useLayoutEffect côté navigateur, useEffect côté serveur (silencieux) */
-const useEffetAvantPeinture =
-  typeof window !== "undefined" ? useLayoutEffect : useEffect;
-
 export function EnTeteTatouage({
   criteres,
   criteresInitiaux,
   surRecherche,
-  moteurMobile = true,
 }: {
   /** Critères PILOTÉS PAR LA PAGE (accueil). Absent = état interne. */
   criteres?: CritèresTatouage;
   criteresInitiaux?: Partial<CritèresTatouage>;
   surRecherche?: (criteres: CritèresTatouage) => void;
-  /** Faux = pas d'encadré de recherche dans la barre du SMARTPHONE
-      (pages connexion, légales, qui sommes-nous). Le web le garde. */
-  moteurMobile?: boolean;
 }) {
   const router = useRouter();
   const { utilisateur, nom } = useUtilisateur();
@@ -162,48 +149,49 @@ export function EnTeteTatouage({
       seuil de 4 px par lecture ignore l'élastique du défilement.
       ⚠️ LA RANGÉE DU LOGO NE BOUGE JAMAIS : sans lui, plus de repère. */
   const [moteurReplie, setMoteurReplie] = useState(false);
-  /** LE CENTRAGE DE LA BARRE (passe nº 147-§3). Le bloc central était
-      centré dans L'ESPACE RESTANT : le logo étant plus large que les
-      actions, il dérivait vers la droite — et en resserrant la
-      fenêtre, l'encadré finissait collé au logo avec du vide à
-      droite. On mesure la largeur NATURELLE des deux flancs (le lien
-      du logo, le contenu de la nav) et chacun réserve LA PLUS LARGE
-      des deux : rien ne pousse plus le milieu. ResizeObserver : le
-      contenu de droite change avec la session (globe ↔ fanion,
-      libellés), le logo avec les points de rupture. */
-  const contenuGauche = useRef<HTMLAnchorElement>(null);
-  const contenuDroit = useRef<HTMLDivElement>(null);
-  const [cote, setCote] = useState(0);
-  useEffetAvantPeinture(() => {
-    const mesurer = () => {
-      const g = contenuGauche.current?.getBoundingClientRect().width ?? 0;
-      const d = contenuDroit.current?.getBoundingClientRect().width ?? 0;
-      setCote(Math.ceil(Math.max(g, d)));
-    };
-    mesurer();
-    const observateur = new ResizeObserver(mesurer);
-    if (contenuGauche.current) observateur.observe(contenuGauche.current);
-    if (contenuDroit.current) observateur.observe(contenuDroit.current);
-    return () => observateur.disconnect();
-  }, []);
+  /** SUR L'ACCUEIL, ET LÀ SEULEMENT, la barre porte la rangée du
+      moteur sur smartphone (nº 150-§3) : l'accueil est la page qui
+      PILOTE la recherche — elle fournit `surRecherche`. Partout
+      ailleurs, la rangée n'existe pas : c'est LA LOUPE de la barre qui
+      mène à la recherche. */
+  const surAccueil = Boolean(surRecherche);
+  /** LA LOUPE EST VISIBLE quand la rangée ne l'est pas : partout hors
+      accueil, et sur l'accueil dès que la rangée est repliée. */
+  const loupeVisible = !surAccueil || moteurReplie;
+
   useEffect(() => {
+    /* ============================================================
+     * LE REPLI, REFAIT DE A À Z (nº 150-§5) — un seul mouvement.
+     * ------------------------------------------------------------
+     * L'ancienne mécanique jugeait CHAQUE lecture de scroll (delta
+     * > 4 px) et se protégeait de ses propres conséquences par un GEL
+     * de 400 ms : les bascules différées repartaient en sens inverse
+     * en pleine transition — trois mouvements visibles au lieu d'un.
+     *
+     * La nouvelle règle juge le GESTE, pas la lecture :
+     *  · un CUMUL DIRECTIONNEL additionne les deltas tant que le sens
+     *    ne change pas, et repart de zéro quand il s'inverse ;
+     *  · 24 px cumulés vers le bas replient ; 12 px cumulés vers le
+     *    haut déplient — le retour reste immédiat au premier vrai
+     *    geste, où qu'on soit dans la page ;
+     *  · sous 64 px du haut, toujours dépliée.
+     * AUCUN gel : l'état ne peut plus se contredire en cours de
+     * transition, car les faux gestes sont traités À LA SOURCE :
+     *  · le RE-BORNAGE du bas de page (replier raccourcit le document,
+     *    le navigateur re-borne le défilement — delta négatif) : un
+     *    delta négatif qui laisse le défilement collé au bas n'est pas
+     *    un geste, il est ignoré ;
+     *  · l'ANCRAGE de défilement (déplier rallonge le header, le
+     *    navigateur « compensait » — delta positif) : il est désactivé
+     *    pour de bon (`overflow-anchor: none`, globals.css).
+     * ============================================================ */
     let yPrecedent = window.scrollY;
-    //  ⚠️ LES FAUX GESTES DU NAVIGATEUR, ET LE GEL QUI LES NEUTRALISE.
-    //  Replier ou déplier la rangée change la hauteur du document, et
-    //  le navigateur réagit par SES PROPRES défilements : le re-bornage
-    //  du bas de page (delta négatif après un repli) et l'ancrage de
-    //  défilement (deltas positifs pendant un dépliement). Lus comme
-    //  des gestes, ils inversaient l'état à peine posé — la barre
-    //  OSCILLAIT. Après chaque bascule, un GEL de 400 ms (la
-    //  transition dure 300 ms) interdit donc aux deltas de la
-    //  contredire ; un vrai geste, lui, continue au-delà du gel et
-    //  garde le dernier mot.
+    let cumul = 0;
     let replieCourant = false;
-    let gelJusqua = 0;
-    const basculer = (valeur: boolean) => {
+    const poserReplie = (valeur: boolean) => {
       if (replieCourant === valeur) return;
       replieCourant = valeur;
-      gelJusqua = performance.now() + 400;
+      cumul = 0;
       setMoteurReplie(valeur);
     };
     const lire = () => {
@@ -211,18 +199,17 @@ export function EnTeteTatouage({
       const delta = y - yPrecedent;
       yPrecedent = y;
       setPosee(y > 8);
-      //  Près du haut : toujours dépliée, gel ou pas.
       if (y < 64) {
-        basculer(false);
+        poserReplie(false);
+        cumul = 0;
         return;
       }
-      if (performance.now() < gelJusqua) return;
-      const yMax =
-        document.documentElement.scrollHeight - window.innerHeight;
-      if (delta > 4) basculer(true);
-      //  Collé au bas de page, un delta négatif peut encore être un
-      //  re-bornage tardif : il ne compte que plus haut.
-      else if (delta < -4 && y < yMax - 2) basculer(false);
+      if (delta === 0) return;
+      const yMax = document.documentElement.scrollHeight - window.innerHeight;
+      if (delta < 0 && y >= yMax - 2) return;
+      cumul = Math.sign(delta) === Math.sign(cumul) ? cumul + delta : delta;
+      if (cumul > 24) poserReplie(true);
+      else if (cumul < -12) poserReplie(false);
     };
     lire();
     window.addEventListener("scroll", lire, { passive: true });
@@ -243,17 +230,6 @@ export function EnTeteTatouage({
       className={`sticky top-0 z-50 transition-colors duration-200 ${
         posee ? "bg-sombre-carte" : "bg-transparent"
       }`}
-      //  LA MÊME LARGEUR RÉSERVÉE DES DEUX CÔTÉS (nº 147-§3) : mesurée
-      //  au navigateur (le contenu naturel du logo et celui des
-      //  actions), la plus large des deux est posée ici en variable —
-      //  les deux flancs la liront comme largeur minimale, et le bloc
-      //  central reste ANCRÉ AU CENTRE DE LA PAGE à toutes les
-      //  largeurs, au lieu de dériver vers le flanc le plus étroit.
-      style={
-        cote > 0
-          ? ({ "--cote-barre": `${cote}px` } as React.CSSProperties)
-          : undefined
-      }
     >
       <div
         //  ⚠️ PLUS DE gap-y (nº 147-§7) : l'espace au-dessus de la
@@ -263,18 +239,15 @@ export function EnTeteTatouage({
         className="mx-auto w-full max-w-[1760px] px-4 sm:px-6
                    flex flex-wrap lg:flex-nowrap items-center gap-x-5 py-3"
       >
-        {/* LOGO ET ACTIONS PRENNENT LA MÊME PLACE : c'est ce qui met
-            le moteur au milieu de la barre.
-            ⚠️ LA MÊME LARGEUR MINIMALE DES DEUX CÔTÉS (nº 147-§3) —
-            `var(--cote-barre)`, la plus large des deux mesures, posée
-            sur le header. Centré dans l'espace restant, le bloc
-            central DÉRIVAIT vers le flanc le plus étroit ; ancré entre
-            deux réserves égales, il reste au CENTRE DE LA PAGE et se
-            rétracte symétriquement. Avant la première mesure, repli
-            sur `fit-content` (la règle de la nº 146-§2 : chaque côté
-            réclame au moins son contenu, seul le moteur — `lg:shrink`
-            + `min-w-0` — peut céder, le logo jamais). */}
-        <div className="shrink-0 order-1 lg:flex-1 lg:min-w-[var(--cote-barre,fit-content)]">
+        {/* LOGO ET ACTIONS PRENNENT LA MÊME PLACE (`lg:flex-1` des deux
+            côtés) : c'est ce qui met le moteur au milieu de la barre.
+            ⚠️ L'ANCRAGE AU CENTRE DE LA PAGE (nº 147-§3) EST ANNULÉ
+            (nº 150-§1), à la demande du propriétaire : retour EXACT à
+            la règle de la nº 146-§2 — chaque côté réclame AU MOINS son
+            contenu (`lg:min-w-fit`), seul le moteur (`lg:shrink` +
+            `min-w-0`) peut céder, le logo jamais. Plus de réserve
+            `--cote-barre`, plus de ResizeObserver. */}
+        <div className="shrink-0 order-1 lg:flex-1 lg:min-w-fit">
           {/* LE LOGO RAMÈNE À L'ACCUEIL — un lien NATIF, exprès. La
               navigation douce de Next a déjà avalé ce clic deux fois
               (page du compte, puis page de création de fiche) : ici,
@@ -289,7 +262,6 @@ export function EnTeteTatouage({
               <Link> a déjà avalé ce clic en silence, deux fois. */}
           <a
             href="/"
-            ref={contenuGauche}
             aria-label={`Accueil ${MARQUE_YOKOFOLIO.nom}`}
             draggable={false}
             className="block w-fit cursor-pointer rounded-lg
@@ -317,29 +289,51 @@ export function EnTeteTatouage({
              `lg:shrink` + `min-w-0` laissent l'encadré se réduire dès
              que la barre manque de place — AVANT que quoi que ce soit
              d'autre ne cède (voir le `lg:min-w-fit` des deux côtés). */}
-        {/*  ⚠️ LA RANGÉE SE REPLIE AU DÉFILEMENT (nº 147-§7, sous
-             1024 px seulement) : une GRILLE À UNE LIGNE dont la ligne
-             passe de 1fr à 0fr — la hauteur EXACTE se replie, sans
-             valeur magique, et la transition la rend fluide. Le web
-             (lg) reste un flex ordinaire, jamais replié. */}
+        {/*  ⚠️ LA RANGÉE DU MOTEUR N'EXISTE QUE SUR L'ACCUEIL
+             (nº 150-§3) : partout ailleurs, `hidden lg:flex` — RIEN
+             sous 1024 px (la loupe de la nav mène à la recherche), et
+             le moteur web ordinaire au-delà. La régression corrigée :
+             les variantes de repli `max-lg:grid` s'appliquaient SANS
+             condition et rallumaient la rangée sur toutes les pages,
+             par-dessus leur `hidden`.
+             SUR L'ACCUEIL, elle SE REPLIE au défilement (nº 150-§5) :
+             une grille à UNE COLONNE PLEINE LARGEUR
+             (`grid-cols-[minmax(0,1fr)]` — la colonne implicite se
+             dimensionnait au contenu et `justify-center` la centrait :
+             c'était la marge parasite du §4) et UNE LIGNE qui passe de
+             1fr à 0fr : la hauteur exacte se replie, le contenu est
+             coupé par l'overflow de l'enveloppe — il se replie AVEC la
+             rangée, jamais après. */}
         <div
           data-rangee-moteur=""
           className={`order-3 lg:order-2 basis-full lg:basis-[680px] lg:shrink lg:grow-0
-                      min-w-0 justify-center
-                      max-lg:grid max-lg:transition-[grid-template-rows,opacity]
-                      max-lg:duration-300 max-lg:ease-out ${
-                        moteurReplie
-                          ? "max-lg:grid-rows-[0fr] max-lg:opacity-0"
-                          : "max-lg:grid-rows-[1fr] max-lg:opacity-100"
-                      } ${moteurMobile ? "lg:flex" : "hidden md:grid lg:flex"}`}
-          aria-hidden={moteurReplie || undefined}
-          inert={moteurReplie || undefined}
+                      min-w-0 justify-center ${
+                        surAccueil
+                          ? `max-lg:grid max-lg:grid-cols-[minmax(0,1fr)]
+                             max-lg:transition-[grid-template-rows,opacity]
+                             max-lg:duration-300 max-lg:ease-out ${
+                               moteurReplie
+                                 ? "max-lg:grid-rows-[0fr] max-lg:opacity-0"
+                                 : "max-lg:grid-rows-[1fr] max-lg:opacity-100"
+                             } lg:flex`
+                          : "hidden lg:flex"
+                      }`}
+          aria-hidden={(surAccueil && moteurReplie) || undefined}
+          inert={(surAccueil && moteurReplie) || undefined}
         >
           <div className="max-lg:min-h-0 max-lg:overflow-hidden flex w-full justify-center">
             {/*  Le pt-3 remplace l'ancien gap-y-3 du parent : il
                  appartient à la rangée et se replie avec elle. */}
-            <div className="w-full max-w-[720px] max-lg:pt-3 lg:pt-0">
-              <MoteurTatouage criteres={valeur} surChangement={chercher} />
+            <div
+              className={`w-full max-w-[720px] lg:pt-0 ${
+                surAccueil ? "max-lg:pt-3" : ""
+              }`}
+            >
+              <MoteurTatouage
+                criteres={valeur}
+                surChangement={chercher}
+                rangeeMobile={surAccueil}
+              />
             </div>
           </div>
         </div>
@@ -348,12 +342,36 @@ export function EnTeteTatouage({
           aria-label="Langue et compte"
           //  gap-3 (nº 141-§7) : le cœur — ou le globe — respirait mal
           //  contre « Mon espace ».
-          className="order-2 lg:order-3 ml-auto lg:flex-1 lg:min-w-[var(--cote-barre,fit-content)] shrink-0 flex items-center justify-end gap-3"
+          className="order-2 lg:order-3 ml-auto lg:flex-1 lg:min-w-fit shrink-0 flex items-center justify-end gap-3"
         >
-          {/* L'ENVELOPPE DE MESURE (nº 147-§3) : la largeur NATURELLE
-              du contenu de droite, lue par le ResizeObserver — la nav,
-              étirée par flex-1, ne peut pas se mesurer elle-même. */}
-          <div ref={contenuDroit} className="flex w-fit items-center gap-3">
+          {/* LA LOUPE (nº 150-§3) — smartphone et écrans étroits
+              seulement : elle mène à la recherche PARTOUT où la rangée
+              du moteur n'est pas là — sur toutes les pages hors
+              accueil, et sur l'accueil dès que la rangée est repliée.
+              Elle garde sa place dans la barre même invisible
+              (opacité seule) : son apparition ne décale jamais les
+              icônes voisines, et elle suit le repli sans décalage.
+              Rang 24, l'échelle de la barre. */}
+          <button
+            type="button"
+            onClick={() => ouvrirRecherche(valeur)}
+            aria-label="Rechercher"
+            title="Rechercher"
+            aria-hidden={!loupeVisible || undefined}
+            tabIndex={loupeVisible ? 0 : -1}
+            style={{ height: HAUTEUR_ACTIONS, width: HAUTEUR_ACTIONS }}
+            className={`flex lg:hidden shrink-0 items-center justify-center rounded-full
+                       transition-opacity duration-200 hover:bg-sombre-eleve
+                       text-sombre-texte
+                       focus-visible:outline-2 focus-visible:outline-offset-2
+                       focus-visible:outline-primaire ${
+                         loupeVisible
+                           ? "opacity-100"
+                           : "opacity-0 pointer-events-none"
+                       }`}
+          >
+            <IconeLoupe taille={24} />
+          </button>
           {/* ⚠️ LA PLACE À GAUCHE DU COMPTE CHANGE DE MAIN SELON QU'ON
               EST CONNECTÉ (passe nº 137) :
                · DÉCONNECTÉ — le GLOBE des langues, comme toujours ;
@@ -437,7 +455,6 @@ export function EnTeteTatouage({
               </Link>
             </>
           )}
-          </div>
         </nav>
       </div>
     </header>

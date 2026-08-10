@@ -137,7 +137,7 @@ export default async function PageFicheTatoueur({
       {/* SMARTPHONE : pas de moteur dans la barre — sur une fiche, on
           regarde un portfolio, on ne cherche pas. Le web garde le sien
           (il RAMÈNE à l'accueil avec les critères). */}
-      <EnTeteTatouage moteurMobile={false} />
+      <EnTeteTatouage />
       {/* WEB : si cette page est un RECHARGEMENT d'une fiche qui était
           ouverte en fenêtre superposée, ce composant repart vers la
           grille et la fenêtre s'y rouvre — recherche et position

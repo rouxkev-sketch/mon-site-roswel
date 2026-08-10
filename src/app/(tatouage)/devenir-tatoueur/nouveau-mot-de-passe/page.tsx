@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 export default function PageNouveauMotDePasse() {
   return (
     <>
-      <EnTeteTatouage moteurMobile={false} />
+      <EnTeteTatouage />
       <NouveauMotDePasse />
     </>
   );

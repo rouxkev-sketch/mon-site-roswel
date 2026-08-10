@@ -67,11 +67,14 @@ export function IconeSilhouette({ taille = 24, classe = "" }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
       <circle cx="12" cy="7.6" r="3.8" stroke="currentColor" strokeWidth="1.8" />
+      {/*  ⚠️ LE TORSE EST FERMÉ (nº 150-§6) : le `Z` referme le tracé
+           par une ligne droite à sa base — la courbe ne reste plus
+           ouverte vers le bas. */}
       <path
-        d="M4.6 20.2c1.4-4.3 4-6.4 7.4-6.4s6 2.1 7.4 6.4"
+        d="M4.6 20.2c1.4-4.3 4-6.4 7.4-6.4s6 2.1 7.4 6.4Z"
         stroke="currentColor"
         strokeWidth="1.8"
-        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );

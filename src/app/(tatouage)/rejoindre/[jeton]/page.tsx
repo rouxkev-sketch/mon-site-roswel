@@ -37,7 +37,7 @@ export default async function PageRejoindre({
 
   return (
     <>
-      <EnTeteTatouage moteurMobile={false} />
+      <EnTeteTatouage />
       <PageRattachement
         jeton={demarchage.jeton}
         etat={demarchage.etat}

@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 export default function PageAdmin() {
   return (
     <>
-      <EnTeteTatouage moteurMobile={false} />
+      <EnTeteTatouage />
       <AdminYokofolio />
     </>
   );

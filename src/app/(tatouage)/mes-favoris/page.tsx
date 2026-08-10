@@ -53,7 +53,7 @@ export default async function PageMesFavoris() {
       {/* La barre fixe SANS moteur sur smartphone : cette page n'est
           pas une page de recherche. Le web garde le moteur — il ramène
           à l'accueil avec les critères choisis. */}
-      <EnTeteTatouage moteurMobile={false} />
+      <EnTeteTatouage />
       <PageFavoris photos={photos} suivis={suivis} />
     </>
   );

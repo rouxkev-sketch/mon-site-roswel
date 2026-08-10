@@ -205,11 +205,18 @@ export function MoteurTatouage({
   criteres,
   surChangement,
   id = "moteur-tatouage",
+  rangeeMobile = true,
 }: {
   criteres: CritèresTatouage;
   /** Appelé à CHAQUE changement : c'est ça, la recherche. */
   surChangement: (criteres: CritèresTatouage) => void;
   id?: string;
+  /** FAUX HORS ACCUEIL (nº 150-§3) : la rangée du smartphone — la
+      pilule et ses deux boutons — n'est pas rendue du tout ; seule la
+      LOUPE de la barre ouvre alors la recherche (le magasin
+      `recherche-mobile` est partagé, la page plein écran est un
+      portail : elle s'affiche d'où qu'on l'appelle). */
+  rangeeMobile?: boolean;
 }) {
   /**
    * L'ÉTAT DE LA PAGE DE RECHERCHE — LU HORS DE REACT, ET C'EST UNE
@@ -763,9 +770,13 @@ export function MoteurTatouage({
   function encadreChamps(identifiant: string) {
     return (
       <div
+        //  ⚠️ UN CRAN PLUS CLAIR (nº 150-§2) : à `eleve`, l'encadré se
+        //  confondait avec la page quand les cartes défilaient
+        //  derrière. `eleve-clair` au repos, et le focus grimpe à
+        //  `haut` — l'éclaircissement des niveaux, jamais un contour.
         className="flex items-stretch rounded-2xl
-                   bg-sombre-eleve overflow-visible
-                   focus-within:bg-sombre-eleve-clair
+                   bg-sombre-eleve-clair overflow-visible
+                   focus-within:bg-sombre-haut
                    transition-colors"
       >
         <div className="flex-1 min-w-0 basis-1/2">
@@ -846,11 +857,13 @@ export function MoteurTatouage({
             //  langue que le focus d'un champ — et l'icône reste
             //  blanche. Fermé, la robe par défaut, même avec des
             //  filtres actifs.
+            //  ⚠️ UN CRAN PLUS CLAIR (nº 150-§2), comme l'encadré :
+            //  `eleve-clair` au repos, `haut` ouvert.
             className={`relative shrink-0 w-[46px] h-[46px] rounded-full
                        flex items-center justify-center transition-colors ${
                          filtresOuverts
-                           ? "bg-sombre-eleve-clair text-sombre-texte"
-                           : "bg-sombre-eleve text-sombre-texte hover:bg-sombre-eleve-clair"
+                           ? "bg-sombre-haut text-sombre-texte"
+                           : "bg-sombre-eleve-clair text-sombre-texte hover:bg-sombre-haut"
                        }`}
           >
             <IconeReglages taille={20} />
@@ -871,10 +884,11 @@ export function MoteurTatouage({
               phototheque ? "Revenir aux cartes" : "Voir les images seules"
             }
             title={phototheque ? "Revenir aux cartes" : "Images seules"}
+            //  ⚠️ UN CRAN PLUS CLAIR (nº 150-§2), comme l'encadré.
             className="relative shrink-0 w-[46px] h-[46px] rounded-full
-                       bg-sombre-eleve text-sombre-texte
+                       bg-sombre-eleve-clair text-sombre-texte
                        flex items-center justify-center
-                       hover:bg-sombre-eleve-clair transition-colors"
+                       hover:bg-sombre-haut transition-colors"
           >
             {phototheque ? <IconeCartes taille={20} /> : <IconePhoto taille={20} />}
           </button>
@@ -900,7 +914,9 @@ export function MoteurTatouage({
           UNE SEULE LIGNE, pleine largeur : la loupe à gauche, puis
           « style · localité » — tronqué d'un seul tenant s'il déborde. */}
       {/* LA RANGÉE DE LA BARRE (vrais mobiles) : la pilule de
-          recherche, et à sa DROITE le bouton rond de DISPOSITION. */}
+          recherche, et à sa DROITE le bouton rond de DISPOSITION.
+          ⚠️ SUR L'ACCUEIL SEULEMENT (nº 150-§3, `rangeeMobile`). */}
+      {rangeeMobile && (
       <div className="hidden mobile:flex w-full items-center gap-2.5">
         {/* LA PILULE : la loupe, puis LE RÉSUMÉ DE LA RECHERCHE.
             TANT QUE RIEN N'EST CHERCHÉ, elle n'annonce pas « Partout »
@@ -1004,6 +1020,7 @@ export function MoteurTatouage({
           {phototheque ? <IconeCartes taille={20} /> : <IconePhoto taille={20} />}
         </button>
       </div>
+      )}
 
       {pageOuverte && (
         /*  LA BASCULE EST DE RETOUR (nº 141) : « Recherche » (style,

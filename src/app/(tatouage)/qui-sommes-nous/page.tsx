@@ -55,7 +55,7 @@ function Section({
 export default function PageQuiSommesNous() {
   return (
     <>
-      <EnTeteTatouage moteurMobile={false} />
+      <EnTeteTatouage />
 
       <main className="flex-1 mx-auto w-full max-w-[720px] px-5 sm:px-6 pt-12 sm:pt-16 pb-24">
         {/* L'ILLUSTRATION : le cœur du site, en grand. C'est le seul
