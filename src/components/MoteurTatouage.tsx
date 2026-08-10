@@ -961,18 +961,13 @@ export function MoteurTatouage({
             //  le titre « ARTISTE » est du TEXTE NU : sa boîte de ligne
             //  (18 px pour des capitales de ~9) pose ~5 px d'air
             //  invisible AU-DESSUS de l'encre — mesuré au DOM : 25 px
-            //  réels en haut pour 20 en bas, avec `p-5` partout.
-            //  ⚠️ ET LA MESURE SE FAIT AUX PIXELS (nº 165-§2, cinquième
-            //  demande) : on photographie le panneau À L'OUVERTURE et
-            //  l'on cherche la première et la dernière LIGNE D'ENCRE —
-            //  plus aucune approximation de hauteur de capitale. Avec
-            //  `pt-4`, ces deux distances valent 20 px et 20 px.
-            //  (Vérifié aussi APRÈS un clic sur un badge : identique —
-            //  le panneau n'a QU'UNE disposition, voir le compte rendu.)
+            //  réels en haut pour 20 en bas, avec `p-5` partout. Le
+            //  rembourrage haut descend donc à 15 px : l'encre du titre
+            //  est à 20 px du bord, comme la capsule du bas.
             <div
               className="absolute top-full right-0 z-30 mt-2
                          w-[min(420px,calc(100vw-32px))] rounded-2xl
-                         bg-sombre-eleve px-5 pb-5 pt-4"
+                         bg-sombre-eleve px-5 pb-5 pt-[15px]"
             >
               {blocFiltres(criteres, annoncer, true)}
             </div>
