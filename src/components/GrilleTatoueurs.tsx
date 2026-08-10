@@ -128,48 +128,38 @@ export function GrilleTatoueurs({
    * passent désormais par la même remise en place.
    */
   /**
-   * ⚠️ ET LA RECOMPOSITION SE FAIT EN FONDU (passe nº 159-§2).
-   * La sonde, chez le propriétaire, a montré que la barre n'avait
-   * JAMAIS bougé — même fond, même hauteur, rangée jamais repliée sur
-   * les 121 images du film. Ce qui saute, c'est LA PAGE :
+   * ⚠️ LA RECOMPOSITION SE JOUE SOUS VERROU (passe nº 162-§2), et non
+   * plus en fondu posé après coup (nº 159-§2).
    *
-   *     t=1    scrollY 490   docH 11874
-   *     t=42   scrollY  69   docH  3505      ← une seule image
+   * CE QUI NE MARCHAIT PAS. Le fondu s'appliquait ICI, dans cet effet
+   * — donc APRÈS que le magasin ait notifié et que React ait rendu.
+   * Entre le clic et cette ligne, le navigateur avait le droit de
+   * peindre : trois fois sur quatre il le faisait au mauvais moment, et
+   * on voyait la page s'effondrer (docH 11874 → 3505 en une image). Le
+   * fondu cachait le symptôme ; il n'empêchait pas la COURSE.
    *
-   * Passer d'une colonne à deux divise la hauteur du document par
-   * trois : toutes les cartes changent de taille et de place d'un
-   * coup. La position est pourtant JUSTE (la carte regardée revient
-   * sous la barre) — mais l'œil, lui, voit tout se réécrire, et lit
-   * cela comme une disparition.
+   * CE QUI SE PASSE MAINTENANT. Le bouton appelle `basculerSansSaut`
+   * (lib/bascule-verrouillee) : il pose le verrou À LA MAIN sur <html>
+   * — donc sans rendu, sans occasion de peindre — puis fait le
+   * changement en `flushSync`. React rend et joue CET effet DANS LA
+   * MÊME TÂCHE que le clic : la remise en place ci-dessous a lieu
+   * avant que le navigateur n'ait peint quoi que ce soit. Le verrou ne
+   * se lève qu'une fois la hauteur du document stabilisée.
    *
-   * On ne peut pas rendre une recomposition progressive : les cartes
-   * n'ont pas d'état intermédiaire entre une et deux colonnes. Ce
-   * qu'on peut faire, c'est NE PAS LA MONTRER. La mosaïque s'efface
-   * AVANT LA PEINTURE de la nouvelle disposition, puis revient en
-   * fondu une fois la page reposée. L'œil ne voit plus un saut mais
-   * une transition — et la barre, qui n'a jamais bougé, reste le
-   * repère fixe pendant tout le mouvement.
+   * CET EFFET RESTE LE FILET : une disposition qui changerait sans
+   * passer par les boutons (restauration du magasin, autre onglet)
+   * repose quand même la page sur sa carte.
    *
-   * ⚠️ JAMAIS AU PREMIER RENDU : une mosaïque qui apparaîtrait en
-   * fondu à chaque arrivée serait un défaut, pas une correction.
+   * ⚠️ JAMAIS AU PREMIER RENDU : une mosaïque qui bougerait à chaque
+   * arrivée serait un défaut, pas une correction.
    */
-  const [enBascule, setEnBascule] = useState(false);
   const premiereDisposition = useRef(true);
   useEffetAvantPeinture(() => {
     if (premiereDisposition.current) {
       premiereDisposition.current = false;
       return;
     }
-    //  1. On efface AVANT que la nouvelle disposition ne soit peinte.
-    setEnBascule(true);
-    //  2. On repose la page sur la carte qu'on regardait.
     reposerLaCarteDuHaut();
-    //  3. On rend la mosaïque à l'image suivante : la transition CSS
-    //     fait le reste (voir la classe du conteneur).
-    const rendre = requestAnimationFrame(() =>
-      requestAnimationFrame(() => setEnBascule(false))
-    );
-    return () => cancelAnimationFrame(rendre);
   }, [disposition, phototheque]);
 
   const [ficheOuverte, setFicheOuverte] = useState<Tatoueur | null>(null);
@@ -342,6 +332,10 @@ export function GrilleTatoueurs({
         // vertical VISUEL égal à l'horizontal. Sur smartphone, les
         // rangées reprennent l'interstice d'UNE ligne des colonnes
         // (2 px), en deux colonnes comme en pleine largeur.
+        //  ⚠️ LE REPÈRE DU VERROU (nº 162-§2) : c'est CETTE mosaïque que
+        //  le CSS efface pendant une bascule (globals.css). Un attribut,
+        //  pas une classe conditionnelle : le verrou se pose sans rendu.
+        data-mosaique=""
         className={`grid gap-4 sm:gap-5 mobile:-mx-4 transition-opacity ${
           phototheque
             ? disposition === "une"
@@ -351,14 +345,9 @@ export function GrilleTatoueurs({
               ? "mobile:gap-y-8"
               : "mobile:gap-x-[2px] mobile:gap-y-4"
         } ${
-          //  ⚠️ LE FONDU DE BASCULE (nº 159-§2) PASSE DEVANT TOUT : la
-          //  mosaïque est effacée le temps que la nouvelle disposition
-          //  soit peinte et la page reposée. `duration-0` à l'aller —
-          //  on ne montre PAS la disparition — et 200 ms au retour :
-          //  c'est le fondu qui remplace le saut.
-          enBascule
-            ? "opacity-0 duration-0"
-            : `duration-200 ${estompee ? "opacity-60" : "opacity-100"}`
+          //  L'ESTOMPE DE RECHERCHE — sans rapport avec le verrou de
+          //  bascule, qui vit en CSS (`html[data-bascule]`).
+          `duration-200 ${estompee ? "opacity-60" : "opacity-100"}`
         } grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6`}
       >
         {tatoueurs.map((tatoueur, rang) => (

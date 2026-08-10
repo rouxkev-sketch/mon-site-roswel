@@ -32,6 +32,17 @@ import { defilerSansGeste } from "@/lib/defilement-programme";
 /** Ce qu'on retient tient en un mot : l'identifiant de la carte. */
 let note: string | null = null;
 
+/**
+ * ⚠️ ET ON S'EN SOUVIENT APRÈS L'AVOIR CONSOMMÉE (passe nº 162-§2).
+ * La remise en place n'est plus un geste unique : tant que la page
+ * BOUGE ENCORE (images qui arrivent, mise en page tardive), le verrou
+ * de bascule la rejoue — c'est ce qui verrouille vraiment la position.
+ * `note` reste la note À CONSOMMER (une bascule, une remise en place
+ * automatique) ; `derniere` est la même carte, gardée le temps du
+ * verrou, et effacée par `oublierLaCarteDuHaut` à sa levée.
+ */
+let derniere: string | null = null;
+
 /** Le bas de la barre fixe, ou 0 si elle n'est pas là (web, pages
     sans barre). C'est notre ligne de repère. */
 export function repereDuHaut(): number {
@@ -56,6 +67,7 @@ export function noterLaCarteDuHaut() {
   // Tout en haut de la page (rien n'est encore passé sous la barre) :
   // il n'y a rien à rattraper, la bascule ne bougera pas la page.
   note = choisie && window.scrollY > 1 ? choisie : null;
+  derniere = note;
 }
 
 /**
@@ -66,6 +78,26 @@ export function noterLaCarteDuHaut() {
 export function reposerLaCarteDuHaut(): boolean {
   const visee = note;
   note = null;
+  return poserLaPageSurLaCarte(visee);
+}
+
+/**
+ * LA REMETTRE ENCORE, SANS CONSOMMER LA NOTE (passe nº 162-§2) — le
+ * verrou de bascule s'en sert à chaque fois que la hauteur du document
+ * bouge encore, jusqu'à ce qu'elle se taise.
+ */
+export function reposerEncoreLaCarteDuHaut(): boolean {
+  return poserLaPageSurLaCarte(derniere);
+}
+
+/** LA LEVÉE DU VERROU : on oublie la carte. Sans cela, une bascule
+    suivante pourrait reposer la page sur une carte d'avant. */
+export function oublierLaCarteDuHaut() {
+  note = null;
+  derniere = null;
+}
+
+function poserLaPageSurLaCarte(visee: string | null): boolean {
   if (!visee) return false;
   const carte = document.querySelector<HTMLElement>(
     `[data-carte="${CSS.escape(visee)}"]`

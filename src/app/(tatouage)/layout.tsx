@@ -41,7 +41,6 @@ import { scriptAvantPeinture } from "@/lib/script-avant-peinture";
 import { chargerStylesAjoutes } from "@/lib/styles-ajoutes";
 import { SondeClavier } from "@/components/SondeClavier";
 import { SondeNavigation } from "@/components/SondeNavigation";
-import { RemonteeChamps } from "@/components/RemonteeChamps";
 import { SondeRetour } from "@/components/SondeRetour";
 import { COMPTES_YOKOFOLIO } from "@/config/tatouage";
 import { utilisateurDepuisCookies } from "@/lib/session-cookie";
@@ -161,11 +160,13 @@ export default async function MiseEnPageTatouage({
         HORS de l'enveloppe `data-fond`, comme les autres sondes : la
         page de recherche la ferait disparaître au moment de lire. */}
     <SondeNavigation />
-    {/* TOUS LES CHAMPS DU SITE REMONTENT AU TOUCHER (nº 155-§1) — un
-        écouteur global, vrais mobiles seulement, défilement natif.
-        HORS de l'enveloppe `data-fond`, comme les sondes : la page de
-        recherche doit le garder actif quand le site quitte le flux. */}
-    <RemonteeChamps />
+    {/* ⚠️ L'ÉCOUTEUR GLOBAL DE REMONTÉE EST SUPPRIMÉ (nº 162-§1). La
+        règle de la nº 155-§1 — « TOUS les champs du site remontent » —
+        est annulée : la remontée ne sert qu'à dégager de la place SOUS
+        un champ POUR SA LISTE DE SUGGESTIONS. Un champ sans liste n'en
+        a aucun besoin, et le navigateur fait déjà le nécessaire, en
+        plus discret. Les trois champs à liste l'arment eux-mêmes
+        (ChampLocalisation, RechercheFicheInscrite). */}
     {/* ⚠️ TEMPORAIRE — LA SONDE DU RETOUR (`?sonde-retour=1`). Elle
         mesure le cache de navigation sur le vrai iPhone et ne corrige
         rien. Pour la retirer : cette ligne, son import, et le fichier

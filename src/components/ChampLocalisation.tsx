@@ -615,6 +615,13 @@ export function ChampLocalisation({
         onBlur={() => {
           if (interactionPanneau.current) return;
           setListeOuverte(false);
+          //  ⚠️ LA REMONTÉE EST RENDUE AU DÉPART (nº 162-§1). Sans
+          //  cela, un départ SANS clavier (clavier matériel, banc)
+          //  laissait l'espace de fin de document en place : personne
+          //  ne guettait plus rien. Sur un vrai mobile, le clavier qui
+          //  se ferme fait le même travail — le premier des deux gagne,
+          //  l'autre ne fait rien.
+          arreterLaRemontee();
           restaurerSiAbandon();
           if (viderSiAbandon && !lieuCourant.current) {
             setTexte("");

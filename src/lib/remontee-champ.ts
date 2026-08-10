@@ -1,10 +1,11 @@
 "use client";
 
 /**
- * LA REMONTÉE D'UN CHAMP AU TOUCHER — LA mécanique, pour TOUT le site
+ * LA REMONTÉE D'UN CHAMP À LISTE — LA mécanique, pour les trois qui en
+ * ont besoin
  * ====================================================================
  * (passe nº 155-§1 — extraite de ChampLocalisation, où la passe nº 21
- * l'avait posée, pour servir CHAQUE champ de saisie.)
+ * l'avait posée. ⚠️ RESTREINTE PAR LA Nº 162-§1, voir ci-dessous.)
  *
  * LA RÈGLE : sur smartphone, toucher un champ fait remonter la page
  * pour l'amener EN HAUT DE L'ÉCRAN — toute la place disponible passe
@@ -12,6 +13,26 @@
  * au-dessus. Sans cela, le navigateur pose le champ JUSTE au-dessus
  * des touches : assez pour saisir, insuffisant pour voir ce qu'on
  * fait.
+ *
+ * ⚠️ ET SEULS LES CHAMPS À LISTE Y ONT DROIT (passe nº 162-§1). La
+ * nº 155-§1 l'avait donnée à TOUS les champs du site, par un écouteur
+ * global : c'était inutile et brutal pour la plupart. À QUOI SERT LA
+ * REMONTÉE — à dégager de la place SOUS le champ, POUR SA LISTE DE
+ * SUGGESTIONS. Un champ sans liste n'en a aucun besoin : le navigateur
+ * fait déjà le nécessaire, il défile juste ce qu'il faut pour garder
+ * le champ visible au-dessus du clavier, et c'est discret.
+ * L'écouteur global est SUPPRIMÉ. Trois champs arment la mécanique
+ * eux-mêmes, et eux seuls :
+ *  · la LOCALITÉ du moteur de recherche (ChampLocalisation,
+ *    `remonterAuToucher`) ;
+ *  · l'ADRESSE et la LOCALITÉ du formulaire de portfolio (mêmes
+ *    composants, via DeuxZonesLieu et BlocStudios) ;
+ *  · la RECHERCHE d'un salon, d'un studio ou d'un artiste
+ *    (RechercheFicheInscrite) — modes d'activité et bloc Organisation.
+ * Tous les autres — nom d'artiste, bio, mots de passe, e-mail, liens
+ * et titres, message de contact, motif de signalement, champs de
+ * l'administration — n'ont AUCUN traitement particulier : ni remontée,
+ * ni espace ajouté en bas, ni marge conditionnelle.
  *
  * ⚠️ AUCUN CALCUL DE POSITION, ET C'EST LE POINT. Les approches qui
  * mesuraient (`getBoundingClientRect` − `visualViewport.offsetTop` −

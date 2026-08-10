@@ -24,7 +24,7 @@ import {
   IconeReglages,
   IconeUneColonne,
 } from "@/components/Icones";
-import { noterLaCarteDuHaut } from "@/lib/carte-du-haut";
+import { basculerSansSaut } from "@/lib/bascule-verrouillee";
 import {
   basculerDisposition,
   lireDisposition,
@@ -925,8 +925,11 @@ export function MoteurTatouage({
           <button
             type="button"
             onClick={() => {
-              noterLaCarteDuHaut();
-              basculerPhototheque();
+              //  ⚠️ SOUS VERROU (nº 162-§2) : la note de la carte, le
+              //  changement et la remise en place tiennent dans UNE
+              //  SEULE tâche — le navigateur ne peut rien peindre au
+              //  milieu (voir lib/bascule-verrouillee).
+              basculerSansSaut(basculerPhototheque);
             }}
             aria-pressed={phototheque}
             aria-label={
@@ -1020,10 +1023,12 @@ export function MoteurTatouage({
             // occupe presque tout l'écran : la même position de
             // défilement ne montre plus du tout le même tatoueur. On
             // retient donc la carte qu'on regarde, et la grille la
-            // remet sous les yeux une fois la nouvelle disposition
-            // peinte (voir src/lib/carte-du-haut.ts).
-            noterLaCarteDuHaut();
-            basculerDisposition();
+            // remet sous les yeux (voir src/lib/carte-du-haut.ts).
+            // ⚠️ ET LE TOUT SOUS VERROU (nº 162-§2) : note, changement
+            // et remise en place dans UNE SEULE tâche — aucune image
+            // intermédiaire ne peut être peinte, quelle que soit la
+            // charge du téléphone (voir lib/bascule-verrouillee).
+            basculerSansSaut(basculerDisposition);
           }}
           aria-label={
             disposition === "deux"
@@ -1051,11 +1056,11 @@ export function MoteurTatouage({
         <button
           type="button"
           onClick={() => {
-            //  Même précaution que la disposition : on retient la
-            //  carte du haut — masquer les textes change la hauteur
-            //  des rangées, la position seule ne suffirait pas.
-            noterLaCarteDuHaut();
-            basculerPhototheque();
+            //  Même précaution que la disposition, et le même verrou
+            //  (nº 162-§2) : masquer les textes change la hauteur des
+            //  rangées — moins que le format, mais la course est la
+            //  même, et elle se voit parfois.
+            basculerSansSaut(basculerPhototheque);
           }}
           aria-pressed={phototheque}
           aria-label={

@@ -178,23 +178,23 @@ html[data-recherche="ouverte"] [data-fond="sombre"] {
       Recherche / Filtres, elle, a le droit de sortir par le haut — on
       ne s'en sert pas pendant qu'on écrit une ville, et chaque pixel
       rendu à la liste compte. */
-/*  ⚠️ TOUS LES CHAMPS DÉSORMAIS (nº 155-§1), plus seulement la
-    localité : la remontée vaut pour chaque champ de saisie du site
-    (voir RemonteeChamps).
+/*  ⚠️ LES SEULS CHAMPS À LISTE (nº 162-§1), et plus « tous les champs
+    du site » (nº 155-§1, annulée). La remontée sert à dégager la place
+    SOUS le champ POUR SA LISTE DE SUGGESTIONS : un champ sans liste
+    n'en a aucun besoin — le navigateur le garde déjà visible au-dessus
+    du clavier, en plus discret. Ces marges ne visent donc plus QUE
+    `[data-remonte-au-toucher]`, l'attribut que portent les trois
+    champs à liste (localité du moteur, adresse/localité du portfolio,
+    recherche d'un salon / studio / artiste).
     ⚠️ 76 px, ET PLUS 92 (nº 157-§1) : les 92 gardaient l'étiquette du
     champ visible sous la barre — il restait « la place d'un second
     champ » au-dessus, perdue pour les suggestions et le clavier. La
     barre fixe fait ~60-64 px sur smartphone : 76 px posent le champ
     JUSTE SOUS ELLE, avec 12 px d'air esthétique — pas collé, pas
     davantage. Chaque pixel au-dessus est rendu au contenu. */
-input,
-textarea,
-select,
 [data-remonte-au-toucher] {
   scroll-margin-top: 76px;
 }
-[data-page-recherche] input,
-[data-page-recherche] textarea,
 [data-page-recherche] [data-remonte-au-toucher] {
   scroll-margin-top: calc(max(12px, env(safe-area-inset-top)) + 56px);
 }
@@ -222,14 +222,35 @@ select,
     ⚠️ RIEN D'AUTRE NE CHANGE : le défilement reste natif
     (`scrollIntoView`), et aucune position n'est calculée nulle part —
     seule la marge est conditionnelle. */
-html[data-clavier="ouvert"] input,
-html[data-clavier="ouvert"] textarea,
-html[data-clavier="ouvert"] select,
 html[data-clavier="ouvert"] [data-remonte-au-toucher],
-html[data-clavier="ouvert"] [data-page-recherche] input,
-html[data-clavier="ouvert"] [data-page-recherche] textarea,
 html[data-clavier="ouvert"] [data-page-recherche] [data-remonte-au-toucher] {
   scroll-margin-top: 12px;
+}
+
+/*  LE VERROU DE BASCULE (nº 162-§2) — RIEN N'EST PEINT PENDANT LA
+    RECOMPOSITION.
+    -------------------------------------------------------------------
+    Changer de format divise la hauteur du document par trois : toutes
+    les cartes changent de taille et de place d'un coup. La position
+    est pourtant juste — la carte regardée revient sous la barre — mais
+    si le navigateur PEINT entre deux étapes, on voit la page
+    s'effondrer. C'est une course, et elle se gagnait trois fois sur
+    quatre : d'où six passes de corrections « qui marchent ».
+
+    L'ATTRIBUT EST POSÉ À LA MAIN sur <html>, avant tout rendu (voir
+    lib/bascule-verrouillee) : la mosaïque est effacée AVANT que le
+    magasin ne notifie, et rendue seulement quand la hauteur du
+    document s'est tue. `duration-0` à l'aller — on ne montre pas la
+    disparition — et le retour reprend la transition de 200 ms portée
+    par la mosaïque elle-même.
+
+    ⚠️ PAS `visibility` ni `display` : les deux feraient perdre les
+    dimensions ou les recalculeraient, et c'est précisément la hauteur
+    qu'on veut laisser se stabiliser. L'opacité ne change RIEN à la
+    mise en page. */
+html[data-bascule] [data-mosaique] {
+  opacity: 0;
+  transition-duration: 0s;
 }
 
 /* Le fond de page reste BLANC PARTOUT (accueil, fiche, contact, etc.).

@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { IconeCroix, IconeLoupe } from "@/components/Icones";
 import { sansRemplissageAuto } from "@/lib/champs-sans-remplissage";
 import { ligneCarte } from "@/lib/adresse";
+import { useAppareilMobile } from "@/lib/appareil";
+import { armerLaRemontee } from "@/lib/remontee-champ";
 
 /**
  * LA RECHERCHE INTERNE — « ton salon est-il déjà sur yokofolio ? »
@@ -107,6 +109,24 @@ export function RechercheFicheInscrite({
   /** LA ZONE « champ + panneau » — elle sert à savoir ce qui est
       DEDANS quand on clique DEHORS (passe nº 121). */
   const zone = useRef<HTMLDivElement>(null);
+
+  /**
+   * LA REMONTÉE AU TOUCHER — ce champ y a droit (passe nº 162-§1)
+   * =============================================================
+   * ⚠️ IL LA TENAIT DE L'ÉCOUTEUR GLOBAL, QUI N'EXISTE PLUS. La
+   * nº 155-§1 faisait remonter TOUS les champs du site ; la nº 162-§1
+   * annule cette règle — brutale et inutile pour un champ sans liste.
+   * Mais celui-ci EN A UNE : « ton salon est-il déjà sur yokofolio ? »
+   * ouvre un panneau de résultats DANS LE FLUX, juste dessous. Sans
+   * remontée, ce panneau naît coincé entre le champ et le clavier.
+   * Il arme donc la mécanique lui-même, comme le champ de localité.
+   *
+   * C1 — L'APPAREIL, JAMAIS LA LARGEUR : à la souris, aucun clavier ne
+   * recouvre rien, et faire défiler au clic serait une gêne.
+   */
+  const surMobile = useAppareilMobile();
+  const arret = useRef<(() => void) | null>(null);
+  useEffect(() => () => arret.current?.(), []);
 
   /* ---------- CLIQUER À CÔTÉ REFERME (passe nº 121) ----------
      Le panneau de résultats restait ouvert indéfiniment : ni le clic
@@ -270,9 +290,20 @@ export function RechercheFicheInscrite({
           {...sansRemplissageAuto(id)}
           value={texte}
           placeholder={texteIndicatif}
+          //  L'attribut qui porte la marge de remontée (globals.css) —
+          //  posé seulement quand la remontée a lieu.
+          data-remonte-au-toucher={surMobile ? "" : undefined}
           onChange={(evenement) => setTexte(evenement.target.value)}
-          onFocus={() => {
+          onFocus={(evenement) => {
             if (resultats.length > 0) setOuverte(true);
+            //  LA PLACE POUR LA LISTE (nº 162-§1) — voir plus haut.
+            if (!surMobile) return;
+            arret.current?.();
+            arret.current = armerLaRemontee(evenement.currentTarget);
+          }}
+          onBlur={() => {
+            arret.current?.();
+            arret.current = null;
           }}
           //  ⚠️ PLUS DE CONTOUR NI D'ANNEAU AU FOCUS (passe nº 116) —
           //  ce champ avait échappé à la règle de la nº 112 : le fond
