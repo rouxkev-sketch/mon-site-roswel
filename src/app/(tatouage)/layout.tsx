@@ -40,6 +40,7 @@ import { RetourGaranti } from "@/components/RetourGaranti";
 import { scriptAvantPeinture } from "@/lib/script-avant-peinture";
 import { chargerStylesAjoutes } from "@/lib/styles-ajoutes";
 import { SondeClavier } from "@/components/SondeClavier";
+import { RemonteeChamps } from "@/components/RemonteeChamps";
 import { SondeRetour } from "@/components/SondeRetour";
 import { COMPTES_YOKOFOLIO } from "@/config/tatouage";
 import { utilisateurDepuisCookies } from "@/lib/session-cookie";
@@ -151,6 +152,11 @@ export default async function MiseEnPageTatouage({
         le flux (voir globals.css) — la sonde y aurait disparu au
         moment précis où l'on veut la lire. */}
     <SondeClavier />
+    {/* TOUS LES CHAMPS DU SITE REMONTENT AU TOUCHER (nº 155-§1) — un
+        écouteur global, vrais mobiles seulement, défilement natif.
+        HORS de l'enveloppe `data-fond`, comme les sondes : la page de
+        recherche doit le garder actif quand le site quitte le flux. */}
+    <RemonteeChamps />
     {/* ⚠️ TEMPORAIRE — LA SONDE DU RETOUR (`?sonde-retour=1`). Elle
         mesure le cache de navigation sur le vrai iPhone et ne corrige
         rien. Pour la retirer : cette ligne, son import, et le fichier

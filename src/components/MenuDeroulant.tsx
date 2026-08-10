@@ -412,7 +412,13 @@ export function MenuDeroulant({
         className={`${classes} flex w-full items-center justify-between gap-2 text-left`}
       >
         {sousEntete}
-        {chevron(sousGroupeDeplie === sousEntete)}
+        {/*  ⚠️ LA FLÈCHE DE LA PORTE EST ROSE (nº 155-§5B), pointée en
+             bas comme en haut — c'est elle, et elle seule, qui dit
+             « ceci s'ouvre au lieu de se choisir ». LE TITRE, LUI,
+             RESTE BLANC : il est un style parmi les styles. */}
+        <span className="text-primaire">
+          {chevron(sousGroupeDeplie === sousEntete)}
+        </span>
       </button>
     );
   }

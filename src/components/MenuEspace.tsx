@@ -13,7 +13,6 @@ import {
   IconeReglages,
   IconeSilhouette,
   IconeSortie,
-  IconeTrianglePlein,
   IconeUtilisateur,
 } from "@/components/Icones";
 import { SelecteurLangue } from "@/components/SelecteurLangue";
@@ -622,12 +621,14 @@ export function MenuEspace({
       </button>
 
       {/* ÉCRAN LARGE (nº 147-§4) : LA CAPSULE « Mon espace » A
-          DISPARU. Restent l'ICÔNE DU COMPTE — la silhouette, ROSE
-          parce que connecté (charte) — et à sa droite un TRIANGLE
-          PLEIN : pointe en BAS fermé, retourné vers le HAUT ouvert.
-          Le nom du compte reste dit aux lecteurs d'écran et en
-          info-bulle. Le survol éclaircit le fond, comme les autres
-          boutons de la barre — jamais une capsule permanente. */}
+          DISPARU. Reste l'ICÔNE DU COMPTE seule — la silhouette, ROSE
+          parce que connecté (charte).
+          ⚠️ LE TRIANGLE QUI DISAIT « ouvert / fermé » EST SUPPRIMÉ
+          (nº 155-§5A), à la demande du propriétaire : l'état reste dit
+          aux lecteurs d'écran (`aria-expanded`), l'œil, lui, voit la
+          fenêtre — l'indicateur ne disait rien de plus. Le nom du
+          compte reste en info-bulle. Même gabarit rond que le globe et
+          le fanion : la barre s'aligne. */}
       <button
         type="button"
         onClick={basculerLeMenu}
@@ -635,19 +636,13 @@ export function MenuEspace({
         aria-expanded={ouvert}
         aria-label={`Mon espace — ${nom}`}
         title={`Mon espace — ${nom}`}
-        style={{ height: hauteur }}
-        className="hidden sm:flex items-center gap-1.5 rounded-full px-2.5
+        style={{ height: hauteur, width: hauteur }}
+        className="hidden sm:flex items-center justify-center rounded-full
                    text-primaire transition-colors hover:bg-sombre-eleve
                    focus-visible:outline-2 focus-visible:outline-offset-2
                    focus-visible:outline-primaire"
       >
         <IconeSilhouette taille={24} classe="shrink-0" />
-        <IconeTrianglePlein
-          taille={14}
-          classe={`shrink-0 text-sombre-texte-doux transition-transform ${
-            ouvert ? "rotate-180" : ""
-          }`}
-        />
       </button>
 
       {/* LE CONTENU DU MENU — écrit UNE FOIS, posé dans les deux

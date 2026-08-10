@@ -178,9 +178,20 @@ html[data-recherche="ouverte"] [data-fond="sombre"] {
       Recherche / Filtres, elle, a le droit de sortir par le haut — on
       ne s'en sert pas pendant qu'on écrit une ville, et chaque pixel
       rendu à la liste compte. */
+/*  ⚠️ TOUS LES CHAMPS DÉSORMAIS (nº 155-§1), plus seulement la
+    localité : la remontée vaut pour chaque champ de saisie du site
+    (voir RemonteeChamps). La marge est la même pour tous — la barre
+    fixe (~64 px) plus l'air esthétique demandé : le champ remonte en
+    haut SANS être collé au bord de l'écran, et son étiquette reste
+    visible au-dessus de lui. */
+input,
+textarea,
+select,
 [data-remonte-au-toucher] {
   scroll-margin-top: 92px;
 }
+[data-page-recherche] input,
+[data-page-recherche] textarea,
 [data-page-recherche] [data-remonte-au-toucher] {
   scroll-margin-top: calc(max(12px, env(safe-area-inset-top)) + 56px);
 }

@@ -18,7 +18,6 @@ import { MenuDeroulant } from "@/components/MenuDeroulant";
 import { PageRechercheMobile } from "@/components/PageRechercheMobile";
 import {
   IconeCartes,
-  IconeCocheListe,
   IconeDeuxColonnes,
   IconeLoupe,
   IconePhoto,
@@ -544,30 +543,33 @@ export function MoteurTatouage({
                 type="button"
                 aria-pressed={choisi}
                 onClick={() => basculerBadge(groupe, option.slug, valeurs, poser)}
-                //  ⚠️ 44 px DE ZONE TACTILE (nº 149-§6) : les 36 px
-                //  d'avant passaient sous le minimum tactile — la
-                //  liste unique a la place, les capsules la prennent.
-                //  ⚠️ LA LARGEUR NE BOUGE JAMAIS (nº 153-§1). La coche
-                //  vivait DANS le flux du badge : sélectionné, il
-                //  s'élargissait de vingt pixels. Or TOUT est
-                //  sélectionné à l'ouverture — chaque rangée pliait
-                //  plus tôt, la liste s'allongeait, « Effacer /
-                //  Valider » passait sous le bord de l'écran… et le
-                //  premier clic, en retirant une coche, « contractait »
-                //  la page. La coche est désormais DESSINÉE DANS LE
-                //  REMBOURRAGE (`absolute`, hors flux) : le badge a la
-                //  même largeur coché ou non, et la mise en page est
-                //  JUSTE DÈS L'OUVERTURE — plus rien ne bouge au clic.
+                //  ⚠️ LA CAPSULE DESCEND À 38 px (nº 155-§2A) : les
+                //  44 px de la nº 149 faisaient des blocs empilés, pas
+                //  des capsules. LA ZONE TACTILE, ELLE, RESTE À 44 :
+                //  un ourlet invisible de 3 px déborde en haut et en
+                //  bas (`before:`) — le doigt a sa place, l'œil a la
+                //  sienne.
+                //  ⚠️ LA LARGEUR NE BOUGE JAMAIS (nº 153-§1) : l'espace
+                //  du POINT est réservé EN PERMANENCE, coché ou non —
+                //  la mise en page est juste dès l'ouverture, rien ne
+                //  bouge au clic.
+                //  ⚠️ LE POINT, ET PLUS LA COCHE (nº 155-§2B) : sortie
+                //  du flux, la coche se posait sur le mot. Le point a
+                //  SON espace (22 px de rembourrage gauche, il vit à
+                //  10 px), le texte le sien — ils ne se touchent pas.
                 className={`relative inline-flex items-center justify-center
-                           rounded-full px-5 min-h-[44px] text-[13.5px]
-                           font-semibold transition-colors ${
+                           rounded-full pl-[22px] pr-4 min-h-[38px] text-[13.5px]
+                           font-semibold transition-colors
+                           before:absolute before:-inset-y-[3px] before:inset-x-0
+                           before:content-[''] ${
                              choisi ? robeChoisie : robeRetiree
                            }`}
               >
                 {choisi && (
-                  <IconeCocheListe
-                    taille={12}
-                    classe="absolute left-1.5 top-1/2 -translate-y-1/2 text-primaire"
+                  <span
+                    aria-hidden="true"
+                    className="absolute left-[10px] top-1/2 h-1.5 w-1.5
+                               -translate-y-1/2 rounded-full bg-primaire"
                   />
                 )}
                 {option.label}
@@ -606,7 +608,11 @@ export function MoteurTatouage({
         les groupes respirent un peu plus. */
     surPanneau = false
   ) => (
-    <div className={`flex flex-col ${surPanneau ? "gap-7" : "gap-6"}`}>
+    //  ⚠️ 20 px ENTRE LES GROUPES, PARTOUT (nº 155-§3 et §4A) : les
+    //  24 (mobile) et 28 (panneau web) faisaient des titres qui
+    //  flottaient loin de leurs badges, et une liste trop longue pour
+    //  le petit viewport d'un iPhone (barre d'outils dépliée).
+    <div className="flex flex-col gap-5">
       {groupeDeBadges(parGroupe.get("mode")!, "Artiste", valeurs, poser, surPanneau)}
       {groupeDeBadges(parGroupe.get("type")!, "Lieu", valeurs, poser, surPanneau)}
       {groupeDeBadges(

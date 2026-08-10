@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { stylePanneau, usePlacementMenu } from "@/components/placement-menu";
+import { armerLaRemontee } from "@/lib/remontee-champ";
 import { IconeCroix } from "@/components/Icones";
 import { sansRemplissageAuto } from "@/lib/champs-sans-remplissage";
 import {
@@ -61,22 +62,6 @@ import { ligneFiche, ligneMoteur } from "@/lib/adresse";
  * le comportement a toujours été juste. Le mode « dans le flux » ne
  * sert plus qu'au FORMULAIRE, où aucune fenêtre n'est en jeu.
  */
-
-/**
- * LE CALME APRÈS LE DERNIER REDIMENSIONNEMENT (ms).
- * Le clavier ne s'ouvre pas d'un coup : il pousse une SÉRIE de
- * redimensionnements pendant son animation. On ne remonte qu'une fois
- * qu'ils se sont tus — sinon on défilerait dix fois, ou trop tôt, vers
- * une page qui n'a pas encore la hauteur nécessaire.
- */
-const CALME_CLAVIER_MS = 120;
-
-/**
- * LE FILET, si AUCUN redimensionnement n'arrive : clavier physique,
- * navigateur de bureau, appareil qui n'annonce rien. On remonte quand
- * même, et la page reste utilisable partout.
- */
-const FILET_CLAVIER_MS = 450;
 
 /**
  * CE QUE LE CHAMP AFFICHE POUR UN LIEU CHOISI (passe nº 114).
@@ -445,29 +430,14 @@ export function ChampLocalisation({
     arreterLaRemontee();
     const cible = champ.current;
     if (!cible) return;
-
-    let minuteur = 0;
-    const remonter = () => {
-      arreterLaRemontee();
-      // LE DÉFILEMENT NATIF, ET LUI SEUL. La marge au-dessus vient de
-      // `scroll-margin-top` (CSS), jamais d'un calcul d'ici.
-      cible.scrollIntoView({ block: "start", behavior: "smooth" });
-    };
-    const auRedimensionnement = () => {
-      window.clearTimeout(minuteur);
-      minuteur = window.setTimeout(remonter, CALME_CLAVIER_MS);
-    };
-
-    const visuel = window.visualViewport;
-    visuel?.addEventListener("resize", auRedimensionnement);
-    window.addEventListener("resize", auRedimensionnement);
-    minuteur = window.setTimeout(remonter, FILET_CLAVIER_MS);
-
+    //  ⚠️ LA MÉCANIQUE A DÉMÉNAGÉ (nº 155-§1) : elle vit dans
+    //  lib/remontee-champ, où TOUS les champs du site la partagent
+    //  (voir RemonteeChamps). Rien d'autre n'a changé — mêmes
+    //  écouteurs, mêmes délais, même défilement natif.
+    const desarmer = armerLaRemontee(cible);
     arret.current = () => {
       arret.current = null;
-      window.clearTimeout(minuteur);
-      visuel?.removeEventListener("resize", auRedimensionnement);
-      window.removeEventListener("resize", auRedimensionnement);
+      desarmer();
     };
   }
 
