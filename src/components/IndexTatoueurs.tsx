@@ -462,14 +462,25 @@ export function IndexTatoueurs({
           </p>
         )}
 
-        {visibles.length === 0 ? (
+        {visibles.length === 0 && (
           <p className="text-sombre-texte-doux py-10">
             Aucun tatoueur ne correspond à cette recherche. Élargir le rayon, ou
             effacer le lieu pour chercher partout.
           </p>
-        ) : (
+        )}
+        {
           // La grille porte aussi la FENÊTRE de fiche (grand écran).
+          //  ⚠️ ELLE N'EST JAMAIS DÉMONTÉE, ET C'EST LE POINT (nº 171) :
+          //  elle vivait dans la branche d'un ternaire — un instant où
+          //  la liste passe par le vide, et React la DÉTRUIT puis la
+          //  reconstruit, images comprises. Vu de l'écran : tout le
+          //  contenu disparaît, puis revient d'un coup. Le message du
+          //  vide s'affiche désormais À CÔTÉ, sans rien démonter.
+          //  ⚠️ ET SA CLÉ EST STABLE ET EXPLICITE : la disposition
+          //  change PAR LES STYLES, jamais par un remontage — une clé
+          //  qui bougerait suffirait à recréer toute la mosaïque.
           <GrilleTatoueurs
+            key="mosaique"
             tatoueurs={visibles}
             styleRecherche={affiches.style}
             // LE RENDU vient des interrupteurs : il n'y a recherche par
@@ -477,7 +488,7 @@ export function IndexTatoueurs({
             renduRecherche={renduCherche(affiches.exclure)}
             estompee={enCours}
           />
-        )}
+        }
 
         {resteAVoir && (
           <div className="mt-10 flex flex-col items-center gap-2">

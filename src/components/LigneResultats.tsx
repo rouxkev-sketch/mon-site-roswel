@@ -35,7 +35,9 @@ export function LigneResultats({
   sousTitre: string | null;
 }) {
   return (
-    <div className="pt-6 pb-5 sm:pt-8 sm:pb-6">
+    //  ⚠️ NOMMÉ (nº 171) : la garantie de globals.css vise ce titre
+    //  pour qu'aucune bascule ne puisse l'effacer.
+    <div data-titre-mosaique="" className="pt-6 pb-5 sm:pt-8 sm:pb-6">
       <h1 className="text-[clamp(1.25rem,2.4vw,1.65rem)] font-bold leading-tight text-sombre-texte">
         {titre}
       </h1>

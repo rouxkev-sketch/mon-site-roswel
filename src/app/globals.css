@@ -188,6 +188,25 @@ html:has([data-fond="sombre"]) {
   }
 }
 
+/*  RIEN NE PEUT EFFACER AUTRE CHOSE QUE LA MOSAÏQUE (nº 171)
+    -------------------------------------------------------------------
+    Au clic sur un bouton d'affichage, le propriétaire voyait TOUT le
+    contenu disparaître une fraction de seconde — barre et titre
+    compris — puis revenir d'un coup, une fois sur deux.
+
+    LA GARANTIE EST POSÉE ICI, ET ELLE EST STRUCTURELLE : la BARRE
+    FIXE et le TITRE de la mosaïque sont déclarés PLEINEMENT VISIBLES,
+    quoi qu'il arrive. Aucun voile de bascule, présent ou futur, ne
+    peut plus les couvrir : si l'on efface quelque chose pendant une
+    recomposition, ce sera la mosaïque, et elle seule.
+    (Le voile de la nº 162 avait été supprimé à la nº 166 — cette règle
+    fait qu'il ne peut pas revenir par mégarde, ni depuis un parent.) */
+[data-barre-fixe],
+[data-titre-mosaique] {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
 /* LA PAGE DE RECHERCHE (smartphone) EST UNE VRAIE PAGE — ET C'EST
    CETTE RÈGLE QUI LE REND VRAI.
    -------------------------------------------------------------------
