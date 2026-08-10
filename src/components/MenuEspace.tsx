@@ -11,7 +11,9 @@ import {
   IconeFanion,
   IconePlus,
   IconeReglages,
+  IconeSilhouette,
   IconeSortie,
+  IconeTrianglePlein,
   IconeUtilisateur,
 } from "@/components/Icones";
 import { SelecteurLangue } from "@/components/SelecteurLangue";
@@ -614,25 +616,38 @@ export function MenuEspace({
                    focus-visible:outline-2 focus-visible:outline-offset-2
                    focus-visible:outline-primaire"
       >
-        <IconeUtilisateur taille={22} />
+        {/*  LA SILHOUETTE SEULE, rang 24 (nº 147-§5 et §6) — ROSE :
+             c'est l'état connecté, le rose le dit (charte). */}
+        <IconeSilhouette taille={24} />
       </button>
 
-      {/* ÉCRAN LARGE : le bouton rose « Mon espace ». */}
+      {/* ÉCRAN LARGE (nº 147-§4) : LA CAPSULE « Mon espace » A
+          DISPARU. Restent l'ICÔNE DU COMPTE — la silhouette, ROSE
+          parce que connecté (charte) — et à sa droite un TRIANGLE
+          PLEIN : pointe en BAS fermé, retourné vers le HAUT ouvert.
+          Le nom du compte reste dit aux lecteurs d'écran et en
+          info-bulle. Le survol éclaircit le fond, comme les autres
+          boutons de la barre — jamais une capsule permanente. */}
       <button
         type="button"
         onClick={basculerLeMenu}
         aria-haspopup="dialog"
         aria-expanded={ouvert}
         aria-label={`Mon espace — ${nom}`}
+        title={`Mon espace — ${nom}`}
         style={{ height: hauteur }}
-        className="hidden sm:flex rounded-full px-5 items-center gap-2
-                   bg-primaire hover:bg-primaire-fonce text-white
-                   text-sm font-semibold transition-colors whitespace-nowrap
+        className="hidden sm:flex items-center gap-1.5 rounded-full px-2.5
+                   text-primaire transition-colors hover:bg-sombre-eleve
                    focus-visible:outline-2 focus-visible:outline-offset-2
                    focus-visible:outline-primaire"
       >
-        <span className="max-w-[180px] truncate">Mon espace</span>
-        <IconeUtilisateur taille={18} classe="shrink-0 text-white" />
+        <IconeSilhouette taille={24} classe="shrink-0" />
+        <IconeTrianglePlein
+          taille={14}
+          classe={`shrink-0 text-sombre-texte-doux transition-transform ${
+            ouvert ? "rotate-180" : ""
+          }`}
+        />
       </button>
 
       {/* LE CONTENU DU MENU — écrit UNE FOIS, posé dans les deux

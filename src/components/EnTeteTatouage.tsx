@@ -1,11 +1,17 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { lieuVersParametres } from "@/lib/geocodage";
 import { MARQUE_YOKOFOLIO, TEXTES_TATOUAGE } from "@/config/tatouage";
-import { IconeFanion, IconeUtilisateur } from "@/components/Icones";
+import { IconeFanion, IconeSilhouette } from "@/components/Icones";
 import { LogoYokofolio } from "@/components/LogoYokofolio";
 import { MenuEspace } from "@/components/MenuEspace";
 import { SelecteurLangue } from "@/components/SelecteurLangue";
@@ -62,6 +68,10 @@ import {
 
 /** Hauteur du globe et du bouton de compte : ils s'alignent au pixel. */
 const HAUTEUR_ACTIONS = 40;
+
+/** useLayoutEffect côté navigateur, useEffect côté serveur (silencieux) */
+const useEffetAvantPeinture =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 export function EnTeteTatouage({
   criteres,
@@ -139,12 +149,81 @@ export function EnTeteTatouage({
       disparu. À sa place, la règle de la charte — les niveaux se
       distinguent par leur CLARTÉ : en haut de page la barre est
       TRANSPARENTE (elle appartient à la page) ; dès que du contenu
-      passe dessous, son fond s'éclaircit d'un cran et se floute, et
-      c'est cette nuance qui la détache. Le seuil de 8 px évite le
-      clignotement sur les micro-défilements élastiques. */
+      passe dessous, son fond s'éclaircit d'un cran, et c'est cette
+      nuance qui la détache. Le seuil de 8 px évite le clignotement sur
+      les micro-défilements élastiques. */
   const [posee, setPosee] = useState(false);
+  /** LA LIGNE DE RECHERCHE SE RÉTRACTE (passe nº 147-§7, smartphone).
+      En DESCENDANT dans les cartes, la rangée du moteur se replie et
+      libère sa hauteur ; elle REVIENT AU PREMIER GESTE vers le haut —
+      immédiatement, sans attendre le haut de page : c'est ce qui
+      distingue une barre rétractable réussie d'une barre pénible.
+      Près du haut (moins de 64 px), elle est toujours dépliée. Le
+      seuil de 4 px par lecture ignore l'élastique du défilement.
+      ⚠️ LA RANGÉE DU LOGO NE BOUGE JAMAIS : sans lui, plus de repère. */
+  const [moteurReplie, setMoteurReplie] = useState(false);
+  /** LE CENTRAGE DE LA BARRE (passe nº 147-§3). Le bloc central était
+      centré dans L'ESPACE RESTANT : le logo étant plus large que les
+      actions, il dérivait vers la droite — et en resserrant la
+      fenêtre, l'encadré finissait collé au logo avec du vide à
+      droite. On mesure la largeur NATURELLE des deux flancs (le lien
+      du logo, le contenu de la nav) et chacun réserve LA PLUS LARGE
+      des deux : rien ne pousse plus le milieu. ResizeObserver : le
+      contenu de droite change avec la session (globe ↔ fanion,
+      libellés), le logo avec les points de rupture. */
+  const contenuGauche = useRef<HTMLAnchorElement>(null);
+  const contenuDroit = useRef<HTMLDivElement>(null);
+  const [cote, setCote] = useState(0);
+  useEffetAvantPeinture(() => {
+    const mesurer = () => {
+      const g = contenuGauche.current?.getBoundingClientRect().width ?? 0;
+      const d = contenuDroit.current?.getBoundingClientRect().width ?? 0;
+      setCote(Math.ceil(Math.max(g, d)));
+    };
+    mesurer();
+    const observateur = new ResizeObserver(mesurer);
+    if (contenuGauche.current) observateur.observe(contenuGauche.current);
+    if (contenuDroit.current) observateur.observe(contenuDroit.current);
+    return () => observateur.disconnect();
+  }, []);
   useEffect(() => {
-    const lire = () => setPosee(window.scrollY > 8);
+    let yPrecedent = window.scrollY;
+    //  ⚠️ LES FAUX GESTES DU NAVIGATEUR, ET LE GEL QUI LES NEUTRALISE.
+    //  Replier ou déplier la rangée change la hauteur du document, et
+    //  le navigateur réagit par SES PROPRES défilements : le re-bornage
+    //  du bas de page (delta négatif après un repli) et l'ancrage de
+    //  défilement (deltas positifs pendant un dépliement). Lus comme
+    //  des gestes, ils inversaient l'état à peine posé — la barre
+    //  OSCILLAIT. Après chaque bascule, un GEL de 400 ms (la
+    //  transition dure 300 ms) interdit donc aux deltas de la
+    //  contredire ; un vrai geste, lui, continue au-delà du gel et
+    //  garde le dernier mot.
+    let replieCourant = false;
+    let gelJusqua = 0;
+    const basculer = (valeur: boolean) => {
+      if (replieCourant === valeur) return;
+      replieCourant = valeur;
+      gelJusqua = performance.now() + 400;
+      setMoteurReplie(valeur);
+    };
+    const lire = () => {
+      const y = window.scrollY;
+      const delta = y - yPrecedent;
+      yPrecedent = y;
+      setPosee(y > 8);
+      //  Près du haut : toujours dépliée, gel ou pas.
+      if (y < 64) {
+        basculer(false);
+        return;
+      }
+      if (performance.now() < gelJusqua) return;
+      const yMax =
+        document.documentElement.scrollHeight - window.innerHeight;
+      if (delta > 4) basculer(true);
+      //  Collé au bas de page, un delta négatif peut encore être un
+      //  re-bornage tardif : il ne compte que plus haut.
+      else if (delta < -4 && y < yMax - 2) basculer(false);
+    };
     lire();
     window.addEventListener("scroll", lire, { passive: true });
     return () => window.removeEventListener("scroll", lire);
@@ -156,34 +235,46 @@ export function EnTeteTatouage({
       // remettre sous les yeux la même carte après un changement de
       // disposition (voir src/lib/carte-du-haut.ts).
       data-barre-fixe=""
-      //  ⚠️ /95, PAS MOINS (nº 146-§1) : à 90 % le contenu transparaissait
-      //  derrière la barre. On reprend la densité de la barre d'avant la
-      //  refonte (95 %), le flou continue d'asseoir la séparation — et
-      //  toujours AUCUN trait : c'est un acquis.
+      //  ⚠️ OPAQUE, TOUT À FAIT (nº 147-§2, troisième signalement) : à
+      //  90 puis 95 %, le contenu transparaissait encore derrière la
+      //  barre. Le fond posé est désormais PLEIN — plus rien ne passe,
+      //  et le flou d'arrière-plan n'a plus rien à flouter : retiré.
+      //  Toujours AUCUN trait : c'est un acquis.
       className={`sticky top-0 z-50 transition-colors duration-200 ${
-        posee
-          ? "bg-sombre-carte/95 backdrop-blur"
-          : "bg-transparent"
+        posee ? "bg-sombre-carte" : "bg-transparent"
       }`}
+      //  LA MÊME LARGEUR RÉSERVÉE DES DEUX CÔTÉS (nº 147-§3) : mesurée
+      //  au navigateur (le contenu naturel du logo et celui des
+      //  actions), la plus large des deux est posée ici en variable —
+      //  les deux flancs la liront comme largeur minimale, et le bloc
+      //  central reste ANCRÉ AU CENTRE DE LA PAGE à toutes les
+      //  largeurs, au lieu de dériver vers le flanc le plus étroit.
+      style={
+        cote > 0
+          ? ({ "--cote-barre": `${cote}px` } as React.CSSProperties)
+          : undefined
+      }
     >
       <div
+        //  ⚠️ PLUS DE gap-y (nº 147-§7) : l'espace au-dessus de la
+        //  rangée du moteur vit DANS la rangée (`pt-3` de son
+        //  enveloppe), pour disparaître AVEC elle quand elle se
+        //  replie — un gap de grille, lui, serait resté.
         className="mx-auto w-full max-w-[1760px] px-4 sm:px-6
-                   flex flex-wrap lg:flex-nowrap items-center gap-x-5 gap-y-3 py-3"
+                   flex flex-wrap lg:flex-nowrap items-center gap-x-5 py-3"
       >
-        {/* LOGO ET ACTIONS PRENNENT LA MÊME PLACE (`lg:flex-1` des deux
-            côtés) : c'est ce qui met le moteur EXACTEMENT au milieu de
-            la barre, quelle que soit la longueur du bouton.
-            ⚠️ `lg:min-w-fit` DES DEUX CÔTÉS (nº 146-§2) — et c'est lui
-            qui décide QUI CÈDE quand la place manque. Sans lui, les
-            côtés (base 0) tombaient sous la taille de leur contenu :
-            l'espace restant après les 680 px du moteur se partageait,
-            et c'est LE LOGO (max-width 100 %) qui se comprimait pendant
-            que l'encadré gardait toute sa largeur. Avec lui, chaque
-            côté réclame AU MOINS son contenu — le seul élément
-            compressible de la barre est le moteur (`lg:shrink` +
-            `min-w-0`) : c'est donc l'encadré qui se réduit en premier,
-            et le logo garde sa taille. */}
-        <div className="shrink-0 order-1 lg:flex-1 lg:min-w-fit">
+        {/* LOGO ET ACTIONS PRENNENT LA MÊME PLACE : c'est ce qui met
+            le moteur au milieu de la barre.
+            ⚠️ LA MÊME LARGEUR MINIMALE DES DEUX CÔTÉS (nº 147-§3) —
+            `var(--cote-barre)`, la plus large des deux mesures, posée
+            sur le header. Centré dans l'espace restant, le bloc
+            central DÉRIVAIT vers le flanc le plus étroit ; ancré entre
+            deux réserves égales, il reste au CENTRE DE LA PAGE et se
+            rétracte symétriquement. Avant la première mesure, repli
+            sur `fit-content` (la règle de la nº 146-§2 : chaque côté
+            réclame au moins son contenu, seul le moteur — `lg:shrink`
+            + `min-w-0` — peut céder, le logo jamais). */}
+        <div className="shrink-0 order-1 lg:flex-1 lg:min-w-[var(--cote-barre,fit-content)]">
           {/* LE LOGO RAMÈNE À L'ACCUEIL — un lien NATIF, exprès. La
               navigation douce de Next a déjà avalé ce clic deux fois
               (page du compte, puis page de création de fiche) : ici,
@@ -198,6 +289,7 @@ export function EnTeteTatouage({
               <Link> a déjà avalé ce clic en silence, deux fois. */}
           <a
             href="/"
+            ref={contenuGauche}
             aria-label={`Accueil ${MARQUE_YOKOFOLIO.nom}`}
             draggable={false}
             className="block w-fit cursor-pointer rounded-lg
@@ -225,14 +317,30 @@ export function EnTeteTatouage({
              `lg:shrink` + `min-w-0` laissent l'encadré se réduire dès
              que la barre manque de place — AVANT que quoi que ce soit
              d'autre ne cède (voir le `lg:min-w-fit` des deux côtés). */}
+        {/*  ⚠️ LA RANGÉE SE REPLIE AU DÉFILEMENT (nº 147-§7, sous
+             1024 px seulement) : une GRILLE À UNE LIGNE dont la ligne
+             passe de 1fr à 0fr — la hauteur EXACTE se replie, sans
+             valeur magique, et la transition la rend fluide. Le web
+             (lg) reste un flex ordinaire, jamais replié. */}
         <div
+          data-rangee-moteur=""
           className={`order-3 lg:order-2 basis-full lg:basis-[680px] lg:shrink lg:grow-0
-                      min-w-0 justify-center ${
-                        moteurMobile ? "flex" : "hidden md:flex"
-                      }`}
+                      min-w-0 justify-center
+                      max-lg:grid max-lg:transition-[grid-template-rows,opacity]
+                      max-lg:duration-300 max-lg:ease-out ${
+                        moteurReplie
+                          ? "max-lg:grid-rows-[0fr] max-lg:opacity-0"
+                          : "max-lg:grid-rows-[1fr] max-lg:opacity-100"
+                      } ${moteurMobile ? "lg:flex" : "hidden md:grid lg:flex"}`}
+          aria-hidden={moteurReplie || undefined}
+          inert={moteurReplie || undefined}
         >
-          <div className="w-full max-w-[720px]">
-            <MoteurTatouage criteres={valeur} surChangement={chercher} />
+          <div className="max-lg:min-h-0 max-lg:overflow-hidden flex w-full justify-center">
+            {/*  Le pt-3 remplace l'ancien gap-y-3 du parent : il
+                 appartient à la rangée et se replie avec elle. */}
+            <div className="w-full max-w-[720px] max-lg:pt-3 lg:pt-0">
+              <MoteurTatouage criteres={valeur} surChangement={chercher} />
+            </div>
           </div>
         </div>
 
@@ -240,8 +348,12 @@ export function EnTeteTatouage({
           aria-label="Langue et compte"
           //  gap-3 (nº 141-§7) : le cœur — ou le globe — respirait mal
           //  contre « Mon espace ».
-          className="order-2 lg:order-3 ml-auto lg:flex-1 lg:min-w-fit shrink-0 flex items-center justify-end gap-3"
+          className="order-2 lg:order-3 ml-auto lg:flex-1 lg:min-w-[var(--cote-barre,fit-content)] shrink-0 flex items-center justify-end gap-3"
         >
+          {/* L'ENVELOPPE DE MESURE (nº 147-§3) : la largeur NATURELLE
+              du contenu de droite, lue par le ResizeObserver — la nav,
+              étirée par flex-1, ne peut pas se mesurer elle-même. */}
+          <div ref={contenuDroit} className="flex w-fit items-center gap-3">
           {/* ⚠️ LA PLACE À GAUCHE DU COMPTE CHANGE DE MAIN SELON QU'ON
               EST CONNECTÉ (passe nº 137) :
                · DÉCONNECTÉ — le GLOBE des langues, comme toujours ;
@@ -269,8 +381,11 @@ export function EnTeteTatouage({
               {/* ⚠️ LE FANION, ET PLUS LE CŒUR (nº 145-§3) : cette
                   icône désigne LA PAGE « Ma sélection », pas le geste
                   d'aimer une photo. Le cœur reste, lui, sur les cartes
-                  et les fiches. Même taille qu'avant. */}
-              <IconeFanion taille={Math.round(HAUTEUR_ACTIONS * 0.55)} />
+                  et les fiches.
+                  RANG 24 (nº 147-§6) : les icônes de la barre — globe,
+                  fanion, compte — montent de 22 à 24, web et
+                  smartphone. */}
+              <IconeFanion taille={24} />
             </Link>
           ) : (
             <SelecteurLangue hauteur={HAUTEUR_ACTIONS} />
@@ -300,7 +415,8 @@ export function EnTeteTatouage({
                            focus-visible:outline-primaire
                            text-sombre-texte hover:text-primaire"
               >
-                <IconeUtilisateur taille={22} />
+                {/*  LA SILHOUETTE SEULE, rang 24 (nº 147-§5 et §6). */}
+                <IconeSilhouette taille={24} />
               </Link>
 
               {/* WEB : le bouton rose. Jamais venu, il invite ; déjà
@@ -321,6 +437,7 @@ export function EnTeteTatouage({
               </Link>
             </>
           )}
+          </div>
         </nav>
       </div>
     </header>

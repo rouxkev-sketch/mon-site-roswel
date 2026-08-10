@@ -54,6 +54,43 @@ export function IconeFanion({ taille = 24, classe = "" }: ProprietesIcone) {
   );
 }
 
+/**
+ * LA SILHOUETTE DU COMPTE — SANS CERCLE (passe nº 147-§5)
+ * --------------------------------------------------------
+ * L'icône de compte de la barre de YOKOFOLIO : la silhouette seule,
+ * qui occupe tout le cadre — même hauteur rendue que le globe et le
+ * fanion. `IconeUtilisateur` (la version encerclée) reste telle
+ * quelle : elle sert le produit artisans et le pictogramme
+ * « à domicile » des fiches, qu'on ne touche pas.
+ */
+export function IconeSilhouette({ taille = 24, classe = "" }: ProprietesIcone) {
+  return (
+    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
+      <circle cx="12" cy="7.6" r="3.8" stroke="currentColor" strokeWidth="1.8" />
+      <path
+        d="M4.6 20.2c1.4-4.3 4-6.4 7.4-6.4s6 2.1 7.4 6.4"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/**
+ * LE TRIANGLE PLEIN DU COMPTE (passe nº 147-§4) — l'indicateur posé à
+ * droite de la silhouette, sur le web : pointe en BAS fermé, et la
+ * ROTATION le retourne vers le HAUT quand la fenêtre est ouverte.
+ * Affiché en 14 (le glyphe fait ~8 px dedans) : un rang de l'échelle.
+ */
+export function IconeTrianglePlein({ taille = 14, classe = "" }: ProprietesIcone) {
+  return (
+    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
+      <path d="M12 16.2 5.4 8.6h13.2Z" fill="currentColor" />
+    </svg>
+  );
+}
+
 export function IconeUtilisateur({ taille = 24, classe = "" }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
@@ -811,29 +848,25 @@ export function IconePhoto({ taille = 20, classe = "" }: ProprietesIcone) {
   );
 }
 
-/** LA VUE AVEC TEXTE — l'icône de la photothèque ACTIVE, reprise à la
-    passe nº 146-§4 : une VRAIE LETTRE « T », grande, sur la moitié
-    droite du cadre — et le MOTIF DU PAYSAGE conservé (le soleil, la
-    montagne), résumé sur la moitié gauche. La version de la nº 144
-    posait un T minuscule sous la montagne : il se lisait comme une
-    ligne de texte factice — « un dessin de carte », pas une lettre.
-    Les deux dessins de la paire partagent le même cadre ; l'état se
-    dit par le DESSIN, jamais par une couleur (même règle que la
-    disposition). Trait 1.8, comme toute l'échelle. */
+/** LA VUE AVEC TEXTE — la LETTRE « T » SEULE (passe nº 147-§1,
+    troisième demande sur ce point : plus de cadre, plus de paysage,
+    plus de montagne, plus de soleil).
+    UNE LETTRE À EMPATTEMENTS, à la manière d'un Times : le chapeau
+    pleine largeur avec ses empattements PENDANTS aux deux extrémités,
+    le fût central, et le pied ÉVASÉ en courbe — une lettre dessinée,
+    pas deux traits qui se croisent. Elle occupe tout le cadre de
+    l'icône et évoque immédiatement le texte.
+    Sa jumelle IconePhoto (le paysage seul) désigne la vue SANS texte ;
+    l'état se dit par le DESSIN, jamais par une couleur. Le glyphe est
+    PLEIN (fill), comme une lettre imprimée — l'échelle des traits
+    (1.8) ne s'applique qu'aux icônes filaires. */
 export function IconeCartes({ taille = 20, classe = "" }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
-      <rect x="3.5" y="4.5" width="17" height="15" rx="2" stroke="currentColor" strokeWidth="1.8" />
-      <circle cx="7.3" cy="8.3" r="1.3" fill="currentColor" />
       <path
-        d="m5.4 15.6 2.4-2.6a1.2 1.2 0 0 1 1.8 0l1.9 2"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        d="M4 4.5H20V9h-1.8V6.5h-4.8V17c1.6.15 2.6.9 2.6 2.5H8c0-1.6 1-2.35 2.6-2.5V6.5H5.8V9H4Z"
+        fill="currentColor"
       />
-      <path d="M12.6 9h6.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M15.7 9v7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }

@@ -221,8 +221,11 @@ export function SelecteurLangue({
           {/* LE GLOBE DESSINÉ — celui du code, en `currentColor`.
               ⚠️ CE N'EST PAS `icone-world.png`. Une passe l'avait
               remplacé ici ; l'image du propriétaire ne sert QU'AU lien
-              « Site internet ou Linktree » de la fiche publique. */}
-          <IconeMonde taille={22} />
+              « Site internet ou Linktree » de la fiche publique.
+              RANG 24 (nº 147-§6) : les icônes de la BARRE — globe,
+              fanion, compte — montent de 22 à 24 ; l'entrée « Langue »
+              de la fenêtre « Mon compte », elle, garde son 22. */}
+          <IconeMonde taille={24} />
         </button>
       )}
 
