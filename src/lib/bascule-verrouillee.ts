@@ -75,6 +75,21 @@ const ATTENTE_MAXI_MS = 600;
     propriétaire enchaîne les appuis). */
 let leverEnCours: number | null = null;
 
+/**
+ * LE REBOND (passe nº 164) — deux déclenchements pour un doigt.
+ * ⚠️ CEINTURE ET BRETELLES. La cause des trois bascules était la
+ * relecture du stockage (lib/disposition-grille), et elle est
+ * corrigée à la source ; les boutons demandent en outre une valeur
+ * EXPLICITE, si bien qu'un appel doublé ne peut plus se défaire
+ * lui-même. Reste le cas d'un appel doublé DÉCALÉ (le clic fantôme
+ * d'iOS après un toucher, un événement rejoué) : deux demandes
+ * opposées à 300 ms d'intervalle feraient encore un aller-retour.
+ * Aucun doigt ne bascule deux fois en un tiers de seconde : on ignore
+ * la seconde.
+ */
+const REBOND_MS = 350;
+let derniereBascule = 0;
+
 /** Vrai pendant qu'une bascule est verrouillée (la sonde le lit). */
 export function basculeVerrouillee(): boolean {
   return typeof document !== "undefined"
@@ -92,6 +107,11 @@ export function basculerSansSaut(changer: () => void): void {
     changer();
     return;
   }
+  //  LE REBOND — voir plus haut. Un second déclenchement dans le tiers
+  //  de seconde qui suit n'est pas un doigt : on l'ignore.
+  const maintenant = performance.now();
+  if (maintenant - derniereBascule < REBOND_MS) return;
+  derniereBascule = maintenant;
   const racine = document.documentElement;
   //  1. LE VERROU, AVANT TOUT LE RESTE.
   racine.dataset[MARQUEUR] = "1";

@@ -26,13 +26,13 @@ import {
 } from "@/components/Icones";
 import { basculerSansSaut } from "@/lib/bascule-verrouillee";
 import {
-  basculerDisposition,
+  poserDisposition,
   lireDisposition,
   lireDispositionServeur,
   souscrireDisposition,
 } from "@/lib/disposition-grille";
 import {
-  basculerPhototheque,
+  poserPhototheque,
   lirePhototheque,
   lirePhototequeServeur,
   souscrirePhototheque,
@@ -929,7 +929,10 @@ export function MoteurTatouage({
               //  changement et la remise en place tiennent dans UNE
               //  SEULE tâche — le navigateur ne peut rien peindre au
               //  milieu (voir lib/bascule-verrouillee).
-              basculerSansSaut(basculerPhototheque);
+              //  ⚠️ UNE VALEUR EXPLICITE (nº 164) : on demande la vue
+              //  VOULUE, on n'inverse pas — un appel doublé ne peut
+              //  plus faire l'aller-retour.
+              basculerSansSaut(() => poserPhototheque(!phototheque));
             }}
             aria-pressed={phototheque}
             aria-label={
@@ -1038,7 +1041,12 @@ export function MoteurTatouage({
             // et remise en place dans UNE SEULE tâche — aucune image
             // intermédiaire ne peut être peinte, quelle que soit la
             // charge du téléphone (voir lib/bascule-verrouillee).
-            basculerSansSaut(basculerDisposition);
+            // ⚠️ UNE VALEUR EXPLICITE (nº 164) : le bouton demande la
+            // disposition qu'il ANNONCE, il n'inverse pas l'état — deux
+            // déclenchements ne peuvent plus se défaire l'un l'autre.
+            basculerSansSaut(() =>
+              poserDisposition(disposition === "deux" ? "une" : "deux")
+            );
           }}
           aria-label={
             disposition === "deux"
@@ -1069,8 +1077,8 @@ export function MoteurTatouage({
             //  Même précaution que la disposition, et le même verrou
             //  (nº 162-§2) : masquer les textes change la hauteur des
             //  rangées — moins que le format, mais la course est la
-            //  même, et elle se voit parfois.
-            basculerSansSaut(basculerPhototheque);
+            //  même, et elle se voit parfois. Valeur explicite (nº 164).
+            basculerSansSaut(() => poserPhototheque(!phototheque));
           }}
           aria-pressed={phototheque}
           aria-label={
