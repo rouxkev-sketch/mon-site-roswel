@@ -1,6 +1,11 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { estDefilementProgramme } from "@/lib/defilement-programme";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -64,6 +69,10 @@ import { ouvrirRecherche } from "@/lib/recherche-mobile";
 
 /** Hauteur du globe et du bouton de compte : ils s'alignent au pixel. */
 const HAUTEUR_ACTIONS = 40;
+
+/** useLayoutEffect côté navigateur, useEffect côté serveur (silencieux). */
+const useEffetAvantPeinture =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 export function EnTeteTatouage({
   criteres,
@@ -133,23 +142,46 @@ export function EnTeteTatouage({
     : TEXTES_TATOUAGE.lienInscription;
 
   /**
-   * ⚠️ LA BARRE NE CHANGE PLUS D'ÉTAT (passe nº 154-§3), ET SON FOND
-   * EST PERMANENT.
-   * Depuis la nº 144-§1 elle était TRANSPARENTE en haut de page et
-   * s'éclaircissait « dès que du contenu passe dessous » (seuil de
-   * 8 px, transition de 200 ms). Ce va-et-vient est exactement ce que
-   * le propriétaire voit CLIGNOTER :
-   *  · en remontant la page, franchir les 8 px éteint le fond — la
-   *    barre semble disparaître, puis revenir ;
-   *  · à l'ouverture d'une fiche, la position mémorisée est rendue
-   *    APRÈS le premier rendu : le fond s'allume « dans un second
-   *    temps », puis s'éteint quand la page repasse par le haut.
-   * Aucun réglage de seuil ne rattrape cela : c'est l'existence même
-   * des deux états qui se voit. La barre porte donc désormais SON
-   * fond, tout le temps — un niveau au-dessus de la page, comme le
-   * veut la charte (les niveaux se distinguent par leur clarté), et
-   * toujours AUCUN trait.
+   * LES DEUX ÉTATS DE LA BARRE SONT RÉTABLIS (passe nº 156-§2)
+   * ===========================================================
+   * EN HAUT DE PAGE elle est TRANSPARENTE — elle appartient à la page,
+   * et rien ne passe derrière elle : un fond posé là ne fait qu'une
+   * bande claire sans raison. DÈS QUE DU CONTENU PASSE DESSOUS, elle
+   * prend son fond opaque, et c'est cette clarté qui la détache
+   * (charte : jamais un trait).
+   *
+   * ⚠️ LA Nº 154 AVAIT SUPPRIMÉ LES DEUX ÉTATS pour arrêter un
+   * clignotement. C'était la mauvaise moitié du problème : le défaut
+   * n'était pas d'avoir deux états, mais LA FAÇON D'EN CHANGER. Trois
+   * causes, trois corrections :
+   *
+   *  1. L'ÉTAT DE DÉPART ÉTAIT FAUX. `posee` naissait à faux, puis un
+   *     effet le corrigeait APRÈS la première peinture : une fiche
+   *     ouverte à une position mémorisée affichait donc une barre
+   *     transparente, puis son fond « dans un second temps ». Il est
+   *     désormais calculé AVANT LA PEINTURE (`useLayoutEffect`) — la
+   *     première image est déjà la bonne.
+   *  2. LA TRANSITION ELLE-MÊME ÉTAIT LE CLIGNOTEMENT. Mesuré au
+   *     banc : un fondu de 200 ms fait passer la barre par une
+   *     quinzaine de valeurs SEMI-TRANSPARENTES — et c'est pendant
+   *     ces images-là que le contenu se voit à travers elle, ce que
+   *     l'œil lit comme « elle disparaît, puis revient ». Il n'y a
+   *     plus de transition du tout : la bascule se fait en UNE image,
+   *     à un instant où le contenu n'a défilé que de huit pixels — il
+   *     n'y a donc rien derrière la barre à révéler. Un changement
+   *     qu'on ne peut pas voir vaut mieux qu'un fondu qu'on voit.
+   *  3. LE SEUIL UNIQUE OSCILLAIT. À 8 px près, l'élastique de fin de
+   *     défilement et les micro-mouvements faisaient basculer l'état
+   *     plusieurs fois par seconde. Deux seuils désormais (HYSTÉRÉSIS) :
+   *     on POSE le fond au-delà de 8 px, on ne le retire qu'au RETOUR
+   *     COMPLET en haut (2 px). Entre les deux, rien ne bouge.
+   *
+   * Et la bascule elle-même est imperceptible par construction : au
+   * moment où elle se produit, le contenu n'a défilé que de quelques
+   * pixels — il n'y a rien derrière la barre à masquer ou à révéler.
    */
+  /** Le fond est-il posé ? Faux = transparente (haut de page). */
+  const [posee, setPosee] = useState(false);
   /** LA LIGNE DE RECHERCHE SE RÉTRACTE (passe nº 147-§7, smartphone).
       En DESCENDANT dans les cartes, la rangée du moteur se replie et
       libère sa hauteur ; elle REVIENT AU PREMIER GESTE vers le haut —
@@ -196,7 +228,11 @@ export function EnTeteTatouage({
   /** La rangée est-elle VRAIMENT hors de portée ? */
   const rangeeEscamotee = surAccueil && moteurReplie && etroit;
 
-  useEffect(() => {
+  //  ⚠️ AVANT LA PEINTURE (nº 156-§2) : la toute première lecture doit
+  //  décider du fond AVANT que la barre ne s'affiche — sinon une page
+  //  ouverte à une position mémorisée montre une barre transparente,
+  //  puis son fond « dans un second temps ».
+  useEffetAvantPeinture(() => {
     /* ============================================================
      * LE REPLI, REFAIT DE A À Z (nº 150-§5) — un seul mouvement.
      * ------------------------------------------------------------
@@ -231,6 +267,13 @@ export function EnTeteTatouage({
       cumul = 0;
       setMoteurReplie(valeur);
     };
+    /** Le fond, avec sa zone morte : `null` = on ne touche à rien. */
+    let fondCourant = window.scrollY > 8;
+    const poserLeFond = (valeur: boolean | null) => {
+      if (valeur === null || fondCourant === valeur) return;
+      fondCourant = valeur;
+      setPosee(valeur);
+    };
     const lire = () => {
       const y = window.scrollY;
       const delta = y - yPrecedent;
@@ -243,6 +286,12 @@ export function EnTeteTatouage({
       //  repliait la rangée alors que personne n'avait fait défiler
       //  quoi que ce soit. On prend acte de la nouvelle position — le
       //  cumul, lui, ne bouge pas.
+      //  LE FOND DE LA BARRE, LUI, SUIT TOUJOURS LA POSITION — même
+      //  pendant un défilement posé par le site : il décrit ce qu'on
+      //  voit, il ne juge aucune intention. HYSTÉRÉSIS (nº 156-§2) :
+      //  on POSE le fond au-delà de 8 px, on ne le retire qu'au retour
+      //  complet en haut (2 px) — entre les deux, rien ne bascule.
+      poserLeFond(y > 8 ? true : y <= 2 ? false : null);
       if (estDefilementProgramme()) {
         cumul = 0;
         return;
@@ -272,12 +321,16 @@ export function EnTeteTatouage({
       data-barre-fixe=""
       //  ⚠️ OPAQUE, TOUT À FAIT (nº 147-§2, troisième signalement) : à
       //  90 puis 95 %, le contenu transparaissait encore derrière la
-      //  barre. Le fond est PLEIN — plus rien ne passe, et le flou
+      //  barre. Le fond posé est PLEIN — plus rien ne passe, et le flou
       //  d'arrière-plan n'a plus rien à flouter : retiré.
-      //  ⚠️ ET PERMANENT (nº 154-§3) : plus d'état « posée », plus de
-      //  transition — c'est ce va-et-vient qui clignotait. Toujours
+      //  ⚠️ DEUX ÉTATS, RÉTABLIS (nº 156-§2) : transparente en haut de
+      //  page (rien ne passe derrière elle), opaque dès que du contenu
+      //  défile dessous. La transition n'est armée qu'après la
+      //  première peinture — voir le commentaire de `posee`. Toujours
       //  AUCUN trait : c'est un acquis.
-      className="sticky top-0 z-50 bg-sombre-carte"
+      className={`sticky top-0 z-50 ${
+        posee ? "bg-sombre-carte" : "bg-transparent"
+      }`}
     >
       <div
         //  ⚠️ PLUS DE gap-y (nº 147-§7) : l'espace au-dessus de la

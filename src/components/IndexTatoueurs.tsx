@@ -239,22 +239,41 @@ export function IndexTatoueurs({
 
     const parametres = parametresDe(suivants);
 
-    // L'ADRESSE PORTE TOUJOURS LA RECHERCHE EN COURS — par une VRAIE
-    // navigation du routeur (`router.replace`), pas un simple
-    // réécrivage de la barre : c'est elle qui rend le RETOUR ARRIÈRE
-    // honnête. Partir sur une fiche puis revenir restitue alors CES
-    // résultats (l'étape d'historique connaît la recherche) à la
-    // position de défilement mémorisée — un réécrivage seul laissait
-    // l'étape sur son instantané d'origine, et le retour montrait
-    // l'accueil nu. `replace` : pas d'étape empilée, il n'y a qu'UNE
-    // page de résultats ; `scroll: false` : la grille ne saute pas
-    // pendant qu'on affine.
+    /**
+     * L'ADRESSE PORTE TOUJOURS LA RECHERCHE EN COURS — par une VRAIE
+     * navigation du routeur, pas un simple réécrivage de la barre :
+     * c'est elle qui rend le RETOUR ARRIÈRE honnête. Partir sur une
+     * fiche puis revenir restitue CES résultats (l'étape d'historique
+     * connaît la recherche) à la position mémorisée.
+     *
+     * ⚠️ `push` ET NON PLUS `replace` (passe nº 156-§1). C'était le
+     * défaut : `replace` ÉCRASE l'étape courante au lieu d'en empiler
+     * une. Une recherche ne laissait donc AUCUNE trace dans
+     * l'historique du navigateur — arrivé depuis Google, on cherchait,
+     * on faisait retour… et on retombait sur Google, l'étape de la
+     * recherche ayant remplacé celle de l'accueil au lieu de s'y
+     * ajouter. (La passe nº 154 avait réparé le JOURNAL du site, qui
+     * ne voyait pas les recherches ; l'historique du NAVIGATEUR, lui,
+     * n'en voyait pas davantage — deux mémoires distinctes, deux
+     * corrections.)
+     * Chaque recherche est désormais une étape : le retour ramène à
+     * l'état d'avant, puis, seulement ensuite, au site d'origine.
+     * `scroll: false` : la grille ne saute pas pendant qu'on affine.
+     */
     const requete = parametres.toString();
     const adresse = requete ? `/?${requete}` : "/";
     // C'est CETTE adresse que la mosaïque à venir décrira — la barre du
     // navigateur, elle, ne l'affichera que plus tard (transition).
     adresseVisee.current = adresse;
-    router.replace(adresse, { scroll: false });
+    //  ⚠️ UNE RECHERCHE QUI NE CHANGE RIEN N'EMPILE RIEN : rouvrir la
+    //  page de recherche et valider sans avoir touché à un critère ne
+    //  doit pas ajouter une étape identique à la précédente — le
+    //  retour arrière semblerait alors ne rien faire.
+    if (adresse === adresseCourante()) {
+      router.replace(adresse, { scroll: false });
+    } else {
+      router.push(adresse, { scroll: false });
+    }
 
     try {
       const reponse = await fetch(`/api/tatoueurs?${parametres}`);

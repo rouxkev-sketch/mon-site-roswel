@@ -25,13 +25,28 @@
  * attribut de document est lisible de partout, survit à un remontage,
  * et se voit dans l'inspecteur quand on cherche à comprendre.
  *
- * LA LEVÉE SE FAIT SUR DEUX IMAGES. `scrollTo` est synchrone, mais
- * l'événement `scroll` qu'il déclenche, lui, arrive à l'image
- * suivante — parfois celle d'après sur un appareil chargé. On lève
- * donc le drapeau après deux images, jamais avant.
+ * LA LEVÉE SE FAIT SUR DEUX IMAGES **ET** UN DÉLAI. `scrollTo` est
+ * synchrone, mais l'événement `scroll` qu'il déclenche arrive à
+ * l'image suivante — parfois bien plus tard.
+ * ⚠️ DEUX IMAGES NE SUFFISAIENT PAS (nº 156-§3), et c'est la cause du
+ * saut qui restait au changement de disposition : la bascule
+ * RECOMPOSE toute la mosaïque (une colonne ↔ deux colonnes), le
+ * document change de hauteur de plusieurs milliers de pixels, et le
+ * navigateur en tire DEUX mouvements — notre remise en place, puis un
+ * RE-BORNAGE quand la page raccourcit sous la position courante. Le
+ * second arrivait après la levée du drapeau : la barre y lisait un
+ * geste, et se repliait. La fenêtre couvre donc aussi ce second
+ * temps.
  */
 
 const MARQUEUR = "defilementProgramme";
+
+/** La fenêtre pendant laquelle les défilements ne sont pas des gestes.
+    Assez large pour couvrir le re-bornage d'une recomposition de
+    mosaïque, assez courte pour ne jamais avaler un vrai geste : un
+    doigt qui défile juste après avoir touché un bouton d'affichage
+    met bien plus de 300 ms à revenir sur l'écran. */
+const FENETRE_MS = 300;
 
 /** Vrai pendant qu'un défilement posé par le site est en cours. */
 export function estDefilementProgramme(): boolean {
@@ -47,13 +62,20 @@ export function estDefilementProgramme(): boolean {
  * global, et une restitution qui s'anime est une restitution qu'on
  * voit passer.
  */
+let leveeEnCours = 0;
+
 export function defilerSansGeste(options: ScrollToOptions): void {
   if (typeof window === "undefined") return;
   document.documentElement.dataset[MARQUEUR] = "1";
   window.scrollTo({ behavior: "instant", ...options });
-  requestAnimationFrame(() => {
+  //  Un seul minuteur : deux remises en place rapprochées ne doivent
+  //  pas laisser la première lever le drapeau de la seconde.
+  window.clearTimeout(leveeEnCours);
+  leveeEnCours = window.setTimeout(() => {
     requestAnimationFrame(() => {
-      delete document.documentElement.dataset[MARQUEUR];
+      requestAnimationFrame(() => {
+        delete document.documentElement.dataset[MARQUEUR];
+      });
     });
-  });
+  }, FENETRE_MS);
 }
