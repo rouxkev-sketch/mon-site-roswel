@@ -951,7 +951,7 @@ export function MoteurTatouage({
             <div
               className="absolute top-full right-0 z-30 mt-2
                          w-[min(420px,calc(100vw-32px))] rounded-2xl
-                         bg-sombre-eleve px-5 pt-5 pb-4"
+                         bg-sombre-eleve p-5"
             >
               {blocFiltres(criteres, annoncer, true)}
             </div>

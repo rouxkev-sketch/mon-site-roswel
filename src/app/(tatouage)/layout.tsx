@@ -40,6 +40,7 @@ import { RetourGaranti } from "@/components/RetourGaranti";
 import { scriptAvantPeinture } from "@/lib/script-avant-peinture";
 import { chargerStylesAjoutes } from "@/lib/styles-ajoutes";
 import { SondeClavier } from "@/components/SondeClavier";
+import { SondeNavigation } from "@/components/SondeNavigation";
 import { RemonteeChamps } from "@/components/RemonteeChamps";
 import { SondeRetour } from "@/components/SondeRetour";
 import { COMPTES_YOKOFOLIO } from "@/config/tatouage";
@@ -152,6 +153,14 @@ export default async function MiseEnPageTatouage({
         le flux (voir globals.css) — la sonde y aurait disparu au
         moment précis où l'on veut la lire. */}
     <SondeClavier />
+    {/* ⚠️ TEMPORAIRE — LA SONDE DE NAVIGATION (`?sonde-nav=1`). Elle
+        MESURE chez le propriétaire (retour arrière, barre fixe,
+        remontée des champs) et ne corrige rien. Pour la retirer :
+        cette ligne, son import, et le fichier
+        src/components/SondeNavigation.tsx.
+        HORS de l'enveloppe `data-fond`, comme les autres sondes : la
+        page de recherche la ferait disparaître au moment de lire. */}
+    <SondeNavigation />
     {/* TOUS LES CHAMPS DU SITE REMONTENT AU TOUCHER (nº 155-§1) — un
         écouteur global, vrais mobiles seulement, défilement natif.
         HORS de l'enveloppe `data-fond`, comme les sondes : la page de

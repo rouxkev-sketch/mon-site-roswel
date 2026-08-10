@@ -896,7 +896,7 @@ export function IconeDeuxColonnes({ taille = 20, classe = "" }: ProprietesIcone)
 export function IconeUneColonne({ taille = 20, classe = "" }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
-      <rect x="6.5" y="3.5" width="11" height="17" rx="2" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="5.5" y="3.5" width="13" height="17" rx="2" stroke="currentColor" strokeWidth="1.8" />
     </svg>
   );
 }
