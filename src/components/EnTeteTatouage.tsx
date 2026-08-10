@@ -142,46 +142,26 @@ export function EnTeteTatouage({
     : TEXTES_TATOUAGE.lienInscription;
 
   /**
-   * LES DEUX ÉTATS DE LA BARRE SONT RÉTABLIS (passe nº 156-§2)
-   * ===========================================================
-   * EN HAUT DE PAGE elle est TRANSPARENTE — elle appartient à la page,
-   * et rien ne passe derrière elle : un fond posé là ne fait qu'une
-   * bande claire sans raison. DÈS QUE DU CONTENU PASSE DESSOUS, elle
-   * prend son fond opaque, et c'est cette clarté qui la détache
-   * (charte : jamais un trait).
+   * LA BARRE NE CHANGE PLUS JAMAIS DE COULEUR (passe nº 161)
+   * =========================================================
+   * ⚠️ LES DEUX ÉTATS DE LA Nº 156-§2 SONT SUPPRIMÉS, à la demande du
+   * propriétaire : la barre prenait un fond PLUS CLAIR que le fond du
+   * site dès qu'on défilait — « ce n'est pas ce qui se fait en 2026 ».
    *
-   * ⚠️ LA Nº 154 AVAIT SUPPRIMÉ LES DEUX ÉTATS pour arrêter un
-   * clignotement. C'était la mauvaise moitié du problème : le défaut
-   * n'était pas d'avoir deux états, mais LA FAÇON D'EN CHANGER. Trois
-   * causes, trois corrections :
+   * LA RÈGLE, DÉSORMAIS : la barre a EXACTEMENT la couleur du fond du
+   * site (`bg-sombre-fond`, #1A1A1D), à toutes les positions de
+   * défilement, et elle est PLEINEMENT OPAQUE — rien ne se voit à
+   * travers elle, jamais (acquis nº 147-§2). Ce n'est plus la barre
+   * qui se pose sur le contenu : c'est le CONTENU qui s'efface sous
+   * elle — voir le VOILE DE FONDU au bas de la barre, plus bas.
    *
-   *  1. L'ÉTAT DE DÉPART ÉTAIT FAUX. `posee` naissait à faux, puis un
-   *     effet le corrigeait APRÈS la première peinture : une fiche
-   *     ouverte à une position mémorisée affichait donc une barre
-   *     transparente, puis son fond « dans un second temps ». Il est
-   *     désormais calculé AVANT LA PEINTURE (`useLayoutEffect`) — la
-   *     première image est déjà la bonne.
-   *  2. LA TRANSITION ELLE-MÊME ÉTAIT LE CLIGNOTEMENT. Mesuré au
-   *     banc : un fondu de 200 ms fait passer la barre par une
-   *     quinzaine de valeurs SEMI-TRANSPARENTES — et c'est pendant
-   *     ces images-là que le contenu se voit à travers elle, ce que
-   *     l'œil lit comme « elle disparaît, puis revient ». Il n'y a
-   *     plus de transition du tout : la bascule se fait en UNE image,
-   *     à un instant où le contenu n'a défilé que de huit pixels — il
-   *     n'y a donc rien derrière la barre à révéler. Un changement
-   *     qu'on ne peut pas voir vaut mieux qu'un fondu qu'on voit.
-   *  3. LE SEUIL UNIQUE OSCILLAIT. À 8 px près, l'élastique de fin de
-   *     défilement et les micro-mouvements faisaient basculer l'état
-   *     plusieurs fois par seconde. Deux seuils désormais (HYSTÉRÉSIS) :
-   *     on POSE le fond au-delà de 8 px, on ne le retire qu'au RETOUR
-   *     COMPLET en haut (2 px). Entre les deux, rien ne bouge.
-   *
-   * Et la bascule elle-même est imperceptible par construction : au
-   * moment où elle se produit, le contenu n'a défilé que de quelques
-   * pixels — il n'y a rien derrière la barre à masquer ou à révéler.
+   * CE QUE CETTE SIMPLIFICATION EMPORTE AVEC ELLE, sans regret : plus
+   * d'état `posee`, plus d'hystérésis 8 px / 2 px, plus de bascule à
+   * surveiller avant la peinture — une couleur qui ne change pas ne
+   * peut ni clignoter (nº 154-§3), ni sauter (nº 156-§2), ni arriver
+   * « dans un second temps ». Le repli de la rangée, lui, n'a pas
+   * bougé d'une ligne.
    */
-  /** Le fond est-il posé ? Faux = transparente (haut de page). */
-  const [posee, setPosee] = useState(false);
   /** LA LIGNE DE RECHERCHE SE RÉTRACTE (passe nº 147-§7, smartphone).
       En DESCENDANT dans les cartes, la rangée du moteur se replie et
       libère sa hauteur ; elle REVIENT AU PREMIER GESTE vers le haut —
@@ -229,9 +209,9 @@ export function EnTeteTatouage({
   const rangeeEscamotee = surAccueil && moteurReplie && etroit;
 
   //  ⚠️ AVANT LA PEINTURE (nº 156-§2) : la toute première lecture doit
-  //  décider du fond AVANT que la barre ne s'affiche — sinon une page
-  //  ouverte à une position mémorisée montre une barre transparente,
-  //  puis son fond « dans un second temps ».
+  //  décider de l'état de la rangée AVANT que la barre ne s'affiche —
+  //  une page ouverte à une position mémorisée doit naître avec la
+  //  rangée déjà juste.
   useEffetAvantPeinture(() => {
     /* ============================================================
      * LE REPLI, REFAIT DE A À Z (nº 150-§5) — un seul mouvement.
@@ -267,13 +247,6 @@ export function EnTeteTatouage({
       cumul = 0;
       setMoteurReplie(valeur);
     };
-    /** Le fond, avec sa zone morte : `null` = on ne touche à rien. */
-    let fondCourant = window.scrollY > 8;
-    const poserLeFond = (valeur: boolean | null) => {
-      if (valeur === null || fondCourant === valeur) return;
-      fondCourant = valeur;
-      setPosee(valeur);
-    };
     const lire = () => {
       const y = window.scrollY;
       const delta = y - yPrecedent;
@@ -286,12 +259,9 @@ export function EnTeteTatouage({
       //  repliait la rangée alors que personne n'avait fait défiler
       //  quoi que ce soit. On prend acte de la nouvelle position — le
       //  cumul, lui, ne bouge pas.
-      //  LE FOND DE LA BARRE, LUI, SUIT TOUJOURS LA POSITION — même
-      //  pendant un défilement posé par le site : il décrit ce qu'on
-      //  voit, il ne juge aucune intention. HYSTÉRÉSIS (nº 156-§2) :
-      //  on POSE le fond au-delà de 8 px, on ne le retire qu'au retour
-      //  complet en haut (2 px) — entre les deux, rien ne bascule.
-      poserLeFond(y > 8 ? true : y <= 2 ? false : null);
+      //  ⚠️ LE FOND DE LA BARRE, LUI, N'A PLUS RIEN À SUIVRE
+      //  (nº 161) : il est la couleur du fond du site, à toutes les
+      //  positions — l'hystérésis 8 px / 2 px est partie avec lui.
       if (estDefilementProgramme()) {
         cumul = 0;
         return;
@@ -321,16 +291,13 @@ export function EnTeteTatouage({
       data-barre-fixe=""
       //  ⚠️ OPAQUE, TOUT À FAIT (nº 147-§2, troisième signalement) : à
       //  90 puis 95 %, le contenu transparaissait encore derrière la
-      //  barre. Le fond posé est PLEIN — plus rien ne passe, et le flou
+      //  barre. Le fond est PLEIN — plus rien ne passe, et le flou
       //  d'arrière-plan n'a plus rien à flouter : retiré.
-      //  ⚠️ DEUX ÉTATS, RÉTABLIS (nº 156-§2) : transparente en haut de
-      //  page (rien ne passe derrière elle), opaque dès que du contenu
-      //  défile dessous. La transition n'est armée qu'après la
-      //  première peinture — voir le commentaire de `posee`. Toujours
-      //  AUCUN trait : c'est un acquis.
-      className={`sticky top-0 z-50 ${
-        posee ? "bg-sombre-carte" : "bg-transparent"
-      }`}
+      //  ⚠️ UNE SEULE COULEUR, CELLE DU FOND DU SITE (nº 161) : les
+      //  deux états de la nº 156-§2 sont supprimés — voir le
+      //  commentaire au-dessus du composant. Toujours AUCUN trait :
+      //  c'est un acquis.
+      className="sticky top-0 z-50 bg-sombre-fond"
     >
       <div
         //  ⚠️ PLUS DE gap-y (nº 147-§7) : l'espace au-dessus de la
@@ -586,6 +553,26 @@ export function EnTeteTatouage({
           )}
         </nav>
       </div>
+      {/* LE VOILE DE FONDU (passe nº 161) — le contenu s'efface SOUS
+          la barre, ce n'est pas la barre qui se pose sur lui.
+          Une bande de 28 px accrochée au bas de la barre, dégradée de
+          la couleur du fond vers le transparent : tout ce qui remonte
+          vers la barre s'y atténue sur ses derniers pixels, et passe
+          dessous déjà éteint — la barre, elle, ne change jamais de
+          teinte. C'est le traitement des interfaces soignées
+          d'aujourd'hui quand la barre EST le fond : pas de flou
+          (retiré à la nº 147-§2), pas de trait (charte), une
+          disparition.
+          `top-full` : le voile suit le bas de la barre, rangée du
+          moteur dépliée comme repliée — il ne mesure rien.
+          `pointer-events-none` : il ne prend aucun doigt ; en haut de
+          page, dégradé du fond posé sur le fond, il est invisible. */}
+      <div
+        aria-hidden="true"
+        data-voile-barre=""
+        className="pointer-events-none absolute inset-x-0 top-full h-7
+                   bg-gradient-to-b from-sombre-fond to-transparent"
+      />
     </header>
   );
 }
