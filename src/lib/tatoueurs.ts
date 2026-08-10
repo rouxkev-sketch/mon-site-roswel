@@ -23,6 +23,7 @@ import {
 import type { LieuTrouve } from "@/lib/geocodage/types";
 import {
   natureConnue,
+  NATURE_PAR_DEFAUT,
   SLUGS_NATURES,
   type PhotoTatoueur,
 } from "@/lib/photos-tatoueur";
@@ -579,6 +580,13 @@ function passeLesFiltres(tatoueur: Tatoueur, exclus: string[]): boolean {
   for (const groupe of GROUPES_FILTRES) {
     const options: string[] = groupe.options.map((o) => o.slug);
     if (!options.some((slug) => eteints.has(slug))) continue; // groupe intact
+    //  ⚠️ GROUPE ENTIÈREMENT ÉTEINT = CRITÈRE ABANDONNÉ (nº 148-§2),
+    //  exactement comme en base (`allumesDuGroupe`) : vider un groupe
+    //  de badges élargit la recherche, il ne la vide pas. Sans cette
+    //  ligne, ce chemin-ci écarterait TOUT LE MONDE là où la base
+    //  n'écarte personne — deux réponses différentes pour une même
+    //  recherche.
+    if (options.every((slug) => eteints.has(slug))) continue;
 
     // ⚠️ « OÙ IL TATOUE » NE PARLE QUE DES ARTISTES. Un salon n'a pas
     // de mode d'exercice, il a des adresses : éteindre « En guest » ne
@@ -755,15 +763,34 @@ function filtrer(
   //  une déclaration : c'est là toute la différence avec l'ancienne
   //  case « Flash ». Combinée au style quand il y en a un — « des
   //  flashs EN réalisme », et pas « des flashs ET du réalisme ».
+  //
+  //  ⚠️ AVEC LE REPLI SUR LE STYLE DÉCLARÉ (passe nº 148, migration
+  //  nº 56) — LE MÊME QU'EN BASE, et c'est indispensable : ce chemin-ci
+  //  sert quand la recherche en base ne peut pas se faire, et deux
+  //  chemins qui ne disent pas la même chose valent un défaut qui
+  //  n'apparaît qu'une fois sur dix.
+  //  La règle : quand la fiche N'A AUCUNE PHOTO CATALOGUÉE pour le
+  //  style cherché, on n'a rien à lui opposer — son style déclaré,
+  //  déjà vérifié au-dessus, fait foi, et elle répond à la nature par
+  //  défaut (« tatouage »). Un FLASH, lui, se déclare : on n'en invente
+  //  jamais, et le croisement voulu tient — un tatoueur qui a des
+  //  photos en japonais et des flashs old-school ne répond pas à
+  //  « Flashs · Japonais ».
   const nature = natureCherchee(filtres.nature);
   if (nature) {
-    retenus = retenus.filter((t) =>
-      (t.galerie ?? []).some(
+    retenus = retenus.filter((t) => {
+      const galerie = t.galerie ?? [];
+      const correspond = galerie.some(
         (photo) =>
           natureConnue(photo.nature) === nature &&
           (!style || photo.style === style)
-      )
-    );
+      );
+      if (correspond) return true;
+      if (nature !== NATURE_PAR_DEFAUT) return false;
+      //  Rien de catalogué sur ce style (ou rien du tout si l'on ne
+      //  cherche pas de style) : le style déclaré fait foi.
+      return !galerie.some((photo) => !style || photo.style === style);
+    });
   }
 
   // LA VILLE D'UNE PAGE DE RÉFÉRENCEMENT — le slug de l'adresse, tel
@@ -1323,6 +1350,15 @@ function sansGalerieInutile(
  * LES INTERRUPTEURS ENCORE ALLUMÉS d'un groupe — ou `null` quand le
  * groupe est intact. C'est la forme que la fonction de base attend :
  * elle ne filtre un groupe que s'il a été touché.
+ *
+ * ⚠️ UN GROUPE ENTIÈREMENT ÉTEINT REND `null`, LUI AUSSI (passe
+ * nº 148-§2). Depuis que l'on peut vider un groupe de badges, la
+ * liste des allumés peut être VIDE — et une liste vide envoyée à la
+ * base ne veut pas dire « aucun filtre », elle veut dire « aucune
+ * valeur ne convient » : plus une seule fiche ne remonterait. Or
+ * vider un groupe, à l'écran, veut dire qu'on ABANDONNE ce critère.
+ * Les deux extrêmes — tout allumé, tout éteint — disent donc la même
+ * chose au moteur : ne filtre pas là-dessus.
  */
 function allumesDuGroupe(
   groupe: (typeof GROUPES_FILTRES)[number],
@@ -1330,7 +1366,8 @@ function allumesDuGroupe(
 ): string[] | null {
   const options: string[] = groupe.options.map((o) => o.slug);
   if (!options.some((slug) => eteints.has(slug))) return null;
-  return options.filter((slug) => !eteints.has(slug));
+  const allumes = options.filter((slug) => !eteints.has(slug));
+  return allumes.length === 0 ? null : allumes;
 }
 
 /**

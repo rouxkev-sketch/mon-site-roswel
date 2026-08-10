@@ -90,6 +90,8 @@ repasse.
 | 53 | `yokofolio-favoris-photos.sql` | 1 table, 2 index, 4 politiques |
 | 54 | `yokofolio-tatoueurs-suivis.sql` | 1 table, 2 index, 4 politiques |
 | 55 | `yokofolio-portfolios-repris.sql` | aucun objet (catalogue les photos que la nº 31 avait laissées) |
+| 56 | `yokofolio-recherche-styles-declares.sql` | 1 fonction (la recherche, refaite — **et réparée**) |
+| 57 | `yokofolio-catalogue-complet.sql` | aucun objet (complète le catalogue, style par style) |
 
 ## Ce que chaque fichier apporte
 
@@ -148,6 +150,8 @@ repasse.
 53. **`yokofolio-favoris-photos.sql`** — Les photos enregistrées (le cœur)
 54. **`yokofolio-tatoueurs-suivis.sql`** — Les tatoueurs suivis (« Suivre »)
 55. **`yokofolio-portfolios-repris.sql`** — Les portfolios que la nº 31 avait oubliés (⚠️ **sans elle, aucun cœur ne s'affiche** sur les fiches dont les images vivent dans `photo_principale`. Les photos reprises reçoivent le rendu **noir et gris** : la colonne est obligatoire depuis la nº 48, et c'est le choix qui se trompe le moins — voir l'en-tête du fichier pour le corriger au cas par cas)
+56. **`yokofolio-recherche-styles-declares.sql`** — La recherche par style réparée (⚠️ **sans elle, chercher un style depuis « Explorer » ne remonte qu'une partie des fiches** : le menu envoie toujours une catégorie, et la nature exigeait une photo taguée à la fois du bon style et de la bonne nature. Une fiche qui DÉCLARE un style sans photo encore taguée dessus répond désormais à « Réalisations » ; un flash, lui, se déclare toujours)
+57. **`yokofolio-catalogue-complet.sql`** — Le catalogue complété style par style (la nº 55 ne reprenait que les portfolios ENTIÈREMENT vides ; celle-ci comble aussi les fiches qui ont une photo dans un style et en déclarent d'autres — cœurs, photothèque et vignettes suivent)
 
 ---
 

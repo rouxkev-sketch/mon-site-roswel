@@ -1,6 +1,6 @@
 #!/bin/bash
 # =====================================================================
-#  REJOUER LES 55 MIGRATIONS SUR UNE VRAIE BASE POSTGRESQL
+#  REJOUER LES 57 MIGRATIONS SUR UNE VRAIE BASE POSTGRESQL
 #  ---------------------------------------------------------------------
 #  Une base JETABLE, repartie de zéro, l'amorce Supabase, puis les
 #  fichiers de `supabase/` DANS L'ORDRE du LISEZ-MOI. On s'arrête à la
@@ -54,6 +54,6 @@ for LIGNE in "${LIGNES[@]}"; do
 done
 
 if [ "$ECHECS" -eq 0 ]; then
-  echo "── LES 55 MIGRATIONS SONT PASSÉES ──────────────────────"
+  echo "── LES MIGRATIONS SONT TOUTES PASSÉES ──────────────────────"
 fi
 exit $ECHECS

@@ -378,6 +378,16 @@ export function MoteurTatouage({
     return groupe.options.map((option) => option.slug);
   }
 
+  /**
+   * LES DEUX GROUPES QU'ON NE PEUT PAS VIDER ENSEMBLE (nº 148-§2).
+   * « Profil » (qui l'on cherche) et « Où tatoue-t-il ? » (où il
+   * travaille) sont les deux moitiés d'une même question. On peut
+   * abandonner l'une, jamais les deux : le dernier badge allumé des
+   * deux réunis ne se retire pas. Technique, Types de projets, Rendu
+   * et Besoins ne sont pas concernés — eux se vident librement.
+   */
+  const GROUPES_INSEPARABLES: string[] = ["type", "mode"];
+
   function selectionDuGroupe(
     groupe: (typeof GROUPES_FILTRES)[number],
     exclure: string[]
@@ -398,16 +408,43 @@ export function MoteurTatouage({
     const suivante = selection.includes(slug)
       ? selection.filter((s) => s !== slug)
       : [...selection, slug];
+
+    //  ============================================================
+    //  VIDER UN GROUPE, ET LA SEULE LIMITE (passe nº 148-§2)
+    //  ------------------------------------------------------------
+    //  Un groupe VIDE ne veut pas dire « ne me montre rien » : il veut
+    //  dire QU'ON ABANDONNE CE CRITÈRE — la base ne reçoit alors aucun
+    //  filtre pour lui (voir `allumesDuGroupe`, src/lib/tatoueurs.ts).
+    //  On peut donc vider librement Technique, Types de projets, Rendu
+    //  et Besoins : la recherche s'élargit, elle ne se vide pas.
+    //
+    //  SAUF POUR L'ENSEMBLE « PROFIL + LIEU » (GROUPES_INSEPARABLES),
+    //  qui dit QUI l'on cherche et OÙ il tatoue. Les deux forment un
+    //  tout : on peut vider l'un OU l'autre, jamais LES DEUX — sans
+    //  eux, la question posée au moteur n'a plus de sujet.
+    //  Retirer le dernier badge allumé des deux groupes réunis est
+    //  donc refusé, et c'est LE GROUPE OÙ SE TROUVAIT CE BADGE qui se
+    //  rallume en entier — jamais l'autre, qui n'a rien demandé.
+    //  ============================================================
+    let selectionFinale = suivante;
+    if (suivante.length === 0 && GROUPES_INSEPARABLES.includes(groupe.groupe)) {
+      const restantAilleurs = GROUPES_FILTRES.filter(
+        (autre) =>
+          autre.groupe !== groupe.groupe &&
+          GROUPES_INSEPARABLES.includes(autre.groupe)
+      ).some(
+        (autre) => selectionDuGroupe(autre, valeurs.exclure).length > 0
+      );
+      if (!restantAilleurs) selectionFinale = tous;
+    }
+
     //  TOUT SÉLECTIONNÉ : le groupe n'écarte rien — `exclure` vide.
-    //  PLUS RIEN DE SÉLECTIONNÉ : on revient à « partout ». Décocher le
-    //  dernier badge d'un groupe ne veut pas dire « ne me montre rien »
-    //  (une recherche sans aucun type de profil ne rendrait aucune
-    //  fiche) : cela veut dire qu'on abandonne ce critère. Le groupe se
-    //  rallume donc en entier — le seul état que la base sache dire.
+    //  GROUPE VIDÉ : tous ses slugs partent dans `exclure`, et
+    //  `allumesDuGroupe` le lira « critère abandonné ».
     const exclusDuGroupe =
-      suivante.length === 0 || suivante.length === tous.length
+      selectionFinale.length === tous.length
         ? []
-        : tous.filter((s) => !suivante.includes(s));
+        : tous.filter((s) => !selectionFinale.includes(s));
     poser({
       exclure: [
         ...valeurs.exclure.filter((s) => !tous.includes(s)),
