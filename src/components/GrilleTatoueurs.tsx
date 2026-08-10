@@ -127,8 +127,49 @@ export function GrilleTatoueurs({
    * on ne retrouvait pas celle qu'on regardait. Les deux bascules
    * passent désormais par la même remise en place.
    */
+  /**
+   * ⚠️ ET LA RECOMPOSITION SE FAIT EN FONDU (passe nº 159-§2).
+   * La sonde, chez le propriétaire, a montré que la barre n'avait
+   * JAMAIS bougé — même fond, même hauteur, rangée jamais repliée sur
+   * les 121 images du film. Ce qui saute, c'est LA PAGE :
+   *
+   *     t=1    scrollY 490   docH 11874
+   *     t=42   scrollY  69   docH  3505      ← une seule image
+   *
+   * Passer d'une colonne à deux divise la hauteur du document par
+   * trois : toutes les cartes changent de taille et de place d'un
+   * coup. La position est pourtant JUSTE (la carte regardée revient
+   * sous la barre) — mais l'œil, lui, voit tout se réécrire, et lit
+   * cela comme une disparition.
+   *
+   * On ne peut pas rendre une recomposition progressive : les cartes
+   * n'ont pas d'état intermédiaire entre une et deux colonnes. Ce
+   * qu'on peut faire, c'est NE PAS LA MONTRER. La mosaïque s'efface
+   * AVANT LA PEINTURE de la nouvelle disposition, puis revient en
+   * fondu une fois la page reposée. L'œil ne voit plus un saut mais
+   * une transition — et la barre, qui n'a jamais bougé, reste le
+   * repère fixe pendant tout le mouvement.
+   *
+   * ⚠️ JAMAIS AU PREMIER RENDU : une mosaïque qui apparaîtrait en
+   * fondu à chaque arrivée serait un défaut, pas une correction.
+   */
+  const [enBascule, setEnBascule] = useState(false);
+  const premiereDisposition = useRef(true);
   useEffetAvantPeinture(() => {
+    if (premiereDisposition.current) {
+      premiereDisposition.current = false;
+      return;
+    }
+    //  1. On efface AVANT que la nouvelle disposition ne soit peinte.
+    setEnBascule(true);
+    //  2. On repose la page sur la carte qu'on regardait.
     reposerLaCarteDuHaut();
+    //  3. On rend la mosaïque à l'image suivante : la transition CSS
+    //     fait le reste (voir la classe du conteneur).
+    const rendre = requestAnimationFrame(() =>
+      requestAnimationFrame(() => setEnBascule(false))
+    );
+    return () => cancelAnimationFrame(rendre);
   }, [disposition, phototheque]);
 
   const [ficheOuverte, setFicheOuverte] = useState<Tatoueur | null>(null);
@@ -310,7 +351,14 @@ export function GrilleTatoueurs({
               ? "mobile:gap-y-8"
               : "mobile:gap-x-[2px] mobile:gap-y-4"
         } ${
-          estompee ? "opacity-60" : "opacity-100"
+          //  ⚠️ LE FONDU DE BASCULE (nº 159-§2) PASSE DEVANT TOUT : la
+          //  mosaïque est effacée le temps que la nouvelle disposition
+          //  soit peinte et la page reposée. `duration-0` à l'aller —
+          //  on ne montre PAS la disparition — et 200 ms au retour :
+          //  c'est le fondu qui remplace le saut.
+          enBascule
+            ? "opacity-0 duration-0"
+            : `duration-200 ${estompee ? "opacity-60" : "opacity-100"}`
         } grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6`}
       >
         {tatoueurs.map((tatoueur, rang) => (

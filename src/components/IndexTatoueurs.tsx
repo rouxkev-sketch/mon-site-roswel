@@ -20,6 +20,10 @@ import {
 import type { Tatoueur } from "@/lib/tatoueurs";
 import { lieuVersParametres } from "@/lib/geocodage";
 import {
+  criteresDepuisAdresse,
+  memeRecherche,
+} from "@/lib/criteres-adresse";
+import {
   adresseCourante,
   lireMosaique,
   memoriserMosaique,
@@ -230,7 +234,21 @@ export function IndexTatoueurs({
     return parametres;
   }
 
-  async function chercher(suivants: CritèresTatouage) {
+  /**
+   * LA RECHERCHE, EN DEUX MOITIÉS (passe nº 159-§1)
+   * ================================================
+   * `ecrireLAdresse` sépare enfin les deux gestes qui n'avaient jamais
+   * eu de raison d'être soudés :
+   *  · CHERCHER — poser les critères, appeler l'API, montrer ;
+   *  · ÉCRIRE L'ADRESSE — empiler une étape d'historique.
+   * Un RETOUR ARRIÈRE veut la première moitié SANS la seconde :
+   * l'adresse est déjà celle que le navigateur vient de restaurer,
+   * la réécrire n'ajouterait qu'une étape parasite (voir `auRetour`).
+   */
+  async function chercher(
+    suivants: CritèresTatouage,
+    ecrireLAdresse = true
+  ) {
     setCriteres(suivants);
     const numero = derniere + 1;
     setDerniere(numero);
@@ -269,10 +287,12 @@ export function IndexTatoueurs({
     //  page de recherche et valider sans avoir touché à un critère ne
     //  doit pas ajouter une étape identique à la précédente — le
     //  retour arrière semblerait alors ne rien faire.
-    if (adresse === adresseCourante()) {
-      router.replace(adresse, { scroll: false });
-    } else {
-      router.push(adresse, { scroll: false });
+    if (ecrireLAdresse) {
+      if (adresse === adresseCourante()) {
+        router.replace(adresse, { scroll: false });
+      } else {
+        router.push(adresse, { scroll: false });
+      }
     }
 
     try {
@@ -294,6 +314,54 @@ export function IndexTatoueurs({
     }
     setEnCours(false);
   }
+
+  /**
+   * LE RETOUR ARRIÈRE RELANCE LA RECHERCHE (passe nº 159-§1)
+   * =========================================================
+   * ⚠️ CE DÉFAUT A RÉSISTÉ À QUATRE PASSES parce qu'on cherchait au
+   * mauvais endroit. La sonde, chez le propriétaire, l'a tranché :
+   *
+   *   [11658] PUSHSTATE   /?style=realisme      length 6 → 7
+   *   [14643] PUSHSTATE   /?style=anime-manga   length 7 → 8
+   *   [16020] REPLACESTATE /?style=realisme     length 8 → 8
+   *   [16022] POPSTATE    /?style=realisme      length 8
+   *
+   * L'HISTORIQUE ÉTAIT PARFAIT. L'adresse recule bien. Seul l'ÉCRAN
+   * restait sur « anime-manga » — et recharger la page suffisait à
+   * remettre les bons résultats.
+   *
+   * LA CAUSE : les deux recherches ont le MÊME CHEMIN (« / »), seuls
+   * les critères changent. React garde donc CETTE MÊME INSTANCE de
+   * composant d'une étape à l'autre — avec son état intact, c'est-à-
+   * dire la mosaïque d'anime-manga. Les critères ne vivent pas dans
+   * l'adresse pour ce composant : ils vivent dans `useState`, posé une
+   * fois au montage par `criteresInitiaux`. Un retour arrière ne
+   * remonte rien, ne remet rien à zéro, et personne n'allait relire
+   * l'adresse restaurée.
+   *
+   * LA CORRECTION : on écoute `popstate` — le seul événement qui dise
+   * « le navigateur vient de changer d'étape » — on RELIT les critères
+   * DANS L'ADRESSE, et on relance la recherche SANS réécrire
+   * l'historique (l'adresse est déjà la bonne : la réécrire ajouterait
+   * une étape parasite, et c'est justement le `replaceState` que la
+   * sonde voyait passer deux millisecondes avant).
+   *
+   * ⚠️ SANS TABLEAU DE DÉPENDANCES : l'écouteur doit toujours voir la
+   * dernière version de `chercher` (qui capture `derniere`). Le coût
+   * est nul — un ajout et un retrait d'écouteur par rendu.
+   */
+  useEffect(() => {
+    function auRetour() {
+      const voulus = criteresDepuisAdresse(window.location.search);
+      //  Rien n'a changé pour la mosaïque (un retour qui ne fait que
+      //  refermer la page de recherche, par exemple) : on ne relance
+      //  rien — « aucune recherche qui ne serve à rien » vaut aussi ici.
+      if (memeRecherche(voulus, criteres)) return;
+      void chercher(voulus, false);
+    }
+    window.addEventListener("popstate", auRetour);
+    return () => window.removeEventListener("popstate", auRetour);
+  });
 
   /**
    * « VOIR PLUS » — la page suivante, ajoutée à la suite

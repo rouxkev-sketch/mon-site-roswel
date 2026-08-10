@@ -92,6 +92,21 @@ function origine(): string {
     .join(" ← ");
 }
 
+/** LA MARGE DE REMONTÉE RÉELLEMENT APPLIQUÉE.
+    ⚠️ Le relevé du propriétaire la donnait VIDE alors que le film
+    disait 76 px : selon le navigateur, la propriété en camel
+    (`scrollMarginTop`) peut rendre une chaîne vide là où le nom CSS
+    complet répond. On demande donc les deux, et on le dit quand
+    aucune ne répond. */
+function margeLue(element: Element): string {
+  const style = getComputedStyle(element);
+  return (
+    style.getPropertyValue("scroll-margin-top") ||
+    style.scrollMarginTop ||
+    "(vide)"
+  );
+}
+
 /** L'adresse courante, chemin + critères. */
 function adresse(): string {
   return window.location.pathname + window.location.search;
@@ -307,7 +322,7 @@ export function SondeNavigation() {
           ...commun,
           champHaut: boite ? Math.round(boite.top) : null,
           champBas: boite ? Math.round(boite.bottom) : null,
-          marge: cible ? getComputedStyle(cible).scrollMarginTop : "—",
+          marge: cible ? margeLue(cible) : "—",
           vvH: window.visualViewport
             ? Math.round(window.visualViewport.height)
             : null,
@@ -316,6 +331,11 @@ export function SondeNavigation() {
             : null,
           innerH: window.innerHeight,
           docH: document.documentElement.scrollHeight,
+          //  L'ESPACE DE REMONTÉE (nº 159-§3) : présent ? c'est lui
+          //  qui donne au document de quoi défiler.
+          espace: document.querySelector("[data-espace-remontee]")
+            ? "OUI"
+            : "non",
         });
       }
     };
@@ -407,7 +427,7 @@ export function SondeNavigation() {
           t: maintenant(depart.current),
           texte:
             `SCROLLINTOVIEW · sur ${decrire} · arguments ${JSON.stringify(arguments_[0] ?? null)}\n` +
-            `    marge appliquée : ${this instanceof HTMLElement ? getComputedStyle(this).scrollMarginTop : "—"}\n` +
+            `    marge appliquée : ${margeLue(this)}\n` +
             `    appelé par : ${origine()}`,
         });
       }
