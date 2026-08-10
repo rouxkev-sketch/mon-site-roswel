@@ -227,31 +227,21 @@ html[data-clavier="ouvert"] [data-page-recherche] [data-remonte-au-toucher] {
   scroll-margin-top: 12px;
 }
 
-/*  LE VERROU DE BASCULE (nº 162-§2) — RIEN N'EST PEINT PENDANT LA
-    RECOMPOSITION.
+/*  ⚠️ L'EFFACEMENT DE LA MOSAÏQUE EST SUPPRIMÉ (nº 166).
     -------------------------------------------------------------------
-    Changer de format divise la hauteur du document par trois : toutes
-    les cartes changent de taille et de place d'un coup. La position
-    est pourtant juste — la carte regardée revient sous la barre — mais
-    si le navigateur PEINT entre deux étapes, on voit la page
-    s'effondrer. C'est une course, et elle se gagnait trois fois sur
-    quatre : d'où six passes de corrections « qui marchent ».
+    La nº 162 cachait la mosaïque le temps d'une recomposition, pour ne
+    pas montrer le saut. Vu de l'écran, c'était pire que le mal : sur
+    smartphone la mosaïque OCCUPE TOUT — l'effacer noircit la page
+    entière, et la barre, qui est un verre à 85 %, prend la couleur du
+    noir qu'elle laisse passer. D'où « toute l'interface disparaît ».
 
-    L'ATTRIBUT EST POSÉ À LA MAIN sur <html>, avant tout rendu (voir
-    lib/bascule-verrouillee) : la mosaïque est effacée AVANT que le
-    magasin ne notifie, et rendue seulement quand la hauteur du
-    document s'est tue. `duration-0` à l'aller — on ne montre pas la
-    disparition — et le retour reprend la transition de 200 ms portée
-    par la mosaïque elle-même.
-
-    ⚠️ PAS `visibility` ni `display` : les deux feraient perdre les
-    dimensions ou les recalculeraient, et c'est précisément la hauteur
-    qu'on veut laisser se stabiliser. L'opacité ne change RIEN à la
-    mise en page. */
-html[data-bascule] [data-mosaique] {
-  opacity: 0;
-  transition-duration: 0s;
-}
+    ET IL N'A PLUS D'OBJET : la nº 164 a supprimé LA CAUSE du saut
+    (l'état relu dans le stockage à chaque rendu, et la bascule qui
+    inversait). Un clic ne produit plus qu'un seul changement de
+    hauteur, instantané — il n'y a plus d'image intermédiaire à cacher.
+    Ce qui reste de la mécanique (lib/bascule-verrouillee) ne cache
+    RIEN : elle note la carte du haut, fait le changement dans une
+    seule tâche, et repose la page tant que la hauteur bouge encore. */
 
 /* Le fond de page reste BLANC PARTOUT (accueil, fiche, contact, etc.).
    Le gris très clair (--rw-fond-page) n'est PAS appliqué globalement :

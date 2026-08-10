@@ -8,7 +8,24 @@ import {
 } from "@/lib/carte-du-haut";
 
 /**
- * LE VERROU DE BASCULE — RIEN N'EST PEINT PENDANT LA RECOMPOSITION
+ * LA BASCULE TIENT DANS UNE SEULE TÂCHE — ET NE CACHE PLUS RIEN
+ * =================================================================
+ * ⚠️ L'EFFACEMENT DE LA MOSAÏQUE EST SUPPRIMÉ (passe nº 166). Vu de
+ * l'écran, il était pire que le mal qu'il soignait : sur smartphone la
+ * mosaïque OCCUPE TOUT — l'effacer noircit la page entière, et la
+ * barre, qui est un verre à 85 %, prend la couleur du noir qu'elle
+ * laisse passer. Le propriétaire voyait donc « toute l'interface
+ * disparaître », barre comprise, à chaque clic.
+ * ET IL N'A PLUS D'OBJET : la nº 164 a supprimé LA CAUSE du saut —
+ * l'état relu dans le stockage à chaque rendu, et la bascule qui
+ * inversait au lieu de poser une valeur. Un clic ne produit plus qu'un
+ * seul changement de hauteur ; il n'y a plus d'image intermédiaire à
+ * cacher. CE QUI RESTE, ET QUI COMPTE : la note de la carte du haut,
+ * le changement en UNE SEULE TÂCHE (`flushSync` — un navigateur ne
+ * peint jamais au milieu d'une tâche), et la remise en place tant que
+ * la hauteur du document bouge encore.
+ *
+ * (Ce qui suit décrit la nº 162, et reste vrai du mécanisme.)
  * =================================================================
  * (passe nº 162-§2 — SEPTIÈME passe sur ce défaut. Les six premières
  * ont corrigé des symptômes ; celle-ci s'attaque à LA COURSE.)
@@ -61,9 +78,6 @@ import {
  *      mosaïque revient, en fondu.
  */
 
-/** L'attribut du verrou, sur <html> — `data-bascule`. */
-const MARQUEUR = "bascule";
-
 /** Deux images de suite sans changement de hauteur : c'est fini. */
 const IMAGES_CALMES = 2;
 
@@ -90,13 +104,6 @@ let leverEnCours: number | null = null;
 const REBOND_MS = 350;
 let derniereBascule = 0;
 
-/** Vrai pendant qu'une bascule est verrouillée (la sonde le lit). */
-export function basculeVerrouillee(): boolean {
-  return typeof document !== "undefined"
-    ? Boolean(document.documentElement.dataset[MARQUEUR])
-    : false;
-}
-
 /**
  * BASCULER SANS SAUT — `changer` est l'appel qui modifie la
  * disposition (format) ou la vue (texte des cartes). Les deux boutons
@@ -112,21 +119,20 @@ export function basculerSansSaut(changer: () => void): void {
   const maintenant = performance.now();
   if (maintenant - derniereBascule < REBOND_MS) return;
   derniereBascule = maintenant;
-  const racine = document.documentElement;
-  //  1. LE VERROU, AVANT TOUT LE RESTE.
-  racine.dataset[MARQUEUR] = "1";
   if (leverEnCours !== null) cancelAnimationFrame(leverEnCours);
-  //  2. LA CARTE QU'ON REGARDE.
+  //  1. LA CARTE QU'ON REGARDE.
   noterLaCarteDuHaut();
-  //  3. LE CHANGEMENT, RENDU ET REPOSÉ DANS LA MÊME TÂCHE.
+  //  2. LE CHANGEMENT, RENDU ET REPOSÉ DANS LA MÊME TÂCHE.
   //     `flushSync` fait tout : rendu, mise à jour du DOM, effets de
   //     mise en page (c'est là que GrilleTatoueurs repose la carte).
+  //     ⚠️ RIEN N'EST CACHÉ (nº 166) : c'est le fait de tenir dans UNE
+  //     SEULE tâche qui empêche l'image intermédiaire, pas un voile.
   flushSync(changer);
-  //  4 et 5. LA STABILISATION, PUIS LA LEVÉE.
+  //  3. LA PAGE BOUGE-T-ELLE ENCORE ? On la repose sur sa carte tant
+  //     que la hauteur n'est pas stable, puis on oublie la note.
   attendreLaStabilite(() => {
     leverEnCours = null;
     oublierLaCarteDuHaut();
-    delete racine.dataset[MARQUEUR];
   });
 }
 

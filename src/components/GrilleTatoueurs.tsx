@@ -332,9 +332,11 @@ export function GrilleTatoueurs({
         // vertical VISUEL égal à l'horizontal. Sur smartphone, les
         // rangées reprennent l'interstice d'UNE ligne des colonnes
         // (2 px), en deux colonnes comme en pleine largeur.
-        //  ⚠️ LE REPÈRE DU VERROU (nº 162-§2) : c'est CETTE mosaïque que
-        //  le CSS efface pendant une bascule (globals.css). Un attribut,
-        //  pas une classe conditionnelle : le verrou se pose sans rendu.
+        //  ⚠️ LE REPÈRE DE LA MOSAÏQUE. Il servait au verrou de la
+        //  nº 162 à l'effacer pendant une bascule ; cet effacement est
+        //  SUPPRIMÉ (nº 166 — il noircissait tout l'écran, et la nº 164
+        //  a ôté la cause du saut qu'il masquait). Le repère reste : il
+        //  nomme la mosaïque, et les bancs s'en servent.
         data-mosaique=""
         className={`grid gap-4 sm:gap-5 mobile:-mx-4 transition-opacity ${
           phototheque
@@ -345,8 +347,8 @@ export function GrilleTatoueurs({
               ? "mobile:gap-y-8"
               : "mobile:gap-x-[2px] mobile:gap-y-4"
         } ${
-          //  L'ESTOMPE DE RECHERCHE — sans rapport avec le verrou de
-          //  bascule, qui vit en CSS (`html[data-bascule]`).
+          //  L'ESTOMPE DE RECHERCHE — la seule opacité de la mosaïque
+          //  désormais (nº 166) : plus rien ne l'efface à la bascule.
           `duration-200 ${estompee ? "opacity-60" : "opacity-100"}`
         } grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6`}
       >
