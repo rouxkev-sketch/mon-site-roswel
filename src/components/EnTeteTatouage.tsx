@@ -101,6 +101,35 @@ export function EnTeteTatouage({
     if (connecte) marquerDejaConnecte();
   }, [connecte]);
 
+  /**
+   * LA DENSITÉ DE TEINTE DU VERRE SE RÈGLE PAR L'ADRESSE (nº 167-§1)
+   * ================================================================
+   * `?verre=30`, `?verre=40`, `?verre=50`, `?verre=85`… — la valeur est
+   * un POURCENTAGE d'opacité de l'anthracite du site. SANS paramètre :
+   * 40. UNE SEULE variable bouge : le FLOU (40 px) et la SATURATION
+   * (1,5) ne changent pas, et la déclaration est la même sur web et sur
+   * smartphone — le paramètre agit donc sur les deux.
+   *
+   * Elle est posée sur <html> (`--rw-verre`), et c'est une règle de
+   * globals.css qui la donne à la barre, sous `@supports` : sans
+   * `backdrop-filter`, le fond reste PLEIN (`bg-sombre-fond`), comme
+   * depuis la nº 147-§2 — jamais de contenu lisible à travers.
+   *
+   * ⚠️ POSÉE DANS UN EFFET, PAS DANS LE RENDU : le serveur ne connaît
+   * pas l'adresse du navigateur, et une classe qui changerait entre les
+   * deux serait un écart d'hydratation.
+   */
+  useEffect(() => {
+    const demande = new URLSearchParams(window.location.search).get("verre");
+    if (demande === null) return;
+    const pourcent = Number(demande);
+    if (!Number.isFinite(pourcent) || pourcent < 0 || pourcent > 100) return;
+    document.documentElement.style.setProperty(
+      "--rw-verre",
+      String(pourcent / 100)
+    );
+  }, []);
+
   // État interne, utilisé UNIQUEMENT quand la page ne pilote rien
   // (fiche, page style + ville).
   const [internes, setInternes] = useState(() =>
@@ -303,7 +332,6 @@ export function EnTeteTatouage({
       //  restent supprimés (nº 161) — une apparence qui ne varie pas
       //  ne peut pas clignoter. Toujours AUCUN trait : c'est un acquis.
       className="sticky top-0 z-50 bg-sombre-fond
-                 supports-[backdrop-filter]:bg-sombre-fond/85
                  backdrop-blur-2xl backdrop-saturate-150"
     >
       <div

@@ -41,6 +41,7 @@ import { scriptAvantPeinture } from "@/lib/script-avant-peinture";
 import { chargerStylesAjoutes } from "@/lib/styles-ajoutes";
 import { SondeClavier } from "@/components/SondeClavier";
 import { SondeNavigation } from "@/components/SondeNavigation";
+import { SondeFiltres } from "@/components/SondeFiltres";
 import { SondeRetour } from "@/components/SondeRetour";
 import { COMPTES_YOKOFOLIO } from "@/config/tatouage";
 import { utilisateurDepuisCookies } from "@/lib/session-cookie";
@@ -160,6 +161,12 @@ export default async function MiseEnPageTatouage({
         HORS de l'enveloppe `data-fond`, comme les autres sondes : la
         page de recherche la ferait disparaître au moment de lire. */}
     <SondeNavigation />
+    {/* ⚠️ TEMPORAIRE — LA SONDE DES FILTRES (`?sonde-filtres=1`). Elle
+        mesure le panneau réellement ouvert chez le propriétaire (marges
+        gauche, haute à l'encre, basse) et DIT QUEL FICHIER le rend.
+        Pour la retirer : cette ligne, son import, et le fichier
+        src/components/SondeFiltres.tsx. */}
+    <SondeFiltres />
     {/* ⚠️ L'ÉCOUTEUR GLOBAL DE REMONTÉE EST SUPPRIMÉ (nº 162-§1). La
         règle de la nº 155-§1 — « TOUS les champs du site remontent » —
         est annulée : la remontée ne sert qu'à dégager de la place SOUS

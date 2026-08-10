@@ -634,6 +634,14 @@ export function MoteurTatouage({
     //  il ne reste que le rembourrage du panneau : 20 px, comme à
     //  gauche et en haut. */
     <div
+      //  ⚠️ D'OÙ VIENT CE BLOC (nº 167-§2) : la sonde des filtres lit ces
+      //  deux attributs DANS LE DOM et les affiche. C'est la seule
+      //  façon de savoir si le composant corrigé ici est bien celui que
+      //  le navigateur du propriétaire rend.
+      data-source-fichier="src/components/MoteurTatouage.tsx"
+      data-source-composant={
+        surPanneau ? "MoteurTatouage · blocFiltres (panneau web)" : "MoteurTatouage · blocFiltres (page mobile)"
+      }
       className="flex flex-col
                  [&>fieldset+fieldset]:mt-4
                  [&>fieldset:last-child]:mb-0 [&>fieldset:last-child]:pb-0"
@@ -985,6 +993,9 @@ export function MoteurTatouage({
             //  rembourrage haut descend donc à 15 px : l'encre du titre
             //  est à 20 px du bord, comme la capsule du bas.
             <div
+              data-panneau-filtres=""
+              data-source-fichier="src/components/MoteurTatouage.tsx"
+              data-source-composant="MoteurTatouage · panneau web des filtres"
               className="absolute top-full right-0 z-30 mt-2
                          w-[min(420px,calc(100vw-32px))] rounded-2xl
                          bg-sombre-eleve px-5 pb-5 pt-[15px]"
