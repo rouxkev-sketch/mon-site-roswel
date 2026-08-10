@@ -158,15 +158,33 @@ html:has([data-fond="sombre"]) {
       en pixels. 40 par défaut — la valeur de la nº 163. */
   --rw-flou: 40px;
 }
+/*  ⚠️ LA CONDITION ACCEPTE LES DEUX ÉCRITURES (nº 170) — et c'est ce
+    qui manquait à Safari. Relevé du propriétaire, Safari 18.6 :
+
+        backdrop-filter ............................ (vide)
+        -webkit-backdrop-filter .................... none
+        CSS.supports('backdrop-filter: blur(1px)') . false
+
+    Safari ne connaît que la forme PRÉFIXÉE : il répond `false` à la
+    forme nue, et toute règle enfermée dans une condition qui ne teste
+    QUE celle-là est ignorée en bloc — la ligne préfixée qu'elle
+    contient comprise. Le flou n'avait jamais été appliqué une seule
+    fois sur son écran. La condition demande donc l'une OU l'autre. */
 @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
   [data-barre-fixe] {
     background-color: rgb(26 26 29 / var(--rw-verre));
-    /*  ⚠️ LE FLOU EST ÉCRIT ICI, ET PLUS EN CLASSES (nº 169-§3b) : une
-        classe Tailwind ne sait pas lire une variable réglable. Les deux
-        écritures — préfixée et non préfixée — sont posées, comme
-        Tailwind le faisait. La saturation (1,5) ne change pas. */
-    -webkit-backdrop-filter: blur(var(--rw-flou)) saturate(1.5);
-    backdrop-filter: blur(var(--rw-flou)) saturate(1.5);
+    /*  ⚠️ LES DEUX PROPRIÉTÉS, PRÉFIXÉE EN PREMIER (nº 170) : Safari ne
+        lit que la première, les autres moteurs que la seconde.
+        ⚠️ ET LA SATURATION EN POURCENTAGE (150 %, la même valeur que
+        1,5) : c'est la forme que tous les moteurs acceptent, et une
+        seule fonction refusée invaliderait TOUTE la liste de filtres —
+        c'est-à-dire le flou avec elle.
+        (Un « repli » en clair posé avant la version réglable ne sert à
+        rien, vérifié au CSSOM : deux déclarations de la même propriété
+        dans une même règle sont fusionnées à l'analyse, la dernière
+        efface la première. Il n'y a donc qu'une écriture, la bonne.) */
+    -webkit-backdrop-filter: blur(var(--rw-flou)) saturate(150%);
+    backdrop-filter: blur(var(--rw-flou)) saturate(150%);
   }
 }
 
