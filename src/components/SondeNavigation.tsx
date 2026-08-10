@@ -31,7 +31,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
  *  · CHAMP — image par image pendant deux secondes après le toucher
  *    d'un champ : sa position à l'écran, le défilement, la marge
  *    `scroll-margin-top` réellement appliquée, la hauteur du viewport
- *    visuel, et tout appel à `scrollIntoView` (avec ses arguments).
+ *    visuel, l'espace de fin de document, l'état « barre fixe sortie
+ *    de l'écran » (colonne `clavier`, nº 160-§3), et tout appel à
+ *    `scrollIntoView` (avec ses arguments).
  *
  * ELLE NE FAIT QUE LIRE — c'est la règle absolue.
  *  · les écouteurs sont POSÉS EN PASSIF ET EN CAPTURE : ils ne
@@ -336,6 +338,10 @@ export function SondeNavigation() {
           espace: document.querySelector("[data-espace-remontee]")
             ? "OUI"
             : "non",
+          //  LA BARRE FIXE EST-ELLE SORTIE DE L'ÉCRAN (nº 160-§3) ?
+          //  C'est cet attribut qui fait passer la marge de 76 px à
+          //  12 px — la colonne « marge » d'à côté le confirme.
+          clavier: document.documentElement.dataset.clavier ? "OUI" : "non",
         });
       }
     };

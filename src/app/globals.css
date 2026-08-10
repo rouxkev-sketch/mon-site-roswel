@@ -199,6 +199,39 @@ select,
   scroll-margin-top: calc(max(12px, env(safe-area-inset-top)) + 56px);
 }
 
+/*  ⚠️ QUAND LE CLAVIER A FAIT DISPARAÎTRE LA BARRE (nº 160-§3).
+    -------------------------------------------------------------------
+    Les marges ci-dessus réservent la hauteur d'une barre fixe. Or
+    pendant la saisie, sur iOS, cette barre N'EST PLUS À L'ÉCRAN : le
+    clavier rétrécit la zone visible et le navigateur fait glisser la
+    page dessous — la barre, accrochée au haut de la page, sort par le
+    haut. Le relevé du propriétaire le disait en une ligne :
+
+        champHaut 76 · marge 76px · vvH 398 · vvTop 295
+
+    …soit 76 px de VIDE au-dessus du champ, réservés à une barre
+    absente, pris sur la poignée de pixels qui restent au clavier.
+
+    LA MARGE SUIT DONC LA BARRE : il ne reste que l'air esthétique —
+    une douzaine de pixels — et le champ monte tout en haut de ce qu'on
+    voit, sans y être collé. `data-clavier="ouvert"` est posé sur
+    <html> juste avant le défilement, et retiré dès que le clavier
+    repart (lib/remontee-champ) ; la marge redevient alors celle de la
+    barre et le champ se repose sous elle.
+
+    ⚠️ RIEN D'AUTRE NE CHANGE : le défilement reste natif
+    (`scrollIntoView`), et aucune position n'est calculée nulle part —
+    seule la marge est conditionnelle. */
+html[data-clavier="ouvert"] input,
+html[data-clavier="ouvert"] textarea,
+html[data-clavier="ouvert"] select,
+html[data-clavier="ouvert"] [data-remonte-au-toucher],
+html[data-clavier="ouvert"] [data-page-recherche] input,
+html[data-clavier="ouvert"] [data-page-recherche] textarea,
+html[data-clavier="ouvert"] [data-page-recherche] [data-remonte-au-toucher] {
+  scroll-margin-top: 12px;
+}
+
 /* Le fond de page reste BLANC PARTOUT (accueil, fiche, contact, etc.).
    Le gris très clair (--rw-fond-page) n'est PAS appliqué globalement :
    il n'habille QUE la zone des résultats de recherche (les cartes), via
