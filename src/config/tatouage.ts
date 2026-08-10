@@ -578,21 +578,28 @@ export const FILTRES_TATOUAGE = [
  */
 export const FILTRE_TYPE_FICHE = {
   groupe: "type",
-  // « Type de fiche » était un mot de développeur ; « Artistes &
-  // salons » répétait ses propres interrupteurs. Un seul mot suffit,
-  // et il dit ce qu'on trie : le PROFIL de la personne cherchée.
-  titre: "Profil",
+  //  « LIEU » depuis la passe nº 149-§6 : la liste unique des filtres
+  //  dit d'abord comment travaille l'ARTISTE (le groupe `mode`), puis
+  //  quel LIEU on cherche — un studio, un salon. C'est le même groupe
+  //  technique qu'avant (le type de la fiche), présenté par sa moitié
+  //  « établissements ».
+  titre: "Lieu",
   options: [
-    { slug: "artiste", label: "Artistes" },
+    //  ⚠️ « ARTISTES » N'A PLUS DE BADGE (nº 149-§6) : le groupe
+    //  « Artiste » (les modes d'exercice) parle déjà pour eux. Le slug
+    //  RESTE dans le groupe — il appartient au langage `exclure=` (les
+    //  adresses partagées le portent, la base le connaît) — mais
+    //  l'écran ne le montre plus : il reste sélectionné en
+    //  permanence, et le moteur raisonne sur les badges VISIBLES.
+    { slug: "artiste", label: "Artistes", cachee: true },
+    // LA FICHE DE LIEU dont `etablissement = 'prive'` (migration
+    // nº 37). Slug distinct de `prive` (le genre de mode) : deux
+    // groupes ne peuvent pas partager un slug, tous voyagent dans le
+    // même `exclure=`.
+    { slug: "studio-prive", label: "Studio" },
     // ⚠️ LE SLUG RESTE « salon » : c'est une CLÉ TECHNIQUE, écrite en
     // base et dans les adresses de recherche depuis le premier jour.
-    // Le LIBELLÉ, lui, redit « Salons » (voir TYPES_FICHE).
-    { slug: "salon", label: "Salons" },
-    // LA TROISIÈME NATURE, ouverte par la migration nº 37 : une fiche
-    // de LIEU dont `etablissement = 'prive'`. Slug NEUF et distinct de
-    // `prive` (le genre de mode) : deux groupes ne peuvent pas
-    // partager un slug, tous voyagent dans le même `exclure=`.
-    { slug: "studio-prive", label: "Studios privés" },
+    { slug: "salon", label: "Salon" },
   ],
 } as const;
 
@@ -628,17 +635,23 @@ export const FILTRE_TYPE_FICHE = {
  */
 export const FILTRE_MODE_ACTIVITE = {
   groupe: "mode",
-  titre: "Où il tatoue",
+  //  « ARTISTE » depuis la passe nº 149-§6 : premier groupe de la
+  //  liste unique des filtres — comment travaille l'artiste qu'on
+  //  cherche. (Un salon n'a pas de mode : ce groupe ne concerne que
+  //  les fiches d'artiste, voir plus haut.)
+  titre: "Artiste",
+  //  L'ORDRE ET LES LIBELLÉS DU BRIEF nº 149-§6 : « À domicile ·
+  //  En studio · En salon · Guest ». Les SLUGS et les GENRES, eux, ne
+  //  bougent pas d'une lettre : ce sont les clés du langage `exclure=`
+  //  et de `modes_exercice.genre` — l'ordre d'un groupe n'a aucun
+  //  effet sur ce qui part vers la base (des ensembles, pas des
+  //  listes). « En studio privé » se raccourcit en « En studio » sur
+  //  demande explicite de cette passe.
   options: [
-    { slug: "en-salon", label: "En salon", genre: "salon" },
-    { slug: "en-guest", label: "En guest", genre: "guest" },
     { slug: "a-domicile", label: "À domicile", genre: "domicile" },
-    //  ⚠️ « En studio privé » ICI, alors que le FORMULAIRE dit
-    //  « En studio » depuis la passe nº 105 — et c'est VOULU, pas un
-    //  oubli : le tatoueur sait de quel studio il parle (le sien), le
-    //  visiteur qui filtre a besoin du mot entier pour comprendre ce
-    //  qu'il inclut. Ne pas « harmoniser » sans demande.
-    { slug: "en-studio-prive", label: "En studio privé", genre: "prive" },
+    { slug: "en-studio-prive", label: "En studio", genre: "prive" },
+    { slug: "en-salon", label: "En salon", genre: "salon" },
+    { slug: "en-guest", label: "Guest", genre: "guest" },
   ],
 } as const;
 

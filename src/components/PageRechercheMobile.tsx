@@ -351,12 +351,17 @@ export function PageRechercheMobile({
            remonte la page, la sortie et la bascule restent
            atteignables. */}
       <div
+        //  ⚠️ 24 px EN HAUT (nº 149-§5) : le titre était collé au bord
+        //  de l'écran. La marge de sécurité des encoches reste.
         className="sticky top-0 z-10 bg-sombre-fond px-4 pb-1
-                   pt-[max(12px,env(safe-area-inset-top))]"
+                   pt-[max(24px,env(safe-area-inset-top))]"
       >
         <div className="flex items-center justify-between gap-4">
-          <h1 className="flex items-center gap-2.5 text-[17px] font-bold text-sombre-texte">
-            <IconeLoupe taille={18} classe="shrink-0 text-sombre-texte-doux" />
+          {/*  LE TITRE ET SA LOUPE, agrandis et en BLANC (nº 149-§1) :
+               20 px de corps, loupe au rang 22 — les deux en blanc
+               pur, c'est le nom de la page. */}
+          <h1 className="flex items-center gap-2.5 text-[20px] font-bold text-white">
+            <IconeLoupe taille={22} classe="shrink-0 text-white" />
             Recherche
           </h1>
           <button
@@ -370,7 +375,12 @@ export function PageRechercheMobile({
             <IconeCroix taille={18} />
           </button>
         </div>
-        <div className="mt-1 max-w-[260px]">
+        {/*  ⚠️ PLEINE LARGEUR (nº 149-§3) : le max-w-[260px] arrêtait
+             la ligne du sélecteur avant le bord droit des champs — la
+             bascule occupe désormais exactement leur largeur (même
+             px-4 des deux côtés). Et mt-4 (§2) : elle respirait mal
+             sous le titre. */}
+        <div className="mt-4">
           <OngletsLigne
             ariaLabel="Explorer ou filtres"
             cleActive={vue}
@@ -400,11 +410,12 @@ export function PageRechercheMobile({
           la place : la vue s'allonge donc quand la liste s'ouvre, le
           document devient défilable, et `scrollIntoView` peut amener
           le champ en haut. */}
-      {/*  pt-2 et pied pt-3 (nº 144-§10) : le titre ajouté au-dessus de la
-     bascule coûtait 8 px à la vue Filtres sur l'écran le plus court
-     (320×568). Repris ici, mesuré : les deux vues tiennent de
-     nouveau exactement. */}
-      <div className="flex grow flex-col gap-4 px-4 pt-2">
+      {/*  ⚠️ LES CHAMPS RESPIRENT (nº 149-§4) : 24 px au-dessus du
+           champ Explorer (pt-6) et 24 px entre les champs (gap-6) —
+           les 8 et 16 px d'avant donnaient l'impression de manquer de
+           place. La page défile quand il le faut : la hauteur n'est
+           plus la contrainte, la lisibilité l'est. */}
+      <div className="flex grow flex-col gap-6 px-4 pt-6">
         {children}
       </div>
 
@@ -419,8 +430,10 @@ export function PageRechercheMobile({
           page — on les rejoint en défilant, comme dans n'importe quel
           formulaire. */}
       <div
-        className="flex items-center justify-between px-4 pt-3
-                   pb-[max(16px,env(safe-area-inset-bottom))]"
+        //  ⚠️ 20 px au-dessus, 28 px en dessous (nº 149-§5) : la ligne
+        //  « Effacer / Valider » était collée au bas de la page.
+        className="flex items-center justify-between px-4 pt-5
+                   pb-[max(28px,env(safe-area-inset-bottom))]"
       >
         {/*  « Effacer » EN TEXTE BRUT (nº 141-2C) : c'est une action
              négative — jamais de capsule. La zone tactile de 44 px

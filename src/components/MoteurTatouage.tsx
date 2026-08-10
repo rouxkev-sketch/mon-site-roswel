@@ -379,12 +379,26 @@ export function MoteurTatouage({
   }
 
   /**
-   * LES DEUX GROUPES QU'ON NE PEUT PAS VIDER ENSEMBLE (nº 148-§2).
-   * « Profil » (qui l'on cherche) et « Où tatoue-t-il ? » (où il
-   * travaille) sont les deux moitiés d'une même question. On peut
-   * abandonner l'une, jamais les deux : le dernier badge allumé des
-   * deux réunis ne se retire pas. Technique, Types de projets, Rendu
-   * et Besoins ne sont pas concernés — eux se vident librement.
+   * LES SLUGS QUI ONT UN BADGE (passe nº 149-§6). L'option « Artistes »
+   * du groupe Lieu n'est plus affichée — le groupe « Artiste » (les
+   * modes) parle pour elle. Son slug reste dans le groupe (il
+   * appartient au langage `exclure=`) mais l'écran raisonne sur les
+   * badges VISIBLES : un slug caché reste sélectionné en permanence et
+   * ne part jamais dans `exclure`.
+   */
+  function slugsVisibles(groupe: (typeof GROUPES_FILTRES)[number]): string[] {
+    return groupe.options
+      .filter((option) => !("cachee" in option && option.cachee))
+      .map((option) => option.slug);
+  }
+
+  /**
+   * LES DEUX GROUPES QU'ON NE PEUT PAS VIDER ENSEMBLE (nº 148-§2,
+   * re-titrés à la nº 149) : « Artiste » (les modes, groupe `mode`) et
+   * « Lieu » (les établissements, groupe `type`) sont les deux moitiés
+   * d'une même question. On peut abandonner l'une, jamais les deux :
+   * le dernier badge allumé des deux réunis ne se retire pas.
+   * Technique et Rendu ne sont pas concernés — eux se vident librement.
    */
   const GROUPES_INSEPARABLES: string[] = ["type", "mode"];
 
@@ -393,8 +407,10 @@ export function MoteurTatouage({
     exclure: string[]
   ): string[] {
     //  UNE SEULE LECTURE, sans cas particulier : est sélectionné tout
-    //  ce qui n'est pas écarté. `exclure` vide ⇒ tout est sélectionné.
-    return slugsDuGroupe(groupe).filter((slug) => !exclure.includes(slug));
+    //  badge qui n'est pas écarté. `exclure` vide ⇒ tout est
+    //  sélectionné. (Sur les VISIBLES : un slug caché n'a pas de badge
+    //  et ne compte ni pour l'écran ni pour la règle d'ensemble.)
+    return slugsVisibles(groupe).filter((slug) => !exclure.includes(slug));
   }
 
   function basculerBadge(
@@ -404,6 +420,7 @@ export function MoteurTatouage({
     poser: (suivant: Partial<CritèresTatouage>) => void
   ) {
     const tous = slugsDuGroupe(groupe);
+    const visibles = slugsVisibles(groupe);
     const selection = selectionDuGroupe(groupe, valeurs.exclure);
     const suivante = selection.includes(slug)
       ? selection.filter((s) => s !== slug)
@@ -415,13 +432,13 @@ export function MoteurTatouage({
     //  Un groupe VIDE ne veut pas dire « ne me montre rien » : il veut
     //  dire QU'ON ABANDONNE CE CRITÈRE — la base ne reçoit alors aucun
     //  filtre pour lui (voir `allumesDuGroupe`, src/lib/tatoueurs.ts).
-    //  On peut donc vider librement Technique, Types de projets, Rendu
-    //  et Besoins : la recherche s'élargit, elle ne se vide pas.
+    //  On peut donc vider librement Technique et Rendu : la recherche
+    //  s'élargit, elle ne se vide pas.
     //
-    //  SAUF POUR L'ENSEMBLE « PROFIL + LIEU » (GROUPES_INSEPARABLES),
-    //  qui dit QUI l'on cherche et OÙ il tatoue. Les deux forment un
-    //  tout : on peut vider l'un OU l'autre, jamais LES DEUX — sans
-    //  eux, la question posée au moteur n'a plus de sujet.
+    //  SAUF POUR L'ENSEMBLE « ARTISTE + LIEU » (GROUPES_INSEPARABLES),
+    //  qui dit QUI l'on cherche et OÙ. Les deux forment un tout : on
+    //  peut vider l'un OU l'autre, jamais LES DEUX — sans eux, la
+    //  question posée au moteur n'a plus de sujet.
     //  Retirer le dernier badge allumé des deux groupes réunis est
     //  donc refusé, et c'est LE GROUPE OÙ SE TROUVAIT CE BADGE qui se
     //  rallume en entier — jamais l'autre, qui n'a rien demandé.
@@ -435,16 +452,17 @@ export function MoteurTatouage({
       ).some(
         (autre) => selectionDuGroupe(autre, valeurs.exclure).length > 0
       );
-      if (!restantAilleurs) selectionFinale = tous;
+      if (!restantAilleurs) selectionFinale = visibles;
     }
 
     //  TOUT SÉLECTIONNÉ : le groupe n'écarte rien — `exclure` vide.
-    //  GROUPE VIDÉ : tous ses slugs partent dans `exclure`, et
-    //  `allumesDuGroupe` le lira « critère abandonné ».
+    //  GROUPE VIDÉ : ses slugs VISIBLES partent dans `exclure` (un
+    //  slug caché n'y va jamais), et `allumesDuGroupe` lira « critère
+    //  abandonné » quand tout le groupe y est.
     const exclusDuGroupe =
-      selectionFinale.length === tous.length
+      selectionFinale.length === visibles.length
         ? []
-        : tous.filter((s) => !selectionFinale.includes(s));
+        : visibles.filter((s) => !selectionFinale.includes(s));
     poser({
       exclure: [
         ...valeurs.exclure.filter((s) => !tous.includes(s)),
@@ -484,8 +502,12 @@ export function MoteurTatouage({
         <legend className="text-[12px] font-semibold uppercase tracking-wide text-sombre-texte-doux">
           {titre}
         </legend>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {groupe.options.map((option) => {
+        <div className="mt-2.5 flex flex-wrap gap-2">
+          {/*  Seules les options VISIBLES ont un badge (nº 149-§6) :
+               « Artistes » du groupe Lieu n'en a plus. */}
+          {groupe.options
+            .filter((option) => !("cachee" in option && option.cachee))
+            .map((option) => {
             const choisi = selection.includes(option.slug);
             return (
               <button
@@ -493,8 +515,11 @@ export function MoteurTatouage({
                 type="button"
                 aria-pressed={choisi}
                 onClick={() => basculerBadge(groupe, option.slug, valeurs, poser)}
-                className={`inline-flex items-center gap-1.5 rounded-full px-3.5
-                           min-h-[36px] text-[13.5px] font-semibold
+                //  ⚠️ 44 px DE ZONE TACTILE (nº 149-§6) : les 36 px
+                //  d'avant passaient sous le minimum tactile — la
+                //  liste unique a la place, les capsules la prennent.
+                className={`inline-flex items-center gap-1.5 rounded-full px-4
+                           min-h-[44px] text-[13.5px] font-semibold
                            transition-colors ${choisi ? robeChoisie : robeRetiree}`}
               >
                 {choisi && (
@@ -510,130 +535,45 @@ export function MoteurTatouage({
   };
 
   /**
-   * LE BLOC DES FILTRES — LE MÊME sur web et sur mobile (nº 141).
-   * DEUX BLOCS RECTANGULAIRES côte à côte — le motif exact du
-   * formulaire de portfolio (les rectangles « Noir et gris /
-   * Couleur » du bloc des styles) : un clic sur l'un ouvre SES
-   * groupes de badges dessous.
-   *   · TYPE DE PROFIL   — Profil ;
-   *   · OÙ TATOUE-T-IL ? — Mode d'activité · Technique · Rendu.
-   * ⚠️ TECHNIQUE ET RENDU ONT CHANGÉ DE MAISON (nº 141-§3) : ils
-   * décrivent la PRATIQUE, pas l'identité — leur place est avec les
-   * modes d'activité. « Type de profil » ne trie plus que le profil.
+   * LE BLOC DES FILTRES — LE MÊME sur web et sur mobile.
+   * ⚠️ PLUS DE VOLETS (nº 149-§6) : le sélecteur « Type de profil /
+   * Où tatoue-t-il ? » a disparu. À la place, UNE LISTE UNIQUE de
+   * quatre groupes, dans cet ordre, chacun sous son titre :
+   *   · ARTISTE   — comment il travaille (le groupe `mode`) ;
+   *   · LIEU      — studio ou salon (le groupe `type`, sans le badge
+   *                 « Artistes » : le groupe du dessus parle pour eux) ;
+   *   · TECHNIQUE — handpoke, tebori, machine ;
+   *   · RENDU     — noir et gris, couleur.
+   * AUCUNE ligne de séparation : l'espacement et la typographie
+   * suffisent (charte).
    * ⚠️ COMPOSITION ET BESOINS NE S'AFFICHENT TOUJOURS PAS — ils ne
    * sont PAS supprimés : leurs groupes vivent dans GROUPES_FILTRES,
    * la base et les adresses `exclure=` les comprennent comme avant,
    * et une passe ultérieure les réintégrera.
    */
-  const [voletFiltres, setVoletFiltres] = useState<"profil" | "lieu">("profil");
-
   const parGroupe = new Map(GROUPES_FILTRES.map((g) => [g.groupe, g]));
-
-  /*  ⚠️ PLUS DE POINT SUR LES TITRES (nº 143-§4). Un point rose
-      apparaissait à droite du titre d'un rectangle dès qu'un de ses
-      groupes écartait quelque chose. Il est retiré dans TOUS les cas :
-      les badges du volet disent déjà, en clair et en toutes lettres,
-      ce qui est retenu et ce qui ne l'est pas — un second signal, plus
-      petit et sans légende, ne faisait que poser une question. */
 
   const blocFiltres = (
     valeurs: CritèresTatouage,
     poser: (suivant: Partial<CritèresTatouage>) => void,
     /** VRAI dans le panneau web (nº 144-§3) : le panneau ayant grimpé
-        à `eleve`, tout ce qui est posé dessus grimpe d'un cran, et la
-        première légende respire davantage (nº 144-§8). */
+        à `eleve`, tout ce qui est posé dessus grimpe d'un cran, et
+        les groupes respirent un peu plus. */
     surPanneau = false
-  ) => {
-    const volets = [
-      { cle: "profil" as const, titre: "Type de profil" },
-      { cle: "lieu" as const, titre: "Où tatoue-t-il ?" },
-    ];
-    const ouvert = volets.find((v) => v.cle === voletFiltres) ?? volets[0];
-    return (
-      <div>
-        {/* LES DEUX RECTANGLES — le motif du formulaire, dans la
-            langue de la charte (nº 144-§6) : l'OUVERT a le fond UN
-            CRAN PLUS CLAIR et le texte BLANC — plus de rose sur rose,
-            le rose ne teinte plus ni le fond ni la typographie. Le
-            fermé garde le fond du niveau et grise son titre. AUCUN
-            contour. Rien d'autre : plus de point (§4). */}
-        <div className="grid grid-cols-2 gap-2">
-          {volets.map((volet) => {
-            const actif = volet.cle === voletFiltres;
-            return (
-              <button
-                key={volet.cle}
-                type="button"
-                onClick={() => setVoletFiltres(volet.cle)}
-                aria-expanded={actif}
-                className={`rounded-xl px-3 py-2.5 text-left transition-colors ${
-                  actif
-                    ? surPanneau
-                      ? "bg-sombre-bordure"
-                      : "bg-sombre-eleve-clair"
-                    : surPanneau
-                      ? "bg-sombre-eleve-clair/60 hover:bg-sombre-eleve-clair"
-                      : "bg-sombre-eleve/70 hover:bg-sombre-eleve"
-                }`}
-              >
-                <span
-                  className={`block text-[14px] font-semibold ${
-                    actif ? "text-sombre-texte" : "text-sombre-texte-doux"
-                  }`}
-                >
-                  {volet.titre}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* LES GROUPES DU VOLET OUVERT — et la MARGE RESPIRE : 20 px
-            sous les rectangles sur smartphone (où chaque pixel de
-            hauteur compte à 320), 28 px sur le panneau web (nº 144-
-            §8), où « Profil » et « Mode d'activité » collaient aux
-            rectangles.
-            ⚠️ TECHNIQUE ET RENDU SONT SOUS LES DEUX VOLETS (nº 143-§3).
-            Ils décrivent la PRATIQUE : la question se pose aussi bien
-            en cherchant un type de profil qu'un lieu d'exercice. Ce
-            sont LES MÊMES badges — un seul et même `exclure` derrière —
-            si bien qu'un retrait fait d'un côté se voit de l'autre :
-            il n'y a pas deux réglages à tenir d'accord, il n'y en a
-            qu'un, montré à deux endroits. */}
-        <div className={`${surPanneau ? "mt-7" : "mt-5"} flex flex-col gap-5`}>
-          {ouvert.cle === "profil"
-            ? groupeDeBadges(
-                parGroupe.get("type")!,
-                "Profil",
-                valeurs,
-                poser,
-                surPanneau
-              )
-            : groupeDeBadges(
-                parGroupe.get("mode")!,
-                "Mode d'activité",
-                valeurs,
-                poser,
-                surPanneau
-              )}
-          {groupeDeBadges(
-            parGroupe.get("technique")!,
-            "Technique",
-            valeurs,
-            poser,
-            surPanneau
-          )}
-          {groupeDeBadges(
-            parGroupe.get("rendu")!,
-            "Rendu",
-            valeurs,
-            poser,
-            surPanneau
-          )}
-        </div>
-      </div>
-    );
-  };
+  ) => (
+    <div className={`flex flex-col ${surPanneau ? "gap-7" : "gap-6"}`}>
+      {groupeDeBadges(parGroupe.get("mode")!, "Artiste", valeurs, poser, surPanneau)}
+      {groupeDeBadges(parGroupe.get("type")!, "Lieu", valeurs, poser, surPanneau)}
+      {groupeDeBadges(
+        parGroupe.get("technique")!,
+        "Technique",
+        valeurs,
+        poser,
+        surPanneau
+      )}
+      {groupeDeBadges(parGroupe.get("rendu")!, "Rendu", valeurs, poser, surPanneau)}
+    </div>
+  );
 
   /**
    * LES ENTRÉES DU MENU « EXPLORER » (passe nº 110)
