@@ -565,13 +565,18 @@ export function MoteurTatouage({
                              choisi ? robeChoisie : robeRetiree
                            }`}
               >
-                {choisi && (
-                  <span
-                    aria-hidden="true"
-                    className="absolute left-[10px] top-1/2 h-1.5 w-1.5
-                               -translate-y-1/2 rounded-full bg-primaire"
-                  />
-                )}
+                {/*  ⚠️ LE POINT NE DISPARAÎT JAMAIS (nº 157-§4) : il
+                     passe en GRIS quand le badge est retiré — la
+                     géométrie ne bouge pas d'un pixel, seule la
+                     couleur dit l'état : rose et texte blanc quand
+                     actif, gris et texte gris quand retiré. */}
+                <span
+                  aria-hidden="true"
+                  className={`absolute left-[10px] top-1/2 h-1.5 w-1.5
+                             -translate-y-1/2 rounded-full ${
+                               choisi ? "bg-primaire" : "bg-sombre-texte-doux"
+                             }`}
+                />
                 {option.label}
               </button>
             );
@@ -612,7 +617,7 @@ export function MoteurTatouage({
     //  24 (mobile) et 28 (panneau web) faisaient des titres qui
     //  flottaient loin de leurs badges, et une liste trop longue pour
     //  le petit viewport d'un iPhone (barre d'outils dépliée).
-    <div className="flex flex-col gap-5">
+    <div className={surPanneau ? "flex flex-col gap-5" : "flex flex-col gap-4"}>
       {groupeDeBadges(parGroupe.get("mode")!, "Artiste", valeurs, poser, surPanneau)}
       {groupeDeBadges(parGroupe.get("type")!, "Lieu", valeurs, poser, surPanneau)}
       {groupeDeBadges(
@@ -946,7 +951,7 @@ export function MoteurTatouage({
             <div
               className="absolute top-full right-0 z-30 mt-2
                          w-[min(420px,calc(100vw-32px))] rounded-2xl
-                         bg-sombre-eleve p-5"
+                         bg-sombre-eleve px-5 pt-5 pb-4"
             >
               {blocFiltres(criteres, annoncer, true)}
             </div>

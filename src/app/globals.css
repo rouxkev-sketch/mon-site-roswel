@@ -180,15 +180,18 @@ html[data-recherche="ouverte"] [data-fond="sombre"] {
       rendu à la liste compte. */
 /*  ⚠️ TOUS LES CHAMPS DÉSORMAIS (nº 155-§1), plus seulement la
     localité : la remontée vaut pour chaque champ de saisie du site
-    (voir RemonteeChamps). La marge est la même pour tous — la barre
-    fixe (~64 px) plus l'air esthétique demandé : le champ remonte en
-    haut SANS être collé au bord de l'écran, et son étiquette reste
-    visible au-dessus de lui. */
+    (voir RemonteeChamps).
+    ⚠️ 76 px, ET PLUS 92 (nº 157-§1) : les 92 gardaient l'étiquette du
+    champ visible sous la barre — il restait « la place d'un second
+    champ » au-dessus, perdue pour les suggestions et le clavier. La
+    barre fixe fait ~60-64 px sur smartphone : 76 px posent le champ
+    JUSTE SOUS ELLE, avec 12 px d'air esthétique — pas collé, pas
+    davantage. Chaque pixel au-dessus est rendu au contenu. */
 input,
 textarea,
 select,
 [data-remonte-au-toucher] {
-  scroll-margin-top: 92px;
+  scroll-margin-top: 76px;
 }
 [data-page-recherche] input,
 [data-page-recherche] textarea,

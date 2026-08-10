@@ -874,26 +874,29 @@ export function IconeCartes({ taille = 20, classe = "" }: ProprietesIcone) {
   );
 }
 
+//  ⚠️ QUATRE PETITS RECTANGLES PORTRAIT (nº 157-§2B) — plus des
+//  carrés : ils répondent au grand rectangle portrait de la pleine
+//  page. Un grand contre quatre petits, la même silhouette partout.
 export function IconeDeuxColonnes({ taille = 20, classe = "" }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
-      <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.8" />
-      <rect x="13.5" y="3.5" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.8" />
-      <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.8" />
-      <rect x="13.5" y="13.5" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="4.5" y="3.5" width="6.5" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="13" y="3.5" width="6.5" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="4.5" y="13" width="6.5" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="13" y="13" width="6.5" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.8" />
     </svg>
   );
 }
 
-/** UN RECTANGLE PLEIN, SEUL (nº 155-§5C) — la disposition en UNE
-    colonne : une image qui occupe tout le cadre. La petite ligne qui
-    l'accompagnait évoquait du texte, or une autre icône est déjà
-    consacrée au texte des cartes. Un grand PLEIN contre quatre petits
-    cadres : l'opposition se lit d'un coup d'œil. */
+/** UN GRAND RECTANGLE PORTRAIT, AU CONTOUR SEUL (nº 157-§2A) — la
+    disposition en UNE colonne : une image à la française, comme les
+    photos du site (1080 × 1350). Le PLEIN de la nº 155 écrasait
+    l'icône en pavé sombre ; le contour dit la même chose, à armes
+    égales avec les quatre petits rectangles d'en face. */
 export function IconeUneColonne({ taille = 20, classe = "" }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
-      <rect x="3.5" y="4.5" width="17" height="15" rx="2" fill="currentColor" />
+      <rect x="6.5" y="3.5" width="11" height="17" rx="2" stroke="currentColor" strokeWidth="1.8" />
     </svg>
   );
 }
