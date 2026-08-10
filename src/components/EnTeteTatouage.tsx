@@ -288,12 +288,26 @@ export function EnTeteTatouage({
       // disposition (voir src/lib/carte-du-haut.ts).
       data-barre-fixe=""
       //  ⚠️ LE VERRE DÉPOLI (nº 163-§2) — YouTube, iOS, macOS. Le
-      //  contenu qui passe derrière est FORTEMENT flouté (40 px, un
-      //  cran de saturation en plus pour que les couleurs vivent) :
-      //  il n'en reste que des masses diffuses — aucune forme, aucun
-      //  texte, aucun visage. La teinte anthracite à 85 % garde la
-      //  barre dans la couleur du site : ce qui passe derrière ne fait
-      //  que la nuancer.
+      //  contenu qui passe derrière est FORTEMENT flouté (40 px, plus
+      //  de saturation pour que les couleurs vivent) : il n'en reste
+      //  que des masses diffuses — aucune forme, aucun texte, aucun
+      //  visage. La teinte anthracite garde la barre dans la couleur
+      //  du site : ce qui passe derrière ne fait que la nuancer.
+      //  ⚠️ CE TRAITEMENT EST DÉJÀ CELUI DU WEB (nº 165-§1), et il l'a
+      //  toujours été : une seule classe, aucune variante de largeur,
+      //  le préfixe `-webkit` bien émis — mesuré sur la page web, flou
+      //  et teinte identiques à ceux du smartphone. Si l'effet s'y
+      //  remarquait moins, la raison n'est pas dans le code : sur
+      //  smartphone la mosaïque passe BORD À BORD sous la barre, tandis
+      //  que sur web elle défile en cartes espacées, plus sombres,
+      //  entrecoupées de fond — il y a simplement moins de couleur à
+      //  laisser passer.
+      //  LA SATURATION MONTE DONC À 1,8 (elle valait 1,5) : ce qui
+      //  traverse est plus coloré, donc plus visible, DES DEUX CÔTÉS —
+      //  sans toucher ni au flou ni à la densité de la teinte, les deux
+      //  réglages qui garantissent qu'on ne lit rien derrière. Éprouvé
+      //  au pixel : à 85 %, le damier de contrôle est le PLUS dissous
+      //  de tous les réglages essayés (bord résiduel 22 sur 255).
       //  ⚠️ PAS LE FLOU DE LA Nº 147 : lui était trop FAIBLE (8 px) et
       //  le fond trop transparent — on lisait le contenu. Ici le flou
       //  est cinq fois plus fort, et la teinte reste dense. Sans
@@ -304,7 +318,7 @@ export function EnTeteTatouage({
       //  ne peut pas clignoter. Toujours AUCUN trait : c'est un acquis.
       className="sticky top-0 z-50 bg-sombre-fond
                  supports-[backdrop-filter]:bg-sombre-fond/85
-                 backdrop-blur-2xl backdrop-saturate-150"
+                 backdrop-blur-2xl backdrop-saturate-[1.8]"
     >
       <div
         //  ⚠️ PLUS DE gap-y (nº 147-§7) : l'espace au-dessus de la
@@ -339,7 +353,21 @@ export function EnTeteTatouage({
              Au-delà de 1024 px, rien ne change : `lg:min-w-fit` garde
              la règle de la nº 146-§2 — seul le moteur cède, jamais le
              logo. */}
-        <div className="min-w-0 basis-0 grow shrink order-1 lg:basis-auto lg:shrink-0 lg:flex-1 lg:min-w-fit">
+        {/*  ⚠️ LES DEUX CÔTÉS RÉSERVENT LA MÊME LARGEUR (nº 165-§3) :
+             c'est cela, et rien d'autre, qui CENTRE le bloc du milieu
+             dans la page. Le côté du logo grandissait librement
+             (`lg:flex-1` sans base) et absorbait tout l'espace
+             disponible : mesuré à 1440, il faisait 455 px contre 217 à
+             droite — le bloc était poussé de 238 px vers la droite.
+             LA RÈGLE : même BASE (240 px) et même croissance des deux
+             côtés. Ils restent donc égaux à toutes les largeurs, et le
+             bloc est au milieu. `lg:min-w-fit` demeure : un contenu
+             plus large que la réserve (un nom de compte long) n'est
+             jamais écrasé — il prime sur le centrage.
+             AU RÉTRÉCISSEMENT, RIEN NE CHANGE : les côtés ne cèdent
+             pas (`shrink-0`), seul le moteur se réduit (`lg:shrink` +
+             `min-w-0`), exactement comme aujourd'hui. */}
+        <div className="min-w-0 basis-0 grow shrink order-1 lg:basis-[240px] lg:grow lg:shrink-0 lg:min-w-fit">
           {/* LE LOGO RAMÈNE À L'ACCUEIL — un lien NATIF, exprès. La
               navigation douce de Next a déjà avalé ce clic deux fois
               (page du compte, puis page de création de fiche) : ici,
@@ -445,7 +473,7 @@ export function EnTeteTatouage({
           aria-label="Langue et compte"
           //  gap-3 (nº 141-§7) : le cœur — ou le globe — respirait mal
           //  contre « Mon espace ».
-          className="order-2 lg:order-3 ml-auto lg:flex-1 lg:min-w-fit shrink-0 flex items-center justify-end gap-3"
+          className="order-2 lg:order-3 ml-auto lg:ml-0 lg:basis-[240px] lg:grow lg:shrink-0 lg:min-w-fit shrink-0 flex items-center justify-end gap-3"
         >
           {/* LA LOUPE (nº 150-§3) — smartphone et écrans étroits
               seulement : elle mène à la recherche PARTOUT où la rangée
