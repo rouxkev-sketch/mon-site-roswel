@@ -32,6 +32,53 @@ import {
  * Accès : administrateurs uniquement (vérifié CÔTÉ SERVEUR).
  */
 
+/**
+ * LES CHAMPS QUI ONT CHANGÉ — le brouillon comparé à la version en
+ * ligne (passe nº 152).
+ * ⚠️ ON COMPARE CE QUI SE VOIT, pas la mécanique : `slug`, `publie`,
+ * `statut`, les dates et les décisions de modération ne sont pas du
+ * contenu à relire. Un champ absent du brouillon n'a pas changé (le
+ * formulaire n'envoie que ce qu'il gère).
+ * La comparaison est FAITE SUR LE TEXTE (`JSON.stringify`) : elle
+ * traite les tableaux (styles, filtres) et les objets
+ * (`photos_styles`) sans code particulier, et l'ordre y compte — deux
+ * styles réordonnés SONT une modification à relire.
+ */
+const CHAMPS_LISIBLES: Array<[string, string]> = [
+  ["nom", "Nom"],
+  ["bio", "Bio"],
+  ["styles", "Styles"],
+  ["ville_nom", "Ville"],
+  ["adresse", "Adresse"],
+  ["code_postal", "Code postal"],
+  ["photo_profil", "Photo de profil"],
+  ["photo_principale", "Photo principale"],
+  ["photos_styles", "Photos"],
+  ["lien_instagram", "Instagram"],
+  ["lien_tiktok", "TikTok"],
+  ["site_web", "Site web"],
+  ["site_web_titre", "Titre du site"],
+  ["page_de_liens", "Second lien"],
+  ["page_de_liens_titre", "Titre du second lien"],
+  ["filtres_technique", "Technique"],
+  ["filtres_composition", "Composition"],
+  ["filtres_besoins", "Besoins"],
+  ["type_fiche", "Type de fiche"],
+  ["etablissement", "Établissement"],
+];
+
+function champsModifies(
+  ligne: Record<string, unknown>,
+  brouillon: Record<string, unknown> | null
+): string[] {
+  if (!brouillon) return [];
+  const memeChose = (a: unknown, b: unknown) =>
+    JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+  return CHAMPS_LISIBLES.filter(
+    ([cle]) => cle in brouillon && !memeChose(brouillon[cle], ligne[cle])
+  ).map(([, libelle]) => libelle);
+}
+
 export async function GET() {
   const refus = await verifierAdmin();
   if (refus) {
@@ -57,14 +104,29 @@ export async function GET() {
     }
     if (reponse.error) throw new Error(reponse.error.message);
 
-    //  ⚠️ LES FICHES DE L'ADMINISTRATEUR NE SONT PLUS RELUES (passe
+    //  ⚠️ LES CRÉATIONS DE L'ADMINISTRATEUR NE SONT PAS RELUES (passe
     //  nº 135). Elles suivaient le même parcours de modération que
     //  celles des vrais tatoueurs : il relisait ce qu'il venait
     //  d'écrire, et une fiche préparée pour un démarchage restait
     //  invisible tant qu'il n'avait pas cliqué « Valider » dans son
     //  propre écran. Elles se mettent en ligne d'un interrupteur, dans
-    //  le tableau de démarchage — elles n'ont donc plus rien à faire
-    //  dans cette file d'attente.
+    //  le tableau de démarchage.
+    //
+    //  ⚠️ MAIS SES MODIFICATIONS, SI (passe nº 152) — ET C'EST LE
+    //  DÉFAUT QUE CETTE PASSE CORRIGE. Modifier une fiche DÉJÀ EN LIGNE
+    //  écrit les changements dans un `brouillon` et repasse la fiche en
+    //  « en_attente » : c'est vrai pour TOUT LE MONDE, l'administrateur
+    //  compris (voir FormulaireFiche, cas B). Sa fiche entrait donc dans
+    //  une file d'attente… dont ce filtre l'excluait. Plus aucun écran
+    //  ne pouvait approuver le changement : la modification restait
+    //  invisible POUR TOUJOURS — un style ajouté qui n'apparaissait ni
+    //  dans la recherche ni sur la fiche.
+    //  LA RÈGLE EST DONC : une fiche d'administrateur n'est écartée QUE
+    //  SI ELLE N'A RIEN EN ATTENTE. Dès qu'elle porte un brouillon,
+    //  elle prend sa place dans la file, comme les autres — et
+    //  l'interrupteur du démarchage, lui, continue de piloter sa mise
+    //  en ligne (il ne touche plus au statut tant qu'une modification
+    //  attend : voir demarchage/fiche/route.ts).
     //  ⚠️ RIEN NE CHANGE POUR LES VRAIS TATOUEURS : on écarte des
     //  PROPRIÉTAIRES, pas des fiches. Le jour où une adresse quitte
     //  COURRIELS_ADMIN, ses fiches reviennent ici d'elles-mêmes.
@@ -72,7 +134,8 @@ export async function GET() {
     const enAttente = ((reponse.data ?? []) as Array<Record<string, unknown>>)
       .filter((ligne) => {
         const proprietaire = ligne.user_id as string | null;
-        return !proprietaire || !comptesAdmin.includes(proprietaire);
+        if (!proprietaire || !comptesAdmin.includes(proprietaire)) return true;
+        return ligne.brouillon != null;
       });
 
     // LE COMPTE PROPRIÉTAIRE, fiche par fiche : un compte peut en
@@ -108,6 +171,17 @@ export async function GET() {
           slug: ligne.slug,
           brouillon: undefined,
           modification: Boolean(brouillon),
+          //  CE QUI A CHANGÉ (passe nº 152) — les champs dont le
+          //  brouillon diffère de la version en ligne, nommés en
+          //  français. « Vérifier » ne veut pas dire « tout relire » :
+          //  sur une modification, seul ce qui bouge demande un avis.
+          champs_modifies: champsModifies(ligne, brouillon),
+          //  UNE FICHE D'ADMINISTRATEUR SE DIT (passe nº 152) : elle
+          //  n'est ici que parce qu'elle a une modification en attente,
+          //  et l'écran doit pouvoir l'annoncer.
+          fiche_admin: Boolean(
+            proprietaire && comptesAdmin.includes(proprietaire)
+          ),
           compte: proprietaire ? (comptes.get(proprietaire) ?? null) : null,
         };
       }

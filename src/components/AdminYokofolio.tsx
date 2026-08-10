@@ -31,9 +31,20 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  *  - FICHES À VALIDER : par ordre d'arrivée ; l'écran de vérification
  *    montre TOUT (nom, adresse, bio, styles et chaque photo, filtres,
  *    liens cliquables) ; VALIDER publie, DEMANDER DES MODIFICATIONS
- *    exige au moins un motif coché (enregistré avec la décision) ;
+ *    et METTRE HORS LIGNE exigent au moins un motif coché (enregistré
+ *    avec la décision, et envoyé en notification) ;
  *  - SIGNALEMENTS : les signalements des visiteurs, lien vers la
  *    fiche, archivage après traitement.
+ *
+ * ⚠️ CETTE FILE VAUT POUR TOUTES LES FICHES (passe nº 152), celles des
+ * tatoueurs comme celles de l'administrateur. La nº 145 avait sorti ces
+ * dernières du parcours de modération — utile à leur CRÉATION (elles se
+ * publient d'un interrupteur, dans le démarchage), désastreux à leur
+ * MODIFICATION : modifier une fiche en ligne écrit les changements dans
+ * un brouillon et la met « en attente », donc dans une file dont elle
+ * était exclue. Elle y restait pour toujours, et le changement avec.
+ * Une fiche d'administrateur revient donc ici DÈS QU'ELLE PORTE UN
+ * BROUILLON — et rien d'autre n'a bougé.
  */
 
 type FicheAdmin = Tatoueur & {
@@ -41,6 +52,15 @@ type FicheAdmin = Tatoueur & {
   cree_le?: string | null;
   /** Vrai = ce sont des MODIFICATIONS d'une fiche déjà en ligne. */
   modification?: boolean;
+  /** CE QUI A CHANGÉ — les champs du brouillon qui diffèrent de la
+      version en ligne, déjà nommés en français par la route. Vide sur
+      une création : tout est neuf, il n'y a rien à comparer. */
+  champs_modifies?: string[];
+  /** Vrai = fiche d'un compte administrateur. Elle n'arrive ici QUE
+      pour une modification en attente (passe nº 152). */
+  fiche_admin?: boolean;
+  /** L'adresse du compte propriétaire, quand elle est lisible. */
+  compte?: string | null;
 };
 
 /** Le libellé français d'un motif de signalement (slug sinon). */
@@ -70,7 +90,8 @@ const SECTIONS = [
   //  d'essai ». L'interrupteur n'a pas disparu : il vit désormais dans
   //  le tableau, où il ne sert plus à « voir sa fiche le temps d'un
   //  test » mais à LA METTRE EN LIGNE — une fiche d'administrateur ne
-  //  passe plus par la validation.
+  //  passe pas par la validation POUR EXISTER. Ses MODIFICATIONS, si
+  //  (passe nº 152) : elles reviennent dans « Fiches à valider ».
   { cle: "demarchage", libelle: "Démarchage" },
 ] as const;
 
@@ -143,7 +164,14 @@ export function AdminYokofolio() {
   /* ---- La demande de modifications ---- */
   const [motifsCoches, setMotifsCoches] = useState<string[]>([]);
   const [noteMotif, setNoteMotif] = useState("");
-  const [refusOuvert, setRefusOuvert] = useState(false);
+  /** LE PANNEAU DES MOTIFS — fermé, ou ouvert POUR UNE DÉCISION
+      précise : « modifier » (rendre la main au tatoueur) ou
+      « hors_ligne » (dépublier). Les deux exigent au moins un motif,
+      et n'ont donc qu'un seul panneau — c'est le bouton qui a
+      appelé qui dit ce que fera « Envoyer ». */
+  const [refusOuvert, setRefusOuvert] = useState<
+    null | "modifier" | "hors_ligne"
+  >(null);
   const [envoiDecision, setEnvoiDecision] = useState(false);
   /* ---- Signalements ---- */
   const [signalements, setSignalements] = useState<Signalement[] | null>(null);
@@ -320,7 +348,7 @@ export function AdminYokofolio() {
     }
   }
 
-  async function decider(action: "valider" | "modifier") {
+  async function decider(action: "valider" | "modifier" | "hors_ligne") {
     if (!ficheOuverte || envoiDecision) return;
     setEnvoiDecision(true);
     try {
@@ -337,7 +365,7 @@ export function AdminYokofolio() {
       const donnees = (await reponse.json()) as { ok: boolean; message?: string };
       if (!donnees.ok) throw new Error(donnees.message);
       setFicheOuverte(null);
-      setRefusOuvert(false);
+      setRefusOuvert(null);
       setMotifsCoches([]);
       setNoteMotif("");
       await chargerFiches();
@@ -522,7 +550,7 @@ export function AdminYokofolio() {
                   type="button"
                   onClick={() => {
                     setFicheOuverte(fiche);
-                    setRefusOuvert(false);
+                    setRefusOuvert(null);
                     setMotifsCoches([]);
                     setNoteMotif("");
                   }}
@@ -540,7 +568,16 @@ export function AdminYokofolio() {
                       {fiche.cree_le ? ` · reçue le ${dateCourte(fiche.cree_le)}` : ""}
                     </span>
                   </span>
-                  <span className="shrink-0 flex items-center gap-2.5">
+                  <span className="shrink-0 flex flex-wrap items-center justify-end gap-2.5">
+                    {/*  UNE FICHE D'ADMINISTRATEUR SE DIT (nº 152) :
+                         elle n'arrive dans cette file QUE pour une
+                         modification — sa création, elle, se publie
+                         d'un interrupteur dans le démarchage. */}
+                    {fiche.fiche_admin && (
+                      <span className="rounded-full bg-sombre-eleve px-2.5 min-h-[24px] inline-flex items-center text-[12px] font-medium text-sombre-texte-doux">
+                        Fiche d&apos;administrateur
+                      </span>
+                    )}
                     {fiche.modification && (
                       <span className="rounded-full bg-primaire/15 px-2.5 min-h-[24px] inline-flex items-center text-[12px] font-medium text-sombre-texte">
                         Modification d&apos;une fiche en ligne
@@ -571,7 +608,50 @@ export function AdminYokofolio() {
             <p className="mt-1 text-[14px] text-sombre-texte-doux">
               {ficheOuverte.adresse ? `${ficheOuverte.adresse}, ` : ""}
               {ficheOuverte.code_postal} {ficheOuverte.ville_nom}
+              {ficheOuverte.compte ? ` · ${ficheOuverte.compte}` : ""}
             </p>
+
+            {/*  CE QUI A CHANGÉ (passe nº 152) — sur une MODIFICATION,
+                 l'écran montre déjà la version modifiée ; ce bandeau
+                 dit OÙ REGARDER. Sans lui, relire une fiche entière
+                 pour un lien TikTok corrigé décourage la relecture, et
+                 c'est ainsi qu'une file d'attente s'allonge.
+                 Une fiche d'administrateur le rappelle ici aussi : elle
+                 n'est dans cette file QUE pour sa modification. */}
+            {ficheOuverte.modification && (
+              <div className="mt-3 rounded-2xl bg-sombre-carte px-4 py-3">
+                <p className="text-[13px] font-semibold text-sombre-texte">
+                  Modification d&apos;une fiche déjà en ligne
+                  {ficheOuverte.fiche_admin
+                    ? " (fiche d'administrateur)"
+                    : ""}
+                </p>
+                {ficheOuverte.champs_modifies?.length ? (
+                  <ul className="mt-2 flex flex-wrap gap-1.5">
+                    {ficheOuverte.champs_modifies.map((champ) => (
+                      <li
+                        key={champ}
+                        className="rounded-full bg-primaire/15 px-2.5 min-h-[26px]
+                                   inline-flex items-center text-[12.5px] text-sombre-texte"
+                      >
+                        {champ}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-1 text-[13px] text-sombre-texte-doux">
+                    Aucun champ public ne diffère — la modification porte
+                    sur des éléments écrits directement (photos, modes
+                    d&apos;exercice, adresses).
+                  </p>
+                )}
+                <p className="mt-2 text-[13px] leading-relaxed text-sombre-texte-doux">
+                  La version publique n&apos;a pas bougé : elle attend
+                  cette décision. « Valider » la remplace par ce qui est
+                  affiché ci-dessous.
+                </p>
+              </div>
+            )}
 
             {/* Les liens — CLIQUABLES, nouvel onglet. */}
             <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[14px]">
@@ -640,8 +720,12 @@ export function AdminYokofolio() {
               <p className={`mt-4 ${ERREUR}`}>{erreurFiches}</p>
             )}
 
-            {/* LES DEUX ACTIONS. */}
-            <div className="mt-6 flex flex-wrap gap-3">
+            {/* LES ACTIONS. La capsule ROSE PLEINE est réservée à celle
+                qui conclut — publier ; les intermédiaires gardent leur
+                capsule naturelle, et METTRE HORS LIGNE, qui retire une
+                fiche du public, s'écrit en TEXTE BRUT (charte : une
+                action négative ne porte jamais de capsule). */}
+            <div className="mt-6 flex flex-wrap items-center gap-3">
               <button
                 type="button"
                 onClick={() => decider("valider")}
@@ -650,12 +734,18 @@ export function AdminYokofolio() {
                            bg-primaire hover:bg-primaire-fonce text-white font-semibold
                            transition-colors disabled:opacity-60"
               >
-                Valider — publier la fiche
+                {ficheOuverte.modification
+                  ? "Valider — publier la modification"
+                  : "Valider — publier la fiche"}
               </button>
               <button
                 type="button"
-                onClick={() => setRefusOuvert((etat) => !etat)}
-                aria-expanded={refusOuvert}
+                onClick={() =>
+                  setRefusOuvert((etat) =>
+                    etat === "modifier" ? null : "modifier"
+                  )
+                }
+                aria-expanded={refusOuvert === "modifier"}
                 className="inline-flex items-center justify-center rounded-full px-7 min-h-[48px]
                            bg-sombre-eleve text-sombre-texte
                            hover:bg-sombre-eleve-clair transition-colors"
@@ -679,13 +769,40 @@ export function AdminYokofolio() {
               >
                 Rouvrir le premier bloc (artiste / studio)
               </button>
+
+              {/*  METTRE HORS LIGNE — la sanction. Elle DÉPUBLIE la
+                   fiche (elle quitte la recherche et les pages
+                   publiques) sans toucher au compte : le tatoueur garde
+                   son espace pour corriger. Elle exige les mêmes motifs
+                   que le refus, et prévient par la même notification.
+                   TEXTE BRUT, en dernier : c'est la règle des actions
+                   négatives, et sa place dit son poids. */}
+              <button
+                type="button"
+                onClick={() =>
+                  setRefusOuvert((etat) =>
+                    etat === "hors_ligne" ? null : "hors_ligne"
+                  )
+                }
+                aria-expanded={refusOuvert === "hors_ligne"}
+                className="inline-flex items-center justify-center px-2 min-h-[48px]
+                           text-[14.5px] font-semibold text-sombre-texte-doux
+                           hover:text-erreur transition-colors"
+              >
+                Mettre la fiche hors ligne
+              </button>
             </div>
 
-            {/* LE REFUS MOTIVÉ — bloqué tant qu'aucun motif n'est coché. */}
+            {/* LE MOTIF — obligatoire pour les DEUX décisions qui
+                rendent la main (demander des modifications) ou
+                dépublient (mettre hors ligne). Un seul panneau : c'est
+                le bouton qui l'a ouvert qui dit ce que fera l'envoi. */}
             {refusOuvert && (
               <div className="mt-4 max-w-[560px] rounded-2xl bg-sombre-carte p-5">
                 <p className="text-[14px] font-semibold text-sombre-texte">
-                  Pourquoi&nbsp;?
+                  {refusOuvert === "hors_ligne"
+                    ? "Pourquoi cette fiche quitte-t-elle le site ?"
+                    : "Pourquoi ?"}
                 </p>
                 <div className="mt-3 flex flex-col gap-1">
                   {MOTIFS_MODERATION.map((motif) => (
@@ -722,13 +839,17 @@ export function AdminYokofolio() {
                 )}
                 <button
                   type="button"
-                  onClick={() => decider("modifier")}
+                  onClick={() => decider(refusOuvert)}
                   disabled={!refusPret || envoiDecision}
                   className="mt-4 inline-flex items-center justify-center rounded-full px-6 min-h-[46px]
                              bg-erreur text-white font-semibold transition-opacity
                              disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  {envoiDecision ? "Envoi…" : "Envoyer la demande"}
+                  {envoiDecision
+                    ? "Envoi…"
+                    : refusOuvert === "hors_ligne"
+                      ? "Retirer la fiche du site"
+                      : "Envoyer la demande"}
                 </button>
               </div>
             )}

@@ -11,12 +11,18 @@ import { creerClientSupabaseAdmin } from "@/lib/supabase/admin";
  * POST { id, restaurer: true }   — remettre en place une fiche que le
  *                                  tatoueur a fait retirer.
  *
- * ⚠️ UNE FICHE D'ADMINISTRATEUR NE PASSE PLUS PAR LA VALIDATION
- * (passe nº 135). Elle suivait le parcours de modération d'un vrai
- * tatoueur : envoyée en attente, relue, publiée. C'était absurde —
+ * ⚠️ UNE FICHE D'ADMINISTRATEUR NE PASSE PLUS PAR LA VALIDATION À SA
+ * CRÉATION (passe nº 135). Elle suivait le parcours de modération d'un
+ * vrai tatoueur : envoyée en attente, relue, publiée. C'était absurde —
  * l'administrateur relisait ce qu'il venait d'écrire, et une fiche
  * préparée pour un démarchage restait invisible tant qu'il n'avait pas
  * cliqué « Valider » dans son propre écran.
+ *
+ * ⚠️ SES MODIFICATIONS, ELLES, Y REPASSENT (passe nº 152) : modifier
+ * une fiche EN LIGNE écrit les changements dans un `brouillon` et pose
+ * « en_attente ». L'interrupteur ne touche donc plus au statut tant
+ * qu'un brouillon attend — sans quoi il ferait sortir la fiche de la
+ * file de validation sans que rien n'ait été approuvé.
  *
  * DÉSORMAIS, L'INTERRUPTEUR FAIT TOUT : il pose `publie`, `statut` ET
  * `admin_publique` d'un seul geste. Les trois colonnes vont ensemble —
@@ -71,13 +77,14 @@ export async function POST(requete: NextRequest) {
     //  publier ni dépublier la fiche de quelqu'un depuis cet écran.
     const proprio = await admin
       .from("tatoueurs")
-      .select("id, user_id, supprime_le")
+      .select("id, user_id, supprime_le, brouillon")
       .eq("id", corps.id)
       .maybeSingle();
     if (proprio.error) throw new Error(proprio.error.message);
     const ligne = proprio.data as {
       user_id: string | null;
       supprime_le: string | null;
+      brouillon?: Record<string, unknown> | null;
     } | null;
     if (!ligne) {
       return NextResponse.json(
@@ -128,6 +135,16 @@ export async function POST(requete: NextRequest) {
       publie: corps.publique,
       statut: corps.publique ? "valide" : "brouillon",
     };
+    //  ⚠️ UNE MODIFICATION EN ATTENTE N'EST PAS EFFACÉE PAR
+    //  L'INTERRUPTEUR (passe nº 152). La fiche porte un `brouillon` :
+    //  elle attend une décision dans « Fiches à valider », et son
+    //  statut « en_attente » est CE QUI L'Y FAIT FIGURER. L'écraser
+    //  d'un « valide » la ferait sortir de la file sans que personne
+    //  n'ait rien approuvé — le changement resterait dans le brouillon,
+    //  invisible, exactement le défaut que cette passe corrige.
+    //  L'interrupteur garde donc son rôle — mettre en ligne ou retirer
+    //  — sans jamais trancher à la place de la modération.
+    if (ligne.brouillon != null) delete valeurs.statut;
     let ecriture = await admin
       .from("tatoueurs")
       .update(valeurs)
