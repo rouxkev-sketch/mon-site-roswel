@@ -41,6 +41,7 @@ export function variablesCssCouleurs(): string {
     "--rw-sombre-eleve-clair": COULEURS_SOMBRE.eleveClair,
     "--rw-sombre-bordure": COULEURS_SOMBRE.bordure,
     "--rw-sombre-haut": COULEURS_SOMBRE.haut,
+    "--rw-sombre-haut-clair": COULEURS_SOMBRE.hautClair,
     "--rw-sombre-texte": COULEURS_SOMBRE.texte,
     "--rw-sombre-texte-doux": COULEURS_SOMBRE.texteDoux,
   };

@@ -1178,6 +1178,13 @@ export const COULEURS_SOMBRE = {
       niveau d'un empilement (sélecteur ouvert dans « Mon compte »,
       badge sélectionné dans le panneau des filtres). */
   haut: "#414149",
+  /** LE CRAN AU-DESSUS DE `haut` (passe nº 146-§3). Le sélecteur de
+      portfolios se confondait avec le fond de la fenêtre « Mon
+      compte » : son repos monte à `haut`, et son état ouvert — ainsi
+      que sa liste, qui le prolonge — avait donc besoin d'un barreau de
+      plus. Même usage strict que `haut` : le DERNIER niveau d'un
+      empilement, jamais un fond courant. */
+  hautClair: "#4B4B54",
   /** Le texte principal. */
   texte: "#F2F2F4",
   /** Le texte discret (ville, styles, mentions). */

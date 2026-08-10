@@ -811,27 +811,29 @@ export function IconePhoto({ taille = 20, classe = "" }: ProprietesIcone) {
   );
 }
 
-/** LA VUE AVEC TEXTE — l'icône de la photothèque ACTIVE, redessinée
-    (nº 144-§9) : LE MÊME MOTIF DE PAYSAGE que sa jumelle (le cadre,
-    le soleil, la montagne — remontés d'un cran), et la LETTRE « T »
-    posée dessous, dans le cadre : l'image ET son texte. Les deux
-    dessins ne diffèrent que par ce T — la paire se lit d'un coup
-    d'œil, et l'état se dit par le DESSIN, jamais par une couleur
-    (même règle que la disposition). */
+/** LA VUE AVEC TEXTE — l'icône de la photothèque ACTIVE, reprise à la
+    passe nº 146-§4 : une VRAIE LETTRE « T », grande, sur la moitié
+    droite du cadre — et le MOTIF DU PAYSAGE conservé (le soleil, la
+    montagne), résumé sur la moitié gauche. La version de la nº 144
+    posait un T minuscule sous la montagne : il se lisait comme une
+    ligne de texte factice — « un dessin de carte », pas une lettre.
+    Les deux dessins de la paire partagent le même cadre ; l'état se
+    dit par le DESSIN, jamais par une couleur (même règle que la
+    disposition). Trait 1.8, comme toute l'échelle. */
 export function IconeCartes({ taille = 20, classe = "" }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
       <rect x="3.5" y="4.5" width="17" height="15" rx="2" stroke="currentColor" strokeWidth="1.8" />
-      <circle cx="8.8" cy="8.4" r="1.4" fill="currentColor" />
+      <circle cx="7.3" cy="8.3" r="1.3" fill="currentColor" />
       <path
-        d="m6 13 3.2-3.4a1.3 1.3 0 0 1 1.9 0l1.6 1.7 1.3-1.4a1.3 1.3 0 0 1 1.9 0l2.1 2.2"
+        d="m5.4 15.6 2.4-2.6a1.2 1.2 0 0 1 1.8 0l1.9 2"
         stroke="currentColor"
         strokeWidth="1.8"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <path d="M9 16.3h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M12 16.3v3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M12.6 9h6.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M15.7 9v7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }

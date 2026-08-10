@@ -440,19 +440,19 @@ export function MenuEspace({
             // IL DOIT SE VOIR QU'ON PEUT L'OUVRIR — mais SANS CONTOUR
             // (charte, nº 132) : c'est un CHAMP, il se dit par son
             // FOND et par son chevron. À l'ouverture le fond
-            // s'éclaircit encore et le chevron passe au rose — la
-            // grammaire du focus des champs, sans un trait.
-            // ⚠️ DEUX CRANS AU-DESSUS DU BLOC (passe nº 134) : posé
-            // sur `bg-sombre-eleve/70` (≈ 41,41,46), le fond
-            // `bg-sombre-eleve` (44,44,49) ne s'en distinguait que de
-            // trois points — le sélecteur était invisible. Il prend
-            // `eleve-clair` (53,53,59) au repos, `bordure` (56,56,63)
+            // s'éclaircit encore — la grammaire du focus des champs,
+            // sans un trait.
+            // ⚠️ ENCORE UN CRAN (passe nº 146-§3, deuxième signalement) :
+            // la fenêtre a été éclaircie à la nº 144 (`carte` → `eleve`)
+            // mais le sélecteur, resté à `bordure` (56,56,63) sur le
+            // bloc `eleve-clair/70`, ne s'en détachait plus. Il prend
+            // `haut` (65,65,73) au repos et `haut-clair` (75,75,84)
             // ouvert : chaque niveau s'éclaircit, jamais de contour.
             className={`flex w-full items-center gap-3 rounded-xl px-3
                        min-h-[54px] text-left transition-colors ${
                          selecteurOuvert
-                           ? "bg-sombre-haut"
-                           : "bg-sombre-bordure hover:bg-sombre-haut"
+                           ? "bg-sombre-haut-clair"
+                           : "bg-sombre-haut hover:bg-sombre-haut-clair"
                        }`}
           >
             <span className="min-w-0 flex-1">
@@ -485,7 +485,7 @@ export function MenuEspace({
             //  elle le prolonge, elle ne peut pas être plus sombre.
             <div
               className="absolute left-0 right-0 top-full z-20 mt-1
-                         rounded-xl bg-sombre-haut overflow-hidden"
+                         rounded-xl bg-sombre-haut-clair overflow-hidden"
             >
               <ul className="max-h-[220px] overflow-y-auto overscroll-contain">
                 {fiches.map((entree) => {

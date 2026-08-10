@@ -156,9 +156,13 @@ export function EnTeteTatouage({
       // remettre sous les yeux la même carte après un changement de
       // disposition (voir src/lib/carte-du-haut.ts).
       data-barre-fixe=""
+      //  ⚠️ /95, PAS MOINS (nº 146-§1) : à 90 % le contenu transparaissait
+      //  derrière la barre. On reprend la densité de la barre d'avant la
+      //  refonte (95 %), le flou continue d'asseoir la séparation — et
+      //  toujours AUCUN trait : c'est un acquis.
       className={`sticky top-0 z-50 transition-colors duration-200 ${
         posee
-          ? "bg-sombre-carte/90 backdrop-blur"
+          ? "bg-sombre-carte/95 backdrop-blur"
           : "bg-transparent"
       }`}
     >
@@ -168,10 +172,18 @@ export function EnTeteTatouage({
       >
         {/* LOGO ET ACTIONS PRENNENT LA MÊME PLACE (`lg:flex-1` des deux
             côtés) : c'est ce qui met le moteur EXACTEMENT au milieu de
-            la barre, quelle que soit la longueur du bouton. Les deux
-            côtés se resserrent ensemble quand l'écran rétrécit — le
-            centre ne bouge donc jamais. */}
-        <div className="shrink-0 order-1 lg:flex-1">
+            la barre, quelle que soit la longueur du bouton.
+            ⚠️ `lg:min-w-fit` DES DEUX CÔTÉS (nº 146-§2) — et c'est lui
+            qui décide QUI CÈDE quand la place manque. Sans lui, les
+            côtés (base 0) tombaient sous la taille de leur contenu :
+            l'espace restant après les 680 px du moteur se partageait,
+            et c'est LE LOGO (max-width 100 %) qui se comprimait pendant
+            que l'encadré gardait toute sa largeur. Avec lui, chaque
+            côté réclame AU MOINS son contenu — le seul élément
+            compressible de la barre est le moteur (`lg:shrink` +
+            `min-w-0`) : c'est donc l'encadré qui se réduit en premier,
+            et le logo garde sa taille. */}
+        <div className="shrink-0 order-1 lg:flex-1 lg:min-w-fit">
           {/* LE LOGO RAMÈNE À L'ACCUEIL — un lien NATIF, exprès. La
               navigation douce de Next a déjà avalé ce clic deux fois
               (page du compte, puis page de création de fiche) : ici,
@@ -208,7 +220,11 @@ export function EnTeteTatouage({
              chacun des deux champs alors que la barre avait de la
              place. 680 px — la juste mesure : les champs respirent,
              et le moteur reste une PILULE au centre de la barre, pas
-             une barre dans la barre. */}
+             une barre dans la barre.
+             ⚠️ ET 680 EST UN MAXIMUM, PAS UNE LARGEUR FIXE (nº 146-§2) :
+             `lg:shrink` + `min-w-0` laissent l'encadré se réduire dès
+             que la barre manque de place — AVANT que quoi que ce soit
+             d'autre ne cède (voir le `lg:min-w-fit` des deux côtés). */}
         <div
           className={`order-3 lg:order-2 basis-full lg:basis-[680px] lg:shrink lg:grow-0
                       min-w-0 justify-center ${
@@ -224,7 +240,7 @@ export function EnTeteTatouage({
           aria-label="Langue et compte"
           //  gap-3 (nº 141-§7) : le cœur — ou le globe — respirait mal
           //  contre « Mon espace ».
-          className="order-2 lg:order-3 ml-auto lg:flex-1 shrink-0 flex items-center justify-end gap-3"
+          className="order-2 lg:order-3 ml-auto lg:flex-1 lg:min-w-fit shrink-0 flex items-center justify-end gap-3"
         >
           {/* ⚠️ LA PLACE À GAUCHE DU COMPTE CHANGE DE MAIN SELON QU'ON
               EST CONNECTÉ (passe nº 137) :
