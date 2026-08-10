@@ -1,6 +1,7 @@
 "use client";
 
 import { sans } from "@/lib/interrupteurs-mesure";
+import { defilerSansGeste } from "@/lib/defilement-programme";
 
 /**
  * LA POSITION EST POSÉE, PAS RATTRAPÉE
@@ -105,14 +106,17 @@ function surveillerLaReserve(reserve: number) {
  * de ce que le script bloquant fait au chargement.
  */
 export function poserLaPosition(position: number) {
+  //  ⚠️ JAMAIS UN GESTE (nº 154-§6A) : une restitution de position est
+  //  posée PAR LE SITE. Sans l'annoncer, la barre y lisait un geste et
+  //  repliait sa rangée de recherche à l'arrivée sur la page.
   if (position <= 0) {
     arreter?.();
-    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    defilerSansGeste({ top: 0, left: 0 });
     return;
   }
   const reserve = position + window.innerHeight;
   document.documentElement.style.minHeight = `${reserve}px`;
-  window.scrollTo({ top: position, left: 0, behavior: "instant" });
+  defilerSansGeste({ top: position, left: 0 });
   surveillerLaReserve(reserve);
 }
 

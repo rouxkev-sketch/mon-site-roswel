@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { estDefilementProgramme } from "@/lib/defilement-programme";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { lieuVersParametres } from "@/lib/geocodage";
@@ -131,15 +132,24 @@ export function EnTeteTatouage({
     ? "Se connecter"
     : TEXTES_TATOUAGE.lienInscription;
 
-  /** LA BARRE SE POSE AU DÉFILEMENT (passe nº 144-§1). Le trait qui la
-      séparait du contenu était LE DERNIER CONTOUR du site : il a
-      disparu. À sa place, la règle de la charte — les niveaux se
-      distinguent par leur CLARTÉ : en haut de page la barre est
-      TRANSPARENTE (elle appartient à la page) ; dès que du contenu
-      passe dessous, son fond s'éclaircit d'un cran, et c'est cette
-      nuance qui la détache. Le seuil de 8 px évite le clignotement sur
-      les micro-défilements élastiques. */
-  const [posee, setPosee] = useState(false);
+  /**
+   * ⚠️ LA BARRE NE CHANGE PLUS D'ÉTAT (passe nº 154-§3), ET SON FOND
+   * EST PERMANENT.
+   * Depuis la nº 144-§1 elle était TRANSPARENTE en haut de page et
+   * s'éclaircissait « dès que du contenu passe dessous » (seuil de
+   * 8 px, transition de 200 ms). Ce va-et-vient est exactement ce que
+   * le propriétaire voit CLIGNOTER :
+   *  · en remontant la page, franchir les 8 px éteint le fond — la
+   *    barre semble disparaître, puis revenir ;
+   *  · à l'ouverture d'une fiche, la position mémorisée est rendue
+   *    APRÈS le premier rendu : le fond s'allume « dans un second
+   *    temps », puis s'éteint quand la page repasse par le haut.
+   * Aucun réglage de seuil ne rattrape cela : c'est l'existence même
+   * des deux états qui se voit. La barre porte donc désormais SON
+   * fond, tout le temps — un niveau au-dessus de la page, comme le
+   * veut la charte (les niveaux se distinguent par leur clarté), et
+   * toujours AUCUN trait.
+   */
   /** LA LIGNE DE RECHERCHE SE RÉTRACTE (passe nº 147-§7, smartphone).
       En DESCENDANT dans les cartes, la rangée du moteur se replie et
       libère sa hauteur ; elle REVIENT AU PREMIER GESTE vers le haut —
@@ -158,6 +168,33 @@ export function EnTeteTatouage({
   /** LA LOUPE EST VISIBLE quand la rangée ne l'est pas : partout hors
       accueil, et sur l'accueil dès que la rangée est repliée. */
   const loupeVisible = !surAccueil || moteurReplie;
+  /**
+   * L'ÉCRAN EST-IL ÉTROIT ? — c'est-à-dire : la rangée du moteur est-
+   * elle réellement repliable ici ?
+   * ⚠️ SANS CETTE QUESTION, LE MOTEUR WEB DEVENAIT INERTE (nº 154-§5).
+   * Le repli est une affaire de LARGEUR (variantes `max-lg:`), mais
+   * `inert` et `aria-hidden` sont des ATTRIBUTS : ils ne connaissent
+   * pas les points de rupture et s'appliquaient à TOUTES les largeurs.
+   * Sur le web, dès qu'on avait défilé de 24 px, `moteurReplie`
+   * passait à vrai et l'enveloppe entière — encadré, filtres, bouton
+   * du texte des cartes — devenait inerte : les clics ne produisaient
+   * plus rien, alors que tout restait parfaitement visible. En haut de
+   * page, elle repassait à faux et tout refonctionnait.
+   * On lit donc la MÊME borne que la feuille de style (1024 px), et
+   * l'inertie ne vaut que là où la rangée se replie vraiment.
+   * (Ceci ne touche pas C1 : la détection par appareil décide de ce
+   * qu'on affiche, pas du point de rupture d'une variante Tailwind.)
+   */
+  const [etroit, setEtroit] = useState(false);
+  useEffect(() => {
+    const borne = window.matchMedia("(max-width: 1023.98px)");
+    const lire = () => setEtroit(borne.matches);
+    lire();
+    borne.addEventListener("change", lire);
+    return () => borne.removeEventListener("change", lire);
+  }, []);
+  /** La rangée est-elle VRAIMENT hors de portée ? */
+  const rangeeEscamotee = surAccueil && moteurReplie && etroit;
 
   useEffect(() => {
     /* ============================================================
@@ -198,7 +235,18 @@ export function EnTeteTatouage({
       const y = window.scrollY;
       const delta = y - yPrecedent;
       yPrecedent = y;
-      setPosee(y > 8);
+      //  ⚠️ UN DÉFILEMENT POSÉ PAR LE SITE N'EST PAS UN GESTE
+      //  (nº 154-§6A). Changer de disposition, montrer ou masquer le
+      //  texte des cartes, restituer une position au retour : chacun
+      //  de ces gestes REPOSE la page (lib/carte-du-haut,
+      //  lib/restitution-position). Le saut franchissait les 24 px et
+      //  repliait la rangée alors que personne n'avait fait défiler
+      //  quoi que ce soit. On prend acte de la nouvelle position — le
+      //  cumul, lui, ne bouge pas.
+      if (estDefilementProgramme()) {
+        cumul = 0;
+        return;
+      }
       if (y < 64) {
         poserReplie(false);
         cumul = 0;
@@ -224,12 +272,12 @@ export function EnTeteTatouage({
       data-barre-fixe=""
       //  ⚠️ OPAQUE, TOUT À FAIT (nº 147-§2, troisième signalement) : à
       //  90 puis 95 %, le contenu transparaissait encore derrière la
-      //  barre. Le fond posé est désormais PLEIN — plus rien ne passe,
-      //  et le flou d'arrière-plan n'a plus rien à flouter : retiré.
-      //  Toujours AUCUN trait : c'est un acquis.
-      className={`sticky top-0 z-50 transition-colors duration-200 ${
-        posee ? "bg-sombre-carte" : "bg-transparent"
-      }`}
+      //  barre. Le fond est PLEIN — plus rien ne passe, et le flou
+      //  d'arrière-plan n'a plus rien à flouter : retiré.
+      //  ⚠️ ET PERMANENT (nº 154-§3) : plus d'état « posée », plus de
+      //  transition — c'est ce va-et-vient qui clignotait. Toujours
+      //  AUCUN trait : c'est un acquis.
+      className="sticky top-0 z-50 bg-sombre-carte"
     >
       <div
         //  ⚠️ PLUS DE gap-y (nº 147-§7) : l'espace au-dessus de la
@@ -247,7 +295,24 @@ export function EnTeteTatouage({
             contenu (`lg:min-w-fit`), seul le moteur (`lg:shrink` +
             `min-w-0`) peut céder, le logo jamais. Plus de réserve
             `--cote-barre`, plus de ResizeObserver. */}
-        <div className="shrink-0 order-1 lg:flex-1 lg:min-w-fit">
+        {/*  ⚠️ LE LOGO CÈDE AVANT QUE LA BARRE NE SE CASSE (nº 154-§4).
+             Il était `shrink-0` à TOUTES les largeurs : à 320 px, le
+             logo entier plus les trois icônes (loupe, fanion, compte)
+             dépassaient la ligne, et le conteneur — qui doit rester
+             `flex-wrap` pour que la rangée du moteur passe SOUS la
+             barre — les renvoyait à la ligne. Vu de l'écran : le logo
+             seul en haut, les icônes en dessous à droite.
+             ⚠️ ET C'EST `basis-0` QUI COMPTE, PAS `shrink` : un
+             conteneur qui peut passer à la ligne place ses éléments
+             AVANT de les rétrécir — il compare leur taille de départ,
+             pas leur taille possible. Un logo « rétrécissable » mais
+             large au départ cassait donc quand même la ligne. Avec une
+             taille de départ NULLE, il ne la casse jamais : il prend
+             ensuite la place qui reste (`grow`), et l'image s'y borne.
+             Au-delà de 1024 px, rien ne change : `lg:min-w-fit` garde
+             la règle de la nº 146-§2 — seul le moteur cède, jamais le
+             logo. */}
+        <div className="min-w-0 basis-0 grow shrink order-1 lg:basis-auto lg:shrink-0 lg:flex-1 lg:min-w-fit">
           {/* LE LOGO RAMÈNE À L'ACCUEIL — un lien NATIF, exprès. La
               navigation douce de Next a déjà avalé ce clic deux fois
               (page du compte, puis page de création de fiche) : ici,
@@ -271,7 +336,14 @@ export function EnTeteTatouage({
             {/* LE LOGO COMPLET, PARTOUT — le fichier du propriétaire,
                 affiché tel quel. Sur smartphone il perd juste quelques
                 pixels de hauteur, jamais son nom. */}
-            <LogoYokofolio hauteur={48} classe="h-9 sm:h-11 lg:h-12 w-auto" />
+            {/*  `max-w-full` : sur un écran très étroit, le logo se
+                 borne à la place qui reste au lieu de pousser les
+                 icônes à la ligne (nº 154-§4). Sa hauteur commande, sa
+                 largeur suit — il n'est jamais déformé. */}
+            <LogoYokofolio
+              hauteur={48}
+              classe="h-9 sm:h-11 lg:h-12 w-auto max-w-full object-contain object-left"
+            />
           </a>
         </div>
 
@@ -318,8 +390,12 @@ export function EnTeteTatouage({
                              } lg:flex`
                           : "hidden lg:flex"
                       }`}
-          aria-hidden={(surAccueil && moteurReplie) || undefined}
-          inert={(surAccueil && moteurReplie) || undefined}
+          //  ⚠️ SEULEMENT LÀ OÙ LA RANGÉE SE REPLIE VRAIMENT
+          //  (nº 154-§5) : ces deux attributs ignorent les points de
+          //  rupture — appliqués sur le web, ils rendaient le moteur
+          //  entier inerte dès qu'on avait défilé.
+          aria-hidden={rangeeEscamotee || undefined}
+          inert={rangeeEscamotee || undefined}
         >
           <div className="max-lg:min-h-0 max-lg:overflow-hidden flex w-full justify-center">
             {/*  Le pt-3 remplace l'ancien gap-y-3 du parent : il

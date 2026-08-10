@@ -118,10 +118,18 @@ export function GrilleTatoueurs({
    * (`useLayoutEffect`) : on repose la page sur cette même carte, et
    * l'œil ne voit aucun saut. Sans note — premier rendu, page en
    * haut — il ne se passe rien.
+   *
+   * ⚠️ ET LA PHOTOTHÈQUE AUSSI (nº 154-§6B) — c'était le défaut : cet
+   * effet ne se rejouait QUE sur `disposition`. Or le bouton du texte
+   * des cartes note lui aussi la carte du haut (MoteurTatouage) et
+   * change autant leur hauteur — la note était prise, jamais reposée.
+   * La page gardait sa position en pixels, les cartes remontaient, et
+   * on ne retrouvait pas celle qu'on regardait. Les deux bascules
+   * passent désormais par la même remise en place.
    */
   useEffetAvantPeinture(() => {
     reposerLaCarteDuHaut();
-  }, [disposition]);
+  }, [disposition, phototheque]);
 
   const [ficheOuverte, setFicheOuverte] = useState<Tatoueur | null>(null);
   // La position de la grille AU MOMENT DU CLIC : c'est elle que la

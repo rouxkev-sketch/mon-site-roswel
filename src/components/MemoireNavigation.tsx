@@ -17,6 +17,11 @@ import {
   poserLaPosition,
   reprendreLaReserveDuScript,
 } from "@/lib/restitution-position";
+import {
+  lireRequeteCourante,
+  lireRequeteServeur,
+  souscrireAdresse,
+} from "@/lib/adresse-courante";
 
 /**
  * MÉMOIRE DE NAVIGATION (posée une seule fois dans le layout)
@@ -33,14 +38,17 @@ import {
  *    page cible (la transition reste parfaitement immobile).
  * N'affiche rien.
  */
-/** Abonnement aux retours/avances : eux seuls changent l'adresse sans
-    changer de page pour React. */
-function surTraversee(rappel: () => void) {
-  window.addEventListener("popstate", rappel);
-  return () => window.removeEventListener("popstate", rappel);
-}
-const lireRequete = () => window.location.search;
-const lireRequeteServeur = () => "";
+/*  ⚠️ L'ABONNEMENT A CHANGÉ (passe nº 154) — il ne suffisait pas.
+    Il ne portait QUE sur `popstate`, l'événement des retours arrière.
+    Une RECHERCHE, elle, change l'adresse par `router.replace('/?…')`,
+    donc par `history.replaceState` : aucun `popstate`, aucune
+    notification, et ce magasin rendait éternellement l'ancienne
+    requête. L'effet plus bas ne se rejouait donc jamais après une
+    recherche, et LA PAGE DE RÉSULTATS N'ÉTAIT JAMAIS INSCRITE AU
+    JOURNAL — d'où un « retour » qui ramenait à l'accueil nu, ou pire,
+    à la page d'avant (« Ma sélection », « Créer mon portfolio »).
+    `souscrireAdresse` surveille les deux portes : le navigateur ET le
+    code. Voir lib/adresse-courante. */
 
 export function MemoireNavigation() {
   const pathname = usePathname();
@@ -64,8 +72,8 @@ export function MemoireNavigation() {
    * perdue.
    */
   const requete = useSyncExternalStore(
-    surTraversee,
-    lireRequete,
+    souscrireAdresse,
+    lireRequeteCourante,
     lireRequeteServeur
   );
   // Vrai uniquement entre un retour/avant (popstate) et le rendu
@@ -159,6 +167,20 @@ export function MemoireNavigation() {
   }, []);
 
   useEffect(() => {
+    /**
+     * ⚠️ ON N'ÉCRIT QUE SUR UNE ADRESSE STABLE (passe nº 154).
+     * Le chemin vient du ROUTEUR, les critères du NAVIGATEUR, et les
+     * deux ne se mettent pas à jour dans le même rendu. Depuis que ce
+     * composant est prévenu de TOUS les changements d'adresse, il voit
+     * donc passer des états intermédiaires — après l'ouverture d'une
+     * fiche, un rendu où le chemin est encore celui de la mosaïque et
+     * les critères déjà vides. Inscrire cet entre-deux au journal
+     * écrasait la vraie page précédente : la fiche croyait venir de
+     * « / » alors qu'on arrivait des résultats.
+     * La règle : tant que le routeur et le navigateur ne montrent pas
+     * la même page, on ne note rien — le rendu suivant le fera.
+     */
+    if (pathname !== window.location.pathname) return;
     const url = pathname + window.location.search;
     noterPageVisitee(url);
     // ⚠️ UNE FENÊTRE DE FICHE N'EST PAS UNE PAGE. Elle se pose PAR-

@@ -1,5 +1,7 @@
 "use client";
 
+import { defilerSansGeste } from "@/lib/defilement-programme";
+
 /**
  * LA CARTE QU'ON REGARDE SURVIT AU CHANGEMENT DE DISPOSITION
  * ===========================================================
@@ -74,10 +76,13 @@ export function reposerLaCarteDuHaut(): boolean {
   // ⚠️ « instant » : le site déclare un défilement doux global, et sans
   // cela la mosaïque GLISSERAIT sur plusieurs centaines de pixels après
   // chaque bascule. On POSE la page, on ne la promène pas.
-  window.scrollTo({
+  // ⚠️ ET SANS QUE CE SOIT UN GESTE (nº 154-§6A) : ce saut n'est pas
+  // un doigt qui défile. Sans l'annoncer, la barre y lisait un geste
+  // vers le bas et REPLIAIT sa rangée de recherche — on touchait un
+  // bouton d'affichage, et la barre se rétractait toute seule.
+  defilerSansGeste({
     top: Math.max(0, window.scrollY + boite.top - repere),
     left: 0,
-    behavior: "instant",
   });
   return true;
 }

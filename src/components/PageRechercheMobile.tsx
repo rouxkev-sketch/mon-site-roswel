@@ -328,9 +328,23 @@ export function PageRechercheMobile({
       requestAnimationFrame(() => setEnPlace(false))
     );
     aLaFinDeLaGlissade(DUREE_SORTIE_MS, () => {
-      const { onValider: valide, onAbandonner: abandonne } = sorties.current;
-      if (valider) valide();
-      else abandonne();
+      const conclure = () => {
+        const { onValider: valide, onAbandonner: abandonne } = sorties.current;
+        if (valider) valide();
+        else abandonne();
+      };
+      //  ⚠️ ON N'AGIT PAS TANT QUE NOTRE ÉTAPE N'EST PAS DÉPILÉE
+      //  (nº 154). Voir `attendreLeDepilement` : `history.back()` est
+      //  ASYNCHRONE. « Valider » lançait la recherche — donc un
+      //  `router.replace('/?…')` — avant que le navigateur n'ait
+      //  retiré l'étape de la page de recherche : la recherche
+      //  s'écrivait sur l'étape CONDAMNÉE, que le retour effaçait
+      //  aussitôt, et l'onglet retombait sur l'étape d'en dessous. Le
+      //  journal enregistrait alors cette page-là comme la dernière
+      //  visitée — c'est ainsi qu'un retour depuis une fiche menait à
+      //  « Ma sélection » puis à « Créer mon portfolio ».
+      if (depilementFait.current) conclure();
+      else actionEnAttente.current = conclure;
     });
   }
 
@@ -355,13 +369,47 @@ export function PageRechercheMobile({
     });
   }, [phase, validerEnSortant]);
 
+  /**
+   * ATTENDRE QUE LE NAVIGATEUR AIT VRAIMENT DÉPILÉ NOTRE ÉTAPE.
+   * ⚠️ `history.back()` NE REND PAS LA MAIN UNE FOIS FAIT — il
+   * PROGRAMME un retour, traité plus tard, et signalé par `popstate`.
+   * Tout ce qui touche à l'adresse entre les deux s'écrit donc sur
+   * l'étape que l'on est en train de retirer. C'est le défaut de
+   * l'historique corrompu : « Valider » remplaçait l'adresse par celle
+   * des résultats juste avant que le retour n'efface cette étape-là.
+   * Un filet de 500 ms garantit qu'on n'attend jamais indéfiniment (un
+   * navigateur qui refuserait le retour, une étape déjà consommée).
+   */
+  const depilementFait = useRef(true);
+  const actionEnAttente = useRef<(() => void) | null>(null);
+  function attendreLeDepilement() {
+    depilementFait.current = false;
+    const conclure = () => {
+      if (depilementFait.current) return;
+      window.removeEventListener("popstate", surRetour);
+      window.clearTimeout(filet);
+      depilementFait.current = true;
+      const enAttente = actionEnAttente.current;
+      actionEnAttente.current = null;
+      enAttente?.();
+    };
+    function surRetour() {
+      conclure();
+    }
+    window.addEventListener("popstate", surRetour);
+    const filet = window.setTimeout(conclure, 500);
+  }
+
   /** LA CROIX ET « VALIDER » — ils dépilent NOTRE étape eux-mêmes,
       puis glissent. Le `popstate` qui suit trouve le drapeau baissé et
       ne fait rien : une seule fermeture, jamais deux. */
   function fermer(valider: boolean) {
     // `prendreLEntree()` rend vrai UNE SEULE FOIS : impossible de
     // dépiler deux fois, donc impossible de quitter le site.
-    if (prendreLEntree()) window.history.back();
+    if (prendreLEntree()) {
+      attendreLeDepilement();
+      window.history.back();
+    }
     glisserDehors(valider);
   }
 
