@@ -1583,6 +1583,42 @@ export async function slugActuelDepuisAncien(
 }
 
 /**
+ * CETTE FICHE EXISTE-T-ELLE, SANS ÊTRE EN LIGNE ? (passe nº 176-§3)
+ * -----------------------------------------------------------------
+ * Une fiche qui existe mais n'est pas publiée ne doit PAS répondre
+ * « cette page n'existe pas » : ce n'est pas une erreur d'adresse. Le
+ * 404 reste réservé aux adresses qui n'existent vraiment pas.
+ *
+ * ⚠️ ELLE NE REND QU'UN OUI OU UN NON. Aucune donnée de la fiche ne
+ * sort d'ici : ni le nom, ni la ville, ni l'état de modération. Un
+ * visiteur apprend seulement que l'adresse est prise — ce que le
+ * moindre lien partagé lui disait déjà.
+ *
+ * ⚠️ PAR LA CLÉ DE SERVICE, côté serveur uniquement : c'est la seule
+ * façon de voir une fiche que les politiques cachent au public. Sans
+ * clé de service, ou en cas de pépin, la réponse est « non » — et la
+ * page redevient un 404, exactement comme avant cette passe.
+ */
+export async function ficheExistanteNonPubliee(
+  slug: string
+): Promise<boolean> {
+  try {
+    const { creerClientSupabaseAdmin } = await import("@/lib/supabase/admin");
+    const supabase = creerClientSupabaseAdmin();
+    const { data, error } = await supabase
+      .from("tatoueurs")
+      .select("id")
+      .eq("slug", slug)
+      .limit(1)
+      .maybeSingle();
+    if (error) return false;
+    return Boolean(data);
+  } catch {
+    return false;
+  }
+}
+
+/**
  * LA FICHE VUE PAR SON PROPRIÉTAIRE — publiée ou non
  * ---------------------------------------------------
  * La page /tatoueur/<slug> montre au TATOUEUR CONNECTÉ sa propre

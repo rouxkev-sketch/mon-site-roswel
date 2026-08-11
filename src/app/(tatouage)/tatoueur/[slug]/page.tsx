@@ -4,11 +4,13 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { cache } from "react";
 import { libelleStyle, renduConnu, TEXTES_TATOUAGE } from "@/config/tatouage";
 import {
+  ficheExistanteNonPubliee,
   lireFicheProprietaire,
   lireTatoueur,
   slugActuelDepuisAncien,
   styleConnu,
 } from "@/lib/tatoueurs";
+import { PageMessageSombre } from "@/components/PageMessageSombre";
 import { ficheLue } from "@/lib/fiche-lue";
 import { utilisateurDepuisCookies } from "@/lib/session-cookie";
 import { adresseDuSite } from "@/lib/site";
@@ -124,6 +126,15 @@ export default async function PageFicheTatoueur({
         style ? `/tatoueur/${actuel}?style=${style}` : `/tatoueur/${actuel}`
       );
     }
+  }
+  //  ⚠️ UNE FICHE QUI EXISTE MAIS N'EST PAS EN LIGNE N'EST PAS UN 404
+  //  (nº 176-§3). Le 404 dit « cette adresse n'existe pas » — et ce
+  //  serait faux : la fiche est là, elle attend d'être publiée. On le
+  //  dit donc, à la charte, avec le même retour à l'accueil.
+  //  (La question est posée par la clé de service et ne rend qu'un oui
+  //  ou un non : rien de la fiche ne sort de là.)
+  if (!tatoueur && (await ficheExistanteNonPubliee(slug))) {
+    return <PageMessageSombre titre="Cette fiche n'est pas encore en ligne." pleinEcran={false} />;
   }
   if (!tatoueur) notFound();
 

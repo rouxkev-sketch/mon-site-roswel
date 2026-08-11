@@ -1,6 +1,6 @@
 # Dans quel ordre passer les migrations
 
-Les 49 fichiers de ce dossier se passent **dans cet ordre**, de haut en
+Les 59 fichiers de ce dossier se passent **dans cet ordre**, de haut en
 bas. L'ordre n'est pas deviné : il est écrit dans les en-têtes des
 fichiers eux-mêmes (« à passer APRÈS … »), et il a été **vérifié en
 rejouant les fichiers sur une base PostgreSQL vierge**, chacun DEUX
@@ -93,6 +93,7 @@ repasse.
 | 56 | `yokofolio-recherche-styles-declares.sql` | 1 fonction (la recherche, refaite — **et réparée**) |
 | 57 | `yokofolio-catalogue-complet.sql` | aucun objet (complète le catalogue, style par style) |
 | 58 | `yokofolio-style-avec-photo.sql` | 1 fonction (la recherche, refaite — **un style sans photo n'existe plus**) |
+| 59 | `yokofolio-lecture-publique.sql` | 1 fonction, 6 politiques, les droits de lecture du rôle anonyme (**sans elle, le site est invisible à un visiteur non connecté**) |
 
 ## Ce que chaque fichier apporte
 
@@ -153,6 +154,8 @@ repasse.
 55. **`yokofolio-portfolios-repris.sql`** — Les portfolios que la nº 31 avait oubliés (⚠️ **sans elle, aucun cœur ne s'affiche** sur les fiches dont les images vivent dans `photo_principale`. Les photos reprises reçoivent le rendu **noir et gris** : la colonne est obligatoire depuis la nº 48, et c'est le choix qui se trompe le moins — voir l'en-tête du fichier pour le corriger au cas par cas)
 56. **`yokofolio-recherche-styles-declares.sql`** — La recherche par style réparée (⚠️ **sans elle, chercher un style depuis « Explorer » ne remonte qu'une partie des fiches** : le menu envoie toujours une catégorie, et la nature exigeait une photo taguée à la fois du bon style et de la bonne nature. Une fiche qui DÉCLARE un style sans photo encore taguée dessus répond désormais à « Réalisations » ; un flash, lui, se déclare toujours)
 57. **`yokofolio-catalogue-complet.sql`** — Le catalogue complété style par style (la nº 55 ne reprenait que les portfolios ENTIÈREMENT vides ; celle-ci comble aussi les fiches qui ont une photo dans un style et en déclarent d'autres — cœurs, photothèque et vignettes suivent)
+58. **`yokofolio-style-avec-photo.sql`** — Un style sans photo n'existe plus dans la recherche (la fonction refaite : une fiche ne répond à un style que si une photo le porte)
+59. **`yokofolio-lecture-publique.sql`** — Le site redevient visible au public (⚠️ **le rôle anonyme n'avait AUCUN droit de lecture** : le site répondait « permission denied », retombait sur les fiches de DÉMONSTRATION, et toute fiche renvoyait un 404 hors connexion). Elle donne ce droit sur les cinq objets d'une fiche publique — et sur eux seuls — et resserre « public » à « EN LIGNE » : publiée, validée, pas en cours de suppression. Le portfolio et les liaisons, jusqu'ici lisibles sans condition, suivent la même règle.
 
 ---
 

@@ -411,7 +411,16 @@ with attendu (ordre, fichier, genre, objet) as (values
   (52, 'yokofolio-suggestions-styles.sql', 'index', 'idx_suggestions_style_par_compte'),
   (52, 'yokofolio-suggestions-styles.sql', 'politique', 'lecture de ses suggestions'),
   (52, 'yokofolio-suggestions-styles.sql', 'politique', 'les styles acceptes sont publics'),
-  (52, 'yokofolio-suggestions-styles.sql', 'politique', 'proposer un style')
+  (52, 'yokofolio-suggestions-styles.sql', 'politique', 'proposer un style'),
+  --  Nº 59 : LA LECTURE PUBLIQUE (passe nº 176). Elle rend le site
+  --  visible à un visiteur non connecté — c'est le droit de lecture du
+  --  rôle anonyme qui manquait — et resserre « public » à « en ligne ».
+  --  ⚠️ SES CINQ POLITIQUES PORTENT LES NOMS DES ANCIENNES (elles les
+  --  remplacent) : les chercher par leur nom dirait « passée » d'une
+  --  base qui n'a que les nº 1, 26 et 31. Elles sont donc reconnues à
+  --  leur CONTENU, comme la règle du fichier le demande.
+  (59, 'yokofolio-lecture-publique.sql', 'fonction', 'public.fiche_en_ligne'),
+  (59, 'yokofolio-lecture-publique.sql', 'contenu', 'droit de lecture anonyme + politiques « en ligne »')
 ),
 
 --  ------------------------------------------------------------
@@ -564,6 +573,27 @@ constate as (
         and not exists (select 1 from pg_proc
                          where proname = 'rechercher_tatoueurs'
                            and prosrc like '%p2.zone%')
+      --  Nº 59 : LE SITE EST-IL VISIBLE AU PUBLIC ? Quatre points, et
+      --  ils doivent être vrais ENSEMBLE :
+      --   · le rôle anonyme a le DROIT de lire la fiche et son
+      --     portfolio (c'est ce qui manquait : sans lui, le site
+      --     répondait « permission denied » et retombait sur la
+      --     démonstration) ;
+      --   · la politique de la fiche regarde `statut` — donc « en
+      --     ligne » et non plus seulement « publiée » ;
+      --   · celle du portfolio n'est plus un `true` sans condition :
+      --     les photos d'un brouillon ne fuient plus.
+      when 59 then
+        has_table_privilege('anon', 'public.tatoueurs', 'SELECT')
+        and has_table_privilege('anon', 'public.photos_tatoueur', 'SELECT')
+        and exists (select 1 from pg_policy
+                     where polrelid = 'public.tatoueurs'::regclass
+                       and polname = 'lecture publique des tatoueurs publies'
+                       and pg_get_expr(polqual, polrelid) like '%statut%')
+        and exists (select 1 from pg_policy
+                     where polrelid = 'public.photos_tatoueur'::regclass
+                       and polname = 'lecture publique des photos'
+                       and pg_get_expr(polqual, polrelid) like '%fiche_en_ligne%')
       end
     end as present
   from attendu a
