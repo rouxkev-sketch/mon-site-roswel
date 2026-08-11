@@ -248,7 +248,11 @@ export function IndexTatoueurs({
    */
   async function chercher(
     suivants: CritèresTatouage,
-    ecrireLAdresse = true
+    ecrireLAdresse = true,
+    /** VRAI pour une recherche VALIDÉE — le bouton « Valider » de la
+        page de recherche du smartphone. Elle, et elle seule, POSE UNE
+        ÉTAPE D'HISTORIQUE (passe nº 182). */
+    validee = false
   ) {
     setCriteres(suivants);
     const numero = derniere + 1;
@@ -290,6 +294,43 @@ export function IndexTatoueurs({
     //  retour arrière semblerait alors ne rien faire.
     if (ecrireLAdresse) {
       if (adresse === adresseCourante()) {
+        router.replace(adresse, { scroll: false });
+      } else if (validee) {
+        /**
+         * UNE RECHERCHE VALIDÉE POSE UNE ÉTAPE, ET ON NE S'EN REMET
+         * PLUS AU ROUTEUR (passe nº 182)
+         * ==========================================================
+         * LE DÉFAUT, relevé par la sonde sur l'iPhone du propriétaire :
+         *
+         *     POPSTATE … HISTORIQUE 2 entrées   ← à chaque retour
+         *
+         * L'historique ne grandissait jamais. Chercher « abstrait »
+         * puis revenir en arrière le faisait SORTIR DU SITE.
+         *
+         * POURQUOI `router.push` NE SUFFIT PAS ICI. Sur smartphone, la
+         * recherche est validée à la SORTIE de la page de recherche,
+         * c'est-à-dire juste après que celle-ci a dépilé SON étape
+         * (`history.back()`). Le navigateur se retrouve alors sur une
+         * étape qui a encore une SUIVANTE ; ce qui s'écrit ensuite la
+         * remplace au lieu de s'y ajouter — l'étape des résultats prend
+         * la place de celle de la page de recherche, et le compte ne
+         * bouge pas. Derrière les résultats, il ne reste donc rien du
+         * site.
+         *
+         * CE QU'ON FAIT : on pose L'ÉTAPE NOUS-MÊME, sur l'adresse
+         * courante — l'état de la mosaïque d'avant reste donc dessous —
+         * puis on HABILLE cette étape neuve de l'adresse des résultats.
+         * Le retour ramène à l'état d'avant la recherche, sur le site.
+         *
+         * ⚠️ `pushState` À DEUX ARGUMENTS, JAMAIS TROIS : passer une
+         * adresse ferait reconstruire la page par Next (voir l'en-tête
+         * de PageRechercheMobile, où cette leçon a été payée). L'état
+         * courant est recopié pour que les internes du routeur suivent.
+         * ⚠️ ET UNE SEULE PAR RECHERCHE VALIDÉE : ni la frappe, ni un
+         * critère intermédiaire, ni le web — eux gardent le chemin
+         * ordinaire juste en dessous.
+         */
+        window.history.pushState(window.history.state, "");
         router.replace(adresse, { scroll: false });
       } else {
         router.push(adresse, { scroll: false });
@@ -417,7 +458,12 @@ export function IndexTatoueurs({
 
   return (
     <>
-      <EnTeteTatouage criteres={criteres} surRecherche={chercher} />
+      <EnTeteTatouage
+        criteres={criteres}
+        surRecherche={(suivants, options) =>
+          void chercher(suivants, true, options?.validee === true)
+        }
+      />
 
       <main
         className={`flex-1 mx-auto w-full ${LARGEUR_SITE} px-4 sm:px-6 pb-16`}

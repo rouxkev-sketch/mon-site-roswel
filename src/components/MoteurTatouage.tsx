@@ -213,7 +213,10 @@ export function MoteurTatouage({
 }: {
   criteres: CritèresTatouage;
   /** Appelé à CHAQUE changement : c'est ça, la recherche. */
-  surChangement: (criteres: CritèresTatouage) => void;
+  surChangement: (
+    criteres: CritèresTatouage,
+    options?: { validee?: boolean }
+  ) => void;
   id?: string;
   /** FAUX HORS ACCUEIL (nº 150-§3) : la rangée du smartphone — la
       pilule et ses deux boutons — n'est pas rendue du tout ; seule la
@@ -329,7 +332,10 @@ export function MoteurTatouage({
   function validerLaPage() {
     const retenus = brouillon;
     fermerRecherche();
-    if (retenus) surChangement(retenus);
+    //  ⚠️ VALIDÉE (nº 182) : c'est CE geste — et lui seul — qui pose
+    //  une étape d'historique, pour que le retour ramène à la mosaïque
+    //  d'avant la recherche au lieu de sortir du site.
+    if (retenus) surChangement(retenus, { validee: true });
     // LA LISTE SE RELIT DEPUIS LE HAUT : valider une recherche ramène
     // tout en haut des résultats — sinon la page reste là où on
     // l'avait laissée et masque les premières cartes. `instant` : le
