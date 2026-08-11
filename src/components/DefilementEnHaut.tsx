@@ -75,6 +75,29 @@ export function DefilementEnHaut() {
   }, []);
 
   useEffetAvantPeinture(() => {
+    /**
+     * ⚠️ UNE PAGE DE DÉTAIL EST TOUJOURS EN HAUT — RETOUR COMME AVANCE
+     * (nº 193-§2).
+     * LE CONSTAT : en AVANÇANT sur une fiche, on arrivait « tout en
+     * bas, à un endroit où l'on n'a jamais été ». C'est le défilement
+     * de la LISTE qui reste en place : le site a coupé la restauration
+     * du navigateur, la page de fiche est plus courte, et le navigateur
+     * rabote la position à son bas. Une traversée ne dispensait pas de
+     * remonter — elle le faisait, et c'était le trou.
+     * ⚠️ APRÈS la fenêtre de fiche (le web ouvre la fiche PAR-DESSUS la
+     * mosaïque : là, il ne faut toucher à rien).
+     */
+    if (
+      chemin.startsWith("/tatoueur/") &&
+      !document.documentElement.dataset.fenetreFiche
+    ) {
+      retourNavigateur.current = false;
+      adresseRetour.current = "";
+      premierRendu.current = false;
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      return;
+    }
+
     const versLAdresseDuRetour =
       retourNavigateur.current &&
       adresseRetour.current === chemin + window.location.search;

@@ -247,6 +247,32 @@ html[data-clair="3"] {
   visibility: visible !important;
 }
 
+/*  LA MOSAÏQUE NE PEUT PLUS PASSER DEVANT LA BARRE (nº 193-§3)
+    -------------------------------------------------------------------
+    LE CONSTAT : au changement de disposition ou d'affichage du texte,
+    les cartes passent AU-DESSUS de la barre fixe pendant la
+    recomposition, puis repassent derrière.
+
+    CE QUI L'AUTORISAIT : la barre est au rang 50, mais la mosaïque
+    n'appartenait à aucun plan à elle — ses enfants pouvaient donc se
+    comparer DIRECTEMENT à la barre. Or il y a plus haut que 50 à
+    l'intérieur : le zoom au pincement pose le rang 60 sur la photo
+    qu'il agrandit (ZoomPincement), et une recomposition peut laisser ce
+    style le temps d'une image. Un navigateur qui recompose la mosaïque
+    la met par ailleurs sur son propre calque, et l'ordre de peinture
+    entre un calque neuf et une barre en verre dépoli n'est pas garanti.
+
+    LA GARANTIE : la mosaïque reçoit SON PROPRE PLAN, au rang 0. Tout ce
+    qu'elle contient s'ordonne À L'INTÉRIEUR de ce plan — les cartes
+    entre elles, le cœur au-dessus de la photo, la photo agrandie
+    au-dessus de ses voisines — et le plan entier reste sous la barre,
+    quoi qu'il arrive. Rien ne bouge à l'écran : `relative` sans décalage
+    ne déplace rien, et le rang 0 ne change aucun ordre interne. */
+[data-mosaique] {
+  position: relative;
+  z-index: 0;
+}
+
 /* LA PAGE DE RECHERCHE (smartphone) EST UNE VRAIE PAGE — ET C'EST
    CETTE RÈGLE QUI LE REND VRAI.
    -------------------------------------------------------------------

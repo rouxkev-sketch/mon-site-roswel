@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   arriveeQuiRestitue,
   consommerRestaurationPosition,
+  demanderRestaurationPosition,
   lireDefilement,
   marquerHydratation,
   memoriserDefilement,
@@ -198,8 +199,26 @@ export function MemoireNavigation() {
     const auDepart = (evenement: MouseEvent) => {
       const cible = evenement.target;
       if (!(cible instanceof Element) || !cible.closest("a[href]")) return;
+      if (estUnePageDeDetail(location.pathname)) return;
       ecrireMaintenant();
       gele = true;
+      /**
+       * ⚠️ ET ON DEMANDE LA RESTITUTION D'AVANCE (nº 193-§1).
+       * LE CONSTAT : depuis une RECHERCHE, le retour rend la place ;
+       * depuis l'ACCUEIL, on atterrit en haut. Les deux passent pourtant
+       * par le même code — sauf sur un point qui ne nous appartient
+       * pas : la façon dont le navigateur QUALIFIE l'arrivée. Toute la
+       * restitution en dépendait (« retour ou avance » selon
+       * `performance`), et cette qualification varie d'un navigateur et
+       * d'un appareil à l'autre.
+       * On pose donc une DEMANDE NOMMÉE, adressée à la liste qu'on
+       * quitte : au retour, la page reconnaît son adresse et rend la
+       * place, que le navigateur ait appelé cela un retour ou non. La
+       * demande n'est consommée que par CETTE adresse (voir
+       * lib/navigation-session), et le script d'avant peinture la lit
+       * lui aussi — la place est donc posée avant la première image.
+       */
+      demanderRestaurationPosition(location.pathname + location.search);
     };
     const auGeste = () => {
       gele = false;
