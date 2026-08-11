@@ -14,6 +14,12 @@ import { BoutonPartageFiche } from "@/components/BoutonPartageFiche";
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import { BoutonSuivre } from "@/components/BoutonSuivre";
 import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
+import {
+  PanneauPortfolio,
+  SelecteurOngletAffiche,
+  type OngletAffiche,
+} from "@/components/PortfolioDeLAffiche";
+import { NATURE_PAR_DEFAUT } from "@/lib/photos-tatoueur";
 import { FenetreSignalement } from "@/components/FenetreSignalement";
 import { SelecteurStyleFiche } from "@/components/SelecteurStyleFiche";
 import { libelleDuLien } from "@/lib/liens-fiche";
@@ -122,6 +128,20 @@ export function FicheTatoueur({
   const [styleAffiche, setStyleAffiche] = useState(ouverture.style);
   /** L'INDICE de la photo affichée, DANS ce style. */
   const [indicePhoto, setIndicePhoto] = useState(ouverture.indice);
+
+  /**
+   * LES DEUX ONGLETS DE L'AFFICHE (nº 197-§1)
+   * ------------------------------------------------------------------
+   * « Profil » montre le contenu de l'affiche, inchangé ; « Portfolio »
+   * montre les styles publiés, catégorie par catégorie. Le sélecteur
+   * vit EN TÊTE DE LA COLONNE DE LECTURE : sur smartphone, cette
+   * colonne vient juste sous la photo principale ; sur le web, elle
+   * commence là où se tiendrait un fil d'Ariane. Un seul endroit, donc,
+   * pour les deux versions — aucune copie.
+   */
+  const [onglet, setOnglet] = useState<OngletAffiche>("profil");
+  /** La catégorie regardée dans l'onglet « Portfolio » (nº 197-§2). */
+  const [categorie, setCategorie] = useState<string>(NATURE_PAR_DEFAUT);
 
   const groupeAffiche =
     groupes.find((groupe) => groupe.slug === styleAffiche) ?? groupes[0];
@@ -457,6 +477,29 @@ export function FicheTatoueur({
               colonne : la photo garde sa géométrie pleine hauteur. */}
           {demonstration && noteDemonstration("mobile:hidden mb-6")}
 
+          {/*  LES DEUX ONGLETS (nº 197-§1) — forme du sélecteur du
+               formulaire, couleurs du badge de filtre. Voir
+               PortfolioDeLAffiche. */}
+          <SelecteurOngletAffiche valeur={onglet} surChoix={setOnglet} />
+
+          {onglet === "portfolio" && (
+            <PanneauPortfolio
+              groupes={groupes}
+              nature={categorie}
+              surNature={setCategorie}
+              nomTatoueur={tatoueur.nom}
+              surStyle={(slug) => {
+                //  §4 — LA GALERIE PRINCIPALE MONTRE CE STYLE, et la
+                //  page remonte en haut pour qu'on le voie.
+                setStyleAffiche(slug);
+                setIndicePhoto(0);
+                window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+              }}
+            />
+          )}
+
+          {onglet === "profil" && (
+          <>
           {/* 1. L'IDENTITÉ — LE NOM D'ABORD, sa nature ensuite.
               C'est l'ordre de lecture des bonnes pages de profil : on
               lit un NOM, puis on apprend ce qu'il est. Le nom revient
@@ -694,6 +737,8 @@ export function FicheTatoueur({
               <FenetreSignalement slug={tatoueur.slug} nom={tatoueur.nom} />
               <BoutonHorsLigne idFiche={tatoueur.id} nom={tatoueur.nom} />
             </div>
+          )}
+          </>
           )}
         </div>
       </div>

@@ -2,6 +2,7 @@ import { libelleStyle } from "@/config/tatouage";
 import {
   galerieOrdonnee,
   libelleRendu,
+  NATURE_PAR_DEFAUT,
   natureConnue,
   photosDuStyle,
   stylesDuPortfolio,
@@ -151,6 +152,10 @@ export type PhotoGalerie = {
       Égale à `url` pour une photo d'avant la refonte. */
   miniature: string;
   rendu: string | null;
+  /** `tatouage` ou `flash` — la CATÉGORIE dans laquelle la photo a été
+      déposée. Elle voyage avec la photo depuis la nº 197 : l'affiche
+      range désormais le portfolio par catégorie, puis par style. */
+  nature: string;
   /** « Couleur » — vide quand la photo n'a pas de rendu. */
   legende: string;
 };
@@ -196,6 +201,7 @@ export function galerieParStyles(tatoueur: {
         url: photo.url,
         miniature: vignetteDe(photo),
         rendu: photo.rendu,
+        nature: natureConnue(photo.nature),
         // La légende ne redit PAS le style : il est déjà annoncé par
         // le sélecteur, juste au-dessus de la photo.
         legende: photo.rendu ? libelleRendu(photo.rendu) : "",
@@ -215,6 +221,7 @@ export function galerieParStyles(tatoueur: {
           url: image,
           miniature: image,
           rendu: null,
+          nature: NATURE_PAR_DEFAUT,
           legende: "",
         },
       ],

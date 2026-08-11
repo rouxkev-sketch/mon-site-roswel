@@ -35,8 +35,15 @@ import type { PointerEvent, ReactNode } from "react";
  * Les deux robes, selon ce qui porte le badge.
  * `surPanneau` : posé sur le panneau web éclairci (nº 144-§3), tout
  * grimpe d'un cran pour garder le même contraste.
+ *
+ * ⚠️ EXPORTÉE DEPUIS LA Nº 197 : le sélecteur « Profil / Portfolio » de
+ * l'affiche prend la FORME du sélecteur du formulaire (deux rectangles)
+ * mais les COULEURS du badge de filtre. Il appelle donc cette
+ * fonction-ci — les quatre couleurs (fond et texte, actif et inactif)
+ * restent écrites À UN SEUL ENDROIT, celui-ci. Aucune valeur n'est
+ * recopiée nulle part.
  */
-function robeDuBadge(actif: boolean, surPanneau: boolean): string {
+export function robeDuBadge(actif: boolean, surPanneau = false): string {
   if (actif) {
     return surPanneau
       ? "bg-sombre-bordure text-sombre-texte"
