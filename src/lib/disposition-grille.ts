@@ -5,98 +5,93 @@
  *  - « deux » : deux colonnes façon Instagram (le défaut, toujours) ;
  *  - « une »  : une image par ligne, bord à bord, textes agrandis.
  *
- * LE CHOIX EST MÉMORISÉ d'une visite à l'autre (stockage local du
- * navigateur — aucune donnée personnelle, juste un mot).
- *
  * Seuls les VRAIS MOBILES voient le bouton : sur un ordinateur, la
  * valeur reste « deux » pour toujours.
+ *
+ * ⚠️ LE CHOIX VIT DANS L'ADRESSE (nº 203-§1b) — « ?disposition=une »,
+ * rien pour le défaut. C'est la règle de la nº 191 : L'ADRESSE DÉCIDE
+ * DE TOUT. Le stockage local, lui, n'était lisible que par le
+ * navigateur : le serveur rendait la disposition PAR DÉFAUT, et la
+ * page se corrigeait sous les yeux après l'hydratation — c'est le saut
+ * que le propriétaire voyait en revenant à l'accueil. Désormais :
+ *  · LE SERVEUR lit le paramètre (page.tsx) et rend la bonne
+ *    disposition du premier coup — plus rien à corriger après coup ;
+ *  · LA BASCULE écrit la mémoire du module (l'écran répond tout de
+ *    suite, sous le verrou de lib/bascule-verrouillee) ET l'adresse
+ *    (history.replaceState — pas d'étape d'historique : changer
+ *    d'affichage n'est pas une navigation) ;
+ *  · LE RETOUR (popstate) relit l'adresse de l'étape retrouvée ;
+ *  · LA CLÉ DE POSITION contient le paramètre d'elle-même (tout ce qui
+ *    n'est pas un réglage de sonde compte comme un critère, voir
+ *    lib/adresse-recherche) : une position prise en une colonne ne
+ *    s'applique jamais à la page en deux colonnes.
+ * Cliquer le logo ramène à l'adresse nue — donc au défaut : c'est le
+ * même contrat que les critères de recherche, et c'est voulu.
+ *
+ * LA VALEUR VIT EN MÉMOIRE ENTRE DEUX LECTURES (acquis de la nº 164) :
+ * `getSnapshot` rend la variable du module, stable et insensible à
+ * tout aléa — l'adresse n'est relue qu'aux moments où elle a pu
+ * changer (première lecture, popstate, remise au pas par l'accueil).
  */
 
-/**
- * ⚠️ LA VALEUR VIT EN MÉMOIRE, LE STOCKAGE N'EST QU'UNE SAUVEGARDE
- * (passe nº 164 — HUITIÈME passe sur « la mosaïque saute »)
- * ==================================================================
- * CE QUE LA SONDE A MESURÉ CHEZ LE PROPRIÉTAIRE. Un seul clic, et la
- * disposition bascule TROIS fois en 1,4 seconde :
- *
- *     t=0     docH 10224   (une colonne)
- *     t=37    docH  2879   (deux colonnes)   ← le clic
- *     t=609   docH 10224   (une colonne)     ← personne n'a cliqué
- *     t=1377  docH  2879   (deux colonnes)   ← ni là
- *
- * LA CAUSE, ET ELLE EST ICI. `lireDisposition` était le `getSnapshot`
- * de `useSyncExternalStore` : React l'appelle À CHAQUE RENDU, pour
- * CHAQUE abonné — la grille, l'en-tête, et LES SOIXANTE CARTES. Soit
- * des dizaines de lectures de `localStorage` par rendu, et autant
- * d'occasions de se tromper :
- *
- *  · `localStorage` est SYNCHRONE et peut LEVER — Safari le fait par
- *    intermittence (pression mémoire, cloisonnement, quota). Le
- *    `catch` rendait alors « deux » : LE DÉFAUT, c'est-à-dire souvent
- *    l'ANCIENNE valeur. React voyait donc l'instantané changer sans
- *    que personne n'ait cliqué, et repeignait toute la mosaïque dans
- *    l'ancienne disposition. À la lecture suivante, qui réussissait,
- *    il la repeignait dans la nouvelle. D'où le va-et-vient ;
- *  · deux abonnés pouvaient lire deux valeurs DIFFÉRENTES dans la
- *    même image — une carte en deux colonnes sous une grille en une.
- *
- * L'ÉTAT ÉTAIT ÉCRIT À DEUX ENDROITS QUI SE CONTREDISAIENT : la
- * mémoire de React et le stockage du navigateur, ce dernier ayant le
- * dernier mot à chaque lecture.
- *
- * DÉSORMAIS : UNE SEULE SOURCE DE VÉRITÉ, une variable de ce module.
- * `getSnapshot` la rend telle quelle — instantané, stable, insensible
- * à tout aléa du stockage. Le stockage est lu UNE FOIS (à la première
- * demande) et RÉÉCRIT à chaque changement : il sert la visite
- * SUIVANTE, il ne commande plus celle-ci. Un stockage qui refuse ne
- * peut plus faire sauter la mosaïque — au pire, le choix ne survit
- * pas à la fermeture de l'onglet.
- */
-
-const CLE = "yokofolio-disposition-grille";
 const EVENEMENT = "yokofolio-disposition-grille-changee";
+
+/** Le paramètre d'adresse — écrit seulement quand il diffère du défaut. */
+export const PARAMETRE_DISPOSITION = "disposition";
 
 export type DispositionGrille = "deux" | "une";
 
-/** LA source de vérité. `null` tant que le stockage n'a pas été lu. */
+/** LA source de vérité entre deux relectures de l'adresse. */
 let valeur: DispositionGrille | null = null;
 
-/** La lecture du stockage — UNE SEULE FOIS, et jamais bloquante. */
-function depuisLeStockage(): DispositionGrille {
+/** La lecture de l'adresse — le défaut sans paramètre. */
+function depuisLAdresse(): DispositionGrille {
   try {
-    return window.localStorage.getItem(CLE) === "une" ? "une" : "deux";
+    return new URLSearchParams(window.location.search).get(
+      PARAMETRE_DISPOSITION
+    ) === "une"
+      ? "une"
+      : "deux";
   } catch {
-    return "deux"; // stockage refusé : le défaut, sans bruit
+    return "deux";
   }
 }
 
-/** La disposition en cours — « deux » tant que rien n'est mémorisé. */
-export function lireDisposition(): DispositionGrille {
-  if (valeur === null) valeur = depuisLeStockage();
-  return valeur;
+/** Écrit (ou efface) le paramètre dans l'adresse COURANTE — un
+    remplacement, jamais une étape : changer d'affichage n'est pas une
+    navigation. */
+function ecrireDansLAdresse(voulue: DispositionGrille) {
+  try {
+    const parametres = new URLSearchParams(window.location.search);
+    if (voulue === "une") parametres.set(PARAMETRE_DISPOSITION, "une");
+    else parametres.delete(PARAMETRE_DISPOSITION);
+    const requete = parametres.toString();
+    window.history.replaceState(
+      window.history.state,
+      "",
+      window.location.pathname + (requete ? `?${requete}` : "") + window.location.hash
+    );
+  } catch {
+    // Adresse inaccessible : la bascule vivra le temps de la page.
+  }
 }
 
-/** Ce que voit le serveur (et la première peinture) : le défaut. */
-export function lireDispositionServeur(): DispositionGrille {
-  return "deux";
+/** La disposition en cours — celle de l'adresse. */
+export function lireDisposition(): DispositionGrille {
+  if (valeur === null) valeur = depuisLAdresse();
+  return valeur;
 }
 
 /**
  * POSER LA DISPOSITION VOULUE — et prévenir les abonnés.
- * ⚠️ UNE VALEUR EXPLICITE, PAS UNE INVERSION (nº 164) : « inverser »
- * transforme le moindre appel en double (un clic fantôme d'iOS, un
- * événement rejoué) en aller-retour visible. Demander « je veux DEUX
- * colonnes » est idempotent : deux fois la même demande ne font qu'un
- * seul changement, et rien du tout si l'on y est déjà.
+ * ⚠️ UNE VALEUR EXPLICITE, PAS UNE INVERSION (nº 164) : demander « je
+ * veux DEUX colonnes » est idempotent — deux fois la même demande ne
+ * font qu'un seul changement, et rien du tout si l'on y est déjà.
  */
 export function poserDisposition(voulue: DispositionGrille) {
   if (lireDisposition() === voulue) return;
   valeur = voulue;
-  try {
-    window.localStorage.setItem(CLE, voulue);
-  } catch {
-    // Stockage refusé : la bascule vivra le temps de la page.
-  }
+  ecrireDansLAdresse(voulue);
   window.dispatchEvent(new Event(EVENEMENT));
 }
 
@@ -105,19 +100,18 @@ export function basculerDisposition() {
   poserDisposition(lireDisposition() === "une" ? "deux" : "une");
 }
 
-/** Abonnement pour `useSyncExternalStore` (autre onglet compris). */
+/** Abonnement pour `useSyncExternalStore`. Le RETOUR (popstate) est le
+    seul moment où l'adresse a raison contre la mémoire : on relit
+    ALORS, et alors seulement. */
 export function souscrireDisposition(rappel: () => void) {
-  //  ⚠️ L'AUTRE ONGLET EST LE SEUL CAS où le stockage a raison contre
-  //  la mémoire : on relit ALORS, et alors seulement.
-  const auStockage = (evenement: StorageEvent) => {
-    if (evenement.key !== null && evenement.key !== CLE) return;
-    valeur = depuisLeStockage();
+  const auRetour = () => {
+    valeur = depuisLAdresse();
     rappel();
   };
   window.addEventListener(EVENEMENT, rappel);
-  window.addEventListener("storage", auStockage);
+  window.addEventListener("popstate", auRetour);
   return () => {
     window.removeEventListener(EVENEMENT, rappel);
-    window.removeEventListener("storage", auStockage);
+    window.removeEventListener("popstate", auRetour);
   };
 }

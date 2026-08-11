@@ -46,6 +46,7 @@ import { SondeVerre } from "@/components/SondeVerre";
 import { SondeRetour } from "@/components/SondeRetour";
 import { SondeBascule } from "@/components/SondeBascule";
 import { COMPTES_YOKOFOLIO } from "@/config/tatouage";
+import { COOKIE_DEJA_CONNECTE } from "@/lib/deja-connecte";
 import { utilisateurDepuisCookies } from "@/lib/session-cookie";
 
 /**
@@ -130,6 +131,11 @@ export default async function MiseEnPageTatouage({
   // moitié (navigations) vivant dans src/lib/use-utilisateur.ts.
   const magasin = await cookies();
   const utilisateur = utilisateurDepuisCookies(magasin.getAll());
+  // LE DRAPEAU « DÉJÀ CONNECTÉ SUR CE NAVIGATEUR » (nº 203-§1a) — un
+  // cookie, donc lisible ICI : le bouton « Se connecter » de la barre
+  // est juste dès le HTML, sans correction après l'hydratation.
+  const dejaConnecte =
+    magasin.get(COOKIE_DEJA_CONNECTE)?.value === "1" || utilisateur !== null;
   // ⚠️ POUR LA SONDE DU RETOUR, ET SEULEMENT POUR ELLE : l'en-tête que
   // le TÉLÉPHONE a réellement envoyé. C'est la seule façon de le savoir
   // — un `fetch` depuis la page en enverrait un autre.
@@ -236,7 +242,7 @@ export default async function MiseEnPageTatouage({
           barre fixe, pied de page — ouvre d'abord la fenêtre
           « Modifications non enregistrées ». Inerte partout ailleurs. */}
       <GardeSaisie />
-      <FournisseurSession utilisateur={utilisateur}>
+      <FournisseurSession utilisateur={utilisateur} dejaConnecte={dejaConnecte}>
         {/* LES CŒURS DÉJÀ POSÉS (passe nº 137) — une seule demande par
             page, qui allume d'un coup toute la mosaïque. Il n'affiche
             rien ; sans session, il ne demande même pas. */}

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useContext,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -18,10 +19,12 @@ import { MenuEspace } from "@/components/MenuEspace";
 import { SelecteurLangue } from "@/components/SelecteurLangue";
 import {
   lireDejaConnecte,
-  lireDejaConnecteServeur,
   marquerDejaConnecte,
   souscrireStockage,
 } from "@/lib/deja-connecte";
+import { ContexteDejaConnecteServeur } from "@/components/FournisseurSession";
+import { lireDisposition } from "@/lib/disposition-grille";
+import { lirePhototheque } from "@/lib/vue-phototheque";
 import { useUtilisateur } from "@/lib/use-utilisateur";
 import {
   criteresComplets,
@@ -92,16 +95,22 @@ export function EnTeteTatouage({
   const connecte = utilisateur !== null;
 
   /** Vrai si un compte s'est DÉJÀ connecté sur ce navigateur : le
-      bouton dit alors « Se connecter » au lieu d'inviter à s'inscrire. */
+      bouton dit alors « Se connecter » au lieu d'inviter à s'inscrire.
+      ⚠️ LE SERVEUR LE SAIT DÉSORMAIS (nº 203-§1a) : le drapeau vit
+      dans un COOKIE, la mise en page le lit et le passe par contexte —
+      le HTML porte le bon libellé du premier coup, plus de bouton qui
+      change sous les yeux au retour à l'accueil. */
+  const dejaConnecteServi = useContext(ContexteDejaConnecteServeur);
   const dejaConnecte = useSyncExternalStore(
     souscrireStockage,
     lireDejaConnecte,
-    lireDejaConnecteServeur
+    () => dejaConnecteServi
   );
-  // Chaque session connectée POSE le drapeau — c'est tout ce qu'on
-  // retient de ce navigateur.
+  // Chaque session connectée POSE le drapeau — et un navigateur qui ne
+  // portait que l'ANCIEN drapeau (stockage local, d'avant la nº 203)
+  // reçoit son cookie au premier passage : la transition est muette.
   useEffect(() => {
-    if (connecte) marquerDejaConnecte();
+    if (connecte || lireDejaConnecte()) marquerDejaConnecte();
   }, [connecte]);
 
   /**
@@ -217,6 +226,10 @@ export function EnTeteTatouage({
       }
       parametres.set("rayon", String(suivants.rayonKm));
     }
+    //  L'AFFICHAGE VOYAGE AVEC LA RECHERCHE (nº 203-§1b) : chercher
+    //  depuis une fiche ne remet pas la mosaïque au défaut.
+    if (lireDisposition() === "une") parametres.set("disposition", "une");
+    if (lirePhototheque()) parametres.set("texte", "sans");
     const requete = parametres.toString();
     router.push(requete ? `/?${requete}` : "/");
   }
@@ -683,7 +696,13 @@ export function EnTeteTatouage({
               </Link>
 
               {/* WEB : le bouton rose. Jamais venu, il invite ; déjà
-                  venu, « Se connecter ». */}
+                  venu, « Se connecter ».
+                  ⚠️ LES DEUX ÉTATS OCCUPENT LA MÊME LARGEUR
+                  (nº 203-§1a) : les deux libellés sont posés dans la
+                  même case de grille — le plus long, invisible,
+                  réserve la place. Quel que soit celui qui s'affiche,
+                  le bouton ne change pas d'un pixel, et rien ne peut
+                  jamais pousser le bloc central de la barre. */}
               <Link
                 href="/devenir-tatoueur"
                 aria-label={libelleDeconnecte}
@@ -694,8 +713,16 @@ export function EnTeteTatouage({
                            focus-visible:outline-2 focus-visible:outline-offset-2
                            focus-visible:outline-primaire"
               >
-                <span className="max-w-[180px] truncate">
-                  {libelleDeconnecte}
+                <span className="grid text-center">
+                  <span className="col-start-1 row-start-1">
+                    {libelleDeconnecte}
+                  </span>
+                  <span aria-hidden="true" className="col-start-1 row-start-1 invisible">
+                    Se connecter
+                  </span>
+                  <span aria-hidden="true" className="col-start-1 row-start-1 invisible">
+                    {TEXTES_TATOUAGE.lienInscription}
+                  </span>
                 </span>
               </Link>
             </>

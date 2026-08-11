@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useContext, useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ARRIVEE_APRES_CONNEXION } from "@/config/tatouage";
@@ -11,11 +11,8 @@ import {
 } from "@/components/Icones";
 import { JaugeMotDePasse } from "@/components/JaugeMotDePasse";
 import { OngletsLigne } from "@/components/OngletsLigne";
-import {
-  lireDejaConnecte,
-  lireDejaConnecteServeur,
-  souscrireStockage,
-} from "@/lib/deja-connecte";
+import { lireDejaConnecte, souscrireStockage } from "@/lib/deja-connecte";
+import { ContexteDejaConnecteServeur } from "@/components/FournisseurSession";
 import { suiteSure } from "@/lib/favoris-yokofolio";
 import { LONGUEUR_MINIMALE, evaluerMotDePasse } from "@/lib/mot-de-passe";
 import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
@@ -143,10 +140,14 @@ export function EcranAuthentification({
       propose pas de créer un compte à qui en a déjà un. Le mode ne
       devient un ÉTAT que lorsqu'on clique un onglet : avant ça, il
       DÉRIVE du drapeau (aucun écart entre serveur et navigateur). */
+  //  ⚠️ LE DRAPEAU EST UN COOKIE DEPUIS LA Nº 203-§1a : le serveur le
+  //  lit et le passe par contexte — l'onglet par défaut est le bon dès
+  //  le HTML, sans bascule visible après l'hydratation.
+  const dejaConnecteServi = useContext(ContexteDejaConnecteServeur);
   const dejaConnecte = useSyncExternalStore(
     souscrireStockage,
     lireDejaConnecte,
-    lireDejaConnecteServeur
+    () => dejaConnecteServi
   );
   const [modeChoisi, setModeChoisi] = useState<Mode | null>(null);
   //  ⚠️ EN RATTACHEMENT, LE DÉFAUT EST TOUJOURS « CRÉER » — même pour
@@ -173,6 +174,15 @@ export function EcranAuthentification({
 
   function basculer(suivant: Mode) {
     setModeChoisi(suivant);
+    //  ⚠️ LES DEUX FORMULAIRES SONT ÉTANCHES (nº 203-§4) : basculer de
+    //  « Me connecter » à « Créer mon compte » — ou l'inverse — ne
+    //  transporte AUCUNE saisie. Un mot de passe tapé pour se
+    //  connecter n'a rien à faire prérempli dans une création de
+    //  compte : chaque bascule repart de champs vides.
+    setEmail("");
+    setMotDePasse("");
+    setConfirmation("");
+    setMotDePasseVisible(false);
     setErreurs({});
     setInfo(null);
     setLienMotDePasseOublie(false);

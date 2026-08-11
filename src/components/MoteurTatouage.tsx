@@ -30,18 +30,12 @@ import { basculerSansSaut } from "@/lib/bascule-verrouillee";
 //  ⚠️ TEMPORAIRE (nº 173) — la sonde-journal enregistre les clics sur
 //  les deux boutons de bascule. Elle n'écrit RIEN sans `?sonde-bascule=1`.
 import { noter } from "@/lib/journal-bascule";
+import { poserDisposition } from "@/lib/disposition-grille";
+import { poserPhototheque } from "@/lib/vue-phototheque";
 import {
-  poserDisposition,
-  lireDisposition,
-  lireDispositionServeur,
-  souscrireDisposition,
-} from "@/lib/disposition-grille";
-import {
-  poserPhototheque,
-  lirePhototheque,
-  lirePhototequeServeur,
-  souscrirePhototheque,
-} from "@/lib/vue-phototheque";
+  useDispositionGrille,
+  useVuePhototheque,
+} from "@/components/AffichageMosaique";
 import {
   fermerRecherche,
   lireRecherche,
@@ -264,18 +258,11 @@ export function MoteurTatouage({
       de localité pour le reconstruire à neuf (voir plus bas). */
   const [effacements, setEffacements] = useState(0);
   const zoneFiltres = useRef<HTMLDivElement>(null);
-  /** La disposition de la mosaïque (mobile) — mémorisée localement. */
-  const disposition = useSyncExternalStore(
-    souscrireDisposition,
-    lireDisposition,
-    lireDispositionServeur
-  );
-  /** La vue photothèque (nº 140) — mémorisée de la même façon. */
-  const phototheque = useSyncExternalStore(
-    souscrirePhototheque,
-    lirePhototheque,
-    lirePhototequeServeur
-  );
+  /** La disposition de la mosaïque (mobile) — celle de L'ADRESSE
+      (nº 203-§1b), servie par le serveur. */
+  const disposition = useDispositionGrille();
+  /** La vue photothèque (nº 140) — même règle. */
+  const phototheque = useVuePhototheque();
 
   // Le panneau des filtres du web : Échap et clic ailleurs referment.
   useEffect(() => {

@@ -1,7 +1,9 @@
 "use client";
 
 import { robeDuBadge } from "@/components/BadgesCharte";
+import { BoutonCoeurSerie } from "@/components/BoutonCoeurSerie";
 import { OngletsLigne } from "@/components/OngletsLigne";
+import { estIdentifiantDeBase } from "@/lib/favoris-yokofolio";
 import { NATURES_PHOTO } from "@/lib/photos-tatoueur";
 import type { StyleGalerie } from "@/lib/photo-tatoueur";
 
@@ -88,6 +90,10 @@ type StylePublie = {
   label: string;
   miniature: string;
   nombre: number;
+  /** LES PHOTOS DE LA SÉRIE QUI EXISTENT EN BASE (nº 203-§2) — le
+      cœur de la vignette les enregistre toutes d'un geste. Vide
+      (démonstration, fiche d'avant le catalogue) : pas de cœur. */
+  enregistrables: string[];
 };
 
 /** LES STYLES PUBLIÉS DANS UNE CATÉGORIE — et rien d'autre : un style
@@ -104,6 +110,9 @@ function stylesDeLaCategorie(
         label: groupe.label,
         miniature: photos[0]?.miniature ?? "",
         nombre: photos.length,
+        enregistrables: photos
+          .map((photo) => photo.cle)
+          .filter((cle) => estIdentifiantDeBase(cle)),
       };
     })
     .filter((style) => style.nombre > 0);
@@ -150,10 +159,15 @@ export function PanneauPortfolio({
       ) : (
         /*  LES VIGNETTES — une par style publié, le nom dessous.
             Angles arrondis, aucun contour, aucun encadré : l'image et
-            son nom, rien de plus. */
+            son nom, rien de plus.
+            ⚠️ LE CŒUR DE LA SÉRIE (nº 203-§2) vit dans l'angle haut
+            droit de la vignette : il enregistre TOUTE la série du
+            style, d'un geste. Il est posé À CÔTÉ du bouton de la
+            vignette (jamais dedans — un bouton dans un bouton n'est
+            pas du HTML), par-dessus l'image. */
         <ul className="mt-7 grid grid-cols-2 gap-x-4 gap-y-7 sm:grid-cols-3">
           {styles.map((style) => (
-            <li key={style.slug}>
+            <li key={style.slug} className="relative">
               <button
                 type="button"
                 onClick={() => surStyle(style.slug)}
@@ -178,6 +192,12 @@ export function PanneauPortfolio({
                   {style.label}
                 </span>
               </button>
+              <span className="absolute right-1.5 top-1.5">
+                <BoutonCoeurSerie
+                  ids={style.enregistrables}
+                  label={style.label}
+                />
+              </span>
             </li>
           ))}
         </ul>

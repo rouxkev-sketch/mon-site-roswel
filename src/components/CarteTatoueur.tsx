@@ -1,13 +1,9 @@
 "use client";
 
-import { useRef, useSyncExternalStore } from "react";
+import { useRef } from "react";
 import Link from "next/link";
 import { libelleTypeFiche, PHOTO_PORTFOLIO, PORTRAIT_ROND } from "@/config/tatouage";
-import {
-  lireDisposition,
-  lireDispositionServeur,
-  souscrireDisposition,
-} from "@/lib/disposition-grille";
+import { useDispositionGrille } from "@/components/AffichageMosaique";
 import { legendeDeCarte, photoChoisie, photoPourStyle } from "@/lib/photo-tatoueur";
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import { ligneCarte } from "@/lib/adresse";
@@ -97,12 +93,9 @@ export function CarteTatoueur({
     renduRecherche
   );
   /** En « une colonne » (bouton de disposition, vrais mobiles), le
-      nom et la localité GRANDISSENT sous la grande image. */
-  const disposition = useSyncExternalStore(
-    souscrireDisposition,
-    lireDisposition,
-    lireDispositionServeur
-  );
+      nom et la localité GRANDISSENT sous la grande image. La valeur
+      vient de L'ADRESSE (nº 203-§1b), servie par le serveur. */
+  const disposition = useDispositionGrille();
   const uneColonne = disposition === "une";
 
   /** LE ZOOM AU PINCEMENT (vrais mobiles) : la carte écoute, la photo

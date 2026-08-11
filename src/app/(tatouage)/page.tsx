@@ -47,18 +47,30 @@ const PARAMETRES_RECHERCHE = [
   //  sans une mémoire parallèle — et c'est très exactement ce qu'on
   //  vient de supprimer.
   "page",
+  //  ⚠️ ET L'AFFICHAGE (nº 203-§1b) : la disposition de la mosaïque
+  //  (« disposition=une ») et le texte des cartes (« texte=sans »)
+  //  vivent dans l'adresse comme les critères — le serveur rend donc
+  //  directement le bon affichage, plus rien ne se corrige à l'écran
+  //  après coup. Comme « page », ils ne font pas une recherche.
+  "disposition", "texte",
 ] as const;
+
+/** Les paramètres qui ne décrivent PAS une recherche : la pagination
+    et l'affichage — « /?page=2 » ou « /?texte=sans », c'est toujours
+    l'accueil. */
+const PARAMETRES_HORS_RECHERCHE = new Set(["page", "disposition", "texte"]);
 
 type ParametresAccueil = Partial<
   Record<(typeof PARAMETRES_RECHERCHE)[number], string>
 >;
 
-/** Cette adresse porte-t-elle une recherche ? (La PAGE n'en est pas
-    une : « /?page=2 », c'est toujours l'accueil, en plus long.) */
+/** Cette adresse porte-t-elle une recherche ? (La PAGE et l'AFFICHAGE
+    n'en sont pas : « /?page=2 », c'est toujours l'accueil, en plus
+    long.) */
 function porteUneRecherche(params: ParametresAccueil): boolean {
-  return PARAMETRES_RECHERCHE.filter((cle) => cle !== "page").some((cle) =>
-    Boolean(params[cle])
-  );
+  return PARAMETRES_RECHERCHE.filter(
+    (cle) => !PARAMETRES_HORS_RECHERCHE.has(cle)
+  ).some((cle) => Boolean(params[cle]));
 }
 
 /** LA PAGE DEMANDÉE, bornée. Dix pages — deux cent quarante cartes —
@@ -212,6 +224,12 @@ export default async function PageAccueilTatouage({
       demonstration={resultat.demonstration}
       message={resultat.message}
       criteresInitiaux={{ style, nature, rayonKm, exclure, lieu }}
+      //  L'AFFICHAGE DEMANDÉ PAR L'ADRESSE (nº 203-§1b) — décodé ici,
+      //  comme les critères : le HTML rendu est le bon du premier coup.
+      affichage={{
+        disposition: params.disposition === "une" ? "une" : "deux",
+        phototheque: params.texte === "sans",
+      }}
     />
   );
 }

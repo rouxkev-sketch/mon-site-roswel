@@ -6,7 +6,6 @@ import {
   useLayoutEffect,
   useRef,
   useState,
-  useSyncExternalStore,
 } from "react";
 import { usePathname } from "next/navigation";
 import { CarteTatoueur } from "@/components/CarteTatoueur";
@@ -23,15 +22,9 @@ import {
 } from "@/lib/journal-bascule";
 import { ficheComplete } from "@/lib/fiche-complete";
 import {
-  lirePhototheque,
-  lirePhototequeServeur,
-  souscrirePhototheque,
-} from "@/lib/vue-phototheque";
-import {
-  lireDisposition,
-  lireDispositionServeur,
-  souscrireDisposition,
-} from "@/lib/disposition-grille";
+  useDispositionGrille,
+  useVuePhototheque,
+} from "@/components/AffichageMosaique";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
 /** useLayoutEffect côté navigateur, useEffect côté serveur (silencieux) */
@@ -103,19 +96,11 @@ export function GrilleTatoueurs({
 }) {
   const pathname = usePathname();
   /** La disposition mobile (deux colonnes / une image par ligne) —
-      choisie par le bouton rond de la barre, mémorisée localement. */
-  const disposition = useSyncExternalStore(
-    souscrireDisposition,
-    lireDisposition,
-    lireDispositionServeur
-  );
+      celle de L'ADRESSE (nº 203-§1b), servie par le serveur. */
+  const disposition = useDispositionGrille();
   /** LA VUE PHOTOTHÈQUE (nº 140) — les images pures. Indépendante de
       la disposition : les deux se combinent librement. */
-  const phototheque = useSyncExternalStore(
-    souscrirePhototheque,
-    lirePhototheque,
-    lirePhototequeServeur
-  );
+  const phototheque = useVuePhototheque();
   /**
    * LA CARTE QU'ON REGARDE SURVIT À LA BASCULE DE DISPOSITION.
    * Le bouton a noté laquelle occupait le haut de l'écran ; ici, la

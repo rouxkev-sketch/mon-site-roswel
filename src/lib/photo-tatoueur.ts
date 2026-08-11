@@ -5,6 +5,7 @@ import {
   NATURE_PAR_DEFAUT,
   natureConnue,
   photosDuStyle,
+  PLAFOND_GALERIE,
   stylesDuPortfolio,
   vignetteDe,
   type PhotoTatoueur,
@@ -196,7 +197,17 @@ export function galerieParStyles(tatoueur: {
     return stylesDuPortfolio(galerie).map((slug) => ({
       slug,
       label: libelleStyle(slug),
-      photos: photosDuStyle(galerie, slug).map((photo) => ({
+      //  ⚠️ VINGT PHOTOS VISIBLES PAR SÉRIE, PAS UNE DE PLUS
+      //  (nº 203-§3). Le plafond du DÉPÔT vaut par galerie — un couple
+      //  style + rendu, doublé par la catégorie (réalisation / flash) :
+      //  un même style peut donc porter jusqu'à quatre-vingts lignes en
+      //  base, toutes légitimes. Mais la fiche FUSIONNE ces galeries en
+      //  une seule série par style — et c'est la série que le visiteur
+      //  regarde : elle est donc bornée au même plafond, dans l'ordre
+      //  que le tatoueur a choisi (les vingt premières de sa galerie).
+      photos: photosDuStyle(galerie, slug)
+        .slice(0, PLAFOND_GALERIE)
+        .map((photo) => ({
         cle: photo.id,
         url: photo.url,
         miniature: vignetteDe(photo),

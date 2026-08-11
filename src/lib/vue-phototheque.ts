@@ -11,38 +11,56 @@
  * n'est pas un troisième état de disposition-grille, mais un magasin
  * à part, bâti sur le même modèle.
  *
- * ⚠️ LA VALEUR VIT EN MÉMOIRE, LE STOCKAGE N'EST QU'UNE SAUVEGARDE
- * (nº 164) — le magasin est le JUMEAU de disposition-grille, et il
- * hérite de la même correction : `getSnapshot` ne lit plus
- * `localStorage` à chaque rendu (des dizaines de fois par image, une
- * exception intermittente suffisant à faire rebasculer la mosaïque).
- * Le raisonnement complet est dans lib/disposition-grille.ts.
+ * ⚠️ LE CHOIX VIT DANS L'ADRESSE (nº 203-§1b) — « ?texte=sans », rien
+ * pour le défaut (les cartes avec leur texte). Même raisonnement, même
+ * mécanique et mêmes conséquences que lib/disposition-grille — le
+ * JUMEAU de ce magasin, où tout est expliqué : serveur qui rend le bon
+ * affichage du premier coup, remplacement d'adresse sans étape
+ * d'historique, relecture au retour, clé de position qui contient le
+ * paramètre, et adresse nue = défaut (le contrat des critères).
  */
 
-const CLE = "yokofolio-vue-phototheque";
 const EVENEMENT = "yokofolio-vue-phototheque-changee";
 
-/** LA source de vérité. `null` tant que le stockage n'a pas été lu. */
+/** Le paramètre d'adresse — écrit seulement quand le texte est masqué. */
+export const PARAMETRE_TEXTE = "texte";
+
+/** LA source de vérité entre deux relectures de l'adresse. */
 let valeur: boolean | null = null;
 
-/** La lecture du stockage — UNE SEULE FOIS, et jamais bloquante. */
-function depuisLeStockage(): boolean {
+/** La lecture de l'adresse — la vue éteinte sans paramètre. */
+function depuisLAdresse(): boolean {
   try {
-    return window.localStorage.getItem(CLE) === "1";
+    return (
+      new URLSearchParams(window.location.search).get(PARAMETRE_TEXTE) ===
+      "sans"
+    );
   } catch {
-    return false; // stockage refusé : le défaut, sans bruit
+    return false;
   }
 }
 
-/** La vue en cours — éteinte tant que rien n'est mémorisé. */
-export function lirePhototheque(): boolean {
-  if (valeur === null) valeur = depuisLeStockage();
-  return valeur;
+/** Écrit (ou efface) le paramètre — un remplacement, jamais une étape. */
+function ecrireDansLAdresse(voulue: boolean) {
+  try {
+    const parametres = new URLSearchParams(window.location.search);
+    if (voulue) parametres.set(PARAMETRE_TEXTE, "sans");
+    else parametres.delete(PARAMETRE_TEXTE);
+    const requete = parametres.toString();
+    window.history.replaceState(
+      window.history.state,
+      "",
+      window.location.pathname + (requete ? `?${requete}` : "") + window.location.hash
+    );
+  } catch {
+    // Adresse inaccessible : la vue vivra le temps de la page.
+  }
 }
 
-/** Ce que voit le serveur (et la première peinture) : le défaut. */
-export function lirePhototequeServeur(): boolean {
-  return false;
+/** La vue en cours — celle de l'adresse. */
+export function lirePhototheque(): boolean {
+  if (valeur === null) valeur = depuisLAdresse();
+  return valeur;
 }
 
 /**
@@ -52,11 +70,7 @@ export function lirePhototequeServeur(): boolean {
 export function poserPhototheque(voulue: boolean) {
   if (lirePhototheque() === voulue) return;
   valeur = voulue;
-  try {
-    window.localStorage.setItem(CLE, voulue ? "1" : "0");
-  } catch {
-    // Stockage refusé : la vue vivra le temps de la page.
-  }
+  ecrireDansLAdresse(voulue);
   window.dispatchEvent(new Event(EVENEMENT));
 }
 
@@ -65,18 +79,17 @@ export function basculerPhototheque() {
   poserPhototheque(!lirePhototheque());
 }
 
+/** Abonnement — le RETOUR (popstate) est le seul moment où l'adresse a
+    raison contre la mémoire : on relit alors, et alors seulement. */
 export function souscrirePhototheque(rappel: () => void) {
-  //  L'autre onglet est le seul cas où le stockage a raison contre la
-  //  mémoire : on relit alors, et alors seulement.
-  const auStockage = (evenement: StorageEvent) => {
-    if (evenement.key !== null && evenement.key !== CLE) return;
-    valeur = depuisLeStockage();
+  const auRetour = () => {
+    valeur = depuisLAdresse();
     rappel();
   };
   window.addEventListener(EVENEMENT, rappel);
-  window.addEventListener("storage", auStockage);
+  window.addEventListener("popstate", auRetour);
   return () => {
     window.removeEventListener(EVENEMENT, rappel);
-    window.removeEventListener("storage", auStockage);
+    window.removeEventListener("popstate", auRetour);
   };
 }

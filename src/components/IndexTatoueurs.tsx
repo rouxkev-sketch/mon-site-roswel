@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -21,6 +21,13 @@ import {
 import type { Tatoueur } from "@/lib/tatoueurs";
 import { lieuVersParametres } from "@/lib/geocodage";
 import { useUtilisateur } from "@/lib/use-utilisateur";
+import { ContexteAffichageServi } from "@/components/AffichageMosaique";
+import {
+  lireDisposition,
+  poserDisposition,
+  type DispositionGrille,
+} from "@/lib/disposition-grille";
+import { lirePhototheque, poserPhototheque } from "@/lib/vue-phototheque";
 
 /**
  * L'ACCUEIL DE YOKOFOLIO (adresse « / ») — L'ADRESSE DÉCIDE DE TOUT
@@ -89,9 +96,16 @@ export function parametresDeRecherche(
   return parametres;
 }
 
-/** L'adresse complète d'une recherche. */
+/** L'adresse complète d'une recherche.
+    ⚠️ L'AFFICHAGE VOYAGE AVEC ELLE (nº 203-§1b) : la disposition et le
+    texte des cartes vivent dans l'adresse — une nouvelle recherche ou
+    un « Voir plus » ne doivent pas les remettre au défaut. On relit
+    donc les valeurs courantes au moment de fabriquer l'adresse. */
 function adresseDe(criteres: CritèresTatouage, page = 1): string {
-  const requete = parametresDeRecherche(criteres, page).toString();
+  const parametres = parametresDeRecherche(criteres, page);
+  if (lireDisposition() === "une") parametres.set("disposition", "une");
+  if (lirePhototheque()) parametres.set("texte", "sans");
+  const requete = parametres.toString();
   return requete ? `/?${requete}` : "/";
 }
 
@@ -102,6 +116,7 @@ export function IndexTatoueurs({
   message,
   total,
   page,
+  affichage = { disposition: "deux", phototheque: false },
 }: {
   /** LES CARTES DE CETTE ADRESSE — toutes celles qu'elle demande,
       pages cumulées comprises. C'est le SEUL contenu de la mosaïque. */
@@ -114,6 +129,10 @@ export function IndexTatoueurs({
   total: number;
   /** La page demandée par l'adresse (1 par défaut). */
   page: number;
+  /** L'AFFICHAGE demandé par l'adresse (nº 203-§1b) : la disposition
+      de la mosaïque et le texte des cartes — décodés par le serveur,
+      comme les critères. */
+  affichage?: { disposition: DispositionGrille; phototheque: boolean };
 }) {
   const router = useRouter();
   /** Une navigation du routeur est en cours : la mosaïque s'estompe,
@@ -154,6 +173,17 @@ export function IndexTatoueurs({
     noterMontage("page (IndexTatoueurs)");
     return () => noterDemontage("page (IndexTatoueurs)");
   }, []);
+
+  /** L'ADRESSE A TOUJOURS LE DERNIER MOT SUR L'AFFICHAGE (nº 203-§1b).
+      Une navigation du routeur peut changer l'adresse SANS passer par
+      les boutons de bascule (le moteur d'une autre page, un retour) :
+      on remet alors les magasins au pas de ce que le serveur a servi.
+      `poser…` ne fait rien quand la valeur est déjà la bonne — le cas
+      de toutes les bascules ordinaires. */
+  useEffect(() => {
+    poserDisposition(affichage.disposition);
+    poserPhototheque(affichage.phototheque);
+  }, [affichage.disposition, affichage.phototheque]);
 
   /**
    * CHERCHER, C'EST CHANGER D'ADRESSE.
@@ -208,8 +238,18 @@ export function IndexTatoueurs({
       ceux que le doigt vient de poser. */
   const affiches = criteresServis;
 
+  /** L'affichage servi, fourni à la grille, aux cartes et aux boutons
+      de bascule : c'est LUI que le HTML du serveur montre (nº 203-§1b). */
+  const affichageServi = useMemo(
+    () => ({
+      disposition: affichage.disposition,
+      phototheque: affichage.phototheque,
+    }),
+    [affichage.disposition, affichage.phototheque]
+  );
+
   return (
-    <>
+    <ContexteAffichageServi.Provider value={affichageServi}>
       <EnTeteTatouage
         criteres={criteres}
         surRecherche={(suivants) => chercher(suivants)}
@@ -360,6 +400,6 @@ export function IndexTatoueurs({
         </section>
         )}
       </main>
-    </>
+    </ContexteAffichageServi.Provider>
   );
 }

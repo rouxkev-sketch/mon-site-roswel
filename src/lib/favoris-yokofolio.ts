@@ -80,13 +80,29 @@ export function useEtatFavori(
   );
 }
 
+/**
+ * L'ÉTAT D'UNE SÉRIE (nº 203-§2) — le cœur d'une vignette de style.
+ * La série est enregistrée quand TOUTES ses photos le sont : c'est le
+ * seul état que le cœur puisse dire honnêtement. L'instantané est un
+ * booléen — React compare la VALEUR, la fonction peut changer.
+ */
+export function useEtatSerie(ids: string[]): boolean {
+  return useSyncExternalStore(
+    sAbonner,
+    () => ids.length > 0 && ids.every((id) => lire("photo", id, false)),
+    () => false
+  );
+}
+
 /* ================================================================
  * LE GESTE EN ATTENTE — pour qui n'est pas connecté
  * ================================================================ */
 
 const CLE_ATTENTE = "yokofolio-geste-en-attente";
 
-export type GesteEnAttente = { genre: Genre; id: string };
+/** « serie » (nº 203-§2) : le cœur d'une vignette de style — l'id est
+    alors la liste des photos de la série, jointes par des virgules. */
+export type GesteEnAttente = { genre: Genre | "serie"; id: string };
 
 /** Retenir le geste avant de partir vers la connexion. */
 export function retenirLeGeste(geste: GesteEnAttente) {
@@ -100,7 +116,10 @@ export function retenirLeGeste(geste: GesteEnAttente) {
 
 /** Le geste retenu, s'il vise CET objet — et il est consommé : on ne
     rejoue jamais deux fois la même chose. */
-export function reprendreLeGeste(genre: Genre, id: string): boolean {
+export function reprendreLeGeste(
+  genre: GesteEnAttente["genre"],
+  id: string
+): boolean {
   try {
     const brut = sessionStorage.getItem(CLE_ATTENTE);
     if (!brut) return false;
@@ -212,6 +231,29 @@ export async function ecrireFavori(
         body: JSON.stringify({ id, actif }),
       }
     );
+    const donnees = (await reponse.json().catch(() => null)) as {
+      ok?: boolean;
+    } | null;
+    return Boolean(donnees?.ok);
+  } catch {
+    return false;
+  }
+}
+
+/** UNE SÉRIE ENTIÈRE, EN UNE DEMANDE (nº 203-§2) — le cœur d'une
+    vignette enregistre (ou retire) toutes les photos du style d'un
+    coup : une seule requête, une seule réponse, jamais de série à
+    moitié posée parce qu'un des appels aurait échoué en route. */
+export async function ecrireFavorisEnSerie(
+  ids: string[],
+  actif: boolean
+): Promise<boolean> {
+  try {
+    const reponse = await fetch("/api/yokofolio/favoris/photo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids, actif }),
+    });
     const donnees = (await reponse.json().catch(() => null)) as {
       ok?: boolean;
     } | null;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { createContext, useState, type ReactNode } from "react";
 import type { User } from "@supabase/supabase-js";
 import { ContexteSessionServeur } from "@/lib/use-utilisateur";
 
@@ -18,17 +18,33 @@ import { ContexteSessionServeur } from "@/lib/use-utilisateur";
  * La suite de la vie de la session (connexion, déconnexion) est
  * l'affaire du magasin client, pas de ce fournisseur.
  */
+
+/**
+ * « UN COMPTE S'EST DÉJÀ CONNECTÉ ICI » — CE QUE LE SERVEUR A LU
+ * (nº 203-§1a). Le drapeau vit dans un cookie (lib/deja-connecte) : la
+ * mise en page le lit et le passe ici, et le bouton « Se connecter » /
+ * « Rejoindre » de la barre est juste dès le HTML — plus de libellé
+ * qui change sous les yeux après l'hydratation.
+ */
+export const ContexteDejaConnecteServeur = createContext(false);
+
 export function FournisseurSession({
   utilisateur,
+  dejaConnecte = false,
   children,
 }: {
   utilisateur: User | null;
+  /** Le drapeau « déjà connecté sur ce navigateur », lu dans le cookie
+      par la mise en page. */
+  dejaConnecte?: boolean;
   children: ReactNode;
 }) {
   const [valeur] = useState(() => ({ utilisateur, pret: true }));
   return (
     <ContexteSessionServeur.Provider value={valeur}>
-      {children}
+      <ContexteDejaConnecteServeur.Provider value={dejaConnecte}>
+        {children}
+      </ContexteDejaConnecteServeur.Provider>
     </ContexteSessionServeur.Provider>
   );
 }
