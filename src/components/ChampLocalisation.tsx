@@ -706,8 +706,17 @@ export function ChampLocalisation({
             // moteur ne le découpe plus (web).
             style={stylePanneau(cadre, ouvreVersLeHaut, hauteurMax)}
             //  À LA CHARTE (nº 139) : ni contour ni ombre.
+            //  ⚠️ LE FOND DU PANNEAU DES FILTRES, RECOPIÉ (nº 179-§1).
+            //  Cette fenêtre est celle qui porte le RAYON une fois une
+            //  ville choisie : elle était restée à `carte` (#232327)
+            //  quand les fenêtres du web sont montées à `eleve`
+            //  (#2C2C31) à la nº 144-§3. Deux fenêtres côte à côte, deux
+            //  gris. C'est la valeur du panneau des filtres, telle
+            //  quelle — et les badges qu'elle contient prennent en
+            //  conséquence la robe « sur panneau », comme dans les
+            //  filtres (voir MoteurTatouage, `piedRayon`).
             className="z-[80] flex flex-col rounded-2xl
-                       bg-sombre-carte text-sombre-texte overflow-hidden"
+                       bg-sombre-eleve text-sombre-texte overflow-hidden"
             onPointerDown={() => {
               interactionPanneau.current = true;
               window.setTimeout(() => {

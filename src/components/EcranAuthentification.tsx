@@ -354,24 +354,25 @@ export function EcranAuthentification({
             ? "Crée ton compte"
             : "Content de te revoir"}
       </h1>
-      {/* ⚠️ PLUS DE SOUS-TITRE À LA CRÉATION DE COMPTE (passe nº 137).
-          « Ton travail a sa place sur YokoFolio » ne s'adressait qu'aux
-          PROFESSIONNELS — or n'importe qui crée désormais un compte
-          ici, pour garder des photos et suivre des tatoueurs. Le titre
-          « Crée ton compte » se suffit ; les deux autres cas gardent
-          leur ligne, qui dit chacune quelque chose d'utile. */}
-      {!creer && (
-        <p className="mt-2 text-center text-[15px] text-sombre-texte-doux">
-          {enRattachement
-            ? "Tes fiches te seront rattachées aussitôt."
+      {/* LE SOUS-TITRE — UN SEUL ÉLÉMENT POUR LES TROIS CAS
+          (passe nº 179-§2)
+          ----------------------------------------------------------
+          La création de compte n'en avait plus depuis la nº 137. Elle
+          en reprend un : « Commence ton expérience YokoFolio. »
+          ⚠️ IL EST PLACÉ EXACTEMENT COMME CELUI DE LA CONNEXION, et
+          c'est garanti par construction : il n'y a plus qu'UN SEUL
+          `<p>`, avec la MÊME classe pour tout le monde — même marge
+          au-dessus (`mt-2`), même taille (15 px), même couleur (le
+          gris doux). L'espace EN DESSOUS ne lui appartient pas : il
+          vient du bloc suivant (`mt-7`), qui ne change pas non plus.
+          Seul le texte diffère selon le cas. */}
+      <p className="mt-2 text-center text-[15px] text-sombre-texte-doux">
+        {enRattachement
+          ? "Tes fiches te seront rattachées aussitôt."
+          : creer
+            ? "Commence ton expérience YokoFolio."
             : "Connecte-toi pour retrouver ton compte."}
-        </p>
-      )}
-      {enRattachement && creer && (
-        <p className="mt-2 text-center text-[15px] text-sombre-texte-doux">
-          Tes fiches te seront rattachées aussitôt.
-        </p>
-      )}
+      </p>
 
       {/* ⚠️ LE SÉLECTEUR DISPARAÎT EN RATTACHEMENT (passe nº 135) —
           c'est LA différence avec la page de connexion ordinaire. On

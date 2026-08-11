@@ -308,8 +308,21 @@ html[data-recherche="ouverte"] [data-fond="sombre"] {
 [data-remonte-au-toucher] {
   scroll-margin-top: 76px;
 }
+/*  ⚠️ LA HAUTEUR RÉELLE DE L'EN-TÊTE, ET PLUS UN CHIFFRE FIGÉ
+    (nº 179-§3). Les 56 px dataient d'un en-tête qui ne portait que la
+    ligne de la croix ; la bascule Explorer / Filtres l'a fait grandir
+    (nº 149-§2), et le champ se posait donc DERRIÈRE lui dès qu'aucun
+    clavier ne venait chasser la barre. La marge suit désormais la
+    mesure (`--rw-entete-recherche`, posée par lib/remontee-champ), et
+    l'ancienne valeur reste en repli.
+    ⚠️ RIEN NE CHANGE SUR UN VRAI TÉLÉPHONE : dès que le clavier
+    s'ouvre, la règle `html[data-clavier="ouvert"]` plus bas impose ses
+    12 px — elle est plus spécifique, et c'est elle qui décide. */
 [data-page-recherche] [data-remonte-au-toucher] {
-  scroll-margin-top: calc(max(12px, env(safe-area-inset-top)) + 56px);
+  scroll-margin-top: calc(
+    var(--rw-entete-recherche, calc(max(12px, env(safe-area-inset-top)) + 56px)) +
+      12px
+  );
 }
 
 /*  ⚠️ QUAND LE CLAVIER A FAIT DISPARAÎTRE LA BARRE (nº 160-§3).
@@ -348,17 +361,32 @@ html[data-clavier="ouvert"] [data-page-recherche] [data-remonte-au-toucher] {
     n'ouvre aucun clavier et n'émet donc aucun `focus` exploitable (voir
     lib/remontee-champ, `remonterSansClavier`).
 
-    ⚠️ LA MARGE EST CELLE DE LA LOCALITÉ, RECOPIÉE : 12 px — la valeur
-    de la règle juste au-dessus, celle à laquelle la localité se pose
-    RÉELLEMENT (clavier ouvert, la barre étant alors hors de l'écran).
-    Un menu n'ouvrant pas de clavier, `data-clavier` n'est jamais posé
-    pour lui : il lui faut donc sa propre déclaration, à la même valeur,
-    pour arriver EXACTEMENT à la même hauteur.
+    ⚠️ LA MARGE DÉGAGE LA BARRE, ET C'EST LA CORRECTION DE LA Nº 179-§3.
+    La nº 175 lui avait donné 12 px — la valeur à laquelle la LOCALITÉ
+    se pose, mais seulement PARCE QUE le clavier a chassé la barre fixe
+    hors de l'écran à ce moment-là. Un menu déroulant n'ouvre aucun
+    clavier : la barre reste où elle est, et le champ montait DESSOUS —
+    seul le menu restait visible.
+
+    Il prend donc pour marge LA HAUTEUR RÉELLE de l'en-tête collant de
+    la page de recherche — mesurée au moment de la montée et posée dans
+    `--rw-entete-recherche` (lib/remontee-champ) — plus les 12 px d'air
+    de la règle voisine. Le champ se pose ainsi JUSTE SOUS la barre, et
+    son menu s'ouvre en dessous : les deux restent visibles.
+
+    ⚠️ UNE HAUTEUR MESURÉE, PAS UN NOMBRE ÉCRIT À LA MAIN. L'en-tête a
+    déjà grandi une fois (la bascule Explorer / Filtres, nº 149-§2) ;
+    un chiffre en dur redeviendrait faux à la prochaine. Le repli —
+    68 px — est la valeur de la règle du dessus, au cas où la mesure
+    n'aurait pas eu lieu.
 
     ⚠️ RIEN NE CHANGE POUR LA LOCALITÉ : elle garde son marqueur, ses
     deux marges et son déclenchement au clavier. */
 [data-remonte-au-menu] {
-  scroll-margin-top: 12px;
+  scroll-margin-top: calc(
+    var(--rw-entete-recherche, calc(max(12px, env(safe-area-inset-top)) + 56px)) +
+      12px
+  );
 }
 
 /*  ⚠️ L'EFFACEMENT DE LA MOSAÏQUE EST SUPPRIMÉ (nº 166).

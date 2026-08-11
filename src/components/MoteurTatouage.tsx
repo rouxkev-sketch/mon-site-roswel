@@ -782,6 +782,11 @@ export function MoteurTatouage({
           <BadgeCharte
             key={palier}
             actif={palier === criteres.rayonKm}
+            //  ⚠️ SUR PANNEAU (nº 179-§1) : la fenêtre du rayon a pris
+            //  le fond du panneau des filtres (`eleve`). Ce qui est
+            //  POSÉ dessus grimpe d'autant — exactement la règle de la
+            //  nº 144-§3, et la même robe que les badges des filtres.
+            surPanneau
             //  `preventDefault` : le champ garde le focus, le panneau
             //  reste ouvert — on peut ajuster plusieurs fois.
             onPointerDown={(evenement) => {
