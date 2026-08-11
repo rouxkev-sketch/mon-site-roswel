@@ -26,7 +26,10 @@ import {
 } from "@/components/Icones";
 import { BadgeCharte, GroupeBadges } from "@/components/BadgesCharte";
 import { remonterSansClavier } from "@/lib/remontee-champ";
-import { armerValidation } from "@/lib/etapes-historique";
+import {
+  armerGesteDeRecherche,
+  armerValidation,
+} from "@/lib/etapes-historique";
 import { basculerSansSaut } from "@/lib/bascule-verrouillee";
 //  ⚠️ TEMPORAIRE (nº 173) — la sonde-journal enregistre les clics sur
 //  les deux boutons de bascule. Elle n'écrit RIEN sans `?sonde-bascule=1`.
@@ -304,6 +307,9 @@ export function MoteurTatouage({
       C'est LA recherche — réservé au moteur du web, qui n'a pas de
       bouton et cherche à chaque geste. */
   function annoncer(suivant: Partial<CritèresTatouage>) {
+    //  ⚠️ UNE ACTION DE L'UTILISATEUR (nº 186) : c'est elle, et elle
+    //  seule, qui donne à la recherche le droit d'écrire l'adresse.
+    armerGesteDeRecherche();
     surChangement({ ...criteres, ...suivant });
   }
 
@@ -342,6 +348,8 @@ export function MoteurTatouage({
     //  ne trouvera plus rien à consommer.
     if (retenus) {
       armerValidation();
+      //  ⚠️ « Valider » EST UNE ACTION (nº 186) — voir `annoncer`.
+      armerGesteDeRecherche();
       surChangement(retenus, { validee: true });
     }
     // LA LISTE SE RELIT DEPUIS LE HAUT : valider une recherche ramène

@@ -10,7 +10,7 @@ import {
 } from "@/config/tatouage";
 import { EnTeteTatouage } from "@/components/EnTeteTatouage";
 import { GrilleTatoueurs } from "@/components/GrilleTatoueurs";
-import { noterDemontage, noterMontage } from "@/lib/journal-bascule";
+import { noter, noterDemontage, noterMontage } from "@/lib/journal-bascule";
 import { LigneResultats } from "@/components/LigneResultats";
 import {
   criteresComplets,
@@ -34,9 +34,11 @@ import {
   criteresDeLAdresse,
 } from "@/lib/adresse-recherche";
 import {
+  consommerGesteDeRecherche,
   consommerValidation,
   traverseeEnCours,
 } from "@/lib/etapes-historique";
+import { souscrireAdresse } from "@/lib/adresse-courante";
 import { estHydrate } from "@/lib/navigation-session";
 import { sans } from "@/lib/interrupteurs-mesure";
 import { useUtilisateur } from "@/lib/use-utilisateur";
@@ -178,6 +180,13 @@ export function IndexTatoueurs({
       lancée : l'adresse du navigateur est alors la bonne. */
   const adresseVisee = useRef<string | null>(null);
 
+  /** LES CRITÈRES DEMANDÉS EN DERNIER — écrits AVANT tout rendu, donc
+      toujours à jour quand une notification d'adresse arrive (nº 186).
+      L'état React, lui, peut n'être appliqué qu'au rendu suivant. */
+  const derniersDemandes = useRef<CritèresTatouage>(
+    criteresComplets(criteresInitiaux)
+  );
+
   /**
    * ET ON LA MET DE CÔTÉ DÈS QU'ELLE CHANGE — c'est-à-dire à chaque
    * « Voir plus » et à chaque recherche validée. Deux gestes rares : il
@@ -262,6 +271,7 @@ export function IndexTatoueurs({
         ÉTAPE D'HISTORIQUE (passe nº 182). */
     validee = false
   ) {
+    derniersDemandes.current = suivants;
     setCriteres(suivants);
     const numero = derniere + 1;
     setDerniere(numero);
@@ -324,9 +334,34 @@ export function IndexTatoueurs({
        * pour dépiler sa marche, ne compte pas comme une traversée —
        * voir lib/etapes-historique.)
        */
+      /**
+       * ⚠️ ET AU-DESSUS DE TOUT : UNE ACTION DE L'UTILISATEUR
+       * (passe nº 186)
+       * ==============================================================
+       * LE RELEVÉ : après un retour, l'adresse revient à « / » et la
+       * mosaïque à 20 cartes — puis, moins d'une seconde plus tard, le
+       * composant réécrit « /?style=abstrait » parce qu'il gardait
+       * encore les critères en mémoire. Cette écriture pose une entrée
+       * (3 devient 4) et efface tout ce qui se trouvait devant : le
+       * retour suivant sort du site.
+       *
+       * LA RÈGLE EST RENVERSÉE. Après une navigation, l'ADRESSE est la
+       * seule source de vérité : l'état s'y remet (voir l'effet
+       * `suivreLAdresse` plus bas), jamais l'inverse. Une recherche qui
+       * ne vient pas d'un geste peut rafraîchir ce qu'on VOIT, elle
+       * n'écrit plus rien dans la barre du navigateur.
+       */
+      const geste = consommerGesteDeRecherche();
       const traversee = traverseeEnCours();
-      const poseUneEtape = validee && consommerValidation() && !traversee;
-      if (traversee || adresseDeRecherche(adresse) === adresseCourante()) {
+      const validation = validee && consommerValidation();
+      const poseUneEtape = geste && validation && !traversee;
+      if (!geste) {
+        //  Aucune action derrière cette recherche : l'adresse ne bouge
+        //  pas d'un caractère.
+        noter(
+          `ADRESSE non écrite · ${adresse} · aucune action de l'utilisateur`
+        );
+      } else if (traversee || adresseDeRecherche(adresse) === adresseCourante()) {
         router.replace(adresse, { scroll: false });
       } else if (poseUneEtape) {
         /**
@@ -414,16 +449,32 @@ export function IndexTatoueurs({
    * remonte rien, ne remet rien à zéro, et personne n'allait relire
    * l'adresse restaurée.
    *
-   * LA CORRECTION : on écoute `popstate` — le seul événement qui dise
-   * « le navigateur vient de changer d'étape » — on RELIT les critères
-   * DANS L'ADRESSE, et on relance la recherche SANS réécrire
-   * l'historique (l'adresse est déjà la bonne : la réécrire ajouterait
-   * une étape parasite, et c'est justement le `replaceState` que la
-   * sonde voyait passer deux millisecondes avant).
+   * LA CORRECTION : on RELIT les critères DANS L'ADRESSE, et on relance
+   * la recherche SANS réécrire l'historique (l'adresse est déjà la
+   * bonne : la réécrire ajouterait une étape parasite, et c'est
+   * justement le `replaceState` que la sonde voyait passer deux
+   * millisecondes avant).
+   *
+   * ⚠️ ET ON ÉCOUTE TOUS LES CHANGEMENTS D'ADRESSE, PLUS SEULEMENT LE
+   * RETOUR ARRIÈRE (passe nº 186).
+   * ------------------------------------------------------------------
+   * LE RELEVÉ : après un retour, l'adresse revenait bien à « / » et la
+   * mosaïque à 20 cartes — puis le composant réécrivait
+   * « /?style=abstrait », parce qu'il gardait les critères en mémoire.
+   * L'ADRESSE EST LA SEULE SOURCE DE VÉRITÉ : quand elle ne porte aucun
+   * critère, l'état des critères SE VIDE. C'est `souscrireAdresse` qui
+   * prévient — il surveille les deux portes, le navigateur (`popstate`)
+   * ET le code (`pushState` / `replaceState`) — voir
+   * lib/adresse-courante.
+   *
+   * ⚠️ ET LA COMPARAISON SE FAIT SUR CE QU'ON A DEMANDÉ EN DERNIER
+   * (`derniersDemandes`), pas sur l'état React : une notification peut
+   * arriver AVANT que React n'ait appliqué le nouvel état, et la
+   * recherche serait alors relancée pour rien.
    *
    * ⚠️ SANS TABLEAU DE DÉPENDANCES : l'écouteur doit toujours voir la
    * dernière version de `chercher` (qui capture `derniere`). Le coût
-   * est nul — un ajout et un retrait d'écouteur par rendu.
+   * est nul — un abonnement et un désabonnement par rendu.
    */
   //  ⚠️ LA SONDE DE LA BASCULE (nº 173) : le conteneur de page est-il
   //  démonté, lui aussi, au clic ? (N'écrit que sous `?sonde-bascule=1`.)
@@ -433,16 +484,19 @@ export function IndexTatoueurs({
   }, []);
 
   useEffect(() => {
-    function auRetour() {
+    function suivreLAdresse() {
       const voulus = criteresDepuisAdresse(window.location.search);
       //  Rien n'a changé pour la mosaïque (un retour qui ne fait que
-      //  refermer la page de recherche, par exemple) : on ne relance
-      //  rien — « aucune recherche qui ne serve à rien » vaut aussi ici.
-      if (memeRecherche(voulus, criteres)) return;
+      //  refermer la page de recherche, par exemple, ou l'adresse que
+      //  nous venons nous-mêmes d'écrire) : on ne relance rien —
+      //  « aucune recherche qui ne serve à rien » vaut aussi ici.
+      if (memeRecherche(voulus, derniersDemandes.current)) return;
+      //  L'ADRESSE COMMANDE : l'état s'y remet, sans jamais la réécrire
+      //  (`ecrireLAdresse` faux). Sans critère dans l'adresse, les
+      //  critères se vident — c'est la règle de la nº 186.
       void chercher(voulus, false);
     }
-    window.addEventListener("popstate", auRetour);
-    return () => window.removeEventListener("popstate", auRetour);
+    return souscrireAdresse(suivreLAdresse);
   });
 
   /**

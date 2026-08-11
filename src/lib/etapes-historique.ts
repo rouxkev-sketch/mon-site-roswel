@@ -65,6 +65,8 @@ let dernierRetour = 0;
 let retourOrdonne = 0;
 /** Quand « Valider » a été pressé (0 : rien à consommer). */
 let validationArmee = 0;
+/** Quand une ACTION de l'utilisateur a lancé une recherche (nº 186). */
+let gesteArme = 0;
 let ecouteurPose = false;
 
 /** Le document lui-même est-il né d'un retour ou d'une avance ? */
@@ -92,6 +94,10 @@ export function surveillerLesTraversees() {
   window.addEventListener("popstate", () => {
     //  b) UNE NAVIGATION EFFACE LA VALIDATION EN ATTENTE, toujours.
     validationArmee = 0;
+    //  ⚠️ ET LE GESTE AVEC ELLE (nº 186) : après une navigation,
+    //  l'adresse commande — plus aucune écriture ne peut se réclamer
+    //  d'une action antérieure.
+    gesteArme = 0;
     //  a) NOTRE PROPRE RETOUR N'EN EST PAS UNE.
     if (retourOrdonne && Date.now() - retourOrdonne < DELAI_RETOUR_ORDONNE_MS) {
       retourOrdonne = 0;
@@ -133,5 +139,36 @@ export function armerValidation() {
 export function consommerValidation(): boolean {
   const quand = validationArmee;
   validationArmee = 0;
+  return quand !== 0 && Date.now() - quand < VIE_VALIDATION_MS;
+}
+
+/* ==================================================================
+ * SEULE UNE ACTION DE L'UTILISATEUR ÉCRIT L'ADRESSE (passe nº 186)
+ * ==================================================================
+ * LE RELEVÉ : après un retour, l'adresse revient bien à « / » et la
+ * mosaïque à 20 cartes — puis, moins d'une seconde plus tard, le
+ * composant RÉÉCRIT « /?style=abstrait » parce qu'il gardait encore
+ * les critères en mémoire. Cette écriture pose une entrée
+ * d'historique (3 devient 4) et efface tout ce qui se trouvait
+ * devant : le retour suivant sort du site.
+ *
+ * LA RÈGLE EST RENVERSÉE : après une navigation, l'ADRESSE est la
+ * seule source de vérité. L'état s'y remet, jamais l'inverse. Une
+ * recherche qui ne vient pas d'un geste peut donc rafraîchir ce qu'on
+ * VOIT, mais elle n'écrit plus rien dans la barre du navigateur.
+ *
+ * `armerGesteDeRecherche()` est appelé par les seuls endroits où
+ * l'utilisateur agit vraiment : le moteur du web (`annoncer`) et le
+ * bouton « Valider » du smartphone. Le jeton se consomme une fois, se
+ * périme en une seconde, et toute navigation l'efface.
+ */
+export function armerGesteDeRecherche() {
+  gesteArme = Date.now();
+}
+
+/** VRAI UNE SEULE FOIS, dans la seconde qui suit l'action. */
+export function consommerGesteDeRecherche(): boolean {
+  const quand = gesteArme;
+  gesteArme = 0;
   return quand !== 0 && Date.now() - quand < VIE_VALIDATION_MS;
 }
