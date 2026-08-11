@@ -174,12 +174,6 @@ export function IndexTatoueurs({
   // récente.
   const [derniere, setDerniere] = useState(0);
 
-  /** L'ADRESSE DE LA DERNIÈRE RECHERCHE DEMANDÉE AU ROUTEUR — la seule
-      qui dise à quoi la mosaïque courante correspond (voir l'effet de
-      mise de côté plus bas). Nulle tant qu'aucune recherche n'a été
-      lancée : l'adresse du navigateur est alors la bonne. */
-  const adresseVisee = useRef<string | null>(null);
-
   /** LES CRITÈRES DEMANDÉS EN DERNIER — écrits AVANT tout rendu, donc
       toujours à jour quand une notification d'adresse arrive (nº 186).
       L'état React, lui, peut n'être appliqué qu'au rendu suivant. */
@@ -193,40 +187,41 @@ export function IndexTatoueurs({
    * n'y a rien à ménager ici. Avant la peinture, pour qu'un départ
    * immédiat vers une fiche trouve la note déjà écrite.
    *
-   * ⚠️ SOUS L'ADRESSE DEMANDÉE, PAS SOUS CELLE QU'ON LIT — mesuré à la
-   * passe 113, et c'était un vrai trou. `chercher()` demande au routeur
-   * `/?style=realisme`, mais un changement d'adresse du routeur est une
-   * TRANSITION : elle n'est pas encore appliquée quand les résultats
-   * arrivent et que cette note s'écrit. La mosaïque partait donc sous
-   * l'ANCIENNE adresse. Au banc : mosaïque rangée sous `/`, retour
-   * demandé sur `/?style=realisme` — plus rien ne correspondait, les 48
-   * fiches étaient perdues, la page se reconstruisait à 4 cartes, et la
-   * position mémorisée (1600) retombait à 549 faute de hauteur.
-   * On range donc la mosaïque à l'adresse que l'on a DEMANDÉE.
+   * ⚠️ SOUS L'ADRESSE DES CARTES, PAS SOUS CELLE QU'ON LIT NI SOUS
+   * CELLE QU'ON A DEMANDÉE (passe nº 187).
+   * ------------------------------------------------------------------
+   * La passe nº 113 avait vu juste sur un point : l'adresse du
+   * navigateur RETARDE (un changement d'adresse du routeur est une
+   * transition), et ranger la mosaïque dessous la perdait. Elle rangeait
+   * donc sous l'adresse DEMANDÉE — `adresseVisee`, posée au tout début
+   * de `chercher()`.
+   * MAIS CETTE ADRESSE-LÀ EST EN AVANCE, et c'est le défaut du
+   * propriétaire : entre le départ de la recherche et l'arrivée des
+   * résultats, les cartes affichées sont encore CELLES D'AVANT. Toute
+   * écriture de note dans cet intervalle rangeait donc la mosaïque de
+   * l'accueil — vingt fiches — sous l'adresse de la recherche. Et comme
+   * une note ne rétrécit jamais (nº 181-§1a), la vraie note de trois
+   * fiches était ensuite REFUSÉE : au retour, la recherche « aquarelle »
+   * rendait les vingt fiches de l'accueil.
+   * LA NOTE EST DONC RANGÉE SOUS L'ADRESSE DES CARTES QU'ELLE CONTIENT :
+   * `affiches` — les critères de ce qui est À L'ÉCRAN, posés dans le
+   * même souffle que les cartes (jamais avant, jamais après). Ni en
+   * avance, ni en retard.
    */
   useEffetAvantPeinture(() => {
     // ⚠️ INTERRUPTEUR DE MESURE (`&sans=memoire`), TEMPORAIRE : la même
     // écriture, mais APRÈS la peinture au lieu d'avant. Elle sérialise
     // jusqu'à quarante-huit fiches ; si cela pèse sur le retour, ce
     // décalage le dira.
+    const adresseDesCartes = `/?${parametresDe(affiches)}`;
     if (sans("memoire")) {
       const apres = requestAnimationFrame(() => {
-        memoriserMosaique(
-          adresseVisee.current ?? adresseCourante(),
-          tatoueurs,
-          page,
-          enTout
-        );
+        memoriserMosaique(adresseDesCartes, tatoueurs, page, enTout);
       });
       return () => cancelAnimationFrame(apres);
     }
-    memoriserMosaique(
-      adresseVisee.current ?? adresseCourante(),
-      tatoueurs,
-      page,
-      enTout
-    );
-  }, [tatoueurs, page, enTout]);
+    memoriserMosaique(adresseDesCartes, tatoueurs, page, enTout);
+  }, [tatoueurs, page, enTout, affiches]);
 
   /** L'adresse d'API d'une recherche — la même pour la première page
       et pour les suivantes. */
@@ -303,9 +298,6 @@ export function IndexTatoueurs({
      */
     const requete = parametres.toString();
     const adresse = requete ? `/?${requete}` : "/";
-    // C'est CETTE adresse que la mosaïque à venir décrira — la barre du
-    // navigateur, elle, ne l'affichera que plus tard (transition).
-    adresseVisee.current = adresse;
     //  ⚠️ UNE RECHERCHE QUI NE CHANGE RIEN N'EMPILE RIEN : rouvrir la
     //  page de recherche et valider sans avoir touché à un critère ne
     //  doit pas ajouter une étape identique à la précédente — le
@@ -481,6 +473,40 @@ export function IndexTatoueurs({
   useEffect(() => {
     noterMontage("page (IndexTatoueurs)");
     return () => noterDemontage("page (IndexTatoueurs)");
+  }, []);
+
+  /**
+   * LE PREMIER AFFICHAGE APPARTIENT À L'ADRESSE (passe nº 187-§1)
+   * ==================================================================
+   * LE CONSTAT DU PROPRIÉTAIRE : « à chaque recherche, la page SAUTE
+   * avant de s'afficher correctement — elle montre d'abord autre chose,
+   * puis mes résultats », et « au retour, j'obtiens 20 fiches au lieu de
+   * mes 3 : ce sont celles de l'accueil ». Le journal disait la même
+   * chose en deux lignes : « rendu mosaïque · 20 cartes », puis
+   * « rendu mosaïque · 2 cartes ».
+   *
+   * LA RÈGLE : une adresse qui porte des critères ne doit JAMAIS montrer
+   * une mosaïque construite sans eux. On compare donc, au montage, les
+   * critères SERVIS (ceux du rendu qu'on vient de recevoir) à ceux de
+   * L'ADRESSE. S'ils ne concordent pas, ces cartes ne sont pas les
+   * nôtres : on les retire et on cherche.
+   *
+   * ⚠️ AVANT LA PEINTURE, et c'est tout l'intérêt : le rendu initial
+   * reste identique à celui du serveur (l'hydratation n'a rien à
+   * redire), mais l'œil ne voit jamais les cartes écartées — elles sont
+   * remplacées avant la première image. Un seul affichage, le bon.
+   */
+  useEffetAvantPeinture(() => {
+    const voulus = criteresDepuisAdresse(window.location.search);
+    if (memeRecherche(voulus, derniersDemandes.current)) return;
+    noter(
+      `PREMIER AFFICHAGE écarté · servi « ${
+        parametresDe(derniersDemandes.current).toString() || "(aucun critère)"
+      } » · adresse « ${parametresDe(voulus).toString() || "(aucun critère)"} »`
+    );
+    setTatoueurs([]);
+    setEnTout(0);
+    void chercher(voulus, false);
   }, []);
 
   useEffect(() => {
