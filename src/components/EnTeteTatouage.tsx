@@ -145,6 +145,17 @@ export function EnTeteTatouage({
         declarations.push(`background-color: rgba(26, 26, 29, ${pourcent / 100})`);
       }
     }
+    //  ⚠️ LE CRAN D'ÉCLAIRCISSEMENT DU CHAMP ET DES DEUX ICÔNES
+    //  (nº 174-§1) — `?clair=1`, `?clair=2`, `?clair=3`, du plus
+    //  discret au plus clair. DÉFAUT : 2, écrit dans la feuille de
+    //  style (globals.css) ; l'attribut ne sert qu'à en changer.
+    //  Il vit sur <html> et non sur la barre : les mêmes trois crans
+    //  habillent le champ et les boutons, qui ne sont pas frères.
+    const clair = params.get("clair");
+    if (clair === "1" || clair === "2" || clair === "3") {
+      racine.dataset.clair = clair;
+    }
+
     const flou = params.get("flou");
     if (flou !== null) {
       const pixels = Number(flou);

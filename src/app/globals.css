@@ -170,6 +170,57 @@ html:has([data-fond="sombre"]) {
   backdrop-filter: blur(40px) saturate(150%);
 }
 
+/*  LE CHAMP ET LES DEUX ICÔNES DE LA BARRE FIXE — LISIBLES SUR
+    N'IMPORTE QUELLE PHOTO (nº 174-§1)
+    -------------------------------------------------------------------
+    Quand des photos défilent derrière la barre, le champ de recherche
+    et les deux boutons de mise en forme se noyaient dedans. Leur fond
+    monte donc d'un cran de l'échelle sombre — SUR MOBILE COMME SUR WEB,
+    les deux portent le même marqueur `data-clair-barre`.
+
+    AUCUN contour, AUCUN rose : rien qu'un barreau de plus sur l'échelle
+    des gris (config/tatouage.ts). Aucune valeur n'est inventée ici —
+    ce sont les couleurs de la charte, telles quelles.
+
+    LE CRAN EST RÉGLABLE PAR L'ADRESSE, comme `?verre=` :
+      ?clair=1  eleve-clair (#35353B) — le plus discret, la valeur d'hier
+                                        sur web
+      ?clair=2  haut        (#414149) — LE DÉFAUT
+      ?clair=3  haut-clair  (#4B4B54) — le plus clair
+    Le défaut vit dans cette feuille : sans attribut, c'est le cran 2 qui
+    s'applique. `EnTeteTatouage` pose `data-clair` sur <html> quand
+    l'adresse le demande.
+
+    LE FOCUS GARDE SON COMPORTEMENT : un champ actif — et un bouton
+    survolé, pressé, ou une fenêtre ouverte (`data-clair-vif`) —
+    s'éclaircit d'un barreau de plus, exactement comme avant. Au cran 3,
+    l'échelle n'a plus de barreau au-dessus : le vif y vaut le repos. */
+:root {
+  --rw-clair-barre: var(--rw-sombre-haut);
+  --rw-clair-barre-vif: var(--rw-sombre-haut-clair);
+}
+html[data-clair="1"] {
+  --rw-clair-barre: var(--rw-sombre-eleve-clair);
+  --rw-clair-barre-vif: var(--rw-sombre-haut);
+}
+html[data-clair="2"] {
+  --rw-clair-barre: var(--rw-sombre-haut);
+  --rw-clair-barre-vif: var(--rw-sombre-haut-clair);
+}
+html[data-clair="3"] {
+  --rw-clair-barre: var(--rw-sombre-haut-clair);
+  --rw-clair-barre-vif: var(--rw-sombre-haut-clair);
+}
+[data-clair-barre] {
+  background-color: var(--rw-clair-barre);
+}
+[data-clair-barre]:hover,
+[data-clair-barre]:active,
+[data-clair-barre]:focus-within,
+[data-clair-barre][data-clair-vif] {
+  background-color: var(--rw-clair-barre-vif);
+}
+
 /*  RIEN NE PEUT EFFACER AUTRE CHOSE QUE LA MOSAÏQUE (nº 171)
     -------------------------------------------------------------------
     Au clic sur un bouton d'affichage, le propriétaire voyait TOUT le

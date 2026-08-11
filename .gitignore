@@ -42,3 +42,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# relevés des sondes (nº 174-§3) — écrits par /api/dev/journal-sonde,
+# en développement uniquement. Ils appartiennent à la machine qui les a
+# produits : jamais dans l'historique.
+journal-*.txt

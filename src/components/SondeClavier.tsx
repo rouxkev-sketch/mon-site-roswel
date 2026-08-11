@@ -7,6 +7,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { BoutonEnvoyerJournal } from "@/components/BoutonEnvoyerJournal";
 
 /**
  * LA SONDE — ELLE MESURE SUR LE VRAI IPHONE, ELLE NE CORRIGE RIEN
@@ -466,6 +467,14 @@ export function SondeClavier() {
             >
               Copier
             </button>
+            {/*  ⚠️ LE CHEMIN SANS PRESSE-PAPIERS (nº 174-§3A) : sur
+                 iPhone, « Copier » échoue — celui-ci poste le rapport au
+                 serveur, qui l'écrit dans un fichier. */}
+            <BoutonEnvoyerJournal
+              sonde="clavier"
+              texte={() => rapport ?? ""}
+              pleineLargeur
+            />
             <button
               type="button"
               onClick={() => {

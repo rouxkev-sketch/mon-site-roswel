@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { BoutonEnvoyerJournal } from "@/components/BoutonEnvoyerJournal";
 
 /**
  * LA SONDE DE LA FENÊTRE DES FILTRES — ELLE MESURE CHEZ LE
@@ -253,6 +254,8 @@ export function SondeFiltres() {
         >
           Copier
         </button>
+        {/*  ⚠️ LE CHEMIN SANS PRESSE-PAPIERS (nº 174-§3A). */}
+        <BoutonEnvoyerJournal sonde="filtres" texte={() => dernier.current} />
       </div>
       <div ref={zone} />
     </div>

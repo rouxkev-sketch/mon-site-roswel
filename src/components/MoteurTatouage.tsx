@@ -24,6 +24,7 @@ import {
   IconeReglages,
   IconeUneColonne,
 } from "@/components/Icones";
+import { BadgeCharte, GroupeBadges } from "@/components/BadgesCharte";
 import { basculerSansSaut } from "@/lib/bascule-verrouillee";
 //  ⚠️ TEMPORAIRE (nº 173) — la sonde-journal enregistre les clics sur
 //  les deux boutons de bascule. Elle n'écrit RIEN sans `?sonde-bascule=1`.
@@ -522,12 +523,10 @@ export function MoteurTatouage({
     surPanneau = false
   ) => {
     const selection = selectionDuGroupe(groupe, valeurs.exclure);
-    const robeChoisie = surPanneau
-      ? "bg-sombre-bordure text-sombre-texte"
-      : "bg-sombre-eleve-clair text-sombre-texte";
-    const robeRetiree = surPanneau
-      ? "bg-sombre-eleve-clair/60 text-sombre-texte-doux hover:bg-sombre-eleve-clair"
-      : "bg-sombre-eleve/70 text-sombre-texte-doux hover:bg-sombre-eleve";
+    //  ⚠️ LE DESSIN DU BADGE A DÉMÉNAGÉ (nº 174-§2) : il vit dans
+    //  components/BadgesCharte.tsx, et les pilules de RAYON appellent le
+    //  MÊME composant. C'est la seule façon que les deux ne divergent
+    //  plus jamais — elles avaient divergé pendant sept passes.
     //  ⚠️ PLUS DE `<fieldset>` NI DE `<legend>` (nº 169-§1, huitième
     //  signalement). Le relevé de la sonde, chez le propriétaire :
     //  dernier groupe HAUT DE 84 px pour un contenu de 66 — titre 18,
@@ -546,71 +545,22 @@ export function MoteurTatouage({
     //  fieldset et legend.
     const idTitre = `${groupe.groupe}-titre`;
     return (
-      <div
-        key={groupe.groupe}
-        role="group"
-        aria-labelledby={idTitre}
-        data-groupe-filtres=""
-      >
-        <p
-          id={idTitre}
-          className="text-[12px] font-semibold uppercase tracking-wide text-sombre-texte-doux"
-        >
-          {titre}
-        </p>
-        <div className="mt-2.5 flex flex-wrap gap-2">
-          {/*  Seules les options VISIBLES ont un badge (nº 149-§6) :
-               « Artistes » du groupe Lieu n'en a plus. */}
-          {groupe.options
-            .filter((option) => !("cachee" in option && option.cachee))
-            .map((option) => {
-            const choisi = selection.includes(option.slug);
-            return (
-              <button
-                key={option.slug}
-                type="button"
-                aria-pressed={choisi}
-                onClick={() => basculerBadge(groupe, option.slug, valeurs, poser)}
-                //  ⚠️ LA CAPSULE DESCEND À 38 px (nº 155-§2A) : les
-                //  44 px de la nº 149 faisaient des blocs empilés, pas
-                //  des capsules. LA ZONE TACTILE, ELLE, RESTE À 44 :
-                //  un ourlet invisible de 3 px déborde en haut et en
-                //  bas (`before:`) — le doigt a sa place, l'œil a la
-                //  sienne.
-                //  ⚠️ LA LARGEUR NE BOUGE JAMAIS (nº 153-§1) : l'espace
-                //  du POINT est réservé EN PERMANENCE, coché ou non —
-                //  la mise en page est juste dès l'ouverture, rien ne
-                //  bouge au clic.
-                //  ⚠️ LE POINT, ET PLUS LA COCHE (nº 155-§2B) : sortie
-                //  du flux, la coche se posait sur le mot. Le point a
-                //  SON espace (22 px de rembourrage gauche, il vit à
-                //  10 px), le texte le sien — ils ne se touchent pas.
-                className={`relative inline-flex items-center justify-center
-                           rounded-full pl-[22px] pr-4 min-h-[38px] text-[13.5px]
-                           font-semibold transition-colors
-                           before:absolute before:-inset-y-[3px] before:inset-x-0
-                           before:content-[''] ${
-                             choisi ? robeChoisie : robeRetiree
-                           }`}
-              >
-                {/*  ⚠️ LE POINT NE DISPARAÎT JAMAIS (nº 157-§4) : il
-                     passe en GRIS quand le badge est retiré — la
-                     géométrie ne bouge pas d'un pixel, seule la
-                     couleur dit l'état : rose et texte blanc quand
-                     actif, gris et texte gris quand retiré. */}
-                <span
-                  aria-hidden="true"
-                  className={`absolute left-[10px] top-1/2 h-1.5 w-1.5
-                             -translate-y-1/2 rounded-full ${
-                               choisi ? "bg-primaire" : "bg-sombre-texte-doux"
-                             }`}
-                />
-                {option.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <GroupeBadges key={groupe.groupe} titre={titre} idTitre={idTitre}>
+        {/*  Seules les options VISIBLES ont un badge (nº 149-§6) :
+             « Artistes » du groupe Lieu n'en a plus. */}
+        {groupe.options
+          .filter((option) => !("cachee" in option && option.cachee))
+          .map((option) => (
+            <BadgeCharte
+              key={option.slug}
+              actif={selection.includes(option.slug)}
+              surPanneau={surPanneau}
+              onClick={() => basculerBadge(groupe, option.slug, valeurs, poser)}
+            >
+              {option.label}
+            </BadgeCharte>
+          ))}
+      </GroupeBadges>
     );
   };
 
@@ -779,34 +729,39 @@ export function MoteurTatouage({
       champ garde le focus, le panneau reste ouvert — on peut ajuster
       plusieurs fois. */
   const piedRayon = rayonActif ? (
-    //  À LA CHARTE (nº 139) : plus de trait au-dessus — l'espacement
-    //  sépare — et les pilules deviennent des BADGES : l'actif en rose
-    //  plein, les autres sur le fond un cran plus clair.
-    <div className="px-4 pb-3 pt-1">
-      <p className="text-[12.5px] font-medium text-sombre-texte-doux">
-        Rayon autour de {criteres.lieu?.intitule}
-      </p>
-      <div className="mt-2 flex flex-wrap gap-1.5">
+    //  ⚠️ LA CHARTE DES FILTRES, À L'IDENTIQUE (nº 174-§2). Ces badges
+    //  ne l'avaient jamais reçue : fond ROSE PLEIN pour l'actif, aucun
+    //  point, titre collé à la rangée, marges au petit bonheur.
+    //  Ils appellent désormais LE MÊME COMPOSANT que le panneau des
+    //  filtres — `GroupeBadges` et `BadgeCharte` — donc, sans qu'on ait
+    //  rien à recopier : point rose actif / gris inactif, aucun fond
+    //  rose, aucun contour, un repos qui se voit, et l'écart
+    //  titre → première rangée de 10 px, celui d'ARTISTE.
+    //  LES MARGES DU BLOC SONT CELLES DU PANNEAU DES FILTRES, aux mêmes
+    //  valeurs : 20 px à gauche, à droite et en bas ; en haut 15 px,
+    //  parce que la boîte de ligne d'un titre en capitales pose ~5 px
+    //  d'air invisible au-dessus de l'encre (nº 163-§3A) — 20 px à
+    //  l'œil, comme les trois autres côtés.
+    <div className="px-5 pb-5 pt-[15px]">
+      <GroupeBadges
+        titre={`Rayon autour de ${criteres.lieu?.intitule ?? ""}`}
+        idTitre={`${id}-rayon-titre`}
+      >
         {RAYONS_TATOUAGE.map((palier) => (
-          <button
+          <BadgeCharte
             key={palier}
-            type="button"
-            aria-pressed={palier === criteres.rayonKm}
+            actif={palier === criteres.rayonKm}
+            //  `preventDefault` : le champ garde le focus, le panneau
+            //  reste ouvert — on peut ajuster plusieurs fois.
             onPointerDown={(evenement) => {
               evenement.preventDefault();
               annoncer({ rayonKm: palier });
             }}
-            className={`rounded-full px-3 min-h-[32px] text-[13px] font-semibold
-                       transition-colors ${
-                         palier === criteres.rayonKm
-                           ? "bg-primaire text-white"
-                           : "bg-sombre-eleve text-sombre-texte hover:bg-sombre-eleve-clair"
-                       }`}
           >
             {palier} km
-          </button>
+          </BadgeCharte>
         ))}
-      </div>
+      </GroupeBadges>
     </div>
   ) : undefined;
 
@@ -880,9 +835,14 @@ export function MoteurTatouage({
         //  confondait avec la page quand les cartes défilaient
         //  derrière. `eleve-clair` au repos, et le focus grimpe à
         //  `haut` — l'éclaircissement des niveaux, jamais un contour.
-        className="flex items-stretch rounded-2xl
-                   bg-sombre-eleve-clair overflow-visible
-                   focus-within:bg-sombre-haut
+        //  ⚠️ ET UN CRAN DE PLUS ENCORE (nº 174-§1) : sur des photos, il
+        //  se noyait toujours. SON FOND N'EST PLUS DÉCLARÉ ICI — il
+        //  vient de la règle `[data-clair-barre]` de globals.css, la
+        //  même pour le champ et pour les deux boutons, réglable par
+        //  `?clair=1|2|3`. Le focus y garde son comportement
+        //  (`:focus-within` monte d'un barreau).
+        data-clair-barre=""
+        className="flex items-stretch rounded-2xl overflow-visible
                    transition-colors"
       >
         <div className="flex-1 min-w-0 basis-1/2">
@@ -965,12 +925,16 @@ export function MoteurTatouage({
             //  filtres actifs.
             //  ⚠️ UN CRAN PLUS CLAIR (nº 150-§2), comme l'encadré :
             //  `eleve-clair` au repos, `haut` ouvert.
-            className={`relative shrink-0 w-[46px] h-[46px] rounded-full
-                       flex items-center justify-center transition-colors ${
-                         filtresOuverts
-                           ? "bg-sombre-haut text-sombre-texte"
-                           : "bg-sombre-eleve-clair text-sombre-texte hover:bg-sombre-haut"
-                       }`}
+            //  ⚠️ SON FOND VIENT DE `[data-clair-barre]` (nº 174-§1),
+            //  comme l'encadré et l'autre icône. Ouvert, il porte en
+            //  plus `data-clair-vif` : le barreau du dessus — la règle
+            //  qui servait déjà au survol et au focus. Rien d'autre ne
+            //  change : ni contour, ni rose.
+            data-clair-barre=""
+            data-clair-vif={filtresOuverts ? "" : undefined}
+            className="relative shrink-0 w-[46px] h-[46px] rounded-full
+                       text-sombre-texte
+                       flex items-center justify-center transition-colors"
           >
             <IconeReglages taille={20} />
           </button>
@@ -1000,10 +964,12 @@ export function MoteurTatouage({
             }
             title={phototheque ? "Revenir aux cartes" : "Images seules"}
             //  ⚠️ UN CRAN PLUS CLAIR (nº 150-§2), comme l'encadré.
+            //  ⚠️ FOND GOUVERNÉ PAR `[data-clair-barre]` (nº 174-§1).
+            data-clair-barre=""
             className="relative shrink-0 w-[46px] h-[46px] rounded-full
-                       bg-sombre-eleve-clair text-sombre-texte
+                       text-sombre-texte
                        flex items-center justify-center
-                       hover:bg-sombre-haut transition-colors"
+                       transition-colors"
           >
             {phototheque ? <IconeCartes taille={20} /> : <IconePhoto taille={20} />}
           </button>
@@ -1066,9 +1032,15 @@ export function MoteurTatouage({
               ? "Rechercher un tatoueur"
               : `Rechercher — ${libelleQuoi || "tout"}, ${libelleOu}`
           }
+          //  ⚠️ FOND GOUVERNÉ PAR `[data-clair-barre]` (nº 174-§1) : sur
+          //  des photos qui défilent, `eleve` se noyait. Le même cran
+          //  que l'encadré du web et que les deux boutons voisins,
+          //  réglable par `?clair=1|2|3`. La pression garde son
+          //  comportement (`:active` monte d'un barreau).
+          data-clair-barre=""
           className="flex flex-1 min-w-0 items-center gap-3 text-left
-                     rounded-full bg-sombre-eleve
-                     px-5 min-h-[52px] active:bg-sombre-eleve-clair transition-colors"
+                     rounded-full
+                     px-5 min-h-[52px] transition-colors"
         >
           {/*  ⚠️ TOUJOURS LE MÊME MOT (passe nº 140) : la loupe et
                « Recherche », qu'une recherche soit active ou non. Les
@@ -1121,8 +1093,10 @@ export function MoteurTatouage({
               ? "Afficher une image par ligne"
               : "Afficher deux colonnes"
           }
+          //  ⚠️ FOND GOUVERNÉ PAR `[data-clair-barre]` (nº 174-§1).
+          data-clair-barre=""
           className="shrink-0 w-[52px] h-[52px] rounded-full
-                     bg-sombre-eleve text-sombre-texte
+                     text-sombre-texte
                      flex items-center justify-center active:opacity-80
                      transition-opacity"
         >
@@ -1155,8 +1129,10 @@ export function MoteurTatouage({
           aria-label={
             phototheque ? "Revenir aux cartes" : "Voir les images seules"
           }
+          //  ⚠️ FOND GOUVERNÉ PAR `[data-clair-barre]` (nº 174-§1).
+          data-clair-barre=""
           className="shrink-0 w-[52px] h-[52px] rounded-full
-                     bg-sombre-eleve text-sombre-texte
+                     text-sombre-texte
                      flex items-center justify-center active:opacity-80
                      transition-opacity"
         >

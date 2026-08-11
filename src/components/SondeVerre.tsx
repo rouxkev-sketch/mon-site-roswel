@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { BoutonEnvoyerJournal } from "@/components/BoutonEnvoyerJournal";
 
 /**
  * LA SONDE DU VERRE — ELLE MESURE CHEZ LE PROPRIÉTAIRE, ET NE CORRIGE
@@ -261,6 +262,8 @@ export function SondeVerre() {
         >
           Copier
         </button>
+        {/*  ⚠️ LE CHEMIN SANS PRESSE-PAPIERS (nº 174-§3A). */}
+        <BoutonEnvoyerJournal sonde="verre" texte={() => dernier.current} />
       </div>
       <div ref={zone} />
     </div>

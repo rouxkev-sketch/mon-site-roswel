@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { BoutonEnvoyerJournal } from "@/components/BoutonEnvoyerJournal";
 
 /**
  * LA SONDE DE NAVIGATION — ELLE MESURE CHEZ LE PROPRIÉTAIRE, ET NE
@@ -590,6 +591,12 @@ export function SondeNavigation() {
             >
               Copier
             </button>
+            {/*  ⚠️ LE CHEMIN SANS PRESSE-PAPIERS (nº 174-§3A). */}
+            <BoutonEnvoyerJournal
+              sonde="navigation"
+              texte={() => rapport ?? ""}
+              pleineLargeur
+            />
             <button
               type="button"
               onClick={() => {

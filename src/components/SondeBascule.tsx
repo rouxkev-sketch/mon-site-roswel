@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { BoutonEnvoyerJournal } from "@/components/BoutonEnvoyerJournal";
 import {
   lignesDuJournal,
   noter,
@@ -53,6 +54,14 @@ function mesureFenetre(): string {
       ? ` · visuel ${Math.round(visuel.width)}×${Math.round(visuel.height)} @${Math.round(visuel.offsetTop)}`
       : " · (pas de viewport visuel)")
   );
+}
+
+/** LE JOURNAL EN UN SEUL TEXTE — ce que COPIER met dans le
+    presse-papiers, et ce qu'ENVOYER poste au serveur : le MÊME. */
+function journalEnTexte(): string {
+  return lignesDuJournal()
+    .map((ligne) => `${ligne.t}\t${ligne.texte}`)
+    .join("\n");
 }
 
 export function SondeBascule() {
@@ -168,7 +177,13 @@ export function SondeBascule() {
         position: "fixed",
         left: 6,
         right: 6,
-        bottom: 6,
+        //  ⚠️ AU-DESSUS DE LA BARRE DU NAVIGATEUR (nº 174-§3B) : sur
+        //  iPhone, `bottom: 6` glisse sous la barre d'outils de Safari
+        //  — les deux boutons deviennent inatteignables. La marge de
+        //  sécurité du bas les en dégage.
+        bottom: "max(6px, env(safe-area-inset-bottom))",
+        //  Le plus haut plan possible : rien ne passe devant, ni la
+        //  barre fixe (z-50) ni un panneau (z-80).
         zIndex: 2147483647,
         background: "#000000",
         border: "2px solid #EE3D6F",
@@ -182,21 +197,22 @@ export function SondeBascule() {
         maxHeight: "52vh",
       }}
     >
-      <div
-        style={{ display: "flex", gap: 10, alignItems: "center", flexShrink: 0 }}
-      >
-        <span style={{ color: "#EE3D6F", fontWeight: 700, flex: 1 }}>
-          JOURNAL BASCULE
-        </span>
+      {/*  ⚠️ LE TITRE SUR SA LIGNE, LES BOUTONS SUR LA LEUR
+           (nº 174-§3B) : à 390 px, un titre et deux boutons sur une
+           seule ligne se marchent dessus. Empilés, chaque bouton garde
+           toute sa largeur et ses 44 px de haut — le pouce ne peut pas
+           les manquer. */}
+      <span style={{ color: "#EE3D6F", fontWeight: 700, flexShrink: 0 }}>
+        JOURNAL BASCULE
+      </span>
+      <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
         <button
           type="button"
           onClick={() => {
-            const texte = lignesDuJournal()
-              .map((l) => `${l.t}\t${l.texte}`)
-              .join("\n");
-            void navigator.clipboard?.writeText(texte);
+            void navigator.clipboard?.writeText(journalEnTexte());
           }}
           style={{
+            flex: 1,
             background: "#EE3D6F",
             color: "#FFFFFF",
             border: 0,
@@ -212,6 +228,11 @@ export function SondeBascule() {
         >
           COPIER
         </button>
+        {/*  ⚠️ LE CHEMIN QUI NE DÉPEND PAS DU PRESSE-PAPIERS
+             (nº 174-§3A) : il poste le journal au serveur, qui l'écrit
+             dans un fichier. COPIER reste là pour les autres
+             appareils. */}
+        <BoutonEnvoyerJournal sonde="bascule" texte={journalEnTexte} pleineLargeur />
       </div>
       <div ref={zone} style={{ overflow: "auto", flex: 1 }} />
     </div>

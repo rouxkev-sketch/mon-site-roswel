@@ -7,6 +7,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { BoutonEnvoyerJournal } from "@/components/BoutonEnvoyerJournal";
 import { usePathname } from "next/navigation";
 import {
   essaisEnClair,
@@ -645,6 +646,8 @@ export function SondeRetour({
         <button type="button" onClick={copier} style={styleBouton}>
           Copier
         </button>
+        {/*  ⚠️ LE CHEMIN SANS PRESSE-PAPIERS (nº 174-§3A). */}
+        <BoutonEnvoyerJournal sonde="retour" texte={() => texte} />
         <button
           type="button"
           onClick={() => {
