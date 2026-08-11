@@ -27,23 +27,10 @@ export async function POST(requete: Request) {
 
   const corps = (await requete.json().catch(() => null)) as {
     id?: string;
-    /** UNE SÉRIE ENTIÈRE (nº 203-§2) — le cœur d'une vignette de
-        style enregistre toutes les photos du style d'un coup. */
-    ids?: string[];
     actif?: boolean;
   } | null;
-  //  Un id seul, ou une liste : les deux passent par la même porte.
-  //  La liste est bornée — une série ne dépasse jamais le plafond
-  //  d'affichage, une liste plus longue est une requête fabriquée.
-  const photoIds = (
-    Array.isArray(corps?.ids)
-      ? corps.ids.filter((id): id is string => typeof id === "string")
-      : [corps?.id ?? ""]
-  )
-    .map((id) => id.trim())
-    .filter(Boolean)
-    .slice(0, 80);
-  if (photoIds.length === 0) {
+  const photoId = corps?.id?.trim();
+  if (!photoId) {
     return NextResponse.json({ ok: false, raison: "photo" }, { status: 400 });
   }
 
@@ -54,10 +41,7 @@ export async function POST(requete: Request) {
     const { error } = await supabase
       .from("favoris_photos")
       .upsert(
-        photoIds.map((photoId) => ({
-          utilisateur_id: user.id,
-          photo_id: photoId,
-        })),
+        { utilisateur_id: user.id, photo_id: photoId },
         { onConflict: "utilisateur_id,photo_id" }
       );
     if (error) {
@@ -68,7 +52,7 @@ export async function POST(requete: Request) {
       .from("favoris_photos")
       .delete()
       .eq("utilisateur_id", user.id)
-      .in("photo_id", photoIds);
+      .eq("photo_id", photoId);
     if (error) {
       return NextResponse.json({ ok: false, raison: error.message }, { status: 500 });
     }

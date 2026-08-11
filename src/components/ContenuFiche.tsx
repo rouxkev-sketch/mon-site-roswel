@@ -14,8 +14,13 @@ import {
   PanneauPortfolio,
   SelecteurOngletAffiche,
   type OngletAffiche,
+  type SerieChoisie,
 } from "@/components/PortfolioDeLAffiche";
-import { NATURE_PAR_DEFAUT, rendusDuPortfolio } from "@/lib/photos-tatoueur";
+import {
+  NATURE_PAR_DEFAUT,
+  RENDU_PAR_DEFAUT,
+  rendusDuPortfolio,
+} from "@/lib/photos-tatoueur";
 import type { StyleGalerie } from "@/lib/photo-tatoueur";
 import { FenetreSignalement } from "@/components/FenetreSignalement";
 import { libelleDuLien } from "@/lib/liens-fiche";
@@ -62,7 +67,7 @@ export function ContenuFiche({
   studioCourant,
   demonstration = false,
   apercu = false,
-  surStyleChoisi,
+  surSerieChoisie,
 }: {
   tatoueur: Tatoueur;
   /** LE PORTFOLIO GROUPÉ PAR STYLE — l'enveloppe le calcule (elle en a
@@ -76,9 +81,10 @@ export function ContenuFiche({
   /** Vrai dans l'espace tatoueur (« Ma fiche ») : ni suivi, ni
       signalement, ni mise hors ligne. */
   apercu?: boolean;
-  /** Un toucher sur une vignette : l'enveloppe change la photo montrée
-      et remonte en haut (nº 197-§4). */
-  surStyleChoisi: (slug: string) => void;
+  /** Un toucher sur une vignette : l'enveloppe montre CETTE série —
+      style + catégorie + rendu (nº 204-§3) — et remonte en haut
+      (nº 197-§4). */
+  surSerieChoisie: (serie: SerieChoisie) => void;
 }) {
   /**
    * LES DEUX ONGLETS DE L'AFFICHE (nº 197-§1)
@@ -88,6 +94,9 @@ export function ContenuFiche({
   const [onglet, setOnglet] = useState<OngletAffiche>("profil");
   /** La catégorie regardée dans l'onglet « Portfolio » (nº 197-§2). */
   const [categorie, setCategorie] = useState<string>(NATURE_PAR_DEFAUT);
+  /** LE RENDU regardé (nº 204-§3) — le panneau le ramène de lui-même
+      au seul rendu présent quand il n'y en a qu'un. */
+  const [rendu, setRendu] = useState<string>(RENDU_PAR_DEFAUT);
 
   const avatarProfil = (
     <span
@@ -268,8 +277,10 @@ export function ContenuFiche({
           groupes={groupes}
           nature={categorie}
           surNature={setCategorie}
+          rendu={rendu}
+          surRendu={setRendu}
           nomTatoueur={tatoueur.nom}
-          surStyle={surStyleChoisi}
+          surSerie={surSerieChoisie}
         />
       )}
 

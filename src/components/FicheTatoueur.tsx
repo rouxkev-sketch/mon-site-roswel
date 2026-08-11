@@ -11,6 +11,7 @@ import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
 import { ContenuFiche } from "@/components/ContenuFiche";
 import { galerieParStyles, ouvertureGalerie } from "@/lib/photo-tatoueur";
+import { RENDU_PAR_DEFAUT } from "@/lib/photos-tatoueur";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
@@ -98,15 +99,28 @@ export function FicheTatoueur({
   );
   const groupes = ouverture.groupes;
 
-  /** LE STYLE AFFICHÉ — c'est le sélecteur posé sur l'image qui en
-      change, et le carrousel suit. */
+  /** LE STYLE AFFICHÉ — c'est une vignette de l'onglet « Portfolio »
+      qui en change, et le carrousel suit. */
   const [styleAffiche, setStyleAffiche] = useState(ouverture.style);
+  /** LA SÉRIE OUVERTE (nº 204-§3) — catégorie + rendu d'une vignette
+      touchée : le carrousel ne montre alors QUE cette galerie de
+      dépôt. `null` à l'arrivée : le style entier, comme toujours. */
+  const [serieOuverte, setSerieOuverte] = useState<{
+    nature: string;
+    rendu: string;
+  } | null>(null);
   /** L'INDICE de la photo affichée, DANS ce style. */
   const [indicePhoto, setIndicePhoto] = useState(ouverture.indice);
 
   const groupeAffiche =
     groupes.find((groupe) => groupe.slug === styleAffiche) ?? groupes[0];
-  const photosDuCarrousel = groupeAffiche?.photos ?? [];
+  const photosDuCarrousel = serieOuverte
+    ? (groupeAffiche?.photos ?? []).filter(
+        (photo) =>
+          photo.nature === serieOuverte.nature &&
+          (photo.rendu ?? RENDU_PAR_DEFAUT) === serieOuverte.rendu
+      )
+    : (groupeAffiche?.photos ?? []);
 
   /** LA PHOTO SOUS LES YEUX — celle que le cœur enregistre. Elle suit
       le carrousel : changer de photo change ce qu'on enregistre, et le
@@ -275,8 +289,9 @@ export function FicheTatoueur({
             studioCourant={studioCourant}
             demonstration={demonstration}
             apercu={apercu}
-            surStyleChoisi={(slug) => {
-              setStyleAffiche(slug);
+            surSerieChoisie={(serie) => {
+              setStyleAffiche(serie.style);
+              setSerieOuverte({ nature: serie.nature, rendu: serie.rendu });
               setIndicePhoto(0);
               window.scrollTo({ top: 0, left: 0, behavior: "instant" });
             }}

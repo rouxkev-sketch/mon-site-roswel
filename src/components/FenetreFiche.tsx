@@ -9,6 +9,7 @@ import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
 import { ContenuFiche } from "@/components/ContenuFiche";
 import { galerieParStyles, ouvertureGalerie } from "@/lib/photo-tatoueur";
+import { RENDU_PAR_DEFAUT } from "@/lib/photos-tatoueur";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
@@ -111,6 +112,13 @@ export function FenetreFiche({
       ouverture (voir la clé dans GrilleTatoueurs), l'état repart donc
       toujours du bon style. */
   const [styleAffiche, setStyleAffiche] = useState(ouverture.style);
+  /** LA SÉRIE OUVERTE (nº 204-§3) — catégorie + rendu d'une vignette
+      touchée : le carrousel ne montre alors QUE cette galerie de
+      dépôt. `null` à l'ouverture : le style entier, comme toujours. */
+  const [serieOuverte, setSerieOuverte] = useState<{
+    nature: string;
+    rendu: string;
+  } | null>(null);
   const [indice, setIndice] = useState(ouverture.indice);
 
   /** LES DEUX BOÎTES QUI DÉFILENT — la fenêtre entière quand elle est
@@ -123,7 +131,13 @@ export function FenetreFiche({
 
   const groupeAffiche =
     groupes.find((groupe) => groupe.slug === styleAffiche) ?? groupes[0];
-  const photosDuStyleAffiche = groupeAffiche?.photos ?? [];
+  const photosDuStyleAffiche = serieOuverte
+    ? (groupeAffiche?.photos ?? []).filter(
+        (photo) =>
+          photo.nature === serieOuverte.nature &&
+          (photo.rendu ?? RENDU_PAR_DEFAUT) === serieOuverte.rendu
+      )
+    : (groupeAffiche?.photos ?? []);
   const n = photosDuStyleAffiche.length;
 
   const ouverte = tatoueur !== null;
@@ -340,8 +354,9 @@ export function FenetreFiche({
               <ContenuFiche
                 tatoueur={tatoueur}
                 groupes={groupes}
-                surStyleChoisi={(slug) => {
-                  setStyleAffiche(slug);
+                surSerieChoisie={(serie) => {
+                  setStyleAffiche(serie.style);
+                  setSerieOuverte({ nature: serie.nature, rendu: serie.rendu });
                   setIndice(0);
                   colonneRef.current?.scrollTo({ top: 0, behavior: "instant" });
                   fenetreRef.current?.scrollTo({ top: 0, behavior: "instant" });
