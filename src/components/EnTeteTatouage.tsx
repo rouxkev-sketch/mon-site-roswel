@@ -3,6 +3,7 @@
 import {
   useEffect,
   useLayoutEffect,
+  useRef,
   useState,
   useSyncExternalStore,
 } from "react";
@@ -113,33 +114,64 @@ export function EnTeteTatouage({
    * deux réglages sont indépendants, et la déclaration est la même sur
    * web et sur smartphone : ils agissent sur les deux.
    *
-   * Elle est posée sur <html> (`--rw-verre`), et c'est une règle de
-   * globals.css qui la donne à la barre, sous `@supports` : sans
-   * `backdrop-filter`, le fond reste PLEIN (`bg-sombre-fond`), comme
-   * depuis la nº 147-§2 — jamais de contenu lisible à travers.
+   * ⚠️ LES DEUX RÉGLAGES PASSENT PAR UN STYLE EN LIGNE (nº 172), posé
+   * ICI, sur la barre, sous forme de CHAÎNE COMPLÈTE — jamais une
+   * variable CSS dans la valeur finale : WebKit invalide un filtre
+   * construit avec `var()`, et la propriété vaut alors `none`. Les
+   * variables `--rw-verre` et `--rw-flou` restent posées sur <html>,
+   * mais pour la seule sonde, qui les affiche.
+   * Sans paramètre, ce sont les valeurs de globals.css qui règnent,
+   * écrites en clair elles aussi ; sans `backdrop-filter` du tout, le
+   * fond reste PLEIN (`bg-sombre-fond`), acquis de la nº 147-§2.
    *
    * ⚠️ POSÉE DANS UN EFFET, PAS DANS LE RENDU : le serveur ne connaît
    * pas l'adresse du navigateur, et une classe qui changerait entre les
    * deux serait un écart d'hydratation.
    */
+  const barre = useRef<HTMLElement>(null);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const racine = document.documentElement;
+    const cible = barre.current;
+    const declarations: string[] = [];
+
     const teinte = params.get("verre");
     if (teinte !== null) {
       const pourcent = Number(teinte);
       if (Number.isFinite(pourcent) && pourcent >= 0 && pourcent <= 100) {
-        document.documentElement.style.setProperty(
-          "--rw-verre",
-          String(pourcent / 100)
-        );
+        //  La variable, pour que la sonde la montre…
+        racine.style.setProperty("--rw-verre", String(pourcent / 100));
+        //  …et la VALEUR FINALE, écrite en clair.
+        declarations.push(`background-color: rgba(26, 26, 29, ${pourcent / 100})`);
       }
     }
     const flou = params.get("flou");
     if (flou !== null) {
       const pixels = Number(flou);
       if (Number.isFinite(pixels) && pixels >= 0 && pixels <= 200) {
-        document.documentElement.style.setProperty("--rw-flou", `${pixels}px`);
+        racine.style.setProperty("--rw-flou", `${pixels}px`);
+        //  ⚠️ UNE CHAÎNE COMPLÈTE, SANS LA MOINDRE VARIABLE (nº 172) :
+        //  c'est tout l'objet de cette passe — WebKit invalide un
+        //  filtre construit avec `var()`, et la propriété vaut alors
+        //  `none`. La préfixée est écrite en PREMIER : Safari ne lit
+        //  qu'elle.
+        const valeur = `blur(${pixels}px) saturate(150%)`;
+        declarations.push(
+          `-webkit-backdrop-filter: ${valeur}`,
+          `backdrop-filter: ${valeur}`
+        );
       }
+    }
+
+    //  ⚠️ ON ÉCRIT LE STYLE EN TEXTE, ET C'EST INDISPENSABLE : passée
+    //  par `setProperty`, une propriété que LE MOTEUR COURANT ne
+    //  connaît pas est simplement JETÉE — Chromium efface ainsi
+    //  `-webkit-backdrop-filter` avant même qu'elle n'atteigne le
+    //  document (mesuré). Le texte, lui, est analysé par chaque moteur
+    //  qui garde ce qu'il comprend : Safari conserve la préfixée, les
+    //  autres la nue. Une seule écriture sert les deux.
+    if (cible && declarations.length > 0) {
+      cible.style.cssText = `${declarations.join("; ")};`;
     }
   }, []);
 
@@ -367,6 +399,7 @@ export function EnTeteTatouage({
       //  ⚠️ UN SEUL ÉTAT, PERMANENT : les deux états de la nº 156-§2
       //  restent supprimés (nº 161) — une apparence qui ne varie pas
       //  ne peut pas clignoter. Toujours AUCUN trait : c'est un acquis.
+      ref={barre}
       //  ⚠️ D'OÙ VIENT CE FOND (nº 169-§2) : la sonde du verre lit ces
       //  deux attributs dans le DOM et les affiche.
       data-source-fichier="src/components/EnTeteTatouage.tsx"

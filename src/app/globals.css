@@ -134,58 +134,40 @@ html:has([data-fond="sombre"]) {
   background-color: var(--rw-sombre-fond);
 }
 
-/*  LA DENSITÉ DE TEINTE DU VERRE — RÉGLABLE PAR L'ADRESSE (nº 167-§1)
+/*  LE VERRE DE LA BARRE — EN VALEURS ÉCRITES EN DUR (nº 172)
     -------------------------------------------------------------------
-    `?verre=30`, `?verre=40`, `?verre=50`, `?verre=85`… : le paramètre
-    pose `--rw-verre` sur <html> (voir EnTeteTatouage). SANS paramètre,
-    la valeur par défaut est 0.4. UNE SEULE variable bouge — le flou
-    (40 px) et la saturation (1,5) restent portés par les classes de la
-    barre, et la déclaration est la même sur web et sur smartphone.
+    ⚠️ PLUS AUCUN `@supports`, ET PLUS AUCUN `var()` DANS LE FILTRE.
+    Relevé du propriétaire, Safari 18.6, APRÈS la nº 170 :
 
-    ⚠️ SOUS `@supports`, ET C'EST L'ACQUIS DE LA Nº 147-§2 : un
-    navigateur qui ne sait pas flouter garde le fond PLEIN
-    (`bg-sombre-fond`, porté par la barre) — jamais de contenu lisible
-    à travers, quelle que soit la valeur demandée.
+        -webkit-backdrop-filter ... none      (inchangé)
+        background ................ rgba(26, 26, 29, 0.75)
+        CSS.supports .............. false
 
-    Les composantes de l'anthracite sont écrites ici en clair : c'est
-    la couleur du site (COULEURS_SOMBRE.fond, #1A1A1D), et une opacité
-    variable demande les canaux séparés. */
+    Deux causes, toutes deux traitées ici :
+     · LE `var()` — WebKit invalide une déclaration de filtre construite
+       avec une variable : `blur(var(--rw-flou))` tombe « invalide au
+       calcul », et la propriété vaut alors `none`. Chromium l'accepte,
+       d'où l'écart entre les deux écrans. Les valeurs sont donc
+       ÉCRITES EN CLAIR, littéralement ;
+     · LE `@supports` — il n'a jamais servi qu'à exclure Safari, qui
+       répond `false` à la forme nue. Un navigateur qui ne connaît pas
+       une propriété l'ignore tout seul : il n'y a rien à couvrir. Le
+       repli de la nº 147-§2 (fond PLEIN sans flou) reste assuré par la
+       classe `bg-sombre-fond` de la barre, posée avant celle-ci.
+
+    LES RÉGLAGES `?verre=` ET `?flou=` PASSENT PAR UN STYLE EN LIGNE,
+    construit en JavaScript comme une chaîne complète, sans la moindre
+    variable (voir EnTeteTatouage). Les deux variables ci-dessous ne
+    servent plus qu'à la sonde, qui les affiche.
+    ⚠️ La préfixée est déclarée EN PREMIER : Safari ne lit qu'elle. */
 :root {
-  /*  ⚠️ 0,75 ET PLUS 0,40 (nº 169-§3c) : les valeurs basses étaient trop
-      claires pour le propriétaire. Le commutateur `?verre=` reste. */
   --rw-verre: 0.75;
-  /*  LE FLOU, RÉGLABLE LUI AUSSI (nº 169-§3b) : `?flou=0` … `?flou=80`,
-      en pixels. 40 par défaut — la valeur de la nº 163. */
   --rw-flou: 40px;
 }
-/*  ⚠️ LA CONDITION ACCEPTE LES DEUX ÉCRITURES (nº 170) — et c'est ce
-    qui manquait à Safari. Relevé du propriétaire, Safari 18.6 :
-
-        backdrop-filter ............................ (vide)
-        -webkit-backdrop-filter .................... none
-        CSS.supports('backdrop-filter: blur(1px)') . false
-
-    Safari ne connaît que la forme PRÉFIXÉE : il répond `false` à la
-    forme nue, et toute règle enfermée dans une condition qui ne teste
-    QUE celle-là est ignorée en bloc — la ligne préfixée qu'elle
-    contient comprise. Le flou n'avait jamais été appliqué une seule
-    fois sur son écran. La condition demande donc l'une OU l'autre. */
-@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
-  [data-barre-fixe] {
-    background-color: rgb(26 26 29 / var(--rw-verre));
-    /*  ⚠️ LES DEUX PROPRIÉTÉS, PRÉFIXÉE EN PREMIER (nº 170) : Safari ne
-        lit que la première, les autres moteurs que la seconde.
-        ⚠️ ET LA SATURATION EN POURCENTAGE (150 %, la même valeur que
-        1,5) : c'est la forme que tous les moteurs acceptent, et une
-        seule fonction refusée invaliderait TOUTE la liste de filtres —
-        c'est-à-dire le flou avec elle.
-        (Un « repli » en clair posé avant la version réglable ne sert à
-        rien, vérifié au CSSOM : deux déclarations de la même propriété
-        dans une même règle sont fusionnées à l'analyse, la dernière
-        efface la première. Il n'y a donc qu'une écriture, la bonne.) */
-    -webkit-backdrop-filter: blur(var(--rw-flou)) saturate(150%);
-    backdrop-filter: blur(var(--rw-flou)) saturate(150%);
-  }
+[data-barre-fixe] {
+  background-color: rgba(26, 26, 29, 0.75);
+  -webkit-backdrop-filter: blur(40px) saturate(150%);
+  backdrop-filter: blur(40px) saturate(150%);
 }
 
 /*  RIEN NE PEUT EFFACER AUTRE CHOSE QUE LA MOSAÏQUE (nº 171)

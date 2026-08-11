@@ -58,6 +58,51 @@ function cequiAnnule(style: CSSStyleDeclaration): string[] {
   return causes;
 }
 
+/**
+ * LA RÈGLE QUI HABILLE LA BARRE, telle que le navigateur l'a analysée —
+ * pas un fichier deviné. Et le bloc `@supports` qui la contient s'il en
+ * reste un : c'est lui qui avait exclu Safari jusqu'à la nº 172.
+ */
+function regleDeLaBarre(barre: HTMLElement): string {
+  const trouvees: string[] = [];
+  for (const feuille of document.styleSheets) {
+    let regles: CSSRuleList;
+    try {
+      regles = feuille.cssRules;
+    } catch {
+      continue; // feuille d'un autre domaine : illisible, on passe
+    }
+    const parcourir = (liste: CSSRuleList, condition: string) => {
+      for (const regle of liste) {
+        if ("conditionText" in regle && "cssRules" in regle) {
+          parcourir(
+            (regle as CSSConditionRule).cssRules,
+            `@supports ${(regle as CSSConditionRule).conditionText}`
+          );
+          continue;
+        }
+        const style = regle as CSSStyleRule;
+        if (typeof style.selectorText !== "string") continue;
+        if (!/backdrop-filter|background-color/.test(style.cssText)) continue;
+        try {
+          if (!barre.matches(style.selectorText)) continue;
+        } catch {
+          continue;
+        }
+        trouvees.push(
+          `${condition ? `${condition} { ` : ""}${style.cssText}${
+            condition ? " }" : ""
+          }`
+        );
+      }
+    };
+    parcourir(regles, "");
+  }
+  return trouvees.length > 0
+    ? trouvees.join("  ||  ")
+    : "(aucune règle trouvée)";
+}
+
 /** Un nom court et reconnaissable pour un élément de la chaîne. */
 function nommer(element: Element): string {
   const classes = (element.className || "").toString().trim().slice(0, 46);
@@ -107,6 +152,23 @@ function lignes(): [string, string][] {
     rang += 1;
   }
   dit.push(["f) navigateur", navigator.userAgent]);
+  //  g) LES VARIABLES, telles que <html> les calcule.
+  const racine = getComputedStyle(document.documentElement);
+  dit.push([
+    "g) variables",
+    `--rw-flou ${racine.getPropertyValue("--rw-flou").trim() || "(vide)"} · --rw-verre ${
+      racine.getPropertyValue("--rw-verre").trim() || "(vide)"
+    }`,
+  ]);
+  //  h) LA RÈGLE QUI S'APPLIQUE, lue dans le CSSOM — et le bloc
+  //  `@supports` qui l'enferme, s'il en reste un (il ne doit plus y en
+  //  avoir depuis la nº 172).
+  dit.push(["h) règle appliquée", regleDeLaBarre(barre)]);
+  //  Et le style EN LIGNE, celui que posent `?verre=` et `?flou=`.
+  dit.push([
+    "h) style en ligne",
+    barre.getAttribute("style") || "(aucun — valeurs de la feuille)",
+  ]);
   return dit;
 }
 
