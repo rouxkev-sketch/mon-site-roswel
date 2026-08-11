@@ -1,6 +1,7 @@
 import { COULEURS_SOMBRE } from "@/config/tatouage";
 import {
   AGE_MAXIMUM_MS,
+  AGE_POSITION_MS,
   CLE_JOURNAL,
   CLE_ONGLET,
   CLE_RESTAURER,
@@ -99,6 +100,8 @@ var nav=(performance.getEntriesByType("navigation")[0]||{}).type||"navigate";
 var jour=function(c,s){try{var b=s.getItem(c);return b?JSON.parse(b):null}catch(e){return null}};
 var maintenant=Date.now();
 var age=${AGE_MAXIMUM_MS};
+/* La POSITION, elle, ne vit qu'une demi-heure (nº 181-§1c). */
+var agePosition=${AGE_POSITION_MS};
 
 /* 3. LA REPRISE DE SESSION, AVANT TOUTE PEINTURE. */
 var memoireOnglet=jour(${onglet},sessionStorage)||{};
@@ -121,7 +124,7 @@ var attendue=demande&&(demande==="1"||demande===adresse);
 if(attendue){try{sessionStorage.removeItem(${restaurer})}catch(e){}}
 if(nav==="navigate"&&!attendue)return;
 var note=jour(${prefixe}+adresse,localStorage);
-if(!note||!note.y||maintenant-(note.date||0)>age)return;
+if(!note||!note.y||maintenant-(note.date||0)>agePosition)return;
 r.style.minHeight=(note.y+innerHeight)+"px";
 r.dataset.positionPosee=String(note.y);
 /* Forme à DEUX ARGUMENTS : voir le point 4 de l'en-tête. */

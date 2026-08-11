@@ -111,6 +111,7 @@ export function poserLaPosition(position: number) {
   //  repliait sa rangée de recherche à l'arrivée sur la page.
   if (position <= 0) {
     arreter?.();
+    arreterLaPoursuite();
     defilerSansGeste({ top: 0, left: 0 });
     return;
   }
@@ -118,6 +119,92 @@ export function poserLaPosition(position: number) {
   document.documentElement.style.minHeight = `${reserve}px`;
   defilerSansGeste({ top: position, left: 0 });
   surveillerLaReserve(reserve);
+  poursuivreLaPosition(position);
+}
+
+/* ==================================================================
+ * ON NE POSE LA POSITION QUE LORSQU'ELLE EST ATTEIGNABLE
+ * (passe nº 181-§1b)
+ * ==================================================================
+ * LE RELEVÉ DU PROPRIÉTAIRE, sur son iPhone :
+ *
+ *     RETOUR demandée 4964 · arrivée 0
+ *     RETOUR 1re image · atteinte 0 · écart −4964 · document 3717
+ *     RETOUR +2500 ms  · atteinte 0 · écart −4964 · document 3717
+ *
+ * On demandait 4964 px sur un document de 3717 : impossible. Le
+ * navigateur rabote alors la demande — et l'on atterrit en haut.
+ *
+ * LA RÉSERVE DE HAUTEUR (ci-dessus) est faite pour ça, mais elle ne
+ * suffit pas toujours : elle s'efface dès que le CONTENU RÉEL atteint
+ * la hauteur voulue, ou au bout de cinq secondes — et si la mosaïque
+ * restituée est plus courte qu'à l'aller, le contenu ne l'atteindra
+ * jamais. Au moment où la réserve part, le navigateur ramène la page
+ * dans ses bornes… c'est-à-dire tout en haut.
+ *
+ * CE QUE FAIT CETTE POURSUITE :
+ *  · elle REPOSE la position tant que la page ne s'y trouve pas, image
+ *    par image — la mosaïque grandit (photos, « Voir plus » restitué),
+ *    et chaque image rapproche du but ;
+ *  · elle S'ARRÊTE dès que la position est atteinte ;
+ *  · à L'EXPIRATION du délai, elle pose LA POSITION LA PLUS BASSE
+ *    ATTEIGNABLE (hauteur du document − hauteur de l'écran) au lieu de
+ *    laisser la page en haut. Le bas de la mosaïque vaut mieux que son
+ *    sommet quand on revient d'une fiche prise tout en bas.
+ */
+
+/** À deux pixels près, on considère qu'on y est. */
+const TOLERANCE_PX = 2;
+
+/** La poursuite en cours — une seule à la fois, jamais deux. */
+let poursuite: (() => void) | null = null;
+
+function arreterLaPoursuite() {
+  poursuite?.();
+  poursuite = null;
+}
+
+function poursuivreLaPosition(position: number) {
+  arreterLaPoursuite();
+  const limite = performance.now() + ATTENTE_MAX_MS;
+  let image = 0;
+  //  ⚠️ LE DOIGT A TOUJOURS RAISON : au premier vrai geste, la
+  //  poursuite s'arrête net. On ne se bat jamais contre la personne —
+  //  c'est la leçon des versions qui « rattrapaient » la position.
+  const gestes = ["wheel", "touchstart", "keydown"] as const;
+  const finir = () => {
+    cancelAnimationFrame(image);
+    for (const geste of gestes) {
+      window.removeEventListener(geste, finir);
+    }
+    poursuite = null;
+  };
+  for (const geste of gestes) {
+    window.addEventListener(geste, finir, { passive: true, once: true });
+  }
+  const suivre = () => {
+    if (Math.abs(window.scrollY - position) <= TOLERANCE_PX) {
+      finir();
+      return;
+    }
+    if (performance.now() > limite) {
+      //  LE PLUS BAS ATTEIGNABLE, plutôt que le haut de la page.
+      const atteignable = Math.max(
+        0,
+        Math.round(
+          document.documentElement.scrollHeight - window.innerHeight
+        )
+      );
+      defilerSansGeste({ top: Math.min(position, atteignable), left: 0 });
+      finir();
+      return;
+    }
+    //  La page a grandi (ou rétréci) : on redemande la même position.
+    defilerSansGeste({ top: position, left: 0 });
+    image = requestAnimationFrame(suivre);
+  };
+  image = requestAnimationFrame(suivre);
+  poursuite = finir;
 }
 
 /**

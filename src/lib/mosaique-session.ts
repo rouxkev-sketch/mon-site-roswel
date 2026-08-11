@@ -64,6 +64,33 @@ export function memoriserMosaique(
   total: number
 ) {
   try {
+    //  ⚠️ UNE NOTE NE RÉTRÉCIT JAMAIS (passe nº 181-§1a).
+    //  ----------------------------------------------------------
+    //  LE DÉFAUT : au retour d'une fiche, le composant se remonte sur
+    //  ce que le serveur a rendu — LA PREMIÈRE PAGE, vingt cartes — et
+    //  cet effet s'exécute aussitôt. Il écrasait alors la note qui en
+    //  contenait quarante ou soixante par une note de vingt. La
+    //  restitution n'avait plus rien à restituer, la page restait
+    //  courte, et la position mémorisée (4964 px sur un document de
+    //  3717) devenait inatteignable : on atterrissait en haut.
+    //  LA RÈGLE EST DONC : pour une MÊME ADRESSE, on n'écrit que si
+    //  l'on a AU MOINS AUTANT de cartes. Grandir (« Voir plus ») écrit ;
+    //  rétrécir ne fait rien. Une recherche différente porte une autre
+    //  adresse — elle passe donc toujours (voir `lireMosaique`, qui
+    //  n'accepte une note que pour son adresse).
+    const brut = sessionStorage.getItem(CLE);
+    if (brut) {
+      const note = JSON.parse(brut) as MosaiqueMemorisee | null;
+      if (
+        note &&
+        note.adresse === adresse &&
+        Array.isArray(note.tatoueurs) &&
+        note.tatoueurs.length > tatoueurs.length &&
+        Date.now() - (note.quand ?? 0) <= DUREE_MS
+      ) {
+        return;
+      }
+    }
     sessionStorage.setItem(
       CLE,
       JSON.stringify({ adresse, tatoueurs, page, total, quand: Date.now() })

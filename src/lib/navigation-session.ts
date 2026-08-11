@@ -18,6 +18,22 @@ const CLE = CLE_JOURNAL;
 /** Douze heures × 2 : au-delà, le journal est considéré périmé */
 export const AGE_MAXIMUM_MS = 24 * 3600 * 1000;
 
+/**
+ * L'ÂGE MAXIMUM D'UNE POSITION DE DÉFILEMENT — TRENTE MINUTES
+ * (passe nº 181-§1c)
+ * ------------------------------------------------------------------
+ * Une position n'est pas une préférence : c'est l'endroit où l'on était
+ * il y a un instant. Relevé du propriétaire : une position de 4964 px
+ * réclamée après 8646 secondes — près de deux heures et demie. Entre
+ * temps la mosaïque avait changé, la page n'avait plus la même hauteur,
+ * et la demande ne pouvait qu'échouer.
+ * Au-delà d'une demi-heure, on l'oublie : la page s'ouvre en haut,
+ * franchement, plutôt que de viser un endroit qui n'existe plus.
+ * (Les 24 heures ci-dessus restent celles du JOURNAL des pages
+ * visitées et de la reprise de session — deux choses différentes.)
+ */
+export const AGE_POSITION_MS = 30 * 60 * 1000;
+
 type PagesVisitees = {
   courante: string | null;
   precedente: string | null;
@@ -98,7 +114,8 @@ export function lireDefilement(url: string): number {
     const brut = localStorage.getItem(`${PREFIXE_DEFILEMENT}${url}`);
     if (!brut) return 0;
     const { y, date } = JSON.parse(brut) as { y: number; date: number };
-    if (Date.now() - (date ?? 0) > AGE_MAXIMUM_MS) return 0;
+    //  ⚠️ TRENTE MINUTES, et plus vingt-quatre heures (nº 181-§1c).
+    if (Date.now() - (date ?? 0) > AGE_POSITION_MS) return 0;
     return y || 0;
   } catch {
     return 0;
@@ -159,7 +176,7 @@ export function purgerDefilementsAnciens() {
         const { date } = JSON.parse(localStorage.getItem(cle) ?? "{}") as {
           date?: number;
         };
-        if (Date.now() - (date ?? 0) > AGE_MAXIMUM_MS) aSupprimer.push(cle);
+        if (Date.now() - (date ?? 0) > AGE_POSITION_MS) aSupprimer.push(cle);
       } catch {
         aSupprimer.push(cle); // entrée illisible : on la retire
       }
