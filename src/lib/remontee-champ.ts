@@ -188,7 +188,10 @@ const RETOUR_CLAVIER_PX = 60;
 
 /** Le temps laissé au défilement doux du retour avant de clore la
     session : ranger pendant qu'il glisse couperait la glissade. */
-const GLISSADE_MS = 320;
+/** LA DURÉE D'UNE REMONTÉE — publique depuis la nº 195-§2 : c'est
+    elle qui commande l'ENCHAÎNEMENT (la remontée d'abord, entièrement,
+    le menu ensuite). */
+export const GLISSADE_MS = 320;
 
 /** La durée du repli de l'espace — c'est elle qui rend la remise en
     place progressive au lieu d'être un saut. */
@@ -251,50 +254,6 @@ export function armerLaRemontee(cible: HTMLElement): () => void {
  * modifiée. Les deux partagent l'espace de fin de document (un seul à
  * la fois), et une remontée en cours cède la place à l'autre.
  */
-/**
- * ATTENDRE QUE LA PAGE AIT FINI DE REMONTER (nº 194-§3)
- * ==================================================================
- * LE CONSTAT DU PROPRIÉTAIRE : sur la page de recherche, toucher
- * « style » ouvrait le menu ALORS QUE le champ était encore en train
- * de monter — deux mouvements à la fois, illisibles.
- * On enchaîne donc au lieu de superposer : la remontée d'abord, le
- * menu ensuite. La fin est reconnue par la page elle-même — deux
- * images de suite sans que le défilement bouge — avec un filet au
- * cas où le défilement doux ne partirait pas du tout.
- * Rend une fonction d'annulation (le menu peut être refermé avant).
- */
-export function attendreLaRemontee(faire: () => void): () => void {
-  if (typeof window === "undefined") {
-    faire();
-    return () => {};
-  }
-  const limite = performance.now() + GLISSADE_MS + 200;
-  let precedent = window.scrollY;
-  let calmes = 0;
-  let image = 0;
-  let fini = false;
-  const suivre = () => {
-    const y = window.scrollY;
-    if (y === precedent) calmes += 1;
-    else {
-      calmes = 0;
-      precedent = y;
-    }
-    if (calmes >= 2 || performance.now() > limite) {
-      fini = true;
-      faire();
-      return;
-    }
-    image = requestAnimationFrame(suivre);
-  };
-  image = requestAnimationFrame(suivre);
-  return () => {
-    if (fini) return;
-    fini = true;
-    cancelAnimationFrame(image);
-  };
-}
-
 export function remonterSansClavier(cible: HTMLElement): () => void {
   enCours?.abandonner();
   enCours = null;

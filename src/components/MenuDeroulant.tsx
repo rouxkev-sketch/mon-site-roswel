@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { attendreLaRemontee } from "@/lib/remontee-champ";
 import { COULEURS } from "@/config/roswel";
 import {
   OPTION_LISTE,
@@ -97,7 +96,7 @@ export function MenuDeroulant({
   hauteur?: string;
   taillePolice?: string;
   sansBordure?: boolean;
-  onOuvertureChange?: (ouvert: boolean) => void;
+  onOuvertureChange?: (ouvert: boolean) => void | Promise<void>;
   feuilleMobile?: boolean;
   /** LES EN-TÊTES DE SECTION DEVIENNENT DES PORTES (passe nº 110).
       Le menu s'ouvre alors sur les seuls titres de groupe ; en toucher
@@ -173,12 +172,42 @@ export function MenuDeroulant({
    * monter. La fonction se lit donc dans une référence, et l'effet ne
    * dépend plus que de l'état d'ouverture.
    */
+  /** Vrai quand la liste est réellement à l'écran — elle n'apparaît
+      qu'une fois la remontée du parent TERMINÉE (nº 195-§2). */
+  const [listeVisible, setListeVisible] = useState(false);
+  //  À LA FERMETURE, la liste disparaît sur-le-champ — ajusté pendant
+  //  le rendu (le motif React officiel), jamais dans un effet.
+  if (!ouvert && listeVisible) setListeVisible(false);
   const prevenirOuverture = useRef(onOuvertureChange);
   useEffect(() => {
     prevenirOuverture.current = onOuvertureChange;
   }, [onOuvertureChange]);
+  /**
+   * LA REMONTÉE D'ABORD, LE MENU ENSUITE — UN ENCHAÎNEMENT, PAS UNE
+   * SURVEILLANCE (nº 195-§2)
+   * ==================================================================
+   * LE CONSTAT : le menu s'ouvrait pendant que le champ remontait.
+   * L'attente de la nº 194 (« deux images sans mouvement ») ne suffisait
+   * pas — le défilement doux d'iOS ne commence pas à la première image,
+   * et la page paraissait immobile alors qu'elle n'avait pas encore
+   * bougé.
+   * ON N'OBSERVE DONC PLUS RIEN : on PRÉVIENT le parent, et c'est LUI
+   * qui dit quand il a fini (il rend une promesse). La liste n'apparaît
+   * qu'après. Les menus dont le parent ne remonte rien s'ouvrent au
+   * tour suivant, c'est-à-dire tout de suite.
+   */
   useEffect(() => {
-    prevenirOuverture.current?.(ouvert);
+    if (!ouvert) {
+      prevenirOuverture.current?.(false);
+      return;
+    }
+    let vivant = true;
+    void Promise.resolve(prevenirOuverture.current?.(true)).then(() => {
+      if (vivant) setListeVisible(true);
+    });
+    return () => {
+      vivant = false;
+    };
   }, [ouvert]);
 
   /**
@@ -193,15 +222,6 @@ export function MenuDeroulant({
    * remonte — tous les autres menus du site — l'attente dure deux
    * images et ne se voit pas.
    */
-  const [listeVisible, setListeVisible] = useState(false);
-  //  À LA FERMETURE, la liste disparaît sur-le-champ — ajusté pendant
-  //  le rendu (le motif React officiel), jamais dans un effet.
-  if (!ouvert && listeVisible) setListeVisible(false);
-  useEffect(() => {
-    if (!ouvert) return;
-    return attendreLaRemontee(() => setListeVisible(true));
-  }, [ouvert]);
-
   // Fermeture au clic extérieur / Échap : SEULEMENT pour le menu
   // déroulant classique (la feuille mobile a son propre fond noir).
   useEffect(() => {

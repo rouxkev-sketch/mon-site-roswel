@@ -271,6 +271,30 @@ html[data-clair="3"] {
 [data-mosaique] {
   position: relative;
   z-index: 0;
+  /*  ⚠️ L'ANCRAGE DE DÉFILEMENT EST COUPÉ ICI AUSSI (nº 195-§1b).
+      Il l'est déjà à la racine, mais un navigateur peut le rétablir
+      dans un conteneur qui se réagence : quand la mosaïque passe de
+      deux colonnes à une, il DÉPLACE la page pour garder un élément en
+      vue — et tout ce qui est haut suit ce mouvement. On le coupe donc
+      sur la mosaïque ET sur chacune de ses cartes : plus aucun élément
+      ne peut servir d'ancre. */
+  overflow-anchor: none;
+}
+
+[data-mosaique] > * {
+  overflow-anchor: none;
+}
+
+/*  « EFFACER » ET « VALIDER » S'EFFACENT TANT QU'UN MENU EST OUVERT
+    (nº 195-§2)
+    -------------------------------------------------------------------
+    Quand un champ ou un menu remonte en haut de l'écran, le site pose
+    `data-clavier="ouvert"` sur <html> (voir lib/remontee-champ). Les
+    deux boutons du bas de la page de recherche n'ont alors plus de
+    sens : on ne valide pas une recherche pendant qu'on choisit un
+    style. Ils reviennent dès que le menu se referme. */
+html[data-clavier="ouvert"] [data-actions-recherche] {
+  display: none;
 }
 
 /* LA PAGE DE RECHERCHE (smartphone) EST UNE VRAIE PAGE — ET C'EST

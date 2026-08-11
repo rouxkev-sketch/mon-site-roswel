@@ -485,6 +485,11 @@ export function PageRechercheMobile({
       <div
         //  ⚠️ 20 px au-dessus, 28 px en dessous (nº 149-§5) : la ligne
         //  « Effacer / Valider » était collée au bas de la page.
+        //  ⚠️ ET ELLE S'EFFACE TANT QU'UN MENU EST OUVERT (nº 195-§2) :
+        //  « Effacer » et « Valider » n'ont aucun sens tant qu'une
+        //  liste est dépliée. La règle est en CSS (globals.css), sur le
+        //  marqueur que pose la remontée d'un champ ou d'un menu.
+        data-actions-recherche=""
         className="flex items-center justify-between px-4 pt-5
                    pb-[max(28px,env(safe-area-inset-bottom))]"
       >

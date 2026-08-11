@@ -392,6 +392,7 @@ export function EnTeteTatouage({
   }, []);
 
   return (
+    <>
     <header
       // Le repère du haut de l'écran : la mosaïque s'en sert pour
       // remettre sous les yeux la même carte après un changement de
@@ -420,7 +421,22 @@ export function EnTeteTatouage({
       //  ⚠️ LE FLOU ET LA TEINTE VIVENT DANS globals.css (nº 169-§3b) :
       //  ils sont réglables par l'adresse, donc portés par des
       //  variables — une classe Tailwind ne saurait pas les lire.
-      className="sticky top-0 z-50 bg-sombre-fond"
+      /**
+       * ⚠️ ARRIMÉE À LA FENÊTRE SUR MOBILE (nº 195-§1a) — plus au
+       * document. Une barre `sticky` reste attachée au FLUX : tout
+       * mouvement du contenu (une mosaïque qui se réagence, un
+       * navigateur qui replace la page) la déplace avec lui, et c'est
+       * le saut que le propriétaire voit à chaque bascule. En `fixed`,
+       * elle est arrimée à la FENÊTRE : plus aucun mouvement du contenu
+       * ne peut l'atteindre.
+       * ⚠️ SUR MOBILE SEULEMENT : sur le web, la barre ne saute pas, et
+       * `sticky` y tient sa hauteur toute seule (le moteur y vit sur la
+       * même ligne que le logo — une hauteur qu'aucune réserve écrite à
+       * la main ne saurait suivre).
+       * LA RÉSERVE D'ESPACE est posée juste en dessous : sans elle, la
+       * barre quittant le flux, la première carte passerait dessous.
+       */
+      className="sticky top-0 z-50 mobile:fixed mobile:inset-x-0 bg-sombre-fond"
     >
       <div
         //  ⚠️ PLUS DE gap-y (nº 147-§7) : l'espace au-dessus de la
@@ -691,5 +707,25 @@ export function EnTeteTatouage({
           pas voulu. C'est désormais le VERRE DÉPOLI de la barre qui
           éteint ce qui passe derrière (voir la classe du <header>). */}
     </header>
+      {/**
+        * LA RÉSERVE D'ESPACE DE LA BARRE FIXE (nº 195-§1a).
+        * Sur mobile, la barre a quitté le flux : ce bloc invisible tient
+        * sa place, exactement à sa hauteur — 128 px sur l'accueil quand
+        * la rangée du moteur est dépliée, 64 px sinon (mesuré : la
+        * rangée du logo fait 64, celle du moteur 64 de plus). Il suit le
+        * repli avec la même durée, pour que le contenu monte et
+        * descende comme avant.
+        * Sur le web, la barre est restée `sticky` : la réserve n'existe
+        * pas (`hidden`).
+        */}
+      <div
+        aria-hidden
+        data-reserve-barre=""
+        className={`hidden mobile:block shrink-0 transition-[height]
+                    duration-300 ease-out ${
+                      surAccueil && !moteurReplie ? "h-32" : "h-16"
+                    }`}
+      />
+    </>
   );
 }

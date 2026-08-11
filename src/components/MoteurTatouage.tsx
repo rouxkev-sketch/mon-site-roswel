@@ -25,7 +25,7 @@ import {
   IconeUneColonne,
 } from "@/components/Icones";
 import { BadgeCharte, GroupeBadges } from "@/components/BadgesCharte";
-import { remonterSansClavier } from "@/lib/remontee-champ";
+import { GLISSADE_MS, remonterSansClavier } from "@/lib/remontee-champ";
 import { basculerSansSaut } from "@/lib/bascule-verrouillee";
 //  ⚠️ TEMPORAIRE (nº 173) — la sonde-journal enregistre les clics sur
 //  les deux boutons de bascule. Elle n'écrit RIEN sans `?sonde-bascule=1`.
@@ -736,13 +736,21 @@ export function MoteurTatouage({
     },
     []
   );
-  function surOuvertureExplorer(ouvert: boolean) {
+  /**
+   * ⚠️ IL REND UNE PROMESSE À L'OUVERTURE (nº 195-§2) : le menu ne
+   * s'affiche qu'une fois la remontée TERMINÉE. C'est un enchaînement
+   * strict — la durée est celle de la glissade elle-même, celle que
+   * pose `remonterSansClavier`.
+   */
+  function surOuvertureExplorer(ouvert: boolean): void | Promise<void> {
     if (ouvert) {
       const cible = blocExplorer.current;
       if (!cible) return;
       rangerExplorer.current?.();
       rangerExplorer.current = remonterSansClavier(cible);
-      return;
+      return new Promise<void>((finie) => {
+        window.setTimeout(finie, GLISSADE_MS);
+      });
     }
     //  Fermé — sélection faite ou abandon : la page reprend sa place.
     rangerExplorer.current?.();
