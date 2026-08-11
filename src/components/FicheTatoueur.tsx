@@ -21,7 +21,6 @@ import {
 } from "@/components/PortfolioDeLAffiche";
 import { NATURE_PAR_DEFAUT } from "@/lib/photos-tatoueur";
 import { FenetreSignalement } from "@/components/FenetreSignalement";
-import { SelecteurStyleFiche } from "@/components/SelecteurStyleFiche";
 import { libelleDuLien } from "@/lib/liens-fiche";
 import { rendusDuPortfolio } from "@/lib/photos-tatoueur";
 import { galerieParStyles, ouvertureGalerie } from "@/lib/photo-tatoueur";
@@ -164,24 +163,11 @@ export function FicheTatoueur({
       partout.) */
   const photoAffichee = photosDuCarrousel[indicePhoto] ?? photosDuCarrousel[0];
 
-  /** LE SÉLECTEUR — un menu dès qu'il y a deux styles, un simple
-      badge quand il n'y en a qu'un. Il ne s'efface jamais. */
-  const selecteurStyle = groupeAffiche && (
-    <SelecteurStyleFiche
-      styles={groupes.map((groupe) => ({
-        slug: groupe.slug,
-        label: groupe.label,
-        nombre: groupe.photos.length,
-      }))}
-      valeur={groupeAffiche.slug}
-      surChangement={(slug) => {
-        setStyleAffiche(slug);
-        // Changer de style, c'est repartir de sa première photo.
-        setIndicePhoto(0);
-      }}
-    />
-  );
-
+  /*  ⚠️ LE SÉLECTEUR DE STYLE POSÉ SUR LA PHOTO A ÉTÉ SUPPRIMÉ
+      (nº 198-§1) — le badge déroulant du bas gauche (mobile) comme le
+      menu du haut gauche (web). La navigation entre styles vit
+      désormais dans l'onglet « Portfolio » (nº 197) : les vignettes
+      remplacent le menu, il n'avait plus de raison d'être. */
 
   /** LA LIGNE D'ADRESSE, LISIBLE PARTOUT DANS LE MONDE : le pays
       s'ajoute dès qu'il n'est pas la France — « 10001 New York,
@@ -425,7 +411,6 @@ export function FicheTatoueur({
               styleLabel={groupeAffiche?.label ?? ""}
               indice={indicePhoto}
               surChangement={setIndicePhoto}
-              selecteur={selecteurStyle}
             >
               {/* WEB : le CŒUR puis le PARTAGE dans la photo, angle
                   haut droit — la page rejoint la fenêtre. Le cœur est
@@ -433,25 +418,37 @@ export function FicheTatoueur({
                   le geste courant, partager l'exception.
                   Pas d'aperçu : l'espace tatoueur montre la fiche sans
                   ces boutons. */}
+              {/*  §3 (nº 198) — LES DEUX BOUTONS DU WEB CHANGENT DE
+                   COIN : le partage passe dans l'angle GAUCHE de la
+                   photo (la place libérée par le menu de style), et le
+                   cœur prend la place qu'il occupait, à droite. Chacun
+                   seul dans son angle — plus de paire. */}
               {!apercu && (
-                <div className="mobile:hidden absolute top-3 right-3 flex items-center gap-2">
+                <>
+                  <div className="mobile:hidden absolute top-3 left-3 z-[2]">
+                    {boutonPartage}
+                  </div>
                   {photoAffichee && (
-                    <BoutonCoeurPhoto
-                      photoId={photoAffichee.cle}
-                      variante="fiche"
-                    />
+                    <div className="mobile:hidden absolute top-3 right-3 z-[2]">
+                      <BoutonCoeurPhoto
+                        photoId={photoAffichee.cle}
+                        variante="fiche"
+                      />
+                    </div>
                   )}
-                  {boutonPartage}
-                </div>
+                </>
               )}
 
               {/* SMARTPHONE : le cœur DANS l'image, angle BAS DROIT —
                   au pouce, et loin de la barre fixe du haut. */}
               {!apercu && photoAffichee && (
                 <div className="hidden mobile:block absolute bottom-3 right-3">
+                  {/*  ⚠️ LE GABARIT TACTILE (nº 198-§2) : 48 px de
+                       cible, glyphe à 30 — l'ombre portée du trait le
+                       garde lisible sur photo claire comme sombre. */}
                   <BoutonCoeurPhoto
                     photoId={photoAffichee.cle}
-                    variante="fiche"
+                    variante="fiche-mobile"
                   />
                 </div>
               )}

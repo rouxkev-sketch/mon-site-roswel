@@ -59,7 +59,6 @@ export function CarrouselPortfolio({
   styleLabel,
   indice,
   surChangement,
-  selecteur,
   children,
 }: {
   /** LES PHOTOS DU STYLE AFFICHÉ — plus « une par style ». */
@@ -70,42 +69,52 @@ export function CarrouselPortfolio({
   /** L'indice RÉEL affiché (0..n-1) — possédé par la fiche. */
   indice: number;
   surChangement: (indice: number) => void;
-  /** LE SÉLECTEUR DE STYLE, posé sur l'image (haut gauche sur le web,
-      bas gauche au doigt) — il ne s'efface jamais. */
-  selecteur?: React.ReactNode;
   /** Posé PAR-DESSUS la photo (le partage, angle haut droit). */
   children?: React.ReactNode;
 }) {
   const n = photos.length;
 
-  /* SMARTPHONE : LE COMPTEUR s'efface en fondu après 3 secondes sans
-     toucher, et revient dès que le doigt se pose n'importe où — puis
-     le délai repart. Visible à l'ouverture de la page. Le sélecteur de
-     style, lui, n'est PAS concerné : il reste. */
+  /**
+   * §4 (nº 198) — L'INDICATEUR DE VOLUME S'EFFACE ET REVIENT
+   * ------------------------------------------------------------------
+   * SMARTPHONE, angle haut droit : la capsule affiche « 1/5 ». Après
+   * trois secondes sans interaction, LE TEXTE S'ESTOMPE et la capsule
+   * SE RESSERRE pour ne laisser qu'une flèche minimale — vers la droite
+   * s'il reste des photos après, vers la gauche en fin de galerie.
+   * Cette flèche demeure : c'est le repère permanent. Au moindre geste
+   * (un toucher n'importe où, un changement de photo), le texte revient
+   * aussitôt, et les trois secondes repartent.
+   *
+   * ⚠️ AUCUN setState SYNCHRONE DANS UN EFFET (la règle du projet) :
+   *  · le retour au toucher vit dans l'ÉCOUTEUR (un événement, pas un
+   *    effet) et incrémente un compteur de réveil ;
+   *  · le retour au changement de photo est un AJUSTEMENT PENDANT LE
+   *    RENDU (le motif React officiel) ;
+   *  · seul le minuteur — asynchrone par nature — éteint le texte.
+   */
   const [compteurVisible, setCompteurVisible] = useState(true);
-  const minuteurCompteur = useRef<number | null>(null);
+  const [reveils, setReveils] = useState(0);
+  //  Le changement de photo est un geste : le texte revient, pendant
+  //  le rendu — jamais dans un effet.
+  const [indiceVu, setIndiceVu] = useState(indice);
+  if (indice !== indiceVu) {
+    setIndiceVu(indice);
+    setCompteurVisible(true);
+  }
   useEffect(() => {
-    const armer = () => {
-      if (minuteurCompteur.current) window.clearTimeout(minuteurCompteur.current);
-      minuteurCompteur.current = window.setTimeout(
-        () => setCompteurVisible(false),
-        3000
-      );
-    };
     const auToucher = () => {
       setCompteurVisible(true);
-      armer();
+      setReveils((n) => n + 1);
     };
-    armer(); // visible à l'arrivée, puis 3 s
     document.addEventListener("touchstart", auToucher, { passive: true });
-    return () => {
-      if (minuteurCompteur.current) window.clearTimeout(minuteurCompteur.current);
-      document.removeEventListener("touchstart", auToucher);
-    };
+    return () => document.removeEventListener("touchstart", auToucher);
   }, []);
-  const fonduCompteur = `transition-opacity duration-500 ${
-    compteurVisible ? "opacity-100" : "opacity-0"
-  }`;
+  //  LE CYCLE DE TROIS SECONDES — réarmé par chaque réveil et chaque
+  //  changement de photo. S'il expire, le texte s'estompe en douceur.
+  useEffect(() => {
+    const minuteur = window.setTimeout(() => setCompteurVisible(false), 3000);
+    return () => window.clearTimeout(minuteur);
+  }, [reveils, indice]);
 
   // Glissement au doigt en cours : décalage en px, sinon null.
   const [glisse, setGlisse] = useState<number | null>(null);
@@ -184,15 +193,50 @@ export function CarrouselPortfolio({
       photo.legende ? ` · ${photo.legende}` : ""
     }`;
 
-  /* SMARTPHONE : le compteur « 3/12 », angle haut droit de la photo.
-     AUCUN quand le style n'a qu'une photo. */
+  /* SMARTPHONE : la capsule « 3/12 », angle haut droit — AUCUNE quand
+     le style n'a qu'une photo. Le texte se replie (largeur ET opacité)
+     pour ne laisser que la flèche ; les deux mouvements sont doux, la
+     réapparition est quasi immédiate — jamais de clignotement. */
+  const enFinDeGalerie = indice >= n - 1;
   const compteur = n > 1 && (
     <span
-      className={`hidden mobile:inline-block absolute top-3 right-3 z-[2] rounded-full
-                 bg-black/60 backdrop-blur px-2.5 py-1 text-[12px] font-semibold
-                 text-white tabular-nums ${fonduCompteur}`}
+      className="hidden mobile:inline-flex absolute top-3 right-3 z-[2]
+                 items-center rounded-full bg-black/60 backdrop-blur
+                 px-2.5 py-1.5 text-white"
     >
-      {indice + 1}/{n}
+      <span
+        aria-hidden={!compteurVisible}
+        className={`overflow-hidden whitespace-nowrap text-[12px]
+                   font-semibold tabular-nums
+                   transition-[max-width,opacity,margin-right] ease-out ${
+                     compteurVisible
+                       ? "max-w-[64px] opacity-100 mr-1.5 duration-150"
+                       : "max-w-0 opacity-0 mr-0 duration-500"
+                   }`}
+      >
+        {indice + 1}/{n}
+      </span>
+      {/*  LA FLÈCHE MINIMALE — le repère permanent : vers la droite
+           tant qu'il reste des photos, vers la gauche en fin de
+           galerie. Elle pivote en douceur, elle ne clignote pas. */}
+      <svg
+        width="10"
+        height="10"
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+        className={`shrink-0 transition-transform duration-500 ${
+          enFinDeGalerie ? "rotate-180" : ""
+        }`}
+      >
+        <path
+          d="M9.5 5.5 16 12l-6.5 6.5"
+          stroke="currentColor"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
     </span>
   );
 
@@ -222,18 +266,89 @@ export function CarrouselPortfolio({
     </button>
   );
 
-  /** LES POINTS — au-delà d'une poignée de photos, ils cesseraient
-      d'être un repère pour devenir une frise illisible : à partir de
-      douze, le compteur suffit (il est déjà là, sur les deux écrans). */
-  const pointsLisibles = n > 1 && n <= 12;
-  const points = (surLimage: boolean) => (
-    <div
-      className={
-        surLimage
-          ? "flex mobile:hidden absolute bottom-3 inset-x-0 z-[2] justify-center items-center gap-1.5"
-          : "hidden mobile:flex mt-3 justify-center items-center gap-1.5"
-      }
-    >
+  /**
+   * §5 (nº 198) — LA PAGINATION DU WEB, EN BAS AU CENTRE
+   * ==================================================================
+   * CAS A — CINQ PHOTOS OU MOINS : tous les ronds, à taille pleine,
+   * fixes et centrés. Le rond actif est BLANC ILLUMINÉ (jamais rose —
+   * la charte le réserve à d'autres emplois) et se déplace de rond en
+   * rond. Aucun glissement, aucune réduction.
+   *
+   * CAS B — PLUS DE CINQ : une frise de SEPT crans au plus, en trois
+   * temps :
+   *  · AU DÉBUT, l'actif est à l'extrême gauche — trois ronds pleins à
+   *    gauche, puis 75 % et 50 % vers la droite : le sens du défilement
+   *    s'annonce ;
+   *  · AU MILIEU, la frise glisse et l'actif se stabilise au centre —
+   *    trois ronds pleins au milieu, les extrémités décroissent
+   *    symétriquement (75 %, 50 %) ;
+   *  · À LA FIN, la frise cesse de glisser et l'actif migre vers la
+   *    droite jusqu'au dernier rond.
+   * Le glissement de la frise et les changements d'échelle partagent la
+   * MÊME transition que la piste des photos (300 ms, ease-out) : tout
+   * bouge d'un seul mouvement avec les flèches.
+   */
+  //  Un cran de frise : le rond (6 px) et son air. Sept crans au plus.
+  const CRAN_FRISE = 14;
+  const paginationWeb = n > 1 && (() => {
+    const crans = Math.min(n, 7);
+    //  Le premier rond de la fenêtre : collée au début, puis centrée
+    //  sur l'actif, puis collée à la fin — les trois temps.
+    const debut = Math.max(0, Math.min(indice - 3, n - 7));
+    //  La zone à taille pleine (trois ronds) : autour de l'actif quand
+    //  la frise glisse, contre le bord au début et à la fin.
+    const zone = n <= 5 ? 0 : Math.max(debut, Math.min(indice - 1, debut + 4));
+    const echelle = (rang: number) => {
+      if (n <= 5) return 1;
+      const distance =
+        rang < zone ? zone - rang : rang > zone + 2 ? rang - (zone + 2) : 0;
+      return distance === 0 ? 1 : distance === 1 ? 0.75 : distance === 2 ? 0.5 : 0;
+    };
+    return (
+      <div className="flex mobile:hidden absolute bottom-3 inset-x-0 z-[2] justify-center pointer-events-none">
+        <div className="overflow-hidden" style={{ width: crans * CRAN_FRISE }}>
+          <div
+            className="flex transition-transform duration-300 ease-out"
+            style={{ transform: `translateX(${-debut * CRAN_FRISE}px)` }}
+          >
+            {photos.map((photo, rang) => {
+              const taille = echelle(rang);
+              return (
+                <span
+                  key={photo.cle}
+                  className="flex shrink-0 items-center justify-center"
+                  style={{ width: CRAN_FRISE }}
+                >
+                  <button
+                    type="button"
+                    aria-label={`Voir la photo ${rang + 1} sur ${n}`}
+                    aria-current={rang === indice ? "true" : undefined}
+                    onClick={() => surChangement(rang)}
+                    tabIndex={taille === 0 ? -1 : 0}
+                    //  L'actif : BLANC ILLUMINÉ — un halo, pas un
+                    //  contour. Les autres : blanc voilé.
+                    className={`pointer-events-auto h-1.5 w-1.5 rounded-full
+                               transition-[transform,opacity,background-color,box-shadow]
+                               duration-300 ease-out ${
+                                 rang === indice
+                                   ? "bg-white shadow-[0_0_6px_rgba(255,255,255,0.95)]"
+                                   : "bg-white/45 hover:bg-white/75"
+                               }`}
+                    style={{ transform: `scale(${taille})`, opacity: taille === 0 ? 0 : 1 }}
+                  />
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  })();
+
+  /** LES POINTS DU SMARTPHONE, SOUS LA PHOTO — inchangés (nº 198 ne
+      touche que ce qui est posé SUR la photo). */
+  const pointsMobiles = n > 1 && n <= 12 && (
+    <div className="hidden mobile:flex mt-3 justify-center items-center gap-1.5">
       {photos.map((photo, rang) => (
         <button
           key={photo.cle}
@@ -244,26 +359,11 @@ export function CarrouselPortfolio({
           className={`rounded-full transition-all ${
             rang === indice
               ? "w-[5px] h-[5px] bg-white"
-              : surLimage
-                ? "w-1 h-1 bg-white/45 hover:bg-white/75"
-                : "w-1 h-1 bg-sombre-bordure"
+              : "w-1 h-1 bg-sombre-bordure"
           }`}
         />
       ))}
     </div>
-  );
-
-  /** LE COMPTEUR DU WEB — il ne paraît QUE lorsque les points ont
-      renoncé (galerie longue) : sans lui, on ne saurait plus où l'on
-      en est dans une série de quarante photos. */
-  const compteurWeb = n > 12 && (
-    <span
-      className="mobile:hidden absolute bottom-3 right-3 z-[2] rounded-full
-                 bg-black/55 backdrop-blur px-2.5 py-1 text-[12px]
-                 font-semibold text-white tabular-nums"
-    >
-      {indice + 1}/{n}
-    </span>
   );
 
   // Une seule photo : une image simple, sans piste, sans compteur,
@@ -286,7 +386,6 @@ export function CarrouselPortfolio({
             </div>
           </ZoomPincement>
         )}
-        {selecteur}
         {children}
       </div>
     );
@@ -358,17 +457,15 @@ export function CarrouselPortfolio({
         {indice > 0 && fleche(-1)}
         {indice < n - 1 && fleche(1)}
         {compteur}
-        {compteurWeb}
-        {selecteur}
         {children}
 
-        {/* WEB : les points EN BAS DE L'IMAGE — menus, l'actif en
-            BLANC : un repère, pas un ornement. */}
-        {pointsLisibles && points(true)}
+        {/* WEB : la pagination façon Instagram, EN BAS AU CENTRE de
+            l'image (nº 198-§5). */}
+        {paginationWeb}
       </div>
 
       {/* SMARTPHONE : les points SOUS la photo. */}
-      {pointsLisibles && points(false)}
+      {pointsMobiles}
     </div>
   );
 }

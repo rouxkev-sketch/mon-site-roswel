@@ -49,7 +49,10 @@ export function BoutonCoeurPhoto({
   enregistreeAuDepart?: boolean;
   /** `carte` : dans l'image de la mosaïque. `fiche` : le même dessin,
       au gabarit des actions de fiche (partage). */
-  variante?: "carte" | "fiche";
+  /** « fiche-mobile » (nº 198-§2) : le cœur posé sur la photo de
+      l'affiche au doigt — cible de 48 px (au-dessus du minimum tactile
+      de 44), glyphe à 30. Les deux autres gabarits ne bougent pas. */
+  variante?: "carte" | "fiche" | "fiche-mobile";
 }) {
   const router = useRouter();
   const { utilisateur, pret } = useUtilisateur();
@@ -109,9 +112,12 @@ export function BoutonCoeurPhoto({
   const gabarit =
     variante === "carte"
       ? "h-9 w-9"
-      : //  Sur la fiche, le cœur répond au bouton de partage : même
-        //  hauteur, même pastille, même flou.
-        "h-10 w-10";
+      : variante === "fiche-mobile"
+        ? //  ⚠️ LE STANDARD TACTILE (nº 198-§2) : 48 px de cible.
+          "h-12 w-12"
+        : //  Sur la fiche (web), le cœur répond au bouton de partage :
+          //  même hauteur, même pastille, même flou.
+          "h-10 w-10";
 
   return (
     <button
@@ -149,7 +155,9 @@ export function BoutonCoeurPhoto({
                   focus-visible:outline-primaire ${pulse ? "rw-coeur-anime" : ""}`}
     >
       <IconeCoeur
-        taille={variante === "carte" ? 20 : 22}
+        taille={
+          variante === "carte" ? 20 : variante === "fiche-mobile" ? 30 : 22
+        }
         classe={`[filter:drop-shadow(0_1px_2px_rgba(0,0,0,0.55))] ${
           enregistree
             ? //  ⚠️ BLANC PLEIN une fois enregistré (nº 141-6B) — plus
