@@ -14,6 +14,9 @@ import { ligneCarte } from "@/lib/adresse";
 import { pincementRecent, usePincement } from "@/components/ZoomPincement";
 import type { Tatoueur } from "@/lib/tatoueurs";
 import { essai } from "@/lib/interrupteurs-mesure";
+//  ⚠️ TEMPORAIRE (nº 175-§6) — la sonde-journal note l'ouverture d'une
+//  fiche. Elle n'écrit RIEN sans `?sonde-bascule=1`.
+import { noter, sauvegarderMaintenant } from "@/lib/journal-bascule";
 
 /**
  * LA CARTE D'UN TATOUEUR
@@ -165,6 +168,17 @@ export function CarteTatoueur({
       return;
     }
     signalerClic();
+    //  ⚠️ TEMPORAIRE (nº 175-§6) — LA SONDE-JOURNAL. On note QUELLE
+    //  fiche on ouvre et D'OÙ on part : sans la position de départ,
+    //  aucun retour ne peut être jugé. N'écrit rien sans
+    //  `?sonde-bascule=1`.
+    noter(
+      `OUVERTURE FICHE ${tatoueur.slug} · défilement ${Math.round(
+        window.scrollY
+      )} · depuis ${window.location.pathname}${window.location.search}`
+    );
+    //  Le journal part avec nous : la page suivante le relira.
+    sauvegarderMaintenant();
     // Nouvel onglet, clic du milieu… : on ne touche à rien.
     if (evenement.metaKey || evenement.ctrlKey || evenement.shiftKey || evenement.altKey) return;
 
@@ -251,6 +265,26 @@ export function CarteTatoueur({
                      transition-shadow duration-300
                      group-hover:shadow-[0_12px_34px_rgba(0,0,0,0.55)]"
         >
+          {/*  ⚠️ LA SOURCE NE DÉPEND PAS DE LA DISPOSITION (nº 175-§5),
+               ET CELA DOIT LE RESTER.
+               ------------------------------------------------------
+               Le propriétaire voit l'écran se vider à la bascule de
+               disposition — et presque jamais au bouton du texte. La
+               seule différence entre les deux : la disposition change
+               la LARGEUR des cartes. Si la largeur demandée changeait
+               avec elle, le navigateur écarterait les images qu'il a
+               pour en retélécharger d'autres, et il ne resterait que le
+               fond le temps du chargement.
+               ELLE NE CHANGE PAS, et c'est vérifié : `photo` est
+               calculée SANS jamais lire `disposition` ; il n'y a ni
+               `srcset` ni `sizes` — donc AUCUNE largeur négociée ; et
+               les dimensions déclarées sont celles de la PLEINE
+               LARGEUR (1080 × 1350), en deux colonnes comme en une.
+               L'image chargée est donc réutilisée telle quelle, et
+               seuls les styles la redimensionnent.
+               ⚠️ NE JAMAIS introduire ici un `sizes`, un `srcset`, une
+               largeur dans l'URL, ni une source choisie d'après
+               `uneColonne` : ce serait exactement le défaut. */}
           {/* eslint-disable-next-line @next/next/no-img-element --
               les images de démonstration sont des SVG dessinés à la
               volée ; l'optimiseur de Next n'a rien à y gagner. */}

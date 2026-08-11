@@ -25,6 +25,7 @@ import {
   IconeUneColonne,
 } from "@/components/Icones";
 import { BadgeCharte, GroupeBadges } from "@/components/BadgesCharte";
+import { remonterSansClavier } from "@/lib/remontee-champ";
 import { basculerSansSaut } from "@/lib/bascule-verrouillee";
 //  ⚠️ TEMPORAIRE (nº 173) — la sonde-journal enregistre les clics sur
 //  les deux boutons de bascule. Elle n'écrit RIEN sans `?sonde-bascule=1`.
@@ -715,6 +716,34 @@ export function MoteurTatouage({
       détail (`libelleQuoi`, `libelleOu`) — un lecteur d'écran ne voit
       pas ce titre à côté de la pilule. */
 
+  /* ---- LA REMONTÉE DU MENU « EXPLORER » (nº 175-§4, mobile) ----
+     Le bloc à remonter, et la fonction qui range la remontée quand le
+     menu se referme. Le ranger vit dans une référence : il n'appartient
+     pas au rendu, et deux ouvertures ne peuvent pas en laisser un
+     derrière elles. */
+  const blocExplorer = useRef<HTMLDivElement>(null);
+  const rangerExplorer = useRef<(() => void) | null>(null);
+  //  Le démontage de la page de recherche ne doit rien laisser traîner.
+  useEffect(
+    () => () => {
+      rangerExplorer.current?.();
+      rangerExplorer.current = null;
+    },
+    []
+  );
+  function surOuvertureExplorer(ouvert: boolean) {
+    if (ouvert) {
+      const cible = blocExplorer.current;
+      if (!cible) return;
+      rangerExplorer.current?.();
+      rangerExplorer.current = remonterSansClavier(cible);
+      return;
+    }
+    //  Fermé — sélection faite ou abandon : la page reprend sa place.
+    rangerExplorer.current?.();
+    rangerExplorer.current = null;
+  }
+
   // LE RAYON N'EST UTILISABLE QU'AUTOUR D'UN POINT (ville, adresse).
   // Sans lieu, ou sur une RÉGION / un PAYS, il reste EXACTEMENT à sa
   // place mais devient inactif : grisé, non manipulable. Aucune phrase
@@ -743,10 +772,12 @@ export function MoteurTatouage({
     //  d'air invisible au-dessus de l'encre (nº 163-§3A) — 20 px à
     //  l'œil, comme les trois autres côtés.
     <div className="px-5 pb-5 pt-[15px]">
-      <GroupeBadges
-        titre={`Rayon autour de ${criteres.lieu?.intitule ?? ""}`}
-        idTitre={`${id}-rayon-titre`}
-      >
+      {/*  ⚠️ « RAYON » TOUT COURT (nº 175-§2) : le titre nommait la
+           ville — « RAYON AUTOUR DE LYON ». Il dit maintenant le
+           critère, comme ARTISTE, LIEU, TECHNIQUE et RENDU, dans la
+           même casse et le même style (le composant s'en charge). La
+           ville, elle, est déjà écrite juste au-dessus, dans le champ. */}
+      <GroupeBadges titre="Rayon" idTitre={`${id}-rayon-titre`}>
         {RAYONS_TATOUAGE.map((palier) => (
           <BadgeCharte
             key={palier}
@@ -1163,12 +1194,23 @@ export function MoteurTatouage({
               plus de fenêtre à lever. Son panneau s'ouvre en
               coordonnées d'écran, comme sur le web, et la page ne
               bouge pas dessous. */}
-          <div>
+          {/*  ⚠️ ET IL REMONTE, LUI AUSSI (nº 175-§4). Toucher la
+               LOCALITÉ amenait son bloc juste sous le haut de l'écran ;
+               toucher EXPLORER ne faisait rien. Le geste est le même —
+               espace de fin de document, `scrollIntoView` natif, marge
+               d'air en CSS — mais il se déclenche à L'OUVERTURE DU
+               MENU : un menu déroulant n'ouvre aucun clavier, il n'y a
+               donc pas de `focus` à écouter. À la fermeture (une fois
+               le style choisi), la page reprend sa position d'origine.
+               `data-remonte-au-menu` porte la marge, recopiée de celle
+               de la localité (globals.css). */}
+          <div ref={blocExplorer} data-remonte-au-menu="">
             <MenuDeroulant
               valeur={valeurExplorer(enFenetre.nature, enFenetre.style)}
               surChangement={(valeur) =>
                 choisirDansExplorer(valeur, poserDansLeBrouillon)
               }
+              onOuvertureChange={surOuvertureExplorer}
               options={options}
               ariaLabel="Explorer"
               placeholder="Explorer"

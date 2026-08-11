@@ -1,5 +1,7 @@
 "use client";
 
+import { defilerSansGeste } from "@/lib/defilement-programme";
+
 /**
  * LA REMONTÉE D'UN CHAMP À LISTE — LA mécanique, pour les trois qui en
  * ont besoin
@@ -220,6 +222,57 @@ export function armerLaRemontee(cible: HTMLElement): () => void {
   const session = ouvrirUneRemontee(cible);
   enCours = session;
   return () => session.laisserPartir();
+}
+
+/**
+ * LA MÊME REMONTÉE, MAIS SANS CLAVIER (nº 175-§4)
+ * ================================================
+ * « Explorer » est un MENU DÉROULANT, pas un champ de saisie : aucun
+ * clavier ne s'ouvre, donc aucun `visualViewport.resize` à guetter —
+ * toute la mécanique ci-dessus attendrait un signal qui ne vient
+ * jamais. La remontée s'y déclenche donc à L'OUVERTURE DU MENU, et
+ * elle se range à sa FERMETURE.
+ *
+ * TOUT LE RESTE EST IDENTIQUE À CELLE DE LA LOCALITÉ, et c'est voulu :
+ *  · l'ESPACE de fin de document, posé d'abord — sans lui, un document
+ *    trop court n'a rien à faire défiler et le champ ne bouge pas ;
+ *  · le DÉFILEMENT NATIF `scrollIntoView({block:"start"})`, jamais une
+ *    position calculée ;
+ *  · la hauteur d'air au-dessus vient de `scroll-margin-top` (CSS), sur
+ *    le marqueur `data-remonte-au-menu` — 12 px, la valeur EXACTE à
+ *    laquelle la localité se pose (globals.css).
+ *
+ * ⚠️ ET LE RETOUR EST EXPLICITE : à la fermeture, la page retrouve la
+ * position qu'elle avait AVANT la remontée, puis l'espace se replie.
+ * On ne compte pas sur le raccourcissement du document pour ramener le
+ * défilement « à peu près » — on repose la valeur notée au départ.
+ *
+ * ⚠️ NE TOUCHE À RIEN DE LA LOCALITÉ : `armerLaRemontee` n'est pas
+ * modifiée. Les deux partagent l'espace de fin de document (un seul à
+ * la fois), et une remontée en cours cède la place à l'autre.
+ */
+export function remonterSansClavier(cible: HTMLElement): () => void {
+  enCours?.abandonner();
+  enCours = null;
+  const espace = poserLEspace();
+  //  LA POSITION D'ORIGINE, notée AVANT de bouger.
+  const depart = window.scrollY;
+  //  L'espace doit être dans la mise en page avant le défilement.
+  const image = requestAnimationFrame(() => {
+    cible.scrollIntoView({ block: "start", behavior: "smooth" });
+  });
+  let rangee = false;
+  return () => {
+    if (rangee) return;
+    rangee = true;
+    cancelAnimationFrame(image);
+    //  1. LA POSITION D'ORIGINE, rendue — et JAMAIS lue comme un geste
+    //     (sans quoi la barre du site replierait sa rangée, nº 154-§6A).
+    defilerSansGeste({ top: depart, left: 0, behavior: "smooth" });
+    //  2. L'ESPACE se replie une fois la glissade finie : le document
+    //     raccourcit alors sans tirer la page au passage.
+    window.setTimeout(() => espace.replier(), GLISSADE_MS);
+  };
 }
 
 function ouvrirUneRemontee(cible: HTMLElement): Session {

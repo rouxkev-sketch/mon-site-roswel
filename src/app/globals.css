@@ -182,20 +182,27 @@ html:has([data-fond="sombre"]) {
     des gris (config/tatouage.ts). Aucune valeur n'est inventée ici —
     ce sont les couleurs de la charte, telles quelles.
 
-    LE CRAN EST RÉGLABLE PAR L'ADRESSE, comme `?verre=` :
+    ⚠️ LA VALEUR EST GRAVÉE (nº 175-§1) : le propriétaire a choisi le
+    CRAN 2, `#414149` (`haut`). C'est désormais LA RÉFÉRENCE du champ de
+    recherche et des deux icônes, sur mobile comme sur web. Elle est
+    écrite ici, en dur, et ne dépend d'aucun réglage : sans attribut sur
+    <html>, c'est elle qui s'applique.
+
+    Le réglage `?clair=` reste, pour une comparaison future — mais il ne
+    commande plus rien par défaut :
       ?clair=1  eleve-clair (#35353B) — le plus discret, la valeur d'hier
                                         sur web
-      ?clair=2  haut        (#414149) — LE DÉFAUT
+      ?clair=2  haut        (#414149) — LA VALEUR GRAVÉE (le défaut)
       ?clair=3  haut-clair  (#4B4B54) — le plus clair
-    Le défaut vit dans cette feuille : sans attribut, c'est le cran 2 qui
-    s'applique. `EnTeteTatouage` pose `data-clair` sur <html> quand
-    l'adresse le demande.
+    `EnTeteTatouage` pose `data-clair` sur <html> quand l'adresse le
+    demande.
 
     LE FOCUS GARDE SON COMPORTEMENT : un champ actif — et un bouton
     survolé, pressé, ou une fenêtre ouverte (`data-clair-vif`) —
     s'éclaircit d'un barreau de plus, exactement comme avant. Au cran 3,
     l'échelle n'a plus de barreau au-dessus : le vif y vaut le repos. */
 :root {
+  /*  LA VALEUR DÉFINITIVE (nº 175-§1) — cran 2, `haut` : #414149. */
   --rw-clair-barre: var(--rw-sombre-haut);
   --rw-clair-barre-vif: var(--rw-sombre-haut-clair);
 }
@@ -330,6 +337,27 @@ html[data-recherche="ouverte"] [data-fond="sombre"] {
     seule la marge est conditionnelle. */
 html[data-clavier="ouvert"] [data-remonte-au-toucher],
 html[data-clavier="ouvert"] [data-page-recherche] [data-remonte-au-toucher] {
+  scroll-margin-top: 12px;
+}
+
+/*  LE MENU « EXPLORER » REMONTE COMME LA LOCALITÉ (nº 175-§4)
+    -------------------------------------------------------------------
+    Toucher la LOCALITÉ fait remonter le bloc juste sous le haut de
+    l'écran ; toucher EXPLORER ne faisait rien. Le même geste est donc
+    donné au menu — déclenché à son OUVERTURE, puisqu'un menu déroulant
+    n'ouvre aucun clavier et n'émet donc aucun `focus` exploitable (voir
+    lib/remontee-champ, `remonterSansClavier`).
+
+    ⚠️ LA MARGE EST CELLE DE LA LOCALITÉ, RECOPIÉE : 12 px — la valeur
+    de la règle juste au-dessus, celle à laquelle la localité se pose
+    RÉELLEMENT (clavier ouvert, la barre étant alors hors de l'écran).
+    Un menu n'ouvrant pas de clavier, `data-clavier` n'est jamais posé
+    pour lui : il lui faut donc sa propre déclaration, à la même valeur,
+    pour arriver EXACTEMENT à la même hauteur.
+
+    ⚠️ RIEN NE CHANGE POUR LA LOCALITÉ : elle garde son marqueur, ses
+    deux marges et son déclenchement au clavier. */
+[data-remonte-au-menu] {
   scroll-margin-top: 12px;
 }
 
@@ -626,12 +654,26 @@ body:has(main.accueil-large) {
 .curseur-sombre::-webkit-slider-runnable-track {
   height: 4px;
   border-radius: 9999px;
-  background: var(--rw-sombre-bordure);
+  /*  ⚠️ LA COULEUR DES FILTRES, RECOPIÉE (nº 175-§3). La piste portait
+      `--rw-sombre-bordure` (#38383F) — un gris à elle, qui ne
+      correspondait à rien d'autre. Elle prend celui des BADGES DE
+      FILTRES au repos, `--rw-sombre-eleve-clair` (#35353B) : sur
+      smartphone, le rayon et les filtres se disent désormais dans la
+      même couleur. Aucune valeur inventée — celle des filtres, telle
+      quelle. */
+  background: var(--rw-sombre-eleve-clair);
 }
 .curseur-sombre::-moz-range-track {
   height: 4px;
   border-radius: 9999px;
-  background: var(--rw-sombre-bordure);
+  /*  ⚠️ LA COULEUR DES FILTRES, RECOPIÉE (nº 175-§3). La piste portait
+      `--rw-sombre-bordure` (#38383F) — un gris à elle, qui ne
+      correspondait à rien d'autre. Elle prend celui des BADGES DE
+      FILTRES au repos, `--rw-sombre-eleve-clair` (#35353B) : sur
+      smartphone, le rayon et les filtres se disent désormais dans la
+      même couleur. Aucune valeur inventée — celle des filtres, telle
+      quelle. */
+  background: var(--rw-sombre-eleve-clair);
 }
 .curseur-sombre::-webkit-slider-thumb {
   -webkit-appearance: none;

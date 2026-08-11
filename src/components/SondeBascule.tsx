@@ -5,6 +5,7 @@ import { BoutonEnvoyerJournal } from "@/components/BoutonEnvoyerJournal";
 import {
   lignesDuJournal,
   noter,
+  sauvegarderMaintenant,
   sondeBasculeArmee,
   souscrireAuJournal,
 } from "@/lib/journal-bascule";
@@ -64,6 +65,113 @@ function journalEnTexte(): string {
     .join("\n");
 }
 
+/* ==================================================================
+ * LE RETOUR EN ARRIÈRE (nº 175-§6) — ON OBSERVE, ON NE CORRIGE RIEN
+ * ==================================================================
+ * LE DÉFAUT À ÉCLAIRER : on défile, on ouvre une fiche, on revient — la
+ * place est bien rendue. Mais au bout de sept ou huit allers-retours, on
+ * revient EN HAUT. Et en venant d'une recherche, trois ou quatre
+ * suffisent pour que tout saute et que la recherche soit effacée.
+ *
+ * Ces fonctions ne font que LIRE ce que le site a rangé, aux endroits
+ * où il le range vraiment (voir lib/navigation-session et
+ * lib/mosaique-session). Aucune ne pose, ne corrige ni n'efface quoi
+ * que ce soit.
+ */
+
+/** Où la position d'une adresse est rangée — lib/navigation-session. */
+const PREFIXE_DEFILEMENT = "roswel:defilement:";
+/** Où la mosaïque entière est mise de côté — lib/mosaique-session. */
+const CLE_MOSAIQUE = "yokofolio:mosaique";
+
+function adresseCourante(): string {
+  return window.location.pathname + window.location.search;
+}
+
+/** Le type de navigation dit par le navigateur : navigate, reload,
+    back_forward. C'est LUI qui décide si le site restitue ou non. */
+function typeDeNavigation(): string {
+  try {
+    const [nav] = performance.getEntriesByType(
+      "navigation"
+    ) as PerformanceNavigationTiming[];
+    return nav?.type ?? "(inconnu)";
+  } catch {
+    return "(illisible)";
+  }
+}
+
+/** c) L'ÉTAT SAUVEGARDÉ : où il est rangé, et s'il est TROUVÉ ou
+    ABSENT — les deux mémoires, nommées par leur clé exacte. */
+function etatSauvegarde(): string[] {
+  const adresse = adresseCourante();
+  const dit: string[] = [];
+
+  //  1. LA POSITION DE DÉFILEMENT (localStorage, une clé par adresse).
+  const cle = `${PREFIXE_DEFILEMENT}${adresse}`;
+  try {
+    const brut = localStorage.getItem(cle);
+    if (!brut) {
+      dit.push(`ÉTAT position · ${cle} · ABSENT`);
+    } else {
+      const { y, date } = JSON.parse(brut) as { y?: number; date?: number };
+      dit.push(
+        `ÉTAT position · ${cle} · TROUVÉ y=${y ?? "?"} · ${
+          date ? Math.round((Date.now() - date) / 1000) : "?"
+        } s`
+      );
+    }
+  } catch {
+    dit.push(`ÉTAT position · ${cle} · ILLISIBLE`);
+  }
+
+  //  2. LA MOSAÏQUE MISE DE CÔTÉ (sessionStorage, UNE SEULE entrée —
+  //     celle de la dernière adresse quittée).
+  try {
+    const brut = sessionStorage.getItem(CLE_MOSAIQUE);
+    if (!brut) {
+      dit.push(`ÉTAT mosaïque · ${CLE_MOSAIQUE} · ABSENT`);
+    } else {
+      const note = JSON.parse(brut) as {
+        adresse?: string;
+        tatoueurs?: unknown[];
+        page?: number;
+        quand?: number;
+      };
+      const memeAdresse = note.adresse === adresse;
+      dit.push(
+        `ÉTAT mosaïque · ${CLE_MOSAIQUE} · TROUVÉ ${
+          note.tatoueurs?.length ?? "?"
+        } fiches · page ${note.page ?? "?"} · pour "${note.adresse ?? "?"}" ${
+          memeAdresse ? "= adresse courante" : "≠ ADRESSE COURANTE (inutilisable)"
+        }`
+      );
+    }
+  } catch {
+    dit.push(`ÉTAT mosaïque · ${CLE_MOSAIQUE} · ILLISIBLE`);
+  }
+  return dit;
+}
+
+/** d) L'HISTORIQUE, et les critères de recherche — encore là, ou
+    perdus ? Les critères vivent dans l'adresse : c'est elle qui les
+    porte d'une page à l'autre. */
+function historiqueEtCriteres(): string {
+  const params = new URLSearchParams(window.location.search);
+  //  Les paramètres de sonde ne sont pas des critères de recherche.
+  for (const nom of [...params.keys()]) {
+    if (nom.startsWith("sonde") || nom === "clair" || nom === "verre" || nom === "flou") {
+      params.delete(nom);
+    }
+  }
+  const critères = params.toString();
+  return (
+    `HISTORIQUE ${history.length} entrées · critères ${
+      critères ? `PRÉSENTS (${critères})` : "PERDUS (aucun dans l'adresse)"
+    }`
+  );
+}
+
 export function SondeBascule() {
   const [armee, setArmee] = useState(false);
   const zone = useRef<HTMLDivElement>(null);
@@ -73,6 +181,93 @@ export function SondeBascule() {
     const image = requestAnimationFrame(() => setArmee(true));
     return () => cancelAnimationFrame(image);
   }, []);
+
+  /* ---- LE RETOUR EN ARRIÈRE (nº 175-§6) : ON OBSERVE ---- */
+  useEffect(() => {
+    if (!armee) return;
+    const racine = document.documentElement;
+    const nav = typeDeNavigation();
+
+    //  LA PAGE OÙ L'ON ARRIVE — la ligne qui sépare deux documents dans
+    //  le journal (le chronomètre, lui, repart de zéro à chaque page).
+    noter(
+      `═══ PAGE ${adresseCourante()} · navigation ${nav} · ${historiqueEtCriteres()}`
+    );
+    for (const ligne of etatSauvegarde()) noter(ligne);
+
+    /* b) LE RETOUR : la position DEMANDÉE, puis celle RÉELLEMENT
+       atteinte, et l'écart. La demandée est celle que le script d'avant
+       peinture a posée (`data-positionPosee`) ; à défaut, celle qui est
+       rangée pour cette adresse. On mesure ensuite plusieurs fois : la
+       page s'allonge en cours de route, et c'est justement là que le
+       défaut se joue. */
+    const posee = racine.dataset.positionPosee;
+    let demandee = posee ? Number(posee) || 0 : 0;
+    if (!posee) {
+      try {
+        const brut = localStorage.getItem(
+          `${PREFIXE_DEFILEMENT}${adresseCourante()}`
+        );
+        demandee = brut ? Number((JSON.parse(brut) as { y?: number }).y) || 0 : 0;
+      } catch {
+        demandee = 0;
+      }
+    }
+    noter(
+      `RETOUR demandée ${demandee} · posée par le script avant peinture : ${
+        posee ? "OUI" : "non"
+      } · défilement à l'arrivée ${Math.round(window.scrollY)}`
+    );
+
+    const minuteurs: number[] = [];
+    const mesurer = (quand: string) => {
+      const atteinte = Math.round(window.scrollY);
+      noter(
+        `RETOUR ${quand} · atteinte ${atteinte} · demandée ${demandee} · ` +
+          `écart ${atteinte - demandee} · document ${Math.round(
+            document.body.getBoundingClientRect().height
+          )}`
+      );
+    };
+    const image = requestAnimationFrame(() => mesurer("1re image"));
+    for (const delai of [300, 1200, 2500]) {
+      minuteurs.push(window.setTimeout(() => mesurer(`+${delai} ms`), delai));
+    }
+
+    //  LE GESTE LUI-MÊME, quand il ne crée pas de document (le routeur
+    //  rend la page cible sur place) : `popstate` est le seul témoin.
+    const auPopstate = () => {
+      noter(
+        `POPSTATE · ${adresseCourante()} · défilement ${Math.round(
+          window.scrollY
+        )} · ${historiqueEtCriteres()}`
+      );
+      window.setTimeout(
+        () =>
+          noter(
+            `POPSTATE +600 ms · défilement ${Math.round(window.scrollY)}`
+          ),
+        600
+      );
+    };
+    //  ET LE DÉPART DE LA PAGE : le journal doit partir avec nous.
+    const auDepart = () => {
+      noter(
+        `DÉPART de ${adresseCourante()} · défilement ${Math.round(
+          window.scrollY
+        )}`
+      );
+      sauvegarderMaintenant();
+    };
+    window.addEventListener("popstate", auPopstate);
+    window.addEventListener("pagehide", auDepart);
+    return () => {
+      cancelAnimationFrame(image);
+      for (const m of minuteurs) window.clearTimeout(m);
+      window.removeEventListener("popstate", auPopstate);
+      window.removeEventListener("pagehide", auDepart);
+    };
+  }, [armee]);
 
   /* ---- LES ÉCOUTEURS : fenêtre et viewport visuel ---- */
   useEffect(() => {
