@@ -20,12 +20,18 @@ import {
  * UN SEUL BOUTON, DEUX ÉTATS, et le libellé dit lequel : « Suivre »
  * tant qu'on ne suit pas, « Suivi » une fois que c'est fait.
  *
- * SON HABILLAGE SUIT LA CHARTE DES BOUTONS INTERMÉDIAIRES : capsule
- * naturelle, fond qui s'éclaircit au survol, aucun contour. Il ne
- * prend PAS le rose plein — ce n'est pas l'action finale de la fiche,
- * et le rose y est déjà pris par les deux badges de réseaux. Suivi, il
- * s'éclaircit d'un cran et son texte passe au rose : l'état d'un
- * objet, l'un des emplois réservés de la couleur.
+ * SON HABILLAGE (nº 206) : « SUIVRE » EST LA CAPSULE ROSE PLEINE —
+ * l'action finale de la fiche, le geste qu'on attend du visiteur, et
+ * la charte réserve précisément le rose à cet emploi. C'est la SEULE
+ * capsule rose de l'écran : sur la rangée du haut, l'onglet actif
+ * porte la capsule de verre grise — la couleur seule distingue
+ * l'action de l'onglet (c'était le constat de la passe : trois
+ * capsules grises, deux « allumées », illisible).
+ * UNE FOIS SUIVI, IL S'ÉTEINT : capsule grise discrète un cran plus
+ * clair, texte GRIS DOUX — le gris des mots inactifs, jamais blanc,
+ * sinon il reprendrait la robe de l'onglet actif. Toujours cliquable
+ * pour se désabonner ; la transition entre les deux états est douce.
+ * AUCUNE icône : le mot suffit. Aucun contour.
  *
  * ⚠️ SA PLACE EST LIBRE (la fiche sera refaite) : il se pose là où le
  * parent le met. Il ne suppose donc aucune largeur, et sait vivre en
@@ -94,8 +100,8 @@ export function BoutonSuivre({
                     pleineLargeur ? "w-full" : ""
                   } ${
                     suivi
-                      ? "bg-sombre-eleve-clair text-primaire hover:bg-sombre-bordure"
-                      : "bg-sombre-eleve text-sombre-texte hover:bg-sombre-eleve-clair"
+                      ? "bg-sombre-eleve text-sombre-texte-doux hover:bg-sombre-eleve-clair"
+                      : "bg-primaire text-white hover:bg-primaire-fonce"
                   }`}
     >
       {suivi ? "Suivi" : "Suivre"}
