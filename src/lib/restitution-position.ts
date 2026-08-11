@@ -2,6 +2,12 @@
 
 import { sans } from "@/lib/interrupteurs-mesure";
 import { defilerSansGeste } from "@/lib/defilement-programme";
+import {
+  adresseDeRechercheCourante,
+  criteresCourants,
+  criteresDeLaMosaique,
+} from "@/lib/adresse-recherche";
+import { noter } from "@/lib/journal-bascule";
 
 /**
  * LA POSITION EST POSÉE, PAS RATTRAPÉE
@@ -99,27 +105,172 @@ function surveillerLaReserve(reserve: number) {
   };
 }
 
-/**
- * POSE LA PAGE À `position`, TOUT DE SUITE, et garantit qu'elle y reste.
- * Pour les retours qui ne créent pas de document (le routeur de Next
- * rend la page cible sur place) : c'est l'équivalent, en cours de route,
- * de ce que le script bloquant fait au chargement.
+/* ==================================================================
+ * ON NE POSE RIEN DANS UNE PAGE QUI N'EXISTE PAS ENCORE
+ * (passe nº 185)
+ * ==================================================================
+ * LE RELEVÉ DU PROPRIÉTAIRE, sur son iPhone :
+ *
+ *     RETOUR 1re image · atteinte 0   · demandée 0 · document 12086
+ *     RETOUR +2500 ms  · atteinte 149 · demandée 0 · document 1338
+ *
+ * La hauteur du document CHANGE APRÈS la pose : 12086 px au premier
+ * instant, 1338 px deux secondes plus tard, quand la mosaïque filtrée
+ * remplace la mosaïque complète. La position était donc posée dans une
+ * page qui n'existait plus. Et sur la première ligne, on ne demandait
+ * RIEN (0) — la page a fini à 149 quand même.
+ *
+ * TROIS RÈGLES, ET ELLES SE LISENT DANS `poserLaPosition` :
+ *
+ *  a) ON ATTEND UNE HAUTEUR STABLE. Deux mesures identiques à 120 ms
+ *     d'intervalle, ET une mosaïque dont les critères RENDUS sont ceux
+ *     de l'adresse courante (le marqueur `data-criteres-mosaique`, posé
+ *     par IndexTatoueurs sur ses cartes AFFICHÉES). Tant que la hauteur
+ *     bouge, on ne pose pas. Passé deux secondes et demie, on pose
+ *     quand même, au plus bas atteignable : mieux vaut une place
+ *     approchée qu'une page qui saute.
+ *
+ *  b) UNE POSITION DE 0 NE DÉPLACE RIEN. Plus aucun `scrollTo(0)` :
+ *     « rien à restituer » veut dire « on ne touche pas à la page ».
+ *
+ *  c) UNE POSITION APPARTIENT À SA RECHERCHE. La clé sous laquelle elle
+ *     a été rangée est comparée à l'adresse courante À CHAQUE
+ *     TENTATIVE — celle de la mosaïque complète ne sera jamais appliquée
+ *     à une mosaïque filtrée, ni l'inverse.
+ *
+ * CHAQUE TENTATIVE LAISSE UNE LIGNE AU JOURNAL (`?sonde-bascule=1`) :
+ * la hauteur du document à cet instant précis, et si elle a été
+ * ACCEPTÉE ou REPOUSSÉE — c'est la stabilisation, vue de l'intérieur.
  */
-export function poserLaPosition(position: number) {
-  //  ⚠️ JAMAIS UN GESTE (nº 154-§6A) : une restitution de position est
-  //  posée PAR LE SITE. Sans l'annoncer, la barre y lisait un geste et
-  //  repliait sa rangée de recherche à l'arrivée sur la page.
+
+/** L'écart entre deux mesures de hauteur. */
+const PAS_STABILITE_MS = 120;
+
+/** Passé ce délai, on pose quand même — au plus bas atteignable. */
+const ATTENTE_STABILITE_MS = 2500;
+
+/** L'attente en cours, pour ne jamais en laisser traîner deux. */
+let attente: (() => void) | null = null;
+
+function arreterLAttente() {
+  attente?.();
+  attente = null;
+}
+
+/** La hauteur NATURELLE du document — celle du corps, que la réserve
+    posée sur <html> n'atteint pas. */
+function hauteurDuDocument(): number {
+  return Math.round(document.body.getBoundingClientRect().height);
+}
+
+/**
+ * POSE LA PAGE À `position` DÈS QUE LA PAGE EST CELLE QU'ON CROIT, et
+ * garantit qu'elle y reste. Pour les retours qui ne créent pas de
+ * document (le routeur de Next rend la page cible sur place) : c'est
+ * l'équivalent, en cours de route, de ce que le script bloquant fait au
+ * chargement.
+ * `cle` — l'adresse canonique sous laquelle la position a été rangée
+ * (voir lib/adresse-recherche). Sans elle, aucune vérification de
+ * recherche n'est faite : c'est le cas des pages sans mosaïque.
+ */
+export function poserLaPosition(position: number, cle?: string) {
+  arreterLAttente();
+  //  b) RIEN À RESTITUER : ON NE TOUCHE À RIEN (nº 185-b).
   if (position <= 0) {
     arreter?.();
     arreterLaPoursuite();
-    defilerSansGeste({ top: 0, left: 0 });
+    noter(
+      `POSE · demandée 0 · document ${hauteurDuDocument()} · AUCUN DÉPLACEMENT`
+    );
     return;
   }
+  //  c) LA POSITION APPARTIENT À SA RECHERCHE (nº 185-c).
+  const adresse = adresseDeRechercheCourante();
+  if (cle !== undefined && cle !== adresse) {
+    noter(
+      `POSE · demandée ${position} · document ${hauteurDuDocument()} · ` +
+        `REPOUSSÉE (clé « ${cle} » ≠ adresse « ${adresse} »)`
+    );
+    return;
+  }
+  attendreLaStabilite(position, cle);
+}
+
+/** a) TANT QUE LA HAUTEUR BOUGE, ON ATTEND. */
+function attendreLaStabilite(position: number, cle?: string) {
+  const debut = performance.now();
+  let precedente = -1;
+  let tentative = 0;
+  let minuteur = 0;
+
+  const essayer = () => {
+    tentative += 1;
+    const hauteur = hauteurDuDocument();
+    const adresse = adresseDeRechercheCourante();
+    const debutDeLigne =
+      `POSE tentative ${tentative} · document ${hauteur} · ` +
+      `demandée ${position}`;
+
+    //  c) L'ADRESSE A CHANGÉ PENDANT L'ATTENTE : on n'y touche plus.
+    if (cle !== undefined && cle !== adresse) {
+      noter(`${debutDeLigne} · REPOUSSÉE (clé « ${cle} » ≠ « ${adresse} »)`);
+      attente = null;
+      return;
+    }
+
+    //  LES CRITÈRES RENDUS — `null` quand la page n'a pas de mosaïque.
+    const rendus = criteresDeLaMosaique();
+    const voulus = criteresCourants();
+    const correspond = rendus === null || rendus === voulus;
+    const stable = hauteur === precedente;
+    const expire = performance.now() - debut > ATTENTE_STABILITE_MS;
+
+    if ((correspond && stable) || expire) {
+      //  LE PLUS BAS ATTEIGNABLE, quand on pose faute de mieux.
+      const atteignable = Math.max(
+        0,
+        Math.round(document.documentElement.scrollHeight - window.innerHeight)
+      );
+      const cible =
+        correspond && stable ? position : Math.min(position, atteignable);
+      noter(
+        `${debutDeLigne} · ACCEPTÉE${
+          correspond && stable ? "" : " (délai écoulé)"
+        } · posée ${cible}`
+      );
+      attente = null;
+      poser(cible, cle);
+      return;
+    }
+
+    noter(
+      `${debutDeLigne} · REPOUSSÉE (${
+        correspond
+          ? `hauteur instable, précédente ${precedente < 0 ? "—" : precedente}`
+          : `mosaïque « ${rendus} » ≠ critères « ${voulus} »`
+      })`
+    );
+    precedente = hauteur;
+    minuteur = window.setTimeout(essayer, PAS_STABILITE_MS);
+  };
+
+  attente = () => {
+    window.clearTimeout(minuteur);
+  };
+  essayer();
+}
+
+/** LA POSE ELLE-MÊME — réserve de hauteur, défilement, surveillance. */
+function poser(position: number, cle?: string) {
+  //  ⚠️ JAMAIS UN GESTE (nº 154-§6A) : une restitution de position est
+  //  posée PAR LE SITE. Sans l'annoncer, la barre y lisait un geste et
+  //  repliait sa rangée de recherche à l'arrivée sur la page.
+  if (position <= 0) return;
   const reserve = position + window.innerHeight;
   document.documentElement.style.minHeight = `${reserve}px`;
   defilerSansGeste({ top: position, left: 0 });
   surveillerLaReserve(reserve);
-  poursuivreLaPosition(position);
+  poursuivreLaPosition(position, cle);
 }
 
 /* ==================================================================
@@ -164,7 +315,7 @@ function arreterLaPoursuite() {
   poursuite = null;
 }
 
-function poursuivreLaPosition(position: number) {
+function poursuivreLaPosition(position: number, cle?: string) {
   arreterLaPoursuite();
   const limite = performance.now() + ATTENTE_MAX_MS;
   let image = 0;
@@ -183,6 +334,13 @@ function poursuivreLaPosition(position: number) {
     window.addEventListener(geste, finir, { passive: true, once: true });
   }
   const suivre = () => {
+    //  ⚠️ ET LA POURSUITE S'ARRÊTE SI LA RECHERCHE CHANGE (nº 185-c) :
+    //  la place d'une mosaïque ne se poursuit pas dans une autre.
+    if (cle !== undefined && cle !== adresseDeRechercheCourante()) {
+      noter(`POURSUITE arrêtée · l'adresse n'est plus « ${cle} »`);
+      finir();
+      return;
+    }
     if (Math.abs(window.scrollY - position) <= TOLERANCE_PX) {
       finir();
       return;

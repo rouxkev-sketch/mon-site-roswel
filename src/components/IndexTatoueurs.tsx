@@ -29,7 +29,10 @@ import {
   lireMosaique,
   memoriserMosaique,
 } from "@/lib/mosaique-session";
-import { adresseDeRecherche } from "@/lib/adresse-recherche";
+import {
+  adresseDeRecherche,
+  criteresDeLAdresse,
+} from "@/lib/adresse-recherche";
 import {
   consommerValidation,
   traverseeEnCours,
@@ -496,6 +499,19 @@ export function IndexTatoueurs({
       />
 
       <main
+        /**
+         * ⚠️ CE QUE LA MOSAÏQUE MONTRE VRAIMENT (nº 185-a).
+         * La restitution de position ne doit pas poser une place dans
+         * une page qui n'est pas encore la bonne : elle attend que les
+         * critères RENDUS — ceux des cartes affichées, pas ceux qu'on
+         * vient de demander — soient ceux de l'adresse courante. C'est
+         * `affiches` qui les dit : il ne change qu'à l'arrivée des
+         * cartes (voir plus haut, il est fait pour ça).
+         * Le marqueur est calculé sans lire le navigateur : le serveur
+         * et le client écrivent donc la même valeur, et l'hydratation
+         * n'a rien à corriger.
+         */
+        data-criteres-mosaique={criteresDeLAdresse(`/?${parametresDe(affiches)}`)}
         className={`flex-1 mx-auto w-full ${LARGEUR_SITE} px-4 sm:px-6 pb-16`}
       >
         {/* LE TITRE DIT LA RECHERCHE (nº 140) — la pilule de la barre

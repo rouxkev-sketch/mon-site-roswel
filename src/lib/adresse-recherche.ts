@@ -54,21 +54,46 @@ function estUnReglage(nom: string): boolean {
   return nom.startsWith("sonde") || HORS_RECHERCHE.includes(nom);
 }
 
-/** L'adresse canonique d'une recherche : chemin + critères triés. */
-export function adresseDeRecherche(adresse: string): string {
+/** LES CRITÈRES SEULS, triés et nettoyés — sans le chemin. Vide quand
+    la recherche n'en porte aucun (la mosaïque complète). */
+export function criteresDeLAdresse(adresse: string): string {
   const coupe = adresse.indexOf("?");
-  if (coupe < 0) return adresse;
-  const chemin = adresse.slice(0, coupe);
+  if (coupe < 0) return "";
   const parametres = new URLSearchParams(adresse.slice(coupe + 1));
   for (const nom of [...parametres.keys()]) {
     if (estUnReglage(nom)) parametres.delete(nom);
   }
   parametres.sort();
-  const requete = parametres.toString();
+  return parametres.toString();
+}
+
+/** L'adresse canonique d'une recherche : chemin + critères triés. */
+export function adresseDeRecherche(adresse: string): string {
+  const coupe = adresse.indexOf("?");
+  if (coupe < 0) return adresse;
+  const chemin = adresse.slice(0, coupe);
+  const requete = criteresDeLAdresse(adresse);
   return requete ? `${chemin}?${requete}` : chemin;
 }
 
 /** L'adresse canonique de la page affichée en ce moment. */
 export function adresseDeRechercheCourante(): string {
   return adresseDeRecherche(window.location.pathname + window.location.search);
+}
+
+/** Les critères que l'ADRESSE demande en ce moment. */
+export function criteresCourants(): string {
+  return criteresDeLAdresse(window.location.search);
+}
+
+/**
+ * LES CRITÈRES QUE LA MOSAÏQUE MONTRE VRAIMENT (nº 185-a) — lus dans le
+ * DOM, donc dits par la page elle-même. `null` : cette page n'a pas de
+ * mosaïque (une fiche, un formulaire…), il n'y a rien à comparer.
+ * C'est IndexTatoueurs qui pose ce marqueur, sur la valeur de ses
+ * cartes AFFICHÉES — pas de celles qu'il vient de demander.
+ */
+export function criteresDeLaMosaique(): string | null {
+  const noeud = document.querySelector<HTMLElement>("[data-criteres-mosaique]");
+  return noeud ? noeud.dataset.criteresMosaique ?? "" : null;
 }

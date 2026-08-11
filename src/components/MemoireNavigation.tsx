@@ -14,6 +14,7 @@ import {
   signalerTraversee,
 } from "@/lib/navigation-session";
 import { surveillerLesTraversees } from "@/lib/etapes-historique";
+import { adresseDeRecherche } from "@/lib/adresse-recherche";
 import {
   poserLaPosition,
   reprendreLaReserveDuScript,
@@ -243,7 +244,10 @@ export function MemoireNavigation() {
     const restaurationDemandee = consommerRestaurationPosition();
 
     if (!vraieTraversee && !documentRestitue && !restaurationDemandee) return;
-    poserLaPosition(lireDefilement(url));
+    //  ⚠️ LA POSITION VOYAGE AVEC SA CLÉ (nº 185-c) : celle d'une
+    //  mosaïque complète ne doit jamais être appliquée à une mosaïque
+    //  filtrée. La pose la revérifie à chaque tentative.
+    poserLaPosition(lireDefilement(url), adresseDeRecherche(url));
   }, [pathname, requete]);
 
   return null;
