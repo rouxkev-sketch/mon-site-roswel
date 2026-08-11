@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { attendreLaRemontee } from "@/lib/remontee-champ";
 import { COULEURS } from "@/config/roswel";
 import {
   OPTION_LISTE,
@@ -178,6 +179,27 @@ export function MenuDeroulant({
   }, [onOuvertureChange]);
   useEffect(() => {
     prevenirOuverture.current?.(ouvert);
+  }, [ouvert]);
+
+  /**
+   * LA LISTE NE S'AFFICHE QU'UNE FOIS LA PAGE IMMOBILE (nº 194-§3)
+   * ==================================================================
+   * LE CONSTAT : sur la page de recherche du smartphone, toucher
+   * « style » ouvrait le menu PENDANT que le champ remontait. Deux
+   * mouvements en même temps, illisibles.
+   * L'ordre est donc : on prévient le parent (il fait remonter le
+   * champ — voir `onOuvertureChange`), on attend que le défilement se
+   * soit arrêté, ET SEULEMENT ENSUITE la liste apparaît. Quand rien ne
+   * remonte — tous les autres menus du site — l'attente dure deux
+   * images et ne se voit pas.
+   */
+  const [listeVisible, setListeVisible] = useState(false);
+  //  À LA FERMETURE, la liste disparaît sur-le-champ — ajusté pendant
+  //  le rendu (le motif React officiel), jamais dans un effet.
+  if (!ouvert && listeVisible) setListeVisible(false);
+  useEffect(() => {
+    if (!ouvert) return;
+    return attendreLaRemontee(() => setListeVisible(true));
   }, [ouvert]);
 
   // Fermeture au clic extérieur / Échap : SEULEMENT pour le menu
@@ -478,7 +500,7 @@ export function MenuDeroulant({
           PAS de titre ici : le champ reste visible juste au-dessus, le
           répéter serait redondant. Le titre n'existe que sur la feuille
           smartphone, qui recouvre le champ. */}
-      {ouvert &&
+      {listeVisible &&
         typeof document !== "undefined" &&
         createPortal(
         <div
@@ -577,7 +599,7 @@ export function MenuDeroulant({
       )}
 
       {/* FEUILLE GLISSANTE — smartphone uniquement (< 768 px) */}
-      {ouvert && feuilleMobile && (
+      {listeVisible && feuilleMobile && (
         <div className="md:hidden fixed inset-0 z-[70] flex flex-col justify-end">
           {/* Fond noir SEMI-TRANSPARENT : le champ (et son contour rose)
               restent visibles au travers. Tap = fermeture. */}

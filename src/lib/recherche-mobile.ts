@@ -36,9 +36,6 @@ import type { CritèresTatouage } from "@/components/MoteurTatouage";
  *  · `vue`         — « recherche » ou « filtres » ;
  *  · `brouillon`   — les choix en cours, tant que « Valider » n'a pas
  *                    été pressé (aucune recherche ne part avant) ;
- *  · `entreePosee` — notre étape d'historique est-elle au sommet de la
- *                    pile (elle ne doit être posée QU'UNE fois, et
- *                    dépilée qu'une fois) ;
  *  · `defilement`  — où en étaient les résultats quand on est parti.
  */
 
@@ -65,11 +62,12 @@ let etat: EtatRecherche = FERME;
 const abonnes = new Set<() => void>();
 
 /**
- * ⚠️ CES DEUX-LÀ NE SONT PAS DANS L'ÉTAT RENDU, ET C'EST VOLONTAIRE :
- * les changer ne doit RIEN redessiner. Ce sont des faits de mécanique,
- * pas de l'affichage.
+ * ⚠️ CELUI-LÀ N'EST PAS DANS L'ÉTAT RENDU, ET C'EST VOLONTAIRE : le
+ * changer ne doit RIEN redessiner. C'est un fait de mécanique, pas de
+ * l'affichage.
+ * (Le drapeau `entreePosee` a disparu avec l'étape d'historique de la
+ * page de recherche — nº 194-§4 : elle n'en pose plus aucune.)
  */
-let entreePosee = false;
 let defilementResultats = 0;
 
 function prevenir() {
@@ -119,22 +117,6 @@ export function poserVueRecherche(vue: VueRecherche) {
 export function poserBrouillon(brouillon: CritèresTatouage) {
   etat = { ...etat, brouillon };
   prevenir();
-}
-
-/** L'ÉTAPE D'HISTORIQUE — posée une fois, dépilée une fois.
-    `prendreLEntree` la « consomme » : elle rend vrai UNE SEULE FOIS,
-    ce qui garantit qu'on ne dépile jamais deux fois (et donc qu'on ne
-    quitte jamais le site). */
-export function marquerEntreePosee() {
-  entreePosee = true;
-}
-export function entreeDejaPosee() {
-  return entreePosee;
-}
-export function prendreLEntree() {
-  if (!entreePosee) return false;
-  entreePosee = false;
-  return true;
 }
 
 /** La position des résultats, mise de côté le temps de la recherche. */

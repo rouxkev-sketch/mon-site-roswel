@@ -325,6 +325,19 @@ export function demanderRestaurationPosition(adresse?: string) {
   }
 }
 
+/** EFFACE la demande, sans rien restituer (nº 194-§1).
+    ⚠️ TOUT GESTE L'ANNULE : un clic sur le logo, un défilement au
+    doigt, une touche. Une demande qui survit à un geste se réapplique
+    et ramène l'utilisateur à sa place enregistrée alors qu'il vient
+    justement de la quitter — la page « remonte puis redescend ». */
+export function oublierRestaurationPosition() {
+  try {
+    sessionStorage.removeItem(CLE_RESTAURER);
+  } catch {
+    // rien à oublier
+  }
+}
+
 /** Consomme la demande (vrai une seule fois — et uniquement sur la
     page à qui elle est destinée, quand elle est adressée) */
 export function consommerRestaurationPosition(): boolean {

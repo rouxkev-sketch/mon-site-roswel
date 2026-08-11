@@ -6,6 +6,7 @@ import {
   arriveeQuiRestitue,
   consommerRestaurationPosition,
   demanderRestaurationPosition,
+  oublierRestaurationPosition,
   lireDefilement,
   marquerHydratation,
   memoriserDefilement,
@@ -198,7 +199,27 @@ export function MemoireNavigation() {
     };
     const auDepart = (evenement: MouseEvent) => {
       const cible = evenement.target;
-      if (!(cible instanceof Element) || !cible.closest("a[href]")) return;
+      const lien =
+        cible instanceof Element ? cible.closest("a[href]") : null;
+      if (!lien) return;
+      /**
+       * ⚠️ LA DEMANDE N'EST POSÉE QUE VERS UNE FICHE (nº 194-§1).
+       * LE DÉFAUT DE LA PASSE PRÉCÉDENTE : elle était posée pour TOUT
+       * lien. Toucher le logo pour remonter en haut la posait donc
+       * aussi — et la page d'accueil, en arrivant, rendait fidèlement
+       * la place qu'on venait de quitter. La page remontait, puis
+       * redescendait, sans qu'on puisse jamais rester en haut.
+       * REVENIR n'a de sens que depuis une page de DÉTAIL. Tout autre
+       * lien — le logo, le menu, « Ma sélection », le pied de page —
+       * EFFACE la demande au lieu d'en poser une.
+       */
+      const versUneFiche = (lien.getAttribute("href") ?? "").startsWith(
+        "/tatoueur/"
+      );
+      if (!versUneFiche) {
+        oublierRestaurationPosition();
+        return;
+      }
       if (estUnePageDeDetail(location.pathname)) return;
       ecrireMaintenant();
       gele = true;
@@ -222,6 +243,10 @@ export function MemoireNavigation() {
     };
     const auGeste = () => {
       gele = false;
+      //  ⚠️ ET LA DEMANDE MEURT AVEC LE GESTE (nº 194-§1) : dès que la
+      //  personne touche la page, plus rien n'a le droit de la
+      //  déplacer à sa place.
+      oublierRestaurationPosition();
     };
 
     window.addEventListener("popstate", marquerTraversee);

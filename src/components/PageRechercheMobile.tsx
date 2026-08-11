@@ -5,11 +5,8 @@ import { createPortal } from "react-dom";
 import { IconeCroix, IconeLoupe } from "@/components/Icones";
 import { OngletsLigne } from "@/components/OngletsLigne";
 import {
-  entreeDejaPosee,
   lireDefilementResultats,
-  marquerEntreePosee,
   memoriserDefilementResultats,
-  prendreLEntree,
   type VueRecherche,
 } from "@/lib/recherche-mobile";
 
@@ -47,96 +44,30 @@ import {
  *   pas un placement. Seul `transform` est animé — le navigateur la
  *   peint sans recalculer la moindre mise en page.
  *
- * SON ENTRÉE D'HISTORIQUE — SANS CHANGER D'ADRESSE, ET SANS PASSER
- * D'ADRESSE À `pushState`
- * -------------------------------------------------
- * ⚠️ CETTE NUANCE EST LA CAUSE DU DÉFAUT « LA PAGE DISPARAÎT
- * AUSSITÔT ». Voir `poserLEntree` plus bas : c'est là que tout se
- * joue, et le commentaire y explique la mécanique exacte.
+ * ELLE NE TOUCHE PLUS À L'HISTORIQUE — PLUS DU TOUT (nº 194-§4)
+ * ------------------------------------------------------------------
+ * ⚠️ ELLE POSAIT UNE ÉTAPE À L'OUVERTURE (`pushState` sans adresse) ET
+ * LA RETIRAIT ELLE-MÊME (`history.back()`) AVANT DE VALIDER. C'était le
+ * seul endroit du site qui manipulait l'historique à la main, et le
+ * seul candidat restant au défaut du propriétaire : sur Chrome pour
+ * iPhone, après plusieurs recherches, un retour ne ramenait ni aux
+ * recherches précédentes ni à l'accueil — il sortait du site. Ce
+ * va-et-vient exige que le navigateur retire l'étape EXACTEMENT quand
+ * on le lui demande ; rien ne le garantit d'un navigateur à l'autre, et
+ * une étape retirée de trop suffit à effacer l'accueil.
  *
- * `pushState` pose une étape SUR L'ADRESSE COURANTE. Le retour arrière
- * du navigateur et le geste depuis le bord de l'écran la referment donc
- * comme n'importe quelle page, et fermer la recherche ne fait JAMAIS
- * quitter le site. Pourquoi pas une adresse à elle (`/recherche`) :
- *  · RÉFÉRENCEMENT — une adresse qui n'existe pas n'a pas besoin d'être
- *    désindexée. Rien à écrire dans le sitemap, aucun `noindex`, aucune
- *    canonique à corriger. C'est la garantie la plus forte, et elle est
- *    gratuite ;
- *  · l'adresse courante PORTE DÉJÀ LA RECHERCHE (`/?style=…&lieu=…`,
- *    posée par IndexTatoueurs). Une seconde adresse par-dessus voudrait
- *    dire deux écritures d'historique concurrentes au moment de
- *    « Valider » ;
- *  · la MÉMOIRE DE NAVIGATION et la REPRISE DE SESSION travaillent par
- *    adresse : le journal d'onglet resterait sur les résultats de toute
- *    façon — autant ne rien avoir à leur apprendre. Position de
- *    défilement mémorisée, retour depuis une fiche : inchangés.
+ * ELLE EST DONC UN PANNEAU POSÉ PAR-DESSUS, INVISIBLE POUR LE
+ * NAVIGATEUR. Elle n'ajoute ni ne retire aucune étape. SEULE LA
+ * VALIDATION D'UNE RECHERCHE en crée une — par un changement d'adresse
+ * ordinaire, comme partout ailleurs sur le site.
  *
- * UNE SEULE PORTE DE SORTIE, ET UN SEUL DRAPEAU. `prendreLEntree()`
- * dit si NOTRE étape est encore au sommet de la pile — et le
- * « consomme » du même geste. La croix et « Valider » la dépilent
- * eux-mêmes (`history.back()`) puis lancent la glissade ; un vrai
- * retour arrière trouve le drapeau et lance la même glissade, sans
- * jamais rappeler `back()`. Impossible de dépiler deux fois, donc
- * impossible de sortir du site.
- * ⚠️ CE DRAPEAU VIT HORS DE REACT (lib/recherche-mobile) : dans une
- * référence de composant, un remontage l'aurait remis à faux, et la
- * page aurait posé une DEUXIÈME étape sans jamais dépiler la première.
+ * CE QUE CELA CHANGE POUR LA PERSONNE : le retour arrière du navigateur
+ * (et le geste depuis le bord de l'écran) ne referme plus la page de
+ * recherche — il quitte la page en cours, comme il l'aurait fait sans
+ * elle ; la page se referme alors sans rien appliquer. Les trois portes
+ * de sortie visibles restent inchangées : la croix, « Valider » et la
+ * touche Échap.
  */
-
-/**
- * POSER L'ÉTAPE D'HISTORIQUE — ET SURTOUT, SANS LUI DONNER D'ADRESSE.
- * ==================================================================
- * ⚠️ C'EST ICI QUE LA PAGE SE REFERMAIT TOUTE SEULE. Elle appelait :
- *
- *     window.history.pushState(état, "", window.location.href)
- *
- * L'adresse passée était pourtant la même que l'adresse courante — on
- * pouvait la croire sans effet. Elle ne l'est pas.
- *
- * Next remplace `history.pushState` par le sien (app-router). Sa
- * version dit, en substance :
- *
- *     data = copierLesInternesDeNext(data);
- *     if (url) { appliquerLAdresse(url); }   // ← TOUT EST LÀ
- *     return vraiPushState(data, _, url);
- *
- * `appliquerLAdresse` envoie au routeur une action de RESTAURATION,
- * celle qu'il emploie quand on traverse l'historique. Le réducteur qui
- * la traite (`restore-reducer`) relance de VRAIES requêtes vers le
- * serveur pour la route (`spawnDynamicRequests`), puis REMPLACE l'arbre
- * du routeur par le résultat — et, s'il ne peut pas réconcilier,
- * termine par une navigation DURE, c'est-à-dire un rechargement.
- *
- * Autrement dit : demander une étape d'historique revenait à demander
- * à Next de REFAIRE LA PAGE. L'arbre reconstruit, le moteur de
- * recherche — qui portait l'état « la page est ouverte » — était
- * remonté à neuf, et la page disparaissait dans la seconde.
- *
- * POURQUOI `?sonde=1` L'EN EMPÊCHAIT. Ce réducteur ne prend pas
- * toujours le même chemin : il compare l'adresse restaurée à celle
- * déjà rendue (`renderedSearch`, `canonicalUrl`) et à ce qu'il a en
- * cache. Une adresse avec un paramètre en plus ne se réconcilie pas
- * comme une adresse nue. Le propriétaire avait donc raison de le
- * signaler : ce n'était pas la sonde qui réparait quoi que ce soit,
- * c'était le paramètre qui changeait le chemin pris par Next.
- *
- * LA CORRECTION TIENT EN UN ARGUMENT RETIRÉ. Sans adresse, la
- * condition `if (url)` est fausse : Next ne dispatche RIEN, ne
- * requête RIEN, ne reconstruit RIEN. L'étape est posée par le
- * navigateur sur l'adresse courante — c'est le comportement natif
- * quand on omet l'adresse — et les internes du routeur y sont tout de
- * même recopiés (`copierLesInternesDeNext` s'exécute avant le test).
- * Le retour arrière reste donc parfaitement compris par Next.
- */
-function poserLEntree() {
-  // UNE SEULE FOIS. Un remontage ne doit pas empiler une deuxième
-  // étape : le retour arrière n'en dépilerait qu'une, et la page
-  // resterait ouverte sur une pile faussée.
-  if (entreeDejaPosee()) return;
-  marquerEntreePosee();
-  // ⚠️ DEUX ARGUMENTS, JAMAIS TROIS. Voir ci-dessus.
-  window.history.pushState({ rechercheMobile: true }, "");
-}
 
 /**
  * LES DEUX GLISSADES (nº 153-§3) — deux durées, deux courbes.
@@ -275,8 +206,13 @@ export function PageRechercheMobile({
     // OUVERTURE : si l'étape est déjà posée, le document ne montre
     // plus les résultats (il est à la page de recherche), et relire
     // `scrollY` écraserait la bonne valeur par un zéro.
-    if (!entreeDejaPosee()) memoriserDefilementResultats(window.scrollY);
-    poserLEntree();
+    //  ⚠️ LA POSITION DES RÉSULTATS N'EST PRISE QUE TANT QU'ILS SONT
+    //  ENCORE DANS LE DOCUMENT : une fois la page posée
+    //  (`data-recherche`), le reste du site a quitté le flux, et relire
+    //  `scrollY` écraserait la bonne valeur par un zéro.
+    if (!document.documentElement.dataset.recherche) {
+      memoriserDefilementResultats(window.scrollY);
+    }
 
     //  ⚠️ DEUX IMAGES, PAS UNE (nº 153-§3) : une seule laissait le
     //  navigateur regrouper l'état de départ (−100 %) et l'état
@@ -328,23 +264,11 @@ export function PageRechercheMobile({
       requestAnimationFrame(() => setEnPlace(false))
     );
     aLaFinDeLaGlissade(DUREE_SORTIE_MS, () => {
-      const conclure = () => {
-        const { onValider: valide, onAbandonner: abandonne } = sorties.current;
-        if (valider) valide();
-        else abandonne();
-      };
-      //  ⚠️ ON N'AGIT PAS TANT QUE NOTRE ÉTAPE N'EST PAS DÉPILÉE
-      //  (nº 154). Voir `attendreLeDepilement` : `history.back()` est
-      //  ASYNCHRONE. « Valider » lançait la recherche — donc un
-      //  `router.replace('/?…')` — avant que le navigateur n'ait
-      //  retiré l'étape de la page de recherche : la recherche
-      //  s'écrivait sur l'étape CONDAMNÉE, que le retour effaçait
-      //  aussitôt, et l'onglet retombait sur l'étape d'en dessous. Le
-      //  journal enregistrait alors cette page-là comme la dernière
-      //  visitée — c'est ainsi qu'un retour depuis une fiche menait à
-      //  « Ma sélection » puis à « Créer mon portfolio ».
-      if (depilementFait.current) conclure();
-      else actionEnAttente.current = conclure;
+      //  Aucune étape d'historique n'a été posée : il n'y a rien à
+      //  attendre, on conclut (nº 194-§4).
+      const { onValider: valide, onAbandonner: abandonne } = sorties.current;
+      if (valider) valide();
+      else abandonne();
     });
   }
 
@@ -369,47 +293,9 @@ export function PageRechercheMobile({
     });
   }, [phase, validerEnSortant]);
 
-  /**
-   * ATTENDRE QUE LE NAVIGATEUR AIT VRAIMENT DÉPILÉ NOTRE ÉTAPE.
-   * ⚠️ `history.back()` NE REND PAS LA MAIN UNE FOIS FAIT — il
-   * PROGRAMME un retour, traité plus tard, et signalé par `popstate`.
-   * Tout ce qui touche à l'adresse entre les deux s'écrit donc sur
-   * l'étape que l'on est en train de retirer. C'est le défaut de
-   * l'historique corrompu : « Valider » remplaçait l'adresse par celle
-   * des résultats juste avant que le retour n'efface cette étape-là.
-   * Un filet de 500 ms garantit qu'on n'attend jamais indéfiniment (un
-   * navigateur qui refuserait le retour, une étape déjà consommée).
-   */
-  const depilementFait = useRef(true);
-  const actionEnAttente = useRef<(() => void) | null>(null);
-  function attendreLeDepilement() {
-    depilementFait.current = false;
-    const conclure = () => {
-      if (depilementFait.current) return;
-      window.removeEventListener("popstate", surRetour);
-      window.clearTimeout(filet);
-      depilementFait.current = true;
-      const enAttente = actionEnAttente.current;
-      actionEnAttente.current = null;
-      enAttente?.();
-    };
-    function surRetour() {
-      conclure();
-    }
-    window.addEventListener("popstate", surRetour);
-    const filet = window.setTimeout(conclure, 500);
-  }
-
-  /** LA CROIX ET « VALIDER » — ils dépilent NOTRE étape eux-mêmes,
-      puis glissent. Le `popstate` qui suit trouve le drapeau baissé et
-      ne fait rien : une seule fermeture, jamais deux. */
+  /** LA CROIX ET « VALIDER » — ils glissent, et rien d'autre : aucune
+      étape n'a été posée, il n'y a donc rien à dépiler (nº 194-§4). */
   function fermer(valider: boolean) {
-    // `prendreLEntree()` rend vrai UNE SEULE FOIS : impossible de
-    // dépiler deux fois, donc impossible de quitter le site.
-    if (prendreLEntree()) {
-      attendreLeDepilement();
-      window.history.back();
-    }
     glisserDehors(valider);
   }
 
@@ -423,8 +309,10 @@ export function PageRechercheMobile({
    */
   useEffect(() => {
     function auRetour() {
-      // Faux = c'était notre propre `back()`, déjà traité.
-      if (!prendreLEntree()) return;
+      //  ⚠️ ON NE CONSOMME AUCUNE ÉTAPE (nº 194-§4) : la page n'en a
+      //  posé aucune. Un retour du navigateur quitte donc la page en
+      //  cours ; on referme simplement le panneau, sans rien appliquer
+      //  et sans toucher à l'historique.
       glisserDehors(false);
     }
     function auClavier(evenement: KeyboardEvent) {

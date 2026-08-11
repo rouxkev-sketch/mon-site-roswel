@@ -120,6 +120,29 @@ export function basculerSansSaut(changer: () => void): void {
   if (maintenant - derniereBascule < REBOND_MS) return;
   derniereBascule = maintenant;
   if (leverEnCours !== null) cancelAnimationFrame(leverEnCours);
+  /**
+   * 0. LA HAUTEUR EST RÉSERVÉE AVANT LE CHANGEMENT (nº 194-§2)
+   * ------------------------------------------------------------------
+   * LE CONSTAT DU PROPRIÉTAIRE : sur iPhone, la barre fixe SAUTE à
+   * chaque bascule ; sur son Mac, elle ne bouge pas d'un pixel.
+   * LA CAUSE N'EST PAS DANS LA SUPERPOSITION, ELLE EST DANS LA HAUTEUR.
+   * Passer de deux colonnes à une (ou retirer le texte des cartes)
+   * change la hauteur du document d'un coup. iOS répond à un
+   * raccourcissement brutal en DÉPLAÇANT SA PROPRE BARRE D'ADRESSE — et
+   * tout ce qui est fixe ou collant suit ce mouvement. C'est le saut.
+   * CE QU'ON FAIT : on réserve la hauteur qu'a le document AVANT le
+   * changement, on applique la nouvelle disposition, et on ne relâche
+   * la réserve qu'une fois la page stabilisée. Le document ne peut
+   * donc pas raccourcir en cours de route — il ne peut que rester
+   * aussi haut, ou grandir. Aucun raccourcissement, aucune réaction du
+   * système.
+   * ⚠️ SUR <html> ET NON SUR LE CORPS : React rend <body>, et tout ce
+   * qu'on y écrit peut être écrasé au rendu suivant (leçon de la
+   * passe 107).
+   */
+  const racine = document.documentElement;
+  const hauteurAvant = racine.scrollHeight;
+  racine.style.minHeight = `${hauteurAvant}px`;
   //  1. LA CARTE QU'ON REGARDE.
   noterLaCarteDuHaut();
   //  2. LE CHANGEMENT, RENDU ET REPOSÉ DANS LA MÊME TÂCHE.
@@ -133,6 +156,11 @@ export function basculerSansSaut(changer: () => void): void {
   attendreLaStabilite(() => {
     leverEnCours = null;
     oublierLaCarteDuHaut();
+    //  ET LA RÉSERVE PART, une fois la page immobile. Si le contenu
+    //  réel est devenu plus haut, elle ne servait déjà plus à rien ;
+    //  s'il est plus court, la page se raccourcit MAINTENANT, alors que
+    //  plus rien ne bouge — et le système n'y voit pas un geste.
+    racine.style.minHeight = "";
   });
 }
 
