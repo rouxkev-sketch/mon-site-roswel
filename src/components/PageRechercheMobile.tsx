@@ -3,7 +3,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { IconeCroix, IconeLoupe } from "@/components/Icones";
-import { ignorerLeProchainRetour } from "@/lib/etapes-historique";
 import { OngletsLigne } from "@/components/OngletsLigne";
 import {
   entreeDejaPosee,
@@ -409,11 +408,6 @@ export function PageRechercheMobile({
     // dépiler deux fois, donc impossible de quitter le site.
     if (prendreLEntree()) {
       attendreLeDepilement();
-      //  ⚠️ CE RETOUR-LÀ EST LE NÔTRE (nº 184-§1) : on le dit avant de
-      //  le demander, pour que le verrou des traversées ne le prenne
-      //  pas pour un geste de l'utilisateur — sans quoi il
-      //  interdirait à la recherche validée de poser son étape.
-      ignorerLeProchainRetour();
       window.history.back();
     }
     glisserDehors(valider);

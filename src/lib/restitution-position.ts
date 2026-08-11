@@ -1,53 +1,40 @@
 "use client";
 
-import { sans } from "@/lib/interrupteurs-mesure";
 import { defilerSansGeste } from "@/lib/defilement-programme";
-import {
-  adresseDeRechercheCourante,
-  criteresCourants,
-  criteresDeLaMosaique,
-} from "@/lib/adresse-recherche";
+import { adresseDeRechercheCourante } from "@/lib/adresse-recherche";
 import { noter } from "@/lib/journal-bascule";
 
 /**
- * LA POSITION EST POSÉE, PAS RATTRAPÉE
- * =====================================
- * LE DÉFAUT CORRIGÉ : en enchaînant des retours en avant, on atterrissait
- * tantôt en haut, tantôt en pied de page, tantôt ailleurs. Pas une
- * position fausse : une position ALÉATOIRE.
+ * LA POSITION EST POSÉE, UNE FOIS, ET C'EST TOUT
+ * ==================================================================
+ * REFONTE DE LA PASSE Nº 191 — une seule mécanique, plus aucune
+ * poursuite concurrente.
  *
- * LA CAUSE. La passe précédente restituait APRÈS COUP : elle reposait le
- * défilement à chaque image pendant deux secondes et demie, en espérant
- * que la page finisse par être assez haute, et elle LÂCHAIT au premier
- * geste. Trois hasards en même temps —
- *  · à quel moment les photos donnent sa hauteur à la page,
- *  · si la fenêtre de deux secondes et demie expire avant ou après,
- *  · si le doigt qui a lancé le retour compte comme un geste
- *    d'abandon (au balayage depuis le bord, il compte).
- * Trois hasards, trois résultats différents pour la même séquence.
+ * CE QUI A RENDU CELA POSSIBLE : l'adresse porte désormais le NOMBRE DE
+ * PAGES chargées (`&page=3`), et le serveur rend toutes ces cartes d'un
+ * coup. La page a donc sa hauteur définitive AVANT la première
+ * peinture : il n'y a plus rien à attendre, plus rien à rattraper, plus
+ * rien à poursuivre image par image.
  *
- * LA MÉCANIQUE RETENUE : ON N'ATTEND PLUS QUE LA PAGE GRANDISSE, ON
- * L'EMPÊCHE D'ÊTRE TROP COURTE.
- * Pour poser le défilement à `y`, il faut que le document mesure au
- * moins `y + la hauteur de l'écran`. On RÉSERVE donc cette hauteur sur
- * <html> — une seule ligne, avant même que le contenu n'existe — puis on
- * pose le défilement. Il n'y a plus rien à raboter, plus rien à
- * réessayer, plus de geste à guetter : le résultat est le même à tous
- * les coups.
- *
- * PUIS LA RÉSERVE S'EFFACE TOUTE SEULE, dès que le contenu réel atteint
- * la même hauteur. On la mesure sans elle : le CORPS n'est pas concerné
- * par la réserve (sa hauteur minimale est en pourcentage, et <html> n'a
- * pas de hauteur fixe — le pourcentage ne s'applique donc pas), sa boîte
- * donne la hauteur NATURELLE de la page. Quand elle suffit, la réserve
- * part sans que rien ne bouge d'un pixel.
+ * IL RESTE DEUX GESTES, ET DEUX SEULEMENT :
+ *  1. RÉSERVER la hauteur nécessaire sur <html> (`min-height`), pour
+ *     que le défilement demandé ne soit pas raboté pendant que les
+ *     images se posent ;
+ *  2. POSER le défilement, une fois.
+ * La réserve s'efface d'elle-même dès que le contenu réel l'atteint —
+ * on mesure la hauteur du CORPS, que la réserve ne concerne pas — ou au
+ * bout de cinq secondes.
  *
  * ⚠️ POURQUOI SUR <html> ET PAS SUR LE CORPS : React rend <body>, et
  * tout ce qu'on y écrit avant l'hydratation devient un écart
  * d'hydratation (mesuré à la passe 107). <html>, non.
  *
- * ⚠️ ET « INSTANT » : le site déclare un défilement doux global. Sans
- * cela, la page GLISSE jusqu'à sa position au lieu de s'y poser.
+ * DEUX GARDE-FOUS, HÉRITÉS DES PASSES 185 ET 186, QUI RESTENT :
+ *  · une position de 0 ne déplace RIEN ;
+ *  · une position n'est posée que si la clé sous laquelle elle a été
+ *    rangée est encore l'adresse courante — une place appartient à une
+ *    recherche, jamais à une autre.
+ * Chaque pose laisse une ligne au journal de la sonde.
  */
 
 /** Au-delà, on rend la main : le contenu ne viendra plus. */
@@ -64,22 +51,6 @@ let arreter: (() => void) | null = null;
 function surveillerLaReserve(reserve: number) {
   arreter?.();
   const racine = document.documentElement;
-  /**
-   * ⚠️ INTERRUPTEUR DE MESURE (`&sans=reserve`), TEMPORAIRE.
-   * La surveillance lit la géométrie du corps À CHAQUE IMAGE tant que la
-   * page n'est pas assez haute. En temps normal elle s'arrête à la
-   * première — mais si quelque chose la fait tourner pendant tout un
-   * geste de retour, c'est une lecture de mise en page forcée par image.
-   * Éteinte, la réserve se libère du premier coup.
-   */
-  if (sans("reserve")) {
-    requestAnimationFrame(() => {
-      racine.style.minHeight = "";
-      delete racine.dataset.positionPosee;
-      arreter = null;
-    });
-    return;
-  }
   const limite = performance.now() + ATTENTE_MAX_MS;
   let image = 0;
   const liberer = () => {
@@ -105,264 +76,35 @@ function surveillerLaReserve(reserve: number) {
   };
 }
 
-/* ==================================================================
- * ON NE POSE RIEN DANS UNE PAGE QUI N'EXISTE PAS ENCORE
- * (passe nº 185)
- * ==================================================================
- * LE RELEVÉ DU PROPRIÉTAIRE, sur son iPhone :
- *
- *     RETOUR 1re image · atteinte 0   · demandée 0 · document 12086
- *     RETOUR +2500 ms  · atteinte 149 · demandée 0 · document 1338
- *
- * La hauteur du document CHANGE APRÈS la pose : 12086 px au premier
- * instant, 1338 px deux secondes plus tard, quand la mosaïque filtrée
- * remplace la mosaïque complète. La position était donc posée dans une
- * page qui n'existait plus. Et sur la première ligne, on ne demandait
- * RIEN (0) — la page a fini à 149 quand même.
- *
- * TROIS RÈGLES, ET ELLES SE LISENT DANS `poserLaPosition` :
- *
- *  a) ON ATTEND UNE HAUTEUR STABLE. Deux mesures identiques à 120 ms
- *     d'intervalle, ET une mosaïque dont les critères RENDUS sont ceux
- *     de l'adresse courante (le marqueur `data-criteres-mosaique`, posé
- *     par IndexTatoueurs sur ses cartes AFFICHÉES). Tant que la hauteur
- *     bouge, on ne pose pas. Passé deux secondes et demie, on pose
- *     quand même, au plus bas atteignable : mieux vaut une place
- *     approchée qu'une page qui saute.
- *
- *  b) UNE POSITION DE 0 NE DÉPLACE RIEN. Plus aucun `scrollTo(0)` :
- *     « rien à restituer » veut dire « on ne touche pas à la page ».
- *
- *  c) UNE POSITION APPARTIENT À SA RECHERCHE. La clé sous laquelle elle
- *     a été rangée est comparée à l'adresse courante À CHAQUE
- *     TENTATIVE — celle de la mosaïque complète ne sera jamais appliquée
- *     à une mosaïque filtrée, ni l'inverse.
- *
- * CHAQUE TENTATIVE LAISSE UNE LIGNE AU JOURNAL (`?sonde-bascule=1`) :
- * la hauteur du document à cet instant précis, et si elle a été
- * ACCEPTÉE ou REPOUSSÉE — c'est la stabilisation, vue de l'intérieur.
- */
-
-/** L'écart entre deux mesures de hauteur. */
-const PAS_STABILITE_MS = 120;
-
-/** Passé ce délai, on pose quand même — au plus bas atteignable. */
-const ATTENTE_STABILITE_MS = 2500;
-
-/** L'attente en cours, pour ne jamais en laisser traîner deux. */
-let attente: (() => void) | null = null;
-
-function arreterLAttente() {
-  attente?.();
-  attente = null;
-}
-
-/** La hauteur NATURELLE du document — celle du corps, que la réserve
-    posée sur <html> n'atteint pas. */
-function hauteurDuDocument(): number {
-  return Math.round(document.body.getBoundingClientRect().height);
-}
-
 /**
- * POSE LA PAGE À `position` DÈS QUE LA PAGE EST CELLE QU'ON CROIT, et
- * garantit qu'elle y reste. Pour les retours qui ne créent pas de
- * document (le routeur de Next rend la page cible sur place) : c'est
- * l'équivalent, en cours de route, de ce que le script bloquant fait au
- * chargement.
- * `cle` — l'adresse canonique sous laquelle la position a été rangée
- * (voir lib/adresse-recherche). Sans elle, aucune vérification de
- * recherche n'est faite : c'est le cas des pages sans mosaïque.
+ * POSE LA PAGE À `position`. `cle` est l'adresse canonique sous
+ * laquelle cette position a été rangée : sans correspondance avec
+ * l'adresse courante, on ne touche à rien.
  */
 export function poserLaPosition(position: number, cle?: string) {
-  arreterLAttente();
-  //  b) RIEN À RESTITUER : ON NE TOUCHE À RIEN (nº 185-b).
+  const hauteur = Math.round(document.body.getBoundingClientRect().height);
+  //  RIEN À RESTITUER : ON NE TOUCHE À RIEN (nº 185-b).
   if (position <= 0) {
-    arreter?.();
-    arreterLaPoursuite();
-    noter(
-      `POSE · demandée 0 · document ${hauteurDuDocument()} · AUCUN DÉPLACEMENT`
-    );
+    noter(`POSE · demandée 0 · document ${hauteur} · AUCUN DÉPLACEMENT`);
     return;
   }
-  //  c) LA POSITION APPARTIENT À SA RECHERCHE (nº 185-c).
+  //  UNE POSITION APPARTIENT À SA RECHERCHE (nº 185-c).
   const adresse = adresseDeRechercheCourante();
   if (cle !== undefined && cle !== adresse) {
     noter(
-      `POSE · demandée ${position} · document ${hauteurDuDocument()} · ` +
-        `REPOUSSÉE (clé « ${cle} » ≠ adresse « ${adresse} »)`
+      `POSE · demandée ${position} · document ${hauteur} · ` +
+        `REFUSÉE (clé « ${cle} » ≠ adresse « ${adresse} »)`
     );
     return;
   }
-  attendreLaStabilite(position, cle);
-}
-
-/** a) TANT QUE LA HAUTEUR BOUGE, ON ATTEND. */
-function attendreLaStabilite(position: number, cle?: string) {
-  const debut = performance.now();
-  let precedente = -1;
-  let tentative = 0;
-  let minuteur = 0;
-
-  const essayer = () => {
-    tentative += 1;
-    const hauteur = hauteurDuDocument();
-    const adresse = adresseDeRechercheCourante();
-    const debutDeLigne =
-      `POSE tentative ${tentative} · document ${hauteur} · ` +
-      `demandée ${position}`;
-
-    //  c) L'ADRESSE A CHANGÉ PENDANT L'ATTENTE : on n'y touche plus.
-    if (cle !== undefined && cle !== adresse) {
-      noter(`${debutDeLigne} · REPOUSSÉE (clé « ${cle} » ≠ « ${adresse} »)`);
-      attente = null;
-      return;
-    }
-
-    //  LES CRITÈRES RENDUS — `null` quand la page n'a pas de mosaïque.
-    const rendus = criteresDeLaMosaique();
-    const voulus = criteresCourants();
-    const correspond = rendus === null || rendus === voulus;
-    const stable = hauteur === precedente;
-    const expire = performance.now() - debut > ATTENTE_STABILITE_MS;
-
-    if ((correspond && stable) || expire) {
-      //  LE PLUS BAS ATTEIGNABLE, quand on pose faute de mieux.
-      const atteignable = Math.max(
-        0,
-        Math.round(document.documentElement.scrollHeight - window.innerHeight)
-      );
-      const cible =
-        correspond && stable ? position : Math.min(position, atteignable);
-      noter(
-        `${debutDeLigne} · ACCEPTÉE${
-          correspond && stable ? "" : " (délai écoulé)"
-        } · posée ${cible}`
-      );
-      attente = null;
-      poser(cible, cle);
-      return;
-    }
-
-    noter(
-      `${debutDeLigne} · REPOUSSÉE (${
-        correspond
-          ? `hauteur instable, précédente ${precedente < 0 ? "—" : precedente}`
-          : `mosaïque « ${rendus} » ≠ critères « ${voulus} »`
-      })`
-    );
-    precedente = hauteur;
-    minuteur = window.setTimeout(essayer, PAS_STABILITE_MS);
-  };
-
-  attente = () => {
-    window.clearTimeout(minuteur);
-  };
-  essayer();
-}
-
-/** LA POSE ELLE-MÊME — réserve de hauteur, défilement, surveillance. */
-function poser(position: number, cle?: string) {
+  noter(`POSE · demandée ${position} · document ${hauteur} · POSÉE`);
   //  ⚠️ JAMAIS UN GESTE (nº 154-§6A) : une restitution de position est
   //  posée PAR LE SITE. Sans l'annoncer, la barre y lisait un geste et
   //  repliait sa rangée de recherche à l'arrivée sur la page.
-  if (position <= 0) return;
   const reserve = position + window.innerHeight;
   document.documentElement.style.minHeight = `${reserve}px`;
   defilerSansGeste({ top: position, left: 0 });
   surveillerLaReserve(reserve);
-  poursuivreLaPosition(position, cle);
-}
-
-/* ==================================================================
- * ON NE POSE LA POSITION QUE LORSQU'ELLE EST ATTEIGNABLE
- * (passe nº 181-§1b)
- * ==================================================================
- * LE RELEVÉ DU PROPRIÉTAIRE, sur son iPhone :
- *
- *     RETOUR demandée 4964 · arrivée 0
- *     RETOUR 1re image · atteinte 0 · écart −4964 · document 3717
- *     RETOUR +2500 ms  · atteinte 0 · écart −4964 · document 3717
- *
- * On demandait 4964 px sur un document de 3717 : impossible. Le
- * navigateur rabote alors la demande — et l'on atterrit en haut.
- *
- * LA RÉSERVE DE HAUTEUR (ci-dessus) est faite pour ça, mais elle ne
- * suffit pas toujours : elle s'efface dès que le CONTENU RÉEL atteint
- * la hauteur voulue, ou au bout de cinq secondes — et si la mosaïque
- * restituée est plus courte qu'à l'aller, le contenu ne l'atteindra
- * jamais. Au moment où la réserve part, le navigateur ramène la page
- * dans ses bornes… c'est-à-dire tout en haut.
- *
- * CE QUE FAIT CETTE POURSUITE :
- *  · elle REPOSE la position tant que la page ne s'y trouve pas, image
- *    par image — la mosaïque grandit (photos, « Voir plus » restitué),
- *    et chaque image rapproche du but ;
- *  · elle S'ARRÊTE dès que la position est atteinte ;
- *  · à L'EXPIRATION du délai, elle pose LA POSITION LA PLUS BASSE
- *    ATTEIGNABLE (hauteur du document − hauteur de l'écran) au lieu de
- *    laisser la page en haut. Le bas de la mosaïque vaut mieux que son
- *    sommet quand on revient d'une fiche prise tout en bas.
- */
-
-/** À deux pixels près, on considère qu'on y est. */
-const TOLERANCE_PX = 2;
-
-/** La poursuite en cours — une seule à la fois, jamais deux. */
-let poursuite: (() => void) | null = null;
-
-function arreterLaPoursuite() {
-  poursuite?.();
-  poursuite = null;
-}
-
-function poursuivreLaPosition(position: number, cle?: string) {
-  arreterLaPoursuite();
-  const limite = performance.now() + ATTENTE_MAX_MS;
-  let image = 0;
-  //  ⚠️ LE DOIGT A TOUJOURS RAISON : au premier vrai geste, la
-  //  poursuite s'arrête net. On ne se bat jamais contre la personne —
-  //  c'est la leçon des versions qui « rattrapaient » la position.
-  const gestes = ["wheel", "touchstart", "keydown"] as const;
-  const finir = () => {
-    cancelAnimationFrame(image);
-    for (const geste of gestes) {
-      window.removeEventListener(geste, finir);
-    }
-    poursuite = null;
-  };
-  for (const geste of gestes) {
-    window.addEventListener(geste, finir, { passive: true, once: true });
-  }
-  const suivre = () => {
-    //  ⚠️ ET LA POURSUITE S'ARRÊTE SI LA RECHERCHE CHANGE (nº 185-c) :
-    //  la place d'une mosaïque ne se poursuit pas dans une autre.
-    if (cle !== undefined && cle !== adresseDeRechercheCourante()) {
-      noter(`POURSUITE arrêtée · l'adresse n'est plus « ${cle} »`);
-      finir();
-      return;
-    }
-    if (Math.abs(window.scrollY - position) <= TOLERANCE_PX) {
-      finir();
-      return;
-    }
-    if (performance.now() > limite) {
-      //  LE PLUS BAS ATTEIGNABLE, plutôt que le haut de la page.
-      const atteignable = Math.max(
-        0,
-        Math.round(
-          document.documentElement.scrollHeight - window.innerHeight
-        )
-      );
-      defilerSansGeste({ top: Math.min(position, atteignable), left: 0 });
-      finir();
-      return;
-    }
-    //  La page a grandi (ou rétréci) : on redemande la même position.
-    defilerSansGeste({ top: position, left: 0 });
-    image = requestAnimationFrame(suivre);
-  };
-  image = requestAnimationFrame(suivre);
-  poursuite = finir;
 }
 
 /**

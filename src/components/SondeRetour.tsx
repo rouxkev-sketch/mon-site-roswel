@@ -9,10 +9,6 @@ import {
 import { BoutonEnvoyerJournal } from "@/components/BoutonEnvoyerJournal";
 import { BoutonCopierJournal, BoutonReplier } from "@/components/OutilsSonde";
 import { usePathname } from "next/navigation";
-import {
-  essaisEnClair,
-  interrupteursEnClair,
-} from "@/lib/interrupteurs-mesure";
 
 /**
  * LA SONDE DU RETOUR — elle mesure le cache de navigation sur le vrai
@@ -154,8 +150,6 @@ function leTerrain(enDeveloppement: boolean): string[] {
     `contexte sécurisé : ${securise ? "oui" : "NON (http) — les service workers y sont désactivés par le navigateur"}`,
     // ⚠️ SANS CETTE LIGNE, UN RELEVÉ NE VEUT RIEN DIRE : on doit savoir
     // quels suspects étaient éteints quand les chiffres ont été pris.
-    `interrupteurs : ${interrupteursEnClair()}`,
-    `essais : ${essaisEnClair()}`,
   ];
 }
 

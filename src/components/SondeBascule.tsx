@@ -16,10 +16,6 @@ import {
   souscrireAuJournal,
 } from "@/lib/journal-bascule";
 import { adresseDeRechercheCourante } from "@/lib/adresse-recherche";
-import {
-  essaisEnClair,
-  interrupteursEnClair,
-} from "@/lib/interrupteurs-mesure";
 
 /**
  * LA SONDE-JOURNAL DE LA BASCULE — elle enregistre, elle ne corrige
@@ -92,9 +88,6 @@ function journalEnTexte(): string {
 
 /** Où la position d'une adresse est rangée — lib/navigation-session. */
 const PREFIXE_DEFILEMENT = "roswel:defilement:";
-/** Où la mosaïque entière est mise de côté — lib/mosaique-session. */
-const CLE_MOSAIQUE = "yokofolio:mosaique";
-
 function adresseCourante(): string {
   return window.location.pathname + window.location.search;
 }
@@ -139,31 +132,14 @@ function etatSauvegarde(): string[] {
     dit.push(`ÉTAT position · ${cle} · ILLISIBLE`);
   }
 
-  //  2. LA MOSAÏQUE MISE DE CÔTÉ (sessionStorage, UNE SEULE entrée —
-  //     celle de la dernière adresse quittée).
-  try {
-    const brut = sessionStorage.getItem(CLE_MOSAIQUE);
-    if (!brut) {
-      dit.push(`ÉTAT mosaïque · ${CLE_MOSAIQUE} · ABSENT`);
-    } else {
-      const note = JSON.parse(brut) as {
-        adresse?: string;
-        tatoueurs?: unknown[];
-        page?: number;
-        quand?: number;
-      };
-      const memeAdresse = note.adresse === adresse;
-      dit.push(
-        `ÉTAT mosaïque · ${CLE_MOSAIQUE} · TROUVÉ ${
-          note.tatoueurs?.length ?? "?"
-        } fiches · page ${note.page ?? "?"} · pour "${note.adresse ?? "?"}" ${
-          memeAdresse ? "= adresse courante" : "≠ ADRESSE COURANTE (inutilisable)"
-        }`
-      );
-    }
-  } catch {
-    dit.push(`ÉTAT mosaïque · ${CLE_MOSAIQUE} · ILLISIBLE`);
-  }
+  //  2. LA MOSAÏQUE MISE DE CÔTÉ A ÉTÉ SUPPRIMÉE (refonte nº 191) :
+  //     les cartes viennent du serveur, pour l'adresse courante, et de
+  //     nulle part ailleurs. Il n'y a plus de mémoire à relever.
+  dit.push(
+    `ÉTAT mosaïque · plus de mémoire parallèle (nº 191) · cartes rendues ${
+      document.querySelectorAll("main a[href^='/tatoueur/']").length
+    }`
+  );
   return dit;
 }
 
@@ -211,11 +187,6 @@ export function SondeBascule() {
     noter(
       `═══ PAGE ${adresseCourante()} · navigation ${nav} · ${historiqueEtCriteres()}`
     );
-    //  ⚠️ DANS QUELLES CONDITIONS ON MESURE (nº 190) : les essais se
-    //  retiennent pour tout l'onglet (`?essai=document` reste armé même
-    //  quand il a disparu de l'adresse). Un journal qui ne le dit pas
-    //  laisse croire à un comportement normal — la sonde doit l'annoncer.
-    noter(`CONDITIONS · ${interrupteursEnClair()} · ${essaisEnClair()}`);
     for (const ligne of etatSauvegarde()) noter(ligne);
 
     /* b) LE RETOUR : la position DEMANDÉE, puis celle RÉELLEMENT

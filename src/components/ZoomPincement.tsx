@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { sans } from "@/lib/interrupteurs-mesure";
 
 /**
  * LE ZOOM AU PINCEMENT — deux doigts, comme sur Instagram
@@ -78,15 +77,13 @@ export function usePincement({
     const element = ecoute.current;
     if (!element) return;
     /**
-     * ⚠️ INTERRUPTEUR DE MESURE (`&sans=tactile`), TEMPORAIRE.
-     * Cet écouteur est NON PASSIF, et il y en a un par carte : le
-     * navigateur doit donc consulter le fil principal avant chaque
-     * mouvement de doigt, au lieu de décider seul. C'est le seul code du
-     * site qui se comporte différemment selon qu'on revient au DOIGT ou
-     * au BOUTON — donc le premier suspect de l'écran gris. Éteint, on
-     * saura s'il est en cause ; par défaut il ne change rien.
+     * ⚠️ CET ÉCOUTEUR EST NON PASSIF, et il y en a un par carte : le
+     * navigateur consulte le fil principal avant chaque mouvement de
+     * doigt, au lieu de décider seul. Il a été mesuré comme suspect de
+     * l'écran gris à la passe 162 ; l'interrupteur qui permettait de
+     * l'éteindre (`&sans=tactile`) a été supprimé avec le reste des
+     * interrupteurs de mesure (refonte nº 191) — il n'a rien montré.
      */
-    if (sans("tactile")) return;
     function bloquerDefilement(evenement: TouchEvent) {
       if (actif.current) evenement.preventDefault();
     }

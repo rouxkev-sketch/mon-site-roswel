@@ -41,15 +41,34 @@ const PARAMETRES_RECHERCHE = [
   //  « Explorer » (passe nº 110).
   "style", "nature", "lieu", "zone", "lat", "lon", "niveau",
   "paysCode", "region", "ville", "rayon", "exclure",
+  //  ⚠️ ET LA PAGE (nº 191) : « Voir plus » l'écrit dans l'adresse, et
+  //  c'est elle qui dit COMBIEN de cartes cette page contient. Sans
+  //  cela, aucun retour ne pourrait retrouver soixante-douze cartes
+  //  sans une mémoire parallèle — et c'est très exactement ce qu'on
+  //  vient de supprimer.
+  "page",
 ] as const;
 
 type ParametresAccueil = Partial<
   Record<(typeof PARAMETRES_RECHERCHE)[number], string>
 >;
 
-/** Cette adresse porte-t-elle une recherche ? */
+/** Cette adresse porte-t-elle une recherche ? (La PAGE n'en est pas
+    une : « /?page=2 », c'est toujours l'accueil, en plus long.) */
 function porteUneRecherche(params: ParametresAccueil): boolean {
-  return PARAMETRES_RECHERCHE.some((cle) => Boolean(params[cle]));
+  return PARAMETRES_RECHERCHE.filter((cle) => cle !== "page").some((cle) =>
+    Boolean(params[cle])
+  );
+}
+
+/** LA PAGE DEMANDÉE, bornée. Dix pages — deux cent quarante cartes —
+    est déjà bien au-delà de ce qu'un œil parcourt ; au-delà, c'est une
+    adresse fabriquée à la main, et la base n'a pas à la servir. */
+const PAGES_MAX = 10;
+function pageDemandee(params: ParametresAccueil): number {
+  const demandee = Math.floor(Number(params.page));
+  if (!Number.isFinite(demandee) || demandee < 1) return 1;
+  return Math.min(demandee, PAGES_MAX);
 }
 
 /**
@@ -64,6 +83,12 @@ const chargerAccueil = cache(async (requete: string) => {
   const params = Object.fromEntries(
     new URLSearchParams(requete)
   ) as ParametresAccueil;
+  //  ⚠️ TOUTES LES PAGES D'UN COUP (nº 191) : l'adresse dit « page 3 »,
+  //  le serveur rend les soixante-douze cartes. La page a donc sa
+  //  hauteur définitive dès la première peinture — c'est ce qui permet
+  //  au retour de retrouver sa place sans qu'aucune mémoire n'ait eu à
+  //  garder les cartes.
+  const page = pageDemandee(params);
   const style = styleConnu(params.style);
   //  ⚠️ LA NATURE N'EST GARDÉE QUE SI ELLE EST CONNUE, comme le
   //  style : une adresse bricolée à la main ne doit pas vider la page.
@@ -78,9 +103,9 @@ const chargerAccueil = cache(async (requete: string) => {
     nature,
     ...criteresDeLieu(lieu, rayonKm),
     exclure,
-    limite: CARTES_PAR_PAGE,
+    limite: CARTES_PAR_PAGE * page,
   });
-  return { resultat, style, nature, lieu, rayonKm, exclure };
+  return { resultat, style, nature, lieu, rayonKm, exclure, page };
 });
 
 /** L'adresse remise à plat, toujours dans le même ordre : c'est la
@@ -176,13 +201,14 @@ export default async function PageAccueilTatouage({
   // La MÊME lecture que les métadonnées : le lieu est décodé de
   // l'adresse, le rayon ramené à un palier connu, les interrupteurs
   // éteints validés — voir `chargerAccueil`.
-  const { resultat, style, nature, lieu, rayonKm, exclure } =
+  const { resultat, style, nature, lieu, rayonKm, exclure, page } =
     await chargerAccueil(requeteNormalisee(params));
 
   return (
     <IndexTatoueurs
       premiers={resultat.tatoueurs}
       total={resultat.total}
+      page={page}
       demonstration={resultat.demonstration}
       message={resultat.message}
       criteresInitiaux={{ style, nature, rayonKm, exclure, lieu }}

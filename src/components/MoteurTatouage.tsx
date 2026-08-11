@@ -26,10 +26,6 @@ import {
 } from "@/components/Icones";
 import { BadgeCharte, GroupeBadges } from "@/components/BadgesCharte";
 import { remonterSansClavier } from "@/lib/remontee-champ";
-import {
-  armerGesteDeRecherche,
-  armerValidation,
-} from "@/lib/etapes-historique";
 import { basculerSansSaut } from "@/lib/bascule-verrouillee";
 //  ⚠️ TEMPORAIRE (nº 173) — la sonde-journal enregistre les clics sur
 //  les deux boutons de bascule. Elle n'écrit RIEN sans `?sonde-bascule=1`.
@@ -217,10 +213,7 @@ export function MoteurTatouage({
 }: {
   criteres: CritèresTatouage;
   /** Appelé à CHAQUE changement : c'est ça, la recherche. */
-  surChangement: (
-    criteres: CritèresTatouage,
-    options?: { validee?: boolean }
-  ) => void;
+  surChangement: (criteres: CritèresTatouage) => void;
   id?: string;
   /** FAUX HORS ACCUEIL (nº 150-§3) : la rangée du smartphone — la
       pilule et ses deux boutons — n'est pas rendue du tout ; seule la
@@ -307,9 +300,6 @@ export function MoteurTatouage({
       C'est LA recherche — réservé au moteur du web, qui n'a pas de
       bouton et cherche à chaque geste. */
   function annoncer(suivant: Partial<CritèresTatouage>) {
-    //  ⚠️ UNE ACTION DE L'UTILISATEUR (nº 186) : c'est elle, et elle
-    //  seule, qui donne à la recherche le droit d'écrire l'adresse.
-    armerGesteDeRecherche();
     surChangement({ ...criteres, ...suivant });
   }
 
@@ -339,19 +329,12 @@ export function MoteurTatouage({
   function validerLaPage() {
     const retenus = brouillon;
     fermerRecherche();
-    //  ⚠️ VALIDÉE (nº 182) : c'est CE geste — et lui seul — qui pose
-    //  une étape d'historique, pour que le retour ramène à la mosaïque
-    //  d'avant la recherche au lieu de sortir du site.
-    //  ⚠️ ET LE DRAPEAU NE SERT QU'UNE FOIS (nº 184-§1b) : il est armé
-    //  ICI, à l'instant du geste, et effacé dès qu'il est lu. Un
-    //  `{ validee: true }` rejoué plus tard — au retour, par exemple —
-    //  ne trouvera plus rien à consommer.
-    if (retenus) {
-      armerValidation();
-      //  ⚠️ « Valider » EST UNE ACTION (nº 186) — voir `annoncer`.
-      armerGesteDeRecherche();
-      surChangement(retenus, { validee: true });
-    }
+    //  ⚠️ VALIDER, C'EST CHANGER D'ADRESSE (refonte nº 191) : le
+    //  routeur pose alors SON étape d'historique, une seule, et le
+    //  retour ramène à l'étape d'avant. Plus aucun drapeau, plus aucune
+    //  étape posée à la main — c'est ce qui faisait grandir l'historique
+    //  à chaque retour.
+    if (retenus) surChangement(retenus);
     // LA LISTE SE RELIT DEPUIS LE HAUT : valider une recherche ramène
     // tout en haut des résultats — sinon la page reste là où on
     // l'avait laissée et masque les premières cartes. `instant` : le

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useRef, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { libelleTypeFiche, PHOTO_PORTFOLIO, PORTRAIT_ROND } from "@/config/tatouage";
 import {
@@ -13,7 +13,6 @@ import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import { ligneCarte } from "@/lib/adresse";
 import { pincementRecent, usePincement } from "@/components/ZoomPincement";
 import type { Tatoueur } from "@/lib/tatoueurs";
-import { essai } from "@/lib/interrupteurs-mesure";
 //  ⚠️ TEMPORAIRE (nº 175-§6) — la sonde-journal note l'ouverture d'une
 //  fiche. Elle n'écrit RIEN sans `?sonde-bascule=1`.
 import { noter, sauvegarderMaintenant } from "@/lib/journal-bascule";
@@ -112,12 +111,6 @@ export function CarteTatoueur({
   const cadrePhoto = useRef<HTMLDivElement>(null);
   const gestesPincement = usePincement({ ecoute: zoneCarte, cible: cadrePhoto });
 
-  /** L'ESSAI DE NAVIGATION DE DOCUMENT est-il allumé ? (voir auClic)
-      Lu une seule fois, pendant le rendu. Le serveur répond toujours
-      « non » : rien ne dépend de cette valeur dans le HTML rendu, il n'y
-      a donc aucune discordance d'hydratation. */
-  const [essaiDocument] = useState(() => essai("document"));
-
   /** L'ADRESSE DE LA FICHE — elle EMPORTE le style cherché (?style=…) :
       la fiche ouvre alors son carrousel sur la photo de CE style, la
       continuité exacte de la photo de la carte. Calculée une fois : le
@@ -183,50 +176,32 @@ export function CarteTatoueur({
     if (evenement.metaKey || evenement.ctrlKey || evenement.shiftKey || evenement.altKey) return;
 
     /**
-     * SUR SMARTPHONE : UNE VRAIE NAVIGATION DE DOCUMENT.
-     * ===================================================
-     * ⚠️ ET C'EST LA CORRECTION DE L'ÉCRAN GRIS, APRÈS HUIT PASSES.
-     * Mesuré sur l'iPhone du propriétaire : au retour par BALAYAGE DU
-     * DOIGT, la première image arrive 384 à 398 ms après le geste ; au
-     * BOUTON du navigateur, 57 ms. Même page, mêmes dix-huit cartes,
-     * mosaïque DÉJÀ rendue, aucune requête réseau — et le fil principal
-     * LIBRE tout du long (49 à 68 tics de minuterie pendant l'attente,
-     * plus grand trou 22 à 35 ms). Éteindre le pincement, la réserve de
-     * hauteur ou la mémoire de la mosaïque n'y change rien.
+     * SUR SMARTPHONE : LA MÊME NAVIGATION INTERNE QUE SUR LE WEB
+     * ===========================================================
+     * (refonte nº 191)
+     * ⚠️ LE `location.assign` A ÉTÉ SUPPRIMÉ, ET AVEC LUI L'ESSAI
+     * `?essai=document` qui l'allumait. Il avait été fabriqué pour une
+     * hypothèse : le balayage du doigt ne révèle une capture que si la
+     * page précédente est un VRAI document, donc une navigation de
+     * document devait rendre l'image manquante. Éprouvée sur l'iPhone
+     * du propriétaire, elle n'a rien rendu — l'écran reste noir — et
+     * elle coûtait tout le reste : document rechargé, page reconstruite,
+     * mosaïque et position à retrouver par des mémoires parallèles.
      *
-     * Notre code ne bloque donc rien. Ce qui manque, c'est L'IMAGE que
-     * le navigateur révèle pendant le glissement. Il la prend dans la
-     * CAPTURE de la page précédente — et il n'en garde une QUE si cette
-     * page est un vrai document. Or `<Link>` fait une navigation
-     * INTERNE : aucun document n'est créé, aucune capture n'existe, et
-     * le navigateur montre son fond par défaut, le gris.
+     * Une carte est donc un LIEN ORDINAIRE, sur mobile comme sur le
+     * web : on ne fait rien, et `<Link>` navigue. La mosaïque n'est pas
+     * démontée par un rechargement, l'adresse porte tout ce qu'il faut
+     * pour la reconstruire (critères ET nombre de pages), et le retour
+     * la retrouve telle quelle.
      *
-     * On rend donc la main au navigateur : `location.assign`, comme un
-     * lien ordinaire. Il crée un document, garde sa capture, et le
-     * balayage révèle la mosaïque telle qu'on l'a quittée. Le cache de
-     * retour redevient utilisable par la même occasion (`no-store` a été
-     * retiré à la passe 108) — c'est lui qui rendra la page vivante,
-     * position comprise.
-     *
-     * ⚠️ SMARTPHONE UNIQUEMENT. Sur le web, la fiche s'ouvre en fenêtre
-     * superposée (`surOuverture`) : la grille n'est jamais démontée, il
-     * n'y a pas de geste de retour, et rien de tout cela ne s'applique.
-     *
-     * ⚠️ ET RIEN N'A ÉTÉ SUPPRIMÉ EN FACE. Le cache de retour n'est
-     * jamais garanti (mémoire, onglets, âge) : quand il ne sert pas, le
-     * document est RECONSTRUIT — et c'est exactement le cas que la
-     * mémoire de la mosaïque, la réserve de hauteur et le script avant
-     * peinture savent traiter depuis les passes 107 à 113. Ils restent
-     * le filet.
+     * ⚠️ SUR LE WEB, la fiche s'ouvre en FENÊTRE superposée
+     * (`surOuverture`) : la grille n'est jamais démontée. C'est le seul
+     * cas où l'on intercepte le clic.
      */
     if (document.documentElement.dataset.appareil === "mobile") {
-      // ⚠️ ET DANS TOUS LES CAS ON S'ARRÊTE ICI : sur un vrai mobile, la
-      // fenêtre superposée du web n'a rien à faire. Sans cet arrêt, le
-      // lien ouvrait la fenêtre au lieu de naviguer — mesuré.
-      if (essaiDocument) {
-        evenement.preventDefault();
-        window.location.assign(adresseFiche);
-      }
+      // ⚠️ ON S'ARRÊTE ICI : sur un vrai mobile, la fenêtre superposée
+      // du web n'a rien à faire. Sans cet arrêt, le lien ouvrait la
+      // fenêtre au lieu de naviguer — mesuré.
       return;
     }
 
@@ -358,7 +333,6 @@ export function CarteTatoueur({
           <Link
             href={adresseFiche}
             aria-label={`Voir la fiche de ${tatoueur.nom}`}
-            prefetch={essaiDocument ? false : undefined}
             onClick={auClic}
             className="absolute inset-0 z-[1] outline-none
                        focus-visible:outline-2 focus-visible:-outline-offset-2
@@ -450,7 +424,6 @@ export function CarteTatoueur({
             // précharge (la charge du routeur) ne peut pas la servir.
             // Dix-huit cartes, dix-huit demandes inutiles. Le web, lui,
             // garde son préchargement — sa fenêtre s'en sert vraiment.
-            prefetch={essaiDocument ? false : undefined}
             onClick={auClic}
             className="outline-none after:absolute after:inset-0 after:content-['']
                        focus-visible:underline"

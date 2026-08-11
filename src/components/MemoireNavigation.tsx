@@ -13,7 +13,6 @@ import {
   purgerDefilementsAnciens,
   signalerTraversee,
 } from "@/lib/navigation-session";
-import { surveillerLesTraversees } from "@/lib/etapes-historique";
 import { adresseDeRecherche } from "@/lib/adresse-recherche";
 import {
   poserLaPosition,
@@ -51,6 +50,11 @@ import {
     à la page d'avant (« Ma sélection », « Créer mon portfolio »).
     `souscrireAdresse` surveille les deux portes : le navigateur ET le
     code. Voir lib/adresse-courante. */
+
+/** Une page de DÉTAIL — une fiche. Elle s'ouvre toujours en haut. */
+function estUnePageDeDetail(chemin: string): boolean {
+  return chemin.startsWith("/tatoueur/");
+}
 
 export function MemoireNavigation() {
   const pathname = usePathname();
@@ -113,12 +117,6 @@ export function MemoireNavigation() {
   const premierRendu = useRef(true);
 
   useEffect(() => {
-    //  ⚠️ L'OREILLE DES TRAVERSÉES EN PREMIER (nº 184-§1). Elle doit
-    //  être posée avant tout autre écouteur de `popstate` : c'est elle
-    //  qui dit ensuite « on est en train de reculer » à qui voudrait
-    //  écrire dans l'historique (voir lib/etapes-historique).
-    surveillerLesTraversees();
-
     // La restauration native provoque le sursaut : on la coupe
     if ("scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
@@ -131,6 +129,12 @@ export function MemoireNavigation() {
     purgerDefilementsAnciens();
 
     const marquerTraversee = () => {
+      //  ⚠️ ON NE DÉGÈLE PAS ICI, ET C'EST TOUT LE POINT. Au retour,
+      //  l'adresse redevient celle de la liste AVANT que React n'ait
+      //  rendu la liste : le document est encore celui de la fiche,
+      //  court, et le navigateur rabote le défilement. Ce rabotage
+      //  s'écrivait sous l'adresse de la LISTE — et écrasait la place
+      //  qu'on s'apprêtait à rendre. Seul un vrai geste rend la main.
       traversee.current = true;
       quandTraversee.current = Date.now();
       // À cet instant, l'adresse est DÉJÀ celle de l'étape rejointe.
@@ -139,11 +143,25 @@ export function MemoireNavigation() {
       signalerTraversee();
     };
 
-    // Position mémorisée en continu, adresse par adresse (au plus
-    // une écriture par image grâce au drapeau)
+    /**
+     * LA POSITION EST MÉMORISÉE EN CONTINU — mais elle se FIGE AU
+     * DÉPART (refonte nº 191).
+     * ⚠️ SANS CE GEL, LA DERNIÈRE VALEUR ÉCRITE N'EST PAS LA VÔTRE.
+     * Mesuré au banc : on quitte la liste à 2400 px, la page suivante
+     * arrive, le document raccourcit d'un coup — et le navigateur
+     * RABOTE le défilement à la nouvelle hauteur (1271 px). Ce
+     * rabotage déclenche un `scroll`, il arrive alors que l'adresse est
+     * encore celle de la liste, et il écrasait la vraie position. Au
+     * retour, on atterrissait 1100 px trop haut.
+     * On écrit donc la position AU MOMENT DU CLIC sur un lien — c'est
+     * la dernière que l'œil a vue — puis on ne touche plus à rien
+     * jusqu'au prochain vrai geste (doigt, molette, clavier) ou au
+     * prochain retour.
+     */
+    let gele = false;
     let ecriturePrevue = false;
     const memoriserPosition = () => {
-      if (ecriturePrevue) return;
+      if (gele || ecriturePrevue) return;
       ecriturePrevue = true;
       requestAnimationFrame(() => {
         ecriturePrevue = false;
@@ -159,6 +177,11 @@ export function MemoireNavigation() {
         // de retour est gardée à part (recherche-mobile), et elle est
         // désormais la seule à parler pour elle.
         if (document.documentElement.dataset.recherche) return;
+        //  ⚠️ UNE POSITION APPARTIENT À UNE LISTE (exigence nº 4 de la
+        //  refonte nº 191). Une fiche s'ouvre toujours en haut : on
+        //  n'écrit donc jamais de position pour une page de détail, et
+        //  on n'en restitue jamais non plus (voir plus bas).
+        if (estUnePageDeDetail(location.pathname)) return;
         memoriserDefilement(
           location.pathname + location.search,
           window.scrollY
@@ -166,11 +189,35 @@ export function MemoireNavigation() {
       });
     };
 
+    /** L'écriture tout de suite, sans attendre l'image suivante. */
+    const ecrireMaintenant = () => {
+      if (document.documentElement.dataset.recherche) return;
+      if (estUnePageDeDetail(location.pathname)) return;
+      memoriserDefilement(location.pathname + location.search, window.scrollY);
+    };
+    const auDepart = (evenement: MouseEvent) => {
+      const cible = evenement.target;
+      if (!(cible instanceof Element) || !cible.closest("a[href]")) return;
+      ecrireMaintenant();
+      gele = true;
+    };
+    const auGeste = () => {
+      gele = false;
+    };
+
     window.addEventListener("popstate", marquerTraversee);
     window.addEventListener("scroll", memoriserPosition, { passive: true });
+    document.addEventListener("click", auDepart, true);
+    for (const geste of ["touchstart", "wheel", "keydown"] as const) {
+      window.addEventListener(geste, auGeste, { passive: true });
+    }
     return () => {
       window.removeEventListener("popstate", marquerTraversee);
       window.removeEventListener("scroll", memoriserPosition);
+      document.removeEventListener("click", auDepart, true);
+      for (const geste of ["touchstart", "wheel", "keydown"] as const) {
+        window.removeEventListener(geste, auGeste);
+      }
     };
   }, []);
 
@@ -244,6 +291,9 @@ export function MemoireNavigation() {
     const restaurationDemandee = consommerRestaurationPosition();
 
     if (!vraieTraversee && !documentRestitue && !restaurationDemandee) return;
+    //  ⚠️ JAMAIS SUR UNE FICHE (exigence nº 4) : elle s'ouvre en haut,
+    //  quelle que soit la façon dont on y arrive.
+    if (estUnePageDeDetail(pathname)) return;
     //  ⚠️ LA POSITION VOYAGE AVEC SA CLÉ (nº 185-c) : celle d'une
     //  mosaïque complète ne doit jamais être appliquée à une mosaïque
     //  filtrée. La pose la revérifie à chaque tentative.

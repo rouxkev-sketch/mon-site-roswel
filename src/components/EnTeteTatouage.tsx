@@ -83,13 +83,9 @@ export function EnTeteTatouage({
   /** Critères PILOTÉS PAR LA PAGE (accueil). Absent = état interne. */
   criteres?: CritèresTatouage;
   criteresInitiaux?: Partial<CritèresTatouage>;
-  /** ⚠️ `validee` : la recherche vient du bouton « Valider » de la
-      page de recherche du smartphone. Elle seule pose une étape
-      d'historique (passe nº 182). */
-  surRecherche?: (
-    criteres: CritèresTatouage,
-    options?: { validee?: boolean }
-  ) => void;
+  /** La recherche demandée. Sur l'accueil, elle change l'adresse — et
+      c'est l'adresse qui décide de tout (refonte nº 191). */
+  surRecherche?: (criteres: CritèresTatouage) => void;
 }) {
   const router = useRouter();
   const { utilisateur, nom } = useUtilisateur();
@@ -199,12 +195,9 @@ export function EnTeteTatouage({
   );
   const valeur = criteres ?? internes;
 
-  function chercher(
-    suivants: CritèresTatouage,
-    options?: { validee?: boolean }
-  ) {
+  function chercher(suivants: CritèresTatouage) {
     if (surRecherche) {
-      surRecherche(suivants, options);
+      surRecherche(suivants);
       return;
     }
     setInternes(suivants);
