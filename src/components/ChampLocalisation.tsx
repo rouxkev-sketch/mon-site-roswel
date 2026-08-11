@@ -371,18 +371,26 @@ export function ChampLocalisation({
     surChoix(null);
   }
 
-  /** Lieu déjà choisi + nouveau toucher → on repart de zéro, l'ancien
-      mis de côté (restauré au départ si rien de neuf n'est choisi). */
-  function viderPourNouvelleSaisie() {
+  /**
+   * LE LIEU DÉJÀ CHOISI RESTE (passe nº 180-§2)
+   * ===========================================
+   * AVANT : recliquer dans un champ qui portait déjà une ville
+   * l'EFFAÇAIT — le texte partait, le lieu était annulé
+   * (`surChoix(null)`), et la fenêtre du rayon se refermait. On ne
+   * pouvait plus revoir son rayon sans tout ressaisir.
+   *
+   * DÉSORMAIS, un toucher ne fait qu'OUVRIR : la ville reste écrite,
+   * son rayon reste choisi, et la fenêtre du rayon se rouvre telle
+   * qu'on l'avait laissée. LA SEULE FAÇON D'EFFACER EST LA CROIX.
+   *
+   * ET LA PREMIÈRE FRAPPE PREND LE RELAIS : c'est elle qui remplace la
+   * sélection par une nouvelle saisie (voir `onChange` du champ), en
+   * mettant l'ancienne de côté — restaurée si l'on part sans rien
+   * choisir, exactement comme avant.
+   */
+  function mettreDeCoteLaSelection() {
     if (!selectionActive) return;
     memoire.current = { texte, lieu: lieuCourant.current };
-    setSelectionActive(false);
-    saisieUtilisateur.current = false;
-    setTexte("");
-    setSuggestions([]);
-    setMessage(null);
-    setListeOuverte(false);
-    surChoix(null);
   }
 
   /**
@@ -451,8 +459,10 @@ export function ChampLocalisation({
       ET `onClick` : après un choix, le champ GARDE le focus — un
       second clic ne déclencherait aucun `focus`.) */
   function auToucher() {
-    viderPourNouvelleSaisie();
-    if (piedPanneau || suggestions.length > 0) setListeOuverte(true);
+    //  ⚠️ ON N'EFFACE PLUS RIEN (nº 180-§2) : on ouvre, c'est tout.
+    if (piedPanneau || suggestions.length > 0 || selectionActive) {
+      setListeOuverte(true);
+    }
     if (remonterAuToucher) remonterEnHautDeLEcran();
   }
 
@@ -597,7 +607,17 @@ export function ChampLocalisation({
             : texte
         }
         onChange={(evenement) => {
-          const valeur = evenement.target.value;
+          //  ⚠️ LE CHAMP AFFICHE « Lyon · 100 km » quand un lieu est
+          //  retenu (nº 180-§2) : la première frappe arrive donc avec ce
+          //  suffixe collé. On le retire — sinon il partirait dans la
+          //  recherche — et on met l'ancienne sélection de côté, pour
+          //  qu'un départ sans nouveau choix la rende.
+          const brut = evenement.target.value;
+          const valeur =
+            selectionActive && suffixeLieu && brut.includes(suffixeLieu)
+              ? brut.replace(suffixeLieu, "")
+              : brut;
+          mettreDeCoteLaSelection();
           saisieUtilisateur.current = true; // vraie frappe : recherche permise
           setSelectionActive(false);
           setTexte(valeur);

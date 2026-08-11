@@ -421,35 +421,6 @@ export function PageRechercheMobile({
    * Sans tableau de dépendances : l'écouteur voit toujours la phase
    * courante.
    */
-  /* ---- LA HAUTEUR DE L'EN-TÊTE, DONNÉE AU CSS (nº 179-§3) ----
-     C'est elle que `scroll-margin-top` réserve au-dessus d'un champ qui
-     remonte : le champ se pose JUSTE SOUS la barre au lieu de glisser
-     derrière. MESURÉE, jamais écrite à la main — l'en-tête a déjà
-     grandi une fois (la bascule Explorer / Filtres, nº 149-§2).
-     Elle est posée ici, à l'ouverture de la page, pour que les DEUX
-     champs — la localité et le menu Explorer — trouvent la même valeur,
-     par quelque chemin qu'ils remontent.
-     ⚠️ SUR UN VRAI TÉLÉPHONE, ELLE NE CHANGE RIEN À LA LOCALITÉ : dès
-     que le clavier s'ouvre, `html[data-clavier="ouvert"]` impose ses
-     12 px et l'emporte (règle plus spécifique, globals.css). */
-  useEffect(() => {
-    const entete = document.querySelector<HTMLElement>("[data-entete-recherche]");
-    if (!entete) return;
-    const poser = () => {
-      document.documentElement.style.setProperty(
-        "--rw-entete-recherche",
-        `${Math.round(entete.getBoundingClientRect().height)}px`
-      );
-    };
-    poser();
-    const oeil = new ResizeObserver(poser);
-    oeil.observe(entete);
-    return () => {
-      oeil.disconnect();
-      document.documentElement.style.removeProperty("--rw-entete-recherche");
-    };
-  }, []);
-
   useEffect(() => {
     function auRetour() {
       // Faux = c'était notre propre `back()`, déjà traité.
@@ -541,10 +512,11 @@ export function PageRechercheMobile({
       <div
         //  ⚠️ 24 px EN HAUT (nº 149-§5) : le titre était collé au bord
         //  de l'écran. La marge de sécurité des encoches reste.
-        //  ⚠️ ET IL SE NOMME (nº 179-§3) : c'est LUI qui reste collé en
-        //  haut quand un champ remonte. La remontée du menu « Explorer »
-        //  mesure sa hauteur pour poser le champ JUSTE DESSOUS au lieu
-        //  de le glisser derrière (voir lib/remontee-champ).
+        //  ⚠️ ET IL SE NOMME (nº 180-§1) : c'est LUI qui reste collé en
+        //  haut quand un champ remonte. Le marqueur `data-clavier`
+        //  — celui que pose la remontée, clavier ou menu — le libère le
+        //  temps du geste : il redevient un bloc ordinaire et s'en va
+        //  par le haut avec la page (globals.css). Rien n'est mesuré.
         data-entete-recherche=""
         className="sticky top-0 z-10 bg-sombre-fond px-4 pb-1
                    pt-[max(24px,env(safe-area-inset-top))]"

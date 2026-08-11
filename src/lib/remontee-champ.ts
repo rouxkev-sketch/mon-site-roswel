@@ -217,37 +217,8 @@ type Session = {
  * du champ, un second toucher ou un démontage ne doivent pas laisser
  * d'écouteur derrière eux.
  */
-/**
- * LA HAUTEUR RÉELLE DE L'EN-TÊTE COLLANT DE LA PAGE DE RECHERCHE,
- * donnée au CSS (nº 179-§3).
- * ------------------------------------------------------------------
- * C'est elle que `scroll-margin-top` réserve au-dessus d'un champ qui
- * remonte : le champ se pose JUSTE SOUS la barre au lieu de glisser
- * derrière. Mesurée, jamais écrite à la main — l'en-tête a déjà grandi
- * une fois (la bascule Explorer / Filtres de la nº 149-§2), et un
- * chiffre en dur redeviendrait faux à la prochaine.
- *
- * ⚠️ ELLE NE CHANGE RIEN À LA LOCALITÉ SUR UN VRAI TÉLÉPHONE : dès que
- * le clavier s'ouvre, `html[data-clavier="ouvert"]` impose ses 12 px et
- * l'emporte sur cette règle (il est plus spécifique). Elle ne sert donc
- * qu'aux cas SANS clavier — le menu « Explorer », et un navigateur à
- * clavier matériel.
- */
-function mesurerLEnteteDeRecherche(): void {
-  if (typeof document === "undefined") return;
-  const entete = document.querySelector<HTMLElement>("[data-entete-recherche]");
-  if (!entete) return;
-  document.documentElement.style.setProperty(
-    "--rw-entete-recherche",
-    `${Math.round(entete.getBoundingClientRect().height)}px`
-  );
-}
-
 export function armerLaRemontee(cible: HTMLElement): () => void {
   enCours?.abandonner();
-  //  La même mesure que pour le menu : les deux champs se posent au
-  //  même endroit quand la barre est là (nº 179-§3).
-  mesurerLEnteteDeRecherche();
   const session = ouvrirUneRemontee(cible);
   enCours = session;
   return () => session.laisserPartir();
@@ -289,11 +260,14 @@ export function remonterSansClavier(cible: HTMLElement): () => void {
   //  lisible. Un menu déroulant n'ouvre aucun clavier : l'en-tête reste
   //  exactement où il est, et le champ passait DESSOUS — seul le menu
   //  restait visible.
-  //  On mesure donc l'en-tête AU MOMENT DE LA MONTÉE et on le donne au
-  //  CSS : `scroll-margin-top` pose alors le champ JUSTE SOUS LUI. Une
-  //  hauteur mesurée, jamais un nombre écrit à la main — l'en-tête a
-  //  déjà grandi une fois (la bascule Explorer / Filtres de la nº 149).
-  mesurerLEnteteDeRecherche();
+  //  ON POSE DONC LE MÊME ÉTAT QUE LE CLAVIER (nº 180-§1) :
+  //  `data-clavier="ouvert"` sur <html> — le marqueur exact que la
+  //  remontée de la localité pose quand la barre est chassée. Tout ce
+  //  qui en dépend suit alors sans qu'on ait rien à mesurer ni à
+  //  calculer : l'en-tête collant se retire (globals.css), et le champ
+  //  se pose à 12 px, comme la localité.
+  //  Il est retiré à la fermeture du menu, par le ranger ci-dessous.
+  poserLaMarge(true);
   const espace = poserLEspace();
   //  LA POSITION D'ORIGINE, notée AVANT de bouger.
   const depart = window.scrollY;
@@ -306,6 +280,8 @@ export function remonterSansClavier(cible: HTMLElement): () => void {
     if (rangee) return;
     rangee = true;
     cancelAnimationFrame(image);
+    //  0. L'ÉTAT « CLAVIER » EST RENDU : l'en-tête redevient collant.
+    rendreLaMarge();
     //  1. LA POSITION D'ORIGINE, rendue — et JAMAIS lue comme un geste
     //     (sans quoi la barre du site replierait sa rangée, nº 154-§6A).
     defilerSansGeste({ top: depart, left: 0, behavior: "smooth" });
