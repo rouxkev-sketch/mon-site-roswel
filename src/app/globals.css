@@ -285,15 +285,31 @@ html[data-clair="3"] {
   overflow-anchor: none;
 }
 
-/*  « EFFACER » ET « VALIDER » S'EFFACENT TANT QU'UN MENU EST OUVERT
-    (nº 195-§2)
+/*  « EFFACER » ET « VALIDER » S'EFFACENT DÈS QU'UNE LISTE EST OUVERTE
+    (nº 195-§2, étendu à TOUS les champs par la nº 196)
     -------------------------------------------------------------------
-    Quand un champ ou un menu remonte en haut de l'écran, le site pose
-    `data-clavier="ouvert"` sur <html> (voir lib/remontee-champ). Les
-    deux boutons du bas de la page de recherche n'ont alors plus de
-    sens : on ne valide pas une recherche pendant qu'on choisit un
-    style. Ils reviennent dès que le menu se referme. */
-html[data-clavier="ouvert"] [data-actions-recherche] {
+    LA RÈGLE EST PORTÉE ICI, UNE SEULE FOIS, ET ELLE NE NOMME AUCUN
+    CHAMP. Elle ne demande qu'une chose : « y a-t-il, quelque part dans
+    la page, une liste ouverte ? » — c'est-à-dire un élément portant le
+    rôle `listbox`, celui que TOUTE liste de choix du site déclare :
+    les menus déroulants (Explorer, qualité, technique, rendu, rayon…,
+    voir MenuDeroulant, y compris sa feuille glissante du smartphone) et
+    les suggestions de localité (ChampLocalisation). Les deux passent
+    par un portail, donc par le corps de la page : c'est pourquoi la
+    question est posée à `body` et non au panneau de recherche.
+    UN CHAMP AJOUTÉ PLUS TARD EST COUVERT SANS RIEN À ÉCRIRE : il lui
+    suffit d'ouvrir une liste comme les autres.
+    On ne valide pas une recherche pendant qu'on choisit un style : les
+    deux boutons du bas reviennent dès que la liste se referme — par une
+    sélection, par la croix, ou par un toucher à l'extérieur.
+
+    ⚠️ ET LA RÈGLE DE LA REMONTÉE RESTE, elle couvre le cas où le
+    clavier est ouvert sans liste (on tape une ville, aucune suggestion
+    n'est encore arrivée) : `data-clavier="ouvert"` est posé par
+    lib/remontee-champ. Les deux règles se complètent, aucune ne nomme
+    un champ. */
+html[data-clavier="ouvert"] [data-actions-recherche],
+body:has([role="listbox"]) [data-actions-recherche] {
   display: none;
 }
 
