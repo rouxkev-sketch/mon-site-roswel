@@ -10,6 +10,7 @@ import {
 } from "@/config/tatouage";
 import { EnTeteTatouage } from "@/components/EnTeteTatouage";
 import { GrilleTatoueurs } from "@/components/GrilleTatoueurs";
+import { noterDemontage, noterMontage } from "@/lib/journal-bascule";
 import { LigneResultats } from "@/components/LigneResultats";
 import {
   criteresComplets,
@@ -350,6 +351,13 @@ export function IndexTatoueurs({
    * dernière version de `chercher` (qui capture `derniere`). Le coût
    * est nul — un ajout et un retrait d'écouteur par rendu.
    */
+  //  ⚠️ LA SONDE DE LA BASCULE (nº 173) : le conteneur de page est-il
+  //  démonté, lui aussi, au clic ? (N'écrit que sous `?sonde-bascule=1`.)
+  useEffect(() => {
+    noterMontage("page (IndexTatoueurs)");
+    return () => noterDemontage("page (IndexTatoueurs)");
+  }, []);
+
   useEffect(() => {
     function auRetour() {
       const voulus = criteresDepuisAdresse(window.location.search);

@@ -25,6 +25,9 @@ import {
   IconeUneColonne,
 } from "@/components/Icones";
 import { basculerSansSaut } from "@/lib/bascule-verrouillee";
+//  ⚠️ TEMPORAIRE (nº 173) — la sonde-journal enregistre les clics sur
+//  les deux boutons de bascule. Elle n'écrit RIEN sans `?sonde-bascule=1`.
+import { noter } from "@/lib/journal-bascule";
 import {
   poserDisposition,
   lireDisposition,
@@ -986,6 +989,9 @@ export function MoteurTatouage({
               //  ⚠️ UNE VALEUR EXPLICITE (nº 164) : on demande la vue
               //  VOULUE, on n'inverse pas — un appel doublé ne peut
               //  plus faire l'aller-retour.
+              noter(
+                `CLIC bouton PHOTOTHÈQUE (barre web) · ${phototheque} → ${!phototheque}`
+              );
               basculerSansSaut(() => poserPhototheque(!phototheque));
             }}
             aria-pressed={phototheque}
@@ -1101,6 +1107,11 @@ export function MoteurTatouage({
             // ⚠️ UNE VALEUR EXPLICITE (nº 164) : le bouton demande la
             // disposition qu'il ANNONCE, il n'inverse pas l'état — deux
             // déclenchements ne peuvent plus se défaire l'un l'autre.
+            noter(
+              `CLIC bouton DISPOSITION (barre mobile) · ${disposition} → ${
+                disposition === "deux" ? "une" : "deux"
+              }`
+            );
             basculerSansSaut(() =>
               poserDisposition(disposition === "deux" ? "une" : "deux")
             );
@@ -1135,6 +1146,9 @@ export function MoteurTatouage({
             //  (nº 162-§2) : masquer les textes change la hauteur des
             //  rangées — moins que le format, mais la course est la
             //  même, et elle se voit parfois. Valeur explicite (nº 164).
+            noter(
+              `CLIC bouton PHOTOTHÈQUE (barre mobile) · ${phototheque} → ${!phototheque}`
+            );
             basculerSansSaut(() => poserPhototheque(!phototheque));
           }}
           aria-pressed={phototheque}

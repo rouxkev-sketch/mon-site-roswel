@@ -16,6 +16,11 @@ import {
   type ContexteFenetreFiche,
 } from "@/components/RetourFenetreFiche";
 import { reposerLaCarteDuHaut } from "@/lib/carte-du-haut";
+import {
+  noter,
+  noterDemontage,
+  noterMontage,
+} from "@/lib/journal-bascule";
 import { ficheComplete } from "@/lib/fiche-complete";
 import {
   lirePhototheque,
@@ -153,6 +158,21 @@ export function GrilleTatoueurs({
    * ⚠️ JAMAIS AU PREMIER RENDU : une mosaïque qui bougerait à chaque
    * arrivée serait un défaut, pas une correction.
    */
+  //  ⚠️ LA SONDE DE LA BASCULE (nº 173) — elle n'écrit QUE si
+  //  l'adresse porte `?sonde-bascule=1` ; sinon ces appels ne coûtent
+  //  rien. C'est la ligne la plus attendue du journal : un démontage
+  //  de la mosaïque après un clic désignerait la cause.
+  useEffect(() => {
+    noterMontage("mosaïque (GrilleTatoueurs)");
+    return () => noterDemontage("mosaïque (GrilleTatoueurs)");
+  }, []);
+  //  Sans tableau de dépendances : à CHAQUE rendu.
+  useEffect(() => {
+    noter(
+      `rendu mosaïque · ${tatoueurs.length} cartes · disposition ${disposition} · photothèque ${phototheque ? "oui" : "non"}`
+    );
+  });
+
   const premiereDisposition = useRef(true);
   useEffetAvantPeinture(() => {
     if (premiereDisposition.current) {

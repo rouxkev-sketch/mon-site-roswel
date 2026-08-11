@@ -44,6 +44,7 @@ import { SondeNavigation } from "@/components/SondeNavigation";
 import { SondeFiltres } from "@/components/SondeFiltres";
 import { SondeVerre } from "@/components/SondeVerre";
 import { SondeRetour } from "@/components/SondeRetour";
+import { SondeBascule } from "@/components/SondeBascule";
 import { COMPTES_YOKOFOLIO } from "@/config/tatouage";
 import { utilisateurDepuisCookies } from "@/lib/session-cookie";
 
@@ -174,6 +175,19 @@ export default async function MiseEnPageTatouage({
         Pour la retirer : cette ligne, son import, et le fichier
         src/components/SondeVerre.tsx. */}
     <SondeVerre />
+    {/* ⚠️ TEMPORAIRE — LA SONDE-JOURNAL DE LA BASCULE
+        (`?sonde-bascule=1`, nº 173). Elle ENREGISTRE, elle ne corrige
+        rien : les clics sur les deux boutons de bascule, les
+        changements de fenêtre et de viewport visuel, la détection
+        d'appareil, et surtout les MONTAGES/DÉMONTAGES de la mosaïque et
+        de son conteneur de page, avec un compteur d'instances. Aucun
+        état React : le journal vit dans lib/journal-bascule et s'écrit
+        directement dans le nœud — il ne peut pas déranger ce qu'il
+        observe. Pour la retirer : cette ligne, son import, le fichier
+        src/components/SondeBascule.tsx, le module
+        src/lib/journal-bascule.ts et les appels à `noter…`.
+        HORS de l'enveloppe `data-fond`, comme les autres sondes. */}
+    <SondeBascule />
     {/* ⚠️ L'ÉCOUTEUR GLOBAL DE REMONTÉE EST SUPPRIMÉ (nº 162-§1). La
         règle de la nº 155-§1 — « TOUS les champs du site remontent » —
         est annulée : la remontée ne sert qu'à dégager de la place SOUS

@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+//  ⚠️ TEMPORAIRE (nº 173) — la sonde-journal enregistre la valeur de ce
+//  crochet à chaque changement. Elle n'écrit RIEN sans `?sonde-bascule=1`.
+import { noter } from "@/lib/journal-bascule";
 
 /**
  * SUIS-JE SUR UN VRAI MOBILE ?
@@ -26,5 +29,22 @@ export function useAppareilMobile(): boolean {
     });
     return () => cancelAnimationFrame(image);
   }, []);
+  //  ⚠️ TEMPORAIRE (nº 173) — LE JOURNAL, à chaque CHANGEMENT de la
+  //  valeur rendue : la valeur, la largeur du moment, et le critère qui
+  //  l'a produite. Il n'y a AUCUN SEUIL DE LARGEUR ici (c'est la règle
+  //  du site depuis la nº 60) : la réponse vient de
+  //  `matchMedia("(pointer: coarse)")`, lu avant la peinture et écrit en
+  //  `data-appareil` sur <html>. La largeur est journalisée quand même,
+  //  pour la mettre en regard des lignes FENÊTRE et VISUEL.
+  const connue = useRef<boolean | null>(null);
+  useEffect(() => {
+    if (connue.current === mobile) return;
+    connue.current = mobile;
+    noter(
+      `CROCHET useAppareilMobile = ${mobile} · largeur ${window.innerWidth} · ` +
+        `data-appareil="${document.documentElement.dataset.appareil ?? "(absent)"}" · ` +
+        `critère pointer:coarse — aucun seuil de largeur`
+    );
+  }, [mobile]);
   return mobile;
 }
