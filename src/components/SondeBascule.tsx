@@ -16,6 +16,10 @@ import {
   souscrireAuJournal,
 } from "@/lib/journal-bascule";
 import { adresseDeRechercheCourante } from "@/lib/adresse-recherche";
+import {
+  essaisEnClair,
+  interrupteursEnClair,
+} from "@/lib/interrupteurs-mesure";
 
 /**
  * LA SONDE-JOURNAL DE LA BASCULE — elle enregistre, elle ne corrige
@@ -207,6 +211,11 @@ export function SondeBascule() {
     noter(
       `═══ PAGE ${adresseCourante()} · navigation ${nav} · ${historiqueEtCriteres()}`
     );
+    //  ⚠️ DANS QUELLES CONDITIONS ON MESURE (nº 190) : les essais se
+    //  retiennent pour tout l'onglet (`?essai=document` reste armé même
+    //  quand il a disparu de l'adresse). Un journal qui ne le dit pas
+    //  laisse croire à un comportement normal — la sonde doit l'annoncer.
+    noter(`CONDITIONS · ${interrupteursEnClair()} · ${essaisEnClair()}`);
     for (const ligne of etatSauvegarde()) noter(ligne);
 
     /* b) LE RETOUR : la position DEMANDÉE, puis celle RÉELLEMENT
