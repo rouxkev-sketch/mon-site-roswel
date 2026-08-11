@@ -27,8 +27,7 @@ import {
   type PhotoTatoueur,
 } from "@/lib/photos-tatoueur";
 import { creerClientSupabaseServeur } from "@/lib/supabase/server";
-import { identifiantsAdmin } from "@/lib/fiches-admin";
-import { COMPTE_ADMIN_DEMO, TATOUEURS_DEMO } from "@/lib/tatoueurs-demo";
+import { TATOUEURS_DEMO } from "@/lib/tatoueurs-demo";
 import { nomVilleCourt } from "@/lib/villes";
 import { slugifier } from "@/lib/slug";
 
@@ -710,29 +709,44 @@ function memeNom(a: string | null | undefined, b: string | null | undefined) {
  * du géocodeur et sont comparés à ceux des fiches.
  */
 /**
- * LES FICHES DES ADMINISTRATEURS, RETIRÉES DU PUBLIC
- * ===================================================
- * La règle porte sur le COMPTE PROPRIÉTAIRE, jamais sur un réglage de
- * la fiche (voir lib/fiches-admin). Elle s'applique ICI, dans la
- * couche qui lit la base — donc pour TOUT ce qui est public à la
- * fois : la mosaïque, la recherche, l'API, les pages style + ville,
- * le plan du site et la page de fiche. Aucun affichage n'a à s'en
- * soucier, et aucune adresse devinée ne les fait réapparaître.
+ * « EN LIGNE » — LA RÈGLE DE LA BASE, RECOPIÉE ICI ET NULLE PART
+ * AILLEURS (passe nº 178)
+ * ==================================================================
+ * LE DÉFAUT CORRIGÉ : la base répondait OUI (20 fiches visibles par un
+ * visiteur, dont 2 rattachées à un compte) et la page répondait NON —
+ * « Cette fiche n'est pas encore en ligne ». Deux règles cohabitaient,
+ * et celle du site était PLUS SÉVÈRE que celle de la base : elle
+ * masquait, EN PLUS, toute fiche appartenant à un compte
+ * administrateur (`COURRIELS_ADMIN`) tant que `admin_publique` n'était
+ * pas allumée. Or le propriétaire du site EST l'administrateur : ses
+ * propres fiches tombaient sous cette règle, à leur adresse exacte
+ * comme dans la mosaïque.
+ *
+ * IL N'Y A PLUS QU'UNE RÈGLE, et c'est celle de la base (migration
+ * nº 60, fonction `fiche_en_ligne`) :
+ *    publiée par l'administrateur (`publie`, colonne que le
+ *    déclencheur `tatoueurs_garde_fou` lui réserve)
+ *    ET pas en cours de suppression
+ *    ET pas mise hors ligne
+ *    ET pas refusée.
+ *
+ * ⚠️ RIEN N'EST RENDU PUBLIC AU-DELÀ : les trois conditions autres que
+ * `publie` sont des VERROUS SUPPLÉMENTAIRES, que la page ne vérifiait
+ * même pas jusqu'ici. Une fiche non publiée reste invisible ; une
+ * fiche d'essai se cache désormais comme n'importe quelle autre — en
+ * ne la publiant pas.
  */
-function sansFichesAdmin<
-  T extends { user_id?: string | null; admin_publique?: boolean | null },
->(liste: T[], proprietaires: string[]): T[] {
-  if (proprietaires.length === 0) return liste;
-  const masques = new Set(proprietaires);
-  return liste.filter(
-    (fiche) =>
-      !fiche.user_id ||
-      !masques.has(fiche.user_id) ||
-      //  L'INTERRUPTEUR DE LA MIGRATION Nº 43 : une fiche d'essai
-      //  ALLUMÉE se comporte comme n'importe quelle autre. Éteinte —
-      //  le cas par défaut, et celui de toutes les fiches d'avant la
-      //  migration — la règle ne bouge pas d'un iota.
-      fiche.admin_publique === true
+export function estEnLigne(fiche: {
+  publie?: boolean | null;
+  supprime_le?: string | null;
+  hors_ligne?: boolean | null;
+  statut?: string | null;
+}): boolean {
+  return (
+    fiche.publie === true &&
+    !fiche.supprime_le &&
+    fiche.hors_ligne !== true &&
+    fiche.statut !== "refusee"
   );
 }
 
@@ -1225,9 +1239,11 @@ export async function listerTatoueurs(
   // aucune lecture de table de communes ici — la recherche est
   // devenue purement géographique.
   const ville = pointDeReference(filtres);
-  // LES FICHES D'ESSAI DE L'ADMINISTRATEUR N'EXISTENT PAS POUR LE
-  // PUBLIC (voir lib/fiches-admin) : on les retire à la source.
-  const proprietairesMasques = await identifiantsAdmin();
+  //  ⚠️ PLUS AUCUN MASQUAGE PAR COMPTE (passe nº 178) : la mosaïque
+  //  applique la MÊME règle que la base et que la page de fiche —
+  //  `estEnLigne`, rien d'autre. Le tableau vide dit à la fonction de
+  //  recherche qu'il n'y a aucun compte à écarter.
+  const proprietairesMasques: string[] = [];
 
   // LE CHEMIN COURT — tout le travail en base, une seule requête.
   const enBase = await rechercheEnBase(filtres, ville, proprietairesMasques);
@@ -1256,10 +1272,11 @@ export async function listerTatoueurs(
 
     const liste = await garnirFiches(
       supabase,
-      sansFichesAdmin(
-        ((reponse.data ?? []) as unknown as Tatoueur[]).map(normaliser),
-        proprietairesMasques
-      )
+      //  La requête a déjà filtré `publie` ; `estEnLigne` ajoute les
+      //  trois verrous de la base (suppression, hors ligne, refus).
+      ((reponse.data ?? []) as unknown as Tatoueur[])
+        .map(normaliser)
+        .filter(estEnLigne)
     );
     return pageDeResultats(filtrer(liste, filtres, ville), filtres, clics, {
       demonstration: false,
@@ -1269,13 +1286,7 @@ export async function listerTatoueurs(
   } catch (e) {
     const raison = e instanceof Error ? e.message : String(e);
     return pageDeResultats(
-      // La démonstration reproduit la règle : sa fiche
-      // d'administrateur est masquée elle aussi.
-      filtrer(
-        sansFichesAdmin(TATOUEURS_DEMO, [COMPTE_ADMIN_DEMO]),
-        filtres,
-        ville
-      ),
+      filtrer(TATOUEURS_DEMO, filtres, ville),
       filtres,
       clics,
       {
@@ -1489,11 +1500,12 @@ function ficheDemoDuProprietaire(
   return { tatoueur: sansProprietaire(demo), etat: demo.publie ? "enLigne" : "attente" };
 }
 
-/** Une fiche de DÉMONSTRATION visible du public : celle de
-    l'administrateur de démonstration en est exclue, comme en base. */
+/** Une fiche de DÉMONSTRATION visible du public — même règle que la
+    base : publiée, pas supprimée, pas hors ligne, pas refusée
+    (passe nº 178 : le masquage par compte administrateur a disparu). */
 function demoPublique(slug: string): Tatoueur | null {
   const demo = TATOUEURS_DEMO.find((x) => x.slug === slug) ?? null;
-  if (!demo || demo.user_id === COMPTE_ADMIN_DEMO) return null;
+  if (!demo || !estEnLigne(demo)) return null;
   return sansProprietaire(demo);
 }
 
@@ -1517,24 +1529,11 @@ export async function lireTatoueur(slug: string): Promise<{
       const [fiche] = await garnirFiches(supabase, [
         normaliser(reponse.data as unknown as Tatoueur),
       ]);
-      // Compte en cours de suppression : la fiche n'existe plus pour
-      // le public (elle revient telle quelle à la reconnexion).
-      if (fiche.supprime_le) return { tatoueur: null, demonstration: false };
-      // FICHE D'ESSAI D'UN ADMINISTRATEUR : elle n'existe pas non plus
-      // pour le public — même à son adresse exacte. Son propriétaire,
-      // lui, la retrouve par `lireFicheProprietaire`.
-      // ⚠️ SAUF SI L'INTERRUPTEUR EST ALLUMÉ (migration nº 43) : la
-      // fiche redevient alors une page publique ordinaire, adresse
-      // directe comprise. C'est bien ici, CÔTÉ SERVEUR, que ça se
-      // décide — pas à l'affichage.
-      const masques = await identifiantsAdmin();
-      if (
-        fiche.user_id &&
-        masques.includes(fiche.user_id) &&
-        fiche.admin_publique !== true
-      ) {
-        return { tatoueur: null, demonstration: false };
-      }
+      //  ⚠️ LA RÈGLE DE LA BASE, ET RIEN QU'ELLE (passe nº 178).
+      //  La page ajoutait une condition que la base n'a pas — voir
+      //  `estEnLigne` : c'est elle qui répondait « pas encore en
+      //  ligne » alors que la base disait oui.
+      if (!estEnLigne(fiche)) return { tatoueur: null, demonstration: false };
       return { tatoueur: sansProprietaire(fiche), demonstration: false };
     }
     // Table présente mais fiche absente : on regarde tout de même la

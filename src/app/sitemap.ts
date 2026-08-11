@@ -1,8 +1,7 @@
 import type { MetadataRoute } from "next";
 import { adresseDuSite } from "@/lib/email";
-import { identifiantsAdmin } from "@/lib/fiches-admin";
 import { creerClientSupabaseServeur } from "@/lib/supabase/server";
-import { styleConnu } from "@/lib/tatoueurs";
+import { estEnLigne, styleConnu } from "@/lib/tatoueurs";
 import { chargerStylesAjoutes } from "@/lib/styles-ajoutes";
 
 // Le plan du site est reconstruit au plus une fois par jour
@@ -130,19 +129,22 @@ async function fichesPourLePlan(): Promise<
   }> = [];
   try {
     const supabase = await creerClientSupabaseServeur();
-    const masques = new Set(await identifiantsAdmin());
-    //  ⚠️ `admin_publique` PEUT NE PAS EXISTER — la migration nº 43
-    //  n'est peut-être pas passée. Le site doit continuer de servir son
-    //  plan sans elle : on redemande alors sans la colonne, et le
-    //  masquage reprend sa forme d'avant (toute fiche d'admin dehors).
-    const COLONNES = "slug, ville_slug, styles, cree_le, decide_le, user_id, supprime_le";
+    //  ⚠️ LA RÈGLE DE LA BASE, ET RIEN QU'ELLE (passe nº 178). Le plan
+    //  du site retirait EN PLUS les fiches des comptes
+    //  administrateurs : celles du propriétaire n'entraient donc
+    //  jamais dans Google. Il applique désormais `estEnLigne`, comme
+    //  la mosaïque et la page de fiche.
+    //  ⚠️ `hors_ligne` et `statut` PEUVENT MANQUER sur une base à qui
+    //  il manque une migration : on redemande alors sans elles, et
+    //  `estEnLigne` se contente de ce qu'elle a.
+    const COLONNES = "slug, ville_slug, styles, cree_le, decide_le, supprime_le, publie";
     const lire = (colonnes: string) =>
       supabase
         .from("tatoueurs")
         .select(colonnes)
         .eq("publie", true)
         .is("supprime_le", null);
-    let { data, error } = await lire(`${COLONNES}, admin_publique`);
+    let { data, error } = await lire(`${COLONNES}, hors_ligne, statut`);
     if (error) ({ data, error } = await lire(COLONNES));
     if (error) return fiches;
     for (const ligne of (data ?? []) as unknown as Array<{
@@ -151,20 +153,14 @@ async function fichesPourLePlan(): Promise<
       styles: string[] | null;
       cree_le: string | null;
       decide_le: string | null;
-      user_id: string | null;
-      admin_publique?: boolean | null;
+      publie?: boolean | null;
+      supprime_le?: string | null;
+      hors_ligne?: boolean | null;
+      statut?: string | null;
     }>) {
       if (!ligne.slug || !ligne.ville_slug) continue;
-      // FICHE D'ESSAI D'UN ADMINISTRATEUR : hors du plan du site, donc
-      // hors de Google — SAUF si l'interrupteur de la migration nº 43
-      // est allumé, auquel cas elle devient une page comme une autre.
-      if (
-        ligne.user_id &&
-        masques.has(ligne.user_id) &&
-        ligne.admin_publique !== true
-      ) {
-        continue;
-      }
+      //  La même règle que partout ailleurs — celle de la base.
+      if (!estEnLigne(ligne)) continue;
       const quand = ligne.decide_le ?? ligne.cree_le;
       fiches.push({
         slug: ligne.slug,

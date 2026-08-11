@@ -2,38 +2,31 @@ import "server-only";
 import { estCourrielAdmin } from "@/lib/admin-yokofolio";
 
 /**
- * LES FICHES DE L'ADMINISTRATEUR — INVISIBLES DU PUBLIC
- * ======================================================
- * L'administrateur de yokofolio crée des fiches pour ESSAYER le site :
- * vérifier un formulaire, une mise en page, un cas limite. Ces fiches
- * ne sont pas de vrais tatoueurs — elles n'ont donc rien à faire dans
- * la mosaïque, dans les résultats de recherche, dans le plan du site,
- * ni dans Google.
+ * LES IDENTIFIANTS DES COMPTES ADMINISTRATEURS
+ * =============================================
+ * ⚠️ CE FICHIER NE MASQUE PLUS RIEN AU PUBLIC (passe nº 178).
+ * Il servait à retirer des pages publiques toute fiche appartenant à
+ * un compte de COURRIELS_ADMIN — mosaïque, recherche, page de fiche et
+ * plan du site. Or le propriétaire du site EST l'administrateur : ses
+ * propres fiches, publiées et validées, restaient invisibles, et leur
+ * adresse répondait « Cette fiche n'est pas encore en ligne » pendant
+ * que la base, elle, les donnait sans difficulté.
  *
- * ⚠️ LA RÈGLE PORTE SUR LE COMPTE, PAS SUR LA FICHE. Il n'y a AUCUNE
- * case « fiche de test » à cocher, et c'est le point important : une
- * case s'oublie, se décoche, se copie d'une fiche à l'autre. Ici,
- * toute fiche créée par un compte de COURRIELS_ADMIN est masquée, du
- * seul fait de son propriétaire — et le jour où l'on retire une
- * adresse de cette liste, ses fiches redeviennent publiques d'un seul
- * geste.
+ * IL N'Y A PLUS QU'UNE RÈGLE DE VISIBILITÉ, celle de la base
+ * (`fiche_en_ligne`, migration nº 60), recopiée une seule fois côté
+ * site dans `estEnLigne` (lib/tatoueurs) : publiée, pas supprimée, pas
+ * hors ligne, pas refusée. Une fiche d'essai se cache comme n'importe
+ * quelle autre : en ne la publiant pas.
  *
- * ELLE S'APPLIQUE CÔTÉ SERVEUR, DANS LA REQUÊTE : les lectures
- * publiques (`listerTatoueurs`, `lireTatoueur`, le plan du site)
- * ajoutent un `not in (…)` sur `user_id`. Les fiches masquées ne
- * quittent JAMAIS la base — on ne compte pas sur l'affichage pour les
- * cacher, et aucune adresse devinée ne les fait apparaître.
- *
- * LE PROPRIÉTAIRE, LUI, LES VOIT NORMALEMENT : son espace et sa page
- * de fiche passent par `lireFicheProprietaire`, qui lit avec la clé de
- * service et vérifie l'appartenance. Il peut les consulter, les
- * modifier, les supprimer — rien ne change pour lui.
+ * CE QUI RESTE ICI, ET SEULEMENT CELA : la traduction des adresses
+ * administratrices en identifiants de comptes, dont les écrans
+ * d'administration se servent (démarchage, validation). Aucune page
+ * publique ne l'appelle plus.
  *
  * POURQUOI PASSER PAR `auth.users` ? Parce que la table `tatoueurs` ne
  * porte pas l'adresse de son propriétaire, seulement son identifiant.
  * On traduit donc UNE FOIS les adresses administratrices en
- * identifiants, et on garde la réponse en mémoire quelques minutes :
- * une lecture d'annuaire par visite serait absurde.
+ * identifiants, et on garde la réponse en mémoire quelques minutes.
  */
 
 /** Combien de temps la liste des identifiants reste valable. */
