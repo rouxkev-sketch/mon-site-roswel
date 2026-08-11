@@ -1,13 +1,13 @@
 "use client";
 
 import {
-  useCallback,
   useEffect,
   useRef,
   useState,
   useSyncExternalStore,
 } from "react";
 import { BoutonEnvoyerJournal } from "@/components/BoutonEnvoyerJournal";
+import { BoutonCopierJournal, BoutonReplier } from "@/components/OutilsSonde";
 import { usePathname } from "next/navigation";
 import {
   essaisEnClair,
@@ -548,30 +548,7 @@ export function SondeRetour({
   /* 2. LE PRESSE-PAPIERS — deux chemins, iOS refusant le premier hors
         HTTPS (repris tel quel de la sonde du clavier). */
   const texte = journal.map((l) => `${l.t} ${l.texte}`).join("\n");
-  const copier = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(texte);
-      setCopie("Copié ! Colle-le dans la conversation.");
-      return;
-    } catch {
-      /* on tente l'autre chemin */
-    }
-    const zone = zoneTexte.current;
-    if (!zone) return;
-    zone.focus();
-    zone.setSelectionRange(0, texte.length);
-    let ok = false;
-    try {
-      ok = document.execCommand("copy");
-    } catch {
-      ok = false;
-    }
-    setCopie(
-      ok
-        ? "Copié ! Colle-le dans la conversation."
-        : "Le texte est sélectionné : garde le doigt appuyé dessus, puis « Copier »."
-    );
-  }, [texte]);
+
 
   if (!armee) return null;
 
@@ -608,7 +585,8 @@ export function SondeRetour({
         position: "fixed",
         inset: "auto 8px 8px 8px",
         zIndex: 2147483647,
-        maxHeight: "70vh",
+        //  ⚠️ LA MOITIÉ BASSE, jamais plus (nº 183-§1).
+        maxHeight: "50vh",
         display: "flex",
         flexDirection: "column",
         gap: 8,
@@ -642,10 +620,9 @@ export function SondeRetour({
         }}
       />
       {copie && <span style={{ color: "#EE3D6F" }}>{copie}</span>}
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <button type="button" onClick={copier} style={styleBouton}>
-          Copier
-        </button>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-start" }}>
+        <BoutonReplier surToucher={() => setOuvert(false)} />
+        <BoutonCopierJournal texte={() => texte} />
         {/*  ⚠️ LE CHEMIN SANS PRESSE-PAPIERS (nº 174-§3A). */}
         <BoutonEnvoyerJournal sonde="retour" texte={() => texte} />
         <button

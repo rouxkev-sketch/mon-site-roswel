@@ -3,6 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import { BoutonEnvoyerJournal } from "@/components/BoutonEnvoyerJournal";
 import {
+  BoutonCopierJournal,
+  BoutonReplier,
+  PastilleSonde,
+  useSondeRepliee,
+} from "@/components/OutilsSonde";
+import {
   lignesDuJournal,
   noter,
   sauvegarderMaintenant,
@@ -174,6 +180,10 @@ function historiqueEtCriteres(): string {
 
 export function SondeBascule() {
   const [armee, setArmee] = useState(false);
+  //  ⚠️ REPLIÉE AU DÉPART (nº 183-§1) : une pastille, rien de plus. Le
+  //  journal, lui, continue d'enregistrer — voir les effets ci-dessous,
+  //  qui ne dépendent pas de cet état.
+  const { repliee, basculer } = useSondeRepliee();
   const zone = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -334,9 +344,13 @@ export function SondeBascule() {
     };
   }, [armee]);
 
-  /* ---- L'AFFICHAGE : écrit à la main, jamais par un rendu ---- */
+  /* ---- L'AFFICHAGE : écrit à la main, jamais par un rendu ----
+     ⚠️ IL DÉPEND AUSSI DU REPLI (nº 183-§1) : le nœud n'existe pas
+     quand la sonde est repliée ; au dépliage, cet effet se rejoue et
+     réécrit TOUT le journal, y compris ce qui s'est enregistré
+     pendant. */
   useEffect(() => {
-    if (!armee) return;
+    if (!armee || repliee) return;
     const ecrire = () => {
       const noeud = zone.current;
       if (!noeud) return;
@@ -362,9 +376,12 @@ export function SondeBascule() {
     };
     ecrire();
     return souscrireAuJournal(ecrire);
-  }, [armee]);
+  }, [armee, repliee]);
 
   if (!armee) return null;
+  if (repliee) {
+    return <PastilleSonde lettre="B" titre="Journal bascule" surToucher={basculer} />;
+  }
 
   return (
     <div
@@ -389,7 +406,7 @@ export function SondeBascule() {
         display: "flex",
         flexDirection: "column",
         gap: 8,
-        maxHeight: "52vh",
+        maxHeight: "50vh",
       }}
     >
       {/*  ⚠️ LE TITRE SUR SA LIGNE, LES BOUTONS SUR LA LEUR
@@ -397,32 +414,14 @@ export function SondeBascule() {
            seule ligne se marchent dessus. Empilés, chaque bouton garde
            toute sa largeur et ses 44 px de haut — le pouce ne peut pas
            les manquer. */}
-      <span style={{ color: "#EE3D6F", fontWeight: 700, flexShrink: 0 }}>
-        JOURNAL BASCULE
-      </span>
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <span style={{ color: "#EE3D6F", fontWeight: 700, flex: 1 }}>
+          JOURNAL BASCULE
+        </span>
+        <BoutonReplier surToucher={basculer} />
+      </div>
       <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-        <button
-          type="button"
-          onClick={() => {
-            void navigator.clipboard?.writeText(journalEnTexte());
-          }}
-          style={{
-            flex: 1,
-            background: "#EE3D6F",
-            color: "#FFFFFF",
-            border: 0,
-            borderRadius: 10,
-            //  Atteignable au pouce : 44 px de haut, large.
-            minHeight: 44,
-            padding: "0 22px",
-            font: "inherit",
-            fontSize: 14,
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
-        >
-          COPIER
-        </button>
+        <BoutonCopierJournal texte={journalEnTexte} pleineLargeur />
         {/*  ⚠️ LE CHEMIN QUI NE DÉPEND PAS DU PRESSE-PAPIERS
              (nº 174-§3A) : il poste le journal au serveur, qui l'écrit
              dans un fichier. COPIER reste là pour les autres

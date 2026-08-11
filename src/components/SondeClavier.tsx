@@ -1,13 +1,18 @@
 "use client";
 
 import {
-  useCallback,
   useEffect,
   useRef,
   useState,
   useSyncExternalStore,
 } from "react";
 import { BoutonEnvoyerJournal } from "@/components/BoutonEnvoyerJournal";
+import {
+  BoutonCopierJournal,
+  BoutonReplier,
+  PastilleSonde,
+  useSondeRepliee,
+} from "@/components/OutilsSonde";
 
 /**
  * LA SONDE — ELLE MESURE SUR LE VRAI IPHONE, ELLE NE CORRIGE RIEN
@@ -189,6 +194,9 @@ export function SondeClavier() {
     lireAdresse,
     jamaisSurLeServeur
   );
+  //  ⚠️ REPLIÉE AU DÉPART (nº 183-§1) : le rapport plein écran
+  //  masquait le bouton « Valider » du moteur.
+  const { repliee, basculer } = useSondeRepliee();
   const [enCours, setEnCours] = useState(false);
   const [rapport, setRapport] = useState<string | null>(null);
   const [copie, setCopie] = useState<string | null>(null);
@@ -376,32 +384,7 @@ export function SondeClavier() {
 
   /* 3. LE PRESSE-PAPIERS. Deux chemins, parce qu'iOS refuse le premier
         hors HTTPS : l'API moderne, puis la sélection du texte. */
-  const copier = useCallback(async () => {
-    const texte = rapport ?? "";
-    try {
-      await navigator.clipboard.writeText(texte);
-      setCopie("Copié ! Colle-le dans la conversation.");
-      return;
-    } catch {
-      /* on tente l'autre chemin */
-    }
-    const zone = zoneTexte.current;
-    if (zone) {
-      zone.focus();
-      zone.setSelectionRange(0, texte.length);
-      let ok = false;
-      try {
-        ok = document.execCommand("copy");
-      } catch {
-        ok = false;
-      }
-      setCopie(
-        ok
-          ? "Copié ! Colle-le dans la conversation."
-          : "Le texte est sélectionné : garde le doigt appuyé dessus, puis « Copier »."
-      );
-    }
-  }, [rapport]);
+
 
   if (!armee) return null;
 
@@ -430,14 +413,21 @@ export function SondeClavier() {
         </div>
       )}
 
+      {/*  REPLIÉE : une pastille, et rien d'autre à l'écran. */}
+      {rapport && repliee && (
+        <PastilleSonde lettre="C" titre="Sonde clavier" surToucher={basculer} bas={112} />
+      )}
+
       {/* LE RAPPORT — il n'existe qu'une fois les 2 secondes passées. */}
-      {rapport && (
+      {rapport && !repliee && (
         <div
           role="dialog"
           aria-label="Rapport de la sonde"
           style={{
             position: "fixed",
-            inset: 0,
+            //  ⚠️ LA MOITIÉ BASSE, jamais tout l'écran (nº 183-§1).
+            inset: "auto 0 0 0",
+            maxHeight: "50vh",
             zIndex: 2147483000,
             background: "#111",
             color: "#eee",
@@ -448,25 +438,14 @@ export function SondeClavier() {
             boxSizing: "border-box",
           }}
         >
-          <p style={{ margin: "0 0 8px", fontWeight: 700, fontSize: 15 }}>
-            Mesure terminée
-          </p>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
+            <p style={{ margin: 0, fontWeight: 700, fontSize: 15, flex: 1 }}>
+              Mesure terminée
+            </p>
+            <BoutonReplier surToucher={basculer} />
+          </div>
           <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-            <button
-              type="button"
-              onClick={copier}
-              style={{
-                flex: 1,
-                minHeight: 46,
-                borderRadius: 999,
-                border: "none",
-                background: "#EE3D6F",
-                color: "#fff",
-                font: "600 15px system-ui, sans-serif",
-              }}
-            >
-              Copier
-            </button>
+            <BoutonCopierJournal texte={() => rapport ?? ""} pleineLargeur />
             {/*  ⚠️ LE CHEMIN SANS PRESSE-PAPIERS (nº 174-§3A) : sur
                  iPhone, « Copier » échoue — celui-ci poste le rapport au
                  serveur, qui l'écrit dans un fichier. */}

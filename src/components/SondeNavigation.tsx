@@ -2,6 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BoutonEnvoyerJournal } from "@/components/BoutonEnvoyerJournal";
+import {
+  BoutonCopierJournal,
+  BoutonReplier,
+  PastilleSonde,
+  useSondeRepliee,
+} from "@/components/OutilsSonde";
 
 /**
  * LA SONDE DE NAVIGATION — ELLE MESURE CHEZ LE PROPRIÉTAIRE, ET NE
@@ -118,6 +124,8 @@ function adresse(): string {
 export function SondeNavigation() {
   const [armee, setArmee] = useState(false);
   const [mesure, setMesure] = useState<Mesure>("retour");
+  //  ⚠️ REPLIÉE AU DÉPART (nº 183-§1).
+  const { repliee, basculer } = useSondeRepliee();
   const [enCours, setEnCours] = useState(false);
   /** Le nombre d'événements retenus — le témoin le montre. */
   const [combien, setCombien] = useState(0);
@@ -462,32 +470,7 @@ export function SondeNavigation() {
 
   /* 5. LE PRESSE-PAPIERS — deux chemins, comme la sonde du clavier :
         l'API moderne, puis la sélection du texte (iOS hors HTTPS). */
-  const copier = useCallback(async () => {
-    const texte = rapport ?? construire();
-    try {
-      await navigator.clipboard.writeText(texte);
-      setCopie("Copié ! Colle-le dans la conversation.");
-      return;
-    } catch {
-      /* on tente l'autre chemin */
-    }
-    const zone = zoneTexte.current;
-    if (zone) {
-      zone.focus();
-      zone.setSelectionRange(0, texte.length);
-      let ok = false;
-      try {
-        ok = document.execCommand("copy");
-      } catch {
-        ok = false;
-      }
-      setCopie(
-        ok
-          ? "Copié ! Colle-le dans la conversation."
-          : "Le texte est sélectionné : garde le doigt appuyé dessus, puis « Copier »."
-      );
-    }
-  }, [rapport, construire]);
+
 
   if (!armee) return null;
 
@@ -553,14 +536,21 @@ export function SondeNavigation() {
         </div>
       )}
 
-      {/* LE RAPPORT — plein écran, avec « Copier ». */}
-      {rapport && (
+      {/*  REPLIÉE : une pastille, et rien d'autre à l'écran. */}
+      {rapport && repliee && (
+        <PastilleSonde lettre="N" titre="Sonde navigation" surToucher={basculer} bas={164} />
+      )}
+
+      {/* LE RAPPORT — la moitié basse, avec « Copier ». */}
+      {rapport && !repliee && (
         <div
           role="dialog"
           aria-label="Rapport de la sonde de navigation"
           style={{
             position: "fixed",
-            inset: 0,
+            //  ⚠️ LA MOITIÉ BASSE, jamais tout l'écran (nº 183-§1).
+            inset: "auto 0 0 0",
+            maxHeight: "50vh",
             zIndex: 2147483000,
             background: "#111",
             color: "#eee",
@@ -572,25 +562,14 @@ export function SondeNavigation() {
             boxSizing: "border-box",
           }}
         >
-          <p style={{ margin: "0 0 8px", fontWeight: 700, fontSize: 15 }}>
-            Rapport — mesure « {mesureCourante.current} »
-          </p>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
+            <p style={{ margin: 0, fontWeight: 700, fontSize: 15, flex: 1 }}>
+              Rapport — mesure « {mesureCourante.current} »
+            </p>
+            <BoutonReplier surToucher={basculer} />
+          </div>
           <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-            <button
-              type="button"
-              onClick={copier}
-              style={{
-                flex: 1,
-                minHeight: 46,
-                borderRadius: 999,
-                border: "none",
-                background: "#EE3D6F",
-                color: "#fff",
-                font: "600 15px system-ui, sans-serif",
-              }}
-            >
-              Copier
-            </button>
+            <BoutonCopierJournal texte={() => rapport ?? ""} pleineLargeur />
             {/*  ⚠️ LE CHEMIN SANS PRESSE-PAPIERS (nº 174-§3A). */}
             <BoutonEnvoyerJournal
               sonde="navigation"

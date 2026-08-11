@@ -2,6 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { BoutonEnvoyerJournal } from "@/components/BoutonEnvoyerJournal";
+import {
+  BoutonCopierJournal,
+  BoutonReplier,
+  PastilleSonde,
+  useSondeRepliee,
+} from "@/components/OutilsSonde";
 
 /**
  * LA SONDE DE LA FENÊTRE DES FILTRES — ELLE MESURE CHEZ LE
@@ -159,6 +165,8 @@ function lignes(r: Releve | null): [string, string][] {
 
 export function SondeFiltres() {
   const [armee, setArmee] = useState(false);
+  //  ⚠️ REPLIÉE AU DÉPART (nº 183-§1) — une pastille dans le coin.
+  const { repliee, basculer } = useSondeRepliee();
   /** ⚠️ LE RELEVÉ N'EST PAS UN ÉTAT REACT : il change trois fois par
       seconde, et un rendu à chaque fois ferait peser la sonde sur ce
       qu'elle mesure. On écrit directement dans son propre nœud. */
@@ -175,7 +183,7 @@ export function SondeFiltres() {
   }, []);
 
   useEffect(() => {
-    if (!armee) return;
+    if (!armee || repliee) return;
     const ecrire = () => {
       const noeud = zone.current;
       if (!noeud) return;
@@ -200,9 +208,19 @@ export function SondeFiltres() {
     ecrire();
     const battement = window.setInterval(ecrire, 300);
     return () => window.clearInterval(battement);
-  }, [armee]);
+  }, [armee, repliee]);
 
   if (!armee) return null;
+  if (repliee) {
+    return (
+      <PastilleSonde
+        lettre="F"
+        titre="Sonde filtres"
+        surToucher={basculer}
+        bas={60}
+      />
+    );
+  }
 
   return (
     <div
@@ -235,25 +253,8 @@ export function SondeFiltres() {
         <span style={{ color: "#EE3D6F", fontWeight: 700 }}>
           SONDE FILTRES · ?sonde-filtres=1
         </span>
-        <button
-          type="button"
-          onClick={() => {
-            void navigator.clipboard?.writeText(dernier.current);
-          }}
-          style={{
-            background: "#EE3D6F",
-            color: "#FFFFFF",
-            border: 0,
-            borderRadius: 8,
-            padding: "4px 12px",
-            font: "inherit",
-            fontWeight: 700,
-            cursor: "pointer",
-            pointerEvents: "auto",
-          }}
-        >
-          Copier
-        </button>
+        <BoutonReplier surToucher={basculer} />
+        <BoutonCopierJournal texte={() => dernier.current} />
         {/*  ⚠️ LE CHEMIN SANS PRESSE-PAPIERS (nº 174-§3A). */}
         <BoutonEnvoyerJournal sonde="filtres" texte={() => dernier.current} />
       </div>

@@ -2,6 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { BoutonEnvoyerJournal } from "@/components/BoutonEnvoyerJournal";
+import {
+  BoutonCopierJournal,
+  BoutonReplier,
+  PastilleSonde,
+  useSondeRepliee,
+} from "@/components/OutilsSonde";
 
 /**
  * LA SONDE DU VERRE — ELLE MESURE CHEZ LE PROPRIÉTAIRE, ET NE CORRIGE
@@ -175,6 +181,8 @@ function lignes(): [string, string][] {
 
 export function SondeVerre() {
   const [armee, setArmee] = useState(false);
+  //  ⚠️ REPLIÉE AU DÉPART (nº 183-§1) — une pastille dans le coin.
+  const { repliee, basculer } = useSondeRepliee();
   const zone = useRef<HTMLDivElement>(null);
   const dernier = useRef<string>("");
 
@@ -186,7 +194,7 @@ export function SondeVerre() {
   }, []);
 
   useEffect(() => {
-    if (!armee) return;
+    if (!armee || repliee) return;
     const ecrire = () => {
       const noeud = zone.current;
       if (!noeud) return;
@@ -211,9 +219,19 @@ export function SondeVerre() {
     ecrire();
     const battement = window.setInterval(ecrire, 500);
     return () => window.clearInterval(battement);
-  }, [armee]);
+  }, [armee, repliee]);
 
   if (!armee) return null;
+  if (repliee) {
+    return (
+      <PastilleSonde
+        lettre="V"
+        titre="Sonde verre"
+        surToucher={basculer}
+        bas={60}
+      />
+    );
+  }
 
   return (
     <div
@@ -221,7 +239,7 @@ export function SondeVerre() {
         position: "fixed",
         left: 8,
         right: 8,
-        top: 8,
+        bottom: "max(8px, env(safe-area-inset-bottom))",
         zIndex: 2147483647,
         background: "#000000",
         border: "2px solid #EE3D6F",
@@ -229,7 +247,7 @@ export function SondeVerre() {
         padding: "10px 12px",
         font: "13px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace",
         color: "#FFFFFF",
-        maxHeight: "60vh",
+        maxHeight: "50vh",
         overflow: "auto",
       }}
     >
@@ -244,24 +262,8 @@ export function SondeVerre() {
         <span style={{ color: "#EE3D6F", fontWeight: 700 }}>
           SONDE VERRE · ?sonde-verre=1
         </span>
-        <button
-          type="button"
-          onClick={() => {
-            void navigator.clipboard?.writeText(dernier.current);
-          }}
-          style={{
-            background: "#EE3D6F",
-            color: "#FFFFFF",
-            border: 0,
-            borderRadius: 8,
-            padding: "4px 12px",
-            font: "inherit",
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
-        >
-          Copier
-        </button>
+        <BoutonReplier surToucher={basculer} />
+        <BoutonCopierJournal texte={() => dernier.current} />
         {/*  ⚠️ LE CHEMIN SANS PRESSE-PAPIERS (nº 174-§3A). */}
         <BoutonEnvoyerJournal sonde="verre" texte={() => dernier.current} />
       </div>
