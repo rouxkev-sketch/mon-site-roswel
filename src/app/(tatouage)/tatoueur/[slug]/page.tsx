@@ -224,10 +224,12 @@ export default async function PageFicheTatoueur({
           },
         }}
       />
-      {/* LE FIL D'ARIANE, version moteurs de recherche : le même
-          chemin Accueil › Style › Nom que celui affiché en haut de la
-          fiche. C'est lui qui fait apparaître le chemin dans les
-          résultats de recherche. */}
+      {/* LE FIL D'ARIANE, version moteurs de recherche — INVISIBLE.
+          ⚠️ La page elle-même n'affiche AUCUN fil d'Ariane (nº 200-§1) :
+          on y arrive directement, il n'y a pas de chemin à remonter.
+          Le chemin Accueil › Style › Nom ne se voit qu'à deux endroits :
+          ici, pour les résultats de recherche, et dans le bandeau de la
+          fenêtre superposée (FenetreFiche, nº 200-§2). */}
       <JsonLd
         donnees={{
           "@context": "https://schema.org",
