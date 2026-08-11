@@ -1,6 +1,10 @@
 "use client";
 
 import type { Tatoueur } from "@/lib/tatoueurs";
+import {
+  adresseDeRecherche,
+  adresseDeRechercheCourante,
+} from "@/lib/adresse-recherche";
 
 /**
  * LA MOSAÏQUE MISE DE CÔTÉ — pour que le retour retombe PILE
@@ -58,11 +62,15 @@ export type MosaiqueMemorisee = {
     (navigation privée, quota) : le retour se contentera alors de la
     première page, comme avant. */
 export function memoriserMosaique(
-  adresse: string,
+  adresseDemandee: string,
   tatoueurs: Tatoueur[],
   page: number,
   total: number
 ) {
+  //  ⚠️ LA MÊME CLÉ QUE LA POSITION (nº 184-§2) : l'adresse CANONIQUE
+  //  de la recherche — critères compris, réglages de sonde exclus. Une
+  //  mosaïque appartient à une recherche précise, jamais à une autre.
+  const adresse = adresseDeRecherche(adresseDemandee);
   try {
     //  ⚠️ UNE NOTE NE RÉTRÉCIT JAMAIS (passe nº 181-§1a).
     //  ----------------------------------------------------------
@@ -101,7 +109,8 @@ export function memoriserMosaique(
 }
 
 /** La mosaïque mise de côté POUR CETTE ADRESSE, ou null. */
-export function lireMosaique(adresse: string): MosaiqueMemorisee | null {
+export function lireMosaique(adresseDemandee: string): MosaiqueMemorisee | null {
+  const adresse = adresseDeRecherche(adresseDemandee);
   try {
     const brut = sessionStorage.getItem(CLE);
     if (!brut) return null;
@@ -119,7 +128,8 @@ export function lireMosaique(adresse: string): MosaiqueMemorisee | null {
   }
 }
 
-/** L'adresse courante, telle que la mémoire la nomme. */
+/** L'adresse courante, telle que la mémoire la nomme — c'est-à-dire
+    l'adresse CANONIQUE de la recherche affichée (nº 184-§2). */
 export function adresseCourante(): string {
-  return window.location.pathname + window.location.search;
+  return adresseDeRechercheCourante();
 }

@@ -123,7 +123,18 @@ var demande=null;try{demande=sessionStorage.getItem(${restaurer})}catch(e){}
 var attendue=demande&&(demande==="1"||demande===adresse);
 if(attendue){try{sessionStorage.removeItem(${restaurer})}catch(e){}}
 if(nav==="navigate"&&!attendue)return;
-var note=jour(${prefixe}+adresse,localStorage);
+/* ⚠️ LA CLÉ EST L'ADRESSE CANONIQUE DE LA RECHERCHE (nº 184-§2) :
+   critères compris, réglages de sonde exclus, paramètres triés. LA
+   MÊME LOGIQUE QU'EN lib/adresse-recherche — si l'une change,
+   l'autre aussi, sinon on irait chercher une clé que personne
+   n'écrit. */
+var p=new URLSearchParams(location.search);var noms=[];
+p.forEach(function(v,n){noms.push(n)});
+for(var i=0;i<noms.length;i++){var n=noms[i];
+if(n.indexOf("sonde")===0||n==="clair"||n==="verre"||n==="flou"||n==="sans")p.delete(n)}
+p.sort();var q=p.toString();
+var cle=location.pathname+(q?"?"+q:"");
+var note=jour(${prefixe}+cle,localStorage);
 if(!note||!note.y||maintenant-(note.date||0)>agePosition)return;
 r.style.minHeight=(note.y+innerHeight)+"px";
 r.dataset.positionPosee=String(note.y);

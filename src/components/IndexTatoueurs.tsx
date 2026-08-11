@@ -29,6 +29,11 @@ import {
   lireMosaique,
   memoriserMosaique,
 } from "@/lib/mosaique-session";
+import { adresseDeRecherche } from "@/lib/adresse-recherche";
+import {
+  consommerValidation,
+  traverseeEnCours,
+} from "@/lib/etapes-historique";
 import { estHydrate } from "@/lib/navigation-session";
 import { sans } from "@/lib/interrupteurs-mesure";
 import { useUtilisateur } from "@/lib/use-utilisateur";
@@ -293,9 +298,34 @@ export function IndexTatoueurs({
     //  doit pas ajouter une étape identique à la précédente — le
     //  retour arrière semblerait alors ne rien faire.
     if (ecrireLAdresse) {
-      if (adresse === adresseCourante()) {
+      /**
+       * ⚠️ LE DROIT D'ÉCRIRE UNE ÉTAPE SE VÉRIFIE AVANT D'ÉCRIRE
+       * (passe nº 184-§1)
+       * ==============================================================
+       * LE DÉFAUT RELEVÉ SUR L'IPHONE : chaque RETOUR ajoutait une
+       * entrée au lieu d'en consommer une (3, 4, 5, 6…). L'étape posée
+       * à la main pour une recherche validée se reposait au retour :
+       * le code croyait à une nouvelle validation, empilait, et
+       * effaçait du même geste les étapes suivantes — d'où le
+       * tourne-en-rond puis la sortie du site.
+       *
+       * DEUX VERROUS, ET ILS SE LISENT ICI, DANS CET ORDRE :
+       *  · `consommerValidation()` — le drapeau du bouton « Valider »
+       *    ne sert QU'UNE FOIS et s'efface au premier regard ; il ne
+       *    survit ni à une navigation ni à l'attente. Un
+       *    `{ validee: true }` rejoué n'ouvre donc plus rien ;
+       *  · `traverseeEnCours()` — le navigateur est-il en train de
+       *    reculer ou d'avancer ? Tant qu'il l'est, RIEN ne s'empile :
+       *    l'adresse est corrigée sur place (`replace`).
+       * (Notre propre `back()`, celui que la page de recherche fait
+       * pour dépiler sa marche, ne compte pas comme une traversée —
+       * voir lib/etapes-historique.)
+       */
+      const traversee = traverseeEnCours();
+      const poseUneEtape = validee && consommerValidation() && !traversee;
+      if (traversee || adresseDeRecherche(adresse) === adresseCourante()) {
         router.replace(adresse, { scroll: false });
-      } else if (validee) {
+      } else if (poseUneEtape) {
         /**
          * UNE RECHERCHE VALIDÉE POSE UNE ÉTAPE, ET ON NE S'EN REMET
          * PLUS AU ROUTEUR (passe nº 182)

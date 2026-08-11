@@ -12,6 +12,8 @@
  * (posé dans le layout).
  */
 
+import { adresseDeRecherche } from "@/lib/adresse-recherche";
+
 export const CLE_JOURNAL = "roswel:pages-visitees";
 const CLE = CLE_JOURNAL;
 
@@ -96,11 +98,26 @@ export function lirePageCourante(): string | null {
 
 export const PREFIXE_DEFILEMENT = "roswel:defilement:";
 
+/**
+ * ⚠️ UNE POSITION APPARTIENT À UNE RECHERCHE PRÉCISE (nº 184-§2).
+ * ------------------------------------------------------------------
+ * LE DÉFAUT, relevé sur l'iPhone du propriétaire : la position prise
+ * dans la mosaïque complète — 10965 px — était réclamée sur une page
+ * filtrée qui ne mesure que 1338 px, et la page retombait à 132.
+ * La clé passe donc par l'adresse CANONIQUE de la recherche : les
+ * critères en font partie, les réglages de sonde n'en font pas partie
+ * (voir lib/adresse-recherche, et la même logique en clair dans le
+ * script d'avant peinture).
+ */
+function cleDePosition(url: string): string {
+  return `${PREFIXE_DEFILEMENT}${adresseDeRecherche(url)}`;
+}
+
 /** Mémorise la position de défilement d'une adresse */
 export function memoriserDefilement(url: string, y: number) {
   try {
     localStorage.setItem(
-      `${PREFIXE_DEFILEMENT}${url}`,
+      cleDePosition(url),
       JSON.stringify({ y: Math.round(y), date: Date.now() })
     );
   } catch {
@@ -111,7 +128,7 @@ export function memoriserDefilement(url: string, y: number) {
 /** La position mémorisée (0 si aucune ou trop ancienne) */
 export function lireDefilement(url: string): number {
   try {
-    const brut = localStorage.getItem(`${PREFIXE_DEFILEMENT}${url}`);
+    const brut = localStorage.getItem(cleDePosition(url));
     if (!brut) return 0;
     const { y, date } = JSON.parse(brut) as { y: number; date: number };
     //  ⚠️ TRENTE MINUTES, et plus vingt-quatre heures (nº 181-§1c).

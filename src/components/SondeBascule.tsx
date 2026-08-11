@@ -15,6 +15,7 @@ import {
   sondeBasculeArmee,
   souscrireAuJournal,
 } from "@/lib/journal-bascule";
+import { adresseDeRechercheCourante } from "@/lib/adresse-recherche";
 
 /**
  * LA SONDE-JOURNAL DE LA BASCULE — elle enregistre, elle ne corrige
@@ -110,10 +111,13 @@ function typeDeNavigation(): string {
 /** c) L'ÉTAT SAUVEGARDÉ : où il est rangé, et s'il est TROUVÉ ou
     ABSENT — les deux mémoires, nommées par leur clé exacte. */
 function etatSauvegarde(): string[] {
-  const adresse = adresseCourante();
+  //  ⚠️ LA CLÉ EST L'ADRESSE CANONIQUE DE LA RECHERCHE (nº 184-§2) —
+  //  celle sous laquelle le site range vraiment : critères compris,
+  //  réglages de sonde exclus.
+  const adresse = adresseDeRechercheCourante();
   const dit: string[] = [];
 
-  //  1. LA POSITION DE DÉFILEMENT (localStorage, une clé par adresse).
+  //  1. LA POSITION DE DÉFILEMENT (localStorage, une clé par recherche).
   const cle = `${PREFIXE_DEFILEMENT}${adresse}`;
   try {
     const brut = localStorage.getItem(cle);
@@ -216,7 +220,7 @@ export function SondeBascule() {
     if (!posee) {
       try {
         const brut = localStorage.getItem(
-          `${PREFIXE_DEFILEMENT}${adresseCourante()}`
+          `${PREFIXE_DEFILEMENT}${adresseDeRechercheCourante()}`
         );
         demandee = brut ? Number((JSON.parse(brut) as { y?: number }).y) || 0 : 0;
       } catch {

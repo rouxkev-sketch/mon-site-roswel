@@ -26,6 +26,7 @@ import {
 } from "@/components/Icones";
 import { BadgeCharte, GroupeBadges } from "@/components/BadgesCharte";
 import { remonterSansClavier } from "@/lib/remontee-champ";
+import { armerValidation } from "@/lib/etapes-historique";
 import { basculerSansSaut } from "@/lib/bascule-verrouillee";
 //  ⚠️ TEMPORAIRE (nº 173) — la sonde-journal enregistre les clics sur
 //  les deux boutons de bascule. Elle n'écrit RIEN sans `?sonde-bascule=1`.
@@ -335,7 +336,14 @@ export function MoteurTatouage({
     //  ⚠️ VALIDÉE (nº 182) : c'est CE geste — et lui seul — qui pose
     //  une étape d'historique, pour que le retour ramène à la mosaïque
     //  d'avant la recherche au lieu de sortir du site.
-    if (retenus) surChangement(retenus, { validee: true });
+    //  ⚠️ ET LE DRAPEAU NE SERT QU'UNE FOIS (nº 184-§1b) : il est armé
+    //  ICI, à l'instant du geste, et effacé dès qu'il est lu. Un
+    //  `{ validee: true }` rejoué plus tard — au retour, par exemple —
+    //  ne trouvera plus rien à consommer.
+    if (retenus) {
+      armerValidation();
+      surChangement(retenus, { validee: true });
+    }
     // LA LISTE SE RELIT DEPUIS LE HAUT : valider une recherche ramène
     // tout en haut des résultats — sinon la page reste là où on
     // l'avait laissée et masque les premières cartes. `instant` : le

@@ -13,6 +13,7 @@ import {
   purgerDefilementsAnciens,
   signalerTraversee,
 } from "@/lib/navigation-session";
+import { surveillerLesTraversees } from "@/lib/etapes-historique";
 import {
   poserLaPosition,
   reprendreLaReserveDuScript,
@@ -111,6 +112,12 @@ export function MemoireNavigation() {
   const premierRendu = useRef(true);
 
   useEffect(() => {
+    //  ⚠️ L'OREILLE DES TRAVERSÉES EN PREMIER (nº 184-§1). Elle doit
+    //  être posée avant tout autre écouteur de `popstate` : c'est elle
+    //  qui dit ensuite « on est en train de reculer » à qui voudrait
+    //  écrire dans l'historique (voir lib/etapes-historique).
+    surveillerLesTraversees();
+
     // La restauration native provoque le sursaut : on la coupe
     if ("scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
