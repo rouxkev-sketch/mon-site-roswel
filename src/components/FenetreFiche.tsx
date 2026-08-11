@@ -34,12 +34,17 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  *    gauche, contenu à droite), une seule colonne étroite ;
  *  - LES BOUTONS POSÉS SUR LA PHOTO, dont la place est celle du web
  *    depuis la nº 198-§3 : le PARTAGE dans l'angle haut GAUCHE, le
- *    CŒUR dans l'angle haut DROIT — descendus d'un cran ici pour
- *    laisser le bandeau du fil d'Ariane seul en haut (nº 200-§2) ;
- *  - LE BANDEAU DU FIL D'ARIANE (nº 200-§2) : la page n'en a pas
- *    (nº 200-§1 — on y arrive directement), la fenêtre en a un, et il
- *    appartient à l'ENVELOPPE : c'est le chemin de la grille qu'elle
- *    recouvre, pas du contenu de la fiche.
+ *    CŒUR dans l'angle haut DROIT ;
+ *  - LE FIL D'ARIANE (nº 201) : la page n'en a pas (nº 200-§1 — on y
+ *    arrive directement), la fenêtre en a un, et il appartient à
+ *    l'ENVELOPPE : c'est le chemin de la grille qu'elle recouvre, pas
+ *    du contenu de la fiche. TEXTE SEUL, posé dans le voile AU-DESSUS
+ *    de la fenêtre, calé sur son bord gauche — le bandeau de la nº 200
+ *    (une surface sombre sur un voile déjà sombre, indiscernable, et
+ *    qui recouvrait le haut de la photo) est supprimé : aucun fond,
+ *    aucun encadré. Et il ne DÉPLACE rien (nº 202) : hors du flux, il
+ *    s'écrit vers le haut dans le voile — la fenêtre garde exactement
+ *    le centrage et les dimensions d'avant la nº 200.
  *
  * LA PHOTO, elle aussi, est le composant de la page (`CarrouselPortfolio`) :
  * la fenêtre avait son propre carrousel, avec ses flèches, ses points et
@@ -220,123 +225,129 @@ export function FenetreFiche({
           écrasé. La marge haute étroite (pt-16) laisse sa place à la
           croix. */}
       <div className="absolute inset-0 flex items-center justify-center p-4 pt-16 lg:p-8 pointer-events-none">
+        {/* ⚠️ LA FENÊTRE EST CENTRÉE EXACTEMENT COMME AVANT LA Nº 200
+            (nº 202). Cette enveloppe ne fait qu'accrocher le fil
+            d'Ariane : elle épouse la fenêtre (le fil, HORS du flux, ne
+            pèse rien — ni dans sa largeur, ni dans sa hauteur), et
+            c'est donc toujours la fenêtre seule que le conteneur
+            centre. Pas un pixel de décalage. */}
         <div
-          ref={fenetreRef}
-          className="pointer-events-auto relative flex flex-col lg:flex-row
-                     w-[min(560px,100%)] lg:w-auto max-h-full
-                     lg:h-[min(88vh,940px,calc((100vw-476px)*1.25))]
-                     lg:max-w-[min(1200px,calc(100vw-96px))]
-                     overflow-y-auto lg:overflow-hidden overscroll-contain
-                     rounded-b-lg rounded-t-none lg:rounded-none lg:rounded-r-lg bg-sombre-carte
-                     shadow-[0_24px_80px_rgba(0,0,0,0.6)]
-                     scale-100 transition-transform duration-200 starting:scale-[0.97]"
+          className="relative flex max-h-full flex-col
+                     w-[min(560px,100%)] lg:w-auto"
         >
-          {/* §2 (nº 200) — LE BANDEAU DU FIL D'ARIANE, d'un bord à
-              l'autre de la fenêtre : de l'angle gauche de la photo au
-              bord droit de la colonne. POSÉ PAR-DESSUS le contenu, HORS
-              du flux — la fenêtre garde exactement son centre et ses
-              dimensions (§3) : en deux colonnes il est `absolute` ; en
-              une seule (la fenêtre elle-même défile) son enveloppe
-              `sticky` a une hauteur NULLE, le bandeau en déborde — rien
-              n'est poussé vers le bas, et il reste au haut de la
-              fenêtre pendant le défilement.
-              Fond sombre TRANSLUCIDE (le voile des capsules posées sur
-              photo : noir voilé + verre dépoli) : on devine la photo à
-              travers. Hauteur : la typographie et son air, rien de
-              plus. Aucun contour, aucun rose — les liens répondent en
-              blanc, comme tout ce qui vit sur une photo. */}
-          <div className="sticky top-0 z-[3] h-0 w-full shrink-0 lg:absolute lg:inset-x-0 lg:h-auto lg:w-auto">
-            <nav
-              aria-label="Fil d'Ariane"
-              className="bg-black/55 backdrop-blur px-4 py-1.5"
-            >
-              <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-white/70">
-                <li>
-                  <Link href="/" className="hover:text-white transition-colors">
-                    Accueil
-                  </Link>
-                </li>
-                {stylePrincipal && (
-                  <>
-                    <li aria-hidden="true">›</li>
-                    <li>
-                      <Link
-                        href={`/tatouage/${stylePrincipal.slug}/${tatoueur.ville_slug}`}
-                        className="hover:text-white transition-colors"
-                      >
-                        {stylePrincipal.label}
-                      </Link>
-                    </li>
-                  </>
-                )}
-                <li aria-hidden="true">›</li>
-                <li aria-current="page" className="font-semibold text-white">
-                  {tatoueur.nom}
-                </li>
-              </ol>
-            </nav>
-          </div>
+          {/* §1-§2 (nº 201) — LE FIL D'ARIANE, TEXTE SEUL DANS LE
+              VOILE. Le bandeau de la nº 200 est SUPPRIMÉ : une surface
+              sombre sur un voile déjà sombre ne se distinguait pas, et
+              elle recouvrait le haut de la photo. Plus aucun fond,
+              aucun encadré — le texte est posé AU-DESSUS de la fenêtre
+              (`bottom-full` : il s'écrit dans le voile, vers le haut,
+              et s'y adapte — JAMAIS la fenêtre, nº 202), aligné à
+              gauche sur son bord, à 8 px de son bord haut (l'air d'une
+              ligne, ni collé ni flottant). Gris clair sur le voile, le
+              segment courant plus clair que les précédents — jamais de
+              rose. */}
+          <nav
+            aria-label="Fil d'Ariane"
+            className="pointer-events-auto absolute bottom-full left-0 mb-2 w-max max-w-full"
+          >
+            <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-white/70">
+              <li>
+                <Link href="/" className="hover:text-white transition-colors">
+                  Accueil
+                </Link>
+              </li>
+              {stylePrincipal && (
+                <>
+                  <li aria-hidden="true">›</li>
+                  <li>
+                    <Link
+                      href={`/tatouage/${stylePrincipal.slug}/${tatoueur.ville_slug}`}
+                      className="hover:text-white transition-colors"
+                    >
+                      {stylePrincipal.label}
+                    </Link>
+                  </li>
+                </>
+              )}
+              <li aria-hidden="true">›</li>
+              <li aria-current="page" className="font-semibold text-white">
+                {tatoueur.nom}
+              </li>
+            </ol>
+          </nav>
 
-          {/* ---- LA PHOTO : collée aux bords — haut, gauche et bas en
-              deux colonnes ; haut, gauche et droite en une seule. La
-              hauteur de la fenêtre est bornée pour que le 4:5 ne soit
-              JAMAIS écrasé. Le carrousel est CELUI DE LA PAGE : mêmes
-              flèches, même pagination, même capsule. ---- */}
-          <div className="relative w-full lg:w-auto lg:h-full aspect-[4/5] min-w-0 shrink-0 lg:shrink bg-black select-none">
-            <CarrouselPortfolio
-              photos={photosDuStyleAffiche}
-              nomTatoueur={tatoueur.nom}
-              styleLabel={groupeAffiche?.label ?? ""}
-              indice={rang}
-              surChangement={setIndice}
-            >
-              {/* LE PARTAGE À GAUCHE, LE CŒUR À DROITE — la place des
-                  deux boutons du web depuis la nº 198-§3, celle de la
-                  page. Chacun seul dans son angle — descendus sous le
-                  bandeau du fil d'Ariane (nº 200-§2 : ~32 px, puis le
-                  même air de 12 px qu'ils avaient contre le bord). */}
-              <div className="absolute top-[44px] left-3 z-[2]">
-                <BoutonPartageFiche
-                  nomArtisan={tatoueur.nom}
-                  cheminFiche={`/tatoueur/${tatoueur.slug}`}
-                  variante="fiche"
-                  avecFenetre
-                  sombre
-                  metier={stylePrincipal?.label}
-                  commune={villeAffichee(tatoueur.ville_nom)}
-                  marque={MARQUE_YOKOFOLIO.nom}
-                />
-              </div>
-              {photoEnregistrable && (
-                <div className="absolute top-[44px] right-3 z-[2]">
-                  <BoutonCoeurPhoto
-                    photoId={photoEnregistrable}
+          <div
+            ref={fenetreRef}
+            className="pointer-events-auto flex flex-col lg:flex-row
+                       w-full lg:w-auto min-h-0
+                       lg:h-[min(88vh,940px,calc((100vw-476px)*1.25))]
+                       lg:max-w-[min(1200px,calc(100vw-96px))]
+                       overflow-y-auto lg:overflow-hidden overscroll-contain
+                       rounded-b-lg rounded-t-none lg:rounded-none lg:rounded-r-lg bg-sombre-carte
+                       shadow-[0_24px_80px_rgba(0,0,0,0.6)]
+                       scale-100 transition-transform duration-200 starting:scale-[0.97]"
+          >
+            {/* ---- LA PHOTO : collée aux bords — haut, gauche et bas en
+                deux colonnes ; haut, gauche et droite en une seule. La
+                hauteur de la fenêtre est bornée pour que le 4:5 ne soit
+                JAMAIS écrasé. Le carrousel est CELUI DE LA PAGE : mêmes
+                flèches, même pagination, même capsule. ---- */}
+            <div className="relative w-full lg:w-auto lg:h-full aspect-[4/5] min-w-0 shrink-0 lg:shrink bg-black select-none">
+              <CarrouselPortfolio
+                photos={photosDuStyleAffiche}
+                nomTatoueur={tatoueur.nom}
+                styleLabel={groupeAffiche?.label ?? ""}
+                indice={rang}
+                surChangement={setIndice}
+              >
+                {/* LE PARTAGE À GAUCHE, LE CŒUR À DROITE — la place des
+                    deux boutons du web depuis la nº 198-§3, celle de la
+                    page. Chacun seul dans son angle (nº 201-§3 : le
+                    bandeau parti, plus rien ne recouvre le haut de la
+                    photo, ils reprennent leurs angles). */}
+                <div className="absolute top-3 left-3 z-[2]">
+                  <BoutonPartageFiche
+                    nomArtisan={tatoueur.nom}
+                    cheminFiche={`/tatoueur/${tatoueur.slug}`}
                     variante="fiche"
+                    avecFenetre
+                    sombre
+                    metier={stylePrincipal?.label}
+                    commune={villeAffichee(tatoueur.ville_nom)}
+                    marque={MARQUE_YOKOFOLIO.nom}
                   />
                 </div>
-              )}
-            </CarrouselPortfolio>
-          </div>
+                {photoEnregistrable && (
+                  <div className="absolute top-3 right-3 z-[2]">
+                    <BoutonCoeurPhoto
+                      photoId={photoEnregistrable}
+                      variante="fiche"
+                    />
+                  </div>
+                )}
+              </CarrouselPortfolio>
+            </div>
 
-          {/* ---- LE CONTENU — sous la photo en une colonne (il défile
-              avec la fenêtre), à sa droite en deux (il défile tout
-              seul). ⚠️ C'EST LE COMPOSANT DE LA PAGE : les deux onglets,
-              les vignettes par style, et tout l'onglet « Profil ». Rien
-              n'est redessiné ici. ---- */}
-          <div
-            ref={colonneRef}
-            className="w-full lg:w-[380px] shrink-0 lg:h-full lg:overflow-y-auto p-5 sm:p-6 flex flex-col"
-          >
-            <ContenuFiche
-              tatoueur={tatoueur}
-              groupes={groupes}
-              surStyleChoisi={(slug) => {
-                setStyleAffiche(slug);
-                setIndice(0);
-                colonneRef.current?.scrollTo({ top: 0, behavior: "instant" });
-                fenetreRef.current?.scrollTo({ top: 0, behavior: "instant" });
-              }}
-            />
+            {/* ---- LE CONTENU — sous la photo en une colonne (il défile
+                avec la fenêtre), à sa droite en deux (il défile tout
+                seul). ⚠️ C'EST LE COMPOSANT DE LA PAGE : les deux onglets,
+                les vignettes par style, et tout l'onglet « Profil ». Rien
+                n'est redessiné ici. ---- */}
+            <div
+              ref={colonneRef}
+              className="w-full lg:w-[380px] shrink-0 lg:h-full lg:overflow-y-auto p-5 sm:p-6 flex flex-col"
+            >
+              <ContenuFiche
+                tatoueur={tatoueur}
+                groupes={groupes}
+                surStyleChoisi={(slug) => {
+                  setStyleAffiche(slug);
+                  setIndice(0);
+                  colonneRef.current?.scrollTo({ top: 0, behavior: "instant" });
+                  fenetreRef.current?.scrollTo({ top: 0, behavior: "instant" });
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>
