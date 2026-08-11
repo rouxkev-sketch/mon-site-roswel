@@ -268,9 +268,19 @@ export function ContenuFiche({
     <>
       {demonstration && noteDemonstration("mb-6")}
 
-      {/*  LES DEUX ONGLETS (nº 197-§1) — forme du sélecteur du
-           formulaire, couleurs du badge de filtre. */}
-      <SelecteurOngletAffiche valeur={onglet} surChoix={setOnglet} />
+      {/*  LA RANGÉE DU HAUT (nº 205) — les deux onglets à gauche
+           (les mots nus et la capsule de verre qui glisse, §1), et
+           « SUIVRE » à droite (§2) : même ligne, même hauteur, quel
+           que soit l'onglet actif. C'est le SEUL bouton Suivre de la
+           fiche. Absent de l'aperçu : on ne se suit pas soi-même.
+           À 390 px, tout tient sur une seule ligne : les mots à
+           gauche, la capsule naturelle de Suivre à droite. */}
+      <div className="flex items-center justify-between gap-3">
+        <SelecteurOngletAffiche valeur={onglet} surChoix={setOnglet} />
+        {!apercu && (
+          <BoutonSuivre tatoueurId={tatoueur.id} nomTatoueur={tatoueur.nom} />
+        )}
+      </div>
 
       {onglet === "portfolio" && (
         <PanneauPortfolio
@@ -306,19 +316,10 @@ export function ContenuFiche({
             </div>
           </div>
 
-          {/* « SUIVRE » — juste sous l'identité, avant tout le reste
-              (passe nº 137). L'emplacement était libre : c'est celui
-              que prennent tous les profils, parce que c'est là qu'on
-              décide si l'on veut garder quelqu'un. Absent de l'aperçu :
-              on ne se suit pas soi-même. */}
-          {!apercu && (
-            <div className="mt-5">
-              <BoutonSuivre
-                tatoueurId={tatoueur.id}
-                nomTatoueur={tatoueur.nom}
-              />
-            </div>
-          )}
+          {/* « SUIVRE » A REJOINT LA RANGÉE DU HAUT (nº 205-§2) — à
+              droite du sélecteur Profil / Portfolio, visible quel que
+              soit l'onglet. Il n'existe plus qu'un seul exemplaire,
+              là-haut. */}
 
           {/* 2-3. OÙ, puis LE SITE. À DROITE DE L'ICÔNE : LA
               LOCALISATION ELLE-MÊME. Le mot « adresse » y figurait —

@@ -1,5 +1,6 @@
 "use client";
 
+import { useLayoutEffect, useRef, useState } from "react";
 import { robeDuBadge } from "@/components/BadgesCharte";
 import { OngletsLigne } from "@/components/OngletsLigne";
 import {
@@ -12,22 +13,32 @@ import type { PhotoGalerie, StyleGalerie } from "@/lib/photo-tatoueur";
 /**
  * L'AFFICHE EN DEUX ONGLETS — « Profil » et « Portfolio »
  * ==================================================================
- * (passe nº 197, complétée par la nº 204)
+ * (passe nº 197, complétée par les nº 204 et 205)
  *
- * ⚠️ RIEN N'EST DESSINÉ ICI. Les sélecteurs REPRENNENT des pièces qui
- * existent déjà, et c'est la règle de la passe :
+ * ⚠️ RIEN N'EST INVENTÉ ICI. Chaque sélecteur reprend un vocabulaire
+ * qui existe déjà :
  *
- *  · « Profil / Portfolio » ET « Noir et gris / Couleur » — LA FORME
- *    du sélecteur du formulaire de portfolio (deux rectangles,
- *    `rounded-xl`, `px-3 py-2.5`, aucun contour) et LES COULEURS DU
- *    BADGE DE FILTRE — la fonction `robeDuBadge` de BadgesCharte. Les
- *    quatre couleurs ne sont écrites qu'à un seul endroit, et pas
- *    ici. Les deux sélecteurs sont LE MÊME composant
- *    (`SelecteurRectangles`), pas deux copies ;
+ *  · « Profil / Portfolio » (nº 205-§1) — DEUX MOTS NUS côte à côte,
+ *    sans piste ni rail ni fond de rangée : l'actif en blanc, l'autre
+ *    en gris. Derrière l'actif, une CAPSULE FLOTTANTE EN VERRE
+ *    DÉPOLI — fond translucide un cran plus clair que le panneau, et
+ *    LE FLOU DE LA BARRE FIXE, aux mêmes valeurs (blur 40 px,
+ *    saturate 150 %, écrites EN CLAIR : WebKit invalide un filtre
+ *    construit avec `var()`, nº 172). Aucun contour, aucun rose. Au
+ *    changement d'onglet, la capsule GLISSE d'un mot à l'autre ;
  *
  *  · « Réalisation / Flash » — le composant `OngletsLigne`, celui du
  *    sélecteur « Explorer / Filtres » du moteur de recherche. Aucune
- *    copie : le composant lui-même.
+ *    copie : le composant lui-même ;
+ *
+ *  · « Noir et gris / Couleur » (nº 204-§3) — les deux rectangles du
+ *    formulaire de portfolio (`rounded-xl`, aucun contour), habillés
+ *    par `robeDuBadge` de BadgesCharte : les quatre couleurs ne sont
+ *    écrites qu'à un seul endroit, et pas ici.
+ *
+ * LA RANGÉE DU HAUT (nº 205-§2) : le sélecteur à gauche, « Suivre » à
+ * droite — c'est ContenuFiche qui compose la rangée, le sélecteur ne
+ * s'occupe que de lui.
  *
  * LA HIÉRARCHIE DU PORTFOLIO (nº 204-§3) : Profil / Portfolio, puis
  * Réalisation / Flash, puis Noir et gris / Couleur, puis les vignettes
@@ -60,12 +71,12 @@ function renduDe(photo: PhotoGalerie): string {
 }
 
 /**
- * LES DEUX RECTANGLES — LE sélecteur de l'affiche, unique.
+ * LES DEUX RECTANGLES — le sélecteur du rendu.
  * Forme du formulaire (deux colonnes, 8 px entre elles — voir
  * BlocPortfolio, « LE RENDU — DEUX RECTANGLES »), couleurs du badge de
- * filtre (`robeDuBadge`, importée telle quelle). « Profil / Portfolio »
- * et « Noir et gris / Couleur » l'appellent tous les deux : une seule
- * géométrie, une seule robe, aucune copie (nº 204-§3).
+ * filtre (`robeDuBadge`, importée telle quelle). Ils sont INCHANGÉS
+ * par la nº 205-§3 : seul « Profil / Portfolio » a quitté cette forme
+ * pour la capsule de verre.
  */
 function SelecteurRectangles({
   ariaLabel,
@@ -102,7 +113,17 @@ function SelecteurRectangles({
 }
 
 /**
- * LE SÉLECTEUR « PROFIL / PORTFOLIO » — les deux rectangles.
+ * LE SÉLECTEUR « PROFIL / PORTFOLIO » — deux mots nus, une capsule de
+ * verre qui glisse (nº 205-§1).
+ *
+ * LA MÉCANIQUE : la capsule est un seul élément, posé DERRIÈRE les
+ * mots, dont la position et la largeur épousent le bouton actif —
+ * mesurées avant peinture (useLayoutEffect), et re-mesurées si la
+ * boîte change (police chargée, redimensionnement : le ResizeObserver
+ * du conteneur voit tout). Au changement d'onglet, seule cette paire
+ * left / width change : la transition la fait GLISSER d'un mot à
+ * l'autre. À sa première apparition, elle naît directement en place —
+ * une transition n'anime qu'un changement, pas une naissance.
  */
 export function SelecteurOngletAffiche({
   valeur,
@@ -111,13 +132,79 @@ export function SelecteurOngletAffiche({
   valeur: OngletAffiche;
   surChoix: (onglet: OngletAffiche) => void;
 }) {
+  const conteneur = useRef<HTMLDivElement>(null);
+  const [capsule, setCapsule] = useState<{ left: number; width: number } | null>(
+    null
+  );
+
+  useLayoutEffect(() => {
+    const zone = conteneur.current;
+    if (!zone) return;
+    const mesurer = () => {
+      const actif = zone.querySelector<HTMLButtonElement>(
+        "button[aria-checked='true']"
+      );
+      if (!actif) return;
+      setCapsule({ left: actif.offsetLeft, width: actif.offsetWidth });
+    };
+    mesurer();
+    const observateur = new ResizeObserver(mesurer);
+    observateur.observe(zone);
+    return () => observateur.disconnect();
+  }, [valeur]);
+
   return (
-    <SelecteurRectangles
-      ariaLabel="Profil ou portfolio"
-      valeur={valeur}
-      surChoix={(cle) => surChoix(cle as OngletAffiche)}
-      options={ONGLETS}
-    />
+    <div
+      ref={conteneur}
+      role="radiogroup"
+      aria-label="Profil ou portfolio"
+      //  SANS piste, sans rail, sans fond de rangée : les mots, c'est
+      //  tout. `w-fit` : la rangée du haut (ContenuFiche) pose
+      //  « Suivre » à sa droite.
+      className="relative flex w-fit items-center gap-1"
+    >
+      {/*  LA CAPSULE DE VERRE — derrière le mot actif. Le FLOU DE LA
+           BARRE FIXE, aux mêmes valeurs, écrites en clair et préfixée
+           d'abord (nº 172 : WebKit invalide un filtre à `var()`, et ne
+           lit que la préfixée). Aucun contour, aucun rose. */}
+      {capsule && (
+        <span
+          aria-hidden="true"
+          className="absolute inset-y-0 rounded-full bg-sombre-eleve-clair/60
+                     transition-[left,width] duration-300 ease-out"
+          style={{
+            left: capsule.left,
+            width: capsule.width,
+            WebkitBackdropFilter: "blur(40px) saturate(150%)",
+            backdropFilter: "blur(40px) saturate(150%)",
+          }}
+        />
+      )}
+      {ONGLETS.map((onglet) => {
+        const actif = valeur === onglet.cle;
+        return (
+          <button
+            key={onglet.cle}
+            type="button"
+            role="radio"
+            aria-checked={actif}
+            onClick={() => surChoix(onglet.cle)}
+            //  Le mot passe au blanc quand il devient actif, l'autre
+            //  redescend en gris — la même transition douce que la
+            //  capsule. L'air vient du rembourrage : la capsule
+            //  enveloppe le mot, elle ne le serre pas.
+            className={`relative z-[1] min-h-[44px] rounded-full px-5
+                        text-[14px] font-semibold transition-colors ${
+                          actif
+                            ? "text-sombre-texte"
+                            : "text-sombre-texte-doux hover:text-sombre-texte"
+                        }`}
+          >
+            {onglet.label}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
