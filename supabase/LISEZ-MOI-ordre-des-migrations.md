@@ -1,6 +1,6 @@
 # Dans quel ordre passer les migrations
 
-Les 59 fichiers de ce dossier se passent **dans cet ordre**, de haut en
+Les 60 fichiers de ce dossier se passent **dans cet ordre**, de haut en
 bas. L'ordre n'est pas deviné : il est écrit dans les en-têtes des
 fichiers eux-mêmes (« à passer APRÈS … »), et il a été **vérifié en
 rejouant les fichiers sur une base PostgreSQL vierge**, chacun DEUX
@@ -94,6 +94,7 @@ repasse.
 | 57 | `yokofolio-catalogue-complet.sql` | aucun objet (complète le catalogue, style par style) |
 | 58 | `yokofolio-style-avec-photo.sql` | 1 fonction (la recherche, refaite — **un style sans photo n'existe plus**) |
 | 59 | `yokofolio-lecture-publique.sql` | 1 fonction, 6 politiques, les droits de lecture du rôle anonyme (**sans elle, le site est invisible à un visiteur non connecté**) |
+| 60 | `yokofolio-en-ligne-vraie-regle.sql` | 1 fonction refaite, 2 politiques, 1 contrainte périmée retirée (**corrige la nº 59** : elle exigeait `statut = 'validee'`, et cachait des fiches validées) |
 
 ## Ce que chaque fichier apporte
 
@@ -155,7 +156,8 @@ repasse.
 56. **`yokofolio-recherche-styles-declares.sql`** — La recherche par style réparée (⚠️ **sans elle, chercher un style depuis « Explorer » ne remonte qu'une partie des fiches** : le menu envoie toujours une catégorie, et la nature exigeait une photo taguée à la fois du bon style et de la bonne nature. Une fiche qui DÉCLARE un style sans photo encore taguée dessus répond désormais à « Réalisations » ; un flash, lui, se déclare toujours)
 57. **`yokofolio-catalogue-complet.sql`** — Le catalogue complété style par style (la nº 55 ne reprenait que les portfolios ENTIÈREMENT vides ; celle-ci comble aussi les fiches qui ont une photo dans un style et en déclarent d'autres — cœurs, photothèque et vignettes suivent)
 58. **`yokofolio-style-avec-photo.sql`** — Un style sans photo n'existe plus dans la recherche (la fonction refaite : une fiche ne répond à un style que si une photo le porte)
-59. **`yokofolio-lecture-publique.sql`** — Le site redevient visible au public (⚠️ **le rôle anonyme n'avait AUCUN droit de lecture** : le site répondait « permission denied », retombait sur les fiches de DÉMONSTRATION, et toute fiche renvoyait un 404 hors connexion). Elle donne ce droit sur les cinq objets d'une fiche publique — et sur eux seuls — et resserre « public » à « EN LIGNE » : publiée, validée, pas en cours de suppression. Le portfolio et les liaisons, jusqu'ici lisibles sans condition, suivent la même règle.
+59. **`yokofolio-lecture-publique.sql`** — Le site redevient visible au public (⚠️ **corrigée par la nº 60 — passer les deux, dans l'ordre** ; **le rôle anonyme n'avait AUCUN droit de lecture** : le site répondait « permission denied », retombait sur les fiches de DÉMONSTRATION, et toute fiche renvoyait un 404 hors connexion). Elle donne ce droit sur les cinq objets d'une fiche publique — et sur eux seuls — et resserre « public » à « EN LIGNE » : publiée, validée, pas en cours de suppression. Le portfolio et les liaisons, jusqu'ici lisibles sans condition, suivent la même règle.
+60. **`yokofolio-en-ligne-vraie-regle.sql`** — « En ligne » remis sur la colonne qui porte vraiment la publication (⚠️ **la nº 59 exigeait `statut = 'validee'`** : des fiches publiées par l'administrateur restaient invisibles, et l'écran « en attente » ne les montrait pas puisqu'il ne liste que `statut = 'en_attente'`). Une fiche est en ligne quand elle est PUBLIÉE — colonne `publie`, que le déclencheur `tatoueurs_garde_fou` réserve à l'administrateur —, pas supprimée, pas mise hors ligne, pas refusée. Elle retire au passage la contrainte `tatoueurs_statut_valide` de la nº 5, restée en place à côté de celle de la nº 10 : à elles deux, elles rendaient `statut = 'modifications'` impossible à écrire.
 
 ---
 
@@ -164,6 +166,10 @@ repasse.
 Deux fichiers du dossier ne portent aucun numéro : ce sont des OUTILS,
 à ouvrir le jour où l'on en a besoin, jamais à passer dans l'ordre.
 
+- **`yokofolio-releve-fiches.sql`** — affiche, fiche par fiche, la
+  valeur exacte des colonnes qui décident de la visibilité (`publie`,
+  `statut`, `supprime_le`, `hors_ligne`) et NOMME celle qui bloque.
+  Il n'écrit rien. À passer quand une fiche ne s'affiche pas.
 - **`yokofolio-verification-migrations.sql`** — dit lesquelles des
   migrations ci-dessus sont réellement passées. N'écrit rien.
 - **`yokofolio-retirer-un-style.sql`** — retire un style accepté du

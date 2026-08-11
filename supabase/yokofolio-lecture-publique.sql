@@ -2,6 +2,18 @@
 --  YOKOFOLIO — LE SITE REDEVIENT VISIBLE AU PUBLIC
 --  (migration nº 59 — à passer APRÈS yokofolio-style-avec-photo.sql)
 -- ================================================================
+--  ⚠️⚠️ CE FICHIER EST CORRIGÉ PAR LA Nº 60
+--  (`yokofolio-en-ligne-vraie-regle.sql`) — PASSER LES DEUX, DANS
+--  L'ORDRE. Le point 2 ci-dessous exige `statut = 'validee'` en plus de
+--  `publie = true` : c'était une erreur. `statut` n'est pas tenu à jour
+--  de façon fiable (voir l'en-tête de la nº 60), et des fiches
+--  parfaitement validées devenaient invisibles. La nº 60 refait la
+--  fonction et la politique sur la seule colonne qui porte vraiment la
+--  publication, `publie` — et ELLE RESTE PLUS STRICTE que l'état
+--  d'avant la nº 59. Tout le reste de ce fichier (les droits de
+--  lecture, les quatre politiques rattachées) est juste et reste en
+--  vigueur.
+-- ================================================================
 --  LE DÉFAUT CORRIGÉ, reproduit par le propriétaire sur Mac et sur
 --  iPhone, sur localhost et sur l'IP du réseau, sur Safari comme sur
 --  Chrome :
@@ -360,6 +372,13 @@ from public.tatoueurs;
 
 --  4) LA PREUVE PAR L'USAGE : ce qu'un VISITEUR NON CONNECTÉ voit
 --     vraiment, en prenant son rôle le temps de trois comptages.
+--  ⚠️ DANS UNE TRANSACTION, et c'est nécessaire : hors transaction,
+--  `set local` est ignoré (avec un avertissement) et le comptage se
+--  ferait sous le rôle administrateur — il compterait TOUT, et
+--  dirait donc le contraire de la vérité. L'éditeur de Supabase
+--  exécute déjà le fichier dans une transaction : ce `begin` y pose
+--  seulement un avertissement, sans effet.
+begin;
 set local role anon;
 select
   'VU PAR UN VISITEUR' as controle,
@@ -368,3 +387,4 @@ select
   (select count(*) from public.modes_exercice) as modes_visibles,
   (select count(*) from public.studios) as studios_visibles;
 reset role;
+commit;

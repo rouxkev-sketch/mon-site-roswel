@@ -97,7 +97,13 @@ with attendu (ordre, fichier, genre, objet) as (values
   ( 4, 'yokofolio-bio.sql', 'contrainte', 'tatoueurs_bio_longueur'),
   ( 5, 'yokofolio-fiches-tatoueurs.sql', 'colonne', 'public.tatoueurs.user_id'),
   ( 5, 'yokofolio-fiches-tatoueurs.sql', 'colonne', 'public.tatoueurs.statut'),
-  ( 5, 'yokofolio-fiches-tatoueurs.sql', 'contrainte', 'tatoueurs_statut_valide'),
+  --  ⚠️ `tatoueurs_statut_valide` N'EST PLUS ATTENDUE : la nº 60 la
+  --  SUPPRIME. La nº 10 l'avait remplacée par `tatoueurs_statut_check`
+  --  (quatre valeurs au lieu de trois) sans retirer l'ancienne : les
+  --  deux s'appliquaient, la plus stricte gagnait, et
+  --  `statut = 'modifications'` était impossible à écrire. Son ABSENCE
+  --  est devenue une trace « contenu » de la nº 60 — elle change de
+  --  camp, elle ne cesse pas d'être vérifiée.
   ( 5, 'yokofolio-fiches-tatoueurs.sql', 'politique', 'creation de sa propre fiche'),
   ( 5, 'yokofolio-fiches-tatoueurs.sql', 'politique', 'lecture de sa propre fiche'),
   ( 5, 'yokofolio-fiches-tatoueurs.sql', 'politique', 'photos tatoueurs visibles par tous'),
@@ -420,7 +426,12 @@ with attendu (ordre, fichier, genre, objet) as (values
   --  base qui n'a que les nº 1, 26 et 31. Elles sont donc reconnues à
   --  leur CONTENU, comme la règle du fichier le demande.
   (59, 'yokofolio-lecture-publique.sql', 'fonction', 'public.fiche_en_ligne'),
-  (59, 'yokofolio-lecture-publique.sql', 'contenu', 'droit de lecture anonyme + politiques « en ligne »')
+  (59, 'yokofolio-lecture-publique.sql', 'contenu', 'droit de lecture anonyme + politiques « en ligne »'),
+  --  Nº 60 : « en ligne » remis sur la colonne qui porte VRAIMENT la
+  --  publication (passe nº 177). Deux traces : la contrainte périmée a
+  --  disparu, et la règle ne dépend plus de `statut = 'validee'`.
+  (60, 'yokofolio-en-ligne-vraie-regle.sql', 'contrainte', 'tatoueurs_statut_check'),
+  (60, 'yokofolio-en-ligne-vraie-regle.sql', 'contenu', 'la règle « en ligne » suit `publie`, et la contrainte périmée est retirée')
 ),
 
 --  ------------------------------------------------------------
@@ -473,7 +484,13 @@ constate as (
       when  8 then exists (select 1 from public.tatoueurs t where to_jsonb(t)->>'slug' like 'atelier-corvus%' and (to_jsonb(t)->'styles') ? 'dotwork')
       when 13 then exists (select 1 from pg_constraint where conname = 'tatoueurs_bio_longueur' and pg_get_constraintdef(oid) like '%150%')
       when 16 then exists (select 1 from public.tatoueurs t where to_jsonb(t)->>'slug' like 'hokusai-mecanique%' and (to_jsonb(t)->'styles') ? 'biomecanique')
-      when 17 then not exists (select 1 from public.tatoueurs t where (to_jsonb(t)->'filtres_composition') ?| array['piece-dos','piece-torse','bodysuit'])
+      --  ⚠️ `bodysuit` A ÉTÉ REMIS PAR LA Nº 38 (passe nº 177) : elle le
+      --  repose volontairement sur deux fiches de démonstration, pour
+      --  que la case du filtre ait de quoi répondre. Le chercher encore
+      --  faisait passer une base PARFAITEMENT À JOUR pour incomplète —
+      --  le contrôle accusait à tort. Seules `piece-dos` et
+      --  `piece-torse`, réellement abolies par la nº 17, sont vérifiées.
+      when 17 then not exists (select 1 from public.tatoueurs t where (to_jsonb(t)->'filtres_composition') ?| array['piece-dos','piece-torse'])
       when 18 then exists (select 1 from pg_constraint where conname = 'tatoueurs_bio_longueur' and pg_get_constraintdef(oid) not like '%80%')
       when 20 then exists (select 1 from public.tatoueurs t where to_jsonb(t)->>'slug' like 'kreuzberg-nadel%')
       when 23 then coalesce(obj_description(to_regclass('public.comptes_a_purger'), 'pg_class'), '') like '%30 jours%'
@@ -594,6 +611,24 @@ constate as (
                      where polrelid = 'public.photos_tatoueur'::regclass
                        and polname = 'lecture publique des photos'
                        and pg_get_expr(polqual, polrelid) like '%fiche_en_ligne%')
+      --  Nº 60 : trois points, ensemble.
+      --   · la contrainte périmée de la nº 5 a bien DISPARU — sans quoi
+      --     `statut = 'modifications'` reste impossible à écrire ;
+      --   · la règle publique ne dépend plus de `statut = 'validee'`
+      --     (elle suit `publie`, la colonne que le déclencheur
+      --     `tatoueurs_garde_fou` réserve à l'administrateur) ;
+      --   · et elle exclut toujours une fiche REFUSÉE.
+      when 60 then
+        not exists (select 1 from pg_constraint
+                     where conname = 'tatoueurs_statut_valide')
+        and exists (select 1 from pg_policy
+                     where polrelid = 'public.tatoueurs'::regclass
+                       and polname = 'lecture publique des tatoueurs publies'
+                       and pg_get_expr(polqual, polrelid) not like '%validee%'
+                       and pg_get_expr(polqual, polrelid) like '%refusee%')
+        and exists (select 1 from pg_proc
+                     where proname = 'fiche_en_ligne'
+                       and prosrc not like '%validee%')
       end
     end as present
   from attendu a
