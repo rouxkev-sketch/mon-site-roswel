@@ -88,7 +88,7 @@ insert into public.tatoueurs (
   nom, slug, type_fiche, etablissement,
   ville_code_insee, ville_nom, ville_slug, latitude, longitude,
   pays, code_pays,
-  styles, lien_instagram, photo_principale, photos, publie,
+  styles, lien_instagram, photo_principale, photos, publie, statut,
   photo_profil, bio
 )
 select
@@ -107,15 +107,22 @@ select
       '<rect width="1080" height="1350" fill="hsl(' || ((f.n * 37) % 360) ||
       ',38%,42%)"/></svg>', '<', '%3C'), '>', '%3E'),
   '{}'::text[],
+  --  « EN LIGNE », C'EST `publie = true` (migration nº 60) — le statut
+  --  n'entre pas dans la règle d'affichage. On le pose quand même à
+  --  « validee », comme les autres fiches de démonstration : une fiche
+  --  sans compte n'a personne pour la faire valider.
   true,
+  'validee',
   'data:image/svg+xml;charset=utf-8,' ||
     replace(replace(
       '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256">'
       '<rect width="256" height="256" fill="hsl(' || ((f.n * 61) % 360) ||
       ',30%,35%)"/></svg>', '<', '%3C'), '>', '%3E'),
-  'Fiche de DÉMONSTRATION (passe nº 214). Ce tatoueur n''existe pas, '
-  'et les images sont des aplats de couleur — aucune photo de tatouage '
-  'n''est publiée sans l''accord de son auteur.'
+  --  ⚠️ 132 CARACTÈRES, pour une borne à 150 (contrainte
+  --  `tatoueurs_bio_longueur`, migration nº 62) : la bio de la nº 214
+  --  en faisait 176 et le fichier était refusé.
+  'Fiche de DÉMONSTRATION (passe nº 214) : ce tatoueur n''existe pas, '
+  'et les images sont des aplats de couleur, jamais de vraies photos.'
 from fiches f;
 
 -- ------------------------------------------------------------
