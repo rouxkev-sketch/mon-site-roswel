@@ -375,7 +375,16 @@ export function FicheTatoueur({
               setStyleAffiche(serie.style);
               setSerieOuverte({ nature: serie.nature, rendu: serie.rendu });
               setIndicePhoto(0);
-              window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+              //  ⚠️ LA REMONTÉE EST RÉSERVÉE AU DOIGT (nº 218-§3). Sur
+              //  mobile, la photo est tout en haut : sans remontée, on
+              //  choisirait une série sans jamais la voir. Sur le web,
+              //  la photo est DÉJÀ à l'écran, dans la colonne de
+              //  gauche — remonter ne montre rien de plus, et fait
+              //  perdre la place qu'on venait de choisir dans la
+              //  galerie.
+              if (document.documentElement.dataset.appareil === "mobile") {
+                window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+              }
             }}
           />
         </div>

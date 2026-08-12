@@ -45,6 +45,7 @@ import { SondeFiltres } from "@/components/SondeFiltres";
 import { SondeVerre } from "@/components/SondeVerre";
 import { SondeRetour } from "@/components/SondeRetour";
 import { SondeBascule } from "@/components/SondeBascule";
+import { SondeCarrousel } from "@/components/SondeCarrousel";
 import { COMPTES_YOKOFOLIO } from "@/config/tatouage";
 import { COOKIE_DEJA_CONNECTE } from "@/lib/deja-connecte";
 import { utilisateurDepuisCookies } from "@/lib/session-cookie";
@@ -194,6 +195,24 @@ export default async function MiseEnPageTatouage({
         src/lib/journal-bascule.ts et les appels à `noter…`.
         HORS de l'enveloppe `data-fond`, comme les autres sondes. */}
     <SondeBascule />
+    {/* ⚠️ TEMPORAIRE — LA SONDE DU CARROUSEL ET DU PORTFOLIO
+        (`?sonde-carrousel=1`, nº 218-§1). Deux défauts ont résisté aux
+        passes 210, 214, 216 et 217 — le scintillement en fin de
+        défilement, et le portfolio qui se détraque en enchaînant les
+        sélecteurs. Elle ENREGISTRE et ne corrige rien : séries
+        demandées et reçues, montages/démontages du carrousel et du
+        zoom avec compteur d'instances, observateurs et écouteurs
+        actifs, poses d'indice avec leur origine, état du conteneur,
+        photos chargées ou vides, et tout ce qui apparaît ou disparaît
+        dans les 300 ms suivant l'arrêt d'une photo. Aucun état React :
+        le journal vit dans lib/journal-carrousel et s'écrit directement
+        dans le nœud — il ne peut pas déranger ce qu'il observe. Pour la
+        retirer : cette ligne, son import, le fichier
+        src/components/SondeCarrousel.tsx, le module
+        src/lib/journal-carrousel.ts et les appels qui le nomment
+        (CarrouselPortfolio, ZoomPincement, ContenuFiche).
+        HORS de l'enveloppe `data-fond`, comme les autres sondes. */}
+    <SondeCarrousel />
     {/* ⚠️ L'ÉCOUTEUR GLOBAL DE REMONTÉE EST SUPPRIMÉ (nº 162-§1). La
         règle de la nº 155-§1 — « TOUS les champs du site remontent » —
         est annulée : la remontée ne sert qu'à dégager de la place SOUS

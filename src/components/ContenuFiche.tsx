@@ -3,6 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { defilerEnDouceur } from "@/lib/defilement-programme";
+//  ⚠️ TEMPORAIRE (nº 218-§1) — la sonde du carrousel : elle veut
+//  savoir CE QUI A ÉTÉ DEMANDÉ (style, catégorie, rendu) juste avant
+//  ce que le carrousel reçoit. Sans `?sonde-carrousel=1`, ne coûte rien.
+import { noter as noterSonde } from "@/lib/journal-carrousel";
 import {
   ICONES_RESEAUX,
   libelleFiltre,
@@ -134,9 +138,17 @@ export function ContenuFiche({
    * sans cela, la barre y lirait une intention et se replierait
    * (nº 154-§6A).
    */
-  function choisirOnglet(suivant: OngletAffiche) {
-    setOnglet(suivant);
+  /**
+   * LA REMONTÉE, ÉCRITE UNE FOIS (nº 218-§2)
+   * ------------------------------------------------------------------
+   * Elle servait au seul sélecteur Profil / Portfolio ; « Réalisation »
+   * et « Flash » changent tout autant ce qu'on regarde, et devaient
+   * remonter au MÊME endroit, au pixel. Une seule fonction, deux
+   * appelants : impossible qu'ils s'arrêtent à deux hauteurs.
+   */
+  function remonterSousLaBarre() {
     if (document.documentElement.dataset.appareil !== "mobile") return;
+    noterSonde("REMONTÉE demandée (mobile)");
     //  ⚠️ LA LIMITE, C'EST LE BAS DE LA PHOTO (nº 209-§5a) — et non le
     //  haut du contenu, qui vient plus bas (l'écart entre les deux
     //  colonnes) : la page s'arrêtait donc trop haut, au-dessus du
@@ -154,6 +166,21 @@ export function ContenuFiche({
     defilerEnDouceur(
       Math.max(0, window.scrollY + photo.bottom - (barre ?? 0))
     );
+  }
+
+  /** Changer d'onglet : le contenu change, la page remonte. */
+  function choisirOnglet(suivant: OngletAffiche) {
+    noterSonde(`SÉLECTEUR onglet → « ${suivant} »`);
+    setOnglet(suivant);
+    remonterSousLaBarre();
+  }
+
+  /** Changer de catégorie (nº 218-§2) : les vignettes changent
+      entièrement, la page remonte au MÊME endroit que ci-dessus. */
+  function choisirCategorie(suivante: string) {
+    noterSonde(`SÉLECTEUR catégorie → « ${suivante} » (rendu « ${rendu} »)`);
+    setCategorie(suivante);
+    remonterSousLaBarre();
   }
 
   const avatarProfil = (
@@ -370,11 +397,22 @@ export function ContenuFiche({
         <PanneauPortfolio
           groupes={groupes}
           nature={categorie}
-          surNature={setCategorie}
+          surNature={choisirCategorie}
           rendu={rendu}
-          surRendu={setRendu}
+          surRendu={(suivant) => {
+            noterSonde(
+              `SÉLECTEUR rendu → « ${suivant} » (catégorie « ${categorie} »)`
+            );
+            setRendu(suivant);
+          }}
           nomTatoueur={tatoueur.nom}
-          surSerie={surSerieChoisie}
+          surSerie={(serie) => {
+            noterSonde(
+              `VIGNETTE demandée · style « ${serie.style} » · catégorie ` +
+                `« ${serie.nature} » · rendu « ${serie.rendu} »`
+            );
+            surSerieChoisie(serie);
+          }}
         />
       )}
 

@@ -398,8 +398,14 @@ export function FenetreFiche({
                   setStyleAffiche(serie.style);
                   setSerieOuverte({ nature: serie.nature, rendu: serie.rendu });
                   setIndice(0);
-                  colonneRef.current?.scrollTo({ top: 0, behavior: "instant" });
-                  fenetreRef.current?.scrollTo({ top: 0, behavior: "instant" });
+                  //  ⚠️ LA COLONNE NE REMONTE PLUS (nº 218-§3). Elle le
+                  //  faisait depuis la nº 197-§4 ; dans cette fenêtre,
+                  //  la photo est en permanence sous les yeux, à
+                  //  gauche : la remontée ne révélait rien et faisait
+                  //  perdre la place qu'on venait de choisir dans la
+                  //  galerie. Les deux références restent utilisées par
+                  //  la mise en page, on ne les touche simplement plus
+                  //  ici.
                 }}
               />
             </div>

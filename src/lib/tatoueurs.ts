@@ -469,20 +469,40 @@ function normaliser(ligne: Tatoueur): Tatoueur {
     introuvable. `styleDuCatalogue` relit le catalogue à chaque appel. */
 
 /**
- * LA POPULARITÉ — le total de clics « carte → fiche » par slug, lu
- * dans la vue `clics_tatoueurs` (supabase/yokofolio-popularite.sql).
- * Vue absente (migration pas passée) ou base injoignable : une carte
- * vide — le classement retombe sur l'ordre actuel, sans bruit.
+ * LE SCORE DE POPULARITÉ — lu dans la vue, jamais recalculé ici
+ * ==================================================================
+ * (passe nº 218-§5, migration nº 62)
+ *
+ * `popularite_tatoueurs` définit le score UNE SEULE FOIS, en base :
+ *     consultations + 3 × cœurs + 8 × abonnés
+ * La fonction de recherche s'en sert, et ce chemin-ci — le repli, quand
+ * la base n'a pas la migration nº 32 — lit exactement la même vue. Deux
+ * classements qui cohabitent finissent toujours par diverger ; c'est ce
+ * genre de désaccord qui a produit le défaut de la nº 217-§2.
+ *
+ * ⚠️ REPLI SUR LES SEULS CLICS : une base où la nº 62 n'est pas passée
+ * n'a pas la vue. On retombe alors sur `clics_tatoueurs` (nº 7), qui
+ * donne déjà un ordre sensé. Et si elle manque aussi : une carte vide,
+ * et le classement redevient le tirage du jour, sans bruit.
  */
-async function lireClics(): Promise<Map<string, number>> {
+async function lirePopularite(): Promise<Map<string, number>> {
   try {
     const supabase = await creerClientSupabaseServeur();
     const { data, error } = await supabase
-      .from("clics_tatoueurs")
-      .select("slug, total");
-    if (error || !data) return new Map();
+      .from("popularite_tatoueurs")
+      .select("slug, score");
+    if (!error && data) {
+      return new Map(
+        (data as Array<{ slug: string; score: number }>).map((ligne) => [
+          ligne.slug,
+          Number(ligne.score) || 0,
+        ])
+      );
+    }
+    const secours = await supabase.from("clics_tatoueurs").select("slug, total");
+    if (secours.error || !secours.data) return new Map();
     return new Map(
-      (data as Array<{ slug: string; total: number }>).map((ligne) => [
+      (secours.data as Array<{ slug: string; total: number }>).map((ligne) => [
         ligne.slug,
         Number(ligne.total) || 0,
       ])
@@ -493,22 +513,26 @@ async function lireClics(): Promise<Map<string, number>> {
 }
 
 /**
- * LE CLASSEMENT PAR POPULARITÉ : les fiches les plus consultées
- * d'abord. Le tri est STABLE — à égalité de clics (ou sans aucun
- * clic), l'ordre existant est conservé : mélange du jour sans ville,
- * proximité avec une ville.
+ * LE CLASSEMENT PAR POPULARITÉ — LES PLUS APPRÉCIÉS D'ABORD.
+ *
+ * ⚠️ IL S'APPLIQUE À LA LISTE ENTIÈRE, JAMAIS À UNE PAGE. C'est la
+ * contrainte absolue de la nº 218-§5, et c'est ce qui avait tout cassé
+ * à la nº 217-§2 : un tri posé sur une tranche fait dépendre l'ordre du
+ * nombre de cartes demandées. Voir `pageDeResultats`, qui l'appelle
+ * AVANT sa coupe et nulle part ailleurs.
+ *
+ * À ÉGALITÉ DE SCORE — le cas de l'immense majorité, à zéro — l'ordre
+ * d'entrée est conservé (le tri est stable) : mélange du jour sans
+ * ville, proximité avec une ville. Le slug tranche en dernier ressort,
+ * pour qu'aucune égalité ne dépende du chemin qui a construit la liste.
  */
 function classerParPopularite(
   liste: Tatoueur[],
-  clics: Map<string, number>
+  scores: Map<string, number>
 ): Tatoueur[] {
-  if (clics.size === 0) return liste;
+  if (scores.size === 0) return liste;
   return [...liste].sort((a, b) => {
-    const ecart = (clics.get(b.slug) ?? 0) - (clics.get(a.slug) ?? 0);
-    //  ⚠️ AUCUNE ÉGALITÉ NE RESTE NON TRANCHÉE (nº 217-§2). `sort` est
-    //  stable, l'ordre d'entrée suffirait ; l'écrire noir sur blanc
-    //  garantit qu'un même catalogue rend la même page, requête après
-    //  requête, quel que soit le chemin qui l'a construit.
+    const ecart = (scores.get(b.slug) ?? 0) - (scores.get(a.slug) ?? 0);
     return ecart !== 0 ? ecart : a.slug.localeCompare(b.slug);
   });
 }
@@ -1254,10 +1278,10 @@ export async function listerTatoueurs(
   const enBase = await rechercheEnBase(filtres, ville, proprietairesMasques);
   if (enBase) return enBase;
 
-  // Le total de clics par fiche — pour CLASSER les résultats par
-  // popularité (les plus consultées d'abord, à égalité l'ordre
-  // actuel). Carte vide tant que la migration n'est pas passée.
-  const clics = await lireClics();
+  // Le SCORE de popularité par fiche — pour CLASSER les résultats
+  // (nº 218-§5). Carte vide tant que la migration n'est pas passée :
+  // l'ordre retombe alors sur le tirage du jour, sans bruit.
+  const clics = await lirePopularite();
 
   try {
     const supabase = await creerClientSupabaseServeur();
@@ -1325,10 +1349,10 @@ export async function listerTatoueurs(
  * même endroit — corrigé par la migration nº 61.)
  *
  * LA RÈGLE, MAINTENANT : un classement porte sur TOUT ce qu'on classe,
- * jamais sur une tranche. La popularité garde donc son seul emploi
- * légitime — les pages « style + ville » (`prioriserClics`), où elle
- * classe la liste entière AVANT la coupe. Partout ailleurs, l'ordre
- * est celui de `filtrer`, et il ne bouge plus d'une page à l'autre.
+ * jamais sur une tranche. Le score de popularité (nº 218-§5) est donc
+ * appliqué ICI, à `ordonnees` — la liste filtrée ENTIÈRE — puis on
+ * coupe. L'accueil et les recherches suivent la même règle, comme la
+ * fonction de base (migration nº 62).
  */
 function pageDeResultats(
   ordonnees: Tatoueur[],
@@ -1338,9 +1362,8 @@ function pageDeResultats(
 ): ResultatTatoueurs {
   const debut = Math.max(filtres.decalage ?? 0, 0);
   const combien = filtres.limite ?? CARTES_PAR_PAGE;
-  const base = filtres.prioriserClics
-    ? classerParPopularite(ordonnees, clics)
-    : ordonnees;
+  //  ⚠️ AVANT LA COUPE, TOUJOURS. `slice` vient après, jamais avant.
+  const base = classerParPopularite(ordonnees, clics);
   return {
     ...reste,
     total: base.length,

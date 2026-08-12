@@ -1,6 +1,6 @@
 # Dans quel ordre passer les migrations
 
-Les 61 fichiers de ce dossier se passent **dans cet ordre**, de haut en
+Les 62 fichiers de ce dossier se passent **dans cet ordre**, de haut en
 bas. L'ordre n'est pas deviné : il est écrit dans les en-têtes des
 fichiers eux-mêmes (« à passer APRÈS … »), et il a été **vérifié en
 rejouant les fichiers sur une base PostgreSQL vierge**, chacun DEUX
@@ -96,6 +96,7 @@ repasse.
 | 59 | `yokofolio-lecture-publique.sql` | 1 fonction, 6 politiques, les droits de lecture du rôle anonyme (**sans elle, le site est invisible à un visiteur non connecté**) |
 | 60 | `yokofolio-en-ligne-vraie-regle.sql` | 1 fonction refaite, 2 politiques, 1 contrainte périmée retirée (**corrige la nº 59** : elle exigeait `statut = 'validee'`, et cachait des fiches validées) |
 | 61 | `yokofolio-ordre-stable-pagination.sql` | 1 fonction refaite (**l'ordre ne dépend plus de la taille de la page** : sans elle, « Voir plus » remonte des cartes au-dessus de celles déjà affichées) |
+| 62 | `yokofolio-popularite-classement.sql` | 1 vue, 1 fonction refaite, 2 index (**les portfolios les plus appréciés remontent** — score calculé sur tout le catalogue AVANT la coupe) |
 
 ## Ce que chaque fichier apporte
 
@@ -160,6 +161,7 @@ repasse.
 59. **`yokofolio-lecture-publique.sql`** — Le site redevient visible au public (⚠️ **corrigée par la nº 60 — passer les deux, dans l'ordre** ; **le rôle anonyme n'avait AUCUN droit de lecture** : le site répondait « permission denied », retombait sur les fiches de DÉMONSTRATION, et toute fiche renvoyait un 404 hors connexion). Elle donne ce droit sur les cinq objets d'une fiche publique — et sur eux seuls — et resserre « public » à « EN LIGNE » : publiée, validée, pas en cours de suppression. Le portfolio et les liaisons, jusqu'ici lisibles sans condition, suivent la même règle.
 60. **`yokofolio-en-ligne-vraie-regle.sql`** — « En ligne » remis sur la colonne qui porte vraiment la publication (⚠️ **la nº 59 exigeait `statut = 'validee'`** : des fiches publiées par l'administrateur restaient invisibles, et l'écran « en attente » ne les montrait pas puisqu'il ne liste que `statut = 'en_attente'`). Une fiche est en ligne quand elle est PUBLIÉE — colonne `publie`, que le déclencheur `tatoueurs_garde_fou` réserve à l'administrateur —, pas supprimée, pas mise hors ligne, pas refusée. Elle retire au passage la contrainte `tatoueurs_statut_valide` de la nº 5, restée en place à côté de celle de la nº 10 : à elles deux, elles rendaient `statut = 'modifications'` impossible à écrire.
 61. **`yokofolio-ordre-stable-pagination.sql`** — L'ordre des résultats ne dépend plus de la taille de la page (⚠️ **sans elle, « Voir plus » fait apparaître des cartes AU-DESSUS de celles déjà affichées**). La fonction `rechercher_tatoueurs` reclassait par nombre de clics la page DÉJÀ COUPÉE : demander 24 cartes puis 48 reclassait deux ensembles différents, et une fiche très consultée sautait du rang 30 à la première place. L'ordre rendu est désormais `s.rang` seul — total, calculé avant la coupe, départagé par `md5(id || jour)`. La popularité garde son rôle là où elle classe le catalogue entier : `p_prioriser_clics`, les pages « style + ville ».
+62. **`yokofolio-popularite-classement.sql`** — Les portfolios les plus appréciés remontent (⚠️ **à passer APRÈS la nº 61**, dont elle reprend le corps). Elle crée la vue `popularite_tatoueurs` — le score d'un portfolio, défini UNE seule fois : `consultations + 3 × cœurs + 8 × abonnés` — et l'intègre au `row_number()` de la recherche, c'est-à-dire **sur tout le catalogue filtré, avant le `limit`/`offset`**. Deux fiches de même score gardent le tirage du jour, donc l'ordre reste stable de page en page. La même vue est lue par le chemin de repli JavaScript : un seul classement, deux lecteurs.
 
 ---
 

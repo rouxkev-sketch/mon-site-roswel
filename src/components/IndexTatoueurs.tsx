@@ -365,11 +365,14 @@ export function IndexTatoueurs({
                  une action INTERMÉDIAIRE — elle prolonge la page, elle
                  ne la conclut pas. Donc une CAPSULE À SA MESURE, en
                  gris relevé, SANS contour et SANS rose plein (le rose
-                 plein appartient à l'action finale d'une page). Le
-                 survol emprunte au rose la seule chose qu'il ait le
-                 droit de prendre : un voile et la couleur du texte —
-                 exactement le bouton « Ajouter » de LienLibre, d'où
-                 cette robe est reprise sans y changer une classe. */}
+                 plein appartient à l'action finale d'une page).
+                 ⚠️ ET AUCUN ROSE AU SURVOL NON PLUS (nº 218-§6) : la
+                 nº 217 en avait gardé un voile et la couleur du texte.
+                 Le rose ne désigne pas un bouton survolé, il désigne
+                 l'action finale d'une page — sinon il ne désigne plus
+                 rien. Au survol, le fond monte d'UN CRAN sur l'échelle
+                 sombre (`eleve` → `haut`) et le texte reste BLANC :
+                 le même geste que le focus d'un champ. */}
             <button
               type="button"
               onClick={voirPlus}
@@ -377,7 +380,7 @@ export function IndexTatoueurs({
               className="inline-flex items-center justify-center rounded-full
                          bg-sombre-eleve px-5 min-h-[42px] text-[14px] font-semibold
                          text-sombre-texte transition-colors
-                         hover:bg-primaire/15 hover:text-primaire
+                         hover:bg-sombre-haut
                          disabled:opacity-60"
             >
               {enTransition ? "Chargement…" : "Voir plus de portfolios"}

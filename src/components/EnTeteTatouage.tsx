@@ -784,9 +784,27 @@ export function EnTeteTatouage({
         * Sur le web, la barre est restée `sticky` : la réserve n'existe
         * pas (`hidden`).
         */}
+      {/**
+        * ⚠️ ELLE SE DÉCLARE, EN PIXELS (nº 218-§4)
+        * ------------------------------------------------------------
+        * CETTE RÉSERVE CHANGE DE HAUTEUR — 128 px rangée dépliée, 64 px
+        * repliée — et elle est DANS LE FLUX : tout le contenu descend
+        * ou monte de 64 px avec elle. Or on quitte la mosaïque après
+        * avoir défilé, donc rangée REPLIÉE, et l'on y revient rangée
+        * DÉPLIÉE : rendre le même `scrollY` remettait l'œil 64 px plus
+        * haut dans la liste. C'est le « cran » que voyait le
+        * propriétaire, dans les deux dispositions.
+        * Elle annonce donc les deux valeurs, et la mémoire de position
+        * corrige l'écart (voir lib/navigation-session,
+        * `memoriserDefilement`). Des NOMBRES, jamais une mesure : au
+        * milieu de la transition de 300 ms, `offsetHeight` rendrait une
+        * valeur intermédiaire qui n'est celle d'aucun des deux états.
+        */}
       <div
         aria-hidden
         data-reserve-barre=""
+        data-reserve-posee={surAccueil && !moteurReplie ? 128 : 64}
+        data-reserve-depliee={surAccueil ? 128 : 64}
         className={`hidden mobile:block shrink-0 transition-[height]
                     duration-300 ease-out ${
                       surAccueil && !moteurReplie ? "h-32" : "h-16"

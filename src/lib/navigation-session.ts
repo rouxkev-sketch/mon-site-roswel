@@ -113,12 +113,58 @@ function cleDePosition(url: string): string {
   return `${PREFIXE_DEFILEMENT}${adresseDeRecherche(url)}`;
 }
 
+/**
+ * L'ÉCART DE LA RÉSERVE DE BARRE — le « cran » du retour (nº 218-§4)
+ * ==================================================================
+ * LE DÉFAUT : au retour d'une fiche, la mosaïque se replaçait
+ * SYSTÉMATIQUEMENT un peu plus haut que la position quittée, dans les
+ * deux dispositions.
+ *
+ * LA CAUSE : sur mobile, la barre a quitté le flux et un bloc
+ * invisible tient sa place (`data-reserve-barre`, nº 195-§1a). Ce bloc
+ * mesure 128 px rangée de recherche DÉPLIÉE, 64 px REPLIÉE — et il est
+ * DANS LE FLUX : tout le contenu descend ou monte de 64 px avec lui.
+ * Or on quitte toujours la mosaïque APRÈS avoir défilé, donc rangée
+ * repliée (réserve 64), et l'on y revient sur une page neuve, rangée
+ * dépliée (réserve 128). Le contenu est alors 64 px plus bas, mais on
+ * rendait le `scrollY` brut : l'œil se retrouvait 64 px plus haut dans
+ * la liste. Un cran, exactement.
+ *
+ * LA CORRECTION : la position est rangée dans le repère de la RANGÉE
+ * DÉPLIÉE — celui de toute page qui s'ouvre. On ajoute donc, à
+ * l'écriture, l'écart entre la réserve dépliée et la réserve du
+ * moment. Rien à changer côté lecture : le script d'avant peinture
+ * comme `lireDefilement` posent la valeur telle quelle, et elle est
+ * juste, parce qu'une page s'ouvre toujours rangée dépliée.
+ *
+ * ⚠️ DES NOMBRES ANNONCÉS, JAMAIS UNE MESURE : la réserve s'anime sur
+ * 300 ms, et `offsetHeight` pris au milieu ne vaut ni 64 ni 128. La
+ * barre écrit donc ses deux valeurs en attributs (EnTeteTatouage).
+ * ⚠️ ET SUR LE WEB, ZÉRO : la réserve y est `display:none` (la barre
+ * est restée dans le flux, en `sticky`). Le seul test qui vaille est
+ * celui-là même qui conditionne son affichage — `data-appareil`.
+ */
+function ecartDeReserveBarre(): number {
+  if (typeof document === "undefined") return 0;
+  if (document.documentElement.dataset.appareil !== "mobile") return 0;
+  const reserve = document.querySelector<HTMLElement>("[data-reserve-barre]");
+  if (!reserve) return 0;
+  const posee = Number(reserve.dataset.reservePosee);
+  const depliee = Number(reserve.dataset.reserveDepliee);
+  if (!Number.isFinite(posee) || !Number.isFinite(depliee)) return 0;
+  return depliee - posee;
+}
+
 /** Mémorise la position de défilement d'une adresse */
 export function memoriserDefilement(url: string, y: number) {
   try {
     localStorage.setItem(
       cleDePosition(url),
-      JSON.stringify({ y: Math.round(y), date: Date.now() })
+      JSON.stringify({
+        //  Rangée dans le repère de la rangée dépliée (voir ci-dessus).
+        y: Math.round(y + ecartDeReserveBarre()),
+        date: Date.now(),
+      })
     );
   } catch {
     // stockage indisponible : la page reviendra simplement en haut

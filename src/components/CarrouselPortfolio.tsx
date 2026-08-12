@@ -5,6 +5,18 @@ import Link from "next/link";
 import { PhotoProgressive } from "@/components/PhotoProgressive";
 import { ZoomPincement } from "@/components/ZoomPincement";
 import type { PhotoGalerie } from "@/lib/photo-tatoueur";
+//  ⚠️ TEMPORAIRE (nº 218-§1) — la sonde du carrousel. Sans
+//  `?sonde-carrousel=1`, chacun de ces appels sort à sa première ligne
+//  et ne coûte rien. Pour la retirer : ces imports et les appels
+//  `noter…` / `ressource` ci-dessous.
+import {
+  inventaire,
+  noter,
+  noterArret,
+  noterDemontage,
+  noterMontage,
+  ressource,
+} from "@/lib/journal-carrousel";
 
 /**
  * LE CARROUSEL DU PORTFOLIO — TOUTES les photos d'un ensemble
@@ -134,6 +146,16 @@ export function CarrouselPortfolio({
   const n = photos.length;
   const surCarte = variante === "carte";
 
+  /* ---- SONDE (nº 218-§1) : ce carrousel vit-il, et depuis quand ? ---
+     Le compteur d'instances est la ligne que le propriétaire veut voir :
+     si un carrousel de fiche reste à deux, ou si le nombre grimpe en
+     enchaînant les sélecteurs, la cause du blocage est là. */
+  useEffect(() => {
+    if (surCarte) return;
+    noterMontage("carrousel");
+    return () => noterDemontage("carrousel");
+  }, [surCarte]);
+
   /**
    * §5 (nº 211) — LE CHARGEMENT DIFFÉRÉ DES CARTES
    * ==================================================================
@@ -183,13 +205,21 @@ export function CarrouselPortfolio({
       setReveils((n) => n + 1);
     };
     document.addEventListener("touchstart", auToucher, { passive: true });
-    return () => document.removeEventListener("touchstart", auToucher);
+    ressource("écouteur touchstart", 1);
+    return () => {
+      document.removeEventListener("touchstart", auToucher);
+      ressource("écouteur touchstart", -1);
+    };
   }, []);
   //  LE CYCLE DE TROIS SECONDES — réarmé par chaque réveil et chaque
   //  changement de photo. S'il expire, le texte s'estompe en douceur.
   useEffect(() => {
     const minuteur = window.setTimeout(() => setCompteurVisible(false), 3000);
-    return () => window.clearTimeout(minuteur);
+    ressource("minuteur compteur", 1);
+    return () => {
+      window.clearTimeout(minuteur);
+      ressource("minuteur compteur", -1);
+    };
   }, [reveils, indice]);
 
   /** LE CADRE QUI DÉFILE, et les colonnes qu'il contient. */
@@ -235,6 +265,15 @@ export function CarrouselPortfolio({
     //  taille le tableau à la série courante (les refs viennent d'y
     //  reposer les nœuds neufs).
     colonnes.current.length = n;
+    /*  SONDE (nº 218-§1) — LA SÉRIE REÇUE. Le nombre de photos que le
+        carrousel reçoit RÉELLEMENT, en face de ce que la fiche croyait
+        demander : c'est là qu'on verra « aucune photo affichée ». */
+    if (!surCarte) {
+      noter(
+        `SÉRIE reçue · ${n} photo(s) · « ${styleLabel} » · cadre ` +
+          `${zone ? "présent" : "ABSENT"} │ ${inventaire()}`
+      );
+    }
     if (!zone || n <= 1) return;
     //  Une nouvelle série commence à sa première photo — sans quoi le
     //  cadre garderait le défilement de la précédente.
@@ -257,6 +296,7 @@ export function CarrouselPortfolio({
           //  travers de l'élan du doigt — et l'on voyait passer la
           //  tranche d'une image.
           dernierPose.current = rang;
+          if (!surCarte) noter(`INDICE → ${rang} · origine DOIGT (défilement)`);
           surChangement(rang);
         }
       },
@@ -265,8 +305,46 @@ export function CarrouselPortfolio({
     for (const colonne of colonnes.current) {
       if (colonne) observateur.observe(colonne);
     }
-    return () => observateur.disconnect();
-  }, [cleDeLaSerie, n, surChangement]);
+    ressource("observateur intersection", 1);
+
+    /*  SONDE (nº 218-§1) — L'ARRÊT DU DÉFILEMENT. C'est le repère des
+        300 ms : la sonde note ensuite tout ce qui apparaît ou disparaît
+        dans le cadre pendant ce délai. On l'obtient par un silence de
+        120 ms après le dernier `scroll` — `scrollend` n'existe pas
+        partout, et on ne peut pas se permettre de le supposer. */
+    let silence = 0;
+    const auDefilement = () => {
+      window.clearTimeout(silence);
+      silence = window.setTimeout(() => {
+        if (surCarte) return;
+        const images = zone.querySelectorAll("img");
+        let chargees = 0;
+        for (const image of images) {
+          if (image.complete && image.naturalWidth > 0) chargees += 1;
+        }
+        noterArret(
+          `scrollLeft ${Math.round(zone.scrollLeft)} · overflow ` +
+            `${getComputedStyle(zone).overflowX} · largeur ${zone.clientWidth} · ` +
+            `colonnes montées ${zone.children.length} · images ${images.length} ` +
+            `(chargées ${chargees}, vides ${images.length - chargees})`
+        );
+      }, 120);
+    };
+    zone.addEventListener("scroll", auDefilement, { passive: true });
+    ressource("écouteur scroll", 1);
+
+    return () => {
+      observateur.disconnect();
+      ressource("observateur intersection", -1);
+      zone.removeEventListener("scroll", auDefilement);
+      ressource("écouteur scroll", -1);
+      window.clearTimeout(silence);
+    };
+    //  ⚠️ `indice` N'EST PAS DANS CETTE LISTE, ET NE DOIT PAS Y ÊTRE :
+    //  l'observateur serait reconstruit à chaque photo. Les deux ajouts
+    //  de la sonde (`surCarte`, `styleLabel`) ne changent qu'avec la
+    //  série, donc en même temps que `cleDeLaSerie`.
+  }, [cleDeLaSerie, n, surChangement, surCarte, styleLabel]);
 
   /**
    * ALLER À UNE PHOTO — les flèches, les points, et tout changement
@@ -274,9 +352,22 @@ export function CarrouselPortfolio({
    * `offsetLeft` est la position que LE NAVIGATEUR a donnée à cette
    * colonne : on ne la calcule pas, on la lit.
    */
-  function allerA(rang: number, doux: boolean) {
+  /*  ⚠️ LA VARIANTE, DANS UNE RÉFÉRENCE (nº 218-§1) : `allerA` est
+      appelée depuis un effet, et une fonction qui lit une VALEUR du
+      rendu en devient une dépendance. Une référence, non — et la
+      variante d'un carrousel ne change jamais de sa vie. La sonde ne
+      modifie donc pas les dépendances de l'effet qu'elle observe. */
+  const varianteRef = useRef(variante);
+  function allerA(rang: number, doux: boolean, origine = "code") {
     const zone = cadre.current;
     const colonne = colonnes.current[rang];
+    if (varianteRef.current !== "carte") {
+      noter(
+        `INDICE → ${rang} · origine ${origine.toUpperCase()} · ` +
+          `cadre ${zone ? "présent" : "ABSENT"} · colonne ` +
+          `${colonne ? "présente" : "ABSENTE"}`
+      );
+    }
     if (!zone || !colonne) return;
     zone.scrollTo({
       left: colonne.offsetLeft,
@@ -298,7 +389,7 @@ export function CarrouselPortfolio({
     const colonne = colonnes.current[indice];
     if (!zone || !colonne) return;
     if (Math.abs(zone.scrollLeft - colonne.offsetLeft) > 1) {
-      allerA(indice, false);
+      allerA(indice, false, "code (fiche)");
     }
     dernierPose.current = indice;
   }, [indice, n]);
@@ -307,7 +398,7 @@ export function CarrouselPortfolio({
   function aller(sens: 1 | -1) {
     const cible = indice + sens;
     if (cible < 0 || cible >= n) return;
-    allerA(cible, true);
+    allerA(cible, true, "flèche");
   }
 
   /** Le texte de remplacement d'une photo : le style, et sa légende
@@ -325,6 +416,10 @@ export function CarrouselPortfolio({
   const enFinDeGalerie = indice >= n - 1;
   const compteur = n > 1 && (
     <span
+      /*  ⚠️ TEMPORAIRE (nº 218-§1) : la sonde nomme ce qui apparaît ou
+          disparaît dans le cadre. Sans ce nom, son relevé dirait
+          « SPAN » — inexploitable. */
+      data-role="compteur"
       className="hidden mobile:inline-flex absolute top-3 right-3 z-[2]
                  items-center rounded-full bg-black/60 backdrop-blur
                  px-2.5 py-1.5 text-white"
@@ -372,6 +467,7 @@ export function CarrouselPortfolio({
     <button
       type="button"
       aria-label={sens === 1 ? "Photo suivante" : "Photo précédente"}
+      data-role={sens === 1 ? "flèche droite" : "flèche gauche"}
       onClick={() => aller(sens)}
       className={`hidden pointer-fine:flex absolute z-[2] ${
         sens === 1 ? "right-2.5" : "left-2.5"
@@ -432,6 +528,7 @@ export function CarrouselPortfolio({
     };
     return (
       <div
+        data-role="pagination"
         className={`${
           surCarte ? "flex" : "flex mobile:hidden"
         } absolute bottom-3 inset-x-0 z-[2] justify-center pointer-events-none`}
@@ -453,7 +550,7 @@ export function CarrouselPortfolio({
                     type="button"
                     aria-label={`Voir la photo ${rang + 1} sur ${n}`}
                     aria-current={rang === indice ? "true" : undefined}
-                    onClick={() => allerA(rang, true)}
+                    onClick={() => allerA(rang, true, "rond")}
                     tabIndex={taille === 0 ? -1 : 0}
                     //  L'actif : BLANC ILLUMINÉ — un halo, pas un
                     //  contour. Les autres : blanc voilé.
@@ -509,6 +606,9 @@ export function CarrouselPortfolio({
       role="region"
       aria-roledescription="carrousel"
       aria-label={`Portfolio de ${nomTatoueur} — ${styleLabel}`}
+      /*  ⚠️ TEMPORAIRE (nº 218-§1) : c'est par cet attribut que la sonde
+          TROUVE le carrousel — elle n'en connaît rien d'autre. */
+      data-carrousel={variante}
       className="relative bg-sombre-carte select-none"
     >
       {/* LE CADRE QUI DÉFILE — le navigateur fait tout : l'inertie du
@@ -524,6 +624,7 @@ export function CarrouselPortfolio({
           et l'accrochage est levé. */}
       <div
         ref={cadre}
+        data-role="cadre"
         onPointerDown={reveiller}
         onScroll={reveiller}
         className={`relative flex ${
@@ -572,6 +673,7 @@ export function CarrouselPortfolio({
               ref={(element) => {
                 colonnes.current[rang] = element;
               }}
+              data-role={`colonne ${rang}`}
               className="relative w-full shrink-0 snap-start snap-always aspect-[4/5]"
               aria-hidden={rang !== indice}
             >

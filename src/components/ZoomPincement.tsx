@@ -1,6 +1,13 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+//  ⚠️ TEMPORAIRE (nº 218-§1) — la sonde du carrousel. Sans
+//  `?sonde-carrousel=1`, ces appels ne coûtent rien.
+import {
+  noterDemontage,
+  noterMontage,
+  ressource,
+} from "@/lib/journal-carrousel";
 
 /**
  * LE ZOOM AU PINCEMENT — deux doigts, comme sur Instagram
@@ -126,8 +133,14 @@ export function usePincement({
     element.addEventListener("touchmove", bloquerDefilement, {
       passive: false,
     });
+    //  SONDE (nº 218-§1) : un zoom vivant = un écouteur `touchmove` NON
+    //  PASSIF de plus. Le compteur dit d'un coup d'œil s'il en reste.
+    noterMontage("zoom");
+    ressource("écouteur touchmove (non passif)", 1);
     return () => {
       element.removeEventListener("touchmove", bloquerDefilement);
+      ressource("écouteur touchmove (non passif)", -1);
+      noterDemontage("zoom", actif.current ? "⚠️ PENDANT UN PINCEMENT" : "");
       /**
        * ⚠️ UN PINCEMENT NE SURVIT PAS À SON COMPOSANT (nº 217-§4)
        * ----------------------------------------------------------------
