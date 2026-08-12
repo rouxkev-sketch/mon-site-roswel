@@ -7,6 +7,7 @@ import {
   ficheExistanteNonPubliee,
   lireFicheProprietaire,
   lireTatoueur,
+  natureCherchee,
   slugActuelDepuisAncien,
   styleConnu,
 } from "@/lib/tatoueurs";
@@ -101,10 +102,19 @@ export default async function PageFicheTatoueur({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ style?: string; rendu?: string; studio?: string }>;
+  searchParams: Promise<{
+    style?: string;
+    rendu?: string;
+    /** LA CATÉGORIE (nº 210-§1) — avec le style et le rendu, elle
+        désigne UN ENSEMBLE : la fiche s'ouvre alors sur cette série
+        seule, comme au toucher d'une vignette du portfolio. C'est ce
+        que « Ma sélection » écrit dans ses liens. */
+    nature?: string;
+    studio?: string;
+  }>;
 }) {
   const { slug } = await params;
-  const { style, rendu, studio } = await searchParams;
+  const { style, rendu, nature, studio } = await searchParams;
   const { tatoueur, demonstration } = await ficheVisible(slug);
 
   // LE PROPRIÉTAIRE VOIT SA FICHE même pas encore publiée, et ses
@@ -167,6 +177,7 @@ export default async function PageFicheTatoueur({
         demonstration={demonstration}
         styleInitial={styleConnu(style)}
         renduInitial={renduConnu(rendu)}
+        natureInitiale={natureCherchee(nature)}
         suiviAuDepart={suiviAuDepart}
       />
       {/* ⚠️ CE BLOC EST INVISIBLE, ET C'EST LE PLUS IMPORTANT DE LA

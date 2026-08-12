@@ -335,12 +335,18 @@ export function FenetreFiche({
                   <div className="absolute top-3 right-3 z-[2]">
                     <BoutonCoeurPhoto
                       photoId={photoEnregistrable}
-                      //  L'ENSEMBLE DE LA PHOTO REGARDÉE (nº 209-§3) —
-                      //  même style, même catégorie, même rendu.
+                      //  L'ENSEMBLE DE LA PHOTO REGARDÉE — calculé
+                      //  depuis la GALERIE BRUTE, la seule liste où
+                      //  chaque photo porte ses trois tags : la réponse
+                      //  ne dépend donc plus du chemin d'arrivée
+                      //  (nº 210-§2, voir le commentaire jumeau dans
+                      //  FicheTatoueur).
                       galerie={ensembleDeLaPhoto(
-                        photosDuStyleAffiche,
-                        photo
-                      ).map((entree) => entree.cle)}
+                        tatoueur.galerie ?? [],
+                        (tatoueur.galerie ?? []).find(
+                          (entree) => entree.id === photoEnregistrable
+                        ) ?? { style: "", rendu: null }
+                      ).map((entree) => entree.id)}
                       variante="fiche"
                     />
                   </div>

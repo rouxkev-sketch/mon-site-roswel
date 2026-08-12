@@ -309,7 +309,13 @@ export function PanneauPortfolio({
            bloc a pour parent le panneau, pas la colonne — il héritait
            donc du transparent, et le contenu se voyait passer
            derrière. */}
-      <div className="pt-6 lg:sticky lg:top-11 lg:z-[1] bg-[var(--fond-colonne)]">
+      {/*  ⚠️ ET UNE MARGE DE CONFORT SOUS LA LIGNE (nº 210-§4) : les
+           photos disparaissaient PILE sous elle, qui devenait
+           invisible — un trait qui touche ce qui passe dessous ne se
+           lit plus. Les 12 px du bas appartiennent au bandeau (il est
+           opaque) : les photos s'effacent donc 12 px plus bas, et la
+           ligne reste nette en toute circonstance. */}
+      <div className="pt-6 lg:pb-3 lg:sticky lg:top-11 lg:z-[1] bg-[var(--fond-colonne)]">
         <OngletsLigne
           ariaLabel="Réalisations ou flashs"
           cleActive={nature}

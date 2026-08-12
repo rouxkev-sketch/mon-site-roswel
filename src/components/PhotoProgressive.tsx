@@ -74,7 +74,16 @@ export function PhotoProgressive({
   return (
     <>
       {/* LA MINIATURE — étirée, donc adoucie tant que la grande n'est
-          pas là. Elle disparaît sous la grande, jamais avant. */}
+          pas là. Elle RESTE EN PLACE, à pleine opacité, sous la grande.
+          ⚠️ ELLE NE S'EFFACE PLUS EN FONDU (nº 210-§3), et c'est la
+          cause du scintillement en fin de défilement : deux images
+          opaques dont les opacités se croisent laissent, à mi-course,
+          voir LE FOND SOMBRE à travers les deux — l'image s'assombrit
+          puis « le voile se lève » d'un coup à la fin de la
+          transition. La grande se pose maintenant par-dessus une
+          miniature qui ne bouge pas : elle la recouvre exactement, il
+          n'y a plus rien à traverser, et plus aucun creux de
+          luminosité. */}
       {!memeImage && (
         /* eslint-disable-next-line @next/next/no-img-element --
            image déjà découpée et servie telle quelle (stockage ou SVG
@@ -89,8 +98,7 @@ export function PhotoProgressive({
           decoding="async"
           width={PHOTO_MINIATURE.largeur}
           height={PHOTO_MINIATURE.hauteur}
-          className={`${classe} ${nette ? "opacity-0" : "opacity-100"}
-                      transition-opacity duration-300`}
+          className={classe}
         />
       )}
 

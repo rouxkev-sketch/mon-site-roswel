@@ -64,6 +64,7 @@ export function FicheTatoueur({
   demonstration,
   styleInitial = "",
   renduInitial = "",
+  natureInitiale = "",
   apercu = false,
   suiviAuDepart = false,
 }: {
@@ -80,6 +81,10 @@ export function FicheTatoueur({
       portait sur lui : le carrousel s'ouvre sur une photo qui y
       correspond. */
   renduInitial?: string;
+  /** LA CATÉGORIE CHERCHÉE (réalisation, flash). Avec le style et le
+      rendu, les trois désignent UN ENSEMBLE : la fiche s'ouvre alors
+      sur cette série seule (nº 210-§1). */
+  natureInitiale?: string;
   /** Vrai dans l'espace tatoueur (« Ma fiche ») : aperçu public SANS
       partage ni signalement, dans un <div> et non un <main>. */
   apercu?: boolean;
@@ -108,11 +113,19 @@ export function FicheTatoueur({
   const [styleAffiche, setStyleAffiche] = useState(ouverture.style);
   /** LA SÉRIE OUVERTE (nº 204-§3) — catégorie + rendu d'une vignette
       touchée : le carrousel ne montre alors QUE cette galerie de
-      dépôt. `null` à l'arrivée : le style entier, comme toujours. */
+      dépôt. `null` à l'arrivée : le style entier, comme toujours.
+      ⚠️ SAUF QUAND L'ADRESSE DÉSIGNE UN ENSEMBLE (nº 210-§1) : les
+      trois tags réunis — style, catégorie, rendu — ne peuvent désigner
+      qu'une série, et c'est elle qu'on vient voir (c'est le lien que
+      « Ma sélection » écrit). */
   const [serieOuverte, setSerieOuverte] = useState<{
     nature: string;
     rendu: string;
-  } | null>(null);
+  } | null>(
+    styleInitial && natureInitiale && renduInitial
+      ? { nature: natureInitiale, rendu: renduInitial }
+      : null
+  );
   /** L'INDICE de la photo affichée, DANS ce style. */
   const [indicePhoto, setIndicePhoto] = useState(ouverture.indice);
 
@@ -142,17 +155,23 @@ export function FicheTatoueur({
       nº 31 avait laissés de côté : après elle, la réponse est oui
       partout.) */
   const photoAffichee = photosDuCarrousel[indicePhoto] ?? photosDuCarrousel[0];
-  /** L'ENSEMBLE DE LA PHOTO REGARDÉE (nº 209-§3) — même style, même
-      catégorie, même rendu. C'est lui que le cœur enregistre, où qu'on
-      ait ouvert la fiche : depuis une vignette du portfolio (la série
-      est déjà l'ensemble) comme depuis la mosaïque de recherche (le
-      carrousel porte alors tout le style, catégories et rendus
-      mêlés — on ne garde que l'ensemble de l'image sous les yeux). */
-  const galerieAffichee = photoAffichee
-    ? ensembleDeLaPhoto(photosDuCarrousel, photoAffichee).map(
-        (photo) => photo.cle
-      )
-    : [];
+  /**
+   * L'ENSEMBLE DE LA PHOTO REGARDÉE — et il ne dépend plus du chemin
+   * d'arrivée (nº 210-§2).
+   * ⚠️ IL SE CALCULE DEPUIS LA GALERIE BRUTE du tatoueur, la seule
+   * liste où chaque photo porte SES TROIS TAGS (style, catégorie,
+   * rendu). Le carrousel, lui, est déjà groupé par style : ses photos
+   * ne portent pas le leur, et ce qu'il contient dépend de la façon
+   * dont on est arrivé — une vignette du portfolio ouvre un ensemble,
+   * une carte de la mosaïque ouvre tout le style. En repartant de la
+   * galerie, la réponse est la même par les deux chemins.
+   */
+  const galerieAffichee = ensembleDeLaPhoto(
+    tatoueur.galerie ?? [],
+    (tatoueur.galerie ?? []).find(
+      (photo) => photo.id === photoAffichee?.cle
+    ) ?? { style: "", rendu: null }
+  ).map((photo) => photo.id);
 
   /*  ⚠️ LE SÉLECTEUR DE STYLE POSÉ SUR LA PHOTO A ÉTÉ SUPPRIMÉ
       (nº 198-§1) — le badge déroulant du bas gauche (mobile) comme le

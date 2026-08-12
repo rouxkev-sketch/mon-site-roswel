@@ -23,7 +23,7 @@ import {
   type ContexteFenetreFiche,
 } from "@/components/RetourFenetreFiche";
 import { useEtatFavori } from "@/lib/favoris-yokofolio";
-import { cleDEnsemble } from "@/lib/photos-tatoueur";
+import { cleDEnsemble, RENDU_PAR_DEFAUT } from "@/lib/photos-tatoueur";
 import { ficheComplete } from "@/lib/fiche-complete";
 import type { PhotoFavorite, TatoueurSuivi } from "@/lib/favoris-serveur";
 import type { Tatoueur } from "@/lib/tatoueurs";
@@ -162,11 +162,15 @@ export function PageFavoris({
   );
 
   /**
-   * LES ENSEMBLES ENREGISTRÉS (nº 209-§4) — les photos gardées,
-   * regroupées par tatoueur + style + catégorie + rendu. Le cœur d'une
-   * carte retire alors TOUT son ensemble, exactement comme sur une
-   * fiche : la sélection ne se manipule pas photo par photo ici et par
-   * ensembles ailleurs.
+   * UN ENSEMBLE = UNE VIGNETTE (nº 210-§1)
+   * ==================================================================
+   * ⚠️ CECI CORRIGE LA Nº 209-§4, où chaque photo d'un ensemble
+   * s'affichait séparément : six photos aimées d'un seul geste
+   * donnaient six vignettes, et la page perdait son sens.
+   * Un ensemble — un artiste, un style, une catégorie, un rendu — se
+   * présente maintenant comme UN SEUL ÉLÉMENT : la première photo
+   * gardée en est la vignette, le nom du style la nomme (comme dans le
+   * portfolio), et la toucher ouvre LA SÉRIE ENTIÈRE.
    * ⚠️ On regroupe TOUTES les photos gardées, pas seulement celles que
    * les filtres laissent voir : retirer un ensemble le retire en
    * entier, y compris ce qui est masqué par un filtre à cet instant.
@@ -179,6 +183,20 @@ export function PageFavoris({
     }
     return groupes;
   }, [photos]);
+
+  /** LES ENSEMBLES À MONTRER — un représentant par ensemble, dans
+      l'ordre d'arrivée (le plus récemment enrichi d'abord). */
+  const ensemblesVisibles = useMemo(() => {
+    const vus = new Set<string>();
+    const liste: Array<{ photo: PhotoFavorite; nombre: number }> = [];
+    for (const photo of visibles) {
+      const cle = cleEnsembleFavori(photo);
+      if (vus.has(cle)) continue;
+      vus.add(cle);
+      liste.push({ photo, nombre: ensembles.get(cle)?.length ?? 1 });
+    }
+    return liste;
+  }, [visibles, ensembles]);
 
   const styleChoisi = stylesGardes.find((entree) => entree.slug === style);
 
@@ -326,7 +344,7 @@ export function PageFavoris({
           </div>
 
           {/* ---------- LES PHOTOS, EN CARTES ---------- */}
-          {visibles.length === 0 ? (
+          {ensemblesVisibles.length === 0 ? (
             <p className="mt-8 rounded-2xl bg-sombre-carte px-4 py-6 text-center text-[14px] text-sombre-texte-doux">
               Rien d&apos;enregistré dans ce style.
             </p>
@@ -335,15 +353,15 @@ export function PageFavoris({
               className="mt-6 grid gap-3 sm:gap-4
                          grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
             >
-              {visibles.map((photo) => (
+              {ensemblesVisibles.map(({ photo, nombre }) => (
                 <CartePhotoFavorite
-                  key={photo.id}
+                  key={cleEnsembleFavori(photo)}
                   photo={photo}
-                  //  L'ENSEMBLE (nº 209-§4) : les photos enregistrées
+                  nombre={nombre}
+                  //  L'ENSEMBLE (nº 210-§1) : les photos enregistrées
                   //  du même style, de la même catégorie et du même
                   //  rendu, chez le même tatoueur. Retirer le cœur les
-                  //  retire toutes — la sélection se manipule par
-                  //  ensembles, ici comme sur une fiche.
+                  //  retire toutes, et la vignette disparaît.
                   ensemble={ensembles.get(cleEnsembleFavori(photo)) ?? [photo.id]}
                   surOuverture={ouvrirLaFiche}
                 />
@@ -374,13 +392,19 @@ export function PageFavoris({
 }
 
 /**
- * UNE PHOTO ENREGISTRÉE — la carte
- * =================================
+ * UN ENSEMBLE ENREGISTRÉ — la carte (nº 210-§1)
+ * ==============================================
+ * ⚠️ UNE VIGNETTE PAR ENSEMBLE, et non par photo : un artiste, un
+ * style, une catégorie, un rendu. La première photo gardée en est
+ * l'image, LE NOM DU STYLE la nomme — comme les vignettes du
+ * portfolio — et le nombre de photos se lit dans l'image.
  * Le même vocabulaire que la mosaïque : l'image en 4:5, le cœur DANS
- * l'image en haut à droite, et sous elle le nom du tatoueur puis la
- * légende de la photo. Toute la carte mène à la fiche, ouverte sur le
- * bon style (`?style=…`) : on retombe exactement sur ce qu'on
- * regardait.
+ * l'image en haut à droite, et sous elle le portrait et le nom du
+ * tatoueur (une page qui mélange les artistes doit dire de qui est ce
+ * qu'on regarde).
+ * LA TOUCHER OUVRE LA SÉRIE ENTIÈRE : l'adresse porte les trois tags
+ * (`?style=…&nature=…&rendu=…`), et la fiche s'ouvre exactement sur
+ * cet ensemble, comme au toucher d'une vignette du portfolio.
  */
 /** LA CLÉ D'UN ENSEMBLE ENREGISTRÉ — celle du site (style, catégorie,
     rendu), plus LE TATOUEUR : deux artistes peuvent avoir chacun leur
@@ -392,15 +416,17 @@ function cleEnsembleFavori(photo: PhotoFavorite): string {
 function CartePhotoFavorite({
   photo,
   ensemble,
+  nombre,
   surOuverture,
 }: {
+  /** LA PHOTO QUI REPRÉSENTE L'ENSEMBLE — la première gardée. */
   photo: PhotoFavorite;
-  /** L'ENSEMBLE auquel elle appartient (nº 209-§4) — les photos du
-      même style, de la même catégorie et du même rendu, chez le même
-      tatoueur, parmi celles que cette page affiche. Retirer le cœur
-      les retire toutes : la sélection se manipule par ensembles, ici
-      comme ailleurs. */
+  /** L'ENSEMBLE ENTIER — les photos du même style, de la même
+      catégorie et du même rendu, chez le même tatoueur. Retirer le
+      cœur les retire toutes, et la vignette disparaît. */
   ensemble: string[];
+  /** Combien de photos il compte — annoncé dans l'image. */
+  nombre: number;
   /** WEB : ouvre la fiche PAR-DESSUS la page (nº 143-6B). */
   surOuverture: (
     slug: string,
@@ -412,7 +438,11 @@ function CartePhotoFavorite({
   //  PÂLIR sans la faire disparaître (voir l'en-tête du fichier).
   const gardee = useEtatFavori("photo", photo.id, true);
 
-  const adresse = `/tatoueur/${photo.tatoueurSlug}?style=${photo.style}`;
+  //  LES TROIS TAGS DANS L'ADRESSE (nº 210-§1) : la fiche ouvre alors
+  //  CET ensemble, et non tout le style.
+  const adresse =
+    `/tatoueur/${photo.tatoueurSlug}?style=${photo.style}` +
+    `&nature=${photo.nature}&rendu=${photo.rendu ?? RENDU_PAR_DEFAUT}`;
 
   /** Le survol demande la fiche d'avance : au clic, elle est là. */
   function surApproche() {
@@ -467,6 +497,21 @@ function CartePhotoFavorite({
           {libelleTypeFiche(photo.typeFiche, photo.etablissement)}
         </span>
 
+        {/*  COMBIEN DE PHOTOS DANS CET ENSEMBLE (nº 210-§1) — angle bas
+             GAUCHE, la même capsule que le badge d'en face. Aucune
+             quand il n'y en a qu'une : « 1 » n'apprend rien. */}
+        {nombre > 1 && (
+          <span
+            className="absolute bottom-2 left-2 inline-flex h-[22px]
+                       items-center justify-center rounded-full
+                       bg-black/38 backdrop-blur-md
+                       px-2.5 text-[11.5px] font-semibold leading-none
+                       text-white tabular-nums pointer-events-none select-none"
+          >
+            {nombre}
+          </span>
+        )}
+
         <div className="absolute top-2 right-2">
           <BoutonCoeurPhoto
             photoId={photo.id}
@@ -509,6 +554,9 @@ function CartePhotoFavorite({
         </span>
 
         <div className="min-w-0 flex-1">
+          {/*  LE NOM DU STYLE NOMME L'ENSEMBLE (nº 210-§1) — comme les
+               vignettes du portfolio : c'est ce qu'on a aimé. Le nom
+               du tatoueur passe dessous, en gris : c'est de qui. */}
           <p className="truncate text-[14px] font-semibold text-sombre-texte leading-[19px]">
             <Link
               href={adresse}
@@ -516,12 +564,16 @@ function CartePhotoFavorite({
               className="outline-none after:absolute after:inset-0 after:content-['']
                          focus-visible:underline"
             >
-              {photo.tatoueurNom}
+              {libelleStyle(photo.style)}
             </Link>
           </p>
+          {/*  DE QUI, ET DE QUELLE NATURE — le nom du tatoueur, puis ce
+               qui distingue cet ensemble d'un autre du même style chez
+               lui : le rendu, et « Flash » quand c'en est. Le style
+               n'est plus répété : il est au-dessus. */}
           <p className="truncate text-[12.5px] text-sombre-texte-doux leading-[19px]">
             {[
-              libelleStyle(photo.style),
+              photo.tatoueurNom,
               photo.rendu ? libelleRendu(photo.rendu) : "",
               photo.nature === "flash" ? libelleNature("flash") : "",
             ]
