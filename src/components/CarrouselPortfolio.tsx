@@ -254,6 +254,50 @@ export function CarrouselPortfolio({
    * changer cette chaîne, quel que soit le nombre.
    */
   const cleDeLaSerie = photos.map((photo) => photo.cle).join("|");
+
+  /**
+   * UNE COLONNE MONTÉE RESTE MONTÉE (passe nº 219-§2)
+   * ==================================================================
+   * La nº 217-§6 avait élargi la fenêtre à deux voisines de chaque
+   * côté, pour que ce qui naît soit hors du champ de vision. Il restait
+   * un mouvement : ce qui MEURT — la colonne à deux rangs en arrière,
+   * démontée au moment même où la photo s'immobilise. Le relevé du
+   * propriétaire l'a vu (« DISPARAÎT IMG … ⚠️ +249 ms APRÈS L'ARRÊT »).
+   *
+   * LA RÈGLE EST DONC PLUS SIMPLE, ET C'EST LA SIENNE : une colonne
+   * montée le reste. On n'ajoute jamais que des colonnes — toujours à
+   * deux rangs au moins de celle qu'on regarde, donc invisibles — et on
+   * n'en retire aucune tant que la série ne change pas. Plus rien ne
+   * disparaît du cadre, jamais.
+   *
+   * CE QUE ÇA COÛTE : à parcourir vingt photos, vingt miniatures
+   * finissent montées — celles qu'on a effectivement regardées, et
+   * elles sont déjà téléchargées. La pleine résolution reste demandée
+   * pour la seule photo regardée : c'est elle qui pèse.
+   *
+   * ⚠️ AJUSTEMENT PENDANT LE RENDU, le motif officiel de React (le même
+   * que le compteur ci-dessus) : jamais de `setState` dans un effet.
+   */
+  const fenetreCourante = () => {
+    const rangs = new Set<number>();
+    for (let rang = indice - VOISINES; rang <= indice + VOISINES; rang += 1) {
+      if (rang >= 0 && rang < n) rangs.add(rang);
+    }
+    return rangs;
+  };
+  const [montees, setMontees] = useState<Set<number>>(fenetreCourante);
+  const [serieMontee, setSerieMontee] = useState(cleDeLaSerie);
+  if (serieMontee !== cleDeLaSerie) {
+    //  NOUVELLE SÉRIE : on repart de sa seule fenêtre — les colonnes de
+    //  l'ancienne n'existent plus, il n'y a rien à garder.
+    setSerieMontee(cleDeLaSerie);
+    setMontees(fenetreCourante());
+  } else {
+    const voulues = fenetreCourante();
+    let manque = false;
+    for (const rang of voulues) if (!montees.has(rang)) manque = true;
+    if (manque) setMontees(new Set([...montees, ...voulues]));
+  }
   /** LA DERNIÈRE POSITION QUE NOUS AVONS POSÉE — voir l'effet plus bas.
       ⚠️ ELLE EST AUSSI POSÉE PAR L'OBSERVATEUR (nº 217-§6) : un indice
       qui vient DU DOIGT ne doit jamais provoquer un `scrollTo` en
@@ -572,35 +616,24 @@ export function CarrouselPortfolio({
     );
   }
 
-  // Une seule photo : une image simple, sans défilement, sans compteur
-  // — un carrousel d'une photo n'est pas un carrousel.
-  if (n <= 1) {
-    return (
-      <div
-        className={`relative bg-sombre-carte ${
-          zoomEnCours ? "overflow-visible z-50" : "overflow-hidden"
-        }`}
-      >
-        {photos[0] && (
-          // Le pincement à deux doigts agrandit la photo (mobile).
-          <ZoomPincement surPincement={surPincement}>
-            <div className="relative w-full aspect-[4/5]">
-              <PhotoProgressive
-                miniature={photos[0].miniature}
-                url={photos[0].url}
-                alt={texteDe(photos[0])}
-                pleineResolution
-                prioritaire
-                classe="absolute inset-0 h-full w-full object-cover"
-              />
-            </div>
-          </ZoomPincement>
-        )}
-        {children}
-      </div>
-    );
-  }
-
+  /**
+   * ⚠️ LA BRANCHE « UNE SEULE PHOTO » A ÉTÉ SUPPRIMÉE (nº 219-§3)
+   * ==================================================================
+   * Elle rendait un arbre COMPLÈTEMENT DIFFÉRENT : pas de cadre qui
+   * défile, donc pas de `ref`, donc la sonde relevait « cadre ABSENT »
+   * — et une série d'une photo n'affichait parfois rien du tout.
+   * Deux chemins de rendu pour une même chose, c'est deux fois plus
+   * d'occasions de se tromper, et c'est celui qu'on regarde le moins
+   * qui casse.
+   *
+   * IL N'Y EN A PLUS QU'UN. Avec une seule photo, le cadre existe,
+   * n'a rien à faire défiler (une seule colonne, large de 100 %), et
+   * tout ce qui suppose un choix disparaît de lui-même : les flèches
+   * (`indice > 0` / `indice < n − 1` sont faux), le compteur (`n > 1`)
+   * et les ronds (`n > 1`). Exactement ce que demande le propriétaire :
+   * « une série d'une seule photo doit s'afficher normalement, sans
+   * flèches ni ronds ».
+   */
   return (
     <div
       role="region"
@@ -635,13 +668,12 @@ export function CarrouselPortfolio({
         style={{ touchAction: "pan-x pan-y" }}
       >
         {photos.map((photo, rang) => {
-          const ecart = Math.abs(rang - indice);
           //  SUR UNE CARTE : la première photo, et les autres seulement
-          //  une fois la carte réveillée. Sur une fiche : la courante
-          //  et ses deux voisines, comme toujours.
+          //  une fois la carte réveillée. Sur une fiche : tout ce qui a
+          //  été monté une fois le reste (voir `montees`).
           const montee = surCarte
             ? rang === 0 || eveille
-            : ecart <= VOISINES;
+            : montees.has(rang);
           const image = surCarte ? (
             /* eslint-disable-next-line @next/next/no-img-element --
                miniature déjà découpée, servie telle quelle : c'est la
@@ -695,23 +727,33 @@ export function CarrouselPortfolio({
                 ) : (
                   montee && image
                 )
-              ) : rang === indice ? (
-                /*  §3 (nº 216) — LE ZOOM N'EST MONTÉ QUE SUR LA PHOTO
-                    REGARDÉE. Il l'était sur CHAQUE colonne : vingt
-                    photos, vingt écouteurs `touchmove` NON PASSIFS —
-                    et un écouteur non passif oblige le navigateur à
-                    consulter le fil principal avant chaque mouvement
-                    de doigt. Sur un iPhone 8, cela suffit à faire
-                    saccader puis bloquer le défilement ; sur un 12, la
-                    marge absorbe. Les cartes de la mosaïque, elles,
-                    n'en montaient aucun — d'où leur fluidité, et
-                    c'était l'indice. On ne pince que ce qu'on
-                    regarde : un seul écouteur, toujours. */
-                <ZoomPincement surPincement={surPincement} classe="h-full w-full">
+              ) : (
+                /*  ⚠️ L'ENVELOPPE DE ZOOM EST SUR TOUTES LES COLONNES,
+                    ET SEULE CELLE QU'ON REGARDE EST ARMÉE (nº 219-§2).
+                    ------------------------------------------------------
+                    LA nº 216-§3 ne la MONTAIT que sur la photo regardée,
+                    pour n'avoir qu'un seul écouteur `touchmove` non
+                    passif — l'intention était juste, le moyen était
+                    faux : monter et démonter cette enveloppe DÉTRUIT ET
+                    RECRÉE l'image qu'elle contient, à l'instant précis
+                    où la photo s'immobilise. Le relevé du propriétaire
+                    le montre ligne à ligne — « DISPARAÎT DIV .h-full ·
+                    APPARAÎT IMG · DISPARAÎT IMG · APPARAÎT DIV .h-full ·
+                    APPARAÎT IMG (image VIDE) ». C'était LE
+                    scintillement.
+                    La structure du DOM est désormais la MÊME pour toutes
+                    les colonnes, à tout instant : une image déjà
+                    affichée n'est jamais remplacée. Seul `arme` change,
+                    et changer un drapeau ne déplace pas un nœud — il n'y
+                    a toujours qu'un seul écouteur non passif. */
+                <ZoomPincement
+                  surPincement={surPincement}
+                  arme={rang === indice}
+                  nom="zoom (fiche)"
+                  classe="h-full w-full"
+                >
                   {montee && image}
                 </ZoomPincement>
-              ) : (
-                montee && image
               )}
             </div>
           );

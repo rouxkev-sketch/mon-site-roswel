@@ -183,7 +183,11 @@ export function GrilleTatoueurs({
   const visible =
     ficheOuverte !== null && pathname === `/tatoueur/${ficheOuverte.slug}`;
 
-  function ouvrir(tatoueur: Tatoueur) {
+  /*  ⚠️ STABLE D'UN RENDU À L'AUTRE (nº 219-§1) : c'est ce qui permet
+      aux cartes d'être mémorisées. Elle ne lit aucune valeur du rendu —
+      seulement l'argument reçu et deux poseurs d'état, eux-mêmes
+      constants. */
+  const ouvrir = useCallback((tatoueur: Tatoueur) => {
     // La note de rechargement : d'où l'on part (adresse de la grille,
     // critères compris — chercher() la tient à jour) et où l'on en
     // était. Elle ne sert QUE si la page est rechargée fenêtre ouverte
@@ -218,12 +222,12 @@ export function GrilleTatoueurs({
         courante && courante.slug === complete.slug ? complete : courante
       );
     });
-  }
+  }, []);
 
   /** Le survol suffit à la demander : au clic, elle est déjà là. */
-  const precharger = useCallback((slug: string) => {
+  const precharger = useCallback((tatoueur: Tatoueur) => {
     if (document.documentElement.dataset.appareil === "mobile") return;
-    void ficheComplete(slug);
+    void ficheComplete(tatoueur.slug);
   }, []);
 
   // Machine arrière : l'adresse de la grille revient, et `visible`
@@ -361,6 +365,15 @@ export function GrilleTatoueurs({
           `duration-200 ${estompee ? "opacity-60" : "opacity-100"}`
         } grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6`}
       >
+        {/*  ⚠️ DEUX FONCTIONS CONSTANTES, ET C'EST LE POINT (nº 219-§1).
+             Elles étaient fabriquées à chaque rendu — `() => ouvrir(t)` —
+             donc différentes à chaque fois, donc chaque carte se
+             re-rendait dès que la FENÊTRE changeait d'état. Les cartes
+             sont désormais mémorisées (voir CarteTatoueur) : encore
+             faut-il ne pas leur donner des propriétés neuves. Elles
+             reçoivent la fiche en argument, les fonctions ne changent
+             plus, et naviguer dans un portfolio ne touche plus une
+             seule carte. */}
         {tatoueurs.map((tatoueur, rang) => (
           <CarteTatoueur
             key={tatoueur.id}
@@ -370,8 +383,8 @@ export function GrilleTatoueurs({
             natureRecherche={natureRecherche}
             prioritaire={rang < CARTES_PRIORITAIRES}
             phototheque={phototheque}
-            surApproche={() => precharger(tatoueur.slug)}
-            surOuverture={() => ouvrir(tatoueur)}
+            surApproche={precharger}
+            surOuverture={ouvrir}
           />
         ))}
       </div>

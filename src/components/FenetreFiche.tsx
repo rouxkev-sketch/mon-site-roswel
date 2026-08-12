@@ -167,13 +167,39 @@ export function FenetreFiche({
   // défilement de la grille est bloqué tant que la fenêtre est là.
   // (Des effets de PONT vers le navigateur : aucun état React n'y est
   // écrit directement.)
+  /**
+   * ⚠️ LE NOMBRE DE PHOTOS N'EST PLUS UNE DÉPENDANCE (passe nº 219-§1)
+   * ==================================================================
+   * `n` figurait dans la liste de l'effet ci-dessous. Or `n` change à
+   * CHAQUE changement de sélecteur dans le portfolio — et l'effet, lui,
+   * GÈLE LE CORPS DU DOCUMENT (`position: fixed`) et le dégèle à son
+   * nettoyage, en repositionnant la page au passage. Chaque clic sur un
+   * sélecteur dégelait donc tout le document, le repositionnait, puis
+   * le regelait : sur un iPhone, c'est une remise en page complète de
+   * la mosaïque restée derrière, images comprises, à chaque clic. Deux
+   * ou trois clics, et l'appareil sature — c'est très exactement ce que
+   * décrit le propriétaire.
+   * L'effet ne dépend plus que de ce qui le concerne : la fenêtre est-
+   * elle ouverte, et où était la grille. Les flèches du clavier lisent
+   * le nombre de photos dans une RÉFÉRENCE, tenue à jour à chaque
+   * rendu — une lecture, pas une dépendance.
+   */
+  const nombreDePhotos = useRef(n);
+  //  ⚠️ MIS À JOUR DANS UN EFFET À LUI, jamais pendant le rendu (la
+  //  règle du projet) : cet effet-ci ne fait qu'écrire un nombre, il
+  //  ne gèle rien et ne repositionne rien.
+  useEffect(() => {
+    nombreDePhotos.current = n;
+  }, [n]);
   useEffect(() => {
     if (!ouverte) return;
     const surTouche = (evenement: KeyboardEvent) => {
       if (evenement.key === "Escape") {
         surFermeture();
       } else if (evenement.key === "ArrowRight") {
-        setIndice((courant) => Math.min(courant + 1, n - 1));
+        setIndice((courant) =>
+          Math.min(courant + 1, nombreDePhotos.current - 1)
+        );
       } else if (evenement.key === "ArrowLeft") {
         setIndice((courant) => Math.max(courant - 1, 0));
       }
@@ -207,7 +233,7 @@ export function FenetreFiche({
       // quelle que soit la façon dont elle disparaît.
       document.documentElement.removeAttribute("data-fenetre-fiche");
     };
-  }, [ouverte, n, positionGrille, surFermeture]);
+  }, [ouverte, positionGrille, surFermeture]);
 
   if (!tatoueur) return null;
 

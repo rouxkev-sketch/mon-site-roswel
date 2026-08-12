@@ -71,6 +71,8 @@ export function usePincement({
   ecoute,
   cible,
   surPincement,
+  arme = true,
+  nom = "zoom",
 }: {
   /** L'élément qui REÇOIT les doigts (les gestionnaires retournés y
       sont posés — et le blocage du défilement s'y accroche). */
@@ -80,6 +82,25 @@ export function usePincement({
   /** Prévient quand le pincement commence/finit — le carrousel s'en
       sert pour ABANDONNER son balayage en cours. */
   surPincement?: (actif: boolean) => void;
+  /**
+   * LE PINCEMENT EST-IL ARMÉ ? (passe nº 219-§2)
+   * ------------------------------------------------------------------
+   * ⚠️ CE N'EST PAS « LE COMPOSANT EXISTE-T-IL ». La nº 216-§3 avait
+   * réduit le nombre d'écouteurs non passifs en ne MONTANT l'enveloppe
+   * que sur la photo regardée — mais monter et démonter une enveloppe,
+   * c'est DÉTRUIRE ET RECRÉER l'image qu'elle contient, à l'instant
+   * précis où la photo s'immobilise. Le relevé du propriétaire le
+   * montre ligne à ligne : « DISPARAÎT IMG … APPARAÎT IMG … image
+   * VIDE ». C'était le scintillement.
+   * L'enveloppe est donc DÉSORMAIS TOUJOURS LÀ, sur chaque colonne, et
+   * c'est ce drapeau qui décide si elle ÉCOUTE. Le DOM ne bouge plus,
+   * et il n'y a toujours qu'un seul écouteur non passif : les deux
+   * acquis sont gardés.
+   */
+  arme?: boolean;
+  /** Le nom porté au journal de la sonde — « zoom (carte) » compte à
+      part de « zoom (fiche) » (nº 219-§1). */
+  nom?: string;
 }) {
   const doigts = useRef(new Map<number, Doigt>());
   const depart = useRef<Mesure | null>(null);
@@ -118,14 +139,14 @@ export function usePincement({
      montage (léger), il ne fait rien tant qu'on ne pince pas. */
   useEffect(() => {
     const element = ecoute.current;
-    if (!element) return;
+    //  DÉSARMÉ : aucun écouteur, aucun compte — la colonne existe, mais
+    //  elle n'écoute pas (nº 219-§2).
+    if (!element || !arme) return;
     /**
-     * ⚠️ CET ÉCOUTEUR EST NON PASSIF, et il y en a un par carte : le
-     * navigateur consulte le fil principal avant chaque mouvement de
-     * doigt, au lieu de décider seul. Il a été mesuré comme suspect de
-     * l'écran gris à la passe 162 ; l'interrupteur qui permettait de
-     * l'éteindre (`&sans=tactile`) a été supprimé avec le reste des
-     * interrupteurs de mesure (refonte nº 191) — il n'a rien montré.
+     * ⚠️ CET ÉCOUTEUR EST NON PASSIF : le navigateur consulte le fil
+     * principal avant chaque mouvement de doigt, au lieu de décider
+     * seul. Il n'y en a qu'UN par carrousel — celui de la photo
+     * regardée (nº 216-§3, conservé) — et un par carte de mosaïque.
      */
     function bloquerDefilement(evenement: TouchEvent) {
       if (actif.current) evenement.preventDefault();
@@ -133,33 +154,32 @@ export function usePincement({
     element.addEventListener("touchmove", bloquerDefilement, {
       passive: false,
     });
-    //  SONDE (nº 218-§1) : un zoom vivant = un écouteur `touchmove` NON
+    //  SONDE (nº 218-§1) : un zoom armé = un écouteur `touchmove` NON
     //  PASSIF de plus. Le compteur dit d'un coup d'œil s'il en reste.
-    noterMontage("zoom");
+    noterMontage(nom);
     ressource("écouteur touchmove (non passif)", 1);
     return () => {
       element.removeEventListener("touchmove", bloquerDefilement);
       ressource("écouteur touchmove (non passif)", -1);
-      noterDemontage("zoom", actif.current ? "⚠️ PENDANT UN PINCEMENT" : "");
+      noterDemontage(nom, actif.current ? "⚠️ PENDANT UN PINCEMENT" : "");
       /**
-       * ⚠️ UN PINCEMENT NE SURVIT PAS À SON COMPOSANT (nº 217-§4)
+       * ⚠️ UN PINCEMENT NE SURVIT PAS AU DÉSARMEMENT (nº 217-§4)
        * ----------------------------------------------------------------
-       * Cette enveloppe n'est montée QUE sur la photo regardée
-       * (nº 216-§3) : elle disparaît donc dès que le carrousel change
-       * de photo — y compris AU MILIEU d'un geste. `terminer` n'était
-       * alors jamais appelé, et deux choses restaient allumées pour
-       * toujours : `data-zoom` sur `<html>` (le plan de la mosaïque
-       * reste au-dessus de la barre) et surtout `surPincement(true)`,
-       * jamais démenti — le carrousel garde `overflow-hidden`, et PLUS
-       * RIEN NE DÉFILE. C'est l'un des deux blocages du portfolio.
-       * Le démontage vaut donc fin de geste, sans exception.
+       * Le carrousel n'arme que la photo regardée : le désarmement
+       * arrive donc dès qu'on change de photo — y compris AU MILIEU
+       * d'un geste. Sans ceci, `terminer` n'était jamais appelé, et
+       * deux choses restaient allumées pour toujours : `data-zoom` sur
+       * `<html>`, et surtout `surPincement(true)` jamais démenti — le
+       * carrousel gardait `overflow-hidden`, et PLUS RIEN NE DÉFILAIT.
+       * Le désarmement vaut fin de geste, sans exception.
        */
       terminer();
     };
-    // La ref est stable d'un rendu à l'autre ; `terminer` ne lit que
-    // des refs et ne change pas de comportement d'un rendu à l'autre.
+    // Les refs sont stables d'un rendu à l'autre ; `terminer` ne lit
+    // que des refs et ne change pas de comportement d'un rendu à
+    // l'autre. Seul l'armement compte.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [arme]);
 
   function mesure(): Mesure {
     const [a, b] = [...doigts.current.values()];
@@ -196,6 +216,8 @@ export function usePincement({
   }
 
   function onPointerDown(evenement: React.PointerEvent) {
+    //  DÉSARMÉ (nº 219-§2) : la colonne existe, elle n'écoute pas.
+    if (!arme) return;
     if (evenement.pointerType !== "touch") return;
     if (document.documentElement.dataset.appareil !== "mobile") return;
     doigts.current.set(evenement.pointerId, {
@@ -337,14 +359,32 @@ export function ZoomPincement({
   children,
   classe = "",
   surPincement,
+  arme = true,
+  nom = "zoom",
 }: {
   children: React.ReactNode;
   /** Classes du cadre (il épouse l'image : lui donner sa taille). */
   classe?: string;
   surPincement?: (actif: boolean) => void;
+  /**
+   * ⚠️ L'ENVELOPPE EST TOUJOURS LÀ, C'EST L'ÉCOUTE QUI S'ARME
+   * (nº 219-§2). Le carrousel en pose une sur CHAQUE colonne — le DOM
+   * ne change donc jamais quand la photo regardée change — et n'arme
+   * que celle qu'on regarde. Monter et démonter l'enveloppe, c'était
+   * détruire et recréer l'image qu'elle contient, à l'instant précis
+   * de l'immobilisation : le scintillement.
+   */
+  arme?: boolean;
+  nom?: string;
 }) {
   const cadre = useRef<HTMLDivElement>(null);
-  const gestes = usePincement({ ecoute: cadre, cible: cadre, surPincement });
+  const gestes = usePincement({
+    ecoute: cadre,
+    cible: cadre,
+    surPincement,
+    arme,
+    nom,
+  });
 
   return (
     <div

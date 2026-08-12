@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   libelleStyle,
@@ -19,6 +19,14 @@ import {
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import { ligneCarte, ligneCarteMobile } from "@/lib/adresse";
 import { pincementRecent, usePincement } from "@/components/ZoomPincement";
+//  ⚠️ TEMPORAIRE (nº 219-§1) — la sonde du carrousel compte les
+//  cartes vivantes : c'est la ligne qui dit si naviguer dans un
+//  portfolio reconstruit la mosaïque. Sans `?sonde-carrousel=1`,
+//  ces appels ne coûtent rien.
+import {
+  noterDemontage as noterDemontageCarte,
+  noterMontage as noterMontageCarte,
+} from "@/lib/journal-carrousel";
 import type { Tatoueur } from "@/lib/tatoueurs";
 //  ⚠️ TEMPORAIRE (nº 175-§6) — la sonde-journal note l'ouverture d'une
 //  fiche. Elle n'écrit RIEN sans `?sonde-bascule=1`.
@@ -58,7 +66,7 @@ import { noter, sauvegarderMaintenant } from "@/lib/journal-bascule";
  * Un pincement n'ouvre JAMAIS la fiche : seul le tap simple navigue
  * (garde `pincementRecent` dans `auClic`).
  */
-export function CarteTatoueur({
+function CarteTatoueurNue({
   tatoueur,
   styleRecherche = "",
   renduRecherche = "",
@@ -90,11 +98,11 @@ export function CarteTatoueur({
       grille au lieu de naviguer (mécanique d'Instagram). Le lien reste
       un vrai lien : clic du milieu, Ctrl+clic et moteurs de recherche
       vont toujours à la page /tatoueur/nom. */
-  surOuverture?: () => void;
+  surOuverture?: (tatoueur: Tatoueur) => void;
   /** LE SURVOL (web) : la grille en profite pour demander d'avance la
       fiche complète — au clic, la fenêtre a déjà tout. N'a aucun effet
       visible. */
-  surApproche?: () => void;
+  surApproche?: (tatoueur: Tatoueur) => void;
 }) {
   const photo = photoPourStyle(
     tatoueur,
@@ -163,7 +171,22 @@ export function CarteTatoueur({
       grossit — voir ZoomPincement.tsx pour la mécanique. */
   const zoneCarte = useRef<HTMLElement>(null);
   const cadrePhoto = useRef<HTMLDivElement>(null);
-  const gestesPincement = usePincement({ ecoute: zoneCarte, cible: cadrePhoto });
+  const gestesPincement = usePincement({
+    ecoute: zoneCarte,
+    cible: cadrePhoto,
+    //  Les zooms des CARTES se comptent à part de celui de la fiche
+    //  (nº 219-§1) : le relevé doit pouvoir dire « zéro montage de
+    //  carte » quand on navigue dans un portfolio.
+    nom: "zoom (carte)",
+  });
+
+  /*  SONDE (nº 219-§1) — LA CARTE EST-ELLE REMONTÉE ? Le relevé de la
+      nº 218 montrait vingt-quatre montages en bloc à chaque changement
+      de sélecteur : c'est ce compteur qui doit rester à plat. */
+  useEffect(() => {
+    noterMontageCarte("carte");
+    return () => noterDemontageCarte("carte");
+  }, []);
 
   /** L'ADRESSE DE LA FICHE — elle EMPORTE le style cherché (?style=…) :
       la fiche ouvre alors son carrousel sur la photo de CE style, la
@@ -264,7 +287,7 @@ export function CarteTatoueur({
 
     if (!surOuverture) return;
     evenement.preventDefault();
-    surOuverture();
+    surOuverture(tatoueur);
   }
 
   return (
@@ -277,7 +300,7 @@ export function CarteTatoueur({
       // Le doigt garde le défilement ; le pincement, non — il zoome
       // la photo (jamais la page).
       style={{ touchAction: "pan-x pan-y" }}
-      onPointerEnter={surApproche}
+      onPointerEnter={surApproche ? () => surApproche(tatoueur) : undefined}
       {...gestesPincement}
     >
       {/* L'ENVELOPPE DE LA PHOTO — elle ne bouge JAMAIS. C'est elle
@@ -602,3 +625,26 @@ export function CarteTatoueur({
     </article>
   );
 }
+
+/**
+ * ⚠️ LA CARTE EST MÉMORISÉE (passe nº 219-§1)
+ * ==================================================================
+ * LE DÉFAUT MESURÉ PAR LA SONDE : naviguer dans un portfolio — donc
+ * changer l'état de la FENÊTRE superposée — faisait retraverser les
+ * vingt-quatre cartes de la mosaïque, avec leurs carrousels, leurs
+ * zooms et leurs écouteurs. Deux ou trois clics, et l'appareil
+ * saturait.
+ *
+ * LA CAUSE : la fenêtre et les cartes sont rendues par le MÊME
+ * composant (GrilleTatoueurs). Tout état de la fenêtre qui y vit —
+ * la fiche ouverte, la position de la grille — provoque un rendu de
+ * ce composant, donc de ses vingt-quatre enfants.
+ *
+ * LA COUPURE : `memo`. Une carte ne se re-rend plus que si SES
+ * PROPRES données changent. Encore faut-il que ses propriétés soient
+ * stables d'un rendu à l'autre — c'est pourquoi `surOuverture` et
+ * `surApproche` reçoivent désormais la fiche EN ARGUMENT au lieu
+ * d'être des fermetures fabriquées à chaque rendu : la grille peut
+ * ainsi passer deux fonctions constantes (`useCallback`).
+ */
+export const CarteTatoueur = memo(CarteTatoueurNue);
