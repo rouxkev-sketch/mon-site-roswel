@@ -101,8 +101,9 @@ function LigneEtiquetee({
 }) {
   if (!valeur) return null;
   return (
-    <p className="text-[15px] leading-snug text-sombre-texte-doux [overflow-wrap:anywhere]">
-      {etiquette} <span className="text-sombre-texte">{valeur}</span>
+    <p className="text-[14px] leading-relaxed text-sombre-texte-doux [overflow-wrap:anywhere]">
+      {etiquette}{" "}
+      <span className="text-[15px] font-medium text-sombre-texte">{valeur}</span>
     </p>
   );
 }
@@ -119,7 +120,7 @@ function DatesDeSession({
 }) {
   if (!debut || !fin) return null;
   return (
-    <div className="mt-2 text-[14px] leading-relaxed text-sombre-texte-doux">
+    <div className="mt-2.5 text-[14px] leading-relaxed text-sombre-texte-doux">
       <p>Du {dateLongue(debut)}</p>
       <p>Au {dateLongue(fin)}</p>
     </div>
@@ -156,7 +157,7 @@ function HorairesEnLigne({
   const suite = reste.join(" • ");
 
   return (
-    <div className="mt-3">
+    <div className="mt-4">
       <button
         type="button"
         onClick={() => setOuvert((etait) => !etait)}
@@ -186,7 +187,7 @@ function HorairesEnLigne({
       </button>
 
       {ouvert && (
-        <dl className="mt-2 grid grid-cols-[minmax(84px,auto)_1fr] gap-x-6 gap-y-1.5">
+        <dl className="mt-3 grid grid-cols-[minmax(84px,auto)_1fr] gap-x-6 gap-y-2">
           {JOURS_STUDIO.map((jour) => {
             const cest = jour.index === aujourdhui;
             const robe = cest
@@ -221,7 +222,7 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
   const membres = equipeOrdonnee(equipe);
   if (membres.length === 0) return null;
   return (
-    <ul className="mt-5 flex flex-col gap-3">
+    <ul className="mt-6 flex flex-col gap-3.5">
       {membres.map((membre) => {
         const nom = (
           <span className="text-[15px] font-medium text-sombre-texte">
@@ -230,7 +231,7 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
         );
         return (
           <li key={membre.artiste_id}>
-            <p className="text-[15px] leading-snug text-sombre-texte-doux">
+            <p className="text-[14px] leading-relaxed text-sombre-texte-doux">
               {roleDuMembre(membre)} ·{" "}
               {membre.slug ? (
                 <Link
@@ -357,7 +358,7 @@ export function BlocAdressesFiche({
         />
       )}
 
-      <div className={aDesAutres ? "mt-6" : ""}>
+      <div className={aDesAutres ? "mt-7" : ""}>
         {onglet === "adresse" || !aDesAutres ? (
           <UneAdresse
             //  ⚠️ LA PHOTO DU LIEU EST CELLE DE LA FICHE : un studio
@@ -378,7 +379,7 @@ export function BlocAdressesFiche({
         ) : (
           /*  LES AUTRES ADRESSES S'EMPILENT — même présentation,
               l'une sous l'autre. */
-          <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-10">
             {autres.map((studio) => (
               <UneAdresse
                 key={studio.id}
@@ -439,7 +440,7 @@ export function BlocProfilsArtiste({
   if (modes.length === 0) return null;
 
   return (
-    <ul className="flex flex-col gap-6">
+    <ul className="flex flex-col gap-7">
       {modes.map((mode) => (
         <li key={mode.id} className="flex items-start gap-4">
           <PhotoRonde
@@ -447,7 +448,7 @@ export function BlocProfilsArtiste({
             initiale={(mode.salon_nom ?? tatoueur.nom).trim().charAt(0).toUpperCase()}
           />
           <div className="min-w-0 flex-1">
-            <p className="text-[15px] leading-snug text-sombre-texte-doux [overflow-wrap:anywhere]">
+            <p className="text-[14px] leading-relaxed text-sombre-texte-doux [overflow-wrap:anywhere]">
               {etiquetteDuMode(mode)}{" "}
               {mode.salon_slug && mode.salon_nom ? (
                 <>
@@ -458,12 +459,12 @@ export function BlocProfilsArtiste({
                   >
                     {mode.salon_nom}
                   </Link>
-                  <span className="text-sombre-texte">
+                  <span className="text-[15px] font-medium text-sombre-texte">
                     {libelleLieuDuMode(mode) ? ` · ${libelleLieuDuMode(mode)}` : ""}
                   </span>
                 </>
               ) : (
-                <span className="text-sombre-texte">{valeurDuMode(mode)}</span>
+                <span className="text-[15px] font-medium text-sombre-texte">{valeurDuMode(mode)}</span>
               )}
             </p>
             {mode.genre === "guest" && (

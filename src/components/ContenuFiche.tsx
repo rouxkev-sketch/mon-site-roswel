@@ -439,13 +439,17 @@ export function ContenuFiche({
               {/*  LE NOM — une taille de titre de profil, DEUX LIGNES
                    AU PLUS, puis des points de suspension (nº 222-§1c
                    et §1d). La passe de finition ajustera la valeur. */}
-              <h1 className="line-clamp-2 text-[clamp(1.15rem,1.6vw,1.35rem)] font-bold tracking-tight text-sombre-texte leading-[1.2]">
+              {/*  20 px au doigt, 22 px au large — l'échelle d'un
+                   titre de profil : nettement au-dessus du sous-titre,
+                   sans crier, et deux lignes d'un nom long tiennent à
+                   390 px. */}
+              <h1 className="line-clamp-2 text-[20px] lg:text-[22px] font-bold tracking-tight text-sombre-texte leading-[1.25]">
                 {tatoueur.nom}
               </h1>
               {/*  LE SOUS-TITRE — UN LIEU, UN RÔLE, RIEN D'AUTRE
                    (nº 222-§1f) : « EN SALON · RÉSIDENT ». La règle vit
                    dans `sousTitreArtiste` (lib/modes-exercice). */}
-              <p className="mt-1.5 text-[11.5px] font-semibold uppercase tracking-[0.14em] text-sombre-texte-doux">
+              <p className="mt-2 text-[12px] font-semibold uppercase tracking-[0.12em] text-sombre-texte-doux">
                 {sousLeNom(tatoueur)}
               </p>
             </div>
@@ -458,7 +462,7 @@ export function ContenuFiche({
               icône à gauche, toutes de la même taille. `flex-wrap` les
               regroupe : rien ne descend d'une ligne s'il peut monter. */}
           {liens.length > 0 && (
-            <div className="mt-6 flex flex-wrap items-center gap-x-7 gap-y-3">
+            <div className="mt-7 flex flex-wrap items-center gap-x-7 gap-y-3.5">
               {liens}
             </div>
           )}
@@ -484,13 +488,13 @@ export function ContenuFiche({
               bloc : c'est l'enveloppe qui sépare ses sections, et le
               sélecteur remplace le trait quand il s'affiche. */}
           {tatoueur.type_fiche === "artiste" ? (
-            <div className={`mt-8 pt-7 ${separation}`}>
+            <div className={`mt-10 pt-10 ${separation}`}>
               <BlocProfilsArtiste tatoueur={tatoueur} />
             </div>
           ) : (
             <div
               className={
-                aPlusieursAdresses ? "mt-8" : `mt-8 pt-7 ${separation}`
+                aPlusieursAdresses ? "mt-10" : `mt-10 pt-10 ${separation}`
               }
             >
               <BlocAdressesFiche
@@ -516,14 +520,14 @@ export function ContenuFiche({
                 key={groupe.titre}
                 className={
                   rang === premierGroupeRempli
-                    ? `mt-8 pt-7 ${separation}`
-                    : "mt-7"
+                    ? `mt-10 pt-10 ${separation}`
+                    : "mt-9"
                 }
               >
-                <h2 className="text-[14px] font-semibold uppercase tracking-wide text-sombre-texte-doux">
+                <h2 className="text-[13px] font-semibold uppercase tracking-[0.14em] text-sombre-texte-doux">
                   {groupe.titre}
                 </h2>
-                <ul className="mt-3 flex flex-wrap gap-2">
+                <ul className="mt-4 flex flex-wrap gap-2">
                   {groupe.slugs.map((slug) =>
                     groupe.versPages ? (
                       <li key={slug}>
@@ -558,7 +562,7 @@ export function ContenuFiche({
               que le SERVEUR n'a pas reconnu l'administrateur). */}
           {!apercu && (
             <div
-              className={`mt-8 pt-7 ${separation} flex flex-col items-start gap-4`}
+              className={`mt-10 pt-10 ${separation} flex flex-col items-start gap-4`}
             >
               <FenetreSignalement slug={tatoueur.slug} nom={tatoueur.nom} />
               <BoutonHorsLigne idFiche={tatoueur.id} nom={tatoueur.nom} />
