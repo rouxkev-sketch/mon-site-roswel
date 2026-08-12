@@ -24,8 +24,8 @@ import {
   type ModeExerciceFiche,
   type StudioFiche,
 } from "@/lib/modes-exercice";
-import { ligneFiche, type LieuAffichable } from "@/lib/adresse";
-import { genreMode } from "@/config/tatouage";
+import { ligneFiche, ligneMaps, type LieuAffichable } from "@/lib/adresse";
+import { genreMode, libelleTypeFiche } from "@/config/tatouage";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
@@ -313,17 +313,220 @@ function lieuDuStudio(studio: StudioFiche): LieuAffichable {
   };
 }
 
+/** L'adresse Google Maps d'un lieu — la recherche COMPLÈTE, code
+    postal et pays compris : un plan n'est pas un affichage. */
+function adresseMaps(lieu: LieuAffichable): string {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    ligneMaps(lieu)
+  )}`;
+}
+
+/**
+ * §3 (nº 225) — LA FENÊTRE D'ADRESSE DU SMARTPHONE
+ * ==================================================================
+ * Une plaque de verre posée au centre de la page : verre dépoli
+ * translucide (la règle `[data-verre-fenetre]` de globals.css — les
+ * DEUX lignes littérales, préfixée et non préfixée, jamais de
+ * `@supports`, jamais de `var()` dans le filtre : les trois pièges
+ * payés du §4), un LISERÉ clair très fin sur le pourtour — la seule
+ * exception voulue à « aucun contour », demandée en toutes lettres.
+ *
+ * DEDANS : l'adresse, les badges du lieu en verre translucide, puis
+ * les deux actions — « Copier » en capsule à taille naturelle en
+ * verre, « Ouvrir dans Google Maps » en capsule ROSE PLEINE sur toute
+ * la largeur : c'est l'action finale de cette fenêtre, et la seule.
+ * La fermeture est un mot nu, et l'appui à côté ferme aussi.
+ */
+function FenetreAdresse({
+  adresse,
+  lieu,
+  badges,
+  surFermeture,
+}: {
+  adresse: string;
+  lieu: LieuAffichable;
+  badges: string[];
+  surFermeture: () => void;
+}) {
+  const [copie, setCopie] = useState(false);
+
+  async function copier() {
+    try {
+      await navigator.clipboard.writeText(adresse);
+      setCopie(true);
+      return;
+    } catch {
+      //  Sans presse-papier (http local) : la méthode ancienne.
+    }
+    try {
+      const zone = document.createElement("textarea");
+      zone.value = adresse;
+      zone.setAttribute("readonly", "");
+      zone.style.cssText =
+        "position:fixed;top:0;left:-9999px;opacity:0;pointer-events:none";
+      document.body.appendChild(zone);
+      zone.focus();
+      zone.setSelectionRange(0, adresse.length);
+      const fait = document.execCommand("copy");
+      zone.remove();
+      if (fait) setCopie(true);
+    } catch {
+      //  Rien : le bouton garde son mot, l'adresse reste lisible.
+    }
+  }
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Adresse du lieu"
+      className="fixed inset-0 z-[80] flex items-center justify-center p-6"
+    >
+      {/*  LE VOILE — un appui à côté de la fenêtre referme. */}
+      <button
+        type="button"
+        aria-label="Fermer"
+        onClick={surFermeture}
+        className="absolute inset-0 bg-black/55"
+      />
+      <div
+        data-verre-fenetre=""
+        className="relative w-full max-w-[360px] rounded-3xl p-6
+                   ring-1 ring-white/20
+                   opacity-100 transition-opacity duration-200 starting:opacity-0"
+      >
+        <p className="text-[16px] font-medium leading-relaxed text-sombre-texte [overflow-wrap:anywhere]">
+          {adresse}
+        </p>
+
+        {badges.length > 0 && (
+          <ul className="mt-4 flex flex-wrap gap-2">
+            {badges.map((badge) => (
+              <li
+                key={badge}
+                className="inline-flex min-h-[30px] items-center rounded-full
+                           bg-white/10 px-3 text-[13px] font-medium text-sombre-texte"
+              >
+                {badge}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {/*  « Copier » — une action INTERMÉDIAIRE : capsule à sa
+             taille, en verre, sans rose plein. Le mot devient
+             « Copié » quand c'est fait — pas d'icône, pas de phrase. */}
+        <button
+          type="button"
+          onClick={() => void copier()}
+          className="mt-6 inline-flex min-h-[42px] items-center rounded-full
+                     bg-white/10 px-5 text-[14px] font-semibold text-sombre-texte
+                     transition-colors active:bg-white/20"
+        >
+          {copie ? "Copié" : "Copier"}
+        </button>
+
+        {/*  L'ACTION FINALE — la seule capsule rose de la fenêtre. */}
+        <a
+          href={adresseMaps(lieu)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 flex min-h-[48px] w-full items-center justify-center
+                     rounded-full bg-primaire text-[15px] font-semibold text-white
+                     transition-colors active:bg-primaire/85"
+        >
+          Ouvrir dans Google Maps
+        </a>
+
+        {/*  FERMER — un mot nu, jamais une capsule. */}
+        <button
+          type="button"
+          onClick={surFermeture}
+          className="mx-auto mt-5 block px-2 text-[14px] font-semibold
+                     text-sombre-texte-doux transition-colors active:text-sombre-texte"
+        >
+          Fermer
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * L'ADRESSE, CLIQUABLE QUAND ELLE EST COMPLÈTE (nº 225-§3).
+ *  · WEB : un lien ordinaire vers Google Maps, nouvel onglet ;
+ *  · SMARTPHONE : la fenêtre de verre ci-dessus — le lien est
+ *    intercepté, rien ne navigue.
+ * Une adresse INCOMPLÈTE (pas de rue) reste du texte : un plan sans
+ * rue tombe n'importe où.
+ */
+function AdresseCliquable({
+  adresse,
+  lieu,
+  badges,
+}: {
+  adresse: string;
+  lieu: LieuAffichable | null;
+  badges: string[];
+}) {
+  const [fenetre, setFenetre] = useState(false);
+  const complete = Boolean(lieu?.adresse && adresse);
+
+  if (!complete || !lieu) {
+    return <LigneEtiquetee etiquette="Adresse :" valeur={adresse} />;
+  }
+
+  return (
+    <>
+      <p className="text-[14px] leading-relaxed text-sombre-texte-doux [overflow-wrap:anywhere]">
+        {"Adresse :"}{" "}
+        <a
+          href={adresseMaps(lieu)}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(evenement) => {
+            //  SMARTPHONE : la fenêtre, pas la navigation.
+            if (document.documentElement.dataset.appareil === "mobile") {
+              evenement.preventDefault();
+              setFenetre(true);
+            }
+          }}
+          className="text-[15px] font-medium text-sombre-texte transition-colors
+                     hover:text-primaire active:text-primaire"
+        >
+          {adresse}
+        </a>
+      </p>
+      {fenetre && (
+        <FenetreAdresse
+          adresse={adresse}
+          lieu={lieu}
+          badges={badges}
+          surFermeture={() => setFenetre(false)}
+        />
+      )}
+    </>
+  );
+}
+
 /** UNE ADRESSE, ENTIÈRE : la photo, la ligne d'adresse, les horaires,
     puis l'équipe dessous. */
 function UneAdresse({
   photo,
   adresse,
+  lieu,
+  badges,
   horaires,
   fuseau,
   equipe,
 }: {
   photo: string | null | undefined;
   adresse: string;
+  /** Le lieu STRUCTURÉ — c'est lui qui rend l'adresse cliquable
+      (nº 225-§3) : sans rue, elle reste du texte. */
+  lieu: LieuAffichable | null;
+  /** Les badges de la fenêtre d'adresse (« Salon », la ville…). */
+  badges: string[];
   horaires: unknown;
   fuseau: string | null | undefined;
   equipe: MembreEquipe[] | null | undefined;
@@ -336,7 +539,7 @@ function UneAdresse({
       <div className="flex items-start gap-4">
         <PhotoRonde source={photo} nature="lieu" />
         <div className="min-w-0 flex-1">
-          <LigneEtiquetee etiquette="Adresse :" valeur={adresse} />
+          <AdresseCliquable adresse={adresse} lieu={lieu} badges={badges} />
           <HorairesEnLigne horaires={horaires} fuseau={fuseau} />
         </div>
       </div>
@@ -374,16 +577,26 @@ export function BlocAdressesFiche({
 
   //  AUCUN STUDIO ENREGISTRÉ (fiche d'avant la migration nº 26) : on
   //  retombe sur l'adresse portée par la fiche elle-même.
-  const adressePrincipale = principal
-    ? ligneFiche(lieuDuStudio(principal))
-    : ligneFiche({
+  const lieuPrincipal: LieuAffichable = principal
+    ? lieuDuStudio(principal)
+    : {
         adresse: tatoueur.adresse,
         code_postal: tatoueur.code_postal,
         ville: tatoueur.ville_nom,
         region: tatoueur.region,
         pays: tatoueur.pays,
         code_pays: tatoueur.code_pays,
-      });
+      };
+  const adressePrincipale = ligneFiche(lieuPrincipal);
+
+  /** LES BADGES DE LA FENÊTRE D'ADRESSE (nº 225-§3) : le type du lieu
+      (« Salon », « Studio ») et sa ville — ce qu'on veut savoir avant
+      d'ouvrir le plan. */
+  const badgesDe = (lieu: LieuAffichable): string[] =>
+    [
+      libelleTypeFiche(tatoueur.type_fiche, tatoueur.etablissement),
+      lieu.ville ?? "",
+    ].filter(Boolean);
 
   return (
     <div>
@@ -408,6 +621,8 @@ export function BlocAdressesFiche({
             //  changer — ici, et dans la boucle des autres adresses.
             photo={tatoueur.photo_profil}
             adresse={adressePrincipale}
+            lieu={lieuPrincipal}
+            badges={badgesDe(lieuPrincipal)}
             horaires={principal?.horaires}
             fuseau={principal?.fuseau}
             //  L'ÉQUIPE APPARTIENT À L'ENSEIGNE, pas à une adresse : la
@@ -425,6 +640,8 @@ export function BlocAdressesFiche({
                 key={studio.id}
                 photo={tatoueur.photo_profil}
                 adresse={ligneFiche(lieuDuStudio(studio))}
+                lieu={lieuDuStudio(studio)}
+                badges={badgesDe(lieuDuStudio(studio))}
                 horaires={studio.horaires}
                 fuseau={studio.fuseau}
                 equipe={null}

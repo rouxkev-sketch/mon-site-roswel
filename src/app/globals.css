@@ -181,6 +181,20 @@ html:has([data-fond="sombre"]) {
   backdrop-filter: blur(40px) saturate(150%);
 }
 
+/*  LA FENÊTRE D'ADRESSE — la plaque de verre du smartphone
+    (nº 225-§3). MÊMES RÈGLES DURES QUE LA BARRE (les pièges payés du
+    §4) : les DEUX lignes littérales, la préfixée EN PREMIER (Safari ne
+    lit qu'elle) ; JAMAIS dans un `@supports (backdrop-filter: …)` —
+    Safari y répond faux et jetterait tout le bloc ; AUCUN `var()`
+    dans le filtre — WebKit invaliderait la déclaration. Sans
+    `backdrop-filter` (navigateur ancien), le fond reste assez dense
+    pour que la fenêtre se lise seule. */
+[data-verre-fenetre] {
+  background-color: rgba(26, 26, 29, 0.72);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  backdrop-filter: blur(24px) saturate(150%);
+}
+
 /*  LE CHAMP ET LES DEUX ICÔNES DE LA BARRE FIXE — LISIBLES SUR
     N'IMPORTE QUELLE PHOTO (nº 174-§1)
     -------------------------------------------------------------------

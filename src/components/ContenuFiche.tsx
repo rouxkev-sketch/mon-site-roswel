@@ -448,9 +448,23 @@ export function ContenuFiche({
               TEXTE (sa colonne), jamais sur celui de la photo.
               ⚠️ ET UNE MARGE AU-DESSUS (nº 222-§1b) : la photo touchait
               la rangée Profil / Portfolio / Suivre. */}
-          <div className="mt-7 flex items-start gap-5">
+          {/*  §1 (nº 225) — 32 px AU-DESSUS ET AU-DESSOUS de la
+               photo, égaux (le bloc des liens porte l'autre moitié :
+               son `mt-8` MESURE la marge basse, il ne s'ajoute pas au
+               28 px de la 223, qu'il remplace).
+               §2 — LE CENTRAGE CONDITIONNEL, en CSS pur et au pixel :
+               la colonne de texte porte `min-height` = hauteur de la
+               photo (92 px) et centre son contenu (`justify-center`).
+               Un bloc MOINS haut que la photo est donc centré sur
+               elle ; un bloc PLUS haut fait grandir sa boîte vers le
+               bas (le parent est calé en haut, `items-start`) : son
+               sommet reste exactement au haut de la photo, et la
+               suite continue dessous, dans la même colonne. Aucun
+               JavaScript, aucune mesure — la bascule est celle de la
+               boîte elle-même. */}
+          <div className="mt-8 flex items-start gap-5">
             {avatarProfil}
-            <div className="min-w-0 flex-1">
+            <div className="flex min-h-[92px] min-w-0 flex-1 flex-col justify-center">
               {/*  LE NOM — une taille de titre de profil, DEUX LIGNES
                    AU PLUS, puis des points de suspension (nº 222-§1c
                    et §1d). La passe de finition ajustera la valeur. */}
@@ -477,7 +491,7 @@ export function ContenuFiche({
               icône à gauche, toutes de la même taille. `flex-wrap` les
               regroupe : rien ne descend d'une ligne s'il peut monter. */}
           {liens.length > 0 && (
-            <div className="mt-7 flex flex-wrap items-center gap-x-7 gap-y-3.5">
+            <div className="mt-8 flex flex-wrap items-center gap-x-7 gap-y-3.5">
               {liens}
             </div>
           )}
