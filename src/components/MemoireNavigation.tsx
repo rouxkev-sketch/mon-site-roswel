@@ -220,7 +220,31 @@ export function MemoireNavigation() {
         oublierRestaurationPosition();
         return;
       }
-      if (estUnePageDeDetail(location.pathname)) return;
+      /**
+       * ⚠️ UNE FICHE GARDE SA PLACE QUAND ELLE MÈNE À UNE AUTRE FICHE
+       * (passe nº 230-§3)
+       * ------------------------------------------------------------
+       * La règle de la nº 191 — « une fiche s'ouvre toujours en haut,
+       * on n'écrit ni ne rend jamais sa position » — a été écrite
+       * quand on n'arrivait sur une fiche QUE depuis une liste. Depuis
+       * la nº 226-§5, une fiche mène à une autre fiche (un résident,
+       * une autre adresse), et au doigt c'est désormais une PAGE
+       * (nº 230-§3) : le retour doit rendre la fiche précédente À SA
+       * POSITION, comme il le fait pour une mosaïque.
+       * On écrit donc la position d'une fiche DANS CE SEUL CAS —
+       * fiche → fiche. Une fiche ouverte depuis une liste n'écrit
+       * toujours rien, et s'ouvre donc toujours en haut : la règle de
+       * la nº 191 n'est pas touchée, elle est bornée.
+       */
+      if (estUnePageDeDetail(location.pathname)) {
+        memoriserDefilement(
+          location.pathname + location.search,
+          window.scrollY
+        );
+        demanderRestaurationPosition(location.pathname + location.search);
+        gele = true;
+        return;
+      }
       ecrireMaintenant();
       gele = true;
       /**
@@ -335,9 +359,14 @@ export function MemoireNavigation() {
     const restaurationDemandee = consommerRestaurationPosition();
 
     if (!vraieTraversee && !documentRestitue && !restaurationDemandee) return;
-    //  ⚠️ JAMAIS SUR UNE FICHE (exigence nº 4) : elle s'ouvre en haut,
-    //  quelle que soit la façon dont on y arrive.
-    if (estUnePageDeDetail(pathname)) return;
+    //  ⚠️ UNE FICHE PEUT DÉSORMAIS RENDRE SA PLACE (nº 230-§3) — mais
+    //  SEULEMENT par l'un des trois chemins ci-dessus, qui tous
+    //  disent un RETOUR. Une navigation neuve vers une fiche n'allume
+    //  aucun des trois : elle s'ouvre en haut, comme depuis la
+    //  nº 191. Et une fiche ouverte depuis une LISTE n'a jamais de
+    //  position écrite (seul le clic fiche → fiche en écrit une, voir
+    //  `auDepart`) : `poserLaPosition` ne trouve alors rien, et ne
+    //  bouge rien.
     //  ⚠️ LA POSITION VOYAGE AVEC SA CLÉ (nº 185-c) : celle d'une
     //  mosaïque complète ne doit jamais être appliquée à une mosaïque
     //  filtrée. La pose la revérifie à chaque tentative.

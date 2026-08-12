@@ -78,6 +78,32 @@ const nextConfig: NextConfig = {
         destination: "/devenir-tatoueur/securite",
         permanent: true,
       },
+      //  ---- LES PAGES DE CRITÈRE DONT LE STYLE A CHANGÉ D'ADRESSE ----
+      //  (passe nº 230-§2) La règle du projet est qu'un slug PUBLIÉ ne
+      //  change jamais — les renommages de libellé et les DEUX
+      //  scissions n'ont donc déplacé aucune adresse : `biomecanique`
+      //  et `cyber-tribal` restent les leurs, et « Organique » et
+      //  « Cyberpunk » sont des adresses NEUVES qui n'ont jamais eu
+      //  d'ancienne. Une seule exception, et c'est une faute de frappe
+      //  qu'il fallait corriger : `neo-reaalisme` (deux « a ») était
+      //  publié tel quel. Il redirige donc, définitivement.
+      //  ⚠️ LES DEUX FORMES : la page de style seule et la page
+      //  style + ville — Next ne déduit pas l'une de l'autre.
+      //  ⚠️ `statusCode: 301` ET NON `permanent: true` : ce dernier
+      //  répond 308. Les deux sont des redirections DÉFINITIVES et
+      //  Google les traite pareil, mais le propriétaire a demandé 301
+      //  en toutes lettres — et pour une page servie en GET, c'est
+      //  exactement équivalent.
+      {
+        source: "/tatouage/neo-reaalisme",
+        destination: "/tatouage/neo-realisme",
+        statusCode: 301,
+      },
+      {
+        source: "/tatouage/neo-reaalisme/:ville",
+        destination: "/tatouage/neo-realisme/:ville",
+        statusCode: 301,
+      },
     ];
   },
 

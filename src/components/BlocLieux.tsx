@@ -3,7 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { IconeChevronBas } from "@/components/Icones";
-import { useOuvertureFiche } from "@/components/PileFiches";
+import {
+  laLargeurVeutUneFenetre,
+  useOuvertureFiche,
+} from "@/components/PileFiches";
 import { ICONE_ADRESSE, PORTRAIT_ROND } from "@/config/tatouage";
 import {
   etatOuverture,
@@ -131,10 +134,18 @@ function PhotoRonde({
 /**
  * LE CLIC D'UN LIEN VERS UNE AUTRE FICHE (nº 226-§5) : quand une pile
  * de fenêtres enveloppe (PileFiches), le clic simple ouvre la fiche
- * PAR-DESSUS celle qu'on lit — web comme mobile — au lieu de changer
- * de page. Toute autre combinaison (nouvel onglet, clic du milieu…)
- * garde le lien, et l'adresse directe rend toujours la page complète.
- * Sans pile (l'aperçu « Ma fiche ») : `undefined`, le lien navigue.
+ * PAR-DESSUS celle qu'on lit, au lieu de changer de page. Toute autre
+ * combinaison (nouvel onglet, clic du milieu…) garde le lien, et
+ * l'adresse directe rend toujours la page complète. Sans pile
+ * (l'aperçu « Ma fiche ») : `undefined`, le lien navigue.
+ *
+ * ⚠️ AU DOIGT, LE LIEN NAVIGUE (nº 230-§3). La fenêtre superposée est
+ * la présentation du WEB ; sous 1024 px, une fiche liée s'affiche
+ * comme n'importe quelle fiche de smartphone — une page. On ne
+ * détourne donc pas le clic : `<Link>` fait son métier, pousse UNE
+ * entrée d'historique, et le retour revient à la fiche précédente à
+ * sa position. La règle de largeur vit dans PileFiches, en un seul
+ * endroit ; elle est lue AU CLIC, jamais au rendu.
  */
 function useClicVersFiche() {
   const ouvrirFiche = useOuvertureFiche();
@@ -148,6 +159,8 @@ function useClicVersFiche() {
     ) {
       return;
     }
+    //  ÉCRAN ÉTROIT : on laisse passer — le lien navigue vers la page.
+    if (!laLargeurVeutUneFenetre()) return;
     evenement.preventDefault();
     ouvrirFiche(slug, `/tatoueur/${slug}`);
   };
@@ -587,31 +600,43 @@ function AdresseCliquable({
 
   return (
     <>
-      <p className="text-[14px] leading-relaxed text-sombre-texte-doux [overflow-wrap:anywhere]">
-        {etiquette}{" "}
-        {/*  §5 (nº 227) — PLUS AUCUN ROSE AU SURVOL : la couleur ne
-             change jamais, le fond monte d'un cran (voile blanc), un
-             fin soulignement décalé apparaît. Au doigt : un bref état
-             enfoncé, rien qui reste. */}
-        <a
-          href={adresseMaps(lieu)}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(evenement) => {
-            //  SMARTPHONE : la fenêtre, pas la navigation.
-            if (document.documentElement.dataset.appareil === "mobile") {
-              evenement.preventDefault();
-              setFenetre(true);
-            }
-          }}
-          className="text-[15px] font-medium text-sombre-texte rounded-md
-                     -mx-1 px-1 transition-colors
-                     hover:bg-white/5 active:bg-white/10
-                     underline-offset-4 decoration-1 hover:underline"
-        >
-          {adresse}
-        </a>
-      </p>
+      {/*  §4 (nº 230) — TOUTE LA LIGNE D'ADRESSE PORTE L'ENCADRÉ, et
+           c'est EXACTEMENT celui d'un membre d'équipe (nº 226-§4) :
+           les mêmes classes, pas une seconde présentation —
+           `rounded-xl`, rembourrage annulé par une marge négative (la
+           surface respire sans déplacer le texte d'un pixel), le fond
+           qui monte d'un cran au survol, l'état enfoncé au doigt.
+           ⚠️ L'ENCADRÉ S'ARRÊTE ICI : le volet des horaires est le
+           FRÈRE SUIVANT de ce lien, jamais son enfant (voir
+           `UneAdresse`). Appuyer sur le chevron ne peut donc pas
+           déclencher le lien de l'adresse — ce ne sont pas les mêmes
+           éléments.
+           §5 (nº 227) — aucun rose : la couleur du texte ne change
+           jamais, seul le fond et un fin soulignement décalé. */}
+      <a
+        href={adresseMaps(lieu)}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(evenement) => {
+          //  SMARTPHONE : la fenêtre, pas la navigation.
+          if (document.documentElement.dataset.appareil === "mobile") {
+            evenement.preventDefault();
+            setFenetre(true);
+          }
+        }}
+        className="group block rounded-xl -m-2 p-2 transition-colors
+                   hover:bg-white/5 active:bg-white/10"
+      >
+        <p className="text-[14px] leading-relaxed text-sombre-texte-doux [overflow-wrap:anywhere]">
+          {etiquette}{" "}
+          <span
+            className="text-[15px] font-medium text-sombre-texte
+                       underline-offset-4 decoration-1 group-hover:underline"
+          >
+            {adresse}
+          </span>
+        </p>
+      </a>
       {fenetre && (
         <FenetreAdresse
           adresse={adresse}
@@ -710,9 +735,14 @@ export function BlocAdressesFiche({
 
       {/*  2. LES AUTRES ADRESSES — une ligne chacune, au bord gauche
            du bloc, comme l'équipe dessous. Le rythme du bloc est de
-           32 px (nº 229-§2). */}
+           32 px (nº 229-§2).
+           ⚠️ `flex flex-col` N'EST PAS DÉCORATIF (nº 230-§4) : le lien
+           d'adresse porte des marges négatives (son encadré), et dans
+           un bloc ordinaire elles FUSIONNENT avec le `mt-8` — l'écart
+           mesuré tombait à 24 px. Un conteneur flex ne laisse aucune
+           marge d'enfant s'échapper : le rythme reste 32, au pixel. */}
       {autres.map((studio) => (
-        <div key={studio.id} className="mt-8">
+        <div key={studio.id} className="mt-8 flex flex-col">
           <AdresseCliquable
             etiquette="Autre adresse :"
             adresse={ligneFiche(lieuDuStudio(studio))}

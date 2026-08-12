@@ -274,16 +274,22 @@ if (!fiche) {
     if ((await adresse.count()) === 0) {
       nonJoue("§5 · adresse", "aucune adresse cliquable");
     } else {
-      const repos = await adresse.evaluate((n) => {
+      //  ⚠️ Depuis la nº 230-§4, le lien est LA LIGNE ENTIÈRE et le
+      //  soulignement vit sur le span de l'adresse (group-hover) : on
+      //  mesure chaque chose sur son porteur réel.
+      const mesureAdresse = (n) => {
         const s = getComputedStyle(n);
-        return { couleur: s.color, fond: s.backgroundColor, soulignement: s.textDecorationLine };
-      });
+        const porteur = n.querySelector("span") ?? n;
+        return {
+          couleur: getComputedStyle(porteur).color,
+          fond: s.backgroundColor,
+          soulignement: getComputedStyle(porteur).textDecorationLine,
+        };
+      };
+      const repos = await adresse.evaluate(mesureAdresse);
       await adresse.hover();
       await web.waitForTimeout(250);
-      const survol = await adresse.evaluate((n) => {
-        const s = getComputedStyle(n);
-        return { couleur: s.color, fond: s.backgroundColor, soulignement: s.textDecorationLine };
-      });
+      const survol = await adresse.evaluate(mesureAdresse);
       verif(
         "adresse : la couleur du texte ne change JAMAIS",
         repos.couleur === survol.couleur,

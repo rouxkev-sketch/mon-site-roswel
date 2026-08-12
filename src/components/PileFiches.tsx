@@ -69,6 +69,39 @@ export function useOuvertureFiche(): OuvertureFiche | null {
   return useContext(ContexteOuvertureFiche);
 }
 
+/**
+ * LA LARGEUR À PARTIR DE LAQUELLE UNE FICHE LIÉE S'OUVRE EN FENÊTRE
+ * ==================================================================
+ * (passe nº 230-§3)
+ *
+ * LE RELEVÉ : sur smartphone, ouvrir une autre adresse ou un résident
+ * depuis une fiche donnait une fenêtre superposée, comme sur le web.
+ * Ce n'est pas ce qu'il faut — au doigt, une fiche est une FICHE : la
+ * présentation normale des fiches sur smartphone, pleine page.
+ *
+ * 1024 px, ET CE N'EST PAS UN NOMBRE DE PLUS : c'est le point où
+ * `FenetreFiche` passe déjà de ses deux colonnes à une seule (voir
+ * ses classes `lg:`). En dessous, la fenêtre n'apportait plus qu'un
+ * voile par-dessus une pleine page — autant servir la page.
+ *
+ * ⚠️ LA LARGEUR NE DÉCIDE QUE DE L'HABILLAGE. L'adresse reste la
+ * seule vérité (règle de la nº 191) : c'est elle qui dit quelle fiche
+ * est montrée. Une entrée d'historique par ouverture, un cran par
+ * retour — au doigt c'est `<Link>` qui la pousse, sur le web c'est le
+ * `pushState` de la pile. Le mécanisme est le même vu de
+ * l'historique.
+ *
+ * ⚠️ ET ELLE SE LIT AU MOMENT DU CLIC, jamais au rendu : une valeur
+ * lue au rendu serait fausse au premier rendu du serveur (qui ne
+ * connaît aucune largeur) et ferait diverger l'hydratation.
+ */
+export const LARGEUR_FENETRE_SUPERPOSEE = 1024;
+
+export function laLargeurVeutUneFenetre(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.innerWidth >= LARGEUR_FENETRE_SUPERPOSEE;
+}
+
 /** Une fenêtre de la pile : la fiche, la position que son gel devra
     rendre, et un numéro d'ouverture (la clé — chaque ouverture est une
     fenêtre NEUVE, la règle de la nº 220-§3). */

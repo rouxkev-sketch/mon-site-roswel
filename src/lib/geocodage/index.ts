@@ -22,7 +22,8 @@ export type {
  *
  * TROIS PROTECTIONS, ici et pas ailleurs — le service est public et
  * gratuit, on ne le maltraite pas :
- *  1. PLANCHER DE SAISIE — rien n'est demandé sous 3 caractères ;
+ *  1. PLANCHER DE SAISIE — rien n'est demandé sous 2 caractères
+ *     (nº 230-§1) ;
  *  2. MÉMOIRE DE SESSION — une saisie déjà cherchée n'est JAMAIS
  *     redemandée (la mémoire vit le temps de l'onglet, plafonnée) ;
  *  3. ANNULATION — chaque recherche annule la précédente (`AbortSignal`),
@@ -44,11 +45,16 @@ export type {
  */
 const FOURNISSEUR: FournisseurGeocodage = chercherChezNous;
 
-/** Sous ce nombre de caractères, aucune requête n'est envoyée. */
-export const SAISIE_MINIMUM = 3;
+/** Sous ce nombre de caractères, aucune requête n'est envoyée.
+    DEUX depuis la nº 230-§1 (trois avant) : « ly », « pa » suffisent
+    à lancer la recherche, et la liste est là avant la troisième
+    lettre. */
+export const SAISIE_MINIMUM = 2;
 
-/** La pause de frappe avant d'interroger le fournisseur (ms). */
-export const PAUSE_FRAPPE_MS = 300;
+/** La pause de frappe avant d'interroger le fournisseur (ms).
+    250 depuis la nº 230-§1 : cinquante millisecondes gagnées sur
+    chaque frappe, sans multiplier les requêtes. */
+export const PAUSE_FRAPPE_MS = 250;
 
 /** La mémoire de session : saisie normalisée → lieux trouvés. */
 const memoire = new Map<string, LieuTrouve[]>();

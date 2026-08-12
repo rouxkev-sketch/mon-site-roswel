@@ -300,7 +300,8 @@ export function ChampLocalisation({
         // Annulée par une frappe : une autre réponse arrive derrière,
         // il n'y a rien à dire.
         if (reponse.panne === "annulee") return;
-        setSuggestions([]);
+        //  ⚠️ LA LISTE PRÉCÉDENTE RESTE (nº 230-§1) : même en panne, on
+        //  ne vide pas — le message s'affiche AVEC ce qu'on avait.
         setMessage(
           "Impossible de charger les suggestions pour le moment — réessaie dans un instant."
         );
@@ -657,7 +658,29 @@ export function ChampLocalisation({
           n'a rien à effacer. À la souris, l'appui est neutralisé pour
           que le champ garde le focus ; au doigt, seul le tap complet
           agit (même règle que les suggestions). */}
-      {croixVisible && (
+      {/*  §1 (nº 230) — LA ROUE QUI TOURNE, DANS LE CHAMP, CONTRE SON
+           BORD DROIT. Elle remplace les « … » du coin bas, qui ne se
+           voyaient pas. Elle apparaît dès qu'une demande part et
+           disparaît dès que la liste arrive.
+           ⚠️ ELLE PREND LA PLACE DE LA CROIX le temps de l'attente
+           (jamais les deux au même endroit), et la croix revient
+           ensuite : le champ ne change pas de largeur, rien ne
+           bouge. */}
+      {chargement && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute right-2 top-1/2 flex h-8 w-8
+                     -translate-y-1/2 items-center justify-center"
+        >
+          <span
+            className="block h-4 w-4 animate-spin rounded-full
+                       border-2 border-sombre-texte-doux/30
+                       border-t-sombre-texte-doux"
+          />
+        </span>
+      )}
+
+      {croixVisible && !chargement && (
         <button
           type="button"
           aria-label="Effacer le lieu — chercher partout"
@@ -750,14 +773,7 @@ export function ChampLocalisation({
           )
         ))}
 
-      {chargement && (
-        <p
-          aria-hidden="true"
-          className="absolute right-3 bottom-3 text-xs text-sombre-texte-doux"
-        >
-          …
-        </p>
-      )}
+
     </div>
   );
 }

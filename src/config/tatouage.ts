@@ -139,10 +139,18 @@ export const LANGUES_YOKOFOLIO = [
  * `entreesExplorer()` plus bas. On peut donc ajouter une ligne ici
  * n'importe où : elle se rangera d'elle-même, à sa lettre.
  *
- * « Japonais (Irezumi) » garde le slug historique `japonais` : un slug
+ * « Japonais · Irezumi » garde le slug historique `japonais` : un slug
  * publié ne change pas (référencement), seul le libellé évolue. Même
  * règle pour tous les autres — les slugs ci-dessous sont gravés dans
  * les adresses, les fiches et les liens déjà partagés.
+ *
+ * ⚠️ ET C'EST AUSSI LA RÈGLE DES SCISSIONS (nº 230-§2). « Biomécanique
+ * / Organique » et « Cyber-tribal / Cyberpunk » sont devenus quatre
+ * styles : le PREMIER de chaque paire garde le slug publié
+ * (`biomecanique`, `cyber-tribal`), le second en reçoit un neuf
+ * (`organique`, `cyberpunk`). Aucune adresse déjà partagée ne casse,
+ * et la migration nº 66 donne LES DEUX styles à toute fiche qui
+ * portait l'ancien — personne ne perd un style au passage.
  *
  * LES SLUGS DES NOUVEAUX suivent la convention des anciens : minuscules,
  * sans accent ni signe diacritique, mots liés par des traits d'union.
@@ -160,17 +168,24 @@ export const STYLES_TATOUAGE = [
   { slug: "old-school", label: "Old School", couleur: "#A2402F" },
   { slug: "neo-traditionnel", label: "Neo-Traditional", couleur: "#7A3A55" },
   { slug: "new-school", label: "New School", couleur: "#8A5A2E" },
-  { slug: "japonais", label: "Japonais (Irezumi)", couleur: "#1F4E5F" },
+  { slug: "japonais", label: "Japonais · Irezumi", couleur: "#1F4E5F" },
   { slug: "chicano", label: "Chicano", couleur: "#57544B" },
   { slug: "tribal", label: "Tribal", couleur: "#3E3E36" },
   { slug: "aquarelle", label: "Aquarelle", couleur: "#4C6470" },
   { slug: "illustratif", label: "Illustratif", couleur: "#705E48" },
-  { slug: "anime-manga", label: "Anime / Manga", couleur: "#6E4A62" },
+  { slug: "anime-manga", label: "Anime & Manga", couleur: "#6E4A62" },
   { slug: "abstrait", label: "Abstrait", couleur: "#565066" },
   { slug: "trash-polka", label: "Trash Polka", couleur: "#77303A" },
-  { slug: "biomecanique", label: "Biomécanique / Organique", couleur: "#44575B" },
+  { slug: "biomecanique", label: "Biomécanique", couleur: "#44575B" },
+  //  ⚠️ SCINDÉ DE « Biomécanique / Organique » (nº 230-§2) : deux
+  //  styles distincts. Le slug historique reste à « Biomécanique »
+  //  (un slug publié ne change pas), « Organique » en reçoit un neuf.
+  { slug: "organique", label: "Organique", couleur: "#4B5F52" },
   { slug: "ignorant-style", label: "Ignorant Style", couleur: "#54505B" },
-  { slug: "cyber-tribal", label: "Cyber-tribal / Cyberpunk", couleur: "#474077" },
+  { slug: "cyber-tribal", label: "Cyber-tribal", couleur: "#474077" },
+  //  ⚠️ SCINDÉ DE « Cyber-tribal / Cyberpunk » (nº 230-§2), même
+  //  règle : le slug publié reste au premier, le second est neuf.
+  { slug: "cyberpunk", label: "Cyberpunk", couleur: "#3A3560" },
   { slug: "lettering", label: "Lettering", couleur: "#5A4632" },
   //  ---- LES SEPT DE LA PASSE Nº 113 ----
   { slug: "acid-trad", label: "Acid-trad", couleur: "#6B7A2E" },
