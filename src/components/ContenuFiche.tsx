@@ -275,7 +275,24 @@ export function ContenuFiche({
            fiche. Absent de l'aperçu : on ne se suit pas soi-même.
            À 390 px, tout tient sur une seule ligne : les mots à
            gauche, la capsule naturelle de Suivre à droite. */}
-      <div className="flex items-center justify-between gap-3">
+      {/*  ⚠️ ELLE NE DÉFILE PAS (nº 207-§4, web) : la colonne de
+           lecture défile sous elle. Le fond vient de l'enveloppe
+           (`bg-inherit`) — anthracite sur la page, carte dans la
+           fenêtre superposée : le contenu partagé n'écrit aucune
+           couleur qui lui serait propre. */}
+      <div
+        className="relative flex items-center justify-between gap-3
+                   lg:sticky lg:top-0 lg:z-[2] bg-inherit"
+      >
+        {/*  LE CAPOT — la colonne de la fenêtre superposée porte un
+             rembourrage haut (24 px) : sans lui, le contenu défilerait
+             VISIBLEMENT dans cette bande, au-dessus de la rangée. Il
+             prend la couleur de l'enveloppe comme elle (`bg-inherit`),
+             et ne coûte rien là où il n'y a pas de rembourrage. */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 bottom-full hidden h-8 bg-inherit lg:block"
+        />
         <SelecteurOngletAffiche valeur={onglet} surChoix={setOnglet} />
         {!apercu && (
           <BoutonSuivre tatoueurId={tatoueur.id} nomTatoueur={tatoueur.nom} />

@@ -277,7 +277,12 @@ export function FicheTatoueur({
             WEB : la colonne DÉFILE TOUTE SEULE (overflow-y-auto) dans
             la même hauteur que la photo — même butée haute (79 + 20),
             même hauteur maximale (100vh − 119) : la marge sous son
-            contenu, à bout de course, égale la marge sous la photo. */}        <div className="lg:sticky lg:top-[99px] lg:self-start lg:max-h-[calc(100vh-119px)] lg:overflow-y-auto min-w-0 flex flex-col">
+            contenu, à bout de course, égale la marge sous la photo.
+            ⚠️ SON FOND EST ÉCRIT (nº 207-§4) : les deux blocs qui ne
+            défilent pas (la rangée du haut, le sélecteur de catégorie)
+            le reprennent par `bg-inherit` — le contenu partagé n'a
+            ainsi aucune couleur d'enveloppe à connaître. C'est
+            l'anthracite de la page : rien ne change à l'œil. */}        <div className="lg:sticky lg:top-[99px] lg:self-start lg:max-h-[calc(100vh-119px)] lg:overflow-y-auto min-w-0 flex flex-col bg-sombre-fond">
           {/*  ⚠️ LE CONTENU DE LA FICHE VIT DANS UN SEUL COMPOSANT
                (nº 199) : cette page et la fenêtre superposée du web
                affichent le MÊME. Ce qui reste ici est l'enveloppe — la

@@ -27,6 +27,14 @@ import { useEffect, useRef } from "react";
  * pour regarder, on lâche, tout se range. Aucun état zoomé ne peut
  * rester coincé (relâchement, annulation : même retour).
  *
+ * ⚠️ « AU RELÂCHEMENT » VEUT DIRE AU LEVER DU DERNIER DOIGT
+ * (nº 207-§8), et non plus dès qu'il n'en reste qu'un. On agrandit à
+ * deux doigts, on en relève un pour mieux voir : l'image RESTE
+ * agrandie, figée telle quelle, tant qu'un doigt touche encore. Elle
+ * ne se range qu'une fois la main partie. Reposer un deuxième doigt
+ * REPREND le geste là où il s'était arrêté — l'échelle et le décalage
+ * courants deviennent la nouvelle base, il n'y a donc aucun saut.
+ *
  * LE PINCEMENT N'OUVRE JAMAIS RIEN : à la fin du geste, un court
  * instant est mémorisé (`pincementRecent`) — les clics qui suivraient
  * (lien de carte…) le consultent et s'abstiennent.
@@ -69,6 +77,14 @@ export function usePincement({
   const doigts = useRef(new Map<number, Doigt>());
   const depart = useRef<Mesure | null>(null);
   const actif = useRef(false);
+  /** LA TRANSFORMATION COURANTE — ce que l'image porte à l'instant.
+      Elle sert de BASE quand un deuxième doigt revient se poser sur un
+      zoom tenu par un seul (nº 207-§8) : le geste reprend d'ici, sans
+      saut. Remise à l'identité à la fin de chaque pincement. */
+  const courant = useRef({ echelle: 1, dx: 0, dy: 0 });
+  /** CE QUE L'IMAGE PORTE À L'ÉCRAN — noté au moment où on le pose,
+      jamais relu dans le style. */
+  const affiche = useRef({ echelle: 1, dx: 0, dy: 0 });
 
   /* Pendant le pincement : la page ne doit NI défiler NI zoomer
      nativement — l'écouteur non passif annule les touchmove. Posé au
@@ -108,6 +124,8 @@ export function usePincement({
     if (!actif.current) return;
     actif.current = false;
     depart.current = null;
+    courant.current = { echelle: 1, dx: 0, dy: 0 };
+    affiche.current = { echelle: 1, dx: 0, dy: 0 };
     finDernierPincement = Date.now();
     surPincement?.(false);
     const element = cible.current;
@@ -133,26 +151,35 @@ export function usePincement({
       x: evenement.clientX,
       y: evenement.clientY,
     });
-    if (doigts.current.size === 2 && !actif.current) {
-      // DEUX doigts posés : le zoom prend la main. Le marqueur part
-      // TOUT DE SUITE : un tap-navigation ne doit pas se déclencher
-      // même si le geste est ultra-bref.
+    if (doigts.current.size === 2) {
+      //  DEUX doigts posés : le zoom prend (ou REPREND) la main. Le
+      //  marqueur part TOUT DE SUITE : un tap-navigation ne doit pas
+      //  se déclencher même si le geste est ultra-bref.
+      //  ⚠️ ON PASSE AUSSI ICI QUAND UN DEUXIÈME DOIGT REVIENT sur un
+      //  zoom tenu par un seul (nº 207-§8) : la mesure de départ est
+      //  reprise à zéro, et `courant` — l'état affiché — sert de base.
+      //  Le geste continue donc là où il s'était figé.
+      const reprise = actif.current;
       actif.current = true;
       finDernierPincement = Date.now();
       depart.current = mesure();
-      surPincement?.(true);
+      if (!reprise) surPincement?.(true);
       const element = cible.current;
       if (element) {
-        const rect = element.getBoundingClientRect();
         // eslint-disable-next-line react-hooks/immutability -- animation impérative du style d'un élément du DOM, jamais un état React
         element.style.transition = "";
-        // L'origine du zoom : le point ENTRE les deux doigts.
-        element.style.transformOrigin = `${depart.current.centreX - rect.left}px ${
-          depart.current.centreY - rect.top
-        }px`;
-        // Au-dessus des voisines de la grille pendant le geste.
-        element.style.position = "relative";
-        element.style.zIndex = "60";
+        if (!reprise) {
+          const rect = element.getBoundingClientRect();
+          // L'origine du zoom : le point ENTRE les deux doigts. Elle
+          // est posée au PREMIER pincement et ne bouge plus — la
+          // changer en cours de geste déplacerait l'image d'un bond.
+          element.style.transformOrigin = `${depart.current.centreX - rect.left}px ${
+            depart.current.centreY - rect.top
+          }px`;
+          // Au-dessus des voisines de la grille pendant le geste.
+          element.style.position = "relative";
+          element.style.zIndex = "60";
+        }
       }
     }
   }
@@ -163,27 +190,46 @@ export function usePincement({
       x: evenement.clientX,
       y: evenement.clientY,
     });
+    //  ⚠️ UN SEUL DOIGT : on ne touche à RIEN (nº 207-§8). L'image
+    //  garde exactement la transformation qu'elle porte — elle est
+    //  figée, pas rangée. C'est le lever du dernier doigt qui range.
     if (!actif.current || doigts.current.size < 2 || !depart.current) return;
     const { distance, centreX, centreY } = mesure();
-    // L'échelle suit l'écart des doigts (jamais plus petite que
-    // l'image, plafonnée à ×4) ; l'image SUIT AUSSI leur centre.
+    //  L'échelle suit l'écart des doigts (jamais plus petite que
+    //  l'image, plafonnée à ×4) ; l'image SUIT AUSSI leur centre.
+    //  ⚠️ TOUT PART DE `base` — l'état figé au moment où ce pincement
+    //  a commencé : au premier, l'identité ; à une reprise, ce que
+    //  l'image montrait déjà. D'où l'absence de saut.
+    const base = courant.current;
     const echelle = Math.min(
       4,
-      Math.max(1, distance / depart.current.distance)
+      Math.max(1, base.echelle * (distance / depart.current.distance))
     );
-    const dx = centreX - depart.current.centreX;
-    const dy = centreY - depart.current.centreY;
+    const dx = base.dx + (centreX - depart.current.centreX);
+    const dy = base.dy + (centreY - depart.current.centreY);
     const element = cible.current;
     if (element) {
       // eslint-disable-next-line react-hooks/immutability -- animation impérative du style d'un élément du DOM, jamais un état React
       element.style.transform = `translate(${dx}px, ${dy}px) scale(${echelle})`;
+      affiche.current = { echelle, dx, dy };
       finDernierPincement = Date.now();
     }
   }
 
   function onPointerUp(evenement: React.PointerEvent) {
+    //  ⚠️ ON NE RANGE QU'AU DERNIER DOIGT (nº 207-§8). Tant qu'il en
+    //  reste un, l'image reste agrandie, exactement telle quelle : on
+    //  garde l'état affiché de côté, il servira de base si un deuxième
+    //  doigt revient reprendre le geste.
     doigts.current.delete(evenement.pointerId);
-    if (doigts.current.size < 2) terminer();
+    if (doigts.current.size === 0) {
+      terminer();
+      return;
+    }
+    if (actif.current) {
+      courant.current = affiche.current;
+      depart.current = null;
+    }
   }
 
   return {

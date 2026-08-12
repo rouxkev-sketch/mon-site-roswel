@@ -19,9 +19,11 @@ import type { PhotoGalerie } from "@/lib/photo-tatoueur";
  *
  * DEUX ÉCRANS, DEUX GESTES :
  *  - SMARTPHONE : le doigt fait défiler ; un COMPTEUR « 3/12 » vit
- *    dans l'angle haut droit (aucun s'il n'y a qu'une photo) ; les
- *    POINTS vivent SOUS la photo ;
- *  - WEB (souris) : les flèches, et les points en bas de l'image.
+ *    dans l'angle haut droit (aucun s'il n'y a qu'une photo). ⚠️ PLUS
+ *    AUCUN POINT SOUS LA PHOTO (nº 207-§5) : le compteur dit déjà où
+ *    l'on en est, et il le dit mieux — les points ne servaient qu'à
+ *    répéter la même chose en moins lisible ;
+ *  - WEB (souris) : les flèches, et la pagination en bas de l'image.
  *
  * CE QUI S'EFFACE, ET CE QUI RESTE (règle changée) :
  *  · LE COMPTEUR garde son fondu après 3 secondes, et revient au
@@ -115,6 +117,46 @@ export function CarrouselPortfolio({
     const minuteur = window.setTimeout(() => setCompteurVisible(false), 3000);
     return () => window.clearTimeout(minuteur);
   }, [reveils, indice]);
+
+  /**
+   * §3 (nº 207) — LA BANDE DE LA PHOTO PRÉCÉDENTE, À GAUCHE
+   * ==================================================================
+   * LE DÉFAUT. La piste se déplaçait de `-100 %` par photo. En CSS,
+   * ce pourcentage se compte sur la LARGEUR DE LA PISTE, qui vaut
+   * celle du cadre — et cette largeur n'est presque jamais un nombre
+   * entier de pixels : le cadre de la fiche est calculé
+   * (`(100vh-119px)*0.8`), celui de la fenêtre superposée dérive d'une
+   * hauteur en `vh`. À 456,66 px, la photo affichée se peint à 456,66
+   * du bord alors que le pixel 456 lui est encore visible : il reste
+   * une FRACTION DE PIXEL non couverte, et c'est le bord droit de la
+   * photo précédente qu'on y voit, sur toute la hauteur. Le navigateur
+   * l'étire à un pixel plein — d'où la bande.
+   *
+   * LA CORRECTION. On mesure le cadre, on ARRONDIT AU PIXEL SUPÉRIEUR,
+   * et cette largeur entière sert AUX DEUX : la largeur de chaque
+   * photo ET le pas de la translation. Le déplacement devient un
+   * multiple exact de la largeur d'une photo — plus aucun reste, à
+   * aucune largeur d'écran. La photo dépasse alors le cadre d'un
+   * demi-pixel au plus, que `overflow: hidden` rogne : elle le couvre
+   * donc bord à bord, toujours.
+   * (Tant que la mesure n'est pas faite — rendu serveur, première
+   * image — on garde le pourcentage : il n'est jamais faux, seulement
+   * imprécis d'une fraction.)
+   */
+  const cadre = useRef<HTMLDivElement>(null);
+  const [largeurCadre, setLargeurCadre] = useState(0);
+  useEffect(() => {
+    const zone = cadre.current;
+    if (!zone) return;
+    const mesurer = () => {
+      const brute = zone.getBoundingClientRect().width;
+      setLargeurCadre(brute > 0 ? Math.ceil(brute) : 0);
+    };
+    mesurer();
+    const observateur = new ResizeObserver(mesurer);
+    observateur.observe(zone);
+    return () => observateur.disconnect();
+  }, [n]);
 
   // Glissement au doigt en cours : décalage en px, sinon null.
   const [glisse, setGlisse] = useState<number | null>(null);
@@ -345,26 +387,10 @@ export function CarrouselPortfolio({
     );
   })();
 
-  /** LES POINTS DU SMARTPHONE, SOUS LA PHOTO — inchangés (nº 198 ne
-      touche que ce qui est posé SUR la photo). */
-  const pointsMobiles = n > 1 && n <= 12 && (
-    <div className="hidden mobile:flex mt-3 justify-center items-center gap-1.5">
-      {photos.map((photo, rang) => (
-        <button
-          key={photo.cle}
-          type="button"
-          aria-label={`Voir la photo ${rang + 1} sur ${n}`}
-          aria-current={rang === indice ? "true" : undefined}
-          onClick={() => surChangement(rang)}
-          className={`rounded-full transition-all ${
-            rang === indice
-              ? "w-[5px] h-[5px] bg-white"
-              : "w-1 h-1 bg-sombre-bordure"
-          }`}
-        />
-      ))}
-    </div>
-  );
+  //  ⚠️ LES POINTS DU SMARTPHONE SOUS LA PHOTO SONT SUPPRIMÉS
+  //  (nº 207-§5) : la capsule « 3/12 » posée dans l'image fait ce
+  //  travail, et mieux. La pagination WEB (nº 198-§5), elle, ne bouge
+  //  pas d'une ligne.
 
   // Une seule photo : une image simple, sans piste, sans compteur,
   // sans points — un carrousel d'une photo n'est pas un carrousel.
@@ -404,6 +430,7 @@ export function CarrouselPortfolio({
             VERTICAL de la page, le carrousel ne capte que
             l'horizontal — et le PINCEMENT n'appartient qu'au zoom. */}
         <div
+          ref={cadre}
           className={rognage}
           style={{ touchAction: "pan-y" }}
           onPointerDown={debutToucher}
@@ -418,7 +445,13 @@ export function CarrouselPortfolio({
                 glisse === null ? "transition-transform duration-300 ease-out" : ""
               }`}
               style={{
-                transform: `translateX(calc(${-indice * 100}% + ${glisse ?? 0}px))`,
+                //  ⚠️ LE PAS EST LA LARGEUR ENTIÈRE MESURÉE (§3) — un
+                //  multiple exact, donc jamais de reste à gauche.
+                transform: largeurCadre
+                  ? `translate3d(${
+                      -indice * largeurCadre + (glisse ?? 0)
+                    }px, 0, 0)`
+                  : `translateX(calc(${-indice * 100}% + ${glisse ?? 0}px))`,
               }}
             >
               {photos.map((photo, rang) => {
@@ -428,14 +461,16 @@ export function CarrouselPortfolio({
                     key={photo.cle}
                     className="relative w-full shrink-0 aspect-[4/5]"
                     aria-hidden={rang !== indice}
-                    // Le temps du pincement, les voisines s'effacent :
-                    // le cadre ne rogne plus, elles apparaîtraient de
-                    // part et d'autre de la photo agrandie.
-                    style={
-                      zoomDebordant && rang !== indice
-                        ? { visibility: "hidden" }
-                        : undefined
-                    }
+                    style={{
+                      //  LA MÊME LARGEUR ENTIÈRE QUE LE PAS (§3).
+                      ...(largeurCadre ? { width: largeurCadre } : null),
+                      // Le temps du pincement, les voisines s'effacent :
+                      // le cadre ne rogne plus, elles apparaîtraient de
+                      // part et d'autre de la photo agrandie.
+                      ...(zoomDebordant && rang !== indice
+                        ? { visibility: "hidden" as const }
+                        : null),
+                    }}
                   >
                     {ecart <= VOISINES && (
                       <PhotoProgressive
@@ -463,9 +498,6 @@ export function CarrouselPortfolio({
             l'image (nº 198-§5). */}
         {paginationWeb}
       </div>
-
-      {/* SMARTPHONE : les points SOUS la photo. */}
-      {pointsMobiles}
     </div>
   );
 }

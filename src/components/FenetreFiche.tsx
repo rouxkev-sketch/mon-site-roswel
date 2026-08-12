@@ -347,9 +347,13 @@ export function FenetreFiche({
                 seul). ⚠️ C'EST LE COMPOSANT DE LA PAGE : les deux onglets,
                 les vignettes par style, et tout l'onglet « Profil ». Rien
                 n'est redessiné ici. ---- */}
+            {/*  ⚠️ SON FOND EST ÉCRIT (nº 207-§4) : les deux blocs qui
+                 ne défilent pas le reprennent par `bg-inherit`. C'est
+                 déjà la couleur de la fenêtre — rien ne change à
+                 l'œil. */}
             <div
               ref={colonneRef}
-              className="w-full lg:w-[380px] shrink-0 lg:h-full lg:overflow-y-auto p-5 sm:p-6 flex flex-col"
+              className="w-full lg:w-[380px] shrink-0 lg:h-full lg:overflow-y-auto p-5 sm:p-6 flex flex-col bg-sombre-carte"
             >
               <ContenuFiche
                 tatoueur={tatoueur}

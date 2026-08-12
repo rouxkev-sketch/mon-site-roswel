@@ -20,12 +20,16 @@ import type { PhotoGalerie, StyleGalerie } from "@/lib/photo-tatoueur";
  *
  *  · « Profil / Portfolio » (nº 205-§1) — DEUX MOTS NUS côte à côte,
  *    sans piste ni rail ni fond de rangée : l'actif en blanc, l'autre
- *    en gris. Derrière l'actif, une CAPSULE FLOTTANTE EN VERRE
- *    DÉPOLI — fond translucide un cran plus clair que le panneau, et
- *    LE FLOU DE LA BARRE FIXE, aux mêmes valeurs (blur 40 px,
- *    saturate 150 %, écrites EN CLAIR : WebKit invalide un filtre
- *    construit avec `var()`, nº 172). Aucun contour, aucun rose. Au
- *    changement d'onglet, la capsule GLISSE d'un mot à l'autre ;
+ *    en gris. Derrière l'actif, une CAPSULE qui GLISSE d'un mot à
+ *    l'autre.
+ *    ⚠️ ELLE EST OPAQUE, PLUS DE VERRE DÉPOLI (nº 207-§1) : un verre
+ *    dépoli ne peut rien montrer sur un panneau uni — il n'y a rien à
+ *    flouter derrière, et le `backdrop-filter` ne faisait que coûter
+ *    un calque. La capsule prend donc `sombre-haut`, LE BARREAU
+ *    AU-DESSUS de l'actif des rectangles de rendu
+ *    (`sombre-eleve-clair`, voir `robeDuBadge`) : le niveau le plus
+ *    haut de la hiérarchie est le plus clair. Aucun contour, aucun
+ *    rose ;
  *
  *  · « Réalisation / Flash » — le composant `OngletsLigne`, celui du
  *    sélecteur « Explorer / Filtres » du moteur de recherche. Aucune
@@ -163,21 +167,15 @@ export function SelecteurOngletAffiche({
       //  « Suivre » à sa droite.
       className="relative flex w-fit items-center gap-1"
     >
-      {/*  LA CAPSULE DE VERRE — derrière le mot actif. Le FLOU DE LA
-           BARRE FIXE, aux mêmes valeurs, écrites en clair et préfixée
-           d'abord (nº 172 : WebKit invalide un filtre à `var()`, et ne
-           lit que la préfixée). Aucun contour, aucun rose. */}
+      {/*  LA CAPSULE — derrière le mot actif, OPAQUE (nº 207-§1) et
+           d'un cran plus claire que l'actif des rectangles de rendu.
+           Aucun contour, aucun rose. */}
       {capsule && (
         <span
           aria-hidden="true"
-          className="absolute inset-y-0 rounded-full bg-sombre-eleve-clair/60
+          className="absolute inset-y-0 rounded-full bg-sombre-haut
                      transition-[left,width] duration-300 ease-out"
-          style={{
-            left: capsule.left,
-            width: capsule.width,
-            WebkitBackdropFilter: "blur(40px) saturate(150%)",
-            backdropFilter: "blur(40px) saturate(150%)",
-          }}
+          style={{ left: capsule.left, width: capsule.width }}
         />
       )}
       {ONGLETS.map((onglet) => {
@@ -291,21 +289,33 @@ export function PanneauPortfolio({
   const styles = stylesDeLaSerie(groupes, nature, renduEffectif);
 
   return (
-    <div className="mt-6">
-      {/*  LE SÉLECTEUR DU MOTEUR DE RECHERCHE, RÉUTILISÉ TEL QUEL. */}
-      <OngletsLigne
-        ariaLabel="Réalisations ou flashs"
-        cleActive={nature}
-        surChoix={surNature}
-        options={NATURES_PHOTO.map((categorie) => ({
-          cle: categorie.slug,
-          label: categorie.label,
-        }))}
-      />
+    <div>
+      {/*  LE SÉLECTEUR DU MOTEUR DE RECHERCHE, RÉUTILISÉ TEL QUEL.
+           ⚠️ IL NE DÉFILE PAS (nº 207-§4, web) : avec la rangée du
+           haut, il reste posé pendant que la galerie défile sous lui.
+           `top-11` = la hauteur de la rangée (44 px), et son air
+           (`pt-6`) est DANS le bloc collant — sinon la galerie
+           passerait dans l'espace laissé au-dessus de lui. Le fond est
+           celui de l'enveloppe (`bg-inherit`) : la page l'anthracite,
+           la fenêtre superposée sa carte — aucune variante à écrire
+           ici. */}
+      <div className="pt-6 lg:sticky lg:top-11 lg:z-[1] bg-inherit">
+        <OngletsLigne
+          ariaLabel="Réalisations ou flashs"
+          cleActive={nature}
+          surChoix={surNature}
+          options={NATURES_PHOTO.map((categorie) => ({
+            cle: categorie.slug,
+            label: categorie.label,
+          }))}
+        />
+      </div>
 
       {/*  LE RENDU (nº 204-§3) — les deux rectangles, SEULEMENT quand
            les deux rendus existent dans la catégorie : à un seul
-           rendu, le choix n'existe pas, on le montre directement. */}
+           rendu, le choix n'existe pas, on le montre directement.
+           ⚠️ IL DÉFILE AVEC LA GALERIE (nº 207-§4) : il appartient à
+           ce qu'on regarde, pas à l'en-tête. */}
       {rendus.length === 2 && (
         <div className="mt-5">
           <SelecteurRectangles
@@ -332,7 +342,7 @@ export function PanneauPortfolio({
             son nom, rien de plus. (Le cœur de série de la nº 203 est
             ANNULÉ par la nº 204-§1 : le cœur vit sur chaque photo,
             dans la galerie — jamais ici.) */
-        <ul className="mt-7 grid grid-cols-2 gap-x-4 gap-y-7 sm:grid-cols-3">
+        <ul className="mt-7 grid grid-cols-2 gap-x-4 gap-y-7">
           {styles.map((style) => (
             <li key={style.slug}>
               <button
@@ -346,7 +356,9 @@ export function PanneauPortfolio({
                 }
                 className="group block w-full text-left"
               >
-                <span className="block overflow-hidden rounded-2xl bg-sombre-eleve">
+                {/*  ANGLES DROITS (nº 207-§6) — web et mobile : la
+                     vignette est une image nette, sans arrondi. */}
+                <span className="block overflow-hidden bg-sombre-eleve">
                   {/* eslint-disable-next-line @next/next/no-img-element --
                       photo déposée par le tatoueur, servie telle quelle
                       (même règle que le portrait rond de l'affiche). */}
@@ -358,10 +370,13 @@ export function PanneauPortfolio({
                                transition-opacity group-hover:opacity-90"
                   />
                 </span>
-                {/*  LE NOM DU STYLE — la hiérarchie tient à lui seul :
-                     blanc, demi-gras, au-dessus de tout le reste de la
-                     page en poids. */}
-                <span className="mt-2.5 block text-[15px] font-semibold text-sombre-texte">
+                {/*  LE NOM DU STYLE — blanc, aligné à gauche, et
+                     ALLÉGÉ D'UN CRAN (nº 207-§7) : `font-semibold`
+                     (600) se lisait comme du gras, la fonte du site
+                     n'ayant pas de graisse intermédiaire dessinée —
+                     le navigateur la remplaçait par le gras. `medium`
+                     (500) donne le demi-gras voulu. */}
+                <span className="mt-2.5 block text-[15px] font-medium text-sombre-texte">
                   {style.label}
                 </span>
               </button>
