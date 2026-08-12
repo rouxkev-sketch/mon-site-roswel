@@ -263,7 +263,9 @@ if (!fiche) {
         (await fenetre.getByRole("button", { name: /^Copi/ }).count()) === 1
       );
       verif(
-        "« Fermer » est un mot nu",
+        //  ⚠️ Le mot nu du bas est devenu LA CROIX en haut à droite
+        //  (nº 229-§5) — même nom accessible, même fermeture.
+        "« Fermer » est là (la croix, nº 229-§5)",
         (await fenetre.getByRole("button", { name: "Fermer" }).count()) === 1
       );
 

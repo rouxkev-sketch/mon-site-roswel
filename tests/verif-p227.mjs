@@ -57,13 +57,15 @@ titre("§6 — les règles de verre, littérales");
   }
   const plaque = css.match(/\[data-verre-fenetre\]\s*\{[^}]+\}/)?.[0] ?? "";
   verif(
-    "la plaque : anthracite à 60 %",
-    plaque.includes("background-color: rgba(26, 26, 29, 0.6);")
+    //  ⚠️ 40 % depuis la nº 229-§5 (60 % à la nº 227).
+    "la plaque : anthracite à 40 %",
+    plaque.includes("background-color: rgba(26, 26, 29, 0.4);")
   );
   verif(
     "le liseré : plus lumineux en haut qu'ailleurs (deux ombres internes)",
-    /inset 0 1px 0 0 rgba\(255, 255, 255, 0\.32\)/.test(plaque) &&
-      /inset 0 0 0 1px rgba\(255, 255, 255, 0\.12\)/.test(plaque)
+    //  ⚠️ ATTÉNUÉ à la nº 229-§5 : 0,16 / 0,06 (0,32 / 0,12 à la 227).
+    /inset 0 1px 0 0 rgba\(255, 255, 255, 0\.16\)/.test(plaque) &&
+      /inset 0 0 0 1px rgba\(255, 255, 255, 0\.06\)/.test(plaque)
   );
   const action = css.match(/\[data-verre-action\]\s*\{[^}]+\}/)?.[0] ?? "";
   verif(
@@ -148,17 +150,18 @@ if (!fiche) {
         `${mesures.ecartPastilleTexte} px`
       );
       if (mesures.entreLignes === null) {
-        nonJoue("§2 · 20 px entre deux lignes", "une seule ligne d'équipe ici");
+        nonJoue("§2 · 32 px entre deux lignes", "une seule ligne d'équipe ici");
       } else {
         verif(
-          "20 px entre deux lignes à pastille",
-          mesures.entreLignes === 20,
+          //  ⚠️ 32 px depuis la nº 229-§2 (20 à la nº 227).
+          "32 px entre deux lignes à pastille",
+          mesures.entreLignes === 32,
           `${mesures.entreLignes} px`
         );
       }
       verif(
-        "20 px au-dessus de la première ligne",
-        mesures.auDessus === 20,
+        "32 px au-dessus de la première ligne (nº 229-§2)",
+        mesures.auDessus === 32,
         `${mesures.auDessus} px`
       );
     }
@@ -214,21 +217,23 @@ if (!fiche) {
         ["TikTok", icones.tiktok],
       ]) {
         verif(
-          `${nom} : un DISQUE BLANC PLEIN de 18 px, l'icône à 14 dedans`,
+          //  ⚠️ 15 px depuis la nº 229-§4 : un liseré de 1,5 px, pas plus.
+          `${nom} : un DISQUE BLANC PLEIN de 18 px, l'icône à 15 dedans`,
           mesure.disque &&
             mesure.rond &&
             mesure.fondDisque === "rgb(255, 255, 255)" &&
             mesure.colonne === 18 &&
-            mesure.image === 14,
+            mesure.image === 15,
           `colonne ${mesure.colonne} · image ${mesure.image} · fond ${mesure.fondDisque}`
         );
       }
       if (icones.siteBrut) {
         verif(
+          //  ⚠️ 16 px depuis la nº 229-§4 (un cran plus petite).
           "site.png : la même colonne de 18 px, SANS disque",
           icones.siteBrut.colonne === 18 &&
             !icones.siteBrut.disqueBlanc &&
-            icones.siteBrut.image === 18,
+            icones.siteBrut.image === 16,
           `colonne ${icones.siteBrut.colonne} · image ${icones.siteBrut.image}`
         );
       }
@@ -429,13 +434,15 @@ titre("§1, §4 et §6 — l'écran étroit (390 px)");
                 /^Copi/.test(b.textContent.trim())
               )
             ),
-            fermerNu: (() => {
-              const fermer = [...plaque.querySelectorAll("button")].find(
-                (b) => b.textContent.trim() === "Fermer"
+            //  ⚠️ LA CROIX (nº 229-§5) a remplacé le mot nu du bas.
+            croix: (() => {
+              const bouton = plaque.querySelector('button[aria-label="Fermer"]');
+              if (!bouton || !bouton.querySelector("svg")) return false;
+              const boite = bouton.getBoundingClientRect();
+              const cadre = plaque.getBoundingClientRect();
+              return (
+                boite.top - cadre.top < 60 && cadre.right - boite.right < 60
               );
-              if (!fermer) return false;
-              const fond = getComputedStyle(fermer).backgroundColor;
-              return fond === "rgba(0, 0, 0, 0)" || fond === "transparent";
             })(),
           };
         });
@@ -446,7 +453,7 @@ titre("§1, §4 et §6 — l'écran étroit (390 px)");
         );
         verif(
           "la plaque : anthracite à 60 %",
-          verre.fond === "rgba(26, 26, 29, 0.6)",
+          verre.fond === "rgba(26, 26, 29, 0.4)",
           verre.fond
         );
         verif("le liseré interne est là", verre.liseré);
@@ -469,7 +476,7 @@ titre("§1, §4 et §6 — l'écran étroit (390 px)");
           verre.filtreAction
         );
         verif("« Copier » est là", verre.copier);
-        verif("« Fermer » reste un mot nu", verre.fermerNu);
+        verif("la croix de fermeture, en haut à droite (nº 229-§5)", verre.croix);
       }
     }
   }

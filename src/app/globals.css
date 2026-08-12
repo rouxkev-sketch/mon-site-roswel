@@ -202,20 +202,24 @@ html:has([data-fond="sombre"]) {
     invaliderait la déclaration. Sans `backdrop-filter` (navigateur
     ancien), le fond reste assez dense pour que la fenêtre se lise
     seule.
-    LES VALEURS DU VERRE (nº 227-§6) : anthracite à 60 %, flou de
-    30 px, et la REMONTÉE DE SATURATION à 180 % — c'est elle qui fait
-    la différence entre du verre et un voile gris.
+    LES VALEURS DU VERRE (nº 227-§6, allégées nº 229-§5) : anthracite
+    à 40 % — on doit DEVINER la page derrière, le 60 % faisait presque
+    un aplat noir —, flou de 30 px, et la REMONTÉE DE SATURATION à
+    180 % — c'est elle qui fait la différence entre du verre et un
+    voile gris.
     LE LISERÉ — la seule exception à « aucun contour » : un fin trait
     clair sur tout le pourtour, PLUS LUMINEUX sur le bord haut que sur
     le bas, pour donner l'épaisseur de la plaque. En ombres internes,
-    pas en bordure : il ne prend aucun pixel au contenu. */
+    pas en bordure : il ne prend aucun pixel au contenu. ATTÉNUÉ à la
+    nº 229-§5 (l'intensité divisée par deux, la nuance haut/bas
+    gardée) : il doit se deviner, pas se lire. */
 [data-verre-fenetre] {
-  background-color: rgba(26, 26, 29, 0.6);
+  background-color: rgba(26, 26, 29, 0.4);
   -webkit-backdrop-filter: blur(30px) saturate(180%);
   backdrop-filter: blur(30px) saturate(180%);
   box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.32),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.16),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
 /*  LES CAPSULES POSÉES SUR LA PLAQUE (nº 227-§6) — les badges du lieu
@@ -228,11 +232,13 @@ html:has([data-fond="sombre"]) {
   backdrop-filter: blur(30px) saturate(180%);
 }
 
-/*  L'ACTION FINALE DE LA FENÊTRE (nº 227-§6) — « Ouvrir dans Google
-    Maps » : du VERRE TEINTÉ ROSE, jamais un aplat opaque. Le rose de
-    la charte (#EE3D6F) en translucide, mêmes flou et saturation. */
+/*  L'ACTION FINALE DE LA FENÊTRE (nº 227-§6, allégée nº 229-§5) —
+    « Ouvrir dans Google Maps » : du VERRE TEINTÉ ROSE, jamais un
+    aplat opaque. Le rose de la charte (#EE3D6F) à 45 % — le 62 %
+    faisait encore un aplat à l'œil —, mêmes flou et saturation que
+    la plaque, texte blanc. */
 [data-verre-action] {
-  background-color: rgba(238, 61, 111, 0.62);
+  background-color: rgba(238, 61, 111, 0.45);
   -webkit-backdrop-filter: blur(30px) saturate(180%);
   backdrop-filter: blur(30px) saturate(180%);
 }

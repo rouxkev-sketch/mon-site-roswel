@@ -286,6 +286,13 @@ export function ContenuFiche({
    *    touchant au fichier — la règle permanente du projet).
    * Colonne de 18 px inchangée (nº 223), pour les trois.
    */
+  //  §4 (nº 229) — LES TAILLES, AJUSTÉES À L'ŒIL DU PROPRIÉTAIRE :
+  //   · réseaux : l'icône REMPLIT son disque de 18 px, il ne reste
+  //     qu'un LISERÉ fin de blanc — 15 px d'icône, soit 1,5 px de
+  //     couronne de chaque côté, jamais davantage ;
+  //   · site.png : un cran plus petite (16 px) et JAMAIS coupée —
+  //     `object-contain`, jamais `cover`. Sans disque, comme avant.
+  //  La colonne de 18 px ne bouge pas, les trois pèsent pareil.
   const iconeFichier = (fichier: string, glyphe: boolean) =>
     glyphe ? (
       /* eslint-disable-next-line @next/next/no-img-element --
@@ -294,15 +301,21 @@ export function ContenuFiche({
       <img
         src={fichier}
         alt=""
-        width={18}
-        height={18}
-        className="h-[18px] w-[18px] invert opacity-60"
+        width={16}
+        height={16}
+        className="h-4 w-4 object-contain invert opacity-60"
       />
     ) : (
       <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-white">
         {/* eslint-disable-next-line @next/next/no-img-element --
            icône déposée par le propriétaire, affichée telle quelle. */}
-        <img src={fichier} alt="" width={14} height={14} className="h-3.5 w-3.5" />
+        <img
+          src={fichier}
+          alt=""
+          width={15}
+          height={15}
+          className="h-[15px] w-[15px] object-contain"
+        />
       </span>
     );
 
@@ -545,8 +558,9 @@ export function ContenuFiche({
               sauf sans TikTok, où Instagram remonte. Chacun son icône
               à gauche, la colonne de 18 px pour les trois. Le `mt-8`
               reste la marge basse de la photo (nº 225-§1). */}
+          {/*  16 px entre les deux lignes (nº 229-§3). */}
           {(premiereLigne.length > 0 || secondeLigne.length > 0) && (
-            <div className="mt-8 flex flex-col items-start gap-y-3.5">
+            <div className="mt-8 flex flex-col items-start gap-y-4">
               {premiereLigne.length > 0 && (
                 <div className="flex flex-wrap items-center gap-x-7 gap-y-3.5">
                   {premiereLigne}
