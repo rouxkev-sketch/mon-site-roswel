@@ -81,8 +81,23 @@ export const ICONE_SITE = "/site.png";
 export const ICONE_ADRESSE = "/adresse.png";
 
 export const ICONES_RESEAUX = {
-  instagram: "/icone-instagram.png",
-  tiktok: "/icone-tiktok.png",
+  /**
+   * ⚠️ LES VERSIONS ROGNÉES (nº 231-§1) — mesuré, pas supposé : les
+   * fichiers déposés (`icone-instagram.png`, `icone-tiktok.png`,
+   * 4375 px) portent une marge intérieure TRANSPARENTE autour du
+   * dessin. Servis dans le disque blanc de 18 px, cette marge
+   * s'ajoutait au liseré voulu et décentrait le glyphe. Les fichiers
+   * `-rognee` sont DÉRIVÉS des originaux par le rognage demandé par
+   * le propriétaire : recadrés aux bornes exactes du dessin (relevées
+   * sur le canal alpha), remis au carré dessin centré, et réduits à
+   * 96 px pour ne pas servir 200 Ko dans une pastille de 15 px.
+   * LES ORIGINAUX NE SONT PAS TOUCHÉS — ils restent la source, et le
+   * pied de page continue de servir `/icone-instagram.png` tel quel.
+   * Les versions rognées, elles, PARTENT DANS LES LIVRAISONS (ce sont
+   * des fichiers du code, pas des dépôts à la main).
+   */
+  instagram: "/icone-instagram-rognee.png",
+  tiktok: "/icone-tiktok-rognee.png",
   // ⚠️ DÉPOSÉE À LA MAIN elle aussi, sous ce nom EXACT : le code ne la
   // fabrique pas et ne l'inclut jamais dans une livraison.
   youtube: "/icone-youtube.png",

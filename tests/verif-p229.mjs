@@ -311,8 +311,9 @@ titre("§5 — la fenêtre d'adresse (390 px)");
         const plaque = document.querySelector("[data-verre-fenetre]");
         const style = getComputedStyle(plaque);
         const cadre = plaque.getBoundingClientRect();
+        //  ⚠️ nº 231-§2 : PLUS AUCUNE croix — la fenêtre est
+        //  dépouillée, seul le voile referme.
         const croix = plaque.querySelector('button[aria-label="Fermer"]');
-        const boiteCroix = croix?.getBoundingClientRect();
         const copier = [...plaque.querySelectorAll("button")].find((b) =>
           /^(Copier l'adresse|Adresse copiée)$/.test(b.textContent.trim())
         );
@@ -325,11 +326,7 @@ titre("§5 — la fenêtre d'adresse (390 px)");
         return {
           fond: style.backgroundColor,
           liseré: style.boxShadow,
-          croix: Boolean(croix && croix.querySelector("svg")),
-          croixEnHautADroite: boiteCroix
-            ? boiteCroix.top - cadre.top < 60 &&
-              cadre.right - boiteCroix.right < 60
-            : false,
+          sansCroix: !croix,
           motNu,
           copierAuDessus: bc && bm ? bc.bottom <= bm.top : false,
           memesDimensions:
@@ -355,8 +352,10 @@ titre("§5 — la fenêtre d'adresse (390 px)");
         mesure.liseré.slice(0, 80)
       );
       verif(
-        "la croix du site, en haut à droite — plus aucun mot « Fermer »",
-        mesure.croix && mesure.croixEnHautADroite && !mesure.motNu
+        //  ⚠️ Dépouillée à la nº 231-§2 : ni croix, ni mot — le voile
+        //  seul referme (vérifié plus bas).
+        "ni croix ni mot « Fermer » dans la fenêtre (nº 231-§2)",
+        mesure.sansCroix && !mesure.motNu
       );
       verif(
         "« Copier l'adresse » et « Ouvrir dans Google Maps » : jumeaux, empilés",
@@ -383,11 +382,14 @@ titre("§5 — la fenêtre d'adresse (390 px)");
         );
       }
 
-      //  LA CROIX REFERME.
-      await fenetre.locator('button[aria-label="Fermer"]').click();
+      //  LE VOILE REFERME (nº 231-§2) — un appui à côté de la plaque.
+      await page
+        .locator('button[aria-label="Fermer"]')
+        .first()
+        .click({ position: { x: 10, y: 10 } });
       await page.waitForTimeout(300);
       verif(
-        "la croix referme la fenêtre",
+        "un appui à côté referme la fenêtre",
         (await page.locator("[data-verre-fenetre]").count()) === 0
       );
     }

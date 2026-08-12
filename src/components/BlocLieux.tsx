@@ -28,7 +28,7 @@ import {
   type StudioFiche,
 } from "@/lib/modes-exercice";
 import { ligneFiche, ligneMaps, type LieuAffichable } from "@/lib/adresse";
-import { genreMode, libelleRoleCourt, libelleTypeFiche } from "@/config/tatouage";
+import { genreMode, libelleRoleCourt } from "@/config/tatouage";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
@@ -411,35 +411,31 @@ function adresseMaps(lieu: LieuAffichable): string {
 }
 
 /**
- * §3 (nº 225) — LA FENÊTRE D'ADRESSE DU SMARTPHONE
+ * §3 (nº 225) — LA FENÊTRE D'ADRESSE DU SMARTPHONE, DÉPOUILLÉE
  * ==================================================================
- * Une plaque de VERRE LIQUIDE posée au centre de la page (nº 227-§6) :
- * anthracite à 60 %, flou de 30 px et REMONTÉE DE SATURATION à 180 %
- * — c'est la saturation qui fait le verre, sans elle ce n'est qu'un
- * voile gris. La règle vit dans globals.css (`[data-verre-fenetre]`,
- * les DEUX lignes littérales, préfixée et non préfixée, jamais de
- * `@supports`, jamais de `var()` dans le filtre : les trois pièges
- * payés du nº 225-§4). Le LISERÉ clair très fin fait le tour, PLUS
- * LUMINEUX sur le bord haut que sur le bas — l'épaisseur de la
- * plaque ; c'est la seule exception voulue à « aucun contour ».
+ * (nº 231-§2) Elle portait trop de choses : la croix, l'adresse
+ * répétée (le visiteur vient de cliquer dessus), les badges du lieu —
+ * tout est SUPPRIMÉ, code compris. Il ne reste que LES DEUX ACTIONS,
+ * empilées, de dimensions identiques : « Copier l'adresse » en verre
+ * blanc au-dessus, « Ouvrir dans Google Maps » en verre teinté rose
+ * dessous — l'unique action finale. La fenêtre se referme par un
+ * appui à côté d'elle, et rétrécit à la hauteur de son contenu.
  *
- * DEDANS : l'adresse, les badges du lieu en verre blanc translucide
- * (`[data-verre-capsule]` — mêmes flou et saturation), « Copier » en
- * capsule de verre à taille naturelle, puis « Ouvrir dans Google
- * Maps » en capsule pleine largeur de VERRE TEINTÉ ROSE
- * (`[data-verre-action]` — rose translucide, jamais un aplat) :
- * l'action finale de cette fenêtre, et la seule. La fermeture est un
- * mot nu, et l'appui à côté ferme aussi.
+ * LE VERRE GARDE LES VALEURS DE LA Nº 229-§5 : plaque anthracite à
+ * 40 %, `blur(30px) saturate(180%)`, liseré atténué — la règle vit
+ * dans globals.css (`[data-verre-fenetre]`, les DEUX lignes
+ * littérales, préfixée d'abord, jamais de `@supports`, jamais de
+ * `var()` dans le filtre : les pièges payés du nº 225-§4).
  */
 function FenetreAdresse({
   adresse,
   lieu,
-  badges,
   surFermeture,
 }: {
+  /** L'adresse en toutes lettres — elle ne s'AFFICHE plus, mais c'est
+      elle que « Copier l'adresse » met au presse-papier. */
   adresse: string;
   lieu: LieuAffichable;
-  badges: string[];
   surFermeture: () => void;
 }) {
   const [copie, setCopie] = useState(false);
@@ -491,58 +487,16 @@ function FenetreAdresse({
         className="relative w-full max-w-[360px] rounded-3xl p-6
                    opacity-100 transition-opacity duration-200 starting:opacity-0"
       >
-        {/*  LA CROIX — en haut à droite, CELLE DE TOUTES LES FENÊTRES
-             DU SITE (nº 229-§5) : le bouton de FenetreSignalement,
-             repris tel quel (mêmes classes, même tracé), simplement
-             posé en absolu puisque cette fenêtre n'a pas de rangée de
-             titre. Le mot « Fermer » du bas a disparu avec elle. */}
-        <button
-          type="button"
-          onClick={surFermeture}
-          aria-label="Fermer"
-          className="absolute right-3 top-3 w-9 h-9 flex items-center justify-center
-                     rounded-full text-sombre-texte-doux
-                     hover:text-sombre-texte hover:bg-sombre-eleve
-                     active:text-sombre-texte active:bg-sombre-eleve
-                     transition-colors"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="m5 5 14 14M19 5 5 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        </button>
-
-        {/*  `pr-10` : l'adresse ne passe jamais sous la croix. */}
-        <p className="pr-10 text-[16px] font-medium leading-relaxed text-sombre-texte [overflow-wrap:anywhere]">
-          {adresse}
-        </p>
-
-        {badges.length > 0 && (
-          <ul className="mt-4 flex flex-wrap gap-2">
-            {badges.map((badge) => (
-              /*  Blanc translucide léger, mêmes flou et saturation
-                  que la plaque, sans contour (nº 227-§6). */
-              <li
-                key={badge}
-                data-verre-capsule=""
-                className="inline-flex min-h-[30px] items-center rounded-full
-                           px-3 text-[13px] font-medium text-sombre-texte"
-              >
-                {badge}
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {/*  « Copier l'adresse » — LE JUMEAU EXACT du badge d'ouverture
-             (nº 229-§5) : même largeur (pleine), même hauteur, même
-             rayon — en verre blanc, jamais en rose (l'action finale
-             reste seule à le porter). Le mot devient « Adresse
-             copiée » après l'appui. */}
+        {/*  DEUX CAPSULES, ET RIEN D'AUTRE (nº 231-§2). « Copier
+             l'adresse » — LE JUMEAU EXACT du badge d'ouverture : même
+             largeur (pleine), même hauteur, même rayon — en verre
+             blanc, jamais en rose (l'action finale reste seule à le
+             porter). Le mot devient « Adresse copiée » après l'appui. */}
         <button
           type="button"
           onClick={() => void copier()}
           data-verre-capsule=""
-          className="mt-6 flex min-h-[48px] w-full items-center justify-center
+          className="flex min-h-[48px] w-full items-center justify-center
                      rounded-full text-[15px] font-semibold text-sombre-texte
                      transition-colors active:bg-white/20"
         >
@@ -584,12 +538,10 @@ function AdresseCliquable({
   etiquette = "Adresse :",
   adresse,
   lieu,
-  badges,
 }: {
   etiquette?: string;
   adresse: string;
   lieu: LieuAffichable | null;
-  badges: string[];
 }) {
   const [fenetre, setFenetre] = useState(false);
   const complete = Boolean(lieu?.adresse && adresse);
@@ -641,7 +593,6 @@ function AdresseCliquable({
         <FenetreAdresse
           adresse={adresse}
           lieu={lieu}
-          badges={badges}
           surFermeture={() => setFenetre(false)}
         />
       )}
@@ -684,15 +635,6 @@ export function BlocAdressesFiche({
       };
   const adressePrincipale = ligneFiche(lieuPrincipal);
 
-  /** LES BADGES DE LA FENÊTRE D'ADRESSE (nº 225-§3) : le type du lieu
-      (« Salon », « Studio ») et sa ville — ce qu'on veut savoir avant
-      d'ouvrir le plan. */
-  const badgesDe = (lieu: LieuAffichable): string[] =>
-    [
-      libelleTypeFiche(tatoueur.type_fiche, tatoueur.etablissement),
-      lieu.ville ?? "",
-    ].filter(Boolean);
-
   /**
    * §3 (nº 226) — L'EMPILEMENT REMPLACE LE VA-ET-VIENT.
    * Le sélecteur « Adresse / Autre adresse » (OngletsLigne) est
@@ -724,7 +666,6 @@ export function BlocAdressesFiche({
           <AdresseCliquable
             adresse={adressePrincipale}
             lieu={lieuPrincipal}
-            badges={badgesDe(lieuPrincipal)}
           />
           <HorairesEnLigne
             horaires={principal?.horaires}
@@ -747,7 +688,6 @@ export function BlocAdressesFiche({
             etiquette="Autre adresse :"
             adresse={ligneFiche(lieuDuStudio(studio))}
             lieu={lieuDuStudio(studio)}
-            badges={badgesDe(lieuDuStudio(studio))}
           />
         </div>
       ))}
