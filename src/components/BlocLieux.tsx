@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { IconeChevronBas } from "@/components/Icones";
-import { OngletsLigne } from "@/components/OngletsLigne";
+import { useOuvertureFiche } from "@/components/PileFiches";
 import { ICONE_ADRESSE, PORTRAIT_ROND } from "@/config/tatouage";
 import {
   etatOuverture,
@@ -37,12 +37,20 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  * DEUX FORMES POUR UNE MÊME QUESTION, et c'est pour cela qu'elles
  * vivent dans le même fichier : « où est-ce, et qui y est ? ».
  *
- *  · UN SALON OU UN STUDIO a des ADRESSES. Chacune porte sa photo, sa
- *    ligne d'adresse, ses horaires et son équipe. Plusieurs adresses
- *    se choisissent par un sélecteur — le MÊME que « Réalisation /
- *    Flash » (`OngletsLigne`), pas une copie.
+ *  · UN SALON OU UN STUDIO a des ADRESSES, empilées de haut en bas
+ *    (nº 226-§3) : celle de l'affiche d'abord — photo, ligne
+ *    d'adresse, horaires —, puis chaque autre adresse sur sa ligne
+ *    (« Autre adresse : » en lien Google Maps), puis l'équipe,
+ *    TOUJOURS après toutes les adresses. Le sélecteur « Adresse /
+ *    Autre adresse » de la nº 222 est SUPPRIMÉ, code compris : il
+ *    cachait une adresse derrière une autre adresse.
  *  · UN ARTISTE a des PROFILS : à domicile, en studio, en salon,
  *    guest. Une entrée chacun, dans l'ordre imposé (nº 222-§1g).
+ *
+ * ⚠️ LES LIENS VERS D'AUTRES FICHES (un membre de l'équipe, le salon
+ * d'un profil) OUVRENT UNE FENÊTRE SUPERPOSÉE (nº 226-§5) quand une
+ * pile enveloppe la fiche (voir PileFiches) — web comme mobile ; le
+ * lien reste un vrai lien pour tout le reste (nouvel onglet, moteurs).
  *
  * ⚠️ AUCUN ENCADRÉ, AUCUN CONTOUR. La charte de la fiche ne connaît
  * que trois niveaux de gris — la page, le bloc, le badge — et rien
@@ -116,6 +124,31 @@ function PhotoRonde({
       ) : null}
     </span>
   );
+}
+
+/**
+ * LE CLIC D'UN LIEN VERS UNE AUTRE FICHE (nº 226-§5) : quand une pile
+ * de fenêtres enveloppe (PileFiches), le clic simple ouvre la fiche
+ * PAR-DESSUS celle qu'on lit — web comme mobile — au lieu de changer
+ * de page. Toute autre combinaison (nouvel onglet, clic du milieu…)
+ * garde le lien, et l'adresse directe rend toujours la page complète.
+ * Sans pile (l'aperçu « Ma fiche ») : `undefined`, le lien navigue.
+ */
+function useClicVersFiche() {
+  const ouvrirFiche = useOuvertureFiche();
+  if (!ouvrirFiche) return undefined;
+  return (slug: string) => (evenement: React.MouseEvent) => {
+    if (
+      evenement.metaKey ||
+      evenement.ctrlKey ||
+      evenement.shiftKey ||
+      evenement.altKey
+    ) {
+      return;
+    }
+    evenement.preventDefault();
+    ouvrirFiche(slug, `/tatoueur/${slug}`);
+  };
 }
 
 /** « Adresse : » en gris, la valeur en blanc — la grammaire de tout ce
@@ -253,43 +286,59 @@ function HorairesEnLigne({
  * deux dates, sur deux lignes.
  * ⚠️ ALIGNÉE SOUS LA PHOTO DU LIEU : elle commence au bord gauche du
  * bloc, pas dans la colonne de texte de l'adresse.
+ *
+ * ⚠️ TOUTE LA LIGNE EST LE LIEN (nº 226-§4) : pastille, rôle et nom
+ * vivent dans UN SEUL élément cliquable — la pastille a le lien pour
+ * ancêtre, il n'y a qu'une zone d'appui. Aucun contour, aucun halo :
+ * seul le nom prend la couleur au survol, comme avant. Un membre sans
+ * fiche (pas de slug) reste une ligne inerte, à l'identique.
  */
 function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined }) {
+  const clicVersFiche = useClicVersFiche();
   const membres = equipeOrdonnee(equipe);
   if (membres.length === 0) return null;
   return (
     <ul className="mt-6 flex flex-col gap-3.5">
       {membres.map((membre) => {
-        const nom = (
-          <span className="text-[15px] font-medium text-sombre-texte">
-            {membre.nom}
-          </span>
-        );
-        return (
-          /*  ⚠️ LA PASTILLE EST LÀ MÊME SANS PHOTO (nº 224-§1) : un
-              rond gris uni, rien dedans. C'est elle qui tient la
-              colonne — sans elle, une équipe où un seul membre a
-              déposé sa photo s'affichait en escalier. */
-          <li key={membre.artiste_id} className="flex items-start gap-4">
+        /*  ⚠️ LA PASTILLE EST LÀ MÊME SANS PHOTO (nº 224-§1) : un
+            rond gris uni, rien dedans. C'est elle qui tient la
+            colonne — sans elle, une équipe où un seul membre a
+            déposé sa photo s'affichait en escalier. */
+        const ligne = (avecFiche: boolean) => (
+          <>
             <PhotoRonde source={membre.photo} nature="personne" />
             <div className="min-w-0 flex-1">
               <p className="text-[14px] leading-relaxed text-sombre-texte-doux">
                 {roleDuMembre(membre)} ·{" "}
-                {membre.slug ? (
-                  <Link
-                    href={`/tatoueur/${membre.slug}`}
-                    className="transition-colors hover:text-primaire active:text-primaire"
-                  >
-                    {nom}
-                  </Link>
-                ) : (
-                  nom
-                )}
+                <span
+                  className={`text-[15px] font-medium text-sombre-texte${
+                    avecFiche
+                      ? " transition-colors group-hover:text-primaire group-active:text-primaire"
+                      : ""
+                  }`}
+                >
+                  {membre.nom}
+                </span>
               </p>
               {membre.genre === "guest" && (
                 <DatesDeSession debut={membre.debut_le} fin={membre.fin_le} />
               )}
             </div>
+          </>
+        );
+        return (
+          <li key={membre.artiste_id}>
+            {membre.slug ? (
+              <Link
+                href={`/tatoueur/${membre.slug}`}
+                onClick={clicVersFiche?.(membre.slug)}
+                className="group flex items-start gap-4"
+              >
+                {ligne(true)}
+              </Link>
+            ) : (
+              <div className="flex items-start gap-4">{ligne(false)}</div>
+            )}
           </li>
         );
       })}
@@ -459,12 +508,17 @@ function FenetreAdresse({
  *    intercepté, rien ne navigue.
  * Une adresse INCOMPLÈTE (pas de rue) reste du texte : un plan sans
  * rue tombe n'importe où.
+ * L'ÉTIQUETTE se choisit (nº 226-§3) : « Adresse : » pour celle de
+ * l'affiche, « Autre adresse : » pour les suivantes — même grammaire,
+ * même lien Google Maps.
  */
 function AdresseCliquable({
+  etiquette = "Adresse :",
   adresse,
   lieu,
   badges,
 }: {
+  etiquette?: string;
   adresse: string;
   lieu: LieuAffichable | null;
   badges: string[];
@@ -473,13 +527,13 @@ function AdresseCliquable({
   const complete = Boolean(lieu?.adresse && adresse);
 
   if (!complete || !lieu) {
-    return <LigneEtiquetee etiquette="Adresse :" valeur={adresse} />;
+    return <LigneEtiquetee etiquette={etiquette} valeur={adresse} />;
   }
 
   return (
     <>
       <p className="text-[14px] leading-relaxed text-sombre-texte-doux [overflow-wrap:anywhere]">
-        {"Adresse :"}{" "}
+        {etiquette}{" "}
         <a
           href={adresseMaps(lieu)}
           target="_blank"
@@ -509,52 +563,13 @@ function AdresseCliquable({
   );
 }
 
-/** UNE ADRESSE, ENTIÈRE : la photo, la ligne d'adresse, les horaires,
-    puis l'équipe dessous. */
-function UneAdresse({
-  photo,
-  adresse,
-  lieu,
-  badges,
-  horaires,
-  fuseau,
-  equipe,
-}: {
-  photo: string | null | undefined;
-  adresse: string;
-  /** Le lieu STRUCTURÉ — c'est lui qui rend l'adresse cliquable
-      (nº 225-§3) : sans rue, elle reste du texte. */
-  lieu: LieuAffichable | null;
-  /** Les badges de la fenêtre d'adresse (« Salon », la ville…). */
-  badges: string[];
-  horaires: unknown;
-  fuseau: string | null | undefined;
-  equipe: MembreEquipe[] | null | undefined;
-}) {
-  return (
-    <div>
-      {/*  ⚠️ `items-start` : le texte commence au HAUT de la photo et
-           se prolonge dessous s'il est long — jamais au-dessus. C'est
-           la même règle que le nom de la fiche (nº 222-§1e). */}
-      <div className="flex items-start gap-4">
-        <PhotoRonde source={photo} nature="lieu" />
-        <div className="min-w-0 flex-1">
-          <AdresseCliquable adresse={adresse} lieu={lieu} badges={badges} />
-          <HorairesEnLigne horaires={horaires} fuseau={fuseau} />
-        </div>
-      </div>
-      <EquipeDuLieu equipe={equipe} />
-    </div>
-  );
-}
-
 export function BlocAdressesFiche({
   tatoueur,
   studioCourantId,
 }: {
   tatoueur: Tatoueur;
   /** Le studio que l'adresse désigne (`?studio=<id>`), quand il y en a
-      un : c'est lui que le sélecteur ouvre. */
+      un : c'est lui qui passe en tête. */
   studioCourantId?: string | null;
 }) {
   const studios = (tatoueur.studios ?? [])
@@ -568,12 +583,6 @@ export function BlocAdressesFiche({
     studios[0] ??
     null;
   const autres = studios.filter((studio) => studio.id !== principal?.id);
-
-  /** LE SÉLECTEUR N'EXISTE QU'À DEUX ADRESSES OU PLUS. Une seule
-      adresse ne se choisit pas — une ligne de séparation la précède,
-      comme tous les autres blocs de la fiche. */
-  const [onglet, setOnglet] = useState<"adresse" | "autres">("adresse");
-  const aDesAutres = autres.length > 0;
 
   //  AUCUN STUDIO ENREGISTRÉ (fiche d'avant la migration nº 26) : on
   //  retombe sur l'adresse portée par la fiche elle-même.
@@ -598,58 +607,57 @@ export function BlocAdressesFiche({
       lieu.ville ?? "",
     ].filter(Boolean);
 
+  /**
+   * §3 (nº 226) — L'EMPILEMENT REMPLACE LE VA-ET-VIENT.
+   * Le sélecteur « Adresse / Autre adresse » (OngletsLigne) est
+   * SUPPRIMÉ, son état avec : il cachait une adresse derrière une
+   * autre adresse. De haut en bas, désormais :
+   *  1. l'adresse de l'affiche, telle qu'elle était — photo, ligne
+   *     d'adresse cliquable, horaires ;
+   *  2. chaque AUTRE adresse sur sa ligne : « Autre adresse : » suivi
+   *     de l'adresse, en lien Google Maps (la même mécanique que la
+   *     première — fenêtre de verre au doigt, nouvel onglet au web) ;
+   *  3. l'ÉQUIPE, TOUJOURS après toutes les adresses — elle appartient
+   *     à l'enseigne, pas à une adresse (la vue `equipe_salon` ne
+   *     distingue pas les studios).
+   */
   return (
     <div>
-      {aDesAutres && (
-        <OngletsLigne
-          ariaLabel="Adresse ou autre adresse"
-          cleActive={onglet}
-          surChoix={(cle) => setOnglet(cle === "autres" ? "autres" : "adresse")}
-          options={[
-            { cle: "adresse", label: "Adresse" },
-            { cle: "autres", label: "Autre adresse" },
-          ]}
-        />
-      )}
-
-      <div className={aDesAutres ? "mt-7" : ""}>
-        {onglet === "adresse" || !aDesAutres ? (
-          <UneAdresse
-            //  ⚠️ LA PHOTO DU LIEU EST CELLE DE LA FICHE : un studio
-            //  n'a pas d'image à lui en base (voir `StudioFiche`).
-            //  Le jour où il en aura une, c'est la seule ligne à
-            //  changer — ici, et dans la boucle des autres adresses.
-            photo={tatoueur.photo_profil}
+      {/*  ⚠️ `items-start` : le texte commence au HAUT de la photo et
+           se prolonge dessous s'il est long — jamais au-dessus. C'est
+           la même règle que le nom de la fiche (nº 222-§1e). */}
+      <div className="flex items-start gap-4">
+        {/*  ⚠️ LA PHOTO DU LIEU EST CELLE DE LA FICHE : un studio n'a
+             pas d'image à lui en base (voir `StudioFiche`). */}
+        <PhotoRonde source={tatoueur.photo_profil} nature="lieu" />
+        <div className="min-w-0 flex-1">
+          <AdresseCliquable
             adresse={adressePrincipale}
             lieu={lieuPrincipal}
             badges={badgesDe(lieuPrincipal)}
+          />
+          <HorairesEnLigne
             horaires={principal?.horaires}
             fuseau={principal?.fuseau}
-            //  L'ÉQUIPE APPARTIENT À L'ENSEIGNE, pas à une adresse : la
-            //  vue `equipe_salon` ne distingue pas les studios. Elle
-            //  s'affiche donc sous l'adresse principale — celle qu'on
-            //  regarde.
-            equipe={tatoueur.equipe}
           />
-        ) : (
-          /*  LES AUTRES ADRESSES S'EMPILENT — même présentation,
-              l'une sous l'autre. */
-          <div className="flex flex-col gap-10">
-            {autres.map((studio) => (
-              <UneAdresse
-                key={studio.id}
-                photo={tatoueur.photo_profil}
-                adresse={ligneFiche(lieuDuStudio(studio))}
-                lieu={lieuDuStudio(studio)}
-                badges={badgesDe(lieuDuStudio(studio))}
-                horaires={studio.horaires}
-                fuseau={studio.fuseau}
-                equipe={null}
-              />
-            ))}
-          </div>
-        )}
+        </div>
       </div>
+
+      {/*  2. LES AUTRES ADRESSES — une ligne chacune, au bord gauche
+           du bloc, comme l'équipe dessous. */}
+      {autres.map((studio) => (
+        <div key={studio.id} className="mt-5">
+          <AdresseCliquable
+            etiquette="Autre adresse :"
+            adresse={ligneFiche(lieuDuStudio(studio))}
+            lieu={lieuDuStudio(studio)}
+            badges={badgesDe(lieuDuStudio(studio))}
+          />
+        </div>
+      ))}
+
+      {/*  3. L'ÉQUIPE — après TOUTES les adresses, toujours. */}
+      <EquipeDuLieu equipe={tatoueur.equipe} />
     </div>
   );
 }
@@ -692,6 +700,9 @@ export function BlocProfilsArtiste({
 }: {
   tatoueur: Tatoueur;
 }) {
+  /** Le salon lié d'un profil s'ouvre en fenêtre superposée
+      (nº 226-§5), comme un membre d'équipe. */
+  const clicVersFiche = useClicVersFiche();
   const modes = modesOrdonnes(tatoueur.modes);
   if (modes.length === 0) return null;
 
@@ -719,6 +730,7 @@ export function BlocProfilsArtiste({
                 <>
                   <Link
                     href={`/tatoueur/${mode.salon_slug}`}
+                    onClick={clicVersFiche?.(mode.salon_slug)}
                     className="font-medium text-sombre-texte transition-colors
                                hover:text-primaire active:text-primaire"
                   >

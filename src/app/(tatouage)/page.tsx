@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { cache } from "react";
 import { adresseDuSite } from "@/lib/site";
+import { rayonRetenu, TEXTES_TATOUAGE } from "@/config/tatouage";
 import {
-  CARTES_PAR_PAGE,
-  rayonRetenu,
-  TEXTES_TATOUAGE,
-} from "@/config/tatouage";
+  COOKIE_COLONNES,
+  taillePageServie,
+} from "@/lib/colonnes-mosaique";
 import { lieuDepuisParametres } from "@/lib/geocodage";
 import { PLAFOND_GALERIE } from "@/lib/photos-tatoueur";
 import {
@@ -74,9 +75,10 @@ function porteUneRecherche(params: ParametresAccueil): boolean {
   ).some((cle) => Boolean(params[cle]));
 }
 
-/** LA PAGE DEMANDÉE, bornée. Dix pages — deux cent quarante cartes —
-    est déjà bien au-delà de ce qu'un œil parcourt ; au-delà, c'est une
-    adresse fabriquée à la main, et la base n'a pas à la servir. */
+/** LA PAGE DEMANDÉE, bornée. Dix pages — de cent vingt à trois cent
+    soixante cartes selon la largeur de l'écran (nº 226-§1) — est déjà
+    bien au-delà de ce qu'un œil parcourt ; au-delà, c'est une adresse
+    fabriquée à la main, et la base n'a pas à la servir. */
 const PAGES_MAX = 10;
 function pageDemandee(params: ParametresAccueil): number {
   const demandee = Math.floor(Number(params.page));
@@ -92,7 +94,7 @@ function pageDemandee(params: ParametresAccueil): number {
  * et non de l'objet des paramètres : deux objets différents pour la
  * même recherche donneraient deux lectures.
  */
-const chargerAccueil = cache(async (requete: string) => {
+const chargerAccueil = cache(async (requete: string, taillePage: number) => {
   const params = Object.fromEntries(
     new URLSearchParams(requete)
   ) as ParametresAccueil;
@@ -116,7 +118,21 @@ const chargerAccueil = cache(async (requete: string) => {
     nature,
     ...criteresDeLieu(lieu, rayonKm),
     exclure,
-    limite: CARTES_PAR_PAGE * page,
+    //  ⚠️ LA TAILLE DE PAGE EST UN MULTIPLE DU NOMBRE DE COLONNES
+    //  (nº 226-§1) : `colonnes × 6`, lu dans le cookie posé avant la
+    //  première peinture (voir lib/colonnes-mosaique). La dernière
+    //  rangée de la mosaïque est donc pleine à toutes les pages —
+    //  vingt-quatre cartes en cinq colonnes en laissaient quatre au
+    //  milieu de nulle part, et le manque grandissait à chaque
+    //  « Voir plus ».
+    //  ⚠️ ET LE DÉCALAGE RESTE À ZÉRO : « Voir plus » ne demande pas
+    //  la page suivante, il redemande la MÊME recherche avec une
+    //  limite plus grande. La liste servie est donc toujours un
+    //  PRÉFIXE de l'ordre stable des migrations nº 61 et 63 — aucune
+    //  carte ne peut y être en double, aucune sautée, et changer de
+    //  taille de page entre deux chargements ne rejoue jamais une
+    //  carte déjà vue.
+    limite: taillePage * page,
     //  ⚠️ PLUS D'UNE PHOTO PAR CARTE (nº 212-§2). La mosaïque n'en
     //  recevait qu'UNE (`sansGalerieInutile`, migration nº 32) : la
     //  carte ne pouvait donc jamais faire défiler quoi que ce soit —
@@ -133,6 +149,18 @@ const chargerAccueil = cache(async (requete: string) => {
 
 /** L'adresse remise à plat, toujours dans le même ordre : c'est la
     clé de lecture ci-dessus. */
+/**
+ * LA TAILLE D'UNE PAGE DE MOSAÏQUE, POUR CETTE REQUÊTE (nº 226-§1).
+ * Le cookie a été posé par le script d'avant peinture du chargement
+ * précédent ; à la toute première visite il n'existe pas encore, et
+ * l'on sert le repli de vingt-quatre cartes — voir
+ * lib/colonnes-mosaique, qui dit exactement ce que cela coûte.
+ */
+async function taillePageDeLaRequete(): Promise<number> {
+  const magasin = await cookies();
+  return taillePageServie(magasin.get(COOKIE_COLONNES)?.value);
+}
+
 function requeteNormalisee(params: ParametresAccueil): string {
   const propre = new URLSearchParams();
   for (const cle of PARAMETRES_RECHERCHE) {
@@ -175,7 +203,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const params = await searchParams;
   const recherche = porteUneRecherche(params);
-  const { resultat } = await chargerAccueil(requeteNormalisee(params));
+  const { resultat } = await chargerAccueil(
+    requeteNormalisee(params),
+    await taillePageDeLaRequete()
+  );
 
   return {
     // L'accueil garde le titre PAR DÉFAUT du groupe
@@ -207,7 +238,8 @@ export async function generateMetadata({
  *     montrer une fiche validée TOUT DE SUITE ;
  *  3. IL NE COÛTE PLUS RIEN. C'était le vrai motif d'en vouloir un
  *     cache : il chargeait le catalogue entier. Il ne lit désormais
- *     qu'une page de 24 fiches, en une requête (migration nº 32).
+ *     qu'une page — douze à trente-six fiches selon le nombre de
+ *     colonnes (nº 226-§1) —, en une requête (migration nº 32).
  *
  * Ce qui devait être mis en cache l'a été là où ça compte : les pages
  * « style + ville », qui répondent à une question stable et que les
@@ -225,7 +257,10 @@ export default async function PageAccueilTatouage({
   // l'adresse, le rayon ramené à un palier connu, les interrupteurs
   // éteints validés — voir `chargerAccueil`.
   const { resultat, style, nature, lieu, rayonKm, exclure, page } =
-    await chargerAccueil(requeteNormalisee(params));
+    await chargerAccueil(
+      requeteNormalisee(params),
+      await taillePageDeLaRequete()
+    );
 
   return (
     <IndexTatoueurs

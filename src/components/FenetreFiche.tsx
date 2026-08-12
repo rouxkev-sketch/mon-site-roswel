@@ -60,8 +60,23 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  *  - étroite (fenêtre rétrécie sous 1024 px) : UNE colonne — la photo
  *    EN HAUT, pleine largeur, les informations EN DESSOUS, et c'est la
  *    fenêtre elle-même qui défile verticalement.
- *  Sur les vrais mobiles, rien ne change : la grille y navigue vers la
- *  page complète, cette fenêtre ne s'y ouvre pas.
+ *  Sur les vrais mobiles, les CARTES de la grille continuent de
+ *  naviguer vers la page complète ; mais depuis une FICHE, les liens
+ *  vers d'autres fiches (équipe, salon d'un profil) ouvrent désormais
+ *  cette fenêtre-ci, au doigt comme à la souris (nº 226-§5, voir
+ *  PileFiches) — la forme étroite ci-dessus est la leur.
+ *
+ * ⚠️ LES FENÊTRES S'EMPILENT (nº 226-§5) : une fiche superposée peut en
+ * ouvrir une autre. Deux mécaniques de ce fichier sont donc COMPTÉES
+ * au niveau du module :
+ *  · LE GEL DU CORPS — seule la PREMIÈRE fenêtre gèle le document,
+ *    seule la DERNIÈRE à partir le dégèle et rend le défilement ;
+ *    fermer une fenêtre du dessus ne rend jamais la page tant qu'une
+ *    autre vit dessous. Le drapeau `data-fenetre-fiche` suit le même
+ *    compte : posé tant qu'au moins une fenêtre vit.
+ *  · LE CLAVIER — Échap et les flèches ne parlent qu'à la fenêtre DU
+ *    DESSUS : sans cela, un seul Échap fermerait toute la pile d'un
+ *    coup (chaque fenêtre écoutant pour elle-même).
  *
  * L'ADRESSE DU NAVIGATEUR se met à jour à l'ouverture (pushState vers
  * /tatoueur/nom — partage possible) : c'est la grille (GrilleTatoueurs)
@@ -71,6 +86,15 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  * arrivées directes (lien partagé, moteurs) : le référencement ne voit
  * que des pages.
  */
+
+/** COMBIEN DE FENÊTRES GÈLENT LE CORPS EN CE MOMENT — le compte du
+    module (nº 226-§5) : gel à la première, dégel à la dernière. */
+let fenetresQuiGelent = 0;
+
+/** LA PILE DES CLAVIERS — chaque fenêtre ouverte y pose son jeton ;
+    seule celle du DESSUS (le dernier jeton) répond aux touches. */
+const pileClavier: object[] = [];
+
 export function FenetreFiche({
   tatoueur,
   styleRecherche = "",
@@ -193,7 +217,13 @@ export function FenetreFiche({
   }, [n]);
   useEffect(() => {
     if (!ouverte) return;
+    //  LE JETON DE CETTE FENÊTRE dans la pile des claviers : les
+    //  touches n'agissent que si elle est LA DERNIÈRE OUVERTE — la
+    //  fenêtre du dessus quand plusieurs s'empilent (nº 226-§5).
+    const jeton = {};
+    pileClavier.push(jeton);
     const surTouche = (evenement: KeyboardEvent) => {
+      if (pileClavier[pileClavier.length - 1] !== jeton) return;
       if (evenement.key === "Escape") {
         surFermeture();
       } else if (evenement.key === "ArrowRight") {
@@ -211,15 +241,32 @@ export function FenetreFiche({
     // de la position DU CLIC (capturée par la grille : après le
     // pushState, le routeur déplace brièvement le défilement — le lire
     // ici donnerait n'importe quoi) — et on la rend à la fermeture.
+    //  ⚠️ LE GEL EST COMPTÉ (nº 226-§5) : quand des fenêtres
+    //  s'empilent, seule la PREMIÈRE gèle (le corps l'est déjà pour
+    //  les suivantes, à la même position) et seule la DERNIÈRE à
+    //  partir dégèle et rend le défilement — fermer la fenêtre du
+    //  dessus ne doit jamais rendre la page tant qu'une autre vit
+    //  dessous. Le drapeau `data-fenetre-fiche` suit le même compte.
     const position = positionGrille;
     const corps = document.body.style;
-    corps.position = "fixed";
-    corps.top = `-${position}px`;
-    corps.left = "0";
-    corps.right = "0";
-    corps.width = "100%";
+    fenetresQuiGelent += 1;
+    if (fenetresQuiGelent === 1) {
+      corps.position = "fixed";
+      corps.top = `-${position}px`;
+      corps.left = "0";
+      corps.right = "0";
+      corps.width = "100%";
+    }
+    //  Idempotent : la grille le pose déjà avant son pushState — mais
+    //  une fenêtre de base qui REVIENT (la pile au-dessus d'elle
+    //  vient de se fermer) doit le reposer elle-même.
+    document.documentElement.setAttribute("data-fenetre-fiche", "1");
     return () => {
       window.removeEventListener("keydown", surTouche);
+      const rang = pileClavier.indexOf(jeton);
+      if (rang !== -1) pileClavier.splice(rang, 1);
+      fenetresQuiGelent -= 1;
+      if (fenetresQuiGelent > 0) return;
       corps.position = "";
       corps.top = "";
       corps.left = "";
@@ -228,9 +275,9 @@ export function FenetreFiche({
       // « instant » : le site déclare un défilement doux global — sans
       // lui, la restitution serait une animation visible.
       window.scrollTo({ top: position, left: 0, behavior: "instant" });
-      // Le drapeau posé par la grille à l'ouverture (voir
-      // GrilleTatoueurs) : on le retire quand la fenêtre disparaît,
-      // quelle que soit la façon dont elle disparaît.
+      // Le drapeau posé à l'ouverture (par la grille ou par la pile) :
+      // on le retire quand la DERNIÈRE fenêtre disparaît, quelle que
+      // soit la façon dont elle disparaît.
       document.documentElement.removeAttribute("data-fenetre-fiche");
     };
   }, [ouverte, positionGrille, surFermeture]);

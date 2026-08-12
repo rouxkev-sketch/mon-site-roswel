@@ -314,25 +314,31 @@ export function ContenuFiche({
       lienEnLigne("tiktok", tatoueur.lien_tiktok, "TikTok", iconeFichier(ICONES_RESEAUX.tiktok, false)),
   ].filter(Boolean);
 
-  /** LES TROIS SECTIONS DE BADGES — Styles, Technique, Composition.
-      UN SEUL format ET UNE SEULE couleur de badge partout : les styles
-      ne portent plus de nuance rose, seul leur survol dit qu'ils se
-      cliquent. Un groupe vide n'affiche pas son titre. */
+  /**
+   * §2 (nº 226) — LES CINQ SECTIONS DE BADGES, DANS CET ORDRE
+   * ==================================================================
+   * STYLES, RENDU, TECHNIQUE, TYPES DE PROJETS, BESOINS PARTICULIERS
+   * — l'ordre et les mots sont ceux du propriétaire, à la lettre. Le
+   * RENDU remonte en deuxième position (il dit ce qu'on voit sur les
+   * photos, juste après ce qu'on tatoue), et « Techniques maîtrisées »
+   * redevient « TECHNIQUE ».
+   *
+   * ⚠️ LES TITRES SONT ÉCRITS EN CAPITALES PAR LA FEUILLE DE STYLE
+   * (`uppercase`, nº 222-§6) : ils se lisent donc « STYLES », « RENDU »
+   * … à l'écran, et restent lisibles tels quels dans le code.
+   *
+   * UN SEUL format ET UNE SEULE couleur de badge partout : les styles
+   * ne portent plus de nuance rose, seul leur survol dit qu'ils se
+   * cliquent. Un groupe VIDE ne rend rien du tout — ni titre, ni
+   * boîte, ni marge : c'est le `null` du `map` plus bas, et c'est
+   * pourquoi son absence ne laisse aucun espace.
+   */
   const groupesBadges: Array<{
     titre: string;
     slugs: string[];
     versPages?: boolean;
   }> = [
     { titre: "Styles", slugs: tatoueur.styles, versPages: true },
-    //  ⚠️ LES TITRES SONT CEUX DU PROPRIÉTAIRE (nº 222-§6) :
-    //  « Techniques maîtrisées », « Types de projets », « Besoins
-    //  particuliers ». « Technique » et « Besoins » disaient la
-    //  catégorie du formulaire, pas ce que le visiteur lit.
-    { titre: "Techniques maîtrisées", slugs: tatoueur.filtres_technique ?? [] },
-    { titre: "Types de projets", slugs: tatoueur.filtres_composition ?? [] },
-    // LES BESOINS — au même format que les deux autres : ce ne
-    // sont pas des goûts, mais ils se lisent au même endroit.
-    { titre: "Besoins particuliers", slugs: tatoueur.filtres_besoins ?? [] },
     // LE RENDU — le seul groupe que PERSONNE n'a coché : il se DÉDUIT
     // des tags des photos déposées (voir rendusDuPortfolio), tout
     // comme le filtre du moteur le lit. Un portfolio entièrement en
@@ -340,6 +346,11 @@ export function ContenuFiche({
     // aucune photo n'est taguée (avant la migration nº 31) n'affiche
     // pas la section du tout.
     { titre: "Rendu", slugs: rendusDuPortfolio(tatoueur.galerie) },
+    { titre: "Technique", slugs: tatoueur.filtres_technique ?? [] },
+    { titre: "Types de projets", slugs: tatoueur.filtres_composition ?? [] },
+    // LES BESOINS — au même format que les autres : ce ne sont pas
+    // des goûts, mais ils se lisent au même endroit.
+    { titre: "Besoins particuliers", slugs: tatoueur.filtres_besoins ?? [] },
   ];
 
   /** LA LIGNE DE SÉPARATION DES BLOCS — un gris TRÈS sombre, discret
@@ -349,13 +360,10 @@ export function ContenuFiche({
       des deux bords pendant que la photo, elle, touchait l'écran —
       un trait suspendu au milieu de rien. Elle ressort maintenant de
       ces marges (`-mx-4`) et les rend à son contenu (`px-4`) : le
-      trait traverse, le texte ne bouge pas d'un pixel. */
-  /** DEUX ADRESSES OU PLUS ? Le sélecteur « Adresse / Autre adresse »
-      s'affiche alors, et il REMPLACE la ligne de séparation — deux
-      traits l'un sur l'autre feraient un cadre. La règle est écrite
-      ici parce que c'est l'enveloppe qui sépare ses sections. */
-  const aPlusieursAdresses =
-    tatoueur.type_fiche !== "artiste" && (tatoueur.studios ?? []).length > 1;
+      trait traverse, le texte ne bouge pas d'un pixel.
+      ⚠️ ELLE PRÉCÈDE DÉSORMAIS TOUTES LES FICHES DE LIEU (nº 226-§3) :
+      le sélecteur « Adresse / Autre adresse », qui la remplaçait à
+      deux adresses ou plus, est supprimé — les adresses s'empilent. */
 
   /** LE PREMIER GROUPE DE BADGES REMPLI — le seul à porter une ligne
       de séparation (nº 222-§6) : les suivants ne se distinguent plus
@@ -507,25 +515,20 @@ export function ContenuFiche({
           {/* ==========================================================
               §4 et §5 — OÙ TRAVAILLE CETTE FICHE
               ==========================================================
-              UN LIEU montre ses ADRESSES (photo, adresse, horaires,
-              équipe) — avec le sélecteur « Adresse / Autre adresse »
-              quand il y en a plusieurs, et une simple ligne de
-              séparation sinon.
+              UN LIEU montre ses ADRESSES, empilées (nº 226-§3) : celle
+              de l'affiche (photo, adresse, horaires), puis chaque
+              autre adresse sur sa ligne, puis l'équipe — toujours
+              après toutes les adresses.
               UN ARTISTE montre ses PROFILS, dans l'ordre imposé
               (nº 222-§1g) : à domicile, en studio, en salon, guest.
               ⚠️ LA LIGNE DE SÉPARATION EST POSÉE ICI, jamais dans le
-              bloc : c'est l'enveloppe qui sépare ses sections, et le
-              sélecteur remplace le trait quand il s'affiche. */}
+              bloc : c'est l'enveloppe qui sépare ses sections. */}
           {tatoueur.type_fiche === "artiste" ? (
             <div className={`mt-10 pt-10 ${separation}`}>
               <BlocProfilsArtiste tatoueur={tatoueur} />
             </div>
           ) : (
-            <div
-              className={
-                aPlusieursAdresses ? "mt-10" : `mt-10 pt-10 ${separation}`
-              }
-            >
+            <div className={`mt-10 pt-10 ${separation}`}>
               <BlocAdressesFiche
                 tatoueur={tatoueur}
                 studioCourantId={studioCourant}

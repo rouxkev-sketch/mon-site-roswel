@@ -1,5 +1,9 @@
 import { COULEURS_SOMBRE } from "@/config/tatouage";
 import {
+  COOKIE_COLONNES,
+  expressionColonnes,
+} from "@/lib/colonnes-mosaique";
+import {
   AGE_MAXIMUM_MS,
   AGE_POSITION_MS,
   CLE_JOURNAL,
@@ -17,7 +21,18 @@ import {
  * n'existe. C'est le SEUL endroit d'où l'on peut agir sans que l'œil
  * voie quoi que ce soit bouger.
  *
- * IL FAIT QUATRE CHOSES, ET TOUTES POUR LA MÊME RAISON :
+ * IL FAIT CINQ CHOSES, ET TOUTES POUR LA MÊME RAISON :
+ *
+ * 0. LE NOMBRE DE COLONNES DE LA MOSAÏQUE, écrit dans un cookie
+ *    (nº 226-§1). Le serveur doit connaître ce nombre pour servir une
+ *    page de `colonnes × 6` cartes — sans quoi la dernière rangée est
+ *    incomplète —, et il rend le HTML avant qu'aucune ligne de
+ *    JavaScript n'ait tourné : le cookie est le seul canal. Il est
+ *    écrit ICI, et NULLE PART AILLEURS — surtout pas au
+ *    redimensionnement : c'est ce qui garantit qu'une taille de page
+ *    est décidée une seule fois par chargement et ne bouge plus de
+ *    toute la pagination. Voir src/lib/colonnes-mosaique.ts, qui porte
+ *    les paliers et dit ce que coûte la toute première visite.
  *
  * 1. L'APPAREIL et LE FOND ANTHRACITE sur <html> — déjà là depuis les
  *    passes 60 et 103.
@@ -93,6 +108,11 @@ export function scriptAvantPeinture(): string {
 var r=document.documentElement;
 r.dataset.appareil=matchMedia("(pointer: coarse)").matches?"mobile":"web";
 r.style.backgroundColor=${fond};
+/* 0. LE NOMBRE DE COLONNES, POUR LA PROCHAINE RÉPONSE DU SERVEUR
+   (nº 226-§1). Un an de validité : le repli ne sert qu'à la toute
+   première visite. samesite=lax : il part avec les navigations du
+   site, jamais avec une requête d'un autre domaine. */
+try{document.cookie=${JSON.stringify(COOKIE_COLONNES)}+"="+(${expressionColonnes()})+";path=/;max-age=31536000;samesite=lax"}catch(e){}
 try{history.scrollRestoration="manual"}catch(e){}
 try{
 var adresse=location.pathname+location.search;

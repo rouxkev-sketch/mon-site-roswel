@@ -10,6 +10,7 @@ import { BoutonPartageFiche } from "@/components/BoutonPartageFiche";
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
 import { ContenuFiche } from "@/components/ContenuFiche";
+import { PileFiches } from "@/components/PileFiches";
 import { galerieParStyles, ouvertureGalerie } from "@/lib/photo-tatoueur";
 import { ensembleDeLaPhoto, RENDU_PAR_DEFAUT } from "@/lib/photos-tatoueur";
 import type { Tatoueur } from "@/lib/tatoueurs";
@@ -237,6 +238,12 @@ export function FicheTatoueur({
   const Racine = apercu ? "div" : "main";
 
   return (
+    /*  LA PILE DES FICHES SUPERPOSÉES (nº 226-§5) : depuis cette page,
+        un membre d'équipe ou le salon d'un profil s'ouvre en FENÊTRE
+        par-dessus — web comme mobile — et le retour rend cette page,
+        à sa position de défilement. Inactive en aperçu (« Ma fiche ») :
+        les liens y restent des liens. */
+    <PileFiches actif={!apercu}>
     <Racine
       // En aperçu (« Ma fiche »), l'ESPACE fournit déjà le cadre
       // (largeur, marges latérales, marge du haut) : ne pas les
@@ -390,5 +397,6 @@ export function FicheTatoueur({
         </div>
       </div>
     </Racine>
+    </PileFiches>
   );
 }

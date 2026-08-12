@@ -10,6 +10,7 @@ import {
 import { usePathname } from "next/navigation";
 import { CarteTatoueur } from "@/components/CarteTatoueur";
 import { FenetreFiche } from "@/components/FenetreFiche";
+import { PileFiches } from "@/components/PileFiches";
 import {
   CLE_FENETRE_FICHE,
   type ContexteFenetreFiche,
@@ -276,11 +277,22 @@ export function GrilleTatoueurs({
   // après lui, le routeur peut déplacer brièvement le défilement.
   const [positionGrille, setPositionGrille] = useState(0);
 
+  /** COMBIEN DE FICHES SONT EMPILÉES PAR-DESSUS la fenêtre de base
+      (nº 226-§5) — remonté par PileFiches : un membre d'équipe ouvert
+      depuis la fenêtre change l'adresse, et la fenêtre de base ne
+      doit pas se fermer pour autant. */
+  const [profondeurPile, setProfondeurPile] = useState(0);
+
   // La fenêtre ne vit que si l'adresse est la sienne : le bouton
   // « précédent » (l'adresse redevient celle de la grille) ou une
   // recherche depuis la barre la referment sans autre mécanique.
+  //  ⚠️ SAUF quand des fiches sont EMPILÉES dessus (nº 226-§5) :
+  //  l'adresse est alors celle du dessus de la pile, et la fenêtre de
+  //  base reste montée dessous — son contenu, sa position de colonne
+  //  et son gel du corps l'attendent au retour.
   const visible =
-    ficheOuverte !== null && pathname === `/tatoueur/${ficheOuverte.slug}`;
+    ficheOuverte !== null &&
+    (pathname === `/tatoueur/${ficheOuverte.slug}` || profondeurPile > 0);
 
   /*  ⚠️ STABLE D'UN RENDU À L'AUTRE (nº 219-§1) : c'est ce qui permet
       aux cartes d'être mémorisées. Elle ne lit aucune valeur du rendu —
@@ -425,7 +437,12 @@ export function GrilleTatoueurs({
   }, []);
 
   return (
-    <>
+    /*  LA PILE DES FICHES SUPERPOSÉES (nº 226-§5) : depuis la fenêtre
+        de base, un membre d'équipe ou le salon d'un profil s'ouvre
+        PAR-DESSUS — c'est ce fournisseur qui porte ces fenêtres-là.
+        La mécanique propre de la fenêtre de base (reprise après
+        rechargement, clé d'ouverture) ne change pas d'une ligne. */
+    <PileFiches surProfondeur={setProfondeurPile}>
       <div
         aria-busy={estompee}
         // WEB : des interstices de 20 px sur les deux axes — les
@@ -523,6 +540,6 @@ export function GrilleTatoueurs({
         positionGrille={positionGrille}
         surFermeture={fermer}
       />
-    </>
+    </PileFiches>
   );
 }
