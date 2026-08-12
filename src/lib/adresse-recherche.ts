@@ -47,7 +47,24 @@
  */
 
 /** Les paramètres qui ne décrivent PAS une recherche. */
-const HORS_RECHERCHE = ["clair", "verre", "flou", "sans"];
+/**
+ * ⚠️ « disposition » ET « texte » ONT REJOINT LA LISTE (nº 212-§4).
+ * Ce sont des RÉGLAGES D'AFFICHAGE, pas des critères : la mosaïque
+ * montre les mêmes tatoueurs en deux colonnes ou en une. Les garder
+ * dans la clé fabriquait une clé par disposition — la position notée
+ * en pleine largeur ne se retrouvait donc plus si l'on revenait avec
+ * l'autre disposition, ou si le paramètre s'était perdu en route
+ * (§3). La position se range désormais sous LES SEULS CRITÈRES, et un
+ * retour la retrouve quelle que soit la façon de regarder.
+ */
+const HORS_RECHERCHE = [
+  "clair",
+  "verre",
+  "flou",
+  "sans",
+  "disposition",
+  "texte",
+];
 
 /** Vrai pour un paramètre de sonde ou de mesure. */
 function estUnReglage(nom: string): boolean {

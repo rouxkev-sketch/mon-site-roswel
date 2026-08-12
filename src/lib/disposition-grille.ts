@@ -39,6 +39,70 @@ const EVENEMENT = "yokofolio-disposition-grille-changee";
 /** Le paramètre d'adresse — écrit seulement quand il diffère du défaut. */
 export const PARAMETRE_DISPOSITION = "disposition";
 
+/**
+ * LE FILET DE LA VISITE (nº 212-§3)
+ * ==================================
+ * ⚠️ POURQUOI L'ADRESSE SEULE NE SUFFISAIT PAS. La bascule écrit
+ * l'adresse par `history.replaceState` — sans navigation, donc sans
+ * nouveau rendu (c'est tout l'intérêt : la mosaïque ne se recharge
+ * pas). Mais Next garde en cache le rendu qu'il a servi POUR L'ADRESSE
+ * D'ORIGINE : au retour depuis une fiche, il restitue ce rendu-là, où
+ * `affichage.disposition` vaut encore le défaut — et la disposition
+ * choisie était perdue.
+ * LE FILET : la préférence est aussi rangée dans le stockage de
+ * session. Au retour, si l'adresse ne dit rien, on la repose ET on la
+ * réécrit dans l'adresse. L'ADRESSE RESTE LA SOURCE quand elle parle —
+ * c'est elle qui fait rendre le bon HTML au premier coup (nº 203-§1b) ;
+ * le filet ne sert qu'à survivre au cache du routeur.
+ */
+const CLE_SESSION = "yokofolio-disposition-visite";
+
+function memoriser(voulue: DispositionGrille) {
+  try {
+    sessionStorage.setItem(CLE_SESSION, voulue);
+  } catch {
+    // Stockage refusé : la préférence vivra le temps de la page.
+  }
+}
+
+function memorisee(): DispositionGrille | null {
+  try {
+    const lue = sessionStorage.getItem(CLE_SESSION);
+    return lue === "une" || lue === "deux" ? lue : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * REMETTRE L'AFFICHAGE AU PAS APRÈS UNE NAVIGATION — l'adresse d'abord,
+ * la préférence de la visite à défaut. Appelée par l'accueil à chaque
+ * rendu servi (voir IndexTatoueurs).
+ */
+export function reprendreDisposition() {
+  const dansLAdresse = new URLSearchParams(window.location.search).has(
+    PARAMETRE_DISPOSITION
+  );
+  if (dansLAdresse) {
+    //  L'adresse parle : elle a toujours raison.
+    const voulue = depuisLAdresse();
+    valeur = voulue;
+    memoriser(voulue);
+    window.dispatchEvent(new Event(EVENEMENT));
+    return;
+  }
+  const retenue = memorisee();
+  //  Rien dans l'adresse, rien en mémoire : le défaut, et c'est juste.
+  if (!retenue || retenue === "deux") {
+    valeur = "deux";
+    window.dispatchEvent(new Event(EVENEMENT));
+    return;
+  }
+  //  La visite avait choisi : on repose, et on réécrit l'adresse.
+  valeur = "deux";
+  poserDisposition(retenue);
+}
+
 export type DispositionGrille = "deux" | "une";
 
 /** LA source de vérité entre deux relectures de l'adresse. */
@@ -92,6 +156,7 @@ export function poserDisposition(voulue: DispositionGrille) {
   if (lireDisposition() === voulue) return;
   valeur = voulue;
   ecrireDansLAdresse(voulue);
+  memoriser(voulue);
   window.dispatchEvent(new Event(EVENEMENT));
 }
 

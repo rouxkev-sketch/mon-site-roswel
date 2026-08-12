@@ -526,6 +526,23 @@ export function ligneMoteur(lieu: LieuAffichable): string {
   return villeEtPays(lieu, nomPaysMoteur(lieu));
 }
 
+/**
+ * §4bis · LA MÊME LIGNE, RESSERRÉE POUR LE SMARTPHONE (nº 212-§6)
+ *   « Austin, TX, USA » · « Lyon, France »
+ * ⚠️ LE PAYS N'EST ABRÉGÉ QUE LORSQU'UNE DIVISION S'ÉCRIT, et c'est
+ * tout le propos : « Austin, TX, États-Unis d'Amérique » ne tient pas
+ * sur la ligne d'une carte au doigt, alors que « Lyon, France » y tient
+ * très bien — abréger la France n'apporterait rien et rendrait le site
+ * télégraphique.
+ * ⚠️ AUCUNE ABRÉVIATION N'EST INVENTÉE ICI : on reprend `ABREGES_MOTEUR`,
+ * la table de la barre de recherche (« États-Unis » → « USA »), par
+ * `nomPaysMoteur`. Une deuxième table finirait par la contredire.
+ */
+export function ligneCarteMobile(lieu: LieuAffichable): string {
+  const abrege = divisionAffichee(lieu) !== null;
+  return villeEtPays(lieu, abrege ? nomPaysMoteur(lieu) : nomPaysAffiche(lieu));
+}
+
 /** Le corps commun des deux : ville, division si le pays l'écrit, pays
     — sous le nom qu'on lui donne. */
 function villeEtPays(lieu: LieuAffichable, pays: string): string {

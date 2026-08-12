@@ -131,7 +131,7 @@ if(nav==="navigate"&&!attendue)return;
 var p=new URLSearchParams(location.search);var noms=[];
 p.forEach(function(v,n){noms.push(n)});
 for(var i=0;i<noms.length;i++){var n=noms[i];
-if(n.indexOf("sonde")===0||n==="clair"||n==="verre"||n==="flou"||n==="sans")p.delete(n)}
+if(n.indexOf("sonde")===0||n==="clair"||n==="verre"||n==="flou"||n==="sans"||n==="disposition"||n==="texte")p.delete(n)}
 p.sort();var q=p.toString();
 var cle=location.pathname+(q?"?"+q:"");
 var note=jour(${prefixe}+cle,localStorage);

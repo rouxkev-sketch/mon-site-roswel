@@ -25,6 +25,51 @@ const EVENEMENT = "yokofolio-vue-phototheque-changee";
 /** Le paramètre d'adresse — écrit seulement quand le texte est masqué. */
 export const PARAMETRE_TEXTE = "texte";
 
+/** LE FILET DE LA VISITE (nº 212-§3) — le JUMEAU de celui de
+    lib/disposition-grille, où tout est expliqué : l'adresse reste la
+    source, le stockage de session ne sert qu'à survivre au rendu que
+    le routeur restitue depuis son cache au retour. */
+const CLE_SESSION = "yokofolio-texte-visite";
+
+function memoriser(voulue: boolean) {
+  try {
+    sessionStorage.setItem(CLE_SESSION, voulue ? "sans" : "avec");
+  } catch {
+    // Stockage refusé : la préférence vivra le temps de la page.
+  }
+}
+
+function memorisee(): boolean | null {
+  try {
+    const lue = sessionStorage.getItem(CLE_SESSION);
+    return lue === "sans" ? true : lue === "avec" ? false : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Remettre la vue au pas après une navigation — l'adresse d'abord, la
+    préférence de la visite à défaut. */
+export function reprendrePhototheque() {
+  const dansLAdresse = new URLSearchParams(window.location.search).has(
+    PARAMETRE_TEXTE
+  );
+  if (dansLAdresse) {
+    valeur = depuisLAdresse();
+    memoriser(valeur);
+    window.dispatchEvent(new Event(EVENEMENT));
+    return;
+  }
+  const retenue = memorisee();
+  if (!retenue) {
+    valeur = false;
+    window.dispatchEvent(new Event(EVENEMENT));
+    return;
+  }
+  valeur = false;
+  poserPhototheque(true);
+}
+
 /** LA source de vérité entre deux relectures de l'adresse. */
 let valeur: boolean | null = null;
 
@@ -71,6 +116,7 @@ export function poserPhototheque(voulue: boolean) {
   if (lirePhototheque() === voulue) return;
   valeur = voulue;
   ecrireDansLAdresse(voulue);
+  memoriser(voulue);
   window.dispatchEvent(new Event(EVENEMENT));
 }
 

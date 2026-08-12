@@ -7,6 +7,7 @@ import {
   TEXTES_TATOUAGE,
 } from "@/config/tatouage";
 import { lieuDepuisParametres } from "@/lib/geocodage";
+import { PLAFOND_GALERIE } from "@/lib/photos-tatoueur";
 import {
   criteresDeLieu,
   filtresConnus,
@@ -116,6 +117,16 @@ const chargerAccueil = cache(async (requete: string) => {
     ...criteresDeLieu(lieu, rayonKm),
     exclure,
     limite: CARTES_PAR_PAGE * page,
+    //  ⚠️ PLUS D'UNE PHOTO PAR CARTE (nº 212-§2). La mosaïque n'en
+    //  recevait qu'UNE (`sansGalerieInutile`, migration nº 32) : la
+    //  carte ne pouvait donc jamais faire défiler quoi que ce soit —
+    //  le carrousel de la nº 211-§5 ne s'affichait chez personne. On
+    //  demande désormais la galerie de la carte, bornée au plafond
+    //  d'un ensemble (vingt photos, lib/photos-tatoueur).
+    //  ⚠️ CE SONT DES LIGNES, PAS DES IMAGES : rien n'est téléchargé de
+    //  plus à l'affichage — la carte ne monte que sa première photo,
+    //  et les suivantes au premier geste (nº 211-§5).
+    photosMax: PLAFOND_GALERIE,
   });
   return { resultat, style, nature, lieu, rayonKm, exclure, page };
 });

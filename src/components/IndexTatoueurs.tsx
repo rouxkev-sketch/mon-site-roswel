@@ -25,10 +25,10 @@ import { useUtilisateur } from "@/lib/use-utilisateur";
 import { ContexteAffichageServi } from "@/components/AffichageMosaique";
 import {
   lireDisposition,
-  poserDisposition,
+  reprendreDisposition,
   type DispositionGrille,
 } from "@/lib/disposition-grille";
-import { lirePhototheque, poserPhototheque } from "@/lib/vue-phototheque";
+import { lirePhototheque, reprendrePhototheque } from "@/lib/vue-phototheque";
 import { memoriserRechercheTatouage } from "@/lib/derniere-recherche";
 
 /**
@@ -184,15 +184,19 @@ export function IndexTatoueurs({
     memoriserRechercheTatouage(criteresServis);
   }, [cleServie, criteresServis]);
 
-  /** L'ADRESSE A TOUJOURS LE DERNIER MOT SUR L'AFFICHAGE (nº 203-§1b).
-      Une navigation du routeur peut changer l'adresse SANS passer par
-      les boutons de bascule (le moteur d'une autre page, un retour) :
-      on remet alors les magasins au pas de ce que le serveur a servi.
-      `poser…` ne fait rien quand la valeur est déjà la bonne — le cas
-      de toutes les bascules ordinaires. */
+  /**
+   * L'AFFICHAGE EST REMIS AU PAS À CHAQUE RENDU SERVI (nº 212-§3).
+   * ⚠️ ON NE REPOSE PLUS CE QUE LE SERVEUR A RENDU, on relit L'ADRESSE
+   * COURANTE — et c'est la correction. Au retour depuis une fiche, le
+   * routeur restitue le rendu qu'il avait mis en cache pour l'adresse
+   * D'ORIGINE : `affichage.disposition` y vaut encore le défaut, et
+   * l'ancien effet écrasait donc la disposition choisie. La reprise
+   * lit l'adresse, puis, si celle-ci ne dit rien, la préférence de la
+   * visite (voir lib/disposition-grille).
+   */
   useEffect(() => {
-    poserDisposition(affichage.disposition);
-    poserPhototheque(affichage.phototheque);
+    reprendreDisposition();
+    reprendrePhototheque();
   }, [affichage.disposition, affichage.phototheque]);
 
   /**

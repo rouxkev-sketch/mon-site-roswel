@@ -144,11 +144,12 @@ export function BoutonCoeurPhoto({
 
   const gabarit =
     variante === "carte"
-      ? //  ⚠️ AGRANDI (nº 211-§3) : 44 px de cible — le minimum tactile
-        //  reconnu — au lieu de 36. Sur une mosaïque d'images, le cœur
-        //  est le seul geste possible sans ouvrir une fiche : il doit
-        //  se voir et s'atteindre.
-        "h-11 w-11"
+      ? //  ⚠️ 40 px de cible, glyphe 24 (nº 212-§5) : agrandi en nº 211
+        //  (36 → 44), il pesait trop lourd sur une carte de deux
+        //  colonnes, qui ne fait que 190 px de large. Sur une mosaïque
+        //  d'images, le cœur reste le seul geste possible sans ouvrir
+        //  une fiche : il doit se voir et s'atteindre, sans dominer.
+        "h-10 w-10"
       : //  ⚠️ LE MÊME GABARIT SUR LES DEUX ÉCRANS (nº 208-§3) : 48 px
         //  de cible, le standard tactile de la nº 198-§2. Le cœur du
         //  web était resté à 40 — trop petit sur une photo qui occupe
@@ -193,7 +194,7 @@ export function BoutonCoeurPhoto({
                   focus-visible:outline-primaire ${pulse ? "rw-coeur-anime" : ""}`}
     >
       <IconeCoeur
-        taille={variante === "carte" ? 26 : 30}
+        taille={variante === "carte" ? 24 : 30}
         classe={`[filter:drop-shadow(0_1px_2px_rgba(0,0,0,0.55))] ${
           enregistree
             ? //  ⚠️ BLANC PLEIN une fois enregistré (nº 141-6B) — plus

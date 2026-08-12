@@ -17,7 +17,7 @@ import {
   vignetteDe,
 } from "@/lib/photos-tatoueur";
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
-import { ligneCarte } from "@/lib/adresse";
+import { ligneCarte, ligneCarteMobile } from "@/lib/adresse";
 import { pincementRecent, usePincement } from "@/components/ZoomPincement";
 import type { Tatoueur } from "@/lib/tatoueurs";
 //  ⚠️ TEMPORAIRE (nº 175-§6) — la sonde-journal note l'ouverture d'une
@@ -136,6 +136,15 @@ export function CarteTatoueur({
     uneColonne && !phototheque && photosDeLaCarte.length > 1;
   /** La photo regardée DANS la carte — le carrousel la possède. */
   const [indicePhoto, setIndicePhoto] = useState(0);
+
+  /** Le lieu de la fiche, tel que les deux écritures de la ligne le
+      lisent (voir plus bas, nº 212-§6). */
+  const lieuDeLaCarte = {
+    ville: tatoueur.ville_nom,
+    region: tatoueur.region,
+    pays: tatoueur.pays,
+    code_pays: tatoueur.code_pays,
+  };
 
   /** LE ZOOM AU PINCEMENT (vrais mobiles) : la carte écoute, la photo
       grossit — voir ZoomPincement.tsx pour la mécanique. */
@@ -379,7 +388,22 @@ export function CarteTatoueur({
             carte, et n'ouvre donc jamais la fiche par erreur.
             ⚠️ C'EST LE SEUL ÉLÉMENT QUE LA PHOTOTHÈQUE CONSERVE. */}
         {photoEnregistrable && (
-          <div className="absolute bottom-2 right-2">
+          /*  ⚠️ LE COIN SE MESURE AU GLYPHE, PAS À LA BOÎTE
+              (nº 212-§5). Le bouton porte sa zone tactile tout autour
+              du cœur : posé à 8 px du bord, c'est le CŒUR qui se
+              retrouve à 16 px — il flottait donc trop haut dans son
+              angle. Le décalage compense la moitié de cet ourlet
+              (`-mb-1 -mr-1` en deux colonnes) : le glyphe retrouve le
+              même air que les autres coins de l'interface, alors que
+              la cible, elle, ne perd pas un pixel. En pleine largeur,
+              le cœur est celui de la fiche et garde sa place. */
+          <div
+            className={
+              uneColonne
+                ? "absolute bottom-2 right-2"
+                : "absolute bottom-2 right-2 -mb-1 -mr-1"
+            }
+          >
             <BoutonCoeurPhoto
               photoId={photoEnregistrable.id}
               //  ⚠️ LE GABARIT SUIT LA CARTE (nº 211-§3 et §4) : en
@@ -521,17 +545,27 @@ export function CarteTatoueur({
               nº 114) — avec le code de l'État pour les pays qui
               l'écrivent (« Miami, FL, États-Unis »). La règle du lieu
               vit dans lib/adresse, jamais ici. */}
-          {[
-            libelleTypeFiche(tatoueur.type_fiche, tatoueur.etablissement),
-            ligneCarte({
-              ville: tatoueur.ville_nom,
-              region: tatoueur.region,
-              pays: tatoueur.pays,
-              code_pays: tatoueur.code_pays,
-            }),
-          ]
-            .filter(Boolean)
-            .join(" · ")}
+          {/*  ⚠️ DEUX ÉCRITURES DU MÊME LIEU (nº 212-§6) : au doigt, le
+               pays s'abrège dès qu'un état s'écrit (« Austin, TX,
+               USA ») — sinon la ligne déborde. Sur le web, la place ne
+               manque pas : le pays reste en toutes lettres. Les deux
+               sont posées, une seule s'affiche. */}
+          <span className="mobile:hidden">
+            {[
+              libelleTypeFiche(tatoueur.type_fiche, tatoueur.etablissement),
+              ligneCarte(lieuDeLaCarte),
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </span>
+          <span className="hidden mobile:inline">
+            {[
+              libelleTypeFiche(tatoueur.type_fiche, tatoueur.etablissement),
+              ligneCarteMobile(lieuDeLaCarte),
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </span>
         </p>
         </div>
       </div>
