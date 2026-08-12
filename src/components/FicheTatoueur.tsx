@@ -103,8 +103,17 @@ export function FicheTatoueur({
       tient compte du RENDU cherché (voir `ouvertureGalerie`). */
   const ouverture = useMemo(
     () =>
-      ouvertureGalerie(galerieParStyles(tatoueur), styleInitial, renduInitial),
-    [tatoueur, styleInitial, renduInitial]
+      //  ⚠️ LES TROIS CRITÈRES, PAS DEUX (nº 217-§3) : la catégorie
+      //  cherchée décide elle aussi du style ouvert et de la photo
+      //  d'ouverture. Sans elle, « flash + aquarelle » ouvrait sur la
+      //  première aquarelle — une RÉALISATION.
+      ouvertureGalerie(
+        galerieParStyles(tatoueur),
+        styleInitial,
+        renduInitial,
+        natureInitiale
+      ),
+    [tatoueur, styleInitial, renduInitial, natureInitiale]
   );
   const groupes = ouverture.groupes;
 
@@ -118,26 +127,41 @@ export function FicheTatoueur({
       trois tags réunis — style, catégorie, rendu — ne peuvent désigner
       qu'une série, et c'est elle qu'on vient voir (c'est le lien que
       « Ma sélection » écrit). */
+  /*  ⚠️ LA CATÉGORIE SUFFIT À RESTREINDRE (nº 217-§3). Il fallait
+      auparavant LES TROIS tags pour que le carrousel se limite à une
+      série ; une recherche « flash + aquarelle », qui n'en porte que
+      deux, laissait donc défiler les réalisations avec les flashs.
+      `rendu` vide veut désormais dire « tous les rendus » : on montre
+      ce qu'on est venu voir, sans jamais montrer autre chose. */
   const [serieOuverte, setSerieOuverte] = useState<{
     nature: string;
     rendu: string;
   } | null>(
-    styleInitial && natureInitiale && renduInitial
-      ? { nature: natureInitiale, rendu: renduInitial }
-      : null
+    natureInitiale ? { nature: natureInitiale, rendu: renduInitial } : null
   );
-  /** L'INDICE de la photo affichée, DANS ce style. */
-  const [indicePhoto, setIndicePhoto] = useState(ouverture.indice);
+  /** L'INDICE de la photo affichée, DANS la série montrée. Une série
+      restreinte commence à sa première photo — elle répond déjà à tout
+      ce qui a été cherché. */
+  const [indicePhoto, setIndicePhoto] = useState(
+    natureInitiale ? 0 : ouverture.indice
+  );
 
   const groupeAffiche =
     groupes.find((groupe) => groupe.slug === styleAffiche) ?? groupes[0];
-  const photosDuCarrousel = serieOuverte
-    ? (groupeAffiche?.photos ?? []).filter(
+  const photosDuStyleEntier = groupeAffiche?.photos ?? [];
+  const photosRestreintes = serieOuverte
+    ? photosDuStyleEntier.filter(
         (photo) =>
           photo.nature === serieOuverte.nature &&
-          (photo.rendu ?? RENDU_PAR_DEFAUT) === serieOuverte.rendu
+          (!serieOuverte.rendu ||
+            (photo.rendu ?? RENDU_PAR_DEFAUT) === serieOuverte.rendu)
       )
-    : (groupeAffiche?.photos ?? []);
+    : photosDuStyleEntier;
+  //  UN CARROUSEL VIDE N'EXISTE PAS : si ce style n'a rien dans la
+  //  série demandée (on a changé de style depuis les vignettes), on
+  //  montre le style entier plutôt qu'une fiche sans image.
+  const photosDuCarrousel =
+    photosRestreintes.length > 0 ? photosRestreintes : photosDuStyleEntier;
 
   /** LA PHOTO SOUS LES YEUX — celle que le cœur enregistre. Elle suit
       le carrousel : changer de photo change ce qu'on enregistre, et le
@@ -342,6 +366,10 @@ export function FicheTatoueur({
             studioCourant={studioCourant}
             demonstration={demonstration}
             apercu={apercu}
+            //  L'onglet « Portfolio » s'ouvre sur ce qu'on cherchait
+            //  (nº 217-§3), pas sur « Réalisations · Noir et gris ».
+            natureCherchee={natureInitiale}
+            renduCherche={renduInitial}
             suiviAuDepart={suiviAuDepart}
             surSerieChoisie={(serie) => {
               setStyleAffiche(serie.style);

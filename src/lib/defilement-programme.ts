@@ -110,8 +110,41 @@ function lever(delai: number) {
 const DUREE_DOUCE_MS = 480;
 let animationEnCours = 0;
 
+/**
+ * ⚠️ CE QUI S'ACCUMULAIT, ET QUI FIGEAIT LE PORTFOLIO (nº 217-§4)
+ * ==================================================================
+ * LE DÉFAUT. Chaque appel posait TROIS choses qui devaient être
+ * reprises à la fin du mouvement :
+ *   · DEUX ÉCOUTEURS sur `window` (`touchstart`, `wheel`), qui servent
+ *     à interrompre l'animation si un doigt intervient ;
+ *   · UNE RÉSERVE DE HAUTEUR sur `<html>` (`min-height`), le temps que
+ *     la cible soit atteignable ;
+ *   · LE DRAPEAU « ce n'est pas un geste » sur `<html>`.
+ * Or un nouvel appel se contentait de `cancelAnimationFrame` : la
+ * boucle précédente ne tournait plus, donc SA FIN N'ARRIVAIT JAMAIS —
+ * ses deux écouteurs restaient posés pour toujours, et sa réserve avec
+ * eux. Pire : le nouvel appel lisait `min-height` pour le restituer
+ * plus tard, et lisait donc LA RÉSERVE DE L'ANIMATION AVORTÉE, qu'il
+ * reposait à son arrivée. Le document gardait ainsi une hauteur
+ * fantôme de plusieurs milliers de pixels, définitivement.
+ * Dans le portfolio, où chaque changement d'onglet appelle cette
+ * fonction, on empile deux écouteurs par geste — l'appareil finit par
+ * ne plus répondre, et la page défile dans un vide qui n'existe pas.
+ *
+ * LA RÈGLE MAINTENANT : une animation en cours est TERMINÉE avant
+ * qu'une autre commence — écouteurs retirés, réserve rendue, image
+ * annulée. Il ne peut donc jamais y en avoir deux, ni une seule qui
+ * traîne. `finirAnimation` est le SEUL chemin de sortie, et il est
+ * idempotent.
+ */
+let finirAnimation: (() => void) | null = null;
+
 export function defilerEnDouceur(cible: number): void {
   if (typeof window === "undefined") return;
+  //  L'animation précédente est close pour de bon AVANT qu'on lise
+  //  quoi que ce soit du document : sa réserve est déjà rendue, la
+  //  hauteur qu'on s'apprête à lire est donc la vraie.
+  finirAnimation?.();
   const depart = window.scrollY;
   const distance = cible - depart;
   document.documentElement.dataset[MARQUEUR] = "1";
@@ -147,7 +180,10 @@ export function defilerEnDouceur(cible: number): void {
   ) {
     window.scrollTo({ top: cible, left: 0, behavior: "instant" });
     //  La réserve tombe une image plus tard : le temps que la position
-    //  soit prise en compte, jamais avant.
+    //  soit prise en compte, jamais avant. Un appel qui surviendrait
+    //  dans cet intervalle la rend d'abord (nº 217-§4) — sans quoi il
+    //  la lirait comme « la hauteur d'origine » et la reposerait.
+    finirAnimation = relacher;
     requestAnimationFrame(relacher);
     lever(FENETRE_MS);
     return;
@@ -161,12 +197,31 @@ export function defilerEnDouceur(cible: number): void {
   window.addEventListener("touchstart", interrompre, { passive: true });
   window.addEventListener("wheel", interrompre, { passive: true });
 
+  /** LE SEUL CHEMIN DE SORTIE — appelé à l'arrivée, à l'interruption
+      par un doigt, ou par l'appel suivant. Idempotent : le repasser ne
+      retire rien deux fois et ne rend aucune réserve étrangère. */
+  let close = false;
+  const clore = (differerLaReserve: boolean) => {
+    if (close) return;
+    close = true;
+    cancelAnimationFrame(animationEnCours);
+    window.removeEventListener("touchstart", interrompre);
+    window.removeEventListener("wheel", interrompre);
+    //  À l'arrivée, la réserve tombe une image plus tard (le temps que
+    //  la position soit prise en compte) ; dans tous les autres cas,
+    //  tout de suite — on ne laisse rien derrière soi.
+    if (differerLaReserve) requestAnimationFrame(relacher);
+    else relacher();
+  };
+  //  ⚠️ ON NE REMET PAS `finirAnimation` À `null` : une fois close,
+  //  cette fermeture ne fait plus rien (`close`), et le prochain appel
+  //  la remplacera. Un état de moins à tenir juste.
+  finirAnimation = () => clore(false);
+
   const debut = performance.now();
   const avancer = (maintenant: number) => {
     if (annulee) {
-      window.removeEventListener("touchstart", interrompre);
-      window.removeEventListener("wheel", interrompre);
-      relacher();
+      clore(false);
       lever(0);
       return;
     }
@@ -183,9 +238,7 @@ export function defilerEnDouceur(cible: number): void {
       animationEnCours = requestAnimationFrame(avancer);
       return;
     }
-    window.removeEventListener("touchstart", interrompre);
-    window.removeEventListener("wheel", interrompre);
-    requestAnimationFrame(relacher);
+    clore(true);
     lever(FENETRE_MS);
   };
   animationEnCours = requestAnimationFrame(avancer);

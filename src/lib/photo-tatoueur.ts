@@ -251,39 +251,89 @@ export function galerieParStyles(tatoueur: {
  * =============================================================
  * 1. UNE RECHERCHE PAR STYLE → ce style, et sa première photo. C'est
  *    la continuité exacte de la carte cliquée ;
- * 2. UNE RECHERCHE PAR RENDU (noir et gris, ou couleur) → une photo
- *    QUI CORRESPOND. Le style cherché garde la main s'il y en avait
- *    un ; sinon on ouvre le premier style qui en possède une ;
- * 3. NI L'UN NI L'AUTRE → le premier style de la fiche, première
- *    photo.
+ * 2. UNE RECHERCHE PAR CATÉGORIE ou PAR RENDU → une photo QUI
+ *    CORRESPOND. Le style cherché garde la main s'il y en avait un ;
+ *    sinon on ouvre le premier style qui en possède une ;
+ * 3. RIEN DE TEL → le premier style de la fiche, première photo.
+ *
+ * ⚠️ LA CATÉGORIE MANQUAIT ICI, ET C'EST TOUTE LA CAUSE (nº 217-§3).
+ * ==================================================================
+ * La nº 216 a fait descendre la catégorie jusqu'à la CARTE ; le
+ * carrousel de la fiche, lui, ne la recevait toujours pas. Chercher
+ * « flash + aquarelle » puis ouvrir la fiche donnait donc la première
+ * photo D'AQUARELLE — une réalisation. La carte disait une chose, la
+ * fiche en montrait une autre, à un clic d'intervalle.
+ * Cette fonction est LE point de passage des deux enveloppes (la page
+ * `FicheTatoueur` et la fenêtre `FenetreFiche`) : la corriger ici les
+ * corrige toutes les deux, et interdit qu'une troisième enveloppe
+ * réinvente la règle.
+ *
+ * LES TROIS CRITÈRES SE HIÉRARCHISENT COMME DANS `photoChoisie` — la
+ * carte et la fiche appliquent ainsi la MÊME cascade, ce qui est la
+ * seule façon de garantir qu'elles montrent la même image.
  */
 export function ouvertureGalerie(
   groupes: StyleGalerie[],
   styleCherche: string,
-  renduCherche: string
+  renduCherche: string,
+  /** LA CATÉGORIE CHERCHÉE — « tatouage » ou « flash ». Vide : on n'a
+      pas cherché par catégorie, et elle ne départage rien. */
+  natureCherchee = ""
 ): { groupes: StyleGalerie[]; style: string; indice: number } {
-  let ordonnes = ordonnerParStyle(groupes, styleCherche);
-  const aLeRendu = (groupe: StyleGalerie) =>
-    Boolean(renduCherche) &&
-    groupe.photos.some((photo) => photo.rendu === renduCherche);
+  /** Cette photo répond-elle à ce qui a été cherché ? Un critère non
+      demandé ne dit jamais non. */
+  const repond = (photo: PhotoGalerie) =>
+    (!natureCherchee || photo.nature === natureCherchee) &&
+    (!renduCherche || photo.rendu === renduCherche);
 
-  // Rendu cherché SANS style : on ouvre le premier style qui en a une.
-  if (renduCherche && !styleCherche) {
-    const rang = ordonnes.findIndex(aLeRendu);
+  let ordonnes = ordonnerParStyle(groupes, styleCherche);
+  const critereDePhoto = Boolean(natureCherchee || renduCherche);
+
+  //  Catégorie ou rendu cherché SANS style : on ouvre le premier style
+  //  qui possède une photo répondant aux deux.
+  if (critereDePhoto && !styleCherche) {
+    const rang = ordonnes.findIndex((groupe) => groupe.photos.some(repond));
     if (rang > 0) {
       ordonnes = [ordonnes[rang], ...ordonnes.filter((_, i) => i !== rang)];
     }
   }
 
   const tete = ordonnes[0];
-  const indice =
-    tete && renduCherche
-      ? Math.max(
-          0,
-          tete.photos.findIndex((photo) => photo.rendu === renduCherche)
-        )
-      : 0;
-  return { groupes: ordonnes, style: tete?.slug ?? "", indice };
+  return {
+    groupes: ordonnes,
+    style: tete?.slug ?? "",
+    indice: tete ? rangDOuverture(tete, repond, natureCherchee, renduCherche) : 0,
+  };
+}
+
+/**
+ * DANS LE STYLE OUVERT, SUR QUELLE PHOTO ON TOMBE — la cascade est
+ * celle de `photoChoisie`, et c'est ce qui garantit que la carte et la
+ * fiche montrent LA MÊME image :
+ *  1. la première photo qui répond aux DEUX critères demandés ;
+ *  2. à défaut, la première de la CATÉGORIE cherchée — elle passe
+ *     avant le rendu, c'est la question posée en premier dans le menu
+ *     « Explorer » ;
+ *  3. à défaut, la première du rendu cherché ;
+ *  4. à défaut, la première du style — la vitrine du tatoueur.
+ */
+function rangDOuverture(
+  groupe: StyleGalerie,
+  repond: (photo: PhotoGalerie) => boolean,
+  natureCherchee: string,
+  renduCherche: string
+): number {
+  if (!natureCherchee && !renduCherche) return 0;
+  const rangs = [
+    groupe.photos.findIndex(repond),
+    natureCherchee
+      ? groupe.photos.findIndex((photo) => photo.nature === natureCherchee)
+      : -1,
+    renduCherche
+      ? groupe.photos.findIndex((photo) => photo.rendu === renduCherche)
+      : -1,
+  ];
+  return rangs.find((rang) => rang >= 0) ?? 0;
 }
 
 /**

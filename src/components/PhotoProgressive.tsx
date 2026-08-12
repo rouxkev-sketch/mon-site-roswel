@@ -17,15 +17,17 @@ import { PHOTO_MINIATURE, PHOTO_PORTFOLIO } from "@/config/tatouage";
  *     cadrage est EXACTEMENT celui de la grande (elles sont découpées
  *     ensemble — voir RecadreurPhoto) ;
  *  2. LA PLEINE RÉSOLUTION ENSUITE, et SEULEMENT pour la photo qu'on
- *     REGARDE (`pleineResolution`). Elle se fond par-dessus dès
- *     qu'elle est prête ;
+ *     REGARDE (`pleineResolution`). Elle se pose par-dessus dès
+ *     qu'elle est prête, SANS AUCUNE TRANSITION (nº 217-§5) : deux
+ *     images superposées au pixel près n'ont rien à se fondre, et le
+ *     moindre fondu se voit — c'est lui qui scintillait ;
  *  3. UNE FOIS CHARGÉE, ELLE RESTE. Revenir en arrière dans le
  *     carrousel ne retélécharge rien.
  *
  * LE CARROUSEL, LUI, décide QUELLES photos existent à l'écran : la
- * courante et ses deux voisines. Les autres n'ont même pas de balise
- * <img> — donc aucune requête. C'est la deuxième moitié de la tenue
- * en charge, et elle vit dans CarrouselPortfolio.
+ * courante et ses DEUX voisines de chaque côté. Les autres n'ont même
+ * pas de balise <img> — donc aucune requête. C'est la deuxième moitié
+ * de la tenue en charge, et elle vit dans CarrouselPortfolio.
  *
  * Les images sont servies telles quelles (URL de stockage ou SVG de
  * démonstration) : `next/image` n'apporterait rien ici — la découpe et
@@ -50,7 +52,6 @@ export function PhotoProgressive({
       le défilement (`loading="eager"`). */
   prioritaire?: boolean;
 }) {
-  const [nette, setNette] = useState(false);
   /** Une fois demandée, la grande image RESTE montée : repasser devant
       la photo ne relance aucun téléchargement. */
   const [demandee, setDemandee] = useState(pleineResolution);
@@ -64,7 +65,6 @@ export function PhotoProgressive({
     // Image différente : on repart du flou.
     setUrlPrecedente(url);
     setDemandee(pleineResolution);
-    setNette(false);
   } else if (pleineResolution && !demandee) {
     setDemandee(true);
   }
@@ -114,10 +114,22 @@ export function PhotoProgressive({
           decoding="async"
           width={PHOTO_PORTFOLIO.largeur}
           height={PHOTO_PORTFOLIO.hauteur}
-          onLoad={() => setNette(true)}
-          className={`${classe} ${
-            memeImage || nette ? "opacity-100" : "opacity-0"
-          } transition-opacity duration-300`}
+          /*  ⚠️ PLUS AUCUNE TRANSITION D'OPACITÉ (nº 217-§5) — c'est le
+              dernier reste du fondu que la nº 210 croyait avoir
+              supprimé, et c'est lui qui a ramené le scintillement.
+              Il se déclenchait PILE au moment où la photo s'immobilise
+              (l'indice change, cette photo devient « celle qu'on
+              regarde », la pleine résolution est demandée, l'image
+              naît à `opacity-0` puis monte en 300 ms) : quelque chose
+              apparaissait donc brutalement à l'arrêt, exactement comme
+              décrit.
+              CE QUI LA REMPLACE : rien. Une image qui n'a pas fini de
+              charger ne peint RIEN — la miniature, immobile dessous,
+              reste seule visible ; quand la grande est prête, elle la
+              recouvre exactement, au pixel près (même découpe, même
+              cadrage). Il n'y a plus aucun instant où l'on voit deux
+              images à la fois, donc plus rien à faire scintiller. */
+          className={classe}
         />
       )}
     </>

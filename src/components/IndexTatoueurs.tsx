@@ -361,16 +361,26 @@ export function IndexTatoueurs({
 
         {resteAVoir && (
           <div className="mt-10 flex flex-col items-center gap-2">
+            {/*  LA CHARTE DES BOUTONS (nº 217-§7) : « Voir plus » est
+                 une action INTERMÉDIAIRE — elle prolonge la page, elle
+                 ne la conclut pas. Donc une CAPSULE À SA MESURE, en
+                 gris relevé, SANS contour et SANS rose plein (le rose
+                 plein appartient à l'action finale d'une page). Le
+                 survol emprunte au rose la seule chose qu'il ait le
+                 droit de prendre : un voile et la couleur du texte —
+                 exactement le bouton « Ajouter » de LienLibre, d'où
+                 cette robe est reprise sans y changer une classe. */}
             <button
               type="button"
               onClick={voirPlus}
               disabled={enTransition}
-              className="inline-flex items-center justify-center rounded-full px-6 min-h-[46px]
-                         border border-sombre-bordure bg-sombre-carte text-[15px]
-                         text-sombre-texte hover:border-primaire hover:text-primaire
-                         disabled:opacity-60 transition-colors"
+              className="inline-flex items-center justify-center rounded-full
+                         bg-sombre-eleve px-5 min-h-[42px] text-[14px] font-semibold
+                         text-sombre-texte transition-colors
+                         hover:bg-primaire/15 hover:text-primaire
+                         disabled:opacity-60"
             >
-              {enTransition ? "Chargement…" : "Voir plus de tatoueurs"}
+              {enTransition ? "Chargement…" : "Voir plus de portfolios"}
             </button>
             <p className="text-[13px] text-sombre-texte-doux">
               {visibles.length} sur {total}

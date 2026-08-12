@@ -126,8 +126,25 @@ export function usePincement({
     element.addEventListener("touchmove", bloquerDefilement, {
       passive: false,
     });
-    return () => element.removeEventListener("touchmove", bloquerDefilement);
-    // La ref est stable d'un rendu à l'autre.
+    return () => {
+      element.removeEventListener("touchmove", bloquerDefilement);
+      /**
+       * ⚠️ UN PINCEMENT NE SURVIT PAS À SON COMPOSANT (nº 217-§4)
+       * ----------------------------------------------------------------
+       * Cette enveloppe n'est montée QUE sur la photo regardée
+       * (nº 216-§3) : elle disparaît donc dès que le carrousel change
+       * de photo — y compris AU MILIEU d'un geste. `terminer` n'était
+       * alors jamais appelé, et deux choses restaient allumées pour
+       * toujours : `data-zoom` sur `<html>` (le plan de la mosaïque
+       * reste au-dessus de la barre) et surtout `surPincement(true)`,
+       * jamais démenti — le carrousel garde `overflow-hidden`, et PLUS
+       * RIEN NE DÉFILE. C'est l'un des deux blocages du portfolio.
+       * Le démontage vaut donc fin de geste, sans exception.
+       */
+      terminer();
+    };
+    // La ref est stable d'un rendu à l'autre ; `terminer` ne lit que
+    // des refs et ne change pas de comportement d'un rendu à l'autre.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -154,7 +171,6 @@ export function usePincement({
     if (element) {
       // Retour en place, en douceur — puis on efface tout : la cible
       // redevient un simple élément, sans style résiduel.
-      // eslint-disable-next-line react-hooks/immutability -- animation impérative du style d'un élément du DOM, jamais un état React
       element.style.transition = "transform 200ms ease-out";
       element.style.transform = "";
       window.setTimeout(() => {
@@ -196,8 +212,7 @@ export function usePincement({
       if (!reprise) surPincement?.(true);
       const element = cible.current;
       if (element) {
-        // eslint-disable-next-line react-hooks/immutability -- animation impérative du style d'un élément du DOM, jamais un état React
-        element.style.transition = "";
+          element.style.transition = "";
         if (!reprise) {
           const rect = element.getBoundingClientRect();
           // L'origine du zoom : le point ENTRE les deux doigts. Elle
@@ -225,7 +240,6 @@ export function usePincement({
   function poser(echelle: number, dx: number, dy: number) {
     const element = cible.current;
     if (!element) return;
-    // eslint-disable-next-line react-hooks/immutability -- animation impérative du style d'un élément du DOM, jamais un état React
     element.style.transform = `translate(${dx}px, ${dy}px) scale(${echelle})`;
     affiche.current = { echelle, dx, dy };
     finDernierPincement = Date.now();

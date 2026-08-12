@@ -75,6 +75,7 @@ export function FenetreFiche({
   tatoueur,
   styleRecherche = "",
   renduRecherche = "",
+  natureRecherche = "",
   positionGrille = 0,
   surFermeture,
 }: {
@@ -86,6 +87,12 @@ export function FenetreFiche({
   /** LE RENDU cherché (noir et gris, ou couleur) : la fenêtre s'ouvre
       alors sur une photo qui y correspond. */
   renduRecherche?: string;
+  /** LA CATÉGORIE cherchée — « tatouage » ou « flash » (nº 217-§3).
+      ⚠️ ELLE MANQUAIT ICI, ET LA FENÊTRE EST LE CHEMIN DU WEB : la
+      nº 216 avait donné la catégorie à la carte, jamais à ce qui
+      s'ouvre quand on la touche. La fenêtre montrait donc la première
+      photo du style, réalisation ou flash indifféremment. */
+  natureRecherche?: string;
   /** La position de défilement de la grille AU CLIC (capturée par la
       grille avant le pushState) : figée à l'ouverture, rendue à la
       fermeture. */
@@ -101,9 +108,10 @@ export function FenetreFiche({
       ouvertureGalerie(
         tatoueur ? galerieParStyles(tatoueur) : [],
         styleRecherche,
-        renduRecherche
+        renduRecherche,
+        natureRecherche
       ),
-    [tatoueur, styleRecherche, renduRecherche]
+    [tatoueur, styleRecherche, renduRecherche, natureRecherche]
   );
   const groupes = ouverture.groupes;
 
@@ -115,11 +123,18 @@ export function FenetreFiche({
   /** LA SÉRIE OUVERTE (nº 204-§3) — catégorie + rendu d'une vignette
       touchée : le carrousel ne montre alors QUE cette galerie de
       dépôt. `null` à l'ouverture : le style entier, comme toujours. */
+  /*  ⚠️ LA CATÉGORIE CHERCHÉE RESTREINT LA SÉRIE DÈS L'OUVERTURE
+      (nº 217-§3) — même règle que la page de fiche : `rendu` vide veut
+      dire « tous les rendus ». */
   const [serieOuverte, setSerieOuverte] = useState<{
     nature: string;
     rendu: string;
-  } | null>(null);
-  const [indice, setIndice] = useState(ouverture.indice);
+  } | null>(
+    natureRecherche ? { nature: natureRecherche, rendu: renduRecherche } : null
+  );
+  const [indice, setIndice] = useState(
+    natureRecherche ? 0 : ouverture.indice
+  );
 
   /** LES DEUX BOÎTES QUI DÉFILENT — la fenêtre entière quand elle est
       en une colonne, la colonne de droite quand elle est en deux. Un
@@ -131,13 +146,19 @@ export function FenetreFiche({
 
   const groupeAffiche =
     groupes.find((groupe) => groupe.slug === styleAffiche) ?? groupes[0];
-  const photosDuStyleAffiche = serieOuverte
-    ? (groupeAffiche?.photos ?? []).filter(
+  const photosDuStyleEntier = groupeAffiche?.photos ?? [];
+  const photosRestreintes = serieOuverte
+    ? photosDuStyleEntier.filter(
         (photo) =>
           photo.nature === serieOuverte.nature &&
-          (photo.rendu ?? RENDU_PAR_DEFAUT) === serieOuverte.rendu
+          (!serieOuverte.rendu ||
+            (photo.rendu ?? RENDU_PAR_DEFAUT) === serieOuverte.rendu)
       )
-    : (groupeAffiche?.photos ?? []);
+    : photosDuStyleEntier;
+  //  Jamais de fenêtre sans image : un style qui n'a rien dans la
+  //  série demandée se montre entier (même règle que la page).
+  const photosDuStyleAffiche =
+    photosRestreintes.length > 0 ? photosRestreintes : photosDuStyleEntier;
   const n = photosDuStyleAffiche.length;
 
   const ouverte = tatoueur !== null;
@@ -370,6 +391,9 @@ export function FenetreFiche({
               <ContenuFiche
                 tatoueur={tatoueur}
                 groupes={groupes}
+                //  Même règle que la page (nº 217-§3).
+                natureCherchee={natureRecherche}
+                renduCherche={renduRecherche}
                 surSerieChoisie={(serie) => {
                   setStyleAffiche(serie.style);
                   setSerieOuverte({ nature: serie.nature, rendu: serie.rendu });

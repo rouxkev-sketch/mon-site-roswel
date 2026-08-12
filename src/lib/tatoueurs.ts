@@ -503,9 +503,14 @@ function classerParPopularite(
   clics: Map<string, number>
 ): Tatoueur[] {
   if (clics.size === 0) return liste;
-  return [...liste].sort(
-    (a, b) => (clics.get(b.slug) ?? 0) - (clics.get(a.slug) ?? 0)
-  );
+  return [...liste].sort((a, b) => {
+    const ecart = (clics.get(b.slug) ?? 0) - (clics.get(a.slug) ?? 0);
+    //  ⚠️ AUCUNE ÉGALITÉ NE RESTE NON TRANCHÉE (nº 217-§2). `sort` est
+    //  stable, l'ordre d'entrée suffirait ; l'écrire noir sur blanc
+    //  garantit qu'un même catalogue rend la même page, requête après
+    //  requête, quel que soit le chemin qui l'a construit.
+    return ecart !== 0 ? ecart : a.slug.localeCompare(b.slug);
+  });
 }
 
 /** Le style demandé est-il connu ? Sinon on l'ignore plutôt que de vider la page. */
@@ -1302,9 +1307,28 @@ export async function listerTatoueurs(
 
 /**
  * LA PAGE DEMANDÉE, découpée dans la liste complète — et le TOTAL.
- * L'ordre est celui de `filtrer` ; le classement par popularité
- * réordonne ENSUITE la page seule, exactement comme avant cette passe
- * (il change l'ordre d'affichage, jamais la sélection).
+ *
+ * ⚠️ L'ORDRE EST DÉCIDÉ UNE FOIS, SUR LA LISTE ENTIÈRE, AVANT LA COUPE
+ * (passe nº 217-§2)
+ * ==================================================================
+ * LE DÉFAUT CORRIGÉ. Cette fonction faisait, hors « style + ville » :
+ *     classerParPopularite(page, clics)
+ * — c'est-à-dire qu'elle reclassait par nombre de clics LA PAGE DÉJÀ
+ * COUPÉE. Or « Voir plus » ne demande pas la page suivante : il
+ * redemande la MÊME recherche avec une limite plus grande (voir
+ * l'accueil, `limite: CARTES_PAR_PAGE * page`). Vingt-quatre cartes
+ * puis quarante-huit, ce sont donc DEUX ENSEMBLES DIFFÉRENTS reclassés
+ * chacun de son côté : une fiche très consultée qui occupait le rang 30
+ * remontait en première position dès qu'elle entrait dans la page. Vu
+ * de l'écran : des cartes apparaissent AU-DESSUS de celles déjà
+ * affichées. (La fonction de base avait exactement le même défaut, au
+ * même endroit — corrigé par la migration nº 61.)
+ *
+ * LA RÈGLE, MAINTENANT : un classement porte sur TOUT ce qu'on classe,
+ * jamais sur une tranche. La popularité garde donc son seul emploi
+ * légitime — les pages « style + ville » (`prioriserClics`), où elle
+ * classe la liste entière AVANT la coupe. Partout ailleurs, l'ordre
+ * est celui de `filtrer`, et il ne bouge plus d'une page à l'autre.
  */
 function pageDeResultats(
   ordonnees: Tatoueur[],
@@ -1314,20 +1338,14 @@ function pageDeResultats(
 ): ResultatTatoueurs {
   const debut = Math.max(filtres.decalage ?? 0, 0);
   const combien = filtres.limite ?? CARTES_PAR_PAGE;
-  // LES PAGES « style + ville » montrent les plus consultés de la
-  // ville : le classement précède la coupe. Partout ailleurs il ne
-  // réordonne que la page — c'est le comportement d'origine.
   const base = filtres.prioriserClics
     ? classerParPopularite(ordonnees, clics)
     : ordonnees;
-  const page = base.slice(debut, debut + combien);
   return {
     ...reste,
     total: base.length,
-    tatoueurs: (filtres.prioriserClics
-      ? page
-      : classerParPopularite(page, clics)
-    )
+    tatoueurs: base
+      .slice(debut, debut + combien)
       .map(sansProprietaire)
       .map((fiche) => sansGalerieInutile(fiche, filtres)),
   };

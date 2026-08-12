@@ -68,6 +68,8 @@ export function ContenuFiche({
   studioCourant,
   demonstration = false,
   apercu = false,
+  natureCherchee = "",
+  renduCherche = "",
   surSerieChoisie,
   suiviAuDepart = false,
 }: {
@@ -83,6 +85,13 @@ export function ContenuFiche({
   /** Vrai dans l'espace tatoueur (« Ma fiche ») : ni suivi, ni
       signalement, ni mise hors ligne. */
   apercu?: boolean;
+  /** LA CATÉGORIE ET LE RENDU CHERCHÉS (nº 217-§3) — l'onglet
+      « Portfolio » s'ouvre alors sur EUX, et non sur « Réalisations ·
+      Noir et gris » par défaut. Arriver d'une recherche de flashs et
+      trouver le panneau posé sur les réalisations, c'était le même
+      mélange de catégories que dans le carrousel, un cran plus loin. */
+  natureCherchee?: string;
+  renduCherche?: string;
   /** Un toucher sur une vignette : l'enveloppe montre CETTE série —
       style + catégorie + rendu (nº 204-§3) — et remonte en haut
       (nº 197-§4). */
@@ -97,11 +106,16 @@ export function ContenuFiche({
    * styles publiés, catégorie par catégorie.
    */
   const [onglet, setOnglet] = useState<OngletAffiche>("profil");
-  /** La catégorie regardée dans l'onglet « Portfolio » (nº 197-§2). */
-  const [categorie, setCategorie] = useState<string>(NATURE_PAR_DEFAUT);
+  /** La catégorie regardée dans l'onglet « Portfolio » (nº 197-§2) —
+      celle qu'on cherchait s'il y en avait une (nº 217-§3). */
+  const [categorie, setCategorie] = useState<string>(
+    natureCherchee || NATURE_PAR_DEFAUT
+  );
   /** LE RENDU regardé (nº 204-§3) — le panneau le ramène de lui-même
       au seul rendu présent quand il n'y en a qu'un. */
-  const [rendu, setRendu] = useState<string>(RENDU_PAR_DEFAUT);
+  const [rendu, setRendu] = useState<string>(
+    renduCherche || RENDU_PAR_DEFAUT
+  );
 
   /**
    * §7 (nº 208) — AU DOIGT, CHANGER D'ONGLET REMONTE LA PAGE

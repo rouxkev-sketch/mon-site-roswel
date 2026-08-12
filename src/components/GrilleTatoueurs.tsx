@@ -383,6 +383,9 @@ export function GrilleTatoueurs({
         tatoueur={visible ? ficheOuverte : null}
         styleRecherche={styleRecherche}
         renduRecherche={renduRecherche}
+        //  LA CATÉGORIE VA JUSQU'À LA FENÊTRE (nº 217-§3) : elle
+        //  s'arrêtait à la carte depuis la nº 216.
+        natureRecherche={natureRecherche}
         positionGrille={positionGrille}
         surFermeture={fermer}
       />

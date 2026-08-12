@@ -656,10 +656,15 @@ export function MoteurTatouage({
    * range. Elle ne porte aucune valeur cherchable ; seuls ses neuf
    * enfants en ont une (voir `entreesExplorer`).
    *
-   * LE NOMBRE DE CRÉATIONS EN FACE DE CHAQUE ENTRÉE (passe nº 216-§2)
+   * LE NOMBRE DE PORTFOLIOS EN FACE DE CHAQUE ENTRÉE (nº 216-§2,
+   * corrigé par la nº 217-§1)
    * -----------------------------------------------------------------
-   * Chaque style annonce combien de créations l'attendent, et les deux
-   * « Tous les … » annoncent le total de leur catégorie.
+   * Chaque style annonce combien de PORTFOLIOS l'attendent — pas
+   * combien de photos existent : personne n'ouvre ce menu pour savoir
+   * combien d'aquarelles ont été déposées. Les deux « Tous les … »
+   * annoncent le total de leur catégorie, compté à part (le même
+   * artiste peut tenir plusieurs styles : l'addition le compterait
+   * deux fois).
    *
    * ⚠️ TROIS ENDROITS N'EN PORTENT PAS, et c'est voulu :
    *  · les DEUX PORTES « Réalisations » et « Flashs » — ce sont des

@@ -3,12 +3,13 @@
 import { useSyncExternalStore } from "react";
 
 /**
- * COMBIEN DE CRÉATIONS PAR STYLE — le magasin du navigateur
+ * COMBIEN DE PORTFOLIOS PAR STYLE — le magasin du navigateur
  * ===========================================================
- * (passe nº 216-§2)
+ * (passe nº 216-§2, corrigée par la nº 217-§1)
  *
- * Le menu « Explorer » annonce, en face de chaque style, ce qu'on y
- * trouvera. Les nombres viennent de /api/yokofolio/creations-par-style.
+ * Le menu « Explorer » annonce, en face de chaque style, COMBIEN
+ * D'ARTISTES on y trouvera — pas combien de photos existent. Les
+ * nombres viennent de /api/yokofolio/creations-par-style.
  *
  * ⚠️ UN MAGASIN DE MODULE, PAS UN ÉTAT DE COMPOSANT. Le moteur de
  * recherche est monté DEUX fois (la barre du site et la page plein
@@ -23,13 +24,26 @@ import { useSyncExternalStore } from "react";
  * une liste de styles, sans nombres. Rien n'attend, rien n'échoue.
  */
 
-/** Nature → style → nombre de photos publiées. */
-export type ComptesCreations = Record<string, Record<string, number>>;
+/**
+ * CE QUE LE MAGASIN CONTIENT :
+ *  · `comptes` — nature → style → nombre de PORTFOLIOS publiés ;
+ *  · `totaux`  — nature → nombre de portfolios de la catégorie.
+ *
+ * ⚠️ `totaux` N'EST PAS LA SOMME DE `comptes` (nº 217-§1), et il ne
+ * peut pas l'être : un artiste qui publie des flashs en aquarelle ET
+ * en chicano compte dans les deux styles, mais il n'est qu'UN
+ * portfolio dans « Tous les flashs ». Seul le serveur peut faire ce
+ * décompte — il a les identifiants, le navigateur n'a que des nombres.
+ */
+export type ComptesCreations = {
+  comptes: Record<string, Record<string, number>>;
+  totaux: Record<string, number>;
+};
 
 /** L'objet des débuts — et celui du serveur. Une CONSTANTE : c'est ce
     que `useSyncExternalStore` attend d'un instantané qui ne change
     pas (une valeur neuve à chaque lecture ferait boucler le rendu). */
-const VIDE: ComptesCreations = {};
+const VIDE: ComptesCreations = { comptes: {}, totaux: {} };
 
 let comptes: ComptesCreations = VIDE;
 let demandeLancee = false;
@@ -44,7 +58,10 @@ function demander() {
     .then((donnees) => {
       const recus = donnees?.comptes;
       if (!recus || typeof recus !== "object") return;
-      comptes = recus as ComptesCreations;
+      comptes = {
+        comptes: recus as ComptesCreations["comptes"],
+        totaux: (donnees?.totaux ?? {}) as ComptesCreations["totaux"],
+      };
       abonnes.forEach((prevenir) => prevenir());
     })
     .catch(() => {
@@ -82,28 +99,26 @@ export function useComptesCreations(): ComptesCreations {
  * rien n'est arrivé, on n'affiche AUCUN nombre ; une fois la réponse
  * là, un style sans photo affiche « 0 » — et c'est une information.
  */
-export function comptesConnus(comptes: ComptesCreations): boolean {
-  return comptes !== VIDE;
+export function comptesConnus(etat: ComptesCreations): boolean {
+  return etat !== VIDE;
 }
 
-/** Les créations d'un style, dans une catégorie. */
+/** Les portfolios publiés dans un style, pour une catégorie. */
 export function compteDuStyle(
-  comptes: ComptesCreations,
+  etat: ComptesCreations,
   nature: string,
   style: string
 ): number {
-  return comptes[nature]?.[style] ?? 0;
+  return etat.comptes[nature]?.[style] ?? 0;
 }
 
-/** Toutes les créations d'une catégorie — le nombre de « Toutes les
-    réalisations » et de « Tous les flashs ». Chaque photo porte un
-    style, la somme des styles est donc bien le total de la nature. */
+/** Les portfolios d'une catégorie — le nombre de « Toutes les
+    réalisations » et de « Tous les flashs ». Il vient du serveur : le
+    même artiste peut tenir plusieurs styles, l'addition compterait
+    deux fois (nº 217-§1). */
 export function compteDeLaCategorie(
-  comptes: ComptesCreations,
+  etat: ComptesCreations,
   nature: string
 ): number {
-  return Object.values(comptes[nature] ?? {}).reduce(
-    (total, nombre) => total + nombre,
-    0
-  );
+  return etat.totaux[nature] ?? 0;
 }

@@ -55,8 +55,34 @@ import type { PhotoGalerie } from "@/lib/photo-tatoueur";
  * balayage suffit.
  */
 
-/** Combien de photos de part et d'autre gardent une image montée. */
-const VOISINES = 1;
+/**
+ * COMBIEN DE PHOTOS DE PART ET D'AUTRE GARDENT UNE IMAGE MONTÉE.
+ *
+ * ⚠️ DEUX, ET C'EST LA CORRECTION DE §5 ET §6 (nº 217)
+ * ==================================================================
+ * À UNE VOISINE, l'ensemble monté était {i−1, i, i+1}. Dès que
+ * l'indice passait à i+1 — c'est-à-dire À L'INSTANT OÙ LA PHOTO
+ * S'IMMOBILISE —, la colonne i+2 naissait et la colonne i−1 mourait.
+ * Or i+2 TOUCHE la colonne regardée : pendant que l'accrochage finit
+ * sa course, on en voit la tranche. Son image apparaissait donc au
+ * beau milieu du mouvement, puis sortait du cadre — un scintillement
+ * sur un appareil rapide, et sur un iPhone 8, où le rendu arrive
+ * après l'arrêt, LA MOITIÉ D'UNE IMAGE, coupée à la verticale, qui se
+ * superpose un instant.
+ *
+ * À DEUX VOISINES, l'ensemble monté est {i−2 … i+2}. Quand l'indice
+ * passe à i+1, la colonne qui naît est i+3 et celle qui meurt est
+ * i−2 : toutes deux à DEUX cadres de la photo regardée, donc
+ * strictement invisibles — le cadre ne peut jamais en montrer que
+ * deux à la fois. Plus rien n'apparaît ni ne disparaît dans le champ
+ * de vision au moment où la photo s'arrête.
+ *
+ * CE QUE ÇA COÛTE : cinq colonnes montées au lieu de trois, soit deux
+ * MINIATURES de plus (~25 ko chacune, `lazy`). La pleine résolution,
+ * elle, reste demandée pour la seule photo regardée — c'est elle qui
+ * pèse, et rien n'a changé de ce côté.
+ */
+const VOISINES = 2;
 
 export function CarrouselPortfolio({
   photos,
@@ -198,6 +224,11 @@ export function CarrouselPortfolio({
    * changer cette chaîne, quel que soit le nombre.
    */
   const cleDeLaSerie = photos.map((photo) => photo.cle).join("|");
+  /** LA DERNIÈRE POSITION QUE NOUS AVONS POSÉE — voir l'effet plus bas.
+      ⚠️ ELLE EST AUSSI POSÉE PAR L'OBSERVATEUR (nº 217-§6) : un indice
+      qui vient DU DOIGT ne doit jamais provoquer un `scrollTo` en
+      retour, sans quoi on se bat avec le défilement natif. */
+  const dernierPose = useRef(-1);
   useEffect(() => {
     const zone = cadre.current;
     //  Les colonnes de l'ancienne série n'ont plus rien à dire : on
@@ -208,6 +239,7 @@ export function CarrouselPortfolio({
     //  Une nouvelle série commence à sa première photo — sans quoi le
     //  cadre garderait le défilement de la précédente.
     zone.scrollLeft = 0;
+    dernierPose.current = 0;
     const observateur = new IntersectionObserver(
       (entrees) => {
         for (const entree of entrees) {
@@ -215,7 +247,17 @@ export function CarrouselPortfolio({
           const rang = colonnes.current.indexOf(
             entree.target as HTMLDivElement
           );
-          if (rang >= 0) surChangement(rang);
+          if (rang < 0) continue;
+          //  ⚠️ CET INDICE VIENT DU DÉFILEMENT LUI-MÊME : on le note
+          //  comme « déjà en place » AVANT de l'annoncer, pour que
+          //  l'effet de repositionnement n'aille pas rejouer un
+          //  `scrollTo` par-dessus le geste en cours (nº 217-§6). Le
+          //  seuil de 60 % se franchit souvent AVANT la fin de
+          //  l'accrochage : la piste sautait alors à la colonne, en
+          //  travers de l'élan du doigt — et l'on voyait passer la
+          //  tranche d'une image.
+          dernierPose.current = rang;
+          surChangement(rang);
         }
       },
       { root: zone, threshold: 0.6 }
@@ -243,16 +285,18 @@ export function CarrouselPortfolio({
   }
 
   /** L'indice vient de la fiche : on s'y rend, sans animation (c'est un
-      changement d'ensemble, pas un défilement). */
-  const dernierPose = useRef(-1);
+      changement d'ensemble, pas un défilement).
+      ⚠️ ET SEULEMENT DE LA FICHE : quand il vient du doigt, l'observateur
+      a déjà posé `dernierPose`, et cet effet ne fait rien (nº 217-§6).
+      La comparaison de position qui servait de garde-fou ne suffisait
+      pas — au moment où l'observateur parle, le défilement est encore
+      en route, l'écart est donc grand, et l'on téléportait la piste. */
   useEffect(() => {
     if (n <= 1) return;
     if (dernierPose.current === indice) return;
     const zone = cadre.current;
     const colonne = colonnes.current[indice];
     if (!zone || !colonne) return;
-    //  Déjà en place (le défilement vient de nous amener ici) : on ne
-    //  touche à rien — sans quoi on se battrait avec l'inertie.
     if (Math.abs(zone.scrollLeft - colonne.offsetLeft) > 1) {
       allerA(indice, false);
     }
