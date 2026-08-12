@@ -370,10 +370,11 @@ titre("§2 — la fenêtre d'adresse, deux capsules et rien d'autre (390 px)");
           mesure.margesGenereuses
       );
       verif(
-        //  ⚠️ nº 233-§4 : 30 % / flou 40 / saturation 200 (40 % / 30 /
-        //  180 à la 229) — la transparence du verre liquide.
-        "le verre porte les valeurs de la 233",
-        mesure.fond === "rgba(26, 26, 29, 0.3)" &&
+        //  ⚠️ nº 234-§2 : 22 % (30 à la 233) — la plaque est
+        //  éclaircie APRÈS la correction de structure. Flou et
+        //  saturation inchangés.
+        "le verre porte les valeurs de la 234",
+        mesure.fond === "rgba(26, 26, 29, 0.22)" &&
           mesure.filtre.includes("blur(40px)") &&
           mesure.filtre.includes("saturate(2)"),
         `${mesure.fond} · ${mesure.filtre}`

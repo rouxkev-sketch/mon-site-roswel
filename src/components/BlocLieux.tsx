@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { IconeChevronBas } from "@/components/Icones";
 import {
@@ -499,27 +500,66 @@ function FenetreAdresse({
     });
   }
 
-  return (
+  /**
+   * §2 (nº 234) — LA FENÊTRE EST POSÉE DANS LE CORPS DU DOCUMENT
+   * ==================================================================
+   * TROIS PASSES ONT MESURÉ DES VALEURS JUSTES DANS CHROMIUM pendant
+   * que l'iPhone montrait une plaque presque noire. Les valeurs
+   * n'étaient pas le sujet : la STRUCTURE l'était. Deux causes, toutes
+   * deux corrigées ici, et aucune n'est une question d'opacité.
+   *
+   * 1. CE QUE LA PLAQUE FLOUTE, C'EST LE VOILE. Un `backdrop-filter`
+   *    floute TOUT CE QUI EST PEINT DERRIÈRE lui dans sa racine
+   *    d'arrière-plan — le voile compris, puisqu'il est peint juste
+   *    avant elle. Un voile noir à 55 % couvrant tout l'écran, c'est
+   *    donc un aplat noir que la plaque floute : flouter du noir uni
+   *    donne du noir uni. Aucun réglage de la plaque ne pouvait
+   *    corriger cela — c'est LE VOILE qu'il fallait alléger (il passe
+   *    à 25 %), et c'est mesurable partout, sans WebKit.
+   *
+   * 2. LA PLAQUE ÉTAIT SA PROPRE RACINE D'ARRIÈRE-PLAN pendant son
+   *    ouverture. Elle portait `transition-opacity` +
+   *    `starting:opacity-0` : une opacité INFÉRIEURE À 1 crée une
+   *    nouvelle racine, et l'élément ne floute alors plus la page mais
+   *    son propre plan. Relevé au banc, plaque saisie en pleine
+   *    ouverture : `opacity 0.0852719`. Le fondu est donc passé AU
+   *    VOILE, qui ne floute rien ; la plaque, elle, n'a plus aucune
+   *    opacité partielle, à aucun instant.
+   *
+   * ⚠️ ET ELLE EST MONTÉE DANS `document.body` (portail) : plus aucun
+   * ancêtre de la fiche — bloc collant, conteneur, futur `transform`
+   * d'animation — ne peut créer une racine au-dessus d'elle. Le voile
+   * et la plaque restent FRÈRES, et leur seul parent est un conteneur
+   * nu (`position: fixed`, qui ne crée aucune racine).
+   */
+  const fenetre = (
     <div
       role="dialog"
       aria-modal="true"
       aria-label="Adresse du lieu"
       className="fixed inset-0 z-[80] flex items-center justify-center p-6"
     >
-      {/*  LE VOILE — un appui à côté de la fenêtre referme. */}
+      {/*  LE VOILE — un appui à côté de la fenêtre referme. Sa couleur
+           est en `rgba` (jamais une `opacity`, qui créerait une racine
+           d'arrière-plan), il ne porte AUCUN filtre, et c'est LUI qui
+           porte le fondu d'ouverture. */}
       <button
         type="button"
         aria-label="Fermer"
         onClick={surFermeture}
-        className="absolute inset-0 bg-black/55"
+        className="absolute inset-0 bg-black/25
+                   opacity-100 transition-opacity duration-200 starting:opacity-0"
       />
       {/*  Le liseré (plus lumineux en haut, ATTÉNUÉ à la nº 229-§5 —
            il se devine, il ne se lit pas) vit dans la règle
            [data-verre-fenetre] de globals.css, avec le verre. */}
+      {/*  ⚠️ AUCUNE OPACITÉ, AUCUNE TRANSITION D'OPACITÉ ICI : ce sont
+           elles qui faisaient de la plaque sa propre racine
+           d'arrière-plan pendant l'ouverture (voir la note ci-dessus).
+           Le fondu appartient au voile. */}
       <div
         data-verre-fenetre=""
-        className="relative w-full max-w-[360px] rounded-3xl p-6
-                   opacity-100 transition-opacity duration-200 starting:opacity-0"
+        className="relative w-full max-w-[360px] rounded-3xl p-6"
       >
         {/*  DEUX CAPSULES, ET RIEN D'AUTRE (nº 231-§2). « Copier
              l'adresse » — LE JUMEAU EXACT du badge d'ouverture : même
@@ -558,6 +598,13 @@ function FenetreAdresse({
       </div>
     </div>
   );
+
+  //  LE PORTAIL — jamais pendant le rendu du serveur (`document`
+  //  n'existe pas) ; la fenêtre ne s'ouvre que sur un geste, donc
+  //  toujours côté navigateur.
+  return typeof document === "undefined"
+    ? fenetre
+    : createPortal(fenetre, document.body);
 }
 
 /**

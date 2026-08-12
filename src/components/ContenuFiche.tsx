@@ -481,11 +481,25 @@ export function ContenuFiche({
           nature={categorie}
           surNature={choisirCategorie}
           rendu={rendu}
+          /*  §1 (nº 234) — LE RENDU REMONTE COMME LES AUTRES. Il était
+              le seul des quatre sélecteurs à ne pas le faire : les
+              vignettes changeaient entièrement sous les yeux, et la
+              page restait où elle était. C'est `remonterSousLaBarre`,
+              LA MÊME fonction que Profil / Portfolio et que
+              Réalisations / Flash — même mouvement, même durée, aucun
+              second mécanisme.
+              ⚠️ ELLE NE POUSSE AUCUNE ENTRÉE D'HISTORIQUE (un simple
+              `scrollTo` amorti, voir lib/defilement-programme) et
+              n'écrit AUCUNE position : sur une page de détail,
+              MemoireNavigation n'enregistre rien au défilement — la
+              restitution des nº 230 et 232 est donc intacte, un
+              retour revient bien où le visiteur était. */
           surRendu={(suivant) => {
             noterSonde(
               `SÉLECTEUR rendu → « ${suivant} » (catégorie « ${categorie} »)`
             );
             setRendu(suivant);
+            remonterSousLaBarre();
           }}
           nomTatoueur={tatoueur.nom}
           surSerie={(serie) => {

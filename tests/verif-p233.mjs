@@ -42,8 +42,10 @@ titre("§3 et §4 — les mécaniques, à la source");
   const css = lire("src/app/globals.css");
   const plaque = css.match(/\[data-verre-fenetre\]\s*\{[^}]+\}/)?.[0] ?? "";
   verif(
-    "la plaque : 30 %, flou 40, saturation 200 — les deux lignes littérales",
-    plaque.includes("background-color: rgba(26, 26, 29, 0.3);") &&
+    //  ⚠️ 22 % depuis la nº 234-§2 (30 à la 233) : la plaque a été
+    //  éclaircie une fois la cause STRUCTURELLE corrigée.
+    "la plaque : 22 %, flou 40, saturation 200 — les deux lignes littérales",
+    plaque.includes("background-color: rgba(26, 26, 29, 0.22);") &&
       plaque.includes("-webkit-backdrop-filter: blur(40px) saturate(200%);") &&
       plaque.includes("\n  backdrop-filter: blur(40px) saturate(200%);") &&
       plaque.indexOf("-webkit-backdrop-filter") <
@@ -51,9 +53,10 @@ titre("§3 et §4 — les mécaniques, à la source");
   );
   verif("la plaque : aucun var() dans le filtre", !/backdrop-filter:[^;]*var\(/.test(plaque));
   verif(
-    "le liseré discret garde sa nuance haut/bas",
-    /inset 0 1px 0 0 rgba\(255, 255, 255, 0\.16\)/.test(plaque) &&
-      /inset 0 0 0 1px rgba\(255, 255, 255, 0\.06\)/.test(plaque)
+    //  ⚠️ ATTÉNUÉ à la nº 234-§2 : 0,10 / 0,035 (0,16 / 0,06 à la 233).
+    "le liseré, encore atténué, garde sa nuance haut/bas",
+    /inset 0 1px 0 0 rgba\(255, 255, 255, 0\.1\)/.test(plaque) &&
+      /inset 0 0 0 1px rgba\(255, 255, 255, 0\.035\)/.test(plaque)
   );
   const capsule = css.match(/\[data-verre-capsule\]\s*\{[^}]+\}/)?.[0] ?? "";
   const action = css.match(/\[data-verre-action\]\s*\{[^}]+\}/)?.[0] ?? "";
@@ -354,8 +357,8 @@ titre("§2 — le glyphe des pastilles grises (390 px)");
         };
       });
       verif(
-        "la plaque : anthracite 30 %, flou 40, saturation 200",
-        verre.fond === "rgba(26, 26, 29, 0.3)" &&
+        "la plaque : anthracite 22 %, flou 40, saturation 200",
+        verre.fond === "rgba(26, 26, 29, 0.22)" &&
           verre.filtre.includes("blur(40px)") &&
           verre.filtre.includes("saturate(2)"),
         `${verre.fond} · ${verre.filtre}`

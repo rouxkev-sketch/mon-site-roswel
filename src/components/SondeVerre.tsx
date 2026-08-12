@@ -116,7 +116,110 @@ function nommer(element: Element): string {
   return `${element.tagName.toLowerCase()}${classes ? `.${classes}` : ""}`;
 }
 
+/**
+ * §3 (nº 234) — LA FENÊTRE D'ADRESSE, QUAND ELLE EST OUVERTE
+ * ==================================================================
+ * TROIS BLOCS, ceux que le propriétaire a demandés — et c'est ce
+ * relevé, pris sur SON iPhone, qui tranchera : Chromium a déjà donné
+ * trois fois des valeurs justes pendant que son écran restait noir.
+ *
+ *  1. LA PLAQUE ET LES DEUX CAPSULES, telles que le navigateur les
+ *     calcule : filtre (les deux écritures), fond, ombre, bordure ;
+ *  2. LA CHAÎNE COMPLÈTE DES ANCÊTRES de la plaque, chacun avec
+ *     `opacity`, `filter`, `transform`, `will-change`, `contain`,
+ *     `isolation` — et un marqueur sur LE PREMIER qui crée une racine
+ *     d'arrière-plan (c'est lui qui tuerait le flou) ;
+ *  3. `CSS.supports` pour les deux écritures du filtre.
+ *
+ * Rien ici ne corrige : la sonde LIT.
+ */
+function releveDeLaFenetre(): [string, string][] {
+  const plaque = document.querySelector<HTMLElement>("[data-verre-fenetre]");
+  if (!plaque) {
+    return [
+      [
+        "FENÊTRE",
+        "fermée — ouvre une adresse de fiche au doigt, puis rouvre la sonde",
+      ],
+    ];
+  }
+  const dit: [string, string][] = [];
+
+  //  1) LA PLAQUE ET LES DEUX CAPSULES.
+  const morceaux: [string, HTMLElement | null][] = [
+    ["plaque", plaque],
+    ["capsule blanche", plaque.querySelector("[data-verre-capsule]")],
+    ["capsule rose", plaque.querySelector("[data-verre-action]")],
+  ];
+  for (const [nom, element] of morceaux) {
+    if (!element) {
+      dit.push([`1) ${nom}`, "absente"]);
+      continue;
+    }
+    const s = getComputedStyle(element);
+    dit.push([`1) ${nom} · filtre`, s.backdropFilter || "(vide)"]);
+    dit.push([
+      `1) ${nom} · -webkit-`,
+      s.getPropertyValue("-webkit-backdrop-filter") || "(vide)",
+    ]);
+    dit.push([`1) ${nom} · fond`, s.backgroundColor]);
+    dit.push([`1) ${nom} · ombre`, s.boxShadow || "(aucune)"]);
+    dit.push([
+      `1) ${nom} · bordure`,
+      s.borderWidth === "0px" ? "(aucune)" : `${s.borderWidth} ${s.borderColor}`,
+    ]);
+    dit.push([`1) ${nom} · opacité`, s.opacity]);
+  }
+
+  //  2) LA CHAÎNE DES ANCÊTRES, du corps jusqu'à la plaque.
+  const chaine: Element[] = [];
+  for (let noeud: Element | null = plaque; noeud; noeud = noeud.parentElement) {
+    chaine.unshift(noeud);
+  }
+  let racineTrouvee = false;
+  let rang = 0;
+  for (const element of chaine) {
+    const causes = cequiAnnule(getComputedStyle(element));
+    //  ⚠️ `overflow` n'est PAS une racine d'arrière-plan : `cequiAnnule`
+    //  le signale pour la barre fixe (il y coupe autre chose), il ne
+    //  compte pas ici.
+    const vraies = causes.filter((c) => !c.startsWith("overflow"));
+    const premier = vraies.length > 0 && !racineTrouvee && element !== plaque;
+    if (premier) racineTrouvee = true;
+    dit.push([
+      `2) ${rang === 0 ? "html" : element === plaque ? "LA PLAQUE" : `parent ${rang}`}`,
+      `${nommer(element)}${
+        vraies.length > 0
+          ? ` ${premier ? "⛔ RACINE D'ARRIÈRE-PLAN :" : "⚠️"} ${vraies.join(" · ")}`
+          : " — rien"
+      }`,
+    ]);
+    rang += 1;
+  }
+  dit.push([
+    "2) verdict",
+    racineTrouvee
+      ? "⛔ un ancêtre crée une racine : la plaque ne floute PAS la page"
+      : "✓ aucun ancêtre ne crée de racine — la plaque floute bien la page",
+  ]);
+
+  //  3) LES DEUX ÉCRITURES DU FILTRE.
+  const supporte = (propriete: string) =>
+    typeof CSS !== "undefined" && CSS.supports
+      ? String(CSS.supports(propriete, "blur(1px)"))
+      : "(CSS.supports absent)";
+  dit.push(["3) supports backdrop-filter", supporte("backdrop-filter")]);
+  dit.push(["3) supports -webkit-", supporte("-webkit-backdrop-filter")]);
+  dit.push(["3) navigateur", navigator.userAgent]);
+  return dit;
+}
+
 function lignes(): [string, string][] {
+  //  ⚠️ LA FENÊTRE D'ADRESSE PASSE AVANT (nº 234-§3) : quand elle est
+  //  ouverte, c'est ELLE qu'on est venu mesurer.
+  if (document.querySelector("[data-verre-fenetre]")) {
+    return releveDeLaFenetre();
+  }
   const barre = document.querySelector<HTMLElement>("[data-barre-fixe]");
   if (!barre) return [["barre", "introuvable sur cette page"]];
   const style = getComputedStyle(barre);
