@@ -596,13 +596,25 @@ export function CarrouselPortfolio({
                     aria-current={rang === indice ? "true" : undefined}
                     onClick={() => allerA(rang, true, "rond")}
                     tabIndex={taille === 0 ? -1 : 0}
-                    //  L'actif : BLANC ILLUMINÉ — un halo, pas un
-                    //  contour. Les autres : blanc voilé.
+                    //  L'actif : blanc plein. Les autres : blanc voilé.
+                    //  ⚠️ L'OMBRE EST LA MÊME SUR TOUS LES RONDS
+                    //  (nº 221) : sans décalage, donc parfaitement
+                    //  centrée, très douce — elle n'existe que pour
+                    //  qu'un rond reste lisible sur une photo blanche.
+                    //  LE HALO BLANC DE L'ACTIF EST SUPPRIMÉ : à
+                    //  14 px d'entraxe, sa lueur touchait les voisins
+                    //  à gauche et à droite mais ne rencontrait rien
+                    //  en haut ni en bas — l'œil y lisait une
+                    //  projection latérale. Et sur une photo claire,
+                    //  un halo blanc n'éclairait rien du tout.
+                    //  (Elle sort de la liste de transition : une
+                    //  ombre constante n'a rien à animer.)
                     className={`pointer-events-auto h-1.5 w-1.5 rounded-full
-                               transition-[transform,opacity,background-color,box-shadow]
+                               shadow-[0_0_2px_rgba(0,0,0,0.4)]
+                               transition-[transform,opacity,background-color]
                                duration-300 ease-out ${
                                  rang === indice
-                                   ? "bg-white shadow-[0_0_6px_rgba(255,255,255,0.95)]"
+                                   ? "bg-white"
                                    : "bg-white/45 hover:bg-white/75"
                                }`}
                     style={{ transform: `scale(${taille})`, opacity: taille === 0 ? 0 : 1 }}
