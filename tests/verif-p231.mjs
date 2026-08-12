@@ -156,8 +156,10 @@ if (!fiche) {
       }
       const valeurs = Object.values(m.cotes);
       verif(
-        `${nom} : un liseré de 1,5 px sur les QUATRE côtés (écart ≤ 0,5)`,
-        valeurs.every((v) => v >= 1 && v <= 2) && m.ecartMax <= 0.5,
+        //  ⚠️ 1 px depuis la nº 233-§1 (1,5 à la 231) : disque de 22,
+        //  glyphe de 20 — le contrôle suit la dernière demande.
+        `${nom} : un liseré d'1 px sur les QUATRE côtés (écart ≤ 0,5)`,
+        valeurs.every((v) => v >= 0.75 && v <= 1.5) && m.ecartMax <= 0.5,
         `G ${m.cotes.gauche} · D ${m.cotes.droite} · H ${m.cotes.haut} · B ${m.cotes.bas} — écart ${m.ecartMax}`
       );
       verif(
@@ -188,8 +190,9 @@ if (!fiche) {
       nonJoue("§1 · site.png", "aucun lien de site sur cette fiche");
     } else {
       verif(
-        "site.png : 16 px, object-contain, sans disque — comme en 229",
-        site.largeur === 16 && site.ajustement === "contain" && !site.disque,
+        //  ⚠️ 20 px depuis la nº 233-§1 (16 à la 229).
+        "site.png : 20 px, object-contain, sans disque",
+        site.largeur === 20 && site.ajustement === "contain" && !site.disque,
         `${site.largeur} px · ${site.ajustement}`
       );
     }
@@ -235,10 +238,11 @@ if (!fiche) {
       );
       const source = lire("src/components/BoutonSuivre.tsx");
       verif(
-        "à la source : 36 px de haut, angles arrondis, retrait réduit",
-        source.includes("min-h-[36px]") &&
-          source.includes("rounded-lg") &&
-          !source.includes("rounded-full") &&
+        //  ⚠️ nº 233-§3 : 30 px (36 à la 231) et les extrémités
+        //  redeviennent RONDES (rounded-full).
+        "à la source : 30 px de haut, extrémités rondes, retrait réduit",
+        source.includes("min-h-[30px]") &&
+          source.includes("rounded-full") &&
           source.includes("px-3.5")
       );
       const selecteur = lire("src/components/PortfolioDeLAffiche.tsx");
@@ -366,10 +370,12 @@ titre("§2 — la fenêtre d'adresse, deux capsules et rien d'autre (390 px)");
           mesure.margesGenereuses
       );
       verif(
-        "le verre garde les valeurs de la 229",
-        mesure.fond === "rgba(26, 26, 29, 0.4)" &&
-          mesure.filtre.includes("blur(30px)") &&
-          mesure.filtre.includes("saturate(1.8)"),
+        //  ⚠️ nº 233-§4 : 30 % / flou 40 / saturation 200 (40 % / 30 /
+        //  180 à la 229) — la transparence du verre liquide.
+        "le verre porte les valeurs de la 233",
+        mesure.fond === "rgba(26, 26, 29, 0.3)" &&
+          mesure.filtre.includes("blur(40px)") &&
+          mesure.filtre.includes("saturate(2)"),
         `${mesure.fond} · ${mesure.filtre}`
       );
 

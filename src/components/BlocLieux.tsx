@@ -121,10 +121,13 @@ function PhotoRonde({
         <img
           src={ICONE_ADRESSE}
           alt=""
-          width={20}
-          height={20}
+          width={28}
+          height={28}
           aria-hidden="true"
-          className="h-5 w-5 invert opacity-40"
+          //  §2 (nº 233) — 28 px : un peu plus de la moitié du rond de
+          //  52, le glyphe ne se perd plus au milieu. PhotoRonde est
+          //  l'unique écriture : TOUS les ronds concernés suivent.
+          className="h-7 w-7 invert opacity-40"
         />
       ) : null}
     </span>

@@ -99,16 +99,16 @@ export function BoutonSuivre({
       aria-label={
         suivi ? `Ne plus suivre ${nomTatoueur}` : `Suivre ${nomTatoueur}`
       }
-      /*  §3 (nº 231) — LE BADGE PÈSE AUTANT QUE LES MOTS D'EN FACE,
-          ni plus ni moins : le rose avance optiquement, alors la boîte
-          recule. Hauteur descendue d'un cran (36 px — les mots du
-          sélecteur en font 40), ANGLES ARRONDIS et non plus une
-          capsule (`rounded-lg`, rayon très en dessous de la
-          mi-hauteur), rembourrage latéral réduit (14 px), et la MÊME
-          typographie que « Profil » et « Portfolio » : 14 px
+      /*  §3 (nº 231, retouché nº 233) — LE BADGE PÈSE AUTANT QUE LES
+          MOTS D'EN FACE, ni plus ni moins : le rose avance
+          optiquement, alors la boîte recule. Hauteur descendue à
+          30 px (36 à la 231, 44 avant), les EXTRÉMITÉS REDEVIENNENT
+          RONDES (nº 233-§3 : `rounded-full` — le rayon vaut la moitié
+          de la hauteur), rembourrage latéral réduit (14 px), et la
+          MÊME typographie que « Profil » et « Portfolio » : 14 px
           semi-gras (SelecteurOngletAffiche). La rangée `items-center`
           de l'enveloppe cale les centres optiques. */
-      className={`inline-flex min-h-[36px] items-center justify-center rounded-lg
+      className={`inline-flex min-h-[30px] items-center justify-center rounded-full
                   px-3.5 text-[14px] font-semibold transition-colors
                   focus-visible:outline-2 focus-visible:outline-offset-2
                   focus-visible:outline-primaire ${

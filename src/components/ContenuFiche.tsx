@@ -254,7 +254,7 @@ export function ContenuFiche({
                  text-sombre-texte-doux rounded-lg -mx-1.5 -my-1 px-1.5 py-1
                  transition-colors hover:bg-white/5 active:bg-white/10"
     >
-      <span className="flex h-[18px] w-[18px] shrink-0 items-center justify-center">
+      <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center">
         {icone}
       </span>
       <span className="min-w-0 truncate underline-offset-4 decoration-1 group-hover:underline">
@@ -286,13 +286,14 @@ export function ContenuFiche({
    *    touchant au fichier — la règle permanente du projet).
    * Colonne de 18 px inchangée (nº 223), pour les trois.
    */
-  //  §4 (nº 229) — LES TAILLES, AJUSTÉES À L'ŒIL DU PROPRIÉTAIRE :
-  //   · réseaux : l'icône REMPLIT son disque de 18 px, il ne reste
-  //     qu'un LISERÉ fin de blanc — 15 px d'icône, soit 1,5 px de
-  //     couronne de chaque côté, jamais davantage ;
-  //   · site.png : un cran plus petite (16 px) et JAMAIS coupée —
-  //     `object-contain`, jamais `cover`. Sans disque, comme avant.
-  //  La colonne de 18 px ne bouge pas, les trois pèsent pareil.
+  //  §1 (nº 233) — LES TAILLES, RÉAJUSTÉES : le liseré de 1,5 px sur
+  //  un disque de 18 était une couronne, pas un liseré, et le glyphe
+  //  paraissait minuscule.
+  //   · la COLONNE passe à 22 px, pour les trois liens ;
+  //   · réseaux : disque blanc de 22 px, glyphe de 20 — un FIL blanc
+  //     d'1 px autour du dessin, rien de plus ;
+  //   · site.png : 20 px, toujours sans disque, toujours
+  //     `object-contain` — jamais rognée.
   const iconeFichier = (fichier: string, glyphe: boolean) =>
     glyphe ? (
       /* eslint-disable-next-line @next/next/no-img-element --
@@ -301,20 +302,20 @@ export function ContenuFiche({
       <img
         src={fichier}
         alt=""
-        width={16}
-        height={16}
-        className="h-4 w-4 object-contain invert opacity-60"
+        width={20}
+        height={20}
+        className="h-5 w-5 object-contain invert opacity-60"
       />
     ) : (
-      <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-white">
+      <span className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-white">
         {/* eslint-disable-next-line @next/next/no-img-element --
            icône déposée par le propriétaire, affichée telle quelle. */}
         <img
           src={fichier}
           alt=""
-          width={15}
-          height={15}
-          className="h-[15px] w-[15px] object-contain"
+          width={20}
+          height={20}
+          className="h-5 w-5 object-contain"
         />
       </span>
     );
@@ -558,16 +559,22 @@ export function ContenuFiche({
               sauf sans TikTok, où Instagram remonte. Chacun son icône
               à gauche, la colonne de 18 px pour les trois. Le `mt-8`
               reste la marge basse de la photo (nº 225-§1). */}
-          {/*  16 px entre les deux lignes (nº 229-§3). */}
+          {/*  16 px entre les deux lignes (nº 229-§3), et DEUX
+               COLONNES DE LARGEUR ÉGALE (nº 233-§5) : chaque ligne est
+               une grille au même gabarit — l'écart entre Instagram et
+               TikTok est EXACTEMENT celui des deux liens du dessus, et
+               TikTok se range sous le deuxième lien. `justify-items-
+               start` : la colonne est large, le lien garde sa taille.
+               L'ordre de la nº 227 ne bouge pas. */}
           {(premiereLigne.length > 0 || secondeLigne.length > 0) && (
-            <div className="mt-8 flex flex-col items-start gap-y-4">
+            <div className="mt-8 flex w-full flex-col items-start gap-y-4">
               {premiereLigne.length > 0 && (
-                <div className="flex flex-wrap items-center gap-x-7 gap-y-3.5">
+                <div className="grid w-full grid-cols-2 items-center justify-items-start gap-x-7 gap-y-4">
                   {premiereLigne}
                 </div>
               )}
               {secondeLigne.length > 0 && (
-                <div className="flex flex-wrap items-center gap-x-7 gap-y-3.5">
+                <div className="grid w-full grid-cols-2 items-center justify-items-start gap-x-7 gap-y-4">
                   {secondeLigne}
                 </div>
               )}
