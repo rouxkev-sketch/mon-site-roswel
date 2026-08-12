@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
+import { defilerSansGeste } from "@/lib/defilement-programme";
 import {
   ICONES_RESEAUX,
   libelleFiltre,
@@ -68,6 +69,7 @@ export function ContenuFiche({
   demonstration = false,
   apercu = false,
   surSerieChoisie,
+  suiviAuDepart = false,
 }: {
   tatoueur: Tatoueur;
   /** LE PORTFOLIO GROUPÉ PAR STYLE — l'enveloppe le calcule (elle en a
@@ -85,6 +87,9 @@ export function ContenuFiche({
       style + catégorie + rendu (nº 204-§3) — et remonte en haut
       (nº 197-§4). */
   surSerieChoisie: (serie: SerieChoisie) => void;
+  /** SUIT-ON DÉJÀ CE TATOUEUR ? — lu par le SERVEUR (nº 208-§1) : le
+      bouton naît dans le bon état, il ne se corrige plus à l'écran. */
+  suiviAuDepart?: boolean;
 }) {
   /**
    * LES DEUX ONGLETS DE L'AFFICHE (nº 197-§1)
@@ -97,6 +102,38 @@ export function ContenuFiche({
   /** LE RENDU regardé (nº 204-§3) — le panneau le ramène de lui-même
       au seul rendu présent quand il n'y en a qu'un. */
   const [rendu, setRendu] = useState<string>(RENDU_PAR_DEFAUT);
+
+  /**
+   * §7 (nº 208) — AU DOIGT, CHANGER D'ONGLET REMONTE LA PAGE
+   * ==================================================================
+   * La limite entre la photo et le contenu vient se poser PILE SOUS LA
+   * BARRE FIXE : ni dessous (le sélecteur qu'on vient de toucher
+   * disparaîtrait derrière elle), ni avec un vide au-dessus.
+   * On mesure les deux — le repère du contenu, et la hauteur réelle de
+   * la barre (`[data-barre-fixe]`, qui vaut 64 px sur une fiche mais
+   * n'est pas écrite ici : elle se lit).
+   * ⚠️ SEULEMENT SUR LES VRAIS MOBILES : sur le web, la colonne défile
+   * toute seule et la rangée y est déjà posée (§4) ; dans la fenêtre
+   * superposée, le corps est gelé et un défilement de page ne veut
+   * rien dire.
+   * ⚠️ `defilerSansGeste` : ce mouvement n'est pas un geste du doigt —
+   * sans cela, la barre y lirait une intention et se replierait
+   * (nº 154-§6A).
+   */
+  const debutContenu = useRef<HTMLSpanElement>(null);
+  function choisirOnglet(suivant: OngletAffiche) {
+    setOnglet(suivant);
+    if (document.documentElement.dataset.appareil !== "mobile") return;
+    const repere = debutContenu.current?.getBoundingClientRect();
+    if (!repere) return;
+    const barre = document
+      .querySelector("[data-barre-fixe]")
+      ?.getBoundingClientRect().height;
+    defilerSansGeste({
+      top: Math.max(0, window.scrollY + repere.top - (barre ?? 0)),
+      left: 0,
+    });
+  }
 
   const avatarProfil = (
     <span
@@ -280,6 +317,10 @@ export function ContenuFiche({
            (`bg-inherit`) — anthracite sur la page, carte dans la
            fenêtre superposée : le contenu partagé n'écrit aucune
            couleur qui lui serait propre. */}
+      {/*  LE REPÈRE DU HAUT DU CONTENU (nº 208-§7) — la limite entre la
+           photo et le texte. Il ne montre rien : il se mesure. */}
+      <span ref={debutContenu} aria-hidden="true" className="block h-0" />
+
       <div
         className="relative flex items-center justify-between gap-3
                    lg:sticky lg:top-0 lg:z-[2] bg-inherit"
@@ -293,9 +334,13 @@ export function ContenuFiche({
           aria-hidden="true"
           className="pointer-events-none absolute inset-x-0 bottom-full hidden h-8 bg-inherit lg:block"
         />
-        <SelecteurOngletAffiche valeur={onglet} surChoix={setOnglet} />
+        <SelecteurOngletAffiche valeur={onglet} surChoix={choisirOnglet} />
         {!apercu && (
-          <BoutonSuivre tatoueurId={tatoueur.id} nomTatoueur={tatoueur.nom} />
+          <BoutonSuivre
+            tatoueurId={tatoueur.id}
+            nomTatoueur={tatoueur.nom}
+            suiviAuDepart={suiviAuDepart}
+          />
         )}
       </div>
 

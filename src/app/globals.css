@@ -33,6 +33,17 @@
    c'est l'interface web qui s'affiche (le meilleur défaut). */
 @custom-variant mobile (&:where([data-appareil="mobile"], [data-appareil="mobile"] *));
 
+/* ⚠️ LA VARIANTE `pointer-fine:` MANQUAIT (nº 208-§2), ET C'EST LA
+   CAUSE DES FLÈCHES INVISIBLES DU CARROUSEL. Elles s'écrivent
+   `hidden pointer-fine:flex` depuis leur création : une variante que
+   Tailwind ne connaît pas ne produit AUCUNE règle — il ne restait donc
+   que `hidden`, à toutes les largeurs et sur tous les appareils. Les
+   flèches n'ont jamais pu s'afficher sur le web.
+   Elle suit LE POINTEUR, pas la largeur : visible dès que l'appareil a
+   une souris, y compris dans une fenêtre rétrécie ; jamais sur un vrai
+   écran tactile, où le balayage suffit. */
+@custom-variant pointer-fine (@media (pointer: fine));
+
 @theme inline {
   --color-primaire: var(--rw-primaire);
   --color-primaire-fonce: var(--rw-primaire-fonce);

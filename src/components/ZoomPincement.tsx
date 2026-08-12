@@ -85,6 +85,26 @@ export function usePincement({
   /** CE QUE L'IMAGE PORTE À L'ÉCRAN — noté au moment où on le pose,
       jamais relu dans le style. */
   const affiche = useRef({ echelle: 1, dx: 0, dy: 0 });
+  /** LE CADRE ET L'ORIGINE DU ZOOM, mesurés au premier pincement : ils
+      donnent les BUTÉES du déplacement (nº 208-§5). */
+  const cadre = useRef({ largeur: 0, hauteur: 0, ox: 0, oy: 0 });
+
+  /**
+   * LES BUTÉES DU DÉPLACEMENT (nº 208-§5) — la photo agrandie glisse,
+   * mais ne DÉCOUVRE JAMAIS son cadre.
+   * Un point `p` de l'image se peint en `o + s·(p − o) + t` (origine
+   * `o`, échelle `s`, décalage `t`). Pour que le bord gauche reste à
+   * gauche du cadre : `o(1−s) + t ≤ 0`, donc `t ≤ o(s−1)`. Pour que le
+   * bord droit reste à droite : `t ≥ −(L−o)(s−1)`. Même calcul en
+   * hauteur. À l'échelle 1, les deux bornes valent zéro : l'image ne
+   * bouge pas — c'est exactement ce qu'on veut.
+   */
+  function borner(valeur: number, origine: number, taille: number, echelle: number) {
+    const marge = echelle - 1;
+    const haute = origine * marge;
+    const basse = -(taille - origine) * marge;
+    return Math.min(haute, Math.max(basse, valeur));
+  }
 
   /* Pendant le pincement : la page ne doit NI défiler NI zoomer
      nativement — l'écouteur non passif annule les touchmove. Posé au
@@ -163,6 +183,10 @@ export function usePincement({
       actif.current = true;
       finDernierPincement = Date.now();
       depart.current = mesure();
+      //  LA BASE DU GESTE EST TOUJOURS CE QUE L'IMAGE MONTRE — au
+      //  premier pincement l'identité, à une reprise l'état atteint
+      //  (zoom tenu, et déplacements faits au doigt depuis).
+      courant.current = affiche.current;
       if (!reprise) surPincement?.(true);
       const element = cible.current;
       if (element) {
@@ -173,9 +197,16 @@ export function usePincement({
           // L'origine du zoom : le point ENTRE les deux doigts. Elle
           // est posée au PREMIER pincement et ne bouge plus — la
           // changer en cours de geste déplacerait l'image d'un bond.
-          element.style.transformOrigin = `${depart.current.centreX - rect.left}px ${
-            depart.current.centreY - rect.top
-          }px`;
+          const ox = depart.current.centreX - rect.left;
+          const oy = depart.current.centreY - rect.top;
+          element.style.transformOrigin = `${ox}px ${oy}px`;
+          //  Le cadre et l'origine servent aux butées du déplacement.
+          cadre.current = {
+            largeur: rect.width,
+            hauteur: rect.height,
+            ox,
+            oy,
+          };
           // Au-dessus des voisines de la grille pendant le geste.
           element.style.position = "relative";
           element.style.zIndex = "60";
@@ -184,16 +215,42 @@ export function usePincement({
     }
   }
 
+  /** Poser la transformation, et retenir ce qu'on vient de poser. */
+  function poser(echelle: number, dx: number, dy: number) {
+    const element = cible.current;
+    if (!element) return;
+    // eslint-disable-next-line react-hooks/immutability -- animation impérative du style d'un élément du DOM, jamais un état React
+    element.style.transform = `translate(${dx}px, ${dy}px) scale(${echelle})`;
+    affiche.current = { echelle, dx, dy };
+    finDernierPincement = Date.now();
+  }
+
   function onPointerMove(evenement: React.PointerEvent) {
-    if (!doigts.current.has(evenement.pointerId)) return;
+    const precedent = doigts.current.get(evenement.pointerId);
+    if (!precedent) return;
     doigts.current.set(evenement.pointerId, {
       x: evenement.clientX,
       y: evenement.clientY,
     });
-    //  ⚠️ UN SEUL DOIGT : on ne touche à RIEN (nº 207-§8). L'image
-    //  garde exactement la transformation qu'elle porte — elle est
-    //  figée, pas rangée. C'est le lever du dernier doigt qui range.
-    if (!actif.current || doigts.current.size < 2 || !depart.current) return;
+    if (!actif.current) return;
+
+    //  ⚠️ UN SEUL DOIGT : IL DÉPLACE LA PHOTO AGRANDIE (nº 208-§5).
+    //  Le zoom tient depuis la nº 207-§8 ; il devient manœuvrable —
+    //  le doigt restant fait glisser l'image dans toutes les
+    //  directions, et les butées l'empêchent de découvrir son cadre.
+    //  (À l'échelle 1, les butées valent zéro : rien ne bouge.)
+    if (doigts.current.size === 1) {
+      const { echelle, dx, dy } = affiche.current;
+      const { largeur, hauteur, ox, oy } = cadre.current;
+      poser(
+        echelle,
+        borner(dx + (evenement.clientX - precedent.x), ox, largeur, echelle),
+        borner(dy + (evenement.clientY - precedent.y), oy, hauteur, echelle)
+      );
+      return;
+    }
+
+    if (doigts.current.size < 2 || !depart.current) return;
     const { distance, centreX, centreY } = mesure();
     //  L'échelle suit l'écart des doigts (jamais plus petite que
     //  l'image, plafonnée à ×4) ; l'image SUIT AUSSI leur centre.
@@ -205,15 +262,14 @@ export function usePincement({
       4,
       Math.max(1, base.echelle * (distance / depart.current.distance))
     );
-    const dx = base.dx + (centreX - depart.current.centreX);
-    const dy = base.dy + (centreY - depart.current.centreY);
-    const element = cible.current;
-    if (element) {
-      // eslint-disable-next-line react-hooks/immutability -- animation impérative du style d'un élément du DOM, jamais un état React
-      element.style.transform = `translate(${dx}px, ${dy}px) scale(${echelle})`;
-      affiche.current = { echelle, dx, dy };
-      finDernierPincement = Date.now();
-    }
+    //  LES MÊMES BUTÉES QU'AU DOIGT (nº 208-§5) : suivre le centre des
+    //  doigts ne doit pas non plus découvrir le cadre.
+    const { largeur, hauteur, ox, oy } = cadre.current;
+    poser(
+      echelle,
+      borner(base.dx + (centreX - depart.current.centreX), ox, largeur, echelle),
+      borner(base.dy + (centreY - depart.current.centreY), oy, hauteur, echelle)
+    );
   }
 
   function onPointerUp(evenement: React.PointerEvent) {
@@ -227,6 +283,8 @@ export function usePincement({
       return;
     }
     if (actif.current) {
+      //  Le geste reprendra depuis ce que l'image montre — un
+      //  deuxième doigt qui revient ne fait donc aucun saut.
       courant.current = affiche.current;
       depart.current = null;
     }

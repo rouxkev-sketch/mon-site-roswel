@@ -65,6 +65,7 @@ export function FicheTatoueur({
   styleInitial = "",
   renduInitial = "",
   apercu = false,
+  suiviAuDepart = false,
 }: {
   tatoueur: Tatoueur;
   demonstration: boolean;
@@ -82,6 +83,9 @@ export function FicheTatoueur({
   /** Vrai dans l'espace tatoueur (« Ma fiche ») : aperçu public SANS
       partage ni signalement, dans un <div> et non un <main>. */
   apercu?: boolean;
+  /** SUIT-ON DÉJÀ CE TATOUEUR ? — la page l'a demandé au serveur
+      (nº 208-§1) : le bouton naît juste, sans se corriger. */
+  suiviAuDepart?: boolean;
 }) {
   const styles = tatoueur.styles.map((slug) => ({
     slug,
@@ -138,6 +142,9 @@ export function FicheTatoueur({
       nº 31 avait laissés de côté : après elle, la réponse est oui
       partout.) */
   const photoAffichee = photosDuCarrousel[indicePhoto] ?? photosDuCarrousel[0];
+  /** LA GALERIE AFFICHÉE (nº 208-§6) — ce que le cœur enregistre : la
+      série entière que l'on regarde, pas la seule image sous les yeux. */
+  const galerieAffichee = photosDuCarrousel.map((photo) => photo.cle);
 
   /*  ⚠️ LE SÉLECTEUR DE STYLE POSÉ SUR LA PHOTO A ÉTÉ SUPPRIMÉ
       (nº 198-§1) — le badge déroulant du bas gauche (mobile) comme le
@@ -241,6 +248,7 @@ export function FicheTatoueur({
                     <div className="mobile:hidden absolute top-3 right-3 z-[2]">
                       <BoutonCoeurPhoto
                         photoId={photoAffichee.cle}
+                        galerie={galerieAffichee}
                         variante="fiche"
                       />
                     </div>
@@ -257,6 +265,7 @@ export function FicheTatoueur({
                        garde lisible sur photo claire comme sombre. */}
                   <BoutonCoeurPhoto
                     photoId={photoAffichee.cle}
+                    galerie={galerieAffichee}
                     variante="fiche-mobile"
                   />
                 </div>
@@ -294,6 +303,7 @@ export function FicheTatoueur({
             studioCourant={studioCourant}
             demonstration={demonstration}
             apercu={apercu}
+            suiviAuDepart={suiviAuDepart}
             surSerieChoisie={(serie) => {
               setStyleAffiche(serie.style);
               setSerieOuverte({ nature: serie.nature, rendu: serie.rendu });

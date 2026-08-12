@@ -335,6 +335,9 @@ export function FenetreFiche({
                   <div className="absolute top-3 right-3 z-[2]">
                     <BoutonCoeurPhoto
                       photoId={photoEnregistrable}
+                      //  LA GALERIE AFFICHÉE (nº 208-§6) — la série
+                      //  entière que l'on regarde.
+                      galerie={photosDuStyleAffiche.map((photo) => photo.cle)}
                       variante="fiche"
                     />
                   </div>

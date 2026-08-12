@@ -39,6 +39,12 @@ import {
  *
  * PAS CONNECTÉ ? Même règle que le cœur : on mène à la connexion en
  * gardant la page (`?suite=`) ET le geste, rejoué au retour.
+ *
+ * ⚠️ SON ÉTAT DE DÉPART VIENT DU SERVEUR (nº 208-§1) : la page de
+ * fiche lit le cookie de session et demande à la base si ce compte
+ * suit déjà ce tatoueur (`suitCeTatoueur`). Le bouton naît donc
+ * « Suivi » quand il doit l'être, au lieu d'afficher « Suivre » puis
+ * de se corriger à l'arrivée de la liste des favoris.
  */
 export function BoutonSuivre({
   tatoueurId,
@@ -104,7 +110,22 @@ export function BoutonSuivre({
                       : "bg-primaire text-white hover:bg-primaire-fonce"
                   }`}
     >
-      {suivi ? "Suivi" : "Suivre"}
+      {/*  ⚠️ LES DEUX LIBELLÉS OCCUPENT LA MÊME LARGEUR (nº 208-§1) :
+           ils sont posés dans la même case de grille, le plus long
+           réservant la place. Le bouton ne change donc pas d'un pixel
+           entre « Suivre » et « Suivi » — rien ne peut bouger autour,
+           quel que soit l'instant où l'état est connu. */}
+      <span className="grid text-center">
+        <span className="col-start-1 row-start-1">
+          {suivi ? "Suivi" : "Suivre"}
+        </span>
+        <span aria-hidden="true" className="col-start-1 row-start-1 invisible">
+          Suivre
+        </span>
+        <span aria-hidden="true" className="col-start-1 row-start-1 invisible">
+          Suivi
+        </span>
+      </span>
     </button>
   );
 }

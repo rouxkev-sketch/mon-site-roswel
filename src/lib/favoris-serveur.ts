@@ -20,6 +20,39 @@ import { natureConnue } from "@/lib/photos-tatoueur";
  * montrer qui ne soit pas public.
  */
 
+/**
+ * SUIT-ON DÉJÀ CE TATOUEUR ? — la question posée PAR LE SERVEUR
+ * ==============================================================
+ * (passe nº 208-§1)
+ *
+ * Le bouton « Suivre » naissait toujours dans son état « pas suivi »,
+ * puis se corrigeait une fois la liste des favoris arrivée du réseau :
+ * sur un téléphone, cela se voyait — « Suivre », puis « Suivi ». C'est
+ * le même défaut que le bouton de compte de la nº 203, et la même
+ * correction : LE SERVEUR A LA SESSION, il répond avant de rendre.
+ *
+ * Une seule ligne lue, un oui ou un non — rien d'autre ne sort d'ici.
+ * Jamais bloquant : base injoignable ou migration nº 54 pas passée, on
+ * répond « non », qui est l'état de la quasi-totalité des visites.
+ */
+export async function suitCeTatoueur(
+  utilisateurId: string,
+  tatoueurId: string
+): Promise<boolean> {
+  try {
+    const supabase = await creerClientSupabaseServeur();
+    const { data } = await supabase
+      .from("tatoueurs_suivis")
+      .select("tatoueur_id")
+      .eq("utilisateur_id", utilisateurId)
+      .eq("tatoueur_id", tatoueurId)
+      .maybeSingle();
+    return data !== null;
+  } catch {
+    return false;
+  }
+}
+
 /** UNE PHOTO ENREGISTRÉE, avec ce qu'il faut pour l'afficher. */
 export type PhotoFavorite = {
   /** L'identifiant de la photo — la clé du cœur. */

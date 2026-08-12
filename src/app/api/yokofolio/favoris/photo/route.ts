@@ -27,10 +27,25 @@ export async function POST(requete: Request) {
 
   const corps = (await requete.json().catch(() => null)) as {
     id?: string;
+    /** LA GALERIE AFFICHÉE (nº 208-§6) — toucher le cœur d'une photo
+        enregistre tout ce qu'on regarde : le style, la catégorie et le
+        rendu courants. Une photo seule (`id`) reste acceptée : c'est
+        ce qu'envoient les cartes de la mosaïque. */
+    ids?: string[];
     actif?: boolean;
   } | null;
-  const photoId = corps?.id?.trim();
-  if (!photoId) {
+  //  Une photo ou une galerie : la même porte. La liste est bornée —
+  //  une galerie de dépôt fait vingt photos, au-delà c'est une requête
+  //  fabriquée à la main.
+  const photoIds = [
+    ...new Set(
+      (Array.isArray(corps?.ids) ? corps.ids : [corps?.id ?? ""])
+        .filter((id): id is string => typeof id === "string")
+        .map((id) => id.trim())
+        .filter(Boolean)
+    ),
+  ].slice(0, 80);
+  if (photoIds.length === 0) {
     return NextResponse.json({ ok: false, raison: "photo" }, { status: 400 });
   }
 
@@ -41,7 +56,10 @@ export async function POST(requete: Request) {
     const { error } = await supabase
       .from("favoris_photos")
       .upsert(
-        { utilisateur_id: user.id, photo_id: photoId },
+        photoIds.map((photoId) => ({
+          utilisateur_id: user.id,
+          photo_id: photoId,
+        })),
         { onConflict: "utilisateur_id,photo_id" }
       );
     if (error) {
@@ -52,7 +70,7 @@ export async function POST(requete: Request) {
       .from("favoris_photos")
       .delete()
       .eq("utilisateur_id", user.id)
-      .eq("photo_id", photoId);
+      .in("photo_id", photoIds);
     if (error) {
       return NextResponse.json({ ok: false, raison: error.message }, { status: 500 });
     }

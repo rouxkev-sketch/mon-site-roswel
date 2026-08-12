@@ -12,6 +12,7 @@ import {
 } from "@/lib/tatoueurs";
 import { PageMessageSombre } from "@/components/PageMessageSombre";
 import { ficheLue } from "@/lib/fiche-lue";
+import { suitCeTatoueur } from "@/lib/favoris-serveur";
 import { utilisateurDepuisCookies } from "@/lib/session-cookie";
 import { adresseDuSite } from "@/lib/site";
 import { adresseStructuree } from "@/lib/adresse";
@@ -140,9 +141,15 @@ export default async function PageFicheTatoueur({
 
   const stylePrincipal = tatoueur.styles[0];
 
-  // PAS DE FAVORI, donc rien à lire côté visiteur : yokofolio n'a pas
-  // de compte particulier. La page se rend sans la moindre requête
-  // d'authentification — plus simple, et plus rapide.
+  //  SUIT-ON DÉJÀ CE TATOUEUR ? (nº 208-§1) — la question est posée
+  //  ICI, côté serveur, qui a le cookie de session : le bouton naît
+  //  donc dans le bon état, et ne se corrige plus sous les yeux. Une
+  //  visite sans compte ne coûte aucune requête.
+  const session = utilisateurDepuisCookies((await cookies()).getAll());
+  const suiviAuDepart = session?.id
+    ? await suitCeTatoueur(session.id, tatoueur.id)
+    : false;
+
   return (
     <>
       {/* SMARTPHONE : pas de moteur dans la barre — sur une fiche, on
@@ -160,6 +167,7 @@ export default async function PageFicheTatoueur({
         demonstration={demonstration}
         styleInitial={styleConnu(style)}
         renduInitial={renduConnu(rendu)}
+        suiviAuDepart={suiviAuDepart}
       />
       {/* ⚠️ CE BLOC EST INVISIBLE, ET C'EST LE PLUS IMPORTANT DE LA
           PAGE POUR LE RÉFÉRENCEMENT LOCAL (passe nº 114). Il ne

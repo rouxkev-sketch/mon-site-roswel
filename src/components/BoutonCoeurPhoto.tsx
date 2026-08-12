@@ -8,6 +8,7 @@ import {
   amorcer,
   definir,
   ecrireFavori,
+  ecrireFavorisPhotos,
   estIdentifiantDeBase,
   reprendreLeGeste,
   retenirLeGeste,
@@ -40,12 +41,25 @@ import {
  */
 export function BoutonCoeurPhoto({
   photoId,
+  galerie,
   enregistreeAuDepart = false,
   variante = "carte",
 }: {
   /** La photo telle qu'elle vit en base. Absente (galerie vide, fiche
       d'avant le portfolio catalogué) : le cœur ne s'affiche pas. */
   photoId: string;
+  /**
+   * LA GALERIE AFFICHÉE (nº 208-§6) — toutes les photos que l'on
+   * regarde : le style, la catégorie et le rendu courants. Fournie par
+   * la fiche, le geste porte alors sur TOUTE la galerie : un cœur
+   * touché les enregistre toutes, et tous leurs cœurs s'allument.
+   * ⚠️ CE N'EST PAS LE CŒUR DE SÉRIE DE LA Nº 203 (annulé par la
+   * nº 204) : le cœur reste sur chaque photo, à sa place. Seul son
+   * EFFET porte plus loin.
+   * Absente (cartes de la mosaïque, page « Ma sélection ») : le geste
+   * ne concerne que cette photo, comme avant.
+   */
+  galerie?: string[];
   enregistreeAuDepart?: boolean;
   /** `carte` : dans l'image de la mosaïque. `fiche` : le même dessin,
       au gabarit des actions de fiche (partage). */
@@ -56,6 +70,12 @@ export function BoutonCoeurPhoto({
 }) {
   const router = useRouter();
   const { utilisateur, pret } = useUtilisateur();
+  /** CE QUE LE GESTE TOUCHE — la galerie affichée quand elle est
+      fournie (nº 208-§6), cette photo sinon. Seules les photos qui
+      existent VRAIMENT en base peuvent être enregistrées. */
+  const visees = (galerie ?? [photoId]).filter((cle) =>
+    estIdentifiantDeBase(cle)
+  );
   amorcer("photo", photoId, enregistreeAuDepart);
   const enregistree = useEtatFavori("photo", photoId, enregistreeAuDepart);
   /** L'animation de pose — un rebond court, jamais au retrait. */
@@ -75,8 +95,13 @@ export function BoutonCoeurPhoto({
     //  ce qui est exactement ce qu'on veut montrer.
     //  (`definir` passe par le magasin partagé, pas par un état React :
     //  aucun rendu en cascade depuis cet effet.)
-    definir("photo", photoId, true);
-    void ecrireFavori("photo", photoId, true);
+    //  LE GESTE REPRIS PORTE AUSSI LOIN QUE LE GESTE D'ORIGINE : la
+    //  galerie entière si elle est fournie (nº 208-§6).
+    for (const cle of visees) definir("photo", cle, true);
+    void ecrireFavorisPhotos(visees, true);
+    // `visees` est recalculé à chaque rendu ; la garde `dejaRejoue`
+    // suffit à ne rejouer qu'une fois.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pret, utilisateur, photoId]);
 
   function basculer(evenement: React.MouseEvent) {
@@ -93,12 +118,20 @@ export function BoutonCoeurPhoto({
     const suivant = !enregistree;
     //  L'ÉCRAN RÉPOND TOUT DE SUITE, la base suit. Un cœur qui attend
     //  le réseau pour se remplir donne l'impression d'un site cassé.
-    definir("photo", photoId, suivant);
+    //  ⚠️ TOUTE LA GALERIE AFFICHÉE (nº 208-§6) : les cœurs des autres
+    //  photos de la série s'allument à l'instant, puisqu'ils lisent le
+    //  même magasin partagé.
+    for (const cle of visees) definir("photo", cle, suivant);
     if (suivant) setPulse(true);
-    void ecrireFavori("photo", photoId, suivant).then((ok) => {
-      //  Le serveur a refusé : on remet le cœur comme il était plutôt
-      //  que de laisser croire à un enregistrement qui n'existe pas.
-      if (!ok) definir("photo", photoId, !suivant);
+    const ecriture =
+      visees.length > 1
+        ? ecrireFavorisPhotos(visees, suivant)
+        : ecrireFavori("photo", photoId, suivant);
+    void ecriture.then((ok) => {
+      //  Le serveur a refusé : on remet les cœurs comme ils étaient
+      //  plutôt que de laisser croire à un enregistrement qui n'existe
+      //  pas.
+      if (!ok) for (const cle of visees) definir("photo", cle, !suivant);
     });
   }
 
@@ -112,12 +145,11 @@ export function BoutonCoeurPhoto({
   const gabarit =
     variante === "carte"
       ? "h-9 w-9"
-      : variante === "fiche-mobile"
-        ? //  ⚠️ LE STANDARD TACTILE (nº 198-§2) : 48 px de cible.
-          "h-12 w-12"
-        : //  Sur la fiche (web), le cœur répond au bouton de partage :
-          //  même hauteur, même pastille, même flou.
-          "h-10 w-10";
+      : //  ⚠️ LE MÊME GABARIT SUR LES DEUX ÉCRANS (nº 208-§3) : 48 px
+        //  de cible, le standard tactile de la nº 198-§2. Le cœur du
+        //  web était resté à 40 — trop petit sur une photo qui occupe
+        //  la moitié de l'écran.
+        "h-12 w-12";
 
   return (
     <button
@@ -155,9 +187,7 @@ export function BoutonCoeurPhoto({
                   focus-visible:outline-primaire ${pulse ? "rw-coeur-anime" : ""}`}
     >
       <IconeCoeur
-        taille={
-          variante === "carte" ? 20 : variante === "fiche-mobile" ? 30 : 22
-        }
+        taille={variante === "carte" ? 20 : 30}
         classe={`[filter:drop-shadow(0_1px_2px_rgba(0,0,0,0.55))] ${
           enregistree
             ? //  ⚠️ BLANC PLEIN une fois enregistré (nº 141-6B) — plus

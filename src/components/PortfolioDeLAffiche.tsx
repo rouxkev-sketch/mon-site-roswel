@@ -250,7 +250,13 @@ function stylesDeLaSerie(
         nombre: photos.length,
       };
     })
-    .filter((style) => style.nombre > 0);
+    .filter((style) => style.nombre > 0)
+    //  ⚠️ DE A À Z (nº 208-§4), quels que soient la catégorie et le
+    //  rendu choisis. L'ordre d'origine était celui du dépôt : il
+    //  changeait d'un sélecteur à l'autre, et l'œil devait rechercher
+    //  chaque fois le même style à un endroit différent. `localeCompare`
+    //  en français : les accents se rangent où on les attend.
+    .sort((a, b) => a.label.localeCompare(b.label, "fr"));
 }
 
 /**
