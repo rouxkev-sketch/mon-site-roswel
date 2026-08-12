@@ -304,8 +304,12 @@ export function PanneauPortfolio({
            passerait dans l'espace laissé au-dessus de lui. Le fond est
            celui de l'enveloppe (`bg-inherit`) : la page l'anthracite,
            la fenêtre superposée sa carte — aucune variante à écrire
-           ici. */}
-      <div className="pt-6 lg:sticky lg:top-11 lg:z-[1] bg-inherit">
+           ici.
+           ⚠️ PAR UNE VARIABLE, ET NON `bg-inherit` (nº 209-§6) : ce
+           bloc a pour parent le panneau, pas la colonne — il héritait
+           donc du transparent, et le contenu se voyait passer
+           derrière. */}
+      <div className="pt-6 lg:sticky lg:top-11 lg:z-[1] bg-[var(--fond-colonne)]">
         <OngletsLigne
           ariaLabel="Réalisations ou flashs"
           cleActive={nature}

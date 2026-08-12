@@ -6,51 +6,53 @@ import { ZoomPincement } from "@/components/ZoomPincement";
 import type { PhotoGalerie } from "@/lib/photo-tatoueur";
 
 /**
- * LE CARROUSEL DU PORTFOLIO — TOUTES les photos d'un style
- * =========================================================
- * ⚠️ IL NE MONTRE PLUS « une photo par style ». Il montre LE STYLE
- * CHOISI, et toutes ses photos, dans l'ordre du dépôt (les zones dans
- * l'ordre de la liste, le noir et gris avant la couleur). Changer de
- * style — au sélecteur posé sur l'image — change le contenu du
- * carrousel : c'est la fiche qui possède le style ET l'indice.
+ * LE CARROUSEL DU PORTFOLIO — TOUTES les photos d'un ensemble
+ * ============================================================
+ * Il montre l'ensemble choisi (style, catégorie, rendu) et toutes ses
+ * photos, dans l'ordre du dépôt. C'est la fiche qui possède l'indice.
  *
- * LE DÉFILEMENT A UN DÉBUT ET UNE FIN : butée franche à la première
- * et à la dernière photo — aucune boucle.
+ * ⚠️ UN DÉFILEMENT NATIF AVEC ACCROCHAGE, PLUS AUCUN CALCUL (nº 209-§7)
+ * ====================================================================
+ * CE QUI A ÉTÉ SUPPRIMÉ, ET POURQUOI. La piste était déplacée par une
+ * translation que NOUS calculions : d'abord en pourcentage, puis (nº 207)
+ * en pixels mesurés et arrondis. Les deux ont laissé la même bande
+ * verticale à droite de la photo — le bord de la suivante. La cause
+ * définitive est celle que le propriétaire a relevée : la mesure est
+ * prise PENDANT L'OUVERTURE de la fenêtre superposée, avant qu'elle ait
+ * sa taille définitive ; le pas de translation restait donc celui d'un
+ * cadre qui n'existe plus. Corriger le calcul, c'était courir après la
+ * mesure.
+ *
+ * IL N'Y A DONC PLUS DE CALCUL DU TOUT. Le cadre est un conteneur qui
+ * DÉFILE (`overflow-x`), les photos sont des colonnes de 100 % de sa
+ * largeur, et l'accrochage (`scroll-snap`) fait le reste. Le navigateur
+ * connaît toujours sa largeur réelle, à l'instant près, pendant une
+ * ouverture comme après un redimensionnement : il ne peut plus y avoir
+ * d'écart entre la largeur d'une photo et le pas du défilement, parce
+ * que PERSONNE ne calcule ce pas.
+ *  · CE QUE LE CARROUSEL LIT : quelle photo occupe le cadre — par un
+ *    `IntersectionObserver`, qui répond par un OUI/NON, sans aucune
+ *    arithmétique ;
+ *  · CE QUE LES FLÈCHES ET LES POINTS ÉCRIVENT : `scrollTo` vers
+ *    `offsetLeft` de la photo visée — une position que le navigateur a
+ *    lui-même posée. Aucune largeur n'est lue nulle part.
  *
  * DEUX ÉCRANS, DEUX GESTES :
- *  - SMARTPHONE : le doigt fait défiler ; un COMPTEUR « 3/12 » vit
- *    dans l'angle haut droit (aucun s'il n'y a qu'une photo). ⚠️ PLUS
- *    AUCUN POINT SOUS LA PHOTO (nº 207-§5) : le compteur dit déjà où
- *    l'on en est, et il le dit mieux — les points ne servaient qu'à
- *    répéter la même chose en moins lisible ;
+ *  - SMARTPHONE : le doigt fait défiler (c'est désormais le défilement
+ *    natif, avec son inertie et son accrochage) ; un COMPTEUR « 3/12 »
+ *    vit dans l'angle haut droit ;
  *  - WEB (souris) : les flèches, et la pagination en bas de l'image.
  *
- * CE QUI S'EFFACE, ET CE QUI RESTE (règle changée) :
- *  · LE COMPTEUR garde son fondu après 3 secondes, et revient au
- *    toucher — il informe, il n'agit pas ;
- *  · LE SÉLECTEUR DE STYLE, lui, NE S'EFFACE PLUS JAMAIS. C'est la
- *    navigation de la fiche : elle doit être là quand la main arrive.
- *    Il est rendu par la fiche (`selecteur`), le carrousel se
- *    contente de lui garder sa place.
- *
- * LA TENUE EN CHARGE — vingt photos dans un style, sur un téléphone
- * en 4G :
- *  1. SEULES LA PHOTO COURANTE ET SES DEUX VOISINES existent comme
- *     images. Les autres sont des cases vides du même format : aucune
- *     requête, et la piste garde ses dimensions ;
- *  2. la courante demande la PLEINE RÉSOLUTION, les voisines se
- *     contentent de leur MINIATURE (voir PhotoProgressive) — le
- *     balayage a donc toujours quelque chose à montrer, tout de
- *     suite, et le réseau ne charge que ce qui va être vu.
+ * LA TENUE EN CHARGE — vingt photos sur un téléphone en 4G : seules la
+ * photo courante et ses deux voisines existent comme IMAGES. Les autres
+ * sont des colonnes vides du même format : aucune requête, et le cadre
+ * garde ses dimensions.
  *
  * LES FLÈCHES SUIVENT LE POINTEUR, pas la largeur : visibles dès que
- * l'appareil a une SOURIS (`pointer-fine`) — même dans une fenêtre
- * rétrécie au format mobile. Sur un vrai écran tactile, jamais : le
+ * l'appareil a une souris (`pointer-fine`, déclarée en nº 208-§2), même
+ * dans une fenêtre rétrécie. Sur un vrai écran tactile, jamais : le
  * balayage suffit.
  */
-
-/** Sous ce déplacement (px), un glissement au doigt est un simple tap. */
-const SEUIL_GLISSEMENT = 48;
 
 /** Combien de photos de part et d'autre gardent une image montée. */
 const VOISINES = 1;
@@ -63,7 +65,7 @@ export function CarrouselPortfolio({
   surChangement,
   children,
 }: {
-  /** LES PHOTOS DU STYLE AFFICHÉ — plus « une par style ». */
+  /** LES PHOTOS DE L'ENSEMBLE AFFICHÉ. */
   photos: PhotoGalerie[];
   nomTatoueur: string;
   /** Le libellé du style affiché — il sert aux textes de remplacement. */
@@ -71,7 +73,7 @@ export function CarrouselPortfolio({
   /** L'indice RÉEL affiché (0..n-1) — possédé par la fiche. */
   indice: number;
   surChangement: (indice: number) => void;
-  /** Posé PAR-DESSUS la photo (le partage, angle haut droit). */
+  /** Posé PAR-DESSUS la photo (le partage, le cœur). */
   children?: React.ReactNode;
 }) {
   const n = photos.length;
@@ -83,9 +85,8 @@ export function CarrouselPortfolio({
    * trois secondes sans interaction, LE TEXTE S'ESTOMPE et la capsule
    * SE RESSERRE pour ne laisser qu'une flèche minimale — vers la droite
    * s'il reste des photos après, vers la gauche en fin de galerie.
-   * Cette flèche demeure : c'est le repère permanent. Au moindre geste
-   * (un toucher n'importe où, un changement de photo), le texte revient
-   * aussitôt, et les trois secondes repartent.
+   * Cette flèche demeure : c'est le repère permanent. Au moindre geste,
+   * le texte revient aussitôt, et les trois secondes repartent.
    *
    * ⚠️ AUCUN setState SYNCHRONE DANS UN EFFET (la règle du projet) :
    *  · le retour au toucher vit dans l'ÉCOUTEUR (un événement, pas un
@@ -118,114 +119,82 @@ export function CarrouselPortfolio({
     return () => window.clearTimeout(minuteur);
   }, [reveils, indice]);
 
-  /**
-   * §3 (nº 207) — LA BANDE DE LA PHOTO PRÉCÉDENTE, À GAUCHE
-   * ==================================================================
-   * LE DÉFAUT. La piste se déplaçait de `-100 %` par photo. En CSS,
-   * ce pourcentage se compte sur la LARGEUR DE LA PISTE, qui vaut
-   * celle du cadre — et cette largeur n'est presque jamais un nombre
-   * entier de pixels : le cadre de la fiche est calculé
-   * (`(100vh-119px)*0.8`), celui de la fenêtre superposée dérive d'une
-   * hauteur en `vh`. À 456,66 px, la photo affichée se peint à 456,66
-   * du bord alors que le pixel 456 lui est encore visible : il reste
-   * une FRACTION DE PIXEL non couverte, et c'est le bord droit de la
-   * photo précédente qu'on y voit, sur toute la hauteur. Le navigateur
-   * l'étire à un pixel plein — d'où la bande.
-   *
-   * LA CORRECTION. On mesure le cadre, on ARRONDIT AU PIXEL SUPÉRIEUR,
-   * et cette largeur entière sert AUX DEUX : la largeur de chaque
-   * photo ET le pas de la translation. Le déplacement devient un
-   * multiple exact de la largeur d'une photo — plus aucun reste, à
-   * aucune largeur d'écran. La photo dépasse alors le cadre d'un
-   * demi-pixel au plus, que `overflow: hidden` rogne : elle le couvre
-   * donc bord à bord, toujours.
-   * (Tant que la mesure n'est pas faite — rendu serveur, première
-   * image — on garde le pourcentage : il n'est jamais faux, seulement
-   * imprécis d'une fraction.)
-   */
+  /** LE CADRE QUI DÉFILE, et les colonnes qu'il contient. */
   const cadre = useRef<HTMLDivElement>(null);
-  const [largeurCadre, setLargeurCadre] = useState(0);
+  const colonnes = useRef<(HTMLDivElement | null)[]>([]);
+
+  /** PINCEMENT À DEUX DOIGTS (vrais mobiles) : le temps du geste, le
+      cadre ne défile plus et l'accrochage est levé — sans quoi le
+      navigateur ferait glisser la piste sous les doigts. */
+  const [zoomEnCours, setZoomEnCours] = useState(false);
+  function surPincement(actif: boolean) {
+    setZoomEnCours(actif);
+  }
+
+  /**
+   * QUELLE PHOTO OCCUPE LE CADRE ? — la question posée au navigateur,
+   * qui répond sans qu'on calcule quoi que ce soit. Le seuil de 60 %
+   * ne peut désigner qu'une seule colonne à la fois.
+   */
   useEffect(() => {
     const zone = cadre.current;
-    if (!zone) return;
-    const mesurer = () => {
-      const brute = zone.getBoundingClientRect().width;
-      setLargeurCadre(brute > 0 ? Math.ceil(brute) : 0);
-    };
-    mesurer();
-    const observateur = new ResizeObserver(mesurer);
-    observateur.observe(zone);
-    return () => observateur.disconnect();
-  }, [n]);
-
-  // Glissement au doigt en cours : décalage en px, sinon null.
-  const [glisse, setGlisse] = useState<number | null>(null);
-  const departX = useRef<number | null>(null);
-  // La distance vit AUSSI dans une ref : les `pointermove` sont des
-  // événements continus, que React repeint en différé — à la levée du
-  // doigt, l'état peut avoir un geste de retard. La ref, jamais.
-  const distanceCourante = useRef(0);
-
-  /** PINCEMENT À DEUX DOIGTS (vrais mobiles) : dès que ZoomPincement
-      prend la main, le balayage en cours est ABANDONNÉ — la piste
-      revient en place, et plus aucun geste à un doigt n'est suivi
-      tant que le zoom vit. */
-  const pincementEnCours = useRef(false);
-  /** LE ZOOM DÉBORDE DU CADRE — comme sur les cartes de la mosaïque.
-      Pendant le geste, les deux enveloppes qui rognent passent en
-      `overflow-visible` et montent d'un cran : l'image agrandie sort
-      de son cadre au lieu d'y être coupée. Les photos VOISINES sont
-      masquées le temps du geste. Tout se range au relâchement. */
-  const [zoomDebordant, setZoomDebordant] = useState(false);
-  function surPincement(actif: boolean) {
-    pincementEnCours.current = actif;
-    setZoomDebordant(actif);
-    if (actif) {
-      departX.current = null;
-      distanceCourante.current = 0;
-      setGlisse(null);
+    if (!zone || n <= 1) return;
+    const observateur = new IntersectionObserver(
+      (entrees) => {
+        for (const entree of entrees) {
+          if (!entree.isIntersecting) continue;
+          const rang = colonnes.current.indexOf(
+            entree.target as HTMLDivElement
+          );
+          if (rang >= 0) surChangement(rang);
+        }
+      },
+      { root: zone, threshold: 0.6 }
+    );
+    for (const colonne of colonnes.current) {
+      if (colonne) observateur.observe(colonne);
     }
+    return () => observateur.disconnect();
+  }, [n, surChangement]);
+
+  /**
+   * ALLER À UNE PHOTO — les flèches, les points, et tout changement
+   * venu de la fiche (choisir un ensemble remet à zéro).
+   * `offsetLeft` est la position que LE NAVIGATEUR a donnée à cette
+   * colonne : on ne la calcule pas, on la lit.
+   */
+  function allerA(rang: number, doux: boolean) {
+    const zone = cadre.current;
+    const colonne = colonnes.current[rang];
+    if (!zone || !colonne) return;
+    zone.scrollTo({
+      left: colonne.offsetLeft,
+      behavior: doux ? "smooth" : "instant",
+    });
   }
-  /** Les classes de rognage — levées le temps du pincement. */
-  const rognage = zoomDebordant ? "overflow-visible z-50" : "overflow-hidden";
+
+  /** L'indice vient de la fiche : on s'y rend, sans animation (c'est un
+      changement d'ensemble, pas un défilement). */
+  const dernierPose = useRef(-1);
+  useEffect(() => {
+    if (n <= 1) return;
+    if (dernierPose.current === indice) return;
+    const zone = cadre.current;
+    const colonne = colonnes.current[indice];
+    if (!zone || !colonne) return;
+    //  Déjà en place (le défilement vient de nous amener ici) : on ne
+    //  touche à rien — sans quoi on se battrait avec l'inertie.
+    if (Math.abs(zone.scrollLeft - colonne.offsetLeft) > 1) {
+      allerA(indice, false);
+    }
+    dernierPose.current = indice;
+  }, [indice, n]);
 
   /** Avance (+1) ou recule (−1) — DANS les bornes, c'est tout. */
   function aller(sens: 1 | -1) {
     const cible = indice + sens;
     if (cible < 0 || cible >= n) return;
-    surChangement(cible);
-  }
-
-  /* ---- Le doigt : suivre, puis décider ---- */
-  function debutToucher(evenement: React.PointerEvent) {
-    if (n <= 1 || evenement.pointerType === "mouse") return;
-    // Un DEUXIÈME doigt vient de se poser : c'est un pincement, pas
-    // un balayage — le zoom a déjà pris la main (voir surPincement).
-    if (pincementEnCours.current) return;
-    departX.current = evenement.clientX;
-    distanceCourante.current = 0;
-    setGlisse(0);
-  }
-  function mouvementToucher(evenement: React.PointerEvent) {
-    if (departX.current === null) return;
-    distanceCourante.current = evenement.clientX - departX.current;
-    // AUX BUTÉES, la photo FREINE (tiers du geste) : on sent qu'il n'y
-    // a rien au-delà — c'est la butée franche, communiquée par le doigt.
-    const enButee =
-      (indice === 0 && distanceCourante.current > 0) ||
-      (indice === n - 1 && distanceCourante.current < 0);
-    setGlisse(enButee ? distanceCourante.current / 3 : distanceCourante.current);
-  }
-  function finToucher() {
-    if (departX.current === null) return;
-    const distance = distanceCourante.current;
-    departX.current = null;
-    distanceCourante.current = 0;
-    setGlisse(null);
-    if (Math.abs(distance) >= SEUIL_GLISSEMENT) {
-      aller(distance < 0 ? 1 : -1);
-    }
-    // Sous le seuil, ou en butée : la piste revient d'elle-même.
+    allerA(cible, true);
   }
 
   /** Le texte de remplacement d'une photo : le style, et sa légende
@@ -236,9 +205,10 @@ export function CarrouselPortfolio({
     }`;
 
   /* SMARTPHONE : la capsule « 3/12 », angle haut droit — AUCUNE quand
-     le style n'a qu'une photo. Le texte se replie (largeur ET opacité)
-     pour ne laisser que la flèche ; les deux mouvements sont doux, la
-     réapparition est quasi immédiate — jamais de clignotement. */
+     l'ensemble n'a qu'une photo. Le texte se replie (largeur ET
+     opacité) pour ne laisser que la flèche ; les deux mouvements sont
+     doux, la réapparition est quasi immédiate — jamais de
+     clignotement. */
   const enFinDeGalerie = indice >= n - 1;
   const compteur = n > 1 && (
     <span
@@ -326,13 +296,14 @@ export function CarrouselPortfolio({
    *    symétriquement (75 %, 50 %) ;
    *  · À LA FIN, la frise cesse de glisser et l'actif migre vers la
    *    droite jusqu'au dernier rond.
-   * Le glissement de la frise et les changements d'échelle partagent la
-   * MÊME transition que la piste des photos (300 ms, ease-out) : tout
-   * bouge d'un seul mouvement avec les flèches.
    */
   //  Un cran de frise : le rond (6 px) et son air. Sept crans au plus.
+  //  ⚠️ UNE FONCTION APPELÉE DANS LE JSX, comme `fleche` — et non une
+  //  valeur calculée pendant le rendu : ses boutons commandent le
+  //  défilement, donc ils touchent au cadre (une ref), ce qui n'a le
+  //  droit de se produire QUE dans un gestionnaire d'événement.
   const CRAN_FRISE = 14;
-  const paginationWeb = n > 1 && (() => {
+  function paginationWeb() {
     const crans = Math.min(n, 7);
     //  Le premier rond de la fenêtre : collée au début, puis centrée
     //  sur l'actif, puis collée à la fin — les trois temps.
@@ -365,7 +336,7 @@ export function CarrouselPortfolio({
                     type="button"
                     aria-label={`Voir la photo ${rang + 1} sur ${n}`}
                     aria-current={rang === indice ? "true" : undefined}
-                    onClick={() => surChangement(rang)}
+                    onClick={() => allerA(rang, true)}
                     tabIndex={taille === 0 ? -1 : 0}
                     //  L'actif : BLANC ILLUMINÉ — un halo, pas un
                     //  contour. Les autres : blanc voilé.
@@ -385,18 +356,17 @@ export function CarrouselPortfolio({
         </div>
       </div>
     );
-  })();
+  }
 
-  //  ⚠️ LES POINTS DU SMARTPHONE SOUS LA PHOTO SONT SUPPRIMÉS
-  //  (nº 207-§5) : la capsule « 3/12 » posée dans l'image fait ce
-  //  travail, et mieux. La pagination WEB (nº 198-§5), elle, ne bouge
-  //  pas d'une ligne.
-
-  // Une seule photo : une image simple, sans piste, sans compteur,
-  // sans points — un carrousel d'une photo n'est pas un carrousel.
+  // Une seule photo : une image simple, sans défilement, sans compteur
+  // — un carrousel d'une photo n'est pas un carrousel.
   if (n <= 1) {
     return (
-      <div className={`relative rounded-none bg-sombre-carte ${rognage}`}>
+      <div
+        className={`relative bg-sombre-carte ${
+          zoomEnCours ? "overflow-visible z-50" : "overflow-hidden"
+        }`}
+      >
         {photos[0] && (
           // Le pincement à deux doigts agrandit la photo (mobile).
           <ZoomPincement surPincement={surPincement}>
@@ -418,86 +388,68 @@ export function CarrouselPortfolio({
   }
 
   return (
-    <div>
+    <div
+      role="region"
+      aria-roledescription="carrousel"
+      aria-label={`Portfolio de ${nomTatoueur} — ${styleLabel}`}
+      className="relative bg-sombre-carte select-none"
+    >
+      {/* LE CADRE QUI DÉFILE — le navigateur fait tout : l'inertie du
+          doigt, l'accrochage d'une photo à la fois (`snap-always`), et
+          les butées franches aux extrémités. La barre de défilement est
+          masquée : elle n'apprendrait rien.
+          ⚠️ `relative` : c'est ce qui fait de ce cadre le repère des
+          colonnes — `offsetLeft` s'y rapporte, et c'est la seule
+          position que les flèches utilisent.
+          ⚠️ `touch-action: pan-x pan-y` — le navigateur garde les deux
+          défilements, mais PAS le pincement : celui-ci est à nous
+          (ZoomPincement). Le temps du zoom, le cadre cesse de défiler
+          et l'accrochage est levé. */}
       <div
-        role="region"
-        aria-roledescription="carrousel"
-        aria-label={`Portfolio de ${nomTatoueur} — ${styleLabel}`}
-        className={`relative rounded-none bg-sombre-carte select-none ${rognage}`}
+        ref={cadre}
+        className={`relative flex ${
+          zoomEnCours
+            ? "overflow-hidden"
+            : "overflow-x-auto snap-x snap-mandatory"
+        } [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}
+        style={{ touchAction: "pan-x pan-y" }}
       >
-        {/* La fenêtre de défilement — elle écoute le doigt.
-            `touch-action: pan-y` : le pouce garde le défilement
-            VERTICAL de la page, le carrousel ne capte que
-            l'horizontal — et le PINCEMENT n'appartient qu'au zoom. */}
-        <div
-          ref={cadre}
-          className={rognage}
-          style={{ touchAction: "pan-y" }}
-          onPointerDown={debutToucher}
-          onPointerMove={mouvementToucher}
-          onPointerUp={finToucher}
-          onPointerCancel={finToucher}
-        >
-          <ZoomPincement surPincement={surPincement}>
-            {/* La piste dérive de l'indice — pas de boucle, pas de clone. */}
+        {photos.map((photo, rang) => {
+          const ecart = Math.abs(rang - indice);
+          return (
             <div
-              className={`flex ${
-                glisse === null ? "transition-transform duration-300 ease-out" : ""
-              }`}
-              style={{
-                //  ⚠️ LE PAS EST LA LARGEUR ENTIÈRE MESURÉE (§3) — un
-                //  multiple exact, donc jamais de reste à gauche.
-                transform: largeurCadre
-                  ? `translate3d(${
-                      -indice * largeurCadre + (glisse ?? 0)
-                    }px, 0, 0)`
-                  : `translateX(calc(${-indice * 100}% + ${glisse ?? 0}px))`,
+              key={photo.cle}
+              ref={(element) => {
+                colonnes.current[rang] = element;
               }}
+              className="relative w-full shrink-0 snap-start snap-always aspect-[4/5]"
+              aria-hidden={rang !== indice}
             >
-              {photos.map((photo, rang) => {
-                const ecart = Math.abs(rang - indice);
-                return (
-                  <div
-                    key={photo.cle}
-                    className="relative w-full shrink-0 aspect-[4/5]"
-                    aria-hidden={rang !== indice}
-                    style={{
-                      //  LA MÊME LARGEUR ENTIÈRE QUE LE PAS (§3).
-                      ...(largeurCadre ? { width: largeurCadre } : null),
-                      // Le temps du pincement, les voisines s'effacent :
-                      // le cadre ne rogne plus, elles apparaîtraient de
-                      // part et d'autre de la photo agrandie.
-                      ...(zoomDebordant && rang !== indice
-                        ? { visibility: "hidden" as const }
-                        : null),
-                    }}
-                  >
-                    {ecart <= VOISINES && (
-                      <PhotoProgressive
-                        miniature={photo.miniature}
-                        url={photo.url}
-                        alt={rang === indice ? texteDe(photo) : ""}
-                        pleineResolution={rang === indice}
-                        prioritaire={rang === 0}
-                        classe="absolute inset-0 h-full w-full object-cover"
-                      />
-                    )}
-                  </div>
-                );
-              })}
+              <ZoomPincement surPincement={surPincement} classe="h-full w-full">
+                {ecart <= VOISINES && (
+                  <PhotoProgressive
+                    miniature={photo.miniature}
+                    url={photo.url}
+                    alt={rang === indice ? texteDe(photo) : ""}
+                    pleineResolution={rang === indice}
+                    prioritaire={rang === 0}
+                    classe="absolute inset-0 h-full w-full object-cover"
+                  />
+                )}
+              </ZoomPincement>
             </div>
-          </ZoomPincement>
-        </div>
-
-        {indice > 0 && fleche(-1)}
-        {indice < n - 1 && fleche(1)}
-        {compteur}
-        {children}
-
-        {/* WEB : la pagination façon Instagram, EN BAS AU CENTRE de
-            l'image (nº 198-§5). */}
-        {paginationWeb}
+          );
+        })}
       </div>
+
+      {indice > 0 && fleche(-1)}
+      {indice < n - 1 && fleche(1)}
+      {compteur}
+      {children}
+
+      {/* WEB : la pagination façon Instagram, EN BAS AU CENTRE de
+          l'image (nº 198-§5). */}
+      {n > 1 && paginationWeb()}
     </div>
   );
 }

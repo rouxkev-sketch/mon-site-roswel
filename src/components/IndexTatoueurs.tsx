@@ -28,6 +28,7 @@ import {
   type DispositionGrille,
 } from "@/lib/disposition-grille";
 import { lirePhototheque, poserPhototheque } from "@/lib/vue-phototheque";
+import { memoriserRechercheTatouage } from "@/lib/derniere-recherche";
 
 /**
  * L'ACCUEIL DE YOKOFOLIO (adresse « / ») — L'ADRESSE DÉCIDE DE TOUT
@@ -173,6 +174,14 @@ export function IndexTatoueurs({
     noterMontage("page (IndexTatoueurs)");
     return () => noterDemontage("page (IndexTatoueurs)");
   }, []);
+
+  /** LA RECHERCHE SERVIE EST RETENUE LE TEMPS DE LA VISITE (nº 209-§1)
+      — pour que la loupe d'une FICHE ouvre le moteur avec les critères
+      en cours. Elle ne décide d'aucune carte : voir
+      lib/derniere-recherche. */
+  useEffect(() => {
+    memoriserRechercheTatouage(criteresServis);
+  }, [cleServie, criteresServis]);
 
   /** L'ADRESSE A TOUJOURS LE DERNIER MOT SUR L'AFFICHAGE (nº 203-§1b).
       Une navigation du routeur peut changer l'adresse SANS passer par

@@ -11,7 +11,7 @@ import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
 import { ContenuFiche } from "@/components/ContenuFiche";
 import { galerieParStyles, ouvertureGalerie } from "@/lib/photo-tatoueur";
-import { RENDU_PAR_DEFAUT } from "@/lib/photos-tatoueur";
+import { ensembleDeLaPhoto, RENDU_PAR_DEFAUT } from "@/lib/photos-tatoueur";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
@@ -142,9 +142,17 @@ export function FicheTatoueur({
       nº 31 avait laissés de côté : après elle, la réponse est oui
       partout.) */
   const photoAffichee = photosDuCarrousel[indicePhoto] ?? photosDuCarrousel[0];
-  /** LA GALERIE AFFICHÉE (nº 208-§6) — ce que le cœur enregistre : la
-      série entière que l'on regarde, pas la seule image sous les yeux. */
-  const galerieAffichee = photosDuCarrousel.map((photo) => photo.cle);
+  /** L'ENSEMBLE DE LA PHOTO REGARDÉE (nº 209-§3) — même style, même
+      catégorie, même rendu. C'est lui que le cœur enregistre, où qu'on
+      ait ouvert la fiche : depuis une vignette du portfolio (la série
+      est déjà l'ensemble) comme depuis la mosaïque de recherche (le
+      carrousel porte alors tout le style, catégories et rendus
+      mêlés — on ne garde que l'ensemble de l'image sous les yeux). */
+  const galerieAffichee = photoAffichee
+    ? ensembleDeLaPhoto(photosDuCarrousel, photoAffichee).map(
+        (photo) => photo.cle
+      )
+    : [];
 
   /*  ⚠️ LE SÉLECTEUR DE STYLE POSÉ SUR LA PHOTO A ÉTÉ SUPPRIMÉ
       (nº 198-§1) — le badge déroulant du bas gauche (mobile) comme le
@@ -220,7 +228,13 @@ export function FicheTatoueur({
               de lecture (butée basse et hauteur maximale).
               SMARTPHONE : la photo ANNULE les marges de la page — elle
               touche la barre fixe du haut et les deux bords. */}
-          <div className="lg:w-[calc((100vh-119px)*0.8)] max-w-full mobile:-mx-4 mobile:-mt-4 mobile:max-w-none">
+          {/*  ⚠️ LA PHOTO SE NOMME (nº 209-§5a) : le contenu partagé
+               lit son bas pour savoir où arrêter la remontée, sans
+               rien connaître de la géométrie de cette page. */}
+          <div
+            data-photo-fiche=""
+            className="lg:w-[calc((100vh-119px)*0.8)] max-w-full mobile:-mx-4 mobile:-mt-4 mobile:max-w-none"
+          >
             <CarrouselPortfolio
               photos={photosDuCarrousel}
               nomTatoueur={tatoueur.nom}
@@ -291,7 +305,13 @@ export function FicheTatoueur({
             défilent pas (la rangée du haut, le sélecteur de catégorie)
             le reprennent par `bg-inherit` — le contenu partagé n'a
             ainsi aucune couleur d'enveloppe à connaître. C'est
-            l'anthracite de la page : rien ne change à l'œil. */}        <div className="lg:sticky lg:top-[99px] lg:self-start lg:max-h-[calc(100vh-119px)] lg:overflow-y-auto min-w-0 flex flex-col bg-sombre-fond">
+            l'anthracite de la page : rien ne change à l'œil.
+            ⚠️ ET IL VOYAGE PAR UNE VARIABLE (nº 209-§6) : `bg-inherit`
+            ne prend que le fond du PARENT DIRECT — les blocs collants
+            enfouis plus bas (le sélecteur de catégorie vit dans le
+            panneau du portfolio) héritaient donc du transparent, et on
+            voyait le contenu défiler derrière. Une variable, elle,
+            traverse tout l'arbre. */}        <div className="lg:sticky lg:top-[99px] lg:self-start lg:max-h-[calc(100vh-119px)] lg:overflow-y-auto min-w-0 flex flex-col bg-sombre-fond [--fond-colonne:var(--rw-sombre-fond)]">
           {/*  ⚠️ LE CONTENU DE LA FICHE VIT DANS UN SEUL COMPOSANT
                (nº 199) : cette page et la fenêtre superposée du web
                affichent le MÊME. Ce qui reste ici est l'enveloppe — la

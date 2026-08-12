@@ -205,6 +205,56 @@ export function naturesDuPortfolio(
   );
 }
 
+/**
+ * L'ENSEMBLE D'UNE PHOTO — la définition, en un seul endroit
+ * ==========================================================
+ * (passe nº 209-§3/§4)
+ *
+ * UN ENSEMBLE, c'est le groupe de photos d'un MÊME STYLE, dans une
+ * MÊME CATÉGORIE et un MÊME RENDU — « réalisation + réalisme + noir et
+ * gris ». C'est exactement une galerie de dépôt (voir le plafond de
+ * vingt), et c'est l'unité que le cœur manipule PARTOUT sur le site :
+ * mosaïque de recherche, fiche, portfolio, « Ma sélection ». Aucun
+ * écran n'y échappe, et aucun ne redéfinit la règle : ils appellent
+ * tous cette fonction.
+ *
+ * LES DEUX REPLIS SONT CEUX DE TOUJOURS : une ligne sans catégorie est
+ * une réalisation (migration nº 49), une ligne sans rendu est du noir
+ * et gris (migration nº 48). Deux photos d'avant ces migrations
+ * tombent donc dans le même ensemble, ce qui est le comportement
+ * voulu.
+ */
+type PhotoClassable = {
+  /** ⚠️ FACULTATIF, et ce n'est pas un relâchement : sur une fiche, les
+      photos sont DÉJÀ groupées par style (StyleGalerie) et ne portent
+      donc pas le leur. Les comparer entre elles sans style revient au
+      même — elles ont le même. Partout où le style voyage avec la
+      photo (mosaïque, « Ma sélection »), il compte normalement. */
+  style?: string;
+  rendu: string | null;
+  nature?: string | null;
+};
+
+/** Les trois tags d'une photo, replis compris — deux photos du même
+    ensemble rendent la même chaîne. */
+export function cleDEnsemble(photo: PhotoClassable): string {
+  return [
+    photo.style ?? "",
+    natureConnue(photo.nature),
+    photo.rendu ?? RENDU_PAR_DEFAUT,
+  ].join("·");
+}
+
+/** LES PHOTOS DE L'ENSEMBLE AUQUEL APPARTIENT `photo` — dans l'ordre
+    de la galerie qu'on lui donne. */
+export function ensembleDeLaPhoto<T extends PhotoClassable>(
+  galerie: T[] | null | undefined,
+  photo: PhotoClassable
+): T[] {
+  const cle = cleDEnsemble(photo);
+  return (galerie ?? []).filter((autre) => cleDEnsemble(autre) === cle);
+}
+
 /** « Réalisme · Couleur » — la légende d'une photo. Un FLASH le dit :
     « Réalisme · Couleur · Flash ». Un tatouage ne le dit pas — c'est
     le cas ordinaire, le nommer serait du bruit. */

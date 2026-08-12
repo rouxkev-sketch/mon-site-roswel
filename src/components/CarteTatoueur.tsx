@@ -5,6 +5,7 @@ import Link from "next/link";
 import { libelleTypeFiche, PHOTO_PORTFOLIO, PORTRAIT_ROND } from "@/config/tatouage";
 import { useDispositionGrille } from "@/components/AffichageMosaique";
 import { legendeDeCarte, photoChoisie, photoPourStyle } from "@/lib/photo-tatoueur";
+import { ensembleDeLaPhoto } from "@/lib/photos-tatoueur";
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import { ligneCarte } from "@/lib/adresse";
 import { pincementRecent, usePincement } from "@/components/ZoomPincement";
@@ -311,7 +312,17 @@ export function CarteTatoueur({
             ⚠️ C'EST LE SEUL ÉLÉMENT QUE LA PHOTOTHÈQUE CONSERVE. */}
         {photoEnregistrable && (
           <div className="absolute top-2 right-2">
-            <BoutonCoeurPhoto photoId={photoEnregistrable.id} />
+            <BoutonCoeurPhoto
+              photoId={photoEnregistrable.id}
+              //  L'ENSEMBLE DE CETTE PHOTO (nº 209-§3) — même style,
+              //  même catégorie, même rendu, chez ce tatoueur : la
+              //  règle est la même depuis la mosaïque que depuis une
+              //  fiche.
+              galerie={ensembleDeLaPhoto(
+                tatoueur.galerie,
+                photoEnregistrable
+              ).map((photo) => photo.id)}
+            />
           </div>
         )}
 

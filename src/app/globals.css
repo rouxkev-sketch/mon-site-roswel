@@ -296,6 +296,21 @@ html[data-clair="3"] {
   overflow-anchor: none;
 }
 
+/*  LE TEMPS D'UN ZOOM, LA PHOTO PASSE DEVANT LA BARRE (nº 209-§2)
+    -------------------------------------------------------------------
+    La règle ci-dessus donne à la mosaïque SON PROPRE PLAN, au rang 0 :
+    c'est ce qui garantit qu'aucune carte ne peut passer devant la barre
+    fixe (rang 50) — un acquis, et il ne bouge pas.
+    MAIS pendant un pincement, la photo agrandie appartient à ce plan :
+    elle glissait donc SOUS la barre, alors qu'elle est justement ce
+    qu'on regarde. Le zoom pose `data-zoom` sur <html> le temps du
+    geste (voir ZoomPincement) : le plan de la mosaïque monte alors
+    au-dessus de la barre, et redescend au relâchement. Rien n'est
+    changé au repos — la garantie tient toujours. */
+html[data-zoom] [data-mosaique] {
+  z-index: 60;
+}
+
 /*  « EFFACER » ET « VALIDER » S'EFFACENT DÈS QU'UNE LISTE EST OUVERTE
     (nº 195-§2, étendu à TOUS les champs par la nº 196)
     -------------------------------------------------------------------

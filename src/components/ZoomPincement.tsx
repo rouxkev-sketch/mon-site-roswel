@@ -146,6 +146,8 @@ export function usePincement({
     depart.current = null;
     courant.current = { echelle: 1, dx: 0, dy: 0 };
     affiche.current = { echelle: 1, dx: 0, dy: 0 };
+    //  Le plan de la mosaïque redescend sous la barre (nº 209-§2).
+    delete document.documentElement.dataset.zoom;
     finDernierPincement = Date.now();
     surPincement?.(false);
     const element = cible.current;
@@ -181,6 +183,10 @@ export function usePincement({
       //  Le geste continue donc là où il s'était figé.
       const reprise = actif.current;
       actif.current = true;
+      //  ⚠️ LA PHOTO PASSE DEVANT LA BARRE FIXE (nº 209-§2) : le plan
+      //  de la mosaïque, tenu sous la barre au repos, monte au-dessus
+      //  le temps du geste (voir la règle dans globals.css).
+      document.documentElement.dataset.zoom = "1";
       finDernierPincement = Date.now();
       depart.current = mesure();
       //  LA BASE DU GESTE EST TOUJOURS CE QUE L'IMAGE MONTRE — au

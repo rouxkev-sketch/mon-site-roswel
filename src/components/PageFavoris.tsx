@@ -23,6 +23,7 @@ import {
   type ContexteFenetreFiche,
 } from "@/components/RetourFenetreFiche";
 import { useEtatFavori } from "@/lib/favoris-yokofolio";
+import { cleDEnsemble } from "@/lib/photos-tatoueur";
 import { ficheComplete } from "@/lib/fiche-complete";
 import type { PhotoFavorite, TatoueurSuivi } from "@/lib/favoris-serveur";
 import type { Tatoueur } from "@/lib/tatoueurs";
@@ -159,6 +160,25 @@ export function PageFavoris({
       (style === TOUS || photo.style === style) &&
       (nature === TOUS || !choixDeNature || photo.nature === nature)
   );
+
+  /**
+   * LES ENSEMBLES ENREGISTRÉS (nº 209-§4) — les photos gardées,
+   * regroupées par tatoueur + style + catégorie + rendu. Le cœur d'une
+   * carte retire alors TOUT son ensemble, exactement comme sur une
+   * fiche : la sélection ne se manipule pas photo par photo ici et par
+   * ensembles ailleurs.
+   * ⚠️ On regroupe TOUTES les photos gardées, pas seulement celles que
+   * les filtres laissent voir : retirer un ensemble le retire en
+   * entier, y compris ce qui est masqué par un filtre à cet instant.
+   */
+  const ensembles = useMemo(() => {
+    const groupes = new Map<string, string[]>();
+    for (const photo of photos) {
+      const cle = cleEnsembleFavori(photo);
+      groupes.set(cle, [...(groupes.get(cle) ?? []), photo.id]);
+    }
+    return groupes;
+  }, [photos]);
 
   const styleChoisi = stylesGardes.find((entree) => entree.slug === style);
 
@@ -319,6 +339,12 @@ export function PageFavoris({
                 <CartePhotoFavorite
                   key={photo.id}
                   photo={photo}
+                  //  L'ENSEMBLE (nº 209-§4) : les photos enregistrées
+                  //  du même style, de la même catégorie et du même
+                  //  rendu, chez le même tatoueur. Retirer le cœur les
+                  //  retire toutes — la sélection se manipule par
+                  //  ensembles, ici comme sur une fiche.
+                  ensemble={ensembles.get(cleEnsembleFavori(photo)) ?? [photo.id]}
                   surOuverture={ouvrirLaFiche}
                 />
               ))}
@@ -356,11 +382,25 @@ export function PageFavoris({
  * bon style (`?style=…`) : on retombe exactement sur ce qu'on
  * regardait.
  */
+/** LA CLÉ D'UN ENSEMBLE ENREGISTRÉ — celle du site (style, catégorie,
+    rendu), plus LE TATOUEUR : deux artistes peuvent avoir chacun leur
+    « réalisme · noir et gris », et ce sont deux ensembles. */
+function cleEnsembleFavori(photo: PhotoFavorite): string {
+  return `${photo.tatoueurSlug}·${cleDEnsemble(photo)}`;
+}
+
 function CartePhotoFavorite({
   photo,
+  ensemble,
   surOuverture,
 }: {
   photo: PhotoFavorite;
+  /** L'ENSEMBLE auquel elle appartient (nº 209-§4) — les photos du
+      même style, de la même catégorie et du même rendu, chez le même
+      tatoueur, parmi celles que cette page affiche. Retirer le cœur
+      les retire toutes : la sélection se manipule par ensembles, ici
+      comme ailleurs. */
+  ensemble: string[];
   /** WEB : ouvre la fiche PAR-DESSUS la page (nº 143-6B). */
   surOuverture: (
     slug: string,
@@ -428,7 +468,11 @@ function CartePhotoFavorite({
         </span>
 
         <div className="absolute top-2 right-2">
-          <BoutonCoeurPhoto photoId={photo.id} enregistreeAuDepart />
+          <BoutonCoeurPhoto
+            photoId={photo.id}
+            galerie={ensemble}
+            enregistreeAuDepart
+          />
         </div>
       </div>
 

@@ -23,6 +23,11 @@ import {
   souscrireStockage,
 } from "@/lib/deja-connecte";
 import { ContexteDejaConnecteServeur } from "@/components/FournisseurSession";
+import {
+  lireDerniereRechercheServeur,
+  lireDerniereRechercheTatouage,
+  souscrireDerniereRecherche,
+} from "@/lib/derniere-recherche";
 import { lireDisposition } from "@/lib/disposition-grille";
 import { lirePhototheque } from "@/lib/vue-phototheque";
 import { useUtilisateur } from "@/lib/use-utilisateur";
@@ -202,7 +207,38 @@ export function EnTeteTatouage({
   const [internes, setInternes] = useState(() =>
     criteresComplets(criteresInitiaux)
   );
-  const valeur = criteres ?? internes;
+  /**
+   * §1 (nº 209) — LA RECHERCHE N'EST PLUS PERDUE SUR UNE FICHE.
+   * Une page qui ne porte AUCUN critère à elle (une fiche : son adresse
+   * ne parle que du tatoueur) reprend ceux de la visite en cours — la
+   * loupe ouvre alors le moteur avec la recherche en cours, prête à
+   * être modifiée.
+   * ⚠️ AUCUN ÉTAT, AUCUN EFFET : la valeur est simplement DÉRIVÉE. Le
+   * stockage de session est lu par `useSyncExternalStore`, le hook
+   * prévu pour cela — le serveur répond « rien », le navigateur répond
+   * la mémoire, et React fait la jonction sans qu'aucun écran ne
+   * clignote ni qu'aucun rendu ne cascade.
+   * ⚠️ SEULEMENT SI LA PAGE NE PILOTE RIEN et n'a rien reçu : sur
+   * l'accueil comme sur une page style + ville, ce sont les critères de
+   * L'ADRESSE qui règnent — cette reprise ne les touche jamais. Et dès
+   * que la main a touché un champ ici, c'est la main qui commande.
+   */
+  const retenue = useSyncExternalStore(
+    souscrireDerniereRecherche,
+    lireDerniereRechercheTatouage,
+    lireDerniereRechercheServeur
+  );
+  const [modifieALaMain, setModifieALaMain] = useState(false);
+  const aDesCriteresPropres =
+    Boolean(criteres) ||
+    Boolean(criteresInitiaux?.style) ||
+    Boolean(criteresInitiaux?.lieu) ||
+    Boolean(criteresInitiaux?.nature);
+  const repris =
+    !aDesCriteresPropres && !modifieALaMain && retenue
+      ? criteresComplets(retenue)
+      : internes;
+  const valeur = criteres ?? repris;
 
   function chercher(suivants: CritèresTatouage) {
     if (surRecherche) {
@@ -210,6 +246,9 @@ export function EnTeteTatouage({
       return;
     }
     setInternes(suivants);
+    //  La main a parlé : la reprise de la visite ne reprend plus le
+    //  dessus (nº 209-§1).
+    setModifieALaMain(true);
     const parametres = new URLSearchParams();
     if (suivants.style) parametres.set("style", suivants.style);
     if (suivants.exclure.length > 0) {

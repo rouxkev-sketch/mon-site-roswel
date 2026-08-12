@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { defilerSansGeste } from "@/lib/defilement-programme";
+import { defilerEnDouceur } from "@/lib/defilement-programme";
 import {
   ICONES_RESEAUX,
   libelleFiltre,
@@ -120,19 +120,26 @@ export function ContenuFiche({
    * sans cela, la barre y lirait une intention et se replierait
    * (nº 154-§6A).
    */
-  const debutContenu = useRef<HTMLSpanElement>(null);
   function choisirOnglet(suivant: OngletAffiche) {
     setOnglet(suivant);
     if (document.documentElement.dataset.appareil !== "mobile") return;
-    const repere = debutContenu.current?.getBoundingClientRect();
-    if (!repere) return;
+    //  ⚠️ LA LIMITE, C'EST LE BAS DE LA PHOTO (nº 209-§5a) — et non le
+    //  haut du contenu, qui vient plus bas (l'écart entre les deux
+    //  colonnes) : la page s'arrêtait donc trop haut, au-dessus du
+    //  bloc Profil / Portfolio. L'enveloppe marque sa photo
+    //  (`data-photo-fiche`), le contenu partagé la lit — il n'a ainsi
+    //  aucune géométrie d'enveloppe écrite chez lui.
+    const photo = document
+      .querySelector("[data-photo-fiche]")
+      ?.getBoundingClientRect();
+    if (!photo) return;
     const barre = document
       .querySelector("[data-barre-fixe]")
       ?.getBoundingClientRect().height;
-    defilerSansGeste({
-      top: Math.max(0, window.scrollY + repere.top - (barre ?? 0)),
-      left: 0,
-    });
+    //  Départ progressif, arrivée amortie, aucun rebond (§5b).
+    defilerEnDouceur(
+      Math.max(0, window.scrollY + photo.bottom - (barre ?? 0))
+    );
   }
 
   const avatarProfil = (
@@ -317,22 +324,23 @@ export function ContenuFiche({
            (`bg-inherit`) — anthracite sur la page, carte dans la
            fenêtre superposée : le contenu partagé n'écrit aucune
            couleur qui lui serait propre. */}
-      {/*  LE REPÈRE DU HAUT DU CONTENU (nº 208-§7) — la limite entre la
-           photo et le texte. Il ne montre rien : il se mesure. */}
-      <span ref={debutContenu} aria-hidden="true" className="block h-0" />
-
+      {/*  ⚠️ LE FOND VIENT D'UNE VARIABLE (nº 209-§6), pas de
+           `bg-inherit` : celui-ci ne prend que le fond du PARENT
+           DIRECT, et les blocs collants n'ont pas tous la colonne pour
+           parent — on voyait donc le contenu défiler en transparence
+           derrière eux. `--fond-colonne` est posée par l'enveloppe
+           (anthracite sur la page, carte dans la fenêtre) et traverse
+           tout l'arbre : les bandeaux sont opaques, partout. */}
       <div
         className="relative flex items-center justify-between gap-3
-                   lg:sticky lg:top-0 lg:z-[2] bg-inherit"
+                   lg:sticky lg:top-0 lg:z-[2] bg-[var(--fond-colonne)]"
       >
         {/*  LE CAPOT — la colonne de la fenêtre superposée porte un
              rembourrage haut (24 px) : sans lui, le contenu défilerait
-             VISIBLEMENT dans cette bande, au-dessus de la rangée. Il
-             prend la couleur de l'enveloppe comme elle (`bg-inherit`),
-             et ne coûte rien là où il n'y a pas de rembourrage. */}
+             VISIBLEMENT dans cette bande, au-dessus de la rangée. */}
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 bottom-full hidden h-8 bg-inherit lg:block"
+          className="pointer-events-none absolute inset-x-0 bottom-full hidden h-8 bg-[var(--fond-colonne)] lg:block"
         />
         <SelecteurOngletAffiche valeur={onglet} surChoix={choisirOnglet} />
         {!apercu && (

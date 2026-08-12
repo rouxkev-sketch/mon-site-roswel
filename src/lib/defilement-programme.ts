@@ -68,6 +68,12 @@ export function defilerSansGeste(options: ScrollToOptions): void {
   if (typeof window === "undefined") return;
   document.documentElement.dataset[MARQUEUR] = "1";
   window.scrollTo({ behavior: "instant", ...options });
+  lever(FENETRE_MS);
+}
+
+/** La levée du drapeau, après un délai puis deux images (voir plus
+    haut : le second mouvement d'une recomposition arrive tard). */
+function lever(delai: number) {
   //  Un seul minuteur : deux remises en place rapprochées ne doivent
   //  pas laisser la première lever le drapeau de la seconde.
   window.clearTimeout(leveeEnCours);
@@ -77,5 +83,83 @@ export function defilerSansGeste(options: ScrollToOptions): void {
         delete document.documentElement.dataset[MARQUEUR];
       });
     });
-  }, FENETRE_MS);
+  }, delai);
+}
+
+/**
+ * DÉFILER EN DOUCEUR — départ progressif, arrivée amortie
+ * ========================================================
+ * (passe nº 209-§5b)
+ *
+ * POURQUOI PAS `behavior: "smooth"` : sa courbe et sa durée
+ * appartiennent au navigateur, elles diffèrent d'un moteur à l'autre,
+ * et rien ne dit quand le mouvement finit — or il faut tenir le
+ * drapeau « ce n'est pas un geste » pendant TOUT le trajet, sans quoi
+ * la barre s'y replie (nº 154-§6A).
+ *
+ * LA COURBE : `easeInOutCubic` — l'accélération est progressive au
+ * départ, l'arrivée s'amortit, et il n'y a AUCUN rebond (une courbe
+ * cubique ne dépasse jamais sa cible). 480 ms : assez pour qu'on suive
+ * le mouvement de l'œil, assez court pour ne pas attendre.
+ *
+ * ⚠️ UN GESTE DE L'UTILISATEUR L'INTERROMPT : poser le doigt ou la
+ * molette pendant l'animation l'annule à l'instant. Une page qui
+ * continue de glisser sous un doigt qui la retient est le pire défaut
+ * qu'un défilement animé puisse avoir.
+ */
+const DUREE_DOUCE_MS = 480;
+let animationEnCours = 0;
+
+export function defilerEnDouceur(cible: number): void {
+  if (typeof window === "undefined") return;
+  const depart = window.scrollY;
+  const distance = cible - depart;
+  document.documentElement.dataset[MARQUEUR] = "1";
+  cancelAnimationFrame(animationEnCours);
+
+  //  Rien à parcourir, ou l'utilisateur refuse les animations : on
+  //  pose la position, et c'est tout.
+  if (
+    Math.abs(distance) < 2 ||
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  ) {
+    window.scrollTo({ top: cible, left: 0, behavior: "instant" });
+    lever(FENETRE_MS);
+    return;
+  }
+
+  let annulee = false;
+  const interrompre = () => {
+    annulee = true;
+  };
+  //  `passive` : on n'empêche rien, on prend seulement acte.
+  window.addEventListener("touchstart", interrompre, { passive: true });
+  window.addEventListener("wheel", interrompre, { passive: true });
+
+  const debut = performance.now();
+  const avancer = (maintenant: number) => {
+    if (annulee) {
+      window.removeEventListener("touchstart", interrompre);
+      window.removeEventListener("wheel", interrompre);
+      lever(0);
+      return;
+    }
+    const part = Math.min(1, (maintenant - debut) / DUREE_DOUCE_MS);
+    //  easeInOutCubic — départ progressif, arrivée amortie.
+    const adouci =
+      part < 0.5 ? 4 * part * part * part : 1 - Math.pow(-2 * part + 2, 3) / 2;
+    window.scrollTo({
+      top: depart + distance * adouci,
+      left: 0,
+      behavior: "instant",
+    });
+    if (part < 1) {
+      animationEnCours = requestAnimationFrame(avancer);
+      return;
+    }
+    window.removeEventListener("touchstart", interrompre);
+    window.removeEventListener("wheel", interrompre);
+    lever(FENETRE_MS);
+  };
+  animationEnCours = requestAnimationFrame(avancer);
 }

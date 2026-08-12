@@ -9,7 +9,7 @@ import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
 import { ContenuFiche } from "@/components/ContenuFiche";
 import { galerieParStyles, ouvertureGalerie } from "@/lib/photo-tatoueur";
-import { RENDU_PAR_DEFAUT } from "@/lib/photos-tatoueur";
+import { ensembleDeLaPhoto, RENDU_PAR_DEFAUT } from "@/lib/photos-tatoueur";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
@@ -335,9 +335,12 @@ export function FenetreFiche({
                   <div className="absolute top-3 right-3 z-[2]">
                     <BoutonCoeurPhoto
                       photoId={photoEnregistrable}
-                      //  LA GALERIE AFFICHÉE (nº 208-§6) — la série
-                      //  entière que l'on regarde.
-                      galerie={photosDuStyleAffiche.map((photo) => photo.cle)}
+                      //  L'ENSEMBLE DE LA PHOTO REGARDÉE (nº 209-§3) —
+                      //  même style, même catégorie, même rendu.
+                      galerie={ensembleDeLaPhoto(
+                        photosDuStyleAffiche,
+                        photo
+                      ).map((entree) => entree.cle)}
                       variante="fiche"
                     />
                   </div>
@@ -356,7 +359,7 @@ export function FenetreFiche({
                  l'œil. */}
             <div
               ref={colonneRef}
-              className="w-full lg:w-[380px] shrink-0 lg:h-full lg:overflow-y-auto p-5 sm:p-6 flex flex-col bg-sombre-carte"
+              className="w-full lg:w-[380px] shrink-0 lg:h-full lg:overflow-y-auto p-5 sm:p-6 flex flex-col bg-sombre-carte [--fond-colonne:var(--rw-sombre-carte)]"
             >
               <ContenuFiche
                 tatoueur={tatoueur}
