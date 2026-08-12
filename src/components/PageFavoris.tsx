@@ -487,19 +487,13 @@ function CartePhotoFavorite({
             hauteur fixe, texte blanc). Il manquait ici (passe nº 142),
             et deux cartes qui se ressemblent doivent dire la même
             chose — sinon on croit regarder deux objets différents. */}
-        <span
-          className="absolute bottom-2 right-2 inline-flex h-[22px]
-                     items-center justify-center rounded-full
-                     bg-black/38 backdrop-blur-md
-                     px-2.5 text-[11.5px] font-semibold leading-none
-                     text-white pointer-events-none select-none"
-        >
-          {libelleTypeFiche(photo.typeFiche, photo.etablissement)}
-        </span>
+        {/*  ⚠️ LE BADGE DE TYPE A QUITTÉ L'IMAGE (nº 211-§2), ici comme
+             en mosaïque : il ouvre désormais le sous-titre de la
+             carte. Le cœur prend sa place, en bas à droite. */}
 
         {/*  COMBIEN DE PHOTOS DANS CET ENSEMBLE (nº 210-§1) — angle bas
-             GAUCHE, la même capsule que le badge d'en face. Aucune
-             quand il n'y en a qu'une : « 1 » n'apprend rien. */}
+             GAUCHE, la capsule sombre des images. Aucune quand il n'y
+             en a qu'une : « 1 » n'apprend rien. */}
         {nombre > 1 && (
           <span
             className="absolute bottom-2 left-2 inline-flex h-[22px]
@@ -512,7 +506,7 @@ function CartePhotoFavorite({
           </span>
         )}
 
-        <div className="absolute top-2 right-2">
+        <div className="absolute bottom-2 right-2">
           <BoutonCoeurPhoto
             photoId={photo.id}
             galerie={ensemble}
@@ -573,6 +567,9 @@ function CartePhotoFavorite({
                n'est plus répété : il est au-dessus. */}
           <p className="truncate text-[12.5px] text-sombre-texte-doux leading-[19px]">
             {[
+              //  LE TYPE DE FICHE OUVRE LA LIGNE (nº 211-§2), comme en
+              //  mosaïque — il a quitté l'image.
+              libelleTypeFiche(photo.typeFiche, photo.etablissement),
               photo.tatoueurNom,
               photo.rendu ? libelleRendu(photo.rendu) : "",
               photo.nature === "flash" ? libelleNature("flash") : "",

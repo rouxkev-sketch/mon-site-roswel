@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { PhotoProgressive } from "@/components/PhotoProgressive";
 import { ZoomPincement } from "@/components/ZoomPincement";
 import type { PhotoGalerie } from "@/lib/photo-tatoueur";
@@ -63,6 +64,9 @@ export function CarrouselPortfolio({
   styleLabel,
   indice,
   surChangement,
+  variante = "fiche",
+  prioritaire = false,
+  lien,
   children,
 }: {
   /** LES PHOTOS DE L'ENSEMBLE AFFICHÉ. */
@@ -73,10 +77,53 @@ export function CarrouselPortfolio({
   /** L'indice RÉEL affiché (0..n-1) — possédé par la fiche. */
   indice: number;
   surChangement: (indice: number) => void;
+  /**
+   * OÙ CE CARROUSEL VIT (nº 211-§5).
+   *  · « fiche » — la photo principale : pleine résolution, compteur
+   *    au doigt, flèches à la souris, pincement ;
+   *  · « carte » — dans la mosaïque, en pleine largeur au doigt : LES
+   *    MINIATURES SEULES (une mosaïque ne télécharge jamais de pleine
+   *    résolution), aucun compteur, aucune flèche, les ronds toujours
+   *    visibles, et le PINCEMENT LAISSÉ À LA CARTE, qui a déjà le sien.
+   *    ⚠️ ET LE CHARGEMENT EST DIFFÉRÉ : seule la première photo est
+   *    demandée tant que le doigt n'a pas touché cette carte-là.
+   */
+  variante?: "fiche" | "carte";
+  /** En variante « carte » : cette carte est-elle dans les premières
+      de la mosaïque ? Elle seule charge son image sans attendre le
+      défilement — les autres restent `lazy`, donc une carte hors écran
+      ne demande RIEN (nº 211-§5). */
+  prioritaire?: boolean;
+  /** En variante « carte » : chaque photo est un LIEN vers la fiche —
+      un toucher navigue, un glissement fait défiler (le navigateur
+      n'émet aucun clic après un glissement). */
+  lien?: {
+    href: string;
+    onClick?: (evenement: React.MouseEvent) => void;
+    label: string;
+  };
   /** Posé PAR-DESSUS la photo (le partage, le cœur). */
   children?: React.ReactNode;
 }) {
   const n = photos.length;
+  const surCarte = variante === "carte";
+
+  /**
+   * §5 (nº 211) — LE CHARGEMENT DIFFÉRÉ DES CARTES
+   * ==================================================================
+   * À l'affichage d'une mosaïque, chaque carte ne demande QU'UNE
+   * image : la première de son ensemble — exactement ce qu'elle
+   * demandait avant cette passe. Les suivantes n'existent même pas
+   * comme balises tant que le doigt n'a pas touché CETTE carte : une
+   * mosaïque de vingt cartes charge donc vingt miniatures, et pas une
+   * de plus, qu'un artiste ait publié une photo ou vingt.
+   * Le réveil se fait au premier contact ou au premier défilement —
+   * c'est-à-dire AVANT que la photo suivante n'entre à l'écran.
+   */
+  const [eveille, setEveille] = useState(false);
+  const reveiller = () => {
+    if (surCarte && !eveille) setEveille(true);
+  };
 
   /**
    * §4 (nº 198) — L'INDICATEUR DE VOLUME S'EFFACE ET REVIENT
@@ -318,7 +365,11 @@ export function CarrouselPortfolio({
       return distance === 0 ? 1 : distance === 1 ? 0.75 : distance === 2 ? 0.5 : 0;
     };
     return (
-      <div className="flex mobile:hidden absolute bottom-3 inset-x-0 z-[2] justify-center pointer-events-none">
+      <div
+        className={`${
+          surCarte ? "flex" : "flex mobile:hidden"
+        } absolute bottom-3 inset-x-0 z-[2] justify-center pointer-events-none`}
+      >
         <div className="overflow-hidden" style={{ width: crans * CRAN_FRISE }}>
           <div
             className="flex transition-transform duration-300 ease-out"
@@ -407,6 +458,8 @@ export function CarrouselPortfolio({
           et l'accrochage est levé. */}
       <div
         ref={cadre}
+        onPointerDown={reveiller}
+        onScroll={reveiller}
         className={`relative flex ${
           zoomEnCours
             ? "overflow-hidden"
@@ -416,6 +469,37 @@ export function CarrouselPortfolio({
       >
         {photos.map((photo, rang) => {
           const ecart = Math.abs(rang - indice);
+          //  SUR UNE CARTE : la première photo, et les autres seulement
+          //  une fois la carte réveillée. Sur une fiche : la courante
+          //  et ses deux voisines, comme toujours.
+          const montee = surCarte
+            ? rang === 0 || eveille
+            : ecart <= VOISINES;
+          const image = surCarte ? (
+            /* eslint-disable-next-line @next/next/no-img-element --
+               miniature déjà découpée, servie telle quelle : c'est la
+               règle des cartes depuis toujours (voir CarteTatoueur). */
+            <img
+              src={photo.miniature}
+              alt={rang === indice ? texteDe(photo) : ""}
+              //  ⚠️ `lazy` PARTOUT SAUF LES PREMIÈRES CARTES : une
+              //  carte hors écran ne demande aucune image, et les
+              //  photos suivantes d'une carte ne sont demandées qu'une
+              //  fois montées — c'est-à-dire au premier geste.
+              loading={rang === 0 && prioritaire ? undefined : "lazy"}
+              fetchPriority={rang === 0 && prioritaire ? "high" : undefined}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          ) : (
+            <PhotoProgressive
+              miniature={photo.miniature}
+              url={photo.url}
+              alt={rang === indice ? texteDe(photo) : ""}
+              pleineResolution={rang === indice}
+              prioritaire={rang === 0}
+              classe="absolute inset-0 h-full w-full object-cover"
+            />
+          );
           return (
             <div
               key={photo.cle}
@@ -425,26 +509,37 @@ export function CarrouselPortfolio({
               className="relative w-full shrink-0 snap-start snap-always aspect-[4/5]"
               aria-hidden={rang !== indice}
             >
-              <ZoomPincement surPincement={surPincement} classe="h-full w-full">
-                {ecart <= VOISINES && (
-                  <PhotoProgressive
-                    miniature={photo.miniature}
-                    url={photo.url}
-                    alt={rang === indice ? texteDe(photo) : ""}
-                    pleineResolution={rang === indice}
-                    prioritaire={rang === 0}
-                    classe="absolute inset-0 h-full w-full object-cover"
-                  />
-                )}
-              </ZoomPincement>
+              {surCarte ? (
+                //  CHAQUE PHOTO EST UN LIEN : un toucher ouvre la
+                //  fiche, un glissement fait défiler.
+                lien ? (
+                  <Link
+                    href={lien.href}
+                    onClick={lien.onClick}
+                    aria-label={lien.label}
+                    tabIndex={rang === indice ? 0 : -1}
+                    className="absolute inset-0 outline-none
+                               focus-visible:outline-2 focus-visible:-outline-offset-2
+                               focus-visible:outline-primaire"
+                  >
+                    {montee && image}
+                  </Link>
+                ) : (
+                  montee && image
+                )
+              ) : (
+                <ZoomPincement surPincement={surPincement} classe="h-full w-full">
+                  {montee && image}
+                </ZoomPincement>
+              )}
             </div>
           );
         })}
       </div>
 
-      {indice > 0 && fleche(-1)}
-      {indice < n - 1 && fleche(1)}
-      {compteur}
+      {!surCarte && indice > 0 && fleche(-1)}
+      {!surCarte && indice < n - 1 && fleche(1)}
+      {!surCarte && compteur}
       {children}
 
       {/* WEB : la pagination façon Instagram, EN BAS AU CENTRE de

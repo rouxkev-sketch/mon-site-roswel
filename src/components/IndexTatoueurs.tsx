@@ -20,6 +20,7 @@ import {
 } from "@/components/MoteurTatouage";
 import type { Tatoueur } from "@/lib/tatoueurs";
 import { lieuVersParametres } from "@/lib/geocodage";
+import { ligneCarte } from "@/lib/adresse";
 import { useUtilisateur } from "@/lib/use-utilisateur";
 import { ContexteAffichageServi } from "@/components/AffichageMosaique";
 import {
@@ -278,27 +279,40 @@ export function IndexTatoueurs({
           const quoi =
             libelleExplorer(affiches.nature, affiches.style) ||
             (affiches.style ? libelleStyleChoisi(affiches.style) : "");
-          const lieu = affiches.lieu
-            ? `${affiches.lieu.intitule}${
-                affiches.lieu.precision === "ville" ||
-                affiches.lieu.precision === "adresse"
-                  ? ` ${affiches.rayonKm} km`
-                  : ""
-              }`
-            : "";
+          //  ⚠️ LE LIEU AU FORMAT INTERNATIONAL (nº 211-§1) — « Paris,
+          //  France », « Austin, TX, États-Unis ». La règle vit dans
+          //  lib/adresse (`ligneCarte`), celle-là même qui écrit la
+          //  localité sous les cartes : une seule écriture du monde,
+          //  pas deux.
+          const lieu = affiches.lieu ? ligneCarte(affiches.lieu) : "";
+          //  LE RAYON, seulement quand il veut dire quelque chose : on
+          //  cherche « à 50 km de Paris », jamais « à 50 km de la
+          //  France ».
+          const rayon =
+            affiches.lieu &&
+            (affiches.lieu.precision === "ville" ||
+              affiches.lieu.precision === "adresse")
+              ? `${affiches.rayonKm} km`
+              : "";
           const compte = `${total} création${total > 1 ? "s" : ""}`;
           if (!quoi && !lieu) {
+            //  SANS RECHERCHE : l'invitation, et ce que le site est.
             return (
               <LigneResultats
-                titre="Explorer toutes les créations"
-                sousTitre={null}
+                titre={TEXTES_TATOUAGE.titreMosaique}
+                sousTitre={TEXTES_TATOUAGE.sousTitreMosaique}
               />
             );
           }
+          //  AVEC UNE RECHERCHE : le titre dit CE QU'ON CHERCHE, le
+          //  sous-titre RÉSUME la recherche — compte · lieu · rayon,
+          //  séparés par le point médian entouré d'espaces.
           return (
             <LigneResultats
-              titre={quoi || affiches.lieu!.intitule}
-              sousTitre={quoi && lieu ? `${compte} · ${lieu}` : compte}
+              titre={quoi || lieu || affiches.lieu!.intitule}
+              sousTitre={[compte, quoi ? lieu : "", rayon]
+                .filter(Boolean)
+                .join(" · ")}
             />
           );
         })()}

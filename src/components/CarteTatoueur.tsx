@@ -1,11 +1,21 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
-import { libelleTypeFiche, PHOTO_PORTFOLIO, PORTRAIT_ROND } from "@/config/tatouage";
+import {
+  libelleStyle,
+  libelleTypeFiche,
+  PHOTO_PORTFOLIO,
+  PORTRAIT_ROND,
+} from "@/config/tatouage";
 import { useDispositionGrille } from "@/components/AffichageMosaique";
+import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
 import { legendeDeCarte, photoChoisie, photoPourStyle } from "@/lib/photo-tatoueur";
-import { ensembleDeLaPhoto } from "@/lib/photos-tatoueur";
+import {
+  ensembleDeLaPhoto,
+  natureConnue,
+  vignetteDe,
+} from "@/lib/photos-tatoueur";
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import { ligneCarte } from "@/lib/adresse";
 import { pincementRecent, usePincement } from "@/components/ZoomPincement";
@@ -98,6 +108,34 @@ export function CarteTatoueur({
       vient de L'ADRESSE (nº 203-§1b), servie par le serveur. */
   const disposition = useDispositionGrille();
   const uneColonne = disposition === "une";
+
+  /**
+   * §5 (nº 211) — LES PHOTOS QUI DÉFILENT DANS LA CARTE
+   * ==================================================================
+   * L'ENSEMBLE de la photo montrée : même style, même catégorie, même
+   * rendu (la définition du site, lib/photos-tatoueur). C'est
+   * exactement ce que le CŒUR de la carte enregistre — on fait donc
+   * défiler ce qu'on aime, et rien d'autre : aucun état à tenir
+   * d'accord entre les deux.
+   * ⚠️ EN PLEINE LARGEUR SEULEMENT, et seulement s'il y a plus d'une
+   * photo. En deux colonnes, une carte fait 190 px : y faire défiler
+   * des images n'apporterait rien et volerait le défilement vertical
+   * de la mosaïque.
+   */
+  const photosDeLaCarte = photoEnregistrable
+    ? ensembleDeLaPhoto(tatoueur.galerie, photoEnregistrable).map((entree) => ({
+        cle: entree.id,
+        url: entree.url,
+        miniature: vignetteDe(entree),
+        rendu: entree.rendu,
+        nature: natureConnue(entree.nature),
+        legende: "",
+      }))
+    : [];
+  const carrouselDansLaCarte =
+    uneColonne && !phototheque && photosDeLaCarte.length > 1;
+  /** La photo regardée DANS la carte — le carrousel la possède. */
+  const [indicePhoto, setIndicePhoto] = useState(0);
 
   /** LE ZOOM AU PINCEMENT (vrais mobiles) : la carte écoute, la photo
       grossit — voir ZoomPincement.tsx pour la mécanique. */
@@ -254,9 +292,42 @@ export function CarteTatoueur({
                ⚠️ NE JAMAIS introduire ici un `sizes`, un `srcset`, une
                largeur dans l'URL, ni une source choisie d'après
                `uneColonne` : ce serait exactement le défaut. */}
-          {/* eslint-disable-next-line @next/next/no-img-element --
+          {/*  §5 (nº 211) — EN PLEINE LARGEUR AU DOIGT, LES PHOTOS DE
+               L'ENSEMBLE DÉFILENT DANS LA CARTE.
+               C'est LE MÊME carrousel que la fiche (nº 209-§7) :
+               défilement natif, accrochage, aucune largeur mesurée. En
+               variante « carte » il ne montre que les MINIATURES,
+               n'affiche ni compteur ni flèches, laisse le pincement à
+               la carte, et ne charge la suite qu'au premier geste.
+               ⚠️ IL PASSE AU-DESSUS DU LIEN ÉTIRÉ (`z-[1]`) : sinon le
+               pseudo-élément du nom recouvrirait l'image et capterait
+               le glissement. Chaque photo est donc elle-même un lien —
+               un toucher ouvre la fiche, un glissement défile.
+               En deux colonnes et sur le web : l'image simple d'avant,
+               inchangée. */}
+          {carrouselDansLaCarte ? (
+            <div className="absolute inset-0 z-[1]">
+              <CarrouselPortfolio
+                photos={photosDeLaCarte}
+                nomTatoueur={tatoueur.nom}
+                styleLabel={libelleStyle(
+                  photoEnregistrable?.style ?? styleRecherche
+                )}
+                indice={indicePhoto}
+                surChangement={setIndicePhoto}
+                variante="carte"
+                prioritaire={prioritaire}
+                lien={{
+                  href: adresseFiche,
+                  onClick: auClic,
+                  label: `Voir la fiche de ${tatoueur.nom}`,
+                }}
+              />
+            </div>
+          ) : (
+          /* eslint-disable-next-line @next/next/no-img-element --
               les images de démonstration sont des SVG dessinés à la
-              volée ; l'optimiseur de Next n'a rien à y gagner. */}
+              volée ; l'optimiseur de Next n'a rien à y gagner. */
           <img
             src={photo}
             // CE QUE MONTRE VRAIMENT LA CARTE : le nom, la ville, et le
@@ -276,6 +347,7 @@ export function CarteTatoueur({
             height={PHOTO_PORTFOLIO.hauteur}
             className="w-full h-full object-cover"
           />
+          )}
         </div>
 
         {/* LE BADGE « Artiste » / « Salon » — DANS l'image, angle bas
@@ -292,17 +364,13 @@ export function CarteTatoueur({
             verticalement — les 10 px de retrait sont exactement les
             mêmes à gauche et à droite, et la hauteur de ligne ne
             décale plus le mot vers le haut. */}
-        {!phototheque && (
-          <span
-            className="absolute bottom-2 right-2 inline-flex h-[22px]
-                       items-center justify-center rounded-full
-                       bg-black/38 backdrop-blur-md
-                       px-2.5 text-[11.5px] font-semibold leading-none
-                       text-white pointer-events-none select-none"
-          >
-            {libelleTypeFiche(tatoueur.type_fiche, tatoueur.etablissement)}
-          </span>
-        )}
+        {/*  ⚠️ LE BADGE A QUITTÉ L'IMAGE (nº 211-§2). Il disait une
+             chose utile — artiste, salon ou studio — mais il la disait
+             SUR la photo, qui est le sujet. Il est désormais le
+             PREMIER MOT DU SOUS-TITRE, devant la localité :
+             « Artiste · Lyon, France ». La place qu'il libère revient
+             au CŒUR, qui est un geste et mérite l'angle le plus
+             accessible au pouce. */}
 
         {/* LE CŒUR — DANS l'image, angle HAUT DROIT : l'angle opposé
             au badge, celui que tous les sites d'images réservent à ce
@@ -311,9 +379,14 @@ export function CarteTatoueur({
             carte, et n'ouvre donc jamais la fiche par erreur.
             ⚠️ C'EST LE SEUL ÉLÉMENT QUE LA PHOTOTHÈQUE CONSERVE. */}
         {photoEnregistrable && (
-          <div className="absolute top-2 right-2">
+          <div className="absolute bottom-2 right-2">
             <BoutonCoeurPhoto
               photoId={photoEnregistrable.id}
+              //  ⚠️ LE GABARIT SUIT LA CARTE (nº 211-§3 et §4) : en
+              //  pleine largeur au doigt, il prend EXACTEMENT la taille
+              //  du cœur de la fiche ; partout ailleurs, le gabarit
+              //  des cartes, agrandi lui aussi.
+              variante={uneColonne ? "fiche-mobile" : "carte"}
               //  L'ENSEMBLE DE CETTE PHOTO (nº 209-§3) — même style,
               //  même catégorie, même rendu, chez ce tatoueur : la
               //  règle est la même depuis la mosaïque que depuis une
@@ -442,15 +515,23 @@ export function CarteTatoueur({
               : "text-[13px]"
           }`}
         >
-          {/* ⚠️ VILLE ET PAYS, RIEN D'AUTRE (passe nº 114) — et le code
-              de l'État pour les pays qui l'écrivent : « Miami, FL,
-              États-Unis ». La règle vit dans lib/adresse, jamais ici. */}
-          {ligneCarte({
-            ville: tatoueur.ville_nom,
-            region: tatoueur.region,
-            pays: tatoueur.pays,
-            code_pays: tatoueur.code_pays,
-          })}
+          {/* ⚠️ LE TYPE DE FICHE OUVRE LA LIGNE (nº 211-§2) — il a
+              quitté l'image, où il couvrait la photo : « Artiste ·
+              Lyon, France ». Puis VILLE ET PAYS, rien d'autre (passe
+              nº 114) — avec le code de l'État pour les pays qui
+              l'écrivent (« Miami, FL, États-Unis »). La règle du lieu
+              vit dans lib/adresse, jamais ici. */}
+          {[
+            libelleTypeFiche(tatoueur.type_fiche, tatoueur.etablissement),
+            ligneCarte({
+              ville: tatoueur.ville_nom,
+              region: tatoueur.region,
+              pays: tatoueur.pays,
+              code_pays: tatoueur.code_pays,
+            }),
+          ]
+            .filter(Boolean)
+            .join(" · ")}
         </p>
         </div>
       </div>
