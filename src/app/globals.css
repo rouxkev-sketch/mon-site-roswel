@@ -235,6 +235,30 @@ html:has([data-fond="sombre"]) {
     inset 0 0 0 1px rgba(255, 255, 255, 0.035);
 }
 
+/*  LES MENUS DE VERRE (nº 236-§4) — LES SURFACES SANS VOILE
+    -------------------------------------------------------------------
+    Un menu déroulant n'a PAS de voile noir derrière lui : la page se
+    voit vraiment à travers. Mesuré au banc, texte #F2F2F4 sur plaque
+    à 22 % :
+      · au-dessus de l'anthracite du site  → contraste 15,53 (excellent)
+      · au-dessus d'une photo TRÈS CLAIRE  → contraste  1,13 (illisible)
+    22 % tient donc parfaitement sur la page nue et sur les photos
+    sombres, et cède sur les photos claires — et la mosaïque en montre.
+    ⚠️ LA VALEUR EST CELLE DE LA PLAQUE, ET ELLE ATTEND L'ARBITRAGE DU
+    PROPRIÉTAIRE (nº 236-§4 : « mesure, dis-le-moi, propose — je
+    tranche »). Elle est isolée ICI, dans sa propre règle, pour que le
+    jour où il tranche, UNE SEULE valeur change et aucune fenêtre n'est
+    touchée. Les mêmes règles dures s'appliquent : deux lignes
+    littérales, préfixée d'abord, ni `@supports`, ni `var()`. */
+[data-verre-menu] {
+  background-color: rgba(26, 26, 29, 0.22);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  backdrop-filter: blur(40px) saturate(200%);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.035);
+}
+
 /*  LES CAPSULES POSÉES SUR LA PLAQUE — « Copier l'adresse » en blanc
     translucide.
     ⚠️ SANS AUCUN FILTRE D'ARRIÈRE-PLAN (nº 233-§4) : un second filtre

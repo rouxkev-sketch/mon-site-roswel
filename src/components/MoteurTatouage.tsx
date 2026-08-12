@@ -1067,9 +1067,10 @@ export function MoteurTatouage({
               data-panneau-filtres=""
               data-source-fichier="src/components/MoteurTatouage.tsx"
               data-source-composant="MoteurTatouage · panneau web des filtres"
+              data-verre-menu=""
               className="absolute top-full right-0 z-30 mt-2
                          w-[min(420px,calc(100vw-32px))] rounded-2xl
-                         bg-sombre-eleve px-5 pb-5 pt-[15px]"
+                         px-5 pb-5 pt-[15px]"
             >
               {blocFiltres(criteres, annoncer, true)}
             </div>

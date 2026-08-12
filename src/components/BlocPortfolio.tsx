@@ -1070,7 +1070,8 @@ export function BlocPortfolio({
               type="button"
               aria-label="Fermer"
               onClick={fermerFenetreStyles}
-              className="absolute inset-0 bg-black/85 cursor-default"
+              className="absolute inset-0 bg-black/25 cursor-default
+                   opacity-100 transition-opacity duration-200 starting:opacity-0"
             />
             <div
               className="relative flex w-full max-w-[420px]
@@ -1291,12 +1292,13 @@ export function BlocPortfolio({
               type="button"
               aria-label="Fermer"
               onClick={() => setSuggestionEnvoyee(false)}
-              className="absolute inset-0 bg-black/85 cursor-default"
+              className="absolute inset-0 bg-black/25 cursor-default
+                   opacity-100 transition-opacity duration-200 starting:opacity-0"
             />
             <div
-              className="relative w-full max-w-[380px] rounded-2xl bg-sombre-carte p-5
-                         shadow-[0_24px_80px_rgba(0,0,0,0.6)]
-                         opacity-100 transition-opacity duration-200 starting:opacity-0"
+              data-verre-fenetre=""
+            className="relative w-full max-w-[380px] rounded-2xl p-5
+                         shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
             >
               <h2 className="text-[17px] font-bold text-sombre-texte">
                 Demande envoyée
@@ -1336,12 +1338,13 @@ export function BlocPortfolio({
               type="button"
               aria-label="Annuler"
               onClick={() => setARetirer(null)}
-              className="absolute inset-0 bg-black/85 cursor-default"
+              className="absolute inset-0 bg-black/25 cursor-default
+                   opacity-100 transition-opacity duration-200 starting:opacity-0"
             />
             <div
-              className="relative w-full max-w-[380px] rounded-2xl bg-sombre-carte p-5
-                         shadow-[0_24px_80px_rgba(0,0,0,0.6)]
-                         opacity-100 transition-opacity duration-200 starting:opacity-0"
+              data-verre-fenetre=""
+            className="relative w-full max-w-[380px] rounded-2xl p-5
+                         shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
             >
               <h2 className="text-[17px] font-bold text-sombre-texte">
                 Retirer «&nbsp;{libelleStyle(aRetirer)}&nbsp;»&nbsp;?

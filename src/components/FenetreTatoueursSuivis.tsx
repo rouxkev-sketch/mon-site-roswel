@@ -85,14 +85,15 @@ export function FenetreTatoueursSuivis({
         type="button"
         aria-label="Fermer la fenêtre"
         onClick={onFermer}
-        className="absolute inset-0 bg-black/60 cursor-default"
+        className="absolute inset-0 bg-black/25 cursor-default
+                   opacity-100 transition-opacity duration-200 starting:opacity-0"
       />
 
       <div
+        data-verre-fenetre=""
         className="relative w-full max-w-[440px] max-h-[min(88dvh,700px)]
-                   flex flex-col rounded-2xl sm:rounded-3xl bg-sombre-carte
-                   overflow-hidden
-                   opacity-100 transition-opacity duration-200 starting:opacity-0"
+                   flex flex-col rounded-2xl sm:rounded-3xl
+                   overflow-hidden"
       >
         {/* L'EN-TÊTE — LE NOMBRE EN TÊTE, comme demandé : c'est le
             titre lui-même qui le porte. */}

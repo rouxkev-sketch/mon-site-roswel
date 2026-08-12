@@ -250,17 +250,18 @@ export function FenetreNotifications({
         type="button"
         aria-label="Fermer les notifications"
         onClick={onFermer}
-        className="absolute inset-0 bg-black/60 cursor-default"
+        className="absolute inset-0 bg-black/25 cursor-default
+                   opacity-100 transition-opacity duration-200 starting:opacity-0"
       />
 
       {/* LE PANNEAU — un fond éclairci d'un cran sur le voile, sans
           contour ni ombre : la grammaire des fenêtres depuis la
           nº 130 (Sécurité, retour de suppression). */}
       <div
+        data-verre-fenetre=""
         className="relative w-full max-w-[520px] max-h-[min(88dvh,720px)]
-                   flex flex-col rounded-2xl sm:rounded-3xl bg-sombre-carte
-                   overflow-hidden
-                   opacity-100 transition-opacity duration-200 starting:opacity-0"
+                   flex flex-col rounded-2xl sm:rounded-3xl
+                   overflow-hidden"
       >
         {/* L'EN-TÊTE — la cloche, le titre, la double coche, la croix.
             La ligne qui le sépare de la liste court d'un bord à

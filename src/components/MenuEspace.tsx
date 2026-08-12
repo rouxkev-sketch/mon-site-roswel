@@ -690,13 +690,13 @@ export function MenuEspace({
                 type="button"
                 aria-label="Fermer le menu"
                 onClick={() => setOuvert(false)}
-                className="absolute inset-0 bg-black/60 cursor-default"
+                className="absolute inset-0 bg-black/25 cursor-default
+                           opacity-100 transition-opacity duration-200 starting:opacity-0"
               />
               <div
+                data-verre-fenetre=""
                 className="relative w-full max-w-[320px] max-h-[min(92dvh,700px)]
-                           overflow-y-auto overscroll-contain rounded-3xl
-                           bg-sombre-carte
-                           opacity-100 transition-opacity duration-200 starting:opacity-0"
+                           overflow-y-auto overscroll-contain rounded-3xl"
               >
                 {contenuMenu}
               </div>

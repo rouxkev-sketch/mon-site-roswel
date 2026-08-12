@@ -3186,12 +3186,13 @@ export function FormulaireFiche() {
           className="fixed inset-0 z-[70] flex items-center justify-center p-5"
           onClick={() => setFenetreRetour(false)}
         >
-          <div aria-hidden="true" className="absolute inset-0 bg-black/80" />
+          <div aria-hidden="true" className="absolute inset-0 bg-black/25
+                   opacity-100 transition-opacity duration-200 starting:opacity-0" />
           <div
             onClick={(evenement) => evenement.stopPropagation()}
-            className="relative w-full max-w-[420px] rounded-2xl bg-sombre-carte
-                       p-6 sm:p-7 text-center
-                       opacity-100 transition-opacity duration-200 starting:opacity-0"
+            data-verre-fenetre=""
+            className="relative w-full max-w-[420px] rounded-2xl
+                       p-6 sm:p-7 text-center"
           >
             <span
               aria-hidden="true"
@@ -3251,13 +3252,14 @@ export function FormulaireFiche() {
           className="fixed inset-0 z-[70] flex items-center justify-center p-5"
           onClick={fermerAnnonce}
         >
-          <div aria-hidden="true" className="absolute inset-0 bg-black/80" />
+          <div aria-hidden="true" className="absolute inset-0 bg-black/25
+                   opacity-100 transition-opacity duration-200 starting:opacity-0" />
           <div
             onClick={(evenement) => evenement.stopPropagation()}
-            className="relative w-full max-w-[420px] rounded-2xl bg-sombre-carte
+            data-verre-fenetre=""
+            className="relative w-full max-w-[420px] rounded-2xl
                        p-6 sm:p-7 text-center
-                       shadow-[0_24px_80px_rgba(0,0,0,0.6)]
-                       opacity-100 transition-opacity duration-200 starting:opacity-0"
+                       shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
           >
             <span
               aria-hidden="true"

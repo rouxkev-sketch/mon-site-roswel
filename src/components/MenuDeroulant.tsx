@@ -531,6 +531,7 @@ export function MenuDeroulant({
         typeof document !== "undefined" &&
         createPortal(
         <div
+          {...(sombre ? { "data-verre-menu": "" } : {})}
           ref={panneau}
           // POSÉ DANS <body>, en coordonnées d'écran : plus aucun cadre
           // ne le découpe. Il déborde donc de la fenêtre du moteur et
@@ -549,7 +550,7 @@ export function MenuDeroulant({
               ? `${listeClassique
                   .replace("border border-bordure", "")
                   .replace("bg-fond", "")
-                  .replace(/shadow-\[[^\]]*\]/, "")} bg-sombre-carte text-sombre-texte`
+                  .replace(/shadow-\[[^\]]*\]/, "")} text-sombre-texte`
               : listeClassique
           }
         >
@@ -645,10 +646,11 @@ export function MenuDeroulant({
           />
           {/* La feuille */}
           <div
+            {...(sombre ? { "data-verre-fenetre": "" } : {})}
             role="listbox"
             aria-label={ariaLabel}
             className={`relative rounded-t-3xl shadow-2xl max-h-[80vh] flex flex-col pb-[max(1rem,env(safe-area-inset-bottom))] ${
-              sombre ? "bg-sombre-carte text-sombre-texte" : "bg-fond"
+              sombre ? "text-sombre-texte" : "bg-fond"
             }`}
             style={{
               transform: `translateY(${dragY}px)`,

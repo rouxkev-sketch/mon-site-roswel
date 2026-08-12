@@ -402,9 +402,13 @@ function BlocSuppression({
           <div
             aria-hidden="true"
             onClick={onFermer}
-            className="absolute inset-0 bg-black/80"
+            className="absolute inset-0 bg-black/25
+                   opacity-100 transition-opacity duration-200 starting:opacity-0"
           />
-          <div className="relative w-full max-w-[440px] rounded-2xl bg-sombre-carte p-6 sm:p-7 text-left">
+          <div
+            data-verre-fenetre=""
+            className="relative w-full max-w-[440px] rounded-2xl p-6 sm:p-7 text-left"
+          >
             <h2 className="text-lg font-bold text-sombre-texte">
               {plusieurs ? "Supprimer mes fiches ?" : "Supprimer ma fiche ?"}
             </h2>

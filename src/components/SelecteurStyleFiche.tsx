@@ -168,9 +168,8 @@ export function SelecteurStyleFiche({
               minWidth: 216,
               maxWidth: "min(300px, calc(100vw - 20px))",
             }}
-            className="z-[95] overflow-y-auto overscroll-contain rounded-2xl
-                       border border-white/10 bg-[#141418]/95 p-1.5
-                       shadow-[0_24px_60px_rgba(0,0,0,0.6)] backdrop-blur-xl"
+            data-verre-menu=""
+            className="z-[95] overflow-y-auto overscroll-contain rounded-2xl p-1.5"
           >
             {styles.map((entree) => {
               const actif = entree.slug === courant.slug;

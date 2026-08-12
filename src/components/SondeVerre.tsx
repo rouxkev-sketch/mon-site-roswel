@@ -134,16 +134,43 @@ function nommer(element: Element): string {
  * Rien ici ne corrige : la sonde LIT.
  */
 function releveDeLaFenetre(): [string, string][] {
-  const plaque = document.querySelector<HTMLElement>("[data-verre-fenetre]");
-  if (!plaque) {
+  //  §5 (nº 236) — TOUTES LES SURFACES DE VERRE OUVERTES, pas
+  //  seulement la fenêtre d'adresse : fenêtres superposées, menus
+  //  déroulants, panneau de filtres. Chacune porte le même attribut,
+  //  chacune est relevée, une ligne par surface.
+  const surfaces = [
+    ...document.querySelectorAll<HTMLElement>(
+      "[data-verre-fenetre], [data-verre-menu]"
+    ),
+  ];
+  if (surfaces.length === 0) {
     return [
       [
-        "FENÊTRE",
-        "fermée — ouvre une adresse de fiche au doigt, puis rouvre la sonde",
+        "SURFACE",
+        "aucune ouverte — ouvre une fenêtre ou un menu, puis rouvre la sonde",
       ],
     ];
   }
   const dit: [string, string][] = [];
+  dit.push(["surfaces ouvertes", String(surfaces.length)]);
+  //  ⚠️ CHAQUE surface est relevée ; le détail complet (chaîne des
+  //  ancêtres) est donné pour la DERNIÈRE ouverte — celle du dessus,
+  //  celle qu'on regarde.
+  for (const surface of surfaces) {
+    const s = getComputedStyle(surface);
+    const nomCourt = nommer(surface).slice(0, 40);
+    dit.push([
+      `0) ${nomCourt}`,
+      `filtre ${s.backdropFilter || "(vide)"} · fond ${s.backgroundColor} · opacité ${s.opacity}`,
+    ]);
+  }
+  const plaque = surfaces[surfaces.length - 1];
+  dit.push([
+    "0) surface détaillée",
+    `${nommer(plaque).slice(0, 40)} — ${
+      plaque.hasAttribute("data-verre-menu") ? "MENU (sans voile)" : "FENÊTRE"
+    }`,
+  ]);
 
   //  1) LA PLAQUE ET LES DEUX CAPSULES.
   const morceaux: [string, HTMLElement | null][] = [

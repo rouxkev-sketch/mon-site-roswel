@@ -497,6 +497,14 @@ export function ContenuFiche({
                 `« ${serie.nature} » · rendu « ${serie.rendu} »`
             );
             surSerieChoisie(serie);
+            //  §1 (nº 236) — UNE VIGNETTE DE STYLE CHANGE LES PHOTOS
+            //  D'EN DESSOUS : la page remonte, comme pour les deux
+            //  sélecteurs (nº 234-§1). LA MÊME fonction, même
+            //  mouvement, même durée, aucune entrée d'historique.
+            //  ⚠️ SEULE LA VIGNETTE REMONTE : ouvrir une PHOTO passe
+            //  par le carrousel de l'enveloppe, pas par ici — rien n'y
+            //  bouge, et c'est voulu.
+            remonterSousLaBarre();
           }}
         />
       )}

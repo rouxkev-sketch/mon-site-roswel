@@ -758,8 +758,9 @@ export function ChampLocalisation({
             //  quelle — et les badges qu'elle contient prennent en
             //  conséquence la robe « sur panneau », comme dans les
             //  filtres (voir MoteurTatouage, `piedRayon`).
+            data-verre-menu=""
             className="z-[80] flex flex-col rounded-2xl
-                       bg-sombre-eleve text-sombre-texte overflow-hidden"
+                       text-sombre-texte overflow-hidden"
             onPointerDown={() => {
               interactionPanneau.current = true;
               window.setTimeout(() => {

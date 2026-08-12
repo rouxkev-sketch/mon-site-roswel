@@ -135,12 +135,13 @@ export function BoutonHorsLigne({
           <div
             aria-hidden="true"
             onClick={() => !envoiEnCours && setOuverte(false)}
-            className="absolute inset-0 bg-black/80"
+            className="absolute inset-0 bg-black/25
+                   opacity-100 transition-opacity duration-200 starting:opacity-0"
           />
           <div
-            className="relative w-full max-w-[440px] rounded-2xl bg-sombre-carte
-                       border border-sombre-bordure p-6
-                       opacity-100 transition-opacity duration-200 starting:opacity-0"
+            data-verre-fenetre=""
+            className="relative w-full max-w-[440px] rounded-2xl
+                       border border-sombre-bordure p-6"
           >
             {fait ? (
               /* ---- C'EST FAIT ---- */
