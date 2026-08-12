@@ -37,7 +37,12 @@ import {
 } from "@/lib/disposition-grille";
 import { lirePhototheque, reprendrePhototheque } from "@/lib/vue-phototheque";
 import { memoriserRechercheTatouage } from "@/lib/derniere-recherche";
-import { defilerSansGeste } from "@/lib/defilement-programme";
+//  ⚠️ TEMPORAIRE (nº 224-§5) — la sonde des cartes. Sans
+//  `?sonde-cartes=1`, ces deux appels sortent à leur première ligne.
+import {
+  fermerReleveCartes,
+  ouvrirReleveCartes,
+} from "@/lib/journal-cartes";
 
 /** useLayoutEffect côté navigateur, useEffect côté serveur (silencieux) */
 const useEffetAvantPeinture =
@@ -253,37 +258,36 @@ export function IndexTatoueurs({
    * recherche.
    */
   /**
-   * §2 (nº 220) — « VOIR PLUS » NE DÉPLACE PLUS LA PAGE
+   * §3 (nº 224) — « VOIR PLUS » NE DÉPLACE PLUS LA PAGE, VRAIMENT
    * ==================================================================
-   * LE DÉFAUT : au moment où la nouvelle rangée apparaît, la page
-   * bouge — web et mobile.
+   * LA CAUSE, ET ELLE EST DE MON FAIT : la nº 220 ancrait le BOUTON.
+   * Elle notait sa position à l'écran avant la transition et la lui
+   * rendait après — donc, les nouvelles cartes s'insérant AU-DESSUS de
+   * lui, elle faisait DESCENDRE la page de toute leur hauteur pour le
+   * garder immobile. C'était la lecture de la demande d'alors ; la
+   * demande d'aujourd'hui est l'inverse, et elle est plus simple :
+   * `window.scrollY` ne bouge pas d'un pixel, les cartes s'ajoutent
+   * dessous, on continue de lire.
    *
-   * LA RÈGLE POSÉE PAR LE PROPRIÉTAIRE : « les nouvelles cartes
-   * s'insèrent AU-DESSUS du bouton, qui reste exactement où il est ».
-   * C'est donc le BOUTON qui sert d'ancre, et non un calcul de
-   * hauteur : on note sa position à l'écran avant la transition, et on
-   * la lui rend une fois les cartes posées — AVANT la peinture
-   * (`useLayoutEffect`), pour qu'aucune image intermédiaire ne montre
-   * la page ailleurs.
-   *
-   * ⚠️ UNE ANCRE, PAS UNE MESURE DE CONTENU. Peu importe ce qui a
-   * changé de hauteur — une rangée de plus, une réserve de barre qui
-   * se replie, une image qui se pose : si le bouton est revenu au même
-   * pixel, rien n'a bougé pour l'œil. C'est vrai quelle que soit la
-   * cause, aujourd'hui comme après la prochaine passe.
-   *
-   * ⚠️ `defilerSansGeste` : ce mouvement est posé par le site. Sans
-   * l'annoncer, la barre y lirait une intention et replierait sa
-   * rangée de recherche (nº 154-§6A).
+   * IL N'Y A DONC PLUS RIEN À CORRIGER APRÈS COUP — c'est le
+   * comportement naturel d'un document qui s'allonge par le bas. Ce
+   * qui reste, ce sont les trois choses qui pourraient le troubler, et
+   * elles sont traitées à la source :
+   *   · `scroll: false` sur la navigation (le routeur ne remonte pas) ;
+   *   · `overflow-anchor: none` sur la grille — l'ancrage de
+   *     défilement du navigateur choisit un nœud de référence et
+   *     compense les changements de hauteur autour de lui ; sur une
+   *     grille qui s'allonge, il déplace la page de quelques pixels
+   *     (voir GrilleTatoueurs) ;
+   *   · la hauteur de chaque image est réservée AVANT son arrivée
+   *     (cadre `aspect-4/5` + `width`/`height` déclarés sur la
+   *     balise) : aucune photo qui se pose ne pousse quoi que ce soit.
    */
-  const zoneVoirPlus = useRef<HTMLDivElement>(null);
-  /** La position du bouton à l'écran, notée juste avant la
-      transition — `null` quand aucun « Voir plus » n'est en cours. */
-  const ancreVoirPlus = useRef<number | null>(null);
-
   function voirPlus() {
-    ancreVoirPlus.current =
-      zoneVoirPlus.current?.getBoundingClientRect().top ?? null;
+    //  SONDE (nº 224-§5) : le relevé s'ouvre AVANT la transition et se
+    //  ferme après le rendu — c'est lui qui prouve que `scrollY` n'a
+    //  pas bougé. Sans `?sonde-cartes=1`, ne coûte rien.
+    ouvrirReleveCartes();
     demarrerTransition(() => {
       router.replace(adresseDe(criteresServis, page + 1), { scroll: false });
     });
@@ -292,22 +296,15 @@ export function IndexTatoueurs({
   const visibles = premiers;
   const resteAVoir = total > visibles.length;
 
-  /*  LA REMISE EN PLACE — avant la peinture, une seule fois par
-      « Voir plus ». Elle ne se déclenche que si une ancre a été notée :
-      un rendu ordinaire (recherche, retour, bascule) n'y touche pas. */
+  /*  ⚠️ PLUS AUCUNE REMISE EN PLACE (nº 224-§3) : la page ne doit pas
+      bouger, donc personne ne la déplace. Cet effet ne fait plus que
+      FERMER le relevé de la sonde, une fois les nouvelles cartes
+      posées — il ne touche jamais au défilement. */
   const nombreAffiche = useRef(visibles.length);
   useEffetAvantPeinture(() => {
     if (visibles.length === nombreAffiche.current) return;
     nombreAffiche.current = visibles.length;
-    const ancre = ancreVoirPlus.current;
-    ancreVoirPlus.current = null;
-    if (ancre === null) return;
-    const bouton = zoneVoirPlus.current;
-    if (!bouton) return;
-    const ecart = bouton.getBoundingClientRect().top - ancre;
-    //  Moins d'un pixel : il n'y a rien à corriger.
-    if (Math.abs(ecart) < 1) return;
-    defilerSansGeste({ top: window.scrollY + ecart, left: 0 });
+    fermerReleveCartes();
   }, [visibles.length]);
   /** Ce que la ligne de résultats annonce : les critères SERVIS, jamais
       ceux que le doigt vient de poser. */
@@ -424,13 +421,10 @@ export function IndexTatoueurs({
              Il vivait dans `{resteAVoir && …}` : à la dernière page, il
              quittait le document d'un coup — quatre-vingt-dix pixels de
              moins sous les pieds de quelqu'un qui est justement en bas
-             de page, donc un saut. Et c'est aussi lui qui sert d'ANCRE
-             à la remise en place : une ancre qui disparaît ne peut rien
-             ancrer. Le bloc reste donc toujours là, le MÊME élément
-             d'une page à l'autre ; c'est son contenu qui s'efface quand
-             il n'y a plus rien à charger. */}
+             de page, donc un saut. Il reste donc toujours là, le MÊME
+             élément d'une page à l'autre ; c'est son contenu qui
+             s'efface quand il n'y a plus rien à charger. */}
         <div
-          ref={zoneVoirPlus}
           className={
             resteAVoir ? "mt-10 flex flex-col items-center gap-2" : "mt-10"
           }

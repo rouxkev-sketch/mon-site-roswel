@@ -8,6 +8,7 @@ import { defilerEnDouceur } from "@/lib/defilement-programme";
 //  ce que le carrousel reçoit. Sans `?sonde-carrousel=1`, ne coûte rien.
 import { noter as noterSonde } from "@/lib/journal-carrousel";
 import {
+  ICONE_SITE,
   ICONES_RESEAUX,
   libelleFiltre,
   libelleStyle,
@@ -34,7 +35,6 @@ import {
   BlocAdressesFiche,
   BlocProfilsArtiste,
 } from "@/components/BlocLieux";
-import { IconeWorld } from "@/components/Icones";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
@@ -255,19 +255,34 @@ export function ContenuFiche({
     </a>
   );
 
-  /** L'icône ronde officielle d'un réseau, à la taille des autres :
-      un lien ne se distingue pas d'un autre par la taille de son
-      icône. */
-  const iconeReseau = (reseau: "instagram" | "tiktok") => (
+  /**
+   * §2 (nº 224) — LES TROIS FICHIERS D'ICÔNES, ET EUX SEULS.
+   * ==================================================================
+   * `icone-instagram.png`, `icone-tiktok.png`, `site.png` — déposés à
+   * la main par le propriétaire, servis tels quels. Le lien libre
+   * portait `IconeWorld`, un tracé SVG dessiné par le site : ce
+   * n'était pas le bon fichier.
+   *
+   * ⚠️ LES DEUX FAMILLES NE SE TRAITENT PAS PAREIL, parce que les
+   * fichiers ne sont pas de même nature :
+   *  · les icônes de RÉSEAU sont des logos en couleur → servis tels
+   *    quels, aucune retouche ;
+   *  · `site.png` est un GLYPHE NOIR sur fond transparent, comme les
+   *    autres images de ce dossier → `invert` l'éclaircit et
+   *    l'opacité le cale sur le gris du texte (jamais en touchant au
+   *    fichier — la règle permanente du projet).
+   * Colonne de 18 px inchangée (nº 223).
+   */
+  const iconeFichier = (fichier: string, glyphe: boolean) => (
     /* eslint-disable-next-line @next/next/no-img-element --
-       icône officielle déposée par le propriétaire, affichée telle
-       quelle. */
+       icône déposée par le propriétaire, affichée telle quelle (le
+       filtre CSS ne modifie pas le fichier). */
     <img
-      src={ICONES_RESEAUX[reseau]}
+      src={fichier}
       alt=""
       width={18}
       height={18}
-      className="h-[18px] w-[18px] rounded-full"
+      className={`h-[18px] w-[18px] ${glyphe ? "invert opacity-60" : ""}`}
     />
   );
 
@@ -279,24 +294,24 @@ export function ContenuFiche({
         "site",
         tatoueur.site_web,
         tatoueur.titre_site_web || libelleDuLien(tatoueur.site_web),
-        <IconeWorld taille={18} />
+        iconeFichier(ICONE_SITE, true)
       ),
     tatoueur.page_de_liens &&
       lienEnLigne(
         "liens",
         tatoueur.page_de_liens,
         tatoueur.titre_page_de_liens || libelleDuLien(tatoueur.page_de_liens),
-        <IconeWorld taille={18} />
+        iconeFichier(ICONE_SITE, true)
       ),
     tatoueur.lien_instagram &&
       lienEnLigne(
         "instagram",
         tatoueur.lien_instagram,
         "Instagram",
-        iconeReseau("instagram")
+        iconeFichier(ICONES_RESEAUX.instagram, false)
       ),
     tatoueur.lien_tiktok &&
-      lienEnLigne("tiktok", tatoueur.lien_tiktok, "TikTok", iconeReseau("tiktok")),
+      lienEnLigne("tiktok", tatoueur.lien_tiktok, "TikTok", iconeFichier(ICONES_RESEAUX.tiktok, false)),
   ].filter(Boolean);
 
   /** LES TROIS SECTIONS DE BADGES — Styles, Technique, Composition.

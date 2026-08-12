@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { IconeChevronBas } from "@/components/Icones";
 import { OngletsLigne } from "@/components/OngletsLigne";
-import { PORTRAIT_ROND } from "@/config/tatouage";
+import { ICONE_ADRESSE, PORTRAIT_ROND } from "@/config/tatouage";
 import {
   etatOuverture,
   JOURS_STUDIO,
@@ -59,15 +59,35 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  * LES BRIQUES PARTAGÉES
  * ================================================================== */
 
-/** LA PHOTO D'UN LIEU OU D'UNE PERSONNE — le gabarit de l'équipe
-    (44 px), le même partout : une adresse et un membre se lisent dans
-    la même colonne. Aucun contour (charte). */
+/**
+ * LA PASTILLE D'UN LIEU OU D'UNE PERSONNE — 44 px, le gabarit de
+ * l'équipe : une adresse et un membre se lisent dans la même colonne.
+ *
+ * ⚠️ ELLE EXISTE TOUJOURS (passe nº 224-§1), même sans photo — c'est
+ * elle qui tient la colonne, et une ligne sans elle se décalait ou
+ * disparaissait. Deux natures, deux replis :
+ *  · UN LIEU sans photo (un salon saisi à la main, qui n'a pas de
+ *    fiche sur yokofolio) → un rond gris uni portant le glyphe
+ *    `adresse.png`, dans un gris NETTEMENT plus foncé que le rond ;
+ *  · UNE PERSONNE sans photo → un rond gris uni, ET RIEN DEDANS : ni
+ *    icône, ni lettre, ni texte. Une initiale sur un rond gris se lit
+ *    comme un avatar bricolé ; le vide se lit comme une absence, ce
+ *    qu'elle est.
+ * Aucun contour, aucun halo.
+ *
+ * ⚠️ `adresse.png` EST UN GLYPHE NOIR sur fond transparent, déposé à
+ * la main : on ne le retouche jamais. `invert` l'éclaircit, et
+ * l'opacité le ramène au gris voulu — plus foncé que le rond, donc
+ * lisible dessus.
+ */
 function PhotoRonde({
   source,
-  initiale,
+  nature,
 }: {
   source: string | null | undefined;
-  initiale: string;
+  /** « lieu » porte le glyphe d'adresse à défaut de photo ;
+      « personne » ne porte rien. */
+  nature: "lieu" | "personne";
 }) {
   return (
     <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-sombre-eleve">
@@ -81,11 +101,19 @@ function PhotoRonde({
           height={PORTRAIT_ROND}
           className="h-full w-full object-cover"
         />
-      ) : (
-        <span aria-hidden="true" className="text-[15px] font-bold text-sombre-texte-doux">
-          {initiale}
-        </span>
-      )}
+      ) : nature === "lieu" ? (
+        /* eslint-disable-next-line @next/next/no-img-element --
+           icône déposée par le propriétaire, affichée telle quelle (le
+           filtre CSS ne modifie pas le fichier). */
+        <img
+          src={ICONE_ADRESSE}
+          alt=""
+          width={20}
+          height={20}
+          aria-hidden="true"
+          className="h-5 w-5 invert opacity-40"
+        />
+      ) : null}
     </span>
   );
 }
@@ -99,11 +127,19 @@ function LigneEtiquetee({
   etiquette: string;
   valeur: string;
 }) {
-  if (!valeur) return null;
+  //  ⚠️ ELLE NE DISPARAÎT PLUS QUAND LA VALEUR MANQUE (nº 224-§1) :
+  //  c'était le défaut — un lieu saisi à la main dont l'adresse ne
+  //  rendait rien effaçait toute la ligne, pastille comprise, et
+  //  l'information sautait sans laisser de trace. L'étiquette reste,
+  //  et dit ce qui manque plutôt que de se taire.
   return (
     <p className="text-[14px] leading-relaxed text-sombre-texte-doux [overflow-wrap:anywhere]">
       {etiquette}{" "}
-      <span className="text-[15px] font-medium text-sombre-texte">{valeur}</span>
+      {valeur ? (
+        <span className="text-[15px] font-medium text-sombre-texte">{valeur}</span>
+      ) : (
+        <span className="text-[15px] font-medium">non renseignée</span>
+      )}
     </p>
   );
 }
@@ -230,23 +266,30 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
           </span>
         );
         return (
-          <li key={membre.artiste_id}>
-            <p className="text-[14px] leading-relaxed text-sombre-texte-doux">
-              {roleDuMembre(membre)} ·{" "}
-              {membre.slug ? (
-                <Link
-                  href={`/tatoueur/${membre.slug}`}
-                  className="transition-colors hover:text-primaire active:text-primaire"
-                >
-                  {nom}
-                </Link>
-              ) : (
-                nom
+          /*  ⚠️ LA PASTILLE EST LÀ MÊME SANS PHOTO (nº 224-§1) : un
+              rond gris uni, rien dedans. C'est elle qui tient la
+              colonne — sans elle, une équipe où un seul membre a
+              déposé sa photo s'affichait en escalier. */
+          <li key={membre.artiste_id} className="flex items-start gap-4">
+            <PhotoRonde source={membre.photo} nature="personne" />
+            <div className="min-w-0 flex-1">
+              <p className="text-[14px] leading-relaxed text-sombre-texte-doux">
+                {roleDuMembre(membre)} ·{" "}
+                {membre.slug ? (
+                  <Link
+                    href={`/tatoueur/${membre.slug}`}
+                    className="transition-colors hover:text-primaire active:text-primaire"
+                  >
+                    {nom}
+                  </Link>
+                ) : (
+                  nom
+                )}
+              </p>
+              {membre.genre === "guest" && (
+                <DatesDeSession debut={membre.debut_le} fin={membre.fin_le} />
               )}
-            </p>
-            {membre.genre === "guest" && (
-              <DatesDeSession debut={membre.debut_le} fin={membre.fin_le} />
-            )}
+            </div>
           </li>
         );
       })}
@@ -274,14 +317,12 @@ function lieuDuStudio(studio: StudioFiche): LieuAffichable {
     puis l'équipe dessous. */
 function UneAdresse({
   photo,
-  initiale,
   adresse,
   horaires,
   fuseau,
   equipe,
 }: {
   photo: string | null | undefined;
-  initiale: string;
   adresse: string;
   horaires: unknown;
   fuseau: string | null | undefined;
@@ -293,7 +334,7 @@ function UneAdresse({
            se prolonge dessous s'il est long — jamais au-dessus. C'est
            la même règle que le nom de la fiche (nº 222-§1e). */}
       <div className="flex items-start gap-4">
-        <PhotoRonde source={photo} initiale={initiale} />
+        <PhotoRonde source={photo} nature="lieu" />
         <div className="min-w-0 flex-1">
           <LigneEtiquetee etiquette="Adresse :" valeur={adresse} />
           <HorairesEnLigne horaires={horaires} fuseau={fuseau} />
@@ -366,7 +407,6 @@ export function BlocAdressesFiche({
             //  Le jour où il en aura une, c'est la seule ligne à
             //  changer — ici, et dans la boucle des autres adresses.
             photo={tatoueur.photo_profil}
-            initiale={tatoueur.nom.trim().charAt(0).toUpperCase()}
             adresse={adressePrincipale}
             horaires={principal?.horaires}
             fuseau={principal?.fuseau}
@@ -384,7 +424,6 @@ export function BlocAdressesFiche({
               <UneAdresse
                 key={studio.id}
                 photo={tatoueur.photo_profil}
-                initiale={(studio.nom ?? tatoueur.nom).trim().charAt(0).toUpperCase()}
                 adresse={ligneFiche(lieuDuStudio(studio))}
                 horaires={studio.horaires}
                 fuseau={studio.fuseau}
@@ -443,9 +482,18 @@ export function BlocProfilsArtiste({
     <ul className="flex flex-col gap-7">
       {modes.map((mode) => (
         <li key={mode.id} className="flex items-start gap-4">
+          {/*  ⚠️ « À DOMICILE », C'EST CHEZ L'ARTISTE (nº 224-§1) : la
+               pastille est SA photo de profil, pas un glyphe d'adresse
+               — il n'y a pas d'autre lieu à montrer. Les autres modes
+               portent le logo du salon lié, ou le glyphe d'adresse
+               quand le lieu a été saisi à la main. */}
           <PhotoRonde
-            source={mode.salon_photo}
-            initiale={(mode.salon_nom ?? tatoueur.nom).trim().charAt(0).toUpperCase()}
+            source={
+              mode.genre === "domicile"
+                ? tatoueur.photo_profil
+                : mode.salon_photo
+            }
+            nature="lieu"
           />
           <div className="min-w-0 flex-1">
             <p className="text-[14px] leading-relaxed text-sombre-texte-doux [overflow-wrap:anywhere]">

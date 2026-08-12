@@ -296,7 +296,28 @@ function CarteTatoueurNue({
       // Son identité, pour la retrouver après un changement de
       // disposition (voir src/lib/carte-du-haut.ts).
       data-carte={tatoueur.id}
-      className="group relative flex flex-col"
+      /**
+       * §4 (nº 224) — LA MÉMOIRE NE CROÎT PLUS AVEC LES CARTES
+       * ------------------------------------------------------------
+       * `content-visibility: auto` : le navigateur ne met en page, ne
+       * peint ni ne garde en mémoire le contenu d'une carte HORS
+       * CHAMP. À quatre-vingt-douze cartes sur un iPhone, c'est la
+       * différence entre un onglet qui vit et un moteur de rendu que
+       * le système tue.
+       *
+       * ⚠️ `contain-intrinsic-size: auto 460px` — LE MOT `auto` EST
+       * L'ESSENTIEL, et c'est lui qui rend la chose compatible avec
+       * le §3 (la page ne bouge pas) : le navigateur MÉMORISE la
+       * hauteur réelle de la carte dès qu'il l'a rendue une fois, et
+       * la réutilise ensuite quand elle sort du champ. La hauteur
+       * réservée est donc EXACTE pour toute carte déjà vue — jamais
+       * une estimation. Les 460 px ne servent qu'aux cartes JAMAIS
+       * rendues, c'est-à-dire loin sous l'écran, là où une erreur de
+       * hauteur ne déplace rien de ce qu'on regarde.
+       */
+      className="group relative flex flex-col
+                 [content-visibility:auto]
+                 [contain-intrinsic-size:auto_460px]"
       // Le doigt garde le défilement ; le pincement, non — il zoome
       // la photo (jamais la page).
       style={{ touchAction: "pan-x pan-y" }}

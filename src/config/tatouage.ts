@@ -63,6 +63,23 @@ export const MARQUE_YOKOFOLIO = {
  * s'affiche, un FIN LISERÉ CLAIR (ring-1 ring-white/25) le détoure —
  * l'icône elle-même n'est jamais retouchée, la marque reste intacte.
  */
+/**
+ * L'ICÔNE DES LIENS LIBRES — le site, la page de liens (nº 224-§2).
+ * ⚠️ `site.png`, DÉPOSÉE À LA MAIN sous ce nom EXACT, comme les
+ * icônes de réseau : le code ne la fabrique pas, ne la modifie pas, et
+ * ne l'inclut jamais dans une livraison. C'est un GLYPHE NOIR sur
+ * fond transparent — le code l'éclaircit par `invert` + opacité, et
+ * jamais en retouchant le fichier.
+ */
+export const ICONE_SITE = "/site.png";
+
+/**
+ * L'ICÔNE D'UNE ADRESSE — la pastille d'un lieu sans photo
+ * (nº 224-§1). `adresse.png`, déposée à la main sous ce nom EXACT :
+ * même règle que ci-dessus, glyphe noir jamais retouché.
+ */
+export const ICONE_ADRESSE = "/adresse.png";
+
 export const ICONES_RESEAUX = {
   instagram: "/icone-instagram.png",
   tiktok: "/icone-tiktok.png",

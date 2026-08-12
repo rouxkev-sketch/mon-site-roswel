@@ -26,6 +26,15 @@ import {
   useVuePhototheque,
 } from "@/components/AffichageMosaique";
 import type { Tatoueur } from "@/lib/tatoueurs";
+//  ⚠️ TEMPORAIRE (nº 224-§5) — la sonde des cartes compte les
+//  observateurs vivants. Sans `?sonde-cartes=1`, ces appels ne coûtent
+//  rien.
+import { observateurMort, observateurNe } from "@/lib/journal-cartes";
+
+/** UN PIXEL TRANSPARENT — ce qu'une image lointaine porte à la place
+    de sa source (nº 224-§4). Une chaîne, aucune requête réseau. */
+const PIXEL_VIDE =
+  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
 /** useLayoutEffect côté navigateur, useEffect côté serveur (silencieux) */
 const useEffetAvantPeinture =
@@ -161,6 +170,77 @@ export function GrilleTatoueurs({
       `rendu mosaïque · ${tatoueurs.length} cartes · disposition ${disposition} · photothèque ${phototheque ? "oui" : "non"}`
     );
   });
+
+  /**
+   * §4 (nº 224) — LES IMAGES TRÈS LOINTAINES RENDENT LEUR SOURCE
+   * ==================================================================
+   * DEUXIÈME LEVIER, après `content-visibility` (voir CarteTatoueur).
+   * Une image DÉCODÉE pèse en mémoire même quand elle n'est pas
+   * peinte ; à cent cartes, c'est ce qui reste et ce qui tue l'onglet.
+   * Au-delà de DEUX ÉCRANS de distance, la carte rend donc sa source
+   * à un substitut d'un pixel transparent — et la reprend quand elle
+   * revient. Le navigateur libère alors ce qu'il avait décodé.
+   *
+   * ⚠️ UN SEUL OBSERVATEUR POUR TOUTE LA MOSAÏQUE, et c'est la
+   * contrainte du propriétaire : « à 100 cartes, le nombre
+   * d'observateurs vivants doit être borné, pas proportionnel ». Un
+   * `IntersectionObserver` observe N éléments sans coûter N
+   * observateurs. Il se déconnecte au démontage et à chaque
+   * changement de la liste — jamais deux vivants à la fois.
+   *
+   * ⚠️ IL NE TOUCHE QU'À `src`, ET JAMAIS À LA MISE EN PAGE. La
+   * hauteur de l'image est réservée par son cadre (`aspect-4/5`) et
+   * par ses dimensions déclarées : rendre la source ne fait donc
+   * bouger AUCUN pixel — c'est ce qui le rend compatible avec le §3.
+   *
+   * ⚠️ ÉCRIT DIRECTEMENT DANS LE DOM, sans état React : un état par
+   * carte redonnerait un rendu par carte, c'est-à-dire exactement le
+   * coût qu'on cherche à supprimer. La vraie source est mise de côté
+   * dans `dataset.source`, et React ne la réécrit qu'au prochain
+   * rendu de la carte — qui la rétablit, ce qui est sans danger.
+   */
+  const zoneGrille = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const grille = zoneGrille.current;
+    if (!grille || typeof IntersectionObserver === "undefined") return;
+    const observateur = new IntersectionObserver(
+      (entrees) => {
+        for (const entree of entrees) {
+          const carte = entree.target as HTMLElement;
+          for (const image of carte.querySelectorAll("img")) {
+            if (entree.isIntersecting) {
+              //  ELLE REVIENT : on lui rend sa source.
+              const gardee = image.dataset.source;
+              if (gardee) {
+                image.src = gardee;
+                delete image.dataset.source;
+              }
+              continue;
+            }
+            //  ELLE S'ÉLOIGNE : on met sa source de côté, et on pose
+            //  un pixel transparent à la place.
+            const source = image.getAttribute("src") ?? "";
+            if (!source || source === PIXEL_VIDE) continue;
+            image.dataset.source = source;
+            image.src = PIXEL_VIDE;
+          }
+        }
+      },
+      //  DEUX ÉCRANS DE PART ET D'AUTRE : on ne libère que ce qui est
+      //  franchement loin, et on recharge bien avant que ça revienne.
+      { root: null, rootMargin: "200% 0px" }
+    );
+    observateurNe();
+    for (const carte of grille.querySelectorAll("[data-carte]")) {
+      observateur.observe(carte);
+    }
+    return () => {
+      observateur.disconnect();
+      observateurMort();
+    };
+    //  LA LISTE DES CARTES CHANGE À CHAQUE « VOIR PLUS » : l'observateur
+    //  est refait, jamais empilé (le nettoyage passe avant).
+  }, [tatoueurs]);
 
   const premiereDisposition = useRef(true);
   useEffetAvantPeinture(() => {
@@ -359,7 +439,6 @@ export function GrilleTatoueurs({
         // unique est posée en style EN LIGNE : aucune règle de largeur
         // ne peut la contredire. Seuls les vrais mobiles y accèdent :
         // le bouton n'existe pas ailleurs.
-        style={disposition === "une" ? { gridTemplateColumns: "1fr" } : undefined}
         // EN PHOTOTHÈQUE (nº 140), L'ÉCART HORIZONTAL EST REPORTÉ À LA
         // VERTICALE : une grille régulière dans les deux sens. Sur le
         // web l'écart des deux axes était déjà le même (gap-5) — c'est
@@ -372,7 +451,26 @@ export function GrilleTatoueurs({
         //  SUPPRIMÉ (nº 166 — il noircissait tout l'écran, et la nº 164
         //  a ôté la cause du saut qu'il masquait). Le repère reste : il
         //  nomme la mosaïque, et les bancs s'en servent.
+        ref={zoneGrille}
         data-mosaique=""
+        /**
+         * ⚠️ `overflow-anchor: none` (passe nº 224-§3)
+         * ------------------------------------------------------------
+         * L'ANCRAGE DE DÉFILEMENT du navigateur choisit tout seul un
+         * nœud de référence dans ce qu'on regarde, et compense les
+         * changements de hauteur qui surviennent AUTOUR de lui en
+         * déplaçant le défilement. C'est une bonne idée sur un fil de
+         * commentaires ; sur une grille qui s'allonge par le bas et
+         * dont les images se posent une à une, il déplace la page de
+         * quelques pixels après chaque « Voir plus ». On le lui
+         * retire : ici, la page ne doit pas bouger d'un pixel.
+         */
+        style={{
+          ...(disposition === "une"
+            ? { gridTemplateColumns: "1fr" }
+            : {}),
+          overflowAnchor: "none",
+        }}
         className={`grid gap-4 sm:gap-5 mobile:-mx-4 transition-opacity ${
           phototheque
             ? disposition === "une"

@@ -46,6 +46,7 @@ import { SondeVerre } from "@/components/SondeVerre";
 import { SondeRetour } from "@/components/SondeRetour";
 import { SondeBascule } from "@/components/SondeBascule";
 import { SondeCarrousel } from "@/components/SondeCarrousel";
+import { SondeCartes } from "@/components/SondeCartes";
 import { COMPTES_YOKOFOLIO } from "@/config/tatouage";
 import { COOKIE_DEJA_CONNECTE } from "@/lib/deja-connecte";
 import { utilisateurDepuisCookies } from "@/lib/session-cookie";
@@ -213,6 +214,20 @@ export default async function MiseEnPageTatouage({
         (CarrouselPortfolio, ZoomPincement, ContenuFiche).
         HORS de l'enveloppe `data-fond`, comme les autres sondes. */}
     <SondeCarrousel />
+    {/* ⚠️ TEMPORAIRE — LA SONDE DES CARTES (`?sonde-cartes=1`,
+        nº 224-§5). Elle relève, à chaque « Voir plus de portfolios » :
+        `scrollY` avant / après / après 1 s, le nombre de cartes
+        montées, de nœuds du document, d'images portant un `src` réel,
+        d'observateurs vivants, et la mémoire du tas quand le
+        navigateur la donne. Elle mesure, elle ne corrige rien : les
+        deux défauts qu'elle éclaire — la page qui bouge, l'onglet que
+        Chrome iOS tue vers 92 cartes — ne se produisent que sur le
+        téléphone du propriétaire. Aucun état React : le journal vit
+        dans lib/journal-cartes et s'écrit directement dans le nœud.
+        Pour la retirer : cette ligne, son import, le fichier
+        src/components/SondeCartes.tsx, le module
+        src/lib/journal-cartes.ts et les appels qui le nomment. */}
+    <SondeCartes />
     {/* ⚠️ L'ÉCOUTEUR GLOBAL DE REMONTÉE EST SUPPRIMÉ (nº 162-§1). La
         règle de la nº 155-§1 — « TOUS les champs du site remontent » —
         est annulée : la remontée ne sert qu'à dégager de la place SOUS
