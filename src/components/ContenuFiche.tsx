@@ -15,6 +15,7 @@ import {
   PORTRAIT_ROND,
 } from "@/config/tatouage";
 import { BoutonHorsLigne } from "@/components/BoutonHorsLigne";
+import { IconeReseauSurDisque } from "@/components/IconeReseau";
 import { BoutonSuivre } from "@/components/BoutonSuivre";
 import {
   PanneauPortfolio,
@@ -286,14 +287,12 @@ export function ContenuFiche({
    *    touchant au fichier — la règle permanente du projet).
    * Colonne de 18 px inchangée (nº 223), pour les trois.
    */
-  //  §1 (nº 233) — LES TAILLES, RÉAJUSTÉES : le liseré de 1,5 px sur
-  //  un disque de 18 était une couronne, pas un liseré, et le glyphe
-  //  paraissait minuscule.
-  //   · la COLONNE passe à 22 px, pour les trois liens ;
-  //   · réseaux : disque blanc de 22 px, glyphe de 20 — un FIL blanc
-  //     d'1 px autour du dessin, rien de plus ;
-  //   · site.png : 20 px, toujours sans disque, toujours
-  //     `object-contain` — jamais rognée.
+  //  §1 (nº 235) — LE LISERÉ PASSE À 0,5 px : disque de 22, glyphe de
+  //  21 — un fil, plus une couronne. L'écriture du disque vit dans
+  //  IconeReseauSurDisque, PARTAGÉE avec le pied de page (§2) : les
+  //  deux endroits ne peuvent plus diverger.
+  //  site.png : 20 px, toujours sans disque, toujours `object-contain`
+  //  — jamais rognée (nº 233).
   const iconeFichier = (fichier: string, glyphe: boolean) =>
     glyphe ? (
       /* eslint-disable-next-line @next/next/no-img-element --
@@ -307,17 +306,7 @@ export function ContenuFiche({
         className="h-5 w-5 object-contain invert opacity-60"
       />
     ) : (
-      <span className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-white">
-        {/* eslint-disable-next-line @next/next/no-img-element --
-           icône déposée par le propriétaire, affichée telle quelle. */}
-        <img
-          src={fichier}
-          alt=""
-          width={20}
-          height={20}
-          className="h-5 w-5 object-contain"
-        />
-      </span>
+      <IconeReseauSurDisque fichier={fichier} />
     );
 
   /**

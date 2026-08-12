@@ -183,10 +183,13 @@ if (!fiche) {
       }
       const valeurs = Object.values(m.cotes);
       verif(
-        `${nom} : disque de 22, liseré d'1 px sur les QUATRE côtés (écart ≤ 0,5)`,
+        //  ⚠️ 0,5 px depuis la nº 235-§1 (1 px à la 233) : le glyphe
+        //  passe à 21 dans le disque de 22 — le contrôle suit la
+        //  dernière demande.
+        `${nom} : disque de 22, liseré de 0,5 px sur les QUATRE côtés (écart ≤ 0,25)`,
         m.disque === 22 &&
-          valeurs.every((v) => v >= 0.75 && v <= 1.5) &&
-          m.ecartMax <= 0.5,
+          valeurs.every((v) => v >= 0.25 && v <= 0.75) &&
+          m.ecartMax <= 0.25,
         `disque ${m.disque} — G ${m.cotes.gauche} · D ${m.cotes.droite} · H ${m.cotes.haut} · B ${m.cotes.bas}`
       );
       verif(

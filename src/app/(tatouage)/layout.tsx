@@ -28,10 +28,12 @@ import Link from "next/link";
 import { cookies, headers } from "next/headers";
 import {
   COULEURS_SOMBRE,
+  ICONES_RESEAUX,
   MARQUE_YOKOFOLIO,
   TEXTES_TATOUAGE,
 } from "@/config/tatouage";
 import { DefilementEnHaut } from "@/components/DefilementEnHaut";
+import { IconeReseauSurDisque } from "@/components/IconeReseau";
 import { ChargeurFavoris } from "@/components/ChargeurFavoris";
 import { FournisseurSession } from "@/components/FournisseurSession";
 import { FournisseurStyles } from "@/components/FournisseurStyles";
@@ -347,12 +349,12 @@ export default async function MiseEnPageTatouage({
               Mentions légales
             </Link>
             {/* LE COMPTE INSTAGRAM DU SITE — dernier de la ligne.
-                ⚠️ L'ICÔNE EST CELLE DU PROPRIÉTAIRE (nº 141-§8) :
-                public/icone-instagram.png, le glyphe noir affiché tel
-                quel et éclairci par `invert` + opacité (le fichier
-                n'est jamais retouché — c'est la règle de toutes ses
-                images). Elle est posée dans un CERCLE GRIS un cran
-                plus clair, pour se détacher du fond du pied.
+                ⚠️ L'ICÔNE EST CELLE DU PROPRIÉTAIRE, dans sa version
+                ROGNÉE (nº 231 — le fichier d'origine n'est jamais
+                retouché), servie par IconeReseauSurDisque : le même
+                disque blanc, le même liseré de 0,5 px et le même
+                centrage que sur les fiches (nº 235-§2). Une seule
+                écriture pour les deux endroits.
                 Nouvel onglet : on quitte le site, on ne l'abandonne
                 pas. `noreferrer` va avec `_blank` — la page ouverte ne
                 doit pas garder la main sur la nôtre. */}
@@ -363,21 +365,13 @@ export default async function MiseEnPageTatouage({
               className="inline-flex items-center gap-2
                          hover:text-sombre-texte transition-colors"
             >
-              <span
-                className="flex h-6 w-6 shrink-0 items-center justify-center
-                           rounded-full bg-sombre-eleve"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element --
-                    icône déposée par le propriétaire, affichée telle
-                    quelle (le filtre CSS ne modifie pas le fichier). */}
-                <img
-                  src="/icone-instagram.png"
-                  alt=""
-                  width={14}
-                  height={14}
-                  className="h-3.5 w-3.5 invert opacity-75"
-                />
-              </span>
+              {/*  §2 (nº 235) — LE MÊME TRAITEMENT QUE SUR LES FICHES,
+                   par LA MÊME ÉCRITURE (IconeReseauSurDisque) : le
+                   fichier rogné de la nº 231, le disque blanc de 22,
+                   le liseré de 0,5 px, le glyphe centré. Le cercle
+                   gris et l'`invert` du fichier d'origine sont
+                   partis avec l'ancienne écriture. */}
+              <IconeReseauSurDisque fichier={ICONES_RESEAUX.instagram} />
               Instagram
             </a>
           </nav>
