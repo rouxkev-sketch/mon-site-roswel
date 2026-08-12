@@ -34,6 +34,13 @@ export type OptionMenu = {
       ce qui permet à « Traditionnel ethnique » d'exister dans le menu
       « Explorer » sans être un style cherchable. */
   sousGroupe?: string;
+  /** CE QUI S'ÉCRIT À DROITE DE L'INTITULÉ (nº 216-§2) — le nombre de
+      créations disponibles pour cette entrée. Rien quand il est
+      absent : une option sans compte s'affiche exactement comme
+      avant. La couleur est celle du nombre du menu de « Ma
+      sélection » (`sombre-texte-doux`) : une seule écriture pour une
+      seule chose. */
+  compte?: number;
 };
 
 /**
@@ -602,13 +609,21 @@ export function MenuDeroulant({
                   //  ⚠️ `optionSombre` RETIRE les classes claires au
                   //  lieu de les recouvrir : le survol sombre ne doit
                   //  rien à l'ordre de la feuille CSS (voir 5A).
-                  className={optionSombre(
+                  //  ⚠️ `flex` SEULEMENT QUAND IL Y A UN COMPTE
+                  //  (nº 216-§2) : sans lui, rien ne change pour les
+                  //  autres menus du site, qui n'en portent pas.
+                  className={`${optionSombre(
                     option.sousGroupe
                       ? OPTION_LISTE.replace("px-4", "pr-4 pl-9")
                       : OPTION_LISTE
-                  )}
+                  )}${option.compte !== undefined ? " flex items-center" : ""}`}
                 >
-                  {option.label}
+                  <span className="min-w-0 flex-1 truncate">{option.label}</span>
+                  {option.compte !== undefined && (
+                    <span className="shrink-0 pl-3 text-[12.5px] text-sombre-texte-doux tabular-nums">
+                      {option.compte}
+                    </span>
+                  )}
                 </button>
                 )}
               </li>

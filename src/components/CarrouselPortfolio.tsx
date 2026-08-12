@@ -549,10 +549,23 @@ export function CarrouselPortfolio({
                 ) : (
                   montee && image
                 )
-              ) : (
+              ) : rang === indice ? (
+                /*  §3 (nº 216) — LE ZOOM N'EST MONTÉ QUE SUR LA PHOTO
+                    REGARDÉE. Il l'était sur CHAQUE colonne : vingt
+                    photos, vingt écouteurs `touchmove` NON PASSIFS —
+                    et un écouteur non passif oblige le navigateur à
+                    consulter le fil principal avant chaque mouvement
+                    de doigt. Sur un iPhone 8, cela suffit à faire
+                    saccader puis bloquer le défilement ; sur un 12, la
+                    marge absorbe. Les cartes de la mosaïque, elles,
+                    n'en montaient aucun — d'où leur fluidité, et
+                    c'était l'indice. On ne pince que ce qu'on
+                    regarde : un seul écouteur, toujours. */
                 <ZoomPincement surPincement={surPincement} classe="h-full w-full">
                   {montee && image}
                 </ZoomPincement>
+              ) : (
+                montee && image
               )}
             </div>
           );

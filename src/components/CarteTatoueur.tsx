@@ -62,6 +62,7 @@ export function CarteTatoueur({
   tatoueur,
   styleRecherche = "",
   renduRecherche = "",
+  natureRecherche = "",
   prioritaire = false,
   phototheque = false,
   surOuverture,
@@ -78,6 +79,9 @@ export function CarteTatoueur({
       couleur et tomber sur du noir et gris serait un mensonge
       d'affichage. */
   renduRecherche?: string;
+  /** LA CATÉGORIE demandée (réalisation, flash) — la carte montre alors
+      une photo QUI EN EST (nº 216-§1). */
+  natureRecherche?: string;
   /** LES PREMIÈRES CARTES DE LA GRILLE. Leur photo est celle que
       Google mesure (le « plus grand élément affiché ») : elle ne doit
       PAS être différée — voir GrilleTatoueurs. */
@@ -92,7 +96,12 @@ export function CarteTatoueur({
       visible. */
   surApproche?: () => void;
 }) {
-  const photo = photoPourStyle(tatoueur, styleRecherche, renduRecherche);
+  const photo = photoPourStyle(
+    tatoueur,
+    styleRecherche,
+    renduRecherche,
+    natureRecherche
+  );
   /** LA PHOTO EXACTE QU'ON REGARDE — c'est ELLE que le cœur
       enregistre, pas « une photo de ce tatoueur ». Absente quand la
       galerie est vide (fiche d'avant le portfolio catalogué, ou fiche
@@ -101,7 +110,8 @@ export function CarteTatoueur({
   const photoEnregistrable = photoChoisie(
     tatoueur,
     styleRecherche,
-    renduRecherche
+    renduRecherche,
+    natureRecherche
   );
   /** En « une colonne » (bouton de disposition, vrais mobiles), le
       nom et la localité GRANDISSENT sous la grande image. La valeur
@@ -164,6 +174,9 @@ export function CarteTatoueur({
     const suite = new URLSearchParams();
     if (styleRecherche) suite.set("style", styleRecherche);
     if (renduRecherche) suite.set("rendu", renduRecherche);
+    //  LA CATÉGORIE VOYAGE AVEC (nº 216-§1) : la fiche s'ouvre alors
+    //  sur l'ensemble qu'on regardait, pas sur tout le style.
+    if (natureRecherche) suite.set("nature", natureRecherche);
     const requete = suite.toString();
     return requete
       ? `/tatoueur/${tatoueur.slug}?${requete}`
@@ -345,7 +358,12 @@ export function CarteTatoueur({
             // CE QUE MONTRE VRAIMENT LA CARTE : le nom, la ville, et le
             // style (avec le rendu quand la photo est taguée) — voir
             // `legendeDeCarte`.
-            alt={legendeDeCarte(tatoueur, styleRecherche, renduRecherche)}
+            alt={legendeDeCarte(
+              tatoueur,
+              styleRecherche,
+              renduRecherche,
+              natureRecherche
+            )}
             // LES PREMIÈRES CARTES NE SONT PAS DIFFÉRÉES : l'image
             // mesurée par Google ne doit pas attendre le défilement.
             loading={prioritaire ? "eager" : "lazy"}

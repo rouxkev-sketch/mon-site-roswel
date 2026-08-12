@@ -351,6 +351,10 @@ export function IndexTatoueurs({
             // LE RENDU vient des interrupteurs : il n'y a recherche par
             // rendu que lorsqu'il n'en reste qu'un allumé.
             renduRecherche={renduCherche(affiches.exclure)}
+            //  LA CATÉGORIE (nº 216-§1) : chaque carte met alors en
+            //  avant une photo QUI EN EST — plus de réalisation
+            //  affichée quand on cherche des flashs.
+            natureRecherche={affiches.nature}
             estompee={enTransition}
           />
         }

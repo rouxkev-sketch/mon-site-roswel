@@ -82,6 +82,7 @@ export function GrilleTatoueurs({
   tatoueurs,
   styleRecherche = "",
   renduRecherche = "",
+  natureRecherche = "",
   estompee = false,
 }: {
   tatoueurs: Tatoueur[];
@@ -91,6 +92,9 @@ export function GrilleTatoueurs({
       n'en laisse qu'un allumé : les cartes montrent une photo qui y
       correspond, et la fenêtre s'ouvre dessus. */
   renduRecherche?: string;
+  /** LA CATÉGORIE demandée — elle décide, avec le style et le rendu,
+      de la photo que chaque carte met en avant (nº 216-§1). */
+  natureRecherche?: string;
   /** Vrai pendant une recherche : la grille s'estompe. */
   estompee?: boolean;
 }) {
@@ -363,6 +367,7 @@ export function GrilleTatoueurs({
             tatoueur={tatoueur}
             styleRecherche={styleRecherche}
             renduRecherche={renduRecherche}
+            natureRecherche={natureRecherche}
             prioritaire={rang < CARTES_PRIORITAIRES}
             phototheque={phototheque}
             surApproche={() => precharger(tatoueur.slug)}

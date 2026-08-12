@@ -44,9 +44,17 @@ export function photoPourStyle(
   },
   style: string,
   /** LE RENDU cherché, quand la recherche en désigne UN SEUL. */
-  rendu?: string
+  rendu?: string,
+  /** ⚠️ LA CATÉGORIE CHERCHÉE (nº 216-§1) — réalisation ou flash. Elle
+      manquait ici, et c'est tout le défaut : la carte montrait la
+      première photo DU STYLE, quelle que soit sa catégorie. Chercher
+      des flashs d'aquarelle et voir une réalisation est le même
+      mensonge d'affichage que chercher de la couleur et voir du noir
+      et gris — `photoChoisie` savait déjà l'éviter, personne ne le lui
+      demandait. */
+  nature?: string
 ): string {
-  const choisie = photoChoisie(tatoueur, style, rendu);
+  const choisie = photoChoisie(tatoueur, style, rendu, nature);
   if (choisie) return vignetteDe(choisie);
   // L'ANCIEN MODÈLE, tant qu'une fiche n'a pas été reprise.
   return (style && tatoueur.photos_styles?.[style]) || tatoueur.photo_principale;
@@ -123,10 +131,13 @@ export function legendeDeCarte(
     galerie?: PhotoTatoueur[] | null;
   },
   style: string,
-  rendu?: string
+  rendu?: string,
+  /** LA CATÉGORIE CHERCHÉE (nº 216-§1) — le texte doit décrire LA
+      photo montrée, donc la même règle de choix. */
+  nature?: string
 ): string {
   const debut = `Portfolio de ${tatoueur.nom} à ${tatoueur.ville_nom}`;
-  const photo = photoChoisie(tatoueur, style, rendu);
+  const photo = photoChoisie(tatoueur, style, rendu, nature);
   const morceaux = photo
     ? [
         libelleStyle(photo.style),

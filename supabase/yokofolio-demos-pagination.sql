@@ -95,7 +95,12 @@ select
   'Démo ' || lpad(f.n::text, 2, '0') || ' · ' || f.nom,
   'demo-p214-' || lpad(f.n::text, 2, '0') || '-' || f.ville_slug,
   f.type_fiche,
-  case when f.type_fiche = 'salon' then 'salon' else null end,
+  --  ⚠️ `etablissement` EST « NOT NULL » (défaut « salon ») : la
+  --  nº 215 la croyait nullable pour les artistes, et l'insertion
+  --  était refusée. Elle vaut donc « salon » pour tout le monde — sur
+  --  une fiche d'artiste, le site ne la lit pas (voir
+  --  config/tatouage : natureDeLaFiche).
+  'salon',
   f.insee, f.nom, f.ville_slug, f.lat, f.lon,
   'France', 'FR',
   array[f.style_un, f.style_deux],

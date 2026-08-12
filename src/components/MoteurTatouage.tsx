@@ -13,6 +13,12 @@ import {
   valeurExplorer,
 } from "@/config/tatouage";
 import { ligneMoteur } from "@/lib/adresse";
+import {
+  compteDeLaCategorie,
+  compteDuStyle,
+  comptesConnus,
+  useComptesCreations,
+} from "@/lib/creations-par-style";
 import { ChampLocalisation } from "@/components/ChampLocalisation";
 import { MenuDeroulant } from "@/components/MenuDeroulant";
 import { PageRechercheMobile } from "@/components/PageRechercheMobile";
@@ -649,12 +655,36 @@ export function MoteurTatouage({
    * une porte, posée à sa lettre, qui révèle les neuf styles qu'elle
    * range. Elle ne porte aucune valeur cherchable ; seuls ses neuf
    * enfants en ont une (voir `entreesExplorer`).
+   *
+   * LE NOMBRE DE CRÉATIONS EN FACE DE CHAQUE ENTRÉE (passe nº 216-§2)
+   * -----------------------------------------------------------------
+   * Chaque style annonce combien de créations l'attendent, et les deux
+   * « Tous les … » annoncent le total de leur catégorie.
+   *
+   * ⚠️ TROIS ENDROITS N'EN PORTENT PAS, et c'est voulu :
+   *  · les DEUX PORTES « Réalisations » et « Flashs » — ce sont des
+   *    titres de section, pas des choix (demande explicite : « il ne
+   *    s'affiche PAS sur la ligne du sélecteur Réalisation / Flash ») ;
+   *  · la porte de la famille « Traditionnel ethnique », même raison —
+   *    elle ne porte aucune valeur cherchable ;
+   *  · TOUTES LES ENTRÉES tant que la réponse n'est pas arrivée —
+   *    `compte: undefined` s'affiche exactement comme avant, sans
+   *    nombre (voir `comptesConnus`).
    */
+  const comptes = useComptesCreations();
+  const nombresSus = comptesConnus(comptes);
+  /** Le nombre d'une entrée, ou rien tant qu'on ne sait pas. */
+  const compteStyle = (nature: string, style: string) =>
+    nombresSus ? compteDuStyle(comptes, nature, style) : undefined;
+
   const options = CATEGORIES_EXPLORER.flatMap((categorie) => [
     {
       value: valeurExplorer(categorie.nature, ""),
       label: categorie.tous,
       groupe: categorie.titre,
+      compte: nombresSus
+        ? compteDeLaCategorie(comptes, categorie.nature)
+        : undefined,
     },
     ...entreesExplorer().flatMap((entree) =>
       entree.genre === "style"
@@ -663,6 +693,7 @@ export function MoteurTatouage({
               value: valeurExplorer(categorie.nature, entree.slug),
               label: entree.label,
               groupe: categorie.titre,
+              compte: compteStyle(categorie.nature, entree.slug),
             },
           ]
         : entree.styles.map((style) => ({
@@ -670,6 +701,7 @@ export function MoteurTatouage({
             label: style.label,
             groupe: categorie.titre,
             sousGroupe: entree.label,
+            compte: compteStyle(categorie.nature, style.slug),
           }))
     ),
   ]);
