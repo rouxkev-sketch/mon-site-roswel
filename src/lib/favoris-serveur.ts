@@ -62,9 +62,18 @@ export type PhotoFavorite = {
   style: string;
   rendu: string | null;
   nature: string;
-  /** Le tatoueur à qui elle appartient — la carte le nomme. */
+  /** Le tatoueur à qui elle appartient — la carte le nomme.
+      ⚠️ SON IDENTIFIANT ET SON LIEU VOYAGENT AUSSI (nº 213-§3b) : la
+      page « Ma sélection » affiche désormais LA CARTE DE LA MOSAÏQUE,
+      qui attend une fiche — pas une photo. Ces colonnes étaient déjà
+      lues par la requête ; elles s'arrêtaient simplement ici. */
+  tatoueurId: string;
   tatoueurNom: string;
   tatoueurSlug: string;
+  ville: string;
+  region: string | null;
+  pays: string | null;
+  codePays: string | null;
   /** DE QUI VIENT LA PHOTO — « Artiste », « Salon », « Studio ».
       La carte de la mosaïque le dit dans l'image ; celle des favoris
       le disait pas (passe nº 142), et deux cartes identiques qui ne
@@ -207,8 +216,13 @@ export async function lireLesFavoris(
         style: photo.style,
         rendu: photo.rendu,
         nature: natureConnue(photo.nature),
+        tatoueurId: fiche.id,
         tatoueurNom: fiche.nom,
         tatoueurSlug: fiche.slug,
+        ville: fiche.ville_nom ?? "",
+        region: fiche.region,
+        pays: fiche.pays,
+        codePays: fiche.code_pays,
         //  LES MÊMES REPLIS QUE `normaliser` dans lib/tatoueurs : une
         //  fiche d'avant la migration nº 38 n'a ni l'une ni l'autre.
         typeFiche: fiche.type_fiche ?? "salon",

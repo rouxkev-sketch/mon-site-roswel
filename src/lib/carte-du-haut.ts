@@ -56,13 +56,27 @@ export function repereDuHaut(): number {
  */
 export function noterLaCarteDuHaut() {
   const repere = repereDuHaut();
+  const bas = window.innerHeight;
   let choisie = "";
+  let meilleure = 0;
   for (const carte of document.querySelectorAll<HTMLElement>("[data-carte]")) {
-    // La première carte dont le BAS passe sous le repère : c'est celle
-    // que l'on voit en haut de l'écran, entière ou entamée.
-    if (carte.getBoundingClientRect().bottom <= repere + 1) continue;
+    const boite = carte.getBoundingClientRect();
+    /**
+     * ⚠️ LA CARTE QUI OCCUPE LE PLUS DE PLACE, ET NON LA PLUS HAUTE
+     * (nº 213-§2). On retenait la PREMIÈRE carte passant sous la
+     * barre : à trois pixels visibles, elle l'emportait sur celle qui
+     * remplissait tout l'écran juste dessous. La bascule ramenait donc
+     * sur une carte qu'on ne regardait pas.
+     * On mesure maintenant la SURFACE VISIBLE de chacune — la hauteur
+     * comprise entre la barre et le bas de l'écran (la largeur est la
+     * même pour toutes dans une colonne, et proportionnelle en deux :
+     * comparer les hauteurs suffit et évite une mesure de plus). La
+     * plus grande gagne : c'est celle que l'œil tient.
+     */
+    const visible = Math.min(boite.bottom, bas) - Math.max(boite.top, repere);
+    if (visible <= meilleure) continue;
+    meilleure = visible;
     choisie = carte.dataset.carte ?? "";
-    break;
   }
   // Tout en haut de la page (rien n'est encore passé sous la barre) :
   // il n'y a rien à rattraper, la bascule ne bougera pas la page.

@@ -3,18 +3,10 @@
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  libelleStyle,
-  libelleTypeFiche,
-  PORTRAIT_ROND,
-} from "@/config/tatouage";
-import {
-  libelleNature,
-  libelleRendu,
-  NATURES_PHOTO,
-} from "@/lib/photos-tatoueur";
+import { LARGEUR_SITE, libelleStyle } from "@/config/tatouage";
+import { libelleNature, NATURES_PHOTO } from "@/lib/photos-tatoueur";
 import { IconeChevronBas } from "@/components/Icones";
-import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
+import { CarteTatoueur } from "@/components/CarteTatoueur";
 import { FenetreTatoueursSuivis } from "@/components/FenetreTatoueursSuivis";
 import { FenetreFiche } from "@/components/FenetreFiche";
 import { OngletsLigne } from "@/components/OngletsLigne";
@@ -22,7 +14,6 @@ import {
   CLE_FENETRE_FICHE,
   type ContexteFenetreFiche,
 } from "@/components/RetourFenetreFiche";
-import { useEtatFavori } from "@/lib/favoris-yokofolio";
 import { cleDEnsemble, RENDU_PAR_DEFAUT } from "@/lib/photos-tatoueur";
 import { ficheComplete } from "@/lib/fiche-complete";
 import type { PhotoFavorite, TatoueurSuivi } from "@/lib/favoris-serveur";
@@ -134,15 +125,21 @@ export function PageFavoris({
   /** LES STYLES RÉELLEMENT ENREGISTRÉS, avec leur nombre — dans
       l'ordre d'arrivée des photos (la plus récente d'abord), donc le
       style qu'on vient d'enrichir se présente en premier. */
+  /** ⚠️ IL COMPTE LES ENSEMBLES, PLUS LES PHOTOS (nº 213-§3d) : la
+      page affiche un élément par ensemble — le sélecteur doit annoncer
+      ce qu'il va montrer, pas ce qu'il contient. Trois ensembles de
+      réalisme font « 3 », qu'ils portent trois photos ou trente. */
   const stylesGardes = useMemo(() => {
-    const compte = new Map<string, number>();
+    const compte = new Map<string, Set<string>>();
     for (const photo of photos) {
-      compte.set(photo.style, (compte.get(photo.style) ?? 0) + 1);
+      const vus = compte.get(photo.style) ?? new Set<string>();
+      vus.add(cleEnsembleFavori(photo));
+      compte.set(photo.style, vus);
     }
-    return [...compte.entries()].map(([slug, nombre]) => ({
+    return [...compte.entries()].map(([slug, vus]) => ({
       slug,
       label: libelleStyle(slug),
-      nombre,
+      nombre: vus.size,
     }));
   }, [photos]);
 
@@ -162,46 +159,81 @@ export function PageFavoris({
   );
 
   /**
-   * UN ENSEMBLE = UNE VIGNETTE (nº 210-§1)
-   * ==================================================================
-   * ⚠️ CECI CORRIGE LA Nº 209-§4, où chaque photo d'un ensemble
-   * s'affichait séparément : six photos aimées d'un seul geste
-   * donnaient six vignettes, et la page perdait son sens.
-   * Un ensemble — un artiste, un style, une catégorie, un rendu — se
-   * présente maintenant comme UN SEUL ÉLÉMENT : la première photo
-   * gardée en est la vignette, le nom du style la nomme (comme dans le
-   * portfolio), et la toucher ouvre LA SÉRIE ENTIÈRE.
-   * ⚠️ On regroupe TOUTES les photos gardées, pas seulement celles que
-   * les filtres laissent voir : retirer un ensemble le retire en
-   * entier, y compris ce qui est masqué par un filtre à cet instant.
+   * LES ENSEMBLES À MONTRER — un par ensemble, dans l'ordre d'arrivée
+   * (le plus récemment enrichi d'abord), CHACUN SOUS LA FORME D'UNE
+   * FICHE (nº 213-§3b).
+   * ⚠️ C'EST LA CARTE DE LA MOSAÏQUE qui les affiche désormais, sans
+   * variante : elle attend un tatoueur et sa galerie. On lui donne
+   * donc le tatoueur de l'ensemble, et pour galerie LES PHOTOS DE CET
+   * ENSEMBLE — ce qui fait tomber juste, sans rien écrire de plus, la
+   * photo montrée, le cœur (qui aime l'ensemble) et, en pleine largeur
+   * au doigt, le défilement des photos.
+   * Les champs qu'une carte ne lit pas (coordonnées, réseaux) sont
+   * neutres : les inventer serait pire que les laisser vides.
    */
-  const ensembles = useMemo(() => {
-    const groupes = new Map<string, string[]>();
-    for (const photo of photos) {
-      const cle = cleEnsembleFavori(photo);
-      groupes.set(cle, [...(groupes.get(cle) ?? []), photo.id]);
-    }
-    return groupes;
-  }, [photos]);
-
-  /** LES ENSEMBLES À MONTRER — un représentant par ensemble, dans
-      l'ordre d'arrivée (le plus récemment enrichi d'abord). */
   const ensemblesVisibles = useMemo(() => {
     const vus = new Set<string>();
-    const liste: Array<{ photo: PhotoFavorite; nombre: number }> = [];
+    const liste: Array<{
+      cle: string;
+      fiche: Tatoueur;
+      photo: PhotoFavorite;
+      nombre: number;
+    }> = [];
     for (const photo of visibles) {
       const cle = cleEnsembleFavori(photo);
       if (vus.has(cle)) continue;
       vus.add(cle);
-      liste.push({ photo, nombre: ensembles.get(cle)?.length ?? 1 });
+      const duMemeEnsemble = photos.filter(
+        (autre) => cleEnsembleFavori(autre) === cle
+      );
+      liste.push({
+        cle,
+        photo,
+        nombre: duMemeEnsemble.length,
+        fiche: {
+          id: photo.tatoueurId,
+          nom: photo.tatoueurNom,
+          slug: photo.tatoueurSlug,
+          type_fiche: photo.typeFiche,
+          etablissement: photo.etablissement,
+          photo_profil: photo.photoProfil,
+          ville_nom: photo.ville,
+          ville_slug: "",
+          region: photo.region,
+          pays: photo.pays,
+          code_pays: photo.codePays,
+          latitude: 0,
+          longitude: 0,
+          styles: [photo.style],
+          lien_instagram: "",
+          photo_principale: photo.miniature,
+          photos_styles: {},
+          photos: [],
+          publie: true,
+          galerie: duMemeEnsemble.map((entree, rang) => ({
+            id: entree.id,
+            style: entree.style,
+            rendu: entree.rendu,
+            nature: entree.nature,
+            url: entree.url,
+            miniature: entree.miniature,
+            ordre: rang,
+          })),
+        },
+      });
     }
     return liste;
-  }, [visibles, ensembles]);
+  }, [visibles, photos]);
 
   const styleChoisi = stylesGardes.find((entree) => entree.slug === style);
 
   return (
-    <main className="flex-1 mx-auto w-full max-w-[1400px] px-4 sm:px-6 pt-6 pb-16">
+    /*  ⚠️ LA LARGEUR DE LA MOSAÏQUE (nº 213-§3a) : `LARGEUR_SITE` et
+        les mêmes marges latérales que l'accueil — cette page montre
+        les mêmes cartes, elle doit occuper le même espace. */
+    <main
+      className={`flex-1 mx-auto w-full ${LARGEUR_SITE} px-4 sm:px-6 pt-6 pb-16`}
+    >
       {/* ---------- LE TITRE, ET LES SUIVIS ---------- */}
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
         {/* ⚠️ « MA SÉLECTION », ET PLUS « Mes favoris » (nº 145-§3) —
@@ -349,22 +381,39 @@ export function PageFavoris({
               Rien d&apos;enregistré dans ce style.
             </p>
           ) : (
+            /*  ⚠️ LA GRILLE DE LA MOSAÏQUE, AU MOT PRÈS (nº 213-§3a) :
+                mêmes colonnes à chaque largeur, même gouttière. Deux
+                pages qui montrent les mêmes cartes ne peuvent pas les
+                ranger autrement. */
             <ul
-              className="mt-6 grid gap-3 sm:gap-4
-                         grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+              className="mt-6 grid gap-x-4 gap-y-8
+                         grid-cols-2 md:grid-cols-3 xl:grid-cols-4
+                         2xl:grid-cols-5 3xl:grid-cols-6"
             >
-              {ensemblesVisibles.map(({ photo, nombre }) => (
-                <CartePhotoFavorite
-                  key={cleEnsembleFavori(photo)}
-                  photo={photo}
-                  nombre={nombre}
-                  //  L'ENSEMBLE (nº 210-§1) : les photos enregistrées
-                  //  du même style, de la même catégorie et du même
-                  //  rendu, chez le même tatoueur. Retirer le cœur les
-                  //  retire toutes, et la vignette disparaît.
-                  ensemble={ensembles.get(cleEnsembleFavori(photo)) ?? [photo.id]}
-                  surOuverture={ouvrirLaFiche}
-                />
+              {ensemblesVisibles.map(({ cle, fiche, photo, nombre }) => (
+                <li key={cle}>
+                  {/*  ⚠️ LA CARTE DE LA MOSAÏQUE, SANS VARIANTE
+                       (nº 213-§3b) — le même composant que la
+                       recherche, donc les mêmes proportions, le même
+                       cœur, le même sous-titre, et le défilement des
+                       photos en pleine largeur. */}
+                  <CarteTatoueur
+                    tatoueur={fiche}
+                    styleRecherche={photo.style}
+                    renduRecherche={photo.rendu ?? ""}
+                    nombrePhotos={nombre}
+                    surOuverture={() =>
+                      void ouvrirLaFiche(
+                        photo.tatoueurSlug,
+                        photo.style,
+                        `/tatoueur/${photo.tatoueurSlug}?style=${photo.style}` +
+                          `&nature=${photo.nature}&rendu=${
+                            photo.rendu ?? RENDU_PAR_DEFAUT
+                          }`
+                      )
+                    }
+                  />
+                </li>
               ))}
             </ul>
           )}
@@ -391,21 +440,6 @@ export function PageFavoris({
   );
 }
 
-/**
- * UN ENSEMBLE ENREGISTRÉ — la carte (nº 210-§1)
- * ==============================================
- * ⚠️ UNE VIGNETTE PAR ENSEMBLE, et non par photo : un artiste, un
- * style, une catégorie, un rendu. La première photo gardée en est
- * l'image, LE NOM DU STYLE la nomme — comme les vignettes du
- * portfolio — et le nombre de photos se lit dans l'image.
- * Le même vocabulaire que la mosaïque : l'image en 4:5, le cœur DANS
- * l'image en haut à droite, et sous elle le portrait et le nom du
- * tatoueur (une page qui mélange les artistes doit dire de qui est ce
- * qu'on regarde).
- * LA TOUCHER OUVRE LA SÉRIE ENTIÈRE : l'adresse porte les trois tags
- * (`?style=…&nature=…&rendu=…`), et la fiche s'ouvre exactement sur
- * cet ensemble, comme au toucher d'une vignette du portfolio.
- */
 /** LA CLÉ D'UN ENSEMBLE ENREGISTRÉ — celle du site (style, catégorie,
     rendu), plus LE TATOUEUR : deux artistes peuvent avoir chacun leur
     « réalisme · noir et gris », et ce sont deux ensembles. */
@@ -413,172 +447,3 @@ function cleEnsembleFavori(photo: PhotoFavorite): string {
   return `${photo.tatoueurSlug}·${cleDEnsemble(photo)}`;
 }
 
-function CartePhotoFavorite({
-  photo,
-  ensemble,
-  nombre,
-  surOuverture,
-}: {
-  /** LA PHOTO QUI REPRÉSENTE L'ENSEMBLE — la première gardée. */
-  photo: PhotoFavorite;
-  /** L'ENSEMBLE ENTIER — les photos du même style, de la même
-      catégorie et du même rendu, chez le même tatoueur. Retirer le
-      cœur les retire toutes, et la vignette disparaît. */
-  ensemble: string[];
-  /** Combien de photos il compte — annoncé dans l'image. */
-  nombre: number;
-  /** WEB : ouvre la fiche PAR-DESSUS la page (nº 143-6B). */
-  surOuverture: (
-    slug: string,
-    style: string,
-    adresse: string
-  ) => Promise<void>;
-}) {
-  //  ⚠️ ON LIT L'ÉTAT PARTAGÉ ICI AUSSI : retirer une photo la fait
-  //  PÂLIR sans la faire disparaître (voir l'en-tête du fichier).
-  const gardee = useEtatFavori("photo", photo.id, true);
-
-  //  LES TROIS TAGS DANS L'ADRESSE (nº 210-§1) : la fiche ouvre alors
-  //  CET ensemble, et non tout le style.
-  const adresse =
-    `/tatoueur/${photo.tatoueurSlug}?style=${photo.style}` +
-    `&nature=${photo.nature}&rendu=${photo.rendu ?? RENDU_PAR_DEFAUT}`;
-
-  /** Le survol demande la fiche d'avance : au clic, elle est là. */
-  function surApproche() {
-    if (document.documentElement.dataset.appareil === "mobile") return;
-    void ficheComplete(photo.tatoueurSlug);
-  }
-
-  function auClic(evenement: React.MouseEvent) {
-    //  Nouvel onglet, clic du milieu… : on ne touche à rien.
-    if (
-      evenement.metaKey ||
-      evenement.ctrlKey ||
-      evenement.shiftKey ||
-      evenement.altKey
-    ) {
-      return;
-    }
-    //  SMARTPHONE : une vraie navigation, comme depuis la mosaïque —
-    //  la fenêtre superposée est un geste d'écran large.
-    if (document.documentElement.dataset.appareil === "mobile") return;
-    evenement.preventDefault();
-    void surOuverture(photo.tatoueurSlug, photo.style, adresse);
-  }
-
-  return (
-    <li className="group relative flex flex-col" onPointerEnter={surApproche}>
-      <div
-        className={`relative w-full aspect-4/5 overflow-hidden bg-sombre-eleve
-                    transition-opacity ${gardee ? "" : "opacity-40"}`}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element --
-            photo déposée par le tatoueur, servie telle quelle. */}
-        <img
-          src={photo.miniature}
-          alt={`${libelleStyle(photo.style)} — ${photo.tatoueurNom}`}
-          loading="lazy"
-          className="h-full w-full object-cover"
-        />
-        {/* LE BADGE « Artiste » / « Salon » / « Studio » — angle BAS
-            DROIT, dans l'image : le MÊME traitement qu'en mosaïque, au
-            pixel près (pastille noire à 38 %, flou d'arrière-plan,
-            hauteur fixe, texte blanc). Il manquait ici (passe nº 142),
-            et deux cartes qui se ressemblent doivent dire la même
-            chose — sinon on croit regarder deux objets différents. */}
-        {/*  ⚠️ LE BADGE DE TYPE A QUITTÉ L'IMAGE (nº 211-§2), ici comme
-             en mosaïque : il ouvre désormais le sous-titre de la
-             carte. Le cœur prend sa place, en bas à droite. */}
-
-        {/*  COMBIEN DE PHOTOS DANS CET ENSEMBLE (nº 210-§1) — angle bas
-             GAUCHE, la capsule sombre des images. Aucune quand il n'y
-             en a qu'une : « 1 » n'apprend rien. */}
-        {nombre > 1 && (
-          <span
-            className="absolute bottom-2 left-2 inline-flex h-[22px]
-                       items-center justify-center rounded-full
-                       bg-black/38 backdrop-blur-md
-                       px-2.5 text-[11.5px] font-semibold leading-none
-                       text-white tabular-nums pointer-events-none select-none"
-          >
-            {nombre}
-          </span>
-        )}
-
-        <div className="absolute bottom-2 right-2">
-          <BoutonCoeurPhoto
-            photoId={photo.id}
-            galerie={ensemble}
-            enregistreeAuDepart
-          />
-        </div>
-      </div>
-
-      {/* SOUS LA CARTE — LE PORTRAIT, puis les deux lignes de texte :
-          le calage exact de la mosaïque (nº 143-6A). Il manquait ici,
-          et c'est justement l'élément qui dit DE QUI est la photo d'un
-          coup d'œil, dans une page qui mélange les tatoueurs.
-          Le repli des fiches sans portrait est le même partout :
-          l'initiale, sur le fond élevé. */}
-      <div className="pt-2.5 px-0.5 min-w-0 flex items-center gap-2.5">
-        <span
-          className="shrink-0 h-10 w-10 flex items-center justify-center
-                     overflow-hidden rounded-full bg-sombre-eleve"
-        >
-          {photo.photoProfil ? (
-            /* eslint-disable-next-line @next/next/no-img-element --
-               photo déposée par le tatoueur, servie telle quelle. */
-            <img
-              src={photo.photoProfil}
-              alt=""
-              loading="lazy"
-              width={PORTRAIT_ROND}
-              height={PORTRAIT_ROND}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <span
-              aria-hidden="true"
-              className="text-[13px] font-bold text-sombre-texte-doux"
-            >
-              {photo.tatoueurNom.trim().charAt(0).toUpperCase()}
-            </span>
-          )}
-        </span>
-
-        <div className="min-w-0 flex-1">
-          {/*  LE NOM DU STYLE NOMME L'ENSEMBLE (nº 210-§1) — comme les
-               vignettes du portfolio : c'est ce qu'on a aimé. Le nom
-               du tatoueur passe dessous, en gris : c'est de qui. */}
-          <p className="truncate text-[14px] font-semibold text-sombre-texte leading-[19px]">
-            <Link
-              href={adresse}
-              onClick={auClic}
-              className="outline-none after:absolute after:inset-0 after:content-['']
-                         focus-visible:underline"
-            >
-              {libelleStyle(photo.style)}
-            </Link>
-          </p>
-          {/*  DE QUI, ET DE QUELLE NATURE — le nom du tatoueur, puis ce
-               qui distingue cet ensemble d'un autre du même style chez
-               lui : le rendu, et « Flash » quand c'en est. Le style
-               n'est plus répété : il est au-dessus. */}
-          <p className="truncate text-[12.5px] text-sombre-texte-doux leading-[19px]">
-            {[
-              //  LE TYPE DE FICHE OUVRE LA LIGNE (nº 211-§2), comme en
-              //  mosaïque — il a quitté l'image.
-              libelleTypeFiche(photo.typeFiche, photo.etablissement),
-              photo.tatoueurNom,
-              photo.rendu ? libelleRendu(photo.rendu) : "",
-              photo.nature === "flash" ? libelleNature("flash") : "",
-            ]
-              .filter(Boolean)
-              .join(" · ")}
-          </p>
-        </div>
-      </div>
-    </li>
-  );
-}
