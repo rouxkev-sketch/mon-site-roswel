@@ -181,18 +181,48 @@ html:has([data-fond="sombre"]) {
   backdrop-filter: blur(40px) saturate(150%);
 }
 
-/*  LA FENÊTRE D'ADRESSE — la plaque de verre du smartphone
-    (nº 225-§3). MÊMES RÈGLES DURES QUE LA BARRE (les pièges payés du
-    §4) : les DEUX lignes littérales, la préfixée EN PREMIER (Safari ne
-    lit qu'elle) ; JAMAIS dans un `@supports (backdrop-filter: …)` —
-    Safari y répond faux et jetterait tout le bloc ; AUCUN `var()`
-    dans le filtre — WebKit invaliderait la déclaration. Sans
-    `backdrop-filter` (navigateur ancien), le fond reste assez dense
-    pour que la fenêtre se lise seule. */
+/*  LA FENÊTRE D'ADRESSE — la plaque de VERRE LIQUIDE du smartphone
+    (nº 225-§3, refaite nº 227-§6). MÊMES RÈGLES DURES QUE LA BARRE
+    (les pièges payés du nº 225-§4) : les DEUX lignes littérales, la
+    préfixée EN PREMIER (Safari ne lit qu'elle) ; JAMAIS dans un
+    `@supports (backdrop-filter: …)` — Safari y répond faux et
+    jetterait tout le bloc ; AUCUN `var()` dans le filtre — WebKit
+    invaliderait la déclaration. Sans `backdrop-filter` (navigateur
+    ancien), le fond reste assez dense pour que la fenêtre se lise
+    seule.
+    LES VALEURS DU VERRE (nº 227-§6) : anthracite à 60 %, flou de
+    30 px, et la REMONTÉE DE SATURATION à 180 % — c'est elle qui fait
+    la différence entre du verre et un voile gris.
+    LE LISERÉ — la seule exception à « aucun contour » : un fin trait
+    clair sur tout le pourtour, PLUS LUMINEUX sur le bord haut que sur
+    le bas, pour donner l'épaisseur de la plaque. En ombres internes,
+    pas en bordure : il ne prend aucun pixel au contenu. */
 [data-verre-fenetre] {
-  background-color: rgba(26, 26, 29, 0.72);
-  -webkit-backdrop-filter: blur(24px) saturate(150%);
-  backdrop-filter: blur(24px) saturate(150%);
+  background-color: rgba(26, 26, 29, 0.6);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  backdrop-filter: blur(30px) saturate(180%);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.32),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+/*  LES CAPSULES POSÉES SUR LA PLAQUE (nº 227-§6) — les badges du lieu
+    et « Copier » : blanc translucide léger, MÊMES flou et saturation
+    que la plaque, sans contour. Les mêmes règles dures : deux lignes
+    littérales, préfixée d'abord, ni `@supports`, ni `var()`. */
+[data-verre-capsule] {
+  background-color: rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  backdrop-filter: blur(30px) saturate(180%);
+}
+
+/*  L'ACTION FINALE DE LA FENÊTRE (nº 227-§6) — « Ouvrir dans Google
+    Maps » : du VERRE TEINTÉ ROSE, jamais un aplat opaque. Le rose de
+    la charte (#EE3D6F) en translucide, mêmes flou et saturation. */
+[data-verre-action] {
+  background-color: rgba(238, 61, 111, 0.62);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  backdrop-filter: blur(30px) saturate(180%);
 }
 
 /*  LE CHAMP ET LES DEUX ICÔNES DE LA BARRE FIXE — LISIBLES SUR

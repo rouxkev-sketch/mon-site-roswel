@@ -38,13 +38,16 @@ titre("§4 — les deux lignes de verre, littérales");
   const css = lire("src/app/globals.css");
   const bloc = css.match(/\[data-verre-fenetre\]\s*\{[^}]+\}/)?.[0] ?? "";
   verif("la règle [data-verre-fenetre] existe", bloc !== "");
+  //  ⚠️ VALEURS DE LA Nº 227-§6 (blur 30, saturate 180 — elles
+  //  valaient 24/150 à la nº 225) : le contrôle suit la dernière
+  //  demande, la MÉCANIQUE des deux lignes littérales est la même.
   verif(
     "la ligne PRÉFIXÉE est écrite littéralement",
-    bloc.includes("-webkit-backdrop-filter: blur(24px) saturate(150%);")
+    bloc.includes("-webkit-backdrop-filter: blur(30px) saturate(180%);")
   );
   verif(
     "la ligne NON préfixée aussi, après elle",
-    bloc.includes("\n  backdrop-filter: blur(24px) saturate(150%);") &&
+    bloc.includes("\n  backdrop-filter: blur(30px) saturate(180%);") &&
       bloc.indexOf("-webkit-backdrop-filter") <
         bloc.lastIndexOf("  backdrop-filter:")
   );
@@ -169,8 +172,11 @@ if (!fiche) {
       /mt-8 flex items-start gap-5/.test(contenu)
     );
     verif(
+      //  ⚠️ La nº 227-§4 a coupé le bloc en DEUX LIGNES (flex-col) :
+      //  le mt-8 — la marge basse de la photo — reste, c'est lui
+      //  qu'on contrôle.
       "32 px AU-DESSOUS, égaux (mt-8 sur le bloc des liens)",
-      /mt-8 flex flex-wrap items-center/.test(contenu)
+      /mt-8 flex flex-col items-start/.test(contenu)
     );
   }
 
@@ -211,7 +217,9 @@ if (!fiche) {
           ...plaque.querySelectorAll("a, button"),
         ].filter((n) => {
           const fond = getComputedStyle(n).backgroundColor;
-          return fond === "rgb(238, 61, 111)";
+          //  ⚠️ VERRE TEINTÉ depuis la nº 227-§6 : le rose est
+          //  TRANSLUCIDE (rgba), plus jamais un aplat opaque.
+          return fond.startsWith("rgba(238, 61, 111");
         });
         return {
           centreX: boite.left + boite.width / 2,

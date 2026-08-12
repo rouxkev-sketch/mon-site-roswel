@@ -68,8 +68,10 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  * ================================================================== */
 
 /**
- * LA PASTILLE D'UN LIEU OU D'UNE PERSONNE — 44 px, le gabarit de
- * l'équipe : une adresse et un membre se lisent dans la même colonne.
+ * LA PASTILLE D'UN LIEU OU D'UNE PERSONNE — 52 px (nº 227-§1, elle
+ * était un peu petite à 44), le gabarit de l'équipe : une adresse et
+ * un membre se lisent dans la même colonne. La photo de PROFIL de la
+ * fiche, elle, reste à 92 px — elle n'est pas une pastille.
  *
  * ⚠️ ELLE EXISTE TOUJOURS (passe nº 224-§1), même sans photo — c'est
  * elle qui tient la colonne, et une ligne sans elle se décalait ou
@@ -98,7 +100,7 @@ function PhotoRonde({
   nature: "lieu" | "personne";
 }) {
   return (
-    <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-sombre-eleve">
+    <span className="flex h-13 w-13 shrink-0 items-center justify-center overflow-hidden rounded-full bg-sombre-eleve">
       {source ? (
         /* eslint-disable-next-line @next/next/no-img-element --
            photo déposée par le tatoueur, servie telle quelle. */
@@ -289,16 +291,30 @@ function HorairesEnLigne({
  *
  * ⚠️ TOUTE LA LIGNE EST LE LIEN (nº 226-§4) : pastille, rôle et nom
  * vivent dans UN SEUL élément cliquable — la pastille a le lien pour
- * ancêtre, il n'y a qu'une zone d'appui. Aucun contour, aucun halo :
- * seul le nom prend la couleur au survol, comme avant. Un membre sans
- * fiche (pas de slug) reste une ligne inerte, à l'identique.
+ * ancêtre, il n'y a qu'une zone d'appui. Aucun contour, aucun halo.
+ * Un membre sans fiche (pas de slug) reste une ligne inerte.
+ *
+ * §2 (nº 227) — LE TEXTE EST CENTRÉ SUR SA PASTILLE (`items-center` :
+ * un texte de deux lignes est centré en BLOC), 20 px entre deux
+ * lignes (`gap-5`), 20 px au-dessus de la première comme sous la
+ * dernière, 14 px entre la pastille et son texte (`gap-3.5`).
+ *
+ * §5 (nº 227) — LE SURVOL, le même pour toutes les lignes cliquables :
+ * la couleur du texte ne change JAMAIS (le rose est réservé), le fond
+ * de la ligne monte d'un cran (un voile blanc léger — la même ligne
+ * vit sur l'anthracite de la page ET sur la carte de la fenêtre, un
+ * jeton fixe ne serait « un cran au-dessus » que d'un seul des deux),
+ * et le texte prend un fin soulignement décalé. Le rembourrage est
+ * annulé par des marges négatives : la surface respire sans déplacer
+ * le texte d'un pixel. Au doigt, pas de survol : un bref état enfoncé
+ * (`active:`), qui ne reste jamais.
  */
 function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined }) {
   const clicVersFiche = useClicVersFiche();
   const membres = equipeOrdonnee(equipe);
   if (membres.length === 0) return null;
   return (
-    <ul className="mt-6 flex flex-col gap-3.5">
+    <ul className="mt-5 flex flex-col gap-5">
       {membres.map((membre) => {
         /*  ⚠️ LA PASTILLE EST LÀ MÊME SANS PHOTO (nº 224-§1) : un
             rond gris uni, rien dedans. C'est elle qui tient la
@@ -308,15 +324,15 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
           <>
             <PhotoRonde source={membre.photo} nature="personne" />
             <div className="min-w-0 flex-1">
-              <p className="text-[14px] leading-relaxed text-sombre-texte-doux">
+              <p
+                className={`text-[14px] leading-relaxed text-sombre-texte-doux${
+                  avecFiche
+                    ? " underline-offset-4 decoration-1 group-hover:underline"
+                    : ""
+                }`}
+              >
                 {roleDuMembre(membre)} ·{" "}
-                <span
-                  className={`text-[15px] font-medium text-sombre-texte${
-                    avecFiche
-                      ? " transition-colors group-hover:text-primaire group-active:text-primaire"
-                      : ""
-                  }`}
-                >
+                <span className="text-[15px] font-medium text-sombre-texte">
                   {membre.nom}
                 </span>
               </p>
@@ -332,12 +348,13 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
               <Link
                 href={`/tatoueur/${membre.slug}`}
                 onClick={clicVersFiche?.(membre.slug)}
-                className="group flex items-start gap-4"
+                className="group flex items-center gap-3.5 rounded-xl -m-2 p-2
+                           transition-colors hover:bg-white/5 active:bg-white/10"
               >
                 {ligne(true)}
               </Link>
             ) : (
-              <div className="flex items-start gap-4">{ligne(false)}</div>
+              <div className="flex items-center gap-3.5">{ligne(false)}</div>
             )}
           </li>
         );
@@ -373,18 +390,23 @@ function adresseMaps(lieu: LieuAffichable): string {
 /**
  * §3 (nº 225) — LA FENÊTRE D'ADRESSE DU SMARTPHONE
  * ==================================================================
- * Une plaque de verre posée au centre de la page : verre dépoli
- * translucide (la règle `[data-verre-fenetre]` de globals.css — les
- * DEUX lignes littérales, préfixée et non préfixée, jamais de
+ * Une plaque de VERRE LIQUIDE posée au centre de la page (nº 227-§6) :
+ * anthracite à 60 %, flou de 30 px et REMONTÉE DE SATURATION à 180 %
+ * — c'est la saturation qui fait le verre, sans elle ce n'est qu'un
+ * voile gris. La règle vit dans globals.css (`[data-verre-fenetre]`,
+ * les DEUX lignes littérales, préfixée et non préfixée, jamais de
  * `@supports`, jamais de `var()` dans le filtre : les trois pièges
- * payés du §4), un LISERÉ clair très fin sur le pourtour — la seule
- * exception voulue à « aucun contour », demandée en toutes lettres.
+ * payés du nº 225-§4). Le LISERÉ clair très fin fait le tour, PLUS
+ * LUMINEUX sur le bord haut que sur le bas — l'épaisseur de la
+ * plaque ; c'est la seule exception voulue à « aucun contour ».
  *
- * DEDANS : l'adresse, les badges du lieu en verre translucide, puis
- * les deux actions — « Copier » en capsule à taille naturelle en
- * verre, « Ouvrir dans Google Maps » en capsule ROSE PLEINE sur toute
- * la largeur : c'est l'action finale de cette fenêtre, et la seule.
- * La fermeture est un mot nu, et l'appui à côté ferme aussi.
+ * DEDANS : l'adresse, les badges du lieu en verre blanc translucide
+ * (`[data-verre-capsule]` — mêmes flou et saturation), « Copier » en
+ * capsule de verre à taille naturelle, puis « Ouvrir dans Google
+ * Maps » en capsule pleine largeur de VERRE TEINTÉ ROSE
+ * (`[data-verre-action]` — rose translucide, jamais un aplat) :
+ * l'action finale de cette fenêtre, et la seule. La fermeture est un
+ * mot nu, et l'appui à côté ferme aussi.
  */
 function FenetreAdresse({
   adresse,
@@ -438,10 +460,11 @@ function FenetreAdresse({
         onClick={surFermeture}
         className="absolute inset-0 bg-black/55"
       />
+      {/*  Le liseré (plus lumineux en haut) vit dans la règle
+           [data-verre-fenetre] de globals.css, avec le verre. */}
       <div
         data-verre-fenetre=""
         className="relative w-full max-w-[360px] rounded-3xl p-6
-                   ring-1 ring-white/20
                    opacity-100 transition-opacity duration-200 starting:opacity-0"
       >
         <p className="text-[16px] font-medium leading-relaxed text-sombre-texte [overflow-wrap:anywhere]">
@@ -451,10 +474,13 @@ function FenetreAdresse({
         {badges.length > 0 && (
           <ul className="mt-4 flex flex-wrap gap-2">
             {badges.map((badge) => (
+              /*  Blanc translucide léger, mêmes flou et saturation
+                  que la plaque, sans contour (nº 227-§6). */
               <li
                 key={badge}
+                data-verre-capsule=""
                 className="inline-flex min-h-[30px] items-center rounded-full
-                           bg-white/10 px-3 text-[13px] font-medium text-sombre-texte"
+                           px-3 text-[13px] font-medium text-sombre-texte"
               >
                 {badge}
               </li>
@@ -462,27 +488,31 @@ function FenetreAdresse({
           </ul>
         )}
 
-        {/*  « Copier » — une action INTERMÉDIAIRE : capsule à sa
-             taille, en verre, sans rose plein. Le mot devient
-             « Copié » quand c'est fait — pas d'icône, pas de phrase. */}
+        {/*  « Copier » — une action INTERMÉDIAIRE : capsule de verre à
+             sa taille, sans rose plein. Le mot devient « Copié » quand
+             c'est fait — pas d'icône, pas de phrase. */}
         <button
           type="button"
           onClick={() => void copier()}
+          data-verre-capsule=""
           className="mt-6 inline-flex min-h-[42px] items-center rounded-full
-                     bg-white/10 px-5 text-[14px] font-semibold text-sombre-texte
+                     px-5 text-[14px] font-semibold text-sombre-texte
                      transition-colors active:bg-white/20"
         >
           {copie ? "Copié" : "Copier"}
         </button>
 
-        {/*  L'ACTION FINALE — la seule capsule rose de la fenêtre. */}
+        {/*  L'ACTION FINALE — la seule capsule rose de la fenêtre, en
+             VERRE TEINTÉ (nº 227-§6) : rose translucide, mêmes flou et
+             saturation, jamais un aplat opaque. */}
         <a
           href={adresseMaps(lieu)}
           target="_blank"
           rel="noopener noreferrer"
+          data-verre-action=""
           className="mt-3 flex min-h-[48px] w-full items-center justify-center
-                     rounded-full bg-primaire text-[15px] font-semibold text-white
-                     transition-colors active:bg-primaire/85"
+                     rounded-full text-[15px] font-semibold text-white
+                     transition-opacity active:opacity-85"
         >
           Ouvrir dans Google Maps
         </a>
@@ -534,6 +564,10 @@ function AdresseCliquable({
     <>
       <p className="text-[14px] leading-relaxed text-sombre-texte-doux [overflow-wrap:anywhere]">
         {etiquette}{" "}
+        {/*  §5 (nº 227) — PLUS AUCUN ROSE AU SURVOL : la couleur ne
+             change jamais, le fond monte d'un cran (voile blanc), un
+             fin soulignement décalé apparaît. Au doigt : un bref état
+             enfoncé, rien qui reste. */}
         <a
           href={adresseMaps(lieu)}
           target="_blank"
@@ -545,8 +579,10 @@ function AdresseCliquable({
               setFenetre(true);
             }
           }}
-          className="text-[15px] font-medium text-sombre-texte transition-colors
-                     hover:text-primaire active:text-primaire"
+          className="text-[15px] font-medium text-sombre-texte rounded-md
+                     -mx-1 px-1 transition-colors
+                     hover:bg-white/5 active:bg-white/10
+                     underline-offset-4 decoration-1 hover:underline"
         >
           {adresse}
         </a>
@@ -623,10 +659,13 @@ export function BlocAdressesFiche({
    */
   return (
     <div>
-      {/*  ⚠️ `items-start` : le texte commence au HAUT de la photo et
-           se prolonge dessous s'il est long — jamais au-dessus. C'est
-           la même règle que le nom de la fiche (nº 222-§1e). */}
-      <div className="flex items-start gap-4">
+      {/*  §2 (nº 227) — LE TEXTE EST CENTRÉ SUR SA PASTILLE
+           (`items-center`) : un bloc de deux lignes est centré en
+           bloc, 14 px le séparent de la pastille (`gap-3.5`). (La
+           règle de centrage CONDITIONNEL de la photo de profil, en
+           tête de fiche, est une autre règle — nº 225-§2 — et ne
+           bouge pas.) */}
+      <div className="flex items-center gap-3.5">
         {/*  ⚠️ LA PHOTO DU LIEU EST CELLE DE LA FICHE : un studio n'a
              pas d'image à lui en base (voir `StudioFiche`). */}
         <PhotoRonde source={tatoueur.photo_profil} nature="lieu" />
@@ -707,9 +746,12 @@ export function BlocProfilsArtiste({
   if (modes.length === 0) return null;
 
   return (
-    <ul className="flex flex-col gap-7">
+    /*  §2 (nº 227) — le même rythme que l'équipe : 20 px entre deux
+        lignes à pastille, texte centré sur la sienne, 14 px entre
+        pastille et texte. */
+    <ul className="flex flex-col gap-5">
       {modes.map((mode) => (
-        <li key={mode.id} className="flex items-start gap-4">
+        <li key={mode.id} className="flex items-center gap-3.5">
           {/*  ⚠️ « À DOMICILE », C'EST CHEZ L'ARTISTE (nº 224-§1) : la
                pastille est SA photo de profil, pas un glyphe d'adresse
                — il n'y a pas d'autre lieu à montrer. Les autres modes
@@ -728,11 +770,15 @@ export function BlocProfilsArtiste({
               {etiquetteDuMode(mode)}{" "}
               {mode.salon_slug && mode.salon_nom ? (
                 <>
+                  {/*  §5 (nº 227) — le même survol que partout : jamais
+                       de rose, le fond monte d'un cran, un fin
+                       soulignement décalé. */}
                   <Link
                     href={`/tatoueur/${mode.salon_slug}`}
                     onClick={clicVersFiche?.(mode.salon_slug)}
-                    className="font-medium text-sombre-texte transition-colors
-                               hover:text-primaire active:text-primaire"
+                    className="font-medium text-sombre-texte rounded-md -mx-1 px-1
+                               transition-colors hover:bg-white/5 active:bg-white/10
+                               underline-offset-4 decoration-1 hover:underline"
                   >
                     {mode.salon_nom}
                   </Link>

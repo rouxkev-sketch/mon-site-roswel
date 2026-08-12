@@ -234,6 +234,11 @@ export function ContenuFiche({
    * ILS SE REGROUPENT : un seul lien libre et Instagram tiennent sur
    * une ligne — `flex-wrap` ne laisse aucune ligne à moitié vide.
    */
+  /*  §5 (nº 227) — LE SURVOL SANS ROSE, comme toutes les lignes
+      cliquables du site : la couleur ne change jamais, le fond monte
+      d'un cran (voile blanc, annulé par des marges négatives — rien
+      ne bouge d'un pixel), un fin soulignement décalé sur le libellé.
+      Au doigt : un bref état enfoncé, jamais un état qui reste. */
   const lienEnLigne = (
     cle: string,
     href: string,
@@ -245,13 +250,16 @@ export function ContenuFiche({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center gap-2.5 text-[15px] leading-snug
-                 text-sombre-texte-doux transition-colors hover:text-primaire"
+      className="group flex items-center gap-2.5 text-[15px] leading-snug
+                 text-sombre-texte-doux rounded-lg -mx-1.5 -my-1 px-1.5 py-1
+                 transition-colors hover:bg-white/5 active:bg-white/10"
     >
       <span className="flex h-[18px] w-[18px] shrink-0 items-center justify-center">
         {icone}
       </span>
-      <span className="min-w-0 truncate">{libelle}</span>
+      <span className="min-w-0 truncate underline-offset-4 decoration-1 group-hover:underline">
+        {libelle}
+      </span>
     </a>
   );
 
@@ -265,30 +273,66 @@ export function ContenuFiche({
    *
    * ⚠️ LES DEUX FAMILLES NE SE TRAITENT PAS PAREIL, parce que les
    * fichiers ne sont pas de même nature :
-   *  · les icônes de RÉSEAU sont des logos en couleur → servis tels
-   *    quels, aucune retouche ;
+   *  · les icônes de RÉSEAU sont dessinées pour un fond noir : sur
+   *    l'anthracite du site, elles disparaissaient. Elles se posent
+   *    donc sur un DISQUE BLANC PLEIN (nº 227-§3) — un disque, pas un
+   *    cercle tracé : aucun contour —, logées dedans avec 2 px de
+   *    retrait (14 px dans un disque de 18). C'est le disque qui leur
+   *    donne leur lisibilité, jamais une taille plus grande : les
+   *    trois icônes gardent le même poids visuel ;
    *  · `site.png` est un GLYPHE NOIR sur fond transparent, comme les
    *    autres images de ce dossier → `invert` l'éclaircit et
-   *    l'opacité le cale sur le gris du texte (jamais en touchant au
-   *    fichier — la règle permanente du projet).
-   * Colonne de 18 px inchangée (nº 223).
+   *    l'opacité le cale sur le gris du texte, SANS disque (jamais en
+   *    touchant au fichier — la règle permanente du projet).
+   * Colonne de 18 px inchangée (nº 223), pour les trois.
    */
-  const iconeFichier = (fichier: string, glyphe: boolean) => (
-    /* eslint-disable-next-line @next/next/no-img-element --
-       icône déposée par le propriétaire, affichée telle quelle (le
-       filtre CSS ne modifie pas le fichier). */
-    <img
-      src={fichier}
-      alt=""
-      width={18}
-      height={18}
-      className={`h-[18px] w-[18px] ${glyphe ? "invert opacity-60" : ""}`}
-    />
-  );
+  const iconeFichier = (fichier: string, glyphe: boolean) =>
+    glyphe ? (
+      /* eslint-disable-next-line @next/next/no-img-element --
+         icône déposée par le propriétaire, affichée telle quelle (le
+         filtre CSS ne modifie pas le fichier). */
+      <img
+        src={fichier}
+        alt=""
+        width={18}
+        height={18}
+        className="h-[18px] w-[18px] invert opacity-60"
+      />
+    ) : (
+      <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-white">
+        {/* eslint-disable-next-line @next/next/no-img-element --
+           icône déposée par le propriétaire, affichée telle quelle. */}
+        <img src={fichier} alt="" width={14} height={14} className="h-3.5 w-3.5" />
+      </span>
+    );
 
-  /** LES LIENS, DANS L'ORDRE : les libres d'abord, les réseaux
-      ensuite. Un lien absent n'occupe aucune place. */
-  const liens = [
+  /**
+   * §4 (nº 227) — LES LIENS, SUR DEUX LIGNES, RÈGLE EXACTE :
+   *  · ligne 1 : les liens de site (deux au maximum — le site et la
+   *    page de liens sont les deux seuls champs) ;
+   *  · ligne 2 : Instagram et TikTok, ensemble ;
+   *  · EXCEPTION UNIQUE : sans TikTok, Instagram remonte sur la
+   *    ligne 1, à côté d'un lien.
+   * Aucune autre combinaison ; une ligne vide ne rend rien, donc ne
+   * laisse aucun espace.
+   */
+  const lienInstagram =
+    tatoueur.lien_instagram &&
+    lienEnLigne(
+      "instagram",
+      tatoueur.lien_instagram,
+      "Instagram",
+      iconeFichier(ICONES_RESEAUX.instagram, false)
+    );
+  const lienTiktok =
+    tatoueur.lien_tiktok &&
+    lienEnLigne(
+      "tiktok",
+      tatoueur.lien_tiktok,
+      "TikTok",
+      iconeFichier(ICONES_RESEAUX.tiktok, false)
+    );
+  const premiereLigne = [
     tatoueur.site_web &&
       lienEnLigne(
         "site",
@@ -303,16 +347,14 @@ export function ContenuFiche({
         tatoueur.titre_page_de_liens || libelleDuLien(tatoueur.page_de_liens),
         iconeFichier(ICONE_SITE, true)
       ),
-    tatoueur.lien_instagram &&
-      lienEnLigne(
-        "instagram",
-        tatoueur.lien_instagram,
-        "Instagram",
-        iconeFichier(ICONES_RESEAUX.instagram, false)
-      ),
-    tatoueur.lien_tiktok &&
-      lienEnLigne("tiktok", tatoueur.lien_tiktok, "TikTok", iconeFichier(ICONES_RESEAUX.tiktok, false)),
   ].filter(Boolean);
+  const secondeLigne: React.ReactNode[] = [];
+  if (lienTiktok) {
+    if (lienInstagram) secondeLigne.push(lienInstagram);
+    secondeLigne.push(lienTiktok);
+  } else if (lienInstagram) {
+    premiereLigne.push(lienInstagram);
+  }
 
   /**
    * §2 (nº 226) — LES CINQ SECTIONS DE BADGES, DANS CET ORDRE
@@ -495,12 +537,23 @@ export function ContenuFiche({
           {/* ==========================================================
               §2 — LES LIENS, SOUS LA PHOTO
               ==========================================================
-              Les liens libres d'abord, les réseaux ensuite ; chacun son
-              icône à gauche, toutes de la même taille. `flex-wrap` les
-              regroupe : rien ne descend d'une ligne s'il peut monter. */}
-          {liens.length > 0 && (
-            <div className="mt-8 flex flex-wrap items-center gap-x-7 gap-y-3.5">
-              {liens}
+              DEUX LIGNES, RÈGLE EXACTE (nº 227-§4) : les sites sur la
+              première, Instagram et TikTok ensemble sur la seconde —
+              sauf sans TikTok, où Instagram remonte. Chacun son icône
+              à gauche, la colonne de 18 px pour les trois. Le `mt-8`
+              reste la marge basse de la photo (nº 225-§1). */}
+          {(premiereLigne.length > 0 || secondeLigne.length > 0) && (
+            <div className="mt-8 flex flex-col items-start gap-y-3.5">
+              {premiereLigne.length > 0 && (
+                <div className="flex flex-wrap items-center gap-x-7 gap-y-3.5">
+                  {premiereLigne}
+                </div>
+              )}
+              {secondeLigne.length > 0 && (
+                <div className="flex flex-wrap items-center gap-x-7 gap-y-3.5">
+                  {secondeLigne}
+                </div>
+              )}
             </div>
           )}
 

@@ -97,8 +97,10 @@ titre("§1 — la pastille d'un lieu sans photo");
     /nature === "lieu" \? \([\s\S]{0,400}?\) : null/.test(bloc)
   );
   verif(
-    "la pastille garde 44 px",
-    bloc.includes("h-11 w-11")
+    //  ⚠️ 52 px depuis la nº 227-§1 (elle valait 44 à la nº 224) : le
+    //  contrôle suit la dernière valeur demandée.
+    "la pastille fait 52 px (nº 227-§1)",
+    bloc.includes("h-13 w-13")
   );
   verif(
     "la ligne d'adresse ne disparaît plus quand la valeur manque",
