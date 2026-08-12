@@ -332,6 +332,17 @@ function HorairesEnLigne({
  * le texte d'un pixel. Au doigt, pas de survol : un bref état enfoncé
  * (`active:`), qui ne reste jamais.
  */
+/**
+ * L'ENCADRÉ D'UNE LIGNE CLIQUABLE À PASTILLE — UNE SEULE ÉCRITURE
+ * (nº 232-§1). La ligne d'un membre d'équipe et la ligne d'adresse
+ * portent EXACTEMENT le même : même élément (pastille + colonne de
+ * texte DANS l'encadré), mêmes classes, même géométrie. C'est cette
+ * constante qui le garantit — il n'existe pas de second dessin.
+ */
+const CLASSES_LIGNE_CLIQUABLE =
+  "group flex items-start gap-3.5 rounded-xl -m-2 p-2 " +
+  "transition-colors hover:bg-white/5 active:bg-white/10";
+
 function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined }) {
   const clicVersFiche = useClicVersFiche();
   const membres = equipeOrdonnee(equipe);
@@ -371,8 +382,7 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
               <Link
                 href={`/tatoueur/${membre.slug}`}
                 onClick={clicVersFiche?.(membre.slug)}
-                className="group flex items-start gap-3.5 rounded-xl -m-2 p-2
-                           transition-colors hover:bg-white/5 active:bg-white/10"
+                className={CLASSES_LIGNE_CLIQUABLE}
               >
                 {ligne(true)}
               </Link>
@@ -440,11 +450,14 @@ function FenetreAdresse({
 }) {
   const [copie, setCopie] = useState(false);
 
-  async function copier() {
+  /** Dit si la copie a VRAIMENT eu lieu : c'est elle qui autorise la
+      fermeture différée (nº 232-§2) — une copie ratée laisse la
+      fenêtre ouverte plutôt que de mimer un succès. */
+  async function copier(): Promise<boolean> {
     try {
       await navigator.clipboard.writeText(adresse);
       setCopie(true);
-      return;
+      return true;
     } catch {
       //  Sans presse-papier (http local) : la méthode ancienne.
     }
@@ -460,9 +473,27 @@ function FenetreAdresse({
       const fait = document.execCommand("copy");
       zone.remove();
       if (fait) setCopie(true);
+      return fait;
     } catch {
       //  Rien : le bouton garde son mot, l'adresse reste lisible.
+      return false;
     }
+  }
+
+  /**
+   * §2 (nº 232) — LA FENÊTRE SE REFERME APRÈS L'ACTION.
+   * « Adresse copiée » se lit 600 ms — assez pour la confirmation,
+   * pas assez pour attendre — puis la fenêtre part. Elle ne part QUE
+   * si la copie a réussi.
+   * ⚠️ AUCUNE ENTRÉE D'HISTORIQUE À RETIRER : l'ouverture n'en pousse
+   * pas (un simple état React, voir AdresseCliquable) — l'historique
+   * ne grossit donc jamais d'un cran par adresse consultée, et le
+   * banc le compte.
+   */
+  function copierPuisFermer() {
+    void copier().then((fait) => {
+      if (fait) window.setTimeout(surFermeture, 600);
+    });
   }
 
   return (
@@ -494,7 +525,7 @@ function FenetreAdresse({
              porter). Le mot devient « Adresse copiée » après l'appui. */}
         <button
           type="button"
-          onClick={() => void copier()}
+          onClick={copierPuisFermer}
           data-verre-capsule=""
           className="flex min-h-[48px] w-full items-center justify-center
                      rounded-full text-[15px] font-semibold text-sombre-texte
@@ -507,10 +538,13 @@ function FenetreAdresse({
              VERRE TEINTÉ (nº 227-§6, allégé nº 229-§5 : rose à 45 %,
              mêmes flou et saturation que la plaque — jamais un aplat
              opaque). */}
+        {/*  Le lien s'ouvre (nouvel onglet), la fenêtre se referme
+             DANS LE MÊME GESTE (nº 232-§2) — rien à attendre ici. */}
         <a
           href={adresseMaps(lieu)}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={surFermeture}
           data-verre-action=""
           className="mt-3 flex min-h-[48px] w-full items-center justify-center
                      rounded-full text-[15px] font-semibold text-white
@@ -538,31 +572,62 @@ function AdresseCliquable({
   etiquette = "Adresse :",
   adresse,
   lieu,
+  pastille,
 }: {
   etiquette?: string;
   adresse: string;
   lieu: LieuAffichable | null;
+  /** LA PASTILLE DU LIEU, quand la ligne en porte une (l'adresse de
+      l'affiche) : elle entre alors DANS l'encadré (nº 232-§1), comme
+      la pastille d'un membre d'équipe. Les « Autre adresse » n'en ont
+      pas et gardent leur ligne de texte seule. */
+  pastille?: React.ReactNode;
 }) {
   const [fenetre, setFenetre] = useState(false);
   const complete = Boolean(lieu?.adresse && adresse);
 
+  const ligneTexte = (cliquable: boolean) => (
+    <p className="text-[14px] leading-relaxed text-sombre-texte-doux [overflow-wrap:anywhere]">
+      {etiquette}{" "}
+      <span
+        className={`text-[15px] font-medium text-sombre-texte${
+          cliquable
+            ? " underline-offset-4 decoration-1 group-hover:underline"
+            : ""
+        }`}
+      >
+        {adresse}
+      </span>
+    </p>
+  );
+
   if (!complete || !lieu) {
-    return <LigneEtiquetee etiquette={etiquette} valeur={adresse} />;
+    //  ADRESSE INCOMPLÈTE : pas de plan, pas de lien — mais la ligne
+    //  garde sa pastille et sa colonne quand elle en a une, comme une
+    //  ligne d'équipe sans fiche.
+    return pastille ? (
+      <div className="flex items-start gap-3.5">
+        {pastille}
+        <div className="flex min-h-13 min-w-0 flex-1 flex-col justify-center">
+          <LigneEtiquetee etiquette={etiquette} valeur={adresse} />
+        </div>
+      </div>
+    ) : (
+      <LigneEtiquetee etiquette={etiquette} valeur={adresse} />
+    );
   }
 
   return (
     <>
-      {/*  §4 (nº 230) — TOUTE LA LIGNE D'ADRESSE PORTE L'ENCADRÉ, et
-           c'est EXACTEMENT celui d'un membre d'équipe (nº 226-§4) :
-           les mêmes classes, pas une seconde présentation —
-           `rounded-xl`, rembourrage annulé par une marge négative (la
-           surface respire sans déplacer le texte d'un pixel), le fond
-           qui monte d'un cran au survol, l'état enfoncé au doigt.
-           ⚠️ L'ENCADRÉ S'ARRÊTE ICI : le volet des horaires est le
-           FRÈRE SUIVANT de ce lien, jamais son enfant (voir
-           `UneAdresse`). Appuyer sur le chevron ne peut donc pas
-           déclencher le lien de l'adresse — ce ne sont pas les mêmes
-           éléments.
+      {/*  §1 (nº 232) — L'ENCADRÉ EST CELUI D'UN MEMBRE D'ÉQUIPE, À LA
+           CLASSE PRÈS : `CLASSES_LIGNE_CLIQUABLE`, l'unique écriture.
+           Il enveloppe LA PASTILLE ET LE BLOC DE TEXTE quand la ligne
+           porte une pastille (l'adresse de l'affiche) ; la colonne de
+           texte garde la bascule de centrage de la nº 229.
+           ⚠️ L'ENCADRÉ S'ARRÊTE ICI (nº 230-§4, tenu) : le volet des
+           horaires vit APRÈS ce lien, jamais dedans — appuyer sur le
+           chevron ne peut pas déclencher le lien de l'adresse, ce ne
+           sont pas les mêmes éléments.
            §5 (nº 227) — aucun rose : la couleur du texte ne change
            jamais, seul le fond et un fin soulignement décalé. */}
       <a
@@ -576,18 +641,20 @@ function AdresseCliquable({
             setFenetre(true);
           }
         }}
-        className="group block rounded-xl -m-2 p-2 transition-colors
-                   hover:bg-white/5 active:bg-white/10"
+        className={
+          pastille
+            ? CLASSES_LIGNE_CLIQUABLE
+            : "group block rounded-xl -m-2 p-2 transition-colors hover:bg-white/5 active:bg-white/10"
+        }
       >
-        <p className="text-[14px] leading-relaxed text-sombre-texte-doux [overflow-wrap:anywhere]">
-          {etiquette}{" "}
-          <span
-            className="text-[15px] font-medium text-sombre-texte
-                       underline-offset-4 decoration-1 group-hover:underline"
-          >
-            {adresse}
-          </span>
-        </p>
+        {pastille}
+        {pastille ? (
+          <div className="flex min-h-13 min-w-0 flex-1 flex-col justify-center">
+            {ligneTexte(true)}
+          </div>
+        ) : (
+          ligneTexte(true)
+        )}
       </a>
       {fenetre && (
         <FenetreAdresse
@@ -651,22 +718,29 @@ export function BlocAdressesFiche({
    */
   return (
     <div>
-      {/*  §1 (nº 229) — LA PASTILLE EST ANCRÉE EN HAUT (`items-start`,
-           elle ne bouge JAMAIS — déplier les horaires ne fait pousser
-           que le texte), et la COLONNE DE TEXTE porte la bascule de la
-           nº 225-§2 : `min-h-13` + `justify-center` — un texte moins
-           haut que la pastille est centré sur elle, un texte plus haut
-           s'aligne à son sommet et continue dessous. Jamais un pixel
-           au-dessus. 14 px entre pastille et texte (`gap-3.5`). */}
-      <div className="flex items-start gap-3.5">
-        {/*  ⚠️ LA PHOTO DU LIEU EST CELLE DE LA FICHE : un studio n'a
-             pas d'image à lui en base (voir `StudioFiche`). */}
-        <PhotoRonde source={tatoueur.photo_profil} nature="lieu" />
-        <div className="flex min-h-13 min-w-0 flex-1 flex-col justify-center">
-          <AdresseCliquable
-            adresse={adressePrincipale}
-            lieu={lieuPrincipal}
-          />
+      {/*  §1 (nº 232) — L'ENCADRÉ DE LA LIGNE D'ADRESSE EST CELUI DE
+           L'ÉQUIPE : la pastille et la colonne de texte vivent DANS
+           l'élément cliquable (voir AdresseCliquable, qui porte
+           CLASSES_LIGNE_CLIQUABLE — l'unique écriture). La pastille
+           reste ancrée en haut (nº 229-§1), la colonne garde sa
+           bascule de centrage.
+           ⚠️ LES HORAIRES SONT DEHORS (nº 230-§4, tenu) : hors de
+           l'encadré, hors du lien — le chevron ne peut pas déclencher
+           l'adresse. Leur retrait gauche (66 px = 52 de pastille + 14
+           d'écart) les garde alignés sous la colonne de texte, là où
+           ils ont toujours été.
+           ⚠️ `flex flex-col` N'EST PAS DÉCORATIF : l'encadré porte des
+           marges négatives — dans un bloc ordinaire elles fusionnent
+           avec les marges voisines et le rythme du bloc se fausse. */}
+      <div className="flex flex-col">
+        <AdresseCliquable
+          adresse={adressePrincipale}
+          lieu={lieuPrincipal}
+          //  ⚠️ LA PHOTO DU LIEU EST CELLE DE LA FICHE : un studio n'a
+          //  pas d'image à lui en base (voir `StudioFiche`).
+          pastille={<PhotoRonde source={tatoueur.photo_profil} nature="lieu" />}
+        />
+        <div className="pl-[66px]">
           <HorairesEnLigne
             horaires={principal?.horaires}
             fuseau={principal?.fuseau}

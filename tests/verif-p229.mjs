@@ -139,9 +139,10 @@ if (!fiche) {
     } else {
       const pastilleAdresse = () =>
         web.evaluate(() => {
-          const bouton = document.querySelector("main button[aria-expanded]");
-          const ligne = bouton?.closest(".flex.items-start");
-          const pastille = ligne?.querySelector("span.rounded-full");
+          //  ⚠️ nº 232-§1 : la pastille vit DANS le lien d'adresse
+          //  (l'encadré l'enveloppe), le chevron vit APRÈS lui.
+          const lien = document.querySelector('main a[href*="google.com/maps"]');
+          const pastille = lien?.querySelector("span.rounded-full");
           return pastille
             ? Math.round(pastille.getBoundingClientRect().top * 10) / 10
             : null;
@@ -369,7 +370,8 @@ titre("§5 — la fenêtre d'adresse (390 px)");
         `${mesure.fondMaps} · ${mesure.filtreMaps}`
       );
 
-      //  LE MOT CHANGE APRÈS L'APPUI.
+      //  LE MOT CHANGE APRÈS L'APPUI — puis la fenêtre se referme
+      //  SEULE (nº 232-§2, 600 ms de lecture).
       const copier = fenetre.getByRole("button", { name: "Copier l'adresse" });
       if ((await copier.count()) === 1) {
         await copier.click();
@@ -380,9 +382,17 @@ titre("§5 — la fenêtre d'adresse (390 px)");
             .getByRole("button", { name: "Adresse copiée" })
             .count()) === 1
         );
+        await page.waitForTimeout(900);
+        verif(
+          "et la fenêtre se referme seule (nº 232-§2)",
+          (await page.locator("[data-verre-fenetre]").count()) === 0
+        );
       }
 
-      //  LE VOILE REFERME (nº 231-§2) — un appui à côté de la plaque.
+      //  LE VOILE REFERME AUSSI — on rouvre pour l'éprouver.
+      await lien.scrollIntoViewIfNeeded();
+      await lien.click();
+      await page.locator("[data-verre-fenetre]").waitFor({ timeout: 5000 }).catch(() => {});
       await page
         .locator('button[aria-label="Fermer"]')
         .first()
