@@ -172,6 +172,25 @@ export function GrilleTatoueurs({
   }, [disposition, phototheque]);
 
   const [ficheOuverte, setFicheOuverte] = useState<Tatoueur | null>(null);
+  /**
+   * COMBIEN DE FOIS UNE FENÊTRE A ÉTÉ OUVERTE (passe nº 220-§3)
+   * ------------------------------------------------------------------
+   * LE DÉFAUT : on ouvre une carte, on défile jusqu'à la photo 18 sur
+   * 20, on referme, on rouvre la MÊME carte — et l'on retombe sur
+   * 18/20. La cause tient en un mot : la clé. Elle valait l'identifiant
+   * de la fiche ; refermer ne fait que passer `tatoueur` à `null` (la
+   * fenêtre rend alors `null`), le composant n'est jamais démonté, et
+   * rouvrir la même fiche lui rend donc son état — l'indice de photo
+   * compris.
+   * Ce compteur entre dans la clé : chaque OUVERTURE est une fenêtre
+   * neuve, qui repart de la première photo. Deux fiches différentes
+   * changeaient déjà de clé ; c'est le cas « la même, deux fois » qui
+   * manquait.
+   * ⚠️ IL NE TOUCHE À RIEN D'AUTRE. La position dans la MOSAÏQUE vit
+   * ailleurs (`positionGrille`, capturée au clic et rendue à la
+   * fermeture) : elle continue d'être restituée exactement comme avant.
+   */
+  const [ouvertures, setOuvertures] = useState(0);
   // La position de la grille AU MOMENT DU CLIC : c'est elle que la
   // fenêtre fige puis restitue. Capturée ici, AVANT le pushState —
   // après lui, le routeur peut déplacer brièvement le défilement.
@@ -204,6 +223,9 @@ export function GrilleTatoueurs({
       // complète, comme avant — jamais bloquant.
     }
     setPositionGrille(window.scrollY);
+    //  Une ouverture de plus : la fenêtre qui suit est une fenêtre
+    //  NEUVE (voir la clé plus bas).
+    setOuvertures((n) => n + 1);
     // Le drapeau AVANT le pushState : DefilementEnHaut le lit au
     // moment où l'adresse change.
     document.documentElement.setAttribute("data-fenetre-fiche", "1");
@@ -389,10 +411,11 @@ export function GrilleTatoueurs({
         ))}
       </div>
 
-      {/* `key` : chaque ouverture repart de la photo du style cherché,
-          jamais de l'état d'une fiche précédente. */}
+      {/* `key` : CHAQUE OUVERTURE repart de la photo du style cherché,
+          jamais de l'état d'une fenêtre précédente — y compris quand
+          c'est la MÊME fiche qu'on rouvre (nº 220-§3). */}
       <FenetreFiche
-        key={ficheOuverte?.id ?? "fermee"}
+        key={`${ficheOuverte?.id ?? "fermee"}-${ouvertures}`}
         tatoueur={visible ? ficheOuverte : null}
         styleRecherche={styleRecherche}
         renduRecherche={renduRecherche}

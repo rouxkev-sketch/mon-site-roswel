@@ -21,6 +21,7 @@ import { EnTeteTatouage } from "@/components/EnTeteTatouage";
 import { FicheTatoueur } from "@/components/FicheTatoueur";
 import { JsonLd } from "@/components/JsonLd";
 import { RetourFenetreFiche } from "@/components/RetourFenetreFiche";
+import { CompteurConsultation } from "@/components/CompteurConsultation";
 
 /**
  * LA FICHE D'UN TATOUEUR — une page par tatoueur
@@ -171,6 +172,12 @@ export default async function PageFicheTatoueur({
           grille et la fenêtre s'y rouvre — recherche et position
           retrouvées (voir GrilleTatoueurs). */}
       <RetourFenetreFiche slug={tatoueur.slug} />
+      {/* LA CONSULTATION EST COMPTÉE ICI (nº 220-§1) — et plus
+          seulement au clic sur une carte : un lien partagé, « Ma
+          sélection » ou une adresse tapée à la main comptent
+          désormais. La base dédoublonne par visiteur, par fiche et par
+          jour : aucun double comptage possible. */}
+      <CompteurConsultation slug={tatoueur.slug} />
       <FicheTatoueur
         studioCourant={studio ?? null}
         tatoueur={tatoueur}
