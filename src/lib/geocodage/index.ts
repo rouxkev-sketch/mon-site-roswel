@@ -1,4 +1,4 @@
-import { chercherChezPhoton } from "@/lib/geocodage/photon";
+import { chercherChezNous } from "@/lib/geocodage/notre-serveur";
 import type {
   FournisseurGeocodage,
   LieuTrouve,
@@ -33,8 +33,16 @@ export type {
  * panne, et le champ affiche un message clair.
  */
 
-/** Le fournisseur en service. Une ligne à changer, rien d'autre. */
-const FOURNISSEUR: FournisseurGeocodage = chercherChezPhoton;
+/**
+ * Le fournisseur en service. Une ligne à changer, rien d'autre — et
+ * c'est ce qu'a fait la nº 228-§1 : le navigateur n'appelle plus
+ * Photon directement (un domaine tiers que n'importe quel bloqueur,
+ * protection anti-pistage ou réseau d'entreprise peut couper, ce qui
+ * rendait le moteur muet), mais NOTRE route `/api/lieux`. C'est le
+ * SERVEUR qui parle à Photon désormais — et qui sert nos propres
+ * villes quand Photon ne répond pas.
+ */
+const FOURNISSEUR: FournisseurGeocodage = chercherChezNous;
 
 /** Sous ce nombre de caractères, aucune requête n'est envoyée. */
 export const SAISIE_MINIMUM = 3;

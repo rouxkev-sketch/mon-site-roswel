@@ -1,5 +1,4 @@
 import { libelleTypeFiche } from "@/config/tatouage";
-import { sousTitreArtiste } from "@/lib/modes-exercice";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
@@ -21,16 +20,22 @@ import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
  * CE QUI S'ÉCRIT SOUS LE NOM.
- * · ARTISTE → UN SEUL LIEU, UN SEUL RÔLE (nº 222-§1f) : « En salon ·
- *   Résident », « En studio · Fondateur », « À domicile ». La règle
- *   vit dans `sousTitreArtiste` — l'inventaire de tous les profils,
- *   lui, a sa place plus bas dans la fiche.
+ * · ARTISTE → UN SEUL MOT : « Artiste » (nº 228-§2). Ni lieu, ni
+ *   rôle à cet endroit — ils sont DESCENDUS dans le bloc des lieux,
+ *   devant chaque adresse (« En salon · RÉSIDENT : Rue des Verriers ·
+ *   Lyon, France »), là où ils désignent quelque chose de précis. Sous
+ *   le nom, ils répétaient une information que la fiche donne mieux
+ *   plus bas.
  * · SALON / STUDIO → « Salon » ou « Studio », quel que soit le nombre
  *   d'adresses : elles se lisent dans le bloc qui leur est réservé.
  */
 export function sousLeNom(tatoueur: Tatoueur): string {
   if (tatoueur.type_fiche === "artiste") {
-    return sousTitreArtiste(tatoueur.modes);
+    //  ⚠️ `sousTitreArtiste` n'est plus appelée ICI, et c'est le §2 :
+    //  elle reste écrite dans lib/modes-exercice (l'espace tatoueur
+    //  s'en sert pour son aperçu de profil), mais la FICHE PUBLIQUE
+    //  ne montre plus que le mot.
+    return libelleTypeFiche("artiste", tatoueur.etablissement);
   }
   return libelleTypeFiche(tatoueur.type_fiche, tatoueur.etablissement);
 }

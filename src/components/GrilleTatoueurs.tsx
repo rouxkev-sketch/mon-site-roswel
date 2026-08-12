@@ -482,9 +482,38 @@ export function GrilleTatoueurs({
          * quelques pixels après chaque « Voir plus ». On le lui
          * retire : ici, la page ne doit pas bouger d'un pixel.
          */
+        /**
+         * ⚠️ `minmax(0, 1fr)`, ET SURTOUT PAS `1fr` (passe nº 228-§3)
+         * ------------------------------------------------------------
+         * LE DÉFAUT MESURÉ : à 390 px en pleine largeur, la page
+         * faisait 461 px de large et glissait vers la droite.
+         * LA CHAÎNE, relevée nœud par nœud :
+         *  1. une carte hors champ porte `content-visibility: auto` et
+         *     `contain-intrinsic-size: auto 460px` (nº 224-§4, la
+         *     correction mémoire — elle reste, elle est juste) ;
+         *  2. cette taille intrinsèque est écrite en UNE valeur : elle
+         *     vaut donc pour LES DEUX AXES. La carte hors champ
+         *     annonce 460 px de LARGE autant que de haut ;
+         *  3. `1fr` veut dire `minmax(auto, 1fr)` : le minimum
+         *     automatique d'un élément de grille prend cette largeur
+         *     annoncée. La piste calculée valait « 460px » — mesuré
+         *     dans `getComputedStyle`, pas déduit ;
+         *  4. document 461 px pour une fenêtre de 390 : 71 px de trop.
+         * `minmax(0, 1fr)` interdit ce minimum : la piste vaut la
+         * largeur disponible, la carte est stretchée à 390, et sa
+         * hauteur mémorisée continue de réserver la place (le §3 de la
+         * nº 226 — la page ne bouge pas d'un pixel — est intact).
+         * ⚠️ C'EST CE QU'ÉCRIVENT DÉJÀ TOUTES LES AUTRES PISTES : les
+         * classes `grid-cols-2 … 3xl:grid-cols-6` compilent en
+         * `repeat(N, minmax(0, 1fr))`. Seule cette colonne unique,
+         * posée en style en ligne, disait `1fr` — c'est pourquoi le
+         * défaut ne se voyait QU'EN PLEINE LARGEUR.
+         * ⚠️ AUCUN `overflow-x: hidden` NULLE PART : on ne cache pas un
+         * débordement, on retire ce qui déborde.
+         */
         style={{
           ...(disposition === "une"
-            ? { gridTemplateColumns: "1fr" }
+            ? { gridTemplateColumns: "minmax(0, 1fr)" }
             : {}),
           overflowAnchor: "none",
         }}

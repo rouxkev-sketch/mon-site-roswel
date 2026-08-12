@@ -525,9 +525,12 @@ export function ContenuFiche({
               <h1 className="line-clamp-2 text-[20px] lg:text-[22px] font-bold tracking-tight text-sombre-texte leading-[1.25]">
                 {tatoueur.nom}
               </h1>
-              {/*  LE SOUS-TITRE — UN LIEU, UN RÔLE, RIEN D'AUTRE
-                   (nº 222-§1f) : « EN SALON · RÉSIDENT ». La règle vit
-                   dans `sousTitreArtiste` (lib/modes-exercice). */}
+              {/*  LE SOUS-TITRE — UN SEUL MOT (nº 228-§2) :
+                   « ARTISTE », « SALON » ou « STUDIO ». Le lieu et le
+                   rôle qui vivaient ici sont descendus dans le bloc
+                   des lieux, devant chaque adresse — la règle vit dans
+                   `sousLeNom` (BlocsFiche) et `etiquetteDuMode`
+                   (BlocLieux). */}
               <p className="mt-2 text-[12px] font-semibold uppercase tracking-[0.12em] text-sombre-texte-doux">
                 {sousLeNom(tatoueur)}
               </p>

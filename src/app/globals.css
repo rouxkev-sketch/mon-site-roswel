@@ -112,8 +112,20 @@ html {
 body {
   color: var(--rw-encre);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
-  /* Évite les surprises de zoom/défilement horizontal sur mobile */
-  overflow-x: hidden;
+  /* ⚠️ `overflow-x: hidden` A ÉTÉ RETIRÉ D'ICI (passe nº 228-§3), et
+     il ne doit JAMAIS revenir.
+     ------------------------------------------------------------------
+     Il était posé « pour éviter les surprises de défilement horizontal
+     sur mobile ». C'était un MASQUE : il ne retire pas ce qui déborde,
+     il coupe la vue dessus — et sur iOS il ne la coupe même pas
+     toujours, d'où la page qui glissait quand même vers la droite.
+     Surtout, il rendait tout débordement futur invisible à l'œil ET au
+     banc : le document mesurait 461 px pour une fenêtre de 390 sans
+     que rien ne le signale.
+     La cause réelle est traitée à sa source (voir GrilleTatoueurs : la
+     colonne unique passe de `1fr` à `minmax(0, 1fr)`), et le banc de
+     la nº 228 vérifie désormais `scrollWidth === clientWidth` — un
+     contrôle qui ne veut plus rien dire si on remet ce masque. */
   -webkit-tap-highlight-color: transparent;
 }
 

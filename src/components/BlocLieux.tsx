@@ -25,7 +25,7 @@ import {
   type StudioFiche,
 } from "@/lib/modes-exercice";
 import { ligneFiche, ligneMaps, type LieuAffichable } from "@/lib/adresse";
-import { genreMode, libelleTypeFiche } from "@/config/tatouage";
+import { genreMode, libelleRoleCourt, libelleTypeFiche } from "@/config/tatouage";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
@@ -705,11 +705,24 @@ export function BlocAdressesFiche({
  * §5 — LES PROFILS D'UN ARTISTE
  * ================================================================== */
 
-/** L'étiquette d'un profil — « À domicile », « En studio », « En
-    salon », « Guest » : les libellés de `GENRES_MODE`, jamais d'autres
-    mots. */
+/**
+ * L'ÉTIQUETTE GRISE D'UN PROFIL (nº 228-§2) — « En salon · RÉSIDENT : »
+ * ==================================================================
+ * Le genre vient de `GENRES_MODE` (« À domicile », « En studio »,
+ * « En salon », « Guest »), jamais d'autres mots ; LE RÔLE le suit,
+ * EN CAPITALES, séparé d'un point médian. C'est le rôle qui vivait
+ * sous le nom jusqu'à la nº 222 : il descend ici, devant l'adresse,
+ * où il désigne enfin quelque chose de précis.
+ *
+ * « Guest » ne redouble pas : son genre EST son rôle, on n'écrit pas
+ * « Guest · GUEST ». Un profil sans rôle enregistré garde son genre
+ * seul (« À domicile : ») — jamais de rôle inventé.
+ */
 function etiquetteDuMode(mode: ModeExerciceFiche): string {
-  return `${genreMode(mode.genre).label} :`;
+  const genre = genreMode(mode.genre).label;
+  const role =
+    mode.genre === "guest" ? "" : libelleRoleCourt(mode.role).toUpperCase();
+  return role ? `${genre} · ${role} :` : `${genre} :`;
 }
 
 /**
