@@ -1,6 +1,6 @@
 # Dans quel ordre passer les migrations
 
-Les 64 fichiers de ce dossier se passent **dans cet ordre**, de haut en
+Les 65 fichiers de ce dossier se passent **dans cet ordre**, de haut en
 bas. L'ordre n'est pas deviné : il est écrit dans les en-têtes des
 fichiers eux-mêmes (« à passer APRÈS … »), et il a été **vérifié en
 rejouant les fichiers sur une base PostgreSQL vierge**, chacun DEUX
@@ -99,6 +99,7 @@ repasse.
 | 62 | `yokofolio-popularite-classement.sql` | 1 vue, 1 fonction refaite, 2 index (**les portfolios les plus appréciés remontent** — score calculé sur tout le catalogue AVANT la coupe) |
 | 63 | `yokofolio-classement-avant-la-coupe.sql` | 1 fonction refaite (**corrige la nº 62** : le score manquait dans l'`order by` que suit le `limit` — la première page ne contenait pas les plus populaires) |
 | 64 | `yokofolio-popularite-lisible.sql` | 1 vue refaite (**corrige la nº 62** : la vue lisait avec les droits du lecteur — cœurs et abonnés valaient zéro pour tout le monde) |
+| 65 | `yokofolio-equipe-avec-role.sql` | 1 vue refaite (une colonne de plus : le **rôle** de chaque membre d'équipe — fondateur ou résident) |
 
 ## Ce que chaque fichier apporte
 
@@ -166,6 +167,7 @@ repasse.
 62. **`yokofolio-popularite-classement.sql`** — Les portfolios les plus appréciés remontent (⚠️ **à passer APRÈS la nº 61**, dont elle reprend le corps). Elle crée la vue `popularite_tatoueurs` — le score d'un portfolio, défini UNE seule fois : `consultations + 3 × cœurs + 8 × abonnés` — et l'intègre au `row_number()` de la recherche, c'est-à-dire **sur tout le catalogue filtré, avant le `limit`/`offset`**. Deux fiches de même score gardent le tirage du jour, donc l'ordre reste stable de page en page. La même vue est lue par le chemin de repli JavaScript : un seul classement, deux lecteurs.
 63. **`yokofolio-classement-avant-la-coupe.sql`** — Le classement s'applique vraiment avant la coupe (⚠️ **corrige la nº 62**, à passer après elle). La fonction contient DEUX `order by` sur la même sous-requête : celui du `row_number()`, qui numérote, et celui que suivent le `limit`/`offset`, qui CHOISIT les lignes rendues. La nº 62 n'avait ajouté le score qu'au premier : la page était donc choisie par le seul tirage du jour, puis reclassée entre ses seules lignes — les portfolios les plus populaires n'arrivaient en tête qu'une fois tout le catalogue chargé. Les deux listes de tri sont désormais identiques, terme pour terme.
 64. **`yokofolio-popularite-lisible.sql`** — Le score était à zéro pour tout le monde (⚠️ **corrige la nº 62**, à passer après elle et après la nº 63). La vue `popularite_tatoueurs` avait été créée en `security_invoker = true` : elle lisait `favoris_photos` et `tatoueurs_suivis` avec les droits du LECTEUR, or ces deux tables ne laissent voir à chacun que ses propres lignes — `coeurs` et `abonnes` valaient donc zéro pour tout le monde, et le score se réduisait au seul nombre de consultations. La vue redevient une vue ordinaire (droits de son propriétaire) ; elle ne rend toujours que des NOMBRES, jamais une ligne ni un identifiant de compte, et les politiques des tables ne sont pas touchées.
+65. **`yokofolio-equipe-avec-role.sql`** — L'équipe d'un lieu dit le rôle de chacun. La vue `equipe_salon` ne rendait que le GENRE du mode (« salon » ou « guest ») : impossible de distinguer un fondateur d'un résident, alors que `modes_exercice.role` le porte depuis la nº 21. Une colonne de plus, aucune condition changée — les mêmes membres, dans les mêmes cas. Le site sait lire la vue sans elle (il lit alors « résident » partout) : ce n'est pas un préalable, c'est une précision.
 
 ---
 

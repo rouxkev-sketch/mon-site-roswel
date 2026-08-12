@@ -1,5 +1,6 @@
 import {
   genreMode,
+  libelleRoleCourt,
   libelleRoleStudio,
   type GenreMode,
   type RoleStudio,
@@ -115,6 +116,11 @@ export type MembreEquipe = {
   photo: string | null;
   /** « salon » = résident ; « guest » = invité, avec ses dates. */
   genre: GenreMode;
+  /** FONDATEUR OU RÉSIDENT (nº 222-§4) — recopié du mode d'exercice
+      qui porte la liaison. `null` quand la liaison n'en pend à aucun
+      (une invitation partie DU SALON) : c'est alors un résident, par
+      construction — voir `roleDuMembre`. */
+  role?: RoleStudio | null;
   debut_le: string | null;
   fin_le: string | null;
 };
@@ -177,6 +183,10 @@ export function membreDepuisVue(ligne: {
   artiste_slug: string | null;
   artiste_photo: string | null;
   genre: string | null;
+  /** ⚠️ FACULTATIF : la vue ne le rend que depuis la migration nº 65.
+      Sans lui, `roleDuMembre` répond « résident », qui est la valeur
+      d'une liaison sans mode — jamais un fondateur inventé. */
+  role?: string | null;
   debut_le: string | null;
   fin_le: string | null;
 }): MembreEquipe {
@@ -186,9 +196,47 @@ export function membreDepuisVue(ligne: {
     slug: ligne.artiste_slug,
     photo: ligne.artiste_photo,
     genre: ligne.genre === "guest" ? "guest" : "salon",
+    role: ligne.role === "fondateur" ? "fondateur" : "resident",
     debut_le: ligne.debut_le,
     fin_le: ligne.fin_le,
   };
+}
+
+/**
+ * LE RÔLE D'UN MEMBRE, EN UN MOT — « Fondateur », « Résident »,
+ * « Guest » (nº 222-§4).
+ * Un invité est un invité : son rôle dans le lieu est sa session, pas
+ * une place. Les autres portent celui de leur mode d'exercice, et à
+ * défaut « Résident » — une liaison partie du salon ne pend à aucun
+ * mode, donc à aucun rôle, et c'est bien un résident.
+ */
+export function roleDuMembre(membre: MembreEquipe): string {
+  if (membre.genre === "guest") return "Guest";
+  return libelleRoleCourt(membre.role) || libelleRoleCourt("resident");
+}
+
+/**
+ * L'ÉQUIPE DANS SON ORDRE (nº 222-§4) : tous les fondateurs, puis tous
+ * les résidents, puis les guests — ceux-ci du plus proche au plus
+ * lointain, par date de début. Un ordre imposé, écrit une seule fois :
+ * la page et la fenêtre superposée le lisent toutes les deux.
+ */
+export function equipeOrdonnee(
+  equipe: MembreEquipe[] | null | undefined
+): MembreEquipe[] {
+  const rang = (membre: MembreEquipe) =>
+    membre.genre === "guest" ? 2 : membre.role === "fondateur" ? 0 : 1;
+  return membresActifs(equipe)
+    .slice()
+    .sort((a, b) => {
+      const ecart = rang(a) - rang(b);
+      if (ecart !== 0) return ecart;
+      if (rang(a) === 2) {
+        //  Les guests : la session la plus proche d'abord.
+        return (a.debut_le ?? "").localeCompare(b.debut_le ?? "");
+      }
+      return a.nom.localeCompare(b.nom, "fr");
+    });
 }
 
 /** LES MEMBRES D'ÉQUIPE ENCORE VALABLES — même règle, côté salon. */
@@ -205,6 +253,29 @@ export function dateCourte(iso: string | null): string {
   if (!iso) return "";
   const [, mois, jour] = iso.split("-");
   return mois && jour ? `${jour}/${mois}` : iso;
+}
+
+/**
+ * « 18 septembre 2026 » — la date en toutes lettres (nº 222-§4/§5).
+ * Les deux bornes d'une session guest s'écrivent ainsi, sur deux
+ * lignes : c'est un engagement de plusieurs semaines, pas un horaire.
+ * Rendu SANS `Intl` sur un objet Date construit à la volée : la chaîne
+ * « AAAA-MM-JJ » est déjà une date civile, sans fuseau — la relire
+ * comme un instant la décalerait d'un jour selon l'endroit du monde.
+ */
+const MOIS_EN_TOUTES_LETTRES = [
+  "janvier", "février", "mars", "avril", "mai", "juin",
+  "juillet", "août", "septembre", "octobre", "novembre", "décembre",
+];
+
+export function dateLongue(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const [annee, mois, jour] = iso.split("-");
+  const nom = MOIS_EN_TOUTES_LETTRES[Number(mois) - 1];
+  if (!annee || !nom || !jour) return iso;
+  //  « 1er septembre », comme on l'écrit en français.
+  const quantieme = Number(jour) === 1 ? "1er" : String(Number(jour));
+  return `${quantieme} ${nom} ${annee}`;
 }
 
 /** « (du 01/09 au 15/09) » — la parenthèse d'une session guest. */
@@ -345,6 +416,69 @@ export function ligneDuMode(mode: ModeExerciceFiche): {
     nomSalon: null,
     apres: queue ? ` ${queue}` : "",
   };
+}
+
+/**
+ * L'ORDRE IMPOSÉ DES PROFILS (passe nº 222-§1g)
+ * ==================================================================
+ * 1. À domicile   2. En studio   3. En salon   4. Guest
+ * Il vaut PARTOUT où plusieurs profils se suivent : le sous-titre du
+ * nom, la liste des profils d'un artiste, et tout ce qui viendra. Un
+ * ordre écrit une seule fois ne peut pas diverger d'un écran à
+ * l'autre. (Les slugs de genre ne sont pas les libellés : `prive`
+ * s'affiche « En studio », `salon` s'affiche « En salon ».)
+ */
+const RANG_DU_GENRE: Record<string, number> = {
+  domicile: 0,
+  prive: 1,
+  salon: 2,
+  guest: 3,
+};
+
+export function modesOrdonnes(
+  modes: ModeExerciceFiche[] | null | undefined
+): ModeExerciceFiche[] {
+  return modesActifs(modes)
+    .slice()
+    .sort((a, b) => {
+      const ecart = (RANG_DU_GENRE[a.genre] ?? 9) - (RANG_DU_GENRE[b.genre] ?? 9);
+      if (ecart !== 0) return ecart;
+      //  Deux sessions guest : la plus proche d'abord.
+      if (a.genre === "guest" && b.genre === "guest") {
+        return (a.debut_le ?? "").localeCompare(b.debut_le ?? "");
+      }
+      return a.ordre - b.ordre;
+    });
+}
+
+/**
+ * CE QUI S'ÉCRIT SOUS LE NOM D'UN ARTISTE (passe nº 222-§1f)
+ * ==================================================================
+ * UN SEUL LIEU, UN SEUL RÔLE, RIEN D'AUTRE :
+ *   « En salon · Résident », « En studio · Fondateur », « À domicile ».
+ *
+ * ⚠️ CE QUI EST SUPPRIMÉ, ET POURQUOI. On énumérait TOUS les genres
+ * déclarés, séparés par des barres obliques — un artiste résident en
+ * salon qui reçoit aussi chez lui affichait « En salon · Artiste
+ * résident / À domicile ». Deux défauts en une ligne : un sous-titre
+ * n'est pas un inventaire (la liste complète des profils est plus bas,
+ * c'est sa place), et le rôle y était écrit dans sa forme longue, qui
+ * répète le lieu qu'on vient de nommer.
+ *
+ * LEQUEL DES PROFILS ? Celui qui porte un RÔLE — c'est le seul qui
+ * dise une place tenue quelque part. À défaut, le premier dans l'ordre
+ * imposé. Sans aucun profil : « Artiste », comme avant (une fiche
+ * neuve ne montre pas un vide sous son nom).
+ */
+export function sousTitreArtiste(
+  modes: ModeExerciceFiche[] | null | undefined
+): string {
+  const ordonnes = modesOrdonnes(modes);
+  if (ordonnes.length === 0) return "Artiste";
+  const principal = ordonnes.find((mode) => mode.role) ?? ordonnes[0];
+  const lieu = genreMode(principal.genre).label;
+  const role = libelleRoleCourt(principal.role);
+  return role ? `${lieu} · ${role}` : lieu;
 }
 
 /**

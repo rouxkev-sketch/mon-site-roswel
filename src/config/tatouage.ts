@@ -1016,6 +1016,19 @@ export function libelleRoleStudio(slug: string | null | undefined): string {
 }
 
 /**
+ * LE RÔLE EN UN SEUL MOT — « Fondateur », « Résident » (nº 222-§1f).
+ * ⚠️ CE N'EST PAS `libelleRoleStudio`, qui rend la forme longue
+ * (« Artiste résident », « Fondateur du salon »). Sous un nom de
+ * profil, le lieu est déjà dit juste avant : « En salon · Artiste
+ * résident » répète « salon » et allonge une étiquette qui doit tenir
+ * en deux mots. C'est `choix` — le mot du formulaire — qui sert ici,
+ * et à la fiche comme au formulaire on lit donc le même mot.
+ */
+export function libelleRoleCourt(slug: string | null | undefined): string {
+  return ROLES_STUDIO.find((r) => r.slug === slug)?.choix ?? "";
+}
+
+/**
  * La définition d'un genre, ou « En salon » à défaut.
  * ⚠️ LE REPLI EST NOMMÉ, PLUS POSITIONNEL (passe nº 107). Il s'écrivait
  * `GENRES_MODE[0]` : il changeait donc de sens à chaque fois que le

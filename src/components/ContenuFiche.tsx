@@ -29,15 +29,11 @@ import {
 import type { StyleGalerie } from "@/lib/photo-tatoueur";
 import { FenetreSignalement } from "@/components/FenetreSignalement";
 import { libelleDuLien } from "@/lib/liens-fiche";
-import { HorairesStudio } from "@/components/HorairesStudio";
-import { aDesHoraires } from "@/lib/horaires-studio";
+import { sousLeNom } from "@/components/BlocsFiche";
 import {
-  BlocAdresses,
-  BlocEquipe,
-  LignesModes,
-  sousLeNom,
-  studioAffiche,
-} from "@/components/BlocsFiche";
+  BlocAdressesFiche,
+  BlocProfilsArtiste,
+} from "@/components/BlocLieux";
 import { IconeWorld } from "@/components/Icones";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
@@ -185,9 +181,11 @@ export function ContenuFiche({
 
   const avatarProfil = (
     <span
+      /*  ⚠️ AUCUN CONTOUR (nº 222-§1a) : la charte de la fiche ne
+           cercle rien. La photo se détache par son fond, pas par un
+           liseré. */
       className="flex h-[92px] w-[92px] shrink-0 items-center justify-center
-                 overflow-hidden rounded-full border border-sombre-bordure
-                 bg-sombre-eleve"
+                 overflow-hidden rounded-full bg-sombre-eleve"
     >
       {tatoueur.photo_profil ? (
         /* eslint-disable-next-line @next/next/no-img-element --
@@ -217,98 +215,89 @@ export function ContenuFiche({
     </p>
   );
 
-  /** L'icône RONDE officielle d'un réseau — fichier du propriétaire,
-      affiché tel quel, détouré d'un FIN CERCLE BLANC sur les DEUX
-      réseaux (Instagram aussi est sombre sur notre fond). 44 px :
-      c'est elle qui donne sa présence au bouton-phare. */
-  const iconeReseau = (reseau: "instagram" | "tiktok" | "youtube") => (
+  /**
+   * §2 (nº 222) — LES LIENS, SOUS LA PHOTO
+   * ==================================================================
+   * UNE SEULE FAMILLE, UNE SEULE FORME : les liens libres que
+   * l'artiste a créés (son site, sa page de liens), puis Instagram et
+   * TikTok. Chacun porte SON ICÔNE À GAUCHE, toutes de la même taille,
+   * et le bloc commence par une colonne d'icônes — quel que soit le
+   * nombre de rangées.
+   *
+   * ⚠️ LES DEUX BADGES-PHARES ONT DISPARU. Instagram et TikTok
+   * vivaient dans deux capsules de 68 px, cerclées de rose, avec un
+   * halo : trois choses que la charte de cette passe interdit
+   * désormais (aucun contour, le rose réservé au badge sélectionné, au
+   * bouton d'action finale et à la ligne du sélecteur actif). Ce sont
+   * des liens, ils se lisent comme les autres.
+   *
+   * ILS SE REGROUPENT : un seul lien libre et Instagram tiennent sur
+   * une ligne — `flex-wrap` ne laisse aucune ligne à moitié vide.
+   */
+  const lienEnLigne = (
+    cle: string,
+    href: string,
+    libelle: string,
+    icone: React.ReactNode
+  ) => (
+    <a
+      key={cle}
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-2.5 text-[15px] leading-snug
+                 text-sombre-texte-doux transition-colors hover:text-primaire"
+    >
+      <span className="flex h-[18px] w-[18px] shrink-0 items-center justify-center">
+        {icone}
+      </span>
+      <span className="min-w-0 truncate">{libelle}</span>
+    </a>
+  );
+
+  /** L'icône ronde officielle d'un réseau, à la taille des autres :
+      un lien ne se distingue pas d'un autre par la taille de son
+      icône. */
+  const iconeReseau = (reseau: "instagram" | "tiktok") => (
     /* eslint-disable-next-line @next/next/no-img-element --
        icône officielle déposée par le propriétaire, affichée telle
        quelle. */
     <img
       src={ICONES_RESEAUX[reseau]}
       alt=""
-      width={44}
-      height={44}
-      className="w-11 h-11 shrink-0 rounded-full ring-1 ring-white/25"
+      width={18}
+      height={18}
+      className="h-[18px] w-[18px] rounded-full"
     />
   );
 
-  /** INSTAGRAM ET TIKTOK — LES DEUX BOUTONS-PHARES DE LA FICHE.
-      C'est LA visite qu'on veut déclencher : le portfolio entier vit
-      sur ces comptes. Alors ils se détachent de tout le reste :
-      SEULS éléments de la fiche au liseré ROSE et au léger halo —
-      l'œil va droit sur eux, sans criard.
-
-      LA GÉOMÉTRIE, REPRISE À ZÉRO — trois colonnes, pas deux.
-      Le texte était centré dans LA PLACE QUI RESTAIT à droite de
-      l'icône, et le badge n'avait aucune marge à droite : le libellé
-      tombait donc trop à droite, et il frôlait le bord. Désormais une
-      grille `44px | 1fr | 44px` : l'icône occupe la colonne de
-      gauche, une colonne FANTÔME de même largeur lui répond à droite,
-      et le texte vit dans la colonne du milieu — donc EXACTEMENT au
-      centre du badge, quel que soit le libellé. Les marges se
-      déduisent : 16 px de chaque côté (px-4), 12 px entre les
-      colonnes (gap-3), soit 72 px avant et après la zone de texte.
-      Hauteur portée à 68 px : ce sont les boutons les plus importants
-      de la fiche, ils en ont la présence. */
-  const badgeReseau = (reseau: "instagram" | "tiktok" | "youtube") => {
-    const lien =
-      reseau === "instagram"
-        ? tatoueur.lien_instagram
-        : reseau === "tiktok"
-          ? tatoueur.lien_tiktok
-          : tatoueur.lien_youtube;
-    if (!lien) return null;
-    const nomReseau =
-      reseau === "instagram"
-        ? "Instagram"
-        : reseau === "tiktok"
-          ? "TikTok"
-          : "YouTube";
-    return (
-      <a
-        href={lien}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label={`${nomReseau} de ${tatoueur.nom} (nouvel onglet)`}
-        className="grid w-full h-[68px] grid-cols-[44px_1fr_44px] items-center gap-3
-                   rounded-2xl px-4
-                   border border-primaire/40 bg-sombre-eleve
-                   shadow-[0_10px_32px_rgba(238,61,111,0.10)]
-                   transition-[border-color,background-color,box-shadow]
-                   hover:border-primaire hover:bg-primaire/10
-                   hover:shadow-[0_12px_36px_rgba(238,61,111,0.22)]
-                   active:bg-primaire/15"
-      >
-        {iconeReseau(reseau)}
-        <span className="min-w-0 truncate text-center text-[16px] font-semibold text-sombre-texte">
-          Voir son {nomReseau}
-        </span>
-        {/* LA COLONNE FANTÔME — elle ne montre rien, elle ÉQUILIBRE :
-            sans elle, le texte ne peut pas être au centre du badge. */}
-        <span aria-hidden="true" />
-      </a>
-    );
-  };
-
-  /** L'adresse et le site — chacun SA ligne, à la taille de la bio,
-      dans le GRIS DOUX des titres de sections (« Styles ») : texte et
-      icône d'une seule voix. Les icônes du propriétaire (adresse.png /
-      site.png, des glyphes noirs) passent en clair par `invert`, et
-      l'opacité les cale sur ce même gris. */
-  const iconeInfo = (fichier: string) => (
-    /* eslint-disable-next-line @next/next/no-img-element --
-       icône déposée par le propriétaire, affichée telle quelle (le
-       filtre CSS ne modifie pas le fichier). */
-    <img
-      src={fichier}
-      alt=""
-      width={16}
-      height={16}
-      className="w-4 h-4 shrink-0 invert opacity-60"
-    />
-  );
+  /** LES LIENS, DANS L'ORDRE : les libres d'abord, les réseaux
+      ensuite. Un lien absent n'occupe aucune place. */
+  const liens = [
+    tatoueur.site_web &&
+      lienEnLigne(
+        "site",
+        tatoueur.site_web,
+        tatoueur.titre_site_web || libelleDuLien(tatoueur.site_web),
+        <IconeWorld taille={18} />
+      ),
+    tatoueur.page_de_liens &&
+      lienEnLigne(
+        "liens",
+        tatoueur.page_de_liens,
+        tatoueur.titre_page_de_liens || libelleDuLien(tatoueur.page_de_liens),
+        <IconeWorld taille={18} />
+      ),
+    tatoueur.lien_instagram &&
+      lienEnLigne(
+        "instagram",
+        tatoueur.lien_instagram,
+        "Instagram",
+        iconeReseau("instagram")
+      ),
+    tatoueur.lien_tiktok &&
+      lienEnLigne("tiktok", tatoueur.lien_tiktok, "TikTok", iconeReseau("tiktok")),
+  ].filter(Boolean);
 
   /** LES TROIS SECTIONS DE BADGES — Styles, Technique, Composition.
       UN SEUL format ET UNE SEULE couleur de badge partout : les styles
@@ -320,11 +309,15 @@ export function ContenuFiche({
     versPages?: boolean;
   }> = [
     { titre: "Styles", slugs: tatoueur.styles, versPages: true },
-    { titre: "Technique", slugs: tatoueur.filtres_technique ?? [] },
+    //  ⚠️ LES TITRES SONT CEUX DU PROPRIÉTAIRE (nº 222-§6) :
+    //  « Techniques maîtrisées », « Types de projets », « Besoins
+    //  particuliers ». « Technique » et « Besoins » disaient la
+    //  catégorie du formulaire, pas ce que le visiteur lit.
+    { titre: "Techniques maîtrisées", slugs: tatoueur.filtres_technique ?? [] },
     { titre: "Types de projets", slugs: tatoueur.filtres_composition ?? [] },
     // LES BESOINS — au même format que les deux autres : ce ne
     // sont pas des goûts, mais ils se lisent au même endroit.
-    { titre: "Besoins", slugs: tatoueur.filtres_besoins ?? [] },
+    { titre: "Besoins particuliers", slugs: tatoueur.filtres_besoins ?? [] },
     // LE RENDU — le seul groupe que PERSONNE n'a coché : il se DÉDUIT
     // des tags des photos déposées (voir rendusDuPortfolio), tout
     // comme le filtre du moteur le lit. Un portfolio entièrement en
@@ -342,9 +335,19 @@ export function ContenuFiche({
       un trait suspendu au milieu de rien. Elle ressort maintenant de
       ces marges (`-mx-4`) et les rend à son contenu (`px-4`) : le
       trait traverse, le texte ne bouge pas d'un pixel. */
-  /** LE STUDIO DONT ON LIT LES HORAIRES — le même que celui dont on
-      lit l'adresse (voir `studioAffiche`). */
-  const studioDesHoraires = studioAffiche(tatoueur, studioCourant);
+  /** DEUX ADRESSES OU PLUS ? Le sélecteur « Adresse / Autre adresse »
+      s'affiche alors, et il REMPLACE la ligne de séparation — deux
+      traits l'un sur l'autre feraient un cadre. La règle est écrite
+      ici parce que c'est l'enveloppe qui sépare ses sections. */
+  const aPlusieursAdresses =
+    tatoueur.type_fiche !== "artiste" && (tatoueur.studios ?? []).length > 1;
+
+  /** LE PREMIER GROUPE DE BADGES REMPLI — le seul à porter une ligne
+      de séparation (nº 222-§6) : les suivants ne se distinguent plus
+      que par l'espacement et la typographie. */
+  const premierGroupeRempli = groupesBadges.findIndex(
+    (groupe) => groupe.slugs.length > 0
+  );
 
   const separation =
     "border-t border-sombre-bordure/60 mobile:-mx-4 mobile:px-4";
@@ -418,230 +421,144 @@ export function ContenuFiche({
 
       {onglet === "profil" && (
         <>
-          {/* 1. L'IDENTITÉ — LE NOM D'ABORD, sa nature ensuite.
-              C'est l'ordre de lecture des bonnes pages de profil : on
-              lit un NOM, puis on apprend ce qu'il est. Le nom revient
-              donc AU-DESSUS, à une taille de titre de profil — plus
-              de bandeau publicitaire : 1,45 rem à 1,75 rem, resserré,
-              sur une interligne courte. Sous lui, « ARTISTE » ou
-              « SALON » en capitales minuscules et espacées : une
-              étiquette, pas un titre. */}
-          <div className="flex items-center gap-5">
+          {/* ==========================================================
+              §1 — L'IDENTITÉ
+              ==========================================================
+              ⚠️ `items-start`, ET C'EST LA RÈGLE DE MISE EN PAGE
+              (nº 222-§1e) : le haut du nom ne dépasse JAMAIS le haut de
+              la photo. Le bloc était centré verticalement — un nom sur
+              deux lignes remontait donc AU-DESSUS d'elle. Calé en haut,
+              il commence à sa hauteur et se prolonge SOUS elle s'il est
+              long, en gardant son alignement sur le bord gauche DU
+              TEXTE (sa colonne), jamais sur celui de la photo.
+              ⚠️ ET UNE MARGE AU-DESSUS (nº 222-§1b) : la photo touchait
+              la rangée Profil / Portfolio / Suivre. */}
+          <div className="mt-7 flex items-start gap-5">
             {avatarProfil}
-            <div className="min-w-0">
-              <h1 className="text-[clamp(1.45rem,2.1vw,1.75rem)] font-bold tracking-tight text-sombre-texte leading-[1.15]">
+            <div className="min-w-0 flex-1">
+              {/*  LE NOM — une taille de titre de profil, DEUX LIGNES
+                   AU PLUS, puis des points de suspension (nº 222-§1c
+                   et §1d). La passe de finition ajustera la valeur. */}
+              <h1 className="line-clamp-2 text-[clamp(1.15rem,1.6vw,1.35rem)] font-bold tracking-tight text-sombre-texte leading-[1.2]">
                 {tatoueur.nom}
               </h1>
+              {/*  LE SOUS-TITRE — UN LIEU, UN RÔLE, RIEN D'AUTRE
+                   (nº 222-§1f) : « EN SALON · RÉSIDENT ». La règle vit
+                   dans `sousTitreArtiste` (lib/modes-exercice). */}
               <p className="mt-1.5 text-[11.5px] font-semibold uppercase tracking-[0.14em] text-sombre-texte-doux">
                 {sousLeNom(tatoueur)}
               </p>
             </div>
           </div>
 
-          {/* « SUIVRE » A REJOINT LA RANGÉE DU HAUT (nº 205-§2) — à
-              droite du sélecteur Profil / Portfolio, visible quel que
-              soit l'onglet. Il n'existe plus qu'un seul exemplaire,
-              là-haut. */}
-
-          {/* 2-3. OÙ, puis LE SITE. À DROITE DE L'ICÔNE : LA
-              LOCALISATION ELLE-MÊME. Le mot « adresse » y figurait —
-              une étiquette qui répétait l'icône et volait la place de
-              l'information. C'est donc le lieu qui vient là, DANS LE
-              GRIS DE L'ICÔNE (texte et icône d'une seule voix, comme
-              la ligne du site juste dessous) et qui passe AU ROSE au
-              survol ou au toucher : la couleur ne sert plus à
-              signaler, elle sert à répondre.
-              Le MODE D'EXERCICE ne disparaît que lorsqu'il ne dit
-              rien de plus que l'adresse (le cas des salons) ; « en
-              salon », « sur zone » ou « itinérant » restent, en
-              petit, sous le lieu qu'ils qualifient.
-              Le retrait n'est plus un décalage écrit en dur : il
-              résulte de l'alignement, le texte se cale tout seul sur
-              l'icône, quelle que soit la taille de celle-ci. */}
-          <div className="mt-7 flex flex-col gap-3.5">
-            <div className="flex items-start gap-2.5">
-              {/* L'ÉPINGLE ne sert qu'aux ADRESSES : les modes
-                  d'exercice portent déjà, chacun, leur propre icône
-                  ronde — deux icônes sur la même ligne se disputent
-                  l'œil sans rien apprendre de plus. */}
-              {!(
-                tatoueur.type_fiche === "artiste" &&
-                (tatoueur.modes ?? []).length > 0
-              ) && (
-                <span className="mt-[3px] flex shrink-0">
-                  {iconeInfo("/adresse.png")}
-                </span>
-              )}
-              <div className="min-w-0 flex flex-col gap-1">
-                {/* UN ARTISTE MONTRE SES MODES D'EXERCICE — une ligne
-                    chacun, avec son icône ronde (ou le logo du salon
-                    auquel il est rattaché). UN SALON montre ses
-                    ADRESSES. C'est la même place, et deux natures
-                    d'information différentes. */}
-                {tatoueur.type_fiche === "artiste" &&
-                (tatoueur.modes ?? []).length > 0 ? (
-                  <LignesModes modes={tatoueur.modes} />
-                ) : (
-                  <BlocAdresses tatoueur={tatoueur} studioCourantId={studioCourant} />
-                )}
-              </div>
+          {/* ==========================================================
+              §2 — LES LIENS, SOUS LA PHOTO
+              ==========================================================
+              Les liens libres d'abord, les réseaux ensuite ; chacun son
+              icône à gauche, toutes de la même taille. `flex-wrap` les
+              regroupe : rien ne descend d'une ligne s'il peut monter. */}
+          {liens.length > 0 && (
+            <div className="mt-6 flex flex-wrap items-center gap-x-7 gap-y-3">
+              {liens}
             </div>
-            {tatoueur.site_web && (
-              <a
-                href={tatoueur.site_web}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex w-fit items-center gap-2.5 text-[15px] leading-snug
-                           text-sombre-texte-doux hover:text-primaire transition-colors"
-              >
-                {/* L'ICÔNE « WORLD » remplace site.png : posée en
-                    masque, à la MÊME taille (17 px), elle prend la
-                    couleur de la ligne — donc elle passe au rose avec
-                    le texte au survol, ce que l'ancienne image ne
-                    faisait pas. */}
-                <IconeWorld taille={16} />
-                {/* LE TITRE CHOISI PAR LE TATOUEUR (passe nº 116) —
-                    et, pour une fiche d'avant la migration nº 51, le
-                    libellé d'avant (service ou domaine). */}
-                {tatoueur.titre_site_web || libelleDuLien(tatoueur.site_web)}
-              </a>
-            )}
-            {/* LA PAGE DE LIENS — SA PROPRE LIGNE, SON PROPRE LIBELLÉ
-                (passe nº 102). Elle partageait le champ du site : on
-                ne pouvait montrer que l'un des deux. Elle a désormais
-                sa colonne, et elle s'affiche sous le site avec le nom
-                du service — « Linktree », « Beacons » — que
-                `libelleDuLien` lit dans l'adresse. Même icône que le
-                site : les deux mènent ailleurs, sur le web. */}
-            {tatoueur.page_de_liens && (
-              <a
-                href={tatoueur.page_de_liens}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex w-fit items-center gap-2.5 text-[15px] leading-snug
-                           text-sombre-texte-doux hover:text-primaire transition-colors"
-              >
-                <IconeWorld taille={16} />
-                {tatoueur.titre_page_de_liens ||
-                  libelleDuLien(tatoueur.page_de_liens)}
-              </a>
-            )}
-          </div>
+          )}
 
-          {/* 4. LA BIO — retours à la ligne SAISIS respectés
-              (whitespace-pre-line), mots sans espace coupés proprement
-              (overflow-wrap) : jamais de débordement. */}
+          {/* §3 — LA BIOGRAPHIE, sous les liens. Retours à la ligne
+              saisis respectés, mots sans espace coupés proprement. */}
           {tatoueur.bio && (
-            <p className="mt-6 text-[15px] leading-relaxed text-sombre-texte whitespace-pre-line [overflow-wrap:anywhere]">
+            <p className="mt-7 text-[15px] leading-relaxed text-sombre-texte whitespace-pre-line [overflow-wrap:anywhere]">
               {tatoueur.bio}
             </p>
           )}
 
-          {/* 5-6. INSTAGRAM puis TIKTOK — des badges au format des
-              sections, PLEINE LARGEUR (jusqu'à la marge droite du
-              bloc, comme la bio), l'icône ronde cerclée de blanc posée
-              avec sa marge d'air égale. */}
-          <div className="mt-8 flex flex-col gap-3">
-            {badgeReseau("instagram")}
-            {badgeReseau("tiktok")}
-            {/* ⚠️ PLUS DE BADGE YOUTUBE (passe nº 101). YouTube a
-                quitté le produit : le formulaire ne le propose plus.
-                Le publier quand même reviendrait à afficher un lien
-                que son propriétaire ne peut PLUS ni corriger ni
-                retirer — un cul-de-sac sur sa propre fiche.
-                ⚠️ LA DONNÉE N'EST PAS PERDUE : la colonne
-                `lien_youtube` garde son contenu, et le formulaire ne
-                l'écrit plus jamais. Rétablir l'affichage tiendrait en
-                une ligne, ici. */}
-          </div>
-
-
-          {/* LES HORAIRES — juste sous les réseaux, AVANT l'équipe :
-              « c'est ouvert ? » précède toujours « qui y travaille ? ».
-              Réservé aux studios : un artiste reçoit sur rendez-vous,
-              il n'a pas d'heures d'ouverture au public. */}
-          {tatoueur.type_fiche !== "artiste" &&
-            aDesHoraires(studioDesHoraires?.horaires) && (
+          {/* ==========================================================
+              §4 et §5 — OÙ TRAVAILLE CETTE FICHE
+              ==========================================================
+              UN LIEU montre ses ADRESSES (photo, adresse, horaires,
+              équipe) — avec le sélecteur « Adresse / Autre adresse »
+              quand il y en a plusieurs, et une simple ligne de
+              séparation sinon.
+              UN ARTISTE montre ses PROFILS, dans l'ordre imposé
+              (nº 222-§1g) : à domicile, en studio, en salon, guest.
+              ⚠️ LA LIGNE DE SÉPARATION EST POSÉE ICI, jamais dans le
+              bloc : c'est l'enveloppe qui sépare ses sections, et le
+              sélecteur remplace le trait quand il s'affiche. */}
+          {tatoueur.type_fiche === "artiste" ? (
             <div className={`mt-8 pt-7 ${separation}`}>
-              <HorairesStudio
-                horaires={studioDesHoraires?.horaires}
-                fuseau={studioDesHoraires?.fuseau}
-                titreClasse="text-[14px] font-semibold uppercase tracking-wide text-sombre-texte-doux"
+              <BlocProfilsArtiste tatoueur={tatoueur} />
+            </div>
+          ) : (
+            <div
+              className={
+                aPlusieursAdresses ? "mt-8" : `mt-8 pt-7 ${separation}`
+              }
+            >
+              <BlocAdressesFiche
+                tatoueur={tatoueur}
+                studioCourantId={studioCourant}
               />
             </div>
           )}
 
-          {/* L'ÉQUIPE — SOUS les adresses, et seulement pour un
-              salon : c'est la deuxième chose qu'on vient y chercher,
-              juste après « où est-ce ? ». Rien n'est stocké : les
-              avatars se déduisent des rattachements validés, et
-              disparaissent d'eux-mêmes quand un artiste passe hors
-              ligne, supprime sa fiche, ou termine sa session guest. */}
-          {(tatoueur.equipe ?? []).length > 0 && (
-            <div className={`mt-8 pt-7 ${separation}`}>
-              <BlocEquipe
-                equipe={tatoueur.equipe}
-                titreClasse="text-[14px] font-semibold uppercase tracking-wide text-sombre-texte-doux"
-              />
-            </div>
-          )}
-
-          {/* 7-9. LES TROIS SECTIONS — chacune ouverte par une ligne
-              de séparation discrète (l'apanage de cette page), un
-              titre plus affirmé, puis ses badges — tous de la même
-              robe neutre. */}
-          {groupesBadges.map(
-            (groupe) =>
-              groupe.slugs.length > 0 && (
-                <div key={groupe.titre} className={`mt-8 pt-7 ${separation}`}>
-                  <h2 className="text-[14px] font-semibold uppercase tracking-wide text-sombre-texte-doux">
-                    {groupe.titre}
-                  </h2>
-                  <ul className="mt-3 flex flex-wrap gap-2">
-                    {groupe.slugs.map((slug) =>
-                      groupe.versPages ? (
-                        <li key={slug}>
-                          <Link
-                            href={`/tatouage/${slug}/${tatoueur.ville_slug}`}
-                            className="inline-flex items-center rounded-full px-3.5 min-h-[32px]
-                                       border border-sombre-bordure bg-sombre-eleve
-                                       text-[13px] font-medium text-sombre-texte
-                                       hover:border-primaire hover:text-primaire transition-colors"
-                          >
-                            {libelleStyle(slug)}
-                          </Link>
-                        </li>
-                      ) : (
-                        <li
-                          key={slug}
+          {/* ==========================================================
+              §6 — LES BADGES, PUIS LE SIGNALEMENT
+              ==========================================================
+              ⚠️ PLUS AUCUN TRAIT ENTRE LES BLOCS DE BADGES
+              (nº 222-§6) : ils se distinguent par l'espacement et la
+              typographie, et par rien d'autre. Le premier prend la
+              ligne qui le sépare de ce qui précède ; les suivants
+              s'enchaînent.
+              ⚠️ ET LES BADGES N'ONT PLUS DE CONTOUR (charte) : chaque
+              niveau s'éclaircit — la page, le bloc, le badge. */}
+          {groupesBadges.map((groupe, rang) =>
+            groupe.slugs.length > 0 ? (
+              <div
+                key={groupe.titre}
+                className={
+                  rang === premierGroupeRempli
+                    ? `mt-8 pt-7 ${separation}`
+                    : "mt-7"
+                }
+              >
+                <h2 className="text-[14px] font-semibold uppercase tracking-wide text-sombre-texte-doux">
+                  {groupe.titre}
+                </h2>
+                <ul className="mt-3 flex flex-wrap gap-2">
+                  {groupe.slugs.map((slug) =>
+                    groupe.versPages ? (
+                      <li key={slug}>
+                        <Link
+                          href={`/tatouage/${slug}/${tatoueur.ville_slug}`}
                           className="inline-flex items-center rounded-full px-3.5 min-h-[32px]
-                                     border border-sombre-bordure bg-sombre-eleve
-                                     text-[13px] font-medium text-sombre-texte"
+                                     bg-sombre-eleve text-[13px] font-medium text-sombre-texte
+                                     transition-colors hover:bg-sombre-haut"
                         >
-                          {libelleFiltre(slug)}
-                        </li>
-                      )
-                    )}
-                  </ul>
-                </div>
-              )
+                          {libelleStyle(slug)}
+                        </Link>
+                      </li>
+                    ) : (
+                      <li
+                        key={slug}
+                        className="inline-flex items-center rounded-full px-3.5 min-h-[32px]
+                                   bg-sombre-eleve text-[13px] font-medium text-sombre-texte"
+                      >
+                        {libelleFiltre(slug)}
+                      </li>
+                    )
+                  )}
+                </ul>
+              </div>
+            ) : null
           )}
 
-          {/* 10. LE SIGNALEMENT — dernier bloc, derrière sa ligne.
-              Pas d'aperçu : l'espace tatoueur ne se signale pas
-              lui-même. EN DESSOUS, et non plus à côté : la mise hors
-              ligne, action d'ADMINISTRATION — le composant ne rend
-              rien tant que le SERVEUR n'a pas reconnu l'administrateur.
-              CÔTE À CÔTE, les deux se ressemblaient trop : un lien
-              PUBLIC (signaler) et un pouvoir d'ADMINISTRATION (retirer
-              la fiche du site) n'ont rien à faire sur la même ligne.
-              L'un reste un lien de texte gris ; l'autre descend d'un
-              cran et prend la robe d'un BOUTON cerclé de rouge — on ne
-              peut plus les confondre, ni les cliquer l'un pour
-              l'autre. */}
+          {/* LE SIGNALEMENT — DERRIÈRE L'UNIQUE TRAIT qui suit les
+              badges (nº 222-§6). En dessous, la mise hors ligne : un
+              lien PUBLIC et un pouvoir d'ADMINISTRATION n'ont rien à
+              faire sur la même ligne (le composant ne rend rien tant
+              que le SERVEUR n'a pas reconnu l'administrateur). */}
           {!apercu && (
             <div
-              className={`mt-8 pt-6 ${separation} flex flex-col items-start gap-4`}
+              className={`mt-8 pt-7 ${separation} flex flex-col items-start gap-4`}
             >
               <FenetreSignalement slug={tatoueur.slug} nom={tatoueur.nom} />
               <BoutonHorsLigne idFiche={tatoueur.id} nom={tatoueur.nom} />

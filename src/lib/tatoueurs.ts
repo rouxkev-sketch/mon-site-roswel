@@ -1222,6 +1222,9 @@ async function garnirFiches<T extends Tatoueur>(
       artiste_slug: string | null;
       artiste_photo: string | null;
       genre: string | null;
+      //  ⚠️ LE RÔLE N'ARRIVE QUE DEPUIS LA MIGRATION Nº 65 : la vue ne
+      //  le rendait pas. Absent, `membreDepuisVue` lit « résident ».
+      role?: string | null;
       debut_le: string | null;
       fin_le: string | null;
     }[]) {
