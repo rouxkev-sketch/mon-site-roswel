@@ -183,9 +183,31 @@ export function CarrouselPortfolio({
    * qui répond sans qu'on calcule quoi que ce soit. Le seuil de 60 %
    * ne peut désigner qu'une seule colonne à la fois.
    */
+  /**
+   * ⚠️ L'IDENTITÉ DE LA SÉRIE, PAS SON NOMBRE (nº 214-§2)
+   * ==================================================================
+   * LE DÉFAUT — le défilement qui « se bloque » dans le portfolio.
+   * L'observateur ne se reposait QUE si `n` changeait. Or on passe
+   * sans cesse d'une série à une autre (onglet, catégorie, rendu,
+   * style), et deux séries ont souvent LE MÊME NOMBRE de photos :
+   * l'effet ne se rejouait pas, l'observateur restait accroché aux
+   * colonnes de la série PRÉCÉDENTE — des nœuds démontés. Plus aucune
+   * photo n'était signalée, l'indice se figeait, et `allerA` visait
+   * lui aussi d'anciens nœuds : flèches et points ne répondaient plus.
+   * On dépend donc des CLÉS des photos : changer de série, c'est
+   * changer cette chaîne, quel que soit le nombre.
+   */
+  const cleDeLaSerie = photos.map((photo) => photo.cle).join("|");
   useEffect(() => {
     const zone = cadre.current;
+    //  Les colonnes de l'ancienne série n'ont plus rien à dire : on
+    //  taille le tableau à la série courante (les refs viennent d'y
+    //  reposer les nœuds neufs).
+    colonnes.current.length = n;
     if (!zone || n <= 1) return;
+    //  Une nouvelle série commence à sa première photo — sans quoi le
+    //  cadre garderait le défilement de la précédente.
+    zone.scrollLeft = 0;
     const observateur = new IntersectionObserver(
       (entrees) => {
         for (const entree of entrees) {
@@ -202,7 +224,7 @@ export function CarrouselPortfolio({
       if (colonne) observateur.observe(colonne);
     }
     return () => observateur.disconnect();
-  }, [n, surChangement]);
+  }, [cleDeLaSerie, n, surChangement]);
 
   /**
    * ALLER À UNE PHOTO — les flèches, les points, et tout changement

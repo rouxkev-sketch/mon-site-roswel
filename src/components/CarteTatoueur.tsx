@@ -64,17 +64,9 @@ export function CarteTatoueur({
   renduRecherche = "",
   prioritaire = false,
   phototheque = false,
-  nombrePhotos,
   surOuverture,
   surApproche,
 }: {
-  /** COMBIEN DE PHOTOS DERRIÈRE CETTE CARTE (nº 213-§3c) — annoncé
-      dans une capsule, angle bas gauche. Fourni par « Ma sélection »,
-      où une carte représente un ENSEMBLE entier ; absent en mosaïque,
-      où une carte est un tatoueur. La carte ne change ni de gabarit ni
-      de proportions : c'est une capsule de plus, comme le badge de
-      type l'était avant la nº 211. */
-  nombrePhotos?: number;
   /** LA VUE PHOTOTHÈQUE (nº 140) : la photo seule — ni badge, ni
       portrait, ni nom, ni adresse. SEUL LE CŒUR des favoris reste,
       dans l'angle. Le clic mène à la fiche, comme toujours. */
@@ -398,21 +390,10 @@ export function CarteTatoueur({
             document et porte `z-10` : le doigt le trouve avant la
             carte, et n'ouvre donc jamais la fiche par erreur.
             ⚠️ C'EST LE SEUL ÉLÉMENT QUE LA PHOTOTHÈQUE CONSERVE. */}
-        {/*  COMBIEN DE PHOTOS (nº 213-§3c) — la capsule sombre des
-             images, angle bas GAUCHE, en face du cœur. Aucune quand il
-             n'y en a qu'une : « 1 » n'apprend rien. */}
-        {nombrePhotos !== undefined && nombrePhotos > 1 && (
-          <span
-            className="absolute bottom-2 left-2 inline-flex h-[22px]
-                       items-center justify-center rounded-full
-                       bg-black/38 backdrop-blur-md
-                       px-2.5 text-[11.5px] font-semibold leading-none
-                       text-white tabular-nums pointer-events-none select-none"
-          >
-            {nombrePhotos}
-          </span>
-        )}
-
+        {/*  ⚠️ AUCUN COMPTEUR DE PHOTOS SUR L'IMAGE (nº 214-§0) : la
+             nº 213 l'avait remis dans l'angle bas gauche par erreur de
+             lecture — le propriétaire demandait sa SUPPRESSION. Rien ne
+             se pose plus sur la photo hormis le cœur. */}
         {photoEnregistrable && (
           /*  ⚠️ LE COIN SE MESURE AU GLYPHE, PAS À LA BOÎTE
               (nº 212-§5). Le bouton porte sa zone tactile tout autour

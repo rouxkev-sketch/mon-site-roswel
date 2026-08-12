@@ -177,7 +177,6 @@ export function PageFavoris({
       cle: string;
       fiche: Tatoueur;
       photo: PhotoFavorite;
-      nombre: number;
     }> = [];
     for (const photo of visibles) {
       const cle = cleEnsembleFavori(photo);
@@ -189,7 +188,6 @@ export function PageFavoris({
       liste.push({
         cle,
         photo,
-        nombre: duMemeEnsemble.length,
         fiche: {
           id: photo.tatoueurId,
           nom: photo.tatoueurNom,
@@ -390,7 +388,7 @@ export function PageFavoris({
                          grid-cols-2 md:grid-cols-3 xl:grid-cols-4
                          2xl:grid-cols-5 3xl:grid-cols-6"
             >
-              {ensemblesVisibles.map(({ cle, fiche, photo, nombre }) => (
+              {ensemblesVisibles.map(({ cle, fiche, photo }) => (
                 <li key={cle}>
                   {/*  ⚠️ LA CARTE DE LA MOSAÏQUE, SANS VARIANTE
                        (nº 213-§3b) — le même composant que la
@@ -401,7 +399,6 @@ export function PageFavoris({
                     tatoueur={fiche}
                     styleRecherche={photo.style}
                     renduRecherche={photo.rendu ?? ""}
-                    nombrePhotos={nombre}
                     surOuverture={() =>
                       void ouvrirLaFiche(
                         photo.tatoueurSlug,

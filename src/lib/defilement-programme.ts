@@ -117,6 +117,28 @@ export function defilerEnDouceur(cible: number): void {
   document.documentElement.dataset[MARQUEUR] = "1";
   cancelAnimationFrame(animationEnCours);
 
+  /**
+   * ⚠️ LA CIBLE DOIT ÊTRE ATTEIGNABLE (nº 214-§1)
+   * ------------------------------------------------------------------
+   * LE DÉFAUT : changer d'onglet change la hauteur du contenu. Si la
+   * nouvelle page est PLUS COURTE que la position visée, le navigateur
+   * borne le défilement au bas du document — on s'arrête plus haut, et
+   * il reste une marge. Depuis le haut de la page, la cible est petite
+   * et le défaut ne se voit pas ; après avoir un peu défilé, il saute
+   * aux yeux. La cible, elle, était déjà absolue : c'est le DOCUMENT
+   * qui manquait de hauteur.
+   * LA RÉSERVE : on garantit au document, le temps du mouvement, de
+   * quoi poser la cible en haut de l'écran. Elle est relâchée à
+   * l'arrivée — la page reprend alors sa vraie hauteur, sans avoir
+   * jamais sauté (même procédé que lib/bascule-verrouillee).
+   */
+  const racine = document.documentElement;
+  const reservePrecedente = racine.style.minHeight;
+  racine.style.minHeight = `${Math.ceil(cible + window.innerHeight)}px`;
+  const relacher = () => {
+    racine.style.minHeight = reservePrecedente;
+  };
+
   //  Rien à parcourir, ou l'utilisateur refuse les animations : on
   //  pose la position, et c'est tout.
   if (
@@ -124,6 +146,9 @@ export function defilerEnDouceur(cible: number): void {
     window.matchMedia("(prefers-reduced-motion: reduce)").matches
   ) {
     window.scrollTo({ top: cible, left: 0, behavior: "instant" });
+    //  La réserve tombe une image plus tard : le temps que la position
+    //  soit prise en compte, jamais avant.
+    requestAnimationFrame(relacher);
     lever(FENETRE_MS);
     return;
   }
@@ -141,6 +166,7 @@ export function defilerEnDouceur(cible: number): void {
     if (annulee) {
       window.removeEventListener("touchstart", interrompre);
       window.removeEventListener("wheel", interrompre);
+      relacher();
       lever(0);
       return;
     }
@@ -159,6 +185,7 @@ export function defilerEnDouceur(cible: number): void {
     }
     window.removeEventListener("touchstart", interrompre);
     window.removeEventListener("wheel", interrompre);
+    requestAnimationFrame(relacher);
     lever(FENETRE_MS);
   };
   animationEnCours = requestAnimationFrame(avancer);
