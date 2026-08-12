@@ -43,10 +43,15 @@ titre("§2 — une seule écriture du verre");
           bloc.lastIndexOf("  backdrop-filter:")
     );
     verif(`[${nom}] : aucun var() dans le filtre`, !/backdrop-filter:[^;]*var\(/.test(bloc));
+    //  ⚠️ nº 237-§1 : le liseré des MENUS descend d'un cran (0,05 /
+    //  0,02) ; les fenêtres gardent les valeurs de la 234.
+    const attendu =
+      nom === "data-verre-menu"
+        ? [/inset 0 1px 0 0 rgba\(255, 255, 255, 0\.05\)/, /inset 0 0 0 1px rgba\(255, 255, 255, 0\.02\)/]
+        : [/inset 0 1px 0 0 rgba\(255, 255, 255, 0\.1\)/, /inset 0 0 0 1px rgba\(255, 255, 255, 0\.035\)/];
     verif(
-      `[${nom}] : le liseré divisé, nuance haut/bas`,
-      /inset 0 1px 0 0 rgba\(255, 255, 255, 0\.1\)/.test(bloc) &&
-        /inset 0 0 0 1px rgba\(255, 255, 255, 0\.035\)/.test(bloc)
+      `[${nom}] : le liseré dosé, nuance haut/bas`,
+      attendu[0].test(bloc) && attendu[1].test(bloc)
     );
   }
   verif(

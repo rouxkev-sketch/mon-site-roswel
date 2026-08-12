@@ -297,12 +297,20 @@ export function MenuEspace({
       et les libellés partent d'un pixel différent — c'est ce qui
       faisait « bouger » Modification et Ma fiche par rapport à
       Sécurité et Déconnexion. */
-  //  ⚠️ LE SURVOL A GRIMPÉ D'UN CRAN (nº 144-§3) : la fenêtre web est
-  //  passée de `carte` à `eleve`, un survol `eleve` y serait invisible.
+  //  §2 (nº 237) — L'ÉTAT DE LA LIGNE EST UN VOILE TRANSLUCIDE, plus
+  //  jamais un aplat : le fond s'éclaircit comme sur les lignes
+  //  cliquables des fiches (nº 229), la couleur du texte ne change
+  //  jamais, aucun rose. La fenêtre est en verre depuis la nº 236 :
+  //  un aplat opaque y faisait une boîte posée sur la plaque.
+  //  AU DOIGT : l'état ENFONCÉ (`active:`) — il apparaît sous le doigt
+  //  et repart au relâchement, il ne reste jamais (le `hover:` de
+  //  Tailwind v4 ne s'applique qu'aux appareils qui survolent).
+  //  MÊME GÉOMÉTRIE des deux côtés : la classe est unique, la hauteur
+  //  (46 px), le rayon (`rounded-xl`) et le retrait (`px-3`) aussi.
   const classeEntree =
     "flex w-full items-center gap-3 rounded-xl px-3 min-h-[46px] text-left " +
-    "text-[14.5px] font-semibold text-sombre-texte hover:bg-sombre-eleve-clair " +
-    "transition-colors";
+    "text-[14.5px] font-semibold text-sombre-texte " +
+    "hover:bg-white/5 active:bg-white/10 transition-colors";
   // LES ICÔNES SORTENT DU GRIS DOUX : à 22 px, sur fond anthracite,
   // elles se devinaient plus qu'elles ne se lisaient. Elles prennent
   // la couleur du texte, à 80 % — présentes, jamais criardes.
