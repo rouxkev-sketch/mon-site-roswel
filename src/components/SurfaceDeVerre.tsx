@@ -1,6 +1,8 @@
 "use client";
 
 import { createPortal } from "react-dom";
+import { usePlacementMenu } from "@/components/placement-menu";
+import type { RefObject } from "react";
 
 /**
  * LE VERRE DU SITE — L'UNIQUE ÉCRITURE
@@ -76,6 +78,102 @@ export function SurfaceDeVerre({
 }
 
 /**
+ * UN MENU ANCRÉ EN VERRE — la plaque posée sous son bouton
+ * ==================================================================
+ * (passe nº 238-§3 et §4)
+ *
+ * POURQUOI IL EXISTE, ET CE QU'IL RÉPARE. Trois panneaux du site
+ * s'ouvraient « sous leur bouton » en `absolute` : le panneau des
+ * filtres, la fenêtre « Mon compte » du web et celle des langues.
+ * Deux défauts en découlaient, tous deux relevés par le propriétaire :
+ *
+ *  · LE PANNEAU DES FILTRES NE S'OUVRAIT PLUS EN FENÊTRE RÉTRÉCIE
+ *    (nº 238-§3). Il était rendu, visible, à la bonne place — et
+ *    ENTIÈREMENT COUPÉ : sous 1024 px, la rangée du moteur porte
+ *    `max-lg:overflow-hidden` (nº 147), qui sert à la replier au
+ *    défilement. Tout ce qui déborde de la rangée est rogné, panneau
+ *    compris. Aucune exception, aucune erreur en console : un ciseau.
+ *
+ *  · LE VERRE NE FLOUTAIT RIEN sur ces surfaces (nº 238-§4) : la barre
+ *    fixe porte elle-même un `backdrop-filter`, donc une RACINE
+ *    D'ARRIÈRE-PLAN — un enfant n'y floute plus que l'intérieur de la
+ *    barre. C'est la leçon de la nº 234, appliquée aux menus.
+ *
+ * LE PORTAIL RÈGLE LES DEUX D'UN COUP : la plaque est montée dans le
+ * corps du document, plus aucun ancêtre applicatif ne la coupe ni ne
+ * lui vole sa racine, et `usePlacementMenu` la repose sous son bouton
+ * à chaque image (défilement, redimensionnement, clavier).
+ *
+ * ⚠️ LE PANNEAU N'EST PLUS DANS LA ZONE DU BOUTON : les fermetures
+ * « au clic dehors » doivent tester la plaque EN PLUS de leur zone —
+ * d'où `refPanneau`.
+ */
+export function MenuDeVerre({
+  ouvert,
+  ancre,
+  refPanneau,
+  largeur,
+  alignement = "droite",
+  className = "",
+  children,
+  ...reste
+}: {
+  ouvert: boolean;
+  /** Le bouton sous lequel le menu se pose. */
+  ancre: RefObject<HTMLElement | null>;
+  /** Pour que l'appelant reconnaisse « dedans » malgré le portail. */
+  refPanneau?: RefObject<HTMLDivElement | null>;
+  /** Largeur voulue, bornée à l'écran (16 px de marge de chaque côté). */
+  largeur: number;
+  /** Le bord du bouton sur lequel le menu s'aligne. */
+  alignement?: "droite" | "gauche";
+  className?: string;
+  children: React.ReactNode;
+} & React.HTMLAttributes<HTMLDivElement>) {
+  const { cadre, hauteurMax, ouvreVersLeHaut } = usePlacementMenu(ouvert, ancre);
+  if (!ouvert || typeof document === "undefined") return null;
+
+  //  La largeur tient toujours dans l'écran ; l'alignement se calcule
+  //  sur le bouton, puis on ramène le panneau dans les bords.
+  const marge = 16;
+  const large = Math.min(largeur, window.innerWidth - 2 * marge);
+  const bordDroit = cadre ? cadre.gauche + cadre.largeur : window.innerWidth;
+  const gaucheVoulue =
+    alignement === "droite" ? bordDroit - large : (cadre?.gauche ?? marge);
+  const gauche = Math.max(
+    marge,
+    Math.min(gaucheVoulue, window.innerWidth - large - marge)
+  );
+
+  return createPortal(
+    <div
+      {...reste}
+      ref={refPanneau}
+      data-verre-menu=""
+      className={`z-[75] rounded-2xl overflow-y-auto overscroll-contain ${className}`}
+      style={{
+        position: "fixed",
+        left: gauche,
+        width: large,
+        ...(cadre
+          ? ouvreVersLeHaut
+            ? { bottom: cadre.bas }
+            : { top: cadre.haut }
+          : { top: 0 }),
+        maxHeight: hauteurMax ? `${hauteurMax}px` : undefined,
+        //  ⚠️ AUCUNE TRANSITION D'OPACITÉ, AUCUNE OPACITÉ PARTIELLE :
+        //  la plaque deviendrait sa propre racine d'arrière-plan et ne
+        //  flouterait plus que son propre plan (règle nº 3).
+        visibility: cadre ? "visible" : "hidden",
+      }}
+    >
+      {children}
+    </div>,
+    document.body
+  );
+}
+
+/**
  * UNE FENÊTRE SUPERPOSÉE EN VERRE — voile + plaque, montée dans le
  * corps du document. C'est la forme de la fenêtre d'adresse (nº 234),
  * rendue disponible à toutes les autres.
@@ -86,6 +184,8 @@ export function FenetreDeVerre({
   surFermeture,
   largeur = "max-w-[440px]",
   classePlaque = "",
+  rembourrage = "p-6",
+  classeCadre = "p-6 z-[80]",
   children,
 }: {
   ariaLabel?: string;
@@ -95,6 +195,12 @@ export function FenetreDeVerre({
   surFermeture?: () => void;
   largeur?: string;
   classePlaque?: string;
+  /** L'air INTÉRIEUR de la plaque — `p-0` quand la fenêtre pose
+      elle-même ses marges (un en-tête d'un bord à l'autre). */
+  rembourrage?: string;
+  /** L'air AUTOUR de la fenêtre, et son étage. Une fenêtre ouverte
+      depuis une autre monte au-dessus d'elle. */
+  classeCadre?: string;
   children: React.ReactNode;
 }) {
   const fenetre = (
@@ -103,7 +209,7 @@ export function FenetreDeVerre({
       aria-modal="true"
       {...(ariaLabelledby ? { "aria-labelledby": ariaLabelledby } : {})}
       {...(ariaLabel ? { "aria-label": ariaLabel } : {})}
-      className="fixed inset-0 z-[80] flex items-center justify-center p-6"
+      className={`fixed inset-0 flex items-center justify-center ${classeCadre}`}
     >
       {/*  LE VOILE — allégé, sa couleur portée par la couleur (jamais
            par `opacity`), et c'est LUI qui porte le fondu. */}
@@ -126,7 +232,7 @@ export function FenetreDeVerre({
       {/*  LA PLAQUE — aucune opacité, aucune transition d'opacité. */}
       <div
         data-verre-fenetre=""
-        className={`relative w-full ${largeur} rounded-3xl p-6 ${classePlaque}`}
+        className={`relative w-full ${largeur} rounded-3xl ${rembourrage} ${classePlaque}`}
       >
         {children}
       </div>

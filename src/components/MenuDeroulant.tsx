@@ -372,15 +372,41 @@ export function MenuDeroulant({
     //  et sa liste s'est dépliée AU-DESSUS du point où l'on est :
     //  l'écran ne bouge pas, le clic semble mort. La liste repart du
     //  haut, où la catégorie ouverte commence.
-    //  (Pas pour une SOUS-section : elle se déplie SOUS sa porte,
-    //  déjà sous les yeux — remonter la cacherait.)
     if (ouvre) listeDeroulante.current?.scrollTo({ top: 0, behavior: "instant" });
   }
 
   function basculerSousGroupe(sousGroupe: string) {
+    const ouvre = sousGroupeDeplie !== sousGroupe;
     setSousGroupeDeplie((courant) =>
       courant === sousGroupe ? null : sousGroupe
     );
+    //  §2 (nº 238) — UNE SOUS-SECTION REMONTE COMME SA PORTE. Elle ne
+    //  le faisait pas, au motif qu'elle se déplie « déjà sous les
+    //  yeux » : c'est faux dès qu'on l'a cherchée en bas de liste —
+    //  « Traditionnel ethnique » ouvre NEUF entrées sous le point où
+    //  l'on est, l'écran ne bouge pas, et le geste semble mort.
+    //  CE QUE FAIT UNE PORTE, EXACTEMENT : ce qu'on vient d'ouvrir
+    //  passe EN TÊTE de la liste, et son contenu se lit dessous. Pour
+    //  une catégorie, la tête est le zéro ; pour une famille rangée à
+    //  sa lettre, c'est SA propre ligne qu'on amène en haut — un
+    //  retour à zéro l'aurait renvoyée hors de l'écran, à la lettre T.
+    //  Même mouvement, même instant, AUCUNE entrée d'historique : un
+    //  défilement de liste n'en pousse pas.
+    if (!ouvre) return;
+    requestAnimationFrame(() => {
+      const liste = listeDeroulante.current;
+      const porte = liste?.querySelector<HTMLElement>(
+        `[data-sous-porte="${CSS.escape(sousGroupe)}"]`
+      );
+      if (!liste || !porte) return;
+      liste.scrollTo({
+        top:
+          liste.scrollTop +
+          (porte.getBoundingClientRect().top -
+            liste.getBoundingClientRect().top),
+        behavior: "instant",
+      });
+    });
   }
 
   /** L'EN-TÊTE D'UNE SECTION — une étiquette, ou une porte quand le
@@ -458,6 +484,10 @@ export function MenuDeroulant({
         type="button"
         aria-expanded={sousGroupeDeplie === sousEntete}
         onClick={() => basculerSousGroupe(sousEntete)}
+        //  C'est cette ligne que la remontée du §2 (nº 238) amène en
+        //  tête de liste : elle se désigne elle-même, aucun calcul
+        //  d'index à tenir à jour.
+        data-sous-porte={sousEntete}
         className={`${classes} flex w-full items-center justify-between gap-2 text-left`}
       >
         {sousEntete}

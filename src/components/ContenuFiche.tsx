@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { defilerEnDouceur } from "@/lib/defilement-programme";
 //  ⚠️ TEMPORAIRE (nº 218-§1) — la sonde du carrousel : elle veut
@@ -164,6 +164,35 @@ export function ContenuFiche({
       Math.max(0, window.scrollY + photo.bottom - (barre ?? 0))
     );
   }
+
+  /**
+   * REMONTER UNE FOIS LA NOUVELLE LISTE POSÉE (nº 238-§1)
+   * ------------------------------------------------------------------
+   * Une vignette de style ne change pas que la galerie du dessous :
+   * elle change AUSSI LA PHOTO DU HAUT (première photo de la série,
+   * dont le cadre prend le format réel — nº 228-§3). Or la remontée se
+   * mesure sur le BAS DE CETTE PHOTO : appelée dans le même souffle
+   * que le changement, elle mesure encore l'ANCIENNE hauteur, et vise
+   * un repère qui n'existera plus une image plus tard.
+   * On attend donc que la nouvelle liste soit rendue ET mise en page :
+   * un compteur, un effet, et DEUX images (la première rend, la
+   * seconde a la mise en page définitive). Les hauteurs de photo étant
+   * réservées d'avance, rien n'attend le chargement des images.
+   */
+  const [remonteeDemandee, setRemonteeDemandee] = useState(0);
+  useEffect(() => {
+    if (remonteeDemandee === 0) return;
+    let seconde = 0;
+    const premiere = requestAnimationFrame(() => {
+      seconde = requestAnimationFrame(() => remonterSousLaBarre());
+    });
+    return () => {
+      cancelAnimationFrame(premiere);
+      cancelAnimationFrame(seconde);
+    };
+    //  `remonterSousLaBarre` ne lit que le DOM : le compteur est le
+    //  seul déclencheur, et c'est voulu.
+  }, [remonteeDemandee]);
 
   /** Changer d'onglet : le contenu change, la page remonte. */
   function choisirOnglet(suivant: OngletAffiche) {
@@ -504,7 +533,10 @@ export function ContenuFiche({
             //  ⚠️ SEULE LA VIGNETTE REMONTE : ouvrir une PHOTO passe
             //  par le carrousel de l'enveloppe, pas par ici — rien n'y
             //  bouge, et c'est voulu.
-            remonterSousLaBarre();
+            //  ⚠️ ET ELLE SE FAIT APRÈS LE RENDU (nº 238-§1) : c'est le
+            //  seul sélecteur qui change aussi la photo du haut, donc
+            //  le repère lui-même. Voir `remonteeDemandee`.
+            setRemonteeDemandee((tour) => tour + 1);
           }}
         />
       )}

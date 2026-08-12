@@ -728,10 +728,18 @@ export function ChampLocalisation({
             // C'est toute la différence avec les versions d'avant.
             style={{ maxHeight: hauteurMax ? `${hauteurMax}px` : undefined }}
             //  À LA CHARTE (nº 139) : plus de contour — le panneau se
-            //  dit par son fond carte, comme toutes les fenêtres.
+            //  dit par son fond, comme toutes les fenêtres.
+            //  ⚠️ EN VERRE LUI AUSSI (nº 238-§4). Il ne l'était pas :
+            //  la nº 236 n'avait converti que l'écriture FLOTTANTE des
+            //  suggestions, et celle-ci, la version « dans le flux »
+            //  (recherche et formulaire sur smartphone), gardait son
+            //  aplat. Deux écritures, un seul des deux converti — le
+            //  défaut exact qui a laissé passer la fenêtre du compte et
+            //  celle des langues. Mesuré au banc à 390 px : fond opaque
+            //  rgb(35, 35, 39), filtre `none`.
             className="mt-1.5 flex min-h-0 flex-1 flex-col rounded-2xl
-                       bg-sombre-carte text-sombre-texte
-                       overflow-hidden"
+                       text-sombre-texte overflow-hidden"
+            data-verre-menu=""
             onPointerDown={() => {
               interactionPanneau.current = true;
               window.setTimeout(() => {

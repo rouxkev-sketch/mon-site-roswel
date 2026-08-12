@@ -31,6 +31,7 @@ import {
   IconeUneColonne,
 } from "@/components/Icones";
 import { BadgeCharte, GroupeBadges } from "@/components/BadgesCharte";
+import { MenuDeVerre } from "@/components/SurfaceDeVerre";
 import { GLISSADE_MS, remonterSansClavier } from "@/lib/remontee-champ";
 import { basculerSansSaut } from "@/lib/bascule-verrouillee";
 //  ⚠️ TEMPORAIRE (nº 173) — la sonde-journal enregistre les clics sur
@@ -264,6 +265,12 @@ export function MoteurTatouage({
       de localité pour le reconstruire à neuf (voir plus bas). */
   const [effacements, setEffacements] = useState(0);
   const zoneFiltres = useRef<HTMLDivElement>(null);
+  /** Le bouton rond — le menu de verre se pose sous LUI (nº 238-§3). */
+  const boutonFiltres = useRef<HTMLButtonElement>(null);
+  /** La plaque du panneau : montée dans le corps du document, elle
+      n'est plus « dans » la zone — la fermeture au clic dehors doit la
+      connaître, sans quoi toucher un badge referme le panneau. */
+  const plaqueFiltres = useRef<HTMLDivElement>(null);
   /** La disposition de la mosaïque (mobile) — celle de L'ADRESSE
       (nº 203-§1b), servie par le serveur. */
   const disposition = useDispositionGrille();
@@ -274,7 +281,11 @@ export function MoteurTatouage({
   useEffect(() => {
     if (!filtresOuverts) return;
     function auClic(evenement: MouseEvent) {
-      if (!zoneFiltres.current?.contains(evenement.target as Node)) {
+      const cible = evenement.target as Node;
+      //  ⚠️ LA PLAQUE EST DANS LE CORPS DU DOCUMENT (nº 238-§3) : sans
+      //  ce second test, chaque badge coché refermait le panneau.
+      if (plaqueFiltres.current?.contains(cible)) return;
+      if (!zoneFiltres.current?.contains(cible)) {
         setFiltresOuverts(false);
       }
     }
@@ -985,6 +996,7 @@ export function MoteurTatouage({
             {encadreChamps(id)}
           </div>
           <button
+            ref={boutonFiltres}
             type="button"
             onClick={() => setFiltresOuverts((etat) => !etat)}
             aria-expanded={filtresOuverts}
@@ -1053,6 +1065,16 @@ export function MoteurTatouage({
             //  contour ni ombre — c'est la clarté qui le détache de la
             //  page. Dedans, LE MÊME bloc que la page mobile, recalé
             //  d'un niveau (`surPanneau`).
+            //  ⚠️ IL NE VIT PLUS DANS LA RANGÉE (nº 238-§3), ET C'EST
+            //  LA CORRECTION DE LA RÉGRESSION : sous 1024 px, la rangée
+            //  du moteur porte `max-lg:overflow-hidden` (nº 147, le
+            //  repli au défilement) — le panneau était rendu, à sa
+            //  place, et rogné À CENT POUR CENT. Mesuré au banc :
+            //  420 × 393 px, `display: block`, `visibility: visible`,
+            //  aucune exception en console, un ancêtre coupeur. Monté
+            //  dans le corps du document par `MenuDeVerre`, plus rien
+            //  ne peut le couper — ni lui voler sa racine
+            //  d'arrière-plan (le flou de la barre fixe).
             //  ⚠️ LES DEUX MARGES SONT ÉGALES À L'ŒIL, PAS EN VALEURS
             //  DÉCLARÉES (nº 163-§3A, quatrième demande). En bas, le
             //  bord d'une capsule COLORÉE touche le rembourrage : la
@@ -1063,17 +1085,19 @@ export function MoteurTatouage({
             //  réels en haut pour 20 en bas, avec `p-5` partout. Le
             //  rembourrage haut descend donc à 15 px : l'encre du titre
             //  est à 20 px du bord, comme la capsule du bas.
-            <div
+            <MenuDeVerre
+              ouvert={filtresOuverts}
+              ancre={boutonFiltres}
+              refPanneau={plaqueFiltres}
+              largeur={420}
+              alignement="droite"
               data-panneau-filtres=""
               data-source-fichier="src/components/MoteurTatouage.tsx"
               data-source-composant="MoteurTatouage · panneau web des filtres"
-              data-verre-menu=""
-              className="absolute top-full right-0 z-30 mt-2
-                         w-[min(420px,calc(100vw-32px))] rounded-2xl
-                         px-5 pb-5 pt-[15px]"
+              className="px-5 pb-5 pt-[15px]"
             >
               {blocFiltres(criteres, annoncer, true)}
-            </div>
+            </MenuDeVerre>
           )}
         </div>
       )}

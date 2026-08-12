@@ -382,16 +382,25 @@ export function FicheTatoueur({
               setStyleAffiche(serie.style);
               setSerieOuverte({ nature: serie.nature, rendu: serie.rendu });
               setIndicePhoto(0);
-              //  ⚠️ LA REMONTÉE EST RÉSERVÉE AU DOIGT (nº 218-§3). Sur
-              //  mobile, la photo est tout en haut : sans remontée, on
-              //  choisirait une série sans jamais la voir. Sur le web,
-              //  la photo est DÉJÀ à l'écran, dans la colonne de
-              //  gauche — remonter ne montre rien de plus, et fait
-              //  perdre la place qu'on venait de choisir dans la
-              //  galerie.
-              if (document.documentElement.dataset.appareil === "mobile") {
-                window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-              }
+              /*  ⚠️ PLUS AUCUNE REMONTÉE ICI (nº 238-§1), ET C'EST LA
+                  CAUSE DE « LA PAGE DESCEND ».
+                  --------------------------------------------------
+                  CE QUI SE PASSAIT, mesuré au banc depuis le bas de la
+                  galerie (départ 2967) :
+                    t=0 ms   → 0    (le saut instantané écrit ICI, nº 218-§3)
+                    t=100 ms → 24
+                    t=250 ms → 340
+                    t=500 ms → 488  (le repère « sous la barre »)
+                  DEUX mécanismes agissaient sur le même geste : ce
+                  `scrollTo(0)` instantané, puis la remontée douce
+                  ajoutée par la nº 236-§1. L'œil ne voit pas le saut —
+                  il voit la page GLISSER VERS LE BAS de 0 à 488. Le
+                  défaut n'était donc ni un calcul faux ni une hauteur
+                  mal lue : c'était un mouvement de trop.
+                  IL N'EN RESTE QU'UN, `remonterSousLaBarre` (dans
+                  ContenuFiche), le MÊME que Profil / Portfolio —
+                  mesuré au même repère, 488, et déclenché seulement
+                  quand la nouvelle liste a sa hauteur définitive. */
             }}
           />
         </div>

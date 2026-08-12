@@ -159,11 +159,24 @@ function releveDeLaFenetre(): [string, string][] {
   for (const surface of surfaces) {
     const s = getComputedStyle(surface);
     const nomCourt = nommer(surface).slice(0, 40);
+    //  §7 (nº 238) — LE VERDICT EST DIT SURFACE PAR SURFACE, et à la
+    //  largeur où l'on est : un filtre vide OU une opacité partielle
+    //  suffisent à tuer le verre, et ce sont les deux seuls défauts
+    //  qu'on ait jamais rencontrés. Marqués ⛔, ils se voient dans le
+    //  relevé sans avoir à lire les valeurs.
+    const filtreVide = !s.backdropFilter || s.backdropFilter === "none";
+    const opaciteFuyante = Number(s.opacity) < 1;
     dit.push([
-      `0) ${nomCourt}`,
+      `0) ${filtreVide || opaciteFuyante ? "⛔ " : ""}${nomCourt}`,
       `filtre ${s.backdropFilter || "(vide)"} · fond ${s.backgroundColor} · opacité ${s.opacity}`,
     ]);
   }
+  dit.push([
+    "0) largeur d'écran",
+    `${window.innerWidth} × ${window.innerHeight} · appareil « ${
+      document.documentElement.dataset.appareil ?? "(non dit)"
+    } »`,
+  ]);
   const plaque = surfaces[surfaces.length - 1];
   dit.push([
     "0) surface détaillée",

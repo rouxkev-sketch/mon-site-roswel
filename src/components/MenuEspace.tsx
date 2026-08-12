@@ -15,8 +15,9 @@ import {
   IconeSortie,
   IconeUtilisateur,
 } from "@/components/Icones";
-import { SelecteurLangue } from "@/components/SelecteurLangue";
+import { EntreeLangue, FenetreLangue } from "@/components/SelecteurLangue";
 import { FenetreNotifications } from "@/components/FenetreNotifications";
+import { MenuDeVerre } from "@/components/SurfaceDeVerre";
 import { FenetreNonEnregistre } from "@/components/GardeSaisie";
 import {
   COULEUR_ETAT,
@@ -104,9 +105,19 @@ export function MenuEspace({
   /** Les nouvelles du compte, et leur fenêtre. */
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notificationsOuvertes, setNotificationsOuvertes] = useState(false);
+  /** La fenêtre des langues (nº 238-§5) : montée par le MENU, pas par
+      sa ligne — elle survit donc à la fermeture du menu. */
+  const [langueOuverte, setLangueOuverte] = useState(false);
   /** L'avertissement « tu as une saisie en cours » — voir plus bas. */
   const [avertirAvantCreation, setAvertirAvantCreation] = useState(false);
   const zone = useRef<HTMLDivElement>(null);
+  /** La plaque du menu web — montée dans le corps du document
+      (nº 238-§4) : la fermeture au clic dehors doit la connaître.
+      ⚠️ L'ANCRE DU MENU EST `zone`, PAS UN DES DEUX BOUTONS : il y en a
+      deux (écran étroit / large) et l'un des deux est toujours
+      `display: none`, donc sans boîte à mesurer. La zone, elle, a
+      toujours celle du bouton visible. */
+  const plaqueWeb = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   const fiche = ficheActive(fiches, idFiche);
@@ -257,7 +268,11 @@ export function MenuEspace({
     }
     function auPointeur(evenement: MouseEvent) {
       if (surMobile) return;
-      if (!zone.current?.contains(evenement.target as Node)) setOuvert(false);
+      const cible = evenement.target as Node;
+      //  ⚠️ LA PLAQUE DU WEB EST DANS LE CORPS DU DOCUMENT (nº 238-§4) :
+      //  sans ce test, le premier clic dans le menu le refermait.
+      if (plaqueWeb.current?.contains(cible)) return;
+      if (!zone.current?.contains(cible)) setOuvert(false);
     }
     const defilementAvant = document.body.style.overflow;
     if (surMobile) document.body.style.overflow = "hidden";
@@ -329,6 +344,12 @@ export function MenuEspace({
           type="button"
           onClick={() => {
             setSelecteurOuvert(false);
+            //  §5 (nº 238) — UNE SEULE SURFACE FLOTTANTE À LA FOIS :
+            //  ouvrir les notifications FERME « Mon compte ». Les deux
+            //  restaient superposées, et la fenêtre du dessous se
+            //  voyait par transparence à travers celle du dessus.
+            //  La fermer, elle, rend la page : elle ne rouvre rien.
+            setOuvert(false);
             setNotificationsOuvertes(true);
           }}
           className={classeEntree}
@@ -580,8 +601,19 @@ export function MenuEspace({
             a quitté la barre fixe, où le CŒUR des favoris a pris sa
             place une fois connecté : une barre de smartphone n'a pas
             de quoi porter les deux. Il ouvre EXACTEMENT la même
-            fenêtre qu'avant — c'est le même composant. */}
-        <SelecteurLangue variante="entree" />
+            fenêtre que le globe de la barre — c'est le même composant.
+            ⚠️ LA LIGNE SEULE (nº 238-§5) : la fenêtre est montée PLUS
+            BAS, hors du menu. Tant qu'elle vivait ici, refermer « Mon
+            compte » l'aurait emportée avec lui — les deux ne pouvaient
+            qu'être empilées. Et la ligne porte enfin la classe
+            commune : elle gardait un survol en aplat (nº 237-§2). */}
+        <EntreeLangue
+          classe={classeEntree}
+          surOuvrir={() => {
+            setOuvert(false);
+            setLangueOuverte(true);
+          }}
+        />
 
         <Link
           href="/devenir-tatoueur/securite"
@@ -657,20 +689,32 @@ export function MenuEspace({
           habillages (web sous le bouton, smartphone au centre). */}
       {ouvert && (
         <>
-          {/* WEB : la fenêtre sous le bouton, comme avant.
-              ⚠️ ÉCLAIRCIE D'UN CRAN (nº 144-§3) : `carte` se détachait
-              mal de la page — c'est l'ÉCLAIRCISSEMENT qui doit la
-              détacher, jamais un contour ni une ombre. Tout ce qui est
-              posé dessus a grimpé d'autant (bloc du portfolio,
-              sélecteur, survols). */}
-          <div
+          {/* WEB : la fenêtre sous le bouton.
+              ⚠️ ELLE N'ÉTAIT PAS EN VERRE (nº 238-§4), ET LE
+              PROPRIÉTAIRE L'A VU : l'inventaire de la nº 236 annonçait
+              « la fenêtre du compte » convertie — seule celle du
+              SMARTPHONE l'avait été. Deux écritures pour une même
+              fenêtre, et le défaut ne se voyait donc que d'un côté :
+              c'est la signature d'un doublon, et la raison pour
+              laquelle le banc à une seule largeur n'a rien vu.
+              ELLE PASSE PAR `MenuDeVerre` — la plaque est montée dans
+              le corps du document, comme le panneau des filtres : la
+              barre fixe porte son propre flou, donc une racine
+              d'arrière-plan, et un enfant n'y flouterait que
+              l'intérieur de la barre. */}
+          <MenuDeVerre
+            ouvert={ouvert}
+            ancre={zone}
+            refPanneau={plaqueWeb}
+            largeur={290}
+            alignement="droite"
             role="dialog"
             aria-label="Mon espace"
-            className="mobile:hidden absolute top-full right-0 z-30 mt-2 w-[290px]
-                       rounded-2xl bg-sombre-eleve"
+            data-source-composant="MenuEspace · fenêtre web"
+            className="mobile:hidden"
           >
             {contenuMenu}
-          </div>
+          </MenuDeVerre>
 
           {/* SMARTPHONE : la fenêtre CENTRÉE derrière son voile — le
               traitement exact de la fenêtre du moteur de recherche.
@@ -738,6 +782,14 @@ export function MenuEspace({
             )
           }
         />
+      )}
+
+      {/* LA FENÊTRE DES LANGUES — montée ICI, et non dans la ligne qui
+          l'ouvre (nº 238-§5) : la ligne vit dans le menu, la fenêtre
+          lui survit. Ouvrir ferme « Mon compte » ; fermer rend la
+          page, sans rien rouvrir. */}
+      {langueOuverte && (
+        <FenetreLangue surFermeture={() => setLangueOuverte(false)} />
       )}
 
       {/* ---------- « MODIFICATIONS NON ENREGISTRÉES » ----------

@@ -242,18 +242,20 @@ html:has([data-fond="sombre"]) {
     à 22 % :
       · au-dessus de l'anthracite du site  → contraste 15,53 (excellent)
       · au-dessus d'une photo TRÈS CLAIRE  → contraste  1,13 (illisible)
-    22 % tient donc parfaitement sur la page nue et sur les photos
-    sombres, et cède sur les photos claires — et la mosaïque en montre.
-    ⚠️ LA VALEUR EST CELLE DE LA PLAQUE, ET ELLE ATTEND L'ARBITRAGE DU
-    PROPRIÉTAIRE (nº 236-§4 : « mesure, dis-le-moi, propose — je
-    tranche »). Elle est isolée ICI, dans sa propre règle, pour que le
-    jour où il tranche, UNE SEULE valeur change et aucune fenêtre n'est
-    touchée. Les mêmes règles dures s'appliquent : deux lignes
-    littérales, préfixée d'abord, ni `@supports`, ni `var()`. */
+    22 % tenait donc sur la page nue et sur les photos sombres, et
+    cédait sur les photos claires — or la mosaïque en montre.
+    ⚠️ ARBITRAGE RENDU (nº 238-§6) : 45 % de fond et 60 px de flou. La
+    valeur n'est plus en attente, elle est TRANCHÉE — aucune passe ne
+    la rediscute. Ce réglage vaut pour TOUS les menus du lot, et
+    d'abord pour les suggestions de localité, qui s'ouvrent par-dessus
+    la mosaïque. Les FENÊTRES ne bougent pas (22 %, 40 px), le liseré
+    dosé de la nº 237 non plus.
+    Les mêmes règles dures s'appliquent : deux lignes littérales,
+    préfixée d'abord, ni `@supports`, ni `var()`. */
 [data-verre-menu] {
-  background-color: rgba(26, 26, 29, 0.22);
-  -webkit-backdrop-filter: blur(40px) saturate(200%);
-  backdrop-filter: blur(40px) saturate(200%);
+  background-color: rgba(26, 26, 29, 0.45);
+  -webkit-backdrop-filter: blur(60px) saturate(200%);
+  backdrop-filter: blur(60px) saturate(200%);
   /*  §1 (nº 237) — LE LISERÉ D'UN MENU DESCEND ENCORE D'UN CRAN
       (0,05 / 0,02, contre 0,10 / 0,035 sur les fenêtres) : un menu
       est petit, un liseré visible y devient un encadrement. Il se
@@ -275,12 +277,30 @@ html:has([data-fond="sombre"]) {
   background-color: rgba(255, 255, 255, 0.2);
 }
 
+/*  LE SURVOL D'UNE CAPSULE — un cran de plus, jamais un aplat
+    (nº 238-§6). Les BADGES DU PANNEAU DE FILTRES sont des capsules de
+    cette famille : au survol, le remplissage translucide s'éclaircit,
+    et c'est tout ce qui change. Il est écrit ICI, dans la même règle
+    non calquée, parce qu'une classe utilitaire `hover:bg-…` ne peut
+    pas passer devant une règle sans calque — elle serait ignorée.
+    ⚠️ TOUJOURS SANS FILTRE PROPRE : le flou reste celui de la plaque. */
+[data-verre-capsule]:hover {
+  background-color: rgba(255, 255, 255, 0.28);
+}
+
 /*  L'ACTION FINALE DE LA FENÊTRE — « Ouvrir dans Google Maps » : du
     VERRE TEINTÉ ROSE, jamais un aplat. Rose à 40 % (nº 233-§4), et
     SANS FILTRE D'ARRIÈRE-PLAN, comme la capsule blanche : on voit la
     page floutée par la plaque à travers les deux. */
 [data-verre-action] {
   background-color: rgba(238, 61, 111, 0.4);
+}
+
+/*  Le survol d'une action rose — même geste que la capsule blanche
+    (nº 238-§6) : un cran de teinte en plus, aucun filtre propre. Les
+    badges SÉLECTIONNÉS du panneau de filtres en sont. */
+[data-verre-action]:hover {
+  background-color: rgba(238, 61, 111, 0.5);
 }
 
 /*  LE CHAMP ET LES DEUX ICÔNES DE LA BARRE FIXE — LISIBLES SUR
