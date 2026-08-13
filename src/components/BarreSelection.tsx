@@ -39,6 +39,10 @@ export function BarreSelection({
 
   return (
     <EnTeteTatouage
+      //  §2 (nº 251) — l'encadré ne vit que sur le web : au doigt, le
+      //  titre de la page commande, et la barre retrouve sa hauteur
+      //  ordinaire.
+      rangeeWeb
       rangee={({ replie, deplier }) => (
         <MenusSelection
           entreesJaime={entreesJaime}

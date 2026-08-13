@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { PhotoProgressive } from "@/components/PhotoProgressive";
 import { ZoomPincement } from "@/components/ZoomPincement";
+import { CADRE_PHOTO_PORTFOLIO } from "@/config/tatouage";
 import type { PhotoGalerie } from "@/lib/photo-tatoueur";
 //  ⚠️ TEMPORAIRE (nº 218-§1) — la sonde du carrousel. Sans
 //  `?sonde-carrousel=1`, chacun de ces appels sort à sa première ligne
@@ -739,7 +740,7 @@ export function CarrouselPortfolio({
               //  celle que le carrousel déclare : les deux doivent
               //  concorder, toujours.
               data-nature={photo.nature}
-              className="relative w-full shrink-0 snap-start snap-always aspect-[4/5]"
+              className={`relative w-full shrink-0 snap-start snap-always ${CADRE_PHOTO_PORTFOLIO}`}
               aria-hidden={rang !== indice}
             >
               {surCarte ? (

@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import Link from "next/link";
+import { CADRE_PHOTO_PORTFOLIO } from "@/config/tatouage";
 import { CLASSES_LIGNE_CLIQUABLE, PhotoRonde } from "@/components/BlocLieux";
 import { IconeCoeur } from "@/components/Icones";
 import {
@@ -212,17 +213,14 @@ function BlocDUnSuivi({
         </span>
       </Link>
 
-      {/* 2 · D'OÙ VIENNENT LES PHOTOS — une petite ligne, pas un lien.
-             §2 (nº 244) : 13 px, grise, 12 px sous la ligne d'identité
-             (mt-3), 8 px au-dessus de la bande (son mt-2). */}
-      {bande.photos.length > 0 && (
-        <p
-          data-provenance={bande.cas}
-          className="mt-3 text-[13px] leading-relaxed text-sombre-texte-doux"
-        >
-          {bande.provenance}
-        </p>
-      )}
+      {/* 2 · §3 (nº 251) — PLUS AUCUN TITRE AU-DESSUS DES BANDES.
+             « Vos coups de cœur », « Ses dernières réalisations », « Ses
+             derniers flashs » : les trois sont supprimés, web et
+             smartphone. L'information n'est pas perdue — depuis la
+             nº 249 c'est LE CŒUR posé en bas à droite de la vignette
+             qui dit qu'une photo a été aimée, et il le dit en moins de
+             place. (`bande.cas` reste : c'est lui qui décide de ce
+             cœur.) */}
 
       {/* 3 · LA BANDE DE VIGNETTES — §6 (nº 249) : ELLE DÉFILE.
              Elle ne se tronque plus à ce qui tient dans la largeur :
@@ -349,8 +347,11 @@ function RangeeDeVignettes({
               data-vignette-suivi={photo.id}
               //  §4 (nº 244) — au doigt, une BRÈVE baisse d'opacité,
               //  rien de plus. §5 (nº 247) — angles droits.
-              className="relative block aspect-square overflow-hidden rounded-none
-                         bg-sombre-eleve transition-opacity active:opacity-75"
+              //  §4 (nº 251) — LE FORMAT PORTFOLIO DU SITE (4:5), lu
+              //  là où il vit : `CADRE_PHOTO_PORTFOLIO`. Il réserve
+              //  aussi la hauteur AVANT l'image (règle du §3, nº 226).
+              className={`relative block ${CADRE_PHOTO_PORTFOLIO} overflow-hidden rounded-none
+                         bg-sombre-eleve transition-opacity active:opacity-75`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element --
                   photo déposée par le tatoueur, servie telle quelle. */}
@@ -396,7 +397,7 @@ function RangeeDeVignettes({
              survol, jamais de rose plein, jamais une case pleine. */}
         {bande.voirPlus && (
           <li className={CASE_RANGEE}>
-            <span className="flex aspect-square items-center justify-center">
+            <span className={`flex ${CADRE_PHOTO_PORTFOLIO} items-center justify-center`}>
               <Link
                 href={`/tatoueur/${suivi.slug}`}
                 data-voir-plus=""

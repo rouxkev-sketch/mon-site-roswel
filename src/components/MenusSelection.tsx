@@ -127,12 +127,18 @@ export function MenusSelection({
   );
 
   return (
-    /*  §3 (nº 249) — LE BLOC QUITTE LA BARRE DU WEB (`lg:hidden`) : il
-        faisait doublon avec le TITRE de la page, qui devient le
-        contrôle (voir PageFavoris, `titreControle`). SUR SMARTPHONE,
-        rien ne change : le bandeau reste, avec son repli, sa ligne
-        étroite et les réglages de juillet. */
-    <div className="w-full lg:hidden">
+    /*  §1 (nº 251) — L'ENCADRÉ REVIENT DANS LA BARRE DU WEB, tel
+        qu'il était à la nº 246 : le `lg:hidden` de la nº 249 est
+        défait. §2 — ET IL N'Y VIT PLUS QUE LÀ (`hidden lg:block`) :
+        sur un téléphone, la hauteur est la ressource rare, et le TITRE
+        de la page est déjà là — c'est lui qui commande (voir
+        PageFavoris, `titreControle`, et la feuille du menu).
+        ⚠️ LES DEUX ÉTATS DU REPLI RESTENT ÉCRITS (la ligne étroite
+        « Ma sélection » et ses jetons) : la barre garde son bandeau et
+        son repli, réglages de juillet compris. Sur le web, `replie`
+        n'est jamais vrai (le repli est une affaire de largeur, sous
+        1024) — l'état existe, il ne se déclenche simplement pas. */
+    <div className="w-full hidden lg:block">
       <div
         className={`${pliage} ${
           replie

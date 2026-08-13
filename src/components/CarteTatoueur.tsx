@@ -3,6 +3,7 @@
 import { memo, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
+  CADRE_PHOTO_PORTFOLIO,
   libelleStyle,
   libelleTypeFiche,
   PHOTO_PORTFOLIO,
@@ -335,11 +336,11 @@ function CarteTatoueurNue({
             par-dessus ses voisines le temps du geste, puis se range). */}
         <div
           ref={cadrePhoto}
-          className="relative w-full aspect-4/5 overflow-hidden rounded-none
+          className={`relative w-full ${CADRE_PHOTO_PORTFOLIO} overflow-hidden rounded-none
                      bg-sombre-eleve
                      shadow-[0_2px_12px_rgba(0,0,0,0.35)]
                      transition-shadow duration-300
-                     group-hover:shadow-[0_12px_34px_rgba(0,0,0,0.55)]"
+                     group-hover:shadow-[0_12px_34px_rgba(0,0,0,0.55)]`}
         >
           {/*  ⚠️ LA SOURCE NE DÉPEND PAS DE LA DISPOSITION (nº 175-§5),
                ET CELA DOIT LE RESTER.

@@ -1,5 +1,7 @@
 "use client";
 
+import { CADRE_PHOTO_PORTFOLIO } from "@/config/tatouage";
+
 import { useEffect, useRef } from "react";
 
 /**
@@ -446,7 +448,7 @@ export function GrilleGalerie({
               loading="lazy"
               decoding="async"
               draggable={false}
-              className="pointer-events-none aspect-[4/5] w-full select-none object-cover"
+              className={`pointer-events-none ${CADRE_PHOTO_PORTFOLIO} w-full select-none object-cover`}
             />
           </button>
         </li>

@@ -432,7 +432,10 @@ export function PageFavoris({
            menu — c'est la porte vers l'autre recherche. En `h2` : une
            page n'a qu'un titre. Sur smartphone il n'existe pas : la
            barre garde son bandeau, qui est la commande (§3). */}
-      <div data-titre-inactif="" className="hidden lg:block">
+      {/*  §2 (nº 251) — LE SECOND TITRE EST LA PORTE VERS L'AUTRE
+           RECHERCHE, et il ne vit plus que SUR LE DOIGT : sur le web,
+           les deux menus de l'encadré sont là, il ferait doublon. */}
+      <div data-titre-inactif="" className="lg:hidden">
         <LigneResultats
           balise="h2"
           titre={titreControle(
@@ -509,8 +512,23 @@ function titreControle(
   if (entrees.length === 0) return nom;
   return (
     <>
-      <span className="lg:hidden">{nom}</span>
-      <span data-titre-menu={cle} className="hidden lg:inline-block -ml-4">
+      {/*  §1 (nº 251) — SUR LE WEB, LE TITRE REDEVIENT UN TITRE : ni
+           chevron, ni fenêtre, rien de cliquable. C'est l'ENCADRÉ de la
+           barre qui commande (nº 246, remis en place). Le titre
+           annonce, l'encadré commande. */}
+      <span className="hidden lg:inline">{nom}</span>
+      {/*  §2 (nº 251) — AU DOIGT, C'EST L'INVERSE : les menus quittent
+           la barre (la hauteur y est rare) et LE TITRE commande. C'est
+           LE menu de la maison — `MenuDeroulant`, son chevron, son
+           drapeau `repliable` pour que « Cultures du monde » s'ouvre —
+           avec sa FEUILLE, qui monte par le bas de l'écran : le pouce
+           est là, et une quarantaine d'entrées dans une fenêtre
+           centrée obligerait à défiler dans une boîte, ce qu'on a
+           justement retiré de cette page.
+           `titreFeuille` : la feuille dit lequel des deux menus elle
+           porte — jamais les deux ensemble, chaque titre ouvre le
+           sien. */}
+      <span data-titre-menu={cle} className="lg:hidden inline-block -ml-4">
         <MenuDeroulant
           valeur={valeurDuMenu(choix, cle)}
           surChangement={(valeur) => poserSelection(cle, valeur)}
@@ -518,11 +536,13 @@ function titreControle(
           ariaLabel={nom}
           placeholder={nom}
           libelleValeur={nom}
+          titreFeuille={nom}
           hauteur="min-h-0"
           taillePolice=""
           sansBordure
           sombre
           repliable
+          feuilleMobile
         />
       </span>
     </>

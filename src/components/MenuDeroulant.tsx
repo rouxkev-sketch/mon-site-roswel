@@ -676,23 +676,47 @@ export function MenuDeroulant({
         document.body
       )}
 
-      {/* FEUILLE GLISSANTE — smartphone uniquement (< 768 px) */}
-      {listeVisible && feuilleMobile && (
+      {/**
+        * FEUILLE GLISSANTE — smartphone uniquement (< 768 px)
+        * ------------------------------------------------------------
+        * §2 (nº 251) — LES TROIS CONDITIONS DÉJÀ PAYÉES, tenues ici :
+        *  1. elle est montée dans un PORTAIL sur le corps du document.
+        *     Elle vivait dans le flux, à l'endroit du champ : posée
+        *     dans un titre de page ou dans la barre, le moindre
+        *     ancêtre à filtre, transformation ou `backdrop-filter` en
+        *     faisait une racine d'arrière-plan — et le verre n'y
+        *     floutait plus la page ;
+        *  2. la plaque est SŒUR du voile, jamais son enfant — sinon
+        *     elle floute le voile (un noir uni) au lieu de la page, et
+        *     redevient noire ;
+        *  3. AUCUN FONDU D'OPACITÉ SUR LA PLAQUE : son animation ne
+        *     touche que `transform` (`rw-feuille-monte`, globals.css).
+        *     Le fondu vit sur LE VOILE.
+        * ⚠️ ET C'EST LE VERRE DES MENUS (`data-verre-menu` : 45 %,
+        * flou 60, liseré discret), pas celui des fenêtres : cette
+        * feuille EST un menu — elle en porte les entrées, ses portes de
+        * catégorie et sa sous-porte de famille.
+        */}
+      {listeVisible &&
+        feuilleMobile &&
+        typeof document !== "undefined" &&
+        createPortal(
         <div className="md:hidden fixed inset-0 z-[70] flex flex-col justify-end">
-          {/* Fond noir SEMI-TRANSPARENT : le champ (et son contour rose)
-              restent visibles au travers. Tap = fermeture. */}
+          {/* LE VOILE — il porte le fondu (la plaque, jamais). Tap =
+              fermeture. */}
           <div
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-black/40 opacity-100
+                       transition-opacity duration-200 starting:opacity-0"
             onPointerDown={fermer}
             aria-hidden
           />
-          {/* La feuille */}
+          {/* La feuille — SŒUR du voile, jamais son enfant. */}
           <div
-            {...(sombre ? { "data-verre-fenetre": "" } : {})}
+            {...(sombre ? { "data-verre-menu": "" } : {})}
             role="listbox"
             aria-label={ariaLabel}
-            className={`relative rounded-t-3xl shadow-2xl max-h-[80vh] flex flex-col pb-[max(1rem,env(safe-area-inset-bottom))] ${
-              sombre ? "text-sombre-texte" : "bg-fond"
+            className={`relative rounded-t-3xl max-h-[80vh] flex flex-col pb-[max(1rem,env(safe-area-inset-bottom))] ${
+              sombre ? "text-sombre-texte" : "bg-fond shadow-2xl"
             }`}
             style={{
               transform: `translateY(${dragY}px)`,
@@ -787,7 +811,8 @@ export function MenuDeroulant({
               })}
             </ul>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -1455,3 +1455,18 @@ export const PHOTO_PORTFOLIO = { largeur: 1080, hauteur: 1350 } as const;
 export const PHOTO_MINIATURE = { largeur: 320, hauteur: 400 } as const;
 /** Le portrait rond (carte, fiche, équipe) — carré. */
 export const PORTRAIT_ROND = 320;
+
+/**
+ * §4 (nº 251) — LE CADRE 4:5, ÉCRIT UNE SEULE FOIS
+ * ------------------------------------------------------------------
+ * Le format ci-dessus dit les PIXELS d'un fichier ; celui-ci dit la
+ * CLASSE qui réserve sa place à l'écran. Les deux vont ensemble : le
+ * cadre tient la hauteur AVANT que l'image n'arrive (la règle du §3 de
+ * la nº 226 — rien ne saute), et l'image la remplit.
+ * ⚠️ IL ÉTAIT RECOPIÉ À LA MAIN dans quatre fichiers (`aspect-4/5`,
+ * `aspect-[4/5]`) : quatre occasions de diverger. Tout ce qui montre
+ * une photo de portfolio consomme désormais CETTE constante — la carte
+ * de la mosaïque, le carrousel de la fiche, la galerie, et les bandes
+ * de « Ma sélection ».
+ */
+export const CADRE_PHOTO_PORTFOLIO = "aspect-4/5";

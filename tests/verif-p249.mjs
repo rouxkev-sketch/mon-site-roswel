@@ -128,8 +128,11 @@ titre("§3 — le bloc quitte la barre du web, les titres portent le menu");
   const menus = lire("src/components/MenusSelection.tsx");
   const favoris = lire("src/components/PageFavoris.tsx");
   verif(
-    "le bloc à deux menus de la barre est `lg:hidden` — le smartphone le garde",
-    /className="w-full lg:hidden"/.test(menus) &&
+    //  (mis à jour nº 251-§1/§2 : l'encadré REVIENT dans la barre du
+    //  web et n'y vit plus QUE là — au doigt, c'est le titre qui
+    //  commande, avec sa feuille.)
+    "le bloc à deux menus vit dans la barre DU WEB — le doigt a ses titres",
+    /className="w-full hidden lg:block"/.test(menus) &&
       //  …avec son repli intact (l'état vient toujours de la barre).
       /data-ligne-repliee/.test(menus) &&
       /surDeploiement/.test(menus)
@@ -151,11 +154,11 @@ titre("§3 — le bloc quitte la barre du web, les titres portent le menu");
       /data-titre-inactif=""/.test(favoris) &&
       //  L'inactif n'existe que sur le web : au doigt, la commande
       //  reste le bandeau de la barre.
-      /data-titre-inactif="" className="hidden lg:block"/.test(favoris)
+      /data-titre-inactif="" className="lg:hidden"/.test(favoris)
   );
   verif(
     "le smartphone garde un titre en mot nu (le bandeau commande)",
-    /<span className="lg:hidden">\{nom\}<\/span>/.test(favoris)
+    /<span className="hidden lg:inline">\{nom\}<\/span>/.test(favoris)
   );
 }
 
@@ -337,11 +340,11 @@ titre("§6 — la rangée défile, aux deux largeurs");
               .map(
                 (_, rang) =>
                   '<li data-case class="' + c.case + '">' +
-                  '<a class="relative block aspect-square overflow-hidden rounded-none bg-sombre-eleve"></a></li>'
+                  '<a class="relative block aspect-4/5 overflow-hidden rounded-none bg-sombre-eleve"></a></li>'
               )
               .join("") +
             '<li data-case data-voir-plus-case class="' + c.case + '">' +
-            '<a class="flex aspect-square items-center justify-center rounded-none bg-sombre-eleve text-[13px] text-sombre-texte-doux">Voir plus</a></li>' +
+            '<a class="flex aspect-4/5 items-center justify-center rounded-none bg-sombre-eleve text-[13px] text-sombre-texte-doux">Voir plus</a></li>' +
             '</ul>' +
             '<button data-fleche class="hidden pointer-fine:flex absolute z-[2] right-1 top-1/2 w-9 h-9"></button>' +
             '</div>';
