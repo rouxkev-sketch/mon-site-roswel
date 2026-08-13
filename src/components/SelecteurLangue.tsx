@@ -75,11 +75,16 @@ function ListeDesLangues({ surChoix }: { surChoix: () => void }) {
             {/* La puce ronde désigne la langue en cours — le seul
                 repère, puisque aucune autre n'est cliquable. BLANCHE
                 (nº 141-§5) : le rose est réservé aux accents forts,
-                et une langue active n'en est pas un. */}
+                et une langue active n'en est pas un.
+                §3 (nº 241) — LES POINTS DES LANGUES À VENIR ÉCLAIRCIS :
+                `sombre-bordure` (#38383F) se perdait sur la plaque à
+                45 %. Blanc à 40 % — GRIS, toujours : une langue à
+                venir n'est ni une sélection (rose), ni un manque
+                (rouge), ni une mise en ligne (vert). */}
             <span
               aria-hidden
               className={`w-2 h-2 rounded-full shrink-0 ${
-                langue.actif ? "bg-white" : "bg-sombre-bordure"
+                langue.actif ? "bg-white" : "bg-white/40"
               }`}
             />
             {langue.label}

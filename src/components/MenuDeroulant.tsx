@@ -488,7 +488,12 @@ export function MenuDeroulant({
         //  tête de liste : elle se désigne elle-même, aucun calcul
         //  d'index à tenir à jour.
         data-sous-porte={sousEntete}
-        className={`${classes} flex w-full items-center justify-between gap-2 text-left`}
+        //  §5 (nº 241) — LA PORTE OUVERTE PREND LE VOILE DU SOUS-MENU
+        //  (voir la note sur les options) : porte et enfants forment
+        //  un seul bloc éclairci, on VOIT qu'on est entré quelque part.
+        className={`${classes} flex w-full items-center justify-between gap-2 text-left${
+          sousGroupeDeplie === sousEntete ? " bg-white/[0.06]" : ""
+        }`}
       >
         {sousEntete}
         {/*  ⚠️ LA FLÈCHE DE LA PORTE EST ROSE (nº 155-§5B), pointée en
@@ -643,11 +648,18 @@ export function MenuDeroulant({
                   //  ⚠️ `flex` SEULEMENT QUAND IL Y A UN COMPTE
                   //  (nº 216-§2) : sans lui, rien ne change pour les
                   //  autres menus du site, qui n'en portent pas.
+                  //  §5 (nº 241) — LE SOUS-MENU S'ÉCLAIRCIT D'UN CRAN,
+                  //  et par un VOILE BLANC AJOUTÉ PAR-DESSUS la plaque
+                  //  (`bg-white/[0.06]`) — JAMAIS en réduisant
+                  //  l'opacité de la plaque : plus transparente, elle
+                  //  disparaîtrait au-dessus d'une carte blanche,
+                  //  exactement ce que la teinte à 45 % évite. Chaque
+                  //  niveau s'éclaircit, c'est la règle de la charte.
                   className={`${optionSombre(
                     option.sousGroupe
                       ? OPTION_LISTE.replace("px-4", "pr-4 pl-9")
                       : OPTION_LISTE
-                  )}${option.compte !== undefined ? " flex items-center" : ""}`}
+                  )}${option.sousGroupe ? " bg-white/[0.06]" : ""}${option.compte !== undefined ? " flex items-center" : ""}`}
                 >
                   <span className="min-w-0 flex-1 truncate">{option.label}</span>
                   {option.compte !== undefined && (
@@ -748,8 +760,9 @@ export function MenuDeroulant({
                       // métier est sélectionné.
                       className={`w-full flex items-center gap-3 min-h-[52px] pr-3 rounded-2xl text-left text-base ${
                         //  Retrait des options d'une sous-section
-                        //  (passe nº 113) — même règle que sur le web.
-                        option.sousGroupe ? "pl-8" : "pl-3"
+                        //  (passe nº 113) — même règle que sur le web,
+                        //  et le VOILE du sous-menu avec (nº 241-§5).
+                        option.sousGroupe ? "pl-8 bg-white/[0.06]" : "pl-3"
                       } ${
                         sombre
                           ? "text-sombre-texte hover:bg-sombre-eleve"

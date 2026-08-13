@@ -566,13 +566,24 @@ function FenetreAdresse({
              largeur (pleine), même hauteur, même rayon — en verre
              blanc, jamais en rose (l'action finale reste seule à le
              porter). Le mot devient « Adresse copiée » après l'appui. */}
+        {/*  §4A (nº 241) — LE FOND EST AUSSI PORTÉ EN STYLE EN LIGNE,
+             et voilà pourquoi : troisième passe sur ces capsules, et le
+             propriétaire les voit toujours opaques sur son appareil,
+             alors qu'ici les valeurs CALCULÉES sont justes (mesuré
+             fenêtre ouverte à 390 px : blanc 0.2 / rose 0.4, filtre
+             none) et qu'il n'existe qu'UNE écriture (vérifié — aucune
+             seconde fenêtre d'adresse). La seule famille de causes
+             restante est la cascade de SA feuille servie (ordre de
+             chunks, règle d'attribut perdante chez lui) : un style en
+             ligne gagne sur toute règle, dans tous les moteurs, quel
+             que soit l'état du build. L'attribut reste pour la sonde. */}
         <button
           type="button"
           onClick={copierPuisFermer}
           data-verre-capsule=""
+          style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
           className="flex min-h-[48px] w-full items-center justify-center
-                     rounded-full text-[15px] font-semibold text-sombre-texte
-                     transition-colors active:bg-white/20"
+                     rounded-full text-[15px] font-semibold text-sombre-texte"
         >
           {copie ? "Adresse copiée" : "Copier l'adresse"}
         </button>
@@ -589,9 +600,13 @@ function FenetreAdresse({
           rel="noopener noreferrer"
           onClick={surFermeture}
           data-verre-action=""
+          //  Même durcissement que la capsule blanche (§4A) — et
+          //  l'état enfoncé ne passe plus par `opacity` : une opacité
+          //  partielle sur un élément posé sur la plaque en ferait un
+          //  plan à part (la leçon de la nº 234, appliquée partout).
+          style={{ backgroundColor: "rgba(238, 61, 111, 0.4)" }}
           className="mt-3 flex min-h-[48px] w-full items-center justify-center
-                     rounded-full text-[15px] font-semibold text-white
-                     transition-opacity active:opacity-85"
+                     rounded-full text-[15px] font-semibold text-white"
         >
           Ouvrir dans Google Maps
         </a>

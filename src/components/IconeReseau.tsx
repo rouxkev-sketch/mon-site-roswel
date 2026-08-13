@@ -24,11 +24,13 @@
  * CE QUE CHAQUE DESSIN SIMPLIFIE, dit franchement :
  *  · INSTAGRAM — le glyphe officiel tel quel : carré aux angles
  *    arrondis, cercle, point. Rien à retirer, il est déjà monochrome.
- *  · TIKTOK — la note du logo est un ruban à double décalage de
- *    couleur, illisible en monochrome à 20 px. RETIRÉ : l'écho de
- *    couleur (le double contour cyan/magenta) et l'épaisseur variable
- *    du ruban. GARDÉ : une note de musique franche — tête ronde,
- *    hampe, fanion courbe — le squelette que le logo stylise.
+ *  · TIKTOK — une MASSE PLEINE (`fill`, nº 241-§2) : le glyphe ne se
+ *    rend pas au trait, la note au contour de la nº 240 ne se lisait
+ *    pas. Gardé : tête ronde pleine, hampe droite, fanion recourbé
+ *    vers la droite en haut — la courbe épaisse qui signe le logo.
+ *    Retiré : l'écho de couleur cyan/magenta. Le poids d'encre est
+ *    égalisé sur Instagram par la TAILLE de dessin (~15/24 contre
+ *    17/24), jamais en affinant la masse.
  *  · LIEN LIBRE — le MAILLON (deux anses obliques, l'icône « lien »
  *    classique) : à 20 px, il reste net là où la flèche qui sort d'un
  *    cadre devient une bouillie de petits traits. C'est lui qu'on
@@ -73,21 +75,28 @@ export function IconeTikTok({ taille = 20 }: ProprietesIconeLien) {
       fill="none"
       aria-hidden
     >
-      {/*  La note : tête ronde en bas à gauche, hampe, fanion qui
-           s'évase à droite — l'ordre de lecture du logo, sans son
-           double contour. */}
-      <circle cx="8.4" cy="17.2" r="3" stroke="currentColor" strokeWidth="1.8" />
+      {/*  §2 (nº 241) — EN SURFACE PLEINE, ET C'EST STRUCTUREL : le
+           glyphe TikTok est une MASSE, un trait de 1,8 ne peut pas le
+           rendre — la note au contour de la nº 240 ne se lisait pas.
+           Ce qui le fait reconnaître, conservé : la tête ronde pleine
+           en bas à gauche, la hampe droite à sa droite, et le FANION
+           qui se recourbe franchement vers la droite en haut — c'est
+           cette courbe épaisse qui signe le glyphe.
+           ⚠️ LE POIDS D'ENCRE : une masse pleine paraît toujours plus
+           lourde qu'un contour à surface égale — on compense par la
+           TAILLE DE DESSIN, jamais en affinant la masse. Mesuré aux
+           pixels rendus contre Instagram : une masse à ~la moitié de
+           l'encre BRUTE d'un contour se lit déjà aussi lourde que lui
+           (l'aplat est concentré, le contour dispersé) — relevé au
+           banc : 934 px² contre 2000, rapport 0,47, boîte de ~16,6 px
+           sous les 17,2 d'Instagram.
+           `fill="currentColor"` : monochrome, la couleur du texte. */}
       <path
-        d="M11.4 17.2V4.6"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-      <path
-        d="M11.4 4.6c.5 3.1 2.9 5.2 6.2 5.5"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
+        fill="currentColor"
+        transform="translate(3.7 3.6) scale(1.04)"
+        d="M9 0h1.98c.144.715.54 1.617 1.235 2.512C12.895 3.389
+           13.797 4 15 4v2c-1.753 0-3.07-.814-4-1.829V11a5 5 0 1
+           1-5-5v2a3 3 0 1 0 3 3V0Z"
       />
     </svg>
   );
@@ -115,6 +124,92 @@ export function IconeLienLibre({ taille = 20 }: ProprietesIconeLien) {
         stroke="currentColor"
         strokeWidth="1.8"
         strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/* ==================================================================
+ * LES QUATRE ICÔNES DE LA FENÊTRE PARTAGE (nº 241-§4B) — même
+ * écriture que les trois du dessus : tracé 1,8 sur la grille de 24,
+ * `currentColor`, aucun logo de couleur, aucun fond de marque, aucun
+ * disque. Elles ne servent QU'À la fenêtre de partage sombre
+ * (YokoFolio) — la fenêtre claire du produit artisans garde ses
+ * icônes historiques, il n'est jamais touché.
+ * ================================================================== */
+
+export function IconePartageWhatsApp({ taille = 20 }: ProprietesIconeLien) {
+  return (
+    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" aria-hidden>
+      {/*  La bulle ronde à queue, et le combiné dedans — le squelette
+           du glyphe, sans son vert. */}
+      <path
+        d="M12 3.6a8.4 8.4 0 0 1 0 16.8 8.6 8.6 0 0 1-4-1l-4 1 1.1-3.8
+           a8.4 8.4 0 0 1 6.9-13Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M9 8.6c.2-.5.8-.6 1.2-.2l.8 1c.2.3.2.7 0 1l-.5.6c.5 1 1.4 1.9 2.5 2.4l.6-.5c.3-.2.7-.3 1-.1l1 .7c.5.3.4 1-.1 1.3-.7.4-1.5.5-2.2.2a8.2 8.2 0 0 1-4.4-4.3c-.3-.7-.2-1.4.1-2.1Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function IconePartageSms({ taille = 20 }: ProprietesIconeLien) {
+  return (
+    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" aria-hidden>
+      {/*  La bulle de message, trois points de conversation. */}
+      <path
+        d="M4 6.8A2.8 2.8 0 0 1 6.8 4h10.4A2.8 2.8 0 0 1 20 6.8v7A2.8 2.8 0 0 1 17.2 16.6H9.4L5.2 20v-3.6A2.8 2.8 0 0 1 4 13.8Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <circle cx="8.8" cy="10.4" r="1" fill="currentColor" />
+      <circle cx="12" cy="10.4" r="1" fill="currentColor" />
+      <circle cx="15.2" cy="10.4" r="1" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function IconePartageEmail({ taille = 20 }: ProprietesIconeLien) {
+  return (
+    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" aria-hidden>
+      {/*  L'enveloppe : le cadre, puis le rabat en V. */}
+      <rect
+        x="3.4"
+        y="5.4"
+        width="17.2"
+        height="13.2"
+        rx="2.6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <path
+        d="m4.6 7.4 7.4 5.6 7.4-5.6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function IconePartageFacebook({ taille = 20 }: ProprietesIconeLien) {
+  return (
+    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" aria-hidden>
+      {/*  Le « f » seul, au trait — jamais le disque bleu. */}
+      <path
+        d="M15.5 4h-2.2A3.3 3.3 0 0 0 10 7.3V10H7.6v3H10v7h3.1v-7h2.5l.5-3h-3V7.7a.9.9 0 0 1 .9-.9h2.5V4Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
         strokeLinejoin="round"
       />
     </svg>

@@ -2,6 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { EnteteModale, FenetreModale } from "@/components/FenetreModale";
+import { FenetreDeVerre } from "@/components/SurfaceDeVerre";
+import {
+  IconePartageEmail,
+  IconePartageFacebook,
+  IconePartageSms,
+  IconePartageWhatsApp,
+} from "@/components/IconeReseau";
 import {
   IconeBulleMessage,
   IconeEnveloppe,
@@ -221,7 +228,9 @@ export function BoutonPartageFiche({
     };
     window.addEventListener("blur", marquer, { once: true });
     document.addEventListener("visibilitychange", marquer, { once: true });
-    window.location.href = `sms:?&body=${encodeURIComponent(texte)}`;
+    //  `assign(...)` et non `href = ...` : même effet, et l'analyse de
+    //  React ne voit plus une mutation faite pendant le rendu.
+    window.location.assign(`sms:?&body=${encodeURIComponent(texte)}`);
     setTimeout(async () => {
       window.removeEventListener("blur", marquer);
       document.removeEventListener("visibilitychange", marquer);
@@ -234,9 +243,9 @@ export function BoutonPartageFiche({
   /** E-mail : objet et corps pré-remplis */
   function ouvrirEmail() {
     const objet = `${nomArtisan} sur ${marque}`;
-    window.location.href = `mailto:?subject=${encodeURIComponent(
-      objet
-    )}&body=${encodeURIComponent(messagePartage())}`;
+    window.location.assign(
+      `mailto:?subject=${encodeURIComponent(objet)}&body=${encodeURIComponent(messagePartage())}`
+    );
   }
 
   async function partager(evenement?: React.MouseEvent) {
@@ -340,107 +349,90 @@ export function BoutonPartageFiche({
   }, [fenetreSombreActive]);
 
   /* ----- LA FENÊTRE DE PARTAGE, CHARTE SOMBRE (yokofolio) -----
-     L'ESPRIT YOUTUBE : titre + croix ; une RANGÉE HORIZONTALE
-     d'icônes rondes (Copier, WhatsApp, SMS, E-mail, Facebook) avec
-     leur libellé court dessous ; et SOUS la rangée, le lien complet
-     dans un champ avec son bouton « Copier » intégré — « Copié ! »
-     s'affiche sur place. Épuré, sombre, à nous. */
+     REFAITE À LA CHARTE (nº 241-§4B). DISPARUS : le titre, la croix,
+     l'icône de copie (la rangée « Copier le lien » — le champ du bas
+     copie déjà), le voile à 80 %, la plaque opaque et son fondu
+     d'opacité (le piège de la nº 234). Elle se referme par un appui à
+     côté, comme la fenêtre d'adresse — c'est FenetreDeVerre qui porte
+     tout : plaque à 22 %, flou, saturation et liseré de fenêtre,
+     voile à 25 % porteur du fondu, portail.
+     CE QUI RESTE, ET RIEN D'AUTRE : WhatsApp, SMS, e-mail, Facebook —
+     quatre ACTIONS INTERMÉDIAIRES à taille naturelle (aucune capsule
+     rose ici, le rose n'a rien à y faire) — puis le champ contenant
+     le lien, badge « Copier » À L'INTÉRIEUR, contre son bord droit.
+     LES QUATRE ICÔNES : l'écriture unique de la nº 240 (IconeReseau,
+     tracé 1,8 / grille 24 / currentColor) — aucun logo de couleur,
+     aucun fond de marque, aucun disque. */
+  const actionsFenetreSombre = [
+    { cle: "whatsapp", libelle: "WhatsApp", icone: <IconePartageWhatsApp taille={22} /> },
+    { cle: "sms", libelle: "SMS", icone: <IconePartageSms taille={22} /> },
+    { cle: "email", libelle: "E-mail", icone: <IconePartageEmail taille={22} /> },
+    { cle: "facebook", libelle: "Facebook", icone: <IconePartageFacebook taille={22} /> },
+  ].map((entree) => ({
+    ...entree,
+    action: actionsPartage.find((a) => a.cle === entree.cle)?.action,
+  }));
+
   const fenetreSombre = fenetreSombreActive ? (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="titre-partage-sombre"
-      className="fixed inset-0 z-[70] flex items-center justify-center p-5"
-      onClick={fermerFenetre}
+    <FenetreDeVerre
+      ariaLabel="Partager cette fiche"
+      surFermeture={fermerFenetre}
+      largeur="max-w-[440px]"
     >
-      <div aria-hidden="true" className="absolute inset-0 bg-black/80" />
-      <div
-        onClick={(evenement) => evenement.stopPropagation()}
-        className="relative w-full max-w-[480px] rounded-2xl bg-sombre-carte p-6
-                   shadow-[0_24px_80px_rgba(0,0,0,0.6)]
-                   opacity-100 transition-opacity duration-200 starting:opacity-0"
-      >
-        <div className="flex items-center justify-between gap-3">
-          <h2
-            id="titre-partage-sombre"
-            className="text-[17px] font-bold text-sombre-texte"
-          >
-            Partager cette fiche
-          </h2>
+      {/*  LES QUATRE PARTAGES — l'icône, le mot dessous ; au survol,
+           le voile translucide des lignes de menu (nº 237-§2), jamais
+           un aplat sur la plaque. */}
+      <div className="flex items-start justify-between gap-1">
+        {actionsFenetreSombre.map(({ cle, libelle, icone, action }) => (
           <button
+            key={cle}
             type="button"
-            aria-label="Fermer"
-            onClick={fermerFenetre}
-            className="w-9 h-9 -mr-1.5 rounded-full flex items-center justify-center
-                       text-sombre-texte-doux hover:text-primaire transition-colors"
+            onClick={action}
+            className="flex flex-1 flex-col items-center gap-2 rounded-xl
+                       px-2 py-3 text-sombre-texte
+                       transition-colors hover:bg-white/5 active:bg-white/10"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="m6 6 12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
+            {icone}
+            <span className="text-[12px] leading-tight text-sombre-texte-doux">
+              {libelle}
+            </span>
           </button>
-        </div>
-
-        {/* LA RANGÉE HORIZONTALE — une icône ronde par moyen, le
-            libellé court dessous. */}
-        <div className="mt-6 flex items-start justify-between gap-1">
-          {actionsPartage.map(({ cle, court, icone, action }) => (
-            <button
-              key={cle}
-              type="button"
-              onClick={action}
-              className="group flex w-[76px] flex-col items-center gap-2"
-            >
-              <span
-                className="w-12 h-12 rounded-full bg-sombre-eleve flex items-center
-                           justify-center text-white group-hover:text-primaire
-                           group-hover:bg-sombre-bordure/60 transition-colors"
-              >
-                {icone}
-              </span>
-              <span className="text-[11.5px] leading-tight text-sombre-texte-doux group-hover:text-sombre-texte transition-colors">
-                {court}
-              </span>
-            </button>
-          ))}
-        </div>
-
-        {/* LE LIEN COMPLET — dans son champ, bouton « Copier »
-            intégré : « Copié ! » s'affiche sur place. */}
-        <div
-          className="mt-6 flex items-center gap-2 rounded-xl border border-sombre-bordure
-                     bg-sombre-eleve pl-4 pr-1.5 py-1.5"
-        >
-          <span
-            className="min-w-0 flex-1 truncate text-[13px] text-sombre-texte-doux"
-            title={typeof window === "undefined" ? undefined : urlFiche()}
-          >
-            {typeof window === "undefined" ? "" : urlFiche()}
-          </span>
-          <button
-            type="button"
-            onClick={async () => {
-              await copierTexte(urlFiche());
-              setRetour("Lien copié");
-              setCopieChamp(true);
-              setTimeout(() => setCopieChamp(false), 2000);
-            }}
-            className="shrink-0 rounded-full bg-primaire hover:bg-primaire-fonce
-                       px-4 min-h-[36px] text-[13px] font-semibold text-white
-                       transition-colors"
-          >
-            {copieChamp ? "Copié !" : "Copier"}
-          </button>
-        </div>
-
-        <p
-          role="status"
-          aria-live="polite"
-          className="mt-3 h-5 text-center text-xs text-sombre-texte-doux"
-        >
-          {retour}
-        </p>
+        ))}
       </div>
-    </div>
+
+      {/*  LE LIEN, badge « Copier » DANS le champ, contre le bord
+           droit. Le champ est un voile translucide (blanc 8 %, le gris
+           foncé des badges éteints) — un fond opaque ferait une boîte
+           sur la plaque. Le badge : blanc à 20 %, les valeurs des
+           badges du filtre, SANS flou propre — durci en style en
+           ligne comme les capsules de la fenêtre d'adresse (§4A). */}
+      <div
+        className="mt-5 flex items-center gap-2 rounded-xl bg-white/[0.08]
+                   pl-4 pr-1.5 py-1.5"
+      >
+        <span
+          className="min-w-0 flex-1 truncate text-[13px] text-sombre-texte-doux"
+          title={typeof window === "undefined" ? undefined : urlFiche()}
+        >
+          {typeof window === "undefined" ? "" : urlFiche()}
+        </span>
+        <button
+          type="button"
+          aria-live="polite"
+          onClick={async () => {
+            await copierTexte(urlFiche());
+            setCopieChamp(true);
+            setTimeout(() => setCopieChamp(false), 2000);
+          }}
+          data-verre-capsule=""
+          style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
+          className="shrink-0 rounded-full px-4 min-h-[36px] text-[13px]
+                     font-semibold text-sombre-texte"
+        >
+          {copieChamp ? "Copié !" : "Copier"}
+        </button>
+      </div>
+    </FenetreDeVerre>
   ) : null;
 
   /* ----- LA FENÊTRE DE PARTAGE, CHARTE CLAIRE (artisans) -----

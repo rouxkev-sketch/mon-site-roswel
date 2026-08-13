@@ -566,10 +566,13 @@ export function ContenuFiche({
               TEXTE (sa colonne), jamais sur celui de la photo.
               ⚠️ ET UNE MARGE AU-DESSUS (nº 222-§1b) : la photo touchait
               la rangée Profil / Portfolio / Suivre. */}
-          {/*  §1 (nº 225) — 32 px AU-DESSUS ET AU-DESSOUS de la
-               photo, égaux (le bloc des liens porte l'autre moitié :
-               son `mt-8` MESURE la marge basse, il ne s'ajoute pas au
-               28 px de la 223, qu'il remplace).
+          {/*  §1 (nº 241) — 40 px AU-DESSUS ET AU-DESSOUS de la
+               photo, égaux : EXACTEMENT l'espacement qui entoure les
+               lignes de séparation depuis la nº 223 (`mt-10 pt-10`) —
+               le rythme de la fiche, pas une valeur inventée. (La
+               nº 225 les tenait à 32 ; le bloc des liens porte
+               toujours la marge basse : son `mt-10` MESURE cette
+               marge, il ne s'y ajoute pas.)
                §2 — LE CENTRAGE CONDITIONNEL, en CSS pur et au pixel :
                la colonne de texte porte `min-height` = hauteur de la
                photo (92 px) et centre son contenu (`justify-center`).
@@ -580,7 +583,7 @@ export function ContenuFiche({
                suite continue dessous, dans la même colonne. Aucun
                JavaScript, aucune mesure — la bascule est celle de la
                boîte elle-même. */}
-          <div className="mt-8 flex items-start gap-5">
+          <div className="mt-10 flex items-start gap-5">
             {avatarProfil}
             <div className="flex min-h-[92px] min-w-0 flex-1 flex-col justify-center">
               {/*  LE NOM — une taille de titre de profil, DEUX LIGNES
@@ -621,7 +624,7 @@ export function ContenuFiche({
                start` : la colonne est large, le lien garde sa taille.
                L'ordre de la nº 227 ne bouge pas. */}
           {(premiereLigne.length > 0 || secondeLigne.length > 0) && (
-            <div className="mt-8 flex w-full flex-col items-start gap-y-4">
+            <div className="mt-10 flex w-full flex-col items-start gap-y-4">
               {premiereLigne.length > 0 && (
                 <div className="grid w-full grid-cols-2 items-center justify-items-start gap-x-7 gap-y-4">
                   {premiereLigne}
