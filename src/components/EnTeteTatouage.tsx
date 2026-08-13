@@ -668,9 +668,40 @@ export function EnTeteTatouage({
              1fr à 0fr : la hauteur exacte se replie, le contenu est
              coupé par l'overflow de l'enveloppe — il se replie AVEC la
              rangée, jamais après. */}
+        {/**
+          * §2 et §3 (nº 248) — 680 EST UN MAXIMUM, PAS UNE LARGEUR FIXE.
+          * ------------------------------------------------------------
+          * LE DÉFAUT, MESURÉ. Ce bloc était posé en `lg:shrink-0` :
+          * `flex: 0 0 680px`, incompressible. La rangée réclamait donc
+          * toujours 24 + 239 (logo) + 20 + 680 + 20 + 189 (langue et
+          * compte) = 1172 px, quelle que soit la fenêtre. Sous cette
+          * largeur, le bloc poussait le côté droit HORS de la page —
+          * l'icône du compte sortait de l'écran — et le document
+          * s'élargissait d'autant : 1172 pour 1024 (148 px de trop),
+          * 1172 pour 1100 (72 px de trop), rien à partir de 1196.
+          * LA RÈGLE ÉTAIT DÉJÀ ÉCRITE, elle avait seulement été
+          * défaite : la nº 146-§2 dit « 680 est un maximum, pas une
+          * largeur fixe — `lg:shrink` + `min-w-0` laissent l'encadré se
+          * réduire dès que la barre manque de place, AVANT que quoi que
+          * ce soit d'autre ne cède ». C'est elle qu'on rétablit.
+          *  · `lg:shrink` (et non `shrink-0`) : le bloc CÈDE, et lui
+          *    seul — le logo et le côté du compte restent `flex-none`,
+          *    ils ne bougent ni ne rétrécissent d'un pixel ;
+          *  · `lg:grow-0` : il ne dépasse jamais 680 ;
+          *  · `min-w-0` : il a le droit d'aller sous sa largeur de
+          *    contenu, sinon la réduction ne peut pas jouer.
+          * ⚠️ ET LES MARGES AUTOMATIQUES NE GÊNENT PAS : quand il reste
+          * de la place, elles l'absorbent à égalité et le bloc garde ses
+          * 680 px (nº 169-§4, intact) ; quand il en manque, elles valent
+          * zéro et c'est la réduction qui joue. Les deux règles ne se
+          * rencontrent jamais.
+          * ⚠️ AUCUN `overflow-x: hidden` NULLE PART : on ne cache pas un
+          * débordement, on retire ce qui déborde (le masque retiré à la
+          * nº 228 ne revient pas).
+          */}
         <div
           data-rangee-moteur=""
-          className={`order-3 lg:order-2 basis-full lg:basis-[680px] lg:shrink-0 lg:grow-0 lg:mx-auto
+          className={`order-3 lg:order-2 basis-full lg:basis-[680px] lg:shrink lg:grow-0 lg:mx-auto
                       min-w-0 justify-center ${
                         surAccueil
                           ? `max-lg:grid max-lg:grid-cols-[minmax(0,1fr)]
