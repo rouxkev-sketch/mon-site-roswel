@@ -266,15 +266,36 @@ html:has([data-fond="sombre"]) {
     inset 0 0 0 1px rgba(255, 255, 255, 0.02);
 }
 
-/*  LES CAPSULES POSÉES SUR LA PLAQUE — « Copier l'adresse » en blanc
-    translucide.
+/*  LES CAPSULES POSÉES SUR LA PLAQUE — « Copier l'adresse », le badge
+    « Copier » de la fenêtre Partage.
     ⚠️ SANS AUCUN FILTRE D'ARRIÈRE-PLAN (nº 233-§4) : un second filtre
     par-dessus celui de la plaque APLATIT l'effet — c'est le flou de
-    la plaque qu'on voit à travers, un remplissage translucide
-    suffit. Et PLUS CLAIRES que la plaque (blanc à 20 %), sinon elles
-    se lisent comme des aplats posés dessus. */
+    la plaque qu'on voit à travers, un remplissage translucide suffit.
+    §2 (nº 242) — LE BLANC DESCEND DE 20 À 12 % : quatre passes ont
+    prouvé (sonde iPhone comprise, iOS 26) que les VALEURS étaient
+    justes et que l'effet ne prenait pas — le défaut est OPTIQUE. La
+    plaque a déjà tout flouté : une capsule translucide posée dessus
+    est transparente sur du vide, elle se lit comme un aplat quelle
+    que soit son opacité. C'est LA LUMIÈRE qui fait le verre (le
+    reflet, plus bas) — le remplissage ne doit plus porter l'effet,
+    d'où le laiteux en moins.
+    LE SURVOL (règle de la nº 229/237) : le remplissage s'éclaircit
+    d'un cran, la couleur du texte ne change jamais, aucun contour,
+    aucun halo, aucun rose ; au doigt, l'état enfoncé ne reste pas.
+    `hover:hover` : réservé aux appareils qui survolent — au doigt,
+    iOS fige le survol après le premier appui. Un @media autour d'un
+    FOND n'a rien du piège des filtres (qui, lui, interdit @supports
+    autour des DEUX LIGNES littérales du filtre). */
 [data-verre-capsule] {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.12);
+}
+@media (hover: hover) {
+  [data-verre-capsule]:hover {
+    background-color: rgba(255, 255, 255, 0.18);
+  }
+}
+[data-verre-capsule]:active {
+  background-color: rgba(255, 255, 255, 0.24);
 }
 
 /*  LES BADGES POSÉS SUR UNE PLAQUE DE VERRE (panneau de filtres,
@@ -301,11 +322,38 @@ html:has([data-fond="sombre"]) {
 }
 
 /*  L'ACTION FINALE DE LA FENÊTRE — « Ouvrir dans Google Maps » : du
-    VERRE TEINTÉ ROSE, jamais un aplat. Rose à 40 % (nº 233-§4), et
-    SANS FILTRE D'ARRIÈRE-PLAN, comme la capsule blanche : on voit la
-    page floutée par la plaque à travers les deux. */
+    VERRE TEINTÉ ROSE, jamais un aplat. Rose à 40 % (nº 233-§4, gardé
+    tel quel à la nº 242), et SANS FILTRE D'ARRIÈRE-PLAN, comme la
+    capsule blanche : on voit la page floutée par la plaque à travers
+    les deux. */
 [data-verre-action] {
   background-color: rgba(238, 61, 111, 0.4);
+}
+
+/*  LA LUMIÈRE DU VERRE SUR LES CAPSULES (nº 242-§2) — L'UNIQUE
+    ÉCRITURE, pour toute capsule posée sur une plaque de verre :
+    fenêtre d'adresse ET fenêtre Partage, blanche comme rose.
+    -------------------------------------------------------------------
+    LE DIAGNOSTIC, après quatre passes de valeurs justes (relevé de la
+    sonde sur iPhone à l'appui) : la plaque floute la page à 40 px —
+    tout détail est effacé derrière elle. Une capsule translucide
+    posée là est transparente SUR DU VIDE : rien à laisser voir, donc
+    un aplat à l'œil, quelle que soit son opacité. Ce qui fait lire le
+    verre, c'est SA LUMIÈRE : le fin reflet clair du bord haut —
+    exactement celui de la plaque.
+    LES PROPORTIONS DE LA PLAQUE (0,10 haut / 0,035 tour — rapport
+    2,86), à l'échelle de la capsule : 0,35 haut / 0,12 tour (rapport
+    2,92). Le pixel est déjà le trait le plus fin possible : sur une
+    capsule de 48 px, c'est L'INTENSITÉ qui se met à l'échelle, pas
+    l'épaisseur — au même alpha que la plaque, le reflet disparaissait
+    dans le remplissage.
+    ⚠️ UNIQUEMENT DES OMBRES INTERNES : aucun contour tracé, aucun
+    halo, aucun filtre propre (le second flou aplatit tout, nº 238). */
+[data-verre-capsule],
+[data-verre-action] {
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.35),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
 /*  LES TROIS FENÊTRES PLUS TEINTÉES (nº 240-§3) — langues,

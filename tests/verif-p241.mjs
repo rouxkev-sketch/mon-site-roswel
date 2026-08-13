@@ -272,10 +272,12 @@ titre("§4A — la fenêtre d'adresse, réellement ouverte (390 px)");
         action: lireStyle(document.querySelector("[data-verre-action]")),
       };
     });
+    //  ⚠️ SPEC REVUE PAR LA Nº 242-§2 (banc daté mis à jour) : le
+    //  blanc descend à 12 % — c'est le reflet qui porte l'effet.
     verif(
-      "« Copier l'adresse » CALCULÉ : blanc à 20 %, aucun flou propre",
+      "« Copier l'adresse » CALCULÉ : blanc à 12 %, aucun flou propre",
       Boolean(vu.capsule) &&
-        vu.capsule.fond === "rgba(255, 255, 255, 0.2)" &&
+        vu.capsule.fond === "rgba(255, 255, 255, 0.12)" &&
         vu.capsule.filtre === "none",
       vu.capsule ? `${vu.capsule.fond} · filtre ${vu.capsule.filtre}` : "fenêtre non ouverte"
     );
@@ -286,14 +288,14 @@ titre("§4A — la fenêtre d'adresse, réellement ouverte (390 px)");
         vu.action.filtre === "none",
       vu.action ? `${vu.action.fond} · filtre ${vu.action.filtre}` : "fenêtre non ouverte"
     );
-    //  §4A — LE DURCISSEMENT : le fond est AUSSI porté par l'élément
-    //  (style en ligne), pour que rien — ordre de chunks, règle
-    //  perdante, feuille d'un autre build — ne puisse le recouvrir.
+    //  ⚠️ LE DURCISSEMENT EN LIGNE DE LA 241 EST RETIRÉ PAR LA 242 :
+    //  la sonde de l'iPhone a prouvé que la feuille arrive intacte, et
+    //  un style en ligne aurait écrasé le survol et le nouveau fond.
+    //  La lumière du verre est mesurée au banc p242.
     verif(
-      "les deux fonds sont portés EN LIGNE par l'élément (imbattables en cascade)",
-      vu.capsule?.enLigne === "rgba(255, 255, 255, 0.2)" &&
-        vu.action?.enLigne === "rgba(238, 61, 111, 0.4)",
-      `${vu.capsule?.enLigne} · ${vu.action?.enLigne}`
+      "plus aucun fond en ligne : la feuille est l'unique écriture",
+      !vu.capsule?.enLigne && !vu.action?.enLigne,
+      `${vu.capsule?.enLigne || "(aucun)"} · ${vu.action?.enLigne || "(aucun)"}`
     );
   } catch (erreur) {
     nonJoue("§4A", String(erreur).slice(0, 70));
@@ -384,10 +386,11 @@ for (const [nomLargeur, faire] of [["1440 px", () => pageWeb(1440)]]) {
           vu.plaque.opacite === "1",
         vu.plaque ? `${vu.plaque.fond} · ${vu.plaque.filtre}` : "—"
       );
+      //  Spec revue par la nº 242 : 12 %, le reflet porte l'effet.
       verif(
-        `le badge « Copier » : blanc à 20 %, sans flou propre (${nomLargeur})`,
+        `le badge « Copier » : blanc à 12 %, sans flou propre (${nomLargeur})`,
         Boolean(vu.badge) &&
-          vu.badge.fond === "rgba(255, 255, 255, 0.2)" &&
+          vu.badge.fond === "rgba(255, 255, 255, 0.12)" &&
           vu.badge.filtre === "none",
         vu.badge ? `${vu.badge.fond} · filtre ${vu.badge.filtre}` : "—"
       );

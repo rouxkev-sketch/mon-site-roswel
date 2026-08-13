@@ -566,22 +566,21 @@ function FenetreAdresse({
              largeur (pleine), même hauteur, même rayon — en verre
              blanc, jamais en rose (l'action finale reste seule à le
              porter). Le mot devient « Adresse copiée » après l'appui. */}
-        {/*  §4A (nº 241) — LE FOND EST AUSSI PORTÉ EN STYLE EN LIGNE,
-             et voilà pourquoi : troisième passe sur ces capsules, et le
-             propriétaire les voit toujours opaques sur son appareil,
-             alors qu'ici les valeurs CALCULÉES sont justes (mesuré
-             fenêtre ouverte à 390 px : blanc 0.2 / rose 0.4, filtre
-             none) et qu'il n'existe qu'UNE écriture (vérifié — aucune
-             seconde fenêtre d'adresse). La seule famille de causes
-             restante est la cascade de SA feuille servie (ordre de
-             chunks, règle d'attribut perdante chez lui) : un style en
-             ligne gagne sur toute règle, dans tous les moteurs, quel
-             que soit l'état du build. L'attribut reste pour la sonde. */}
+        {/*  §2 (nº 242) — LE DOSSIER TECHNIQUE EST CLOS : la sonde de
+             l'iPhone (iOS 26) a prouvé les valeurs justes et la
+             structure saine — le défaut était OPTIQUE (une capsule
+             translucide sur une plaque déjà floutée n'a rien à
+             laisser voir). La réponse est LA LUMIÈRE DU VERRE : le
+             reflet d'ombres internes porté par `data-verre-capsule`
+             (globals.css, l'unique écriture), et le remplissage
+             descendu à 12 % — c'est le reflet qui porte l'effet.
+             Le style en ligne de la nº 241 est retiré : la sonde a
+             prouvé que la feuille arrive intacte, et il aurait écrasé
+             le survol et le nouveau fond. */}
         <button
           type="button"
           onClick={copierPuisFermer}
           data-verre-capsule=""
-          style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
           className="flex min-h-[48px] w-full items-center justify-center
                      rounded-full text-[15px] font-semibold text-sombre-texte"
         >
@@ -600,11 +599,9 @@ function FenetreAdresse({
           rel="noopener noreferrer"
           onClick={surFermeture}
           data-verre-action=""
-          //  Même durcissement que la capsule blanche (§4A) — et
-          //  l'état enfoncé ne passe plus par `opacity` : une opacité
-          //  partielle sur un élément posé sur la plaque en ferait un
-          //  plan à part (la leçon de la nº 234, appliquée partout).
-          style={{ backgroundColor: "rgba(238, 61, 111, 0.4)" }}
+          //  La lumière du verre vient de la même écriture que la
+          //  capsule blanche (nº 242-§2) ; le rose reste à 40 %, et
+          //  l'état enfoncé ne passe jamais par `opacity` (nº 234).
           className="mt-3 flex min-h-[48px] w-full items-center justify-center
                      rounded-full text-[15px] font-semibold text-white"
         >

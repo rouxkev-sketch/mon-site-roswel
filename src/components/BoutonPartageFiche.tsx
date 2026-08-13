@@ -364,10 +364,13 @@ export function BoutonPartageFiche({
      tracé 1,8 / grille 24 / currentColor) — aucun logo de couleur,
      aucun fond de marque, aucun disque. */
   const actionsFenetreSombre = [
-    { cle: "whatsapp", libelle: "WhatsApp", icone: <IconePartageWhatsApp taille={22} /> },
-    { cle: "sms", libelle: "SMS", icone: <IconePartageSms taille={22} /> },
-    { cle: "email", libelle: "E-mail", icone: <IconePartageEmail taille={22} /> },
-    { cle: "facebook", libelle: "Facebook", icone: <IconePartageFacebook taille={22} /> },
+    //  §3 (nº 242) — 28 px : à 22 elles se perdaient dans la fenêtre.
+    //  Même écriture, même grille de 24, même épaisseur apparente —
+    //  seul le rendu grandit.
+    { cle: "whatsapp", libelle: "WhatsApp", icone: <IconePartageWhatsApp taille={28} /> },
+    { cle: "sms", libelle: "SMS", icone: <IconePartageSms taille={28} /> },
+    { cle: "email", libelle: "E-mail", icone: <IconePartageEmail taille={28} /> },
+    { cle: "facebook", libelle: "Facebook", icone: <IconePartageFacebook taille={28} /> },
   ].map((entree) => ({
     ...entree,
     action: actionsPartage.find((a) => a.cle === entree.cle)?.action,
@@ -403,9 +406,10 @@ export function BoutonPartageFiche({
       {/*  LE LIEN, badge « Copier » DANS le champ, contre le bord
            droit. Le champ est un voile translucide (blanc 8 %, le gris
            foncé des badges éteints) — un fond opaque ferait une boîte
-           sur la plaque. Le badge : blanc à 20 %, les valeurs des
-           badges du filtre, SANS flou propre — durci en style en
-           ligne comme les capsules de la fenêtre d'adresse (§4A). */}
+           sur la plaque. Le badge : `data-verre-capsule` (nº 242-§2),
+           l'unique écriture — blanc 12 %, la lumière du verre en
+           reflet, le survol qui éclaircit d'un cran sans toucher au
+           texte, l'état enfoncé au doigt, SANS flou propre. */}
       <div
         className="mt-5 flex items-center gap-2 rounded-xl bg-white/[0.08]
                    pl-4 pr-1.5 py-1.5"
@@ -425,7 +429,6 @@ export function BoutonPartageFiche({
             setTimeout(() => setCopieChamp(false), 2000);
           }}
           data-verre-capsule=""
-          style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
           className="shrink-0 rounded-full px-4 min-h-[36px] text-[13px]
                      font-semibold text-sombre-texte"
         >
