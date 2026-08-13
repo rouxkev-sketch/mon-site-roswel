@@ -101,11 +101,12 @@ titre("§2 — la fenêtre d'adresse : les ombres CALCULÉES (390 px)");
         nonJoue(`§2 · ${nom}`, "fenêtre non ouverte");
         continue;
       }
-      const [haut, tour] = alphasDeLOmbre(el.ombre);
+      //  ⚠️ SPEC REVUE PAR LA Nº 244-§1 (banc daté mis à jour) : la
+      //  lumière est RETIRÉE — capsule NUE, aucune ombre interne.
       verif(
-        `${nom} : le reflet est là — haut 0,35 / tour 0,12, haut > tour`,
-        haut === 0.35 && tour === 0.12 && haut > tour,
-        `ombre calculée : ${el.ombre.slice(0, 110)}`
+        `${nom} : NUE — aucune ombre interne, aucun reflet`,
+        el.ombre === "none",
+        `ombre calculée : ${el.ombre.slice(0, 80)}`
       );
       verif(
         `${nom} : aucun contour tracé, aucun filtre propre, aucun fond en ligne`,
@@ -114,8 +115,8 @@ titre("§2 — la fenêtre d'adresse : les ombres CALCULÉES (390 px)");
       );
     }
     verif(
-      "« Copier l'adresse » : le blanc est descendu à 12 %",
-      vu.capsule?.fond === "rgba(255, 255, 255, 0.12)",
+      "« Copier l'adresse » : le blanc est remonté à 20 % (nº 244)",
+      vu.capsule?.fond === "rgba(255, 255, 255, 0.2)",
       vu.capsule?.fond ?? "—"
     );
     verif(
@@ -143,8 +144,9 @@ titre("§2 — la fenêtre d'adresse : les ombres CALCULÉES (390 px)");
       return p ? getComputedStyle(p).boxShadow.slice(0, 120) : null;
     });
     verif(
-      "la nuance de la capsule suit la proportion de la plaque (2,92 contre 2,86)",
-      Math.abs(0.35 / 0.12 - 0.1 / 0.035) < 0.15,
+      "LE LISERÉ DE LA PLAQUE, LUI, EST INTACT (0,10 / 0,035)",
+      /rgba\(255, 255, 255, 0\.1\) 0px 1px/.test(nuancePlaque ?? "") &&
+        /rgba\(255, 255, 255, 0\.035\) 0px 0px 0px 1px/.test(nuancePlaque ?? ""),
       `plaque : ${nuancePlaque}`
     );
   } catch (erreur) {
@@ -168,11 +170,11 @@ titre("§2 — une seule écriture de la lumière");
         fenetre.indexOf("\n  backdrop-filter") &&
       /rgba\(26, 26, 29, 0\.22\)/.test(fenetre)
   );
+  //  Nº 244 : la lumière n'existe PLUS — nulle part.
   const lumieres = [...css.matchAll(/inset 0 1px 0 0 rgba\(255, 255, 255, 0\.35\)/g)];
   verif(
-    "la règle vit UNE fois, pour les deux attributs à la fois",
-    lumieres.length === 1 &&
-      /\[data-verre-capsule\],\s*\n\[data-verre-action\]\s*\{[^}]*0\.35[^}]*0\.12/.test(css)
+    "la règle de lumière n'existe plus (retirée une fois = retirée partout)",
+    lumieres.length === 0
   );
   const { execSync } = await import("node:child_process");
   const ailleurs = execSync(
@@ -219,15 +221,14 @@ titre("§2/§3 — la fenêtre Partage : lumière, icônes, survol (1440 px)");
         filtre: s.backdropFilter || "none",
       };
     });
-    const [haut, tour] = alphasDeLOmbre(repos.ombre);
     verif(
-      "le badge « Copier » porte la MÊME lumière (0,35 / 0,12)",
-      haut === 0.35 && tour === 0.12,
-      repos.ombre.slice(0, 110)
+      "le badge « Copier » est NU lui aussi (même écriture) — aucune ombre",
+      repos.ombre === "none",
+      repos.ombre.slice(0, 80)
     );
     verif(
-      "son fond au repos : blanc à 12 %, sans flou propre",
-      repos.fond === "rgba(255, 255, 255, 0.12)" && repos.filtre === "none",
+      "son fond au repos : blanc à 20 %, sans flou propre",
+      repos.fond === "rgba(255, 255, 255, 0.2)" && repos.filtre === "none",
       `${repos.fond} · filtre ${repos.filtre}`
     );
 
@@ -239,8 +240,8 @@ titre("§2/§3 — la fenêtre Partage : lumière, icônes, survol (1440 px)");
       return { fond: s.backgroundColor, couleur: s.color, bordure: s.borderWidth };
     });
     verif(
-      "au survol, le remplissage s'éclaircit d'un cran (12 → 18 %)",
-      survol.fond === "rgba(255, 255, 255, 0.18)",
+      "au survol, le remplissage s'éclaircit d'un cran (20 → 26 %)",
+      survol.fond === "rgba(255, 255, 255, 0.26)",
       `${repos.fond} → ${survol.fond}`
     );
     verif(
@@ -303,15 +304,15 @@ titre("§3 — l'état enfoncé, au doigt (390 px)");
     const enfonce = await capsule.evaluate((c) => getComputedStyle(c).backgroundColor);
     await page.mouse.up();
     verif(
-      "l'état enfoncé apparaît sous le doigt (24 %), translucide",
-      enfonce === "rgba(255, 255, 255, 0.24)",
+      "l'état enfoncé apparaît sous le doigt (30 %), translucide",
+      enfonce === "rgba(255, 255, 255, 0.3)",
       `${repos} → ${enfonce}`
     );
     //  ⚠️ ET LE SURVOL N'EXISTE PAS AU DOIGT : la règle est sous
-    //  `@media (hover: hover)` — au repos, le fond est bien 12 %.
+    //  `@media (hover: hover)` — au repos, le fond est bien 20 %.
     verif(
-      "au repos (pas de survol au doigt), le fond est 12 %",
-      repos === "rgba(255, 255, 255, 0.12)",
+      "au repos (pas de survol au doigt), le fond est 20 %",
+      repos === "rgba(255, 255, 255, 0.2)",
       repos
     );
   } catch (erreur) {

@@ -150,7 +150,7 @@ export function periodeDuGuest(mode: {
 export function ligneDInformation(
   suivi: TatoueurSuivi,
   aujourdhui = jourCivil()
-): { texte: string; guest: boolean; proche: boolean } {
+): { texte: string; avant: string; date: string; guest: boolean; proche: boolean } {
   const guest = guestDuSuivi(suivi, aujourdhui);
   if (guest) {
     const lieu = guest.ville ?? guest.intitule ?? suivi.ville;
@@ -158,13 +158,15 @@ export function ligneDInformation(
     const proche =
       Boolean(guest.debut_le) &&
       guest.debut_le! <= jourCivilDepuis(aujourdhui, JOURS_PROCHES);
+    //  ⚠️ LA DATE EST RENDUE À PART (`date`), pour que le composant
+    //  puisse la traiter seule (nº 244-§3 : l'urgence par la
+    //  TYPOGRAPHIE — la date proche passe en blanc semi-gras, rien
+    //  d'autre). `texte` reste la ligne entière.
+    const avant = `${genreMode("guest").label}${lieu ? ` à ${lieu}` : ""}`;
     return {
-      texte: [
-        `${genreMode("guest").label}${lieu ? ` à ${lieu}` : ""}`,
-        periode,
-      ]
-        .filter(Boolean)
-        .join(" · "),
+      texte: [avant, periode].filter(Boolean).join(" · "),
+      avant,
+      date: periode,
       guest: true,
       proche,
     };
@@ -175,23 +177,17 @@ export function ligneDInformation(
     //  Un salon ou un studio n'a pas de mode d'exercice : il EST le
     //  lieu — « Salon · Lyon 2e ». Le mot vient de `libelleTypeFiche`,
     //  celui des cartes ; la ville, de sa fiche.
-    return {
-      texte: [libelleTypeFiche(suivi.typeFiche, suivi.etablissement), suivi.ville]
-        .filter(Boolean)
-        .join(" · "),
-      guest: false,
-      proche: false,
-    };
+    const texteLieu = [libelleTypeFiche(suivi.typeFiche, suivi.etablissement), suivi.ville]
+      .filter(Boolean)
+      .join(" · ");
+    return { texte: texteLieu, avant: texteLieu, date: "", guest: false, proche: false };
   }
   const lieu =
     mode.genre === "domicile" || mode.genre === "prive"
       ? libelleSecteurDuMode(mode)
       : libelleLieuDuMode(mode);
-  return {
-    texte: [genreMode(mode.genre).label, lieu].filter(Boolean).join(" · "),
-    guest: false,
-    proche: false,
-  };
+  const texteMode = [genreMode(mode.genre).label, lieu].filter(Boolean).join(" · ");
+  return { texte: texteMode, avant: texteMode, date: "", guest: false, proche: false };
 }
 
 /* ==================================================================

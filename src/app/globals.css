@@ -271,14 +271,10 @@ html:has([data-fond="sombre"]) {
     ⚠️ SANS AUCUN FILTRE D'ARRIÈRE-PLAN (nº 233-§4) : un second filtre
     par-dessus celui de la plaque APLATIT l'effet — c'est le flou de
     la plaque qu'on voit à travers, un remplissage translucide suffit.
-    §2 (nº 242) — LE BLANC DESCEND DE 20 À 12 % : quatre passes ont
-    prouvé (sonde iPhone comprise, iOS 26) que les VALEURS étaient
-    justes et que l'effet ne prenait pas — le défaut est OPTIQUE. La
-    plaque a déjà tout flouté : une capsule translucide posée dessus
-    est transparente sur du vide, elle se lit comme un aplat quelle
-    que soit son opacité. C'est LA LUMIÈRE qui fait le verre (le
-    reflet, plus bas) — le remplissage ne doit plus porter l'effet,
-    d'où le laiteux en moins.
+    §1 (nº 244) — LA LUMIÈRE DE LA nº 242 EST RETIRÉE, et le blanc
+    REMONTE À 20 % : le reflet ne portant plus l'effet, le remplissage
+    reprend sa valeur d'avant. Il ne reste QUE le remplissage
+    translucide — aucune ombre interne, aucun contour, aucun halo.
     LE SURVOL (règle de la nº 229/237) : le remplissage s'éclaircit
     d'un cran, la couleur du texte ne change jamais, aucun contour,
     aucun halo, aucun rose ; au doigt, l'état enfoncé ne reste pas.
@@ -287,15 +283,15 @@ html:has([data-fond="sombre"]) {
     FOND n'a rien du piège des filtres (qui, lui, interdit @supports
     autour des DEUX LIGNES littérales du filtre). */
 [data-verre-capsule] {
-  background-color: rgba(255, 255, 255, 0.12);
+  background-color: rgba(255, 255, 255, 0.2);
 }
 @media (hover: hover) {
   [data-verre-capsule]:hover {
-    background-color: rgba(255, 255, 255, 0.18);
+    background-color: rgba(255, 255, 255, 0.26);
   }
 }
 [data-verre-capsule]:active {
-  background-color: rgba(255, 255, 255, 0.24);
+  background-color: rgba(255, 255, 255, 0.3);
 }
 
 /*  LES BADGES POSÉS SUR UNE PLAQUE DE VERRE (panneau de filtres,
@@ -330,32 +326,13 @@ html:has([data-fond="sombre"]) {
   background-color: rgba(238, 61, 111, 0.4);
 }
 
-/*  LA LUMIÈRE DU VERRE SUR LES CAPSULES (nº 242-§2) — L'UNIQUE
-    ÉCRITURE, pour toute capsule posée sur une plaque de verre :
-    fenêtre d'adresse ET fenêtre Partage, blanche comme rose.
-    -------------------------------------------------------------------
-    LE DIAGNOSTIC, après quatre passes de valeurs justes (relevé de la
-    sonde sur iPhone à l'appui) : la plaque floute la page à 40 px —
-    tout détail est effacé derrière elle. Une capsule translucide
-    posée là est transparente SUR DU VIDE : rien à laisser voir, donc
-    un aplat à l'œil, quelle que soit son opacité. Ce qui fait lire le
-    verre, c'est SA LUMIÈRE : le fin reflet clair du bord haut —
-    exactement celui de la plaque.
-    LES PROPORTIONS DE LA PLAQUE (0,10 haut / 0,035 tour — rapport
-    2,86), à l'échelle de la capsule : 0,35 haut / 0,12 tour (rapport
-    2,92). Le pixel est déjà le trait le plus fin possible : sur une
-    capsule de 48 px, c'est L'INTENSITÉ qui se met à l'échelle, pas
-    l'épaisseur — au même alpha que la plaque, le reflet disparaissait
-    dans le remplissage.
-    ⚠️ UNIQUEMENT DES OMBRES INTERNES : aucun contour tracé, aucun
-    halo, aucun filtre propre (le second flou aplatit tout, nº 238). */
-[data-verre-capsule],
-[data-verre-action] {
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.35),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.12);
-}
-
+/*  ⚠️ LA LUMIÈRE DU VERRE (nº 242) A ÉTÉ RETIRÉE PAR LA nº 244-§1 :
+    plus d'anneau, plus de trait clair sur le bord haut — les capsules
+    sont NUES, seul leur remplissage translucide les dit. La règle
+    était unique et partagée (fenêtre d'adresse ET fenêtre Partage) :
+    la retirer ICI l'a retirée partout, aucun composant n'en gardait
+    une copie. LE LISERÉ DE LA PLAQUE, lui, ne bouge pas : c'est elle
+    qui reste une plaque de verre posée. */
 /*  LES TROIS FENÊTRES PLUS TEINTÉES (nº 240-§3) — langues,
     notifications, Mon compte : dans la catégorie des flashs, les
     cartes sont majoritairement sur fond blanc, et la plaque à 22 %

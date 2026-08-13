@@ -26,9 +26,12 @@ import type { PhotoFavorite, TatoueurSuivi } from "@/lib/favoris-serveur";
  * ⚠️ AUCUNE VALEUR GRAPHIQUE INVENTÉE : la ligne d'identité reprend
  * `CLASSES_LIGNE_CLIQUABLE` (nº 232) et `PhotoRonde` (nº 224/227) —
  * les mêmes briques que les lignes d'équipe et d'adresse d'une fiche.
- * Ce qui est propre à cette passe (les titres de groupe, la bande de
- * trois) est posé nu, sans couleur ni graisse décidée ici : la passe
- * de finition tranchera.
+ * LA FINITION EST CELLE DE LA nº 244-§2 : titres de groupe aux
+ * capitales des sections de fiche (13 px), 40 px de part et d'autre
+ * des lignes de séparation, 34 px entre blocs, 12/8 px autour de la
+ * ligne de provenance, bande à 6 px d'écart et rayon 10 — le rythme
+ * du site, pas des valeurs inventées. L'urgence d'une date proche est
+ * TYPOGRAPHIQUE (§3) : blanc semi-gras, jamais une couleur.
  *
  * ⚠️ CE QUI EST CLIQUABLE, ET RIEN D'AUTRE (§3) : la ligne d'identité
  * ouvre la fiche — pastille comprise, elle est DANS le lien —, une
@@ -59,15 +62,29 @@ export function BlocSuivis({
   }
 
   return (
-    <div data-onglet-suivis="" className="mt-6 flex flex-col gap-10">
-      {groupes.map((groupe) => (
+    <div data-onglet-suivis="" className="mt-6">
+      {groupes.map((groupe, rang) => (
         /*  ⚠️ UN GROUPE VIDE NE REND RIEN — ni titre, ni espace : il
-             n'est même pas dans la liste (voir `groupesDeSuivis`). */
-        <section key={groupe.cle} data-groupe-suivis={groupe.cle}>
-          <h2 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sombre-texte-doux">
+             n'est même pas dans la liste (voir `groupesDeSuivis`).
+             §2 (nº 244) — 40 px DE PART ET D'AUTRE de la ligne de
+             séparation entre deux groupes (`mt-10 pt-10`), le rythme
+             des sections de fiche depuis la nº 223. Le premier groupe
+             n'a pas de ligne au-dessus de lui. */
+        <section
+          key={groupe.cle}
+          data-groupe-suivis={groupe.cle}
+          className={
+            rang > 0 ? "mt-10 border-t border-sombre-bordure/60 pt-10" : ""
+          }
+        >
+          {/*  §2 (nº 244) — LES CAPITALES DES SECTIONS DE FICHE
+               (nº 223) : 13 px, grises, espacées — la classe exacte
+               des titres de l'onglet Profil. */}
+          <h2 className="text-[13px] font-semibold uppercase tracking-[0.14em] text-sombre-texte-doux">
             {groupe.titre}
           </h2>
-          <ul className="mt-4 flex flex-col gap-8">
+          {/*  34 px entre deux blocs d'artiste (§2). */}
+          <ul className="mt-5 flex flex-col gap-[34px]">
             {groupe.suivis.map((suivi) => (
               <li key={suivi.id}>
                 <BlocDUnSuivi suivi={suivi} favoris={favoris} />
@@ -93,7 +110,7 @@ function BlocDUnSuivi({
   const nouveautes = libelleNouveautes(suivi.nouveautes);
 
   return (
-    <div data-suivi={suivi.slug} className="flex flex-col gap-3">
+    <div data-suivi={suivi.slug} className="flex flex-col">
       {/* 1 · LA LIGNE D'IDENTITÉ — UN SEUL LIEN, pastille comprise. */}
       <Link
         href={`/tatoueur/${suivi.slug}`}
@@ -111,15 +128,30 @@ function BlocDUnSuivi({
           <span className="truncate text-[15px] font-semibold text-sombre-texte">
             {suivi.nom}
           </span>
+          {/*  §2 (nº 244) — la ligne d'information : 14 px, grise.
+               §3 — L'URGENCE PAR LA TYPOGRAPHIE, JAMAIS PAR LA
+               COULEUR : quand la session tombe dans les sept jours,
+               LA DATE seule passe du gris au BLANC semi-gras — aucun
+               rose, aucun vert, aucun rouge, aucun badge. */}
           <span
             data-info-suivi=""
-            //  ⚠️ LA DATE PROCHE EST MARQUÉE, PAS COLORÉE (§3) : cet
-            //  attribut existe POUR la passe de finition — ici, aucune
-            //  couleur, aucune graisse particulière.
             data-guest-proche={info.proche ? "" : undefined}
-            className="truncate text-[13.5px] leading-relaxed text-sombre-texte-doux"
+            className="truncate text-[14px] leading-relaxed text-sombre-texte-doux"
           >
-            {info.texte}
+            {info.avant}
+            {info.date && (
+              <>
+                {info.avant ? " · " : ""}
+                <span
+                  data-date-guest=""
+                  className={
+                    info.proche ? "font-semibold text-sombre-texte" : ""
+                  }
+                >
+                  {info.date}
+                </span>
+              </>
+            )}
             {nouveautes && (
               <>
                 {info.texte ? " · " : ""}
@@ -130,11 +162,13 @@ function BlocDUnSuivi({
         </span>
       </Link>
 
-      {/* 2 · D'OÙ VIENNENT LES PHOTOS — une petite ligne, pas un lien. */}
+      {/* 2 · D'OÙ VIENNENT LES PHOTOS — une petite ligne, pas un lien.
+             §2 (nº 244) : 13 px, grise, 12 px sous la ligne d'identité
+             (mt-3), 8 px au-dessus de la bande (son mt-2). */}
       {bande.photos.length > 0 && (
         <p
           data-provenance={bande.cas}
-          className="text-[12.5px] leading-relaxed text-sombre-texte-doux"
+          className="mt-3 text-[13px] leading-relaxed text-sombre-texte-doux"
         >
           {bande.provenance}
         </p>
@@ -144,7 +178,8 @@ function BlocDUnSuivi({
              ⚠️ MOINS DE TROIS PHOTOS : on n'affiche que ce qui existe,
              jamais un doublon, jamais une case vide comblée. */}
       {bande.photos.length > 0 && (
-        <ul data-bande-suivi="" className="grid grid-cols-3 gap-2">
+        /*  §2 (nº 244) — 6 px d'écart, rayon 10 px. */
+        <ul data-bande-suivi="" className="mt-2 grid grid-cols-3 gap-1.5">
           {bande.photos.map((photo) => (
             <li key={photo.id}>
               {/*  UNE VIGNETTE OUVRE LA PHOTO, et elle seule : la
@@ -159,7 +194,10 @@ function BlocDUnSuivi({
                   `&photo=${photo.id}`
                 }
                 data-vignette-suivi={photo.id}
-                className="block aspect-square overflow-hidden rounded-lg bg-sombre-eleve"
+                //  §4 (nº 244) — au doigt, une BRÈVE baisse d'opacité,
+                //  rien de plus : ni voile, ni contour, ni rose.
+                className="block aspect-square overflow-hidden rounded-[10px]
+                           bg-sombre-eleve transition-opacity active:opacity-75"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element --
                     photo déposée par le tatoueur, servie telle quelle. */}

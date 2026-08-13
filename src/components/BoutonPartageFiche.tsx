@@ -406,10 +406,11 @@ export function BoutonPartageFiche({
       {/*  LE LIEN, badge « Copier » DANS le champ, contre le bord
            droit. Le champ est un voile translucide (blanc 8 %, le gris
            foncé des badges éteints) — un fond opaque ferait une boîte
-           sur la plaque. Le badge : `data-verre-capsule` (nº 242-§2),
-           l'unique écriture — blanc 12 %, la lumière du verre en
-           reflet, le survol qui éclaircit d'un cran sans toucher au
-           texte, l'état enfoncé au doigt, SANS flou propre. */}
+           sur la plaque. Le badge : `data-verre-capsule`, l'unique
+           écriture — blanc 20 % NU (la lumière de la nº 242 est
+           retirée par la nº 244-§1), le survol qui éclaircit d'un
+           cran sans toucher au texte, l'état enfoncé au doigt, SANS
+           flou propre. */}
       <div
         className="mt-5 flex items-center gap-2 rounded-xl bg-white/[0.08]
                    pl-4 pr-1.5 py-1.5"
