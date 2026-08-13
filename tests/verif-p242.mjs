@@ -46,12 +46,8 @@ const ouvrir = async (page, chemin = "/") => {
 };
 const FICHE = "/tatoueur/atelier-corvus-lyon-1er";
 
-/** Les DEUX alphas d'une ombre interne double (haut, tour), lus dans
-    la valeur calculée — l'ordre des morceaux est celui de l'écriture. */
-const alphasDeLOmbre = (ombre) =>
-  [...(ombre?.matchAll(/rgba\(255, 255, 255, ([\d.]+)\)/g) ?? [])].map((m) =>
-    Number(m[1])
-  );
+//  (Le lecteur d'alphas d'ombre de la 242 est parti avec la lumière,
+//  retirée par la nº 244-§1 : les capsules sont nues.)
 
 /* ==================================================================
  * §2 — LA LUMIÈRE DU VERRE, FENÊTRE D'ADRESSE OUVERTE À 390
