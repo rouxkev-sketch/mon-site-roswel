@@ -858,7 +858,7 @@ export function EnTeteTatouage({
                          transition-colors ${ETATS_ROND_BARRE}
                          focus-visible:outline-2 focus-visible:outline-offset-2
                          focus-visible:outline-primaire
-                         text-sombre-texte hover:text-primaire`}
+                         text-sombre-texte`}
             >
               {/* ⚠️ LE FANION, ET PLUS LE CŒUR (nº 145-§3) : cette
                   icône désigne LA PAGE « Ma sélection », pas le geste
@@ -895,7 +895,7 @@ export function EnTeteTatouage({
                            transition-colors ${ETATS_ROND_BARRE}
                            focus-visible:outline-2 focus-visible:outline-offset-2
                            focus-visible:outline-primaire
-                           text-sombre-texte hover:text-primaire`}
+                           text-sombre-texte`}
               >
                 {/*  LA SILHOUETTE SEULE, rang 24 (nº 147-§5 et §6). */}
                 <IconeSilhouette taille={24} />

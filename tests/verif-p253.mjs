@@ -276,17 +276,23 @@ titre("§4 — à la source : la page entière, l'indicateur, le survol");
   verif(
     "les commandes n'apparaissent QU'AU SURVOL — par la visibilité, jamais l'opacité",
     /invisible group-hover:visible/.test(source) &&
-      /className="group relative mt-2"/.test(source) &&
+      //  ⚠️ MIS À JOUR nº 254-§2 : l'enveloppe a gagné `lg:mt-5`
+      //  (20 px identité → bande sur le web) — la règle « au survol
+      //  seulement », elle, n'a pas bougé.
+      /className="group relative mt-2 lg:mt-5"/.test(source) &&
       !/opacity/.test(
         nettoyer(source.match(/className=\{`(hidden pointer-fine:flex[^`]*)`\}/)?.[1] ?? "")
       )
   );
   verif(
-    "l'indicateur : les ronds de la pagination du carrousel, absolu, dès deux pages",
+    "l'indicateur : absolu dans l'angle, dès deux pages (tirets depuis la nº 254-§5)",
     /etat\.pages > 1 && \(/.test(source) &&
       /data-indicateur-pages=\{etat\.pages\}/.test(source) &&
       /absolute top-3 right-3/.test(source) &&
-      /h-1\.5 w-1\.5 rounded-full/.test(source)
+      //  ⚠️ MIS À JOUR nº 254-§5 : les ronds 6 px (h-1.5 w-1.5) sont
+      //  devenus des tirets 16 × 2 px. La place, l'apparition dès deux
+      //  pages et l'absolu — ce que CETTE passe a posé — demeurent.
+      /h-0\.5 w-4 rounded-full/.test(source)
   );
 }
 
@@ -365,9 +371,12 @@ titre("§4 — le survol, mesuré (1440 px) ; le doigt (390 px)");
 {
   const { contexte, page } = await ouvrirA(1440, "/", { mobile: false });
   try {
+    //  ⚠️ MIS À JOUR nº 254-§4 : l'interpolation du bouton rond porte
+    //  aussi les demi-marges (`"right-0 -mr-5" : "left-0 -ml-5"`) — la
+    //  retirer TOUTE, sinon ses guillemets casseraient l'attribut.
     const classeBandeau = nettoyer(
       source.match(/className=\{`(hidden pointer-fine:flex[^`]*)`\}/)?.[1] ?? ""
-    ).replace(/\$\{\s*sens === 1 \? "right-0" : "left-0"\s*\}/, "");
+    ).replace(/\$\{\s*sens === 1 \? "[^"]*" : "[^"]*"\s*\}/, "");
     const vu = await page.evaluate(
       `(async (classes) => {
         const hote = document.createElement("div");
@@ -411,9 +420,11 @@ titre("§4 — le survol, mesuré (1440 px) ; le doigt (390 px)");
 {
   const { contexte, page } = await ouvrirA(390, "/");
   try {
+    //  ⚠️ MIS À JOUR nº 254-§4 : même retrait de l'interpolation
+    //  entière (voir le survol ci-dessus).
     const classeBandeau = nettoyer(
       source.match(/className=\{`(hidden pointer-fine:flex[^`]*)`\}/)?.[1] ?? ""
-    ).replace(/\$\{\s*sens === 1 \? "right-0" : "left-0"\s*\}/, "");
+    ).replace(/\$\{\s*sens === 1 \? "[^"]*" : "[^"]*"\s*\}/, "");
     const affichage = await page.evaluate(
       `((classes) => {
         const hote = document.createElement("div");

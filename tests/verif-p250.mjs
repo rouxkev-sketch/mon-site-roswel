@@ -63,7 +63,12 @@ titre("§1 — à la source : l'écriture unique des états du rond");
   const espace = lire("src/components/MenuEspace.tsx");
   verif(
     "les états sont écrits UNE fois (ETATS_ROND_BARRE : survol + enfoncé, mêmes valeurs)",
-    /export const ETATS_ROND_BARRE = "hover:bg-sombre-eleve active:bg-sombre-eleve"/.test(
+    //  ⚠️ MIS À JOUR nº 254-§6 : l'écriture unique porte désormais
+    //  AUSSI le rose de l'icône (`text-primaire`, survol ET appui) —
+    //  le littéral d'une seule chaîne est devenu une concaténation.
+    //  Ce que CETTE passe exigeait — cercle au survol ET à l'appui,
+    //  mêmes valeurs, une seule écriture — s'y lit toujours.
+    /export const ETATS_ROND_BARRE =\s*"hover:bg-sombre-eleve active:bg-sombre-eleve " \+\s*"hover:text-primaire active:text-primaire"/.test(
       icones
     )
   );
@@ -78,7 +83,11 @@ titre("§1 — à la source : l'écriture unique des états du rond");
   );
   verif(
     "le survol web n'a pas bougé (rose du survol compris — c'est un survol)",
-    /text-sombre-texte hover:text-primaire/.test(barre)
+    //  ⚠️ MIS À JOUR nº 254-§6 : le `hover:text-primaire` local a
+    //  rejoint ETATS_ROND_BARRE — le rose du survol vit dans l'écriture
+    //  unique, la couleur de repos reste posée sur chaque bouton.
+    /hover:text-primaire/.test(icones) &&
+      /\$\{ETATS_ROND_BARRE\}[\s\S]{0,200}?text-sombre-texte/.test(barre)
   );
 }
 
@@ -354,7 +363,11 @@ titre("§4 — à la source : rien sur les bords, les flèches dehors, la capsul
     //  soi : le verre est l'écriture partagée `data-verre-fenetre`.)
     "les commandes de défilement : les bandeaux de verre, sans capsule pleine",
     /data-bandeau-defilement/.test(source) &&
-      /hidden pointer-fine:flex absolute inset-y-0/.test(source) &&
+      //  ⚠️ MIS À JOUR nº 254-§4 : le survol de la nº 253 (`invisible
+      //  group-hover:visible`) puis le passage au bouton rond ont
+      //  glissé des classes entre le pointer-fine et l'absolu — les
+      //  jetons demeurent, plus leur adjacence.
+      /hidden pointer-fine:flex[\s\S]{0,80}?absolute inset-y-0/.test(source) &&
       !/absolute[^"]*(right|left)-1 top-1\/2/.test(source) &&
       !/bg-sombre-fond\/55/.test(source) &&
       !/backdrop-blur/.test(source)

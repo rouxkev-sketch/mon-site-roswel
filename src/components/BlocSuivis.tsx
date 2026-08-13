@@ -112,7 +112,12 @@ export function BlocSuivis({
                (un nom long, une adresse), et la page déborde en
                largeur. Avec le plancher à zéro, la colonne cède, et
                `scrollWidth` reste égal à `clientWidth`. */}
-          <ul className="mt-5 grid gap-[34px] grid-cols-[minmax(0,1fr)]">
+          {/*  §2 (nº 254) — 48 px ENTRE DEUX ARTISTES SUR LE WEB : à
+               20 px d'écart interne, les 34 px de la nº 244 ne se
+               distinguaient plus assez (14 px de différence) — la
+               hiérarchie doit se LIRE. Le doigt garde ses 34 px
+               (écart interne 8 : la différence y est nette). */}
+          <ul className="mt-5 grid gap-[34px] lg:gap-12 grid-cols-[minmax(0,1fr)]">
             {groupe.suivis.map((suivi) => (
               <li key={suivi.id}>
                 <BlocDUnSuivi suivi={suivi} favoris={favoris} />
@@ -143,7 +148,12 @@ function BlocDUnSuivi({
       <Link
         href={`/tatoueur/${suivi.slug}`}
         data-ligne-suivi=""
-        className={CLASSES_LIGNE_CLIQUABLE}
+        /*  §3 (nº 254) — L'ÉCART PASTILLE-TEXTE SE REMET À L'ÉCHELLE :
+            14 px pour un rond de 52 (gap-3.5, la proportion de
+            toujours) → 20 px pour un rond de 72 (14 × 72 ÷ 52 ≈ 19,4,
+            le cran de la grille le plus proche). La ligne reste
+            l'écriture partagée, l'écart web s'y ajoute. */
+        className={`${CLASSES_LIGNE_CLIQUABLE} lg:gap-5`}
       >
         <PhotoRonde
           source={suivi.photoProfil}
@@ -151,6 +161,11 @@ function BlocDUnSuivi({
           //  « lieu » porte le glyphe d'adresse, celui que la fiche
           //  emploie déjà pour un lieu sans photo.
           nature={suivi.modes.length > 0 ? "personne" : "lieu"}
+          //  §3 (nº 254) — 72 px SUR LE WEB (52 au doigt, inchangé),
+          //  par le paramètre de l'écriture unique. Le glyphe du repli
+          //  suit l'échelle (28 → 40).
+          classeTaille="h-13 w-13 lg:h-18 lg:w-18"
+          classeGlyphe="h-7 w-7 lg:h-10 lg:w-10"
         />
         {/*  §4 (nº 247) — LE NOM NE BOUGE PAS, LES LIGNES S'AJOUTENT
              SOUS LUI. Le bloc de texte est calé EN HAUT
@@ -163,11 +178,14 @@ function BlocDUnSuivi({
              lui. Un seul mode : la boîte de 52 px centre comme avant,
              au pixel. */}
         <span
-          className={`flex min-h-13 min-w-0 flex-1 flex-col ${
+          className={`flex min-h-13 lg:min-h-18 min-w-0 flex-1 flex-col ${
             lignes.length > 1 ? "justify-start" : "justify-center"
           }`}
         >
-          <span className="truncate text-[15px] font-semibold text-sombre-texte">
+          {/*  §3 (nº 254) — le nom 15 → 18 px sur le web, MÊME
+               graisse ; l'information 14 → 15, MÊME couleur. Le doigt
+               ne change pas. */}
+          <span className="truncate text-[15px] lg:text-[18px] font-semibold text-sombre-texte">
             {suivi.nom}
           </span>
           {/*  §2 (nº 244) — la ligne d'information : 14 px, grise.
@@ -182,7 +200,7 @@ function BlocDUnSuivi({
               key={info.cle}
               data-info-suivi=""
               data-guest-proche={info.proche ? "" : undefined}
-              className="truncate text-[14px] leading-relaxed text-sombre-texte-doux"
+              className="truncate text-[14px] lg:text-[15px] leading-relaxed text-sombre-texte-doux"
             >
               {info.avant}
               {info.date && (
@@ -205,7 +223,7 @@ function BlocDUnSuivi({
           {nouveautes && (
             <span
               data-nouveautes=""
-              className="truncate text-[14px] leading-relaxed text-sombre-texte-doux"
+              className="truncate text-[14px] lg:text-[15px] leading-relaxed text-sombre-texte-doux"
             >
               {nouveautes}
             </span>
@@ -352,28 +370,25 @@ function RangeeDeVignettes({
     };
   }, [bande.photos.length]);
 
-  /*  §1 (nº 252) — LES DEUX BANDEAUX DE VERRE. Les flèches de la
-      nº 250 (posées au-dessus de la rangée) s'en vont : à leur place,
-      un bandeau vertical translucide à chaque extrémité — la lecture
-      moderne d'une rangée qui défile.
-       · il court sur TOUTE la hauteur des images, pas plus, pas moins
-         (`inset-y-0` d'une enveloppe qui ne contient que la rangée) ;
-       · sa flèche est en son centre exact (flex centré), dans
-         l'écriture unique des icônes (`currentColor`) ;
-       · il ne recouvre JAMAIS complètement une vignette : 48 px de
-         large, appuyés sur le bord — le dépassement d'un tiers de la
-         nº 250 (62 à 78 px selon la largeur) reste visible derrière,
-         et le verre laisse voir ce qu'il couvre ;
-       · LE VERRE EST CELUI DES PLAQUES DU SITE (`data-verre-fenetre`,
-         une écriture existante — aucune seconde) : 22 % de teinte,
-         plus léger que les menus (45 %) — un bandeau posé sur des
-         photos se devine, il ne bouche pas. Ses pièges restent tenus
-         par la règle unique de globals.css (préfixée en premier, pas
-         de var() dans le filtre, pas de @supports) ;
-       · AUCUN FONDU D'OPACITÉ SUR LA PLAQUE : le bandeau apparaît et
-         disparaît par montage conditionnel, sans transition ;
-       · au doigt, il n'existe pas (`pointer-fine:`) : le glissement
-         suffit, comme à la nº 250. */
+  /*  §4 (nº 254) — LE BANDEAU DEVIENT UN BOUTON ROND. Le bandeau
+      pleine hauteur de la nº 252, posé en permanence sur les photos,
+      datait l'interface : ce qui se fait — Netflix, Apple — c'est RIEN
+      au repos, un objet discret au survol.
+       · un rond d'environ 40 px (w-10 h-10), dans LE VERRE LE PLUS
+         LÉGER du site (`data-verre-fenetre`, 22 % + flou 40 — une
+         écriture existante, aucune seconde) ;
+       · la flèche en son centre, écriture unique des icônes
+         (`currentColor`) ;
+       · centré en hauteur SANS transformation (`inset-y-0 my-auto
+         h-10` — un `translate` couperait la plaque de la page et elle
+         redeviendrait un disque opaque : le piège payé trois passes) ;
+       · À CHEVAL sur le bord de la rangée (la moitié dans la marge de
+         la page, 20 < 24 px de `px-6` : rien ne déborde du document) —
+         il ne couvre jamais qu'une fraction d'une vignette ;
+       · AU SURVOL DE LA RANGÉE seulement (`group-hover`, par la
+         VISIBILITÉ — ni fondu d'opacité, ni transition, ni
+         `will-change`) ; monté et démonté selon la position, comme à
+         la nº 252 ; au doigt, il n'existe pas (`pointer-fine`). */
   const bandeau = (sens: 1 | -1) => (
     <button
       type="button"
@@ -381,14 +396,10 @@ function RangeeDeVignettes({
       data-bandeau-defilement={sens === 1 ? "droite" : "gauche"}
       onClick={() => defiler(sens)}
       data-verre-fenetre=""
-      /*  §4 (nº 253) — AU SURVOL SEULEMENT (`group-hover`), et par la
-          VISIBILITÉ, jamais par l'opacité : un fondu d'opacité sur une
-          plaque de verre est interdit (nº 252-§1), et la visibilité ne
-          déplace rien — le bandeau est de toute façon absolu. Au
-          repos : rien. Au doigt : rien du tout (`pointer-fine`). */
-      className={`hidden pointer-fine:flex invisible group-hover:visible absolute inset-y-0 z-[2] w-12 ${
-        sens === 1 ? "right-0" : "left-0"
-      } items-center justify-center text-sombre-texte`}
+      className={`hidden pointer-fine:flex invisible group-hover:visible
+        absolute inset-y-0 my-auto z-[2] h-10 w-10 rounded-full ${
+          sens === 1 ? "right-0 -mr-5" : "left-0 -ml-5"
+        } items-center justify-center text-sombre-texte`}
     >
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path
@@ -407,7 +418,11 @@ function RangeeDeVignettes({
         haute des flèches de la nº 250 est partie avec elles) : les
         bandeaux `inset-y-0` épousent donc exactement la hauteur des
         images, et l'identité retrouve sa bande juste dessous. */
-    <div className="group relative mt-2">
+    /*  §2 (nº 254) — 20 px entre l'identité et sa bande SUR LE WEB
+        (les 8 px de la nº 252 collaient le bloc) ; le doigt garde ses
+        8 px. La hiérarchie tient : entre deux artistes, 48 px sur le
+        web (voir la grille des blocs). */
+    <div className="group relative mt-2 lg:mt-5">
       <ul
         ref={zone}
         data-bande-suivi=""
@@ -506,13 +521,9 @@ function RangeeDeVignettes({
       {/*  §4 (nº 253) — L'INDICATEUR DE PAGES, en haut à droite de la
            rangée : autant de repères que de pages, celui en cours
            distingué. Il ne s'affiche qu'à partir de deux pages — un
-           repère unique n'apprendrait rien.
-           ⚠️ AUCUNE VALEUR NEUVE : ce sont LES RONDS DE PAGINATION DU
-           CARROUSEL (nº 198-§5) — 6 px, blanc plein pour l'actif,
-           blanc voilé pour les autres, la même ombre très douce qui
-           les garde lisibles sur une photo blanche — posés dans
-           l'angle du COMPTEUR de ce même carrousel (nº 198-§4). Il est
-           absolu : son apparition ne déplace rien. */}
+           repère unique n'apprendrait rien. Posé dans l'angle du
+           COMPTEUR du carrousel (nº 198-§4) ; il est absolu : son
+           apparition ne déplace rien. */}
       {etat.pages > 1 && (
         <div
           data-indicateur-pages={etat.pages}
@@ -520,11 +531,17 @@ function RangeeDeVignettes({
           aria-hidden="true"
           className="pointer-events-none absolute top-3 right-3 z-[3] flex items-center gap-1"
         >
+          {/*  §5 (nº 254) — DES TIRETS, un par page : 16 × 2 px, 4 px
+               d'écart (le gap-1 du conteneur), la page en cours en
+               blanc plein, les autres très atténuées. Aucun rose. La
+               même ombre très douce que les ronds du carrousel
+               (nº 221) : elle n'existe que pour rester lisible sur une
+               photo blanche. */}
           {Array.from({ length: etat.pages }).map((_, rang) => (
             <span
               key={rang}
-              className={`h-1.5 w-1.5 rounded-full shadow-[0_0_2px_rgba(0,0,0,0.4)] ${
-                rang === etat.page ? "bg-white" : "bg-white/45"
+              className={`h-0.5 w-4 rounded-full shadow-[0_0_2px_rgba(0,0,0,0.4)] ${
+                rang === etat.page ? "bg-white" : "bg-white/30"
               }`}
             />
           ))}

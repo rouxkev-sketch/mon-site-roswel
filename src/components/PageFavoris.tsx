@@ -298,7 +298,13 @@ export function PageFavoris({
         les mêmes marges latérales que l'accueil — cette page montre
         les mêmes cartes, elle doit occuper le même espace. */
     <main
-      className={`flex-1 mx-auto w-full ${LARGEUR_SITE} px-4 sm:px-6 pt-6 pb-16`}
+      /*  §1 (nº 254) — LE `pt-6` EN TROP EST PARTI : la page de
+          recherche n'en met pas sur son <main> — c'est LigneResultats
+          qui porte l'air du titre (pt-6 sm:pt-8, pb-5 sm:pb-6). Le
+          doubler ici décalait « Mes favoris » de 24 px vers le bas par
+          rapport à la recherche. Mêmes classes, même composant : les
+          deux pages sont désormais identiques valeur par valeur. */
+      className={`flex-1 mx-auto w-full ${LARGEUR_SITE} px-4 sm:px-6 pb-16`}
     >
       {/* ---------- LE TITRE (§2, nº 249) ----------
            « Ma sélection » et le sous-titre en capitales ont DISPARU.

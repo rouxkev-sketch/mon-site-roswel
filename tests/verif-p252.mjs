@@ -66,7 +66,11 @@ const classeBandeau = nettoyer(
     /className=\{`(hidden pointer-fine:flex[^`]*inset-y-0[^`]*)`\}/
   )?.[1]
 )
-  .replace(/\$\{\s*sens === 1 \? "right-0" : "left-0"\s*\}/, "")
+  //  (mis à jour nº 254-§4 : le bandeau pleine hauteur est devenu le
+  //  BOUTON ROND, et son interpolation porte aussi les demi-marges
+  //  `-mr-5`/`-ml-5` — la retirer EN ENTIER, sinon ses guillemets
+  //  casseraient l'attribut injecté.)
+  .replace(/\$\{\s*sens === 1 \? "[^"]*" : "[^"]*"\s*\}/, "")
   .trim();
 //  LES PRÉDICATS DE PRÉSENCE, extraits du fichier livré — le banc
 //  rejoue CES expressions-là, jamais une réécriture.
@@ -176,6 +180,7 @@ titre("§1 — les bandeaux, mesurés sur la rangée injectée (1440 px)");
         const mesure = {
           hauteurBandeau: Math.round(bd.height),
           hauteurImage: Math.round(image.height),
+          centreY: Math.abs((bd.top + bd.bottom) / 2 - (image.top + image.bottom) / 2),
           centreFlecheX: Math.abs((fleche.left + fleche.right) / 2 - (bd.left + bd.right) / 2),
           centreFlecheY: Math.abs((fleche.top + fleche.bottom) / 2 - (bd.top + bd.bottom) / 2),
           largeurBandeau: Math.round(bd.width),
@@ -192,10 +197,17 @@ titre("§1 — les bandeaux, mesurés sur la rangée injectée (1440 px)");
         return mesure;
       })(${JSON.stringify({ rangee: classeRangee, case: classeCase, bandeau: classeBandeau })})`
     );
+    //  ⚠️ MIS À JOUR nº 254-§4 : le bandeau pleine hauteur n'a vécu
+    //  que deux passes — c'est désormais un BOUTON ROND de 40 px,
+    //  centré dans la hauteur des images. Ce que CETTE passe a posé —
+    //  le verre le plus léger, les prédicats livrés, le montage
+    //  conditionnel — se mesure inchangé sur lui.
     verif(
-      "le bandeau court sur toute la hauteur des images, à un pixel près",
-      Math.abs(vu.hauteurBandeau - vu.hauteurImage) <= 1,
-      `bandeau ${vu.hauteurBandeau} px · image ${vu.hauteurImage} px`
+      "la commande : 40 px, ronde, centrée dans la hauteur des images",
+      vu.hauteurBandeau === 40 &&
+        vu.largeurBandeau === 40 &&
+        vu.centreY <= 1,
+      `${vu.largeurBandeau}×${vu.hauteurBandeau} px · centre ±${vu.centreY.toFixed(1)} px · image ${vu.hauteurImage} px`
     );
     verif(
       "la flèche est au centre exact du bandeau",
@@ -299,6 +311,12 @@ titre("§2 — l'écart identité → bande, contre l'écart entre deux blocs");
     const classeGrille = nettoyer(
       source.match(/className="(mt-5 grid gap-\[34px\][^"]*)"/)?.[1]
     );
+    //  ⚠️ MIS À JOUR nº 254-§2 : l'enveloppe n'est plus le `mt-2` codé
+    //  en dur ici — elle se lit À LA SOURCE (`mt-2 lg:mt-5`), car ce
+    //  banc mesure à 1440, où le lg: s'applique.
+    const classeEnveloppe = nettoyer(
+      source.match(/className="(group relative mt-2[^"]*)"/)?.[1]
+    );
     const vu = await page.evaluate(
       `((c) => {
         const hote = document.createElement("div");
@@ -311,7 +329,7 @@ titre("§2 — l'écart identité → bande, contre l'écart entre deux blocs");
           '<span class="truncate text-[15px] font-semibold text-sombre-texte">Lola</span>' +
           '<span class="truncate text-[14px] leading-relaxed text-sombre-texte-doux">En salon · Lyon</span>' +
           '</span></a>' +
-          '<div class="relative mt-2" data-enveloppe>' +
+          '<div class="' + c.enveloppe + '" data-enveloppe>' +
           '<ul data-rangee class="' + c.rangee + '">' +
           Array.from({ length: 8 })
             .map(() => '<li class="' + c.case + '"><a class="relative block aspect-4/5 rounded-none bg-sombre-eleve"></a></li>')
@@ -340,16 +358,22 @@ titre("§2 — l'écart identité → bande, contre l'écart entre deux blocs");
         rangee: classeRangee,
         case: classeCase,
         grille: classeGrille,
+        enveloppe: classeEnveloppe,
       })})`
     );
+    //  ⚠️ MIS À JOUR nº 254-§2 : à 1440, l'écart identité → bande est
+    //  monté de 8 à 20 px, et l'écart entre deux blocs de 34 à 48 px
+    //  (le doigt garde 8 et 34). CE QUE CETTE PASSE A POSÉ — la
+    //  hiérarchie, l'écart entre blocs STRICTEMENT le plus grand — se
+    //  mesure inchangé.
     verif(
-      "l'identité et sa bande se lisent comme UN bloc (l'écart mesuré)",
-      vu.identiteVersBande <= 12 && vu.identiteVersBande >= 4,
+      "l'identité et sa bande se lisent comme UN bloc (20 px depuis la nº 254-§2)",
+      vu.identiteVersBande === 20,
       `${vu.identiteVersBande} px`
     );
     verif(
-      "l'écart entre deux blocs reste 34 px — STRICTEMENT le plus grand",
-      vu.entreBlocs === 34 && vu.entreBlocs > vu.identiteVersBande,
+      "l'écart entre deux blocs (48 px, nº 254-§2) — STRICTEMENT le plus grand",
+      vu.entreBlocs === 48 && vu.entreBlocs > vu.identiteVersBande,
       `entre blocs ${vu.entreBlocs} px > identité→bande ${vu.identiteVersBande} px`
     );
   } catch (erreur) {

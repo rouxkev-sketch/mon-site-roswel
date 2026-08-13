@@ -22,7 +22,14 @@ type ProprietesIcone = { taille?: number; classe?: string };
  *    affiché. Même géométrie des deux côtés : le rond de 40
  *    (HAUTEUR_ACTIONS) et son `rounded-full`, déjà partagés.
  */
-export const ETATS_ROND_BARRE = "hover:bg-sombre-eleve active:bg-sombre-eleve";
+//  §6 (nº 254) — L'ICÔNE AUSSI : au survol du web, elle passe au rose
+//  (`hover:text-primaire` — la seule exception rose de la barre, déjà
+//  en place et voulue) ; à l'appui du doigt, LE MÊME rose, ensemble
+//  avec le cercle gris, et tout repart au relâchement (`active:`).
+//  La valeur est celle du survol, jamais une autre.
+export const ETATS_ROND_BARRE =
+  "hover:bg-sombre-eleve active:bg-sombre-eleve " +
+  "hover:text-primaire active:text-primaire";
 
 /* ============ Icônes du menu (trait fin) ============ */
 

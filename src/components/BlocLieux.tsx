@@ -97,14 +97,25 @@ import type { Tatoueur } from "@/lib/tatoueurs";
 export function PhotoRonde({
   source,
   nature,
+  classeTaille = "h-13 w-13",
+  classeGlyphe = "h-7 w-7",
 }: {
   source: string | null | undefined;
   /** « lieu » porte le glyphe d'adresse à défaut de photo ;
       « personne » ne porte rien. */
   nature: "lieu" | "personne";
+  /** §3 (nº 254) — LA TAILLE EN PARAMÈTRE, l'écriture reste UNIQUE :
+      « Ma sélection » agrandit sa pastille sur le web (72 px) sans
+      recopier le rond — une seconde écriture divergerait à la passe
+      suivante. Défaut : le rond de 52 de toujours. */
+  classeTaille?: string;
+  /** Le glyphe du repli « lieu » suit la même échelle (28 → 40). */
+  classeGlyphe?: string;
 }) {
   return (
-    <span className="flex h-13 w-13 shrink-0 items-center justify-center overflow-hidden rounded-full bg-sombre-eleve">
+    <span
+      className={`flex ${classeTaille} shrink-0 items-center justify-center overflow-hidden rounded-full bg-sombre-eleve`}
+    >
       {source ? (
         /* eslint-disable-next-line @next/next/no-img-element --
            photo déposée par le tatoueur, servie telle quelle. */
@@ -127,8 +138,9 @@ export function PhotoRonde({
           aria-hidden="true"
           //  §2 (nº 233) — 28 px : un peu plus de la moitié du rond de
           //  52, le glyphe ne se perd plus au milieu. PhotoRonde est
-          //  l'unique écriture : TOUS les ronds concernés suivent.
-          className="h-7 w-7 invert opacity-40"
+          //  l'unique écriture : TOUS les ronds concernés suivent —
+          //  et sa taille suit celle du rond (nº 254-§3).
+          className={`${classeGlyphe} invert opacity-40`}
         />
       ) : null}
     </span>
