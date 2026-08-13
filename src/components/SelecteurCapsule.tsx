@@ -28,13 +28,23 @@ import { useLayoutEffect, useRef, useState } from "react";
  * plus haut de la hiérarchie est le plus clair. Le mot actif passe au
  * blanc, l'autre redescend en gris. AUCUN contour, AUCUN rose.
  *
- * `pleineLargeur` (nº 255-§1) — LE SEUL PARAMÈTRE, et il ne dessine
- * rien : dans la barre, le badge occupe toute sa moitié d'encadré et
- * ses deux mots s'y partagent la largeur À ÉGALITÉ (`flex-1
- * basis-1/2`), de sorte que la capsule glisse d'exactement une
- * demi-largeur. Sur la fiche, la rangée pose « Suivre » à droite du
- * sélecteur : il y garde sa largeur de contenu (`w-fit`), comme
- * depuis la nº 205.
+ * `pleineLargeur` (nº 255-§1) — dans la barre, le badge occupe toute
+ * sa moitié d'encadré et ses deux mots s'y partagent la largeur À
+ * ÉGALITÉ (`flex-1 basis-1/2`), de sorte que la capsule glisse
+ * d'exactement une demi-largeur. Sur la fiche, la rangée pose
+ * « Suivre » à droite du sélecteur : il y garde sa largeur de contenu
+ * (`w-fit`), comme depuis la nº 205.
+ *
+ * `robeCapsule` (nº 256-§2) — LE CRAN AU-DESSUS DU CONTEXTE, par
+ * PARAMÈTRE de l'écriture unique. La règle est celle de la fiche
+ * depuis la nº 207-§1 : la capsule prend LE BARREAU AU-DESSUS de ce
+ * qui l'entoure. Sur la fiche, l'actif des rectangles est
+ * `eleve-clair` → la capsule est `haut` (le défaut, inchangé). Dans
+ * la barre, l'encadré est `haut` (la valeur gravée nº 175) → la
+ * capsule y est `haut-clair`, un cran franc au-dessus : plus sombre
+ * que son encadré, elle inversait la hiérarchie de la charte (page →
+ * bloc → badge, chaque niveau s'éclaircit) et le sélecteur ne se
+ * lisait pas. Aucune couleur neuve : les deux barreaux existent.
  */
 export function SelecteurCapsule<T extends string>({
   valeur,
@@ -42,12 +52,14 @@ export function SelecteurCapsule<T extends string>({
   surChoix,
   ariaLabel,
   pleineLargeur = false,
+  robeCapsule = "bg-sombre-haut",
 }: {
   valeur: T;
   options: ReadonlyArray<{ cle: T; label: string }>;
   surChoix: (cle: T) => void;
   ariaLabel: string;
   pleineLargeur?: boolean;
+  robeCapsule?: string;
 }) {
   const conteneur = useRef<HTMLDivElement>(null);
   const [capsule, setCapsule] = useState<{ left: number; width: number } | null>(
@@ -91,8 +103,8 @@ export function SelecteurCapsule<T extends string>({
         <span
           aria-hidden="true"
           data-capsule-glissante=""
-          className="absolute inset-y-0 rounded-full bg-sombre-haut
-                     transition-[left,width] duration-300 ease-out"
+          className={`absolute inset-y-0 rounded-full ${robeCapsule}
+                     transition-[left,width] duration-300 ease-out`}
           style={{ left: capsule.left, width: capsule.width }}
         />
       )}

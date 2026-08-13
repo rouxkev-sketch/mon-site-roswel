@@ -26,17 +26,46 @@
 export function EncadreDeuxChamps({
   gauche,
   droite,
+  porteBadge = false,
 }: {
   gauche: React.ReactNode;
   droite: React.ReactNode;
+  /** §1 (nº 256) — L'ENCADRÉ QUI PORTE UN BADGE, pas deux champs :
+      celui de « Ma sélection », dont la moitié gauche est le badge
+      ovale qui glisse (SelecteurCapsule). Trois écarts, et rien
+      d'autre :
+       · CAPSULE (`rounded-full`, rayon à la moitié de la hauteur) au
+         lieu des angles arrondis : l'encadré épouse la forme du badge
+         qu'il contient — sur web comme au doigt ;
+       · le badge garde SA MOITIÉ DE CONTENU (`basis-1/2` en
+         `box-content` : la moitié se mesure sur le badge lui-même,
+         l'air s'AJOUTE autour au lieu de le rétrécir — ses mots et sa
+         glissade ne changent pas d'un pixel) ;
+       · L'AIR : 4 px à gauche (`pl-1` — l'air même que le haut et le
+         bas du badge, 44 dans 52) pour que la pilule ne touche pas la
+         courbe de la capsule, et 12 px à droite (`pr-3`) avant le fin
+         trait. C'est le CHAMP qui cède cet air, jamais le badge.
+      Le moteur ne passe pas ce drapeau : son encadré à deux champs ne
+      change pas d'un jeton. */
+  porteBadge?: boolean;
 }) {
   return (
     <div
       data-encadre-barre=""
       data-clair-barre=""
-      className="flex items-stretch rounded-2xl overflow-visible transition-colors"
+      className={`flex items-stretch overflow-visible transition-colors ${
+        porteBadge ? "rounded-full" : "rounded-2xl"
+      }`}
     >
-      <div className="flex-1 min-w-0 basis-1/2">{gauche}</div>
+      <div
+        className={
+          porteBadge
+            ? "shrink-0 grow-0 basis-1/2 box-content pl-1 pr-3 flex items-center"
+            : "flex-1 min-w-0 basis-1/2"
+        }
+      >
+        {gauche}
+      </div>
       <div aria-hidden="true" className="w-px my-2.5 bg-sombre-bordure shrink-0" />
       <div className="flex-1 min-w-0 basis-1/2">{droite}</div>
     </div>

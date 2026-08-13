@@ -76,11 +76,19 @@ const favoris = lire("src/components/PageFavoris.tsx");
  * Les gabarits portent des ternaires : on RÉSOUT la branche qu'on
  * injecte, on ne réécrit pas la chaîne.
  * ---------------------------------------------------------------- */
+//  ⚠️ MIS À JOUR nº 256-§1 : l'encadré porte désormais un ternaire
+//  `porteBadge` (capsule + air du badge) — les branches du bloc de
+//  « Ma sélection » sont RÉSOLUES, comme pour tout gabarit.
 const classeEncadre = nettoyer(
-  encadre.match(/className="(flex items-stretch rounded-2xl[^"]*)"/)?.[1]
+  encadre
+    .match(/className=\{`(flex items-stretch[^`]*)`\}/)?.[1]
+    ?.replace(/\$\{\s*porteBadge \? "([^"]+)" : "[^"]+"\s*\}/, "$1")
+);
+const classeMoitieBadge = nettoyer(
+  encadre.match(/\? "(shrink-0 grow-0 basis-1\/2 box-content[^"]+)"/)?.[1]
 );
 const classeMoitie = nettoyer(
-  encadre.match(/className="(flex-1 min-w-0 basis-1\/2)"/)?.[1]
+  encadre.match(/<div className="(flex-1 min-w-0 basis-1\/2)">\{droite\}/)?.[1]
 );
 const classeTrait = nettoyer(
   encadre.match(/className="(w-px my-2\.5[^"]*)"/)?.[1]
@@ -104,8 +112,14 @@ const classeMot = (actif) =>
         actif ? "text-sombre-texte" : "text-sombre-texte-doux"
       )
   );
+//  ⚠️ MIS À JOUR nº 256-§2 : la robe de la pilule est un PARAMÈTRE
+//  (`robeCapsule`) — pour le bloc de la barre, on résout celle que la
+//  barre passe (le cran au-dessus du fond de l'encadré).
+const robeBarre = menus.match(/robeCapsule="([^"]+)"/)?.[1] ?? "";
 const classeCapsuleGlissante = nettoyer(
-  capsule.match(/data-capsule-glissante=""[\s\S]*?className="([^"]+)"/)?.[1]
+  capsule
+    .match(/data-capsule-glissante=""[\s\S]*?className=\{`([^`]+)`\}/)?.[1]
+    ?.replace(/\$\{robeCapsule\}/, robeBarre)
 );
 /** La hauteur du champ, telle que le bloc la demande. */
 const hauteurChamp = menus.match(/hauteur="(min-h-\[\d+px\])"/)?.[1] ?? "";
@@ -219,16 +233,14 @@ const BLOC = `((c) => {
     '<div data-bloc class="' + c.rangee + '">' +
       '<div class="flex-1 min-w-0">' +
         '<div data-encadre-barre data-clair-barre class="' + c.encadre + '">' +
-          '<div data-moitie class="' + c.moitie + '">' + badge + '</div>' +
+          '<div data-moitie class="' + c.moitieBadge + '">' + badge + '</div>' +
           '<div aria-hidden="true" class="' + c.trait + '"></div>' +
           '<div data-moitie class="' + c.moitie + '">' + champ + '</div>' +
         '</div>' +
       '</div>' +
-      (c.icone
-        ? '<div data-mise-en-page class="hidden lg:flex">' +
-          '<button data-bouton-phototheque data-clair-barre style="width:46px;height:46px" ' +
-          'class="relative shrink-0 rounded-full flex items-center justify-center"></button></div>'
-        : "") +
+      '<div data-mise-en-page class="hidden lg:flex' + (c.iconeInvisible ? " invisible" : "") + '">' +
+      '<button data-bouton-phototheque data-clair-barre style="width:46px;height:46px" ' +
+      'class="relative shrink-0 rounded-full flex items-center justify-center"></button></div>' +
     '</div>';
   document.body.appendChild(hote);
   return hote;
@@ -283,6 +295,7 @@ for (const largeur of [390, 1440]) {
     const config = {
       largeur: Math.min(largeur - 32, 720),
       encadre: classeEncadre,
+      moitieBadge: classeMoitieBadge,
       moitie: classeMoitie,
       trait: classeTrait,
       badge: classeBadge,
@@ -292,7 +305,7 @@ for (const largeur of [390, 1440]) {
       hauteur: hauteurChamp,
       hote: classeHote,
       rangee: classeRangee,
-      icone: true,
+      iconeInvisible: false,
     };
     const vu = await page.evaluate(
       `(${RELEVE_BLOC})(${JSON.stringify(config)}, ${BLOC}, ${JSON.stringify(
@@ -307,13 +320,17 @@ for (const largeur of [390, 1440]) {
         vu.boites.hauteurEncadre
       )} px`
     );
+    //  ⚠️ MIS À JOUR nº 256-§1/§3 : la moitié du badge est passée en
+    //  `box-content` — sa moitié SE MESURE SUR LE BADGE LUI-MÊME, et
+    //  l'air (4 px à gauche, 12 à droite) s'AJOUTE autour au lieu de
+    //  le rétrécir, cédé par le champ. Ce que CETTE passe a posé — le
+    //  badge occupe toute sa moitié d'encadré — se lit sur le contenu.
     verif(
-      `${largeur} px : deux moitiés égales, et le badge occupe TOUTE la sienne`,
-      Math.abs(vu.boites.gauche - vu.boites.droite) <= 1 &&
-        Math.abs(vu.boites.badge - vu.boites.gauche) <= 1,
-      `moitiés ${Math.round(vu.boites.gauche)} / ${Math.round(
-        vu.boites.droite
-      )} px · badge ${Math.round(vu.boites.badge)} px`
+      `${largeur} px : le badge occupe toute sa moitié (de contenu depuis la nº 256)`,
+      Math.abs(vu.boites.badge - vu.boites.encadre / 2) <= 1.5,
+      `badge ${Math.round(vu.boites.badge)} px · demi-encadré ${Math.round(
+        vu.boites.encadre / 2
+      )} px`
     );
     verif(
       `${largeur} px : les deux mots se partagent la largeur À ÉGALITÉ`,
@@ -353,28 +370,29 @@ for (const largeur of [390, 1440]) {
       `scrollWidth − clientWidth = ${vu.debordement}`
     );
 
-    /*  §4 — L'ICÔNE PART, LE CHAMP PREND LA PLACE, LE BLOC NE BOUGE PAS. */
-    const sansIcone = await page.evaluate(
+    /*  §4 — ⚠️ MIS À JOUR nº 256-§4/§5 : la nº 255 démontait l'icône
+        sur « Suivis » et faisait REPRENDRE sa place au champ — c'est
+        précisément ce qui faisait GLISSER tout le groupe à chaque
+        bascule (la largeur changeait, le centrage recalculait).
+        L'emplacement est désormais RÉSERVÉ EN PERMANENCE (`invisible`,
+        jamais démontée) : sur « Suivis », RIEN ne bouge — ni le bloc,
+        ni l'encadré. */
+    const surSuivisBloc = await page.evaluate(
       `(${RELEVE_BLOC})(${JSON.stringify({
         ...config,
-        icone: false,
+        iconeInvisible: true,
       })}, ${BLOC}, ${JSON.stringify(selecteurActif)}, ${JSON.stringify(
         mesureCapsule
       )})`
     );
-    const web = largeur >= 1024;
     verif(
-      `${largeur} px : §4 — sans l'icône, le BLOC garde sa largeur${
-        web ? " et l'encadré reprend la place" : " (l'icône n'existe pas au doigt)"
-      }`,
-      Math.abs(vu.boites.bloc - sansIcone.boites.bloc) <= 1 &&
-        (web
-          ? sansIcone.boites.encadre > vu.boites.encadre
-          : Math.abs(sansIcone.boites.encadre - vu.boites.encadre) <= 1),
+      `${largeur} px : §4 — l'icône invisible (« Suivis »), le bloc ET l'encadré immobiles (nº 256)`,
+      Math.abs(vu.boites.bloc - surSuivisBloc.boites.bloc) <= 0.5 &&
+        Math.abs(vu.boites.encadre - surSuivisBloc.boites.encadre) <= 0.5,
       `bloc ${Math.round(vu.boites.bloc)} → ${Math.round(
-        sansIcone.boites.bloc
+        surSuivisBloc.boites.bloc
       )} px · encadré ${Math.round(vu.boites.encadre)} → ${Math.round(
-        sansIcone.boites.encadre
+        surSuivisBloc.boites.encadre
       )} px`
     );
   } catch (erreur) {
@@ -472,7 +490,12 @@ titre("§3 — à la source : jamais vide, le chevron, aucune loupe");
   );
   verif(
     "le libellé se raccourcit sur écran étroit — et la borne est CELLE DE LA BARRE",
-    /return etroit && titre \? titre : complet;/.test(menusNus) &&
+    //  ⚠️ MIS À JOUR nº 256-§6 : au doigt, le champ ne dit plus que LA
+    //  CATÉGORIE, toujours (même filtré par un style) — le style
+    //  complet vit dans le titre de la page. Le principe de CETTE
+    //  passe — raccourcir au titre de la porte plutôt que rétrécir le
+    //  badge — est devenu la règle entière du doigt.
+    /if \(etroit\) return titre \?\? "";/.test(menusNus) &&
       /matchMedia\("\(max-width: 1023\.98px\)"\)/.test(menusNus) &&
       /matchMedia\("\(max-width: 1023\.98px\)"\)/.test(barre)
   );
@@ -630,8 +653,15 @@ titre("§4 — à la source : une écriture, sur « Favoris » et sur le web");
   );
   verif(
     "elle n'existe que sur « Favoris », et sur le web",
-    /\{surLesFavoris && \(/.test(menusNus) &&
-      /data-mise-en-page-selection="" className="hidden lg:flex"/.test(menusNus)
+    //  ⚠️ MIS À JOUR nº 256-§4 : le montage conditionnel de la nº 255
+    //  faisait GLISSER le groupe à chaque bascule (la largeur
+    //  changeait). L'icône est désormais TOUJOURS montée, `invisible`
+    //  sur « Suivis » — elle n'existe toujours QUE sur « Favoris »
+    //  pour l'œil et pour le doigt (visibility ne reçoit ni clic ni
+    //  focus), mais son emplacement demeure.
+    /className=\{`hidden lg:flex \$\{surLesFavoris \? "" : "invisible"\}`\}/.test(
+      menus
+    ) && /data-mise-en-page-selection=""/.test(menusNus)
   );
   verif(
     "elle COMMANDE vraiment : la page passe la vue à ses cartes",
