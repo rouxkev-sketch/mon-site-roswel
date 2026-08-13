@@ -141,16 +141,16 @@ titre("§1 — la vignette de galerie (390 px, doigt)");
         uneSeconde < avant,
         `${avant} → ${uneSeconde}`
       );
-      //  LE REPÈRE DE PROFIL / PORTFOLIO, mesuré sur la même page.
-      await page.evaluate(() => window.scrollTo(0, 1500));
-      await page.waitForTimeout(300);
-      await page.getByRole("radio", { name: "Profil" }).click();
-      await page.waitForTimeout(1000);
-      const repere = await page.evaluate(() => Math.round(window.scrollY));
+      //  ⚠️ SPEC REVUE PAR LA Nº 239-§1 (banc daté mis à jour) : la
+      //  vignette ramène désormais TOUT EN HAUT — le repère partagé
+      //  avec Profil / Portfolio n'a vécu que cette passe-ci. C'est le
+      //  banc p239 qui mesure le nouveau point d'arrivée au pixel ;
+      //  ici on garde l'essentiel de la 238 : remontée, jamais une
+      //  descente.
       verif(
-        "et elle s'arrête AU MÊME REPÈRE que Profil / Portfolio",
-        Math.abs(uneSeconde - repere) <= 2,
-        `vignette ${uneSeconde} · onglet ${repere}`
+        "et elle est remontée (le point d'arrivée exact est au banc p239)",
+        uneSeconde < avant,
+        `${avant} → ${uneSeconde}`
       );
       verif(
         "aucune entrée d'historique",
@@ -764,8 +764,8 @@ titre("§6 — les badges du panneau de filtres, en verre");
           coche: b.getAttribute("aria-pressed") === "true",
           fond: s.backgroundColor,
           filtre: s.backdropFilter,
-          capsule: b.hasAttribute("data-verre-capsule"),
-          action: b.hasAttribute("data-verre-action"),
+          badgeAllume: b.hasAttribute("data-verre-badge-allume"),
+          badgeEteint: b.hasAttribute("data-verre-badge-eteint"),
         };
       });
     };
@@ -776,25 +776,28 @@ titre("§6 — les badges du panneau de filtres, en verre");
     const etats = [premier, second].filter(Boolean);
     const coche = etats.find((e) => e.coche);
     const eteint = etats.find((e) => !e.coche);
+    //  ⚠️ SPEC REVUE PAR LA Nº 240-§2 (banc daté mis à jour) : les
+    //  badges sont GRIS dans les deux états — le rose de la 238 était
+    //  une erreur, il retourne dans le POINT.
     verif(
-      "éteint : du verre BLANC translucide (20 %), sans filtre propre",
+      "éteint : du verre GRIS foncé (8 %), sans filtre propre",
       Boolean(eteint) &&
-        eteint.capsule &&
-        eteint.fond === "rgba(255, 255, 255, 0.2)" &&
+        eteint.badgeEteint &&
+        eteint.fond === "rgba(255, 255, 255, 0.08)" &&
         (!eteint.filtre || eteint.filtre === "none"),
       eteint ? `${eteint.fond} · filtre ${eteint.filtre || "none"}` : "état non atteint"
     );
     verif(
-      "sélectionné : du verre ROSE translucide (40 %), sans filtre propre",
+      "sélectionné : du verre GRIS clair (20 %), sans filtre propre",
       Boolean(coche) &&
-        coche.action &&
-        coche.fond === "rgba(238, 61, 111, 0.4)" &&
+        coche.badgeAllume &&
+        coche.fond === "rgba(255, 255, 255, 0.2)" &&
         (!coche.filtre || coche.filtre === "none"),
       coche ? `${coche.fond} · filtre ${coche.filtre || "none"}` : "état non atteint"
     );
     verif(
-      "le rose ne sert QU'À la sélection",
-      Boolean(eteint) && !eteint.fond.includes("238, 61")
+      "aucun rose sur le badge, dans aucun état",
+      etats.every((e) => !e.fond.includes("238, 61"))
     );
     //  Le panneau, lui, garde SON flou : c'est le sien qu'on voit à
     //  travers les capsules.

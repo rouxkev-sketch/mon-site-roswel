@@ -23,13 +23,11 @@ import type { PointerEvent, ReactNode } from "react";
  *  · un POINT à gauche — ROSE quand le badge est actif, GRIS quand il
  *    ne l'est pas. Il ne disparaît jamais : la géométrie ne bouge pas
  *    d'un pixel au clic (nº 157-§4) ;
- *  · AUCUN FOND ROSE TANT QUE LE BADGE EST POSÉ SUR UNE PAGE
- *    (nº 144-§7). ⚠️ SUR UNE PLAQUE DE VERRE, LA RÈGLE A ÉTÉ REVUE PAR
- *    LE PROPRIÉTAIRE (nº 238-§6) : le badge sélectionné y est du VERRE
- *    TEINTÉ ROSE (40 %), éteint du verre blanc (20 %) — le rose reste
- *    réservé à la sélection, ce que la charte demande. C'est le seul
- *    endroit où un badge porte du rose, et c'est un remplissage
- *    translucide, jamais un aplat ;
+ *  · AUCUN FOND ROSE, jamais, quel que soit l'état (nº 144-§7 —
+ *    réaffirmé par la nº 240-§2 : la nº 238 avait teinté de rose le
+ *    badge sélectionné du panneau de verre, c'était une erreur, les
+ *    badges n'ont JAMAIS été roses ; le rose du badge vit dans son
+ *    POINT, et nulle part ailleurs) ;
  *  · AUCUN contour ;
  *  · un badge AU REPOS SE VOIT : son fond est un cran plus clair que
  *    ce qui le porte (nº 155) ;
@@ -50,19 +48,21 @@ import type { PointerEvent, ReactNode } from "react";
  * recopiée nulle part.
  */
 export function robeDuBadge(actif: boolean, surPanneau = false): string {
-  //  ⚠️ `surPanneau` VEUT DIRE « POSÉ SUR UNE PLAQUE DE VERRE »
-  //  (nº 238-§6). Les deux seuls appelants qui le passent — le panneau
-  //  des filtres du web et le pied « Rayon » du menu de localité —
-  //  sont depuis la nº 236 des surfaces de verre. Un aplat opaque y
-  //  faisait une boîte posée sur la plaque : le badge devient donc du
-  //  VERRE lui aussi, blanc translucide éteint, ROSE translucide
-  //  sélectionné (le rose reste réservé à la sélection, charte).
-  //  Le REMPLISSAGE vient de `data-verre-capsule` / `data-verre-action`
-  //  (voir BadgeCharte) : ici, il ne reste que la couleur du texte.
+  //  ⚠️ `surPanneau` VEUT DIRE « POSÉ SUR UNE PLAQUE DE VERRE » : le
+  //  panneau des filtres du web et le pied « Rayon » du menu de
+  //  localité sont, depuis la nº 236, des surfaces de verre — un aplat
+  //  opaque y faisait une boîte posée sur la plaque. Le badge est donc
+  //  un remplissage TRANSLUCIDE… et GRIS, dans les deux états
+  //  (nº 240-§2, qui DÉFAIT le rose introduit par la nº 238 : les
+  //  badges n'ont jamais été roses — gris clair allumé, gris foncé
+  //  éteint, et le rose ne vit que dans le POINT).
+  //  Le remplissage vient de `data-verre-badge-…` (voir BadgeCharte) :
+  //  ici, il ne reste que la couleur du texte.
   //  ⚠️ AUCUN FILTRE PROPRE sur ces capsules — c'est le flou de la
   //  plaque qu'on voit à travers ; un second flou aplatirait tout
   //  (piège payé à la nº 233-§4).
-  if (surPanneau) return actif ? "text-white" : "text-sombre-texte";
+  if (surPanneau)
+    return actif ? "text-sombre-texte" : "text-sombre-texte-doux";
   //  Hors verre (la page mobile des filtres, le sélecteur de l'affiche
   //  nº 197) : les aplats d'origine, inchangés.
   return actif
@@ -91,15 +91,17 @@ export function BadgeCharte({
       aria-pressed={actif}
       onClick={onClick}
       onPointerDown={onPointerDown}
-      //  LE REMPLISSAGE DE VERRE (nº 238-§6) — les deux mêmes
-      //  marqueurs que les capsules de la fenêtre d'adresse (nº 233),
-      //  donc les mêmes valeurs, écrites à un seul endroit :
-      //  blanc à 20 % éteint, rose à 40 % sélectionné, et AUCUN filtre
-      //  d'arrière-plan propre.
+      //  LE REMPLISSAGE DE VERRE — GRIS DANS LES DEUX ÉTATS
+      //  (nº 240-§2) : gris clair allumé, gris foncé éteint, les
+      //  valeurs vivent dans globals.css (`data-verre-badge-…`), et
+      //  AUCUN filtre d'arrière-plan propre — ces badges vivent sur la
+      //  plaque du panneau, c'est SON flou qu'on voit à travers.
+      //  Le rose, lui, est dans le POINT ci-dessous, et nulle part
+      //  ailleurs.
       {...(surPanneau
         ? actif
-          ? { "data-verre-action": "" }
-          : { "data-verre-capsule": "" }
+          ? { "data-verre-badge-allume": "" }
+          : { "data-verre-badge-eteint": "" }
         : {})}
       //  ⚠️ LA LARGEUR NE BOUGE JAMAIS (nº 153-§1) : l'espace du POINT
       //  est réservé EN PERMANENCE, actif ou non — la mise en page est

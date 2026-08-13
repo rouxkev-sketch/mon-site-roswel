@@ -277,15 +277,27 @@ html:has([data-fond="sombre"]) {
   background-color: rgba(255, 255, 255, 0.2);
 }
 
-/*  LE SURVOL D'UNE CAPSULE — un cran de plus, jamais un aplat
-    (nº 238-§6). Les BADGES DU PANNEAU DE FILTRES sont des capsules de
-    cette famille : au survol, le remplissage translucide s'éclaircit,
-    et c'est tout ce qui change. Il est écrit ICI, dans la même règle
-    non calquée, parce qu'une classe utilitaire `hover:bg-…` ne peut
-    pas passer devant une règle sans calque — elle serait ignorée.
-    ⚠️ TOUJOURS SANS FILTRE PROPRE : le flou reste celui de la plaque. */
-[data-verre-capsule]:hover {
-  background-color: rgba(255, 255, 255, 0.28);
+/*  LES BADGES POSÉS SUR UNE PLAQUE DE VERRE (panneau de filtres,
+    pied « Rayon » du menu de localité) — GRIS, DANS LES DEUX ÉTATS
+    (nº 240-§2, qui DÉFAIT le rose de la nº 238 : les badges n'ont
+    jamais été roses ; le rose du badge vit dans son POINT, rose
+    allumé, gris éteint, présent dans les deux états).
+    Un remplissage translucide — le blanc sur la plaque sombre se lit
+    en gris —, clair quand le critère est actif, foncé quand il est
+    éteint ; le survol de l'éteint remonte d'un cran, comme le badge
+    gris des pages. Écrit ICI, en règles non calquées : une classe
+    utilitaire `hover:bg-…` ne passerait pas devant.
+    ⚠️ AUCUN FILTRE PROPRE : ces badges vivent SUR la plaque du
+    panneau, un second flou par-dessus le premier aplatit tout
+    (nº 233-§4). */
+[data-verre-badge-allume] {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+[data-verre-badge-eteint] {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+[data-verre-badge-eteint]:hover {
+  background-color: rgba(255, 255, 255, 0.14);
 }
 
 /*  L'ACTION FINALE DE LA FENÊTRE — « Ouvrir dans Google Maps » : du
@@ -296,11 +308,16 @@ html:has([data-fond="sombre"]) {
   background-color: rgba(238, 61, 111, 0.4);
 }
 
-/*  Le survol d'une action rose — même geste que la capsule blanche
-    (nº 238-§6) : un cran de teinte en plus, aucun filtre propre. Les
-    badges SÉLECTIONNÉS du panneau de filtres en sont. */
-[data-verre-action]:hover {
-  background-color: rgba(238, 61, 111, 0.5);
+/*  LES TROIS FENÊTRES PLUS TEINTÉES (nº 240-§3) — langues,
+    notifications, Mon compte : dans la catégorie des flashs, les
+    cartes sont majoritairement sur fond blanc, et la plaque à 22 %
+    n'y tient pas. Elles passent à 45 %, sur web comme sur smartphone ;
+    elles GARDENT leur voile, leur flou et leur liseré de fenêtre (la
+    règle de base au-dessus — seul le fond change ici, il n'y a donc
+    aucune ligne de filtre à réécrire). Les AUTRES fenêtres restent à
+    22 %. */
+[data-verre-fenetre][data-verre-dense] {
+  background-color: rgba(26, 26, 29, 0.45);
 }
 
 /*  LE CHAMP ET LES DEUX ICÔNES DE LA BARRE FIXE — LISIBLES SUR

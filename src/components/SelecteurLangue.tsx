@@ -150,6 +150,9 @@ export function FenetreLangue({ surFermeture }: { surFermeture: () => void }) {
   return (
     <FenetreDeVerre
       ariaLabel="Choisir la langue"
+      //  §3 (nº 240) — 45 % : elle s'ouvre au-dessus de la mosaïque,
+      //  et les cartes de flashs sont souvent blanches.
+      dense
       surFermeture={surFermeture}
       largeur="max-w-[320px]"
       rembourrage="p-0"

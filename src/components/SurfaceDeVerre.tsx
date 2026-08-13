@@ -14,8 +14,7 @@ import type { RefObject } from "react";
  * étaient justes à chaque fois, la cause était structurelle. Si chaque
  * fenêtre garde son propre verre, elles reperdront le même combat une
  * à une. Il n'y a donc qu'une écriture — celle-ci —, sur le modèle de
- * `IconeReseauSurDisque` (nº 235) et `CLASSES_LIGNE_CLIQUABLE`
- * (nº 232).
+ * `CLASSES_LIGNE_CLIQUABLE` (nº 232) et `IconeDuLien` (nº 240).
  *
  * CE QU'ELLE GARANTIT, SANS VARIATION POSSIBLE :
  *
@@ -186,6 +185,7 @@ export function FenetreDeVerre({
   classePlaque = "",
   rembourrage = "p-6",
   classeCadre = "p-6 z-[80]",
+  dense = false,
   children,
 }: {
   ariaLabel?: string;
@@ -198,6 +198,10 @@ export function FenetreDeVerre({
   /** L'air INTÉRIEUR de la plaque — `p-0` quand la fenêtre pose
       elle-même ses marges (un en-tête d'un bord à l'autre). */
   rembourrage?: string;
+  /** LA TEINTE DENSE (nº 240-§3) : 45 % au lieu de 22 — pour les
+      fenêtres qui s'ouvrent au-dessus des cartes de flashs, souvent
+      blanches. Voile, flou et liseré inchangés. */
+  dense?: boolean;
   /** L'air AUTOUR de la fenêtre, et son étage. Une fenêtre ouverte
       depuis une autre monte au-dessus d'elle. */
   classeCadre?: string;
@@ -232,6 +236,7 @@ export function FenetreDeVerre({
       {/*  LA PLAQUE — aucune opacité, aucune transition d'opacité. */}
       <div
         data-verre-fenetre=""
+        {...(dense ? { "data-verre-dense": "" } : {})}
         className={`relative w-full ${largeur} rounded-3xl ${rembourrage} ${classePlaque}`}
       >
         {children}

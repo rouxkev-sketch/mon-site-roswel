@@ -8,14 +8,12 @@ import { defilerEnDouceur } from "@/lib/defilement-programme";
 //  ce que le carrousel reçoit. Sans `?sonde-carrousel=1`, ne coûte rien.
 import { noter as noterSonde } from "@/lib/journal-carrousel";
 import {
-  ICONE_SITE,
-  ICONES_RESEAUX,
   libelleFiltre,
   libelleStyle,
   PORTRAIT_ROND,
 } from "@/config/tatouage";
 import { BoutonHorsLigne } from "@/components/BoutonHorsLigne";
-import { IconeReseauSurDisque } from "@/components/IconeReseau";
+import { IconeDuLien } from "@/components/IconeReseau";
 import { BoutonSuivre } from "@/components/BoutonSuivre";
 import {
   PanneauPortfolio,
@@ -332,49 +330,21 @@ export function ContenuFiche({
   );
 
   /**
-   * §2 (nº 224) — LES TROIS FICHIERS D'ICÔNES, ET EUX SEULS.
+   * §1 (nº 240) — LES ICÔNES DES LIENS SONT DESSINÉES DANS LE CODE.
    * ==================================================================
-   * `icone-instagram.png`, `icone-tiktok.png`, `site.png` — déposés à
-   * la main par le propriétaire, servis tels quels. Le lien libre
-   * portait `IconeWorld`, un tracé SVG dessiné par le site : ce
-   * n'était pas le bon fichier.
-   *
-   * ⚠️ LES DEUX FAMILLES NE SE TRAITENT PAS PAREIL, parce que les
-   * fichiers ne sont pas de même nature :
-   *  · les icônes de RÉSEAU sont dessinées pour un fond noir : sur
-   *    l'anthracite du site, elles disparaissaient. Elles se posent
-   *    donc sur un DISQUE BLANC PLEIN (nº 227-§3) — un disque, pas un
-   *    cercle tracé : aucun contour —, logées dedans avec 2 px de
-   *    retrait (14 px dans un disque de 18). C'est le disque qui leur
-   *    donne leur lisibilité, jamais une taille plus grande : les
-   *    trois icônes gardent le même poids visuel ;
-   *  · `site.png` est un GLYPHE NOIR sur fond transparent, comme les
-   *    autres images de ce dossier → `invert` l'éclaircit et
-   *    l'opacité le cale sur le gris du texte, SANS disque (jamais en
-   *    touchant au fichier — la règle permanente du projet).
-   * Colonne de 18 px inchangée (nº 223), pour les trois.
+   * FIN DES FICHIERS : `icone-instagram.png`, `icone-tiktok.png` et
+   * `site.png` (et les versions rognées de la nº 231) ne sont plus
+   * servis ici — et LE DISQUE BLANC est parti avec eux, avec toute la
+   * mécanique du liseré des passes 231 à 235 : elle n'existait que
+   * parce que ces fichiers étaient dessinés pour un fond noir.
+   * Les tracés vivent dans IconeReseau.tsx (`IconeDuLien`, l'écriture
+   * PARTAGÉE avec le pied de page) : monochromes en `currentColor`,
+   * ils prennent la couleur du texte du lien — gris doux ici, et ses
+   * survols — sans un seul réglage. Aucun disque, aucun fond.
    */
-  //  §1 (nº 235) — LE LISERÉ PASSE À 0,5 px : disque de 22, glyphe de
-  //  21 — un fil, plus une couronne. L'écriture du disque vit dans
-  //  IconeReseauSurDisque, PARTAGÉE avec le pied de page (§2) : les
-  //  deux endroits ne peuvent plus diverger.
-  //  site.png : 20 px, toujours sans disque, toujours `object-contain`
-  //  — jamais rognée (nº 233).
-  const iconeFichier = (fichier: string, glyphe: boolean) =>
-    glyphe ? (
-      /* eslint-disable-next-line @next/next/no-img-element --
-         icône déposée par le propriétaire, affichée telle quelle (le
-         filtre CSS ne modifie pas le fichier). */
-      <img
-        src={fichier}
-        alt=""
-        width={20}
-        height={20}
-        className="h-5 w-5 object-contain invert opacity-60"
-      />
-    ) : (
-      <IconeReseauSurDisque fichier={fichier} />
-    );
+  const iconeDeLien = (reseau: "instagram" | "tiktok" | "site") => (
+    <IconeDuLien reseau={reseau} taille={20} />
+  );
 
   /**
    * §4 (nº 227) — LES LIENS, SUR DEUX LIGNES, RÈGLE EXACTE :
@@ -392,7 +362,7 @@ export function ContenuFiche({
       "instagram",
       tatoueur.lien_instagram,
       "Instagram",
-      iconeFichier(ICONES_RESEAUX.instagram, false)
+      iconeDeLien("instagram")
     );
   const lienTiktok =
     tatoueur.lien_tiktok &&
@@ -400,7 +370,7 @@ export function ContenuFiche({
       "tiktok",
       tatoueur.lien_tiktok,
       "TikTok",
-      iconeFichier(ICONES_RESEAUX.tiktok, false)
+      iconeDeLien("tiktok")
     );
   const premiereLigne = [
     tatoueur.site_web &&
@@ -408,14 +378,14 @@ export function ContenuFiche({
         "site",
         tatoueur.site_web,
         tatoueur.titre_site_web || libelleDuLien(tatoueur.site_web),
-        iconeFichier(ICONE_SITE, true)
+        iconeDeLien("site")
       ),
     tatoueur.page_de_liens &&
       lienEnLigne(
         "liens",
         tatoueur.page_de_liens,
         tatoueur.titre_page_de_liens || libelleDuLien(tatoueur.page_de_liens),
-        iconeFichier(ICONE_SITE, true)
+        iconeDeLien("site")
       ),
   ].filter(Boolean);
   const secondeLigne: React.ReactNode[] = [];

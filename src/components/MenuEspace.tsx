@@ -747,6 +747,11 @@ export function MenuEspace({
               />
               <div
                 data-verre-fenetre=""
+                //  §3 (nº 240) — 45 %, comme les langues et les
+                //  notifications : ces trois fenêtres s'ouvrent
+                //  au-dessus de la mosaïque, souvent blanche côté
+                //  flashs. Voile, flou et liseré inchangés.
+                data-verre-dense=""
                 className="relative w-full max-w-[320px] max-h-[min(92dvh,700px)]
                            overflow-y-auto overscroll-contain rounded-3xl"
               >

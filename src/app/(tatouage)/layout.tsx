@@ -28,12 +28,11 @@ import Link from "next/link";
 import { cookies, headers } from "next/headers";
 import {
   COULEURS_SOMBRE,
-  ICONES_RESEAUX,
   MARQUE_YOKOFOLIO,
   TEXTES_TATOUAGE,
 } from "@/config/tatouage";
 import { DefilementEnHaut } from "@/components/DefilementEnHaut";
-import { IconeReseauSurDisque } from "@/components/IconeReseau";
+import { IconeDuLien } from "@/components/IconeReseau";
 import { ChargeurFavoris } from "@/components/ChargeurFavoris";
 import { FournisseurSession } from "@/components/FournisseurSession";
 import { FournisseurStyles } from "@/components/FournisseurStyles";
@@ -349,12 +348,6 @@ export default async function MiseEnPageTatouage({
               Mentions légales
             </Link>
             {/* LE COMPTE INSTAGRAM DU SITE — dernier de la ligne.
-                ⚠️ L'ICÔNE EST CELLE DU PROPRIÉTAIRE, dans sa version
-                ROGNÉE (nº 231 — le fichier d'origine n'est jamais
-                retouché), servie par IconeReseauSurDisque : le même
-                disque blanc, le même liseré de 0,5 px et le même
-                centrage que sur les fiches (nº 235-§2). Une seule
-                écriture pour les deux endroits.
                 Nouvel onglet : on quitte le site, on ne l'abandonne
                 pas. `noreferrer` va avec `_blank` — la page ouverte ne
                 doit pas garder la main sur la nôtre. */}
@@ -365,13 +358,12 @@ export default async function MiseEnPageTatouage({
               className="inline-flex items-center gap-2
                          hover:text-sombre-texte transition-colors"
             >
-              {/*  §2 (nº 235) — LE MÊME TRAITEMENT QUE SUR LES FICHES,
-                   par LA MÊME ÉCRITURE (IconeReseauSurDisque) : le
-                   fichier rogné de la nº 231, le disque blanc de 22,
-                   le liseré de 0,5 px, le glyphe centré. Le cercle
-                   gris et l'`invert` du fichier d'origine sont
-                   partis avec l'ancienne écriture. */}
-              <IconeReseauSurDisque fichier={ICONES_RESEAUX.instagram} />
+              {/*  §1 (nº 240) — LA MÊME ÉCRITURE QUE SUR LES FICHES
+                   (IconeDuLien) : le tracé dessiné dans le code, en
+                   `currentColor` — il prend le gris de ce lien et son
+                   survol sans un réglage. Le fichier image et le
+                   disque blanc des nº 227-235 sont partis. */}
+              <IconeDuLien reseau="instagram" taille={20} />
               Instagram
             </a>
           </nav>

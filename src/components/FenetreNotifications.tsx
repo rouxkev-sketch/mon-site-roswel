@@ -259,6 +259,10 @@ export function FenetreNotifications({
           nº 130 (Sécurité, retour de suppression). */}
       <div
         data-verre-fenetre=""
+        //  §3 (nº 240) — 45 % : au-dessus des cartes de flashs,
+        //  souvent blanches, la plaque à 22 % ne tenait pas. Voile,
+        //  flou et liseré inchangés.
+        data-verre-dense=""
         className="relative w-full max-w-[520px] max-h-[min(88dvh,720px)]
                    flex flex-col rounded-2xl sm:rounded-3xl
                    overflow-hidden"

@@ -54,54 +54,26 @@ export const MARQUE_YOKOFOLIO = {
 };
 
 /**
- * LES ICÔNES RONDES OFFICIELLES D'INSTAGRAM ET DE TIKTOK — deux
- * fichiers DÉPOSÉS À LA MAIN par le propriétaire (comme les logos),
- * affichés tels quels sur les fiches. S'ils manquent du clone, ils ne
- * s'affichent pas — c'est normal, pas une régression.
- *
- * Le rond TikTok est NOIR sur notre fond quasi noir : partout où il
- * s'affiche, un FIN LISERÉ CLAIR (ring-1 ring-white/25) le détoure —
- * l'icône elle-même n'est jamais retouchée, la marque reste intacte.
+ * ⚠️ LES ICÔNES DES LIENS NE SONT PLUS DES FICHIERS (nº 240-§1).
+ * `ICONE_SITE` et `ICONES_RESEAUX` vivaient ici et pointaient sur
+ * `site.png`, `icone-instagram(-rognee).png`, `icone-tiktok(-rognee).png`,
+ * `icone-youtube.png` : les trois liens des fiches et le pied de page
+ * sont désormais dessinés dans le code (`IconeDuLien`,
+ * src/components/IconeReseau.tsx), en `currentColor`, sans disque.
+ * Les fichiers déposés à la main par le propriétaire restent dans
+ * `public/` — INTOUCHABLES et hors livraison, comme toujours — mais
+ * plus rien ne les sert ; les versions rognées (dérivées, nº 231) sont
+ * supprimées avec la mécanique du liseré qui les justifiait.
  */
-/**
- * L'ICÔNE DES LIENS LIBRES — le site, la page de liens (nº 224-§2).
- * ⚠️ `site.png`, DÉPOSÉE À LA MAIN sous ce nom EXACT, comme les
- * icônes de réseau : le code ne la fabrique pas, ne la modifie pas, et
- * ne l'inclut jamais dans une livraison. C'est un GLYPHE NOIR sur
- * fond transparent — le code l'éclaircit par `invert` + opacité, et
- * jamais en retouchant le fichier.
- */
-export const ICONE_SITE = "/site.png";
 
 /**
  * L'ICÔNE D'UNE ADRESSE — la pastille d'un lieu sans photo
  * (nº 224-§1). `adresse.png`, déposée à la main sous ce nom EXACT :
- * même règle que ci-dessus, glyphe noir jamais retouché.
+ * glyphe noir jamais retouché, éclairci par `invert` + opacité, et
+ * jamais dans une livraison. Elle, elle RESTE un fichier : la nº 240
+ * n'a redessiné que les trois icônes de liens.
  */
 export const ICONE_ADRESSE = "/adresse.png";
-
-export const ICONES_RESEAUX = {
-  /**
-   * ⚠️ LES VERSIONS ROGNÉES (nº 231-§1) — mesuré, pas supposé : les
-   * fichiers déposés (`icone-instagram.png`, `icone-tiktok.png`,
-   * 4375 px) portent une marge intérieure TRANSPARENTE autour du
-   * dessin. Servis dans le disque blanc de 18 px, cette marge
-   * s'ajoutait au liseré voulu et décentrait le glyphe. Les fichiers
-   * `-rognee` sont DÉRIVÉS des originaux par le rognage demandé par
-   * le propriétaire : recadrés aux bornes exactes du dessin (relevées
-   * sur le canal alpha), remis au carré dessin centré, et réduits à
-   * 96 px pour ne pas servir 200 Ko dans une pastille de 15 px.
-   * LES ORIGINAUX NE SONT PAS TOUCHÉS — ils restent la source, et le
-   * pied de page continue de servir `/icone-instagram.png` tel quel.
-   * Les versions rognées, elles, PARTENT DANS LES LIVRAISONS (ce sont
-   * des fichiers du code, pas des dépôts à la main).
-   */
-  instagram: "/icone-instagram-rognee.png",
-  tiktok: "/icone-tiktok-rognee.png",
-  // ⚠️ DÉPOSÉE À LA MAIN elle aussi, sous ce nom EXACT : le code ne la
-  // fabrique pas et ne l'inclut jamais dans une livraison.
-  youtube: "/icone-youtube.png",
-};
 
 /**
  * LES COMPTES DU SITE LUI-MÊME — à ne pas confondre avec ceux des
