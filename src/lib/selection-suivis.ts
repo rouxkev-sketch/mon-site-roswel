@@ -4,7 +4,13 @@ import {
   modesOrdonnes,
   type ModeExerciceFiche,
 } from "@/lib/modes-exercice";
-import { genreMode, libelleTypeFiche } from "@/config/tatouage";
+import {
+  genreMode,
+  libelleTypeFiche,
+  valeurExplorer,
+} from "@/config/tatouage";
+import { cleDEnsemble, natureConnue } from "@/lib/photos-tatoueur";
+import type { ChoixSelection } from "@/lib/filtres-selection";
 import type { PhotoDuSuivi, PhotoFavorite, TatoueurSuivi } from "@/lib/favoris-serveur";
 
 /**
@@ -138,56 +144,91 @@ export function periodeDuGuest(mode: {
     : `${jour(jourD)} ${nom(moisD)} – ${jour(jourF)} ${nom(moisF)}`;
 }
 
+/** Une ligne d'information — une par mode d'exercice (§4, nº 247). */
+export type LigneInfoSuivi = {
+  /** Une clé stable pour la liste (l'identifiant du mode, à défaut son
+      rang). */
+  cle: string;
+  /** Ce qui précède la date : « Guest à Lyon », « En salon · Lyon 1er ». */
+  avant: string;
+  /** La période d'une session guest, rendue À PART pour que le
+      composant la traite seule (nº 244-§3 — l'urgence est
+      TYPOGRAPHIQUE, jamais une couleur). Vide pour les autres modes. */
+  date: string;
+  guest: boolean;
+  /** La session commence (ou se déroule) dans les sept jours. */
+  proche: boolean;
+};
+
 /**
- * CE QUI S'ÉCRIT SOUS LE NOM (§3), selon le cas :
- *  · artiste en salon   → « En salon · Lyon 1er »
- *  · artiste à domicile → « À domicile · Bordeaux »
- *  · guest              → « Guest à Lyon · 3 – 8 mars »
- *  · salon ou studio    → « Salon · Lyon 2e »
- * Les mots viennent de `genreMode` et de `libelle…DuMode` : aucun
- * libellé n'est inventé ici.
+ * CE QUI S'ÉCRIT SOUS LE NOM (§3), MODE PAR MODE (§4, nº 247)
+ * ==================================================================
+ * ⚠️ UNE FICHE PEUT EN CUMULER PLUSIEURS, et l'information était
+ * ÉCRASÉE : on n'écrivait qu'une ligne — la session guest s'il y en
+ * avait une, sinon le premier mode de l'ordre officiel. Lola, à
+ * domicile ET résidente en salon ET guest ailleurs, n'en montrait
+ * qu'un tiers.
+ * CHAQUE MODE A DÉSORMAIS SA LIGNE, les unes sous les autres, DANS
+ * L'ORDRE DÉJÀ ÉTABLI par `modesOrdonnes` (à domicile, en studio, en
+ * salon, guest) — aucun second classement n'est écrit ici.
+ *   · artiste en salon   → « En salon · Lyon 1er »
+ *   · artiste à domicile → « À domicile · Bordeaux »
+ *   · guest              → « Guest à Lyon · 3 – 8 mars »
+ *   · salon ou studio    → « Salon · Lyon 2e » (il n'a pas de mode :
+ *     il EST le lieu — une seule ligne, comme avant)
+ * Les mots viennent de `genreMode`, `libelle…DuMode` et
+ * `libelleTypeFiche` : aucun libellé n'est inventé ici.
+ *
+ * ⚠️ UNE SESSION GUEST TERMINÉE NE S'ÉCRIT PAS : la règle du §2
+ * (nº 243) vaut ligne à ligne — elle est passée, elle ne dit plus où
+ * l'artiste se trouve.
  */
-export function ligneDInformation(
+export function lignesDInformation(
   suivi: TatoueurSuivi,
   aujourdhui = jourCivil()
-): { texte: string; avant: string; date: string; guest: boolean; proche: boolean } {
-  const guest = guestDuSuivi(suivi, aujourdhui);
-  if (guest) {
-    const lieu = guest.ville ?? guest.intitule ?? suivi.ville;
-    const periode = periodeDuGuest(guest);
-    const proche =
-      Boolean(guest.debut_le) &&
-      guest.debut_le! <= jourCivilDepuis(aujourdhui, JOURS_PROCHES);
-    //  ⚠️ LA DATE EST RENDUE À PART (`date`), pour que le composant
-    //  puisse la traiter seule (nº 244-§3 : l'urgence par la
-    //  TYPOGRAPHIE — la date proche passe en blanc semi-gras, rien
-    //  d'autre). `texte` reste la ligne entière.
-    const avant = `${genreMode("guest").label}${lieu ? ` à ${lieu}` : ""}`;
-    return {
-      texte: [avant, periode].filter(Boolean).join(" · "),
-      avant,
-      date: periode,
-      guest: true,
-      proche,
-    };
-  }
-  //  Pas de guest en cours : le premier mode de l'ordre officiel.
-  const mode = modesOrdonnes(suivi.modes)[0];
-  if (!mode) {
-    //  Un salon ou un studio n'a pas de mode d'exercice : il EST le
-    //  lieu — « Salon · Lyon 2e ». Le mot vient de `libelleTypeFiche`,
-    //  celui des cartes ; la ville, de sa fiche.
-    const texteLieu = [libelleTypeFiche(suivi.typeFiche, suivi.etablissement), suivi.ville]
-      .filter(Boolean)
-      .join(" · ");
-    return { texte: texteLieu, avant: texteLieu, date: "", guest: false, proche: false };
-  }
-  const lieu =
-    mode.genre === "domicile" || mode.genre === "prive"
-      ? libelleSecteurDuMode(mode)
-      : libelleLieuDuMode(mode);
-  const texteMode = [genreMode(mode.genre).label, lieu].filter(Boolean).join(" · ");
-  return { texte: texteMode, avant: texteMode, date: "", guest: false, proche: false };
+): LigneInfoSuivi[] {
+  const lignes: LigneInfoSuivi[] = [];
+  modesOrdonnes(suivi.modes).forEach((mode, rang) => {
+    const cle = mode.id ?? `${mode.genre}-${rang}`;
+    if (mode.genre === "guest") {
+      //  Terminée : elle ne dit plus rien (règle du §2, nº 243).
+      if (mode.fin_le && mode.fin_le < aujourdhui) return;
+      const lieu = mode.ville ?? mode.intitule ?? suivi.ville;
+      lignes.push({
+        cle,
+        avant: `${genreMode("guest").label}${lieu ? ` à ${lieu}` : ""}`,
+        date: periodeDuGuest(mode),
+        guest: true,
+        proche:
+          Boolean(mode.debut_le) &&
+          mode.debut_le! <= jourCivilDepuis(aujourdhui, JOURS_PROCHES),
+      });
+      return;
+    }
+    const lieu =
+      mode.genre === "domicile" || mode.genre === "prive"
+        ? libelleSecteurDuMode(mode)
+        : libelleLieuDuMode(mode);
+    lignes.push({
+      cle,
+      avant: [genreMode(mode.genre).label, lieu].filter(Boolean).join(" · "),
+      date: "",
+      guest: false,
+      proche: false,
+    });
+  });
+  if (lignes.length > 0) return lignes;
+  //  Aucun mode : un salon ou un studio EST le lieu — « Salon · Lyon 2e ».
+  const texteLieu = [
+    libelleTypeFiche(suivi.typeFiche, suivi.etablissement),
+    suivi.ville,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  if (!texteLieu) return [];
+  return [
+    { cle: "lieu", avant: texteLieu, date: "", guest: false, proche: false },
+  ];
 }
 
 /* ==================================================================
@@ -202,16 +243,26 @@ export type BandeDeTrois = {
 };
 
 /**
- * L'ORDRE EST STRICT (§4) :
- *  1. les photos de cet artiste QUE LE VISITEUR A AIMÉES — les trois
- *     plus récemment aimées (`favoris` arrive déjà dans cet ordre) ;
- *  2. aucune aimée → ses trois RÉALISATIONS les plus récentes. Jamais
- *     un flash : un flash est un dessin proposé, il ne montre pas sa
+ * COMBIEN DE VIGNETTES AU MAXIMUM (nº 247-§5)
+ * ------------------------------------------------------------------
+ * SIX, et jamais plus — même quand l'écran le permettrait. La bande
+ * GRANDIT AVEC L'ÉCRAN : trois au doigt, jusqu'à six au large. C'est
+ * la mise en page qui décide combien s'en montrent (les colonnes de
+ * BlocSuivis) ; cette liste, elle, en fournit au plus six.
+ */
+export const VIGNETTES_MAX = 6;
+
+/**
+ * L'ORDRE EST STRICT (§4 de la nº 243) :
+ *  1. les photos de cet artiste QUE LE VISITEUR A AIMÉES — les plus
+ *     récemment aimées (`favoris` arrive déjà dans cet ordre) ;
+ *  2. aucune aimée → ses RÉALISATIONS les plus récentes. Jamais un
+ *     flash : un flash est un dessin proposé, il ne montre pas sa
  *     main sur la peau ;
- *  3. aucune réalisation publiée → ses trois derniers FLASHS.
+ *  3. aucune réalisation publiée → ses derniers FLASHS.
  * Aucun tri par rendu — noir et gris et couleur se mélangent, c'est
- * la vérité de son éventail. Moins de trois : on n'affiche que ce qui
- * existe, jamais un doublon, jamais une case comblée.
+ * la vérité de son éventail. Moins que le maximum : on n'affiche que
+ * ce qui existe, jamais un doublon, jamais une case comblée.
  */
 export function bandeDeTrois(
   suivi: TatoueurSuivi,
@@ -219,7 +270,7 @@ export function bandeDeTrois(
 ): BandeDeTrois {
   const aimees = favoris
     .filter((photo) => photo.tatoueurId === suivi.id)
-    .slice(0, 3)
+    .slice(0, VIGNETTES_MAX)
     .map((photo) => ({
       id: photo.id,
       url: photo.url,
@@ -234,7 +285,7 @@ export function bandeDeTrois(
   }
   const realisations = suivi.recentes
     .filter((photo) => photo.nature !== "flash")
-    .slice(0, 3);
+    .slice(0, VIGNETTES_MAX);
   if (realisations.length > 0) {
     return {
       photos: realisations,
@@ -243,58 +294,88 @@ export function bandeDeTrois(
     };
   }
   return {
-    photos: suivi.recentes.filter((photo) => photo.nature === "flash").slice(0, 3),
+    photos: suivi.recentes
+      .filter((photo) => photo.nature === "flash")
+      .slice(0, VIGNETTES_MAX),
     provenance: "Ses derniers flashs",
     cas: "flashs",
   };
 }
 
 /* ==================================================================
- * LE FILTRE PAR STYLE (nº 245-§3)
+ * LE FILTRE DES DEUX MENUS (nº 245-§3, refait nº 247-§2 et §3)
  * ==================================================================
- * UNE SEULE RÈGLE, deux usages : elle filtre la liste affichée, et
- * elle compte les entrées du menu « Mes suivis ». Un artiste PORTE un
- * style dès qu'une de ses publications le porte — c'est ce que le
- * visiteur voit de son travail.
+ * UNE SEULE RÈGLE, deux usages : elle filtre ce qui s'affiche, et elle
+ * compte les entrées du menu. Elle porte désormais sur LES DEUX TAGS
+ * du menu « Explorer » — la CATÉGORIE puis le style —, jamais sur le
+ * style seul : c'est le §3 de la nº 247.
+ * Les comptes sont indexés par la valeur d'Explorer (« flash »,
+ * « flash:maori »…), les totaux de catégorie compris : c'est
+ * exactement ce que `entreesDuFiltre` attend.
  */
-export function suiviPorteLeStyle(suivi: TatoueurSuivi, style: string): boolean {
-  return suivi.recentes.some((photo) => photo.style === style);
+
+/** Cette photo répond-elle au choix courant ? Un tag non demandé ne
+    dit jamais non. */
+export function photoDuChoix(
+  photo: { style: string; nature?: string | null },
+  choix: Pick<ChoixSelection, "nature" | "style">
+): boolean {
+  if (choix.nature && natureConnue(photo.nature) !== choix.nature) return false;
+  if (choix.style && photo.style !== choix.style) return false;
+  return true;
 }
 
-/** Les suivis d'un style — « tous » rend la liste entière. */
-export function suivisDuStyle(
+/** Les suivis qui répondent au choix — un artiste PORTE un tag dès
+    qu'une de ses publications le porte. Aucun tag : la liste entière. */
+export function suivisDuChoix(
   suivis: TatoueurSuivi[],
-  style: string
+  choix: Pick<ChoixSelection, "nature" | "style">
 ): TatoueurSuivi[] {
-  if (!style || style === "tous") return suivis;
-  return suivis.filter((suivi) => suiviPorteLeStyle(suivi, style));
+  if (!choix.nature && !choix.style) return suivis;
+  return suivis.filter((suivi) =>
+    suivi.recentes.some((photo) => photoDuChoix(photo, choix))
+  );
 }
 
-/** Le nombre d'ARTISTES par style — ce que le menu annonce en face de
-    chaque entrée (le menu filtre des artistes, il les compte donc). */
-export function comptesParStyleDesSuivis(
+/** Le nombre d'ARTISTES par entrée — le menu filtre des artistes, il
+    les compte donc. */
+export function comptesDesSuivis(
   suivis: TatoueurSuivi[]
 ): Map<string, number> {
   const comptes = new Map<string, number>();
   for (const suivi of suivis) {
-    const vus = new Set(suivi.recentes.map((photo) => photo.style));
-    for (const style of vus) comptes.set(style, (comptes.get(style) ?? 0) + 1);
+    const cles = new Set<string>();
+    for (const photo of suivi.recentes) {
+      const nature = natureConnue(photo.nature);
+      cles.add(valeurExplorer(nature, ""));
+      cles.add(valeurExplorer(nature, photo.style));
+    }
+    for (const cle of cles) comptes.set(cle, (comptes.get(cle) ?? 0) + 1);
   }
   return comptes;
 }
 
-/** Le nombre d'ENSEMBLES aimés par style — le menu « Mes j'aime »
+/** Le nombre d'ENSEMBLES aimés par entrée — le menu « Mes j'aime »
     annonce ce qu'il va montrer (une carte = un ensemble, nº 213-§3d). */
-export function comptesParStyleDesJaime(
+export function comptesDesJaime(
   photos: PhotoFavorite[]
 ): Map<string, number> {
-  const parStyle = new Map<string, Set<string>>();
+  const parCle = new Map<string, Set<string>>();
+  const ajouter = (cle: string, ensemble: string) => {
+    const vus = parCle.get(cle) ?? new Set<string>();
+    vus.add(ensemble);
+    parCle.set(cle, vus);
+  };
   for (const photo of photos) {
-    const vus = parStyle.get(photo.style) ?? new Set<string>();
-    vus.add(`${photo.tatoueurSlug}·${photo.style}·${photo.nature}·${photo.rendu ?? ""}`);
-    parStyle.set(photo.style, vus);
+    const nature = natureConnue(photo.nature);
+    //  L'ENSEMBLE, tel que le site le définit partout (style +
+    //  catégorie + rendu), plus le tatoueur : deux artistes ont chacun
+    //  leur « réalisme · noir et gris ».
+    const ensemble = `${photo.tatoueurSlug}·${cleDEnsemble(photo)}`;
+    ajouter(valeurExplorer(nature, ""), ensemble);
+    ajouter(valeurExplorer(nature, photo.style), ensemble);
   }
-  return new Map([...parStyle].map(([style, vus]) => [style, vus.size]));
+  return new Map([...parCle].map(([cle, vus]) => [cle, vus.size]));
 }
 
 /** « 3 nouvelles réalisations » — le compte du §5, jamais à zéro. */

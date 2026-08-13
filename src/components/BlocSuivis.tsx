@@ -6,7 +6,7 @@ import {
   bandeDeTrois,
   groupesDeSuivis,
   libelleNouveautes,
-  ligneDInformation,
+  lignesDInformation,
 } from "@/lib/selection-suivis";
 import type { PhotoFavorite, TatoueurSuivi } from "@/lib/favoris-serveur";
 
@@ -97,22 +97,16 @@ export function BlocSuivis({
             {groupe.titre}
           </h2>
           {/*  34 px entre deux blocs d'artiste (nº 244-§2).
-               §5 (nº 245) — DEUX COLONNES EN PLEINE LARGEUR : une
-               grille à partir de `lg`, une seule colonne en dessous.
+               §5 (nº 247) — UNE FICHE PAR LIGNE, PLEINE LARGEUR : les
+               deux colonnes de la nº 245 sont ABANDONNÉES. Le format
+               du bloc (nº 243/244) ne change pas d'un pixel ; c'est sa
+               bande de vignettes qui prend la largeur gagnée.
                ⚠️ `minmax(0,1fr)` ET NON `1fr` — c'est le piège de la
                nº 228 : une colonne `1fr` se dimensionne à son contenu
                (un nom long, une adresse), et la page déborde en
                largeur. Avec le plancher à zéro, la colonne cède, et
                `scrollWidth` reste égal à `clientWidth`. */}
-          {/*  §3 (nº 246) — 34 px DANS LES DEUX SENS : l'écart entre
-               les deux colonnes est CELUI qui sépare deux blocs
-               verticalement depuis la nº 244 — l'espace est égal
-               partout. Colonnes STRICTEMENT égales (`minmax(0,1fr)`
-               deux fois — et jamais `1fr`, le piège de la nº 228). */}
-          <ul
-            className="mt-5 grid gap-[34px]
-                       grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
-          >
+          <ul className="mt-5 grid gap-[34px] grid-cols-[minmax(0,1fr)]">
             {groupe.suivis.map((suivi) => (
               <li key={suivi.id}>
                 <BlocDUnSuivi suivi={suivi} favoris={favoris} />
@@ -133,7 +127,7 @@ function BlocDUnSuivi({
   suivi: TatoueurSuivi;
   favoris: PhotoFavorite[];
 }) {
-  const info = ligneDInformation(suivi);
+  const lignes = lignesDInformation(suivi);
   const bande = bandeDeTrois(suivi, favoris);
   const nouveautes = libelleNouveautes(suivi.nouveautes);
 
@@ -152,7 +146,21 @@ function BlocDUnSuivi({
           //  emploie déjà pour un lieu sans photo.
           nature={suivi.modes.length > 0 ? "personne" : "lieu"}
         />
-        <span className="flex min-h-13 min-w-0 flex-1 flex-col justify-center">
+        {/*  §4 (nº 247) — LE NOM NE BOUGE PAS, LES LIGNES S'AJOUTENT
+             SOUS LUI. Le bloc de texte est calé EN HAUT
+             (`justify-start`) dès qu'il y a plusieurs modes : centré,
+             il aurait fait remonter le nom au-dessus du rond quand le
+             texte grandit. C'est la règle de la nº 241, telle quelle —
+             le rond est ancré en haut (`items-start` de
+             CLASSES_LIGNE_CLIQUABLE, `shrink-0` de PhotoRonde), il ne
+             bouge JAMAIS, et le texte ne dépasse jamais au-dessus de
+             lui. Un seul mode : la boîte de 52 px centre comme avant,
+             au pixel. */}
+        <span
+          className={`flex min-h-13 min-w-0 flex-1 flex-col ${
+            lignes.length > 1 ? "justify-start" : "justify-center"
+          }`}
+        >
           <span className="truncate text-[15px] font-semibold text-sombre-texte">
             {suivi.nom}
           </span>
@@ -160,33 +168,42 @@ function BlocDUnSuivi({
                §3 — L'URGENCE PAR LA TYPOGRAPHIE, JAMAIS PAR LA
                COULEUR : quand la session tombe dans les sept jours,
                LA DATE seule passe du gris au BLANC semi-gras — aucun
-               rose, aucun vert, aucun rouge, aucun badge. */}
-          <span
-            data-info-suivi=""
-            data-guest-proche={info.proche ? "" : undefined}
-            className="truncate text-[14px] leading-relaxed text-sombre-texte-doux"
-          >
-            {info.avant}
-            {info.date && (
-              <>
-                {info.avant ? " · " : ""}
-                <span
-                  data-date-guest=""
-                  className={
-                    info.proche ? "font-semibold text-sombre-texte" : ""
-                  }
-                >
-                  {info.date}
-                </span>
-              </>
-            )}
-            {nouveautes && (
-              <>
-                {info.texte ? " · " : ""}
-                <span data-nouveautes="">{nouveautes}</span>
-              </>
-            )}
-          </span>
+               rose, aucun vert, aucun rouge, aucun badge.
+               §4 (nº 247) — UNE LIGNE PAR MODE, les unes sous les
+               autres, dans l'ordre de `modesOrdonnes`. */}
+          {lignes.map((info) => (
+            <span
+              key={info.cle}
+              data-info-suivi=""
+              data-guest-proche={info.proche ? "" : undefined}
+              className="truncate text-[14px] leading-relaxed text-sombre-texte-doux"
+            >
+              {info.avant}
+              {info.date && (
+                <>
+                  {info.avant ? " · " : ""}
+                  <span
+                    data-date-guest=""
+                    className={
+                      info.proche ? "font-semibold text-sombre-texte" : ""
+                    }
+                  >
+                    {info.date}
+                  </span>
+                </>
+              )}
+            </span>
+          ))}
+          {/*  LE COMPTE DE NOUVEAUTÉS (§5, nº 243) — sur SA ligne : il
+               ne parle d'aucun mode en particulier. */}
+          {nouveautes && (
+            <span
+              data-nouveautes=""
+              className="truncate text-[14px] leading-relaxed text-sombre-texte-doux"
+            >
+              {nouveautes}
+            </span>
+          )}
         </span>
       </Link>
 
@@ -202,14 +219,38 @@ function BlocDUnSuivi({
         </p>
       )}
 
-      {/* 3 · LA BANDE DE TROIS — trois colonnes égales, carrées.
-             ⚠️ MOINS DE TROIS PHOTOS : on n'affiche que ce qui existe,
-             jamais un doublon, jamais une case vide comblée. */}
+      {/* 3 · LA BANDE DE VIGNETTES — des colonnes égales, carrées.
+             ⚠️ MOINS DE PHOTOS QUE DE COLONNES : on n'affiche que ce
+             qui existe, jamais un doublon, jamais une case vide
+             comblée.
+             §5 (nº 247) — ELLE GRANDIT AVEC L'ÉCRAN : trois sur un
+             téléphone, quatre, cinq, puis SIX au maximum sur les
+             écrans larges — jamais plus, même quand la largeur le
+             permettrait. Le nombre de COLONNES et le nombre de
+             vignettes MONTRÉES avancent ensemble : la bande tient
+             toujours sur UNE seule ligne (les vignettes en trop sont
+             retirées du flux à chaque palier, elles ne repassent
+             jamais dessous). */}
       {bande.photos.length > 0 && (
-        /*  §2 (nº 244) — 6 px d'écart, rayon 10 px. */
-        <ul data-bande-suivi="" className="mt-2 grid grid-cols-3 gap-1.5">
-          {bande.photos.map((photo) => (
-            <li key={photo.id}>
+        /*  §2 (nº 244) — 6 px d'écart. §5 (nº 247) — ANGLES DROITS :
+             rayon zéro, la seule valeur graphique de cette passe. */
+        <ul
+          data-bande-suivi=""
+          className="mt-2 grid gap-1.5 grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+        >
+          {bande.photos.map((photo, rang) => (
+            <li
+              key={photo.id}
+              className={
+                rang < 3
+                  ? undefined
+                  : rang === 3
+                    ? "hidden sm:block"
+                    : rang === 4
+                      ? "hidden lg:block"
+                      : "hidden xl:block"
+              }
+            >
               {/*  UNE VIGNETTE OUVRE LA PHOTO, et elle seule : la
                    fiche s'ouvre sur cette photo, dans son ensemble
                    (style + catégorie + rendu), exactement comme une
@@ -224,7 +265,7 @@ function BlocDUnSuivi({
                 data-vignette-suivi={photo.id}
                 //  §4 (nº 244) — au doigt, une BRÈVE baisse d'opacité,
                 //  rien de plus : ni voile, ni contour, ni rose.
-                className="block aspect-square overflow-hidden rounded-[10px]
+                className="block aspect-square overflow-hidden rounded-none
                            bg-sombre-eleve transition-opacity active:opacity-75"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element --

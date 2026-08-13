@@ -4,12 +4,7 @@ import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LARGEUR_SITE } from "@/config/tatouage";
-import {
-  filtreCourant,
-  PARAM_JAIME,
-  PARAM_SUIVIS,
-  TOUS_LES_STYLES,
-} from "@/lib/filtres-selection";
+import { lireSelection, MENU_JAIME } from "@/lib/filtres-selection";
 import { lireRequeteCourante, souscrireAdresse } from "@/lib/adresse-courante";
 import { CarteTatoueur } from "@/components/CarteTatoueur";
 import { BlocSuivis } from "@/components/BlocSuivis";
@@ -18,8 +13,12 @@ import {
   CLE_FENETRE_FICHE,
   type ContexteFenetreFiche,
 } from "@/components/RetourFenetreFiche";
-import { cleDEnsemble, RENDU_PAR_DEFAUT } from "@/lib/photos-tatoueur";
-import { suivisDuStyle } from "@/lib/selection-suivis";
+import {
+  cleDEnsemble,
+  natureConnue,
+  RENDU_PAR_DEFAUT,
+} from "@/lib/photos-tatoueur";
+import { photoDuChoix, suivisDuChoix } from "@/lib/selection-suivis";
 import { ficheComplete } from "@/lib/fiche-complete";
 import type { PhotoFavorite, TatoueurSuivi } from "@/lib/favoris-serveur";
 import type { Tatoueur } from "@/lib/tatoueurs";
@@ -68,15 +67,19 @@ export function PageFavoris({
   photos: PhotoFavorite[];
   suivis: TatoueurSuivi[];
 }) {
-  //  LES DEUX FILTRES VIENNENT DE L'ADRESSE — la même source que les
-  //  menus de la barre, lue par le même magasin (nº 245-§3).
+  //  LE FILTRE VIENT DE L'ADRESSE — la même source que les menus de la
+  //  barre, lue par le même magasin (nº 245-§3, nº 247-§2).
   const requete = useSyncExternalStore(
     souscrireAdresse,
     lireRequeteCourante,
     () => ""
   );
-  const style = filtreCourant(PARAM_JAIME, requete);
-  const styleSuivis = filtreCourant(PARAM_SUIVIS, requete);
+  const choix = lireSelection(requete);
+  /*  §2 (nº 247) — LES DEUX MENUS SONT EXCLUSIFS : un seul mène la
+      recherche, et l'autre section n'est PAS affichée. À l'ouverture
+      (adresse sans paramètre), c'est « Mes j'aime » : les favoris
+      seuls, aucun suivi. */
+  const surLesJaime = choix.menu === MENU_JAIME;
 
   /**
    * §5 (nº 243) — LA DERNIÈRE VISITE S'ÉCRIT AU DÉPART, JAMAIS À
@@ -135,12 +138,28 @@ export function PageFavoris({
   const pathname = usePathname();
   const [ficheOuverte, setFicheOuverte] = useState<Tatoueur | null>(null);
   const [positionPage, setPositionPage] = useState(0);
-  const [styleOuvert, setStyleOuvert] = useState("");
+  /**
+   * §1 (nº 247) — LES TROIS TAGS DE L'ENSEMBLE OUVERT, ET PLUS LE SEUL
+   * STYLE. C'est ICI que la catégorie se perdait : la fenêtre ne
+   * recevait que `styleRecherche`, donc elle ouvrait TOUT le style —
+   * et sa première photo est une réalisation. On ouvrait un flash, on
+   * voyait une réalisation.
+   */
+  const [serieOuverte, setSerieOuverte] = useState({
+    cle: "",
+    style: "",
+    nature: "",
+    rendu: "",
+  });
   const visible =
     ficheOuverte !== null && pathname === `/tatoueur/${ficheOuverte.slug}`;
 
   const ouvrirLaFiche = useCallback(
-    async (slug: string, styleDeLaPhoto: string, adresse: string) => {
+    async (
+      slug: string,
+      serie: { cle: string; style: string; nature: string; rendu: string },
+      adresse: string
+    ) => {
       const fiche = await ficheComplete(slug);
       if (!fiche) {
         //  Rien à montrer : on s'efface devant la navigation normale.
@@ -158,7 +177,7 @@ export function PageFavoris({
         // Stockage indisponible : le rechargement servira la page.
       }
       setPositionPage(window.scrollY);
-      setStyleOuvert(styleDeLaPhoto);
+      setSerieOuverte(serie);
       document.documentElement.setAttribute("data-fenetre-fiche", "1");
       window.history.pushState({ fenetreFiche: true }, "", `/tatoueur/${slug}`);
       setFicheOuverte(fiche);
@@ -183,16 +202,23 @@ export function PageFavoris({
       page affiche un élément par ensemble — le sélecteur doit annoncer
       ce qu'il va montrer, pas ce qu'il contient. Trois ensembles de
       réalisme font « 3 », qu'ils portent trois photos ou trente. */
-  //  UN SEUL FILTRE, celui du menu « Mes j'aime » (l'adresse).
-  const visibles = photos.filter(
-    (photo) => style === TOUS_LES_STYLES || photo.style === style
+  //  UN SEUL FILTRE, celui du menu actif (l'adresse) — et la règle vit
+  //  dans `lib/selection-suivis`, écrite une fois pour le filtrage
+  //  comme pour le comptage des entrées de menu.
+  //  ⚠️ DES VALEURS SIMPLES EN DÉPENDANCE, jamais l'objet `choix` : il
+  //  est reconstruit à chaque lecture de l'adresse, et une mémoire qui
+  //  se refait à chaque rendu ne mémorise rien.
+  const { nature, style } = choix;
+  const visibles = useMemo(
+    () =>
+      surLesJaime
+        ? photos.filter((photo) => photoDuChoix(photo, { nature, style }))
+        : [],
+    [surLesJaime, photos, nature, style]
   );
-  //  ET SON JUMEAU pour les suivis — la règle vit dans
-  //  `lib/selection-suivis`, écrite une fois pour le filtrage comme
-  //  pour le comptage des entrées de menu.
   const suivisVisibles = useMemo(
-    () => suivisDuStyle(suivis, styleSuivis),
-    [suivis, styleSuivis]
+    () => (surLesJaime ? [] : suivisDuChoix(suivis, { nature, style })),
+    [surLesJaime, suivis, nature, style]
   );
 
   /**
@@ -275,8 +301,12 @@ export function PageFavoris({
         Ma sélection
       </h1>
 
-      {/* ---------- LES PHOTOS GARDÉES ---------- */}
-      {photos.length === 0 ? (
+      {/* ---------- LES PHOTOS GARDÉES ----------
+           §2 (nº 247) — LES DEUX MENUS SONT EXCLUSIFS : cette section
+           n'existe que si « Mes j'aime » mène la recherche. Choisir
+           dans « Mes suivis » la fait disparaître, et réciproquement —
+           on ne lit jamais deux recherches à la fois. */}
+      {!surLesJaime ? null : photos.length === 0 ? (
         /* L'ÉTAT VIDE — il dit quoi faire, en une ligne, et ouvre la
            porte. Pas de dessin, pas de paragraphe. */
         <div className="mt-8 rounded-2xl bg-sombre-carte px-5 py-8 text-center">
@@ -321,16 +351,28 @@ export function PageFavoris({
                        recherche, donc les mêmes proportions, le même
                        cœur, le même sous-titre, et le défilement des
                        photos en pleine largeur. */}
+                  {/*  §1 (nº 247) — LA CATÉGORIE VOYAGE, ELLE AUSSI.
+                       Elle manquait ici : l'adresse que la carte
+                       fabrique (`?style=…&rendu=…`) n'emportait donc
+                       pas `&nature=`, et le smartphone — qui navigue
+                       par ce lien — ouvrait TOUT le style. C'est la
+                       moitié mobile du défaut. */}
                   <CarteTatoueur
                     tatoueur={fiche}
                     styleRecherche={photo.style}
                     renduRecherche={photo.rendu ?? ""}
+                    natureRecherche={natureConnue(photo.nature)}
                     surOuverture={() =>
                       void ouvrirLaFiche(
                         photo.tatoueurSlug,
-                        photo.style,
+                        {
+                          cle,
+                          style: photo.style,
+                          nature: natureConnue(photo.nature),
+                          rendu: photo.rendu ?? RENDU_PAR_DEFAUT,
+                        },
                         `/tatoueur/${photo.tatoueurSlug}?style=${photo.style}` +
-                          `&nature=${photo.nature}&rendu=${
+                          `&nature=${natureConnue(photo.nature)}&rendu=${
                             photo.rendu ?? RENDU_PAR_DEFAUT
                           }`
                       )
@@ -344,20 +386,31 @@ export function PageFavoris({
       )}
 
       {/* ---------- LES ARTISTES SUIVIS (nº 243-§2 à §5) ----------
-           Ils ne sont plus derrière un onglet (nº 245-§2) : la page
-           les montre à la suite des photos, filtrés par LEUR menu. */}
-      <BlocSuivis
-        suivis={suivisVisibles}
-        favoris={photos}
-        titre="Mes suivis"
-      />
+           §2 (nº 247) — ILS N'APPARAISSENT QUE SI « Mes suivis » mène
+           la recherche : à l'ouverture, la page ne montre QUE les
+           favoris. */}
+      {!surLesJaime && (
+        <BlocSuivis suivis={suivisVisibles} favoris={photos} titre="Mes suivis" />
+      )}
 
-      {/* `key` : chaque ouverture repart de la photo du style gardé,
-          jamais de l'état d'une fiche précédente. */}
+      {/* `key` : chaque ouverture repart de L'ENSEMBLE ouvert, jamais
+          de l'état d'une fiche précédente.
+          ⚠️ ET L'ENSEMBLE, PAS SEULEMENT LA FICHE (nº 247-§1) : la clé
+          ne portait que l'identifiant du tatoueur. Ouvrir un flash de
+          Lola puis une de ses réalisations (ou l'inverse) réutilisait
+          donc LA MÊME fenêtre — React garde l'état interne d'un
+          composant dont la clé n'a pas changé, à commencer par la série
+          et l'indice de photo. Une photo héritée de l'ensemble voisin,
+          exactement. La mosaïque comptait déjà ses ouvertures pour
+          cette raison (nº 220-§3) ; cette page ne le faisait pas. */}
       <FenetreFiche
-        key={ficheOuverte?.id ?? "fermee"}
+        key={`${ficheOuverte?.id ?? "fermee"}-${serieOuverte.cle}`}
         tatoueur={visible ? ficheOuverte : null}
-        styleRecherche={styleOuvert}
+        styleRecherche={serieOuverte.style}
+        //  LES TROIS TAGS, jusqu'au bout : la fenêtre s'ouvre sur
+        //  L'ENSEMBLE qu'on a touché, jamais sur tout le style.
+        natureRecherche={serieOuverte.nature}
+        renduRecherche={serieOuverte.rendu}
         positionGrille={positionPage}
         surFermeture={fermerLaFiche}
       />

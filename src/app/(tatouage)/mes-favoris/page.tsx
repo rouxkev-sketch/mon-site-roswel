@@ -5,10 +5,7 @@ import { lireLesFavoris } from "@/lib/favoris-serveur";
 import { BarreSelection } from "@/components/BarreSelection";
 import { PageFavoris } from "@/components/PageFavoris";
 import { entreesDuFiltre } from "@/lib/filtres-selection";
-import {
-  comptesParStyleDesJaime,
-  comptesParStyleDesSuivis,
-} from "@/lib/selection-suivis";
+import { comptesDesJaime, comptesDesSuivis } from "@/lib/selection-suivis";
 
 /**
  * MES FAVORIS — la page du compte (passe nº 137)
@@ -52,13 +49,14 @@ export default async function PageMesFavoris() {
   }
 
   const { photos, suivis } = await lireLesFavoris(user.id);
-  //  §1 et §3 (nº 245) — LES DEUX MENUS DE LA BARRE, calculés ICI, au
-  //  plus près des données : les styles réellement présents dans les
-  //  j'aime et dans le travail des suivis. L'ordre et les libellés
-  //  viennent du menu du moteur (`entreesDuFiltre`) ; un menu sans
-  //  entrée ne s'affiche pas.
-  const entreesJaime = entreesDuFiltre(comptesParStyleDesJaime(photos));
-  const entreesSuivis = entreesDuFiltre(comptesParStyleDesSuivis(suivis));
+  //  §1 et §3 (nº 245, refait nº 247-§3) — LES DEUX MENUS DE LA BARRE,
+  //  calculés ICI, au plus près des données : les CATÉGORIES et les
+  //  styles réellement présents dans les j'aime et dans le travail des
+  //  suivis. La structure, l'ordre et les libellés viennent du menu
+  //  « Explorer » du moteur (`entreesDuFiltre`) ; un menu sans entrée
+  //  ne s'affiche pas.
+  const entreesJaime = entreesDuFiltre(comptesDesJaime(photos));
+  const entreesSuivis = entreesDuFiltre(comptesDesSuivis(suivis));
 
   return (
     <>

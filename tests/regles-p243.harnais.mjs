@@ -33,7 +33,7 @@ export async function resolve(spec, ctx, next) {
 const {
   groupesDeSuivis,
   guestDuSuivi,
-  ligneDInformation,
+  lignesDInformation,
   bandeDeTrois,
   libelleNouveautes,
   jourCivilDepuis,
@@ -43,6 +43,21 @@ const {
  * LE JEU D'ESSAI — un jour fixe, des dates relatives : déterministe.
  * ------------------------------------------------------------------ */
 const JOUR = "2026-08-13";
+/*  ⚠️ MIS À JOUR À LA nº 247-§4 (la spec a changé) : `ligneDInformation`
+    (une seule ligne, l'information des autres modes ÉCRASÉE) est
+    remplacée par `lignesDInformation` — UNE LIGNE PAR MODE. Ce banc
+    daté garde ses assertions : il lit la PREMIÈRE ligne, et recompose
+    `texte` comme avant. Le champ `lignes` expose la liste entière. */
+const ligneDInformation = (suivi, jour) => {
+  const lignes = lignesDInformation(suivi, jour);
+  const premiere =
+    lignes[0] ?? { avant: "", date: "", guest: false, proche: false };
+  return {
+    ...premiere,
+    texte: [premiere.avant, premiere.date].filter(Boolean).join(" \u00b7 "),
+    lignes,
+  };
+};
 const J = (n) => jourCivilDepuis(JOUR, n);
 
 const mode = (surcharges) => ({

@@ -104,6 +104,7 @@ export function CarrouselPortfolio({
   surChangement,
   variante = "fiche",
   prioritaire = false,
+  natureDeLaSerie = "",
   lien,
   children,
 }: {
@@ -112,6 +113,19 @@ export function CarrouselPortfolio({
   nomTatoueur: string;
   /** Le libellé du style affiché — il sert aux textes de remplacement. */
   styleLabel: string;
+  /**
+   * §1 (nº 247) — LA CATÉGORIE QUE CE CARROUSEL DÉCLARE MONTRER
+   * ------------------------------------------------------------------
+   * « tatouage », « flash », ou rien du tout quand il montre un style
+   * entier. Ce n'est pas un réglage : c'est une DÉCLARATION, et la
+   * règle du site est qu'elle ne peut pas mentir — toute photo montrée
+   * porte cette catégorie (l'enveloppe abandonne sa série plutôt que
+   * d'en violer une, voir `serieMontree`). Elle s'écrit dans le DOM
+   * (`data-serie-nature`), en face de la catégorie de chaque colonne
+   * (`data-nature`) : le défaut redevient mesurable, il ne peut plus
+   * revenir en silence.
+   */
+  natureDeLaSerie?: string;
   /** L'indice RÉEL affiché (0..n-1) — possédé par la fiche. */
   indice: number;
   surChangement: (indice: number) => void;
@@ -654,6 +668,9 @@ export function CarrouselPortfolio({
       /*  ⚠️ TEMPORAIRE (nº 218-§1) : c'est par cet attribut que la sonde
           TROUVE le carrousel — elle n'en connaît rien d'autre. */
       data-carrousel={variante}
+      //  §1 (nº 247) — CE QUE CE CARROUSEL DÉCLARE MONTRER. Vide : un
+      //  style entier, il ne promet aucune catégorie.
+      data-serie-nature={natureDeLaSerie || undefined}
       className="relative bg-sombre-carte select-none"
     >
       {/* LE CADRE QUI DÉFILE — le navigateur fait tout : l'inertie du
@@ -718,6 +735,10 @@ export function CarrouselPortfolio({
                 colonnes.current[rang] = element;
               }}
               data-role={`colonne ${rang}`}
+              //  §1 (nº 247) — LA CATÉGORIE DE CETTE PHOTO, en face de
+              //  celle que le carrousel déclare : les deux doivent
+              //  concorder, toujours.
+              data-nature={photo.nature}
               className="relative w-full shrink-0 snap-start snap-always aspect-[4/5]"
               aria-hidden={rang !== indice}
             >

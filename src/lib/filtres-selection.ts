@@ -1,55 +1,97 @@
-import { entreesExplorer } from "@/config/tatouage";
+import {
+  CATEGORIES_EXPLORER,
+  entreesExplorer,
+  lireValeurExplorer,
+  valeurExplorer,
+} from "@/config/tatouage";
 
 /**
- * LES DEUX FILTRES DE « MA SÉLECTION » — L'ADRESSE EST LA VÉRITÉ
+ * LES DEUX MENUS DE « MA SÉLECTION » — L'ADRESSE EST LA VÉRITÉ
  * ==================================================================
- * (passe nº 245-§3)
+ * (passe nº 245-§3, REFAITE par la nº 247-§2 et §3)
  *
- * DEUX MENUS, DEUX PARAMÈTRES, UNE SEULE ÉCRITURE. Les menus vivent
- * dans la BARRE (EnTeteTatouage) et le contenu qu'ils filtrent vit
- * dans la PAGE (PageFavoris) : deux composants frères, qui ne peuvent
- * pas se passer un état de la main à la main. La source commune est
- * donc L'ADRESSE — comme tout depuis la nº 191 — lue par les deux et
- * écrite par un seul, via le magasin d'adresse (lib/adresse-courante),
- * qui surveille déjà `pushState`, `replaceState` et `popstate`.
+ * ⚠️ LES DEUX MENUS SONT EXCLUSIFS, PAS COMPLÉMENTAIRES (nº 247-§2).
+ * C'était le contresens de la nº 245 : deux paramètres d'adresse
+ * (`?jaime=`, `?suivis=`) filtraient EN MÊME TEMPS deux sections
+ * affichées l'une sous l'autre. Chacun mène en réalité SA PROPRE
+ * recherche, et une seule vit à la fois :
+ *  · « Mes j'aime »  → les photos gardées, et RIEN d'autre ;
+ *  · « Mes suivis »  → les artistes suivis, et les favoris disparaissent ;
+ *  · choisir dans l'un REMET L'AUTRE À ZÉRO — c'est mécanique, il n'y
+ *    a qu'une valeur.
+ * UN SEUL PARAMÈTRE SUFFIT DONC, et deux ne pourraient que se
+ * contredire : `?selection=<menu>[:<catégorie>[:<style>]]`.
+ *   (absent)                  → « Mes j'aime », tout : l'état d'ouverture
+ *   `suivis`                  → tous les suivis
+ *   `jaime:flash`             → les flashs aimés
+ *   `suivis:tatouage:maori`   → les suivis qui publient du maori réalisé
  *
  * ⚠️ CE MODULE N'EST PAS « use client » : `entreesDuFiltre` est PURE
  * et la page serveur l'appelle pour bâtir les deux listes. Les deux
- * autres fonctions touchent `window` — elles ne sont appelées que
- * depuis des composants clients, et se gardent d'elles-mêmes.
+ * fonctions qui touchent `window` se gardent d'elles-mêmes.
  *
  * ⚠️ `replaceState`, PAS `pushState` : changer de filtre ne doit pas
- * empiler des entrées d'historique qu'il faudrait ensuite dépiler une
- * à une pour revenir d'où l'on vient. L'adresse porte le filtre —
- * c'est tout ce dont la restitution a besoin : la mémoire de position
- * est indexée sur `chemin + recherche` (MemoireNavigation), donc
- * revenir d'une fiche rend le même filtre ET la même place, sans une
- * ligne de plus.
+ * empiler des entrées d'historique. L'adresse porte le filtre — c'est
+ * tout ce dont la restitution a besoin : la mémoire de position est
+ * indexée sur `chemin + recherche` (MemoireNavigation), donc revenir
+ * d'une fiche rend le même écran ET la même place.
  */
 
-/** « Tous les styles » — la première entrée, celle qui remet tout. */
-export const TOUS_LES_STYLES = "tous";
+/** Le paramètre — UN SEUL, et c'est le sujet du §2. */
+export const PARAM_SELECTION = "selection";
 
-/** Les deux paramètres d'adresse, nommés une fois. */
-export const PARAM_JAIME = "jaime";
-export const PARAM_SUIVIS = "suivis";
+export const MENU_JAIME = "jaime";
+export const MENU_SUIVIS = "suivis";
+export type MenuSelection = typeof MENU_JAIME | typeof MENU_SUIVIS;
 
-export type CleFiltre = typeof PARAM_JAIME | typeof PARAM_SUIVIS;
+/** Ce que l'adresse dit : quel menu mène la recherche, et sur quoi. */
+export type ChoixSelection = {
+  menu: MenuSelection;
+  /** « tatouage », « flash », ou vide (toutes catégories). */
+  nature: string;
+  /** Un style du catalogue, ou vide (tous les styles). */
+  style: string;
+};
 
-/** Le style choisi pour un menu, lu dans l'adresse (ou « tous »). */
-export function filtreCourant(cle: CleFiltre, recherche?: string): string {
+/** L'ÉTAT D'OUVERTURE (§2) : les favoris seuls, tous styles, aucun
+    suivi. C'est aussi ce que rend une adresse sans paramètre. */
+export const CHOIX_PAR_DEFAUT: ChoixSelection = {
+  menu: MENU_JAIME,
+  nature: "",
+  style: "",
+};
+
+/**
+ * LIRE L'ADRESSE — et ne jamais rendre n'importe quoi : un menu
+ * inconnu retombe sur l'ouverture, une catégorie ou un style inconnus
+ * sont ignorés (c'est `lireValeurExplorer` qui tranche, la même
+ * autorité que le moteur).
+ */
+export function lireSelection(recherche?: string): ChoixSelection {
   const params = new URLSearchParams(
     recherche ?? (typeof window === "undefined" ? "" : window.location.search)
   );
-  return params.get(cle) || TOUS_LES_STYLES;
+  const brut = params.get(PARAM_SELECTION) ?? "";
+  if (!brut) return CHOIX_PAR_DEFAUT;
+  const [menu = "", ...reste] = brut.split(":");
+  if (menu !== MENU_JAIME && menu !== MENU_SUIVIS) return CHOIX_PAR_DEFAUT;
+  const { nature, style } = lireValeurExplorer(reste.join(":"));
+  return { menu, nature, style };
 }
 
-/** Poser un filtre dans l'adresse — sans entrée d'historique. */
-export function poserFiltre(cle: CleFiltre, valeur: string): void {
+/**
+ * POSER UN CHOIX — le menu qui parle devient le seul actif, et l'autre
+ * est remis à zéro par construction : il n'y a qu'une valeur à écrire.
+ * `valeur` est celle du menu « Explorer » (« flash », « flash:maori »,
+ * ou vide pour « Tous les styles »).
+ */
+export function poserSelection(menu: MenuSelection, valeur: string): void {
   if (typeof window === "undefined") return;
   const params = new URLSearchParams(window.location.search);
-  if (!valeur || valeur === TOUS_LES_STYLES) params.delete(cle);
-  else params.set(cle, valeur);
+  //  L'ouverture (les favoris, tous styles) ne s'écrit pas : une page
+  //  sans paramètre est déjà exactement cela.
+  if (menu === MENU_JAIME && !valeur) params.delete(PARAM_SELECTION);
+  else params.set(PARAM_SELECTION, valeur ? `${menu}:${valeur}` : menu);
   const requete = params.toString();
   window.history.replaceState(
     window.history.state,
@@ -58,56 +100,103 @@ export function poserFiltre(cle: CleFiltre, valeur: string): void {
   );
 }
 
+/** CE QUE PORTE UN MENU : sa valeur d'Explorer s'il mène la recherche,
+    rien s'il est en sommeil (l'autre a la main). */
+export function valeurDuMenu(
+  choix: ChoixSelection,
+  menu: MenuSelection
+): string {
+  if (choix.menu !== menu) return "";
+  return valeurExplorer(choix.nature, choix.style);
+}
+
 /**
  * LES ENTRÉES D'UN MENU — CALCULÉES, JAMAIS ÉCRITES (§3)
  * ------------------------------------------------------------------
- * On part de `entreesExplorer()` — LA source unique du menu des
- * styles du moteur, familles comprises — et on ne garde que les
- * styles RÉELLEMENT présents dans les données. L'ordre et les
- * libellés sont donc ceux du moteur, au mot près ; aucune seconde
- * liste n'existe.
- *  · un style d'une famille garde sa famille en sous-groupe, comme
- *    dans le menu du moteur ;
- *  · « Tous les styles » ouvre la liste ;
- *  · aucune entrée présente → on rend une liste VIDE, et l'appelant
- *    n'affiche pas le menu du tout.
+ * ⚠️ ELLES DISTINGUENT LES RÉALISATIONS DES FLASHS (nº 247-§3), et
+ * exactement comme le menu « Explorer » du moteur : mêmes deux portes
+ * (`CATEGORIES_EXPLORER`), mêmes mots (« Toutes les réalisations »,
+ * « Tous les flashs »), même ordre de styles (`entreesExplorer`),
+ * mêmes familles en sous-porte (« Cultures du monde »). Une seule
+ * source, celle du moteur — aucune seconde liste nulle part.
+ *
+ * ON NE GARDE QUE CE QUI EXISTE : une catégorie sans rien dedans n'a
+ * pas de porte, un style sans rien n'a pas de ligne. Les trente-huit
+ * styles du site dans un menu où trente-cinq ne donnent rien seraient
+ * inutilisables.
+ *
+ * `comptes` est indexé par la valeur d'Explorer : « flash »,
+ * « flash:maori », « tatouage », « tatouage:realisme »… — les totaux
+ * de catégorie compris.
  */
 export type EntreeFiltre = {
   value: string;
   label: string;
+  /** La porte de catégorie — « Réalisations » / « Flashs ». */
+  groupe?: string;
+  /** La sous-porte de famille — « Cultures du monde ». */
   sousGroupe?: string;
-  /** Combien d'éléments portent ce style — le menu l'annonce, comme
-      celui du moteur annonce ses portfolios. */
+  /** Combien d'éléments derrière cette entrée. */
   compte?: number;
 };
 
 export function entreesDuFiltre(
-  comptesParStyle: Map<string, number>
+  comptes: Map<string, number>
 ): EntreeFiltre[] {
-  if (comptesParStyle.size === 0) return [];
-  const presentes: EntreeFiltre[] = [];
-  for (const entree of entreesExplorer()) {
-    if (entree.genre === "style") {
-      const compte = comptesParStyle.get(entree.slug);
-      if (compte) presentes.push({ value: entree.slug, label: entree.label, compte });
-      continue;
-    }
-    for (const style of entree.styles) {
-      const compte = comptesParStyle.get(style.slug);
-      if (compte)
-        presentes.push({
-          value: style.slug,
+  if (comptes.size === 0) return [];
+  const entrees: EntreeFiltre[] = [];
+  let total = 0;
+
+  for (const categorie of CATEGORIES_EXPLORER) {
+    const compteCategorie = comptes.get(valeurExplorer(categorie.nature, ""));
+    if (!compteCategorie) continue;
+    total += compteCategorie;
+    //  La tête de la porte : « Toutes les réalisations », « Tous les
+    //  flashs » — les mots du moteur, au mot près.
+    entrees.push({
+      value: valeurExplorer(categorie.nature, ""),
+      label: categorie.tous,
+      groupe: categorie.titre,
+      compte: compteCategorie,
+    });
+    for (const entree of entreesExplorer()) {
+      if (entree.genre === "style") {
+        const compte = comptes.get(
+          valeurExplorer(categorie.nature, entree.slug)
+        );
+        if (compte) {
+          entrees.push({
+            value: valeurExplorer(categorie.nature, entree.slug),
+            label: entree.label,
+            groupe: categorie.titre,
+            compte,
+          });
+        }
+        continue;
+      }
+      for (const style of entree.styles) {
+        const compte = comptes.get(
+          valeurExplorer(categorie.nature, style.slug)
+        );
+        if (!compte) continue;
+        entrees.push({
+          value: valeurExplorer(categorie.nature, style.slug),
           label: style.label,
+          groupe: categorie.titre,
+          //  ⚠️ LA FAMILLE EN SOUS-PORTE — elle n'ouvrait pas du tout
+          //  à la nº 245 (nº 247-§3) : `sousGroupe` n'a d'effet
+          //  qu'avec le drapeau `repliable` du menu, que ces deux
+          //  menus-ci ne passaient pas. Voir MenusSelection.
           sousGroupe: entree.label,
           compte,
         });
+      }
     }
   }
-  if (presentes.length === 0) return [];
-  let total = 0;
-  for (const compte of comptesParStyle.values()) total += compte;
-  return [
-    { value: TOUS_LES_STYLES, label: "Tous les styles", compte: total },
-    ...presentes,
-  ];
+
+  if (entrees.length === 0) return [];
+  //  « TOUS LES STYLES » — la remise à zéro du menu (§2 : elle rend
+  //  tous les favoris, ou tous les suivis). Sans groupe : elle reste
+  //  visible portes fermées, en tête de liste.
+  return [{ value: "", label: "Tous les styles", compte: total }, ...entrees];
 }

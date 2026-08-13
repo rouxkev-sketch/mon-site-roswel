@@ -8,8 +8,12 @@ import { BoutonPartageFiche } from "@/components/BoutonPartageFiche";
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
 import { ContenuFiche } from "@/components/ContenuFiche";
-import { galerieParStyles, ouvertureGalerie } from "@/lib/photo-tatoueur";
-import { ensembleDeLaPhoto, RENDU_PAR_DEFAUT } from "@/lib/photos-tatoueur";
+import {
+  galerieParStyles,
+  ouvertureGalerie,
+  serieMontree,
+} from "@/lib/photo-tatoueur";
+import { ensembleDeLaPhoto } from "@/lib/photos-tatoueur";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
@@ -171,16 +175,15 @@ export function FenetreFiche({
   const groupeAffiche =
     groupes.find((groupe) => groupe.slug === styleAffiche) ?? groupes[0];
   const photosDuStyleEntier = groupeAffiche?.photos ?? [];
-  const photosRestreintes = serieOuverte
-    ? photosDuStyleEntier.filter(
-        (photo) =>
-          photo.nature === serieOuverte.nature &&
-          (!serieOuverte.rendu ||
-            (photo.rendu ?? RENDU_PAR_DEFAUT) === serieOuverte.rendu)
-      )
-    : photosDuStyleEntier;
-  //  Jamais de fenêtre sans image : un style qui n'a rien dans la
-  //  série demandée se montre entier (même règle que la page).
+  /*  §1 (nº 247) — L'ÉCRITURE UNIQUE (`serieMontree`) : la copie du
+      filtre qui vivait ici est partie, avec son repli. Une catégorie
+      demandée n'est jamais violée — voir lib/photo-tatoueur. */
+  const photosRestreintes = serieMontree(photosDuStyleEntier, serieOuverte);
+  //  Jamais de fenêtre sans image : un style qui n'a rien de la
+  //  catégorie demandée se montre entier — mais LA SÉRIE EST ALORS
+  //  ABANDONNÉE, le carrousel ne déclare plus aucune catégorie (même
+  //  règle que la page).
+  const serieEffective = photosRestreintes.length > 0 ? serieOuverte : null;
   const photosDuStyleAffiche =
     photosRestreintes.length > 0 ? photosRestreintes : photosDuStyleEntier;
   const n = photosDuStyleAffiche.length;
@@ -405,6 +408,9 @@ export function FenetreFiche({
                 photos={photosDuStyleAffiche}
                 nomTatoueur={tatoueur.nom}
                 styleLabel={groupeAffiche?.label ?? ""}
+                //  §1 (nº 247) — la catégorie déclarée est celle de
+                //  TOUTES les photos montrées, sans exception.
+                natureDeLaSerie={serieEffective?.nature ?? ""}
                 indice={rang}
                 surChangement={setIndice}
               >

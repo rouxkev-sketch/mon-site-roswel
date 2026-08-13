@@ -8,7 +8,10 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { estDefilementProgramme } from "@/lib/defilement-programme";
+import {
+  defilerSansGeste,
+  estDefilementProgramme,
+} from "@/lib/defilement-programme";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { lieuVersParametres } from "@/lib/geocodage";
@@ -314,6 +317,25 @@ export function EnTeteTatouage({
    * incompressible (acquis de la nº 168).
    */
 
+  /**
+   * §6 (nº 247) — UN APPUI SUR L'ICÔNE DE LA PAGE OÙ L'ON EST DÉJÀ.
+   * ------------------------------------------------------------------
+   * Il ne se passait rien du tout : `<Link>` compare l'adresse visée à
+   * l'adresse courante et n'a nulle part où aller. On rend donc le
+   * geste attendu — la page revient EN HAUT et se rafraîchit — sans
+   * recharger l'application (`router.refresh()` redemande au serveur
+   * ce que cette page affiche, et rien d'autre).
+   * ⚠️ LE DÉFILEMENT PASSE PAR `defilerSansGeste` : la barre y lirait
+   * sinon une intention et se replierait (la règle de la nº 154-§6A).
+   */
+  const rafraichirSiDejaLa = (chemin: string) => (evenement: React.MouseEvent) => {
+    if (evenement.metaKey || evenement.ctrlKey || evenement.shiftKey) return;
+    if (window.location.pathname !== chemin) return;
+    evenement.preventDefault();
+    defilerSansGeste({ top: 0 });
+    router.refresh();
+  };
+
   /** Déconnecté : « Se connecter » pour qui est déjà venu, la formule
       d'invitation pour les autres. Le même libellé sert d'info-bulle à
       l'icône du smartphone. (Connecté, c'est MenuEspace qui joue.) */
@@ -349,6 +371,34 @@ export function EnTeteTatouage({
       seuil de 4 px par lecture ignore l'élastique du défilement.
       ⚠️ LA RANGÉE DU LOGO NE BOUGE JAMAIS : sans lui, plus de repère. */
   const [moteurReplie, setMoteurReplie] = useState(false);
+  /**
+   * §6 (nº 247) — L'ÉTAT DU REPLI TIENT DANS DEUX RÉFÉRENCES, ET C'EST
+   * LA CORRECTION DE « LE BANDEAU NE SE RÉTRACTE PLUS ».
+   * ------------------------------------------------------------------
+   * CE QUI SE PASSAIT. L'écouteur de défilement gardait sa propre
+   * mémoire de l'état (`replieCourant`, une variable de sa fermeture)
+   * et refusait de rejouer une bascule qu'il croyait déjà faite. Or
+   * `deplier` — l'appui sur la ligne étroite, §4 de la nº 245 —
+   * remettait l'état REACT à « déplié » sans rien dire à l'écouteur :
+   * celui-ci continuait de croire la rangée repliée, et son
+   * `poserReplie(true)` ne faisait plus jamais rien. Un seul appui, et
+   * le bandeau ne se rétractait plus de la visite.
+   * POURQUOI L'ACCUEIL N'EN SOUFFRAIT PAS : il n'a pas de ligne
+   * étroite à toucher — `deplier` n'existe QUE pour une rangée libre,
+   * c'est-à-dire pour « Ma sélection ».
+   * IL N'Y A DONC PLUS QU'UNE MÉMOIRE, partagée par l'écouteur et par
+   * le doigt : deux références, et un seul chemin pour écrire l'état.
+   * Aucune seconde mécanique — les réglages (24 / 12 / 64 px, 300 ms)
+   * ne bougent pas d'un chiffre.
+   */
+  const cumulDuGeste = useRef(0);
+  //  LE CUMUL REPART À CHAQUE CHANGEMENT D'ÉTAT, D'OÙ QU'IL VIENNE —
+  //  du défilement comme du doigt. C'est ce que faisait `poserReplie`
+  //  pour lui seul ; branché sur l'état, il n'a plus rien à savoir de
+  //  qui a parlé.
+  useEffect(() => {
+    cumulDuGeste.current = 0;
+  }, [moteurReplie]);
   /** SUR L'ACCUEIL, ET LÀ SEULEMENT, la barre porte la rangée du
       moteur sur smartphone (nº 150-§3) : l'accueil est la page qui
       PILOTE la recherche — elle fournit `surRecherche`. Partout
@@ -425,14 +475,11 @@ export function EnTeteTatouage({
      *    pour de bon (`overflow-anchor: none`, globals.css).
      * ============================================================ */
     let yPrecedent = window.scrollY;
-    let cumul = 0;
-    let replieCourant = false;
-    const poserReplie = (valeur: boolean) => {
-      if (replieCourant === valeur) return;
-      replieCourant = valeur;
-      cumul = 0;
-      setMoteurReplie(valeur);
-    };
+    //  ⚠️ PLUS AUCUNE MÉMOIRE D'ÉTAT ICI (nº 247-§6) : `setMoteurReplie`
+    //  est idempotent, React ne redessine pas pour la même valeur. La
+    //  seule vérité est l'état React — un doigt et un défilement ne
+    //  peuvent donc plus se contredire.
+    const poserReplie = (valeur: boolean) => setMoteurReplie(valeur);
     const lire = () => {
       const y = window.scrollY;
       const delta = y - yPrecedent;
@@ -449,20 +496,22 @@ export function EnTeteTatouage({
       //  (nº 161) : il est la couleur du fond du site, à toutes les
       //  positions — l'hystérésis 8 px / 2 px est partie avec lui.
       if (estDefilementProgramme()) {
-        cumul = 0;
+        cumulDuGeste.current = 0;
         return;
       }
       if (y < 64) {
         poserReplie(false);
-        cumul = 0;
+        cumulDuGeste.current = 0;
         return;
       }
       if (delta === 0) return;
       const yMax = document.documentElement.scrollHeight - window.innerHeight;
       if (delta < 0 && y >= yMax - 2) return;
-      cumul = Math.sign(delta) === Math.sign(cumul) ? cumul + delta : delta;
-      if (cumul > 24) poserReplie(true);
-      else if (cumul < -12) poserReplie(false);
+      const cumul = cumulDuGeste.current;
+      cumulDuGeste.current =
+        Math.sign(delta) === Math.sign(cumul) ? cumul + delta : delta;
+      if (cumulDuGeste.current > 24) poserReplie(true);
+      else if (cumulDuGeste.current < -12) poserReplie(false);
     };
     lire();
     window.addEventListener("scroll", lire, { passive: true });
@@ -655,6 +704,9 @@ export function EnTeteTatouage({
                 //  même centrage, même repli. Seul son CONTENU change.
                 rangee({
                   replie: moteurReplie && etroit,
+                  //  §6 (nº 247) — L'ÉTAT EST LE MÊME POUR TOUS : le
+                  //  doigt écrit là où l'écouteur lit, donc la rangée
+                  //  se replie de nouveau au défilement suivant.
                   deplier: () => setMoteurReplie(false),
                 })
               ) : (
@@ -667,6 +719,35 @@ export function EnTeteTatouage({
             </div>
           </div>
         </div>
+
+        {/**
+          * §6 (nº 247) — LA LOUPE RETROUVE SA PAGE DE RECHERCHE
+          * ------------------------------------------------------------
+          * CE QUI SE PASSAIT. La page plein écran de la recherche
+          * (PageRechercheMobile) est montée PAR LE MOTEUR, et par lui
+          * seul : partout ailleurs, le moteur est bien là — simplement
+          * caché sous 1024 px (`hidden lg:flex`) —, et comme sa page
+          * est un PORTAIL, la loupe l'ouvre depuis n'importe où. Sur
+          * « Ma sélection », la nº 245 a remplacé le contenu de la
+          * rangée : plus de moteur monté du tout, donc plus personne
+          * pour ouvrir la page. La loupe posait bien son état dans le
+          * magasin partagé (recherche-mobile) — il n'y avait plus
+          * d'écran pour l'entendre.
+          * IL EST DONC REMONTÉ ICI, dans un hôte INVISIBLE : ce n'est
+          * pas un second moteur, c'est LE moteur, sans sa rangée
+          * (`rangeeMobile={false}`) et sans son encadré (le parent est
+          * `hidden`) — rien qu'un porteur pour la page en portail.
+          */}
+        {rangeeLibre && (
+          <div hidden data-hote-recherche="">
+            <MoteurTatouage
+              criteres={valeur}
+              surChangement={chercher}
+              id="moteur-hote-recherche"
+              rangeeMobile={false}
+            />
+          </div>
+        )}
 
         <nav
           aria-label="Langue et compte"
@@ -723,6 +804,15 @@ export function EnTeteTatouage({
               href="/mes-favoris"
               aria-label="Ma sélection"
               title="Ma sélection"
+              //  §6 (nº 247) — L'ICÔNE DE LA PAGE COURANTE RAFRAÎCHIT.
+              //  Un <Link> vers l'adresse où l'on est déjà ne fait
+              //  RIEN : le routeur constate qu'il n'y a nulle part où
+              //  aller. C'est pourtant le geste que tout le monde fait
+              //  pour « revoir la page depuis le début ». On le rend
+              //  donc : retour en haut, et le serveur redonne ses
+              //  données (`router.refresh()` — les favoris d'à
+              //  l'instant, sans recharger l'application entière).
+              onClick={rafraichirSiDejaLa("/mes-favoris")}
               style={{ height: HAUTEUR_ACTIONS, width: HAUTEUR_ACTIONS }}
               className="shrink-0 flex items-center justify-center rounded-full
                          transition-colors hover:bg-sombre-eleve
@@ -842,12 +932,18 @@ export function EnTeteTatouage({
         data-reserve-barre=""
         //  §4 (nº 245) — UNE TROISIÈME HAUTEUR, et une seule raison :
         //  repliée, la rangée LIBRE ne disparaît pas — il reste sa
-        //  ligne étroite (36 px + son air). La réserve doit donc
-        //  l'annoncer, sans quoi le contenu passerait dessous. Les
-        //  deux hauteurs du moteur (128 / 64) ne bougent pas d'un
-        //  pixel : la position au retour reste celle de juillet.
+        //  ligne étroite. La réserve doit donc l'annoncer, sans quoi
+        //  le contenu passerait dessous. Les deux hauteurs du moteur
+        //  (128 / 64) ne bougent pas d'un pixel : la position au
+        //  retour reste celle de juillet.
+        //  ⚠️ 112, ET C'EST UNE ADDITION, PAS UN CHOIX (nº 247-§6) :
+        //  la rangée du logo fait 64 (40 d'icônes + `py-3`), l'air
+        //  au-dessus de la ligne étroite 12 (`max-lg:pt-3`) et la
+        //  ligne elle-même 36 (`min-h-[36px]`). Les 104 annoncés par
+        //  la nº 245 en oubliaient huit : le contenu passait dessous
+        //  d'autant.
         data-reserve-posee={
-          rangeePresente && !moteurReplie ? 128 : rangeeLibre ? 104 : 64
+          rangeePresente && !moteurReplie ? 128 : rangeeLibre ? 112 : 64
         }
         data-reserve-depliee={rangeePresente ? 128 : 64}
         className={`hidden mobile:block shrink-0 transition-[height]
@@ -855,7 +951,7 @@ export function EnTeteTatouage({
                       rangeePresente && !moteurReplie
                         ? "h-32"
                         : rangeeLibre
-                          ? "h-[104px]"
+                          ? "h-28"
                           : "h-16"
                     }`}
       />

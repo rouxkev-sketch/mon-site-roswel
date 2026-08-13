@@ -11,8 +11,12 @@ import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
 import { ContenuFiche } from "@/components/ContenuFiche";
 import { PileFiches } from "@/components/PileFiches";
-import { galerieParStyles, ouvertureGalerie } from "@/lib/photo-tatoueur";
-import { ensembleDeLaPhoto, RENDU_PAR_DEFAUT } from "@/lib/photos-tatoueur";
+import {
+  galerieParStyles,
+  ouvertureGalerie,
+  serieMontree,
+} from "@/lib/photo-tatoueur";
+import { ensembleDeLaPhoto } from "@/lib/photos-tatoueur";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
@@ -150,17 +154,19 @@ export function FicheTatoueur({
   const groupeAffiche =
     groupes.find((groupe) => groupe.slug === styleAffiche) ?? groupes[0];
   const photosDuStyleEntier = groupeAffiche?.photos ?? [];
-  const photosRestreintes = serieOuverte
-    ? photosDuStyleEntier.filter(
-        (photo) =>
-          photo.nature === serieOuverte.nature &&
-          (!serieOuverte.rendu ||
-            (photo.rendu ?? RENDU_PAR_DEFAUT) === serieOuverte.rendu)
-      )
-    : photosDuStyleEntier;
-  //  UN CARROUSEL VIDE N'EXISTE PAS : si ce style n'a rien dans la
-  //  série demandée (on a changé de style depuis les vignettes), on
-  //  montre le style entier plutôt qu'une fiche sans image.
+  /*  §1 (nº 247) — LA SÉRIE VIENT DE `serieMontree`, L'ÉCRITURE
+      UNIQUE : une catégorie demandée n'y est jamais violée. Le filtre
+      qui vivait ici en double (page ET fenêtre superposée) est parti
+      avec son repli « série vide → tout le style » — le chemin par
+      lequel une réalisation entrait dans un carrousel de flashs. */
+  const photosRestreintes = serieMontree(photosDuStyleEntier, serieOuverte);
+  //  UN CARROUSEL VIDE N'EXISTE PAS : ce style n'a rien de la
+  //  catégorie demandée (une adresse écrite à la main — `ouvertureGalerie`
+  //  met sinon devant un style qui l'a). On montre alors le style
+  //  entier, mais LA SÉRIE EST ABANDONNÉE : le carrousel ne déclare
+  //  plus aucune catégorie, il ne prétend donc rien montrer d'autre
+  //  que ce style.
+  const serieEffective = photosRestreintes.length > 0 ? serieOuverte : null;
   const photosDuCarrousel =
     photosRestreintes.length > 0 ? photosRestreintes : photosDuStyleEntier;
 
@@ -289,6 +295,11 @@ export function FicheTatoueur({
               photos={photosDuCarrousel}
               nomTatoueur={tatoueur.nom}
               styleLabel={groupeAffiche?.label ?? ""}
+              //  §1 (nº 247) — LE CARROUSEL DIT CE QU'IL MONTRE : la
+              //  catégorie qu'il déclare est celle de TOUTES ses
+              //  photos, sans exception (rien quand il montre un style
+              //  entier).
+              natureDeLaSerie={serieEffective?.nature ?? ""}
               indice={indicePhoto}
               surChangement={setIndicePhoto}
             >

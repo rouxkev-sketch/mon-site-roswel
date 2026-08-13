@@ -5,6 +5,7 @@ import {
   NATURE_PAR_DEFAUT,
   natureConnue,
   photosDuStyle,
+  RENDU_PAR_DEFAUT,
   stylesDuPortfolio,
   vignetteDe,
   type PhotoTatoueur,
@@ -246,6 +247,53 @@ export function galerieParStyles(tatoueur: {
   });
 }
 
+/* ================================================================
+ * LA SÉRIE MONTRÉE PAR UN CARROUSEL — UNE SEULE ÉCRITURE
+ * ================================================================ */
+
+/** Ce qu'une enveloppe demande à voir : une catégorie, et un rendu
+    quand il en reste un seul (`rendu` vide = tous les rendus). */
+export type SerieDemandee = { nature: string; rendu: string } | null;
+
+/**
+ * LES PHOTOS D'UNE SÉRIE — ET JAMAIS CELLES D'UNE AUTRE CATÉGORIE
+ * ==================================================================
+ * (passe nº 247-§1 — LA correction du défaut, écrite UNE fois)
+ *
+ * CE QUI SE PASSAIT. Les deux enveloppes de fiche — la page
+ * (`FicheTatoueur`) et la fenêtre superposée (`FenetreFiche`) —
+ * portaient CHACUNE leur copie de ce filtre, suivie du même repli :
+ * « série vide → on montre le style entier ». Ce repli est le chemin
+ * par lequel une RÉALISATION entrait dans un carrousel de FLASHS : il
+ * suffisait que la catégorie demandée n'arrive pas jusqu'ici (c'était
+ * le cas depuis « Ma sélection », voir PageFavoris) ou que le style
+ * ouvert n'en possède aucune.
+ *
+ * LA RÈGLE, DÉSORMAIS, N'A PLUS D'EXCEPTION : une catégorie demandée
+ * n'est jamais violée.
+ *  · la CATÉGORIE filtre, et ne s'élargit jamais — rien de cette
+ *    catégorie ici ? on rend une liste VIDE, et l'appelant sait qu'il
+ *    n'a pas de série (il montre alors le style, sans prétendre
+ *    montrer une catégorie : voir `data-serie-nature`) ;
+ *  · le RENDU, lui, peut s'élargir à toute la catégorie : c'est le
+ *    même dessin, dans l'autre encre — jamais un autre genre d'image.
+ */
+export function serieMontree(
+  photos: PhotoGalerie[],
+  serie: SerieDemandee
+): PhotoGalerie[] {
+  if (!serie || !serie.nature) return photos;
+  const deLaCategorie = photos.filter(
+    (photo) => photo.nature === serie.nature
+  );
+  if (deLaCategorie.length === 0) return [];
+  if (!serie.rendu) return deLaCategorie;
+  const duRendu = deLaCategorie.filter(
+    (photo) => (photo.rendu ?? RENDU_PAR_DEFAUT) === serie.rendu
+  );
+  return duRendu.length > 0 ? duRendu : deLaCategorie;
+}
+
 /**
  * SUR QUOI LE CARROUSEL S'OUVRE — la règle, en un seul endroit
  * =============================================================
@@ -289,12 +337,30 @@ export function ouvertureGalerie(
   let ordonnes = ordonnerParStyle(groupes, styleCherche);
   const critereDePhoto = Boolean(natureCherchee || renduCherche);
 
-  //  Catégorie ou rendu cherché SANS style : on ouvre le premier style
-  //  qui possède une photo répondant aux deux.
-  if (critereDePhoto && !styleCherche) {
+  /**
+   * ⚠️ ON N'OUVRE JAMAIS UN STYLE QUI N'A PAS CE QU'ON DEMANDE
+   * ------------------------------------------------------------------
+   * (nº 247-§1 — deuxième cause du mélange de catégories)
+   * La règle ne jouait QUE si aucun style n'était cherché. Un style
+   * cherché qui ne possède aucune photo de la catégorie demandée
+   * gardait donc la tête : la série demandée sortait VIDE, et les deux
+   * enveloppes se repliaient alors sur « tout le style » — c'est-à-dire
+   * sur des réalisations affichées sous le mot « flash ».
+   * On regarde donc TOUJOURS si la tête répond ; si elle ne répond pas,
+   * on met devant le premier style qui répond — d'abord aux deux
+   * critères, à défaut à la seule CATÉGORIE (elle passe avant le rendu,
+   * comme dans `photoChoisie`).
+   */
+  if (critereDePhoto && !ordonnes[0]?.photos.some(repond)) {
     const rang = ordonnes.findIndex((groupe) => groupe.photos.some(repond));
-    if (rang > 0) {
-      ordonnes = [ordonnes[rang], ...ordonnes.filter((_, i) => i !== rang)];
+    const rangCategorie = natureCherchee
+      ? ordonnes.findIndex((groupe) =>
+          groupe.photos.some((photo) => photo.nature === natureCherchee)
+        )
+      : -1;
+    const choisi = rang >= 0 ? rang : rangCategorie;
+    if (choisi > 0) {
+      ordonnes = [ordonnes[choisi], ...ordonnes.filter((_, i) => i !== choisi)];
     }
   }
 
