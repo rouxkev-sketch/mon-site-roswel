@@ -8,6 +8,7 @@ import { lireSelection, MENU_FAVORIS } from "@/lib/filtres-selection";
 import { lireRequeteCourante, souscrireAdresse } from "@/lib/adresse-courante";
 import { CarteTatoueur } from "@/components/CarteTatoueur";
 import { CLASSES_GRILLE_CARTES } from "@/components/GrilleTatoueurs";
+import { useVuePhototheque } from "@/components/AffichageMosaique";
 import { BlocSuivis } from "@/components/BlocSuivis";
 import { FenetreFiche } from "@/components/FenetreFiche";
 import { LigneResultats } from "@/components/LigneResultats";
@@ -87,6 +88,12 @@ export function PageFavoris({
       (adresse sans paramètre), c'est « Mes favoris » : les favoris
       seuls, aucun suivi. */
   const surLesFavoris = choix.menu === MENU_FAVORIS;
+  /*  §4 (nº 255) — LA MISE EN PAGE DES CARTES. L'icône posée dans la
+      barre commande la MÊME vue que sur la page de recherche : le
+      magasin est partagé (lib/vue-phototheque, lu ici par le même
+      abonnement que la mosaïque). Sans cette lecture, l'icône ne
+      commanderait rien — les cartes de cette page ignoraient l'état. */
+  const phototheque = useVuePhototheque();
 
   /**
    * §5 (nº 243) — LA DERNIÈRE VISITE S'ÉCRIT AU DÉPART, JAMAIS À
@@ -382,6 +389,10 @@ export function PageFavoris({
                     styleRecherche={photo.style}
                     renduRecherche={photo.rendu ?? ""}
                     natureRecherche={natureConnue(photo.nature)}
+                    //  §4 (nº 255) — LA MÊME VUE QUE LA MOSAÏQUE : le
+                    //  drapeau que la carte attend depuis toujours, et
+                    //  que cette page ne lui donnait pas.
+                    phototheque={phototheque}
                     surOuverture={() =>
                       void ouvrirLaFiche(
                         photo.tatoueurSlug,

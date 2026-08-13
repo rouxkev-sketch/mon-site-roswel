@@ -23,14 +23,13 @@ import { ChampLocalisation } from "@/components/ChampLocalisation";
 import { MenuDeroulant } from "@/components/MenuDeroulant";
 import { PageRechercheMobile } from "@/components/PageRechercheMobile";
 import {
-  IconeCartes,
   IconeDeuxColonnes,
   IconeLoupe,
-  IconePhoto,
   IconeReglages,
   IconeUneColonne,
 } from "@/components/Icones";
 import { BadgeCharte, GroupeBadges } from "@/components/BadgesCharte";
+import { BoutonPhototheque } from "@/components/BoutonPhototheque";
 import { MenuDeVerre } from "@/components/SurfaceDeVerre";
 import { EncadreDeuxChamps } from "@/components/EncadreBarre";
 import { GLISSADE_MS, remonterSansClavier } from "@/lib/remontee-champ";
@@ -39,11 +38,7 @@ import { basculerSansSaut } from "@/lib/bascule-verrouillee";
 //  les deux boutons de bascule. Elle n'écrit RIEN sans `?sonde-bascule=1`.
 import { noter } from "@/lib/journal-bascule";
 import { poserDisposition } from "@/lib/disposition-grille";
-import { poserPhototheque } from "@/lib/vue-phototheque";
-import {
-  useDispositionGrille,
-  useVuePhototheque,
-} from "@/components/AffichageMosaique";
+import { useDispositionGrille } from "@/components/AffichageMosaique";
 import {
   fermerRecherche,
   lireRecherche,
@@ -275,8 +270,9 @@ export function MoteurTatouage({
   /** La disposition de la mosaïque (mobile) — celle de L'ADRESSE
       (nº 203-§1b), servie par le serveur. */
   const disposition = useDispositionGrille();
-  /** La vue photothèque (nº 140) — même règle. */
-  const phototheque = useVuePhototheque();
+  /*  ⚠️ LA VUE PHOTOTHÈQUE N'EST PLUS LUE ICI (nº 255-§4) : elle vit
+      dans `BoutonPhototheque`, l'écriture extraite que les deux barres
+      consomment — c'est lui qui s'abonne au magasin. */
 
   // Le panneau des filtres du web : Échap et clic ailleurs referment.
   useEffect(() => {
@@ -1016,37 +1012,12 @@ export function MoteurTatouage({
           {/* LA VUE PHOTOTHÈQUE — à côté du bouton de filtres, même
               taille (46 px), ronde. ⚠️ AUCUNE COULEUR D'ÉTAT (nº 141-
               4C) : robe constante, le DESSIN dit l'état — comme le
-              bouton de disposition. */}
-          <button
-            type="button"
-            onClick={() => {
-              //  ⚠️ SOUS VERROU (nº 162-§2) : la note de la carte, le
-              //  changement et la remise en place tiennent dans UNE
-              //  SEULE tâche — le navigateur ne peut rien peindre au
-              //  milieu (voir lib/bascule-verrouillee).
-              //  ⚠️ UNE VALEUR EXPLICITE (nº 164) : on demande la vue
-              //  VOULUE, on n'inverse pas — un appel doublé ne peut
-              //  plus faire l'aller-retour.
-              noter(
-                `CLIC bouton PHOTOTHÈQUE (barre web) · ${phototheque} → ${!phototheque}`
-              );
-              basculerSansSaut(() => poserPhototheque(!phototheque));
-            }}
-            aria-pressed={phototheque}
-            aria-label={
-              phototheque ? "Revenir aux cartes" : "Voir les images seules"
-            }
-            title={phototheque ? "Revenir aux cartes" : "Images seules"}
-            //  ⚠️ UN CRAN PLUS CLAIR (nº 150-§2), comme l'encadré.
-            //  ⚠️ FOND GOUVERNÉ PAR `[data-clair-barre]` (nº 174-§1).
-            data-clair-barre=""
-            className="relative shrink-0 w-[46px] h-[46px] rounded-full
-                       text-sombre-texte
-                       flex items-center justify-center
-                       transition-colors"
-          >
-            {phototheque ? <IconeCartes taille={20} /> : <IconePhoto taille={20} />}
-          </button>
+              bouton de disposition.
+              ⚠️ SON ÉCRITURE EST EXTRAITE (nº 255-§4) : elle vit dans
+              `BoutonPhototheque`, et la barre de « Ma sélection »
+              consomme LA MÊME. Rien n'a changé de ce qu'elle dessine —
+              46 px, `data-clair-barre`, le dessin qui dit l'état. */}
+          <BoutonPhototheque contexte="barre web" />
 
           {filtresOuverts && (
             //  LE PANNEAU — la robe des fenêtres du web depuis la
@@ -1199,32 +1170,12 @@ export function MoteurTatouage({
             traitement du bouton de disposition — la robe ne bouge
             pas, c'est le DESSIN qui change et montre la vue VERS
             LAQUELLE on bascule (la photo → images seules ; la carte →
-            retour aux cartes). */}
-        <button
-          type="button"
-          onClick={() => {
-            //  Même précaution que la disposition, et le même verrou
-            //  (nº 162-§2) : masquer les textes change la hauteur des
-            //  rangées — moins que le format, mais la course est la
-            //  même, et elle se voit parfois. Valeur explicite (nº 164).
-            noter(
-              `CLIC bouton PHOTOTHÈQUE (barre mobile) · ${phototheque} → ${!phototheque}`
-            );
-            basculerSansSaut(() => poserPhototheque(!phototheque));
-          }}
-          aria-pressed={phototheque}
-          aria-label={
-            phototheque ? "Revenir aux cartes" : "Voir les images seules"
-          }
-          //  ⚠️ FOND GOUVERNÉ PAR `[data-clair-barre]` (nº 174-§1).
-          data-clair-barre=""
-          className="shrink-0 w-[52px] h-[52px] rounded-full
-                     text-sombre-texte
-                     flex items-center justify-center active:opacity-80
-                     transition-opacity"
-        >
-          {phototheque ? <IconeCartes taille={20} /> : <IconePhoto taille={20} />}
-        </button>
+            retour aux cartes).
+            ⚠️ LA MÊME ÉCRITURE QUE LA BARRE WEB (extraite nº 255-§4,
+            `BoutonPhototheque`) : ici en 52 px, avec le retour à
+            l'appui de la rangée du doigt — les deux seules valeurs qui
+            distinguaient les deux barres, et elles ne bougent pas. */}
+        <BoutonPhototheque contexte="barre mobile" diametre={52} retourAuDoigt />
       </div>
       )}
 

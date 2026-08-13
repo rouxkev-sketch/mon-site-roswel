@@ -1,8 +1,8 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
 import { robeDuBadge } from "@/components/BadgesCharte";
 import { OngletsLigne } from "@/components/OngletsLigne";
+import { SelecteurCapsule } from "@/components/SelecteurCapsule";
 import {
   NATURES_PHOTO,
   RENDU_PAR_DEFAUT,
@@ -117,17 +117,14 @@ function SelecteurRectangles({
 }
 
 /**
- * LE SÉLECTEUR « PROFIL / PORTFOLIO » — deux mots nus, une capsule de
- * verre qui glisse (nº 205-§1).
+ * LE SÉLECTEUR « PROFIL / PORTFOLIO » — deux mots nus, une capsule qui
+ * glisse (nº 205-§1).
  *
- * LA MÉCANIQUE : la capsule est un seul élément, posé DERRIÈRE les
- * mots, dont la position et la largeur épousent le bouton actif —
- * mesurées avant peinture (useLayoutEffect), et re-mesurées si la
- * boîte change (police chargée, redimensionnement : le ResizeObserver
- * du conteneur voit tout). Au changement d'onglet, seule cette paire
- * left / width change : la transition la fait GLISSER d'un mot à
- * l'autre. À sa première apparition, elle naît directement en place —
- * une transition n'anime qu'un changement, pas une naissance.
+ * ⚠️ SON ÉCRITURE A ÉTÉ EXTRAITE (nº 255-§1) : la capsule, sa mesure,
+ * ses couleurs et sa glissade vivent dans `SelecteurCapsule`, et la
+ * barre de « Ma sélection » consomme LA MÊME — deux emplois, une seule
+ * écriture. Rien n'a changé de ce qu'il dessine ici : mêmes mots,
+ * même `w-fit` (la rangée du haut pose « Suivre » à sa droite).
  */
 export function SelecteurOngletAffiche({
   valeur,
@@ -136,73 +133,13 @@ export function SelecteurOngletAffiche({
   valeur: OngletAffiche;
   surChoix: (onglet: OngletAffiche) => void;
 }) {
-  const conteneur = useRef<HTMLDivElement>(null);
-  const [capsule, setCapsule] = useState<{ left: number; width: number } | null>(
-    null
-  );
-
-  useLayoutEffect(() => {
-    const zone = conteneur.current;
-    if (!zone) return;
-    const mesurer = () => {
-      const actif = zone.querySelector<HTMLButtonElement>(
-        "button[aria-checked='true']"
-      );
-      if (!actif) return;
-      setCapsule({ left: actif.offsetLeft, width: actif.offsetWidth });
-    };
-    mesurer();
-    const observateur = new ResizeObserver(mesurer);
-    observateur.observe(zone);
-    return () => observateur.disconnect();
-  }, [valeur]);
-
   return (
-    <div
-      ref={conteneur}
-      role="radiogroup"
-      aria-label="Profil ou portfolio"
-      //  SANS piste, sans rail, sans fond de rangée : les mots, c'est
-      //  tout. `w-fit` : la rangée du haut (ContenuFiche) pose
-      //  « Suivre » à sa droite.
-      className="relative flex w-fit items-center gap-1"
-    >
-      {/*  LA CAPSULE — derrière le mot actif, OPAQUE (nº 207-§1) et
-           d'un cran plus claire que l'actif des rectangles de rendu.
-           Aucun contour, aucun rose. */}
-      {capsule && (
-        <span
-          aria-hidden="true"
-          className="absolute inset-y-0 rounded-full bg-sombre-haut
-                     transition-[left,width] duration-300 ease-out"
-          style={{ left: capsule.left, width: capsule.width }}
-        />
-      )}
-      {ONGLETS.map((onglet) => {
-        const actif = valeur === onglet.cle;
-        return (
-          <button
-            key={onglet.cle}
-            type="button"
-            role="radio"
-            aria-checked={actif}
-            onClick={() => surChoix(onglet.cle)}
-            //  Le mot passe au blanc quand il devient actif, l'autre
-            //  redescend en gris — la même transition douce que la
-            //  capsule. L'air vient du rembourrage : la capsule
-            //  enveloppe le mot, elle ne le serre pas.
-            className={`relative z-[1] min-h-[44px] rounded-full px-5
-                        text-[14px] font-semibold transition-colors ${
-                          actif
-                            ? "text-sombre-texte"
-                            : "text-sombre-texte-doux hover:text-sombre-texte"
-                        }`}
-          >
-            {onglet.label}
-          </button>
-        );
-      })}
-    </div>
+    <SelecteurCapsule
+      valeur={valeur}
+      options={ONGLETS}
+      surChoix={surChoix}
+      ariaLabel="Profil ou portfolio"
+    />
   );
 }
 

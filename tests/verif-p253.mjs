@@ -74,17 +74,22 @@ titre("§1 — à la source : la rangée revient, les titres y commandent");
       barre
     ) && /rangeeLibre\s*\n?\s*\? "h-\[104px\]"/.test(barre)
   );
+  //  ⚠️ MIS À JOUR nº 255-§1/§5 : les deux titres cliquables du doigt
+  //  et les deux menus du web sont partis ENSEMBLE — le bloc porte
+  //  désormais UN BADGE et UN SEUL menu, la même ligne aux deux
+  //  largeurs. Ce que CETTE passe a rétabli — la rangée EXISTE au
+  //  doigt, avec sa rétractation — se lit toujours, et c'est ce qu'on
+  //  vérifie ici (le contenu de la rangée, lui, appartient à la 255).
   verif(
-    "la rangée : l'encadré sur le web, les deux TITRES au doigt",
-    /<div className="hidden lg:block">\{blocDesMenus\}<\/div>/.test(menus) &&
-      /<div className="lg:hidden">\{blocDesTitres\}<\/div>/.test(menus) &&
-      /data-titre-barre=\{cle\}/.test(menus)
+    "la rangée existe aux deux largeurs, sans contenu par point de rupture",
+    !/hidden lg:block/.test(menus) &&
+      !/className="lg:hidden"/.test(menus) &&
+      /<EncadreDeuxChamps/.test(menus)
   );
   verif(
-    "chaque titre est LE menu de la maison, avec feuille et `repliable`",
-    /titreFeuille=\{nom\}/.test(menus) &&
-      /feuilleMobile$/m.test(menus.replace(/\s+$/gm, "")) &&
-      (menus.match(/^\s*repliable$/gm) ?? []).length === 2
+    "son menu est LE menu de la maison, avec feuille et `repliable`",
+    /feuilleMobile$/m.test(menus.replace(/\s+$/gm, "")) &&
+      (menus.match(/^\s*repliable$/gm) ?? []).length === 1
   );
   verif(
     "la ligne étroite et ses jetons restent écrits (28 px, flèche, 300 ms)",
@@ -245,10 +250,15 @@ titre("§3 — « Mes j'aime » n'existe plus nulle part");
     restes.trim() === "",
     restes.trim() ? restes.trim().split("\n").join(" · ") : "aucun fichier"
   );
+  //  ⚠️ MIS À JOUR nº 255-§1 : le mot de la BARRE est passé de « Mes
+  //  favoris » (le menu d'alors) à « Favoris » (le mot du badge, qui
+  //  partage sa moitié avec « Suivis »). La règle de CETTE passe — un
+  //  seul nom, « favoris », de la clé d'adresse au titre de la page —
+  //  ne bouge pas : c'est elle qu'on vérifie.
   verif(
-    "et « Mes favoris » est le nom UNIQUE (barre, titres, feuille, adresse)",
+    "et « favoris » est le nom UNIQUE (clé d'adresse, badge de barre, titre de page)",
     /MENU_FAVORIS = "favoris"/.test(lire("src/lib/filtres-selection.ts")) &&
-      /"Mes favoris"/.test(lire("src/components/MenusSelection.tsx")) &&
+      /label: "Favoris"/.test(lire("src/components/MenusSelection.tsx")) &&
       /"Mes favoris"/.test(lire("src/components/PageFavoris.tsx"))
   );
 }
