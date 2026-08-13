@@ -166,7 +166,7 @@ export function BlocPortfolio({
   const [stylesAjoutes, setStylesAjoutes] = useState<string[]>([]);
   /** La fenêtre de sélection des styles, par-dessus le formulaire. */
   const [fenetreStyles, setFenetreStyles] = useState(false);
-  /** La famille dépliée DANS la fenêtre (« Traditionnel ethnique »). */
+  /** La famille dépliée DANS la fenêtre (« Cultures du monde »). */
   const [familleDepliee, setFamilleDepliee] = useState<string | null>(null);
   /** Le style dont la section est ouverte — un seul à la fois. */
   const [styleOuvert, setStyleOuvert] = useState<string | null>(null);
@@ -1052,7 +1052,7 @@ export function BlocPortfolio({
       {/* ---------- LA FENÊTRE DE SÉLECTION DES STYLES (nº 116) ----
           Par-dessus le formulaire : LA liste des 38 styles de A à Z,
           un par ligne, défilante — sans champ de saisie, sans menu.
-          « Traditionnel ethnique » porte sa flèche BIEN VISIBLE : un
+          « Cultures du monde » porte sa flèche BIEN VISIBLE : un
           clic déploie ses neuf styles dessous, décalés à droite pour
           montrer qu'ils lui appartiennent. Les styles déjà choisis
           restent listés, cochés et inertes. Choisir ferme la fenêtre

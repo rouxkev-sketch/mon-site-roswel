@@ -166,14 +166,52 @@ export function ContenuFiche({
   }
 
   /**
+   * REMONTER EN HAUT DE LA PHOTO (nº 239-§1) — LE REPÈRE DE LA VIGNETTE
+   * ------------------------------------------------------------------
+   * DEUX GESTES, DEUX REPÈRES, et c'est voulu :
+   *  · PROFIL / PORTFOLIO, RÉALISATION / FLASH, LE RENDU changent ce
+   *    qu'on lit SOUS la photo : la page se cale sous la barre, le bas
+   *    de la photo affleurant (`remonterSousLaBarre`, inchangée) ;
+   *  · UNE VIGNETTE DE STYLE change LA PHOTO ELLE-MÊME : elle ramène
+   *    donc TOUT EN HAUT, au sommet de l'affiche — sans quoi on
+   *    choisit une série sans jamais voir la photo qu'elle ouvre.
+   * MÊME MOUVEMENT, MÊME DURÉE : c'est le même `defilerEnDouceur`,
+   * donc la même courbe et le même temps ; seul le point d'arrivée
+   * diffère. Aucune entrée d'historique (un simple défilement amorti),
+   * et rien n'est écrit : sur une page de détail, la restitution des
+   * nº 230 et 232 reste intacte.
+   */
+  function remonterEnHautDeLaPhoto() {
+    if (document.documentElement.dataset.appareil !== "mobile") return;
+    noterSonde("REMONTÉE EN HAUT DE LA PHOTO (vignette)");
+    //  On vise le HAUT de la photo, lu sur l'enveloppe — jamais un
+    //  zéro écrit en dur : si quoi que ce soit vient un jour au-dessus
+    //  d'elle, le repère suit sans qu'on ait à y revenir.
+    const photo = document
+      .querySelector("[data-photo-fiche]")
+      ?.getBoundingClientRect();
+    if (!photo) return;
+    //  ⚠️ MOINS LA HAUTEUR DE LA BARRE, exactement comme la remontée
+    //  d'à côté : viser le haut de la photo TOUT COURT l'aurait glissé
+    //  SOUS la barre fixe (mesuré : arrivée à 64, les 64 premiers
+    //  pixels de la photo cachés). La page arrive donc tout en haut —
+    //  scrollY 0 sur une fiche — et la photo commence pile sous la
+    //  barre, entière.
+    const barre = document
+      .querySelector("[data-barre-fixe]")
+      ?.getBoundingClientRect().height;
+    defilerEnDouceur(Math.max(0, window.scrollY + photo.top - (barre ?? 0)));
+  }
+
+  /**
    * REMONTER UNE FOIS LA NOUVELLE LISTE POSÉE (nº 238-§1)
    * ------------------------------------------------------------------
    * Une vignette de style ne change pas que la galerie du dessous :
    * elle change AUSSI LA PHOTO DU HAUT (première photo de la série,
    * dont le cadre prend le format réel — nº 228-§3). Or la remontée se
-   * mesure sur le BAS DE CETTE PHOTO : appelée dans le même souffle
-   * que le changement, elle mesure encore l'ANCIENNE hauteur, et vise
-   * un repère qui n'existera plus une image plus tard.
+   * mesure SUR CETTE PHOTO : appelée dans le même souffle que le
+   * changement, elle mesure encore l'ANCIENNE, et vise un repère qui
+   * n'existera plus une image plus tard.
    * On attend donc que la nouvelle liste soit rendue ET mise en page :
    * un compteur, un effet, et DEUX images (la première rend, la
    * seconde a la mise en page définitive). Les hauteurs de photo étant
@@ -184,14 +222,14 @@ export function ContenuFiche({
     if (remonteeDemandee === 0) return;
     let seconde = 0;
     const premiere = requestAnimationFrame(() => {
-      seconde = requestAnimationFrame(() => remonterSousLaBarre());
+      seconde = requestAnimationFrame(() => remonterEnHautDeLaPhoto());
     });
     return () => {
       cancelAnimationFrame(premiere);
       cancelAnimationFrame(seconde);
     };
-    //  `remonterSousLaBarre` ne lit que le DOM : le compteur est le
-    //  seul déclencheur, et c'est voulu.
+    //  `remonterEnHautDeLaPhoto` ne lit que le DOM : le compteur est
+    //  le seul déclencheur, et c'est voulu.
   }, [remonteeDemandee]);
 
   /** Changer d'onglet : le contenu change, la page remonte. */
@@ -527,9 +565,12 @@ export function ContenuFiche({
             );
             surSerieChoisie(serie);
             //  §1 (nº 236) — UNE VIGNETTE DE STYLE CHANGE LES PHOTOS
-            //  D'EN DESSOUS : la page remonte, comme pour les deux
-            //  sélecteurs (nº 234-§1). LA MÊME fonction, même
-            //  mouvement, même durée, aucune entrée d'historique.
+            //  D'EN DESSOUS : la page remonte. Même mouvement, même
+            //  durée que les sélecteurs, aucune entrée d'historique.
+            //  ⚠️ MAIS PAS AU MÊME REPÈRE (nº 239-§1) : elle ramène TOUT
+            //  EN HAUT, au sommet de la photo de l'affiche — elle
+            //  change la photo, pas seulement ce qui est dessous.
+            //  Profil / Portfolio gardent le leur, sous la barre.
             //  ⚠️ SEULE LA VIGNETTE REMONTE : ouvrir une PHOTO passe
             //  par le carrousel de l'enveloppe, pas par ici — rien n'y
             //  bouge, et c'est voulu.

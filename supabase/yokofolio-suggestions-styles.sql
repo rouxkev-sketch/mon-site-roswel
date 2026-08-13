@@ -118,6 +118,11 @@ alter table public.suggestions_style
 alter table public.suggestions_style
   add constraint suggestions_style_famille
   check (famille is null or famille = 'traditionnel-ethnique');
+--  ⚠️ CETTE CONTRAINTE A ÉTÉ REFAITE PAR LA MIGRATION Nº 67
+--  (yokofolio-famille-cultures-du-monde.sql, passe nº 239-§2) : la
+--  famille s'appelle désormais `cultures-du-monde`. Ce fichier-ci
+--  reste tel qu'il a été passé — une migration est une HISTOIRE, on ne
+--  la réécrit pas ; c'est la nº 67 qui dit l'état d'aujourd'hui.
 
 -- UNE ACCEPTATION EST COMPLÈTE, ou n'est pas : accepter sans nom ni
 -- slug produirait un style fantôme, listé nulle part et cherchable

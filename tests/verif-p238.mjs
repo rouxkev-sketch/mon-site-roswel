@@ -243,7 +243,8 @@ titre("§2 — le sous-menu de styles remonte (1440 px)");
     const apres = await mesurer();
     const historiqueApres = await page.evaluate(() => history.length);
     //  ⚠️ « EN TÊTE » VEUT DIRE : aussi haut que la liste peut la
-    //  mettre. « Traditionnel ethnique » est rangée à sa lettre, tout
+    //  mettre. « Cultures du monde » (« Traditionnel ethnique »
+    //  jusqu'à la nº 239) est rangée à sa lettre, tout
     //  en bas : une fois le défilement au bout, elle ne peut pas
     //  monter davantage — et c'est bien le maximum qui est atteint.
     verif(

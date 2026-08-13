@@ -210,7 +210,7 @@ export const STYLES_TATOUAGE = [
   { slug: "gravure", label: "Gravure", couleur: "#4E4740" },
   { slug: "one-line", label: "One Line", couleur: "#5B5560" },
   { slug: "suminagashi", label: "Suminagashi", couleur: "#2F4A57" },
-  //  ---- LES NEUF TRADITIONNELS (famille `traditionnel-ethnique`) ----
+  //  ---- LES NEUF DE LA FAMILLE `cultures-du-monde` ----
   //  Ce sont des styles À PART ENTIÈRE : cherchables, portant chacun sa
   //  page style + ville. Seul leur RANGEMENT diffère (voir plus bas).
   { slug: "berbere", label: "Berbère", couleur: "#6B4A38" },
@@ -233,7 +233,7 @@ export type StyleTatouage = (typeof STYLES_TATOUAGE)[number]["slug"];
  * UN STYLE AJOUTÉ PAR L'ADMINISTRATION.
  * Il naît d'une suggestion de tatoueur, acceptée dans /admin : nom
  * arrêté par l'administration, rangement choisi (la liste principale
- * ou la famille « Traditionnel ethnique »). En base, jamais dans ce
+ * ou la famille « Cultures du monde »). En base, jamais dans ce
  * fichier — sinon il faudrait une livraison à chaque style ajouté.
  */
 export type StyleAjoute = {
@@ -360,7 +360,7 @@ function parLibelle(a: { label: string }, b: { label: string }): number {
  * qu'on trouve ensemble. Elle porte un nom et une porte dans le menu
  * « Explorer » ; elle N'EST PAS CHERCHABLE : son slug n'existe pas
  * dans STYLES_TATOUAGE, donc `lireValeurExplorer` le refuse et aucune
- * page /tatouage/traditionnel-ethnique/<ville> ne peut exister. Ouvrir
+ * page /tatouage/cultures-du-monde/<ville> ne peut exister. Ouvrir
  * une famille ne fait qu'une chose : montrer ce qu'elle contient.
  *
  * ⚠️ ET ELLE N'EST JAMAIS DÉCLARABLE. La fenêtre « Ajouter un style »
@@ -370,8 +370,16 @@ function parLibelle(a: { label: string }, b: { label: string }): number {
  */
 export const FAMILLES_STYLES = [
   {
-    slug: "traditionnel-ethnique",
-    label: "Traditionnel ethnique",
+    //  ⚠️ RENOMMÉE À LA nº 239-§2 — « Traditionnel ethnique » est
+    //  devenu « Cultures du monde », slug compris. LE SLUG POUVAIT
+    //  CHANGER SANS RIEN CASSER, et c'est vérifié : une famille n'est
+    //  pas cherchable, elle n'a donc JAMAIS eu d'adresse publique
+    //  (/tatouage/traditionnel-ethnique/<ville> a toujours répondu
+    //  404, par construction) — rien à rediriger. En base, il ne vit
+    //  qu'à un seul endroit, `suggestions_style.famille` : voir la
+    //  migration nº 67, qui le renomme et refait sa contrainte.
+    slug: "cultures-du-monde",
+    label: "Cultures du monde",
     styles: [
       "berbere",
       "celtique",
@@ -389,7 +397,7 @@ export const FAMILLES_STYLES = [
 /**
  * LES FAMILLES, REGISTRE COMPRIS (nº 122).
  * Un style accepté par l'administration peut être rangé dans
- * « Traditionnel ethnique » : il rejoint alors la famille exactement
+ * « Cultures du monde » : il rejoint alors la famille exactement
  * comme les neuf d'origine, sans que ce fichier ait à être retouché.
  */
 export function famillesStyles(): {
@@ -439,9 +447,11 @@ export type EntreeExplorer =
 /**
  * LES TRENTE ENTRÉES DU MENU « EXPLORER », DE A À Z.
  * Vingt-neuf styles isolés + une famille, rangés ensemble par leur
- * libellé : « Traditionnel ethnique » se place entre « Suminagashi »
- * et « Trash Polka » comme n'importe quel autre mot — la famille ne
- * saute pas en fin de liste, elle prend simplement sa lettre.
+ * libellé : « Cultures du monde » se place entre « Chrome » et
+ * « Cyber-sigilism » comme n'importe quel autre mot — la famille ne
+ * saute pas en fin de liste, elle prend simplement sa lettre. (Elle
+ * était à la lettre T avant la nº 239 ; le tri est calculé, il l'a
+ * suivie tout seul.)
  */
 export function entreesExplorer(): EntreeExplorer[] {
   const enFamille = stylesEnFamille();

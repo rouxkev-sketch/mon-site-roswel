@@ -662,7 +662,7 @@ export function MoteurTatouage({
    * ils cherchent une nature, pas l'absence de critère.
    *
    * TRENTE ENTRÉES DE A À Z (passe nº 113), dont une FAMILLE
-   * dépliante : « Traditionnel ethnique » n'est pas un style — c'est
+   * dépliante : « Cultures du monde » n'est pas un style — c'est
    * une porte, posée à sa lettre, qui révèle les neuf styles qu'elle
    * range. Elle ne porte aucune valeur cherchable ; seuls ses neuf
    * enfants en ont une (voir `entreesExplorer`).
@@ -681,7 +681,7 @@ export function MoteurTatouage({
    *  · les DEUX PORTES « Réalisations » et « Flashs » — ce sont des
    *    titres de section, pas des choix (demande explicite : « il ne
    *    s'affiche PAS sur la ligne du sélecteur Réalisation / Flash ») ;
-   *  · la porte de la famille « Traditionnel ethnique », même raison —
+   *  · la porte de la famille « Cultures du monde », même raison —
    *    elle ne porte aucune valeur cherchable ;
    *  · TOUTES LES ENTRÉES tant que la réponse n'est pas arrivée —
    *    `compte: undefined` s'affiche exactement comme avant, sans

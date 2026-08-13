@@ -8,6 +8,7 @@ import {
   MARQUE_YOKOFOLIO,
   MOTIFS_MODERATION,
   MOTIFS_SIGNALEMENT,
+  famillesStyles,
 } from "@/config/tatouage";
 import { estCourrielAdmin } from "@/lib/admin-yokofolio-client";
 import { AdminDemarchage } from "@/components/AdminDemarchage";
@@ -999,7 +1000,7 @@ export function AdminYokofolio() {
          *    « tribal maori » devient « Maori » si c'est ça, le style.
          *    Le slug de l'adresse en découle, et ne se saisit pas.
          *  · LE RANGEMENT. La liste principale, ou le sous-menu
-         *    « Traditionnel ethnique ».
+         *    « Cultures du monde ».
          * ============================================================== */}
         {section === "styles" && (
           <>
@@ -1083,8 +1084,13 @@ export function AdminYokofolio() {
                             : "Refusé"}
                         </span>
                         {demande.famille && (
+                          //  LE NOM DE LA FAMILLE, LU À SA SOURCE
+                          //  (nº 239-§2) : il était écrit en dur, et
+                          //  aurait survécu au renommage.
                           <span className="ml-2 text-[12.5px] text-sombre-texte-doux">
-                            Traditionnel ethnique
+                            {famillesStyles().find(
+                              (famille) => famille.slug === demande.famille
+                            )?.label ?? demande.famille}
                           </span>
                         )}
                         {demande.message && (
@@ -1218,12 +1224,23 @@ export function AdminYokofolio() {
                                 aria-label="Où ranger le style"
                                 className="flex flex-wrap gap-2"
                               >
+                                {/*  ⚠️ LES FAMILLES VIENNENT DE LEUR
+                                     SOURCE UNIQUE (nº 239-§2) : elles
+                                     étaient RECOPIÉES ici, slug et
+                                     libellé en dur. Deux listes
+                                     divergent toujours — celle-ci
+                                     aurait annoncé « Traditionnel
+                                     ethnique » après le renommage,
+                                     tout en écrivant le bon slug.
+                                     Ajouter une famille au site ne
+                                     demande plus de toucher cet
+                                     écran. */}
                                 {[
                                   { valeur: null, libelle: "Liste principale" },
-                                  {
-                                    valeur: "traditionnel-ethnique",
-                                    libelle: "Traditionnel ethnique",
-                                  },
+                                  ...famillesStyles().map((famille) => ({
+                                    valeur: famille.slug as string | null,
+                                    libelle: famille.label,
+                                  })),
                                 ].map((choix) => {
                                   const actif = brouillon.famille === choix.valeur;
                                   return (

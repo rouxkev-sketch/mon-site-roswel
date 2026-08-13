@@ -31,7 +31,7 @@ export type OptionMenu = {
       suivent ; une PORTE portant ce nom s'affiche à leur place dans la
       liste, et ne les révèle qu'une fois ouverte.
       ⚠️ CE NOM N'EST PAS UNE OPTION : on ne peut pas le choisir. C'est
-      ce qui permet à « Traditionnel ethnique » d'exister dans le menu
+      ce qui permet à « Cultures du monde » d'exister dans le menu
       « Explorer » sans être un style cherchable. */
   sousGroupe?: string;
   /** CE QUI S'ÉCRIT À DROITE DE L'INTITULÉ (nº 216-§2) — le nombre de
@@ -383,7 +383,7 @@ export function MenuDeroulant({
     //  §2 (nº 238) — UNE SOUS-SECTION REMONTE COMME SA PORTE. Elle ne
     //  le faisait pas, au motif qu'elle se déplie « déjà sous les
     //  yeux » : c'est faux dès qu'on l'a cherchée en bas de liste —
-    //  « Traditionnel ethnique » ouvre NEUF entrées sous le point où
+    //  « Cultures du monde » ouvre NEUF entrées sous le point où
     //  l'on est, l'écran ne bouge pas, et le geste semble mort.
     //  CE QUE FAIT UNE PORTE, EXACTEMENT : ce qu'on vient d'ouvrir
     //  passe EN TÊTE de la liste, et son contenu se lit dessous. Pour
@@ -471,7 +471,7 @@ export function MenuDeroulant({
    * LA PORTE D'UNE SOUS-SECTION (passe nº 113)
    * ===========================================
    * Elle ressemble à une OPTION, pas à un titre de catégorie — et
-   * c'est voulu : « Traditionnel ethnique » occupe la place d'un style
+   * c'est voulu : « Cultures du monde » occupe la place d'un style
    * dans la liste alphabétique, entre « Suminagashi » et « Trash
    * Polka ». Même taille, même couleur, même hauteur de touche ; seul
    * le chevron dit qu'elle s'ouvre au lieu de se choisir.
@@ -508,7 +508,7 @@ export function MenuDeroulant({
    * le BLANC CASSÉ du produit artisans, pour ses menus clairs. Sur le
    * panneau SOMBRE, les options y échappaient par accident — la
    * surcouche `hover:bg-sombre-eleve` gagnait à l'ordre de la feuille
-   * CSS — mais la PORTE « Traditionnel ethnique » recevait la classe
+   * CSS — mais la PORTE « Cultures du monde » recevait la classe
    * NUE : au survol, un pavé blanc sous la typographie blanche.
    * On ne s'en remet plus à l'ordre de la feuille : en sombre, les
    * classes claires sont RETIRÉES avant d'être remplacées.

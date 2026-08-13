@@ -19,7 +19,7 @@ import { creerClientSupabaseAdmin } from "@/lib/supabase/admin";
  *
  * ACCEPTER exige un NOM (celui proposé, ou celui que l'administration
  * lui préfère) et un RANGEMENT (la liste principale, ou la famille
- * « Traditionnel ethnique »). Le slug est calculé à partir du nom
+ * « Cultures du monde »). Le slug est calculé à partir du nom
  * retenu — jamais saisi : il entre dans des adresses publiques, et un
  * slug tapé à la main finit toujours par porter une majuscule ou un
  * accent.
