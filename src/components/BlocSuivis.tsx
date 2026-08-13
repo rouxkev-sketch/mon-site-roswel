@@ -11,13 +11,17 @@ import {
 import type { PhotoFavorite, TatoueurSuivi } from "@/lib/favoris-serveur";
 
 /**
- * L'ONGLET « TATOUEURS » DE MA SÉLECTION (passe nº 243)
+ * LES ARTISTES SUIVIS, DANS « MA SÉLECTION » (nº 243, revu nº 245)
  * ==================================================================
  * IL REMPLACE UNE FENÊTRE, et c'est le point de départ : les suivis
  * vivaient dans une fenêtre superposée qui défilait sur elle-même —
  * deux défilements imbriqués et une boîte dans une boîte, que la
  * charte interdit. La fenêtre est SUPPRIMÉE, code compris ; tout vit
  * dans la page, pleine largeur, un seul défilement.
+ * ⚠️ ET PLUS DERRIÈRE UN ONGLET NON PLUS (nº 245-§2) : le va-et-vient
+ * `Photos · Tatoueurs` est supprimé, code compris. Cette section suit
+ * les photos dans la page, et c'est le menu « Mes suivis » de la
+ * barre qui décide de ce qu'elle montre.
  *
  * CE QUI SE DÉCIDE N'EST PAS ICI : les trois groupes, leur tri, le
  * choix des trois photos et les libellés vivent dans
@@ -42,10 +46,14 @@ import type { PhotoFavorite, TatoueurSuivi } from "@/lib/favoris-serveur";
 export function BlocSuivis({
   suivis,
   favoris,
+  titre,
 }: {
   suivis: TatoueurSuivi[];
   /** Les photos aimées — elles décident du premier cas du §4. */
   favoris: PhotoFavorite[];
+  /** Le titre de la section, quand elle en porte un (nº 245-§2 : les
+      suivis suivent les photos dans la page, ils se nomment). */
+  titre?: string;
 }) {
   const groupes = groupesDeSuivis(suivis);
 
@@ -62,7 +70,12 @@ export function BlocSuivis({
   }
 
   return (
-    <div data-onglet-suivis="" className="mt-6">
+    <div data-section-suivis="" className="mt-10">
+      {titre && (
+        <h2 className="text-[13px] font-semibold uppercase tracking-[0.14em] text-sombre-texte-doux">
+          {titre}
+        </h2>
+      )}
       {groupes.map((groupe, rang) => (
         /*  ⚠️ UN GROUPE VIDE NE REND RIEN — ni titre, ni espace : il
              n'est même pas dans la liste (voir `groupesDeSuivis`).
@@ -83,8 +96,18 @@ export function BlocSuivis({
           <h2 className="text-[13px] font-semibold uppercase tracking-[0.14em] text-sombre-texte-doux">
             {groupe.titre}
           </h2>
-          {/*  34 px entre deux blocs d'artiste (§2). */}
-          <ul className="mt-5 flex flex-col gap-[34px]">
+          {/*  34 px entre deux blocs d'artiste (nº 244-§2).
+               §5 (nº 245) — DEUX COLONNES EN PLEINE LARGEUR : une
+               grille à partir de `lg`, une seule colonne en dessous.
+               ⚠️ `minmax(0,1fr)` ET NON `1fr` — c'est le piège de la
+               nº 228 : une colonne `1fr` se dimensionne à son contenu
+               (un nom long, une adresse), et la page déborde en
+               largeur. Avec le plancher à zéro, la colonne cède, et
+               `scrollWidth` reste égal à `clientWidth`. */}
+          <ul
+            className="mt-5 grid gap-x-8 gap-y-[34px]
+                       grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
+          >
             {groupe.suivis.map((suivi) => (
               <li key={suivi.id}>
                 <BlocDUnSuivi suivi={suivi} favoris={favoris} />

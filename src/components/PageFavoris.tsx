@@ -1,20 +1,25 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LARGEUR_SITE, libelleStyle } from "@/config/tatouage";
-import { libelleNature, NATURES_PHOTO } from "@/lib/photos-tatoueur";
-import { IconeChevronBas } from "@/components/Icones";
+import { LARGEUR_SITE } from "@/config/tatouage";
+import {
+  filtreCourant,
+  PARAM_JAIME,
+  PARAM_SUIVIS,
+  TOUS_LES_STYLES,
+} from "@/lib/filtres-selection";
+import { lireRequeteCourante, souscrireAdresse } from "@/lib/adresse-courante";
 import { CarteTatoueur } from "@/components/CarteTatoueur";
 import { BlocSuivis } from "@/components/BlocSuivis";
 import { FenetreFiche } from "@/components/FenetreFiche";
-import { OngletsLigne } from "@/components/OngletsLigne";
 import {
   CLE_FENETRE_FICHE,
   type ContexteFenetreFiche,
 } from "@/components/RetourFenetreFiche";
 import { cleDEnsemble, RENDU_PAR_DEFAUT } from "@/lib/photos-tatoueur";
+import { suivisDuStyle } from "@/lib/selection-suivis";
 import { ficheComplete } from "@/lib/fiche-complete";
 import type { PhotoFavorite, TatoueurSuivi } from "@/lib/favoris-serveur";
 import type { Tatoueur } from "@/lib/tatoueurs";
@@ -22,25 +27,31 @@ import type { Tatoueur } from "@/lib/tatoueurs";
 /**
  * MA SÉLECTION — les photos gardées, et les tatoueurs suivis
  * ==========================================================
- * §1 (nº 243) — DEUX ONGLETS, `Photos · Tatoueurs`, et PLUS DE
- * FENÊTRE. Les suivis vivaient derrière un bouton, dans une fenêtre
- * qui défilait sur elle-même : deux défilements imbriqués et une
- * boîte dans une boîte. Elle est supprimée, code compris. Tout vit
- * dans la page, pleine largeur, un seul défilement.
+ * §1 (nº 243) — PLUS DE FENÊTRE POUR LES SUIVIS : ils vivaient
+ * derrière un bouton, dans une fenêtre qui défilait sur elle-même —
+ * deux défilements imbriqués et une boîte dans une boîte. Supprimée,
+ * code compris. Tout vit dans la page, un seul défilement.
  *
- * ⚠️ L'ONGLET ACTIF VIT DANS L'ADRESSE (`?onglet=…`), comme tout le
- * reste depuis la nº 191 : une entrée d'historique par changement, et
- * le retour d'une fiche rend le bon onglet ET la bonne position (la
- * mémoire de défilement est indexée sur `chemin + recherche`, voir
- * MemoireNavigation — l'onglet en fait donc partie, sans une ligne
- * de plus).
+ * §2 (nº 245) — ET PLUS DE VA-ET-VIENT NON PLUS. Le sélecteur
+ * `Photos · Tatoueurs` de la nº 243 est supprimé, code compris : ce
+ * sont LES DEUX MENUS de la barre — « Mes j'aime » et « Mes suivis »
+ * (MenusSelection, posés dans la rangée de EnTeteTatouage à la place
+ * du bloc de recherche) — qui décident de ce qui s'affiche. Les deux
+ * sections sont là, l'une sous l'autre : les photos gardées, puis les
+ * artistes suivis.
  *
- * LE MENU DES STYLES NE MONTRE QUE LES STYLES ENREGISTRÉS, et c'est le
- * point important : les trente-huit styles du site dans un menu où
- * trente-cinq entrées ne donnent rien seraient inutilisables. La liste
- * est donc CALCULÉE à partir des photos gardées (voir `stylesGardes`),
- * chacune avec son nombre. Elle se réduit toute seule quand on retire
- * des photos.
+ * ⚠️ LES DEUX CHOIX VIVENT DANS L'ADRESSE (`?jaime=…`, `?suivis=…`),
+ * comme tout depuis la nº 191 — et c'est aussi ce qui les fait
+ * partager par la BARRE et par la PAGE, deux composants frères : voir
+ * lib/filtres-selection. Le retour d'une fiche rend donc le même
+ * filtre ET la même position (la mémoire de défilement est indexée
+ * sur `chemin + recherche`, MemoireNavigation).
+ *
+ * LES MENUS NE MONTRENT QUE LES STYLES PRÉSENTS, et c'est le point
+ * important : les trente-huit styles du site dans un menu où
+ * trente-cinq entrées ne donnent rien seraient inutilisables. Les
+ * listes sont CALCULÉES (voir `entreesDuFiltre`), dans l'ordre et
+ * avec les libellés du menu du moteur — aucune seconde liste.
  *
  * ⚠️ UNE PHOTO RETIRÉE NE DISPARAÎT PAS SOUS LE DOIGT. Le cœur
  * s'éteint, la carte PÂLIT et reste en place : on peut se raviser
@@ -50,55 +61,22 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  * quelque chose s'est cassé.
  */
 
-/** LE MENU DES STYLES — « tous » compris. */
-const TOUS = "tous";
-
-/** Les deux onglets — leur clé voyage dans l'adresse. */
-const ONGLET_PHOTOS = "photos";
-const ONGLET_SUIVIS = "tatoueurs";
-
 export function PageFavoris({
   photos,
   suivis,
-  ongletInitial,
 }: {
   photos: PhotoFavorite[];
   suivis: TatoueurSuivi[];
-  /** L'onglet demandé par l'adresse, lu par le SERVEUR : la page naît
-      dans le bon onglet, elle ne se corrige pas après coup. */
-  ongletInitial?: string;
 }) {
-  const [style, setStyle] = useState(TOUS);
-  const [nature, setNature] = useState(TOUS);
-  const [menuOuvert, setMenuOuvert] = useState(false);
-  const [onglet, setOnglet] = useState(
-    ongletInitial === ONGLET_SUIVIS ? ONGLET_SUIVIS : ONGLET_PHOTOS
+  //  LES DEUX FILTRES VIENNENT DE L'ADRESSE — la même source que les
+  //  menus de la barre, lue par le même magasin (nº 245-§3).
+  const requete = useSyncExternalStore(
+    souscrireAdresse,
+    lireRequeteCourante,
+    () => ""
   );
-
-  /**
-   * L'ONGLET DANS L'ADRESSE — une entrée d'historique par changement.
-   * ⚠️ `history.pushState`, PAS `router.push` : le routeur remonterait
-   * la page en haut et rejouerait le rendu serveur pour un simple
-   * changement d'onglet. On écrit l'adresse, on garde la place.
-   * Le RETOUR (`popstate`) rejoue l'onglet écrit dans l'adresse.
-   */
-  const choisirOnglet = useCallback((suivant: string) => {
-    setOnglet(suivant);
-    const adresse =
-      suivant === ONGLET_SUIVIS
-        ? `${window.location.pathname}?onglet=${ONGLET_SUIVIS}`
-        : window.location.pathname;
-    window.history.pushState({ ongletSelection: suivant }, "", adresse);
-  }, []);
-
-  useEffect(() => {
-    const auRetour = () => {
-      const demande = new URLSearchParams(window.location.search).get("onglet");
-      setOnglet(demande === ONGLET_SUIVIS ? ONGLET_SUIVIS : ONGLET_PHOTOS);
-    };
-    window.addEventListener("popstate", auRetour);
-    return () => window.removeEventListener("popstate", auRetour);
-  }, []);
+  const style = filtreCourant(PARAM_JAIME, requete);
+  const styleSuivis = filtreCourant(PARAM_SUIVIS, requete);
 
   /**
    * §5 (nº 243) — LA DERNIÈRE VISITE S'ÉCRIT AU DÉPART, JAMAIS À
@@ -205,33 +183,16 @@ export function PageFavoris({
       page affiche un élément par ensemble — le sélecteur doit annoncer
       ce qu'il va montrer, pas ce qu'il contient. Trois ensembles de
       réalisme font « 3 », qu'ils portent trois photos ou trente. */
-  const stylesGardes = useMemo(() => {
-    const compte = new Map<string, Set<string>>();
-    for (const photo of photos) {
-      const vus = compte.get(photo.style) ?? new Set<string>();
-      vus.add(cleEnsembleFavori(photo));
-      compte.set(photo.style, vus);
-    }
-    return [...compte.entries()].map(([slug, vus]) => ({
-      slug,
-      label: libelleStyle(slug),
-      nombre: vus.size,
-    }));
-  }, [photos]);
-
-  /** LES NATURES PRÉSENTES — même règle. C'est elle qui décide s'il y
-      a un choix à offrir : avec une seule nature enregistrée, il n'y a
-      rien à choisir, et le sélecteur ne s'affiche pas. */
-  const naturesGardees = useMemo(() => {
-    const presentes = new Set(photos.map((photo) => photo.nature));
-    return NATURES_PHOTO.filter((n) => presentes.has(n.slug));
-  }, [photos]);
-  const choixDeNature = naturesGardees.length > 1;
-
+  //  UN SEUL FILTRE, celui du menu « Mes j'aime » (l'adresse).
   const visibles = photos.filter(
-    (photo) =>
-      (style === TOUS || photo.style === style) &&
-      (nature === TOUS || !choixDeNature || photo.nature === nature)
+    (photo) => style === TOUS_LES_STYLES || photo.style === style
+  );
+  //  ET SON JUMEAU pour les suivis — la règle vit dans
+  //  `lib/selection-suivis`, écrite une fois pour le filtrage comme
+  //  pour le comptage des entrées de menu.
+  const suivisVisibles = useMemo(
+    () => suivisDuStyle(suivis, styleSuivis),
+    [suivis, styleSuivis]
   );
 
   /**
@@ -299,8 +260,6 @@ export function PageFavoris({
     return liste;
   }, [visibles, photos]);
 
-  const styleChoisi = stylesGardes.find((entree) => entree.slug === style);
-
   return (
     /*  ⚠️ LA LARGEUR DE LA MOSAÏQUE (nº 213-§3a) : `LARGEUR_SITE` et
         les mêmes marges latérales que l'accueil — cette page montre
@@ -316,26 +275,8 @@ export function PageFavoris({
         Ma sélection
       </h1>
 
-      {/* LE SÉLECTEUR DE LIGNE HABITUEL — celui d'Explorer / Filtres
-          et de Profil / Portfolio (OngletsLigne), à deux positions. */}
-      <div className="mt-5 max-w-[320px]">
-        <OngletsLigne
-          ariaLabel="Photos ou tatoueurs suivis"
-          cleActive={onglet}
-          surChoix={choisirOnglet}
-          options={[
-            { cle: ONGLET_PHOTOS, label: "Photos" },
-            { cle: ONGLET_SUIVIS, label: "Tatoueurs" },
-          ]}
-        />
-      </div>
-
-      {/* ---------- L'ONGLET « TATOUEURS » (nº 243-§2 à §5) ---------- */}
-      {onglet === ONGLET_SUIVIS && (
-        <BlocSuivis suivis={suivis} favoris={photos} />
-      )}
-
-      {onglet === ONGLET_SUIVIS ? null : photos.length === 0 ? (
+      {/* ---------- LES PHOTOS GARDÉES ---------- */}
+      {photos.length === 0 ? (
         /* L'ÉTAT VIDE — il dit quoi faire, en une ligne, et ouvre la
            porte. Pas de dessin, pas de paragraphe. */
         <div className="mt-8 rounded-2xl bg-sombre-carte px-5 py-8 text-center">
@@ -353,104 +294,11 @@ export function PageFavoris({
         </div>
       ) : (
         <>
-          {/* ---------- LES DEUX FILTRES ---------- */}
-          <div className="mt-5 flex flex-col gap-4">
-            {/* LE MENU DÉROULANT DES STYLES — un CHAMP, donc : pas de
-                contour, un fond, un chevron. Il s'ouvre par-dessus la
-                grille (absolute), il ne la pousse pas. */}
-            <div className="relative w-full max-w-[280px]">
-              <button
-                type="button"
-                onClick={() => setMenuOuvert((ouvert) => !ouvert)}
-                aria-expanded={menuOuvert}
-                aria-haspopup="listbox"
-                className={`flex w-full items-center gap-3 rounded-xl px-4 min-h-[48px]
-                           text-left transition-colors ${
-                             menuOuvert
-                               ? "bg-sombre-eleve-clair"
-                               : "bg-sombre-eleve hover:bg-sombre-eleve-clair"
-                           }`}
-              >
-                <span className="min-w-0 flex-1 truncate text-[14.5px] font-semibold text-sombre-texte">
-                  {styleChoisi ? styleChoisi.label : "Tous les styles"}
-                </span>
-                <span className="shrink-0 text-[13px] text-sombre-texte-doux">
-                  {styleChoisi ? styleChoisi.nombre : photos.length}
-                </span>
-                <IconeChevronBas
-                  taille={16}
-                  classe={`shrink-0 transition-transform ${
-                    menuOuvert
-                      ? "rotate-180 text-primaire"
-                      : "text-sombre-texte-doux"
-                  }`}
-                />
-              </button>
-
-              {menuOuvert && (
-                <div
-                  role="listbox"
-                  aria-label="Filtrer par style"
-                  className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden
-                             rounded-xl bg-sombre-eleve-clair"
-                >
-                  <ul className="max-h-[280px] overflow-y-auto overscroll-contain">
-                    {[{ slug: TOUS, label: "Tous les styles", nombre: photos.length }]
-                      .concat(stylesGardes)
-                      .map((entree) => (
-                        <li key={entree.slug}>
-                          <button
-                            type="button"
-                            role="option"
-                            aria-selected={style === entree.slug}
-                            onClick={() => {
-                              setStyle(entree.slug);
-                              setMenuOuvert(false);
-                            }}
-                            className={`flex w-full items-center gap-3 px-4 py-2.5 text-left
-                                       transition-colors hover:bg-white/[0.06] ${
-                                         style === entree.slug
-                                           ? "bg-white/[0.04]"
-                                           : ""
-                                       }`}
-                          >
-                            <span className="min-w-0 flex-1 truncate text-[14.5px] text-sombre-texte">
-                              {entree.label}
-                            </span>
-                            <span className="shrink-0 text-[12.5px] text-sombre-texte-doux">
-                              {entree.nombre}
-                            </span>
-                          </button>
-                        </li>
-                      ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-
-            {/* RÉALISATIONS / FLASHS — ET SEULEMENT SI LES DEUX ONT ÉTÉ
-                ENREGISTRÉS. L'affichage par défaut est « Tout », c'est
-                à dire les deux MÉLANGÉS, dans l'ordre où ils ont été
-                gardés. Une seule nature enregistrée : aucun sélecteur,
-                puisqu'il n'y a rien à choisir. */}
-            {choixDeNature && (
-              <div className="max-w-[320px]">
-                <OngletsLigne
-                  ariaLabel="Réalisations ou flashs"
-                  cleActive={nature}
-                  surChoix={setNature}
-                  options={[
-                    { cle: TOUS, label: "Tout" },
-                    ...naturesGardees.map((n) => ({
-                      cle: n.slug,
-                      label: libelleNature(n.slug) + "s",
-                    })),
-                  ]}
-                />
-              </div>
-            )}
-          </div>
-
+          {/*  ⚠️ LES DEUX FILTRES QUI VIVAIENT ICI SONT PARTIS
+               (nº 245-§2) : le menu de style local et le sélecteur
+               Réalisations / Flashs faisaient double emploi avec les
+               deux menus de la barre, qui décident désormais seuls.
+               Une seule écriture, et un seul endroit où choisir. */}
           {/* ---------- LES PHOTOS, EN CARTES ---------- */}
           {ensemblesVisibles.length === 0 ? (
             <p className="mt-8 rounded-2xl bg-sombre-carte px-4 py-6 text-center text-[14px] text-sombre-texte-doux">
@@ -494,6 +342,15 @@ export function PageFavoris({
           )}
         </>
       )}
+
+      {/* ---------- LES ARTISTES SUIVIS (nº 243-§2 à §5) ----------
+           Ils ne sont plus derrière un onglet (nº 245-§2) : la page
+           les montre à la suite des photos, filtrés par LEUR menu. */}
+      <BlocSuivis
+        suivis={suivisVisibles}
+        favoris={photos}
+        titre="Mes suivis"
+      />
 
       {/* `key` : chaque ouverture repart de la photo du style gardé,
           jamais de l'état d'une fiche précédente. */}

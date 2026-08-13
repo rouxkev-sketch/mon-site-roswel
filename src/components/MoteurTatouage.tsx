@@ -32,6 +32,7 @@ import {
 } from "@/components/Icones";
 import { BadgeCharte, GroupeBadges } from "@/components/BadgesCharte";
 import { MenuDeVerre } from "@/components/SurfaceDeVerre";
+import { EncadreDeuxChamps } from "@/components/EncadreBarre";
 import { GLISSADE_MS, remonterSansClavier } from "@/lib/remontee-champ";
 import { basculerSansSaut } from "@/lib/bascule-verrouillee";
 //  ⚠️ TEMPORAIRE (nº 173) — la sonde-journal enregistre les clics sur
@@ -914,22 +915,13 @@ export function MoteurTatouage({
       encadré — la parente de celle des sélecteurs. */
   function encadreChamps(identifiant: string) {
     return (
-      <div
-        //  ⚠️ UN CRAN PLUS CLAIR (nº 150-§2) : à `eleve`, l'encadré se
-        //  confondait avec la page quand les cartes défilaient
-        //  derrière. `eleve-clair` au repos, et le focus grimpe à
-        //  `haut` — l'éclaircissement des niveaux, jamais un contour.
-        //  ⚠️ ET UN CRAN DE PLUS ENCORE (nº 174-§1) : sur des photos, il
-        //  se noyait toujours. SON FOND N'EST PLUS DÉCLARÉ ICI — il
-        //  vient de la règle `[data-clair-barre]` de globals.css, la
-        //  même pour le champ et pour les deux boutons, réglable par
-        //  `?clair=1|2|3`. Le focus y garde son comportement
-        //  (`:focus-within` monte d'un barreau).
-        data-clair-barre=""
-        className="flex items-stretch rounded-2xl overflow-visible
-                   transition-colors"
-      >
-        <div className="flex-1 min-w-0 basis-1/2">
+      /*  ⚠️ L'ENCADRÉ EST EXTRAIT DEPUIS LA nº 245-§1 : il vit dans
+          `EncadreDeuxChamps` (EncadreBarre.tsx) et la page « Ma
+          sélection » consomme LA MÊME écriture pour ses deux menus.
+          Rien n'a changé de ce qu'il dessine — fond `data-clair-barre`,
+          aucun contour, le fin trait entre les deux moitiés. */
+      <EncadreDeuxChamps
+        gauche={
           <MenuDeroulant
             valeur={valeurDuMenu}
             surChangement={(valeur) => choisirDansExplorer(valeur, annoncer)}
@@ -946,11 +938,8 @@ export function MoteurTatouage({
             sombre
             repliable
           />
-        </div>
-
-        <div aria-hidden="true" className="w-px my-2.5 bg-sombre-bordure shrink-0" />
-
-        <div className="flex-1 min-w-0 basis-1/2">
+        }
+        droite={
           <ChampLocalisation
             pourLeMoteur
             id={`${identifiant}-lieu`}
@@ -966,8 +955,8 @@ export function MoteurTatouage({
             piedPanneau={piedRayon}
             garderOuvertApresChoix
           />
-        </div>
-      </div>
+        }
+      />
     );
   }
 

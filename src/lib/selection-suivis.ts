@@ -249,6 +249,54 @@ export function bandeDeTrois(
   };
 }
 
+/* ==================================================================
+ * LE FILTRE PAR STYLE (nº 245-§3)
+ * ==================================================================
+ * UNE SEULE RÈGLE, deux usages : elle filtre la liste affichée, et
+ * elle compte les entrées du menu « Mes suivis ». Un artiste PORTE un
+ * style dès qu'une de ses publications le porte — c'est ce que le
+ * visiteur voit de son travail.
+ */
+export function suiviPorteLeStyle(suivi: TatoueurSuivi, style: string): boolean {
+  return suivi.recentes.some((photo) => photo.style === style);
+}
+
+/** Les suivis d'un style — « tous » rend la liste entière. */
+export function suivisDuStyle(
+  suivis: TatoueurSuivi[],
+  style: string
+): TatoueurSuivi[] {
+  if (!style || style === "tous") return suivis;
+  return suivis.filter((suivi) => suiviPorteLeStyle(suivi, style));
+}
+
+/** Le nombre d'ARTISTES par style — ce que le menu annonce en face de
+    chaque entrée (le menu filtre des artistes, il les compte donc). */
+export function comptesParStyleDesSuivis(
+  suivis: TatoueurSuivi[]
+): Map<string, number> {
+  const comptes = new Map<string, number>();
+  for (const suivi of suivis) {
+    const vus = new Set(suivi.recentes.map((photo) => photo.style));
+    for (const style of vus) comptes.set(style, (comptes.get(style) ?? 0) + 1);
+  }
+  return comptes;
+}
+
+/** Le nombre d'ENSEMBLES aimés par style — le menu « Mes j'aime »
+    annonce ce qu'il va montrer (une carte = un ensemble, nº 213-§3d). */
+export function comptesParStyleDesJaime(
+  photos: PhotoFavorite[]
+): Map<string, number> {
+  const parStyle = new Map<string, Set<string>>();
+  for (const photo of photos) {
+    const vus = parStyle.get(photo.style) ?? new Set<string>();
+    vus.add(`${photo.tatoueurSlug}·${photo.style}·${photo.nature}·${photo.rendu ?? ""}`);
+    parStyle.set(photo.style, vus);
+  }
+  return new Map([...parStyle].map(([style, vus]) => [style, vus.size]));
+}
+
 /** « 3 nouvelles réalisations » — le compte du §5, jamais à zéro. */
 export function libelleNouveautes(nombre: number): string {
   if (nombre <= 0) return "";

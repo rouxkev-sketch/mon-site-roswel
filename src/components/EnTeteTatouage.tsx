@@ -87,6 +87,7 @@ export function EnTeteTatouage({
   criteres,
   criteresInitiaux,
   surRecherche,
+  rangee,
 }: {
   /** Critères PILOTÉS PAR LA PAGE (accueil). Absent = état interne. */
   criteres?: CritèresTatouage;
@@ -94,6 +95,23 @@ export function EnTeteTatouage({
   /** La recherche demandée. Sur l'accueil, elle change l'adresse — et
       c'est l'adresse qui décide de tout (refonte nº 191). */
   surRecherche?: (criteres: CritèresTatouage) => void;
+  /**
+   * §1 (nº 245) — UNE AUTRE RANGÉE QUE LE MOTEUR.
+   * ------------------------------------------------------------------
+   * « Ma sélection » n'a que faire du bloc de recherche : elle pose
+   * SES deux menus à la place. Elle ne fabrique pour autant NI un
+   * second centrage, NI un second repli — elle passe son contenu ici,
+   * et c'est la rangée existante qui le porte : même largeur
+   * (`basis-[680px]`, `max-w-[720px]`), même centrage, même mécanique
+   * de repli (les deux hauteurs, réglages inchangés).
+   * On lui rend l'état de repli : à elle de dire ce qu'elle montre
+   * repliée (§4 — la ligne étroite « Recherche »), et de demander le
+   * dépliement au toucher.
+   */
+  rangee?: (etat: {
+    replie: boolean;
+    deplier: () => void;
+  }) => React.ReactNode;
 }) {
   const router = useRouter();
   const { utilisateur, nom } = useUtilisateur();
@@ -337,8 +355,16 @@ export function EnTeteTatouage({
       ailleurs, la rangée n'existe pas : c'est LA LOUPE de la barre qui
       mène à la recherche. */
   const surAccueil = Boolean(surRecherche);
+  /** §1 (nº 245) — LA RANGÉE PORTE UN AUTRE CONTENU (« Ma
+      sélection »). Elle existe alors comme sur l'accueil, mais elle
+      n'EST PAS le moteur : la loupe reste donc à sa place (§4), et la
+      rangée ne s'escamote jamais entièrement — elle se réduit à sa
+      ligne étroite, dont le contenu décide. */
+  const rangeeLibre = Boolean(rangee);
+  const rangeePresente = surAccueil || rangeeLibre;
   /** LA LOUPE EST VISIBLE quand la rangée ne l'est pas : partout hors
-      accueil, et sur l'accueil dès que la rangée est repliée. */
+      accueil, et sur l'accueil dès que la rangée est repliée. Avec une
+      rangée libre, la loupe ne bouge pas (nº 245-§4). */
   const loupeVisible = !surAccueil || moteurReplie;
   /**
    * L'ÉCRAN EST-IL ÉTROIT ? — c'est-à-dire : la rangée du moteur est-
@@ -605,7 +631,9 @@ export function EnTeteTatouage({
                                  ? "max-lg:grid-rows-[0fr] max-lg:opacity-0"
                                  : "max-lg:grid-rows-[1fr] max-lg:opacity-100"
                              } lg:flex`
-                          : "hidden lg:flex"
+                          : rangeeLibre
+                            ? "flex"
+                            : "hidden lg:flex"
                       }`}
           //  ⚠️ SEULEMENT LÀ OÙ LA RANGÉE SE REPLIE VRAIMENT
           //  (nº 154-§5) : ces deux attributs ignorent les points de
@@ -619,14 +647,23 @@ export function EnTeteTatouage({
                  appartient à la rangée et se replie avec elle. */}
             <div
               className={`w-full max-w-[720px] lg:pt-0 ${
-                surAccueil ? "max-lg:pt-3" : ""
+                rangeePresente ? "max-lg:pt-3" : ""
               }`}
             >
-              <MoteurTatouage
-                criteres={valeur}
-                surChangement={chercher}
-                rangeeMobile={surAccueil}
-              />
+              {rangee ? (
+                //  §1 (nº 245) — la rangée libre : même enveloppe,
+                //  même centrage, même repli. Seul son CONTENU change.
+                rangee({
+                  replie: moteurReplie && etroit,
+                  deplier: () => setMoteurReplie(false),
+                })
+              ) : (
+                <MoteurTatouage
+                  criteres={valeur}
+                  surChangement={chercher}
+                  rangeeMobile={surAccueil}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -803,11 +840,23 @@ export function EnTeteTatouage({
       <div
         aria-hidden
         data-reserve-barre=""
-        data-reserve-posee={surAccueil && !moteurReplie ? 128 : 64}
-        data-reserve-depliee={surAccueil ? 128 : 64}
+        //  §4 (nº 245) — UNE TROISIÈME HAUTEUR, et une seule raison :
+        //  repliée, la rangée LIBRE ne disparaît pas — il reste sa
+        //  ligne étroite (36 px + son air). La réserve doit donc
+        //  l'annoncer, sans quoi le contenu passerait dessous. Les
+        //  deux hauteurs du moteur (128 / 64) ne bougent pas d'un
+        //  pixel : la position au retour reste celle de juillet.
+        data-reserve-posee={
+          rangeePresente && !moteurReplie ? 128 : rangeeLibre ? 104 : 64
+        }
+        data-reserve-depliee={rangeePresente ? 128 : 64}
         className={`hidden mobile:block shrink-0 transition-[height]
                     duration-300 ease-out ${
-                      surAccueil && !moteurReplie ? "h-32" : "h-16"
+                      rangeePresente && !moteurReplie
+                        ? "h-32"
+                        : rangeeLibre
+                          ? "h-[104px]"
+                          : "h-16"
                     }`}
       />
     </>

@@ -2,8 +2,13 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { creerClientSupabaseServeur } from "@/lib/supabase/server";
 import { lireLesFavoris } from "@/lib/favoris-serveur";
-import { EnTeteTatouage } from "@/components/EnTeteTatouage";
+import { BarreSelection } from "@/components/BarreSelection";
 import { PageFavoris } from "@/components/PageFavoris";
+import { entreesDuFiltre } from "@/lib/filtres-selection";
+import {
+  comptesParStyleDesJaime,
+  comptesParStyleDesSuivis,
+} from "@/lib/selection-suivis";
 
 /**
  * MES FAVORIS — la page du compte (passe nº 137)
@@ -36,11 +41,7 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function PageMesFavoris({
-  searchParams,
-}: {
-  searchParams: Promise<{ onglet?: string }>;
-}) {
+export default async function PageMesFavoris() {
   const supabase = await creerClientSupabaseServeur();
   const {
     data: { user },
@@ -51,18 +52,26 @@ export default async function PageMesFavoris({
   }
 
   const { photos, suivis } = await lireLesFavoris(user.id);
-  //  §1 (nº 243) — L'ONGLET VIT DANS L'ADRESSE : lu par le serveur,
-  //  la page naît dans le bon onglet — un retour, un lien partagé ou
-  //  un rechargement rendent la même chose.
-  const { onglet } = await searchParams;
+  //  §1 et §3 (nº 245) — LES DEUX MENUS DE LA BARRE, calculés ICI, au
+  //  plus près des données : les styles réellement présents dans les
+  //  j'aime et dans le travail des suivis. L'ordre et les libellés
+  //  viennent du menu du moteur (`entreesDuFiltre`) ; un menu sans
+  //  entrée ne s'affiche pas.
+  const entreesJaime = entreesDuFiltre(comptesParStyleDesJaime(photos));
+  const entreesSuivis = entreesDuFiltre(comptesParStyleDesSuivis(suivis));
 
   return (
     <>
-      {/* La barre fixe SANS moteur sur smartphone : cette page n'est
-          pas une page de recherche. Le web garde le moteur — il ramène
-          à l'accueil avec les critères choisis. */}
-      <EnTeteTatouage />
-      <PageFavoris photos={photos} suivis={suivis} ongletInitial={onglet} />
+      {/* ⚠️ LE BLOC DE RECHERCHE N'A RIEN À FAIRE ICI (nº 245-§1) :
+          la barre porte, à sa place et dans SA rangée, les deux menus
+          « Mes j'aime » et « Mes suivis ». Il reste intact partout
+          ailleurs — c'est `BarreSelection` qui le remplace, pas une
+          seconde barre. */}
+      <BarreSelection
+        entreesJaime={entreesJaime}
+        entreesSuivis={entreesSuivis}
+      />
+      <PageFavoris photos={photos} suivis={suivis} />
     </>
   );
 }
