@@ -348,8 +348,13 @@ titre("§4 — à la source : rien sur les bords, les flèches dehors, la capsul
     !/gradient|mask/.test(source)
   );
   verif(
-    "les flèches vivent HORS de la rangée (sa marge haute), sans capsule pleine",
-    /justify-end gap-1 mb-1/.test(source) &&
+    //  (mis à jour nº 252-§1 : les flèches de la marge haute sont
+    //  devenues DEUX BANDEAUX DE VERRE aux extrémités — toujours par
+    //  `pointer-fine:`, toujours sans capsule pleine ni flou porté à
+    //  soi : le verre est l'écriture partagée `data-verre-fenetre`.)
+    "les commandes de défilement : les bandeaux de verre, sans capsule pleine",
+    /data-bandeau-defilement/.test(source) &&
+      /hidden pointer-fine:flex absolute inset-y-0/.test(source) &&
       !/absolute[^"]*(right|left)-1 top-1\/2/.test(source) &&
       !/bg-sombre-fond\/55/.test(source) &&
       !/backdrop-blur/.test(source)

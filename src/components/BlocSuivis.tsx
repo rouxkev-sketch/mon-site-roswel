@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CADRE_PHOTO_PORTFOLIO } from "@/config/tatouage";
 import { CLASSES_LIGNE_CLIQUABLE, PhotoRonde } from "@/components/BlocLieux";
@@ -282,22 +282,65 @@ function RangeeDeVignettes({
     cadre.scrollBy({ left: sens * cadre.clientWidth, behavior: "smooth" });
   };
 
-  /*  §4 (nº 250) — LES FLÈCHES VIVENT HORS DE LA RANGÉE : elles ne
-      recouvrent plus jamais une vignette. Plus de capsule pleine ni de
-      flou porté — l'icône à taille naturelle, grise, qui s'éclaircit ;
-      l'appui pose le voile blanc des lignes cliquables (nº 229). Elles
-      se rangent au-dessus de la rangée, calées à droite — le coin des
-      rangées d'Apple. `pointer-fine:` : la variante déclarée en
-      nº 208-§2 — au doigt, elles n'existent pas, le glissement
-      suffit. */
-  const fleche = (sens: 1 | -1) => (
+  /**
+   * §1 (nº 252) — OÙ EN EST LE DÉFILEMENT : c'est lui qui décide quels
+   * bandeaux EXISTENT. Celui de droite tant qu'il reste quelque chose à
+   * voir à droite ; celui de gauche seulement une fois qu'on a fait
+   * défiler — et il repart quand on est revenu au début.
+   * Relevé au montage, à chaque défilement, et au redimensionnement
+   * (le nombre de cases visibles change avec la largeur).
+   */
+  const [bords, setBords] = useState({ gauche: false, droite: false });
+  useEffect(() => {
+    const cadre = zone.current;
+    if (!cadre) return;
+    const lire = () =>
+      setBords({
+        gauche: cadre.scrollLeft > 1,
+        droite: cadre.scrollLeft + cadre.clientWidth < cadre.scrollWidth - 1,
+      });
+    lire();
+    cadre.addEventListener("scroll", lire, { passive: true });
+    const observateur = new ResizeObserver(lire);
+    observateur.observe(cadre);
+    return () => {
+      cadre.removeEventListener("scroll", lire);
+      observateur.disconnect();
+    };
+  }, [bande.photos.length]);
+
+  /*  §1 (nº 252) — LES DEUX BANDEAUX DE VERRE. Les flèches de la
+      nº 250 (posées au-dessus de la rangée) s'en vont : à leur place,
+      un bandeau vertical translucide à chaque extrémité — la lecture
+      moderne d'une rangée qui défile.
+       · il court sur TOUTE la hauteur des images, pas plus, pas moins
+         (`inset-y-0` d'une enveloppe qui ne contient que la rangée) ;
+       · sa flèche est en son centre exact (flex centré), dans
+         l'écriture unique des icônes (`currentColor`) ;
+       · il ne recouvre JAMAIS complètement une vignette : 48 px de
+         large, appuyés sur le bord — le dépassement d'un tiers de la
+         nº 250 (62 à 78 px selon la largeur) reste visible derrière,
+         et le verre laisse voir ce qu'il couvre ;
+       · LE VERRE EST CELUI DES PLAQUES DU SITE (`data-verre-fenetre`,
+         une écriture existante — aucune seconde) : 22 % de teinte,
+         plus léger que les menus (45 %) — un bandeau posé sur des
+         photos se devine, il ne bouche pas. Ses pièges restent tenus
+         par la règle unique de globals.css (préfixée en premier, pas
+         de var() dans le filtre, pas de @supports) ;
+       · AUCUN FONDU D'OPACITÉ SUR LA PLAQUE : le bandeau apparaît et
+         disparaît par montage conditionnel, sans transition ;
+       · au doigt, il n'existe pas (`pointer-fine:`) : le glissement
+         suffit, comme à la nº 250. */
+  const bandeau = (sens: 1 | -1) => (
     <button
       type="button"
       aria-label={sens === 1 ? "Vignettes suivantes" : "Vignettes précédentes"}
+      data-bandeau-defilement={sens === 1 ? "droite" : "gauche"}
       onClick={() => defiler(sens)}
-      className="hidden pointer-fine:flex h-8 w-8 items-center justify-center
-                 rounded-full text-sombre-texte-doux transition-colors
-                 hover:bg-white/5 hover:text-sombre-texte active:bg-white/10"
+      data-verre-fenetre=""
+      className={`hidden pointer-fine:flex absolute inset-y-0 z-[2] w-12 ${
+        sens === 1 ? "right-0" : "left-0"
+      } items-center justify-center text-sombre-texte`}
     >
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path
@@ -312,13 +355,11 @@ function RangeeDeVignettes({
   );
 
   return (
-    <div className="mt-2">
-      {/*  Les deux flèches, dans la marge HAUTE de la rangée (jamais
-           dessus). Cachées au doigt : aucune hauteur ajoutée là. */}
-      <div className="hidden pointer-fine:flex justify-end gap-1 mb-1">
-        {fleche(-1)}
-        {fleche(1)}
-      </div>
+    /*  §2 (nº 252) — l'enveloppe ne contient QUE la rangée (la marge
+        haute des flèches de la nº 250 est partie avec elles) : les
+        bandeaux `inset-y-0` épousent donc exactement la hauteur des
+        images, et l'identité retrouve sa bande juste dessous. */
+    <div className="relative mt-2">
       <ul
         ref={zone}
         data-bande-suivi=""
@@ -412,6 +453,8 @@ function RangeeDeVignettes({
           </li>
         )}
       </ul>
+      {bords.gauche && bandeau(-1)}
+      {bords.droite && bandeau(1)}
     </div>
   );
 }
