@@ -82,8 +82,8 @@ export function lireSelection(recherche?: string): ChoixSelection {
 /**
  * POSER UN CHOIX — le menu qui parle devient le seul actif, et l'autre
  * est remis à zéro par construction : il n'y a qu'une valeur à écrire.
- * `valeur` est celle du menu « Explorer » (« flash », « flash:maori »,
- * ou vide pour « Tous les styles »).
+ * `valeur` est celle du menu « Explorer » — « flash », « flash:maori »
+ * (vide : retour à l'état d'ouverture).
  */
 export function poserSelection(menu: MenuSelection, valeur: string): void {
   if (typeof window === "undefined") return;
@@ -145,12 +145,10 @@ export function entreesDuFiltre(
 ): EntreeFiltre[] {
   if (comptes.size === 0) return [];
   const entrees: EntreeFiltre[] = [];
-  let total = 0;
 
   for (const categorie of CATEGORIES_EXPLORER) {
     const compteCategorie = comptes.get(valeurExplorer(categorie.nature, ""));
     if (!compteCategorie) continue;
-    total += compteCategorie;
     //  La tête de la porte : « Toutes les réalisations », « Tous les
     //  flashs » — les mots du moteur, au mot près.
     entrees.push({
@@ -194,9 +192,10 @@ export function entreesDuFiltre(
     }
   }
 
-  if (entrees.length === 0) return [];
-  //  « TOUS LES STYLES » — la remise à zéro du menu (§2 : elle rend
-  //  tous les favoris, ou tous les suivis). Sans groupe : elle reste
-  //  visible portes fermées, en tête de liste.
-  return [{ value: "", label: "Tous les styles", compte: total }, ...entrees];
+  //  ⚠️ « TOUS LES STYLES » A DISPARU (nº 249-§1). Elle était inutile :
+  //  « Toutes les réalisations » et « Tous les flashs » jouent déjà ce
+  //  rôle à l'intérieur de leur catégorie — et personne ne mélange une
+  //  recherche de flashs avec une recherche de réalisations. Ces deux
+  //  entrées restent le seul chemin de retour vers tout.
+  return entrees;
 }

@@ -69,7 +69,15 @@ export default async function PageMesFavoris() {
         entreesJaime={entreesJaime}
         entreesSuivis={entreesSuivis}
       />
-      <PageFavoris photos={photos} suivis={suivis} />
+      {/*  §3 (nº 249) — LA PAGE REÇOIT LES MÊMES ENTRÉES : sur le web,
+           ce sont ses TITRES qui portent désormais les menus (la barre
+           n'y montre plus le bloc — il reste au smartphone). */}
+      <PageFavoris
+        photos={photos}
+        suivis={suivis}
+        entreesJaime={entreesJaime}
+        entreesSuivis={entreesSuivis}
+      />
     </>
   );
 }

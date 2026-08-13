@@ -127,7 +127,12 @@ export function MenusSelection({
   );
 
   return (
-    <div className="w-full">
+    /*  §3 (nº 249) — LE BLOC QUITTE LA BARRE DU WEB (`lg:hidden`) : il
+        faisait doublon avec le TITRE de la page, qui devient le
+        contrôle (voir PageFavoris, `titreControle`). SUR SMARTPHONE,
+        rien ne change : le bandeau reste, avec son repli, sa ligne
+        étroite et les réglages de juillet. */
+    <div className="w-full lg:hidden">
       <div
         className={`${pliage} ${
           replie

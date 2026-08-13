@@ -240,17 +240,20 @@ export type BandeDeTrois = {
   /** La petite ligne du §3.2 — elle dit lequel des trois cas joue. */
   provenance: string;
   cas: "aimees" | "realisations" | "flashs";
+  /** §6 (nº 249) — la source en avait AU MOINS DIX : la rangée finit
+      par une case « voir plus », qui mène au portfolio entier. */
+  voirPlus: boolean;
 };
 
 /**
- * COMBIEN DE VIGNETTES AU MAXIMUM (nº 247-§5)
+ * COMBIEN DE VIGNETTES AU MAXIMUM (nº 247-§5, revu nº 249-§6)
  * ------------------------------------------------------------------
- * SIX, et jamais plus — même quand l'écran le permettrait. La bande
- * GRANDIT AVEC L'ÉCRAN : trois au doigt, jusqu'à six au large. C'est
- * la mise en page qui décide combien s'en montrent (les colonnes de
- * BlocSuivis) ; cette liste, elle, en fournit au plus six.
+ * DIX. La bande DÉFILE désormais (elle ne se tronque plus à ce qui
+ * tient dans la largeur) : le plafond n'est plus celui de l'écran,
+ * c'est le seuil de la case « voir plus » — dès que la source en a
+ * dix, la rangée s'arrête là et la dernière case mène au portfolio.
  */
-export const VIGNETTES_MAX = 6;
+export const VIGNETTES_MAX = 10;
 
 /**
  * L'ORDRE EST STRICT (§4 de la nº 243) :
@@ -268,37 +271,45 @@ export function bandeDeTrois(
   suivi: TatoueurSuivi,
   favoris: PhotoFavorite[]
 ): BandeDeTrois {
-  const aimees = favoris
-    .filter((photo) => photo.tatoueurId === suivi.id)
-    .slice(0, VIGNETTES_MAX)
-    .map((photo) => ({
-      id: photo.id,
-      url: photo.url,
-      miniature: photo.miniature,
-      style: photo.style,
-      rendu: photo.rendu,
-      nature: photo.nature,
-      creeLe: "",
-    }));
+  const aimeesSource = favoris.filter(
+    (photo) => photo.tatoueurId === suivi.id
+  );
+  const aimees = aimeesSource.slice(0, VIGNETTES_MAX).map((photo) => ({
+    id: photo.id,
+    url: photo.url,
+    miniature: photo.miniature,
+    style: photo.style,
+    rendu: photo.rendu,
+    nature: photo.nature,
+    creeLe: "",
+  }));
   if (aimees.length > 0) {
-    return { photos: aimees, provenance: "Vos coups de cœur", cas: "aimees" };
-  }
-  const realisations = suivi.recentes
-    .filter((photo) => photo.nature !== "flash")
-    .slice(0, VIGNETTES_MAX);
-  if (realisations.length > 0) {
     return {
-      photos: realisations,
-      provenance: "Ses dernières réalisations",
-      cas: "realisations",
+      photos: aimees,
+      provenance: "Vos coups de cœur",
+      cas: "aimees",
+      voirPlus: aimeesSource.length >= VIGNETTES_MAX,
     };
   }
+  const realisationsSource = suivi.recentes.filter(
+    (photo) => photo.nature !== "flash"
+  );
+  if (realisationsSource.length > 0) {
+    return {
+      photos: realisationsSource.slice(0, VIGNETTES_MAX),
+      provenance: "Ses dernières réalisations",
+      cas: "realisations",
+      voirPlus: realisationsSource.length >= VIGNETTES_MAX,
+    };
+  }
+  const flashsSource = suivi.recentes.filter(
+    (photo) => photo.nature === "flash"
+  );
   return {
-    photos: suivi.recentes
-      .filter((photo) => photo.nature === "flash")
-      .slice(0, VIGNETTES_MAX),
+    photos: flashsSource.slice(0, VIGNETTES_MAX),
     provenance: "Ses derniers flashs",
     cas: "flashs",
+    voirPlus: flashsSource.length >= VIGNETTES_MAX,
   };
 }
 

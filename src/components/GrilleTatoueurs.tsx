@@ -87,6 +87,29 @@ const useEffetAvantPeinture =
  */
 const CARTES_PRIORITAIRES = 4;
 
+/**
+ * LA GRILLE DES CARTES — L'ÉCRITURE, EN UN SEUL ENDROIT (nº 249-§4)
+ * ==================================================================
+ * « Ma sélection » recopiait les colonnes de la mosaïque mais PAS ses
+ * gouttières de smartphone : ses cartes gardaient 16 px d'écart là où
+ * la recherche colle les siennes bord à bord (2 px, le rythme
+ * Instagram de la grille au doigt), et les deux pages divergeaient —
+ * le défaut qui a coûté trois passes sur le verre. Les deux morceaux
+ * sont donc NOMMÉS ici, et la mosaïque comme « Ma sélection » les
+ * consomment : il n'existe plus de seconde écriture.
+ */
+export const COLONNES_MOSAIQUE =
+  "grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6";
+/** Le socle : gouttières web, marges de bord au doigt. */
+export const SOCLE_GRILLE_CARTES = "grid gap-4 sm:gap-5 mobile:-mx-4";
+/** Les gouttières du smartphone en deux colonnes — le rythme
+    Instagram : 2 px entre colonnes.
+    ⚠️ JAMAIS superposées à une autre gouttière `mobile:` : deux
+    classes `gap` en conflit se départagent à l'ordre de la FEUILLE,
+    pas du className — la grille choisit UNE écriture par état. */
+export const GOUTTIERES_DEUX_COLONNES = "mobile:gap-x-[2px] mobile:gap-y-4";
+/** La grille standard, entière — cartes en deux colonnes au doigt. */
+export const CLASSES_GRILLE_CARTES = `${SOCLE_GRILLE_CARTES} ${GOUTTIERES_DEUX_COLONNES} ${COLONNES_MOSAIQUE}`;
 
 export function GrilleTatoueurs({
   tatoueurs,
@@ -517,19 +540,26 @@ export function GrilleTatoueurs({
             : {}),
           overflowAnchor: "none",
         }}
-        className={`grid gap-4 sm:gap-5 mobile:-mx-4 transition-opacity ${
+        //  ⚠️ COMPOSÉE DES MORCEAUX PARTAGÉS (nº 249-§4) : le socle,
+        //  les colonnes et la gouttière deux-colonnes sont l'écriture
+        //  unique — celle que « Ma sélection » consomme entière
+        //  (CLASSES_GRILLE_CARTES). La photothèque et la pleine
+        //  largeur, qui n'existent qu'ici, CHOISISSENT leur gouttière
+        //  (jamais une superposition : deux `gap` en conflit se
+        //  départagent à l'ordre de la feuille, pas du className).
+        className={`${SOCLE_GRILLE_CARTES} transition-opacity ${
           phototheque
             ? disposition === "une"
               ? "mobile:gap-y-[2px]"
               : "mobile:gap-[2px]"
             : disposition === "une"
               ? "mobile:gap-y-8"
-              : "mobile:gap-x-[2px] mobile:gap-y-4"
+              : GOUTTIERES_DEUX_COLONNES
         } ${
           //  L'ESTOMPE DE RECHERCHE — la seule opacité de la mosaïque
           //  désormais (nº 166) : plus rien ne l'efface à la bascule.
           `duration-200 ${estompee ? "opacity-60" : "opacity-100"}`
-        } grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6`}
+        } ${COLONNES_MOSAIQUE}`}
       >
         {/*  ⚠️ DEUX FONCTIONS CONSTANTES, ET C'EST LE POINT (nº 219-§1).
              Elles étaient fabriquées à chaque rendu — `() => ouvrir(t)` —

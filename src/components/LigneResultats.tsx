@@ -28,19 +28,29 @@
 export function LigneResultats({
   titre,
   sousTitre,
+  balise = "h1",
 }: {
-  /** « Explorer toutes les créations », ou ce qui a été cherché. */
-  titre: string;
+  /** « Explorer toutes les créations », ou ce qui a été cherché.
+      ⚠️ UN NŒUD depuis la nº 249-§3 : sur « Ma sélection », le titre
+      est aussi LE CONTRÔLE (il ouvre le menu). L'écriture — les
+      classes, la disposition — ne change pas d'un pixel. */
+  titre: React.ReactNode;
   /** « 20 créations · Lyon 5 km » — null sans recherche active. */
   sousTitre: string | null;
+  /** La balise du titre — `h1` partout, sauf le SECOND titre de « Ma
+      sélection » (nº 249-§3) : le titre inactif est un contrôle de
+      même écriture, pas le titre de la page — une page n'a qu'un h1.
+      Un choix de SÉMANTIQUE, jamais d'apparence : mêmes classes. */
+  balise?: "h1" | "h2";
 }) {
+  const Titre = balise;
   return (
     //  ⚠️ NOMMÉ (nº 171) : la garantie de globals.css vise ce titre
     //  pour qu'aucune bascule ne puisse l'effacer.
     <div data-titre-mosaique="" className="pt-6 pb-5 sm:pt-8 sm:pb-6">
-      <h1 className="text-[clamp(1.25rem,2.4vw,1.65rem)] font-bold leading-tight text-sombre-texte">
+      <Titre className="text-[clamp(1.25rem,2.4vw,1.65rem)] font-bold leading-tight text-sombre-texte">
         {titre}
-      </h1>
+      </Titre>
       {sousTitre && (
         <p className="mt-1.5 text-[15.5px] sm:text-[16px] text-sombre-texte-doux">
           {sousTitre}

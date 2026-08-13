@@ -1,7 +1,9 @@
 "use client";
 
+import { useRef } from "react";
 import Link from "next/link";
 import { CLASSES_LIGNE_CLIQUABLE, PhotoRonde } from "@/components/BlocLieux";
+import { IconeCoeur } from "@/components/Icones";
 import {
   bandeDeTrois,
   groupesDeSuivis,
@@ -46,14 +48,10 @@ import type { PhotoFavorite, TatoueurSuivi } from "@/lib/favoris-serveur";
 export function BlocSuivis({
   suivis,
   favoris,
-  titre,
 }: {
   suivis: TatoueurSuivi[];
   /** Les photos aimées — elles décident du premier cas du §4. */
   favoris: PhotoFavorite[];
-  /** Le titre de la section, quand elle en porte un (nº 245-§2 : les
-      suivis suivent les photos dans la page, ils se nomment). */
-  titre?: string;
 }) {
   const groupes = groupesDeSuivis(suivis);
 
@@ -70,12 +68,16 @@ export function BlocSuivis({
   }
 
   return (
-    <div data-section-suivis="" className="mt-10">
-      {titre && (
-        <h2 className="text-[13px] font-semibold uppercase tracking-[0.14em] text-sombre-texte-doux">
-          {titre}
-        </h2>
-      )}
+    /*  §2 (nº 249) — LES CAPITALES ONT DISPARU : « MES SUIVIS » (le
+        titre de section de la nº 245) est parti — c'est le TITRE de la
+        page qui dit désormais « Mes suivis » (LigneResultats, comme la
+        page de recherche). Et « TOUS LES SUIVIS » ne s'écrit plus
+        quand il est SEUL : un unique groupe sous un titre qui dit déjà
+        la même chose n'apprenait rien. Les titres de groupe ne
+        reviennent que quand le classement de la nº 243 a quelque chose
+        à dire — une session guest classe les artistes en « Cette
+        semaine », « À venir », « Tous les suivis ». */
+    <div data-section-suivis="" className="mt-4">
       {groupes.map((groupe, rang) => (
         /*  ⚠️ UN GROUPE VIDE NE REND RIEN — ni titre, ni espace : il
              n'est même pas dans la liste (voir `groupesDeSuivis`).
@@ -92,10 +94,13 @@ export function BlocSuivis({
         >
           {/*  §2 (nº 244) — LES CAPITALES DES SECTIONS DE FICHE
                (nº 223) : 13 px, grises, espacées — la classe exacte
-               des titres de l'onglet Profil. */}
-          <h2 className="text-[13px] font-semibold uppercase tracking-[0.14em] text-sombre-texte-doux">
-            {groupe.titre}
-          </h2>
+               des titres de l'onglet Profil. §2 (nº 249) — SEULEMENT
+               quand il y a PLUSIEURS groupes : voir plus haut. */}
+          {groupes.length > 1 && (
+            <h2 className="text-[13px] font-semibold uppercase tracking-[0.14em] text-sombre-texte-doux">
+              {groupe.titre}
+            </h2>
+          )}
           {/*  34 px entre deux blocs d'artiste (nº 244-§2).
                §5 (nº 247) — UNE FICHE PAR LIGNE, PLEINE LARGEUR : les
                deux colonnes de la nº 245 sont ABANDONNÉES. Le format
@@ -219,68 +224,174 @@ function BlocDUnSuivi({
         </p>
       )}
 
-      {/* 3 · LA BANDE DE VIGNETTES — des colonnes égales, carrées.
-             ⚠️ MOINS DE PHOTOS QUE DE COLONNES : on n'affiche que ce
-             qui existe, jamais un doublon, jamais une case vide
-             comblée.
-             §5 (nº 247) — ELLE GRANDIT AVEC L'ÉCRAN : trois sur un
-             téléphone, quatre, cinq, puis SIX au maximum sur les
-             écrans larges — jamais plus, même quand la largeur le
-             permettrait. Le nombre de COLONNES et le nombre de
-             vignettes MONTRÉES avancent ensemble : la bande tient
-             toujours sur UNE seule ligne (les vignettes en trop sont
-             retirées du flux à chaque palier, elles ne repassent
-             jamais dessous). */}
+      {/* 3 · LA BANDE DE VIGNETTES — §6 (nº 249) : ELLE DÉFILE.
+             Elle ne se tronque plus à ce qui tient dans la largeur :
+             c'est une rangée à défilement NATIF avec accrochage
+             (`scroll-snap`), à la manière des rangées d'Apple ou de
+             Netflix — la refonte du carrousel de portfolio (nº 209-§7),
+             appliquée telle quelle : AUCUNE translation calculée.
+              · au doigt, TROIS vignettes pleines, et la suivante
+                DÉPASSE du bord droit — c'est ce dépassement qui dit
+                qu'il y en a d'autres ; le web garde ses nombres
+                d'aujourd'hui (4, 5, puis 6), même dépassement ;
+              · l'accrochage est au CENTRE (`snap-center`) : dès qu'on
+                a fait défiler, la précédente dépasse à GAUCHE — la
+                rangée n'est jamais coupée net aux deux bords (les
+                extrémités, elles, s'alignent au bord : le navigateur
+                borne) ;
+              · à la souris, deux flèches (`pointer-fine:` — la
+                variante EXISTE, déclarée dans globals.css nº 208-§2 :
+                vérifié, pas supposé) font défiler par `scrollBy`, une
+                position que le navigateur possède ;
+              · le débordement vit DANS la rangée (`overflow-x-auto`),
+                jamais dans la page : le piège de la nº 228 ne peut pas
+                se réveiller.
+             ⚠️ MOINS DE PHOTOS QUE LA LARGEUR : on n'affiche que ce
+             qui existe, jamais un doublon, jamais une case comblée. */}
       {bande.photos.length > 0 && (
-        /*  §2 (nº 244) — 6 px d'écart. §5 (nº 247) — ANGLES DROITS :
-             rayon zéro, la seule valeur graphique de cette passe. */
-        <ul
-          data-bande-suivi=""
-          className="mt-2 grid gap-1.5 grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
-        >
-          {bande.photos.map((photo, rang) => (
-            <li
-              key={photo.id}
-              className={
-                rang < 3
-                  ? undefined
-                  : rang === 3
-                    ? "hidden sm:block"
-                    : rang === 4
-                      ? "hidden lg:block"
-                      : "hidden xl:block"
-              }
-            >
-              {/*  UNE VIGNETTE OUVRE LA PHOTO, et elle seule : la
-                   fiche s'ouvre sur cette photo, dans son ensemble
-                   (style + catégorie + rendu), exactement comme une
-                   carte de la mosaïque le fait. */}
-              <Link
-                href={
-                  `/tatoueur/${suivi.slug}?style=${photo.style}` +
-                  `&nature=${photo.nature}` +
-                  (photo.rendu ? `&rendu=${photo.rendu}` : "") +
-                  `&photo=${photo.id}`
-                }
-                data-vignette-suivi={photo.id}
-                //  §4 (nº 244) — au doigt, une BRÈVE baisse d'opacité,
-                //  rien de plus : ni voile, ni contour, ni rose.
-                className="block aspect-square overflow-hidden rounded-none
-                           bg-sombre-eleve transition-opacity active:opacity-75"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element --
-                    photo déposée par le tatoueur, servie telle quelle. */}
-                <img
-                  src={photo.miniature}
-                  alt=""
-                  loading="lazy"
-                  className="h-full w-full object-cover"
-                />
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <RangeeDeVignettes suivi={suivi} bande={bande} />
       )}
+    </div>
+  );
+}
+
+/**
+ * LA RANGÉE QUI DÉFILE (§5 et §6, nº 249)
+ * ==================================================================
+ * Les largeurs de case disent le NOMBRE VISIBLE, pas un pixel choisi :
+ * `(100% − les écarts) / N,4` montre N vignettes pleines et 0,4 de la
+ * suivante — le dépassement demandé. Les écarts restent les 6 px de la
+ * nº 244 (`gap-1.5`), les angles droits ceux de la nº 247.
+ */
+const CASE_RANGEE =
+  "shrink-0 snap-center basis-[calc((100%-12px)/3.4)] " +
+  "sm:basis-[calc((100%-18px)/4.4)] lg:basis-[calc((100%-24px)/5.4)] " +
+  "xl:basis-[calc((100%-30px)/6.4)]";
+
+function RangeeDeVignettes({
+  suivi,
+  bande,
+}: {
+  suivi: TatoueurSuivi;
+  bande: ReturnType<typeof bandeDeTrois>;
+}) {
+  const zone = useRef<HTMLUListElement>(null);
+
+  /** Une page de défilement — `scrollBy`, jamais une translation. */
+  const defiler = (sens: 1 | -1) => {
+    const cadre = zone.current;
+    if (!cadre) return;
+    cadre.scrollBy({ left: sens * cadre.clientWidth, behavior: "smooth" });
+  };
+
+  const fleche = (sens: 1 | -1) => (
+    <button
+      type="button"
+      aria-label={sens === 1 ? "Vignettes suivantes" : "Vignettes précédentes"}
+      onClick={() => defiler(sens)}
+      /*  LA ROBE DES FLÈCHES DU CARROUSEL (nº 198), telle quelle —
+          aucune valeur neuve. `pointer-fine:` : la variante déclarée
+          en nº 208-§2, la même que ces flèches-là. */
+      className={`hidden pointer-fine:flex absolute z-[2] ${
+        sens === 1 ? "right-1" : "left-1"
+      } top-1/2 -translate-y-1/2 w-9 h-9 rounded-full
+      bg-sombre-fond/55 backdrop-blur items-center justify-center
+      text-sombre-texte hover:bg-sombre-eleve/75 transition-colors`}
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path
+          d={sens === 1 ? "M9.5 5.5 16 12l-6.5 6.5" : "M14.5 5.5 8 12l6.5 6.5"}
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </button>
+  );
+
+  return (
+    <div className="relative mt-2">
+      <ul
+        ref={zone}
+        data-bande-suivi=""
+        data-cas={bande.cas}
+        /*  §2 (nº 244) — 6 px d'écart. Le défilement est NATIF, la
+            barre est masquée (elle n'apprendrait rien), et
+            l'accrochage au centre laisse dépasser les deux voisines. */
+        className="flex gap-1.5 overflow-x-auto snap-x snap-mandatory
+                   [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {bande.photos.map((photo) => (
+          <li key={photo.id} className={CASE_RANGEE}>
+            {/*  UNE VIGNETTE OUVRE LA PHOTO, et elle seule : la fiche
+                 s'ouvre sur cette photo, dans son ensemble (style +
+                 catégorie + rendu), exactement comme une carte de la
+                 mosaïque le fait. */}
+            <Link
+              href={
+                `/tatoueur/${suivi.slug}?style=${photo.style}` +
+                `&nature=${photo.nature}` +
+                (photo.rendu ? `&rendu=${photo.rendu}` : "") +
+                `&photo=${photo.id}`
+              }
+              data-vignette-suivi={photo.id}
+              //  §4 (nº 244) — au doigt, une BRÈVE baisse d'opacité,
+              //  rien de plus. §5 (nº 247) — angles droits.
+              className="relative block aspect-square overflow-hidden rounded-none
+                         bg-sombre-eleve transition-opacity active:opacity-75"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element --
+                  photo déposée par le tatoueur, servie telle quelle. */}
+              <img
+                src={photo.miniature}
+                alt=""
+                loading="lazy"
+                className="h-full w-full object-cover"
+              />
+              {/*  §5 (nº 249) — LE CŒUR DES VIGNETTES AIMÉES, en bas à
+                   droite, sur elles SEULES (le cas « aimees » — les
+                   premières affichées, l'ordre de la nº 243). Le
+                   glyphe est celui du cœur allumé des photos
+                   (nº 141-6B) : blanc plein, ombre du trait. ⚠️ SA
+                   TAILLE EST PROVISOIRE : c'est le travail de la passe
+                   Fable — seule la POSITION est posée ici. */}
+              {bande.cas === "aimees" && (
+                <span
+                  data-coeur-aime=""
+                  aria-hidden="true"
+                  className="pointer-events-none absolute bottom-1.5 right-1.5"
+                >
+                  <IconeCoeur
+                    taille={14}
+                    classe="fill-white text-white [filter:drop-shadow(0_1px_2px_rgba(0,0,0,0.55))]"
+                  />
+                </span>
+              )}
+            </Link>
+          </li>
+        ))}
+        {/*  §6 (nº 249) — LA CASE « VOIR PLUS », au bout du glissement,
+             dès que la source compte au moins dix vignettes : elle
+             mène au portfolio entier de la fiche. Même case, même
+             accrochage — le fond relevé et le petit gris des libellés
+             secondaires, aucune valeur neuve. */}
+        {bande.voirPlus && (
+          <li className={CASE_RANGEE}>
+            <Link
+              href={`/tatoueur/${suivi.slug}`}
+              data-voir-plus=""
+              className="flex aspect-square items-center justify-center rounded-none
+                         bg-sombre-eleve text-[13px] text-sombre-texte-doux
+                         transition-colors hover:bg-sombre-haut active:opacity-75"
+            >
+              Voir plus
+            </Link>
+          </li>
+        )}
+      </ul>
+      {fleche(-1)}
+      {fleche(1)}
     </div>
   );
 }

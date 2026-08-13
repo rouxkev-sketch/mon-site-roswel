@@ -372,10 +372,13 @@ if (R) {
       "Cultures du monde"
   );
   verif(
-    "« Tous les styles » ouvre la liste, hors des portes",
-    R.entreesJaime[0]?.value === "" &&
-      R.entreesJaime[0]?.label === "Tous les styles" &&
-      R.entreesJaime[0]?.groupe === undefined
+    //  (mis à jour à la nº 249-§1 : « Tous les styles » est SUPPRIMÉE
+    //  — « Toutes les réalisations » et « Tous les flashs » sont le
+    //  seul chemin de retour vers tout, chacune en tête de sa porte.)
+    "« Tous les styles » n'existe plus — la liste s'ouvre sur les portes",
+    !R.entreesJaime.some((e) => e.label === "Tous les styles") &&
+      R.entreesJaime[0]?.value === "tatouage" &&
+      R.entreesJaime[0]?.label === "Toutes les réalisations"
   );
   verif(
     "une catégorie sans rien dedans n'a pas de porte du tout",
@@ -529,9 +532,6 @@ titre("§5 — les colonnes et la bande (injection des classes réelles)");
   const classeBlocs = nettoyer(
     source.match(/className="(mt-5 grid gap-\[34px\][^"]*)"/)?.[1] ?? ""
   );
-  const classeBande = nettoyer(
-    source.match(/className="(mt-2 grid gap-1\.5[^"]*)"/)?.[1] ?? ""
-  );
   const classeVignette = nettoyer(
     source.match(/className="(block aspect-square[^"]*)"/)?.[1] ?? ""
   );
@@ -547,94 +547,23 @@ titre("§5 — les colonnes et la bande (injection des classes réelles)");
     classeBlocs
   );
 
-  for (const largeur of [390, 768, 1100, 1440]) {
-    const { contexte, page } = await pageWeb(largeur);
-    try {
-      await ouvrir(page, "/");
-      //  ⚠️ LE DÉBORDEMENT SE MESURE EN ÉCART, PAS EN ABSOLU. La page
-      //  d'accueil déborde d'elle-même entre 1024 et ~1150 px (148 px
-      //  à 1024, 72 à 1100, 0 à partir de 1200) — un défaut de LA
-      //  BARRE, antérieur à cette passe et hors de son sujet. Ce qui
-      //  se vérifie ici, c'est que la structure injectée n'ajoute PAS
-      //  un pixel au débordement de la page qui l'accueille.
-      const avant = await page.evaluate(
-        () =>
-          document.documentElement.scrollWidth -
-          document.documentElement.clientWidth
-      );
-      const vu = await page.evaluate(
-        `((c) => {
-          const hote = document.createElement("div");
-          hote.style.cssText = "position:relative;width:100%;";
-          const vignette = (rang) => {
-            const cache =
-              rang < 3 ? "" : rang === 3 ? "hidden sm:block"
-              : rang === 4 ? "hidden lg:block" : "hidden xl:block";
-            return '<li class="' + cache + '" data-vignette><a class="' + c.vignette + '"></a></li>';
-          };
-          hote.innerHTML =
-            '<ul class="' + c.blocs + '" data-blocs>' +
-            [0, 1].map(() => '<li data-bloc><div class="flex flex-col">' +
-              '<ul class="' + c.bande + '" data-bande>' +
-              [0,1,2,3,4,5].map(vignette).join("") + '</ul></div></li>').join("") +
-            '</ul>';
-          document.body.appendChild(hote);
-          const blocs = [...hote.querySelectorAll("[data-bloc]")].map((b) =>
-            Math.round(b.getBoundingClientRect().top)
-          );
-          const bande = hote.querySelector("[data-bande]");
-          const visibles = [...bande.querySelectorAll("[data-vignette]")].filter(
-            (v) => v.getBoundingClientRect().width > 0
-          );
-          const hauts = new Set(
-            visibles.map((v) => Math.round(v.getBoundingClientRect().top))
-          );
-          const style = visibles[0]
-            ? getComputedStyle(visibles[0].firstElementChild)
-            : null;
-          const mesure = {
-            //  Une fiche par ligne : les deux blocs sont à des hauteurs
-            //  différentes, jamais côte à côte.
-            unParLigne: blocs.length === 2 && blocs[0] !== blocs[1],
-            vignettes: visibles.length,
-            //  …et toutes sur UNE seule ligne.
-            lignesDeBande: hauts.size,
-            rayon: style ? style.borderRadius : "",
-            debordement:
-              document.documentElement.scrollWidth -
-              document.documentElement.clientWidth,
-          };
-          hote.remove();
-          return mesure;
-        })(${JSON.stringify({
-          blocs: classeBlocs,
-          bande: classeBande,
-          vignette: classeVignette,
-        })})`
-      );
-      const attendu = largeur < 640 ? 3 : largeur < 1024 ? 4 : largeur < 1280 ? 5 : 6;
-      verif(
-        `${largeur} px : une fiche par ligne, ${attendu} vignette(s) sur UNE ligne`,
-        vu.unParLigne && vu.vignettes === attendu && vu.lignesDeBande === 1,
-        `un par ligne ${vu.unParLigne} · ${vu.vignettes} vignette(s) · ${vu.lignesDeBande} ligne(s)`
-      );
-      verif(
-        `${largeur} px : rayon zéro, et rien n'élargit la page (piège nº 228)`,
-        vu.rayon === "0px" && vu.debordement === avant,
-        `rayon ${vu.rayon} · débordement ${avant} → ${vu.debordement}` +
-          (avant > 0 ? " (celui de l'accueil, hors sujet ici)" : "")
-      );
-    } catch (erreur) {
-      nonJoue(`§5 (${largeur} px)`, String(erreur).slice(0, 70));
-    }
-    await contexte.close();
-  }
+  //  ⚠️ MIS À JOUR À LA nº 249-§6 (la spec a changé) : la bande ne se
+  //  tronque plus aux colonnes de l'écran — elle DÉFILE (défilement
+  //  natif, accrochage, dépassement aux deux bords). Les mesures par
+  //  paliers (3/4/5/6 cachées au-delà) n'ont donc plus d'objet : la
+  //  rangée vivante est mesurée par LE BANC DE LA PASSE 249
+  //  (tests/verif-p249.mjs), le précédent des bancs datés renvoyés
+  //  (nº 238 → nº 239). Restent ici ce qui n'a pas changé : les
+  //  angles droits, la colonne unique des blocs — vérifiés plus haut.
 }
 
 if (R) {
   verif(
-    "la bande ne fournit JAMAIS plus de six vignettes",
-    R.bande.nombre === 6 && R.bande.max === 6,
+    //  (mis à jour à la nº 249-§6 : la bande DÉFILE désormais — le
+    //  plafond n'est plus l'écran mais le seuil de la case « voir
+    //  plus », DIX. Elle reste bornée : jamais plus que le plafond.)
+    "la bande ne fournit jamais plus que son plafond (dix, le seuil du « voir plus »)",
+    R.bande.nombre === R.bande.max && R.bande.max === 10,
     `${R.bande.nombre} sur douze publiées`
   );
 }

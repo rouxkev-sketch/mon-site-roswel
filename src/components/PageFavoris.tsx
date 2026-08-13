@@ -1,14 +1,26 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LARGEUR_SITE } from "@/config/tatouage";
-import { lireSelection, MENU_JAIME } from "@/lib/filtres-selection";
+import {
+  lireSelection,
+  MENU_JAIME,
+  MENU_SUIVIS,
+  poserSelection,
+  valeurDuMenu,
+  type EntreeFiltre,
+  type MenuSelection,
+} from "@/lib/filtres-selection";
 import { lireRequeteCourante, souscrireAdresse } from "@/lib/adresse-courante";
 import { CarteTatoueur } from "@/components/CarteTatoueur";
+import { CLASSES_GRILLE_CARTES } from "@/components/GrilleTatoueurs";
 import { BlocSuivis } from "@/components/BlocSuivis";
 import { FenetreFiche } from "@/components/FenetreFiche";
+import { LigneResultats } from "@/components/LigneResultats";
+import { MenuDeroulant } from "@/components/MenuDeroulant";
+import { libelleExplorer } from "@/components/MoteurTatouage";
 import {
   CLE_FENETRE_FICHE,
   type ContexteFenetreFiche,
@@ -63,9 +75,16 @@ import type { Tatoueur } from "@/lib/tatoueurs";
 export function PageFavoris({
   photos,
   suivis,
+  entreesJaime,
+  entreesSuivis,
 }: {
   photos: PhotoFavorite[];
   suivis: TatoueurSuivi[];
+  /** §3 (nº 249) — LES ENTRÉES DES DEUX MENUS, calculées par le
+      serveur (les mêmes que celles de la barre) : sur le web, ce sont
+      les TITRES de cette page qui portent désormais les menus. */
+  entreesJaime: EntreeFiltre[];
+  entreesSuivis: EntreeFiltre[];
 }) {
   //  LE FILTRE VIENT DE L'ADRESSE — la même source que les menus de la
   //  barre, lue par le même magasin (nº 245-§3, nº 247-§2).
@@ -205,21 +224,18 @@ export function PageFavoris({
   //  UN SEUL FILTRE, celui du menu actif (l'adresse) — et la règle vit
   //  dans `lib/selection-suivis`, écrite une fois pour le filtrage
   //  comme pour le comptage des entrées de menu.
-  //  ⚠️ DES VALEURS SIMPLES EN DÉPENDANCE, jamais l'objet `choix` : il
-  //  est reconstruit à chaque lecture de l'adresse, et une mémoire qui
-  //  se refait à chaque rendu ne mémorise rien.
+  //  ⚠️ PLUS DE `useMemo` À LA MAIN ICI (nº 249) : le compilateur de
+  //  React ne parvenait plus à préserver ces deux mémoïsations depuis
+  //  que `choix` sert aussi aux titres — il mémoïse désormais
+  //  lui-même, et ces filtres sur quelques dizaines d'éléments ne
+  //  coûtent rien.
   const { nature, style } = choix;
-  const visibles = useMemo(
-    () =>
-      surLesJaime
-        ? photos.filter((photo) => photoDuChoix(photo, { nature, style }))
-        : [],
-    [surLesJaime, photos, nature, style]
-  );
-  const suivisVisibles = useMemo(
-    () => (surLesJaime ? [] : suivisDuChoix(suivis, { nature, style })),
-    [surLesJaime, suivis, nature, style]
-  );
+  const visibles = surLesJaime
+    ? photos.filter((photo) => photoDuChoix(photo, { nature, style }))
+    : [];
+  const suivisVisibles = surLesJaime
+    ? []
+    : suivisDuChoix(suivis, { nature, style });
 
   /**
    * LES ENSEMBLES À MONTRER — un par ensemble, dans l'ordre d'arrivée
@@ -233,8 +249,11 @@ export function PageFavoris({
    * au doigt, le défilement des photos.
    * Les champs qu'une carte ne lit pas (coordonnées, réseaux) sont
    * neutres : les inventer serait pire que les laisser vides.
+   * ⚠️ PLUS DE `useMemo` À LA MAIN (nº 249) : sa dépendance `visibles`
+   * est désormais calculée au rendu — c'est le compilateur de React
+   * qui mémoïse, comme pour les deux filtres au-dessus.
    */
-  const ensemblesVisibles = useMemo(() => {
+  const ensemblesVisibles = (() => {
     const vus = new Set<string>();
     const liste: Array<{
       cle: string;
@@ -284,7 +303,7 @@ export function PageFavoris({
       });
     }
     return liste;
-  }, [visibles, photos]);
+  })();
 
   return (
     /*  ⚠️ LA LARGEUR DE LA MOSAÏQUE (nº 213-§3a) : `LARGEUR_SITE` et
@@ -293,13 +312,26 @@ export function PageFavoris({
     <main
       className={`flex-1 mx-auto w-full ${LARGEUR_SITE} px-4 sm:px-6 pt-6 pb-16`}
     >
-      {/* ---------- LE TITRE, ET LE SÉLECTEUR (nº 243-§1) ---------- */}
-      {/* ⚠️ « MA SÉLECTION », ET PLUS « Mes favoris » (nº 145-§3) —
-          le mot du site pour la pochette où l'on range ce qu'on
-          veut retrouver. Même graisse, même taille. */}
-      <h1 className="text-[22px] font-bold tracking-tight text-sombre-texte">
-        Ma sélection
-      </h1>
+      {/* ---------- LE TITRE (§2, nº 249) ----------
+           « Ma sélection » et le sous-titre en capitales ont DISPARU.
+           À la place, L'ÉCRITURE DE LA PAGE DE RECHERCHE — le même
+           composant (`LigneResultats`), la même hiérarchie : le titre
+           est le menu qui mène la recherche (« Mes j'aime », aussi le
+           titre de l'écran d'ouverture, ou « Mes suivis »), et
+           dessous, LE CRITÈRE EN COURS, écrit par `libelleExplorer` —
+           l'écriture exacte de la page de recherche (« Réalisations ·
+           Abstrait », « Tous les flashs ») ; rien sans critère.
+           §3 — SUR LE WEB, CE TITRE EST LE CONTRÔLE : voir
+           `titreControle`. */}
+      <LigneResultats
+        titre={titreControle(
+          surLesJaime ? MENU_JAIME : MENU_SUIVIS,
+          surLesJaime ? "Mes j'aime" : "Mes suivis",
+          surLesJaime ? entreesJaime : entreesSuivis,
+          choix
+        )}
+        sousTitre={libelleExplorer(nature, style) || null}
+      />
 
       {/* ---------- LES PHOTOS GARDÉES ----------
            §2 (nº 247) — LES DEUX MENUS SONT EXCLUSIFS : cette section
@@ -335,15 +367,14 @@ export function PageFavoris({
               Rien d&apos;enregistré dans ce style.
             </p>
           ) : (
-            /*  ⚠️ LA GRILLE DE LA MOSAÏQUE, AU MOT PRÈS (nº 213-§3a) :
-                mêmes colonnes à chaque largeur, même gouttière. Deux
-                pages qui montrent les mêmes cartes ne peuvent pas les
-                ranger autrement. */
-            <ul
-              className="mt-6 grid gap-x-4 gap-y-8
-                         grid-cols-2 md:grid-cols-3 xl:grid-cols-4
-                         2xl:grid-cols-5 3xl:grid-cols-6"
-            >
+            /*  ⚠️ LA GRILLE DE LA MOSAÏQUE, L'ÉCRITURE MÊME (nº 249-§4).
+                Cette page en recopiait les colonnes mais PAS les
+                gouttières du smartphone : ses cartes gardaient 16 px
+                d'écart là où la recherche colle les siennes bord à
+                bord (2 px). C'est désormais LA MÊME CHAÎNE DE CLASSES
+                (`CLASSES_GRILLE_CARTES`, exportée par la mosaïque) —
+                mêmes cartes, même grille, une seule écriture. */
+            <ul className={`mt-6 ${CLASSES_GRILLE_CARTES}`}>
               {ensemblesVisibles.map(({ cle, fiche, photo }) => (
                 <li key={cle}>
                   {/*  ⚠️ LA CARTE DE LA MOSAÏQUE, SANS VARIANTE
@@ -388,10 +419,31 @@ export function PageFavoris({
       {/* ---------- LES ARTISTES SUIVIS (nº 243-§2 à §5) ----------
            §2 (nº 247) — ILS N'APPARAISSENT QUE SI « Mes suivis » mène
            la recherche : à l'ouverture, la page ne montre QUE les
-           favoris. */}
+           favoris. §2 (nº 249) — le sous-titre en capitales est parti :
+           le TITRE de la page dit déjà « Mes suivis ». */}
       {!surLesJaime && (
-        <BlocSuivis suivis={suivisVisibles} favoris={photos} titre="Mes suivis" />
+        <BlocSuivis suivis={suivisVisibles} favoris={photos} />
       )}
+
+      {/* ---------- LE TITRE INACTIF (§3, nº 249), WEB SEULEMENT ----
+           Les DEUX titres sont les contrôles : celui de la recherche
+           en cours est en tête de page, l'AUTRE attend ici, même
+           écriture (`LigneResultats`), même chevron, même fenêtre de
+           menu — c'est la porte vers l'autre recherche. En `h2` : une
+           page n'a qu'un titre. Sur smartphone il n'existe pas : la
+           barre garde son bandeau, qui est la commande (§3). */}
+      <div data-titre-inactif="" className="hidden lg:block">
+        <LigneResultats
+          balise="h2"
+          titre={titreControle(
+            surLesJaime ? MENU_SUIVIS : MENU_JAIME,
+            surLesJaime ? "Mes suivis" : "Mes j'aime",
+            surLesJaime ? entreesSuivis : entreesJaime,
+            choix
+          )}
+          sousTitre={null}
+        />
+      </div>
 
       {/* `key` : chaque ouverture repart de L'ENSEMBLE ouvert, jamais
           de l'état d'une fiche précédente.
@@ -423,5 +475,57 @@ export function PageFavoris({
     « réalisme · noir et gris », et ce sont deux ensembles. */
 function cleEnsembleFavori(photo: PhotoFavorite): string {
   return `${photo.tatoueurSlug}·${cleDEnsemble(photo)}`;
+}
+
+/**
+ * LE TITRE-CONTRÔLE (§3, nº 249)
+ * ==================================================================
+ * SUR SMARTPHONE, le titre est UN MOT : la commande reste le bandeau
+ * de la barre, avec son repli — rien ne change de ce côté.
+ * SUR LE WEB, LE TITRE EST LE MENU. Le bloc à deux menus de la barre
+ * (nº 245/246) faisait doublon : le titre annonce déjà « Mes suivis ·
+ * Réalisations · Abstrait » — c'est donc LUI qui s'ouvre. Rien n'est
+ * redessiné : c'est `MenuDeroulant`, LE menu de la maison — son
+ * chevron (la flèche qu'il porte depuis toujours, celle qui dit qu'il
+ * s'ouvre), son panneau `[data-verre-menu]`, et le drapeau `repliable`
+ * SANS LEQUEL ni les portes de catégorie ni la sous-porte « Cultures
+ * du monde » n'existent (la leçon payée à la nº 247-§3).
+ *  · `libelleValeur` fige le texte du champ sur LE NOM DU MENU — le
+ *    critère choisi, lui, s'écrit dans le sous-titre, comme sur la
+ *    page de recherche ;
+ *  · la typographie est CELLE DU TITRE : le bouton hérite de la
+ *    police de son heading (le socle du projet fait hériter les
+ *    boutons), aucune valeur n'est écrite ici ;
+ *  · `-ml-4` rend le rembourrage gauche du champ (`pl-4`) : le texte
+ *    du titre s'aligne au pixel sur le sous-titre et sur le titre
+ *    smartphone — une compensation de boîte, pas un choix graphique.
+ */
+function titreControle(
+  cle: MenuSelection,
+  nom: string,
+  entrees: EntreeFiltre[],
+  choix: ReturnType<typeof lireSelection>
+): React.ReactNode {
+  if (entrees.length === 0) return nom;
+  return (
+    <>
+      <span className="lg:hidden">{nom}</span>
+      <span data-titre-menu={cle} className="hidden lg:inline-block -ml-4">
+        <MenuDeroulant
+          valeur={valeurDuMenu(choix, cle)}
+          surChangement={(valeur) => poserSelection(cle, valeur)}
+          options={entrees}
+          ariaLabel={nom}
+          placeholder={nom}
+          libelleValeur={nom}
+          hauteur="min-h-0"
+          taillePolice=""
+          sansBordure
+          sombre
+          repliable
+        />
+      </span>
+    </>
+  );
 }
 

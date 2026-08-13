@@ -33,7 +33,6 @@ const { entreesDuFiltre, lireSelection } = await import(
 );
 const {
   comptesDesJaime,
-  comptesDesSuivis,
   photoDuChoix,
   suivisDuChoix,
   lignesDInformation,
