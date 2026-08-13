@@ -81,7 +81,9 @@ titre("§3 — l'inventaire, à la source");
     ["BlocPortfolio", "styles, demande envoyée, retrait"],
     ["PageRattachement", "suppression de fiche"],
     ["FenetreNotifications", "notifications"],
-    ["FenetreTatoueursSuivis", "tatoueurs suivis"],
+    //  ⚠️ FenetreTatoueursSuivis a été SUPPRIMÉE par la nº 243-§1 :
+    //  les suivis vivent désormais dans la page « Ma sélection »
+    //  (BlocSuivis), sans fenêtre — ce banc daté suit.
     ["MenuEspace", "fenêtre du compte"],
   ];
   for (const [fichier, quoi] of converties) {

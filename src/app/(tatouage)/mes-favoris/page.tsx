@@ -36,7 +36,11 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function PageMesFavoris() {
+export default async function PageMesFavoris({
+  searchParams,
+}: {
+  searchParams: Promise<{ onglet?: string }>;
+}) {
   const supabase = await creerClientSupabaseServeur();
   const {
     data: { user },
@@ -47,6 +51,10 @@ export default async function PageMesFavoris() {
   }
 
   const { photos, suivis } = await lireLesFavoris(user.id);
+  //  §1 (nº 243) — L'ONGLET VIT DANS L'ADRESSE : lu par le serveur,
+  //  la page naît dans le bon onglet — un retour, un lien partagé ou
+  //  un rechargement rendent la même chose.
+  const { onglet } = await searchParams;
 
   return (
     <>
@@ -54,7 +62,7 @@ export default async function PageMesFavoris() {
           pas une page de recherche. Le web garde le moteur — il ramène
           à l'accueil avec les critères choisis. */}
       <EnTeteTatouage />
-      <PageFavoris photos={photos} suivis={suivis} />
+      <PageFavoris photos={photos} suivis={suivis} ongletInitial={onglet} />
     </>
   );
 }

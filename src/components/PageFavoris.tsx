@@ -1,13 +1,13 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LARGEUR_SITE, libelleStyle } from "@/config/tatouage";
 import { libelleNature, NATURES_PHOTO } from "@/lib/photos-tatoueur";
 import { IconeChevronBas } from "@/components/Icones";
 import { CarteTatoueur } from "@/components/CarteTatoueur";
-import { FenetreTatoueursSuivis } from "@/components/FenetreTatoueursSuivis";
+import { BlocSuivis } from "@/components/BlocSuivis";
 import { FenetreFiche } from "@/components/FenetreFiche";
 import { OngletsLigne } from "@/components/OngletsLigne";
 import {
@@ -20,11 +20,20 @@ import type { PhotoFavorite, TatoueurSuivi } from "@/lib/favoris-serveur";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
- * MES FAVORIS — les photos gardées, et les tatoueurs suivis
+ * MA SÉLECTION — les photos gardées, et les tatoueurs suivis
  * ==========================================================
- * LES PHOTOS SONT LE CONTENU PRINCIPAL, en cartes : c'est ce qu'on
- * vient revoir. Les tatoueurs suivis vivent DERRIÈRE UN BOUTON, en
- * haut : une liste de noms n'a pas à disputer la place à des images.
+ * §1 (nº 243) — DEUX ONGLETS, `Photos · Tatoueurs`, et PLUS DE
+ * FENÊTRE. Les suivis vivaient derrière un bouton, dans une fenêtre
+ * qui défilait sur elle-même : deux défilements imbriqués et une
+ * boîte dans une boîte. Elle est supprimée, code compris. Tout vit
+ * dans la page, pleine largeur, un seul défilement.
+ *
+ * ⚠️ L'ONGLET ACTIF VIT DANS L'ADRESSE (`?onglet=…`), comme tout le
+ * reste depuis la nº 191 : une entrée d'historique par changement, et
+ * le retour d'une fiche rend le bon onglet ET la bonne position (la
+ * mémoire de défilement est indexée sur `chemin + recherche`, voir
+ * MemoireNavigation — l'onglet en fait donc partie, sans une ligne
+ * de plus).
  *
  * LE MENU DES STYLES NE MONTRE QUE LES STYLES ENREGISTRÉS, et c'est le
  * point important : les trente-huit styles du site dans un menu où
@@ -44,17 +53,84 @@ import type { Tatoueur } from "@/lib/tatoueurs";
 /** LE MENU DES STYLES — « tous » compris. */
 const TOUS = "tous";
 
+/** Les deux onglets — leur clé voyage dans l'adresse. */
+const ONGLET_PHOTOS = "photos";
+const ONGLET_SUIVIS = "tatoueurs";
+
 export function PageFavoris({
   photos,
   suivis,
+  ongletInitial,
 }: {
   photos: PhotoFavorite[];
   suivis: TatoueurSuivi[];
+  /** L'onglet demandé par l'adresse, lu par le SERVEUR : la page naît
+      dans le bon onglet, elle ne se corrige pas après coup. */
+  ongletInitial?: string;
 }) {
   const [style, setStyle] = useState(TOUS);
   const [nature, setNature] = useState(TOUS);
   const [menuOuvert, setMenuOuvert] = useState(false);
-  const [fenetreSuivis, setFenetreSuivis] = useState(false);
+  const [onglet, setOnglet] = useState(
+    ongletInitial === ONGLET_SUIVIS ? ONGLET_SUIVIS : ONGLET_PHOTOS
+  );
+
+  /**
+   * L'ONGLET DANS L'ADRESSE — une entrée d'historique par changement.
+   * ⚠️ `history.pushState`, PAS `router.push` : le routeur remonterait
+   * la page en haut et rejouerait le rendu serveur pour un simple
+   * changement d'onglet. On écrit l'adresse, on garde la place.
+   * Le RETOUR (`popstate`) rejoue l'onglet écrit dans l'adresse.
+   */
+  const choisirOnglet = useCallback((suivant: string) => {
+    setOnglet(suivant);
+    const adresse =
+      suivant === ONGLET_SUIVIS
+        ? `${window.location.pathname}?onglet=${ONGLET_SUIVIS}`
+        : window.location.pathname;
+    window.history.pushState({ ongletSelection: suivant }, "", adresse);
+  }, []);
+
+  useEffect(() => {
+    const auRetour = () => {
+      const demande = new URLSearchParams(window.location.search).get("onglet");
+      setOnglet(demande === ONGLET_SUIVIS ? ONGLET_SUIVIS : ONGLET_PHOTOS);
+    };
+    window.addEventListener("popstate", auRetour);
+    return () => window.removeEventListener("popstate", auRetour);
+  }, []);
+
+  /**
+   * §5 (nº 243) — LA DERNIÈRE VISITE S'ÉCRIT AU DÉPART, JAMAIS À
+   * L'OUVERTURE : écrite à l'arrivée, elle effacerait les compteurs
+   * avant qu'ils n'aient été lus. La valeur affichée vient du rendu
+   * serveur (lue au montage) ; ici, on ne fait que MARQUER la visite
+   * quand on s'en va — `pagehide` couvre la fermeture d'onglet et le
+   * passage en arrière-plan sur iOS (`beforeunload` n'y est pas
+   * fiable), le nettoyage de l'effet couvre la navigation interne.
+   * `sendBeacon` : la requête survit au départ de la page.
+   */
+  useEffect(() => {
+    let marquee = false;
+    const marquer = () => {
+      if (marquee) return;
+      marquee = true;
+      try {
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon("/api/selection/visite", new Blob([], { type: "text/plain" }));
+        } else {
+          void fetch("/api/selection/visite", { method: "POST", keepalive: true });
+        }
+      } catch {
+        //  Sans importance : le compteur restera celui d'avant.
+      }
+    };
+    window.addEventListener("pagehide", marquer);
+    return () => {
+      window.removeEventListener("pagehide", marquer);
+      marquer();
+    };
+  }, []);
 
   /* ================================================================
    * LA FICHE EN FENÊTRE SUPERPOSÉE (nº 143-6B)
@@ -232,32 +308,34 @@ export function PageFavoris({
     <main
       className={`flex-1 mx-auto w-full ${LARGEUR_SITE} px-4 sm:px-6 pt-6 pb-16`}
     >
-      {/* ---------- LE TITRE, ET LES SUIVIS ---------- */}
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-        {/* ⚠️ « MA SÉLECTION », ET PLUS « Mes favoris » (nº 145-§3) —
-            le mot du site pour la pochette où l'on range ce qu'on
-            veut retrouver. Même graisse, même taille. */}
-        <h1 className="text-[22px] font-bold tracking-tight text-sombre-texte">
-          Ma sélection
-        </h1>
+      {/* ---------- LE TITRE, ET LE SÉLECTEUR (nº 243-§1) ---------- */}
+      {/* ⚠️ « MA SÉLECTION », ET PLUS « Mes favoris » (nº 145-§3) —
+          le mot du site pour la pochette où l'on range ce qu'on
+          veut retrouver. Même graisse, même taille. */}
+      <h1 className="text-[22px] font-bold tracking-tight text-sombre-texte">
+        Ma sélection
+      </h1>
 
-        {/* LE BOUTON DES SUIVIS — DISCRET, et il porte le compte.
-            Capsule naturelle, sans rose : ce n'est pas l'action de la
-            page, c'est une porte à côté. */}
-        <button
-          type="button"
-          onClick={() => setFenetreSuivis(true)}
-          className="inline-flex min-h-[40px] items-center rounded-full bg-sombre-carte
-                     px-4 text-[13.5px] font-semibold text-sombre-texte
-                     transition-colors hover:bg-sombre-eleve
-                     focus-visible:outline-2 focus-visible:outline-offset-2
-                     focus-visible:outline-primaire"
-        >
-          Tatoueurs suivis · {suivis.length}
-        </button>
+      {/* LE SÉLECTEUR DE LIGNE HABITUEL — celui d'Explorer / Filtres
+          et de Profil / Portfolio (OngletsLigne), à deux positions. */}
+      <div className="mt-5 max-w-[320px]">
+        <OngletsLigne
+          ariaLabel="Photos ou tatoueurs suivis"
+          cleActive={onglet}
+          surChoix={choisirOnglet}
+          options={[
+            { cle: ONGLET_PHOTOS, label: "Photos" },
+            { cle: ONGLET_SUIVIS, label: "Tatoueurs" },
+          ]}
+        />
       </div>
 
-      {photos.length === 0 ? (
+      {/* ---------- L'ONGLET « TATOUEURS » (nº 243-§2 à §5) ---------- */}
+      {onglet === ONGLET_SUIVIS && (
+        <BlocSuivis suivis={suivis} favoris={photos} />
+      )}
+
+      {onglet === ONGLET_SUIVIS ? null : photos.length === 0 ? (
         /* L'ÉTAT VIDE — il dit quoi faire, en une ligne, et ouvre la
            porte. Pas de dessin, pas de paragraphe. */
         <div className="mt-8 rounded-2xl bg-sombre-carte px-5 py-8 text-center">
@@ -415,13 +493,6 @@ export function PageFavoris({
             </ul>
           )}
         </>
-      )}
-
-      {fenetreSuivis && (
-        <FenetreTatoueursSuivis
-          suivis={suivis}
-          onFermer={() => setFenetreSuivis(false)}
-        />
       )}
 
       {/* `key` : chaque ouverture repart de la photo du style gardé,

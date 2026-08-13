@@ -1,5 +1,6 @@
 import { creerClientSupabaseServeur } from "@/lib/supabase/server";
 import { natureConnue } from "@/lib/photos-tatoueur";
+import { modesActifs, type ModeExerciceFiche } from "@/lib/modes-exercice";
 
 /**
  * CE QUE LA PAGE « MES FAVORIS » LIT — côté serveur
@@ -87,7 +88,20 @@ export type PhotoFavorite = {
   photoProfil: string | null;
 };
 
-/** UN TATOUEUR SUIVI, tel que la fenêtre le montre. */
+/** UNE PHOTO D'UN SUIVI — la bande de trois du bloc (nº 243-§4). */
+export type PhotoDuSuivi = {
+  id: string;
+  url: string;
+  miniature: string;
+  style: string;
+  rendu: string | null;
+  nature: string;
+  /** La date de publication — elle sert au classement ET au compte de
+      nouveautés (nº 243-§5). */
+  creeLe: string;
+};
+
+/** UN TATOUEUR SUIVI, tel que l'onglet « Tatoueurs » le montre. */
 export type TatoueurSuivi = {
   id: string;
   nom: string;
@@ -97,6 +111,20 @@ export type TatoueurSuivi = {
   pays: string | null;
   codePays: string | null;
   photoProfil: string | null;
+  /** Le type de la fiche (« artiste », « salon », « prive ») — la
+      ligne d'un LIEU suivi s'écrit avec `libelleTypeFiche`. */
+  typeFiche: string;
+  etablissement: string;
+  /** ⚠️ SES MODES D'EXERCICE (nº 243-§2 et §3) : ce sont EUX qui
+      portent les dates de guest (migration nº 21) et la ligne
+      d'information. Aucune seconde source n'est créée. */
+  modes: ModeExerciceFiche[];
+  /** SES PUBLICATIONS RÉCENTES — les plus récentes d'abord. Elles
+      servent aux trois photos du bloc (§4) et au compte du §5. */
+  recentes: PhotoDuSuivi[];
+  /** LE COMPTE DE NOUVEAUTÉS (§5) — publications postérieures à la
+      dernière visite de CETTE page. Zéro quand on ne sait pas. */
+  nouveautes: number;
 };
 
 export type ContenuFavoris = {
@@ -105,6 +133,13 @@ export type ContenuFavoris = {
 };
 
 const VIDE: ContenuFavoris = { photos: [], suivis: [] };
+
+/**
+ * COMBIEN DE PUBLICATIONS ON REGARDE EN ARRIÈRE. Une lecture bornée,
+ * pour tous les suivis à la fois : au-delà, ni la bande de trois ni le
+ * compte de nouveautés ne changeraient quoi que ce soit à l'écran.
+ */
+const PUBLICATIONS_LUES = 400;
 
 /**
  * TOUT CE QUE CE COMPTE A GARDÉ. Rendu VIDE — jamais en erreur — si
@@ -231,10 +266,71 @@ export async function lireLesFavoris(
       });
     }
 
+    /* ---- 4. CE QU'IL FAUT POUR L'ONGLET « TATOUEURS » (nº 243) ----
+       DEUX LECTURES DE PLUS, et seulement si l'on suit quelqu'un :
+        · LES MODES D'EXERCICE — ils portent les dates de guest
+          (migration nº 21) et la ligne d'information. C'est la SEULE
+          source : rien n'est recopié ailleurs ;
+        · LES PUBLICATIONS RÉCENTES de ces fiches — la bande de trois
+          photos, et le compte de nouveautés depuis la dernière visite.
+       ⚠️ TROIS LECTURES SIMPLES, JAMAIS UNE IMBRIQUÉE : la règle de la
+       maison, rappelée en tête de ce fichier. */
+    const suivisPresents = idsSuivis.filter((id) => parFiche.has(id));
+    const [lignesModes, lignesRecentes, visite] = await Promise.all([
+      suivisPresents.length > 0
+        ? supabase.from("modes_exercice").select("*").in("tatoueur_id", suivisPresents)
+        : Promise.resolve({ data: [], error: null }),
+      suivisPresents.length > 0
+        ? supabase
+            .from("photos_tatoueur")
+            .select("id, tatoueur_id, style, rendu, nature, url, miniature, cree_le")
+            .in("tatoueur_id", suivisPresents)
+            .order("cree_le", { ascending: false })
+            .limit(PUBLICATIONS_LUES)
+        : Promise.resolve({ data: [], error: null }),
+      lireLaDerniereVisite(utilisateurId),
+    ]);
+
+    type LigneMode = ModeExerciceFiche & { tatoueur_id: string };
+    const modesParFiche = new Map<string, ModeExerciceFiche[]>();
+    for (const ligne of (lignesModes.error ? [] : (lignesModes.data ?? [])) as unknown as LigneMode[]) {
+      const liste = modesParFiche.get(ligne.tatoueur_id) ?? [];
+      liste.push(ligne);
+      modesParFiche.set(ligne.tatoueur_id, liste);
+    }
+
+    type LigneRecente = {
+      id: string;
+      tatoueur_id: string;
+      style: string;
+      rendu: string | null;
+      nature?: string | null;
+      url: string;
+      miniature: string | null;
+      cree_le: string;
+    };
+    const recentesParFiche = new Map<string, PhotoDuSuivi[]>();
+    for (const ligne of (lignesRecentes.error
+      ? []
+      : (lignesRecentes.data ?? [])) as unknown as LigneRecente[]) {
+      const liste = recentesParFiche.get(ligne.tatoueur_id) ?? [];
+      liste.push({
+        id: ligne.id,
+        url: ligne.url,
+        miniature: ligne.miniature || ligne.url,
+        style: ligne.style,
+        rendu: ligne.rendu,
+        nature: natureConnue(ligne.nature),
+        creeLe: ligne.cree_le,
+      });
+      recentesParFiche.set(ligne.tatoueur_id, liste);
+    }
+
     const listeSuivis: TatoueurSuivi[] = [];
     for (const id of idsSuivis) {
       const fiche = parFiche.get(id);
       if (!fiche) continue;
+      const recentes = recentesParFiche.get(id) ?? [];
       listeSuivis.push({
         id: fiche.id,
         nom: fiche.nom,
@@ -244,6 +340,18 @@ export async function lireLesFavoris(
         pays: fiche.pays,
         codePays: fiche.code_pays,
         photoProfil: fiche.photo_profil,
+        typeFiche: fiche.type_fiche ?? "salon",
+        etablissement: fiche.etablissement ?? "salon",
+        modes: modesActifs(modesParFiche.get(id) ?? []),
+        recentes,
+        //  ⚠️ LE COMPTE SE LIT, IL NE S'ÉCRIT PAS ICI (nº 243-§5) :
+        //  l'horodatage de visite n'est écrit qu'au DÉPART de la page
+        //  (voir /api/selection/visite). Sans visite connue — la
+        //  première —, aucune nouveauté n'est annoncée : tout serait
+        //  « nouveau », ce qui ne veut rien dire.
+        nouveautes: visite
+          ? recentes.filter((photo) => photo.creeLe > visite).length
+          : 0,
       });
     }
 
@@ -252,5 +360,34 @@ export async function lireLesFavoris(
     //  Migrations pas encore passées, base injoignable : la page
     //  montre son état vide. Elle ne tombe jamais en erreur.
     return VIDE;
+  }
+}
+
+/* ==================================================================
+ * LA DERNIÈRE VISITE DE « MA SÉLECTION » (nº 243-§5)
+ * ==================================================================
+ * ⚠️ LE PIÈGE, ET IL EST DIT EN TOUTES LETTRES : écrire l'horodatage
+ * À L'OUVERTURE effacerait les compteurs avant qu'ils n'aient été lus.
+ * On LIT ici, au rendu de la page ; on n'ÉCRIT qu'au DÉPART, depuis le
+ * navigateur (voir /api/selection/visite et `MemoireVisiteSelection`).
+ *
+ * Table `visites_selection` (migration nº 68) : une ligne par compte,
+ * la page entière étant concernée. Absente — migration pas encore
+ * passée —, on répond `null` : aucun compteur ne s'affiche, et rien
+ * ne casse.
+ */
+export async function lireLaDerniereVisite(
+  utilisateurId: string
+): Promise<string | null> {
+  try {
+    const supabase = await creerClientSupabaseServeur();
+    const { data } = await supabase
+      .from("visites_selection")
+      .select("vu_le")
+      .eq("utilisateur_id", utilisateurId)
+      .maybeSingle();
+    return (data?.vu_le as string | undefined) ?? null;
+  } catch {
+    return null;
   }
 }

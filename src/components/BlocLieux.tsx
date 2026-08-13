@@ -94,7 +94,7 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  * l'opacité le ramène au gris voulu — plus foncé que le rond, donc
  * lisible dessus.
  */
-function PhotoRonde({
+export function PhotoRonde({
   source,
   nature,
 }: {
@@ -343,7 +343,7 @@ function HorairesEnLigne({
  * texte DANS l'encadré), mêmes classes, même géométrie. C'est cette
  * constante qui le garantit — il n'existe pas de second dessin.
  */
-const CLASSES_LIGNE_CLIQUABLE =
+export const CLASSES_LIGNE_CLIQUABLE =
   "group flex items-start gap-3.5 rounded-xl -m-2 p-2 " +
   "transition-colors hover:bg-white/5 active:bg-white/10";
 
