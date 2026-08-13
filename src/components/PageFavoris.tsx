@@ -4,22 +4,13 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LARGEUR_SITE } from "@/config/tatouage";
-import {
-  lireSelection,
-  MENU_JAIME,
-  MENU_SUIVIS,
-  poserSelection,
-  valeurDuMenu,
-  type EntreeFiltre,
-  type MenuSelection,
-} from "@/lib/filtres-selection";
+import { lireSelection, MENU_FAVORIS } from "@/lib/filtres-selection";
 import { lireRequeteCourante, souscrireAdresse } from "@/lib/adresse-courante";
 import { CarteTatoueur } from "@/components/CarteTatoueur";
 import { CLASSES_GRILLE_CARTES } from "@/components/GrilleTatoueurs";
 import { BlocSuivis } from "@/components/BlocSuivis";
 import { FenetreFiche } from "@/components/FenetreFiche";
 import { LigneResultats } from "@/components/LigneResultats";
-import { MenuDeroulant } from "@/components/MenuDeroulant";
 import { libelleExplorer } from "@/components/MoteurTatouage";
 import {
   CLE_FENETRE_FICHE,
@@ -45,13 +36,13 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  *
  * §2 (nº 245) — ET PLUS DE VA-ET-VIENT NON PLUS. Le sélecteur
  * `Photos · Tatoueurs` de la nº 243 est supprimé, code compris : ce
- * sont LES DEUX MENUS de la barre — « Mes j'aime » et « Mes suivis »
+ * sont LES DEUX MENUS de la barre — « Mes favoris » et « Mes suivis »
  * (MenusSelection, posés dans la rangée de EnTeteTatouage à la place
  * du bloc de recherche) — qui décident de ce qui s'affiche. Les deux
  * sections sont là, l'une sous l'autre : les photos gardées, puis les
  * artistes suivis.
  *
- * ⚠️ LES DEUX CHOIX VIVENT DANS L'ADRESSE (`?jaime=…`, `?suivis=…`),
+ * ⚠️ LES DEUX CHOIX VIVENT DANS L'ADRESSE (`?favoris=…`, `?suivis=…`),
  * comme tout depuis la nº 191 — et c'est aussi ce qui les fait
  * partager par la BARRE et par la PAGE, deux composants frères : voir
  * lib/filtres-selection. Le retour d'une fiche rend donc le même
@@ -72,19 +63,16 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  * quelque chose s'est cassé.
  */
 
+/*  §1 (nº 253) — LA PAGE NE PORTE PLUS AUCUN MENU : les deux entrées
+    qu'elle recevait depuis la nº 249 sont retournées à la BARRE, seule
+    à commander (l'encadré sur le web, les deux titres au doigt). Elle
+    n'ANNONCE plus que ce qui est cherché. */
 export function PageFavoris({
   photos,
   suivis,
-  entreesJaime,
-  entreesSuivis,
 }: {
   photos: PhotoFavorite[];
   suivis: TatoueurSuivi[];
-  /** §3 (nº 249) — LES ENTRÉES DES DEUX MENUS, calculées par le
-      serveur (les mêmes que celles de la barre) : sur le web, ce sont
-      les TITRES de cette page qui portent désormais les menus. */
-  entreesJaime: EntreeFiltre[];
-  entreesSuivis: EntreeFiltre[];
 }) {
   //  LE FILTRE VIENT DE L'ADRESSE — la même source que les menus de la
   //  barre, lue par le même magasin (nº 245-§3, nº 247-§2).
@@ -96,9 +84,9 @@ export function PageFavoris({
   const choix = lireSelection(requete);
   /*  §2 (nº 247) — LES DEUX MENUS SONT EXCLUSIFS : un seul mène la
       recherche, et l'autre section n'est PAS affichée. À l'ouverture
-      (adresse sans paramètre), c'est « Mes j'aime » : les favoris
+      (adresse sans paramètre), c'est « Mes favoris » : les favoris
       seuls, aucun suivi. */
-  const surLesJaime = choix.menu === MENU_JAIME;
+  const surLesFavoris = choix.menu === MENU_FAVORIS;
 
   /**
    * §5 (nº 243) — LA DERNIÈRE VISITE S'ÉCRIT AU DÉPART, JAMAIS À
@@ -230,10 +218,10 @@ export function PageFavoris({
   //  lui-même, et ces filtres sur quelques dizaines d'éléments ne
   //  coûtent rien.
   const { nature, style } = choix;
-  const visibles = surLesJaime
+  const visibles = surLesFavoris
     ? photos.filter((photo) => photoDuChoix(photo, { nature, style }))
     : [];
-  const suivisVisibles = surLesJaime
+  const suivisVisibles = surLesFavoris
     ? []
     : suivisDuChoix(suivis, { nature, style });
 
@@ -316,7 +304,7 @@ export function PageFavoris({
            « Ma sélection » et le sous-titre en capitales ont DISPARU.
            À la place, L'ÉCRITURE DE LA PAGE DE RECHERCHE — le même
            composant (`LigneResultats`), la même hiérarchie : le titre
-           est le menu qui mène la recherche (« Mes j'aime », aussi le
+           est le menu qui mène la recherche (« Mes favoris », aussi le
            titre de l'écran d'ouverture, ou « Mes suivis »), et
            dessous, LE CRITÈRE EN COURS, écrit par `libelleExplorer` —
            l'écriture exacte de la page de recherche (« Réalisations ·
@@ -324,21 +312,16 @@ export function PageFavoris({
            §3 — SUR LE WEB, CE TITRE EST LE CONTRÔLE : voir
            `titreControle`. */}
       <LigneResultats
-        titre={titreControle(
-          surLesJaime ? MENU_JAIME : MENU_SUIVIS,
-          surLesJaime ? "Mes j'aime" : "Mes suivis",
-          surLesJaime ? entreesJaime : entreesSuivis,
-          choix
-        )}
+        titre={titreControle(surLesFavoris ? "Mes favoris" : "Mes suivis")}
         sousTitre={libelleExplorer(nature, style) || null}
       />
 
       {/* ---------- LES PHOTOS GARDÉES ----------
            §2 (nº 247) — LES DEUX MENUS SONT EXCLUSIFS : cette section
-           n'existe que si « Mes j'aime » mène la recherche. Choisir
+           n'existe que si « Mes favoris » mène la recherche. Choisir
            dans « Mes suivis » la fait disparaître, et réciproquement —
            on ne lit jamais deux recherches à la fois. */}
-      {!surLesJaime ? null : photos.length === 0 ? (
+      {!surLesFavoris ? null : photos.length === 0 ? (
         /* L'ÉTAT VIDE — il dit quoi faire, en une ligne, et ouvre la
            porte. Pas de dessin, pas de paragraphe. */
         <div className="mt-8 rounded-2xl bg-sombre-carte px-5 py-8 text-center">
@@ -421,7 +404,7 @@ export function PageFavoris({
            la recherche : à l'ouverture, la page ne montre QUE les
            favoris. §2 (nº 249) — le sous-titre en capitales est parti :
            le TITRE de la page dit déjà « Mes suivis ». */}
-      {!surLesJaime && (
+      {!surLesFavoris && (
         <BlocSuivis suivis={suivisVisibles} favoris={photos} />
       )}
 
@@ -432,18 +415,13 @@ export function PageFavoris({
            menu — c'est la porte vers l'autre recherche. En `h2` : une
            page n'a qu'un titre. Sur smartphone il n'existe pas : la
            barre garde son bandeau, qui est la commande (§3). */}
-      {/*  §2 (nº 251) — LE SECOND TITRE EST LA PORTE VERS L'AUTRE
-           RECHERCHE, et il ne vit plus que SUR LE DOIGT : sur le web,
-           les deux menus de l'encadré sont là, il ferait doublon. */}
-      <div data-titre-inactif="" className="lg:hidden">
+      {/*  §1 (nº 253) — LE SECOND TITRE ne vit que SUR LE WEB, en mot
+           nu : au doigt, la BARRE porte déjà les deux titres, et les
+           répéter dans la page ferait doublon. */}
+      <div data-titre-inactif="" className="hidden lg:block">
         <LigneResultats
           balise="h2"
-          titre={titreControle(
-            surLesJaime ? MENU_SUIVIS : MENU_JAIME,
-            surLesJaime ? "Mes suivis" : "Mes j'aime",
-            surLesJaime ? entreesSuivis : entreesJaime,
-            choix
-          )}
+          titre={titreControle(surLesFavoris ? "Mes suivis" : "Mes favoris")}
           sousTitre={null}
         />
       </div>
@@ -503,49 +481,15 @@ function cleEnsembleFavori(photo: PhotoFavorite): string {
  *    du titre s'aligne au pixel sur le sous-titre et sur le titre
  *    smartphone — une compensation de boîte, pas un choix graphique.
  */
-function titreControle(
-  cle: MenuSelection,
-  nom: string,
-  entrees: EntreeFiltre[],
-  choix: ReturnType<typeof lireSelection>
-): React.ReactNode {
-  if (entrees.length === 0) return nom;
-  return (
-    <>
-      {/*  §1 (nº 251) — SUR LE WEB, LE TITRE REDEVIENT UN TITRE : ni
-           chevron, ni fenêtre, rien de cliquable. C'est l'ENCADRÉ de la
-           barre qui commande (nº 246, remis en place). Le titre
-           annonce, l'encadré commande. */}
-      <span className="hidden lg:inline">{nom}</span>
-      {/*  §2 (nº 251) — AU DOIGT, C'EST L'INVERSE : les menus quittent
-           la barre (la hauteur y est rare) et LE TITRE commande. C'est
-           LE menu de la maison — `MenuDeroulant`, son chevron, son
-           drapeau `repliable` pour que « Cultures du monde » s'ouvre —
-           avec sa FEUILLE, qui monte par le bas de l'écran : le pouce
-           est là, et une quarantaine d'entrées dans une fenêtre
-           centrée obligerait à défiler dans une boîte, ce qu'on a
-           justement retiré de cette page.
-           `titreFeuille` : la feuille dit lequel des deux menus elle
-           porte — jamais les deux ensemble, chaque titre ouvre le
-           sien. */}
-      <span data-titre-menu={cle} className="lg:hidden inline-block -ml-4">
-        <MenuDeroulant
-          valeur={valeurDuMenu(choix, cle)}
-          surChangement={(valeur) => poserSelection(cle, valeur)}
-          options={entrees}
-          ariaLabel={nom}
-          placeholder={nom}
-          libelleValeur={nom}
-          titreFeuille={nom}
-          hauteur="min-h-0"
-          taillePolice=""
-          sansBordure
-          sombre
-          repliable
-          feuilleMobile
-        />
-      </span>
-    </>
-  );
+/**
+ * §1 (nº 253) — LE TITRE EST UN MOT NU, AUX DEUX LARGEURS.
+ * ------------------------------------------------------------------
+ * La commande vit dans LA BARRE : l'encadré à deux menus sur le web,
+ * les deux titres-menus au doigt (voir MenusSelection). La page, elle,
+ * ne fait plus qu'ANNONCER — le contrôle qu'elle portait depuis la
+ * nº 249 est parti avec sa raison d'être.
+ */
+function titreControle(nom: string): React.ReactNode {
+  return nom;
 }
 

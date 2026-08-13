@@ -68,7 +68,7 @@ try {
 titre("§1 — « Tous les styles » a disparu, les deux « Tous… » restent");
 if (R) {
   for (const [nom, entrees] of [
-    ["Mes j'aime", R.entreesJaime],
+    ["Mes favoris", R.entreesFavoris],
     ["Mes suivis (sans flash : sa porte n'existe pas)", R.sansFlash],
   ]) {
     verif(
@@ -79,8 +79,8 @@ if (R) {
   }
   verif(
     "« Toutes les réalisations » et « Tous les flashs » sont là, en tête de porte",
-    R.entreesJaime[0]?.label === "Toutes les réalisations" &&
-      R.entreesJaime.some((e) => e.label === "Tous les flashs")
+    R.entreesFavoris[0]?.label === "Toutes les réalisations" &&
+      R.entreesFavoris.some((e) => e.label === "Tous les flashs")
   );
 }
 verif(
@@ -106,8 +106,8 @@ titre("§2 — le titre et son critère, rendus par le composant de la recherche
       /libelleExplorer\(/.test(index)
   );
   verif(
-    "les titres sont « Mes j'aime » (l'ouverture) et « Mes suivis »",
-    /surLesJaime \? "Mes j'aime" : "Mes suivis"/.test(favoris)
+    "les titres sont « Mes favoris » (l'ouverture) et « Mes suivis »",
+    /surLesFavoris \? "Mes favoris" : "Mes suivis"/.test(favoris)
   );
   verif(
     "« Ma sélection » et le sous-titre en capitales ont disparu",
@@ -149,8 +149,8 @@ titre("§3 — le bloc quitte la barre du web, les titres portent le menu");
   );
   verif(
     "le titre actif ET le titre inactif sont des contrôles (les DEUX titres)",
-    /titreControle\(\s*surLesJaime \? MENU_JAIME : MENU_SUIVIS/.test(favoris) &&
-      /titreControle\(\s*surLesJaime \? MENU_SUIVIS : MENU_JAIME/.test(favoris) &&
+    /titreControle\(\s*surLesFavoris \? MENU_FAVORIS : MENU_SUIVIS/.test(favoris) &&
+      /titreControle\(\s*surLesFavoris \? MENU_SUIVIS : MENU_FAVORIS/.test(favoris) &&
       /data-titre-inactif=""/.test(favoris) &&
       //  L'inactif n'existe que sur le web : au doigt, la commande
       //  reste le bandeau de la barre.

@@ -12,18 +12,18 @@ import {
  *
  * ⚠️ LES DEUX MENUS SONT EXCLUSIFS, PAS COMPLÉMENTAIRES (nº 247-§2).
  * C'était le contresens de la nº 245 : deux paramètres d'adresse
- * (`?jaime=`, `?suivis=`) filtraient EN MÊME TEMPS deux sections
+ * (`?favoris=`, `?suivis=`) filtraient EN MÊME TEMPS deux sections
  * affichées l'une sous l'autre. Chacun mène en réalité SA PROPRE
  * recherche, et une seule vit à la fois :
- *  · « Mes j'aime »  → les photos gardées, et RIEN d'autre ;
+ *  · « Mes favoris »  → les photos gardées, et RIEN d'autre ;
  *  · « Mes suivis »  → les artistes suivis, et les favoris disparaissent ;
  *  · choisir dans l'un REMET L'AUTRE À ZÉRO — c'est mécanique, il n'y
  *    a qu'une valeur.
  * UN SEUL PARAMÈTRE SUFFIT DONC, et deux ne pourraient que se
  * contredire : `?selection=<menu>[:<catégorie>[:<style>]]`.
- *   (absent)                  → « Mes j'aime », tout : l'état d'ouverture
+ *   (absent)                  → « Mes favoris », tout : l'état d'ouverture
  *   `suivis`                  → tous les suivis
- *   `jaime:flash`             → les flashs aimés
+ *   `favoris:flash`           → les flashs aimés
  *   `suivis:tatouage:maori`   → les suivis qui publient du maori réalisé
  *
  * ⚠️ CE MODULE N'EST PAS « use client » : `entreesDuFiltre` est PURE
@@ -40,9 +40,9 @@ import {
 /** Le paramètre — UN SEUL, et c'est le sujet du §2. */
 export const PARAM_SELECTION = "selection";
 
-export const MENU_JAIME = "jaime";
+export const MENU_FAVORIS = "favoris";
 export const MENU_SUIVIS = "suivis";
-export type MenuSelection = typeof MENU_JAIME | typeof MENU_SUIVIS;
+export type MenuSelection = typeof MENU_FAVORIS | typeof MENU_SUIVIS;
 
 /** Ce que l'adresse dit : quel menu mène la recherche, et sur quoi. */
 export type ChoixSelection = {
@@ -56,7 +56,7 @@ export type ChoixSelection = {
 /** L'ÉTAT D'OUVERTURE (§2) : les favoris seuls, tous styles, aucun
     suivi. C'est aussi ce que rend une adresse sans paramètre. */
 export const CHOIX_PAR_DEFAUT: ChoixSelection = {
-  menu: MENU_JAIME,
+  menu: MENU_FAVORIS,
   nature: "",
   style: "",
 };
@@ -74,7 +74,7 @@ export function lireSelection(recherche?: string): ChoixSelection {
   const brut = params.get(PARAM_SELECTION) ?? "";
   if (!brut) return CHOIX_PAR_DEFAUT;
   const [menu = "", ...reste] = brut.split(":");
-  if (menu !== MENU_JAIME && menu !== MENU_SUIVIS) return CHOIX_PAR_DEFAUT;
+  if (menu !== MENU_FAVORIS && menu !== MENU_SUIVIS) return CHOIX_PAR_DEFAUT;
   const { nature, style } = lireValeurExplorer(reste.join(":"));
   return { menu, nature, style };
 }
@@ -90,7 +90,7 @@ export function poserSelection(menu: MenuSelection, valeur: string): void {
   const params = new URLSearchParams(window.location.search);
   //  L'ouverture (les favoris, tous styles) ne s'écrit pas : une page
   //  sans paramètre est déjà exactement cela.
-  if (menu === MENU_JAIME && !valeur) params.delete(PARAM_SELECTION);
+  if (menu === MENU_FAVORIS && !valeur) params.delete(PARAM_SELECTION);
   else params.set(PARAM_SELECTION, valeur ? `${menu}:${valeur}` : menu);
   const requete = params.toString();
   window.history.replaceState(

@@ -32,7 +32,7 @@ const { entreesDuFiltre, lireSelection } = await import(
   pathToFileURL(RACINE + "/src/lib/filtres-selection.ts").href
 );
 const {
-  comptesDesJaime,
+  comptesDesFavoris,
   photoDuChoix,
   suivisDuChoix,
   lignesDInformation,
@@ -44,7 +44,7 @@ const { serieMontree, photoChoisie } = await import(
 );
 
 /* ---------------- LE JEU D'ESSAI ---------------- */
-const jaime = (id, style, nature, tatoueur = "a") => ({
+const favori = (id, style, nature, tatoueur = "a") => ({
   id,
   url: `/p/${id}`,
   miniature: `/m/${id}`,
@@ -109,26 +109,26 @@ const mode = (surcharges) => ({
 
 /* ---- §3 : les entrées d'un menu — DEUX portes, une famille ---- */
 const photosAimees = [
-  jaime("1", "realisme", "tatouage"),
-  jaime("2", "aquarelle", "flash"),
-  jaime("3", "maori", "flash"),
+  favori("1", "realisme", "tatouage"),
+  favori("2", "aquarelle", "flash"),
+  favori("3", "maori", "flash"),
 ];
-const entreesJaime = entreesDuFiltre(comptesDesJaime(photosAimees));
+const entreesFavoris = entreesDuFiltre(comptesDesFavoris(photosAimees));
 
 //  Un portfolio sans le moindre flash : la porte « Flashs » n'existe
 //  pas du tout dans son menu.
 const sansFlash = entreesDuFiltre(
-  comptesDesJaime([jaime("4", "realisme", "tatouage")])
+  comptesDesFavoris([favori("4", "realisme", "tatouage")])
 );
 
 /* ---- §2 : l'adresse, et un seul paramètre ---- */
 const adresses = {
   vide: lireSelection(""),
   suivis: lireSelection("selection=suivis"),
-  jaimeFlash: lireSelection("selection=jaime:flash"),
+  favorisFlash: lireSelection("selection=favoris:flash"),
   suivisMaori: lireSelection("selection=suivis:tatouage:maori"),
   menuInconnu: lireSelection("selection=nimporte:flash"),
-  styleInconnu: lireSelection("selection=jaime:flash:pas-un-style"),
+  styleInconnu: lireSelection("selection=favoris:flash:pas-un-style"),
 };
 
 /* ---- §2 : les deux menus sont exclusifs ---- */
@@ -140,11 +140,11 @@ const suivisEssai = [
   suivi("deux", [photoSuivi("d1", "realisme", "tatouage")]),
 ];
 const filtrage = {
-  //  Le menu « Mes j'aime » sur les flashs : deux photos gardées.
-  jaimeFlash: photosAimees
+  //  Le menu « Mes favoris » sur les flashs : deux photos gardées.
+  favorisFlash: photosAimees
     .filter((photo) => photoDuChoix(photo, { nature: "flash", style: "" }))
     .map((photo) => photo.id),
-  jaimeFlashMaori: photosAimees
+  favorisFlashMaori: photosAimees
     .filter((photo) => photoDuChoix(photo, { nature: "flash", style: "maori" }))
     .map((photo) => photo.id),
   suivisTous: suivisDuChoix(suivisEssai, { nature: "", style: "" }).map(
@@ -250,7 +250,7 @@ console.log(
   JSON.stringify(
     {
       cartes,
-      entreesJaime,
+      entreesFavoris,
       sansFlash,
       adresses,
       filtrage,

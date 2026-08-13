@@ -26,26 +26,27 @@ import type { EntreeFiltre } from "@/lib/filtres-selection";
  * d'elle ; repliée, la rangée garde sa ligne étroite « Recherche ».
  */
 export function BarreSelection({
-  entreesJaime,
+  entreesFavoris,
   entreesSuivis,
 }: {
-  entreesJaime: EntreeFiltre[];
+  entreesFavoris: EntreeFiltre[];
   entreesSuivis: EntreeFiltre[];
 }) {
   //  Aucune entrée nulle part : la rangée n'a rien à porter, la barre
   //  redevient celle de n'importe quelle page (§3).
-  const vide = entreesJaime.length === 0 && entreesSuivis.length === 0;
+  const vide = entreesFavoris.length === 0 && entreesSuivis.length === 0;
   if (vide) return <EnTeteTatouage />;
 
   return (
     <EnTeteTatouage
-      //  §2 (nº 251) — l'encadré ne vit que sur le web : au doigt, le
-      //  titre de la page commande, et la barre retrouve sa hauteur
-      //  ordinaire.
-      rangeeWeb
+      //  §1 (nº 253) — LA RANGÉE EXISTE AUX DEUX LARGEURS : le
+      //  `rangeeWeb` de la nº 251 est défait. La barre du smartphone
+      //  garde sa rétractation, ses deux hauteurs et sa ligne étroite ;
+      //  seul le CONTENU de la rangée change (l'encadré sur le web,
+      //  les deux titres au doigt — voir MenusSelection).
       rangee={({ replie, deplier }) => (
         <MenusSelection
-          entreesJaime={entreesJaime}
+          entreesFavoris={entreesFavoris}
           entreesSuivis={entreesSuivis}
           replie={replie}
           surDeploiement={deplier}

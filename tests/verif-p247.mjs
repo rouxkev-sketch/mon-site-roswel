@@ -280,8 +280,8 @@ if (R) {
 titre("§2 — un seul paramètre d'adresse, et deux recherches exclusives");
 if (R) {
   verif(
-    "l'adresse nue ouvre sur « Mes j'aime », tout — aucun suivi",
-    R.adresses.vide.menu === "jaime" &&
+    "l'adresse nue ouvre sur « Mes favoris », tout — aucun suivi",
+    R.adresses.vide.menu === "favoris" &&
       !R.adresses.vide.nature &&
       !R.adresses.vide.style,
     JSON.stringify(R.adresses.vide)
@@ -300,15 +300,15 @@ if (R) {
   );
   verif(
     "une valeur malmenée ne rend jamais n'importe quoi",
-    R.adresses.menuInconnu.menu === "jaime" &&
+    R.adresses.menuInconnu.menu === "favoris" &&
       R.adresses.styleInconnu.style === "" &&
       R.adresses.styleInconnu.nature === "flash"
   );
   verif(
     "le filtre porte sur les DEUX tags (flash, puis flash + maori)",
-    JSON.stringify(R.filtrage.jaimeFlash) === JSON.stringify(["2", "3"]) &&
-      JSON.stringify(R.filtrage.jaimeFlashMaori) === JSON.stringify(["3"]),
-    `${R.filtrage.jaimeFlash} / ${R.filtrage.jaimeFlashMaori}`
+    JSON.stringify(R.filtrage.favorisFlash) === JSON.stringify(["2", "3"]) &&
+      JSON.stringify(R.filtrage.favorisFlashMaori) === JSON.stringify(["3"]),
+    `${R.filtrage.favorisFlash} / ${R.filtrage.favorisFlashMaori}`
   );
   verif(
     "…et sur les suivis de la même façon",
@@ -324,15 +324,15 @@ if (R) {
   verif(
     "il n'y a plus qu'un paramètre — les deux d'avant ont disparu du code",
     /PARAM_SELECTION = "selection"/.test(filtres) &&
-      !/PARAM_JAIME|PARAM_SUIVIS|TOUS_LES_STYLES/.test(
+      !/PARAM_FAVORIS|PARAM_SUIVIS|TOUS_LES_STYLES/.test(
         filtres + page + menus
       )
   );
   verif(
     "la page n'affiche jamais les deux sections à la fois",
-    /const surLesJaime = choix\.menu === MENU_JAIME/.test(page) &&
-      /\{!surLesJaime \? null : photos\.length === 0 \?/.test(page) &&
-      /\{!surLesJaime && \(\s*<BlocSuivis/.test(page)
+    /const surLesFavoris = choix\.menu === MENU_FAVORIS/.test(page) &&
+      /\{!surLesFavoris \? null : photos\.length === 0 \?/.test(page) &&
+      /\{!surLesFavoris && \(\s*<BlocSuivis/.test(page)
   );
   verif(
     "choisir dans un menu remet l'autre à zéro (une seule valeur écrite)",
@@ -351,7 +351,7 @@ if (R) {
  * ================================================================== */
 titre("§3 — les deux catégories dans les menus, familles comprises");
 if (R) {
-  const portes = [...new Set(R.entreesJaime.map((e) => e.groupe ?? ""))];
+  const portes = [...new Set(R.entreesFavoris.map((e) => e.groupe ?? ""))];
   verif(
     "les entrées portent les DEUX portes du menu Explorer, dans son ordre",
     JSON.stringify(portes) === JSON.stringify(["", "Réalisations", "Flashs"]),
@@ -359,16 +359,16 @@ if (R) {
   );
   verif(
     "…avec les mots du moteur, au mot près",
-    R.entreesJaime.some((e) => e.label === "Toutes les réalisations") &&
-      R.entreesJaime.some((e) => e.label === "Tous les flashs"),
+    R.entreesFavoris.some((e) => e.label === "Toutes les réalisations") &&
+      R.entreesFavoris.some((e) => e.label === "Tous les flashs"),
   );
   verif(
     "la valeur encode le couple, comme le moteur (« flash:maori »)",
-    R.entreesJaime.some((e) => e.value === "flash:maori")
+    R.entreesFavoris.some((e) => e.value === "flash:maori")
   );
   verif(
     "un style de famille garde sa famille en SOUS-PORTE",
-    R.entreesJaime.find((e) => e.value === "flash:maori")?.sousGroupe ===
+    R.entreesFavoris.find((e) => e.value === "flash:maori")?.sousGroupe ===
       "Cultures du monde"
   );
   verif(
@@ -376,9 +376,9 @@ if (R) {
     //  — « Toutes les réalisations » et « Tous les flashs » sont le
     //  seul chemin de retour vers tout, chacune en tête de sa porte.)
     "« Tous les styles » n'existe plus — la liste s'ouvre sur les portes",
-    !R.entreesJaime.some((e) => e.label === "Tous les styles") &&
-      R.entreesJaime[0]?.value === "tatouage" &&
-      R.entreesJaime[0]?.label === "Toutes les réalisations"
+    !R.entreesFavoris.some((e) => e.label === "Tous les styles") &&
+      R.entreesFavoris[0]?.value === "tatouage" &&
+      R.entreesFavoris[0]?.label === "Toutes les réalisations"
   );
   verif(
     "une catégorie sans rien dedans n'a pas de porte du tout",

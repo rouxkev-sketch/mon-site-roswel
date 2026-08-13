@@ -5,7 +5,7 @@ import { lireLesFavoris } from "@/lib/favoris-serveur";
 import { BarreSelection } from "@/components/BarreSelection";
 import { PageFavoris } from "@/components/PageFavoris";
 import { entreesDuFiltre } from "@/lib/filtres-selection";
-import { comptesDesJaime, comptesDesSuivis } from "@/lib/selection-suivis";
+import { comptesDesFavoris, comptesDesSuivis } from "@/lib/selection-suivis";
 
 /**
  * MES FAVORIS — la page du compte (passe nº 137)
@@ -51,33 +51,27 @@ export default async function PageMesFavoris() {
   const { photos, suivis } = await lireLesFavoris(user.id);
   //  §1 et §3 (nº 245, refait nº 247-§3) — LES DEUX MENUS DE LA BARRE,
   //  calculés ICI, au plus près des données : les CATÉGORIES et les
-  //  styles réellement présents dans les j'aime et dans le travail des
+  //  styles réellement présents dans les favoris et dans le travail des
   //  suivis. La structure, l'ordre et les libellés viennent du menu
   //  « Explorer » du moteur (`entreesDuFiltre`) ; un menu sans entrée
   //  ne s'affiche pas.
-  const entreesJaime = entreesDuFiltre(comptesDesJaime(photos));
+  const entreesFavoris = entreesDuFiltre(comptesDesFavoris(photos));
   const entreesSuivis = entreesDuFiltre(comptesDesSuivis(suivis));
 
   return (
     <>
       {/* ⚠️ LE BLOC DE RECHERCHE N'A RIEN À FAIRE ICI (nº 245-§1) :
           la barre porte, à sa place et dans SA rangée, les deux menus
-          « Mes j'aime » et « Mes suivis ». Il reste intact partout
+          « Mes favoris » et « Mes suivis ». Il reste intact partout
           ailleurs — c'est `BarreSelection` qui le remplace, pas une
           seconde barre. */}
       <BarreSelection
-        entreesJaime={entreesJaime}
+        entreesFavoris={entreesFavoris}
         entreesSuivis={entreesSuivis}
       />
-      {/*  §3 (nº 249) — LA PAGE REÇOIT LES MÊMES ENTRÉES : sur le web,
-           ce sont ses TITRES qui portent désormais les menus (la barre
-           n'y montre plus le bloc — il reste au smartphone). */}
-      <PageFavoris
-        photos={photos}
-        suivis={suivis}
-        entreesJaime={entreesJaime}
-        entreesSuivis={entreesSuivis}
-      />
+      {/*  §1 (nº 253) — LA PAGE N'A PLUS BESOIN DES ENTRÉES : les deux
+           menus sont retournés à la barre, seule à commander. */}
+      <PageFavoris photos={photos} suivis={suivis} />
     </>
   );
 }

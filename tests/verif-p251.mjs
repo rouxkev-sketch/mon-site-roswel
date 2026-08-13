@@ -55,11 +55,14 @@ titre("§1 — à la source : l'encadré est de retour, et les titres se taisent
 {
   const menus = lire("src/components/MenusSelection.tsx");
   const favoris = lire("src/components/PageFavoris.tsx");
-  const barre = lire("src/components/BarreSelection.tsx");
   verif(
-    "le bloc à deux menus revient sur le web, et n'y vit QUE là",
-    /className="w-full hidden lg:block"/.test(menus) &&
-      !/className="w-full lg:hidden"/.test(menus)
+    //  (mis à jour nº 253-§1 : la rangée du smartphone est rétablie —
+    //  l'enveloppe est pleine largeur, l'encadré vit dans sa branche
+    //  web, les titres dans la branche doigt.)
+    "le bloc à deux menus vit sur le web — la rangée du doigt porte les titres",
+    /className="w-full"/.test(menus) &&
+      /<div className="hidden lg:block">\{blocDesMenus\}<\/div>/.test(menus) &&
+      /<div className="lg:hidden">\{blocDesTitres\}<\/div>/.test(menus)
   );
   verif(
     "…toujours par l'écriture partagée avec le moteur (EncadreDeuxChamps)",
@@ -67,20 +70,27 @@ titre("§1 — à la source : l'encadré est de retour, et les titres se taisent
       /<EncadreDeuxChamps/.test(lire("src/components/MoteurTatouage.tsx"))
   );
   verif(
-    "la barre annonce que sa rangée est WEB SEULE (la réserve du doigt suit)",
-    /rangeeWeb/.test(barre) &&
-      /rangeeLibreMobile = rangeeLibre && !rangeeWeb/.test(
-        lire("src/components/EnTeteTatouage.tsx")
-      )
+    //  (mis à jour nº 253-§1 : `rangeeWeb` est défait — la rangée
+    //  existe aux deux largeurs, et la réserve du doigt a ses trois
+    //  hauteurs.)
+    "la rangée existe aux deux largeurs, la réserve à trois hauteurs",
+    /const rangeePresente = surAccueil \|\| rangeeLibre;/.test(
+      lire("src/components/EnTeteTatouage.tsx")
+    )
   );
   verif(
-    "sur le web, le titre est un MOT NU — rien de cliquable",
-    /<span className="hidden lg:inline">\{nom\}<\/span>/.test(favoris) &&
-      /data-titre-menu=\{cle\} className="lg:hidden/.test(favoris)
+    //  (mis à jour nº 253-§1 : le titre de la PAGE est un mot nu aux
+    //  DEUX largeurs — la commande du doigt vit dans la barre.)
+    "les titres de la page sont des mots nus (la commande est dans la barre)",
+    /function titreControle\(nom: string\)/.test(favoris) &&
+      !/<MenuDeroulant/.test(favoris) &&
+      /data-titre-barre=\{cle\}/.test(lire("src/components/MenusSelection.tsx"))
   );
   verif(
-    "le second titre (la porte vers l'autre recherche) ne vit plus que sur le doigt",
-    /data-titre-inactif="" className="lg:hidden"/.test(favoris)
+    //  (mis à jour nº 253-§1 : au doigt, la BARRE porte les deux
+    //  titres — l'inactif de la page redevient web seulement.)
+    "le second titre de la page ne vit que sur le web",
+    /data-titre-inactif="" className="hidden lg:block"/.test(favoris)
   );
   verif(
     "et le repli de la barre reste écrit (bandeau, ligne étroite, jetons)",
@@ -166,7 +176,6 @@ const sansNotes = (source) =>
 titre("§2 — à la source : les trois conditions déjà payées");
 {
   const menu = lire("src/components/MenuDeroulant.tsx");
-  const favoris = lire("src/components/PageFavoris.tsx");
   //  ⚠️ `lastIndexOf` : « FEUILLE GLISSANTE » apparaît aussi dans
   //  l'en-tête du fichier, et le panneau déroulant porte LUI AUSSI
   //  `data-verre-menu` — une ancre trop haute découpait le mauvais
@@ -209,11 +218,13 @@ titre("§2 — à la source : les trois conditions déjà payées");
     /"data-verre-menu": ""/.test(feuille) && !/data-verre-fenetre/.test(feuille)
   );
   verif(
+    //  (mis à jour nº 253-§1 : les titres du doigt vivent dans la
+    //  BARRE — MenusSelection — plus dans la page.)
     "le titre du doigt ouvre LE menu de la maison, avec sa feuille et `repliable`",
-    /feuilleMobile/.test(favoris) &&
-      /^\s*repliable$/m.test(favoris) &&
-      /titreFeuille=\{nom\}/.test(favoris) &&
-      (favoris.match(/<MenuDeroulant/g) ?? []).length === 1
+    /feuilleMobile/.test(lire("src/components/MenusSelection.tsx")) &&
+      /titreFeuille=\{nom\}/.test(lire("src/components/MenusSelection.tsx")) &&
+      (lire("src/components/MenusSelection.tsx").match(/^\s*repliable$/gm) ?? [])
+        .length === 2
   );
 }
 

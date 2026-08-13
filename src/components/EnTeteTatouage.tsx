@@ -96,7 +96,6 @@ export function EnTeteTatouage({
   criteresInitiaux,
   surRecherche,
   rangee,
-  rangeeWeb = false,
 }: {
   /** Critères PILOTÉS PAR LA PAGE (accueil). Absent = état interne. */
   criteres?: CritèresTatouage;
@@ -121,17 +120,6 @@ export function EnTeteTatouage({
     replie: boolean;
     deplier: () => void;
   }) => React.ReactNode;
-  /**
-   * §2 (nº 251) — CETTE RANGÉE LIBRE NE VIT QUE SUR LE WEB.
-   * ------------------------------------------------------------------
-   * « Ma sélection » pose ses deux menus dans la barre du web, et
-   * SEULEMENT là : au doigt, la hauteur est la ressource rare et c'est
-   * le titre de la page qui commande. La rangée disparaît donc sous
-   * `lg` — et la RÉSERVE d'espace du smartphone suit : la barre y
-   * redevient celle de n'importe quelle page (64 px), sans quoi on
-   * réserverait 128 px pour une rangée qui ne s'affiche pas.
-   */
-  rangeeWeb?: boolean;
 }) {
   const router = useRouter();
   const { utilisateur, nom } = useUtilisateur();
@@ -428,10 +416,11 @@ export function EnTeteTatouage({
       rangée ne s'escamote jamais entièrement — elle se réduit à sa
       ligne étroite, dont le contenu décide. */
   const rangeeLibre = Boolean(rangee);
-  /** §2 (nº 251) — une rangée libre RÉSERVÉE AU WEB ne pèse rien sur
-      la réserve du smartphone : elle n'y est pas affichée. */
-  const rangeeLibreMobile = rangeeLibre && !rangeeWeb;
-  const rangeePresente = surAccueil || rangeeLibreMobile;
+  /** §1 (nº 253) — LA RANGÉE LIBRE EXISTE AUX DEUX LARGEURS : le
+      `rangeeWeb` de la nº 251 est défait, et la réserve du smartphone
+      retrouve ses trois hauteurs (128 dépliée, 104 repliée, 64 sans
+      rangée). */
+  const rangeePresente = surAccueil || rangeeLibre;
   /** LA LOUPE EST VISIBLE quand la rangée ne l'est pas : partout hors
       accueil, et sur l'accueil dès que la rangée est repliée. Avec une
       rangée libre, la loupe ne bouge pas (nº 245-§4). */
@@ -731,7 +720,7 @@ export function EnTeteTatouage({
                                  ? "max-lg:grid-rows-[0fr] max-lg:opacity-0"
                                  : "max-lg:grid-rows-[1fr] max-lg:opacity-100"
                              } lg:flex`
-                          : rangeeLibre && !rangeeWeb
+                          : rangeeLibre
                             ? "flex"
                             : "hidden lg:flex"
                       }`}
@@ -994,14 +983,14 @@ export function EnTeteTatouage({
         //  resserrée d'un cran à la nº 250). La réserve suit, sans
         //  quoi la page sauterait d'autant.
         data-reserve-posee={
-          rangeePresente && !moteurReplie ? 128 : rangeeLibreMobile ? 104 : 64
+          rangeePresente && !moteurReplie ? 128 : rangeeLibre ? 104 : 64
         }
         data-reserve-depliee={rangeePresente ? 128 : 64}
         className={`hidden mobile:block shrink-0 transition-[height]
                     duration-300 ease-out ${
                       rangeePresente && !moteurReplie
                         ? "h-32"
-                        : rangeeLibreMobile
+                        : rangeeLibre
                           ? "h-[104px]"
                           : "h-16"
                     }`}

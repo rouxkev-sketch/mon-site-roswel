@@ -38,7 +38,7 @@ export async function resolve(spec, ctx, next) {
 const { entreesDuFiltre } = await import(
   pathToFileURL(RACINE + "/src/lib/filtres-selection.ts").href
 );
-const { suivisDuChoix, comptesDesSuivis, comptesDesJaime } = await import(
+const { suivisDuChoix, comptesDesSuivis, comptesDesFavoris } = await import(
   pathToFileURL(RACINE + "/src/lib/selection-suivis.ts").href
 );
 const TOUS_LES_STYLES = "";
@@ -78,7 +78,7 @@ const suivi = (id, styles) => ({
   recentes: styles.map((style, rang) => photo(`${id}-${rang}`, style)),
   nouveautes: 0,
 });
-const jaime = (id, style, nature, tatoueur = "a") => ({
+const favori = (id, style, nature, tatoueur = "a") => ({
   id,
   url: `/p/${id}`,
   miniature: `/m/${id}`,
@@ -97,13 +97,13 @@ const jaime = (id, style, nature, tatoueur = "a") => ({
   photoProfil: null,
 });
 
-/* ---- §3 : « Mes j'aime » — du réalisme en réalisation, de
+/* ---- §3 : « Mes favoris » — du réalisme en réalisation, de
  *      l'aquarelle en flash : DEUX entrées, et rien d'autre. ---- */
 const photosAimees = [
-  jaime("1", "realisme", "realisation"),
-  jaime("2", "aquarelle", "flash"),
+  favori("1", "realisme", "realisation"),
+  favori("2", "aquarelle", "flash"),
 ];
-const entreesJaime = sansLesPortes(entreesDuFiltre(comptesDesJaime(photosAimees)));
+const entreesFavoris = sansLesPortes(entreesDuFiltre(comptesDesFavoris(photosAimees)));
 
 /* ---- §3 : « Mes suivis » — un artiste à huit styles les apporte
  *      tous ; un style absent n'apparaît pas. ---- */
@@ -138,7 +138,7 @@ const filtres = {
 console.log(
   JSON.stringify(
     {
-      entreesJaime,
+      entreesFavoris,
       entreesSuivis,
       ordreDuMoteur,
       filtres,

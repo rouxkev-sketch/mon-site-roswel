@@ -145,13 +145,13 @@ titre("§3 — le contenu des deux menus (harnais : le vrai module)");
   const r = JSON.parse(brut.slice(brut.indexOf("{")));
 
   verif(
-    "« Mes j'aime » : les styles aimés, et RIEN d'autre (réalisme + aquarelle)",
-    r.entreesJaime.map((e) => e.value).join(",") === "tous,aquarelle,realisme",
-    r.entreesJaime.map((e) => e.label).join(" · ")
+    "« Mes favoris » : les styles aimés, et RIEN d'autre (réalisme + aquarelle)",
+    r.entreesFavoris.map((e) => e.value).join(",") === "tous,aquarelle,realisme",
+    r.entreesFavoris.map((e) => e.label).join(" · ")
   );
   verif(
     "« Tous les styles » ouvre la liste, et remet tout",
-    r.entreesJaime[0].value === "tous" && r.entreesSuivis[0].value === "tous"
+    r.entreesFavoris[0].value === "tous" && r.entreesSuivis[0].value === "tous"
   );
   verif(
     "un artiste à huit styles apporte ses huit styles",
@@ -175,7 +175,7 @@ titre("§3 — le contenu des deux menus (harnais : le vrai module)");
   verif(
     "un style absent des données n'apparaît pas",
     !r.entreesSuivis.some((e) => e.value === "suminagashi") &&
-      !r.entreesJaime.some((e) => e.value === "maori")
+      !r.entreesFavoris.some((e) => e.value === "maori")
   );
   verif(
     "aucune entrée → aucune liste (le menu ne s'affiche pas)",
@@ -198,7 +198,7 @@ titre("§3 — le choix vit dans l'adresse, lu par les deux côtés");
   const page = lire("src/components/PageFavoris.tsx");
   verif(
     "l'adresse porte les deux paramètres, et personne ne garde d'état local",
-    /PARAM_JAIME = "jaime"/.test(filtres) &&
+    /PARAM_FAVORIS = "favoris"/.test(filtres) &&
       /PARAM_SUIVIS = "suivis"/.test(filtres) &&
       /history\.replaceState/.test(filtres) &&
       !/useState\(/.test(menus)

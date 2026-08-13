@@ -275,11 +275,25 @@ function RangeeDeVignettes({
 }) {
   const zone = useRef<HTMLUListElement>(null);
 
-  /** Une page de défilement — `scrollBy`, jamais une translation. */
+  /**
+   * §4 (nº 253) — UNE PAGE ENTIÈRE, ET RIEN D'AUTRE.
+   * ------------------------------------------------------------------
+   * On VISE une frontière de page (`page × largeur visible`) au lieu
+   * d'ajouter une largeur à la position courante : les deux font le
+   * même pas, mais viser se corrige tout seul — après un glissement du
+   * doigt qui s'est arrêté entre deux pages, l'appui suivant retombe
+   * sur une frontière au lieu de propager l'écart.
+   * C'est le défilement NATIF (`scrollTo`), avec l'accrochage déjà en
+   * place : aucune translation calculée, aucun `transform`.
+   * ⚠️ LE NAVIGATEUR BORNE : à la dernière page, la course restante
+   * peut être plus courte qu'une largeur — c'est la fin de la rangée,
+   * pas un pas raté.
+   */
   const defiler = (sens: 1 | -1) => {
     const cadre = zone.current;
     if (!cadre) return;
-    cadre.scrollBy({ left: sens * cadre.clientWidth, behavior: "smooth" });
+    const cible = Math.max(0, etat.page + sens) * cadre.clientWidth;
+    cadre.scrollTo({ left: cible, behavior: "smooth" });
   };
 
   /**
@@ -287,18 +301,47 @@ function RangeeDeVignettes({
    * bandeaux EXISTENT. Celui de droite tant qu'il reste quelque chose à
    * voir à droite ; celui de gauche seulement une fois qu'on a fait
    * défiler — et il repart quand on est revenu au début.
-   * Relevé au montage, à chaque défilement, et au redimensionnement
-   * (le nombre de cases visibles change avec la largeur).
+   * §4 (nº 253) — ET COMBIEN DE PAGES, ET LAQUELLE. Le nombre de pages
+   * se calcule COMME LE DEMANDE LA RÈGLE : le nombre de vignettes
+   * divisé par le nombre VISIBLE — et ce nombre visible se lit dans le
+   * DOM (la largeur d'une case et l'écart), jamais dans une constante
+   * qui divergerait des classes. La page courante est la position
+   * divisée par la largeur visible.
+   * Le tout relevé au montage, à chaque défilement, et au
+   * redimensionnement — l'observateur de taille posé à la nº 252 est
+   * déjà là, il sert aux quatre valeurs.
    */
-  const [bords, setBords] = useState({ gauche: false, droite: false });
+  const [etat, setEtat] = useState({
+    gauche: false,
+    droite: false,
+    pages: 1,
+    page: 0,
+  });
   useEffect(() => {
     const cadre = zone.current;
     if (!cadre) return;
-    const lire = () =>
-      setBords({
+    const lire = () => {
+      const premiere = cadre.firstElementChild as HTMLElement | null;
+      const largeurCase = premiere?.getBoundingClientRect().width ?? 0;
+      //  L'écart entre deux cases, lu dans la mise en page (jamais
+      //  recopié) : la distance entre le début de la première et celui
+      //  de la deuxième, moins la largeur d'une case.
+      const seconde = premiere?.nextElementSibling as HTMLElement | null;
+      const pas = seconde
+        ? seconde.getBoundingClientRect().left -
+          premiere!.getBoundingClientRect().left
+        : largeurCase;
+      const visibles = pas > 0 ? Math.max(1, Math.round(cadre.clientWidth / pas)) : 1;
+      const total = cadre.children.length;
+      setEtat({
         gauche: cadre.scrollLeft > 1,
         droite: cadre.scrollLeft + cadre.clientWidth < cadre.scrollWidth - 1,
+        pages: Math.max(1, Math.ceil(total / visibles)),
+        page: cadre.clientWidth
+          ? Math.round(cadre.scrollLeft / cadre.clientWidth)
+          : 0,
       });
+    };
     lire();
     cadre.addEventListener("scroll", lire, { passive: true });
     const observateur = new ResizeObserver(lire);
@@ -338,7 +381,12 @@ function RangeeDeVignettes({
       data-bandeau-defilement={sens === 1 ? "droite" : "gauche"}
       onClick={() => defiler(sens)}
       data-verre-fenetre=""
-      className={`hidden pointer-fine:flex absolute inset-y-0 z-[2] w-12 ${
+      /*  §4 (nº 253) — AU SURVOL SEULEMENT (`group-hover`), et par la
+          VISIBILITÉ, jamais par l'opacité : un fondu d'opacité sur une
+          plaque de verre est interdit (nº 252-§1), et la visibilité ne
+          déplace rien — le bandeau est de toute façon absolu. Au
+          repos : rien. Au doigt : rien du tout (`pointer-fine`). */
+      className={`hidden pointer-fine:flex invisible group-hover:visible absolute inset-y-0 z-[2] w-12 ${
         sens === 1 ? "right-0" : "left-0"
       } items-center justify-center text-sombre-texte`}
     >
@@ -359,7 +407,7 @@ function RangeeDeVignettes({
         haute des flèches de la nº 250 est partie avec elles) : les
         bandeaux `inset-y-0` épousent donc exactement la hauteur des
         images, et l'identité retrouve sa bande juste dessous. */
-    <div className="relative mt-2">
+    <div className="group relative mt-2">
       <ul
         ref={zone}
         data-bande-suivi=""
@@ -453,8 +501,35 @@ function RangeeDeVignettes({
           </li>
         )}
       </ul>
-      {bords.gauche && bandeau(-1)}
-      {bords.droite && bandeau(1)}
+      {etat.gauche && bandeau(-1)}
+      {etat.droite && bandeau(1)}
+      {/*  §4 (nº 253) — L'INDICATEUR DE PAGES, en haut à droite de la
+           rangée : autant de repères que de pages, celui en cours
+           distingué. Il ne s'affiche qu'à partir de deux pages — un
+           repère unique n'apprendrait rien.
+           ⚠️ AUCUNE VALEUR NEUVE : ce sont LES RONDS DE PAGINATION DU
+           CARROUSEL (nº 198-§5) — 6 px, blanc plein pour l'actif,
+           blanc voilé pour les autres, la même ombre très douce qui
+           les garde lisibles sur une photo blanche — posés dans
+           l'angle du COMPTEUR de ce même carrousel (nº 198-§4). Il est
+           absolu : son apparition ne déplace rien. */}
+      {etat.pages > 1 && (
+        <div
+          data-indicateur-pages={etat.pages}
+          data-page-courante={etat.page}
+          aria-hidden="true"
+          className="pointer-events-none absolute top-3 right-3 z-[3] flex items-center gap-1"
+        >
+          {Array.from({ length: etat.pages }).map((_, rang) => (
+            <span
+              key={rang}
+              className={`h-1.5 w-1.5 rounded-full shadow-[0_0_2px_rgba(0,0,0,0.4)] ${
+                rang === etat.page ? "bg-white" : "bg-white/45"
+              }`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

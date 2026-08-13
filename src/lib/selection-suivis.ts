@@ -366,9 +366,9 @@ export function comptesDesSuivis(
   return comptes;
 }
 
-/** Le nombre d'ENSEMBLES aimés par entrée — le menu « Mes j'aime »
+/** Le nombre d'ENSEMBLES aimés par entrée — le menu « Mes favoris »
     annonce ce qu'il va montrer (une carte = un ensemble, nº 213-§3d). */
-export function comptesDesJaime(
+export function comptesDesFavoris(
   photos: PhotoFavorite[]
 ): Map<string, number> {
   const parCle = new Map<string, Set<string>>();

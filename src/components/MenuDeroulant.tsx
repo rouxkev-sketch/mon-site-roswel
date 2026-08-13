@@ -136,6 +136,27 @@ export function MenuDeroulant({
 }) {
   const [ouvert, setOuvert] = useState(false);
   const conteneur = useRef<HTMLDivElement>(null);
+  /**
+   * §2 (nº 253) — LA PLAQUE DE LA FEUILLE, NOMMÉE.
+   * ------------------------------------------------------------------
+   * LA CAUSE DU DÉFAUT, ET ELLE EST DANS LE CODE DE LA nº 251 : la
+   * fermeture au clic extérieur (plus bas) excuse DEUX zones — le
+   * conteneur du champ, et le panneau du menu déroulant. Tant que la
+   * feuille vivait DANS le flux, elle était à l'intérieur du
+   * conteneur : elle était donc excusée sans qu'on ait à le dire.
+   * La nº 251 l'a montée dans un PORTAIL sur le corps du document —
+   * `conteneur.contains(cible)` est devenu FAUX pour tout ce qu'elle
+   * contient, et le moindre appui à l'intérieur fermait le menu.
+   * POURQUOI LES OPTIONS SEMBLAIENT MARCHER : une option choisit dès
+   * l'appui (`onPointerDown`) et referme dans la foulée — la fermeture
+   * parasite ne changeait rien. Une PORTE, elle, ne fait que basculer :
+   * l'état s'ouvrait, puis le menu se fermait sous elle. Vu de
+   * l'écran : « appuyer sur Réalisations n'ouvre rien du tout ».
+   * C'est exactement la leçon de la nº 238-§3 (une fermeture au clic
+   * dehors doit connaître TOUTES les surfaces montées en portail),
+   * qu'il fallait rejouer ici.
+   */
+  const feuille = useRef<HTMLDivElement>(null);
   const bouton = useRef<HTMLButtonElement>(null);
   // Hauteur maximale du menu et sens d'ouverture : le calcul est
   // PARTAGÉ avec la liste des villes (usePlacementMenu), pour que les
@@ -237,6 +258,10 @@ export function MenuDeroulant({
       const cible = evenement.target as Node;
       if (conteneur.current?.contains(cible)) return;
       if (panneau.current?.contains(cible)) return;
+      //  §2 (nº 253) — ET LA FEUILLE, montée en portail depuis la
+      //  nº 251 : sans cette ligne, ses portes s'ouvraient puis le
+      //  menu se fermait sous elles.
+      if (feuille.current?.contains(cible)) return;
       setOuvert(false);
     };
     const surTouche = (evenement: KeyboardEvent) => {
@@ -713,6 +738,7 @@ export function MenuDeroulant({
           {/* La feuille — SŒUR du voile, jamais son enfant. */}
           <div
             {...(sombre ? { "data-verre-menu": "" } : {})}
+            ref={feuille}
             role="listbox"
             aria-label={ariaLabel}
             className={`relative rounded-t-3xl max-h-[80vh] flex flex-col pb-[max(1rem,env(safe-area-inset-bottom))] ${

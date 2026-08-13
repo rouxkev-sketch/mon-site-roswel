@@ -7,7 +7,7 @@ import { IconeChevronBas } from "@/components/Icones";
 import { libelleStyle } from "@/config/tatouage";
 import {
   lireSelection,
-  MENU_JAIME,
+  MENU_FAVORIS,
   MENU_SUIVIS,
   poserSelection,
   valeurDuMenu,
@@ -19,7 +19,7 @@ import { lireRequeteCourante, souscrireAdresse } from "@/lib/adresse-courante";
 /**
  * LES DEUX MENUS DE « MA SÉLECTION » (nº 245-§1/§3, nº 246, nº 247)
  * ==================================================================
- * `Mes j'aime` · `Mes suivis` — DANS UN SEUL BLOC, exactement comme
+ * `Mes favoris` · `Mes suivis` — DANS UN SEUL BLOC, exactement comme
  * le champ et la localité n'en forment qu'un dans le moteur : c'est
  * `EncadreDeuxChamps`, l'encadré EXTRAIT du moteur. Il n'existe pas de
  * second encadré, pas de second centrage, pas de second repli — ce
@@ -50,12 +50,12 @@ import { lireRequeteCourante, souscrireAdresse } from "@/lib/adresse-courante";
  */
 
 export function MenusSelection({
-  entreesJaime,
+  entreesFavoris,
   entreesSuivis,
   replie = false,
   surDeploiement,
 }: {
-  entreesJaime: EntreeFiltre[];
+  entreesFavoris: EntreeFiltre[];
   entreesSuivis: EntreeFiltre[];
   /** La rangée est-elle repliée ? (§4 — l'état vient de la barre, il
       n'est pas calculé ici : une seule mécanique de repli.) */
@@ -121,24 +121,66 @@ export function MenusSelection({
 
   const blocDesMenus = (
     <EncadreDeuxChamps
-      gauche={menu(MENU_JAIME, "Mes j'aime", entreesJaime)}
+      gauche={menu(MENU_FAVORIS, "Mes favoris", entreesFavoris)}
       droite={menu(MENU_SUIVIS, "Mes suivis", entreesSuivis)}
     />
+  );
+
+  /**
+   * §1 (nº 253) — AU DOIGT, LA RANGÉE PORTE LES DEUX TITRES.
+   * ------------------------------------------------------------------
+   * La barre RESTE, entière, avec sa rétractation (la nº 251 l'avait
+   * retirée du smartphone — c'était une mauvaise lecture, défaite
+   * ici) : ce sont les deux MENUS DÉROULANTS qui cèdent la place aux
+   * deux TITRES. Chacun porte son chevron et ouvre SA feuille, jamais
+   * les deux — c'est le même `MenuDeroulant`, avec les mêmes drapeaux
+   * (`sombre`, `repliable`) et sa feuille glissante : le titre EST son
+   * champ (`libelleValeur` fixe, `hauteur` et `taillePolice` neutres),
+   * de sorte que rien n'est redessiné.
+   */
+  const titre = (cle: MenuSelection, nom: string, entrees: EntreeFiltre[]) => {
+    if (entrees.length === 0) return null;
+    return (
+      <span data-titre-barre={cle} className="min-w-0">
+        <MenuDeroulant
+          valeur={valeurDuMenu(choix, cle)}
+          surChangement={(suivante) => poserSelection(cle, suivante)}
+          options={entrees}
+          ariaLabel={nom}
+          placeholder={nom}
+          libelleValeur={nom}
+          titreFeuille={nom}
+          hauteur="min-h-0"
+          taillePolice=""
+          sansBordure
+          sombre
+          repliable
+          feuilleMobile
+        />
+      </span>
+    );
+  };
+
+  const blocDesTitres = (
+    <div className="flex items-center gap-6">
+      {titre(MENU_FAVORIS, "Mes favoris", entreesFavoris)}
+      {titre(MENU_SUIVIS, "Mes suivis", entreesSuivis)}
+    </div>
   );
 
   return (
     /*  §1 (nº 251) — L'ENCADRÉ REVIENT DANS LA BARRE DU WEB, tel
         qu'il était à la nº 246 : le `lg:hidden` de la nº 249 est
-        défait. §2 — ET IL N'Y VIT PLUS QUE LÀ (`hidden lg:block`) :
-        sur un téléphone, la hauteur est la ressource rare, et le TITRE
-        de la page est déjà là — c'est lui qui commande (voir
-        PageFavoris, `titreControle`, et la feuille du menu).
+        défait.
+        §1 (nº 253) — ET LA RANGÉE DU SMARTPHONE EST RÉTABLIE : elle
+        porte les deux TITRES à la place des deux menus déroulants. Une
+        seule rangée, deux contenus selon la largeur — le centrage, la
+        largeur et le repli restent ceux de la barre (EnTeteTatouage),
+        avec ses réglages de juillet.
         ⚠️ LES DEUX ÉTATS DU REPLI RESTENT ÉCRITS (la ligne étroite
         « Ma sélection » et ses jetons) : la barre garde son bandeau et
-        son repli, réglages de juillet compris. Sur le web, `replie`
-        n'est jamais vrai (le repli est une affaire de largeur, sous
-        1024) — l'état existe, il ne se déclenche simplement pas. */
-    <div className="w-full hidden lg:block">
+        son repli. */
+    <div className="w-full">
       <div
         className={`${pliage} ${
           replie
@@ -148,7 +190,12 @@ export function MenusSelection({
         aria-hidden={replie || undefined}
         inert={replie || undefined}
       >
-        <div className="min-h-0 overflow-hidden">{blocDesMenus}</div>
+        <div className="min-h-0 overflow-hidden">
+          {/*  L'ENCADRÉ sur le web, LES DEUX TITRES au doigt : la même
+               rangée, le même repli. */}
+          <div className="hidden lg:block">{blocDesMenus}</div>
+          <div className="lg:hidden">{blocDesTitres}</div>
+        </div>
       </div>
       <div
         className={`${pliage} ${

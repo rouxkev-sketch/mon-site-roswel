@@ -58,9 +58,12 @@ const classeRangee = nettoyer(
 );
 //  LA CLASSE DU BANDEAU, lue à la source (les deux sens partagent tout
 //  sauf right-0/left-0, injecté par le ternaire).
+//  (mis à jour nº 253-§4 : la classe porte en plus le survol —
+//  `invisible group-hover:visible` — entre le pointer-fine et
+//  l'absolu ; l'ancre s'élargit d'autant.)
 const classeBandeau = nettoyer(
   source.match(
-    /className=\{`(hidden pointer-fine:flex absolute inset-y-0[^`]*)`\}/
+    /className=\{`(hidden pointer-fine:flex[^`]*inset-y-0[^`]*)`\}/
   )?.[1]
 )
   .replace(/\$\{\s*sens === 1 \? "right-0" : "left-0"\s*\}/, "")
@@ -88,8 +91,9 @@ titre("§1 — à la source : les bandeaux remplacent les flèches");
   );
   verif(
     "présence par MONTAGE conditionnel — aucun fondu d'opacité sur la plaque",
-    /\{bords\.gauche && bandeau\(-1\)\}/.test(source) &&
-      /\{bords\.droite && bandeau\(1\)\}/.test(source) &&
+    //  (nº 253 : l'état s'appelle `etat` — il porte aussi les pages.)
+    /\{etat\.gauche && bandeau\(-1\)\}/.test(source) &&
+      /\{etat\.droite && bandeau\(1\)\}/.test(source) &&
       !/transition-opacity/.test(classeBandeau) &&
       !/starting:/.test(classeBandeau)
   );
