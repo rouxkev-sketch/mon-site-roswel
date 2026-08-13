@@ -5,7 +5,6 @@ import { EncadreDeuxChamps } from "@/components/EncadreBarre";
 import { MenuDeroulant } from "@/components/MenuDeroulant";
 import { IconeLoupe } from "@/components/Icones";
 import {
-  entreesDuFiltre,
   filtreCourant,
   PARAM_JAIME,
   PARAM_SUIVIS,
