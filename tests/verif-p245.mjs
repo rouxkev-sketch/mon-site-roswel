@@ -74,7 +74,12 @@ titre("§1 — une seule écriture, consommée par les deux endroits");
   verif(
     "le REPLI non plus : une seule mécanique, celle des deux hauteurs",
     (barre.match(/max-lg:grid-rows-\[0fr\]/g) ?? []).length === 1 &&
-      !/grid-rows-\[0fr\]|scrollY|addEventListener\("scroll"/.test(menus) &&
+      //  (mis à jour à la nº 246-§2 : les enveloppes pliées de
+      //  MenusSelection portent désormais les MÊMES jetons
+      //  `grid-rows`, mais l'ÉTAT vient toujours de la barre — la
+      //  mécanique interdite chez le jumeau, c'est le CALCUL : ni
+      //  scrollY, ni écouteur de défilement.)
+      !/scrollY|addEventListener\("scroll"/.test(menus) &&
       !/addEventListener\("scroll"/.test(barreSelection)
   );
   verif(

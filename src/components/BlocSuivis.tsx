@@ -104,8 +104,13 @@ export function BlocSuivis({
                (un nom long, une adresse), et la page déborde en
                largeur. Avec le plancher à zéro, la colonne cède, et
                `scrollWidth` reste égal à `clientWidth`. */}
+          {/*  §3 (nº 246) — 34 px DANS LES DEUX SENS : l'écart entre
+               les deux colonnes est CELUI qui sépare deux blocs
+               verticalement depuis la nº 244 — l'espace est égal
+               partout. Colonnes STRICTEMENT égales (`minmax(0,1fr)`
+               deux fois — et jamais `1fr`, le piège de la nº 228). */}
           <ul
-            className="mt-5 grid gap-x-8 gap-y-[34px]
+            className="mt-5 grid gap-[34px]
                        grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
           >
             {groupe.suivis.map((suivi) => (
