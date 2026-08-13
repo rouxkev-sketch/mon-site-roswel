@@ -16,7 +16,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { lieuVersParametres } from "@/lib/geocodage";
 import { MARQUE_YOKOFOLIO, TEXTES_TATOUAGE } from "@/config/tatouage";
-import { IconeFanion, IconeLoupe, IconeSilhouette } from "@/components/Icones";
+import {
+  ETATS_ROND_BARRE,
+  IconeFanion,
+  IconeLoupe,
+  IconeSilhouette,
+} from "@/components/Icones";
 import { LogoYokofolio } from "@/components/LogoYokofolio";
 import { MenuEspace } from "@/components/MenuEspace";
 import { SelecteurLangue } from "@/components/SelecteurLangue";
@@ -807,7 +812,7 @@ export function EnTeteTatouage({
             tabIndex={loupeVisible ? 0 : -1}
             style={{ height: HAUTEUR_ACTIONS, width: HAUTEUR_ACTIONS }}
             className={`flex lg:hidden shrink-0 items-center justify-center rounded-full
-                       transition-opacity duration-200 hover:bg-sombre-eleve
+                       transition-opacity duration-200 ${ETATS_ROND_BARRE}
                        text-sombre-texte
                        focus-visible:outline-2 focus-visible:outline-offset-2
                        focus-visible:outline-primaire ${
@@ -845,11 +850,11 @@ export function EnTeteTatouage({
               //  l'instant, sans recharger l'application entière).
               onClick={rafraichirSiDejaLa("/mes-favoris")}
               style={{ height: HAUTEUR_ACTIONS, width: HAUTEUR_ACTIONS }}
-              className="shrink-0 flex items-center justify-center rounded-full
-                         transition-colors hover:bg-sombre-eleve
+              className={`shrink-0 flex items-center justify-center rounded-full
+                         transition-colors ${ETATS_ROND_BARRE}
                          focus-visible:outline-2 focus-visible:outline-offset-2
                          focus-visible:outline-primaire
-                         text-sombre-texte hover:text-primaire"
+                         text-sombre-texte hover:text-primaire`}
             >
               {/* ⚠️ LE FANION, ET PLUS LE CŒUR (nº 145-§3) : cette
                   icône désigne LA PAGE « Ma sélection », pas le geste
@@ -882,11 +887,11 @@ export function EnTeteTatouage({
                 aria-label={libelleDeconnecte}
                 title={libelleDeconnecte}
                 style={{ height: HAUTEUR_ACTIONS, width: HAUTEUR_ACTIONS }}
-                className="sm:hidden flex items-center justify-center rounded-full
-                           transition-colors hover:bg-sombre-eleve
+                className={`sm:hidden flex items-center justify-center rounded-full
+                           transition-colors ${ETATS_ROND_BARRE}
                            focus-visible:outline-2 focus-visible:outline-offset-2
                            focus-visible:outline-primaire
-                           text-sombre-texte hover:text-primaire"
+                           text-sombre-texte hover:text-primaire`}
               >
                 {/*  LA SILHOUETTE SEULE, rang 24 (nº 147-§5 et §6). */}
                 <IconeSilhouette taille={24} />
@@ -967,14 +972,14 @@ export function EnTeteTatouage({
         //  le contenu passerait dessous. Les deux hauteurs du moteur
         //  (128 / 64) ne bougent pas d'un pixel : la position au
         //  retour reste celle de juillet.
-        //  ⚠️ 112, ET C'EST UNE ADDITION, PAS UN CHOIX (nº 247-§6) :
-        //  la rangée du logo fait 64 (40 d'icônes + `py-3`), l'air
-        //  au-dessus de la ligne étroite 12 (`max-lg:pt-3`) et la
-        //  ligne elle-même 36 (`min-h-[36px]`). Les 104 annoncés par
-        //  la nº 245 en oubliaient huit : le contenu passait dessous
-        //  d'autant.
+        //  ⚠️ 104, ET C'EST UNE ADDITION, PAS UN CHOIX (nº 247-§6,
+        //  recalculée nº 250-§2) : la rangée du logo fait 64 (40
+        //  d'icônes + `py-3`), l'air au-dessus de la ligne étroite 12
+        //  (`max-lg:pt-3`) et la ligne elle-même 28 (`min-h-[28px]`,
+        //  resserrée d'un cran à la nº 250). La réserve suit, sans
+        //  quoi la page sauterait d'autant.
         data-reserve-posee={
-          rangeePresente && !moteurReplie ? 128 : rangeeLibre ? 112 : 64
+          rangeePresente && !moteurReplie ? 128 : rangeeLibre ? 104 : 64
         }
         data-reserve-depliee={rangeePresente ? 128 : 64}
         className={`hidden mobile:block shrink-0 transition-[height]
@@ -982,7 +987,7 @@ export function EnTeteTatouage({
                       rangeePresente && !moteurReplie
                         ? "h-32"
                         : rangeeLibre
-                          ? "h-28"
+                          ? "h-[104px]"
                           : "h-16"
                     }`}
       />

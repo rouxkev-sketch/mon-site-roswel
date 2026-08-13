@@ -3,7 +3,7 @@
 import { useSyncExternalStore } from "react";
 import { EncadreDeuxChamps } from "@/components/EncadreBarre";
 import { MenuDeroulant } from "@/components/MenuDeroulant";
-import { IconeLoupe } from "@/components/Icones";
+import { IconeChevronBas } from "@/components/Icones";
 import { libelleStyle } from "@/config/tatouage";
 import {
   lireSelection,
@@ -154,27 +154,34 @@ export function MenusSelection({
         inert={!replie || undefined}
       >
         <div className="min-h-0 overflow-hidden">
-          {/*  §2 (nº 246) — LA LIGNE ÉTROITE : le mot en 13 px GRIS
-               (la taille et la couleur des libellés secondaires,
-               `text-sombre-texte-doux` — aucune valeur neuve), la
-               loupe à 18 px en `currentColor` (l'écriture unique des
-               icônes), collée à sa gauche avec 8 px d'écart (`gap-2`),
-               l'ensemble centré. Aucun contour, aucun halo, aucun
+          {/*  §2 (nº 246, resserrée nº 250-§2) — LA LIGNE ÉTROITE : le
+               mot en 13 px GRIS (la taille et la couleur des libellés
+               secondaires, `text-sombre-texte-doux` — aucune valeur
+               neuve), et à sa gauche, avec 8 px d'écart (`gap-2`), LA
+               FLÈCHE VERS LE BAS (nº 250-§2) : elle dit qu'un appui
+               DÉPLOIE — la loupe, elle, disait « chercher », ce que
+               cette ligne ne fait pas. `IconeChevronBas`, l'écriture
+               unique des icônes de la nº 240, en `currentColor`.
+               L'ensemble centré. Aucun contour, aucun halo, aucun
                rose.
-               ⚠️ LE MOT EST « MA SÉLECTION » (nº 247-§6) : cette
-               rangée ne porte pas le bloc de recherche, elle porte les
-               deux menus de cette page — repliée, elle doit dire OÙ
-               l'on est, pas ce qu'elle n'est pas. */}
+               ⚠️ LE MOT EST « MA SÉLECTION » (nº 247-§6) : repliée, la
+               rangée dit OÙ l'on est.
+               ⚠️ UN CRAN PLUS BASSE (nº 250-§2) : 28 px au lieu de 36
+               — le mot et la flèche restent lisibles (13 px / 14 px).
+               La courbe et la durée du repli ne bougent pas d'un
+               jeton : mêmes enveloppes `pliage`, 300 ms, ease-out. La
+               réserve de la barre suit (64 + 12 + 28 = 104, voir
+               EnTeteTatouage). */}
           <button
             type="button"
             data-ligne-repliee=""
             onClick={surDeploiement}
             aria-label="Déplier les menus de Ma sélection"
             className="flex w-full items-center justify-center gap-2 rounded-2xl
-                       min-h-[36px] text-[13px] text-sombre-texte-doux
+                       min-h-[28px] text-[13px] text-sombre-texte-doux
                        transition-colors hover:bg-white/5 active:bg-white/10"
           >
-            <IconeLoupe taille={18} />
+            <IconeChevronBas taille={14} />
             Ma sélection
           </button>
         </div>

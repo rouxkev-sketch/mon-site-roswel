@@ -610,13 +610,18 @@ titre("§6 — la loupe, l'icône de la page courante, le repli");
       /data-reserve-depliee=\{rangeePresente \? 128 : 64\}/.test(barre)
   );
   verif(
-    "la troisième hauteur est une addition : 64 + 12 + 36 = 112",
-    /rangeeLibre \? 112 : 64/.test(barre) && /rangeeLibre\s*\n?\s*\? "h-28"/.test(barre),
+    //  (mis à jour à la nº 250-§2 : la ligne étroite est resserrée à
+    //  28 px — l'addition devient 64 + 12 + 28 = 104, et la réserve
+    //  suit.)
+    "la troisième hauteur est une addition : 64 + 12 + 28 = 104",
+    /rangeeLibre \? 104 : 64/.test(barre) && /rangeeLibre\s*\n?\s*\? "h-\[104px\]"/.test(barre),
   );
   verif(
     "repliée, la rangée dit « Ma sélection » (et plus « Recherche »)",
     /Ma sélection\s*\n?\s*<\/button>/.test(menus) &&
-      /IconeLoupe taille=\{18\}/.test(menus) &&
+      //  (mis à jour nº 250-§2 : la loupe est devenue la flèche vers
+      //  le bas — un appui DÉPLOIE, il ne cherche pas.)
+      /IconeChevronBas taille=\{14\}/.test(menus) &&
       !/>\s*Recherche\s*</.test(menus)
   );
 }

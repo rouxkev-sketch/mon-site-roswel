@@ -277,7 +277,9 @@ if (R) {
     "le cœur : le glyphe du cœur allumé, en bas à droite, sur le cas « aimees » SEUL",
     /bande\.cas === "aimees" && \(/.test(source) &&
       /data-coeur-aime=""/.test(source) &&
-      /absolute bottom-1\.5 right-1\.5/.test(source) &&
+      //  (mis à jour nº 250-§3 : le cœur prend sa juste taille — un
+      //  huitième de la vignette, à 8 px des deux bords.)
+      /absolute bottom-2 right-2 w-\[12\.5%\]/.test(source) &&
       /fill-white text-white/.test(source) &&
       (source.match(/data-coeur-aime/g) ?? []).length === 1
   );

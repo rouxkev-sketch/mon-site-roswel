@@ -10,6 +10,20 @@
 
 type ProprietesIcone = { taille?: number; classe?: string };
 
+/**
+ * §1 (nº 250) — LES ÉTATS DU ROND DES ICÔNES DE LA BARRE, écrits UNE
+ * FOIS : loupe, fanion, compte (les deux visages du compte compris).
+ *  · WEB : le cercle gris au survol — inchangé. (Le rose du survol
+ *    reste ce qu'il est : un SURVOL, pas un bouton qui devient rose —
+ *    il ne contredit pas la réserve du rose.)
+ *  · SMARTPHONE : il n'y a pas de survol au doigt — l'équivalent est
+ *    l'état ENFONCÉ : LE MÊME cercle gris apparaît sous le doigt
+ *    (`active:`) et repart au relâchement ; il ne reste jamais
+ *    affiché. Même géométrie des deux côtés : le rond de 40
+ *    (HAUTEUR_ACTIONS) et son `rounded-full`, déjà partagés.
+ */
+export const ETATS_ROND_BARRE = "hover:bg-sombre-eleve active:bg-sombre-eleve";
+
 /* ============ Icônes du menu (trait fin) ============ */
 
 export function IconeCoeur({ taille = 24, classe = "" }: ProprietesIcone) {
@@ -394,7 +408,10 @@ export function IconeFlecheRetour({ taille = 20, classe = "" }: ProprietesIcone)
   );
 }
 
-/** Le chevron des accordéons (pivote à l'ouverture) */
+/** Le chevron des accordéons (pivote à l'ouverture).
+    §2 (nº 250) — c'est AUSSI la flèche de la ligne étroite de « Ma
+    sélection » : repliée, la barre la montre vers le bas pour dire
+    qu'un appui déploie. Une seule écriture, `currentColor`. */
 export function IconeChevronBas({ taille = 18, classe = "" }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
@@ -411,6 +428,7 @@ export function IconeLoupe({ taille = 20, classe = "" }: ProprietesIcone) {
     </svg>
   );
 }
+
 
 /* ============ Icônes des modules de l'accueil ============ */
 

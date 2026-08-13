@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  ETATS_ROND_BARRE,
   IconeBouclierTrait,
   IconeChevronBas,
   IconeCloche,
@@ -650,10 +651,10 @@ export function MenuEspace({
         aria-label={`Mon espace — ${nom}`}
         title={`Mon espace — ${nom}`}
         style={{ height: hauteur, width: hauteur }}
-        className="sm:hidden flex items-center justify-center rounded-full
-                   text-primaire transition-colors hover:bg-sombre-eleve
+        className={`sm:hidden flex items-center justify-center rounded-full
+                   text-primaire transition-colors ${ETATS_ROND_BARRE}
                    focus-visible:outline-2 focus-visible:outline-offset-2
-                   focus-visible:outline-primaire"
+                   focus-visible:outline-primaire`}
       >
         {/*  LA SILHOUETTE SEULE, rang 24 (nº 147-§5 et §6) — ROSE :
              c'est l'état connecté, le rose le dit (charte). */}
@@ -677,10 +678,10 @@ export function MenuEspace({
         aria-label={`Mon espace — ${nom}`}
         title={`Mon espace — ${nom}`}
         style={{ height: hauteur, width: hauteur }}
-        className="hidden sm:flex items-center justify-center rounded-full
-                   text-primaire transition-colors hover:bg-sombre-eleve
+        className={`hidden sm:flex items-center justify-center rounded-full
+                   text-primaire transition-colors ${ETATS_ROND_BARRE}
                    focus-visible:outline-2 focus-visible:outline-offset-2
-                   focus-visible:outline-primaire"
+                   focus-visible:outline-primaire`}
       >
         <IconeSilhouette taille={24} classe="shrink-0" />
       </button>

@@ -284,19 +284,22 @@ function RangeeDeVignettes({
     cadre.scrollBy({ left: sens * cadre.clientWidth, behavior: "smooth" });
   };
 
+  /*  §4 (nº 250) — LES FLÈCHES VIVENT HORS DE LA RANGÉE : elles ne
+      recouvrent plus jamais une vignette. Plus de capsule pleine ni de
+      flou porté — l'icône à taille naturelle, grise, qui s'éclaircit ;
+      l'appui pose le voile blanc des lignes cliquables (nº 229). Elles
+      se rangent au-dessus de la rangée, calées à droite — le coin des
+      rangées d'Apple. `pointer-fine:` : la variante déclarée en
+      nº 208-§2 — au doigt, elles n'existent pas, le glissement
+      suffit. */
   const fleche = (sens: 1 | -1) => (
     <button
       type="button"
       aria-label={sens === 1 ? "Vignettes suivantes" : "Vignettes précédentes"}
       onClick={() => defiler(sens)}
-      /*  LA ROBE DES FLÈCHES DU CARROUSEL (nº 198), telle quelle —
-          aucune valeur neuve. `pointer-fine:` : la variante déclarée
-          en nº 208-§2, la même que ces flèches-là. */
-      className={`hidden pointer-fine:flex absolute z-[2] ${
-        sens === 1 ? "right-1" : "left-1"
-      } top-1/2 -translate-y-1/2 w-9 h-9 rounded-full
-      bg-sombre-fond/55 backdrop-blur items-center justify-center
-      text-sombre-texte hover:bg-sombre-eleve/75 transition-colors`}
+      className="hidden pointer-fine:flex h-8 w-8 items-center justify-center
+                 rounded-full text-sombre-texte-doux transition-colors
+                 hover:bg-white/5 hover:text-sombre-texte active:bg-white/10"
     >
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path
@@ -311,14 +314,22 @@ function RangeeDeVignettes({
   );
 
   return (
-    <div className="relative mt-2">
+    <div className="mt-2">
+      {/*  Les deux flèches, dans la marge HAUTE de la rangée (jamais
+           dessus). Cachées au doigt : aucune hauteur ajoutée là. */}
+      <div className="hidden pointer-fine:flex justify-end gap-1 mb-1">
+        {fleche(-1)}
+        {fleche(1)}
+      </div>
       <ul
         ref={zone}
         data-bande-suivi=""
         data-cas={bande.cas}
         /*  §2 (nº 244) — 6 px d'écart. Le défilement est NATIF, la
             barre est masquée (elle n'apprendrait rien), et
-            l'accrochage au centre laisse dépasser les deux voisines. */
+            l'accrochage au centre laisse dépasser les deux voisines
+            (§4, nº 250 : c'est LE DÉPASSEMENT SEUL qui dit la suite —
+            aucun dégradé, aucun voile de bord). */
         className="flex gap-1.5 overflow-x-auto snap-x snap-mandatory
                    [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
@@ -353,18 +364,23 @@ function RangeeDeVignettes({
                    droite, sur elles SEULES (le cas « aimees » — les
                    premières affichées, l'ordre de la nº 243). Le
                    glyphe est celui du cœur allumé des photos
-                   (nº 141-6B) : blanc plein, ombre du trait. ⚠️ SA
-                   TAILLE EST PROVISOIRE : c'est le travail de la passe
-                   Fable — seule la POSITION est posée ici. */}
+                   (nº 141-6B) : blanc plein, et l'ombre du trait —
+                   c'est la lisibilité du glyphe sur photo claire comme
+                   sombre (la décision de la nº 141-6A), PAS un halo ni
+                   un fond : aucun cercle, aucune plaque derrière lui.
+                   §3 (nº 250) — SA JUSTE TAILLE : UN HUITIÈME de la
+                   largeur de la vignette (`w-[12.5%]` — il suit la
+                   vignette, il ne l'écrase jamais), tenu à 8 px des
+                   deux bords (`bottom-2 right-2`). */}
               {bande.cas === "aimees" && (
                 <span
                   data-coeur-aime=""
                   aria-hidden="true"
-                  className="pointer-events-none absolute bottom-1.5 right-1.5"
+                  className="pointer-events-none absolute bottom-2 right-2 w-[12.5%]"
                 >
                   <IconeCoeur
-                    taille={14}
-                    classe="fill-white text-white [filter:drop-shadow(0_1px_2px_rgba(0,0,0,0.55))]"
+                    taille={24}
+                    classe="block h-auto w-full fill-white text-white [filter:drop-shadow(0_1px_2px_rgba(0,0,0,0.55))]"
                   />
                 </span>
               )}
@@ -373,25 +389,28 @@ function RangeeDeVignettes({
         ))}
         {/*  §6 (nº 249) — LA CASE « VOIR PLUS », au bout du glissement,
              dès que la source compte au moins dix vignettes : elle
-             mène au portfolio entier de la fiche. Même case, même
-             accrochage — le fond relevé et le petit gris des libellés
-             secondaires, aucune valeur neuve. */}
+             mène au portfolio entier de la fiche.
+             §4 (nº 250) — L'ÉCRITURE DES ACTIONS INTERMÉDIAIRES
+             (charte, nº 217-§7) : une CAPSULE À TAILLE NATURELLE,
+             centrée dans sa case — le gris relevé qui s'éclaircit au
+             survol, jamais de rose plein, jamais une case pleine. */}
         {bande.voirPlus && (
           <li className={CASE_RANGEE}>
-            <Link
-              href={`/tatoueur/${suivi.slug}`}
-              data-voir-plus=""
-              className="flex aspect-square items-center justify-center rounded-none
-                         bg-sombre-eleve text-[13px] text-sombre-texte-doux
-                         transition-colors hover:bg-sombre-haut active:opacity-75"
-            >
-              Voir plus
-            </Link>
+            <span className="flex aspect-square items-center justify-center">
+              <Link
+                href={`/tatoueur/${suivi.slug}`}
+                data-voir-plus=""
+                className="inline-flex items-center justify-center rounded-full
+                           bg-sombre-eleve px-3.5 min-h-[32px] text-[13px]
+                           font-medium text-sombre-texte transition-colors
+                           hover:bg-sombre-haut active:opacity-80"
+              >
+                Voir plus
+              </Link>
+            </span>
           </li>
         )}
       </ul>
-      {fleche(-1)}
-      {fleche(1)}
     </div>
   );
 }
