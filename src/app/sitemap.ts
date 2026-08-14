@@ -25,10 +25,24 @@ export const revalidate = 86400;
  *
  * CE QU'IL N'ANNONCE JAMAIS :
  *  - les fiches de DÉMONSTRATION : elles n'existent pas ;
- *  - les fiches d'ESSAI DES ADMINISTRATEURS : elles sont retirées à la
- *    source, par la lecture elle-même (voir lib/fiches-admin) — ce
- *    plan hérite donc de la règle sans avoir à la répéter ;
+ *  - les fiches NON PUBLIÉES, supprimées, hors ligne ou refusées :
+ *    c'est `estEnLigne` qui tranche, et elle seule ;
  *  - les espaces privés (compte, admin) : voir robots.ts.
+ *
+ * ⚠️⚠️ CE QU'IL N'EXCLUT PLUS, ET QU'IL NE FAUT PAS REMETTRE
+ * (passes nº 178 et 275). Ces lignes annonçaient jusqu'ici que « les
+ * fiches d'essai des administrateurs sont retirées à la source ».
+ * C'ÉTAIT VRAI, ET C'ÉTAIT LE DÉFAUT : le propriétaire du site est le
+ * SEUL compte administrateur, donc cette règle retirait SES fiches —
+ * toutes — du plan du site. Résultat, en juillet : elles n'entraient
+ * dans aucun index, et le site était introuvable sur Google. La
+ * nº 178 a supprimé le masquage ici comme dans la mosaïque et sur la
+ * page de fiche ; la nº 275 l'a retiré de la base elle-même
+ * (migration yokofolio-recherche-sans-masquage.sql).
+ * IL N'Y A PLUS QU'UNE RÈGLE DE VISIBILITÉ, celle de la base
+ * (`fiche_en_ligne`, nº 60), recopiée une seule fois côté site dans
+ * `estEnLigne`. Une fiche qu'on ne veut pas voir se cache en ne la
+ * publiant pas — jamais par le compte auquel elle appartient.
  *
  * LA DATE DE DERNIÈRE MODIFICATION accompagne chaque entrée quand elle
  * est connue : `decide_le` (la dernière décision de modération, donc
@@ -113,8 +127,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
  * LA DATE DE DERNIÈRE MODIFICATION DE CHAQUE FICHE PUBLIÉE.
  * Une lecture légère (quatre colonnes), à part de la lecture des
  * fiches : celle-ci n'a pas à porter des colonnes dont l'affichage
- * n'a que faire. Les fiches des administrateurs en sont retirées,
- * comme partout ailleurs.
+ * n'a que faire.
+ * ⚠️ AUCUNE FICHE N'EST RETIRÉE POUR SON PROPRIÉTAIRE (nº 178, voir la
+ * note de tête) : `estEnLigne` décide seule, comme partout ailleurs.
  * Table ou colonne absente : une carte vide, et le plan se rabat sur
  * la date du jour — jamais d'échec.
  */

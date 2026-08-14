@@ -24,11 +24,16 @@ import { creerClientSupabaseAdmin } from "@/lib/supabase/admin";
  * qu'un brouillon attend — sans quoi il ferait sortir la fiche de la
  * file de validation sans que rien n'ait été approuvé.
  *
- * DÉSORMAIS, L'INTERRUPTEUR FAIT TOUT : il pose `publie`, `statut` ET
- * `admin_publique` d'un seul geste. Les trois colonnes vont ensemble —
- * `publie` fait exister la fiche, `admin_publique` lève le masquage
- * des comptes administrateurs (migration nº 43), et `statut` évite que
- * la fiche réapparaisse dans la file d'attente de la modération.
+ * DÉSORMAIS, L'INTERRUPTEUR FAIT TOUT : il pose `publie`,
+ * `admin_publique` et — À L'ALLUMAGE SEULEMENT — `statut`.
+ * ⚠️ CE QUE `admin_publique` NE FAIT PLUS (nº 275) : lever un
+ * masquage. Ce masquage n'existe plus, ni côté site (nº 178) ni en
+ * base (migration yokofolio-recherche-sans-masquage.sql) — c'est
+ * `publie` qui rend une fiche publique, pour tout le monde. La colonne
+ * ne sert plus qu'à CET écran : elle dit « cette fiche a été allumée
+ * ici », et le tableau la relit pour afficher « en ligne ».
+ * `statut`, lui, n'est écrit qu'à l'allumage (`validee`) : éteindre ne
+ * touche pas à l'état de modération — voir la note de l'écriture.
  *
  * ⚠️ CELA NE CHANGE RIEN POUR LES VRAIS TATOUEURS : la seconde
  * serrure ci-dessous refuse toute fiche qui n'appartient pas à un
@@ -44,6 +49,39 @@ function colonneAbsente(message: string): boolean {
     /column\b[^]*\bdoes not exist/.test(texte) ||
     /could not find the .* column/.test(texte) ||
     texte.includes("schema cache")
+  );
+}
+
+/**
+ * §1 (nº 275) — UNE RÈGLE DE LA BASE QUI REFUSE LA VALEUR, ÇA SE DIT.
+ * ====================================================================
+ * LE DÉFAUT QUE CETTE FONCTION EMPÊCHE DE SE REPRODUIRE : l'écriture
+ * ci-dessous posait `statut: "valide"` / `"brouillon"` — deux mots qui
+ * n'existent dans AUCUNE contrainte de `tatoueurs` (elle n'admet que
+ * en_attente, validee, refusee, modifications ; « valide » est le
+ * vocabulaire du produit ARTISANS, `statut_validation`, une autre
+ * table). PostgreSQL rejetait donc l'UPDATE ENTIER — `publie` et
+ * `admin_publique` ne s'écrivaient pas davantage — et le repli, qui ne
+ * connaissait que les « colonne absente », laissait remonter un
+ * « Enregistrement impossible » muet. L'interrupteur paraissait mort
+ * sans que rien ne dise pourquoi ; il a fallu le message brut de
+ * Postgres, relevé à la main sur une fiche, pour le comprendre.
+ * DÉSORMAIS : une violation de contrainte est RECONNUE et NOMMÉE dans
+ * la réponse — la contrainte, et la valeur refusée quand le message la
+ * porte. Le prochain défaut de ce genre se lira à l'écran.
+ */
+function contrainteRefusee(message: string): string | null {
+  //  Postgres : « new row for relation "x" violates check constraint
+  //  "y" » (23514), « violates foreign key constraint », « violates
+  //  not-null constraint ». PostgREST relaie le texte tel quel.
+  const forme = /violates ([a-z-]+ )?(check|foreign key|not-null|unique) constraint(?: "([^"]+)")?/i.exec(
+    message
+  );
+  if (!forme) return null;
+  const nom = forme[3] ? ` « ${forme[3]} »` : "";
+  return (
+    `La base a REFUSÉ la valeur : contrainte${nom} (${forme[2]}). ` +
+    `Message d'origine : ${message}`
   );
 }
 
@@ -114,7 +152,15 @@ export async function POST(requete: NextRequest) {
         .from("tatoueurs")
         .update({ supprime_le: null, purge_le: null })
         .eq("id", corps.id);
-      if (remise.error) throw new Error(remise.error.message);
+      //  §1 (nº 275) — même règle qu'à l'interrupteur : un refus de la
+      //  base se dit, il ne se tait pas.
+      if (remise.error) {
+        const refus = contrainteRefusee(remise.error.message);
+        if (refus) {
+          return NextResponse.json({ ok: false, message: refus }, { status: 409 });
+        }
+        throw new Error(remise.error.message);
+      }
       rafraichirPagesPubliques();
       return NextResponse.json({ ok: true });
     }
@@ -130,18 +176,34 @@ export async function POST(requete: NextRequest) {
     //  LES TROIS COLONNES ENSEMBLE. Écrire `admin_publique` seul
     //  laissait la fiche invisible (elle n'était pas publiée) et
     //  l'interrupteur passait pour cassé.
+    //  §1 (nº 275) — LES DEUX SENS N'ONT PAS LA MÊME ÉCRITURE, ET
+    //  C'EST LA CORRECTION DU RELEVÉ (« violates check constraint
+    //  tatoueurs_statut_check », fiche « Funambulink Ttt ») :
+    //   · ALLUMER → `validee`, LE mot de la contrainte (les quatre
+    //     valeurs admises : en_attente, validee, refusee,
+    //     modifications). « valide », qui était écrit ici, n'en fait
+    //     pas partie : il vient du produit artisans.
+    //   · ÉTEINDRE → LE STATUT N'EST PAS TOUCHÉ. L'interrupteur ne
+    //     pilote que la VISIBILITÉ ; l'état de modération appartient à
+    //     la modération, et « brouillon » n'existait pas plus que
+    //     « valide ». Une fiche éteinte garde donc le statut qu'elle
+    //     avait — elle n'encombre aucune file, puisque la file lit
+    //     `statut = 'en_attente'`.
+    //  ⚠️ RIEN NE S'ALLUME TOUT SEUL : `admin_publique` reste `false`
+    //  par défaut en base (migration nº 43) et n'est écrit qu'ici, sur
+    //  un geste explicite du propriétaire.
     const valeurs: Record<string, unknown> = {
       admin_publique: corps.publique,
       publie: corps.publique,
-      statut: corps.publique ? "valide" : "brouillon",
     };
+    if (corps.publique) valeurs.statut = "validee";
     //  ⚠️ UNE MODIFICATION EN ATTENTE N'EST PAS EFFACÉE PAR
     //  L'INTERRUPTEUR (passe nº 152). La fiche porte un `brouillon` :
     //  elle attend une décision dans « Fiches à valider », et son
     //  statut « en_attente » est CE QUI L'Y FAIT FIGURER. L'écraser
-    //  d'un « valide » la ferait sortir de la file sans que personne
+    //  d'un « validee » la ferait sortir de la file sans que personne
     //  n'ait rien approuvé — le changement resterait dans le brouillon,
-    //  invisible, exactement le défaut que cette passe corrige.
+    //  invisible, exactement le défaut que la nº 152 corrigeait.
     //  L'interrupteur garde donc son rôle — mettre en ligne ou retirer
     //  — sans jamais trancher à la place de la modération.
     if (ligne.brouillon != null) delete valeurs.statut;
@@ -167,7 +229,18 @@ export async function POST(requete: NextRequest) {
         );
       }
     }
-    if (ecriture.error) throw new Error(ecriture.error.message);
+    //  §1 (nº 275) — LA VIOLATION DE CONTRAINTE EST NOMMÉE, jamais
+    //  avalée en « Enregistrement impossible » : c'est ce silence qui
+    //  a rendu le défaut de l'interrupteur invisible pendant des
+    //  passes entières. 409 : la demande est bonne, c'est l'état de la
+    //  base qui la refuse.
+    if (ecriture.error) {
+      const refus = contrainteRefusee(ecriture.error.message);
+      if (refus) {
+        return NextResponse.json({ ok: false, message: refus }, { status: 409 });
+      }
+      throw new Error(ecriture.error.message);
+    }
 
     //  LA MOSAÏQUE ET LE PLAN DU SITE SONT EN CACHE : sans ce
     //  rafraîchissement, la fiche mettrait l'âge du cache à

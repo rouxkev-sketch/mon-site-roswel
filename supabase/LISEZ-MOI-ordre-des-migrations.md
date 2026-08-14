@@ -193,6 +193,8 @@ Deux fichiers du dossier ne portent aucun numéro : ce sont des OUTILS,
 
 ---
 
+66. **`yokofolio-recherche-sans-masquage.sql`** — Le masquage par compte quitte la recherche (⚠️ **à passer après la nº 63**, dont elle reprend le corps). La fonction `rechercher_tatoueurs` portait depuis la nº 43 un paramètre `p_comptes_masques` et son exception `admin_publique` : c'est la machine qui a rendu le site INVISIBLE DU PUBLIC en juillet, le propriétaire étant le seul compte administrateur. La passe nº 178 en avait coupé l'alimentation côté site (tableau vide), mais elle restait en base, armée. Le paramètre et la clause disparaissent ; la visibilité tient à `publie`, et à rien d'autre. **Aucun changement de comportement** (le paramètre était déjà vide) et **aucun ordre de livraison imposé** : le site n'envoie plus ce paramètre, et la fonction d'avant la migration lui donne sa valeur par défaut. La colonne `admin_publique` n'est pas supprimée — l'écran de démarchage s'en sert toujours. Le reste du corps est celui de la nº 63 au caractère près, extrait mécaniquement.
+
 ## Savoir lesquelles sont passées
 
 Colle **`yokofolio-verification-migrations.sql`** dans l'éditeur SQL de

@@ -68,10 +68,12 @@ export type Tatoueur = {
   nom: string;
   slug: string;
   /** LE COMPTE PROPRIÉTAIRE. ⚠️ Il n'est JAMAIS lu par les pages
-      publiques (il n'est pas dans `COLONNES`) : le masquage des fiches
-      d'administrateur se fait DANS LA REQUÊTE, côté serveur — voir
-      lib/fiches-admin. Il n'existe ici que pour les fiches de
-      DÉMONSTRATION, qui reproduisent la règle sans base. */
+      publiques (il n'est pas dans `COLONNES`), et AUCUNE règle de
+      visibilité ne le consulte : le masquage des fiches
+      d'administrateur a disparu (nº 178 côté site, nº 275 en base).
+      Il ne sert qu'à répondre « cette fiche est-elle la MIENNE ? » —
+      le formulaire, la suppression, l'aperçu du propriétaire — et aux
+      fiches de DÉMONSTRATION, qui rejouent la même question. */
   user_id?: string | null;
   /** L'ADRESSE D'AVANT : les liens déjà partagés restent bons — la
       page de fiche redirige l'ancien slug vers le nouveau. */
@@ -186,10 +188,14 @@ export type Tatoueur = {
   /** Photos supplémentaires (galerie de la fiche). */
   photos: string[];
   publie: boolean;
-  /** FICHE D'ESSAI D'UN ADMINISTRATEUR, RENDUE PUBLIQUE MALGRÉ TOUT
-      (migration nº 43). Éteint par défaut, et sans le moindre effet
-      sur la fiche d'un vrai tatoueur : cet interrupteur ne fait que
-      LEVER le masquage qui frappe les comptes administrateurs.
+  /** L'INTERRUPTEUR DE L'ÉCRAN DE DÉMARCHAGE (migration nº 43).
+      ⚠️ IL NE DÉCIDE PLUS DE LA VISIBILITÉ (nº 275) : le masquage
+      qu'il levait n'existe plus, ni côté site (nº 178) ni en base
+      (migration yokofolio-recherche-sans-masquage.sql). C'est `publie`
+      qui fait qu'une fiche est publique, pour tout le monde et sans
+      exception. Cette colonne ne sert plus qu'au TABLEAU DE
+      DÉMARCHAGE : l'interrupteur l'écrit avec `publie`, et le tableau
+      la relit pour dire « en ligne ».
       Facultatif dans le type — la colonne peut manquer sur une base
       où la migration n'est pas passée, et le site doit continuer. */
   admin_publique?: boolean | null;
@@ -1281,14 +1287,18 @@ export async function listerTatoueurs(
   // aucune lecture de table de communes ici — la recherche est
   // devenue purement géographique.
   const ville = pointDeReference(filtres);
-  //  ⚠️ PLUS AUCUN MASQUAGE PAR COMPTE (passe nº 178) : la mosaïque
-  //  applique la MÊME règle que la base et que la page de fiche —
-  //  `estEnLigne`, rien d'autre. Le tableau vide dit à la fonction de
-  //  recherche qu'il n'y a aucun compte à écarter.
-  const proprietairesMasques: string[] = [];
+  //  ⚠️ PLUS AUCUN MASQUAGE PAR COMPTE (passe nº 178, ACHEVÉE À LA
+  //  Nº 275) : la mosaïque applique la MÊME règle que la base et que
+  //  la page de fiche — `estEnLigne`, rien d'autre. La nº 178 se
+  //  contentait de passer un tableau VIDE à la fonction de recherche ;
+  //  le paramètre `p_comptes_masques` et son exception
+  //  `admin_publique` vivaient donc toujours en base, dormants mais
+  //  armés. Ils en sont retirés (migration
+  //  supabase/yokofolio-recherche-sans-masquage.sql), et l'appel
+  //  n'envoie plus rien : il n'y a plus de machine à réveiller.
 
   // LE CHEMIN COURT — tout le travail en base, une seule requête.
-  const enBase = await rechercheEnBase(filtres, ville, proprietairesMasques);
+  const enBase = await rechercheEnBase(filtres, ville);
   if (enBase) return enBase;
 
   // Le SCORE de popularité par fiche — pour CLASSER les résultats
@@ -1461,8 +1471,7 @@ function allumesDuGroupe(
  */
 async function rechercheEnBase(
   filtres: FiltresTatoueurs,
-  ville: ResultatTatoueurs["ville"],
-  proprietairesMasques: string[]
+  ville: ResultatTatoueurs["ville"]
 ): Promise<ResultatTatoueurs | null> {
   try {
     const supabase = await creerClientSupabaseServeur();
@@ -1504,7 +1513,11 @@ async function rechercheEnBase(
       //  la croise avec le style pour ne garder que les fiches qui
       //  ont VRAIMENT une photo de ce genre-là.
       p_nature: natureCherchee(filtres.nature) || null,
-      p_comptes_masques: proprietairesMasques,
+      //  §2 (nº 275) — `p_comptes_masques` N'EST PLUS ENVOYÉ. Sur une
+      //  base pas encore migrée, la fonction lui donne sa valeur par
+      //  défaut (`'{}'`), c'est-à-dire exactement ce que la nº 178
+      //  envoyait : le site marche donc identiquement, migration
+      //  passée ou non.
       // LE RENDU CHERCHÉ décide de la photo que la carte montre —
       // la même règle que `photoChoisie`, appliquée en base.
       p_photo_rendu: renduCherche(filtres.exclure) || null,
