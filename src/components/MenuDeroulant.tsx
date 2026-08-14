@@ -17,9 +17,13 @@ const flecheImage = (couleur: string) =>
   `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(
     `<svg xmlns='http://www.w3.org/2000/svg' width='14' height='8'><path d='M1 1l6 6 6-6' stroke='${couleur}' stroke-width='2' fill='none' stroke-linecap='round'/></svg>`
   )}")`;
-/** §3 (nº 260) — LA TAILLE DES POINTS DE LA FEUILLE : 4 px, la même
-    pour tous (les styles et la porte de famille). Écrite une fois. */
-const TAILLE_POINT = "w-1 h-1";
+/** §3 (nº 260) — LA TAILLE DES POINTS DE LA FEUILLE : la même pour
+    tous (les styles et la porte de famille). Écrite une fois.
+    §1 (nº 262) — PORTÉE À 6 px : les 4 px de la nº 260 étaient trop
+    discrets, on ne les voyait plus. Les couleurs ne bougent pas :
+    la porte de famille seule est rose, tous les autres restent
+    clairs. */
+const TAILLE_POINT = "w-1.5 h-1.5";
 
 const FLECHE_GRISE = flecheImage(COULEURS.flecheMenus);
 const FLECHE_ROSE = flecheImage(COULEURS.primaire);
@@ -100,6 +104,8 @@ export function MenuDeroulant({
   repliable = false,
   libelleValeur,
   positionFleche,
+  champMobile,
+  iconeTitreFeuille,
 }: {
   valeur: string;
   surChangement: (valeur: string) => void;
@@ -138,6 +144,18 @@ export function MenuDeroulant({
       feuille mobile ET dans le menu déroulant (structure identique sur
       tous les formats). */
   titreFeuille?: string;
+  /** §3 (nº 262) — CE QUE LE CHAMP AFFICHE SUR SMARTPHONE, à la place
+      du libellé : le champ de « Ma sélection » y dit « Filtrer » avec
+      l'icône de filtre, et LA FLÈCHE DISPARAÎT avec le libellé — c'est
+      l'icône, grise, qui dit « ceci ouvre ». La borne est CELLE DE LA
+      FEUILLE (même chaîne que le gel, au centième près) : le contenu
+      change exactement là où ce qui s'ouvre change. Sur le web et
+      l'iPad, rien : libellé et chevron comme partout. */
+  champMobile?: React.ReactNode;
+  /** §3 (nº 262) — L'ICÔNE À GAUCHE DU TITRE DE LA FEUILLE : la même
+      écriture d'icône que dans le champ, à la couleur du titre. Le
+      gris dans la barre dit « ceci ouvre », ici elle dit « tu y es ». */
+  iconeTitreFeuille?: React.ReactNode;
   /** Padding resserré (moteur des résultats) : gagne ~16 px de largeur
       utile pour le libellé, sans changer la hauteur ni la flèche. */
   compact?: boolean;
@@ -170,6 +188,26 @@ export function MenuDeroulant({
    */
   const feuille = useRef<HTMLDivElement>(null);
   const bouton = useRef<HTMLButtonElement>(null);
+  /**
+   * §3 (nº 262) — SOMMES-NOUS SUR SMARTPHONE ? Seul le champ qui reçoit
+   * `champMobile` en a besoin : en deçà de la borne, il affiche ce
+   * contenu-là (sans flèche) ; au-delà, le libellé et le chevron de
+   * toujours. LA BORNE EST CELLE DE LA FEUILLE — la même chaîne que le
+   * gel du corps, au centième près : on ne pose pas un second point de
+   * rupture, le champ change exactement là où ce qui s'ouvre change.
+   * Le premier rendu (celui du serveur) prend le libellé, l'effet
+   * corrige après l'hydratation — le précédent est celui du libellé
+   * raccourci de « Ma sélection » (nº 255).
+   */
+  const [surSmartphone, setSurSmartphone] = useState(false);
+  useEffect(() => {
+    const borne = window.matchMedia("(max-width: 767.98px)");
+    const lire = () => setSurSmartphone(borne.matches);
+    lire();
+    borne.addEventListener("change", lire);
+    return () => borne.removeEventListener("change", lire);
+  }, []);
+  const champEnModeMobile = Boolean(champMobile) && surSmartphone;
   // Hauteur maximale du menu et sens d'ouverture : le calcul est
   // PARTAGÉ avec la liste des villes (usePlacementMenu), pour que les
   // deux menus du moteur se comportent exactement pareil.
@@ -658,12 +696,20 @@ export function MenuDeroulant({
         aria-haspopup="listbox"
         aria-expanded={ouvert}
         onClick={() => (ouvert ? fermer() : setOuvert(true))}
-        style={{
-          backgroundImage: ouvert ? FLECHE_ROSE : FLECHE_GRISE,
-          backgroundRepeat: "no-repeat",
-          backgroundPosition:
-            positionFleche ?? (compact ? "right 0.65rem center" : "right 0.9rem center"),
-        }}
+        //  §3 (nº 262) — en mode mobile du champ, AUCUNE flèche : elle
+        //  part avec le libellé, c'est l'icône grise du contenu qui dit
+        //  « ceci ouvre ».
+        style={
+          champEnModeMobile
+            ? undefined
+            : {
+                backgroundImage: ouvert ? FLECHE_ROSE : FLECHE_GRISE,
+                backgroundRepeat: "no-repeat",
+                backgroundPosition:
+                  positionFleche ??
+                  (compact ? "right 0.65rem center" : "right 0.9rem center"),
+              }
+        }
         className={`w-full ${hauteur} ${taillePolice} ${habillage} ${
           compact ? "pl-3 pr-7" : "pl-4 pr-10"
         } text-left outline-none overflow-hidden text-ellipsis whitespace-nowrap ${
@@ -679,7 +725,13 @@ export function MenuDeroulant({
               : "text-encre"
         }`}
       >
-        {libelleChoisi ?? placeholder ?? "Choisir…"}
+        {champEnModeMobile ? (
+          //  §3 (nº 262) — le contenu smartphone de l'appelant (l'icône
+          //  et son mot), aligné comme le titre de la page du moteur.
+          <span className="flex items-center gap-2.5">{champMobile}</span>
+        ) : (
+          (libelleChoisi ?? placeholder ?? "Choisir…")
+        )}
       </button>
 
       {/* Menu déroulant CLASSIQUE (toujours sur web/iPad ; sur mobile
@@ -870,7 +922,12 @@ export function MenuDeroulant({
               <div className="pt-3 pb-2 flex justify-center">
                 <span className="w-10 h-1.5 rounded-full bg-bordure" aria-hidden />
               </div>
-              <h2 className="px-5 pb-3 text-lg font-bold text-left">
+              {/*  §3 (nº 262) — l'icône de l'appelant à gauche du
+                   titre, à la couleur du titre : dans la barre elle
+                   était grise (« ceci ouvre »), ici elle dit
+                   « tu y es ». Une seule écriture d'icône. */}
+              <h2 className="px-5 pb-3 text-lg font-bold text-left flex items-center gap-2.5">
+                {iconeTitreFeuille}
                 {titreFeuille ?? "Choisissez une option"}
               </h2>
             </div>
@@ -896,7 +953,15 @@ export function MenuDeroulant({
                       sousEnteteVisible(option) &&
                       porteSousSection(
                         sousEntete,
-                        `min-h-[52px] pl-8 pr-3 rounded-2xl text-base ${
+                        //  §2 (nº 262) — LA PORTE EST UNE ENTRÉE DE MÊME
+                        //  RANG que les styles : même `pl-3` qu'eux, son
+                        //  point et son libellé partent du même bord
+                        //  gauche. Le retrait (`pl-8`) ne dit qu'une
+                        //  chose — « ceci est DEDANS » — et il ne vaut
+                        //  que pour les styles qu'elle contient, une
+                        //  fois ouverte (la branche `sousGroupe` des
+                        //  options, ci-dessous).
+                        `min-h-[52px] pl-3 pr-3 rounded-2xl text-base ${
                           sombre
                             ? "text-sombre-texte hover:bg-sombre-eleve"
                             : "text-encre hover:bg-fond-doux"

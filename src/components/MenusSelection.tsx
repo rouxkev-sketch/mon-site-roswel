@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { EncadreDeuxChamps } from "@/components/EncadreBarre";
+import { IconeReglages } from "@/components/Icones";
 import { MenuDeroulant } from "@/components/MenuDeroulant";
 import { SelecteurCapsule } from "@/components/SelecteurCapsule";
 import { BoutonPhototheque } from "@/components/BoutonPhototheque";
@@ -194,6 +195,28 @@ export function MenusSelection({
         placeholder={libelleDuFiltre(entrees, choix, etroit)}
         libelleValeur={libelleDuFiltre(entrees, choix, etroit)}
         titreFeuille="Filtrer"
+        /*  §3 (nº 262) — SUR SMARTPHONE, LE CHAMP NE DIT PLUS LE
+            STYLE : le mot « Filtrer », en blanc et en gras — la graisse
+            et la taille du titre « Recherche » de la page du moteur
+            (PageRechercheMobile, text-[20px] font-bold text-white) —,
+            et à sa gauche L'ICÔNE DE FILTRE DU MOTEUR (IconeReglages,
+            la même écriture que son bouton rond du web — jamais un
+            second dessin), en gris. La flèche part avec le libellé
+            (MenuDeroulant). L'état n'est pas perdu : le titre de la
+            page, juste dessous, dit déjà « Mes suivis · Anime &
+            Manga ». Sur web et iPad, rien ne change : libellé et
+            chevron. */
+        champMobile={
+          <>
+            <IconeReglages taille={20} classe="shrink-0 text-sombre-texte-doux" />
+            <span className="text-[20px] font-bold text-white">Filtrer</span>
+          </>
+        }
+        /*  §3 (nº 262) — la MÊME icône à gauche du titre de la
+            feuille, à la couleur du titre : le gris dans la barre dit
+            « ceci ouvre », ici elle dit « tu y es ». Une seule
+            écriture, deux couleurs. */
+        iconeTitreFeuille={<IconeReglages taille={20} classe="shrink-0" />}
         //  §5 (nº 258) — LA FLÈCHE PREND L'AIR DES MOTS DU BADGE
         //  (20 px, le `px-5` de l'écriture des fiches — aucune valeur
         //  neuve) : à 14 px du bord elle touchait presque la courbe de
@@ -330,6 +353,14 @@ function libelleDuFiltre(
     if (etroit && !choix.style) return "Style";
     return libelleStyleChoisi(choix.style);
   }
+  //  §5 (nº 262) — SUR LE WEB, L'ÉTAT D'OUVERTURE DES FAVORIS DIT
+  //  « Tous les styles », COMME SUR LES SUIVIS : « Toutes les
+  //  réalisations » y était l'écriture d'une porte qu'on n'a pas
+  //  choisie. C'est le LIBELLÉ seul : le menu garde ses deux portes
+  //  (Réalisations, Flashs), et un choix — porte ou couple — s'écrit
+  //  comme avant. L'écriture vient de `libelleStyleChoisi`, la même
+  //  que les suivis — aucun mot écrit ici.
+  if (!etroit && !choix.nature && !choix.style) return libelleStyleChoisi("");
   //  LA PORTE EN COURS : celle du choix, ou la PREMIÈRE PRÉSENTE quand
   //  rien n'est filtré — c'est ce que dit l'état d'ouverture.
   const nature = choix.nature || (entrees[0]?.value.split(":")[0] ?? "");

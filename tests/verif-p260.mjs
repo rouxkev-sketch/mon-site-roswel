@@ -120,9 +120,15 @@ titre("§2 — à la source : le fond fixe, la nº 175 intacte");
   );
   verif(
     "la pilule garde son cran au-dessus, dans les deux fonds",
-    /\[data-clair-barre\] \[data-capsule-glissante\],\s*\[data-clair-fixe\] \[data-capsule-glissante\] \{\s*background-color: var\(--rw-clair-barre-vif\);/.test(
+    //  ⚠️ nº 262 (§4) : la pilule est montée d'un cran franc — le
+    //  barreau du survol (#55555F, `--rw-clair-pilule-vif`) est devenu
+    //  sa robe au repos, UNE règle pour les deux fonds, et les quatre
+    //  règles d'état de la nº 258 sont parties (elles rhabillaient la
+    //  pilule de la couleur qu'elle porte désormais toujours). Le cran
+    //  au-dessus demeure, plus grand qu'avant — c'était le but.
+    /\[data-clair-barre\] \[data-capsule-glissante\],\s*\[data-clair-fixe\] \[data-capsule-glissante\] \{\s*background-color: var\(--rw-clair-pilule-vif\);/.test(
       css
-    )
+    ) && !/:hover \[data-capsule-glissante\]/.test(css)
   );
 }
 
@@ -261,7 +267,10 @@ titre("§2 — les quatre états, mesurés (injection, 1440 px)");
     );
     verif(
       "et la pilule garde son cran unique au-dessus, aux quatre états",
-      pilules.every((robe) => robe === VIF),
+      //  ⚠️ nº 262 (§4) : sa robe est désormais #55555F (le barreau du
+      //  survol de la nº 258, devenu le repos) — la même aux quatre
+      //  états, toujours au-dessus du fond fixe.
+      pilules.every((robe) => robe === "rgb(85, 85, 95)"),
       Object.entries(etats)
         .map(([nom, e]) => `${nom} ${e.pilule}`)
         .join(" · ")
@@ -307,7 +316,9 @@ titre("§3 — à la source : 4 px pour tous, le rose à la seule porte");
 {
   verif(
     "la taille des points est écrite UNE fois, et vaut 4 px",
-    /const TAILLE_POINT = "w-1 h-1";/.test(menuDeroulant) &&
+    //  ⚠️ nº 262 (§1) : portée à 6 px (w-1.5) — les 4 px ne se voyaient
+    //  plus. Toujours écrite une seule fois, pour tous.
+    /const TAILLE_POINT = "w-1\.5 h-1\.5";/.test(menuDeroulant) &&
       (sansNotes(menuDeroulant).match(/\$\{TAILLE_POINT\}/g) ?? []).length === 2
   );
   verif(
@@ -361,8 +372,10 @@ titre("§3 — VIVANT (390 px) : les points de la feuille, et après un choix");
     });
     verif(
       "chaque style porte un point de 4 × 4, tous de la même couleur claire",
+      //  ⚠️ nº 262 (§1) : 6 × 6 désormais — la taille a monté, les
+      //  couleurs n'ont pas bougé.
       vu.length > 3 &&
-        vu.every((p) => p.l === 4 && p.h === 4 && p.couleur === BLANC_POINT),
+        vu.every((p) => p.l === 6 && p.h === 6 && p.couleur === BLANC_POINT),
       `${vu.length} points · ${vu[0]?.l}×${vu[0]?.h} · ${vu[0]?.couleur}`
     );
     verif(

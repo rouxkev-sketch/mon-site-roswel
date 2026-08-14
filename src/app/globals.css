@@ -438,21 +438,28 @@ html[data-clair="3"] {
     fiche (Profil / Portfolio), hors encadré, garde sa robe de classe
     (`bg-sombre-haut`) — le cran au-dessus de SON contexte.
     ⚠️ ET DEPUIS LA nº 260-§2, L'ENCADRÉ DU BADGE NE S'ÉCLAIRCIT PLUS
-    (`data-clair-fixe`) : son fond ne quitte jamais `--rw-clair-barre`,
-    donc la pilule garde son CRAN UNIQUE au-dessus, dans tous les états.
-    Le second barreau ci-dessous ne sert plus qu'à un encadré qui
-    s'éclaircirait — il reste écrit pour cela. */
+    (`data-clair-fixe`) : son fond ne quitte jamais `--rw-clair-barre`.
+
+    §4 (nº 262) — LA PILULE MONTE D'UN CRAN FRANC : LE BARREAU DU
+    SURVOL DEVIENT SA COULEUR AU REPOS. `#55555F` — le barreau posé à
+    la nº 258 au pas du cran précédent — n'est plus l'état vif de la
+    pilule : c'est SA robe, unique, dans tous les états. L'encadré, lui,
+    ne bouge pas (`data-clair-fixe`, jamais quitté `--rw-clair-barre`) :
+    l'écart entre les deux s'agrandit d'autant — c'est le but — et il ne
+    peut s'annuler dans AUCUN état :
+     · sous l'encadré FIXE du badge : aucun état n'existe, l'écart est
+       constant (#414149 → #55555F, deux barreaux) ;
+     · sous un encadré à états (`data-clair-barre`, la mécanique 175) :
+       son fond ne monte jamais au-delà de `--rw-clair-barre-vif`
+       (#4B4B54 au plus haut de l'échelle), toujours SOUS #55555F.
+    Les quatre règles d'état de la pilule (nº 258) sont donc PARTIES :
+    elles rhabillaient la pilule de la couleur qu'elle porte désormais
+    au repos — les garder aurait été écrire deux fois la même chose. */
 :root {
   --rw-clair-pilule-vif: #55555f;
 }
 [data-clair-barre] [data-capsule-glissante],
 [data-clair-fixe] [data-capsule-glissante] {
-  background-color: var(--rw-clair-barre-vif);
-}
-[data-clair-barre]:hover [data-capsule-glissante],
-[data-clair-barre]:active [data-capsule-glissante],
-[data-clair-barre]:focus-within [data-capsule-glissante],
-[data-clair-barre][data-clair-vif] [data-capsule-glissante] {
   background-color: var(--rw-clair-pilule-vif);
 }
 
