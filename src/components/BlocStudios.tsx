@@ -218,6 +218,26 @@ export function BlocStudios({
                     prefixe={`studio-${studio.cle}`}
                     titreInscrit="Ce studio est sur le site"
                     titreManuel="Ce studio n'est pas sur le site"
+                    /*  §3 (nº 267) — LA RECHERCHE EST BORNÉE À LA
+                        NATURE DU LIEU, et c'est ICI qu'elle ne l'était
+                        pas : ce bloc appelait `DeuxZonesLieu` sans
+                        `etablissement`, la requête partait donc sans
+                        le paramètre, et l'API — qui ne filtre que
+                        lorsqu'on le lui donne — rendait les DEUX
+                        natures. Un salon voyait des studios, un studio
+                        voyait des salons. La fiche connaît la sienne
+                        (`etablissement`) : elle la passe. Le mode
+                        guest, lui, reste volontairement ouvert aux
+                        deux — il peut être reçu par l'un comme par
+                        l'autre (nº 121). */
+                    etablissement={
+                      etablissement === "prive" ? "prive" : "salon"
+                    }
+                    messageVide={
+                      etablissement === "prive"
+                        ? "Aucun studio trouvé"
+                        : "Aucun salon trouvé"
+                    }
                     ficheChoisie={studio.fiche ?? null}
                     surFiche={(fiche) =>
                       modifier(studio.cle, {

@@ -184,9 +184,6 @@ titre("§1 — à la source : le champ du nom du lieu");
 /* ==================================================================
  * §1 — LE CHAMP DU NOM, INJECTÉ ET MESURÉ (deux largeurs)
  * ================================================================== */
-const gabaritChampNom = deuxZonesNu.match(
-  /className=\{`\$\{CHAMP\} pr-12 \$\{([\s\S]*?)\}`\}/
-);
 const classeChamp = (enErreur) =>
   nettoyer(
     `${
@@ -303,19 +300,20 @@ titre("§2 — à la source : le rouge partout, et la remontée d'un seul endroi
   );
   verif(
     "le badge rouge est CELUI du mode incomplet (sa clé, son genre)",
-    /const modeEnFaute = modes\.find\(\s*\(mode\) => manque\?\.cle && mode\.cle === manque\.cle\s*\);/.test(
+    //  ⚠️ nº 267 (§1) : le rouge lit désormais TOUS les manques, plus
+    //  seulement le premier — un artiste cumule les quatre modes, et
+    //  les quatre badges doivent pouvoir rougir ensemble.
+    /const cadreRouge = modes\.some\(\s*\(mode\) => mode\.genre === genre && modeEnManque\(mode\.cle\)\s*\);/.test(
       blocModesNu
-    ) &&
-      /const cadreRouge = Boolean\(modeEnFaute && modeEnFaute\.genre === genre\);/.test(
-        blocModesNu
-      )
+    ) && /function modeEnManque\(cle: string\): boolean/.test(blocModesNu)
   );
   verif(
     "le TITRE NUMÉROTÉ du volet incomplet rougit (« À domicile 2/2 »)",
-    /data-titre-en-faute=\{\s*manque\?\.cle === session\.cle \? "" : undefined\s*\}/.test(
+    //  ⚠️ nº 267 (§1) : même bascule vers la liste complète.
+    /data-titre-en-faute=\{\s*modeEnManque\(session\.cle\) \? "" : undefined\s*\}/.test(
       blocModesNu
     ) &&
-      /manque\?\.cle === session\.cle\s*\? "text-erreur"/.test(blocModesNu)
+      /modeEnManque\(session\.cle\)\s*\? "text-erreur"/.test(blocModesNu)
   );
   verif(
     "… et l'intertitre d'un lieu unique aussi",
@@ -323,10 +321,13 @@ titre("§2 — à la source : le rouge partout, et la remontée d'un seul endroi
   );
   verif(
     "LE MÉCANISME EST CELUI DU SITE, pas un second : `premierManque` désigne, `defilerVersErreur` remonte",
-    /import \{[\s\S]*?premierManque,[\s\S]*?\} from "@\/lib\/modes-exercice";/.test(
+    //  ⚠️ nº 267 (§1) : `premierManque` est devenu `tousLesManques`,
+    //  dont le PREMIER élément commande la remontée — une seule règle,
+    //  deux lectures. Le mécanisme du site reste consommé tel quel.
+    /import \{[\s\S]*?tousLesManques,[\s\S]*?\} from "@\/lib\/modes-exercice";/.test(
       lire("src/components/FormulaireFiche.tsx")
     ) &&
-      /const manqueDesigne = confirmationTentee\s*\? premierManque\(/.test(
+      /const manqueDesigne = manquesDesignes\[0\] \?\? null;/.test(
         formulaire
       ) &&
       /defilerVersErreur\(fautes\);/.test(formulaire)

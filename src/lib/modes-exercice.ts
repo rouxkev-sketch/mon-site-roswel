@@ -1119,6 +1119,129 @@ export function premierManque(
   return null;
 }
 
+/**
+ * TOUS LES MANQUES, PAS SEULEMENT LE PREMIER (§1, nº 267)
+ * ==================================================================
+ * LE RELEVÉ : « à domicile » avec son adresse mais SANS RAYON, et un
+ * guest SANS DATES — rien ne rougissait. La nº 266 avait bien posé le
+ * rouge, mais elle le branchait sur `premierManque`, qui s'ARRÊTE au
+ * premier trouvé : un seul mode pouvait être désigné à la fois, et si
+ * ce premier manque était ailleurs, les deux autres restaient muets.
+ *
+ * UN ARTISTE CUMULE LES QUATRE MODES. S'il a oublié quelque chose
+ * dans les quatre, les quatre encadrements de badge, les quatre
+ * titres et tous les champs concernés doivent rougir EN MÊME TEMPS.
+ * Cette fonction rend donc LA LISTE COMPLÈTE — un manque par champ
+ * manquant, dans l'ordre des modes puis des champs.
+ *
+ * ⚠️ UNE SEULE RÈGLE, DEUX LECTURES : `premierManque` n'est plus
+ * qu'une vue de celle-ci (`tousLesManques(...)[0]`), et c'est elle qui
+ * commande la remontée — la page mène toujours au PREMIER endroit à
+ * corriger. Les deux ne peuvent plus diverger.
+ *
+ * LES CHAMPS OBLIGATOIRES, PAR MODE (la liste que le code connaît) :
+ *  · À DOMICILE      — le lieu, puis LE RAYON dès que le lieu est un
+ *                      point (une ville ou une adresse : `rayonRequis`) ;
+ *  · EN STUDIO       — le lieu (le portfolio du studio OU une ville /
+ *    (studio privé)    adresse), et LE NOM DU LIEU si l'adresse est
+ *                      saisie à la main (nº 266). Le rôle y est
+ *                      PROPOSÉ mais pas exigé : la migration nº 44
+ *                      l'autorise pour un studio sans l'imposer, et
+ *                      les lignes d'avant n'en ont pas ;
+ *  · EN SALON        — LE RÔLE (fondateur / résident), le lieu (le
+ *                      portfolio du salon OU l'adresse complète), et
+ *                      le nom du lieu si saisi à la main ;
+ *  · GUEST           — la nature du lieu (studio ou salon), le lieu,
+ *                      le nom du lieu si saisi à la main, et LES DEUX
+ *                      DATES (début et fin, la fin jamais avant le
+ *                      début).
+ * Et pour le bloc entier : le type de fiche, puis au moins un mode
+ * choisi.
+ */
+export function tousLesManques(
+  typeFiche: "artiste" | "salon" | null,
+  modes: ModeEnSaisie[],
+  studios: StudioEnSaisie[],
+  etablissement?: string | null
+): ManqueBloc[] {
+  //  LES DEUX CAS QUI NE PARLENT PAS D'UN MODE — le type de fiche et
+  //  le cas « salon » — n'ont qu'un seul manque possible : la vue
+  //  d'ensemble et le premier manque disent alors la même chose.
+  if (!typeFiche || typeFiche === "salon") {
+    const seul = premierManque(typeFiche, modes, studios, etablissement);
+    return seul ? [seul] : [];
+  }
+  const manques: ManqueBloc[] = [];
+  const declares = modesDeclares(modes);
+  if (declares.length === 0) {
+    const seul = premierManque(typeFiche, modes, studios, etablissement);
+    return seul ? [seul] : [];
+  }
+  for (const mode of declares) {
+    if (!mode.genre) {
+      manques.push({
+        cle: mode.cle,
+        champ: "genre",
+        message: "Choisis un mode d'activité parmi les quatre.",
+      });
+      continue;
+    }
+    if (mode.genre === "salon" && !mode.role) {
+      manques.push({
+        cle: mode.cle,
+        champ: "role",
+        message: "Précise si tu es fondateur ou résident du salon.",
+      });
+    }
+    if (mode.genre === "guest" && !mode.natureLieu) {
+      manques.push({
+        cle: mode.cle,
+        champ: "genre",
+        message: "Dis si le lieu qui t'accueille est un studio ou un salon.",
+      });
+    }
+    if (!pointDuMode(mode)) {
+      manques.push({
+        cle: mode.cle,
+        champ: "lieu",
+        message: "Renseigne le lieu de ce mode.",
+      });
+    }
+    if (nomLieuRequis(mode) && !(mode.nomLieu ?? "").trim()) {
+      manques.push({
+        cle: mode.cle,
+        champ: "nomLieu",
+        message: "Donne le nom de ce lieu.",
+      });
+    }
+    //  LE RAYON — obligatoire à domicile, là où il s'affiche.
+    if (rayonRequis(mode) && mode.rayonKm == null) {
+      manques.push({
+        cle: mode.cle,
+        champ: "rayon",
+        message: "Choisis ton rayon de déplacement.",
+      });
+    }
+    //  LES DATES d'une session guest : les deux, et dans l'ordre.
+    if (mode.genre === "guest") {
+      if (!(mode.debut_le && mode.fin_le)) {
+        manques.push({
+          cle: mode.cle,
+          champ: "dates",
+          message: "Une session guest a besoin de ses deux dates.",
+        });
+      } else if (mode.fin_le < mode.debut_le) {
+        manques.push({
+          cle: mode.cle,
+          champ: "dates",
+          message: "La date de fin précède la date de début.",
+        });
+      }
+    }
+  }
+  return manques;
+}
+
 /** La même règle, ramenée à sa phrase — l'infobulle du bouton, et le
     message d'erreur de l'envoi du formulaire. */
 export function raisonBlocIncomplet(

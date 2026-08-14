@@ -2,6 +2,7 @@
 
 import { useId, useRef } from "react";
 import { BIO_MAXIMUM } from "@/config/tatouage";
+import { longueurVisible, tronquerVisible } from "@/lib/emojis";
 import { sansRemplissageAuto } from "@/lib/champs-sans-remplissage";
 import { SelecteurEmojis } from "@/components/SelecteurEmojis";
 
@@ -67,7 +68,12 @@ export function ChampBio({
 }) {
   const id = useId();
   const zone = useRef<HTMLTextAreaElement>(null);
-  const longueur = valeur.length;
+  /*  §4 (nº 267) — LE COMPTE SE FAIT SUR CE QUE L'ŒIL VOIT. `length`
+      comptait des unités techniques : un cœur de couleur en valait
+      deux, un drapeau quatre — une bio de dix émojis était refusée
+      bien avant les 150 annoncés, sans explication possible. On compte
+      des GRAPHÈMES (voir `longueurVisible`). */
+  const longueur = longueurVisible(valeur);
   const depasse = longueur > BIO_MAXIMUM;
 
   /** Insère un émoji là où est le curseur, et rend la main au champ,
@@ -83,7 +89,8 @@ export function ChampBio({
     const debut = champ?.selectionStart ?? valeur.length;
     const fin = champ?.selectionEnd ?? debut;
     const suivante = valeur.slice(0, debut) + emoji + valeur.slice(fin);
-    if (suivante.length > BIO_MAXIMUM) return;
+    //  §4 (nº 267) — le plafond se lit lui aussi en caractères VISIBLES.
+    if (longueurVisible(suivante) > BIO_MAXIMUM) return;
     surChangement(suivante);
     requestAnimationFrame(() => {
       if (!champ) return;
@@ -114,11 +121,17 @@ export function ChampBio({
           {...sansRemplissageAuto(`bio-${id}`)}
           ref={zone}
           value={valeur}
-          onChange={(e) => surChangement(e.target.value)}
-          //  LA BORNE DURE (passe nº 123) : on ne tape pas au-delà de
-          //  150, et un collage trop long est TRONQUÉ à 150 — jamais
-          //  refusé en bloc.
-          maxLength={BIO_MAXIMUM}
+          //  §4 (nº 267) — LA BORNE DURE SE MESURE EN GRAPHÈMES : un
+          //  collage trop long est tronqué à 150 CARACTÈRES VISIBLES,
+          //  jamais au milieu d'un émoji.
+          onChange={(e) =>
+            surChangement(tronquerVisible(e.target.value, BIO_MAXIMUM))
+          }
+          //  LA BORNE DURE (passe nº 123) tient toujours — mais elle
+          //  n'est plus posée par `maxLength` : §4 (nº 267), cet
+          //  attribut compte en unités UTF-16 et coupait donc les
+          //  émojis bien avant 150 signes. C'est `onChange` qui borne,
+          //  en caractères visibles.
           rows={5}
           aria-label={nomAccessible}
           aria-invalid={enFaute}

@@ -13,6 +13,7 @@ import {
   type TypeFiche,
 } from "@/config/tatouage";
 import { CHAMP } from "@/components/champs-formulaire";
+import { longueurVisible } from "@/lib/emojis";
 import { BlocAutreAdresse } from "@/components/BlocAutreAdresse";
 import { BlocEquipeSalon } from "@/components/BlocEquipeSalon";
 import { BlocHorairesStudio } from "@/components/BlocHorairesStudio";
@@ -36,7 +37,7 @@ import {
   membreDepuisVue,
   modeComplet,
   modeVide,
-  premierManque,
+  tousLesManques,
   raisonBlocIncomplet,
   type MembreEquipe,
   type ModeEnSaisie,
@@ -882,9 +883,17 @@ export function FormulaireFiche() {
   //  ⚠️ L'ÉTABLISSEMENT ENTRE DANS LE CALCUL (passe nº 111) : il y
   //  manquait, et la règle d'adresse n'est pas la même pour un salon
   //  (rue et numéro) que pour un studio privé (sa ville suffit).
-  const manqueDesigne = confirmationTentee
-    ? premierManque(typeFiche, modesExercice, studios, etablissement)
-    : null;
+  /*  §1 (nº 267) — TOUS LES MANQUES, PAS SEULEMENT LE PREMIER. Le
+      rouge se branchait sur `premierManque`, qui s'arrête au premier
+      trouvé : un « à domicile » sans rayon ET un guest sans dates ne
+      pouvaient pas rougir ensemble. La liste complète part au bloc ;
+      LE PREMIER, lui, garde son office — la remontée de page et la
+      bascule d'onglet mènent au premier endroit à corriger. Une seule
+      règle, deux lectures (voir `tousLesManques`). */
+  const manquesDesignes = confirmationTentee
+    ? tousLesManques(typeFiche, modesExercice, studios, etablissement)
+    : [];
+  const manqueDesigne = manquesDesignes[0] ?? null;
 
   /** L'ADRESSE PRÉCISE (rue et numéro) est-elle publiable ? Elle ne
       l'est pas quand la fiche ne tient que par des modes « à
@@ -1484,7 +1493,10 @@ export function FormulaireFiche() {
     //  librement au-delà de 150, le compteur rougit — et c'est ICI
     //  que le dépassement se paie : l'enregistrement est refusé tant
     //  qu'il dure. MUET, comme les manques : le compteur rouge parle.
-    if (bio.length > BIO_MAXIMUM) {
+    //  §4 (nº 267) — MÊME COMPTE QUE LE CHAMP : en caractères
+    //  VISIBLES. Sans cela, le champ acceptait dix émojis et la
+    //  validation les refusait — deux règles pour un même plafond.
+    if (longueurVisible(bio) > BIO_MAXIMUM) {
       trouvees.bio = MANQUE;
     }
     // LE PORTFOLIO — au moins une photo, et CHAQUE PHOTO DÉPOSÉE
@@ -2658,6 +2670,7 @@ export function FormulaireFiche() {
                 surMobile={surMobile}
                 enErreur={erreurs.mode ?? erreurs.lieu ?? null}
                 manque={manqueDesigne}
+                manques={manquesDesignes}
               />
             </div>
           )}

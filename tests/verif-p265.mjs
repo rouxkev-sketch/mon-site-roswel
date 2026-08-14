@@ -133,8 +133,13 @@ titre("§2/§3 — la cause commune : un encadré vidé gardait sa ligne");
 {
   verif(
     "LA PREUVE 1/2 — la croix VIDE l'encadré en lui laissant son identifiant",
-    /modeVierge\(genre, mode\.cle, mode\.id\)/.test(blocModes) &&
-      /function modeVierge\(\s*genre: GenreMode,\s*cle\?: string,\s*id\?: string \| null\s*\)/.test(
+    //  ⚠️ nº 267 (§2) : la croix passe désormais le drapeau `vide` —
+    //  l'encadré vidé ne garde NI son identifiant NI son rôle (les
+    //  deux rôles étaient deux vues d'une même ligne). La preuve
+    //  historique reste lisible dans l'appel, qui vise toujours la
+    //  même clé et le même identifiant.
+    /modeVierge\(genre, mode\.cle, mode\.id, true\)/.test(blocModes) &&
+      /function modeVierge\(\s*genre: GenreMode,\s*cle\?: string,\s*id\?: string \| null,\s*vide = false\s*\)/.test(
         blocModes
       )
   );

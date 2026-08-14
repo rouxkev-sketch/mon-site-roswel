@@ -164,17 +164,44 @@ export function modeNeuf(): ModeEnSaisie {
 function modeVierge(
   genre: GenreMode,
   cle?: string,
-  id?: string | null
+  id?: string | null,
+  /*  §2 (nº 267) — QUI APPELLE ? Ouvrir un onglet et VIDER un encadré
+      donnaient jusqu'ici le même résultat, et c'est ce qui a fait le
+      défaut du rôle. Un onglet NEUF s'ouvre sur la première position
+      de ses bascules (il n'y a rien derrière lui) ; un encadré VIDÉ,
+      lui, ne doit rien réinventer — ni rôle, ni identifiant. */
+  vide = false
 ): ModeEnSaisie {
   const base = modeNeuf();
   return {
     ...base,
     cle: cle ?? base.cle,
-    ...(id !== undefined ? { id } : {}),
+    //  §2 (nº 267) — VIDÉ, IL PERD SON IDENTIFIANT : il ne partage
+    //  plus la ligne de personne, et celle qu'il portait s'en va de la
+    //  base (elle n'est plus dans `gardes` — nº 265).
+    ...(id !== undefined && !vide ? { id } : {}),
     genre,
-    //  LE RÔLE concerne les deux lieux qui ont une équipe : le salon
-    //  et le studio privé.
-    role: genre === "salon" || genre === "prive" ? "fondateur" : null,
+    /*  §2 (nº 267) — VIDER UN ENCADRÉ N'INVENTE PLUS DE RÔLE, ET
+        C'ÉTAIT LA CAUSE. `modeVierge` sert à DEUX choses : ouvrir un
+        onglet neuf, et VIDER un encadré par la croix (voir
+        `fermerCeLieu`). Dans les deux cas il reposait
+        `role: "fondateur"` — la première position de la bascule.
+        Conséquence, exactement le relevé : on retire le studio choisi
+        sous « Fondateur », on choisit « Artiste résident »… mais
+        l'encadré vidé était déjà revenu à « fondateur », et il gardait
+        SON IDENTIFIANT — les deux rôles n'étaient donc que deux vues
+        d'UNE MÊME LIGNE, dont la croix rétablissait la première.
+        D'où « le formulaire garde fondateur » ET « supprimer d'un côté
+        supprime de l'autre ».
+        DÉSORMAIS : un encadré vidé n'a plus de rôle du tout (`null`),
+        et il perd son identifiant (voir `fermerCeLieu`) — il ne
+        partage plus la ligne de personne. Chaque rôle a sa propre
+        existence ; celui qu'on choisit ensuite est le seul enregistré.
+        ⚠️ UN ONGLET NEUF garde son rôle d'ouverture : là, aucune ligne
+        n'existe encore, et la bascule doit bien s'ouvrir quelque
+        part. */
+    role:
+      vide || (genre !== "salon" && genre !== "prive") ? null : "fondateur",
     //  LA NATURE DU LIEU ne concerne qu'un guest. « Studio » d'abord
     //  depuis la passe nº 128 (l'ordre de la bascule s'est inversé) —
     //  et une bascule s'ouvre sur sa PREMIÈRE position, jamais sur la
@@ -208,6 +235,7 @@ export function BlocModesExercice({
   surMobile,
   enErreur,
   manque,
+  manques = [],
 }: {
   modes: ModeEnSaisie[];
   surChangement: (modes: ModeEnSaisie[]) => void;
@@ -217,8 +245,17 @@ export function BlocModesExercice({
   enErreur?: string | null;
   /** CE QUI MANQUE, quand la personne a essayé de confirmer. Null
       tant qu'elle n'a rien tenté : on n'allume pas des champs rouges
-      sur un formulaire qu'on vient d'ouvrir. */
+      sur un formulaire qu'on vient d'ouvrir.
+      ⚠️ LE PREMIER SEULEMENT : c'est LUI qui commande la remontée et
+      la bascule d'onglet — on mène toujours au premier endroit à
+      corriger (nº 266). */
   manque?: ManqueBloc | null;
+  /** §1 (nº 267) — ET TOUS LES AUTRES. Un artiste cumule les quatre
+      modes : s'il a oublié quelque chose dans les quatre, les quatre
+      badges, les quatre titres et tous les champs concernés rougissent
+      EN MÊME TEMPS. Le premier reste le point d'arrivée de la page ;
+      cette liste-ci ne fait que dire OÙ ÇA MANQUE, partout. */
+  manques?: ManqueBloc[];
 }) {
   /** L'ONGLET REGARDÉ — au retour sur une fiche existante, celui du
       premier mode déclaré. Null sur un formulaire vierge : aucun
@@ -279,8 +316,25 @@ export function BlocModesExercice({
     return sessions[sessions.length - 1]?.cle ?? null;
   }
 
+  /*  §1 (nº 267) — LE ROUGE LIT LA LISTE COMPLÈTE. Il lisait le
+      PREMIER manque : un seul champ, un seul badge, un seul titre
+      pouvaient rougir à la fois — d'où le relevé (un « à domicile »
+      sans rayon ET un guest sans dates, et rien qui s'allume). La
+      liste rend tous les manques ; le premier, lui, garde son rôle :
+      la remontée et la bascule d'onglet. Repli sur `manque` seul si
+      l'appelant ne donne pas la liste. */
+  const tousLesManquesDuBloc: ManqueBloc[] =
+    manques.length > 0 ? manques : manque ? [manque] : [];
+
   function manquant(cle: string, champ: ManqueBloc["champ"]): boolean {
-    return Boolean(manque && manque.cle === cle && manque.champ === champ);
+    return tousLesManquesDuBloc.some(
+      (unManque) => unManque.cle === cle && unManque.champ === champ
+    );
+  }
+
+  /** CE MODE-LÀ manque-t-il de quelque chose ? (le badge, le titre) */
+  function modeEnManque(cle: string): boolean {
+    return tousLesManquesDuBloc.some((unManque) => unManque.cle === cle);
   }
 
   function modifier(cle: string, morceau: Partial<ModeEnSaisie>) {
@@ -353,7 +407,9 @@ export function BlocModesExercice({
     if (autres.length === 0) {
       surChangement(
         modes.map((mode) =>
-          mode.cle === cle ? modeVierge(genre, mode.cle, mode.id) : mode
+          //  §2 (nº 267) — LA CROIX VIDE : ni rôle réinventé, ni
+          //  identifiant gardé (voir `modeVierge`).
+          mode.cle === cle ? modeVierge(genre, mode.cle, mode.id, true) : mode
         )
       );
       return;
@@ -840,10 +896,11 @@ export function BlocModesExercice({
               rouge des champs manquants, la seule écriture d'erreur du
               site. Au repos, la bordure est transparente — la boîte ne
               change donc jamais de taille. */
-          const modeEnFaute = modes.find(
-            (mode) => manque?.cle && mode.cle === manque.cle
+          //  §1 (nº 267) — TOUS les modes de ce genre qui manquent
+          //  de quelque chose, plus seulement celui du premier manque.
+          const cadreRouge = modes.some(
+            (mode) => mode.genre === genre && modeEnManque(mode.cle)
           );
-          const cadreRouge = Boolean(modeEnFaute && modeEnFaute.genre === genre);
           return (
             <button
               key={genre}
@@ -907,10 +964,10 @@ export function BlocModesExercice({
                   <span
                     data-titre-volet={session.cle}
                     data-titre-en-faute={
-                      manque?.cle === session.cle ? "" : undefined
+                      modeEnManque(session.cle) ? "" : undefined
                     }
                     className={`${TITRE_INTERTITRE}${
-                      manque?.cle === session.cle ? " text-erreur" : ""
+                      modeEnManque(session.cle) ? " text-erreur" : ""
                     }`}
                   >
                     {LIBELLES_MODES[genreAffiche]}
@@ -963,11 +1020,11 @@ export function BlocModesExercice({
                         <span
                           data-titre-volet={session.cle}
                           data-titre-en-faute={
-                            manque?.cle === session.cle ? "" : undefined
+                            modeEnManque(session.cle) ? "" : undefined
                           }
                           className={`text-[14px] font-semibold uppercase
                                      tracking-[0.1em] transition-colors ${
-                                       manque?.cle === session.cle
+                                       modeEnManque(session.cle)
                                          ? "text-erreur"
                                          : deplie
                                            ? "text-sombre-texte"
