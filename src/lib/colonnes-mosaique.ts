@@ -49,6 +49,20 @@ import { CARTES_PAR_PAGE } from "@/config/tatouage";
 /** LE NOM DU COOKIE — court, sans donnée personnelle : un chiffre. */
 export const COOKIE_COLONNES = "yf_colonnes";
 
+/**
+ * LA POLITIQUE DES COOKIES D'AFFICHAGE — ÉCRITE UNE FOIS (nº 257-§2)
+ * ------------------------------------------------------------------
+ * Un an de validité : le repli ne sert qu'à la toute première visite.
+ * `samesite=lax` : le cookie part avec les navigations du site, jamais
+ * avec une requête d'un autre domaine. `path=/` : toutes les pages le
+ * lisent.
+ * ⚠️ CE SUFFIXE EST CONSOMMÉ PAR LES DEUX COOKIES D'AFFICHAGE — celui
+ * des colonnes (script d'avant peinture, nº 226-§1) et celui de la
+ * mise en page (lib/vue-phototheque, nº 257-§2). Une seule écriture :
+ * ils ne peuvent pas diverger.
+ */
+export const SUFFIXE_COOKIE_AFFICHAGE = ";path=/;max-age=31536000;samesite=lax";
+
 /** SIX CARTES PAR COLONNE : le multiplicateur demandé (§1). */
 export const CARTES_PAR_COLONNE = 6;
 

@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { creerClientSupabaseServeur } from "@/lib/supabase/server";
 import { lireLesFavoris } from "@/lib/favoris-serveur";
 import { BarreSelection } from "@/components/BarreSelection";
 import { PageFavoris } from "@/components/PageFavoris";
-import { entreesDuFiltre } from "@/lib/filtres-selection";
+import { entreesDesStyles, entreesDuFiltre } from "@/lib/filtres-selection";
 import { comptesDesFavoris, comptesDesSuivis } from "@/lib/selection-suivis";
+import { COOKIE_TEXTE, phototequeDuCookie } from "@/lib/vue-phototheque";
+import { FournisseurAffichageServi } from "@/components/AffichageMosaique";
 
 /**
  * MES FAVORIS — la page du compte (passe nº 137)
@@ -55,11 +58,25 @@ export default async function PageMesFavoris() {
   //  suivis. La structure, l'ordre et les libellés viennent du menu
   //  « Explorer » du moteur (`entreesDuFiltre`) ; un menu sans entrée
   //  ne s'affiche pas.
+  //  §1 (nº 257) — DEUX MENUS, DEUX FORMES. Les favoris se divisent en
+  //  deux portes (une photo aimée est une réalisation OU un flash) ;
+  //  les suivis, non — on ne suit pas une photo, on suit une personne :
+  //  leur menu ne porte que la liste des styles, familles en
+  //  sous-porte, précédée de « Tous les styles ».
   const entreesFavoris = entreesDuFiltre(comptesDesFavoris(photos));
-  const entreesSuivis = entreesDuFiltre(comptesDesSuivis(suivis));
+  const entreesSuivis = entreesDesStyles(comptesDesSuivis(suivis));
 
   return (
-    <>
+    /*  §2 (nº 257) — LA MISE EN PAGE MÉMORISÉE, LUE ICI ET SERVIE À
+        TOUTE LA PAGE : les cartes (nº 255-§4) et l'icône de la barre
+        naissent déjà dans le bon état, comme sur l'accueil. Sans ce
+        fournisseur, le HTML montrait le texte des cartes et le
+        navigateur le retirait après coup — le saut du §2. */
+    <FournisseurAffichageServi
+      phototheque={phototequeDuCookie(
+        (await cookies()).get(COOKIE_TEXTE)?.value
+      )}
+    >
       {/* ⚠️ LE BLOC DE RECHERCHE N'A RIEN À FAIRE ICI (nº 245-§1) :
           la barre porte, à sa place et dans SA rangée, les deux menus
           « Mes favoris » et « Mes suivis ». Il reste intact partout
@@ -70,8 +87,9 @@ export default async function PageMesFavoris() {
         entreesSuivis={entreesSuivis}
       />
       {/*  §1 (nº 253) — LA PAGE N'A PLUS BESOIN DES ENTRÉES : les deux
-           menus sont retournés à la barre, seule à commander. */}
+           menus sont retournés à la barre, seule à commander.
+           La mise en page, elle, vient du fournisseur au-dessus. */}
       <PageFavoris photos={photos} suivis={suivis} />
-    </>
+    </FournisseurAffichageServi>
   );
 }

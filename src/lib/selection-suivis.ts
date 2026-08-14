@@ -10,7 +10,7 @@ import {
   valeurExplorer,
 } from "@/config/tatouage";
 import { cleDEnsemble, natureConnue } from "@/lib/photos-tatoueur";
-import type { ChoixSelection } from "@/lib/filtres-selection";
+import { CLE_TOTAL, type ChoixSelection } from "@/lib/filtres-selection";
 import type { PhotoDuSuivi, PhotoFavorite, TatoueurSuivi } from "@/lib/favoris-serveur";
 
 /**
@@ -356,10 +356,18 @@ export function comptesDesSuivis(
   const comptes = new Map<string, number>();
   for (const suivi of suivis) {
     const cles = new Set<string>();
+    //  §1 (nº 257) — LE TOTAL, et LE STYLE SEUL. Le menu des suivis
+    //  n'a plus de porte de catégorie : il compte les artistes PAR
+    //  STYLE, toutes catégories confondues (un artiste qui a un maori
+    //  réalisé ET un flash maori compte une fois), et le total sert la
+    //  tête « Tous les styles ». Les clés de couple restent : elles
+    //  servent encore au menu des favoris.
+    cles.add(CLE_TOTAL);
     for (const photo of suivi.recentes) {
       const nature = natureConnue(photo.nature);
       cles.add(valeurExplorer(nature, ""));
       cles.add(valeurExplorer(nature, photo.style));
+      if (photo.style) cles.add(photo.style);
     }
     for (const cle of cles) comptes.set(cle, (comptes.get(cle) ?? 0) + 1);
   }

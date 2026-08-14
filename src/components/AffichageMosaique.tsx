@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useSyncExternalStore } from "react";
+import { createContext, useContext, useMemo, useSyncExternalStore } from "react";
 import {
   lireDisposition,
   souscrireDisposition,
@@ -35,6 +35,37 @@ export const ContexteAffichageServi = createContext<{
   disposition: DispositionGrille;
   phototheque: boolean;
 }>({ disposition: "deux", phototheque: false });
+
+/**
+ * LE FOURNISSEUR, POUR UNE PAGE QUI N'EST PAS LA MOSAÏQUE (nº 257-§2)
+ * ------------------------------------------------------------------
+ * « Ma sélection » montre LES MÊMES CARTES (nº 249-§4) et suit LA MÊME
+ * mise en page (nº 255-§4), mais elle n'a pas d'IndexTatoueurs pour
+ * porter l'instantané servi : ses cartes et l'icône de la barre
+ * naissaient donc au défaut, puis se corrigeaient à l'hydratation —
+ * le saut de page du §2, à l'identique.
+ * Ce fournisseur est POSÉ PAR LA PAGE SERVEUR, autour de la barre ET
+ * du contenu : un composant client ne peut pas être monté depuis un
+ * composant serveur autrement (un `Provider` n'existe pas côté
+ * serveur). Il ne décide de rien — il transmet ce que le cookie a dit.
+ */
+export function FournisseurAffichageServi({
+  phototheque,
+  children,
+}: {
+  phototheque: boolean;
+  children: React.ReactNode;
+}) {
+  const servi = useMemo(
+    () => ({ disposition: "deux" as DispositionGrille, phototheque }),
+    [phototheque]
+  );
+  return (
+    <ContexteAffichageServi.Provider value={servi}>
+      {children}
+    </ContexteAffichageServi.Provider>
+  );
+}
 
 /** La disposition de la mosaïque — celle de l'adresse. */
 export function useDispositionGrille(): DispositionGrille {

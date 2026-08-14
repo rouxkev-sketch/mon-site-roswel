@@ -486,7 +486,11 @@ titre("§3 — à la source : jamais vide, le chevron, aucune loupe");
         menusNus
       ) &&
       //  Les mots viennent du moteur, aucun n'est écrit ici.
-      /libelleExplorer\(nature, choix\.style\)/.test(menusNus)
+      //  ⚠️ MIS À JOUR nº 257-§1 : l'écriture est passée dans
+      //  `libelleDuChoix` (partagée avec le sous-titre de la page),
+      //  qui consomme toujours `libelleExplorer` — la règle de CETTE
+      //  passe, « les mots du moteur », n'a pas bougé.
+      /libelleExplorer\(choix\.nature, choix\.style\)/.test(menusNus)
   );
   verif(
     "le libellé se raccourcit sur écran étroit — et la borne est CELLE DE LA BARRE",

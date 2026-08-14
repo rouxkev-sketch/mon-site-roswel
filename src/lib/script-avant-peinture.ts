@@ -2,6 +2,7 @@ import { COULEURS_SOMBRE } from "@/config/tatouage";
 import {
   COOKIE_COLONNES,
   expressionColonnes,
+  SUFFIXE_COOKIE_AFFICHAGE,
 } from "@/lib/colonnes-mosaique";
 import {
   AGE_MAXIMUM_MS,
@@ -109,10 +110,10 @@ var r=document.documentElement;
 r.dataset.appareil=matchMedia("(pointer: coarse)").matches?"mobile":"web";
 r.style.backgroundColor=${fond};
 /* 0. LE NOMBRE DE COLONNES, POUR LA PROCHAINE RÉPONSE DU SERVEUR
-   (nº 226-§1). Un an de validité : le repli ne sert qu'à la toute
-   première visite. samesite=lax : il part avec les navigations du
-   site, jamais avec une requête d'un autre domaine. */
-try{document.cookie=${JSON.stringify(COOKIE_COLONNES)}+"="+(${expressionColonnes()})+";path=/;max-age=31536000;samesite=lax"}catch(e){}
+   (nº 226-§1). La politique du cookie — validité, portée, samesite —
+   est écrite UNE fois (SUFFIXE_COOKIE_AFFICHAGE, lib/colonnes-
+   mosaique) et partagée avec le cookie de mise en page (nº 257-§2). */
+try{document.cookie=${JSON.stringify(COOKIE_COLONNES)}+"="+(${expressionColonnes()})+${JSON.stringify(SUFFIXE_COOKIE_AFFICHAGE)}}catch(e){}
 try{history.scrollRestoration="manual"}catch(e){}
 try{
 var adresse=location.pathname+location.search;

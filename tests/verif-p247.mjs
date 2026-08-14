@@ -291,12 +291,21 @@ if (R) {
     R.adresses.suivis.menu === "suivis",
     JSON.stringify(R.adresses.suivis)
   );
+  //  ⚠️ MIS À JOUR nº 257-§1 : le menu des suivis ne connaît plus de
+  //  catégorie — on ne suit pas une photo, on suit une personne. Le
+  //  couple s'éprouve donc sur LES FAVORIS ; sur les suivis, le reste
+  //  du paramètre est un STYLE seul, et l'ancienne forme couple
+  //  retombe proprement (rien de filtré). Le paramètre, lui, reste
+  //  UNIQUE — ce que CETTE passe exigeait.
   verif(
     "le couple catégorie + style voyage dans LE MÊME paramètre",
-    R.adresses.suivisMaori.menu === "suivis" &&
-      R.adresses.suivisMaori.nature === "tatouage" &&
-      R.adresses.suivisMaori.style === "maori",
-    JSON.stringify(R.adresses.suivisMaori)
+    R.adresses.favorisMaori.menu === "favoris" &&
+      R.adresses.favorisMaori.nature === "tatouage" &&
+      R.adresses.favorisMaori.style === "maori" &&
+      R.adresses.suivisStyle.menu === "suivis" &&
+      R.adresses.suivisStyle.style === "maori" &&
+      R.adresses.suivisMaori.style === "",
+    JSON.stringify(R.adresses.favorisMaori)
   );
   verif(
     "une valeur malmenée ne rend jamais n'importe quoi",
@@ -323,10 +332,13 @@ if (R) {
   const menus = lire("src/components/MenusSelection.tsx");
   verif(
     "il n'y a plus qu'un paramètre — les deux d'avant ont disparu du code",
+    //  ⚠️ MIS À JOUR nº 257-§1 : le NOM `TOUS_LES_STYLES` revit — pour
+    //  la tête du menu des SUIVIS (sans porte de catégorie, il lui
+    //  faut un chemin de retour), pas pour celui des favoris, d'où la
+    //  nº 249-§1 l'avait retirée. Ce que CETTE passe interdisait — les
+    //  deux paramètres d'adresse — reste interdit.
     /PARAM_SELECTION = "selection"/.test(filtres) &&
-      !/PARAM_FAVORIS|PARAM_SUIVIS|TOUS_LES_STYLES/.test(
-        filtres + page + menus
-      )
+      !/PARAM_FAVORIS|PARAM_SUIVIS/.test(filtres + page + menus)
   );
   verif(
     "la page n'affiche jamais les deux sections à la fois",
@@ -354,7 +366,11 @@ if (R) {
   const portes = [...new Set(R.entreesFavoris.map((e) => e.groupe ?? ""))];
   verif(
     "les entrées portent les DEUX portes du menu Explorer, dans son ordre",
-    JSON.stringify(portes) === JSON.stringify(["", "Réalisations", "Flashs"]),
+    //  ⚠️ MIS À JOUR nº 249-§1 (constaté au rejeu de la nº 257) :
+    //  l'entrée « Tous les styles » — le groupe vide en tête — a été
+    //  supprimée du menu des favoris à la 249. Les DEUX portes, elles,
+    //  sont exactement ce que cette passe a posé.
+    JSON.stringify(portes) === JSON.stringify(["Réalisations", "Flashs"]),
     portes.join(" | ")
   );
   verif(
@@ -532,8 +548,14 @@ titre("§5 — les colonnes et la bande (injection des classes réelles)");
   const classeBlocs = nettoyer(
     source.match(/className="(mt-5 grid gap-\[34px\][^"]*)"/)?.[1] ?? ""
   );
+  //  ⚠️ MIS À JOUR nº 251-§4 (constaté au rejeu de la nº 257) : la
+  //  vignette est passée du carré au 4/5 par l'écriture unique
+  //  `CADRE_PHOTO_PORTFOLIO` — les ANGLES DROITS, la règle de CETTE
+  //  passe, n'ont pas bougé.
   const classeVignette = nettoyer(
-    source.match(/className="(block aspect-square[^"]*)"/)?.[1] ?? ""
+    source.match(
+      /className=\{`(relative block \$\{CADRE_PHOTO_PORTFOLIO\}[^`]*)`\}/
+    )?.[1] ?? ""
   );
   verif(
     "les vignettes sont à ANGLES DROITS (rayon zéro) à la source",

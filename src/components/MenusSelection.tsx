@@ -7,7 +7,10 @@ import { SelecteurCapsule } from "@/components/SelecteurCapsule";
 import { BoutonPhototheque } from "@/components/BoutonPhototheque";
 import { IconeChevronBas } from "@/components/Icones";
 import { CATEGORIES_EXPLORER } from "@/config/tatouage";
-import { libelleExplorer } from "@/components/MoteurTatouage";
+import {
+  libelleExplorer,
+  libelleStyleChoisi,
+} from "@/components/MoteurTatouage";
 import {
   lireSelection,
   MENU_FAVORIS,
@@ -305,27 +308,53 @@ export function MenusSelection({
 }
 
 /**
+ * CE QUE LE CHOIX COURANT S'APPELLE — L'ÉCRITURE UNIQUE (nº 257-§1)
+ * ------------------------------------------------------------------
+ * Lue ICI par le champ de la barre, et par le SOUS-TITRE de la page
+ * (PageFavoris) : les deux disaient la même chose, il ne fallait pas
+ * qu'ils le disent deux fois — le menu des suivis ne connaît plus de
+ * catégorie, et `libelleExplorer(nature, style)` y rendait « » pour
+ * un style pourtant choisi.
+ *  · MES FAVORIS → l'écriture du moteur refermé : « Réalisations ·
+ *    Abstrait », « Toutes les réalisations » (`libelleExplorer`) ;
+ *  · MES SUIVIS  → le style seul (`libelleStyleChoisi`, l'écriture du
+ *    site pour « aucun style choisi » — « Tous les styles »).
+ * Vide quand rien n'est choisi : c'est à l'appelant de dire s'il veut
+ * un état d'ouverture (le champ, §3) ou rien du tout (le sous-titre).
+ */
+export function libelleDuChoix(choix: ChoixSelection): string {
+  if (choix.menu === MENU_SUIVIS) {
+    return choix.style ? libelleStyleChoisi(choix.style) : "";
+  }
+  return libelleExplorer(choix.nature, choix.style);
+}
+
+/**
  * CE QUE LE CHAMP AFFICHE — L'ÉTAT EN COURS, JAMAIS RIEN (§3)
  * ------------------------------------------------------------------
- * SUR LE WEB :
- *  · un style choisi   → « Réalisations · Abstrait » (le titre de la
- *    porte, puis le style : l'écriture du moteur refermé) ;
- *  · une porte choisie → « Toutes les réalisations » (le mot de
- *    l'entrée elle-même) ;
+ * SUR « MES FAVORIS », SUR LE WEB :
+ *  · un style choisi   → « Réalisations · Abstrait » ;
+ *  · une porte choisie → « Toutes les réalisations » ;
  *  · rien de choisi    → le mot de la PREMIÈRE PORTE présente — c'est
  *    l'état d'ouverture, et il se lit.
  * AU DOIGT (§6, nº 256) : LA CATÉGORIE SEULE — « Réalisations » ou
  * « Flashs », avec le chevron qui dit que le champ s'ouvre. Le style
  * complet vit dans le TITRE de la page, juste dessous : le répéter
  * dans un champ étroit le tronquait.
+ * SUR « MES SUIVIS » (nº 257-§1) : le style, ou « Tous les styles » à
+ * l'ouverture — il n'y a plus de catégorie à dire, aux deux largeurs.
  * ⚠️ AUCUN MOT N'EST ÉCRIT ICI : `CATEGORIES_EXPLORER` porte les
- * titres et les « Tous les… », `libelleExplorer` l'écriture refermée.
+ * titres et les « Tous les… », `libelleStyleChoisi` porte « Tous les
+ * styles », `libelleExplorer` l'écriture refermée.
  */
 function libelleDuFiltre(
   entrees: EntreeFiltre[],
   choix: ChoixSelection,
   etroit: boolean
 ): string {
+  //  §1 (nº 257) — LES SUIVIS N'ONT PLUS DE PORTE : le style, ou
+  //  l'état d'ouverture, à toutes les largeurs.
+  if (choix.menu === MENU_SUIVIS) return libelleStyleChoisi(choix.style);
   //  LA PORTE EN COURS : celle du choix, ou la PREMIÈRE PRÉSENTE quand
   //  rien n'est filtré — c'est ce que dit l'état d'ouverture.
   const nature = choix.nature || (entrees[0]?.value.split(":")[0] ?? "");
@@ -333,7 +362,5 @@ function libelleDuFiltre(
   const titre = CATEGORIES_EXPLORER.find((c) => c.nature === nature)?.titre;
   //  §6 (nº 256) — au doigt, la catégorie et rien d'autre.
   if (etroit) return titre ?? "";
-  //  ⚠️ L'ÉCRITURE DU MOTEUR, PAS UNE SECONDE : `libelleExplorer` est
-  //  ce que le champ « Explorer » affiche une fois refermé.
-  return libelleExplorer(nature, choix.style);
+  return libelleDuChoix({ ...choix, nature });
 }

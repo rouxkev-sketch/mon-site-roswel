@@ -7,6 +7,7 @@ import {
   COOKIE_COLONNES,
   taillePageServie,
 } from "@/lib/colonnes-mosaique";
+import { COOKIE_TEXTE, phototequeDuCookie } from "@/lib/vue-phototheque";
 import { lieuDepuisParametres } from "@/lib/geocodage";
 import { PLAFOND_GALERIE } from "@/lib/photos-tatoueur";
 import {
@@ -272,9 +273,20 @@ export default async function PageAccueilTatouage({
       criteresInitiaux={{ style, nature, rayonKm, exclure, lieu }}
       //  L'AFFICHAGE DEMANDÉ PAR L'ADRESSE (nº 203-§1b) — décodé ici,
       //  comme les critères : le HTML rendu est le bon du premier coup.
+      //  §2 (nº 257) — … ET LA MISE EN PAGE MÉMORISÉE quand l'adresse
+      //  ne dit rien : sans cette lecture, arriver sur « / » rendait la
+      //  version AVEC texte, que le navigateur retirait une seconde
+      //  plus tard — le saut de page signalé deux fois. L'ADRESSE
+      //  L'EMPORTE TOUJOURS (un lien partagé reste maître), le cookie
+      //  ne parle qu'en son absence.
       affichage={{
         disposition: params.disposition === "une" ? "une" : "deux",
-        phototheque: params.texte === "sans",
+        phototheque:
+          params.texte === undefined
+            ? phototequeDuCookie(
+                (await cookies()).get(COOKIE_TEXTE)?.value
+              )
+            : params.texte === "sans",
       }}
     />
   );

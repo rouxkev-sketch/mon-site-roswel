@@ -2,6 +2,7 @@ import {
   CATEGORIES_EXPLORER,
   entreesExplorer,
   lireValeurExplorer,
+  styleDuCatalogue,
   valeurExplorer,
 } from "@/config/tatouage";
 
@@ -75,7 +76,22 @@ export function lireSelection(recherche?: string): ChoixSelection {
   if (!brut) return CHOIX_PAR_DEFAUT;
   const [menu = "", ...reste] = brut.split(":");
   if (menu !== MENU_FAVORIS && menu !== MENU_SUIVIS) return CHOIX_PAR_DEFAUT;
-  const { nature, style } = lireValeurExplorer(reste.join(":"));
+  const valeur = reste.join(":");
+  /*  §1 (nº 257) — SUR « SUIVIS », LE RESTE EST UN STYLE, PAS UN
+      COUPLE. On ne suit pas une photo, on suit une personne : la
+      division Réalisations / Flashs n'a aucun sens sur ce menu, et
+      elle a donc disparu de ses entrées. Le paramètre reste UNIQUE
+      (`?selection=suivis:maori`) — c'est sa LECTURE qui suit le menu,
+      et un style inconnu est ignoré comme partout ailleurs
+      (`styleDuCatalogue`, la même autorité que le moteur). */
+  if (menu === MENU_SUIVIS) {
+    return {
+      menu,
+      nature: "",
+      style: styleDuCatalogue(valeur) ? valeur : "",
+    };
+  }
+  const { nature, style } = lireValeurExplorer(valeur);
   return { menu, nature, style };
 }
 
@@ -107,6 +123,9 @@ export function valeurDuMenu(
   menu: MenuSelection
 ): string {
   if (choix.menu !== menu) return "";
+  //  §1 (nº 257) — « Suivis » ne connaît que le style (voir
+  //  `lireSelection`) : sa valeur EST le style, jamais un couple.
+  if (menu === MENU_SUIVIS) return choix.style;
   return valeurExplorer(choix.nature, choix.style);
 }
 
@@ -140,6 +159,49 @@ export type EntreeFiltre = {
   compte?: number;
 };
 
+/**
+ * LES STYLES PRÉSENTS, dans l'ordre et avec les libellés du moteur —
+ * l'écriture UNIQUE des deux menus (§1, nº 257). `cle` dit sous quelle
+ * valeur chaque style se compte et se choisit : le couple d'Explorer
+ * pour « Mes favoris » (« flash:maori »), le style seul pour « Mes
+ * suivis » (« maori »).
+ */
+function stylesPresents(
+  comptes: Map<string, number>,
+  cle: (slug: string) => string,
+  groupe?: string
+): EntreeFiltre[] {
+  const entrees: EntreeFiltre[] = [];
+  for (const entree of entreesExplorer()) {
+    if (entree.genre === "style") {
+      const compte = comptes.get(cle(entree.slug));
+      if (compte) {
+        entrees.push({ value: cle(entree.slug), label: entree.label, groupe, compte });
+      }
+      continue;
+    }
+    for (const style of entree.styles) {
+      const compte = comptes.get(cle(style.slug));
+      if (!compte) continue;
+      entrees.push({
+        value: cle(style.slug),
+        label: style.label,
+        groupe,
+        //  ⚠️ LA FAMILLE EN SOUS-PORTE — elle n'ouvrait pas du tout
+        //  à la nº 245 (nº 247-§3) : `sousGroupe` n'a d'effet
+        //  qu'avec le drapeau `repliable` du menu, que ces deux
+        //  menus-ci ne passaient pas. Voir MenusSelection.
+        //  ⚠️ ET ELLE VIT SANS PORTE DE CATÉGORIE (nº 257-§1) : la
+        //  sous-porte ne dépend pas d'un groupe parent — voir
+        //  `sousEnteteVisible` dans MenuDeroulant.
+        sousGroupe: entree.label,
+        compte,
+      });
+    }
+  }
+  return entrees;
+}
+
 export function entreesDuFiltre(
   comptes: Map<string, number>
 ): EntreeFiltre[] {
@@ -157,39 +219,13 @@ export function entreesDuFiltre(
       groupe: categorie.titre,
       compte: compteCategorie,
     });
-    for (const entree of entreesExplorer()) {
-      if (entree.genre === "style") {
-        const compte = comptes.get(
-          valeurExplorer(categorie.nature, entree.slug)
-        );
-        if (compte) {
-          entrees.push({
-            value: valeurExplorer(categorie.nature, entree.slug),
-            label: entree.label,
-            groupe: categorie.titre,
-            compte,
-          });
-        }
-        continue;
-      }
-      for (const style of entree.styles) {
-        const compte = comptes.get(
-          valeurExplorer(categorie.nature, style.slug)
-        );
-        if (!compte) continue;
-        entrees.push({
-          value: valeurExplorer(categorie.nature, style.slug),
-          label: style.label,
-          groupe: categorie.titre,
-          //  ⚠️ LA FAMILLE EN SOUS-PORTE — elle n'ouvrait pas du tout
-          //  à la nº 245 (nº 247-§3) : `sousGroupe` n'a d'effet
-          //  qu'avec le drapeau `repliable` du menu, que ces deux
-          //  menus-ci ne passaient pas. Voir MenusSelection.
-          sousGroupe: entree.label,
-          compte,
-        });
-      }
-    }
+    entrees.push(
+      ...stylesPresents(
+        comptes,
+        (slug) => valeurExplorer(categorie.nature, slug),
+        categorie.titre
+      )
+    );
   }
 
   //  ⚠️ « TOUS LES STYLES » A DISPARU (nº 249-§1). Elle était inutile :
@@ -198,4 +234,43 @@ export function entreesDuFiltre(
   //  recherche de flashs avec une recherche de réalisations. Ces deux
   //  entrées restent le seul chemin de retour vers tout.
   return entrees;
+}
+
+/**
+ * LE MENU DES SUIVIS — LES STYLES SEULS (§1, nº 257)
+ * ------------------------------------------------------------------
+ * PAS DE PORTE Réalisations / Flashs ICI, et c'est le sujet du §1 : on
+ * ne suit pas une photo, on suit une PERSONNE — un artiste n'est ni
+ * une réalisation ni un flash, il fait les deux. Le menu ne garde donc
+ * que la liste des styles, dans l'ordre et avec les libellés du
+ * moteur, familles EN SOUS-PORTE comprises (« Cultures du monde »).
+ *
+ * ⚠️ ET UNE TÊTE, « Tous les styles » : sans porte de catégorie, plus
+ * RIEN ne ramenait à la liste entière une fois un style choisi (les
+ * deux têtes « Toutes les réalisations » / « Tous les flashs » jouaient
+ * ce rôle sur les favoris — c'est très exactement pourquoi la nº 249-§1
+ * pouvait retirer cette entrée-là). Le mot n'est pas inventé : c'est
+ * celui de `libelleStyleChoisi` (MoteurTatouage), l'écriture du site
+ * pour « aucun style choisi ».
+ */
+export const TOUS_LES_STYLES = "";
+
+/** LA CLÉ DU TOTAL, dans la table des comptes — une étoile : ni un
+    slug de style, ni une valeur d'Explorer, donc aucune collision
+    possible (voir `comptesDesSuivis`). */
+export const CLE_TOTAL = "*";
+
+export function entreesDesStyles(
+  comptes: Map<string, number>
+): EntreeFiltre[] {
+  const styles = stylesPresents(comptes, (slug) => slug);
+  if (styles.length === 0) return [];
+  return [
+    {
+      value: TOUS_LES_STYLES,
+      label: "Tous les styles",
+      compte: comptes.get(CLE_TOTAL) ?? 0,
+    },
+    ...styles,
+  ];
 }

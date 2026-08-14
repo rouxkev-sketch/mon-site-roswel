@@ -126,6 +126,11 @@ const adresses = {
   vide: lireSelection(""),
   suivis: lireSelection("selection=suivis"),
   favorisFlash: lireSelection("selection=favoris:flash"),
+  //  ⚠️ MIS À JOUR nº 257-§1 : sur « suivis », le reste du paramètre
+  //  est UN STYLE, plus un couple — le couple s'éprouve sur les
+  //  favoris, et l'ancienne forme retombe proprement.
+  favorisMaori: lireSelection("selection=favoris:tatouage:maori"),
+  suivisStyle: lireSelection("selection=suivis:maori"),
   suivisMaori: lireSelection("selection=suivis:tatouage:maori"),
   menuInconnu: lireSelection("selection=nimporte:flash"),
   styleInconnu: lireSelection("selection=favoris:flash:pas-un-style"),

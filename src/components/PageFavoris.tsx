@@ -12,7 +12,7 @@ import { useVuePhototheque } from "@/components/AffichageMosaique";
 import { BlocSuivis } from "@/components/BlocSuivis";
 import { FenetreFiche } from "@/components/FenetreFiche";
 import { LigneResultats } from "@/components/LigneResultats";
-import { libelleExplorer } from "@/components/MoteurTatouage";
+import { libelleDuChoix } from "@/components/MenusSelection";
 import {
   CLE_FENETRE_FICHE,
   type ContexteFenetreFiche,
@@ -92,7 +92,10 @@ export function PageFavoris({
       barre commande la MÊME vue que sur la page de recherche : le
       magasin est partagé (lib/vue-phototheque, lu ici par le même
       abonnement que la mosaïque). Sans cette lecture, l'icône ne
-      commanderait rien — les cartes de cette page ignoraient l'état. */
+      commanderait rien — les cartes de cette page ignoraient l'état.
+      §2 (nº 257) — ET SON INSTANTANÉ SERVEUR EST CELUI DU COOKIE : le
+      contexte le porte (voir plus bas), exactement comme la mosaïque
+      le reçoit d'IndexTatoueurs. */
   const phototheque = useVuePhototheque();
 
   /**
@@ -324,9 +327,14 @@ export function PageFavoris({
            Abstrait », « Tous les flashs ») ; rien sans critère.
            §3 — SUR LE WEB, CE TITRE EST LE CONTRÔLE : voir
            `titreControle`. */}
+      {/*  §1 (nº 257) — LE SOUS-TITRE LIT LA MÊME ÉCRITURE QUE LE CHAMP
+           DE LA BARRE (`libelleDuChoix`) : sur « Mes suivis », le menu
+           n'a plus de catégorie, et `libelleExplorer` rendait « » pour
+           un style pourtant choisi — le critère disparaissait de la
+           page. Une seule écriture, deux endroits. */}
       <LigneResultats
         titre={titreControle(surLesFavoris ? "Mes favoris" : "Mes suivis")}
-        sousTitre={libelleExplorer(nature, style) || null}
+        sousTitre={libelleDuChoix(choix) || null}
       />
 
       {/* ---------- LES PHOTOS GARDÉES ----------

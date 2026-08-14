@@ -18,70 +18,112 @@
  * affichage du premier coup, remplacement d'adresse sans étape
  * d'historique, relecture au retour, clé de position qui contient le
  * paramètre, et adresse nue = défaut (le contrat des critères).
+ *
+ * §2 (nº 257) — … ET IL EST MÉMORISÉ DANS UN COOKIE, PARCE QUE LE
+ * SERVEUR DOIT LE CONNAÎTRE.
+ * ------------------------------------------------------------------
+ * LE DÉFAUT, signalé deux fois : on choisit la mise en page sans
+ * texte, on revient sur l'accueil, et la page s'affiche D'ABORD avec
+ * le texte, puis le retire une seconde plus tard — un saut de page.
+ * Ce n'était ni une animation ni un retard d'hydratation : c'était un
+ * ÉTAT QUI N'EXISTAIT PAS CÔTÉ SERVEUR. L'adresse d'arrivée est nue
+ * (« / »), le serveur rendait donc le défaut, et la préférence — rangée
+ * dans le `sessionStorage`, que le serveur ne voit pas — ne pouvait
+ * s'appliquer qu'APRÈS coup, en réécrivant l'adresse.
+ *
+ * LE REMÈDE EST CELUI DE LA nº 226-§1, à la lettre : UN COOKIE. C'est
+ * le seul canal qui existe — le serveur rend le HTML avant qu'une
+ * ligne de JavaScript n'ait tourné, et un cookie part avec CHAQUE
+ * requête, la navigation du routeur comprise. La préférence est donc
+ * écrite dans un cookie AU MOMENT DU CHOIX (sa valeur est connue là,
+ * contrairement au nombre de colonnes, qui ne se mesure qu'avant la
+ * peinture), et le serveur la lit (page.tsx, mes-favoris/page.tsx).
+ * La politique du cookie — un an, `path=/`, `samesite=lax` — est celle
+ * de la nº 226, écrite une seule fois (SUFFIXE_COOKIE_AFFICHAGE).
+ *
+ * ⚠️ ET LE MAGASIN LE LIT AUSSI, dans cet ordre : L'ADRESSE D'ABORD
+ * (un lien partagé « ?texte=sans » l'emporte, le contrat des critères
+ * ne bouge pas), LE COOKIE ENSUITE. Sans cela le navigateur dirait
+ * « avec texte » là où le serveur vient de rendre « sans » — et le
+ * saut reviendrait par la fenêtre, en écart d'hydratation.
  */
+
+import { SUFFIXE_COOKIE_AFFICHAGE } from "@/lib/colonnes-mosaique";
 
 const EVENEMENT = "yokofolio-vue-phototheque-changee";
 
 /** Le paramètre d'adresse — écrit seulement quand le texte est masqué. */
 export const PARAMETRE_TEXTE = "texte";
 
-/** LE FILET DE LA VISITE (nº 212-§3) — le JUMEAU de celui de
-    lib/disposition-grille, où tout est expliqué : l'adresse reste la
-    source, le stockage de session ne sert qu'à survivre au rendu que
-    le routeur restitue depuis son cache au retour. */
-const CLE_SESSION = "yokofolio-texte-visite";
+/** LE COOKIE DE LA MISE EN PAGE (§2, nº 257) — deux mots, aucune
+    donnée personnelle. Le frère de `yf_colonnes`. */
+export const COOKIE_TEXTE = "yf_texte";
+export const TEXTE_SANS = "sans";
+export const TEXTE_AVEC = "avec";
+
+/**
+ * LE COOKIE RELU — et jamais cru sur parole : n'importe qui peut
+ * écrire n'importe quoi dans un cookie. Tout ce qui n'est pas le mot
+ * exact vaut « avec le texte », le défaut du site.
+ * ⚠️ PURE, et sans `window` : le serveur l'appelle.
+ */
+export function phototequeDuCookie(
+  valeurCookie: string | undefined | null
+): boolean {
+  return valeurCookie === TEXTE_SANS;
+}
 
 function memoriser(voulue: boolean) {
   try {
-    sessionStorage.setItem(CLE_SESSION, voulue ? "sans" : "avec");
+    //  §2 (nº 257) — LE COOKIE REMPLACE LE `sessionStorage` de la
+    //  nº 212-§3 : il dit la même chose, mais le serveur le voit. Une
+    //  seule mémoire, donc rien à tenir d'accord.
+    document.cookie = `${COOKIE_TEXTE}=${
+      voulue ? TEXTE_SANS : TEXTE_AVEC
+    }${SUFFIXE_COOKIE_AFFICHAGE}`;
   } catch {
-    // Stockage refusé : la préférence vivra le temps de la page.
+    // Cookies refusés : la préférence vivra le temps de la page.
   }
 }
 
 function memorisee(): boolean | null {
   try {
-    const lue = sessionStorage.getItem(CLE_SESSION);
-    return lue === "sans" ? true : lue === "avec" ? false : null;
+    const lue = document.cookie
+      .split("; ")
+      .find((morceau) => morceau.startsWith(`${COOKIE_TEXTE}=`))
+      ?.slice(COOKIE_TEXTE.length + 1);
+    return lue === TEXTE_SANS ? true : lue === TEXTE_AVEC ? false : null;
   } catch {
     return null;
   }
 }
 
 /** Remettre la vue au pas après une navigation — l'adresse d'abord, la
-    préférence de la visite à défaut. */
+    préférence mémorisée à défaut. */
 export function reprendrePhototheque() {
-  const dansLAdresse = new URLSearchParams(window.location.search).has(
-    PARAMETRE_TEXTE
-  );
-  if (dansLAdresse) {
-    valeur = depuisLAdresse();
+  //  ⚠️ PLUS RIEN À CORRIGER À L'ÉCRAN (§2, nº 257) : le serveur a
+  //  déjà rendu la bonne mise en page (il lit le cookie) et la
+  //  première lecture du magasin dit la même chose. On relit, on
+  //  prévient — et si l'adresse portait le paramètre, on le retient.
+  valeur = depuisLAdresse() ?? memorisee() ?? false;
+  if (new URLSearchParams(window.location.search).has(PARAMETRE_TEXTE)) {
     memoriser(valeur);
-    window.dispatchEvent(new Event(EVENEMENT));
-    return;
   }
-  const retenue = memorisee();
-  if (!retenue) {
-    valeur = false;
-    window.dispatchEvent(new Event(EVENEMENT));
-    return;
-  }
-  valeur = false;
-  poserPhototheque(true);
+  window.dispatchEvent(new Event(EVENEMENT));
 }
 
 /** LA source de vérité entre deux relectures de l'adresse. */
 let valeur: boolean | null = null;
 
-/** La lecture de l'adresse — la vue éteinte sans paramètre. */
-function depuisLAdresse(): boolean {
+/** La lecture de l'adresse — `null` quand elle ne dit rien (c'est
+    alors au cookie de parler, §2 nº 257). */
+function depuisLAdresse(): boolean | null {
   try {
-    return (
-      new URLSearchParams(window.location.search).get(PARAMETRE_TEXTE) ===
-      "sans"
-    );
+    const parametres = new URLSearchParams(window.location.search);
+    if (!parametres.has(PARAMETRE_TEXTE)) return null;
+    return parametres.get(PARAMETRE_TEXTE) === TEXTE_SANS;
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -104,7 +146,11 @@ function ecrireDansLAdresse(voulue: boolean) {
 
 /** La vue en cours — celle de l'adresse. */
 export function lirePhototheque(): boolean {
-  if (valeur === null) valeur = depuisLAdresse();
+  //  §2 (nº 257) — L'ADRESSE, PUIS LE COOKIE : la première lecture du
+  //  navigateur doit dire EXACTEMENT ce que le serveur vient de
+  //  rendre, sans quoi le premier rendu se corrige à l'écran — le
+  //  saut de page qu'on vient de supprimer.
+  if (valeur === null) valeur = depuisLAdresse() ?? memorisee() ?? false;
   return valeur;
 }
 
@@ -129,7 +175,7 @@ export function basculerPhototheque() {
     raison contre la mémoire : on relit alors, et alors seulement. */
 export function souscrirePhototheque(rappel: () => void) {
   const auRetour = () => {
-    valeur = depuisLAdresse();
+    valeur = depuisLAdresse() ?? memorisee() ?? false;
     rappel();
   };
   window.addEventListener(EVENEMENT, rappel);
