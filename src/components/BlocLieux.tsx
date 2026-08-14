@@ -658,11 +658,14 @@ function AdresseCliquable({
   const ligneTexte = (cliquable: boolean) => (
     <p className="text-[14px] leading-relaxed text-sombre-texte-doux [overflow-wrap:anywhere]">
       {etiquette}{" "}
+      {/*  §3 (nº 268) — LE SOULIGNEMENT DIT LE LIEN, et il le dit AU
+           REPOS : celui de la nº 229 — fin (`decoration-1`), décalé
+           (`underline-offset-4`) — n'attend plus le survol, puisque
+           l'encadré qui l'annonçait est parti (voir plus bas). La
+           couleur du texte ne change jamais. */}
       <span
         className={`text-[15px] font-medium text-sombre-texte${
-          cliquable
-            ? " underline-offset-4 decoration-1 group-hover:underline"
-            : ""
+          cliquable ? " underline underline-offset-4 decoration-1" : ""
         }`}
       >
         {adresse}
@@ -688,17 +691,19 @@ function AdresseCliquable({
 
   return (
     <>
-      {/*  §1 (nº 232) — L'ENCADRÉ EST CELUI D'UN MEMBRE D'ÉQUIPE, À LA
-           CLASSE PRÈS : `CLASSES_LIGNE_CLIQUABLE`, l'unique écriture.
-           Il enveloppe LA PASTILLE ET LE BLOC DE TEXTE quand la ligne
-           porte une pastille (l'adresse de l'affiche) ; la colonne de
-           texte garde la bascule de centrage de la nº 229.
-           ⚠️ L'ENCADRÉ S'ARRÊTE ICI (nº 230-§4, tenu) : le volet des
-           horaires vit APRÈS ce lien, jamais dedans — appuyer sur le
-           chevron ne peut pas déclencher le lien de l'adresse, ce ne
-           sont pas les mêmes éléments.
-           §5 (nº 227) — aucun rose : la couleur du texte ne change
-           jamais, seul le fond et un fin soulignement décalé. */}
+      {/*  §3 (nº 268) — PLUS D'ENCADRÉ SUR SA PROPRE ADRESSE. La ligne
+           d'adresse d'un salon ou d'un studio portait l'encadré de la
+           nº 232 (celui d'un membre d'équipe) : or l'encadré dit
+           « cette ligne mène à une fiche », et il n'y a pas de fiche
+           au bout — ce serait un lien vers soi-même. Le lien qui
+           reste (la fenêtre de verre au doigt, Google Maps au web)
+           est dit par LE SOULIGNEMENT SEUL, permanent, sous l'adresse
+           (voir `ligneTexte`). La géométrie ne bouge pas : pastille
+           ancrée, colonne centrée, mêmes écarts — seuls le fond au
+           survol et les marges négatives de l'encadré sont partis.
+           ⚠️ LES HORAIRES RESTENT DEHORS (nº 230-§4, tenu) : le
+           chevron ne peut pas déclencher le lien de l'adresse.
+           §5 (nº 227) — aucun rose : la couleur ne change jamais. */}
       <a
         href={adresseMaps(lieu)}
         target="_blank"
@@ -710,11 +715,7 @@ function AdresseCliquable({
             setFenetre(true);
           }
         }}
-        className={
-          pastille
-            ? CLASSES_LIGNE_CLIQUABLE
-            : "group block rounded-xl -m-2 p-2 transition-colors hover:bg-white/5 active:bg-white/10"
-        }
+        className={pastille ? "flex items-start gap-3.5" : "block"}
       >
         {pastille}
         {pastille ? (
@@ -846,22 +847,29 @@ export function BlocAdressesFiche({
  * ================================================================== */
 
 /**
- * L'ÉTIQUETTE GRISE D'UN PROFIL (nº 228-§2) — « En salon · RÉSIDENT : »
+ * L'ÉTIQUETTE GRISE D'UN PROFIL (nº 228-§2) — « En salon · Résident : »
  * ==================================================================
  * Le genre vient de `GENRES_MODE` (« À domicile », « En studio »,
  * « En salon », « Guest »), jamais d'autres mots ; LE RÔLE le suit,
- * EN CAPITALES, séparé d'un point médian. C'est le rôle qui vivait
- * sous le nom jusqu'à la nº 222 : il descend ici, devant l'adresse,
- * où il désigne enfin quelque chose de précis.
+ * séparé d'un point médian. C'est le rôle qui vivait sous le nom
+ * jusqu'à la nº 222 : il descend ici, devant l'adresse, où il désigne
+ * enfin quelque chose de précis.
+ *
+ * §1 (nº 268) — LES CAPITALES SONT PARTIES : la consigne de la nº 228
+ * est annulée par le propriétaire — des capitales sur un mot long
+ * crient là où le reste de la fiche parle. Le rôle s'écrit comme le
+ * reste de la ligne, l'initiale seule en majuscule : c'est le mot même
+ * de `libelleRoleCourt` (« Fondateur », « Résident »), celui du
+ * formulaire et de l'équipe — plus aucune transformation. Taille et
+ * couleur n'ont pas bougé, seule la casse.
  *
  * « Guest » ne redouble pas : son genre EST son rôle, on n'écrit pas
- * « Guest · GUEST ». Un profil sans rôle enregistré garde son genre
+ * « Guest · Guest ». Un profil sans rôle enregistré garde son genre
  * seul (« À domicile : ») — jamais de rôle inventé.
  */
 function etiquetteDuMode(mode: ModeExerciceFiche): string {
   const genre = genreMode(mode.genre).label;
-  const role =
-    mode.genre === "guest" ? "" : libelleRoleCourt(mode.role).toUpperCase();
+  const role = mode.genre === "guest" ? "" : libelleRoleCourt(mode.role);
   return role ? `${genre} · ${role} :` : `${genre} :`;
 }
 
@@ -905,13 +913,13 @@ export function BlocProfilsArtiste({
         lignes ne dépasse jamais au-dessus), 32 px entre deux lignes
         (`gap-8`), 14 px entre pastille et texte. */
     <ul className="flex flex-col gap-8">
-      {modes.map((mode) => (
-        <li key={mode.id} className="flex items-start gap-3.5">
-          {/*  ⚠️ « À DOMICILE », C'EST CHEZ L'ARTISTE (nº 224-§1) : la
-               pastille est SA photo de profil, pas un glyphe d'adresse
-               — il n'y a pas d'autre lieu à montrer. Les autres modes
-               portent le logo du salon lié, ou le glyphe d'adresse
-               quand le lieu a été saisi à la main. */}
+      {modes.map((mode) => {
+        /*  ⚠️ « À DOMICILE », C'EST CHEZ L'ARTISTE (nº 224-§1) : la
+            pastille est SA photo de profil, pas un glyphe d'adresse
+            — il n'y a pas d'autre lieu à montrer. Les autres modes
+            portent le logo du salon lié, ou le glyphe d'adresse
+            quand le lieu a été saisi à la main. */
+        const pastille = (
           <PhotoRonde
             source={
               mode.genre === "domicile"
@@ -920,27 +928,34 @@ export function BlocProfilsArtiste({
             }
             nature="lieu"
           />
+        );
+        const lie = Boolean(mode.salon_slug && mode.salon_nom);
+        const colonne = (
           <div className="flex min-h-13 min-w-0 flex-1 flex-col justify-center">
             <p className="text-[14px] leading-relaxed text-sombre-texte-doux [overflow-wrap:anywhere]">
               {etiquetteDuMode(mode)}{" "}
-              {mode.salon_slug && mode.salon_nom ? (
-                <>
-                  {/*  §5 (nº 227) — le même survol que partout : jamais
-                       de rose, le fond monte d'un cran, un fin
-                       soulignement décalé. */}
-                  <Link
-                    href={`/tatoueur/${mode.salon_slug}`}
-                    onClick={clicVersFiche?.(mode.salon_slug)}
-                    className="font-medium text-sombre-texte rounded-md -mx-1 px-1
-                               transition-colors hover:bg-white/5 active:bg-white/10
-                               underline-offset-4 decoration-1 hover:underline"
-                  >
-                    {mode.salon_nom}
-                  </Link>
-                  <span className="text-[15px] font-medium text-sombre-texte">
-                    {libelleLieuDuMode(mode) ? ` · ${libelleLieuDuMode(mode)}` : ""}
-                  </span>
-                </>
+              {lie ? (
+                /*  §2 (nº 268) — CE QUI EST CLIQUABLE : le NOM plus
+                    l'ADRESSE, rien de plus. L'étiquette « En salon ·
+                    Fondateur » DÉCRIT — elle n'est ni soulignée ni
+                    dans le lien, elle ne mène nulle part. Le
+                    soulignement fin décalé s'allume au survol de LA
+                    LIGNE (`group-hover`, l'encadré de la 232 est le
+                    groupe) — l'écriture de l'équipe, au jeton près.
+                    Jamais de rose : la couleur ne change pas. */
+                <Link
+                  href={`/tatoueur/${mode.salon_slug}`}
+                  //  `lie` garantit le slug ; le `?? ""` ne sert qu'au
+                  //  typage (le rappel exige une chaîne).
+                  onClick={clicVersFiche?.(mode.salon_slug ?? "")}
+                  className="text-[15px] font-medium text-sombre-texte
+                             underline-offset-4 decoration-1 group-hover:underline"
+                >
+                  {mode.salon_nom}
+                  {libelleLieuDuMode(mode)
+                    ? ` · ${libelleLieuDuMode(mode)}`
+                    : ""}
+                </Link>
               ) : (
                 <span className="text-[15px] font-medium text-sombre-texte">{valeurDuMode(mode)}</span>
               )}
@@ -949,8 +964,33 @@ export function BlocProfilsArtiste({
               <DatesDeSession debut={mode.debut_le} fin={mode.fin_le} />
             )}
           </div>
-        </li>
-      ))}
+        );
+        return (
+          <li key={mode.id}>
+            {lie ? (
+              /*  §2 (nº 268) — LE LIEU A SA PROPRE FICHE : la ligne se
+                  comporte comme celle d'un membre d'équipe sur la
+                  fiche d'un salon — au survol, L'ENCADRÉ englobe la
+                  pastille et le texte. C'est `CLASSES_LIGNE_CLIQUABLE`
+                  (nº 232), l'unique écriture — jamais un second
+                  dessin. Le lien, lui, reste borné au nom + adresse
+                  (voir la colonne) : l'encadré dit « cette ligne mène
+                  quelque part », le soulignement dit où l'on clique. */
+              <div className={CLASSES_LIGNE_CLIQUABLE}>
+                {pastille}
+                {colonne}
+              </div>
+            ) : (
+              /*  AUCUNE FICHE : ni encadré, ni soulignement — rien
+                  n'est cliquable, la ligne garde sa géométrie. */
+              <div className="flex items-start gap-3.5">
+                {pastille}
+                {colonne}
+              </div>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }
