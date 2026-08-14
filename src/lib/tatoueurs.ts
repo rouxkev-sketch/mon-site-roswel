@@ -126,6 +126,14 @@ export type Tatoueur = {
   lien_tiktok?: string | null;
   /** La chaîne YouTube — facultative (migration nº 34). */
   lien_youtube?: string | null;
+  /** L'ÉTAT DES CARNETS (passe nº 270, migration yokofolio-booking) :
+      'ouvert', 'delai' ou 'ferme' — DÉCLARÉ par l'artiste, jamais
+      deviné. NULL tant qu'une fiche n'a pas été réenregistrée : sa
+      page publique n'affiche alors RIEN à cette place. */
+  booking?: "ouvert" | "delai" | "ferme" | null;
+  /** Le nombre de mois d'attente (1 à 12) — n'a de sens qu'avec
+      l'état 'delai' (« Booking · 3 mois »). NULL sinon. */
+  booking_mois?: number | null;
   /** LA PAGE DE LIENS — Linktree ou Beacons. Un champ À PART du site
       depuis la passe nº 102 (migration nº 46) : ce ne sont pas la
       même chose pour le visiteur, et beaucoup de tatoueurs ont les
@@ -333,7 +341,7 @@ const COLONNES: string =
   `adresse, code_postal, bio, site_web, titre_site_web, titre_page_de_liens, ` +
   `filtres_technique, filtres_composition, filtres_besoins, region, pays, code_pays, lieu_id, ` +
   `type_fiche, etablissement, mode_exercice, rayon_zone_km, villes, photo_profil, ancien_slug, supprime_le, ` +
-  `user_id`;
+  `user_id, booking, booking_mois`;
 
 /**
  * LA MIGRATION N'EST PAS ENCORE PASSÉE ?
@@ -434,6 +442,8 @@ function normaliser(ligne: Tatoueur): Tatoueur {
     lien_tiktok: ligne.lien_tiktok ?? null,
     lien_youtube: ligne.lien_youtube ?? null,
     page_de_liens: ligne.page_de_liens ?? null,
+    booking: ligne.booking ?? null,
+    booking_mois: ligne.booking_mois ?? null,
     adresse: ligne.adresse ?? null,
     code_postal: ligne.code_postal ?? null,
     bio: ligne.bio ?? null,

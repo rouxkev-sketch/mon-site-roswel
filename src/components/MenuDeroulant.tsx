@@ -106,6 +106,8 @@ export function MenuDeroulant({
   positionFleche,
   champMobile,
   iconeTitreFeuille,
+  enErreur,
+  arrondi,
 }: {
   valeur: string;
   surChangement: (valeur: string) => void;
@@ -163,6 +165,17 @@ export function MenuDeroulant({
       seules les couleurs changent. Les pages artisans ne passent
       jamais cette option. */
   sombre?: boolean;
+  /** §2 (nº 270) — LE MENU PEUT ÊTRE EN FAUTE, comme un champ : le
+      formulaire de fiche exige le Booking, et un manque s'y dit par
+      un bord rouge — la même écriture que tous ses champs
+      (`border-erreur` / `border-transparent`). ⚠️ LES CLASSES DE
+      BORD NE SONT POSÉES QUE SI LA PROP EST FOURNIE : les menus qui
+      ne la passent pas gardent leur boîte au pixel près. */
+  enErreur?: boolean;
+  /** §2 (nº 270) — L'ARRONDI DU CHAMP, quand le menu vit au milieu
+      de champs de formulaire (`rounded-xl` chez eux) : sans rien,
+      le `rounded-2xl` historique des menus. */
+  arrondi?: string;
 }) {
   const [ouvert, setOuvert] = useState(false);
   const conteneur = useRef<HTMLDivElement>(null);
@@ -225,14 +238,29 @@ export function MenuDeroulant({
   //  liseré rose à l'ouverture (border-primaire + ring) se lisait
   //  comme un encadrement d'alerte. Le mode CLAIR (produit artisans)
   //  garde son habillage historique.
+  //  §2 (nº 270) — l'arrondi se règle (formulaire de fiche :
+  //  `rounded-xl`, comme ses champs) ; et le bord rouge d'un manque
+  //  n'existe QUE pour les appelants qui passent `enErreur` — les
+  //  autres menus ne reçoivent aucune classe de bord en plus.
+  const rayon = arrondi ?? "rounded-2xl";
+  const bordDuManque =
+    enErreur === undefined
+      ? ""
+      : enErreur
+        ? " border border-erreur"
+        : " border border-transparent";
   const habillage = sansBordure
     ? "bg-transparent"
     : sombre
-      ? `rounded-2xl transition-colors ${
+      ? `${rayon} transition-colors ${
           ouvert ? "bg-sombre-eleve-clair" : "bg-sombre-eleve"
-        }`
-      : `rounded-2xl border bg-fond ${
-          ouvert ? "border-primaire ring-2 ring-primaire/25" : "border-bordure-champ"
+        }${bordDuManque}`
+      : `${rayon} border bg-fond ${
+          ouvert
+            ? "border-primaire ring-2 ring-primaire/25"
+            : enErreur
+              ? "border-erreur"
+              : "border-bordure-champ"
         }`;
 
   const libelleChoisi =

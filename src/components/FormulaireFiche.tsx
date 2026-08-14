@@ -67,6 +67,7 @@ import {
   type LienLibreSaisie,
 } from "@/components/LienLibre";
 import { libelleDuLien, normaliserUrlLibre } from "@/lib/liens-fiche";
+import { MenuDeroulant, type OptionMenu } from "@/components/MenuDeroulant";
 import { FicheTatoueur } from "@/components/FicheTatoueur";
 import {
   IconeCocheListe,
@@ -149,6 +150,26 @@ function normaliserLien(
 
 const FORME_INSTAGRAM = /^https:\/\/(www\.)?instagram\.com\/[A-Za-z0-9._]{2,}\/?$/i;
 const FORME_TIKTOK = /^https:\/\/(www\.)?tiktok\.com\/@[A-Za-z0-9._-]{2,}\/?$/i;
+
+/**
+ * §2 (nº 270) — LE CHAMP BOOKING : TROIS ENTRÉES, MOT POUR MOT.
+ * L'état des carnets se DÉCLARE, il ne se devine pas — et c'est une
+ * information OBLIGATOIRE du formulaire (voir `valider`). Les valeurs
+ * ('ouvert' | 'delai' | 'ferme') sont celles de la colonne
+ * `tatoueurs.booking` (migration supabase/yokofolio-booking.sql).
+ */
+const OPTIONS_BOOKING: OptionMenu[] = [
+  { value: "ouvert", label: "Booking ouvert" },
+  { value: "delai", label: "Booking délai d'attente" },
+  { value: "ferme", label: "Booking fermé" },
+];
+
+/** Sur « délai d'attente » SEULEMENT, le champ se divise : le second
+    encadré propose le nombre de mois, de 1 à 12 — rien d'autre. */
+const OPTIONS_BOOKING_MOIS: OptionMenu[] = Array.from(
+  { length: 12 },
+  (_, rang) => ({ value: String(rang + 1), label: `${rang + 1} mois` })
+);
 //  ⚠️ LA FORME DU SITE WEB A DÉMÉNAGÉ (passe nº 116) : les deux
 //  emplacements « Ajouter un lien » la lisent dans lib/liens-fiche
 //  (`FORME_URL_LIBRE` / `normaliserUrlLibre`) — une seule autorité.
@@ -823,15 +844,29 @@ export function FormulaireFiche() {
   } | null>(null);
   const [instagram, setInstagram] = useState("");
   const [tiktok, setTiktok] = useState("");
-  /** LES DEUX LIENS LIBRES (passe nº 116) — ils REMPLACENT les champs
-      « Site web » et « Linktree » : deux emplacements « Ajouter un
-      lien », chacun une URL et un TITRE choisi par la personne
-      (16 caractères), rien n'est détecté. En base, ils continuent de
-      s'écrire dans `site_web` et `page_de_liens` (plus leurs titres,
-      migration nº 51) : les fiches existantes ne cassent pas. */
-  const [liensLibres, setLiensLibres] = useState<
-    [LienLibreSaisie, LienLibreSaisie]
-  >([{ ...LIEN_LIBRE_VIDE }, { ...LIEN_LIBRE_VIDE }]);
+  /** §2 (nº 270) — L'ÉTAT DES CARNETS : "" (rien déclaré — un manque
+      à la validation), 'ouvert', 'delai' ou 'ferme'. */
+  const [booking, setBooking] = useState("");
+  /** Le nombre de mois d'attente ("1" à "12"), exigé sur 'delai'
+      seulement. Il SURVIT à un aller-retour vers 'ouvert'/'fermé'
+      dans le formulaire (on ne re-saisit pas ce qu'on vient de dire),
+      mais ne S'ÉCRIT en base qu'avec 'delai' (voir l'envoi). */
+  const [bookingMois, setBookingMois] = useState("");
+  /** LE LIEN LIBRE (passe nº 116) — l'emplacement « Ajouter un
+      lien » : une URL et un TITRE choisi par la personne
+      (16 caractères), rien n'est détecté. En base, il s'écrit dans
+      les colonnes historiques `site_web` + `titre_site_web`
+      (migration nº 51) : les fiches existantes ne cassent pas.
+      ⚠️ IL N'EN RESTE QU'UN (§1, nº 270) : le second emplacement a
+      cédé sa place au champ Booking. Ses colonnes (`page_de_liens`,
+      `titre_page_de_liens`) NE SONT PLUS ÉCRITES DU TOUT — la même
+      garantie que `lien_youtube` : aucun enregistrement ne peut plus
+      les toucher, donc jamais les effacer. Une fiche qui portait une
+      page de liens la garde, affichée sur sa fiche publique comme
+      avant. */
+  const [lienLibre, setLienLibre] = useState<LienLibreSaisie>({
+    ...LIEN_LIBRE_VIDE,
+  });
   /** LES PRATIQUES ALLUMÉES, par groupe (technique, composition) —
       des interrupteurs TOUS ÉTEINTS au départ : le tatoueur allume ce
       qu'il pratique (l'inverse de la recherche, où tout est allumé).
@@ -1348,11 +1383,34 @@ export function FormulaireFiche() {
           setPhotosPortfolio(portfolioLu);
           setInstagram(String(source.lien_instagram ?? ""));
           setTiktok(String(source.lien_tiktok ?? ""));
-          //  LES LIENS LIBRES, relus depuis leurs colonnes. Une fiche
+          //  §2 (nº 270) — L'ÉTAT DES CARNETS, relu tel que déclaré.
+          //  On ne garde que les trois valeurs connues (et un mois
+          //  entre 1 et 12) : une donnée d'avant les garde-fous ne
+          //  doit pas pré-cocher n'importe quoi.
+          const bookingLu = String(source.booking ?? "");
+          setBooking(
+            bookingLu === "ouvert" || bookingLu === "delai" || bookingLu === "ferme"
+              ? bookingLu
+              : ""
+          );
+          const moisLu = Number(source.booking_mois ?? 0);
+          setBookingMois(
+            Number.isInteger(moisLu) && moisLu >= 1 && moisLu <= 12
+              ? String(moisLu)
+              : ""
+          );
+          //  LE LIEN LIBRE, relu depuis ses colonnes. Une fiche
           //  d'avant la migration nº 51 n'a pas de titre : on lui rend
           //  celui que la fiche publique affichait déjà (le nom du
           //  service, ou le domaine — `libelleDuLien`), borné aux
           //  16 caractères du champ.
+          //  ⚠️ `page_de_liens` N'EST PLUS RELU (§1, nº 270) : son
+          //  emplacement a cédé sa place au Booking, et le charger
+          //  dans le champ restant l'aurait RÉÉCRIT dans `site_web`
+          //  au prochain envoi — le même lien dans deux colonnes,
+          //  affiché deux fois. La colonne dort, intacte (garantie
+          //  `lien_youtube`), et la fiche publique l'affiche comme
+          //  avant.
           const lienDepuisBase = (
             url: unknown,
             titre: unknown
@@ -1369,10 +1427,7 @@ export function FormulaireFiche() {
               etat: "valide",
             };
           };
-          setLiensLibres([
-            lienDepuisBase(source.site_web, source.titre_site_web),
-            lienDepuisBase(source.page_de_liens, source.titre_page_de_liens),
-          ]);
+          setLienLibre(lienDepuisBase(source.site_web, source.titre_site_web));
           setFiltresCoches({
             technique: (source.filtres_technique as string[]) ?? [],
             //  ⚠️ « flash » EST FILTRÉ À LA LECTURE (passe nº 110).
@@ -1524,6 +1579,19 @@ export function FormulaireFiche() {
     }
     // LES BESOINS RESTENT FACULTATIFS, et c'est voulu : ne pas faire
     // de cover n'est pas une case oubliée, c'est une réponse.
+    //  §2 (nº 270) — LE BOOKING EST OBLIGATOIRE, et il se dit en deux
+    //  temps : rien de déclaré → l'encadré du menu rougit (MANQUE,
+    //  muet — le champ lui-même dit ce qui manque) ; « délai
+    //  d'attente » choisi SANS le mois → c'est l'encadré des mois qui
+    //  rougit, lui aussi sans un mot. Le rouge suit les règles des
+    //  nº 266/269 : il n'apparaît qu'au clic de validation, la
+    //  remontée mène au premier manque (ORDRE_ERREURS), et la
+    //  relecture à la frappe ne fait QU'ENLEVER des reproches.
+    if (!booking) {
+      trouvees.booking = MANQUE;
+    } else if (booking === "delai" && !bookingMois) {
+      trouvees.bookingMois = MANQUE;
+    }
     const lienInstagram = normaliserLien(instagram, FORME_INSTAGRAM);
     const lienTiktok = normaliserLien(tiktok, FORME_TIKTOK);
     if (lienInstagram === undefined) {
@@ -1541,15 +1609,14 @@ export function FormulaireFiche() {
     //  aurait enfermé dehors quiconque avait saisi, un jour, une
     //  adresse un peu tordue — un message d'erreur pointant un champ
     //  introuvable est une impasse.
-    //  ⚠️ LES DEUX LIENS LIBRES (passe nº 116) : facultatifs, mais un
-    //  emplacement entamé se finit — URL sans titre (ou l'inverse) →
-    //  MANQUE (le champ rougit), URL mal formée → mention courte. La
-    //  détection de service a DISPARU : un Linktree, un site, un
-    //  portfolio Behance — c'est le titre choisi qui dit ce que c'est.
-    const fauteLien1 = erreurDuLienLibre(liensLibres[0]);
-    const fauteLien2 = erreurDuLienLibre(liensLibres[1]);
-    if (fauteLien1) trouvees.lien1 = fauteLien1;
-    if (fauteLien2) trouvees.lien2 = fauteLien2;
+    //  ⚠️ LE LIEN LIBRE (passe nº 116, réduit à UN à la nº 270-§1) :
+    //  facultatif, mais un emplacement entamé se finit — URL sans
+    //  titre (ou l'inverse) → MANQUE (le champ rougit), URL mal
+    //  formée → mention courte. La détection de service a DISPARU :
+    //  un Linktree, un site, un portfolio Behance — c'est le titre
+    //  choisi qui dit ce que c'est.
+    const fauteLien = erreurDuLienLibre(lienLibre);
+    if (fauteLien) trouvees.lien1 = fauteLien;
     //  ⚠️ PLUS DE VALIDATION DU FORMULAIRE DE DEMANDE (passe nº 102) :
     //  le champ est retiré du produit, colonne comprise (migration
     //  nº 47). Laisser sa règle en place aurait bloqué l'enregistrement
@@ -1571,10 +1638,14 @@ export function FormulaireFiche() {
     ["photoProfil", "section-profil"],
     ["nom", "fiche-nom"],
     ["bio", "fiche-bio"],
+    //  §1-§2 (nº 270) — LE BOOKING OUVRE LES LIENS : la remontée au
+    //  premier manque suit l'ordre de l'écran. Les mois partagent la
+    //  même rangée — leur manque défile vers le même endroit.
+    ["booking", "fiche-booking"],
+    ["bookingMois", "fiche-booking-mois"],
     ["instagram", "fiche-instagram"],
     ["tiktok", "fiche-tiktok"],
     ["lien1", "fiche-lien-1"],
-    ["lien2", "fiche-lien-2"],
     ["styles", "section-styles"],
     ["photos", "section-styles"],
     ["technique", "section-technique"],
@@ -1666,7 +1737,9 @@ export function FormulaireFiche() {
     filtresCoches,
     instagram,
     tiktok,
-    liensLibres,
+    booking,
+    bookingMois,
+    lienLibre,
   ]);
 
   async function envoyer(evenement: React.FormEvent) {
@@ -1798,17 +1871,20 @@ export function FormulaireFiche() {
       //    pays, coordonnées, identifiant OpenStreetMap).
       const lienInstagram = normaliserLien(instagram, FORME_INSTAGRAM);
       const lienTiktok = normaliserLien(tiktok, FORME_TIKTOK);
-      //  LES LIENS LIBRES, COMPACTÉS : le premier validé part dans
-      //  `site_web`, le second dans `page_de_liens` — les colonnes
-      //  historiques, pour que rien ne casse. Leurs titres suivent
-      //  (migration nº 51). La validation a déjà garanti les formes.
-      const liensAEcrire = liensLibres
-        .filter((lien) => lien.etat !== "vide")
-        .map((lien) => ({
-          url: normaliserUrlLibre(lien.url) ?? null,
-          titre: lien.titre.trim().slice(0, TITRE_LIEN_MAXIMUM) || null,
-        }))
-        .filter((lien) => Boolean(lien.url && lien.titre));
+      //  LE LIEN LIBRE (un seul depuis la nº 270-§1) : validé, il part
+      //  dans `site_web` — la colonne historique, pour que rien ne
+      //  casse. Son titre suit (migration nº 51). La validation a déjà
+      //  garanti les formes.
+      const lienValide =
+        lienLibre.etat !== "vide"
+          ? {
+              url: normaliserUrlLibre(lienLibre.url) ?? null,
+              titre:
+                lienLibre.titre.trim().slice(0, TITRE_LIEN_MAXIMUM) || null,
+            }
+          : null;
+      const lienAEcrire =
+        lienValide && lienValide.url && lienValide.titre ? lienValide : null;
       const villePrincipale =
         lieuPrincipal.ville ?? lieuPrincipal.intitule;
       const ligne = {
@@ -1846,6 +1922,13 @@ export function FormulaireFiche() {
         // Instagram est OBLIGATOIRE (la validation l'a garanti).
         lien_instagram: lienInstagram ?? "",
         lien_tiktok: lienTiktok ?? null,
+        //  §2 (nº 270) — L'ÉTAT DES CARNETS, déclaré et obligatoire
+        //  (la validation l'a garanti). Le mois n'a de sens qu'avec
+        //  « délai d'attente » : sur 'ouvert' et 'ferme' il part en
+        //  NULL — un délai d'un autre jour ne doit pas rester écrit.
+        booking: booking || null,
+        booking_mois:
+          booking === "delai" && bookingMois ? Number(bookingMois) : null,
         //  ⚠️ `lien_youtube` N'EST PLUS ÉCRIT — VOLONTAIREMENT, ET
         //  C'EST LA GARANTIE LA PLUS FORTE QU'ON PUISSE DONNER.
         //  YouTube a quitté le produit (passe nº 101). La colonne, elle,
@@ -1855,14 +1938,19 @@ export function FormulaireFiche() {
         //  `lien_youtube: null`, la première modification d'une fiche
         //  aurait effacé en silence une adresse que son propriétaire
         //  n'avait pas demandé à retirer.
-        //  LES DEUX LIENS LIBRES (passe nº 116) — colonnes historiques
-        //  + leurs titres. ⚠️ `formulaire_demande` A DISPARU DE
-        //  L'ENVOI : le champ est retiré du produit et sa colonne est
-        //  effacée par la migration nº 47.
-        site_web: liensAEcrire[0]?.url ?? null,
-        titre_site_web: liensAEcrire[0]?.titre ?? null,
-        page_de_liens: liensAEcrire[1]?.url ?? null,
-        titre_page_de_liens: liensAEcrire[1]?.titre ?? null,
+        //  LE LIEN LIBRE (passe nº 116) — colonne historique + son
+        //  titre. ⚠️ `formulaire_demande` A DISPARU DE L'ENVOI : le
+        //  champ est retiré du produit et sa colonne est effacée par
+        //  la migration nº 47.
+        //  ⚠️ `page_de_liens` ET `titre_page_de_liens` NE SONT PLUS
+        //  ÉCRITS (§1, nº 270) — VOLONTAIREMENT, comme `lien_youtube`
+        //  ci-dessus : le second emplacement a cédé sa place au
+        //  Booking, et ne plus MENTIONNER ses colonnes dans l'envoi
+        //  est la seule garantie qu'aucun enregistrement ne pourra
+        //  les effacer. Une fiche qui portait une page de liens la
+        //  garde, et sa fiche publique l'affiche comme avant.
+        site_web: lienAEcrire?.url ?? null,
+        titre_site_web: lienAEcrire?.titre ?? null,
         filtres_technique: filtresCoches.technique,
         filtres_composition: filtresCoches.composition,
         filtres_besoins: filtresCoches.besoins ?? [],
@@ -1886,11 +1974,19 @@ export function FormulaireFiche() {
         "filtres_technique",
         "filtres_composition",
         "site_web",
-        "page_de_liens",
-        //  Les titres des liens libres (migration nº 51) : sur une
-        //  base pas encore migrée, l'envoi les retire et continue.
+        //  Le titre du lien libre (migration nº 51) : sur une base
+        //  pas encore migrée, l'envoi le retire et continue.
+        //  (`page_de_liens` et son titre ont quitté l'envoi à la
+        //  nº 270 — plus rien à tolérer pour eux.)
         "titre_site_web",
-        "titre_page_de_liens",
+        //  §2 (nº 270) — l'état des carnets (yokofolio-booking.sql).
+        //  ⚠️ `booking_mois` AVANT `booking` : la recherche du fautif
+        //  se fait par inclusion du nom dans le message d'erreur, et
+        //  « booking » est contenu dans « booking_mois » — dans
+        //  l'autre ordre, une base sans `booking_mois` ferait retirer
+        //  `booking` d'abord, pour rien.
+        "booking_mois",
+        "booking",
         "statut",
         "type_fiche",
         "etablissement",
@@ -2394,10 +2490,19 @@ export function FormulaireFiche() {
           site_web: (sourceFiche.site_web as string | null) ?? null,
           titre_site_web:
             (sourceFiche.titre_site_web as string | null) ?? null,
+          //  ⚠️ LA PAGE DE LIENS RESTE MONTRÉE ICI (nº 270-§1) : c'est
+          //  un chemin de LECTURE — l'aperçu doit dire ce que le
+          //  public verra, et la colonne dormante s'affiche toujours.
+          //  Seul L'ENVOI ne la mentionne plus.
           page_de_liens:
             (sourceFiche.page_de_liens as string | null) ?? null,
           titre_page_de_liens:
             (sourceFiche.titre_page_de_liens as string | null) ?? null,
+          //  §3 (nº 270) — L'ÉTAT DES CARNETS, dans l'aperçu aussi :
+          //  déclaré, il ouvre la liste des liens de « Ma fiche »
+          //  exactement comme sur la fiche publique.
+          booking: (sourceFiche.booking as Tatoueur["booking"]) ?? null,
+          booking_mois: (sourceFiche.booking_mois as number | null) ?? null,
           filtres_technique: (sourceFiche.filtres_technique as string[]) ?? [],
           filtres_composition:
             (sourceFiche.filtres_composition as string[]) ?? [],
@@ -2946,11 +3051,58 @@ export function FormulaireFiche() {
             )}
           </div>
 
-          {/* LES RÉSEAUX — quatre lignes, tout l'état DANS le champ :
-              icône du service, identifiant reconnu, coche ou croix.
-              Instagram OBLIGATOIRE : c'est là que vit le travail d'un
-              tatoueur — les trois autres sont libres. */}
+          {/* LES LIENS — quatre lignes, dans CET ordre et lui seul
+              (§1, nº 270) : 1. le Booking · 2. Instagram · 3. TikTok
+              · 4. le lien libre. Instagram OBLIGATOIRE : c'est là que
+              vit le travail d'un tatoueur ; le Booking aussi (l'état
+              des carnets se déclare) ; les deux autres sont libres. */}
           <div className="flex flex-col gap-3">
+            {/* §2 (nº 270) — LE CHAMP BOOKING : le menu maison, trois
+                entrées mot pour mot. Sur « délai d'attente »
+                SEULEMENT, le champ SE DIVISE : un second encadré
+                apparaît à sa DROITE — le nombre de mois, 1 à 12.
+                Les manques rougissent le bord de l'encadré en cause
+                (`enErreur`), muets comme partout : rien déclaré → le
+                menu ; « délai » sans mois → l'encadré des mois.
+                ⚠️ Un menu ne pousse AUCUN évènement `change` de
+                formulaire : `marquerModifie` s'appelle à la main,
+                comme pour les filtres. */}
+            <div id="fiche-booking" className="flex gap-3">
+              <div className="min-w-0 flex-1">
+                <MenuDeroulant
+                  valeur={booking}
+                  surChangement={(valeur) => {
+                    marquerModifie();
+                    setBooking(valeur);
+                  }}
+                  options={OPTIONS_BOOKING}
+                  ariaLabel="L'état de ton booking"
+                  placeholder="Booking"
+                  sombre
+                  arrondi="rounded-xl"
+                  hauteur="min-h-[48px]"
+                  enErreur={Boolean(erreurs.booking)}
+                />
+              </div>
+              {booking === "delai" && (
+                <div id="fiche-booking-mois" className="w-32 shrink-0">
+                  <MenuDeroulant
+                    valeur={bookingMois}
+                    surChangement={(valeur) => {
+                      marquerModifie();
+                      setBookingMois(valeur);
+                    }}
+                    options={OPTIONS_BOOKING_MOIS}
+                    ariaLabel="Le délai d'attente, en mois"
+                    placeholder="Mois"
+                    sombre
+                    arrondi="rounded-xl"
+                    hauteur="min-h-[48px]"
+                    enErreur={Boolean(erreurs.bookingMois)}
+                  />
+                </div>
+              )}
+            </div>
             <ChampLienVerifie
               id="fiche-instagram"
               champ="instagram"
@@ -2972,35 +3124,38 @@ export function FormulaireFiche() {
               motif={motifsParChamp.tiktok ?? null}
             />
             {/* ⚠️ LES CHAMPS « Site web » ET « Linktree » ONT DISPARU
-                (passe nº 116) : à leur place, DEUX EMPLACEMENTS
-                LIBRES — « Ajouter un lien », URL + TITRE choisi par
-                la personne (16 caractères), rien n'est deviné. Le
-                MOTIF de la relecture, lui, garde sa ligne : c'est un
-                texte qui apprend quelque chose. */}
-            {liensLibres.map((lien, rang) => (
-              <div key={rang}>
-                <LienLibre
-                  id={`fiche-lien-${rang + 1}`}
-                  valeur={lien}
-                  surChangement={(suivant) => {
-                    marquerModifie();
-                    setLiensLibres((courants) =>
-                      rang === 0
-                        ? [suivant, courants[1]]
-                        : [courants[0], suivant]
-                    );
-                  }}
-                  erreur={erreurs[rang === 0 ? "lien1" : "lien2"] ?? null}
-                />
-                {(rang === 0 ? motifsParChamp.site : motifsParChamp.pageDeLiens) && (
-                  <p className="mt-1.5 text-[13px] text-erreur">
-                    {rang === 0
-                      ? motifsParChamp.site
-                      : motifsParChamp.pageDeLiens}
-                  </p>
-                )}
-              </div>
-            ))}
+                (passe nº 116) : à leur place, UN EMPLACEMENT LIBRE —
+                « Ajouter un lien », URL + TITRE choisi par la
+                personne (16 caractères), rien n'est deviné. IL N'EN
+                RESTE QU'UN (§1, nº 270) : le second a cédé sa place
+                au Booking — voir l'état `lienLibre` pour ce que
+                deviennent ses colonnes. Le MOTIF de la relecture,
+                lui, garde sa ligne : c'est un texte qui apprend
+                quelque chose — y compris celui d'une page de liens
+                enregistrée avant la nº 270, que le formulaire ne
+                peut plus éditer mais dont l'explication vaut
+                toujours. */}
+            <div>
+              <LienLibre
+                id="fiche-lien-1"
+                valeur={lienLibre}
+                surChangement={(suivant) => {
+                  marquerModifie();
+                  setLienLibre(suivant);
+                }}
+                erreur={erreurs.lien1 ?? null}
+              />
+              {motifsParChamp.site && (
+                <p className="mt-1.5 text-[13px] text-erreur">
+                  {motifsParChamp.site}
+                </p>
+              )}
+              {motifsParChamp.pageDeLiens && (
+                <p className="mt-1.5 text-[13px] text-erreur">
+                  {motifsParChamp.pageDeLiens}
+                </p>
+              )}
+            </div>
           </div>
         </Section>
 

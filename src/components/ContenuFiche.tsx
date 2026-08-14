@@ -367,6 +367,61 @@ export function ContenuFiche({
    * Aucune autre combinaison ; une ligne vide ne rend rien, donc ne
    * laisse aucun espace.
    */
+  /**
+   * §3 (nº 270) — L'ÉTAT DES CARNETS, EN PREMIÈRE POSITION DES LIENS
+   * ==================================================================
+   * TROIS ÉCRITURES, ET PAS UNE DE PLUS : « Booking ouvert »,
+   * « Booking · 3 mois » (le chiffre = le mois déclaré),
+   * « Booking fermé ». Et UN ROND, LE MÊME dans les trois cas, à
+   * trois intensités — le signal s'allume ou s'éteint :
+   *  · ouvert → VERT (#34D399, le vert du site — celui de la coche
+   *    des liens du formulaire) ;
+   *  · délai  → GRIS CLAIR (`sombre-texte-doux`) ;
+   *  · fermé  → GRIS FONCÉ presque éteint (`sombre-haut-clair`).
+   * ⚠️ PAS D'ORANGE, PAS DE ROUGE : un rond rouge sur une fiche se
+   * lirait comme une erreur — le rouge est réservé à ce qui manque.
+   * ⚠️ RIEN DÉCLARÉ → RIEN AFFICHÉ : le site ne devine pas l'état
+   * des carnets de quelqu'un. Les fiches d'avant la migration
+   * (booking NULL) restent muettes jusqu'à leur prochain
+   * enregistrement — et un « délai » sans mois (donnée d'avant les
+   * garde-fous) se tait aussi : on n'écrit pas « Booking · ? mois ».
+   * CE N'EST PAS UN LIEN : une étiquette d'état, qui ne mène nulle
+   * part — ni survol, ni soulignement (leçon de la nº 268 : ce qui
+   * décrit ne se clique pas). Elle partage la famille des liens :
+   * même taille, même gris doux, même colonne de 22 px — le rond y
+   * prend la place de l'icône.
+   */
+  const RONDS_BOOKING: Record<string, string> = {
+    ouvert: "bg-[#34D399]",
+    delai: "bg-sombre-texte-doux",
+    ferme: "bg-sombre-haut-clair",
+  };
+  const libelleBooking =
+    tatoueur.booking === "ouvert"
+      ? "Booking ouvert"
+      : tatoueur.booking === "ferme"
+        ? "Booking fermé"
+        : tatoueur.booking === "delai" && tatoueur.booking_mois
+          ? `Booking · ${tatoueur.booking_mois} mois`
+          : null;
+  const entreeBooking = tatoueur.booking && libelleBooking && (
+    <span
+      key="booking"
+      data-booking-fiche={tatoueur.booking}
+      className="flex items-center gap-2.5 text-[15px] leading-snug
+                 text-sombre-texte-doux"
+    >
+      <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center">
+        <span
+          data-rond-booking=""
+          aria-hidden="true"
+          className={`h-2.5 w-2.5 rounded-full ${RONDS_BOOKING[tatoueur.booking]}`}
+        />
+      </span>
+      <span className="min-w-0 truncate">{libelleBooking}</span>
+    </span>
+  );
+
   const lienInstagram =
     tatoueur.lien_instagram &&
     lienEnLigne(
@@ -384,6 +439,9 @@ export function ContenuFiche({
       iconeDeLien("tiktok")
     );
   const premiereLigne = [
+    //  §3 (nº 270) — LE BOOKING OUVRE LA LISTE, devant tout le reste :
+    //  la PREMIÈRE position des liens, comme dans le formulaire.
+    entreeBooking,
     tatoueur.site_web &&
       lienEnLigne(
         "site",

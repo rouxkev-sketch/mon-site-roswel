@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { etatDuLien, type ChampLien } from "@/lib/liens-fiche";
+import { IconeCroix } from "@/components/Icones";
 import { SANS_REMPLISSAGE_AUTO } from "@/lib/champs-sans-remplissage";
 import { texteErreur } from "@/lib/erreurs-formulaire";
 
@@ -18,7 +19,9 @@ import { texteErreur } from "@/lib/erreurs-formulaire";
  *     d'écrire, c'est L'IDENTIFIANT qui s'affiche à la place de
  *     l'URL : « @yoko.folio », pas « https://www.instagram.com/… ».
  *     Une coche discrète à droite dit que c'est bon. Au clic, l'URL
- *     brute revient, telle quelle, prête à corriger ;
+ *     brute revient, telle quelle — et la coche cède la place à la
+ *     CROIX du formulaire, qui efface le lien pour en saisir un
+ *     autre (§4, nº 270) ; refermé sans y toucher, la coche revient ;
  *   · SOUS LE CHAMP, il n'y a plus JAMAIS rien quand tout va bien.
  *     La ligne ne sert qu'à l'erreur — bord rouge, croix, une phrase.
  *
@@ -135,6 +138,23 @@ export function ChampLienVerifie({
   //  mention garde le premier nom, celui que tout le monde emploie.
   const mentionCourte = `${indication.split(" /")[0]} non valide`;
   const identifiantAffiche = reconnu && !enEdition;
+  /**
+   * §4 (nº 270) — LA COCHE CÈDE LA PLACE À UNE CROIX QUAND ON ENTRE
+   * DANS LE CHAMP. Au repos, la coche verte demeure — c'est elle qui
+   * dit « rempli et valide ». Au clic dans le champ (pour remplacer
+   * le lien), une CROIX la remplace : un BOUTON, qui EFFACE le lien
+   * pour en saisir un autre. Et c'est la croix DES AUTRES CHAMPS du
+   * formulaire (IconeCroix dans son bouton rond, l'écriture de
+   * ChampLocalisation et du nom de lieu) — pas un second dessin.
+   * Elle vit tant que le champ est focalisé ET porte quelque chose :
+   * vide, il n'y a rien à effacer ; refermé, la coche revient.
+   */
+  const croixEffacer = enEdition && valeur.trim() !== "";
+  const cocheVisible = reconnu && !enEdition;
+  //  La croix ROUGE d'état (forme refusée) garde sa place au repos ;
+  //  pendant la frappe, c'est le bouton d'effacement qui occupe la
+  //  droite du champ — deux croix superposées ne se liraient pas.
+  const croixEtat = enFaute && !croixEffacer;
 
   return (
     <div>
@@ -189,17 +209,44 @@ export function ChampLienVerifie({
           </span>
         )}
 
-        {/* LA COCHE OU LA CROIX, dans le champ, à droite — l'état d'un
-            coup d'œil. */}
-        {(reconnu || enFaute) && (
+        {/* LA COCHE OU LA CROIX D'ÉTAT, dans le champ, à droite —
+            l'état d'un coup d'œil. §4 (nº 270) : la coche N'EXISTE
+            QU'AU REPOS — champ focalisé, c'est le bouton d'effacement
+            qui prend sa place (plus bas). */}
+        {(cocheVisible || croixEtat) && (
           <span
             aria-hidden="true"
             className={`pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 ${
-              reconnu ? "text-[#34D399]" : "text-erreur"
+              cocheVisible ? "text-[#34D399]" : "text-erreur"
             }`}
           >
-            {reconnu ? <Coche /> : <Croix />}
+            {cocheVisible ? <Coche /> : <Croix />}
           </span>
+        )}
+
+        {/* §4 (nº 270) — LA CROIX QUI EFFACE, à l'entrée dans le
+            champ : le bouton rond des autres champs du formulaire
+            (ChampLocalisation, nom de lieu), pas un second dessin.
+            ⚠️ `preventDefault` À L'APPUI, souris ET doigt : le bouton
+            ne vit que tant que le champ a le focus — laisser l'appui
+            le lui voler démonterait la croix SOUS le geste, avant que
+            le clic ne l'atteigne. Le focus reste donc au champ, et on
+            enchaîne la saisie du lien suivant sans re-cliquer. */}
+        {croixEffacer && (
+          <button
+            type="button"
+            aria-label={`Effacer le lien ${indication}`}
+            title="Effacer"
+            onPointerDown={(evenement) => evenement.preventDefault()}
+            onClick={() => surChangement("")}
+            className="absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8
+                       items-center justify-center rounded-full
+                       text-sombre-texte-doux transition-colors
+                       hover:bg-sombre-eleve hover:text-sombre-texte
+                       active:bg-sombre-eleve"
+          >
+            <IconeCroix taille={16} />
+          </button>
         )}
 
         {/* LA MENTION COURTE — « Instagram non valide », DANS le

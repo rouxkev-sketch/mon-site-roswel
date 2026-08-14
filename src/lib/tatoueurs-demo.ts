@@ -297,6 +297,13 @@ export const TATOUEURS_DEMO: Tatoueur[] = [
     filtres_composition: ["petit-tatouage"],
     filtres_besoins: ["cover"],
     lien_instagram: "https://www.instagram.com/camille.fauve.demo/",
+    //  §3 (nº 270) — L'ÉTAT DES CARNETS, VIVANT SUR UNE FICHE DE
+    //  DÉMONSTRATION : « Booking · 3 mois » (l'exemple de la consigne),
+    //  en PREMIÈRE position des liens. Les autres fiches de
+    //  démonstration n'ont RIEN déclaré — et n'affichent donc RIEN à
+    //  cette place : c'est la règle, le site ne devine pas.
+    booking: "delai",
+    booking_mois: 3,
     photos_styles: {
       illustratif: "/images-demo/tatouage/illustratif-1.svg",
       "fine-line": "/images-demo/tatouage/fine-line-2.svg",
