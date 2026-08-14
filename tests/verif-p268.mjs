@@ -102,8 +102,10 @@ titre("§2 — à la source : l'encadré de la 232, le lien borné");
       )
   );
   verif(
-    "le soulignement du lien est celui de la 229, au survol de la LIGNE (group-hover)",
-    /underline-offset-4 decoration-1 group-hover:underline"\s*>\s*\{mode\.salon_nom\}/.test(
+    "le soulignement du lien est celui de la 229, au survol de la LIGNE " +
+      "(⚠️ nº 271 : l'écriture UNIQUE `SOULIGNEMENT_LIEN`, importée — " +
+      "plus une recopie de jetons)",
+    /text-sombre-texte \$\{SOULIGNEMENT_LIEN\}`\}\s*>\s*\{mode\.salon_nom\}/.test(
       blocNu
     )
   );
@@ -116,20 +118,28 @@ titre("§2 — à la source : l'encadré de la 232, le lien borné");
 }
 titre("§3 — à la source : le soulignement seul sur sa propre adresse");
 {
-  verif(
-    "l'adresse d'un salon/studio n'a PLUS l'encadré (ni le fond de survol)",
-    /className=\{pastille \? "flex items-start gap-3\.5" : "block"\}/.test(
-      blocNu
-    ) &&
-      !/AdresseCliquable[\s\S]{0,2400}CLASSES_LIGNE_CLIQUABLE/.test(
-        blocNu.slice(blocNu.indexOf("function AdresseCliquable"))
-      )
+  //  ⚠️ ASSERTIONS RÉVISÉES PAR LA Nº 271 : le propriétaire a corrigé
+  //  sa consigne 268 — le soulignement de l'adresse n'est plus AU
+  //  REPOS mais AU SURVOL, et l'état enfoncé du doigt (nº 229) est
+  //  revenu sur la ligne. L'encadré de la 232 (fond de SURVOL), lui,
+  //  reste banni d'ici.
+  const adresseSlice = blocNu.slice(
+    blocNu.indexOf("function AdresseCliquable"),
+    blocNu.indexOf("function BlocAdressesFiche")
   );
   verif(
-    "le soulignement est PERMANENT, fin et décalé (la 229), couleur inchangée",
-    /cliquable \? " underline underline-offset-4 decoration-1" : ""/.test(
-      blocNu
+    "l'adresse d'un salon/studio n'a PLUS l'encadré (aucun fond de " +
+      "survol — nº 271 : l'état enfoncé du doigt, lui, est revenu)",
+    /className=\{`group rounded-xl -m-2 p-2 transition-colors active:bg-white\/10 \$\{\s*pastille \? "flex items-start gap-3\.5" : "block"\s*\}`\}/.test(
+      adresseSlice
     ) &&
+      !adresseSlice.includes("hover:bg-white/5") &&
+      !adresseSlice.includes("CLASSES_LIGNE_CLIQUABLE")
+  );
+  verif(
+    "le soulignement (⚠️ nº 271 : AU SURVOL, plus au repos — la 268 " +
+      "corrigée) : l'écriture unique, couleur du texte jamais changée",
+    /cliquable \? ` \$\{SOULIGNEMENT_LIEN\}` : ""/.test(blocNu) &&
       //  Aucun changement de couleur au survol dans cette ligne.
       !/ligneTexte[\s\S]{0,400}hover:text/.test(blocNu)
   );
@@ -318,17 +328,21 @@ for (const largeur of [390, 1440]) {
       `${largeur} px : aucun rôle en capitales sur la fiche du salon (l'équipe parle bas)`,
       !vu.rolesEnCapitales
     );
+    //  ⚠️ RÉVISÉ PAR LA Nº 271 : plus de fond de SURVOL, mais l'état
+    //  enfoncé du doigt (active) et le `group` du soulignement sont
+    //  revenus sur la ligne — et le soulignement n'existe plus AU
+    //  REPOS : il n'apparaît qu'au survol.
     verif(
-      `${largeur} px : AUCUN encadré sur sa propre adresse — pas de fond de survol, pas de -m-2`,
+      `${largeur} px : AUCUN encadré au survol sur sa propre adresse — l'état enfoncé du doigt (nº 271) est là`,
       vu.adresseTrouvee &&
         !vu.classesAdresse.includes("hover:bg-white/5") &&
-        !vu.classesAdresse.includes("-m-2") &&
-        !vu.classesAdresse.includes("group"),
+        vu.classesAdresse.includes("active:bg-white/10") &&
+        vu.classesAdresse.includes("group"),
       `classes « ${vu.classesAdresse} »`
     );
     verif(
-      `${largeur} px : le soulignement de la 229 — présent AU REPOS, fin (1px), décalé (4px)`,
-      vu.soulignement === "underline" &&
+      `${largeur} px : RIEN au repos (nº 271) — le trait reste fin (1px) et décalé (4px), prêt pour le survol`,
+      vu.soulignement === "none" &&
         vu.epaisseur === "1px" &&
         vu.decalage === "4px",
       `${vu.soulignement} · ${vu.epaisseur} · ${vu.decalage}`
@@ -340,14 +354,16 @@ for (const largeur of [390, 1440]) {
       await page.waitForTimeout(250);
       const apres = await span.evaluate((n) => ({
         couleur: getComputedStyle(n).color,
+        soulignement: getComputedStyle(n).textDecorationLine,
         fondLien: getComputedStyle(n.closest("a")).backgroundColor,
       }));
       verif(
-        "1440 px : la couleur du texte est IDENTIQUE avant et après le survol, sans fond",
+        "1440 px : au survol le soulignement s'allume, la couleur du texte est IDENTIQUE, aucun fond",
         apres.couleur === avant &&
+          apres.soulignement === "underline" &&
           (apres.fondLien === "rgba(0, 0, 0, 0)" ||
             apres.fondLien === "transparent"),
-        `${avant} → ${apres.couleur} · fond ${apres.fondLien}`
+        `${avant} → ${apres.couleur} · ${apres.soulignement} · fond ${apres.fondLien}`
       );
     }
   } catch (erreur) {

@@ -33,6 +33,7 @@ import { sousLeNom } from "@/components/BlocsFiche";
 import {
   BlocAdressesFiche,
   BlocProfilsArtiste,
+  SOULIGNEMENT_LIEN,
 } from "@/components/BlocLieux";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
@@ -334,7 +335,10 @@ export function ContenuFiche({
       <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center">
         {icone}
       </span>
-      <span className="min-w-0 truncate underline-offset-4 decoration-1 group-hover:underline">
+      {/*  §2 (nº 271) — le soulignement au survol est l'écriture
+           UNIQUE du dépôt (celle de la ligne d'équipe, nº 229) :
+           importée, jamais recopiée. Même trait ici qu'ailleurs. */}
+      <span className={`min-w-0 truncate ${SOULIGNEMENT_LIEN}`}>
         {libelle}
       </span>
     </a>

@@ -359,6 +359,34 @@ export const CLASSES_LIGNE_CLIQUABLE =
   "group flex items-start gap-3.5 rounded-xl -m-2 p-2 " +
   "transition-colors hover:bg-white/5 active:bg-white/10";
 
+/**
+ * LE SOULIGNEMENT D'UN LIEN DE FICHE — UNE SEULE ÉCRITURE (nº 271-§2)
+ * ====================================================================
+ * C'est celui de la ligne d'équipe (nº 229), et lui seul : FIN
+ * (`decoration-1`), DÉCALÉ (`underline-offset-4`), GRIS DOUX, et il
+ * n'apparaît qu'AU SURVOL de la ligne (`group-hover` — l'élément
+ * survolable porte la classe `group`). Au repos : du texte nu. Au
+ * doigt, pas de survol : l'état enfoncé (`active:`) parle à sa place.
+ *
+ * ⚠️ LA COULEUR EST ÉCRITE, ET VOICI POURQUOI. La nº 229 tenait son
+ * gris du `<p>` gris doux qui déclarait le soulignement — sans un mot.
+ * La nº 268 a recopié les mêmes jetons sur des éléments à TEXTE CLAIR
+ * (le lien d'artiste, l'adresse) : même `decoration-1`, mais un trait
+ * PRESQUE BLANC — c'est lui que le relevé lisait « plus épais ». La
+ * couleur (`decoration-sombre-texte-doux`) fait donc partie de
+ * l'écriture : le trait est LE MÊME, où que le texte soit clair ou
+ * doux.
+ *
+ * ⚠️ QUATRE LECTEURS, AUCUNE COPIE : la ligne d'équipe, le lien
+ * nom + adresse d'une fiche d'artiste, l'adresse d'une fiche de
+ * salon/studio (AdresseCliquable) et les liens sous la photo
+ * (ContenuFiche). Si un cinquième endroit doit souligner un lien de
+ * fiche, il importe CETTE constante — jamais une recopie des jetons.
+ */
+export const SOULIGNEMENT_LIEN =
+  "underline-offset-4 decoration-1 decoration-sombre-texte-doux " +
+  "group-hover:underline";
+
 function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined }) {
   const clicVersFiche = useClicVersFiche();
   const membres = equipeOrdonnee(equipe);
@@ -376,9 +404,10 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
             <div className="flex min-h-13 min-w-0 flex-1 flex-col justify-center">
               <p
                 className={`text-[14px] leading-relaxed text-sombre-texte-doux${
-                  avecFiche
-                    ? " underline-offset-4 decoration-1 group-hover:underline"
-                    : ""
+                  //  §2 (nº 271) — l'écriture UNIQUE du soulignement :
+                  //  c'est d'ICI (nº 229) qu'elle vient, elle n'est
+                  //  plus recopiée nulle part.
+                  avecFiche ? ` ${SOULIGNEMENT_LIEN}` : ""
                 }`}
               >
                 {roleDuMembre(membre)} ·{" "}
@@ -658,14 +687,17 @@ function AdresseCliquable({
   const ligneTexte = (cliquable: boolean) => (
     <p className="text-[14px] leading-relaxed text-sombre-texte-doux [overflow-wrap:anywhere]">
       {etiquette}{" "}
-      {/*  §3 (nº 268) — LE SOULIGNEMENT DIT LE LIEN, et il le dit AU
-           REPOS : celui de la nº 229 — fin (`decoration-1`), décalé
-           (`underline-offset-4`) — n'attend plus le survol, puisque
-           l'encadré qui l'annonçait est parti (voir plus bas). La
-           couleur du texte ne change jamais. */}
+      {/*  §1 (nº 271) — LE SOULIGNEMENT N'APPARAÎT QU'AU SURVOL. La
+           nº 268 l'avait posé AU REPOS (consigne trop vague, corrigée) :
+           au repos, l'adresse est du TEXTE NU. Au survol de la ligne,
+           le soulignement de la nº 229 — l'écriture UNIQUE
+           (`SOULIGNEMENT_LIEN`), plus une recopie de jetons : fin,
+           décalé, gris doux. La couleur du texte, elle, ne change
+           jamais. Au doigt, pas de survol : l'état enfoncé (voir le
+           lien plus bas). */}
       <span
         className={`text-[15px] font-medium text-sombre-texte${
-          cliquable ? " underline underline-offset-4 decoration-1" : ""
+          cliquable ? ` ${SOULIGNEMENT_LIEN}` : ""
         }`}
       >
         {adresse}
@@ -691,16 +723,19 @@ function AdresseCliquable({
 
   return (
     <>
-      {/*  §3 (nº 268) — PLUS D'ENCADRÉ SUR SA PROPRE ADRESSE. La ligne
-           d'adresse d'un salon ou d'un studio portait l'encadré de la
-           nº 232 (celui d'un membre d'équipe) : or l'encadré dit
-           « cette ligne mène à une fiche », et il n'y a pas de fiche
-           au bout — ce serait un lien vers soi-même. Le lien qui
-           reste (la fenêtre de verre au doigt, Google Maps au web)
-           est dit par LE SOULIGNEMENT SEUL, permanent, sous l'adresse
-           (voir `ligneTexte`). La géométrie ne bouge pas : pastille
-           ancrée, colonne centrée, mêmes écarts — seuls le fond au
-           survol et les marges négatives de l'encadré sont partis.
+      {/*  §3 (nº 268, tenu à la nº 271) — PLUS D'ENCADRÉ SUR SA PROPRE
+           ADRESSE. La ligne d'adresse d'un salon ou d'un studio
+           portait l'encadré de la nº 232 (celui d'un membre
+           d'équipe) : or l'encadré dit « cette ligne mène à une
+           fiche », et il n'y a pas de fiche au bout — ce serait un
+           lien vers soi-même. AUCUN fond de survol ici : au survol,
+           seul le soulignement s'allume (voir `ligneTexte`).
+           §1 (nº 271) — la ligne devient le `group` du soulignement
+           (il s'allume au survol de LA LIGNE, comme à l'équipe), et
+           AU DOIGT, où il n'y a pas de survol : l'état enfoncé de la
+           nº 229 (`active:bg-white/10`, bref, jamais un état qui
+           reste) — avec la géométrie annulée (`-m-2 p-2`) pour que
+           rien ne bouge d'un pixel.
            ⚠️ LES HORAIRES RESTENT DEHORS (nº 230-§4, tenu) : le
            chevron ne peut pas déclencher le lien de l'adresse.
            §5 (nº 227) — aucun rose : la couleur ne change jamais. */}
@@ -715,7 +750,9 @@ function AdresseCliquable({
             setFenetre(true);
           }
         }}
-        className={pastille ? "flex items-start gap-3.5" : "block"}
+        className={`group rounded-xl -m-2 p-2 transition-colors active:bg-white/10 ${
+          pastille ? "flex items-start gap-3.5" : "block"
+        }`}
       >
         {pastille}
         {pastille ? (
@@ -948,8 +985,13 @@ export function BlocProfilsArtiste({
                   //  `lie` garantit le slug ; le `?? ""` ne sert qu'au
                   //  typage (le rappel exige une chaîne).
                   onClick={clicVersFiche?.(mode.salon_slug ?? "")}
-                  className="text-[15px] font-medium text-sombre-texte
-                             underline-offset-4 decoration-1 group-hover:underline"
+                  //  §2 (nº 271) — le soulignement n'est plus une
+                  //  recopie des jetons de la 229 : c'est SON écriture,
+                  //  importée. La couleur du trait est celle de la
+                  //  ligne d'équipe (gris doux), même sur ce texte
+                  //  clair — c'était l'écart que le relevé lisait
+                  //  « plus épais ».
+                  className={`text-[15px] font-medium text-sombre-texte ${SOULIGNEMENT_LIEN}`}
                 >
                   {mode.salon_nom}
                   {libelleLieuDuMode(mode)
