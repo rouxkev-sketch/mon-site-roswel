@@ -145,15 +145,44 @@ async function ecrireModes(
   ficheId: string,
   modes: ModeEnSaisie[]
 ): Promise<Array<{ id: string; salonId: string | null }>> {
-  // 1) CE QUI DISPARAÎT — les lignes de la base absentes de l'écran.
-  const gardes = modes.map((mode) => mode.id).filter(Boolean) as string[];
+  //  1) CE QUI DISPARAÎT — les lignes de la base absentes de l'écran.
+  /*  §2 et §3 (nº 265) — LA CAUSE COMMUNE DES DEUX DÉFAUTS, ET ELLE
+      EST ICI. `gardes` retenait l'identifiant de TOUS les encadrés à
+      l'écran, y compris ceux que la croix venait de VIDER : quand un
+      lieu est le seul de son genre, la croix ne le retire pas, elle le
+      remplace par un encadré VIERGE en lui laissant son identifiant
+      (BlocModesExercice, `fermerCeLieu` → `modeVierge(genre, cle,
+      mode.id)`). Cet identifiant protégeait donc la ligne de la
+      suppression — et comme l'encadré est vide, la boucle d'écriture
+      le saute (`modeVide`, plus bas). Résultat : LA LIGNE D'ORIGINE
+      RESTAIT EN BASE, INCHANGÉE.
+       · supprimer « à domicile » ne s'enregistrait pas (§2) : le mode
+         revenait au rechargement, formulaire et fiche publique ;
+       · retirer « artiste résident » puis choisir « fondateur » (§3)
+         laissait DEUX lignes : l'ancienne, vidée à l'écran mais
+         intacte en base, et la nouvelle.
+      LA RÈGLE POSÉE : l'état enregistré est EXACTEMENT celui que
+      montre le formulaire. Ne protège donc de la suppression que ce
+      qui va vraiment être RÉÉCRIT — les encadrés qui portent un genre
+      et une saisie. Un encadré vidé n'est plus une ligne : la sienne
+      part. Un encadré NEUF laissé vide n'a pas d'identifiant : il n'y
+      a rien à supprimer, et rien n'est écrit (le garde-fou de la
+      nº 124 tient toujours). */
+  const gardes = modes
+    .filter((mode) => mode.genre && !modeVide(mode))
+    .map((mode) => mode.id)
+    .filter(Boolean) as string[];
   const suppression = supabase
     .from("modes_exercice")
     .delete()
     .eq("tatoueur_id", ficheId);
-  await (gardes.length > 0
+  //  ⚠️ ET L'ON REGARDE LA RÉPONSE (nº 265) : une suppression refusée
+  //  passait inaperçue — l'appel était attendu, jamais lu. Un
+  //  enregistrement qui ne supprime pas doit se dire.
+  const effacement = await (gardes.length > 0
     ? suppression.not("id", "in", `(${gardes.join(",")})`)
     : suppression);
+  if (effacement.error) throw new Error(effacement.error.message);
 
   // 2) CE QUI RESTE ET CE QUI ARRIVE.
   const ecrits: Array<{ id: string; salonId: string | null }> = [];

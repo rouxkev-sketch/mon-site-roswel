@@ -1982,6 +1982,47 @@ export function FormulaireFiche() {
       // les modes et les studios, et pour la même raison.
       delete champs.exercice_verrouille;
 
+      /*  §1 (nº 265) — LE NOM NE PASSE PLUS PAR LE BROUILLON, ET VOICI
+          POURQUOI. Le relevé : on renomme un salon, le formulaire
+          valide, mais la recherche de rattachement montre encore
+          l'ancien nom — et le nouveau finit par disparaître.
+          LA CAUSE, ligne à ligne : sur une fiche EN LIGNE (cas B),
+          TOUT part dans `brouillon` et la colonne `tatoueurs.nom` ne
+          bouge pas tant que l'administration n'a pas validé. Or la
+          recherche de rattachement lit cette colonne
+          (api/tatoueur/recherche-fiches : `.ilike("nom", …)` sur
+          `tatoueurs`), pendant que l'espace du propriétaire, lui,
+          affiche la ligne RECOUVERTE de son brouillon (le chargement
+          plus haut : `{ ...ligne, ...brouillon }`). Deux vérités pour
+          un même nom — c'est tout le relevé. Renommer un ARTISTE
+          « fonctionnait » pour la seule raison que sa fiche n'était
+          pas encore en ligne : cas A, écriture directe.
+          LE REMÈDE : le NOM est une IDENTITÉ, pas un contenu à
+          relire — comme le verrou d'exercice, comme les modes et les
+          studios, il s'écrit DIRECTEMENT sur la ligne. La fiche part
+          quand même en relecture (`statut: "en_attente"`), et tout le
+          reste — bio, styles, photos — continue d'attendre dans le
+          brouillon. Conséquences, toutes voulues :
+           · la recherche trouve le nouveau nom IMMÉDIATEMENT, sans
+             vider aucun cache ;
+           · la fiche publique et la recherche lisent la MÊME colonne :
+             elles ne peuvent plus se contredire ;
+           · le nom ne peut plus revenir en arrière — il n'est plus
+             dans le brouillon, donc plus rien ne peut le ramener.
+          ⚠️ DANS QUELLES CONDITIONS LE BROUILLON ÉCRASAIT UNE
+          MODIFICATION VALIDÉE (la question posée) : le brouillon porte
+          une COPIE COMPLÈTE de la fiche (`{ ...ligne }`), et la
+          validation la recopie telle quelle dans les colonnes
+          publiques (api/admin/yokofolio/fiches, action « valider » :
+          `{ ...brouillon, publie: true, brouillon: null }`). Un
+          formulaire ouvert AVANT une validation et enregistré APRÈS
+          repose donc un brouillon entier fait de valeurs d'alors : la
+          validation suivante réécrit la fiche dans cet état-là, et ce
+          qui avait été validé entre-temps disparaît. Le nom, lui, y
+          échappe désormais. */
+      const champsIdentite: Record<string, unknown> = { nom: ligne.nom };
+      delete champs.nom;
+
       let maj: Record<string, unknown>;
       if (ficheChargee.publie) {
         // CAS B — la fiche est EN LIGNE : la version publique ne bouge
@@ -1989,6 +2030,8 @@ export function FormulaireFiche() {
         // version en attente : chaque envoi remplace la précédente).
         maj = {
           brouillon: champs,
+          //  L'IDENTITÉ, elle, s'écrit sur la ligne (voir ci-dessus).
+          ...champsIdentite,
           statut: "en_attente",
           motifs_moderation: null,
           note_moderation: null,
@@ -2010,6 +2053,10 @@ export function FormulaireFiche() {
         // jour DIRECTEMENT, l'admin verra la dernière version.
         maj = {
           ...champs,
+          //  §1 (nº 265) — l'identité, retirée de `champs` plus haut,
+          //  revient ici : le cas A écrit tout directement de toute
+          //  façon, rien ne change pour lui.
+          ...champsIdentite,
           statut: "en_attente",
           motifs_moderation: null,
           note_moderation: null,
@@ -2066,8 +2113,15 @@ export function FormulaireFiche() {
         //  LES STUDIOS RETIRÉS À L'ÉCRAN — chargés puis supprimés par
         //  la personne : ils partent de la base avec cet envoi (bug
         //  du « studio fantôme », passe nº 104).
+        //  §2 (nº 265) — … ET CEUX QUE LA CROIX A VIDÉS SANS LES
+        //  RETIRER : quand un studio est le seul de l'écran, la croix
+        //  efface son adresse et laisse l'encadré (avec son
+        //  identifiant). `ecrireStudios` saute une ligne sans adresse
+        //  (`if (!studio.lieu) continue`) — la ligne d'origine restait
+        //  donc intacte en base, exactement comme les modes vidés. Un
+        //  studio sans adresse n'est plus un studio : sa ligne part.
         idsStudiosCharges.current.filter(
-          (id) => !studios.some((studio) => studio.id === id)
+          (id) => !studios.some((studio) => studio.id === id && studio.lieu)
         )
       );
       await demanderLesRattachements(String(ficheChargee.id), ecritsMaj.modes);
