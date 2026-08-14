@@ -242,7 +242,18 @@ export function ContenuFiche({
   function choisirCategorie(suivante: string) {
     noterSonde(`SÉLECTEUR catégorie → « ${suivante} » (rendu « ${rendu} »)`);
     setCategorie(suivante);
-    remonterSousLaBarre();
+    /*  §1 (nº 269) — LE VA-ET-VIENT « RÉALISATIONS / FLASH » NE
+        REMONTE PLUS. La consigne de la nº 234 est ANNULÉE par le
+        propriétaire : la page ne bouge plus d'un pixel quand on passe
+        d'une catégorie à l'autre.
+        ⚠️ `remonterSousLaBarre` ne s'exécute QUE sur smartphone (son
+        premier test) : retirer l'appel ici retire donc la remontée là
+        où elle existait — au doigt — et ne change rien au web, qui
+        n'en avait jamais.
+        ⚠️ LES TROIS AUTRES NE BOUGENT PAS : Profil / Portfolio
+        (`choisirOnglet`), le rendu Noir & gris / Couleur (`surRendu`)
+        et les vignettes de style (qui remontent TOUT EN HAUT depuis la
+        nº 239) gardent chacune la leur. */
   }
 
   const avatarProfil = (

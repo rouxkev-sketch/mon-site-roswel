@@ -115,14 +115,18 @@ titre("§1 — la règle REJOUÉE sur les cas du relevé");
     .replace(/\(\s*typeFiche: [\s\S]*?\): ManqueBloc\[\]/, "(typeFiche, modes, studios, etablissement)")
     .replace(/: ManqueBloc\[\]/g, "")
     .replace(/const manques: ManqueBloc\[\] = \[\];/, "const manques = [];");
+  //  ⚠️ nº 269 (§4) : l'expression livrée filtre désormais elle-même
+  //  (« un mode OUVERT dit tous ses manques, même vierge ») — elle a
+  //  donc besoin de `modeVide` en plus de `modesDeclares`.
   const calculer = new Function(
+    "modeVide",
     "modesDeclares",
     "pointDuMode",
     "nomLieuRequis",
     "rayonRequis",
     "premierManque",
     `${source}; return tousLesManques;`
-  )(modesDeclares, pointDuMode, nomLieuRequis, rayonRequis, premierManque);
+  )(modeVide, modesDeclares, pointDuMode, nomLieuRequis, rayonRequis, premierManque);
 
   //  LES QUATRE MODES, TOUS INCOMPLETS — le cas du propriétaire.
   const lieu = { intitule: "Lyon" };

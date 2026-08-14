@@ -1973,7 +1973,11 @@ export function FormulaireFiche() {
         // ENREGISTRÉ : il n'y a plus rien à perdre — le menu peut
         // ouvrir une création sans rien demander.
         marquerTravailEnCours(false);
-        window.location.assign(
+        //  §2 (nº 269) — MÊME RÈGLE À LA CRÉATION : `replace`, jamais
+        //  `assign` — l'enregistrement ne laisse aucune entrée de
+        //  formulaire de plus dans la pile (voir la note du cas
+        //  MODIFICATION, plus bas).
+        window.location.replace(
           creee
             ? `/devenir-tatoueur/fiche?fiche=${creee}&enregistre=1`
             : "/devenir-tatoueur/fiche?enregistre=1"
@@ -2163,7 +2167,23 @@ export function FormulaireFiche() {
       // Même retour que la création : l'espace rechargé, encadré
       // d'état en tête de formulaire — SUR LA MÊME FICHE.
       marquerTravailEnCours(false);
-      window.location.assign(
+      /*  §2 (nº 269) — LA CAUSE DU RETOUR QUI RAMÈNE AU FORMULAIRE.
+          `location.assign` POUSSE une entrée d'historique : après un
+          enregistrement, la pile contenait DEUX fois le formulaire —
+          celui qu'on quittait, et celui rechargé avec `enregistre=1`.
+          Le visiteur cliquait ensuite le logo (l'accueil), ouvrait une
+          fiche, revenait… et retombait sur la seconde entrée du
+          formulaire au lieu de l'accueil.
+          `location.replace` REMPLACE l'entrée courante : le formulaire
+          n'occupe plus qu'une place, celle qu'il avait déjà — rien
+          n'est ajouté à la pile. Le rechargement, lui, est identique
+          (même adresse, même encadré d'état, même fiche).
+          ⚠️ LA RESTITUTION DE POSITION N'EST PAS TOUCHÉE : elle vit
+          dans MemoireNavigation, qui écrit et relit par CLÉ D'ADRESSE
+          (lib/navigation-session) — pas par index d'entrée. Remplacer
+          au lieu d'ajouter ne lui retire aucune clé ; c'est même une
+          entrée parasite de moins entre l'accueil et la fiche. */
+      window.location.replace(
         `/devenir-tatoueur/fiche?fiche=${ficheChargee.id}&enregistre=1`
       );
       return;

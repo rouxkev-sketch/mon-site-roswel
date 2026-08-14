@@ -1172,7 +1172,19 @@ export function tousLesManques(
     return seul ? [seul] : [];
   }
   const manques: ManqueBloc[] = [];
-  const declares = modesDeclares(modes);
+  /*  §4 (nº 269) — UN MODE OUVERT DIT TOUS SES MANQUES, MÊME VIERGE.
+      `modesDeclares` écarte les encadrés où RIEN n'est saisi (la règle
+      de la nº 124 : ouvrir un onglet par curiosité ne coûte rien).
+      Mais un guest neuf, ouvert et laissé vide, BLOQUE la validation —
+      et il ne montrait alors qu'un seul rouge, celui du lieu : ni la
+      recherche, ni l'adresse, ni les deux dates. On garde donc AUSSI
+      les encadrés qui portent un GENRE : ils sont une déclaration en
+      cours, et tout ce qui leur manque doit se voir d'un coup.
+      ⚠️ UN ENCADRÉ SANS GENRE reste hors du compte — c'est le
+      formulaire vierge, il n'y a rien à reprocher. */
+  const declares = modes.filter(
+    (mode) => !modeVide(mode) || Boolean(mode.genre)
+  );
   if (declares.length === 0) {
     const seul = premierManque(typeFiche, modes, studios, etablissement);
     return seul ? [seul] : [];

@@ -536,7 +536,26 @@ export function BlocModesExercice({
     const enFaute = manquant(mode.cle, "lieu");
     if (sansStudioInscrit(mode.genre)) {
       return (
+        /*  §3 (nº 269) — CHAQUE MODE A SON PROPRE CHAMP, ET LA CLÉ LE
+            GRAVE. Le relevé (trois passes de suite) : une adresse
+            saisie sous « en studio » apparaissait aussi sous « en
+            salon », et supprimer l'un vidait l'autre. LA CAUSE EST UN
+            PARTAGE D'ÉTAT INTERNE, pas un partage de données : les
+            champs de localisation gardent leur saisie en mémoire
+            propre (`lieuInitial` n'est lu qu'au MONTAGE — voir
+            ChampLocalisation) ; à genre identique et position
+            identique dans l'arbre, React RÉUTILISE l'instance au lieu
+            de la remonter, et le texte d'un mode se retrouve dans
+            l'autre. La clé `genre + clé du mode` rend deux modes
+            impossibles à confondre : changer d'onglet ou de lieu
+            remonte le champ, et chacun repart de SA valeur.
+            ⚠️ CE N'EST PAS LE CAS DU GUEST (nº 265) : là, une seule
+            ligne porte une NATURE (studio ou salon), et changer de
+            nature efface bien l'autre — deux vues d'un même lieu.
+            « En studio » et « en salon », eux, sont DEUX MODES qu'un
+            artiste cumule : ils ne partagent rien. */
         <ZoneLieuSeule
+          key={`${mode.genre}-${mode.cle}`}
           prefixe={`mode-${mode.cle}`}
           //  ⚠️ PLUS DE TITRE : la question est passée DANS le champ
           //  (passe nº 100). Un titre et un fantôme qui disent la même
@@ -621,6 +640,10 @@ export function BlocModesExercice({
           </div>
         )}
         <DeuxZonesLieu
+          //  §3 (nº 269) — la clé de l'isolement (voir ZoneLieuSeule,
+          //  plus haut) : deux modes de genres différents ne peuvent
+          //  plus réutiliser la même instance de champ.
+          key={`${mode.genre}-${mode.cle}`}
           prefixe={`mode-${mode.cle}`}
           titre={question}
           //  ⚠️ CHAQUE MODE CHERCHE CE QU'IL DÉCLARE (passe nº 121).
