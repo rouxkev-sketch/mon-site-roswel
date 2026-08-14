@@ -102,12 +102,12 @@ titre("§2 — à la source : l'encadré de la 232, le lien borné");
       )
   );
   verif(
-    "le soulignement du lien est celui de la 229, au survol de la LIGNE " +
-      "(⚠️ nº 271 : l'écriture UNIQUE `SOULIGNEMENT_LIEN`, importée — " +
-      "plus une recopie de jetons)",
-    /text-sombre-texte \$\{SOULIGNEMENT_LIEN\}`\}\s*>\s*\{mode\.salon_nom\}/.test(
+    "le lien du profil d'artiste (⚠️ nº 273 : PLUS de soulignement — " +
+      "il mène à une fiche du site, l'encadré 232 dit seul le clic)",
+    /className="text-\[15px\] font-medium text-sombre-texte"\s*>\s*\{mode\.salon_nom\}/.test(
       blocNu
-    )
+    ) &&
+      !/SOULIGNEMENT_LIEN[\s\S]{0,40}\{mode\.salon_nom\}/.test(blocNu)
   );
   verif(
     "une adresse SANS fiche : ni encadré, ni soulignement — la ligne nue",
@@ -285,8 +285,9 @@ for (const largeur of [390, 1440]) {
         apres.fond
       );
       verif(
-        "1440 px : le soulignement s'allume sur le LIEN seul, la couleur ne change pas",
-        apres.soulignementLien === "underline" &&
+        "1440 px (⚠️ nº 273) : AUCUN soulignement au survol — ni le lien " +
+          "ni l'étiquette — et la couleur ne change pas",
+        apres.soulignementLien === "none" &&
           apres.soulignementEtiquette === "none" &&
           apres.couleurLien === avant,
         `lien ${apres.soulignementLien} · étiquette ${apres.soulignementEtiquette} · ${avant} → ${apres.couleurLien}`

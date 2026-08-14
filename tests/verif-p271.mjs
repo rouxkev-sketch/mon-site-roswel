@@ -94,12 +94,16 @@ titre("§2 — une seule écriture de soulignement, celle de la 229");
       auSurvol.porteurs[0]?.startsWith("src/components/BlocLieux.tsx"),
     `decoration-1 : ${traitFin.porteurs.join(", ")} · group-hover:underline : ${auSurvol.porteurs.join(", ")}`
   );
+  //  ⚠️ RÉVISÉ PAR LA Nº 273 : le soulignement ne sert plus qu'à CE
+  //  QUI SORT DU SITE — l'adresse (AdresseCliquable), UNIQUE lecteur.
+  //  L'équipe, le lien d'artiste et les liens sous la photo l'ont
+  //  perdu : leur fond de survol dit déjà le clic.
   verif(
-    "les QUATRE lecteurs importent l'écriture — équipe, lien d'artiste, " +
-      "adresse, liens sous la photo — aucune recopie",
-    (blocNu.match(/\$\{SOULIGNEMENT_LIEN\}/g) ?? []).length === 3 &&
-      (contenuNu.match(/\$\{SOULIGNEMENT_LIEN\}/g) ?? []).length === 1 &&
-      contenuNu.includes("SOULIGNEMENT_LIEN,")
+    "UN SEUL lecteur (⚠️ nº 273) : l'adresse — l'équipe, le lien " +
+      "d'artiste et les liens sous la photo n'en ont plus",
+    (blocNu.match(/\$\{SOULIGNEMENT_LIEN\}/g) ?? []).length === 1 &&
+      (contenuNu.match(/\$\{SOULIGNEMENT_LIEN\}/g) ?? []).length === 0 &&
+      !contenuNu.includes("SOULIGNEMENT_LIEN")
   );
 }
 
@@ -128,14 +132,15 @@ titre("§1/§3 — à la source : le repos nu, l'état enfoncé, ce qui ne chang
       !adresseSlice.includes("CLASSES_LIGNE_CLIQUABLE")
   );
   verif(
-    "ce qui ne change pas : l'encadré 232 de la ligne d'artiste (l'écriture " +
-      "même), le rôle hors du lien, l'équipe soulignée seulement AVEC fiche",
+    "ce qui ne change pas : l'encadré 232 de la ligne d'artiste " +
+      "(l'écriture même), le rôle hors du lien — et (⚠️ nº 273) " +
+      "l'équipe n'a PLUS de soulignement du tout",
     /"group flex items-start gap-3\.5 rounded-xl -m-2 p-2 " \+\s*"transition-colors hover:bg-white\/5 active:bg-white\/10"/.test(
       blocLieux
     ) &&
       /\{lie \? \(\s*<div className=\{CLASSES_LIGNE_CLIQUABLE\}>/.test(blocNu) &&
       /\{etiquetteDuMode\(mode\)\}\{" "\}\s*\{lie \? \(/.test(blocNu) &&
-      /avecFiche \? ` \$\{SOULIGNEMENT_LIEN\}` : ""/.test(blocNu)
+      !/avecFiche/.test(blocNu)
   );
   verif(
     "aucun rose : aucun `hover:text` dans les trois lignes soulignées",
@@ -201,7 +206,6 @@ const TRIPLE = ({ epaisseur, decalage, couleur }) => ({
 
 for (const largeur of [390, 1440]) {
   titre(`VIVANT (${largeur} px) — la fiche du salon : adresse et équipe`);
-  let tripleEquipe = null;
   const salon = await ouvrirA(largeur, FICHE_SALON);
   try {
     await salon.page.waitForSelector('a[href*="google.com/maps"]', {
@@ -235,18 +239,17 @@ for (const largeur of [390, 1440]) {
       repos.adresse?.ligne === "none" && repos.equipe?.ligne === "none",
       `adresse ${repos.adresse?.ligne} · équipe ${repos.equipe?.ligne}`
     );
-    tripleEquipe = repos.equipe && TRIPLE(repos.equipe);
+    //  ⚠️ RÉVISÉ PAR LA Nº 273 : la ligne d'équipe a PERDU son trait —
+    //  la référence vivante de la 271 n'existe plus. Les valeurs de la
+    //  271 restent LA règle du trait de l'adresse : comparées en dur.
     const tripleAdresse = repos.adresse && TRIPLE(repos.adresse);
     verif(
-      `${largeur} px : épaisseur, décalage et couleur du trait IDENTIQUES à la ligne d'équipe, valeur par valeur`,
-      Boolean(tripleEquipe && tripleAdresse) &&
-        tripleAdresse.epaisseur === tripleEquipe.epaisseur &&
-        tripleAdresse.decalage === tripleEquipe.decalage &&
-        tripleAdresse.couleur === tripleEquipe.couleur &&
-        tripleEquipe.epaisseur === "1px" &&
-        tripleEquipe.decalage === "4px" &&
-        tripleEquipe.couleur === GRIS_DOUX,
-      `adresse ${JSON.stringify(tripleAdresse)} · équipe ${JSON.stringify(tripleEquipe)}`
+      `${largeur} px : le trait de l'adresse garde les VALEURS de la 271 — fin (1px), décalé (4px), gris doux`,
+      Boolean(tripleAdresse) &&
+        tripleAdresse.epaisseur === "1px" &&
+        tripleAdresse.decalage === "4px" &&
+        tripleAdresse.couleur === GRIS_DOUX,
+      `adresse ${JSON.stringify(tripleAdresse)}`
     );
 
     //  LE SURVOL DE L'ADRESSE : le trait s'allume, la couleur du texte
@@ -297,19 +300,24 @@ for (const largeur of [390, 1440]) {
       enfonce
     );
 
-    //  LE TRAIT DE RÉFÉRENCE s'allume pareil : survol de la ligne
-    //  d'équipe.
+    //  ⚠️ Nº 273 : la ligne d'équipe n'a PLUS de trait, même au
+    //  survol — son encadré (fond blanc/5) dit seul qu'elle se clique.
     const ligneEquipe = salon.page
       .locator('li:has(a[href^="/tatoueur/"] p)')
       .first();
     await ligneEquipe.locator("a").first().hover();
     await salon.page.waitForTimeout(250);
-    const equipeSurvol = await ligneEquipe.evaluate(
-      (li) => getComputedStyle(li.querySelector("p")).textDecorationLine
-    );
+    const equipeSurvol = await ligneEquipe.evaluate((li) => ({
+      trait: getComputedStyle(li.querySelector("p")).textDecorationLine,
+      fond: getComputedStyle(li.firstElementChild).backgroundColor,
+    }));
     verif(
-      `${largeur} px : la ligne d'équipe garde son trait au survol (la référence vit)`,
-      equipeSurvol === "underline"
+      `${largeur} px : au survol d'une ligne d'équipe (⚠️ nº 273) — AUCUN trait, l'encadré seul s'allume`,
+      equipeSurvol.trait === "none" &&
+        (equipeSurvol.fond === "rgba(255, 255, 255, 0.05)" ||
+          (equipeSurvol.fond.startsWith("oklab(0.99") &&
+            equipeSurvol.fond.includes("/ 0.05"))),
+      `trait ${equipeSurvol.trait} · fond ${equipeSurvol.fond}`
     );
   } catch (erreur) {
     nonJoue(
@@ -346,17 +354,9 @@ for (const largeur of [390, 1440]) {
       reposArtiste.ligne === "none",
       reposArtiste.ligne
     );
-    verif(
-      `${largeur} px : son trait est CELUI de l'équipe, valeur par valeur — gris doux même sur texte clair`,
-      Boolean(tripleEquipe) &&
-        reposArtiste.epaisseur === tripleEquipe.epaisseur &&
-        reposArtiste.decalage === tripleEquipe.decalage &&
-        reposArtiste.couleur === tripleEquipe.couleur,
-      `lien ${JSON.stringify(TRIPLE(reposArtiste))} · équipe ${JSON.stringify(tripleEquipe)}`
-    );
-    //  LE SURVOL DE LA LIGNE : l'encadré 268 s'allume (blanc/5), le
-    //  trait s'allume sur le lien SEUL, le rôle reste nu, la couleur
-    //  du lien ne change pas.
+    //  ⚠️ Nº 273 : le lien d'artiste mène à une fiche DU SITE — il n'a
+    //  PLUS de trait, ni au repos ni au survol. L'encadré 268 reste
+    //  seul à dire le clic ; la couleur ne change jamais.
     await ligne.hover();
     await artiste.page.waitForTimeout(250);
     const survolArtiste = await ligne.evaluate((li) => {
@@ -371,38 +371,31 @@ for (const largeur of [390, 1440]) {
       };
     });
     verif(
-      `${largeur} px : l'encadré 268 reste, le trait sur le lien seul, le rôle jamais souligné, couleur inchangée`,
+      `${largeur} px : au survol (⚠️ nº 273) — l'encadré 268 s'allume, AUCUN trait sur le lien, le rôle nu, couleur inchangée`,
       (survolArtiste.fond === "rgba(255, 255, 255, 0.05)" ||
         (survolArtiste.fond.startsWith("oklab(0.99") &&
           survolArtiste.fond.includes("/ 0.05"))) &&
-        survolArtiste.lien === "underline" &&
+        survolArtiste.lien === "none" &&
         survolArtiste.role === "none" &&
         survolArtiste.couleur === reposArtiste.texte &&
         survolArtiste.couleur !== ROSE,
       `fond ${survolArtiste.fond} · lien ${survolArtiste.lien} · rôle ${survolArtiste.role}`
     );
-    //  LES LIENS SOUS LA PHOTO partagent l'écriture : repos nu, trait
-    //  au survol (mesuré une fois par largeur, sur « Instagram »).
+    //  ⚠️ Nº 273 : les liens sous la photo n'ont PLUS de trait — leur
+    //  fond de survol (nº 227) dit seul le clic.
     const lienInstagram = artiste.page
       .locator('a[href*="instagram.com"]')
       .filter({ hasText: "Instagram" })
       .first();
-    const spanInstagram = lienInstagram.locator('[class*="underline"]').first();
-    const reposLien = await spanInstagram.evaluate(
-      (n) => getComputedStyle(n).textDecorationLine
-    );
     await lienInstagram.hover();
     await artiste.page.waitForTimeout(200);
-    const survolLien = await spanInstagram.evaluate((n) => {
-      const s = getComputedStyle(n);
-      return { ligne: s.textDecorationLine, couleur: s.textDecorationColor };
-    });
+    const survolLien = await lienInstagram.evaluate((a) => ({
+      ligne: getComputedStyle(a.querySelector("span.min-w-0")).textDecorationLine,
+    }));
     verif(
-      `${largeur} px : les liens sous la photo — même écriture, repos nu, trait gris doux au survol`,
-      reposLien === "none" &&
-        survolLien.ligne === "underline" &&
-        survolLien.couleur === GRIS_DOUX,
-      `repos ${reposLien} · survol ${survolLien.ligne} ${survolLien.couleur}`
+      `${largeur} px : les liens sous la photo (⚠️ nº 273) — plus aucun trait, même au survol`,
+      survolLien.ligne === "none",
+      `survol ${survolLien.ligne}`
     );
   } catch (erreur) {
     nonJoue(

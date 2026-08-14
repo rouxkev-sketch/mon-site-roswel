@@ -102,6 +102,45 @@ export function IconeTikTok({ taille = 20 }: ProprietesIconeLien) {
   );
 }
 
+/**
+ * LE CALENDRIER DU BOOKING (nº 273-§1) — l'état des carnets parle de
+ * TEMPS, pas de feu de circulation : les trois ronds de la nº 270
+ * (vert, gris clair, gris foncé) sont partis. À leur place, CETTE
+ * icône — LA MÊME pour les trois états, sans variante : c'est le MOT
+ * qui dit l'état (« Booking ouvert », « Booking · 3 mois », « Booking
+ * fermé »), l'icône dit seulement de quoi on parle — la
+ * disponibilité, ce que « Booking » seul ne dit pas à l'œil qui
+ * balaie. Même écriture que ses voisines : trait 1,8 sur la grille de
+ * 24, `currentColor` — elle prend le gris doux du libellé à côté
+ * duquel elle vit, sans un seul réglage. Tout en CONTOUR : les icônes
+ * de la liste des liens n'ont ni aplat ni fond.
+ */
+export function IconeCalendrier({ taille = 20 }: ProprietesIconeLien) {
+  return (
+    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" aria-hidden>
+      {/*  Le corps, en contour — mêmes proportions qu'Instagram. */}
+      <rect
+        x="3.4"
+        y="5"
+        width="17.2"
+        height="15.6"
+        rx="2.6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      {/*  Les deux anneaux, au-dessus du corps. */}
+      <path
+        d="M8.2 3v3.4M15.8 3v3.4"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      {/*  La ligne du bandeau — le trait qui fait lire « calendrier ». */}
+      <path d="M3.4 10h17.2" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
 export function IconeLienLibre({ taille = 20 }: ProprietesIconeLien) {
   return (
     <svg

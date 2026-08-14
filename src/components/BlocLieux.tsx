@@ -377,11 +377,16 @@ export const CLASSES_LIGNE_CLIQUABLE =
  * l'écriture : le trait est LE MÊME, où que le texte soit clair ou
  * doux.
  *
- * ⚠️ QUATRE LECTEURS, AUCUNE COPIE : la ligne d'équipe, le lien
- * nom + adresse d'une fiche d'artiste, l'adresse d'une fiche de
- * salon/studio (AdresseCliquable) et les liens sous la photo
- * (ContenuFiche). Si un cinquième endroit doit souligner un lien de
- * fiche, il importe CETTE constante — jamais une recopie des jetons.
+ * ⚠️ UN SEUL LECTEUR, UN SEUL USAGE (nº 273-§2) : le soulignement ne
+ * sert plus qu'à CE QUI SORT DU SITE — et il n'y a qu'un cas,
+ * l'ADRESSE (AdresseCliquable : Google Maps sur le web, la fenêtre
+ * de verre au doigt — le cas de l'artiste qui a saisi l'adresse de
+ * son lieu à la main, faute de portfolio à lier). Les lignes qui
+ * mènent à une fiche DU SITE (équipe, profil d'artiste, liens sous
+ * la photo) ont perdu le leur : leur fond qui monte au survol dit
+ * déjà le clic, le trait faisait double emploi. Si un second endroit
+ * doit un jour sortir du site, il importe CETTE constante — jamais
+ * une recopie des jetons, et jamais pour un lien interne.
  */
 export const SOULIGNEMENT_LIEN =
   "underline-offset-4 decoration-1 decoration-sombre-texte-doux " +
@@ -398,17 +403,21 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
             rond gris uni, rien dedans. C'est elle qui tient la
             colonne — sans elle, une équipe où un seul membre a
             déposé sa photo s'affichait en escalier. */
-        const ligne = (avecFiche: boolean) => (
+        //  §2 (nº 273) — la ligne s'écrit PAREIL avec ou sans fiche :
+        //  le soulignement qui les distinguait est parti, seul
+        //  l'encadré du Link (au survol) dit encore le clic.
+        const ligne = () => (
           <>
             <PhotoRonde source={membre.photo} nature="personne" />
             <div className="flex min-h-13 min-w-0 flex-1 flex-col justify-center">
               <p
-                className={`text-[14px] leading-relaxed text-sombre-texte-doux${
-                  //  §2 (nº 271) — l'écriture UNIQUE du soulignement :
-                  //  c'est d'ICI (nº 229) qu'elle vient, elle n'est
-                  //  plus recopiée nulle part.
-                  avecFiche ? ` ${SOULIGNEMENT_LIEN}` : ""
-                }`}
+                //  §2 (nº 273) — PLUS DE SOULIGNEMENT sur une ligne
+                //  d'équipe : l'encadré au survol (CLASSES_LIGNE_
+                //  CLIQUABLE) dit déjà qu'elle se clique — le trait
+                //  faisait double emploi. Le soulignement est réservé
+                //  au seul cas qui SORT du site : l'adresse (voir
+                //  AdresseCliquable, l'unique lecteur).
+                className="text-[14px] leading-relaxed text-sombre-texte-doux"
               >
                 {roleDuMembre(membre)} ·{" "}
                 <span className="text-[15px] font-medium text-sombre-texte">
@@ -429,10 +438,10 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
                 onClick={clicVersFiche?.(membre.slug)}
                 className={CLASSES_LIGNE_CLIQUABLE}
               >
-                {ligne(true)}
+                {ligne()}
               </Link>
             ) : (
-              <div className="flex items-start gap-3.5">{ligne(false)}</div>
+              <div className="flex items-start gap-3.5">{ligne()}</div>
             )}
           </li>
         );
@@ -985,13 +994,12 @@ export function BlocProfilsArtiste({
                   //  `lie` garantit le slug ; le `?? ""` ne sert qu'au
                   //  typage (le rappel exige une chaîne).
                   onClick={clicVersFiche?.(mode.salon_slug ?? "")}
-                  //  §2 (nº 271) — le soulignement n'est plus une
-                  //  recopie des jetons de la 229 : c'est SON écriture,
-                  //  importée. La couleur du trait est celle de la
-                  //  ligne d'équipe (gris doux), même sur ce texte
-                  //  clair — c'était l'écart que le relevé lisait
-                  //  « plus épais ».
-                  className={`text-[15px] font-medium text-sombre-texte ${SOULIGNEMENT_LIEN}`}
+                  //  §2 (nº 273) — PLUS DE SOULIGNEMENT : cette ligne
+                  //  mène à une fiche DU SITE, et l'encadré de la 232
+                  //  (le groupe, au survol) dit déjà qu'elle se
+                  //  clique. Le soulignement est réservé au seul cas
+                  //  qui SORT du site : l'adresse (AdresseCliquable).
+                  className="text-[15px] font-medium text-sombre-texte"
                 >
                   {mode.salon_nom}
                   {libelleLieuDuMode(mode)

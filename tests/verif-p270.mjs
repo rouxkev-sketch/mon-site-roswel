@@ -245,11 +245,7 @@ titre("§2 — la persistance : l'écriture, la tolérance, la migration NOMMÉE
 /* ==================================================================
  * §3 — LA FICHE PUBLIQUE, À LA SOURCE
  * ================================================================== */
-titre("§3 — à la source : première position, libellés exacts, un rond");
-const rondsDebut = contenuNu.indexOf("const RONDS_BOOKING");
-const rondsBloc = contenuNu.slice(rondsDebut, contenuNu.indexOf("};", rondsDebut));
-const classeRond = (cle) =>
-  rondsBloc.match(new RegExp(`${cle}: "([^"]+)"`))?.[1] ?? "";
+titre("§3 — à la source : première position, libellés exacts, le calendrier");
 {
   verif(
     "les trois libellés, et pas d'autres : « Booking ouvert » / " +
@@ -262,16 +258,17 @@ const classeRond = (cle) =>
         contenuNu
       )
   );
+  //  ⚠️ ASSERTION RÉVISÉE PAR LA Nº 273 : les trois ronds de la 270
+  //  sont partis (le booking parle de temps, pas de feu de
+  //  circulation) — à leur place, UNE icône de calendrier, la même
+  //  pour les trois états, en `currentColor` (l'écriture des icônes
+  //  de la 240), hors de tout ternaire d'état.
   verif(
-    "UN rond, LE MÊME, à trois intensités : vert #34D399, gris clair " +
-      "(sombre-texte-doux), gris foncé presque éteint (sombre-haut-clair)",
-    classeRond("ouvert") === "bg-[#34D399]" &&
-      classeRond("delai") === "bg-sombre-texte-doux" &&
-      classeRond("ferme") === "bg-sombre-haut-clair" &&
-      //  une seule écriture de rond, la classe seule change.
-      /h-2\.5 w-2\.5 rounded-full \$\{RONDS_BOOKING\[tatoueur\.booking\]\}/.test(
-        contenuNu
-      )
+    "le signal (⚠️ nº 273 : le CALENDRIER, plus aucun rond) — une seule " +
+      "écriture, hors ternaire, et RONDS_BOOKING n'existe plus",
+    !contenuNu.includes("RONDS_BOOKING") &&
+      !contenuNu.includes("bg-[#34D399]") &&
+      contenuNu.includes("<IconeCalendrier taille={20} />")
   );
   verif(
     "le Booking OUVRE la liste des liens (première position), et ce " +
@@ -395,15 +392,18 @@ for (const largeur of [390, 1440]) {
   );
   try {
     await page.waitForSelector("[data-booking-fiche]", { timeout: 20000 });
+    //  ⚠️ RELEVÉ RÉVISÉ PAR LA Nº 273 : plus de rond à mesurer — le
+    //  CALENDRIER (une icône, la même pour les trois états), à la
+    //  couleur du libellé d'à côté. Le libellé et la position, eux,
+    //  n'ont pas bougé depuis la 270.
     const releve = await page.evaluate(() => {
       const entree = document.querySelector("[data-booking-fiche]");
-      const rond = entree.querySelector("[data-rond-booking]");
+      const icone = entree.querySelector("svg");
+      const libelle = entree.querySelector("span.min-w-0");
       const instagram = [...document.querySelectorAll("a")].find(
         (a) => a.textContent.trim() === "Instagram"
       );
       const boiteEntree = entree.getBoundingClientRect();
-      const boiteRond = rond.getBoundingClientRect();
-      const styleRond = getComputedStyle(rond);
       return {
         etat: entree.getAttribute("data-booking-fiche"),
         texte: entree.textContent.trim(),
@@ -414,10 +414,18 @@ for (const largeur of [390, 1440]) {
                 Node.DOCUMENT_POSITION_FOLLOWING
             ) && boiteEntree.top < instagram.getBoundingClientRect().top
           : null,
-        rondLargeur: boiteRond.width,
-        rondHauteur: boiteRond.height,
-        rondRayon: styleRond.borderRadius,
-        rondFond: styleRond.backgroundColor,
+        iconePresente: icone !== null,
+        couleurIcone: icone ? getComputedStyle(icone).color : null,
+        couleurLibelle: libelle ? getComputedStyle(libelle).color : null,
+        rondsRestants: [...entree.querySelectorAll("*")].filter((n) => {
+          const s = getComputedStyle(n);
+          return (
+            parseFloat(s.borderRadius) * 2 >=
+              n.getBoundingClientRect().width - 1 &&
+            n.getBoundingClientRect().width > 0 &&
+            s.backgroundColor !== "rgba(0, 0, 0, 0)"
+          );
+        }).length,
       };
     });
     verif(
@@ -429,45 +437,16 @@ for (const largeur of [390, 1440]) {
       "PREMIÈRE position des liens : devant Instagram, et ce n'est pas un lien",
       releve.avantInstagram === true && releve.estUnLien === false
     );
-    const gris = await enRgb(page, releve.rondFond);
+    const grisIcone = await enRgb(page, releve.couleurIcone ?? "");
     verif(
-      "le rond du délai : GRIS CLAIR mesuré (#A8A8B0), 10 px, rond",
-      memes(gris, [168, 168, 176]) &&
-        sansAlarme(gris) &&
-        Math.abs(releve.rondLargeur - 10) <= 1 &&
-        Math.abs(releve.rondHauteur - 10) <= 1 &&
-        parseFloat(releve.rondRayon) * 2 >= releve.rondLargeur - 1,
-      `rgb(${gris.join(", ")}) · ${releve.rondLargeur}×${releve.rondHauteur}`
-    );
-
-    //  LES TROIS INTENSITÉS, mesurées d'un coup : les classes RÉELLES
-    //  du produit (lues dans la source), posées sur la page vivante.
-    const classes = {
-      ouvert: classeRond("ouvert"),
-      delai: classeRond("delai"),
-      ferme: classeRond("ferme"),
-    };
-    const fonds = await page.evaluate((troisClasses) => {
-      const releves = {};
-      for (const [cle, classe] of Object.entries(troisClasses)) {
-        const rond = document.createElement("span");
-        rond.className = "h-2.5 w-2.5 rounded-full " + classe;
-        document.body.appendChild(rond);
-        releves[cle] = getComputedStyle(rond).backgroundColor;
-      }
-      return releves;
-    }, classes);
-    const ouvert = await enRgb(page, fonds.ouvert);
-    const delai = await enRgb(page, fonds.delai);
-    const ferme = await enRgb(page, fonds.ferme);
-    verif(
-      "les trois intensités mesurées : vert #34D399, gris clair #A8A8B0, " +
-        "gris foncé #4B4B54 — jamais de rouge ni d'orange",
-      memes(ouvert, [52, 211, 153]) &&
-        memes(delai, [168, 168, 176]) &&
-        memes(ferme, [75, 75, 84]) &&
-        [ouvert, delai, ferme].every(sansAlarme),
-      `ouvert rgb(${ouvert.join(",")}) · délai rgb(${delai.join(",")}) · fermé rgb(${ferme.join(",")})`
+      "⚠️ nº 273 : LE CALENDRIER, à la couleur du libellé (gris doux " +
+        "mesuré), et plus AUCUN rond dans l'entrée",
+      releve.iconePresente &&
+        releve.couleurIcone === releve.couleurLibelle &&
+        memes(grisIcone, [168, 168, 176]) &&
+        sansAlarme(grisIcone) &&
+        releve.rondsRestants === 0,
+      `icône ${releve.couleurIcone} · libellé ${releve.couleurLibelle} · ronds ${releve.rondsRestants}`
     );
   } catch (erreur) {
     nonJoue(

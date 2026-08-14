@@ -13,7 +13,7 @@ import {
   PORTRAIT_ROND,
 } from "@/config/tatouage";
 import { BoutonHorsLigne } from "@/components/BoutonHorsLigne";
-import { IconeDuLien } from "@/components/IconeReseau";
+import { IconeCalendrier, IconeDuLien } from "@/components/IconeReseau";
 import { BoutonSuivre } from "@/components/BoutonSuivre";
 import {
   PanneauPortfolio,
@@ -33,7 +33,6 @@ import { sousLeNom } from "@/components/BlocsFiche";
 import {
   BlocAdressesFiche,
   BlocProfilsArtiste,
-  SOULIGNEMENT_LIEN,
 } from "@/components/BlocLieux";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
@@ -335,10 +334,12 @@ export function ContenuFiche({
       <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center">
         {icone}
       </span>
-      {/*  §2 (nº 271) — le soulignement au survol est l'écriture
-           UNIQUE du dépôt (celle de la ligne d'équipe, nº 229) :
-           importée, jamais recopiée. Même trait ici qu'ailleurs. */}
-      <span className={`min-w-0 truncate ${SOULIGNEMENT_LIEN}`}>
+      {/*  §2 (nº 273) — PLUS DE SOULIGNEMENT ICI : le fond qui monte
+           au survol (`hover:bg-white/5`, la ligne cliquable de la
+           nº 227) dit déjà que la ligne se clique — le trait faisait
+           double emploi. Le soulignement du dépôt est réservé au SEUL
+           cas qui sort du site : l'adresse (AdresseCliquable). */}
+      <span className="min-w-0 truncate">
         {libelle}
       </span>
     </a>
@@ -372,18 +373,21 @@ export function ContenuFiche({
    * laisse aucun espace.
    */
   /**
-   * §3 (nº 270) — L'ÉTAT DES CARNETS, EN PREMIÈRE POSITION DES LIENS
+   * §3 (nº 270, REFAIT PAR LA Nº 273) — L'ÉTAT DES CARNETS, EN
+   * PREMIÈRE POSITION DES LIENS
    * ==================================================================
    * TROIS ÉCRITURES, ET PAS UNE DE PLUS : « Booking ouvert »,
    * « Booking · 3 mois » (le chiffre = le mois déclaré),
-   * « Booking fermé ». Et UN ROND, LE MÊME dans les trois cas, à
-   * trois intensités — le signal s'allume ou s'éteint :
-   *  · ouvert → VERT (#34D399, le vert du site — celui de la coche
-   *    des liens du formulaire) ;
-   *  · délai  → GRIS CLAIR (`sombre-texte-doux`) ;
-   *  · fermé  → GRIS FONCÉ presque éteint (`sombre-haut-clair`).
-   * ⚠️ PAS D'ORANGE, PAS DE ROUGE : un rond rouge sur une fiche se
-   * lirait comme une erreur — le rouge est réservé à ce qui manque.
+   * « Booking fermé ». C'est LE MOT qui dit l'état.
+   * ⚠️ LES TROIS RONDS DE LA Nº 270 SONT PARTIS (nº 273-§1) — le vert
+   * d'« ouvert », le gris clair du délai, le gris foncé de « fermé » :
+   * le booking parle de TEMPS, pas de feu de circulation. À leur
+   * place, UNE ICÔNE DE CALENDRIER — la même pour les trois états,
+   * sans variante, dans l'écriture unique des icônes de la nº 240
+   * (IconeReseau, `currentColor`, trait 1,8) : elle prend le gris
+   * doux du libellé à côté duquel elle vit, à la taille des autres
+   * icônes de la liste (20, dans la colonne de 22 px). L'icône dit de
+   * quoi on parle — la disponibilité — le mot dit l'état.
    * ⚠️ RIEN DÉCLARÉ → RIEN AFFICHÉ : le site ne devine pas l'état
    * des carnets de quelqu'un. Les fiches d'avant la migration
    * (booking NULL) restent muettes jusqu'à leur prochain
@@ -392,14 +396,8 @@ export function ContenuFiche({
    * CE N'EST PAS UN LIEN : une étiquette d'état, qui ne mène nulle
    * part — ni survol, ni soulignement (leçon de la nº 268 : ce qui
    * décrit ne se clique pas). Elle partage la famille des liens :
-   * même taille, même gris doux, même colonne de 22 px — le rond y
-   * prend la place de l'icône.
+   * même taille, même gris doux, même colonne de 22 px.
    */
-  const RONDS_BOOKING: Record<string, string> = {
-    ouvert: "bg-[#34D399]",
-    delai: "bg-sombre-texte-doux",
-    ferme: "bg-sombre-haut-clair",
-  };
   const libelleBooking =
     tatoueur.booking === "ouvert"
       ? "Booking ouvert"
@@ -415,12 +413,11 @@ export function ContenuFiche({
       className="flex items-center gap-2.5 text-[15px] leading-snug
                  text-sombre-texte-doux"
     >
+      {/*  §1 (nº 273) — LE CALENDRIER, hors de tout ternaire d'état :
+           une seule écriture couvre les trois états PAR CONSTRUCTION —
+           aucune variante n'est seulement possible. */}
       <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center">
-        <span
-          data-rond-booking=""
-          aria-hidden="true"
-          className={`h-2.5 w-2.5 rounded-full ${RONDS_BOOKING[tatoueur.booking]}`}
-        />
+        <IconeCalendrier taille={20} />
       </span>
       <span className="min-w-0 truncate">{libelleBooking}</span>
     </span>
