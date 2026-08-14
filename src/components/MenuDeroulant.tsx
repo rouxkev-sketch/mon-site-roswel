@@ -314,16 +314,57 @@ export function MenuDeroulant({
   const [dragY, setDragY] = useState(0);
   const [enGlissement, setEnGlissement] = useState(false);
   const depart = useRef<number | null>(null);
-  function glissementDebut(e: React.PointerEvent) {
+  const departSurLaBande = useRef(false);
+  /**
+   * §2 (nº 261) — LA FEUILLE ENTIÈRE ÉCOUTE LE GLISSEMENT, ET LA LISTE
+   * ARBITRE.
+   * ------------------------------------------------------------------
+   * LE RELEVÉ : pour refermer la feuille il fallait viser la petite
+   * barre du haut, et l'on s'y reprenait à plusieurs fois. Désormais :
+   *  · TOUTE LA BANDE HAUTE (la barre de glissement ET le titre) est
+   *    préhensible — plus de 44 px, la cible minimale d'un pouce ;
+   *  · et quand la liste est DÉJÀ EN HAUT de son défilement, un
+   *    glissement vers le bas N'IMPORTE OÙ dans la feuille la referme —
+   *    le comportement des feuilles natives ;
+   *  · quand elle n'est PAS en haut, le geste défile la liste, il ne
+   *    referme rien : la condition se lit au DÉPART du geste ET au
+   *    moment du mouvement (les deux doivent dire « en haut »).
+   * Le drag ne s'arme qu'après 6 px vers le bas : un tap sur une option
+   * reste un tap. La capture du pointeur n'est prise qu'à l'armement —
+   * jamais au départ — pour ne rien voler aux options.
+   * ⚠️ RIEN NE CHANGE du gel de la nº 259 : le corps reste gelé par
+   * lib/gel-du-corps, la liste garde son `overscroll-contain`, et la
+   * position de la page revient au pixel à la fermeture.
+   */
+  function listeEnHaut() {
+    return (listeDeroulante.current?.scrollTop ?? 0) <= 0;
+  }
+  function glissementDebut(e: React.PointerEvent, bande: boolean) {
+    //  Sur la LISTE, le geste n'est candidat que si elle est en haut ;
+    //  sur la bande haute, toujours.
+    if (!bande && !listeEnHaut()) return;
     depart.current = e.clientY;
-    setEnGlissement(true);
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    } catch {}
+    departSurLaBande.current = bande;
   }
   function glissementBouge(e: React.PointerEvent) {
     if (depart.current == null) return;
-    setDragY(Math.max(0, e.clientY - depart.current));
+    const delta = e.clientY - depart.current;
+    if (!enGlissement) {
+      //  L'ARMEMENT : 6 px vers le bas. Parti de la LISTE, le geste
+      //  re-vérifie qu'elle est toujours en haut (elle a pu défiler
+      //  entre-temps — le natif garde la main) ; parti de la BANDE,
+      //  il s'arme toujours : la bande referme, même liste défilée.
+      if (delta < 6) return;
+      if (!departSurLaBande.current && !listeEnHaut()) {
+        depart.current = null;
+        return;
+      }
+      setEnGlissement(true);
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      } catch {}
+    }
+    setDragY(Math.max(0, delta));
   }
   function glissementFin() {
     if (dragY > 70) fermer();
@@ -808,20 +849,31 @@ export function MenuDeroulant({
               transition: enGlissement ? "none" : "transform .25s ease",
               animation: "rw-feuille-monte .25s ease",
             }}
+            //  §2 (nº 261) — la feuille ENTIÈRE écoute : sur la liste,
+            //  le geste ne devient une fermeture que si elle est en
+            //  haut (voir `glissementDebut`).
+            onPointerDown={(e) => glissementDebut(e, false)}
+            onPointerMove={glissementBouge}
+            onPointerUp={glissementFin}
+            onPointerCancel={glissementFin}
           >
-            {/* Barre de glissement iOS (zone de drag) */}
+            {/*  §2 (nº 261) — LA BANDE PRÉHENSIBLE : la barre ET le
+                 titre, d'un seul tenant (data-bande-feuille, mesurée
+                 au-delà des 44 px du pouce). `touch-none` : au doigt,
+                 le navigateur n'a rien à défiler ici — le geste nous
+                 revient entier. */}
             <div
-              className="pt-3 pb-2 flex justify-center cursor-grab touch-none"
-              onPointerDown={glissementDebut}
-              onPointerMove={glissementBouge}
-              onPointerUp={glissementFin}
-              onPointerCancel={glissementFin}
+              data-bande-feuille=""
+              className="cursor-grab touch-none"
+              onPointerDown={(e) => glissementDebut(e, true)}
             >
-              <span className="w-10 h-1.5 rounded-full bg-bordure" aria-hidden />
+              <div className="pt-3 pb-2 flex justify-center">
+                <span className="w-10 h-1.5 rounded-full bg-bordure" aria-hidden />
+              </div>
+              <h2 className="px-5 pb-3 text-lg font-bold text-left">
+                {titreFeuille ?? "Choisissez une option"}
+              </h2>
             </div>
-            <h2 className="px-5 pb-3 text-lg font-bold text-left">
-              {titreFeuille ?? "Choisissez une option"}
-            </h2>
             <ul
               ref={listeDeroulante}
               //  §3 (nº 259) — `overscroll-contain` : arrivé en bout de

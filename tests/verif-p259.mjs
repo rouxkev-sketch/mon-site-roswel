@@ -77,13 +77,17 @@ titre("§1 — à la source : la position se calcule, elle ne se mesure plus");
   );
   verif(
     "la position est une fonction PURE du rang, en calc() — une seule source",
+    //  ⚠️ nº 261 (§1) : la fonction pure demeure, mais elle s'écrit en
+    //  TRANSFORMATION (translateX composé) — `left` vaut 0 et ne bouge
+    //  jamais. Le 100 % se lit sur la pilule (une largeur de mot) : un
+    //  rang = une largeur + l'écart, la même géométrie qu'ici.
     /const rang = Math\.max\(\s*0,\s*options\.findIndex\(\(option\) => option\.cle === valeur\)\s*\)/.test(
       capsuleNue
     ) &&
       /const largeurMot = `calc\(\(100% - \$\{options\.length - 1\} \* var\(--rw-ecart-mots\)\) \/ \$\{options\.length\}\)`/.test(
         capsuleNue
       ) &&
-      /left: `calc\(\$\{rang\} \* \(\$\{largeurMot\} \+ var\(--rw-ecart-mots\)\)\)`/.test(
+      /left: 0,\s*width: largeurMot,\s*transform: `translateX\(calc\(\$\{rang\} \* \(100% \+ var\(--rw-ecart-mots\)\)\)\)`/.test(
         capsuleNue
       )
   );
@@ -97,7 +101,13 @@ titre("§1 — à la source : la position se calcule, elle ne se mesure plus");
   );
   verif(
     "la glissade de la nº 255 ne change ni de durée ni de courbe",
-    /transition-\[left,width\] duration-300 ease-out/.test(capsule)
+    //  ⚠️ nº 261 (§1) : en pleine largeur la propriété en transition
+    //  devient la TRANSFORMATION (le compositeur anime, le fil occupé
+    //  ne gèle plus la glissade) ; la fiche garde ses left/width
+    //  mesurés. Durée et courbe, elles, n'ont jamais bougé.
+    /pleineLargeur \? "transition-transform" : "transition-\[left,width\]"/.test(
+      capsule
+    ) && /\} duration-300 ease-out`/.test(capsule)
   );
   verif(
     "la fiche, elle, garde SA mesure (ses deux mots n'ont pas la même largeur)",
@@ -131,23 +141,27 @@ const classePilule = nettoyer(
   capsule
     .match(/data-capsule-glissante=""[\s\S]*?className=\{`([^`]+)`\}/)?.[1]
     ?.replace(/\$\{robeCapsule\}/, "bg-sombre-haut")
+    //  nº 261 (§1) : la classe porte désormais le ternaire de la
+    //  propriété en transition — ici la branche PLEINE LARGEUR.
+    .replace(
+      /\$\{\s*pleineLargeur[^}]*\}/,
+      "transition-transform"
+    )
 );
 /** LE CALCUL LIVRÉ, extrait du fichier : le banc rejoue CETTE
-    expression-là, jamais une réécriture. */
+    expression-là, jamais une réécriture.
+    ⚠️ nº 261 (§1) : la position n'est plus un `left` en calc() mais un
+    TRANSLATEX composé — left vaut 0, width vaut la largeur de mot, et
+    le 100 % du translateX se lit sur la pilule elle-même. La mesure
+    (getBoundingClientRect) voit la transformation : « la pilule tombe
+    SUR le mot » se vérifie exactement comme avant. */
 const gabaritLargeur = capsule.match(/const largeurMot = `([^`]+)`/)?.[1] ?? "";
-const gabaritGauche = capsule.match(/left: `([^`]+)`/)?.[1] ?? "";
+const gabaritTransform = capsule.match(/transform: `([^`]+)`/)?.[1] ?? "";
 const place = (rang, nombre) => ({
   width: gabaritLargeur
     .replace("${options.length - 1}", String(nombre - 1))
     .replace("${options.length}", String(nombre)),
-  left: gabaritGauche
-    .replace("${rang}", String(rang))
-    .replace(
-      "${largeurMot}",
-      gabaritLargeur
-        .replace("${options.length - 1}", String(nombre - 1))
-        .replace("${options.length}", String(nombre))
-    ),
+  transform: gabaritTransform.replace("${rang}", String(rang)),
 });
 
 for (const largeur of [390, 1440]) {
@@ -165,7 +179,7 @@ for (const largeur of [390, 1440]) {
         //  par le CALCUL LIVRÉ, sans une seule mesure.
         const zone = (rang, place) =>
           '<div data-zone="' + rang + '" class="' + c.zone + '">' +
-          '<span data-pilule class="' + c.pilule + '" style="left:' + place.left + ';width:' + place.width + '"></span>' +
+          '<span data-pilule class="' + c.pilule + '" style="left:0;width:' + place.width + ';transform:' + place.transform + '"></span>' +
           mot(rang === 0, "Favoris") + mot(rang === 1, "Suivis") + '</div>';
         hote.innerHTML = zone(0, c.place0) + zone(1, c.place1);
         document.body.appendChild(hote);

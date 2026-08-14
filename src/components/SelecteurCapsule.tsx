@@ -110,9 +110,38 @@ export function SelecteurCapsule<T extends string>({
     options.findIndex((option) => option.cle === valeur)
   );
   const largeurMot = `calc((100% - ${options.length - 1} * var(--rw-ecart-mots)) / ${options.length})`;
+  /*  §1 (nº 261) — LA PILULE SE DÉPLACE PAR UNE TRANSFORMATION, PLUS
+      JAMAIS PAR SA POSITION. La nº 259 avait tari les mesures — c'était
+      vrai, et ça ne suffisait pas : `left` est animé PAR LE FIL
+      PRINCIPAL, chaque image recalcule style et disposition. Or sur
+      « Ma sélection », la bascule redessine TOUT le contenu de la page
+      dans le même instant : ce travail occupe le fil, l'écran gèle, et
+      la transition — dont la pendule, elle, continue — reprend plus
+      loin. Elle part, s'arrête, repart ; et l'asymétrie vient de ce que
+      les deux sens n'ont pas la même quantité à rendre (les rangées de
+      carrousels des suivis contre des cartes).
+      Une TRANSFORMATION est composée par la carte graphique : un fil
+      encombré ne peut plus l'interrompre.
+       · `left` vaut 0 et ne bouge JAMAIS ; `width` ne bouge pas non
+         plus (les deux moitiés sont égales) : seul `transform` anime ;
+       · le `100%` du translateX se lit sur LA PILULE elle-même, qui
+         fait exactement une largeur de mot : un rang = une largeur plus
+         l'écart — la même géométrie que la nº 259, dans le repère de la
+         pilule ;
+       · GARDE-FOU (le piège de la nº 234) : la pilule est un fond
+         OPAQUE, elle ne porte AUCUN filtre d'arrière-plan — une
+         transformation sur une plaque de verre la couperait de la
+         page ; le banc le mesure ;
+       · GARDE-FOU : aucune clé sur la pilule — le nœud est RÉUTILISÉ
+         entre les deux états, sans quoi aucune transition ne
+         survivrait ; le banc vérifie l'identité du nœud.
+      Ni la durée ni la courbe ne changent. La fiche, elle, garde ses
+      transitions de position : ses deux mots n'ont pas la même largeur,
+      et son panneau ne redessine presque rien. */
   const placeCalculee = {
-    left: `calc(${rang} * (${largeurMot} + var(--rw-ecart-mots)))`,
+    left: 0,
     width: largeurMot,
+    transform: `translateX(calc(${rang} * (100% + var(--rw-ecart-mots))))`,
   };
 
   useLayoutEffect(() => {
@@ -162,8 +191,11 @@ export function SelecteurCapsule<T extends string>({
         <span
           aria-hidden="true"
           data-capsule-glissante=""
-          className={`absolute inset-y-0 rounded-full ${robeCapsule}
-                     transition-[left,width] duration-300 ease-out`}
+          //  §1 (nº 261) — en pleine largeur, SEUL `transform` est en
+          //  transition ; la fiche garde ses `left`/`width` mesurés.
+          className={`absolute inset-y-0 rounded-full ${robeCapsule} ${
+            pleineLargeur ? "transition-transform" : "transition-[left,width]"
+          } duration-300 ease-out`}
           style={
             pleineLargeur
               ? placeCalculee
