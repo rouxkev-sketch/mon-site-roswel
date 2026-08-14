@@ -294,13 +294,18 @@ titre("§3 — à la source : le champ smartphone, l'icône unique, le web intac
       ) &&
       />Filtrer<\/span>/.test(champMobilePasse)
   );
-  //  LA GRAISSE ET LA TAILLE DU TITRE « Recherche » DE LA PAGE DU
-  //  MOTEUR : les trois jetons du h1, présents sur le mot « Filtrer ».
-  const jetonsTitre = ["text-[20px]", "font-bold", "text-white"];
+  //  ⚠️ nº 264 (§1) : LA TAILLE N'EST PLUS CELLE DU TITRE — les 20 px
+  //  étaient disproportionnés dans un champ. « Filtrer » prend LA
+  //  TAILLE DU MOT DU CHAMP de recherche (relevée vivante : 16 px,
+  //  `text-base` — le jeton même que le champ passe en taillePolice).
+  //  La graisse et le blanc du titre restent.
+  const jetonsTitre = ["font-bold", "text-white"];
   const spanFiltrer = menusNus.match(/<span className="([^"]+)">Filtrer/)?.[1];
   verif(
-    "« Filtrer » porte la graisse et la taille du titre « Recherche » du moteur",
+    "« Filtrer » porte la graisse et le blanc du titre, à la taille du mot du champ",
     jetonsTitre.every((j) => (spanFiltrer ?? "").includes(j)) &&
+      (spanFiltrer ?? "").includes("text-base") &&
+      /taillePolice="text-base"/.test(menusNus) &&
       jetonsTitre.every((j) =>
         (pageMoteur.match(/<h1 className="([^"]+)"/)?.[1] ?? "").includes(j)
       ),
@@ -365,7 +370,10 @@ titre("§3 — injecté (390 px) : blanc gras 20 px, icône grise, pas de flèch
     );
     verif(
       "« Filtrer » : 20 px, gras (700), blanc",
-      vu.mot.taille === "20px" &&
+      //  ⚠️ nº 264 (§1) : 16 px désormais — la taille du mot du champ
+      //  de recherche (text-base), plus celle d'un titre. Gras et
+      //  blanc inchangés.
+      vu.mot.taille === "16px" &&
         vu.mot.graisse === "700" &&
         vu.mot.couleur === "rgb(255, 255, 255)",
       `${vu.mot.taille} · ${vu.mot.graisse} · ${vu.mot.couleur}`

@@ -381,7 +381,14 @@ export function PageFavoris({
                 bord (2 px). C'est désormais LA MÊME CHAÎNE DE CLASSES
                 (`CLASSES_GRILLE_CARTES`, exportée par la mosaïque) —
                 mêmes cartes, même grille, une seule écriture. */
-            <ul className={`mt-6 ${CLASSES_GRILLE_CARTES}`}>
+            /*  §2 (nº 264) — PLUS AUCUNE MARGE AJOUTÉE SOUS LE BLOC DU
+                TITRE : la recherche enchaîne sa grille directement sous
+                le `pb` de LigneResultats (relevé vivant : 20 px au
+                doigt, 24 sur le web, dans les DEUX états) — le `mt-6`
+                d'ici s'y AJOUTAIT, et le bloc ne respectait plus les
+                marges de la page de recherche. Même écriture, même
+                rythme, plus rien d'ajouté. */
+            <ul className={CLASSES_GRILLE_CARTES}>
               {ensemblesVisibles.map(({ cle, fiche, photo }) => (
                 <li key={cle}>
                   {/*  ⚠️ LA CARTE DE LA MOSAÏQUE, SANS VARIANTE

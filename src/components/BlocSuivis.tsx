@@ -78,7 +78,11 @@ export function BlocSuivis({
         reviennent que quand le classement de la nº 243 a quelque chose
         à dire — une session guest classe les artistes en « Cette
         semaine », « À venir », « Tous les suivis ». */
-    <div data-section-suivis="" className="mt-4">
+    /*  §2 (nº 264) — PLUS AUCUNE MARGE AJOUTÉE SOUS LE BLOC DU TITRE :
+        le `pb` de LigneResultats suffit, comme sur la page de
+        recherche (relevé vivant : 20 px au doigt, 24 sur le web) — le
+        `mt-4` d'ici s'y ajoutait. */
+    <div data-section-suivis="">
       {groupes.map((groupe, rang) => (
         /*  ⚠️ UN GROUPE VIDE NE REND RIEN — ni titre, ni espace : il
              n'est même pas dans la liste (voir `groupesDeSuivis`).
@@ -116,8 +120,19 @@ export function BlocSuivis({
                20 px d'écart interne, les 34 px de la nº 244 ne se
                distinguaient plus assez (14 px de différence) — la
                hiérarchie doit se LIRE. Le doigt garde ses 34 px
-               (écart interne 8 : la différence y est nette). */}
-          <ul className="mt-5 grid gap-[34px] lg:gap-12 grid-cols-[minmax(0,1fr)]">
+               (écart interne 8 : la différence y est nette).
+               §3 (nº 264) — L'ESPACEMENT WEB S'ÉLARGIT DE 30 % :
+               48 × 1,3 = 62,4 → 62 px, le pixel entier le plus
+               proche. Le doigt ne bouge pas.
+               §2 (nº 264) — LE `mt-5` N'EXISTE QUE SOUS UN TITRE DE
+               GROUPE : groupe unique, pas de titre — la liste part du
+               `pb` du bloc de titre, comme la grille de la
+               recherche. */}
+          <ul
+            className={`${
+              groupes.length > 1 ? "mt-5 " : ""
+            }grid gap-[34px] lg:gap-[62px] grid-cols-[minmax(0,1fr)]`}
+          >
             {groupe.suivis.map((suivi) => (
               <li key={suivi.id}>
                 <BlocDUnSuivi suivi={suivi} favoris={favoris} />
@@ -278,9 +293,24 @@ function BlocDUnSuivi({
  * `(100% − les écarts) / N,4` montre N vignettes pleines et 0,4 de la
  * suivante — le dépassement demandé. Les écarts restent les 6 px de la
  * nº 244 (`gap-1.5`), les angles droits ceux de la nº 247.
+ *
+ * §4 (nº 264) — AU DOIGT, LE DÉPASSEMENT DÉCIDE DE LA TAILLE, plus
+ * l'inverse : la vignette de droite ne montre que 10 % de sa largeur
+ * AU BORD DE L'ÉCRAN. La rangée déborde des marges (§3) : la largeur
+ * disponible au repos va du bord de contenu gauche au bord d'écran
+ * droit — 100 % (le contenu) + 16 px (la marge `px-4` de la page).
+ * Trois pleines, trois écarts de 6 px, et 10 % de la quatrième :
+ * `3,1 × case + 18 px = 100 % + 16 px`, d'où
+ * `case = (100 % + 16 px − 18 px) / 3,1`. AUCUNE LARGEUR EN DUR : la
+ * règle tient à toutes les largeurs de téléphone ; les vignettes s'en
+ * trouvent agrandies, le format 4/5 suit (CADRE_PHOTO_PORTFOLIO).
+ * ⚠️ LE WEB NE CHANGE PAS : ses pourcentages se lisent sur la BOÎTE DE
+ * CONTENU de la rangée (le rembourrage du débordement n'y entre pas,
+ * c'est la règle des pourcentages en flexbox) — mêmes largeurs, mêmes
+ * hauteurs qu'avant le débordement.
  */
 const CASE_RANGEE =
-  "shrink-0 snap-center basis-[calc((100%-12px)/3.4)] " +
+  "shrink-0 snap-center basis-[calc((100%+16px-18px)/3.1)] " +
   "sm:basis-[calc((100%-18px)/4.4)] lg:basis-[calc((100%-24px)/5.4)] " +
   "xl:basis-[calc((100%-30px)/6.4)]";
 
@@ -307,10 +337,23 @@ function RangeeDeVignettes({
    * peut être plus courte qu'une largeur — c'est la fin de la rangée,
    * pas un pas raté.
    */
+  /*  §3 (nº 264) — LA LARGEUR DE CONTENU, PAS LE `clientWidth` : la
+      rangée déborde désormais des marges (rembourrage interne), et
+      `clientWidth` les compte. Une PAGE reste une largeur de CONTENU —
+      le pas de la nº 253 ne change pas d'un pixel. */
+  const largeurContenu = (cadre: HTMLElement) => {
+    const style = getComputedStyle(cadre);
+    return (
+      cadre.clientWidth -
+      parseFloat(style.paddingLeft) -
+      parseFloat(style.paddingRight)
+    );
+  };
+
   const defiler = (sens: 1 | -1) => {
     const cadre = zone.current;
     if (!cadre) return;
-    const cible = Math.max(0, etat.page + sens) * cadre.clientWidth;
+    const cible = Math.max(0, etat.page + sens) * largeurContenu(cadre);
     cadre.scrollTo({ left: cible, behavior: "smooth" });
   };
 
@@ -334,6 +377,11 @@ function RangeeDeVignettes({
     droite: false,
     pages: 1,
     page: 0,
+    //  §5 (nº 264) — le décalage du bord droit des pointillés : la
+    //  distance entre le bord droit du CONTENU et celui de la dernière
+    //  vignette ENTIÈREMENT visible — jamais le bord de l'écran,
+    //  jamais une vignette coupée. Lu dans le DOM à chaque relevé.
+    decalage: 0,
   });
   useEffect(() => {
     const cadre = zone.current;
@@ -349,14 +397,31 @@ function RangeeDeVignettes({
         ? seconde.getBoundingClientRect().left -
           premiere!.getBoundingClientRect().left
         : largeurCase;
-      const visibles = pas > 0 ? Math.max(1, Math.round(cadre.clientWidth / pas)) : 1;
+      //  §3 (nº 264) — le nombre visible et la page se lisent sur la
+      //  LARGEUR DE CONTENU : le débordement des marges (rembourrage)
+      //  ne fait pas partie d'une page.
+      const contenu = largeurContenu(cadre);
+      const visibles = pas > 0 ? Math.max(1, Math.round(contenu / pas)) : 1;
       const total = cadre.children.length;
+      //  §5 (nº 264) — le bord droit de la dernière vignette PLEINE :
+      //  la plus à droite dont le bord droit reste dans le contenu.
+      const boite = cadre.getBoundingClientRect();
+      const droiteContenu =
+        boite.right - parseFloat(getComputedStyle(cadre).paddingRight);
+      let bordDerniere = 0;
+      for (const enfant of cadre.children) {
+        const droite = enfant.getBoundingClientRect().right;
+        if (droite <= droiteContenu + 1 && droite > bordDerniere) {
+          bordDerniere = droite;
+        }
+      }
       setEtat({
         gauche: cadre.scrollLeft > 1,
         droite: cadre.scrollLeft + cadre.clientWidth < cadre.scrollWidth - 1,
         pages: Math.max(1, Math.ceil(total / visibles)),
-        page: cadre.clientWidth
-          ? Math.round(cadre.scrollLeft / cadre.clientWidth)
+        page: contenu ? Math.round(cadre.scrollLeft / contenu) : 0,
+        decalage: bordDerniere
+          ? Math.max(0, Math.round(droiteContenu - bordDerniere))
           : 0,
       });
     };
@@ -370,42 +435,37 @@ function RangeeDeVignettes({
     };
   }, [bande.photos.length]);
 
-  /*  §4 (nº 254) — LE BANDEAU DEVIENT UN BOUTON ROND. Le bandeau
-      pleine hauteur de la nº 252, posé en permanence sur les photos,
-      datait l'interface : ce qui se fait — Netflix, Apple — c'est RIEN
-      au repos, un objet discret au survol.
-       · un rond d'environ 40 px (w-10 h-10), dans LE VERRE LE PLUS
-         LÉGER du site (`data-verre-fenetre`, 22 % + flou 40 — une
-         écriture existante, aucune seconde) ;
-       · la flèche en son centre, écriture unique des icônes
-         (`currentColor`) ;
-       · centré en hauteur SANS transformation (`inset-y-0 my-auto
-         h-10` — un `translate` couperait la plaque de la page et elle
-         redeviendrait un disque opaque : le piège payé trois passes) ;
-       · À CHEVAL sur le bord de la rangée (la moitié dans la marge de
-         la page, 20 < 24 px de `px-6` : rien ne déborde du document) —
-         il ne couvre jamais qu'une fraction d'une vignette ;
+  /*  §6 (nº 264) — LE CHEVRON SE DÉSHABILLE. Le disque de verre de la
+      nº 254 faisait daté : un bouton collé sur la photo. Même
+      emplacement, même comportement, plus d'habit :
+       · un CHEVRON NU, blanc — ni disque, ni verre, ni fond, ni
+         contour, ni halo ;
+       · plus haut que large : 24 × 12, au trait de l'écriture unique
+         des icônes (1,8 — celui d'Icones.tsx) ;
+       · il SE POSE SUR LE FONDU du bord (§3) : la zone du bouton est
+         la marge même où vit le voile — le fondu efface la vignette,
+         le chevron dit la suite, chacun donne son contraste à
+         l'autre ;
        · AU SURVOL DE LA RANGÉE seulement (`group-hover`, par la
-         VISIBILITÉ — ni fondu d'opacité, ni transition, ni
-         `will-change`) ; monté et démonté selon la position, comme à
-         la nº 252 ; au doigt, il n'existe pas (`pointer-fine`). */
+         VISIBILITÉ — aucun fondu d'opacité : monté et démonté, comme
+         les bandeaux de la nº 252) ; au doigt, il n'existe pas
+         (`pointer-fine`). */
   const bandeau = (sens: 1 | -1) => (
     <button
       type="button"
       aria-label={sens === 1 ? "Vignettes suivantes" : "Vignettes précédentes"}
       data-bandeau-defilement={sens === 1 ? "droite" : "gauche"}
       onClick={() => defiler(sens)}
-      data-verre-fenetre=""
       className={`hidden pointer-fine:flex invisible group-hover:visible
-        absolute inset-y-0 my-auto z-[2] h-10 w-10 rounded-full ${
-          sens === 1 ? "right-0 -mr-5" : "left-0 -ml-5"
-        } items-center justify-center text-sombre-texte`}
+        absolute inset-y-0 z-[2] ${
+          sens === 1 ? "-right-4 sm:-right-6" : "-left-4 sm:-left-6"
+        } w-4 sm:w-6 items-center justify-center text-white`}
     >
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <svg width="12" height="24" viewBox="0 0 12 24" fill="none" aria-hidden="true">
         <path
-          d={sens === 1 ? "M9.5 5.5 16 12l-6.5 6.5" : "M14.5 5.5 8 12l6.5 6.5"}
+          d={sens === 1 ? "M3 4l6 8-6 8" : "M9 4l-6 8 6 8"}
           stroke="currentColor"
-          strokeWidth="2.2"
+          strokeWidth="1.8"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
@@ -413,26 +473,64 @@ function RangeeDeVignettes({
     </button>
   );
 
+  /*  §3 (nº 264) — LE FONDU ANTHRACITE DES BORDS. La rangée déborde
+      jusqu'aux bords de l'écran (voir la liste), et chaque MARGE porte
+      un voile vertical de la couleur du fond du site — #1A1A1D
+      (`sombre-fond`), à 90 % vers rien : légèrement transparent, la
+      vignette S'EFFACE DANS LA PAGE au lieu d'être coupée net.
+      ⚠️ L'INTERDIT DE LA nº 250 EST LEVÉ PAR LE PROPRIÉTAIRE (nº 264) :
+      l'échec d'alors était la COULEUR — un fondu clair qu'on ne
+      comprenait pas. L'anthracite dit la vérité : c'est la page qui
+      recouvre la vignette.
+      Celui de droite existe tant qu'il reste quelque chose à voir,
+      celui de gauche dès qu'on a fait défiler — les états mêmes des
+      chevrons (montés et démontés ensemble). Jamais d'interception de
+      clic (`pointer-events-none`), et le chevron (z-[2]) se pose
+      dessus (z-[1]). */
+  const voile = (sens: 1 | -1) => (
+    <div
+      aria-hidden="true"
+      data-voile-rangee={sens === 1 ? "droite" : "gauche"}
+      className={`pointer-events-none absolute inset-y-0 z-[1] w-4 sm:w-6 ${
+        sens === 1
+          ? "-right-4 sm:-right-6 bg-gradient-to-l"
+          : "-left-4 sm:-left-6 bg-gradient-to-r"
+      } from-sombre-fond/90 to-sombre-fond/0`}
+    />
+  );
+
   return (
     /*  §2 (nº 252) — l'enveloppe ne contient QUE la rangée (la marge
         haute des flèches de la nº 250 est partie avec elles) : les
         bandeaux `inset-y-0` épousent donc exactement la hauteur des
         images, et l'identité retrouve sa bande juste dessous. */
-    /*  §2 (nº 254) — 20 px entre l'identité et sa bande SUR LE WEB
-        (les 8 px de la nº 252 collaient le bloc) ; le doigt garde ses
-        8 px. La hiérarchie tient : entre deux artistes, 48 px sur le
-        web (voir la grille des blocs). */
-    <div className="group relative mt-2 lg:mt-5">
+    /*  §2 (nº 254) — 20 px entre l'identité et sa bande sur le web ;
+        §4 (nº 264) — LE DOIGT REJOINT LES 20 px : ses 8 px collaient
+        la photo de profil à la rangée agrandie. Une seule valeur
+        désormais (`mt-5`). */
+    <div className="group relative mt-5">
       <ul
         ref={zone}
         data-bande-suivi=""
         data-cas={bande.cas}
         /*  §2 (nº 244) — 6 px d'écart. Le défilement est NATIF, la
-            barre est masquée (elle n'apprendrait rien), et
-            l'accrochage au centre laisse dépasser les deux voisines
-            (§4, nº 250 : c'est LE DÉPASSEMENT SEUL qui dit la suite —
-            aucun dégradé, aucun voile de bord). */
-        className="flex gap-1.5 overflow-x-auto snap-x snap-mandatory
+            barre est masquée (elle n'apprendrait rien), l'accrochage
+            au centre laisse dépasser les deux voisines.
+            §3 (nº 264) — LA RANGÉE DÉBORDE DE SON CADRE, à gauche et à
+            droite, jusqu'aux bords de l'écran : marges NÉGATIVES de la
+            largeur des marges de la page (`-mx-4 sm:-mx-6`), rendues
+            en REMBOURRAGE interne (`px-4 sm:px-6`) — au repos la
+            première vignette reste alignée sur le contenu, et la
+            partielle se prolonge dans la marge, sous le fondu (§3).
+            Les pourcentages des cases se lisent sur la BOÎTE DE
+            CONTENU (le rembourrage n'y entre pas) : les largeurs du
+            web ne bougent pas d'un pixel.
+            ⚠️ PIÈGE DE LA nº 228 : le débordement vit DANS le
+            défilement de la rangée (`overflow-x-auto`), jamais dans la
+            page — `scrollWidth` du document reste égal à
+            `clientWidth`, le banc le mesure. */
+        className="flex gap-1.5 -mx-4 px-4 sm:-mx-6 sm:px-6
+                   overflow-x-auto snap-x snap-mandatory
                    [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {bande.photos.map((photo) => (
@@ -473,15 +571,21 @@ function RangeeDeVignettes({
                    c'est la lisibilité du glyphe sur photo claire comme
                    sombre (la décision de la nº 141-6A), PAS un halo ni
                    un fond : aucun cercle, aucune plaque derrière lui.
-                   §3 (nº 250) — SA JUSTE TAILLE : UN HUITIÈME de la
-                   largeur de la vignette (`w-[12.5%]` — il suit la
-                   vignette, il ne l'écrase jamais), tenu à 8 px des
-                   deux bords (`bottom-2 right-2`). */}
+                   §3 (nº 250) — SA TAILLE SUIT LA VIGNETTE, il ne
+                   l'écrase jamais ; tenu à 8 px des deux bords
+                   (`bottom-2 right-2`).
+                   §7 (nº 264) — LA PROPORTION DESCEND DE 12,5 À 9 % :
+                   au huitième, le cœur d'une vignette web (~250 px)
+                   faisait 31 px — PLUS GROS que celui des cartes de
+                   favoris (24 px, BoutonCoeurPhoto), sur une photo
+                   bien plus petite. À 9 %, il repasse nettement
+                   dessous et rend la photo. Les 8 px des bords ne
+                   bougent pas. */}
               {bande.cas === "aimees" && (
                 <span
                   data-coeur-aime=""
                   aria-hidden="true"
-                  className="pointer-events-none absolute bottom-2 right-2 w-[12.5%]"
+                  className="pointer-events-none absolute bottom-2 right-2 w-[9%]"
                 >
                   <IconeCoeur
                     taille={24}
@@ -516,31 +620,39 @@ function RangeeDeVignettes({
           </li>
         )}
       </ul>
+      {etat.gauche && voile(-1)}
+      {etat.droite && voile(1)}
       {etat.gauche && bandeau(-1)}
       {etat.droite && bandeau(1)}
-      {/*  §4 (nº 253) — L'INDICATEUR DE PAGES, en haut à droite de la
-           rangée : autant de repères que de pages, celui en cours
-           distingué. Il ne s'affiche qu'à partir de deux pages — un
-           repère unique n'apprendrait rien. Posé dans l'angle du
-           COMPTEUR du carrousel (nº 198-§4) ; il est absolu : son
-           apparition ne déplace rien. */}
+      {/*  §4 (nº 253) — L'INDICATEUR DE PAGES : autant de repères que
+           de pages, celui en cours distingué ; dès deux pages
+           seulement. Absolu : son apparition ne déplace rien.
+           §5 (nº 264) — AU-DESSUS DE LA RANGÉE, à droite
+           (`bottom-full`, 6 px au-dessus des photos — l'écart même de
+           la rangée), et SON BORD DROIT S'ALIGNE sur celui de la
+           dernière vignette ENTIÈREMENT visible (`etat.decalage`, lu
+           dans le DOM) — jamais le bord de l'écran, jamais une
+           vignette coupée. SUR LE WEB SEULEMENT (`pointer-fine`) : au
+           doigt on fait glisser, les repères sont SUPPRIMÉS. */}
       {etat.pages > 1 && (
         <div
           data-indicateur-pages={etat.pages}
           data-page-courante={etat.page}
           aria-hidden="true"
-          className="pointer-events-none absolute top-3 right-3 z-[3] flex items-center gap-1"
+          style={{ right: etat.decalage }}
+          className="pointer-events-none absolute bottom-full mb-1.5 z-[3]
+                     hidden pointer-fine:flex items-center gap-1"
         >
           {/*  §5 (nº 254) — DES TIRETS, un par page : 16 × 2 px, 4 px
                d'écart (le gap-1 du conteneur), la page en cours en
-               blanc plein, les autres très atténuées. Aucun rose. La
-               même ombre très douce que les ronds du carrousel
-               (nº 221) : elle n'existe que pour rester lisible sur une
-               photo blanche. */}
+               blanc plein, les autres très atténuées. Aucun rose.
+               (nº 264 : au-dessus de la rangée, ils ne couvrent plus
+               de photo — l'ombre de lisibilité de la nº 221 n'a plus
+               d'objet et s'en va.) */}
           {Array.from({ length: etat.pages }).map((_, rang) => (
             <span
               key={rang}
-              className={`h-0.5 w-4 rounded-full shadow-[0_0_2px_rgba(0,0,0,0.4)] ${
+              className={`h-0.5 w-4 rounded-full ${
                 rang === etat.page ? "bg-white" : "bg-white/30"
               }`}
             />

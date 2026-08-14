@@ -209,7 +209,14 @@ export function MenusSelection({
         champMobile={
           <>
             <IconeReglages taille={20} classe="shrink-0 text-sombre-texte-doux" />
-            <span className="text-[20px] font-bold text-white">Filtrer</span>
+            {/*  §1 (nº 264) — LA TAILLE DU MOT DU CHAMP, PAS D'UN
+                 TITRE : les 20 px de la nº 262 (empruntés au titre de
+                 la page du moteur) étaient disproportionnés dans un
+                 champ. RELEVÉ sur le champ de recherche de l'accueil,
+                 vivant : 16 px — c'est `text-base`, le jeton même que
+                 ce champ passe en `taillePolice` : ils ne peuvent pas
+                 diverger. Blanc et gras, inchangés. */}
+            <span className="text-base font-bold text-white">Filtrer</span>
           </>
         }
         /*  §3 (nº 262) — la MÊME icône à gauche du titre de la
