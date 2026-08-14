@@ -332,8 +332,11 @@ export function PageFavoris({
            n'a plus de catégorie, et `libelleExplorer` rendait « » pour
            un style pourtant choisi — le critère disparaissait de la
            page. Une seule écriture, deux endroits. */}
+      {/*  §2 (nº 263) — le titre est un MOT NU depuis la nº 253 :
+           `titreControle`, réduit à l'identité, est parti avec le
+           titre inactif qu'il servait encore. */}
       <LigneResultats
-        titre={titreControle(surLesFavoris ? "Mes favoris" : "Mes suivis")}
+        titre={surLesFavoris ? "Mes favoris" : "Mes suivis"}
         sousTitre={libelleDuChoix(choix) || null}
       />
 
@@ -433,23 +436,17 @@ export function PageFavoris({
         <BlocSuivis suivis={suivisVisibles} favoris={photos} />
       )}
 
-      {/* ---------- LE TITRE INACTIF (§3, nº 249), WEB SEULEMENT ----
-           Les DEUX titres sont les contrôles : celui de la recherche
-           en cours est en tête de page, l'AUTRE attend ici, même
-           écriture (`LigneResultats`), même chevron, même fenêtre de
-           menu — c'est la porte vers l'autre recherche. En `h2` : une
-           page n'a qu'un titre. Sur smartphone il n'existe pas : la
-           barre garde son bandeau, qui est la commande (§3). */}
-      {/*  §1 (nº 253) — LE SECOND TITRE ne vit que SUR LE WEB, en mot
-           nu : au doigt, la BARRE porte déjà les deux titres, et les
-           répéter dans la page ferait doublon. */}
-      <div data-titre-inactif="" className="hidden lg:block">
-        <LigneResultats
-          balise="h2"
-          titre={titreControle(surLesFavoris ? "Mes suivis" : "Mes favoris")}
-          sousTitre={null}
-        />
-      </div>
+      {/* ---------- LE TITRE INACTIF EST PARTI (§2, nº 263) ----------
+           LA CAUSE DU RELEVÉ (« Mes suivis » traînait en bas de la
+           page, sur le web) : un titre rendu HORS des blocs
+           conditionnels. À la nº 249 c'était un CONTRÔLE — le titre de
+           l'autre recherche, en menu, la porte pour y aller ; à la
+           nº 253 la commande est retournée à la barre et il est devenu
+           un MOT NU (`titreControle`) : il avait perdu sa raison
+           d'être, pas sa place. Depuis la nº 247 les deux sections
+           sont exclusives — sur « Favoris », RIEN des suivis ne se
+           rend, ni titre ni espace ; le bloc entier est donc retiré,
+           et la symétrie vaut sur « Suivis ». */}
 
       {/* `key` : chaque ouverture repart de L'ENSEMBLE ouvert, jamais
           de l'état d'une fiche précédente.
@@ -483,38 +480,4 @@ function cleEnsembleFavori(photo: PhotoFavorite): string {
   return `${photo.tatoueurSlug}·${cleDEnsemble(photo)}`;
 }
 
-/**
- * LE TITRE-CONTRÔLE (§3, nº 249)
- * ==================================================================
- * SUR SMARTPHONE, le titre est UN MOT : la commande reste le bandeau
- * de la barre, avec son repli — rien ne change de ce côté.
- * SUR LE WEB, LE TITRE EST LE MENU. Le bloc à deux menus de la barre
- * (nº 245/246) faisait doublon : le titre annonce déjà « Mes suivis ·
- * Réalisations · Abstrait » — c'est donc LUI qui s'ouvre. Rien n'est
- * redessiné : c'est `MenuDeroulant`, LE menu de la maison — son
- * chevron (la flèche qu'il porte depuis toujours, celle qui dit qu'il
- * s'ouvre), son panneau `[data-verre-menu]`, et le drapeau `repliable`
- * SANS LEQUEL ni les portes de catégorie ni la sous-porte « Cultures
- * du monde » n'existent (la leçon payée à la nº 247-§3).
- *  · `libelleValeur` fige le texte du champ sur LE NOM DU MENU — le
- *    critère choisi, lui, s'écrit dans le sous-titre, comme sur la
- *    page de recherche ;
- *  · la typographie est CELLE DU TITRE : le bouton hérite de la
- *    police de son heading (le socle du projet fait hériter les
- *    boutons), aucune valeur n'est écrite ici ;
- *  · `-ml-4` rend le rembourrage gauche du champ (`pl-4`) : le texte
- *    du titre s'aligne au pixel sur le sous-titre et sur le titre
- *    smartphone — une compensation de boîte, pas un choix graphique.
- */
-/**
- * §1 (nº 253) — LE TITRE EST UN MOT NU, AUX DEUX LARGEURS.
- * ------------------------------------------------------------------
- * La commande vit dans LA BARRE : l'encadré à deux menus sur le web,
- * les deux titres-menus au doigt (voir MenusSelection). La page, elle,
- * ne fait plus qu'ANNONCER — le contrôle qu'elle portait depuis la
- * nº 249 est parti avec sa raison d'être.
- */
-function titreControle(nom: string): React.ReactNode {
-  return nom;
-}
 

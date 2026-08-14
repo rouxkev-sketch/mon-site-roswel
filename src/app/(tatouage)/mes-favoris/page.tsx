@@ -7,7 +7,8 @@ import { BarreSelection } from "@/components/BarreSelection";
 import { PageFavoris } from "@/components/PageFavoris";
 import { entreesDesStyles, entreesDuFiltre } from "@/lib/filtres-selection";
 import { comptesDesFavoris, comptesDesSuivis } from "@/lib/selection-suivis";
-import { COOKIE_TEXTE, phototequeDuCookie } from "@/lib/vue-phototheque";
+import { cleCookieTexte, phototequeDuCookie } from "@/lib/vue-phototheque";
+import { SURFACE_SELECTION } from "@/lib/surface-affichage";
 import { FournisseurAffichageServi } from "@/components/AffichageMosaique";
 
 /**
@@ -73,8 +74,12 @@ export default async function PageMesFavoris() {
         fournisseur, le HTML montrait le texte des cartes et le
         navigateur le retirait après coup — le saut du §2. */
     <FournisseurAffichageServi
+      /*  §1 (nº 263) — LE COOKIE DE CETTE SURFACE-CI : « Ma sélection »
+          a sa propre mémoire de mise en page, la recherche la sienne
+          (page.tsx) — retirer le texte sur l'une ne touche plus
+          l'autre. Même mécanisme, deux clés (cleCookieTexte). */
       phototheque={phototequeDuCookie(
-        (await cookies()).get(COOKIE_TEXTE)?.value
+        (await cookies()).get(cleCookieTexte(SURFACE_SELECTION))?.value
       )}
     >
       {/* ⚠️ LE BLOC DE RECHERCHE N'A RIEN À FAIRE ICI (nº 245-§1) :

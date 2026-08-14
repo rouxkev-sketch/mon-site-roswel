@@ -49,6 +49,11 @@
  */
 
 import { SUFFIXE_COOKIE_AFFICHAGE } from "@/lib/colonnes-mosaique";
+import {
+  cleDeSurface,
+  surfaceCourante,
+  type SurfaceAffichage,
+} from "@/lib/surface-affichage";
 
 const EVENEMENT = "yokofolio-vue-phototheque-changee";
 
@@ -56,10 +61,19 @@ const EVENEMENT = "yokofolio-vue-phototheque-changee";
 export const PARAMETRE_TEXTE = "texte";
 
 /** LE COOKIE DE LA MISE EN PAGE (§2, nº 257) — deux mots, aucune
-    donnée personnelle. Le frère de `yf_colonnes`. */
+    donnée personnelle. Le frère de `yf_colonnes`.
+    §1 (nº 263) — IL N'EST PLUS UNIQUE : chaque surface a le sien
+    (`cleCookieTexte`), la recherche garde la clé nue. */
 export const COOKIE_TEXTE = "yf_texte";
 export const TEXTE_SANS = "sans";
 export const TEXTE_AVEC = "avec";
+
+/** LE NOM DU COOKIE D'UNE SURFACE — la même écriture pour le serveur
+    (page.tsx, mes-favoris/page.tsx) et pour ce magasin : ils ne
+    peuvent pas diverger. */
+export function cleCookieTexte(surface: SurfaceAffichage): string {
+  return cleDeSurface(COOKIE_TEXTE, surface);
+}
 
 /**
  * LE COOKIE RELU — et jamais cru sur parole : n'importe qui peut
@@ -78,7 +92,10 @@ function memoriser(voulue: boolean) {
     //  §2 (nº 257) — LE COOKIE REMPLACE LE `sessionStorage` de la
     //  nº 212-§3 : il dit la même chose, mais le serveur le voit. Une
     //  seule mémoire, donc rien à tenir d'accord.
-    document.cookie = `${COOKIE_TEXTE}=${
+    //  §1 (nº 263) — LA CLÉ EST CELLE DE LA SURFACE : un choix fait sur
+    //  « Ma sélection » ne s'écrit jamais dans la mémoire de la
+    //  recherche, ni l'inverse.
+    document.cookie = `${cleCookieTexte(surfaceCourante())}=${
       voulue ? TEXTE_SANS : TEXTE_AVEC
     }${SUFFIXE_COOKIE_AFFICHAGE}`;
   } catch {
@@ -86,12 +103,13 @@ function memoriser(voulue: boolean) {
   }
 }
 
-function memorisee(): boolean | null {
+function memorisee(surface: SurfaceAffichage): boolean | null {
   try {
+    const cle = cleCookieTexte(surface);
     const lue = document.cookie
       .split("; ")
-      .find((morceau) => morceau.startsWith(`${COOKIE_TEXTE}=`))
-      ?.slice(COOKIE_TEXTE.length + 1);
+      .find((morceau) => morceau.startsWith(`${cle}=`))
+      ?.slice(cle.length + 1);
     return lue === TEXTE_SANS ? true : lue === TEXTE_AVEC ? false : null;
   } catch {
     return null;
@@ -105,15 +123,22 @@ export function reprendrePhototheque() {
   //  déjà rendu la bonne mise en page (il lit le cookie) et la
   //  première lecture du magasin dit la même chose. On relit, on
   //  prévient — et si l'adresse portait le paramètre, on le retient.
-  valeur = depuisLAdresse() ?? memorisee() ?? false;
+  const surface = surfaceCourante();
+  valeurs[surface] = depuisLAdresse() ?? memorisee(surface) ?? false;
   if (new URLSearchParams(window.location.search).has(PARAMETRE_TEXTE)) {
-    memoriser(valeur);
+    memoriser(valeurs[surface]);
   }
   window.dispatchEvent(new Event(EVENEMENT));
 }
 
-/** LA source de vérité entre deux relectures de l'adresse. */
-let valeur: boolean | null = null;
+/** LA source de vérité entre deux relectures de l'adresse.
+    §1 (nº 263) — UNE PAR SURFACE : le module survit aux navigations du
+    routeur, et une valeur unique portait le choix d'une page sur
+    l'autre — c'était le troisième étage du défaut, avec le cookie. */
+const valeurs: Record<SurfaceAffichage, boolean | null> = {
+  recherche: null,
+  selection: null,
+};
 
 /** La lecture de l'adresse — `null` quand elle ne dit rien (c'est
     alors au cookie de parler, §2 nº 257). */
@@ -144,23 +169,35 @@ function ecrireDansLAdresse(voulue: boolean) {
   }
 }
 
-/** La vue en cours — celle de l'adresse. */
-export function lirePhototheque(): boolean {
+/** La vue en cours — celle de l'adresse.
+    §1 (nº 263) — DE LA SURFACE DEMANDÉE (la page en cours par défaut).
+    L'adresse n'appartient qu'à la page qui la porte : pour une surface
+    étrangère (la barre qui bâtit une adresse de recherche depuis
+    « Ma sélection »), seule sa mémoire parle. */
+export function lirePhototheque(
+  surface: SurfaceAffichage = surfaceCourante()
+): boolean {
   //  §2 (nº 257) — L'ADRESSE, PUIS LE COOKIE : la première lecture du
   //  navigateur doit dire EXACTEMENT ce que le serveur vient de
   //  rendre, sans quoi le premier rendu se corrige à l'écran — le
   //  saut de page qu'on vient de supprimer.
-  if (valeur === null) valeur = depuisLAdresse() ?? memorisee() ?? false;
-  return valeur;
+  if (valeurs[surface] === null) {
+    valeurs[surface] =
+      (surface === surfaceCourante() ? depuisLAdresse() : null) ??
+      memorisee(surface) ??
+      false;
+  }
+  return valeurs[surface];
 }
 
 /**
  * POSER LA VUE VOULUE — explicite, donc idempotente (nº 164) : deux
- * fois la même demande ne font qu'un seul changement.
+ * fois la même demande ne font qu'un seul changement. Toujours SUR LA
+ * SURFACE EN COURS : une bascule agit là où elle vit (nº 263-§1).
  */
 export function poserPhototheque(voulue: boolean) {
   if (lirePhototheque() === voulue) return;
-  valeur = voulue;
+  valeurs[surfaceCourante()] = voulue;
   ecrireDansLAdresse(voulue);
   memoriser(voulue);
   window.dispatchEvent(new Event(EVENEMENT));
@@ -175,7 +212,8 @@ export function basculerPhototheque() {
     raison contre la mémoire : on relit alors, et alors seulement. */
 export function souscrirePhototheque(rappel: () => void) {
   const auRetour = () => {
-    valeur = depuisLAdresse() ?? memorisee() ?? false;
+    const surface = surfaceCourante();
+    valeurs[surface] = depuisLAdresse() ?? memorisee(surface) ?? false;
     rappel();
   };
   window.addEventListener(EVENEMENT, rappel);

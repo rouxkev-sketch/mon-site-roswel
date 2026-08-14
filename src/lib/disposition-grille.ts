@@ -34,6 +34,12 @@
  * changer (première lecture, popstate, remise au pas par l'accueil).
  */
 
+import {
+  cleDeSurface,
+  surfaceCourante,
+  type SurfaceAffichage,
+} from "@/lib/surface-affichage";
+
 const EVENEMENT = "yokofolio-disposition-grille-changee";
 
 /** Le paramètre d'adresse — écrit seulement quand il diffère du défaut. */
@@ -57,17 +63,21 @@ export const PARAMETRE_DISPOSITION = "disposition";
  */
 const CLE_SESSION = "yokofolio-disposition-visite";
 
+//  §1 (nº 263) — LE FILET N'EST PLUS UNIQUE : une clé par surface
+//  (`cleDeSurface`, la même écriture que le cookie du texte). Choisir
+//  la pleine largeur sur la recherche n'écrit plus dans la mémoire de
+//  « Ma sélection », ni l'inverse.
 function memoriser(voulue: DispositionGrille) {
   try {
-    sessionStorage.setItem(CLE_SESSION, voulue);
+    sessionStorage.setItem(cleDeSurface(CLE_SESSION, surfaceCourante()), voulue);
   } catch {
     // Stockage refusé : la préférence vivra le temps de la page.
   }
 }
 
-function memorisee(): DispositionGrille | null {
+function memorisee(surface: SurfaceAffichage): DispositionGrille | null {
   try {
-    const lue = sessionStorage.getItem(CLE_SESSION);
+    const lue = sessionStorage.getItem(cleDeSurface(CLE_SESSION, surface));
     return lue === "une" || lue === "deux" ? lue : null;
   } catch {
     return null;
@@ -80,33 +90,41 @@ function memorisee(): DispositionGrille | null {
  * rendu servi (voir IndexTatoueurs).
  */
 export function reprendreDisposition() {
+  const surface = surfaceCourante();
   const dansLAdresse = new URLSearchParams(window.location.search).has(
     PARAMETRE_DISPOSITION
   );
   if (dansLAdresse) {
     //  L'adresse parle : elle a toujours raison.
     const voulue = depuisLAdresse();
-    valeur = voulue;
+    valeurs[surface] = voulue;
     memoriser(voulue);
     window.dispatchEvent(new Event(EVENEMENT));
     return;
   }
-  const retenue = memorisee();
+  const retenue = memorisee(surface);
   //  Rien dans l'adresse, rien en mémoire : le défaut, et c'est juste.
   if (!retenue || retenue === "deux") {
-    valeur = "deux";
+    valeurs[surface] = "deux";
     window.dispatchEvent(new Event(EVENEMENT));
     return;
   }
   //  La visite avait choisi : on repose, et on réécrit l'adresse.
-  valeur = "deux";
+  valeurs[surface] = "deux";
   poserDisposition(retenue);
 }
 
 export type DispositionGrille = "deux" | "une";
 
-/** LA source de vérité entre deux relectures de l'adresse. */
-let valeur: DispositionGrille | null = null;
+/** LA source de vérité entre deux relectures de l'adresse.
+    §1 (nº 263) — UNE PAR SURFACE : le module survit aux navigations du
+    routeur, et une valeur unique portait la pleine largeur choisie sur
+    la recherche jusqu'à « Ma sélection » — le suivi relevé par le
+    propriétaire. */
+const valeurs: Record<SurfaceAffichage, DispositionGrille | null> = {
+  recherche: null,
+  selection: null,
+};
 
 /** La lecture de l'adresse — le défaut sans paramètre. */
 function depuisLAdresse(): DispositionGrille {
@@ -140,10 +158,21 @@ function ecrireDansLAdresse(voulue: DispositionGrille) {
   }
 }
 
-/** La disposition en cours — celle de l'adresse. */
-export function lireDisposition(): DispositionGrille {
-  if (valeur === null) valeur = depuisLAdresse();
-  return valeur;
+/** La disposition en cours — celle de l'adresse.
+    §1 (nº 263) — DE LA SURFACE DEMANDÉE (la page en cours par défaut).
+    L'adresse n'appartient qu'à la page qui la porte : pour une surface
+    étrangère (la barre qui bâtit une adresse de recherche depuis
+    « Ma sélection »), c'est son filet de session qui parle. */
+export function lireDisposition(
+  surface: SurfaceAffichage = surfaceCourante()
+): DispositionGrille {
+  if (valeurs[surface] === null) {
+    valeurs[surface] =
+      surface === surfaceCourante()
+        ? depuisLAdresse()
+        : (memorisee(surface) ?? "deux");
+  }
+  return valeurs[surface];
 }
 
 /**
@@ -154,7 +183,9 @@ export function lireDisposition(): DispositionGrille {
  */
 export function poserDisposition(voulue: DispositionGrille) {
   if (lireDisposition() === voulue) return;
-  valeur = voulue;
+  //  Toujours SUR LA SURFACE EN COURS : une bascule agit là où elle
+  //  vit (nº 263-§1).
+  valeurs[surfaceCourante()] = voulue;
   ecrireDansLAdresse(voulue);
   memoriser(voulue);
   window.dispatchEvent(new Event(EVENEMENT));
@@ -170,7 +201,7 @@ export function basculerDisposition() {
     ALORS, et alors seulement. */
 export function souscrireDisposition(rappel: () => void) {
   const auRetour = () => {
-    valeur = depuisLAdresse();
+    valeurs[surfaceCourante()] = depuisLAdresse();
     rappel();
   };
   window.addEventListener(EVENEMENT, rappel);

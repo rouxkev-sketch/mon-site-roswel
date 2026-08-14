@@ -38,6 +38,7 @@ import {
 } from "@/lib/derniere-recherche";
 import { lireDisposition } from "@/lib/disposition-grille";
 import { lirePhototheque } from "@/lib/vue-phototheque";
+import { SURFACE_RECHERCHE } from "@/lib/surface-affichage";
 import { useUtilisateur } from "@/lib/use-utilisateur";
 import {
   criteresComplets,
@@ -291,8 +292,12 @@ export function EnTeteTatouage({
     }
     //  L'AFFICHAGE VOYAGE AVEC LA RECHERCHE (nº 203-§1b) : chercher
     //  depuis une fiche ne remet pas la mosaïque au défaut.
-    if (lireDisposition() === "une") parametres.set("disposition", "une");
-    if (lirePhototheque()) parametres.set("texte", "sans");
+    //  §1 (nº 263) — LA SURFACE EST NOMMÉE : l'adresse bâtie ici est
+    //  celle de l'accueil — c'est la mémoire de la RECHERCHE qui
+    //  voyage, jamais celle de « Ma sélection », d'où qu'on cherche.
+    if (lireDisposition(SURFACE_RECHERCHE) === "une")
+      parametres.set("disposition", "une");
+    if (lirePhototheque(SURFACE_RECHERCHE)) parametres.set("texte", "sans");
     const requete = parametres.toString();
     router.push(requete ? `/?${requete}` : "/");
   }

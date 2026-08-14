@@ -7,7 +7,8 @@ import {
   COOKIE_COLONNES,
   taillePageServie,
 } from "@/lib/colonnes-mosaique";
-import { COOKIE_TEXTE, phototequeDuCookie } from "@/lib/vue-phototheque";
+import { cleCookieTexte, phototequeDuCookie } from "@/lib/vue-phototheque";
+import { SURFACE_RECHERCHE } from "@/lib/surface-affichage";
 import { lieuDepuisParametres } from "@/lib/geocodage";
 import { PLAFOND_GALERIE } from "@/lib/photos-tatoueur";
 import {
@@ -279,12 +280,15 @@ export default async function PageAccueilTatouage({
       //  plus tard — le saut de page signalé deux fois. L'ADRESSE
       //  L'EMPORTE TOUJOURS (un lien partagé reste maître), le cookie
       //  ne parle qu'en son absence.
+      //  §1 (nº 263) — LE COOKIE EST CELUI DE LA SURFACE « recherche » :
+      //  « Ma sélection » a le sien (mes-favoris/page.tsx), et les deux
+      //  pages ne parlent plus d'une seule voix.
       affichage={{
         disposition: params.disposition === "une" ? "une" : "deux",
         phototheque:
           params.texte === undefined
             ? phototequeDuCookie(
-                (await cookies()).get(COOKIE_TEXTE)?.value
+                (await cookies()).get(cleCookieTexte(SURFACE_RECHERCHE))?.value
               )
             : params.texte === "sans",
       }}
