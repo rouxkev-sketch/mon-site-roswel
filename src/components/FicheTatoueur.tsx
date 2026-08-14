@@ -16,7 +16,7 @@ import {
   ouvertureGalerie,
   serieMontree,
 } from "@/lib/photo-tatoueur";
-import { ensembleDeLaPhoto } from "@/lib/photos-tatoueur";
+import { NATURE_PAR_DEFAUT, ensembleDeLaPhoto } from "@/lib/photos-tatoueur";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
@@ -138,17 +138,31 @@ export function FicheTatoueur({
       deux, laissait donc défiler les réalisations avec les flashs.
       `rendu` vide veut désormais dire « tous les rendus » : on montre
       ce qu'on est venu voir, sans jamais montrer autre chose. */
+  /*  §4 (nº 272) — UN STYLE CHERCHÉ SANS CATÉGORIE VAUT
+      « RÉALISATIONS ». La catégorie voyageait (nº 247) mais les
+      chemins de recherche PAR STYLE SEUL (le champ « Recherche », les
+      pages de style) n'en portent pas : la fiche montrait alors le
+      style ENTIER, flashs compris. Chercher « réaliste », c'est
+      chercher des réalisations réalistes — « Réalisations » est la
+      catégorie par défaut du menu Explorer (NATURE_PAR_DEFAUT). La
+      fiche ouverte depuis une recherche ne montre QUE le carrousel
+      demandé — le style ET la catégorie ; le reste du travail reste
+      accessible par l'onglet Portfolio. SANS recherche (lien direct,
+      favoris, équipe d'un salon — aucun paramètre) : tout, comme
+      toujours. Même règle dans FenetreFiche. */
+  const serieCherchee =
+    natureInitiale || styleInitial
+      ? { nature: natureInitiale || NATURE_PAR_DEFAUT, rendu: renduInitial }
+      : null;
   const [serieOuverte, setSerieOuverte] = useState<{
     nature: string;
     rendu: string;
-  } | null>(
-    natureInitiale ? { nature: natureInitiale, rendu: renduInitial } : null
-  );
+  } | null>(serieCherchee);
   /** L'INDICE de la photo affichée, DANS la série montrée. Une série
       restreinte commence à sa première photo — elle répond déjà à tout
       ce qui a été cherché. */
   const [indicePhoto, setIndicePhoto] = useState(
-    natureInitiale ? 0 : ouverture.indice
+    serieCherchee ? 0 : ouverture.indice
   );
 
   const groupeAffiche =

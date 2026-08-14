@@ -47,3 +47,7 @@ next-env.d.ts
 # en développement uniquement. Ils appartiennent à la machine qui les a
 # produits : jamais dans l'historique.
 journal-*.txt
+
+# le journal de bord (nº 272-§2) — écrit par /api/dev/journal-de-bord,
+# à la racine : un relevé d'environnement, jamais un fichier du produit
+journal-de-bord*.ndjson

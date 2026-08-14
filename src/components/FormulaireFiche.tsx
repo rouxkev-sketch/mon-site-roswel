@@ -83,6 +83,7 @@ import { useAppareilMobile } from "@/lib/appareil";
 import type { NatureEtablissement } from "@/config/tatouage";
 import { lieuDepuisFiche, type LieuTrouve } from "@/lib/geocodage";
 import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
+import { redirectionDeGarde } from "@/lib/journal-de-bord";
 import { marquerTravailEnCours } from "@/lib/travail-en-cours";
 import { useUtilisateur } from "@/lib/use-utilisateur";
 import { MANQUE, texteErreur } from "@/lib/erreurs-formulaire";
@@ -2345,8 +2346,24 @@ export function FormulaireFiche() {
      bouton qu'on y trouvait. Rien ne s'affiche pendant le trajet :
      un titre montré une demi-seconde puis remplacé est un scintillement,
      pas une information. */
+  //  §2 (nº 272) — LA GARDE PASSE PAR LE COUPE-CIRCUIT DU JOURNAL.
+  //  Cette redirection est LA MOITIÉ d'un miroir : en face, la page
+  //  de compte renvoie « session présente » vers l'espace
+  //  (EcranAuthentification). Une session à moitié morte — cookie
+  //  encore là, jeton de rafraîchissement déjà révoqué — fait
+  //  alterner les deux verdicts de use-utilisateur, et les deux
+  //  gardes se renvoyaient la balle : le clignotement du relevé,
+  //  jusqu'à l'écran noir. `redirectionDeGarde` laisse passer les
+  //  allers normaux, consigne chacun d'eux, et COUPE au-delà de
+  //  trois dans la fenêtre — la page s'immobilise au lieu de mourir.
   useEffect(() => {
-    if (pret && !utilisateur) router.replace("/devenir-tatoueur");
+    if (
+      pret &&
+      !utilisateur &&
+      redirectionDeGarde("espace", "/devenir-tatoueur")
+    ) {
+      router.replace("/devenir-tatoueur");
+    }
   }, [pret, utilisateur, router]);
 
   if (pret && !utilisateur) {

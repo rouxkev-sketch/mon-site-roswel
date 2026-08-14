@@ -14,7 +14,7 @@ import {
   ouvertureGalerie,
   serieMontree,
 } from "@/lib/photo-tatoueur";
-import { ensembleDeLaPhoto } from "@/lib/photos-tatoueur";
+import { NATURE_PAR_DEFAUT, ensembleDeLaPhoto } from "@/lib/photos-tatoueur";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
@@ -150,16 +150,29 @@ export function FenetreFiche({
       dépôt. `null` à l'ouverture : le style entier, comme toujours. */
   /*  ⚠️ LA CATÉGORIE CHERCHÉE RESTREINT LA SÉRIE DÈS L'OUVERTURE
       (nº 217-§3) — même règle que la page de fiche : `rendu` vide veut
-      dire « tous les rendus ». */
+      dire « tous les rendus ».
+      §4 (nº 272) — ET UN STYLE CHERCHÉ SANS CATÉGORIE VAUT
+      « RÉALISATIONS » : la catégorie voyageait (nº 247) mais les
+      chemins de recherche PAR STYLE SEUL (le champ « Recherche », les
+      pages de style) n'en portent pas — la fiche montrait alors le
+      style ENTIER, flashs compris (mesuré : 5 photos au lieu de 4).
+      Or chercher « réaliste » sur ce site, c'est chercher des
+      réalisations réalistes — « Réalisations » est la catégorie par
+      défaut du menu Explorer (NATURE_PAR_DEFAUT). La fiche ouverte
+      depuis une recherche ne montre QUE le carrousel demandé — le
+      style ET la catégorie ; le reste du travail reste accessible par
+      l'onglet Portfolio, rien n'est caché définitivement. SANS
+      recherche (aucun style, aucune catégorie) : tout, comme
+      toujours. */
+  const serieCherchee =
+    natureRecherche || styleRecherche
+      ? { nature: natureRecherche || NATURE_PAR_DEFAUT, rendu: renduRecherche }
+      : null;
   const [serieOuverte, setSerieOuverte] = useState<{
     nature: string;
     rendu: string;
-  } | null>(
-    natureRecherche ? { nature: natureRecherche, rendu: renduRecherche } : null
-  );
-  const [indice, setIndice] = useState(
-    natureRecherche ? 0 : ouverture.indice
-  );
+  } | null>(serieCherchee);
+  const [indice, setIndice] = useState(serieCherchee ? 0 : ouverture.indice);
 
   /** LES DEUX BOÎTES QUI DÉFILENT — la fenêtre entière quand elle est
       en une colonne, la colonne de droite quand elle est en deux. Un

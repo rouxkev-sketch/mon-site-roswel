@@ -3,6 +3,7 @@
 import { createContext, useContext, useSyncExternalStore } from "react";
 import type { User } from "@supabase/supabase-js";
 import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
+import { noterAuJournal } from "@/lib/journal-de-bord";
 import { utilisateurDepuisCookies } from "@/lib/session-cookie";
 
 /**
@@ -75,6 +76,11 @@ function signature(utilisateur: User | null): string {
  */
 function poser(utilisateur: User | null) {
   if (etat.pret && signature(utilisateur) === signature(etat.utilisateur)) return;
+  //  §2 (nº 272) — CHAQUE BASCULE DE SESSION EST CONSIGNÉE au journal
+  //  de bord : c'est l'alternance connecté / déconnecté (le cookie
+  //  contre onAuthStateChange) qui nourrissait la boucle du relevé —
+  //  elle doit se LIRE dans le fichier, avec ses heures.
+  noterAuJournal("session", { connecte: Boolean(utilisateur) });
   etat = { utilisateur, pret: true };
   abonnes.forEach((prevenir) => prevenir());
 }

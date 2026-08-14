@@ -536,26 +536,24 @@ export function BlocModesExercice({
     const enFaute = manquant(mode.cle, "lieu");
     if (sansStudioInscrit(mode.genre)) {
       return (
-        /*  §3 (nº 269) — CHAQUE MODE A SON PROPRE CHAMP, ET LA CLÉ LE
-            GRAVE. Le relevé (trois passes de suite) : une adresse
-            saisie sous « en studio » apparaissait aussi sous « en
-            salon », et supprimer l'un vidait l'autre. LA CAUSE EST UN
-            PARTAGE D'ÉTAT INTERNE, pas un partage de données : les
-            champs de localisation gardent leur saisie en mémoire
-            propre (`lieuInitial` n'est lu qu'au MONTAGE — voir
-            ChampLocalisation) ; à genre identique et position
-            identique dans l'arbre, React RÉUTILISE l'instance au lieu
-            de la remonter, et le texte d'un mode se retrouve dans
-            l'autre. La clé `genre + clé du mode` rend deux modes
-            impossibles à confondre : changer d'onglet ou de lieu
-            remonte le champ, et chacun repart de SA valeur.
+        /*  §3 (nº 269, ÉLARGIE PAR LA Nº 272) — CHAQUE MODE EST UNE
+            INSTANCE À PART. Le relevé (trois passes de suite) : une
+            adresse saisie sous « en studio » apparaissait aussi sous
+            « en salon ». LA CAUSE EST UN PARTAGE D'ÉTAT INTERNE, pas
+            un partage de données : les champs gardent leur saisie en
+            mémoire propre (`lieuInitial` n'est lu qu'au MONTAGE) ; à
+            position identique dans l'arbre, React RÉUTILISE
+            l'instance au lieu de la remonter. La nº 269 avait gravé
+            l'identité SUR CE CHAMP ; la nº 272 la porte sur LE BLOC
+            ENTIER du mode (voir le panneau, plus bas) — le champ n'a
+            plus de clé à lui : son bloc la lui donne, avec tous ses
+            voisins (recherche, adresse, nom du lieu, rôle, dates).
             ⚠️ CE N'EST PAS LE CAS DU GUEST (nº 265) : là, une seule
             ligne porte une NATURE (studio ou salon), et changer de
             nature efface bien l'autre — deux vues d'un même lieu.
-            « En studio » et « en salon », eux, sont DEUX MODES qu'un
+            « En salon » et « en studio », eux, sont DEUX MODES qu'un
             artiste cumule : ils ne partagent rien. */
         <ZoneLieuSeule
-          key={`${mode.genre}-${mode.cle}`}
           prefixe={`mode-${mode.cle}`}
           //  ⚠️ PLUS DE TITRE : la question est passée DANS le champ
           //  (passe nº 100). Un titre et un fantôme qui disent la même
@@ -640,10 +638,12 @@ export function BlocModesExercice({
           </div>
         )}
         <DeuxZonesLieu
-          //  §3 (nº 269) — la clé de l'isolement (voir ZoneLieuSeule,
-          //  plus haut) : deux modes de genres différents ne peuvent
-          //  plus réutiliser la même instance de champ.
-          key={`${mode.genre}-${mode.cle}`}
+          //  §3 (nº 272) — plus de clé ICI : l'identité du mode vit
+          //  sur SON BLOC entier (voir ZoneLieuSeule et le panneau).
+          //  La clé de la nº 269 ne couvrait que ce champ — et pas la
+          //  bascule de nature du guest, qui ne change ni le genre ni
+          //  la clé : le portfolio trouvé et l'adresse tapée
+          //  survivaient au va-et-vient.
           prefixe={`mode-${mode.cle}`}
           titre={question}
           //  ⚠️ CHAQUE MODE CHERCHE CE QU'IL DÉCLARE (passe nº 121).
@@ -978,7 +978,23 @@ export function BlocModesExercice({
                 Un lieu unique se corrige champ par champ (la croix du
                 champ de localité, le retrait de l'établissement). */
             sessionsAffichees.map((session) => (
-              <div key={session.cle}>
+              /*  §3 (nº 272) — LA CLÉ VA SUR LE BLOC ENTIER DU MODE,
+                  plus sur tel ou tel champ. La nº 269 n'avait gravé
+                  l'identité que sur les deux champs de lieu : tout le
+                  reste (le portfolio trouvé, la recherche en cours,
+                  l'adresse tapée, le nom du lieu) continuait de se
+                  partager par POSITION dans l'arbre — et la bascule de
+                  nature d'un guest, qui ne change ni le genre ni la
+                  clé, ne remontait rien du tout. L'identité complète —
+                  genre, clé, ET nature du lieu — fait de chaque mode
+                  une instance à part : aucun état ne peut plus être
+                  retenu par une position. Changer la nature d'un guest
+                  remonte son bloc, comme la règle de la nº 265 efface
+                  son lieu : l'écran et la donnée disent enfin la même
+                  chose. Les DONNÉES du mode (rôle, dates, rayon),
+                  elles, vivent dans `modes` et se repeignent — rien ne
+                  se perd à la remontée. */
+              <div key={`${session.genre}-${session.cle}-${session.natureLieu ?? ""}`}>
                 <div className="flex min-h-[36px] items-center">
                   {/*  §2 (nº 266) — MÊME RÈGLE POUR LE LIEU UNIQUE :
                        son intertitre rougit quand c'est lui qui
@@ -1015,8 +1031,12 @@ export function BlocModesExercice({
               {sessionsAffichees.map((session, position) => {
                 const deplie = ouverte === session.cle;
                 return (
+                  /*  §3 (nº 272) — LA MÊME CLÉ DE BLOC que le lieu
+                      unique (voir plus haut) : l'accordéon n'est pas
+                      un second dessin, chaque volet est une instance
+                      à part entière. */
                   <li
-                    key={session.cle}
+                    key={`${session.genre}-${session.cle}-${session.natureLieu ?? ""}`}
                     className={
                       position > 0
                         ? "border-t border-sombre-bordure"

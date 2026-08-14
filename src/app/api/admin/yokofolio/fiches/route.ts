@@ -127,6 +127,27 @@ export async function GET() {
     //  l'interrupteur du démarchage, lui, continue de piloter sa mise
     //  en ligne (il ne touche plus au statut tant qu'une modification
     //  attend : voir demarchage/fiche/route.ts).
+    //
+    //  ⚠️⚠️ ET SES CRÉATIONS AUSSI, DEPUIS LA PASSE Nº 272 — C'EST LE
+    //  DÉFAUT DU RELEVÉ. Le propriétaire du site EST l'administrateur
+    //  (COURRIELS_ADMIN) : sa création NORMALE — le formulaire,
+    //  « Envoyer mon portfolio pour vérification », statut
+    //  « en_attente », publie=false — tombait dans l'exclusion de la
+    //  nº 135 (pensée pour les fiches de démarchage) et n'apparaissait
+    //  DANS AUCUN ÉCRAN de validation : elle ne pouvait jamais être
+    //  mise en ligne par ce chemin. Le tableau de démarchage la
+    //  listait bien (il liste TOUTES les fiches des comptes admins),
+    //  mais comme une ligne « à envoyer », sans rien dire qu'elle
+    //  attendait une décision.
+    //  LA RÈGLE COMPLÈTE : une fiche d'un compte administrateur est
+    //  écartée SEULEMENT quand rien n'attend — ni brouillon (nº 152),
+    //  ni CRÉATION jamais publiée. Une fiche déjà passée par
+    //  l'interrupteur du démarchage (`admin_publique` posé) reste
+    //  pilotée par lui, comme avant : elle n'entre pas dans la file.
+    //  Les fiches préparées POUR un démarchage apparaissent désormais
+    //  ici AUSSI, marquées `fiche_admin` (l'écran les annonce) : les
+    //  voir en trop est un moindre mal — une création invisible ne
+    //  l'est pas.
     //  ⚠️ RIEN NE CHANGE POUR LES VRAIS TATOUEURS : on écarte des
     //  PROPRIÉTAIRES, pas des fiches. Le jour où une adresse quitte
     //  COURRIELS_ADMIN, ses fiches reviennent ici d'elles-mêmes.
@@ -135,7 +156,12 @@ export async function GET() {
       .filter((ligne) => {
         const proprietaire = ligne.user_id as string | null;
         if (!proprietaire || !comptesAdmin.includes(proprietaire)) return true;
-        return ligne.brouillon != null;
+        if (ligne.brouillon != null) return true;
+        //  LA CRÉATION D'UN ADMINISTRATEUR : jamais publiée, jamais
+        //  passée par l'interrupteur — elle attend une décision, elle
+        //  est montrée. (`admin_publique` absent d'une base pas
+        //  encore migrée se lit comme « jamais posé » : on montre.)
+        return ligne.publie !== true && ligne.admin_publique !== true;
       });
 
     // LE COMPTE PROPRIÉTAIRE, fiche par fiche : un compte peut en

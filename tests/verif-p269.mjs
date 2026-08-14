@@ -210,9 +210,13 @@ titre("§3 — la cause nommée, et l'isolement à la source");
       /lieuInitial/.test(sansNotes(lire("src/components/ChampLocalisation.tsx")))
   );
   verif(
-    "LE REMÈDE — une clé par GENRE et par MODE sur les deux champs de lieu",
-    (blocModesNu.match(/key=\{`\$\{mode\.genre\}-\$\{mode\.cle\}`\}/g) ?? [])
-      .length === 2
+    "LE REMÈDE — l'identité du mode gravée par une clé " +
+      "(⚠️ nº 272 : portée sur LE BLOC ENTIER — genre, clé ET nature " +
+      "du lieu — les clés de champ de la 269 sont retirées, couvertes)",
+    (blocModesNu.match(
+      /key=\{`\$\{session\.genre\}-\$\{session\.cle\}-\$\{session\.natureLieu \?\? ""\}`\}/g
+    ) ?? []).length === 2 &&
+      !/key=\{`\$\{mode\.genre\}-\$\{mode\.cle\}`\}/.test(blocModesNu)
   );
   verif(
     "chaque mode garde SA ligne : la croix et l'ajout ne touchent QUE le genre visé",

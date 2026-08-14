@@ -4,6 +4,7 @@ import { useContext, useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ARRIVEE_APRES_CONNEXION } from "@/config/tatouage";
+import { redirectionDeGarde } from "@/lib/journal-de-bord";
 import {
   IconeApple,
   IconeFacebook,
@@ -339,16 +340,36 @@ export function EcranAuthentification({
   //  ⚠️ SAUF EN RATTACHEMENT : là, un connecté a tout à faire sur la
   //  page du jeton (elle lui donne ses fiches). C'est ELLE qui décide
   //  quoi montrer — cet écran n'est qu'un de ses morceaux.
+  /*  §2 (nº 272) — LA GARDE PASSE PAR LE COUPE-CIRCUIT DU JOURNAL.
+      C'est l'AUTRE MOITIÉ du miroir de FormulaireFiche : lui renvoie
+      « pas de session » ici, cette page renvoie « session présente »
+      là-bas. Une session à moitié morte fait alterner les deux
+      verdicts (cookie contre onAuthStateChange — voir
+      journal-de-bord) : sans coupe-circuit, le ping-pong clignotait
+      jusqu'à l'écran noir, et chaque tour martyrisait le jeton de
+      rafraîchissement jusqu'à la déconnexion définitive.
+      COUPÉE, la garde S'ARRÊTE ICI : l'écran de connexion s'affiche —
+      exactement l'endroit où reprendre pied quand la session est
+      morte — au lieu du <main> vide qui attendait une redirection
+      devenue interdite. */
+  const [gardeCoupee, setGardeCoupee] = useState(false);
   useEffect(() => {
     if (!enRattachement && pret && utilisateur) {
       //  DÉJÀ CONNECTÉ, avec un chemin de retour : on y va. C'est le
       //  cas de qui revient sur cette page par le bouton « précédent »
       //  après s'être connecté ailleurs.
-      router.replace(arrivee);
+      if (redirectionDeGarde("connexion", arrivee)) {
+        router.replace(arrivee);
+        return;
+      }
+      //  COUPÉE : l'écran de connexion se montre AU TOUR SUIVANT,
+      //  jamais dans le rendu en cours — pas de cascade de rendus.
+      const arret = window.setTimeout(() => setGardeCoupee(true), 0);
+      return () => window.clearTimeout(arret);
     }
   }, [enRattachement, pret, utilisateur, router, arrivee]);
 
-  if (!enRattachement && pret && utilisateur) {
+  if (!enRattachement && pret && utilisateur && !gardeCoupee) {
     return <main className="flex-1" aria-hidden="true" />;
   }
 

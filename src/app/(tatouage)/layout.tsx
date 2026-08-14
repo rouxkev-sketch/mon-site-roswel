@@ -36,6 +36,7 @@ import { IconeDuLien } from "@/components/IconeReseau";
 import { ChargeurFavoris } from "@/components/ChargeurFavoris";
 import { FournisseurSession } from "@/components/FournisseurSession";
 import { FournisseurStyles } from "@/components/FournisseurStyles";
+import { JournalDeBord } from "@/components/JournalDeBord";
 import { GardeSaisie } from "@/components/GardeSaisie";
 import { RetourGaranti } from "@/components/RetourGaranti";
 import { scriptAvantPeinture } from "@/lib/script-avant-peinture";
@@ -164,6 +165,14 @@ export default async function MiseEnPageTatouage({
         le flux (voir globals.css) — la sonde y aurait disparu au
         moment précis où l'on veut la lire. */}
     <SondeClavier />
+    {/* LE JOURNAL DE BORD (nº 272-§2) — PERMANENT, lui : le témoin
+        qui survit à l'écran noir. Il note côté serveur (fichier
+        journal-de-bord.ndjson, en développement — voir la route) les
+        chargements, navigations, erreurs et bascules de session, au
+        fil de l'eau ; et son coupe-circuit arrête les boucles de
+        redirection au lieu de laisser le site clignoter jusqu'à
+        mourir. Aucun rendu, aucun effet sur le site. */}
+    <JournalDeBord />
     {/* ⚠️ TEMPORAIRE — LA SONDE DE NAVIGATION (`?sonde-nav=1`). Elle
         MESURE chez le propriétaire (retour arrière, barre fixe,
         remontée des champs) et ne corrige rien. Pour la retirer :
