@@ -403,6 +403,39 @@ html[data-clair="3"] {
   background-color: var(--rw-clair-barre-vif);
 }
 
+/*  LA PILULE DU BADGE, TOUJOURS UN CRAN AU-DESSUS DE SON FOND
+    (nº 258-§4)
+    -------------------------------------------------------------------
+    Le défaut de la nº 256 : la robe de la pilule était ABSOLUE
+    (`haut-clair`), et la mécanique de focus ci-dessus — intouchée,
+    c'est la règle gravée nº 175 — montait l'encadré à cette même
+    couleur : au survol comme au focus, la pilule se fondait de nouveau
+    dans son fond. L'écart devient RELATIF : la robe de la pilule SUIT
+    celle de son encadré, un barreau au-dessus dans chaque état.
+     · au repos : le fond est `--rw-clair-barre` → la pilule prend
+       `--rw-clair-barre-vif`, le barreau au-dessus (déjà défini) ;
+     · au survol, à l'appui, au focus, panneau ouvert : le fond est
+       `--rw-clair-barre-vif` → la pilule monte d'un barreau de plus.
+       CE BARREAU N'EXISTAIT PAS : l'échelle s'arrêtait à `haut-clair`
+       (#4B4B54). Il est posé ici, au PAS DU CRAN PRÉCÉDENT — haut →
+       haut-clair vaut (+10, +10, +11) — appliqué une fois de plus :
+       #55555F. Aucun autre choix n'existait, et le pas n'est pas neuf.
+    Ces règles ne vivent QUE sous `[data-clair-barre]` : la capsule de
+    la fiche (Profil / Portfolio), hors encadré, garde sa robe de
+    classe (`bg-sombre-haut`) — le cran au-dessus de SON contexte. */
+:root {
+  --rw-clair-pilule-vif: #55555f;
+}
+[data-clair-barre] [data-capsule-glissante] {
+  background-color: var(--rw-clair-barre-vif);
+}
+[data-clair-barre]:hover [data-capsule-glissante],
+[data-clair-barre]:active [data-capsule-glissante],
+[data-clair-barre]:focus-within [data-capsule-glissante],
+[data-clair-barre][data-clair-vif] [data-capsule-glissante] {
+  background-color: var(--rw-clair-pilule-vif);
+}
+
 /*  RIEN NE PEUT EFFACER AUTRE CHOSE QUE LA MOSAÏQUE (nº 171)
     -------------------------------------------------------------------
     Au clic sur un bouton d'affichage, le propriétaire voyait TOUT le

@@ -87,7 +87,8 @@ const classeTrait = nettoyer(
   encadre.match(/className="(w-px my-2\.5[^"]*)"/)?.[1]
 );
 const classeRangee = nettoyer(
-  menus.match(/className="(flex items-center gap-2\.5)"/)?.[1]
+  //  (élargie nº 258 : la rangée porte aussi min-h-[52px] mobile:min-h-0.)
+  menus.match(/className="(flex items-center gap-2\.5[^"]*)"/)?.[1]
 );
 const hauteurChamp = menus.match(/hauteur="(min-h-\[\d+px\])"/)?.[1] ?? "";
 /** LA ROBE DE LA PILULE — le paramètre passé par la barre, et le
@@ -103,10 +104,14 @@ const classeHote = nettoyer(
   capsule.match(/data-hote-capsule="" className="([^"]+)"/)?.[1]
 );
 const gabaritMot = capsule.match(/className=\{`(relative z-\[1\][^`]+)`\}/)?.[1];
+//  ⚠️ MIS À JOUR nº 258-§1 : la hauteur des mots est un PARAMÈTRE —
+//  on résout celle que la barre passe (38, l'encadré descendu à 46).
+const hauteurMotBarre = menus.match(/hauteurMot="(min-h-\[\d+px\])"/)?.[1] ?? "";
 const classeMot = (actif) =>
   nettoyer(
     gabaritMot
-      ?.replace(/\$\{[^}]*"flex-1 basis-1\/2 min-w-0"[^}]*\}/, "flex-1 basis-1/2 min-w-0")
+      ?.replace(/\$\{hauteurMot\}/, hauteurMotBarre)
+      .replace(/\$\{[^}]*"flex-1 basis-1\/2 min-w-0"[^}]*\}/, "flex-1 basis-1/2 min-w-0")
       .replace(
         /\$\{[^}]*actif[^}]*\}/,
         actif ? "text-sombre-texte" : "text-sombre-texte-doux"
@@ -150,7 +155,17 @@ titre("§1/§2/§5/§6 — à la source : l'encadré-capsule, le cran, la réser
   );
   verif(
     "§2 — le cran franc, par PARAMÈTRE de l'écriture unique (la fiche garde le sien)",
-    robeBarre === "bg-sombre-haut-clair" &&
+    //  ⚠️ MIS À JOUR nº 258-§4 : le cran n'est plus une CLASSE absolue
+    //  mais la règle RELATIVE de globals.css (`[data-clair-barre]
+    //  [data-capsule-glissante]`) — la barre passe une robe VIDE, le
+    //  CSS habille un cran au-dessus du fond dans tous ses états. Ce
+    //  que CETTE passe exigeait — la pilule plus claire que l'encadré,
+    //  la fiche gardant son défaut — se mesure inchangé plus bas.
+    robeBarre === "" &&
+      /robeCapsule=""/.test(sansNotes(menus)) &&
+      /\[data-clair-barre\] \[data-capsule-glissante\]/.test(
+        lire("src/app/globals.css")
+      ) &&
       robeDefaut === "bg-sombre-haut" &&
       //  La fiche ne passe rien : elle consomme le défaut.
       !/robeCapsule/.test(lire("src/components/PortfolioDeLAffiche.tsx"))
@@ -203,7 +218,7 @@ const BLOC = `((c) => {
     '</div></div>';
   const champ =
     '<button data-champ type="button" class="w-full ' + c.hauteur +
-    ' text-base pl-4 pr-10 text-left">Toutes les réalisations</button>';
+    ' text-base pl-4 pr-10 text-left overflow-hidden text-ellipsis whitespace-nowrap">Toutes les réalisations</button>';
   const icone =
     '<div data-mise-en-page class="hidden lg:flex' + (c.iconeInvisible ? " invisible" : "") + '">' +
     '<button data-bouton-phototheque data-clair-barre style="width:46px;height:46px" ' +
@@ -298,7 +313,8 @@ for (const largeur of [390, 1440]) {
     const ref = REFERENCE_255[largeur];
     verif(
       `${largeur} px : §1 — l'encadré est une CAPSULE (rayon ≥ la moitié de sa hauteur)`,
-      vu.cadreHauteur === 52 && vu.cadreRayon >= vu.cadreHauteur / 2,
+      //  (46 depuis la nº 258 — la hauteur des cercles.)
+      vu.cadreHauteur === 46 && vu.cadreRayon >= vu.cadreHauteur / 2,
       `hauteur ${Math.round(vu.cadreHauteur)} px · rayon effectif ${Math.min(
         Math.round(vu.cadreRayon),
         Math.round(vu.cadreHauteur / 2)
@@ -329,8 +345,10 @@ for (const largeur of [390, 1440]) {
       )} · droite ${vu.airDroite.toFixed(1)} px (avant le fin trait)`
     );
     verif(
-      `${largeur} px : §4 — hauteur 44 et courbure de la nº 255, intactes`,
-      vu.hauteurBadge === 44 && vu.piluleHauteur === 44 && vu.piluleRayon >= 22,
+      //  ⚠️ MIS À JOUR nº 258-§1 : le badge suit son encadré descendu
+      //  à 46 — 38 de haut (46 − 2 × 4 d'air), la courbure pleine.
+      `${largeur} px : §4 — hauteur 38 et courbure pleine, l'air de la nº 256 intact`,
+      vu.hauteurBadge === 38 && vu.piluleHauteur === 38 && vu.piluleRayon >= 19,
       `badge ${Math.round(vu.hauteurBadge)} px · pilule ${Math.round(
         vu.piluleHauteur
       )} px, rayon effectif ${Math.min(Math.round(vu.piluleRayon), 22)} px`
@@ -403,10 +421,12 @@ titre("§7 — la rétractation inchangée (l'accueil VIVANT, 390 px)");
     await page.waitForTimeout(700);
     const redeplie = await releve();
     verif(
-      "128 → 64 → 128, en 300 ms ease-out — les réglages de juillet",
-      haut.reserve === 128 &&
+      //  ⚠️ MIS À JOUR nº 258-§1 : 122 (les blocs à 46). La durée et
+      //  la courbe — les réglages de juillet — n'ont pas bougé.
+      "122 → 64 → 122, en 300 ms ease-out — les réglages de juillet",
+      haut.reserve === 122 &&
         replie.reserve === 64 &&
-        redeplie.reserve === 128 &&
+        redeplie.reserve === 122 &&
         /0\.3s/.test(haut.duree) &&
         /cubic-bezier\(0, 0, 0\.2, 1\)/.test(haut.courbe),
       `${haut.reserve} → ${replie.reserve} → ${redeplie.reserve} · ${haut.duree} · ${haut.courbe}`

@@ -482,7 +482,10 @@ export function ChampLocalisation({
   }
 
   const habillageChamp = sansBordure
-    ? `w-full h-full min-h-[48px] bg-transparent ${
+    ? //  §2 (nº 258) — 46, la hauteur des cercles : le champ suivait
+      //  son propre plancher de 48 et tenait l'encadré au-dessus des
+      //  ronds voisins.
+      `w-full h-full min-h-[46px] bg-transparent ${
         compact ? "px-3" : "px-4"
       } text-base outline-none overflow-hidden text-ellipsis
        text-sombre-texte placeholder:text-sombre-texte-doux`

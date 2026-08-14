@@ -118,7 +118,6 @@ export function EnTeteTatouage({
    */
   rangee?: (etat: {
     replie: boolean;
-    deplier: () => void;
   }) => React.ReactNode;
 }) {
   const router = useRouter();
@@ -418,7 +417,7 @@ export function EnTeteTatouage({
   const rangeeLibre = Boolean(rangee);
   /** §1 (nº 253) — LA RANGÉE LIBRE EXISTE AUX DEUX LARGEURS : le
       `rangeeWeb` de la nº 251 est défait, et la réserve du smartphone
-      retrouve ses trois hauteurs (128 dépliée, 104 repliée, 64 sans
+      retrouve ses hauteurs (deux depuis la nº 258-§3 : dépliée, 64 sans
       rangée). */
   const rangeePresente = surAccueil || rangeeLibre;
   /** LA LOUPE EST VISIBLE quand la rangée ne l'est pas : partout hors
@@ -742,13 +741,12 @@ export function EnTeteTatouage({
               {rangee ? (
                 //  §1 (nº 245) — la rangée libre : même enveloppe,
                 //  même centrage, même repli. Seul son CONTENU change.
-                rangee({
-                  replie: moteurReplie && etroit,
-                  //  §6 (nº 247) — L'ÉTAT EST LE MÊME POUR TOUS : le
-                  //  doigt écrit là où l'écouteur lit, donc la rangée
-                  //  se replie de nouveau au défilement suivant.
-                  deplier: () => setMoteurReplie(false),
-                })
+                //  §3 (nº 258) — `deplier` est parti avec la ligne
+                //  étroite : plus aucun doigt ne redéploie la rangée,
+                //  seule la remontée de la page le fait (les seuils de
+                //  juillet, une seule mémoire — la leçon nº 247-§6
+                //  reste vraie par construction).
+                rangee({ replie: moteurReplie && etroit })
               ) : (
                 <MoteurTatouage
                   criteres={valeur}
@@ -970,29 +968,26 @@ export function EnTeteTatouage({
       <div
         aria-hidden
         data-reserve-barre=""
-        //  §4 (nº 245) — UNE TROISIÈME HAUTEUR, et une seule raison :
-        //  repliée, la rangée LIBRE ne disparaît pas — il reste sa
-        //  ligne étroite. La réserve doit donc l'annoncer, sans quoi
-        //  le contenu passerait dessous. Les deux hauteurs du moteur
-        //  (128 / 64) ne bougent pas d'un pixel : la position au
-        //  retour reste celle de juillet.
-        //  ⚠️ 104, ET C'EST UNE ADDITION, PAS UN CHOIX (nº 247-§6,
-        //  recalculée nº 250-§2) : la rangée du logo fait 64 (40
-        //  d'icônes + `py-3`), l'air au-dessus de la ligne étroite 12
-        //  (`max-lg:pt-3`) et la ligne elle-même 28 (`min-h-[28px]`,
-        //  resserrée d'un cran à la nº 250). La réserve suit, sans
-        //  quoi la page sauterait d'autant.
-        data-reserve-posee={
-          rangeePresente && !moteurReplie ? 128 : rangeeLibre ? 104 : 64
-        }
-        data-reserve-depliee={rangeePresente ? 128 : 64}
+        //  §1/§3 (nº 258) — DEUX HAUTEURS, PLUS TROIS, et des
+        //  ADDITIONS, jamais des choix :
+        //   · DÉPLIÉE : 122 = 64 (la rangée du logo : 40 d'icônes +
+        //     `py-3`) + 12 (`max-lg:pt-3`) + 46 (les blocs descendus
+        //     de 11 % — 52 × 0,89 = 46,28 → 46 au pixel entier, la
+        //     hauteur même des cercles du web). L'espace libéré est
+        //     RETIRÉ de la barre : elle ne garde pas un vide.
+        //   · REPLIÉE : 64 — la rangée du logo, rien d'autre. La
+        //     TROISIÈME hauteur (104, la ligne étroite de la rangée
+        //     libre) est partie avec la ligne étroite elle-même
+        //     (nº 258-§3) : une barre qui se replie ne laisse rien
+        //     derrière elle, et « Ma sélection » se replie désormais
+        //     comme le moteur, aux mêmes deux hauteurs.
+        data-reserve-posee={rangeePresente && !moteurReplie ? 122 : 64}
+        data-reserve-depliee={rangeePresente ? 122 : 64}
         className={`hidden mobile:block shrink-0 transition-[height]
                     duration-300 ease-out ${
                       rangeePresente && !moteurReplie
-                        ? "h-32"
-                        : rangeeLibre
-                          ? "h-[104px]"
-                          : "h-16"
+                        ? "h-[122px]"
+                        : "h-16"
                     }`}
       />
     </>

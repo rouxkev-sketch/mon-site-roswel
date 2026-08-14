@@ -68,11 +68,14 @@ titre("§1 — à la source : la rangée revient, les titres y commandent");
       !/rangeeWeb$/m.test(barreSel) &&
       /const rangeePresente = surAccueil \|\| rangeeLibre;/.test(barre)
   );
+  //  ⚠️ MIS À JOUR nº 258-§1/§3 : la ligne étroite est partie, et les
+  //  blocs sont descendus à 46 — la réserve n'a plus que DEUX hauteurs
+  //  (122 / 64). Ce que CETTE passe a rétabli — la rangée du
+  //  smartphone EXISTE et la réserve la suit — se lit toujours.
   verif(
-    "la réserve retrouve ses trois hauteurs (128 / 104 / 64)",
-    /rangeePresente && !moteurReplie \? 128 : rangeeLibre \? 104 : 64/.test(
-      barre
-    ) && /rangeeLibre\s*\n?\s*\? "h-\[104px\]"/.test(barre)
+    "la réserve suit la rangée (122 déployée / 64 repliée, depuis la nº 258)",
+    /rangeePresente && !moteurReplie \? 122 : 64/.test(barre) &&
+      /h-\[122px\]/.test(barre)
   );
   //  ⚠️ MIS À JOUR nº 255-§1/§5 : les deux titres cliquables du doigt
   //  et les deux menus du web sont partis ENSEMBLE — le bloc porte
@@ -91,11 +94,13 @@ titre("§1 — à la source : la rangée revient, les titres y commandent");
     /feuilleMobile$/m.test(menus.replace(/\s+$/gm, "")) &&
       (menus.match(/^\s*repliable$/gm) ?? []).length === 1
   );
+  //  ⚠️ MIS À JOUR nº 258-§3 : la ligne étroite a DISPARU — une barre
+  //  qui se replie ne laisse rien derrière elle. Le rabattement, lui,
+  //  garde les jetons de la rangée du moteur (ce que cette passe
+  //  posait) : c'est lui qu'on vérifie désormais.
   verif(
-    "la ligne étroite et ses jetons restent écrits (28 px, flèche, 300 ms)",
-    /data-ligne-repliee/.test(menus) &&
-      /min-h-\[28px\]/.test(menus) &&
-      /IconeChevronBas taille=\{14\}/.test(menus) &&
+    "repliée, la rangée ne laisse rien — et se rabat aux jetons du moteur",
+    !/data-ligne-repliee/.test(menus) &&
       /duration-300 ease-out/.test(menus)
   );
   verif(
@@ -127,7 +132,8 @@ titre("§1 — la rangée VIVANTE (l'accueil, 390 px) : la mécanique partagée"
     const remonte = await reserve();
     verif(
       "elle se rétracte et se redéploie (les réglages de juillet)",
-      haut === 128 && descendu === 64 && remonte === 128,
+      //  (122 depuis la nº 258 — les blocs descendus à 46.)
+      haut === 122 && descendu === 64 && remonte === 122,
       `${haut} → ${descendu} → ${remonte}`
     );
   } catch (erreur) {

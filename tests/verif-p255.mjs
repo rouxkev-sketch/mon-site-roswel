@@ -103,10 +103,14 @@ const classeHote = nettoyer(
   capsule.match(/data-hote-capsule="" className="([^"]+)"/)?.[1]
 );
 const gabaritMot = capsule.match(/className=\{`(relative z-\[1\][^`]+)`\}/)?.[1];
+//  ⚠️ MIS À JOUR nº 258-§1 : la hauteur des mots est un PARAMÈTRE
+//  (`hauteurMot`) — on résout celle que la barre passe (38).
+const hauteurMotBarre = menus.match(/hauteurMot="(min-h-\[\d+px\])"/)?.[1] ?? "";
 const classeMot = (actif) =>
   nettoyer(
     gabaritMot
-      ?.replace(/\$\{[^}]*"flex-1 basis-1\/2 min-w-0"[^}]*\}/, "flex-1 basis-1/2 min-w-0")
+      ?.replace(/\$\{hauteurMot\}/, hauteurMotBarre)
+      .replace(/\$\{[^}]*"flex-1 basis-1\/2 min-w-0"[^}]*\}/, "flex-1 basis-1/2 min-w-0")
       .replace(
         /\$\{[^}]*actif[^}]*\}/,
         actif ? "text-sombre-texte" : "text-sombre-texte-doux"
@@ -125,7 +129,8 @@ const classeCapsuleGlissante = nettoyer(
 const hauteurChamp = menus.match(/hauteur="(min-h-\[\d+px\])"/)?.[1] ?? "";
 /** L'écart entre l'encadré et l'icône, et la rangée qui les porte. */
 const classeRangee = nettoyer(
-  menus.match(/className="(flex items-center gap-[\d.]+)"/)?.[1]
+  //  (élargie nº 258 : la rangée porte aussi min-h-[52px] mobile:min-h-0.)
+  menus.match(/className="(flex items-center gap-[\d.][^"]*)"/)?.[1]
 );
 /** LES PRÉDICATS DE LA CAPSULE, extraits du fichier livré. */
 const selecteurActif = capsule.match(/querySelector<HTMLButtonElement>\(\s*"([^"]+)"/)?.[1];
@@ -228,7 +233,7 @@ const BLOC = `((c) => {
     '</div></div>';
   const champ =
     '<button data-champ type="button" class="w-full ' + c.hauteur +
-    ' text-base pl-4 pr-10 text-left">Toutes les réalisations</button>';
+    ' text-base pl-4 pr-10 text-left overflow-hidden text-ellipsis whitespace-nowrap">Toutes les réalisations</button>';
   hote.innerHTML =
     '<div data-bloc class="' + c.rangee + '">' +
       '<div class="flex-1 min-w-0">' +
@@ -313,9 +318,13 @@ for (const largeur of [390, 1440]) {
       )}, ${JSON.stringify(mesureCapsule)})`
     );
     verif(
-      `${largeur} px : une seule ligne — le bloc ne fait qu'une hauteur d'encadré`,
-      Math.abs(vu.boites.lignes - vu.boites.hauteurEncadre) <= 1 &&
-        vu.boites.hauteurEncadre === 52,
+      `${largeur} px : une seule ligne — l'encadré de 46 centré dans la zone du web`,
+      //  ⚠️ MIS À JOUR nº 258-§1/§2 : l'encadré est descendu à la
+      //  hauteur des cercles (46) ; sur le web (cette injection est à
+      //  souris), la rangée GARDE sa zone de 52 et y centre l'encadré
+      //  — la barre ne change pas. « Une seule ligne » demeure : le
+      //  bloc ne fait qu'une hauteur de zone.
+      vu.boites.hauteurEncadre === 46 && Math.round(vu.boites.lignes) === 52,
       `bloc ${Math.round(vu.boites.lignes)} px · encadré ${Math.round(
         vu.boites.hauteurEncadre
       )} px`
@@ -338,9 +347,11 @@ for (const largeur of [390, 1440]) {
       `${Math.round(vu.boites.mot1)} / ${Math.round(vu.boites.mot2)} px`
     );
     verif(
-      `${largeur} px : la pilule garde la hauteur des mots (44), centrée dans le champ`,
-      vu.boites.hauteurCapsule === 44 &&
-        Math.abs(vu.boites.airHaut - (vu.boites.hauteurEncadre - 44) / 2) <= 1,
+      //  ⚠️ MIS À JOUR nº 258-§1 : 38 dans 46 — l'air de 4 px, la
+      //  règle de CETTE passe, n'a pas bougé.
+      `${largeur} px : la pilule garde la hauteur des mots (38), centrée dans le champ`,
+      vu.boites.hauteurCapsule === 38 &&
+        Math.abs(vu.boites.airHaut - (vu.boites.hauteurEncadre - 38) / 2) <= 1,
       `pilule ${Math.round(vu.boites.hauteurCapsule)} px dans ${Math.round(
         vu.boites.hauteurEncadre
       )} px · air ${Math.round(vu.boites.airHaut)} px`
@@ -476,7 +487,8 @@ titre("§3 — à la source : jamais vide, le chevron, aucune loupe");
   verif(
     "les drapeaux du champ « Explorer » du moteur, `repliable` compris",
     /sansBordure\s+sombre\s+repliable\s+feuilleMobile/.test(nettoyer(menusNus)) &&
-      /hauteur="min-h-\[52px\]"/.test(menusNus) &&
+      //  (46 depuis la nº 258 — la hauteur des cercles.)
+      /hauteur="min-h-\[46px\]"/.test(menusNus) &&
       /taillePolice="text-base"/.test(menusNus)
   );
   verif(
@@ -509,8 +521,11 @@ titre("§3 — à la source : jamais vide, le chevron, aucune loupe");
   );
   verif(
     "le chevron est celui du menu de la maison, pas un second dessin",
-    !/svg|path |chevron/i.test(sansNotes(menus).replace(/IconeChevronBas/g, "")) &&
-      /IconeChevronBas/.test(menus)
+    //  ⚠️ MIS À JOUR nº 258-§3 : `IconeChevronBas` est partie avec la
+    //  ligne étroite — le bloc ne dessine plus AUCUNE icône, et le
+    //  chevron du champ reste la flèche du MenuDeroulant lui-même.
+    !/svg|path |chevron|Icone/i.test(sansNotes(menus)) &&
+      /FLECHE_GRISE/.test(lire("src/components/MenuDeroulant.tsx"))
   );
   verif(
     "il filtre CE QUE LE BADGE A CHOISI (les entrées suivent le menu actif)",
@@ -716,13 +731,15 @@ titre("§6 — à la source : une seule mécanique de repli, aucune seconde");
       !/scrollY|addEventListener\("scroll"/.test(menus)
   );
   verif(
-    "la réserve déployée est la MÊME que celle du moteur (128), et elle est unique",
-    /rangeePresente && !moteurReplie \? 128 : rangeeLibre \? 104 : 64/.test(barre) &&
-      (barre.match(/128/g) ?? []).length >= 2 &&
+    "la réserve déployée est la MÊME que celle du moteur (122), et elle est unique",
+    //  ⚠️ MIS À JOUR nº 258-§1/§3 : 122 (64 + 12 + 46), et DEUX
+    //  hauteurs — la ligne étroite (104) est partie avec la nº 258.
+    /rangeePresente && !moteurReplie \? 122 : 64/.test(barre) &&
+      (barre.match(/122/g) ?? []).length >= 2 &&
       //  ⚠️ SUR LE SOURCE SANS SES NOTES : le commentaire de la ligne
       //  étroite RACONTE le calcul de la réserve (64 + 12 + 28 = 104),
       //  il ne la pose pas.
-      !/128|104/.test(menusNus)
+      !/122|104/.test(menusNus)
   );
   verif(
     "la durée et la courbe du pliage : celles de la rangée du moteur",
@@ -756,13 +773,14 @@ titre("§6 — VIVANTE : la barre de la recherche, sur l'accueil (390 px)");
     await page.waitForTimeout(700);
     const redeplie = await releve();
     verif(
-      "la rangée déployée réserve 128 px, repliée 64, et redéployée 128",
-      haut.reserve === 128 && replie.reserve === 64 && redeplie.reserve === 128,
+      //  ⚠️ MIS À JOUR nº 258-§1 : 122 (les blocs descendus à 46).
+      "la rangée déployée réserve 122 px, repliée 64, et redéployée 122",
+      haut.reserve === 122 && replie.reserve === 64 && redeplie.reserve === 122,
       `${haut.reserve} → ${replie.reserve} → ${redeplie.reserve}`
     );
     verif(
       "la hauteur posée suit la réserve, au pixel",
-      haut.hauteur === 128 && replie.hauteur === 64,
+      haut.hauteur === 122 && replie.hauteur === 64,
       `${haut.hauteur} px → ${replie.hauteur} px`
     );
     verif(
@@ -774,8 +792,8 @@ titre("§6 — VIVANTE : la barre de la recherche, sur l'accueil (390 px)");
     //  même réserve déployée — son bloc a la hauteur de l'encadré du
     //  moteur (mesurée plus haut : 52 px).
     verif(
-      "« Ma sélection » retombe sur la même réserve déployée (64 + 12 + 52 = 128)",
-      64 + 12 + 52 === 128 && /max-lg:pt-3/.test(barre) && hauteurChamp === "min-h-[52px]",
+      "« Ma sélection » retombe sur la même réserve déployée (64 + 12 + 46 = 122)",
+      64 + 12 + 46 === 122 && /max-lg:pt-3/.test(barre) && hauteurChamp === "min-h-[46px]",
       `champ ${hauteurChamp}`
     );
   } catch (erreur) {

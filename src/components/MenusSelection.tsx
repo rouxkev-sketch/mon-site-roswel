@@ -5,7 +5,6 @@ import { EncadreDeuxChamps } from "@/components/EncadreBarre";
 import { MenuDeroulant } from "@/components/MenuDeroulant";
 import { SelecteurCapsule } from "@/components/SelecteurCapsule";
 import { BoutonPhototheque } from "@/components/BoutonPhototheque";
-import { IconeChevronBas } from "@/components/Icones";
 import { CATEGORIES_EXPLORER } from "@/config/tatouage";
 import {
   libelleExplorer,
@@ -94,15 +93,12 @@ export function MenusSelection({
   entreesFavoris,
   entreesSuivis,
   replie = false,
-  surDeploiement,
 }: {
   entreesFavoris: EntreeFiltre[];
   entreesSuivis: EntreeFiltre[];
   /** La rangée est-elle repliée ? (§4 — l'état vient de la barre, il
       n'est pas calculé ici : une seule mécanique de repli.) */
   replie?: boolean;
-  /** Un appui sur la ligne étroite redéploie la rangée. */
-  surDeploiement?: () => void;
 }) {
   //  L'ADRESSE, LUE COMME UN MAGASIN : le même que celui de la
   //  mémoire de navigation — il surveille `pushState`, `replaceState`
@@ -156,10 +152,18 @@ export function MenusSelection({
       surChoix={(menu) => poserSelection(menu, "")}
       ariaLabel="Favoris ou suivis"
       pleineLargeur
-      //  §2 (nº 256) — le cran franc au-dessus du fond de l'encadré
-      //  (`haut` → `haut-clair`) : la hiérarchie de la charte remise à
-      //  l'endroit. Voir SelecteurCapsule.
-      robeCapsule="bg-sombre-haut-clair"
+      //  §4 (nº 258) — LA ROBE NE SE PASSE PLUS ICI : dans l'encadré,
+      //  la pilule est habillée par la règle `[data-clair-barre]
+      //  [data-capsule-glissante]` de globals.css — un cran au-dessus
+      //  du fond DE SON ENCADRÉ, au repos comme au survol et au focus
+      //  (l'écart était absolu depuis la nº 256, et le survol
+      //  l'annulait : le fond montait à la couleur de la pilule). La
+      //  fiche, hors encadré, garde son défaut (`bg-sombre-haut`).
+      robeCapsule=""
+      //  §1 (nº 258) — LA HAUTEUR DES MOTS SUIT L'ENCADRÉ : 46 − 2 × 4
+      //  d'air (le même air qu'à la nº 256) = 38. La fiche garde ses
+      //  44 (son défaut) : c'est le paramètre de l'écriture unique.
+      hauteurMot="min-h-[38px]"
     />
   );
 
@@ -205,7 +209,12 @@ export function MenusSelection({
         placeholder={libelleDuFiltre(entrees, choix, etroit)}
         libelleValeur={libelleDuFiltre(entrees, choix, etroit)}
         titreFeuille="Filtrer"
-        hauteur="min-h-[52px]"
+        //  §5 (nº 258) — LA FLÈCHE PREND L'AIR DES MOTS DU BADGE
+        //  (20 px, le `px-5` de l'écriture des fiches — aucune valeur
+        //  neuve) : à 14 px du bord elle touchait presque la courbe de
+        //  la capsule. Le plancher demandé est 12 px.
+        positionFleche="right 1.25rem center"
+        hauteur="min-h-[46px]"
         taillePolice="text-base"
         sansBordure
         sombre
@@ -236,7 +245,14 @@ export function MenusSelection({
                moteur, avec son drapeau `porteBadge` (la capsule, l'air
                du badge — voir EncadreBarre). L'écart avec l'icône
                (`gap-2.5`) est celui de la rangée du moteur. */}
-          <div className="flex items-center gap-2.5">
+          {/*  §1/§2 (nº 258) — L'ENCADRÉ PASSE À LA HAUTEUR DES CERCLES
+               (46 px, relevée sur les ronds du moteur — jamais choisie).
+               Sur le web, LA BARRE NE CHANGE PAS : la rangée garde la
+               zone de 52 px d'hier (`min-h-[52px]`) et y centre
+               l'encadré. Au doigt, l'espace libéré est RETIRÉ de la
+               barre (`mobile:min-h-0`) : la réserve suit
+               (64 + 12 + 46 = 122, voir EnTeteTatouage). */}
+          <div className="flex items-center gap-2.5 min-h-[52px] mobile:min-h-0">
             <div className="flex-1 min-w-0">
               <EncadreDeuxChamps gauche={badge} droite={filtre()} porteBadge />
             </div>
@@ -261,48 +277,17 @@ export function MenusSelection({
           </div>
         </div>
       </div>
-      <div
-        className={`${pliage} ${
-          replie
-            ? "grid-rows-[1fr] opacity-100"
-            : "grid-rows-[0fr] opacity-0"
-        }`}
-        aria-hidden={!replie || undefined}
-        inert={!replie || undefined}
-      >
-        <div className="min-h-0 overflow-hidden">
-          {/*  §2 (nº 246, resserrée nº 250-§2) — LA LIGNE ÉTROITE : le
-               mot en 13 px GRIS (la taille et la couleur des libellés
-               secondaires, `text-sombre-texte-doux` — aucune valeur
-               neuve), et à sa gauche, avec 8 px d'écart (`gap-2`), LA
-               FLÈCHE VERS LE BAS (nº 250-§2) : elle dit qu'un appui
-               DÉPLOIE — la loupe, elle, disait « chercher », ce que
-               cette ligne ne fait pas. `IconeChevronBas`, l'écriture
-               unique des icônes de la nº 240, en `currentColor`.
-               L'ensemble centré. Aucun contour, aucun halo, aucun
-               rose.
-               ⚠️ LE MOT EST « MA SÉLECTION » (nº 247-§6) : repliée, la
-               rangée dit OÙ l'on est.
-               ⚠️ UN CRAN PLUS BASSE (nº 250-§2) : 28 px au lieu de 36
-               — le mot et la flèche restent lisibles (13 px / 14 px).
-               La courbe et la durée du repli ne bougent pas d'un
-               jeton : mêmes enveloppes `pliage`, 300 ms, ease-out. La
-               réserve de la barre suit (64 + 12 + 28 = 104, voir
-               EnTeteTatouage). */}
-          <button
-            type="button"
-            data-ligne-repliee=""
-            onClick={surDeploiement}
-            aria-label="Déplier les menus de Ma sélection"
-            className="flex w-full items-center justify-center gap-2 rounded-2xl
-                       min-h-[28px] text-[13px] text-sombre-texte-doux
-                       transition-colors hover:bg-white/5 active:bg-white/10"
-          >
-            <IconeChevronBas taille={14} />
-            Ma sélection
-          </button>
-        </div>
-      </div>
+      {/*  §3 (nº 258) — LA LIGNE ÉTROITE A DISPARU, entièrement. Une
+           barre qui se replie ne laisse rien derrière elle : il ne
+           reste que le logo et les trois icônes — le titre juste en
+           dessous dit déjà où l'on est, et la loupe reste ce qu'elle
+           est (elle ouvre la recherche, elle ne redéploie rien). Le
+           retour se fait en remontant la page, ce que la mécanique de
+           la barre fait déjà (les seuils de juillet). La rangée se
+           rabat par L'ENVELOPPE `pliage` ci-dessus — les jetons mêmes
+           de la rangée du moteur (300 ms, ease-out), aucune seconde
+           écriture. La réserve repasse de trois hauteurs à deux
+           (122 / 64, comme le moteur — voir EnTeteTatouage). */}
     </div>
   );
 }

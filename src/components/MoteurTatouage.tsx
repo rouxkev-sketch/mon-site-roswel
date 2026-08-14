@@ -928,7 +928,10 @@ export function MoteurTatouage({
             libelleValeur={libelleQuoi}
             ariaLabel="Explorer"
             placeholder="Explorer"
-            hauteur="min-h-[52px]"
+            //  §2 (nº 258) — LA HAUTEUR DES CERCLES (46 px, relevée
+            //  sur les deux ronds voisins — jamais choisie) : le bloc
+            //  était plus haut que tout ce qui l'entoure.
+            hauteur="min-h-[46px]"
             taillePolice="text-base"
             sansBordure
             sombre
@@ -967,7 +970,10 @@ export function MoteurTatouage({
       {!pageOuverte && (
         <div
           ref={zoneFiltres}
-          className="relative flex mobile:hidden items-center gap-2.5"
+          //  §2 (nº 258) — LA BARRE NE CHANGE PAS SUR LE WEB : la
+          //  rangée garde sa zone de 52 px et y CENTRE l'encadré
+          //  descendu à 46 (items-center, déjà là).
+          className="relative flex mobile:hidden items-center gap-2.5 min-h-[52px]"
         >
           {/* OUVRIR LE STYLE OU LA LOCALITÉ FERME LE PANNEAU DES
               FILTRES : un seul volet vivant à la fois. En capture,
@@ -1096,9 +1102,12 @@ export function MoteurTatouage({
           //  réglable par `?clair=1|2|3`. La pression garde son
           //  comportement (`:active` monte d'un barreau).
           data-clair-barre=""
+          //  §1 (nº 258) — MOINS 11 % : 52 × 0,89 = 46,28 → 46 au
+          //  pixel entier — la hauteur même des cercles du web. La
+          //  barre rend l'espace (réserve 122, voir EnTeteTatouage).
           className="flex flex-1 min-w-0 items-center gap-3 text-left
                      rounded-full
-                     px-5 min-h-[52px] transition-colors"
+                     px-5 min-h-[46px] transition-colors"
         >
           {/*  ⚠️ TOUJOURS LE MÊME MOT (passe nº 140) : la loupe et
                « Recherche », qu'une recherche soit active ou non. Les
@@ -1153,7 +1162,9 @@ export function MoteurTatouage({
           }
           //  ⚠️ FOND GOUVERNÉ PAR `[data-clair-barre]` (nº 174-§1).
           data-clair-barre=""
-          className="shrink-0 w-[52px] h-[52px] rounded-full
+          //  §1 (nº 258) — 46, comme le champ et l'autre rond : les
+          //  trois blocs de la rangée restent alignés au pixel.
+          className="shrink-0 w-[46px] h-[46px] rounded-full
                      text-sombre-texte
                      flex items-center justify-center active:opacity-80
                      transition-opacity"
@@ -1175,7 +1186,7 @@ export function MoteurTatouage({
             `BoutonPhototheque`) : ici en 52 px, avec le retour à
             l'appui de la rangée du doigt — les deux seules valeurs qui
             distinguaient les deux barres, et elles ne bougent pas. */}
-        <BoutonPhototheque contexte="barre mobile" diametre={52} retourAuDoigt />
+        <BoutonPhototheque contexte="barre mobile" diametre={46} retourAuDoigt />
       </div>
       )}
 

@@ -94,6 +94,7 @@ export function MenuDeroulant({
   sombre = false,
   repliable = false,
   libelleValeur,
+  positionFleche,
 }: {
   valeur: string;
   surChangement: (valeur: string) => void;
@@ -122,6 +123,12 @@ export function MenuDeroulant({
       garde ses libellés courts — la catégorie est déjà écrite en
       titre au-dessus, la répéter vingt-deux fois serait du bruit. */
   libelleValeur?: string;
+  /** §5 (nº 258) — OÙ LA FLÈCHE SE POSE, quand le champ vit dans une
+      capsule dont la courbe mange le bord (l'encadré de « Ma
+      sélection ») : la position par défaut reste celle de toujours,
+      l'appelant peut donner plus d'air. Une position CSS
+      (`background-position`), rien d'autre. */
+  positionFleche?: string;
   /** Titre principal EN GRAS, affiché en tête de la liste — dans la
       feuille mobile ET dans le menu déroulant (structure identique sur
       tous les formats). */
@@ -562,7 +569,8 @@ export function MenuDeroulant({
         style={{
           backgroundImage: ouvert ? FLECHE_ROSE : FLECHE_GRISE,
           backgroundRepeat: "no-repeat",
-          backgroundPosition: compact ? "right 0.65rem center" : "right 0.9rem center",
+          backgroundPosition:
+            positionFleche ?? (compact ? "right 0.65rem center" : "right 0.9rem center"),
         }}
         className={`w-full ${hauteur} ${taillePolice} ${habillage} ${
           compact ? "pl-3 pr-7" : "pl-4 pr-10"

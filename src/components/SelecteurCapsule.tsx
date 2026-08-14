@@ -53,13 +53,22 @@ export function SelecteurCapsule<T extends string>({
   ariaLabel,
   pleineLargeur = false,
   robeCapsule = "bg-sombre-haut",
+  hauteurMot = "min-h-[44px]",
 }: {
   valeur: T;
   options: ReadonlyArray<{ cle: T; label: string }>;
   surChoix: (cle: T) => void;
   ariaLabel: string;
   pleineLargeur?: boolean;
+  /** §4 (nº 258) — une chaîne VIDE laisse la robe au CSS : dans
+      l'encadré de la barre, la règle `[data-clair-barre]
+      [data-capsule-glissante]` (globals.css) habille la pilule UN CRAN
+      AU-DESSUS de son fond, dans tous les états du fond. */
   robeCapsule?: string;
+  /** §1 (nº 258) — la hauteur des mots (et donc de la pilule,
+      `inset-y-0`). La fiche garde son 44 ; la barre passe 38 — son
+      encadré est descendu à 46, et l'air de 4 px ne bouge pas. */
+  hauteurMot?: string;
 }) {
   const conteneur = useRef<HTMLDivElement>(null);
   const [capsule, setCapsule] = useState<{ left: number; width: number } | null>(
@@ -121,7 +130,7 @@ export function SelecteurCapsule<T extends string>({
             //  redescend en gris — la même transition douce que la
             //  capsule. L'air vient du rembourrage : la capsule
             //  enveloppe le mot, elle ne le serre pas.
-            className={`relative z-[1] min-h-[44px] rounded-full px-5
+            className={`relative z-[1] ${hauteurMot} rounded-full px-5
                         text-[14px] font-semibold transition-colors ${
                           pleineLargeur ? "flex-1 basis-1/2 min-w-0" : ""
                         } ${

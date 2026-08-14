@@ -64,14 +64,38 @@ export function BoutonPhototheque({
       //  ⚠️ FOND GOUVERNÉ PAR `[data-clair-barre]` (nº 174-§1).
       data-clair-barre=""
       style={{ width: diametre, height: diametre }}
+      /*  §6 (nº 258) — LE TRAIT FANTÔME À GAUCHE DU « T », mesuré
+          avant d'être corrigé : à chaque bascule, UNE SEULE icône est
+          montée (jamais deux), opacité 1, visibilité pleine, et la
+          transition du bouton ne porte que des couleurs — aucun fondu
+          croisé, aucun reste dans le DOM. Mais le rasterisé parle : le
+          T ne peint RIEN à gauche de x=4, tandis que le cadre de
+          l'icône photo y peint son bord gauche (x=3,5 au trait 1,8 —
+          la colonne 2,6 → 4,4). Le trait intermittent est donc une
+          INVALIDATION DE PEINTURE INCOMPLÈTE au remplacement du
+          glyphe : le bouton vit au-dessus du verre de la barre
+          (backdrop-filter), et la colonne de l'ancien cadre qui
+          déborde de la boîte d'encre du T peut survivre dans une tuile
+          non repeinte. `contain: paint` borne la peinture du bouton à
+          SA boîte et force son invalidation ENTIÈRE à chaque
+          changement — une borne d'invalidation, PAS un masque posé
+          par-dessus : rien ne déborde d'un rond de 46 dont l'icône de
+          20 est centrée. Les `key` gravent le remplacement franc du
+          nœud SVG (aujourd'hui garanti par les deux composants
+          distincts ; la clé protège d'un refactor qui les unifierait). */
       className={`relative shrink-0 rounded-full text-sombre-texte
+                  [contain:paint]
                   flex items-center justify-center ${
                     retourAuDoigt
                       ? "active:opacity-80 transition-opacity"
                       : "transition-colors"
                   }`}
     >
-      {phototheque ? <IconeCartes taille={20} /> : <IconePhoto taille={20} />}
+      {phototheque ? (
+        <IconeCartes key="cartes" taille={20} />
+      ) : (
+        <IconePhoto key="photo" taille={20} />
+      )}
     </button>
   );
 }

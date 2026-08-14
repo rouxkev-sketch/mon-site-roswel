@@ -22,8 +22,10 @@ import type { EntreeFiltre } from "@/lib/filtres-selection";
  * porte les deux menus À SA PLACE (le moteur n'est monté que si
  * `surRecherche` est donné, ce qu'on ne fait pas ici). Il reste
  * intact partout ailleurs.
- * §4 — LA LOUPE RESTE OÙ ELLE EST, les menus s'installent en dessous
- * d'elle ; repliée, la rangée garde sa ligne étroite « Recherche ».
+ * §3 (nº 258) — REPLIÉE, LA RANGÉE NE LAISSE RIEN : la ligne étroite
+ * « Ma sélection » est partie. Le retour se fait en remontant la page,
+ * ce que la mécanique de la barre fait déjà — plus aucun rappel à
+ * porter ici.
  */
 export function BarreSelection({
   entreesFavoris,
@@ -44,12 +46,11 @@ export function BarreSelection({
       //  garde sa rétractation, ses deux hauteurs et sa ligne étroite ;
       //  seul le CONTENU de la rangée change (l'encadré sur le web,
       //  les deux titres au doigt — voir MenusSelection).
-      rangee={({ replie, deplier }) => (
+      rangee={({ replie }) => (
         <MenusSelection
           entreesFavoris={entreesFavoris}
           entreesSuivis={entreesSuivis}
           replie={replie}
-          surDeploiement={deplier}
         />
       )}
     />

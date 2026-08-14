@@ -160,30 +160,24 @@ titre("§1 — l'appui, VIVANT (la loupe et le compte, 390 px)");
 /* ==================================================================
  * §2 — LA BARRE REPLIÉE SE REPLIE DAVANTAGE
  * ================================================================== */
-titre("§2 — la ligne étroite : 28 px, « Ma sélection », la flèche vers le bas");
+titre("§2 — la ligne étroite (posée ici, disparue nº 258-§3) et la mécanique");
 {
   const menus = lire("src/components/MenusSelection.tsx");
   const barre = lire("src/components/EnTeteTatouage.tsx");
-  const icones = lire("src/components/Icones.tsx");
+  //  ⚠️ MIS À JOUR nº 258-§3 : la ligne étroite que CETTE passe avait
+  //  resserrée (36 → 28) a été SUPPRIMÉE — une barre qui se replie ne
+  //  laisse plus rien derrière elle, et la réserve n'a plus que deux
+  //  hauteurs (la troisième, 104, est partie avec la ligne). Ce que la
+  //  nº 250 a posé et qui demeure : la mécanique de juillet, intacte,
+  //  et le pliage aux jetons de la rangée du moteur.
   verif(
-    "la ligne passe de 36 à 28 px, mot et flèche lisibles (13 px / 14)",
-    /min-h-\[28px\] text-\[13px\]/.test(menus) &&
-      /IconeChevronBas taille=\{14\}/.test(menus) &&
-      !/min-h-\[36px\]/.test(menus)
-  );
-  verif(
-    "la flèche pointe vers le bas, dans l'écriture unique des icônes (currentColor)",
-    /export function IconeChevronBas/.test(icones) &&
-      /stroke="currentColor"/.test(
-        icones.slice(icones.indexOf("function IconeChevronBas"))
-      ) &&
-      !/IconeLoupe/.test(menus)
-  );
-  verif(
-    "la réserve suit : 64 + 12 + 28 = 104 (et h-[104px])",
-    /rangeeLibre \? 104 : 64/.test(barre) &&
-      /rangeeLibre\s*\n?\s*\? "h-\[104px\]"/.test(barre) &&
-      !/rangeeLibre \? 112/.test(barre)
+    "la ligne étroite n'existe plus, ni sa réserve de 104",
+    !/data-ligne-repliee/.test(menus) &&
+      !/min-h-\[28px\]|min-h-\[36px\]/.test(menus) &&
+      !/IconeChevronBas|IconeLoupe/.test(menus) &&
+      !/104|h-\[104px\]/.test(
+        barre.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "")
+      )
   );
   verif(
     "la mécanique de juillet est INTACTE (24 / −12 / 64, 300 ms, ease-out)",
@@ -193,47 +187,27 @@ titre("§2 — la ligne étroite : 28 px, « Ma sélection », la flèche vers l
       /duration-300 ease-out/.test(menus) &&
       /max-lg:duration-300 max-lg:ease-out/.test(barre)
   );
-  verif(
-    "aucun contour, aucun halo, aucun rose sur la ligne",
-    !/primaire|border-|shadow/.test(
-      menus.slice(menus.indexOf("data-ligne-repliee"), menus.indexOf("</button>"))
-    )
-  );
 }
 
 titre("§2 — la hauteur et la courbe, mesurées (injection + accueil vivant)");
 {
   const { contexte, page } = await ouvrirA(390, "/");
   try {
-    //  LA LIGNE ÉTROITE, injectée avec ses classes réelles : hauteur
-    //  AVANT (36, celle de la nº 246) contre APRÈS (28).
-    const menus = lire("src/components/MenusSelection.tsx");
-    const classeLigne = (
-      menus.match(/className="(flex w-full items-center justify-center[^"]*)"/)?.[1] ??
-      ""
-    ).replace(/\s+/g, " ");
+    //  ⚠️ MIS À JOUR nº 258-§3 : plus de ligne étroite à mesurer — il
+    //  reste LE PLIAGE, dont la courbe et la durée doivent égaler la
+    //  rangée du moteur vivante (juillet).
     const vu = await page.evaluate(
-      `((classes) => {
+      `(() => {
         const hote = document.createElement("div");
         hote.style.cssText = "position:fixed;top:0;left:0;width:350px;z-index:9999;";
         hote.innerHTML =
-          '<button class="' + classes + '">Ma sélection</button>' +
-          '<button class="' + classes.replace("min-h-[28px]", "min-h-[36px]") + '">avant</button>' +
-          //  Les jetons du pliage — la courbe et la durée se LISENT.
           '<div class="grid grid-cols-[minmax(0,1fr)] transition-[grid-template-rows,opacity] duration-300 ease-out" data-pliage></div>';
         document.body.appendChild(hote);
-        const [apres, avant] = [...hote.querySelectorAll("button")].map(
-          (b) => Math.round(b.getBoundingClientRect().height)
-        );
         const pliage = getComputedStyle(hote.querySelector("[data-pliage]"));
-        //  LA RÉFÉRENCE : la rangée du moteur, VIVANTE sur cette page —
-        //  c'est SA courbe et SA durée (juillet) qu'il faut égaler.
         const moteur = getComputedStyle(
           document.querySelector("[data-rangee-moteur]")
         );
         const mesure = {
-          apres,
-          avant,
           duree: pliage.transitionDuration,
           courbe: pliage.transitionTimingFunction,
           dureeMoteur: moteur.transitionDuration,
@@ -241,12 +215,7 @@ titre("§2 — la hauteur et la courbe, mesurées (injection + accueil vivant)")
         };
         hote.remove();
         return mesure;
-      })(${JSON.stringify(classeLigne)})`
-    );
-    verif(
-      "la ligne repliée : 36 px avant, 28 px après — un cran de moins",
-      vu.avant === 36 && vu.apres === 28,
-      `${vu.avant} → ${vu.apres} px`
+      })()`
     );
     verif(
       "la courbe et la durée du repli : celles de juillet, à l'identique",
@@ -272,8 +241,9 @@ titre("§2 — la hauteur et la courbe, mesurées (injection + accueil vivant)")
     await page.waitForTimeout(600);
     const remonte = await reserve();
     verif(
-      "la mécanique vivante n'a pas bougé (128 → 64 → 128 sur l'accueil)",
-      haut === 128 && descendu === 64 && remonte === 128,
+      //  (122 depuis la nº 258-§1 — les blocs descendus à 46.)
+      "la mécanique vivante n'a pas bougé (122 → 64 → 122 sur l'accueil)",
+      haut === 122 && descendu === 64 && remonte === 122,
       `${haut} → ${descendu} → ${remonte}`
     );
   } catch (erreur) {
