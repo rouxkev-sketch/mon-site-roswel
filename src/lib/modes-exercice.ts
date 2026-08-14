@@ -688,6 +688,16 @@ export type ModeEnSaisie = {
   } | null;
   /** Le lieu Photon saisi à la main, s'il n'y a pas de salon. */
   lieu: LieuTrouve | null;
+  /** §1 (nº 266) — LE NOM DU LIEU QUI N'EST PAS SUR YOKOFOLIO. Quand
+      l'adresse est saisie à la main (le portfolio du lieu n'existe
+      pas), un champ apparaît sous elle et demande comment ce lieu
+      s'appelle — « Nom du salon » ou « Nom du studio ». Il est
+      OBLIGATOIRE : sans lui, une adresse sur la fiche ne dit pas chez
+      QUI l'on travaille (voir `modeComplet`).
+      ⚠️ IL N'EXISTE QUE FACE À UNE ADRESSE SAISIE : un lieu trouvé
+      par la recherche porte déjà son nom, celui de sa fiche — le
+      champ disparaît alors avec l'adresse. */
+  nomLieu?: string | null;
   debut_le: string;
   fin_le: string;
 };
@@ -812,8 +822,32 @@ export function modeVide(mode: ModeEnSaisie): boolean {
     !mode.lieu &&
     !mode.debut_le &&
     !mode.fin_le &&
-    mode.rayonKm == null
+    mode.rayonKm == null &&
+    //  §1 (nº 266) — un nom de lieu saisi est une saisie comme une
+    //  autre : l'encadré n'est plus vierge.
+    !(mode.nomLieu ?? "").trim()
   );
+}
+
+/**
+ * LE NOM DU LIEU EST-IL EXIGIBLE SUR CE MODE ? (§1, nº 266)
+ * ------------------------------------------------------------------
+ * OUI quand les trois conditions tiennent :
+ *  · le mode se passe CHEZ QUELQU'UN — un salon, un studio, un lieu
+ *    de guest ; « à domicile » n'a pas de nom d'enseigne ;
+ *  · le lieu N'EST PAS sur YokoFolio (aucune fiche retenue) — sinon
+ *    son nom est déjà celui de sa fiche, et le champ n'existe pas ;
+ *  · une adresse a été CHOISIE : le champ ne s'ouvre qu'après elle.
+ * ⚠️ UNE SEULE ÉCRITURE : le formulaire l'interroge pour AFFICHER le
+ * champ, `modeComplet` pour l'exiger et `premierManque` pour le
+ * désigner — les trois ne peuvent pas diverger.
+ */
+export function nomLieuRequis(mode: ModeEnSaisie): boolean {
+  if (mode.genre !== "salon" && mode.genre !== "prive" && mode.genre !== "guest") {
+    return false;
+  }
+  if (mode.salon) return false;
+  return Boolean(mode.lieu);
 }
 
 /** LES MODES QUI COMPTENT — ceux où quelque chose a été saisi. C'est
@@ -850,6 +884,10 @@ export function modeComplet(mode: ModeEnSaisie): boolean {
   //  champs qui suivent posent une question sans sujet.
   if (mode.genre === "guest" && !mode.natureLieu) return false;
   if (!pointDuMode(mode)) return false;
+  //  §1 (nº 266) — LE NOM DU LIEU EST OBLIGATOIRE quand l'adresse est
+  //  saisie à la main : sans lui, la fiche dit OÙ l'on travaille sans
+  //  dire CHEZ QUI. Un lieu trouvé par la recherche porte déjà le sien.
+  if (nomLieuRequis(mode) && !(mode.nomLieu ?? "").trim()) return false;
   //  ⚠️ LE RAYON EST OBLIGATOIRE À DOMICILE (passe nº 124) : une ville
   //  sans rayon laissait croire que l'artiste ne bouge pas — et la
   //  recherche par distance n'avait rien à mesurer.
@@ -952,7 +990,7 @@ export function blocExerciceComplet(
 export type ManqueBloc = {
   /** La clé du mode en cause — null quand c'est le bloc entier. */
   cle: string | null;
-  champ: "type" | "genre" | "role" | "lieu" | "rayon" | "dates";
+  champ: "type" | "genre" | "role" | "lieu" | "nomLieu" | "rayon" | "dates";
   message: string;
 };
 
@@ -1035,6 +1073,16 @@ export function premierManque(
         cle: mode.cle,
         champ: "lieu",
         message: "Renseigne le lieu de ce mode.",
+      };
+    }
+    //  §1 (nº 266) — LE NOM DU LIEU SAISI À LA MAIN. Même règle que
+    //  les autres manques : le champ s'encadre de rouge, et cette
+    //  phrase ne sert qu'à l'infobulle et aux lecteurs d'écran.
+    if (nomLieuRequis(mode) && !(mode.nomLieu ?? "").trim()) {
+      return {
+        cle: mode.cle,
+        champ: "nomLieu",
+        message: "Donne le nom de ce lieu.",
       };
     }
     //  ⚠️ LE RAYON EST OBLIGATOIRE À DOMICILE (passe nº 124), mais

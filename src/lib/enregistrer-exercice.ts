@@ -2,6 +2,7 @@ import { fuseauDuLieu, semaineVersBase } from "@/lib/horaires-studio";
 import {
   colonnesDuLieu,
   modeVide,
+  nomLieuRequis,
   type ModeEnSaisie,
   type StudioEnSaisie,
 } from "@/lib/modes-exercice";
@@ -56,6 +57,11 @@ const COLONNES_MIGRATION_33 = [
   "rayon_km",
   //  ⚠️ AJOUTÉE PAR LA nº 41 (nature du lieu d'une session guest).
   "nature_lieu",
+  //  §1 (nº 266) — LE NOM DU LIEU qui n'est pas sur YokoFolio. Même
+  //  règle : tant que la migration n'est pas passée, le reste part
+  //  quand même — aucune version du site n'exige une migration pour
+  //  fonctionner.
+  "nom_lieu",
 ] as const;
 
 function colonneNeuveAbsente(message: string): string | null {
@@ -243,6 +249,13 @@ async function ecrireModes(
       rayon_km: mode.genre === "domicile" ? (mode.rayonKm ?? null) : null,
       //  LA NATURE DU LIEU VISITÉ n'a de sens que pour un guest.
       nature_lieu: mode.genre === "guest" ? (mode.natureLieu ?? null) : null,
+      //  §1 (nº 266) — LE NOM DU LIEU SAISI À LA MAIN. Il n'a de sens
+      //  que là où le champ existe (`nomLieuRequis` : un lieu qui a
+      //  son portfolio porte déjà le sien, « à domicile » n'en a pas)
+      //  — ailleurs null, comme le rayon et la nature.
+      nom_lieu: nomLieuRequis(mode)
+        ? (mode.nomLieu ?? "").trim() || null
+        : null,
       debut_le: mode.genre === "guest" ? mode.debut_le || null : null,
       fin_le: mode.genre === "guest" ? mode.fin_le || null : null,
       ordre: rang,

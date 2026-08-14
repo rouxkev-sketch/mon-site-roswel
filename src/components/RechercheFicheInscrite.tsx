@@ -106,6 +106,33 @@ export function RechercheFicheInscrite({
   const [ouverte, setOuverte] = useState(false);
   const [cherche, setCherche] = useState(false);
   const requete = useRef(0);
+  /**
+   * §3 (nº 266) — LA LISTE DÉBORDE-T-ELLE VRAIMENT ?
+   * ------------------------------------------------------------------
+   * C'est cette réponse, et elle seule, qui pose l'exception
+   * `defilement-visible` (voir la note du panneau, plus bas) : une
+   * barre n'a de sens que s'il reste quelque chose à voir. Mesurée sur
+   * le panneau lui-même — jamais devinée d'après le nombre de
+   * résultats, qui ne dit rien de la hauteur réelle des lignes — et
+   * remesurée quand la liste change ou que la fenêtre bouge
+   * (ResizeObserver, comme les rangées de la nº 252).
+   */
+  const panneauListe = useRef<HTMLDivElement>(null);
+  const [listeDeborde, setListeDeborde] = useState(false);
+  useEffect(() => {
+    const cadre = panneauListe.current;
+    if (!cadre) {
+      setListeDeborde(false);
+      return;
+    }
+    const lire = () =>
+      setListeDeborde(cadre.scrollHeight > cadre.clientHeight + 1);
+    lire();
+    const observateur = new ResizeObserver(lire);
+    observateur.observe(cadre);
+    for (const enfant of cadre.children) observateur.observe(enfant);
+    return () => observateur.disconnect();
+  }, [ouverte, resultats, cherche]);
   /** LA ZONE « champ + panneau » — elle sert à savoir ce qui est
       DEDANS quand on clique DEHORS (passe nº 121). */
   const zone = useRef<HTMLDivElement>(null);
@@ -348,9 +375,34 @@ export function RechercheFicheInscrite({
 
       {ouverte && (
         <div
-          className="mt-1.5 max-h-[280px] overflow-y-auto overscroll-contain
-                     rounded-xl border border-sombre-bordure bg-sombre-carte
-                     defilement-visible"
+          ref={panneauListe}
+          /*  §3 (nº 266) — LE POINT BLANC FANTÔME, ET SA CAUSE.
+              MESURE : ce n'est ni une puce de liste, ni un élément
+              rendu par le menu, ni un reste de peinture (le trait
+              fantôme de la nº 258). C'est LE POUCE DE LA BARRE DE
+              DÉFILEMENT de ce panneau. La règle
+              `.defilement-visible::-webkit-scrollbar-thumb`
+              (globals.css) dessine une barre CLASSIQUE — 11 px de
+              large, `border: 3px solid transparent` + `background-clip:
+              content-box` (donc 5 px visibles), `border-radius: 999px`,
+              couleur `--rw-bordure-carte`, le gris très clair. Blink la
+              peint MÊME QUAND IL N'Y A RIEN À FAIRE DÉFILER : le pouce
+              occupe alors toute la piste, et sur une liste d'une ou
+              deux entrées cette capsule de 5 px de large fait à peine
+              plus haut que large — un POINT CLAIR sur le bord droit.
+              C'est exactement le relevé : il n'apparaît qu'avec le
+              menu ouvert, et sur le côté droit.
+              LE REMÈDE N'EST PAS UN MASQUE : on ne pose l'exception
+              `defilement-visible` QUE lorsque la liste déborde
+              vraiment — c'est la seule raison qui l'a fait naître (la
+              barre disait qu'il restait des choix plus bas). Sans
+              débordement, le panneau retombe sous la règle générale du
+              site (« jamais d'ascenseur affiché ») : il n'y a plus de
+              pouce à peindre, donc plus de point. */
+          className={`mt-1.5 max-h-[280px] overflow-y-auto overscroll-contain
+                     rounded-xl border border-sombre-bordure bg-sombre-carte${
+                       listeDeborde ? " defilement-visible" : ""
+                     }`}
         >
           {resultats.length === 0 ? (
             //  ⚠️ LE MESSAGE NOMME CE QU'ON CHERCHAIT (passe nº 121) :

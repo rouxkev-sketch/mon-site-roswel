@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import { ChampLocalisation } from "@/components/ChampLocalisation";
+import { IconeCroix } from "@/components/Icones";
 import {
   RechercheFicheInscrite,
   type FicheInscrite,
 } from "@/components/RechercheFicheInscrite";
+import { sansRemplissageAuto } from "@/lib/champs-sans-remplissage";
+import { CHAMP } from "@/components/champs-formulaire";
 import type { LieuTrouve } from "@/lib/geocodage/types";
 
 /**
@@ -128,6 +131,20 @@ export function DeuxZonesLieu({
       comme au studio privé : les mots changent, la mécanique non. */
   indicationInscrit = "Recherche par nom",
   indicationManuel = "Je tape son adresse",
+  /** §1 (nº 266) — LE TITRE DE LA ZONE D'ADRESSE (« Où se trouve-t-il
+      ? »), au-dessus du champ comme la recherche a le sien. Il ne
+      rougit jamais — ce sont les champs qui s'encadrent (règle de la
+      nº 116). Sans lui, la zone n'a que son champ, comme avant. */
+  titreAdresse = null,
+  /** §1 (nº 266) — LE NOM DU LIEU QUI N'EST PAS SUR YOKOFOLIO. Le
+      champ n'apparaît qu'une fois l'ADRESSE CHOISIE, et disparaît
+      avec elle : trouver le portfolio du lieu par la recherche efface
+      l'adresse (`retenirLaFiche` met de côté, le parent lâche), donc
+      ce champ s'en va dans le même geste. Son libellé vit DEDANS. */
+  libelleNomLieu = null,
+  nomLieu = "",
+  surNomLieu,
+  nomLieuEnErreur = false,
 }: {
   prefixe: string;
   titre?: string | null;
@@ -135,6 +152,11 @@ export function DeuxZonesLieu({
   titreManuel?: string | null;
   indicationInscrit?: string;
   indicationManuel?: string;
+  titreAdresse?: string | null;
+  libelleNomLieu?: string | null;
+  nomLieu?: string;
+  surNomLieu?: (nom: string) => void;
+  nomLieuEnErreur?: boolean;
   ficheChoisie: FicheInscrite | null;
   surFiche: (fiche: FicheInscrite | null) => void;
   lieu: LieuTrouve | null;
@@ -246,6 +268,17 @@ export function DeuxZonesLieu({
               {zoneBremplie && <PastilleRetenu />}
             </p>
           )}
+          {/*  §1 (nº 266) — LE TITRE DE LA ZONE D'ADRESSE, à la même
+               écriture que la question et que les sous-titres : blanc,
+               13,5 px, semi-gras. Il ne rougit jamais. */}
+          {titreAdresse && !titreManuel && (
+            <p
+              data-titre-adresse=""
+              className="mb-2 text-[13.5px] font-semibold text-sombre-texte"
+            >
+              {titreAdresse}
+            </p>
+          )}
           <ChampLocalisation
             id={`${prefixe}-adresse`}
             etiquette={null}
@@ -257,6 +290,57 @@ export function DeuxZonesLieu({
             croixEffacement
             enErreur={enErreur}
           />
+          {/*  §1 (nº 266) — LE NOM DU LIEU, sous l'adresse et
+               seulement après elle : sans adresse la question n'a pas
+               de sujet. Pas de titre — son libellé vit dedans, comme
+               tous les champs du formulaire — et la croix
+               d'effacement de l'écriture partagée. */}
+          {libelleNomLieu && lieu && (
+            <div className="relative mt-3">
+              <input
+                id={`${prefixe}-nom-lieu`}
+                data-nom-lieu=""
+                type="text"
+                {...sansRemplissageAuto(`${prefixe}-nom-lieu`)}
+                value={nomLieu}
+                onChange={(evenement) => surNomLieu?.(evenement.target.value)}
+                placeholder={libelleNomLieu}
+                aria-label={libelleNomLieu}
+                aria-invalid={nomLieuEnErreur}
+                //  L'ÉCRITURE DES CHAMPS DU FORMULAIRE (`CHAMP`), et
+                //  l'encadré rouge des manques — comme partout ailleurs
+                //  sur le site. La place de la croix est réservée à
+                //  droite (`pr-12`), sinon le texte passerait dessous.
+                className={`${CHAMP} pr-12 ${
+                  nomLieuEnErreur ? "border-erreur" : "border-transparent"
+                }`}
+              />
+              {/*  LA CROIX D'EFFACEMENT — l'écriture de
+                   ChampLocalisation, au jeton près : même taille, même
+                   place, mêmes états. Elle ne s'affiche que s'il y a
+                   quelque chose à effacer. */}
+              {nomLieu.trim().length > 0 && (
+                <button
+                  type="button"
+                  aria-label="Effacer le nom"
+                  title="Effacer le nom"
+                  onPointerDown={(evenement) => {
+                    if (evenement.pointerType === "mouse") {
+                      evenement.preventDefault();
+                    }
+                  }}
+                  onClick={() => surNomLieu?.("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8
+                             items-center justify-center rounded-full
+                             text-sombre-texte-doux transition-colors
+                             hover:bg-sombre-eleve hover:text-sombre-texte
+                             active:bg-sombre-eleve"
+                >
+                  <IconeCroix taille={16} />
+                </button>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

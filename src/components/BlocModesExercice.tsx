@@ -516,9 +516,14 @@ export function BlocModesExercice({
     //  « Ton studio » et non « Ton studio privé » (passe nº 105) : le
     //  mode s'appelle « Studio », comme la position « Studio » de
     //  la glissière du bloc 1 — la question parle la même langue.
+    //  §1 (nº 266) — LA QUESTION PARLE DU PORTFOLIO, PAS DU LIEU : on
+    //  ne demande pas si le studio « est sur YokoFolio » (il y est
+    //  bien, physiquement, dans la vie de la personne) mais s'il y a
+    //  son PORTFOLIO — c'est cela qu'on cherche dans le champ juste
+    //  en dessous.
     const question = prive
-      ? "Ton studio est-il sur YokoFolio ?"
-      : "Ton salon est-il sur YokoFolio ?";
+      ? "Le studio a-t-il son portfolio sur YokoFolio ?"
+      : "Le salon a-t-il son portfolio sur YokoFolio ?";
 
     return (
       <div>
@@ -582,8 +587,24 @@ export function BlocModesExercice({
           }
           //  LES DEUX CHAMPS SE PRÉSENTENT SEULS : ce qu'ils attendent
           //  est écrit DEDANS, plus au-dessus.
+          //  §1 (nº 266) — … SAUF LA ZONE D'ADRESSE, qui reçoit un
+          //  TITRE comme la recherche a le sien, et un libellé
+          //  intérieur qui suit la nature du lieu : une ville suffit à
+          //  un studio, un salon veut son adresse complète (c'est la
+          //  règle d'`adresseSuffisante`, écrite ici en mots).
           indicationInscrit="Recherche"
-          indicationManuel="Ajouter l'adresse"
+          titreAdresse="Où se trouve-t-il ?"
+          indicationManuel={
+            prive ? "Ville ou adresse complète" : "Adresse complète"
+          }
+          //  §1 (nº 266) — LE NOM DU LIEU QUI N'EST PAS SUR YOKOFOLIO :
+          //  il n'apparaît qu'une fois l'adresse choisie, son libellé
+          //  vit DEDANS, et il disparaît avec l'adresse dès que le
+          //  portfolio du lieu est trouvé par la recherche.
+          libelleNomLieu={prive ? "Nom du studio" : "Nom du salon"}
+          nomLieu={mode.nomLieu ?? ""}
+          surNomLieu={(nomLieu) => modifier(mode.cle, { nomLieu })}
+          nomLieuEnErreur={manquant(mode.cle, "nomLieu")}
           ficheChoisie={ficheDuMode(mode)}
           surFiche={(fiche) =>
             modifier(
@@ -620,6 +641,14 @@ export function BlocModesExercice({
                     //  la seconde, calculée sur l'état d'avant,
                     //  écrasait la première).
                     lieu: null,
+                    //  §1 (nº 266) — LA BASCULE DANS L'AUTRE SENS :
+                    //  le portfolio du lieu a été créé entre-temps et
+                    //  la personne le trouve par la recherche —
+                    //  l'adresse s'efface (ci-dessus) ET le nom saisi
+                    //  avec elle. Le lieu porte désormais le nom de sa
+                    //  fiche : garder l'ancien en mémoire, invisible,
+                    //  le ferait ressortir au premier retrait.
+                    nomLieu: null,
                   }
                 : { salon: null }
             )
@@ -800,6 +829,21 @@ export function BlocModesExercice({
           const enFauteGenre = Boolean(
             manque && manque.cle === null && manque.champ === "genre"
           );
+          /*  §2 (nº 266) — L'ENCADREMENT DU BADGE ROUGIT quand CE
+              mode-là est incomplet : c'est le CADRE qui le dit, jamais
+              le mot ni le fond — le badge garde sa robe, son rose
+              d'actif et sa lisibilité. On voit ainsi d'un coup d'œil
+              LEQUEL des quatre modes réclame quelque chose, même
+              onglet fermé : le manque désigné porte la clé d'un mode
+              (`manque.cle`), et ce mode a son genre.
+              ⚠️ RIEN N'EST INVENTÉ : `border-erreur` est l'encadré
+              rouge des champs manquants, la seule écriture d'erreur du
+              site. Au repos, la bordure est transparente — la boîte ne
+              change donc jamais de taille. */
+          const modeEnFaute = modes.find(
+            (mode) => manque?.cle && mode.cle === manque.cle
+          );
+          const cadreRouge = Boolean(modeEnFaute && modeEnFaute.genre === genre);
           return (
             <button
               key={genre}
@@ -807,7 +851,11 @@ export function BlocModesExercice({
               role="radio"
               aria-checked={actif}
               onClick={() => choisirOnglet(genre)}
-              className={`rounded-xl px-1 py-2.5 text-center transition-colors ${
+              data-badge-mode={genre}
+              data-badge-en-faute={cadreRouge ? "" : undefined}
+              className={`rounded-xl border px-1 py-2.5 text-center transition-colors ${
+                cadreRouge ? "border-erreur" : "border-transparent"
+              } ${
                 actif
                   ? "bg-primaire/15"
                   : "bg-sombre-eleve hover:bg-primaire/10 active:bg-primaire/10"
@@ -852,7 +900,19 @@ export function BlocModesExercice({
             sessionsAffichees.map((session) => (
               <div key={session.cle}>
                 <div className="flex min-h-[36px] items-center">
-                  <span className={TITRE_INTERTITRE}>
+                  {/*  §2 (nº 266) — MÊME RÈGLE POUR LE LIEU UNIQUE :
+                       son intertitre rougit quand c'est lui qui
+                       manque. Il n'a pas de numéro (il est seul de son
+                       type), le reste ne change pas. */}
+                  <span
+                    data-titre-volet={session.cle}
+                    data-titre-en-faute={
+                      manque?.cle === session.cle ? "" : undefined
+                    }
+                    className={`${TITRE_INTERTITRE}${
+                      manque?.cle === session.cle ? " text-erreur" : ""
+                    }`}
+                  >
                     {LIBELLES_MODES[genreAffiche]}
                   </span>
                 </div>
@@ -894,12 +954,24 @@ export function BlocModesExercice({
                         className="group flex min-h-[52px] min-w-0 flex-1 items-center
                                    justify-between gap-3 text-left"
                       >
+                        {/*  §2 (nº 266) — LE TITRE NUMÉROTÉ ROUGIT
+                             quand c'est CE volet-là qui est incomplet :
+                             « À domicile 2/2 » en rouge dit lequel des
+                             deux réclame quelque chose, même replié.
+                             Aucune phrase — la couleur, et rien
+                             d'autre. */}
                         <span
+                          data-titre-volet={session.cle}
+                          data-titre-en-faute={
+                            manque?.cle === session.cle ? "" : undefined
+                          }
                           className={`text-[14px] font-semibold uppercase
                                      tracking-[0.1em] transition-colors ${
-                                       deplie
-                                         ? "text-sombre-texte"
-                                         : "text-sombre-texte-doux group-hover:text-sombre-texte"
+                                       manque?.cle === session.cle
+                                         ? "text-erreur"
+                                         : deplie
+                                           ? "text-sombre-texte"
+                                           : "text-sombre-texte-doux group-hover:text-sombre-texte"
                                      }`}
                         >
                           {LIBELLES_MODES[genreAffiche]} {position + 1}/

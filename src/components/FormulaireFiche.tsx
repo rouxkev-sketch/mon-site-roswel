@@ -12,6 +12,7 @@ import {
   MOTIFS_MODERATION,
   type TypeFiche,
 } from "@/config/tatouage";
+import { CHAMP } from "@/components/champs-formulaire";
 import { BlocAutreAdresse } from "@/components/BlocAutreAdresse";
 import { BlocEquipeSalon } from "@/components/BlocEquipeSalon";
 import { BlocHorairesStudio } from "@/components/BlocHorairesStudio";
@@ -162,10 +163,10 @@ const FORME_TIKTOK = /^https:\/\/(www\.)?tiktok\.com\/@[A-Za-z0-9._-]{2,}\/?$/i;
     raison désormais : l'ERREUR la teinte en rouge — un manque se
     signale toujours. Transparente par défaut, elle ne décale rien
     quand elle s'allume. */
-const CHAMP =
-  "w-full min-h-[52px] rounded-xl border bg-sombre-eleve px-4 text-base " +
-  "text-sombre-texte placeholder:text-sombre-texte-doux outline-none " +
-  "transition-colors focus:bg-sombre-eleve-clair";
+//  §1 (nº 266) — L'ÉCRITURE D'UN CHAMP A DÉMÉNAGÉ dans
+//  `champs-formulaire` : le champ du nom d'un lieu (bloc 1) la partage
+//  désormais, et un import depuis ce fichier-ci aurait fermé un cercle.
+//  Aucune valeur n'a changé.
 
 /**
  * LES BLOCS DU FORMULAIRE — LEUR ORDRE, LEUR NUMÉRO, LEURS DEUX NOMS
@@ -593,6 +594,13 @@ async function chargerModes(
         natureLieu:
           ligne.nature_lieu ?? (ligne.genre === "guest" ? "salon" : null),
         rayonKm: ligne.rayon_km ?? null,
+        //  §1 (nº 266) — LE NOM DU LIEU SAISI À LA MAIN, relu pour la
+        //  même raison que les deux colonnes ci-dessus : non relu, il
+        //  repartirait à `null` au premier enregistrement. Une ligne
+        //  d'avant la migration nº 266 n'en a pas — la colonne est
+        //  tolérée absente (voir enregistrer-exercice).
+        nomLieu:
+          (ligne as unknown as { nom_lieu?: string | null }).nom_lieu ?? null,
         salon: salon
           ? {
               id: ligne.salon_id as string,
