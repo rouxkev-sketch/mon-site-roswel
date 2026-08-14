@@ -112,13 +112,12 @@ export function EnTeteTatouage({
    * et c'est la rangée existante qui le porte : même largeur
    * (`basis-[680px]`, `max-w-[720px]`), même centrage, même mécanique
    * de repli (les deux hauteurs, réglages inchangés).
-   * On lui rend l'état de repli : à elle de dire ce qu'elle montre
-   * repliée (§4 — la ligne étroite « Recherche »), et de demander le
-   * dépliement au toucher.
+   * §2 (nº 259) — ET LE REPLI EST ENTIÈREMENT CELUI DE LA BARRE :
+   * l'enveloppe se rabat pour les deux rangées, avec les mêmes jetons.
+   * La rangée libre n'a plus rien à savoir de l'état — elle ne reçoit
+   * plus rien.
    */
-  rangee?: (etat: {
-    replie: boolean;
-  }) => React.ReactNode;
+  rangee?: () => React.ReactNode;
 }) {
   const router = useRouter();
   const { utilisateur, nom } = useUtilisateur();
@@ -450,7 +449,9 @@ export function EnTeteTatouage({
     return () => borne.removeEventListener("change", lire);
   }, []);
   /** La rangée est-elle VRAIMENT hors de portée ? */
-  const rangeeEscamotee = surAccueil && moteurReplie && etroit;
+  //  §2 (nº 259) — LES DEUX RANGÉES SE REPLIENT : celle du moteur ET
+  //  la rangée libre. L'inertie suit la même condition que le repli.
+  const rangeeEscamotee = rangeePresente && moteurReplie && etroit;
 
   //  ⚠️ AVANT LA PEINTURE (nº 156-§2) : la toute première lecture doit
   //  décider de l'état de la rangée AVANT que la barre ne s'affiche —
@@ -709,9 +710,20 @@ export function EnTeteTatouage({
           */}
         <div
           data-rangee-moteur=""
+          //  §2 (nº 259) — UNE SEULE ÉCRITURE DU REPLI, POUR LES DEUX
+          //  RANGÉES. La rangée LIBRE (« Ma sélection ») ne se repliait
+          //  pas : son enveloppe restait `flex`, et seul le CONTENU se
+          //  rabattait, dans MenusSelection. Il restait donc les 12 px
+          //  du `max-lg:pt-3` ci-dessous — mesuré : rangée libre repliée
+          //  12 px contre 0 pour celle du moteur —, et la barre de
+          //  « Ma sélection » descendait 12 px plus bas que celle de la
+          //  recherche, alors que la réserve annonçait 64. C'est donc
+          //  CETTE enveloppe qui se replie désormais, pour l'accueil
+          //  comme pour la rangée libre : mêmes jetons, même durée,
+          //  même courbe, et la réserve tombe juste par construction.
           className={`order-3 lg:order-2 basis-full lg:basis-[680px] lg:shrink lg:grow-0 lg:mx-auto
                       min-w-0 justify-center ${
-                        surAccueil
+                        rangeePresente
                           ? `max-lg:grid max-lg:grid-cols-[minmax(0,1fr)]
                              max-lg:transition-[grid-template-rows,opacity]
                              max-lg:duration-300 max-lg:ease-out ${
@@ -719,9 +731,7 @@ export function EnTeteTatouage({
                                  ? "max-lg:grid-rows-[0fr] max-lg:opacity-0"
                                  : "max-lg:grid-rows-[1fr] max-lg:opacity-100"
                              } lg:flex`
-                          : rangeeLibre
-                            ? "flex"
-                            : "hidden lg:flex"
+                          : "hidden lg:flex"
                       }`}
           //  ⚠️ SEULEMENT LÀ OÙ LA RANGÉE SE REPLIE VRAIMENT
           //  (nº 154-§5) : ces deux attributs ignorent les points de
@@ -746,7 +756,9 @@ export function EnTeteTatouage({
                 //  seule la remontée de la page le fait (les seuils de
                 //  juillet, une seule mémoire — la leçon nº 247-§6
                 //  reste vraie par construction).
-                rangee({ replie: moteurReplie && etroit })
+                //  §2 (nº 259) — et `replie` est parti à son tour :
+                //  l'enveloppe ci-dessus rabat la rangée elle-même.
+                rangee()
               ) : (
                 <MoteurTatouage
                   criteres={valeur}

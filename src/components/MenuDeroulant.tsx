@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { gelerLeCorps } from "@/lib/gel-du-corps";
 import { createPortal } from "react-dom";
 import { COULEURS } from "@/config/roswel";
 import {
@@ -217,6 +218,29 @@ export function MenuDeroulant({
   useEffect(() => {
     prevenirOuverture.current = onOuvertureChange;
   }, [onOuvertureChange]);
+  /**
+   * §3 (nº 259) — LA PAGE NE DÉFILE PLUS DERRIÈRE LA FEUILLE OUVERTE.
+   * ------------------------------------------------------------------
+   * Le défaut : feuille ouverte, un doigt qui parcourt la liste faisait
+   * défiler LA PAGE derrière — l'interface paraissait cassée, et l'on
+   * revenait ailleurs en refermant.
+   * ⚠️ LE GEL N'EST PAS ÉCRIT ICI : c'est celui de la fenêtre de fiche
+   * (nº 226-§5), EXTRAIT à cette passe (lib/gel-du-corps) et partagé —
+   * même compte (la première surface gèle, la dernière dégèle), même
+   * restitution de la position. Une feuille ouverte par-dessus une
+   * fenêtre ne peut donc pas dégeler la page en se refermant.
+   * ⚠️ LA FEUILLE SEULE (`feuilleMobile`) : le panneau du web ne
+   * recouvre pas la page et ne gèle rien.
+   * Le défilement INTERNE, lui, reste vivant — et il ne se propage pas
+   * à la page en bout de liste (`overscroll-contain` sur la liste).
+   */
+  useEffect(() => {
+    if (!feuilleMobile || !listeVisible) return;
+    //  La feuille ne vit qu'au doigt (`md:hidden`) : au-dessus de cette
+    //  borne, rien n'est monté à l'écran — donc rien à geler.
+    if (!window.matchMedia("(max-width: 767.98px)").matches) return;
+    return gelerLeCorps();
+  }, [feuilleMobile, listeVisible]);
   /**
    * LA REMONTÉE D'ABORD, LE MENU ENSUITE — UN ENCHAÎNEMENT, PAS UNE
    * SURVEILLANCE (nº 195-§2)
@@ -773,7 +797,10 @@ export function MenuDeroulant({
             </h2>
             <ul
               ref={listeDeroulante}
-              className="overflow-y-auto px-2 pb-2 defilement-visible"
+              //  §3 (nº 259) — `overscroll-contain` : arrivé en bout de
+              //  liste, le geste NE SE PROPAGE PAS à la page (la même
+              //  écriture que le panneau du web, ci-dessus).
+              className="overflow-y-auto overscroll-contain px-2 pb-2 defilement-visible"
             >
               {optionsAvecEntetes.map(({ option, entete, sousEntete }) => {
                 const { value, label } = option;

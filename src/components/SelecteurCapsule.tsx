@@ -75,7 +75,48 @@ export function SelecteurCapsule<T extends string>({
     null
   );
 
+  /**
+   * §1 (nº 259) — EN PLEINE LARGEUR, LA POSITION NE SE MESURE PLUS :
+   * ELLE SE CALCULE, ET AVANT LA PEINTURE.
+   * ------------------------------------------------------------------
+   * LE DÉFAUT, dans un seul sens : la pilule partait, s'arrêtait,
+   * repartait. LA CAUSE, mesurée : la position venait d'une MESURE DU
+   * DOM prise après coup, et il y en avait DEUX par bascule —
+   *  1. celle de l'effet de disposition (juste avant la peinture) ;
+   *  2. celle du ResizeObserver, que l'effet recrée à chaque
+   *     changement de valeur : `observe()` déclenche un rappel INITIAL
+   *     à l'image suivante (mesuré : ~1 image après l'appel), c'est-à-
+   *     dire APRÈS le départ de la transition.
+   * Tant que les deux mesures coïncident, rien ne se voit. Mais la
+   * bascule change AUSSI le reste de la barre et de la page (le
+   * libellé du champ, l'icône de mise en page, tout le contenu de
+   * « Ma sélection ») : quand la disposition se pose une image plus
+   * tard, la seconde mesure diffère, elle réécrit `left` EN PLEINE
+   * TRANSITION, et la transition repart de la position interpolée.
+   * D'où l'asymétrie : le sens dont la disposition se stabilise le
+   * plus tard est le seul qui casse.
+   *
+   * LE REMÈDE, sans toucher ni à la durée ni à la courbe : EN PLEINE
+   * LARGEUR, la géométrie est CONNUE — les mots se partagent la
+   * largeur à égalité, séparés par l'écart du conteneur. La position
+   * de la pilule est donc une fonction pure de son rang, écrite en
+   * `calc()` dès le PREMIER rendu : plus aucune mesure, plus aucun
+   * observateur, plus de second rendu — une seule source, connue avant
+   * la peinture. (Sur la fiche, les deux mots ont des largeurs
+   * différentes : la mesure y reste la seule vérité.)
+   */
+  const rang = Math.max(
+    0,
+    options.findIndex((option) => option.cle === valeur)
+  );
+  const largeurMot = `calc((100% - ${options.length - 1} * var(--rw-ecart-mots)) / ${options.length})`;
+  const placeCalculee = {
+    left: `calc(${rang} * (${largeurMot} + var(--rw-ecart-mots)))`,
+    width: largeurMot,
+  };
+
   useLayoutEffect(() => {
+    if (pleineLargeur) return;
     const zone = conteneur.current;
     if (!zone) return;
     const mesurer = () => {
@@ -89,7 +130,7 @@ export function SelecteurCapsule<T extends string>({
     const observateur = new ResizeObserver(mesurer);
     observateur.observe(zone);
     return () => observateur.disconnect();
-  }, [valeur]);
+  }, [valeur, pleineLargeur]);
 
   const contenu = (
     <div
@@ -101,20 +142,33 @@ export function SelecteurCapsule<T extends string>({
       //  tout. `w-fit` sur la fiche (la rangée du haut pose « Suivre »
       //  à sa droite) ; pleine largeur dans la barre, où le badge
       //  remplit sa moitié d'encadré.
-      className={`relative flex items-center gap-1 ${
-        pleineLargeur ? "w-full" : "w-fit"
-      }`}
+      //  L'ÉCART ENTRE LES MOTS, ÉCRIT UNE FOIS (nº 259-§1) : la
+      //  classe le POSE et l'écart le relit — les deux ne peuvent plus
+      //  diverger. La valeur est celle de toujours (`gap-1`, 0,25 rem).
+      //  ⚠️ DANS LA CLASSE, PAS DANS UN `style` EN LIGNE : la variable
+      //  voyage alors AVEC la chaîne de classes — un style en ligne se
+      //  serait perdu partout où l'on rejoue ces classes seules (les
+      //  bancs l'ont montré : l'écart tombait à zéro), et la pilule
+      //  aurait épousé une largeur qui n'est pas celle des mots.
+      className={`relative flex items-center [--rw-ecart-mots:0.25rem]
+                  gap-[var(--rw-ecart-mots)] ${
+                    pleineLargeur ? "w-full" : "w-fit"
+                  }`}
     >
       {/*  LA CAPSULE — derrière le mot actif, OPAQUE (nº 207-§1) et
            d'un cran plus claire que l'actif des rectangles de rendu.
            Aucun contour, aucun rose. */}
-      {capsule && (
+      {(pleineLargeur || capsule) && (
         <span
           aria-hidden="true"
           data-capsule-glissante=""
           className={`absolute inset-y-0 rounded-full ${robeCapsule}
                      transition-[left,width] duration-300 ease-out`}
-          style={{ left: capsule.left, width: capsule.width }}
+          style={
+            pleineLargeur
+              ? placeCalculee
+              : { left: capsule!.left, width: capsule!.width }
+          }
         />
       )}
       {options.map((option) => {

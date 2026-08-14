@@ -105,12 +105,17 @@ titre("§1/§3/§5 — à la source : 46 partout, la ligne étroite morte, la fl
       /h-\[122px\]/.test(barre) &&
       !/104|h-\[104px\]/.test(barreNue)
   );
+  //  ⚠️ MIS À JOUR nº 259-§2 : le bloc n'écrit plus son propre
+  //  rabattement — c'est L'ENVELOPPE DE LA BARRE qui replie les deux
+  //  rangées, avec les jetons du moteur (le bloc gardait un second
+  //  pliage, et les 12 px de son air restaient à l'écran). Ce que
+  //  CETTE passe exigeait — mêmes jetons que la rangée du moteur — se
+  //  lit désormais à un seul endroit.
   verif(
-    "§3 — le rabattement du bloc : les jetons mêmes de la rangée du moteur",
-    /transition-\[grid-template-rows,opacity\] duration-300 ease-out/.test(menus) &&
-      /max-lg:transition-\[grid-template-rows,opacity\]\s*\n?\s*max-lg:duration-300 max-lg:ease-out/.test(
-        barre
-      )
+    "§3 — le rabattement : les jetons du moteur, dans UNE seule enveloppe",
+    /max-lg:transition-\[grid-template-rows,opacity\]\s*\n?\s*max-lg:duration-300 max-lg:ease-out/.test(
+      barre
+    ) && !/transition-\[grid-template-rows,opacity\]/.test(menus)
   );
   verif(
     "§5 — la flèche du menu : l'air des mots du badge (20 px ≥ le plancher de 12)",
@@ -231,8 +236,10 @@ titre("§1 — VIVANT (390 px) : trois blocs à 46, la barre à 122, scrollY imm
     const redeplie = await page.evaluate(() =>
       Number(document.querySelector("[data-reserve-barre]").getAttribute("data-reserve-posee"))
     );
-    /*  LE SECOND RELEVÉ : la transition du bloc, mesurée sur ses
-        classes réelles injectées dans la même page. */
+    /*  LE SECOND RELEVÉ — ⚠️ MIS À JOUR nº 259-§2 : le bloc n'a plus
+        de pliage à lui. On mesure donc L'ENVELOPPE DE LA BARRE, sur
+        ses classes réelles lues à la source (branches résolues) : la
+        rangée libre et celle du moteur la partagent désormais. */
     const releveBloc = await page.evaluate(
       `((classes) => {
         const hote = document.createElement("div");
@@ -243,7 +250,18 @@ titre("§1 — VIVANT (390 px) : trois blocs à 46, la barre à 122, scrollY imm
         hote.remove();
         return vu;
       })(${JSON.stringify(
-        nettoyer(menus.match(/"(grid grid-cols-\[minmax\(0,1fr\)\] transition-\[grid-template-rows,opacity\][^"]+)"/)?.[1])
+        nettoyer(
+          barre
+            .match(/className=\{`(order-3 lg:order-2 basis-full[\s\S]*?)`\}/)?.[1]
+            ?.replace(
+              /\$\{\s*rangeePresente\s*\?\s*`([\s\S]*?)`\s*:\s*"[^"]*"\s*\}/,
+              "$1"
+            )
+            .replace(
+              /\$\{\s*moteurReplie\s*\?\s*"([^"]*)"\s*:\s*"[^"]*"\s*\}/,
+              "$1"
+            )
+        )
       )})`
     );
     verif(
@@ -252,12 +270,12 @@ titre("§1 — VIVANT (390 px) : trois blocs à 46, la barre à 122, scrollY imm
       `122 → ${replie.reserve} → ${redeplie} · ligne étroite ${replie.ligneEtroite ? "PRÉSENTE" : "absente"}`
     );
     verif(
-      "§3 — les deux relevés du rabattement, identiques (moteur vivant / bloc)",
+      "§3 — les deux relevés du rabattement, identiques (moteur vivant / enveloppe)",
       releveMoteur.duree === releveBloc.duree &&
         releveMoteur.courbe === releveBloc.courbe &&
         /0\.3s/.test(releveMoteur.duree) &&
         /cubic-bezier\(0, 0, 0\.2, 1\)/.test(releveMoteur.courbe),
-      `moteur ${releveMoteur.duree} ${releveMoteur.courbe} · bloc ${releveBloc.duree} ${releveBloc.courbe}`
+      `moteur ${releveMoteur.duree} ${releveMoteur.courbe} · enveloppe ${releveBloc.duree} ${releveBloc.courbe}`
     );
   } catch (erreur) {
     nonJoue("§1 · vivant 390", String(erreur).slice(0, 90));

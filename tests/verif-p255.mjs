@@ -741,10 +741,14 @@ titre("§6 — à la source : une seule mécanique de repli, aucune seconde");
       //  il ne la pose pas.
       !/122|104/.test(menusNus)
   );
+  //  ⚠️ MIS À JOUR nº 259-§2 : le pliage du bloc est parti — c'est
+  //  l'enveloppe de la barre qui replie les deux rangées. Ce que CETTE
+  //  passe exigeait — la durée et la courbe de la rangée du moteur —
+  //  se lit au même endroit que le repli lui-même.
   verif(
     "la durée et la courbe du pliage : celles de la rangée du moteur",
-    /duration-300 ease-out/.test(menus) &&
-      /max-lg:duration-300 max-lg:ease-out/.test(barre)
+    /max-lg:duration-300 max-lg:ease-out/.test(barre) &&
+      !/duration-300 ease-out/.test(menusNus)
   );
 }
 

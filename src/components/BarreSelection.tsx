@@ -46,11 +46,14 @@ export function BarreSelection({
       //  garde sa rétractation, ses deux hauteurs et sa ligne étroite ;
       //  seul le CONTENU de la rangée change (l'encadré sur le web,
       //  les deux titres au doigt — voir MenusSelection).
-      rangee={({ replie }) => (
+      //  §2 (nº 259) — LE REPLI EST CELUI DE LA BARRE, entièrement :
+      //  son enveloppe se rabat pour les deux rangées (celle du moteur
+      //  et celle-ci), avec les mêmes jetons. Le bloc n'a plus rien à
+      //  savoir de l'état.
+      rangee={() => (
         <MenusSelection
           entreesFavoris={entreesFavoris}
           entreesSuivis={entreesSuivis}
-          replie={replie}
         />
       )}
     />

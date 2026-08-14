@@ -92,13 +92,9 @@ const MOTS_DU_BADGE: ReadonlyArray<{ cle: MenuSelection; label: string }> = [
 export function MenusSelection({
   entreesFavoris,
   entreesSuivis,
-  replie = false,
 }: {
   entreesFavoris: EntreeFiltre[];
   entreesSuivis: EntreeFiltre[];
-  /** La rangée est-elle repliée ? (§4 — l'état vient de la barre, il
-      n'est pas calculé ici : une seule mécanique de repli.) */
-  replie?: boolean;
 }) {
   //  L'ADRESSE, LUE COMME UN MAGASIN : le même que celui de la
   //  mémoire de navigation — il surveille `pushState`, `replaceState`
@@ -129,17 +125,6 @@ export function MenusSelection({
     borne.addEventListener("change", lire);
     return () => borne.removeEventListener("change", lire);
   }, []);
-
-  /*  §2 (nº 246) — LE PASSAGE DÉPLOYÉ → RÉTRACTÉ SUIT LE REPLI
-      EXISTANT, courbe et durée : les deux états sont montés, chacun
-      dans une enveloppe pliée par LES MÊMES JETONS que la rangée du
-      moteur (`grid-template-rows` 1fr ↔ 0fr + opacité, 300 ms,
-      `ease-out` — nº 147/150). L'ÉTAT, lui, vient toujours de la
-      barre (`replie`) : aucune seconde mécanique, seulement la même
-      présentation branchée sur le même interrupteur. L'état caché est
-      `inert` : rien n'y reçoit le focus. */
-  const pliage =
-    "grid grid-cols-[minmax(0,1fr)] transition-[grid-template-rows,opacity] duration-300 ease-out";
 
   /*  §2 — LE BADGE. Un appui repose le paramètre sur l'autre menu, sans
       critère : le filtre d'un menu ne vaut pas pour l'autre (leurs
@@ -229,17 +214,16 @@ export function MenusSelection({
         la place disponible, et l'icône de mise en page se pose à sa
         droite (§4). Le centrage, la largeur et le repli restent ceux
         de la barre (EnTeteTatouage), avec ses réglages de juillet. */
+    /*  §2 (nº 259) — LE RABATTEMENT N'EST PLUS ÉCRIT ICI. Ce bloc
+        portait son propre pliage (les jetons de la rangée du moteur,
+        branchés sur `replie`) tandis que l'enveloppe de la barre, elle,
+        restait dépliée : il restait donc les 12 px de son air
+        (`max-lg:pt-3`), et la barre de « Ma sélection » descendait
+        d'autant plus bas que celle du moteur. C'est désormais
+        L'ENVELOPPE DE LA BARRE qui se replie, pour les deux rangées —
+        une seule mécanique, une seule réserve, et rien à tenir
+        d'accord. */
     <div className="w-full">
-      <div
-        className={`${pliage} ${
-          replie
-            ? "grid-rows-[0fr] opacity-0"
-            : "grid-rows-[1fr] opacity-100"
-        }`}
-        aria-hidden={replie || undefined}
-        inert={replie || undefined}
-      >
-        <div className="min-h-0 overflow-hidden">
           {/*  §1 (nº 256) — L'ENCADRÉ UNIQUE, devenu capsule : le badge
                puis le champ, dans LE MÊME `EncadreDeuxChamps` que le
                moteur, avec son drapeau `porteBadge` (la capsule, l'air
@@ -275,8 +259,6 @@ export function MenusSelection({
               <BoutonPhototheque contexte="Ma sélection" />
             </div>
           </div>
-        </div>
-      </div>
       {/*  §3 (nº 258) — LA LIGNE ÉTROITE A DISPARU, entièrement. Une
            barre qui se replie ne laisse rien derrière elle : il ne
            reste que le logo et les trois icônes — le titre juste en
@@ -284,9 +266,9 @@ export function MenusSelection({
            est (elle ouvre la recherche, elle ne redéploie rien). Le
            retour se fait en remontant la page, ce que la mécanique de
            la barre fait déjà (les seuils de juillet). La rangée se
-           rabat par L'ENVELOPPE `pliage` ci-dessus — les jetons mêmes
-           de la rangée du moteur (300 ms, ease-out), aucune seconde
-           écriture. La réserve repasse de trois hauteurs à deux
+           rabat par L'ENVELOPPE DE LA BARRE (nº 259-§2) — les jetons
+           mêmes de la rangée du moteur (300 ms, ease-out), aucune
+           seconde écriture. La réserve repasse de trois hauteurs à deux
            (122 / 64, comme le moteur — voir EnTeteTatouage). */}
     </div>
   );

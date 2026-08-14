@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { corpsGele, gelerLeCorps } from "@/lib/gel-du-corps";
 import Link from "next/link";
 import { villeAffichee } from "@/lib/adresse";
 import { libelleStyle, MARQUE_YOKOFOLIO } from "@/config/tatouage";
@@ -90,10 +91,6 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  * arrivées directes (lien partagé, moteurs) : le référencement ne voit
  * que des pages.
  */
-
-/** COMBIEN DE FENÊTRES GÈLENT LE CORPS EN CE MOMENT — le compte du
-    module (nº 226-§5) : gel à la première, dégel à la dernière. */
-let fenetresQuiGelent = 0;
 
 /** LA PILE DES CLAVIERS — chaque fenêtre ouverte y pose son jeton ;
     seule celle du DESSUS (le dernier jeton) répond aux touches. */
@@ -250,16 +247,12 @@ export function FenetreFiche({
     //  partir dégèle et rend le défilement — fermer la fenêtre du
     //  dessus ne doit jamais rendre la page tant qu'une autre vit
     //  dessous. Le drapeau `data-fenetre-fiche` suit le même compte.
-    const position = positionGrille;
-    const corps = document.body.style;
-    fenetresQuiGelent += 1;
-    if (fenetresQuiGelent === 1) {
-      corps.position = "fixed";
-      corps.top = `-${position}px`;
-      corps.left = "0";
-      corps.right = "0";
-      corps.width = "100%";
-    }
+    //  ⚠️ LE GEL EST L'ÉCRITURE UNIQUE DU SITE (extraite nº 259-§3,
+    //  lib/gel-du-corps) : même compte, mêmes valeurs, même
+    //  restitution — la feuille du menu au doigt le partage désormais,
+    //  et une feuille ouverte par-dessus une fenêtre ne peut plus
+    //  dégeler la page en se refermant.
+    const degeler = gelerLeCorps(positionGrille);
     //  Idempotent : la grille le pose déjà avant son pushState — mais
     //  une fenêtre de base qui REVIENT (la pile au-dessus d'elle
     //  vient de se fermer) doit le reposer elle-même.
@@ -268,16 +261,8 @@ export function FenetreFiche({
       window.removeEventListener("keydown", surTouche);
       const rang = pileClavier.indexOf(jeton);
       if (rang !== -1) pileClavier.splice(rang, 1);
-      fenetresQuiGelent -= 1;
-      if (fenetresQuiGelent > 0) return;
-      corps.position = "";
-      corps.top = "";
-      corps.left = "";
-      corps.right = "";
-      corps.width = "";
-      // « instant » : le site déclare un défilement doux global — sans
-      // lui, la restitution serait une animation visible.
-      window.scrollTo({ top: position, left: 0, behavior: "instant" });
+      degeler();
+      if (corpsGele()) return;
       // Le drapeau posé à l'ouverture (par la grille ou par la pile) :
       // on le retire quand la DERNIÈRE fenêtre disparaît, quelle que
       // soit la façon dont elle disparaît.

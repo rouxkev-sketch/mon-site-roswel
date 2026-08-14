@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { usePathname } from "next/navigation";
+import { positionSousLeGel } from "@/lib/gel-du-corps";
 import { FenetreFiche } from "@/components/FenetreFiche";
 import { ficheComplete } from "@/lib/fiche-complete";
 import type { Tatoueur } from "@/lib/tatoueurs";
@@ -178,13 +179,11 @@ export function PileFiches({
         return;
       }
       //  La position que le gel rendra : celle du CORPS DÉJÀ GELÉ
-      //  quand une fenêtre vit dessous (window.scrollY y vaut zéro),
-      //  celle de la page sinon.
-      const corps = document.body.style;
-      const position =
-        corps.position === "fixed"
-          ? Math.abs(parseFloat(corps.top || "0")) || 0
-          : window.scrollY;
+      //  quand une surface vit dessous (window.scrollY y vaut zéro),
+      //  celle de la page sinon. ⚠️ LA LECTURE VIT AVEC LE GEL
+      //  (extraite nº 259-§3, lib/gel-du-corps) : deux endroits ne
+      //  peuvent plus lire le corps de deux façons.
+      const position = positionSousLeGel();
       //  Le drapeau AVANT le pushState : DefilementEnHaut le lit au
       //  moment où l'adresse change (même règle que la mosaïque).
       document.documentElement.setAttribute("data-fenetre-fiche", "1");
