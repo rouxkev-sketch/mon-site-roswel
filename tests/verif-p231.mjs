@@ -245,7 +245,12 @@ if (!fiche) {
           source.includes("rounded-full") &&
           source.includes("px-3.5")
       );
-      const selecteur = lire("src/components/PortfolioDeLAffiche.tsx");
+      //  ⚠️ RÉVISÉ nº 255-§1 puis nº 276-§3 : les mots du sélecteur
+      //  Profil / Portfolio vivent dans SelecteurCapsule (extraction
+      //  255), et PortfolioDeLAffiche n'a plus aucun sélecteur à lui
+      //  (la 276 a supprimé les deux va-et-vient). La typographie de
+      //  référence se lit donc chez SelecteurCapsule.
+      const selecteur = lire("src/components/SelecteurCapsule.tsx");
       verif(
         "à la source : la même typographie que les mots du sélecteur",
         source.includes("text-[14px] font-semibold") &&

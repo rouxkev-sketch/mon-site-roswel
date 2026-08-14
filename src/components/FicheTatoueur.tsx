@@ -398,10 +398,10 @@ export function FicheTatoueur({
             studioCourant={studioCourant}
             demonstration={demonstration}
             apercu={apercu}
-            //  L'onglet « Portfolio » s'ouvre sur ce qu'on cherchait
-            //  (nº 217-§3), pas sur « Réalisations · Noir et gris ».
-            natureCherchee={natureInitiale}
-            renduCherche={renduInitial}
+            //  §3 (nº 276) — plus de natureCherchee / renduCherche : le
+            //  panneau montre les deux sections, il n'a plus rien à
+            //  ouvrir « au bon endroit ». La série cherchée continue,
+            //  elle, d'ouvrir le carrousel ci-dessus (serieCherchee).
             suiviAuDepart={suiviAuDepart}
             surSerieChoisie={(serie) => {
               setStyleAffiche(serie.style);

@@ -1274,8 +1274,13 @@ for (const salon of TATOUEURS_DEMO) {
  *
  * Les images restent des rectangles de couleur dessinés à la volée
  * (/images-demo/tatouage/<style>-<n>.svg) : aucune photo de tatouage
- * n'est publiée sans l'accord de son auteur. La « miniature » est la
- * même adresse — un SVG n'a pas deux résolutions.
+ * n'est publiée sans l'accord de son auteur.
+ * §4 (nº 276) — LA MINIATURE A UNE ADRESSE DISTINCTE (`?miniature=1`,
+ * le même SVG : il n'a pas deux résolutions). Quand elle était la même
+ * adresse, `PhotoProgressive` reconnaissait « même image » et ne
+ * rendait qu'une balise : le chargement EN DEUX TEMPS des vraies
+ * fiches était INVISIBLE en démonstration, donc immesurable au banc.
+ * Deux adresses = deux requêtes, comme en production.
  */
 TATOUEURS_DEMO.forEach((fiche, rangDeLaFiche) => {
   const galerie: PhotoTatoueur[] = [];
@@ -1315,7 +1320,8 @@ TATOUEURS_DEMO.forEach((fiche, rangDeLaFiche) => {
         rendu,
         nature,
         url: image,
-        miniature: image,
+        //  §4 (nº 276) — adresse distincte : voir la note de tête.
+        miniature: `${image}?miniature=1`,
         ordre: galerie.length,
       });
     }
@@ -1378,7 +1384,8 @@ FICHE_ADMIN_DEMO.galerie = FICHE_ADMIN_DEMO.styles.flatMap((style, rang) =>
     //  une vraie fiche, sinon elle ne teste rien.
     nature: i === 2 ? "flash" : "tatouage",
     url: `/images-demo/tatouage/${style}-${i + 1}.svg`,
-    miniature: `/images-demo/tatouage/${style}-${i + 1}.svg`,
+    //  §4 (nº 276) — adresse distincte : voir la note de tête.
+    miniature: `/images-demo/tatouage/${style}-${i + 1}.svg?miniature=1`,
     ordre: rang * 3 + i,
   }))
 );

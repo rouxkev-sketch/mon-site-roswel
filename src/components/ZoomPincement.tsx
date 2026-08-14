@@ -73,9 +73,12 @@ export function usePincement({
   surPincement,
   arme = true,
   nom = "zoom",
+  sortirDuCadre = false,
 }: {
   /** L'élément qui REÇOIT les doigts (les gestionnaires retournés y
-      sont posés — et le blocage du défilement s'y accroche). */
+      sont posés — et le blocage du défilement s'y accroche).
+      §1 (nº 276) : il porte `data-pincement` le temps du geste — c'est
+      ce qui LÈVE SON CONFINEMENT (voir la règle dans globals.css). */
   ecoute: React.RefObject<HTMLElement | null>;
   /** L'élément TRANSFORMÉ (l'image, ou son cadre direct). */
   cible: React.RefObject<HTMLElement | null>;
@@ -101,6 +104,22 @@ export function usePincement({
   /** Le nom porté au journal de la sonde — « zoom (carte) » compte à
       part de « zoom (fiche) » (nº 219-§1). */
   nom?: string;
+  /**
+   * §1 (nº 276) — SORTIR LA PHOTO DE SON CADRE DE DÉFILEMENT.
+   * ------------------------------------------------------------------
+   * Sur la FICHE, la photo pincée vit DANS le cadre du carrousel — un
+   * conteneur de défilement, et un conteneur de défilement rogne
+   * toujours ce qui dépasse (c'est la limite actée à la nº 209-§7, que
+   * la nº 276 lève). On ne peut pas ouvrir ce cadre le temps du geste :
+   * il perdrait sa position de défilement, et toutes les colonnes
+   * glisseraient sous les doigts. La photo en SORT donc elle-même :
+   * `position: fixed`, posée au pixel exact où elle est déjà (la page
+   * ne peut pas défiler pendant le geste, rien ne bouge), le temps du
+   * pincement — puis tout est effacé au rangement.
+   * Les CARTES de la mosaïque n'en ont pas besoin : leur photo n'est
+   * dans aucun cadre de défilement, lever le confinement suffit.
+   */
+  sortirDuCadre?: boolean;
 }) {
   const doigts = useRef(new Map<number, Doigt>());
   const depart = useRef<Mesure | null>(null);
@@ -116,6 +135,13 @@ export function usePincement({
   /** LE CADRE ET L'ORIGINE DU ZOOM, mesurés au premier pincement : ils
       donnent les BUTÉES du déplacement (nº 208-§5). */
   const cadre = useRef({ largeur: 0, hauteur: 0, ox: 0, oy: 0 });
+  /** LE RANGEMENT EN VOL (§1 nº 276) — les 220 ms qui suivent la fin
+      d'un geste : la photo revient en place, PUIS ses styles et le
+      `data-pincement` s'effacent. Un pincement qui REPREND pendant ce
+      délai l'annule : sans cela, le rangement du geste précédent
+      s'abattrait au milieu du nouveau — styles effacés, confinement
+      revenu — et l'image serait rognée sous les doigts. */
+  const rangement = useRef<number | null>(null);
 
   /**
    * LES BUTÉES DU DÉPLACEMENT (nº 208-§5) — la photo agrandie glisse,
@@ -201,17 +227,32 @@ export function usePincement({
     finDernierPincement = Date.now();
     surPincement?.(false);
     const element = cible.current;
+    //  §1 (nº 276) — la zone est notée MAINTENANT : au moment où le
+    //  rangement s'achèvera, la ref peut déjà être vide (démontage).
+    const zone = ecoute.current;
     if (element) {
       // Retour en place, en douceur — puis on efface tout : la cible
       // redevient un simple élément, sans style résiduel.
       element.style.transition = "transform 200ms ease-out";
       element.style.transform = "";
-      window.setTimeout(() => {
+      rangement.current = window.setTimeout(() => {
+        rangement.current = null;
         element.style.transition = "";
         element.style.zIndex = "";
         element.style.position = "";
         element.style.transformOrigin = "";
+        //  La sortie du cadre (fiche) s'efface avec le reste.
+        element.style.left = "";
+        element.style.top = "";
+        element.style.width = "";
+        element.style.height = "";
+        //  §1 (nº 276) — LE CONFINEMENT NE REVIENT QU'ICI, une fois le
+        //  retour animé achevé : le reprendre pendant les 200 ms de la
+        //  transition rognerait l'image en plein mouvement.
+        if (zone) delete zone.dataset.pincement;
       }, 220);
+    } else if (zone) {
+      delete zone.dataset.pincement;
     }
   }
 
@@ -234,10 +275,26 @@ export function usePincement({
       //  Le geste continue donc là où il s'était figé.
       const reprise = actif.current;
       actif.current = true;
+      //  §1 (nº 276) — un rangement encore en vol (les 220 ms du geste
+      //  précédent) est annulé : il ne doit pas s'abattre sur ce geste.
+      if (rangement.current !== null) {
+        window.clearTimeout(rangement.current);
+        rangement.current = null;
+      }
       //  ⚠️ LA PHOTO PASSE DEVANT LA BARRE FIXE (nº 209-§2) : le plan
       //  de la mosaïque, tenu sous la barre au repos, monte au-dessus
       //  le temps du geste (voir la règle dans globals.css).
       document.documentElement.dataset.zoom = "1";
+      //  §1 (nº 276) — PENDANT LE GESTE, LA ZONE PINCÉE CESSE D'ÊTRE
+      //  CONFINÉE. La nº 224 a posé `content-visibility: auto` sur
+      //  chaque carte, et cette propriété implique un confinement de
+      //  peinture : tout ce qui dépasse de la boîte est rogné — le
+      //  zoom ne débordait donc plus de son cadre. Le marqueur lève ce
+      //  confinement (règle dans globals.css), sur CETTE zone et elle
+      //  seule, le temps du pincement : les autres cartes gardent leur
+      //  mémoire (le plantage à 92 cartes que la nº 224 a tué ne peut
+      //  pas revenir pour une carte, le temps d'un geste).
+      if (ecoute.current) ecoute.current.dataset.pincement = "1";
       finDernierPincement = Date.now();
       depart.current = mesure();
       //  LA BASE DU GESTE EST TOUJOURS CE QUE L'IMAGE MONTRE — au
@@ -263,8 +320,23 @@ export function usePincement({
             ox,
             oy,
           };
-          // Au-dessus des voisines de la grille pendant le geste.
-          element.style.position = "relative";
+          if (sortirDuCadre) {
+            //  §1 (nº 276) — LA PHOTO SORT DE SON CADRE DE DÉFILEMENT
+            //  (fiche) : posée en `fixed` au pixel exact où elle est
+            //  déjà — la page ne peut pas défiler pendant le geste,
+            //  rien ne bouge à l'écran — elle échappe au rognage du
+            //  carrousel. Sa colonne garde sa taille (le cadre 4/5 est
+            //  porté par la colonne, pas par elle) : la mise en page ne
+            //  bronche pas.
+            element.style.left = `${rect.left}px`;
+            element.style.top = `${rect.top}px`;
+            element.style.width = `${rect.width}px`;
+            element.style.height = `${rect.height}px`;
+            element.style.position = "fixed";
+          } else {
+            // Au-dessus des voisines de la grille pendant le geste.
+            element.style.position = "relative";
+          }
           element.style.zIndex = "60";
         }
       }
@@ -361,6 +433,7 @@ export function ZoomPincement({
   surPincement,
   arme = true,
   nom = "zoom",
+  sortirDuCadre = false,
 }: {
   children: React.ReactNode;
   /** Classes du cadre (il épouse l'image : lui donner sa taille). */
@@ -376,6 +449,9 @@ export function ZoomPincement({
    */
   arme?: boolean;
   nom?: string;
+  /** §1 (nº 276) — voir `usePincement` : la photo du carrousel de la
+      fiche sort de son cadre de défilement le temps du geste. */
+  sortirDuCadre?: boolean;
 }) {
   const cadre = useRef<HTMLDivElement>(null);
   const gestes = usePincement({
@@ -384,6 +460,7 @@ export function ZoomPincement({
     surPincement,
     arme,
     nom,
+    sortirDuCadre,
   });
 
   return (

@@ -784,6 +784,10 @@ export function CarrouselPortfolio({
                   surPincement={surPincement}
                   arme={rang === indice}
                   nom="zoom (fiche)"
+                  //  §1 (nº 276) — le cadre du carrousel est un
+                  //  conteneur de défilement : il rogne. La photo en
+                  //  sort le temps du geste (voir usePincement).
+                  sortirDuCadre
                   classe="h-full w-full"
                 >
                   {montee && image}

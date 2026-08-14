@@ -8,6 +8,7 @@ import { defilerEnDouceur } from "@/lib/defilement-programme";
 //  ce que le carrousel reçoit. Sans `?sonde-carrousel=1`, ne coûte rien.
 import { noter as noterSonde } from "@/lib/journal-carrousel";
 import {
+  ECRITURE_TITRE_SECTION,
   libelleFiltre,
   libelleStyle,
   PORTRAIT_ROND,
@@ -21,11 +22,7 @@ import {
   type OngletAffiche,
   type SerieChoisie,
 } from "@/components/PortfolioDeLAffiche";
-import {
-  NATURE_PAR_DEFAUT,
-  RENDU_PAR_DEFAUT,
-  rendusDuPortfolio,
-} from "@/lib/photos-tatoueur";
+import { rendusDuPortfolio } from "@/lib/photos-tatoueur";
 import type { StyleGalerie } from "@/lib/photo-tatoueur";
 import { FenetreSignalement } from "@/components/FenetreSignalement";
 import { libelleDuLien } from "@/lib/liens-fiche";
@@ -50,10 +47,11 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  * coller son adresse dans la barre du navigateur.
  *
  * DÉSORMAIS IL N'Y EN A QU'UN. Ce composant porte TOUT ce qui est du
- * CONTENU : les deux onglets, le sélecteur de catégorie, les vignettes
- * par style, « Aucune publication », et l'intégralité de l'onglet
- * « Profil » — identité, suivre, adresse, site, horaires, bio, réseaux,
- * équipe, les trois sections de badges, le signalement.
+ * CONTENU : les deux onglets, les sections « Réalisations » et
+ * « Flashs » du portfolio et leurs vignettes (nº 276-§3), « Aucune
+ * publication », et l'intégralité de l'onglet « Profil » — identité,
+ * suivre, adresse, site, horaires, bio, réseaux, équipe, les trois
+ * sections de badges, le signalement.
  *
  * CE QUI RESTE À CHAQUE ENVELOPPE, et rien d'autre : la façon de
  * s'ouvrir et de se fermer, et les boutons posés SUR la photo, dont la
@@ -67,8 +65,6 @@ export function ContenuFiche({
   studioCourant,
   demonstration = false,
   apercu = false,
-  natureCherchee = "",
-  renduCherche = "",
   surSerieChoisie,
   suiviAuDepart = false,
 }: {
@@ -84,13 +80,6 @@ export function ContenuFiche({
   /** Vrai dans l'espace tatoueur (« Ma fiche ») : ni suivi, ni
       signalement, ni mise hors ligne. */
   apercu?: boolean;
-  /** LA CATÉGORIE ET LE RENDU CHERCHÉS (nº 217-§3) — l'onglet
-      « Portfolio » s'ouvre alors sur EUX, et non sur « Réalisations ·
-      Noir et gris » par défaut. Arriver d'une recherche de flashs et
-      trouver le panneau posé sur les réalisations, c'était le même
-      mélange de catégories que dans le carrousel, un cran plus loin. */
-  natureCherchee?: string;
-  renduCherche?: string;
   /** Un toucher sur une vignette : l'enveloppe montre CETTE série —
       style + catégorie + rendu (nº 204-§3) — et remonte en haut
       (nº 197-§4). */
@@ -105,16 +94,13 @@ export function ContenuFiche({
    * styles publiés, catégorie par catégorie.
    */
   const [onglet, setOnglet] = useState<OngletAffiche>("profil");
-  /** La catégorie regardée dans l'onglet « Portfolio » (nº 197-§2) —
-      celle qu'on cherchait s'il y en avait une (nº 217-§3). */
-  const [categorie, setCategorie] = useState<string>(
-    natureCherchee || NATURE_PAR_DEFAUT
-  );
-  /** LE RENDU regardé (nº 204-§3) — le panneau le ramène de lui-même
-      au seul rendu présent quand il n'y en a qu'un. */
-  const [rendu, setRendu] = useState<string>(
-    renduCherche || RENDU_PAR_DEFAUT
-  );
+  /*  §3 (nº 276) — PLUS AUCUN ÉTAT DE CATÉGORIE NI DE RENDU : les deux
+      sélecteurs du portfolio sont SUPPRIMÉS, code compris. Le panneau
+      montre les deux sections empilées ; il n'a plus rien à retenir,
+      et l'onglet « Portfolio » n'a plus besoin de savoir ce qu'on
+      cherchait (les props natureCherchee / renduCherche partent avec —
+      la série cherchée continue d'ouvrir le CARROUSEL de l'enveloppe,
+      cette logique-là vit chez elle et n'a pas bougé). */
 
   /**
    * §7 (nº 208) — AU DOIGT, CHANGER D'ONGLET REMONTE LA PAGE
@@ -237,24 +223,12 @@ export function ContenuFiche({
     remonterSousLaBarre();
   }
 
-  /** Changer de catégorie (nº 218-§2) : les vignettes changent
-      entièrement, la page remonte au MÊME endroit que ci-dessus. */
-  function choisirCategorie(suivante: string) {
-    noterSonde(`SÉLECTEUR catégorie → « ${suivante} » (rendu « ${rendu} »)`);
-    setCategorie(suivante);
-    /*  §1 (nº 269) — LE VA-ET-VIENT « RÉALISATIONS / FLASH » NE
-        REMONTE PLUS. La consigne de la nº 234 est ANNULÉE par le
-        propriétaire : la page ne bouge plus d'un pixel quand on passe
-        d'une catégorie à l'autre.
-        ⚠️ `remonterSousLaBarre` ne s'exécute QUE sur smartphone (son
-        premier test) : retirer l'appel ici retire donc la remontée là
-        où elle existait — au doigt — et ne change rien au web, qui
-        n'en avait jamais.
-        ⚠️ LES TROIS AUTRES NE BOUGENT PAS : Profil / Portfolio
-        (`choisirOnglet`), le rendu Noir & gris / Couleur (`surRendu`)
-        et les vignettes de style (qui remontent TOUT EN HAUT depuis la
-        nº 239) gardent chacune la leur. */
-  }
+  /*  §3 (nº 276) — `choisirCategorie` et `surRendu` ont DISPARU avec
+      leurs sélecteurs, et leurs remontées de page avec eux (celle du
+      rendu datait de la nº 234 ; celle de la catégorie était déjà
+      partie à la nº 269). RESTENT, inchangées : la remontée de
+      Profil / Portfolio (`choisirOnglet`, sous la barre) et celle des
+      vignettes de style (tout en haut, nº 239 — `remonteeDemandee`). */
 
   const avatarProfil = (
     <span
@@ -574,29 +548,6 @@ export function ContenuFiche({
       {onglet === "portfolio" && (
         <PanneauPortfolio
           groupes={groupes}
-          nature={categorie}
-          surNature={choisirCategorie}
-          rendu={rendu}
-          /*  §1 (nº 234) — LE RENDU REMONTE COMME LES AUTRES. Il était
-              le seul des quatre sélecteurs à ne pas le faire : les
-              vignettes changeaient entièrement sous les yeux, et la
-              page restait où elle était. C'est `remonterSousLaBarre`,
-              LA MÊME fonction que Profil / Portfolio et que
-              Réalisations / Flash — même mouvement, même durée, aucun
-              second mécanisme.
-              ⚠️ ELLE NE POUSSE AUCUNE ENTRÉE D'HISTORIQUE (un simple
-              `scrollTo` amorti, voir lib/defilement-programme) et
-              n'écrit AUCUNE position : sur une page de détail,
-              MemoireNavigation n'enregistre rien au défilement — la
-              restitution des nº 230 et 232 est donc intacte, un
-              retour revient bien où le visiteur était. */
-          surRendu={(suivant) => {
-            noterSonde(
-              `SÉLECTEUR rendu → « ${suivant} » (catégorie « ${categorie} »)`
-            );
-            setRendu(suivant);
-            remonterSousLaBarre();
-          }}
           nomTatoueur={tatoueur.nom}
           surSerie={(serie) => {
             noterSonde(
@@ -760,7 +711,10 @@ export function ContenuFiche({
                     : "mt-9"
                 }
               >
-                <h2 className="text-[13px] font-semibold uppercase tracking-[0.14em] text-sombre-texte-doux">
+                {/*  §3 (nº 276) — l'écriture de la nº 223, désormais en
+                     constante partagée (les titres du Portfolio la
+                     consomment aussi) : une seule écriture, partout. */}
+                <h2 className={ECRITURE_TITRE_SECTION}>
                   {groupe.titre}
                 </h2>
                 <ul className="mt-4 flex flex-wrap gap-2">

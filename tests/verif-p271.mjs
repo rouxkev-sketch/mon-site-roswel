@@ -122,23 +122,38 @@ titre("§1/§3 — à la source : le repos nu, l'état enfoncé, ce qui ne chang
     /cliquable \? ` \$\{SOULIGNEMENT_LIEN\}` : ""/.test(adresseSlice) &&
       !/[" ]underline[ "]/.test(adresseSlice)
   );
+  //  ⚠️ RÉVISÉ PAR LA Nº 276-§2 : la RANGÉE d'adresse n'est plus le
+  //  lien — la destination sort du site, donc « dehors on souligne » :
+  //  le <a> Google Maps est EN LIGNE, autour de la seule adresse, et
+  //  c'est LUI le `group` du trait et le porteur de l'état enfoncé.
+  //  La rangée est redevenue un simple bloc de mise en page.
   verif(
-    "la ligne d'adresse est le `group` du trait, et porte l'état enfoncé " +
-      "de la 229 (`active:bg-white/10`) — SANS fond de survol, sans encadré 232",
-    /className=\{`group rounded-xl -m-2 p-2 transition-colors active:bg-white\/10 \$\{\s*pastille \? "flex items-start gap-3\.5" : "block"\s*\}`\}/.test(
+    "l'adresse (⚠️ nº 276-§2) : le lien Maps est EN LIGNE — `group` du " +
+      "trait, état enfoncé de la 229 — la rangée est un bloc nu, " +
+      "sans fond de survol, sans encadré 232",
+    /className="group rounded transition-colors active:bg-white\/10"/.test(
       adresseSlice
     ) &&
+      /<div className=\{pastille \? "flex items-start gap-3\.5" : "block"\}>/.test(
+        adresseSlice
+      ) &&
       !adresseSlice.includes("hover:bg-white/5") &&
       !adresseSlice.includes("CLASSES_LIGNE_CLIQUABLE")
   );
+  //  ⚠️ RÉVISÉ PAR LA Nº 276-§2 : la ligne d'artiste liée est un LINK
+  //  ENTIER (pastille comprise) — la consigne 268 « lien borné au nom
+  //  + adresse » est ANNULÉE par le propriétaire. L'encadré 232 reste
+  //  l'écriture unique, désormais portée par ce Link.
   verif(
-    "ce qui ne change pas : l'encadré 232 de la ligne d'artiste " +
-      "(l'écriture même), le rôle hors du lien — et (⚠️ nº 273) " +
-      "l'équipe n'a PLUS de soulignement du tout",
+    "ce qui ne change pas : l'écriture 232 elle-même, le rôle décrit — " +
+      "et (⚠️ nº 276-§2) la ligne d'artiste liée est un Link ENTIER " +
+      "portant CLASSES_LIGNE_CLIQUABLE",
     /"group flex items-start gap-3\.5 rounded-xl -m-2 p-2 " \+\s*"transition-colors hover:bg-white\/5 active:bg-white\/10"/.test(
       blocLieux
     ) &&
-      /\{lie \? \(\s*<div className=\{CLASSES_LIGNE_CLIQUABLE\}>/.test(blocNu) &&
+      /\{lie \? \(\s*<Link[\s\S]{0,600}?className=\{CLASSES_LIGNE_CLIQUABLE\}\s*>/.test(
+        blocNu
+      ) &&
       /\{etiquetteDuMode\(mode\)\}\{" "\}\s*\{lie \? \(/.test(blocNu) &&
       !/avecFiche/.test(blocNu)
   );
@@ -279,7 +294,14 @@ for (const largeur of [390, 1440]) {
 
     //  L'ÉTAT ENFONCÉ (nº 229) : à l'appui, le fond monte à blanc/10 —
     //  puis le geste est relâché AILLEURS, aucun clic ne part.
-    const boite = await lienAdresse.boundingBox();
+    //  ⚠️ nº 276-§2 : le lien est EN LIGNE — sa boîte englobante peut
+    //  couvrir deux lignes de texte, et son centre tomber ENTRE elles
+    //  (l'appui manquait alors le lien). On vise la PREMIÈRE boîte de
+    //  ligne, là où le texte est.
+    const boite = await lienAdresse.evaluate((a) => {
+      const r = a.getClientRects()[0] ?? a.getBoundingClientRect();
+      return { x: r.left, y: r.top, width: r.width, height: r.height };
+    });
     await salon.page.mouse.move(
       boite.x + boite.width / 2,
       boite.y + boite.height / 2

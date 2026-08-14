@@ -31,15 +31,18 @@ const navigateur = await chromium.launch();
 titre("§1 et §2 — les mécaniques, à la source");
 {
   const contenu = lire("src/components/ContenuFiche.tsx");
-  //  UNE SEULE fonction de remontée, appelée par les QUATRE chemins :
-  //  l'onglet, la catégorie, le rendu.
+  //  UNE SEULE fonction de remontée. ⚠️ RÉVISÉ DEUX FOIS : la nº 269 a
+  //  retiré la remontée de la catégorie, puis la nº 276-§3 a SUPPRIMÉ
+  //  les deux sélecteurs du portfolio (catégorie et rendu), code
+  //  compris — il ne reste que Profil / Portfolio pour l'appeler (les
+  //  vignettes ont la leur, `remonteeDemandee`).
   verif(
     "une seule fonction de remontée, écrite une fois",
     (contenu.match(/function remonterSousLaBarre\(\)/g) ?? []).length === 1
   );
   verif(
-    "les sélecteurs de galerie l'appellent tous",
-    (contenu.match(/remonterSousLaBarre\(\);/g) ?? []).length >= 3
+    "le sélecteur restant l'appelle (⚠️ nº 276-§3 : il n'en reste qu'un)",
+    (contenu.match(/remonterSousLaBarre\(\);/g) ?? []).length === 1
   );
   verif(
     "elle ne touche jamais à l'historique",
@@ -152,14 +155,15 @@ titre("§1 — les quatre sélecteurs remontent (390 px)");
     for (const s of selecteurs) {
       const bouton = page.getByRole("radio", { name: s.mot });
       if ((await bouton.count()) === 0) {
-        //  ⚠️ LE SÉLECTEUR DE RENDU DISPARAÎT quand le portfolio n'a
-        //  qu'un seul rendu (règle de la nº 204-§3) : sur le catalogue
-        //  de démonstration, il n'y a donc rien à toucher. On le dit,
-        //  on ne le maquille pas — la mécanique, elle, est vérifiée à
-        //  la source plus haut.
+        //  ⚠️ CES DEUX SÉLECTEURS N'EXISTENT PLUS (nº 276-§3) : le
+        //  portfolio montre désormais deux sections empilées,
+        //  RÉALISATIONS puis FLASHS, sans aucun va-et-vient — leurs
+        //  remontées sont parties avec eux. Il n'y a donc rien à
+        //  toucher ici, par construction ; la remontée restante
+        //  (Profil / Portfolio) est mesurée au-dessus.
         nonJoue(
           `§1 · ${s.nom}`,
-          "ce sélecteur ne s'affiche pas sur cette fiche (un seul rendu publié)"
+          "ce sélecteur n'existe plus (supprimé par la nº 276-§3, ses remontées avec)"
         );
         continue;
       }

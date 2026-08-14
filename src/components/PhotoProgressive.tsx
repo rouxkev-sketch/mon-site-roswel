@@ -85,32 +85,62 @@ export function PhotoProgressive({
           n'y a plus rien à traverser, et plus aucun creux de
           luminosité. */}
       {!memeImage && (
-        /* eslint-disable-next-line @next/next/no-img-element --
-           image déjà découpée et servie telle quelle (stockage ou SVG
-           de démonstration) : rien à optimiser au vol. */
-        <img
-          src={miniature}
-          alt=""
-          aria-hidden="true"
-          draggable={false}
-          loading={prioritaire ? "eager" : "lazy"}
-          fetchPriority={prioritaire ? "high" : undefined}
-          decoding="async"
-          width={PHOTO_MINIATURE.largeur}
-          height={PHOTO_MINIATURE.hauteur}
-          className={classe}
-        />
+        /*  §4 (nº 276) — L'APERÇU EST FLOUTÉ, STATIQUEMENT. Le relevé
+            du propriétaire : « d'abord très pixelisées, puis nettes »
+            — la miniature de 320 px, étirée sur un cadre qui en
+            affiche jusqu'à trois fois plus (pixels physiques, écrans
+            denses compris), se lisait en mosaïque grossière. Un flou
+            posé UNE FOIS transforme cette étape en simple réservation
+            adoucie : plus aucun pixel apparent, sur aucune connexion.
+            ⚠️ AUCUNE TRANSITION, ni ici ni sur la grande (nº 217-§5 :
+            tout fondu à l'instant où une photo s'immobilise
+            scintille) : la grande, opaque, recouvre l'aperçu d'un
+            coup, exactement comme avant.
+            L'ENVELOPPE PORTE LE CADRE (les classes du parent) et rogne
+            le débordement du flou : un flou échantillonne au-delà de
+            ses bords — sans `overflow-hidden` et sans la légère
+            surtaille (`scale-105`), l'image montrerait un liseré
+            sombre sur tout son tour. */
+        <span aria-hidden="true" className={`overflow-hidden ${classe}`}>
+          {/* eslint-disable-next-line @next/next/no-img-element --
+              image déjà découpée et servie telle quelle (stockage ou
+              SVG de démonstration) : rien à optimiser au vol. */}
+          <img
+            src={miniature}
+            alt=""
+            draggable={false}
+            //  §4 (nº 276) — l'aperçu de la photo REGARDÉE part tout
+            //  de suite : c'est lui qui tient la place pendant que la
+            //  grande arrive. Les voisines restent en `lazy`.
+            loading={prioritaire || demandee ? "eager" : "lazy"}
+            fetchPriority={prioritaire ? "high" : undefined}
+            decoding="async"
+            width={PHOTO_MINIATURE.largeur}
+            height={PHOTO_MINIATURE.hauteur}
+            className="h-full w-full scale-105 object-cover blur-md"
+          />
+        </span>
       )}
 
       {(demandee || memeImage) && (
         /* eslint-disable-next-line @next/next/no-img-element --
-           voir ci-dessus. */
+           image déjà découpée et servie telle quelle (stockage ou SVG
+           de démonstration) : rien à optimiser au vol. */
         <img
           src={url}
           alt={alt}
           draggable={false}
-          loading={prioritaire ? "eager" : "lazy"}
-          fetchPriority={prioritaire ? "high" : undefined}
+          /*  §4 (nº 276) — LA PLEINE RÉSOLUTION NE PERD PLUS UN TOUR.
+              Elle était `lazy` partout sauf la première photo : le
+              navigateur la relâchait derrière tout le reste alors
+              qu'elle n'est MONTÉE que pour la photo qu'on REGARDE
+              (`demandee`) — c'est elle qu'on attend, elle part donc
+              `eager` et en priorité haute, EN MÊME TEMPS que son
+              aperçu. Seul cas encore `lazy` : la démonstration
+              (`memeImage`, une seule image) sur une photo non
+              regardée. */
+          loading={prioritaire || demandee ? "eager" : "lazy"}
+          fetchPriority={prioritaire || demandee ? "high" : undefined}
           decoding="async"
           width={PHOTO_PORTFOLIO.largeur}
           height={PHOTO_PORTFOLIO.hauteur}

@@ -1470,3 +1470,18 @@ export const PORTRAIT_ROND = 320;
  * de « Ma sélection ».
  */
 export const CADRE_PHOTO_PORTFOLIO = "aspect-4/5";
+
+/**
+ * §3 (nº 276) — L'ÉCRITURE DES TITRES DE SECTION, UNE SEULE FOIS
+ * ------------------------------------------------------------------
+ * Les capitales grises espacées de 13 px de la nº 223 : « STYLES »,
+ * « TECHNIQUE » sur le profil d'une fiche, les titres de « Ma
+ * sélection », et — depuis la nº 276 — « RÉALISATIONS » et « FLASHS »
+ * dans l'onglet Portfolio. Elle était recopiée à la main dans deux
+ * fichiers ; le troisième consommateur l'extrait ici : AUCUNE valeur
+ * n'est choisie, tout le monde réutilise LA LEUR.
+ * (Les majuscules viennent d'`uppercase` : les libellés restent écrits
+ * en toutes lettres — « Réalisations » — là où ils vivent.)
+ */
+export const ECRITURE_TITRE_SECTION =
+  "text-[13px] font-semibold uppercase tracking-[0.14em] text-sombre-texte-doux";

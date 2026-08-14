@@ -535,6 +535,28 @@ html[data-zoom] [data-mosaique] {
   z-index: 60;
 }
 
+/*  PENDANT UN PINCEMENT, LA ZONE PINCÉE CESSE D'ÊTRE CONFINÉE (nº 276-§1)
+    -------------------------------------------------------------------
+    LA RÉGRESSION : depuis la nº 224, zoomer à deux doigts sur la photo
+    d'une carte gardait l'image ENFERMÉE dans son cadre. La cause est
+    le confinement de peinture : `content-visibility: auto`, posé sur
+    chaque carte pour la mémoire (nº 224), ROGNE tout ce qui dépasse de
+    la boîte — la photo agrandie comprise.
+
+    LE REMÈDE, et il ne coûte rien : `usePincement` pose
+    `data-pincement` sur la zone pincée au moment où le geste commence,
+    et le retire une fois le retour animé achevé (les 220 ms du
+    rangement — le reprendre plus tôt rognerait l'image en plein
+    mouvement). Cette règle lève alors le confinement de CETTE zone, et
+    d'elle seule : une carte, le temps d'un geste, forcément à l'écran
+    puisqu'on la touche. Les 99 autres cartes gardent leur
+    `content-visibility: auto` — la mémoire gagnée par la nº 224 (le
+    plantage à 92 cartes) n'est pas rendue. */
+[data-pincement] {
+  content-visibility: visible !important;
+  contain: none !important;
+}
+
 /*  « EFFACER » ET « VALIDER » S'EFFACENT DÈS QU'UNE LISTE EST OUVERTE
     (nº 195-§2, étendu à TOUS les champs par la nº 196)
     -------------------------------------------------------------------

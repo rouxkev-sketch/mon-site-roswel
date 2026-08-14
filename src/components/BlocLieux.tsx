@@ -350,10 +350,13 @@ function HorairesEnLigne({
  */
 /**
  * L'ENCADRÉ D'UNE LIGNE CLIQUABLE À PASTILLE — UNE SEULE ÉCRITURE
- * (nº 232-§1). La ligne d'un membre d'équipe et la ligne d'adresse
- * portent EXACTEMENT le même : même élément (pastille + colonne de
- * texte DANS l'encadré), mêmes classes, même géométrie. C'est cette
- * constante qui le garantit — il n'existe pas de second dessin.
+ * (nº 232-§1). Ses porteurs, depuis la nº 276-§2 : les lignes qui
+ * mènent à une FICHE DU SITE — un membre d'équipe, le salon lié d'un
+ * profil d'artiste — et elles seules. TOUT l'encadré est alors le
+ * lien, pastille comprise. La ligne d'ADRESSE ne le porte PLUS : sa
+ * destination sort du site (Google Maps), et « dehors on souligne » —
+ * seule l'adresse s'y clique (voir AdresseCliquable). C'est cette
+ * constante qui garantit l'écriture unique — pas de second dessin.
  */
 export const CLASSES_LIGNE_CLIQUABLE =
   "group flex items-start gap-3.5 rounded-xl -m-2 p-2 " +
@@ -696,21 +699,44 @@ function AdresseCliquable({
   const ligneTexte = (cliquable: boolean) => (
     <p className="text-[14px] leading-relaxed text-sombre-texte-doux [overflow-wrap:anywhere]">
       {etiquette}{" "}
-      {/*  §1 (nº 271) — LE SOULIGNEMENT N'APPARAÎT QU'AU SURVOL. La
-           nº 268 l'avait posé AU REPOS (consigne trop vague, corrigée) :
-           au repos, l'adresse est du TEXTE NU. Au survol de la ligne,
-           le soulignement de la nº 229 — l'écriture UNIQUE
-           (`SOULIGNEMENT_LIEN`), plus une recopie de jetons : fin,
-           décalé, gris doux. La couleur du texte, elle, ne change
-           jamais. Au doigt, pas de survol : l'état enfoncé (voir le
-           lien plus bas). */}
-      <span
-        className={`text-[15px] font-medium text-sombre-texte${
-          cliquable ? ` ${SOULIGNEMENT_LIEN}` : ""
-        }`}
-      >
-        {adresse}
-      </span>
+      {/*  §1 (nº 271) — LE SOULIGNEMENT N'APPARAÎT QU'AU SURVOL : au
+           repos, l'adresse est du TEXTE NU. C'est l'écriture UNIQUE
+           (`SOULIGNEMENT_LIEN`) : fin, décalé, gris doux — la couleur
+           du texte, elle, ne change jamais.
+           §2 (nº 276) — LE LIEN EST EN LIGNE, AUTOUR DE LA SEULE
+           ADRESSE. La destination SORT du site (Google Maps, ou la
+           fenêtre de verre au doigt) : AUCUN encadré — « dehors on
+           souligne » — et seule l'adresse répond. Le `group` du
+           soulignement est donc le lien lui-même : le trait s'allume
+           au survol de l'adresse, pas de toute la ligne. Au doigt,
+           pas de survol : le bref état enfoncé (`active:`). */}
+      {cliquable && lieu ? (
+        <a
+          href={adresseMaps(lieu)}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(evenement) => {
+            //  SMARTPHONE : la fenêtre, pas la navigation.
+            if (document.documentElement.dataset.appareil === "mobile") {
+              evenement.preventDefault();
+              setFenetre(true);
+            }
+          }}
+          className="group rounded transition-colors active:bg-white/10"
+        >
+          <span
+            className={`text-[15px] font-medium text-sombre-texte${
+              cliquable ? ` ${SOULIGNEMENT_LIEN}` : ""
+            }`}
+          >
+            {adresse}
+          </span>
+        </a>
+      ) : (
+        <span className="text-[15px] font-medium text-sombre-texte">
+          {adresse}
+        </span>
+      )}
     </p>
   );
 
@@ -732,37 +758,20 @@ function AdresseCliquable({
 
   return (
     <>
-      {/*  §3 (nº 268, tenu à la nº 271) — PLUS D'ENCADRÉ SUR SA PROPRE
-           ADRESSE. La ligne d'adresse d'un salon ou d'un studio
-           portait l'encadré de la nº 232 (celui d'un membre
-           d'équipe) : or l'encadré dit « cette ligne mène à une
-           fiche », et il n'y a pas de fiche au bout — ce serait un
-           lien vers soi-même. AUCUN fond de survol ici : au survol,
-           seul le soulignement s'allume (voir `ligneTexte`).
-           §1 (nº 271) — la ligne devient le `group` du soulignement
-           (il s'allume au survol de LA LIGNE, comme à l'équipe), et
-           AU DOIGT, où il n'y a pas de survol : l'état enfoncé de la
-           nº 229 (`active:bg-white/10`, bref, jamais un état qui
-           reste) — avec la géométrie annulée (`-m-2 p-2`) pour que
-           rien ne bouge d'un pixel.
+      {/*  §2 (nº 276) — LA RANGÉE N'EST PLUS LE LIEN. La 271 faisait
+           de toute la ligne la surface cliquable (l'<a> portait la
+           rangée entière, pastille comprise) : or la destination SORT
+           du site — Google Maps, ou la fenêtre de verre au doigt — et
+           la règle du propriétaire tient à la destination : « dehors
+           on souligne », SEULE L'ADRESSE se clique (le lien est en
+           ligne, dans `ligneTexte`). La rangée redevient donc un
+           simple bloc de mise en page : aucun encadré, aucun fond de
+           survol — l'encadré est réservé à ce qui mène à une fiche du
+           site.
            ⚠️ LES HORAIRES RESTENT DEHORS (nº 230-§4, tenu) : le
            chevron ne peut pas déclencher le lien de l'adresse.
            §5 (nº 227) — aucun rose : la couleur ne change jamais. */}
-      <a
-        href={adresseMaps(lieu)}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={(evenement) => {
-          //  SMARTPHONE : la fenêtre, pas la navigation.
-          if (document.documentElement.dataset.appareil === "mobile") {
-            evenement.preventDefault();
-            setFenetre(true);
-          }
-        }}
-        className={`group rounded-xl -m-2 p-2 transition-colors active:bg-white/10 ${
-          pastille ? "flex items-start gap-3.5" : "block"
-        }`}
-      >
+      <div className={pastille ? "flex items-start gap-3.5" : "block"}>
         {pastille}
         {pastille ? (
           <div className="flex min-h-13 min-w-0 flex-1 flex-col justify-center">
@@ -771,7 +780,7 @@ function AdresseCliquable({
         ) : (
           ligneTexte(true)
         )}
-      </a>
+      </div>
       {fenetre && (
         <FenetreAdresse
           adresse={adresse}
@@ -834,20 +843,17 @@ export function BlocAdressesFiche({
    */
   return (
     <div>
-      {/*  §1 (nº 232) — L'ENCADRÉ DE LA LIGNE D'ADRESSE EST CELUI DE
-           L'ÉQUIPE : la pastille et la colonne de texte vivent DANS
-           l'élément cliquable (voir AdresseCliquable, qui porte
-           CLASSES_LIGNE_CLIQUABLE — l'unique écriture). La pastille
-           reste ancrée en haut (nº 229-§1), la colonne garde sa
-           bascule de centrage.
-           ⚠️ LES HORAIRES SONT DEHORS (nº 230-§4, tenu) : hors de
-           l'encadré, hors du lien — le chevron ne peut pas déclencher
+      {/*  §2 (nº 276) — LA LIGNE D'ADRESSE N'A PLUS D'ENCADRÉ : sa
+           destination sort du site, seule l'ADRESSE se clique (lien en
+           ligne, soulignement au survol — voir AdresseCliquable). La
+           pastille reste ancrée en haut (nº 229-§1), la colonne garde
+           sa bascule de centrage — la géométrie de la rangée n'a pas
+           bougé d'un pixel.
+           ⚠️ LES HORAIRES SONT DEHORS (nº 230-§4, tenu) : hors de la
+           rangée, hors du lien — le chevron ne peut pas déclencher
            l'adresse. Leur retrait gauche (66 px = 52 de pastille + 14
            d'écart) les garde alignés sous la colonne de texte, là où
-           ils ont toujours été.
-           ⚠️ `flex flex-col` N'EST PAS DÉCORATIF : l'encadré porte des
-           marges négatives — dans un bloc ordinaire elles fusionnent
-           avec les marges voisines et le rythme du bloc se fausse. */}
+           ils ont toujours été. */}
       <div className="flex flex-col">
         <AdresseCliquable
           adresse={adressePrincipale}
@@ -866,12 +872,10 @@ export function BlocAdressesFiche({
 
       {/*  2. LES AUTRES ADRESSES — une ligne chacune, au bord gauche
            du bloc, comme l'équipe dessous. Le rythme du bloc est de
-           32 px (nº 229-§2).
-           ⚠️ `flex flex-col` N'EST PAS DÉCORATIF (nº 230-§4) : le lien
-           d'adresse porte des marges négatives (son encadré), et dans
-           un bloc ordinaire elles FUSIONNENT avec le `mt-8` — l'écart
-           mesuré tombait à 24 px. Un conteneur flex ne laisse aucune
-           marge d'enfant s'échapper : le rythme reste 32, au pixel. */}
+           32 px (nº 229-§2). Le `flex flex-col` date du temps où la
+           rangée portait des marges négatives (l'encadré, retiré à la
+           nº 276-§2) ; il ne coûte rien et protège le rythme si une
+           marge d'enfant revenait un jour. */}
       {autres.map((studio) => (
         <div key={studio.id} className="mt-8 flex flex-col">
           <AdresseCliquable
@@ -981,31 +985,22 @@ export function BlocProfilsArtiste({
             <p className="text-[14px] leading-relaxed text-sombre-texte-doux [overflow-wrap:anywhere]">
               {etiquetteDuMode(mode)}{" "}
               {lie ? (
-                /*  §2 (nº 268) — CE QUI EST CLIQUABLE : le NOM plus
-                    l'ADRESSE, rien de plus. L'étiquette « En salon ·
-                    Fondateur » DÉCRIT — elle n'est ni soulignée ni
-                    dans le lien, elle ne mène nulle part. Le
-                    soulignement fin décalé s'allume au survol de LA
-                    LIGNE (`group-hover`, l'encadré de la 232 est le
-                    groupe) — l'écriture de l'équipe, au jeton près.
-                    Jamais de rose : la couleur ne change pas. */
-                <Link
-                  href={`/tatoueur/${mode.salon_slug}`}
-                  //  `lie` garantit le slug ; le `?? ""` ne sert qu'au
-                  //  typage (le rappel exige une chaîne).
-                  onClick={clicVersFiche?.(mode.salon_slug ?? "")}
-                  //  §2 (nº 273) — PLUS DE SOULIGNEMENT : cette ligne
-                  //  mène à une fiche DU SITE, et l'encadré de la 232
-                  //  (le groupe, au survol) dit déjà qu'elle se
-                  //  clique. Le soulignement est réservé au seul cas
-                  //  qui SORT du site : l'adresse (AdresseCliquable).
-                  className="text-[15px] font-medium text-sombre-texte"
-                >
+                /*  §2 (nº 276) — LE NOM ET L'ADRESSE NE SONT PLUS UN
+                    LIEN À PART : c'est LA LIGNE ENTIÈRE qui l'est (le
+                    Link enveloppe, plus bas — la consigne de la 268
+                    « borné au nom plus l'adresse » est ANNULÉE par le
+                    propriétaire). Ici, un simple span : même robe,
+                    aucun soulignement — la destination est une fiche
+                    DU SITE, et dedans, on encadre. L'étiquette « En
+                    salon · Fondateur » DÉCRIT toujours : elle vit dans
+                    le même lien que le reste de la ligne, mais n'est
+                    jamais soulignée — rien ne l'est. */
+                <span className="text-[15px] font-medium text-sombre-texte">
                   {mode.salon_nom}
                   {libelleLieuDuMode(mode)
                     ? ` · ${libelleLieuDuMode(mode)}`
                     : ""}
-                </Link>
+                </span>
               ) : (
                 <span className="text-[15px] font-medium text-sombre-texte">{valeurDuMode(mode)}</span>
               )}
@@ -1018,18 +1013,27 @@ export function BlocProfilsArtiste({
         return (
           <li key={mode.id}>
             {lie ? (
-              /*  §2 (nº 268) — LE LIEU A SA PROPRE FICHE : la ligne se
-                  comporte comme celle d'un membre d'équipe sur la
-                  fiche d'un salon — au survol, L'ENCADRÉ englobe la
-                  pastille et le texte. C'est `CLASSES_LIGNE_CLIQUABLE`
-                  (nº 232), l'unique écriture — jamais un second
-                  dessin. Le lien, lui, reste borné au nom + adresse
-                  (voir la colonne) : l'encadré dit « cette ligne mène
-                  quelque part », le soulignement dit où l'on clique. */
-              <div className={CLASSES_LIGNE_CLIQUABLE}>
+              /*  §2 (nº 276) — LE LIEU A SA PROPRE FICHE : TOUT
+                  L'ENCADRÉ EST LE LIEN, pastille comprise — exactement
+                  la ligne d'un membre d'équipe sur la fiche d'un
+                  salon. La consigne de la 268 (« le lien reste borné
+                  au nom + adresse ») est ANNULÉE par le propriétaire :
+                  elle laissait un encadré qui ne répondait qu'au
+                  texte. La règle tient à la DESTINATION : une fiche DU
+                  SITE → l'encadré entier se clique, rien n'est
+                  souligné (« dedans on encadre, dehors on souligne —
+                  jamais les deux »). `CLASSES_LIGNE_CLIQUABLE`
+                  (nº 232) reste l'unique écriture de l'encadré. */
+              <Link
+                href={`/tatoueur/${mode.salon_slug}`}
+                //  `lie` garantit le slug ; le `?? ""` ne sert qu'au
+                //  typage (le rappel exige une chaîne).
+                onClick={clicVersFiche?.(mode.salon_slug ?? "")}
+                className={CLASSES_LIGNE_CLIQUABLE}
+              >
                 {pastille}
                 {colonne}
-              </div>
+              </Link>
             ) : (
               /*  AUCUNE FICHE : ni encadré, ni soulignement — rien
                   n'est cliquable, la ligne garde sa géométrie. */

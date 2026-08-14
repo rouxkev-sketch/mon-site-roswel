@@ -47,23 +47,23 @@ const deuxZones = sansNotes(lire("src/components/DeuxZonesLieu.tsx"));
  * ================================================================== */
 titre("§1 — à la source : Réalisations / Flash ne remonte plus");
 {
+  //  ⚠️ RÉVISÉ PAR LA Nº 276-§3 : les DEUX sélecteurs du portfolio
+  //  (catégorie ET rendu) sont SUPPRIMÉS, code compris —
+  //  `choisirCategorie` et `surRendu` n'existent plus, et leurs
+  //  remontées sont parties avec eux. La règle de la 269 (« le
+  //  va-et-vient de catégorie ne remonte pas ») est donc tenue par
+  //  construction : il n'y a plus de va-et-vient du tout.
   verif(
-    "le va-et-vient de catégorie n'appelle plus la remontée",
-    /function choisirCategorie\(suivante: string\) \{[\s\S]*?setCategorie\(suivante\);\s*\}/.test(
-      contenuNu
-    ) &&
-      !/function choisirCategorie[\s\S]{0,200}remonterSousLaBarre\(\);/.test(
-        contenuNu
-      )
+    "le va-et-vient de catégorie n'existe plus (⚠️ nº 276-§3 : supprimé, code compris)",
+    !/function choisirCategorie/.test(contenuNu) &&
+      !/setCategorie/.test(contenuNu) &&
+      !/surRendu/.test(contenuNu)
   );
   verif(
-    "LES TROIS AUTRES sont intactes : Profil/Portfolio, le rendu, les vignettes",
-    //  Profil / Portfolio et le rendu appellent toujours la remontée…
-    (contenuNu.match(/remonterSousLaBarre\(\);/g) ?? []).length === 2 &&
+    "LES DEUX RESTANTES sont intactes : Profil/Portfolio, les vignettes",
+    //  Profil / Portfolio appelle toujours la remontée…
+    (contenuNu.match(/remonterSousLaBarre\(\);/g) ?? []).length === 1 &&
       /function choisirOnglet[\s\S]{0,300}remonterSousLaBarre\(\);/.test(
-        contenuNu
-      ) &&
-      /surRendu=\{\(suivant\) => \{[\s\S]{0,300}remonterSousLaBarre\(\);/.test(
         contenuNu
       ) &&
       //  … et la vignette garde SA remontée à elle (tout en haut).
@@ -95,31 +95,26 @@ titre("§1 — VIVANT (390 px) : la page ne bouge plus d'un pixel");
       timeout: 60000,
     });
     await page.waitForTimeout(2500);
-    //  On descend, puis on bascule Réalisations → Flash.
-    await page.evaluate(() => window.scrollTo(0, 900));
-    await page.waitForTimeout(500);
-    const avant = await page.evaluate(() => Math.round(window.scrollY));
-    const bascule = page
-      .locator('button:visible', { hasText: /^Flashs?$/ })
+    //  ⚠️ RÉVISÉ PAR LA Nº 276-§3 : le va-et-vient Réalisations /
+    //  Flash n'existe PLUS à l'écran — il est supprimé, code compris.
+    //  La règle de la 269 (« basculer ne déplace pas la page ») est
+    //  tenue par construction : on vérifie ici qu'aucun bouton de
+    //  bascule ne subsiste, l'onglet Portfolio ouvert.
+    const portfolio = page
+      .locator("button:visible", { hasText: /^Portfolio$/ })
       .first();
-    const existe = (await bascule.count()) > 0;
-    if (existe) {
-      await bascule.click();
+    if ((await portfolio.count()) > 0) {
+      await portfolio.click();
       await page.waitForTimeout(900);
     }
-    const apres = await page.evaluate(() => Math.round(window.scrollY));
-    if (!existe) {
-      nonJoue(
-        "§1 · vivant",
-        "cette fiche de démonstration n'a pas de va-et-vient Réalisations / Flash (elle n'a qu'une catégorie)"
-      );
-    } else {
-      verif(
-        "390 px : basculer Réalisations → Flash ne déplace pas la page",
-        Math.abs(apres - avant) <= 1,
-        `${avant} → ${apres}`
-      );
-    }
+    const boutonsBascule = await page
+      .locator("button:visible", { hasText: /^(Flashs?|Réalisations?)$/ })
+      .count();
+    verif(
+      "390 px (⚠️ nº 276-§3) : plus AUCUN bouton Réalisations / Flash — le va-et-vient est supprimé",
+      boutonsBascule === 0,
+      `${boutonsBascule} bouton(s) de bascule`
+    );
   } catch (erreur) {
     nonJoue("§1 · vivant", String(erreur).slice(0, 90));
   }

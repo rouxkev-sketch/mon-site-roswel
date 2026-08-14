@@ -2,7 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { CADRE_PHOTO_PORTFOLIO } from "@/config/tatouage";
+import {
+  CADRE_PHOTO_PORTFOLIO,
+  ECRITURE_TITRE_SECTION,
+} from "@/config/tatouage";
 import { CLASSES_LIGNE_CLIQUABLE, PhotoRonde } from "@/components/BlocLieux";
 import { IconeCoeur } from "@/components/Icones";
 import {
@@ -102,7 +105,10 @@ export function BlocSuivis({
                des titres de l'onglet Profil. §2 (nº 249) — SEULEMENT
                quand il y a PLUSIEURS groupes : voir plus haut. */}
           {groupes.length > 1 && (
-            <h2 className="text-[13px] font-semibold uppercase tracking-[0.14em] text-sombre-texte-doux">
+            //  §3 (nº 276) — la classe exacte vit désormais dans
+            //  ECRITURE_TITRE_SECTION (config), partagée avec l'onglet
+            //  Profil et les titres du Portfolio.
+            <h2 className={ECRITURE_TITRE_SECTION}>
               {groupe.titre}
             </h2>
           )}

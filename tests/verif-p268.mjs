@@ -5,9 +5,11 @@
  *    Fondateur », « En salon · Résident » — taille et couleur
  *    inchangées, seule la casse ;
  * §2 sur une fiche d'ARTISTE, la ligne d'un lieu qui a sa fiche prend
- *    l'encadré de la nº 232 au survol (pastille + texte englobés) ; le
- *    lien est borné au NOM + ADRESSE — l'étiquette du rôle n'est ni
- *    soulignée ni cliquable ; une adresse sans fiche n'a rien ;
+ *    l'encadré de la nº 232 au survol (pastille + texte englobés) ;
+ *    ⚠️ RÉVISÉ PAR LA Nº 276-§2 : « le lien est borné au NOM +
+ *    ADRESSE » est ANNULÉ par le propriétaire — TOUT l'encadré est le
+ *    lien, pastille comprise ; rien n'est souligné (« dedans on
+ *    encadre ») ; une adresse sans fiche n'a toujours rien ;
  * §3 sur SA PROPRE fiche, un salon/studio n'a AUCUN encadré : le lien
  *    d'adresse est dit par le soulignement de la nº 229 — fin, décalé,
  *    permanent — et la couleur ne change jamais.
@@ -82,22 +84,29 @@ titre("§1 — à la source : la casse du rôle");
     !/etiquetteDuMode[\s\S]{0,600}uppercase/.test(blocNu)
   );
 }
-titre("§2 — à la source : l'encadré de la 232, le lien borné");
+titre("§2 — à la source : l'encadré de la 232, le lien entier (⚠️ nº 276)");
 {
+  //  ⚠️ RÉVISÉ PAR LA Nº 276-§2 : la ligne liée est un <Link> ENTIER
+  //  portant l'écriture 232 — pastille comprise. « Borné au nom +
+  //  adresse » (268) est annulé par le propriétaire.
   verif(
-    "la ligne LIÉE porte l'encadré de la nº 232 — l'écriture même, jamais un second dessin",
+    "la ligne LIÉE est un Link portant l'encadré de la nº 232 — l'écriture même, jamais un second dessin",
     /const lie = Boolean\(mode\.salon_slug && mode\.salon_nom\);/.test(blocNu) &&
-      /\{lie \? \(\s*<div className=\{CLASSES_LIGNE_CLIQUABLE\}>/.test(blocNu) &&
+      /\{lie \? \(\s*<Link[\s\S]{0,600}?className=\{CLASSES_LIGNE_CLIQUABLE\}\s*>/.test(
+        blocNu
+      ) &&
       /"group flex items-start gap-3\.5 rounded-xl -m-2 p-2 " \+\s*"transition-colors hover:bg-white\/5 active:bg-white\/10"/.test(
         blocLieux
       )
   );
   verif(
-    "le LIEN est borné au nom + adresse ; l'étiquette du rôle reste dehors",
-    //  L'étiquette s'écrit AVANT le lien, hors de lui.
+    "le Link enveloppe pastille + colonne ; le nom + adresse est un SPAN " +
+      "(⚠️ nº 276-§2 : plus de lien intérieur), l'étiquette décrit toujours",
     /\{etiquetteDuMode\(mode\)\}\{" "\}\s*\{lie \? \(/.test(blocNu) &&
-      //  Le lien contient le nom PUIS l'adresse, rien d'autre.
-      /<Link[\s\S]{0,400}\{mode\.salon_nom\}\s*\{libelleLieuDuMode\(mode\)/.test(
+      /<span className="text-\[15px\] font-medium text-sombre-texte">\s*\{mode\.salon_nom\}\s*\{libelleLieuDuMode\(mode\)/.test(
+        blocNu
+      ) &&
+      /className=\{CLASSES_LIGNE_CLIQUABLE\}\s*>\s*\{pastille\}\s*\{colonne\}/.test(
         blocNu
       )
   );
@@ -127,12 +136,18 @@ titre("§3 — à la source : le soulignement seul sur sa propre adresse");
     blocNu.indexOf("function AdresseCliquable"),
     blocNu.indexOf("function BlocAdressesFiche")
   );
+  //  ⚠️ RÉVISÉ PAR LA Nº 276-§2 : la rangée n'est plus le lien — le
+  //  <a> Google Maps est EN LIGNE autour de la seule adresse (« dehors
+  //  on souligne »), et c'est lui qui porte `group` et l'état enfoncé.
   verif(
-    "l'adresse d'un salon/studio n'a PLUS l'encadré (aucun fond de " +
-      "survol — nº 271 : l'état enfoncé du doigt, lui, est revenu)",
-    /className=\{`group rounded-xl -m-2 p-2 transition-colors active:bg-white\/10 \$\{\s*pastille \? "flex items-start gap-3\.5" : "block"\s*\}`\}/.test(
+    "l'adresse d'un salon/studio n'a PLUS l'encadré — le lien Maps est " +
+      "EN LIGNE (⚠️ nº 276-§2), l'état enfoncé du doigt sur lui",
+    /className="group rounded transition-colors active:bg-white\/10"/.test(
       adresseSlice
     ) &&
+      /<div className=\{pastille \? "flex items-start gap-3\.5" : "block"\}>/.test(
+        adresseSlice
+      ) &&
       !adresseSlice.includes("hover:bg-white/5") &&
       !adresseSlice.includes("CLASSES_LIGNE_CLIQUABLE")
   );
@@ -202,10 +217,14 @@ for (const largeur of [390, 1440]) {
       ].every((jeton) => vu.classesEnveloppe.split(/\s+/).includes(jeton)),
       vu.classesEnveloppe
     );
+    //  ⚠️ RÉVISÉ PAR LA Nº 276-§2 : le lien est LA LIGNE ENTIÈRE —
+    //  l'étiquette y vit désormais (elle n'est toujours pas soulignée,
+    //  mesuré plus bas au survol), et la pastille a le lien pour
+    //  ancêtre.
     verif(
-      `${largeur} px : le lien contient nom + adresse, jamais l'étiquette du rôle`,
+      `${largeur} px : le lien est la ligne ENTIÈRE (⚠️ nº 276-§2) — étiquette comprise, pastille comprise`,
       Boolean(vu.lienTexte) &&
-        vu.etiquetteDansLeLien === false &&
+        vu.etiquetteDansLeLien === true &&
         (vu.lienTexte ?? "").includes("·"),
       `« ${String(vu.lienTexte).slice(0, 50)} »`
     );

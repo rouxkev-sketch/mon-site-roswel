@@ -1,59 +1,46 @@
 "use client";
 
-import { robeDuBadge } from "@/components/BadgesCharte";
-import { OngletsLigne } from "@/components/OngletsLigne";
 import { SelecteurCapsule } from "@/components/SelecteurCapsule";
 import {
-  NATURES_PHOTO,
-  RENDU_PAR_DEFAUT,
-  RENDUS_PHOTO,
-} from "@/lib/photos-tatoueur";
+  CATEGORIES_EXPLORER,
+  ECRITURE_TITRE_SECTION,
+} from "@/config/tatouage";
+import { RENDU_PAR_DEFAUT, RENDUS_PHOTO } from "@/lib/photos-tatoueur";
 import type { PhotoGalerie, StyleGalerie } from "@/lib/photo-tatoueur";
 
 /**
  * L'AFFICHE EN DEUX ONGLETS — « Profil » et « Portfolio »
  * ==================================================================
- * (passe nº 197, complétée par les nº 204 et 205)
- *
- * ⚠️ RIEN N'EST INVENTÉ ICI. Chaque sélecteur reprend un vocabulaire
- * qui existe déjà :
+ * (passe nº 197 ; refondu par la nº 276-§3)
  *
  *  · « Profil / Portfolio » (nº 205-§1) — DEUX MOTS NUS côte à côte,
- *    sans piste ni rail ni fond de rangée : l'actif en blanc, l'autre
- *    en gris. Derrière l'actif, une CAPSULE qui GLISSE d'un mot à
- *    l'autre.
- *    ⚠️ ELLE EST OPAQUE, PLUS DE VERRE DÉPOLI (nº 207-§1) : un verre
- *    dépoli ne peut rien montrer sur un panneau uni — il n'y a rien à
- *    flouter derrière, et le `backdrop-filter` ne faisait que coûter
- *    un calque. La capsule prend donc `sombre-haut`, LE BARREAU
- *    AU-DESSUS de l'actif des rectangles de rendu
- *    (`sombre-eleve-clair`, voir `robeDuBadge`) : le niveau le plus
- *    haut de la hiérarchie est le plus clair. Aucun contour, aucun
- *    rose ;
+ *    l'actif en blanc, l'autre en gris, une CAPSULE opaque qui GLISSE
+ *    (`SelecteurCapsule`, l'écriture partagée avec « Ma sélection »).
+ *    LA RANGÉE DU HAUT (nº 205-§2) : le sélecteur à gauche, « Suivre »
+ *    à droite — c'est ContenuFiche qui compose la rangée.
  *
- *  · « Réalisation / Flash » — le composant `OngletsLigne`, celui du
- *    sélecteur « Explorer / Filtres » du moteur de recherche. Aucune
- *    copie : le composant lui-même ;
+ * ⚠️ LES DEUX VA-ET-VIENT ONT DISPARU (nº 276-§3, code compris) :
+ * « Réalisations / Flashs » (OngletsLigne) et « Noir & gris / Couleur »
+ * (les deux rectangles) cachaient chacun la moitié du portfolio
+ * derrière un aller-retour. À leur place, DEUX SECTIONS EMPILÉES :
  *
- *  · « Noir et gris / Couleur » (nº 204-§3) — les deux rectangles du
- *    formulaire de portfolio (`rounded-xl`, aucun contour), habillés
- *    par `robeDuBadge` de BadgesCharte : les quatre couleurs ne sont
- *    écrites qu'à un seul endroit, et pas ici.
+ *  · un titre « RÉALISATIONS », puis « FLASHS » — les libellés de
+ *    `CATEGORIES_EXPLORER` (les seuls endroits du site qui les
+ *    nomment), rendus par L'ÉCRITURE DES TITRES DE SECTION DU PROFIL
+ *    (`ECRITURE_TITRE_SECTION`, les capitales grises espacées de la
+ *    nº 223) — aucune valeur choisie ici, on réutilise la leur ;
+ *  · sous chaque titre, TOUTES SES SÉRIES en vignettes, noir & gris
+ *    et couleur MÊLÉS, dans leur ordre existant — les styles de A à Z
+ *    (nº 208-§4), et dans un style, l'ordre de `RENDUS_PHOTO` — SANS
+ *    aucun titre intermédiaire : les mots « Noir & gris » et
+ *    « Couleur » ne s'écrivent nulle part ;
+ *  · une section vide NE REND RIEN — ni titre, ni espace.
  *
- * LA RANGÉE DU HAUT (nº 205-§2) : le sélecteur à gauche, « Suivre » à
- * droite — c'est ContenuFiche qui compose la rangée, le sélecteur ne
- * s'occupe que de lui.
- *
- * LA HIÉRARCHIE DU PORTFOLIO (nº 204-§3) : Profil / Portfolio, puis
- * Réalisation / Flash, puis Noir et gris / Couleur, puis les vignettes
- * de styles. UNE SÉRIE = STYLE + CATÉGORIE + RENDU — exactement une
- * galerie de dépôt, donc vingt photos au plus PAR CONSTRUCTION, sans
- * aucune limite d'affichage : une série ouverte sous « Flash » ne
- * contient plus aucune réalisation.
- *
- * LES CATÉGORIES viennent de `NATURES_PHOTO`, LES RENDUS de
- * `RENDUS_PHOTO` (lib/photos-tatoueur) — les seules listes du site qui
- * les nomment.
+ * UNE SÉRIE = STYLE + CATÉGORIE + RENDU — exactement une galerie de
+ * dépôt, donc vingt photos au plus PAR CONSTRUCTION : rien de tronqué.
+ * Un toucher de vignette ouvre cette série dans la galerie de
+ * l'affiche, comme avant — les vignettes et leur remontée n'ont pas
+ * bougé.
  */
 
 /** Les deux onglets de l'affiche. */
@@ -72,48 +59,6 @@ const ONGLETS: Array<{ cle: OngletAffiche; label: string }> = [
     nº 48 n'en portent pas — on lit alors le même défaut que partout. */
 function renduDe(photo: PhotoGalerie): string {
   return photo.rendu ?? RENDU_PAR_DEFAUT;
-}
-
-/**
- * LES DEUX RECTANGLES — le sélecteur du rendu.
- * Forme du formulaire (deux colonnes, 8 px entre elles — voir
- * BlocPortfolio, « LE RENDU — DEUX RECTANGLES »), couleurs du badge de
- * filtre (`robeDuBadge`, importée telle quelle). Ils sont INCHANGÉS
- * par la nº 205-§3 : seul « Profil / Portfolio » a quitté cette forme
- * pour la capsule de verre.
- */
-function SelecteurRectangles({
-  ariaLabel,
-  valeur,
-  surChoix,
-  options,
-}: {
-  ariaLabel: string;
-  valeur: string;
-  surChoix: (cle: string) => void;
-  options: ReadonlyArray<{ cle: string; label: string }>;
-}) {
-  return (
-    <div role="radiogroup" aria-label={ariaLabel} className="grid grid-cols-2 gap-2">
-      {options.map((option) => {
-        const actif = valeur === option.cle;
-        return (
-          <button
-            key={option.cle}
-            type="button"
-            role="radio"
-            aria-checked={actif}
-            onClick={() => surChoix(option.cle)}
-            //  ⚠️ AUCUN CONTOUR, AUCUN ROSE : `robeDuBadge` dit tout.
-            className={`rounded-xl px-3 py-2.5 text-center text-[14px]
-                        font-semibold transition-colors ${robeDuBadge(actif)}`}
-          >
-            {option.label}
-          </button>
-        );
-      })}
-    </div>
-  );
 }
 
 /**
@@ -143,200 +88,144 @@ export function SelecteurOngletAffiche({
   );
 }
 
-/** Un style publié dans la série regardée, et sa vignette. */
-type StylePublie = {
-  slug: string;
+/** Une série publiée — sa vignette dans la grille d'une section. */
+type SeriePubliee = {
+  style: string;
   label: string;
+  rendu: string;
   miniature: string;
-  nombre: number;
 };
 
-/** LES RENDUS PRÉSENTS DANS UNE CATÉGORIE, dans l'ordre de la
-    configuration — c'est eux qui décident si le sélecteur s'affiche. */
-function rendusDeLaCategorie(
+/**
+ * TOUTES LES SÉRIES PUBLIÉES D'UNE CATÉGORIE, APLATIES (nº 276-§3).
+ * Les styles de A à Z (`localeCompare` en français, nº 208-§4 — les
+ * accents se rangent où on les attend) ; DANS un style, les rendus
+ * présents dans l'ordre de `RENDUS_PHOTO` (noir & gris, puis couleur)
+ * — « leur ordre existant », celui que les sélecteurs parcouraient.
+ * Les deux rendus sont MÊLÉS dans la même grille : aucun mot de rendu
+ * ne s'écrit, nulle part. Un style sans photo dans cette catégorie n'a
+ * pas de vignette.
+ */
+function seriesDeLaCategorie(
   groupes: StyleGalerie[],
   nature: string
-): string[] {
-  const presents = new Set(
-    groupes.flatMap((groupe) =>
-      groupe.photos
-        .filter((photo) => photo.nature === nature)
-        .map((photo) => renduDe(photo))
-    )
-  );
-  return RENDUS_PHOTO.map((r) => r.slug).filter((slug) => presents.has(slug));
-}
-
-/** LES STYLES PUBLIÉS DANS UNE SÉRIE (catégorie + rendu) — et rien
-    d'autre : un style sans photo de cette série-là n'a pas de
-    vignette. */
-function stylesDeLaSerie(
-  groupes: StyleGalerie[],
-  nature: string,
-  rendu: string
-): StylePublie[] {
-  return groupes
-    .map((groupe) => {
-      const photos = groupe.photos.filter(
-        (photo) => photo.nature === nature && renduDe(photo) === rendu
-      );
-      return {
-        slug: groupe.slug,
-        label: groupe.label,
-        miniature: photos[0]?.miniature ?? "",
-        nombre: photos.length,
-      };
-    })
-    .filter((style) => style.nombre > 0)
-    //  ⚠️ DE A À Z (nº 208-§4), quels que soient la catégorie et le
-    //  rendu choisis. L'ordre d'origine était celui du dépôt : il
-    //  changeait d'un sélecteur à l'autre, et l'œil devait rechercher
-    //  chaque fois le même style à un endroit différent. `localeCompare`
-    //  en français : les accents se rangent où on les attend.
+): SeriePubliee[] {
+  const series: SeriePubliee[] = [];
+  const parLabel = groupes
+    .slice()
     .sort((a, b) => a.label.localeCompare(b.label, "fr"));
+  for (const groupe of parLabel) {
+    for (const rendu of RENDUS_PHOTO) {
+      const photos = groupe.photos.filter(
+        (photo) => photo.nature === nature && renduDe(photo) === rendu.slug
+      );
+      if (photos.length === 0) continue;
+      series.push({
+        style: groupe.slug,
+        label: groupe.label,
+        rendu: rendu.slug,
+        miniature: photos[0]?.miniature ?? "",
+      });
+    }
+  }
+  return series;
 }
 
 /**
- * LE PANNEAU « PORTFOLIO » — la catégorie, le rendu, puis les styles
- * publiés.
+ * LE PANNEAU « PORTFOLIO » — deux sections empilées, sans plus aucun
+ * sélecteur (nº 276-§3).
  */
 export function PanneauPortfolio({
   groupes,
-  nature,
-  surNature,
-  rendu,
-  surRendu,
   surSerie,
   nomTatoueur,
 }: {
   groupes: StyleGalerie[];
-  nature: string;
-  surNature: (nature: string) => void;
-  /** Le rendu CHOISI — le panneau le ramène de lui-même à un rendu
-      réellement présent dans la catégorie regardée. */
-  rendu: string;
-  surRendu: (rendu: string) => void;
   /** Un toucher sur une vignette : la galerie principale montre CETTE
       série — style + catégorie + rendu, une galerie de dépôt — et la
       page remonte en haut (nº 197-§4, précisé par la nº 204-§3). */
   surSerie: (serie: SerieChoisie) => void;
   nomTatoueur: string;
 }) {
-  const rendus = rendusDeLaCategorie(groupes, nature);
-  /** LE RENDU EFFECTIF : celui qu'on a choisi s'il existe ici, sinon
-      LE SEUL présent (nº 204-§3 : un artiste qui n'a déposé qu'un
-      rendu le voit directement, sans sélecteur). */
-  const renduEffectif = rendus.includes(rendu)
-    ? rendu
-    : (rendus[0] ?? RENDU_PAR_DEFAUT);
-  const styles = stylesDeLaSerie(groupes, nature, renduEffectif);
+  /*  LES DEUX SECTIONS — « Réalisations » puis « Flashs », les
+      libellés de CATEGORIES_EXPLORER. UNE SECTION VIDE NE REND RIEN :
+      ni titre, ni espace (nº 276-§3). */
+  const sections = CATEGORIES_EXPLORER.map((categorie) => ({
+    nature: categorie.nature,
+    titre: categorie.titre,
+    series: seriesDeLaCategorie(groupes, categorie.nature),
+  })).filter((section) => section.series.length > 0);
+
+  if (sections.length === 0) {
+    /*  §5 (nº 197) — LE TITRE SEUL, centré. Aucune phrase, aucune
+        icône. */
+    return (
+      <p className="mt-10 text-center text-[16px] font-semibold text-sombre-texte-doux">
+        Aucune publication
+      </p>
+    );
+  }
 
   return (
     <div>
-      {/*  LE SÉLECTEUR DU MOTEUR DE RECHERCHE, RÉUTILISÉ TEL QUEL.
-           ⚠️ IL NE DÉFILE PAS (nº 207-§4, web) : avec la rangée du
-           haut, il reste posé pendant que la galerie défile sous lui.
-           `top-11` = la hauteur de la rangée (44 px), et son air
-           (`pt-6`) est DANS le bloc collant — sinon la galerie
-           passerait dans l'espace laissé au-dessus de lui. Le fond est
-           celui de l'enveloppe (`bg-inherit`) : la page l'anthracite,
-           la fenêtre superposée sa carte — aucune variante à écrire
-           ici.
-           ⚠️ PAR UNE VARIABLE, ET NON `bg-inherit` (nº 209-§6) : ce
-           bloc a pour parent le panneau, pas la colonne — il héritait
-           donc du transparent, et le contenu se voyait passer
-           derrière. */}
-      {/*  ⚠️ ET UNE MARGE DE CONFORT SOUS LA LIGNE (nº 210-§4) : les
-           photos disparaissaient PILE sous elle, qui devenait
-           invisible — un trait qui touche ce qui passe dessous ne se
-           lit plus. Les 12 px du bas appartiennent au bandeau (il est
-           opaque) : les photos s'effacent donc 12 px plus bas, et la
-           ligne reste nette en toute circonstance. */}
-      <div className="pt-6 lg:pb-3 lg:sticky lg:top-11 lg:z-[1] bg-[var(--fond-colonne)]">
-        <OngletsLigne
-          ariaLabel="Réalisations ou flashs"
-          cleActive={nature}
-          surChoix={surNature}
-          options={NATURES_PHOTO.map((categorie) => ({
-            cle: categorie.slug,
-            label: categorie.label,
-          }))}
-        />
-      </div>
+      {sections.map((section) => (
+        <section key={section.nature} className="pt-6">
+          {/*  LE TITRE DE SECTION — l'écriture des titres du profil
+               (nº 223), consommée telle quelle : capitales grises
+               espacées, 13 px. Aucune valeur choisie ici. */}
+          <h2 className={ECRITURE_TITRE_SECTION}>{section.titre}</h2>
 
-      {/*  LE RENDU (nº 204-§3) — les deux rectangles, SEULEMENT quand
-           les deux rendus existent dans la catégorie : à un seul
-           rendu, le choix n'existe pas, on le montre directement.
-           ⚠️ IL DÉFILE AVEC LA GALERIE (nº 207-§4) : il appartient à
-           ce qu'on regarde, pas à l'en-tête. */}
-      {rendus.length === 2 && (
-        <div className="mt-5">
-          <SelecteurRectangles
-            ariaLabel="Noir et gris ou couleur"
-            valeur={renduEffectif}
-            surChoix={surRendu}
-            options={RENDUS_PHOTO.map((r) => ({
-              cle: r.slug,
-              label: r.label,
-            }))}
-          />
-        </div>
-      )}
-
-      {styles.length === 0 ? (
-        /*  §5 (nº 197) — LE TITRE SEUL, centré. Aucune phrase, aucune
-            icône. */
-        <p className="mt-10 text-center text-[16px] font-semibold text-sombre-texte-doux">
-          Aucune publication
-        </p>
-      ) : (
-        /*  LES VIGNETTES — une par style publié, le nom dessous.
-            Angles arrondis, aucun contour, aucun encadré : l'image et
-            son nom, rien de plus. (Le cœur de série de la nº 203 est
-            ANNULÉ par la nº 204-§1 : le cœur vit sur chaque photo,
-            dans la galerie — jamais ici.) */
-        <ul className="mt-7 grid grid-cols-2 gap-x-4 gap-y-7">
-          {styles.map((style) => (
-            <li key={style.slug}>
-              <button
-                type="button"
-                onClick={() =>
-                  surSerie({
-                    style: style.slug,
-                    nature,
-                    rendu: renduEffectif,
-                  })
-                }
-                className="group block w-full text-left"
-              >
-                {/*  ANGLES DROITS (nº 207-§6) — web et mobile : la
-                     vignette est une image nette, sans arrondi. */}
-                <span className="block overflow-hidden bg-sombre-eleve">
-                  {/* eslint-disable-next-line @next/next/no-img-element --
-                      photo déposée par le tatoueur, servie telle quelle
-                      (même règle que le portrait rond de l'affiche). */}
-                  <img
-                    src={style.miniature}
-                    alt={`${style.label} — ${nomTatoueur}`}
-                    loading="lazy"
-                    className="aspect-[4/5] w-full object-cover
-                               transition-opacity group-hover:opacity-90"
-                  />
-                </span>
-                {/*  LE NOM DU STYLE — blanc, aligné à gauche, et
-                     ALLÉGÉ D'UN CRAN (nº 207-§7) : `font-semibold`
-                     (600) se lisait comme du gras, la fonte du site
-                     n'ayant pas de graisse intermédiaire dessinée —
-                     le navigateur la remplaçait par le gras. `medium`
-                     (500) donne le demi-gras voulu. */}
-                <span className="mt-2.5 block text-[15px] font-medium text-sombre-texte">
-                  {style.label}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+          {/*  LES VIGNETTES — une par SÉRIE publiée, le nom du style
+               dessous. Angles arrondis, aucun contour, aucun encadré :
+               l'image et son nom, rien de plus. (Le cœur de série de
+               la nº 203 est ANNULÉ par la nº 204-§1 : le cœur vit sur
+               chaque photo, dans la galerie — jamais ici.) Un style
+               publié dans les deux rendus a DEUX vignettes, sous le
+               même nom : c'est la première photo de chaque série qui
+               les distingue — jamais un mot de rendu. */}
+          <ul className="mt-7 grid grid-cols-2 gap-x-4 gap-y-7">
+            {section.series.map((serie) => (
+              <li key={`${serie.style}-${serie.rendu}`}>
+                <button
+                  type="button"
+                  onClick={() =>
+                    surSerie({
+                      style: serie.style,
+                      nature: section.nature,
+                      rendu: serie.rendu,
+                    })
+                  }
+                  className="group block w-full text-left"
+                >
+                  {/*  ANGLES DROITS (nº 207-§6) — web et mobile : la
+                       vignette est une image nette, sans arrondi. */}
+                  <span className="block overflow-hidden bg-sombre-eleve">
+                    {/* eslint-disable-next-line @next/next/no-img-element --
+                        photo déposée par le tatoueur, servie telle quelle
+                        (même règle que le portrait rond de l'affiche). */}
+                    <img
+                      src={serie.miniature}
+                      alt={`${serie.label} — ${nomTatoueur}`}
+                      loading="lazy"
+                      className="aspect-[4/5] w-full object-cover
+                                 transition-opacity group-hover:opacity-90"
+                    />
+                  </span>
+                  {/*  LE NOM DU STYLE — blanc, aligné à gauche, et
+                       ALLÉGÉ D'UN CRAN (nº 207-§7) : `font-semibold`
+                       (600) se lisait comme du gras, la fonte du site
+                       n'ayant pas de graisse intermédiaire dessinée —
+                       le navigateur la remplaçait par le gras. `medium`
+                       (500) donne le demi-gras voulu. */}
+                  <span className="mt-2.5 block text-[15px] font-medium text-sombre-texte">
+                    {serie.label}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
     </div>
   );
 }

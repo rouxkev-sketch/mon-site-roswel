@@ -468,9 +468,10 @@ export function FenetreFiche({
               <ContenuFiche
                 tatoueur={tatoueur}
                 groupes={groupes}
-                //  Même règle que la page (nº 217-§3).
-                natureCherchee={natureRecherche}
-                renduCherche={renduRecherche}
+                //  §3 (nº 276) — plus de natureCherchee / renduCherche :
+                //  le panneau montre les deux sections (la série
+                //  cherchée continue d'ouvrir le carrousel de gauche,
+                //  serieCherchee n'a pas bougé).
                 surSerieChoisie={(serie) => {
                   setStyleAffiche(serie.style);
                   setSerieOuverte({ nature: serie.nature, rendu: serie.rendu });
