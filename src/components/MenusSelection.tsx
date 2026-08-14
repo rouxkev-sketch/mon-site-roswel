@@ -320,8 +320,16 @@ function libelleDuFiltre(
   etroit: boolean
 ): string {
   //  §1 (nº 257) — LES SUIVIS N'ONT PLUS DE PORTE : le style, ou
-  //  l'état d'ouverture, à toutes les largeurs.
-  if (choix.menu === MENU_SUIVIS) return libelleStyleChoisi(choix.style);
+  //  l'état d'ouverture.
+  //  §1 (nº 260) — … ET AU DOIGT, L'ÉTAT D'OUVERTURE SE DIT « Style » :
+  //  « Tous les styles » ne tenait pas dans la largeur du champ. Un
+  //  style choisi, lui, s'écrit en entier — c'est SEULEMENT l'état
+  //  d'ouverture qui se raccourcit. Sur le web, la place y est : le
+  //  mot ne change pas.
+  if (choix.menu === MENU_SUIVIS) {
+    if (etroit && !choix.style) return "Style";
+    return libelleStyleChoisi(choix.style);
+  }
   //  LA PORTE EN COURS : celle du choix, ou la PREMIÈRE PRÉSENTE quand
   //  rien n'est filtré — c'est ce que dit l'état d'ouverture.
   const nature = choix.nature || (entrees[0]?.value.split(":")[0] ?? "");

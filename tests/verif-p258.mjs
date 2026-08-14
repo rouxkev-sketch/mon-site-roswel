@@ -137,7 +137,10 @@ titre("§4 — à la source : la robe de la pilule est RELATIVE (globals.css)");
   const css = lire("src/app/globals.css");
   verif(
     "au repos, la pilule prend LE BARREAU AU-DESSUS du fond (la variable existante)",
-    /\[data-clair-barre\] \[data-capsule-glissante\] \{\s*background-color: var\(--rw-clair-barre-vif\);/.test(
+    //  ⚠️ MIS À JOUR nº 260-§2 : l'encadré du badge ne s'éclaircit plus
+    //  (`data-clair-fixe`), et la règle sert désormais les DEUX fonds
+    //  de barre. Le cran au-dessus, lui, ne bouge pas.
+    /\[data-clair-barre\] \[data-capsule-glissante\],\s*\[data-clair-fixe\] \[data-capsule-glissante\] \{\s*background-color: var\(--rw-clair-barre-vif\);/.test(
       css
     )
   );

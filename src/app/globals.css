@@ -403,6 +403,20 @@ html[data-clair="3"] {
   background-color: var(--rw-clair-barre-vif);
 }
 
+/*  LE MÊME FOND, SANS SES ÉTATS (nº 260-§2)
+    -------------------------------------------------------------------
+    L'encadré de « Ma sélection » ne s'éclaircit plus : on n'y écrit
+    nulle part — le badge change le contenu de la page et le champ ouvre
+    un menu —, et l'éclaircissement annonçait une saisie qui n'arrive
+    pas, en fabriquant une troisième teinte pour deux états.
+    ⚠️ CE N'EST PAS UNE SECONDE COULEUR : c'est la MÊME variable, prise
+    au repos et jamais quittée. La mécanique de la nº 175 ci-dessus n'est
+    pas touchée d'une ligne — le champ du moteur, où l'on tape vraiment,
+    la garde entière. */
+[data-clair-fixe] {
+  background-color: var(--rw-clair-barre);
+}
+
 /*  LA PILULE DU BADGE, TOUJOURS UN CRAN AU-DESSUS DE SON FOND
     (nº 258-§4)
     -------------------------------------------------------------------
@@ -420,13 +434,19 @@ html[data-clair="3"] {
        (#4B4B54). Il est posé ici, au PAS DU CRAN PRÉCÉDENT — haut →
        haut-clair vaut (+10, +10, +11) — appliqué une fois de plus :
        #55555F. Aucun autre choix n'existait, et le pas n'est pas neuf.
-    Ces règles ne vivent QUE sous `[data-clair-barre]` : la capsule de
-    la fiche (Profil / Portfolio), hors encadré, garde sa robe de
-    classe (`bg-sombre-haut`) — le cran au-dessus de SON contexte. */
+    Ces règles ne vivent QUE sous un fond de barre : la capsule de la
+    fiche (Profil / Portfolio), hors encadré, garde sa robe de classe
+    (`bg-sombre-haut`) — le cran au-dessus de SON contexte.
+    ⚠️ ET DEPUIS LA nº 260-§2, L'ENCADRÉ DU BADGE NE S'ÉCLAIRCIT PLUS
+    (`data-clair-fixe`) : son fond ne quitte jamais `--rw-clair-barre`,
+    donc la pilule garde son CRAN UNIQUE au-dessus, dans tous les états.
+    Le second barreau ci-dessous ne sert plus qu'à un encadré qui
+    s'éclaircirait — il reste écrit pour cela. */
 :root {
   --rw-clair-pilule-vif: #55555f;
 }
-[data-clair-barre] [data-capsule-glissante] {
+[data-clair-barre] [data-capsule-glissante],
+[data-clair-fixe] [data-capsule-glissante] {
   background-color: var(--rw-clair-barre-vif);
 }
 [data-clair-barre]:hover [data-capsule-glissante],

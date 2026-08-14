@@ -52,7 +52,18 @@ export function EncadreDeuxChamps({
   return (
     <div
       data-encadre-barre=""
-      data-clair-barre=""
+      /*  §2 (nº 260) — L'ENCADRÉ QUI PORTE UN BADGE NE S'ÉCLAIRCIT PAS.
+          La mécanique de focus gravée à la nº 175 (`data-clair-barre`)
+          est faite pour un champ dans lequel on ÉCRIT : le fond monte
+          d'un cran pour dire « c'est ici que tu tapes ». Or on n'écrit
+          nulle part dans ce bloc — le badge change le contenu de la
+          page, le champ ouvre un menu. L'éclaircissement annonçait donc
+          quelque chose qui n'arrive pas, et fabriquait une TROISIÈME
+          teinte : trois couleurs pour deux états. Cet encadré-ci prend
+          donc `data-clair-fixe` — le MÊME fond, sans ses états (voir
+          globals.css). Le champ du moteur, lui, garde le sien : on y
+          tape vraiment, et la nº 175 ne bouge pas d'une ligne. */
+      {...(porteBadge ? { "data-clair-fixe": "" } : { "data-clair-barre": "" })}
       className={`flex items-stretch overflow-visible transition-colors ${
         porteBadge ? "rounded-full" : "rounded-2xl"
       }`}

@@ -139,11 +139,16 @@ titre("§1 — à la source : la page, le champ, le sous-titre");
     /entreesDuFiltre\(comptesDesFavoris\(photos\)\)/.test(pageFavoris) &&
       /entreesDesStyles\(comptesDesSuivis\(suivis\)\)/.test(pageFavoris)
   );
+  //  ⚠️ MIS À JOUR nº 260-§1 : au doigt, l'état d'ouverture se dit
+  //  « Style » — « Tous les styles » ne tenait pas dans la largeur du
+  //  champ. Ce que CETTE passe a posé demeure : le menu des suivis dit
+  //  LE STYLE, par l'écriture du site (`libelleStyleChoisi`), et sur le
+  //  web le mot long ne bouge pas.
   verif(
-    "le champ des suivis dit le style, « Tous les styles » à l'ouverture",
-    /if \(choix\.menu === MENU_SUIVIS\) return libelleStyleChoisi\(choix\.style\);/.test(
-      menus
-    )
+    "le champ des suivis dit le style (« Style » à l'ouverture au doigt)",
+    /if \(choix\.menu === MENU_SUIVIS\) \{/.test(menus) &&
+      /if \(etroit && !choix\.style\) return "Style";/.test(menus) &&
+      /return libelleStyleChoisi\(choix\.style\);/.test(menus)
   );
   verif(
     "le sous-titre de la page lit LA MÊME écriture que le champ (libelleDuChoix)",

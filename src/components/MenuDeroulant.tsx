@@ -17,6 +17,10 @@ const flecheImage = (couleur: string) =>
   `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(
     `<svg xmlns='http://www.w3.org/2000/svg' width='14' height='8'><path d='M1 1l6 6 6-6' stroke='${couleur}' stroke-width='2' fill='none' stroke-linecap='round'/></svg>`
   )}")`;
+/** §3 (nº 260) — LA TAILLE DES POINTS DE LA FEUILLE : 4 px, la même
+    pour tous (les styles et la porte de famille). Écrite une fois. */
+const TAILLE_POINT = "w-1 h-1";
+
 const FLECHE_GRISE = flecheImage(COULEURS.flecheMenus);
 const FLECHE_ROSE = flecheImage(COULEURS.primaire);
 
@@ -534,7 +538,20 @@ export function MenuDeroulant({
    * ⚠️ `onClick` SEUL, pour la raison écrite plus haut : une porte
    * bascule, la jouer deux fois dans un même geste la referme.
    */
-  function porteSousSection(sousEntete: string, classes: string) {
+  function porteSousSection(
+    sousEntete: string,
+    classes: string,
+    //  §3 (nº 260) — DEUX ÉCARTS, ET LA FEUILLE SEULE LES DEMANDE :
+    //  · `avecPoint` — la porte reçoit un point comme les styles, et
+    //    lui seul est ROSE : c'est ce qui la distingue d'eux, elle ne
+    //    mène pas à une sélection, elle ouvre un niveau ;
+    //  · `sansVoile` — le voile blanc de la nº 241-§5 s'en va : le
+    //    sous-niveau garde EXACTEMENT la teinte de la fenêtre. C'est
+    //    le point rose qui dit qu'on est entré, pas un fond qui change.
+    //  Le panneau du web, lui, ne passe rien : il garde son voile et
+    //  n'a jamais eu de points.
+    { avecPoint = false, sansVoile = false } = {}
+  ) {
     return (
       <button
         type="button"
@@ -544,14 +561,24 @@ export function MenuDeroulant({
         //  tête de liste : elle se désigne elle-même, aucun calcul
         //  d'index à tenir à jour.
         data-sous-porte={sousEntete}
+        data-porte-famille={avecPoint ? "" : undefined}
         //  §5 (nº 241) — LA PORTE OUVERTE PREND LE VOILE DU SOUS-MENU
         //  (voir la note sur les options) : porte et enfants forment
         //  un seul bloc éclairci, on VOIT qu'on est entré quelque part.
-        className={`${classes} flex w-full items-center justify-between gap-2 text-left${
-          sousGroupeDeplie === sousEntete ? " bg-white/[0.06]" : ""
+        //  (nº 260-§3 : la FEUILLE s'en passe — voir `sansVoile`.)
+        className={`${classes} flex w-full items-center gap-3 text-left${
+          !sansVoile && sousGroupeDeplie === sousEntete ? " bg-white/[0.06]" : ""
         }`}
       >
-        {sousEntete}
+        {avecPoint && (
+          <span
+            data-point-option=""
+            className={`${TAILLE_POINT} rounded-full shrink-0`}
+            style={{ backgroundColor: COULEURS.primaire }}
+            aria-hidden
+          />
+        )}
+        <span className="flex-1">{sousEntete}</span>
         {/*  ⚠️ LA FLÈCHE DE LA PORTE EST ROSE (nº 155-§5B), pointée en
              bas comme en haut — c'est elle, et elle seule, qui dit
              « ceci s'ouvre au lieu de se choisir ». LE TITRE, LUI,
@@ -821,7 +848,9 @@ export function MenuDeroulant({
                           sombre
                             ? "text-sombre-texte hover:bg-sombre-eleve"
                             : "text-encre hover:bg-fond-doux"
-                        }`
+                        }`,
+                        //  §3 (nº 260) — le point rose, et aucun voile.
+                        { avecPoint: true, sansVoile: true }
                       )}
                     {optionVisible(option) && (
                     <button
@@ -845,23 +874,28 @@ export function MenuDeroulant({
                       // métier est sélectionné.
                       className={`w-full flex items-center gap-3 min-h-[52px] pr-3 rounded-2xl text-left text-base ${
                         //  Retrait des options d'une sous-section
-                        //  (passe nº 113) — même règle que sur le web,
-                        //  et le VOILE du sous-menu avec (nº 241-§5).
-                        option.sousGroupe ? "pl-8 bg-white/[0.06]" : "pl-3"
+                        //  (passe nº 113) — même règle que sur le web.
+                        //  §3 (nº 260) — MAIS PLUS LE VOILE (nº 241-§5) :
+                        //  le sous-niveau garde la teinte de la fenêtre.
+                        option.sousGroupe ? "pl-8" : "pl-3"
                       } ${
                         sombre
                           ? "text-sombre-texte hover:bg-sombre-eleve"
                           : "text-encre hover:bg-fond-doux"
                       }`}
                     >
-                      {/* Puce ronde ~10 px : grise, ROSE plein si choisie */}
+                      {/*  §3 (nº 260) — LE POINT D'UN STYLE : 4 px, et
+                           BLANC quoi qu'il arrive. Il faisait 10 px, et
+                           il passait au ROSE sur le style choisi —
+                           trois fois la même information : le champ
+                           juste au-dessus dit lequel est choisi, et le
+                           titre de la page le répète. Le menu n'a pas à
+                           le redire. Le seul point rose de la liste est
+                           celui de la porte de famille. */}
                       <span
-                        className="w-2.5 h-2.5 rounded-full shrink-0"
-                        style={{
-                          backgroundColor: choisi
-                            ? COULEURS.primaire
-                            : COULEURS.bordureCarte,
-                        }}
+                        data-point-option=""
+                        className={`${TAILLE_POINT} rounded-full shrink-0`}
+                        style={{ backgroundColor: COULEURS.bordureCarte }}
                         aria-hidden
                       />
                       {label}
