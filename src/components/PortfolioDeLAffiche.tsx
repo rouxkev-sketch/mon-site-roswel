@@ -169,7 +169,17 @@ export function PanneauPortfolio({
   return (
     <div>
       {sections.map((section) => (
-        <section key={section.nature} className="pt-6">
+        /*  §2 (nº 277) — L'AÉRATION DES SECTIONS, et sa règle : PLUS
+            D'ESPACE AVANT UN TITRE QU'APRÈS LUI — c'est ce qui rattache
+            un titre à ce qui le SUIT. Les valeurs, dans le rythme du
+            site : 40 px avant chaque titre (`mt-10` — sous la rangée
+            Profil / Portfolio pour « RÉALISATIONS », sous le dernier
+            carrousel des réalisations pour « FLASHS ») et 20 px entre
+            un titre et son premier carrousel (`mt-5`, sur la grille).
+            L'écart entre deux carrousels d'une même section ne change
+            pas (le `gap` de la grille, plus bas). 40 > 20 : la preuve
+            est au banc, mesurée au pixel. */
+        <section key={section.nature} className="mt-10">
           {/*  LE TITRE DE SECTION — l'écriture des titres du profil
                (nº 223), consommée telle quelle : capitales grises
                espacées, 13 px. Aucune valeur choisie ici. */}
@@ -183,7 +193,10 @@ export function PanneauPortfolio({
                publié dans les deux rendus a DEUX vignettes, sous le
                même nom : c'est la première photo de chaque série qui
                les distingue — jamais un mot de rendu. */}
-          <ul className="mt-7 grid grid-cols-2 gap-x-4 gap-y-7">
+          {/*  §2 (nº 277) — 20 px sous le titre (`mt-5`) : moins que
+               les 40 au-dessus, le titre appartient à sa section. Le
+               `gap` entre carrousels, lui, NE CHANGE PAS. */}
+          <ul className="mt-5 grid grid-cols-2 gap-x-4 gap-y-7">
             {section.series.map((serie) => (
               <li key={`${serie.style}-${serie.rendu}`}>
                 <button
