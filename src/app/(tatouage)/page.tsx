@@ -10,7 +10,7 @@ import {
 import { cleCookieTexte, phototequeDuCookie } from "@/lib/vue-phototheque";
 import { SURFACE_RECHERCHE } from "@/lib/surface-affichage";
 import { lieuDepuisParametres } from "@/lib/geocodage";
-import { PLAFOND_GALERIE } from "@/lib/photos-tatoueur";
+import { PHOTOS_PAR_CARROUSEL } from "@/lib/photos-tatoueur";
 import {
   criteresDeLieu,
   filtresConnus,
@@ -143,13 +143,16 @@ const chargerAccueil = cache(async (requete: string, taillePage: number) => {
     //  ⚠️ PLUS D'UNE PHOTO PAR CARTE (nº 212-§2). La mosaïque n'en
     //  recevait qu'UNE (`sansGalerieInutile`, migration nº 32) : la
     //  carte ne pouvait donc jamais faire défiler quoi que ce soit —
-    //  le carrousel de la nº 211-§5 ne s'affichait chez personne. On
-    //  demande désormais la galerie de la carte, bornée au plafond
-    //  d'un ensemble (vingt photos, lib/photos-tatoueur).
+    //  le carrousel de la nº 211-§5 ne s'affichait chez personne.
+    //  ⚠️ DIX, ET PLUS VINGT (règle 3, nº 283). Ce nombre-ci dit ce
+    //  qu'une CARTE montre ; il ne décide plus de rien d'autre. Ce qui
+    //  décidait, à son insu, QUELLES CARTES EXISTENT, c'était le
+    //  nombre de photos demandé À LA BASE — il n'est plus lu ici (voir
+    //  PHOTOS_LUES_PAR_FICHE, config/tatouage).
     //  ⚠️ CE SONT DES LIGNES, PAS DES IMAGES : rien n'est téléchargé de
     //  plus à l'affichage — la carte ne monte que sa première photo,
     //  et les suivantes au premier geste (nº 211-§5).
-    photosMax: PLAFOND_GALERIE,
+    photosMax: PHOTOS_PAR_CARROUSEL,
   });
   return { resultat, style, nature, lieu, rayonKm, exclure, page };
 });

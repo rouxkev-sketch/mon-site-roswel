@@ -2,6 +2,7 @@ import {
   CARTES_PAR_PAGE,
   genreDuModeFiltre,
   GROUPES_FILTRES,
+  PHOTOS_LUES_PAR_FICHE,
   PLAFOND_CARROUSELS,
   profilDeLaFiche,
   rayonRetenu,
@@ -1656,7 +1657,20 @@ async function rechercheEnBase(
       p_photo_rendu: renduCherche(filtres.exclure) || null,
       p_limite: filtres.limite ?? CARTES_PAR_PAGE,
       p_decalage: Math.max(filtres.decalage ?? 0, 0),
-      p_photos_max: Math.max(filtres.photosMax ?? 1, 1),
+      //  ⚠️ RÈGLE 2 (nº 283) — ON NE DEMANDE PLUS « CE QU'UNE CARTE
+      //  AFFICHE », MAIS « TOUT CE QU'IL FAUT POUR CONNAÎTRE LES
+      //  CARROUSELS ». C'était `filtres.photosMax` — vingt photos par
+      //  fiche sur l'accueil — et ce nombre décidait, sans que
+      //  personne l'ait voulu, QUELLES CARTES EXISTENT : une galerie
+      //  dont la première photo arrivait après la vingtième de la
+      //  fiche n'était jamais ramassée, donc jamais affichée. On
+      //  demande désormais large (voir PHOTOS_LUES_PAR_FICHE), et
+      //  c'est la coupe PAR CARROUSEL qui borne — ici (lib/carrousels)
+      //  et, migration nº 69 passée, en base.
+      //  ⚠️ `filtres.photosMax` GARDE SON RÔLE, qui est un autre : il
+      //  dit combien de photos partent vers le navigateur POUR CHAQUE
+      //  CARTE (`sansGalerieInutile`).
+      p_photos_max: PHOTOS_LUES_PAR_FICHE,
       p_prioriser_clics: Boolean(filtres.prioriserClics),
       // LE MÉLANGE DU JOUR : la même graine que le code (voir
       // `melangerDuJour`) — le tirage ne change qu'une fois par jour.

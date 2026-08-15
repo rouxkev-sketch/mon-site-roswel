@@ -42,6 +42,7 @@ import {
   cleDEnsemble,
   galerieOrdonnee,
   natureConnue,
+  PHOTOS_PAR_CARROUSEL,
   RENDU_PAR_DEFAUT,
   type PhotoTatoueur,
 } from "@/lib/photos-tatoueur";
@@ -104,6 +105,9 @@ export function carrouselsDeLaFiche(
           ageJours: 0,
           distanceKm: contexte.distanceKm ?? null,
           personnalisation: 0,
+          //  Aucune photo cataloguée : ce carrousel-là n'a rien à
+          //  faire valoir au départage du §5, et c'est juste.
+          photos: 0,
         },
       },
     ];
@@ -119,6 +123,16 @@ export function carrouselsDeLaFiche(
 
   return [...parCle.entries()].map(([, photos]) => {
     const premiere = photos[0];
+    /**
+     * §3 (nº 283) — LA LIMITE EST DANS LE CARROUSEL, JAMAIS SUR LA
+     * FICHE. Au plus dix photos, DANS L'ORDRE DE L'ARTISTE — c'est un
+     * `slice`, jamais un tri : la première photo reste celle qu'il a
+     * mise en tête (règle 1), et les suivantes se suivent (règle 3).
+     * ⚠️ ON NE SUPPRIME JAMAIS UN CARROUSEL : ce qui dépasse dix
+     * photos n'écarte pas la galerie, il la raccourcit. C'est toute la
+     * différence avec le plafond par fiche que cette passe retire.
+     */
+    const montrees = photos.slice(0, PHOTOS_PAR_CARROUSEL);
     //  L'ÂGE DU CARROUSEL : celui de sa photo LA PLUS RÉCENTE. Une
     //  galerie qu'on enrichit reste vivante — c'est le comportement
     //  voulu par le §3 (« les artistes qui publient doivent voir un
@@ -132,16 +146,25 @@ export function carrouselsDeLaFiche(
     return {
       cle: cleDuCarrousel(fiche.slug, premiere),
       artisteId: fiche.id,
-      fiche: { ...fiche, galerie: photos },
+      fiche: { ...fiche, galerie: montrees },
       style: premiere.style,
       nature: natureConnue(premiere.nature),
       rendu: premiere.rendu ?? RENDU_PAR_DEFAUT,
-      photos,
+      photos: montrees,
       signaux: {
         popularite: contexte.popularite ?? 0,
+        //  ⚠️ L'ÂGE SE MESURE SUR LE CARROUSEL ENTIER, pas sur les dix
+        //  photos montrées : une galerie enrichie hier est jeune même
+        //  si sa nouveauté est la quinzième (règle 4).
         ageJours: ageEnJours(derniere, jour),
         distanceKm: contexte.distanceKm ?? null,
         personnalisation: 0,
+        //  §5 (nº 283) — CE QUI DÉPARTAGE DEUX NOTES ÉGALES : le
+        //  nombre de photos REÇUES pour ce carrousel. Voir la note du
+        //  classement — au-delà de dix, la base n'en envoie pas plus,
+        //  et deux carrousels bien fournis sont alors départagés par
+        //  leur fraîcheur.
+        photos: photos.length,
       },
     };
   });

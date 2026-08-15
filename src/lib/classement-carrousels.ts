@@ -56,6 +56,34 @@
  * pages successives.
  *
  * ==================================================================
+ * 1 bis. LE DÉPARTAGE À NOTE ÉGALE — LE PLUS FOURNI PASSE DEVANT
+ * ==================================================================
+ * (règle 5 de la nº 283)
+ * LE CAS RÉEL, ET IL EST LE NÔTRE AUJOURD'HUI : un catalogue tout
+ * neuf n'a AUCUN cœur. La popularité vaut donc 0 partout, et la
+ * formule ci-dessus rend la MÊME note à tous les carrousels du même
+ * âge — l'ordre se jouait alors sur l'ordre d'entrée, c'est-à-dire sur
+ * le hasard du chemin qui a construit la liste. Une galerie de trois
+ * photos pouvait passer devant une galerie de vingt.
+ *
+ * LA RÈGLE : à note égale, LE CARROUSEL LE PLUS FOURNI D'ABORD ; à
+ * nombre de photos égal, LE PLUS RÉCENT. C'est le meilleur signal
+ * qu'on ait avant les cœurs — un artiste qui a rempli une galerie a
+ * plus à montrer qu'un autre qui l'a ébauchée.
+ *
+ * ⚠️ ET ELLE S'EFFACE TOUTE SEULE. Ce n'est PAS un terme de la note :
+ * c'est un départage, il ne se déclenche que si les notes sont
+ * strictement égales. Le premier cœur suffit à les écarter, et la
+ * formule du §1 reprend la main sans qu'on ait rien à éteindre — donc
+ * sans qu'on doive s'en souvenir dans six mois.
+ *
+ * ⚠️ CE QU'IL COMPTE : les photos REÇUES pour ce carrousel, au plus
+ * dix (règle 3, `PHOTOS_PAR_CARROUSEL`). Deux galeries de onze et de
+ * vingt-cinq photos sont donc à égalité ici, et c'est leur fraîcheur
+ * qui les départage — pas leur taille réelle, que la mosaïque ne
+ * connaît pas et n'a aucune raison de rapatrier.
+ *
+ * ==================================================================
  * 2. PAS DEUX FOIS LE MÊME ARTISTE (au plus deux par page)
  * ==================================================================
  * Sans cette règle, un salon à douze galeries occupe la moitié de la
@@ -116,6 +144,12 @@ export type SignauxClassement = {
   distanceKm: number | null;
   /** §4 — LA PLACE DE LA PERSONNALISATION. Toujours 0 aujourd'hui. */
   personnalisation: number;
+  /**
+   * COMBIEN DE PHOTOS CE CARROUSEL PORTE — le départage de la règle 5
+   * (nº 283). Il n'entre PAS dans la note : il ne sert qu'à trancher
+   * entre deux notes égales (voir la note nº 5 de tête).
+   */
+  photos: number;
 };
 
 /** L'exposant du vieillissement — voir la note de tête. */
@@ -252,9 +286,18 @@ export function classerCarrousels<T extends Classable>(
     .sort(
       (a, b) =>
         b.score - a.score ||
-        //  ÉGALITÉ : l'ordre d'entrée d'abord (mélange du jour, ou
-        //  distance), puis la clé — pour qu'aucune égalité ne dépende
-        //  du chemin qui a construit la liste.
+        //  §5 (nº 283) — LE CARROUSEL LE PLUS FOURNI PASSE DEVANT.
+        //  Voir la note nº 5 de tête : ce critère ne se déclenche
+        //  QU'À NOTE ÉGALE, donc, en pratique, sur un catalogue sans
+        //  aucun cœur. Un seul like suffit à écarter les notes, et la
+        //  règle 4 reprend la main sans qu'on ait rien à éteindre.
+        b.element.signaux.photos - a.element.signaux.photos ||
+        //  À NOMBRE DE PHOTOS ÉGAL : le plus récent (âge le plus
+        //  petit). C'est la seconde moitié de la règle 5.
+        a.element.signaux.ageJours - b.element.signaux.ageJours ||
+        //  ÉGALITÉ COMPLÈTE : l'ordre d'entrée d'abord (mélange du
+        //  jour, ou distance), puis la clé — pour qu'aucune égalité ne
+        //  dépende du chemin qui a construit la liste.
         a.entree - b.entree ||
         a.element.cle.localeCompare(b.element.cle)
     )

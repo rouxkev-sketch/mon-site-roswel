@@ -1150,6 +1150,32 @@ export const CARTES_PAR_PAGE = 24;
 export const PLAFOND_CARROUSELS = 2000;
 
 /**
+ * §RÈGLE 2 (nº 283) — COMBIEN DE PHOTOS ON DEMANDE PAR FICHE, ET
+ * POURQUOI CE NOMBRE EST GRAND
+ * ------------------------------------------------------------------
+ * ⚠️ CE N'EST PAS UN PLAFOND D'AFFICHAGE, c'est un plafond de LECTURE,
+ * et il ne doit JAMAIS être ce qui décide qu'une carte existe. C'est
+ * exactement ce qui s'était produit : la mosaïque demandait vingt
+ * photos par fiche (le plafond d'UNE galerie), et depuis que la carte
+ * vaut un carrousel (nº 279), toute galerie dont la première photo
+ * arrivait après la vingtième de la fiche N'EXISTAIT PLUS — un salon à
+ * cinq styles n'en montrait qu'un, pour toujours, sans message.
+ *
+ * ON DEMANDE DONC LARGE. Cinq cents photos par fiche, c'est vingt-cinq
+ * galeries pleines : aucun portfolio réel n'en approche, et la lecture
+ * reste bornée (jamais « tout », sans limite).
+ *
+ * ⚠️ ET LA MIGRATION Nº 69 REND CE NOMBRE INOFFENSIF : elle borne à DIX
+ * PHOTOS PAR CARROUSEL au lieu de vingt par fiche. Demander cinq cents
+ * revient alors à demander « dix par carrousel », c'est-à-dire
+ * exactement ce que la règle 3 autorise. Avant la migration, la base
+ * envoie tout et le site coupe lui-même (lib/carrousels) : les deux
+ * versions donnent LA MÊME MOSAÏQUE, seule la quantité transportée
+ * change. Aucune version du site n'exige la migration.
+ */
+export const PHOTOS_LUES_PAR_FICHE = 500;
+
+/**
  * LE DÉLAI DE RÉFLEXION AVANT SUPPRESSION DÉFINITIVE, en jours.
  * TRENTE JOURS : le standard du secteur — assez long pour qu'un
  * regret ait le temps de venir, assez court pour ne pas garder des

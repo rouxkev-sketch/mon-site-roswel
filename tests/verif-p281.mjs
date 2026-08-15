@@ -379,13 +379,23 @@ titre("§3 — diagnostic : les règles qui décident qu'un carrousel s'affiche"
       "ancien descend, et peut tomber au-delà de la page regardée",
     /const VIEILLISSEMENT = 1\.2;/.test(classementNu)
   );
+  /*  ⚠️ AMENDÉ LE 2026-08-15 (nº 283) — LE DIAGNOSTIC A ÉTÉ RETENU, ET
+      LE DÉFAUT CORRIGÉ. Cette vérification CONSTATAIT le plafond de
+      vingt photos par fiche : c'était son objet, la nº 281 étant une
+      passe de diagnostic. La nº 283 le supprime — la limite se pose
+      désormais DANS le carrousel (dix photos), jamais sur la fiche.
+      On vérifie donc l'inverse, et l'énoncé le dit. Le détail de la
+      correction est au banc de la nº 283 ; ici, on garde la trace de
+      ce qui a été trouvé. */
   verif(
-    "RÈGLE 4 — LE PLAFOND DE PHOTOS PAR FICHE. La lecture en base ne " +
-      "rapporte que `p_photos_max` photos par fiche (l'accueil demande " +
-      "PLAFOND_GALERIE = 20), triées par `ordre`",
-    /limit greatest\(coalesce\(p_photos_max, 1\), 1\)/.test(recherche) &&
-      /export const PLAFOND_GALERIE = 20;/.test(lire("src/lib/photos-tatoueur.ts")) &&
-      /photosMax: PLAFOND_GALERIE,/.test(accueilNu)
+    "RÈGLE 4 (AMENDÉE nº 283) — LE PLAFOND DE PHOTOS PAR FICHE A " +
+      "DISPARU : la lecture en base ne coupe plus par fiche, et " +
+      "l'accueil ne demande plus PLAFOND_GALERIE",
+    !/photosMax: PLAFOND_GALERIE,/.test(accueilNu) &&
+      /photosMax: PHOTOS_PAR_CARROUSEL/.test(accueilNu) &&
+      /p_photos_max: PHOTOS_LUES_PAR_FICHE/.test(
+        sansNotes(lire("src/lib/tatoueurs.ts"))
+      )
   );
   //  LA CONSÉQUENCE, PROUVÉE PAR REJEU : depuis la nº 279, ces photos
   //  sont ÉCLATÉES en carrousels — donc un carrousel dont aucune photo
@@ -409,11 +419,13 @@ titre("§3 — diagnostic : les règles qui décident qu'un carrousel s'affiche"
   const carrouselsComplets = new Set(galerie.map(cle));
   const carrouselsServis = new Set(galerie.slice(0, 20).map(cle));
   verif(
-    "CONSÉQUENCE MESURÉE : une fiche de 25 photos dont les flashs sont " +
-      "déposés en dernier PERD son carrousel de flashs — la lecture " +
-      "s'arrête à la vingtième photo",
+    "CONSÉQUENCE MESURÉE (le diagnostic de cette passe, CORRIGÉ À LA " +
+      "Nº 283) : une fiche de 25 photos dont les flashs sont déposés " +
+      "en dernier PERDAIT son carrousel de flashs — la lecture " +
+      "s'arrêtait à la vingtième photo. La nº 283 lui en rend deux : " +
+      "voir tests/verif-p283.mjs, §2",
     carrouselsComplets.size === 2 && carrouselsServis.size === 1,
-    `portfolio réel : ${carrouselsComplets.size} carrousels · servis à la mosaïque : ${carrouselsServis.size}`
+    `portfolio réel : ${carrouselsComplets.size} carrousels · servis AVANT la nº 283 : ${carrouselsServis.size}`
   );
   nonJoue(
     "§3 · LES DEUX CAS NOMMÉS (Funambulink, Graphink)",

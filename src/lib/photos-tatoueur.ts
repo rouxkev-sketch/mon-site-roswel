@@ -145,6 +145,25 @@ export function libelleNature(slug: string | null | undefined): string {
 /** VINGT PHOTOS par couple style + rendu — le plafond d'une galerie. */
 export const PLAFOND_GALERIE = 20;
 
+/**
+ * DIX PHOTOS PAR CARROUSEL SUR UNE CARTE — la règle 3 (nº 283)
+ * ==================================================================
+ * ⚠️ CE N'EST PAS LE PLAFOND D'UNE GALERIE, et les confondre serait
+ * refaire le défaut que cette passe corrige. `PLAFOND_GALERIE` dit
+ * combien de photos un artiste a le DROIT DE DÉPOSER dans une galerie
+ * (vingt) ; ce nombre-ci dit combien une CARTE en montre (dix).
+ *
+ * POURQUOI UNE LIMITE ICI, ET PLUS SUR LA FICHE. Jusqu'à la nº 283, la
+ * mosaïque bornait ce qu'elle rapatriait PAR FICHE — vingt photos, la
+ * fiche entière. Depuis que la carte vaut un CARROUSEL (nº 279), ce
+ * plafond ne raccourcissait plus une galerie : il faisait disparaître
+ * des cartes entières — un salon à cinq styles n'existait plus que par
+ * celui de ses vingt premières photos. La limite se pose donc DANS le
+ * carrousel, jamais sur la fiche : on ne supprime jamais un carrousel,
+ * on montre au plus dix de ses photos, DANS L'ORDRE DE L'ARTISTE.
+ */
+export const PHOTOS_PAR_CARROUSEL = 10;
+
 export function libelleRendu(slug: string | null | undefined): string {
   return RENDUS_PHOTO.find((r) => r.slug === slug)?.label ?? (slug ?? "");
 }
