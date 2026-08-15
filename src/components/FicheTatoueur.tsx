@@ -204,13 +204,22 @@ export function FicheTatoueur({
    * vide, et à défaut on prend LE PREMIER GROUPE QUI A DES PHOTOS —
    * le carrousel principal de la fiche, jamais rien.
    */
-  const groupesGarnis = groupes.filter((groupe) => groupe.photos.length > 0);
+  /**
+   * §2 (nº 294) — LA nº 293-§3 EST ANNULÉE, SUR CONSIGNE.
+   * ------------------------------------------------------------------
+   * Elle repêchait le premier groupe GARNI quand celui du style
+   * demandé était vide, pour qu'une photo apparaisse toujours en haut.
+   * Le propriétaire veut l'inverse : une fiche ouverte depuis un lien
+   * interne à une autre fiche commence par Profil / Portfolio, sans
+   * photo. On revient donc au choix d'avant — le groupe demandé, sinon
+   * le premier, garni ou non.
+   * ⚠️ CE QUI RESTE DE LA nº 293, ET QUI EST UTILE : un carrousel sans
+   * photo ne réserve AUCUNE place (voir CarrouselPortfolio). Pas de
+   * grand rectangle noir : rien du tout, et la page commence bien par
+   * Profil / Portfolio.
+   */
   const groupeAffiche =
-    groupes.find(
-      (groupe) => groupe.slug === styleAffiche && groupe.photos.length > 0
-    ) ??
-    groupesGarnis[0] ??
-    groupes[0];
+    groupes.find((groupe) => groupe.slug === styleAffiche) ?? groupes[0];
   const photosDuStyleEntier = groupeAffiche?.photos ?? [];
   /*  §1 (nº 247) — LA SÉRIE VIENT DE `serieMontree`, L'ÉCRITURE
       UNIQUE : une catégorie demandée n'y est jamais violée. Le filtre

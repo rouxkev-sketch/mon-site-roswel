@@ -45,8 +45,18 @@ const trois = (valeur: number) => valeur.toFixed(3).replace(".", ",");
     colorer quand elle porte un verdict. */
 type Ligne = { cle: string; valeur: string; ton?: "bon" | "mauvais" };
 
+/**
+ * §1 (nº 294) — UNE SEULE SONDE À L'ÉCRAN, LA PLUS RÉCENTE.
+ * Elle est montée par la PAGE et par la FENÊTRE superposée : quand la
+ * seconde s'ouvre par-dessus la première, c'est ELLE qui relève, et le
+ * bandeau ne se dédouble jamais. Le dernier arrivé gagne, et rend la
+ * main en partant.
+ */
+const sondesMontees: object[] = [];
+
 export function SondePhoto() {
   const [lignes, setLignes] = useState<Ligne[]>([]);
+  const [aLaMain, setALaMain] = useState(true);
   const [copie, setCopie] = useState<null | "faite" | "ratee">(null);
   //  La dernière empreinte affichée : on ne repose un état que si un
   //  nombre a VRAIMENT changé — sinon la sonde rendrait soixante fois
@@ -62,6 +72,20 @@ export function SondePhoto() {
    * d'hydratation. Sans `?sonde-photo=1`, aucune boucle n'est même
    * lancée.
    */
+  useEffect(() => {
+    const jeton = {};
+    sondesMontees.push(jeton);
+    const revoir = () =>
+      setALaMain(sondesMontees[sondesMontees.length - 1] === jeton);
+    revoir();
+    const battement = setInterval(revoir, 300);
+    return () => {
+      clearInterval(battement);
+      const rang = sondesMontees.indexOf(jeton);
+      if (rang >= 0) sondesMontees.splice(rang, 1);
+    };
+  }, []);
+
   useEffect(() => {
     const demandee =
       new URLSearchParams(window.location.search).get("sonde-photo") === "1";
@@ -81,7 +105,20 @@ export function SondePhoto() {
       if (!vivante) return;
       trame = requestAnimationFrame(mesurer);
 
-      const zone = document.querySelector<HTMLElement>("[data-photo-fiche]");
+      /**
+       * §1 (nº 294) — LA SONDE VOIT AUSSI LA FENÊTRE SUPERPOSÉE.
+       * ----------------------------------------------------------------
+       * Elle ne cherchait que `[data-photo-fiche]`, qui n'existe QUE sur
+       * la page. Le propriétaire voit pourtant le même liseré dans la
+       * fenêtre centrée : elle doit donc pouvoir y relever. À défaut de
+       * l'enveloppe de la page, on prend LA BOÎTE QUI PORTE LE
+       * CARROUSEL — celle de la fenêtre —, et le relevé dit laquelle.
+       */
+      const zone =
+        document.querySelector<HTMLElement>("[data-photo-fiche]") ??
+        (document
+          .querySelector<HTMLElement>('[data-carrousel="fiche"]')
+          ?.parentElement ?? null);
       if (!zone) {
         poser([
           {
@@ -195,8 +232,9 @@ export function SondePhoto() {
       poser([
         {
           cle: "la page",
-          valeur:
-            racine?.dataset.ficheVue === "apercu"
+          valeur: !zone.hasAttribute("data-photo-fiche")
+            ? "FENÊTRE CENTRÉE SUPERPOSÉE"
+            : racine?.dataset.ficheVue === "apercu"
               ? "« Mon portfolio » (aperçu de l'espace)"
               : racine
                 ? "fiche publique (pleine page)"
@@ -244,6 +282,45 @@ export function SondePhoto() {
           "▸ bande d'enveloppe À DROITE du cadre",
           bc ? boite.right - bc.right : null
         ),
+        /**
+         * §1 (nº 294) — CE QUI EST PEINT DERRIÈRE LA PHOTO.
+         * ----------------------------------------------------------------
+         * La voie du pixel entier était épuisée : les fractions valaient
+         * zéro et le liseré restait. C'est qu'il ne fallait pas chercher
+         * un pixel de plus, mais regarder ce qu'il y avait DESSOUS — un
+         * fond plus clair que la page, qui s'affichait au moindre cheveu
+         * découvert. Cette ligne le dit, boîte par boîte.
+         * ⚠️ SEULE LA COLONNE A LE DROIT D'ÊTRE PEINTE : c'est la
+         * réservation sombre de la nº 280, et la photo la recouvre avec
+         * un pixel de marge. Tout le reste doit être transparent.
+         */
+        (() => {
+          const peint = (nom: string, element: Element | null) => {
+            if (!element) return `${nom} INTROUVABLE`;
+            const style = getComputedStyle(element);
+            const morceaux: string[] = [];
+            if (!/rgba\(0, 0, 0, 0\)|transparent/.test(style.backgroundColor))
+              morceaux.push(`fond ${style.backgroundColor}`);
+            if (parseFloat(style.borderTopWidth) > 0)
+              morceaux.push(`bordure ${style.borderTopWidth}`);
+            if (style.outlineStyle !== "none" && parseFloat(style.outlineWidth) > 0)
+              morceaux.push(`contour ${style.outlineWidth}`);
+            if (style.boxShadow !== "none") morceaux.push("ombre");
+            if (parseFloat(style.borderTopLeftRadius) > 0)
+              morceaux.push(`arrondi ${style.borderTopLeftRadius}`);
+            return morceaux.length ? `${nom} → ${morceaux.join(", ")}` : "";
+          };
+          const dits = [
+            peint("enveloppe", zone),
+            peint("racine", zone.querySelector("[data-carrousel]")),
+            peint("cadre", cadre),
+          ].filter(Boolean);
+          return {
+            cle: "▸ PEINT AUTOUR DE LA PHOTO",
+            valeur: dits.length ? dits.join(" · ") : "RIEN (seule la colonne réserve son fond)",
+            ton: dits.length ? "mauvais" : "bon",
+          } as Ligne;
+        })(),
         { cle: "nº 290 · haut de la photo (document)", valeur: `${trois(hautDansLeDocument)} px` },
         { cle: "nº 290 · marge du bas (racine)", valeur: `${trois(margeDuBas)} px` },
         { cle: "nº 290 · hauteur libre calculée", valeur: `${trois(libreCalcule)} px` },
@@ -263,7 +340,7 @@ export function SondePhoto() {
     };
   }, []);
 
-  if (lignes.length === 0) return null;
+  if (!aLaMain || lignes.length === 0) return null;
 
   /** LE RELEVÉ EN TEXTE SIMPLE — ce que le bouton copie, et ce qui
       reste sélectionnable à la main quand la copie échoue. */

@@ -722,7 +722,21 @@ export function CarrouselPortfolio({
       //  §1 (nº 247) — CE QUE CE CARROUSEL DÉCLARE MONTRER. Vide : un
       //  style entier, il ne promet aucune catégorie.
       data-serie-nature={natureDeLaSerie || undefined}
-      className="relative bg-sombre-carte select-none"
+      /*  §1 (nº 294) — LA RACINE NE PEINT PLUS RIEN. C'ÉTAIT ELLE, LE
+           LISERÉ : `bg-sombre-carte` (#28282D) est UN CRAN PLUS CLAIR
+           que la page, et il occupait toute la boîte du carrousel —
+           donc le moindre pixel que la photo ne couvrait pas
+           l'affichait en clair, tout autour d'elle. La nº 293 a fait
+           tomber les fractions à zéro dans Chromium sans faire
+           disparaître le trait : c'est qu'il ne fallait pas chercher
+           un pixel de plus, mais retirer ce qu'il y avait DESSOUS.
+           LA RÉSERVATION SOMBRE DE LA nº 280 N'EST PAS PERDUE : elle
+           descend sur la COLONNE, c'est-à-dire exactement la boîte de
+           la photo — que la photo recouvre, elle, avec un pixel de
+           marge (voir plus bas). Le rectangle sombre tient donc encore
+           la place le temps du chargement, mais il ne peut plus
+           déborder d'un cheveu autour d'elle. */
+      className="relative select-none"
     >
       {/* LE CADRE QUI DÉFILE — le navigateur fait tout : l'inertie du
           doigt, l'accrochage d'une photo à la fois (`snap-always`), et
@@ -831,7 +845,10 @@ export function CarrouselPortfolio({
               //  fois montées — c'est-à-dire au premier geste.
               loading={rang === 0 && prioritaire ? undefined : "lazy"}
               fetchPriority={rang === 0 && prioritaire ? "high" : undefined}
-              className="absolute inset-0 h-full w-full object-cover"
+              //  §1 (nº 294) — UN PIXEL DE DÉBORDEMENT, rogné par la
+              //  colonne : la photo couvre sa colonne sur ses quatre
+              //  côtés quoi qu'il arrive (voir la note de la colonne).
+              className="absolute -top-px -left-px h-[calc(100%+2px)] w-[calc(100%+2px)] max-w-none object-cover"
             />
           ) : (
             /*  §1 (nº 280) — PLUS D'APERÇU : la pleine résolution, et
@@ -843,7 +860,9 @@ export function CarrouselPortfolio({
               alt={rang === indice ? texteDe(photo) : ""}
               pleineResolution={rang === indice}
               prioritaire={rang === 0}
-              classe="absolute inset-0 h-full w-full object-cover"
+              //  §1 (nº 294) — le même pixel de débordement que sur
+              //  les cartes, rogné par la colonne.
+              classe="absolute -top-px -left-px h-[calc(100%+2px)] w-[calc(100%+2px)] max-w-none object-cover"
             />
           );
           return (
@@ -862,7 +881,18 @@ export function CarrouselPortfolio({
               //  note du cadre). Elle garde son format 4/5 — le cadre
               //  l'étire déjà à sa hauteur, les deux disent la même
               //  chose et ne peuvent pas diverger.
-              className={`relative w-full shrink-0 snap-start snap-always min-h-0 ${CADRE_PHOTO_PORTFOLIO}`}
+              /*  §1 (nº 294) — DEUX CHOSES, ET ELLES VONT ENSEMBLE :
+                   · `bg-sombre-carte` — la réservation sombre de la
+                     nº 280, descendue ici depuis la racine. Elle
+                     n'occupe plus que la boîte de la photo ;
+                   · `overflow-hidden` — la colonne ROGNE. C'est ce qui
+                     permet à la photo de déborder d'un pixel sans
+                     jamais mordre sur sa voisine : elle couvre à coup
+                     sûr, et le débordement est coupé net au bord de
+                     la colonne. Aucune arithmétique ne peut plus
+                     laisser d'interstice, quelles que soient les
+                     fractions. */
+              className={`relative w-full shrink-0 snap-start snap-always min-h-0 overflow-hidden bg-sombre-carte ${CADRE_PHOTO_PORTFOLIO}`}
               aria-hidden={rang !== indice}
             >
               {surCarte ? (

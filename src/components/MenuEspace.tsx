@@ -94,9 +94,6 @@ export function MenuEspace({
   hauteur: number;
 }) {
   const [ouvert, setOuvert] = useState(false);
-  //  §2 (nº 293) — LA FENÊTRE DU COMPTE assombrit la page derrière
-  //  elle. Web uniquement : le crochet s'écarte de lui-même au doigt.
-  useVoileDeLaPage(ouvert);
   /*  ⚠️ PLUS DE REPÈRE « NON PUBLIQUE » DANS LE MENU (passe nº 133).
       Il ne disait rien à personne d'autre qu'à l'administrateur, et il
       encombrait deux lignes du sélecteur — celle du portfolio choisi
@@ -116,6 +113,10 @@ export function MenuEspace({
   /** L'avertissement « tu as une saisie en cours » — voir plus bas. */
   const [avertirAvantCreation, setAvertirAvantCreation] = useState(false);
   const zone = useRef<HTMLDivElement>(null);
+  //  §2 (nº 293), §3 (nº 294) — LA FENÊTRE DU COMPTE assombrit tout
+  //  l'écran, et son déclencheur reste clair. Web uniquement : le
+  //  crochet s'écarte de lui-même au doigt.
+  useVoileDeLaPage(ouvert, zone);
   /** La plaque du menu web — montée dans le corps du document
       (nº 238-§4) : la fermeture au clic dehors doit la connaître.
       ⚠️ L'ANCRE DU MENU EST `zone`, PAS UN DES DEUX BOUTONS : il y en a

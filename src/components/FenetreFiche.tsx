@@ -9,6 +9,7 @@ import { BoutonPartageFiche } from "@/components/BoutonPartageFiche";
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
 import { ContenuFiche } from "@/components/ContenuFiche";
+import { SondePhoto } from "@/components/SondePhoto";
 import {
   cheminDuCarrousel,
   galerieParStyles,
@@ -193,13 +194,22 @@ export function FenetreFiche({
   //  on ne se pose jamais sur un groupe VIDE. À défaut, le premier qui
   //  a des photos — le carrousel principal de la fiche, jamais rien.
   //  (Voir la note longue dans FicheTatoueur.)
-  const groupesGarnis = groupes.filter((groupe) => groupe.photos.length > 0);
+  /**
+   * §2 (nº 294) — LA nº 293-§3 EST ANNULÉE, SUR CONSIGNE.
+   * ------------------------------------------------------------------
+   * Elle repêchait le premier groupe GARNI quand celui du style
+   * demandé était vide, pour qu'une photo apparaisse toujours en haut.
+   * Le propriétaire veut l'inverse : une fiche ouverte depuis un lien
+   * interne à une autre fiche commence par Profil / Portfolio, sans
+   * photo. On revient donc au choix d'avant — le groupe demandé, sinon
+   * le premier, garni ou non.
+   * ⚠️ CE QUI RESTE DE LA nº 293, ET QUI EST UTILE : un carrousel sans
+   * photo ne réserve AUCUNE place (voir CarrouselPortfolio). Pas de
+   * grand rectangle noir : rien du tout, et la page commence bien par
+   * Profil / Portfolio.
+   */
   const groupeAffiche =
-    groupes.find(
-      (groupe) => groupe.slug === styleAffiche && groupe.photos.length > 0
-    ) ??
-    groupesGarnis[0] ??
-    groupes[0];
+    groupes.find((groupe) => groupe.slug === styleAffiche) ?? groupes[0];
   const photosDuStyleEntier = groupeAffiche?.photos ?? [];
   /*  §1 (nº 247) — L'ÉCRITURE UNIQUE (`serieMontree`) : la copie du
       filtre qui vivait ici est partie, avec son repli. Une catégorie
@@ -417,7 +427,22 @@ export function FenetreFiche({
                 hauteur de la fenêtre est bornée pour que le 4:5 ne soit
                 JAMAIS écrasé. Le carrousel est CELUI DE LA PAGE : mêmes
                 flèches, même pagination, même capsule. ---- */}
-            <div className="relative w-full lg:w-auto lg:h-full aspect-[4/5] min-w-0 shrink-0 lg:shrink bg-black select-none">
+            {/*  §1 (nº 294) — LE NOIR DERRIÈRE LA PHOTO S'EN VA, et c'est
+                 la moitié « fenêtre superposée » du même défaut. CE QUE
+                 LA nº 292 AVAIT CHANGÉ ICI : le cadre a reçu son propre
+                 format 4/5, calculé sur sa largeur ARRONDIE AU PIXEL
+                 INFÉRIEUR (nº 280) ; cette boîte-ci, elle, tire sa
+                 largeur de sa hauteur et tombe donc à virgule. Le cadre
+                 est devenu un cheveu plus étroit et plus court qu'elle
+                 — et ce cheveu montrait le noir. Sans fond, il n'y a
+                 plus rien à montrer. */}
+            {/*  §1 (nº 294) — LA SONDE RELÈVE AUSSI ICI. Le liseré se
+                 voit dans cette fenêtre comme sur la page : elle doit
+                 pouvoir y prendre ses nombres. Elle ne rend rien sans
+                 `?sonde-photo=1`, et une seule sonde s'affiche à la
+                 fois — la plus récente, donc celle-ci. */}
+            <SondePhoto />
+            <div className="relative w-full lg:w-auto lg:h-full aspect-[4/5] min-w-0 shrink-0 lg:shrink select-none">
               <CarrouselPortfolio
                 photos={photosDuStyleAffiche}
                 nomTatoueur={tatoueur.nom}

@@ -258,13 +258,14 @@ export function MoteurTatouage({
   );
   /** Le panneau des interrupteurs (web, sous le bouton rond). */
   const [filtresOuverts, setFiltresOuverts] = useState(false);
-  //  §2 (nº 293) — LA FENÊTRE DES FILTRES assombrit la page derrière
-  //  elle, comme les menus. Web uniquement (le crochet s'en assure).
-  useVoileDeLaPage(filtresOuverts);
   /** Combien de fois « Effacer » a été pressé — sert de clé au champ
       de localité pour le reconstruire à neuf (voir plus bas). */
   const [effacements, setEffacements] = useState(0);
   const zoneFiltres = useRef<HTMLDivElement>(null);
+  //  §2 (nº 293), §3 (nº 294) — LA FENÊTRE DES FILTRES assombrit tout
+  //  l'écran, et le bloc qui la porte reste clair. Web uniquement (le
+  //  crochet s'en assure).
+  useVoileDeLaPage(filtresOuverts, zoneFiltres);
   /** Le bouton rond — le menu de verre se pose sous LUI (nº 238-§3). */
   const boutonFiltres = useRef<HTMLButtonElement>(null);
   /** La plaque du panneau : montée dans le corps du document, elle

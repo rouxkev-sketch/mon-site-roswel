@@ -310,8 +310,10 @@ export function MenuDeroulant({
   /** Vrai quand la liste est réellement à l'écran — elle n'apparaît
       qu'une fois la remontée du parent TERMINÉE (nº 195-§2). */
   const [listeVisible, setListeVisible] = useState(false);
-  //  §2 (nº 293) — le voile suit l'ouverture, et rien d'autre.
-  useVoileDeLaPage(avecVoile && listeVisible);
+  //  §2 (nº 293), §3 (nº 294) — le voile suit l'ouverture, et le BLOC
+  //  qui contient ce menu reste clair : on donne notre conteneur, le
+  //  crochet remonte tout seul à l'encadré qui l'entoure.
+  useVoileDeLaPage(avecVoile && listeVisible, conteneur);
   //  À LA FERMETURE, la liste disparaît sur-le-champ — ajusté pendant
   //  le rendu (le motif React officiel), jamais dans un effet.
   if (!ouvert && listeVisible) setListeVisible(false);

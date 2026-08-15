@@ -105,17 +105,20 @@ titre("§2 — le voile : comment on garantit que la plaque floute LA PAGE");
       !/transform/.test(voile) &&
       !/will-change|isolation|filter:/.test(voile)
   );
+  //  ⚠️ LES DEUX SUIVANTES AMENDÉES À LA nº 294-§3, SUR CONSIGNE : le
+  //  voile passe AU-DESSUS de la barre (une seule couleur, plus de
+  //  raccord), et il monte donc à 28 % — il n'est plus cumulé au flou
+  //  de la plaque. Il est percé d'un trou pour le bloc ouvert.
   verif(
-    "IL EST LÉGER (18 %) — le remède exact de la nº 234, qui avait " +
-      "ramené un voile de 55 % à 25 % : la plaque lit la page à travers",
-    /rgba\(0, 0, 0, 0\.18\)/.test(voile)
+    "IL EST À 28 % (nº 294) — au-dessus de la barre, il agit seul",
+    /rgba\(0, 0, 0, 0\.28\)/.test(voile)
   );
   verif(
-    "IL COMMENCE AU BAS DE LA BARRE, mesuré — jamais une hauteur " +
-      "recopiée, et jamais un `z-index` sous la barre (elle est " +
-      "elle-même une plaque : elle flouterait le voile et s'assombrirait)",
-    /getBoundingClientRect\(\)\.bottom/.test(voile) &&
-      /top: hautDeLaBarre/.test(voile)
+    "IL COUVRE TOUT L'ÉCRAN, la barre comprise, et le bloc ouvert " +
+      "reste clair par un TROU — jamais par un `z-index` (nº 294)",
+    /const ETAGE = 60;/.test(voile) &&
+      /pan\("plein", \{ inset: 0 \}\)/.test(voile) &&
+      /closest<HTMLElement>\("\[data-encadre-barre\]"\)/.test(voile)
   );
   verif(
     "AUCUN SECOND MÉCANISME DE FERMETURE : le voile n'écoute rien, " +
@@ -131,23 +134,28 @@ titre("§2 — le voile : comment on garantit que la plaque floute LA PAGE");
     /dataset\.appareil === "mobile"\) return;/.test(voile)
   );
   verif(
+    //  ⚠️ AMENDÉE À LA nº 294-§3 : le compte est devenu une PILE de
+    //  surfaces (chacune dépose le bloc qu'elle épargne). Le fait
+    //  vérifié ne change pas — la dernière qui part retire le voile.
     "UN COMPTE PARTAGÉ, comme le gel du corps : la première surface " +
       "pose, la dernière retire — et LE GEL N'EST PAS TOUCHÉ",
-    /compte = Math\.max\(0, compte - 1\)/.test(
+    /surfaces\.splice\(rang, 1\)/.test(
       sansNotes(lire("src/lib/voile-de-la-page.ts"))
     ) && !/gelerLeCorps/.test(voile)
   );
   verif(
     "LES CINQ SURFACES, ET PAS UNE DE PLUS : compte, filtres, menu du " +
       "moteur (web + doigt), menus de Ma sélection, localité du moteur",
-    /useVoileDeLaPage\(ouvert\)/.test(sansNotes(lire("src/components/MenuEspace.tsx"))) &&
-      /useVoileDeLaPage\(filtresOuverts\)/.test(
+    //  ⚠️ AMENDÉE À LA nº 294-§3 : chaque surface donne EN PLUS le bloc
+    //  qu'elle épargne. Le compte des appelants ne change pas.
+    /useVoileDeLaPage\(ouvert, zone\)/.test(sansNotes(lire("src/components/MenuEspace.tsx"))) &&
+      /useVoileDeLaPage\(filtresOuverts, zoneFiltres\)/.test(
         sansNotes(lire("src/components/MoteurTatouage.tsx"))
       ) &&
       (sansNotes(lire("src/components/MoteurTatouage.tsx")).match(/avecVoile/g) ?? [])
         .length === 2 &&
       /avecVoile/.test(sansNotes(lire("src/components/MenusSelection.tsx"))) &&
-      /useVoileDeLaPage\(pourLeMoteur && listeOuverte\)/.test(
+      /useVoileDeLaPage\(pourLeMoteur && listeOuverte, racine\)/.test(
         sansNotes(lire("src/components/ChampLocalisation.tsx"))
       ) &&
       ["src/components/FormulaireFiche.tsx", "src/components/FormulaireContact.tsx"].every(
@@ -158,14 +166,15 @@ titre("§2 — le voile : comment on garantit que la plaque floute LA PAGE");
 
 titre("§3 et §4 — à la source");
 {
+  //  ⚠️ ANNULÉE À LA nº 294-§2, SUR CONSIGNE EXPLICITE DU PROPRIÉTAIRE
+  //  (« l'erreur vient de moi, pas de toi ») : une fiche ouverte depuis
+  //  un lien interne ne doit PAS imposer de photo en haut. Le repêchage
+  //  de groupe est retiré ; ce qui est vérifié ici, c'est qu'il est
+  //  bien parti.
   verif(
-    "§3 — ON NE SE POSE JAMAIS SUR UN GROUPE VIDE : à défaut, le " +
-      "premier qui a des photos — sur la PAGE comme dans la FENÊTRE",
-    [fiche, fenetre].every((texte) =>
-      /groupe\.slug === styleAffiche && groupe\.photos\.length > 0\s*\)\s*\?\?\s*groupesGarnis\[0\]/.test(
-        texte.replace(/\s+/g, " ").replace(/\) \?\?/g, ") ??")
-      )
-    )
+    "§3 (nº 293) ANNULÉ EN nº 294 : plus de repêchage de groupe — le " +
+      "style demandé, sinon le premier, garni ou non",
+    [fiche, fenetre].every((texte) => !/groupesGarnis/.test(texte))
   );
   verif(
     "§3 — ET UN CARROUSEL VIDE NE RÉSERVE PLUS DE PLACE : le format " +
@@ -255,10 +264,14 @@ titre("vivant — 1440 × 823, densité 2 : LA FENÊTRE DU PROPRIÉTAIRE");
       Math.abs(g.bandeDroite) < 0.001,
       `${g.bandeDroite}`
     );
+    //  ⚠️ AMENDÉE À LA nº 294-§1, SUR CONSIGNE : la photo DÉBORDE
+    //  désormais d'un pixel sur chaque côté (la colonne le rogne) —
+    //  c'est ce qui garantit la couverture quelles que soient les
+    //  fractions. Un écart NÉGATIF est donc le bon résultat.
     verif(
       "LA PHOTO REMPLIT SA COLONNE SUR SES QUATRE CÔTÉS : aucun " +
         "interstice, donc aucun morceau de la voisine",
-      Object.values(g.ecarts).every((e) => Math.abs(e) < 0.001),
+      Object.values(g.ecarts).every((e) => e <= 0.001),
       `haut ${g.ecarts.haut} · bas ${g.ecarts.bas} · gauche ${g.ecarts.gauche} · droite ${g.ecarts.droite}`
     );
     verif(
@@ -313,12 +326,13 @@ titre("vivant — 1440 × 823, densité 2 : LA FENÊTRE DU PROPRIÉTAIRE");
         parent: p.parentElement.tagName,
       };
     });
+    //  ⚠️ AMENDÉE À LA nº 294-§3, SUR CONSIGNE : le voile part du HAUT
+    //  DE L'ÉCRAN et recouvre la barre — une seule couleur, plus de
+    //  raccord sous la barre.
     verif(
-      "MENU DU MOTEUR OUVERT : le voile est là, il COMMENCE AU BAS DE " +
-        "LA BARRE (qui reste donc claire), et il est léger",
-      v !== null &&
-        Math.abs(v.top - v.basBarre) < 0.5 &&
-        v.fond === "rgba(0, 0, 0, 0.18)",
+      "MENU DU MOTEUR OUVERT : le voile est là, il part du HAUT DE " +
+        "L'ÉCRAN (barre comprise, nº 294) et il vaut 28 %",
+      v !== null && v.top === 0 && v.fond === "rgba(0, 0, 0, 0.28)",
       v ? `haut ${v.top} · bas de barre ${v.basBarre} · ${v.fond}` : "absent"
     );
     verif(

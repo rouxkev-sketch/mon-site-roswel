@@ -53,9 +53,13 @@ titre("§1 — à la source : la hauteur ne vient plus du contenu");
     )
   );
   verif(
+    //  ⚠️ AMENDÉE À LA nº 294-§1, SUR CONSIGNE : la colonne ROGNE
+    //  désormais et porte la réservation sombre (la photo la déborde
+    //  d'un pixel). Le fait vérifié ne change pas : `min-h-0` et le
+    //  format 4/5 y sont toujours.
     "LA COLONNE AUSSI : `min-h-0`, format 4/5 conservé — les deux " +
       "disent la même chose et ne peuvent pas diverger",
-    /shrink-0 snap-start snap-always min-h-0 \$\{CADRE_PHOTO_PORTFOLIO\}/.test(
+    /shrink-0 snap-start snap-always min-h-0 overflow-hidden bg-sombre-carte \$\{CADRE_PHOTO_PORTFOLIO\}/.test(
       carrousel
     )
   );

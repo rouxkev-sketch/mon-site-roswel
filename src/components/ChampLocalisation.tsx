@@ -174,11 +174,6 @@ export function ChampLocalisation({
   );
   const [suggestions, setSuggestions] = useState<LieuTrouve[]>([]);
   const [listeOuverte, setListeOuverte] = useState(false);
-  //  §2 (nº 293) — LE MENU DE LA LOCALITÉ ET DU RAYON assombrit la
-  //  page derrière lui, comme les autres — mais seulement CELUI DU
-  //  MOTEUR : le champ vit aussi dans le formulaire de fiche, qui
-  //  n'a rien demandé.
-  useVoileDeLaPage(pourLeMoteur && listeOuverte);
   const [chargement, setChargement] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -211,6 +206,12 @@ export function ChampLocalisation({
       l'épargner explicitement. */
   const panneau = useRef<HTMLDivElement>(null);
   const racine = useRef<HTMLDivElement>(null);
+  //  §2 (nº 293), §3 (nº 294) — LE MENU DE LA LOCALITÉ ET DU RAYON
+  //  assombrit tout l'écran, et le BLOC qui le contient reste clair
+  //  (l'encadré style + localité du moteur, pas la seule moitié
+  //  droite). Seulement CELUI DU MOTEUR : le champ vit aussi dans le
+  //  formulaire de fiche, qui n'a rien demandé.
+  useVoileDeLaPage(pourLeMoteur && listeOuverte, racine);
   /** VRAI pendant qu'un doigt est DANS le panneau : le blur du champ
       ne ferme alors rien (un défilement n'est pas un départ). */
   const interactionPanneau = useRef(false);
