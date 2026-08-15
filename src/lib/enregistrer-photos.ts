@@ -42,6 +42,23 @@ import { CONNEXIONS_SIMULTANEES, enPool } from "@/lib/televerser-photos";
  * JAMAIS BLOQUANT : si la table n'existe pas encore (migration nº 31
  * non passée), on n'interrompt RIEN — la fiche est enregistrée, et le
  * portfolio suivra au prochain envoi. Le message part dans le journal.
+ *
+ * ██ LES PHOTOS NEUVES ATTENDENT LEUR VALIDATION (règle 3, nº 285) ██
+ * ==================================================================
+ * C'est LE SEUL contenu du portfolio qui passe encore par une
+ * relecture. Une photo qui ARRIVE (aucun `id` : elle n'a jamais existé
+ * en base) est écrite `en_attente = true` ; elle vit donc en base, son
+ * auteur la voit dans son formulaire, et LE PUBLIC NE LA VOIT PAS
+ * (règle 6) — ni la mosaïque, ni la fiche, ni le partage.
+ * ⚠️ CE QUI N'EST PAS UNE ARRIVÉE N'ATTEND RIEN : réordonner (règle 5),
+ * retaguer, retirer une photo ne touche jamais `en_attente` — ces
+ * lignes ont un `id`, elles sont MISES À JOUR, et la mise à jour ne
+ * mentionne pas la colonne. Une photo déjà validée ne peut donc pas
+ * retomber en attente parce qu'on l'a déplacée.
+ * ⚠️ ET LA COLONNE PEUT MANQUER : sans la migration nº 70, l'insertion
+ * est rejouée SANS elle. Le site marche alors exactement comme avant
+ * cette passe — les photos neuves sont visibles tout de suite. Aucune
+ * version du site n'exige la migration.
  */
 
 export type PhotoAEcrire = {
@@ -62,7 +79,14 @@ export async function enregistrerPhotos(
   /** LES PHOTOS CHARGÉES PUIS RETIRÉES À L'ÉCRAN — leurs identifiants,
       et EUX SEULS, partent de la base. Vide à la création d'une fiche :
       il n'y avait rien à retirer. */
-  retirees: string[] = []
+  retirees: string[] = [],
+  /** §1 (nº 285) — LES ARRIVÉES ATTENDENT-ELLES LEUR VALIDATION ?
+      Vrai sur une fiche DÉJÀ VALIDÉE : les photos neuves sont écrites
+      `en_attente` (règle 3). Faux à la toute première création : la
+      fiche entière passe la validation (règle 1), ses photos avec —
+      les marquer une seconde fois les laisserait invisibles après la
+      mise en ligne. */
+  arriveesEnAttente = false
 ): Promise<void> {
   try {
     // 1) CE QUI DISPARAÎT — ce que la personne a retiré, et rien
@@ -94,9 +118,26 @@ export async function enregistrerPhotos(
     }));
 
     //  LES ARRIVÉES, D'UN SEUL COUP : une requête pour tout le lot.
-    const neuves = lignes.filter((l) => !l.id).map((l) => l.ligne);
+    //  §1 (nº 285) — et elles portent leur attente quand la fiche est
+    //  déjà validée (voir la note de tête).
+    const neuves = lignes
+      .filter((l) => !l.id)
+      .map((l) =>
+        arriveesEnAttente ? { ...l.ligne, en_attente: true } : l.ligne
+      );
     if (neuves.length > 0) {
-      const insertion = await supabase.from("photos_tatoueur").insert(neuves);
+      let insertion = await supabase.from("photos_tatoueur").insert(neuves);
+      //  LA COLONNE PEUT MANQUER (migration nº 70 pas encore passée) :
+      //  on rejoue SANS elle plutôt que de perdre les photos.
+      if (
+        insertion.error &&
+        arriveesEnAttente &&
+        insertion.error.message.toLowerCase().includes("en_attente")
+      ) {
+        insertion = await supabase
+          .from("photos_tatoueur")
+          .insert(lignes.filter((l) => !l.id).map((l) => l.ligne));
+      }
       if (insertion.error) throw new Error(insertion.error.message);
     }
 

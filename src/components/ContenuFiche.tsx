@@ -223,6 +223,42 @@ export function ContenuFiche({
     remonterSousLaBarre();
   }
 
+  /**
+   * §2-6 (nº 285) — ARRIVER DIRECTEMENT SUR LE PROFIL, À SA PLACE
+   * ==================================================================
+   * Le rond de profil de la fenêtre de carrousel (nº 284) déposait le
+   * visiteur TOUT EN HAUT de la fiche. Il doit le déposer EXACTEMENT
+   * là où la page se pose quand on touche l'onglet « Profil » :
+   * `remonterSousLaBarre`, le MÊME mouvement, la MÊME position finale
+   * — pas une seconde écriture, celle qui existe.
+   * L'adresse le demande (`#profil`, ce que le lien du rond écrit) ;
+   * l'onglet « Profil » étant déjà celui d'arrivée, il n'y a que la
+   * remontée à jouer.
+   * ⚠️ AU DOIGT SEULEMENT, comme la remontée elle-même (elle sort
+   * d'elle-même sur le web) ; et UNE SEULE FOIS, à l'arrivée — on
+   * efface l'ancre aussitôt, pour qu'un rechargement ou un retour ne
+   * rejoue pas un mouvement que personne n'a demandé.
+   * ⚠️ APRÈS DEUX IMAGES : la photo du haut doit avoir sa hauteur
+   * définitive, sans quoi on viserait un repère qui n'existe pas
+   * encore (la leçon de `remonteeDemandee`, nº 238-§1).
+   */
+  useEffect(() => {
+    if (window.location.hash !== "#profil") return;
+    const propre = window.location.href.replace(/#profil$/, "");
+    window.history.replaceState(null, "", propre);
+    let seconde = 0;
+    const premiere = requestAnimationFrame(() => {
+      seconde = requestAnimationFrame(() => remonterSousLaBarre());
+    });
+    return () => {
+      cancelAnimationFrame(premiere);
+      cancelAnimationFrame(seconde);
+    };
+    //  `remonterSousLaBarre` ne lit que le DOM : la rejouer à chaque
+    //  rendu ne changerait rien, et l'ajouter en dépendance
+    //  relancerait l'effet pour rien.
+  }, []);
+
   /*  §3 (nº 276) — `choisirCategorie` et `surRendu` ont DISPARU avec
       leurs sélecteurs, et leurs remontées de page avec eux (celle du
       rendu datait de la nº 234 ; celle de la catégorie était déjà

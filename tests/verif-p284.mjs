@@ -143,20 +143,30 @@ titre("§2 — à la source : la fenêtre, pièce par pièce");
         fenetre.replace(/borderRadius|borderBottom/g, "")
       )
   );
+  /*  ⚠️ AMENDÉ LE 2026-08-15 (nº 285-§2) — LA FENÊTRE A ÉTÉ RETOUCHÉE,
+      ET C'ÉTAIT LA CONSIGNE. Ce que la nº 284 avait livré et que la
+      nº 285 change VOLONTAIREMENT : le vide de droite laisse la place
+      au COMPTEUR « 1/19 » ; les POINTS sont supprimés (dix-neuf points
+      sont illisibles) ; le TITRE descend SOUS la photo, à côté du
+      rond ; et le rond mène au profil À SA PLACE (`#profil`). Les
+      vérifications ci-dessous suivent, et le disent. Tout le reste de
+      la nº 284 — défilement, ouverture sans remontée, retour au pixel,
+      adresse partageable, web intact — est vérifié inchangé. Le détail
+      de la retouche est au banc de la nº 285. */
   verif(
-    "la barre du haut : la flèche à gauche, le logo au centre, RIEN à " +
-      "droite (un vide de la largeur de la flèche — pas de croix)",
+    "la barre du haut (AMENDÉE nº 285) : la flèche à gauche, le logo " +
+      "au centre, LE COMPTEUR à droite — et toujours pas de croix",
     /aria-label="Retour"/.test(fenetre) &&
       /LogoYokofolio/.test(fenetre) &&
-      /<span className="h-11 w-11" aria-hidden="true" \/>/.test(fenetre) &&
+      /data-role="compteur-fenetre"/.test(fenetre) &&
       !/aria-label="Fermer/.test(fenetre)
   );
   verif(
     "le style en blanc et en gras, la série dessous en gris plus petit " +
       "(« Réalisation · Noir et gris » : libellés du site, jamais écrits " +
-      "à la main)",
-    /text-\[17px\] font-bold text-sombre-texte/.test(fenetre) &&
-      /text-\[13px\] text-sombre-texte-doux/.test(fenetre) &&
+      "à la main) — DESCENDUS SOUS LA PHOTO à la nº 285",
+    /text-\[17px\] font-bold leading-tight text-sombre-texte/.test(fenetre) &&
+      /text-\[13px\] leading-tight text-sombre-texte-doux/.test(fenetre) &&
       /libelleNature\(serieEffective\.nature\)/.test(fenetre) &&
       /libelleRendu\(serieEffective\.rendu\)/.test(fenetre)
   );
@@ -171,25 +181,19 @@ titre("§2 — à la source : la fenêtre, pièce par pièce");
       /n > 1 && !sansPoints && paginationWeb\(\)/.test(carrousel)
   );
   verif(
-    "LES POINTS SONT CEUX DU WEB, repris tels quels : une seule " +
-      "écriture (PointsDuCarrousel), consommée par la pagination du " +
-      "carrousel ET par la fenêtre",
+    "LA FRISE DE POINTS RESTE L'ÉCRITURE DU WEB, intacte — la nº 285 " +
+      "l'a retirée DE LA FENÊTRE (illisible à dix-neuf photos), pas du " +
+      "carrousel",
     /export function PointsDuCarrousel\(/.test(carrousel) &&
       /<PointsDuCarrousel\s+photos=\{photos\}\s+indice=\{indice\}\s+surRang=\{\(rang\) => allerA\(rang, true, "rond"\)\}/.test(
         carrousel
       ) &&
-      /<PointsDuCarrousel/.test(fenetre)
+      !/<PointsDuCarrousel/.test(fenetre)
   );
   verif(
-    "une série d'UNE photo : la fenêtre s'ouvre quand même, SANS points",
-    /\{n > 1 && \(\s*<PointsDuCarrousel/.test(fenetre)
-  );
-  verif(
-    "un rond touché suit LA règle du carrousel : scrollTo vers " +
-      "`offsetLeft` — aucune largeur lue",
-    /zone\.scrollTo\(\{ left: colonne\.offsetLeft, behavior: "smooth" \}\)/.test(
-      fenetre
-    )
+    "une série d'UNE photo : la fenêtre s'ouvre quand même, et son " +
+      "compteur se tait (« 1/1 » n'apprend rien)",
+    /\{n > 1 \? `\$\{rang \+ 1\}\/\$\{n\}` : ""\}/.test(fenetre)
   );
   verif(
     "LE CŒUR EST L'EXISTANT (BoutonCoeurPhoto, non redessiné) et il " +
@@ -219,10 +223,10 @@ titre("§3 — à la source : trois commandes, trois destinations");
       !/import Link from/.test(fenetre)
   );
   verif(
-    "LE ROND DE PROFIL : la fiche, section Profil — un vrai lien vers " +
-      "l'adresse NUE de la fiche (l'onglet Profil est celui d'arrivée, " +
-      "et DefilementEnHaut garantit l'arrivée en haut)",
-    /href=\{`\/tatoueur\/\$\{tatoueur\.slug\}`\}/.test(fenetre) &&
+    "LE ROND DE PROFIL : la fiche, section Profil — et À SA PLACE " +
+      "depuis la nº 285 (`#profil` : la fiche y joue la MÊME remontée " +
+      "que l'onglet Profil, au lieu de déposer tout en haut)",
+    /href=\{`\/tatoueur\/\$\{tatoueur\.slug\}#profil`\}/.test(fenetre) &&
       /aria-label=\{`Voir le profil de \$\{tatoueur\.nom\}`\}/.test(fenetre)
   );
   verif(
@@ -339,11 +343,12 @@ titre("§1-§2 — vivant (390 px) : toucher, regarder, refermer — au pixel");
       `« ${ouverte.titre} » · « ${ouverte.sousTitre} »`
     );
     verif(
-      "LA PHOTO EST NETTE : ni capsule, ni points dans l'image — les " +
-        "points vivent SOUS la photo, et le cadre est le carrousel natif",
+      "LA PHOTO EST NETTE : ni capsule, ni points dans l'image — et " +
+        "PLUS AUCUN POINT NULLE PART depuis la nº 285 (le compteur de " +
+        "la barre les remplace). Le cadre reste le carrousel natif",
       !ouverte.capsule &&
         !ouverte.pointsDansLaPhoto &&
-        ouverte.pointsSousLaPhoto > 0 &&
+        ouverte.pointsSousLaPhoto === 0 &&
         ouverte.cadre,
       `${ouverte.pointsSousLaPhoto} point(s) sous la photo`
     );
@@ -457,7 +462,7 @@ titre("§4 — vivant (390 px) : le partage — l'adresse ouvre la fenêtre");
         "fiche sur ce carrousel, l'accueil, le profil",
       (etat.fleche ?? "").startsWith(`${FICHE}?style=chicano`) &&
         etat.logo === "/" &&
-        etat.rond === FICHE,
+        etat.rond === `${FICHE}#profil`,
       `flèche ${etat.fleche}`
     );
 

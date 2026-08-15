@@ -1,13 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { corpsGele, gelerLeCorps } from "@/lib/gel-du-corps";
 import { PORTRAIT_ROND } from "@/config/tatouage";
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
-import {
-  CarrouselPortfolio,
-  PointsDuCarrousel,
-} from "@/components/CarrouselPortfolio";
+import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
 import { LogoYokofolio } from "@/components/LogoYokofolio";
 import {
   cheminDuCarrousel,
@@ -34,21 +31,32 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  * et en la refermant on retombe EXACTEMENT à l'endroit touché : le
  * carrousel suivant est sous le doigt.
  *
- * CE QU'ELLE MONTRE, du haut vers le bas :
- *  · une barre : la FLÈCHE RETOUR à gauche, le LOGO YokoFolio au
- *    centre, RIEN à droite (ni croix, ni seconde flèche) ;
- *  · le STYLE en blanc et en gras, centré ; dessous, en gris et plus
- *    petit, la nature et le rendu — « Réalisation · Noir et gris » ;
- *  · LA PHOTO en pleine largeur, NETTE : rien de posé dessus — pas de
- *    capsule « 3/12 » ici, les points le disent déjà ;
- *  · UNE SEULE LIGNE sous la photo : le ROND DE PROFIL à gauche, les
- *    POINTS au centre (la frise du web, reprise telle quelle —
- *    `PointsDuCarrousel`), le CŒUR à droite (l'existant, qui aime
- *    TOUT le carrousel d'un coup — rien n'est redessiné).
- * Fond anthracite (`bg-sombre-fond`), AUCUN contour nulle part. Le
- * menu fixe du site disparaît tant qu'elle est ouverte : elle couvre
- * tout l'écran (fixed, z-70 — la barre vit à z-50), et sa page dédiée
- * ne le rend même pas.
+ * CE QU'ELLE MONTRE, du haut vers le bas (§2, nº 285) :
+ *  · UNE BARRE, et rien d'autre au-dessus de la photo : la FLÈCHE
+ *    RETOUR à gauche, le LOGO YokoFolio au centre (à sa taille), et à
+ *    droite LE COMPTEUR « 1/19 » en gris, aligné sur les deux autres.
+ *    Il avance à mesure qu'on défile : il dit toujours où l'on en est ;
+ *  · LA PHOTO en pleine largeur, NETTE : rien de posé dessus ;
+ *  · SOUS LA PHOTO, UNE SEULE LIGNE : le ROND DE PROFIL, puis, collé à
+ *    lui, le STYLE en blanc et en gras avec dessous, en gris et plus
+ *    petit, la nature et le rendu — « Réalisation · Noir et gris » ; le
+ *    CŒUR seul à droite (l'existant, qui aime TOUT le carrousel d'un
+ *    coup — rien n'est redessiné).
+ *
+ * ⚠️ LES POINTS DE DÉFILEMENT SONT SUPPRIMÉS (§2-2, nº 285) : à
+ * dix-neuf photos, dix-neuf points font une bouillie grise illisible.
+ * Le compteur de la barre les remplace, et dit la même chose en clair.
+ * (`PointsDuCarrousel` reste l'écriture du WEB, où la frise a sa place
+ * — elle n'a pas bougé d'un pixel là-bas.)
+ * ⚠️ LE TITRE A QUITTÉ LE HAUT (§2-3) : au-dessus de la photo il ne
+ * reste que la barre. Le style est passé à côté du rond, comme un nom
+ * posé à côté d'un portrait sur une carte de visite — le bloc est
+ * contenu dans la hauteur du rond et centré sur elle (§2-5).
+ *
+ * Fond anthracite (`bg-sombre-fond`), AUCUN contour nulle part, aucune
+ * boîte imbriquée, aucun rose. Le menu fixe du site disparaît tant
+ * qu'elle est ouverte : elle couvre tout l'écran (fixed, z-70 — la
+ * barre vit à z-50), et sa page dédiée ne le rend même pas.
  *
  * ⚠️ LE DÉFILEMENT EST CELUI QUI EXISTE (nº 209-§7, recalé nº 282) :
  * `CarrouselPortfolio`, défilement natif avec accrochage. RIEN n'est
@@ -75,10 +83,11 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  *  1. LA FLÈCHE → la fiche, sur ce carrousel, dans le portfolio
  *     (retour d'historique si l'on venait du profil, lien sinon) ;
  *  2. LE LOGO → l'accueil ;
- *  3. LE ROND DE PROFIL → la fiche, section PROFIL. Un VRAI lien (une
- *     navigation de document neuve) : la page arrive en haut, profil
- *     sous la photo — c'est `DefilementEnHaut` qui garantit la
- *     remontée, comme pour toute arrivée sur une fiche.
+ *  3. LE ROND DE PROFIL → la fiche, section PROFIL, ET À SA PLACE
+ *     (§2-6, nº 285) : l'adresse porte `#profil`, que `ContenuFiche`
+ *     lit à l'arrivée pour jouer LA MÊME remontée que l'onglet
+ *     « Profil » (`remonterSousLaBarre`) — même mouvement, même
+ *     position finale. Il déposait jusqu'ici tout en haut de la fiche.
  * ⚠️ Les trois sont des <a> ORDINAIRES (jamais un <Link>) : depuis une
  * fenêtre posée sur un corps gelé, une navigation de client laisserait
  * le dégel reposer l'ancienne position sur la NOUVELLE page. Une
@@ -157,23 +166,6 @@ export function FenetreCarrousel({
     serieEffective
   );
 
-  /** LE CADRE DE CETTE FENÊTRE — les points du bas s'adressent à lui,
-      et à lui seul (jamais au carrousel de la fiche restée dessous). */
-  const conteneur = useRef<HTMLDivElement>(null);
-  /** UN ROND TOUCHÉ : la même règle que `allerA` (nº 209-§7) —
-      `scrollTo` vers `offsetLeft`, la position que le navigateur a
-      lui-même posée. Aucune largeur n'est lue nulle part. */
-  const allerAuRang = (vise: number) => {
-    const zone = conteneur.current?.querySelector<HTMLElement>(
-      '[data-role="cadre"]'
-    );
-    const colonne = zone?.querySelector<HTMLElement>(
-      `[data-role="colonne ${vise}"]`
-    );
-    if (!zone || !colonne) return;
-    zone.scrollTo({ left: colonne.offsetLeft, behavior: "smooth" });
-  };
-
   /**
    * SUPERPOSÉE : LE GEL DU CORPS — l'écriture unique (lib/gel-du-corps),
    * exactement le compte de la fenêtre du web (nº 226-§5). La position
@@ -208,10 +200,12 @@ export function FenetreCarrousel({
       dessin que la fiche : aucun contour, le fond détache). */
   const rondDeProfil = (
     <a
-      href={`/tatoueur/${tatoueur.slug}`}
+      /*  §2-6 (nº 285) — `#profil` : la fiche joue à l'arrivée LA MÊME
+          remontée que l'onglet « Profil » (voir ContenuFiche). */
+      href={`/tatoueur/${tatoueur.slug}#profil`}
       aria-label={`Voir le profil de ${tatoueur.nom}`}
-      className="flex h-10 w-10 shrink-0 items-center justify-center
-                 justify-self-start overflow-hidden rounded-full bg-sombre-eleve"
+      className="flex h-11 w-11 shrink-0 items-center justify-center
+                 overflow-hidden rounded-full bg-sombre-eleve"
     >
       {tatoueur.photo_profil ? (
         /* eslint-disable-next-line @next/next/no-img-element --
@@ -255,7 +249,6 @@ export function FenetreCarrousel({
 
   return (
     <div
-      ref={conteneur}
       data-fenetre-carrousel=""
       role={superposee ? "dialog" : undefined}
       aria-modal={superposee || undefined}
@@ -318,23 +311,22 @@ export function FenetreCarrousel({
         <a href="/" aria-label="Accueil YokoFolio" className="flex items-center">
           <LogoYokofolio hauteur={24} />
         </a>
-        <span className="h-11 w-11" aria-hidden="true" />
-      </div>
-
-      {/* LE STYLE, EN BLANC ET EN GRAS ; dessous, la nature et le
-          rendu en gris, plus petits — « Réalisation · Noir et gris ». */}
-      <div className="px-4 pb-3 text-center">
-        <h1 className="text-[17px] font-bold text-sombre-texte">
-          {groupeAffiche?.label ?? ""}
-        </h1>
-        {serieEffective && (
-          <p className="mt-0.5 text-[13px] text-sombre-texte-doux">
-            {libelleNature(serieEffective.nature)}
-            {serieEffective.rendu
-              ? ` · ${libelleRendu(serieEffective.rendu)}`
-              : ""}
-          </p>
-        )}
+        {/*  §2-1 (nº 285) — LE COMPTEUR, À DROITE, EN GRIS. Il tient la
+             place du vide de la nº 284 : la barre garde ses trois
+             éléments alignés, et le logo reste au centre VRAI (les deux
+             bords ont la même largeur). Il avance avec le défilement —
+             `rang` vient du carrousel lui-même.
+             ⚠️ `tabular-nums` : les chiffres ont tous la même largeur,
+             donc « 9/19 » puis « 10/19 » ne font pas sauter la barre.
+             Une série d'UNE photo n'affiche rien : « 1/1 » n'apprend
+             rien à personne. */}
+        <span
+          data-role="compteur-fenetre"
+          className="flex h-11 w-11 items-center justify-end pr-1.5
+                     text-[13px] tabular-nums text-sombre-texte-doux"
+        >
+          {n > 1 ? `${rang + 1}/${n}` : ""}
+        </span>
       </div>
 
       {/* LA PHOTO, PLEINE LARGEUR — LE carrousel du site (défilement
@@ -351,22 +343,34 @@ export function FenetreCarrousel({
         sansPoints
       />
 
-      {/* LA LIGNE SOUS LA PHOTO — rond de profil · points · cœur. Les
-          colonnes des bords ont la largeur du cœur (48 px) : les
-          points sont au centre VRAI. Une série d'UNE photo n'a pas de
-          points — la ligne reste, rond et cœur à leur place. */}
-      <div className="grid grid-cols-[48px_1fr_48px] items-center px-4 pt-3 pb-6">
+      {/*  §2-4 et §2-5 (nº 285) — LA LIGNE SOUS LA PHOTO, et c'est la
+           seule : le rond, le style collé à sa droite, le cœur seul à
+           l'autre bout.
+           ⚠️ LE BLOC DE TEXTE EST CONTENU DANS LA HAUTEUR DU ROND et
+           centré sur elle : `items-center` aligne les trois, et les
+           deux lignes (17 px + 13 px, interlignes serrés) tiennent
+           dans les 44 px du rond — rien ne dépasse, rien ne flotte.
+           `min-w-0` + `truncate` : un nom de style long s'arrête
+           proprement au lieu de pousser le cœur hors de l'écran.
+           ⚠️ AUCUN CONTOUR, AUCUNE BOÎTE : trois éléments posés sur
+           l'anthracite, séparés par de l'air (12 px entre le rond et
+           le texte, 16 px de marge de page, 20 px sous la photo). */}
+      <div className="flex items-center gap-3 px-4 pt-5 pb-7">
         {rondDeProfil}
-        <div className="flex justify-center">
-          {n > 1 && (
-            <PointsDuCarrousel
-              photos={photos}
-              indice={rang}
-              surRang={allerAuRang}
-            />
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-[17px] font-bold leading-tight text-sombre-texte">
+            {groupeAffiche?.label ?? ""}
+          </h1>
+          {serieEffective && (
+            <p className="truncate text-[13px] leading-tight text-sombre-texte-doux">
+              {libelleNature(serieEffective.nature)}
+              {serieEffective.rendu
+                ? ` · ${libelleRendu(serieEffective.rendu)}`
+                : ""}
+            </p>
           )}
         </div>
-        <div className="flex justify-end">{coeur}</div>
+        {coeur}
       </div>
     </div>
   );

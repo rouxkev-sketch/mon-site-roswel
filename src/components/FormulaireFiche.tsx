@@ -1114,15 +1114,22 @@ export function FormulaireFiche() {
      une relecture automatique : plus rien ne peut la rouvrir, parce
      qu'il n'y a plus d'état à interpréter. */
   const annonceDemandee = parametres.get("enregistre") === "1";
+  /** §1 (nº 285) — CET ENVOI PORTAIT-IL DES PHOTOS NEUVES ? C'est la
+      seule chose qui décide de ce que la fenêtre dit : avec, une
+      relecture est en cours (24 h) ; sans, tout est DÉJÀ en ligne. */
+  const [photosEnRelecture, setPhotosEnRelecture] = useState(false);
+  const photosDemandees = parametres.get("photos") === "1";
   useEffect(() => {
     if (!annonceDemandee || vueApercuDemandee) return;
     // L'ADRESSE EST NETTOYÉE TOUT DE SUITE, avant même l'affichage :
     // recharger la page ne rouvrira rien.
     const propre = new URL(window.location.href);
     propre.searchParams.delete("enregistre");
+    propre.searchParams.delete("photos");
     window.history.replaceState(null, "", propre.toString());
+    setPhotosEnRelecture(photosDemandees);
     setAnnonceValidation(true);
-  }, [annonceDemandee, vueApercuDemandee]);
+  }, [annonceDemandee, photosDemandees, vueApercuDemandee]);
 
   /* LA FERMETURE MARQUE L'ANNONCE COMME VUE, EN BASE.
      Ce n'était pas un caprice de rangement : tant que l'état vivait
@@ -2144,16 +2151,57 @@ export function FormulaireFiche() {
       const champsIdentite: Record<string, unknown> = { nom: ligne.nom };
       delete champs.nom;
 
+      /**
+       * ██ §1 (nº 285) — CE QUI PART EN VALIDATION, ET RIEN D'AUTRE ██
+       * ==================================================================
+       * LES SIX RÈGLES, appliquées ici :
+       *  · RÈGLE 1 — la toute PREMIÈRE création passe par la validation
+       *    (cas A, plus bas : inchangé) ;
+       *  · RÈGLE 2 — une fois validée, TOUTE modification part
+       *    automatiquement en ligne. Le brouillon disparaît de ce
+       *    chemin : bio, styles, liens, filtres, adresses s'écrivent
+       *    DIRECTEMENT, comme le faisaient déjà le nom, le verrou, les
+       *    modes et les studios ;
+       *  · RÈGLE 3 — EXCEPTION UNIQUE, LES PHOTOS QUI ARRIVENT. Deux
+       *    cas, et ce test les couvre tous les deux : de nouvelles
+       *    photos dans un carrousel existant, ou un nouveau style ET
+       *    ses photos. Dans les deux cas ce sont des lignes SANS `id` —
+       *    elles n'ont jamais existé en base ;
+       *  · RÈGLE 4 — un style sans photo ne déclenche donc rien : il
+       *    n'ajoute aucune ligne de photo. (Et il ne s'affiche nulle
+       *    part : `stylesChoisis` se DÉDUIT des photos —
+       *    `stylesDuPortfolio` —, un style vide n'entre même pas dans
+       *    la fiche. Règle déjà en place, non réécrite.) ;
+       *  · RÈGLE 5 — RÉORDONNER NE DÉCLENCHE RIEN : une photo déplacée
+       *    garde son `id`, elle est mise à jour, pas insérée. Le nouvel
+       *    ordre est en ligne tout de suite ;
+       *  · RÈGLE 6 — la fiche RESTE EN LIGNE : `publie` n'est pas
+       *    touché (il ne l'était déjà pas), et `statut` NON PLUS
+       *    désormais — la fiche entière ne retourne JAMAIS dans la
+       *    file. Seules les photos neuves attendent, invisibles au
+       *    public (voir `enregistrerPhotos` et lib/tatoueurs).
+       */
+      const photosQuiArrivent = triees.filter((photo) => !photo.id).length;
+
       let maj: Record<string, unknown>;
       if (ficheChargee.publie) {
-        // CAS B — la fiche est EN LIGNE : la version publique ne bouge
-        // pas, les modifications partent en BROUILLON (une seule
-        // version en attente : chaque envoi remplace la précédente).
+        // CAS B — LA FICHE EST EN LIGNE, ET ELLE Y RESTE (règles 2 et 6).
+        //  ⚠️ LE BROUILLON A DISPARU DE CE CHEMIN, et c'est tout le
+        //  §1 de la nº 285. Il servait à retenir la fiche entière le
+        //  temps d'une relecture — or seules les PHOTOS se relisent
+        //  désormais, et elles ne passent pas par là (elles ont leur
+        //  propre attente, ligne par ligne). Tout le reste s'écrit
+        //  DIRECTEMENT sur la ligne publique : c'est en ligne à la
+        //  seconde où l'on enregistre.
+        //  ⚠️ ET `brouillon: null` EST ÉCRIT : une fiche qui portait
+        //  encore un brouillon d'avant cette passe le voit disparaître
+        //  au premier enregistrement — sinon il attendrait pour
+        //  toujours une validation qui ne viendra plus.
         maj = {
-          brouillon: champs,
-          //  L'IDENTITÉ, elle, s'écrit sur la ligne (voir ci-dessus).
+          ...champs,
+          //  L'IDENTITÉ, elle, s'écrivait déjà sur la ligne (nº 265).
           ...champsIdentite,
-          statut: "en_attente",
+          brouillon: null,
           motifs_moderation: null,
           note_moderation: null,
           // LE VERROU, LUI, S'ÉCRIT SUR LA LIGNE (voir plus haut).
@@ -2258,7 +2306,12 @@ export function FormulaireFiche() {
         //  la personne : elles seules partent de la base (passe nº 151).
         idsPhotosChargees.current.filter(
           (id) => !galerieAEcrire.some((photo) => photo.id === id)
-        )
+        ),
+        //  §1 (nº 285) — RÈGLE 3 : sur une fiche DÉJÀ VALIDÉE, les
+        //  photos qui arrivent attendent leur relecture, invisibles au
+        //  public. Sur une fiche pas encore publiée (cas A), non : elle
+        //  passe la validation en entier, ses photos avec (règle 1).
+        Boolean(ficheChargee.publie)
       );
 
       // Même retour que la création : l'espace rechargé, encadré
@@ -2280,8 +2333,15 @@ export function FormulaireFiche() {
           (lib/navigation-session) — pas par index d'entrée. Remplacer
           au lieu d'ajouter ne lui retire aucune clé ; c'est même une
           entrée parasite de moins entre l'accueil et la fiche. */
+      /*  §1 (nº 285) — L'ÉCRAN DE CONFIRMATION SAIT CE QUI VIENT DE SE
+          PASSER, et l'adresse le lui dit — comme `enregistre=1` (le
+          motif de la nº 191 : un GESTE, jamais un état à interpréter).
+          `photos=1` : des photos neuves attendent leur relecture, on
+          annonce les 24 h. Sans lui : tout est déjà en ligne, et
+          l'annoncer sous 24 h serait un mensonge. */
       window.location.replace(
-        `/devenir-tatoueur/fiche?fiche=${ficheChargee.id}&enregistre=1`
+        `/devenir-tatoueur/fiche?fiche=${ficheChargee.id}&enregistre=1` +
+          (ficheChargee.publie && photosQuiArrivent > 0 ? "&photos=1" : "")
       );
       return;
     } catch (erreur) {
@@ -3528,12 +3588,21 @@ export function FormulaireFiche() {
                        p-6 sm:p-7 text-center
                        shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
           >
+            {/*  §1 (nº 285) — TROIS VOIX, ET PAS UNE DE PLUS.
+                 L'icône suit ce qui est dit : une HORLOGE quand
+                 quelque chose attend, une COCHE quand tout est déjà
+                 en ligne — annoncer 24 h d'attente pour une bio
+                 corrigée serait faux (règle 2). */}
             <span
               aria-hidden="true"
               className="mx-auto flex w-14 h-14 items-center justify-center
                          rounded-full bg-primaire/15 text-primaire"
             >
-              <IconeHorloge taille={24} />
+              {!ficheChargee?.publie || horsLigne || photosEnRelecture ? (
+                <IconeHorloge taille={24} />
+              ) : (
+                <IconeCocheListe taille={24} />
+              )}
             </span>
             {!ficheChargee?.publie && !horsLigne ? (
               <>
@@ -3548,16 +3617,36 @@ export function FormulaireFiche() {
                   24&nbsp;h.
                 </p>
               </>
-            ) : (
+            ) : photosEnRelecture ? (
               <>
+                {/*  LE TITRE DIT CE QUI ATTEND, et rien d'autre : ce
+                     ne sont plus « les modifications » — elles sont
+                     déjà en ligne (règle 2) —, ce sont LES PHOTOS. Le
+                     mot est vrai dans les deux cas de la règle 3, un
+                     nouveau style n'existant que par ses photos. */}
                 <h2
                   id="titre-annonce-validation"
                   className="mt-5 text-[19px] font-bold text-sombre-texte leading-snug"
                 >
-                  Modifications envoyées
+                  Nouvelles photos envoyées
                 </h2>
                 <p className="mt-2.5 text-[14.5px] leading-relaxed text-sombre-texte-doux">
                   Relues et en ligne sous 24&nbsp;h.
+                </p>
+              </>
+            ) : (
+              <>
+                {/*  AUCUNE PHOTO NEUVE : il n'y a RIEN à attendre —
+                     règle 2. On ne parle donc ni de relecture ni de
+                     24 h : on dit que c'est fait. */}
+                <h2
+                  id="titre-annonce-validation"
+                  className="mt-5 text-[19px] font-bold text-sombre-texte leading-snug"
+                >
+                  Modifications en ligne
+                </h2>
+                <p className="mt-2.5 text-[14.5px] leading-relaxed text-sombre-texte-doux">
+                  Elles sont visibles tout de suite.
                 </p>
               </>
             )}

@@ -104,6 +104,63 @@ export async function GET() {
     }
     if (reponse.error) throw new Error(reponse.error.message);
 
+    /**
+     * ██ §1 (nº 285) — LES FICHES DONT SEULES LES PHOTOS ATTENDENT ██
+     * ==================================================================
+     * Depuis la nº 285, une fiche en ligne ne retourne PLUS dans la
+     * file quand on la modifie : tout part en ligne (règle 2), et LES
+     * PHOTOS NEUVES SEULES attendent, ligne par ligne
+     * (`photos_tatoueur.en_attente`). Leur fiche n'a donc ni brouillon,
+     * ni statut « en_attente » — et sans ce qui suit, elle
+     * n'apparaîtrait NULLE PART : les photos attendraient pour
+     * toujours, exactement le défaut que la nº 152 avait corrigé pour
+     * les brouillons.
+     * ⚠️ ON NE TOUCHE PAS À SON STATUT POUR AUTANT (règle 6) : la fiche
+     * reste en ligne, telle qu'elle était. C'est la FILE qui va la
+     * chercher, pas la fiche qui vient s'y mettre.
+     * ⚠️ SANS LA MIGRATION Nº 70, la colonne n'existe pas : la lecture
+     * échoue, on l'ignore, et l'écran est celui d'avant cette passe.
+     */
+    const photosEnAttenteParFiche = new Map<string, number>();
+    const attentes = await admin
+      .from("photos_tatoueur")
+      .select("tatoueur_id")
+      .eq("en_attente", true);
+    if (!attentes.error) {
+      for (const ligne of (attentes.data ?? []) as Array<{
+        tatoueur_id: string;
+      }>) {
+        photosEnAttenteParFiche.set(
+          ligne.tatoueur_id,
+          (photosEnAttenteParFiche.get(ligne.tatoueur_id) ?? 0) + 1
+        );
+      }
+    }
+    //  Les fiches concernées qui ne sont pas déjà dans la file.
+    const dejaListees = new Set(
+      ((reponse.data ?? []) as Array<Record<string, unknown>>).map((l) =>
+        String(l.id)
+      )
+    );
+    const manquantes = [...photosEnAttenteParFiche.keys()].filter(
+      (id) => !dejaListees.has(id)
+    );
+    if (manquantes.length > 0) {
+      const complement = await admin
+        .from("tatoueurs")
+        .select("*")
+        .in("id", manquantes);
+      if (!complement.error) {
+        reponse = {
+          ...reponse,
+          data: [
+            ...((reponse.data ?? []) as Array<Record<string, unknown>>),
+            ...((complement.data ?? []) as Array<Record<string, unknown>>),
+          ],
+        } as typeof reponse;
+      }
+    }
+
     //  ⚠️ LES CRÉATIONS DE L'ADMINISTRATEUR NE SONT PAS RELUES (passe
     //  nº 135). Elles suivaient le même parcours de modération que
     //  celles des vrais tatoueurs : il relisait ce qu'il venait
@@ -157,6 +214,10 @@ export async function GET() {
         const proprietaire = ligne.user_id as string | null;
         if (!proprietaire || !comptesAdmin.includes(proprietaire)) return true;
         if (ligne.brouillon != null) return true;
+        //  §1 (nº 285) — MÊME RAISON QUE LE BROUILLON : des photos qui
+        //  attendent sont une décision à prendre, fût-ce sur une fiche
+        //  d'administrateur.
+        if (photosEnAttenteParFiche.has(String(ligne.id))) return true;
         //  LA CRÉATION D'UN ADMINISTRATEUR : jamais publiée, jamais
         //  passée par l'interrupteur — elle attend une décision, elle
         //  est montrée. (`admin_publique` absent d'une base pas
@@ -208,6 +269,11 @@ export async function GET() {
           fiche_admin: Boolean(
             proprietaire && comptesAdmin.includes(proprietaire)
           ),
+          //  §1 (nº 285) — COMBIEN DE PHOTOS ATTENDENT. L'écran peut
+          //  ainsi dire « seules des photos attendent » : la fiche,
+          //  elle, est en ligne et n'a rien à faire relire.
+          photos_en_attente:
+            photosEnAttenteParFiche.get(String(ligne.id)) ?? 0,
           compte: proprietaire ? (comptes.get(proprietaire) ?? null) : null,
         };
       }
@@ -337,6 +403,26 @@ export async function POST(requete: NextRequest) {
       maj = await admin.from("tatoueurs").update({ publie: true }).eq("id", id);
     }
     if (maj.error) throw new Error(maj.error.message);
+
+    /**
+     * §1 (nº 285) — VALIDER LIBÈRE AUSSI LES PHOTOS QUI ATTENDAIENT.
+     * ------------------------------------------------------------------
+     * C'est le geste qui TERMINE la règle 3 : les photos neuves
+     * deviennent publiques, d'un coup, avec le reste. Sans lui elles
+     * resteraient invisibles pour toujours.
+     * ⚠️ SEULEMENT SUR « VALIDER » : demander des modifications ou
+     * mettre hors ligne laisse les photos en attente — elles n'ont pas
+     * été acceptées, elles ne doivent pas s'afficher.
+     * ⚠️ JAMAIS BLOQUANT : sans la migration nº 70 la colonne n'existe
+     * pas, et il n'y a alors rien à libérer (aucune photo n'attend).
+     */
+    if (action === "valider") {
+      await admin
+        .from("photos_tatoueur")
+        .update({ en_attente: false })
+        .eq("tatoueur_id", id)
+        .eq("en_attente", true);
+    }
 
     // LE CACHE DES PAGES PUBLIQUES EST VIDÉ TOUT DE SUITE : une fiche
     // validée doit apparaître dans la mosaïque et sur sa page « style

@@ -1193,8 +1193,25 @@ async function garnirFiches<T extends Tatoueur>(
     if (modes.error || studios.error || equipe.error) return fiches;
     const galerieParFiche = new Map<string, PhotoTatoueur[]>();
     for (const ligne of (photos.error ? [] : (photos.data ?? [])) as unknown as Array<
-      PhotoTatoueur & { tatoueur_id: string }
+      PhotoTatoueur & { tatoueur_id: string; en_attente?: boolean | null }
     >) {
+      /**
+       * §1 (nº 285) — RÈGLE 6 : UNE PHOTO QUI ATTEND SA RELECTURE
+       * N'EXISTE PAS POUR LE PUBLIC.
+       * ------------------------------------------------------------------
+       * C'est ici que la règle se tient pour TOUTES les lectures qui
+       * passent par ce chemin : la page d'une fiche (`lireTatoueur`) et
+       * la mosaïque de secours. Le chemin rapide, lui, est filtré EN
+       * BASE (migration nº 70, dans la clause qui ramasse les photos).
+       * ⚠️ LA FICHE, ELLE, RESTE EN LIGNE, exactement comme elle était :
+       * on retire des photos d'une galerie, on ne retire jamais une
+       * fiche du site. Un carrousel dont TOUTES les photos attendent
+       * n'apparaît simplement pas encore — il apparaîtra validé.
+       * ⚠️ SANS LA MIGRATION Nº 70 la colonne n'existe pas : la valeur
+       * est `undefined`, la photo est gardée, et le site se comporte
+       * exactement comme avant cette passe.
+       */
+      if (ligne.en_attente === true) continue;
       const liste = galerieParFiche.get(ligne.tatoueur_id) ?? [];
       liste.push({
         id: ligne.id,
