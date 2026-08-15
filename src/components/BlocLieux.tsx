@@ -408,14 +408,13 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
   const clicVersFiche = useClicVersFiche();
   const membres = equipeOrdonnee(equipe);
   if (membres.length === 0) return null;
+  //  §1 (nº 288) — PAS DE TITRE « ÉQUIPE ». Celui de la nº 286 venait
+  //  d'une proposition, jamais d'une demande : il est retiré. Les
+  //  lignes, elles, ne bougent pas d'un pixel — rond, nom en blanc,
+  //  rôle en gris dessous, ligne entière cliquable, ordre fondateurs ·
+  //  résidents · guests, dates de guest en blanc.
   return (
-    <>
-    {/*  §4 (nº 286) — « ÉQUIPE », l'étiquette de section : la même
-         écriture que STYLES, RENDU, TECHNIQUE — et la même que celle
-         des lieux, juste au-dessus. La page entière parle désormais
-         d'une seule voix. */}
-    <p className={`mt-10 ${ECRITURE_TITRE_SECTION}`}>Équipe</p>
-    <ul className="mt-5 flex flex-col gap-8">
+    <ul className="mt-8 flex flex-col gap-8">
       {membres.map((membre) => {
         /*  ⚠️ LA PASTILLE EST LÀ MÊME SANS PHOTO (nº 224-§1) : un
             rond gris uni, rien dedans. C'est elle qui tient la
@@ -471,7 +470,6 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
         );
       })}
     </ul>
-    </>
   );
 }
 
@@ -716,7 +714,23 @@ function AdresseCliquable({
   pastille?: React.ReactNode;
 }) {
   const [fenetre, setFenetre] = useState(false);
-  const complete = Boolean(lieu?.adresse && adresse);
+  /**
+   * §4 (nº 288) — UNE LOCALITÉ SEULE SE CLIQUE AUSSI.
+   * ------------------------------------------------------------------
+   * LE DÉFAUT RELEVÉ : sur la fiche d'un studio, « Félines, France »
+   * était du TEXTE MORT. La condition exigeait une RUE
+   * (`lieu?.adresse`) — la règle de la nº 225-§3, « un plan sans rue
+   * tombe n'importe où ». Or un studio n'a souvent que sa localité, et
+   * ouvrir la localité est déjà utile : ce n'est jamais une erreur.
+   * On n'exige donc plus qu'UNE CHOSE : qu'il y ait quelque chose à
+   * chercher. `ligneMaps` compose la requête avec ce qu'il a — rue si
+   * elle existe, sinon ville, région, pays.
+   * ⚠️ CELA NE TOUCHE PAS « À DOMICILE » : un domicile n'expose jamais
+   * d'adresse, et il ne passe pas par ici (voir BlocProfilsArtiste, où
+   * la ville et le rayon remplacent nom et adresse). Un studio est un
+   * lieu PROFESSIONNEL — ce n'est pas le même cas.
+   */
+  const complete = Boolean(lieu && adresse);
 
   /*  §4 (nº 286) — DEUX LIGNES, la grammaire de toute la fiche :
        l'étiquette grise en capitales (« ADRESSE DU SALON »), puis

@@ -757,9 +757,14 @@ async function chargerEquipe(
       .select("*")
       .eq("salon_id", ficheId);
     if (error || !Array.isArray(data)) return [];
+    //  ⚠️ L'APPEL EST EXPLICITE (nº 288-§3) : `membreDepuisVue` prend
+    //  désormais un SECOND argument — la déclaration de l'artiste —, et
+    //  `.map(membreDepuisVue)` lui aurait passé l'INDICE à sa place.
+    //  L'aperçu du salon, lui, n'a pas cette déclaration sous la main :
+    //  il lit la vue, comme avant cette passe.
     return (
       data as unknown as Parameters<typeof membreDepuisVue>[0][]
-    ).map(membreDepuisVue);
+    ).map((ligne) => membreDepuisVue(ligne));
   } catch {
     return [];
   }

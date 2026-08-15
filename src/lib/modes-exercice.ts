@@ -195,26 +195,45 @@ export function modesActifs(
  * pend à aucun mode d'exercice (`mode_id` est null), donc à aucune
  * date — c'est un résident, et il ne périme pas.
  */
-export function membreDepuisVue(ligne: {
-  artiste_id: string;
-  artiste_nom: string;
-  artiste_slug: string | null;
-  artiste_photo: string | null;
-  genre: string | null;
-  /** ⚠️ FACULTATIF : la vue ne le rend que depuis la migration nº 65.
-      Sans lui, `roleDuMembre` répond « résident », qui est la valeur
-      d'une liaison sans mode — jamais un fondateur inventé. */
-  role?: string | null;
-  debut_le: string | null;
-  fin_le: string | null;
-}): MembreEquipe {
+export function membreDepuisVue(
+  ligne: {
+    artiste_id: string;
+    artiste_nom: string;
+    artiste_slug: string | null;
+    artiste_photo: string | null;
+    genre: string | null;
+    /** ⚠️ FACULTATIF : la vue ne le rend que depuis la migration nº 65. */
+    role?: string | null;
+    debut_le: string | null;
+    fin_le: string | null;
+  },
+  /**
+   * §3 (nº 288) — LA DÉCLARATION DE L'ARTISTE, quand on l'a lue.
+   * ------------------------------------------------------------------
+   * LE DÉFAUT : le même artiste était FONDATEUR sur sa propre fiche et
+   * RÉSIDENT dans l'équipe de son studio. Les deux côtés calculaient le
+   * rôle chacun du sien — sa fiche lisait `modes_exercice.role` (sa
+   * déclaration), l'équipe lisait la vue `equipe_salon`, qui rend
+   * `null` dès que la liaison ne pend à aucun mode (invitation partie
+   * DU salon) ou tant que la migration nº 65 n'est pas passée. Ce
+   * `null` retombait sur « résident » : une valeur DEVINÉE.
+   * LA RÈGLE : il n'y a qu'UNE information — celle que l'artiste
+   * déclare dans son formulaire —, et les deux écrans la LISENT. Quand
+   * l'appelant a pu aller la chercher (voir `garnirFiches`), elle passe
+   * ici et l'emporte sur la vue ; sinon on garde le comportement
+   * d'avant, qui reste vrai dans le cas courant.
+   */
+  declaration?: { genre?: string | null; role?: string | null } | null
+): MembreEquipe {
+  const genre = declaration?.genre ?? ligne.genre;
+  const role = declaration?.role ?? ligne.role;
   return {
     artiste_id: ligne.artiste_id,
     nom: ligne.artiste_nom,
     slug: ligne.artiste_slug,
     photo: ligne.artiste_photo,
-    genre: ligne.genre === "guest" ? "guest" : "salon",
-    role: ligne.role === "fondateur" ? "fondateur" : "resident",
+    genre: genre === "guest" ? "guest" : "salon",
+    role: role === "fondateur" ? "fondateur" : "resident",
     debut_le: ligne.debut_le,
     fin_le: ligne.fin_le,
   };
@@ -348,10 +367,16 @@ export function libelleLieuDuMode(mode: ModeExerciceFiche): string {
  * LA FORME, DÉSORMAIS — trois lignes, comme partout ailleurs sur une
  * fiche (une étiquette grise en capitales, une valeur blanche) :
  *
- *      SALON · RÉSIDENT          ← l'étiquette (ECRITURE_TITRE_SECTION)
+ *      RÉSIDENT DU SALON         ← l'étiquette (ECRITURE_TITRE_SECTION)
  *      Hand In Glove Tattoo      ← le nom, en blanc (un LIEN s'il a
  *                                  sa fiche)
  *      44 Rue Trousseau, Paris   ← l'adresse, en gris
+ *
+ * ⚠️ §2 (nº 288) — LES ÉTIQUETTES SONT DU FRANÇAIS, PAS DU TÉLÉGRAPHE.
+ * « SALON · RÉSIDENT » (nº 286) ne se comprenait pas : sept étiquettes
+ * les remplacent, et elles se lisent — FONDATEUR DU SALON, RÉSIDENT DU
+ * SALON, EN GUEST AU SALON, les trois mêmes AU STUDIO, et REÇOIT À
+ * DOMICILE. Le mot « artiste » n'y apparaît nulle part.
  *
  * ⚠️ L'ÉTIQUETTE PORTE TOUJOURS LE TYPE DE LIEU — salon ou studio. Un
  * visiteur qui arrive directement sur la page doit savoir où il met
@@ -391,12 +416,24 @@ export function typeDeLieuDuMode(mode: ModeExerciceFiche): string {
  * leur apparence — celle des étiquettes STYLES, RENDU, TECHNIQUE.
  */
 export function etiquetteDuLieu(mode: ModeExerciceFiche): string {
-  if (mode.genre === "domicile") return "À domicile";
-  const type = typeDeLieuDuMode(mode);
-  const role =
-    mode.genre === "guest" ? "Guest" : libelleRoleCourt(mode.role);
-  if (type && role) return `${type} · ${role}`;
-  return type || role || genreMode(mode.genre).label;
+  //  REÇOIT À DOMICILE — ni type de lieu, ni rôle : c'est chez lui.
+  if (mode.genre === "domicile") return "Reçoit à domicile";
+  //  « Salon » ou « Studio », en toutes lettres dans la phrase.
+  const lieu = typeDeLieuDuMode(mode).toLowerCase();
+  //  EN GUEST AU SALON / AU STUDIO — la préposition suit le lieu ;
+  //  sans lieu connu (base ancienne, `nature_lieu` absent), « En
+  //  guest » se suffit : on n'invente pas un type.
+  if (mode.genre === "guest") {
+    return lieu ? `En guest au ${lieu}` : "En guest";
+  }
+  //  FONDATEUR / RÉSIDENT DU SALON — DU STUDIO. Le rôle vient de
+  //  `libelleRoleCourt` (« Fondateur », « Résident »), le mot même du
+  //  formulaire : la fiche et le formulaire ne peuvent pas diverger.
+  const role = libelleRoleCourt(mode.role);
+  if (role && lieu) return `${role} du ${lieu}`;
+  //  Un rôle sans type de lieu (ou l'inverse) : on dit ce qu'on sait,
+  //  jamais plus.
+  return role || (lieu ? `Au ${lieu}` : genreMode(mode.genre).label);
 }
 
 /**

@@ -1289,8 +1289,7 @@ async function garnirFiches<T extends Tatoueur>(
       studiosParFiche.set(ligne.tatoueur_id, liste);
     }
 
-    const equipeParSalon = new Map<string, MembreEquipe[]>();
-    for (const ligne of (equipe.data ?? []) as unknown as {
+    const lignesEquipe = (equipe.data ?? []) as unknown as {
       salon_id: string;
       artiste_id: string;
       artiste_nom: string;
@@ -1302,11 +1301,63 @@ async function garnirFiches<T extends Tatoueur>(
       role?: string | null;
       debut_le: string | null;
       fin_le: string | null;
-    }[]) {
+    }[];
+
+    /**
+     * ██ §3 (nº 288) — LE RÔLE VIENT DE L'ARTISTE, ET DE LUI SEUL ██
+     * ==================================================================
+     * LE DÉFAUT RELEVÉ : le même artiste s'affichait FONDATEUR sur sa
+     * fiche et RÉSIDENT dans l'équipe de son studio. Sa fiche lit sa
+     * DÉCLARATION (`modes_exercice.role`, ce qu'il a coché dans son
+     * formulaire) ; l'équipe lisait la vue `equipe_salon`, dont le rôle
+     * vaut `null` dès que la liaison ne pend à aucun mode — et ce
+     * `null` retombait sur « résident », une valeur DEVINÉE. Deux
+     * calculs, deux réponses.
+     * LA CORRECTION : on va chercher LA DÉCLARATION, une fois, pour
+     * tous les membres de toutes les fiches lues, et c'est elle qui
+     * décide. La vue continue de dire QUI est de l'équipe (liaisons
+     * validées, artiste en ligne, guest non expiré) — elle ne dit plus
+     * à quel titre.
+     * ⚠️ UNE SEULE REQUÊTE DE PLUS, et seulement s'il y a une équipe.
+     * ⚠️ JAMAIS BLOQUANTE : en cas d'échec, on retombe exactement sur
+     * le comportement d'avant cette passe.
+     */
+    const declarations = new Map<string, { genre: string | null; role: string | null }>();
+    const artistesDeLEquipe = [
+      ...new Set(lignesEquipe.map((ligne) => ligne.artiste_id)),
+    ];
+    if (artistesDeLEquipe.length > 0) {
+      const reponse = await supabase
+        .from("modes_exercice")
+        .select("tatoueur_id, salon_id, genre, role")
+        .in("tatoueur_id", artistesDeLEquipe)
+        .in("salon_id", identifiants);
+      for (const ligne of (reponse.data ?? []) as unknown as {
+        tatoueur_id: string;
+        salon_id: string | null;
+        genre: string | null;
+        role: string | null;
+      }[]) {
+        if (!ligne.salon_id) continue;
+        declarations.set(`${ligne.salon_id}|${ligne.tatoueur_id}`, {
+          genre: ligne.genre,
+          role: ligne.role,
+        });
+      }
+    }
+
+    const equipeParSalon = new Map<string, MembreEquipe[]>();
+    for (const ligne of lignesEquipe) {
       const liste = equipeParSalon.get(ligne.salon_id) ?? [];
       // LA MÊME TRADUCTION QUE L'APERÇU DU SALON, au mot près : elle
-      // vit dans lib/modes-exercice, et nulle part ailleurs.
-      liste.push(membreDepuisVue(ligne));
+      // vit dans lib/modes-exercice, et nulle part ailleurs — et elle
+      // reçoit désormais la déclaration de l'artiste (§3, nº 288).
+      liste.push(
+        membreDepuisVue(
+          ligne,
+          declarations.get(`${ligne.salon_id}|${ligne.artiste_id}`) ?? null
+        )
+      );
       equipeParSalon.set(ligne.salon_id, liste);
     }
 

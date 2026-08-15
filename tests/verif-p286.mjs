@@ -34,6 +34,21 @@ import {
   verif,
 } from "./commun-verif.mjs";
 
+/*  ⚠️ AMENDÉ LE 2026-08-15 (nº 288, §1 et §2) — LES ÉTIQUETTES ET LE
+    TITRE ONT CHANGÉ SUR CONSIGNE. Ce que la nº 286 avait livré et que
+    la nº 288 remplace VOLONTAIREMENT :
+     · le télégraphe « SALON · RÉSIDENT » devient du français —
+       FONDATEUR DU SALON, RÉSIDENT DU SALON, EN GUEST AU SALON, les
+       trois mêmes AU STUDIO, et REÇOIT À DOMICILE (le mot « artiste »
+       n'y apparaît nulle part) ;
+     · le titre « ÉQUIPE » est RETIRÉ — il venait d'une proposition,
+       jamais d'une demande.
+    Les vérifications ci-dessous suivent, et le disent. TOUT LE RESTE
+    de la nº 286 est vérifié inchangé : la structure en trois lignes,
+    « à domicile » sans adresse, l'adresse jamais écrite deux fois, le
+    nom qui devient un lien s'il a une fiche. Le détail est au banc de
+    la nº 288. */
+
 const sansNotes = (t) =>
   t.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
 
@@ -181,8 +196,9 @@ titre("§3 — l'erreur était À LA LECTURE, et elle est corrigée");
     `« ${lignes.etiquette} » / « ${lignes.nom} » / « ${lignes.adresse} »`
   );
   verif(
-    "et son étiquette dit le lieu ET le rôle : « Salon · Résident »",
-    lignes.etiquette === "Salon · Résident"
+    "et son étiquette dit le lieu ET le rôle (AMENDÉE nº 288 : " +
+      "« Résident du salon », en français)",
+    lignes.etiquette === "Résident du salon"
   );
 }
 
@@ -193,12 +209,12 @@ titre("§4 — rejeu : toutes les combinaisons, sur le vrai code");
 {
   const attendus = [
     //  [surcharge du mode, étiquette attendue]
-    [{ genre: "salon", role: "resident", nom_lieu: "X" }, "Salon · Résident"],
-    [{ genre: "salon", role: "fondateur", nom_lieu: "X" }, "Salon · Fondateur"],
-    [{ genre: "prive", role: "resident", nom_lieu: "X" }, "Studio · Résident"],
-    [{ genre: "prive", role: "fondateur", nom_lieu: "X" }, "Studio · Fondateur"],
-    [{ genre: "guest", nature_lieu: "salon", nom_lieu: "X" }, "Salon · Guest"],
-    [{ genre: "guest", nature_lieu: "prive", nom_lieu: "X" }, "Studio · Guest"],
+    [{ genre: "salon", role: "resident", nom_lieu: "X" }, "Résident du salon"],
+    [{ genre: "salon", role: "fondateur", nom_lieu: "X" }, "Fondateur du salon"],
+    [{ genre: "prive", role: "resident", nom_lieu: "X" }, "Résident du studio"],
+    [{ genre: "prive", role: "fondateur", nom_lieu: "X" }, "Fondateur du studio"],
+    [{ genre: "guest", nature_lieu: "salon", nom_lieu: "X" }, "En guest au salon"],
+    [{ genre: "guest", nature_lieu: "prive", nom_lieu: "X" }, "En guest au studio"],
   ];
   for (const [surcharge, etiquette] of attendus) {
     const lignes = troisLignesDuMode(mode(surcharge));
@@ -212,8 +228,9 @@ titre("§4 — rejeu : toutes les combinaisons, sur le vrai code");
   //  UN GUEST SANS NATURE DE LIEU (base d'avant la nº 41) : on
   //  n'invente rien — « Guest » seul.
   verif(
-    "guest sans nature de lieu : « Guest » seul, jamais un type inventé",
-    etiquetteDuLieu(mode({ genre: "guest" })) === "Guest"
+    "guest sans nature de lieu (AMENDÉE nº 288) : « En guest » seul, " +
+      "jamais un type inventé",
+    etiquetteDuLieu(mode({ genre: "guest" })) === "En guest"
   );
 
   //  À DOMICILE : la ville en blanc, LE RAYON en gris — et AUCUNE
@@ -222,9 +239,9 @@ titre("§4 — rejeu : toutes les combinaisons, sur le vrai code");
     mode({ genre: "domicile", rayon_km: 30 })
   );
   verif(
-    "À DOMICILE : « À domicile » / la ville / « Dans un rayon de " +
+    "À DOMICILE (AMENDÉE nº 288 : « Reçoit à domicile ») / la ville / « Dans un rayon de " +
       "30 km » — et pas une rue en vue",
-    domicile.etiquette === "À domicile" &&
+    domicile.etiquette === "Reçoit à domicile" &&
       domicile.nom === "Paris, France" &&
       domicile.adresse === "Dans un rayon de 30 km" &&
       !/Trousseau/.test(domicile.nom + domicile.adresse),
@@ -275,11 +292,12 @@ titre("§4 — à la source : l'écriture est unique, l'étiquette est celle du 
   );
   verif(
     "l'adresse d'un salon dit SON TYPE (« Adresse du salon / du " +
-      "studio »), l'accord suit le nombre, et « ÉQUIPE » a son étiquette",
+      "studio »), et l'accord suit le nombre (le titre « ÉQUIPE » est " +
+        "RETIRÉ à la nº 288)",
     /`Adresse du \$\{typeDuLieu\}`/.test(blocLieux) &&
       /`Autres adresses du \$\{typeDuLieu\}`/.test(blocLieux) &&
       /`Autre adresse du \$\{typeDuLieu\}`/.test(blocLieux) &&
-      />Équipe<\/p>/.test(blocLieux)
+      !/>Équipe<\/p>/.test(blocLieux)
   );
   verif(
     "dans l'équipe : le nom en blanc, le rôle en gris DESSOUS, la " +
@@ -314,7 +332,7 @@ titre("§4 — vivant (1440 px) : la grammaire, mesurée sur les fiches");
     await page.waitForTimeout(2000);
     const troisLignes = await page.evaluate(() => {
       const etiquette = [...document.querySelectorAll("li p")].find((p) =>
-        /Salon · Résident/i.test(p.textContent ?? "")
+        /Résident du salon/i.test(p.textContent ?? "")
       );
       if (!etiquette) return null;
       const bloc = etiquette.parentElement;
@@ -355,8 +373,11 @@ titre("§4 — vivant (1440 px) : la grammaire, mesurée sur les fiches");
     });
     await page.waitForTimeout(2000);
     const sansNom = await page.evaluate(() => {
+      //  AMENDÉ nº 288 : les étiquettes ne commencent plus par le type
+      //  de lieu — elles se lisent (« Résident du salon », « En guest
+      //  au salon »). On vise donc la même famille, dite autrement.
       const etiquette = [...document.querySelectorAll("li p")].find((p) =>
-        /^Salon/i.test(p.textContent?.trim() ?? "")
+        /(du|au) (salon|studio)$/i.test(p.textContent?.trim() ?? "")
       );
       if (!etiquette) return null;
       const texte = etiquette.parentElement.textContent ?? "";
@@ -381,7 +402,7 @@ titre("§4 — vivant (1440 px) : la grammaire, mesurée sur les fiches");
       "À DOMICILE : la ville, et AUCUNE rue nulle part",
       await page.evaluate(() => {
         const etiquette = [...document.querySelectorAll("li p")].find((p) =>
-          /^À domicile$/i.test(p.textContent?.trim() ?? "")
+          /^Reçoit à domicile$/i.test(p.textContent?.trim() ?? "")
         );
         if (!etiquette) return false;
         const texte = etiquette.parentElement.textContent ?? "";
@@ -422,10 +443,11 @@ titre("§4 — vivant (1440 px) : la grammaire, mesurée sur les fiches");
     });
     verif(
       "« ADRESSE DU SALON », « AUTRE ADRESSE DU SALON » (au singulier : " +
-        "il n'y en a qu'une) et « ÉQUIPE » — les étiquettes du site",
+        "il n'y en a qu'une) — les étiquettes du site (« ÉQUIPE » est " +
+        "retiré à la nº 288)",
       salon.etiquettes.includes("Adresse du salon") &&
         salon.etiquettes.includes("Autre adresse du salon") &&
-        salon.etiquettes.includes("Équipe"),
+        !salon.etiquettes.includes("Équipe"),
       salon.etiquettes.join(" · ")
     );
     verif(
