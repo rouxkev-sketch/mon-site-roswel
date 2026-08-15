@@ -607,9 +607,32 @@ export function FicheTatoueur({
     >
       {/* Les DEUX COLONNES FORMENT UN ENSEMBLE CENTRÉ : la piste photo
           prend sa largeur réelle (`auto`), la colonne de lecture est
-          bornée (340 à 400 px), et `justify-center` centre le tout —
+          bornée (340 à 380 px), et `justify-center` centre le tout —
           plus de photo collée à gauche avec un trou au milieu. */}
-      <div className="grid gap-8 lg:gap-10 lg:grid-cols-[auto_minmax(340px,400px)] lg:justify-center">
+      {/*  §1 (nº 298) — LA COLONNE DE LECTURE FAIT 380 px, LA LARGEUR
+           DE LA FENÊTRE SUPERPOSÉE, ET PAS UN PIXEL D'AUTRE.
+           ------------------------------------------------------------
+           LE DÉFAUT, RELEVÉ PAR LE PROPRIÉTAIRE À 1440 CSS : la colonne
+           s'ouvrait jusqu'à 400 px, ses lignes de séparation couraient
+           sur toute cette largeur, et le contenu ne la remplissait pas
+           — la page paraissait vide à droite.
+           LA VALEUR N'EST PAS CHOISIE À L'ŒIL : c'est celle que porte
+           la colonne de la FENÊTRE CENTRÉE SUPERPOSÉE (`lg:w-[380px]`
+           dans FenetreFiche) — les deux vues montrent le MÊME contenu,
+           elles doivent donc lui donner la même laisse.
+           ⚠️ POURQUOI UN `minmax` ET NON UN 380 SEC : la borne basse
+           (340) existe pour les fenêtres étroites, où la colonne DOIT
+           pouvoir se resserrer plutôt que de pousser la photo hors de
+           l'écran. Dès qu'il y a la place — et il y en a à 1440 —
+           elle vaut exactement 380.
+           ⚠️ LE RECENTRAGE VIENT TOUT SEUL : `justify-center` centre
+           l'ENSEMBLE photo + gouttière + colonne. En retirant 20 px à
+           la colonne, le bloc se rétrécit d'autant et les deux marges
+           extérieures gagnent 10 px chacune — elles restent égales,
+           sans qu'aucune marge soit écrite nulle part.
+           ⚠️ CE QUI NE BOUGE PAS : la photo (sa largeur découle de la
+           hauteur de l'écran, nº 290) et la gouttière (`lg:gap-10`). */}
+      <div className="grid gap-8 lg:gap-10 lg:grid-cols-[auto_minmax(340px,380px)] lg:justify-center">
         {/* ---------- La photo — calée dans la hauteur visible (web) ----------
              §3 (nº 295) — SAUF QUAND LE LIEN A DIT « PAS DE PHOTO » :
              la colonne entière disparaît, la page commence par Profil /
@@ -734,7 +757,33 @@ export function FicheTatoueur({
             enfouis plus bas (le sélecteur de catégorie vit dans le
             panneau du portfolio) héritaient donc du transparent, et on
             voyait le contenu défiler derrière. Une variable, elle,
-            traverse tout l'arbre. */}        <div className="lg:sticky lg:top-[99px] lg:self-start lg:max-h-[calc(100vh-119px)] lg:overflow-y-auto min-w-0 flex flex-col bg-sombre-fond [--fond-colonne:var(--rw-sombre-fond)]">
+            traverse tout l'arbre.
+            §2 (nº 298) — ET ELLE NE COUPE PLUS LES ENCADRÉS DE SURVOL.
+            ------------------------------------------------------------
+            LE DÉFAUT : au survol d'un membre d'équipe, d'un guest ou
+            d'un studio, l'encadré avait les bords DROITS — « on dirait
+            que ça a été coupé par les marges ». C'est exactement ça.
+            LA MÉCANIQUE : `CLASSES_LIGNE_CLIQUABLE` porte `-m-2 p-2`,
+            donc l'encadré déborde de 8 px de chaque côté du contenu —
+            C'EST VOULU (sans ce débord, son texte ne serait plus aligné
+            sur le reste de la colonne). Or `overflow-y-auto` fait
+            calculer `overflow-x` à `auto` : la colonne devient un
+            conteneur qui ROGNE AUSSI LATÉRALEMENT, et le bord de la
+            colonne tranchait les quatre arrondis.
+            LA FENÊTRE SUPERPOSÉE, ELLE, N'A JAMAIS EU CE DÉFAUT : sa
+            colonne rogne pareil, mais elle porte `p-5 sm:p-6` — les
+            8 px du débord tombent dans son rembourrage, loin du bord.
+            LE REMÈDE EST LE SIEN, SANS DÉPLACER QUOI QUE CE SOIT : un
+            rembourrage de 12 px, ANNULÉ par une marge négative de 12 px
+            (`lg:px-3 lg:-mx-3`). La boîte de contenu ne bouge pas d'un
+            pixel — même position, même largeur, donc des lignes de
+            séparation identiques —, mais le bord qui rogne s'écarte de
+            12 px : l'encadré déborde toujours dans les marges, et ses
+            quatre arrondis sont dessinés en entier, avec 4 px de reste.
+            ⚠️ CE ROGNAGE-LÀ N'EST PAS CELUI DES PHOTOS : celui de la
+            nº 295, sur les colonnes du carrousel, protège les images et
+            n'est pas touché. */}
+        <div className="lg:sticky lg:top-[99px] lg:self-start lg:max-h-[calc(100vh-119px)] lg:overflow-y-auto lg:px-3 lg:-mx-3 min-w-0 flex flex-col bg-sombre-fond [--fond-colonne:var(--rw-sombre-fond)]">
           {/*  ⚠️ LE CONTENU DE LA FICHE VIT DANS UN SEUL COMPOSANT
                (nº 199) : cette page et la fenêtre superposée du web
                affichent le MÊME. Ce qui reste ici est l'enveloppe — la
