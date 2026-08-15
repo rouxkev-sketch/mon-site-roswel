@@ -38,10 +38,18 @@ titre("à la source — la largeur vient de la fenêtre, le rognage s'écarte");
     fenetreF
   );
   const largeurPage = /lg:grid-cols-\[auto_minmax\(340px,(\d+)px\)\]/.exec(fiche);
+  //  ⚠️ AMENDÉ LE 15/08/2026 (passe nº 299) — CETTE VÉRIFICATION EST
+  //  CADUQUE TELLE QU'ELLE ÉTAIT ÉCRITE. Elle exigeait que la colonne
+  //  de la page et celle de la fenêtre superposée soient LE MÊME
+  //  NOMBRE (380). Le propriétaire a mesuré le résultat et tranché :
+  //  380 reste juste pour la fenêtre, mais c'est encore trop long en
+  //  pleine page — il a choisi 350. Les deux vues n'ont donc plus la
+  //  même laisse, EN CONNAISSANCE DE CAUSE. Ce qui reste vérifiable, et
+  //  qui compte, c'est que la fenêtre superposée n'a PAS bougé.
   verif(
-    "LA LARGEUR N'EST PAS INVENTÉE : celle de la colonne de la FENÊTRE " +
-      "SUPERPOSÉE et celle de la colonne de la PAGE sont le même nombre",
-    largeurFenetre && largeurPage && largeurFenetre[1] === largeurPage[1],
+    "LA FENÊTRE SUPERPOSÉE EST TOUJOURS À 380 px — la nº 299 n'a changé " +
+      "que la page pleine, qui vaut désormais 350 px",
+    largeurFenetre?.[1] === "380" && largeurPage?.[1] === "350",
     `fenêtre ${largeurFenetre?.[1]} px · page ${largeurPage?.[1]} px`
   );
   verif(
@@ -117,10 +125,13 @@ titre("vivant — 1440 × 823, densité 2");
         gouttiere: contenuGauche - r(photo).right,
       };
     });
+    //  ⚠️ AMENDÉ LE 15/08/2026 (passe nº 299) : 380 était la valeur de
+    //  la nº 298 ; le propriétaire l'a mesurée puis ramenée à 350 pour
+    //  la seule page pleine. La vérification garde son sens — la
+    //  colonne vaut la largeur DÉCIDÉE —, seul le nombre change.
     verif(
-      "LA COLONNE DE LECTURE FAIT 380 px — la largeur de la fenêtre " +
-        "superposée",
-      Math.abs(m.largeurColonne - 380) < 0.001,
+      "LA COLONNE DE LECTURE FAIT 350 px (nº 299 — c'était 380 à la nº 298)",
+      Math.abs(m.largeurColonne - 350) < 0.001,
       `${m.largeurColonne.toFixed(3)} px`
     );
     verif(
