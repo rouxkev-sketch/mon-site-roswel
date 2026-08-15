@@ -22,6 +22,7 @@ import { FicheTatoueur } from "@/components/FicheTatoueur";
 import { JsonLd } from "@/components/JsonLd";
 import { RetourFenetreFiche } from "@/components/RetourFenetreFiche";
 import { CompteurConsultation } from "@/components/CompteurConsultation";
+import { SondeCadre } from "@/components/SondeCadre";
 
 /**
  * LA FICHE D'UN TATOUEUR — une page par tatoueur
@@ -67,14 +68,57 @@ async function ficheVisible(slug: string): Promise<{
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }): Promise<Metadata> {
   const { slug } = await params;
   const { tatoueur, demonstration, privee } = await ficheVisible(slug);
   if (!tatoueur) {
     return { title: "Tatoueur introuvable", robots: { index: false, follow: false } };
   }
+
+  /**
+   * §2 (nº 281) — L'APERÇU SUIT LE CARROUSEL PARTAGÉ.
+   * ------------------------------------------------------------------
+   * Le lien partagé porte les trois tags depuis la nº 280-§3 ; l'image
+   * que fabriquent WhatsApp et Facebook, elle, venait d'un fichier que
+   * Next appelle SANS les paramètres d'adresse — elle montrait donc la
+   * vitrine de la fiche pendant que le lien menait ailleurs.
+   * On annonce donc, quand (et seulement quand) l'adresse désigne un
+   * carrousel, la route `/tatoueur/<slug>/partage`, qui rend LA MÊME
+   * composition avec la première photo de CE carrousel. Sans tag :
+   * rien n'est annoncé ici, et l'aperçu par défaut
+   * (`opengraph-image.tsx`) s'applique comme avant.
+   */
+  const criteres = await searchParams;
+  const seul = (valeur: string | string[] | undefined) =>
+    Array.isArray(valeur) ? (valeur[0] ?? "") : (valeur ?? "");
+  const styleCarrousel = styleConnu(seul(criteres.style));
+  const natureCarrousel = natureCherchee(seul(criteres.nature));
+  const renduCarrousel = renduConnu(seul(criteres.rendu));
+  const tagsPartage = new URLSearchParams();
+  if (styleCarrousel) tagsPartage.set("style", styleCarrousel);
+  if (natureCarrousel) tagsPartage.set("nature", natureCarrousel);
+  if (renduCarrousel) tagsPartage.set("rendu", renduCarrousel);
+  const imageDuCarrousel = tagsPartage.toString()
+    ? {
+        images: [
+          {
+            url:
+              `${adresseDuSite()}/tatoueur/${tatoueur.slug}/partage` +
+              `?${tagsPartage.toString()}`,
+            width: 1200,
+            height: 630,
+            alt:
+              `Portfolio de ${tatoueur.nom} à ${tatoueur.ville_nom}` +
+              (styleCarrousel ? ` — ${libelleStyle(styleCarrousel)}` : "") +
+              " · yokofolio",
+          },
+        ],
+      }
+    : null;
 
   const styles = tatoueur.styles.map(libelleStyle).join(", ");
   return {
@@ -83,6 +127,9 @@ export async function generateMetadata({
       `${tatoueur.nom}, tatoueur à ${tatoueur.ville_nom}` +
       (styles ? ` — ${styles}.` : ".") +
       " Portfolio Instagram et styles pratiqués.",
+    ...(imageDuCarrousel
+      ? { openGraph: imageDuCarrousel, twitter: imageDuCarrousel }
+      : {}),
     alternates: privee
       ? undefined
       : { canonical: `${adresseDuSite()}/tatoueur/${tatoueur.slug}` },
@@ -178,6 +225,12 @@ export default async function PageFicheTatoueur({
           désormais. La base dédoublonne par visiteur, par fiche et par
           jour : aucun double comptage possible. */}
       <CompteurConsultation slug={tatoueur.slug} />
+      {/*  §1 (nº 281) — LA SONDE DU CADRE, `?sonde-cadre=1`. Elle ne
+           s'installe QUE si l'adresse la demande (elle rend `null`
+           sinon) et ne touche à rien d'autre : elle mesure et affiche.
+           Elle vit sur CETTE page — celle d'une fiche de partage —,
+           là où le propriétaire voit la bande à gauche du cadre. */}
+      <SondeCadre />
       <FicheTatoueur
         studioCourant={studio ?? null}
         tatoueur={tatoueur}
