@@ -278,6 +278,22 @@ export function SondePhoto() {
         aZero("▸ photo/colonne · écart BAS", bp && bk ? bk.bottom - bp.bottom : null),
         aZero("▸ photo/colonne · écart GAUCHE", bp && bk ? bp.left - bk.left : null),
         aZero("▸ photo/colonne · écart DROITE", bp && bk ? bk.right - bp.right : null),
+        /**
+         * §2 (nº 296) — LA POSITION DU DÉFILEMENT, ET SON RESTE.
+         * ----------------------------------------------------------------
+         * C'est la dernière cause possible du trait au bord gauche : une
+         * position arrêtée sur une FRACTION de la largeur d'une colonne
+         * laisse voir la dernière colonne de pixels de la photo
+         * précédente. Le reste doit valoir zéro à chaque arrêt.
+         */
+        {
+          cle: "position du défilement",
+          valeur: cadre ? `${trois(cadre.scrollLeft)} px` : "INTROUVABLE",
+        },
+        aZero(
+          "▸ reste modulo la largeur d'une colonne",
+          cadre && bk && bk.width > 1 ? cadre.scrollLeft % bk.width : null
+        ),
         aZero(
           "▸ bande d'enveloppe À DROITE du cadre",
           bc ? boite.right - bc.right : null

@@ -34,12 +34,16 @@ const FICHE = "atelier-corvus-lyon-1er";
 
 titre("§1 — à la source : plus rien de peint derrière la photo");
 {
+  //  ⚠️ AMENDÉE À LA nº 296-§1, SUR CONSIGNE : la fenêtre superposée
+  //  est REMISE dans son état d'avant les nº 292-295 (« elles vont
+  //  bien, n'y touche pas », nº 290). La racine ne peint donc plus
+  //  rien SUR LA PAGE, et retrouve son fond DANS LA FENÊTRE.
   verif(
-    "LA RACINE DU CARROUSEL NE PEINT PLUS RIEN — c'était elle, le " +
-      "liseré : `bg-sombre-carte` occupait toute sa boîte, un cran plus " +
-      "clair que la page",
-    /className="relative select-none"/.test(carrousel) &&
-      !/relative bg-sombre-carte select-none/.test(carrousel)
+    "LA RACINE DU CARROUSEL NE PEINT PLUS RIEN SUR LA PAGE — c'était " +
+      "elle, le liseré ; dans la fenêtre, son fond est rendu (nº 296)",
+    /className=\{`relative select-none\$\{dansLaFenetre \? " bg-sombre-carte" : ""\}`\}/.test(
+      carrousel
+    )
   );
   //  ⚠️ LES DEUX SUIVANTES AMENDÉES À LA nº 295, SUR CONSIGNE. Le fond
   //  descendu sur la colonne était encore une couleur à découvrir : il
@@ -48,11 +52,12 @@ titre("§1 — à la source : plus rien de peint derrière la photo");
   //  bord gauche de celle qu'on regarde : il est annulé (règle a, la
   //  colonne rogne, et c'est désormais prouvé AU PIXEL).
   verif(
-    "LA COLONNE ROGNE, ET PLUS RIEN N'Y EST PEINT (nº 295) — la " +
-      "réservation de la nº 280 vient du format 4/5, pas d'une couleur",
-    /snap-always min-h-0 overflow-hidden \$\{CADRE_PHOTO_PORTFOLIO\}/.test(
-      carrousel
-    ) && !/overflow-hidden bg-sombre-carte/.test(carrousel)
+    //  ⚠️ AMENDÉE À LA nº 296-§1 : le rognage vaut POUR LA PAGE ; la
+    //  fenêtre retrouve son absence de rognage, comme avant la nº 294.
+    "LA COLONNE DE LA PAGE ROGNE, ET PLUS RIEN N'Y EST PEINT (nº 295) — " +
+      "la réservation de la nº 280 vient du format 4/5, pas d'une couleur",
+    /dansLaFenetre \? "" : "min-h-0 overflow-hidden"/.test(carrousel) &&
+      !/overflow-hidden bg-sombre-carte/.test(carrousel)
   );
   verif(
     "LA PHOTO ÉPOUSE EXACTEMENT SA COLONNE (nº 295) : le débordement " +
@@ -61,10 +66,13 @@ titre("§1 — à la source : plus rien de peint derrière la photo");
       .length === 2
   );
   verif(
-    "LA FENÊTRE SUPERPOSÉE N'A PLUS SA PLAQUE NOIRE derrière la photo " +
-      "— c'est la moitié « fenêtre » du même défaut",
-    !/aspect-\[4\/5\] min-w-0 shrink-0 lg:shrink bg-black/.test(fenetre) &&
-      /aspect-\[4\/5\] min-w-0 shrink-0 lg:shrink select-none/.test(fenetre)
+    //  ⚠️ ANNULÉE À LA nº 296-§1, SUR CONSIGNE : la plaque noire est
+    //  RENDUE à la fenêtre, avec tout le reste de son état d'avant.
+    "LA PLAQUE NOIRE EST RENDUE À LA FENÊTRE (nº 296) : son état " +
+      "d'avant les nº 292-295, à la lettre",
+    /aspect-\[4\/5\] min-w-0 shrink-0 lg:shrink bg-black select-none/.test(
+      fenetre
+    )
   );
   verif(
     "CE QUI A ÉTÉ PAYÉ CHER TIENT ENCORE : le format 4/5 et `min-h-0` " +
@@ -307,12 +315,12 @@ titre("vivant — 1440 × 823, densité 2");
         `haut ${fen1.ecarts.haut} · bas ${fen1.ecarts.bas} · ` +
           `gauche ${fen1.ecarts.gauche} · droite ${fen1.ecarts.droite}`
       );
+      //  ⚠️ ANNULÉE À LA nº 296-§1 : la fenêtre retrouve ses fonds.
       verif(
-        "FENÊTRE SUPERPOSÉE — la plaque noire a disparu, et depuis la " +
-          "nº 295 la colonne non plus ne peint rien",
-        /rgba\(0, 0, 0, 0\)/.test(fen1.boite) &&
-          /rgba\(0, 0, 0, 0\)/.test(fen1.racine) &&
-          /rgba\(0, 0, 0, 0\)/.test(fen1.colonne),
+        "FENÊTRE SUPERPOSÉE — ses fonds sont RENDUS (nº 296) : le noir " +
+          "derrière la photo, le gris sur la racine",
+        /rgb\(0, 0, 0\)/.test(fen1.boite) &&
+          /rgb\(40, 40, 45\)/.test(fen1.racine),
         `boîte ${fen1.boite} · racine ${fen1.racine} · colonne ${fen1.colonne}`
       );
     } else {

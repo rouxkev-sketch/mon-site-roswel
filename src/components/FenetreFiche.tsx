@@ -418,7 +418,7 @@ export function FenetreFiche({
                        lg:h-[min(88vh,940px,calc((100vw-476px)*1.25))]
                        lg:max-w-[min(1200px,calc(100vw-96px))]
                        overflow-y-auto lg:overflow-hidden overscroll-contain
-                       rounded-b-lg rounded-t-none lg:rounded-none lg:rounded-r-lg
+                       rounded-b-lg rounded-t-none lg:rounded-none lg:rounded-r-lg bg-sombre-carte
                        shadow-[0_24px_80px_rgba(0,0,0,0.6)]
                        scale-100 transition-transform duration-200 starting:scale-[0.97]"
           >
@@ -442,8 +442,13 @@ export function FenetreFiche({
                  `?sonde-photo=1`, et une seule sonde s'affiche à la
                  fois — la plus récente, donc celle-ci. */}
             <SondePhoto />
-            <div className="relative w-full lg:w-auto lg:h-full aspect-[4/5] min-w-0 shrink-0 lg:shrink select-none">
+            <div className="relative w-full lg:w-auto lg:h-full aspect-[4/5] min-w-0 shrink-0 lg:shrink bg-black select-none">
               <CarrouselPortfolio
+                //  §1 (nº 296) — LA FENÊTRE RETROUVE SON ÉTAT D'AVANT LA
+                //  nº 292 : les corrections des nº 292 à 295 étaient
+                //  pensées pour la PAGE, dont la géométrie est
+                //  l'inverse de la sienne. Voir la note du drapeau.
+                dansLaFenetre
                 photos={photosDuStyleAffiche}
                 nomTatoueur={tatoueur.nom}
                 styleLabel={groupeAffiche?.label ?? ""}

@@ -109,6 +109,7 @@ export function CarrouselPortfolio({
   lien,
   sansCompteur = false,
   sansPoints = false,
+  dansLaFenetre = false,
   children,
 }: {
   /** LES PHOTOS DE L'ENSEMBLE AFFICHÉ. */
@@ -172,6 +173,25 @@ export function CarrouselPortfolio({
    * partout ailleurs.
    */
   sansPoints?: boolean;
+  /**
+   * §1 (nº 296) — CE CARROUSEL VIT DANS LA FENÊTRE CENTRÉE SUPERPOSÉE.
+   * ------------------------------------------------------------------
+   * ⚠️ ELLE N'AURAIT JAMAIS DÛ ÊTRE TOUCHÉE, et le propriétaire l'avait
+   * écrit dès la nº 290 : « NON concerné : les fiches au format FENÊTRE
+   * SUPERPOSÉE. Elles vont bien, n'y touche pas. » Les nº 292 à 295 lui
+   * ont pourtant appliqué des corrections pensées POUR LA PAGE, dont la
+   * géométrie est l'inverse de la sienne : la page tire sa largeur d'une
+   * mesure, la fenêtre tire la sienne de sa hauteur. Résultat, chez le
+   * propriétaire : un vide entre la photo et la colonne de droite, et
+   * une colonne de droite qui descend plus bas que la photo.
+   * CE DRAPEAU REND À LA FENÊTRE SON ÉTAT D'AVANT LA nº 292, à la
+   * lettre : le fond de la racine, aucun format sur le cadre, aucun
+   * `min-h-0`, aucun rognage de colonne. RIEN DE PLUS, RIEN DE MOINS.
+   * ⚠️ ET LA PAGE NE CHANGE PAS D'UN PIXEL : elle garde toutes ses
+   * corrections, celle de la hauteur en particulier (nº 290-293), qui a
+   * réglé la photo débordant sous l'écran dans « Mon portfolio ».
+   */
+  dansLaFenetre?: boolean;
   /** Posé PAR-DESSUS la photo (le partage, le cœur). */
   children?: React.ReactNode;
 }) {
@@ -334,6 +354,71 @@ export function CarrouselPortfolio({
    * porte `content-visibility:auto` (nº 224) et n'est pas mise en page
    * tant qu'elle est hors écran — on y mesurerait du vent.
    */
+  /**
+   * §2 (nº 296) — LA POSITION DU DÉFILEMENT S'ARRÊTE SUR UN MULTIPLE
+   * ENTIER DE LA LARGEUR D'UNE COLONNE, TOUJOURS.
+   * ==================================================================
+   * LE DÉFAUT, ÉTABLI PAR LES PIXELS DU PROPRIÉTAIRE : un trait d'UN
+   * pixel au bord GAUCHE de la photo, sur toute sa hauteur, dont la
+   * couleur CHANGE — rgb(133,100,99), rgb(107,80,79), rgb(95,74,71),
+   * rgb(82,61,59). Des teintes de peau : c'est LA PHOTO D'À CÔTÉ. À sa
+   * gauche le fond de page, à sa droite la photo regardée.
+   *
+   * TOUT LE RESTE A ÉTÉ ÉLIMINÉ EN CINQ PASSES : plus aucun fond peint
+   * dans la chaîne (nº 295), le rognage de chaque colonne prouvé au
+   * pixel (nº 295), le débordement d'un pixel annulé (nº 295), les
+   * largeurs sur des pixels entiers (nº 293). Il ne reste qu'une cause
+   * possible : la position du défilement s'arrête sur une FRACTION de
+   * pixel. À un décalage fractionnaire, la dernière colonne de pixels
+   * de la photo précédente reste dans le cadre — au bord gauche, sur
+   * toute la hauteur, et seulement à partir de la deuxième photo.
+   *
+   * LE REMÈDE : après chaque arrêt, on ramène la position au multiple
+   * entier le plus proche. C'est une GARANTIE, pas un calcul de pas —
+   * la nº 209-§7 interdit de calculer le pas du défilement, et on ne
+   * le calcule pas : on lit la largeur que le navigateur a lui-même
+   * donnée à une colonne, et on corrige seulement le RESTE.
+   *
+   * ⚠️ APRÈS L'ARRÊT, JAMAIS PENDANT. `scrollend` quand le navigateur
+   * le sert (Chromium 114+, Safari 17+) ; sinon un repos de 140 ms
+   * après le dernier `scroll`. Corriger en cours de geste combattrait
+   * l'accrochage natif et hacherait le mouvement.
+   * ⚠️ ET SEULEMENT SI LE RESTE EST NON NUL : ici, dans Chromium, il
+   * vaut déjà zéro à tous les coups — la correction ne fait alors
+   * rien du tout. Elle est écrite pour les moteurs qui s'arrêtent
+   * entre deux pixels.
+   * ⚠️ TOUS LES CHEMINS PASSENT PAR LÀ, sans exception : l'accrochage
+   * natif, les flèches, les points, le doigt, la molette, le clavier
+   * et la restauration de position — parce qu'ils produisent tous un
+   * défilement, donc un arrêt.
+   */
+  useEffect(() => {
+    const zone = cadre.current;
+    if (!zone) return;
+    let repos = 0;
+    const recaler = () => {
+      const premiere = zone.firstElementChild as HTMLElement | null;
+      const pas = premiere?.getBoundingClientRect().width ?? 0;
+      if (!(pas > 1)) return;
+      const reste = zone.scrollLeft % pas;
+      if (reste < 0.001 || pas - reste < 0.001) return;
+      zone.scrollLeft = Math.round(zone.scrollLeft / pas) * pas;
+    };
+    const auRepos = () => {
+      window.clearTimeout(repos);
+      repos = window.setTimeout(recaler, 140);
+    };
+    //  `scrollend` est le bon signal ; le repos est le repli des
+    //  moteurs qui ne le servent pas encore.
+    zone.addEventListener("scrollend", recaler);
+    zone.addEventListener("scroll", auRepos, { passive: true });
+    return () => {
+      window.clearTimeout(repos);
+      zone.removeEventListener("scrollend", recaler);
+      zone.removeEventListener("scroll", auRepos);
+    };
+  }, []);
+
   const [calage, setCalage] = useState(0);
   const calagePose = useRef(0);
   useEffect(() => {
@@ -741,7 +826,7 @@ export function CarrouselPortfolio({
            LA RÉSERVATION DE LA nº 280 TIENT SANS COULEUR : elle vient
            du format 4/5 (cadre et colonne), pas d'un fond. La hauteur
            est connue avant la première image ; la page ne saute pas. */
-      className="relative select-none"
+      className={`relative select-none${dansLaFenetre ? " bg-sombre-carte" : ""}`}
     >
       {/* LE CADRE QUI DÉFILE — le navigateur fait tout : l'inertie du
           doigt, l'accrochage d'une photo à la fois (`snap-always`), et
@@ -819,8 +904,8 @@ export function CarrouselPortfolio({
              tout. Un carrousel vide ne réserve donc aucune place :
              c'est au reste de la page de dire ce qui manque. */
         className={`relative flex w-[round(down,100%,1px)] ${
-          n > 0 ? CADRE_PHOTO_PORTFOLIO : ""
-        } min-h-0 ${
+          dansLaFenetre ? "" : `${n > 0 ? CADRE_PHOTO_PORTFOLIO : ""} min-h-0`
+        } ${
           zoomEnCours
             ? "overflow-hidden"
             : "overflow-x-auto snap-x snap-mandatory"
@@ -908,7 +993,9 @@ export function CarrouselPortfolio({
                    du format 4/5 porté par le cadre et par la colonne :
                    la hauteur est connue avant la première image, sans
                    qu'un seul pixel soit peint. */
-              className={`relative w-full shrink-0 snap-start snap-always min-h-0 overflow-hidden ${CADRE_PHOTO_PORTFOLIO}`}
+              className={`relative w-full shrink-0 snap-start snap-always ${
+                dansLaFenetre ? "" : "min-h-0 overflow-hidden"
+              } ${CADRE_PHOTO_PORTFOLIO}`}
               aria-hidden={rang !== indice}
             >
               {surCarte ? (

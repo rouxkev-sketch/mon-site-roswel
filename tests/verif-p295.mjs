@@ -43,16 +43,21 @@ titre("§1-§2 — à la source");
       .length === 2 && !/calc\(100%\+2px\)/.test(carrousel)
   );
   verif(
-    "LA COLONNE ROGNE, ET ELLE NE PEINT PLUS RIEN — le fond que la " +
-      "nº 294 y avait descendu était encore une couleur à découvrir",
-    /snap-always min-h-0 overflow-hidden \$\{CADRE_PHOTO_PORTFOLIO\}/.test(
-      carrousel
-    ) && !/overflow-hidden bg-sombre-carte/.test(carrousel)
+    //  ⚠️ AMENDÉE À LA nº 296-§1, SUR CONSIGNE : rognage et absence de
+    //  fond valent POUR LA PAGE ; la fenêtre est rendue à son état
+    //  d'avant les nº 292-295.
+    "LA COLONNE DE LA PAGE ROGNE, ET ELLE NE PEINT PLUS RIEN — le fond " +
+      "que la nº 294 y avait descendu était encore une couleur à découvrir",
+    /dansLaFenetre \? "" : "min-h-0 overflow-hidden"/.test(carrousel) &&
+      !/overflow-hidden bg-sombre-carte/.test(carrousel)
   );
   verif(
-    "LA FENÊTRE SUPERPOSÉE NE PEINT PLUS SOUS LA PHOTO : son gris est " +
-      "descendu sur la seule colonne de droite",
-    !/lg:rounded-r-lg bg-sombre-carte/.test(fenetreF) &&
+    //  ⚠️ ANNULÉE À LA nº 296-§1, SUR CONSIGNE EXPLICITE : « remets-la
+    //  exactement dans son état d'avant ces quatre passes ». Son gris
+    //  revient sur la fenêtre elle-même.
+    "LA FENÊTRE SUPERPOSÉE RETROUVE SON GRIS (nº 296) — son état " +
+      "d'avant, la colonne de droite gardant le sien",
+    /lg:rounded-r-lg bg-sombre-carte/.test(fenetreF) &&
       /bg-sombre-carte \[--fond-colonne/.test(fenetreF)
   );
   verif(
@@ -298,14 +303,13 @@ titre("vivant — 1440 × 823, densité 2");
           },
         };
       });
+      //  ⚠️ ANNULÉE À LA nº 296-§1 : la fenêtre retrouve ses fonds, et
+      //  c'est CELA qui supprime le vide et la colonne trop longue.
       verif(
-        "FENÊTRE SUPERPOSÉE — AUCUN ENCADRÉ AUTOUR DE LA PHOTO : la " +
-          "fenêtre, la boîte de la photo, la racine et la colonne sont " +
-          "transparentes ; le gris ne vit plus que dans la colonne de droite",
-        /rgba\(0, 0, 0, 0\)/.test(f.fenetre) &&
-          /rgba\(0, 0, 0, 0\)/.test(f.boitePhoto) &&
-          /rgba\(0, 0, 0, 0\)/.test(f.racine) &&
-          /rgba\(0, 0, 0, 0\)/.test(f.colonne) &&
+        "FENÊTRE SUPERPOSÉE — SES FONDS SONT RENDUS (nº 296) : le gris " +
+          "sur la fenêtre et sur la racine, le noir derrière la photo",
+        f.fenetre === "rgb(40, 40, 45)" &&
+          f.boitePhoto === "rgb(0, 0, 0)" &&
           f.droite === "rgb(40, 40, 45)",
         `fenêtre ${f.fenetre} · boîte ${f.boitePhoto} · droite ${f.droite}`
       );
