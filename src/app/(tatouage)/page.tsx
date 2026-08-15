@@ -135,6 +135,11 @@ const chargerAccueil = cache(async (requete: string, taillePage: number) => {
     //  taille de page entre deux chargements ne rejoue jamais une
     //  carte déjà vue.
     limite: taillePage * page,
+    //  §1 (nº 279) — LA TAILLE D'UNE PAGE, à part de la limite : c'est
+    //  elle que la règle « au plus deux carrousels d'un même artiste
+    //  par page » utilise. La limite, elle, grandit à chaque « Voir
+    //  plus » — les confondre ferait bouger les cartes déjà affichées.
+    taillePage,
     //  ⚠️ PLUS D'UNE PHOTO PAR CARTE (nº 212-§2). La mosaïque n'en
     //  recevait qu'UNE (`sansGalerieInutile`, migration nº 32) : la
     //  carte ne pouvait donc jamais faire défiler quoi que ce soit —

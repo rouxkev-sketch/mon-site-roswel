@@ -2,6 +2,7 @@ import {
   CARTES_PAR_PAGE,
   genreDuModeFiltre,
   GROUPES_FILTRES,
+  PLAFOND_CARROUSELS,
   profilDeLaFiche,
   rayonRetenu,
   renduCherche,
@@ -27,9 +28,14 @@ import {
   type PhotoTatoueur,
 } from "@/lib/photos-tatoueur";
 import {
+  carrouselsDesFiches,
+  ficheDuCarrousel,
+} from "@/lib/carrousels";
+import {
   catalogueDemoAutorise,
   MESSAGE_INDISPONIBLE,
 } from "@/lib/catalogue-demonstration";
+import { classerCarrousels } from "@/lib/classement-carrousels";
 import { creerClientSupabaseServeur } from "@/lib/supabase/server";
 import { TATOUEURS_DEMO } from "@/lib/tatoueurs-demo";
 import { nomVilleCourt } from "@/lib/villes";
@@ -109,6 +115,28 @@ export type Tatoueur = {
       `photos_styles` prend alors le relais, et rien ne disparaît de
       l'écran. */
   galerie?: PhotoTatoueur[] | null;
+  /**
+   * §1 (nº 279) — LE CARROUSEL QUE CETTE CARTE MONTRE.
+   * ------------------------------------------------------------------
+   * ⚠️ IL N'EST POSÉ QUE SUR LES FICHES SERVIES À UNE MOSAÏQUE, où
+   * l'unité n'est plus l'artiste mais LA GALERIE (lib/carrousels) :
+   * un artiste à trois galeries donne trois fiches, identiques sauf
+   * leur `galerie` (restreinte) et ce champ. Il porte :
+   *  · `cle` — unique et stable : clé de rendu de la carte, et repère
+   *    de position dans la mosaïque (l'identifiant de la fiche ne peut
+   *    plus servir, deux cartes le partageraient) ;
+   *  · les trois tags du carrousel, que la carte utilise pour sa photo,
+   *    son lien et son cœur — à la place des critères de la recherche,
+   *    qui sont les mêmes pour toute la page.
+   * Absent partout ailleurs (fiche, favoris, aperçu) : ces écrans
+   * n'affichent pas une liste de carrousels.
+   */
+  carrousel?: {
+    cle: string;
+    style: string;
+    nature: string;
+    rendu: string;
+  } | null;
   /** Les BESOINS pris en charge : cover, cicatrice. */
   filtres_besoins?: string[] | null;
   /** LA PHOTO DE PROFIL, carrée en fichier, RONDE à l'affichage.
@@ -269,6 +297,16 @@ export type FiltresTatoueurs = {
       depuis toujours (elles montrent les plus consultés de la ville) ;
       l'accueil, lui, tire au hasard du jour puis reclasse la page. */
   prioriserClics?: boolean;
+  /**
+   * §1 (nº 279) — LA TAILLE D'UNE PAGE, pour l'étalement des artistes.
+   * ⚠️ DIFFÉRENTE DE `limite` : `limite` est ce qu'on demande MAINTENANT
+   * (elle grandit à chaque « Voir plus » — `taillePage × page`), tandis
+   * que celle-ci est la taille d'UNE page, fixe. C'est elle que la
+   * règle « au plus deux carrousels par artiste et par page » utilise ;
+   * la confondre avec `limite` ferait bouger les cartes déjà affichées
+   * à chaque chargement. Défaut : `CARTES_PAR_PAGE`.
+   */
+  taillePage?: number;
 };
 
 /** Les critères que le LIEU décide à lui seul. */
@@ -533,29 +571,21 @@ async function lirePopularite(): Promise<Map<string, number>> {
 }
 
 /**
- * LE CLASSEMENT PAR POPULARITÉ — LES PLUS APPRÉCIÉS D'ABORD.
- *
- * ⚠️ IL S'APPLIQUE À LA LISTE ENTIÈRE, JAMAIS À UNE PAGE. C'est la
- * contrainte absolue de la nº 218-§5, et c'est ce qui avait tout cassé
- * à la nº 217-§2 : un tri posé sur une tranche fait dépendre l'ordre du
- * nombre de cartes demandées. Voir `pageDeResultats`, qui l'appelle
- * AVANT sa coupe et nulle part ailleurs.
- *
- * À ÉGALITÉ DE SCORE — le cas de l'immense majorité, à zéro — l'ordre
- * d'entrée est conservé (le tri est stable) : mélange du jour sans
- * ville, proximité avec une ville. Le slug tranche en dernier ressort,
- * pour qu'aucune égalité ne dépende du chemin qui a construit la liste.
+ * §3 (nº 279) — LE CLASSEMENT PAR POPULARITÉ A DÉMÉNAGÉ, ET CHANGÉ
+ * ==================================================================
+ * `classerParPopularite` vivait ici : un simple tri décroissant sur le
+ * score brut (`consultations + 3 × cœurs + 8 × abonnés`). Elle est
+ * SUPPRIMÉE, code compris — remplacée par `lib/classement-carrousels`,
+ * l'écriture unique que consomment TOUTES les listes de cartes du
+ * site. Deux différences, et ce sont les deux consignes du §3 :
+ *  · LE SCORE VIEILLIT — un total qui ne décroît jamais fige la tête
+ *    de liste pour toujours, et décourage ceux qui publient ;
+ *  · L'UNITÉ EST LE CARROUSEL, pas la fiche (§1).
+ * CE QUI NE CHANGE PAS, et qui reste la contrainte absolue (nº 218-§5,
+ * migrations nº 61 et nº 63) : le classement porte sur LA LISTE
+ * ENTIÈRE, jamais sur une tranche — `pageDeResultats` l'appelle avant
+ * sa coupe, et nulle part ailleurs.
  */
-function classerParPopularite(
-  liste: Tatoueur[],
-  scores: Map<string, number>
-): Tatoueur[] {
-  if (scores.size === 0) return liste;
-  return [...liste].sort((a, b) => {
-    const ecart = (scores.get(b.slug) ?? 0) - (scores.get(a.slug) ?? 0);
-    return ecart !== 0 ? ecart : a.slug.localeCompare(b.slug);
-  });
-}
 
 /** Le style demandé est-il connu ? Sinon on l'ignore plutôt que de vider la page. */
 export function styleConnu(slug: string | undefined): string {
@@ -1175,6 +1205,11 @@ async function garnirFiches<T extends Tatoueur>(
         url: ligne.url,
         miniature: ligne.miniature,
         ordre: ligne.ordre,
+        //  §3 (nº 279) — LA DATE DE DÉPÔT : c'est elle qui donne son
+        //  âge au carrousel, donc son rang dans un classement qui
+        //  vieillit. Absente d'une base ancienne : le carrousel est
+        //  traité comme neuf.
+        cree_le: ligne.cree_le ?? null,
       });
       galerieParFiche.set(ligne.tatoueur_id, liste);
     }
@@ -1303,14 +1338,40 @@ export async function listerTatoueurs(
   //  supabase/yokofolio-recherche-sans-masquage.sql), et l'appel
   //  n'envoie plus rien : il n'y a plus de machine à réveiller.
 
-  // LE CHEMIN COURT — tout le travail en base, une seule requête.
-  const enBase = await rechercheEnBase(filtres, ville);
-  if (enBase) return enBase;
+  // LE SCORE de popularité par fiche — il sert aux deux chemins.
+  const scores = await lirePopularite();
 
-  // Le SCORE de popularité par fiche — pour CLASSER les résultats
-  // (nº 218-§5). Carte vide tant que la migration n'est pas passée :
-  // l'ordre retombe alors sur le tirage du jour, sans bruit.
-  const clics = await lirePopularite();
+  /**
+   * LE CHEMIN COURT — le FILTRE et la DISTANCE se font en base.
+   * §1 (nº 279) — MAIS PLUS LA PAGINATION : l'unité de la mosaïque est
+   * désormais LE CARROUSEL, et la base, elle, pagine des FICHES. Une
+   * page de 24 fiches ne fait pas 24 cartes — elle en fait autant que
+   * ces fiches ont de galeries. On demande donc à la base TOUT ce qui
+   * répond aux critères (avec les galeries), et le classement, la
+   * variété et la coupe se font ici, sur des carrousels, en une seule
+   * écriture partagée par toutes les listes (lib/classement-carrousels).
+   * ⚠️ CE QUE ÇA COÛTE, DIT FRANCHEMENT : on rapatrie les fiches
+   * filtrées au lieu d'une page. À l'échelle du site (deux fiches
+   * réelles, quelques dizaines de fiches de démarchage) c'est
+   * imperceptible ; le plafond ci-dessous borne le pire des cas. Le
+   * jour où le catalogue dépassera quelques milliers de carrousels, il
+   * faudra descendre CE MÊME classement en base — la formule est
+   * écrite une fois, elle se traduit sans se réinventer.
+   */
+  const enBase = await rechercheEnBase(
+    { ...filtres, limite: PLAFOND_CARROUSELS, decalage: 0 },
+    ville
+  );
+  if (enBase) {
+    return pageDeResultats(enBase.tatoueurs, filtres, scores, {
+      demonstration: false,
+      message: null,
+      ville,
+    });
+  }
+
+  //  Le score est lu plus haut (`scores`) : il sert aux deux chemins.
+  const clics = scores;
 
   try {
     const supabase = await creerClientSupabaseServeur();
@@ -1403,13 +1464,67 @@ function pageDeResultats(
 ): ResultatTatoueurs {
   const debut = Math.max(filtres.decalage ?? 0, 0);
   const combien = filtres.limite ?? CARTES_PAR_PAGE;
-  //  ⚠️ AVANT LA COUPE, TOUJOURS. `slice` vient après, jamais avant.
-  const base = classerParPopularite(ordonnees, clics);
+
+  /**
+   * §1 (nº 279) — LA LISTE EST FAITE DE CARROUSELS, PLUS DE FICHES.
+   * ------------------------------------------------------------------
+   * Chaque fiche est éclatée en autant de galeries qu'elle en a
+   * publiées (lib/carrousels) : un artiste à trois galeries occupe
+   * trois cartes, chacune montrant SA première photo. Le total compte
+   * donc des carrousels — c'est ce que le compteur annonce.
+   *
+   * ⚠️ L'ORDRE EST DÉCIDÉ UNE FOIS, SUR LA LISTE ENTIÈRE, AVANT LA
+   * COUPE : la règle de la nº 217-§2 et des migrations nº 61 et nº 63
+   * ne change pas d'unité. Le classement (lib/classement-carrousels) vieillit la
+   * popularité sur un âge ANCRÉ AU JOUR — deux pages d'une même
+   * journée voient exactement le même ordre — et étale les carrousels
+   * d'un même artiste à raison de deux par page.
+   */
+  /**
+   * §1 (nº 279) — ET LES CRITÈRES PORTENT SUR LE CARROUSEL, PAS SUR
+   * LA FICHE. C'est la conséquence la plus visible du changement
+   * d'unité, et elle se voit tout de suite sur une page « japonais à
+   * Paris » : les fiches trouvées répondent au style, mais leurs
+   * AUTRES galeries n'y répondent pas — on y voyait donc du blackwork
+   * et du tribal. Un filtre qui a servi à choisir des fiches doit
+   * maintenant choisir des CARROUSELS, sinon la page ment sur ce
+   * qu'elle annonce (et la règle 3 du §0 de la nº 278 avec elle).
+   * ⚠️ SEULS LES TROIS TAGS DU CARROUSEL sont concernés. Les autres
+   * critères — ville, rayon, technique, besoins, profil — décrivent
+   * l'ARTISTE : ils ont déjà fait leur travail sur les fiches, et
+   * n'ont rien à dire sur une galerie.
+   */
+  const styleVoulu = styleConnu(filtres.style);
+  const natureVoulue = natureCherchee(filtres.nature);
+  const renduVoulu = renduCherche(filtres.exclure);
+  const carrousels = carrouselsDesFiches(ordonnees, {
+    populariteParFiche: clics,
+  }).filter(
+    (carrousel) =>
+      (!styleVoulu || carrousel.style === styleVoulu) &&
+      (!natureVoulue || carrousel.nature === natureVoulue) &&
+      (!renduVoulu || carrousel.rendu === renduVoulu)
+  );
+  const classes = classerCarrousels(carrousels, {
+    popularite: true,
+    //  LA PROXIMITÉ NE JOUE PAS ICI : la liste arrive déjà triée par
+    //  distance quand une ville est cherchée (c'est l'ordre d'entrée,
+    //  qui départage les égalités). L'allumer serait compter deux fois.
+    proximite: false,
+    varieteDesArtistes: true,
+    //  L'ÉTALEMENT SE RAPPORTE À UNE PAGE DE TAILLE FIXE — jamais à la
+    //  limite demandée, qui grandit à chaque « Voir plus » (l'accueil
+    //  demande `taillePage × page`). Sans cela, la place d'un
+    //  carrousel changerait d'un chargement à l'autre : le défaut
+    //  exact des nº 61 et 63.
+    parPage: filtres.taillePage ?? CARTES_PAR_PAGE,
+  });
   return {
     ...reste,
-    total: base.length,
-    tatoueurs: base
+    total: classes.length,
+    tatoueurs: classes
       .slice(debut, debut + combien)
+      .map((carrousel) => ficheDuCarrousel(carrousel))
       .map(sansProprietaire)
       .map((fiche) => sansGalerieInutile(fiche, filtres)),
   };

@@ -294,9 +294,13 @@ function CarteTatoueurNue({
   return (
     <article
       ref={zoneCarte}
-      // Son identité, pour la retrouver après un changement de
-      // disposition (voir src/lib/carte-du-haut.ts).
-      data-carte={tatoueur.id}
+      //  Son identité, pour la retrouver après un changement de
+      //  disposition (voir src/lib/carte-du-haut.ts).
+      //  §1 (nº 279) — C'EST LA CLÉ DU CARROUSEL quand la carte en
+      //  montre un : deux galeries d'un même artiste sont deux cartes
+      //  distinctes, et la mémoire de position doit pouvoir les
+      //  distinguer — l'identifiant de la fiche ne le peut plus.
+      data-carte={tatoueur.carrousel?.cle ?? tatoueur.id}
       /**
        * §4 (nº 224) — LA MÉMOIRE NE CROÎT PLUS AVEC LES CARTES
        * ------------------------------------------------------------

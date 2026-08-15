@@ -174,6 +174,12 @@ export type PhotoTatoueur = {
   miniature: string | null;
   /** La place dans la galerie. Le rang 0 sert de vignette. */
   ordre: number;
+  /** QUAND ELLE A ÉTÉ DÉPOSÉE (colonne de la migration nº 31, lue
+      depuis la nº 279) — c'est elle qui donne son ÂGE au carrousel, et
+      donc son vieillissement au classement (lib/classement). Absente
+      sur une base ancienne ou en démonstration : le carrousel est
+      alors traité comme neuf, jamais puni pour une donnée manquante. */
+  cree_le?: string | null;
 };
 
 /**

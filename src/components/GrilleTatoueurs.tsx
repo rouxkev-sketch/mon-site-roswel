@@ -344,10 +344,28 @@ export function GrilleTatoueurs({
     // Le drapeau AVANT le pushState : DefilementEnHaut le lit au
     // moment où l'adresse change.
     document.documentElement.setAttribute("data-fenetre-fiche", "1");
+    /**
+     * §2 (nº 279) — CE QUE L'OUVERTURE FAIT À L'HISTORIQUE : elle
+     * AJOUTE UNE ENTRÉE (`pushState`), que la fermeture consomme
+     * (`history.back()`, plus bas). C'est le même compte que sur
+     * smartphone, où la carte est un vrai lien : une carte ouverte =
+     * une entrée, un retour = la mosaïque, à sa place.
+     * ⚠️ ET L'ADRESSE POUSSÉE PORTE LES TAGS DU CARROUSEL depuis cette
+     * passe : sans eux, recharger la page fenêtre ouverte (ou coller
+     * l'adresse) rouvrait TOUT le style — la règle 3 tombait au
+     * premier F5. L'adresse dit maintenant exactement ce qu'on
+     * regarde, et c'est la même que celle du lien du smartphone.
+     */
+    const tags = tatoueur.carrousel;
+    const suite = tags
+      ? `?style=${encodeURIComponent(tags.style)}&rendu=${encodeURIComponent(
+          tags.rendu
+        )}&nature=${encodeURIComponent(tags.nature)}`
+      : "";
     window.history.pushState(
       { fenetreFiche: true },
       "",
-      `/tatoueur/${tatoueur.slug}`
+      `/tatoueur/${tatoueur.slug}${suite}`
     );
     setFicheOuverte(tatoueur);
     // LE PORTFOLIO ENTIER ARRIVE JUSTE APRÈS — la fenêtre est déjà
@@ -356,7 +374,15 @@ export function GrilleTatoueurs({
     void ficheComplete(tatoueur.slug).then((complete) => {
       if (!complete) return;
       setFicheOuverte((courante) =>
-        courante && courante.slug === complete.slug ? complete : courante
+        courante && courante.slug === complete.slug
+          ? //  §2 (nº 279) — LE CARROUSEL SURVIT À L'ARRIVÉE DE LA
+            //  FICHE COMPLÈTE. Celle-ci apporte TOUT le portfolio (il
+            //  faut bien, pour l'onglet Portfolio) mais ne sait rien
+            //  du carrousel qu'on regarde : sans ce report, la fenêtre
+            //  changeait de clé et rouvrait le style entier une demi-
+            //  seconde après l'ouverture.
+            { ...complete, carrousel: courante.carrousel ?? null }
+          : courante
       );
     });
   }, []);
@@ -570,13 +596,21 @@ export function GrilleTatoueurs({
              reçoivent la fiche en argument, les fonctions ne changent
              plus, et naviguer dans un portfolio ne touche plus une
              seule carte. */}
+        {/*  §1 (nº 279) — UNE CARTE = UN CARROUSEL. La fiche porte
+             désormais le carrousel qu'elle montre (lib/carrousels) :
+             la CLÉ vient de lui (deux galeries d'un même artiste
+             partageraient l'identifiant de la fiche), et ses TAGS
+             priment sur les critères de la recherche — ceux-ci valent
+             pour toute la page, alors que chaque carte montre SA
+             galerie. Sans carrousel (aperçu, listes d'autre nature) :
+             tout se comporte comme avant. */}
         {tatoueurs.map((tatoueur, rang) => (
           <CarteTatoueur
-            key={tatoueur.id}
+            key={tatoueur.carrousel?.cle ?? tatoueur.id}
             tatoueur={tatoueur}
-            styleRecherche={styleRecherche}
-            renduRecherche={renduRecherche}
-            natureRecherche={natureRecherche}
+            styleRecherche={tatoueur.carrousel?.style ?? styleRecherche}
+            renduRecherche={tatoueur.carrousel?.rendu ?? renduRecherche}
+            natureRecherche={tatoueur.carrousel?.nature ?? natureRecherche}
             prioritaire={rang < CARTES_PRIORITAIRES}
             phototheque={phototheque}
             surApproche={precharger}
@@ -589,13 +623,16 @@ export function GrilleTatoueurs({
           jamais de l'état d'une fenêtre précédente — y compris quand
           c'est la MÊME fiche qu'on rouvre (nº 220-§3). */}
       <FenetreFiche
-        key={`${ficheOuverte?.id ?? "fermee"}-${ouvertures}`}
+        key={`${ficheOuverte?.carrousel?.cle ?? ficheOuverte?.id ?? "fermee"}-${ouvertures}`}
         tatoueur={visible ? ficheOuverte : null}
-        styleRecherche={styleRecherche}
-        renduRecherche={renduRecherche}
+        //  §2 (nº 279) — LA FENÊTRE OUVRE LE CARROUSEL DE LA CARTE, et
+        //  lui seul : ses trois tags priment sur les critères de la
+        //  page (règle 3 du §0 de la nº 278).
+        styleRecherche={ficheOuverte?.carrousel?.style ?? styleRecherche}
+        renduRecherche={ficheOuverte?.carrousel?.rendu ?? renduRecherche}
         //  LA CATÉGORIE VA JUSQU'À LA FENÊTRE (nº 217-§3) : elle
         //  s'arrêtait à la carte depuis la nº 216.
-        natureRecherche={natureRecherche}
+        natureRecherche={ficheOuverte?.carrousel?.nature ?? natureRecherche}
         positionGrille={positionGrille}
         surFermeture={fermer}
       />

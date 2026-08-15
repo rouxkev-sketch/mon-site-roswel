@@ -1322,6 +1322,16 @@ TATOUEURS_DEMO.forEach((fiche, rangDeLaFiche) => {
         url: image,
         //  §4 (nº 276) — adresse distincte : voir la note de tête.
         miniature: `${image}?miniature=1`,
+        //  §3 (nº 279) — UNE DATE DE DÉPÔT DÉTERMINISTE. Sans elle,
+        //  toutes les photos de démonstration auraient le même âge
+        //  (zéro) et le vieillissement du classement serait
+        //  INVÉRIFIABLE ici. La formule ne dépend que des rangs :
+        //  d'une fiche à l'autre, de 0 à ~200 jours, toujours les
+        //  mêmes. (En base, c'est `photos_tatoueur.cree_le`.)
+        cree_le: new Date(
+          Date.now() -
+            ((rangDeLaFiche * 37 + rangStyle * 11 + i * 3) % 200) * 86_400_000
+        ).toISOString(),
         ordre: galerie.length,
       });
     }

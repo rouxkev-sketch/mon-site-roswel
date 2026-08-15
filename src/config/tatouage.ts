@@ -1133,6 +1133,23 @@ export function rayonRetenu(km: number): number {
 export const CARTES_PAR_PAGE = 24;
 
 /**
+ * §1 (nº 279) — LE PLAFOND DE CE QU'ON RAPATRIE POUR ÉCLATER EN
+ * CARROUSELS.
+ * ------------------------------------------------------------------
+ * La mosaïque liste des carrousels, la base pagine des fiches : on lui
+ * demande donc TOUTES les fiches qui répondent aux critères, puis on
+ * éclate, on classe et on coupe côté site (lib/classement — l'écriture
+ * unique). Ce plafond borne le pire des cas : deux mille fiches, c'est
+ * déjà bien au-delà du catalogue, et cela reste une lecture bornée —
+ * jamais « tout le catalogue » sans limite.
+ * ⚠️ LE JOUR OÙ CE PLAFOND SERA ATTEINT, ce n'est pas lui qu'il faudra
+ * lever : c'est le classement qu'il faudra descendre en base (la
+ * formule est écrite une seule fois, elle se traduit sans se
+ * réinventer).
+ */
+export const PLAFOND_CARROUSELS = 2000;
+
+/**
  * LE DÉLAI DE RÉFLEXION AVANT SUPPRESSION DÉFINITIVE, en jours.
  * TRENTE JOURS : le standard du secteur — assez long pour qu'un
  * regret ait le temps de venir, assez court pour ne pas garder des
