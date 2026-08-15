@@ -186,7 +186,7 @@ export function SelecteurStyleFiche({
                   className={`flex w-full min-h-[44px] items-center gap-2.5 rounded-xl
                              px-3 text-left text-[14px] transition-colors ${
                                actif
-                                 ? "bg-primaire/15 font-semibold text-primaire"
+                                 ? "bg-primaire-voile font-semibold text-primaire"
                                  : "text-sombre-texte hover:bg-white/[0.07]"
                              }`}
                 >

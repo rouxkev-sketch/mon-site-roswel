@@ -134,11 +134,11 @@ type SectionCle = (typeof SECTIONS)[number]["cle"];
     ⚠️ `border border-transparent` réserve l'épaisseur : sans elle, le
     texte bougerait d'un pixel au focus sur certains navigateurs. */
 const CHAMP =
-  "w-full rounded-xl border border-transparent bg-sombre-eleve px-4 text-sombre-texte placeholder:text-sombre-texte-doux outline-none transition-colors focus:bg-sombre-eleve-clair";
+  "w-full rounded-lg border border-transparent bg-sombre-eleve-clair px-4 text-sombre-texte placeholder:text-sombre-texte-doux outline-none transition-colors focus:bg-sombre-haut";
 
 /** L'ENCADRÉ D'ERREUR — la SEULE exception au « zéro contour ». */
 const ERREUR =
-  "rounded-xl border border-erreur/50 bg-erreur/10 px-4 py-3 text-[13px] leading-relaxed text-sombre-texte";
+  "rounded-lg border border-erreur/50 bg-erreur/10 px-4 py-3 text-[13px] leading-relaxed text-sombre-texte";
 
 function dateCourte(iso: string | null | undefined): string {
   if (!iso) return "";
@@ -505,10 +505,10 @@ export function AdminYokofolio() {
               type="button"
               onClick={() => setSection(entree.cle)}
               aria-current={section === entree.cle ? "page" : undefined}
-              className={`rounded-xl px-4 min-h-[42px] text-left text-[14.5px] font-semibold
+              className={`rounded-lg px-4 min-h-[42px] text-left text-[14.5px] font-semibold
                          transition-colors ${
                            section === entree.cle
-                             ? "bg-primaire/15 text-primaire"
+                             ? "bg-primaire-voile text-primaire"
                              : "text-sombre-texte-doux hover:text-sombre-texte hover:bg-sombre-carte"
                          }`}
             >
@@ -541,7 +541,7 @@ export function AdminYokofolio() {
                 </Patience>
               )}
               {fiches?.length === 0 && !erreurFiches && (
-                <p className="rounded-2xl bg-sombre-carte px-4 py-5 text-sombre-texte-doux">
+                <p className="rounded-xl bg-sombre-carte px-4 py-5 text-sombre-texte-doux">
                   Aucune fiche en attente — tout est à jour.
                 </p>
               )}
@@ -555,7 +555,7 @@ export function AdminYokofolio() {
                     setMotifsCoches([]);
                     setNoteMotif("");
                   }}
-                  className="w-full rounded-2xl bg-sombre-carte px-5 py-4 text-left
+                  className="w-full rounded-xl bg-sombre-carte px-5 py-4 text-left
                              hover:bg-sombre-eleve transition-colors
                              flex items-center justify-between gap-4"
                 >
@@ -580,7 +580,7 @@ export function AdminYokofolio() {
                       </span>
                     )}
                     {fiche.modification && (
-                      <span className="rounded-full bg-primaire/15 px-2.5 min-h-[24px] inline-flex items-center text-[12px] font-medium text-sombre-texte">
+                      <span className="rounded-full bg-primaire-voile px-2.5 min-h-[24px] inline-flex items-center text-[12px] font-medium text-sombre-texte">
                         Modification d&apos;une fiche en ligne
                       </span>
                     )}
@@ -620,7 +620,7 @@ export function AdminYokofolio() {
                  Une fiche d'administrateur le rappelle ici aussi : elle
                  n'est dans cette file QUE pour sa modification. */}
             {ficheOuverte.modification && (
-              <div className="mt-3 rounded-2xl bg-sombre-carte px-4 py-3">
+              <div className="mt-3 rounded-xl bg-sombre-carte px-4 py-3">
                 <p className="text-[13px] font-semibold text-sombre-texte">
                   Modification d&apos;une fiche déjà en ligne
                   {ficheOuverte.fiche_admin
@@ -632,7 +632,7 @@ export function AdminYokofolio() {
                     {ficheOuverte.champs_modifies.map((champ) => (
                       <li
                         key={champ}
-                        className="rounded-full bg-primaire/15 px-2.5 min-h-[26px]
+                        className="rounded-full bg-primaire-voile px-2.5 min-h-[26px]
                                    inline-flex items-center text-[12.5px] text-sombre-texte"
                       >
                         {champ}
@@ -672,7 +672,7 @@ export function AdminYokofolio() {
             </div>
 
             {ficheOuverte.bio && (
-              <p className="mt-4 max-w-[640px] rounded-xl bg-sombre-carte px-4 py-3 text-[14.5px] leading-relaxed text-sombre-texte whitespace-pre-line [overflow-wrap:anywhere]">
+              <p className="mt-4 max-w-[640px] rounded-lg bg-sombre-carte px-4 py-3 text-[14.5px] leading-relaxed text-sombre-texte whitespace-pre-line [overflow-wrap:anywhere]">
                 {ficheOuverte.bio}
               </p>
             )}
@@ -707,7 +707,7 @@ export function AdminYokofolio() {
                     <img
                       src={url}
                       alt={`Photo du style ${libelleStyle(slug)}`}
-                      className="w-full aspect-[4/5] object-cover rounded-xl"
+                      className="w-full aspect-[4/5] object-cover rounded-lg"
                     />
                     <figcaption className="mt-1 text-[12.5px] text-sombre-texte-doux">
                       {libelleStyle(slug)}
@@ -799,7 +799,7 @@ export function AdminYokofolio() {
                 dépublient (mettre hors ligne). Un seul panneau : c'est
                 le bouton qui l'a ouvert qui dit ce que fera l'envoi. */}
             {refusOuvert && (
-              <div className="mt-4 max-w-[560px] rounded-2xl bg-sombre-carte p-5">
+              <div className="mt-4 max-w-[560px] rounded-xl bg-sombre-carte p-5">
                 <p className="text-[14px] font-semibold text-sombre-texte">
                   {refusOuvert === "hors_ligne"
                     ? "Pourquoi cette fiche quitte-t-elle le site ?"
@@ -872,14 +872,14 @@ export function AdminYokofolio() {
                 </Patience>
               )}
               {signalements?.length === 0 && !erreurSignalements && (
-                <p className="rounded-2xl bg-sombre-carte px-4 py-5 text-sombre-texte-doux">
+                <p className="rounded-xl bg-sombre-carte px-4 py-5 text-sombre-texte-doux">
                   Aucun signalement — tant mieux.
                 </p>
               )}
               {signalements?.map((s) => (
                 <article
                   key={s.id}
-                  className={`rounded-2xl px-5 py-4 ${
+                  className={`rounded-xl px-5 py-4 ${
                     s.traite
                       ? "bg-sombre-carte/50 opacity-70"
                       : "bg-sombre-carte"
@@ -920,7 +920,7 @@ export function AdminYokofolio() {
                   {/* LA NOTE DE TRAITEMENT — écrite ici, RELUE ici,
                       avant comme après archivage. */}
                   {s.note && noteEnCours?.id !== s.id && (
-                    <p className="mt-3 rounded-xl bg-sombre-eleve px-3.5 py-2.5 text-[13.5px] leading-relaxed text-sombre-texte whitespace-pre-line [overflow-wrap:anywhere]">
+                    <p className="mt-3 rounded-lg bg-sombre-eleve px-3.5 py-2.5 text-[13.5px] leading-relaxed text-sombre-texte whitespace-pre-line [overflow-wrap:anywhere]">
                       <span className="block text-[11.5px] font-semibold uppercase tracking-wide text-sombre-texte-doux">
                         Note
                       </span>
@@ -1017,7 +1017,7 @@ export function AdminYokofolio() {
                 </Patience>
               )}
               {suggestions?.length === 0 && !erreurSuggestions && (
-                <p className="rounded-2xl bg-sombre-carte px-4 py-5 text-sombre-texte-doux">
+                <p className="rounded-xl bg-sombre-carte px-4 py-5 text-sombre-texte-doux">
                   Aucune suggestion pour l&apos;instant.
                 </p>
               )}
@@ -1027,7 +1027,7 @@ export function AdminYokofolio() {
                 return (
                   <article
                     key={demande.id}
-                    className={`rounded-2xl px-5 py-4 ${
+                    className={`rounded-xl px-5 py-4 ${
                       enAttente
                         ? "bg-sombre-carte"
                         : "bg-sombre-carte/50 opacity-80"

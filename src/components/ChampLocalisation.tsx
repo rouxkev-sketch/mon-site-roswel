@@ -493,9 +493,9 @@ export function ChampLocalisation({
       //  focus il s'éclaircit légèrement (nº 116, plus de trait
       //  rose), l'erreur allume un bord rouge. Cette branche ne sert
       //  QU'AU FORMULAIRE (le moteur passe `sansBordure`).
-      `w-full min-h-[52px] rounded-xl border bg-sombre-eleve px-4 text-base
+      `w-full min-h-[52px] rounded-lg border bg-sombre-eleve-clair px-4 text-base
        text-sombre-texte placeholder:text-sombre-texte-doux outline-none
-       transition-colors focus:bg-sombre-eleve-clair
+       transition-colors focus:bg-sombre-haut
        overflow-hidden text-ellipsis ${
          enErreur ? "border-erreur" : "border-transparent"
        }`;
@@ -740,7 +740,7 @@ export function ChampLocalisation({
             //  défaut exact qui a laissé passer la fenêtre du compte et
             //  celle des langues. Mesuré au banc à 390 px : fond opaque
             //  rgb(35, 35, 39), filtre `none`.
-            className="mt-1.5 flex min-h-0 flex-1 flex-col rounded-2xl
+            className="mt-1.5 flex min-h-0 flex-1 flex-col rounded-xl
                        text-sombre-texte overflow-hidden"
             data-verre-menu=""
             onPointerDown={() => {
@@ -770,7 +770,7 @@ export function ChampLocalisation({
             //  conséquence la robe « sur panneau », comme dans les
             //  filtres (voir MoteurTatouage, `piedRayon`).
             data-verre-menu=""
-            className="z-[80] flex flex-col rounded-2xl
+            className="z-[80] flex flex-col rounded-xl
                        text-sombre-texte overflow-hidden"
             onPointerDown={() => {
               interactionPanneau.current = true;

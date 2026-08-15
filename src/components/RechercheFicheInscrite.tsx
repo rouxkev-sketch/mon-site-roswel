@@ -239,7 +239,7 @@ export function RechercheFicheInscrite({
             qui mentait. La charte tranche — aucun contour, un fond
             d'un cran plus clair, le rose réservé aux badges
             sélectionnés, au bouton final et à la ligne du sélecteur. */}
-        <div className="flex items-center gap-3 rounded-xl bg-sombre-eleve px-3 py-2.5">
+        <div className="flex items-center gap-3 rounded-lg bg-sombre-eleve px-3 py-2.5">
           <span
             className="flex h-9 w-9 shrink-0 items-center justify-center
                        overflow-hidden rounded-full bg-sombre-eleve"
@@ -338,10 +338,10 @@ export function RechercheFicheInscrite({
           //  sans décalage) ne s'allume qu'en ROUGE, pour un manque.
           //  ⚠️ `pr-11` (passe nº 121) : la croix de vidage occupe la
           //  droite du champ — le texte ne doit jamais passer dessous.
-          className={`w-full min-h-[48px] rounded-xl border
-                     bg-sombre-eleve pl-10 pr-11 text-base text-sombre-texte
+          className={`w-full min-h-[48px] rounded-lg border
+                     bg-sombre-eleve-clair pl-10 pr-11 text-base text-sombre-texte
                      placeholder:text-sombre-texte-doux outline-none
-                     transition-colors focus:bg-sombre-eleve-clair ${
+                     transition-colors focus:bg-sombre-haut ${
                        enErreur ? "border-erreur" : "border-transparent"
                      }`}
         />
@@ -400,7 +400,7 @@ export function RechercheFicheInscrite({
               site (« jamais d'ascenseur affiché ») : il n'y a plus de
               pouce à peindre, donc plus de point. */
           className={`mt-1.5 max-h-[280px] overflow-y-auto overscroll-contain
-                     rounded-xl border border-sombre-bordure bg-sombre-carte${
+                     rounded-lg border border-sombre-bordure bg-sombre-carte${
                        listeDeborde ? " defilement-visible" : ""
                      }`}
         >

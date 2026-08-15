@@ -83,9 +83,9 @@ function Croix({ taille = 15 }: { taille?: number }) {
 //  ⚠️ PLUS DE CONTOUR (passe nº 112) : le fond un cran plus clair dit
 //  le champ ; au focus il s'éclaircit légèrement (nº 116 — plus de
 //  trait rose), l'erreur allume un bord rouge.
-const CHAMP = `w-full min-h-[48px] rounded-xl border bg-sombre-eleve pl-12 pr-11
+const CHAMP = `w-full min-h-[48px] rounded-lg border bg-sombre-eleve-clair pl-12 pr-11
   text-base text-sombre-texte placeholder:text-sombre-texte-doux outline-none
-  transition-colors focus:bg-sombre-eleve-clair`;
+  transition-colors focus:bg-sombre-haut`;
 
 export function ChampLienVerifie({
   id,

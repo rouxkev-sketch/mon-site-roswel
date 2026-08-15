@@ -1258,14 +1258,23 @@ export const COULEURS_SOMBRE = {
   /** Le fond de page. */
   fond: "#1A1A1D",
   /** Les cartes et les blocs : un cran plus clair que le fond. */
-  carte: "#232327",
+  //  §1 (nº 287) — L'ÉCHELLE EST RETENDUE : le bloc se confondait avec
+  //  la page (écart de 9 sur 255 — le relevé du propriétaire). L'ordre
+  //  ne change pas, les ÉCARTS si : page #1A1A1D · bloc #28282D ·
+  //  badge #33333A · champ #3F3F47 — quatre niveaux, chacun lisible à
+  //  côté de sa voisine, sans un seul contour.
+  carte: "#28282D",
   /** Un cran encore au-dessus : champs, éléments survolés. */
-  eleve: "#2C2C31",
+  eleve: "#33333A",
   /** LE FOCUS D'UN CHAMP (passe nº 116) : le fond s'éclaircit très
       légèrement, et le curseur clignote — c'est tout. Le contour rose
       au focus a disparu : le rose est réservé à ce qui compte (badges
       sélectionnés, bouton final, ligne du sélecteur). */
-  eleveClair: "#35353B",
+  //  §1 (nº 287) — C'EST LE NIVEAU DES CHAMPS AU REPOS, désormais : la
+  //  charte a toujours dit « badge plus sombre que le champ », mais les
+  //  deux vivaient sur `eleve`. Les champs de saisie et de recherche
+  //  montent ici ; leur focus monte d'autant (`haut`).
+  eleveClair: "#3F3F47",
   /** Les traits : présents, jamais visibles avant qu'on les cherche. */
   bordure: "#38383F",
   /** LE HAUT DE L'ÉCHELLE (passe nº 144). Les fenêtres du web ont été
@@ -1275,14 +1284,14 @@ export const COULEURS_SOMBRE = {
       `bordure`. C'est lui — jamais employé ailleurs que comme dernier
       niveau d'un empilement (sélecteur ouvert dans « Mon compte »,
       badge sélectionné dans le panneau des filtres). */
-  haut: "#414149",
+  haut: "#4A4A53",
   /** LE CRAN AU-DESSUS DE `haut` (passe nº 146-§3). Le sélecteur de
       portfolios se confondait avec le fond de la fenêtre « Mon
       compte » : son repos monte à `haut`, et son état ouvert — ainsi
       que sa liste, qui le prolonge — avait donc besoin d'un barreau de
       plus. Même usage strict que `haut` : le DERNIER niveau d'un
       empilement, jamais un fond courant. */
-  hautClair: "#4B4B54",
+  hautClair: "#55555F",
   /** Le texte principal. */
   texte: "#F2F2F4",
   /** Le texte discret (ville, styles, mentions). */

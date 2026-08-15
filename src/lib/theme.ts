@@ -14,6 +14,7 @@ export function variablesCssCouleurs(): string {
     "--rw-primaire": COULEURS.primaire,
     "--rw-primaire-fonce": COULEURS.primaireFonce,
     "--rw-primaire-clair": COULEURS.primaireClair,
+    "--rw-primaire-voile": COULEURS.primaireVoile,
     "--rw-degrade-debut": COULEURS.degradeDebut,
     "--rw-degrade-fin": COULEURS.degradeFin,
     "--rw-fond": COULEURS.fond,

@@ -48,6 +48,7 @@
   --color-primaire: var(--rw-primaire);
   --color-primaire-fonce: var(--rw-primaire-fonce);
   --color-primaire-clair: var(--rw-primaire-clair);
+  --color-primaire-voile: var(--rw-primaire-voile);
   --color-degrade-debut: var(--rw-degrade-debut);
   --color-degrade-fin: var(--rw-degrade-fin);
   --color-fond: var(--rw-fond);
@@ -1113,6 +1114,6 @@ input[data-sans-remplissage]:-webkit-autofill,
 input[data-sans-remplissage]:-webkit-autofill:hover,
 input[data-sans-remplissage]:-webkit-autofill:focus {
   -webkit-text-fill-color: var(--rw-sombre-texte, #ECECEE);
-  -webkit-box-shadow: 0 0 0 1000px var(--rw-sombre-eleve, #212126) inset;
+  -webkit-box-shadow: 0 0 0 1000px var(--rw-sombre-eleve-clair, #3F3F47) inset;
   transition: background-color 9999s ease-in-out 0s;
 }

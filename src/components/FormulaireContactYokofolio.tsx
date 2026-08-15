@@ -77,7 +77,7 @@ export function FormulaireContactYokofolio() {
       <div className="mt-10 text-center">
         <span
           aria-hidden="true"
-          className="mx-auto w-16 h-16 rounded-full bg-primaire/15 text-primaire
+          className="mx-auto w-16 h-16 rounded-full bg-primaire-voile text-primaire
                      flex items-center justify-center text-3xl"
         >
           ✓

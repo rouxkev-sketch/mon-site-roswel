@@ -129,7 +129,7 @@ export function BlocSuppressions() {
           bloc « Changer de mot de passe » (gap-4). Les intertitres
           « Supprimer un portfolio » et « Supprimer le compte » ont
           disparu : chaque ligne porte son nom, le titre du bloc suffit. */}
-      <div className="mt-3 flex flex-col gap-4 bg-sombre-carte rounded-2xl px-4 py-6 sm:rounded-3xl sm:px-7 sm:py-7">
+      <div className="mt-3 flex flex-col gap-4 bg-sombre-carte rounded-xl px-4 py-6 sm:px-7 sm:py-7">
 
       {/* ---------- LES SUPPRESSIONS EN COURS ----------
           En tête, parce que c'est ce qui presse : le délai court.
@@ -141,7 +141,7 @@ export function BlocSuppressions() {
             <div
               key={fiche.id}
               className="flex flex-wrap items-center gap-x-4 gap-y-2
-                         rounded-xl bg-sombre-eleve px-4 py-2.5 min-h-[54px]"
+                         rounded-lg bg-sombre-eleve px-4 py-2.5 min-h-[54px]"
             >
               <span className="min-w-0 flex-1">
                 <span className="block text-[14px] font-semibold text-sombre-texte">
@@ -192,7 +192,7 @@ export function BlocSuppressions() {
             <li
               key={fiche.id}
               className="flex items-center gap-x-4
-                         rounded-xl bg-sombre-eleve px-4 min-h-[54px]"
+                         rounded-lg bg-sombre-eleve px-4 min-h-[54px]"
             >
               <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-sombre-texte">
                 {fiche.nom}
@@ -222,7 +222,7 @@ export function BlocSuppressions() {
           dans la fenêtre de confirmation, au moment où ça compte. */}
       <div
         className="flex items-center gap-x-4
-                   rounded-xl bg-sombre-eleve px-4 min-h-[54px]"
+                   rounded-lg bg-sombre-eleve px-4 min-h-[54px]"
       >
         <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-sombre-texte">
           Supprimer le compte
@@ -244,7 +244,7 @@ export function BlocSuppressions() {
       {erreur && (
         <p
           role="alert"
-          className="rounded-xl border border-erreur/50 bg-erreur/10
+          className="rounded-lg border border-erreur/50 bg-erreur/10
                      px-4 py-3 text-[13px] leading-relaxed text-sombre-texte"
         >
           {erreur}
@@ -331,10 +331,10 @@ export function BlocSuppressions() {
             onChange={(e) => setConfirmation(e.target.value)}
             placeholder="SUPPRIMER"
             aria-label="Écris SUPPRIMER pour confirmer"
-            className="mt-4 w-full min-h-[48px] rounded-xl border border-transparent
-                       bg-sombre-eleve px-4 text-base text-sombre-texte
+            className="mt-4 w-full min-h-[48px] rounded-lg border border-transparent
+                       bg-sombre-eleve-clair px-4 text-base text-sombre-texte
                        placeholder:text-sombre-texte-doux outline-none
-                       transition-colors focus:bg-sombre-eleve-clair"
+                       transition-colors focus:bg-sombre-haut"
           />
           <button
             type="button"
@@ -386,7 +386,7 @@ function FenetreConfirmation({
         onClick={onFermer}
         className="absolute inset-0 bg-black/80"
       />
-      <div className="relative w-full max-w-[440px] rounded-2xl bg-sombre-carte p-6 sm:p-7 text-left">
+      <div className="relative w-full max-w-[440px] rounded-xl bg-sombre-carte p-6 sm:p-7 text-left">
         <h2 className="text-lg font-bold text-sombre-texte">{titre}</h2>
         {children}
       </div>

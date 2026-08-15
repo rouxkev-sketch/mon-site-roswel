@@ -148,7 +148,7 @@ export function PageRattachement({
   if (retire) {
     return (
       <main className="flex-1 mx-auto w-full max-w-[560px] px-4 sm:px-6 pt-10 sm:pt-14 pb-24">
-        <div className="rounded-2xl bg-sombre-carte px-4 py-8 text-center sm:px-7">
+        <div className="rounded-xl bg-sombre-carte px-4 py-8 text-center sm:px-7">
           <span
             aria-hidden="true"
             className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-sombre-eleve"
@@ -181,7 +181,7 @@ export function PageRattachement({
           {erreur && (
             <p
               role="alert"
-              className="mt-4 rounded-xl border border-erreur/50 bg-erreur/10 px-4 py-3
+              className="mt-4 rounded-lg border border-erreur/50 bg-erreur/10 px-4 py-3
                          text-[13px] leading-relaxed text-sombre-texte"
             >
               {erreur}
@@ -226,7 +226,7 @@ export function PageRattachement({
         {erreur && (
           <p
             role="alert"
-            className="mt-4 rounded-xl border border-erreur/50 bg-erreur/10 px-4 py-3
+            className="mt-4 rounded-lg border border-erreur/50 bg-erreur/10 px-4 py-3
                        text-[13px] leading-relaxed text-sombre-texte"
           >
             {erreur}
@@ -263,7 +263,7 @@ export function PageRattachement({
         {erreur && (
           <p
             role="alert"
-            className="mt-5 rounded-xl border border-erreur/50 bg-erreur/10 px-4 py-3
+            className="mt-5 rounded-lg border border-erreur/50 bg-erreur/10 px-4 py-3
                        text-[13px] leading-relaxed text-sombre-texte"
           >
             {erreur}
@@ -305,7 +305,7 @@ function ListeDesFiches({
       {fiches.map((fiche) => (
         <li
           key={fiche.id}
-          className="flex items-center gap-3 rounded-2xl bg-sombre-carte px-4 py-3"
+          className="flex items-center gap-3 rounded-xl bg-sombre-carte px-4 py-3"
         >
           {fiche.photo ? (
             <Image
@@ -407,7 +407,7 @@ function BlocSuppression({
           />
           <div
             data-verre-fenetre=""
-            className="relative w-full max-w-[440px] rounded-2xl p-6 sm:p-7 text-left"
+            className="relative w-full max-w-[440px] rounded-xl p-6 sm:p-7 text-left"
           >
             <h2 className="text-lg font-bold text-sombre-texte">
               {plusieurs ? "Supprimer mes fiches ?" : "Supprimer ma fiche ?"}
@@ -432,10 +432,10 @@ function BlocSuppression({
               onChange={(e) => onMot(e.target.value)}
               placeholder="SUPPRIMER"
               aria-label="Écris SUPPRIMER pour confirmer"
-              className="mt-4 w-full min-h-[48px] rounded-xl border border-transparent
-                         bg-sombre-eleve px-4 text-base text-sombre-texte
+              className="mt-4 w-full min-h-[48px] rounded-lg border border-transparent
+                         bg-sombre-eleve-clair px-4 text-base text-sombre-texte
                          placeholder:text-sombre-texte-doux outline-none
-                         transition-colors focus:bg-sombre-eleve-clair"
+                         transition-colors focus:bg-sombre-haut"
             />
             <button
               type="button"

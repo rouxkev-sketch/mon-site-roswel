@@ -517,7 +517,7 @@ export function BlocModesExercice({
                            min-h-[40px] text-[13.5px] font-semibold
                            transition-colors ${
                              actif
-                               ? "border-transparent bg-primaire/15 text-primaire"
+                               ? "border-transparent bg-primaire-voile text-primaire"
                                : enFaute
                                  ? "border-erreur bg-sombre-eleve text-sombre-texte-doux hover:text-sombre-texte"
                                  : "border-transparent bg-sombre-eleve text-sombre-texte-doux hover:text-sombre-texte"
@@ -882,7 +882,7 @@ export function BlocModesExercice({
           « MODE D'ACTIVITÉ », fini le compteur : les quatre modes
           reprennent EXACTEMENT la présentation des rectangles du bloc
           des styles (« Noir et gris / Couleur ») — mêmes angles
-          (rounded-xl), même remplissage vertical (py-2.5), même
+          (rounded-lg), même remplissage vertical (py-2.5), même
           couple de couleurs (rose pâle + texte rose quand c'est
           ouvert, fond un cran plus clair sinon), et ils se posent
           directement sous la glissière Artiste / Studio / Salon.
@@ -933,11 +933,11 @@ export function BlocModesExercice({
               onClick={() => choisirOnglet(genre)}
               data-badge-mode={genre}
               data-badge-en-faute={cadreRouge ? "" : undefined}
-              className={`rounded-xl border px-1 py-2.5 text-center transition-colors ${
+              className={`rounded-lg border px-1 py-2.5 text-center transition-colors ${
                 cadreRouge ? "border-erreur" : "border-transparent"
               } ${
                 actif
-                  ? "bg-primaire/15"
+                  ? "bg-primaire-voile"
                   : "bg-sombre-eleve hover:bg-primaire/10 active:bg-primaire/10"
               }`}
             >
@@ -1120,8 +1120,8 @@ export function BlocModesExercice({
             onClick={() => ajouterUnLieu(genreAffiche)}
             className="mt-5 w-fit rounded-full bg-sombre-eleve px-4 min-h-[40px]
                        text-[13.5px] font-semibold text-sombre-texte-doux
-                       transition-colors hover:bg-primaire/15 hover:text-primaire
-                       active:bg-primaire/15 active:text-primaire"
+                       transition-colors hover:bg-primaire-voile hover:text-primaire
+                       active:bg-primaire-voile active:text-primaire"
           >
             {genreAffiche === "guest"
               ? "+ Ajouter une autre date"

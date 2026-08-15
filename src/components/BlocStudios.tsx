@@ -193,10 +193,10 @@ export function BlocStudios({
                       onChange={(evenement) =>
                         modifier(studio.cle, { nom: evenement.target.value })
                       }
-                      className="w-full min-h-[48px] rounded-xl border border-transparent
-                                 bg-sombre-eleve px-4 text-base text-sombre-texte
+                      className="w-full min-h-[48px] rounded-lg border border-transparent
+                                 bg-sombre-eleve-clair px-4 text-base text-sombre-texte
                                  placeholder:text-sombre-texte-doux outline-none
-                                 transition-colors focus:bg-sombre-eleve-clair"
+                                 transition-colors focus:bg-sombre-haut"
                     />
                   </div>
                 )}

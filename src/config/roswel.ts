@@ -56,6 +56,12 @@ export const MARQUE = {
 export const COULEURS = {
   // — Couleur principale (rose de la marque) —
   primaire: "#EE3D6F",        // boutons, liens, icône favori
+  //  §2 (nº 287) — LE FOND D'UN BADGE SÉLECTIONNÉ : un rose sombre qui
+  //  FAIT FOND, pour que le mot rose (#EE3D6F) se détache franchement
+  //  dessus. Il remplace les voiles `bg-primaire/15` — quinze pour cent
+  //  de rose posés sur des fonds différents donnaient un rose différent
+  //  à chaque endroit ; un seul cas d'usage, un seul jeu de valeurs.
+  primaireVoile: "#381E29",
   primaireFonce: "#D42A5C",   // survol / appui des boutons roses
   primaireClair: "#FFEBF1",   // fonds très légers teintés de rose
 

@@ -122,7 +122,7 @@ export function FenetreSignalement({
               <div className="text-center py-4">
                 <span
                   aria-hidden="true"
-                  className="mx-auto w-14 h-14 rounded-full bg-primaire/15 text-primaire
+                  className="mx-auto w-14 h-14 rounded-full bg-primaire-voile text-primaire
                              flex items-center justify-center text-2xl"
                 >
                   ✓

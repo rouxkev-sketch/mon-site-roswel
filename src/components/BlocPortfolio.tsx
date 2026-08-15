@@ -674,8 +674,8 @@ export function BlocPortfolio({
           aria-hidden="true"
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full
                      bg-sombre-eleve text-sombre-texte transition-colors
-                     group-hover:bg-primaire/15 group-hover:text-primaire
-                     group-active:bg-primaire/15 group-active:text-primaire"
+                     group-hover:bg-primaire-voile group-hover:text-primaire
+                     group-active:bg-primaire-voile group-active:text-primaire"
         >
           <IconePlus taille={18} />
         </span>
@@ -866,10 +866,10 @@ export function BlocPortfolio({
                     //  ⚠️ PLUS DE CONTOUR (passe nº 112) : le fond dit
                     //  tout — un cran plus clair au repos, teinté de
                     //  rose quand la galerie est ouverte.
-                    className={`rounded-xl px-3 py-2.5 text-left
+                    className={`rounded-lg px-3 py-2.5 text-left
                                transition-colors ${
                                  actif
-                                   ? "bg-primaire/15"
+                                   ? "bg-primaire-voile"
                                    : "bg-sombre-eleve hover:bg-primaire/10"
                                }`}
                   >
@@ -1076,7 +1076,7 @@ export function BlocPortfolio({
             <div
               className="relative flex w-full max-w-[420px]
                          max-h-[min(80dvh,640px)] flex-col overflow-hidden
-                         rounded-2xl bg-sombre-carte
+                         rounded-xl bg-sombre-carte
                          shadow-[0_24px_80px_rgba(0,0,0,0.6)]
                          opacity-100 transition-opacity duration-200 starting:opacity-0"
             >
@@ -1201,7 +1201,7 @@ export function BlocPortfolio({
                       //  champ monte d'un niveau avec lui, et le focus
                       //  éclaircit encore d'un cran (la charte, sans
                       //  contour ni rose).
-                      className={`w-full h-11 rounded-xl bg-sombre-eleve-clair pl-3
+                      className={`w-full h-11 rounded-lg bg-sombre-eleve-clair pl-3
                                  text-[15px] text-sombre-texte
                                  placeholder:text-sombre-texte-doux/70
                                  outline-none transition-colors
@@ -1297,7 +1297,7 @@ export function BlocPortfolio({
             />
             <div
               data-verre-fenetre=""
-            className="relative w-full max-w-[380px] rounded-2xl p-5
+            className="relative w-full max-w-[380px] rounded-xl p-5
                          shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
             >
               <h2 className="text-[17px] font-bold text-sombre-texte">
@@ -1343,7 +1343,7 @@ export function BlocPortfolio({
             />
             <div
               data-verre-fenetre=""
-            className="relative w-full max-w-[380px] rounded-2xl p-5
+            className="relative w-full max-w-[380px] rounded-xl p-5
                          shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
             >
               <h2 className="text-[17px] font-bold text-sombre-texte">
@@ -1367,10 +1367,10 @@ export function BlocPortfolio({
                 autoCapitalize="characters"
                 spellCheck={false}
                 aria-label="Tape SUPPRIMER pour confirmer"
-                className="mt-4 w-full min-h-[48px] rounded-xl border border-transparent
-                           bg-sombre-eleve px-4 text-base tracking-wide text-sombre-texte
+                className="mt-4 w-full min-h-[48px] rounded-lg border border-transparent
+                           bg-sombre-eleve-clair px-4 text-base tracking-wide text-sombre-texte
                            placeholder:text-sombre-texte-doux/50 outline-none
-                           transition-colors focus:bg-sombre-eleve-clair"
+                           transition-colors focus:bg-sombre-haut"
               />
               {/* RÈGLE DES BOUTONS (passe nº 112) : l'action porte une
                   capsule à sa mesure, le retrait est un texte nu. */}

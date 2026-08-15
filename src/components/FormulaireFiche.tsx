@@ -441,7 +441,7 @@ function Section({
           rayon pour 16 px de retrait sur téléphone, 24 pour 28 sur le
           web — un grand rayon sur une petite carte mangerait les
           angles du contenu. */}
-      <div className="mt-3 flex flex-col gap-5 bg-sombre-carte rounded-2xl px-4 py-6 sm:rounded-3xl sm:px-7 sm:py-7">
+      <div className="mt-3 flex flex-col gap-5 bg-sombre-carte rounded-xl px-4 py-6 sm:px-7 sm:py-7">
         {children}
       </div>
     </section>
@@ -2461,7 +2461,7 @@ export function FormulaireFiche() {
   if (ficheChargee && (ficheChargee.purge_le || ficheChargee.supprime_le)) {
     return (
       <main className="flex-1 mx-auto w-full max-w-[640px] px-4 sm:px-6 pt-8 sm:pt-10 pb-24">
-        <div className="rounded-2xl bg-sombre-carte px-4 py-8 sm:rounded-3xl sm:px-7 sm:py-10 text-center">
+        <div className="rounded-xl bg-sombre-carte px-4 py-8 sm:px-7 sm:py-10 text-center">
           <span
             aria-hidden="true"
             className="mx-auto flex h-14 w-14 items-center justify-center
@@ -2478,7 +2478,7 @@ export function FormulaireFiche() {
           {erreurReactivation && (
             <p
               role="alert"
-              className="mt-5 rounded-xl border border-erreur/50 bg-erreur/10
+              className="mt-5 rounded-lg border border-erreur/50 bg-erreur/10
                          px-4 py-3 text-[13px] leading-relaxed text-sombre-texte"
             >
               {erreurReactivation}
@@ -2638,7 +2638,7 @@ export function FormulaireFiche() {
             L'ENCADRÉ DE CORRECTION quand la relecture a parlé — les
             champs visés, eux, sont signalés en rouge sur place. */}
         {enCorrection && (
-          <div className="mb-6 rounded-2xl border border-erreur/50 bg-erreur/10 px-5 py-4">
+          <div className="mb-6 rounded-xl border border-erreur/50 bg-erreur/10 px-5 py-4">
             <p className="text-[14.5px] font-semibold text-sombre-texte">
               {horsLigne
                 ? "Ton portfolio a été mis hors ligne."
@@ -2697,7 +2697,7 @@ export function FormulaireFiche() {
           Seule exception à la photo collée à la barre : ce bandeau
           passe devant, l'information prime. */}
       {vue === "apercu" && enCorrection && (
-        <div className="mx-auto w-full max-w-[640px] mb-5 rounded-2xl border border-erreur/50 bg-erreur/10 px-5 py-4">
+        <div className="mx-auto w-full max-w-[640px] mb-5 rounded-xl border border-erreur/50 bg-erreur/10 px-5 py-4">
           <p className="text-[14.5px] font-semibold text-sombre-texte">
             {horsLigne
               ? "Ton portfolio a été mis hors ligne."
@@ -3047,8 +3047,8 @@ export function FormulaireFiche() {
                 aria-hidden="true"
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full
                            bg-sombre-eleve text-sombre-texte transition-colors
-                           group-hover:bg-primaire/15 group-hover:text-primaire
-                           group-active:bg-primaire/15 group-active:text-primaire"
+                           group-hover:bg-primaire-voile group-hover:text-primaire
+                           group-active:bg-primaire-voile group-active:text-primaire"
               >
                 <IconePlus taille={18} />
               </span>
@@ -3156,7 +3156,7 @@ export function FormulaireFiche() {
                   ariaLabel="L'état de ton booking"
                   placeholder="Booking"
                   sombre
-                  arrondi="rounded-xl"
+                  arrondi="rounded-lg"
                   hauteur="min-h-[48px]"
                   enErreur={Boolean(erreurs.booking)}
                 />
@@ -3173,7 +3173,7 @@ export function FormulaireFiche() {
                     ariaLabel="Le délai d'attente, en mois"
                     placeholder="Mois"
                     sombre
-                    arrondi="rounded-xl"
+                    arrondi="rounded-lg"
                     hauteur="min-h-[48px]"
                     enErreur={Boolean(erreurs.bookingMois)}
                   />
@@ -3426,7 +3426,7 @@ export function FormulaireFiche() {
         {erreurs.general && (
           <p
             role="alert"
-            className="rounded-xl border border-erreur/50 bg-erreur/10 px-4 py-3 text-sm text-sombre-texte"
+            className="rounded-lg border border-erreur/50 bg-erreur/10 px-4 py-3 text-sm text-sombre-texte"
           >
             {erreurs.general}
           </p>
@@ -3518,13 +3518,13 @@ export function FormulaireFiche() {
           <div
             onClick={(evenement) => evenement.stopPropagation()}
             data-verre-fenetre=""
-            className="relative w-full max-w-[420px] rounded-2xl
+            className="relative w-full max-w-[420px] rounded-xl
                        p-6 sm:p-7 text-center"
           >
             <span
               aria-hidden="true"
               className="mx-auto flex w-14 h-14 items-center justify-center
-                         rounded-full bg-primaire/15 text-primaire"
+                         rounded-full bg-primaire-voile text-primaire"
             >
               <IconeCocheListe taille={24} />
             </span>
@@ -3584,7 +3584,7 @@ export function FormulaireFiche() {
           <div
             onClick={(evenement) => evenement.stopPropagation()}
             data-verre-fenetre=""
-            className="relative w-full max-w-[420px] rounded-2xl
+            className="relative w-full max-w-[420px] rounded-xl
                        p-6 sm:p-7 text-center
                        shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
           >
@@ -3596,7 +3596,7 @@ export function FormulaireFiche() {
             <span
               aria-hidden="true"
               className="mx-auto flex w-14 h-14 items-center justify-center
-                         rounded-full bg-primaire/15 text-primaire"
+                         rounded-full bg-primaire-voile text-primaire"
             >
               {!ficheChargee?.publie || horsLigne || photosEnRelecture ? (
                 <IconeHorloge taille={24} />

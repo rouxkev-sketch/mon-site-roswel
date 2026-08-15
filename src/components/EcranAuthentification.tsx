@@ -93,17 +93,17 @@ function messageErreur(erreur: unknown): string {
     robe (`focus:ring-primaire/25`) a disparu : la charte réserve le
     rose au sélecteur et à l'action finale. */
 const CHAMP =
-  "w-full min-h-[52px] rounded-xl border bg-sombre-eleve px-4 text-base " +
+  "w-full min-h-[52px] rounded-lg border bg-sombre-eleve-clair px-4 text-base " +
   "text-sombre-texte placeholder:text-sombre-texte-doux outline-none " +
-  "transition-colors focus:bg-sombre-eleve-clair";
+  "transition-colors focus:bg-sombre-haut";
 
 /** LE MESSAGE (réussite / information) — fond élevé, comme Sécurité. */
 const MESSAGE =
-  "rounded-xl bg-sombre-eleve px-4 py-3 text-[13.5px] leading-relaxed text-sombre-texte";
+  "rounded-lg bg-sombre-eleve px-4 py-3 text-[13.5px] leading-relaxed text-sombre-texte";
 
 /** L'ERREUR — la seule exception de la charte : l'encadré rouge. */
 const ERREUR =
-  "rounded-xl border border-erreur/50 bg-erreur/10 px-4 py-3 text-[13px] leading-relaxed text-sombre-texte";
+  "rounded-lg border border-erreur/50 bg-erreur/10 px-4 py-3 text-[13px] leading-relaxed text-sombre-texte";
 
 export function EcranAuthentification({
   rattachement,
@@ -451,7 +451,7 @@ export function EcranAuthentification({
             disabled
             aria-disabled="true"
             title={`La connexion ${fournisseur} arrive bientôt`}
-            className="flex items-center gap-3 rounded-xl bg-sombre-eleve
+            className="flex items-center gap-3 rounded-lg bg-sombre-eleve
                        min-h-[54px] px-4 text-left text-[14.5px] text-sombre-texte
                        opacity-55 cursor-not-allowed"
           >

@@ -55,9 +55,9 @@ export const TITRE_LIEN_MAXIMUM = 16;
 
 //  Le même habillage que tous les champs du formulaire : fond un cran
 //  plus clair, éclairci au focus (nº 116), bordure rouge en faute.
-const CHAMP = `w-full min-h-[48px] rounded-xl border bg-sombre-eleve px-4
+const CHAMP = `w-full min-h-[48px] rounded-lg border bg-sombre-eleve-clair px-4
   text-base text-sombre-texte placeholder:text-sombre-texte-doux outline-none
-  transition-colors focus:bg-sombre-eleve-clair`;
+  transition-colors focus:bg-sombre-haut`;
 
 export function LienLibre({
   id,
@@ -118,7 +118,7 @@ export function LienLibre({
         id={id}
         type="button"
         onClick={() => surChangement({ ...valeur, etat: "edition" })}
-        className="flex w-full min-h-[52px] items-center gap-3 rounded-xl
+        className="flex w-full min-h-[52px] items-center gap-3 rounded-lg
                    bg-sombre-eleve px-4 text-left text-base
                    text-sombre-texte-doux transition-colors
                    hover:bg-primaire/10 hover:text-primaire"
@@ -136,7 +136,7 @@ export function LienLibre({
     return (
       <div
         id={id}
-        className="flex min-h-[52px] items-center gap-3 rounded-xl
+        className="flex min-h-[52px] items-center gap-3 rounded-lg
                    bg-sombre-eleve px-4"
       >
         <span aria-hidden="true" className="shrink-0 text-sombre-texte-doux">
@@ -236,7 +236,7 @@ export function LienLibre({
           className="inline-flex items-center rounded-full bg-sombre-eleve
                      px-5 min-h-[42px] text-[14px] font-semibold
                      text-sombre-texte transition-colors
-                     hover:bg-primaire/15 hover:text-primaire"
+                     hover:bg-primaire-voile hover:text-primaire"
         >
           Ajouter
         </button>

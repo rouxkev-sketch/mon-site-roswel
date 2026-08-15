@@ -61,7 +61,7 @@ import type { GenreNotification, Notification } from "@/lib/notifications";
        (ce n'est ni une erreur ni un manque — rien à corriger). */
 const VERT = "bg-[#34D399]/15 text-[#34D399]";
 const ROUGE = "bg-erreur/15 text-erreur";
-const ROSE = "bg-primaire/15 text-primaire";
+const ROSE = "bg-primaire-voile text-primaire";
 const NEUTRE = "bg-sombre-eleve-clair text-sombre-texte-doux";
 
 const CATALOGUE: Record<

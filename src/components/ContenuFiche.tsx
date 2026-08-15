@@ -534,8 +534,11 @@ export function ContenuFiche({
     (groupe) => groupe.slugs.length > 0
   );
 
-  const separation =
-    "border-t border-sombre-bordure/60 mobile:-mx-4 mobile:px-4";
+  /*  §5 (nº 287) — LES SÉPARATEURS RESPECTENT LES MARGES, au doigt
+      comme au web : le « bord à bord » du smartphone (l'ancien
+      `mobile:-mx-4`) est ANNULÉ par le propriétaire — la ligne
+      s'arrête où le contenu s'arrête, mêmes marges des deux côtés. */
+  const separation = "border-t border-sombre-bordure/60";
 
   return (
     <>

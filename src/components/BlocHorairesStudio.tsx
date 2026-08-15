@@ -60,9 +60,9 @@ import {
  * les heures se posent enfin au milieu de leur pastille, sur le web
  * comme au doigt.
  */
-const CHAMP_HEURE = `h-[38px] w-[72px] rounded-lg bg-sombre-eleve px-0
+const CHAMP_HEURE = `h-[38px] w-[72px] rounded-lg bg-sombre-eleve-clair px-0
   text-center text-[14px] tabular-nums text-sombre-texte outline-none
-  transition-colors focus:bg-sombre-eleve-clair
+  transition-colors focus:bg-sombre-haut
   [&::-webkit-calendar-picker-indicator]:hidden
   [&::-webkit-datetime-edit]:w-full
   [&::-webkit-datetime-edit]:p-0
@@ -206,7 +206,7 @@ export function BlocHorairesStudio({
                       onClick={() => ouvrirLeJour(jour.index)}
                       className="ml-auto rounded-full bg-sombre-eleve px-3.5 min-h-[34px]
                                  text-[13px] font-semibold text-sombre-texte
-                                 transition-colors hover:bg-primaire/15
+                                 transition-colors hover:bg-primaire-voile
                                  hover:text-primaire"
                     >
                       + Ajouter des horaires
@@ -285,7 +285,7 @@ export function BlocHorairesStudio({
                           onClick={() => ajouterUneCoupure(jour.index)}
                           className="rounded-full bg-sombre-eleve px-2 min-h-[32px]
                                      text-[12px] font-semibold text-sombre-texte-doux
-                                     transition-colors hover:bg-primaire/15
+                                     transition-colors hover:bg-primaire-voile
                                      hover:text-primaire sm:px-3 sm:text-[12.5px]"
                         >
                           + Coupure du midi
@@ -297,8 +297,8 @@ export function BlocHorairesStudio({
                         className={`rounded-full px-2 min-h-[32px] text-[12px]
                                    font-semibold transition-colors sm:px-3 sm:text-[12.5px] ${
                                      copieFaite === jour.index
-                                       ? "bg-primaire/15 text-primaire"
-                                       : "bg-sombre-eleve text-sombre-texte-doux hover:bg-primaire/15 hover:text-primaire"
+                                       ? "bg-primaire-voile text-primaire"
+                                       : "bg-sombre-eleve text-sombre-texte-doux hover:bg-primaire-voile hover:text-primaire"
                                    }`}
                       >
                         {/* « DUPLIQUER LES HORAIRES » (passe nº 107) —

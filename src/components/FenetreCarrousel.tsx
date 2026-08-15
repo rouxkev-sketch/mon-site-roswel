@@ -261,9 +261,13 @@ export function FenetreCarrousel({
                  bg-sombre-fond opacity-100 transition-opacity duration-200
                  starting:opacity-0"
     >
-      {/* LA BARRE DU HAUT — flèche · logo · rien. Le vide de droite a
-          la largeur de la flèche : le logo est au centre VRAI. */}
-      <div className="flex h-14 items-center justify-between px-1.5">
+      {/* LA BARRE DU HAUT — flèche · logo · compteur.
+          §4 (nº 287) — UNE SEULE COLONNE DE MARGE À GAUCHE : la barre
+          porte le même `px-4` que la ligne du rond, et la flèche fait
+          44 px comme lui — leurs bords gauches tombent au MÊME pixel
+          (16). Le compteur, à droite, garde la largeur de la flèche :
+          le logo reste au centre vrai. */}
+      <div className="flex h-14 items-center justify-between px-4">
         {surFermeture ? (
           <button
             type="button"

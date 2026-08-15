@@ -63,7 +63,7 @@ export function JaugeMotDePasse({ motDePasse }: { motDePasse: string }) {
               aria-hidden="true"
               className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] ${
                 critere.ok
-                  ? "bg-primaire/20 text-primaire"
+                  ? "bg-primaire-voile text-primaire"
                   : "bg-sombre-eleve text-sombre-texte-doux"
               }`}
             >

@@ -199,7 +199,7 @@ export function ChampsPlageDates({
       fond un cran plus clair, bordure transparente qui ne s'allume
       qu'en rouge, fond éclairci quand il a la main (charte nº 116). */
   function classesDuChamp(cible: "debut" | "fin", enFaute: boolean): string {
-    return `flex w-full min-w-0 min-h-[48px] items-center rounded-xl border
+    return `flex w-full min-w-0 min-h-[48px] items-center rounded-lg border
       px-3.5 text-left text-base transition-colors ${
         ouvert === cible ? "bg-sombre-eleve-clair" : "bg-sombre-eleve"
       } ${enFaute ? "border-erreur" : "border-transparent"}`;
@@ -244,7 +244,7 @@ export function ChampsPlageDates({
           ne sort jamais de l'écran. ---------- */}
       {ouvert && (
         <div
-          className="mt-2 rounded-xl bg-sombre-eleve p-3
+          className="mt-2 rounded-lg bg-sombre-eleve p-3
                      opacity-100 transition-opacity duration-200 starting:opacity-0"
         >
           {/* L'EN-TÊTE : le mois, encadré par ses deux flèches. */}
@@ -321,7 +321,7 @@ export function ChampsPlageDates({
                                      : eteint
                                        ? "text-sombre-texte-doux/40"
                                        : dansLaPlage
-                                         ? "bg-primaire/15 text-primaire"
+                                         ? "bg-primaire-voile text-primaire"
                                          : estAujourdHui
                                            ? "font-bold text-primaire hover:bg-sombre-eleve-clair"
                                            : "text-sombre-texte hover:bg-sombre-eleve-clair"

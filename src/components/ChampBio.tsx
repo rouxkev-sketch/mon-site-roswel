@@ -147,10 +147,10 @@ export function ChampBio({
           //  `block` (nº 116) : un textarea est un élément en ligne —
           //  sa jambe de ligne ajoutait ~5 px SOUS le champ, et la
           //  bio semblait plus loin d'Instagram que du nom (point 12).
-          className={`block w-full rounded-xl border bg-sombre-eleve
+          className={`block w-full rounded-lg border bg-sombre-eleve-clair
                      px-4 py-3 pr-12 pb-8 text-base leading-relaxed text-sombre-texte
                      placeholder:text-sombre-texte-doux outline-none resize-y
-                     transition-colors focus:bg-sombre-eleve-clair ${
+                     transition-colors focus:bg-sombre-haut ${
                        enFaute ? "border-erreur" : "border-transparent"
                      }`}
         />

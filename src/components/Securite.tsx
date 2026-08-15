@@ -71,19 +71,19 @@ import { useUtilisateur } from "@/lib/use-utilisateur";
     Le formulaire l'écrit aussi, champ par champ (`border-transparent`
     ou `border-erreur`). Le focus n'est qu'un fond plus clair. */
 const CHAMP =
-  "w-full min-h-[52px] rounded-xl border border-transparent bg-sombre-eleve " +
+  "w-full min-h-[52px] rounded-lg border border-transparent bg-sombre-eleve-clair " +
   "px-4 text-base text-sombre-texte placeholder:text-sombre-texte-doux " +
-  "outline-none transition-colors focus:bg-sombre-eleve-clair";
+  "outline-none transition-colors focus:bg-sombre-haut";
 
 /** LE MESSAGE DE RÉUSSITE — sur fond ÉLEVÉ, pas en rose : la charte
     réserve le rose aux badges sélectionnés, au bouton final et au
     sélecteur. Une confirmation est une information, pas un accent. */
 const MESSAGE =
-  "rounded-xl bg-sombre-eleve px-4 py-3 text-[13.5px] leading-relaxed text-sombre-texte";
+  "rounded-lg bg-sombre-eleve px-4 py-3 text-[13.5px] leading-relaxed text-sombre-texte";
 
 /** L'ERREUR — la seule exception de la charte : l'encadré rouge. */
 const ERREUR =
-  "rounded-xl border border-erreur/50 bg-erreur/10 px-4 py-3 text-[13px] leading-relaxed text-sombre-texte";
+  "rounded-lg border border-erreur/50 bg-erreur/10 px-4 py-3 text-[13px] leading-relaxed text-sombre-texte";
 
 /** Un bloc de la page — la grammaire de `Section` du formulaire
     (nº 125 web, nº 128 partout) : le TITRE VIT AU-DESSUS de
@@ -109,7 +109,7 @@ function Bloc({
       {/* GAP-4 (nº 134) : 16 px entre les enfants de la carte — le
           MÊME écart que celui des champs du bloc de mot de passe.
           Une seule respiration sur toute la page. */}
-      <div className="mt-3 flex flex-col gap-4 bg-sombre-carte rounded-2xl px-4 py-6 sm:rounded-3xl sm:px-7 sm:py-7">
+      <div className="mt-3 flex flex-col gap-4 bg-sombre-carte rounded-xl px-4 py-6 sm:px-7 sm:py-7">
         {children}
       </div>
     </section>
@@ -304,7 +304,7 @@ export function Securite() {
         <Bloc titre="Changer d'e-mail">
           {/* L'ADRESSE EN COURS — un fond élevé, sans contour : c'est
               un badge d'information, le niveau au-dessus de la carte. */}
-          <div className="flex items-center gap-3 rounded-xl bg-sombre-eleve px-4 py-3">
+          <div className="flex items-center gap-3 rounded-lg bg-sombre-eleve px-4 py-3">
             <IconeEnveloppe taille={20} classe="shrink-0 text-sombre-texte-doux" />
             <span className="min-w-0 flex-1 truncate text-[15px] text-sombre-texte">
               {utilisateur?.email ?? "—"}
@@ -481,7 +481,7 @@ export function Securite() {
             {/* L'E-MAIL — le seul actif : un BADGE SÉLECTIONNÉ, donc
                 le rose dilué — sans contour, le fond suffit. */}
             <li
-              className="flex items-center gap-3 rounded-xl
+              className="flex items-center gap-3 rounded-lg
                          bg-primaire/10 px-4 min-h-[54px]"
             >
               <IconeBouclierTrait taille={20} classe="shrink-0 text-primaire" />
@@ -514,7 +514,7 @@ export function Securite() {
                   disabled
                   aria-disabled="true"
                   title={`La connexion ${fournisseur} arrive bientôt`}
-                  className="flex w-full items-center gap-3 rounded-xl
+                  className="flex w-full items-center gap-3 rounded-lg
                              bg-sombre-eleve px-4 min-h-[54px] text-left
                              text-[14.5px] text-sombre-texte opacity-55
                              cursor-not-allowed"

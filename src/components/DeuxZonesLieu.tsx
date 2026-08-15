@@ -90,7 +90,7 @@ import type { LieuTrouve } from "@/lib/geocodage/types";
 function PastilleRetenu() {
   return (
     <span
-      className="ml-2 inline-flex items-center rounded-full bg-primaire/15
+      className="ml-2 inline-flex items-center rounded-full bg-primaire-voile
                  px-2 py-0.5 align-middle text-[11px] font-semibold
                  uppercase tracking-wide text-primaire"
     >
