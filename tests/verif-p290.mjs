@@ -126,10 +126,15 @@ titre("§2 — le trait rose, demandé et jamais posé d'office");
 
 titre("§3 — la hauteur libre est mesurée, plus jamais devinée");
 {
+  //  ⚠️ AMENDÉE À LA nº 293-§1, SUR CONSIGNE : la largeur ne se
+  //  calcule plus dans la feuille de style — elle est POSÉE, déjà
+  //  arrondie à un multiple de 4, pour qu'aucun bord ne tombe sur une
+  //  fraction de pixel. Le fait vérifié ne change pas : elle découle
+  //  de la mesure, et les 119 px ne sont plus qu'un repli.
   verif(
-    "la largeur DÉCOULE de la mesure (`--photo-hauteur-libre`) ; les " +
+    "la largeur DÉCOULE de la mesure (`--photo-largeur`, nº 293) ; les " +
       "119 px ne survivent QUE comme repli du tout premier rendu",
-    /lg:w-\[calc\(var\(--photo-hauteur-libre,100vh_-_119px\)\*0\.8\)\]/.test(
+    /lg:w-\[var\(--photo-largeur,calc\(\(100vh_-_119px\)\*0\.8\)\)\]/.test(
       fiche
     ) && !/calc\(\(100vh-119px\)\*0\.8\)/.test(fiche)
   );
@@ -185,10 +190,15 @@ titre("vivant (1440 px) — les quatre mesures, et le trait");
         };
       });
     const m = await geometrie();
+    //  ⚠️ AMENDÉE À LA nº 293-§1, SUR CONSIGNE : la largeur tombe
+    //  désormais sur un multiple de 4 (aucun bord fractionnaire), et
+    //  le reste — moins de 5 px — part dans la marge du bas. Les deux
+    //  marges restent donc jumelles, l'écart allant TOUJOURS du bon
+    //  côté : jamais un débordement.
     verif(
-      "LES DEUX MARGES SONT ÉGALES — celle du bas était DÉJÀ ÉCRITE " +
+      "LES DEUX MARGES SONT JUMELLES — celle du bas était DÉJÀ ÉCRITE " +
         "(`lg:pb-5`, la jumelle de `lg:pt-5`) : l'élargissement la mangeait",
-      Math.abs(m.dessus - m.dessous) < 1,
+      m.dessous >= m.dessus && m.dessous - m.dessus <= 5,
       `dessus ${m.dessus.toFixed(1)} · dessous ${m.dessous.toFixed(1)}`
     );
     verif(
@@ -221,8 +231,9 @@ titre("vivant (1440 px) — les quatre mesures, et le trait");
       `${m.hauteur.toFixed(1)} → ${apres.hauteur.toFixed(1)}`
     );
     verif(
-      "…et les deux marges restent égales, sans débordement",
-      Math.abs(apres.dessus - apres.dessous) < 1 &&
+      "…et les deux marges restent jumelles, sans débordement",
+      apres.dessous >= apres.dessus &&
+        apres.dessous - apres.dessus <= 5 &&
         apres.hauteur + apres.dessus + apres.dessous <= apres.ecran,
       `dessus ${apres.dessus.toFixed(1)} · dessous ${apres.dessous.toFixed(1)}`
     );

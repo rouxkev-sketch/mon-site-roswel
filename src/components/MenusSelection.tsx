@@ -243,6 +243,9 @@ export function MenusSelection({
         //  le trait — le drapeau ne vaut que pour le panneau
         //  classique, donc pour le web.
         familleSoulignee
+        //  §2 (nº 293) — la page s'assombrit derrière ce menu, en WEB :
+        //  au doigt cette page ouvre sa feuille, et le crochet s'écarte.
+        avecVoile
       />
     );
   };

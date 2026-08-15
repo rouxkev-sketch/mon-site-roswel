@@ -793,7 +793,15 @@ export function CarrouselPortfolio({
              accrochage (nº 209-§7), le calage au pixel (nº 282) et la
              restauration de position — aucune de ces écritures ne parle
              de hauteur. */
-        className={`relative flex w-[round(down,100%,1px)] ${CADRE_PHOTO_PORTFOLIO} min-h-0 ${
+        /*  §3 (nº 293) — PAS DE CADRE SANS PHOTO. Le format 4/5 que la
+             nº 292 a posé ici donne une hauteur À COUP SÛR — y compris
+             quand il n'y a rien à montrer, ce qui ferait un grand
+             rectangle noir là où, avant elle, il n'y avait rien du
+             tout. Un carrousel vide ne réserve donc aucune place :
+             c'est au reste de la page de dire ce qui manque. */
+        className={`relative flex w-[round(down,100%,1px)] ${
+          n > 0 ? CADRE_PHOTO_PORTFOLIO : ""
+        } min-h-0 ${
           zoomEnCours
             ? "overflow-hidden"
             : "overflow-x-auto snap-x snap-mandatory"

@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { stylePanneau, usePlacementMenu } from "@/components/placement-menu";
 import { armerLaRemontee } from "@/lib/remontee-champ";
 import { IconeCroix } from "@/components/Icones";
+import { useVoileDeLaPage } from "@/components/VoileDeLaPage";
 import { sansRemplissageAuto } from "@/lib/champs-sans-remplissage";
 import {
   chercherLieux,
@@ -173,6 +174,11 @@ export function ChampLocalisation({
   );
   const [suggestions, setSuggestions] = useState<LieuTrouve[]>([]);
   const [listeOuverte, setListeOuverte] = useState(false);
+  //  §2 (nº 293) — LE MENU DE LA LOCALITÉ ET DU RAYON assombrit la
+  //  page derrière lui, comme les autres — mais seulement CELUI DU
+  //  MOTEUR : le champ vit aussi dans le formulaire de fiche, qui
+  //  n'a rien demandé.
+  useVoileDeLaPage(pourLeMoteur && listeOuverte);
   const [chargement, setChargement] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 

@@ -42,9 +42,15 @@ titre("§1 — à la source : la hauteur ne vient plus du contenu");
     carrousel.indexOf("{photos.map(")
   );
   verif(
+    //  ⚠️ AMENDÉE À LA nº 293-§3, SUR CONSIGNE : le format n'est plus
+    //  posé quand le carrousel est VIDE — il ferait un grand rectangle
+    //  noir là où il n'y avait rien. Le fait vérifié ne change pas :
+    //  dès qu'il y a une photo, le cadre porte son 4/5 et son `min-h-0`.
     "LE CADRE PORTE LUI-MÊME LE FORMAT 4/5, et `min-h-0` lui retire le " +
       "minimum-contenu : c'est sa largeur qui décide de sa hauteur",
-    /\$\{CADRE_PHOTO_PORTFOLIO\} min-h-0/.test(cadre)
+    /n > 0 \? CADRE_PHOTO_PORTFOLIO : ""\s*\} min-h-0/.test(
+      cadre.replace(/\s+/g, " ").replace(/" \} min-h-0/, '" } min-h-0')
+    )
   );
   verif(
     "LA COLONNE AUSSI : `min-h-0`, format 4/5 conservé — les deux " +
@@ -192,10 +198,14 @@ titre("vivant — 1440 × 823, densité 2 : LA FENÊTRE DU PROPRIÉTAIRE");
       `bas ${m.bas.toFixed(3)} pour un écran de ${m.ecran} — ` +
         `débordement ${Math.max(0, m.bas - m.ecran).toFixed(3)}`
     );
+    //  ⚠️ AMENDÉE À LA nº 293-§1, SUR CONSIGNE : l'écart passe de
+    //  moins d'un pixel à moins de cinq — c'est le reste du calage de
+    //  la largeur sur un multiple de 4, qui supprime tout bord
+    //  fractionnaire. Il va TOUJOURS du bon côté.
     verif(
-      "LES DEUX MARGES SONT ÉGALES — l'écart résiduel est l'arrondi au " +
-        "pixel entier de la nº 280, et il joue toujours DU BON CÔTÉ",
-      Math.abs(m.dessus - m.dessous) < 1 && m.dessous >= m.dessus,
+      "LES DEUX MARGES SONT JUMELLES — l'écart résiduel est le calage " +
+        "sur 4 px de la nº 293, et il joue toujours DU BON CÔTÉ",
+      m.dessous - m.dessus <= 5 && m.dessous >= m.dessus,
       `dessus ${m.dessus.toFixed(3)} · dessous ${m.dessous.toFixed(3)}`
     );
     verif(

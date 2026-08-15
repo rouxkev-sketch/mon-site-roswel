@@ -114,7 +114,9 @@ export function SondePhoto() {
       /*  LES DEUX LARGEURS POSSIBLES, calculées ici pour être
           COMPARÉES à celle qui s'applique — on ne déduit pas la
           source, on la reconnaît au nombre. */
-      const siMesure = libreCalcule * 0.8;
+      //  §1 (nº 293) — la mesure passe par un multiple de 4 : c'est ce
+      //  nombre-là qu'il faut comparer, pas `libre × 0,8` brut.
+      const siMesure = Math.floor((libreCalcule * 0.8) / 4) * 4;
       const siRepli = (window.innerHeight - 119) * 0.8;
       const colleAlaMesure = Math.abs(largeurReelle - siMesure) < 2;
       const colleAuRepli = Math.abs(largeurReelle - siRepli) < 2;
@@ -158,6 +160,38 @@ export function SondePhoto() {
 
       const debordeSousLEcran = boite.bottom - window.innerHeight;
 
+      /**
+       * §1-e (nº 293) — LES FRACTIONS DE PIXEL, ET LES QUATRE ÉCARTS.
+       * ----------------------------------------------------------------
+       * C'est ce relevé-ci qui prononce le verdict du §1 : un bord posé
+       * entre deux pixels laisse passer la photo voisine (nº 282), et à
+       * densité 2 un quart de pixel CSS est un demi-pixel d'écran. Tout
+       * doit valoir zéro — le cadre, ses colonnes, et les quatre côtés
+       * de la photo dans sa colonne.
+       * ⚠️ TROIS ÉLÉMENTS DIFFÉRENTS, ET ON LES NOMME : l'ENVELOPPE
+       * (`data-photo-fiche`, celle qui porte la largeur calculée), le
+       * CADRE (`data-role="cadre"`, celui qui rogne et défile), la
+       * COLONNE (une photo). La nº 292 les confondait sous le mot
+       * « cadre » — d'où une conclusion fausse sur 0,594 px d'écart qui
+       * n'étaient qu'une bande d'enveloppe à droite du cadre.
+       */
+      const fraction = (valeur: number) => valeur - Math.round(valeur);
+      const cadre = zone.querySelector<HTMLElement>('[data-role="cadre"]');
+      const colonne = zone.querySelector<HTMLElement>('[data-role="colonne 0"]');
+      const photo = colonne?.querySelector("img");
+      const bc = cadre?.getBoundingClientRect();
+      const bk = colonne?.getBoundingClientRect();
+      const bp = photo?.getBoundingClientRect();
+      /** Une ligne « doit valoir zéro » : verte à zéro, rouge sinon. */
+      const aZero = (cle: string, valeur: number | null): Ligne =>
+        valeur === null
+          ? { cle, valeur: "INTROUVABLE", ton: "mauvais" }
+          : {
+              cle,
+              valeur: trois(valeur),
+              ton: Math.abs(valeur) < 0.001 ? "bon" : "mauvais",
+            };
+
       poser([
         {
           cle: "la page",
@@ -182,17 +216,38 @@ export function SondePhoto() {
         { cle: "fenêtre (innerHeight × innerWidth)", valeur: `${trois(window.innerHeight)} × ${trois(window.innerWidth)}` },
         { cle: "devicePixelRatio", valeur: trois(window.devicePixelRatio) },
         { cle: "palier lg (min-width:64rem)", valeur: paliers ? "ACTIF" : "INACTIF", ton: paliers ? "bon" : "mauvais" },
-        { cle: "cadre · haut", valeur: `${trois(boite.top)} px` },
-        { cle: "cadre · bas", valeur: `${trois(boite.bottom)} px` },
-        { cle: "cadre · hauteur", valeur: `${trois(boite.height)} px` },
-        { cle: "cadre · largeur", valeur: `${trois(boite.width)} px` },
-        { cle: "cadre calculé · height", valeur: calcule.height },
-        { cle: "cadre calculé · width", valeur: calcule.width },
-        { cle: "cadre calculé · max-width", valeur: calcule.maxWidth },
+        //  ⚠️ « ENVELOPPE », PAS « CADRE » : ces quatre lignes disaient
+        //  « cadre » jusqu'à la nº 292 et mesuraient l'enveloppe — deux
+        //  boîtes différentes, et un relevé qui mélangeait les deux.
+        { cle: "enveloppe · haut", valeur: `${trois(boite.top)} px` },
+        { cle: "enveloppe · bas", valeur: `${trois(boite.bottom)} px` },
+        { cle: "enveloppe · hauteur", valeur: `${trois(boite.height)} px` },
+        { cle: "enveloppe · largeur", valeur: `${trois(boite.width)} px` },
+        { cle: "enveloppe calculée · height", valeur: calcule.height },
+        { cle: "enveloppe calculée · width", valeur: calcule.width },
+        { cle: "enveloppe calculée · max-width", valeur: calcule.maxWidth },
+
+        /* ---- §1 (nº 293) — TOUT CE QUI SUIT DOIT VALOIR ZÉRO ---- */
+        { cle: "cadre · largeur", valeur: bc ? `${trois(bc.width)} px` : "INTROUVABLE" },
+        { cle: "cadre · hauteur", valeur: bc ? `${trois(bc.height)} px` : "INTROUVABLE" },
+        aZero("▸ cadre · fraction du bord GAUCHE", bc ? fraction(bc.left) : null),
+        aZero("▸ cadre · fraction du bord HAUT", bc ? fraction(bc.top) : null),
+        aZero("▸ cadre · fraction de la LARGEUR", bc ? fraction(bc.width) : null),
+        aZero("▸ cadre · fraction de la HAUTEUR", bc ? fraction(bc.height) : null),
+        { cle: "colonne · largeur", valeur: bk ? `${trois(bk.width)} px` : "INTROUVABLE" },
+        aZero("▸ colonne · fraction de la LARGEUR", bk ? fraction(bk.width) : null),
+        aZero("▸ photo/colonne · écart HAUT", bp && bk ? bp.top - bk.top : null),
+        aZero("▸ photo/colonne · écart BAS", bp && bk ? bk.bottom - bp.bottom : null),
+        aZero("▸ photo/colonne · écart GAUCHE", bp && bk ? bp.left - bk.left : null),
+        aZero("▸ photo/colonne · écart DROITE", bp && bk ? bk.right - bp.right : null),
+        aZero(
+          "▸ bande d'enveloppe À DROITE du cadre",
+          bc ? boite.right - bc.right : null
+        ),
         { cle: "nº 290 · haut de la photo (document)", valeur: `${trois(hautDansLeDocument)} px` },
         { cle: "nº 290 · marge du bas (racine)", valeur: `${trois(margeDuBas)} px` },
         { cle: "nº 290 · hauteur libre calculée", valeur: `${trois(libreCalcule)} px` },
-        { cle: "largeur si MESURE (libre × 0,8)", valeur: `${trois(siMesure)} px` },
+        { cle: "largeur si MESURE (multiple de 4 ≤ libre × 0,8)", valeur: `${trois(siMesure)} px` },
         { cle: "largeur si REPLI ((100vh−119) × 0,8)", valeur: `${trois(siRepli)} px` },
         { cle: "largeur RÉELLEMENT appliquée", valeur: `${trois(largeurReelle)} px` },
         { cle: "document.scrollHeight", valeur: trois(document.documentElement.scrollHeight) },

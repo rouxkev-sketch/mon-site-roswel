@@ -187,8 +187,30 @@ export function FicheTatoueur({
     serieCherchee ? 0 : ouverture.indice
   );
 
+  /**
+   * §3 (nº 293) — QUEL QUE SOIT LE CHEMIN, LA PHOTO EST EN HAUT.
+   * ------------------------------------------------------------------
+   * CE QUE J'AI VÉRIFIÉ AVANT DE TOUCHER À QUOI QUE CE SOIT : les liens
+   * internes (équipe, guest, adresse d'un salon) pointent bien vers la
+   * fiche SANS style ni catégorie ni rendu — mais ce n'est PAS la cause.
+   * Le repli existe depuis la nº 278 (`serieDeLOuverture`) et il tient :
+   * mesuré au doigt, une fiche ouverte depuis l'intérieur d'une autre
+   * affiche ses trois colonnes.
+   * CE QUI RESTAIT OUVERT, EN REVANCHE : un groupe SANS photo faisait
+   * un carrousel vide — hauteur nulle avant la nº 292, et depuis elle
+   * un grand rectangle noir. C'est le seul chemin qui donne exactement
+   * le symptôme décrit (« la page commence par Profil / Portfolio »),
+   * et c'est celui-ci qu'on ferme : on ne se pose jamais sur un groupe
+   * vide, et à défaut on prend LE PREMIER GROUPE QUI A DES PHOTOS —
+   * le carrousel principal de la fiche, jamais rien.
+   */
+  const groupesGarnis = groupes.filter((groupe) => groupe.photos.length > 0);
   const groupeAffiche =
-    groupes.find((groupe) => groupe.slug === styleAffiche) ?? groupes[0];
+    groupes.find(
+      (groupe) => groupe.slug === styleAffiche && groupe.photos.length > 0
+    ) ??
+    groupesGarnis[0] ??
+    groupes[0];
   const photosDuStyleEntier = groupeAffiche?.photos ?? [];
   /*  §1 (nº 247) — LA SÉRIE VIENT DE `serieMontree`, L'ÉCRITURE
       UNIQUE : une catégorie demandée n'y est jamais violée. Le filtre
@@ -342,6 +364,38 @@ export function FicheTatoueur({
       if (Math.abs(libre - posee) < 0.5) return;
       posee = libre;
       zone.style.setProperty("--photo-hauteur-libre", `${libre}px`);
+      /**
+       * §1 (nº 293) — LA LARGEUR TOMBE SUR UN MULTIPLE DE 4, ET VOICI
+       * POURQUOI CE NOMBRE-LÀ.
+       * ----------------------------------------------------------------
+       * CE QUI ÉCHAPPAIT À L'ARRONDI : l'ENVELOPPE. `round(down,100%,1px)`
+       * (nº 280) est écrit sur le CADRE et sur lui seul ; l'enveloppe,
+       * elle, prenait `libre × 0,8` tel quel — 565,594 px au relevé du
+       * propriétaire. Le cadre tombait donc à 565, et il restait 0,594 px
+       * d'enveloppe À DROITE du cadre, sur toute la hauteur : une bande
+       * du fond de la carte, pile là où il voit « une marge verticale ».
+       * ET LA HAUTEUR N'ÉTAIT PAS ENTIÈRE NON PLUS : 565 × 1,25 = 706,25.
+       * Le bord du bas tombait donc entre deux pixels — à densité 2,
+       * c'est un demi-pixel d'écran, et c'est le liseré du haut et du bas.
+       *
+       * LE NOMBRE 4 N'EST PAS CHOISI À L'ŒIL, IL EST DÉDUIT : le format
+       * est 4/5, donc la hauteur vaut largeur × 1,25. Une largeur entière
+       * ne suffit pas — il faut qu'elle soit MULTIPLE DE 4 pour que
+       * × 1,25 retombe sur un entier (4k × 1,25 = 5k). Alors tout tombe
+       * juste ENSEMBLE : l'enveloppe, le cadre (dont l'arrondi de la
+       * nº 280 n'a plus rien à retirer), chaque colonne (100 % du cadre),
+       * les positions d'arrêt du défilement (k × largeur) et la hauteur.
+       * ⚠️ CE QUE ÇA COÛTE : jusqu'à 3 px de largeur, qui partent dans la
+       * marge du bas. Elle reste donc à un cheveu de celle du haut, et
+       * TOUJOURS du bon côté — jamais un débordement.
+       * ⚠️ LE DOIGT N'EST PAS CONCERNÉ : la règle qui lit cette variable
+       * est sous `lg:`. Au doigt la photo est bord à bord, et elle le
+       * reste.
+       */
+      zone.style.setProperty(
+        "--photo-largeur",
+        `${Math.floor((libre * 0.8) / 4) * 4}px`
+      );
     };
     mesurer();
     //  UNE SECONDE MESURE À LA TRAME SUIVANTE : la première tombe
@@ -538,7 +592,7 @@ export function FicheTatoueur({
                 relevé qui commande, et il tient compte de TOUT ce qui
                 surmonte la photo — barre fixe, bandeau de l'espace,
                 marge du haut. */
-            className="lg:w-[calc(var(--photo-hauteur-libre,100vh_-_119px)*0.8)] max-w-full mobile:-mx-4 mobile:-mt-4 mobile:max-w-none"
+            className="lg:w-[var(--photo-largeur,calc((100vh_-_119px)*0.8))] max-w-full mobile:-mx-4 mobile:-mt-4 mobile:max-w-none"
           >
             <CarrouselPortfolio
               photos={photosDuCarrousel}

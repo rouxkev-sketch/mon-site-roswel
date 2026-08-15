@@ -33,6 +33,7 @@ import {
 import type { Notification } from "@/lib/notifications";
 import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
 import { travailEnCours } from "@/lib/travail-en-cours";
+import { useVoileDeLaPage } from "@/components/VoileDeLaPage";
 
 /**
  * LE MENU « MON ESPACE » — le compte du tatoueur, depuis la barre
@@ -93,6 +94,9 @@ export function MenuEspace({
   hauteur: number;
 }) {
   const [ouvert, setOuvert] = useState(false);
+  //  §2 (nº 293) — LA FENÊTRE DU COMPTE assombrit la page derrière
+  //  elle. Web uniquement : le crochet s'écarte de lui-même au doigt.
+  useVoileDeLaPage(ouvert);
   /*  ⚠️ PLUS DE REPÈRE « NON PUBLIQUE » DANS LE MENU (passe nº 133).
       Il ne disait rien à personne d'autre qu'à l'administrateur, et il
       encombrait deux lignes du sélecteur — celle du portfolio choisi

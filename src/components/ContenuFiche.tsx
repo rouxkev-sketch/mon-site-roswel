@@ -672,7 +672,16 @@ export function ContenuFiche({
                    des lieux, devant chaque adresse — la règle vit dans
                    `sousLeNom` (BlocsFiche) et `etiquetteDuMode`
                    (BlocLieux). */}
-              <p className="mt-2 text-[12px] font-semibold uppercase tracking-[0.12em] text-sombre-texte-doux">
+              {/*  §4 (nº 293) — LE SOUS-TITRE PASSE DE 12 À 14 px, aux
+                   DEUX largeurs. À 12 px, en capitales et en gris doux,
+                   il se lisait comme une mention légale ; c'est
+                   pourtant lui qui dit ce QU'EST le portfolio.
+                   LA HIÉRARCHIE TIENT, et c'est ce qui décide : les
+                   capitales de 14 px ont une hauteur d'œil d'environ
+                   10 px, contre 13 à 14 pour le nom (19 px au web,
+                   20 au doigt) — il reste nettement dessous, et le gris
+                   doux l'y maintient. */}
+              <p className="mt-2 text-[14px] font-semibold uppercase tracking-[0.12em] text-sombre-texte-doux">
                 {sousLeNom(tatoueur)}
               </p>
             </div>

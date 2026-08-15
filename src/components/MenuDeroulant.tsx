@@ -9,6 +9,7 @@ import {
   PANNEAU_LISTE_FLOTTANT,
 } from "@/components/champs-recherche";
 import { stylePanneau, usePlacementMenu } from "@/components/placement-menu";
+import { useVoileDeLaPage } from "@/components/VoileDeLaPage";
 
 // La petite flèche du menu, dessinée dans le code. Deux versions :
 // GRISE au repos, ROSE quand le menu est ouvert (elle change en même
@@ -109,6 +110,7 @@ export function MenuDeroulant({
   enErreur,
   arrondi,
   familleSoulignee = false,
+  avecVoile = false,
 }: {
   valeur: string;
   surChangement: (valeur: string) => void;
@@ -195,6 +197,14 @@ export function MenuDeroulant({
    * panneau classique — c'est écrit à l'endroit qui le pose, plus bas.
    */
   familleSoulignee?: boolean;
+  /**
+   * §2 (nº 293) — LA PAGE S'ASSOMBRIT DERRIÈRE CE MENU (web).
+   * ⚠️ SUR DEMANDE, comme le trait rose de la nº 291 : seuls le menu
+   * des styles du moteur principal et les deux menus de « Ma
+   * sélection » le passent. Le formulaire de fiche, le formulaire de
+   * contact et le menu métier des artisans ne l'ont pas demandé.
+   */
+  avecVoile?: boolean;
 }) {
   const [ouvert, setOuvert] = useState(false);
   const conteneur = useRef<HTMLDivElement>(null);
@@ -300,6 +310,8 @@ export function MenuDeroulant({
   /** Vrai quand la liste est réellement à l'écran — elle n'apparaît
       qu'une fois la remontée du parent TERMINÉE (nº 195-§2). */
   const [listeVisible, setListeVisible] = useState(false);
+  //  §2 (nº 293) — le voile suit l'ouverture, et rien d'autre.
+  useVoileDeLaPage(avecVoile && listeVisible);
   //  À LA FERMETURE, la liste disparaît sur-le-champ — ajusté pendant
   //  le rendu (le motif React officiel), jamais dans un effet.
   if (!ouvert && listeVisible) setListeVisible(false);

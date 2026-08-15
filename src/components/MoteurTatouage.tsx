@@ -21,6 +21,7 @@ import {
 } from "@/lib/creations-par-style";
 import { ChampLocalisation } from "@/components/ChampLocalisation";
 import { MenuDeroulant } from "@/components/MenuDeroulant";
+import { useVoileDeLaPage } from "@/components/VoileDeLaPage";
 import { PageRechercheMobile } from "@/components/PageRechercheMobile";
 import {
   IconeDeuxColonnes,
@@ -257,6 +258,9 @@ export function MoteurTatouage({
   );
   /** Le panneau des interrupteurs (web, sous le bouton rond). */
   const [filtresOuverts, setFiltresOuverts] = useState(false);
+  //  §2 (nº 293) — LA FENÊTRE DES FILTRES assombrit la page derrière
+  //  elle, comme les menus. Web uniquement (le crochet s'en assure).
+  useVoileDeLaPage(filtresOuverts);
   /** Combien de fois « Effacer » a été pressé — sert de clé au champ
       de localité pour le reconstruire à neuf (voir plus bas). */
   const [effacements, setEffacements] = useState(0);
@@ -939,6 +943,8 @@ export function MoteurTatouage({
             //  §2 (nº 290) — le trait rose sous « Cultures du monde » :
             //  le menu des styles du MOTEUR PRINCIPAL, côté web.
             familleSoulignee
+            //  §2 (nº 293) — la page s'assombrit derrière ce menu (web).
+            avecVoile
           />
         }
         droite={
@@ -1243,6 +1249,9 @@ export function MoteurTatouage({
               //  c'est le même menu des styles du moteur principal, et
               //  il s'ouvre dans le même panneau classique.
               familleSoulignee
+              //  §2 (nº 293) — le même voile, côté smartphone : le crochet
+              //  s'écarte de lui-même au doigt.
+              avecVoile
             />
           </div>
 

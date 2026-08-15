@@ -189,8 +189,17 @@ export function FenetreFiche({
   const fenetreRef = useRef<HTMLDivElement>(null);
   const colonneRef = useRef<HTMLDivElement>(null);
 
+  //  §3 (nº 293) — LA MÊME RÈGLE QUE LA PAGE, et pour la même raison :
+  //  on ne se pose jamais sur un groupe VIDE. À défaut, le premier qui
+  //  a des photos — le carrousel principal de la fiche, jamais rien.
+  //  (Voir la note longue dans FicheTatoueur.)
+  const groupesGarnis = groupes.filter((groupe) => groupe.photos.length > 0);
   const groupeAffiche =
-    groupes.find((groupe) => groupe.slug === styleAffiche) ?? groupes[0];
+    groupes.find(
+      (groupe) => groupe.slug === styleAffiche && groupe.photos.length > 0
+    ) ??
+    groupesGarnis[0] ??
+    groupes[0];
   const photosDuStyleEntier = groupeAffiche?.photos ?? [];
   /*  §1 (nº 247) — L'ÉCRITURE UNIQUE (`serieMontree`) : la copie du
       filtre qui vivait ici est partie, avec son repli. Une catégorie

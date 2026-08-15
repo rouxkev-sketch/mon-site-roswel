@@ -43,6 +43,7 @@ import { scriptAvantPeinture } from "@/lib/script-avant-peinture";
 import { chargerStylesAjoutes } from "@/lib/styles-ajoutes";
 import { SondeClavier } from "@/components/SondeClavier";
 import { SondeNavigation } from "@/components/SondeNavigation";
+import { VoileDeLaPage } from "@/components/VoileDeLaPage";
 import { SondeFiltres } from "@/components/SondeFiltres";
 import { SondeVerre } from "@/components/SondeVerre";
 import { SondeRetour } from "@/components/SondeRetour";
@@ -180,6 +181,13 @@ export default async function MiseEnPageTatouage({
         src/components/SondeNavigation.tsx.
         HORS de l'enveloppe `data-fond`, comme les autres sondes : la
         page de recherche la ferait disparaître au moment de lire. */}
+    {/*  §2 (nº 293) — LE VOILE DE LA PAGE. Monté une seule fois pour
+        tout le site tatouage : il ne rend rien tant qu'aucune fenêtre
+        ni aucun menu ne l'a demandé, et il vit dans un PORTAIL au
+        corps du document — donc frère des plaques de verre, jamais
+        leur ancêtre (le piège du nº 234).
+        HORS de l'enveloppe `data-fond`, comme les sondes. */}
+    <VoileDeLaPage />
     <SondeNavigation />
     {/* ⚠️ TEMPORAIRE — LA SONDE DES FILTRES (`?sonde-filtres=1`). Elle
         mesure le panneau réellement ouvert chez le propriétaire (marges

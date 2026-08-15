@@ -296,12 +296,16 @@ titre("vivant (1440 px) — le relevé, et l'absence d'effet de bord");
         "--photo-hauteur-libre posée",
         "fenêtre (innerHeight × innerWidth)",
         "devicePixelRatio",
-        "cadre · haut",
-        "cadre · bas",
-        "cadre · hauteur",
-        "cadre · largeur",
-        "cadre calculé · height",
-        "cadre calculé · width",
+        //  ⚠️ AMENDÉES À LA nº 293-§1, SUR CONSIGNE : ces lignes
+        //  disaient « cadre » et mesuraient L'ENVELOPPE — deux boîtes
+        //  différentes. Elles portent maintenant leur vrai nom, et la
+        //  sonde relève EN PLUS le cadre et la colonne.
+        "enveloppe · haut",
+        "enveloppe · bas",
+        "enveloppe · hauteur",
+        "enveloppe · largeur",
+        "enveloppe calculée · height",
+        "enveloppe calculée · width",
         "nº 290 · haut de la photo (document)",
         "nº 290 · marge du bas (racine)",
         "largeur RÉELLEMENT appliquée",
