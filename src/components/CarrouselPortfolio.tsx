@@ -648,6 +648,52 @@ export function CarrouselPortfolio({
     allerA(cible, true, "flèche");
   }
 
+  /**
+   * §1 (nº 297) — LA PHOTO EST DEUX PIXELS PLUS ÉTROITE QUE SA COLONNE,
+   * CENTRÉE DEDANS. LE TRAIT DE LA VOISINE DEVIENT IMPOSSIBLE.
+   * ==================================================================
+   * LE FAIT QUI TRANCHE, ET QUI MANQUAIT AUX CINQ PASSES PRÉCÉDENTES :
+   * le trait est INTERMITTENT — « des fois elle n'y est pas, d'un coup
+   * elle va y être ». Un fond peint serait là EN PERMANENCE. Une
+   * intermittence est la signature d'un ARRÊT DE DÉFILEMENT qui tombe
+   * tantôt juste, tantôt sur une fraction de pixel.
+   *
+   * POURQUOI IL EST INMESURABLE D'ICI, ET POURQUOI LES VINGT RESTES À
+   * ZÉRO DE LA nº 296 NE PROUVENT RIEN : WebKit RAPPORTE une position
+   * de défilement ARRONDIE alors que le décalage réellement PEINT peut
+   * être fractionnaire. Depuis le code, tout paraît entier — le chiffre
+   * lu est faux. On ne peut donc RIEN fonder sur une valeur lue.
+   *
+   * LE REMÈDE NE DÉPEND D'AUCUNE MESURE. La photo n'occupe plus toute
+   * sa colonne : elle laisse UN PIXEL LIBRE DE CHAQUE CÔTÉ, où rien
+   * n'est peint (la chaîne est transparente depuis la nº 295 — donc
+   * c'est la page, l'anthracite). Quel que soit le décalage
+   * fractionnaire, et quel que soit le moteur, ce qui peut apparaître
+   * au bord du cadre est au pire ce pixel de page : invisible sur
+   * l'anthracite. LA PHOTO VOISINE NE PEUT PLUS PHYSIQUEMENT ATTEINDRE
+   * LE BORD DU CADRE — ce n'est plus une affaire de précision, c'est
+   * une impossibilité géométrique. C'est le raisonnement qui a réglé le
+   * trait gris en nº 295 : on n'essaie plus de coller au pixel, on
+   * supprime ce qui rend l'écart visible.
+   *
+   * CE QUE ÇA COÛTE : deux pixels de largeur d'image sur ~660, soit
+   * 0,3 %. `object-cover` recadre, rien ne se déforme.
+   * ⚠️ CE QUE ÇA NE TOUCHE PAS : la colonne, elle, garde sa largeur de
+   * 100 % — donc le pas du défilement, l'accrochage, `offsetLeft`, la
+   * restauration de position, le format 4/5 et la hauteur réservée sont
+   * strictement inchangés. Seule l'IMAGE rétrécit, à l'intérieur.
+   * ⚠️ LA PAGE PLEINE, ET ELLE SEULE :
+   *  · les CARTES de la mosaïque ne changent pas (leur trait n'a jamais
+   *    été signalé, et leurs miniatures sont bien plus petites) ;
+   *  · la FENÊTRE CENTRÉE SUPERPOSÉE ne change pas — elle vient d'être
+   *    remise dans son état d'avant la nº 292 (`dansLaFenetre`) et
+   *    n'aurait jamais dû être touchée.
+   */
+  const PHOTO_DANS_SA_COLONNE =
+    surCarte || dansLaFenetre
+      ? "absolute inset-0 h-full w-full object-cover"
+      : "absolute inset-y-0 left-px h-full w-[calc(100%_-_2px)] object-cover";
+
   /** Le texte de remplacement d'une photo : le style, et sa légende
       quand elle est taguée (« Avant-bras · Couleur »). */
   const texteDe = (photo: PhotoGalerie) =>
@@ -944,7 +990,10 @@ export function CarrouselPortfolio({
               //  protège d'un demi-pixel manquant, ce n'est plus un
               //  débordement, c'est qu'il n'y a RIEN à découvrir
               //  derrière (règle b).
-              className="absolute inset-0 h-full w-full object-cover"
+              //  §1 (nº 297) — inchangé ici : une CARTE de mosaïque
+              //  garde sa photo pleine colonne (voir la note de
+              //  `PHOTO_DANS_SA_COLONNE`).
+              className={PHOTO_DANS_SA_COLONNE}
             />
           ) : (
             /*  §1 (nº 280) — PLUS D'APERÇU : la pleine résolution, et
@@ -958,7 +1007,11 @@ export function CarrouselPortfolio({
               prioritaire={rang === 0}
               //  §2 (nº 295) — annulé ici aussi : la photo épouse
               //  exactement sa colonne (voir la note jumelle).
-              classe="absolute inset-0 h-full w-full object-cover"
+              //  §1 (nº 297) — …et en PAGE PLEINE elle s'y rétracte de
+              //  deux pixels, centrée : il reste un pixel de page de
+              //  chaque côté, que la voisine ne peut plus franchir
+              //  (voir la note de `PHOTO_DANS_SA_COLONNE`).
+              classe={PHOTO_DANS_SA_COLONNE}
             />
           );
           return (
