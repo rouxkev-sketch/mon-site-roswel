@@ -674,8 +674,8 @@ export function BlocPortfolio({
           aria-hidden="true"
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full
                      bg-sombre-eleve text-sombre-texte transition-colors
-                     group-hover:bg-primaire-voile group-hover:text-primaire
-                     group-active:bg-primaire-voile group-active:text-primaire"
+                     group-hover:bg-sombre-eleve-clair group-hover:text-primaire
+                     group-active:bg-sombre-eleve-clair group-active:text-primaire"
         >
           <IconePlus taille={18} />
         </span>
@@ -869,8 +869,8 @@ export function BlocPortfolio({
                     className={`rounded-lg px-3 py-2.5 text-left
                                transition-colors ${
                                  actif
-                                   ? "bg-primaire-voile"
-                                   : "bg-sombre-eleve hover:bg-primaire/10"
+                                   ? "bg-sombre-eleve-clair"
+                                   : "bg-sombre-eleve hover:bg-sombre-eleve-clair"
                                }`}
                   >
                     <span

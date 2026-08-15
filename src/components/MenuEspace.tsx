@@ -479,6 +479,10 @@ export function MenuEspace({
             // bloc `eleve-clair/70`, ne s'en détachait plus. Il prend
             // `haut` (65,65,73) au repos et `haut-clair` (75,75,84)
             // ouvert : chaque niveau s'éclaircit, jamais de contour.
+            //  §2 (nº 289) — LE LISERÉ DE VERRE : l'exception de la
+            //  charte, dosée pour se sentir sans se voir (globals.css,
+            //  [data-verre-champ]).
+            data-verre-champ=""
             className={`flex w-full items-center gap-3 rounded-xl px-3
                        min-h-[54px] text-left transition-colors ${
                          selecteurOuvert

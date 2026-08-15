@@ -236,7 +236,7 @@ export function LienLibre({
           className="inline-flex items-center rounded-full bg-sombre-eleve
                      px-5 min-h-[42px] text-[14px] font-semibold
                      text-sombre-texte transition-colors
-                     hover:bg-primaire-voile hover:text-primaire"
+                     hover:bg-sombre-eleve-clair hover:text-primaire"
         >
           Ajouter
         </button>

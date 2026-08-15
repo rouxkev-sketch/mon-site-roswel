@@ -321,7 +321,7 @@ export function ChampsPlageDates({
                                      : eteint
                                        ? "text-sombre-texte-doux/40"
                                        : dansLaPlage
-                                         ? "bg-primaire-voile text-primaire"
+                                         ? "bg-sombre-eleve-clair text-primaire"
                                          : estAujourdHui
                                            ? "font-bold text-primaire hover:bg-sombre-eleve-clair"
                                            : "text-sombre-texte hover:bg-sombre-eleve-clair"

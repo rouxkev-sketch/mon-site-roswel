@@ -273,10 +273,30 @@ export function FenetreCarrousel({
             type="button"
             aria-label="Retour"
             onClick={surFermeture}
-            className="flex h-11 w-11 items-center justify-center
+            className="relative flex h-11 w-11 items-center justify-center
                        text-sombre-texte"
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+              /*  §1 (nº 289) — LE TRACÉ, PAS LA BOÎTE. La nº 287 avait
+                  aligné les BOÎTES (16 = 16) ; l'œil, lui, voit le
+                  TRAIT — qui commençait 17 px plus à droite (le
+                  chevron est centré dans sa zone de touche de 44).
+                  Le bord visible du trait vit à 6,325 px du bord du
+                  svg : la pointe du chevron est à 8/24 du viewBox,
+                  moins la demi-épaisseur (1,1), le tout à l'échelle
+                  22/24 → (8 − 1,1) × 22 ÷ 24 = 6,325. Posé en
+                  absolu à −6,325 px, LE TRAIT commence à 0 du bouton
+                  — donc à 16 px de l'écran, LE BORD DU ROND, au
+                  pixel. La zone de touche ne bouge pas : toujours
+                  44 × 44, à sa place. */
+              className="absolute"
+              style={{ left: "-6.325px", top: "11px" }}
+            >
               <path
                 d="M14.5 5.5 8 12l6.5 6.5"
                 stroke="currentColor"
@@ -293,10 +313,30 @@ export function FenetreCarrousel({
           <a
             href={adresseFiche}
             aria-label="Voir la fiche"
-            className="flex h-11 w-11 items-center justify-center
+            className="relative flex h-11 w-11 items-center justify-center
                        text-sombre-texte"
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+              /*  §1 (nº 289) — LE TRACÉ, PAS LA BOÎTE. La nº 287 avait
+                  aligné les BOÎTES (16 = 16) ; l'œil, lui, voit le
+                  TRAIT — qui commençait 17 px plus à droite (le
+                  chevron est centré dans sa zone de touche de 44).
+                  Le bord visible du trait vit à 6,325 px du bord du
+                  svg : la pointe du chevron est à 8/24 du viewBox,
+                  moins la demi-épaisseur (1,1), le tout à l'échelle
+                  22/24 → (8 − 1,1) × 22 ÷ 24 = 6,325. Posé en
+                  absolu à −6,325 px, LE TRAIT commence à 0 du bouton
+                  — donc à 16 px de l'écran, LE BORD DU ROND, au
+                  pixel. La zone de touche ne bouge pas : toujours
+                  44 × 44, à sa place. */
+              className="absolute"
+              style={{ left: "-6.325px", top: "11px" }}
+            >
               <path
                 d="M14.5 5.5 8 12l6.5 6.5"
                 stroke="currentColor"

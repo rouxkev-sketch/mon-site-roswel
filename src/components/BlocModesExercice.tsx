@@ -517,7 +517,7 @@ export function BlocModesExercice({
                            min-h-[40px] text-[13.5px] font-semibold
                            transition-colors ${
                              actif
-                               ? "border-transparent bg-primaire-voile text-primaire"
+                               ? "border-transparent bg-sombre-eleve-clair text-primaire"
                                : enFaute
                                  ? "border-erreur bg-sombre-eleve text-sombre-texte-doux hover:text-sombre-texte"
                                  : "border-transparent bg-sombre-eleve text-sombre-texte-doux hover:text-sombre-texte"
@@ -937,8 +937,8 @@ export function BlocModesExercice({
                 cadreRouge ? "border-erreur" : "border-transparent"
               } ${
                 actif
-                  ? "bg-primaire-voile"
-                  : "bg-sombre-eleve hover:bg-primaire/10 active:bg-primaire/10"
+                  ? "bg-sombre-eleve-clair"
+                  : "bg-sombre-eleve hover:bg-sombre-eleve-clair active:bg-sombre-eleve-clair"
               }`}
             >
               {/* Plus de police réduite sous 360 px (nº 124) : à deux
@@ -1120,8 +1120,8 @@ export function BlocModesExercice({
             onClick={() => ajouterUnLieu(genreAffiche)}
             className="mt-5 w-fit rounded-full bg-sombre-eleve px-4 min-h-[40px]
                        text-[13.5px] font-semibold text-sombre-texte-doux
-                       transition-colors hover:bg-primaire-voile hover:text-primaire
-                       active:bg-primaire-voile active:text-primaire"
+                       transition-colors hover:bg-sombre-eleve-clair hover:text-primaire
+                       active:bg-sombre-eleve-clair active:text-primaire"
           >
             {genreAffiche === "guest"
               ? "+ Ajouter une autre date"

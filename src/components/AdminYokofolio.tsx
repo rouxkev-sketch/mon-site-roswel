@@ -508,7 +508,7 @@ export function AdminYokofolio() {
               className={`rounded-lg px-4 min-h-[42px] text-left text-[14.5px] font-semibold
                          transition-colors ${
                            section === entree.cle
-                             ? "bg-primaire-voile text-primaire"
+                             ? "bg-sombre-eleve-clair text-primaire"
                              : "text-sombre-texte-doux hover:text-sombre-texte hover:bg-sombre-carte"
                          }`}
             >
