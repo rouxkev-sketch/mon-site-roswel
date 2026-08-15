@@ -1,13 +1,15 @@
 /**
- * BANC DE LA PASSE Nº 299 — LIVRAISON RAPIDE
+ * BANC DE LA PASSE Nº 300 — LIVRAISON RAPIDE
  * ==================================================================
  * UN SEUL POINT : la colonne de lecture de la FICHE PLEINE PAGE passe
- * de 380 à 340 px (350 à l'écriture, amendé nº 300 — voir plus bas),
- * et l'ensemble photo + gouttière + colonne se
- * recentre — marges extérieures égales.
- * ⚠️ LA FENÊTRE SUPERPOSÉE RESTE À 380 : elle n'est pas concernée.
+ * de 350 à 340 px — la valeur que le propriétaire voulait à la nº 299
+ * (350 était une erreur de saisie). Les deux bornes de l'ancien
+ * `minmax(340px, 350px)` se rejoignant, c'est désormais une LARGEUR
+ * FIXE. L'ensemble photo + gouttière + colonne reste recentré.
+ * ⚠️ LA FENÊTRE SUPERPOSÉE RESTE À 380 : elle n'est pas concernée, et
+ * aucun de ses fichiers n'est modifié.
  * ⚠️ LE GROS DU BANC TIENT À UNE SEULE FENÊTRE : 1440 × 823, densité 2.
- * Les trois autres largeurs ne servent qu'au contrôle de débordement
+ * Les autres largeurs ne servent qu'au contrôle de débordement
  * horizontal que le propriétaire demande nommément.
  */
 import {
@@ -33,16 +35,20 @@ const FICHE = "atelier-corvus-lyon-1er";
 /** Le fond de la page (`#1A1A1D`). */
 const PAGE = "26,26,29";
 
-titre("à la source — 340 en page pleine, 380 dans la fenêtre");
+titre("à la source — 340 en largeur fixe, 380 dans la fenêtre");
 {
-  //  ⚠️ AMENDÉ LE 15/08/2026 (passe nº 300) — 350 était une ERREUR DE
-  //  SAISIE du propriétaire : il voulait 340. Les deux bornes du
-  //  `minmax` se rejoignant sur 340, il ne reste qu'une largeur fixe.
-  //  La vérification garde son sens, seul le nombre change.
   verif(
-    "LA PAGE PLEINE FAIT 340 px, EN LARGEUR FIXE (nº 300 — c'était " +
-      "minmax(340,350) à la nº 299)",
-    /lg:grid-cols-\[auto_340px\]/.test(fiche)
+    "LA PAGE PLEINE FAIT 340 px, ÉCRIT DE LA FAÇON LA PLUS SIMPLE : une " +
+      "largeur fixe, plus aucun `minmax`",
+    /lg:grid-cols-\[auto_340px\] lg:justify-center/.test(fiche) &&
+      !/minmax\(340px/.test(fiche)
+  );
+  verif(
+    "ET LE CODE DIT QUE C'EST UNE VALEUR CHOISIE À L'ŒIL PAR LE " +
+      "PROPRIÉTAIRE — pour qu'aucune session future ne la « corrige »",
+    /340 EST UNE VALEUR CHOISIE À L'ŒIL PAR LE PROPRIÉTAIRE/.test(
+      lire("src/components/FicheTatoueur.tsx")
+    )
   );
   verif(
     "LA FENÊTRE SUPERPOSÉE EST TOUJOURS À 380 — pas un caractère de sa " +
@@ -121,7 +127,7 @@ titre("vivant — 1440 × 823, densité 2");
       };
     });
     verif(
-      "LA COLONNE DE LECTURE FAIT 340 px (amendé nº 300 — c'était 350)",
+      "LA COLONNE DE LECTURE FAIT 340 px",
       Math.abs(m.largeurColonne - 340) < 0.001,
       `${m.largeurColonne.toFixed(3)} px`
     );
@@ -149,8 +155,8 @@ titre("vivant — 1440 × 823, densité 2");
         `${m.largeurColonne} + ${m.margeDroite} = ${m.fenetre}`
     );
     verif(
-      "LA PHOTO N'A PAS CHANGÉ DE TAILLE : 564 × 705, comme aux nº 297 " +
-        "et nº 298",
+      "LA PHOTO N'A PAS CHANGÉ DE TAILLE : 564 × 705, comme aux nº 297, " +
+        "nº 298 et nº 299",
       Math.abs(m.largeurPhoto - 564) < 0.001 &&
         Math.abs(m.hauteurPhoto - 705) < 0.001,
       `${m.largeurPhoto.toFixed(3)} × ${m.hauteurPhoto.toFixed(3)}`
@@ -313,11 +319,23 @@ titre("vivant — 1440 × 823, densité 2");
 
     /* ---- 4. AUCUN DÉBORDEMENT HORIZONTAL, QUATRE LARGEURS ------- */
     /*  Le seul point de ce banc qui sort de la fenêtre unique — le
-        propriétaire le demande nommément. Une mesure, rien de plus. */
+        propriétaire le demande nommément. Une mesure, rien de plus.
+        ⚠️ ET UN CINQUIÈME CAS, LE PLUS SERRÉ QUI PUISSE EXISTER :
+        1024 de large sur 1400 de haut. La colonne ne peut plus se
+        resserrer (elle est fixe), et c'est la hauteur qui commande la
+        largeur de la photo — donc plus la fenêtre est haute et étroite,
+        plus le couple photo + colonne pousse. Si la page devait déborder
+        quelque part, ce serait là. */
     const larges = [];
-    for (const largeur of [1024, 1280, 1440, 1920]) {
+    for (const [largeur, hauteur] of [
+      [1024, 900],
+      [1280, 900],
+      [1440, 900],
+      [1920, 900],
+      [1024, 1400],
+    ]) {
       const c = await nav.newContext({
-        viewport: { width: largeur, height: 900 },
+        viewport: { width: largeur, height: hauteur },
         deviceScaleFactor: 1,
       });
       const p = await c.newPage();
@@ -337,6 +355,7 @@ titre("vivant — 1440 × 823, densité 2");
           const cd = r(colonne).right - parseFloat(cs.paddingRight);
           return {
             largeur: innerWidth,
+            hauteur: innerHeight,
             debord: document.documentElement.scrollWidth - innerWidth,
             colonne:
               cd - (r(colonne).left + parseFloat(cs.paddingLeft)),
@@ -348,19 +367,22 @@ titre("vivant — 1440 × 823, densité 2");
       await c.close();
     }
     verif(
-      "AUCUN DÉBORDEMENT HORIZONTAL DE LA PAGE À 1024, 1280, 1440 ET 1920",
+      "AUCUN DÉBORDEMENT HORIZONTAL DE LA PAGE À 1024, 1280, 1440 ET 1920 " +
+        "— ni dans le cas le plus serré (1024 × 1400)",
       larges.every((l) => l.debord === 0),
-      larges.map((l) => `${l.largeur}:${l.debord}`).join(" · ")
+      larges.map((l) => `${l.largeur}×${l.hauteur}:${l.debord}`).join(" · ")
     );
     verif(
-      "…ET AUX QUATRE LARGEURS, LA COLONNE VAUT 340 ET LES DEUX MARGES " +
-        "RESTENT ÉGALES",
+      "…ET PARTOUT, LA COLONNE VAUT 340 ET LES DEUX MARGES RESTENT ÉGALES",
       larges.every(
         (l) =>
           Math.abs(l.colonne - 340) < 0.001 && Math.abs(l.margeG - l.margeD) < 0.001
       ),
       larges
-        .map((l) => `${l.largeur}: col ${l.colonne} · ${l.margeG}/${l.margeD}`)
+        .map(
+          (l) =>
+            `${l.largeur}×${l.hauteur}: col ${l.colonne} · ${l.margeG}/${l.margeD}`
+        )
         .join(" · ")
     );
   } finally {

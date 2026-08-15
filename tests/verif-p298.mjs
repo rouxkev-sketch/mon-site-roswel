@@ -37,20 +37,26 @@ titre("à la source — la largeur vient de la fenêtre, le rognage s'écarte");
   const largeurFenetre = /lg:w-\[(\d+)px\] shrink-0 lg:h-full lg:overflow-y-auto/.exec(
     fenetreF
   );
-  const largeurPage = /lg:grid-cols-\[auto_minmax\(340px,(\d+)px\)\]/.exec(fiche);
+  //  ⚠️ LA PAGE A CESSÉ D'ÊTRE UN `minmax` À LA nº 300 : la plage
+  //  340–350 s'est refermée sur un nombre. Les deux écritures sont
+  //  reconnues ici, pour que ce banc reste lisible d'où qu'on vienne.
+  const largeurPage = (
+    /lg:grid-cols-\[auto_(?:minmax\(340px,)?(\d+)px\)?\]/.exec(fiche) ?? []
+  )[1];
   //  ⚠️ AMENDÉ LE 15/08/2026 (passe nº 299) — CETTE VÉRIFICATION EST
   //  CADUQUE TELLE QU'ELLE ÉTAIT ÉCRITE. Elle exigeait que la colonne
   //  de la page et celle de la fenêtre superposée soient LE MÊME
   //  NOMBRE (380). Le propriétaire a mesuré le résultat et tranché :
   //  380 reste juste pour la fenêtre, mais c'est encore trop long en
-  //  pleine page — il a choisi 350. Les deux vues n'ont donc plus la
+  //  pleine page — il a choisi 350, puis 340 (nº 300 : 350 était une
+  //  erreur de saisie). Les deux vues n'ont donc plus la
   //  même laisse, EN CONNAISSANCE DE CAUSE. Ce qui reste vérifiable, et
   //  qui compte, c'est que la fenêtre superposée n'a PAS bougé.
   verif(
     "LA FENÊTRE SUPERPOSÉE EST TOUJOURS À 380 px — la nº 299 n'a changé " +
-      "que la page pleine, qui vaut désormais 350 px",
-    largeurFenetre?.[1] === "380" && largeurPage?.[1] === "350",
-    `fenêtre ${largeurFenetre?.[1]} px · page ${largeurPage?.[1]} px`
+      "que la page pleine, qui vaut désormais 340 px",
+    largeurFenetre?.[1] === "380" && largeurPage === "340",
+    `fenêtre ${largeurFenetre?.[1]} px · page ${largeurPage} px`
   );
   verif(
     "LE RECENTRAGE N'EST PAS ÉCRIT : c'est `justify-center` qui centre " +
@@ -126,12 +132,12 @@ titre("vivant — 1440 × 823, densité 2");
       };
     });
     //  ⚠️ AMENDÉ LE 15/08/2026 (passe nº 299) : 380 était la valeur de
-    //  la nº 298 ; le propriétaire l'a mesurée puis ramenée à 350 pour
+    //  la nº 298 ; le propriétaire l'a mesurée puis ramenée à 340 pour
     //  la seule page pleine. La vérification garde son sens — la
     //  colonne vaut la largeur DÉCIDÉE —, seul le nombre change.
     verif(
-      "LA COLONNE DE LECTURE FAIT 350 px (nº 299 — c'était 380 à la nº 298)",
-      Math.abs(m.largeurColonne - 350) < 0.001,
+      "LA COLONNE DE LECTURE FAIT 340 px (nº 300 — c'était 380 à la nº 298)",
+      Math.abs(m.largeurColonne - 340) < 0.001,
       `${m.largeurColonne.toFixed(3)} px`
     );
     verif(

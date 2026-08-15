@@ -607,36 +607,40 @@ export function FicheTatoueur({
     >
       {/* Les DEUX COLONNES FORMENT UN ENSEMBLE CENTRÉ : la piste photo
           prend sa largeur réelle (`auto`), la colonne de lecture est
-          bornée (340 à 350 px), et `justify-center` centre le tout —
-          plus de photo collée à gauche avec un trou au milieu. */}
-      {/*  §1 (nº 298, révisé nº 299) — LA COLONNE DE LECTURE FAIT
-           350 px EN PLEINE PAGE.
+          fixée à 340 px, et `justify-center` centre le tout — plus de
+          photo collée à gauche avec un trou au milieu. */}
+      {/*  §1 (nº 298, révisé nº 299 puis nº 300) — LA COLONNE DE
+           LECTURE FAIT 340 px EN PLEINE PAGE.
            ------------------------------------------------------------
-           LE DÉFAUT, RELEVÉ PAR LE PROPRIÉTAIRE À 1440 CSS : la colonne
-           s'ouvrait jusqu'à 400 px, ses lignes de séparation couraient
-           sur toute cette largeur, et le contenu ne la remplissait pas
-           — la page paraissait vide à droite.
-           LA nº 298 L'A ALIGNÉE SUR LA FENÊTRE SUPERPOSÉE (380 px, la
-           valeur de `lg:w-[380px]` dans FenetreFiche). Mesuré chez le
-           propriétaire : les lignes faisaient bien 380 — mais à l'œil,
-           c'était ENCORE trop long. LA nº 299 POSE DONC 350, ET C'EST
-           SON CHOIX : la pleine page et la fenêtre superposée cessent
-           d'avoir la même laisse, en connaissance de cause.
+           ⚠️ 340 EST UNE VALEUR CHOISIE À L'ŒIL PAR LE PROPRIÉTAIRE, ET
+           ELLE NE SE « CORRIGE » PAS. Aucune session future ne doit la
+           recalculer, l'arrondir, ni la réaligner sur quoi que ce soit :
+           c'est SA décision de mise en page, prise sur ses propres
+           captures. Si elle doit changer un jour, c'est lui qui le dira.
+           L'HISTOIRE, POUR QU'ON NE LA REFASSE PAS : la colonne
+           s'ouvrait jusqu'à 400 px et le contenu ne la remplissait pas
+           — la page paraissait vide à droite. La nº 298 l'a alignée sur
+           la FENÊTRE SUPERPOSÉE (380 px, `lg:w-[380px]` dans
+           FenetreFiche) ; mesuré chez le propriétaire, c'était encore
+           trop long. La nº 299 a posé 350, une erreur de saisie de sa
+           part. La nº 300 pose la valeur qu'il voulait : 340.
            ⚠️ ET LA FENÊTRE SUPERPOSÉE RESTE À 380 — elle n'est pas
-           concernée, aucun de ses fichiers ne bouge.
-           ⚠️ POURQUOI UN `minmax` ET NON UN 350 SEC : la borne basse
-           (340) existe pour les fenêtres étroites, où la colonne DOIT
-           pouvoir se resserrer plutôt que de pousser la photo hors de
-           l'écran. Dès qu'il y a la place — et il y en a à 1440 —
-           elle vaut exactement 350.
+           concernée, aucun de ses fichiers ne bouge. Les deux vues
+           n'ont plus la même laisse, EN CONNAISSANCE DE CAUSE.
+           ⚠️ UNE LARGEUR FIXE, PLUS UN `minmax` : la plage allait de
+           340 à 350 ; les deux bornes se rejoignant sur 340, il ne
+           reste qu'un nombre. C'est aussi la borne basse d'origine,
+           celle qui protégeait les fenêtres étroites — la colonne ne
+           peut donc pas pousser la photo hors de l'écran, elle est
+           déjà à son minimum historique.
            ⚠️ LE RECENTRAGE VIENT TOUT SEUL : `justify-center` centre
-           l'ENSEMBLE photo + gouttière + colonne. En retirant 30 px à
+           l'ENSEMBLE photo + gouttière + colonne. En retirant 10 px à
            la colonne, le bloc se rétrécit d'autant et les deux marges
-           extérieures gagnent 15 px chacune — elles restent égales,
-           sans qu'aucune marge soit écrite nulle part.
+           extérieures gagnent 5 px chacune — elles restent égales, sans
+           qu'aucune marge soit écrite nulle part.
            ⚠️ CE QUI NE BOUGE PAS : la photo (sa largeur découle de la
            hauteur de l'écran, nº 290) et la gouttière (`lg:gap-10`). */}
-      <div className="grid gap-8 lg:gap-10 lg:grid-cols-[auto_minmax(340px,350px)] lg:justify-center">
+      <div className="grid gap-8 lg:gap-10 lg:grid-cols-[auto_340px] lg:justify-center">
         {/* ---------- La photo — calée dans la hauteur visible (web) ----------
              §3 (nº 295) — SAUF QUAND LE LIEN A DIT « PAS DE PHOTO » :
              la colonne entière disparaît, la page commence par Profil /
