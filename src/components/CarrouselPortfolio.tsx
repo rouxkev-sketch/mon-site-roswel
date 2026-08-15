@@ -107,6 +107,8 @@ export function CarrouselPortfolio({
   prioritaire = false,
   natureDeLaSerie = "",
   lien,
+  sansCompteur = false,
+  sansPoints = false,
   children,
 }: {
   /** LES PHOTOS DE L'ENSEMBLE AFFICHÉ. */
@@ -155,6 +157,21 @@ export function CarrouselPortfolio({
     onClick?: (evenement: React.MouseEvent) => void;
     label: string;
   };
+  /**
+   * §Fenêtre (nº 284) — LA CAPSULE « 3/12 » NE S'AFFICHE PAS. Dans la
+   * fenêtre de carrousel du smartphone, la photo est NETTE : rien de
+   * posé dessus — les points, rendus SOUS la photo, disent déjà le
+   * nombre. Faux partout ailleurs : la page et la fenêtre du web ne
+   * changent en rien.
+   */
+  sansCompteur?: boolean;
+  /**
+   * §Fenêtre (nº 284) — LES POINTS NE SE DESSINENT PAS DANS LA PHOTO.
+   * La fenêtre de carrousel les affiche elle-même SOUS la photo (la
+   * même frise, `PointsDuCarrousel` — une seule écriture). Faux
+   * partout ailleurs.
+   */
+  sansPoints?: boolean;
   /** Posé PAR-DESSUS la photo (le partage, le cœur). */
   children?: React.ReactNode;
 }) {
@@ -651,26 +668,15 @@ export function CarrouselPortfolio({
    *  · À LA FIN, la frise cesse de glisser et l'actif migre vers la
    *    droite jusqu'au dernier rond.
    */
-  //  Un cran de frise : le rond (6 px) et son air. Sept crans au plus.
   //  ⚠️ UNE FONCTION APPELÉE DANS LE JSX, comme `fleche` — et non une
   //  valeur calculée pendant le rendu : ses boutons commandent le
   //  défilement, donc ils touchent au cadre (une ref), ce qui n'a le
   //  droit de se produire QUE dans un gestionnaire d'événement.
-  const CRAN_FRISE = 14;
+  //  ⚠️ LA FRISE ELLE-MÊME EST EXTRAITE (`PointsDuCarrousel`, en bas de
+  //  ce fichier — nº 284) : la fenêtre de carrousel du smartphone rend
+  //  LES MÊMES points, sous la photo. Ici, rien n'a changé : le même
+  //  DOM, à la même place, avec le même comportement.
   function paginationWeb() {
-    const crans = Math.min(n, 7);
-    //  Le premier rond de la fenêtre : collée au début, puis centrée
-    //  sur l'actif, puis collée à la fin — les trois temps.
-    const debut = Math.max(0, Math.min(indice - 3, n - 7));
-    //  La zone à taille pleine (trois ronds) : autour de l'actif quand
-    //  la frise glisse, contre le bord au début et à la fin.
-    const zone = n <= 5 ? 0 : Math.max(debut, Math.min(indice - 1, debut + 4));
-    const echelle = (rang: number) => {
-      if (n <= 5) return 1;
-      const distance =
-        rang < zone ? zone - rang : rang > zone + 2 ? rang - (zone + 2) : 0;
-      return distance === 0 ? 1 : distance === 1 ? 0.75 : distance === 2 ? 0.5 : 0;
-    };
     return (
       <div
         data-role="pagination"
@@ -678,53 +684,11 @@ export function CarrouselPortfolio({
           surCarte ? "flex" : "flex mobile:hidden"
         } absolute bottom-3 inset-x-0 z-[2] justify-center pointer-events-none`}
       >
-        <div className="overflow-hidden" style={{ width: crans * CRAN_FRISE }}>
-          <div
-            className="flex transition-transform duration-300 ease-out"
-            style={{ transform: `translateX(${-debut * CRAN_FRISE}px)` }}
-          >
-            {photos.map((photo, rang) => {
-              const taille = echelle(rang);
-              return (
-                <span
-                  key={photo.cle}
-                  className="flex shrink-0 items-center justify-center"
-                  style={{ width: CRAN_FRISE }}
-                >
-                  <button
-                    type="button"
-                    aria-label={`Voir la photo ${rang + 1} sur ${n}`}
-                    aria-current={rang === indice ? "true" : undefined}
-                    onClick={() => allerA(rang, true, "rond")}
-                    tabIndex={taille === 0 ? -1 : 0}
-                    //  L'actif : blanc plein. Les autres : blanc voilé.
-                    //  ⚠️ L'OMBRE EST LA MÊME SUR TOUS LES RONDS
-                    //  (nº 221) : sans décalage, donc parfaitement
-                    //  centrée, très douce — elle n'existe que pour
-                    //  qu'un rond reste lisible sur une photo blanche.
-                    //  LE HALO BLANC DE L'ACTIF EST SUPPRIMÉ : à
-                    //  14 px d'entraxe, sa lueur touchait les voisins
-                    //  à gauche et à droite mais ne rencontrait rien
-                    //  en haut ni en bas — l'œil y lisait une
-                    //  projection latérale. Et sur une photo claire,
-                    //  un halo blanc n'éclairait rien du tout.
-                    //  (Elle sort de la liste de transition : une
-                    //  ombre constante n'a rien à animer.)
-                    className={`pointer-events-auto h-1.5 w-1.5 rounded-full
-                               shadow-[0_0_2px_rgba(0,0,0,0.4)]
-                               transition-[transform,opacity,background-color]
-                               duration-300 ease-out ${
-                                 rang === indice
-                                   ? "bg-white"
-                                   : "bg-white/45 hover:bg-white/75"
-                               }`}
-                    style={{ transform: `scale(${taille})`, opacity: taille === 0 ? 0 : 1 }}
-                  />
-                </span>
-              );
-            })}
-          </div>
-        </div>
+        <PointsDuCarrousel
+          photos={photos}
+          indice={indice}
+          surRang={(rang) => allerA(rang, true, "rond")}
+        />
       </div>
     );
   }
@@ -915,12 +879,105 @@ export function CarrouselPortfolio({
 
       {!surCarte && indice > 0 && fleche(-1)}
       {!surCarte && indice < n - 1 && fleche(1)}
-      {!surCarte && compteur}
+      {/*  §Fenêtre (nº 284) — la capsule ne se pose pas quand la photo
+           doit rester nette (fenêtre de carrousel). */}
+      {!surCarte && !sansCompteur && compteur}
       {children}
 
       {/* WEB : la pagination façon Instagram, EN BAS AU CENTRE de
-          l'image (nº 198-§5). */}
-      {n > 1 && paginationWeb()}
+          l'image (nº 198-§5) — sauf quand l'appelant la rend lui-même
+          SOUS la photo (fenêtre de carrousel, nº 284). */}
+      {n > 1 && !sansPoints && paginationWeb()}
+    </div>
+  );
+}
+
+/** Un cran de frise : le rond (6 px) et son air. Sept crans au plus. */
+const CRAN_FRISE = 14;
+
+/**
+ * LA FRISE DE POINTS — L'ÉCRITURE UNIQUE (nº 198-§5, extraite nº 284)
+ * ==================================================================
+ * C'est la pagination façon Instagram du web, MOT POUR MOT : sept
+ * crans au plus, l'actif blanc plein qui glisse, les extrémités qui
+ * décroissent (75 %, 50 %). Elle vivait enfermée dans le carrousel ;
+ * la FENÊTRE DE CARROUSEL du smartphone (nº 284) affiche LES MÊMES
+ * points SOUS la photo — deux emplois, une seule écriture, aucun
+ * risque qu'ils divergent.
+ * `surRang` : ce que fait un rond touché. Le carrousel y met son
+ * `allerA` (défilement doux vers `offsetLeft`) ; la fenêtre applique
+ * la même règle sur son propre cadre.
+ */
+export function PointsDuCarrousel({
+  photos,
+  indice,
+  surRang,
+}: {
+  photos: PhotoGalerie[];
+  indice: number;
+  surRang: (rang: number) => void;
+}) {
+  const n = photos.length;
+  const crans = Math.min(n, 7);
+  //  Le premier rond de la fenêtre : collée au début, puis centrée
+  //  sur l'actif, puis collée à la fin — les trois temps.
+  const debut = Math.max(0, Math.min(indice - 3, n - 7));
+  //  La zone à taille pleine (trois ronds) : autour de l'actif quand
+  //  la frise glisse, contre le bord au début et à la fin.
+  const zone = n <= 5 ? 0 : Math.max(debut, Math.min(indice - 1, debut + 4));
+  const echelle = (rang: number) => {
+    if (n <= 5) return 1;
+    const distance =
+      rang < zone ? zone - rang : rang > zone + 2 ? rang - (zone + 2) : 0;
+    return distance === 0 ? 1 : distance === 1 ? 0.75 : distance === 2 ? 0.5 : 0;
+  };
+  return (
+    <div className="overflow-hidden" style={{ width: crans * CRAN_FRISE }}>
+      <div
+        className="flex transition-transform duration-300 ease-out"
+        style={{ transform: `translateX(${-debut * CRAN_FRISE}px)` }}
+      >
+        {photos.map((photo, rang) => {
+          const taille = echelle(rang);
+          return (
+            <span
+              key={photo.cle}
+              className="flex shrink-0 items-center justify-center"
+              style={{ width: CRAN_FRISE }}
+            >
+              <button
+                type="button"
+                aria-label={`Voir la photo ${rang + 1} sur ${n}`}
+                aria-current={rang === indice ? "true" : undefined}
+                onClick={() => surRang(rang)}
+                tabIndex={taille === 0 ? -1 : 0}
+                //  L'actif : blanc plein. Les autres : blanc voilé.
+                //  ⚠️ L'OMBRE EST LA MÊME SUR TOUS LES RONDS
+                //  (nº 221) : sans décalage, donc parfaitement
+                //  centrée, très douce — elle n'existe que pour
+                //  qu'un rond reste lisible sur une photo blanche.
+                //  LE HALO BLANC DE L'ACTIF EST SUPPRIMÉ : à
+                //  14 px d'entraxe, sa lueur touchait les voisins
+                //  à gauche et à droite mais ne rencontrait rien
+                //  en haut ni en bas — l'œil y lisait une
+                //  projection latérale. Et sur une photo claire,
+                //  un halo blanc n'éclairait rien du tout.
+                //  (Elle sort de la liste de transition : une
+                //  ombre constante n'a rien à animer.)
+                className={`pointer-events-auto h-1.5 w-1.5 rounded-full
+                           shadow-[0_0_2px_rgba(0,0,0,0.4)]
+                           transition-[transform,opacity,background-color]
+                           duration-300 ease-out ${
+                             rang === indice
+                               ? "bg-white"
+                               : "bg-white/45 hover:bg-white/75"
+                           }`}
+                style={{ transform: `scale(${taille})`, opacity: taille === 0 ? 0 : 1 }}
+              />
+            </span>
+          );
+        })}
+      </div>
     </div>
   );
 }

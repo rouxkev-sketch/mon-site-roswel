@@ -318,6 +318,34 @@ export function cheminDuCarrousel(
   return requete ? `/tatoueur/${slug}?${requete}` : `/tatoueur/${slug}`;
 }
 
+/**
+ * §Fenêtre (nº 284) — L'ADRESSE DE LA FENÊTRE DE CARROUSEL, écrite une
+ * seule fois.
+ * ==================================================================
+ * Sur smartphone, un carrousel s'ouvre en PLEINE PAGE par-dessus la
+ * fiche (FenetreCarrousel). Cette adresse est celle que l'ouverture
+ * pousse dans l'historique, ET une vraie page servie par le serveur
+ * (`/tatoueur/<slug>/carrousel`) : partagée, elle ouvre la fenêtre chez
+ * quelqu'un qui n'a jamais vu la fiche.
+ * `photo` : LE RANG DE LA PHOTO TOUCHÉE — la fenêtre s'ouvre sur elle,
+ * jamais sur la première (nº 284). Zéro ne s'écrit pas : l'adresse la
+ * plus courante reste propre.
+ */
+export function cheminDeLaFenetreCarrousel(
+  slug: string,
+  style: string,
+  serie: { nature: string; rendu: string } | null,
+  photo = 0
+): string {
+  const suite = new URLSearchParams();
+  if (style) suite.set("style", style);
+  if (serie?.nature) suite.set("nature", serie.nature);
+  if (serie?.rendu) suite.set("rendu", serie.rendu);
+  if (photo > 0) suite.set("photo", String(photo));
+  const requete = suite.toString();
+  return `/tatoueur/${slug}/carrousel${requete ? `?${requete}` : ""}`;
+}
+
 export function serieDeLOuverture(
   groupes: StyleGalerie[],
   style: string

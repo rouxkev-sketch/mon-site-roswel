@@ -1,24 +1,34 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
 import {
   libelleStyle,
   MARQUE_YOKOFOLIO,
 } from "@/config/tatouage";
 import { villeAffichee } from "@/lib/adresse";
+import { positionSousLeGel } from "@/lib/gel-du-corps";
 import { BoutonPartageFiche } from "@/components/BoutonPartageFiche";
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
 import { ContenuFiche } from "@/components/ContenuFiche";
+import { FenetreCarrousel } from "@/components/FenetreCarrousel";
 import { PileFiches } from "@/components/PileFiches";
+import { pincementRecent } from "@/components/ZoomPincement";
 import {
+  cheminDeLaFenetreCarrousel,
   cheminDuCarrousel,
   galerieParStyles,
   ouvertureGalerie,
   serieDeLOuverture,
   serieMontree,
 } from "@/lib/photo-tatoueur";
-import { NATURE_PAR_DEFAUT, ensembleDeLaPhoto } from "@/lib/photos-tatoueur";
+import {
+  NATURE_PAR_DEFAUT,
+  RENDU_PAR_DEFAUT,
+  ensembleDeLaPhoto,
+  natureConnue,
+} from "@/lib/photos-tatoueur";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
@@ -229,6 +239,106 @@ export function FicheTatoueur({
     ) ?? { style: "", rendu: null }
   ).map((photo) => photo.id);
 
+  /**
+   * ██ LA FENÊTRE DE CARROUSEL — SMARTPHONE SEULEMENT (nº 284) ██
+   * ==================================================================
+   * AU DOIGT, toucher un carrousel n'entraîne PLUS AUCUNE remontée :
+   * une page s'ouvre PAR-DESSUS (FenetreCarrousel), et la refermer
+   * retombe EXACTEMENT à l'endroit touché — la page reste MONTÉE
+   * dessous, corps gelé à sa position.
+   *
+   * L'ADRESSE DÉCIDE, comme pour la pile des fiches (nº 226-§5) :
+   *  · OUVRIR pousse UNE entrée d'historique (`pushState` vers
+   *    `/tatoueur/<slug>/carrousel?…` — une vraie page, servie aussi
+   *    par le serveur : c'est elle qu'on partage) ;
+   *  · la fenêtre ne s'affiche que tant que l'adresse correspond —
+   *    le bouton retour du téléphone et le glissement du bord la
+   *    referment donc naturellement, d'un cran ;
+   *  · l'état `fenetreFiche` du pushState dit à la mémoire de
+   *    navigation que ce N'EST PAS une page — le journal d'onglet ne
+   *    la retient pas, la reprise de session ne la rouvrira pas.
+   * ⚠️ LE DRAPEAU `data-fenetre-fiche` EST POSÉ AVANT le pushState :
+   * c'est lui qui retient `DefilementEnHaut` de remonter la page (une
+   * adresse `/tatoueur/…` qui change remonte, sinon — nº 193-§2).
+   *
+   * SUR LE WEB ET EN APERÇU (« Ma fiche »), RIEN NE CHANGE : la
+   * fonction répond faux, et les vignettes gardent leur comportement
+   * (le carrousel principal change, la page remonte — nº 197-§4).
+   */
+  const pathname = usePathname();
+  const [fenetreCarrousel, setFenetreCarrousel] = useState<{
+    style: string;
+    serie: { nature: string; rendu: string } | null;
+    photo: number;
+    position: number;
+  } | null>(null);
+  //  LA FENÊTRE SUIT L'ADRESSE — ajustée PENDANT LE RENDU, jamais dans
+  //  un effet (le motif de PileFiches, avec la même vérité :
+  //  `location.pathname`, car `usePathname` reste en retard d'un rendu
+  //  et ne sert que de réveil).
+  const adresseDeLaFenetre = `/tatoueur/${tatoueur.slug}/carrousel`;
+  const cheminReel =
+    typeof window === "undefined" ? pathname : window.location.pathname;
+  if (fenetreCarrousel && cheminReel !== adresseDeLaFenetre) {
+    setFenetreCarrousel(null);
+  }
+
+  /** OUVRIR LA FENÊTRE — vrai si elle s'ouvre (smartphone), faux si
+      l'appelant doit garder son comportement (web, aperçu). */
+  function ouvrirLaFenetreCarrousel(
+    styleVoulu: string,
+    serie: { nature: string; rendu: string } | null,
+    photo: number
+  ): boolean {
+    if (apercu) return false;
+    //  ⚠️ LU AU MOMENT DU GESTE, jamais au rendu (la règle de
+    //  PileFiches) : le serveur ne connaît pas l'appareil.
+    if (document.documentElement.dataset.appareil !== "mobile") return false;
+    //  La position à rendre, capturée AVANT le pushState (le routeur
+    //  déplace brièvement le défilement après lui).
+    const position = positionSousLeGel();
+    document.documentElement.setAttribute("data-fenetre-fiche", "1");
+    window.history.pushState(
+      { fenetreFiche: true, fenetreCarrousel: true },
+      "",
+      cheminDeLaFenetreCarrousel(tatoueur.slug, styleVoulu, serie, photo)
+    );
+    setFenetreCarrousel({ style: styleVoulu, serie, photo, position });
+    return true;
+  }
+
+  /**
+   * TOUCHER LA PHOTO PRINCIPALE (smartphone) : la fenêtre s'ouvre sur
+   * LA PHOTO TOUCHÉE — jamais sur la première (nº 284). Le carrousel
+   * ouvert est L'ENSEMBLE de cette photo (règles 1 et 3 de la
+   * nº 278-§0), et son rang dedans est celui qu'on regardait.
+   * ⚠️ SEULEMENT UN TOUCHER FRANC : après un pincement, rien (le
+   * délai de `pincementRecent`, celui des cartes) ; un glissement
+   * n'émet aucun clic (le navigateur s'en charge) ; et les boutons
+   * posés sur la photo (cœur, partage, ronds) gardent leur geste.
+   */
+  function surToucherDeLaPhoto(evenement: React.MouseEvent) {
+    if ((evenement.target as HTMLElement).closest("button, a")) return;
+    if (pincementRecent()) return;
+    const brute = (tatoueur.galerie ?? []).find(
+      (photo) => photo.id === photoAffichee?.cle
+    );
+    if (!brute) return;
+    const ensemble = ensembleDeLaPhoto(tatoueur.galerie ?? [], brute);
+    const rangDansLEnsemble = Math.max(
+      0,
+      ensemble.findIndex((photo) => photo.id === brute.id)
+    );
+    ouvrirLaFenetreCarrousel(
+      brute.style,
+      {
+        nature: natureConnue(brute.nature),
+        rendu: brute.rendu ?? RENDU_PAR_DEFAUT,
+      },
+      rangDansLEnsemble
+    );
+  }
+
   /*  ⚠️ LE SÉLECTEUR DE STYLE POSÉ SUR LA PHOTO A ÉTÉ SUPPRIMÉ
       (nº 198-§1) — le badge déroulant du bas gauche (mobile) comme le
       menu du haut gauche (web). La navigation entre styles vit
@@ -324,6 +434,12 @@ export function FicheTatoueur({
                rien connaître de la géométrie de cette page. */}
           <div
             data-photo-fiche=""
+            /*  §Fenêtre (nº 284) — SMARTPHONE : toucher la photo ouvre
+                la fenêtre de carrousel, SUR CETTE PHOTO. Le
+                gestionnaire s'écarte de lui-même partout ailleurs
+                (web, aperçu, toucher d'un bouton, fin de pincement) :
+                aucun comportement existant ne change. */
+            onClick={surToucherDeLaPhoto}
             className="lg:w-[calc((100vh-119px)*0.8)] max-w-full mobile:-mx-4 mobile:-mt-4 mobile:max-w-none"
           >
             <CarrouselPortfolio
@@ -425,6 +541,22 @@ export function FicheTatoueur({
             //  elle, d'ouvrir le carrousel ci-dessus (serieCherchee).
             suiviAuDepart={suiviAuDepart}
             surSerieChoisie={(serie) => {
+              /*  §Fenêtre (nº 284) — AU DOIGT, LA VIGNETTE OUVRE LA
+                  FENÊTRE DE CARROUSEL, par-dessus : plus AUCUNE
+                  remontée, la page ne bouge pas d'un pixel — la
+                  refermer repose le doigt sur la grille, là où il
+                  était. La photo touchée est celle de la vignette, la
+                  première de sa série. SUR LE WEB (et en aperçu), tout
+                  ce qui suit reste le comportement d'avant. */
+              if (
+                ouvrirLaFenetreCarrousel(
+                  serie.style,
+                  { nature: serie.nature, rendu: serie.rendu },
+                  0
+                )
+              ) {
+                return;
+              }
               setStyleAffiche(serie.style);
               setSerieOuverte({ nature: serie.nature, rendu: serie.rendu });
               setIndicePhoto(0);
@@ -452,6 +584,21 @@ export function FicheTatoueur({
         </div>
       </div>
     </Racine>
+      {/*  §Fenêtre (nº 284) — LA FENÊTRE DE CARROUSEL, par-dessus la
+           page. Elle ne vit que tant que l'adresse est la sienne
+           (voir l'ajustement pendant le rendu, plus haut) : le retour
+           du téléphone la referme, et le gel du corps rend la page à
+           sa position exacte. */}
+      {fenetreCarrousel && (
+        <FenetreCarrousel
+          tatoueur={tatoueur}
+          style={fenetreCarrousel.style}
+          serie={fenetreCarrousel.serie}
+          photoInitiale={fenetreCarrousel.photo}
+          positionPage={fenetreCarrousel.position}
+          surFermeture={() => window.history.back()}
+        />
+      )}
     </PileFiches>
   );
 }
