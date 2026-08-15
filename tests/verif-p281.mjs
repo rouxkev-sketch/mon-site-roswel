@@ -52,28 +52,39 @@ titre("§1 — à la source : la sonde ne s'installe que si on la demande");
     /get\("sonde-cadre"\) === "1"/.test(sondeNu) &&
       /if \(!active\) return null;/.test(sondeNu)
   );
+  /*  ⚠️ AMENDÉ LE 2026-08-15 (nº 282-§4) — LA SONDE A ÉTÉ REFAITE.
+      Elle relevait à DEUX MOMENTS seulement (montage, puis 600 ms
+      après « suivant ») : un relevé pris après avoir changé de photo à
+      la main affichait donc l'état du CHARGEMENT. La nº 282 la fait
+      mesurer EN CONTINU, et lui ajoute les deux nombres qui décident
+      (décalage résiduel, fraction du bord). Les valeurs de la nº 281
+      sont TOUTES encore relevées — seule leur écriture a changé
+      (`trois(...)` au lieu de `.toFixed(3)` répété). On vérifie donc
+      les VALEURS, pas la façon de les écrire ; le détail de la
+      nouvelle sonde est au banc de la nº 282. */
   verif(
-    "elle relève LES ONZE VALEURS demandées, au millième là où il le " +
-      "faut",
+    "elle relève TOUJOURS LES ONZE VALEURS demandées, au millième là " +
+      "où il le faut (écriture changée en nº 282, valeurs identiques)",
     [
-      "cadreLargeur: boite.width.toFixed(3)",
+      "cadreLargeur:",
       "clientWidth: cadre.clientWidth",
       "scrollWidth: cadre.scrollWidth",
-      "scrollLeft: cadre.scrollLeft.toFixed(3)",
+      "scrollLeft:",
       "photos: colonnes.length",
       "paddingGauche: style.paddingLeft",
       "paddingDroit: style.paddingRight",
       "gap: style.columnGap",
       "densite: window.devicePixelRatio",
       "fenetre: window.innerWidth",
+      "photoLargeur:",
     ].every((morceau) => sondeNu.includes(morceau)) &&
-      /photoLargeur: \(premiere\?\.width \?\? 0\)\.toFixed\(3\)/.test(sondeNu)
+      /toFixed\(3\)/.test(sondeNu)
   );
   verif(
-    "les DEUX BOUTONS existent : « suivant » (une photo, puis nouveau " +
-      "relevé) et « copier » (tout le relevé en un appui)",
+    "les DEUX BOUTONS existent : « suivant » (une photo) et « copier » " +
+      "(tout le relevé en un appui)",
     /const suivant = \(\) => \{/.test(sondeNu) &&
-      /scrollBy\(\{ left: cadre\.getBoundingClientRect\(\)\.width/.test(sondeNu) &&
+      /scrollBy\(\{/.test(sondeNu) &&
       /navigator\.clipboard\.writeText\(texte\)/.test(sondeNu) &&
       //  Les libellés sont sur leur propre ligne dans le JSX.
       />\s*suivant\s*</.test(sondeNu) &&

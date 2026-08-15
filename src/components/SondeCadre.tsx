@@ -1,46 +1,83 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
- * ██ SONDE DU CADRE — `?sonde-cadre=1` (nº 281-§1) ██
+ * ██ SONDE DU CADRE — `?sonde-cadre=1` (nº 281-§1, refaite en 282-§4) ██
  * ==================================================================
  * POURQUOI ELLE EXISTE. Le propriétaire voit, sur la page d'une fiche,
- * « une marge verticale côté gauche qui laisse transparaître la photo
- * d'à côté ». La nº 280-§4 a corrigé une cause plausible (la largeur
- * fractionnaire du cadre) et mesuré zéro écart sur vingt défilements
- * — mais le défaut est TOUJOURS là chez lui. Donc la cause mesurée ici
- * n'est pas la sienne, et continuer à corriger à l'aveugle serait
- * deviner. CETTE PASSE NE CORRIGE RIEN : elle donne de quoi RELEVER,
- * sur SON téléphone, les nombres qui décideront.
+ * un trait blanc vertical au bord gauche du cadre — la tranche de la
+ * photo d'à côté. La nº 280 a corrigé une cause réelle (la largeur
+ * fractionnaire) sans faire disparaître le défaut : il fallait des
+ * NOMBRES relevés sur SON écran, pas des déductions sur le mien.
  *
- * CE QU'ELLE AFFICHE, en haut de l'écran, sur fond noir opaque :
- * la largeur du cadre au millième, `clientWidth` et `scrollWidth` du
- * conteneur qui défile, `scrollLeft` au millième, le nombre de photos,
- * la largeur d'UNE photo au millième, les rembourrages gauche et droit
- * et l'écart (`gap`) calculés, la densité d'écran, et la largeur de la
- * fenêtre.
+ * ⚠️ CE QUI CLOCHAIT DANS LA PREMIÈRE VERSION (nº 281), ET QUI EST
+ * CORRIGÉ ICI. Elle ne relevait qu'à DEUX MOMENTS : au montage de la
+ * page, et 600 ms après le bouton « suivant ». Aucun écouteur de
+ * défilement. Un relevé pris après avoir changé de photo À LA MAIN
+ * (flèches, points, doigt) affichait donc encore l'état du CHARGEMENT
+ * — « scrollLeft 0,000 · photo courante 0 » pendant que l'écran
+ * montrait la cinquième photo. Les deux faits ne se contredisaient
+ * pas : ils n'étaient pas pris au même instant.
+ * DÉSORMAIS ELLE MESURE EN CONTINU, à chaque image du navigateur :
+ * ce qui s'affiche est toujours l'état de l'instant.
  *
- * DEUX BOUTONS : « suivant » fait défiler d'une photo puis réaffiche
- * les mêmes valeurs ; « copier » met tout le relevé dans le
- * presse-papier en un seul appui.
+ * ⚠️ ET ELLE SUIT LA PIÈCE QUI BOUGE. Le cadre, lui, ne bouge pas :
+ * c'est une fenêtre immobile qui ROGNE. Ce qui se déplace, c'est SON
+ * CONTENU — les colonnes. La sonde cherche donc, à chaque image, LA
+ * COLONNE dont le bord gauche est le plus proche du bord gauche du
+ * cadre (elle la trouve, elle ne la suppose pas), et elle affiche les
+ * deux nombres qui décident :
+ *  · LE DÉCALAGE RÉSIDUEL — bord gauche de la photo affichée MOINS
+ *    bord gauche du cadre. Il doit valoir 0,000 : au-delà, une tranche
+ *    de la photo voisine est DANS le cadre ;
+ *  · LA FRACTION DU BORD — de combien le bord gauche du cadre manque
+ *    le pixel entier. Elle doit valoir 0,000 : sinon le cadre est posé
+ *    entre deux pixels, et le pixel partagé peut laisser passer la
+ *    tranche d'à côté selon le moteur de rendu (nº 282-§2).
+ * Les deux lignes sont VERTES à zéro, ROUGES sinon : il n'y a rien à
+ * interpréter.
  *
- * ⚠️ ELLE NE MODIFIE RIEN D'AUTRE : aucune classe posée, aucun style
- * touché, aucune mesure forcée. Sans `?sonde-cadre=1` dans l'adresse,
- * le composant ne rend RIEN — il ne s'installe même pas.
+ * ⚠️ ELLE DIT AUSSI COMBIEN DE CADRES EXISTENT SUR LA PAGE, et lequel
+ * elle mesure : la question « est-ce le bon élément ? » ne doit plus
+ * jamais rester ouverte.
+ *
+ * ⚠️ ELLE NE MODIFIE RIEN : aucune classe posée, aucun style touché,
+ * aucune mise en page forcée. Sans `?sonde-cadre=1` dans l'adresse, le
+ * composant ne rend RIEN — il ne s'installe même pas, et sa boucle de
+ * mesure n'existe pas.
  */
 
-/** Le cadre du carrousel — le conteneur qui défile (voir
-    CarrouselPortfolio, `data-role="cadre"`). */
+/** Le cadre du carrousel — la fenêtre immobile qui rogne (voir
+    CarrouselPortfolio, `data-role="cadre"`). Sur une page de fiche, on
+    veut CELUI DE LA PHOTO : les cartes de la mosaïque du bas en
+    portent un chacune. */
 const CADRE = '[data-role="cadre"]';
+const CADRE_DE_LA_FICHE = `[data-photo-fiche] ${CADRE}`;
+
+/** Trois décimales, virgule française — la précision demandée. */
+const trois = (valeur: number) => valeur.toFixed(3).replace(".", ",");
 
 type Releve = {
+  cadres: number;
+  cadreDeLaFiche: boolean;
   cadreLargeur: string;
   clientWidth: number;
   scrollWidth: number;
   scrollLeft: string;
   photos: number;
   photoLargeur: string;
+  /** LA PIÈCE MOBILE : le rang de la colonne trouvée au bord gauche. */
+  rangMobile: number;
+  /** Sa position, dans la page, au millième. */
+  positionMobile: string;
+  /** Le bord gauche du cadre, dans la page, au millième. */
+  bordCadre: string;
+  /** LES DEUX NOMBRES QUI DÉCIDENT — texte affiché et verdict. */
+  residuel: string;
+  residuelJuste: boolean;
+  fraction: string;
+  fractionJuste: boolean;
   paddingGauche: string;
   paddingDroit: string;
   gap: string;
@@ -50,21 +87,56 @@ type Releve = {
 };
 
 function relever(): Releve | null {
-  const cadre = document.querySelector<HTMLElement>(CADRE);
+  const tous = document.querySelectorAll<HTMLElement>(CADRE);
+  const deLaFiche = document.querySelector<HTMLElement>(CADRE_DE_LA_FICHE);
+  const cadre = deLaFiche ?? tous[0];
   if (!cadre) return null;
   const boite = cadre.getBoundingClientRect();
   const style = getComputedStyle(cadre);
   const colonnes = [
     ...cadre.querySelectorAll<HTMLElement>('[data-role^="colonne"]'),
   ];
+
+  //  LA PIÈCE MOBILE, TROUVÉE ET NON SUPPOSÉE : la colonne dont le bord
+  //  gauche est le plus proche du bord gauche du cadre. C'est celle que
+  //  l'œil voit — quelle que soit la façon dont elle est arrivée là.
+  let rang = -1;
+  let meilleur = Infinity;
+  colonnes.forEach((colonne, index) => {
+    const ecart = Math.abs(colonne.getBoundingClientRect().left - boite.left);
+    if (ecart < meilleur) {
+      meilleur = ecart;
+      rang = index;
+    }
+  });
+  const boiteMobile =
+    rang >= 0 ? colonnes[rang].getBoundingClientRect() : undefined;
   const premiere = colonnes[0]?.getBoundingClientRect();
+
+  //  LE DÉCALAGE RÉSIDUEL — ce que le propriétaire doit voir à zéro.
+  const residuel = boiteMobile ? boiteMobile.left - boite.left : 0;
+  //  LA FRACTION DU BORD — de combien le cadre manque le pixel entier.
+  const fraction = boite.left - Math.round(boite.left);
+
   return {
-    cadreLargeur: boite.width.toFixed(3),
+    cadres: tous.length,
+    cadreDeLaFiche: Boolean(deLaFiche),
+    cadreLargeur: trois(boite.width),
     clientWidth: cadre.clientWidth,
     scrollWidth: cadre.scrollWidth,
-    scrollLeft: cadre.scrollLeft.toFixed(3),
+    scrollLeft: trois(cadre.scrollLeft),
     photos: colonnes.length,
-    photoLargeur: (premiere?.width ?? 0).toFixed(3),
+    photoLargeur: trois(premiere?.width ?? 0),
+    rangMobile: rang,
+    positionMobile: trois(boiteMobile?.left ?? 0),
+    bordCadre: trois(boite.left),
+    residuel: trois(residuel),
+    //  Un demi-millième : la limite du bruit d'arrondi des mesures du
+    //  navigateur (un soixante-quatrième de pixel), pas une tolérance
+    //  de complaisance.
+    residuelJuste: Math.abs(residuel) < 0.0005,
+    fraction: trois(fraction),
+    fractionJuste: Math.abs(fraction) < 0.0005,
     paddingGauche: style.paddingLeft,
     paddingDroit: style.paddingRight,
     //  L'écart entre colonnes, TEL QUE LE NAVIGATEUR LE CALCULE :
@@ -86,20 +158,27 @@ function relever(): Releve | null {
 
 function enTexte(releve: Releve): string {
   return [
-    "SONDE CADRE (nº 281-§1)",
+    "SONDE CADRE (nº 282-§4)",
     `adresse : ${window.location.href}`,
-    `cadre.width      ${releve.cadreLargeur} px`,
-    `clientWidth      ${releve.clientWidth}`,
-    `scrollWidth      ${releve.scrollWidth}`,
-    `scrollLeft       ${releve.scrollLeft}`,
-    `photos           ${releve.photos}`,
-    `photo.width      ${releve.photoLargeur} px`,
-    `padding-left     ${releve.paddingGauche}`,
-    `padding-right    ${releve.paddingDroit}`,
-    `gap              ${releve.gap}`,
-    `devicePixelRatio ${releve.densite}`,
-    `fenêtre          ${releve.fenetre} px`,
-    `photo courante   ${releve.photoCourante} (entier attendu)`,
+    `cadres sur la page ${releve.cadres} (mesuré : ` +
+      `${releve.cadreDeLaFiche ? "celui de la fiche" : "le premier trouvé"})`,
+    `cadre.width       ${releve.cadreLargeur} px`,
+    `clientWidth       ${releve.clientWidth}`,
+    `scrollWidth       ${releve.scrollWidth}`,
+    `scrollLeft        ${releve.scrollLeft}`,
+    `photos            ${releve.photos}`,
+    `photo.width       ${releve.photoLargeur} px`,
+    `pièce mobile      colonne ${releve.rangMobile}`,
+    `bord du cadre     ${releve.bordCadre} px`,
+    `bord de la photo  ${releve.positionMobile} px`,
+    `DÉCALAGE RÉSIDUEL ${releve.residuel} px  (0,000 attendu)`,
+    `FRACTION DU BORD  ${releve.fraction} px  (0,000 attendu)`,
+    `padding-left      ${releve.paddingGauche}`,
+    `padding-right     ${releve.paddingDroit}`,
+    `gap               ${releve.gap}`,
+    `devicePixelRatio  ${releve.densite}`,
+    `fenêtre           ${releve.fenetre} px`,
+    `photo courante    ${releve.photoCourante} (entier attendu)`,
   ].join("\n");
 }
 
@@ -107,38 +186,62 @@ export function SondeCadre() {
   const [active, setActive] = useState(false);
   const [releve, setReleve] = useState<Releve | null>(null);
   const [copie, setCopie] = useState(false);
+  //  La dernière empreinte affichée : on ne repose un état que si un
+  //  nombre a VRAIMENT changé — sinon la sonde rendrait soixante fois
+  //  par seconde pour rien, et fausserait ce qu'elle mesure.
+  const empreinte = useRef("");
 
-  //  L'ADRESSE DÉCIDE, ET ELLE SEULE. Lu au montage, côté navigateur :
-  //  aucun rendu du serveur n'en dépend, donc aucun écart d'hydratation.
+  /**
+   * LA MESURE EN CONTINU (§4, nº 282) — une image après l'autre, tant
+   * que la sonde est demandée. C'est ce qui manquait : elle voit donc
+   * le défilement au doigt, aux flèches, aux points, et l'arrivée en
+   * douceur de l'accrochage.
+   * ⚠️ L'ADRESSE DÉCIDE, ET ELLE SEULE. Lue au montage, côté navigateur :
+   * aucun rendu du serveur n'en dépend, donc aucun écart d'hydratation.
+   * Sans `?sonde-cadre=1`, aucune boucle n'est même lancée.
+   */
   useEffect(() => {
     const demandee =
       new URLSearchParams(window.location.search).get("sonde-cadre") === "1";
     if (!demandee) return;
-    //  ⚠️ DEUX IMAGES D'ATTENTE, et l'état posé DEDANS : la mise en
+    let image = 0;
+    const mesurer = () => {
+      const frais = relever();
+      const signature = frais ? JSON.stringify(frais) : "";
+      if (signature !== empreinte.current) {
+        empreinte.current = signature;
+        setReleve(frais);
+      }
+      image = requestAnimationFrame(mesurer);
+    };
+    //  ⚠️ DEUX IMAGES D'ATTENTE AVANT LA PREMIÈRE MESURE : la mise en
     //  page doit être finie (sinon on relève des largeurs qui
     //  n'existeront plus), et poser un état SYNCHRONEMENT dans un effet
     //  déclenche des rendus en cascade — le lint le refuse, à raison
     //  (le piège payé à la nº 272).
-    const premiere = requestAnimationFrame(() =>
+    image = requestAnimationFrame(() =>
       requestAnimationFrame(() => {
         setActive(true);
-        setReleve(relever());
+        mesurer();
       })
     );
-    return () => cancelAnimationFrame(premiere);
+    return () => cancelAnimationFrame(image);
   }, []);
 
   if (!active) return null;
 
   const suivant = () => {
-    const cadre = document.querySelector<HTMLElement>(CADRE);
+    const cadre =
+      document.querySelector<HTMLElement>(CADRE_DE_LA_FICHE) ??
+      document.querySelector<HTMLElement>(CADRE);
     if (!cadre) return;
     //  UNE PHOTO — la largeur du cadre, exactement ce que fait le
-    //  geste du doigt (accrochage compris).
-    cadre.scrollBy({ left: cadre.getBoundingClientRect().width, behavior: "smooth" });
-    //  On relit APRÈS l'arrêt : 600 ms couvrent le défilement doux et
-    //  l'accrochage, sans rien forcer.
-    window.setTimeout(() => setReleve(relever()), 600);
+    //  geste du doigt (accrochage compris). Plus besoin d'attendre
+    //  pour relire : la boucle affiche tout le trajet.
+    cadre.scrollBy({
+      left: cadre.getBoundingClientRect().width,
+      behavior: "smooth",
+    });
   };
 
   const copier = async () => {
@@ -164,9 +267,20 @@ export function SondeCadre() {
     window.setTimeout(() => setCopie(false), 1500);
   };
 
-  const ligne = (nom: string, valeur: string | number) => (
-    <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-      <span style={{ opacity: 0.75 }}>{nom}</span>
+  const ligne = (nom: string, valeur: string | number, verdict?: boolean) => (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        gap: 12,
+        //  LES DEUX LIGNES QUI DÉCIDENT SE VOIENT : vert à zéro, rouge
+        //  sinon. Le reste est du contexte.
+        color:
+          verdict === undefined ? undefined : verdict ? "#34D399" : "#FB7185",
+        fontWeight: verdict === undefined ? undefined : 700,
+      }}
+    >
+      <span style={{ opacity: verdict === undefined ? 0.75 : 1 }}>{nom}</span>
       <span style={{ fontVariantNumeric: "tabular-nums" }}>{valeur}</span>
     </div>
   );
@@ -186,19 +300,38 @@ export function SondeCadre() {
         zIndex: 2147483647,
         background: "#000",
         color: "#fff",
-        font: "13px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace",
+        font: "13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace",
         padding: "10px 12px",
         borderBottom: "1px solid #fff3",
       }}
     >
       {releve ? (
         <>
+          {ligne(
+            "cadres sur la page",
+            `${releve.cadres} · ${
+              releve.cadreDeLaFiche ? "celui de la fiche" : "le premier"
+            }`
+          )}
           {ligne("cadre.width", `${releve.cadreLargeur} px`)}
           {ligne("clientWidth", releve.clientWidth)}
           {ligne("scrollWidth", releve.scrollWidth)}
           {ligne("scrollLeft", releve.scrollLeft)}
           {ligne("photos", releve.photos)}
           {ligne("photo.width", `${releve.photoLargeur} px`)}
+          {ligne("pièce mobile", `colonne ${releve.rangMobile}`)}
+          {ligne("bord du cadre", `${releve.bordCadre} px`)}
+          {ligne("bord de la photo", `${releve.positionMobile} px`)}
+          {ligne(
+            "DÉCALAGE RÉSIDUEL",
+            `${releve.residuel} px`,
+            releve.residuelJuste
+          )}
+          {ligne(
+            "FRACTION DU BORD",
+            `${releve.fraction} px`,
+            releve.fractionJuste
+          )}
           {ligne("padding-left", releve.paddingGauche)}
           {ligne("padding-right", releve.paddingDroit)}
           {ligne("gap", releve.gap)}

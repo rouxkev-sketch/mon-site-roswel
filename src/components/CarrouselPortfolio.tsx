@@ -271,6 +271,92 @@ export function CarrouselPortfolio({
   const cleDeLaSerie = photos.map((photo) => photo.cle).join("|");
 
   /**
+   * §2 (nº 282) — LE CADRE SE POSE SUR LA GRILLE DE PIXELS
+   * ==================================================================
+   * ⚠️ CE N'EST PAS UN ARRONDI DE LARGEUR. Celui-là existe déjà
+   * (nº 280-§4, `round(down,100%,1px)`) et il TIENT : mesuré au banc,
+   * le décalage entre le bord gauche du cadre et le bord gauche de la
+   * photo affichée vaut 0,000 px. La largeur n'était donc que LA
+   * MOITIÉ du problème ; voici l'autre.
+   *
+   * CE QUI RESTAIT, MESURÉ. Sur une fiche à part entière, en fenêtre
+   * de 1609 px, le cadre est large de 995,000 px — entier — mais son
+   * BORD GAUCHE tombe à 110,90625 px. Il est posé ENTRE DEUX PIXELS.
+   * D'où vient cette fraction : la colonne de la photo prend la
+   * largeur `calc((100vh−119px)×0,8)`, qui n'est pas ronde ; la grille
+   * de la fiche centre ses deux colonnes (`justify-center`), donc
+   * partage en deux un espace libre fractionnaire — la moitié d'un
+   * nombre à virgule tombe à son tour à virgule.
+   *
+   * POURQUOI UN BORD À VIRGULE FAIT UN TRAIT. Le cadre ROGNE (il
+   * défile, donc il coupe) et la photo COMMENCE au même endroit : à
+   * 110,90625. Le pixel nº 110 est donc réclamé à 9 % par la photo
+   * regardée et à 91 % par ce qui est derrière — c'est-à-dire par la
+   * TRANCHE DE LA PHOTO VOISINE, celle que le rognage est censé
+   * supprimer. Chaque moteur de rendu tranche ce partage à sa façon :
+   * Chromium recale tout sur le pixel entier et ne laisse rien passer
+   * (mesuré ici : le pixel nº 110 est du fond pur, 26,26,29) ; un
+   * moteur qui recale le ROGNAGE mais pas la PHOTO laisse voir ces
+   * 91 % — un cheveu de la photo d'à côté. Et comme les flashs sont
+   * sur fond blanc, ce cheveu est BLANC.
+   * ⚠️ JE NE PEUX PAS LE VOIR D'ICI : je n'ai que Chromium, qui ne
+   * l'affiche pas. Ce qui suit corrige la CAUSE MESURABLE — le bord à
+   * virgule — et la sonde te donne le nombre pour le vérifier.
+   *
+   * LE REMÈDE : une marge gauche de moins d'un pixel, qui ramène le
+   * bord sur le pixel entier le plus proche. La largeur restant
+   * entière (nº 280), les DEUX bords tombent alors juste, et il n'y a
+   * plus un seul pixel partagé à trancher.
+   * ⚠️ CE QU'IL NE TOUCHE PAS, et c'est le point : ni la largeur, ni
+   * `scrollLeft`, ni l'accrochage, ni `offsetLeft` (les colonnes se
+   * repèrent sur le cadre, pas sur la page) — le glissement, la
+   * restauration de position et la fenêtre superposée ne voient rien
+   * passer. Au doigt, où la photo touche les deux bords de l'écran,
+   * le bord vaut déjà 0 : la correction est nulle et rien ne bouge.
+   * ⚠️ RÉSERVÉ AUX FICHES (`variante="fiche"`) : une carte de mosaïque
+   * porte `content-visibility:auto` (nº 224) et n'est pas mise en page
+   * tant qu'elle est hors écran — on y mesurerait du vent.
+   */
+  const [calage, setCalage] = useState(0);
+  const calagePose = useRef(0);
+  useEffect(() => {
+    if (surCarte) return;
+    const zone = cadre.current;
+    if (!zone) return;
+    let image = 0;
+    const caler = () => {
+      //  LA POSITION SANS CORRECTION — on retranche ce qu'on a déjà
+      //  posé, sans quoi on corrigerait sa propre correction.
+      const brut = zone.getBoundingClientRect().left - calagePose.current;
+      const voulu = Math.round(brut) - brut;
+      //  Moins d'un millième de pixel d'écart : il n'y a rien à faire
+      //  (et surtout rien à réécrire — un état posé pour rien
+      //  relancerait un rendu à chaque image).
+      if (Math.abs(voulu - calagePose.current) < 0.001) return;
+      calagePose.current = voulu;
+      setCalage(voulu);
+    };
+    //  ⚠️ TOUJOURS DANS UNE IMAGE D'ATTENTE : la mise en page doit être
+    //  finie avant qu'on mesure, et poser un état SYNCHRONEMENT dans un
+    //  effet déclenche des rendus en cascade (le piège de la nº 272).
+    const auChangement = () => {
+      cancelAnimationFrame(image);
+      image = requestAnimationFrame(caler);
+    };
+    auChangement();
+    //  Le cadre change de taille : la fenêtre a bougé, la colonne de
+    //  lecture aussi, une police est arrivée. On remesure.
+    const observateur = new ResizeObserver(auChangement);
+    observateur.observe(zone);
+    window.addEventListener("resize", auChangement);
+    return () => {
+      cancelAnimationFrame(image);
+      observateur.disconnect();
+      window.removeEventListener("resize", auChangement);
+    };
+  }, [surCarte, cleDeLaSerie]);
+
+  /**
    * UNE COLONNE MONTÉE RESTE MONTÉE (passe nº 219-§2)
    * ==================================================================
    * La nº 217-§6 avait élargi la fenêtre à deux voisines de chaque
@@ -718,7 +804,10 @@ export function CarrouselPortfolio({
             ? "overflow-hidden"
             : "overflow-x-auto snap-x snap-mandatory"
         } [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}
-        style={{ touchAction: "pan-x pan-y" }}
+        //  §2 (nº 282) — LE CALAGE SUR LA GRILLE DE PIXELS : moins d'un
+        //  pixel, jamais une largeur. Zéro tant que le bord tombe déjà
+        //  juste (au doigt, toujours).
+        style={{ touchAction: "pan-x pan-y", marginLeft: calage || undefined }}
       >
         {photos.map((photo, rang) => {
           //  SUR UNE CARTE : la première photo, et les autres seulement
