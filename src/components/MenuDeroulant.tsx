@@ -124,7 +124,7 @@ export function MenuDeroulant({
       Le menu s'ouvre alors sur les seuls titres de groupe ; en toucher
       un déplie SES options et referme l'autre. C'est ce qui permet au
       menu « Explorer » de poser sa vraie première question —
-      tatouages ou flashs ? — au lieu d'aligner quarante-six lignes.
+      tatouages ou flashs ? — au lieu d'aligner soixante-deux lignes.
       Faux (le cas de tous les autres menus) : rien ne change, les
       en-têtes restent de simples étiquettes non cliquables. */
   repliable?: boolean;
@@ -135,7 +135,7 @@ export function MenuDeroulant({
       « Réalisme » ne dirait plus si l'on cherche des tatouages ou des
       flashs. Il affiche donc « Flashs · Réalisme ». La LISTE, elle,
       garde ses libellés courts — la catégorie est déjà écrite en
-      titre au-dessus, la répéter vingt-deux fois serait du bruit. */
+      titre au-dessus, la répéter trente et une fois serait du bruit. */
   libelleValeur?: string;
   /** §5 (nº 258) — OÙ LA FLÈCHE SE POSE, quand le champ vit dans une
       capsule dont la courbe mange le bord (l'encadré de « Ma
@@ -488,6 +488,17 @@ export function MenuDeroulant({
     const nouveauGroupe = option.groupe !== precedente?.groupe;
     return {
       option,
+      /**
+       * §1 (nº 291) — LA CLÉ DE RENDU N'EST PLUS LA VALEUR.
+       * ----------------------------------------------------------------
+       * Depuis que « Japonais · Irezumi » se lit AUX DEUX ENDROITS, deux
+       * entrées d'une même liste portent la même `value` — et deux clés
+       * React identiques, c'est un rendu qui se mélange. La clé prend
+       * donc aussi la place : groupe, sous-groupe, valeur. Aucune autre
+       * conséquence — la clé ne sert qu'au rendu, la `value` reste ce
+       * qu'on choisit et ce qu'on compare.
+       */
+      cle: `${option.groupe ?? ""}▸${option.sousGroupe ?? ""}▸${option.value}`,
       entete: option.groupe && nouveauGroupe ? option.groupe : null,
       sousEntete:
         option.sousGroupe &&
@@ -509,7 +520,20 @@ export function MenuDeroulant({
      le rendu (le motif que React recommande), ce qui évite un rendu
      perdu et le clignotement qui va avec.
   ---------------------------------------------------------------- */
-  const optionDuChoix = options.find((option) => option.value === valeur);
+  /**
+   * §1 (nº 291) — UN MÊME STYLE PEUT TENIR DEUX PLACES.
+   * ------------------------------------------------------------------
+   * « Japonais · Irezumi » se lit à sa lettre ET dans « Cultures du
+   * monde » : deux entrées, une seule valeur. On préfère donc CELLE DU
+   * PREMIER NIVEAU pour décider quoi déplier — sans quoi le choisir
+   * dans la liste alphabétique ouvrirait la famille au rendez-vous
+   * suivant, ce que personne n'a demandé. Les styles qui ne vivent QUE
+   * dans la famille (Maori, Tribal…) n'ont pas de jumeau : le repli
+   * les retrouve, et « on retombe sur son style » tient toujours.
+   */
+  const optionDuChoix =
+    options.find((option) => option.value === valeur && !option.sousGroupe) ??
+    options.find((option) => option.value === valeur);
   const groupeDuChoix = optionDuChoix?.groupe ?? null;
   const sousGroupeDuChoix = optionDuChoix?.sousGroupe ?? null;
   const [groupeDeplie, setGroupeDeplie] = useState<string | null>(groupeDuChoix);
@@ -569,7 +593,7 @@ export function MenuDeroulant({
     //  §2 (nº 238) — UNE SOUS-SECTION REMONTE COMME SA PORTE. Elle ne
     //  le faisait pas, au motif qu'elle se déplie « déjà sous les
     //  yeux » : c'est faux dès qu'on l'a cherchée en bas de liste —
-    //  « Cultures du monde » ouvre NEUF entrées sous le point où
+    //  « Cultures du monde » ouvre ONZE entrées sous le point où
     //  l'on est, l'écran ne bouge pas, et le geste semble mort.
     //  CE QUE FAIT UNE PORTE, EXACTEMENT : ce qu'on vient d'ouvrir
     //  passe EN TÊTE de la liste, et son contenu se lit dessous. Pour
@@ -815,7 +839,7 @@ export function MenuDeroulant({
           ref={panneau}
           // POSÉ DANS <body>, en coordonnées d'écran : plus aucun cadre
           // ne le découpe. Il déborde donc de la fenêtre du moteur et
-          // descend jusqu'au bas de l'écran — vingt-deux styles, pas
+          // descend jusqu'au bas de l'écran — trente et un styles, pas
           // quatre.
           //  ⚠️ LARGEUR AU CONTENU (nº 144-§5) : le champ n'est plus
           //  qu'un plancher — le panneau s'élargit jusqu'au style le
@@ -847,8 +871,8 @@ export function MenuDeroulant({
             // assumée à la règle « jamais d'ascenseur affiché ».
             className="min-h-0 flex-1 overflow-y-auto overscroll-contain defilement-visible py-1"
           >
-            {optionsAvecEntetes.map(({ option, entete, sousEntete }) => (
-              <li key={option.value}>
+            {optionsAvecEntetes.map(({ option, cle, entete, sousEntete }) => (
+              <li key={cle}>
                 {/* En-tête de section — étiquette, ou porte repliable */}
                 {entete && enTeteSection(entete, "px-4 pt-3 pb-1")}
                 {/* Porte de sous-section — à la place d'une option */}
@@ -1013,11 +1037,11 @@ export function MenuDeroulant({
               //  écriture que le panneau du web, ci-dessus).
               className="overflow-y-auto overscroll-contain px-2 pb-2 defilement-visible"
             >
-              {optionsAvecEntetes.map(({ option, entete, sousEntete }) => {
+              {optionsAvecEntetes.map(({ option, cle, entete, sousEntete }) => {
                 const { value, label } = option;
                 const choisi = value === valeur;
                 return (
-                  <li key={value}>
+                  <li key={cle}>
                     {/* En-tête de section — étiquette, ou porte repliable */}
                     {entete && enTeteSection(entete, "px-3 pt-3 pb-1")}
                     {/* Porte de sous-section — à la place d'une option.

@@ -120,7 +120,7 @@ export const LANGUES_YOKOFOLIO = [
 /*
  * ⚠️ CETTE LISTE EST UN CATALOGUE, PAS UN ORDRE D'AFFICHAGE (passe
  * nº 113). Elle a longtemps porté l'ordre du menu, décidé à la main ;
- * à trente-huit entrées, un ordre thématique oblige à balayer toute
+ * à quarante entrées (nº 291), un ordre thématique oblige à balayer
  * la liste pour retrouver un style. L'AFFICHAGE EST DÉSORMAIS
  * ALPHABÉTIQUE, ET CALCULÉ — voir `stylesAlphabetiques()` et
  * `entreesExplorer()` plus bas. On peut donc ajouter une ligne ici
@@ -155,8 +155,17 @@ export const STYLES_TATOUAGE = [
   { slug: "old-school", label: "Old School", couleur: "#A2402F" },
   { slug: "neo-traditionnel", label: "Neo-Traditional", couleur: "#7A3A55" },
   { slug: "new-school", label: "New School", couleur: "#8A5A2E" },
+  //  §1 (nº 291) — IL FIGURE AUSSI DANS « Cultures du monde », SANS
+  //  quitter le premier niveau (voir `aussi`, plus bas). Un seul
+  //  style, un seul slug, un seul jeu de photos : il se montre à deux
+  //  endroits, il ne se compte jamais deux fois.
   { slug: "japonais", label: "Japonais · Irezumi", couleur: "#1F4E5F" },
+  //  §1 (nº 291) — CHICANO NE BOUGE PAS : premier niveau, à sa lettre.
   { slug: "chicano", label: "Chicano", couleur: "#57544B" },
+  //  §1 (nº 291) — DÉPLACÉ dans « Cultures du monde » : il quitte le
+  //  premier niveau. Son slug, sa page /tatouage/tribal/<ville> et les
+  //  fiches qui le portent ne bougent pas — une famille est un
+  //  RANGEMENT, jamais une donnée.
   { slug: "tribal", label: "Tribal", couleur: "#3E3E36" },
   { slug: "aquarelle", label: "Aquarelle", couleur: "#4C6470" },
   { slug: "illustratif", label: "Illustratif", couleur: "#705E48" },
@@ -176,7 +185,17 @@ export const STYLES_TATOUAGE = [
   { slug: "lettering", label: "Lettering", couleur: "#5A4632" },
   //  ---- LES SEPT DE LA PASSE Nº 113 ----
   { slug: "acid-trad", label: "Acid-trad", couleur: "#6B7A2E" },
-  { slug: "bio-mecha", label: "Bio-mecha", couleur: "#4A4550" },
+  //  §1 (nº 291) — RENOMMÉ « Bio-organique », SLUG INCHANGÉ. Le
+  //  libellé seul évolue, et c'est la règle de ce fichier depuis
+  //  toujours (« Japonais · Irezumi » garde `japonais`) : les
+  //  portfolios déjà rangés en `bio-mecha` restent rangés, les liens
+  //  déjà partagés (`?style=bio-mecha`) répondent encore, et il n'y a
+  //  AUCUNE migration à lancer.
+  //  ⚠️ CE N'EST PAS UN DOUBLON DE « Biomécanique », et il ne faut
+  //  jamais les fusionner : la Biomécanique met du MÉTAL sous la peau,
+  //  le Bio-organique de la CHAIR, de l'os, du tendon. Deux styles,
+  //  deux publics.
+  { slug: "bio-mecha", label: "Bio-organique", couleur: "#4A4550" },
   { slug: "chrome", label: "Chrome", couleur: "#5A6068" },
   { slug: "cyber-sigilism", label: "Cyber-sigilism", couleur: "#3E3A5C" },
   { slug: "gravure", label: "Gravure", couleur: "#4E4740" },
@@ -229,7 +248,7 @@ export type StyleAjoute = {
  *  · côté navigateur, `<FournisseurStyles>` repose la même liste
  *    pendant son rendu — donc avant celui de ses enfants.
  * Vide par défaut : sans base, sans migration, le site marche
- * exactement comme avant, avec ses trente-huit styles.
+ * exactement comme avant, avec ses quarante styles (nº 291).
  */
 let STYLES_AJOUTES: readonly StyleAjoute[] = [];
 
@@ -275,7 +294,7 @@ function couleurCalculee(slug: string): string {
 }
 
 /**
- * LE CATALOGUE COMPLET : les trente-huit d'origine, plus ceux que
+ * LE CATALOGUE COMPLET : les quarante d’origine (nº 291), plus ceux que
  * l'administration a acceptés. C'est la SEULE liste que le reste du
  * fichier consulte — ajouter un style en base suffit à le faire
  * apparaître partout.
@@ -337,7 +356,7 @@ function parLibelle(a: { label: string }, b: { label: string }): number {
  *
  * ⚠️ ET ELLE N'EST JAMAIS DÉCLARABLE. La fenêtre « Ajouter un style »
  * du formulaire (passe nº 116) reprend la porte du menu Explorer :
- * l'ouvrir montre les neuf styles, décalés à droite, et le tatoueur
+ * l’ouvrir montre les onze styles (nº 291), décalés à droite, et le tatoueur
  * choisit l'un d'eux — « Maori », pas « du traditionnel ethnique ».
  */
 export const FAMILLES_STYLES = [
@@ -352,6 +371,9 @@ export const FAMILLES_STYLES = [
     //  migration nº 67, qui le renomme et refait sa contrainte.
     slug: "cultures-du-monde",
     label: "Cultures du monde",
+    //  CEUX QUI VIVENT ICI, ET NULLE PART AILLEURS : ils quittent le
+    //  premier niveau du menu et ne se lisent que dans la famille.
+    //  (nº 291 — « Tribal » les rejoint.)
     styles: [
       "berbere",
       "celtique",
@@ -361,8 +383,26 @@ export const FAMILLES_STYLES = [
       "pa-tutiki",
       "polynesien",
       "sicanje",
+      "tribal",
       "yoruba",
     ],
+    /**
+     * §1 (nº 291) — CEUX QUI FIGURENT ICI **SANS** QUITTER LE PREMIER
+     * NIVEAU.
+     * ----------------------------------------------------------------
+     * « Japonais · Irezumi » se lit à sa lettre dans la liste ET dans
+     * cette famille : il appartient aux deux lectures. Ce n'est pas
+     * une copie — c'est LE MÊME STYLE, le même slug, le même jeu de
+     * photos, le même compteur, le même résultat de recherche. Le menu
+     * l'affiche à deux endroits ; tout le reste du site n'en connaît
+     * qu'un.
+     * ⚠️ D'OÙ LES DEUX LECTURES SÉPARÉES, plus bas : `famillesStyles()`
+     * dit CE QUE LA FAMILLE MONTRE (`styles` + `aussi`), et
+     * `stylesRangesEnFamille()` dit CE QUI QUITTE LE PREMIER NIVEAU
+     * (`styles` seul). Les confondre remettrait Japonais hors de la
+     * liste alphabétique — c'est précisément ce qu'on ne veut pas.
+     */
+    aussi: ["japonais"],
   },
 ] as const;
 
@@ -380,8 +420,11 @@ export function famillesStyles(): {
   return FAMILLES_STYLES.map((famille) => ({
     slug: famille.slug,
     label: famille.label,
+    //  CE QUE LA FAMILLE MONTRE : les siens, ceux qui y figurent SANS
+    //  la rejoindre (nº 291), et ceux que l'administration y a rangés.
     styles: [
       ...famille.styles,
+      ...famille.aussi,
       ...lesStylesAjoutes()
         .filter((style) => style.famille === famille.slug)
         .map((style) => style.slug),
@@ -389,16 +432,30 @@ export function famillesStyles(): {
   }));
 }
 
-/** Les slugs rangés dans une famille — calculé, jamais recopié. */
-function stylesEnFamille(): Set<string> {
+/**
+ * LES SLUGS QUI QUITTENT LE PREMIER NIVEAU — calculé, jamais recopié.
+ * ⚠️ CE N'EST PAS `famillesStyles()`, et la nuance est tout le §1 de
+ * la nº 291 : `aussi` en est EXCLU. Un style « aussi » se lit dans la
+ * famille sans perdre sa place à sa lettre ; s'il entrait dans cet
+ * ensemble, il disparaîtrait de la liste alphabétique.
+ */
+function stylesRangesEnFamille(): Set<string> {
   return new Set<string>(
-    famillesStyles().flatMap((famille) => famille.styles)
+    FAMILLES_STYLES.flatMap((famille) => [
+      ...famille.styles,
+      ...lesStylesAjoutes()
+        .filter((style) => style.famille === famille.slug)
+        .map((style) => style.slug),
+    ])
   );
 }
 
 /** LES STYLES, DE A À Z — la liste du FORMULAIRE : les familles n'y
-    existent pas, chaque style est à sa lettre. Trente-huit d'origine,
-    plus ceux que l'administration a acceptés. */
+    existent pas, chaque style est à sa lettre. QUARANTE d'origine
+    (nº 291), plus ceux que l'administration a acceptés. Chacun UNE
+    SEULE FOIS : elle part du catalogue, où « Japonais · Irezumi »
+    n'a qu'une ligne — les deux places qu'il occupe dans le menu ne
+    sont qu'un affichage. */
 export function stylesAlphabetiques(): { slug: string; label: string }[] {
   return catalogueStyles()
     .map((style) => ({ slug: style.slug, label: style.label }))
@@ -417,16 +474,26 @@ export type EntreeExplorer =
     };
 
 /**
- * LES TRENTE ENTRÉES DU MENU « EXPLORER », DE A À Z.
- * Vingt-neuf styles isolés + une famille, rangés ensemble par leur
+ * LES TRENTE ET UNE ENTRÉES DU MENU « EXPLORER », DE A À Z (nº 291).
+ * Trente styles isolés + une famille, rangés ensemble par leur
  * libellé : « Cultures du monde » se place entre « Chrome » et
  * « Cyber-sigilism » comme n'importe quel autre mot — la famille ne
  * saute pas en fin de liste, elle prend simplement sa lettre. (Elle
  * était à la lettre T avant la nº 239 ; le tri est calculé, il l'a
  * suivie tout seul.)
+ *
+ * ⚠️ LES NOMBRES, TENUS À JOUR (nº 291) : QUARANTE styles au
+ * catalogue ; DIX vivent dans la famille et n'apparaissent que là ;
+ * TRENTE restent au premier niveau — dont « Japonais · Irezumi », qui
+ * se lit EN PLUS dans la famille. La famille en montre donc ONZE,
+ * mais le catalogue n'en compte toujours que quarante : la seconde
+ * place de Japonais est un affichage, pas une ligne de plus.
+ * (Les nombres d'avant — « trente entrées », « vingt-neuf isolés »,
+ * « trente-huit d'origine » — dataient de la nº 230, qui avait scindé
+ * deux styles en quatre sans qu'on repasse par ici.)
  */
 export function entreesExplorer(): EntreeExplorer[] {
-  const enFamille = stylesEnFamille();
+  const enFamille = stylesRangesEnFamille();
   const isoles: EntreeExplorer[] = catalogueStyles()
     .filter((style) => !enFamille.has(style.slug))
     .map((style) => ({
@@ -457,10 +524,10 @@ export function entreesExplorer(): EntreeExplorer[] {
  * qu'à choisir. Quelqu'un qui vient avec son projet cherche, lui, du
  * travail réalisé. Deux intentions, deux chemins.
  *
- * LE MENU S'OUVRE DONC SUR DEUX MOTS, pas sur vingt-deux : TATOUAGES
+ * LE MENU S’OUVRE DONC SUR DEUX MOTS, pas sur trente et un : TATOUAGES
  * et FLASHS. On en déplie UN, et les styles apparaissent dessous —
  * précédés de « Tous les … » pour qui n'a pas de style en tête.
- * Déplier l'autre referme le premier : on ne lit jamais quarante-six
+ * Déplier l’autre referme le premier : on ne lit jamais soixante-deux
  * lignes d'un coup.
  *
  * ⚠️ COVER ET CICATRICE NE SONT PAS ICI, et c'est délibéré : ce sont

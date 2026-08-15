@@ -76,7 +76,7 @@ const ACCEPT_PHOTO =
  *     formulaire : LA liste des 38 styles de A à Z, un par ligne,
  *     défilante, sans champ de saisie ni menu. « Traditionnel
  *     ethnique » y porte une flèche BIEN VISIBLE : un clic déploie
- *     ses neuf styles dessous, décalés à droite. Choisir un style
+ *     ses onze styles dessous, décalés à droite. Choisir un style
  *     FERME la fenêtre et pose son BADGE sous le bouton ; les styles
  *     déjà choisis restent dans la liste, cochés et inertes — pas de
  *     doublon possible. Le badge ouvre SA section, dessous ; la CROIX
@@ -616,7 +616,7 @@ export function BlocPortfolio({
     : [];
   const galeriePleine = galerieOuverte.length >= PLAFOND_GALERIE;
 
-  /** UNE LIGNE DE LA FENÊTRE DES STYLES. `retrait` : les neuf styles
+  /** UNE LIGNE DE LA FENÊTRE DES STYLES. `retrait` : les onze styles
       de la famille dépliée se décalent à droite — ils lui
       appartiennent, et cela doit se voir. Un style DÉJÀ CHOISI reste
       dans la liste, coché et inerte : le faire disparaître ferait
@@ -652,7 +652,7 @@ export function BlocPortfolio({
   return (
     <div className="flex flex-col gap-4">
       {/* ---------- LE BOUTON « AJOUTER UN STYLE » (passe nº 116) ----
-          Au départ, LUI SEUL : un rond « + » et son texte. Les 38
+          Au départ, LUI SEUL : un rond « + » et son texte. Les quarante
           badges d'un bloc ont quitté l'écran — la liste vit dans la
           fenêtre qu'il ouvre. ---------------------------------- */}
       <button
@@ -1053,7 +1053,7 @@ export function BlocPortfolio({
           Par-dessus le formulaire : LA liste des 38 styles de A à Z,
           un par ligne, défilante — sans champ de saisie, sans menu.
           « Cultures du monde » porte sa flèche BIEN VISIBLE : un
-          clic déploie ses neuf styles dessous, décalés à droite pour
+          clic déploie ses onze styles dessous, décalés à droite pour
           montrer qu'ils lui appartiennent. Les styles déjà choisis
           restent listés, cochés et inertes. Choisir ferme la fenêtre
           et pose le badge. Voile, croix et Échap referment. ------- */}
@@ -1108,7 +1108,7 @@ export function BlocPortfolio({
                         {/* LA PORTE DE LA FAMILLE — sa flèche est
                             GRANDE et pleine couleur : impossible de
                             la manquer, c'est elle qui dit « il y a
-                            neuf styles là-dessous ». */}
+                            onze styles là-dessous ». */}
                         <button
                           type="button"
                           aria-expanded={depliee}
@@ -1125,7 +1125,7 @@ export function BlocPortfolio({
                               C'EST OUVERT (passe nº 117, point 10).
                               Elle pointait vers la DROITE fermée — le
                               signe d'un sous-menu qui s'ouvre À CÔTÉ,
-                              alors que les neuf styles se déplient
+                              alors que les onze styles se déplient
                               DESSOUS. Le chevron dit maintenant ce que
                               le clic fait : « ça descend », puis « ça
                               se replie ». */}

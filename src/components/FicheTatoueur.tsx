@@ -14,6 +14,7 @@ import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
 import { ContenuFiche } from "@/components/ContenuFiche";
 import { FenetreCarrousel } from "@/components/FenetreCarrousel";
 import { PileFiches } from "@/components/PileFiches";
+import { SondePhoto } from "@/components/SondePhoto";
 import { pincementRecent } from "@/components/ZoomPincement";
 import {
   cheminDeLaFenetreCarrousel,
@@ -480,6 +481,11 @@ export function FicheTatoueur({
       //  `lg:pt-5`), et c'est là que la mesure va la LIRE — plus
       //  aucune valeur recopiée dans le calcul.
       data-racine-fiche=""
+      //  §2 (nº 291) — LA SONDE DOIT POUVOIR DIRE OÙ ELLE EST : le
+      //  défaut du propriétaire ne se voit que sur « Mon portfolio »,
+      //  et un relevé qui ne nomme pas sa page ne prouve rien. Une
+      //  marque, aucune conséquence de mise en page.
+      data-fiche-vue={apercu ? "apercu" : "publique"}
       // En aperçu (« Ma fiche »), l'ESPACE fournit déjà le cadre
       // (largeur, marges latérales, marge du haut) : ne pas les
       // doubler — la photo mobile reste ainsi bord à bord et vient
@@ -675,6 +681,16 @@ export function FicheTatoueur({
           />
         </div>
       </div>
+
+      {/*  §2 (nº 291) — LA SONDE DE LA PHOTO, `?sonde-photo=1`. Elle
+           est posée ICI et pas sur la page publique seule : le défaut
+           relevé vit sur « Mon portfolio », qui rend CE composant en
+           mode aperçu — une sonde montée ailleurs n'aurait jamais vu
+           l'écran qui se plaint.
+           ⚠️ ELLE NE DÉPLACE RIEN : son bandeau part dans un portail
+           vers `document.body`, en `position: fixed`. Sans le
+           paramètre dans l'adresse, elle ne rend rien du tout. */}
+      <SondePhoto />
     </Racine>
       {/*  §Fenêtre (nº 284) — LA FENÊTRE DE CARROUSEL, par-dessus la
            page. Elle ne vit que tant que l'adresse est la sienne

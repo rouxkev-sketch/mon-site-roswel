@@ -658,9 +658,9 @@ export function MoteurTatouage({
    * les deux « Tous les … », qui ne veulent PAS dire la même chose —
    * ils cherchent une nature, pas l'absence de critère.
    *
-   * TRENTE ENTRÉES DE A À Z (passe nº 113), dont une FAMILLE
+   * TRENTE ET UNE ENTRÉES DE A À Z (nº 113, recomptées nº 291), dont une FAMILLE
    * dépliante : « Cultures du monde » n'est pas un style — c'est
-   * une porte, posée à sa lettre, qui révèle les neuf styles qu'elle
+   * une porte, posée à sa lettre, qui révèle les onze styles qu’elle
    * range. Elle ne porte aucune valeur cherchable ; seuls ses neuf
    * enfants en ont une (voir `entreesExplorer`).
    *
