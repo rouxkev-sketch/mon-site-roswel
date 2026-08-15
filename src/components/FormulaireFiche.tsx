@@ -3638,15 +3638,20 @@ export function FormulaireFiche() {
               <>
                 {/*  AUCUNE PHOTO NEUVE : il n'y a RIEN à attendre —
                      règle 2. On ne parle donc ni de relecture ni de
-                     24 h : on dit que c'est fait. */}
+                     24 h : on dit que c'est fait.
+                     §1 (nº 286) — ET LE SOUS-TITRE PARLE DU PORTFOLIO.
+                     « Elles sont visibles tout de suite » ne disait pas
+                     CE QUI est en ligne ; la personne vient d'envoyer
+                     son portfolio, c'est de lui qu'elle attend des
+                     nouvelles. */}
                 <h2
                   id="titre-annonce-validation"
                   className="mt-5 text-[19px] font-bold text-sombre-texte leading-snug"
                 >
-                  Modifications en ligne
+                  C&apos;est enregistré
                 </h2>
                 <p className="mt-2.5 text-[14.5px] leading-relaxed text-sombre-texte-doux">
-                  Elles sont visibles tout de suite.
+                  Ton portfolio est à jour et en ligne.
                 </p>
               </>
             )}

@@ -518,7 +518,23 @@ export function MenuEspace({
               className="absolute left-0 right-0 top-full z-20 mt-1
                          rounded-xl bg-sombre-haut-clair overflow-hidden"
             >
-              <ul className="max-h-[220px] overflow-y-auto overscroll-contain">
+              {/*  §2 (nº 286) — LA BARRE DE DÉFILEMENT SE VOIT DÈS QUE
+                   LA LISTE DÉBORDE.
+                   LE DÉFAUT : le propriétaire a CINQ portfolios, la
+                   liste en montre trois (220 px), et RIEN ne disait
+                   qu'il y en avait d'autres — la règle globale du site
+                   masque toutes les barres (`*:not(.defilement-visible)`,
+                   globals.css). Son cinquième portfolio était
+                   invisible, et rien ne l'invitait à faire défiler.
+                   LE REMÈDE EST L'EXCEPTION DÉJÀ ÉCRITE, celle des
+                   menus déroulants : `defilement-visible`. Elle ne
+                   dessine RIEN quand le contenu tient (c'est
+                   `overflow-y: auto` qui décide, pas la classe), et
+                   sort un curseur fin et arrondi dès qu'il déborde —
+                   sans piste, sans contour, dans le gris des bordures
+                   du site. AUCUNE valeur graphique n'est écrite ici :
+                   on consomme celle de globals.css. */}
+              <ul className="max-h-[220px] overflow-y-auto overscroll-contain defilement-visible">
                 {fiches.map((entree) => {
                   const etatEntree = etatDeLaFiche(entree);
                   const choisie = entree.id === fiche?.id;

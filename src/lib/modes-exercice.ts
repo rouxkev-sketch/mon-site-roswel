@@ -65,6 +65,24 @@ export type ModeExerciceFiche = {
   salon_nom?: string | null;
   salon_slug?: string | null;
   salon_photo?: string | null;
+  /**
+   * §3 (nº 286) — LE NOM DU LIEU SAISI À LA MAIN, et voici pourquoi il
+   * manquait ici.
+   * ------------------------------------------------------------------
+   * La colonne `modes_exercice.nom_lieu` existe depuis la nº 266 et le
+   * formulaire l'ÉCRIT correctement (voir `enregistrer-exercice`, elle
+   * est même obligatoire quand le lieu n'a pas de portfolio). Mais ce
+   * type-ci — celui que LIT la fiche publique — ne l'a jamais déclarée.
+   * La lecture faisait donc `salon_nom ?? intitule` : sans salon lié,
+   * elle prenait `intitule`, qui est L'ADRESSE du lieu. D'où le relevé
+   * du propriétaire : « Résident : 44 Rue Trousseau · 44 Rue
+   * Trousseau, Paris, France » — l'adresse écrite DEUX FOIS, à la
+   * place d'un nom qui, lui, était bien en base.
+   * ⚠️ FACULTATIF, comme `nature_lieu` et `rayon_km` : sur une base où
+   * la migration nº 266 n'est pas passée, la colonne manque et la
+   * lecture doit continuer de fonctionner.
+   */
+  nom_lieu?: string | null;
   intitule: string | null;
   adresse: string | null;
   code_postal: string | null;
@@ -318,6 +336,114 @@ export function libelleLieuDuMode(mode: ModeExerciceFiche): string {
     return ligneCarte(lieu);
   }
   return ligneFiche({ ...lieu, adresse: mode.adresse });
+}
+
+/* ================================================================
+ * §4 (nº 286) — LA GRAMMAIRE DES LIEUX, EN TROIS LIGNES
+ * ================================================================
+ * LA FORME ABANDONNÉE : « En salon · Résident : Hand In Glove · 44 Rue
+ * Trousseau, Paris ». Ton administratif, deux-points superflu, double
+ * séparateur, et l'adresse répétée quand aucun nom n'était lu.
+ *
+ * LA FORME, DÉSORMAIS — trois lignes, comme partout ailleurs sur une
+ * fiche (une étiquette grise en capitales, une valeur blanche) :
+ *
+ *      SALON · RÉSIDENT          ← l'étiquette (ECRITURE_TITRE_SECTION)
+ *      Hand In Glove Tattoo      ← le nom, en blanc (un LIEN s'il a
+ *                                  sa fiche)
+ *      44 Rue Trousseau, Paris   ← l'adresse, en gris
+ *
+ * ⚠️ L'ÉTIQUETTE PORTE TOUJOURS LE TYPE DE LIEU — salon ou studio. Un
+ * visiteur qui arrive directement sur la page doit savoir où il met
+ * les pieds ; « Résident » seul ne le dit pas.
+ * ⚠️ « À DOMICILE » N'A NI NOM NI ADRESSE : personne ne publie
+ * l'adresse de son domicile. La VILLE prend la ligne blanche, le RAYON
+ * la ligne grise. C'est la promesse de `libelleLieuDuMode`, tenue une
+ * seconde fois, ici, par construction.
+ * ⚠️ L'ADRESSE NE S'ÉCRIT JAMAIS DEUX FOIS : sans fiche liée ET sans
+ * nom saisi, c'est elle qui monte sur la ligne blanche, et il n'y a
+ * pas de troisième ligne (voir `troisLignesDuMode`).
+ * ================================================================ */
+
+/**
+ * LE TYPE DE LIEU D'UN MODE, EN UN MOT — « SALON » ou « STUDIO ».
+ * ⚠️ POUR UN GUEST, C'EST LE LIEU VISITÉ qui décide (`nature_lieu`,
+ * migration nº 41) : on est guest DANS un salon ou DANS un studio.
+ * Sans cette indication (base ancienne), on n'invente rien : la
+ * chaîne est vide et l'étiquette se réduit à « GUEST ».
+ */
+export function typeDeLieuDuMode(mode: ModeExerciceFiche): string {
+  if (mode.genre === "salon") return "Salon";
+  if (mode.genre === "prive") return "Studio";
+  if (mode.genre === "guest") {
+    if (mode.nature_lieu === "salon") return "Salon";
+    if (mode.nature_lieu === "prive") return "Studio";
+  }
+  return "";
+}
+
+/**
+ * L'ÉTIQUETTE D'UN MODE — « SALON · RÉSIDENT », « STUDIO · FONDATEUR »,
+ * « SALON · GUEST », « À DOMICILE ».
+ * ⚠️ ELLE EST RENDUE EN CAPITALES PAR LA FEUILLE DE STYLE
+ * (`ECRITURE_TITRE_SECTION`, `uppercase`), jamais par le texte : les
+ * mots restent ceux du formulaire, et une seule écriture décide de
+ * leur apparence — celle des étiquettes STYLES, RENDU, TECHNIQUE.
+ */
+export function etiquetteDuLieu(mode: ModeExerciceFiche): string {
+  if (mode.genre === "domicile") return "À domicile";
+  const type = typeDeLieuDuMode(mode);
+  const role =
+    mode.genre === "guest" ? "Guest" : libelleRoleCourt(mode.role);
+  if (type && role) return `${type} · ${role}`;
+  return type || role || genreMode(mode.genre).label;
+}
+
+/**
+ * LE NOM DU LIEU — celui de sa fiche quand il en a une, SINON CELUI
+ * QUE L'ARTISTE A SAISI (`nom_lieu`, §3 de la nº 286 : c'est ce que la
+ * lecture ne prenait pas). Jamais `intitule` : c'est l'adresse.
+ */
+export function nomDuLieuDuMode(mode: ModeExerciceFiche): string {
+  return (mode.salon_nom || mode.nom_lieu || "").trim();
+}
+
+/**
+ * LES TROIS LIGNES D'UN MODE, décidées UNE SEULE FOIS — l'affichage
+ * n'a plus qu'à les poser.
+ *  · `etiquette` : toujours présente ;
+ *  · `nom`       : la ligne blanche ;
+ *  · `adresse`   : la ligne grise, vide quand il n'y a rien à écrire
+ *    de plus (le nom manquait, l'adresse a pris sa place).
+ */
+export function troisLignesDuMode(mode: ModeExerciceFiche): {
+  etiquette: string;
+  nom: string;
+  adresse: string;
+} {
+  const etiquette = etiquetteDuLieu(mode);
+  //  À DOMICILE : la ville, puis le rayon. Aucune adresse, jamais.
+  if (mode.genre === "domicile") {
+    const lieu = {
+      ville: mode.ville ?? mode.intitule,
+      region: mode.region,
+      pays: mode.pays,
+      code_pays: mode.code_pays,
+    };
+    const rayon = mode.rayon_km ?? 0;
+    return {
+      etiquette,
+      nom: ligneCarte(lieu),
+      adresse: rayon > 0 ? `Dans un rayon de ${rayon} km` : "",
+    };
+  }
+  const adresse = libelleLieuDuMode(mode);
+  const nom = nomDuLieuDuMode(mode);
+  //  NI FICHE NI NOM SAISI : l'adresse monte sur la ligne blanche, et
+  //  il n'y a pas de troisième ligne — elle ne s'écrit jamais deux
+  //  fois (c'était tout le défaut du §3).
+  if (!nom) return { etiquette, nom: adresse, adresse: "" };
+  return { etiquette, nom, adresse };
 }
 
 /**

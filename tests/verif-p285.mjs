@@ -283,10 +283,22 @@ titre("§1 — L'ÉCRAN DE CONFIRMATION : trois voix, aucune ne ment");
       !/Modifications envoyées/.test(formulaire)
   );
   verif(
+    /*  ⚠️ AMENDÉ LE 2026-08-15 (nº 286-§1) — LE TEXTE A CHANGÉ SUR
+        CONSIGNE : « Modifications en ligne / Elles sont visibles tout
+        de suite » ne disait rien du portfolio. Il devient « C'est
+        enregistré / Ton portfolio est à jour et en ligne ». La RÈGLE
+        de cette passe-ci, elle, ne bouge pas : sans photo neuve, ni
+        relecture ni 24 h. */
     "AUCUNE PHOTO NEUVE — on ne parle NI de relecture NI de 24 h : " +
-      "c'est déjà en ligne",
-    /Modifications en ligne/.test(formulaire) &&
-      /Elles sont visibles tout de suite\./.test(formulaire)
+      "c'est déjà en ligne (texte amendé nº 286)",
+    /C&apos;est enregistré/.test(formulaire) &&
+      /Ton portfolio est à jour et en ligne\./.test(formulaire) &&
+      !/24&nbsp;h/.test(
+        formulaire.slice(
+          formulaire.indexOf("C&apos;est enregistré"),
+          formulaire.indexOf("C&apos;est enregistré") + 400
+        )
+      )
   );
   verif(
     "et c'est un GESTE qui décide, pas un état : l'adresse porte " +

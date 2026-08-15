@@ -20,16 +20,15 @@ import {
 import {
   dateLongue,
   equipeOrdonnee,
-  libelleLieuDuMode,
-  libelleSecteurDuMode,
   modesOrdonnes,
   roleDuMembre,
+  troisLignesDuMode,
   type MembreEquipe,
   type ModeExerciceFiche,
   type StudioFiche,
 } from "@/lib/modes-exercice";
 import { ligneFiche, ligneMaps, type LieuAffichable } from "@/lib/adresse";
-import { genreMode, libelleRoleCourt } from "@/config/tatouage";
+import { ECRITURE_TITRE_SECTION, profilDeLaFiche } from "@/config/tatouage";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
@@ -196,15 +195,15 @@ function LigneEtiquetee({
   //  rendait rien effaçait toute la ligne, pastille comprise, et
   //  l'information sautait sans laisser de trace. L'étiquette reste,
   //  et dit ce qui manque plutôt que de se taire.
+  //  §4 (nº 286) — MÊME GRAMMAIRE QUE PARTOUT : l'étiquette grise en
+  //  capitales, la valeur en blanc DESSOUS.
   return (
-    <p className="text-[14px] leading-relaxed text-sombre-texte-doux [overflow-wrap:anywhere]">
-      {etiquette}{" "}
-      {valeur ? (
-        <span className="text-[15px] font-medium text-sombre-texte">{valeur}</span>
-      ) : (
-        <span className="text-[15px] font-medium">non renseignée</span>
-      )}
-    </p>
+    <div className="[overflow-wrap:anywhere]">
+      <p className={ECRITURE_TITRE_SECTION}>{etiquette}</p>
+      <p className="mt-1.5 text-[15px] font-medium leading-snug text-sombre-texte">
+        {valeur || "non renseignée"}
+      </p>
+    </div>
   );
 }
 
@@ -214,13 +213,23 @@ function LigneEtiquetee({
 function DatesDeSession({
   debut,
   fin,
+  enBlanc = false,
 }: {
   debut: string | null;
   fin: string | null;
+  /** §4 (nº 286) — LES DATES D'UN GUEST SONT EN BLANC sur les lieux et
+      dans l'équipe : c'est l'information qui décide le visiteur à
+      prendre rendez-vous MAINTENANT, elle ne peut pas être un détail
+      gris. Ailleurs (le reste du site), rien ne change. */
+  enBlanc?: boolean;
 }) {
   if (!debut || !fin) return null;
   return (
-    <div className="mt-2.5 text-[14px] leading-relaxed text-sombre-texte-doux">
+    <div
+      className={`mt-2.5 text-[14px] leading-relaxed ${
+        enBlanc ? "text-sombre-texte" : "text-sombre-texte-doux"
+      }`}
+    >
       <p>Du {dateLongue(debut)}</p>
       <p>Au {dateLongue(fin)}</p>
     </div>
@@ -400,7 +409,13 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
   const membres = equipeOrdonnee(equipe);
   if (membres.length === 0) return null;
   return (
-    <ul className="mt-8 flex flex-col gap-8">
+    <>
+    {/*  §4 (nº 286) — « ÉQUIPE », l'étiquette de section : la même
+         écriture que STYLES, RENDU, TECHNIQUE — et la même que celle
+         des lieux, juste au-dessus. La page entière parle désormais
+         d'une seule voix. */}
+    <p className={`mt-10 ${ECRITURE_TITRE_SECTION}`}>Équipe</p>
+    <ul className="mt-5 flex flex-col gap-8">
       {membres.map((membre) => {
         /*  ⚠️ LA PASTILLE EST LÀ MÊME SANS PHOTO (nº 224-§1) : un
             rond gris uni, rien dedans. C'est elle qui tient la
@@ -413,22 +428,28 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
           <>
             <PhotoRonde source={membre.photo} nature="personne" />
             <div className="flex min-h-13 min-w-0 flex-1 flex-col justify-center">
-              <p
-                //  §2 (nº 273) — PLUS DE SOULIGNEMENT sur une ligne
-                //  d'équipe : l'encadré au survol (CLASSES_LIGNE_
-                //  CLIQUABLE) dit déjà qu'elle se clique — le trait
-                //  faisait double emploi. Le soulignement est réservé
-                //  au seul cas qui SORT du site : l'adresse (voir
-                //  AdresseCliquable, l'unique lecteur).
-                className="text-[14px] leading-relaxed text-sombre-texte-doux"
-              >
-                {roleDuMembre(membre)} ·{" "}
-                <span className="text-[15px] font-medium text-sombre-texte">
-                  {membre.nom}
-                </span>
+              {/*  §4 (nº 286) — LE NOM D'ABORD, EN BLANC ; LE RÔLE
+                   DESSOUS, EN GRIS. La forme « Résident · Kevin Roux »
+                   faisait lire le rôle avant la personne, et sur une
+                   même ligne : c'est le nom qu'on cherche dans une
+                   équipe. Même grammaire que les lieux au-dessus —
+                   valeur blanche, détail gris.
+                   §2 (nº 273) — PLUS DE SOULIGNEMENT : l'encadré au
+                   survol (CLASSES_LIGNE_CLIQUABLE) dit déjà qu'elle se
+                   clique. Le soulignement reste réservé à ce qui SORT
+                   du site (l'adresse). */}
+              <p className="text-[15px] font-medium leading-snug text-sombre-texte [overflow-wrap:anywhere]">
+                {membre.nom}
+              </p>
+              <p className="mt-0.5 text-[14px] leading-relaxed text-sombre-texte-doux">
+                {roleDuMembre(membre)}
               </p>
               {membre.genre === "guest" && (
-                <DatesDeSession debut={membre.debut_le} fin={membre.fin_le} />
+                <DatesDeSession
+                  debut={membre.debut_le}
+                  fin={membre.fin_le}
+                  enBlanc
+                />
               )}
             </div>
           </>
@@ -450,6 +471,7 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
         );
       })}
     </ul>
+    </>
   );
 }
 
@@ -679,7 +701,7 @@ function FenetreAdresse({
  * même lien Google Maps.
  */
 function AdresseCliquable({
-  etiquette = "Adresse :",
+  etiquette = "Adresse",
   adresse,
   lieu,
   pastille,
@@ -696,9 +718,14 @@ function AdresseCliquable({
   const [fenetre, setFenetre] = useState(false);
   const complete = Boolean(lieu?.adresse && adresse);
 
+  /*  §4 (nº 286) — DEUX LIGNES, la grammaire de toute la fiche :
+       l'étiquette grise en capitales (« ADRESSE DU SALON »), puis
+       l'adresse en blanc dessous. Le deux-points est parti avec la
+       ligne unique — une étiquette de section n'en porte pas. */
   const ligneTexte = (cliquable: boolean) => (
-    <p className="text-[14px] leading-relaxed text-sombre-texte-doux [overflow-wrap:anywhere]">
-      {etiquette}{" "}
+    <div className="[overflow-wrap:anywhere]">
+      <p className={ECRITURE_TITRE_SECTION}>{etiquette}</p>
+      <p className="mt-1.5">
       {/*  §1 (nº 271) — LE SOULIGNEMENT N'APPARAÎT QU'AU SURVOL : au
            repos, l'adresse est du TEXTE NU. C'est l'écriture UNIQUE
            (`SOULIGNEMENT_LIEN`) : fin, décalé, gris doux — la couleur
@@ -737,7 +764,8 @@ function AdresseCliquable({
           {adresse}
         </span>
       )}
-    </p>
+      </p>
+    </div>
   );
 
   if (!complete || !lieu) {
@@ -828,6 +856,28 @@ export function BlocAdressesFiche({
   const adressePrincipale = ligneFiche(lieuPrincipal);
 
   /**
+   * §4 (nº 286) — L'ÉTIQUETTE PORTE LE TYPE DE LIEU : « ADRESSE DU
+   * SALON », « ADRESSE DU STUDIO ». Un visiteur qui arrive
+   * directement sur la page doit savoir ce qu'il regarde — « Adresse »
+   * seul ne le disait pas.
+   * ⚠️ LE MOT VIENT DE `profilDeLaFiche`, l'unique écriture qui
+   * traduit `type_fiche` + `etablissement` : la carte, le moteur et
+   * cette page ne peuvent pas se contredire.
+   * ⚠️ ET L'ACCORD SUIT LE NOMBRE : « AUTRE ADRESSE » s'il n'y en a
+   * qu'une, « AUTRES ADRESSES » au-delà.
+   */
+  const typeDuLieu =
+    profilDeLaFiche(tatoueur.type_fiche, tatoueur.etablissement) ===
+    "studio-prive"
+      ? "studio"
+      : "salon";
+  const etiquettePrincipale = `Adresse du ${typeDuLieu}`;
+  const etiquetteAutres =
+    autres.length > 1
+      ? `Autres adresses du ${typeDuLieu}`
+      : `Autre adresse du ${typeDuLieu}`;
+
+  /**
    * §3 (nº 226) — L'EMPILEMENT REMPLACE LE VA-ET-VIENT.
    * Le sélecteur « Adresse / Autre adresse » (OngletsLigne) est
    * SUPPRIMÉ, son état avec : il cachait une adresse derrière une
@@ -856,6 +906,7 @@ export function BlocAdressesFiche({
            ils ont toujours été. */}
       <div className="flex flex-col">
         <AdresseCliquable
+          etiquette={etiquettePrincipale}
           adresse={adressePrincipale}
           lieu={lieuPrincipal}
           //  ⚠️ LA PHOTO DU LIEU EST CELLE DE LA FICHE : un studio n'a
@@ -879,7 +930,7 @@ export function BlocAdressesFiche({
       {autres.map((studio) => (
         <div key={studio.id} className="mt-8 flex flex-col">
           <AdresseCliquable
-            etiquette="Autre adresse :"
+            etiquette={etiquetteAutres}
             adresse={ligneFiche(lieuDuStudio(studio))}
             lieu={lieuDuStudio(studio)}
           />
@@ -897,52 +948,55 @@ export function BlocAdressesFiche({
  * ================================================================== */
 
 /**
- * L'ÉTIQUETTE GRISE D'UN PROFIL (nº 228-§2) — « En salon · Résident : »
+ * ██ §4 (nº 286) — LA GRAMMAIRE DES LIEUX : TROIS LIGNES ██
  * ==================================================================
- * Le genre vient de `GENRES_MODE` (« À domicile », « En studio »,
- * « En salon », « Guest »), jamais d'autres mots ; LE RÔLE le suit,
- * séparé d'un point médian. C'est le rôle qui vivait sous le nom
- * jusqu'à la nº 222 : il descend ici, devant l'adresse, où il désigne
- * enfin quelque chose de précis.
+ * LA FORME ABANDONNÉE — « En salon · Résident : Hand In Glove · 44
+ * Rue Trousseau, Paris » : ton administratif, deux-points superflu,
+ * double séparateur, et l'adresse écrite deux fois quand aucun nom
+ * n'était lu (le défaut du §3).
  *
- * §1 (nº 268) — LES CAPITALES SONT PARTIES : la consigne de la nº 228
- * est annulée par le propriétaire — des capitales sur un mot long
- * crient là où le reste de la fiche parle. Le rôle s'écrit comme le
- * reste de la ligne, l'initiale seule en majuscule : c'est le mot même
- * de `libelleRoleCourt` (« Fondateur », « Résident »), celui du
- * formulaire et de l'équipe — plus aucune transformation. Taille et
- * couleur n'ont pas bougé, seule la casse.
+ * LA FORME, DÉSORMAIS, et c'est celle de TOUTE la fiche — une
+ * étiquette grise en capitales, une valeur blanche, un détail gris :
  *
- * « Guest » ne redouble pas : son genre EST son rôle, on n'écrit pas
- * « Guest · Guest ». Un profil sans rôle enregistré garde son genre
- * seul (« À domicile : ») — jamais de rôle inventé.
+ *      SALON · RÉSIDENT
+ *      Hand In Glove Tattoo
+ *      44 Rue Trousseau, Paris
+ *
+ * ⚠️ LES TROIS LIGNES SE DÉCIDENT DANS `troisLignesDuMode`
+ * (lib/modes-exercice), pas ici : l'aperçu du formulaire et la fiche
+ * publique liront donc toujours la même chose. Ce composant POSE, il
+ * ne choisit pas.
+ * ⚠️ L'ÉTIQUETTE EST CELLE DES AUTRES (`ECRITURE_TITRE_SECTION` — les
+ * capitales grises espacées de STYLES, RENDU, TECHNIQUE) : aucune
+ * valeur graphique n'est écrite ici.
  */
-function etiquetteDuMode(mode: ModeExerciceFiche): string {
-  const genre = genreMode(mode.genre).label;
-  const role = mode.genre === "guest" ? "" : libelleRoleCourt(mode.role);
-  return role ? `${genre} · ${role} :` : `${genre} :`;
-}
-
-/**
- * CE QUI S'ÉCRIT À DROITE DE LA PHOTO D'UN PROFIL.
- *  · à domicile → « Lyon, France · Rayon 200 km » (le secteur) ;
- *  · en studio  → « Lyon, France » (jamais la rue : un studio privé
- *    est privé — la règle vit dans `libelleLieuDuMode`) ;
- *  · en salon / guest → le nom du lieu quand il est connu, puis son
- *    adresse complète.
- * ⚠️ LE LIEU EST ÉCRIT PAR `lib/adresse`, comme partout ailleurs sur
- * le site : ville, code administratif quand le pays l'écrit, pays.
- */
-function valeurDuMode(mode: ModeExerciceFiche): string {
-  const lieu =
-    mode.genre === "domicile"
-      ? libelleSecteurDuMode(mode)
-      : libelleLieuDuMode(mode);
-  const nom = mode.salon_nom ?? mode.intitule ?? "";
-  //  Le nom du lieu ne se répète pas s'il EST déjà le lieu (un mode
-  //  situé à la main n'a que son intitulé).
-  if (!nom || nom === lieu) return lieu;
-  return lieu ? `${nom} · ${lieu}` : nom;
+function TroisLignesDuLieu({ mode }: { mode: ModeExerciceFiche }) {
+  const { etiquette, nom, adresse } = troisLignesDuMode(mode);
+  return (
+    <div className="flex min-h-13 min-w-0 flex-1 flex-col justify-center">
+      <p className={ECRITURE_TITRE_SECTION}>{etiquette}</p>
+      {/*  LA LIGNE BLANCHE — le nom du lieu, ou l'adresse quand il n'y
+           a pas de nom (elle ne s'écrit alors qu'ICI, jamais deux
+           fois). Le `lie` ne dessine rien de plus : la ligne entière
+           est déjà le lien (voir plus bas), et « dedans on encadre ». */}
+      {nom && (
+        <p className="mt-1.5 text-[15px] font-medium leading-snug text-sombre-texte [overflow-wrap:anywhere]">
+          {nom}
+        </p>
+      )}
+      {adresse && (
+        <p className="mt-0.5 text-[14px] leading-relaxed text-sombre-texte-doux [overflow-wrap:anywhere]">
+          {adresse}
+        </p>
+      )}
+      {/*  UN GUEST PORTE SES DATES EN BLANC, et c'est voulu : c'est
+           l'information qui décide le visiteur à prendre rendez-vous
+           MAINTENANT — elle ne peut pas être un détail gris. */}
+      {mode.genre === "guest" && (
+        <DatesDeSession debut={mode.debut_le} fin={mode.fin_le} enBlanc />
+      )}
+    </div>
+  );
 }
 
 export function BlocProfilsArtiste({
@@ -980,36 +1034,7 @@ export function BlocProfilsArtiste({
           />
         );
         const lie = Boolean(mode.salon_slug && mode.salon_nom);
-        const colonne = (
-          <div className="flex min-h-13 min-w-0 flex-1 flex-col justify-center">
-            <p className="text-[14px] leading-relaxed text-sombre-texte-doux [overflow-wrap:anywhere]">
-              {etiquetteDuMode(mode)}{" "}
-              {lie ? (
-                /*  §2 (nº 276) — LE NOM ET L'ADRESSE NE SONT PLUS UN
-                    LIEN À PART : c'est LA LIGNE ENTIÈRE qui l'est (le
-                    Link enveloppe, plus bas — la consigne de la 268
-                    « borné au nom plus l'adresse » est ANNULÉE par le
-                    propriétaire). Ici, un simple span : même robe,
-                    aucun soulignement — la destination est une fiche
-                    DU SITE, et dedans, on encadre. L'étiquette « En
-                    salon · Fondateur » DÉCRIT toujours : elle vit dans
-                    le même lien que le reste de la ligne, mais n'est
-                    jamais soulignée — rien ne l'est. */
-                <span className="text-[15px] font-medium text-sombre-texte">
-                  {mode.salon_nom}
-                  {libelleLieuDuMode(mode)
-                    ? ` · ${libelleLieuDuMode(mode)}`
-                    : ""}
-                </span>
-              ) : (
-                <span className="text-[15px] font-medium text-sombre-texte">{valeurDuMode(mode)}</span>
-              )}
-            </p>
-            {mode.genre === "guest" && (
-              <DatesDeSession debut={mode.debut_le} fin={mode.fin_le} />
-            )}
-          </div>
-        );
+        const colonne = <TroisLignesDuLieu mode={mode} />;
         return (
           <li key={mode.id}>
             {lie ? (
