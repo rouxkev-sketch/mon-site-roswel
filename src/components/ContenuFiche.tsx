@@ -652,8 +652,18 @@ export function ContenuFiche({
               {/*  20 px au doigt, 22 px au large — l'échelle d'un
                    titre de profil : nettement au-dessus du sous-titre,
                    sans crier, et deux lignes d'un nom long tiennent à
-                   390 px. */}
-              <h1 className="line-clamp-2 text-[20px] lg:text-[22px] font-bold tracking-tight text-sombre-texte leading-[1.25]">
+                   390 px.
+                   §3 (nº 292) — LE WEB REDESCEND À 19 px. Le
+                   propriétaire le trouvait trop imposant : 22 px dans
+                   une colonne de lecture de 340 à 400 px, c'était le
+                   poids d'un titre de page, pas d'un titre de profil.
+                   LA HIÉRARCHIE TIENT, et c'est ce qui décide : 19 px
+                   en gras contre les 12 px en capitales du sous-titre
+                   juste dessous, et contre les 15 px des valeurs de la
+                   fiche — il reste le plus important de la page, de
+                   loin. LE DOIGT NE BOUGE PAS (20 px) : c'est le web
+                   seul qui était trop grand. */}
+              <h1 className="line-clamp-2 text-[20px] lg:text-[19px] font-bold tracking-tight text-sombre-texte leading-[1.25]">
                 {tatoueur.nom}
               </h1>
               {/*  LE SOUS-TITRE — UN SEUL MOT (nº 228-§2) :

@@ -133,11 +133,15 @@ titre("§1 — le catalogue, rejoué sur le vrai code");
     `${entrees.length} entrées · ${isoles.length} isolés · ${familles.length} famille`
   );
   verif(
+    //  ⚠️ AMENDÉE À LA nº 292-§2, SUR CONSIGNE : sous la porte, le
+    //  style s'écrit désormais « Irezumi » tout court. Le fait vérifié
+    //  ne change pas — c'est bien `japonais` qui est là, et il y est
+    //  toujours ; seul le mot affiché a changé.
     "LA FAMILLE EN MONTRE ONZE, dans l'ordre alphabétique — Tribal " +
-      "dedans, Japonais dedans",
+      "dedans, Japonais dedans (« Irezumi » depuis la nº 292)",
     dansLaFamille.length === 11 &&
       dansLaFamille.includes("Tribal") &&
-      dansLaFamille.includes("Japonais · Irezumi"),
+      dansLaFamille.includes("Irezumi"),
     dansLaFamille.join(" · ")
   );
   verif(
@@ -353,12 +357,18 @@ titre("vivant (1440 px) — le relevé, et l'absence d'effet de bord");
         .filter(Boolean)
     );
     verif(
-      "LA FAMILLE OUVERTE montre Tribal ET Japonais — et « Japonais · " +
-        "Irezumi » se lit alors DEUX FOIS dans la même liste, ce qui " +
-        "est exactement ce qui était demandé",
+      //  ⚠️ AMENDÉE À LA nº 292-§2, SUR CONSIGNE : le style se lit
+      //  toujours AUX DEUX ENDROITS de la même liste — mais sous deux
+      //  libellés, « Japonais · Irezumi » à sa lettre et « Irezumi »
+      //  sous la porte. C'est ce couple que la vérification compte.
+      "LA FAMILLE OUVERTE montre Tribal ET le japonais — qui se lit " +
+        "alors AUX DEUX ENDROITS de la même liste, sous ses deux " +
+        "libellés (nº 292-§2)",
       apresPorte.includes("Tribal") &&
-        apresPorte.filter((mot) => mot === "Japonais · Irezumi").length === 2,
-      `Japonais ×${apresPorte.filter((m) => m === "Japonais · Irezumi").length}`
+        apresPorte.filter((mot) => mot === "Japonais · Irezumi").length === 1 &&
+        apresPorte.filter((mot) => mot === "Irezumi").length === 1,
+      `« Japonais · Irezumi » ×${apresPorte.filter((m) => m === "Japonais · Irezumi").length}` +
+        ` · « Irezumi » ×${apresPorte.filter((m) => m === "Irezumi").length}`
     );
     verif(
       "…et le navigateur ne se plaint de RIEN : deux entrées de même " +

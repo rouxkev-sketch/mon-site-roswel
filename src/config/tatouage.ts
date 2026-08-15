@@ -403,6 +403,21 @@ export const FAMILLES_STYLES = [
      * liste alphabétique — c'est précisément ce qu'on ne veut pas.
      */
     aussi: ["japonais"],
+    /**
+     * §2 (nº 292) — LE LIBELLÉ D'UN STYLE **DANS CETTE FAMILLE**.
+     * ----------------------------------------------------------------
+     * Sous « Cultures du monde », l'entrée s'écrit « Irezumi » tout
+     * court : le mot « Japonais » y serait un pléonasme — la famille
+     * dit déjà de quelle culture on parle. Au PREMIER NIVEAU, où rien
+     * ne le situe, il garde son nom complet « Japonais · Irezumi ».
+     * ⚠️ C'EST UN LIBELLÉ, RIEN D'AUTRE. Même style, même slug
+     * (`japonais`), même jeu de photos, même compteur, même résultat
+     * de recherche : seul le mot affiché change selon l'endroit. Le
+     * catalogue (`libelleStyle`) n'en sait rien et ne doit rien en
+     * savoir — sinon le nom changerait aussi sur les fiches, les
+     * badges et les pages style + ville.
+     */
+    intitules: { japonais: "Irezumi" } as Record<string, string>,
   },
 ] as const;
 
@@ -501,14 +516,20 @@ export function entreesExplorer(): EntreeExplorer[] {
       slug: style.slug,
       label: style.label,
     }));
-  const familles: EntreeExplorer[] = famillesStyles().map((famille) => ({
-    genre: "famille",
-    slug: famille.slug,
-    label: famille.label,
-    styles: famille.styles
-      .map((slug) => ({ slug, label: libelleStyle(slug) }))
-      .sort(parLibelle),
-  }));
+  const familles: EntreeExplorer[] = famillesStyles().map((famille) => {
+    //  §2 (nº 292) — LE LIBELLÉ DE FAMILLE, quand il y en a un : c'est
+    //  la SEULE différence entre les deux places d'un même style.
+    const propres =
+      FAMILLES_STYLES.find((une) => une.slug === famille.slug)?.intitules ?? {};
+    return {
+      genre: "famille",
+      slug: famille.slug,
+      label: famille.label,
+      styles: famille.styles
+        .map((slug) => ({ slug, label: propres[slug] ?? libelleStyle(slug) }))
+        .sort(parLibelle),
+    };
+  });
   return [...isoles, ...familles].sort(parLibelle);
 }
 

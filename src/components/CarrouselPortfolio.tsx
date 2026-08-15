@@ -763,7 +763,37 @@ export function CarrouselPortfolio({
         data-role="cadre"
         onPointerDown={reveiller}
         onScroll={reveiller}
-        className={`relative flex w-[round(down,100%,1px)] ${
+        /*  §1 (nº 292) — LA HAUTEUR DU CADRE DÉCOULE DE SA LARGEUR, ET
+             DE RIEN D'AUTRE.
+             ------------------------------------------------------------
+             LE DÉFAUT MESURÉ CHEZ LE PROPRIÉTAIRE (Safari, 1440 × 823) :
+             un cadre large de 565,594 px et haut de 912,313 — rapport
+             1,613 au lieu de 1,25. La largeur obéissait au calcul de la
+             nº 290 ; la HAUTEUR, non : elle venait du contenu.
+             LA MÉCANIQUE, REPRODUITE ICI AU BANC (et elle n'est pas
+             propre à Safari) : sur une boîte à `aspect-ratio`,
+             `min-height: auto` vaut LA HAUTEUR DU CONTENU. Le rapport ne
+             pose donc qu'une hauteur SOUHAITÉE — le moindre élément en
+             flux plus haut que lui la repousse, et la colonne, puis le
+             cadre, puis l'enveloppe grandissent avec. Mesuré : un enfant
+             de 912 px en flux fait passer le cadre de 706 à 1618 px.
+             LE REMÈDE, EN DEUX TEMPS ET SANS UNE SEULE CONSTANTE :
+              · `min-h-0` retire ce minimum-contenu — le rapport
+                redevient une règle, plus un souhait ;
+              · le cadre porte LUI-MÊME le format 4/5. Il est un
+                CONTENEUR DE DÉFILEMENT (`overflow-x-auto`) : une fois sa
+                hauteur définie par sa largeur, aucun contenu ne peut
+                plus la changer — ce qui dépasse défile ou se rogne. La
+                hauteur est donc connue AVANT la première image, la
+                réservation de la nº 280 est tenue, et la photo se
+                recadre à l'intérieur (`object-cover`) au lieu d'étirer
+                son cadre.
+             ⚠️ CE QU'IL NE TOUCHE PAS : la largeur entière
+             (`round(down,100%,1px)`, nº 280), le défilement natif avec
+             accrochage (nº 209-§7), le calage au pixel (nº 282) et la
+             restauration de position — aucune de ces écritures ne parle
+             de hauteur. */
+        className={`relative flex w-[round(down,100%,1px)] ${CADRE_PHOTO_PORTFOLIO} min-h-0 ${
           zoomEnCours
             ? "overflow-hidden"
             : "overflow-x-auto snap-x snap-mandatory"
@@ -819,7 +849,12 @@ export function CarrouselPortfolio({
               //  celle que le carrousel déclare : les deux doivent
               //  concorder, toujours.
               data-nature={photo.nature}
-              className={`relative w-full shrink-0 snap-start snap-always ${CADRE_PHOTO_PORTFOLIO}`}
+              //  §1 (nº 292) — `min-h-0` : la colonne non plus ne se
+              //  laisse pas grandir par ce qu'elle contient (voir la
+              //  note du cadre). Elle garde son format 4/5 — le cadre
+              //  l'étire déjà à sa hauteur, les deux disent la même
+              //  chose et ne peuvent pas diverger.
+              className={`relative w-full shrink-0 snap-start snap-always min-h-0 ${CADRE_PHOTO_PORTFOLIO}`}
               aria-hidden={rang !== indice}
             >
               {surCarte ? (
