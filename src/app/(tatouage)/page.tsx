@@ -269,7 +269,6 @@ export default async function PageAccueilTatouage({
       premiers={resultat.tatoueurs}
       total={resultat.total}
       page={page}
-      demonstration={resultat.demonstration}
       message={resultat.message}
       criteresInitiaux={{ style, nature, rayonKm, exclure, lieu }}
       //  L'AFFICHAGE DEMANDÉ PAR L'ADRESSE (nº 203-§1b) — décodé ici,

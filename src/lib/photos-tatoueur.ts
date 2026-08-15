@@ -1,6 +1,48 @@
 import { libelleStyle } from "@/config/tatouage";
 
 /**
+ * ██ CE QU'EST UN CARROUSEL — LA DÉFINITION DU SITE (nº 278-§0) ██
+ * ==================================================================
+ * ⚠️ CES QUATRE RÈGLES SONT LA RÉFÉRENCE. Elles valent PARTOUT, sans
+ * exception, et aucune passe ne doit les défaire sans le savoir : si
+ * une correction future paraît les contredire, c'est la correction
+ * qu'il faut revoir, ou le propriétaire qu'il faut consulter.
+ *
+ * UN CARROUSEL N'EST PAS UNE PHOTO : C'EST UNE GALERIE, définie par
+ * trois choses et trois seulement —
+ *   · UN STYLE de tatouage (réalisme, maori, aquarelle…) ;
+ *   · UNE CATÉGORIE : réalisation ou flash ;
+ *   · UN RENDU : noir et gris, ou couleur.
+ * C'est exactement `cleDEnsemble` (plus bas) : le style, la nature et
+ * le rendu, replis compris. L'artiste y range ses photos dans l'ordre
+ * qu'il choisit, et CET ORDRE EST LA VÉRITÉ — il vit dans la colonne
+ * `photos_tatoueur.ordre` (migration nº 31, `integer not null default
+ * 0` : aussi durable que la nature de la nº 49, et posée avant elle),
+ * écrite par le glisser-déposer du formulaire (lib/enregistrer-photos).
+ *
+ *  1. LA PREMIÈRE PHOTO DE L'ARTISTE EST LA PREMIÈRE PHOTO AFFICHÉE,
+ *     partout — sur une carte, dans les favoris, sur la fiche, dans
+ *     une fenêtre. Aucune surface ne choisit sa propre vignette ;
+ *  2. L'ORDRE DES SUIVANTES NE CHANGE JAMAIS NON PLUS. Une surface qui
+ *     affiche des photos les trie par `ordre`, et par rien d'autre —
+ *     ni date d'ajout aux favoris, ni ordre de lecture en base, ni
+ *     ordre d'arrivée d'une requête `in(...)` ;
+ *  3. UN CARROUSEL NE MÊLE JAMAIS LES PHOTOS D'UN AUTRE — ni d'un
+ *     autre style, ni d'une autre catégorie, ni d'un autre rendu.
+ *     C'est `ensembleDeLaPhoto` qui tranche, jamais un filtre écrit à
+ *     la main ailleurs ;
+ *  4. LE CŒUR PORTE SUR LE CARROUSEL ENTIER, pas sur une photo : aimer
+ *     une photo, c'est aimer la galerie, et c'est la galerie COMPLÈTE
+ *     qui se range dans les favoris, DANS L'ORDRE DE L'ARTISTE.
+ *
+ * ⚠️ CE QUI N'EST PAS UN CARROUSEL, et n'a donc pas à suivre la règle
+ * 1 : une bande CHRONOLOGIQUE, qui montre « les dernières
+ * publications » d'un artiste tous carrousels confondus (la rangée
+ * « Ses dernières réalisations » de « Ma sélection »). Elle l'annonce
+ * en toutes lettres à l'écran, et son ordre est la date de
+ * publication — c'est sa raison d'être. Dès qu'une rangée prétend
+ * montrer UNE galerie, en revanche, les quatre règles s'appliquent.
+ *
  * LE PORTFOLIO — une photo, deux tags
  * ====================================
  * Une photo de yokofolio est une LIGNE, qui porte deux tags :
@@ -233,6 +275,10 @@ type PhotoClassable = {
   style?: string;
   rendu: string | null;
   nature?: string | null;
+  /** §2 (nº 278) — la place voulue par l'artiste, quand la source la
+      porte : `ensembleDeLaPhoto` s'en sert pour rendre le carrousel
+      DANS SON ORDRE, quelle que soit la surface qui l'appelle. */
+  ordre?: number | null;
 };
 
 /** Les trois tags d'une photo, replis compris — deux photos du même
@@ -245,14 +291,49 @@ export function cleDEnsemble(photo: PhotoClassable): string {
   ].join("·");
 }
 
-/** LES PHOTOS DE L'ENSEMBLE AUQUEL APPARTIENT `photo` — dans l'ordre
-    de la galerie qu'on lui donne. */
+/**
+ * LES PHOTOS DE L'ENSEMBLE AUQUEL APPARTIENT `photo`.
+ * §2 (nº 278) — ET DANS L'ORDRE DE L'ARTISTE, par construction : la
+ * règle 1 du carrousel ne dépend plus de la source qui a fourni la
+ * galerie. Un appelant qui lui passe des photos rangées autrement (les
+ * favoris, rangés par date de cœur) obtient quand même la première de
+ * l'artiste en premier. Une source sans `ordre` garde son ordre à elle
+ * — le tri est stable.
+ */
 export function ensembleDeLaPhoto<T extends PhotoClassable>(
   galerie: T[] | null | undefined,
   photo: PhotoClassable
 ): T[] {
   const cle = cleDEnsemble(photo);
-  return (galerie ?? []).filter((autre) => cleDEnsemble(autre) === cle);
+  return ordreDeLArtiste(
+    (galerie ?? []).filter((autre) => cleDEnsemble(autre) === cle)
+  );
+}
+
+/**
+ * §1 (nº 278) — REMETTRE DES PHOTOS DANS L'ORDRE DE LEUR AUTEUR
+ * ==================================================================
+ * LES RÈGLES 1 ET 2 DU CARROUSEL, en une fonction : la place voulue
+ * par l'artiste (`ordre`) commande, et rien d'autre. Le tri est STABLE
+ * — deux photos de même rang gardent l'ordre où elles arrivent —, ce
+ * qui rend la fonction sûre même sur une base d'avant la migration
+ * nº 31, où tout le monde vaut 0.
+ *
+ * ⚠️ ELLE NE SE SUBSTITUE PAS À `galerieOrdonnee` : celle-là trie une
+ * galerie DÉJÀ complète et typée. Celle-ci sert aux listes qui
+ * arrivent d'ailleurs — les favoris, dont les lignes sont rangées par
+ * date d'enregistrement, et non par volonté de l'artiste.
+ */
+export function ordreDeLArtiste<T extends { ordre?: number | null }>(
+  photos: T[]
+): T[] {
+  return photos
+    .map((photo, rang) => ({ photo, rang }))
+    .sort(
+      (a, b) =>
+        (a.photo.ordre ?? 0) - (b.photo.ordre ?? 0) || a.rang - b.rang
+    )
+    .map(({ photo }) => photo);
 }
 
 /** « Réalisme · Couleur » — la légende d'une photo. Un FLASH le dit :

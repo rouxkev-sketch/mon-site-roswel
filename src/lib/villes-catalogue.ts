@@ -1,3 +1,4 @@
+import { catalogueDemoAutorise } from "@/lib/catalogue-demonstration";
 import { creerClientSupabaseServeur } from "@/lib/supabase/server";
 import { TATOUEURS_DEMO } from "@/lib/tatoueurs-demo";
 import { lieuDepuisFiche, type LieuTrouve } from "@/lib/geocodage";
@@ -103,6 +104,12 @@ export async function villesDuCatalogue(
   } catch {
     //  Base injoignable : on continue sur la démonstration.
   }
+
+  //  §4 (nº 278) — EN PRODUCTION, AUCUNE VILLE DE DÉMONSTRATION NON
+  //  PLUS : les suggestions de lieux viennent de la base ou de rien.
+  //  Une ville inventée mènerait à une recherche vide, ou pire, à une
+  //  fausse fiche (voir lib/catalogue-demonstration).
+  if (!catalogueDemoAutorise()) return [];
 
   const demo = TATOUEURS_DEMO.filter((fiche) =>
     aplati(fiche.ville_nom ?? "").includes(cherche)

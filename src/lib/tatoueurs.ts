@@ -26,6 +26,10 @@ import {
   SLUGS_NATURES,
   type PhotoTatoueur,
 } from "@/lib/photos-tatoueur";
+import {
+  catalogueDemoAutorise,
+  MESSAGE_INDISPONIBLE,
+} from "@/lib/catalogue-demonstration";
 import { creerClientSupabaseServeur } from "@/lib/supabase/server";
 import { TATOUEURS_DEMO } from "@/lib/tatoueurs-demo";
 import { nomVilleCourt } from "@/lib/villes";
@@ -1105,6 +1109,8 @@ export async function lireVilleParSlug(
   } catch {
     // Base injoignable : on retombe sur les fiches de démonstration.
   }
+  //  §4 (nº 278) — jamais en production (voir catalogue-demonstration).
+  if (!catalogueDemoAutorise()) return null;
   const demo = TATOUEURS_DEMO.find((t) => t.ville_slug === slug);
   return demo
     ? {
@@ -1337,6 +1343,18 @@ export async function listerTatoueurs(
     });
   } catch (e) {
     const raison = e instanceof Error ? e.message : String(e);
+    //  §4 (nº 278) — EN PRODUCTION, AUCUNE FAUSSE FICHE. La liste est
+    //  VIDE et le message est honnête : le site est momentanément
+    //  indisponible. Servir vingt tatoueurs inventés à un visiteur —
+    //  qu'il croira vrais, et qu'un moteur de recherche pourrait
+    //  indexer — est un dommage durable pour une panne d'une heure.
+    if (!catalogueDemoAutorise()) {
+      return pageDeResultats([], filtres, clics, {
+        demonstration: false,
+        message: MESSAGE_INDISPONIBLE,
+        ville,
+      });
+    }
     return pageDeResultats(
       filtrer(TATOUEURS_DEMO, filtres, ville),
       filtres,
@@ -1560,6 +1578,8 @@ function ficheDemoDuProprietaire(
   slug: string,
   utilisateurId: string
 ): { tatoueur: Tatoueur | null; etat: "attente" | "enLigne" | null } {
+  //  §4 (nº 278) — jamais en production (voir catalogue-demonstration).
+  if (!catalogueDemoAutorise()) return { tatoueur: null, etat: null };
   const demo = TATOUEURS_DEMO.find((x) => x.slug === slug) ?? null;
   if (!demo || !demo.user_id || demo.user_id !== utilisateurId) {
     return { tatoueur: null, etat: null };
@@ -1571,6 +1591,10 @@ function ficheDemoDuProprietaire(
     base : publiée, pas supprimée, pas hors ligne, pas refusée
     (passe nº 178 : le masquage par compte administrateur a disparu). */
 function demoPublique(slug: string): Tatoueur | null {
+  //  §4 (nº 278) — EN PRODUCTION, AUCUNE FAUSSE FICHE N'EST JOIGNABLE :
+  //  l'adresse d'une fiche de démonstration répond « page introuvable »
+  //  comme n'importe quelle adresse qui n'existe pas.
+  if (!catalogueDemoAutorise()) return null;
   const demo = TATOUEURS_DEMO.find((x) => x.slug === slug) ?? null;
   if (!demo || !estEnLigne(demo)) return null;
   return sansProprietaire(demo);
@@ -1643,6 +1667,8 @@ export async function slugActuelDepuisAncien(
     // Colonne pas encore créée, ou base injoignable : la
     // démonstration prend le relais, comme partout ailleurs.
   }
+  //  §4 (nº 278) — jamais en production (voir catalogue-demonstration).
+  if (!catalogueDemoAutorise()) return null;
   return (
     TATOUEURS_DEMO.find((t) => t.ancien_slug === ancien)?.slug ?? null
   );

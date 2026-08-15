@@ -9,7 +9,11 @@ import {
   libelleTypeFiche,
   valeurExplorer,
 } from "@/config/tatouage";
-import { cleDEnsemble, natureConnue } from "@/lib/photos-tatoueur";
+import {
+  cleDEnsemble,
+  natureConnue,
+  ordreDeLArtiste,
+} from "@/lib/photos-tatoueur";
 import { CLE_TOTAL, type ChoixSelection } from "@/lib/filtres-selection";
 import type { PhotoDuSuivi, PhotoFavorite, TatoueurSuivi } from "@/lib/favoris-serveur";
 
@@ -271,8 +275,28 @@ export function bandeDeTrois(
   suivi: TatoueurSuivi,
   favoris: PhotoFavorite[]
 ): BandeDeTrois {
-  const aimeesSource = favoris.filter(
-    (photo) => photo.tatoueurId === suivi.id
+  /**
+   * §1 et §2 (nº 278) — LES CŒURS, CARROUSEL PAR CARROUSEL, DANS
+   * L'ORDRE DE L'ARTISTE.
+   * ------------------------------------------------------------------
+   * `favoris` arrive rangé par date d'enregistrement du cœur — et un
+   * cœur de galerie écrit toutes ses lignes d'un seul coup : cet ordre
+   * ne disait donc rien, et il ENTREMÊLAIT deux galeries aimées du
+   * même artiste (règle 3 du carrousel). Désormais : les carrousels se
+   * suivent dans l'ordre où ils ont été aimés — le plus récent
+   * d'abord, ce que la rangée annonce — et DANS chacun, l'ordre est
+   * celui de l'artiste (règles 1 et 2). Voir lib/photos-tatoueur.
+   */
+  const duSuivi = favoris.filter((photo) => photo.tatoueurId === suivi.id);
+  const rangDuCarrousel = new Map<string, number>();
+  for (const photo of duSuivi) {
+    const cle = cleDEnsemble(photo);
+    if (!rangDuCarrousel.has(cle)) rangDuCarrousel.set(cle, rangDuCarrousel.size);
+  }
+  const aimeesSource = ordreDeLArtiste(duSuivi).sort(
+    (a, b) =>
+      (rangDuCarrousel.get(cleDEnsemble(a)) ?? 0) -
+      (rangDuCarrousel.get(cleDEnsemble(b)) ?? 0)
   );
   const aimees = aimeesSource.slice(0, VIGNETTES_MAX).map((photo) => ({
     id: photo.id,

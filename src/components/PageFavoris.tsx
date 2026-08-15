@@ -20,6 +20,7 @@ import {
 import {
   cleDEnsemble,
   natureConnue,
+  ordreDeLArtiste,
   RENDU_PAR_DEFAUT,
 } from "@/lib/photos-tatoueur";
 import { photoDuChoix, suivisDuChoix } from "@/lib/selection-suivis";
@@ -262,8 +263,15 @@ export function PageFavoris({
       const cle = cleEnsembleFavori(photo);
       if (vus.has(cle)) continue;
       vus.add(cle);
-      const duMemeEnsemble = photos.filter(
-        (autre) => cleEnsembleFavori(autre) === cle
+      //  §1 (nº 278) — DANS L'ORDRE DE L'ARTISTE, ET NON DANS CELUI
+      //  DES FAVORIS. C'était LE défaut relevé : la liste `photos`
+      //  arrive rangée par date d'enregistrement du cœur, et un cœur
+      //  de galerie écrit toutes ses lignes d'un coup — leur ordre
+      //  n'avait donc aucun sens. La règle 1 du carrousel (voir
+      //  lib/photos-tatoueur) veut la première photo de l'artiste en
+      //  premier : c'est `ordre` qui le dit, et lui seul.
+      const duMemeEnsemble = ordreDeLArtiste(
+        photos.filter((autre) => cleEnsembleFavori(autre) === cle)
       );
       liste.push({
         cle,
@@ -284,18 +292,24 @@ export function PageFavoris({
           longitude: 0,
           styles: [photo.style],
           lien_instagram: "",
-          photo_principale: photo.miniature,
+          //  §1 (nº 278) — LA PREMIÈRE PHOTO DE L'ARTISTE, jamais la
+          //  dernière aimée : ce repli ne sert qu'aux galeries vides,
+          //  mais il ne doit pas mentir non plus.
+          photo_principale: duMemeEnsemble[0]?.miniature ?? photo.miniature,
           photos_styles: {},
           photos: [],
           publie: true,
-          galerie: duMemeEnsemble.map((entree, rang) => ({
+          //  §1 (nº 278) — ON GARDE `ordre`, LA VALEUR DE L'ARTISTE, et
+          //  non le rang dans la liste des favoris : c'est elle que
+          //  `galerieOrdonnee` relit ensuite, partout.
+          galerie: duMemeEnsemble.map((entree) => ({
             id: entree.id,
             style: entree.style,
             rendu: entree.rendu,
             nature: entree.nature,
             url: entree.url,
             miniature: entree.miniature,
-            ordre: rang,
+            ordre: entree.ordre,
           })),
         },
       });

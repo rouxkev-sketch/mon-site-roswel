@@ -131,7 +131,6 @@ function adresseDe(criteres: CritèresTatouage, page = 1): string {
 export function IndexTatoueurs({
   premiers,
   criteresInitiaux,
-  demonstration,
   message,
   total,
   page,
@@ -141,7 +140,12 @@ export function IndexTatoueurs({
       pages cumulées comprises. C'est le SEUL contenu de la mosaïque. */
   premiers: Tatoueur[];
   criteresInitiaux?: Partial<CritèresTatouage>;
-  demonstration: boolean;
+  /** §4 (nº 278) — LE DRAPEAU `demonstration` NE VIENT PLUS JUSQU'ICI :
+      il ne servait qu'à conditionner l'affichage du message, et ce
+      message existe désormais AUSSI en production (« momentanément
+      indisponible »). La page d'accueil le garde pour ce qui le
+      regarde vraiment : ne pas laisser indexer une mosaïque de
+      démonstration (voir `robots` dans page.tsx). */
   message: string | null;
   /** COMBIEN DE TATOUEURS RÉPONDENT EN TOUT — pas seulement ceux de
       cette page. C'est lui qui décide s'il faut proposer « Voir plus ». */
@@ -379,7 +383,14 @@ export function IndexTatoueurs({
           );
         })()}
 
-        {demonstration && message && (
+        {/*  §4 (nº 278) — LE MESSAGE S'AFFICHE DÈS QU'IL Y EN A UN, et
+             non plus seulement en démonstration. C'est par là que passe
+             désormais le SEUL message servi en production : « le site
+             est momentanément indisponible », quand la base ne répond
+             pas (voir lib/catalogue-demonstration). Le lier au drapeau
+             de démonstration le rendait muet exactement là où il compte
+             le plus. */}
+        {message && (
           <p className="mb-6 rounded-xl border border-primaire/40 bg-primaire/10 px-4 py-3 text-sm text-sombre-texte">
             {message}
           </p>

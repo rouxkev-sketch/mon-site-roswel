@@ -14,6 +14,7 @@ import { PileFiches } from "@/components/PileFiches";
 import {
   galerieParStyles,
   ouvertureGalerie,
+  serieDeLOuverture,
   serieMontree,
 } from "@/lib/photo-tatoueur";
 import { NATURE_PAR_DEFAUT, ensembleDeLaPhoto } from "@/lib/photos-tatoueur";
@@ -154,10 +155,19 @@ export function FicheTatoueur({
     natureInitiale || styleInitial
       ? { nature: natureInitiale || NATURE_PAR_DEFAUT, rendu: renduInitial }
       : null;
+  /*  §2 (nº 278) — SANS RECHERCHE, ON N'OUVRE PLUS « TOUT LE STYLE ».
+      La règle 3 du carrousel (lib/photos-tatoueur) interdit de mêler
+      deux galeries : le carrousel s'ouvre donc sur L'ENSEMBLE DE LA
+      PREMIÈRE PHOTO de l'artiste — sa vitrine (règle 1). La consigne
+      « sans recherche, montre tout » (nº 272-§4) est annulée par la
+      définition de la nº 278-§0. Rien n'est perdu : les autres séries
+      du style vivent dans l'onglet Portfolio, sous leurs vignettes. */
+  const serieInitiale =
+    serieCherchee ?? serieDeLOuverture(groupes, ouverture.style);
   const [serieOuverte, setSerieOuverte] = useState<{
     nature: string;
     rendu: string;
-  } | null>(serieCherchee);
+  } | null>(serieInitiale);
   /** L'INDICE de la photo affichée, DANS la série montrée. Une série
       restreinte commence à sa première photo — elle répond déjà à tout
       ce qui a été cherché. */

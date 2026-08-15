@@ -278,6 +278,37 @@ export type SerieDemandee = { nature: string; rendu: string } | null;
  *  · le RENDU, lui, peut s'élargir à toute la catégorie : c'est le
  *    même dessin, dans l'autre encre — jamais un autre genre d'image.
  */
+/**
+ * §2 (nº 278) — LA SÉRIE D'OUVERTURE QUAND ON N'A RIEN CHERCHÉ
+ * ==================================================================
+ * LA RÈGLE 3 DU CARROUSEL (voir lib/photos-tatoueur) : un carrousel ne
+ * mêle JAMAIS les photos d'un autre — ni d'une autre catégorie, ni
+ * d'un autre rendu. Une fiche ouverte SANS recherche (lien direct,
+ * favoris, ligne d'équipe) montrait pourtant LE STYLE ENTIER : les
+ * réalisations et les flashs d'un même style défilaient dans le même
+ * cadre, noir et gris et couleur mêlés. C'était la consigne de la
+ * nº 272 (« sans recherche, montre tout ») — elle est ANNULÉE par la
+ * définition posée en nº 278-§0, qui vaut « partout sans exception ».
+ *
+ * CE QUI S'OUVRE DÉSORMAIS : l'ensemble de LA PREMIÈRE PHOTO du style
+ * — la vitrine de l'artiste (règle 1). Rien n'est perdu : les autres
+ * séries du même style vivent dans l'onglet Portfolio, chacune sous sa
+ * vignette (nº 276-§3).
+ */
+export function serieDeLOuverture(
+  groupes: StyleGalerie[],
+  style: string
+): { nature: string; rendu: string } | null {
+  const groupe =
+    groupes.find((entree) => entree.slug === style) ?? groupes[0] ?? null;
+  const premiere = groupe?.photos[0];
+  if (!premiere) return null;
+  return {
+    nature: premiere.nature || NATURE_PAR_DEFAUT,
+    rendu: premiere.rendu ?? RENDU_PAR_DEFAUT,
+  };
+}
+
 export function serieMontree(
   photos: PhotoGalerie[],
   serie: SerieDemandee

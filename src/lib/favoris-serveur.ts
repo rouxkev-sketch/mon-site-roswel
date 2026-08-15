@@ -63,6 +63,19 @@ export type PhotoFavorite = {
   style: string;
   rendu: string | null;
   nature: string;
+  /**
+   * §1 (nº 278) — SA PLACE DANS LA GALERIE DE L'ARTISTE.
+   * ------------------------------------------------------------------
+   * ⚠️ ELLE MANQUAIT, ET C'ÉTAIT LE DÉFAUT. Sans elle, rien, nulle
+   * part, ne pouvait remettre un carrousel favori dans l'ordre de son
+   * auteur : la page affichait les photos dans l'ordre des LIGNES DE
+   * FAVORIS, et ces lignes-là sont écrites toutes en même temps quand
+   * on aime une galerie (un seul `upsert`, donc un seul `now()`, donc
+   * des dates identiques, donc un ordre que PostgreSQL ne garantit
+   * pas). La règle 1 du carrousel (voir lib/photos-tatoueur) exige la
+   * colonne `ordre` : elle voyage désormais avec la photo.
+   */
+  ordre: number;
   /** Le tatoueur à qui elle appartient — la carte le nomme.
       ⚠️ SON IDENTIFIANT ET SON LIEU VOYAGENT AUSSI (nº 213-§3b) : la
       page « Ma sélection » affiche désormais LA CARTE DE LA MOSAÏQUE,
@@ -179,7 +192,10 @@ export async function lireLesFavoris(
       idsPhotos.length > 0
         ? await supabase
             .from("photos_tatoueur")
-            .select("id, tatoueur_id, style, rendu, nature, url, miniature")
+            //  §1 (nº 278) — `ordre` EST LU : c'est la place que
+            //  l'artiste a donnée à la photo dans sa galerie, et la
+            //  règle 1 du carrousel en dépend entièrement.
+            .select("id, tatoueur_id, style, rendu, nature, url, miniature, ordre")
             .in("id", idsPhotos)
         : { data: [], error: null };
 
@@ -191,6 +207,7 @@ export async function lireLesFavoris(
       nature?: string | null;
       url: string;
       miniature: string | null;
+      ordre?: number | null;
     };
     const brutes = (photos.error ? [] : (photos.data ?? [])) as unknown as
       LignePhoto[];
@@ -251,6 +268,11 @@ export async function lireLesFavoris(
         style: photo.style,
         rendu: photo.rendu,
         nature: natureConnue(photo.nature),
+        //  §1 (nº 278) — la place voulue par l'artiste. Une base à qui
+        //  il manquerait la colonne rend `null` : on lit 0, comme le
+        //  défaut de la migration nº 31 — l'ordre de la liste sert
+        //  alors de départage, exactement comme avant.
+        ordre: photo.ordre ?? 0,
         tatoueurId: fiche.id,
         tatoueurNom: fiche.nom,
         tatoueurSlug: fiche.slug,

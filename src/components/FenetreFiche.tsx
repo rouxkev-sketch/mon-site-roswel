@@ -12,6 +12,7 @@ import { ContenuFiche } from "@/components/ContenuFiche";
 import {
   galerieParStyles,
   ouvertureGalerie,
+  serieDeLOuverture,
   serieMontree,
 } from "@/lib/photo-tatoueur";
 import { NATURE_PAR_DEFAUT, ensembleDeLaPhoto } from "@/lib/photos-tatoueur";
@@ -168,10 +169,15 @@ export function FenetreFiche({
     natureRecherche || styleRecherche
       ? { nature: natureRecherche || NATURE_PAR_DEFAUT, rendu: renduRecherche }
       : null;
+  /*  §2 (nº 278) — MÊME RÈGLE QUE LA PAGE : sans recherche, on ouvre
+      l'ensemble de la PREMIÈRE photo, jamais le style entier (règles 1
+      et 3 du carrousel — voir lib/photos-tatoueur). */
+  const serieInitiale =
+    serieCherchee ?? serieDeLOuverture(groupes, ouverture.style);
   const [serieOuverte, setSerieOuverte] = useState<{
     nature: string;
     rendu: string;
-  } | null>(serieCherchee);
+  } | null>(serieInitiale);
   const [indice, setIndice] = useState(serieCherchee ? 0 : ouverture.indice);
 
   /** LES DEUX BOÎTES QUI DÉFILENT — la fenêtre entière quand elle est
