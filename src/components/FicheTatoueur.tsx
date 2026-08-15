@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import {
   libelleStyle,
@@ -283,6 +283,85 @@ export function FicheTatoueur({
     setFenetreCarrousel(null);
   }
 
+  /**
+   * §3 (nº 290) — LA PHOTO ÉPOUSE LA HAUTEUR VISIBLE : ON LA MESURE,
+   * ON NE LA DEVINE PLUS
+   * ==================================================================
+   * CE QUI ÉTAIT ÉCRIT : `calc((100vh − 119px) × 0,8)`. Ces 119 px
+   * étaient une SOMME DEVINÉE — 79 de barre fixe, 20 de marge en
+   * haut, 20 en bas — posée il y a plusieurs passes. Deux choses la
+   * rendent fausse : la barre ne mesure pas 79 px (relevé ici : 76),
+   * et surtout, en APERÇU (« Mon portfolio » du menu Mon compte), la
+   * fiche est posée DANS l'espace tatoueur, qui a son propre bandeau
+   * au-dessus : la photo commence bien plus bas, la constante réserve
+   * bien trop peu, et le cadre calcule donc une largeur trop grande —
+   * il s'élargit et déborde par le bas, en mangeant la marge.
+   *
+   * LA VOIE PRISE : MESURER CE QUI ENTOURE VRAIMENT LA PHOTO — pas
+   * une nouvelle constante, aucune. Deux nombres, tous deux lus :
+   *   · LE HAUT — la position du haut de la photo dans le document.
+   *     Elle contient TOUT ce qui vit au-dessus (barre, bandeau de
+   *     l'espace, marge du haut), quel qu'il soit et quoi qu'il
+   *     devienne ;
+   *   · LE BAS — la marge du bas, DÉJÀ ÉCRITE sur la racine de la
+   *     fiche (`lg:pb-5`, la jumelle de `lg:pt-5`) : on la LIT sur
+   *     l'élément, on ne la réécrit pas.
+   * La hauteur libre est la différence, et la largeur en découle
+   * (× 0,8, le format 4:5). Somme garantie : haut + photo + bas =
+   * hauteur de l'écran, exactement.
+   *
+   * ⚠️ AUCUNE BOUCLE POSSIBLE : le haut de la photo ne dépend pas de
+   * sa propre taille (elle ouvre sa colonne, et les deux colonnes de
+   * la grille partagent la même rangée). On ne l'observe donc jamais
+   * elle-même — seulement la fenêtre et ce qui la précède.
+   * ⚠️ AVANT LA MESURE (le tout premier rendu, avant l'hydratation),
+   * la feuille de style retombe sur l'ancien calcul : rien ne change
+   * pour cet instant-là, et la valeur juste arrive dans la foulée.
+   */
+  const cadrePhoto = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const zone = cadrePhoto.current;
+    if (!zone) return;
+    const racine = zone.closest("[data-racine-fiche]");
+    let posee = -1;
+    const mesurer = () => {
+      if (!zone.isConnected) return;
+      //  LA POSITION AU REPOS : `rect.top` seul suivrait le
+      //  défilement ; la somme avec le défilement courant, non.
+      const haut =
+        zone.getBoundingClientRect().top +
+        (document.scrollingElement?.scrollTop ?? 0);
+      const basEcrit = racine
+        ? parseFloat(getComputedStyle(racine).paddingBottom) || 0
+        : 0;
+      const libre = window.innerHeight - haut - basEcrit;
+      //  Une fenêtre plus courte que ce qui surmonte la photo : on ne
+      //  pose rien, l'ancien calcul reste — jamais de largeur nulle.
+      if (!(libre > 0)) return;
+      if (Math.abs(libre - posee) < 0.5) return;
+      posee = libre;
+      zone.style.setProperty("--photo-hauteur-libre", `${libre}px`);
+    };
+    mesurer();
+    //  UNE SECONDE MESURE À LA TRAME SUIVANTE : la première tombe
+    //  parfois avant que les polices ne soient posées, et la barre
+    //  fixe change alors de hauteur d'un cheveu.
+    const trame = requestAnimationFrame(mesurer);
+    window.addEventListener("resize", mesurer);
+    //  LA BARRE FIXE peut changer de hauteur sans que la fenêtre
+    //  bouge : on la regarde, ELLE — jamais la photo, ni aucun de ses
+    //  parents (leur hauteur dépend de la sienne : ce serait une
+    //  boucle).
+    const barre = document.querySelector("header");
+    const observateur = new ResizeObserver(mesurer);
+    if (barre) observateur.observe(barre);
+    return () => {
+      cancelAnimationFrame(trame);
+      window.removeEventListener("resize", mesurer);
+      observateur.disconnect();
+    };
+  }, []);
+
   /** OUVRIR LA FENÊTRE — vrai si elle s'ouvre (smartphone), faux si
       l'appelant doit garder son comportement (web, aperçu). */
   function ouvrirLaFenetreCarrousel(
@@ -396,6 +475,11 @@ export function FicheTatoueur({
         les liens y restent des liens. */
     <PileFiches actif={!apercu}>
     <Racine
+      //  §3 (nº 290) — LA RACINE SE NOMME : c'est sur elle qu'est
+      //  ÉCRITE la marge du bas de la photo (`lg:pb-5`, jumelle de
+      //  `lg:pt-5`), et c'est là que la mesure va la LIRE — plus
+      //  aucune valeur recopiée dans le calcul.
+      data-racine-fiche=""
       // En aperçu (« Ma fiche »), l'ESPACE fournit déjà le cadre
       // (largeur, marges latérales, marge du haut) : ne pas les
       // doubler — la photo mobile reste ainsi bord à bord et vient
@@ -433,6 +517,7 @@ export function FicheTatoueur({
                lit son bas pour savoir où arrêter la remontée, sans
                rien connaître de la géométrie de cette page. */}
           <div
+            ref={cadrePhoto}
             data-photo-fiche=""
             /*  §Fenêtre (nº 284) — SMARTPHONE : toucher la photo ouvre
                 la fenêtre de carrousel, SUR CETTE PHOTO. Le
@@ -440,7 +525,14 @@ export function FicheTatoueur({
                 (web, aperçu, toucher d'un bouton, fin de pincement) :
                 aucun comportement existant ne change. */
             onClick={surToucherDeLaPhoto}
-            className="lg:w-[calc((100vh-119px)*0.8)] max-w-full mobile:-mx-4 mobile:-mt-4 mobile:max-w-none"
+            /*  §3 (nº 290) — LA LARGEUR DÉCOULE DE LA HAUTEUR LIBRE
+                MESURÉE (voir l'effet plus haut). Le repli
+                `100vh − 119px` ne sert plus qu'au tout premier rendu,
+                avant l'hydratation : dès la mesure, c'est le nombre
+                relevé qui commande, et il tient compte de TOUT ce qui
+                surmonte la photo — barre fixe, bandeau de l'espace,
+                marge du haut. */
+            className="lg:w-[calc(var(--photo-hauteur-libre,100vh_-_119px)*0.8)] max-w-full mobile:-mx-4 mobile:-mt-4 mobile:max-w-none"
           >
             <CarrouselPortfolio
               photos={photosDuCarrousel}

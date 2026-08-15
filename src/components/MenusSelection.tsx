@@ -235,6 +235,14 @@ export function MenusSelection({
         sombre
         repliable
         feuilleMobile
+        //  §2 (nº 290) — le trait rose sous « Cultures du monde », sur
+        //  les DEUX menus de cette page (les suivis et les favoris :
+        //  ils passent tous deux par ici). EN WEB SEULEMENT, et c'est
+        //  automatique : `feuilleMobile` ci-dessus fait qu'au doigt
+        //  cette page ouvre sa feuille glissante, qui ne pose jamais
+        //  le trait — le drapeau ne vaut que pour le panneau
+        //  classique, donc pour le web.
+        familleSoulignee
       />
     );
   };

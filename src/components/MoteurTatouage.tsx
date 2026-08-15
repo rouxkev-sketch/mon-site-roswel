@@ -936,6 +936,9 @@ export function MoteurTatouage({
             sansBordure
             sombre
             repliable
+            //  §2 (nº 290) — le trait rose sous « Cultures du monde » :
+            //  le menu des styles du MOTEUR PRINCIPAL, côté web.
+            familleSoulignee
           />
         }
         droite={
@@ -1236,6 +1239,10 @@ export function MoteurTatouage({
               taillePolice="text-[16px]"
               sombre
               repliable
+              //  §2 (nº 290) — le même trait rose, côté SMARTPHONE :
+              //  c'est le même menu des styles du moteur principal, et
+              //  il s'ouvre dans le même panneau classique.
+              familleSoulignee
             />
           </div>
 

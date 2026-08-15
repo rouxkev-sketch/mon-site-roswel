@@ -688,6 +688,80 @@ function FenetreAdresse({
 }
 
 /**
+ * §1 (nº 290) — LE LIEN D'ADRESSE, ET IL N'Y EN A QU'UN
+ * ==================================================================
+ * LE DÉFAUT RELEVÉ : sur la fiche d'un ARTISTE, l'adresse d'un lieu
+ * saisi à la main (« 44 Rue Trousseau, Paris, France ») était du
+ * TEXTE MORT. Ce n'était PAS le verrou de la nº 288-§4 — celui-là ne
+ * gardait que `AdresseCliquable` — mais UN AUTRE CHEMIN : la fiche
+ * d'artiste pose ses lieux avec `TroisLignesDuLieu`, dont la ligne
+ * d'adresse était un simple `<p>` qui n'a jamais rencontré
+ * `AdresseCliquable`.
+ *
+ * LE REMÈDE, ET LA RÈGLE : le lien lui-même sort d'`AdresseCliquable`
+ * et devient CE composant, que les deux chemins consomment. Il n'y a
+ * donc pas un second mécanisme — il y en a un, partagé : même
+ * `ligneMaps`, même soulignement au survol, même interception au
+ * doigt, même fenêtre de verre (« Copier l'adresse » / « Ouvrir dans
+ * Google Maps »).
+ *
+ * CE QU'IL NE FAIT PAS : sans lieu à chercher (`lieu` nul — un
+ * DOMICILE n'expose jamais d'adresse) ou sans texte, il rend le texte
+ * NU, exactement comme avant. C'est la seule exception, et elle ne
+ * change pas.
+ */
+function LienAdresse({
+  texte,
+  lieu,
+  classeTexte,
+}: {
+  texte: string;
+  /** `null` = rien à chercher : le texte reste du texte. */
+  lieu: LieuAffichable | null;
+  classeTexte: string;
+}) {
+  const [fenetre, setFenetre] = useState(false);
+  if (!lieu || !texte) return <span className={classeTexte}>{texte}</span>;
+  return (
+    <>
+      {/*  §1 (nº 271) — LE SOULIGNEMENT N'APPARAÎT QU'AU SURVOL : au
+           repos, l'adresse est du TEXTE NU. C'est l'écriture UNIQUE
+           (`SOULIGNEMENT_LIEN`) : fin, décalé, gris doux — la couleur
+           du texte, elle, ne change jamais.
+           §2 (nº 276) — LE LIEN EST EN LIGNE, AUTOUR DE LA SEULE
+           ADRESSE. La destination SORT du site (Google Maps, ou la
+           fenêtre de verre au doigt) : AUCUN encadré — « dehors on
+           souligne » — et seule l'adresse répond. Le `group` du
+           soulignement est donc le lien lui-même : le trait s'allume
+           au survol de l'adresse, pas de toute la ligne. Au doigt,
+           pas de survol : le bref état enfoncé (`active:`). */}
+      <a
+        href={adresseMaps(lieu)}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(evenement) => {
+          //  SMARTPHONE : la fenêtre, pas la navigation.
+          if (document.documentElement.dataset.appareil === "mobile") {
+            evenement.preventDefault();
+            setFenetre(true);
+          }
+        }}
+        className="group rounded transition-colors active:bg-white/10"
+      >
+        <span className={`${classeTexte} ${SOULIGNEMENT_LIEN}`}>{texte}</span>
+      </a>
+      {fenetre && (
+        <FenetreAdresse
+          adresse={texte}
+          lieu={lieu}
+          surFermeture={() => setFenetre(false)}
+        />
+      )}
+    </>
+  );
+}
+
+/**
  * L'ADRESSE, CLIQUABLE QUAND ELLE EST COMPLÈTE (nº 225-§3).
  *  · WEB : un lien ordinaire vers Google Maps, nouvel onglet ;
  *  · SMARTPHONE : la fenêtre de verre ci-dessus — le lien est
@@ -713,7 +787,6 @@ function AdresseCliquable({
       pas et gardent leur ligne de texte seule. */
   pastille?: React.ReactNode;
 }) {
-  const [fenetre, setFenetre] = useState(false);
   /**
    * §4 (nº 288) — UNE LOCALITÉ SEULE SE CLIQUE AUSSI.
    * ------------------------------------------------------------------
@@ -740,44 +813,14 @@ function AdresseCliquable({
     <div className="[overflow-wrap:anywhere]">
       <p className={ECRITURE_TITRE_SECTION}>{etiquette}</p>
       <p className="mt-1.5">
-      {/*  §1 (nº 271) — LE SOULIGNEMENT N'APPARAÎT QU'AU SURVOL : au
-           repos, l'adresse est du TEXTE NU. C'est l'écriture UNIQUE
-           (`SOULIGNEMENT_LIEN`) : fin, décalé, gris doux — la couleur
-           du texte, elle, ne change jamais.
-           §2 (nº 276) — LE LIEN EST EN LIGNE, AUTOUR DE LA SEULE
-           ADRESSE. La destination SORT du site (Google Maps, ou la
-           fenêtre de verre au doigt) : AUCUN encadré — « dehors on
-           souligne » — et seule l'adresse répond. Le `group` du
-           soulignement est donc le lien lui-même : le trait s'allume
-           au survol de l'adresse, pas de toute la ligne. Au doigt,
-           pas de survol : le bref état enfoncé (`active:`). */}
-      {cliquable && lieu ? (
-        <a
-          href={adresseMaps(lieu)}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(evenement) => {
-            //  SMARTPHONE : la fenêtre, pas la navigation.
-            if (document.documentElement.dataset.appareil === "mobile") {
-              evenement.preventDefault();
-              setFenetre(true);
-            }
-          }}
-          className="group rounded transition-colors active:bg-white/10"
-        >
-          <span
-            className={`text-[15px] font-medium text-sombre-texte${
-              cliquable ? ` ${SOULIGNEMENT_LIEN}` : ""
-            }`}
-          >
-            {adresse}
-          </span>
-        </a>
-      ) : (
-        <span className="text-[15px] font-medium text-sombre-texte">
-          {adresse}
-        </span>
-      )}
+        {/*  §1 (nº 290) — LE LIEN EST DÉSORMAIS `LienAdresse`, partagé
+             avec la fiche d'artiste : plus une seule ligne de lien
+             recopiée ici. */}
+        <LienAdresse
+          texte={adresse}
+          lieu={cliquable ? lieu : null}
+          classeTexte="text-[15px] font-medium text-sombre-texte"
+        />
       </p>
     </div>
   );
@@ -823,13 +866,6 @@ function AdresseCliquable({
           ligneTexte(true)
         )}
       </div>
-      {fenetre && (
-        <FenetreAdresse
-          adresse={adresse}
-          lieu={lieu}
-          surFermeture={() => setFenetre(false)}
-        />
-      )}
     </>
   );
 }
@@ -984,23 +1020,64 @@ export function BlocAdressesFiche({
  * capitales grises espacées de STYLES, RENDU, TECHNIQUE) : aucune
  * valeur graphique n'est écrite ici.
  */
-function TroisLignesDuLieu({ mode }: { mode: ModeExerciceFiche }) {
+function TroisLignesDuLieu({
+  mode,
+  sansLien = false,
+}: {
+  mode: ModeExerciceFiche;
+  /** LA LIGNE ENTIÈRE EST DÉJÀ UN LIEN vers la fiche du lieu : on n'en
+      met pas un second dedans — ni en HTML (un `<a>` dans un `<a>`),
+      ni en charte (« dedans on encadre, dehors on souligne — jamais
+      les deux »). L'adresse se clique alors SUR LA FICHE DU LIEU, où
+      elle est déjà cliquable. */
+  sansLien?: boolean;
+}) {
   const { etiquette, nom, adresse } = troisLignesDuMode(mode);
+  /**
+   * §1 (nº 290) — LE LIEU QUE LE PLAN VA CHERCHER.
+   * ------------------------------------------------------------------
+   * Les mêmes champs que partout ailleurs (`LieuAffichable`), lus sur
+   * le mode d'exercice : `ligneMaps` compose la requête avec ce qu'il
+   * a — rue si elle existe, sinon ville, région, pays (la règle levée
+   * en nº 288-§4).
+   * ⚠️ « À DOMICILE » N'EXPOSE JAMAIS D'ADRESSE : ses deux lignes sont
+   * la ville et le rayon, pas un lieu — `null`, donc du texte nu.
+   * C'est la seule exception, et elle ne change pas.
+   */
+  const lieu: LieuAffichable | null =
+    sansLien || mode.genre === "domicile"
+      ? null
+      : {
+          adresse: mode.adresse,
+          code_postal: mode.code_postal,
+          ville: mode.ville ?? mode.intitule,
+          region: mode.region,
+          pays: mode.pays,
+          code_pays: mode.code_pays,
+        };
   return (
     <div className="flex min-h-13 min-w-0 flex-1 flex-col justify-center">
       <p className={ECRITURE_TITRE_SECTION}>{etiquette}</p>
       {/*  LA LIGNE BLANCHE — le nom du lieu, ou l'adresse quand il n'y
            a pas de nom (elle ne s'écrit alors qu'ICI, jamais deux
            fois). Le `lie` ne dessine rien de plus : la ligne entière
-           est déjà le lien (voir plus bas), et « dedans on encadre ». */}
+           est déjà le lien (voir plus bas), et « dedans on encadre ».
+           §1 (nº 290) — QUAND C'EST L'ADRESSE QUI EST MONTÉE ICI
+           (aucun nom saisi), c'est ELLE qui se clique : sinon le lieu
+           serait cliquable ou non selon qu'un nom a été tapé, ce qui
+           n'a aucun sens pour le visiteur. */}
       {nom && (
         <p className="mt-1.5 text-[15px] font-medium leading-snug text-sombre-texte [overflow-wrap:anywhere]">
-          {nom}
+          <LienAdresse
+            texte={nom}
+            lieu={adresse ? null : lieu}
+            classeTexte=""
+          />
         </p>
       )}
       {adresse && (
         <p className="mt-0.5 text-[14px] leading-relaxed text-sombre-texte-doux [overflow-wrap:anywhere]">
-          {adresse}
+          <LienAdresse texte={adresse} lieu={lieu} classeTexte="" />
         </p>
       )}
       {/*  UN GUEST PORTE SES DATES EN BLANC, et c'est voulu : c'est
@@ -1048,7 +1125,7 @@ export function BlocProfilsArtiste({
           />
         );
         const lie = Boolean(mode.salon_slug && mode.salon_nom);
-        const colonne = <TroisLignesDuLieu mode={mode} />;
+        const colonne = <TroisLignesDuLieu mode={mode} sansLien={lie} />;
         return (
           <li key={mode.id}>
             {lie ? (

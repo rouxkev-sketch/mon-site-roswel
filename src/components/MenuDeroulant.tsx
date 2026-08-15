@@ -108,6 +108,7 @@ export function MenuDeroulant({
   iconeTitreFeuille,
   enErreur,
   arrondi,
+  familleSoulignee = false,
 }: {
   valeur: string;
   surChangement: (valeur: string) => void;
@@ -176,6 +177,24 @@ export function MenuDeroulant({
       de champs de formulaire (`rounded-xl` chez eux) : sans rien,
       le `rounded-2xl` historique des menus. */
   arrondi?: string;
+  /**
+   * §2 (nº 290) — LA PORTE DE FAMILLE PORTE UN SOULIGNEMENT ROSE.
+   * ------------------------------------------------------------------
+   * « Cultures du monde » occupe la place d'un style dans la liste
+   * alphabétique et lui ressemble en tout : rien ne disait, au repos,
+   * qu'elle OUVRE au lieu de se choisir. Un trait fin rose sous ses
+   * seuls mots le dit.
+   * ⚠️ SUR DEMANDE, ET NULLE PART AILLEURS. Deux appelants seulement
+   * le passent — le moteur de recherche principal (son panneau est le
+   * même au doigt et au web) et les deux menus de « Ma sélection ».
+   * Le formulaire de fiche, le formulaire de contact et le menu métier
+   * du produit artisans ne le passent pas : ils ne changent pas.
+   * ⚠️ ET JAMAIS SUR LA FEUILLE GLISSANTE (`feuilleMobile`, la
+   * présentation smartphone de « Ma sélection » : elle monte du bas
+   * avec ses points sur les côtés). Le drapeau ne vaut que pour le
+   * panneau classique — c'est écrit à l'endroit qui le pose, plus bas.
+   */
+  familleSoulignee?: boolean;
 }) {
   const [ouvert, setOuvert] = useState(false);
   const conteneur = useRef<HTMLDivElement>(null);
@@ -657,7 +676,10 @@ export function MenuDeroulant({
     //    le point rose qui dit qu'on est entré, pas un fond qui change.
     //  Le panneau du web, lui, ne passe rien : il garde son voile et
     //  n'a jamais eu de points.
-    { avecPoint = false, sansVoile = false } = {}
+    //  §2 (nº 290) — `souligne` : le trait rose sous les seuls mots de
+    //  la porte. Posé par le panneau classique quand l'appelant l'a
+    //  demandé, JAMAIS par la feuille glissante.
+    { avecPoint = false, sansVoile = false, souligne = false } = {}
   ) {
     return (
       <button
@@ -685,7 +707,25 @@ export function MenuDeroulant({
             aria-hidden
           />
         )}
-        <span className="flex-1">{sousEntete}</span>
+        {/*  §2 (nº 290) — LE TRAIT NE TIENT QU'AUX MOTS : le `flex-1`
+             porte toute la largeur de la ligne, il ne peut donc pas
+             porter le soulignement (il barrerait la ligne entière,
+             chevron compris). C'est un second `span`, EN LIGNE, qui
+             le reçoit — la largeur du texte, et rien de plus.
+             ⚠️ `decoration-primaire` : le rose de la charte
+             (`#EE3D6F`), lu au jeton — jamais recopié. */}
+        <span className="flex-1">
+          <span
+            data-porte-soulignee={souligne ? "" : undefined}
+            className={
+              souligne
+                ? "underline decoration-primaire decoration-1 underline-offset-4"
+                : undefined
+            }
+          >
+            {sousEntete}
+          </span>
+        </span>
         {/*  ⚠️ LA FLÈCHE DE LA PORTE EST ROSE (nº 155-§5B), pointée en
              bas comme en haut — c'est elle, et elle seule, qui dit
              « ceci s'ouvre au lieu de se choisir ». LE TITRE, LUI,
@@ -814,7 +854,14 @@ export function MenuDeroulant({
                 {/* Porte de sous-section — à la place d'une option */}
                 {sousEntete &&
                   sousEnteteVisible(option) &&
-                  porteSousSection(sousEntete, optionSombre(OPTION_LISTE))}
+                  //  §2 (nº 290) — LE PANNEAU CLASSIQUE, et lui seul,
+                  //  pose le trait rose : c'est la présentation du
+                  //  moteur principal AU DOIGT COMME AU WEB, et celle
+                  //  de « Ma sélection » sur le web. La feuille
+                  //  glissante (plus bas) ne le pose jamais.
+                  porteSousSection(sousEntete, optionSombre(OPTION_LISTE), {
+                    souligne: familleSoulignee,
+                  })}
                 {optionVisible(option) && (
                 <button
                   type="button"
