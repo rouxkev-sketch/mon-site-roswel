@@ -295,6 +295,29 @@ export type SerieDemandee = { nature: string; rendu: string } | null;
  * séries du même style vivent dans l'onglet Portfolio, chacune sous sa
  * vignette (nº 276-§3).
  */
+/**
+ * §3 (nº 280) — L'ADRESSE D'UN CARROUSEL, écrite une seule fois.
+ * ==================================================================
+ * C'est celle que partage le bouton de partage, celle que pousse la
+ * fenêtre superposée à l'ouverture (nº 279-§2) et celle que porte le
+ * lien d'une carte : les trois disent la même chose, donc elles
+ * s'écrivent au même endroit. Une fiche ouverte sans série connue rend
+ * l'adresse nue — elle ouvrira sa première galerie (nº 278-§2).
+ */
+export function cheminDuCarrousel(
+  slug: string,
+  style: string,
+  serie: { nature: string; rendu: string } | null
+): string {
+  if (!style && !serie) return `/tatoueur/${slug}`;
+  const suite = new URLSearchParams();
+  if (style) suite.set("style", style);
+  if (serie?.nature) suite.set("nature", serie.nature);
+  if (serie?.rendu) suite.set("rendu", serie.rendu);
+  const requete = suite.toString();
+  return requete ? `/tatoueur/${slug}?${requete}` : `/tatoueur/${slug}`;
+}
+
 export function serieDeLOuverture(
   groupes: StyleGalerie[],
   style: string

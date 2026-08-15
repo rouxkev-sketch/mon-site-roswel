@@ -12,6 +12,7 @@ import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
 import { ContenuFiche } from "@/components/ContenuFiche";
 import { PileFiches } from "@/components/PileFiches";
 import {
+  cheminDuCarrousel,
   galerieParStyles,
   ouvertureGalerie,
   serieDeLOuverture,
@@ -252,7 +253,17 @@ export function FicheTatoueur({
       nom tient sa place — jamais de trou dans la mise en page. */  const boutonPartage = (
     <BoutonPartageFiche
       nomArtisan={tatoueur.nom}
-      cheminFiche={`/tatoueur/${tatoueur.slug}`}
+      /*  §3 (nº 280) — ON PARTAGE LE CARROUSEL OUVERT, pas la fiche en
+          général : celui qui regarde des flashs en réalisme partage
+          des flashs en réalisme (règle 3 du §0 de la nº 278). Les
+          trois tags sont ceux de la série AFFICHÉE — vignette du
+          portfolio comprise —, et l'adresse qu'ils forment est celle
+          que la fiche sait rouvrir (nº 279-§2). */
+      cheminFiche={cheminDuCarrousel(
+        tatoueur.slug,
+        styleAffiche,
+        serieEffective
+      )}
       variante="fiche"
       avecFenetre
       sombre

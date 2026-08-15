@@ -10,6 +10,7 @@ import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
 import { ContenuFiche } from "@/components/ContenuFiche";
 import {
+  cheminDuCarrousel,
   galerieParStyles,
   ouvertureGalerie,
   serieDeLOuverture,
@@ -426,7 +427,13 @@ export function FenetreFiche({
                 <div className="absolute top-3 left-3 z-[2]">
                   <BoutonPartageFiche
                     nomArtisan={tatoueur.nom}
-                    cheminFiche={`/tatoueur/${tatoueur.slug}`}
+                    /*  §3 (nº 280) — le carrousel ouvert, comme sur la
+                        page de fiche : une seule écriture d'adresse. */
+                    cheminFiche={cheminDuCarrousel(
+                      tatoueur.slug,
+                      styleAffiche,
+                      serieEffective
+                    )}
                     variante="fiche"
                     avecFenetre
                     sombre

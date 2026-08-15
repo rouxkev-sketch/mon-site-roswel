@@ -685,12 +685,35 @@ export function CarrouselPortfolio({
           défilements, mais PAS le pincement : celui-ci est à nous
           (ZoomPincement). Le temps du zoom, le cadre cesse de défiler
           et l'accrochage est levé. */}
+      {/*  §4 (nº 280) — LE CADRE PREND UNE LARGEUR ENTIÈRE, et c'est la
+           correction du « morceau de la photo d'à côté ».
+           LA CAUSE, MESURÉE : sur une fiche de page (web), la colonne
+           de la photo est fluide et tombe sur une largeur FRACTIONNAIRE
+           — relevé 664,796875 px. Chaque colonne du carrousel fait
+           100 % de cette largeur, mais les positions d'arrêt du
+           défilement, elles, sont ARRONDIES À L'ENTIER (relevé : 0,
+           665, 1330, 1994). L'écart s'accumule photo après photo —
+           +0,203 px, +0,406 px, −0,391 px… — et ce qui dépasse du bord
+           gauche, c'est la tranche de la photo précédente. D'où
+           l'intermittence : l'écart change à chaque photo et repasse
+           parfois par zéro.
+           LE REMÈDE : `round(down, 100%, 1px)` — le cadre s'aligne sur
+           le pixel entier inférieur, donc les colonnes aussi (elles
+           font 100 % de lui), donc les positions d'arrêt tombent
+           JUSTE. On perd moins d'un pixel de largeur, invisible, et
+           rien d'autre ne bouge : ni le format 4:5, ni la hauteur
+           réservée, ni la charte (aucune valeur graphique n'est
+           écrite ici).
+           ⚠️ UN NAVIGATEUR QUI NE CONNAÎT PAS `round()` IGNORE LA
+           DÉCLARATION et retrouve exactement le comportement d'avant :
+           aucune régression possible. (Chromium la connaît — le banc
+           mesure 0,000 px d'écart sur vingt défilements.) */}
       <div
         ref={cadre}
         data-role="cadre"
         onPointerDown={reveiller}
         onScroll={reveiller}
-        className={`relative flex ${
+        className={`relative flex w-[round(down,100%,1px)] ${
           zoomEnCours
             ? "overflow-hidden"
             : "overflow-x-auto snap-x snap-mandatory"
@@ -720,8 +743,11 @@ export function CarrouselPortfolio({
               className="absolute inset-0 h-full w-full object-cover"
             />
           ) : (
+            /*  §1 (nº 280) — PLUS D'APERÇU : la pleine résolution, et
+                elle seule. La miniature ne lui est plus passée — elle
+                n'existe plus dans ce chemin. Le cadre garde son fond
+                sombre et sa hauteur réservée le temps du chargement. */
             <PhotoProgressive
-              miniature={photo.miniature}
               url={photo.url}
               alt={rang === indice ? texteDe(photo) : ""}
               pleineResolution={rang === indice}

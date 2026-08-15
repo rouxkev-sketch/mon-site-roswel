@@ -464,7 +464,11 @@ export function IndexTatoueurs({
                          hover:bg-sombre-haut
                          disabled:opacity-60"
             >
-              {enTransition ? "Chargement…" : "Voir plus de portfolios"}
+              {/*  §5 (nº 280) — « VOIR PLUS », TOUT COURT. Le bouton
+                   charge des GALERIES depuis la nº 279, plus des
+                   portfolios : le mot promettait autre chose que ce
+                   qu'il apporte. (Le compteur, lui, ne change pas.) */}
+              {enTransition ? "Chargement…" : "Voir plus"}
             </button>
             <p className="text-[13px] text-sombre-texte-doux">
               {visibles.length} sur {total}
