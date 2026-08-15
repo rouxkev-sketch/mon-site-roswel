@@ -730,12 +730,17 @@ export function CarrouselPortfolio({
            tomber les fractions à zéro dans Chromium sans faire
            disparaître le trait : c'est qu'il ne fallait pas chercher
            un pixel de plus, mais retirer ce qu'il y avait DESSOUS.
-           LA RÉSERVATION SOMBRE DE LA nº 280 N'EST PAS PERDUE : elle
-           descend sur la COLONNE, c'est-à-dire exactement la boîte de
-           la photo — que la photo recouvre, elle, avec un pixel de
-           marge (voir plus bas). Le rectangle sombre tient donc encore
-           la place le temps du chargement, mais il ne peut plus
-           déborder d'un cheveu autour d'elle. */
+           §1-b (nº 295) — ET PLUS AUCUNE BOÎTE DE LA CHAÎNE NE PEINT :
+           ni l'enveloppe, ni cette racine, ni le cadre, ni la colonne,
+           ni la boîte de la photo. C'est le seul remède qui ne peut
+           pas échouer : on n'essaie plus de coller au pixel, on efface
+           ce qui rendait l'écart visible. S'il manque un demi-pixel,
+           il montre la page en pleine page et le fond de la fenêtre en
+           superposé — la même couleur que tout autour, invisible quel
+           que soit le moteur de rendu.
+           LA RÉSERVATION DE LA nº 280 TIENT SANS COULEUR : elle vient
+           du format 4/5 (cadre et colonne), pas d'un fond. La hauteur
+           est connue avant la première image ; la page ne saute pas. */
       className="relative select-none"
     >
       {/* LE CADRE QUI DÉFILE — le navigateur fait tout : l'inertie du
@@ -845,10 +850,16 @@ export function CarrouselPortfolio({
               //  fois montées — c'est-à-dire au premier geste.
               loading={rang === 0 && prioritaire ? undefined : "lazy"}
               fetchPriority={rang === 0 && prioritaire ? "high" : undefined}
-              //  §1 (nº 294) — UN PIXEL DE DÉBORDEMENT, rogné par la
-              //  colonne : la photo couvre sa colonne sur ses quatre
-              //  côtés quoi qu'il arrive (voir la note de la colonne).
-              className="absolute -top-px -left-px h-[calc(100%+2px)] w-[calc(100%+2px)] max-w-none object-cover"
+              //  §2 (nº 295) — LE DÉBORDEMENT D'UN PIXEL DE LA nº 294 EST
+              //  ANNULÉ : c'est LUI qui posait la dernière colonne de
+              //  pixels de la photo précédente au bord gauche de celle
+              //  qu'on regarde (relevé du propriétaire : rgb(133,100,99),
+              //  rgb(107,80,79)… — des teintes de peau, pas un fond).
+              //  La photo épouse exactement sa colonne ; ce qui la
+              //  protège d'un demi-pixel manquant, ce n'est plus un
+              //  débordement, c'est qu'il n'y a RIEN à découvrir
+              //  derrière (règle b).
+              className="absolute inset-0 h-full w-full object-cover"
             />
           ) : (
             /*  §1 (nº 280) — PLUS D'APERÇU : la pleine résolution, et
@@ -860,9 +871,9 @@ export function CarrouselPortfolio({
               alt={rang === indice ? texteDe(photo) : ""}
               pleineResolution={rang === indice}
               prioritaire={rang === 0}
-              //  §1 (nº 294) — le même pixel de débordement que sur
-              //  les cartes, rogné par la colonne.
-              classe="absolute -top-px -left-px h-[calc(100%+2px)] w-[calc(100%+2px)] max-w-none object-cover"
+              //  §2 (nº 295) — annulé ici aussi : la photo épouse
+              //  exactement sa colonne (voir la note jumelle).
+              classe="absolute inset-0 h-full w-full object-cover"
             />
           );
           return (
@@ -881,18 +892,23 @@ export function CarrouselPortfolio({
               //  note du cadre). Elle garde son format 4/5 — le cadre
               //  l'étire déjà à sa hauteur, les deux disent la même
               //  chose et ne peuvent pas diverger.
-              /*  §1 (nº 294) — DEUX CHOSES, ET ELLES VONT ENSEMBLE :
-                   · `bg-sombre-carte` — la réservation sombre de la
-                     nº 280, descendue ici depuis la racine. Elle
-                     n'occupe plus que la boîte de la photo ;
-                   · `overflow-hidden` — la colonne ROGNE. C'est ce qui
-                     permet à la photo de déborder d'un pixel sans
-                     jamais mordre sur sa voisine : elle couvre à coup
-                     sûr, et le débordement est coupé net au bord de
-                     la colonne. Aucune arithmétique ne peut plus
-                     laisser d'interstice, quelles que soient les
-                     fractions. */
-              className={`relative w-full shrink-0 snap-start snap-always min-h-0 overflow-hidden bg-sombre-carte ${CADRE_PHOTO_PORTFOLIO}`}
+              /*  §1-§2 (nº 295) — LA COLONNE ROGNE, ET ELLE NE PEINT
+                   PLUS RIEN.
+                   ------------------------------------------------------
+                   `overflow-hidden` — LA RÈGLE (a) : une photo ne peut
+                   JAMAIS déborder chez sa voisine, quelles que soient
+                   les fractions. Le rognage n'est plus supposé : le
+                   banc le prouve AU PIXEL, en posant une cale trop
+                   large dans une colonne et en vérifiant qu'aucun de
+                   ses pixels n'apparaît hors d'elle.
+                   AUCUN FOND — LA RÈGLE (b) : la nº 294 avait descendu
+                   `bg-sombre-carte` ici pour garder la réservation de
+                   la nº 280. C'était encore une couleur à découvrir.
+                   LA RÉSERVATION NE VIENT PAS D'UNE COULEUR, elle vient
+                   du format 4/5 porté par le cadre et par la colonne :
+                   la hauteur est connue avant la première image, sans
+                   qu'un seul pixel soit peint. */
+              className={`relative w-full shrink-0 snap-start snap-always min-h-0 overflow-hidden ${CADRE_PHOTO_PORTFOLIO}`}
               aria-hidden={rang !== indice}
             >
               {surCarte ? (

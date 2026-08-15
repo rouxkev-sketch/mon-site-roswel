@@ -418,7 +418,7 @@ export function FenetreFiche({
                        lg:h-[min(88vh,940px,calc((100vw-476px)*1.25))]
                        lg:max-w-[min(1200px,calc(100vw-96px))]
                        overflow-y-auto lg:overflow-hidden overscroll-contain
-                       rounded-b-lg rounded-t-none lg:rounded-none lg:rounded-r-lg bg-sombre-carte
+                       rounded-b-lg rounded-t-none lg:rounded-none lg:rounded-r-lg
                        shadow-[0_24px_80px_rgba(0,0,0,0.6)]
                        scale-100 transition-transform duration-200 starting:scale-[0.97]"
           >

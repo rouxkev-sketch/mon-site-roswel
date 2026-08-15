@@ -28,6 +28,7 @@ import {
   type StudioFiche,
 } from "@/lib/modes-exercice";
 import { ligneFiche, ligneMaps, type LieuAffichable } from "@/lib/adresse";
+import { poserArriveeSansPhoto } from "@/lib/arrivee-sans-photo";
 import { ECRITURE_TITRE_SECTION, profilDeLaFiche } from "@/config/tatouage";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
@@ -174,8 +175,17 @@ function useClicVersFiche() {
     ) {
       return;
     }
-    //  ÉCRAN ÉTROIT : on laisse passer — le lien navigue vers la page.
-    if (!laLargeurVeutUneFenetre()) return;
+    /*  ÉCRAN ÉTROIT : on laisse passer — le lien navigue vers la page.
+        §3 (nº 295) — MAIS IL EMPORTE SA CONSIGNE. Un lien INTERNE à une
+        fiche mène à un portfolio SANS photo en haut : c'est le lien qui
+        le dit, la page d'arrivée n'a rien à deviner. La consigne ne
+        passe pas par l'adresse (un lien partagé l'emporterait chez
+        quelqu'un qui, lui, arrive de l'extérieur) — voir
+        lib/arrivee-sans-photo. */
+    if (!laLargeurVeutUneFenetre()) {
+      poserArriveeSansPhoto(`/tatoueur/${slug}`);
+      return;
+    }
     evenement.preventDefault();
     ouvrirFiche(slug, `/tatoueur/${slug}`);
   };

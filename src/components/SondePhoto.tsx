@@ -294,6 +294,39 @@ export function SondePhoto() {
          * réservation sombre de la nº 280, et la photo la recouvre avec
          * un pixel de marge. Tout le reste doit être transparent.
          */
+        /**
+         * §1-§2 (nº 295) — LES DEUX LIGNES QUI TRANCHENT.
+         * ----------------------------------------------------------------
+         * · CHAQUE COLONNE ROGNE : on ne le suppose plus (la nº 294 le
+         *   supposait, et c'est ce qui a laissé passer la dernière
+         *   colonne de pixels de la photo précédente). On LIT
+         *   `overflow` sur chaque colonne : il doit être coupant.
+         * · PEINT DANS LA CHAÎNE : la liste des boîtes qui peignent
+         *   encore quelque chose — fond, bordure, contour, ombre,
+         *   arrondi. La réponse attendue est « rien » : alors un
+         *   demi-pixel manquant ne montre que la page, la même couleur
+         *   que tout autour, et il devient invisible quel que soit le
+         *   moteur de rendu.
+         */
+        (() => {
+          const colonnes = [
+            ...zone.querySelectorAll<HTMLElement>('[data-role^="colonne"]'),
+          ];
+          const coupantes = colonnes.filter((colonne) => {
+            const debord = getComputedStyle(colonne).overflow;
+            return debord === "hidden" || debord === "clip" || debord === "auto";
+          });
+          const toutes = colonnes.length > 0 && coupantes.length === colonnes.length;
+          return {
+            cle: "▸ CHAQUE COLONNE ROGNE",
+            valeur: colonnes.length === 0
+              ? "aucune colonne"
+              : toutes
+                ? `oui (${colonnes.length}/${colonnes.length})`
+                : `NON — ${coupantes.length}/${colonnes.length} seulement`,
+            ton: toutes ? "bon" : "mauvais",
+          } as Ligne;
+        })(),
         (() => {
           const peint = (nom: string, element: Element | null) => {
             if (!element) return `${nom} INTROUVABLE`;
@@ -314,10 +347,12 @@ export function SondePhoto() {
             peint("enveloppe", zone),
             peint("racine", zone.querySelector("[data-carrousel]")),
             peint("cadre", cadre),
+            peint("colonne", colonne),
+            peint("photo", photo ?? null),
           ].filter(Boolean);
           return {
-            cle: "▸ PEINT AUTOUR DE LA PHOTO",
-            valeur: dits.length ? dits.join(" · ") : "RIEN (seule la colonne réserve son fond)",
+            cle: "▸ PEINT DANS LA CHAÎNE",
+            valeur: dits.length ? dits.join(" · ") : "rien",
             ton: dits.length ? "mauvais" : "bon",
           } as Ligne;
         })(),

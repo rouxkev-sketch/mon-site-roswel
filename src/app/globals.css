@@ -1137,3 +1137,18 @@ input[data-sans-remplissage]:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0 1000px var(--rw-sombre-eleve-clair, #3F3F47) inset;
   transition: background-color 9999s ease-in-out 0s;
 }
+
+/*  §3 (nº 295) — « PAS DE PHOTO EN HAUT », POSÉ PAR LE LIEN LUI-MÊME
+    -------------------------------------------------------------------
+    Un lien INTERNE à une fiche (équipe, guest, salon, studio, adresse)
+    mène, AU DOIGT, à un portfolio qui commence par Profil / Portfolio.
+    C'est le LIEN qui porte la consigne — la page d'arrivée ne devine
+    rien (voir lib/arrivee-sans-photo).
+    ⚠️ POURQUOI UNE RÈGLE DE STYLE EN PLUS DE L'ÉTAT REACT : l'attribut
+    est posé AU CLIC, donc AVANT que la page d'arrivée ne se rende. La
+    photo est masquée dès le premier pixel, sans le clignotement d'une
+    image qui s'afficherait puis disparaîtrait. L'état React prend le
+    relais aussitôt et démonte le carrousel — plus aucune requête. */
+[data-fiche-sans-photo] [data-photo-fiche] {
+  display: none;
+}

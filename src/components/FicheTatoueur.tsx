@@ -8,6 +8,10 @@ import {
 } from "@/config/tatouage";
 import { villeAffichee } from "@/lib/adresse";
 import { positionSousLeGel } from "@/lib/gel-du-corps";
+import {
+  consommerArriveeSansPhoto,
+  oublierArriveeSansPhoto,
+} from "@/lib/arrivee-sans-photo";
 import { BoutonPartageFiche } from "@/components/BoutonPartageFiche";
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
@@ -350,6 +354,45 @@ export function FicheTatoueur({
    * la feuille de style retombe sur l'ancien calcul : rien ne change
    * pour cet instant-là, et la valeur juste arrive dans la foulée.
    */
+  /**
+   * §3 (nº 295) — LA PAGE OBÉIT À LA CONSIGNE DU LIEN.
+   * ------------------------------------------------------------------
+   * Elle ne regarde pas si un groupe a des photos, elle ne se replie
+   * sur rien : elle LIT ce que le lien a déposé, une seule fois, et
+   * s'y tient. Sans consigne — une carte, un lien partagé, un moteur
+   * de recherche — la photo est là, comme toujours.
+   * ⚠️ AUCUN CLIGNOTEMENT : l'attribut posé sur la racine AU CLIC
+   * masque déjà la photo par la feuille de style (globals.css), avant
+   * même que cette page ne se rende. Cet état-ci prend le relais et
+   * démonte le carrousel — donc aucune image n'est demandée.
+   * ⚠️ EN APERÇU (« Ma fiche »), jamais : on n'y arrive pas par un lien.
+   */
+  /*  ⚠️ LU PENDANT LE RENDU, PAS DANS UN EFFET — le motif que React
+      recommande, et celui que ce projet emploie déjà (« la fenêtre
+      suit l'adresse », PileFiches). Un effet aurait rendu la page UNE
+      FOIS avec sa photo avant de la retirer : c'est le clignotement
+      qu'on veut éviter. La consigne est lue au premier rendu du
+      navigateur, une seule fois, et elle se consomme. */
+  /**
+   * ⚠️ LA LECTURE EST LIÉE À LA FICHE RENDUE, pas au montage — mesuré :
+   * d'une fiche à l'autre, le routeur RÉUTILISE ce composant (même
+   * type, même place dans l'arbre), donc un état posé « une seule
+   * fois » ne se rejouait jamais et la consigne restait lettre morte.
+   * On relit donc à CHAQUE changement de fiche.
+   * ⚠️ ET ON COMPARE AU SLUG RENDU, pas à `location.pathname` : le
+   * composant sait quelle fiche il montre, l'adresse peut être en
+   * retard d'un rendu (la leçon de PileFiches, prise à l'envers).
+   */
+  const [ficheLue, setFicheLue] = useState<string | null>(null);
+  const [sansPhoto, setSansPhoto] = useState(false);
+  if (typeof window !== "undefined" && ficheLue !== tatoueur.slug) {
+    setFicheLue(tatoueur.slug);
+    setSansPhoto(
+      apercu ? false : consommerArriveeSansPhoto(`/tatoueur/${tatoueur.slug}`)
+    );
+  }
+  useEffect(() => oublierArriveeSansPhoto, []);
+
   const cadrePhoto = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const zone = cadrePhoto.current;
@@ -567,7 +610,12 @@ export function FicheTatoueur({
           bornée (340 à 400 px), et `justify-center` centre le tout —
           plus de photo collée à gauche avec un trou au milieu. */}
       <div className="grid gap-8 lg:gap-10 lg:grid-cols-[auto_minmax(340px,400px)] lg:justify-center">
-        {/* ---------- La photo — calée dans la hauteur visible (web) ---------- */}
+        {/* ---------- La photo — calée dans la hauteur visible (web) ----------
+             §3 (nº 295) — SAUF QUAND LE LIEN A DIT « PAS DE PHOTO » :
+             la colonne entière disparaît, la page commence par Profil /
+             Portfolio. Le carrousel n'est même pas monté — aucune image
+             n'est demandée. */}
+        {!sansPhoto && (
         <div className="flex flex-col gap-3 min-w-0">
           {/* SMARTPHONE : RIEN au-dessus de la photo — ni flèche
               retour (le site n'en a nulle part), ni partage : la page
@@ -664,6 +712,8 @@ export function FicheTatoueur({
                partagé (nº 199) : il s'affiche en tête de la colonne,
                donc juste sous la photo au doigt. */}
         </div>
+
+        )}
 
         {/* ---------- La colonne de lecture — L'ORDRE DU FICHIER DE
             RÉFÉRENCE : 1 nom · 2 adresse · 3 site · 4 bio ·

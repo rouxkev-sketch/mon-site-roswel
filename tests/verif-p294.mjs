@@ -41,20 +41,24 @@ titre("§1 — à la source : plus rien de peint derrière la photo");
     /className="relative select-none"/.test(carrousel) &&
       !/relative bg-sombre-carte select-none/.test(carrousel)
   );
+  //  ⚠️ LES DEUX SUIVANTES AMENDÉES À LA nº 295, SUR CONSIGNE. Le fond
+  //  descendu sur la colonne était encore une couleur à découvrir : il
+  //  part (règle b). Et le débordement d'un pixel FABRIQUAIT le second
+  //  défaut — la dernière colonne de pixels de la photo précédente au
+  //  bord gauche de celle qu'on regarde : il est annulé (règle a, la
+  //  colonne rogne, et c'est désormais prouvé AU PIXEL).
   verif(
-    "LA RÉSERVATION SOMBRE DE LA nº 280 N'EST PAS PERDUE : elle est " +
-      "descendue SUR LA COLONNE, c'est-à-dire exactement la boîte de la " +
-      "photo — et la colonne ROGNE",
-    /overflow-hidden bg-sombre-carte \$\{CADRE_PHOTO_PORTFOLIO\}/.test(
+    "LA COLONNE ROGNE, ET PLUS RIEN N'Y EST PEINT (nº 295) — la " +
+      "réservation de la nº 280 vient du format 4/5, pas d'une couleur",
+    /snap-always min-h-0 overflow-hidden \$\{CADRE_PHOTO_PORTFOLIO\}/.test(
       carrousel
-    )
+    ) && !/overflow-hidden bg-sombre-carte/.test(carrousel)
   );
   verif(
-    "LA PHOTO DÉBORDE D'UN PIXEL SUR SES QUATRE CÔTÉS, et la colonne " +
-      "le coupe : aucune arithmétique ne peut plus laisser d'interstice",
-    (carrousel.match(
-      /-top-px -left-px h-\[calc\(100%\+2px\)\] w-\[calc\(100%\+2px\)\] max-w-none object-cover/g
-    ) ?? []).length === 2
+    "LA PHOTO ÉPOUSE EXACTEMENT SA COLONNE (nº 295) : le débordement " +
+      "d'un pixel de la nº 294 est annulé",
+    (carrousel.match(/absolute inset-0 h-full w-full object-cover/g) ?? [])
+      .length === 2
   );
   verif(
     "LA FENÊTRE SUPERPOSÉE N'A PLUS SA PLAQUE NOIRE derrière la photo " +
@@ -80,12 +84,14 @@ titre("§1 — à la source : plus rien de peint derrière la photo");
     )
   );
   verif(
+    //  ⚠️ AMENDÉE À LA nº 295 : la ligne s'appelle désormais « PEINT
+    //  DANS LA CHAÎNE » et couvre AUSSI la colonne et la photo.
     "LA SONDE RELÈVE AUSSI DANS LA FENÊTRE SUPERPOSÉE, elle dit " +
-      "laquelle, et elle annonce CE QUI EST PEINT autour de la photo",
+      "laquelle, et elle annonce CE QUI EST PEINT dans la chaîne",
     /data-carrousel="fiche"/.test(sonde) &&
       /FENÊTRE CENTRÉE SUPERPOSÉE/.test(sonde) &&
-      /PEINT AUTOUR DE LA PHOTO/.test(sonde) &&
-      /RIEN \(seule la colonne réserve son fond\)/.test(sonde)
+      /PEINT DANS LA CHAÎNE/.test(sonde) &&
+      /CHAQUE COLONNE ROGNE/.test(sonde)
   );
 }
 
@@ -229,10 +235,12 @@ titre("vivant — 1440 × 823, densité 2");
         };
       }, racine);
     const page1 = await lirePhoto("[data-photo-fiche]");
+    //  ⚠️ AMENDÉE À LA nº 295 : la photo ÉPOUSE sa colonne (écarts à
+    //  zéro). Ce qui la protège d'un demi-pixel manquant n'est plus un
+    //  débordement — c'est qu'il n'y a plus rien à découvrir derrière.
     verif(
-      "PLEINE PAGE — LA PHOTO COUVRE SA COLONNE et la déborde d'un " +
-        "pixel sur ses QUATRE côtés : aucun interstice possible",
-      Object.values(page1.ecarts).every((e) => e <= -0.99 && e >= -1.01),
+      "PLEINE PAGE — LA PHOTO ÉPOUSE SA COLONNE sur ses QUATRE côtés",
+      Object.values(page1.ecarts).every((e) => Math.abs(e) < 0.001),
       `haut ${page1.ecarts.haut} · bas ${page1.ecarts.bas} · ` +
         `gauche ${page1.ecarts.gauche} · droite ${page1.ecarts.droite}`
     );
@@ -251,12 +259,12 @@ titre("vivant — 1440 × 823, densité 2");
         rienPeint(page1.cadre),
       `enveloppe ${page1.enveloppe.fond} · racine ${page1.racine.fond} · cadre ${page1.cadre.fond}`
     );
+    //  ⚠️ AMENDÉE À LA nº 295, SUR CONSIGNE : la colonne non plus ne
+    //  peint plus rien. La chaîne entière est transparente.
     verif(
-      "…et SEULE LA COLONNE est peinte : la réservation sombre de la " +
-        "nº 280, que la photo recouvre avec un pixel de marge",
-      page1.colonne.fond === "rgb(40, 40, 45)" &&
-        page1.colonne.bordure === 0 &&
-        page1.colonne.contour === 0,
+      "…et LA COLONNE NON PLUS ne peint rien (nº 295) : la chaîne " +
+        "entière est transparente",
+      rienPeint(page1.colonne),
       page1.colonne.fond
     );
 
@@ -294,17 +302,17 @@ titre("vivant — 1440 × 823, densité 2");
       });
       verif(
         "FENÊTRE SUPERPOSÉE — LES MÊMES QUATRE ÉCARTS : c'est le même " +
-          "composant, c'est le même résultat",
-        Object.values(fen1.ecarts).every((e) => e <= -0.99 && e >= -1.01),
+          "composant, c'est le même résultat (zéro depuis la nº 295)",
+        Object.values(fen1.ecarts).every((e) => Math.abs(e) < 0.001),
         `haut ${fen1.ecarts.haut} · bas ${fen1.ecarts.bas} · ` +
           `gauche ${fen1.ecarts.gauche} · droite ${fen1.ecarts.droite}`
       );
       verif(
-        "FENÊTRE SUPERPOSÉE — la plaque noire a disparu : la boîte et " +
-          "la racine sont transparentes, seule la colonne réserve",
+        "FENÊTRE SUPERPOSÉE — la plaque noire a disparu, et depuis la " +
+          "nº 295 la colonne non plus ne peint rien",
         /rgba\(0, 0, 0, 0\)/.test(fen1.boite) &&
           /rgba\(0, 0, 0, 0\)/.test(fen1.racine) &&
-          fen1.colonne === "rgb(40, 40, 45)",
+          /rgba\(0, 0, 0, 0\)/.test(fen1.colonne),
         `boîte ${fen1.boite} · racine ${fen1.racine} · colonne ${fen1.colonne}`
       );
     } else {
