@@ -537,7 +537,21 @@ export function FenetreFiche({
                 surSerieChoisie={(serie) => {
                   setStyleAffiche(serie.style);
                   setSerieOuverte({ nature: serie.nature, rendu: serie.rendu });
-                  setIndice(0);
+                  /*  §5 (nº 310) — LA PHOTO TOUCHÉE, PAS LA PREMIÈRE.
+                      ------------------------------------------------
+                      C'ÉTAIT ÉCRIT `setIndice(0)`, ET C'EST TOUT LE
+                      DÉFAUT : la galerie envoie le RANG de la photo
+                      cliquée depuis la nº 306-§6 (`serie.indice`), la
+                      fiche PLEINE PAGE l'honore — et cette fenêtre-ci,
+                      écrite avant, le jetait à la poubelle en reposant
+                      l'indice à zéro. Cliquer la 4ᵉ photo ouvrait donc
+                      bien la bonne série, mais sur sa PREMIÈRE image :
+                      vu de l'écran, « il ne se passe rien ».
+                      Les deux contextes lisent maintenant la MÊME
+                      valeur, de la même façon. Le repli sur zéro reste
+                      pour la grille du doigt, qui n'envoie pas de rang
+                      (nº 306-§6). */
+                  setIndice(serie.indice ?? 0);
                   //  ⚠️ LA COLONNE NE REMONTE PLUS (nº 218-§3). Elle le
                   //  faisait depuis la nº 197-§4 ; dans cette fenêtre,
                   //  la photo est en permanence sous les yeux, à

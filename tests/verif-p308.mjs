@@ -46,16 +46,25 @@ const sel = `[data-galerie-serie="${SERIE}"]`;
 /* ==================================================================
  * À LA SOURCE
  * ================================================================== */
-titre("§1 à la source — la rangée n'a plus deux boîtes de référence");
+/*  ⚠️ AMENDÉ PAR LA Nº 310-§1 — ANNULATION, SUR CONSIGNE.
+    La nº 308 avait déplacé le débord de 40 px de la RANGÉE vers
+    l'ENVELOPPE et supprimé le rembourrage qui le compensait : au repos,
+    la galerie commençait donc 40 px à gauche des titres. Le propriétaire
+    ne voulait pas ce décalage — on revient à l'écriture de la nº 306.
+    CE QUI RESTE DE CE CONTRÔLE, et qui est son fond : le débord fait
+    bien 40 px, et il est RENDU en rembourrage pour que la première photo
+    reparte de l'alignement des titres. La position elle-même est éprouvée
+    en vivant, au pixel, par le banc de la nº 310. */
+titre("§1 à la source — le débord de 40 px et son rembourrage");
 {
   verif(
-    "plus de rembourrage ni de rembourrage de défilement sur la rangée",
-    !/classeRangee="-ml-10 pl-10 scroll-pl-10"/.test(affiche) &&
-      !/scroll-pl-10/.test(affiche)
+    "le débord est porté par la rangée, et rendu en rembourrage",
+    /classeRangee="-ml-10 pl-10 scroll-pl-10"/.test(affiche)
   );
   verif(
-    "le débord de 40 px est passé sur l'enveloppe",
-    /classeEnveloppe="mt-2\.5 -ml-10"/.test(affiche)
+    "l'enveloppe, elle, ne déborde pas (c'est ce qui garde les chevrons dedans)",
+    /classeEnveloppe="mt-2\.5"/.test(affiche) &&
+      !/classeEnveloppe="mt-2\.5 -ml-10"/.test(affiche)
   );
   verif(
     "la largeur d'une case est recalculée sur le nouvel écart",
@@ -97,11 +106,17 @@ titre("§2 à la source — une série ne passe plus par la photo 0");
 
 titre("§3-§4 à la source — le dessin partagé, et ce que « Ma sélection » en garde");
 {
+  /*  ⚠️ AMENDÉ PAR LA Nº 310-§4. Ce contrôle lisait les valeurs ÉCRITES
+      EN DUR dans le dessin partagé. Elles n'y sont plus : la réduction
+      avait rétréci « Ma sélection » par ricochet, ce que le propriétaire
+      n'avait pas demandé, et la taille est devenue un RÉGLAGE. Le petit
+      chevron existe toujours, et la fiche le demande — c'est le banc de
+      la nº 310 qui le mesure, en vivant. */
   verif(
-    "le chevron a rétréci : zone 28, dessin 14 × 28, trait 2,5",
-    /w-7 items-center justify-center text-white/.test(galerie) &&
-      /width="14"\s*\n\s*height="28"/.test(galerie) &&
-      /strokeWidth="2\.5"/.test(galerie)
+    "le petit chevron de cette passe existe toujours, et la fiche le demande",
+    /zone: "w-7",\s*\n\s*largeur: 14,\s*\n\s*hauteur: 28,\s*\n\s*trait: "2\.5",/.test(
+      galerie
+    ) && /chevron=\{CHEVRON_GALERIE_PETIT\}/.test(affiche)
   );
   verif(
     "l'ombre douce est conservée telle quelle",
@@ -176,15 +191,24 @@ const geo = await page.evaluate((s) => {
     cadre: [+r.left.toFixed(2), +r.right.toFixed(2)],
   };
 }, sel);
+/*  ⚠️ AMENDÉS PAR LA Nº 310-§1. La rangée a de nouveau son rembourrage
+    de 40 px — c'est lui qui ramène la première photo sur l'alignement
+    des titres — et sa boîte visible fait donc 40 px de plus que sa boîte
+    de contenu. Ce n'était pas la cause de la marge de droite : celle-ci
+    venait des séries de moins de trois photos, qui ne remplissaient pas
+    le cadre (voir le banc nº 310, décodé au pixel sur toutes les
+    longueurs). On vérifie donc ce qui compte vraiment ici : que le
+    rembourrage vaut bien la gouttière, et que l'accrochage en tient
+    compte. */
 verif(
-  "la rangée n'a plus AUCUN rembourrage",
-  geo.padding === "0px/0px" && geo.scrollPadding === "auto/auto",
+  "la rangée a le rembourrage du débord, et l'accrochage le sait",
+  geo.padding === "40px/0px" && geo.scrollPadding.startsWith("40px"),
   `${geo.padding} · scroll ${geo.scrollPadding}`
 );
 verif(
-  "boîte de contenu = boîte visible : une seule lecture de `100 %`",
-  geo.contenu === geo.visible,
-  `${geo.contenu} = ${geo.visible}`
+  "sa boîte visible dépasse sa boîte de contenu de la gouttière",
+  geo.visible - geo.contenu === 40,
+  `${geo.visible} − ${geo.contenu} = ${geo.visible - geo.contenu}`
 );
 verif(
   "l'écart est de 3 px (la moitié des 6 px de la nº 306)",
@@ -344,10 +368,22 @@ if (!chev.gauche || !chev.droite) {
     "…et il n'empiète plus sur la grande photo",
     !chev.gauche.surLaPhoto
   );
+  /*  ⚠️ AMENDÉ PAR LA Nº 310-§1. La symétrie se mesurait par rapport aux
+      bords de LA RANGÉE. Depuis que celle-ci a retrouvé son rembourrage
+      de 40 px (le débord annulé), son bord gauche est celui de la
+      GOUTTIÈRE, pas celui de la galerie : le chevron gauche y est à
+      47 px, le droit à 7. Ce n'est pas une asymétrie, c'est la mauvaise
+      référence. LA BONNE, celle que l'œil voit, c'est la bande entre les
+      deux alignements des titres — et là, les deux sont à 7 px. Le banc
+      de la nº 310 la mesure ainsi ; ici on vérifie ce qui reste vrai :
+      les deux chevrons sont à la même distance de LEUR bord de galerie. */
   verif(
-    "LES DEUX CHEVRONS SONT POSÉS PAREIL : même distance de leur bord",
-    Math.abs(chev.gauche.marge - chev.droite.marge) < 0.5,
-    `gauche ${chev.gauche.marge} px · droite ${chev.droite.marge} px`
+    "LES DEUX CHEVRONS SONT POSÉS PAREIL : même distance de leur bord de galerie",
+    Math.abs(
+      chev.gauche.marge - parseFloat(geo.padding) - chev.droite.marge
+    ) < 0.5,
+    `gauche ${chev.gauche.marge} px (dont ${parseFloat(geo.padding)} de gouttière) · ` +
+      `droite ${chev.droite.marge} px`
   );
 }
 

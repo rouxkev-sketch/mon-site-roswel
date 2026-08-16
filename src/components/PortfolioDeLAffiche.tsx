@@ -10,7 +10,10 @@ import {
   RENDUS_PHOTO,
   libelleRendu,
 } from "@/lib/photos-tatoueur";
-import { GalerieQuiDefile } from "@/components/GalerieQuiDefile";
+import {
+  CHEVRON_GALERIE_PETIT,
+  GalerieQuiDefile,
+} from "@/components/GalerieQuiDefile";
 import type { PhotoGalerie, StyleGalerie } from "@/lib/photo-tatoueur";
 
 /**
@@ -310,45 +313,48 @@ export function PanneauPortfolio({
                   {serie.label} · {libelleRendu(serie.rendu)}
                 </p>
                 <GalerieQuiDefile
-                  /*  §1 ET §4-b (nº 308) — LE DÉBORD PASSE SUR
-                       L'ENVELOPPE, ET LA RANGÉE N'A PLUS AUCUN
-                       REMBOURRAGE.
+                  /*  §1 (nº 310) — ANNULATION DU DÉCALAGE DE LA nº 308.
                        ------------------------------------------------
-                       CE QUE LA nº 306 AVAIT ÉCRIT, ET POURQUOI ÇA
-                       LAISSAIT UNE MARGE À DROITE : la rangée portait
-                       `-ml-10 pl-10 scroll-pl-10`. Elle débordait donc
-                       de 40 px à gauche et se les reprenait en
-                       REMBOURRAGE, pour que la première photo reste
-                       alignée sur les titres au repos. Conséquence :
-                       la largeur d'une case était un POURCENTAGE de la
-                       boîte de CONTENU (380 − 40 = 340), pendant que
-                       la boîte visible, elle, fait 380. Deux boîtes de
-                       référence pour une même rangée, c'est une marge
-                       qui attend son navigateur — et il a suffi d'un
-                       moteur qui résout `100 %` sur l'autre boîte
-                       pour qu'elle apparaisse. (Mesuré ici : Chromium
-                       tombe juste, à 0,00 px près, au repos comme en
-                       fin de course — donc ce n'est pas un défaut de
-                       calcul, c'est une AMBIGUÏTÉ, et on l'enlève.)
-                       CE QUI EST ÉCRIT MAINTENANT : le débord de 40 px
-                       est sur l'ENVELOPPE (`-ml-10`), la rangée n'a
-                       plus ni rembourrage ni rembourrage de
-                       défilement. Sa boîte de contenu, sa boîte de
-                       rembourrage et sa boîte visible sont LA MÊME —
-                       380 px. `100 %` n'a plus qu'une seule lecture
-                       possible, `snap-start` s'aligne sur le bon bord
-                       sans `scroll-pl-*`, et la troisième photo touche
-                       le bord droit par construction.
-                       ET C'EST AUSSI LE §4-b : la galerie est décalée
-                       de 40 px VERS LA GAUCHE — au repos, la première
-                       photo commence désormais sous la bande
-                       d'effacement au lieu de s'aligner sur les
-                       titres. Les titres, eux, ne bougent pas. */
-                  classeEnveloppe="mt-2.5 -ml-10"
+                       La nº 308-§4-b avait décalé la galerie de 40 px
+                       vers la gauche : le débord était passé sur
+                       l'enveloppe (`-ml-10`), la rangée n'avait plus de
+                       rembourrage, et au repos la première photo
+                       commençait donc au bord du cadre, sous la bande
+                       d'effacement. LE PROPRIÉTAIRE NE VOULAIT PAS ÇA.
+                       ON REVIENT À L'ÉCRITURE DE LA nº 306 : le débord
+                       de 40 px est porté par LA RANGÉE et rendu en
+                       REMBOURRAGE (`-ml-10 pl-10`), si bien qu'au repos
+                       la première photo repart de l'alignement des
+                       titres. La bande d'effacement, elle, ne bouge
+                       pas : elle sert quand on fait défiler, pour
+                       qu'aucune photo ne vienne se coller nette contre
+                       la grande photo.
+                       ⚠️ ET L'ENVELOPPE NE DÉBORDE PLUS — c'est ce qui
+                       règle aussi le §3 : les chevrons se posent par
+                       rapport à ELLE, donc à l'intérieur de la galerie
+                       au lieu de la gouttière collée à la photo. */
+                  classeEnveloppe="mt-2.5"
                   /*  §4-a (nº 308) — L'ÉCART PASSE DE 6 À 3 px, la
                        moitié. Il est donné au dessin partagé en
                        RÉGLAGE : « Ma sélection » garde ses 6 px. */
                   ecart="gap-[3px]"
+                  //  §4 (nº 310) — le petit chevron est demandé ICI,
+                  //  et seulement ici : « Ma sélection » garde celui
+                  //  de la nº 301 (le défaut du dessin partagé).
+                  chevron={CHEVRON_GALERIE_PETIT}
+                  /*  §1 (nº 310) — LE DÉBORD REVIENT SUR LA RANGÉE, EN
+                       REMBOURRAGE.
+                       ⚠️ `scroll-pl-10` N'EST PAS UN ORNEMENT, ET IL A
+                       COÛTÉ UNE MESURE (nº 306) : l'accrochage
+                       (`snap-start`) aligne le bord d'une case sur le
+                       début du SNAPPORT, qui est la boîte de
+                       REMBOURRAGE — donc 40 px à gauche de la boîte de
+                       contenu. Sans lui, le navigateur fait défiler de
+                       40 px dès le premier rendu pour y arriver : la
+                       première photo se colle au bord gauche du cadre
+                       au lieu de s'aligner sur les titres, et la
+                       troisième dépasse à droite. */
+                  classeRangee="-ml-10 pl-10 scroll-pl-10"
                   styleRangee={{
                     WebkitMaskImage:
                       "linear-gradient(to right, rgba(0,0,0,0) 0px, rgba(0,0,0,1) 40px)",
@@ -379,18 +385,38 @@ export function PanneauPortfolio({
                     <li
                       key={photo.cle}
                       data-case-galerie={rang}
-                      /*  §1 ET §4 (nº 308) — LA LARGEUR RECALCULÉE.
-                           La règle ne change pas — deux photos
-                           pleines, 10 % de la troisième, son bord
-                           droit collé au bord droit du cadre — mais
-                           ses deux termes ont bougé : la rangée fait
-                           maintenant 380 px de contenu (plus de
-                           rembourrage) et l'écart 3 px au lieu de 6.
+                      /*  LA LARGEUR D'UNE CASE — deux photos pleines,
+                           10 % de la troisième, son bord droit collé
+                           au bord droit du cadre :
                            `2,1 × case + 2 × écart = 100 %`, d'où
-                           `case = (100 % − 6px) / 2,1`. Aucune
-                           largeur en dur : la règle tient à toute
-                           largeur de colonne. */
-                      className="shrink-0 snap-start basis-[calc((100%_-_6px)/2.1)]"
+                           `case = (100 % − 6px) / 2,1` avec l'écart de
+                           3 px. `100 %` est la boîte de CONTENU de la
+                           rangée — le rembourrage de 40 px du débord
+                           n'en fait pas partie. Aucune largeur en dur :
+                           la règle tient à toute largeur de colonne.
+                           §2 (nº 310) — `grow` : ET C'ÉTAIT ÇA, LA
+                           MARGE DE DROITE.
+                           ------------------------------------------
+                           LA CAUSE, DÉCODÉE AU PIXEL : cette largeur
+                           est calculée pour qu'IL Y AIT une troisième
+                           photo. Une série qui n'en a QUE DEUX ne
+                           remplit donc pas le cadre, et ce qui reste
+                           se voit comme une marge à droite — mesuré
+                           21 px à deux photos, 202 px à une seule,
+                           contre 0,00 px dès trois. Mes trois relevés
+                           précédents disaient tous zéro parce qu'ils
+                           portaient tous sur une série de cinq : je
+                           mesurais le seul cas qui allait bien.
+                           LE REMÈDE : les cases GRANDISSENT pour
+                           remplir ce qui reste. `shrink-0` les empêche
+                           toujours de rétrécir, donc dès trois photos
+                           la rangée déborde, l'espace libre est
+                           négatif, et `grow` n'a rien à distribuer —
+                           la règle des 10 % est intacte, au pixel. À
+                           deux photos elles se partagent le cadre, à
+                           une elle le prend en entier : plus jamais de
+                           vide à droite, quel que soit le nombre. */
+                      className="grow shrink-0 snap-start basis-[calc((100%_-_6px)/2.1)]"
                     >
                       {/*  RÈGLE 6 — CLIQUER UNE PHOTO L'AFFICHE DANS LE
                            CADRE PHOTO DE LA FICHE. Elle ne s'ouvre pas

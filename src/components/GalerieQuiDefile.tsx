@@ -35,6 +35,37 @@ import { useEffect, useRef, useState } from "react";
     DÉFAUT du dessin : « Ma sélection » le garde tel quel. */
 export const ECART_GALERIE = "gap-1.5";
 
+/** Ce qui décrit un chevron : la largeur de sa zone sensible, la boîte
+    de son dessin, l'épaisseur de son trait. */
+export type TailleChevron = {
+  /** La classe de largeur de la zone (elle occupe toute la hauteur). */
+  zone: string;
+  largeur: number;
+  hauteur: number;
+  trait: string;
+};
+
+/** LE CHEVRON DE LA Nº 301 — zone 40 px, dessin 20 × 40, trait 3.
+    C'est le DÉFAUT du dessin partagé : « Ma sélection » le garde tel
+    quel (nº 310-§4, qui annule la réduction que la nº 308 lui avait
+    fait subir par ricochet). */
+export const CHEVRON_GALERIE: TailleChevron = {
+  zone: "w-10",
+  largeur: 20,
+  hauteur: 40,
+  trait: "3",
+};
+
+/** LE CHEVRON RÉDUIT DE LA Nº 308 — zone 28 px, dessin 14 × 28,
+    trait 2,5. Réservé à la colonne Portfolio d'une fiche, où les
+    galeries sont étroites et où le grand chevron dominait l'image. */
+export const CHEVRON_GALERIE_PETIT: TailleChevron = {
+  zone: "w-7",
+  largeur: 14,
+  hauteur: 28,
+  trait: "2.5",
+};
+
 export function GalerieQuiDefile({
   children,
   classeEnveloppe = "",
@@ -50,6 +81,20 @@ export function GalerieQuiDefile({
    * d'un pixel.
    */
   ecart = ECART_GALERIE,
+  /**
+   * §4 (nº 310) — LA TAILLE DES CHEVRONS, QUAND L'APPELANT EN VEUT UNE
+   * AUTRE. Même raison que `ecart` : c'est un RÉGLAGE, pas un second
+   * dessin. La nº 308 avait réduit les chevrons DANS le dessin partagé
+   * pour la colonne Portfolio ; « Ma sélection », qui consomme le même
+   * dessin, a rétréci avec — le propriétaire ne l'avait pas demandé.
+   * LE DÉFAUT EST DONC CELUI DE LA Nº 301, mot pour mot (zone 40 px,
+   * dessin 20 × 40, trait 3) : sans argument, « Ma sélection » retrouve
+   * exactement ce qu'elle avait. La fiche, elle, demande le petit.
+   * ⚠️ L'OMBRE N'EST PAS RÉGLABLE, et ne doit pas l'être : c'est elle
+   * qui rend le chevron lisible sur une photo claire, à toutes les
+   * tailles.
+   */
+  chevron = CHEVRON_GALERIE,
   /** Le décalage des chevrons hors du cadre, par côté. */
   decalageGauche = "-left-4 sm:-left-6",
   decalageDroite = "-right-4 sm:-right-6",
@@ -69,6 +114,7 @@ export function GalerieQuiDefile({
   classeRangee?: string;
   styleRangee?: React.CSSProperties;
   ecart?: string;
+  chevron?: TailleChevron;
   decalageGauche?: string;
   decalageDroite?: string;
   avecVoiles?: boolean;
@@ -138,14 +184,14 @@ export function GalerieQuiDefile({
       (le piège de la nº 228).
       §4-c (nº 301) — et il porte une OMBRE DOUCE, jamais un contour :
       c'est le procédé du cœur des vignettes, pas un second.
-      §3-a (nº 308) — IL RÉTRÉCIT. La nº 301 l'avait porté à une zone
-      de 40 px et un dessin de 20 × 40 au trait 3 : à cette taille il
-      DOMINAIT la galerie au lieu de l'accompagner. Zone 28 px, dessin
-      14 × 28, trait 2,5 — la surface du dessin passe de 800 à 392
-      points, soit la moitié. L'OMBRE NE BOUGE PAS : c'est elle, et
-      elle seule, qui garantit la lisibilité sur une photo claire ;
-      la réduire aurait annulé le seul point que la nº 301 avait bien
-      réglé. */
+      §3-a (nº 308), RÉGLÉ PAR L'APPELANT DEPUIS LA Nº 310-§4 : la
+      nº 301 l'avait porté à une zone de 40 px et un dessin de 20 × 40
+      au trait 3 ; sur les galeries étroites de la colonne Portfolio,
+      à cette taille, il DOMINAIT l'image au lieu de l'accompagner.
+      Les deux tailles existent donc, et c'est l'appelant qui choisit
+      (`CHEVRON_GALERIE` / `CHEVRON_GALERIE_PETIT`) — un seul dessin,
+      deux réglages. L'OMBRE NE BOUGE PAS, à aucune taille : c'est elle,
+      et elle seule, qui garantit la lisibilité sur une photo claire. */
   const bandeau = (sens: 1 | -1) => (
     <button
       type="button"
@@ -155,11 +201,11 @@ export function GalerieQuiDefile({
       className={`hidden pointer-fine:flex invisible group-hover:visible
         absolute inset-y-0 z-[2] ${
           sens === 1 ? decalageDroite : decalageGauche
-        } w-7 items-center justify-center text-white`}
+        } ${chevron.zone} items-center justify-center text-white`}
     >
       <svg
-        width="14"
-        height="28"
+        width={chevron.largeur}
+        height={chevron.hauteur}
         viewBox="0 0 12 24"
         fill="none"
         aria-hidden="true"
@@ -168,7 +214,7 @@ export function GalerieQuiDefile({
         <path
           d={sens === 1 ? "M3 4l6 8-6 8" : "M9 4l-6 8 6 8"}
           stroke="currentColor"
-          strokeWidth="2.5"
+          strokeWidth={chevron.trait}
           strokeLinecap="round"
           strokeLinejoin="round"
         />
