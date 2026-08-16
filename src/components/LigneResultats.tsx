@@ -30,6 +30,7 @@ export function LigneResultats({
   sousTitre,
   balise = "h1",
   degagementConstant = false,
+  airEnBas = false,
 }: {
   /** « Explorer toutes les créations », ou ce qui a été cherché.
       ⚠️ UN NŒUD depuis la nº 249-§3 : sur « Ma sélection », le titre
@@ -62,12 +63,44 @@ export function LigneResultats({
    * ce drapeau, son rythme ne change pas d'un pixel.
    */
   degagementConstant?: boolean;
+  /**
+   * §2 (nº 325) — DE L'AIR SOUS LE BLOC DE TÊTE. Sur le WEB
+   * uniquement, et sur « Ma sélection » uniquement — c'est elle qui
+   * demande ce drapeau.
+   * ------------------------------------------------------------------
+   * LE DÉFAUT : sur « Ma sélection », le bloc de tête (le titre et son
+   * compte) touchait presque la première photo de profil — 24 px les
+   * séparaient, et rien d'autre : le bloc qui suit ne pose aucune
+   * marge, ce rembourrage EST tout l'écart. Le titre d'une page et le
+   * premier visage de la liste se lisaient comme un seul bloc.
+   * LA VALEUR : 40 px sur le web (`lg:pb-10`), contre 24. Le doigt
+   * garde ses 20 px — le drapeau n'ouvre qu'un cran `lg:`.
+   *
+   * ⚠️ POURQUOI UN DRAPEAU ET PAS UNE VALEUR CHANGÉE ICI. Ce composant
+   * sert AUSSI la page de recherche (IndexTatoueurs, deux appels) :
+   * élargir le rembourrage pour tout le monde déplacerait la mosaïque
+   * de l'accueil, que personne n'a demandé de toucher. Même procédé
+   * que `degagementConstant` juste au-dessus, et pour la même raison.
+   *
+   * ⚠️ ET IL VAUT POUR LES DEUX ONGLETS. « Ma sélection » ne monte
+   * qu'UN SEUL bloc de tête, dont le titre bascule entre « Ma
+   * sélection de portfolios » et « Ma sélection de photos » : l'air
+   * posé ici se voit donc sur les favoris comme sur les portfolios.
+   * C'est dit au propriétaire, à lui de trancher s'il n'en veut que
+   * d'un côté — auquel cas ce drapeau deviendrait conditionnel à
+   * l'onglet, ce qui est une ligne de plus, pas une refonte.
+   */
+  airEnBas?: boolean;
 }) {
   const Titre = balise;
   return (
     //  ⚠️ NOMMÉ (nº 171) : la garantie de globals.css vise ce titre
     //  pour qu'aucune bascule ne puisse l'effacer.
-    <div data-titre-mosaique="" className="pt-6 pb-5 sm:pt-8 sm:pb-6">
+    <div
+      data-titre-mosaique=""
+      data-air-en-bas={airEnBas ? "" : undefined}
+      className={`pt-6 pb-5 sm:pt-8 sm:pb-6 ${airEnBas ? "lg:pb-10" : ""}`}
+    >
       <Titre className="text-[clamp(1.25rem,2.4vw,1.65rem)] font-bold leading-tight text-sombre-texte">
         {titre}
       </Titre>

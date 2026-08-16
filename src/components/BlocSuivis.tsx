@@ -419,19 +419,21 @@ function RangeeDeVignettes({
         comme la taille des chevrons depuis la nº 310. Le défaut du
         composant n'est pas touché — la colonne Portfolio d'une fiche,
         qui passe le sien (3 px), ne sent rien. */
-    /*  §2 (nº 323) — LE WEB RESPIRE ENTRE L'IDENTITÉ ET LES PHOTOS :
-        20 → 36 px (`lg:mt-9`). La galerie était collée au sous-titre,
-        et le §1 vient d'agrandir le nom et le sous-titre — le bloc
-        d'identité a besoin de finir avant que les photos commencent.
-        ⚠️ LA HIÉRARCHIE DES ÉCARTS TIENT TOUJOURS : 36 px À
-        L'INTÉRIEUR d'un bloc restent nettement moins que les 62 px
-        qui séparent DEUX artistes (voir la grille plus haut) — c'est
-        ce qui fait qu'on lit encore un bloc, et pas deux.
-        ⚠️ LE DOIGT NE CHANGE PAS : `mt-5` nu est intact, seul le cran
-        `lg:` s'ajoute. Les 20 px de la nº 254 et de la nº 264-§4
-        restent la valeur du téléphone. */
+    /*  §1 (nº 325) — ANNULATION DU §2 DE LA nº 323 : LES 20 px SONT
+        REMIS, WEB COMPRIS.
+        ------------------------------------------------------------------
+        La nº 323 avait porté cet écart à 36 px sur le web
+        (`lg:mt-9`), en croyant que c'était là que le propriétaire
+        voulait de l'air. CE N'ÉTAIT PAS LÀ — l'air manquait sous le
+        BLOC DE TÊTE de la page (le titre et son compte), et c'est ce
+        que le §2 de la nº 325 corrige, dans `LigneResultats`.
+        LA VALEUR REDEVIENT DONC CELLE DE TOUJOURS : `mt-5` nu, 20 px,
+        aux DEUX largeurs — celle posée à la nº 254 pour le web et
+        rejointe par le doigt à la nº 264-§4.
+        ⚠️ AUCUNE PASSE FUTURE NE DOIT « RÉTABLIR » LES 36 px en
+        croyant réparer un oubli : ils ont été retirés sur demande. */
     <GalerieQuiDefile
-      classeEnveloppe="mt-5 lg:mt-9"
+      classeEnveloppe="mt-5"
       classeRangee="-mx-4 px-4 sm:-mx-6 sm:px-6"
       ecart="gap-[3px] lg:gap-1.5"
       cleDuContenu={bande.photos.length}

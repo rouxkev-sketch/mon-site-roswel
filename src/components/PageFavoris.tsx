@@ -392,6 +392,16 @@ export function PageFavoris({
             .join(" · ") || null
         }
         degagementConstant
+        /*  §2 (nº 325) — DE L'AIR SOUS LE BLOC DE TÊTE, sur le web :
+            24 → 40 px. Le titre de la page et son compte touchaient
+            presque la première photo de profil — rien d'autre ne
+            sépare les deux que le rembourrage de ce bloc.
+            ⚠️ IL VAUT POUR LES DEUX ONGLETS, et c'est inévitable ici :
+            ce `LigneResultats` est UNIQUE, seul son titre bascule
+            entre « portfolios » et « photos ». Le propriétaire le
+            sait ; s'il n'en veut que d'un côté, ce drapeau se lira
+            `airEnBas={!surLesFavoris}` — une ligne, pas une refonte. */
+        airEnBas
       />
 
       {/* ---------- LES PHOTOS GARDÉES ----------

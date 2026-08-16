@@ -5,6 +5,10 @@
  *
  * §1 — LE NOM ET LE SOUS-TITRE MONTENT D'UN CRAN, EN WEB SEULEMENT.
  * §2 — DE LA MARGE ENTRE L'IDENTITÉ ET LA GALERIE, EN WEB SEULEMENT.
+ *      ⚠️ ANNULÉ PAR LA nº 325-§1, sur demande du propriétaire : la
+ *      valeur est revenue à 20 px. Le contrôle correspondant a été
+ *      refait à l'envers plus bas, et la mesure complète vit dans
+ *      `verif-p325.mjs`.
  * §3 — UNE SEULE GRAMMAIRE SOUS LE NOM : « LE TYPE · OÙ », pour un
  *      artiste comme pour un lieu, web et smartphone.
  *
@@ -418,9 +422,26 @@ const ENVELOPPE = (SOURCE.match(/classeEnveloppe="([^"]+)"/) ?? [])[1] ?? "";
     nomWeb.graisse === "600",
     `graisse ${nomWeb.graisse}`
   );
+  /*  ⚠️ AMENDÉ PAR LA nº 325-§1 — CE §2 A ÉTÉ ANNULÉ.
+      ------------------------------------------------------------------
+      CE BANC EXIGEAIT ICI 36 px entre le bloc d'identité d'un artiste
+      et sa galerie : c'est ce que le §2 de la nº 323 avait posé. LE
+      PROPRIÉTAIRE A FAIT ANNULER CE CHANGEMENT à la nº 325 — la
+      consigne de la nº 323 avait été mal comprise, l'air manquait
+      SOUS LE BLOC DE TÊTE de la page, pas là. La valeur est donc
+      revenue à 20 px, sa valeur de toujours (nº 254 pour le web,
+      nº 264-§4 pour le doigt).
+      LE SUJET A ÉTÉ RETIRÉ PAR DÉCISION : la mesure n'est ni ratée ni
+      supprimée, elle est REFAITE À L'ENVERS ci-dessous, et reprise en
+      entier dans `verif-p325.mjs` §1 — qui mesure les 20 px aux deux
+      largeurs et vérifie que `lg:mt-9` a quitté le code.
+      ⚠️ CE QUE LA nº 323 GARDE, et qui n'est pas en cause : son §1
+      (le nom à 20 px, le sous-titre à 16) et son §3 (la grammaire du
+      sous-titre). Seul cet écart-ci est revenu en arrière. */
   verif(
-    "§2 WEB — LA MARGE SOUS LE SOUS-TITRE : 20 px AVANT, 36 px APRÈS",
-    margeWeb.margeHaut === "36px",
+    "§2 WEB — LA MARGE EST REVENUE À 20 px (nº 325-§1 : le §2 de cette " +
+      "passe est annulé par le propriétaire, mesuré en entier dans p325)",
+    margeWeb.margeHaut === "20px",
     margeWeb.margeHaut
   );
   await web.nav.close();
