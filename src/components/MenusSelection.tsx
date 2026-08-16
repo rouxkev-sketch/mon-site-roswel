@@ -6,12 +6,10 @@ import { IconeReglages } from "@/components/Icones";
 import { MenuDeroulant } from "@/components/MenuDeroulant";
 import { SelecteurCapsule } from "@/components/SelecteurCapsule";
 import { BoutonPhototheque } from "@/components/BoutonPhototheque";
-import { CATEGORIES_EXPLORER } from "@/config/tatouage";
+import { CATEGORIES_EXPLORER, libelleStyle } from "@/config/tatouage";
+import { libelleExplorer } from "@/components/MoteurTatouage";
 import {
-  libelleExplorer,
-  libelleStyleChoisi,
-} from "@/components/MoteurTatouage";
-import {
+  LIBELLE_TOUS_LES_FAVORIS,
   LIBELLE_TOUS_LES_PORTFOLIOS,
   libelleDuProfil,
   lireSelection,
@@ -342,8 +340,7 @@ export function MenusSelection({
  * un style pourtant choisi.
  *  · MES FAVORIS → l'écriture du moteur refermé : « Réalisations ·
  *    Abstrait », « Toutes les réalisations » (`libelleExplorer`) ;
- *  · MES SUIVIS  → le style seul (`libelleStyleChoisi`, l'écriture du
- *    site pour « aucun style choisi » — « Tous les styles »).
+ *  · MES SUIVIS  → le style seul (`libelleStyle`, le mot du catalogue).
  * Vide quand rien n'est choisi : c'est à l'appelant de dire s'il veut
  * un état d'ouverture (le champ, §3) ou rien du tout (le sous-titre).
  */
@@ -354,7 +351,7 @@ export function libelleDuChoix(choix: ChoixSelection): string {
     //  ils occupent donc la même ligne de titre. Le mot vient de
     //  `libelleDuProfil` — celui du menu, jamais un second.
     if (choix.profil) return libelleDuProfil(choix.profil);
-    return choix.style ? libelleStyleChoisi(choix.style) : "";
+    return choix.style ? libelleStyle(choix.style) : "";
   }
   return libelleExplorer(choix.nature, choix.style);
 }
@@ -371,11 +368,16 @@ export function libelleDuChoix(choix: ChoixSelection): string {
  * « Flashs », avec le chevron qui dit que le champ s'ouvre. Le style
  * complet vit dans le TITRE de la page, juste dessous : le répéter
  * dans un champ étroit le tronquait.
- * SUR « MES SUIVIS » (nº 257-§1) : le style, ou « Tous les styles » à
- * l'ouverture — il n'y a plus de catégorie à dire, aux deux largeurs.
+ * SUR « MES SUIVIS » (nº 257-§1) : le style, ou « Tous les portfolios »
+ * à l'ouverture (nº 318) — il n'y a plus de catégorie à dire.
+ * §3 (nº 321) — ET SUR « MES FAVORIS », L'ÉTAT D'OUVERTURE DIT « Tous
+ * les favoris », aux DEUX largeurs : le mot de l'entrée neutre que ce
+ * menu vient de recevoir, celui qu'elle porte dans la liste. Les deux
+ * onglets se répondent enfin — chacun nomme ce qu'il contient.
  * ⚠️ AUCUN MOT N'EST ÉCRIT ICI : `CATEGORIES_EXPLORER` porte les
- * titres et les « Tous les… », `libelleStyleChoisi` porte « Tous les
- * styles », `libelleExplorer` l'écriture refermée.
+ * titres et les « Tous les… », `LIBELLE_TOUS_LES_FAVORIS` et
+ * `LIBELLE_TOUS_LES_PORTFOLIOS` les deux entrées neutres,
+ * `libelleExplorer` l'écriture refermée.
  */
 function libelleDuFiltre(
   entrees: EntreeFiltre[],
@@ -391,8 +393,10 @@ function libelleDuFiltre(
   //  mot ne change pas.
   if (choix.menu === MENU_SUIVIS) {
     //  §2 (nº 316) — UN PROFIL CHOISI S'ÉCRIT EN ENTIER, aux deux
-    //  largeurs : « À domicile », « Studio ». C'est un choix, et un
-    //  choix se lit.
+    //  largeurs : « Artiste », « Studio », « Salon », « Tous les
+    //  profils ». C'est un choix, et un choix se lit.
+    //  §2 (nº 321) — LES EXEMPLES D'AVANT (« À domicile ») ÉTAIENT DES
+    //  MODES D'EXERCICE : ils ont quitté ce menu avec les sous-titres.
     if (choix.profil) return libelleDuProfil(choix.profil);
     /*  §2-c (nº 318) — RIEN DE CHOISI : « Tous les portfolios », AUX
         DEUX LARGEURS — le mot de l'entrée neutre, celui qu'elle porte
@@ -402,16 +406,17 @@ function libelleDuFiltre(
         (Au vrai doigt, le champ dit « Filtrer » — nº 262 — : cette
         écriture ne sert qu'aux largeurs intermédiaires.) */
     if (!choix.style) return LIBELLE_TOUS_LES_PORTFOLIOS;
-    return libelleStyleChoisi(choix.style);
+    return libelleStyle(choix.style);
   }
-  //  §5 (nº 262) — SUR LE WEB, L'ÉTAT D'OUVERTURE DES FAVORIS DIT
-  //  « Tous les styles », COMME SUR LES SUIVIS : « Toutes les
-  //  réalisations » y était l'écriture d'une porte qu'on n'a pas
-  //  choisie. C'est le LIBELLÉ seul : le menu garde ses deux portes
-  //  (Réalisations, Flashs), et un choix — porte ou couple — s'écrit
-  //  comme avant. L'écriture vient de `libelleStyleChoisi`, la même
-  //  que les suivis — aucun mot écrit ici.
-  if (!etroit && !choix.nature && !choix.style) return libelleStyleChoisi("");
+  /*  §3 (nº 321) — RIEN DE CHOISI : « Tous les favoris », AUX DEUX
+      LARGEURS. C'est le mot de l'entrée neutre que ce menu vient de
+      recevoir — la symétrie exacte de « Tous les portfolios » sur
+      l'autre onglet (nº 318). Il remplace « Tous les styles », qui
+      était l'écriture d'un objet aujourd'hui disparu du site, ET le
+      raccourci au doigt qui affichait la seule catégorie : le champ
+      annonce désormais l'ABSENCE de filtre, pas une porte qu'on n'a
+      pas choisie. Le menu, lui, garde ses deux portes. */
+  if (!choix.nature && !choix.style) return LIBELLE_TOUS_LES_FAVORIS;
   //  LA PORTE EN COURS : celle du choix, ou la PREMIÈRE PRÉSENTE quand
   //  rien n'est filtré — c'est ce que dit l'état d'ouverture.
   const nature = choix.nature || (entrees[0]?.value.split(":")[0] ?? "");

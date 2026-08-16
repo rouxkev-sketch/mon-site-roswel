@@ -165,10 +165,18 @@ export function libelleExplorer(nature: string, style: string): string {
   return `${categorie.titre} · ${label}`;
 }
 
-/** Le libellé du style choisi (« Tous les styles » par défaut). */
-export function libelleStyleChoisi(style: string): string {
-  return style ? libelleStyle(style) : "Tous les styles";
-}
+/*  « TOUS LES STYLES » N'EXISTE PLUS NULLE PART (nº 321-§3)
+    ------------------------------------------------------------------
+    Il y avait ici un `libelleStyleChoisi(style)` qui rendait le mot du
+    catalogue quand un style était choisi, et « Tous les styles » quand
+    il ne l'était pas. Ce second cas est mort : le menu des favoris dit
+    désormais « Tous les favoris », celui des portfolios suivis « Tous
+    les portfolios », et chacun de ces deux mots vit dans
+    `lib/filtres-selection` avec l'entrée qu'il nomme. Le seul appelant
+    qui restait (IndexTatoueurs) ne l'atteignait jamais que STYLE NON
+    VIDE — il lit donc `libelleStyle` en direct, et la fonction est
+    partie plutôt que de garder une branche morte qui réintroduirait le
+    mot au premier réemploi distrait. */
 
 /**
  * LE RAYON S'APPLIQUE-T-IL À CE LIEU ?

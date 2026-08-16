@@ -937,21 +937,29 @@ export function EnTeteTatouage({
                    AUCUNE PASSE FUTURE NE DOIT LE RETIRER en croyant
                    appliquer la charte : ce n'est pas un oubli, ce n'est
                    pas une dérive, c'est une décision.
+                   §1 (nº 321) — ET DÉSORMAIS LE CONTOUR N'EST PLUS
+                   JAMAIS VISIBLE : SA COULEUR SUIT EXACTEMENT CELLE DU
+                   FOND, DANS TOUS LES ÉTATS. Le propriétaire ne veut
+                   voir QU'UNE SEULE CHOSE — un bloc plein. On voyait
+                   deux objets : un contour gris et un fond noir.
+                   ⚠️ LES 2 px RESTENT, ET C'EST TOUT CE QUE CETTE NOTE
+                   PROTÈGE MAINTENANT : ils tiennent la TAILLE du
+                   bouton, qui ne doit pas changer. Le contour est
+                   devenu invisible, il n'a pas disparu — le retirer
+                   rétrécirait le badge de 4 px en largeur comme en
+                   hauteur, et la rangée entière bougerait.
                    Ce qu'il porte, et rien d'autre :
-                    · le fond de la PAGE (`#1A1A1D`, `bg-sombre-fond`) —
-                      le badge est un trou dans le verre de la barre, il
-                      montre la couleur du site ;
-                    · un CONTOUR GRIS (`#38383F`, `sombre-bordure`, le
-                      gris des traits du site — aucune couleur nouvelle
-                      n'est inventée ici), ÉPAIS DE 2 px depuis la
-                      nº 311-§1b : à 1 px il se devinait plus qu'il ne
-                      se voyait, et c'est lui qui porte tout le badge ;
-                    · §1 (nº 313) — AU SURVOL, LE FOND PREND LA COULEUR
-                      DU CONTOUR (`hover:bg-sombre-bordure`, le même
-                      `#38383F`) : le badge se remplit et son contour
-                      DISPARAÎT DANS LE FOND, au lieu de se détacher
-                      d'un fond qui ne lui répondait pas. Une seule
-                      couleur au survol, donc, et c'est la sienne ;
+                    · AU REPOS, le fond ET le contour valent `#38383F`
+                      (`bg-sombre-bordure border-sombre-bordure`) — le
+                      gris des traits du site, aucune couleur nouvelle.
+                      Le badge n'est plus un trou dans le verre de la
+                      barre : c'est un bloc plein d'une seule teinte ;
+                    · AU SURVOL, LES DEUX MONTENT ENSEMBLE D'UN CRAN, à
+                      `#4A4A53` (`hover:bg-sombre-haut
+                      hover:border-sombre-haut`) — le barreau au-dessus
+                      dans l'échelle du site ;
+                    · le CONTOUR ÉPAIS DE 2 px (nº 311-§1b) — invisible
+                      dans les deux états, gardé pour la taille seule ;
                     · le texte en ROSE (`#EE3D6F`, `text-primaire`) ;
                     · l'icône de connexion DANS le badge, avec le texte :
                       `IconeUtilisateur`, le rond avec une personne
@@ -970,8 +978,9 @@ export function EnTeteTatouage({
                 data-bouton-connexion=""
                 style={{ height: HAUTEUR_ACTIONS }}
                 className="hidden sm:flex rounded-full px-5 items-center gap-2
-                           bg-sombre-fond border-2 border-sombre-bordure
-                           text-primaire hover:bg-sombre-bordure
+                           bg-sombre-bordure border-2 border-sombre-bordure
+                           hover:bg-sombre-haut hover:border-sombre-haut
+                           text-primaire
                            text-sm font-semibold transition-colors whitespace-nowrap
                            focus-visible:outline-2 focus-visible:outline-offset-2
                            focus-visible:outline-primaire"

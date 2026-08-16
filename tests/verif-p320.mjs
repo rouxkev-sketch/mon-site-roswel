@@ -132,50 +132,53 @@ titre("§1 — les deux pages sont revenues, et le commentaire y est");
     q.traits === 0,
     `${q.traits} trait(s)`
   );
+  /*  ⚠️ AMENDÉ PAR LA nº 321 — LE CONTOUR DU LIEN SECONDAIRE
+      ------------------------------------------------------------------
+      CE BANC EXIGEAIT ICI un contour d'1 px et un fond transparent sur
+      le second bouton de la page : c'était l'un des « écarts de charte
+      assumés » que la nº 320 avait remis en place en annulant la
+      nº 319. LE PROPRIÉTAIRE A LEVÉ CET ÉCART-LÀ À LA nº 321-§5 : le
+      bouton est devenu « Crée ton portfolio », une capsule PLEINE
+      (#33333A, #4A4A53 au survol, texte blanc) SANS AUCUN CONTOUR.
+      Son SUJET a donc été retiré par décision — la mesure n'est ni
+      ratée ni supprimée : elle est REFAITE À L'ENVERS ci-dessous, et
+      mesurée en entier (les deux fonds, le mot, la capsule, le bouton
+      rose voisin) dans `verif-p321.mjs`, §5.
+      ⚠️ CE QUE LA nº 320 GARDE, ET QUI N'EST PAS EN CAUSE : la mise en
+      page LIBRE de la page. C'est toujours l'exception qui décide ici —
+      ce bouton n'a pas pris l'habit standard de la charte, il a pris
+      celui que le propriétaire a demandé, sur cette page-là. */
   verif(
-    "LE CONTOUR du lien secondaire est revenu (l'écart de charte assumé)",
-    q.lienSecondaire.bordure === "1px" &&
-      q.lienSecondaire.fond === "rgba(0, 0, 0, 0)",
+    "LE LIEN SECONDAIRE N'A PLUS DE CONTOUR — l'écart gardé par la " +
+      "nº 320 est levé par le propriétaire à la nº 321-§5",
+    q.lienSecondaire.bordure === "0px" &&
+      q.lienSecondaire.fond === "rgb(51, 51, 58)",
     `bordure ${q.lienSecondaire.bordure} · fond ${q.lienSecondaire.fond}`
   );
 
-  //  LE TEXTE — AU MOT PRÈS, celui de la nº 319.
-  const ATTENDUS = [
-    "« Yoko » vient du japonais, signifie « couché, sur le côté ». Regarde le cœur rose du logo, il est incliné. « Folio » vient de portfolio : c'est le cœur du site. YokoFolio, c'est un cœur incliné qui t'emmène vers des portfolios.",
-    "Un tatouage commence par un style. YokoFolio classe les tatoueurs par style.",
-    "Essaie de chercher « du réalisme autour de Lyon » sur Instagram : aucune case ne pose cette question. Ici, c'est précisément celle qu'on te pose.",
-    "Choisis un style, une ville et un rayon : les tatoueurs qui correspondent s'affichent, chacun avec un portfolio consacré à son travail dans le style recherché.",
-    "YokoFolio ne remplace pas Instagram — il t'y conduit, avec le bon artiste au bout.",
-    "Tatoueur ? Crée ton portfolio : un style montré est un style trouvable.",
-    "Curieux ? Cherche, et découvre ton prochain tatouage.",
-    "Pas d'avis, pas de notes.",
-    "Personne ne commente ni ne juge le travail d'un tatoueur ici. Son portfolio parle pour lui. À toi de te faire ton avis.",
-  ];
-  //  ⚠️ LES DEUX CARACTÈRES INVISIBLES : l'apostrophe courbe et
-  //  l'espace insécable. Les deux côtés de la comparaison passent par
-  //  ici — sans quoi deux textes identiques à l'œil se déclarent
-  //  différents.
-  const apostrophes = (t) =>
-    t.replace(/[’']/g, "'").replace(/ /g, " ").replace(/\s+/g, " ").trim();
-  const ecarts = ATTENDUS.filter(
-    (attendu, rang) =>
-      apostrophes(q.paragraphes[rang] ?? "") !== apostrophes(attendu)
-  );
+  /*  ⚠️ AMENDÉ PAR LA nº 321 — LE TEXTE DE LA PAGE
+      ------------------------------------------------------------------
+      CE BANC RECOPIAIT ICI les neuf paragraphes et les quatre gras, au
+      mot près. LE PROPRIÉTAIRE A RETOUCHÉ TROIS CHOSES À LA nº 321-§4 :
+      un « il » ajouté au premier paragraphe, la consigne « Choisis un
+      style, une ville et un rayon : » passée en gras et en blanc, et la
+      phrase sur Instagram réécrite ET remise en style normal. Les
+      attendus d'ici sont donc périmés — non parce qu'ils étaient faux,
+      mais parce que le texte a changé par décision.
+      ET ON NE LES RECOPIE PAS UNE TROISIÈME FOIS : le texte au mot près
+      vit désormais dans `verif-p321.mjs` §4, ET LÀ SEULEMENT — avec, en
+      plus, les trois retouches nommées une à une et les six paragraphes
+      restés intacts. Trois copies du même texte, ce sont trois endroits
+      à corriger à la retouche suivante, et deux oubliés.
+      CE QUI RESTE MESURÉ ICI, parce que c'est le sujet DE LA nº 320 et
+      de personne d'autre : que la page porte toujours NEUF paragraphes
+      et QUATRE gras — c'est-à-dire que la mise en page revenue n'a ni
+      perdu ni ajouté un bloc en chemin. */
   verif(
-    "LE TEXTE EST TOUJOURS CELUI DU PROPRIÉTAIRE, AU MOT PRÈS — neuf " +
-      "paragraphes, zéro écart",
-    q.paragraphes.length === ATTENDUS.length && ecarts.length === 0,
-    ecarts.length
-      ? `écart sur : « ${ecarts[0].slice(0, 60)}… »`
-      : "9 paragraphes conformes"
-  );
-  verif(
-    "…et ses QUATRE passages en gras sont là, dans l'ordre",
-    apostrophes(q.gras.join(" | ")) ===
-      apostrophes(
-        "il t'y conduit, avec le bon artiste au bout. | Tatoueur ? | Curieux ? | À toi de te faire ton avis."
-      ),
-    q.gras.join(" | ")
+    "LA PAGE PORTE TOUJOURS SES NEUF PARAGRAPHES ET SES QUATRE GRAS " +
+      "(leur texte au mot près se mesure dans p321-§4)",
+    q.paragraphes.length === 9 && q.gras.length === 4,
+    `${q.paragraphes.length} paragraphes · ${q.gras.length} gras`
   );
 
   /* ---------- CONTACT : la mise en page d'avant, deux mots gardés --- */

@@ -1,7 +1,6 @@
 import {
   CATEGORIES_EXPLORER,
   entreesExplorer,
-  genreMode,
   libelleTypeFiche,
   lireValeurExplorer,
   styleDuCatalogue,
@@ -56,7 +55,8 @@ export type ChoixSelection = {
   style: string;
   /**
    * §2 (nº 316) — LE PROFIL CHOISI dans le second menu des portfolios
-   * suivis : « mode:domicile », « lieu:prive »… ou vide.
+   * suivis : « profil:artiste », « profil:prive »… ou vide (le
+   * vocabulaire est celui de la nº 321 — voir `cleProfil`).
    * ⚠️ IL EXCLUT LE STYLE, et c'est mécanique : l'adresse ne porte
    * qu'UNE valeur pour ce menu (voir `lireSelection`). Choisir un
    * profil remplace donc le style, exactement comme choisir un style
@@ -231,77 +231,95 @@ export type EntreeFiltre = {
  * inconnue est ignorée, comme partout ailleurs.
  */
 
-/** Le préfixe d'un mode d'exercice d'ARTISTE — « mode:domicile ». */
-export const PROFIL_MODE = "mode";
-/** Le préfixe d'un genre de LIEU — « lieu:prive », « lieu:salon ». */
-export const PROFIL_LIEU = "lieu";
+/**
+ * §2 (nº 321) — LE MENU « PROFIL » EST UNE LISTE PLATE DE TROIS TYPES.
+ * ------------------------------------------------------------------
+ * ⚠️ CECI SIMPLIFIE CE QUE LES nº 316 ET 317 AVAIENT CONSTRUIT, sur
+ * décision du propriétaire. Ce qui disparaît, entièrement :
+ *  · les deux SOUS-TITRES « ARTISTE » et « LIEU » — plus de sous-titre
+ *    gris, plus de point rose, plus de sous-groupe du tout ;
+ *  · les quatre MODES D'EXERCICE (à domicile, en studio, en salon,
+ *    guest) — ils ne figurent plus dans ce menu.
+ * CE QUI RESTE : quatre entrées à plat, dans cet ordre —
+ *
+ *     Tous les profils
+ *     Artiste
+ *     Studio
+ *     Salon
+ *
+ * LE FILTRE PORTE DONC SUR LE TYPE DE PORTFOLIO SUIVI, plus sur le
+ * mode d'exercice de son auteur. C'est une question plus simple, et
+ * c'est celle que le propriétaire veut poser.
+ *
+ * ⚠️ UN SEUL PRÉFIXE SUFFIT DÉSORMAIS. Il en fallait deux (`mode:` et
+ * `lieu:`) tant que le menu mélangeait deux natures de chose ; il n'y
+ * en a plus qu'une — le type de fiche. `profil:` porte tout, et aucun
+ * slug de style du catalogue ne contient de deux-points : la confusion
+ * reste impossible.
+ */
 
-/** Les deux sous-titres du menu « Profil » — écrits une seule fois. */
-export const SOUS_TITRE_ARTISTE = "ARTISTE";
-export const SOUS_TITRE_LIEU = "LIEU";
-/** Le titre des deux menus (§2-a et §2-b). */
+/** Le préfixe d'un type de portfolio — « profil:artiste ». */
+export const PROFIL = "profil";
+/** Le titre des deux menus (§2-a et §2-b de la nº 316). */
 export const GROUPE_STYLES = "Styles";
 export const GROUPE_PROFIL = "Profil";
 
-/** La clé d'un mode d'artiste, dans la table des comptes comme dans
-    l'adresse — une seule écriture pour les deux. */
-export const cleProfilMode = (genre: string) => `${PROFIL_MODE}:${genre}`;
-/** La clé d'un genre de lieu — « prive » (Studio) ou « salon ». */
-export const cleProfilLieu = (nature: string) => `${PROFIL_LIEU}:${nature}`;
+/** La clé d'un type, dans la table des comptes comme dans l'adresse —
+    une seule écriture pour les deux. Les natures sont celles de
+    `natureDeLaFiche` : « artiste », « prive » (Studio), « salon ». */
+export const cleProfil = (nature: string) => `${PROFIL}:${nature}`;
 
 /**
- * §2-d (nº 317) — LES DEUX TÊTES DE SOUS-GROUPE.
+ * §2-d (nº 321) — LA TÊTE DU GROUPE : « Tous les profils ».
  * ------------------------------------------------------------------
- * « Tous les artistes » et « Tous les lieux » : elles se placent EN
- * PREMIER dans leur sous-groupe et sélectionnent tout — le procédé de
+ * Elle porte LE TOTAL et sélectionne tous les types — le procédé de
  * « Toutes les réalisations » sur l'onglet des favoris, à la lettre.
- * ⚠️ L'ÉTOILE N'EST NI UN GENRE NI UNE NATURE : aucune collision
- * possible avec « mode:domicile » ou « lieu:salon ». C'est la même
- * ruse que `CLE_TOTAL`, et pour la même raison.
- * ⚠️ ELLES NE SONT PAS UN RACCOURCI D'AFFICHAGE : elles ont leur
- * propre clé dans la table des comptes, posée par `clesDuProfil` en
- * même temps que les autres. Compter et filtrer restent une seule
- * fonction — le nombre annoncé ne peut donc pas mentir.
+ * ⚠️ L'ÉTOILE N'EST PAS UNE NATURE : aucune collision possible avec
+ * « profil:artiste ». C'est la même ruse que `CLE_TOTAL`, et pour la
+ * même raison.
+ * ⚠️ ELLE N'EST PAS UN RACCOURCI D'AFFICHAGE : elle a sa propre clé
+ * dans la table des comptes, posée par `clesDuProfil` en même temps
+ * que les autres. Compter et filtrer restent une seule fonction — le
+ * nombre annoncé ne peut donc pas mentir.
  */
-export const TOUS_LES_ARTISTES = `${PROFIL_MODE}:*`;
-export const TOUS_LES_LIEUX = `${PROFIL_LIEU}:*`;
-/** Leurs mots, écrits une seule fois — le menu et le champ les lisent
-    tous les deux (voir `libelleDuProfil`). */
-export const LIBELLE_TOUS_LES_ARTISTES = "Tous les artistes";
-export const LIBELLE_TOUS_LES_LIEUX = "Tous les lieux";
+export const TOUS_LES_PROFILS = `${PROFIL}:*`;
+/** Son mot, écrit une seule fois — le menu et le champ le lisent tous
+    les deux (voir `libelleDuProfil`). */
+export const LIBELLE_TOUS_LES_PROFILS = "Tous les profils";
 
 /**
  * EST-CE UNE VALEUR DE PROFIL ? Rend la valeur telle quelle si oui,
  * « » sinon — c'est ce qui départage un style d'un profil à la
  * lecture de l'adresse, et c'est écrit UNE fois.
- * ⚠️ ON NE VALIDE PAS LE GENRE ICI : un genre disparu du catalogue ne
- * comptera simplement aucune entrée, donc aucun portfolio ne
- * correspondra — l'écran est vide, jamais faux. C'est exactement ce
- * que fait un style inconnu.
+ * ⚠️ ON NE VALIDE PAS LA NATURE ICI : une nature inconnue ne comptera
+ * simplement aucune entrée, donc aucun portfolio ne correspondra —
+ * l'écran est vide, jamais faux. C'est exactement ce que fait un style
+ * inconnu.
  */
 export function profilDuFiltre(valeur: string): string {
   const [prefixe] = valeur.split(":");
-  return prefixe === PROFIL_MODE || prefixe === PROFIL_LIEU ? valeur : "";
+  return prefixe === PROFIL ? valeur : "";
 }
 
 /**
- * COMMENT UN PROFIL CHOISI S'APPELLE — « À domicile », « Studio »…
+ * COMMENT UN PROFIL CHOISI S'APPELLE — « Artiste », « Studio »…
  * ------------------------------------------------------------------
  * Le CHAMP de la barre et le SOUS-TITRE de la page le lisent tous les
  * deux : une seule écriture, comme `libelleDuChoix` l'exige depuis la
- * nº 257. Et aucun mot n'est inventé ici — `genreMode` porte les
- * libellés des modes, `libelleTypeFiche` ceux des lieux, exactement
- * comme le menu les affiche.
+ * nº 257. Et aucun mot n'est inventé ici — `libelleTypeFiche` porte
+ * les trois, exactement comme les fiches et les cartes les écrivent.
  */
 export function libelleDuProfil(profil: string): string {
-  //  §2-d (nº 317) — LES DEUX TÊTES D'ABORD : leur mot n'est pas celui
-  //  d'un genre, il dit « tout ce sous-groupe ».
-  if (profil === TOUS_LES_ARTISTES) return LIBELLE_TOUS_LES_ARTISTES;
-  if (profil === TOUS_LES_LIEUX) return LIBELLE_TOUS_LES_LIEUX;
-  const [prefixe, valeur = ""] = profil.split(":");
-  if (prefixe === PROFIL_MODE) return genreMode(valeur).label;
-  if (prefixe === PROFIL_LIEU) return libelleTypeFiche("salon", valeur);
-  return "";
+  //  §2-d (nº 321) — LA TÊTE D'ABORD : son mot n'est celui d'aucun
+  //  type, il dit « tout le groupe ».
+  if (profil === TOUS_LES_PROFILS) return LIBELLE_TOUS_LES_PROFILS;
+  const [prefixe, nature = ""] = profil.split(":");
+  if (prefixe !== PROFIL) return "";
+  //  « artiste » se dit par lui-même ; « prive » et « salon » sont des
+  //  natures d'ÉTABLISSEMENT — d'où les deux formes d'appel.
+  return nature === "artiste"
+    ? libelleTypeFiche("artiste", "")
+    : libelleTypeFiche("salon", nature);
 }
 
 /**
@@ -351,7 +369,29 @@ export function entreesDuFiltre(
   comptes: Map<string, number>
 ): EntreeFiltre[] {
   if (comptes.size === 0) return [];
-  const entrees: EntreeFiltre[] = [];
+  /*  §3 (nº 321) — « TOUS LES FAVORIS » : L'ENTRÉE NEUTRE DE CE MENU.
+      ------------------------------------------------------------------
+      Le menu des portfolios a la sienne depuis la nº 318 (« Tous les
+      portfolios ») ; celui des favoris n'en avait aucune. Même place,
+      même rôle, même écriture :
+       · PREMIÈRE de la liste, et HORS GROUPE — au-dessus des deux
+         portes. Une entrée qui annule TOUT le filtre ne peut pas vivre
+         dans l'une d'elles ;
+       · elle porte LE TOTAL des photos aimées (`CLE_TOTAL`) ;
+       · sa valeur est VIDE : la choisir efface le paramètre d'adresse
+         (voir `poserSelection`), donc annule catégorie et style d'un
+         coup.
+      ⚠️ LE DÉFAUT DE LA nº 317 NE PEUT PAS SE RÉVEILLER, et doublement :
+      la garde « une valeur vide n'est pas un choix » (replieALOuverture)
+      tient toujours — et cette entrée n'ayant AUCUN groupe, même sans
+      la garde elle n'aurait rien à ouvrir. Le banc éprouve les deux. */
+  const entrees: EntreeFiltre[] = [
+    {
+      value: VALEUR_NEUTRE,
+      label: LIBELLE_TOUS_LES_FAVORIS,
+      compte: comptes.get(CLE_TOTAL) ?? 0,
+    },
+  ];
 
   for (const categorie of CATEGORIES_EXPLORER) {
     const compteCategorie = comptes.get(valeurExplorer(categorie.nature, ""));
@@ -373,11 +413,11 @@ export function entreesDuFiltre(
     );
   }
 
-  //  ⚠️ « TOUS LES STYLES » A DISPARU (nº 249-§1). Elle était inutile :
-  //  « Toutes les réalisations » et « Tous les flashs » jouent déjà ce
-  //  rôle à l'intérieur de leur catégorie — et personne ne mélange une
-  //  recherche de flashs avec une recherche de réalisations. Ces deux
-  //  entrées restent le seul chemin de retour vers tout.
+  //  ⚠️ « TOUS LES STYLES » AVAIT DISPARU À LA nº 249-§1, et ne revient
+  //  PAS : ce n'est pas ce que « Tous les favoris » remplace. Celle-là
+  //  cherchait un style toutes catégories confondues — une question que
+  //  personne ne pose. Celle-ci ANNULE le filtre, ce qui est autre
+  //  chose, et c'est pourquoi elle vit hors groupe.
   return entrees;
 }
 
@@ -390,15 +430,18 @@ export function entreesDuFiltre(
  * que la liste des styles, dans l'ordre et avec les libellés du
  * moteur, familles EN SOUS-PORTE comprises (« Cultures du monde »).
  *
- * ⚠️ ET UNE TÊTE, « Tous les styles » : sans porte de catégorie, plus
- * RIEN ne ramenait à la liste entière une fois un style choisi (les
- * deux têtes « Toutes les réalisations » / « Tous les flashs » jouaient
- * ce rôle sur les favoris — c'est très exactement pourquoi la nº 249-§1
- * pouvait retirer cette entrée-là). Le mot n'est pas inventé : c'est
- * celui de `libelleStyleChoisi` (MoteurTatouage), l'écriture du site
- * pour « aucun style choisi ».
+ * ⚠️ LA VALEUR NEUTRE — celle qui n'est ni un style, ni une catégorie,
+ * ni un profil : la valeur VIDE. La choisir efface le paramètre
+ * d'adresse, donc annule TOUT le filtre. Les DEUX menus l'emploient
+ * pour leur entrée de tête, chacun avec son mot :
+ *  · les portfolios → « Tous les portfolios » (nº 318) ;
+ *  · les favoris    → « Tous les favoris » (nº 321).
+ * ⚠️ ELLE S'APPELAIT `TOUS_LES_STYLES`, et ce nom est parti avec le
+ * mot (nº 321-§3) : il ne restait plus une seule entrée « Tous les
+ * styles » dans le site, garder son nom sur la valeur aurait rappelé
+ * un objet disparu.
  */
-export const TOUS_LES_STYLES = "";
+export const VALEUR_NEUTRE = "";
 
 /** §2-c (nº 318) — LE MOT DE L'ENTRÉE NEUTRE : « Tous les
     portfolios ». Écrit une fois — l'entrée du menu et le champ de la
@@ -406,6 +449,13 @@ export const TOUS_LES_STYLES = "";
     « Tous les styles », qui mentait depuis que le menu filtre aussi
     par profil (nº 316). */
 export const LIBELLE_TOUS_LES_PORTFOLIOS = "Tous les portfolios";
+
+/** §3 (nº 321) — LE MOT DE L'ENTRÉE NEUTRE DU MENU DES FAVORIS. Même
+    place et même rôle que « Tous les portfolios » sur l'autre onglet :
+    première de la liste, hors groupe, elle annule le filtre — et c'est
+    ce que le champ affiche quand rien n'est choisi. Écrit une fois,
+    lu par le menu et par le champ (voir MenusSelection). */
+export const LIBELLE_TOUS_LES_FAVORIS = "Tous les favoris";
 
 /** LA CLÉ DU TOTAL, dans la table des comptes — une étoile : ni un
     slug de style, ni une valeur d'Explorer, donc aucune collision
@@ -439,7 +489,7 @@ export function entreesDesStyles(
         plus AUCUN groupe, même sans la garde elle n'aurait plus rien
         à ouvrir. Le banc éprouve les deux. */
     {
-      value: TOUS_LES_STYLES,
+      value: VALEUR_NEUTRE,
       label: LIBELLE_TOUS_LES_PORTFOLIOS,
       compte: comptes.get(CLE_TOTAL) ?? 0,
     },
@@ -448,74 +498,43 @@ export function entreesDesStyles(
 }
 
 /**
- * §2-b et §2-c (nº 316) — LE MENU « PROFIL », BÂTI SUR CE QUI EXISTE
+ * §2 (nº 321) — LE MENU « PROFIL », À PLAT
  * ------------------------------------------------------------------
- * DEUX SOUS-TITRES, ET RIEN QUI N'EXISTE PAS :
+ * QUATRE ENTRÉES, ET RIEN QUI N'EXISTE PAS :
  *  · une entrée n'apparaît que si au moins un portfolio suivi lui
  *    répond (`comptes` ne porte que du réel — voir `comptesDesSuivis`) ;
- *  · un sous-titre n'apparaît que si une de ses options existe : c'est
- *    mécanique, une sous-porte sans option n'est jamais rendue (le
- *    menu la pose À LA PLACE de sa première option) ;
- *  · si les deux sont vides, la fonction rend une liste VIDE — et le
- *    groupe « Profil » n'existe alors nulle part.
+ *  · s'il n'y a aucun portfolio suivi, la fonction rend une liste
+ *    VIDE — et le groupe « Profil » n'existe alors nulle part.
  *
- * ⚠️ L'ORDRE DES MODES EST CELUI DE LA CONSIGNE — à domicile, en
- * studio, en salon, guest — et non celui de `GENRES_MODE`, qui range
- * pour le formulaire. Les LIBELLÉS, eux, viennent de `GENRES_MODE` et
- * de `libelleTypeFiche` : aucun mot n'est réécrit ici.
+ * ⚠️ PLUS AUCUN SOUS-GROUPE (nº 321-§2-a) : les entrées sont posées à
+ * plat, dans le groupe « Profil » et rien de plus. Les sous-titres
+ * « ARTISTE » et « LIEU » de la nº 316 sont partis, avec leur point
+ * rose et les quatre modes d'exercice qu'ils abritaient.
+ *
+ * ⚠️ L'ORDRE EST CELUI DE LA CONSIGNE — Tous les profils, Artiste,
+ * Studio, Salon. Les LIBELLÉS viennent de `libelleTypeFiche` : aucun
+ * mot n'est réécrit ici.
  */
-const MODES_DU_PROFIL = ["domicile", "prive", "salon", "guest"] as const;
-const LIEUX_DU_PROFIL = ["prive", "salon"] as const;
+const TYPES_DU_PROFIL = ["artiste", "prive", "salon"] as const;
 
 export function entreesDuProfil(
   comptes: Map<string, number>
 ): EntreeFiltre[] {
   const entrees: EntreeFiltre[] = [];
-  const ajouter = (
-    value: string,
-    label: string,
-    sousGroupe: string
-  ) => {
+  const ajouter = (value: string, label: string) => {
     const compte = comptes.get(value);
     //  §2-d — CHAQUE ENTRÉE PORTE SON NOMBRE, comme celles de
     //  « Styles » : c'est le même champ, lu au même endroit. Et une
     //  entrée sans compte n'entre jamais : rien ne s'affiche qui
-    //  n'existe pas (§2-c de la nº 316, inchangé).
-    if (compte) {
-      entrees.push({
-        value,
-        label,
-        groupe: GROUPE_PROFIL,
-        sousGroupe,
-        //  §2 (nº 317) — CE SOUS-GROUPE EST UN SOUS-TITRE, PAS UNE
-        //  PORTE : ni flèche, ni pliage, ni clic.
-        sousTitre: true,
-        compte,
-      });
-    }
+    //  n'existe pas (la règle de la nº 316-§2-c, inchangée).
+    if (compte) entrees.push({ value, label, groupe: GROUPE_PROFIL, compte });
   };
-  /*  §2-d (nº 317) — LA TÊTE D'ABORD, LES OPTIONS ENSUITE, dans chaque
-      sous-groupe. C'est l'ordre de « Toutes les réalisations » sur
-      l'onglet des favoris : on peut reprendre TOUT le sous-groupe sans
-      avoir à parcourir ses entrées.
-      ⚠️ ET LA TÊTE SUIT LA MÊME RÈGLE QUE LES AUTRES : sans compte,
-      elle n'entre pas. Un artiste qui n'a déclaré aucun mode ne
-      nourrit aucune clé (voir `clesDuProfil`) — « Tous les artistes »
-      n'apparaît donc pas plus que les entrées individuelles, et le cas
-      « aucun profil déclaré » du §1 reste ce qu'il est. */
-  ajouter(TOUS_LES_ARTISTES, LIBELLE_TOUS_LES_ARTISTES, SOUS_TITRE_ARTISTE);
-  for (const genre of MODES_DU_PROFIL) {
-    ajouter(cleProfilMode(genre), genreMode(genre).label, SOUS_TITRE_ARTISTE);
-  }
-  ajouter(TOUS_LES_LIEUX, LIBELLE_TOUS_LES_LIEUX, SOUS_TITRE_LIEU);
-  for (const nature of LIEUX_DU_PROFIL) {
-    //  « Studio » pour un studio privé, « Salon » pour un salon — les
-    //  mots de `libelleTypeFiche`, ceux des fiches et des cartes.
-    ajouter(
-      cleProfilLieu(nature),
-      libelleTypeFiche("salon", nature),
-      SOUS_TITRE_LIEU
-    );
+  /*  LA TÊTE D'ABORD, LES TYPES ENSUITE. C'est l'ordre de « Toutes les
+      réalisations » sur l'onglet des favoris : on peut reprendre TOUT
+      le groupe sans avoir à parcourir ses entrées. */
+  ajouter(TOUS_LES_PROFILS, LIBELLE_TOUS_LES_PROFILS);
+  for (const nature of TYPES_DU_PROFIL) {
+    ajouter(cleProfil(nature), libelleDuProfil(cleProfil(nature)));
   }
   return entrees;
 }

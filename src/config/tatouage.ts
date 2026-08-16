@@ -1464,6 +1464,18 @@ export const TEXTES_TATOUAGE = {
    * Une fois CONNECTÉ, le bouton affiche « Mon espace » à la place.
    */
   lienInscription: "Rejoindre",
+  /**
+   * §5 (nº 321) — LE BOUTON DE « QUI SOMMES-NOUS », ET LUI SEUL.
+   * ------------------------------------------------------------------
+   * Cette page portait « Rejoindre », le mot de la barre fixe
+   * (`lienInscription` ci-dessus). Elle dit désormais ce qu'on y fait :
+   * « Crée ton portfolio ». LE MOT DE LA BARRE NE BOUGE PAS — elle
+   * s'adresse à tout le monde (garder des photos, suivre un tatoueur),
+   * pendant que cette page-ci vient de finir d'expliquer ce qu'est un
+   * portfolio et à qui il sert. Deux endroits, deux publics, deux mots :
+   * c'est pourquoi il y a DEUX clés et non une seule partagée.
+   */
+  lienCreerPortfolio: "Crée ton portfolio",
   /** LE TITRE AU-DESSUS DE LA MOSAÏQUE, sans recherche (nº 211-§1) —
       une INVITATION adressée au visiteur, et non plus la description
       d'un écran (« Explorer toutes les créations »).

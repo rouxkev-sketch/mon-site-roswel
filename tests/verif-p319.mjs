@@ -14,12 +14,15 @@
  * REVENUE — traits absents, contours présents, focus rose, grandes
  * typographies.
  *
- * CE QUI RESTE ICI, ET QUI EST TOUJOURS VRAI : les DEUX SEULES choses
- * que la nº 320 a gardées de la nº 319 —
- *  · LE TEXTE de « Qui sommes-nous », au mot près, gras compris ;
- *  · LES DEUX LIBELLÉS de Contact, dans leur champ.
- * Ces deux mesures-là sont RENDUES, pas retirées : elles sont refaites
- * ci-dessous sur la page telle qu'elle est aujourd'hui.
+ * CE QUI RESTE ICI : UNE SEULE MESURE, depuis la nº 321.
+ * La nº 320 en avait gardé deux — le TEXTE de « Qui sommes-nous », au
+ * mot près, et les DEUX LIBELLÉS de Contact. Le texte a été retouché
+ * par le propriétaire à la nº 321-§4, et sa mesure a suivi la
+ * retouche : elle vit désormais dans `verif-p321.mjs` §4, plus fine
+ * qu'ici (voir le bloc explicatif plus bas, là où elle se trouvait).
+ * NE RESTENT donc ici que LES DEUX LIBELLÉS DE CONTACT — RENDUS, pas
+ * retirés : refaits ci-dessous sur la page telle qu'elle est
+ * aujourd'hui.
  *
  * ⚠️ UNE SEULE LARGEUR : 1440 × 823, celle du propriétaire.
  */
@@ -37,63 +40,29 @@ const { nav, page } = await ouvrirLeNavigateur("p319", {
 });
 
 /* ==================================================================
- * LE TEXTE DE « QUI SOMMES-NOUS » — AU MOT PRÈS
+ * LE TEXTE DE « QUI SOMMES-NOUS » — RENDU À LA nº 321
+ * ==================================================================
+ * ⚠️ CE BLOC MESURAIT LE TEXTE AU MOT PRÈS. IL A CHANGÉ DE MAIN.
+ * La nº 321-§4 a apporté TROIS retouches demandées par le
+ * propriétaire — un « il » ajouté au premier paragraphe, la consigne
+ * « Choisis un style, une ville et un rayon : » passée en gras et en
+ * blanc, et la phrase sur Instagram réécrite ET remise en style
+ * normal. Les neuf paragraphes recopiés ici étaient donc périmés : pas
+ * faux au moment où ils ont été écrits, mais dépassés par une décision.
+ *
+ * LA MESURE EST RENDUE, PAS RETIRÉE, et elle est même plus fine
+ * qu'ici : `verif-p321.mjs` §4 contrôle les neuf paragraphes au mot
+ * près, NOMME les trois retouches une à une (le mot ajouté, la graisse
+ * et la couleur du gras, le retour au style normal) et déclare
+ * séparément que les six autres paragraphes n'ont pas bougé d'un
+ * caractère. ELLE VIT LÀ, ET LÀ SEULEMENT : recopier le même texte
+ * dans trois bancs, ce sont trois endroits à corriger à la retouche
+ * suivante — et deux oubliés.
+ *
+ * `verif-p320.mjs` garde, lui, le seul contrôle qui soit VRAIMENT le
+ * sien : que la page porte toujours neuf paragraphes et quatre gras,
+ * c'est-à-dire que la mise en page revenue n'a perdu aucun bloc.
  * ================================================================== */
-titre("Qui sommes-nous — le texte du propriétaire, au mot près");
-{
-  await page.goto(`${BASE}/qui-sommes-nous`, { waitUntil: "networkidle" });
-
-  const m = await page.evaluate(() => {
-    const main = document.querySelector("main");
-    return {
-      //  ⚠️ `main p`, ET NON `main section p` : le chapô d'ouverture
-      //  vit HORS section depuis que la mise en page d'avant est
-      //  revenue (nº 320) — le viser par les sections en perdait un.
-      paragraphes: [...main.querySelectorAll("p")].map((p) =>
-        p.textContent.trim()
-      ),
-      gras: [...main.querySelectorAll("strong")].map((n) =>
-        n.textContent.trim()
-      ),
-    };
-  });
-
-  const ATTENDUS = [
-    "« Yoko » vient du japonais, signifie « couché, sur le côté ». Regarde le cœur rose du logo, il est incliné. « Folio » vient de portfolio : c'est le cœur du site. YokoFolio, c'est un cœur incliné qui t'emmène vers des portfolios.",
-    "Un tatouage commence par un style. YokoFolio classe les tatoueurs par style.",
-    "Essaie de chercher « du réalisme autour de Lyon » sur Instagram : aucune case ne pose cette question. Ici, c'est précisément celle qu'on te pose.",
-    "Choisis un style, une ville et un rayon : les tatoueurs qui correspondent s'affichent, chacun avec un portfolio consacré à son travail dans le style recherché.",
-    "YokoFolio ne remplace pas Instagram — il t'y conduit, avec le bon artiste au bout.",
-    "Tatoueur ? Crée ton portfolio : un style montré est un style trouvable.",
-    "Curieux ? Cherche, et découvre ton prochain tatouage.",
-    "Pas d'avis, pas de notes.",
-    "Personne ne commente ni ne juge le travail d'un tatoueur ici. Son portfolio parle pour lui. À toi de te faire ton avis.",
-  ];
-  //  ⚠️ LES DEUX CARACTÈRES INVISIBLES : l'apostrophe courbe et
-  //  l'espace insécable. Les deux côtés passent par ici — sans quoi
-  //  deux textes identiques à l'œil se déclarent différents.
-  const nu = (t) =>
-    t.replace(/[’']/g, "'").replace(/ /g, " ").replace(/\s+/g, " ").trim();
-  const ecarts = ATTENDUS.filter(
-    (attendu, rang) => nu(m.paragraphes[rang] ?? "") !== nu(attendu)
-  );
-  verif(
-    "LE TEXTE EST CELUI DU PROPRIÉTAIRE, AU MOT PRÈS — neuf paragraphes, " +
-      "zéro écart",
-    m.paragraphes.length === ATTENDUS.length && ecarts.length === 0,
-    ecarts.length
-      ? `écart sur : « ${ecarts[0].slice(0, 60)}… »`
-      : "9 paragraphes conformes"
-  );
-  verif(
-    "…et ses QUATRE passages en gras sont là, dans l'ordre",
-    nu(m.gras.join(" | ")) ===
-      nu(
-        "il t'y conduit, avec le bon artiste au bout. | Tatoueur ? | Curieux ? | À toi de te faire ton avis."
-      ),
-    m.gras.join(" | ")
-  );
-}
 
 /* ==================================================================
  * LES DEUX LIBELLÉS DE CONTACT — DANS LEUR CHAMP

@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   LARGEUR_SITE,
+  libelleStyle,
   rayonSuivant,
   renduCherche,
   TEXTES_TATOUAGE,
@@ -24,7 +25,6 @@ import { LigneResultats } from "@/components/LigneResultats";
 import {
   criteresComplets,
   libelleExplorer,
-  libelleStyleChoisi,
   rayonApplicable,
   type CritèresTatouage,
 } from "@/components/MoteurTatouage";
@@ -347,7 +347,11 @@ export function IndexTatoueurs({
         {(() => {
           const quoi =
             libelleExplorer(affiches.nature, affiches.style) ||
-            (affiches.style ? libelleStyleChoisi(affiches.style) : "");
+            //  ⚠️ `libelleStyle` EN DIRECT (nº 321-§3) : cette ligne
+            //  passait par `libelleStyleChoisi`, mais elle est GARDÉE
+            //  par `affiches.style` — le cas vide n'y arrivait jamais.
+            //  Le mot « Tous les styles » a donc quitté le site.
+            (affiches.style ? libelleStyle(affiches.style) : "");
           //  ⚠️ LE LIEU AU FORMAT INTERNATIONAL (nº 211-§1) — « Paris,
           //  France », « Austin, TX, États-Unis ». La règle vit dans
           //  lib/adresse (`ligneCarte`), celle-là même qui écrit la

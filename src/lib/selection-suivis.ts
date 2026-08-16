@@ -17,10 +17,8 @@ import {
 } from "@/lib/photos-tatoueur";
 import {
   CLE_TOTAL,
-  cleProfilLieu,
-  cleProfilMode,
-  TOUS_LES_ARTISTES,
-  TOUS_LES_LIEUX,
+  cleProfil,
+  TOUS_LES_PROFILS,
   type ChoixSelection,
 } from "@/lib/filtres-selection";
 import type { PhotoDuSuivi, PhotoFavorite, TatoueurSuivi } from "@/lib/favoris-serveur";
@@ -582,33 +580,26 @@ export function photoDuChoix(
  * nombre affiché ne mente jamais sur ce qu'il montrera — la nº 314-§2
  * a rappelé ce que coûte un compte qui suit sa propre règle.
  *
- * LA RÈGLE, EN DEUX LIGNES :
- *  · une fiche d'ARTISTE porte ses MODES D'EXERCICE (à domicile, en
- *    studio, en salon, guest) — un artiste peut en cumuler plusieurs,
- *    et il apparaît alors sous chacun ;
- *  · une fiche de LIEU (salon, studio privé) porte son GENRE, et lui
- *    seul : un lieu n'a pas de mode d'exercice, il EST le lieu.
- * Les deux mondes ne se croisent jamais : c'est ce qui fait les deux
- * sous-titres du menu, ARTISTE et LIEU.
+ * LA RÈGLE, EN UNE LIGNE (nº 321) : UN PORTFOLIO SUIVI PORTE SON
+ * TYPE, ET RIEN D'AUTRE — « artiste », « prive » (Studio) ou
+ * « salon ». C'est `natureDeLaFiche` qui tranche, la même autorité que
+ * les fiches et les cartes.
+ *
+ * ⚠️ CE QUE LA nº 321 A RETIRÉ : les MODES D'EXERCICE (à domicile, en
+ * studio, en salon, guest). Un artiste apparaissait alors sous chacun
+ * de ses modes, et le menu portait deux sous-titres pour séparer les
+ * deux mondes. Le propriétaire a tranché autrement : le filtre porte
+ * sur le TYPE du portfolio, une question à laquelle toute fiche répond
+ * — d'où la liste plate, et d'où le fait qu'aucun portfolio ne peut
+ * plus manquer à l'appel.
  */
 export function clesDuProfil(suivi: TatoueurSuivi): string[] {
   const nature = natureDeLaFiche(suivi.typeFiche, suivi.etablissement);
-  /*  §2-d (nº 317) — LA TÊTE DU SOUS-GROUPE EST UNE CLÉ COMME LES
-      AUTRES. « Tous les lieux » et « Tous les artistes » ne sont pas un
-      raccourci d'affichage : ils se comptent et se filtrent par cette
-      même fonction, donc leur nombre ne peut pas mentir sur ce qu'ils
-      montreront. */
-  if (nature !== "artiste") return [TOUS_LES_LIEUX, cleProfilLieu(nature)];
-  //  Un même genre déclaré deux fois (deux salons, deux guests) ne
-  //  compte qu'une fois : le menu compte des PORTFOLIOS, pas des modes.
-  const modes = [...new Set(suivi.modes.map((mode) => cleProfilMode(mode.genre)))];
-  /*  ⚠️ UN ARTISTE SANS AUCUN MODE DÉCLARÉ NE NOURRIT RIEN, pas même
-      la tête. C'est ce qui garde intact le cas du §1 (nº 317) : sans
-      profil déclaré chez les suivis, le menu « Profil » n'existe pas,
-      « Styles » reste seul, et la règle de la nº 304 le rouvre sans
-      flèche. Poser la tête ici ferait apparaître « Profil » dès qu'un
-      artiste est suivi — un menu qui n'ouvrirait sur rien. */
-  return modes.length > 0 ? [TOUS_LES_ARTISTES, ...modes] : [];
+  /*  LA TÊTE DU GROUPE EST UNE CLÉ COMME LES AUTRES. « Tous les
+      profils » n'est pas un raccourci d'affichage : il se compte et se
+      filtre par cette même fonction, donc son nombre ne peut pas
+      mentir sur ce qu'il montrera. */
+  return [TOUS_LES_PROFILS, cleProfil(nature)];
 }
 
 /** Les suivis qui répondent au choix — un artiste PORTE un tag dès
@@ -691,6 +682,13 @@ export function comptesDesFavoris(
   const ajouter = (cle: string) => parCle.set(cle, (parCle.get(cle) ?? 0) + 1);
   for (const photo of photos) {
     const nature = natureConnue(photo.nature);
+    /*  §3 (nº 321) — LE TOTAL, pour « Tous les favoris ». La clé est
+        la MÊME que celle des suivis (`CLE_TOTAL`, une étoile), parce
+        que les deux menus posent la même question : « combien en
+        tout ? ». Elle est comptée UNE FOIS PAR PHOTO, comme les deux
+        autres — le total d'un menu qui montre des photos est le
+        nombre de photos, pas le nombre d'entrées qu'elles nourrissent. */
+    ajouter(CLE_TOTAL);
     //  La catégorie seule, puis la catégorie et le style : une photo
     //  compte pour un dans chacune des deux entrées qu'elle nourrit.
     ajouter(valeurExplorer(nature, ""));
