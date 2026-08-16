@@ -208,7 +208,30 @@ export function PageFavoris({
       setPositionPage(window.scrollY);
       setSerieOuverte(serie);
       document.documentElement.setAttribute("data-fenetre-fiche", "1");
-      window.history.pushState({ fenetreFiche: true }, "", `/tatoueur/${slug}`);
+      /**
+       * §1 (nº 314) — L'ADRESSE GARDE SA REQUÊTE, ET C'EST TOUT LE BUG.
+       * ----------------------------------------------------------------
+       * CE QUI ÉTAIT ÉCRIT : `pushState(…, `/tatoueur/${slug}`)` — une
+       * adresse SANS AUCUNE requête. Or L'ONGLET DE CETTE PAGE VIT DANS
+       * LA REQUÊTE (`?selection=suivis:…`, lu par `lireSelection` à
+       * travers `lireRequeteCourante()`, qui rend `window.location.search`).
+       * En l'effaçant, on faisait retomber la page sur le choix par
+       * défaut — « Mes favoris ». La fenêtre s'ouvrait bien, mais LA
+       * PAGE DERRIÈRE BASCULAIT SUR L'ONGLET FAVORIS, et la refermer y
+       * laissait le propriétaire.
+       * ⚠️ ÇA NE SE VOYAIT PAS DEPUIS LES CARTES DE FAVORIS : on y est
+       * DÉJÀ sur l'onglet par défaut, donc l'effacement ne changeait
+       * rien. Le défaut n'est apparu qu'en ouvrant la même écriture
+       * depuis les PORTFOLIOS (nº 312-§2).
+       * LE REMÈDE : on emporte la requête courante. L'onglet, le filtre
+       * de style et la catégorie survivent à l'ouverture, et la
+       * fermeture rend la page exactement telle qu'elle était.
+       */
+      window.history.pushState(
+        { fenetreFiche: true },
+        "",
+        `/tatoueur/${slug}${window.location.search}`
+      );
       setFicheOuverte(fiche);
     },
     []

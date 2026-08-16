@@ -46,7 +46,15 @@ const fenetre = lire("src/components/FenetreFiche.tsx");
 
 const FICHE = "/tatoueur/ligne-claire-studio-nantes";
 const SERIE = "cyberpunk·color";
-const sel = `[data-galerie-serie="${SERIE}"]`;
+/*  ⚠️ AMENDÉ À LA nº 314. Le sélecteur était nu, et il désignait UNE
+    galerie tant que le doigt montrait une grille de vignettes. Depuis
+    la nº 314-§3, le doigt a lui aussi ses galeries : la même écriture
+    en trouve DEUX, et la première (celle du doigt) est masquée en web
+    — le banc attendait donc indéfiniment un élément invisible.
+    ⚠️ CE QUE MESURE CE BANC N'A PAS CHANGÉ D'UN POUCE : il éprouve LE
+    WEB (fenêtre 1440 × 823), et c'est le bloc du web qu'on nomme
+    désormais. La mesure est rendue, pas retirée. */
+const sel = `[data-galeries="web"] [data-galerie-serie="${SERIE}"]`;
 const FOND = [26, 26, 29]; //  #1A1A1D
 const ROSE = "rgb(238, 61, 111)";
 
@@ -55,11 +63,22 @@ const ROSE = "rgb(238, 61, 111)";
  * ================================================================== */
 titre("§1 · §4 à la source — les annulations");
 {
+  /*  ⚠️ AMENDÉ À LA nº 314. La question posée était : « la galerie DU
+      WEB n'a plus de débord » — et le fichier ne contenait alors qu'une
+      seule galerie, celle du web. Depuis la nº 314-§3, le DOIGT a la
+      sienne, et elle DOIT avoir un débord : c'est la consigne du
+      propriétaire (bord à bord de l'écran, comme « Ma sélection »).
+      Lue sur tout le fichier, la mesure d'origine confondait les deux
+      et déclarait un défaut là où il n'y en a pas.
+      LA MESURE EST RENDUE, PAS RETIRÉE : on la pose sur le bloc du
+      web, qui est son sujet depuis le premier jour. */
+  const blocWeb = affiche.slice(affiche.indexOf('data-galeries="web"'));
   verif(
-    "§1-a — la rangée n'a plus ni débord, ni rembourrage, ni rembourrage de défilement",
-    !/classeRangee=/.test(affiche) &&
-      !/scroll-pl-10/.test(affiche) &&
-      !/-ml-10/.test(affiche)
+    "§1-a — la rangée DU WEB n'a ni débord, ni rembourrage, ni rembourrage " +
+      "de défilement",
+    !/classeRangee=/.test(blocWeb) &&
+      !/scroll-pl/.test(blocWeb) &&
+      !/-ml-10/.test(blocWeb)
   );
   verif(
     "§1-b — le masque a disparu, code compris",

@@ -257,41 +257,26 @@ export function EcranAuthentification({
           password: motDePasse,
         });
         if (error) throw error;
-        // UNE SUPPRESSION EN COURS ? La reconnexion l'ANNULE, tout de
-        // suite et sans rien demander — c'est la promesse faite au
-        // moment de la demande. Si quelque chose est rétabli, la page
-        // d'arrivée accueille la personne (voir ?bienvenue=1).
-        let rétabli = false;
+        /*  UNE SUPPRESSION EN COURS ? La reconnexion l'ANNULE, tout de
+            suite et sans rien demander — c'est la promesse faite au
+            moment de la demande.
+            §4 (nº 314) — ET ON N'EN DIT PLUS RIEN : le message
+            d'accueil qui suivait (`?bienvenue=1`) est supprimé, code
+            compris, sur consigne. La réponse de la route n'a donc plus
+            de lecteur, et l'appel garde son seul rôle utile : réactiver.
+            ⚠️ CE QU'ON NE TOUCHE PAS : la réactivation elle-même, ni
+            son caractère automatique. */
         try {
-          const reponse = await fetch("/api/tatoueur/reactiver", {
-            method: "POST",
-          });
-          const donnees = (await reponse.json().catch(() => null)) as
-            | { reactive?: boolean }
-            | null;
-          rétabli = Boolean(donnees?.reactive);
+          await fetch("/api/tatoueur/reactiver", { method: "POST" });
         } catch {
           // Route injoignable : la connexion, elle, a réussi — on
           // n'en fait pas un échec.
         }
-        // Connecté → « MA FICHE », l'aperçu public de son portfolio
-        // (passe nº 131). Celui du sélecteur s'il en a plusieurs, le
-        // formulaire de création s'il n'en a aucun : la page
-        // /devenir-tatoueur/fiche tranche elle-même.
-        //  EN RATTACHEMENT, ON RETOURNE AU JETON, sans « bienvenue » :
-        //  la page du jeton a son propre accueil, et c'est elle qui
-        //  rattache les fiches.
-        router.push(
-          enRattachement
-            ? arrivee
-            : rétabli
-              ? //  ⚠️ « ? » ET NON « & » (passe nº 137) : l'adresse
-                //  d'arrivée est désormais l'aiguillage, qui n'a aucun
-                //  paramètre à lui. Il fait suivre « bienvenue » à la
-                //  fiche.
-                `${ARRIVEE_APRES_CONNEXION}?bienvenue=1`
-              : arrivee
-        );
+        //  Connecté → l'arrivée : « Ma sélection » pour tout le monde
+        //  (nº 313-§2), ou le chemin d'un retour d'action quand il y en
+        //  a un. EN RATTACHEMENT, on retourne au jeton : la page du
+        //  jeton a son propre accueil, et c'est elle qui rattache.
+        router.push(arrivee);
       }
     } catch (erreur) {
       setErreurs({ general: messageErreur(erreur) });

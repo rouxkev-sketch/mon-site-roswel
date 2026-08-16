@@ -604,27 +604,40 @@ export function comptesDesSuivis(
   return comptes;
 }
 
-/** Le nombre d'ENSEMBLES aimés par entrée — le menu « Mes favoris »
-    annonce ce qu'il va montrer (une carte = un ensemble, nº 213-§3d). */
+/** Le nombre de PHOTOS aimées par entrée — le menu « Mes favoris »
+    annonce ce qu'il va montrer (une carte = une photo depuis la
+    nº 302 ; le compte a suivi à la nº 314-§2). */
 export function comptesDesFavoris(
   photos: PhotoFavorite[]
 ): Map<string, number> {
-  const parCle = new Map<string, Set<string>>();
-  const ajouter = (cle: string, ensemble: string) => {
-    const vus = parCle.get(cle) ?? new Set<string>();
-    vus.add(ensemble);
-    parCle.set(cle, vus);
-  };
+  /**
+   * §2 (nº 314) — ON COMPTE LES PHOTOS AIMÉES, PLUS LES ENSEMBLES.
+   * ------------------------------------------------------------------
+   * CE QUI ÉTAIT COMPTÉ : le nombre d'ENSEMBLES distincts
+   * (`tatoueur · style · catégorie · rendu`) touchés par au moins un
+   * cœur. Six photos aimées d'un même carrousel de réalisme ne faisaient
+   * donc qu'UN, et le menu affichait « 1 » là où le propriétaire en
+   * attendait six.
+   * POURQUOI C'ÉTAIT ÉCRIT AINSI, ET POURQUOI ÇA NE L'EST PLUS : jusqu'à
+   * la nº 302, un cœur mettait en favori TOUT un ensemble — compter les
+   * ensembles était donc compter les gestes. Depuis la nº 302, UN CŒUR
+   * NE VAUT QU'UNE PHOTO : le compte naturel est celui des photos, et
+   * c'est celui-là qu'on écrit.
+   * ⚠️ LES DEUX CLÉS SUIVENT LA MÊME RÈGLE — la catégorie seule
+   * (« Réalisation », « Flash ») comme le couple catégorie + style. On
+   * ne peut donc plus lire des photos d'un côté et des ensembles de
+   * l'autre : partout, ce sont des photos.
+   */
+  const parCle = new Map<string, number>();
+  const ajouter = (cle: string) => parCle.set(cle, (parCle.get(cle) ?? 0) + 1);
   for (const photo of photos) {
     const nature = natureConnue(photo.nature);
-    //  L'ENSEMBLE, tel que le site le définit partout (style +
-    //  catégorie + rendu), plus le tatoueur : deux artistes ont chacun
-    //  leur « réalisme · noir et gris ».
-    const ensemble = `${photo.tatoueurSlug}·${cleDEnsemble(photo)}`;
-    ajouter(valeurExplorer(nature, ""), ensemble);
-    ajouter(valeurExplorer(nature, photo.style), ensemble);
+    //  La catégorie seule, puis la catégorie et le style : une photo
+    //  compte pour un dans chacune des deux entrées qu'elle nourrit.
+    ajouter(valeurExplorer(nature, ""));
+    ajouter(valeurExplorer(nature, photo.style));
   }
-  return new Map([...parCle].map(([cle, vus]) => [cle, vus.size]));
+  return parCle;
 }
 
 /** « 3 nouvelles réalisations » — le compte du §5, jamais à zéro. */

@@ -29,21 +29,23 @@ export async function GET(request: Request) {
     const supabase = await creerClientSupabaseServeur();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      // UNE SUPPRESSION DE COMPTE EN COURS ? Revenir, c'est l'annuler
-      // — quel que soit le chemin de retour (mot de passe, lien
-      // d'e-mail, fournisseur externe). La page d'arrivée accueille
-      // alors la personne (?bienvenue=1).
+      /*  UNE SUPPRESSION DE COMPTE EN COURS ? Revenir, c'est l'annuler
+          — quel que soit le chemin de retour (mot de passe, lien
+          d'e-mail, fournisseur externe).
+          §4 (nº 314) — ET PLUS AUCUN `?bienvenue=1` : le message
+          d'accueil qu'il portait est supprimé, sur consigne (il vivait
+          sur le formulaire de fiche, page où une connexion ne mène plus
+          depuis la nº 313-§2). LA RÉACTIVATION, ELLE, RESTE — c'est la
+          promesse faite au moment de la demande de suppression, et elle
+          n'a jamais eu besoin d'un message pour se faire. */
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      let retour = suite;
       if (user) {
         const { reactiverCompte } = await import("@/lib/suppression-compte");
-        if (await reactiverCompte(user.id)) {
-          retour += (suite.includes("?") ? "&" : "?") + "bienvenue=1";
-        }
+        await reactiverCompte(user.id);
       }
-      return NextResponse.redirect(`${origin}${retour}`);
+      return NextResponse.redirect(`${origin}${suite}`);
     }
   }
 

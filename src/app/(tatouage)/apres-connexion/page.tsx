@@ -28,12 +28,11 @@ import { creerClientSupabaseServeur } from "@/lib/supabase/server";
  * revient à son geste, pas ici. Cette règle ne vaut donc que pour une
  * connexion ORDINAIRE — celle qui n'a rien demandé de particulier.
  *
- * ⚠️ ET `?bienvenue=1` CONTINUE DE VOYAGER (retour d'un compte dont la
- * suppression vient d'être annulée). Le message d'accueil, lui, est
- * écrit dans le formulaire de fiche (`FormulaireFiche`) : tant qu'il
- * n'est pas déplacé, il ne s'affichera plus, puisqu'on n'y passe plus.
- * Le paramètre est gardé pour que rien ne se perde en silence — c'est
- * au propriétaire de dire s'il veut ce message sur « Ma sélection ».
+ * ⚠️ `?bienvenue=1` A DISPARU (nº 314-§4). Il portait un message
+ * d'accueil pour qui revenait annuler la suppression de son compte ;
+ * ce message est supprimé, code compris, sur consigne. La réactivation
+ * du compte, elle, n'a pas bougé : elle se fait à la connexion, sans
+ * rien afficher (voir /auth/callback).
  */
 export const metadata: Metadata = {
   title: "Un instant…",
@@ -42,16 +41,7 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function PageApresConnexion({
-  searchParams,
-}: {
-  searchParams: Promise<{ bienvenue?: string }>;
-}) {
-  const { bienvenue } = await searchParams;
-  //  « Bienvenue » traverse l'arrivée sans la commander : la sélection
-  //  n'a plus de query à elle, le séparateur est donc `?`.
-  const suffixe = bienvenue ? "?bienvenue=1" : "";
-
+export default async function PageApresConnexion() {
   const supabase = await creerClientSupabaseServeur();
   const {
     data: { user },
@@ -62,5 +52,5 @@ export default async function PageApresConnexion({
   if (!user) redirect("/devenir-tatoueur");
 
   //  §2 (nº 313) — UNE SEULE SORTIE, POUR TOUT LE MONDE.
-  redirect(`${ARRIVEE_SANS_PORTFOLIO}${suffixe}`);
+  redirect(ARRIVEE_SANS_PORTFOLIO);
 }

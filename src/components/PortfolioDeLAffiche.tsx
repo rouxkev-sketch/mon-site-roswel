@@ -189,6 +189,76 @@ export function PanneauPortfolio({
     );
   }
 
+  /**
+   * §3 (nº 314) — LES CASES D'UNE GALERIE, ÉCRITES UNE SEULE FOIS.
+   * ------------------------------------------------------------------
+   * Le web et le doigt montrent EXACTEMENT les mêmes cases : même
+   * largeur, même format, même geste. Seuls diffèrent le débord et
+   * l'effacement, qui sont des réglages de l'enveloppe — pas du
+   * contenu. Les écrire deux fois, c'était garantir qu'ils finiraient
+   * par diverger ; ils vivent donc ici, et les deux blocs les
+   * appellent.
+   */
+  const casesDe = (serie: SeriePubliee, nature: string) =>
+    serie.photos.map((photo, rang) => (
+      <li
+        key={photo.cle}
+        data-case-galerie={rang}
+        /*  LA LARGEUR D'UNE CASE — deux photos pleines, 10 % de la
+             troisième, son bord droit collé au bord droit du cadre :
+             `2,1 × case + 2 × écart = 100 %`, d'où
+             `case = (100 % − 6px) / 2,1` avec l'écart de 3 px. `100 %`
+             est la boîte de CONTENU de la rangée — au doigt, le
+             rembourrage du débord n'en fait donc pas partie, et la
+             règle tient telle quelle sur les deux appareils. Aucune
+             largeur en dur.
+             §2 (nº 310) — `grow` : ET C'ÉTAIT ÇA, LA MARGE DE DROITE.
+             ------------------------------------------------------
+             LA CAUSE, DÉCODÉE AU PIXEL : cette largeur est calculée
+             pour qu'IL Y AIT une troisième photo. Une série qui n'en a
+             QUE DEUX ne remplit donc pas le cadre, et ce qui reste se
+             voit comme une marge à droite — mesuré 21 px à deux
+             photos, 202 px à une seule, contre 0,00 px dès trois.
+             LE REMÈDE : les cases GRANDISSENT pour remplir ce qui
+             reste. `shrink-0` les empêche toujours de rétrécir, donc
+             dès trois photos la rangée déborde, l'espace libre est
+             négatif, et `grow` n'a rien à distribuer — la règle des
+             10 % est intacte, au pixel. */
+        className="grow shrink-0 snap-start basis-[calc((100%_-_6px)/2.1)]"
+      >
+        {/*  RÈGLE 6 (nº 306) — TOUCHER UNE PHOTO L'OUVRE, ELLE ET PAS
+             UNE AUTRE. C'est le chemin qui existe déjà (`surSerie`),
+             avec le RANG en plus : en web il pose la photo dans le
+             cadre du haut, au doigt il ouvre la fenêtre de carrousel
+             dessus (§3-d, nº 314 — voir FicheTatoueur). */}
+        <button
+          type="button"
+          onClick={() =>
+            surSerie({
+              style: serie.style,
+              nature,
+              rendu: serie.rendu,
+              indice: rang,
+            })
+          }
+          className="group/case block w-full text-left"
+        >
+          <span className="block aspect-[4/5] overflow-hidden bg-sombre-eleve">
+            {/* eslint-disable-next-line @next/next/no-img-element --
+                photo déposée par le tatoueur, servie telle quelle
+                (la règle des vignettes). */}
+            <img
+              src={photo.miniature}
+              alt={`${serie.label} — ${nomTatoueur}`}
+              loading="lazy"
+              className="h-full w-full object-cover
+                         transition-opacity group-hover/case:opacity-90"
+            />
+          </span>
+        </button>
+      </li>
+    ));
+
   return (
     <div>
       {sections.map((section) => (
@@ -219,51 +289,79 @@ export function PanneauPortfolio({
           {/*  §2 (nº 277) — 20 px sous le titre (`mt-5`) : moins que
                les 40 au-dessus, le titre appartient à sa section. Le
                `gap` entre carrousels, lui, NE CHANGE PAS. */}
-          {/*  §1 (nº 306) — AU DOIGT, RIEN NE CHANGE : la grille de
-               vignettes par lignes de deux reste exactement ce qu'elle
-               était. Le web, lui, prend les galeries qui défilent (plus
-               bas) — c'est la seule différence entre les deux. */}
-          <ul className="mt-5 grid grid-cols-2 gap-x-4 gap-y-7 lg:hidden">
+          {/*  §3 (nº 314) — AU DOIGT AUSSI, DES GALERIES QUI DÉFILENT.
+               ------------------------------------------------------
+               CE QUI EST REMPLACÉ : la GRILLE DE VIGNETTES par lignes
+               de deux (une vignette par SÉRIE, sa première photo et le
+               nom du style dessous). Elle ne montrait qu'une image par
+               carrousel ; on ne voyait le reste qu'après avoir touché.
+               CE QUI PREND SA PLACE : la présentation du web — un titre
+               « Réalisme · Couleur » et, sous lui, TOUTES les photos du
+               carrousel dans une galerie qui défile.
+               LA SEULE DIFFÉRENCE AVEC LE WEB, et c'est le cœur du
+               point : AU DOIGT, LA GALERIE VA BORD À BORD DE L'ÉCRAN et
+               s'efface dans les marges de la page.
+               ⚠️ RIEN N'EST INVENTÉ ICI : ce débord et cet effacement
+               sont EXACTEMENT ceux de « Ma sélection » au doigt
+               (BlocSuivis) — mêmes marges négatives rendues en
+               rembourrage (`-mx-4 px-4 sm:-mx-6 sm:px-6`), et les deux
+               FONDUS ANTHRACITE du dessin partagé, qui sont son
+               comportement PAR DÉFAUT (`avecVoiles`, `decalageGauche`
+               et `decalageDroite` de `GalerieQuiDefile`). On ne les
+               repasse même pas : ne rien passer, c'est déjà les
+               demander.
+               ⚠️ ET C'EST LE MÊME COMPOSANT : le débord et l'effacement
+               étaient déjà des réglages, comme l'écart et la taille des
+               chevrons. Aucun second dessin. */}
+          <div data-galeries="doigt" className="mt-5 lg:hidden">
             {section.series.map((serie) => (
-              <li key={`${serie.style}-${serie.rendu}`}>
-                <button
-                  type="button"
-                  onClick={() =>
-                    surSerie({
-                      style: serie.style,
-                      nature: section.nature,
-                      rendu: serie.rendu,
-                    })
-                  }
-                  className="group block w-full text-left"
+              <div
+                key={`doigt-${serie.style}-${serie.rendu}`}
+                data-galerie-serie={`${serie.style}·${serie.rendu}`}
+                className="mt-7 first:mt-0"
+              >
+                <p
+                  data-titre-galerie=""
+                  className="text-[15px] font-medium text-sombre-texte"
                 >
-                  {/*  ANGLES DROITS (nº 207-§6) — web et mobile : la
-                       vignette est une image nette, sans arrondi. */}
-                  <span className="block overflow-hidden bg-sombre-eleve">
-                    {/* eslint-disable-next-line @next/next/no-img-element --
-                        photo déposée par le tatoueur, servie telle quelle
-                        (même règle que le portrait rond de l'affiche). */}
-                    <img
-                      src={serie.miniature}
-                      alt={`${serie.label} — ${nomTatoueur}`}
-                      loading="lazy"
-                      className="aspect-[4/5] w-full object-cover
-                                 transition-opacity group-hover:opacity-90"
-                    />
-                  </span>
-                  {/*  LE NOM DU STYLE — blanc, aligné à gauche, et
-                       ALLÉGÉ D'UN CRAN (nº 207-§7) : `font-semibold`
-                       (600) se lisait comme du gras, la fonte du site
-                       n'ayant pas de graisse intermédiaire dessinée —
-                       le navigateur la remplaçait par le gras. `medium`
-                       (500) donne le demi-gras voulu. */}
-                  <span className="mt-2.5 block text-[15px] font-medium text-sombre-texte">
-                    {serie.label}
-                  </span>
-                </button>
-              </li>
+                  {serie.label} · {libelleRendu(serie.rendu)}
+                </p>
+                <GalerieQuiDefile
+                  classeEnveloppe="mt-2.5"
+                  /*  LE DÉBORD DE « MA SÉLECTION », À LA LETTRE : la
+                       rangée sort jusqu'aux bords de l'écran (marges
+                       négatives de la largeur des marges de page) et se
+                       les reprend en REMBOURRAGE — au repos, la
+                       première photo reste donc alignée sur les titres,
+                       et ce qui défile passe SOUS les marges, où les
+                       fondus l'effacent.
+                       ⚠️ ET LE REMBOURRAGE DE DÉFILEMENT AVEC (`scroll-pl`),
+                       MESURÉ : sans lui, la rangée s'ouvrait décalée de
+                       16 px (`scrollLeft: 16`) et la première photo
+                       collait au bord de l'écran, à moitié effacée. LA
+                       RAISON : `snap-start` aligne sur le SNAPPORT, qui
+                       est la boîte de REMBOURRAGE — le rembourrage de
+                       débord en faisait donc partie, et le navigateur
+                       « rattrapait » les 16 px pour poser la première
+                       case au bord. « Ma sélection » ne connaît pas ce
+                       défaut parce que ses cases sont en `snap-center`,
+                       pas en `snap-start` ; les nôtres suivent le web
+                       (nº 308), qui n'a aucun rembourrage. On ne change
+                       donc NI les cases NI le web : on dit seulement au
+                       défilement où est le bord utile, et le débord se
+                       comporte enfin comme celui de « Ma sélection ». */
+                  classeRangee="-mx-4 px-4 scroll-pl-4 sm:-mx-6 sm:px-6 sm:scroll-pl-6"
+                  //  L'écart de la fiche (nº 308), le même qu'en web :
+                  //  le portfolio se lit pareil sur les deux appareils.
+                  ecart="gap-[3px]"
+                  cleDuContenu={`${serie.style}-${serie.rendu}-${serie.photos.length}`}
+                  etiquette={`${serie.label} · ${libelleRendu(serie.rendu)}`}
+                >
+                  {casesDe(serie, section.nature)}
+                </GalerieQuiDefile>
+              </div>
             ))}
-          </ul>
+          </div>
 
           {/*  §1 (nº 306) — LE WEB : UNE GALERIE QUI DÉFILE PAR
                CARROUSEL, la présentation de « Ma sélection »
@@ -296,7 +394,7 @@ export function PanneauPortfolio({
                rembourrage, ni rembourrage de défilement : sa boîte est
                celle de la colonne, et `snap-start` s'aligne dessus
                sans qu'on ait rien à corriger. */}
-          <div className="mt-5 hidden lg:block">
+          <div data-galeries="web" className="mt-5 hidden lg:block">
             {section.series.map((serie) => (
               <div
                 key={`galerie-${serie.style}-${serie.rendu}`}
@@ -352,75 +450,7 @@ export function PanneauPortfolio({
                   cleDuContenu={`${serie.style}-${serie.rendu}-${serie.photos.length}`}
                   etiquette={`${serie.label} · ${libelleRendu(serie.rendu)}`}
                 >
-                  {serie.photos.map((photo, rang) => (
-                    <li
-                      key={photo.cle}
-                      data-case-galerie={rang}
-                      /*  LA LARGEUR D'UNE CASE — deux photos pleines,
-                           10 % de la troisième, son bord droit collé
-                           au bord droit du cadre :
-                           `2,1 × case + 2 × écart = 100 %`, d'où
-                           `case = (100 % − 6px) / 2,1` avec l'écart de
-                           3 px. `100 %` est la boîte de CONTENU de la
-                           rangée — le rembourrage de 40 px du débord
-                           n'en fait pas partie. Aucune largeur en dur :
-                           la règle tient à toute largeur de colonne.
-                           §2 (nº 310) — `grow` : ET C'ÉTAIT ÇA, LA
-                           MARGE DE DROITE.
-                           ------------------------------------------
-                           LA CAUSE, DÉCODÉE AU PIXEL : cette largeur
-                           est calculée pour qu'IL Y AIT une troisième
-                           photo. Une série qui n'en a QUE DEUX ne
-                           remplit donc pas le cadre, et ce qui reste
-                           se voit comme une marge à droite — mesuré
-                           21 px à deux photos, 202 px à une seule,
-                           contre 0,00 px dès trois. Mes trois relevés
-                           précédents disaient tous zéro parce qu'ils
-                           portaient tous sur une série de cinq : je
-                           mesurais le seul cas qui allait bien.
-                           LE REMÈDE : les cases GRANDISSENT pour
-                           remplir ce qui reste. `shrink-0` les empêche
-                           toujours de rétrécir, donc dès trois photos
-                           la rangée déborde, l'espace libre est
-                           négatif, et `grow` n'a rien à distribuer —
-                           la règle des 10 % est intacte, au pixel. À
-                           deux photos elles se partagent le cadre, à
-                           une elle le prend en entier : plus jamais de
-                           vide à droite, quel que soit le nombre. */
-                      className="grow shrink-0 snap-start basis-[calc((100%_-_6px)/2.1)]"
-                    >
-                      {/*  RÈGLE 6 — CLIQUER UNE PHOTO L'AFFICHE DANS LE
-                           CADRE PHOTO DE LA FICHE. Elle ne s'ouvre pas
-                           ailleurs, elle ne change pas de page : c'est
-                           le chemin qui existe déjà (`surSerie`), avec
-                           le rang en plus. */}
-                      <button
-                        type="button"
-                        onClick={() =>
-                          surSerie({
-                            style: serie.style,
-                            nature: section.nature,
-                            rendu: serie.rendu,
-                            indice: rang,
-                          })
-                        }
-                        className="group/case block w-full text-left"
-                      >
-                        <span className="block aspect-[4/5] overflow-hidden bg-sombre-eleve">
-                          {/* eslint-disable-next-line @next/next/no-img-element --
-                              photo déposée par le tatoueur, servie telle
-                              quelle (la règle des vignettes). */}
-                          <img
-                            src={photo.miniature}
-                            alt={`${serie.label} — ${nomTatoueur}`}
-                            loading="lazy"
-                            className="h-full w-full object-cover
-                                       transition-opacity group-hover/case:opacity-90"
-                          />
-                        </span>
-                      </button>
-                    </li>
-                  ))}
+                  {casesDe(serie, section.nature)}
                 </GalerieQuiDefile>
               </div>
             ))}

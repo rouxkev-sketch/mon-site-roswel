@@ -809,11 +809,24 @@ export function FicheTatoueur({
                   était. La photo touchée est celle de la vignette, la
                   première de sa série. SUR LE WEB (et en aperçu), tout
                   ce qui suit reste le comportement d'avant. */
+              /*  §3-d (nº 314) — LA FENÊTRE S'OUVRE SUR LA PHOTO
+                  TOUCHÉE, PLUS SUR LA PREMIÈRE.
+                  --------------------------------------------------
+                  C'ÉTAIT `0` EN DUR, et c'était juste tant que le
+                  doigt voyait une GRILLE DE VIGNETTES : une vignette
+                  DÉSIGNAIT une série, pas une image — sa première
+                  photo était donc la bonne. Depuis que le doigt montre
+                  les galeries qui défilent (§3, nº 314), on touche une
+                  PHOTO précise, et c'est elle qu'on veut voir.
+                  ⚠️ AUCUN SECOND MÉCANISME : le rang voyage dans
+                  l'adresse (`?photo=`), lue par `ouvertureSurUnePhoto`
+                  — celui de la nº 302, tel quel. Le repli sur zéro
+                  reste pour tout appelant qui n'envoie pas de rang. */
               if (
                 ouvrirLaFenetreCarrousel(
                   serie.style,
                   { nature: serie.nature, rendu: serie.rendu },
-                  0
+                  serie.indice ?? 0
                 )
               ) {
                 return;

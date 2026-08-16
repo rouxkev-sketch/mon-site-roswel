@@ -1317,8 +1317,6 @@ export const DELAI_SUPPRESSION_JOURS = 30;
  * et /auth/callback, qui tourne sur le serveur, ne pourrait de toute
  * façon pas interroger un magasin de navigateur.
  *
- * `?bienvenue=1` (retour d'un compte dont la suppression est annulée)
- * traverse cette page sans être touché.
  */
 export const ARRIVEE_APRES_CONNEXION = "/apres-connexion";
 

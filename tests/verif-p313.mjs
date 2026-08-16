@@ -54,11 +54,19 @@ const GRIS_DOUX = "rgb(168, 168, 176)"; //  #A8A8B0
  * ================================================================== */
 titre("§2 à la source — une seule arrivée, et les retours d'action intacts");
 {
+  /*  ⚠️ AMENDÉ À LA nº 314. La sortie s'écrivait
+      `redirect(`${ARRIVEE_SANS_PORTFOLIO}${suffixe}`)` — le `suffixe`
+      ne servait qu'à faire suivre `?bienvenue=1`, et la nº 314-§4 a
+      supprimé ce message, code compris. La sortie est donc nue.
+      LA MESURE EST RENDUE, PAS RETIRÉE : ce que ce contrôle éprouve —
+      plus aucune question posée à la base, et UNE SEULE sortie — est
+      vérifié à l'identique, sur l'écriture d'aujourd'hui. */
   verif(
     "l'arrivée ne demande plus rien à la base : la bifurcation a disparu",
     !/aUnPortfolio/.test(arrivee) &&
       !/from\("tatoueurs"\)/.test(arrivee) &&
-      /redirect\(`\$\{ARRIVEE_SANS_PORTFOLIO\}\$\{suffixe\}`\)/.test(arrivee)
+      /redirect\(ARRIVEE_SANS_PORTFOLIO\)/.test(arrivee) &&
+      (arrivee.match(/redirect\(/g) ?? []).length === 2
   );
   verif(
     "…et la constante qui menait à la fiche est SUPPRIMÉE, code compris",

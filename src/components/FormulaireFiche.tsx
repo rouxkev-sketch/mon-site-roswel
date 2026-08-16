@@ -1090,13 +1090,18 @@ export function FormulaireFiche() {
     marquerTravailEnCours(true);
   }
 
-  /** LE RETOUR D'UN COMPTE QUI ALLAIT ÊTRE SUPPRIMÉ. La connexion a
-      annulé la suppression (voir /api/tatoueur/reactiver) et nous
-      envoie ici avec ?bienvenue=1 : on accueille la personne, une
-      fois, dans une vraie fenêtre. */
-  const [fenetreRetour, setFenetreRetour] = useState(
-    parametres.get("bienvenue") === "1"
-  );
+  /*  §4 (nº 314) — LE MESSAGE DE BIENVENUE EST SUPPRIMÉ, CODE
+      COMPRIS, sur consigne.
+      ------------------------------------------------------------------
+      Il s'ouvrait quand quelqu'un annulait la suppression de son compte
+      en se reconnectant (`?bienvenue=1`, posé par /auth/callback). Il
+      vivait sur CETTE page — et depuis la nº 313-§2, une connexion
+      n'y mène plus : on arrive toujours sur « Ma sélection ». Le
+      propriétaire a tranché, il ne sert à rien. L'état, l'écouteur
+      d'Échap, la fenêtre ET la lecture du paramètre partent ensemble ;
+      la réactivation du compte, elle, ne change pas d'un iota — elle
+      est automatique à la connexion (/api/tatoueur/reactiver) et n'a
+      jamais eu besoin de cette fenêtre pour se faire. */
 
   /* L'ANNONCE DE VALIDATION : dès que la vue « Modification » est
      affichée alors qu'une version attend la relecture (fiche jamais
@@ -1172,16 +1177,6 @@ export function FormulaireFiche() {
     // qu'elle fait ne dépend que de la fiche chargée.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [annonceValidation]);
-
-  /* La fenêtre de retour aussi : Échap referme. */
-  useEffect(() => {
-    if (!fenetreRetour) return;
-    function surTouche(evenement: KeyboardEvent) {
-      if (evenement.key === "Escape") setFenetreRetour(false);
-    }
-    window.addEventListener("keydown", surTouche);
-    return () => window.removeEventListener("keydown", surTouche);
-  }, [fenetreRetour]);
 
   /* « MODIFICATION » CLIQUÉ DANS LE MENU alors que le formulaire est
      DÉJÀ affiché : naviguer vers la même adresse ne déclenche rien —
@@ -3487,86 +3482,6 @@ export function FormulaireFiche() {
           surValidation={cadrageValide}
           surFermeture={() => setRecadrage(null)}
         />
-      )}
-
-      {/* ---------- LA FENÊTRE DE RETOUR ----------
-          Le compte allait être supprimé ; la reconnexion vient de tout
-          rétablir. On le DIT, chaleureusement, dans une vraie fenêtre
-          — le même soin que celle de la suppression : voile sombre,
-          panneau carte, pastille ronde.
-
-          DEUX BOUTONS DEPUIS LA PASSE Nº 129 : « Réactiver mon compte »
-          en capsule pleine, « Annuler » en texte brut (la grammaire de
-          toutes les fenêtres du site).
-
-          ⚠️ CE QUE CES BOUTONS FONT, EXACTEMENT. La réactivation est
-          AUTOMATIQUE à la reconnexion — c'est la promesse faite au
-          moment de la demande de suppression, et elle a DÉJÀ été tenue
-          quand cette fenêtre s'ouvre (/api/tatoueur/reactiver, appelée
-          à la connexion). Les deux boutons referment donc la fenêtre :
-          rien n'est remis en jeu ici, et surtout « Annuler » NE
-          REPROGRAMME PAS la suppression — un bouton d'annulation qui
-          effacerait un compte serait un piège. Faire de cette fenêtre
-          un vrai choix supposerait de retirer la réactivation
-          automatique, ce que la consigne interdit explicitement.
-          Voile, Échap et les deux boutons referment. */}
-      {fenetreRetour && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="titre-retour-compte"
-          className="fixed inset-0 z-[70] flex items-center justify-center p-5"
-          onClick={() => setFenetreRetour(false)}
-        >
-          <div aria-hidden="true" className="absolute inset-0 bg-black/25
-                   opacity-100 transition-opacity duration-200 starting:opacity-0" />
-          <div
-            onClick={(evenement) => evenement.stopPropagation()}
-            data-verre-fenetre=""
-            className="relative w-full max-w-[420px] rounded-xl
-                       p-6 sm:p-7 text-center"
-          >
-            <span
-              aria-hidden="true"
-              className="mx-auto flex w-14 h-14 items-center justify-center
-                         rounded-full bg-primaire-voile text-primaire"
-            >
-              <IconeCocheListe taille={24} />
-            </span>
-            <h2
-              id="titre-retour-compte"
-              className="mt-5 text-[19px] font-bold text-sombre-texte leading-snug"
-            >
-              Ravi de te revoir&nbsp;!
-            </h2>
-            <p className="mt-2.5 text-[14.5px] leading-relaxed text-sombre-texte-doux">
-              Souhaites-tu réactiver ton compte et conserver ta
-              fiche&nbsp;?
-            </p>
-            {/* Même règle que la fenêtre d'annonce (nº 116, 15C) :
-                l'action finale, capsule pleine largeur. « Annuler »
-                reste en texte brut, sous elle. */}
-            <button
-              type="button"
-              onClick={() => setFenetreRetour(false)}
-              className="mt-6 inline-flex w-full items-center justify-center
-                         rounded-full min-h-[50px] bg-primaire
-                         hover:bg-primaire-fonce active:bg-primaire-fonce
-                         text-white font-semibold transition-colors"
-            >
-              Réactiver mon compte
-            </button>
-            <button
-              type="button"
-              onClick={() => setFenetreRetour(false)}
-              className="mt-3 inline-flex w-full items-center justify-center
-                         min-h-[44px] text-[14px] text-sombre-texte-doux
-                         hover:text-sombre-texte transition-colors"
-            >
-              Annuler
-            </button>
-          </div>
-        </div>
       )}
 
       {/* ---------- LA FENÊTRE D'ANNONCE DE VALIDATION ----------
