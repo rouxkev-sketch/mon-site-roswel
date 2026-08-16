@@ -16,6 +16,7 @@ import {
 } from "@/lib/photos-tatoueur";
 import { CLE_TOTAL, type ChoixSelection } from "@/lib/filtres-selection";
 import type { PhotoDuSuivi, PhotoFavorite, TatoueurSuivi } from "@/lib/favoris-serveur";
+import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
  * L'ONGLET « TATOUEURS » DE MA SÉLECTION — LES RÈGLES, SANS UN PIXEL
@@ -396,6 +397,150 @@ export function bandeDeTrois(suivi: TatoueurSuivi): BandeDeTrois {
   //  RÈGLE 3 — un tour de rôle entre les styles retenus, la règle 5
   //  décidant de l'ordre à l'intérieur de chacun.
   return { photos: alterner(retenus.map((liste) => parJaimePuisArtiste(liste))) };
+}
+
+/* ==================================================================
+ * LES CARTES DE « MA SÉLECTION DE PHOTOS » (§2, nº 303)
+ * ==================================================================
+ * UNE PHOTO AIMÉE = UNE CARTE.
+ * ------------------------------------------------------------------
+ * LE DÉFAUT : depuis la nº 302, un cœur ne met en favori QUE la photo
+ * touchée. La page, elle, DÉDOUBLONNAIT PAR CARROUSEL — aimer trois
+ * photos d'un même carrousel n'en montrait qu'UNE, et le propriétaire
+ * ne retrouvait pas ce qu'il avait gardé.
+ * LE DÉDOUBLONNAGE EST SUPPRIMÉ, et la carte montre SA photo : la
+ * galerie qu'on lui donne ne contient qu'elle. Cliquer tombe pile
+ * dessus, par le mécanisme de la nº 302 (`?photo=`,
+ * `ouvertureSurUnePhoto`) — rien de neuf n'est écrit pour ça.
+ * ⚠️ L'ORDRE NE CHANGE PAS : la liste arrive rangée par date
+ * d'enregistrement du cœur, la plus récente d'abord.
+ * ⚠️ CETTE RÈGLE VIT ICI, ET NON DANS LE COMPOSANT : sortie de React,
+ * elle s'exécute, donc elle se prouve.
+ * ⚠️ ET ELLE DÉPEND DE LA MIGRATION POUR LES ANCIENNES DONNÉES : tant
+ * que `yokofolio-coeur-une-photo.sql` n'est pas passée, un carrousel
+ * aimé AVANT la nº 302 a toutes ses lignes en base — il donnera donc
+ * autant de cartes qu'il avait de photos. C'est exactement ce que la
+ * migration convertit.
+ * Les champs qu'une carte ne lit pas (coordonnées, réseaux) sont
+ * neutres : les inventer serait pire que les laisser vides.
+ */
+export function cartesDesFavoris(
+  visibles: PhotoFavorite[]
+): Array<{ cle: string; fiche: Tatoueur; photo: PhotoFavorite }> {
+  const liste: Array<{
+    cle: string;
+    fiche: Tatoueur;
+    photo: PhotoFavorite;
+  }> = [];
+  for (const photo of visibles) {
+    //  LA CLÉ EST CELLE DE LA PHOTO : deux photos d'un même carrousel
+    //  ne peuvent plus se confondre.
+    const cle = photo.id;
+    //  §1 (nº 278) — DANS L'ORDRE DE L'ARTISTE, ET NON DANS CELUI
+    //  DES FAVORIS. C'était LE défaut relevé : la liste `photos`
+    //  arrive rangée par date d'enregistrement du cœur, et un cœur
+    //  de galerie écrit toutes ses lignes d'un coup — leur ordre
+    //  n'avait donc aucun sens. La règle 1 du carrousel (voir
+    //  lib/photos-tatoueur) veut la première photo de l'artiste en
+    //  premier : c'est `ordre` qui le dit, et lui seul.
+    //  §2 (nº 303) — LA CARTE MONTRE SA PHOTO, ET ELLE SEULE. On lui
+    //  donnait tout le carrousel : elle affichait alors la PREMIÈRE
+    //  photo de l'artiste, la même pour les trois cartes d'un même
+    //  carrousel. La fiche qui s'ouvre, elle, garde bien tout le
+    //  carrousel — elle est demandée au serveur (`ficheComplete`).
+    const duMemeEnsemble = [photo];
+    liste.push({
+      cle,
+      photo,
+      fiche: {
+        id: photo.tatoueurId,
+        nom: photo.tatoueurNom,
+        slug: photo.tatoueurSlug,
+        type_fiche: photo.typeFiche,
+        etablissement: photo.etablissement,
+        photo_profil: photo.photoProfil,
+        ville_nom: photo.ville,
+        ville_slug: "",
+        region: photo.region,
+        pays: photo.pays,
+        code_pays: photo.codePays,
+        latitude: 0,
+        longitude: 0,
+        styles: [photo.style],
+        lien_instagram: "",
+        //  §1 (nº 278) — LA PREMIÈRE PHOTO DE L'ARTISTE, jamais la
+        //  dernière aimée : ce repli ne sert qu'aux galeries vides,
+        //  mais il ne doit pas mentir non plus.
+        photo_principale: duMemeEnsemble[0]?.miniature ?? photo.miniature,
+        photos_styles: {},
+        photos: [],
+        publie: true,
+        //  §1 (nº 278) — ON GARDE `ordre`, LA VALEUR DE L'ARTISTE, et
+        //  non le rang dans la liste des favoris : c'est elle que
+        //  `galerieOrdonnee` relit ensuite, partout.
+        galerie: duMemeEnsemble.map((entree) => ({
+          id: entree.id,
+          style: entree.style,
+          rendu: entree.rendu,
+          nature: entree.nature,
+          url: entree.url,
+          miniature: entree.miniature,
+          ordre: entree.ordre,
+        })),
+      },
+    });
+  }
+return liste;
+}
+
+/* ==================================================================
+ * LE COMPTE, SOUS LE TITRE DE « MA SÉLECTION » (§1, nº 303)
+ * ==================================================================
+ * ⚠️ LA LIGNE DU SOUS-TITRE N'EST PLUS JAMAIS VIDE. Jusqu'ici elle ne
+ * disait QUE le filtre en cours (« Réalisme », « Réalisations ·
+ * Abstrait ») et restait muette sans filtre — c'est pour ça que la
+ * nº 301 avait dû lui RÉSERVER sa hauteur. Elle porte désormais le
+ * COMPTE, qui existe toujours. (La réservation reste : elle ne coûte
+ * rien, et elle protège d'un cas qu'on n'aurait pas prévu.)
+ *
+ * ⚠️ ET LE NOM DU FILTRE N'EST PAS PERDU : quand un filtre est actif,
+ * les deux informations tiennent ensemble — « Réalisme · 7 portfolios
+ * sur 18 ». Supprimer le nom du filtre en silence aurait fait perdre
+ * une information que la page donnait depuis la nº 249.
+ *
+ * LES TROIS CAS, ET ILS SONT TOUS ÉCRITS ICI :
+ *  · SINGULIER — « 1 portfolio », « 1 photo », jamais « 1 portfolios » ;
+ *  · VIDE — « Aucun portfolio suivi », « Aucune photo en favori »,
+ *    jamais « 0 portfolios » ;
+ *  · FILTRE ACTIF — « 7 portfolios sur 18 » : le compte reste, et il
+ *    dit ce que le filtre a laissé. Un filtre qui ne laisse rien se dit
+ *    « Aucun portfolio sur 18 » — jamais « 0 portfolio sur 18 ».
+ */
+export function compteDeLaSelection({
+  surLesFavoris,
+  total,
+  visibles,
+  filtreActif,
+}: {
+  /** Vrai sur « Ma sélection de photos », faux sur les portfolios. */
+  surLesFavoris: boolean;
+  /** Tout ce que le compte possède, filtre ou pas. */
+  total: number;
+  /** Ce que le filtre laisse — égal à `total` sans filtre. */
+  visibles: number;
+  filtreActif: boolean;
+}): string {
+  const nom = (n: number) =>
+    surLesFavoris ? (n > 1 ? "photos" : "photo") : n > 1 ? "portfolios" : "portfolio";
+  //  RIEN DU TOUT — et on le dit avec le mot juste, pas avec un zéro.
+  if (total === 0) {
+    return surLesFavoris ? "Aucune photo en favori" : "Aucun portfolio suivi";
+  }
+  if (!filtreActif) return `${total} ${nom(total)}`;
+  if (visibles === 0) {
+    return `${surLesFavoris ? "Aucune photo" : "Aucun portfolio"} sur ${total}`;
+  }
+  return `${visibles} ${nom(visibles)} sur ${total}`;
 }
 
 /* ==================================================================

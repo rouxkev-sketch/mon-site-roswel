@@ -5,6 +5,9 @@ import { createPortal } from "react-dom";
 import { stylePanneau, usePlacementMenu } from "@/components/placement-menu";
 import { armerLaRemontee } from "@/lib/remontee-champ";
 import { IconeCroix } from "@/components/Icones";
+//  §4 (nº 303) — la robe du champ de style, déclarée par le menu
+//  lui-même : aucune valeur graphique n'est recopiée ici.
+import { ROBE_CHAMP_SOMBRE } from "@/components/MenuDeroulant";
 import { useVoileDeLaPage } from "@/components/VoileDeLaPage";
 import { sansRemplissageAuto } from "@/lib/champs-sans-remplissage";
 import {
@@ -92,6 +95,7 @@ export function ChampLocalisation({
   texteIndicatif = "Ville, ou adresse complète…",
   id = "champ-localisation",
   sansBordure = false,
+  robeDeMenu = false,
   compact = false,
   retraitDroite = 0,
   actionValider,
@@ -118,6 +122,23 @@ export function ChampLocalisation({
   id?: string;
   /** true = champ nu, posé dans un encadré partagé (moteur). */
   sansBordure?: boolean;
+  /**
+   * §4 (nº 303) — CE CHAMP PREND LA ROBE DU CHAMP DE STYLE.
+   * ------------------------------------------------------------------
+   * AU DOIGT, sur la page du moteur, les deux champs doivent se
+   * ressembler. Ils ne se ressemblaient pas : le style est un
+   * `MenuDeroulant` (arrondi 16 px, fond `sombre-eleve`), la localité
+   * gardait la robe des champs de FORMULAIRE (arrondi 8 px, fond
+   * `sombre-eleve-clair`, contour) — deux écritures nées à deux
+   * endroits.
+   * ⚠️ AUCUNE VALEUR N'EST RECOPIÉE ICI : la robe vient de
+   * `ROBE_CHAMP_SOMBRE`, déclarée par le menu lui-même. Les deux champs
+   * ne peuvent donc plus diverger.
+   * ⚠️ LE WEB N'EST PAS CONCERNÉ : là-bas, le moteur passe
+   * `sansBordure` (les deux champs vivent dans un encadré commun qui
+   * porte la forme), et cette branche n'est même pas atteinte.
+   */
+  robeDeMenu?: boolean;
   /** Padding resserré (moteur). */
   compact?: boolean;
   /** Place réservée à DROITE dans le champ (la loupe du moteur). */
@@ -496,11 +517,22 @@ export function ChampLocalisation({
         compact ? "px-3" : "px-4"
       } text-base outline-none overflow-hidden text-ellipsis
        text-sombre-texte placeholder:text-sombre-texte-doux`
-    : //  ⚠️ PLUS DE CONTOUR (passe nº 112) : le fond suffit — au
-      //  focus il s'éclaircit légèrement (nº 116, plus de trait
-      //  rose), l'erreur allume un bord rouge. Cette branche ne sert
-      //  QU'AU FORMULAIRE (le moteur passe `sansBordure`).
-      `w-full min-h-[52px] rounded-lg border bg-sombre-eleve-clair px-4 text-base
+    : robeDeMenu
+      ? //  §4 (nº 303) — LA ROBE DU CHAMP DE STYLE, telle quelle :
+        //  l'arrondi et les deux fonds viennent de `ROBE_CHAMP_SOMBRE`.
+        //  Pas de contour — un menu n'en a pas. La hauteur reste celle
+        //  du champ de localité (52), qui est aussi celle du champ de
+        //  style au doigt (`min-h-[54px]` ⇒ le contenu commande).
+        `w-full min-h-[52px] ${ROBE_CHAMP_SOMBRE.rayon} ${ROBE_CHAMP_SOMBRE.repos}
+         px-4 text-base text-sombre-texte
+         placeholder:text-sombre-texte-doux outline-none transition-colors
+         ${ROBE_CHAMP_SOMBRE.actifAuFocus} overflow-hidden text-ellipsis`
+      : //  ⚠️ PLUS DE CONTOUR (passe nº 112) : le fond suffit — au
+        //  focus il s'éclaircit légèrement (nº 116, plus de trait
+        //  rose), l'erreur allume un bord rouge. Cette branche ne sert
+        //  QU'AU FORMULAIRE (le moteur passe `sansBordure` sur le web,
+        //  `robeDeMenu` au doigt).
+        `w-full min-h-[52px] rounded-lg border bg-sombre-eleve-clair px-4 text-base
        text-sombre-texte placeholder:text-sombre-texte-doux outline-none
        transition-colors focus:bg-sombre-haut
        overflow-hidden text-ellipsis ${

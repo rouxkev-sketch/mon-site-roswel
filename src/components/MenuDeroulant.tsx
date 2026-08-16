@@ -88,6 +88,31 @@ export type OptionMenu = {
  * s'ouvre vers le HAUT si le bas est trop juste. Au-delà, il défile
  * sur lui-même — la page ne défile jamais à sa place.
  */
+/**
+ * §4 (nº 303) — LA ROBE D'UN CHAMP SOMBRE, ÉCRITE UNE SEULE FOIS.
+ * ==================================================================
+ * Le champ de STYLE du moteur est ce menu ; le champ de LOCALITÉ est
+ * un autre composant (`ChampLocalisation`). Au doigt, le propriétaire
+ * les veut identiques — « au pixel et à la valeur près ». Deux chaînes
+ * recopiées dans deux fichiers finissent toujours par diverger : la
+ * robe est donc DÉCLARÉE ICI, et le champ de localité la CONSOMME.
+ * Un jour où l'on changera l'arrondi, les deux suivront ensemble, sans
+ * qu'on ait à y penser.
+ */
+export const ROBE_CHAMP_SOMBRE = {
+  /** L'arrondi — 16 px (`rounded-2xl`). */
+  rayon: "rounded-2xl",
+  /** Le fond au repos. */
+  repos: "bg-sombre-eleve",
+  /** Le fond quand le champ est ouvert (menu) ou actif (saisie) : un
+      cran plus clair, la règle de la charte en sombre (nº 141-2B). */
+  actif: "bg-sombre-eleve-clair",
+  /** Le même, en variante de focus — ÉCRIT EN TOUTES LETTRES parce que
+      Tailwind lit des chaînes littérales : `focus:${…}` fabriqué à
+      l'exécution ne produirait aucune règle. */
+  actifAuFocus: "focus:bg-sombre-eleve-clair",
+} as const;
+
 export function MenuDeroulant({
   valeur,
   surChangement,
@@ -271,7 +296,7 @@ export function MenuDeroulant({
   //  `rounded-xl`, comme ses champs) ; et le bord rouge d'un manque
   //  n'existe QUE pour les appelants qui passent `enErreur` — les
   //  autres menus ne reçoivent aucune classe de bord en plus.
-  const rayon = arrondi ?? "rounded-2xl";
+  const rayon = arrondi ?? ROBE_CHAMP_SOMBRE.rayon;
   const bordDuManque =
     enErreur === undefined
       ? ""
@@ -282,7 +307,7 @@ export function MenuDeroulant({
     ? "bg-transparent"
     : sombre
       ? `${rayon} transition-colors ${
-          ouvert ? "bg-sombre-eleve-clair" : "bg-sombre-eleve"
+          ouvert ? ROBE_CHAMP_SOMBRE.actif : ROBE_CHAMP_SOMBRE.repos
         }${bordDuManque}`
       : `${rayon} border bg-fond ${
           ouvert

@@ -931,8 +931,12 @@ export function MoteurTatouage({
             //  « Réalisme » tout seul ne dirait plus si l'on cherche
             //  des tatouages ou des flashs.
             libelleValeur={libelleQuoi}
-            ariaLabel="Explorer"
-            placeholder="Explorer"
+            //  §3 (nº 303) — LE CHAMP S'INTITULE « Style ». « Explorer »
+            //  était le nom du MENU, pas de ce qu'on y cherche : on y
+            //  choisit un style, le champ le dit. Web et smartphone
+            //  portent le même mot — c'est le même champ.
+            ariaLabel="Style"
+            placeholder="Style"
             //  §2 (nº 258) — LA HAUTEUR DES CERCLES (46 px, relevée
             //  sur les deux ronds voisins — jamais choisie) : le bloc
             //  était plus haut que tout ce qui l'entoure.
@@ -1240,8 +1244,9 @@ export function MoteurTatouage({
               }
               onOuvertureChange={surOuvertureExplorer}
               options={options}
-              ariaLabel="Explorer"
-              placeholder="Explorer"
+              //  §3 (nº 303) — le même mot qu'en web : « Style ».
+              ariaLabel="Style"
+              placeholder="Style"
               hauteur="min-h-[54px]"
               taillePolice="text-[16px]"
               sombre
@@ -1261,6 +1266,11 @@ export function MoteurTatouage({
           <div>
             <ChampLocalisation
               pourLeMoteur
+              //  §4 (nº 303) — AU DOIGT, LA MÊME ROBE QUE LE CHAMP DE
+              //  STYLE juste au-dessus : même arrondi, même fond. Le
+              //  web n'est pas concerné (là-bas, les deux champs
+              //  passent `sansBordure` dans un encadré commun).
+              robeDeMenu
               // « EFFACER » REMONTE LE CHAMP À ZÉRO : sa clé change,
               // le champ est reconstruit sur « aucun lieu ». Sans
               // ça, il continuerait d'afficher « Lyon » alors que la

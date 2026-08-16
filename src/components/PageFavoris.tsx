@@ -17,13 +17,13 @@ import {
   CLE_FENETRE_FICHE,
   type ContexteFenetreFiche,
 } from "@/components/RetourFenetreFiche";
+import { natureConnue, RENDU_PAR_DEFAUT } from "@/lib/photos-tatoueur";
 import {
-  cleDEnsemble,
-  natureConnue,
-  ordreDeLArtiste,
-  RENDU_PAR_DEFAUT,
-} from "@/lib/photos-tatoueur";
-import { photoDuChoix, suivisDuChoix } from "@/lib/selection-suivis";
+  cartesDesFavoris,
+  compteDeLaSelection,
+  photoDuChoix,
+  suivisDuChoix,
+} from "@/lib/selection-suivis";
 import { ficheComplete } from "@/lib/fiche-complete";
 import type { PhotoFavorite, TatoueurSuivi } from "@/lib/favoris-serveur";
 import type { Tatoueur } from "@/lib/tatoueurs";
@@ -263,70 +263,11 @@ export function PageFavoris({
    * est désormais calculée au rendu — c'est le compilateur de React
    * qui mémoïse, comme pour les deux filtres au-dessus.
    */
-  const ensemblesVisibles = (() => {
-    const vus = new Set<string>();
-    const liste: Array<{
-      cle: string;
-      fiche: Tatoueur;
-      photo: PhotoFavorite;
-    }> = [];
-    for (const photo of visibles) {
-      const cle = cleEnsembleFavori(photo);
-      if (vus.has(cle)) continue;
-      vus.add(cle);
-      //  §1 (nº 278) — DANS L'ORDRE DE L'ARTISTE, ET NON DANS CELUI
-      //  DES FAVORIS. C'était LE défaut relevé : la liste `photos`
-      //  arrive rangée par date d'enregistrement du cœur, et un cœur
-      //  de galerie écrit toutes ses lignes d'un coup — leur ordre
-      //  n'avait donc aucun sens. La règle 1 du carrousel (voir
-      //  lib/photos-tatoueur) veut la première photo de l'artiste en
-      //  premier : c'est `ordre` qui le dit, et lui seul.
-      const duMemeEnsemble = ordreDeLArtiste(
-        photos.filter((autre) => cleEnsembleFavori(autre) === cle)
-      );
-      liste.push({
-        cle,
-        photo,
-        fiche: {
-          id: photo.tatoueurId,
-          nom: photo.tatoueurNom,
-          slug: photo.tatoueurSlug,
-          type_fiche: photo.typeFiche,
-          etablissement: photo.etablissement,
-          photo_profil: photo.photoProfil,
-          ville_nom: photo.ville,
-          ville_slug: "",
-          region: photo.region,
-          pays: photo.pays,
-          code_pays: photo.codePays,
-          latitude: 0,
-          longitude: 0,
-          styles: [photo.style],
-          lien_instagram: "",
-          //  §1 (nº 278) — LA PREMIÈRE PHOTO DE L'ARTISTE, jamais la
-          //  dernière aimée : ce repli ne sert qu'aux galeries vides,
-          //  mais il ne doit pas mentir non plus.
-          photo_principale: duMemeEnsemble[0]?.miniature ?? photo.miniature,
-          photos_styles: {},
-          photos: [],
-          publie: true,
-          //  §1 (nº 278) — ON GARDE `ordre`, LA VALEUR DE L'ARTISTE, et
-          //  non le rang dans la liste des favoris : c'est elle que
-          //  `galerieOrdonnee` relit ensuite, partout.
-          galerie: duMemeEnsemble.map((entree) => ({
-            id: entree.id,
-            style: entree.style,
-            rendu: entree.rendu,
-            nature: entree.nature,
-            url: entree.url,
-            miniature: entree.miniature,
-            ordre: entree.ordre,
-          })),
-        },
-      });
-    }
-    return liste;
-  })();
+  /*  §2 (nº 303) — LA LISTE DES CARTES EST CALCULÉE HORS DE CE
+      COMPOSANT (`cartesDesFavoris`, lib/selection-suivis) : une photo
+      aimée = une carte, et c'est une RÈGLE, pas un détail d'affichage.
+      Sortie d'ici, elle s'exécute — donc elle se prouve. */
+  const ensemblesVisibles = cartesDesFavoris(visibles);
 
   return (
     /*  ⚠️ LA LARGEUR DE LA MOSAÏQUE (nº 213-§3a) : `LARGEUR_SITE` et
@@ -372,11 +313,29 @@ export function PageFavoris({
            deux cas (voir `degagementConstant`) : le sous-titre n'existe
            que sous un filtre, la page sautait de 30 px quand on le
            retirait. */}
+      {/*  §1 (nº 303) — LE SOUS-TITRE PORTE LE COMPTE, et il ne peut
+           plus être vide. ⚠️ LE NOM DU FILTRE EST GARDÉ : jusqu'ici
+           cette ligne ne disait QUE lui (« Réalisme », « Réalisations ·
+           Abstrait ») ; les deux tiennent ensemble — « Réalisme ·
+           7 portfolios sur 18 ». Les trois cas (un, aucun, filtré)
+           vivent dans `compteDeLaSelection`, pas ici. */}
       <LigneResultats
         titre={
           surLesFavoris ? "Ma sélection de photos" : "Ma sélection de portfolios"
         }
-        sousTitre={libelleDuChoix(choix) || null}
+        sousTitre={
+          [
+            libelleDuChoix(choix),
+            compteDeLaSelection({
+              surLesFavoris,
+              total: surLesFavoris ? photos.length : suivis.length,
+              visibles: surLesFavoris ? visibles.length : suivisVisibles.length,
+              filtreActif: Boolean(choix.nature || choix.style),
+            }),
+          ]
+            .filter(Boolean)
+            .join(" · ") || null
+        }
         degagementConstant
       />
 
@@ -532,11 +491,9 @@ export function PageFavoris({
   );
 }
 
-/** LA CLÉ D'UN ENSEMBLE ENREGISTRÉ — celle du site (style, catégorie,
-    rendu), plus LE TATOUEUR : deux artistes peuvent avoir chacun leur
-    « réalisme · noir et gris », et ce sont deux ensembles. */
-function cleEnsembleFavori(photo: PhotoFavorite): string {
-  return `${photo.tatoueurSlug}·${cleDEnsemble(photo)}`;
-}
+/*  §2 (nº 303) — `cleEnsembleFavori` EST SUPPRIMÉE, code compris. Elle
+    servait à DÉDOUBLONNER les favoris par carrousel — exactement ce
+    que le propriétaire ne veut plus : une photo aimée, une carte. Rien
+    d'autre ne l'appelait. */
 
 
