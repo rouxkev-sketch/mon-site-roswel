@@ -12,6 +12,7 @@ import {
   libelleStyleChoisi,
 } from "@/components/MoteurTatouage";
 import {
+  libelleDuProfil,
   lireSelection,
   MENU_FAVORIS,
   MENU_SUIVIS,
@@ -347,6 +348,11 @@ export function MenusSelection({
  */
 export function libelleDuChoix(choix: ChoixSelection): string {
   if (choix.menu === MENU_SUIVIS) {
+    //  §2 (nº 316) — LE PROFIL PARLE À LA PLACE DU STYLE quand c'est
+    //  lui qui est choisi : les deux occupent la même valeur d'adresse,
+    //  ils occupent donc la même ligne de titre. Le mot vient de
+    //  `libelleDuProfil` — celui du menu, jamais un second.
+    if (choix.profil) return libelleDuProfil(choix.profil);
     return choix.style ? libelleStyleChoisi(choix.style) : "";
   }
   return libelleExplorer(choix.nature, choix.style);
@@ -383,6 +389,10 @@ function libelleDuFiltre(
   //  d'ouverture qui se raccourcit. Sur le web, la place y est : le
   //  mot ne change pas.
   if (choix.menu === MENU_SUIVIS) {
+    //  §2 (nº 316) — UN PROFIL CHOISI S'ÉCRIT EN ENTIER, aux deux
+    //  largeurs : « À domicile », « Studio ». C'est un choix, et un
+    //  choix se lit — seul l'état d'ouverture se raccourcit au doigt.
+    if (choix.profil) return libelleDuProfil(choix.profil);
     if (etroit && !choix.style) return "Style";
     return libelleStyleChoisi(choix.style);
   }

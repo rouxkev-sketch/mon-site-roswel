@@ -262,13 +262,15 @@ export function PageFavoris({
   //  que `choix` sert aussi aux titres — il mémoïse désormais
   //  lui-même, et ces filtres sur quelques dizaines d'éléments ne
   //  coûtent rien.
-  const { nature, style } = choix;
+  //  §2-e (nº 316) — LE PROFIL VOYAGE AVEC LE STYLE jusqu'au filtre :
+  //  c'est la même règle, écrite une fois dans `suivisDuChoix`.
+  const { nature, style, profil } = choix;
   const visibles = surLesFavoris
     ? photos.filter((photo) => photoDuChoix(photo, { nature, style }))
     : [];
   const suivisVisibles = surLesFavoris
     ? []
-    : suivisDuChoix(suivis, { nature, style });
+    : suivisDuChoix(suivis, { nature, style, profil });
 
   /**
    * LES ENSEMBLES À MONTRER — un par ensemble, dans l'ordre d'arrivée

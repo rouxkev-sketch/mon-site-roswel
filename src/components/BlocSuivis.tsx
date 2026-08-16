@@ -419,9 +419,22 @@ function RangeeDeVignettes({
         §1 (nº 306) — ET LE DESSIN N'EST PLUS ÉCRIT ICI : c'est
         `GalerieQuiDefile`, partagé avec la colonne Portfolio d'une
         fiche. Ce composant ne décide plus que du CONTENU. */
+    /*  §1-a (nº 316) — L'ÉCART DES PHOTOS EST DIVISÉ PAR DEUX AU
+        DOIGT, ET PAR LÀ SEULEMENT : 6 px (`gap-1.5`, le défaut de
+        `GalerieQuiDefile` depuis la nº 244) devient 3 px.
+        ⚠️ LA VALEUR ÉTAIT PARTAGÉE AVEC LE WEB — c'était le même
+        `gap-1.5` aux deux largeurs, puisque rien n'était passé et que
+        le défaut vaut partout. LE WEB NE BOUGE PAS : il reprend ses
+        6 px dès `lg`, la borne qui sépare le doigt du web sur ce site.
+        ⚠️ ET C'EST UN RÉGLAGE, PAS UNE VALEUR CHANGÉE : `ecart` est un
+        paramètre de `GalerieQuiDefile` depuis la nº 308, exactement
+        comme la taille des chevrons depuis la nº 310. Le défaut du
+        composant n'est pas touché — la colonne Portfolio d'une fiche,
+        qui passe le sien (3 px), ne sent rien. */
     <GalerieQuiDefile
       classeEnveloppe="mt-5"
       classeRangee="-mx-4 px-4 sm:-mx-6 sm:px-6"
+      ecart="gap-[3px] lg:gap-1.5"
       cleDuContenu={bande.photos.length}
     >
         {bande.photos.map((photo) => (

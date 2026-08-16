@@ -44,6 +44,13 @@ export type OptionMenu = {
       ce qui permet à « Cultures du monde » d'exister dans le menu
       « Explorer » sans être un style cherchable. */
   sousGroupe?: string;
+  /** §2-f (nº 316) — CETTE SOUS-PORTE S'ÉCRIT EN GRIS, dans la feuille
+      du bas. « ARTISTE » et « LIEU » sont des SOUS-TITRES : ils
+      annoncent deux familles de profils, ils ne tiennent pas la place
+      d'une option. « Cultures du monde », elle, occupe la place d'un
+      style entre deux styles — elle garde le blanc des options, et ce
+      drapeau ne la concerne pas. */
+  sousGroupeGris?: boolean;
   /** CE QUI S'ÉCRIT À DROITE DE L'INTITULÉ (nº 216-§2) — le nombre de
       créations disponibles pour cette entrée. Rien quand il est
       absent : une option sans compte s'affiche exactement comme
@@ -1129,12 +1136,36 @@ export function MenuDeroulant({
                         //  que pour les styles qu'elle contient, une
                         //  fois ouverte (la branche `sousGroupe` des
                         //  options, ci-dessous).
+                        /*  §2-f (nº 316) — UN SOUS-TITRE S'ÉCRIT EN
+                             GRIS. « ARTISTE » et « LIEU » annoncent
+                             deux familles de profils : ils ne se
+                             choisissent pas, et le gris le dit —
+                             c'est le gris des textes discrets du site
+                             (`sombre-texte-doux`), jamais une teinte
+                             neuve. « Cultures du monde » ne passe pas
+                             ce drapeau et garde son blanc : elle, elle
+                             tient la place d'un style entre deux
+                             styles. */
                         `min-h-[52px] pl-3 pr-3 rounded-2xl text-base ${
                           sombre
-                            ? "text-sombre-texte hover:bg-sombre-eleve"
+                            ? `${
+                                option.sousGroupeGris
+                                  ? "text-sombre-texte-doux"
+                                  : "text-sombre-texte"
+                              } hover:bg-sombre-eleve`
                             : "text-encre hover:bg-fond-doux"
                         }`,
                         //  §3 (nº 260) — le point rose, et aucun voile.
+                        //  §2-f (nº 316) — ⚠️ CE POINT ROSE EST UN EMPLOI
+                        //  PRÉVU DE LA CHARTE, PAS UNE DÉRIVE. C'est
+                        //  EXACTEMENT le même usage que le point de la
+                        //  porte de famille « Cultures du monde » : le
+                        //  rose y dit « ceci ouvre un niveau », il ne
+                        //  désigne jamais une sélection. La charte
+                        //  réserve le rose ; ceci en fait partie.
+                        //  AUCUNE PASSE FUTURE NE DOIT L'EFFACER AU NOM
+                        //  DE LA CHARTE — décision du propriétaire,
+                        //  passe nº 316.
                         { avecPoint: true, sansVoile: true }
                       )}
                     {optionVisible(option) && (
@@ -1183,7 +1214,32 @@ export function MenuDeroulant({
                         style={{ backgroundColor: COULEURS.bordureCarte }}
                         aria-hidden
                       />
-                      {label}
+                      {/*  §1-b (nº 316) — LE NOMBRE MANQUAIT AU DOIGT.
+                           Le panneau du web l'écrivait depuis la
+                           nº 216 ; la feuille du bas, non — elle ne
+                           rendait que le libellé. Aucun compte n'était
+                           donc lisible sur smartphone : ni à côté de
+                           « Néo-Japonais » dans le filtre des
+                           portfolios, ni à côté des photos des favoris.
+                           ⚠️ MÊME SOURCE, MÊME ÉCRITURE, AUCUN SECOND
+                           CALCUL : c'est `option.compte`, celui-là même
+                           que le panneau du web affiche — les deux
+                           lisent la seule table de comptes bâtie par le
+                           serveur. Et c'est le gris des nombres
+                           (`sombre-texte-doux`), la taille des nombres
+                           (12,5 px) et leurs chiffres à chasse fixe :
+                           l'écriture du web, recopiée nulle part
+                           ailleurs qu'ici.
+                           ⚠️ `flex-1` SUR LE LIBELLÉ : sans lui, le
+                           nombre se collerait au mot au lieu de tenir
+                           le bord droit — la ligne est déjà un `flex`,
+                           il ne manquait qu'à dire qui pousse. */}
+                      <span className="min-w-0 flex-1 truncate">{label}</span>
+                      {option.compte !== undefined && (
+                        <span className="shrink-0 pl-3 text-[12.5px] text-sombre-texte-doux tabular-nums">
+                          {option.compte}
+                        </span>
+                      )}
                     </button>
                     )}
                   </li>

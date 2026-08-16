@@ -7,6 +7,7 @@ import { ligneCarte } from "@/lib/adresse";
 import {
   genreMode,
   libelleTypeFiche,
+  natureDeLaFiche,
   valeurExplorer,
 } from "@/config/tatouage";
 import {
@@ -14,7 +15,12 @@ import {
   natureConnue,
   ordreDeLArtiste,
 } from "@/lib/photos-tatoueur";
-import { CLE_TOTAL, type ChoixSelection } from "@/lib/filtres-selection";
+import {
+  CLE_TOTAL,
+  cleProfilLieu,
+  cleProfilMode,
+  type ChoixSelection,
+} from "@/lib/filtres-selection";
 import type { PhotoDuSuivi, PhotoFavorite, TatoueurSuivi } from "@/lib/favoris-serveur";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
@@ -566,12 +572,45 @@ export function photoDuChoix(
   return true;
 }
 
+/**
+ * §2 (nº 316) — LES CLÉS DE PROFIL D'UN PORTFOLIO SUIVI.
+ * ------------------------------------------------------------------
+ * ÉCRITE UNE SEULE FOIS, ET LUE DEUX : par le COMPTAGE des entrées du
+ * menu et par le FILTRAGE de la liste. C'est la seule façon qu'un
+ * nombre affiché ne mente jamais sur ce qu'il montrera — la nº 314-§2
+ * a rappelé ce que coûte un compte qui suit sa propre règle.
+ *
+ * LA RÈGLE, EN DEUX LIGNES :
+ *  · une fiche d'ARTISTE porte ses MODES D'EXERCICE (à domicile, en
+ *    studio, en salon, guest) — un artiste peut en cumuler plusieurs,
+ *    et il apparaît alors sous chacun ;
+ *  · une fiche de LIEU (salon, studio privé) porte son GENRE, et lui
+ *    seul : un lieu n'a pas de mode d'exercice, il EST le lieu.
+ * Les deux mondes ne se croisent jamais : c'est ce qui fait les deux
+ * sous-titres du menu, ARTISTE et LIEU.
+ */
+export function clesDuProfil(suivi: TatoueurSuivi): string[] {
+  const nature = natureDeLaFiche(suivi.typeFiche, suivi.etablissement);
+  if (nature !== "artiste") return [cleProfilLieu(nature)];
+  //  Un même genre déclaré deux fois (deux salons, deux guests) ne
+  //  compte qu'une fois : le menu compte des PORTFOLIOS, pas des modes.
+  return [...new Set(suivi.modes.map((mode) => cleProfilMode(mode.genre)))];
+}
+
 /** Les suivis qui répondent au choix — un artiste PORTE un tag dès
     qu'une de ses publications le porte. Aucun tag : la liste entière. */
 export function suivisDuChoix(
   suivis: TatoueurSuivi[],
-  choix: Pick<ChoixSelection, "nature" | "style">
+  choix: Pick<ChoixSelection, "nature" | "style" | "profil">
 ): TatoueurSuivi[] {
+  /*  §2-e (nº 316) — LE PROFIL FILTRE COMME LE STYLE : même place dans
+      l'adresse, même place ici. Il passe AVANT le reste parce qu'il
+      l'exclut par construction (voir `lireSelection`) — écrire les
+      deux tests l'un après l'autre laisserait croire qu'ils peuvent se
+      cumuler, ce qui est faux. */
+  if (choix.profil) {
+    return suivis.filter((suivi) => clesDuProfil(suivi).includes(choix.profil));
+  }
   if (!choix.nature && !choix.style) return suivis;
   return suivis.filter((suivi) =>
     suivi.recentes.some((photo) => photoDuChoix(photo, choix))
@@ -599,6 +638,12 @@ export function comptesDesSuivis(
       cles.add(valeurExplorer(nature, photo.style));
       if (photo.style) cles.add(photo.style);
     }
+    //  §2-c et §2-d (nº 316) — LES CLÉS DU SECOND MENU, par la MÊME
+    //  fonction que le filtrage (`clesDuProfil`) : le nombre annoncé
+    //  et la liste montrée ne peuvent pas diverger. Et rien ne
+    //  s'affiche qui n'existe pas — une entrée sans compte n'entre
+    //  jamais dans cette table, donc jamais dans le menu.
+    for (const cle of clesDuProfil(suivi)) cles.add(cle);
     for (const cle of cles) comptes.set(cle, (comptes.get(cle) ?? 0) + 1);
   }
   return comptes;

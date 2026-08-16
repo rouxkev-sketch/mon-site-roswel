@@ -5,7 +5,11 @@ import { creerClientSupabaseServeur } from "@/lib/supabase/server";
 import { lireLesFavoris } from "@/lib/favoris-serveur";
 import { BarreSelection } from "@/components/BarreSelection";
 import { PageFavoris } from "@/components/PageFavoris";
-import { entreesDesStyles, entreesDuFiltre } from "@/lib/filtres-selection";
+import {
+  entreesDesStyles,
+  entreesDuFiltre,
+  entreesDuProfil,
+} from "@/lib/filtres-selection";
 import { comptesDesFavoris, comptesDesSuivis } from "@/lib/selection-suivis";
 import { cleCookieTexte, phototequeDuCookie } from "@/lib/vue-phototheque";
 import { SURFACE_SELECTION } from "@/lib/surface-affichage";
@@ -65,7 +69,19 @@ export default async function PageMesFavoris() {
   //  leur menu ne porte que la liste des styles, familles en
   //  sous-porte, précédée de « Tous les styles ».
   const entreesFavoris = entreesDuFiltre(comptesDesFavoris(photos));
-  const entreesSuivis = entreesDesStyles(comptesDesSuivis(suivis));
+  /*  §2 (nº 316) — LE MENU DES PORTFOLIOS A DÉSORMAIS DEUX GROUPES :
+      « Styles », celui qui existait, et « Profil » — comment le
+      portfolio suivi exerce. Les deux listes viennent de LA MÊME table
+      de comptes, et se concatènent : c'est tout ce que le menu à deux
+      groupes des favoris demande (il en a deux depuis toujours). Un
+      « Profil » sans aucune entrée rend une liste vide, il ne reste
+      alors qu'un groupe — et la règle de la nº 304 rouvre le menu
+      sans flèche, d'elle-même. */
+  const comptesSuivis = comptesDesSuivis(suivis);
+  const entreesSuivis = [
+    ...entreesDesStyles(comptesSuivis),
+    ...entreesDuProfil(comptesSuivis),
+  ];
 
   return (
     /*  §2 (nº 257) — LA MISE EN PAGE MÉMORISÉE, LUE ICI ET SERVIE À

@@ -1,6 +1,8 @@
 import {
   CATEGORIES_EXPLORER,
   entreesExplorer,
+  genreMode,
+  libelleTypeFiche,
   lireValeurExplorer,
   styleDuCatalogue,
   valeurExplorer,
@@ -52,6 +54,18 @@ export type ChoixSelection = {
   nature: string;
   /** Un style du catalogue, ou vide (tous les styles). */
   style: string;
+  /**
+   * §2 (nº 316) — LE PROFIL CHOISI dans le second menu des portfolios
+   * suivis : « mode:domicile », « lieu:prive »… ou vide.
+   * ⚠️ IL EXCLUT LE STYLE, et c'est mécanique : l'adresse ne porte
+   * qu'UNE valeur pour ce menu (voir `lireSelection`). Choisir un
+   * profil remplace donc le style, exactement comme choisir un style
+   * remplace le profil — c'est la même règle qu'entre les deux menus
+   * de la page, et elle ne demande aucun code de plus.
+   * ⚠️ TOUJOURS VIDE SUR « MES FAVORIS » : ce menu-là n'a pas de
+   * profil, ses entrées sont des photos.
+   */
+  profil: string;
 };
 
 /** L'ÉTAT D'OUVERTURE (§2) : les favoris seuls, tous styles, aucun
@@ -60,6 +74,7 @@ export const CHOIX_PAR_DEFAUT: ChoixSelection = {
   menu: MENU_FAVORIS,
   nature: "",
   style: "",
+  profil: "",
 };
 
 /**
@@ -85,14 +100,20 @@ export function lireSelection(recherche?: string): ChoixSelection {
       et un style inconnu est ignoré comme partout ailleurs
       (`styleDuCatalogue`, la même autorité que le moteur). */
   if (menu === MENU_SUIVIS) {
+    /*  §2 (nº 316) — UN STYLE OU UN PROFIL, jamais les deux : ce menu
+        ne porte qu'UNE valeur, et c'est son préfixe qui dit laquelle.
+        Rien à valider de plus — un profil inconnu ne comptera aucune
+        entrée, et un style inconnu est ignoré comme depuis toujours. */
+    const profil = profilDuFiltre(valeur);
     return {
       menu,
       nature: "",
-      style: styleDuCatalogue(valeur) ? valeur : "",
+      style: profil ? "" : styleDuCatalogue(valeur) ? valeur : "",
+      profil,
     };
   }
   const { nature, style } = lireValeurExplorer(valeur);
-  return { menu, nature, style };
+  return { menu, nature, style, profil: "" };
 }
 
 /**
@@ -125,7 +146,9 @@ export function valeurDuMenu(
   if (choix.menu !== menu) return "";
   //  §1 (nº 257) — « Suivis » ne connaît que le style (voir
   //  `lireSelection`) : sa valeur EST le style, jamais un couple.
-  if (menu === MENU_SUIVIS) return choix.style;
+  //  §2 (nº 316) — … ou son PROFIL, quand c'est lui qui est choisi.
+  //  Les deux occupent la même place : il n'y en a qu'une.
+  if (menu === MENU_SUIVIS) return choix.profil || choix.style;
   return valeurExplorer(choix.nature, choix.style);
 }
 
@@ -155,9 +178,93 @@ export type EntreeFiltre = {
   groupe?: string;
   /** La sous-porte de famille — « Cultures du monde ». */
   sousGroupe?: string;
+  /** §2-f (nº 316) — CETTE SOUS-PORTE S'ÉCRIT EN GRIS. « ARTISTE » et
+      « LIEU » sont des SOUS-TITRES : ils annoncent, ils ne se
+      choisissent pas. « Cultures du monde », elle, tient la place d'un
+      style dans la liste alphabétique — elle garde donc le blanc des
+      options. Le drapeau vit sur l'entrée, pas dans le menu : c'est
+      celui qui compose la liste qui sait ce qu'il écrit. */
+  sousGroupeGris?: boolean;
   /** Combien d'éléments derrière cette entrée. */
   compte?: number;
 };
+
+/* ==================================================================
+ * §2 (nº 316) — LE SECOND MENU DES PORTFOLIOS SUIVIS : « PROFIL »
+ * ==================================================================
+ * L'onglet des favoris avait deux groupes (Réalisations, Flashs),
+ * l'onglet des portfolios un seul. Il en a deux : « Styles », celui
+ * qui existait, et « Profil » — comment le portfolio suivi exerce.
+ *
+ *     STYLES   →   (inchangé)
+ *     PROFIL   →   ARTISTE : À domicile · En studio · En salon · Guest
+ *                  LIEU    : Studio · Salon
+ *
+ * ⚠️ AUCUN SECOND MÉCANISME (§2-h) : ce sont les groupes et sous-portes
+ * du menu des favoris, tels quels. Les deux sous-titres sont des
+ * SOUS-PORTES, comme « Cultures du monde » ; les deux menus sont des
+ * GROUPES, comme « Réalisations » et « Flashs ». Rien de neuf n'est
+ * dessiné — c'est la LISTE qui change, pas le menu.
+ *
+ * ⚠️ ET LA RÈGLE DE LA nº 304 TIENT (§2-g) : à un seul groupe, pas de
+ * flèche et tout reste ouvert. Elle se joue toute seule ici — quand
+ * aucun profil n'existe, « Styles » reste le seul groupe.
+ *
+ * COMMENT ÇA VOYAGE DANS L'ADRESSE. Le menu des suivis portait un
+ * STYLE (`?selection=suivis:maori`). Il porte maintenant un style OU
+ * un profil, et les deux ne peuvent pas se confondre : un profil est
+ * PRÉFIXÉ (`suivis:mode:domicile`, `suivis:lieu:prive`), et aucun slug
+ * de style du catalogue ne contient de deux-points. Une valeur
+ * inconnue est ignorée, comme partout ailleurs.
+ */
+
+/** Le préfixe d'un mode d'exercice d'ARTISTE — « mode:domicile ». */
+export const PROFIL_MODE = "mode";
+/** Le préfixe d'un genre de LIEU — « lieu:prive », « lieu:salon ». */
+export const PROFIL_LIEU = "lieu";
+
+/** Les deux sous-titres du menu « Profil » — écrits une seule fois. */
+export const SOUS_TITRE_ARTISTE = "ARTISTE";
+export const SOUS_TITRE_LIEU = "LIEU";
+/** Le titre des deux menus (§2-a et §2-b). */
+export const GROUPE_STYLES = "Styles";
+export const GROUPE_PROFIL = "Profil";
+
+/** La clé d'un mode d'artiste, dans la table des comptes comme dans
+    l'adresse — une seule écriture pour les deux. */
+export const cleProfilMode = (genre: string) => `${PROFIL_MODE}:${genre}`;
+/** La clé d'un genre de lieu — « prive » (Studio) ou « salon ». */
+export const cleProfilLieu = (nature: string) => `${PROFIL_LIEU}:${nature}`;
+
+/**
+ * EST-CE UNE VALEUR DE PROFIL ? Rend la valeur telle quelle si oui,
+ * « » sinon — c'est ce qui départage un style d'un profil à la
+ * lecture de l'adresse, et c'est écrit UNE fois.
+ * ⚠️ ON NE VALIDE PAS LE GENRE ICI : un genre disparu du catalogue ne
+ * comptera simplement aucune entrée, donc aucun portfolio ne
+ * correspondra — l'écran est vide, jamais faux. C'est exactement ce
+ * que fait un style inconnu.
+ */
+export function profilDuFiltre(valeur: string): string {
+  const [prefixe] = valeur.split(":");
+  return prefixe === PROFIL_MODE || prefixe === PROFIL_LIEU ? valeur : "";
+}
+
+/**
+ * COMMENT UN PROFIL CHOISI S'APPELLE — « À domicile », « Studio »…
+ * ------------------------------------------------------------------
+ * Le CHAMP de la barre et le SOUS-TITRE de la page le lisent tous les
+ * deux : une seule écriture, comme `libelleDuChoix` l'exige depuis la
+ * nº 257. Et aucun mot n'est inventé ici — `genreMode` porte les
+ * libellés des modes, `libelleTypeFiche` ceux des lieux, exactement
+ * comme le menu les affiche.
+ */
+export function libelleDuProfil(profil: string): string {
+  const [prefixe, valeur = ""] = profil.split(":");
+  if (prefixe === PROFIL_MODE) return genreMode(valeur).label;
+  if (prefixe === PROFIL_LIEU) return libelleTypeFiche("salon", valeur);
+  return "";
+}
 
 /**
  * LES STYLES PRÉSENTS, dans l'ordre et avec les libellés du moteur —
@@ -263,14 +370,69 @@ export const CLE_TOTAL = "*";
 export function entreesDesStyles(
   comptes: Map<string, number>
 ): EntreeFiltre[] {
-  const styles = stylesPresents(comptes, (slug) => slug);
+  //  §2-a (nº 316) — LE MENU QUI EXISTAIT REÇOIT SON TITRE. Il n'en
+  //  avait aucun : il était seul, donc rien à nommer. Maintenant qu'un
+  //  second le rejoint, il lui faut son mot — « Styles ». SON CONTENU
+  //  NE CHANGE PAS D'UNE LIGNE : mêmes entrées, même ordre, même tête
+  //  « Tous les styles », mêmes familles en sous-porte.
+  const styles = stylesPresents(comptes, (slug) => slug, GROUPE_STYLES);
   if (styles.length === 0) return [];
   return [
     {
       value: TOUS_LES_STYLES,
       label: "Tous les styles",
+      groupe: GROUPE_STYLES,
       compte: comptes.get(CLE_TOTAL) ?? 0,
     },
     ...styles,
   ];
+}
+
+/**
+ * §2-b et §2-c (nº 316) — LE MENU « PROFIL », BÂTI SUR CE QUI EXISTE
+ * ------------------------------------------------------------------
+ * DEUX SOUS-TITRES, ET RIEN QUI N'EXISTE PAS :
+ *  · une entrée n'apparaît que si au moins un portfolio suivi lui
+ *    répond (`comptes` ne porte que du réel — voir `comptesDesSuivis`) ;
+ *  · un sous-titre n'apparaît que si une de ses options existe : c'est
+ *    mécanique, une sous-porte sans option n'est jamais rendue (le
+ *    menu la pose À LA PLACE de sa première option) ;
+ *  · si les deux sont vides, la fonction rend une liste VIDE — et le
+ *    groupe « Profil » n'existe alors nulle part.
+ *
+ * ⚠️ L'ORDRE DES MODES EST CELUI DE LA CONSIGNE — à domicile, en
+ * studio, en salon, guest — et non celui de `GENRES_MODE`, qui range
+ * pour le formulaire. Les LIBELLÉS, eux, viennent de `GENRES_MODE` et
+ * de `libelleTypeFiche` : aucun mot n'est réécrit ici.
+ */
+const MODES_DU_PROFIL = ["domicile", "prive", "salon", "guest"] as const;
+const LIEUX_DU_PROFIL = ["prive", "salon"] as const;
+
+export function entreesDuProfil(
+  comptes: Map<string, number>
+): EntreeFiltre[] {
+  const entrees: EntreeFiltre[] = [];
+  const ajouter = (
+    value: string,
+    label: string,
+    sousGroupe: string
+  ) => {
+    const compte = comptes.get(value);
+    //  §2-d — CHAQUE ENTRÉE PORTE SON NOMBRE, comme celles de
+    //  « Styles » : c'est le même champ, lu au même endroit.
+    if (compte) entrees.push({ value, label, groupe: GROUPE_PROFIL, sousGroupe, sousGroupeGris: true, compte });
+  };
+  for (const genre of MODES_DU_PROFIL) {
+    ajouter(cleProfilMode(genre), genreMode(genre).label, SOUS_TITRE_ARTISTE);
+  }
+  for (const nature of LIEUX_DU_PROFIL) {
+    //  « Studio » pour un studio privé, « Salon » pour un salon — les
+    //  mots de `libelleTypeFiche`, ceux des fiches et des cartes.
+    ajouter(
+      cleProfilLieu(nature),
+      libelleTypeFiche("salon", nature),
+      SOUS_TITRE_LIEU
+    );
+  }
+  return entrees;
 }
