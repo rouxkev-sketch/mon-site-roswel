@@ -20,6 +20,7 @@ import {
   RENDUS_PHOTO,
   libelleNature,
   libelleRendu,
+  renduDOuverture,
 } from "@/lib/photos-tatoueur";
 
 /**
@@ -272,6 +273,14 @@ export function BlocPortfolio({
       )
       .sort((a, b) => a.ordre - b.ordre);
 
+  /*  §2-b (nº 309) — LE RENDU SUR LEQUEL UN STYLE S'OUVRE : celui qui a
+       déjà des photos. La règle et ses trois cas vivent dans
+       `lib/photos-tatoueur` (`renduDOuverture`), en fonction pure —
+       cette page-ci exige une session que le banc ne peut pas
+       fabriquer, la règle doit donc être éprouvable sans elle. */
+  const ouvertureSur = (style: string, nature: string) =>
+    renduDOuverture(photos, style, nature);
+
   /** LES BADGES AFFICHÉS — les styles qui ONT des photos, plus ceux
       tout juste ajoutés par la fenêtre. De A à Z, ordre CALCULÉ
       (règle nº 113) : jamais figé dans une liste. */
@@ -295,7 +304,14 @@ export function BlocPortfolio({
       plus. */
   const styleActif = styleOuvert ?? stylesDesBadges[0]?.slug ?? null;
   const natureActive = natureOuverte ?? NATURES_PHOTO[0].slug;
-  const renduActif = renduOuvert ?? RENDUS_PHOTO[0].slug;
+  /*  §2-b (nº 309) — LA DÉRIVATION SUIT LA MÊME RÈGLE QUE L'OUVERTURE,
+       et c'est indispensable : à la RÉOUVERTURE d'un portfolio, le
+       premier badge est ouvert PAR CE CALCUL, sans que `basculerStyle`
+       ne soit jamais appelé. Poser la règle dans la seule bascule
+       l'aurait laissée muette là où elle sert le plus. */
+  const renduActif =
+    renduOuvert ??
+    (styleActif ? ouvertureSur(styleActif, natureActive) : RENDUS_PHOTO[0].slug);
 
   /** OUVRIR UN STYLE — et poser les DEUX niveaux sur leur première
       position (passe nº 117, points 6 et 9) : la nature d'abord
@@ -306,8 +322,11 @@ export function BlocPortfolio({
       d'être sélectionné d'office à la réouverture d'un portfolio, et
       ce qui donne aux badges leurs DEUX états, sans troisième. */
   function basculerStyle(style: string) {
-    setNatureOuverte(NATURES_PHOTO[0].slug);
-    setRenduOuvert(RENDUS_PHOTO[0].slug);
+    const nature = NATURES_PHOTO[0].slug;
+    setNatureOuverte(nature);
+    //  §2-b (nº 309) — plus « toujours le premier » : le rendu qui a
+    //  déjà des photos (voir `renduDOuverture`).
+    setRenduOuvert(ouvertureSur(style, nature));
     setStyleOuvert(style);
   }
 
@@ -867,19 +886,30 @@ export function BlocPortfolio({
                     //  fait donc rien — il est déjà ouvert.
                     onClick={() => setRenduOuvert(rendu.slug)}
                     aria-expanded={actif}
+                    data-rendu-choix={rendu.slug}
+                    data-rendu-actif={actif ? "" : undefined}
                     //  ⚠️ PLUS DE CONTOUR (passe nº 112) : le fond dit
                     //  tout — un cran plus clair au repos, teinté de
                     //  rose quand la galerie est ouverte.
-                    className={`rounded-lg px-3 py-2.5 text-left
-                               transition-colors ${
+                    /*  §2-a (nº 309) — `relative` : c'est ce qui porte le
+                        soulignement rose de l'actif, posé DANS le
+                        rectangle (voir plus bas). */
+                    className={`relative overflow-hidden rounded-lg px-3 py-2.5
+                               text-left transition-colors ${
                                  actif
                                    ? "bg-sombre-eleve-clair"
                                    : "bg-sombre-eleve hover:bg-sombre-eleve-clair"
                                }`}
                   >
+                    {/*  §2-a (nº 309) — LE TITRE PASSE DU ROSE AU BLANC
+                         quand le rendu est choisi, et le rendu qu'on ne
+                         regarde pas s'efface EN GRIS — titre compris.
+                         Le rose quitte le mot : il ne reste plus que
+                         dans le soulignement, où il dit « c'est ici »
+                         sans se disputer la lecture avec le texte. */}
                     <span
                       className={`block text-[14px] font-semibold ${
-                        actif ? "text-primaire" : "text-sombre-texte"
+                        actif ? "text-white" : "text-sombre-texte-doux"
                       }`}
                     >
                       {rendu.label}
@@ -887,10 +917,30 @@ export function BlocPortfolio({
                     {/* LE COMPTE DIT AUSSI LE PLAFOND (passe nº 112) :
                         « 16/20 photos ». L'en-tête « PORTFOLIO 16/20 »
                         au-dessus de la grille est parti — le compte vit
-                        ici, et seulement ici. */}
-                    <span className="mt-0.5 block text-[12.5px] text-sombre-texte-doux">
+                        ici, et seulement ici.
+                        §2-a (nº 309) — blanc sous le rendu choisi, gris
+                        sous l'autre : le sous-titre suit son titre. */}
+                    <span
+                      className={`mt-0.5 block text-[12.5px] ${
+                        actif ? "text-white" : "text-sombre-texte-doux"
+                      }`}
+                    >
                       {nombre}/{PLAFOND_GALERIE} photos
                     </span>
+                    {/*  §2-a (nº 309) — LE SOULIGNEMENT ROSE, SOUS
+                         L'ACTIF ET SOUS LUI SEUL. Léger : 2 px, tout en
+                         bas du rectangle, d'un bord à l'autre. C'est le
+                         procédé des onglets de la ligne au-dessus
+                         (`OngletsLigne` : trait rose sous l'onglet
+                         choisi) — on ne réinvente pas un marqueur, on
+                         reprend celui que la page emploie déjà. */}
+                    {actif && (
+                      <span
+                        aria-hidden="true"
+                        data-soulignement-rendu=""
+                        className="absolute inset-x-0 bottom-0 h-[2px] bg-primaire"
+                      />
+                    )}
                   </button>
                 );
               })}

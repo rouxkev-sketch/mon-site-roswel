@@ -748,6 +748,30 @@ export function MoteurTatouage({
   const libelleQuoi = libelleExplorer(criteres.nature, criteres.style);
   const libelleOu = libelleLieu(criteres);
 
+  /**
+   * §3 (nº 309) — LE CHAMP « Style » DU WEB NE GARDE QUE LE STYLE.
+   * ------------------------------------------------------------------
+   * CE QU'IL AFFICHAIT JUSQU'ICI : le COUPLE catégorie + style, écrit
+   * par `libelleExplorer` — « Réalisations · Acid-trad », « Flashs ·
+   * Réalisme ». C'était une décision de la nº 110, et elle avait sa
+   * raison, notée juste sous ce champ : « Réalisme tout seul ne dirait
+   * plus si l'on cherche des tatouages ou des flashs ». Le propriétaire
+   * tranche autrement : le champ s'appelle « Style » depuis la nº 303,
+   * il doit donc dire un style, et rien d'autre.
+   * ⚠️ LE CAS SANS STYLE GARDE SES MOTS. Quand une catégorie seule est
+   * cherchée (« Toutes les réalisations »), il n'y a AUCUN style à
+   * écrire : n'afficher que le style viderait le champ alors qu'une
+   * recherche est bel et bien en cours, et l'invitation « Style »
+   * reprendrait la place d'un choix qui a été fait. On garde donc la
+   * phrase de la catégorie dans ce seul cas.
+   * ⚠️ WEB SEULEMENT : `libelleQuoi` continue de servir tel quel à
+   * l'aria-label de la pilule du smartphone et à la page de recherche
+   * — rien n'y change.
+   */
+  const libelleChampStyleWeb = criteres.style
+    ? libelleStyle(criteres.style)
+    : libelleQuoi;
+
   /** RIEN N'A ENCORE ÉTÉ CHERCHÉ : la barre fixe n'a alors aucun
       résultat à résumer — elle INVITE, elle ne rend pas compte. */
   const rechercheVierge =
@@ -927,10 +951,14 @@ export function MoteurTatouage({
             valeur={valeurDuMenu}
             surChangement={(valeur) => choisirDansExplorer(valeur, annoncer)}
             options={options}
-            //  LE CHAMP REFERMÉ DIT LE COUPLE, pas seulement le style :
-            //  « Réalisme » tout seul ne dirait plus si l'on cherche
-            //  des tatouages ou des flashs.
-            libelleValeur={libelleQuoi}
+            //  §3 (nº 309) — LE CHAMP REFERMÉ NE DIT PLUS QUE LE STYLE.
+            //  Il disait le COUPLE depuis la nº 110 (« Réalisations ·
+            //  Acid-trad ») pour qu'on sache si l'on cherche des
+            //  tatouages ou des flashs ; le propriétaire a tranché —
+            //  un champ qui s'appelle « Style » dit un style. Le
+            //  couple reste dans le TITRE au-dessus de la mosaïque,
+            //  qui l'écrit déjà en toutes lettres.
+            libelleValeur={libelleChampStyleWeb}
             //  §3 (nº 303) — LE CHAMP S'INTITULE « Style ». « Explorer »
             //  était le nom du MENU, pas de ce qu'on y cherche : on y
             //  choisit un style, le champ le dit. Web et smartphone

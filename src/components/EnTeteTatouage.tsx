@@ -21,6 +21,7 @@ import {
   IconeFanion,
   IconeLoupe,
   IconeSilhouette,
+  IconeUtilisateur,
 } from "@/components/Icones";
 import { LogoYokofolio } from "@/components/LogoYokofolio";
 import { MenuEspace } from "@/components/MenuEspace";
@@ -916,24 +917,53 @@ export function EnTeteTatouage({
                 <IconeSilhouette taille={24} />
               </Link>
 
-              {/* WEB : le bouton rose. Jamais venu, il invite ; déjà
-                  venu, « Se connecter ».
+              {/* WEB : le badge de connexion. Jamais venu, il invite ;
+                  déjà venu, « Se connecter ».
                   ⚠️ LES DEUX ÉTATS OCCUPENT LA MÊME LARGEUR
                   (nº 203-§1a) : les deux libellés sont posés dans la
                   même case de grille — le plus long, invisible,
                   réserve la place. Quel que soit celui qui s'affiche,
                   le bouton ne change pas d'un pixel, et rien ne peut
                   jamais pousser le bloc central de la barre. */}
+              {/*  ██████████████████████████████████████████████████████
+                   §1 (nº 309) — EXCEPTION EXPLICITE À LA CHARTE :
+                   CE BOUTON PORTE UN CONTOUR, ET C'EST VOULU.
+                   ██████████████████████████████████████████████████████
+                   LA CHARTE DU SITE DIT « AUCUN CONTOUR NULLE PART » —
+                   c'est elle qui a fait retirer, passe après passe, les
+                   encadrés des cartes, des vignettes, des champs et des
+                   panneaux. CELUI-CI EST LA SEULE EXCEPTION, DEMANDÉE
+                   NOMMÉMENT PAR LE PROPRIÉTAIRE À LA PASSE Nº 309.
+                   AUCUNE PASSE FUTURE NE DOIT LE RETIRER en croyant
+                   appliquer la charte : ce n'est pas un oubli, ce n'est
+                   pas une dérive, c'est une décision.
+                   Ce qu'il porte, et rien d'autre :
+                    · le fond de la PAGE (`#1A1A1D`, `bg-sombre-fond`) —
+                      le badge est un trou dans le verre de la barre, il
+                      montre la couleur du site ;
+                    · un CONTOUR GRIS (`#38383F`, `sombre-bordure`, le
+                      gris des traits du site — aucune couleur nouvelle
+                      n'est inventée ici) ;
+                    · le texte en ROSE (`#EE3D6F`, `text-primaire`) ;
+                    · l'icône de connexion DANS le badge, avec le texte :
+                      `IconeUtilisateur`, le rond avec une personne
+                      dedans, qui existe déjà — on ne la redessine pas.
+                   ⚠️ WEB UNIQUEMENT (`hidden sm:flex`) : au doigt, c'est
+                   la silhouette ronde ci-dessus qui mène à la connexion,
+                   et elle ne change pas. */}
               <Link
                 href="/devenir-tatoueur"
                 aria-label={libelleDeconnecte}
+                data-bouton-connexion=""
                 style={{ height: HAUTEUR_ACTIONS }}
                 className="hidden sm:flex rounded-full px-5 items-center gap-2
-                           bg-primaire hover:bg-primaire-fonce text-white
+                           bg-sombre-fond border border-sombre-bordure
+                           text-primaire hover:bg-sombre-carte
                            text-sm font-semibold transition-colors whitespace-nowrap
                            focus-visible:outline-2 focus-visible:outline-offset-2
                            focus-visible:outline-primaire"
               >
+                <IconeUtilisateur taille={18} classe="shrink-0" />
                 <span className="grid text-center">
                   <span className="col-start-1 row-start-1">
                     {libelleDeconnecte}

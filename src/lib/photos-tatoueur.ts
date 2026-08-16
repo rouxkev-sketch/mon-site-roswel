@@ -90,6 +90,48 @@ export const SLUGS_RENDUS = new Set<string>(RENDUS_PHOTO.map((r) => r.slug));
 export const RENDU_PAR_DEFAUT: SlugRendu = "black_and_grey";
 
 /**
+ * §2-b (nº 309) — LE RENDU SUR LEQUEL UN STYLE S'OUVRE
+ * ==================================================================
+ * ON OUVRE SUR LE RENDU QUI A DÉJÀ DES PHOTOS. Jusqu'ici, ouvrir un
+ * style posait toujours le premier de la liste (« Noir et gris ») : un
+ * portfolio entièrement en couleur s'ouvrait donc sur une galerie
+ * VIDE, et il fallait un clic pour voir son propre travail.
+ *
+ * LES TROIS CAS, DANS LES MOTS DU PROPRIÉTAIRE :
+ *  · « si seule la couleur en contient, on ouvre sur Couleur » ;
+ *  · « si les deux en contiennent, on garde le comportement actuel » ;
+ *  · « si aucun n'en contient, on garde le comportement actuel ».
+ * Les deux derniers se disent d'une seule façon : hors du cas
+ * « EXACTEMENT UN rendu garni », on ne change rien. Le cas symétrique
+ * — seul le noir et gris est garni — rend le premier, ce qui est déjà
+ * ce qu'il rendait : la règle ne le dérange pas.
+ *
+ * ⚠️ ELLE VIT ICI, PAS DANS LE FORMULAIRE, pour être ÉPROUVABLE : la
+ * page qui la consomme exige une session Supabase signée par le
+ * serveur, qu'un banc ne peut pas fabriquer. Écrite en fonction pure,
+ * elle s'exécute hors navigateur, cas par cas — c'est plus fort qu'une
+ * capture d'écran.
+ * ⚠️ LE COMPTE SE FAIT SUR LE TRIPLET, nature comprise : les deux
+ * galeries comparées sont bien celles que le formulaire montre côte à
+ * côte.
+ */
+export function renduDOuverture(
+  photos: readonly { style: string; rendu: string; nature: string }[],
+  style: string,
+  nature: string
+): string {
+  const garnis = RENDUS_PHOTO.filter((rendu) =>
+    photos.some(
+      (photo) =>
+        photo.style === style &&
+        photo.rendu === rendu.slug &&
+        photo.nature === nature
+    )
+  );
+  return garnis.length === 1 ? garnis[0].slug : RENDUS_PHOTO[0].slug;
+}
+
+/**
  * LA NATURE D'UNE PHOTO — tatouage, ou flash (passe nº 110)
  * ==========================================================
  * ⚠️ UN FLASH N'EST PAS UN STYLE, C'EST UN ÉTAT DU DESSIN. C'est un
