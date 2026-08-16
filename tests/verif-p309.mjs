@@ -66,9 +66,15 @@ titre("§1 à la source — l'exception à la charte est écrite noir sur blanc"
       entete
     )
   );
+  /*  ⚠️ AMENDÉ PAR LA Nº 311-§1a : l'icône est passée du rang 18 au
+      rang 24, celui du GLOBE de la barre. CE QUE CE CONTRÔLE TIENT, et
+      qui ne change pas : c'est l'icône QUI EXISTE DÉJÀ qu'on réemploie,
+      aucun second dessin n'a été fabriqué pour ce bouton. La taille,
+      elle, est mesurée en vivant par le banc de la nº 311 — en face de
+      celle du globe. */
   verif(
     "l'icône réemployée est celle qui existe (aucun second dessin)",
-    /<IconeUtilisateur taille=\{18\}/.test(entete) &&
+    /<IconeUtilisateur taille=\{24\}/.test(entete) &&
       !/function IconeConnexion/.test(entete)
   );
 }
@@ -146,21 +152,27 @@ titre("§2 à la source — le formulaire consomme la règle, et rien d'autre");
     "§2-a — le titre du rendu choisi est BLANC, l'autre GRIS",
     /actif \? "text-white" : "text-sombre-texte-doux"/.test(portfolio)
   );
+  /*  ⚠️ AMENDÉ PAR LA Nº 311-§3a : le trait rose a QUITTÉ le bord bas
+      pour le bord GAUCHE — il est vertical, sur la hauteur du bouton.
+      Ce que ce contrôle tient reste le même : il n'est RENDU que sur le
+      rendu choisi, et sur lui seul. */
   verif(
-    "§2-a — le soulignement rose n'est rendu que sous l'actif",
+    "§2-a — le trait rose n'est rendu que sur l'actif",
     /\{actif && \(/.test(portfolio) &&
       /data-soulignement-rendu=""/.test(portfolio) &&
-      /absolute inset-x-0 bottom-0 h-\[2px\] bg-primaire/.test(portfolio)
+      /absolute inset-y-0 left-0 w-\[2px\] bg-primaire/.test(portfolio)
   );
-  //  LES QUATRE ÉTATS, comptés : deux classes de couleur, chacune sur
-  //  le titre ET sur le sous-titre.
-  const etats = (
-    portfolio.match(/actif \? "text-white" : "text-sombre-texte-doux"/g) ?? []
-  ).length;
+  /*  ⚠️ AMENDÉ PAR LA Nº 311-§3b : le TITRE est désormais blanc dans les
+      deux états, il n'a donc plus de ternaire — le compte de deux
+      couples n'a plus de sens. Ce qui distingue les quatre états, c'est
+      maintenant le SOUS-TITRE (blanc / gris) et le TRAIT. On tient donc
+      les deux : un titre inconditionnellement blanc, et un sous-titre
+      qui, lui, bascule. */
   verif(
-    "les QUATRE états sont écrits (titre et sous-titre, choisi et non choisi)",
-    etats === 2,
-    `${etats} couple(s) de couleurs`
+    "les QUATRE états sont écrits (titre blanc partout, sous-titre blanc / gris)",
+    /block text-\[14px\] font-semibold text-white/.test(portfolio) &&
+      (portfolio.match(/actif \? "text-white" : "text-sombre-texte-doux"/g) ?? [])
+        .length === 1
   );
 }
 
@@ -229,9 +241,12 @@ titre("§1 en vivant — le badge de connexion, déconnecté, 1440 × 823");
     b.fond === ANTHRACITE,
     b.fond
   );
+  /*  ⚠️ AMENDÉ PAR LA Nº 311-§1b : le contour est DOUBLÉ, 1 px → 2 px.
+      Ce que ce contrôle tient : il existe, il est plein, et il est du
+      gris des traits du site. */
   verif(
-    "il porte un CONTOUR GRIS #38383F",
-    b.contourLargeur === "1px" &&
+    "il porte un CONTOUR GRIS #38383F, épais de 2 px",
+    b.contourLargeur === "2px" &&
       b.contourStyle === "solid" &&
       b.contourCouleur === GRIS_TRAIT,
     `${b.contourLargeur} ${b.contourStyle} ${b.contourCouleur}`

@@ -901,17 +901,16 @@ export function BlocPortfolio({
                                    : "bg-sombre-eleve hover:bg-sombre-eleve-clair"
                                }`}
                   >
-                    {/*  §2-a (nº 309) — LE TITRE PASSE DU ROSE AU BLANC
-                         quand le rendu est choisi, et le rendu qu'on ne
-                         regarde pas s'efface EN GRIS — titre compris.
-                         Le rose quitte le mot : il ne reste plus que
-                         dans le soulignement, où il dit « c'est ici »
-                         sans se disputer la lecture avec le texte. */}
-                    <span
-                      className={`block text-[14px] font-semibold ${
-                        actif ? "text-white" : "text-sombre-texte-doux"
-                      }`}
-                    >
+                    {/*  §2-a (nº 309) — LE TITRE A QUITTÉ LE ROSE POUR
+                         LE BLANC : le rose ne vit plus que dans le
+                         trait, où il dit « c'est ici » sans se
+                         disputer la lecture avec le texte.
+                         §3-b (nº 311) — ET IL EST BLANC DANS LES DEUX
+                         ÉTATS. La nº 309 avait aussi grisé le titre du
+                         rendu non choisi ; le propriétaire le veut
+                         blanc. C'est le SOUS-TITRE, lui seul, qui dit
+                         lequel des deux on regarde — avec le trait. */}
+                    <span className="block text-[14px] font-semibold text-white">
                       {rendu.label}
                     </span>
                     {/* LE COMPTE DIT AUSSI LE PLAFOND (passe nº 112) :
@@ -927,18 +926,21 @@ export function BlocPortfolio({
                     >
                       {nombre}/{PLAFOND_GALERIE} photos
                     </span>
-                    {/*  §2-a (nº 309) — LE SOULIGNEMENT ROSE, SOUS
-                         L'ACTIF ET SOUS LUI SEUL. Léger : 2 px, tout en
-                         bas du rectangle, d'un bord à l'autre. C'est le
-                         procédé des onglets de la ligne au-dessus
-                         (`OngletsLigne` : trait rose sous l'onglet
-                         choisi) — on ne réinvente pas un marqueur, on
-                         reprend celui que la page emploie déjà. */}
+                    {/*  §2-a (nº 309) — LE TRAIT ROSE, SUR L'ACTIF ET
+                         SUR LUI SEUL. Léger : 2 px.
+                         §3-a (nº 311) — IL A CHANGÉ DE CÔTÉ. Il courait
+                         le long du BORD BAS, d'un bord à l'autre ; il
+                         court maintenant le long du BORD GAUCHE, sur
+                         toute la hauteur du rectangle. Un trait
+                         horizontal sous une boîte se lit comme un
+                         onglet — or ces deux-là n'en sont pas : ce sont
+                         deux cases côte à côte, et c'est leur FLANC qui
+                         les distingue. */}
                     {actif && (
                       <span
                         aria-hidden="true"
                         data-soulignement-rendu=""
-                        className="absolute inset-x-0 bottom-0 h-[2px] bg-primaire"
+                        className="absolute inset-y-0 left-0 w-[2px] bg-primaire"
                       />
                     )}
                   </button>

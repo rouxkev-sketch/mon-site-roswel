@@ -943,11 +943,18 @@ export function EnTeteTatouage({
                       montre la couleur du site ;
                     · un CONTOUR GRIS (`#38383F`, `sombre-bordure`, le
                       gris des traits du site — aucune couleur nouvelle
-                      n'est inventée ici) ;
+                      n'est inventée ici), ÉPAIS DE 2 px depuis la
+                      nº 311-§1b : à 1 px il se devinait plus qu'il ne
+                      se voyait, et c'est lui qui porte tout le badge ;
                     · le texte en ROSE (`#EE3D6F`, `text-primaire`) ;
                     · l'icône de connexion DANS le badge, avec le texte :
                       `IconeUtilisateur`, le rond avec une personne
                       dedans, qui existe déjà — on ne la redessine pas.
+                      §1-a (nº 311) — ELLE EST AU RANG 24, celui du
+                      GLOBE de la barre juste à sa gauche (voir
+                      `SelecteurLangue`, et la note de rang de la
+                      nº 147-§6). Les deux icônes de cette rangée font
+                      donc la même taille, au pixel.
                    ⚠️ WEB UNIQUEMENT (`hidden sm:flex`) : au doigt, c'est
                    la silhouette ronde ci-dessus qui mène à la connexion,
                    et elle ne change pas. */}
@@ -957,13 +964,13 @@ export function EnTeteTatouage({
                 data-bouton-connexion=""
                 style={{ height: HAUTEUR_ACTIONS }}
                 className="hidden sm:flex rounded-full px-5 items-center gap-2
-                           bg-sombre-fond border border-sombre-bordure
+                           bg-sombre-fond border-2 border-sombre-bordure
                            text-primaire hover:bg-sombre-carte
                            text-sm font-semibold transition-colors whitespace-nowrap
                            focus-visible:outline-2 focus-visible:outline-offset-2
                            focus-visible:outline-primaire"
               >
-                <IconeUtilisateur taille={18} classe="shrink-0" />
+                <IconeUtilisateur taille={24} classe="shrink-0" />
                 <span className="grid text-center">
                   <span className="col-start-1 row-start-1">
                     {libelleDeconnecte}

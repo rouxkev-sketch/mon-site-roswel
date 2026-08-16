@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { LANGUES_YOKOFOLIO } from "@/config/tatouage";
 import { IconeCroix, IconeMonde } from "@/components/Icones";
 import { FenetreDeVerre, MenuDeVerre } from "@/components/SurfaceDeVerre";
+import { useVoileDeLaPage } from "@/components/VoileDeLaPage";
 
 /**
  * LE SÉLECTEUR DE LANGUE
@@ -65,11 +66,22 @@ function ListeDesLangues({ surChoix }: { surChoix: () => void }) {
             //  Le voile translucide des lignes de menu (nº 237-§2) :
             //  sur une plaque de verre, un aplat ferait une boîte
             //  posée dessus.
+            /*  §2-b (nº 311) — UNE LANGUE INDISPONIBLE SE VOIT COMME
+                 TELLE. Elle était à `text-sombre-texte-doux/50` — le
+                 gris doux du site à moitié transparent, qui se pose
+                 vers `rgb(105,105,111)` sur la plaque : lisible, donc
+                 pas lu comme éteint. Elle descend à /20, soit environ
+                 `rgb(67,67,71)` — la moitié plus sombre, et l'écart
+                 avec une langue disponible (`#F2F2F4`, opaque) devient
+                 celui qu'on attend entre « je peux » et « je ne peux
+                 pas ». C'est une OPACITÉ, pas une couleur nouvelle :
+                 sur une plaque de verre, un gris plein ferait une
+                 tache posée dessus (la règle de la nº 237-§2). */
             className={`w-full flex items-center gap-3 min-h-[46px] px-3 rounded-xl
                         text-left text-[14.5px] transition-colors ${
                           langue.actif
                             ? "text-sombre-texte font-semibold hover:bg-white/5 active:bg-white/10"
-                            : "text-sombre-texte-doux/50 cursor-not-allowed"
+                            : "text-sombre-texte-doux/20 cursor-not-allowed"
                         }`}
           >
             {/* La puce ronde désigne la langue en cours — le seul
@@ -80,11 +92,16 @@ function ListeDesLangues({ surChoix }: { surChoix: () => void }) {
                 `sombre-bordure` (#38383F) se perdait sur la plaque à
                 45 %. Blanc à 40 % — GRIS, toujours : une langue à
                 venir n'est ni une sélection (rose), ni un manque
-                (rouge), ni une mise en ligne (vert). */}
+                (rouge), ni une mise en ligne (vert).
+                §2-b (nº 311) — …ET IL SUIT SON TEXTE, à 15 %. Laisser
+                le point à 40 % pendant que le mot descend à 20 % en
+                aurait fait la chose la plus claire d'une ligne éteinte :
+                l'œil serait allé droit dessus. Une ligne indisponible
+                s'éteint ENTIÈREMENT, ou elle ne s'éteint pas. */}
             <span
               aria-hidden
               className={`w-2 h-2 rounded-full shrink-0 ${
-                langue.actif ? "bg-white" : "bg-white/40"
+                langue.actif ? "bg-white" : "bg-white/15"
               }`}
             />
             {langue.label}
@@ -239,6 +256,29 @@ export function SelecteurLangue({ hauteur = 40 }: { hauteur?: number }) {
     setOuvert(false);
     globe.current?.focus();
   }
+
+  /**
+   * §2-a (nº 311) — LA PAGE S'ASSOMBRIT DERRIÈRE LE MENU DU GLOBE.
+   * ------------------------------------------------------------------
+   * C'ÉTAIT LA SIXIÈME SURFACE, ET ELLE AVAIT ÉTÉ OUBLIÉE. La nº 294 a
+   * posé un voile qui recouvre TOUT l'écran, barre comprise, d'une
+   * seule couleur, en n'épargnant que le bloc qui a ouvert la surface —
+   * et cinq surfaces le consomment déjà (le menu des styles, le champ
+   * de localité, le panneau des filtres, « Mon compte », le menu du
+   * moteur). Le globe, non : sa fenêtre s'ouvrait sur une page qui ne
+   * bougeait pas.
+   * ⚠️ C'EST LE MÊME MÉCANISME, PAS UN SECOND : `useVoileDeLaPage`,
+   * l'écriture unique (components/VoileDeLaPage). On lui donne notre
+   * conteneur ; il remonte tout seul au premier encadré qui le
+   * contient, pose le voile et l'enlève. Rien n'est recopié ici — ni
+   * couleur, ni opacité, ni z-index.
+   * ⚠️ LE WEB SEULEMENT, et sur deux niveaux : le crochet sort de
+   * lui-même sur un vrai téléphone, et `!superposee` dit la même chose
+   * côté rendu — la fenêtre superposée du doigt porte DÉJÀ son propre
+   * voile (FenetreDeVerre), en poser un second l'assombrirait deux
+   * fois.
+   */
+  useVoileDeLaPage(ouvert && !superposee, zone);
 
   //  Le menu du web : Échap et clic ailleurs referment.
   //  ⚠️ LA PLAQUE EST DANS LE CORPS DU DOCUMENT (nº 238-§4) : sans le

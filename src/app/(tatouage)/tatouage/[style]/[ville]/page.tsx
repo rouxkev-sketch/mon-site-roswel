@@ -4,10 +4,8 @@ import { notFound } from "next/navigation";
 import {
   CARTES_PAR_PAGE,
   libelleStyle,
-  RAYON_TATOUAGE_MINIMUM,
   stylesAlphabetiques,
 } from "@/config/tatouage";
-import { lieuVersParametres } from "@/lib/geocodage";
 import { AucunResultat } from "@/components/AucunResultat";
 import { chargerStyleVille as charger } from "@/lib/style-ville";
 import { adresseDuSite } from "@/lib/site";
@@ -182,42 +180,23 @@ export default async function PageStyleVille({
               (composants/AucunResultat) : il était écrit ici une
               seconde fois, dans une autre formulation, et une
               correction posée dans l'un ne se voyait pas dans l'autre.
-              LES DEUX ISSUES SONT DES ADRESSES, pas des gestes — cette
-              page est rendue par le serveur et n'a aucun état de
-              recherche à relancer :
-               · « Élargir le rayon » — cette page cherche la COMMUNE
-                 SEULE (`slugVille`, voir lib/style-ville) ; le cran
-                 juste au-dessus, c'est le premier palier du moteur
-                 autour de la même ville. La page, elle, garde sa
-                 question stable et son absence de rayon — on ne fait
-                 que passer la main au moteur ;
-               · « Chercher partout » — la mosaïque sans lieu, en
-                 gardant le style de la page. */
+              §4 (nº 311) — ET IL N'Y RESTE QU'UNE SEULE ISSUE.
+              ------------------------------------------------------
+              « Élargir le rayon » est RETIRÉ de cette page. La nº 307
+              l'y avait posé en le faisant pointer vers le moteur, au
+              premier palier autour de la même ville ; c'était une
+              pirouette. CETTE PAGE N'A PAS DE RAYON — c'est écrit en
+              tête du fichier, et c'est ce qui fait d'elle une page
+              indexable : « une question stable, ce style, cette
+              ville ». Un bouton qui promet d'élargir un rayon qui
+              n'existe pas trompe le visiteur.
+              IL N'Y RESTE DONC QUE « Chercher partout » — la mosaïque
+              sans lieu, en gardant le style de la page. Sur le MOTEUR,
+              rien ne change : les deux boutons y restent, parce que
+              là-bas le rayon existe pour de bon (voir
+              IndexTatoueurs). */
           <AucunResultat
-            issues={[
-              {
-                libelle: "Élargir le rayon",
-                href: `/?${new URLSearchParams({
-                  style,
-                  ...lieuVersParametres({
-                    identifiant: `ville:${villeSlug}`,
-                    intitule: nomVille,
-                    contexte: "",
-                    adresse: null,
-                    ville: nomVille,
-                    code_postal: null,
-                    region: null,
-                    pays: null,
-                    code_pays: null,
-                    latitude: ville.latitude,
-                    longitude: ville.longitude,
-                    precision: "ville",
-                  }),
-                  rayon: String(RAYON_TATOUAGE_MINIMUM),
-                }).toString()}`,
-              },
-              { libelle: "Chercher partout", href: `/?style=${style}` },
-            ]}
+            issues={[{ libelle: "Chercher partout", href: `/?style=${style}` }]}
           />
         ) : (
           // La page porte UN style : chaque carte montre la photo de CE
