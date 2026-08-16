@@ -8,43 +8,42 @@ import { CONTACT_YOKOFOLIO } from "@/config/tatouage";
  * =================================================
  * Trois champs (nom, e-mail, message), la validation en français,
  * l'envoi vers /api/tatoueur/contact (enregistrement en base +
- * transmission e-mail à l'exploitant), puis un écran de confirmation.
+ * transmission e-mail à l'exploitant via le service existant), puis
+ * un écran de confirmation. Charte sombre du site, sobre.
  *
- * §1 et §3 (nº 319) — LE FORMULAIRE PASSE À LA CHARTE. Ce qui est
- * parti, et pourquoi :
- *  · LES CONTOURS des champs (`border-sombre-bordure`) — la charte
- *    n'en veut nulle part : le champ est un FOND (`eleve-clair`,
- *    #3F3F47) qui s'éclaircit au focus (`haut`, #4A4A53). La bordure
- *    de boîte reste TRANSPARENTE, et ne se peint qu'en rouge, champ
- *    par champ, quand quelque chose manque ;
- *  · LE FOCUS ROSE (`focus:border-primaire` + halo `ring-primaire/25`)
- *    — le rose ne signale JAMAIS un champ actif ;
- *  · LES ARRONDIS `rounded-xl` (12 px, l'arrondi des BLOCS) — un champ
- *    s'arrondit à 8 px (`rounded-lg`, nº 287) ;
- *  · LES LIBELLÉS AU-DESSUS DES CHAMPS (« Ton nom », « Ton adresse
- *    e-mail », « Ton message ») — les libellés vivent DANS les champs,
- *    comme partout : « Nom », « E-mail », « Message » (§3 — et plus
- *    de « Ex. Léa »). L'accessibilité les garde en `aria-label` ;
- *  · LE ROND ROSE DE LA CONFIRMATION (✓ sur `primaire-voile`) — le
- *    rose est réservé (badge sélectionné, action finale, sélecteur,
- *    état de fiche, survols de barre, porte de famille) : un décor de
- *    confirmation n'en fait pas partie.
+ * ⚠️⚠️ EXCEPTION DE MISE EN PAGE — LA RÈGLE, ET ELLE FAIT AUTORITÉ ICI
+ * ==================================================================
+ * CES DEUX PAGES ONT LEUR PROPRE MISE EN PAGE, PLUS LIBRE QUE LA
+ * CHARTE DU RESTE DU SITE. C'EST UNE EXCEPTION ASSUMÉE, DÉCIDÉE PAR LE
+ * PROPRIÉTAIRE À LA PASSE Nº 320 APRÈS AVOIR VU LE RÉSULTAT DE LEUR
+ * PASSAGE À LA CHARTE. AUCUNE PASSE FUTURE NE DOIT LES Y RAMENER.
  *
- * ⚠️ LA ROBE DU CHAMP EST CELLE DU SITE, à la lettre : la chaîne
- * `CHAMP` est la copie exacte de celle d'EcranAuthentification —
- * elle-même « la copie exacte de celui du formulaire et de Sécurité ».
- * L'encadré d'erreur général reprend `ERREUR` du même écran : la seule
- * exception de contour actée par la charte.
+ * (« ces deux pages » : /contact — dont ce formulaire — et
+ * /qui-sommes-nous.)
+ *
+ * SONT DONC VOULUS ICI, et ne sont PAS des oublis de charte :
+ *  · les CONTOURS des champs (`border-sombre-bordure`) ;
+ *  · le FOCUS ROSE et son halo (`focus:border-primaire`,
+ *    `focus:ring-2 focus:ring-primaire/25`) ;
+ *  · les ARRONDIS DE 12 px (`rounded-xl`) sur des champs ;
+ *  · les LIBELLÉS AU-DESSUS des champs ;
+ *  · le ROND ROSE de l'écran de confirmation.
+ * La nº 319 les avait tous retirés : c'est ANNULÉ.
+ *
+ * ⚠️ SAUF DEUX MOTS, GARDÉS DE LA nº 319 SUR CONSIGNE : le champ du
+ * nom affiche « Nom » et celui du courriel « E-mail », DANS le champ —
+ * même si cette mise en page pose par ailleurs ses libellés au-dessus.
+ * Le libellé du dessus reste, lui, pour le lecteur d'écran et le clic
+ * (`<label htmlFor>`) : ce sont deux choses différentes, et le
+ * propriétaire n'a demandé que le mot DANS le champ. Le troisième
+ * champ (message) n'était pas visé : sa phrase indicative d'avant ne
+ * bouge pas.
  */
 
 const CHAMP =
-  "w-full min-h-[52px] rounded-lg border bg-sombre-eleve-clair px-4 text-base " +
+  "w-full min-h-[52px] rounded-xl border bg-sombre-eleve px-4 text-base " +
   "text-sombre-texte placeholder:text-sombre-texte-doux outline-none " +
-  "transition-colors focus:bg-sombre-haut";
-
-/** L'ERREUR — la seule exception de la charte : l'encadré rouge. */
-const ERREUR =
-  "rounded-lg border border-erreur/50 bg-erreur/10 px-4 py-3 text-[13px] leading-relaxed text-sombre-texte";
+  "transition-colors focus:border-primaire focus:ring-2 focus:ring-primaire/25";
 
 export function FormulaireContactYokofolio() {
   const [nom, setNom] = useState("");
@@ -100,17 +99,24 @@ export function FormulaireContactYokofolio() {
     }
   }
 
-  /* ---------- LA CONFIRMATION — sobre, sans décor rose ---------- */
+  /* ---------- LA CONFIRMATION ---------- */
   if (envoye) {
     return (
-      <div className="mt-10">
-        <h2 className="text-[20px] font-bold text-sombre-texte">
-          Message envoyé&nbsp;!
+      <div className="mt-10 text-center">
+        <span
+          aria-hidden="true"
+          className="mx-auto w-16 h-16 rounded-full bg-primaire-voile text-primaire
+                     flex items-center justify-center text-3xl"
+        >
+          ✓
+        </span>
+        <h2 className="mt-5 text-[clamp(1.3rem,3vw,1.6rem)] font-bold text-sombre-texte">
+          Message envoyé !
         </h2>
-        <p className="mt-3 text-[15px] text-sombre-texte-doux leading-relaxed">
+        <p className="mt-3 text-sombre-texte-doux leading-relaxed">
           Merci de nous avoir écrit — on te répond à{" "}
           <strong className="text-sombre-texte">{email.trim()}</strong>, en
-          général sous 48&nbsp;heures.
+          général sous 48 heures.
         </p>
       </div>
     );
@@ -118,21 +124,23 @@ export function FormulaireContactYokofolio() {
 
   return (
     <form onSubmit={envoyer} noValidate className="mt-8 flex flex-col gap-4">
-      {/*  §3 — LE LIBELLÉ VIT DANS LE CHAMP : « Nom », plus de
-           « ex. Léa ». La bordure est transparente au repos, rouge
-           champ par champ quand quelque chose manque — jamais laissée
-           à `currentColor`. */}
       <div>
+        <label
+          htmlFor="contact-nom"
+          className="block text-sm font-medium text-sombre-texte mb-1.5"
+        >
+          Ton nom
+        </label>
         <input
           id="contact-nom"
           type="text"
           autoComplete="name"
           value={nom}
           onChange={(e) => setNom(e.target.value)}
+          //  §1 (nº 320) — GARDÉ DE LA nº 319 : « Nom », dans le champ.
           placeholder="Nom"
-          aria-label="Nom"
           aria-invalid={Boolean(erreurs.nom)}
-          className={`${CHAMP} ${erreurs.nom ? "border-erreur" : "border-transparent"}`}
+          className={`${CHAMP} ${erreurs.nom ? "border-erreur" : "border-sombre-bordure"}`}
         />
         {erreurs.nom && (
           <p className="mt-1.5 text-[13px] text-erreur">{erreurs.nom}</p>
@@ -140,16 +148,22 @@ export function FormulaireContactYokofolio() {
       </div>
 
       <div>
+        <label
+          htmlFor="contact-email"
+          className="block text-sm font-medium text-sombre-texte mb-1.5"
+        >
+          Ton adresse e-mail
+        </label>
         <input
           id="contact-email"
           type="email"
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          //  §1 (nº 320) — GARDÉ DE LA nº 319 : « E-mail », dans le champ.
           placeholder="E-mail"
-          aria-label="E-mail"
           aria-invalid={Boolean(erreurs.email)}
-          className={`${CHAMP} ${erreurs.email ? "border-erreur" : "border-transparent"}`}
+          className={`${CHAMP} ${erreurs.email ? "border-erreur" : "border-sombre-bordure"}`}
         />
         {erreurs.email && (
           <p className="mt-1.5 text-[13px] text-erreur">{erreurs.email}</p>
@@ -157,20 +171,25 @@ export function FormulaireContactYokofolio() {
       </div>
 
       <div>
+        <label
+          htmlFor="contact-message"
+          className="block text-sm font-medium text-sombre-texte mb-1.5"
+        >
+          Ton message
+        </label>
         <textarea
           id="contact-message"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           rows={6}
           maxLength={CONTACT_YOKOFOLIO.messageMax}
-          placeholder="Message"
-          aria-label="Message"
+          placeholder="Une question, une idée, un problème — on lit tout."
           aria-invalid={Boolean(erreurs.message)}
-          className={`w-full rounded-lg border bg-sombre-eleve-clair px-4 py-3 text-base
+          className={`w-full rounded-xl border bg-sombre-eleve px-4 py-3 text-base
                      leading-relaxed text-sombre-texte outline-none resize-y
                      placeholder:text-sombre-texte-doux transition-colors
-                     focus:bg-sombre-haut ${
-                       erreurs.message ? "border-erreur" : "border-transparent"
+                     focus:border-primaire focus:ring-2 focus:ring-primaire/25 ${
+                       erreurs.message ? "border-erreur" : "border-sombre-bordure"
                      }`}
         />
         {erreurs.message && (
@@ -179,13 +198,14 @@ export function FormulaireContactYokofolio() {
       </div>
 
       {erreurs.general && (
-        <p role="alert" className={ERREUR}>
+        <p
+          role="alert"
+          className="rounded-xl border border-erreur/50 bg-erreur/10 px-4 py-3 text-sm text-sombre-texte"
+        >
           {erreurs.general}
         </p>
       )}
 
-      {/*  L'ACTION FINALE — la capsule rose pleine largeur, la seule
-           de la page (la même écriture que le bouton d'authentification). */}
       <button
         type="submit"
         disabled={enCours}

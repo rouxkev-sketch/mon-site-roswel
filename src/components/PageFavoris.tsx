@@ -324,7 +324,7 @@ export function PageFavoris({
         RÉEMPLOI STRICT : le fournisseur, ses fenêtres, son historique
         (une entrée par fiche, un cran par retour) — rien n'est réécrit
         ici. La règle entière vit dans PileFiches, où elle est écrite. */
-    <PileFiches surProfondeur={setProfondeurPile}>
+    <PileFiches surProfondeur={setProfondeurPile} voileDejaPose>
     {/*  ⚠️ LA LARGEUR DE LA MOSAÏQUE (nº 213-§3a) : `LARGEUR_SITE` et
         les mêmes marges latérales que l'accueil — cette page montre
         les mêmes cartes, elle doit occuper le même espace. */}

@@ -107,6 +107,7 @@ export function FenetreFiche({
   natureRecherche = "",
   photoRecherche = "",
   positionGrille = 0,
+  avecVoile = true,
   surFermeture,
 }: {
   /** La fiche à montrer — null : fenêtre fermée. */
@@ -132,6 +133,18 @@ export function FenetreFiche({
       grille avant le pushState) : figée à l'ouverture, rendue à la
       fermeture. */
   positionGrille?: number;
+  /**
+   * §2 (nº 320) — CETTE FENÊTRE PEINT-ELLE LE VOILE ?
+   * ------------------------------------------------------------------
+   * VRAI PAR DÉFAUT : une fenêtre seule est la première, elle le peint.
+   * FAUX pour toute fenêtre qui s'ouvre PAR-DESSUS une autre — le voile
+   * est déjà là, dessous, et un second ne ferait qu'assombrir la page
+   * du fond jusqu'à l'effacer (0,96 à deux fenêtres, 0,992 à trois).
+   * ⚠️ C'EST L'APPELANT QUI TRANCHE, et c'est voulu : lui seul sait ce
+   * qu'il y a sous lui. Voir `PileFiches`, qui porte la règle pour
+   * toutes les surfaces du site.
+   */
+  avecVoile?: boolean;
   /** Referme (la grille fait alors machine arrière dans l'historique). */
   surFermeture: () => void;
 }) {
@@ -350,11 +363,30 @@ export function FenetreFiche({
       className="fixed inset-0 z-[60]
                  opacity-100 transition-opacity duration-200 starting:opacity-0"
     >
-      {/* Le VOILE : la grille reste visible derrière ; un clic referme. */}
+      {/*  LE VOILE : la grille reste visible derrière ; un clic referme.
+           §2 (nº 320) — MAIS UN SEUL VOILE POUR TOUTE LA PILE.
+           ------------------------------------------------------------
+           LE DÉFAUT : chaque fenêtre peignait le sien. Deux fenêtres
+           empilées faisaient donc 0,8 puis 0,8 par-dessus — soit 0,96
+           de noir cumulé ; à trois, 0,992 : la page du fond
+           disparaissait, et l'on ne savait plus d'où l'on venait.
+           LA RÈGLE : SEULE LA PREMIÈRE FENÊTRE SUPERPOSÉE POSE UN
+           VOILE ; les suivantes n'en ajoutent AUCUN. Le voile
+           appartient à la PILE, pas à la fenêtre — il est peint une
+           seule fois, tout en bas. C'est l'appelant qui le sait (lui
+           seul connaît ce qu'il y a dessous), d'où le paramètre.
+           ⚠️ LA SURFACE RESTE, MÊME SANS PEINTURE : c'est elle qui
+           referme au clic. On lui retire sa couleur, jamais son rôle —
+           sans quoi cliquer à côté d'une fenêtre empilée ne fermerait
+           plus rien.
+           ⚠️ ET AUCUN FONDU N'EST AJOUTÉ ICI (rappel de la nº 234) :
+           l'opacité qui s'anime vit sur l'enveloppe `role="dialog"`
+           ci-dessus, jamais sur une plaque de verre. */}
       <div
         aria-hidden="true"
+        data-voile-fiche={avecVoile ? "" : undefined}
         onClick={surFermeture}
-        className="absolute inset-0 bg-black/80"
+        className={`absolute inset-0${avecVoile ? " bg-black/80" : ""}`}
       />
 
       {/* LA CROIX — hors de la fenêtre, dans la zone ombrée. */}

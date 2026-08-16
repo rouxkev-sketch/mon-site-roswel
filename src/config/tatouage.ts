@@ -1394,13 +1394,20 @@ export const COULEURS_SOMBRE = {
    * CE JETON EXISTE POUR QU'IL N'Y AIT QU'UNE VALEUR, écrite une seule
    * fois et partagée par tout ce qui sépare deux sections — il y en
    * avait DEUX qui ne s'accordaient même pas (voir TRAIT_SEPARATION).
-   * ⚠️ IL VAUT AUJOURD'HUI LE MÊME GRIS QUE `haut`, et c'est une
-   * coïncidence de l'échelle, pas un lien : `haut` est un FOND de
-   * dernier niveau, celui-ci est une LIGNE. Les deux peuvent diverger
-   * sans se demander la permission.
+   * §3 (nº 320) — ET IL REDESCEND D'UN DEMI-CRAN : #4A4A53 → #3B3B42.
+   * La nº 315 avait raison de l'éclaircir, mais elle est allée un cran
+   * trop loin — le trait se voyait un peu trop. #3B3B42 est LE MILIEU
+   * EXACT entre l'ancien #2C2C31 et le #4A4A53 de la nº 315 : peint
+   * sur l'anthracite, il rend (59, 59, 66) contre un fond à
+   * (26, 26, 29), là où le dilué d'avant la nº 315 rendait (44, 44, 49)
+   * et où la nº 315 montait à (74, 74, 83).
+   * ⚠️ IL RESTE LE JETON UNIQUE de la nº 315 : il vaut donc AUSSI pour
+   * l'écran de connexion et l'administration, qui lisent la même
+   * variable. C'est accepté, et c'est le prix de l'unicité — deux
+   * valeurs finiraient par diverger.
    * ⚠️ ET IL RESTE UN TRAIT, PAS UNE BARRE : un pixel, jamais deux.
    */
-  trait: "#4A4A53",
+  trait: "#3B3B42",
   /** LE HAUT DE L'ÉCHELLE (passe nº 144). Les fenêtres du web ont été
       éclaircies d'un cran (`carte` → `eleve`) pour mieux se détacher
       de la page : tout ce qui est POSÉ SUR ELLES devait grimper

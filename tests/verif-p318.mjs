@@ -98,11 +98,19 @@ titre("§1 à la source — la règle des fenêtres, et « Ma sélection » bran
     manquants.length === 0,
     manquants.length ? `manque : ${manquants.join(" / ")}` : "les sept phrases"
   );
+  /*  ⚠️ AMENDÉ À LA nº 320-§2 : la même balise porte désormais
+      `voileDejaPose` — cette surface monte sa PROPRE fenêtre de base,
+      qui peint déjà le voile, et la pile ne doit pas en rajouter. LA
+      MESURE EST RENDUE, PAS RETIRÉE : ce que ce contrôle éprouve — la
+      page est bien enveloppée par LE fournisseur existant — est
+      vérifié à l'identique, sur l'écriture d'aujourd'hui. */
   //  LE CHAÎNON MANQUANT : « Ma sélection » est ENVELOPPÉE PAR LA PILE.
   verif(
     "« Ma sélection » est enveloppée par PileFiches — le fournisseur " +
       "existant, aucun second mécanisme",
-    /<PileFiches surProfondeur=\{setProfondeurPile\}>/.test(pageFavoris) &&
+    /<PileFiches surProfondeur=\{setProfondeurPile\} voileDejaPose>/.test(
+      pageFavoris
+    ) &&
       /import \{ PileFiches \} from "@\/components\/PileFiches"/.test(
         pageFavoris
       ),

@@ -491,7 +491,7 @@ export function GrilleTatoueurs({
         PAR-DESSUS — c'est ce fournisseur qui porte ces fenêtres-là.
         La mécanique propre de la fenêtre de base (reprise après
         rechargement, clé d'ouverture) ne change pas d'une ligne. */
-    <PileFiches surProfondeur={setProfondeurPile}>
+    <PileFiches surProfondeur={setProfondeurPile} voileDejaPose>
       <div
         aria-busy={estompee}
         // WEB : des interstices de 20 px sur les deux axes — les

@@ -1,9 +1,27 @@
 /**
- * BANC DE LA PASSE Nº 319 — LIVRAISON ÉCONOME (graphique)
+ * BANC DE LA PASSE Nº 319 — RÉDUIT À CE QUI SURVIT (voir nº 320-§1)
  * ==================================================================
- * Les deux pages passées à la charte : « Qui sommes-nous » et
- * « Contact ». UN SEUL navigateur, UNE SEULE largeur (1440 × 823),
- * aucune mesure « avant » : on mesure le résultat, rien de plus.
+ * ⚠️⚠️ LA MOITIÉ DE CE BANC A ÉTÉ ANNULÉE PAR LE PROPRIÉTAIRE.
+ * La nº 319 avait passé « Qui sommes-nous » et « Contact » à la charte
+ * du site : jetons de couleur, titres de section de 13 px, traits de
+ * séparation, champs sans contour, focus qui éclaircit le fond. Le
+ * propriétaire a vu le résultat et l'a REFUSÉ — la nº 320-§1 a tout
+ * remis dans la mise en page d'avant, et a inscrit l'exception en
+ * commentaire sur les deux pages. Les huit contrôles qui mesuraient
+ * cette charte-là n'ont plus d'objet : ils ne sont pas « ratés », leur
+ * SUJET a été retiré. Ils sont donc partis d'ici, et ce qui les
+ * remplace vit dans `verif-p320.mjs`, qui mesure la mise en page
+ * REVENUE — traits absents, contours présents, focus rose, grandes
+ * typographies.
+ *
+ * CE QUI RESTE ICI, ET QUI EST TOUJOURS VRAI : les DEUX SEULES choses
+ * que la nº 320 a gardées de la nº 319 —
+ *  · LE TEXTE de « Qui sommes-nous », au mot près, gras compris ;
+ *  · LES DEUX LIBELLÉS de Contact, dans leur champ.
+ * Ces deux mesures-là sont RENDUES, pas retirées : elles sont refaites
+ * ci-dessous sur la page telle qu'elle est aujourd'hui.
+ *
+ * ⚠️ UNE SEULE LARGEUR : 1440 × 823, celle du propriétaire.
  */
 import {
   BASE,
@@ -13,95 +31,33 @@ import {
   verif,
 } from "./commun-verif.mjs";
 
-const GRIS_DOUX = "rgb(168, 168, 176)"; //  #A8A8B0 texteDoux
-const CHAMP_REPOS = "rgb(63, 63, 71)"; //  #3F3F47 eleveClair
-const CHAMP_FOCUS = "rgb(74, 74, 83)"; //  #4A4A53 haut
-const TRAIT = "rgb(74, 74, 83)"; //  #4A4A53 trait (nº 315)
-const ROSE = "rgb(238, 61, 111)"; //  #EE3D6F primaire
-const ELEVE = "rgb(51, 51, 58)"; //  #33333A eleve
-
 const { nav, page } = await ouvrirLeNavigateur("p319", {
   width: 1440,
   height: 823,
 });
 
 /* ==================================================================
- * §1 · §2 — QUI SOMMES-NOUS
+ * LE TEXTE DE « QUI SOMMES-NOUS » — AU MOT PRÈS
  * ================================================================== */
-titre("Qui sommes-nous — la charte, et le texte au mot près");
+titre("Qui sommes-nous — le texte du propriétaire, au mot près");
 {
   await page.goto(`${BASE}/qui-sommes-nous`, { waitUntil: "networkidle" });
 
   const m = await page.evaluate(() => {
     const main = document.querySelector("main");
-    const titres = [...main.querySelectorAll("h1, h2")].map((h) => {
-      const s = getComputedStyle(h);
-      return {
-        texte: h.textContent.replace(/ /g, " ").trim(),
-        taille: s.fontSize,
-        graisse: s.fontWeight,
-        casse: s.textTransform,
-        couleur: s.color,
-      };
-    });
-    const paragraphes = [...main.querySelectorAll("section p")].map((p) =>
-      p.textContent.replace(/ /g, " ").replace(/\s+/g, " ").trim()
-    );
-    const gras = [...main.querySelectorAll("section strong")].map((n) => ({
-      texte: n.textContent.replace(/ /g, " ").trim(),
-      couleur: getComputedStyle(n).color,
-    }));
-    const separateurs = [...main.querySelectorAll("section, div")]
-      .map((n) => getComputedStyle(n))
-      .filter((s) => s.borderTopWidth === "1px" && s.borderTopStyle === "solid")
-      .map((s) => s.borderTopColor);
-    const liens = [...main.querySelectorAll("a")].map((a) => {
-      const s = getComputedStyle(a);
-      const r = a.getBoundingClientRect();
-      return {
-        texte: a.textContent.trim(),
-        fond: s.backgroundColor,
-        bordure: `${s.borderTopWidth} ${s.borderTopColor}`,
-        rayon: s.borderRadius,
-        largeur: Math.round(r.width),
-      };
-    });
-    const corps = main.querySelector("section p");
-    const sCorps = getComputedStyle(corps);
-    const sMain = getComputedStyle(main);
     return {
-      titres,
-      paragraphes,
-      gras,
-      separateurs,
-      liens,
-      corps: { taille: sCorps.fontSize, couleur: sCorps.color },
-      margesMain: [sMain.paddingLeft, sMain.paddingRight],
-      largeurMain: main.getBoundingClientRect().width,
+      //  ⚠️ `main p`, ET NON `main section p` : le chapô d'ouverture
+      //  vit HORS section depuis que la mise en page d'avant est
+      //  revenue (nº 320) — le viser par les sections en perdait un.
+      paragraphes: [...main.querySelectorAll("p")].map((p) =>
+        p.textContent.trim()
+      ),
+      gras: [...main.querySelectorAll("strong")].map((n) =>
+        n.textContent.trim()
+      ),
     };
   });
 
-  //  §2 — LES TROIS TITRES, dans l'écriture des titres de section.
-  verif(
-    "les trois titres sont là, dans l'ordre du texte",
-    m.titres.map((t) => t.texte).join(" | ") ===
-      "Pourquoi « YokoFolio » ? | Ce que fait le site | Ce qu'on ne fait pas",
-    m.titres.map((t) => t.texte).join(" | ")
-  );
-  verif(
-    "…et ils portent L'ÉCRITURE DES TITRES DE SECTION du site : 13 px, " +
-      "demi-gras, capitales, gris doux",
-    m.titres.every(
-      (t) =>
-        t.taille === "13px" &&
-        t.graisse === "600" &&
-        t.casse === "uppercase" &&
-        t.couleur === GRIS_DOUX
-    ),
-    `${m.titres[0].taille} · ${m.titres[0].graisse} · ${m.titres[0].casse} · ${m.titres[0].couleur}`
-  );
-
-  //  §2 — LE TEXTE, AU MOT PRÈS (les neuf paragraphes).
   const ATTENDUS = [
     "« Yoko » vient du japonais, signifie « couché, sur le côté ». Regarde le cœur rose du logo, il est incliné. « Folio » vient de portfolio : c'est le cœur du site. YokoFolio, c'est un cœur incliné qui t'emmène vers des portfolios.",
     "Un tatouage commence par un style. YokoFolio classe les tatoueurs par style.",
@@ -113,9 +69,13 @@ titre("Qui sommes-nous — la charte, et le texte au mot près");
     "Pas d'avis, pas de notes.",
     "Personne ne commente ni ne juge le travail d'un tatoueur ici. Son portfolio parle pour lui. À toi de te faire ton avis.",
   ];
-  const normalise = (t) => t.replace(/[’']/g, "'");
+  //  ⚠️ LES DEUX CARACTÈRES INVISIBLES : l'apostrophe courbe et
+  //  l'espace insécable. Les deux côtés passent par ici — sans quoi
+  //  deux textes identiques à l'œil se déclarent différents.
+  const nu = (t) =>
+    t.replace(/[’']/g, "'").replace(/ /g, " ").replace(/\s+/g, " ").trim();
   const ecarts = ATTENDUS.filter(
-    (attendu, rang) => normalise(m.paragraphes[rang] ?? "") !== normalise(attendu)
+    (attendu, rang) => nu(m.paragraphes[rang] ?? "") !== nu(attendu)
   );
   verif(
     "LE TEXTE EST CELUI DU PROPRIÉTAIRE, AU MOT PRÈS — neuf paragraphes, " +
@@ -125,150 +85,31 @@ titre("Qui sommes-nous — la charte, et le texte au mot près");
       ? `écart sur : « ${ecarts[0].slice(0, 60)}… »`
       : "9 paragraphes conformes"
   );
-  //  §2 — LES QUATRE GRAS, en blanc (la grammaire du site).
   verif(
-    "les QUATRE passages en gras sont là, et en blanc",
-    m.gras.map((g) => normalise(g.texte)).join(" | ") ===
-      normalise(
+    "…et ses QUATRE passages en gras sont là, dans l'ordre",
+    nu(m.gras.join(" | ")) ===
+      nu(
         "il t'y conduit, avec le bon artiste au bout. | Tatoueur ? | Curieux ? | À toi de te faire ton avis."
-      ) && m.gras.every((g) => g.couleur === "rgb(242, 242, 244)"),
-    m.gras.map((g) => g.texte).join(" | ")
-  );
-
-  //  §1 — LES JETONS : corps de lecture, séparateurs, marges, boutons.
-  verif(
-    "le corps de texte est la lecture du site : 15 px, gris doux",
-    m.corps.taille === "15px" && m.corps.couleur === GRIS_DOUX,
-    `${m.corps.taille} · ${m.corps.couleur}`
-  );
-  verif(
-    "les séparateurs sont LE TRAIT du site (nº 315) : 1 px, #4A4A53",
-    m.separateurs.length === 3 && m.separateurs.every((c) => c === TRAIT),
-    `${m.separateurs.length} trait(s) · ${m.separateurs[0]}`
-  );
-  verif(
-    "les marges de page sont celles du site (24 px à cette largeur)",
-    m.margesMain.join("/") === "24px/24px",
-    m.margesMain.join(" / ")
-  );
-  const [principal, secondaire] = m.liens.slice(-2);
-  verif(
-    "L'ACTION FINALE : capsule rose pleine largeur — la seule de la page",
-    principal.texte === "Chercher un tatoueur" &&
-      principal.fond === ROSE &&
-      principal.largeur === Math.round(m.largeurMain) - 48 &&
-      m.liens.filter((l) => l.fond === ROSE).length === 1,
-    `${principal.fond} · ${principal.largeur} px (colonne ${Math.round(m.largeurMain) - 48} px)`
-  );
-  verif(
-    "l'action intermédiaire : capsule à sa taille naturelle, fond eleve, " +
-      "AUCUN contour",
-    secondaire.fond === ELEVE &&
-      secondaire.bordure === "0px rgb(242, 242, 244)" &&
-      secondaire.largeur < principal.largeur / 2,
-    `${secondaire.texte} · ${secondaire.fond} · bordure ${secondaire.bordure} · ${secondaire.largeur} px`
-  );
-  verif(
-    "AUCUN CONTOUR sur la page : pas un lien, pas un bloc n'a de bordure " +
-      "peinte (hors les traits de séparation)",
-    m.liens.every((l) => l.bordure.startsWith("0px")),
-    "0 contour"
+      ),
+    m.gras.join(" | ")
   );
 }
 
 /* ==================================================================
- * §1 · §3 — CONTACT
+ * LES DEUX LIBELLÉS DE CONTACT — DANS LEUR CHAMP
  * ================================================================== */
-titre("Contact — les champs de la charte, et les libellés dedans");
+titre("Contact — les deux libellés vivent dans leur champ");
 {
   await page.goto(`${BASE}/contact`, { waitUntil: "networkidle" });
   await page.waitForSelector("#contact-nom", { timeout: 20000 });
-
-  const c = await page.evaluate(() => {
-    const main = document.querySelector("main");
-    const lire = (sel) => {
-      const n = main.querySelector(sel);
-      const s = getComputedStyle(n);
-      return {
-        placeholder: n.getAttribute("placeholder"),
-        fond: s.backgroundColor,
-        rayon: s.borderRadius,
-        bordure: s.borderTopColor,
-        contour: s.outlineStyle,
-      };
-    };
-    return {
-      nom: lire("#contact-nom"),
-      email: lire("#contact-email"),
-      message: lire("#contact-message"),
-      etiquettes: main.querySelectorAll("label").length,
-      bouton: (() => {
-        const b = main.querySelector('button[type="submit"]');
-        const s = getComputedStyle(b);
-        const r = b.getBoundingClientRect();
-        return { fond: s.backgroundColor, largeur: Math.round(r.width) };
-      })(),
-      largeurForm: Math.round(
-        main.querySelector("form").getBoundingClientRect().width
-      ),
-      titre: (() => {
-        const s = getComputedStyle(main.querySelector("h1"));
-        return `${s.fontSize} ${s.fontWeight}`;
-      })(),
-      margesMain: getComputedStyle(main).paddingLeft,
-    };
-  });
-
+  const c = await page.evaluate(() => ({
+    nom: document.querySelector("#contact-nom").getAttribute("placeholder"),
+    email: document.querySelector("#contact-email").getAttribute("placeholder"),
+  }));
   verif(
-    "§3 — les libellés vivent DANS les champs : « Nom », « E-mail », " +
-      "« Message » — et plus de « Ex. Léa »",
-    c.nom.placeholder === "Nom" &&
-      c.email.placeholder === "E-mail" &&
-      c.message.placeholder === "Message" &&
-      c.etiquettes === 0,
-    `« ${c.nom.placeholder} » · « ${c.email.placeholder} » · « ${c.message.placeholder} » · 0 étiquette au-dessus`
-  );
-  verif(
-    "les trois champs portent LA robe du site : fond #3F3F47, arrondi " +
-      "8 px, bordure transparente — aucun contour",
-    [c.nom, c.email, c.message].every(
-      (champ) =>
-        champ.fond === CHAMP_REPOS &&
-        champ.rayon === "8px" &&
-        champ.bordure === "rgba(0, 0, 0, 0)"
-    ),
-    `${c.nom.fond} · ${c.nom.rayon} · bordure ${c.nom.bordure}`
-  );
-
-  //  LE FOCUS : le fond s'éclaircit — pas de contour, pas de rose.
-  //  (un clic, puis le temps de la transition de couleur : on mesure
-  //  l'état posé, jamais le dégradé en vol)
-  await page.click("#contact-nom");
-  await page.waitForTimeout(350);
-  const focus = await page.evaluate(() => {
-    const s = getComputedStyle(document.querySelector("#contact-nom"));
-    return {
-      fond: s.backgroundColor,
-      contour: s.outlineStyle,
-      bordure: s.borderTopColor,
-    };
-  });
-  verif(
-    "au focus, le fond monte à #4A4A53 — sans contour, sans halo, sans rose",
-    focus.fond === CHAMP_FOCUS &&
-      focus.contour === "none" &&
-      focus.bordure === "rgba(0, 0, 0, 0)",
-    `${focus.fond} · outline ${focus.contour} · bordure ${focus.bordure}`
-  );
-  verif(
-    "l'action finale : capsule rose pleine largeur, la seule de la page",
-    c.bouton.fond === ROSE && c.bouton.largeur === c.largeurForm,
-    `${c.bouton.fond} · ${c.bouton.largeur} px = formulaire ${c.largeurForm} px`
-  );
-  verif(
-    "le titre et les marges sont ceux du site : 20 px gras, 24 px de marge",
-    c.titre === "20px 700" && c.margesMain === "24px",
-    `${c.titre} · ${c.margesMain}`
+    "le champ du nom affiche « Nom », celui du courriel « E-mail »",
+    c.nom === "Nom" && c.email === "E-mail",
+    `« ${c.nom} » · « ${c.email} »`
   );
 }
 

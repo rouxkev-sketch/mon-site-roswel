@@ -136,12 +136,34 @@ type EntreePile = {
 
 export function PileFiches({
   actif = true,
+  voileDejaPose = false,
   surProfondeur,
   children,
 }: {
   /** Faux dans l'aperçu « Ma fiche » : on n'empile rien par-dessus un
       formulaire — les liens restent des liens. */
   actif?: boolean;
+  /**
+   * §2 (nº 320) — Y A-T-IL DÉJÀ UN VOILE SOUS CETTE PILE ?
+   * ------------------------------------------------------------------
+   * VRAI sur les surfaces qui montent elles-mêmes une FENÊTRE DE BASE :
+   * la mosaïque et « Ma sélection » — leur fenêtre est la première, et
+   * c'est elle qui peint. La pile n'en rajoute alors AUCUN.
+   * FAUX sur une PAGE de fiche : rien ne voile dessous, c'est donc la
+   * PREMIÈRE fenêtre de la pile qui peint.
+   * ⚠️ POURQUOI UN DRAPEAU, ET NON UN COMPTEUR PARTAGÉ. Un compteur de
+   * fenêtres montées ne se lit qu'APRÈS le rendu (un effet) : la
+   * première fenêtre s'afficherait un instant sans voile, puis il
+   * apparaîtrait — un clignotement à chaque ouverture. Ici la réponse
+   * est connue AVANT le premier rendu, parce qu'elle ne dépend que de
+   * la surface, jamais de l'instant.
+   * ⚠️ ET ELLE NE PEUT PAS SE DÉSYNCHRONISER : une fenêtre de la pile
+   * ne s'ouvre QUE depuis une fiche déjà affichée (c'est
+   * `useOuvertureFiche`, consommé par BlocLieux, qui ne vit que dans
+   * une fiche). Là où la base existe, elle est donc toujours ouverte
+   * sous la pile.
+   */
+  voileDejaPose?: boolean;
   /** La profondeur de la pile, remontée à l'enveloppe qui la veut :
       la mosaïque s'en sert pour garder sa fenêtre de base VISIBLE
       sous les fiches empilées (son adresse ne correspond plus, mais
@@ -235,13 +257,19 @@ export function PileFiches({
       {children}
       {/*  LES FENÊTRES EMPILÉES — dans l'ordre d'ouverture : la
            dernière du tableau est la dernière du document, donc
-           au-dessus (même z-index, l'ordre du flux tranche). Chacune
-           porte son voile : ce qui vit dessous s'assombrit d'autant. */}
-      {visibles.map((entree) => (
+           au-dessus (même z-index, l'ordre du flux tranche).
+           §2 (nº 320) — UN SEUL VOILE POUR TOUTE LA PILE, et il est
+           peint TOUT EN BAS. La toute première fenêtre superposée le
+           pose ; aucune de celles qui montent par-dessus n'en ajoute.
+           Sur la mosaïque et sur « Ma sélection », la fenêtre de base
+           l'a déjà posé (`voileDejaPose`) : la pile n'en pose alors
+           aucun, pas même sur son premier cran. */}
+      {visibles.map((entree, rang) => (
         <FenetreFiche
           key={`${entree.fiche.id}-${entree.ouverture}`}
           tatoueur={entree.fiche}
           positionGrille={entree.position}
+          avecVoile={rang === 0 && !voileDejaPose}
           surFermeture={fermer}
         />
       ))}
