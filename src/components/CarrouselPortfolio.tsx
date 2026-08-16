@@ -701,11 +701,23 @@ export function CarrouselPortfolio({
       photo.legende ? ` · ${photo.legende}` : ""
     }`;
 
-  /* SMARTPHONE : la capsule « 3/12 », angle haut droit — AUCUNE quand
-     l'ensemble n'a qu'une photo. Le texte se replie (largeur ET
-     opacité) pour ne laisser que la flèche ; les deux mouvements sont
-     doux, la réapparition est quasi immédiate — jamais de
-     clignotement. */
+  /* LA CAPSULE « 3/12 » — AUCUNE quand l'ensemble n'a qu'une photo. Le
+     texte se replie (largeur ET opacité) pour ne laisser que la
+     flèche ; les deux mouvements sont doux, la réapparition est quasi
+     immédiate — jamais de clignotement.
+     §1 (nº 307) — ELLE S'AFFICHE AUSSI SUR LE WEB, et c'est LE MÊME
+     ÉLÉMENT, pas une copie : la mécanique des trois secondes
+     (`compteurVisible`, réarmée par `reveils` et par `indice`) et la
+     flèche minimale qui reste sont donc rigoureusement identiques aux
+     deux largeurs — elles ne peuvent pas diverger, il n'y en a qu'une.
+     SEULE LA PLACE CHANGE, et c'est imposé par les boutons déjà là :
+      · au doigt, l'angle HAUT DROIT (inchangé) — le cœur occupe le bas
+        droit (voir FicheTatoueur, `variante="fiche-mobile"`) ;
+      · au web, l'angle BAS DROIT — le cœur occupe le haut droit et le
+        partage le haut gauche.
+     ⚠️ `mobile:` n'est pas une largeur mais un POINTEUR
+     (`[data-appareil="mobile"]`, voir globals.css) : la bascule suit
+     l'appareil, comme partout ailleurs dans ce fichier. */
   const enFinDeGalerie = indice >= n - 1;
   const compteur = n > 1 && (
     <span
@@ -713,7 +725,8 @@ export function CarrouselPortfolio({
           disparaît dans le cadre. Sans ce nom, son relevé dirait
           « SPAN » — inexploitable. */
       data-role="compteur"
-      className="hidden mobile:inline-flex absolute top-3 right-3 z-[2]
+      className="inline-flex absolute right-3 bottom-3
+                 mobile:bottom-auto mobile:top-3 z-[2]
                  items-center rounded-full bg-black/60 backdrop-blur
                  px-2.5 py-1.5 text-white"
     >
@@ -811,9 +824,9 @@ export function CarrouselPortfolio({
     return (
       <div
         data-role="pagination"
-        className={`${
-          surCarte ? "flex" : "flex mobile:hidden"
-        } absolute bottom-3 inset-x-0 z-[2] justify-center pointer-events-none`}
+        //  §1 (nº 307) — plus qu'un seul emploi (les CARTES de la
+        //  mosaïque), donc plus de bascule de largeur à écrire ici.
+        className="flex absolute bottom-3 inset-x-0 z-[2] justify-center pointer-events-none"
       >
         <PointsDuCarrousel
           photos={photos}
@@ -1120,10 +1133,16 @@ export function CarrouselPortfolio({
       {!surCarte && !sansCompteur && compteur}
       {children}
 
-      {/* WEB : la pagination façon Instagram, EN BAS AU CENTRE de
-          l'image (nº 198-§5) — sauf quand l'appelant la rend lui-même
-          SOUS la photo (fenêtre de carrousel, nº 284). */}
-      {n > 1 && !sansPoints && paginationWeb()}
+      {/* LA PAGINATION FAÇON INSTAGRAM, EN BAS AU CENTRE de l'image
+          (nº 198-§5) — sauf quand l'appelant la rend lui-même SOUS la
+          photo (fenêtre de carrousel, nº 284).
+          §1 (nº 307) — ELLE NE RESTE QUE SUR LES CARTES de la
+          mosaïque. Sur une FICHE — la page pleine comme la fenêtre
+          centrée superposée, qui montent le même carrousel —, le bas
+          de la photo est rendu à la photo : c'est la capsule du
+          compteur, seule, qui dit le volume. Deux repères pour le même
+          renseignement, au même endroit, se gênaient. */}
+      {surCarte && n > 1 && !sansPoints && paginationWeb()}
     </div>
   );
 }

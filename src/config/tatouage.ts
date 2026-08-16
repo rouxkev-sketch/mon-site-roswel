@@ -1217,6 +1217,20 @@ export function rayonRetenu(km: number): number {
   return Math.max(RAYON_TATOUAGE_MINIMUM, km);
 }
 
+/**
+ * LE PALIER JUSTE AU-DESSUS — `null` quand il n'y en a plus (nº 307-§2).
+ * C'est ce que fait « Élargir le rayon » sur un écran sans résultat :
+ * UN cran, pas un saut au maximum. Un rayon hors paliers (une adresse
+ * partagée à la main : `rayon=75`) trouve quand même son suivant —
+ * on cherche le premier palier STRICTEMENT plus grand, pas un rang
+ * dans la liste.
+ * `null` au dernier palier : l'appelant n'affiche alors pas le bouton,
+ * plutôt que d'en proposer un qui ne ferait rien.
+ */
+export function rayonSuivant(km: number): number | null {
+  return RAYONS_TATOUAGE.find((palier) => palier > km) ?? null;
+}
+
 /** Combien de cartes la grille affiche au plus, en une fois. */
 export const CARTES_PAR_PAGE = 24;
 

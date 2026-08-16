@@ -4,8 +4,11 @@ import { notFound } from "next/navigation";
 import {
   CARTES_PAR_PAGE,
   libelleStyle,
+  RAYON_TATOUAGE_MINIMUM,
   stylesAlphabetiques,
 } from "@/config/tatouage";
+import { lieuVersParametres } from "@/lib/geocodage";
+import { AucunResultat } from "@/components/AucunResultat";
 import { chargerStyleVille as charger } from "@/lib/style-ville";
 import { adresseDuSite } from "@/lib/site";
 //  ⚠️ `villeAffichee`, PAS `nomVilleCourt` (passe nº 114) : les
@@ -175,14 +178,47 @@ export default async function PageStyleVille({
         </div>
 
         {tatoueurs.length === 0 ? (
-          <p className="text-sombre-texte-doux py-8">
-            Personne n&apos;est encore référencé en {libelle.toLowerCase()} à{" "}
-            {nomVille}.{" "}
-            <Link href="/" className="text-primaire underline">
-              Voir tous les tatoueurs
-            </Link>
-            .
-          </p>
+          /*  §2 (nº 307) — LE MÊME MESSAGE QUE LA MOSAÏQUE, à la lettre
+              (composants/AucunResultat) : il était écrit ici une
+              seconde fois, dans une autre formulation, et une
+              correction posée dans l'un ne se voyait pas dans l'autre.
+              LES DEUX ISSUES SONT DES ADRESSES, pas des gestes — cette
+              page est rendue par le serveur et n'a aucun état de
+              recherche à relancer :
+               · « Élargir le rayon » — cette page cherche la COMMUNE
+                 SEULE (`slugVille`, voir lib/style-ville) ; le cran
+                 juste au-dessus, c'est le premier palier du moteur
+                 autour de la même ville. La page, elle, garde sa
+                 question stable et son absence de rayon — on ne fait
+                 que passer la main au moteur ;
+               · « Chercher partout » — la mosaïque sans lieu, en
+                 gardant le style de la page. */
+          <AucunResultat
+            issues={[
+              {
+                libelle: "Élargir le rayon",
+                href: `/?${new URLSearchParams({
+                  style,
+                  ...lieuVersParametres({
+                    identifiant: `ville:${villeSlug}`,
+                    intitule: nomVille,
+                    contexte: "",
+                    adresse: null,
+                    ville: nomVille,
+                    code_postal: null,
+                    region: null,
+                    pays: null,
+                    code_pays: null,
+                    latitude: ville.latitude,
+                    longitude: ville.longitude,
+                    precision: "ville",
+                  }),
+                  rayon: String(RAYON_TATOUAGE_MINIMUM),
+                }).toString()}`,
+              },
+              { libelle: "Chercher partout", href: `/?style=${style}` },
+            ]}
+          />
         ) : (
           // La page porte UN style : chaque carte montre la photo de CE
           // style-là, et la grille porte la FENÊTRE de fiche (grand

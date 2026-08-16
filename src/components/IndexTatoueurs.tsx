@@ -12,9 +12,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   LARGEUR_SITE,
+  rayonSuivant,
   renduCherche,
   TEXTES_TATOUAGE,
 } from "@/config/tatouage";
+import { AucunResultat } from "@/components/AucunResultat";
 import { EnTeteTatouage } from "@/components/EnTeteTatouage";
 import { GrilleTatoueurs } from "@/components/GrilleTatoueurs";
 import { noterDemontage, noterMontage } from "@/lib/journal-bascule";
@@ -23,6 +25,7 @@ import {
   criteresComplets,
   libelleExplorer,
   libelleStyleChoisi,
+  rayonApplicable,
   type CritèresTatouage,
 } from "@/components/MoteurTatouage";
 import type { Tatoueur } from "@/lib/tatoueurs";
@@ -396,11 +399,46 @@ export function IndexTatoueurs({
           </p>
         )}
 
+        {/*  §2 (nº 307) — LE MESSAGE DU VIDE EST DÉSORMAIS ÉCRIT UNE
+             SEULE FOIS (composants/AucunResultat). Ici, on ne décide
+             plus que des ISSUES : celles qui ont un sens pour la
+             recherche servie, dans l'ordre où le propriétaire les a
+             demandées.
+              · « Élargir le rayon » — un cran, et seulement quand le
+                rayon veut dire quelque chose (une ville, une adresse :
+                on ne cherche pas « à 50 km de la France ») et qu'il
+                reste un palier au-dessus ;
+              · « Chercher partout » — efface le lieu, rien d'autre :
+                le style, la nature et les filtres restent.
+             SANS LIEU RENSEIGNÉ, ni l'une ni l'autre : la liste est
+             déjà celle du monde entier, il n'y a plus rien à élargir.
+             Il ne reste alors que le titre. */}
         {visibles.length === 0 && (
-          <p className="text-sombre-texte-doux py-10">
-            Aucun tatoueur ne correspond à cette recherche. Élargir le rayon, ou
-            effacer le lieu pour chercher partout.
-          </p>
+          <AucunResultat
+            issues={[
+              ...(rayonApplicable(affiches.lieu) &&
+              rayonSuivant(affiches.rayonKm) !== null
+                ? [
+                    {
+                      libelle: "Élargir le rayon",
+                      surClic: () =>
+                        chercher({
+                          ...affiches,
+                          rayonKm: rayonSuivant(affiches.rayonKm)!,
+                        }),
+                    },
+                  ]
+                : []),
+              ...(affiches.lieu
+                ? [
+                    {
+                      libelle: "Chercher partout",
+                      surClic: () => chercher({ ...affiches, lieu: null }),
+                    },
+                  ]
+                : []),
+            ]}
+          />
         )}
         {
           // La grille porte aussi la FENÊTRE de fiche (grand écran).
