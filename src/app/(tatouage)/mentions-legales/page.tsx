@@ -100,9 +100,10 @@ export default function PageMentionsLegales() {
               </a>
             </p>
             <p>
-              {MARQUE_YOKOFOLIO.nom} est édité SANS MODÈLE ÉCONOMIQUE : le site
-              ne vend rien, ne prend aucune commission, n&apos;affiche aucune
-              publicité et ne revend aucune donnée.
+              {MARQUE_YOKOFOLIO.nom}{" "}
+              est édité SANS MODÈLE ÉCONOMIQUE : le site ne vend rien, ne
+              prend aucune commission, n&apos;affiche aucune publicité et ne
+              revend aucune donnée.
             </p>
             <p>
               Conformément à l&apos;article 6-III-2 de la loi n° 2004-575 du
@@ -139,6 +140,17 @@ export default function PageMentionsLegales() {
                 </li>
               ))}
             </ul>
+            {/*  §3-e (nº 322) — LE TRANSFERT HORS D'EUROPE, DIT EN
+                 TOUTES LETTRES. Les deux adresses ci-dessus le
+                 montraient déjà (Californie, Singapour), mais une
+                 adresse n'est pas une information sur le TRAITEMENT :
+                 le RGPD demande que le transfert hors UE soit annoncé
+                 pour lui-même. */}
+            <p>
+              Ces deux hébergeurs sont établis hors de l&apos;Union
+              européenne : les données du site sont donc traitées aux
+              États-Unis et à Singapour.
+            </p>
           </Section>
 
           <Section titre="Données personnelles">
@@ -146,6 +158,27 @@ export default function PageMentionsLegales() {
               Un visiteur qui se contente de chercher un tatoueur ne crée aucun
               compte et ne donne aucune information : {MARQUE_YOKOFOLIO.nom} ne
               lui demande rien.
+            </p>
+            {/*  §3-a (nº 322) — LE COMPTE VISITEUR. C'ÉTAIT LE MANQUE LE
+                 PLUS IMPORTANT DE CETTE PAGE : le paragraphe ci-dessus
+                 affirmait qu'un visiteur ne crée aucun compte, et ce
+                 n'est plus vrai depuis « Ma sélection ». Les trois
+                 données nommées ici sont EXACTEMENT les trois tables du
+                 site — `tatoueurs_suivis`, `favoris_photos` et
+                 `visites_selection` — et toutes trois disparaissent
+                 avec le compte (`on delete cascade` sur `auth.users`),
+                 ce qui est précisément ce que la dernière phrase
+                 promet. */}
+            <p>
+              Un VISITEUR qui veut garder une sélection crée un compte avec une
+              adresse e-mail. Le site conserve alors les portfolios qu&apos;il
+              suit, les photos qu&apos;il a mises en favori, et la date de sa
+              dernière visite — uniquement pour lui afficher sa sélection et
+              lui signaler ce qui est nouveau depuis son dernier passage. Rien
+              de cela n&apos;est vendu, cédé, ni utilisé à des fins
+              publicitaires. Base légale : l&apos;exécution du service demandé
+              (article 6.1.b du RGPD). Conservation : tant que le compte
+              existe, puis suppression.
             </p>
             <p>
               Un TATOUEUR qui crée sa fiche fournit un nom, une ville, une
@@ -159,11 +192,44 @@ export default function PageMentionsLegales() {
               du RGPD) pour les informations de la fiche. Conservation : tant
               que la fiche existe, puis suppression.
             </p>
+            {/*  §3-f (nº 322) — LA RELECTURE DES PHOTOS. Elle existe
+                 (une fiche modifiée repasse en validation), et c'est un
+                 ACCÈS de l'éditeur aux images déposées : une page qui
+                 dit ce que deviennent les informations doit le dire.
+                 Elle est posée juste après la fiche, dont elle parle,
+                 et avant le formulaire de contact, qui est un autre
+                 traitement. */}
+            <p>
+              Les photos déposées sur un portfolio sont relues avant
+              d&apos;être publiées. L&apos;éditeur du site y a donc accès, à
+              cette seule fin.
+            </p>
+            {/*  §3-d (nº 322) — LE FORMULAIRE DE CONTACT : trois champs,
+                 une seule raison d'être. Il ne relevait d'aucun des
+                 paragraphes précédents — ni fiche, ni sélection — d'où
+                 son paragraphe à lui. */}
+            <p>
+              Le formulaire de contact recueille un nom, une adresse e-mail et
+              un message. Ils servent uniquement à répondre, et ne sont
+              conservés que le temps nécessaire à cet échange.
+            </p>
             <p>
               <strong className="text-sombre-texte">
                 Droit d&apos;accès, de rectification et de SUPPRESSION.
               </strong>{" "}
-              Un tatoueur peut demander à tout moment la correction ou la
+              {/*  §3-b (nº 322) — LA SUPPRESSION SE FAIT DEPUIS LE
+                   COMPTE, ET ELLE PASSE EN PREMIER. La page n'offrait
+                   qu'une voie, l'e-mail — c'était sous-estimer ce que
+                   le site sait faire : l'écran Sécurité
+                   (`BlocSuppressions`) supprime une fiche ou le compte
+                   entier, sans demander à personne, et il est ouvert à
+                   TOUT compte connecté, visiteur compris. La voie de
+                   l'e-mail RESTE, juste après : elle sert à qui ne
+                   peut plus se connecter. */}
+              Un compte peut être supprimé à tout moment par son titulaire,
+              DIRECTEMENT DEPUIS SON COMPTE, sans avoir à le demander à
+              personne. Un tatoueur peut demander à tout moment la correction
+              ou la
               suppression complète de sa fiche et de son compte, par simple
               e-mail à{" "}
               <a
@@ -190,9 +256,10 @@ export default function PageMentionsLegales() {
 
           <Section titre="Cookies">
             <p>
-              {MARQUE_YOKOFOLIO.nom} ne dépose AUCUN cookie publicitaire et
-              n&apos;utilise aucun outil de mesure d&apos;audience qui suivrait
-              les visiteurs d&apos;un site à l&apos;autre.
+              {MARQUE_YOKOFOLIO.nom}{" "}
+              ne dépose AUCUN cookie publicitaire et n&apos;utilise aucun outil
+              de mesure d&apos;audience qui suivrait les visiteurs d&apos;un
+              site à l&apos;autre.
             </p>
             <p>
               Seuls sont utilisés les cookies strictement nécessaires au
@@ -206,9 +273,10 @@ export default function PageMentionsLegales() {
           <Section titre="Les photos appartiennent aux tatoueurs">
             <p>
               Chaque image publiée sur une fiche reste la PROPRIÉTÉ ENTIÈRE du
-              tatoueur qui l&apos;a déposée. {MARQUE_YOKOFOLIO.nom} ne
-              revendique aucun droit sur ces images : le site les affiche pour
-              présenter le travail de leur auteur, et pour rien d&apos;autre.
+              tatoueur qui l&apos;a déposée. {MARQUE_YOKOFOLIO.nom}{" "}
+              ne revendique aucun droit sur ces images : le site les affiche
+              pour présenter le travail de leur auteur, et pour rien
+              d&apos;autre.
             </p>
             <p>
               En déposant une image, un tatoueur déclare en être l&apos;auteur
@@ -257,6 +325,19 @@ export default function PageMentionsLegales() {
             </p>
           </Section>
         </div>
+
+        {/*  §3-g (nº 322) — LA DATE DE DERNIÈRE MISE À JOUR.
+             ------------------------------------------------------------
+             Elle ferme le CONTENU, avant le lien de retour, qui est de la
+             navigation et non du texte légal.
+             ⚠️ AUCUNE VALEUR NOUVELLE : l'écriture est mot pour mot celle
+             du chapô de cette page (`text-[15px] text-sombre-texte-doux`),
+             et la marge celle qui sépare déjà le chapô de la pile de
+             sections (`mt-10`). La page ne gagne pas un jeton, pas une
+             taille, pas une couleur — c'est la consigne de la nº 322. */}
+        <p className="mt-10 text-[15px] text-sombre-texte-doux">
+          Dernière mise à jour : 16 août 2026
+        </p>
 
         <Link
           href="/"
