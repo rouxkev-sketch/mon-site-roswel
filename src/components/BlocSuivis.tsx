@@ -14,7 +14,7 @@ import {
   bandeDeTrois,
   groupesDeSuivis,
   libelleNouveautes,
-  lignesDInformation,
+  ligneDIdentite,
 } from "@/lib/selection-suivis";
 import type { TatoueurSuivi } from "@/lib/favoris-serveur";
 
@@ -214,7 +214,7 @@ function BlocDUnSuivi({
   suivi: TatoueurSuivi;
   surOuverture?: OuvertureDepuisSuivis;
 }) {
-  const lignes = lignesDInformation(suivi);
+  const identite = ligneDIdentite(suivi);
   const bande = bandeDeTrois(suivi);
   const nouveautes = libelleNouveautes(suivi.nouveautes);
 
@@ -263,57 +263,45 @@ function BlocDUnSuivi({
           classeTaille="h-13 w-13 lg:h-18 lg:w-18"
           classeGlyphe="h-7 w-7 lg:h-10 lg:w-10"
         />
-        {/*  §4 (nº 247) — LE NOM NE BOUGE PAS, LES LIGNES S'AJOUTENT
-             SOUS LUI. Le bloc de texte est calé EN HAUT
-             (`justify-start`) dès qu'il y a plusieurs modes : centré,
-             il aurait fait remonter le nom au-dessus du rond quand le
-             texte grandit. C'est la règle de la nº 241, telle quelle —
-             le rond est ancré en haut (`items-start` de
-             CLASSES_LIGNE_CLIQUABLE, `shrink-0` de PhotoRonde), il ne
-             bouge JAMAIS, et le texte ne dépasse jamais au-dessus de
-             lui. Un seul mode : la boîte de 52 px centre comme avant,
-             au pixel. */}
-        <span
-          className={`flex min-h-13 lg:min-h-18 min-w-0 flex-1 flex-col ${
-            lignes.length > 1 ? "justify-start" : "justify-center"
-          }`}
-        >
+        {/*  §3 (nº 323) — LA BOÎTE DE TEXTE EST TOUJOURS CENTRÉE.
+             Elle basculait en `justify-start` dès qu'il y avait
+             PLUSIEURS lignes (une par mode, nº 247-§4) : le nom serait
+             sinon remonté au-dessus du rond quand le texte grandit. Il
+             n'y a plus qu'UNE ligne d'information — le cas à deux
+             branches n'existe plus, et le centrage redevient ce qu'il
+             était avant la nº 247. */}
+        <span className="flex min-h-13 lg:min-h-18 min-w-0 flex-1 flex-col justify-center">
           {/*  §3 (nº 254) — le nom 15 → 18 px sur le web, MÊME
                graisse ; l'information 14 → 15, MÊME couleur. Le doigt
-               ne change pas. */}
-          <span className="truncate text-[15px] lg:text-[18px] font-semibold text-sombre-texte">
+               ne change pas.
+               §1 (nº 323) — LE WEB MONTE ENCORE D'UN CRAN : le nom
+               18 → 20 px, l'information 15 → 16 (juste dessous). Le
+               propriétaire les trouvait trop petits à côté d'un rond
+               de 72 px. LA HIÉRARCHIE NE BOUGE PAS — le nom reste plus
+               grand que l'information (l'écart passe même de 3 à 4 px)
+               et l'information reste grise : on ne fait que monter
+               l'échelle. ⚠️ LE DOIGT NE CHANGE PAS : les deux valeurs
+               nues (15 et 14) sont intactes, seul le cran `lg:` bouge. */}
+          <span className="truncate text-[15px] lg:text-[20px] font-semibold text-sombre-texte">
             {suivi.nom}
           </span>
           {/*  §2 (nº 244) — la ligne d'information : 14 px, grise.
-               §3 — L'URGENCE PAR LA TYPOGRAPHIE, JAMAIS PAR LA
-               COULEUR : quand la session tombe dans les sept jours,
-               LA DATE seule passe du gris au BLANC semi-gras — aucun
-               rose, aucun vert, aucun rouge, aucun badge.
-               §4 (nº 247) — UNE LIGNE PAR MODE, les unes sous les
-               autres, dans l'ordre de `modesOrdonnes`. */}
-          {lignes.map((info) => (
-            <span
-              key={info.cle}
-              data-info-suivi=""
-              data-guest-proche={info.proche ? "" : undefined}
-              className="truncate text-[14px] lg:text-[15px] leading-relaxed text-sombre-texte-doux"
-            >
-              {info.avant}
-              {info.date && (
-                <>
-                  {info.avant ? " · " : ""}
-                  <span
-                    data-date-guest=""
-                    className={
-                      info.proche ? "font-semibold text-sombre-texte" : ""
-                    }
-                  >
-                    {info.date}
-                  </span>
-                </>
-              )}
-            </span>
-          ))}
+               §3 (nº 323) — ET IL N'Y EN A PLUS QU'UNE, POUR TOUT LE
+               MONDE : « Artiste · Paris, France », « Studio · Félines,
+               France ». La boucle sur les modes est partie avec eux, et
+               avec elle la date de guest et son gras d'urgence (la
+               règle de la nº 244-§3) : cette ligne n'a plus de date à
+               porter. Ce qu'elle dit est calculé par `ligneDIdentite`,
+               qui est aussi ce que le banc éprouve — le composant ne
+               décide plus d'un seul mot.
+               §1 (nº 323) — 16 px sur le web (15 avant), le doigt
+               garde ses 14. */}
+          <span
+            data-info-suivi=""
+            className="truncate text-[14px] lg:text-[16px] leading-relaxed text-sombre-texte-doux"
+          >
+            {identite}
+          </span>
           {/*  LE COMPTE DE NOUVEAUTÉS (§5, nº 243) — sur SA ligne : il
                ne parle d'aucun mode en particulier. */}
           {nouveautes && (
@@ -431,8 +419,19 @@ function RangeeDeVignettes({
         comme la taille des chevrons depuis la nº 310. Le défaut du
         composant n'est pas touché — la colonne Portfolio d'une fiche,
         qui passe le sien (3 px), ne sent rien. */
+    /*  §2 (nº 323) — LE WEB RESPIRE ENTRE L'IDENTITÉ ET LES PHOTOS :
+        20 → 36 px (`lg:mt-9`). La galerie était collée au sous-titre,
+        et le §1 vient d'agrandir le nom et le sous-titre — le bloc
+        d'identité a besoin de finir avant que les photos commencent.
+        ⚠️ LA HIÉRARCHIE DES ÉCARTS TIENT TOUJOURS : 36 px À
+        L'INTÉRIEUR d'un bloc restent nettement moins que les 62 px
+        qui séparent DEUX artistes (voir la grille plus haut) — c'est
+        ce qui fait qu'on lit encore un bloc, et pas deux.
+        ⚠️ LE DOIGT NE CHANGE PAS : `mt-5` nu est intact, seul le cran
+        `lg:` s'ajoute. Les 20 px de la nº 254 et de la nº 264-§4
+        restent la valeur du téléphone. */
     <GalerieQuiDefile
-      classeEnveloppe="mt-5"
+      classeEnveloppe="mt-5 lg:mt-9"
       classeRangee="-mx-4 px-4 sm:-mx-6 sm:px-6"
       ecart="gap-[3px] lg:gap-1.5"
       cleDuContenu={bande.photos.length}

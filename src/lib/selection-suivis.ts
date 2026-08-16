@@ -5,7 +5,6 @@ import { modesOrdonnes, type ModeExerciceFiche } from "@/lib/modes-exercice";
 //  écrite ici — c'est la règle de lib/adresse depuis toujours.
 import { ligneCarte } from "@/lib/adresse";
 import {
-  genreMode,
   libelleTypeFiche,
   natureDeLaFiche,
   valeurExplorer,
@@ -36,8 +35,13 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  * les vérifier sans ouvrir un navigateur.
  *
  * ⚠️ AUCUNE SECONDE SOURCE. Les dates de guest viennent des modes
- * d'exercice (migration nº 21), les libellés de `libelleLieuDuMode`,
- * `libelleSecteurDuMode` et `genreMode` — rien n'est réécrit ici.
+ * d'exercice (migration nº 21) ; le TYPE de la ligne d'identité vient
+ * de `libelleTypeFiche` et son LIEU de `ligneCarte` — rien n'est
+ * réécrit ici.
+ * ⚠️ `genreMode` A QUITTÉ CE FICHIER À LA nº 323 : il écrivait « En
+ * salon », « À domicile », « Guest » sous le nom. Le mode d'exercice
+ * ne s'affiche plus sur cette ligne (§3-a) — l'import partait donc
+ * avec lui.
  */
 
 /** Les sept jours qui font « cette semaine ». */
@@ -155,121 +159,132 @@ export function periodeDuGuest(mode: {
     : `${jour(jourD)} ${nom(moisD)} – ${jour(jourF)} ${nom(moisF)}`;
 }
 
-/** Une ligne d'information — une par mode d'exercice (§4, nº 247). */
-export type LigneInfoSuivi = {
-  /** Une clé stable pour la liste (l'identifiant du mode, à défaut son
-      rang). */
-  cle: string;
-  /** Ce qui précède la date : « Guest à Lyon », « En salon · Lyon 1er ». */
-  avant: string;
-  /** La période d'une session guest, rendue À PART pour que le
-      composant la traite seule (nº 244-§3 — l'urgence est
-      TYPOGRAPHIQUE, jamais une couleur). Vide pour les autres modes. */
-  date: string;
-  guest: boolean;
-  /** La session commence (ou se déroule) dans les sept jours. */
-  proche: boolean;
-};
+/**
+ * CE QUI S'ÉCRIT SOUS LE NOM — UNE SEULE GRAMMAIRE POUR TOUT LE MONDE
+ * ==================================================================
+ * (§3, passe nº 323)
+ *
+ * LA RÈGLE, EN DEUX SEGMENTS ET PAS UN DE PLUS :
+ *
+ *     LE TYPE · OÙ
+ *
+ *   · Artiste · Paris, France
+ *   · Artiste · Austin, TX, États-Unis
+ *   · Artiste · Paris, France +2      (il travaille dans 3 villes)
+ *   · Studio  · Félines, France
+ *   · Salon   · Austin, TX, États-Unis
+ *
+ * CE QUI NE VA PLUS, ET POURQUOI ON L'A CHANGÉ. La liste mélangeait
+ * DEUX grammaires : pour un lieu, le premier mot disait CE QU'IL EST
+ * (« Studio ») ; pour un artiste, il disait COMMENT IL TRAVAILLE
+ * (« En salon »). Deux questions différentes sur la même colonne — et
+ * le mot « artiste », lui, n'apparaissait nulle part. Désormais le
+ * premier segment répond toujours à « c'est quoi ? », le second
+ * toujours à « où ? ».
+ *
+ * ⚠️ LE MODE D'EXERCICE A QUITTÉ CETTE LIGNE (§3-a). « En salon »,
+ * « En studio », « À domicile », « Guest » : plus aucun. Ils ne sont
+ * pas perdus — la FICHE les porte, et elle a la place de les écrire.
+ * LES GUESTS SERONT TRAITÉS À PART, sur la page des notifications :
+ * c'est pourquoi `periodeDuGuest` et `guestDuSuivi` restent exportées
+ * alors que cette ligne ne les appelle plus. Ce n'est pas un oubli,
+ * c'est une attente annoncée par le propriétaire.
+ *
+ * ⚠️ AUCUN MOT N'EST INVENTÉ ICI, et c'est le point : `libelleTypeFiche`
+ * écrit déjà « Artiste », « Salon » et « Studio » pour les cartes de la
+ * mosaïque et les têtes de fiche. On l'appelle — donc un artiste
+ * s'appelle « Artiste » ICI EXACTEMENT COMME AILLEURS, et le jour où ce
+ * mot changera il changera partout d'un coup. `ligneCarte` (nº 301)
+ * écrit le lieu, avec sa division quand le pays l'écrit (« Austin, TX,
+ * États-Unis ») et sans quand il ne l'écrit pas (« Lyon, France »).
+ */
 
 /**
- * CE QUI S'ÉCRIT SOUS LE NOM (§3), MODE PAR MODE (§4, nº 247)
- * ==================================================================
- * ⚠️ UNE FICHE PEUT EN CUMULER PLUSIEURS, et l'information était
- * ÉCRASÉE : on n'écrivait qu'une ligne — la session guest s'il y en
- * avait une, sinon le premier mode de l'ordre officiel. Lola, à
- * domicile ET résidente en salon ET guest ailleurs, n'en montrait
- * qu'un tiers.
- * CHAQUE MODE A DÉSORMAIS SA LIGNE, les unes sous les autres, DANS
- * L'ORDRE DÉJÀ ÉTABLI par `modesOrdonnes` (à domicile, en studio, en
- * salon, guest) — aucun second classement n'est écrit ici.
- *   · artiste en salon   → « En salon · Lyon, France »
- *   · artiste à domicile → « À domicile · Bordeaux, France »
- *   · guest              → « Guest · Lyon, France · 3 – 8 mars »
- *   · salon ou studio    → « Salon · Lyon, France » (il n'a pas de
- *     mode : il EST le lieu — une seule ligne, comme avant)
- * Les mots viennent de `genreMode`, `ligneCarte` et
- * `libelleTypeFiche` : aucun libellé n'est inventé ici.
+ * LES VILLES OÙ CET ARTISTE TRAVAILLE, DÉDOUBLONNÉES, DANS SON ORDRE.
+ * ------------------------------------------------------------------
+ * §3-e — L'ORDRE EST CELUI QU'IL A DÉCLARÉ : on parcourt `suivi.modes`
+ * TEL QUEL. ⚠️ SURTOUT PAS `modesOrdonnes`, qui range par genre (à
+ * domicile, en studio, en salon, guest) — c'était le bon classement
+ * quand chaque mode avait sa ligne ; ici il choisirait à la place de
+ * l'artiste QUELLE ville s'écrit en entier.
  *
- * §2 (nº 301) — PLUS JAMAIS L'ADRESSE COMPLÈTE. On lisait « En salon ·
- * 12 Rue de la République, Lyon » : la rue et le numéro n'apprennent
- * rien dans une LISTE — on y cherche qui on suit et où il se trouve, on
- * ne s'y rend pas. La forme est donc LE MODE EN FORME COURTE (« En
- * salon », « En studio », « À domicile », « Guest » — les `label` de
- * `GENRES_MODE`, jamais les libellés longs de la fiche du genre
- * « FONDATEUR DU SALON », qui eux ne changent pas), puis LA VILLE ET LE
- * PAYS par `ligneCarte`. Ni rue, ni numéro, jamais.
+ * §3-d — DÉDOUBLONNÉES SUR LA LIGNE RENDUE, et non sur le nom brut :
+ * deux modes qui s'écrivent pareil à l'écran SONT la même ville pour
+ * qui lit. C'est ce qui fait qu'un artiste qui reçoit chez lui ET
+ * travaille en salon dans la même ville affiche « Artiste · Paris,
+ * France » — sans « +1 ». C'est le cas le plus fréquent, il reste
+ * court.
  *
- * ⚠️ UNE SESSION GUEST TERMINÉE NE S'ÉCRIT PAS : la règle du §2
- * (nº 243) vaut ligne à ligne — elle est passée, elle ne dit plus où
- * l'artiste se trouve.
+ * §3-f — UNE VILLE, JAMAIS UNE ADRESSE. On ne lit que `ville`,
+ * `region`, `pays`, `code_pays` — ni rue ni numéro n'entrent dans
+ * `ligneCarte`. Et on ne se replie PAS sur l'intitulé d'un mode (le
+ * nom du lieu qui accueille) : ce n'est pas une ville. Un mode sans
+ * ville reprend celle de la fiche.
+ *
+ * ⚠️ UNE SESSION GUEST TERMINÉE NE COMPTE PAS. Elle ne dit plus où
+ * l'artiste se trouve — c'est la règle du §2 de la nº 243, et elle
+ * vaut ici comme elle valait ligne à ligne : compter une ville qu'il a
+ * quittée gonflerait le « +N » d'un endroit où il n'est plus.
  */
-export function lignesDInformation(
+export function villesDuSuivi(
   suivi: TatoueurSuivi,
   aujourdhui = jourCivil()
-): LigneInfoSuivi[] {
-  const lignes: LigneInfoSuivi[] = [];
-  /**
-   * §2 (nº 301) — LA VILLE ET LE PAYS DU MODE, ET RIEN D'AUTRE.
-   * ------------------------------------------------------------------
-   * Le mode porte son propre lieu ; quand il n'en a pas (un guest qui
-   * ne dit qu'un intitulé, par exemple), on retombe sur celui de la
-   * fiche. `ligneCarte` fait le reste — c'est elle qui sait quand une
-   * division s'écrit (« Austin, TX, États-Unis ») et quand elle ne
-   * s'écrit pas (« Lyon, France »).
-   */
-  const villeEtPaysDuMode = (mode: ModeExerciceFiche) =>
-    ligneCarte({
-      ville: mode.ville ?? mode.intitule ?? suivi.ville,
-      region: mode.region ?? suivi.region,
-      pays: mode.pays ?? suivi.pays,
-      code_pays: mode.code_pays ?? suivi.codePays,
-    });
-  modesOrdonnes(suivi.modes).forEach((mode, rang) => {
-    const cle = mode.id ?? `${mode.genre}-${rang}`;
-    if (mode.genre === "guest") {
-      //  Terminée : elle ne dit plus rien (règle du §2, nº 243).
-      if (mode.fin_le && mode.fin_le < aujourdhui) return;
-      lignes.push({
-        cle,
-        avant: [genreMode("guest").label, villeEtPaysDuMode(mode)]
-          .filter(Boolean)
-          .join(" · "),
-        date: periodeDuGuest(mode),
-        guest: true,
-        proche:
-          Boolean(mode.debut_le) &&
-          mode.debut_le! <= jourCivilDepuis(aujourdhui, JOURS_PROCHES),
-      });
-      return;
+): string[] {
+  const villes: string[] = [];
+  const ajouter = (ligne: string) => {
+    if (ligne && !villes.includes(ligne)) villes.push(ligne);
+  };
+  for (const mode of suivi.modes) {
+    if (mode.genre === "guest" && mode.fin_le && mode.fin_le < aujourdhui) {
+      continue;
     }
-    lignes.push({
-      cle,
-      avant: [genreMode(mode.genre).label, villeEtPaysDuMode(mode)]
-        .filter(Boolean)
-        .join(" · "),
-      date: "",
-      guest: false,
-      proche: false,
-    });
-  });
-  if (lignes.length > 0) return lignes;
-  //  Aucun mode : un salon ou un studio EST le lieu — « Salon · Lyon,
-  //  France ». Même grammaire, même fonction.
-  const texteLieu = [
-    libelleTypeFiche(suivi.typeFiche, suivi.etablissement),
-    ligneCarte({
-      ville: suivi.ville,
-      region: suivi.region,
-      pays: suivi.pays,
-      code_pays: suivi.codePays,
-    }),
-  ]
-    .filter(Boolean)
-    .join(" · ");
-  if (!texteLieu) return [];
-  return [
-    { cle: "lieu", avant: texteLieu, date: "", guest: false, proche: false },
-  ];
+    ajouter(
+      ligneCarte({
+        ville: mode.ville ?? suivi.ville,
+        region: mode.region ?? suivi.region,
+        pays: mode.pays ?? suivi.pays,
+        code_pays: mode.code_pays ?? suivi.codePays,
+      })
+    );
+  }
+  //  Aucun mode (un salon, un studio — ou un artiste qui n'en a pas
+  //  déclaré) : la fiche EST le lieu.
+  if (villes.length === 0) {
+    ajouter(
+      ligneCarte({
+        ville: suivi.ville,
+        region: suivi.region,
+        pays: suivi.pays,
+        code_pays: suivi.codePays,
+      })
+    );
+  }
+  return villes;
+}
+
+/**
+ * LA LIGNE SOUS LE NOM — « Artiste · Paris, France +2 ».
+ * ------------------------------------------------------------------
+ * §3-b — LA PREMIÈRE VILLE EN ENTIER, et elle seule.
+ * §3-c — LES AUTRES SONT COMPTÉES, après le pays : « +1 », « +2 ».
+ *        Rien d'autre — pas de « et 2 autres », pas de liste tronquée.
+ * ⚠️ ELLE REND UNE CHAÎNE, PLUS UNE LISTE. Il y avait UNE LIGNE PAR
+ * MODE (nº 247-§4), et le type `LigneInfoSuivi` qui allait avec, avec
+ * sa date de guest et son drapeau « proche ». Tout cela part avec les
+ * modes : il n'y a plus qu'une ligne, elle n'a pas de date, elle n'a
+ * pas d'urgence à signaler. Le composant s'en trouve d'autant plus
+ * simple — voir BlocSuivis.
+ */
+export function ligneDIdentite(
+  suivi: TatoueurSuivi,
+  aujourdhui = jourCivil()
+): string {
+  const type = libelleTypeFiche(suivi.typeFiche, suivi.etablissement);
+  const villes = villesDuSuivi(suivi, aujourdhui);
+  const premiere = villes[0] ?? "";
+  const autres = villes.length - 1;
+  const ou = premiere && autres > 0 ? `${premiere} +${autres}` : premiere;
+  return [type, ou].filter(Boolean).join(" · ");
 }
 
 /* ==================================================================
