@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { defilerEnDouceur } from "@/lib/defilement-programme";
 //  ⚠️ TEMPORAIRE (nº 218-§1) — la sonde du carrousel : elle veut
@@ -127,26 +127,90 @@ export function ContenuFiche({
    * remonter au MÊME endroit, au pixel. Une seule fonction, deux
    * appelants : impossible qu'ils s'arrêtent à deux hauteurs.
    */
-  function remonterSousLaBarre() {
-    if (document.documentElement.dataset.appareil !== "mobile") return;
-    noterSonde("REMONTÉE demandée (mobile)");
-    //  ⚠️ LA LIMITE, C'EST LE BAS DE LA PHOTO (nº 209-§5a) — et non le
-    //  haut du contenu, qui vient plus bas (l'écart entre les deux
-    //  colonnes) : la page s'arrêtait donc trop haut, au-dessus du
-    //  bloc Profil / Portfolio. L'enveloppe marque sa photo
-    //  (`data-photo-fiche`), le contenu partagé la lit — il n'a ainsi
-    //  aucune géométrie d'enveloppe écrite chez lui.
+  /**
+   * §4 (nº 304) — LA POSITION VISÉE, ET LA GARANTIE QUI LA TIENT.
+   * ------------------------------------------------------------------
+   * ⚠️ LA LIMITE, C'EST LE BAS DE LA PHOTO (nº 209-§5a) — et non le
+   * haut du contenu, qui vient plus bas (l'écart entre les deux
+   * colonnes) : la page s'arrêtait alors trop haut, au-dessus du bloc
+   * Profil / Portfolio. L'enveloppe marque sa photo
+   * (`data-photo-fiche`), le contenu partagé la lit — il n'a ainsi
+   * aucune géométrie d'enveloppe écrite chez lui.
+   *
+   * LE DÉFAUT DU PROPRIÉTAIRE : la page se pose LÉGÈREMENT AU-DESSUS,
+   * et une bande horizontale de photo reste visible sur toute la
+   * largeur. DEUX CAUSES POSSIBLES, et on les traite toutes les deux
+   * parce que je n'ai pas pu reproduire la bande ici (Chromium arrive
+   * juste, mesuré : le bas de la photo tombe à 0,5 px SOUS la barre) :
+   *  1. LE DEMI-PIXEL. La cible est fractionnaire (mesuré : 487,5) ;
+   *     un moteur qui tronque au lieu d'arrondir s'arrête au-dessus.
+   *     `Math.ceil` : on ne s'arrête JAMAIS trop haut, au pire un
+   *     pixel trop bas — invisible, et du bon côté.
+   *  2. LA MESURE VIEILLIT. Le repère est lu AVANT le mouvement ; si
+   *     quoi que ce soit change de hauteur pendant les ~300 ms de
+   *     l'animation (la barre, une image qui arrive), on vise un
+   *     endroit qui n'existe plus. On REMESURE donc à l'arrivée, et
+   *     on corrige le reste s'il y en a — instantanément, sans
+   *     animation, sans entrée d'historique. C'est le raisonnement du
+   *     recalage de la nº 296 : une garantie posée APRÈS le mouvement,
+   *     qui ne coûte rien quand tout est déjà juste.
+   * ⚠️ ET ELLE S'EFFACE DEVANT LE DOIGT : un toucher pendant le
+   *     mouvement désarme la garantie — on ne corrige jamais par-dessus
+   *     quelqu'un qui a repris la main.
+   */
+  function positionSousLaPhoto(): number | null {
     const photo = document
       .querySelector("[data-photo-fiche]")
       ?.getBoundingClientRect();
-    if (!photo) return;
-    const barre = document
-      .querySelector("[data-barre-fixe]")
-      ?.getBoundingClientRect().height;
+    if (!photo) return null;
+    const barre =
+      document.querySelector("[data-barre-fixe]")?.getBoundingClientRect()
+        .height ?? 0;
+    return Math.max(0, Math.ceil(window.scrollY + photo.bottom - barre));
+  }
+
+  function remonterSousLaBarre() {
+    if (document.documentElement.dataset.appareil !== "mobile") return;
+    noterSonde("REMONTÉE demandée (mobile)");
+    const cible = positionSousLaPhoto();
+    if (cible === null) return;
     //  Départ progressif, arrivée amortie, aucun rebond (§5b).
-    defilerEnDouceur(
-      Math.max(0, window.scrollY + photo.bottom - (barre ?? 0))
-    );
+    defilerEnDouceur(cible);
+    garantirLArrivee();
+  }
+
+  /** LA GARANTIE — elle remesure à l'arrivée et corrige le reste. */
+  const garantie = useRef<{ repos: number; doigt: (() => void) | null }>({
+    repos: 0,
+    doigt: null,
+  });
+  function garantirLArrivee() {
+    const etat = garantie.current;
+    window.clearTimeout(etat.repos);
+    if (etat.doigt) etat.doigt();
+    let abandonnee = false;
+    const auDoigt = () => {
+      abandonnee = true;
+    };
+    window.addEventListener("touchstart", auDoigt, { passive: true });
+    window.addEventListener("wheel", auDoigt, { passive: true });
+    etat.doigt = () => {
+      window.removeEventListener("touchstart", auDoigt);
+      window.removeEventListener("wheel", auDoigt);
+      etat.doigt = null;
+    };
+    etat.repos = window.setTimeout(() => {
+      etat.doigt?.();
+      if (abandonnee) return;
+      const cible = positionSousLaPhoto();
+      //  `positionSousLaPhoto` rend la position ABSOLUE à viser : si
+      //  elle vaut encore la position courante, il n'y a rien à faire.
+      if (cible === null || Math.abs(cible - window.scrollY) < 0.5) return;
+      noterSonde(`REMONTÉE recalée · ${window.scrollY} → ${cible}`);
+      window.scrollTo({ top: cible, left: 0, behavior: "instant" });
+      //  ⚠️ 520 ms : la durée du mouvement (400) et une marge. Plus
+      //  court, on corrigerait EN COURS de route.
+    }, 520);
   }
 
   /**
@@ -257,6 +321,9 @@ export function ContenuFiche({
     //  `remonterSousLaBarre` ne lit que le DOM : la rejouer à chaque
     //  rendu ne changerait rien, et l'ajouter en dépendance
     //  relancerait l'effet pour rien.
+    //  §4 (nº 304) — elle porte désormais la garantie d'arrivée, qui
+    //  ne lit elle aussi que le DOM et une référence stable.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /*  §3 (nº 276) — `choisirCategorie` et `surRendu` ont DISPARU avec

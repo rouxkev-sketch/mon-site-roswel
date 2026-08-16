@@ -575,6 +575,30 @@ export function MenuDeroulant({
     options.find((option) => option.value === valeur);
   const groupeDuChoix = optionDuChoix?.groupe ?? null;
   const sousGroupeDuChoix = optionDuChoix?.sousGroupe ?? null;
+  /**
+   * §2 (nº 304) — UN SEUL GROUPE N'A PAS DE PORTE.
+   * ------------------------------------------------------------------
+   * LE CAS, ET C'EST CELUI DES FAVORIS : le menu ne range ses styles en
+   * volets (« Réalisation », « Flash ») que parce qu'il y a DEUX
+   * natures. Quand le compte n'a que des réalisations, un volet unique
+   * « Réalisation » s'affichait quand même — avec sa flèche, et fermé :
+   * il fallait l'ouvrir pour voir une liste qui n'avait aucune
+   * alternative. Une porte qui ne mène qu'à une pièce n'est pas une
+   * porte.
+   * LA RÈGLE : le pliage PAR GROUPE ne joue qu'à partir de DEUX
+   * groupes. À un seul, l'en-tête redevient une étiquette (pas de
+   * flèche, rien à toucher) et ses options sont visibles d'emblée.
+   * ⚠️ ELLE NE TOUCHE PAS AUX SOUS-SECTIONS : « Cultures du monde »
+   * garde sa porte, elle en est une vraie — onze styles derrière, et
+   * d'autres styles à côté.
+   * ⚠️ ET ELLE EST GÉNÉRALE, non pas réservée aux favoris : c'est le
+   * même composant partout, et « une porte unique n'est pas une
+   * porte » vaut partout. Le menu du moteur, lui, a toujours ses deux
+   * catégories : il ne voit aucune différence.
+   */
+  const portesDeGroupe =
+    repliable &&
+    new Set(options.map((option) => option.groupe).filter(Boolean)).size > 1;
   const [groupeDeplie, setGroupeDeplie] = useState<string | null>(groupeDuChoix);
   /** LA SOUS-SECTION OUVERTE (passe nº 113) — une seule à la fois, et
       elle repart elle aussi du choix courant à chaque ouverture : on
@@ -596,14 +620,18 @@ export function MenuDeroulant({
       repliable ne replie rien. */
   const optionVisible = (option: OptionMenu) => {
     if (!repliable) return true;
-    if (option.groupe && option.groupe !== groupeDeplie) return false;
+    //  §2 (nº 304) — sans portes de groupe, le groupe ne cache rien.
+    if (portesDeGroupe && option.groupe && option.groupe !== groupeDeplie) {
+      return false;
+    }
     return !option.sousGroupe || option.sousGroupe === sousGroupeDeplie;
   };
 
   /** La PORTE d'une sous-section se voit dès que son groupe est ouvert
       (elle tient la place d'une option dans la liste). */
   const sousEnteteVisible = (option: OptionMenu) =>
-    repliable && (!option.groupe || option.groupe === groupeDeplie);
+    repliable &&
+    (!portesDeGroupe || !option.groupe || option.groupe === groupeDeplie);
 
   /** LA LISTE QUI DÉFILE — pour la remonter en haut (5B, nº 139). Une
       seule référence : un seul habillage est monté à la fois. */
@@ -666,7 +694,9 @@ export function MenuDeroulant({
       doit le confondre avec une option. */
   function enTeteSection(entete: string, marge: string) {
     const classes = `${marge} text-[13px] font-bold uppercase tracking-[0.08em] text-primaire`;
-    if (!repliable) {
+    //  §2 (nº 304) — À UN SEUL GROUPE, c'est une étiquette : aucune
+    //  flèche, rien à toucher, et le contenu est déjà là.
+    if (!portesDeGroupe) {
       return (
         <p role="presentation" className={classes}>
           {entete}

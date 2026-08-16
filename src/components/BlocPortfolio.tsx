@@ -213,9 +213,13 @@ export function BlocPortfolio({
 
   /* ---------- « UN STYLE MANQUE ? » (passe nº 122) ----------
      Le bas de la fenêtre des styles. Quatre états, et rien de plus :
-     le texte saisi, l'envoi en cours, le refus éventuel (le style
-     existe déjà, la même demande est en attente, le quota est
-     atteint), et la fenêtre de confirmation. */
+     le texte saisi, l'envoi en cours, le refus éventuel, et la fenêtre
+     de confirmation.
+     ⚠️ §1-d (nº 304) — IL N'Y A PLUS QUE DEUX REFUS POSSIBLES : le
+     style existe déjà, ou la même demande est en attente. Le troisième
+     — « tu as déjà proposé 3 styles cette semaine » — est SUPPRIMÉ
+     avec le quota lui-même (voir l'API `suggestion-style`). Rien ne
+     limite plus les demandes. */
   const [suggestion, setSuggestion] = useState("");
   const [envoiSuggestion, setEnvoiSuggestion] = useState(false);
   const [refusSuggestion, setRefusSuggestion] = useState<string | null>(null);
@@ -1073,14 +1077,35 @@ export function BlocPortfolio({
               className="absolute inset-0 bg-black/25 cursor-default
                    opacity-100 transition-opacity duration-200 starting:opacity-0"
             />
+            {/*  §1-a (nº 304) — LA PLAQUE PASSE EN VERRE. Elle était
+                 OPAQUE (`bg-sombre-carte`) quand toutes les autres
+                 surfaces superposées du site sont en verre — les deux
+                 fenêtres de confirmation de ce fichier même le sont
+                 déjà (`data-verre-fenetre`, plus bas).
+                 ⚠️ C'EST L'ÉCRITURE DES FENÊTRES (22 %, 40 px), et non
+                 celle des MENUS (45 %, 60 px) : celle-là est faite pour
+                 les panneaux qui s'ouvrent SANS voile, où la page se
+                 voit vraiment à travers. Ici il y a un voile noir à
+                 25 %, exactement comme les deux fenêtres voisines — on
+                 prend donc la même écriture qu'elles.
+                 ⚠️ ET SON FONDU D'OPACITÉ EST RETIRÉ : c'est le piège
+                 de la nº 234, mot pour mot — une plaque qui s'anime en
+                 opacité devient sa PROPRE racine d'arrière-plan pendant
+                 le fondu, et l'iPhone montre du noir. Le fondu reste au
+                 VOILE, à qui il appartient. */}
             <div
+              data-verre-fenetre=""
               className="relative flex w-full max-w-[420px]
                          max-h-[min(80dvh,640px)] flex-col overflow-hidden
-                         rounded-xl bg-sombre-carte
-                         shadow-[0_24px_80px_rgba(0,0,0,0.6)]
-                         opacity-100 transition-opacity duration-200 starting:opacity-0"
+                         rounded-xl
+                         shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
             >
-              <div className="flex items-center justify-between pl-5 pr-3 pt-3 pb-1">
+              {/*  §1-b (nº 304) — UNE LIGNE DE SÉPARATION SOUS LE
+                   TITRE : le filet du site (`border-sombre-bordure`),
+                   celui des sections de fiche — aucune valeur neuve.
+                   Le `pb-1` passe à `pb-3` pour que le filet ne colle
+                   pas au mot. */}
+              <div className="flex items-center justify-between border-b border-sombre-bordure pl-5 pr-3 pt-3 pb-3">
                 <h2 className="text-[16px] font-bold text-sombre-texte">
                   Ajouter un style
                 </h2>
@@ -1129,12 +1154,19 @@ export function BlocPortfolio({
                               DESSOUS. Le chevron dit maintenant ce que
                               le clic fait : « ça descend », puis « ça
                               se replie ». */}
+                          {/*  §1-c (nº 304) — LE CHEVRON EST ROSE DANS
+                               LES DEUX ÉTATS, comme dans le menu du
+                               moteur de recherche (MenuDeroulant : « la
+                               flèche de la porte est ROSE, pointée en
+                               bas comme en haut — c'est elle, et elle
+                               seule, qui dit ceci s'ouvre au lieu de se
+                               choisir »). Il n'était rose qu'OUVERT :
+                               fermé, plus rien ne distinguait la porte
+                               d'un style. */}
                           <IconeChevronBas
                             taille={20}
-                            classe={`shrink-0 transition-transform ${
-                              depliee
-                                ? "rotate-180 text-primaire"
-                                : "text-sombre-texte"
+                            classe={`shrink-0 transition-transform text-primaire ${
+                              depliee ? "rotate-180" : ""
                             }`}
                           />
                         </button>
@@ -1259,9 +1291,9 @@ export function BlocPortfolio({
                   </button>
                 </div>
                 {/* LE SEUL TEXTE SOUS LE CHAMP EST UN REFUS — jamais
-                    une explication (charte). Il dit ce qui bloque :
-                    le style existe déjà, la demande est en cours, le
-                    quota est atteint. */}
+                    une explication (charte). Il dit ce qui bloque : le
+                    style existe déjà, ou la demande est en cours.
+                    §1-d (nº 304) — plus aucun refus de volume. */}
                 {refusSuggestion && (
                   <p role="alert" className="mt-2 text-[13px] text-erreur">
                     {refusSuggestion}

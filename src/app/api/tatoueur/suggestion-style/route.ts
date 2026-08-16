@@ -24,35 +24,31 @@ import { creerClientSupabaseServeur } from "@/lib/supabase/server";
  *     saura sous quel nom le chercher.
  *  2. LA MÊME DEMANDE EST DÉJÀ EN ATTENTE, du même compte. La
  *     reproposer ne l'accélère pas.
- *  3. LE QUOTA EST ATTEINT (voir plus bas).
+ * ⚠️ §1-d (nº 304) — LE TROISIÈME MOTIF A DISPARU : le quota de trois
+ * propositions par semaine glissante est SUPPRIMÉ, code compris. Le
+ * propriétaire le retire : les demandes ne sont plus limitées, et
+ * aucun message ne parle plus de semaine. Il ne reste donc que deux
+ * refus possibles — « ce style existe déjà » et « tu l'as déjà
+ * proposé ».
  */
 
 /* ================================================================
- * LE QUOTA — trois propositions par semaine glissante
+ * §1-d (nº 304) — IL N'Y A PLUS DE QUOTA
  * ================================================================
- * POURQUOI TROIS. Un tatoueur qui parcourt les trente-huit styles en
- * repère un ou deux qui manquent à son travail, rarement plus : trois
- * couvre largement l'usage sincère, y compris l'hésitation (« je
- * propose les deux noms »). Au-delà, ce n'est plus une découverte,
- * c'est une liste — et une liste se discute par écrit, pas par
- * formulaire.
- *
- * POURQUOI UNE SEMAINE GLISSANTE, ET PAS « PAR SEMAINE CIVILE ».
- * Une semaine civile se remet à zéro le lundi à minuit : on pourrait
- * en poster trois le dimanche soir et trois le lundi matin — six en
- * douze heures, six fois plus que ce qu'on croyait autoriser. La
- * fenêtre glissante n'a pas de couture : elle compte TOUJOURS les
- * sept derniers jours, quelle que soit l'heure.
- *
- * CE QUE ÇA PLAFONNE VRAIMENT : douze demandes par mois et par
- * compte, dans le pire des cas. Une personne seule absorbe ça sans
- * peine ; un robot, lui, n'y trouve aucun intérêt.
+ * CE QUI VIVAIT ICI : `QUOTA_SUGGESTIONS = 3` et
+ * `FENETRE_QUOTA_JOURS = 7`, plus la section 5 qui comptait les sept
+ * derniers jours et refusait la quatrième demande. Les deux constantes
+ * et le comptage sont SUPPRIMÉS, et le refus « quota » avec eux : rien
+ * ne limite plus les demandes de nouveau style, et plus aucun message
+ * ne parle de semaine.
+ * ⚠️ CE QUI RESTE, ET QUI N'EST PAS UN QUOTA : les deux refus de fond
+ * — le style existe déjà dans le catalogue, ou la même demande est
+ * déjà en attente du même compte. Ceux-là disent une VÉRITÉ sur la
+ * demande, pas une limite de volume.
  */
-const QUOTA_SUGGESTIONS = 3;
-const FENETRE_QUOTA_JOURS = 7;
 
 /** Les trois issues rendues au navigateur, en plus de la réussite. */
-type Refus = "existe" | "doublon" | "quota";
+type Refus = "existe" | "doublon";
 
 export async function POST(requete: NextRequest) {
   /* ---- 1. QUI DEMANDE ? ---- */
@@ -134,20 +130,6 @@ export async function POST(requete: NextRequest) {
         ok: false,
         refus: "doublon" satisfies Refus,
         message: "Tu as déjà proposé ce style — il est en cours d'examen.",
-      });
-    }
-
-    /* ---- 5. LE QUOTA ---- */
-    const debutFenetre =
-      Date.now() - FENETRE_QUOTA_JOURS * 24 * 60 * 60 * 1000;
-    const recentes = lignes.filter(
-      (ligne) => new Date(ligne.cree_le).getTime() >= debutFenetre
-    );
-    if (recentes.length >= QUOTA_SUGGESTIONS) {
-      return NextResponse.json({
-        ok: false,
-        refus: "quota" satisfies Refus,
-        message: `Tu as déjà proposé ${QUOTA_SUGGESTIONS} styles cette semaine. Reviens dans quelques jours.`,
       });
     }
 

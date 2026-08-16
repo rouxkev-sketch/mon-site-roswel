@@ -19,7 +19,6 @@ import { ContenuFiche } from "@/components/ContenuFiche";
 import { FenetreCarrousel } from "@/components/FenetreCarrousel";
 import { PileFiches } from "@/components/PileFiches";
 import { SondePhoto } from "@/components/SondePhoto";
-import { pincementRecent } from "@/components/ZoomPincement";
 import {
   cheminDeLaFenetreCarrousel,
   cheminDuCarrousel,
@@ -29,12 +28,11 @@ import {
   serieDeLOuverture,
   serieMontree,
 } from "@/lib/photo-tatoueur";
-import {
-  NATURE_PAR_DEFAUT,
-  RENDU_PAR_DEFAUT,
-  ensembleDeLaPhoto,
-  natureConnue,
-} from "@/lib/photos-tatoueur";
+//  §3 (nº 304) — TROIS IMPORTS SONT PARTIS AVEC `surToucherDeLaPhoto`
+//  (`RENDU_PAR_DEFAUT`, `ensembleDeLaPhoto`, `natureConnue`), et
+//  `pincementRecent` avec eux : ils ne servaient qu'à ouvrir la fenêtre
+//  de carrousel depuis la photo du haut.
+import { NATURE_PAR_DEFAUT } from "@/lib/photos-tatoueur";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
@@ -495,37 +493,19 @@ export function FicheTatoueur({
     return true;
   }
 
-  /**
-   * TOUCHER LA PHOTO PRINCIPALE (smartphone) : la fenêtre s'ouvre sur
-   * LA PHOTO TOUCHÉE — jamais sur la première (nº 284). Le carrousel
-   * ouvert est L'ENSEMBLE de cette photo (règles 1 et 3 de la
-   * nº 278-§0), et son rang dedans est celui qu'on regardait.
-   * ⚠️ SEULEMENT UN TOUCHER FRANC : après un pincement, rien (le
-   * délai de `pincementRecent`, celui des cartes) ; un glissement
-   * n'émet aucun clic (le navigateur s'en charge) ; et les boutons
-   * posés sur la photo (cœur, partage, ronds) gardent leur geste.
-   */
-  function surToucherDeLaPhoto(evenement: React.MouseEvent) {
-    if ((evenement.target as HTMLElement).closest("button, a")) return;
-    if (pincementRecent()) return;
-    const brute = (tatoueur.galerie ?? []).find(
-      (photo) => photo.id === photoAffichee?.cle
-    );
-    if (!brute) return;
-    const ensemble = ensembleDeLaPhoto(tatoueur.galerie ?? [], brute);
-    const rangDansLEnsemble = Math.max(
-      0,
-      ensemble.findIndex((photo) => photo.id === brute.id)
-    );
-    ouvrirLaFenetreCarrousel(
-      brute.style,
-      {
-        nature: natureConnue(brute.nature),
-        rendu: brute.rendu ?? RENDU_PAR_DEFAUT,
-      },
-      rangDansLEnsemble
-    );
-  }
+  /*  §3 (nº 304) — LA PHOTO DU HAUT N'OUVRE PLUS RIEN, et
+      `surToucherDeLaPhoto` est SUPPRIMÉE, code compris.
+      ------------------------------------------------------------------
+      LA RÈGLE DU PROPRIÉTAIRE : la fenêtre de carrousel (nº 284) est
+      RÉSERVÉE À LA PARTIE PORTFOLIO de la fiche. On y entre en touchant
+      un style dans l'onglet Portfolio, et NULLE PART AILLEURS. Toucher
+      la photo principale l'ouvrait aussi — ce n'était pas voulu.
+      ⚠️ LA PHOTO GARDE TOUT LE RESTE : son défilement latéral, son
+      compteur « 3/12 », ses flèches. C'est SEULEMENT l'ouverture de la
+      fenêtre qui part — le gestionnaire de clic, et lui seul.
+      ⚠️ ET `ouvrirLaFenetreCarrousel` RESTE : elle a toujours son
+      appelant, l'unique et le bon — la vignette de l'onglet Portfolio
+      (`surSerieChoisie`, plus bas). */
 
   /*  ⚠️ LE SÉLECTEUR DE STYLE POSÉ SUR LA PHOTO A ÉTÉ SUPPRIMÉ
       (nº 198-§1) — le badge déroulant du bas gauche (mobile) comme le
@@ -669,12 +649,9 @@ export function FicheTatoueur({
           <div
             ref={cadrePhoto}
             data-photo-fiche=""
-            /*  §Fenêtre (nº 284) — SMARTPHONE : toucher la photo ouvre
-                la fenêtre de carrousel, SUR CETTE PHOTO. Le
-                gestionnaire s'écarte de lui-même partout ailleurs
-                (web, aperçu, toucher d'un bouton, fin de pincement) :
-                aucun comportement existant ne change. */
-            onClick={surToucherDeLaPhoto}
+            /*  §3 (nº 304) — PLUS AUCUN `onClick` ICI : la photo du
+                haut n'ouvre plus la fenêtre de carrousel (voir la note
+                de la fonction supprimée, plus haut). */
             /*  §3 (nº 290) — LA LARGEUR DÉCOULE DE LA HAUTEUR LIBRE
                 MESURÉE (voir l'effet plus haut). Le repli
                 `100vh − 119px` ne sert plus qu'au tout premier rendu,
