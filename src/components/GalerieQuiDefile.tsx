@@ -31,7 +31,8 @@ import { useEffect, useRef, useState } from "react";
  *    par `scrollTo` (nº 253-§4).
  */
 
-/** L'écart entre deux cases — 6 px, la valeur de la nº 244. */
+/** L'écart entre deux cases — 6 px, la valeur de la nº 244. C'est le
+    DÉFAUT du dessin : « Ma sélection » le garde tel quel. */
 export const ECART_GALERIE = "gap-1.5";
 
 export function GalerieQuiDefile({
@@ -39,6 +40,16 @@ export function GalerieQuiDefile({
   classeEnveloppe = "",
   classeRangee = "",
   styleRangee,
+  /**
+   * §4-a (nº 308) — L'ÉCART ENTRE DEUX CASES, quand l'appelant en veut
+   * un autre. C'est un RÉGLAGE, pas un second dessin : le composant
+   * continue de poser la rangée, ses chevrons et ses fondus — comme
+   * `classeRangee` ou `decalageGauche` avant lui. La colonne
+   * Portfolio d'une fiche demande 3 px (la moitié) ; sans argument, on
+   * garde les 6 px de la nº 244, donc « Ma sélection » ne bouge pas
+   * d'un pixel.
+   */
+  ecart = ECART_GALERIE,
   /** Le décalage des chevrons hors du cadre, par côté. */
   decalageGauche = "-left-4 sm:-left-6",
   decalageDroite = "-right-4 sm:-right-6",
@@ -57,6 +68,7 @@ export function GalerieQuiDefile({
   classeEnveloppe?: string;
   classeRangee?: string;
   styleRangee?: React.CSSProperties;
+  ecart?: string;
   decalageGauche?: string;
   decalageDroite?: string;
   avecVoiles?: boolean;
@@ -120,12 +132,20 @@ export function GalerieQuiDefile({
       ni disque, ni verre, ni fond, ni contour, ni halo —, au survol de
       la rangée seulement (`group-hover`, par la VISIBILITÉ : aucun
       fondu d'opacité), et jamais au doigt (`pointer-fine`).
-      §4-b (nº 301) — SA ZONE FAIT 40 px et déborde donc de la bande
-      des marges, vers l'INTÉRIEUR : le bord extérieur reste celui du
-      cadre, sans quoi un élément absolu qui dépasse à droite
-      ÉLARGIRAIT le document (le piège de la nº 228).
+      §4-b (nº 301) — SA ZONE déborde de la bande des marges vers
+      l'INTÉRIEUR : le bord extérieur reste celui du cadre, sans quoi
+      un élément absolu qui dépasse à droite ÉLARGIRAIT le document
+      (le piège de la nº 228).
       §4-c (nº 301) — et il porte une OMBRE DOUCE, jamais un contour :
-      c'est le procédé du cœur des vignettes, pas un second. */
+      c'est le procédé du cœur des vignettes, pas un second.
+      §3-a (nº 308) — IL RÉTRÉCIT. La nº 301 l'avait porté à une zone
+      de 40 px et un dessin de 20 × 40 au trait 3 : à cette taille il
+      DOMINAIT la galerie au lieu de l'accompagner. Zone 28 px, dessin
+      14 × 28, trait 2,5 — la surface du dessin passe de 800 à 392
+      points, soit la moitié. L'OMBRE NE BOUGE PAS : c'est elle, et
+      elle seule, qui garantit la lisibilité sur une photo claire ;
+      la réduire aurait annulé le seul point que la nº 301 avait bien
+      réglé. */
   const bandeau = (sens: 1 | -1) => (
     <button
       type="button"
@@ -135,11 +155,11 @@ export function GalerieQuiDefile({
       className={`hidden pointer-fine:flex invisible group-hover:visible
         absolute inset-y-0 z-[2] ${
           sens === 1 ? decalageDroite : decalageGauche
-        } w-10 items-center justify-center text-white`}
+        } w-7 items-center justify-center text-white`}
     >
       <svg
-        width="20"
-        height="40"
+        width="14"
+        height="28"
         viewBox="0 0 12 24"
         fill="none"
         aria-hidden="true"
@@ -148,7 +168,7 @@ export function GalerieQuiDefile({
         <path
           d={sens === 1 ? "M3 4l6 8-6 8" : "M9 4l-6 8 6 8"}
           stroke="currentColor"
-          strokeWidth="3"
+          strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
@@ -179,7 +199,7 @@ export function GalerieQuiDefile({
         ref={zone}
         data-galerie-defilante=""
         aria-label={etiquette}
-        className={`flex ${ECART_GALERIE} ${classeRangee}
+        className={`flex ${ecart} ${classeRangee}
                    overflow-x-auto snap-x snap-mandatory
                    [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}
         style={styleRangee}

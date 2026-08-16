@@ -66,12 +66,17 @@ titre("à la source — un seul dessin de galerie");
       !/data-bandeau-defilement/.test(affiche) &&
       /data-bandeau-defilement/.test(galerie)
   );
+  /*  ⚠️ AMENDÉ PAR LA Nº 308-§3-a. Ce contrôle épinglait les valeurs de
+      la nº 301 — zone 40 px, dessin 20 × 40, trait 3. Le propriétaire
+      les a jugées trop grandes et les a fait réduire : zone 28, dessin
+      14 × 28, trait 2,5. Ce qui RESTE vrai, et qui est le fond de ce
+      contrôle, c'est que le chevron est nu, ombré, et qu'il n'y a
+      toujours aucun point. Les valeurs elles-mêmes sont éprouvées par
+      le banc de la nº 308 — un seul banc les possède. */
   verif(
-    "LES FLÈCHES DE LA nº 301 SONT GARDÉES : zone de 40 px, dessin " +
-      "20 × 40, trait 3, ombre douce — et toujours aucun point",
-    /\} w-10 items-center justify-center text-white/.test(galerie) &&
-      /width="20"\n\s*height="40"/.test(galerie) &&
-      /strokeWidth="3"/.test(galerie) &&
+    "LES FLÈCHES SONT NUES ET OMBRÉES — et toujours aucun point " +
+      "(taille : voir le banc nº 308, qui la possède depuis la réduction)",
+    /\} w-7 items-center justify-center text-white/.test(galerie) &&
       /\[filter:drop-shadow\(0_1px_3px_rgba\(0,0,0,0\.65\)\)\]/.test(galerie) &&
       !/data-indicateur-pages/.test(galerie)
   );
@@ -87,20 +92,32 @@ titre("à la source — un seul dessin de galerie");
       !/slice\(0,/.test(affiche) &&
       !/Voir plus/.test(affiche)
   );
+  /*  ⚠️ AMENDÉ PAR LA Nº 308-§4-a : l'écart est passé de 6 à 3 px, donc
+      la soustraction de la formule passe de 12 à 6. LA RÈGLE, ELLE, NE
+      CHANGE PAS — deux pleines et 10 % de la troisième, et la largeur
+      se CALCULE au lieu d'être écrite en dur. C'est cela qu'on tient
+      ici ; les nombres sont éprouvés en vivant par le banc nº 308. */
   verif(
     "RÈGLE 4 — DEUX PLEINES ET 10 % DE LA TROISIÈME : la largeur d'une " +
       "case se calcule, elle n'est pas écrite en dur",
-    /basis-\[calc\(\(100%_-_12px\)\/2\.1\)\]/.test(affiche)
+    /basis-\[calc\(\(100%_-_6px\)\/2\.1\)\]/.test(affiche)
   );
+  /*  ⚠️ AMENDÉ PAR LA Nº 308-§1 ET §4-b. Le débord de 40 px a QUITTÉ la
+      rangée pour l'ENVELOPPE, et le rembourrage qui le compensait a
+      disparu : c'est lui qui donnait à la rangée deux boîtes de
+      référence, et donc la marge de droite que le propriétaire voyait.
+      LA BANDE D'EFFACEMENT DE 40 px, ELLE, EST INTACTE — c'est le cœur
+      de ce contrôle, et il est gardé mot pour mot. */
   verif(
-    "RÈGLE 5 — LA GALERIE DÉBORDE À GAUCHE JUSQU'AU CONTACT DE LA PHOTO " +
-      "(`-ml-10`, rendu en `pl-10`), ET CETTE BANDE S'EFFACE — les deux " +
-      "lignes du masque sont littérales, la préfixée d'abord",
-    /classeRangee="-ml-10 pl-10 scroll-pl-10"/.test(affiche) &&
+    "RÈGLE 5 — LA GALERIE DÉBORDE À GAUCHE DE 40 px JUSQU'AU CONTACT DE " +
+      "LA PHOTO (le débord est porté par l'enveloppe depuis la nº 308), " +
+      "ET CETTE BANDE S'EFFACE — les deux lignes du masque sont " +
+      "littérales, la préfixée d'abord",
+    /classeEnveloppe="mt-2\.5 -ml-10"/.test(affiche) &&
       /WebkitMaskImage:\s*\n?\s*"linear-gradient\(to right, rgba\(0,0,0,0\) 0px, rgba\(0,0,0,1\) 40px\)"/.test(
         affiche
       ) &&
-      /maskImage:\s*\n?\s*"linear-gradient\(to right, rgba\(0,0,0,0\) 0px, rgba\(0,0,0,1\) 40px\)"/.test(
+      /\bmaskImage:\s*\n?\s*"linear-gradient\(to right, rgba\(0,0,0,0\) 0px, rgba\(0,0,0,1\) 40px\)"/.test(
         affiche
       )
   );
@@ -214,10 +231,19 @@ titre("vivant — 1440 × 900, densité 2");
         Math.abs(m.ecartDroite) < 0.001,
         `${m.ecartDroite}`
       );
+      /*  ⚠️ AMENDÉ PAR LA Nº 308-§4-b : « LA GALERIE EST DÉCALÉE VERS LA
+          GAUCHE ». Au repos, la première photo ne s'aligne donc plus sur
+          les titres — elle commence 40 px à leur gauche, au bord même du
+          cadre, sous la bande d'effacement. C'est l'inverse EXACT de ce
+          que ce contrôle exigeait, et c'est une consigne, pas une
+          dérive : on retourne la mesure au lieu de la retirer. */
       verif(
-        "AU REPOS, LA PREMIÈRE PHOTO EST ALIGNÉE SUR LES TITRES",
-        Math.abs(m.premiereGauche - m.alignementTitres) < 0.001,
-        `première ${m.premiereGauche} · titres ${m.alignementTitres}`
+        "AU REPOS, LA PREMIÈRE PHOTO COMMENCE 40 px À GAUCHE DES TITRES " +
+          "(le décalage demandé à la nº 308-§4-b), donc au bord du cadre",
+        Math.abs(m.alignementTitres - m.premiereGauche - 40) < 0.001 &&
+          Math.abs(m.premiereGauche - m.bordGaucheCadre) < 0.001,
+        `première ${m.premiereGauche} · titres ${m.alignementTitres} · ` +
+          `cadre ${m.bordGaucheCadre}`
       );
       verif(
         "RÈGLE 5 — LE CADRE VA JUSQU'AU CONTACT DE LA GRANDE PHOTO, et " +
@@ -244,16 +270,43 @@ titre("vivant — 1440 × 900, densité 2");
         const rangee = document.querySelector(
           "[data-galerie-serie] [data-galerie-defilante]"
         );
-        //  ⚠️ ON VISE UNE POSITION D'ACCROCHAGE, PAS UN NOMBRE ROND.
-        //  L'accrochage est OBLIGATOIRE (`snap-mandatory`) : un
-        //  `scrollLeft = 100` est ramené à zéro dans la même trame, et
-        //  la preuve se ferait alors sur une galerie AU REPOS — où
-        //  aucune photo n'entre dans la bande, donc où elle ne
-        //  prouverait rien. On avance donc d'UN PAS : une case et son
-        //  écart.
+        /*  ⚠️ AMENDÉ PAR LA Nº 308 — ON NE DÉFILE PLUS « D'UN PAS », ON
+            PLACE LA SCÈNE.
+            ------------------------------------------------------------
+            CE QUI ÉTAIT ÉCRIT : avancer d'une case et son écart, pour
+            tomber sur une position d'accrochage (`snap-mandatory`
+            ramène tout le reste). Ça marchait avec l'écart de 6 px de
+            la nº 306 ; avec les 3 px du §4-a, l'accrochage a reposé la
+            piste ailleurs et LE JOINT ENTRE DEUX PHOTOS est tombé EN
+            PLEIN MILIEU de la bande d'effacement. On lisait alors le
+            fond de la page à 20 px — d'où un « 0 % » au milieu d'une
+            rampe qui montait bien partout ailleurs. Le défaut était
+            dans la scène, pas dans l'effacement.
+            CE QU'ON FAIT MAINTENANT : on neutralise l'accrochage le
+            temps de la mesure (le procédé de la nº 297), et on pose la
+            piste pour que LA DEUXIÈME CASE, à elle seule, recouvre
+            toute la bande — son bord gauche 60 px avant le bord du
+            cadre, sa largeur (178 px) bien au-delà des 43 px lus. Plus
+            aucun joint dans la zone de lecture, quels que soient
+            l'écart et la largeur des cases.
+            ⚠️ ET LE PAS EST BORNÉ PAR LA COURSE DISPONIBLE : cette
+            série n'a que trois photos, sa course entière fait 160 px.
+            Viser plus loin ne fait rien du tout — la piste est
+            écrêtée, et on retombe exactement sur le joint qu'on
+            voulait fuir. On avance donc de 60 px, ce qui est à la fois
+            un vrai défilement et assez peu pour que la PREMIÈRE case
+            (178 px de large) couvre encore toute la bande. */
         const premiere = rangee.querySelector("[data-case-galerie]");
-        const pas = premiere.getBoundingClientRect().width + 6;
-        rangee.scrollTo({ left: pas, behavior: "instant" });
+        rangee.style.scrollSnapType = "none";
+        const course = rangee.scrollWidth - rangee.clientWidth;
+        const large = premiere.getBoundingClientRect().width;
+        //  Au plus 60 px, jamais plus que la course, et jamais assez
+        //  pour que le bord droit de la première case entre dans la
+        //  zone lue (43 px).
+        rangee.scrollLeft = Math.max(
+          1,
+          Math.min(60, course, Math.floor(large - 43))
+        );
       });
       await page.waitForTimeout(900);
 
@@ -279,16 +332,22 @@ titre("vivant — 1440 × 900, densité 2");
       });
       const couvert = (x) =>
         scene.bords.some(([g, d]) => x >= g - 0.001 && x <= d + 0.001);
+      /*  ⚠️ AMENDÉ PAR LA Nº 308 : on ne se contente plus de deux points,
+          on exige qu'UNE SEULE ET MÊME PHOTO recouvre TOUTE la zone
+          qu'on va lire (0 à 43 px). C'est la garantie qu'aucun joint ne
+          s'y cache — la cause exacte du « 0 % » au milieu de la rampe. */
+      const uneSeuleCouvreTout = scene.bords.some(
+        ([g, d]) => g <= m.bordGaucheCadre && d >= m.bordGaucheCadre + 43
+      );
       verif(
         "LA SCÈNE DE LA PREUVE EST BIEN CELLE QU'ON CROIT : la galerie a " +
-          "défilé d'un pas, et une photo couvre RÉELLEMENT le bord gauche " +
-          "du cadre comme le milieu de la bande",
-        scene.position > 1 &&
-          couvert(m.bordGaucheCadre) &&
-          couvert(m.bordGaucheCadre + 20),
-        `position ${scene.position.toFixed(3)} · bords ${scene.bords
-          .map(([g, d]) => `${g.toFixed(0)}→${d.toFixed(0)}`)
-          .join(" ")}`
+          "défilé, et UNE SEULE photo couvre RÉELLEMENT toute la bande " +
+          "qu'on s'apprête à lire — aucun joint dedans",
+        scene.position > 1 && uneSeuleCouvreTout,
+        `position ${scene.position.toFixed(3)} · bande ${m.bordGaucheCadre}→` +
+          `${m.bordGaucheCadre + 43} · bords ${scene.bords
+            .map(([g, d]) => `${g.toFixed(0)}→${d.toFixed(0)}`)
+            .join(" ")}`
       );
 
       /*  ON DÉCODE TOUTE LA BANDE D'UN COUP, du bord gauche du cadre

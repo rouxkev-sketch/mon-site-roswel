@@ -506,6 +506,20 @@ export function CarrouselPortfolio({
       qui vient DU DOIGT ne doit jamais provoquer un `scrollTo` en
       retour, sans quoi on se bat avec le défilement natif. */
   const dernierPose = useRef(-1);
+  /*  §2 (nº 308) — L'INDICE VOULU, LISIBLE DEPUIS L'EFFET DE SÉRIE.
+       L'effet de série ne peut PAS dépendre de `indice` (il
+       reconstruirait l'observateur à chaque photo — voir sa note de
+       fin), mais il doit savoir SUR QUELLE PHOTO la série s'ouvre.
+       ⚠️ ET LA RÉFÉRENCE NE S'ÉCRIT PAS PENDANT LE RENDU — la règle du
+       projet, et le linteur la fait respecter. Elle s'écrit dans un
+       effet À ELLE, DÉCLARÉ AVANT celui de la série : React exécute
+       les effets DANS L'ORDRE DE DÉCLARATION, donc sur le rendu où la
+       série ET l'indice changent ensemble, celui-ci a déjà posé la
+       valeur quand l'autre la lit. */
+  const indiceVoulu = useRef(indice);
+  useEffect(() => {
+    indiceVoulu.current = indice;
+  }, [indice]);
   useEffect(() => {
     const zone = cadre.current;
     //  Les colonnes de l'ancienne série n'ont plus rien à dire : on
@@ -522,10 +536,35 @@ export function CarrouselPortfolio({
       );
     }
     if (!zone || n <= 1) return;
-    //  Une nouvelle série commence à sa première photo — sans quoi le
-    //  cadre garderait le défilement de la précédente.
-    zone.scrollLeft = 0;
-    dernierPose.current = 0;
+    /*  §2 (nº 308) — UNE NOUVELLE SÉRIE S'OUVRE SUR LA PHOTO DEMANDÉE,
+        ET NE PASSE PLUS PAR LA PREMIÈRE.
+        ------------------------------------------------------------
+        CE QUI ÉTAIT ÉCRIT ICI : `scrollLeft = 0` et
+        `dernierPose = 0` — « une nouvelle série commence à sa
+        première photo ». L'intention était juste (ne pas garder le
+        défilement de la série précédente) ; le moyen ouvrait une
+        COURSE, et c'est le seul chemin qui donne le symptôme du
+        propriétaire (« cliquer la 4ᵉ photo n'affiche rien ») :
+         · cet effet-ci remettait la piste à zéro et créait
+           l'observateur ;
+         · l'effet de repositionnement, déclaré APRÈS, visait la photo
+           demandée ;
+         · entre les deux, l'observateur pouvait mesurer la colonne 0
+           — celle sous les yeux à cet instant — et l'annoncer à la
+           fiche (`surChangement(0)`), qui reposait alors son indice à
+           0. La photo touchée était perdue en route.
+        Plus de passage par zéro : on POSE directement la colonne
+        demandée, et on note cette position comme la nôtre. Le
+        défilement de la série précédente est écarté tout aussi
+        sûrement — c'est une position choisie, pas une position
+        gardée. L'observateur, à sa première mesure, voit déjà la
+        bonne colonne : il n'a plus rien à corriger.
+        ⚠️ REPLI SUR ZÉRO quand la colonne demandée n'existe pas
+        encore (indice hors bornes après un changement de série) :
+        c'est exactement l'ancien comportement. */
+    const colonneVoulue = colonnes.current[indiceVoulu.current];
+    zone.scrollLeft = colonneVoulue ? colonneVoulue.offsetLeft : 0;
+    dernierPose.current = colonneVoulue ? indiceVoulu.current : 0;
     const observateur = new IntersectionObserver(
       (entrees) => {
         for (const entree of entrees) {
