@@ -17,6 +17,28 @@ import type { Tatoueur } from "@/lib/tatoueurs";
 /**
  * LA PILE DES FICHES SUPERPOSÉES (passe nº 226-§5)
  * ==================================================================
+ * §1 (nº 318) — LA RÈGLE DES FENÊTRES EN WEB, ÉCRITE UNE FOIS POUR
+ * TOUTES. C'est ici qu'elle décide, et AUCUNE PASSE FUTURE NE DOIT LA
+ * CONTREDIRE — décision du propriétaire, passe nº 318 :
+ *
+ *   EN VERSION WEB, LE FORMAT PLEIN ÉCRAN EST RÉSERVÉ À DEUX CAS, ET
+ *   À DEUX SEULEMENT :
+ *     1. « Mon portfolio », dans le compte du propriétaire de la
+ *        fiche (c'est l'aperçu — le drapeau `actif={false}` de cette
+ *        pile : on n'empile rien par-dessus son propre formulaire) ;
+ *     2. une fiche ouverte depuis un LIEN DE PARTAGE, c'est-à-dire
+ *        par quelqu'un qui arrive de l'extérieur (l'adresse directe
+ *        /tatoueur/nom, rendue en page complète par le serveur — le
+ *        référencement ne voit qu'elle).
+ *   TOUT LE RESTE S'OUVRE EN FENÊTRE CENTRÉE SUPERPOSÉE : les cartes
+ *   de la mosaïque, celles de « Ma sélection », et TOUT lien interne
+ *   d'une fiche vers une autre — même quand on lit déjà une fiche en
+ *   fenêtre : le lien s'empile, il ne sort JAMAIS de la fenêtre.
+ *
+ *   Toute surface du web qui montre une fiche en fenêtre doit donc
+ *   être enveloppée par CETTE pile — c'est elle qui tient la règle.
+ *   SMARTPHONE : rien de tout cela ; une fiche y est une page.
+ * ==================================================================
  * DEPUIS UNE FICHE, cliquer un membre de l'équipe ou le salon d'un
  * profil ouvrait une NOUVELLE PAGE : la fiche qu'on lisait était
  * perdue, position de défilement comprise. Ces liens ouvrent désormais

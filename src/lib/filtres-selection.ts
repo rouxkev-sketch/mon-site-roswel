@@ -400,6 +400,13 @@ export function entreesDuFiltre(
  */
 export const TOUS_LES_STYLES = "";
 
+/** §2-c (nº 318) — LE MOT DE L'ENTRÉE NEUTRE : « Tous les
+    portfolios ». Écrit une fois — l'entrée du menu et le champ de la
+    barre le lisent tous les deux (voir MenusSelection). Il remplace
+    « Tous les styles », qui mentait depuis que le menu filtre aussi
+    par profil (nº 316). */
+export const LIBELLE_TOUS_LES_PORTFOLIOS = "Tous les portfolios";
+
 /** LA CLÉ DU TOTAL, dans la table des comptes — une étoile : ni un
     slug de style, ni une valeur d'Explorer, donc aucune collision
     possible (voir `comptesDesSuivis`). */
@@ -410,16 +417,30 @@ export function entreesDesStyles(
 ): EntreeFiltre[] {
   //  §2-a (nº 316) — LE MENU QUI EXISTAIT REÇOIT SON TITRE. Il n'en
   //  avait aucun : il était seul, donc rien à nommer. Maintenant qu'un
-  //  second le rejoint, il lui faut son mot — « Styles ». SON CONTENU
-  //  NE CHANGE PAS D'UNE LIGNE : mêmes entrées, même ordre, même tête
-  //  « Tous les styles », mêmes familles en sous-porte.
+  //  second le rejoint, il lui faut son mot — « Styles ».
   const styles = stylesPresents(comptes, (slug) => slug, GROUPE_STYLES);
   if (styles.length === 0) return [];
   return [
+    /*  §2-c (nº 318) — L'ENTRÉE NEUTRE S'APPELLE « TOUS LES
+        PORTFOLIOS », ET ELLE VIT HORS GROUPE.
+        --------------------------------------------------------------
+        Elle s'appelait « Tous les styles » — ce n'était plus vrai
+        depuis que le menu filtre AUSSI par profil (nº 316) : sa valeur
+        vide annule TOUT, le style comme le profil. Le mot suit ce
+        qu'elle fait, et c'est le mot du titre de la page (« Ma
+        sélection de portfolios », nº 301).
+        ET ELLE SORT DU GROUPE « Styles » : une entrée qui annule les
+        DEUX groupes ne peut pas vivre dans l'un d'eux — elle se pose
+        AU-DESSUS des deux, sans `groupe`, donc visible en permanence,
+        portes fermées comprises.
+        ⚠️ LE DÉFAUT DE LA nº 317 NE PEUT PAS SE RÉVEILLER, et
+        doublement : la garde « une valeur vide n'est pas un choix »
+        (replieALOuverture) tient toujours — et cette entrée n'ayant
+        plus AUCUN groupe, même sans la garde elle n'aurait plus rien
+        à ouvrir. Le banc éprouve les deux. */
     {
       value: TOUS_LES_STYLES,
-      label: "Tous les styles",
-      groupe: GROUPE_STYLES,
+      label: LIBELLE_TOUS_LES_PORTFOLIOS,
       compte: comptes.get(CLE_TOTAL) ?? 0,
     },
     ...styles,

@@ -11,6 +11,7 @@ import { CLASSES_GRILLE_CARTES } from "@/components/GrilleTatoueurs";
 import { useVuePhototheque } from "@/components/AffichageMosaique";
 import { BlocSuivis } from "@/components/BlocSuivis";
 import { FenetreFiche } from "@/components/FenetreFiche";
+import { PileFiches } from "@/components/PileFiches";
 import { LigneResultats } from "@/components/LigneResultats";
 import { libelleDuChoix } from "@/components/MenusSelection";
 import {
@@ -174,8 +175,15 @@ export function PageFavoris({
     rendu: "",
     photo: "",
   });
+  /*  §1 (nº 318) — COMBIEN DE FICHES SONT EMPILÉES PAR-DESSUS la
+      fenêtre de base : remonté par PileFiches, exactement comme sur la
+      mosaïque (nº 226-§5). Un artiste ouvert depuis la fenêtre change
+      l'adresse — la fenêtre de base ne doit pas se fermer pour autant :
+      son contenu, sa série et son gel du corps l'attendent au retour. */
+  const [profondeurPile, setProfondeurPile] = useState(0);
   const visible =
-    ficheOuverte !== null && pathname === `/tatoueur/${ficheOuverte.slug}`;
+    ficheOuverte !== null &&
+    (pathname === `/tatoueur/${ficheOuverte.slug}` || profondeurPile > 0);
 
   const ouvrirLaFiche = useCallback(
     async (
@@ -245,6 +253,15 @@ export function PageFavoris({
       // Sans importance : la note ne sert qu'au rechargement.
     }
     setFicheOuverte(null);
+    /*  §1 (nº 318) — ET LA MACHINE ARRIÈRE, comme la mosaïque (son
+        `fermer` ne fait que ça). L'ouverture POUSSE une entrée
+        d'historique ; la croix, le voile et Échap doivent la
+        CONSOMMER — sans quoi l'adresse restait /tatoueur/… sur une
+        page qui montre « Ma sélection », et le compte de l'historique
+        divergeait de celui de la pile posée à cette passe (une entrée
+        par fenêtre, un cran par retour). Le bouton « précédent »,
+        lui, passait déjà par là — c'est le même chemin désormais. */
+    window.history.back();
   }, []);
 
   /** LES STYLES RÉELLEMENT ENREGISTRÉS, avec leur nombre — dans
@@ -295,9 +312,22 @@ export function PageFavoris({
   const ensemblesVisibles = cartesDesFavoris(visibles);
 
   return (
-    /*  ⚠️ LA LARGEUR DE LA MOSAÏQUE (nº 213-§3a) : `LARGEUR_SITE` et
+    /*  §1 (nº 318) — LA PILE DES FICHES SUPERPOSÉES ENVELOPPE LA PAGE.
+        C'ÉTAIT LE CHAÎNON MANQUANT, et tout le défaut : la fenêtre de
+        cette page était montée SANS fournisseur de pile — les liens
+        internes d'une fiche (membre d'équipe, salon, studio, guest)
+        ne trouvaient donc aucune main pour empiler (`useOuvertureFiche`
+        rendait null) et redevenaient des liens : la fiche suivante
+        s'ouvrait EN PLEIN ÉCRAN, hors de la fenêtre. La mosaïque et la
+        page de fiche avaient leur pile depuis la nº 226 ; cette page,
+        née après (nº 143), ne l'avait jamais reçue.
+        RÉEMPLOI STRICT : le fournisseur, ses fenêtres, son historique
+        (une entrée par fiche, un cran par retour) — rien n'est réécrit
+        ici. La règle entière vit dans PileFiches, où elle est écrite. */
+    <PileFiches surProfondeur={setProfondeurPile}>
+    {/*  ⚠️ LA LARGEUR DE LA MOSAÏQUE (nº 213-§3a) : `LARGEUR_SITE` et
         les mêmes marges latérales que l'accueil — cette page montre
-        les mêmes cartes, elle doit occuper le même espace. */
+        les mêmes cartes, elle doit occuper le même espace. */}
     <main
       /*  §1 (nº 254) — LE `pt-6` EN TROP EST PARTI : la page de
           recherche n'en met pas sur son <main> — c'est LigneResultats
@@ -529,6 +559,7 @@ export function PageFavoris({
         surFermeture={fermerLaFiche}
       />
     </main>
+    </PileFiches>
   );
 }
 

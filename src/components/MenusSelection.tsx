@@ -12,6 +12,7 @@ import {
   libelleStyleChoisi,
 } from "@/components/MoteurTatouage";
 import {
+  LIBELLE_TOUS_LES_PORTFOLIOS,
   libelleDuProfil,
   lireSelection,
   MENU_FAVORIS,
@@ -391,9 +392,16 @@ function libelleDuFiltre(
   if (choix.menu === MENU_SUIVIS) {
     //  §2 (nº 316) — UN PROFIL CHOISI S'ÉCRIT EN ENTIER, aux deux
     //  largeurs : « À domicile », « Studio ». C'est un choix, et un
-    //  choix se lit — seul l'état d'ouverture se raccourcit au doigt.
+    //  choix se lit.
     if (choix.profil) return libelleDuProfil(choix.profil);
-    if (etroit && !choix.style) return "Style";
+    /*  §2-c (nº 318) — RIEN DE CHOISI : « Tous les portfolios », AUX
+        DEUX LARGEURS — le mot de l'entrée neutre, celui qu'elle porte
+        dans le menu. Il remplace « Tous les styles » (faux depuis le
+        filtre par profil) ET le raccourci « Style » de la nº 260-§1,
+        qui est ANNULÉ pour ce menu : il abrégeait un mot devenu faux.
+        (Au vrai doigt, le champ dit « Filtrer » — nº 262 — : cette
+        écriture ne sert qu'aux largeurs intermédiaires.) */
+    if (!choix.style) return LIBELLE_TOUS_LES_PORTFOLIOS;
     return libelleStyleChoisi(choix.style);
   }
   //  §5 (nº 262) — SUR LE WEB, L'ÉTAT D'OUVERTURE DES FAVORIS DIT

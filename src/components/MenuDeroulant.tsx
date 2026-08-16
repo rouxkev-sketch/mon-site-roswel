@@ -862,19 +862,18 @@ export function MenuDeroulant({
   function porteSousSection(
     sousEntete: string,
     classes: string,
-    //  §3 (nº 260) — DEUX ÉCARTS, ET LA FEUILLE SEULE LES DEMANDE :
-    //  · `avecPoint` — la porte reçoit un point comme les styles, et
-    //    lui seul est ROSE : c'est ce qui la distingue d'eux, elle ne
-    //    mène pas à une sélection, elle ouvre un niveau ;
-    //  · `sansVoile` — le voile blanc de la nº 241-§5 s'en va : le
-    //    sous-niveau garde EXACTEMENT la teinte de la fenêtre. C'est
-    //    le point rose qui dit qu'on est entré, pas un fond qui change.
-    //  Le panneau du web, lui, ne passe rien : il garde son voile et
-    //  n'a jamais eu de points.
+    //  §3 (nº 260) — `avecPoint`, ET LA FEUILLE SEULE LE DEMANDE : la
+    //  porte reçoit un point comme les styles, et lui seul est ROSE —
+    //  c'est ce qui la distingue d'eux, elle ne mène pas à une
+    //  sélection, elle ouvre un niveau.
     //  §2 (nº 290) — `souligne` : le trait rose sous les seuls mots de
     //  la porte. Posé par le panneau classique quand l'appelant l'a
     //  demandé, JAMAIS par la feuille glissante.
-    { avecPoint = false, sansVoile = false, souligne = false } = {}
+    //  §2-b (nº 318) — `sansVoile` A DISPARU AVEC LE VOILE : le
+    //  panneau du web perd le sien (voir la note des options — le menu
+    //  garde UNE couleur de fond), la feuille l'avait perdu à la
+    //  nº 260. Plus personne ne le passait : le paramètre part avec.
+    { avecPoint = false, souligne = false } = {}
   ) {
     return (
       <button
@@ -886,13 +885,7 @@ export function MenuDeroulant({
         //  d'index à tenir à jour.
         data-sous-porte={sousEntete}
         data-porte-famille={avecPoint ? "" : undefined}
-        //  §5 (nº 241) — LA PORTE OUVERTE PREND LE VOILE DU SOUS-MENU
-        //  (voir la note sur les options) : porte et enfants forment
-        //  un seul bloc éclairci, on VOIT qu'on est entré quelque part.
-        //  (nº 260-§3 : la FEUILLE s'en passe — voir `sansVoile`.)
-        className={`${classes} flex w-full items-center gap-3 text-left${
-          !sansVoile && sousGroupeDeplie === sousEntete ? " bg-white/[0.06]" : ""
-        }`}
+        className={`${classes} flex w-full items-center gap-3 text-left`}
       >
         {avecPoint && (
           <span
@@ -1094,10 +1087,16 @@ export function MenuDeroulant({
                   // autres (même couleur, même graisse). Le rose est
                   // réservé au contour du champ et aux en-têtes de
                   // section — il ne doit pas désigner une option.
-                  //  ⚠️ LES OPTIONS D'UNE SOUS-SECTION SONT RETRAITÉES
+                  //  ⚠️ LES OPTIONS D'UNE VRAIE PORTE SONT RETRAITÉES
                   //  (passe nº 113) : le décrochage dit qu'elles
                   //  appartiennent à la porte du dessus, sans avoir à
                   //  l'écrire.
+                  //  §2-a (nº 318) — MAIS PAS CELLES D'UN SOUS-TITRE :
+                  //  « ARTISTE » et « LIEU » ne sont pas des portes
+                  //  (nº 317), leurs options n'ont rien « dedans » à
+                  //  dire — elles s'alignent à GAUCHE, sur la même
+                  //  ligne verticale que leur sous-titre. Aucun
+                  //  retrait, aux deux largeurs.
                   //  ⚠️ ON REMPLACE `px-4` AU LIEU D'AJOUTER `pl-9` :
                   //  deux classes Tailwind qui visent la même propriété
                   //  ont la même force, et c'est l'ORDRE DE LA FEUILLE
@@ -1110,18 +1109,25 @@ export function MenuDeroulant({
                   //  ⚠️ `flex` SEULEMENT QUAND IL Y A UN COMPTE
                   //  (nº 216-§2) : sans lui, rien ne change pour les
                   //  autres menus du site, qui n'en portent pas.
-                  //  §5 (nº 241) — LE SOUS-MENU S'ÉCLAIRCIT D'UN CRAN,
-                  //  et par un VOILE BLANC AJOUTÉ PAR-DESSUS la plaque
-                  //  (`bg-white/[0.06]`) — JAMAIS en réduisant
-                  //  l'opacité de la plaque : plus transparente, elle
-                  //  disparaîtrait au-dessus d'une carte blanche,
-                  //  exactement ce que la teinte à 45 % évite. Chaque
-                  //  niveau s'éclaircit, c'est la règle de la charte.
+                  /*  §2-b (nº 318) — LE VOILE BLANC DU SOUS-MENU EST
+                      SUPPRIMÉ, et c'est une ANNULATION de la nº 241-§5,
+                      sur consigne : « en web, le menu garde UNE SEULE
+                      couleur de fond, quel que soit le groupe ouvert —
+                      un seul fond, du haut en bas, tout le temps. »
+                      Depuis que les entrées de « Profil » vivent sous
+                      des sous-titres toujours dépliés (nº 317), ce
+                      voile teintait TOUT le groupe ouvert : le panneau
+                      changeait de couleur selon le menu ouvert. Ce qui
+                      dit encore l'appartenance : le RETRAIT des enfants
+                      d'une vraie porte (ci-dessous), et le trait rose
+                      de la porte (nº 290). La feuille du bas l'avait
+                      déjà retiré (nº 260-§3) — les deux habillages
+                      disent enfin la même chose. */
                   className={`${optionSombre(
-                    option.sousGroupe
+                    option.sousGroupe && !option.sousTitre
                       ? OPTION_LISTE.replace("px-4", "pr-4 pl-9")
                       : OPTION_LISTE
-                  )}${option.sousGroupe ? " bg-white/[0.06]" : ""}${option.compte !== undefined ? " flex items-center" : ""}`}
+                  )}${option.compte !== undefined ? " flex items-center" : ""}`}
                 >
                   <span className="min-w-0 flex-1 truncate">{option.label}</span>
                   {option.compte !== undefined && (
@@ -1270,8 +1276,10 @@ export function MenuDeroulant({
                             ? "text-sombre-texte hover:bg-sombre-eleve"
                             : "text-encre hover:bg-fond-doux"
                         }`,
-                        //  §3 (nº 260) — le point rose, et aucun voile.
-                        { avecPoint: true, sansVoile: true }
+                        //  §3 (nº 260) — le point rose. (Le voile est
+                        //  parti PARTOUT à la nº 318-§2-b — plus rien
+                        //  à refuser ici.)
+                        { avecPoint: true }
                       ))}
                     {optionVisible(option) && (
                     <button
@@ -1294,11 +1302,18 @@ export function MenuDeroulant({
                       // elle, la feuille n'indiquerait plus du tout quel
                       // métier est sélectionné.
                       className={`w-full flex items-center gap-3 min-h-[52px] pr-3 rounded-2xl text-left text-base ${
-                        //  Retrait des options d'une sous-section
+                        //  Retrait des options d'une VRAIE porte
                         //  (passe nº 113) — même règle que sur le web.
                         //  §3 (nº 260) — MAIS PLUS LE VOILE (nº 241-§5) :
                         //  le sous-niveau garde la teinte de la fenêtre.
-                        option.sousGroupe ? "pl-8" : "pl-3"
+                        //  §2-a (nº 318) — ET AUCUN RETRAIT SOUS UN
+                        //  SOUS-TITRE : « ARTISTE » et « LIEU » ne sont
+                        //  pas des portes (nº 317) — leurs options
+                        //  partent de la même ligne verticale qu'eux,
+                        //  comme sur le web.
+                        option.sousGroupe && !option.sousTitre
+                          ? "pl-8"
+                          : "pl-3"
                       } ${
                         sombre
                           ? "text-sombre-texte hover:bg-sombre-eleve"

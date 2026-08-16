@@ -253,11 +253,21 @@ const profilDe = (liste) => entreesDuProfil(comptesDesSuivis(liste));
  * ================================================================== */
 titre("§2-a et §2-e — « Styles » reçoit son titre, et choisir filtre");
 {
+  /*  ⚠️ AMENDÉ À LA nº 318-§2-c. L'entrée NEUTRE (« Tous les
+      portfolios ») a quitté le groupe « Styles » : elle annule AUSSI
+      le profil, elle vit donc AU-DESSUS des deux groupes, hors
+      groupe. LA MESURE EST RENDUE, PAS RETIRÉE : ce que ce contrôle
+      éprouve — le menu existant a reçu son titre — se vérifie sur les
+      entrées DE STYLE, la tête neutre en moins. */
   const styles = entreesDesStyles(comptesDesSuivis(CAS.tous));
   verif(
-    "§2-a — toutes les entrées du menu existant portent le titre « Styles »",
-    styles.length === 0 || styles.every((e) => e.groupe === GROUPE_STYLES),
-    `${styles.length} entrée(s), groupe « ${styles[0]?.groupe ?? "—"} »`
+    "§2-a — les entrées de style portent le titre « Styles », et la tête " +
+      "neutre vit hors groupe (nº 318)",
+    styles.length > 1 &&
+      styles[0].groupe === undefined &&
+      styles.slice(1).every((e) => e.groupe === GROUPE_STYLES),
+    `${styles.length} entrée(s) — tête « ${styles[0]?.label} » hors groupe, ` +
+      `le reste sous « ${styles[1]?.groupe} »`
   );
 
   //  §2-e — LE FILTRAGE, sur les mêmes données que le comptage.

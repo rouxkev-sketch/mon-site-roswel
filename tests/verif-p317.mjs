@@ -160,15 +160,19 @@ titre("§1 — à l'ouverture, les deux groupes sont fermés");
     arrivee.groupe === null && arrivee.sousGroupe === null,
     `groupe ${arrivee.groupe} · sous-groupe ${arrivee.sousGroupe}`
   );
-  //  LE DÉFAUT EXACT QUE CETTE PASSE CORRIGE : la tête « Tous les
-  //  styles » a une valeur VIDE, et c'est elle qu'on trouvait.
+  /*  ⚠️ AMENDÉ À LA nº 318-§2-c : la tête neutre s'appelle désormais
+      « Tous les portfolios » et vit HORS GROUPE — l'entrée à valeur
+      vide n'a donc PLUS de groupe à faire ouvrir : la cause d'origine
+      du défaut a disparu avec le rangement, en plus de la garde. LA
+      MESURE EST RENDUE : l'entrée à valeur vide existe toujours, et
+      c'est bien elle que la garde neutralise. */
   const tete = ENTREES.find((e) => e.value === "");
   verif(
     "…alors que le menu contient bien une entrée à valeur VIDE — c'était " +
-      "elle, la cause : « Tous les styles » se faisait passer pour le " +
-      "choix courant",
-    Boolean(tete) && tete.groupe === GROUPE_STYLES,
-    `« ${tete?.label} » (valeur vide, groupe « ${tete?.groupe}` + " »)"
+      "elle, la cause ; depuis la nº 318 elle vit hors groupe, et ne " +
+      "pourrait plus rien ouvrir même sans la garde",
+    Boolean(tete) && tete.groupe === undefined,
+    `« ${tete?.label} » (valeur vide, hors groupe)`
   );
   //  ET LE COMPORTEMENT NORMAL N'A PAS BOUGÉ : un vrai choix rouvre
   //  son groupe, et sa famille.
@@ -229,10 +233,15 @@ titre("§1 — à l'ouverture, les deux groupes sont fermés");
     ),
     `${ENTREES_SEULES.filter((e) => e.sousGroupe).length} style(s) en famille, encore rangés`
   );
+  /*  ⚠️ AMENDÉ À LA nº 318-§2-c : l'entrée neutre (« Tous les
+      portfolios ») vit hors groupe — elle est donc VISIBLE portes
+      fermées, et c'est voulu : elle annule le filtre, elle doit se
+      voir de partout. Ce que ce contrôle éprouve tient toujours :
+      RIEN DES DEUX GROUPES ne se voit tant qu'on n'a rien ouvert. */
   verif(
-    "à DEUX groupes fermés, en revanche, RIEN ne se voit — c'est bien " +
-      "l'écran d'arrivée du §1",
-    ENTREES.every(
+    "à DEUX groupes fermés, RIEN DES GROUPES ne se voit — seule l'entrée " +
+      "neutre, hors groupe, reste posée au-dessus (nº 318)",
+    ENTREES.filter((option) => option.groupe).every(
       (option) =>
         !optionSeVoit(option, {
           repliable: true,
@@ -242,7 +251,7 @@ titre("§1 — à l'ouverture, les deux groupes sont fermés");
           sousTitres: sousTitresDe(ENTREES),
         })
     ),
-    "aucune option visible tant qu'on n'a rien ouvert"
+    "aucune option d'un groupe visible tant qu'on n'a rien ouvert"
   );
 }
 
