@@ -19,6 +19,8 @@ import {
   CLE_TOTAL,
   cleProfilLieu,
   cleProfilMode,
+  TOUS_LES_ARTISTES,
+  TOUS_LES_LIEUX,
   type ChoixSelection,
 } from "@/lib/filtres-selection";
 import type { PhotoDuSuivi, PhotoFavorite, TatoueurSuivi } from "@/lib/favoris-serveur";
@@ -591,10 +593,22 @@ export function photoDuChoix(
  */
 export function clesDuProfil(suivi: TatoueurSuivi): string[] {
   const nature = natureDeLaFiche(suivi.typeFiche, suivi.etablissement);
-  if (nature !== "artiste") return [cleProfilLieu(nature)];
+  /*  §2-d (nº 317) — LA TÊTE DU SOUS-GROUPE EST UNE CLÉ COMME LES
+      AUTRES. « Tous les lieux » et « Tous les artistes » ne sont pas un
+      raccourci d'affichage : ils se comptent et se filtrent par cette
+      même fonction, donc leur nombre ne peut pas mentir sur ce qu'ils
+      montreront. */
+  if (nature !== "artiste") return [TOUS_LES_LIEUX, cleProfilLieu(nature)];
   //  Un même genre déclaré deux fois (deux salons, deux guests) ne
   //  compte qu'une fois : le menu compte des PORTFOLIOS, pas des modes.
-  return [...new Set(suivi.modes.map((mode) => cleProfilMode(mode.genre)))];
+  const modes = [...new Set(suivi.modes.map((mode) => cleProfilMode(mode.genre)))];
+  /*  ⚠️ UN ARTISTE SANS AUCUN MODE DÉCLARÉ NE NOURRIT RIEN, pas même
+      la tête. C'est ce qui garde intact le cas du §1 (nº 317) : sans
+      profil déclaré chez les suivis, le menu « Profil » n'existe pas,
+      « Styles » reste seul, et la règle de la nº 304 le rouvre sans
+      flèche. Poser la tête ici ferait apparaître « Profil » dès qu'un
+      artiste est suivi — un menu qui n'ouvrirait sur rien. */
+  return modes.length > 0 ? [TOUS_LES_ARTISTES, ...modes] : [];
 }
 
 /** Les suivis qui répondent au choix — un artiste PORTE un tag dès

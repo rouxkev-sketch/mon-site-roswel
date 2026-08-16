@@ -10,6 +10,14 @@ import {
 } from "@/components/champs-recherche";
 import { stylePanneau, usePlacementMenu } from "@/components/placement-menu";
 import { useVoileDeLaPage } from "@/components/VoileDeLaPage";
+//  §1 et §2-a (nº 317) — LES TROIS RÈGLES DE REPLI, SORTIES D'ICI pour
+//  qu'un banc puisse les jouer plutôt que les relire.
+import {
+  aDesPortesDeGroupe,
+  optionSeVoit,
+  replieALOuverture,
+  sousTitresDe,
+} from "@/lib/repli-menu";
 
 // La petite flèche du menu, dessinée dans le code. Deux versions :
 // GRISE au repos, ROSE quand le menu est ouvert (elle change en même
@@ -29,6 +37,24 @@ const TAILLE_POINT = "w-1.5 h-1.5";
 const FLECHE_GRISE = flecheImage(COULEURS.flecheMenus);
 const FLECHE_ROSE = flecheImage(COULEURS.primaire);
 
+/**
+ * §2-b (nº 317) — L'ÉCRITURE D'UN TITRE DE GROUPE, EXTRAITE.
+ * ------------------------------------------------------------------
+ * Elle habillait « Styles », « Profil », « Réalisations », « Flashs »
+ * — et elle vivait en dur dans `enTeteSection`. Le propriétaire exige
+ * que les SOUS-TITRES (« ARTISTE », « LIEU ») portent LA MÊME taille
+ * et LA MÊME graisse : la seule façon de le garantir pour de bon est
+ * qu'ils lisent la même chaîne. Deux valeurs recopiées finiraient par
+ * diverger — c'est la règle du site depuis la nº 276.
+ * ⚠️ LA COULEUR N'EN FAIT PAS PARTIE, et c'est voulu : le titre de
+ * groupe est ROSE, le sous-titre GRIS. C'est la seule chose qui les
+ * sépare, et elle se lit d'un coup d'œil.
+ * ⚠️ LA TAILLE (13 px) EST SOUS CELLE DES ENTRÉES (16 px) : un titre
+ * annonce, il ne se choisit pas.
+ */
+const ECRITURE_TITRE_GROUPE =
+  "text-[13px] font-bold uppercase tracking-[0.08em]";
+
 export type OptionMenu = {
   value: string;
   label: string;
@@ -44,13 +70,23 @@ export type OptionMenu = {
       ce qui permet à « Cultures du monde » d'exister dans le menu
       « Explorer » sans être un style cherchable. */
   sousGroupe?: string;
-  /** §2-f (nº 316) — CETTE SOUS-PORTE S'ÉCRIT EN GRIS, dans la feuille
-      du bas. « ARTISTE » et « LIEU » sont des SOUS-TITRES : ils
-      annoncent deux familles de profils, ils ne tiennent pas la place
-      d'une option. « Cultures du monde », elle, occupe la place d'un
-      style entre deux styles — elle garde le blanc des options, et ce
-      drapeau ne la concerne pas. */
-  sousGroupeGris?: boolean;
+  /**
+   * §2 (nº 317) — CETTE SOUS-SECTION EST UN SIMPLE SOUS-TITRE.
+   * ------------------------------------------------------------------
+   * ⚠️ IL REMPLACE `sousGroupeGris` (nº 316), ET IL DIT PLUS QUE LUI.
+   * La nº 316 avait posé « ARTISTE » et « LIEU » comme de vraies
+   * PORTES : flèche, pliage, clic. Le propriétaire a tranché — ce sont
+   * de simples sous-titres. Ils ANNONCENT, et rien de plus :
+   *  · aucune flèche, aucun pliage — leurs options sont visibles dès
+   *    que leur groupe est ouvert ;
+   *  · aucun clic, aucun survol, aucun état choisi ;
+   *  · en gris : la typographie des titres de groupe au web
+   *    (`ECRITURE_TITRE_GROUPE`), le rang des entrées au doigt.
+   * ⚠️ « CULTURES DU MONDE » N'EST PAS CONCERNÉE : elle EST une porte,
+   * onze styles derrière elle et d'autres styles à côté. Elle ne passe
+   * pas ce drapeau et garde tout — flèche, pliage, blanc des options.
+   */
+  sousTitre?: boolean;
   /** CE QUI S'ÉCRIT À DROITE DE L'INTITULÉ (nº 216-§2) — le nombre de
       créations disponibles pour cette entrée. Rien quand il est
       absent : une option sans compte s'affiche exactement comme
@@ -577,11 +613,13 @@ export function MenuDeroulant({
    * dans la famille (Maori, Tribal…) n'ont pas de jumeau : le repli
    * les retrouve, et « on retombe sur son style » tient toujours.
    */
-  const optionDuChoix =
-    options.find((option) => option.value === valeur && !option.sousGroupe) ??
-    options.find((option) => option.value === valeur);
-  const groupeDuChoix = optionDuChoix?.groupe ?? null;
-  const sousGroupeDuChoix = optionDuChoix?.sousGroupe ?? null;
+  /*  §1 (nº 317) — RIEN N'EST PRÉ-OUVERT QUAND RIEN N'EST CHOISI, et
+      LA RÈGLE N'EST PLUS ÉCRITE ICI : elle vit dans `lib/repli-menu`,
+      où un banc peut l'EXÉCUTER. C'est ce qui manquait — le défaut
+      corrigé ici a vécu une passe entière parce qu'on ne pouvait que
+      relire ce code, jamais le jouer. */
+  const { groupe: groupeDuChoix, sousGroupe: sousGroupeDuChoix } =
+    replieALOuverture(options, valeur);
   /**
    * §2 (nº 304) — UN SEUL GROUPE N'A PAS DE PORTE.
    * ------------------------------------------------------------------
@@ -603,9 +641,7 @@ export function MenuDeroulant({
    * porte » vaut partout. Le menu du moteur, lui, a toujours ses deux
    * catégories : il ne voit aucune différence.
    */
-  const portesDeGroupe =
-    repliable &&
-    new Set(options.map((option) => option.groupe).filter(Boolean)).size > 1;
+  const portesDeGroupe = aDesPortesDeGroupe(options, repliable);
   const [groupeDeplie, setGroupeDeplie] = useState<string | null>(groupeDuChoix);
   /** LA SOUS-SECTION OUVERTE (passe nº 113) — une seule à la fois, et
       elle repart elle aussi du choix courant à chaque ouverture : on
@@ -622,17 +658,28 @@ export function MenuDeroulant({
     }
   }
 
-  /** Cette option se voit-elle ? Toujours, sauf si son groupe est
-      replié — ou sa sous-section, quand elle en a une. Un menu non
-      repliable ne replie rien. */
-  const optionVisible = (option: OptionMenu) => {
-    if (!repliable) return true;
-    //  §2 (nº 304) — sans portes de groupe, le groupe ne cache rien.
-    if (portesDeGroupe && option.groupe && option.groupe !== groupeDeplie) {
-      return false;
-    }
-    return !option.sousGroupe || option.sousGroupe === sousGroupeDeplie;
-  };
+  /**
+   * §2-a (nº 317) — LES SOUS-TITRES QUI NE SE PLIENT PAS.
+   * ------------------------------------------------------------------
+   * « ARTISTE » et « LIEU » ne sont pas des portes : ils annoncent.
+   * Leurs options sont donc TOUJOURS visibles dès que leur groupe est
+   * ouvert — il n'y a rien à déplier. La liste des noms concernés est
+   * lue sur LES ENTRÉES elles-mêmes (`sousTitre`), jamais écrite ici :
+   * le menu ne connaît aucun mot du produit, et « Cultures du monde »,
+   * qui ne porte pas ce drapeau, garde sa porte entière.
+   */
+  const sousTitres = sousTitresDe(options);
+
+  /** Cette option se voit-elle ? La règle vit dans `lib/repli-menu`,
+      avec les deux autres : elle s'exécute, elle ne se relit pas. */
+  const optionVisible = (option: OptionMenu) =>
+    optionSeVoit(option, {
+      repliable,
+      portesDeGroupe,
+      groupeDeplie,
+      sousGroupeDeplie,
+      sousTitres,
+    });
 
   /** La PORTE d'une sous-section se voit dès que son groupe est ouvert
       (elle tient la place d'une option dans la liste). */
@@ -700,7 +747,7 @@ export function MenuDeroulant({
       titre de catégorie annonce, il ne se choisit pas — et rien ne
       doit le confondre avec une option. */
   function enTeteSection(entete: string, marge: string) {
-    const classes = `${marge} text-[13px] font-bold uppercase tracking-[0.08em] text-primaire`;
+    const classes = `${marge} ${ECRITURE_TITRE_GROUPE} text-primaire`;
     //  §2 (nº 304) — À UN SEUL GROUPE, c'est une étiquette : aucune
     //  flèche, rien à toucher, et le contenu est déjà là.
     if (!portesDeGroupe) {
@@ -728,6 +775,54 @@ export function MenuDeroulant({
         {entete}
         {chevron(groupeDeplie === entete)}
       </button>
+    );
+  }
+
+  /**
+   * §2-b et §2-c (nº 317) — UN SOUS-TITRE, ET RIEN D'AUTRE.
+   * ------------------------------------------------------------------
+   * Ni bouton, ni flèche, ni survol, ni `role` : un `<p>` que rien ne
+   * peut choisir. C'est ce qui remplace la porte de la nº 316 pour
+   * « ARTISTE » et « LIEU ».
+   *
+   * §2-b — EN WEB, IL PREND LA TYPOGRAPHIE DES TITRES DE GROUPE
+   * (« Styles », « Profil ») : la MÊME taille, la MÊME graisse, la
+   * MÊME chasse — et le gris à la place du rose. Un sous-titre est un
+   * titre d'un rang plus bas, pas une option : il devait se lire comme
+   * un titre. Aucun soulignement, jamais : le trait rose de
+   * `familleSoulignee` appartient aux PORTES (« Cultures du monde »),
+   * et celui-ci n'en est pas une.
+   *
+   * §2-c — AU DOIGT, IL GARDE CE QUE LA nº 316 A POSÉ : le gris et le
+   * point rose à sa gauche, à la géométrie des entrées voisines. Seul
+   * le pliage part.
+   * ⚠️ CE POINT ROSE EST UN EMPLOI PRÉVU DE LA CHARTE, PAS UNE DÉRIVE.
+   * C'est EXACTEMENT le même usage que le point de la porte de famille
+   * « Cultures du monde » : le rose y dit « ceci ouvre un niveau », il
+   * ne désigne jamais une sélection. La charte réserve le rose ; ceci
+   * en fait partie. AUCUNE PASSE FUTURE NE DOIT L'EFFACER AU NOM DE LA
+   * CHARTE — décision du propriétaire, passe nº 316, tenue à la nº 317.
+   */
+  function sousTitreDeSection(
+    sousEntete: string,
+    { avecPoint = false, classes = "" } = {}
+  ) {
+    return (
+      <p
+        role="presentation"
+        data-sous-titre={sousEntete}
+        className={`flex w-full items-center gap-3 ${classes}`}
+      >
+        {avecPoint && (
+          <span
+            data-point-option=""
+            className={`${TAILLE_POINT} rounded-full shrink-0`}
+            style={{ backgroundColor: COULEURS.primaire }}
+            aria-hidden
+          />
+        )}
+        {sousEntete}
+      </p>
     );
   }
 
@@ -954,14 +1049,29 @@ export function MenuDeroulant({
                 {/* Porte de sous-section — à la place d'une option */}
                 {sousEntete &&
                   sousEnteteVisible(option) &&
-                  //  §2 (nº 290) — LE PANNEAU CLASSIQUE, et lui seul,
-                  //  pose le trait rose : c'est la présentation du
-                  //  moteur principal AU DOIGT COMME AU WEB, et celle
-                  //  de « Ma sélection » sur le web. La feuille
-                  //  glissante (plus bas) ne le pose jamais.
-                  porteSousSection(sousEntete, optionSombre(OPTION_LISTE), {
-                    souligne: familleSoulignee,
-                  })}
+                  /*  §2-b (nº 317) — UN SOUS-TITRE PLUTÔT QU'UNE PORTE,
+                      quand l'entrée le demande. Il prend la
+                      typographie des titres de groupe (`ECRITURE_TITRE_
+                      GROUPE` — même taille, même graisse, même chasse),
+                      et le gris à la place du rose. Le rembourrage est
+                      celui des en-têtes de section juste au-dessus :
+                      c'est un titre, il s'aligne sur les titres.
+                      ⚠️ ET SANS `souligne` : le trait rose appartient
+                      aux portes, celui-ci n'en est pas une. */
+                  (option.sousTitre
+                    ? sousTitreDeSection(sousEntete, {
+                        classes: `${ECRITURE_TITRE_GROUPE} px-4 pt-3 pb-1 ${
+                          sombre ? "text-sombre-texte-doux" : "text-encre-douce"
+                        }`,
+                      })
+                    : //  §2 (nº 290) — LE PANNEAU CLASSIQUE, et lui seul,
+                      //  pose le trait rose : c'est la présentation du
+                      //  moteur principal AU DOIGT COMME AU WEB, et celle
+                      //  de « Ma sélection » sur le web. La feuille
+                      //  glissante (plus bas) ne le pose jamais.
+                      porteSousSection(sousEntete, optionSombre(OPTION_LISTE), {
+                        souligne: familleSoulignee,
+                      }))}
                 {optionVisible(option) && (
                 <button
                   type="button"
@@ -1126,7 +1236,26 @@ export function MenuDeroulant({
                         l'aplomb des libellés voisins. */}
                     {sousEntete &&
                       sousEnteteVisible(option) &&
-                      porteSousSection(
+                      /*  §2-c (nº 317) — AU DOIGT, LE SOUS-TITRE GARDE
+                          CE QUE LA nº 316 A POSÉ — le gris, le point
+                          rose, la géométrie des entrées voisines — mais
+                          IL NE SE PLIE PLUS ET NE SE CLIQUE PLUS. C'est
+                          un `<p>`, plus un bouton : rien à toucher,
+                          rien à survoler, aucun état choisi possible.
+                          ⚠️ ET PLUS DE `hover:` : une classe de survol
+                          sur un texte qui ne réagit pas serait un
+                          mensonge visuel — le doigt ne survole pas, la
+                          souris si. */
+                      (option.sousTitre
+                        ? sousTitreDeSection(sousEntete, {
+                            avecPoint: true,
+                            classes: `min-h-[52px] pl-3 pr-3 text-base ${
+                              sombre
+                                ? "text-sombre-texte-doux"
+                                : "text-encre-douce"
+                            }`,
+                          })
+                        : porteSousSection(
                         sousEntete,
                         //  §2 (nº 262) — LA PORTE EST UNE ENTRÉE DE MÊME
                         //  RANG que les styles : même `pl-3` qu'eux, son
@@ -1136,38 +1265,14 @@ export function MenuDeroulant({
                         //  que pour les styles qu'elle contient, une
                         //  fois ouverte (la branche `sousGroupe` des
                         //  options, ci-dessous).
-                        /*  §2-f (nº 316) — UN SOUS-TITRE S'ÉCRIT EN
-                             GRIS. « ARTISTE » et « LIEU » annoncent
-                             deux familles de profils : ils ne se
-                             choisissent pas, et le gris le dit —
-                             c'est le gris des textes discrets du site
-                             (`sombre-texte-doux`), jamais une teinte
-                             neuve. « Cultures du monde » ne passe pas
-                             ce drapeau et garde son blanc : elle, elle
-                             tient la place d'un style entre deux
-                             styles. */
                         `min-h-[52px] pl-3 pr-3 rounded-2xl text-base ${
                           sombre
-                            ? `${
-                                option.sousGroupeGris
-                                  ? "text-sombre-texte-doux"
-                                  : "text-sombre-texte"
-                              } hover:bg-sombre-eleve`
+                            ? "text-sombre-texte hover:bg-sombre-eleve"
                             : "text-encre hover:bg-fond-doux"
                         }`,
                         //  §3 (nº 260) — le point rose, et aucun voile.
-                        //  §2-f (nº 316) — ⚠️ CE POINT ROSE EST UN EMPLOI
-                        //  PRÉVU DE LA CHARTE, PAS UNE DÉRIVE. C'est
-                        //  EXACTEMENT le même usage que le point de la
-                        //  porte de famille « Cultures du monde » : le
-                        //  rose y dit « ceci ouvre un niveau », il ne
-                        //  désigne jamais une sélection. La charte
-                        //  réserve le rose ; ceci en fait partie.
-                        //  AUCUNE PASSE FUTURE NE DOIT L'EFFACER AU NOM
-                        //  DE LA CHARTE — décision du propriétaire,
-                        //  passe nº 316.
                         { avecPoint: true, sansVoile: true }
-                      )}
+                      ))}
                     {optionVisible(option) && (
                     <button
                       type="button"

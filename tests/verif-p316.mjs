@@ -55,6 +55,10 @@ const {
   GROUPE_STYLES,
   SOUS_TITRE_ARTISTE,
   SOUS_TITRE_LIEU,
+  //  ⚠️ AJOUTÉES À LA nº 317 : les deux têtes de sous-groupe, dont les
+  //  clés entrent désormais dans `clesDuProfil`.
+  TOUS_LES_ARTISTES,
+  TOUS_LES_LIEUX,
 } = await import("@/lib/filtres-selection");
 const { comptesDesSuivis, clesDuProfil, suivisDuChoix } = await import(
   "@/lib/selection-suivis"
@@ -160,14 +164,23 @@ const profilDe = (liste) => entreesDuProfil(comptesDesSuivis(liste));
     "un groupe au plus"
   );
 
-  //  (b) UN SEUL — une entrée, un seul sous-titre.
+  /*  ⚠️ AMENDÉ À LA nº 317. Chaque sous-groupe a désormais une TÊTE
+      (« Tous les artistes », « Tous les lieux ») posée EN PREMIER,
+      comme « Toutes les réalisations » sur l'onglet des favoris. Les
+      comptes de ce banc en gagnent donc un par sous-groupe présent.
+      LA MESURE EST RENDUE, PAS RETIRÉE : ce que ces contrôles
+      éprouvent — un seul mode déclaré ne remplit qu'un sous-titre,
+      l'autre n'apparaît pas — est vérifié à l'identique. */
+  //  (b) UN SEUL — sa tête et son entrée, sous le seul sous-titre ARTISTE.
   const unSeul = profilDe(CAS.unSeul);
   verif(
-    "UN SEUL MODE : une seule entrée, sous le seul sous-titre ARTISTE",
-    unSeul.length === 1 &&
-      unSeul[0].label === "Guest" &&
-      unSeul[0].sousGroupe === SOUS_TITRE_ARTISTE &&
-      unSeul[0].groupe === GROUPE_PROFIL,
+    "UN SEUL MODE : sa tête et son entrée, sous le seul sous-titre ARTISTE",
+    unSeul.length === 2 &&
+      unSeul.map((e) => e.label).join(" · ") === "Tous les artistes · Guest" &&
+      unSeul.every(
+        (e) =>
+          e.sousGroupe === SOUS_TITRE_ARTISTE && e.groupe === GROUPE_PROFIL
+      ),
     `${unSeul.map((e) => `${e.sousGroupe}/${e.label}`).join(" · ")}`
   );
   verif(
@@ -177,45 +190,60 @@ const profilDe = (liste) => entreesDuProfil(comptesDesSuivis(liste));
     "aucun sous-titre LIEU"
   );
 
-  //  (c) TOUS — les six entrées, dans l'ordre de la consigne.
+  //  (c) TOUS — les six entrées de la consigne, plus les deux TÊTES
+  //  posées à la nº 317, chacune en tête de son sous-groupe.
   const tous = profilDe(CAS.tous);
   verif(
-    "TOUS : les six entrées, dans l'ordre exact de la consigne",
+    "TOUS : les six entrées, dans l'ordre exact de la consigne — chaque " +
+      "sous-groupe précédé de sa tête (nº 317)",
     tous.map((e) => e.label).join(" · ") ===
-      "À domicile · En studio · En salon · Guest · Studio · Salon",
+      "Tous les artistes · À domicile · En studio · En salon · Guest · " +
+        "Tous les lieux · Studio · Salon",
     tous.map((e) => e.label).join(" · ")
   );
   verif(
-    "…rangées sous leurs deux sous-titres : quatre sous ARTISTE, deux " +
-      "sous LIEU",
-    tous.filter((e) => e.sousGroupe === SOUS_TITRE_ARTISTE).length === 4 &&
-      tous.filter((e) => e.sousGroupe === SOUS_TITRE_LIEU).length === 2,
-    `${SOUS_TITRE_ARTISTE} ×4 · ${SOUS_TITRE_LIEU} ×2`
+    "…rangées sous leurs deux sous-titres : cinq sous ARTISTE (sa tête " +
+      "comprise), trois sous LIEU",
+    tous.filter((e) => e.sousGroupe === SOUS_TITRE_ARTISTE).length === 5 &&
+      tous.filter((e) => e.sousGroupe === SOUS_TITRE_LIEU).length === 3,
+    `${SOUS_TITRE_ARTISTE} ×5 · ${SOUS_TITRE_LIEU} ×3`
   );
   verif(
     "§2-d — CHAQUE ENTRÉE PORTE SON NOMBRE, et il dit vrai",
     tous.map((e) => `${e.label}:${e.compte}`).join(" · ") ===
-      "À domicile:2 · En studio:1 · En salon:1 · Guest:1 · Studio:1 · Salon:2",
+      "Tous les artistes:3 · À domicile:2 · En studio:1 · En salon:1 · " +
+        "Guest:1 · Tous les lieux:3 · Studio:1 · Salon:2",
     tous.map((e) => `${e.label}:${e.compte}`).join(" · ")
   );
+  /*  ⚠️ AMENDÉ À LA nº 317 : le drapeau `sousGroupeGris` s'appelle
+      désormais `sousTitre`, et il dit plus que la couleur — ces
+      sous-sections ne sont plus des portes du tout. La mesure est
+      rendue : on éprouve toujours que les deux sous-titres se
+      distinguent des options, sur le nom d'aujourd'hui. */
   verif(
-    "…et les deux sous-titres demandent le gris (§2-f)",
-    tous.every((e) => e.sousGroupeGris === true),
-    "sousGroupeGris sur les six"
+    "…et les deux sous-titres se déclarent comme tels (§2-f, nº 317)",
+    tous.every((e) => e.sousTitre === true),
+    "sousTitre sur les huit"
   );
   //  UN ARTISTE QUI CUMULE COMPTE SOUS CHACUN DE SES MODES, mais UNE
   //  SEULE FOIS PAR MODE — c'est ce que « c1 » et « c3 » éprouvent.
+  //  ⚠️ AMENDÉ À LA nº 317 : la tête du sous-groupe est une clé comme
+  //  les autres, posée par la même fonction — elle ouvre donc la liste.
   verif(
     "un portfolio qui cumule deux modes apparaît sous les deux, une fois " +
-      "sous chacun",
+      "sous chacun — et sous la tête de son sous-groupe",
     clesDuProfil(CAS.tous[0]).join(" ") ===
-      `${cleProfilMode("domicile")} ${cleProfilMode("guest")}`,
+      `${TOUS_LES_ARTISTES} ${cleProfilMode("domicile")} ${cleProfilMode(
+        "guest"
+      )}`,
     clesDuProfil(CAS.tous[0]).join(" · ")
   );
   verif(
     "un LIEU ne porte QUE son genre : il n'a pas de mode d'exercice",
-    clesDuProfil(CAS.tous[3]).join(" ") === cleProfilLieu("prive") &&
-      clesDuProfil(CAS.tous[4]).join(" ") === cleProfilLieu("salon"),
+    clesDuProfil(CAS.tous[3]).join(" ") ===
+      `${TOUS_LES_LIEUX} ${cleProfilLieu("prive")}` &&
+      clesDuProfil(CAS.tous[4]).join(" ") ===
+        `${TOUS_LES_LIEUX} ${cleProfilLieu("salon")}`,
     `${clesDuProfil(CAS.tous[3])} · ${clesDuProfil(CAS.tous[4])}`
   );
 }
@@ -322,13 +350,18 @@ titre("À la source — rien de dessiné deux fois, et la charte écrite");
       /portesDeGroupe/.test(menuNu),
     "MenuDeroulant, tel quel"
   );
+  /*  ⚠️ AMENDÉ À LA nº 317. La règle n'a pas changé d'un caractère,
+      elle a CHANGÉ DE MAISON : elle vit dans `lib/repli-menu`, où un
+      banc peut l'exécuter plutôt que la relire. C'est là qu'on la
+      cherche désormais — et le contrôle éprouve en plus que le menu ne
+      s'en est pas gardé une seconde écriture. */
   verif(
     "§2-g — la règle de la nº 304 est intacte : à un seul groupe, aucune " +
       "porte",
     /new Set\(options\.map\(\(option\) => option\.groupe\)\.filter\(Boolean\)\)\.size > 1/.test(
-      menuNu
-    ),
-    "portesDeGroupe = plus d'un groupe"
+      sansNotes(lire("src/lib/repli-menu.ts"))
+    ) && /aDesPortesDeGroupe\(options, repliable\)/.test(menuNu),
+    "portesDeGroupe = plus d'un groupe (lib/repli-menu)"
   );
   //  §1-b — LA MÊME SOURCE, PAS UNE SECONDE.
   verif(
@@ -355,15 +388,26 @@ titre("À la source — rien de dessiné deux fois, et la charte écrite");
     "la classe du nombre, à l'identique aux deux endroits"
   );
   //  §2-f — LE GRIS, LE POINT, ET LA RÈGLE.
+  //  ⚠️ AMENDÉ À LA nº 317 : le drapeau s'appelle `sousTitre`, et il
+  //  emporte plus que la couleur — ces sous-sections ne sont plus des
+  //  portes. Ce que ce contrôle éprouve ne change pas : le gris est
+  //  DEMANDÉ PAR L'ENTRÉE, jamais écrit en dur dans le menu.
   verif(
-    "§2-f — la sous-porte grise est un DRAPEAU DE L'ENTRÉE, pas une " +
+    "§2-f — le gris du sous-titre est un DRAPEAU DE L'ENTRÉE, pas une " +
       "exception écrite dans le menu",
-    /option\.sousGroupeGris/.test(menuNu) &&
-      /text-sombre-texte-doux/.test(menuNu),
-    "sousGroupeGris → text-sombre-texte-doux"
+    /option\.sousTitre/.test(menuNu) && /text-sombre-texte-doux/.test(menuNu),
+    "sousTitre → text-sombre-texte-doux"
   );
-  const normalise = (t) => t.replace(/^\s*\/\/[ \t]?/gm, " ").replace(/\s+/g, " ");
+  const normalise = (t) =>
+    t
+      .replace(/^\s*\*[ \t]?/gm, " ")
+      .replace(/^\s*\/\/[ \t]?/gm, " ")
+      .replace(/\s+/g, " ");
   const regle = normalise(menu);
+  //  ⚠️ AMENDÉ À LA nº 317 : la règle a suivi le point rose dans la
+  //  note de `sousTitreDeSection`, et sa dernière phrase porte
+  //  désormais les DEUX passes. Les quatre phrases de fond, elles,
+  //  sont cherchées mot pour mot, comme avant.
   const morceaux = [
     "CE POINT ROSE EST UN EMPLOI PRÉVU DE LA CHARTE, PAS UNE DÉRIVE",
     "le même usage que le point de la porte de famille « Cultures du monde »",

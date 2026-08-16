@@ -178,13 +178,26 @@ export type EntreeFiltre = {
   groupe?: string;
   /** La sous-porte de famille — « Cultures du monde ». */
   sousGroupe?: string;
-  /** §2-f (nº 316) — CETTE SOUS-PORTE S'ÉCRIT EN GRIS. « ARTISTE » et
-      « LIEU » sont des SOUS-TITRES : ils annoncent, ils ne se
-      choisissent pas. « Cultures du monde », elle, tient la place d'un
-      style dans la liste alphabétique — elle garde donc le blanc des
-      options. Le drapeau vit sur l'entrée, pas dans le menu : c'est
-      celui qui compose la liste qui sait ce qu'il écrit. */
-  sousGroupeGris?: boolean;
+  /**
+   * §2 (nº 317) — CETTE SOUS-SECTION EST UN SIMPLE SOUS-TITRE, PAS UNE
+   * PORTE.
+   * ------------------------------------------------------------------
+   * ⚠️ CE DRAPEAU REMPLACE `sousGroupeGris` (nº 316), ET IL DIT PLUS
+   * QUE LUI. La nº 316 avait posé « ARTISTE » et « LIEU » en
+   * réemployant le mécanisme à deux niveaux des favoris : ils avaient
+   * donc une flèche, ils se pliaient, ils se cliquaient. Le
+   * propriétaire a tranché — CE SONT DE SIMPLES SOUS-TITRES. Ils
+   * annoncent, et c'est tout : ni flèche, ni pliage, ni survol, ni
+   * état choisi. Leurs options sont visibles dès que leur groupe est
+   * ouvert.
+   * ⚠️ « CULTURES DU MONDE » N'EST PAS CONCERNÉE, et c'est bien pour ça
+   * que le drapeau vit sur l'entrée : elle, elle EST une porte — onze
+   * styles derrière, et d'autres styles à côté d'elle dans la liste
+   * alphabétique. Elle ne passe pas ce drapeau, elle garde tout.
+   * LA COULEUR SUIT LA NATURE : un sous-titre s'écrit en gris (§2-b au
+   * web, §2-c au doigt) — c'est le menu qui le peint, à partir d'ici.
+   */
+  sousTitre?: boolean;
   /** Combien d'éléments derrière cette entrée. */
   compte?: number;
 };
@@ -237,6 +250,27 @@ export const cleProfilMode = (genre: string) => `${PROFIL_MODE}:${genre}`;
 export const cleProfilLieu = (nature: string) => `${PROFIL_LIEU}:${nature}`;
 
 /**
+ * §2-d (nº 317) — LES DEUX TÊTES DE SOUS-GROUPE.
+ * ------------------------------------------------------------------
+ * « Tous les artistes » et « Tous les lieux » : elles se placent EN
+ * PREMIER dans leur sous-groupe et sélectionnent tout — le procédé de
+ * « Toutes les réalisations » sur l'onglet des favoris, à la lettre.
+ * ⚠️ L'ÉTOILE N'EST NI UN GENRE NI UNE NATURE : aucune collision
+ * possible avec « mode:domicile » ou « lieu:salon ». C'est la même
+ * ruse que `CLE_TOTAL`, et pour la même raison.
+ * ⚠️ ELLES NE SONT PAS UN RACCOURCI D'AFFICHAGE : elles ont leur
+ * propre clé dans la table des comptes, posée par `clesDuProfil` en
+ * même temps que les autres. Compter et filtrer restent une seule
+ * fonction — le nombre annoncé ne peut donc pas mentir.
+ */
+export const TOUS_LES_ARTISTES = `${PROFIL_MODE}:*`;
+export const TOUS_LES_LIEUX = `${PROFIL_LIEU}:*`;
+/** Leurs mots, écrits une seule fois — le menu et le champ les lisent
+    tous les deux (voir `libelleDuProfil`). */
+export const LIBELLE_TOUS_LES_ARTISTES = "Tous les artistes";
+export const LIBELLE_TOUS_LES_LIEUX = "Tous les lieux";
+
+/**
  * EST-CE UNE VALEUR DE PROFIL ? Rend la valeur telle quelle si oui,
  * « » sinon — c'est ce qui départage un style d'un profil à la
  * lecture de l'adresse, et c'est écrit UNE fois.
@@ -260,6 +294,10 @@ export function profilDuFiltre(valeur: string): string {
  * comme le menu les affiche.
  */
 export function libelleDuProfil(profil: string): string {
+  //  §2-d (nº 317) — LES DEUX TÊTES D'ABORD : leur mot n'est pas celui
+  //  d'un genre, il dit « tout ce sous-groupe ».
+  if (profil === TOUS_LES_ARTISTES) return LIBELLE_TOUS_LES_ARTISTES;
+  if (profil === TOUS_LES_LIEUX) return LIBELLE_TOUS_LES_LIEUX;
   const [prefixe, valeur = ""] = profil.split(":");
   if (prefixe === PROFIL_MODE) return genreMode(valeur).label;
   if (prefixe === PROFIL_LIEU) return libelleTypeFiche("salon", valeur);
@@ -419,12 +457,36 @@ export function entreesDuProfil(
   ) => {
     const compte = comptes.get(value);
     //  §2-d — CHAQUE ENTRÉE PORTE SON NOMBRE, comme celles de
-    //  « Styles » : c'est le même champ, lu au même endroit.
-    if (compte) entrees.push({ value, label, groupe: GROUPE_PROFIL, sousGroupe, sousGroupeGris: true, compte });
+    //  « Styles » : c'est le même champ, lu au même endroit. Et une
+    //  entrée sans compte n'entre jamais : rien ne s'affiche qui
+    //  n'existe pas (§2-c de la nº 316, inchangé).
+    if (compte) {
+      entrees.push({
+        value,
+        label,
+        groupe: GROUPE_PROFIL,
+        sousGroupe,
+        //  §2 (nº 317) — CE SOUS-GROUPE EST UN SOUS-TITRE, PAS UNE
+        //  PORTE : ni flèche, ni pliage, ni clic.
+        sousTitre: true,
+        compte,
+      });
+    }
   };
+  /*  §2-d (nº 317) — LA TÊTE D'ABORD, LES OPTIONS ENSUITE, dans chaque
+      sous-groupe. C'est l'ordre de « Toutes les réalisations » sur
+      l'onglet des favoris : on peut reprendre TOUT le sous-groupe sans
+      avoir à parcourir ses entrées.
+      ⚠️ ET LA TÊTE SUIT LA MÊME RÈGLE QUE LES AUTRES : sans compte,
+      elle n'entre pas. Un artiste qui n'a déclaré aucun mode ne
+      nourrit aucune clé (voir `clesDuProfil`) — « Tous les artistes »
+      n'apparaît donc pas plus que les entrées individuelles, et le cas
+      « aucun profil déclaré » du §1 reste ce qu'il est. */
+  ajouter(TOUS_LES_ARTISTES, LIBELLE_TOUS_LES_ARTISTES, SOUS_TITRE_ARTISTE);
   for (const genre of MODES_DU_PROFIL) {
     ajouter(cleProfilMode(genre), genreMode(genre).label, SOUS_TITRE_ARTISTE);
   }
+  ajouter(TOUS_LES_LIEUX, LIBELLE_TOUS_LES_LIEUX, SOUS_TITRE_LIEU);
   for (const nature of LIEUX_DU_PROFIL) {
     //  « Studio » pour un studio privé, « Salon » pour un salon — les
     //  mots de `libelleTypeFiche`, ceux des fiches et des cartes.
