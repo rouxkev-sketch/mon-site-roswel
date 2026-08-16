@@ -1346,6 +1346,35 @@ async function garnirFiches<T extends Tatoueur>(
       }
     }
 
+    /**
+     * ██ §3 (nº 313) — LES STYLES VIENNENT DE L'ARTISTE, ET DE LUI SEUL ██
+     * ==================================================================
+     * Exactement la même règle que le rôle, juste au-dessus, et pour la
+     * même raison : il n'y a qu'UNE information — celle que l'artiste
+     * déclare sur SA fiche (`tatoueurs.styles`) — et l'équipe de son
+     * salon la LIT. Rien n'est recopié, rien n'est deviné.
+     * ⚠️ AUCUNE MIGRATION : la vue `equipe_salon` n'a pas à porter les
+     * styles. Elle dit QUI est de l'équipe ; les styles se lisent là où
+     * ils vivent, en UNE requête de plus, et seulement s'il y a une
+     * équipe.
+     * ⚠️ JAMAIS BLOQUANTE : en cas d'échec, les membres n'ont pas de
+     * styles et la troisième ligne ne se rend pas — c'est exactement le
+     * comportement d'avant cette passe.
+     */
+    const stylesDesMembres = new Map<string, string[]>();
+    if (artistesDeLEquipe.length > 0) {
+      const reponse = await supabase
+        .from("tatoueurs")
+        .select("id, styles")
+        .in("id", artistesDeLEquipe);
+      for (const ligne of (reponse.data ?? []) as unknown as {
+        id: string;
+        styles: string[] | null;
+      }[]) {
+        if (ligne.styles?.length) stylesDesMembres.set(ligne.id, ligne.styles);
+      }
+    }
+
     const equipeParSalon = new Map<string, MembreEquipe[]>();
     for (const ligne of lignesEquipe) {
       const liste = equipeParSalon.get(ligne.salon_id) ?? [];
@@ -1353,10 +1382,11 @@ async function garnirFiches<T extends Tatoueur>(
       // vit dans lib/modes-exercice, et nulle part ailleurs — et elle
       // reçoit désormais la déclaration de l'artiste (§3, nº 288).
       liste.push(
-        membreDepuisVue(
-          ligne,
-          declarations.get(`${ligne.salon_id}|${ligne.artiste_id}`) ?? null
-        )
+        membreDepuisVue(ligne, {
+          ...(declarations.get(`${ligne.salon_id}|${ligne.artiste_id}`) ?? {}),
+          //  §3 (nº 313) — sa déclaration de styles, quand on l'a lue.
+          styles: stylesDesMembres.get(ligne.artiste_id) ?? null,
+        })
       );
       equipeParSalon.set(ligne.salon_id, liste);
     }

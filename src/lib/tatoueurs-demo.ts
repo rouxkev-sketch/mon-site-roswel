@@ -1250,6 +1250,9 @@ for (const salon of TATOUEURS_DEMO) {
         genre: mode.genre === "guest" ? "guest" : "salon",
         debut_le: mode.debut_le,
         fin_le: mode.fin_le,
+        //  §3 (nº 313) — SES STYLES, comme en production : ils viennent
+        //  de la fiche de l'artiste lui-même, jamais du salon.
+        styles: artiste.styles,
       });
     }
   }

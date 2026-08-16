@@ -1,43 +1,39 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import {
-  ARRIVEE_AVEC_PORTFOLIO,
-  ARRIVEE_SANS_PORTFOLIO,
-} from "@/config/tatouage";
+import { ARRIVEE_SANS_PORTFOLIO } from "@/config/tatouage";
 import { creerClientSupabaseServeur } from "@/lib/supabase/server";
 
 /**
- * L'AIGUILLAGE D'APRÈS CONNEXION (passe nº 137)
- * ==============================================
+ * L'ARRIVÉE D'APRÈS CONNEXION (passe nº 137, simplifiée nº 313-§2)
+ * ==============================================================
  * Adresse : /apres-connexion
  *
- * ELLE N'AFFICHE RIEN. Elle pose UNE question à la base — « ce compte
- * a-t-il au moins un portfolio ? » — et redirige :
+ * ELLE N'AFFICHE RIEN, ET ELLE NE DEMANDE PLUS RIEN À LA BASE :
+ * APRÈS CONNEXION, ON ARRIVE TOUJOURS SUR « MA SÉLECTION ». Même page
+ * pour tout le monde, portfolio ou pas.
  *
- *   · OUI → sa fiche (l'aperçu public de son portfolio) ;
- *   · NON → ses favoris.
+ * ⚠️ CE QU'ELLE FAISAIT JUSQU'ICI, ET QUI EST ANNULÉ (nº 313-§2, sur
+ * consigne) : elle posait une question à la base — « ce compte a-t-il
+ * au moins un portfolio ? » — et envoyait vers la FICHE quand la
+ * réponse était oui. Ce n'était pas voulu : quelqu'un qui a créé un
+ * portfolio arrivait sur la visualisation de sa fiche au lieu de sa
+ * sélection. La question, la requête et les deux sorties disparaissent
+ * ensemble — il n'y a plus qu'une arrivée, donc plus rien à départager.
  *
- * ⚠️ ELLE REMPLACE LA RÈGLE DE LA PASSE Nº 131 (« toujours Ma
- * fiche »), qui datait d'un site où seuls les tatoueurs avaient un
- * compte. Elle vaut pour TOUS les chemins d'entrée — connexion,
- * création de compte, lien d'e-mail, nouveau mot de passe — parce
- * qu'ils mènent tous ici (voir ARRIVEE_APRES_CONNEXION).
+ * ⚠️ CE QUI N'EST PAS CONCERNÉ, ET QUI NE DOIT PAS L'ÊTRE : LES
+ * RETOURS D'ACTION. Un cœur ou un « Suivre » touché sans compte
+ * emporte le chemin de la page qu'on regardait (`?suite=`, voir
+ * `versLaConnexion`), et le lien d'e-mail son propre `next=`. Ces
+ * chemins-là passent AVANT cette page et ne l'atteignent jamais : on
+ * revient à son geste, pas ici. Cette règle ne vaut donc que pour une
+ * connexion ORDINAIRE — celle qui n'a rien demandé de particulier.
  *
- * COMMENT ON SAIT QU'UN PORTFOLIO EXISTE : la ligne `tatoueurs` n'est
- * écrite QU'À L'ENVOI du formulaire (aucun brouillon n'est créé
- * avant). Une seule ligne suffit donc à répondre — d'où le `limit(1)` :
- * on ne compte pas, on cherche une preuve.
- *
- * ⚠️ ET UNE SUPPRESSION EN COURS RESTE UN PORTFOLIO. La ligne existe
- * encore pendant les 30 jours (c'est ce qui permet de la réactiver) :
- * son propriétaire doit arriver sur sa fiche, là où l'écran
- * « Portfolio désactivé » l'attend — pas sur des favoris vides qui ne
- * lui diraient rien de ce qui se passe.
- *
- * EN CAS DE DOUTE (base injoignable), ON ENVOIE VERS LA FICHE : c'est
- * la page qui sait se débrouiller seule — sans portfolio, elle affiche
- * le formulaire de création. L'inverse aurait montré des favoris vides
- * à un tatoueur.
+ * ⚠️ ET `?bienvenue=1` CONTINUE DE VOYAGER (retour d'un compte dont la
+ * suppression vient d'être annulée). Le message d'accueil, lui, est
+ * écrit dans le formulaire de fiche (`FormulaireFiche`) : tant qu'il
+ * n'est pas déplacé, il ne s'affichera plus, puisqu'on n'y passe plus.
+ * Le paramètre est gardé pour que rien ne se perde en silence — c'est
+ * au propriétaire de dire s'il veut ce message sur « Ma sélection ».
  */
 export const metadata: Metadata = {
   title: "Un instant…",
@@ -52,9 +48,9 @@ export default async function PageApresConnexion({
   searchParams: Promise<{ bienvenue?: string }>;
 }) {
   const { bienvenue } = await searchParams;
-  //  « Bienvenue » traverse l'aiguillage : c'est la fiche qui l'affiche
-  //  (retour d'un compte dont la suppression vient d'être annulée).
-  const suffixe = bienvenue ? "&bienvenue=1" : "";
+  //  « Bienvenue » traverse l'arrivée sans la commander : la sélection
+  //  n'a plus de query à elle, le séparateur est donc `?`.
+  const suffixe = bienvenue ? "?bienvenue=1" : "";
 
   const supabase = await creerClientSupabaseServeur();
   const {
@@ -65,21 +61,6 @@ export default async function PageApresConnexion({
   //  ainsi, mais une adresse tapée à la main ne doit rien casser.
   if (!user) redirect("/devenir-tatoueur");
 
-  let aUnPortfolio = true;
-  try {
-    const { data, error } = await supabase
-      .from("tatoueurs")
-      .select("id")
-      .eq("user_id", user.id)
-      .limit(1);
-    if (!error) aUnPortfolio = (data ?? []).length > 0;
-  } catch {
-    //  Base injoignable : on garde le chemin qui sait se débrouiller.
-  }
-
-  redirect(
-    aUnPortfolio
-      ? `${ARRIVEE_AVEC_PORTFOLIO}${suffixe}`
-      : ARRIVEE_SANS_PORTFOLIO
-  );
+  //  §2 (nº 313) — UNE SEULE SORTIE, POUR TOUT LE MONDE.
+  redirect(`${ARRIVEE_SANS_PORTFOLIO}${suffixe}`);
 }

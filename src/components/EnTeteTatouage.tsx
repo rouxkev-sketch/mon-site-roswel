@@ -946,6 +946,12 @@ export function EnTeteTatouage({
                       n'est inventée ici), ÉPAIS DE 2 px depuis la
                       nº 311-§1b : à 1 px il se devinait plus qu'il ne
                       se voyait, et c'est lui qui porte tout le badge ;
+                    · §1 (nº 313) — AU SURVOL, LE FOND PREND LA COULEUR
+                      DU CONTOUR (`hover:bg-sombre-bordure`, le même
+                      `#38383F`) : le badge se remplit et son contour
+                      DISPARAÎT DANS LE FOND, au lieu de se détacher
+                      d'un fond qui ne lui répondait pas. Une seule
+                      couleur au survol, donc, et c'est la sienne ;
                     · le texte en ROSE (`#EE3D6F`, `text-primaire`) ;
                     · l'icône de connexion DANS le badge, avec le texte :
                       `IconeUtilisateur`, le rond avec une personne
@@ -965,7 +971,7 @@ export function EnTeteTatouage({
                 style={{ height: HAUTEUR_ACTIONS }}
                 className="hidden sm:flex rounded-full px-5 items-center gap-2
                            bg-sombre-fond border-2 border-sombre-bordure
-                           text-primaire hover:bg-sombre-carte
+                           text-primaire hover:bg-sombre-bordure
                            text-sm font-semibold transition-colors whitespace-nowrap
                            focus-visible:outline-2 focus-visible:outline-offset-2
                            focus-visible:outline-primaire"

@@ -1318,18 +1318,19 @@ export const DELAI_SUPPRESSION_JOURS = 30;
  * façon pas interroger un magasin de navigateur.
  *
  * `?bienvenue=1` (retour d'un compte dont la suppression est annulée)
- * traverse l'aiguillage sans être touché.
+ * traverse cette page sans être touché.
  */
 export const ARRIVEE_APRES_CONNEXION = "/apres-connexion";
 
-/** LA PAGE DU PORTFOLIO — l'une des deux sorties de l'aiguillage.
-    AUCUN IDENTIFIANT DE FICHE DANS L'ADRESSE, ET C'EST VOULU : sans
-    paramètre `fiche`, `ficheActive()` prend celle qui est RETENUE (le
-    choix du sélecteur, gardé en mémoire locale), et à défaut la
-    première. */
-export const ARRIVEE_AVEC_PORTFOLIO = "/devenir-tatoueur/fiche?vue=apercu";
-
-/** L'AUTRE SORTIE — les favoris, pour qui n'a pas de portfolio. */
+/**
+ * L'ARRIVÉE, ET IL N'Y EN A PLUS QU'UNE (nº 313-§2).
+ * ------------------------------------------------------------------
+ * « Ma sélection », pour tout le monde, portfolio ou pas.
+ * ⚠️ `ARRIVEE_AVEC_PORTFOLIO` EST SUPPRIMÉE, code compris : l'aiguillage
+ * envoyait vers la fiche quand un portfolio existait, et ce n'était pas
+ * voulu. Le nom est retiré pour qu'aucune passe future ne le retrouve
+ * et ne rétablisse la bifurcation par mégarde.
+ */
 export const ARRIVEE_SANS_PORTFOLIO = "/mes-favoris";
 
 /**

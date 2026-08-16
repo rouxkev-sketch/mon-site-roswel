@@ -20,6 +20,7 @@ import {
 import {
   dateLongue,
   equipeOrdonnee,
+  libelleStylesEquipe,
   modesOrdonnes,
   roleDuMembre,
   troisLignesDuMode,
@@ -472,6 +473,30 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
               <p className="mt-0.5 text-[14px] leading-relaxed text-sombre-texte-doux">
                 {roleDuMembre(membre)}
               </p>
+              {/*  §3 (nº 313) — SES STYLES, SOUS SON RÔLE.
+                   ------------------------------------------------------
+                   Ils viennent de SA déclaration, sur sa propre fiche —
+                   jamais d'une recopie dans le salon (voir
+                   `garnirFiches`). Trois au plus, puis le reste compté
+                   (« +2 ») : la règle vit dans `libelleStylesEquipe`,
+                   en fonction pure.
+                   ⚠️ AUCUNE CAPSULE, AUCUN CONTOUR : du texte gris, un
+                   cran plus petit que le rôle. Les capsules de style
+                   restent réservées à la section STYLES d'une fiche —
+                   ici, ce serait une deuxième grammaire pour la même
+                   information.
+                   ⚠️ RIEN NE SE REND QUAND IL N'Y A RIEN : pas une
+                   ligne vide, pas un espace. Un membre sans style
+                   déclaré garde exactement la ligne d'avant cette
+                   passe. */}
+              {libelleStylesEquipe(membre.styles) && (
+                <p
+                  data-styles-membre=""
+                  className="mt-0.5 text-[13px] leading-relaxed text-sombre-texte-doux"
+                >
+                  {libelleStylesEquipe(membre.styles)}
+                </p>
+              )}
               {membre.genre === "guest" && (
                 <DatesDeSession
                   debut={membre.debut_le}

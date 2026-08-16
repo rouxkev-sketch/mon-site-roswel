@@ -2,6 +2,7 @@ import {
   genreMode,
   libelleRoleCourt,
   libelleRoleStudio,
+  libelleStyle,
   type GenreMode,
   type RoleStudio,
 } from "@/config/tatouage";
@@ -141,7 +142,45 @@ export type MembreEquipe = {
   role?: RoleStudio | null;
   debut_le: string | null;
   fin_le: string | null;
+  /** §3 (nº 313) — LES STYLES QUE L'ARTISTE DÉCLARE SUR SA PROPRE
+      FICHE (`tatoueurs.styles`). Facultatif : l'aperçu du salon lit la
+      vue `equipe_salon`, qui ne les porte pas — il n'affiche alors pas
+      la troisième ligne, et rien ne bouge d'un pixel. */
+  styles?: string[];
 };
+
+/** §3 (nº 313) — COMBIEN DE STYLES S'ÉCRIVENT SUR UNE LIGNE D'ÉQUIPE. */
+export const STYLES_EQUIPE_AFFICHES = 3;
+
+/**
+ * §3 (nº 313) — LA LIGNE DE STYLES D'UN MEMBRE D'ÉQUIPE.
+ * ==================================================================
+ * « Réalisme · Trash Polka », « Japonais · Irezumi ». Les libellés
+ * viennent de `libelleStyle` — le catalogue, jamais un mot écrit ici —
+ * et le point médian entouré d'espaces est le séparateur du site.
+ *
+ * AU PLUS TROIS, PUIS LE RESTE COMPTÉ : « Réalisme · Fine Line ·
+ * Blackwork +2 ». Sans ce plafond, un artiste à huit styles
+ * transformerait sa ligne d'équipe en paragraphe, et l'équipe d'un
+ * salon en mur de texte.
+ *
+ * VIDE QUAND IL N'Y A RIEN : l'appelant ne rend alors AUCUNE
+ * troisième ligne — pas une ligne vide, pas un espace. C'est ce qui
+ * garantit qu'un membre sans style déclaré ne déplace rien.
+ *
+ * ⚠️ FONCTION PURE, ET C'EST VOULU : la page qui l'emploie exige une
+ * base et une session ; écrite ici, la règle s'EXÉCUTE au banc, cas
+ * par cas, au lieu d'être seulement relue.
+ */
+export function libelleStylesEquipe(
+  styles: string[] | null | undefined
+): string {
+  const propres = (styles ?? []).map((s) => s.trim()).filter(Boolean);
+  if (propres.length === 0) return "";
+  const montres = propres.slice(0, STYLES_EQUIPE_AFFICHES).map(libelleStyle);
+  const reste = propres.length - montres.length;
+  return montres.join(" · ") + (reste > 0 ? ` +${reste}` : "");
+}
 
 /** UNE DEMANDE DE RATTACHEMENT, en attente de réponse. */
 export type LiaisonDemande = {
@@ -223,7 +262,15 @@ export function membreDepuisVue(
    * ici et l'emporte sur la vue ; sinon on garde le comportement
    * d'avant, qui reste vrai dans le cas courant.
    */
-  declaration?: { genre?: string | null; role?: string | null } | null
+  declaration?: {
+    genre?: string | null;
+    role?: string | null;
+    /** §3 (nº 313) — LES STYLES DE L'ARTISTE, du même endroit et pour
+        la même raison que son rôle : sa DÉCLARATION, sur sa propre
+        fiche. La vue `equipe_salon` ne les porte pas ; l'appelant qui
+        a pu aller les chercher les passe ici (voir `garnirFiches`). */
+    styles?: string[] | null;
+  } | null
 ): MembreEquipe {
   const genre = declaration?.genre ?? ligne.genre;
   const role = declaration?.role ?? ligne.role;
@@ -236,6 +283,9 @@ export function membreDepuisVue(
     role: role === "fondateur" ? "fondateur" : "resident",
     debut_le: ligne.debut_le,
     fin_le: ligne.fin_le,
+    //  Absents : la troisième ligne ne se rend pas (voir
+    //  `libelleStylesEquipe`).
+    ...(declaration?.styles ? { styles: declaration.styles } : {}),
   };
 }
 
