@@ -382,6 +382,25 @@ export const CLASSES_LIGNE_CLIQUABLE =
   "transition-colors hover:bg-white/5 active:bg-white/10";
 
 /**
+ * §3 (nº 301) — LA MÊME LIGNE, SANS SON ENCADRÉ DE SURVOL.
+ * ==================================================================
+ * ⚠️ UN SEUL PORTEUR, ET C'EST VOULU : la ligne d'identité de « Ma
+ * sélection » (BlocSuivis). Le propriétaire n'y veut plus de fond au
+ * survol — l'ensemble reste cliquable et mène à la fiche, c'est
+ * seulement la plaque qui disparaît. PARTOUT AILLEURS l'encadré reste,
+ * et la correction de ses arrondis (nº 298, `lg:px-3` / `lg:-mx-3` sur
+ * la colonne de lecture d'une fiche) n'est pas touchée.
+ *
+ * ⚠️ MÊME GÉOMÉTRIE, AU PIXEL : `-m-2 p-2` s'annulent, les retirer ne
+ * déplace donc RIEN — ni le rond, ni le nom, ni les lignes. Seuls le
+ * rayon, la transition et les deux fonds partent, puisqu'ils n'ont plus
+ * rien à dessiner. `group` reste : il sert aux enfants qui réagissent
+ * au survol de la ligne.
+ */
+export const CLASSES_LIGNE_CLIQUABLE_SANS_ENCADRE =
+  "group flex items-start gap-3.5";
+
+/**
  * LE SOULIGNEMENT D'UN LIEN DE FICHE — UNE SEULE ÉCRITURE (nº 271-§2)
  * ====================================================================
  * C'est celui de la ligne d'équipe (nº 229), et lui seul : FIN

@@ -349,9 +349,24 @@ export function PageFavoris({
       {/*  §2 (nº 263) — le titre est un MOT NU depuis la nº 253 :
            `titreControle`, réduit à l'identité, est parti avec le
            titre inactif qu'il servait encore. */}
+      {/*  §1 (nº 301) — LES DEUX TITRES DISENT CE QUE LA LISTE CONTIENT.
+           « Mes suivis » → « Ma sélection de portfolios » : la liste ne
+           contient PAS que des artistes — il y a aussi des salons et
+           des studios, et « portfolio » est le seul mot qui couvre les
+           trois. « Mes favoris » → « Ma sélection de photos » : celle-là
+           contient des photos. ⚠️ AUCUNE SESSION FUTURE NE DOIT LES
+           « CORRIGER » : ce sont les mots du propriétaire, et la raison
+           est écrite ici.
+           §1 (nº 301) — ET LE TITRE GARDE LE MÊME DÉGAGEMENT dans les
+           deux cas (voir `degagementConstant`) : le sous-titre n'existe
+           que sous un filtre, la page sautait de 30 px quand on le
+           retirait. */}
       <LigneResultats
-        titre={surLesFavoris ? "Mes favoris" : "Mes suivis"}
+        titre={
+          surLesFavoris ? "Ma sélection de photos" : "Ma sélection de portfolios"
+        }
         sousTitre={libelleDuChoix(choix) || null}
+        degagementConstant
       />
 
       {/* ---------- LES PHOTOS GARDÉES ----------

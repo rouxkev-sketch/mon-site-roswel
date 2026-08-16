@@ -1,9 +1,9 @@
-import {
-  libelleLieuDuMode,
-  libelleSecteurDuMode,
-  modesOrdonnes,
-  type ModeExerciceFiche,
-} from "@/lib/modes-exercice";
+import { modesOrdonnes, type ModeExerciceFiche } from "@/lib/modes-exercice";
+//  §2 (nº 301) — LA VILLE ET LE PAYS, PAR L'ÉCRITURE UNIQUE DU SITE :
+//  `ligneCarte` est celle des cartes de la mosaïque (« Lyon, France »,
+//  « Austin, TX, États-Unis »). Aucune seconde grammaire de lieu n'est
+//  écrite ici — c'est la règle de lib/adresse depuis toujours.
+import { ligneCarte } from "@/lib/adresse";
 import {
   genreMode,
   libelleTypeFiche,
@@ -112,7 +112,7 @@ export function groupesDeSuivis(
   return [
     { cle: "semaine" as const, titre: "Cette semaine", suivis: semaine.sort(parDebut) },
     { cle: "avenir" as const, titre: "À venir", suivis: avenir.sort(parDebut) },
-    { cle: "tous" as const, titre: "Tous les suivis", suivis: tous.sort(parPublication) },
+    { cle: "tous" as const, titre: "Tous les portfolios", suivis: tous.sort(parPublication) },
   ].filter((groupe) => groupe.suivis.length > 0);
 }
 
@@ -175,13 +175,22 @@ export type LigneInfoSuivi = {
  * CHAQUE MODE A DÉSORMAIS SA LIGNE, les unes sous les autres, DANS
  * L'ORDRE DÉJÀ ÉTABLI par `modesOrdonnes` (à domicile, en studio, en
  * salon, guest) — aucun second classement n'est écrit ici.
- *   · artiste en salon   → « En salon · Lyon 1er »
- *   · artiste à domicile → « À domicile · Bordeaux »
- *   · guest              → « Guest à Lyon · 3 – 8 mars »
- *   · salon ou studio    → « Salon · Lyon 2e » (il n'a pas de mode :
- *     il EST le lieu — une seule ligne, comme avant)
- * Les mots viennent de `genreMode`, `libelle…DuMode` et
+ *   · artiste en salon   → « En salon · Lyon, France »
+ *   · artiste à domicile → « À domicile · Bordeaux, France »
+ *   · guest              → « Guest · Lyon, France · 3 – 8 mars »
+ *   · salon ou studio    → « Salon · Lyon, France » (il n'a pas de
+ *     mode : il EST le lieu — une seule ligne, comme avant)
+ * Les mots viennent de `genreMode`, `ligneCarte` et
  * `libelleTypeFiche` : aucun libellé n'est inventé ici.
+ *
+ * §2 (nº 301) — PLUS JAMAIS L'ADRESSE COMPLÈTE. On lisait « En salon ·
+ * 12 Rue de la République, Lyon » : la rue et le numéro n'apprennent
+ * rien dans une LISTE — on y cherche qui on suit et où il se trouve, on
+ * ne s'y rend pas. La forme est donc LE MODE EN FORME COURTE (« En
+ * salon », « En studio », « À domicile », « Guest » — les `label` de
+ * `GENRES_MODE`, jamais les libellés longs de la fiche du genre
+ * « FONDATEUR DU SALON », qui eux ne changent pas), puis LA VILLE ET LE
+ * PAYS par `ligneCarte`. Ni rue, ni numéro, jamais.
  *
  * ⚠️ UNE SESSION GUEST TERMINÉE NE S'ÉCRIT PAS : la règle du §2
  * (nº 243) vaut ligne à ligne — elle est passée, elle ne dit plus où
@@ -192,15 +201,32 @@ export function lignesDInformation(
   aujourdhui = jourCivil()
 ): LigneInfoSuivi[] {
   const lignes: LigneInfoSuivi[] = [];
+  /**
+   * §2 (nº 301) — LA VILLE ET LE PAYS DU MODE, ET RIEN D'AUTRE.
+   * ------------------------------------------------------------------
+   * Le mode porte son propre lieu ; quand il n'en a pas (un guest qui
+   * ne dit qu'un intitulé, par exemple), on retombe sur celui de la
+   * fiche. `ligneCarte` fait le reste — c'est elle qui sait quand une
+   * division s'écrit (« Austin, TX, États-Unis ») et quand elle ne
+   * s'écrit pas (« Lyon, France »).
+   */
+  const villeEtPaysDuMode = (mode: ModeExerciceFiche) =>
+    ligneCarte({
+      ville: mode.ville ?? mode.intitule ?? suivi.ville,
+      region: mode.region ?? suivi.region,
+      pays: mode.pays ?? suivi.pays,
+      code_pays: mode.code_pays ?? suivi.codePays,
+    });
   modesOrdonnes(suivi.modes).forEach((mode, rang) => {
     const cle = mode.id ?? `${mode.genre}-${rang}`;
     if (mode.genre === "guest") {
       //  Terminée : elle ne dit plus rien (règle du §2, nº 243).
       if (mode.fin_le && mode.fin_le < aujourdhui) return;
-      const lieu = mode.ville ?? mode.intitule ?? suivi.ville;
       lignes.push({
         cle,
-        avant: `${genreMode("guest").label}${lieu ? ` à ${lieu}` : ""}`,
+        avant: [genreMode("guest").label, villeEtPaysDuMode(mode)]
+          .filter(Boolean)
+          .join(" · "),
         date: periodeDuGuest(mode),
         guest: true,
         proche:
@@ -209,23 +235,27 @@ export function lignesDInformation(
       });
       return;
     }
-    const lieu =
-      mode.genre === "domicile" || mode.genre === "prive"
-        ? libelleSecteurDuMode(mode)
-        : libelleLieuDuMode(mode);
     lignes.push({
       cle,
-      avant: [genreMode(mode.genre).label, lieu].filter(Boolean).join(" · "),
+      avant: [genreMode(mode.genre).label, villeEtPaysDuMode(mode)]
+        .filter(Boolean)
+        .join(" · "),
       date: "",
       guest: false,
       proche: false,
     });
   });
   if (lignes.length > 0) return lignes;
-  //  Aucun mode : un salon ou un studio EST le lieu — « Salon · Lyon 2e ».
+  //  Aucun mode : un salon ou un studio EST le lieu — « Salon · Lyon,
+  //  France ». Même grammaire, même fonction.
   const texteLieu = [
     libelleTypeFiche(suivi.typeFiche, suivi.etablissement),
-    suivi.ville,
+    ligneCarte({
+      ville: suivi.ville,
+      region: suivi.region,
+      pays: suivi.pays,
+      code_pays: suivi.codePays,
+    }),
   ]
     .filter(Boolean)
     .join(" · ");

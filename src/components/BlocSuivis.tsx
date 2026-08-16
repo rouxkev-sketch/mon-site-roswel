@@ -6,7 +6,10 @@ import {
   CADRE_PHOTO_PORTFOLIO,
   ECRITURE_TITRE_SECTION,
 } from "@/config/tatouage";
-import { CLASSES_LIGNE_CLIQUABLE, PhotoRonde } from "@/components/BlocLieux";
+import {
+  CLASSES_LIGNE_CLIQUABLE_SANS_ENCADRE,
+  PhotoRonde,
+} from "@/components/BlocLieux";
 import { IconeCoeur } from "@/components/Icones";
 import {
   bandeDeTrois,
@@ -173,8 +176,14 @@ function BlocDUnSuivi({
             14 px pour un rond de 52 (gap-3.5, la proportion de
             toujours) → 20 px pour un rond de 72 (14 × 72 ÷ 52 ≈ 19,4,
             le cran de la grille le plus proche). La ligne reste
-            l'écriture partagée, l'écart web s'y ajoute. */
-        className={`${CLASSES_LIGNE_CLIQUABLE} lg:gap-5`}
+            l'écriture partagée, l'écart web s'y ajoute.
+            §3 (nº 301) — ET PLUS AUCUN ENCADRÉ AU SURVOL, web comme
+            doigt : le propriétaire n'en veut plus SUR CETTE PAGE. La
+            ligne reste un lien vers la fiche, pastille comprise ; seule
+            la plaque grise disparaît. La géométrie ne bouge pas d'un
+            pixel — `-m-2 p-2` s'annulaient (voir la note de
+            `CLASSES_LIGNE_CLIQUABLE_SANS_ENCADRE`). */
+        className={`${CLASSES_LIGNE_CLIQUABLE_SANS_ENCADRE} lg:gap-5`}
       >
         <PhotoRonde
           source={suivi.photoProfil}
@@ -378,57 +387,31 @@ function RangeeDeVignettes({
    * redimensionnement — l'observateur de taille posé à la nº 252 est
    * déjà là, il sert aux quatre valeurs.
    */
+  //  §4-a (nº 301) — DEUX VALEURS SONT PARTIES AVEC LES POINTS : le
+  //  NOMBRE de pages et le DÉCALAGE du bord droit (nº 264) ne servaient
+  //  qu'à les dessiner. Il reste ce qui commande vraiment : les deux
+  //  bouts de course (`gauche`, `droite`, qui décident de l'existence
+  //  des chevrons et des fondus) et la PAGE COURANTE, qui est le pas du
+  //  défilement.
   const [etat, setEtat] = useState({
     gauche: false,
     droite: false,
-    pages: 1,
     page: 0,
-    //  §5 (nº 264) — le décalage du bord droit des pointillés : la
-    //  distance entre le bord droit du CONTENU et celui de la dernière
-    //  vignette ENTIÈREMENT visible — jamais le bord de l'écran,
-    //  jamais une vignette coupée. Lu dans le DOM à chaque relevé.
-    decalage: 0,
   });
   useEffect(() => {
     const cadre = zone.current;
     if (!cadre) return;
     const lire = () => {
-      const premiere = cadre.firstElementChild as HTMLElement | null;
-      const largeurCase = premiere?.getBoundingClientRect().width ?? 0;
-      //  L'écart entre deux cases, lu dans la mise en page (jamais
-      //  recopié) : la distance entre le début de la première et celui
-      //  de la deuxième, moins la largeur d'une case.
-      const seconde = premiere?.nextElementSibling as HTMLElement | null;
-      const pas = seconde
-        ? seconde.getBoundingClientRect().left -
-          premiere!.getBoundingClientRect().left
-        : largeurCase;
-      //  §3 (nº 264) — le nombre visible et la page se lisent sur la
-      //  LARGEUR DE CONTENU : le débordement des marges (rembourrage)
-      //  ne fait pas partie d'une page.
+      //  §3 (nº 264) — la page se lit sur la LARGEUR DE CONTENU : le
+      //  débordement des marges (rembourrage) n'en fait pas partie.
+      //  §4-a (nº 301) — la largeur d'une case et l'écart entre deux
+      //  cases étaient lus ici pour COMPTER LES PAGES ; les points
+      //  partis, ce compte n'a plus de lecteur.
       const contenu = largeurContenu(cadre);
-      const visibles = pas > 0 ? Math.max(1, Math.round(contenu / pas)) : 1;
-      const total = cadre.children.length;
-      //  §5 (nº 264) — le bord droit de la dernière vignette PLEINE :
-      //  la plus à droite dont le bord droit reste dans le contenu.
-      const boite = cadre.getBoundingClientRect();
-      const droiteContenu =
-        boite.right - parseFloat(getComputedStyle(cadre).paddingRight);
-      let bordDerniere = 0;
-      for (const enfant of cadre.children) {
-        const droite = enfant.getBoundingClientRect().right;
-        if (droite <= droiteContenu + 1 && droite > bordDerniere) {
-          bordDerniere = droite;
-        }
-      }
       setEtat({
         gauche: cadre.scrollLeft > 1,
         droite: cadre.scrollLeft + cadre.clientWidth < cadre.scrollWidth - 1,
-        pages: Math.max(1, Math.ceil(total / visibles)),
         page: contenu ? Math.round(cadre.scrollLeft / contenu) : 0,
-        decalage: bordDerniere
-          ? Math.max(0, Math.round(droiteContenu - bordDerniere))
-          : 0,
       });
     };
     lire();
@@ -462,16 +445,49 @@ function RangeeDeVignettes({
       aria-label={sens === 1 ? "Vignettes suivantes" : "Vignettes précédentes"}
       data-bandeau-defilement={sens === 1 ? "droite" : "gauche"}
       onClick={() => defiler(sens)}
+      /*  §4-b (nº 301) — LE CHEVRON DÉBORDE DES MARGES. Il vivait
+           EXACTEMENT dedans : `w-4 sm:w-6` calé sur `-right-4
+           sm:-right-6`, c'est-à-dire la largeur de la marge, ni plus ni
+           moins — contenu, donc discret jusqu'à l'effacement. SA ZONE
+           PASSE À 40 px et déborde donc de la bande des marges : 16 px
+           empiètent sur les vignettes à partir de `sm` (40 − 24), 24 px
+           en dessous (40 − 16).
+           ⚠️ IL DÉBORDE VERS L'INTÉRIEUR, ET C'EST LE SEUL SENS
+           POSSIBLE : le bord EXTÉRIEUR de la marge, c'est le bord de
+           l'écran. Le décalage extérieur reste donc CELUI DE LA MARGE
+           (`-right-4 sm:-right-6`), inchangé — poussé à 40 px, le
+           bouton serait sorti de la fenêtre de 16 px à 1440, et un
+           élément absolu qui dépasse à droite ÉLARGIT LE DOCUMENT
+           (c'est exactement le piège de la nº 228, que le banc mesure
+           par `scrollWidth`). */
       className={`hidden pointer-fine:flex invisible group-hover:visible
         absolute inset-y-0 z-[2] ${
           sens === 1 ? "-right-4 sm:-right-6" : "-left-4 sm:-left-6"
-        } w-4 sm:w-6 items-center justify-center text-white`}
+        } w-10 items-center justify-center text-white`}
     >
-      <svg width="12" height="24" viewBox="0 0 12 24" fill="none" aria-hidden="true">
+      {/*  §4-b (nº 301) — LE DESSIN SUIT SA ZONE : 20 × 40 au lieu de
+           12 × 24, la même proportion (plus haut que large) et le même
+           trait de l'écriture unique des icônes, remis à l'échelle
+           (1,8 × 40 ÷ 24 = 3).
+           §4-c (nº 301) — ET IL PORTE UNE OMBRE DOUCE, pour rester
+           lisible sur une photo claire. UNE OMBRE, PAS UN CONTOUR : la
+           charte interdit les traits durs, et c'est déjà l'écriture du
+           cœur des vignettes juste au-dessus (`drop-shadow` sur le
+           glyphe) — on ne fabrique pas un second procédé. Elle est un
+           cran plus large que celle du cœur parce que le chevron est
+           un trait nu, sans surface pleine pour le porter. */}
+      <svg
+        width="20"
+        height="40"
+        viewBox="0 0 12 24"
+        fill="none"
+        aria-hidden="true"
+        className="[filter:drop-shadow(0_1px_3px_rgba(0,0,0,0.65))]"
+      >
         <path
           d={sens === 1 ? "M3 4l6 8-6 8" : "M9 4l-6 8 6 8"}
           stroke="currentColor"
-          strokeWidth="1.8"
+          strokeWidth="3"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
@@ -630,41 +646,16 @@ function RangeeDeVignettes({
       {etat.droite && voile(1)}
       {etat.gauche && bandeau(-1)}
       {etat.droite && bandeau(1)}
-      {/*  §4 (nº 253) — L'INDICATEUR DE PAGES : autant de repères que
-           de pages, celui en cours distingué ; dès deux pages
-           seulement. Absolu : son apparition ne déplace rien.
-           §5 (nº 264) — AU-DESSUS DE LA RANGÉE, à droite
-           (`bottom-full`, 6 px au-dessus des photos — l'écart même de
-           la rangée), et SON BORD DROIT S'ALIGNE sur celui de la
-           dernière vignette ENTIÈREMENT visible (`etat.decalage`, lu
-           dans le DOM) — jamais le bord de l'écran, jamais une
-           vignette coupée. SUR LE WEB SEULEMENT (`pointer-fine`) : au
-           doigt on fait glisser, les repères sont SUPPRIMÉS. */}
-      {etat.pages > 1 && (
-        <div
-          data-indicateur-pages={etat.pages}
-          data-page-courante={etat.page}
-          aria-hidden="true"
-          style={{ right: etat.decalage }}
-          className="pointer-events-none absolute bottom-full mb-1.5 z-[3]
-                     hidden pointer-fine:flex items-center gap-1"
-        >
-          {/*  §5 (nº 254) — DES TIRETS, un par page : 16 × 2 px, 4 px
-               d'écart (le gap-1 du conteneur), la page en cours en
-               blanc plein, les autres très atténuées. Aucun rose.
-               (nº 264 : au-dessus de la rangée, ils ne couvrent plus
-               de photo — l'ombre de lisibilité de la nº 221 n'a plus
-               d'objet et s'en va.) */}
-          {Array.from({ length: etat.pages }).map((_, rang) => (
-            <span
-              key={rang}
-              className={`h-0.5 w-4 rounded-full ${
-                rang === etat.page ? "bg-white" : "bg-white/30"
-              }`}
-            />
-          ))}
-        </div>
-      )}
+      {/*  §4-a (nº 301) — LES POINTS DE DÉFILEMENT SONT SUPPRIMÉS.
+           L'indicateur de pages de la nº 253 (des tirets, un par page,
+           posés au-dessus de la rangée depuis la nº 264) s'en va, web
+           compris : le propriétaire n'en veut plus. Ce que la rangée
+           dit d'elle-même suffit — la vignette partielle qui dépasse à
+           droite annonce la suite, et les chevrons la commandent.
+           ⚠️ `etat.pages` ET `etat.page` RESTENT LUS : `page` est le
+           pas même du défilement (`defiler` vise `page × largeur`), et
+           `pages` sert au compte. Rien n'est débranché, seul le dessin
+           part. */}
     </div>
   );
 }

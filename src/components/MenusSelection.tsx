@@ -87,7 +87,15 @@ import { lireRequeteCourante, souscrireAdresse } from "@/lib/adresse-courante";
     puis ceux qu'on suit. */
 const MOTS_DU_BADGE: ReadonlyArray<{ cle: MenuSelection; label: string }> = [
   { cle: MENU_FAVORIS, label: "Favoris" },
-  { cle: MENU_SUIVIS, label: "Suivis" },
+  //  §5 (nº 301) — « SUIVIS » → « PORTFOLIOS ». La consigne est
+  //  explicite : le mot « suivis » disparaît PARTOUT de cette page, et
+  //  le badge en était le dernier porteur avec le titre de groupe
+  //  « Tous les suivis ». Le mot suit le titre du §1 (« Ma sélection de
+  //  portfolios ») et couvre, lui, les artistes comme les salons et les
+  //  studios. Le mot « Favoris » n'est pas concerné : rien ne demandait
+  //  de le changer, et c'est celui de l'icône de la barre et de
+  //  l'adresse `/mes-favoris`.
+  { cle: MENU_SUIVIS, label: "Portfolios" },
 ];
 
 export function MenusSelection({
@@ -136,7 +144,7 @@ export function MenusSelection({
       valeur={choix.menu}
       options={MOTS_DU_BADGE}
       surChoix={(menu) => poserSelection(menu, "")}
-      ariaLabel="Favoris ou suivis"
+      ariaLabel="Favoris ou portfolios"
       pleineLargeur
       //  §4 (nº 258) — LA ROBE NE SE PASSE PLUS ICI : dans l'encadré,
       //  la pilule est habillée par la règle `[data-clair-barre]
@@ -194,7 +202,14 @@ export function MenusSelection({
         ariaLabel="Filtrer"
         placeholder={libelleDuFiltre(entrees, choix, etroit)}
         libelleValeur={libelleDuFiltre(entrees, choix, etroit)}
-        titreFeuille="Filtrer"
+        /*  §5 (nº 301) — LA FEUILLE DU BAS DIT CE QU'ELLE FILTRE :
+             « Filtre de portfolios » sur les portfolios suivis,
+             « Filtre de photos » sur les favoris — les deux titres du
+             §1, au mot près. Le champ, lui, garde « Filtrer » : il est
+             court par nature, et la feuille qu'il ouvre le précise. */
+        titreFeuille={
+          surLesFavoris ? "Filtre de photos" : "Filtre de portfolios"
+        }
         /*  §3 (nº 262) — SUR SMARTPHONE, LE CHAMP NE DIT PLUS LE
             STYLE : le mot « Filtrer », en blanc et en gras — la graisse
             et la taille du titre « Recherche » de la page du moteur
