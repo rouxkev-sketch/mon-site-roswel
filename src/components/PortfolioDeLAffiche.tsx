@@ -281,21 +281,21 @@ export function PanneauPortfolio({
                RÈGLE 4 — DEUX PHOTOS PLEINES ET 10 % DE LA TROISIÈME,
                son bord droit collé au bord droit du cadre :
                `2,1 × case + 2 écarts = 100 %` de la boîte de CONTENU,
-               d'où `case = (100 % − 12px) / 2,1`. Aucune largeur en
-               dur — la règle tient à toute largeur de colonne.
-               RÈGLE 5 — À GAUCHE, LA GALERIE VA JUSQU'AU CONTACT DE LA
-               GRANDE PHOTO (`-ml-10`, la gouttière de 40 px, rendue en
-               rembourrage `pl-10` : au repos la première photo reste
-               alignée sur les titres), ET CETTE BANDE S'EFFACE — un
-               masque en dégradé, transparent au bord gauche du cadre,
-               pleinement opaque à l'alignement des titres. À droite,
-               rien : l'effacement ne concerne QUE la bande de gauche.
-               ⚠️ UN MASQUE CRÉE UNE NOUVELLE RACINE D'ARRIÈRE-PLAN
-               POUR SES DESCENDANTS. Ici ils ne sont que des images :
-               aucune plaque de verre n'est prise dedans, et rien
-               n'anime en opacité (le défaut nº 234 ne se rejoue pas).
-               ⚠️ ET LES DEUX LIGNES DU MASQUE SONT LITTÉRALES, la
-               préfixée d'abord — la même prudence que les filtres. */}
+               d'où `case = (100 % − 6px) / 2,1` avec l'écart de 3 px.
+               Aucune largeur en dur — la règle tient à toute largeur
+               de colonne.
+               RÈGLE 5 — ANNULÉE PAR LA Nº 312-§1, SUR CONSIGNE.
+               ------------------------------------------------------
+               Elle faisait DÉBORDER la galerie de 40 px vers la grande
+               photo et effaçait cette bande en dégradé. Le propriétaire
+               n'en veut plus : LA GALERIE S'ARRÊTE À L'ALIGNEMENT DU
+               TEXTE, la même ligne verticale que les titres, et une
+               photo qui sort à gauche disparaît NETTEMENT sur cette
+               ligne. Plus de débord, plus de masque, plus de dégradé —
+               la rangée n'a donc plus ni marge négative, ni
+               rembourrage, ni rembourrage de défilement : sa boîte est
+               celle de la colonne, et `snap-start` s'aligne dessus
+               sans qu'on ait rien à corriger. */}
           <div className="mt-5 hidden lg:block">
             {section.series.map((serie) => (
               <div
@@ -313,26 +313,23 @@ export function PanneauPortfolio({
                   {serie.label} · {libelleRendu(serie.rendu)}
                 </p>
                 <GalerieQuiDefile
-                  /*  §1 (nº 310) — ANNULATION DU DÉCALAGE DE LA nº 308.
+                  /*  §1 (nº 312) — PLUS AUCUN DÉBORD, PLUS AUCUN MASQUE.
                        ------------------------------------------------
-                       La nº 308-§4-b avait décalé la galerie de 40 px
-                       vers la gauche : le débord était passé sur
-                       l'enveloppe (`-ml-10`), la rangée n'avait plus de
-                       rembourrage, et au repos la première photo
-                       commençait donc au bord du cadre, sous la bande
-                       d'effacement. LE PROPRIÉTAIRE NE VOULAIT PAS ÇA.
-                       ON REVIENT À L'ÉCRITURE DE LA nº 306 : le débord
-                       de 40 px est porté par LA RANGÉE et rendu en
-                       REMBOURRAGE (`-ml-10 pl-10`), si bien qu'au repos
-                       la première photo repart de l'alignement des
-                       titres. La bande d'effacement, elle, ne bouge
-                       pas : elle sert quand on fait défiler, pour
-                       qu'aucune photo ne vienne se coller nette contre
-                       la grande photo.
-                       ⚠️ ET L'ENVELOPPE NE DÉBORDE PLUS — c'est ce qui
-                       règle aussi le §3 : les chevrons se posent par
-                       rapport à ELLE, donc à l'intérieur de la galerie
-                       au lieu de la gouttière collée à la photo. */
+                       LA GALERIE TIENT DANS LA COLONNE, exactement : ni
+                       marge négative sur l'enveloppe, ni marge négative
+                       sur la rangée, ni rembourrage pour la compenser.
+                       Son bord gauche EST l'alignement du texte, parce
+                       que c'est la même boîte que celle des titres — ce
+                       n'est plus un réglage qui tombe juste, c'est une
+                       identité.
+                       CE QUE ÇA SIMPLIFIE AU PASSAGE : `scroll-pl-10`
+                       n'a plus de raison d'être (il remettait le
+                       snapport sur la boîte de contenu quand la rangée
+                       avait 40 px de rembourrage), et les deux lignes
+                       de masque disparaissent avec l'effacement — donc
+                       aussi la racine d'arrière-plan qu'un masque crée
+                       pour ses descendants, et toutes les précautions
+                       qui allaient avec (nº 234). */
                   classeEnveloppe="mt-2.5"
                   /*  §4-a (nº 308) — L'ÉCART PASSE DE 6 À 3 px, la
                        moitié. Il est donné au dessin partagé en
@@ -342,39 +339,13 @@ export function PanneauPortfolio({
                   //  et seulement ici : « Ma sélection » garde celui
                   //  de la nº 301 (le défaut du dessin partagé).
                   chevron={CHEVRON_GALERIE_PETIT}
-                  /*  §1 (nº 310) — LE DÉBORD REVIENT SUR LA RANGÉE, EN
-                       REMBOURRAGE.
-                       ⚠️ `scroll-pl-10` N'EST PAS UN ORNEMENT, ET IL A
-                       COÛTÉ UNE MESURE (nº 306) : l'accrochage
-                       (`snap-start`) aligne le bord d'une case sur le
-                       début du SNAPPORT, qui est la boîte de
-                       REMBOURRAGE — donc 40 px à gauche de la boîte de
-                       contenu. Sans lui, le navigateur fait défiler de
-                       40 px dès le premier rendu pour y arriver : la
-                       première photo se colle au bord gauche du cadre
-                       au lieu de s'aligner sur les titres, et la
-                       troisième dépasse à droite. */
-                  classeRangee="-ml-10 pl-10 scroll-pl-10"
-                  styleRangee={{
-                    WebkitMaskImage:
-                      "linear-gradient(to right, rgba(0,0,0,0) 0px, rgba(0,0,0,1) 40px)",
-                    maskImage:
-                      "linear-gradient(to right, rgba(0,0,0,0) 0px, rgba(0,0,0,1) 40px)",
-                  }}
                   /*  §3-b ET §4-c (nº 308) — LES DEUX CHEVRONS SONT
                        POSÉS DE LA MÊME FAÇON, chacun contre SON bord
-                       de la rangée : `left-0` et `right-0`, donc la
-                       même distance des deux côtés.
-                       CE QU'IL Y AVAIT AVANT : `-left-10` sortait le
-                       chevron gauche de l'enveloppe pour le poser dans
-                       la gouttière de 40 px, contre la grande photo —
-                       à l'extérieur du dessin, à l'extérieur de la
-                       galerie, et à l'endroit exact où la colonne
-                       ROGNE (son bord de rognage tombe au même pixel).
-                       C'est de là que venait « à moitié coupée ».
-                       Le chevron gauche vit maintenant DANS la
-                       rangée : son dessin est à 7 px du bord, jamais
-                       au contact du rognage, jamais sur la photo. */
+                       de la galerie : `left-0` et `right-0`, donc la
+                       même distance des deux côtés. Ils vivent DANS la
+                       rangée — jamais dans une gouttière collée à la
+                       grande photo, d'où venait « à moitié coupée »
+                       (nº 308-§3, puis nº 310-§3). */
                   decalageGauche="left-0"
                   decalageDroite="right-0"
                   avecVoiles={false}

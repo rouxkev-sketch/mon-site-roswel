@@ -55,7 +55,63 @@ import type { TatoueurSuivi } from "@/lib/favoris-serveur";
 //  galerie ne se compose plus de ses coups de cœur mais des cinq règles
 //  de composition (voir `bandeDeTrois`), et la règle 5 lit les j'aime
 //  REÇUS par chaque photo, qui voyagent avec elle.
-export function BlocSuivis({ suivis }: { suivis: TatoueurSuivi[] }) {
+/**
+ * §2 (nº 312) — CE QUE « MA SÉLECTION » DEMANDE POUR OUVRIR UNE FICHE.
+ * ==================================================================
+ * EN WEB, UNE FICHE S'OUVRE EN FENÊTRE CENTRÉE SUPERPOSÉE — partout
+ * ailleurs sur le site, et donc ici aussi. C'était le §1 de la passe
+ * nº 305, jamais exécutée dans ce dépôt ; la nº 307 n'en avait rattrapé
+ * que deux points sur trois, et celui-ci était resté.
+ * ⚠️ CE BLOC N'OUVRE RIEN LUI-MÊME, et c'est la règle : `PageFavoris`
+ * possède déjà la fenêtre, sa note de retour, sa position de page et sa
+ * clé de remontage (elle s'en sert pour les cartes de favoris depuis la
+ * nº 213). On lui passe la main — un seul propriétaire de la fenêtre,
+ * une seule écriture. Sans ce rappel, les liens restent de VRAIS liens
+ * et la page de fiche s'ouvre : c'est ce qui doit arriver au doigt, au
+ * clic du milieu, et aux moteurs de recherche.
+ */
+export type OuvertureDepuisSuivis = (
+  slug: string,
+  serie: { cle: string; style: string; nature: string; rendu: string; photo: string },
+  adresse: string
+) => void;
+
+/**
+ * LE CLIC QUI OUVRE LA FENÊTRE (§2, nº 312) — l'écriture unique des
+ * deux liens de ce bloc, et la MÊME QUE CELLE DES CARTES DE MOSAÏQUE
+ * (voir `auClic` dans CarteTatoueur) :
+ *  · un clic modifié (nouvel onglet, clic du milieu…) ne touche à rien ;
+ *  · sur un VRAI TÉLÉPHONE on ne fait rien non plus — le lien navigue,
+ *    et la fenêtre superposée du web n'a rien à y faire ;
+ *  · sinon, on empêche la navigation et on ouvre la fenêtre.
+ */
+function ouvrirEnFenetre(
+  evenement: React.MouseEvent,
+  surOuverture: OuvertureDepuisSuivis | undefined,
+  ...args: Parameters<OuvertureDepuisSuivis>
+) {
+  if (!surOuverture) return;
+  if (
+    evenement.metaKey ||
+    evenement.ctrlKey ||
+    evenement.shiftKey ||
+    evenement.altKey
+  ) {
+    return;
+  }
+  if (document.documentElement.dataset.appareil === "mobile") return;
+  evenement.preventDefault();
+  surOuverture(...args);
+}
+
+export function BlocSuivis({
+  suivis,
+  surOuverture,
+}: {
+  suivis: TatoueurSuivi[];
+  /** Fournie par « Ma sélection » sur le web ; absente ailleurs. */
+  surOuverture?: OuvertureDepuisSuivis;
+}) {
   const groupes = groupesDeSuivis(suivis);
 
   if (suivis.length === 0) {
@@ -140,7 +196,7 @@ export function BlocSuivis({ suivis }: { suivis: TatoueurSuivi[] }) {
           >
             {groupe.suivis.map((suivi) => (
               <li key={suivi.id}>
-                <BlocDUnSuivi suivi={suivi} />
+                <BlocDUnSuivi suivi={suivi} surOuverture={surOuverture} />
               </li>
             ))}
           </ul>
@@ -151,7 +207,13 @@ export function BlocSuivis({ suivis }: { suivis: TatoueurSuivi[] }) {
 }
 
 /** LE BLOC D'UN ARTISTE — trois étages (§3). */
-function BlocDUnSuivi({ suivi }: { suivi: TatoueurSuivi }) {
+function BlocDUnSuivi({
+  suivi,
+  surOuverture,
+}: {
+  suivi: TatoueurSuivi;
+  surOuverture?: OuvertureDepuisSuivis;
+}) {
   const lignes = lignesDInformation(suivi);
   const bande = bandeDeTrois(suivi);
   const nouveautes = libelleNouveautes(suivi.nouveautes);
@@ -162,6 +224,20 @@ function BlocDUnSuivi({ suivi }: { suivi: TatoueurSuivi }) {
       <Link
         href={`/tatoueur/${suivi.slug}`}
         data-ligne-suivi=""
+        /*  §2 (nº 312) — EN WEB, LA FICHE S'OUVRE PAR-DESSUS. Le lien
+            reste un vrai lien : au doigt il navigue, et un clic du
+            milieu ouvre toujours la page. */
+        onClick={(evenement) =>
+          ouvrirEnFenetre(
+            evenement,
+            surOuverture,
+            suivi.slug,
+            //  Aucune série demandée : la fiche s'ouvre sur ce qu'elle
+            //  montre par défaut, comme le ferait sa page.
+            { cle: `suivi-${suivi.slug}`, style: "", nature: "", rendu: "", photo: "" },
+            `/tatoueur/${suivi.slug}`
+          )
+        }
         /*  §3 (nº 254) — L'ÉCART PASTILLE-TEXTE SE REMET À L'ÉCHELLE :
             14 px pour un rond de 52 (gap-3.5, la proportion de
             toujours) → 20 px pour un rond de 72 (14 × 72 ÷ 52 ≈ 19,4,
@@ -285,7 +361,7 @@ function BlocDUnSuivi({ suivi }: { suivi: TatoueurSuivi }) {
              ⚠️ MOINS DE PHOTOS QUE LA LARGEUR : on n'affiche que ce
              qui existe, jamais un doublon, jamais une case comblée. */}
       {bande.photos.length > 0 && (
-        <RangeeDeVignettes suivi={suivi} bande={bande} />
+        <RangeeDeVignettes suivi={suivi} bande={bande} surOuverture={surOuverture} />
       )}
     </div>
   );
@@ -322,9 +398,11 @@ const CASE_RANGEE =
 function RangeeDeVignettes({
   suivi,
   bande,
+  surOuverture,
 }: {
   suivi: TatoueurSuivi;
   bande: ReturnType<typeof bandeDeTrois>;
+  surOuverture?: OuvertureDepuisSuivis;
 }) {
   return (
     /*  §2 (nº 254) — 20 px entre l'identité et sa bande sur le web ;
@@ -360,6 +438,30 @@ function RangeeDeVignettes({
               `&photo=${photo.id}`
             }
             data-vignette-suivi={photo.id}
+            /*  §2 (nº 312) — EN WEB, LA FICHE S'OUVRE PAR-DESSUS, ET
+                SUR CETTE PHOTO : les trois tags de la série ET
+                l'identifiant de la photo voyagent, exactement comme
+                dans l'adresse juste au-dessus. Les deux chemins
+                ouvrent donc la même chose — c'est ce qui permet au
+                doigt de naviguer sans qu'on écrive rien de plus. */
+            onClick={(evenement) =>
+              ouvrirEnFenetre(
+                evenement,
+                surOuverture,
+                suivi.slug,
+                {
+                  cle: `suivi-${photo.id}`,
+                  style: photo.style,
+                  nature: photo.nature,
+                  rendu: photo.rendu ?? "",
+                  photo: photo.id,
+                },
+                `/tatoueur/${suivi.slug}?style=${photo.style}` +
+                  `&nature=${photo.nature}` +
+                  (photo.rendu ? `&rendu=${photo.rendu}` : "") +
+                  `&photo=${photo.id}`
+              )
+            }
             //  §4 (nº 244) — au doigt, une BRÈVE baisse d'opacité,
             //  rien de plus. §5 (nº 247) — angles droits.
             //  §4 (nº 251) — LE FORMAT PORTFOLIO DU SITE (4:5), lu

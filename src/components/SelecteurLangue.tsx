@@ -66,22 +66,27 @@ function ListeDesLangues({ surChoix }: { surChoix: () => void }) {
             //  Le voile translucide des lignes de menu (nº 237-§2) :
             //  sur une plaque de verre, un aplat ferait une boîte
             //  posée dessus.
-            /*  §2-b (nº 311) — UNE LANGUE INDISPONIBLE SE VOIT COMME
-                 TELLE. Elle était à `text-sombre-texte-doux/50` — le
-                 gris doux du site à moitié transparent, qui se pose
-                 vers `rgb(105,105,111)` sur la plaque : lisible, donc
-                 pas lu comme éteint. Elle descend à /20, soit environ
-                 `rgb(67,67,71)` — la moitié plus sombre, et l'écart
-                 avec une langue disponible (`#F2F2F4`, opaque) devient
-                 celui qu'on attend entre « je peux » et « je ne peux
-                 pas ». C'est une OPACITÉ, pas une couleur nouvelle :
-                 sur une plaque de verre, un gris plein ferait une
-                 tache posée dessus (la règle de la nº 237-§2). */
+            /*  §3-a (nº 312) — ANNULATION DE LA nº 311, SUR CONSIGNE :
+                 UNE LANGUE INDISPONIBLE DOIT SE LIRE SANS EFFORT.
+                 ------------------------------------------------------
+                 La nº 311 l'avait ASSOMBRIE (de /50 à /20) parce que
+                 la consigne disait « on ne voit pas qu'elles sont
+                 désactivées ». C'était l'inverse : le propriétaire
+                 trouvait le /50 DÉJÀ trop sombre pour être lu. On
+                 remonte donc franchement AU-DESSUS du point de
+                 départ — /85. Elle reste distincte d'une langue
+                 disponible, qui est en BLANC PLEIN et en gras
+                 (`text-sombre-texte`, #F2F2F4, `font-semibold`) :
+                 c'est la COULEUR et la GRAISSE qui séparent les deux,
+                 plus l'effacement.
+                 ⚠️ C'EST UNE OPACITÉ, PAS UNE COULEUR NOUVELLE : sur
+                 une plaque de verre, un gris plein ferait une tache
+                 posée dessus (la règle de la nº 237-§2). */
             className={`w-full flex items-center gap-3 min-h-[46px] px-3 rounded-xl
                         text-left text-[14.5px] transition-colors ${
                           langue.actif
                             ? "text-sombre-texte font-semibold hover:bg-white/5 active:bg-white/10"
-                            : "text-sombre-texte-doux/20 cursor-not-allowed"
+                            : "text-sombre-texte-doux/85 cursor-not-allowed"
                         }`}
           >
             {/* La puce ronde désigne la langue en cours — le seul
@@ -93,15 +98,14 @@ function ListeDesLangues({ surChoix }: { surChoix: () => void }) {
                 45 %. Blanc à 40 % — GRIS, toujours : une langue à
                 venir n'est ni une sélection (rose), ni un manque
                 (rouge), ni une mise en ligne (vert).
-                §2-b (nº 311) — …ET IL SUIT SON TEXTE, à 15 %. Laisser
-                le point à 40 % pendant que le mot descend à 20 % en
-                aurait fait la chose la plus claire d'une ligne éteinte :
-                l'œil serait allé droit dessus. Une ligne indisponible
-                s'éteint ENTIÈREMENT, ou elle ne s'éteint pas. */}
+                §3-b (nº 312) — ET IL REVIENT À 40 %, sa valeur d'avant
+                la nº 311 : celle-ci l'avait descendu à 15 % pour qu'il
+                suive un texte qu'on assombrissait, et le texte remonte.
+                La valeur de la nº 241 est donc rendue telle quelle. */}
             <span
               aria-hidden
               className={`w-2 h-2 rounded-full shrink-0 ${
-                langue.actif ? "bg-white" : "bg-white/15"
+                langue.actif ? "bg-white" : "bg-white/40"
               }`}
             />
             {langue.label}

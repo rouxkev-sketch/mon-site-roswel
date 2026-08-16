@@ -76,15 +76,22 @@ titre("§1 · §3 · §4 à la source");
       //  rien n'est recopié : aucune couleur, aucune opacité, aucun z
       !/z-\[[0-9]+\][^\n]*bg-black/.test(langue)
   );
+  /*  ⚠️ AMENDÉ PAR LA Nº 312-§3a — ANNULATION, SUR CONSIGNE. La
+      consigne de cette passe-ci était fausse : le propriétaire trouvait
+      le /50 DÉJÀ trop sombre, et l'assombrir encore l'a rendu illisible.
+      On est remonté à /85. Ce contrôle tient donc l'inverse de ce qu'il
+      tenait — c'est la même mesure, retournée. */
   verif(
-    "§2-b — les langues indisponibles descendent de /50 à /20",
-    /text-sombre-texte-doux\/20 cursor-not-allowed/.test(langue) &&
-      !/text-sombre-texte-doux\/50/.test(langue)
+    "§2-b — les langues indisponibles sont REMONTÉES au-dessus du /50 de départ",
+    /text-sombre-texte-doux\/85 cursor-not-allowed/.test(langue) &&
+      !/text-sombre-texte-doux\/20/.test(langue)
   );
+  /*  ⚠️ AMENDÉ PAR LA Nº 312-§4 — ANNULATION, SUR CONSIGNE : le trait
+      est revenu au bord BAS, celui de la nº 309. */
   verif(
-    "§3-a — le trait rose court le long du bord GAUCHE, sur la hauteur",
-    /absolute inset-y-0 left-0 w-\[2px\] bg-primaire/.test(portfolio) &&
-      !/absolute inset-x-0 bottom-0 h-\[2px\] bg-primaire/.test(portfolio)
+    "§3-a — le trait rose court le long du bord BAS (revenu par la nº 312)",
+    /absolute inset-x-0 bottom-0 h-\[2px\] bg-primaire/.test(portfolio) &&
+      !/absolute inset-y-0 left-0 w-\[2px\] bg-primaire/.test(portfolio)
   );
   verif(
     "§3-a — …et il n'est rendu que sous le rendu choisi",
@@ -292,10 +299,14 @@ titre("§2-b au pixel — les langues indisponibles, avant et après");
     content: `button[lang][disabled]{color:rgba(168,168,176,0.2)!important}`,
   });
 
+  /*  ⚠️ AMENDÉ PAR LA Nº 312-§3a : le sens est INVERSÉ. Le texte éteint
+      doit maintenant être plus CLAIR que le /50 de départ, pas plus
+      sombre. La mesure, elle, ne change pas d'un iota — c'est le même
+      pixel, lu sur le même fond. */
   verif(
-    "le texte éteint est NETTEMENT plus sombre qu'avant",
-    apres.pixel[0] < avant.pixel[0] - 30,
-    `avant rgb(${avant.pixel.join(", ")}) → après rgb(${apres.pixel.join(", ")})`
+    "le texte éteint est NETTEMENT plus CLAIR que le /50 de départ",
+    apres.pixel[0] > avant.pixel[0] + 30,
+    `/50 rgb(${avant.pixel.join(", ")}) → /85 rgb(${apres.pixel.join(", ")})`
   );
   const dispo = await page.evaluate(() => {
     const b = [...document.querySelectorAll("button[lang]")].find(
@@ -303,9 +314,12 @@ titre("§2-b au pixel — les langues indisponibles, avant et après");
     );
     return getComputedStyle(b).color;
   });
+  /*  ⚠️ AMENDÉ PAR LA Nº 312-§3a : une langue indisponible doit rester
+      MOINS PRÉSENTE qu'une disponible — mais lisible. On borne donc par
+      le haut, plus par le bas. */
   verif(
-    "…et l'écart avec une langue disponible saute aux yeux",
-    dispo === "rgb(242, 242, 244)" && apres.pixel[0] < 80,
+    "…tout en restant moins présente qu'une langue disponible",
+    dispo === "rgb(242, 242, 244)" && apres.pixel[0] < 200,
     `disponible ${dispo} · indisponible rgb(${apres.pixel.join(", ")})`
   );
   const point = await page.evaluate(() => {
@@ -315,9 +329,12 @@ titre("§2-b au pixel — les langues indisponibles, avant et après");
     return getComputedStyle(b.querySelector("span[aria-hidden]"))
       .backgroundColor;
   });
+  /*  ⚠️ AMENDÉ PAR LA Nº 312-§3b : le point est revenu à 40 %, sa valeur
+      de la nº 241 — il n'avait été descendu à 15 % que pour suivre un
+      texte qu'on assombrissait, et le texte est remonté. */
   verif(
-    "le point de la ligne s'est éteint avec elle (il ne reste pas le plus clair)",
-    /0\.15|15%/.test(point),
+    "le point de la ligne est revenu à 40 % (la valeur de la nº 241)",
+    /0\.4\b|40%/.test(point),
     point
   );
 }

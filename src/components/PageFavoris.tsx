@@ -447,7 +447,23 @@ export function PageFavoris({
            favoris. §2 (nº 249) — le sous-titre en capitales est parti :
            le TITRE de la page dit déjà « Mes suivis ». */}
       {!surLesFavoris && (
-        <BlocSuivis suivis={suivisVisibles} />
+        /*  §2 (nº 312) — EN WEB, UN PORTFOLIO S'OUVRE EN FENÊTRE
+            CENTRÉE SUPERPOSÉE, comme partout ailleurs sur le site.
+            ⚠️ ON LUI PASSE `ouvrirLaFiche`, CELLE QUI SERT DÉJÀ AUX
+            CARTES DE FAVORIS : même note de retour, même position de
+            page mémorisée, même entrée d'historique, même fenêtre
+            montée plus bas. Rien n'est écrit une seconde fois, et la
+            fenêtre elle-même n'est pas touchée — elle est seulement
+            ouverte depuis un endroit de plus.
+            ⚠️ AU DOIGT, RIEN NE CHANGE : `BlocSuivis` n'appelle ce
+            rappel que sur un appareil à pointeur fin (voir
+            `ouvrirEnFenetre`) — ailleurs, ses liens naviguent. */
+        <BlocSuivis
+          suivis={suivisVisibles}
+          surOuverture={(slug, serie, adresse) =>
+            void ouvrirLaFiche(slug, serie, adresse)
+          }
+        />
       )}
 
       {/* ---------- LE TITRE INACTIF EST PARTI (§2, nº 263) ----------

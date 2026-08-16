@@ -152,15 +152,17 @@ titre("§2 à la source — le formulaire consomme la règle, et rien d'autre");
     "§2-a — le titre du rendu choisi est BLANC, l'autre GRIS",
     /actif \? "text-white" : "text-sombre-texte-doux"/.test(portfolio)
   );
-  /*  ⚠️ AMENDÉ PAR LA Nº 311-§3a : le trait rose a QUITTÉ le bord bas
-      pour le bord GAUCHE — il est vertical, sur la hauteur du bouton.
-      Ce que ce contrôle tient reste le même : il n'est RENDU que sur le
-      rendu choisi, et sur lui seul. */
+  /*  ⚠️ AMENDÉ DEUX FOIS, ET IL EST REVENU À SON POINT DE DÉPART. La
+      nº 311-§3a avait fait passer le trait du bord BAS au bord GAUCHE ;
+      la nº 312-§4 l'a RAMENÉ EN BAS, sur consigne — c'est-à-dire
+      exactement ce que cette passe-ci avait livré. On réécrit donc la
+      valeur d'origine. Ce que ce contrôle tient n'a jamais bougé : le
+      trait n'est RENDU que sur le rendu choisi, et sur lui seul. */
   verif(
     "§2-a — le trait rose n'est rendu que sur l'actif",
     /\{actif && \(/.test(portfolio) &&
       /data-soulignement-rendu=""/.test(portfolio) &&
-      /absolute inset-y-0 left-0 w-\[2px\] bg-primaire/.test(portfolio)
+      /absolute inset-x-0 bottom-0 h-\[2px\] bg-primaire/.test(portfolio)
   );
   /*  ⚠️ AMENDÉ PAR LA Nº 311-§3b : le TITRE est désormais blanc dans les
       deux états, il n'a donc plus de ternaire — le compte de deux

@@ -48,20 +48,30 @@ const COURTES = "/tatoueur/atelier-boreal-montreal";
  * ================================================================== */
 titre("§1 · §4 à la source — ce qui est revenu, et ce qui est réglable");
 {
+  /*  ⚠️ AMENDÉ PAR LA Nº 312-§1 — ANNULATION, SUR CONSIGNE. Cette
+      passe-ci avait REMIS le débord de 40 px sur la rangée, en
+      rembourrage, pour que la première photo reparte des titres. La
+      nº 312 supprime le débord ENTIER : la galerie s'arrête à
+      l'alignement du texte, et il n'y a plus ni marge négative, ni
+      rembourrage à compenser. CE QUE CE CONTRÔLE TIENT DÉSORMAIS, et
+      qui est le fond de la demande d'alors : au repos, la première
+      photo est bien sur la ligne des titres — c'est maintenant une
+      identité de boîtes, mesurée en vivant par le banc nº 312. */
   verif(
-    "§1 — le débord de 40 px est de nouveau porté par la RANGÉE, en rembourrage",
-    /classeRangee="-ml-10 pl-10 scroll-pl-10"/.test(affiche) &&
+    "§1 — la rangée n'a plus aucun débord à compenser",
+    !/classeRangee=/.test(affiche) &&
       /classeEnveloppe="mt-2\.5"/.test(affiche) &&
-      !/classeEnveloppe="mt-2\.5 -ml-10"/.test(affiche)
+      !/-ml-10/.test(affiche)
   );
+  /*  ⚠️ AMENDÉ PAR LA Nº 312-§1b — ANNULATION, SUR CONSIGNE. La bande
+      d'effacement de 40 px est SUPPRIMÉE : plus de masque, plus de
+      dégradé, plus de transparence progressive. Une photo qui sort à
+      gauche disparaît nettement sur la ligne des titres. Ce contrôle
+      exige donc l'inverse de ce qu'il exigeait — et le banc nº 312
+      décode les pixels pour le prouver. */
   verif(
-    "§1 — LA BANDE D'EFFACEMENT DE 40 px EST GARDÉE, en deux lignes littérales",
-    /WebkitMaskImage:\s*\n?\s*"linear-gradient\(to right, rgba\(0,0,0,0\) 0px, rgba\(0,0,0,1\) 40px\)"/.test(
-      affiche
-    ) &&
-      /\bmaskImage:\s*\n?\s*"linear-gradient\(to right, rgba\(0,0,0,0\) 0px, rgba\(0,0,0,1\) 40px\)"/.test(
-        affiche
-      )
+    "§1 — LA BANDE D'EFFACEMENT EST SUPPRIMÉE, code compris",
+    !/maskImage/.test(affiche) && !/WebkitMaskImage/.test(affiche)
   );
   verif(
     "§2 — les cases GRANDISSENT quand la série ne remplit pas, sans jamais rétrécir",
@@ -213,11 +223,14 @@ titre("§1 en vivant — au repos, la première photo repart des titres");
     Math.abs(boites.premiereGauche - boites.titreGauche) < 0.001,
     `case ${boites.premiereGauche} · titres ${boites.titreGauche}`
   );
+  /*  ⚠️ AMENDÉ PAR LA Nº 312-§1a : la rangée NE DÉBORDE PLUS. Son bord
+      gauche EST celui des titres — plus un réglage qui tombe juste, une
+      identité de boîtes. */
   verif(
-    "…et la rangée déborde bien de 40 px à sa gauche (la bande d'effacement)",
-    Math.abs(boites.titreGauche - boites.rangeeGauche - 40) < 0.5 &&
-      boites.rembourrage === "40px / 0px",
-    `rangée ${boites.rangeeGauche} · rembourrage ${boites.rembourrage}`
+    "…et la rangée ne déborde plus : son bord gauche EST celui des titres",
+    Math.abs(boites.titreGauche - boites.rangeeGauche) < 0.001 &&
+      boites.rembourrage === "0px / 0px",
+    `rangée ${boites.rangeeGauche} · titres ${boites.titreGauche} · rembourrage ${boites.rembourrage}`
   );
   verif(
     "l'écart entre photos est resté à 3 px sur la fiche",
@@ -531,9 +544,10 @@ titre("ce qui ne devait pas bouger");
       colonne: `${cs.paddingLeft}/${cs.paddingRight} · ${cs.marginLeft}/${cs.marginRight}`,
     };
   });
+  /*  ⚠️ AMENDÉ PAR LA Nº 312-§1b : plus aucun masque. */
   verif(
-    "la bande d'effacement de 40 px est intacte",
-    /0px/.test(garde.masque) && /40px/.test(garde.masque),
+    "plus aucun masque sur la rangée",
+    garde.masque === "none",
     garde.masque.slice(0, 74)
   );
   verif("aucun point de défilement", !garde.points);
@@ -542,9 +556,13 @@ titre("ce qui ne devait pas bouger");
     Math.abs(garde.rapport - 0.8) < 0.002,
     `${garde.largeur} px · rapport ${garde.rapport}`
   );
+  /*  ⚠️ AMENDÉ PAR LA Nº 312-§1c : les 40 px de gauche n'avaient d'autre
+      client que le débord des galeries, qui disparaît. Le rognage revient
+      donc à l'écriture SYMÉTRIQUE de la nº 298 — 12 px, de quoi couvrir
+      les 8 px d'encadré de survol avec 4 de reste. */
   verif(
-    "le rognage asymétrique de la colonne (nº 306) n'a pas bougé",
-    garde.colonne === "40px/12px · -40px/-12px",
+    "le rognage de la colonne est revenu à 12 px, symétrique (nº 298)",
+    garde.colonne === "12px/12px · -12px/-12px",
     garde.colonne
   );
 }

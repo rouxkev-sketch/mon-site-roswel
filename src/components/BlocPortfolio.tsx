@@ -928,19 +928,25 @@ export function BlocPortfolio({
                     </span>
                     {/*  §2-a (nº 309) — LE TRAIT ROSE, SUR L'ACTIF ET
                          SUR LUI SEUL. Léger : 2 px.
-                         §3-a (nº 311) — IL A CHANGÉ DE CÔTÉ. Il courait
-                         le long du BORD BAS, d'un bord à l'autre ; il
-                         court maintenant le long du BORD GAUCHE, sur
-                         toute la hauteur du rectangle. Un trait
-                         horizontal sous une boîte se lit comme un
-                         onglet — or ces deux-là n'en sont pas : ce sont
-                         deux cases côte à côte, et c'est leur FLANC qui
-                         les distingue. */}
+                         §4 (nº 312) — ANNULATION DE LA nº 311, SUR
+                         CONSIGNE : IL REVIENT EN BAS. Elle l'avait fait
+                         passer au bord GAUCHE, vertical ; le
+                         propriétaire le veut comme à la nº 309 —
+                         HORIZONTAL, le long du BORD BAS de l'encadré,
+                         d'un bord à l'autre, sous le seul bouton
+                         choisi. C'est le procédé des onglets de la
+                         ligne au-dessus (`OngletsLigne` : trait rose
+                         sous l'onglet choisi) — on ne réinvente pas un
+                         marqueur, on reprend celui que la page emploie
+                         déjà.
+                         ⚠️ LE RESTE DE LA nº 311 EST CONSERVÉ : les
+                         quatre états de couleur ne bougent pas (voir
+                         le titre et le sous-titre, plus haut). */}
                     {actif && (
                       <span
                         aria-hidden="true"
                         data-soulignement-rendu=""
-                        className="absolute inset-y-0 left-0 w-[2px] bg-primaire"
+                        className="absolute inset-x-0 bottom-0 h-[2px] bg-primaire"
                       />
                     )}
                   </button>
