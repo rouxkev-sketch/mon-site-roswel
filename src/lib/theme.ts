@@ -41,6 +41,9 @@ export function variablesCssCouleurs(): string {
     "--rw-sombre-eleve": COULEURS_SOMBRE.eleve,
     "--rw-sombre-eleve-clair": COULEURS_SOMBRE.eleveClair,
     "--rw-sombre-bordure": COULEURS_SOMBRE.bordure,
+    //  §4 (nº 315) — LE TRAIT DES SÉPARATIONS, une seule valeur pour
+    //  tout ce qui sépare deux sections (voir COULEURS_SOMBRE.trait).
+    "--rw-sombre-trait": COULEURS_SOMBRE.trait,
     "--rw-sombre-haut": COULEURS_SOMBRE.haut,
     "--rw-sombre-haut-clair": COULEURS_SOMBRE.hautClair,
     "--rw-sombre-texte": COULEURS_SOMBRE.texte,

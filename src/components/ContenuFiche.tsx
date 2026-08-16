@@ -8,10 +8,12 @@ import { defilerEnDouceur } from "@/lib/defilement-programme";
 //  ce que le carrousel reçoit. Sans `?sonde-carrousel=1`, ne coûte rien.
 import { noter as noterSonde } from "@/lib/journal-carrousel";
 import {
+  ARRONDI_ETIQUETTE,
   ECRITURE_TITRE_SECTION,
   libelleFiltre,
   libelleStyle,
   PORTRAIT_ROND,
+  TRAIT_SEPARATION,
 } from "@/config/tatouage";
 import { BoutonHorsLigne } from "@/components/BoutonHorsLigne";
 import { IconeCalendrier, IconeDuLien } from "@/components/IconeReseau";
@@ -22,7 +24,7 @@ import {
   type OngletAffiche,
   type SerieChoisie,
 } from "@/components/PortfolioDeLAffiche";
-import { rendusDuPortfolio } from "@/lib/photos-tatoueur";
+import { capsulesPratiques } from "@/lib/pratique-fiche";
 import type { StyleGalerie } from "@/lib/photo-tatoueur";
 import { FenetreSignalement } from "@/components/FenetreSignalement";
 import { libelleDuLien } from "@/lib/liens-fiche";
@@ -544,43 +546,39 @@ export function ContenuFiche({
   }
 
   /**
-   * §2 (nº 226) — LES CINQ SECTIONS DE BADGES, DANS CET ORDRE
+   * §1 et §2 (nº 315) — DE CINQ SECTIONS TITRÉES À UNE SEULE
    * ==================================================================
-   * STYLES, RENDU, TECHNIQUE, TYPES DE PROJETS, BESOINS PARTICULIERS
-   * — l'ordre et les mots sont ceux du propriétaire, à la lettre. Le
-   * RENDU remonte en deuxième position (il dit ce qu'on voit sur les
-   * photos, juste après ce qu'on tatoue), et « Techniques maîtrisées »
-   * redevient « TECHNIQUE ».
+   * CE QU'IL Y AVAIT (nº 226) : cinq titres en capitales — STYLES,
+   * RENDU, TECHNIQUE, TYPES DE PROJETS, BESOINS PARTICULIERS — chacun
+   * au-dessus d'une poignée de mots. Le propriétaire l'a tranché :
+   * c'était plus de structure que d'information.
    *
-   * ⚠️ LES TITRES SONT ÉCRITS EN CAPITALES PAR LA FEUILLE DE STYLE
-   * (`uppercase`, nº 222-§6) : ils se lisent donc « STYLES », « RENDU »
-   * … à l'écran, et restent lisibles tels quels dans le code.
+   * §1 — LE TITRE « STYLES » DISPARAÎT, ET SES BADGES REMONTENT. Ils
+   * ne sont plus une section : ils se posent DIRECTEMENT SOUS LA BIO,
+   * sans rien au-dessus d'eux, comme la fin de la présentation. Ils
+   * vivent donc à part, plus bas dans ce fichier (`badgesDeStyle`).
+   * ⚠️ ILS RESTENT DES LIENS vers /tatouage/<style>/<ville> : c'est la
+   * valeur de référencement du site, elle ne part pas avec le titre.
    *
-   * UN SEUL format ET UNE SEULE couleur de badge partout : les styles
-   * ne portent plus de nuance rose, seul leur survol dit qu'ils se
-   * cliquent. Un groupe VIDE ne rend rien du tout — ni titre, ni
-   * boîte, ni marge : c'est le `null` du `map` plus bas, et c'est
-   * pourquoi son absence ne laisse aucun espace.
+   * §2 — LES QUATRE AUTRES FUSIONNENT SOUS « PRATIQUE ». Toutes leurs
+   * capsules se rangent ensemble, sur une ou plusieurs lignes :
+   *
+   *     PRATIQUE
+   *     Couleur · Machine · Grandes pièces · Bodysuit · Cover · Cicatrice
+   *
+   * ⚠️ UN ORDRE FIXE, TOUJOURS LE MÊME — rendu, puis technique, puis
+   * types de projets, puis besoins particuliers. Sans lui, les
+   * capsules changeraient de place d'une fiche à l'autre, et l'œil
+   * perdrait le repère qu'il vient de prendre sur la précédente.
+   * ⚠️ ET CET ORDRE NE VIT PAS ICI : il est la RÈGLE, et une règle
+   * qu'aucun banc ne peut exécuter finit par dériver. Il vit donc dans
+   * `capsulesPratiques` (lib/pratique-fiche), où il s'éprouve sur
+   * trois cas — une capsule, six, aucune — sans navigateur.
+   * ⚠️ RIEN DE DÉCLARÉ, RIEN D'AFFICHÉ : la section entière disparaît
+   * si les quatre catégories sont vides — pas de titre orphelin (voir
+   * `capsulesPratique.length` au rendu).
    */
-  const groupesBadges: Array<{
-    titre: string;
-    slugs: string[];
-    versPages?: boolean;
-  }> = [
-    { titre: "Styles", slugs: tatoueur.styles, versPages: true },
-    // LE RENDU — le seul groupe que PERSONNE n'a coché : il se DÉDUIT
-    // des tags des photos déposées (voir rendusDuPortfolio), tout
-    // comme le filtre du moteur le lit. Un portfolio entièrement en
-    // noir et gris n'affiche donc qu'une pastille, et une fiche dont
-    // aucune photo n'est taguée (avant la migration nº 31) n'affiche
-    // pas la section du tout.
-    { titre: "Rendu", slugs: rendusDuPortfolio(tatoueur.galerie) },
-    { titre: "Technique", slugs: tatoueur.filtres_technique ?? [] },
-    { titre: "Types de projets", slugs: tatoueur.filtres_composition ?? [] },
-    // LES BESOINS — au même format que les autres : ce ne sont pas
-    // des goûts, mais ils se lisent au même endroit.
-    { titre: "Besoins particuliers", slugs: tatoueur.filtres_besoins ?? [] },
-  ];
+  const capsulesPratique = capsulesPratiques(tatoueur);
 
   /** LA LIGNE DE SÉPARATION DES BLOCS — un gris TRÈS sombre, discret
       mais lisible sur l'anthracite (réservée à cette page).
@@ -594,18 +592,47 @@ export function ContenuFiche({
       le sélecteur « Adresse / Autre adresse », qui la remplaçait à
       deux adresses ou plus, est supprimé — les adresses s'empilent. */
 
-  /** LE PREMIER GROUPE DE BADGES REMPLI — le seul à porter une ligne
-      de séparation (nº 222-§6) : les suivants ne se distinguent plus
-      que par l'espacement et la typographie. */
-  const premierGroupeRempli = groupesBadges.findIndex(
-    (groupe) => groupe.slugs.length > 0
-  );
-
   /*  §5 (nº 287) — LES SÉPARATEURS RESPECTENT LES MARGES, au doigt
       comme au web : le « bord à bord » du smartphone (l'ancien
       `mobile:-mx-4`) est ANNULÉ par le propriétaire — la ligne
-      s'arrête où le contenu s'arrête, mêmes marges des deux côtés. */
-  const separation = "border-t border-sombre-bordure/60";
+      s'arrête où le contenu s'arrête, mêmes marges des deux côtés.
+      §4 (nº 315) — ET SA COULEUR N'EST PLUS ÉCRITE ICI. C'était
+      `border-sombre-bordure/60`, le jeton des traits dilué à 60 % :
+      (44, 44, 49) sur un fond à (26, 26, 29) — on ne le voyait qu'en
+      le cherchant. La valeur vit maintenant dans la charte, une seule
+      fois, et le soulignement du sélecteur à deux choix lit la même
+      (voir TRAIT_SEPARATION). */
+  const separation = `border-t ${TRAIT_SEPARATION}`;
+
+  /**
+   * §1 (nº 315) — LES BADGES DE STYLE, SOUS LA BIO ET SANS TITRE.
+   * ------------------------------------------------------------------
+   * Ils ne sont plus une section : plus de « STYLES » au-dessus d'eux,
+   * plus de ligne de séparation. Ils ferment la présentation — le
+   * rond, le nom, le sous-titre, les liens, la bio, puis eux.
+   * ⚠️ `mt-7`, LE MÊME DÉGAGEMENT QUE LA BIO : la fiche SANS bio les
+   * pose donc sous ce qui précède avec exactement l'espace qu'ils
+   * auraient eu sous elle. Aucune règle conditionnelle à écrire — la
+   * marge ne dépend pas de son voisin.
+   * ⚠️ ET CE SONT TOUJOURS DES LIENS (§1, la consigne insiste) : vers
+   * /tatouage/<style>/<ville>, la valeur de référencement du site.
+   */
+  const badgesDeStyle = tatoueur.styles.length > 0 && (
+    <ul data-badges-style="" className="mt-7 flex flex-wrap gap-2">
+      {tatoueur.styles.map((slug) => (
+        <li key={slug}>
+          <Link
+            href={`/tatouage/${slug}/${tatoueur.ville_slug}`}
+            className={`inline-flex items-center ${ARRONDI_ETIQUETTE} px-3.5 min-h-[32px]
+                       bg-sombre-eleve text-[13px] font-medium text-sombre-texte
+                       transition-colors hover:bg-sombre-haut`}
+          >
+            {libelleStyle(slug)}
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
 
   return (
     <>
@@ -792,6 +819,12 @@ export function ContenuFiche({
             </p>
           )}
 
+          {/*  §1 (nº 315) — LES BADGES DE STYLE, DIRECTEMENT SOUS LA
+               BIO. Sans titre, sans trait : la fin de la présentation,
+               pas une section. Les sections titrées ne commencent
+               qu'après eux. (Voir `badgesDeStyle` plus haut.) */}
+          {badgesDeStyle}
+
           {/* ==========================================================
               §4 et §5 — OÙ TRAVAILLE CETTE FICHE
               ==========================================================
@@ -817,57 +850,35 @@ export function ContenuFiche({
           )}
 
           {/* ==========================================================
-              §6 — LES BADGES, PUIS LE SIGNALEMENT
+              §6 — « PRATIQUE », PUIS LE SIGNALEMENT
               ==========================================================
-              ⚠️ PLUS AUCUN TRAIT ENTRE LES BLOCS DE BADGES
-              (nº 222-§6) : ils se distinguent par l'espacement et la
-              typographie, et par rien d'autre. Le premier prend la
-              ligne qui le sépare de ce qui précède ; les suivants
-              s'enchaînent.
-              ⚠️ ET LES BADGES N'ONT PLUS DE CONTOUR (charte) : chaque
-              niveau s'éclaircit — la page, le bloc, le badge. */}
-          {groupesBadges.map((groupe, rang) =>
-            groupe.slugs.length > 0 ? (
-              <div
-                key={groupe.titre}
-                className={
-                  rang === premierGroupeRempli
-                    ? `mt-10 pt-10 ${separation}`
-                    : "mt-9"
-                }
-              >
-                {/*  §3 (nº 276) — l'écriture de la nº 223, désormais en
-                     constante partagée (les titres du Portfolio la
-                     consomment aussi) : une seule écriture, partout. */}
-                <h2 className={ECRITURE_TITRE_SECTION}>
-                  {groupe.titre}
-                </h2>
-                <ul className="mt-4 flex flex-wrap gap-2">
-                  {groupe.slugs.map((slug) =>
-                    groupe.versPages ? (
-                      <li key={slug}>
-                        <Link
-                          href={`/tatouage/${slug}/${tatoueur.ville_slug}`}
-                          className="inline-flex items-center rounded-full px-3.5 min-h-[32px]
-                                     bg-sombre-eleve text-[13px] font-medium text-sombre-texte
-                                     transition-colors hover:bg-sombre-haut"
-                        >
-                          {libelleStyle(slug)}
-                        </Link>
-                      </li>
-                    ) : (
-                      <li
-                        key={slug}
-                        className="inline-flex items-center rounded-full px-3.5 min-h-[32px]
-                                   bg-sombre-eleve text-[13px] font-medium text-sombre-texte"
-                      >
-                        {libelleFiltre(slug)}
-                      </li>
-                    )
-                  )}
-                </ul>
-              </div>
-            ) : null
+              §2 (nº 315) — QUATRE SECTIONS EN UNE. RENDU, TECHNIQUE,
+              TYPES DE PROJETS et BESOINS PARTICULIERS n'ont plus
+              chacun leur titre : leurs capsules se rangent ensemble
+              sous « PRATIQUE », dans l'ordre fixe de `capsulesPratique`.
+              ⚠️ RIEN DE DÉCLARÉ, PAS DE TITRE ORPHELIN : la section
+              entière ne s'affiche pas quand la liste est vide.
+              ⚠️ ET LES CAPSULES N'ONT PLUS DE CONTOUR (charte) : chaque
+              niveau s'éclaircit — la page, le bloc, la capsule. */}
+          {capsulesPratique.length > 0 && (
+            <div className={`mt-10 pt-10 ${separation}`}>
+              {/*  §3 (nº 276) — l'écriture de la nº 223, désormais en
+                   constante partagée (les titres du Portfolio la
+                   consomment aussi) : une seule écriture, partout. */}
+              <h2 className={ECRITURE_TITRE_SECTION}>Pratique</h2>
+              <ul className="mt-4 flex flex-wrap gap-2">
+                {capsulesPratique.map((slug) => (
+                  <li
+                    key={slug}
+                    data-capsule-pratique=""
+                    className={`inline-flex items-center ${ARRONDI_ETIQUETTE} px-3.5 min-h-[32px]
+                               bg-sombre-eleve text-[13px] font-medium text-sombre-texte`}
+                  >
+                    {libelleFiltre(slug)}
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
 
           {/* LE SIGNALEMENT — DERRIÈRE L'UNIQUE TRAIT qui suit les

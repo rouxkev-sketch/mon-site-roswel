@@ -73,6 +73,10 @@
   --color-sombre-eleve: var(--rw-sombre-eleve);
   --color-sombre-eleve-clair: var(--rw-sombre-eleve-clair);
   --color-sombre-bordure: var(--rw-sombre-bordure);
+  /* §4 (nº 315) — le trait des séparations : UNE valeur, partagée par
+     `border-sombre-trait` et `bg-sombre-trait`. Les deux lisent la même
+     variable — il ne peut donc pas y en avoir deux. */
+  --color-sombre-trait: var(--rw-sombre-trait);
   --color-sombre-haut: var(--rw-sombre-haut);
   --color-sombre-haut-clair: var(--rw-sombre-haut-clair);
   --color-sombre-texte: var(--rw-sombre-texte);

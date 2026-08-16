@@ -1376,8 +1376,31 @@ export const COULEURS_SOMBRE = {
   //  deux vivaient sur `eleve`. Les champs de saisie et de recherche
   //  montent ici ; leur focus monte d'autant (`haut`).
   eleveClair: "#3F3F47",
-  /** Les traits : présents, jamais visibles avant qu'on les cherche. */
+  /** Les traits : présents, jamais visibles avant qu'on les cherche.
+      ⚠️ CE JETON N'EST PLUS CELUI DES LIGNES DE SÉPARATION (nº 315-§4) :
+      voir `trait` juste dessous. Il reste ce qu'il a toujours été
+      ailleurs — le fond de survol du badge « Se connecter » (nº 313),
+      les traits des fenêtres et des listes. */
   bordure: "#38383F",
+  /**
+   * §4 (nº 315) — LE TRAIT QUI SÉPARE DEUX SECTIONS.
+   * ------------------------------------------------------------------
+   * LE DÉFAUT RELEVÉ PAR LE PROPRIÉTAIRE : sur les fiches, les lignes
+   * de séparation se distinguaient mal du fond. Elles étaient écrites
+   * `border-sombre-bordure/60` — le jeton des traits, DILUÉ à 60 % :
+   * peint sur l'anthracite, il rendait (44, 44, 49) contre un fond à
+   * (26, 26, 29). Dix-huit points d'écart sur 255, pour un trait d'un
+   * pixel : on ne le voyait qu'en le cherchant.
+   * CE JETON EXISTE POUR QU'IL N'Y AIT QU'UNE VALEUR, écrite une seule
+   * fois et partagée par tout ce qui sépare deux sections — il y en
+   * avait DEUX qui ne s'accordaient même pas (voir TRAIT_SEPARATION).
+   * ⚠️ IL VAUT AUJOURD'HUI LE MÊME GRIS QUE `haut`, et c'est une
+   * coïncidence de l'échelle, pas un lien : `haut` est un FOND de
+   * dernier niveau, celui-ci est une LIGNE. Les deux peuvent diverger
+   * sans se demander la permission.
+   * ⚠️ ET IL RESTE UN TRAIT, PAS UNE BARRE : un pixel, jamais deux.
+   */
+  trait: "#4A4A53",
   /** LE HAUT DE L'ÉCHELLE (passe nº 144). Les fenêtres du web ont été
       éclaircies d'un cran (`carte` → `eleve`) pour mieux se détacher
       de la page : tout ce qui est POSÉ SUR ELLES devait grimper
@@ -1638,3 +1661,52 @@ export const CADRE_PHOTO_PORTFOLIO = "aspect-4/5";
  */
 export const ECRITURE_TITRE_SECTION =
   "text-[13px] font-semibold uppercase tracking-[0.14em] text-sombre-texte-doux";
+
+/**
+ * §3 (nº 315) — LA FORME D'UNE ÉTIQUETTE : DES ANGLES ARRONDIS
+ * ==================================================================
+ * LA RÈGLE DE CHARTE, DÉCISION DU PROPRIÉTAIRE (passe nº 315) :
+ *
+ *   « La gélule (`rounded-full`) est réservée aux ACTIONS : bouton
+ *   d'action finale, action intermédiaire, segment de sélecteur. Une
+ *   ÉTIQUETTE qui ne se clique pas pour agir — badge de style, capsule
+ *   de PRATIQUE — prend des ANGLES ARRONDIS de 8 px. C'est ce qui
+ *   distingue un bouton d'une information. Décision du propriétaire,
+ *   passe nº 315 : aucune passe future ne doit remettre de gélule sur
+ *   une étiquette. »
+ *
+ * ⚠️ ET LA LECTURE DE LA RÈGLE, QUI FAIT TOUTE SA PORTÉE : UN BADGE DE
+ * STYLE SE CLIQUE QUAND MÊME. C'est un LIEN vers
+ * /tatouage/<style>/<ville> — la valeur de référencement du site.
+ * CLIQUER POUR ALLER QUELQUE PART N'EST PAS AGIR : un lien de
+ * navigation reste une ÉTIQUETTE, et prend donc les angles arrondis.
+ * Seul ce qui DÉCLENCHE quelque chose — envoyer, choisir, basculer —
+ * est une action, et garde la gélule.
+ *
+ * ⚠️ UNE SEULE VALEUR, ÉCRITE ICI : 8 px, c'est-à-dire `rounded-lg`,
+ * le rayon des champs posé à la nº 287. Deux valeurs recopiées dans
+ * deux fichiers finiraient par diverger — tout ce qui est une
+ * étiquette consomme cette constante.
+ */
+export const ARRONDI_ETIQUETTE = "rounded-lg";
+
+/**
+ * §4 (nº 315) — LE TRAIT QUI SÉPARE DEUX SECTIONS, UNE SEULE ÉCRITURE
+ * ==================================================================
+ * IL Y EN AVAIT DEUX SUR UNE FICHE, ET ELLES NE S'ACCORDAIENT PAS :
+ *  · `border-t border-sombre-bordure/60` — les séparations du profil
+ *    (ContenuFiche), le jeton des traits DILUÉ à 60 % ;
+ *  · `h-px bg-sombre-bordure` — le soulignement du sélecteur à deux
+ *    choix (OngletsLigne), le même jeton À PLEIN.
+ * Deux écritures pour un même objet, donc deux gris différents à
+ * l'écran. Elles lisent désormais LA MÊME variable (`sombre-trait`,
+ * voir COULEURS_SOMBRE) : il ne peut plus y en avoir qu'un.
+ *
+ * ⚠️ DEUX CLASSES, UNE SEULE VALEUR. Un trait se peint tantôt en
+ * BORDURE (`border-t`), tantôt en FOND d'un bloc d'un pixel
+ * (`h-px`) — Tailwind veut alors deux préfixes. Les deux pointent la
+ * même couleur : c'est la variable CSS qui tient l'unicité, pas la
+ * discipline de celui qui écrit.
+ */
+export const TRAIT_SEPARATION = "border-sombre-trait";
+export const TRAIT_SEPARATION_FOND = "bg-sombre-trait";

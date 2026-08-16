@@ -26,6 +26,8 @@
  * `radiogroup` + `radio`/`aria-checked` — les mêmes lecteurs d'écran,
  * et les mêmes tests, y retrouvent exactement la même chose.
  */
+import { TRAIT_SEPARATION_FOND } from "@/config/tatouage";
+
 export function OngletsLigne({
   options,
   cleActive,
@@ -79,9 +81,17 @@ export function OngletsLigne({
       </div>
       {/* LA LIGNE — grise et fine partout, épaisse et rose sous
           l'actif. Les deux épaisseurs partagent le même bord bas :
-          le rose recouvre le gris, jamais l'inverse. */}
+          le rose recouvre le gris, jamais l'inverse.
+          §4 (nº 315) — LE GRIS EST CELUI DE LA CHARTE, PARTAGÉ. Il
+          était écrit `bg-sombre-bordure` (à plein) pendant que les
+          séparations d'une fiche s'écrivaient `border-sombre-bordure/60`
+          (dilué) : DEUX écritures pour un même objet, donc deux gris à
+          l'écran. Les deux lisent désormais la même variable — il ne
+          peut plus y en avoir qu'un (voir TRAIT_SEPARATION). */}
       <div className="relative h-[3px]" aria-hidden="true">
-        <span className="absolute inset-x-0 bottom-0 h-px bg-sombre-bordure" />
+        <span
+          className={`absolute inset-x-0 bottom-0 h-px ${TRAIT_SEPARATION_FOND}`}
+        />
         {index >= 0 && (
           <span
             className="absolute bottom-0 left-0 h-[3px] rounded-full bg-primaire
