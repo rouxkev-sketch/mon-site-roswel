@@ -64,10 +64,16 @@ titre("à la source — la largeur vient de la fenêtre, le rognage s'écarte");
     /lg:justify-center/.test(fiche) &&
       !/lg:ml-\[\d+px\]|lg:pl-\[\d+px\]/.test(fiche)
   );
+  //  ⚠️ AMENDÉ LE 16/08/2026 (passe nº 306) — le rembourrage de la
+  //  colonne devient ASYMÉTRIQUE : 40 px à gauche (les galeries du
+  //  Portfolio y débordent jusqu'au contact de la photo et s'y
+  //  effacent), 12 px à droite (40 px y sortiraient de la fenêtre sur
+  //  un écran étroit). La boîte de contenu, elle, ne bouge pas — c'est
+  //  ce que la vérification garantit toujours.
   verif(
     "LA COLONNE S'ÉCARTE DE 12 px POUR NE PLUS ROGNER, ET SA BOÎTE DE " +
-      "CONTENU NE BOUGE PAS (`lg:px-3` annulé par `lg:-mx-3`)",
-    /lg:overflow-y-auto lg:px-3 lg:-mx-3/.test(fiche)
+      "CONTENU NE BOUGE PAS (`lg:pl-10` annulé par `lg:-ml-10`, `lg:pr-3` par `lg:-mr-3`)",
+    /lg:overflow-y-auto lg:pl-10 lg:-ml-10 lg:pr-3 lg:-mr-3/.test(fiche)
   );
   verif(
     "L'ENCADRÉ GARDE SON DÉBORD DE 8 px — il n'est PAS rentré dans sa " +

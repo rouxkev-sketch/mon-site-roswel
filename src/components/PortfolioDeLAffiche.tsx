@@ -5,7 +5,12 @@ import {
   CATEGORIES_EXPLORER,
   ECRITURE_TITRE_SECTION,
 } from "@/config/tatouage";
-import { RENDU_PAR_DEFAUT, RENDUS_PHOTO } from "@/lib/photos-tatoueur";
+import {
+  RENDU_PAR_DEFAUT,
+  RENDUS_PHOTO,
+  libelleRendu,
+} from "@/lib/photos-tatoueur";
+import { GalerieQuiDefile } from "@/components/GalerieQuiDefile";
 import type { PhotoGalerie, StyleGalerie } from "@/lib/photo-tatoueur";
 
 /**
@@ -48,7 +53,15 @@ export type OngletAffiche = "profil" | "portfolio";
 
 /** UNE SÉRIE — ce qu'un toucher de vignette ouvre (nº 204-§3) :
     exactement une galerie de dépôt. */
-export type SerieChoisie = { style: string; nature: string; rendu: string };
+export type SerieChoisie = {
+  style: string;
+  nature: string;
+  rendu: string;
+  /** §1-6 (nº 306) — LE RANG DE LA PHOTO TOUCHÉE dans sa série. Le
+      cadre photo de la fiche s'ouvre SUR ELLE. Absent : la première,
+      comme depuis toujours (c'est ce qu'envoie la grille du doigt). */
+  indice?: number;
+};
 
 const ONGLETS: Array<{ cle: OngletAffiche; label: string }> = [
   { cle: "profil", label: "Profil" },
@@ -94,6 +107,12 @@ type SeriePubliee = {
   label: string;
   rendu: string;
   miniature: string;
+  /** §1 (nº 306) — TOUTES LES PHOTOS DE CETTE SÉRIE, dans leur ordre.
+      La galerie du web les montre TOUTES : pas de plafond ici (celui de
+      « Ma sélection » ne vaut que pour elle), et pas de « Voir plus ».
+      La grille du doigt, elle, n'en lit que la première (`miniature`) —
+      elle ne change pas d'un pixel. */
+  photos: PhotoGalerie[];
 };
 
 /**
@@ -125,6 +144,7 @@ function seriesDeLaCategorie(
         label: groupe.label,
         rendu: rendu.slug,
         miniature: photos[0]?.miniature ?? "",
+        photos,
       });
     }
   }
@@ -196,7 +216,11 @@ export function PanneauPortfolio({
           {/*  §2 (nº 277) — 20 px sous le titre (`mt-5`) : moins que
                les 40 au-dessus, le titre appartient à sa section. Le
                `gap` entre carrousels, lui, NE CHANGE PAS. */}
-          <ul className="mt-5 grid grid-cols-2 gap-x-4 gap-y-7">
+          {/*  §1 (nº 306) — AU DOIGT, RIEN NE CHANGE : la grille de
+               vignettes par lignes de deux reste exactement ce qu'elle
+               était. Le web, lui, prend les galeries qui défilent (plus
+               bas) — c'est la seule différence entre les deux. */}
+          <ul className="mt-5 grid grid-cols-2 gap-x-4 gap-y-7 lg:hidden">
             {section.series.map((serie) => (
               <li key={`${serie.style}-${serie.rendu}`}>
                 <button
@@ -237,6 +261,123 @@ export function PanneauPortfolio({
               </li>
             ))}
           </ul>
+
+          {/*  §1 (nº 306) — LE WEB : UNE GALERIE QUI DÉFILE PAR
+               CARROUSEL, la présentation de « Ma sélection »
+               (`GalerieQuiDefile`, partagée — aucun second dessin).
+               ------------------------------------------------------
+               RÈGLE 2 — LE TITRE PORTE LE STYLE ET LE RENDU :
+               « Réalisme · Couleur », « Réalisme · Noir et gris ».
+               Deux carrousels d'un même style mais de rendus
+               différents portent donc deux titres distincts, et c'est
+               le but. Les mots viennent de `libelleRendu` : aucun
+               libellé n'est écrit ici.
+               RÈGLE 3 — TOUTES les photos du carrousel. Le plafond de
+               vingt de « Ma sélection » ne s'applique pas à cette
+               page, et il n'y a pas de « Voir plus ».
+               RÈGLE 4 — DEUX PHOTOS PLEINES ET 10 % DE LA TROISIÈME,
+               son bord droit collé au bord droit du cadre :
+               `2,1 × case + 2 écarts = 100 %` de la boîte de CONTENU,
+               d'où `case = (100 % − 12px) / 2,1`. Aucune largeur en
+               dur — la règle tient à toute largeur de colonne.
+               RÈGLE 5 — À GAUCHE, LA GALERIE VA JUSQU'AU CONTACT DE LA
+               GRANDE PHOTO (`-ml-10`, la gouttière de 40 px, rendue en
+               rembourrage `pl-10` : au repos la première photo reste
+               alignée sur les titres), ET CETTE BANDE S'EFFACE — un
+               masque en dégradé, transparent au bord gauche du cadre,
+               pleinement opaque à l'alignement des titres. À droite,
+               rien : l'effacement ne concerne QUE la bande de gauche.
+               ⚠️ UN MASQUE CRÉE UNE NOUVELLE RACINE D'ARRIÈRE-PLAN
+               POUR SES DESCENDANTS. Ici ils ne sont que des images :
+               aucune plaque de verre n'est prise dedans, et rien
+               n'anime en opacité (le défaut nº 234 ne se rejoue pas).
+               ⚠️ ET LES DEUX LIGNES DU MASQUE SONT LITTÉRALES, la
+               préfixée d'abord — la même prudence que les filtres. */}
+          <div className="mt-5 hidden lg:block">
+            {section.series.map((serie) => (
+              <div
+                key={`galerie-${serie.style}-${serie.rendu}`}
+                data-galerie-serie={`${serie.style}·${serie.rendu}`}
+                className="mt-7 first:mt-0"
+              >
+                {/*  LE TITRE, AU-DESSUS DE SA GALERIE — l'écriture des
+                     noms de style de la grille (15 px, `medium`,
+                     blanche), reprise telle quelle. */}
+                <p
+                  data-titre-galerie=""
+                  className="text-[15px] font-medium text-sombre-texte"
+                >
+                  {serie.label} · {libelleRendu(serie.rendu)}
+                </p>
+                <GalerieQuiDefile
+                  classeEnveloppe="mt-2.5"
+                  /*  ⚠️ `scroll-pl-10` N'EST PAS UN ORNEMENT, ET IL A
+                       COÛTÉ UNE MESURE : l'accrochage (`snap-start`)
+                       aligne le bord d'une case sur le début du
+                       SNAPPORT, qui est la boîte de REMBOURRAGE — donc
+                       40 px à gauche de la boîte de contenu. Sans lui,
+                       le navigateur faisait défiler de 40 px dès le
+                       premier rendu pour y arriver : la première photo
+                       se collait au bord gauche du cadre au lieu de
+                       s'aligner sur les titres, et la troisième
+                       dépassait de 100 px à droite (mesuré). Le
+                       rembourrage de défilement remet le snapport sur
+                       la boîte de contenu. */
+                  classeRangee="-ml-10 pl-10 scroll-pl-10"
+                  styleRangee={{
+                    WebkitMaskImage:
+                      "linear-gradient(to right, rgba(0,0,0,0) 0px, rgba(0,0,0,1) 40px)",
+                    maskImage:
+                      "linear-gradient(to right, rgba(0,0,0,0) 0px, rgba(0,0,0,1) 40px)",
+                  }}
+                  decalageGauche="-left-10"
+                  decalageDroite="right-0"
+                  avecVoiles={false}
+                  cleDuContenu={`${serie.style}-${serie.rendu}-${serie.photos.length}`}
+                  etiquette={`${serie.label} · ${libelleRendu(serie.rendu)}`}
+                >
+                  {serie.photos.map((photo, rang) => (
+                    <li
+                      key={photo.cle}
+                      data-case-galerie={rang}
+                      className="shrink-0 snap-start basis-[calc((100%_-_12px)/2.1)]"
+                    >
+                      {/*  RÈGLE 6 — CLIQUER UNE PHOTO L'AFFICHE DANS LE
+                           CADRE PHOTO DE LA FICHE. Elle ne s'ouvre pas
+                           ailleurs, elle ne change pas de page : c'est
+                           le chemin qui existe déjà (`surSerie`), avec
+                           le rang en plus. */}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          surSerie({
+                            style: serie.style,
+                            nature: section.nature,
+                            rendu: serie.rendu,
+                            indice: rang,
+                          })
+                        }
+                        className="group/case block w-full text-left"
+                      >
+                        <span className="block aspect-[4/5] overflow-hidden bg-sombre-eleve">
+                          {/* eslint-disable-next-line @next/next/no-img-element --
+                              photo déposée par le tatoueur, servie telle
+                              quelle (la règle des vignettes). */}
+                          <img
+                            src={photo.miniature}
+                            alt={`${serie.label} — ${nomTatoueur}`}
+                            loading="lazy"
+                            className="h-full w-full object-cover
+                                       transition-opacity group-hover/case:opacity-90"
+                          />
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </GalerieQuiDefile>
+              </div>
+            ))}
+          </div>
         </section>
       ))}
     </div>

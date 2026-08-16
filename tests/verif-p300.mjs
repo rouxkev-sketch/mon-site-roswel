@@ -67,10 +67,16 @@ titre("à la source — 340 en largeur fixe, 380 dans la fenêtre");
     "LA GOUTTIÈRE DE 40 px NE CHANGE PAS (`lg:gap-10`)",
     /grid gap-8 lg:gap-10 lg:grid-cols-/.test(fiche)
   );
+  //  ⚠️ AMENDÉ LE 16/08/2026 (passe nº 306) — le rembourrage de la
+  //  colonne devient ASYMÉTRIQUE : 40 px à gauche (les galeries du
+  //  Portfolio y débordent jusqu'au contact de la photo et s'y
+  //  effacent), 12 px à droite (40 px y sortiraient de la fenêtre sur
+  //  un écran étroit). La boîte de contenu, elle, ne bouge pas — c'est
+  //  ce que la vérification garantit toujours.
   verif(
     "LA CORRECTION DES ARRONDIS DE LA nº 298 EST INTACTE : le bord qui " +
       "rogne reste écarté de 12 px, et l'encadré garde son débord de 8",
-    /lg:overflow-y-auto lg:px-3 lg:-mx-3/.test(fiche) &&
+    /lg:overflow-y-auto lg:pl-10 lg:-ml-10 lg:pr-3 lg:-mr-3/.test(fiche) &&
       /rounded-xl -m-2 p-2/.test(blocLieux)
   );
   verif(

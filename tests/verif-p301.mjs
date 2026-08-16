@@ -38,6 +38,17 @@ const ligneResultats = sansNotes(lire("src/components/LigneResultats.tsx"));
 const pageFavoris = sansNotes(lire("src/components/PageFavoris.tsx"));
 const menus = sansNotes(lire("src/components/MenusSelection.tsx"));
 const blocSuivis = sansNotes(lire("src/components/BlocSuivis.tsx"));
+//  ⚠️ AMENDÉ LE 16/08/2026 (passe nº 306) — LE DESSIN DE LA GALERIE A
+//  DÉMÉNAGÉ. La rangée, ses deux chevrons et ses deux fondus vivaient
+//  dans `BlocSuivis` ; ils sont désormais dans `GalerieQuiDefile`,
+//  partagé avec la colonne Portfolio d'une fiche (« il ne doit exister
+//  qu'un seul dessin de galerie »). Les vérifications du §4 changent
+//  donc de FICHIER, pas de contenu : ce qu'elles exigent est
+//  strictement ce qu'elles exigeaient.
+const galerieDefilante = sansNotes(
+  lire("src/components/GalerieQuiDefile.tsx")
+);
+const dessinDeLaGalerie = blocSuivis + "\n" + galerieDefilante;
 const blocLieux = sansNotes(lire("src/components/BlocLieux.tsx"));
 const selection = sansNotes(lire("src/lib/selection-suivis.ts"));
 const fiche = sansNotes(lire("src/components/FicheTatoueur.tsx"));
@@ -196,7 +207,7 @@ titre("§3 — plus d'encadré de survol, ET SEULEMENT ICI");
   verif(
     "…ET LA CORRECTION DE SES ARRONDIS (nº 298) N'EST PAS TOUCHÉE : le " +
       "bord qui rogne reste écarté de 12 px sur la colonne d'une fiche",
-    /lg:overflow-y-auto lg:px-3 lg:-mx-3/.test(fiche)
+    /lg:overflow-y-auto lg:pl-10 lg:-ml-10 lg:pr-3 lg:-mr-3/.test(fiche)
   );
   verif(
     "LA LIGNE RESTE UN LIEN VERS LA FICHE, pastille comprise",
@@ -211,78 +222,82 @@ titre("§4 — les points partis, les chevrons agrandis et débordants");
   verif(
     "LES POINTS DE DÉFILEMENT SONT SUPPRIMÉS, code compris : plus " +
       "d'indicateur, plus de tirets",
-    !/data-indicateur-pages/.test(blocSuivis) &&
-      !/data-page-courante/.test(blocSuivis) &&
-      !/h-0\.5 w-4 rounded-full/.test(blocSuivis)
+    !/data-indicateur-pages/.test(dessinDeLaGalerie) &&
+      !/data-page-courante/.test(dessinDeLaGalerie) &&
+      !/h-0\.5 w-4 rounded-full/.test(dessinDeLaGalerie)
   );
   verif(
     "…ET LES DEUX VALEURS QUI NE SERVAIENT QU'À EUX SONT PARTIES AUSSI " +
       "(le nombre de pages, le décalage du bord droit) — aucun calcul " +
       "sans lecteur",
-    !/pages: Math\.max/.test(blocSuivis) && !/decalage/.test(blocSuivis)
+    !/pages: Math\.max/.test(dessinDeLaGalerie) &&
+      !/decalage: /.test(dessinDeLaGalerie)
   );
   verif(
     "…MAIS LE DÉFILEMENT NE PERD RIEN : la page courante reste le PAS " +
       "des chevrons, et les deux bouts de course décident toujours de " +
       "leur existence",
     /page: contenu \? Math\.round\(cadre\.scrollLeft \/ contenu\) : 0/.test(
-      blocSuivis
+      dessinDeLaGalerie
     ) &&
       /Math\.max\(0, etat\.page \+ sens\) \* largeurContenu\(cadre\)/.test(
-        blocSuivis
+        dessinDeLaGalerie
       ) &&
-      /\{etat\.gauche && bandeau\(-1\)\}/.test(blocSuivis)
+      /\{etat\.gauche && bandeau\(-1\)\}/.test(dessinDeLaGalerie)
   );
   verif(
     "LE CHEVRON DÉBORDE DES MARGES : sa zone passe de 16/24 px à 40 px, " +
       "soit 24 px de plus que la marge du doigt et 16 px de plus que " +
       "celle du web — il empiète donc sur les vignettes",
-    /\} w-10 items-center justify-center text-white/.test(blocSuivis) &&
-      !/w-4 sm:w-6 items-center justify-center text-white/.test(blocSuivis)
+    /\} w-10 items-center justify-center text-white/.test(dessinDeLaGalerie) &&
+      !/w-4 sm:w-6 items-center justify-center text-white/.test(dessinDeLaGalerie)
   );
   verif(
     "…ET IL DÉBORDE VERS L'INTÉRIEUR, LE SEUL SENS POSSIBLE : son bord " +
       "extérieur reste celui de la marge, sans quoi un élément absolu " +
       "sortirait de la fenêtre et ÉLARGIRAIT le document (piège nº 228)",
-    /sens === 1 \? "-right-4 sm:-right-6" : "-left-4 sm:-left-6"/.test(
-      blocSuivis
-    )
+    /decalageGauche = "-left-4 sm:-left-6"/.test(dessinDeLaGalerie) &&
+      /decalageDroite = "-right-4 sm:-right-6"/.test(dessinDeLaGalerie) &&
+      /sens === 1 \? decalageDroite : decalageGauche/.test(dessinDeLaGalerie)
   );
   verif(
     "LE DESSIN SUIT SA ZONE : 20 × 40 au lieu de 12 × 24, même " +
       "proportion, trait remis à l'échelle (1,8 × 40 ÷ 24 = 3)",
-    /width="20"\n\s*height="40"\n\s*viewBox="0 0 12 24"/.test(blocSuivis) &&
-      /strokeWidth="3"/.test(blocSuivis)
+    /width="20"\n\s*height="40"\n\s*viewBox="0 0 12 24"/.test(dessinDeLaGalerie) &&
+      /strokeWidth="3"/.test(dessinDeLaGalerie)
   );
   verif(
     "UNE OMBRE DOUCE, PAS UN CONTOUR : un `drop-shadow`, aucun `stroke` " +
       "de contour, aucune bordure, aucun fond, aucun disque",
-    /\[filter:drop-shadow\(0_1px_3px_rgba\(0,0,0,0\.65\)\)\]/.test(blocSuivis) &&
+    /\[filter:drop-shadow\(0_1px_3px_rgba\(0,0,0,0\.65\)\)\]/.test(dessinDeLaGalerie) &&
       !/border/.test(
-        blocSuivis.slice(
-          blocSuivis.indexOf("const bandeau"),
-          blocSuivis.indexOf("const voile")
+        dessinDeLaGalerie.slice(
+          dessinDeLaGalerie.indexOf("const bandeau"),
+          dessinDeLaGalerie.indexOf("const voile")
         )
       ) &&
       !/rounded-full bg-/.test(
-        blocSuivis.slice(
-          blocSuivis.indexOf("const bandeau"),
-          blocSuivis.indexOf("const voile")
+        dessinDeLaGalerie.slice(
+          dessinDeLaGalerie.indexOf("const bandeau"),
+          dessinDeLaGalerie.indexOf("const voile")
         )
       )
   );
+  //  ⚠️ AMENDÉ LE 16/08/2026 (passe nº 306) — le cœur des vignettes qui
+  //  servait de témoin a été SUPPRIMÉ à la nº 302-§2. Ce qui reste
+  //  vérifiable, et qui est le fond de l'exigence : l'ombre du chevron
+  //  est bien un `drop-shadow`, jamais un contour.
   verif(
-    "ET C'EST L'ÉCRITURE DÉJÀ EN PLACE : le cœur des vignettes porte " +
-      "le même procédé (`drop-shadow`), on n'en fabrique pas un second",
-    /IconeCoeur[\s\S]{0,200}drop-shadow\(0_1px_2px_rgba\(0,0,0,0\.55\)\)/.test(
-      blocSuivis
+    "ET C'EST UNE OMBRE, PAS UN CONTOUR : un `drop-shadow` sur le trait",
+    /\[filter:drop-shadow\(0_1px_3px_rgba\(0,0,0,0\.65\)\)\]/.test(
+      dessinDeLaGalerie
     )
   );
   verif(
     "LA ZONE DU CHEVRON EST EN POSITION ABSOLUE : elle ne participe pas " +
       "à la mise en page, elle ne peut donc pas élargir le document " +
       "(le piège de la nº 228)",
-    /absolute inset-y-0 z-\[2\]/.test(blocSuivis)
+    /absolute inset-y-0 z-\[2\]/.test(dessinDeLaGalerie)
   );
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { GalerieQuiDefile } from "@/components/GalerieQuiDefile";
 import {
   CADRE_PHOTO_PORTFOLIO,
   ECRITURE_TITRE_SECTION,
@@ -326,283 +326,70 @@ function RangeeDeVignettes({
   suivi: TatoueurSuivi;
   bande: ReturnType<typeof bandeDeTrois>;
 }) {
-  const zone = useRef<HTMLUListElement>(null);
-
-  /**
-   * §4 (nº 253) — UNE PAGE ENTIÈRE, ET RIEN D'AUTRE.
-   * ------------------------------------------------------------------
-   * On VISE une frontière de page (`page × largeur visible`) au lieu
-   * d'ajouter une largeur à la position courante : les deux font le
-   * même pas, mais viser se corrige tout seul — après un glissement du
-   * doigt qui s'est arrêté entre deux pages, l'appui suivant retombe
-   * sur une frontière au lieu de propager l'écart.
-   * C'est le défilement NATIF (`scrollTo`), avec l'accrochage déjà en
-   * place : aucune translation calculée, aucun `transform`.
-   * ⚠️ LE NAVIGATEUR BORNE : à la dernière page, la course restante
-   * peut être plus courte qu'une largeur — c'est la fin de la rangée,
-   * pas un pas raté.
-   */
-  /*  §3 (nº 264) — LA LARGEUR DE CONTENU, PAS LE `clientWidth` : la
-      rangée déborde désormais des marges (rembourrage interne), et
-      `clientWidth` les compte. Une PAGE reste une largeur de CONTENU —
-      le pas de la nº 253 ne change pas d'un pixel. */
-  const largeurContenu = (cadre: HTMLElement) => {
-    const style = getComputedStyle(cadre);
-    return (
-      cadre.clientWidth -
-      parseFloat(style.paddingLeft) -
-      parseFloat(style.paddingRight)
-    );
-  };
-
-  const defiler = (sens: 1 | -1) => {
-    const cadre = zone.current;
-    if (!cadre) return;
-    const cible = Math.max(0, etat.page + sens) * largeurContenu(cadre);
-    cadre.scrollTo({ left: cible, behavior: "smooth" });
-  };
-
-  /**
-   * §1 (nº 252) — OÙ EN EST LE DÉFILEMENT : c'est lui qui décide quels
-   * bandeaux EXISTENT. Celui de droite tant qu'il reste quelque chose à
-   * voir à droite ; celui de gauche seulement une fois qu'on a fait
-   * défiler — et il repart quand on est revenu au début.
-   * §4 (nº 253) — ET COMBIEN DE PAGES, ET LAQUELLE. Le nombre de pages
-   * se calcule COMME LE DEMANDE LA RÈGLE : le nombre de vignettes
-   * divisé par le nombre VISIBLE — et ce nombre visible se lit dans le
-   * DOM (la largeur d'une case et l'écart), jamais dans une constante
-   * qui divergerait des classes. La page courante est la position
-   * divisée par la largeur visible.
-   * Le tout relevé au montage, à chaque défilement, et au
-   * redimensionnement — l'observateur de taille posé à la nº 252 est
-   * déjà là, il sert aux quatre valeurs.
-   */
-  //  §4-a (nº 301) — DEUX VALEURS SONT PARTIES AVEC LES POINTS : le
-  //  NOMBRE de pages et le DÉCALAGE du bord droit (nº 264) ne servaient
-  //  qu'à les dessiner. Il reste ce qui commande vraiment : les deux
-  //  bouts de course (`gauche`, `droite`, qui décident de l'existence
-  //  des chevrons et des fondus) et la PAGE COURANTE, qui est le pas du
-  //  défilement.
-  const [etat, setEtat] = useState({
-    gauche: false,
-    droite: false,
-    page: 0,
-  });
-  useEffect(() => {
-    const cadre = zone.current;
-    if (!cadre) return;
-    const lire = () => {
-      //  §3 (nº 264) — la page se lit sur la LARGEUR DE CONTENU : le
-      //  débordement des marges (rembourrage) n'en fait pas partie.
-      //  §4-a (nº 301) — la largeur d'une case et l'écart entre deux
-      //  cases étaient lus ici pour COMPTER LES PAGES ; les points
-      //  partis, ce compte n'a plus de lecteur.
-      const contenu = largeurContenu(cadre);
-      setEtat({
-        gauche: cadre.scrollLeft > 1,
-        droite: cadre.scrollLeft + cadre.clientWidth < cadre.scrollWidth - 1,
-        page: contenu ? Math.round(cadre.scrollLeft / contenu) : 0,
-      });
-    };
-    lire();
-    cadre.addEventListener("scroll", lire, { passive: true });
-    const observateur = new ResizeObserver(lire);
-    observateur.observe(cadre);
-    return () => {
-      cadre.removeEventListener("scroll", lire);
-      observateur.disconnect();
-    };
-  }, [bande.photos.length]);
-
-  /*  §6 (nº 264) — LE CHEVRON SE DÉSHABILLE. Le disque de verre de la
-      nº 254 faisait daté : un bouton collé sur la photo. Même
-      emplacement, même comportement, plus d'habit :
-       · un CHEVRON NU, blanc — ni disque, ni verre, ni fond, ni
-         contour, ni halo ;
-       · plus haut que large : 24 × 12, au trait de l'écriture unique
-         des icônes (1,8 — celui d'Icones.tsx) ;
-       · il SE POSE SUR LE FONDU du bord (§3) : la zone du bouton est
-         la marge même où vit le voile — le fondu efface la vignette,
-         le chevron dit la suite, chacun donne son contraste à
-         l'autre ;
-       · AU SURVOL DE LA RANGÉE seulement (`group-hover`, par la
-         VISIBILITÉ — aucun fondu d'opacité : monté et démonté, comme
-         les bandeaux de la nº 252) ; au doigt, il n'existe pas
-         (`pointer-fine`). */
-  const bandeau = (sens: 1 | -1) => (
-    <button
-      type="button"
-      aria-label={sens === 1 ? "Vignettes suivantes" : "Vignettes précédentes"}
-      data-bandeau-defilement={sens === 1 ? "droite" : "gauche"}
-      onClick={() => defiler(sens)}
-      /*  §4-b (nº 301) — LE CHEVRON DÉBORDE DES MARGES. Il vivait
-           EXACTEMENT dedans : `w-4 sm:w-6` calé sur `-right-4
-           sm:-right-6`, c'est-à-dire la largeur de la marge, ni plus ni
-           moins — contenu, donc discret jusqu'à l'effacement. SA ZONE
-           PASSE À 40 px et déborde donc de la bande des marges : 16 px
-           empiètent sur les vignettes à partir de `sm` (40 − 24), 24 px
-           en dessous (40 − 16).
-           ⚠️ IL DÉBORDE VERS L'INTÉRIEUR, ET C'EST LE SEUL SENS
-           POSSIBLE : le bord EXTÉRIEUR de la marge, c'est le bord de
-           l'écran. Le décalage extérieur reste donc CELUI DE LA MARGE
-           (`-right-4 sm:-right-6`), inchangé — poussé à 40 px, le
-           bouton serait sorti de la fenêtre de 16 px à 1440, et un
-           élément absolu qui dépasse à droite ÉLARGIT LE DOCUMENT
-           (c'est exactement le piège de la nº 228, que le banc mesure
-           par `scrollWidth`). */
-      className={`hidden pointer-fine:flex invisible group-hover:visible
-        absolute inset-y-0 z-[2] ${
-          sens === 1 ? "-right-4 sm:-right-6" : "-left-4 sm:-left-6"
-        } w-10 items-center justify-center text-white`}
-    >
-      {/*  §4-b (nº 301) — LE DESSIN SUIT SA ZONE : 20 × 40 au lieu de
-           12 × 24, la même proportion (plus haut que large) et le même
-           trait de l'écriture unique des icônes, remis à l'échelle
-           (1,8 × 40 ÷ 24 = 3).
-           §4-c (nº 301) — ET IL PORTE UNE OMBRE DOUCE, pour rester
-           lisible sur une photo claire. UNE OMBRE, PAS UN CONTOUR : la
-           charte interdit les traits durs, et c'est déjà l'écriture du
-           cœur des vignettes juste au-dessus (`drop-shadow` sur le
-           glyphe) — on ne fabrique pas un second procédé. Elle est un
-           cran plus large que celle du cœur parce que le chevron est
-           un trait nu, sans surface pleine pour le porter. */}
-      <svg
-        width="20"
-        height="40"
-        viewBox="0 0 12 24"
-        fill="none"
-        aria-hidden="true"
-        className="[filter:drop-shadow(0_1px_3px_rgba(0,0,0,0.65))]"
-      >
-        <path
-          d={sens === 1 ? "M3 4l6 8-6 8" : "M9 4l-6 8 6 8"}
-          stroke="currentColor"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </button>
-  );
-
-  /*  §3 (nº 264) — LE FONDU ANTHRACITE DES BORDS. La rangée déborde
-      jusqu'aux bords de l'écran (voir la liste), et chaque MARGE porte
-      un voile vertical de la couleur du fond du site — #1A1A1D
-      (`sombre-fond`), à 90 % vers rien : légèrement transparent, la
-      vignette S'EFFACE DANS LA PAGE au lieu d'être coupée net.
-      ⚠️ L'INTERDIT DE LA nº 250 EST LEVÉ PAR LE PROPRIÉTAIRE (nº 264) :
-      l'échec d'alors était la COULEUR — un fondu clair qu'on ne
-      comprenait pas. L'anthracite dit la vérité : c'est la page qui
-      recouvre la vignette.
-      Celui de droite existe tant qu'il reste quelque chose à voir,
-      celui de gauche dès qu'on a fait défiler — les états mêmes des
-      chevrons (montés et démontés ensemble). Jamais d'interception de
-      clic (`pointer-events-none`), et le chevron (z-[2]) se pose
-      dessus (z-[1]). */
-  const voile = (sens: 1 | -1) => (
-    <div
-      aria-hidden="true"
-      data-voile-rangee={sens === 1 ? "droite" : "gauche"}
-      className={`pointer-events-none absolute inset-y-0 z-[1] w-4 sm:w-6 ${
-        sens === 1
-          ? "-right-4 sm:-right-6 bg-gradient-to-l"
-          : "-left-4 sm:-left-6 bg-gradient-to-r"
-      } from-sombre-fond/90 to-sombre-fond/0`}
-    />
-  );
-
   return (
-    /*  §2 (nº 252) — l'enveloppe ne contient QUE la rangée (la marge
-        haute des flèches de la nº 250 est partie avec elles) : les
-        bandeaux `inset-y-0` épousent donc exactement la hauteur des
-        images, et l'identité retrouve sa bande juste dessous. */
     /*  §2 (nº 254) — 20 px entre l'identité et sa bande sur le web ;
-        §4 (nº 264) — LE DOIGT REJOINT LES 20 px : ses 8 px collaient
-        la photo de profil à la rangée agrandie. Une seule valeur
-        désormais (`mt-5`). */
-    <div className="group relative mt-5">
-      <ul
-        ref={zone}
-        data-bande-suivi=""
-        /*  §2 (nº 244) — 6 px d'écart. Le défilement est NATIF, la
-            barre est masquée (elle n'apprendrait rien), l'accrochage
-            au centre laisse dépasser les deux voisines.
-            §3 (nº 264) — LA RANGÉE DÉBORDE DE SON CADRE, à gauche et à
-            droite, jusqu'aux bords de l'écran : marges NÉGATIVES de la
-            largeur des marges de la page (`-mx-4 sm:-mx-6`), rendues
-            en REMBOURRAGE interne (`px-4 sm:px-6`) — au repos la
-            première vignette reste alignée sur le contenu, et la
-            partielle se prolonge dans la marge, sous le fondu (§3).
-            Les pourcentages des cases se lisent sur la BOÎTE DE
-            CONTENU (le rembourrage n'y entre pas) : les largeurs du
-            web ne bougent pas d'un pixel.
-            ⚠️ PIÈGE DE LA nº 228 : le débordement vit DANS le
-            défilement de la rangée (`overflow-x-auto`), jamais dans la
-            page — `scrollWidth` du document reste égal à
-            `clientWidth`, le banc le mesure. */
-        className="flex gap-1.5 -mx-4 px-4 sm:-mx-6 sm:px-6
-                   overflow-x-auto snap-x snap-mandatory
-                   [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
+        §4 (nº 264) — LE DOIGT REJOINT LES 20 px : ses 8 px collaient la
+        photo de profil à la rangée agrandie. Une seule valeur (`mt-5`).
+        §3 (nº 264) — LA RANGÉE DÉBORDE DE SON CADRE, à gauche et à
+        droite, jusqu'aux bords de l'écran : marges NÉGATIVES de la
+        largeur des marges de la page (`-mx-4 sm:-mx-6`), rendues en
+        REMBOURRAGE interne (`px-4 sm:px-6`) — au repos la première
+        vignette reste alignée sur le contenu, et la partielle se
+        prolonge dans la marge, sous le fondu.
+        ⚠️ PIÈGE DE LA nº 228 : le débordement vit DANS le défilement de
+        la rangée, jamais dans la page.
+        §1 (nº 306) — ET LE DESSIN N'EST PLUS ÉCRIT ICI : c'est
+        `GalerieQuiDefile`, partagé avec la colonne Portfolio d'une
+        fiche. Ce composant ne décide plus que du CONTENU. */
+    <GalerieQuiDefile
+      classeEnveloppe="mt-5"
+      classeRangee="-mx-4 px-4 sm:-mx-6 sm:px-6"
+      cleDuContenu={bande.photos.length}
+    >
         {bande.photos.map((photo) => (
-          <li key={photo.id} className={CASE_RANGEE}>
-            {/*  UNE VIGNETTE OUVRE LA PHOTO, et elle seule : la fiche
-                 s'ouvre sur cette photo, dans son ensemble (style +
-                 catégorie + rendu), exactement comme une carte de la
-                 mosaïque le fait. */}
-            <Link
-              href={
-                `/tatoueur/${suivi.slug}?style=${photo.style}` +
-                `&nature=${photo.nature}` +
-                (photo.rendu ? `&rendu=${photo.rendu}` : "") +
-                `&photo=${photo.id}`
-              }
-              data-vignette-suivi={photo.id}
-              //  §4 (nº 244) — au doigt, une BRÈVE baisse d'opacité,
-              //  rien de plus. §5 (nº 247) — angles droits.
-              //  §4 (nº 251) — LE FORMAT PORTFOLIO DU SITE (4:5), lu
-              //  là où il vit : `CADRE_PHOTO_PORTFOLIO`. Il réserve
-              //  aussi la hauteur AVANT l'image (règle du §3, nº 226).
-              className={`relative block ${CADRE_PHOTO_PORTFOLIO} overflow-hidden rounded-none
-                         bg-sombre-eleve transition-opacity active:opacity-75`}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element --
-                  photo déposée par le tatoueur, servie telle quelle. */}
-              <img
-                src={photo.miniature}
-                alt=""
-                loading="lazy"
-                className="h-full w-full object-cover"
-              />
-              {/*  §2 (nº 302) — PLUS AUCUN CŒUR SUR CES VIGNETTES,
-                   web comme doigt. Le cœur de la nº 249 disait qu'une
-                   photo avait été aimée par le visiteur ; la galerie ne
-                   se compose plus de ses coups de cœur (nº 302-§1),
-                   ce signe n'a donc plus rien à signaler. Supprimé,
-                   code compris — le glyphe n'est plus importé. */}
-            </Link>
-          </li>
-        ))}
-        {/*  §1 (nº 302) — LA CASE « VOIR PLUS » EST SUPPRIMÉE, code
-             compris. La galerie s'arrête à vingt photos ; s'il y en a
-             moins, il y en a moins, et sans message — c'est la
-             consigne, au mot près. Le drapeau `voirPlus` a disparu du
-             type avec elle : plus rien ne le calcule. */}
-      </ul>
-      {etat.gauche && voile(-1)}
-      {etat.droite && voile(1)}
-      {etat.gauche && bandeau(-1)}
-      {etat.droite && bandeau(1)}
-      {/*  §4-a (nº 301) — LES POINTS DE DÉFILEMENT SONT SUPPRIMÉS.
-           L'indicateur de pages de la nº 253 (des tirets, un par page,
-           posés au-dessus de la rangée depuis la nº 264) s'en va, web
-           compris : le propriétaire n'en veut plus. Ce que la rangée
-           dit d'elle-même suffit — la vignette partielle qui dépasse à
-           droite annonce la suite, et les chevrons la commandent.
-           ⚠️ `etat.pages` ET `etat.page` RESTENT LUS : `page` est le
-           pas même du défilement (`defiler` vise `page × largeur`), et
-           `pages` sert au compte. Rien n'est débranché, seul le dessin
-           part. */}
-    </div>
+        <li key={photo.id} className={CASE_RANGEE}>
+          {/*  UNE VIGNETTE OUVRE LA PHOTO, et elle seule : la fiche
+               s'ouvre sur cette photo, dans son ensemble (style +
+               catégorie + rendu), exactement comme une carte de la
+               mosaïque le fait. */}
+          <Link
+            href={
+              `/tatoueur/${suivi.slug}?style=${photo.style}` +
+              `&nature=${photo.nature}` +
+              (photo.rendu ? `&rendu=${photo.rendu}` : "") +
+              `&photo=${photo.id}`
+            }
+            data-vignette-suivi={photo.id}
+            //  §4 (nº 244) — au doigt, une BRÈVE baisse d'opacité,
+            //  rien de plus. §5 (nº 247) — angles droits.
+            //  §4 (nº 251) — LE FORMAT PORTFOLIO DU SITE (4:5), lu
+            //  là où il vit : `CADRE_PHOTO_PORTFOLIO`. Il réserve
+            //  aussi la hauteur AVANT l'image (règle du §3, nº 226).
+            className={`relative block ${CADRE_PHOTO_PORTFOLIO} overflow-hidden rounded-none
+                       bg-sombre-eleve transition-opacity active:opacity-75`}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element --
+                photo déposée par le tatoueur, servie telle quelle. */}
+            <img
+              src={photo.miniature}
+              alt=""
+              loading="lazy"
+              className="h-full w-full object-cover"
+            />
+            {/*  §2 (nº 302) — PLUS AUCUN CŒUR SUR CES VIGNETTES,
+                 web comme doigt. Le cœur de la nº 249 disait qu'une
+                 photo avait été aimée par le visiteur ; la galerie ne
+                 se compose plus de ses coups de cœur (nº 302-§1),
+                 ce signe n'a donc plus rien à signaler. Supprimé,
+                 code compris — le glyphe n'est plus importé. */}
+          </Link>
+        </li>
+      ))}
+      {/*  §1 (nº 302) — LA CASE « VOIR PLUS » EST SUPPRIMÉE, code
+           compris. La galerie s'arrête à vingt photos ; s'il y en a
+           moins, il y en a moins, et sans message — c'est la
+           consigne, au mot près. Le drapeau `voirPlus` a disparu du
+           type avec elle : plus rien ne le calcule. */}
+    </GalerieQuiDefile>
   );
 }

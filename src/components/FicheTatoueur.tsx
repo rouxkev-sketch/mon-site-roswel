@@ -767,8 +767,25 @@ export function FicheTatoueur({
             quatre arrondis sont dessinés en entier, avec 4 px de reste.
             ⚠️ CE ROGNAGE-LÀ N'EST PAS CELUI DES PHOTOS : celui de la
             nº 295, sur les colonnes du carrousel, protège les images et
-            n'est pas touché. */}
-        <div className="lg:sticky lg:top-[99px] lg:self-start lg:max-h-[calc(100vh-119px)] lg:overflow-y-auto lg:px-3 lg:-mx-3 min-w-0 flex flex-col bg-sombre-fond [--fond-colonne:var(--rw-sombre-fond)]">
+            n'est pas touché.
+            §1 (nº 306) — ET À GAUCHE, IL S'ÉCARTE DE 40 px AU LIEU DE 12.
+            ------------------------------------------------------------
+            MESURÉ, et c'est ce qui a fait rater la première tentative :
+            les galeries du Portfolio débordent de 40 px vers la grande
+            photo, mais le bord qui rogne était à 12 px — elles étaient
+            donc COUPÉES NET à 28 px de l'alignement des titres, au lieu
+            de s'effacer en dégradé jusqu'au contact de la photo (relevé
+            au pixel : plus rien de peint avant 870, puis le rouge d'un
+            coup). Le rembourrage de gauche passe donc à la largeur de
+            la gouttière, toujours annulé par sa marge négative : la
+            boîte de contenu ne bouge pas d'un pixel, seul le bord qui
+            rogne recule.
+            ⚠️ À DROITE, IL RESTE À 12 px, ET C'EST VOULU : 40 px de
+            débord y sortiraient de la fenêtre sur un écran étroit
+            (marge de page 24 px à 1024) et ÉLARGIRAIENT le document —
+            le piège de la nº 228. Rien ne déborde à droite de toute
+            façon : ni les encadrés (8 px), ni les galeries. */}
+        <div className="lg:sticky lg:top-[99px] lg:self-start lg:max-h-[calc(100vh-119px)] lg:overflow-y-auto lg:pl-10 lg:-ml-10 lg:pr-3 lg:-mr-3 min-w-0 flex flex-col bg-sombre-fond [--fond-colonne:var(--rw-sombre-fond)]">
           {/*  ⚠️ LE CONTENU DE LA FICHE VIT DANS UN SEUL COMPOSANT
                (nº 199) : cette page et la fenêtre superposée du web
                affichent le MÊME. Ce qui reste ici est l'enveloppe — la
@@ -804,7 +821,11 @@ export function FicheTatoueur({
               }
               setStyleAffiche(serie.style);
               setSerieOuverte({ nature: serie.nature, rendu: serie.rendu });
-              setIndicePhoto(0);
+              //  §1-6 (nº 306) — LE RANG DE LA PHOTO TOUCHÉE. Les
+              //  galeries du web en envoient un : le cadre photo de la
+              //  fiche s'ouvre SUR CETTE PHOTO. La grille du doigt n'en
+              //  envoie pas — la première, comme depuis toujours.
+              setIndicePhoto(serie.indice ?? 0);
               /*  ⚠️ PLUS AUCUNE REMONTÉE ICI (nº 238-§1), ET C'EST LA
                   CAUSE DE « LA PAGE DESCEND ».
                   --------------------------------------------------
