@@ -1021,6 +1021,13 @@ export function CarrouselPortfolio({
                 colonnes.current[rang] = element;
               }}
               data-role={`colonne ${rang}`}
+              //  §4 (nº 302) — LA CLÉ DE LA PHOTO, DANS LE DOM. Même
+              //  raison que `data-nature` (nº 247) : « le défaut
+              //  redevient mesurable, il ne peut plus revenir en
+              //  silence ». C'est par elle qu'on vérifie qu'une adresse
+              //  `?photo=<clé>` ouvre bien SUR CETTE photo, et non sur
+              //  la première. Aucune conséquence de mise en page.
+              data-photo-cle={photo.cle}
               //  §1 (nº 247) — LA CATÉGORIE DE CETTE PHOTO, en face de
               //  celle que le carrousel déclare : les deux doivent
               //  concorder, toujours.

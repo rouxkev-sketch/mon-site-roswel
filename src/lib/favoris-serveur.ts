@@ -109,6 +109,18 @@ export type PhotoDuSuivi = {
   style: string;
   rendu: string | null;
   nature: string;
+  /** §1 (nº 302) — LA PLACE VOULUE PAR L'ARTISTE dans sa galerie. Elle
+      manquait ici : la composition de la galerie de « Ma sélection »
+      range chaque carrousel dans l'ordre de son auteur (règle 1 du
+      carrousel), elle a donc besoin de cette colonne. */
+  ordre: number;
+  /** §1 (nº 302), RÈGLE 5 — LE NOMBRE DE J'AIME REÇUS PAR CETTE PHOTO,
+      tous comptes confondus. Il vient de la vue `coeurs_par_photo`
+      (migration `yokofolio-coeur-une-photo`) : la table des favoris est
+      privée, seul un COMPTE en sort — il ne nomme personne. Base sans
+      la migration : zéro partout, et la galerie garde l'ordre de
+      l'artiste. */
+  jaime: number;
   /** La date de publication — elle sert au classement ET au compte de
       nouveautés (nº 243-§5). */
   creeLe: string;
@@ -305,7 +317,12 @@ export async function lireLesFavoris(
       suivisPresents.length > 0
         ? supabase
             .from("photos_tatoueur")
-            .select("id, tatoueur_id, style, rendu, nature, url, miniature, cree_le")
+            .select(
+              //  §1 (nº 302) — `ordre` EST LU ICI AUSSI : la galerie de
+              //  « Ma sélection » range chaque carrousel dans l'ordre
+              //  de son auteur.
+              "id, tatoueur_id, style, rendu, nature, url, miniature, cree_le, ordre"
+            )
             .in("tatoueur_id", suivisPresents)
             .order("cree_le", { ascending: false })
             .limit(PUBLICATIONS_LUES)
@@ -330,11 +347,42 @@ export async function lireLesFavoris(
       url: string;
       miniature: string | null;
       cree_le: string;
+      ordre?: number | null;
     };
-    const recentesParFiche = new Map<string, PhotoDuSuivi[]>();
-    for (const ligne of (lignesRecentes.error
+    /**
+     * §1 (nº 302), RÈGLE 5 — LES J'AIME DE CES PHOTOS, EN UNE LECTURE.
+     * ------------------------------------------------------------------
+     * ⚠️ UNE VUE, PAS LA TABLE : `favoris_photos` est privée (RLS de la
+     * migration nº 53) — personne ne peut lire les favoris d'un autre,
+     * et c'est très bien ainsi. `coeurs_par_photo` n'en rend qu'un
+     * COMPTE par photo, qui ne nomme personne.
+     * ⚠️ ET ELLE PEUT NE PAS EXISTER : tant que la migration n'est pas
+     * passée, la lecture échoue et l'on répond zéro partout — la
+     * galerie garde alors l'ordre de l'artiste, sans rien casser.
+     */
+    const lignesBrutes = (lignesRecentes.error
       ? []
-      : (lignesRecentes.data ?? [])) as unknown as LigneRecente[]) {
+      : (lignesRecentes.data ?? [])) as unknown as LigneRecente[];
+    const jaimeParPhoto = new Map<string, number>();
+    if (lignesBrutes.length > 0) {
+      const comptes = await supabase
+        .from("coeurs_par_photo")
+        .select("photo_id, coeurs")
+        .in(
+          "photo_id",
+          lignesBrutes.map((ligne) => ligne.id)
+        );
+      for (const ligne of (comptes.error
+        ? []
+        : (comptes.data ?? [])) as unknown as {
+        photo_id: string;
+        coeurs: number | null;
+      }[]) {
+        jaimeParPhoto.set(ligne.photo_id, Number(ligne.coeurs ?? 0));
+      }
+    }
+    const recentesParFiche = new Map<string, PhotoDuSuivi[]>();
+    for (const ligne of lignesBrutes) {
       const liste = recentesParFiche.get(ligne.tatoueur_id) ?? [];
       liste.push({
         id: ligne.id,
@@ -344,6 +392,10 @@ export async function lireLesFavoris(
         rendu: ligne.rendu,
         nature: natureConnue(ligne.nature),
         creeLe: ligne.cree_le,
+        //  Une base à qui il manquerait la colonne rend `null` : on lit
+        //  0, comme le défaut de la migration nº 31.
+        ordre: ligne.ordre ?? 0,
+        jaime: jaimeParPhoto.get(ligne.id) ?? 0,
       });
       recentesParFiche.set(ligne.tatoueur_id, liste);
     }

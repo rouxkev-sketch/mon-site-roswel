@@ -266,105 +266,136 @@ export function lignesDInformation(
 }
 
 /* ==================================================================
- * LES TROIS PHOTOS, ET LEUR PROVENANCE (§4)
+ * LA GALERIE D'UN PORTFOLIO SUIVI (§1, nº 302)
  * ================================================================== */
 
 export type BandeDeTrois = {
   photos: PhotoDuSuivi[];
-  /** La petite ligne du §3.2 — elle dit lequel des trois cas joue. */
-  provenance: string;
-  cas: "aimees" | "realisations" | "flashs";
-  /** §6 (nº 249) — la source en avait AU MOINS DIX : la rangée finit
-      par une case « voir plus », qui mène au portfolio entier. */
-  voirPlus: boolean;
 };
 
 /**
- * COMBIEN DE VIGNETTES AU MAXIMUM (nº 247-§5, revu nº 249-§6)
+ * COMBIEN DE VIGNETTES AU MAXIMUM — VINGT (nº 302-§1).
  * ------------------------------------------------------------------
- * DIX. La bande DÉFILE désormais (elle ne se tronque plus à ce qui
- * tient dans la largeur) : le plafond n'est plus celui de l'écran,
- * c'est le seuil de la case « voir plus » — dès que la source en a
- * dix, la rangée s'arrête là et la dernière case mène au portfolio.
+ * C'était dix, suivies d'une case « Voir plus ». La case est SUPPRIMÉE
+ * (code compris) : la galerie s'arrête à vingt, et s'il y a moins de
+ * photos disponibles il y en a moins, sans message.
  */
-export const VIGNETTES_MAX = 10;
+export const VIGNETTES_MAX = 20;
 
 /**
- * L'ORDRE EST STRICT (§4 de la nº 243) :
- *  1. les photos de cet artiste QUE LE VISITEUR A AIMÉES — les plus
- *     récemment aimées (`favoris` arrive déjà dans cet ordre) ;
- *  2. aucune aimée → ses RÉALISATIONS les plus récentes. Jamais un
- *     flash : un flash est un dessin proposé, il ne montre pas sa
- *     main sur la peau ;
- *  3. aucune réalisation publiée → ses derniers FLASHS.
- * Aucun tri par rendu — noir et gris et couleur se mélangent, c'est
- * la vérité de son éventail. Moins que le maximum : on n'affiche que
- * ce qui existe, jamais un doublon, jamais une case comblée.
+ * COMBIEN DE PHOTOS UN STYLE DOIT AVOIR POUR ENTRER DANS L'ALTERNANCE
+ * (règle 4, nº 302-§1). En dessous, il n'y entre pas.
  */
-export function bandeDeTrois(
-  suivi: TatoueurSuivi,
-  favoris: PhotoFavorite[]
-): BandeDeTrois {
-  /**
-   * §1 et §2 (nº 278) — LES CŒURS, CARROUSEL PAR CARROUSEL, DANS
-   * L'ORDRE DE L'ARTISTE.
-   * ------------------------------------------------------------------
-   * `favoris` arrive rangé par date d'enregistrement du cœur — et un
-   * cœur de galerie écrit toutes ses lignes d'un seul coup : cet ordre
-   * ne disait donc rien, et il ENTREMÊLAIT deux galeries aimées du
-   * même artiste (règle 3 du carrousel). Désormais : les carrousels se
-   * suivent dans l'ordre où ils ont été aimés — le plus récent
-   * d'abord, ce que la rangée annonce — et DANS chacun, l'ordre est
-   * celui de l'artiste (règles 1 et 2). Voir lib/photos-tatoueur.
-   */
-  const duSuivi = favoris.filter((photo) => photo.tatoueurId === suivi.id);
-  const rangDuCarrousel = new Map<string, number>();
-  for (const photo of duSuivi) {
-    const cle = cleDEnsemble(photo);
-    if (!rangDuCarrousel.has(cle)) rangDuCarrousel.set(cle, rangDuCarrousel.size);
-  }
-  const aimeesSource = ordreDeLArtiste(duSuivi).sort(
-    (a, b) =>
-      (rangDuCarrousel.get(cleDEnsemble(a)) ?? 0) -
-      (rangDuCarrousel.get(cleDEnsemble(b)) ?? 0)
+export const PHOTOS_POUR_ALTERNER = 8;
+
+/**
+ * LES CINQ RÈGLES DE COMPOSITION (nº 302-§1)
+ * ==================================================================
+ * ⚠️ CE QUI EST ANNULÉ : la bande de la nº 243 montrait « vos coups de
+ * cœur », à défaut les dernières réalisations, à défaut les derniers
+ * flashs — trois cas exclusifs, dix photos, et une case « Voir plus ».
+ * Tout cela est remplacé par les cinq règles ci-dessous. Le nom du
+ * type est conservé pour ne pas éparpiller un renommage dans toute la
+ * page ; ce qu'il contient, lui, est neuf.
+ *
+ * RÈGLE 1 — QUE DES RÉALISATIONS, JAMAIS UN FLASH. Un flash est un
+ * dessin proposé : il ne montre pas la main de l'artiste sur la peau.
+ *
+ * RÈGLE 2 — UN SEUL STYLE : ses photos. Et s'il est divisé entre
+ * COULEUR et NOIR ET GRIS, on ALTERNE entre les deux — une couleur,
+ * une noir et gris, et ainsi de suite. (Dans le modèle du site, un
+ * style divisé par le rendu, ce sont deux carrousels : `cleDEnsemble`
+ * le dit déjà, on ne réinvente rien.)
+ *
+ * RÈGLE 3 — PLUSIEURS STYLES : une photo du premier, une du deuxième,
+ * et ainsi de suite, en boucle, jusqu'à vingt. Le tour de rôle vaut à
+ * trois styles comme à dix.
+ *
+ * RÈGLE 4 — UN STYLE N'ENTRE DANS L'ALTERNANCE QUE S'IL COMPTE AU
+ * MOINS HUIT PHOTOS. ⚠️ ET C'EST UNE RÈGLE D'ALTERNANCE, pas une
+ * règle d'exclusion : si AUCUN style n'atteint huit, ils reviennent
+ * tous — sans quoi la galerie d'un artiste qui débute serait vide, ce
+ * qui n'est demandé nulle part.
+ *
+ * RÈGLE 5 — LES J'AIME PASSENT DEVANT. Dans chaque style, les photos
+ * qui ont reçu au moins un j'aime s'affichent d'abord, par nombre
+ * DÉCROISSANT ; les autres suivent dans l'ordre de l'artiste.
+ * L'alternance de la règle 3 n'est pas touchée : chaque style donne
+ * simplement ses meilleures d'abord.
+ *
+ * ⚠️ L'ORDRE DES STYLES est celui de leur photo la plus récente : la
+ * lecture arrive déjà rangée par date décroissante (voir
+ * `lireLesFavoris`), on prend donc l'ordre d'apparition. Aucun second
+ * classement n'est écrit ici.
+ */
+//  ⚠️ LES FAVORIS DU VISITEUR NE COMMANDENT PLUS RIEN (nº 302), et le
+//  paramètre qui les portait est parti avec eux : la règle 5 parle des
+//  j'aime REÇUS par la photo, tous comptes confondus (`photo.jaime`),
+//  pas de ce que celui qui regarde a gardé.
+export function bandeDeTrois(suivi: TatoueurSuivi): BandeDeTrois {
+  //  RÈGLE 1 — que des réalisations.
+  const realisations = suivi.recentes.filter(
+    (photo) => natureConnue(photo.nature) !== "flash"
   );
-  const aimees = aimeesSource.slice(0, VIGNETTES_MAX).map((photo) => ({
-    id: photo.id,
-    url: photo.url,
-    miniature: photo.miniature,
-    style: photo.style,
-    rendu: photo.rendu,
-    nature: photo.nature,
-    creeLe: "",
-  }));
-  if (aimees.length > 0) {
-    return {
-      photos: aimees,
-      provenance: "Vos coups de cœur",
-      cas: "aimees",
-      voirPlus: aimeesSource.length >= VIGNETTES_MAX,
-    };
+  if (realisations.length === 0) return { photos: [] };
+
+  //  LES STYLES, DANS L'ORDRE D'APPARITION (donc du plus récent).
+  const parStyle = new Map<string, PhotoDuSuivi[]>();
+  for (const photo of realisations) {
+    const liste = parStyle.get(photo.style) ?? [];
+    liste.push(photo);
+    parStyle.set(photo.style, liste);
   }
-  const realisationsSource = suivi.recentes.filter(
-    (photo) => photo.nature !== "flash"
-  );
-  if (realisationsSource.length > 0) {
-    return {
-      photos: realisationsSource.slice(0, VIGNETTES_MAX),
-      provenance: "Ses dernières réalisations",
-      cas: "realisations",
-      voirPlus: realisationsSource.length >= VIGNETTES_MAX,
-    };
-  }
-  const flashsSource = suivi.recentes.filter(
-    (photo) => photo.nature === "flash"
-  );
-  return {
-    photos: flashsSource.slice(0, VIGNETTES_MAX),
-    provenance: "Ses derniers flashs",
-    cas: "flashs",
-    voirPlus: flashsSource.length >= VIGNETTES_MAX,
+
+  /** RÈGLE 5 — les plus aimées d'abord, puis l'ordre de l'artiste. */
+  const parJaimePuisArtiste = (photos: PhotoDuSuivi[]) =>
+    ordreDeLArtiste(photos)
+      .map((photo, rang) => ({ photo, rang }))
+      .sort((a, b) => b.photo.jaime - a.photo.jaime || a.rang - b.rang)
+      .map(({ photo }) => photo);
+
+  /** Le tour de rôle : une de chaque file, en boucle, jusqu'au bout. */
+  const alterner = (files: PhotoDuSuivi[][]): PhotoDuSuivi[] => {
+    const sortie: PhotoDuSuivi[] = [];
+    const restes = files.map((file) => [...file]);
+    while (sortie.length < VIGNETTES_MAX && restes.some((f) => f.length > 0)) {
+      for (const file of restes) {
+        if (sortie.length >= VIGNETTES_MAX) break;
+        const photo = file.shift();
+        if (photo) sortie.push(photo);
+      }
+    }
+    return sortie;
   };
+
+  //  RÈGLE 2 — un seul style : ses photos, et l'alternance des rendus
+  //  quand il en porte deux.
+  if (parStyle.size === 1) {
+    const photos = [...parStyle.values()][0];
+    const parRendu = new Map<string, PhotoDuSuivi[]>();
+    for (const photo of photos) {
+      const cle = cleDEnsemble(photo);
+      const liste = parRendu.get(cle) ?? [];
+      liste.push(photo);
+      parRendu.set(cle, liste);
+    }
+    return {
+      photos: alterner(
+        [...parRendu.values()].map((liste) => parJaimePuisArtiste(liste))
+      ),
+    };
+  }
+
+  //  RÈGLE 4 — qui a le droit d'alterner. Personne n'atteint huit :
+  //  tout le monde revient (voir la note de la règle 4).
+  const assezFournis = [...parStyle.values()].filter(
+    (photos) => photos.length >= PHOTOS_POUR_ALTERNER
+  );
+  const retenus = assezFournis.length > 0 ? assezFournis : [...parStyle.values()];
+
+  //  RÈGLE 3 — un tour de rôle entre les styles retenus, la règle 5
+  //  décidant de l'ordre à l'intérieur de chacun.
+  return { photos: alterner(retenus.map((liste) => parJaimePuisArtiste(liste))) };
 }
 
 /* ==================================================================

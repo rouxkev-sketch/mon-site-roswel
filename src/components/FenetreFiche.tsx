@@ -14,10 +14,11 @@ import {
   cheminDuCarrousel,
   galerieParStyles,
   ouvertureGalerie,
+  ouvertureSurUnePhoto,
   serieDeLOuverture,
   serieMontree,
 } from "@/lib/photo-tatoueur";
-import { NATURE_PAR_DEFAUT, ensembleDeLaPhoto } from "@/lib/photos-tatoueur";
+import { NATURE_PAR_DEFAUT } from "@/lib/photos-tatoueur";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
@@ -104,6 +105,7 @@ export function FenetreFiche({
   styleRecherche = "",
   renduRecherche = "",
   natureRecherche = "",
+  photoRecherche = "",
   positionGrille = 0,
   surFermeture,
 }: {
@@ -121,6 +123,11 @@ export function FenetreFiche({
       s'ouvre quand on la touche. La fenêtre montrait donc la première
       photo du style, réalisation ou flash indifféremment. */
   natureRecherche?: string;
+  /** §4 (nº 302) — L'IDENTIFIANT D'UNE PHOTO PRÉCISE. Ouvrir une carte
+      de « Ma sélection de photos » tombe SUR ELLE — « 8/14 », pas
+      « 1/14 ». Même mécanisme que la page (`ouvertureGalerie`), aucun
+      second chemin. */
+  photoRecherche?: string;
   /** La position de défilement de la grille AU CLIC (capturée par la
       grille avant le pushState) : figée à l'ouverture, rendue à la
       fermeture. */
@@ -137,9 +144,10 @@ export function FenetreFiche({
         tatoueur ? galerieParStyles(tatoueur) : [],
         styleRecherche,
         renduRecherche,
-        natureRecherche
+        natureRecherche,
+        photoRecherche
       ),
-    [tatoueur, styleRecherche, renduRecherche, natureRecherche]
+    [tatoueur, styleRecherche, renduRecherche, natureRecherche, photoRecherche]
   );
   const groupes = ouverture.groupes;
 
@@ -174,13 +182,21 @@ export function FenetreFiche({
   /*  §2 (nº 278) — MÊME RÈGLE QUE LA PAGE : sans recherche, on ouvre
       l'ensemble de la PREMIÈRE photo, jamais le style entier (règles 1
       et 3 du carrousel — voir lib/photos-tatoueur). */
+  /*  §4 (nº 302) — UNE PHOTO DEMANDÉE COMMANDE SA PROPRE SÉRIE, et son
+      rang s'y compte : ouvrir une carte de « Ma sélection de photos »
+      tombe sur ELLE (« 8/14 »). Même écriture que la page. */
+  const surUnePhoto = ouvertureSurUnePhoto(groupes, photoRecherche);
   const serieInitiale =
-    serieCherchee ?? serieDeLOuverture(groupes, ouverture.style);
+    surUnePhoto?.serie ??
+    serieCherchee ??
+    serieDeLOuverture(groupes, ouverture.style);
   const [serieOuverte, setSerieOuverte] = useState<{
     nature: string;
     rendu: string;
   } | null>(serieInitiale);
-  const [indice, setIndice] = useState(serieCherchee ? 0 : ouverture.indice);
+  const [indice, setIndice] = useState(
+    surUnePhoto ? surUnePhoto.indice : serieCherchee ? 0 : ouverture.indice
+  );
 
   /** LES DEUX BOÎTES QUI DÉFILENT — la fenêtre entière quand elle est
       en une colonne, la colonne de droite quand elle est en deux. Un
@@ -491,12 +507,6 @@ export function FenetreFiche({
                       //  ne dépend donc plus du chemin d'arrivée
                       //  (nº 210-§2, voir le commentaire jumeau dans
                       //  FicheTatoueur).
-                      galerie={ensembleDeLaPhoto(
-                        tatoueur.galerie ?? [],
-                        (tatoueur.galerie ?? []).find(
-                          (entree) => entree.id === photoEnregistrable
-                        ) ?? { style: "", rendu: null }
-                      ).map((entree) => entree.id)}
                       variante="fiche"
                     />
                   </div>

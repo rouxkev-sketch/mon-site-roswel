@@ -10,14 +10,13 @@ import {
   CLASSES_LIGNE_CLIQUABLE_SANS_ENCADRE,
   PhotoRonde,
 } from "@/components/BlocLieux";
-import { IconeCoeur } from "@/components/Icones";
 import {
   bandeDeTrois,
   groupesDeSuivis,
   libelleNouveautes,
   lignesDInformation,
 } from "@/lib/selection-suivis";
-import type { PhotoFavorite, TatoueurSuivi } from "@/lib/favoris-serveur";
+import type { TatoueurSuivi } from "@/lib/favoris-serveur";
 
 /**
  * LES ARTISTES SUIVIS, DANS « MA SÉLECTION » (nº 243, revu nº 245)
@@ -52,14 +51,11 @@ import type { PhotoFavorite, TatoueurSuivi } from "@/lib/favoris-serveur";
  * de groupe et le compte de nouveautés ne sont pas des boutons.
  */
 
-export function BlocSuivis({
-  suivis,
-  favoris,
-}: {
-  suivis: TatoueurSuivi[];
-  /** Les photos aimées — elles décident du premier cas du §4. */
-  favoris: PhotoFavorite[];
-}) {
+//  §1 (nº 302) — LES FAVORIS DU VISITEUR NE SONT PLUS DEMANDÉS : la
+//  galerie ne se compose plus de ses coups de cœur mais des cinq règles
+//  de composition (voir `bandeDeTrois`), et la règle 5 lit les j'aime
+//  REÇUS par chaque photo, qui voyagent avec elle.
+export function BlocSuivis({ suivis }: { suivis: TatoueurSuivi[] }) {
   const groupes = groupesDeSuivis(suivis);
 
   if (suivis.length === 0) {
@@ -144,7 +140,7 @@ export function BlocSuivis({
           >
             {groupe.suivis.map((suivi) => (
               <li key={suivi.id}>
-                <BlocDUnSuivi suivi={suivi} favoris={favoris} />
+                <BlocDUnSuivi suivi={suivi} />
               </li>
             ))}
           </ul>
@@ -155,15 +151,9 @@ export function BlocSuivis({
 }
 
 /** LE BLOC D'UN ARTISTE — trois étages (§3). */
-function BlocDUnSuivi({
-  suivi,
-  favoris,
-}: {
-  suivi: TatoueurSuivi;
-  favoris: PhotoFavorite[];
-}) {
+function BlocDUnSuivi({ suivi }: { suivi: TatoueurSuivi }) {
   const lignes = lignesDInformation(suivi);
-  const bande = bandeDeTrois(suivi, favoris);
+  const bande = bandeDeTrois(suivi);
   const nouveautes = libelleNouveautes(suivi.nouveautes);
 
   return (
@@ -534,7 +524,6 @@ function RangeeDeVignettes({
       <ul
         ref={zone}
         data-bande-suivi=""
-        data-cas={bande.cas}
         /*  §2 (nº 244) — 6 px d'écart. Le défilement est NATIF, la
             barre est masquée (elle n'apprendrait rien), l'accrochage
             au centre laisse dépasser les deux voisines.
@@ -585,62 +574,20 @@ function RangeeDeVignettes({
                 loading="lazy"
                 className="h-full w-full object-cover"
               />
-              {/*  §5 (nº 249) — LE CŒUR DES VIGNETTES AIMÉES, en bas à
-                   droite, sur elles SEULES (le cas « aimees » — les
-                   premières affichées, l'ordre de la nº 243). Le
-                   glyphe est celui du cœur allumé des photos
-                   (nº 141-6B) : blanc plein, et l'ombre du trait —
-                   c'est la lisibilité du glyphe sur photo claire comme
-                   sombre (la décision de la nº 141-6A), PAS un halo ni
-                   un fond : aucun cercle, aucune plaque derrière lui.
-                   §3 (nº 250) — SA TAILLE SUIT LA VIGNETTE, il ne
-                   l'écrase jamais ; tenu à 8 px des deux bords
-                   (`bottom-2 right-2`).
-                   §7 (nº 264) — LA PROPORTION DESCEND DE 12,5 À 9 % :
-                   au huitième, le cœur d'une vignette web (~250 px)
-                   faisait 31 px — PLUS GROS que celui des cartes de
-                   favoris (24 px, BoutonCoeurPhoto), sur une photo
-                   bien plus petite. À 9 %, il repasse nettement
-                   dessous et rend la photo. Les 8 px des bords ne
-                   bougent pas. */}
-              {bande.cas === "aimees" && (
-                <span
-                  data-coeur-aime=""
-                  aria-hidden="true"
-                  className="pointer-events-none absolute bottom-2 right-2 w-[9%]"
-                >
-                  <IconeCoeur
-                    taille={24}
-                    classe="block h-auto w-full fill-white text-white [filter:drop-shadow(0_1px_2px_rgba(0,0,0,0.55))]"
-                  />
-                </span>
-              )}
+              {/*  §2 (nº 302) — PLUS AUCUN CŒUR SUR CES VIGNETTES,
+                   web comme doigt. Le cœur de la nº 249 disait qu'une
+                   photo avait été aimée par le visiteur ; la galerie ne
+                   se compose plus de ses coups de cœur (nº 302-§1),
+                   ce signe n'a donc plus rien à signaler. Supprimé,
+                   code compris — le glyphe n'est plus importé. */}
             </Link>
           </li>
         ))}
-        {/*  §6 (nº 249) — LA CASE « VOIR PLUS », au bout du glissement,
-             dès que la source compte au moins dix vignettes : elle
-             mène au portfolio entier de la fiche.
-             §4 (nº 250) — L'ÉCRITURE DES ACTIONS INTERMÉDIAIRES
-             (charte, nº 217-§7) : une CAPSULE À TAILLE NATURELLE,
-             centrée dans sa case — le gris relevé qui s'éclaircit au
-             survol, jamais de rose plein, jamais une case pleine. */}
-        {bande.voirPlus && (
-          <li className={CASE_RANGEE}>
-            <span className={`flex ${CADRE_PHOTO_PORTFOLIO} items-center justify-center`}>
-              <Link
-                href={`/tatoueur/${suivi.slug}`}
-                data-voir-plus=""
-                className="inline-flex items-center justify-center rounded-full
-                           bg-sombre-eleve px-3.5 min-h-[32px] text-[13px]
-                           font-medium text-sombre-texte transition-colors
-                           hover:bg-sombre-haut active:opacity-80"
-              >
-                Voir plus
-              </Link>
-            </span>
-          </li>
-        )}
+        {/*  §1 (nº 302) — LA CASE « VOIR PLUS » EST SUPPRIMÉE, code
+             compris. La galerie s'arrête à vingt photos ; s'il y en a
+             moins, il y en a moins, et sans message — c'est la
+             consigne, au mot près. Le drapeau `voirPlus` a disparu du
+             type avec elle : plus rien ne le calcule. */}
       </ul>
       {etat.gauche && voile(-1)}
       {etat.droite && voile(1)}

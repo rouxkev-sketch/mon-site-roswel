@@ -158,11 +158,16 @@ export default async function PageFicheTatoueur({
         seule, comme au toucher d'une vignette du portfolio. C'est ce
         que « Ma sélection » écrit dans ses liens. */
     nature?: string;
+    /** §4 (nº 302) — L'IDENTIFIANT D'UNE PHOTO PRÉCISE. Le carrousel
+        s'ouvre SUR ELLE — « 8/19 », pas « 1/19 ». C'est ce qu'écrit la
+        galerie de « Ma sélection » quand on touche sa huitième
+        vignette. Introuvable : la fiche s'ouvre comme avant. */
+    photo?: string;
     studio?: string;
   }>;
 }) {
   const { slug } = await params;
-  const { style, rendu, nature, studio } = await searchParams;
+  const { style, rendu, nature, photo, studio } = await searchParams;
   const { tatoueur, demonstration } = await ficheVisible(slug);
 
   // LE PROPRIÉTAIRE VOIT SA FICHE même pas encore publiée, et ses
@@ -238,6 +243,9 @@ export default async function PageFicheTatoueur({
         styleInitial={styleConnu(style)}
         renduInitial={renduConnu(rendu)}
         natureInitiale={natureCherchee(nature)}
+        //  §4 (nº 302) — la photo demandée, telle quelle : c'est
+        //  `ouvertureGalerie` qui décide si elle existe.
+        photoInitiale={typeof photo === "string" ? photo : ""}
         suiviAuDepart={suiviAuDepart}
       />
       {/* ⚠️ CE BLOC EST INVISIBLE, ET C'EST LE PLUS IMPORTANT DE LA

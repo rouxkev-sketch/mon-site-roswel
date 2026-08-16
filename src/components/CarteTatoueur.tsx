@@ -72,6 +72,7 @@ function CarteTatoueurNue({
   styleRecherche = "",
   renduRecherche = "",
   natureRecherche = "",
+  photoRecherche = "",
   prioritaire = false,
   phototheque = false,
   surOuverture,
@@ -91,6 +92,12 @@ function CarteTatoueurNue({
   /** LA CATÉGORIE demandée (réalisation, flash) — la carte montre alors
       une photo QUI EN EST (nº 216-§1). */
   natureRecherche?: string;
+  /** §4 (nº 302) — L'IDENTIFIANT D'UNE PHOTO PRÉCISE, quand la carte
+      EST une photo (« Ma sélection de photos »). Il voyage dans
+      l'adresse : au doigt, où la carte NAVIGUE, la fiche s'ouvre alors
+      sur cette photo-là. Vide partout ailleurs — une carte de mosaïque
+      montre un carrousel, pas une image choisie. */
+  photoRecherche?: string;
   /** LES PREMIÈRES CARTES DE LA GRILLE. Leur photo est celle que
       Google mesure (le « plus grand élément affiché ») : elle ne doit
       PAS être différée — voir GrilleTatoueurs. */
@@ -201,6 +208,8 @@ function CarteTatoueurNue({
     //  LA CATÉGORIE VOYAGE AVEC (nº 216-§1) : la fiche s'ouvre alors
     //  sur l'ensemble qu'on regardait, pas sur tout le style.
     if (natureRecherche) suite.set("nature", natureRecherche);
+    //  §4 (nº 302) — la photo touchée, quand la carte en désigne une.
+    if (photoRecherche) suite.set("photo", photoRecherche);
     const requete = suite.toString();
     return requete
       ? `/tatoueur/${tatoueur.slug}?${requete}`
@@ -489,10 +498,6 @@ function CarteTatoueurNue({
               //  même catégorie, même rendu, chez ce tatoueur : la
               //  règle est la même depuis la mosaïque que depuis une
               //  fiche.
-              galerie={ensembleDeLaPhoto(
-                tatoueur.galerie,
-                photoEnregistrable
-              ).map((photo) => photo.id)}
             />
           </div>
         )}

@@ -8,7 +8,6 @@ import {
   amorcer,
   definir,
   ecrireFavori,
-  ecrireFavorisPhotos,
   estIdentifiantDeBase,
   reprendreLeGeste,
   retenirLeGeste,
@@ -41,7 +40,6 @@ import {
  */
 export function BoutonCoeurPhoto({
   photoId,
-  galerie,
   enregistreeAuDepart = false,
   variante = "carte",
 }: {
@@ -49,17 +47,18 @@ export function BoutonCoeurPhoto({
       d'avant le portfolio catalogué) : le cœur ne s'affiche pas. */
   photoId: string;
   /**
-   * LA GALERIE AFFICHÉE (nº 208-§6) — toutes les photos que l'on
-   * regarde : le style, la catégorie et le rendu courants. Fournie par
-   * la fiche, le geste porte alors sur TOUTE la galerie : un cœur
-   * touché les enregistre toutes, et tous leurs cœurs s'allument.
-   * ⚠️ CE N'EST PAS LE CŒUR DE SÉRIE DE LA Nº 203 (annulé par la
-   * nº 204) : le cœur reste sur chaque photo, à sa place. Seul son
-   * EFFET porte plus loin.
-   * Absente (cartes de la mosaïque, page « Ma sélection ») : le geste
-   * ne concerne que cette photo, comme avant.
+   * §3 (nº 302) — ANNULATION EXPLICITE : LE CŒUR NE PORTE PLUS QUE SUR
+   * CETTE PHOTO.
+   * ------------------------------------------------------------------
+   * LA RÈGLE ANNULÉE, mot pour mot : « quand un utilisateur aime une
+   * des photos du carrousel, c'est l'ensemble du carrousel qui est
+   * aimé » (nº 208-§6). Elle avait été posée sur une consigne ; le
+   * propriétaire la change. Le paramètre `galerie` qui la portait est
+   * SUPPRIMÉ, code compris — aucun appelant ne peut donc la
+   * réintroduire par mégarde.
+   * DÉSORMAIS : un cœur met en favori UNE SEULE PHOTO, celle sur
+   * laquelle on a cliqué. Le carrousel n'est plus concerné.
    */
-  galerie?: string[];
   enregistreeAuDepart?: boolean;
   /** `carte` : dans l'image de la mosaïque. `fiche` : le même dessin,
       au gabarit des actions de fiche (partage). */
@@ -70,12 +69,6 @@ export function BoutonCoeurPhoto({
 }) {
   const router = useRouter();
   const { utilisateur, pret } = useUtilisateur();
-  /** CE QUE LE GESTE TOUCHE — la galerie affichée quand elle est
-      fournie (nº 208-§6), cette photo sinon. Seules les photos qui
-      existent VRAIMENT en base peuvent être enregistrées. */
-  const visees = (galerie ?? [photoId]).filter((cle) =>
-    estIdentifiantDeBase(cle)
-  );
   amorcer("photo", photoId, enregistreeAuDepart);
   const enregistree = useEtatFavori("photo", photoId, enregistreeAuDepart);
   /** L'animation de pose — un rebond court, jamais au retrait. */
@@ -95,13 +88,10 @@ export function BoutonCoeurPhoto({
     //  ce qui est exactement ce qu'on veut montrer.
     //  (`definir` passe par le magasin partagé, pas par un état React :
     //  aucun rendu en cascade depuis cet effet.)
-    //  LE GESTE REPRIS PORTE AUSSI LOIN QUE LE GESTE D'ORIGINE : la
-    //  galerie entière si elle est fournie (nº 208-§6).
-    for (const cle of visees) definir("photo", cle, true);
-    void ecrireFavorisPhotos(visees, true);
-    // `visees` est recalculé à chaque rendu ; la garde `dejaRejoue`
-    // suffit à ne rejouer qu'une fois.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    //  §3 (nº 302) — LE GESTE REPRIS PORTE EXACTEMENT AUSSI LOIN QUE
+    //  LE GESTE D'ORIGINE : cette photo, et elle seule.
+    definir("photo", photoId, true);
+    void ecrireFavori("photo", photoId, true);
   }, [pret, utilisateur, photoId]);
 
   function basculer(evenement: React.MouseEvent) {
@@ -118,20 +108,13 @@ export function BoutonCoeurPhoto({
     const suivant = !enregistree;
     //  L'ÉCRAN RÉPOND TOUT DE SUITE, la base suit. Un cœur qui attend
     //  le réseau pour se remplir donne l'impression d'un site cassé.
-    //  ⚠️ TOUTE LA GALERIE AFFICHÉE (nº 208-§6) : les cœurs des autres
-    //  photos de la série s'allument à l'instant, puisqu'ils lisent le
-    //  même magasin partagé.
-    for (const cle of visees) definir("photo", cle, suivant);
+    //  §3 (nº 302) — UNE SEULE PHOTO : celle-ci.
+    definir("photo", photoId, suivant);
     if (suivant) setPulse(true);
-    const ecriture =
-      visees.length > 1
-        ? ecrireFavorisPhotos(visees, suivant)
-        : ecrireFavori("photo", photoId, suivant);
-    void ecriture.then((ok) => {
-      //  Le serveur a refusé : on remet les cœurs comme ils étaient
-      //  plutôt que de laisser croire à un enregistrement qui n'existe
-      //  pas.
-      if (!ok) for (const cle of visees) definir("photo", cle, !suivant);
+    void ecrireFavori("photo", photoId, suivant).then((ok) => {
+      //  Le serveur a refusé : on remet le cœur comme il était plutôt
+      //  que de laisser croire à un enregistrement qui n'existe pas.
+      if (!ok) definir("photo", photoId, !suivant);
     });
   }
 

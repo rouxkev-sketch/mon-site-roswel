@@ -346,6 +346,43 @@ export function cheminDeLaFenetreCarrousel(
   return `/tatoueur/${slug}/carrousel${requete ? `?${requete}` : ""}`;
 }
 
+/**
+ * §4 (nº 302) — LA SÉRIE ET LE RANG D'UNE PHOTO DEMANDÉE.
+ * ==================================================================
+ * `ouvertureGalerie` met le bon STYLE en tête et donne le rang de la
+ * photo DANS CE STYLE ENTIER. Or les deux enveloppes n'affichent pas
+ * un style entier : elles le restreignent à une SÉRIE (catégorie +
+ * rendu — la règle 3 du carrousel, nº 278, qui interdit de mêler deux
+ * galeries de dépôt). Le rang du style entier n'y correspond donc pas,
+ * et la photo demandée peut même en être absente.
+ * CETTE FONCTION REND LES DEUX RÉPONSES D'UN COUP : la série à ouvrir
+ * (celle de la photo, jamais celle de la première du style) et le rang
+ * de la photo DANS cette série. Une seule écriture pour la page, la
+ * fenêtre superposée et la fenêtre de carrousel — la corriger ici les
+ * corrige toutes les trois.
+ * `null` quand aucune photo n'est demandée, ou qu'elle est introuvable :
+ * l'appelant retombe alors sur son comportement d'avant, à la lettre.
+ */
+export function ouvertureSurUnePhoto(
+  groupes: StyleGalerie[],
+  photoCherchee: string
+): { serie: { nature: string; rendu: string }; indice: number } | null {
+  if (!photoCherchee) return null;
+  const groupe = groupes.find((entree) =>
+    entree.photos.some((photo) => photo.cle === photoCherchee)
+  );
+  const visee = groupe?.photos.find((photo) => photo.cle === photoCherchee);
+  if (!groupe || !visee) return null;
+  const serie = {
+    nature: visee.nature || NATURE_PAR_DEFAUT,
+    rendu: visee.rendu ?? RENDU_PAR_DEFAUT,
+  };
+  const indice = serieMontree(groupe.photos, serie).findIndex(
+    (photo) => photo.cle === photoCherchee
+  );
+  return { serie, indice: Math.max(0, indice) };
+}
+
 export function serieDeLOuverture(
   groupes: StyleGalerie[],
   style: string
@@ -408,8 +445,49 @@ export function ouvertureGalerie(
   renduCherche: string,
   /** LA CATÉGORIE CHERCHÉE — « tatouage » ou « flash ». Vide : on n'a
       pas cherché par catégorie, et elle ne départage rien. */
-  natureCherchee = ""
+  natureCherchee = "",
+  /**
+   * §4 (nº 302) — L'IDENTIFIANT D'UNE PHOTO PRÉCISE — ET IL PASSE
+   * AVANT TOUT LE RESTE.
+   * ------------------------------------------------------------------
+   * LE DÉFAUT : cliquer la 8ᵉ photo d'une galerie ouvrait le carrousel
+   * SUR LA PREMIÈRE (« 1/19 »). Les trois critères existants (style,
+   * catégorie, rendu) désignent une SÉRIE, jamais une image : ils ne
+   * pouvaient pas répondre à la question « laquelle ».
+   * LE REMÈDE : quand l'adresse porte `?photo=<id>`, on ouvre LE STYLE
+   * QUI LA CONTIENT, positionné SUR ELLE. Aucun second mécanisme n'est
+   * écrit : c'est la même fonction, le même point de passage unique
+   * pour la page, la fenêtre superposée et la fenêtre de carrousel du
+   * doigt — la corriger ici les corrige toutes les trois.
+   * ⚠️ INTROUVABLE (photo retirée, adresse recopiée à la main) : on
+   * retombe EXACTEMENT sur le comportement d'avant, sans erreur.
+   */
+  photoCherchee = ""
 ): { groupes: StyleGalerie[]; style: string; indice: number } {
+  /*  §4 (nº 302) — LA PHOTO DEMANDÉE D'ABORD. On la cherche dans TOUS
+      les styles ; celui qui la porte passe en tête, et l'indice est sa
+      place exacte dans ce style. */
+  if (photoCherchee) {
+    //  ⚠️ `cle` EST L'IDENTIFIANT : c'est l'identifiant en base quand
+    //  la photo en a un (le cas de tout portfolio catalogué), l'adresse
+    //  de l'image sinon. C'est exactement ce que le lien transporte.
+    const rangStyle = groupes.findIndex((groupe) =>
+      groupe.photos.some((photo) => photo.cle === photoCherchee)
+    );
+    if (rangStyle >= 0) {
+      const ordonnes =
+        rangStyle === 0
+          ? groupes
+          : [groupes[rangStyle], ...groupes.filter((_, i) => i !== rangStyle)];
+      return {
+        groupes: ordonnes,
+        style: ordonnes[0].slug,
+        indice: ordonnes[0].photos.findIndex(
+          (photo) => photo.cle === photoCherchee
+        ),
+      };
+    }
+  }
   /** Cette photo répond-elle à ce qui a été cherché ? Un critère non
       demandé ne dit jamais non. */
   const repond = (photo: PhotoGalerie) =>

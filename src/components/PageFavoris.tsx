@@ -163,11 +163,16 @@ export function PageFavoris({
    * et sa première photo est une réalisation. On ouvrait un flash, on
    * voyait une réalisation.
    */
+  /*  §4 (nº 302) — ET L'IDENTIFIANT DE LA PHOTO TOUCHÉE. Les trois
+      tags désignent une SÉRIE ; ils ne disent pas LAQUELLE des photos
+      on a ouverte. La carte de favori EST une photo : son identifiant
+      voyage avec, et la fenêtre s'ouvre dessus (« 8/14 »). */
   const [serieOuverte, setSerieOuverte] = useState({
     cle: "",
     style: "",
     nature: "",
     rendu: "",
+    photo: "",
   });
   const visible =
     ficheOuverte !== null && pathname === `/tatoueur/${ficheOuverte.slug}`;
@@ -175,7 +180,13 @@ export function PageFavoris({
   const ouvrirLaFiche = useCallback(
     async (
       slug: string,
-      serie: { cle: string; style: string; nature: string; rendu: string },
+      serie: {
+        cle: string;
+        style: string;
+        nature: string;
+        rendu: string;
+        photo: string;
+      },
       adresse: string
     ) => {
       const fiche = await ficheComplete(slug);
@@ -436,6 +447,12 @@ export function PageFavoris({
                     styleRecherche={photo.style}
                     renduRecherche={photo.rendu ?? ""}
                     natureRecherche={natureConnue(photo.nature)}
+                    //  §4 (nº 302) — au doigt, la carte NAVIGUE : son
+                    //  adresse porte la photo, et la fiche s'ouvre
+                    //  dessus. Sur le web, c'est la fenêtre superposée
+                    //  qui la reçoit (voir plus bas) — le même
+                    //  identifiant, les deux chemins.
+                    photoRecherche={photo.id}
                     //  §4 (nº 255) — LA MÊME VUE QUE LA MOSAÏQUE : le
                     //  drapeau que la carte attend depuis toujours, et
                     //  que cette page ne lui donnait pas.
@@ -448,11 +465,13 @@ export function PageFavoris({
                           style: photo.style,
                           nature: natureConnue(photo.nature),
                           rendu: photo.rendu ?? RENDU_PAR_DEFAUT,
+                          //  §4 (nº 302) — la photo elle-même.
+                          photo: photo.id,
                         },
                         `/tatoueur/${photo.tatoueurSlug}?style=${photo.style}` +
                           `&nature=${natureConnue(photo.nature)}&rendu=${
                             photo.rendu ?? RENDU_PAR_DEFAUT
-                          }`
+                          }&photo=${photo.id}`
                       )
                     }
                   />
@@ -469,7 +488,7 @@ export function PageFavoris({
            favoris. §2 (nº 249) — le sous-titre en capitales est parti :
            le TITRE de la page dit déjà « Mes suivis ». */}
       {!surLesFavoris && (
-        <BlocSuivis suivis={suivisVisibles} favoris={photos} />
+        <BlocSuivis suivis={suivisVisibles} />
       )}
 
       {/* ---------- LE TITRE INACTIF EST PARTI (§2, nº 263) ----------
@@ -502,6 +521,10 @@ export function PageFavoris({
         //  L'ENSEMBLE qu'on a touché, jamais sur tout le style.
         natureRecherche={serieOuverte.nature}
         renduRecherche={serieOuverte.rendu}
+        /*  §4 (nº 302) — LA PHOTO TOUCHÉE, ET NON LA PREMIÈRE DE SA
+            SÉRIE. Une carte de favori EST une photo précise : la
+            fenêtre s'ouvre dessus. */
+        photoRecherche={serieOuverte.photo}
         positionGrille={positionPage}
         surFermeture={fermerLaFiche}
       />

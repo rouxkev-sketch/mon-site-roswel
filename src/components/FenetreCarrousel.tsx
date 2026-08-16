@@ -14,7 +14,6 @@ import {
   serieMontree,
 } from "@/lib/photo-tatoueur";
 import {
-  ensembleDeLaPhoto,
   libelleNature,
   libelleRendu,
 } from "@/lib/photos-tatoueur";
@@ -237,12 +236,6 @@ export function FenetreCarrousel({
   const coeur = photoAffichee?.cle ? (
     <BoutonCoeurPhoto
       photoId={photoAffichee.cle}
-      galerie={ensembleDeLaPhoto(
-        tatoueur.galerie ?? [],
-        (tatoueur.galerie ?? []).find(
-          (entree) => entree.id === photoAffichee.cle
-        ) ?? { style: "", rendu: null }
-      ).map((entree) => entree.id)}
       variante="fiche-mobile"
     />
   ) : null;

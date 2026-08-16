@@ -196,35 +196,12 @@ export function oublierLesMiens() {
  * ÉCRIRE EN BASE — une seule porte pour les deux genres
  * ================================================================ */
 
-/**
- * TOUTE UNE GALERIE, EN UNE DEMANDE (nº 208-§6)
- * ==============================================
- * ⚠️ CE N'EST PAS LE « CŒUR DE SÉRIE » DE LA Nº 203, annulé par la
- * nº 204 : le cœur reste sur CHAQUE PHOTO, à sa place. C'est son EFFET
- * qui porte plus loin — toucher le cœur d'une photo enregistre la
- * GALERIE AFFICHÉE (le style, la catégorie et le rendu courants),
- * c'est-à-dire ce que l'on est en train de regarder.
- * Une seule requête pour toute la galerie : jamais une série à moitié
- * posée parce qu'un appel aurait échoué en route.
- */
-export async function ecrireFavorisPhotos(
-  ids: string[],
-  actif: boolean
-): Promise<boolean> {
-  try {
-    const reponse = await fetch("/api/yokofolio/favoris/photo", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ids, actif }),
-    });
-    const donnees = (await reponse.json().catch(() => null)) as {
-      ok?: boolean;
-    } | null;
-    return Boolean(donnees?.ok);
-  } catch {
-    return false;
-  }
-}
+/*  §3 (nº 302) — `ecrireFavorisPhotos` EST SUPPRIMÉE, code compris.
+    Elle écrivait TOUTE UNE GALERIE d'un geste (nº 208-§6) : « aimer une
+    photo du carrousel, c'est aimer le carrousel ». Le propriétaire
+    annule cette règle — un cœur ne met en favori QUE la photo cliquée.
+    Il ne reste donc qu'une porte, `ecrireFavori`, et plus aucun chemin
+    ne peut réintroduire l'ancien comportement par mégarde. */
 
 /** Enregistre (ou retire) — rend `true` si le serveur a suivi. */
 export async function ecrireFavori(

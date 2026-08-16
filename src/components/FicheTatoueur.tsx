@@ -25,6 +25,7 @@ import {
   cheminDuCarrousel,
   galerieParStyles,
   ouvertureGalerie,
+  ouvertureSurUnePhoto,
   serieDeLOuverture,
   serieMontree,
 } from "@/lib/photo-tatoueur";
@@ -87,6 +88,7 @@ export function FicheTatoueur({
   styleInitial = "",
   renduInitial = "",
   natureInitiale = "",
+  photoInitiale = "",
   apercu = false,
   suiviAuDepart = false,
 }: {
@@ -107,6 +109,10 @@ export function FicheTatoueur({
       rendu, les trois désignent UN ENSEMBLE : la fiche s'ouvre alors
       sur cette série seule (nº 210-§1). */
   natureInitiale?: string;
+  /** §4 (nº 302) — L'IDENTIFIANT D'UNE PHOTO PRÉCISE, venu de
+      l'adresse (`?photo=`). Le carrousel s'ouvre SUR ELLE. Vide : le
+      comportement d'avant, à la lettre. */
+  photoInitiale?: string;
   /** Vrai dans l'espace tatoueur (« Ma fiche ») : aperçu public SANS
       partage ni signalement, dans un <div> et non un <main>. */
   apercu?: boolean;
@@ -133,9 +139,12 @@ export function FicheTatoueur({
         galerieParStyles(tatoueur),
         styleInitial,
         renduInitial,
-        natureInitiale
+        natureInitiale,
+        //  §4 (nº 302) — et la photo demandée, qui passe avant tout le
+        //  reste quand elle existe.
+        photoInitiale
       ),
-    [tatoueur, styleInitial, renduInitial, natureInitiale]
+    [tatoueur, styleInitial, renduInitial, natureInitiale, photoInitiale]
   );
   const groupes = ouverture.groupes;
 
@@ -178,8 +187,14 @@ export function FicheTatoueur({
       « sans recherche, montre tout » (nº 272-§4) est annulée par la
       définition de la nº 278-§0. Rien n'est perdu : les autres séries
       du style vivent dans l'onglet Portfolio, sous leurs vignettes. */
+  /*  §4 (nº 302) — UNE PHOTO DEMANDÉE COMMANDE SA PROPRE SÉRIE. Sans
+      cela, on ouvrait la série de la PREMIÈRE photo du style, et la
+      photo visée pouvait en être absente : on retombait sur « 1/… ». */
+  const surUnePhoto = ouvertureSurUnePhoto(groupes, photoInitiale);
   const serieInitiale =
-    serieCherchee ?? serieDeLOuverture(groupes, ouverture.style);
+    surUnePhoto?.serie ??
+    serieCherchee ??
+    serieDeLOuverture(groupes, ouverture.style);
   const [serieOuverte, setSerieOuverte] = useState<{
     nature: string;
     rendu: string;
@@ -188,7 +203,7 @@ export function FicheTatoueur({
       restreinte commence à sa première photo — elle répond déjà à tout
       ce qui a été cherché. */
   const [indicePhoto, setIndicePhoto] = useState(
-    serieCherchee ? 0 : ouverture.indice
+    surUnePhoto ? surUnePhoto.indice : serieCherchee ? 0 : ouverture.indice
   );
 
   /**
@@ -257,23 +272,10 @@ export function FicheTatoueur({
       nº 31 avait laissés de côté : après elle, la réponse est oui
       partout.) */
   const photoAffichee = photosDuCarrousel[indicePhoto] ?? photosDuCarrousel[0];
-  /**
-   * L'ENSEMBLE DE LA PHOTO REGARDÉE — et il ne dépend plus du chemin
-   * d'arrivée (nº 210-§2).
-   * ⚠️ IL SE CALCULE DEPUIS LA GALERIE BRUTE du tatoueur, la seule
-   * liste où chaque photo porte SES TROIS TAGS (style, catégorie,
-   * rendu). Le carrousel, lui, est déjà groupé par style : ses photos
-   * ne portent pas le leur, et ce qu'il contient dépend de la façon
-   * dont on est arrivé — une vignette du portfolio ouvre un ensemble,
-   * une carte de la mosaïque ouvre tout le style. En repartant de la
-   * galerie, la réponse est la même par les deux chemins.
-   */
-  const galerieAffichee = ensembleDeLaPhoto(
-    tatoueur.galerie ?? [],
-    (tatoueur.galerie ?? []).find(
-      (photo) => photo.id === photoAffichee?.cle
-    ) ?? { style: "", rendu: null }
-  ).map((photo) => photo.id);
+  /*  §3 (nº 302) — LA GALERIE AFFICHÉE N'EST PLUS CALCULÉE ICI, et
+      elle n'a plus de lecteur : elle ne servait qu'au cœur, pour
+      enregistrer TOUT le carrousel d'un geste (nº 208-§6). Cette règle
+      est annulée — un cœur ne met en favori que sa photo. */
 
   /**
    * ██ LA FENÊTRE DE CARROUSEL — SMARTPHONE SEULEMENT (nº 284) ██
@@ -714,7 +716,6 @@ export function FicheTatoueur({
                     <div className="mobile:hidden absolute top-3 right-3 z-[2]">
                       <BoutonCoeurPhoto
                         photoId={photoAffichee.cle}
-                        galerie={galerieAffichee}
                         variante="fiche"
                       />
                     </div>
@@ -731,7 +732,6 @@ export function FicheTatoueur({
                        garde lisible sur photo claire comme sombre. */}
                   <BoutonCoeurPhoto
                     photoId={photoAffichee.cle}
-                    galerie={galerieAffichee}
                     variante="fiche-mobile"
                   />
                 </div>
