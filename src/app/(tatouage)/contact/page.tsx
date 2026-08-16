@@ -23,8 +23,13 @@ export default function PageContactTatouage() {
   return (
     <>
       <EnTeteTatouage />
-      <main className="flex-1 mx-auto w-full max-w-[560px] px-5 sm:px-6 pt-10 sm:pt-14 pb-24">
-        <h1 className="text-[clamp(1.6rem,4.5vw,2.1rem)] font-bold leading-tight text-sombre-texte">
+      {/*  §1 (nº 319) — LA PAGE PASSE À LA CHARTE : les marges du site
+           (px-4 sm:px-6, le rythme des autres pages), et le titre à
+           l'échelle des titres du site — 20 px gras, celle des titres
+           de page du produit (PageRechercheMobile, la fiche), plus la
+           grande typographie propre à cette page. */}
+      <main className="flex-1 mx-auto w-full max-w-[560px] px-4 sm:px-6 pt-10 pb-16">
+        <h1 className="text-[20px] font-bold text-sombre-texte">
           Écris-nous
         </h1>
         <p className="mt-2 text-[15px] text-sombre-texte-doux leading-relaxed">
