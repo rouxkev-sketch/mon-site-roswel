@@ -479,121 +479,42 @@ nonJoue(
 /* ==================================================================
  * §4 — LE TEXTE DE « QUI SOMMES-NOUS »
  * ================================================================== */
-titre("§4 — les trois retouches, et les six autres paragraphes intacts");
+titre("§4 — le texte : rendu à la nº 324, l'exception de page gardée");
 {
   await page.goto(`${BASE}/qui-sommes-nous`, { waitUntil: "networkidle" });
-  const m = await page.evaluate(() => {
-    const main = document.querySelector("main");
-    return {
-      paragraphes: [...main.querySelectorAll("p")].map((p) =>
-        p.textContent.trim()
-      ),
-      gras: [...main.querySelectorAll("strong")].map((n) =>
-        n.textContent.trim()
-      ),
-    };
-  });
 
-  const ATTENDUS = [
-    "« Yoko » vient du japonais, il signifie « couché, sur le côté ». Regarde le cœur rose du logo, il est incliné. « Folio » vient de portfolio : c'est le cœur du site. YokoFolio, c'est un cœur incliné qui t'emmène vers des portfolios.",
-    "Un tatouage commence par un style. YokoFolio classe les tatoueurs par style.",
-    "Essaie de chercher « du réalisme autour de Lyon » sur Instagram : aucune case ne pose cette question. Ici, c'est précisément celle qu'on te pose.",
-    "Choisis un style, une ville et un rayon : les tatoueurs qui correspondent s'affichent, chacun avec un portfolio consacré à son travail dans le style recherché.",
-    "YokoFolio ne remplace pas Instagram, il le complète, en t'y conduisant.",
-    "Tatoueur ? Crée ton portfolio : un style montré est un style trouvable.",
-    "Curieux ? Cherche, et découvre ton prochain tatouage.",
-    "Pas d'avis, pas de notes.",
-    "Personne ne commente ni ne juge le travail d'un tatoueur ici. Son portfolio parle pour lui. À toi de te faire ton avis.",
-  ];
-  const ecarts = ATTENDUS.map((attendu, rang) => ({ attendu, rang })).filter(
-    ({ attendu, rang }) => nu(m.paragraphes[rang] ?? "") !== nu(attendu)
+  /*  ⚠️ AMENDÉ PAR LA nº 324 — LE TEXTE A CHANGÉ DE MAIN.
+      ------------------------------------------------------------------
+      CE BLOC MESURAIT ICI les neuf paragraphes au mot près, les trois
+      retouches de la nº 321-§4 une à une, et les quatre gras. LE
+      PROPRIÉTAIRE A RÉÉCRIT LE CORPS DU TEXTE À LA nº 324-§1 :
+      l'algorithme remplace « aucune case ne pose cette question », la
+      phrase sur Instagram est refaite, « Ici » ouvre la dernière, et il
+      y a désormais CINQ gras. Les attendus d'ici sont donc périmés —
+      pas faux quand ils ont été écrits, dépassés par une décision.
+      LA MESURE EST RENDUE, PAS RETIRÉE, et elle est plus fine là-bas :
+      `verif-p324.mjs` §1 contrôle les neuf paragraphes au mot près, les
+      cinq gras avec leur couleur et leur graisse, les trois changements
+      nommés un par un, ET le collage d'espaces paragraphe par
+      paragraphe. ELLE VIT LÀ, ET LÀ SEULEMENT : recopier le même texte
+      dans deux bancs, ce sont deux endroits à corriger à la retouche
+      suivante — et un oublié. (C'est déjà ce que la nº 321 avait fait
+      des bancs p319 et p320.)
+
+      CE QUI RESTE MESURÉ ICI, parce que c'est le sujet DE LA nº 321 et
+      de personne d'autre : que la page porte toujours neuf paragraphes,
+      et qu'elle garde l'exception de mise en page actée à la nº 320 —
+      les deux choses que le §4 de cette passe-là ne devait pas casser. */
+  const nombre = await page.evaluate(
+    () => document.querySelectorAll("main p").length
   );
   verif(
-    "LE TEXTE EST CELUI DU PROPRIÉTAIRE, AU MOT PRÈS — neuf paragraphes, zéro écart",
-    m.paragraphes.length === ATTENDUS.length && ecarts.length === 0,
-    ecarts.length
-      ? `écart au paragraphe ${ecarts[0].rang + 1} : « ${nu(
-          m.paragraphes[ecarts[0].rang] ?? ""
-        ).slice(0, 70)}… »`
-      : "9 paragraphes conformes"
+    "LA PAGE PORTE TOUJOURS SES NEUF PARAGRAPHES " +
+      "(leur texte au mot près se mesure dans p324-§1)",
+    nombre === 9,
+    `${nombre} paragraphes`
   );
 
-  //  §4-a — LE « IL » AJOUTÉ, ET PAS EN GRAS.
-  verif(
-    "§4-a — « vient du japonais, IL SIGNIFIE » : le mot est là",
-    /vient du japonais, il signifie/.test(nu(m.paragraphes[0] ?? "")),
-    nu(m.paragraphes[0] ?? "").slice(0, 60) + "…"
-  );
-  verif(
-    "…et le chapô ne porte AUCUN gras : le « il » est une correction de langue",
-    !m.gras.some((g) => /japonais|signifie/.test(nu(g))),
-    "aucun <strong> dans ce paragraphe"
-  );
-
-  //  §4-b — LA CONSIGNE EN GRAS ET EN BLANC, ET ELLE SEULE.
-  const consigne = await page.evaluate(() => {
-    const n = [...document.querySelectorAll("main strong")].find((s) =>
-      s.textContent.includes("Choisis un style")
-    );
-    if (!n) return null;
-    const c = getComputedStyle(n);
-    return {
-      texte: n.textContent.trim(),
-      graisse: c.fontWeight,
-      couleur: c.color,
-      reste: getComputedStyle(n.parentElement).color,
-    };
-  });
-  verif(
-    "§4-b — « Choisis un style, une ville et un rayon : » EST EN GRAS",
-    consigne !== null && Number(consigne.graisse) >= 700,
-    consigne ? `graisse ${consigne.graisse}` : "introuvable"
-  );
-  verif(
-    "…ET EN BLANC (#F2F2F4), pendant que la suite garde le gris du texte",
-    consigne.couleur === "rgb(242, 242, 244)" &&
-      consigne.reste === "rgb(168, 168, 176)",
-    `gras ${consigne.couleur} · suite ${consigne.reste}`
-  );
-  verif(
-    "…et LE GRAS S'ARRÊTE AU DEUX-POINTS : rien de la suite n'y est entré",
-    nu(consigne.texte) === "Choisis un style, une ville et un rayon :",
-    `« ${consigne.texte} »`
-  );
-
-  //  §4-c — LA PHRASE SUR INSTAGRAM, RÉÉCRITE ET EN STYLE NORMAL.
-  verif(
-    "§4-c — la phrase sur Instagram est réécrite au mot du propriétaire",
-    nu(m.paragraphes[4] ?? "") ===
-      nu(
-        "YokoFolio ne remplace pas Instagram, il le complète, en t'y conduisant."
-      ),
-    `« ${m.paragraphes[4]} »`
-  );
-  verif(
-    "…ET ELLE REPASSE EN STYLE NORMAL : plus un seul gras dedans",
-    !m.gras.some((g) => /Instagram|conduisant|conduit/.test(nu(g))),
-    "aucun <strong> dans ce paragraphe"
-  );
-
-  //  LES QUATRE GRAS, DANS LEUR NOUVEL ORDRE.
-  verif(
-    "IL RESTE QUATRE GRAS, et le premier a changé de phrase",
-    nu(m.gras.join(" | ")) ===
-      nu(
-        "Choisis un style, une ville et un rayon : | Tatoueur ? | Curieux ? | À toi de te faire ton avis."
-      ),
-    m.gras.join(" | ")
-  );
-
-  //  LE RESTE N'A PAS BOUGÉ D'UN CARACTÈRE — on le dit explicitement,
-  //  paragraphe par paragraphe, pour les six qui ne sont pas touchés.
-  const INTACTS = [1, 2, 5, 6, 7, 8];
-  verif(
-    "LES SIX AUTRES PARAGRAPHES SONT INTACTS, au caractère près",
-    INTACTS.every((rang) => nu(m.paragraphes[rang]) === nu(ATTENDUS[rang])),
-    "paragraphes 2, 3, 6, 7, 8 et 9 inchangés"
-  );
 
   //  ET L'EXCEPTION DE MISE EN PAGE DE LA nº 320 TIENT TOUJOURS.
   const exception = lire("src/app/(tatouage)/qui-sommes-nous/page.tsx");

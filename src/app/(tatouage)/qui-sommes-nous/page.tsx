@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { MARQUE_YOKOFOLIO, TEXTES_TATOUAGE } from "@/config/tatouage";
 import { adresseDuSite } from "@/lib/site";
+import { BoutonCreerPortfolio } from "@/components/BoutonCreerPortfolio";
 import { EnTeteTatouage } from "@/components/EnTeteTatouage";
 import { LogoYokofolio } from "@/components/LogoYokofolio";
 
@@ -28,19 +29,24 @@ import { LogoYokofolio } from "@/components/LogoYokofolio";
  * libellés AU-DESSUS des champs et le rond rose de confirmation.
  * La nº 319 avait tout ramené aux jetons du site : c'est ANNULÉ.
  *
- * CE QUI EST GARDÉ DE LA nº 319, ET SEULEMENT CELA : LE TEXTE
- * ci-dessous, au mot près, avec ses quatre passages en gras. Il est de
- * la main du propriétaire — aucune passe ne le réécrit.
- * ⚠️ TROIS RETOUCHES, ET TROIS SEULEMENT, À LA nº 321-§4 — toutes
- * demandées mot pour mot par le propriétaire, le reste du texte n'ayant
- * pas bougé d'un caractère :
- *  a) «&nbsp;Yoko&nbsp;» vient du japonais, IL signifie… (un « il »
- *     ajouté, pas en gras) ;
- *  b) « Choisis un style, une ville et un rayon : » PASSE EN GRAS ET EN
- *     BLANC — la suite de la phrase garde le gris du texte ;
- *  c) la phrase sur Instagram est réécrite (« …, il le complète, en
- *     t'y conduisant. ») ET REPASSE EN STYLE NORMAL.
- * Il y a donc toujours QUATRE gras, mais le premier a changé de phrase.
+ * LE TEXTE CI-DESSOUS EST DE LA MAIN DU PROPRIÉTAIRE, AU MOT PRÈS —
+ * aucune passe ne le réécrit de sa propre initiative. Il a été posé à
+ * la nº 319, gardé par la nº 320 quand la mise en page a été annulée,
+ * retouché en trois endroits à la nº 321-§4, puis RÉÉCRIT PAR LE
+ * PROPRIÉTAIRE à la nº 324-§1.
+ *
+ * ⚠️ CE QUE LA nº 324 A CHANGÉ, et rien d'autre :
+ *  · « aucune case ne pose cette question. Ici, c'est précisément
+ *    celle qu'on te pose. » devient L'ALGORITHME : « c'est
+ *    l'algorithme qui décide ce que tu verras. Ici, c'est toi. » ;
+ *  · la phrase sur Instagram devient « YokoFolio n'a pas
+ *    d'algorithme, il a des styles — et il te conduit jusqu'à
+ *    l'Instagram de celui qui les tatoue. », en style normal ;
+ *  · « Personne ne commente… ici » devient « Ici, personne ne
+ *    commente… » — le lieu ouvre la phrase.
+ * IL Y A DÉSORMAIS CINQ GRAS, dans cet ordre : « Ici, c'est toi. » ·
+ * « Choisis un style, une ville et un rayon : » · « Tatoueur ? » ·
+ * « Curieux ? » · « À toi de te faire ton avis. »
  * (Côté /contact : les deux libellés « Nom » et « E-mail », qui
  * restent DANS leur champ. Voir FormulaireContactYokofolio.)
  *
@@ -115,9 +121,18 @@ export default function PageQuiSommesNous() {
         </h1>
 
         {/*  LE TEXTE CI-DESSOUS EST CELUI DU PROPRIÉTAIRE, AU MOT PRÈS
-             (nº 319, conservé par la nº 320). Seule la MISE EN PAGE est
-             revenue à celle d'avant : grandes typographies, ouverture
-             centrée, sections aérées. */}
+             (nº 319, conservé par la nº 320, retouché aux nº 321 et
+             nº 324). Seule la MISE EN PAGE est revenue à celle d'avant :
+             grandes typographies, ouverture centrée, sections aérées.
+             ⚠️ §1 (nº 324) — LE CORPS EST RÉÉCRIT PAR LE PROPRIÉTAIRE.
+             Ce qui change, et rien d'autre : « aucune case ne pose
+             cette question » devient l'ALGORITHME (« c'est
+             l'algorithme qui décide ce que tu verras. Ici, c'est
+             toi. ») ; la phrase sur Instagram devient « YokoFolio n'a
+             pas d'algorithme, il a des styles… » et repart en style
+             normal ; « Personne ne commente… ici » devient « Ici,
+             personne ne commente… ». CINQ passages en gras et en
+             blanc, et cinq seulement. */}
         <p className="mt-6 text-center text-[17px] sm:text-[19px] leading-[1.7] text-sombre-texte-doux text-pretty">
           {/*  §4-a (nº 321) — « IL SIGNIFIE », et le « il » n'est PAS
                en gras : c'est une correction de langue, pas une mise en
@@ -136,9 +151,16 @@ export default function PageQuiSommesNous() {
             classe les tatoueurs par style.
           </p>
           <p>
+            {/*  §1 (nº 324) — LE GRAS EST EN FIN DE PHRASE, et c'est
+                 le piège de cette page : l'espace qui PRÉCÈDE un
+                 `<strong>` posé sur sa propre ligne se fait avaler tout
+                 comme celle qui le suit. D'où le `{" "}` explicite
+                 AVANT, et pas seulement après. « verras.Ici » a été
+                 mesuré, pas supposé. */}
             Essaie de chercher «&nbsp;du réalisme autour de Lyon&nbsp;»
-            sur Instagram&nbsp;: aucune case ne pose cette question. Ici,
-            c&apos;est précisément celle qu&apos;on te pose.
+            sur Instagram&nbsp;: c&apos;est l&apos;algorithme qui décide
+            ce que tu verras.{" "}
+            <strong className="text-sombre-texte">Ici, c&apos;est toi.</strong>
           </p>
           <p>
             {/*  §4-b (nº 321) — LA CONSIGNE PASSE EN GRAS ET EN BLANC,
@@ -153,15 +175,14 @@ export default function PageQuiSommesNous() {
             un portfolio consacré à son travail dans le style recherché.
           </p>
           <p>
-            {/*  §4-c (nº 321) — CETTE PHRASE REPASSE EN STYLE NORMAL :
-                 plus de gras, plus de blanc. Elle en portait depuis la
-                 nº 319 (« il t'y conduit, avec le bon artiste au
-                 bout. ») ; le gras a changé de phrase, il est allé sur
-                 la consigne juste au-dessus. Le texte lui-même est
-                 réécrit par le propriétaire. */}
+            {/*  §1 (nº 324) — LA PHRASE SUR INSTAGRAM, RÉÉCRITE. Elle
+                 répond à l'algorithme nommé deux paragraphes plus
+                 haut, et elle reste EN STYLE NORMAL — le gras de ce
+                 passage est allé sur « Ici, c'est toi. ». */}
             {MARQUE_YOKOFOLIO.nom}{" "}
-            ne remplace pas Instagram, il le complète, en t&apos;y
-            conduisant.
+            n&apos;a pas d&apos;algorithme, il a des styles — et il te
+            conduit jusqu&apos;à l&apos;Instagram de celui qui les
+            tatoue.
           </p>
           <p>
             <strong className="text-sombre-texte">Tatoueur&nbsp;?</strong>{" "}
@@ -177,8 +198,11 @@ export default function PageQuiSommesNous() {
         <Section titre="Ce qu'on ne fait pas">
           <p>Pas d&apos;avis, pas de notes.</p>
           <p>
-            Personne ne commente ni ne juge le travail d&apos;un tatoueur
-            ici. Son portfolio parle pour lui.{" "}
+            {/*  §1 (nº 324) — « ICI » PASSE EN TÊTE : la phrase disait
+                 « Personne ne commente ni ne juge le travail d'un
+                 tatoueur ici ». Le lieu ouvre désormais la phrase. */}
+            Ici, personne ne commente ni ne juge le travail d&apos;un
+            tatoueur. Son portfolio parle pour lui.{" "}
             <strong className="text-sombre-texte">
               À toi de te faire ton avis.
             </strong>
@@ -194,7 +218,17 @@ export default function PageQuiSommesNous() {
                        focus-visible:outline-2 focus-visible:outline-offset-2
                        focus-visible:outline-primaire"
           >
-            Chercher un tatoueur
+            {/*  §2 (nº 324) — « UN STYLE », ET PLUS « un tatoueur ».
+                 C'est ce que la page vient d'expliquer sur six
+                 paragraphes : on ne cherche pas une personne, on
+                 cherche un style — la personne vient au bout. La
+                 destination et l'habit ne bougent pas : c'est toujours
+                 la capsule rose vers l'accueil.
+                 ⚠️ ET `TEXTES_TATOUAGE.titreRecherche` N'EST PAS
+                 TOUCHÉ : ce libellé-là est celui du MOTEUR, en tête de
+                 ses deux champs, et le propriétaire n'a rien demandé
+                 pour lui. Deux endroits, deux phrases. */}
+            Chercher un style
           </Link>
           {/*  §5 (nº 321) — LE SECOND BOUTON : « Crée ton portfolio »,
                UNE CAPSULE PLEINE, SANS AUCUN CONTOUR.
@@ -209,8 +243,16 @@ export default function PageQuiSommesNous() {
                (#33333A), TEXTE BLANC, `sombre-haut` (#4A4A53) au
                survol, et rien autour. Le fond seul dit qu'il est
                cliquable — le rose reste au bouton d'à côté. */}
-          <Link
-            href="/devenir-tatoueur"
+          {/*  §3 (nº 324) — SA DESTINATION SUIT LE VISITEUR, et elle
+               seule : pas de compte → la page de compte, qui s'ouvre
+               sur « Créer mon compte » ; déjà connecté → « Ma
+               sélection ». La règle vit dans `BoutonCreerPortfolio`,
+               parce qu'elle demande de savoir qui regarde — ce que
+               seule l'exécution sait.
+               ⚠️ L'HABIT NE CHANGE PAS D'UN PIXEL : les classes du §5
+               de la nº 321 sont passées telles quelles au composant,
+               qui n'en décide aucune. Le libellé non plus. */}
+          <BoutonCreerPortfolio
             className="inline-flex items-center justify-center rounded-full
                        px-7 min-h-[54px] bg-sombre-eleve hover:bg-sombre-haut
                        text-white font-semibold transition-colors
@@ -218,7 +260,7 @@ export default function PageQuiSommesNous() {
                        focus-visible:outline-primaire"
           >
             {TEXTES_TATOUAGE.lienCreerPortfolio}
-          </Link>
+          </BoutonCreerPortfolio>
         </div>
       </main>
     </>
