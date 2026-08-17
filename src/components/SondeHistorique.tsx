@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { desarmerLesSondes, sondeArmee } from "@/lib/sondes-armees";
 import {
   BoutonCopierJournal,
+  BoutonDesarmer,
   BoutonReplier,
   PastilleSonde,
   useSondeRepliee,
@@ -54,9 +56,10 @@ export function SondeHistorique() {
   const { repliee, basculer } = useSondeRepliee();
 
   useEffect(() => {
-    if (!new URLSearchParams(window.location.search).has("sonde-historique")) {
-      return;
-    }
+    //  §1 (nº 343) — L'ARMEMENT A UNE SEULE ÉCRITURE, et il est
+    //  DURABLE : il survit à l'ouverture d'un onglet neuf, ce que
+    //  l'adresse ne permet pas (lib/sondes-armees).
+    if (!sondeArmee("historique")) return;
     //  L'ENVELOPPE D'ABORD, l'affichage ensuite : le drapeau est posé
     //  dans une image (le motif de `useAppareilMobile`), pour ne pas
     //  enchaîner deux rendus dans le corps de l'effet.
@@ -130,6 +133,9 @@ export function SondeHistorique() {
         >
           VIDER
         </button>
+        {/*  §4 (nº 343) — DÉSARMER SANS TAPER D'ADRESSE. L'armement
+             étant durable, il faut pouvoir l'éteindre d'un doigt. */}
+        <BoutonDesarmer surToucher={desarmerLesSondes} />
         <BoutonReplier surToucher={basculer} />
       </div>
 

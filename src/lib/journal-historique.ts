@@ -1,5 +1,12 @@
-"use client";
-
+/*  §2 (nº 343) — PAS DE DIRECTIVE « use client » ICI, ET C'EST VOULU.
+    Ce module ne rend rien : ce sont des fonctions pures qui ne touchent
+    au navigateur qu'AU MOMENT OÙ ON LES APPELLE. Or le script d'avant
+    peinture est fabriqué PAR LE SERVEUR, et il a besoin de
+    `amorceDuJournalPourLeScript` : avec la directive, Next refuse
+    l'appel (« Attempted to call … from the server but it is on the
+    client »), mesuré. Les composants clients qui l'importent
+    continuent de fonctionner à l'identique — la directive n'est pas
+    requise pour être importé par eux. */
 /**
  * ██ LE JOURNAL DE L'HISTORIQUE — `?sonde-historique=1` (nº 331-§4) ██
  * ==================================================================
@@ -11,10 +18,14 @@
  *
  * ⚠️ IL SURVIT AUX CHANGEMENTS DE PAGE, et c'est l'exigence nº 1 : un
  * journal qui repart de zéro à chaque page ne montrerait jamais
- * l'accumulation. Il vit donc dans le `sessionStorage` — la mémoire de
- * L'ONGLET : elle traverse toutes les navigations, y compris les
- * rechargements complets, et disparaît quand l'onglet se ferme. Rien à
- * purger, rien qui traîne d'un jour sur l'autre.
+ * l'accumulation.
+ * §5 (nº 343) — ET IL SURVIT MAINTENANT AU CHANGEMENT D'ONGLET. Il
+ * vivait dans la mémoire de L'ONGLET (`sessionStorage`) ; il vit
+ * désormais dans la mémoire LOCALE. La raison est la même que celle de
+ * l'armement durable : le défaut poursuivi ne se produit qu'en
+ * PREMIÈRE ENTRÉE D'UN ONGLET NEUF, et un journal d'onglet y
+ * repartirait vide à chaque essai. Le bouton « VIDER » reste le seul
+ * moyen de l'effacer, et il est à portée de doigt.
  *
  * ⚠️ IL NE PERTURBE RIEN, et c'est l'exigence nº 2 :
  *  · il ne pose AUCUNE entrée d'historique ;
@@ -27,8 +38,16 @@
  *    propre panneau, et n'entoure la page d'AUCUN conteneur ;
  *  · tout est remis en place au démontage.
  *
- * ⚠️ IL NE S'ARME QUE SUR DEMANDE. Sans `?sonde-historique=1`, rien
- * n'est enveloppé, rien n'est écouté, rien n'est écrit.
+ * ⚠️ IL NE S'ARME QUE SUR DEMANDE, et l'armement a UNE SEULE écriture
+ * depuis la nº 343 (lib/sondes-armees) : sans lui, rien n'est
+ * enveloppé, rien n'est écouté, rien n'est écrit.
+ *
+ * §2 (nº 343) — ET IL COMMENCE AVANT TOUT CODE D'APPLICATION. Les
+ * enveloppes sont posées par le SCRIPT D'AVANT PEINTURE, à partir du
+ * texte que ce module lui rend (`amorceDuJournalPourLeScript`) : les
+ * toutes premières entrées d'historique — celles qui expulsent du
+ * site — sont donc enregistrées. Quand ce module démarre, il RECONNAÎT
+ * les enveloppes déjà posées et ne les double pas.
  *
  * ⚠️ TEMPORAIRE — inscrit au bandeau des chantiers ouverts
  * (lib/navigation-session), à retirer avant la mise en ligne.
@@ -49,7 +68,8 @@ export type LigneHistorique = {
   pile: number;
 };
 
-const CLE = "roswel:journal-historique";
+export const CLE_JOURNAL = "roswel:journal-historique";
+const CLE = CLE_JOURNAL;
 /** Au-delà, on jette les plus anciennes : un onglet longtemps ouvert ne
     doit pas remplir la mémoire de l'onglet. */
 const MAXIMUM = 500;
@@ -62,7 +82,7 @@ function relire(): void {
   if (charge) return;
   charge = true;
   try {
-    const brut = sessionStorage.getItem(CLE);
+    const brut = localStorage.getItem(CLE);
     if (brut) lignes = JSON.parse(brut) as LigneHistorique[];
   } catch {
     lignes = [];
@@ -71,7 +91,7 @@ function relire(): void {
 
 function ecrire(): void {
   try {
-    sessionStorage.setItem(CLE, JSON.stringify(lignes));
+    localStorage.setItem(CLE, JSON.stringify(lignes));
   } catch {
     // mémoire pleine ou refusée : le journal vit alors le temps de la page
   }
@@ -216,10 +236,26 @@ function noter(quoi: string, qui: string): void {
 
 let desarmer: (() => void) | null = null;
 
+/** La marque que le script d'avant peinture pose sur `window` quand il
+    a DÉJÀ enveloppé `history`. Nommée ici, écrite là-bas. */
+export const MARQUE_AMORCE = "__roswelJournalAmorce";
+
 export function armerLeJournalDHistorique(): () => void {
   if (typeof window === "undefined") return () => {};
   //  Une seule enveloppe, même si le composant se remonte.
   if (desarmer) return desarmer;
+  /*  §2 (nº 343) — LE SCRIPT D'AVANT PEINTURE A PU ARMER AVANT NOUS.
+      Il enveloppe `history` dès la première ligne du document, pour
+      que les toutes premières entrées soient enregistrées. Poser une
+      SECONDE enveloppe par-dessus doublerait chaque ligne. On prend
+      acte, on note notre arrivée, et on ne touche à rien. */
+  if ((window as unknown as Record<string, unknown>)[MARQUE_AMORCE]) {
+    noter("ARRIVÉE SUR LA PAGE", "sonde (enveloppes déjà posées)");
+    desarmer = () => {
+      desarmer = null;
+    };
+    return desarmer;
+  }
 
   const pushOriginal = history.pushState.bind(history);
   const replaceOriginal = history.replaceState.bind(history);
@@ -269,4 +305,55 @@ export function armerLeJournalDHistorique(): () => void {
     desarmer = null;
   };
   return desarmer;
+}
+
+/* ==================================================================
+ * §2 (nº 343) — L'AMORCE, POUR LE SCRIPT D'AVANT PEINTURE
+ * ================================================================== */
+
+/**
+ * LE JOURNAL COMMENCE AVANT TOUT CODE D'APPLICATION.
+ * ------------------------------------------------------------------
+ * CE QUI MANQUAIT. Ce module ne s'arme qu'à l'hydratation. Or le
+ * défaut poursuivi par le propriétaire se joue dans les TOUTES
+ * PREMIÈRES entrées d'historique d'un onglet neuf — celles qui sont
+ * posées avant, ou pendant, le démarrage de React. Elles n'étaient
+ * donc jamais enregistrées.
+ *
+ * Ce texte-ci est exécuté par le script d'avant peinture. Il pose les
+ * mêmes enveloppes, écrit dans le MÊME journal, au MÊME format, et
+ * marque `window` pour que le module ne les double pas quand il
+ * démarre. Ce n'est pas une copie : c'est ce module qui le fabrique,
+ * à partir de ses propres constantes.
+ *
+ * ⚠️ IL N'EST INCLUS QUE SI LA SONDE DE L'HISTORIQUE EST ARMÉE — le
+ * script vérifie la marque avant de l'exécuter.
+ *
+ * ⚠️ IL N'AJOUTE AUCUNE ENTRÉE D'HISTORIQUE, n'écoute qu'en PASSIF, et
+ * appelle toujours l'implémentation d'origine avant de noter.
+ */
+export function amorceDuJournalPourLeScript(): string {
+  const cle = JSON.stringify(CLE_JOURNAL);
+  const marque = JSON.stringify(MARQUE_AMORCE);
+  const maximum = String(MAXIMUM);
+  return `(function(){
+if(window[${marque}])return;window[${marque}]=1;
+var lire=function(){try{return JSON.parse(localStorage.getItem(${cle})||"[]")}catch(e){return[]}};
+var noter=function(quoi,qui){try{
+var l=lire();var d=new Date();
+var deux=function(v){return String(v).padStart(2,"0")};
+l.push({n:(l.length?l[l.length-1].n:0)+1,
+t:deux(d.getHours())+":"+deux(d.getMinutes())+":"+deux(d.getSeconds())+"."+String(d.getMilliseconds()).padStart(3,"0"),
+quoi:quoi,ou:location.pathname+location.search+location.hash,qui:qui,pile:history.length});
+localStorage.setItem(${cle},JSON.stringify(l.slice(-${maximum})))}catch(e){}};
+var pousser=history.pushState.bind(history);
+var remplacer=history.replaceState.bind(history);
+var reculer=history.back.bind(history);
+history.pushState=function(){var v=pousser.apply(history,arguments);noter("POSÉE","avant peinture");return v};
+history.replaceState=function(){var v=remplacer.apply(history,arguments);noter("REMPLACÉE","avant peinture");return v};
+history.back=function(){noter("REPRISE (history.back)","avant peinture");return reculer()};
+addEventListener("popstate",function(){noter("RETOUR / AVANT (popstate)","navigateur")},{passive:true});
+addEventListener("pagehide",function(){noter("DÉPART DU SITE (pagehide)","navigateur")},{passive:true});
+noter("DOCUMENT OUVERT (avant peinture)","script");
+})()`;
 }

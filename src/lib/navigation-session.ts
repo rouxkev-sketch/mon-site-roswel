@@ -205,6 +205,14 @@
  *
  * ------------------------------------------------------------------
  * CHANTIERS OUVERTS — À RETIRER AVANT LA MISE EN LIGNE :
+ *  · L'ARMEMENT DES SONDES (nº 343) — src/lib/sondes-armees.ts, son
+ *    bloc dans le script d'avant peinture, et le bouton `BoutonDesarmer`
+ *    (OutilsSonde). ⚠️ LES TROIS SONDES S'ARMENT DÉSORMAIS PAR LUI, ET
+ *    DURABLEMENT : la mémoire LOCALE, lue avant toute ligne
+ *    d'application, parce que le défaut poursuivi ne se produit qu'à
+ *    l'adresse NUE — une sonde armée par l'adresse le fait disparaître.
+ *    Désarmées, elles ne coûtent qu'une lecture de la mémoire locale :
+ *    aucune écriture, aucun écouteur, aucune enveloppe (banc p343).
  *  · `?sonde-remontee=1` (nº 330-§1) — src/components/SondeRemontee.tsx,
  *    sa ligne et son import dans app/(tatouage)/layout.tsx. Elle
  *    expose au banc les vraies fonctions du gel et de la remontée,

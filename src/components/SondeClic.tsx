@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { desarmerLesSondes, sondeArmee } from "@/lib/sondes-armees";
 import {
   BoutonCopierJournal,
+  BoutonDesarmer,
   BoutonReplier,
   PastilleSonde,
   useSondeRepliee,
@@ -109,7 +111,8 @@ export function SondeClic() {
   const { repliee, basculer } = useSondeRepliee();
 
   useEffect(() => {
-    if (!new URLSearchParams(window.location.search).has("sonde-clic")) return;
+    //  §1 (nº 343) — armement DURABLE, une seule écriture.
+    if (!sondeArmee("clic")) return;
     const image = requestAnimationFrame(() => setArmee(true));
 
     let rang = 0;
@@ -205,6 +208,9 @@ export function SondeClic() {
         <strong style={{ flex: 1, color: "#EE3D6F", fontSize: 12 }}>
           CLIC — {touchers.length} toucher(s)
         </strong>
+        {/*  §4 (nº 343) — DÉSARMER SANS TAPER D'ADRESSE. L'armement
+             étant durable, il faut pouvoir l'éteindre d'un doigt. */}
+        <BoutonDesarmer surToucher={desarmerLesSondes} />
         <BoutonReplier surToucher={basculer} />
       </div>
       <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>

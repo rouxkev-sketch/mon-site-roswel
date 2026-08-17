@@ -11,6 +11,7 @@ import { BoutonCopierJournal, BoutonReplier } from "@/components/OutilsSonde";
 import { usePathname } from "next/navigation";
 //  §1 (nº 339) — la clé canonique d'une position : voir plus bas.
 import { adresseDeRecherche } from "@/lib/adresse-recherche";
+import { desarmerLesSondes, sondeArmee } from "@/lib/sondes-armees";
 
 /**
  * LA SONDE DU RETOUR — elle mesure le cache de navigation sur le vrai
@@ -106,14 +107,12 @@ function noter(texte: string) {
 const RIEN_A_ECOUTER = () => () => {};
 const jamaisSurLeServeur = () => false;
 function estArmee(): boolean {
-  try {
-    return (
-      new URLSearchParams(window.location.search).has("sonde-retour") ||
-      sessionStorage.getItem(CLE_ARMEE) === "1"
-    );
-  } catch {
-    return false;
-  }
+  //  §1 (nº 343) — L'ARMEMENT A DÉMÉNAGÉ, et c'est le point de la
+  //  passe : il vivait dans la mémoire de L'ONGLET, il vit maintenant
+  //  dans la mémoire LOCALE, lue par le script d'avant peinture
+  //  (lib/sondes-armees). Une sonde armée par l'adresse ne pouvait pas
+  //  voir un défaut qui ne se produit QU'À L'ADRESSE NUE.
+  return sondeArmee("retour");
 }
 
 /**
@@ -796,6 +795,10 @@ export function SondeRetour({
         <button
           type="button"
           onClick={() => {
+            //  §4 (nº 343) — LE DÉSARMEMENT EST DURABLE LUI AUSSI, et
+            //  il vaut pour LES TROIS sondes : l'armement n'en a plus
+            //  qu'une écriture (lib/sondes-armees).
+            desarmerLesSondes();
             try {
               sessionStorage.removeItem(CLE_ARMEE);
               sessionStorage.removeItem(CLE_JOURNAL);
@@ -806,7 +809,7 @@ export function SondeRetour({
           }}
           style={{ ...styleBouton, background: "#EE3D6F", borderColor: "#EE3D6F" }}
         >
-          Arrêter la sonde
+          DÉSARMER (les trois sondes)
         </button>
       </div>
     </div>

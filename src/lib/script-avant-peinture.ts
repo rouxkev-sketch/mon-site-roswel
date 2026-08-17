@@ -26,6 +26,12 @@ import {
 //  script ne peut pas appeler la règle : elle lui rend sa boucle TOUTE
 //  FAITE, à partir des mêmes constantes. Aucune copie à la main.
 import { boucleDAttentePourLeScript } from "@/lib/pose-sur-contenu";
+//  §1 et §2 (nº 343) — l'armement DURABLE des sondes, et le journal de
+//  l'historique qui commence avant tout code d'application. Les deux
+//  textes sont FABRIQUÉS par les modules qui portent la règle : aucune
+//  copie à la main ici.
+import { armementPourLeScript, MARQUE_SONDES } from "@/lib/sondes-armees";
+import { amorceDuJournalPourLeScript } from "@/lib/journal-historique";
 
 /**
  * TOUT CE QUI DOIT ÊTRE DÉCIDÉ AVANT LA PREMIÈRE PEINTURE
@@ -136,6 +142,18 @@ r.style.backgroundColor=${fond};
    mosaique) et partagée avec le cookie de mise en page (nº 257-§2). */
 try{document.cookie=${JSON.stringify(COOKIE_COLONNES)}+"="+(${expressionColonnes()})+${JSON.stringify(SUFFIXE_COOKIE_AFFICHAGE)}}catch(e){}
 try{history.scrollRestoration="manual"}catch(e){}
+/* §1 (nº 343) — L'ARMEMENT DURABLE DES SONDES, LU AU PLUS TÔT.
+   Le défaut que le propriétaire poursuit ne se produit QU'À L'ADRESSE
+   NUE : une sonde armée par l'adresse le fait disparaître. L'armement
+   vit donc dans la mémoire locale, survit à l'ouverture d'un onglet
+   neuf, et se lit ICI — avant toute ligne d'application.
+   ⚠️ DÉSARMÉ, CE BLOC NE FAIT QU'UNE LECTURE : aucune écriture, aucun
+   attribut, aucun écouteur. */
+try{${armementPourLeScript()}}catch(e){}
+/* §2 (nº 343) — ET LE JOURNAL DE L'HISTORIQUE COMMENCE ICI. Armé
+   seulement : les toutes premières entrées de la pile — celles qui
+   expulsent du site — sont enregistrées avant que React n'existe. */
+try{if((r.dataset[${JSON.stringify(MARQUE_SONDES)}]||"").indexOf("historique")>=0){${amorceDuJournalPourLeScript()}}}catch(e){}
 try{
 var adresse=location.pathname+location.search;
 var nav=(performance.getEntriesByType("navigation")[0]||{}).type||"navigate";
