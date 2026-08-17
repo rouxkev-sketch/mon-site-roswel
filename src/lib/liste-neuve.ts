@@ -60,6 +60,36 @@ import {
  * garder sa position. Rendre `DefilementEnHaut` sensible à la requête
  * casserait le retour ; poser la remontée sur le clic, non.
  */
+/**
+ * §1 (nº 334) — LA REMONTÉE NE DOIT PAS SE VOIR SUR LA PAGE QU'ON
+ * QUITTE.
+ * ==================================================================
+ * CE QUE LE PROPRIÉTAIRE A VU, ET QUI DIT TOUT : « au moment où je
+ * valide ma recherche, LA PAGE REMONTE — je vois le haut de l'accueil,
+ * PUIS les résultats s'affichent ». La remontée s'appliquait à l'écran
+ * qu'on quitte, sous ses yeux.
+ *
+ * ET CE N'EST PAS QU'UNE QUESTION DE CONFORT — c'est la cause du défaut
+ * de position. Faire remonter l'accueil déclenche un événement de
+ * défilement ; `MemoireNavigation` l'entend et écrit la position
+ * courante — 0 — SOUS L'ADRESSE ENCORE AFFICHÉE, c'est-à-dire celle de
+ * l'accueil. Le 900 px qu'on venait d'y quitter était donc écrasé par
+ * un zéro, quelques millisecondes avant que le routeur ne change
+ * d'adresse. La nº 333 avait empêché l'EFFACEMENT explicite ; elle
+ * n'avait pas vu cette écriture-là, qui passe par la porte d'à côté.
+ *
+ * LA RÈGLE : on ne fait remonter que la page où l'on EST. Si la liste
+ * neuve est AILLEURS, la remontée est mise EN ATTENTE et jouée à son
+ * arrivée — avant la première peinture de la nouvelle liste, donc sans
+ * que personne ne voie ni l'ancienne remonter, ni la nouvelle sauter.
+ *
+ * ⚠️ ELLE RESTE POSÉE PAR LE GESTE. C'est le clic qui l'arme ; un
+ * RETOUR n'arme rien, et ne trouvera donc rien à consommer. La règle
+ * que le propriétaire a posée à la nº 330 — « jamais déduite de
+ * l'adresse » — tient exactement comme avant.
+ */
+let remonteeEnAttente = false;
+
 export function ouvrirLaListeEnHaut(
   /** L'adresse de la liste QUI VA S'AFFICHER, quand elle n'est pas
       encore l'adresse courante (une recherche appelle avant de
@@ -68,10 +98,32 @@ export function ouvrirLaListeEnHaut(
   adresseDeLaListe?: string
 ): void {
   if (typeof window === "undefined") return;
+  const ici = window.location.pathname + window.location.search;
+  const cible = adresseDeLaListe ?? ici;
   oublierRestaurationPosition();
-  oublierDefilementDe(
-    adresseDeLaListe ?? window.location.pathname + window.location.search
-  );
+  oublierDefilementDe(cible);
   laPositionDuGelRepartDeZero();
+  if (cible === ici) {
+    //  LA LISTE NEUVE EST ICI MÊME (un filtre : l'adresse a été écrite
+    //  par `replaceState`, la page ne change pas). On remonte tout de
+    //  suite — c'est ce que le propriétaire a validé à la nº 330-§1.
+    defilerSansGeste({ top: 0, left: 0 });
+    return;
+  }
+  //  LA LISTE NEUVE EST AILLEURS : on n'y touche pas maintenant.
+  remonteeEnAttente = true;
+}
+
+/**
+ * « LA LISTE DEMANDÉE EST ARRIVÉE » — à appeler par la liste elle-même,
+ * AVANT LA PEINTURE de son nouveau contenu (un effet de mise en page).
+ * Elle consomme la remontée mise en attente, et rien d'autre : sans
+ * geste préalable, elle ne fait rien du tout — un retour passe donc au
+ * travers sans être déplacé.
+ */
+export function laListeServieEstArrivee(): void {
+  if (typeof window === "undefined") return;
+  if (!remonteeEnAttente) return;
+  remonteeEnAttente = false;
   defilerSansGeste({ top: 0, left: 0 });
 }

@@ -23,7 +23,10 @@ import { GrilleTatoueurs } from "@/components/GrilleTatoueurs";
 import { noterDemontage, noterMontage } from "@/lib/journal-bascule";
 //  §2 (nº 330) — L'ÉCRITURE UNIQUE DE « UNE LISTE NEUVE COMMENCE EN
 //  HAUT », partagée avec les filtres de « Ma sélection ».
-import { ouvrirLaListeEnHaut } from "@/lib/liste-neuve";
+import {
+  laListeServieEstArrivee,
+  ouvrirLaListeEnHaut,
+} from "@/lib/liste-neuve";
 //  §1 (nº 332) — « l'étape d'une surface est consommée par la
 //  navigation, jamais doublée » (lib/etape-refermable).
 import { laNavigationRemplaceLEtape } from "@/lib/etape-refermable";
@@ -213,6 +216,29 @@ export function IndexTatoueurs({
   useEffect(() => {
     memoriserRechercheTatouage(criteresServis);
   }, [cleServie, criteresServis]);
+
+  /**
+   * §1 (nº 334) — LA REMONTÉE MISE EN ATTENTE EST JOUÉE ICI, À
+   * L'ARRIVÉE DE LA LISTE — ET AVANT SA PEINTURE.
+   * ------------------------------------------------------------------
+   * `chercher` ne fait plus remonter la page qu'on QUITTE (le
+   * propriétaire voyait le haut de l'accueil passer avant les
+   * résultats, et cette remontée écrasait au passage la position
+   * mémorisée de l'accueil — voir lib/liste-neuve). Elle met la
+   * remontée en attente ; c'est cette liste-ci qui la consomme quand
+   * son nouveau contenu est posé.
+   * ⚠️ UN EFFET DE MISE EN PAGE, pas un effet ordinaire : il s'exécute
+   * ENTRE la pose du DOM et la peinture. Aucune image ne montre donc la
+   * nouvelle liste ailleurs qu'en haut, et aucune ne montre l'ancienne
+   * remonter.
+   * ⚠️ ET IL NE FAIT RIEN SANS GESTE : `laListeServieEstArrivee` ne
+   * consomme que ce qu'un clic a armé. Un RETOUR change lui aussi la
+   * clé servie, et passe ici sans rien déclencher — la position
+   * restituée n'est pas touchée.
+   */
+  useEffetAvantPeinture(() => {
+    laListeServieEstArrivee();
+  }, [cleServie]);
 
   /**
    * L'AFFICHAGE EST REMIS AU PAS À CHAQUE RENDU SERVI (nº 212-§3).

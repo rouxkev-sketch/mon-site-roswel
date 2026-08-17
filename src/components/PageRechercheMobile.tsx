@@ -293,11 +293,25 @@ export function PageRechercheMobile({
    * la page en `fixed` quand l'effet s'exécute, et la peinture
    * n'arrive qu'après : les deux états sont indissociables à l'écran.
    */
+  /*  §1 (nº 334) — ET ON NE REMONTE PLUS LA PAGE QU'ON QUITTE.
+      ------------------------------------------------------------------
+      CE QUI ÉTAIT ÉCRIT : « Valider » posait le document À ZÉRO ici même,
+      au DÉBUT de la glissade de sortie. Le propriétaire l'a décrit
+      exactement : « au moment où je valide, LA PAGE REMONTE — je vois le
+      haut de l'accueil, PUIS les résultats s'affichent ». Pendant les
+      240 ms de la glissade, l'ancienne liste est encore là, et on la
+      voyait remonter.
+      MAINTENANT : on rend le document à la place où il était, dans les
+      DEUX cas. La liste NEUVE, elle, est posée en haut par
+      `laListeServieEstArrivee` (lib/liste-neuve), à son arrivée et AVANT
+      SA PEINTURE — jamais sur celle qu'on quitte. Une liste neuve
+      s'ouvre en haut parce qu'elle est neuve, pas parce qu'on a fait
+      remonter l'ancienne sous les yeux de quelqu'un. */
   useLayoutEffect(() => {
     if (phase !== "part") return;
     delete document.documentElement.dataset.recherche;
     window.scrollTo({
-      top: validerEnSortant ? 0 : lireDefilementResultats(),
+      top: lireDefilementResultats(),
       left: 0,
       behavior: "instant",
     });

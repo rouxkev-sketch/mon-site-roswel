@@ -358,14 +358,22 @@ export function MoteurTatouage({
     //  étape posée à la main — c'est ce qui faisait grandir l'historique
     //  à chaque retour.
     if (retenus) surChangement(retenus);
-    // LA LISTE SE RELIT DEPUIS LE HAUT : valider une recherche ramène
-    // tout en haut des résultats — sinon la page reste là où on
-    // l'avait laissée et masque les premières cartes. `instant` : le
-    // défilement doux global transformerait la remontée en animation
-    // interrompue par le rendu. (La page de recherche rend déjà les
-    // résultats en haut en sortant sur « Valider » ; ceci garantit le
-    // haut même après l'arrivée des nouvelles cartes.)
-    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    /*  §1 (nº 334) — LE `window.scrollTo({ top: 0 })` QUI VIVAIT ICI EST
+        PARTI, ET C'ÉTAIT LE TROISIÈME REMONTAGE DE LA PAGE QU'ON QUITTE.
+        ------------------------------------------------------------------
+        Il datait de la refonte nº 191, quand rien d'autre ne remontait
+        la liste. Depuis, DEUX autres mécanismes s'en chargent, et
+        celui-ci arrivait en premier — sur l'ANCIENNE liste, encore
+        affichée. Mesuré image par image : 131 images sur 150 montraient
+        l'ancienne liste posée en haut, exactement ce que le
+        propriétaire décrit. Pire, il écrivait 0 dans la position
+        mémorisée de la page qu'on quitte (un `scrollTo` NU n'est même
+        pas annoncé : la barre y lit un geste, et la mémoire l'entend) —
+        et le retour rendait 0 au lieu de 900.
+        CE QUI REMONTE LA LISTE MAINTENANT, et une seule fois :
+        `laListeServieEstArrivee` (lib/liste-neuve), joué par la liste
+        NEUVE à son arrivée, avant sa peinture. `surChangement` l'a armé
+        juste au-dessus, par le geste. */
   }
 
   /** « EFFACER » N'EFFACE QUE CE QUI EST SOUS LES YEUX (règle
