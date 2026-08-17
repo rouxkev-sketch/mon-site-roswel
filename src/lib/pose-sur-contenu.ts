@@ -62,8 +62,18 @@
  * image.
  */
 
-/** La marque de l'attente, sur `<html>`. Le document est masqué tant
-    qu'elle est là (voir globals.css). */
+/**
+ * La marque de l'attente, sur `<html>`. Le document est masqué tant
+ * qu'elle est là.
+ * §1 (nº 339) — ELLE PORTE L'INSTANT OÙ ELLE A ÉTÉ POSÉE, pas « 1 ».
+ * Le masque peut être posé par le script d'avant peinture, donc AVANT
+ * que React n'existe : sans cet horodatage, la sonde du retour, qui
+ * monte plus tard, n'aurait aucun moyen de savoir depuis quand l'écran
+ * est masqué. Elle a besoin de trancher entre « le navigateur refait la
+ * page » et « c'est notre propre masque » — et c'est la question du
+ * propriétaire, mot pour mot. Aucun comportement ne change : la marque
+ * sert de drapeau, sa valeur n'a jamais été lue par le code.
+ */
 export const MARQUE_ATTENTE = "placeEnAttente";
 
 /** Au-delà, on pose quand même : le contenu ne viendra plus. */
@@ -103,6 +113,6 @@ var fin=Date.now()+${ATTENTE_MAX_MS};
 var essayer=function(){
 if(document.body&&document.body.getBoundingClientRect().height>=${position}||Date.now()>fin){${poser};r.style.visibility="";delete r.dataset[${JSON.stringify(MARQUE_ATTENTE)}];return}
 requestAnimationFrame(essayer)};
-r.dataset[${JSON.stringify(MARQUE_ATTENTE)}]="1";r.style.visibility="hidden";
+r.dataset[${JSON.stringify(MARQUE_ATTENTE)}]=String(Date.now());r.style.visibility="hidden";
 requestAnimationFrame(essayer)})()`;
 }

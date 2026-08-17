@@ -166,7 +166,9 @@ function attendreLeContenu(position: number, poser: () => void) {
     }
     image = requestAnimationFrame(essayer);
   };
-  racine.dataset[MARQUE_ATTENTE] = "1";
+  //  §1 (nº 339) — L'INSTANT, et non « 1 » : la sonde du retour en a
+  //  besoin pour dire depuis combien de temps l'écran est masqué.
+  racine.dataset[MARQUE_ATTENTE] = String(Date.now());
   racine.style.visibility = "hidden";
   image = requestAnimationFrame(essayer);
   attenteEnCours = () => {

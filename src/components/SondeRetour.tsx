@@ -9,6 +9,8 @@ import {
 import { BoutonEnvoyerJournal } from "@/components/BoutonEnvoyerJournal";
 import { BoutonCopierJournal, BoutonReplier } from "@/components/OutilsSonde";
 import { usePathname } from "next/navigation";
+//  §1 (nº 339) — la clé canonique d'une position : voir plus bas.
+import { adresseDeRecherche } from "@/lib/adresse-recherche";
 
 /**
  * LA SONDE DU RETOUR — elle mesure le cache de navigation sur le vrai
@@ -112,6 +114,131 @@ function estArmee(): boolean {
   } catch {
     return false;
   }
+}
+
+/**
+ * §1-2 (nº 339) — CE QUE LE DOCUMENT A COÛTÉ EN RÉSEAU.
+ * `transferSize === 0` sur une navigation d'historique est le second
+ * témoin de la restauration, et le seul qui existe partout : là où
+ * `notRestoredReasons` manque (Safari), il tranche à sa place.
+ * ⚠️ ZÉRO VEUT AUSSI DIRE « servi par le cache HTTP » : c'est un
+ * indice, pas une preuve. `pageshow.persisted` reste le juge.
+ */
+function transfertDuDocument(nav: PerformanceNavigationTiming | undefined): string {
+  if (!nav) return "(aucune entrée de navigation)";
+  const taille = nav.transferSize;
+  if (taille === undefined) return "(transferSize absent de ce navigateur)";
+  return taille === 0
+    ? "0 octet — RIEN N'A ÉTÉ TÉLÉCHARGÉ (page sortie d'une mémoire)"
+    : `${taille} octets téléchargés (le document a été refabriqué)`;
+}
+
+/**
+ * §1-3 (nº 339) — NOTRE PROPRE MASQUE, CELUI DE LA Nº 337.
+ * ------------------------------------------------------------------
+ * LA QUESTION DU PROPRIÉTAIRE, MOT POUR MOT : « il faut savoir si le
+ * noir que je vois est le navigateur qui refabrique, ou NOTRE PROPRE
+ * MASQUE. » Depuis la nº 337, le document est masqué tant que le
+ * contenu n'a pas atteint la position à rendre — chez moi cela dure une
+ * image, chez lui cela peut durer longtemps, et un document masqué est
+ * exactement un écran de la couleur du fond, sans rien dessus.
+ *
+ * ON MESURE DONC LES DEUX BOUTS. Le masque peut être posé par le script
+ * d'avant peinture, avant que React n'existe : sa marque porte
+ * l'instant de la pose (lib/pose-sur-contenu). On lit cet instant à
+ * l'arrivée, et un observateur de mutations attrape la levée.
+ *
+ * ⚠️ ELLE NE FAIT QUE REGARDER : l'observateur n'écrit rien, ne touche
+ * ni au masque ni à la position.
+ */
+function surveillerLeMasque(noterLigne: (t: string) => void): () => void {
+  const racine = document.documentElement;
+  const MARQUE = "placeEnAttente";
+  const debut = Number(racine.dataset[MARQUE]);
+  const masqueALArrivee = Number.isFinite(debut) && debut > 0;
+  if (masqueALArrivee) {
+    noterLigne(
+      `masque nº 337      : POSÉ (il y a ${Math.max(
+        0,
+        Date.now() - debut
+      )} ms) — l'écran est masqué PAR NOUS, pas par le navigateur`
+    );
+  }
+  let depart = masqueALArrivee ? debut : 0;
+  const observateur = new MutationObserver(() => {
+    const valeur = Number(racine.dataset[MARQUE]);
+    const present = Number.isFinite(valeur) && valeur > 0;
+    if (present && !depart) {
+      depart = valeur;
+      noterLigne("masque nº 337      : POSÉ maintenant");
+      return;
+    }
+    if (!present && depart) {
+      noterLigne(
+        `masque nº 337      : LEVÉ après ${Date.now() - depart} ms d'écran masqué`
+      );
+      depart = 0;
+    }
+  });
+  observateur.observe(racine, {
+    attributes: true,
+    attributeFilter: ["data-place-en-attente"],
+  });
+  if (!masqueALArrivee) {
+    noterLigne("masque nº 337      : pas posé à l'arrivée");
+  }
+  return () => observateur.disconnect();
+}
+
+/**
+ * §1-4 (nº 339) — L'INSTANT DE LA PREMIÈRE IMAGE QUI PORTE DU CONTENU.
+ * Deux sources, et l'on donne les deux :
+ *  · `first-contentful-paint`, la mesure du navigateur lui-même ;
+ *  · notre propre relevé image par image — la première image où le
+ *    document n'est PAS masqué et où un élément de contenu coupe la
+ *    fenêtre. C'est celle qui décrit ce que l'œil voit.
+ */
+function guetterLaPremiereImagePleine(
+  noterLigne: (t: string) => void
+): () => void {
+  const peinture = performance.getEntriesByType("paint");
+  const fcp = peinture.find((p) => p.name === "first-contentful-paint");
+  noterLigne(
+    `première peinture  : ${
+      fcp
+        ? `${Math.round(fcp.startTime)} ms (first-contentful-paint)`
+        : "(non exposée par ce navigateur)"
+    }`
+  );
+  let image = 0;
+  let rendue = false;
+  const limite = performance.now() + 15000;
+  const regarder = () => {
+    if (rendue || performance.now() > limite) return;
+    const masque =
+      !document.documentElement ||
+      getComputedStyle(document.documentElement).visibility === "hidden";
+    if (!masque) {
+      const hauteur = window.innerHeight;
+      for (const e of document.querySelectorAll(
+        "main a, main img, main h1, main h2, main p"
+      )) {
+        const r = e.getBoundingClientRect();
+        if (r.bottom > 0 && r.top < hauteur && r.width > 8 && r.height > 8) {
+          rendue = true;
+          noterLigne(
+            `premier contenu vu : ${Math.round(
+              performance.now()
+            )} ms après le début de cette page`
+          );
+          return;
+        }
+      }
+    }
+    image = requestAnimationFrame(regarder);
+  };
+  image = requestAnimationFrame(regarder);
+  return () => cancelAnimationFrame(image);
 }
 
 /** Ce que dit `notRestoredReasons`, en clair. */
@@ -268,6 +395,7 @@ export function SondeRetour({
         );
       }
       noter(`refus du cache     : ${raisonsDuRefus()}`);
+      noter(`transfert          : ${transfertDuDocument(nav)}`);
       noter(`sec-fetch-dest reçu par le serveur : ${secFetchDest}`);
     } else {
       noter(
@@ -295,7 +423,15 @@ export function SondeRetour({
      */
     const memorisee = (() => {
       try {
-        const brut = localStorage.getItem(`roswel:defilement:${adresse}`);
+        /*  §1 (nº 339) — LA CLÉ CANONIQUE, et non l'adresse telle
+            quelle. La position est rangée sous l'adresse DÉBARRASSÉE
+            des réglages de sonde (lib/adresse-recherche) : en lisant
+            `…?sonde-retour=1`, la sonde annonçait « (rien) » alors
+            qu'une position existait, et l'on ne pouvait pas savoir si
+            le masque de la nº 337 avait une raison de se poser. */
+        const brut = localStorage.getItem(
+          `roswel:defilement:${adresseDeRecherche(adresse)}`
+        );
         return brut ? (JSON.parse(brut) as { y: number }).y : null;
       } catch {
         return null;
@@ -514,7 +650,27 @@ export function SondeRetour({
     function rafraichir() {
       window.setTimeout(() => setJournal(lireJournal()), 0);
     }
+
+    /*  §1-3 et §1-4 (nº 339) — LES DEUX MESURES QUI MANQUAIENT.
+        Le masque de la nº 337 (posé quand, levé quand, combien de temps)
+        et l'instant de la première image qui porte du contenu. Elles
+        répondent ensemble à la seule question qui reste : le noir que
+        voit le propriétaire est-il le navigateur qui refabrique la page,
+        ou notre propre masque ? */
+    const arreterLeMasque = surveillerLeMasque((t) => {
+      noter(t);
+      rafraichir();
+    });
+    const arreterLImage = guetterLaPremiereImagePleine((t) => {
+      noter(t);
+      rafraichir();
+    });
+
     rafraichir();
+    return () => {
+      arreterLeMasque();
+      arreterLImage();
+    };
   }, [armee, chemin, secFetchDest, enDeveloppement]);
 
   /* 1bis. LES ÉVÉNEMENTS DE DOCUMENT — posés une seule fois. */
