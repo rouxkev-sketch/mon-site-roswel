@@ -11,6 +11,9 @@ import {
   famillesStyles,
 } from "@/config/tatouage";
 import { estCourrielAdmin } from "@/lib/admin-yokofolio-client";
+//  §4 (nº 332) — un état qui vit dans l'adresse, une entrée par pas :
+//  l'écriture commune du C-6 (lib/etape-dans-adresse).
+import { useEtapeDansLAdresse } from "@/lib/etape-dans-adresse";
 //  §3 (nº 330) — l'étape d'historique, écriture unique des quatre
 //  surfaces qui couvrent l'écran.
 import { useEtapeQuiSeReferme } from "@/lib/etape-refermable";
@@ -132,6 +135,15 @@ type BrouillonDecision = {
 
 type SectionCle = (typeof SECTIONS)[number]["cle"];
 
+/** §4 (nº 332) — CE QUE L'ADRESSE A LE DROIT DE DIRE. Une clé inconnue
+    rend `null`, et l'écriture commune retombe alors sur la section
+    d'arrivée : une adresse bricolée ne peut pas afficher un écran
+    vide. La liste est celle des sections, jamais une seconde. */
+function reconnaitreLaSection(brut: string): SectionCle | null {
+  const trouvee = SECTIONS.find((s) => s.cle === brut);
+  return trouvee ? (trouvee.cle as SectionCle) : null;
+}
+
 /** LA GRAMMAIRE DES CHAMPS (passe nº 136) — la même que le formulaire
     et la page Sécurité : pas de contour, le focus ÉCLAIRCIT le fond.
     ⚠️ `border border-transparent` réserve l'épaisseur : sans elle, le
@@ -159,7 +171,26 @@ function dateCourte(iso: string | null | undefined): string {
 
 export function AdminYokofolio() {
   const { utilisateur, pret } = useUtilisateur();
-  const [section, setSection] = useState<SectionCle>("fiches");
+  /**
+   * §4 (nº 332) — LA SECTION VIT DANS L'ADRESSE, ET CHAQUE PAS COMPTE.
+   * ------------------------------------------------------------------
+   * C'est la moitié du C-6 (inventaire nº 327), et le POINT 5 de la
+   * règle de navigation. Elle vivait dans un `useState` : passer d'une
+   * section à l'autre, puis appuyer sur retour, faisait SORTIR de
+   * l'administration au lieu de ramener à la section précédente.
+   * ⚠️ ET CE N'EST PAS LA RÈGLE DE L'ONGLET PROFIL / PORTFOLIO : là-bas
+   * on REMPLACE l'entrée (changer d'onglet n'est pas un déplacement) ;
+   * ici on en POSE une par pas, parce que changer de section EN EST un
+   * — décision du propriétaire à la nº 332. L'écriture est commune
+   * (lib/etape-dans-adresse), rien n'est recopié ici.
+   * ⚠️ UNE SECTION INCONNUE dans l'adresse retombe sur « fiches » :
+   * l'écran d'arrivée, jamais un écran vide.
+   */
+  const [section, setSection] = useEtapeDansLAdresse<SectionCle>(
+    "section",
+    "fiches",
+    reconnaitreLaSection
+  );
 
   /* ---- Fiches à valider ---- */
   const [fiches, setFiches] = useState<FicheAdmin[] | null>(null);

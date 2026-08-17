@@ -41,6 +41,7 @@ import { avecConsigneDeLienInterne } from "@/components/ContenuFiche";
 //  §3 (nº 330) — l'étape d'historique, écriture unique des quatre
 //  surfaces qui couvrent l'écran.
 import {
+  laNavigationRemplaceLEtape,
   laSurfaceVaNaviguer,
   useEtapeQuiSeReferme,
 } from "@/lib/etape-refermable";
@@ -144,6 +145,23 @@ export function MenuEspace({
    */
   const auDoigt = useAppareilMobile();
   useEtapeQuiSeReferme(auDoigt && ouvert, () => setOuvert(false));
+  /**
+   * §1 (nº 332) — ET SES LIENS CONSOMMENT CETTE ÉTAPE, ils ne
+   * l'empilent pas.
+   * ------------------------------------------------------------------
+   * C'est la même règle que pour la page de recherche (voir
+   * `laNavigationRemplaceLEtape`) : l'étape du menu porte l'adresse de
+   * la page qu'on regardait ; une navigation qui la REMPLACE la
+   * consomme, et l'on obtient `[page] → [destination]`, sans jumelle
+   * entre les deux. Un empilement ordinaire laisserait une entrée
+   * invisible portant l'adresse de la page — exactement le défaut du
+   * nº 22 du recensement.
+   * ⚠️ SUR LE WEB, le menu ne pose aucune étape : la réponse est faux,
+   * et les liens empilent normalement. Rien ne change de ce côté.
+   * ⚠️ LU AU RENDU, ce qui est juste : l'étape est posée à l'ouverture
+   * du menu et n'est plus touchée tant qu'il est ouvert.
+   */
+  const liensRemplacent = auDoigt && ouvert && laNavigationRemplaceLEtape();
   /** La plaque du menu web — montée dans le corps du document
       (nº 238-§4) : la fermeture au clic dehors doit la connaître.
       ⚠️ L'ANCRE DU MENU EST `zone`, PAS UN DES DEUX BOUTONS : il y en a
@@ -274,7 +292,10 @@ export function MenuEspace({
       window.dispatchEvent(new Event("yokofolio-fiche-neuve"));
       return;
     }
-    router.push(ADRESSE_NOUVELLE);
+    //  §1 (nº 332) — et il CONSOMME l'étape du menu comme les quatre
+    //  liens : `replace` quand elle est là, `push` sinon.
+    if (laNavigationRemplaceLEtape()) router.replace(ADRESSE_NOUVELLE);
+    else router.push(ADRESSE_NOUVELLE);
   }
 
   /** LE GESTE DU MENU — il commence par regarder si l'on a quelque
@@ -419,6 +440,7 @@ export function MenuEspace({
             cartes ni des fiches. Taille et graisse inchangées. */}
         <Link
           href="/mes-favoris"
+          replace={liensRemplacent}
           onClick={() => setOuvert(false)}
           className={classeEntree}
         >
@@ -626,6 +648,7 @@ export function MenuEspace({
               rouvre l'annonce de validation lui-même. */}
           <Link
             href={versFiche()}
+            replace={liensRemplacent}
             onClick={() => {
               setOuvert(false);
               window.dispatchEvent(new Event("yokofolio-modification-demandee"));
@@ -648,6 +671,7 @@ export function MenuEspace({
               unique — jamais à la main. */}
           <Link
             href={avecConsigneDeLienInterne(versFiche("vue=apercu"))}
+            replace={liensRemplacent}
             onClick={() => setOuvert(false)}
             className={classeEntree}
           >
@@ -682,6 +706,7 @@ export function MenuEspace({
 
         <Link
           href="/devenir-tatoueur/securite"
+          replace={liensRemplacent}
           onClick={() => setOuvert(false)}
           className={classeEntree}
         >

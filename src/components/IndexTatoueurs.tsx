@@ -24,6 +24,9 @@ import { noterDemontage, noterMontage } from "@/lib/journal-bascule";
 //  §2 (nº 330) — L'ÉCRITURE UNIQUE DE « UNE LISTE NEUVE COMMENCE EN
 //  HAUT », partagée avec les filtres de « Ma sélection ».
 import { ouvrirLaListeEnHaut } from "@/lib/liste-neuve";
+//  §1 (nº 332) — « l'étape d'une surface est consommée par la
+//  navigation, jamais doublée » (lib/etape-refermable).
+import { laNavigationRemplaceLEtape } from "@/lib/etape-refermable";
 import { LigneResultats } from "@/components/LigneResultats";
 import {
   criteresComplets,
@@ -255,11 +258,30 @@ export function IndexTatoueurs({
         par le bas, on continue de lire là où on est (nº 224-§3). */
     ouvrirLaListeEnHaut();
     const adresse = adresseDe(suivants, 1);
+    /*  §1 (nº 332) — L'ÉTAPE DE LA PAGE DE RECHERCHE EST CONSOMMÉE PAR
+        CETTE NAVIGATION, PAS DOUBLÉE.
+        ------------------------------------------------------------------
+        LE DÉFAUT (nº 22 du recensement de la nº 331) : au doigt, la
+        page de recherche pose une étape en s'ouvrant, et se referme
+        POUR NAVIGUER — son étape restait donc SOUS les résultats, avec
+        l'adresse de l'accueil. Un seul retour depuis les résultats
+        renvoyait à l'accueil, et dix recherches empilaient dix
+        jumelles.
+        ⚠️ LA QUESTION EST POSÉE ICI, AU MOMENT DU GESTE, et elle LIT
+        l'étape du dessus — elle ne la suppose pas. Sur le web, où
+        aucune surface ne pose d'étape, la réponse est faux et la
+        recherche empile normalement : rien ne change de ce côté.
+        ⚠️ ET ON NE RECULE PAS : reculer après avoir navigué rouvrirait
+        la course de la nº 330. Remplacer ne dépend d'aucun ordre. */
+    const consommeLEtape = laNavigationRemplaceLEtape();
     demarrerTransition(() => {
       //  UNE RECHERCHE QUI NE CHANGE RIEN N'AJOUTE PAS D'ÉTAPE : rouvrir
       //  la page de recherche et valider sans avoir touché à un critère
       //  ne doit pas empiler une étape identique à la précédente.
-      if (adresse === window.location.pathname + window.location.search) {
+      if (
+        consommeLEtape ||
+        adresse === window.location.pathname + window.location.search
+      ) {
         router.replace(adresse, { scroll: false });
       } else {
         router.push(adresse, { scroll: false });

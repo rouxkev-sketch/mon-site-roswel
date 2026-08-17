@@ -499,7 +499,12 @@ export function GrilleTatoueurs({
     // doux global ferait de cette restitution une animation
     // interrompue par le rendu.
     const minuteur = window.setTimeout(() => {
-      window.history.replaceState(null, "", adressePropre);
+      //  §2 (nº 332) — L'ÉTAT EST RECOPIÉ, plus effacé. Cette ligne
+      //  ne veut que NETTOYER L'ADRESSE ; passer `null` jetait au
+      //  passage les marques que le site pose dans l'étape (le filet
+      //  `retourReconstruit`, l'étape d'une surface refermable), et
+      //  le retour ne savait plus où il en était.
+      window.history.replaceState(window.history.state, "", adressePropre);
       if (!cible) return; // la fiche n'est plus dans ces résultats.
       window.scrollTo({ top: defilement, left: 0, behavior: "instant" });
       ouvrir(cible);

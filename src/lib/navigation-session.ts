@@ -22,7 +22,8 @@
  * écran a besoin d'une exception, elle s'écrit ici, nommée et datée. »
  *
  *  1. Toute surface qui couvre l'écran pose une entrée d'historique,
- *     et le bouton retour la referme.
+ *     et le bouton retour la referme. Et cette entrée est CONSOMMÉE
+ *     par la navigation qui suit, jamais doublée (nº 332-§1).
  *  2. Le retour ne referme qu'une chose à la fois — la dernière
  *     ouverte.
  *  3. Un écran neuf s'ouvre en haut. Un écran où l'on revient se pose
@@ -37,6 +38,9 @@
  *  7. Une fermeture ne consomme une entrée que si elle l'a créée.
  *  8. Le pas en avant rouvre ce que le retour vient de fermer, dans le
  *     même état.
+ *  9. UN RETOUR NE FAIT JAMAIS QUITTER LE SITE — sauf s'il n'y a
+ *     jamais rien eu d'autre dans l'onglet, auquel cas le visiteur a
+ *     le droit de repartir d'où il venait (nº 332-§2, RetourGaranti).
  *
  * ------------------------------------------------------------------
  * POURQUOI ELLE VIT ICI, ET PAS AILLEURS. Ce module portait déjà LA
@@ -69,11 +73,22 @@
  *    ceux qui écrivent une position depuis la nº 328-§2.
  *  · 5 — l'onglet Profil / Portfolio (`?onglet=`) et la consigne
  *    d'arrivée (`?entree=lien`) vivent dans l'adresse depuis la
- *    nº 329-§3 et §4 — voir ContenuFiche, qui porte les deux noms.
- *    ⚠️ DEUX ÉTATS N'Y SONT TOUJOURS PAS : la section
- *    d'administration et l'étape du formulaire. C'est le C-6, et il
- *    reste le SEUL chantier ouvert après la nº 330 — le propriétaire
- *    l'a explicitement réservé à la passe suivante.
+ *    nº 329-§3 et §4 — voir ContenuFiche, qui porte les deux noms ;
+ *    la SECTION D'ADMINISTRATION (`?section=`) depuis la nº 332-§4,
+ *    par l'écriture commune `useEtapeDansLAdresse`
+ *    (lib/etape-dans-adresse).
+ *    ⚠️ DEUX RÈGLES OPPOSÉES, ET IL FAUT LES DISTINGUER : l'onglet
+ *    d'une fiche REMPLACE son entrée (changer d'onglet n'est pas un
+ *    déplacement, le retour doit quitter la fiche d'un seul appui) ;
+ *    une SECTION ou une ÉTAPE en POSE une (c'est un vrai déplacement,
+ *    et un retour ne doit pas abandonner un formulaire à moitié
+ *    rempli). Décision du propriétaire, nº 332-§4.
+ *    ⚠️ L'AUTRE MOITIÉ DU C-6 RESTE OUVERTE, faute d'objet : le
+ *    formulaire n'a AUCUNE étape que l'on parcourt — son seul état
+ *    nommé `etape` est un sas de vérification qui avance tout seul au
+ *    bout de huit secondes. Le porter dans l'adresse enverrait le
+ *    retour sur un écran qui repartirait aussitôt. À redéfinir avec
+ *    le propriétaire.
  *  · 6 — `?entree=lien`, posé par `avecConsigneDeLienInterne`
  *    (ContenuFiche) — l'écriture unique, dont `adresseDeLienInterne`
  *    n'est que le cas d'une adresse publique de portfolio. Elle
@@ -111,8 +126,14 @@
  *    recherche (§2) ; C-4 est traité — les quatre dernières surfaces
  *    posent leur étape d'historique (§3) ; « Mon portfolio » porte la
  *    consigne des liens internes (§4).
- *  · IL RESTE : C-6 — deux états qui ne vivent pas dans l'adresse (la
- *    section d'administration, l'étape du formulaire).
+ *  · nº 332 — l'étape d'une surface est CONSOMMÉE par la navigation
+ *    au lieu d'être doublée (§1, `laNavigationRemplaceLEtape`) ; le
+ *    filet couvre TOUT le site, au doigt comme sur ordinateur, et ne
+ *    joue que si l'onglet n'a rien derrière lui (§2, RetourGaranti) ;
+ *    le rond de profil d'un carrousel PARTAGÉ porte la consigne des
+ *    liens internes (§3) ; la section d'administration vit dans
+ *    l'adresse, une entrée par pas (§4).
+ *  · IL RESTE : la moitié du C-6 sans objet — voir le point 5.
  *
  * ------------------------------------------------------------------
  * CHANTIERS OUVERTS — À RETIRER AVANT LA MISE EN LIGNE :

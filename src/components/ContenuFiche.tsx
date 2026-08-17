@@ -430,7 +430,12 @@ export function ContenuFiche({
   useEffect(() => {
     if (window.location.hash !== "#profil") return;
     const propre = window.location.href.replace(/#profil$/, "");
-    window.history.replaceState(null, "", propre);
+    //  §2 (nº 332) — L'ÉTAT EST RECOPIÉ, plus effacé. Cette ligne
+    //  ne veut que NETTOYER L'ADRESSE ; passer `null` jetait au
+    //  passage les marques que le site pose dans l'étape (le filet
+    //  `retourReconstruit`, l'étape d'une surface refermable), et
+    //  le retour ne savait plus où il en était.
+    window.history.replaceState(window.history.state, "", propre);
     let seconde = 0;
     const premiere = requestAnimationFrame(() => {
       seconde = requestAnimationFrame(() => remonterSousLaBarre());

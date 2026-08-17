@@ -137,6 +137,41 @@ export function laSurfaceVaNaviguer(): void {
   navigationDemandee = true;
 }
 
+/**
+ * §1 (nº 332) — L'ÉTAPE D'UNE SURFACE EST CONSOMMÉE PAR LA NAVIGATION,
+ * JAMAIS DOUBLÉE.
+ * ==================================================================
+ * LE DÉFAUT, TROUVÉ AU RECENSEMENT DE LA nº 331 (son nº 22) : quand
+ * une surface se referme POUR NAVIGUER, son étape restait en place —
+ * sous la nouvelle. Une entrée en trop PAR RECHERCHE VALIDÉE, et son
+ * adresse est celle de la page d'avant : un seul retour depuis les
+ * résultats renvoyait donc à l'accueil. Dix recherches, dix jumelles.
+ *
+ * LES DEUX CHEMINS INTERDITS, ET POURQUOI :
+ *  · RECULER APRÈS AVOIR NAVIGUÉ rouvrirait la course de la nº 330 —
+ *    on ne parie sur l'ordre d'aucun événement ;
+ *  · LAISSER L'ÉTAPE est le défaut lui-même.
+ *
+ * CE QU'ON FAIT : la navigation REMPLACE l'étape au lieu de s'empiler
+ * dessus. L'étape de la surface porte l'adresse de la page qu'on
+ * regardait ; en la remplaçant par la destination, elle DEVIENT la
+ * nouvelle entrée. Une posée, une consommée, rien entre les deux.
+ *
+ *     avant :  [accueil] → [étape (accueil)] → [résultats]
+ *     après :  [accueil] → [résultats]
+ *
+ * ⚠️ ELLE NE RÉPOND VRAI QUE SI L'ÉTAPE DU DESSUS EST BIEN UNE DES
+ * NÔTRES. Sur le web, où aucune surface ne pose d'étape, elle répond
+ * faux et la navigation empile normalement : rien ne change pour
+ * personne d'autre. Et c'est une LECTURE de `history.state`, pas une
+ * hypothèse — elle ne peut pas se tromper d'entrée.
+ */
+export function laNavigationRemplaceLEtape(): boolean {
+  if (typeof window === "undefined") return false;
+  const etat = window.history.state as Record<string, unknown> | null;
+  return etat?.[CLE] !== undefined;
+}
+
 export function useEtapeQuiSeReferme(
   ouverte: boolean,
   fermer: () => void

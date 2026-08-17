@@ -7,6 +7,8 @@ import { PORTRAIT_ROND } from "@/config/tatouage";
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
 import { LogoYokofolio } from "@/components/LogoYokofolio";
+//  §3 (nº 332) — l'écriture unique de la consigne des liens internes.
+import { adresseDeLienInterne } from "@/components/ContenuFiche";
 import {
   cheminDuCarrousel,
   galerieParStyles,
@@ -221,7 +223,27 @@ export function FenetreCarrousel({
           bâtarde (C-1 de l'inventaire nº 327). En client, la fiche
           reste montée — c'est la même route Next —, et le retour
           rouvre la fenêtre depuis l'adresse (voir FicheTatoueur). */
-      href={`/tatoueur/${tatoueur.slug}#profil`}
+      /*  §3 (nº 332) — DEPUIS UN LIEN PARTAGÉ, C'EST UN LIEN INTERNE.
+          ------------------------------------------------------------
+          Quand cette fenêtre est une PAGE À PART ENTIÈRE (`superposee`
+          faux), on vient de l'extérieur : toucher le rond, c'est
+          ENTRER dans le site vers un portfolio. L'adresse porte donc
+          la consigne des liens internes — par l'écriture unique
+          (`adresseDeLienInterne`), jamais « entree=lien » à la main —
+          et l'on arrive sur la fiche SANS photo en haut, comme depuis
+          n'importe quel autre portfolio (point 6 de la règle).
+          ⚠️ SUPERPOSÉE, NON, et c'est la différence qui compte : la
+          fiche est DÉJÀ dessous, on y revient, on n'y arrive pas. Lui
+          poser la consigne ferait disparaître la photo de la fiche
+          qu'on regardait il y a un instant. L'adresse reste donc celle
+          de la nº 285, au caractère près.
+          ⚠️ LE FRAGMENT RESTE EN DERNIER : `?entree=lien#profil`, et
+          jamais l'inverse — un `#` avale tout ce qui le suit. */
+      href={
+        superposee
+          ? `/tatoueur/${tatoueur.slug}#profil`
+          : `${adresseDeLienInterne(tatoueur.slug)}#profil`
+      }
       aria-label={`Voir le profil de ${tatoueur.nom}`}
       className="flex h-11 w-11 shrink-0 items-center justify-center
                  overflow-hidden rounded-full bg-sombre-eleve"

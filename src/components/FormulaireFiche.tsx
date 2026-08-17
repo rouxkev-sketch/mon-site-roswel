@@ -1136,7 +1136,12 @@ export function FormulaireFiche() {
     const propre = new URL(window.location.href);
     propre.searchParams.delete("enregistre");
     propre.searchParams.delete("photos");
-    window.history.replaceState(null, "", propre.toString());
+    //  §2 (nº 332) — L'ÉTAT EST RECOPIÉ, plus effacé. Cette ligne
+    //  ne veut que NETTOYER L'ADRESSE ; passer `null` jetait au
+    //  passage les marques que le site pose dans l'étape (le filet
+    //  `retourReconstruit`, l'étape d'une surface refermable), et
+    //  le retour ne savait plus où il en était.
+    window.history.replaceState(window.history.state, "", propre.toString());
     setPhotosEnRelecture(photosDemandees);
     setAnnonceValidation(true);
   }, [annonceDemandee, photosDemandees, vueApercuDemandee]);
