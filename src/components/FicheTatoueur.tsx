@@ -1,7 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { usePathname } from "next/navigation";
+//  §2 (nº 337) — le chemin lu là où il est vrai, et le réveil par les
+//  DEUX portes : voir la note de `cheminDuNavigateur` plus bas.
+import {
+  lireCheminCourant,
+  lireCheminServeur,
+  souscrireAdresse,
+} from "@/lib/adresse-courante";
 import {
   libelleStyle,
   MARQUE_YOKOFOLIO,
@@ -410,10 +423,47 @@ export function FicheTatoueur({
     const image = requestAnimationFrame(() => setFicheDejaPosee(true));
     return () => cancelAnimationFrame(image);
   }, []);
+  /**
+   * §2 (nº 337) — ET IL FALLAIT ÊTRE RÉVEILLÉ, SANS QUOI LA RÈGLE
+   * CI-DESSUS NE S'APPLIQUAIT JAMAIS DEUX FOIS.
+   * ==================================================================
+   * MESURÉ, RÉSEAU RALENTI ET PROCESSEUR BRIDÉ, SUR LA FENÊTRE
+   * SUPERPOSÉE — le chemin du propriétaire, enfin reproduit :
+   *
+   *     premier appui sur le rond → /tatoueur/x#profil  + FENÊTRE
+   *     second  appui sur le rond → /tatoueur/x#profil  (plus de fenêtre)
+   *
+   * « Au premier appui la page saute et la fenêtre revient ; au second,
+   * j'accède au profil. » Exactement cela.
+   *
+   * POURQUOI. La fenêtre pose son adresse par un `pushState` BRUT — le
+   * routeur de Next n'en sait rien et continue d'annoncer le chemin de
+   * la PAGE, `/tatoueur/<slug>`. Quand le rond ramène à ce même chemin,
+   * `usePathname()` NE CHANGE PAS : il valait déjà cela. Aucun rendu
+   * n'est donc déclenché, l'ajustement ci-dessous n'est jamais rejoué,
+   * et la fenêtre reste. Le second appui, lui, provoque un rendu pour
+   * une autre raison — et c'est ce rendu-là qui refermait.
+   * Ma correction de la nº 336 était juste sur le fond (le routeur dit
+   * la vérité à la naissance) mais elle ne pouvait pas s'appliquer : il
+   * n'y avait pas de second rendu.
+   *
+   * LA CORRECTION : on s'abonne à TOUT changement d'adresse, par les
+   * DEUX portes — le navigateur (`popstate`) et le code
+   * (`pushState`/`replaceState`, Next compris). C'est l'écriture
+   * commune qui existe déjà pour cela (`souscrireAdresse`,
+   * lib/adresse-courante), celle que la mémoire de navigation emploie
+   * depuis la nº 154. Aucun second dispositif.
+   * ⚠️ DÉTERMINISTE, ET NON PLUS DÉPENDANT D'UN ORDRE : quel que soit
+   * l'instant où l'adresse est commise, elle réveille ce composant, et
+   * l'ajustement retrouve la vérité.
+   */
+  const cheminDuNavigateur = useSyncExternalStore(
+    souscrireAdresse,
+    lireCheminCourant,
+    lireCheminServeur
+  );
   const cheminReel =
-    typeof window === "undefined" || !ficheDejaPosee
-      ? pathname
-      : window.location.pathname;
+    !ficheDejaPosee || !cheminDuNavigateur ? pathname : cheminDuNavigateur;
   if (fenetreCarrousel && cheminReel !== adresseDeLaFenetre) {
     setFenetreCarrousel(null);
   }

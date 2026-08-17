@@ -22,6 +22,10 @@ import {
   RESERVE_LOGO,
   VARIABLE_RESERVE_REPLIEE,
 } from "@/lib/reserve-barre";
+//  §1 (nº 337) — « on ne pose une position que sur du contenu ». Le
+//  script ne peut pas appeler la règle : elle lui rend sa boucle TOUTE
+//  FAITE, à partir des mêmes constantes. Aucune copie à la main.
+import { boucleDAttentePourLeScript } from "@/lib/pose-sur-contenu";
 
 /**
  * TOUT CE QUI DOIT ÊTRE DÉCIDÉ AVANT LA PREMIÈRE PEINTURE
@@ -174,15 +178,23 @@ p.sort();var q=p.toString();
 var cle=location.pathname+(q?"?"+q:"");
 var note=jour(${prefixe}+cle,localStorage);
 if(!note||!note.y||maintenant-(note.date||0)>agePosition)return;
-r.style.minHeight=(note.y+innerHeight)+"px";
 r.dataset.positionPosee=String(note.y);
 /* §1 (nº 335) — LA RANGÉE NAÎT DANS L'ÉTAT OÙ ON L'A LAISSÉE. La
    place gardée porte les deux (lib/navigation-session) ; la barre
    lit cette marque à sa naissance (lib/reserve-barre). Sans elle,
    la réserve renaît dépliée et tout le contenu descend d'un cran. */
 if(note.p){r.style.setProperty(${JSON.stringify(VARIABLE_RESERVE_REPLIEE)},${JSON.stringify(`${RESERVE_LOGO}px`)});r.dataset[${JSON.stringify(MARQUE_RANGEE)}]="1"}
-/* IMMÉDIAT, ET PLUS EN GLISSANT : voir le point 4 de l'en-tête. */
-scrollTo({top:note.y,left:0,behavior:"instant"});
+/* §1 (nº 337) — ON ATTEND QUE LE CONTENU SOIT LÀ. La réserve de
+   hauteur et le défilement ne sont plus posés sur-le-champ : sur un
+   document qui n'a pas fini d'arriver, ils rendaient le document
+   grand et VIDE, et l'on se posait à 900 px devant rien. La boucle
+   d'attente est celle de lib/pose-sur-contenu — pas une copie : ce
+   texte EST fabriqué par elle. Le défilement reste IMMÉDIAT (point 4
+   de l'en-tête) : c'est l'instant qui change, pas la manière. */
+${boucleDAttentePourLeScript(
+  "note.y",
+  `r.style.minHeight=(note.y+innerHeight)+"px";scrollTo({top:note.y,left:0,behavior:"instant"})`
+)};
 /* FILET : si React ne démarre jamais, la réserve part quand même. */
 setTimeout(function(){if(r.dataset.positionPosee){r.style.minHeight="";delete r.dataset.positionPosee}},6000);
 }catch(e){}

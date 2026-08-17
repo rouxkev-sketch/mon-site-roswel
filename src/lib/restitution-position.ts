@@ -8,6 +8,13 @@ import {
 import { noter } from "@/lib/journal-bascule";
 import { lireLaPlace } from "@/lib/navigation-session";
 import { rendreLEtatDeRangee } from "@/lib/reserve-barre";
+//  §1 (nº 337) — « on ne pose une position que sur du contenu » :
+//  la règle, sa mesure et sa raison sont dans ce module-là.
+import {
+  ATTENTE_MAX_MS as ATTENTE_CONTENU_MS,
+  contenuAtteint,
+  MARQUE_ATTENTE,
+} from "@/lib/pose-sur-contenu";
 
 /**
  * LA POSITION EST POSÉE, UNE FOIS, ET C'EST TOUT
@@ -103,13 +110,69 @@ export function poserLaPosition(position: number, cle?: string) {
     return;
   }
   noter(`POSE · demandée ${position} · document ${hauteur} · POSÉE`);
-  //  ⚠️ JAMAIS UN GESTE (nº 154-§6A) : une restitution de position est
-  //  posée PAR LE SITE. Sans l'annoncer, la barre y lisait un geste et
-  //  repliait sa rangée de recherche à l'arrivée sur la page.
-  const reserve = position + window.innerHeight;
-  document.documentElement.style.minHeight = `${reserve}px`;
-  defilerSansGeste({ top: position, left: 0 });
-  surveillerLaReserve(reserve);
+  /**
+   * §1 (nº 337) — ON ATTEND QUE LE CONTENU SOIT LÀ.
+   * ------------------------------------------------------------------
+   * CE QUI SE PASSAIT : la réserve de hauteur et le défilement étaient
+   * posés SUR-LE-CHAMP. Sur un document qui n'a pas fini d'arriver, on
+   * se retrouvait à 900 px dans un document de 1744 px entièrement
+   * VIDE — c'est l'écran nu que le propriétaire voit depuis des passes,
+   * et il l'a diagnostiqué lui-même. La règle vit maintenant dans
+   * lib/pose-sur-contenu, avec la mesure qui l'a établie.
+   * ⚠️ QUAND LE CONTENU EST DÉJÀ LÀ — le dégel d'une surface, un retour
+   * de client où React n'a rien démonté — la première mesure passe et
+   * l'on pose dans la foulée : rien n'est retardé.
+   */
+  attendreLeContenu(position, () => {
+    //  ⚠️ JAMAIS UN GESTE (nº 154-§6A) : une restitution de position est
+    //  posée PAR LE SITE. Sans l'annoncer, la barre y lisait un geste et
+    //  repliait sa rangée de recherche à l'arrivée sur la page.
+    const reserve = position + window.innerHeight;
+    document.documentElement.style.minHeight = `${reserve}px`;
+    defilerSansGeste({ top: position, left: 0 });
+    surveillerLaReserve(reserve);
+  });
+}
+
+/** L'attente en cours, pour ne jamais en laisser traîner deux. */
+let attenteEnCours: (() => void) | null = null;
+
+/**
+ * ATTENDRE QUE LE CONTENU ATTEIGNE LA POSITION, PUIS POSER — dans la
+ * MÊME image, avant sa peinture. Voir lib/pose-sur-contenu pour la
+ * règle, la mesure qui l'a établie, et pourquoi on masque en attendant.
+ */
+function attendreLeContenu(position: number, poser: () => void) {
+  attenteEnCours?.();
+  const racine = document.documentElement;
+  const limite = performance.now() + ATTENTE_CONTENU_MS;
+  let image = 0;
+  const demasquer = () => {
+    racine.style.visibility = "";
+    delete racine.dataset[MARQUE_ATTENTE];
+    attenteEnCours = null;
+  };
+  //  LE CAS LE PLUS FRÉQUENT, ET IL NE COÛTE RIEN : le contenu est déjà
+  //  là. On ne masque même pas.
+  if (contenuAtteint(position)) {
+    poser();
+    return;
+  }
+  const essayer = () => {
+    if (contenuAtteint(position) || performance.now() > limite) {
+      poser();
+      demasquer();
+      return;
+    }
+    image = requestAnimationFrame(essayer);
+  };
+  racine.dataset[MARQUE_ATTENTE] = "1";
+  racine.style.visibility = "hidden";
+  image = requestAnimationFrame(essayer);
+  attenteEnCours = () => {
+    cancelAnimationFrame(image);
+    demasquer();
+  };
 }
 
 /**

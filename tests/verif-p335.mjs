@@ -175,10 +175,22 @@ async function allerRetour(adresse, deplier, documentNeuf) {
     const b = () => {
       const r = document.querySelector("[data-reserve-barre]");
       const m = document.querySelector("main");
+      /*  §1 (nº 337) — UNE IMAGE MASQUÉE N'EST PAS UNE IMAGE PEINTE.
+          Depuis la nº 337, le document est masqué tant que le contenu
+          n'a pas atteint la position à rendre (lib/pose-sur-contenu) :
+          rien n'y est peint, donc rien ne peut y être vu bouger.
+          L'exigence du propriétaire porte sur ce qu'il VOIT — on ne
+          retient donc que les images peintes. Le reste de la mesure
+          n'a pas changé d'un pixel. */
+      //  ⚠️ `documentElement` peut ne pas exister encore, sur les toutes
+      //  premières images d'un document neuf.
+      const masque =
+        !document.documentElement ||
+        getComputedStyle(document.documentElement).visibility === "hidden";
       window.__im.push([
         Math.round(scrollY),
         r ? Math.round(r.getBoundingClientRect().height) : -1,
-        m ? Math.round(m.getBoundingClientRect().top) : null,
+        masque ? null : m ? Math.round(m.getBoundingClientRect().top) : null,
       ]);
       window.__bb = requestAnimationFrame(b);
     };

@@ -60,6 +60,14 @@
  *     routeur À SA NAISSANCE, et au navigateur ensuite. S'en remettre
  *     à un seul des deux, c'est ouvrir une surface sur une adresse
  *     qu'on est en train de quitter — et plus rien ne la referme.
+ * 13. ON NE POSE UNE POSITION QUE SUR DU CONTENU (nº 337-§1,
+ *     lib/pose-sur-contenu). Poser une place dans un document qui n'a
+ *     pas fini d'arriver, c'est se retrouver à 900 px dans une réserve
+ *     de hauteur VIDE — et c'est cet écran nu que le propriétaire
+ *     voyait à chaque retour depuis une position descendue. On attend,
+ *     masqués, que le contenu réel atteigne la position, puis on pose
+ *     la réserve ET le défilement dans la même image, avant sa
+ *     peinture.
  *
  * ------------------------------------------------------------------
  * POURQUOI ELLE VIT ICI, ET PAS AILLEURS. Ce module portait déjà LA
@@ -136,7 +144,15 @@
  *  · 12 — `FicheTatoueur` (l'ajustement pendant le rendu de la fenêtre
  *    de carrousel, `ficheDejaPosee`). C'est la seule surface du site
  *    qui s'ouvre depuis l'adresse ; toute autre qui le ferait un jour
- *    doit reprendre la même règle, et non la recopier de travers.
+ *    doit reprendre la même règle, et non la recopier de travers. Depuis la
+ *    nº 337-§2, la seconde moitié passe par l'écriture commune des
+ *    changements d'adresse (`souscrireAdresse`, lib/adresse-courante) :
+ *    sans réveil, la règle ne s'appliquait qu'une fois, et la fenêtre
+ *    restait ouverte jusqu'à un second appui.
+ *  · 13 — `lib/pose-sur-contenu` (la règle et la boucle d'attente,
+ *    écrites une fois), `poserLaPosition` (lib/restitution-position) et
+ *    le script d'avant peinture, qui reçoit sa boucle TOUTE FAITE au
+ *    lieu d'en garder une copie.
  *  · 8 — conséquence des points 1 et 5 : une surface qui vit dans
  *    l'historique et dont l'état vit dans l'adresse se rouvre telle
  *    quelle. Tenu pour la fiche (onglet et consigne d'arrivée) depuis
@@ -177,6 +193,9 @@
  *  · nº 335 — LA PLACE EST RENDUE AVEC L'ÉTAT DE LA BARRE (§1, point
  *    10 ci-dessus) ; le lien de partage est tranché par le SERVEUR
  *    (§2, point 11) ; la sonde du clic répond au rond de profil (§3).
+ *  · nº 337 — on ne pose plus une position dans le vide (§1, point 13)
+ *    et la fiche est RÉVEILLÉE par tout changement d'adresse, ce qui
+ *    rend le point 12 applicable plus d'une fois (§2).
  *  · nº 336 — LA FENÊTRE NE SE ROUVRE PLUS PAR-DESSUS LA PAGE OÙ L'ON
  *    ARRIVE (§1, point 12 ci-dessous) ; l'ancre `#profil` reste dans
  *    l'adresse, et le « une seule fois » passe dans l'étape

@@ -43,11 +43,17 @@ const { nav, ctx } = await ouvrirLeNavigateur(
 titre("§1-a — la fenêtre ne se rouvre plus, l'ancre ne s'efface plus");
 
 const fiche = sansNotes(lire("src/components/FicheTatoueur.tsx"));
+/*  §2 (nº 337) — CETTE ASSERTION A ÉTÉ MISE À JOUR, ET C'EST DIT.
+    La règle n'a pas changé — le routeur à la naissance, le navigateur
+    ensuite — mais sa SECONDE moitié est passée par l'écriture commune
+    des changements d'adresse (`souscrireAdresse`), sans quoi le
+    composant n'était jamais réveillé et la règle ne s'appliquait
+    qu'une fois. On vérifie donc les deux moitiés. */
 verif(
   "au premier rendu, c'est le ROUTEUR qui dit où l'on va",
-  /!ficheDejaPosee\s*\?\s*pathname/.test(fiche) &&
-    /window\.location\.pathname/.test(fiche),
-  "ensuite, et pour toute la vie du composant, c'est `location`"
+  /!ficheDejaPosee[^?]*\?\s*pathname/.test(fiche) &&
+    /useSyncExternalStore\(\s*souscrireAdresse/.test(fiche),
+  "ensuite le navigateur, et tout changement d'adresse réveille la fiche"
 );
 verif(
   "l'ouverture au doigt n'est pas touchée : elle pose l'état elle-même",

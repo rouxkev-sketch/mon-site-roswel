@@ -86,6 +86,27 @@ export function lireRequeteCourante(): string {
   return window.location.search;
 }
 
+/**
+ * LE CHEMIN DE L'ADRESSE COURANTE, côté navigateur.
+ * §2 (nº 337) — POURQUOI IL A FALLU L'AJOUTER. `usePathname()` ne dit
+ * pas tout : une surface qui pose son adresse par un `pushState` BRUT
+ * (la fenêtre de carrousel, FicheTatoueur) ne passe pas par le routeur,
+ * qui continue donc d'annoncer le chemin de la PAGE. Un composant
+ * abonné au seul `usePathname` n'est alors JAMAIS réveillé quand cette
+ * adresse-là change — mesuré : la fenêtre restait ouverte par-dessus la
+ * fiche, et il fallait un second appui pour qu'un rendu quelconque la
+ * referme. Ici, on lit le chemin là où il est vrai, et l'on est
+ * réveillé par les DEUX portes (le navigateur et le code).
+ */
+export function lireCheminCourant(): string {
+  return window.location.pathname;
+}
+
+/** Côté serveur : rien à lire, et surtout pas d'erreur. */
+export function lireCheminServeur(): string {
+  return "";
+}
+
 /** Côté serveur : rien à lire, et surtout pas d'erreur. */
 export function lireRequeteServeur(): string {
   return "";
