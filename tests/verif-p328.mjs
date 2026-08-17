@@ -76,10 +76,19 @@ titre("§1 — la règle de navigation, écrite en entier dans sa maison");
     ) && /si un\n \* écran a besoin d'une exception, elle s'écrit ici, nommée et datée/.test(socle),
     "la clause d'exception est là"
   );
+  /*  ⚠️ ON EXIGE QUE LE BANDEAU NOMME CE QUI RESTE, PAS QU'IL LE
+      COMPTE PAREIL POUR TOUJOURS (mis à jour à la nº 329). La formule
+      d'origine épinglait « QUATRE ÉTATS N'Y SONT PAS ENCORE » : les §3
+      et §4 de la nº 329 en ont fait passer DEUX dans l'adresse
+      (l'onglet, la consigne d'arrivée), et le bandeau dit maintenant
+      « DEUX ÉTATS N'Y SONT TOUJOURS PAS ». C'est le progrès attendu —
+      un banc qui exigerait l'ancien décompte demanderait au site de
+      mentir. Ce qui doit rester vrai, et que l'on mesure ici : les deux
+      chantiers ouverts sont TOUJOURS nommés, chacun à sa place. */
   verif(
     "…et elle dit NOMMÉMENT ce que cette passe NE traite pas (C-4 et C-6)",
-    /QUATRE SURFACES NE LE FONT\n \* {4}PAS ENCORE/.test(socle) &&
-      /QUATRE ÉTATS N'Y SONT PAS ENCORE/.test(socle),
+    /QUATRE SURFACES NE LE FONT/.test(socle) &&
+      /ÉTATS N'Y SONT (PAS ENCORE|TOUJOURS PAS)/.test(socle),
     "les deux renvois à la passe suivante sont écrits"
   );
   //  UNE SEULE MAISON : la règle n'est pas recopiée ailleurs.
@@ -269,9 +278,15 @@ const poserLEnregistreur = () =>
       true
     );
   });
-  await page.click(`a[href="${FICHE_B}"]`);
+  /*  ⚠️ LE LIEN SE RECONNAÎT PAR SON DÉBUT, PLUS PAR SON ADRESSE
+      EXACTE (mis à jour à la nº 329) : depuis le §4 de cette passe-là,
+      tout lien interne porte `?entree=lien` — la consigne « pas de
+      photo en haut » vit dans l'adresse. Ce banc-ci ne mesure pas la
+      consigne (c'est le rôle de verif-p329) mais la POSITION au retour :
+      il lui faut le même lien, à son nouveau nom. */
+  await page.click(`a[href^="${FICHE_B}"]`);
   const posee = await page.evaluate(() => window.__auClic);
-  await page.waitForURL(`**${FICHE_B}`, { timeout: 15000 });
+  await page.waitForURL(`**${FICHE_B}**`, { timeout: 15000 });
   await page.waitForTimeout(400);
   const surB = await page.evaluate(() => ({
     y: Math.round(window.scrollY),

@@ -48,22 +48,49 @@
  * OÙ CHAQUE POINT S'APPLIQUE, POUR QU'AUCUN NE SE PERDE :
  *  · 1 et 2 — `PileFiches`, `FicheTatoueur` (fenêtre de carrousel),
  *    `GrilleTatoueurs`, `PageFavoris`. ⚠️ QUATRE SURFACES NE LE FONT
- *    PAS ENCORE : la feuille du bas des menus, la page de recherche,
- *    le menu « Mon espace » et l'administration (C-4 de l'inventaire).
- *    C'EST LA PASSE SUIVANTE QUI LES TRAITE — ce n'est pas un oubli.
- *  · 3 — `DefilementEnHaut` (l'arrivée, avant la peinture) et
- *    `MemoireNavigation` (la mémorisation, et le filet après).
+ *    TOUJOURS PAS : la feuille du bas des menus, la page de recherche,
+ *    le menu « Mon espace » et l'administration (C-4 de l'inventaire
+ *    nº 327). ELLES RESTENT LE SEUL CHANTIER OUVERT après la nº 329 —
+ *    le propriétaire les a explicitement réservées à une passe à part.
+ *  · 3 — `DefilementEnHaut` (l'arrivée, avant la peinture),
+ *    `MemoireNavigation` (la mémorisation, et le filet après),
+ *    `gel-du-corps` (le dégel, avec sa réserve depuis la nº 329-§2) et
+ *    `poserSelection` (un filtre appliqué ouvre en haut, nº 329-§5).
  *  · 4 — `positionSousLeGel` (lib/gel-du-corps), appelée par TOUS
  *    ceux qui écrivent une position depuis la nº 328-§2.
- *  · 5 — ⚠️ QUATRE ÉTATS N'Y SONT PAS ENCORE : l'onglet Profil /
- *    Portfolio, la consigne « sans photo », la section
- *    d'administration et l'étape du formulaire (C-6). PASSE SUIVANTE.
- *  · 6 — `lib/arrivee-sans-photo` (nº 295).
+ *  · 5 — l'onglet Profil / Portfolio (`?onglet=`) et la consigne
+ *    d'arrivée (`?entree=lien`) vivent dans l'adresse depuis la
+ *    nº 329-§3 et §4 — voir ContenuFiche, qui porte les deux noms.
+ *    ⚠️ DEUX ÉTATS N'Y SONT TOUJOURS PAS : la section
+ *    d'administration et l'étape du formulaire. Ils attendent la même
+ *    passe que les quatre surfaces ci-dessus.
+ *  · 6 — `?entree=lien`, posé par `adresseDeLienInterne` (ContenuFiche)
+ *    sur TOUS les liens qui mènent d'un portfolio à un autre, et LU PAR
+ *    LE SERVEUR (page d'une fiche) qui le passe en accessoire à
+ *    `FicheTatoueur` : au premier clic, `window.location.search` est
+ *    encore celui de la fiche quittée, et la photo montait quand même.
+ *    ⚠️ `lib/arrivee-sans-photo` A ÉTÉ SUPPRIMÉ, code compris
+ *    (nº 329-§4) : sa mémoire de session se consommait à la première
+ *    lecture, et un retour perdait la consigne.
  *  · 7 — chaque `fermer` du site vérifie qu'il a poussé son entrée.
  *  · 8 — conséquence des points 1 et 5 : une surface qui vit dans
  *    l'historique et dont l'état vit dans l'adresse se rouvre telle
- *    quelle. Tant que le point 5 n'est pas tenu partout, le point 8
- *    ne l'est pas non plus.
+ *    quelle. Tenu pour la fiche (onglet et consigne d'arrivée) depuis
+ *    la nº 329 ; pas encore pour les quatre surfaces du point 1.
+ *
+ * ------------------------------------------------------------------
+ * CE QUE CHAQUE PASSE A APPLIQUÉ, ET CE QUI RESTE :
+ *  · nº 328 — la règle écrite ; C-3 (la position sous le gel), C-2
+ *    (le chemin décide, sans saut), C-1 (les commandes de la fenêtre
+ *    de carrousel en navigation de client), C-5 (les gardes de
+ *    fermeture).
+ *  · nº 329 — le dégel ne repose plus une position sur une page qui
+ *    n'est pas la sienne (§1) et le fait AVEC RÉSERVE DE HAUTEUR
+ *    (§2) ; l'onglet et la consigne d'arrivée passent dans l'adresse
+ *    (§3, §4) ; un filtre appliqué ouvre la liste en haut (§5).
+ *  · IL RESTE : C-4 — les quatre surfaces qui ne posent aucune entrée
+ *    d'historique, et que le bouton retour du téléphone ne referme
+ *    donc pas.
  * ██████████████████████████████████████████████████████████████████
  */
 

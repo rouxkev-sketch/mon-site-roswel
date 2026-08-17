@@ -8,14 +8,10 @@ import {
 } from "@/config/tatouage";
 import { villeAffichee } from "@/lib/adresse";
 import { positionSousLeGel } from "@/lib/gel-du-corps";
-import {
-  consommerArriveeSansPhoto,
-  oublierArriveeSansPhoto,
-} from "@/lib/arrivee-sans-photo";
 import { BoutonPartageFiche } from "@/components/BoutonPartageFiche";
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
-import { ContenuFiche } from "@/components/ContenuFiche";
+import { ContenuFiche, ENTREE_LIEN } from "@/components/ContenuFiche";
 import { FenetreCarrousel } from "@/components/FenetreCarrousel";
 import { PileFiches } from "@/components/PileFiches";
 import { SondePhoto } from "@/components/SondePhoto";
@@ -87,6 +83,7 @@ export function FicheTatoueur({
   renduInitial = "",
   natureInitiale = "",
   photoInitiale = "",
+  entreeInitiale = "",
   apercu = false,
   suiviAuDepart = false,
 }: {
@@ -111,6 +108,11 @@ export function FicheTatoueur({
       l'adresse (`?photo=`). Le carrousel s'ouvre SUR ELLE. Vide : le
       comportement d'avant, à la lettre. */
   photoInitiale?: string;
+  /** §4 (nº 329) — COMMENT ON EST ARRIVÉ, lu dans l'adresse PAR LE
+      SERVEUR (`?entree=`). `ENTREE_LIEN` : par un lien interne à un
+      autre portfolio — pas de photo en haut. Vide : par une carte ou un
+      lien de partage, la photo est là. */
+  entreeInitiale?: string;
   /** Vrai dans l'espace tatoueur (« Ma fiche ») : aperçu public SANS
       partage ni signalement, dans un <div> et non un <main>. */
   apercu?: boolean;
@@ -412,43 +414,33 @@ export function FicheTatoueur({
    * pour cet instant-là, et la valeur juste arrive dans la foulée.
    */
   /**
-   * §3 (nº 295) — LA PAGE OBÉIT À LA CONSIGNE DU LIEN.
-   * ------------------------------------------------------------------
-   * Elle ne regarde pas si un groupe a des photos, elle ne se replie
-   * sur rien : elle LIT ce que le lien a déposé, une seule fois, et
-   * s'y tient. Sans consigne — une carte, un lien partagé, un moteur
-   * de recherche — la photo est là, comme toujours.
-   * ⚠️ AUCUN CLIGNOTEMENT : l'attribut posé sur la racine AU CLIC
-   * masque déjà la photo par la feuille de style (globals.css), avant
-   * même que cette page ne se rende. Cet état-ci prend le relais et
-   * démonte le carrousel — donc aucune image n'est demandée.
+   * §4 (nº 329) — LA CONSIGNE D'ARRIVÉE VIT DANS L'ADRESSE.
+   * ==================================================================
+   * C'est le POINT 6 de la règle de navigation (lib/navigation-session) :
+   * un lien interne vers un autre portfolio n'affiche pas la photo en
+   * haut ; une arrivée par une carte ou un lien de partage l'affiche.
+   *
+   * CE QUI ÉTAIT ÉCRIT, ET QU'IL NE FAUT PAS REJOUER (nº 295) :
+   * `consommerArriveeSansPhoto`, une mémoire de session QUI SE VIDAIT À
+   * LA PREMIÈRE LECTURE. Un retour sur la fiche la trouvait vide, et la
+   * photo revenait — le défaut que le propriétaire a redécrit à la
+   * nº 329. Le module `lib/arrivee-sans-photo` a été SUPPRIMÉ, code
+   * compris, et la règle CSS qui l'accompagnait avec lui.
+   * MAINTENANT : `?entree=lien` dans l'adresse. Elle ne se consomme
+   * pas — le retour ET le pas en avant la retrouvent tout seuls, parce
+   * que l'adresse de l'étape la porte (points 5, 6 et 8 de la règle).
+   *
+   * ⚠️ ET ELLE EST LUE PAR LE SERVEUR, PAS PAR LE NAVIGATEUR. Mesuré :
+   * au PREMIER clic sur un lien interne, `window.location.search` est
+   * encore celui de la fiche QUITTÉE quand celle-ci se rend — la
+   * consigne n'était pas vue, et la photo montait. Le serveur, lui,
+   * connaît l'adresse de l'étape dès le premier pixel : elle arrive donc
+   * en accessoire (`entreeInitiale`), et il n'y a plus aucun rendu
+   * intermédiaire à rattraper — donc aucun clignotement, et rien à
+   * garder d'un rendu à l'autre.
    * ⚠️ EN APERÇU (« Ma fiche »), jamais : on n'y arrive pas par un lien.
    */
-  /*  ⚠️ LU PENDANT LE RENDU, PAS DANS UN EFFET — le motif que React
-      recommande, et celui que ce projet emploie déjà (« la fenêtre
-      suit l'adresse », PileFiches). Un effet aurait rendu la page UNE
-      FOIS avec sa photo avant de la retirer : c'est le clignotement
-      qu'on veut éviter. La consigne est lue au premier rendu du
-      navigateur, une seule fois, et elle se consomme. */
-  /**
-   * ⚠️ LA LECTURE EST LIÉE À LA FICHE RENDUE, pas au montage — mesuré :
-   * d'une fiche à l'autre, le routeur RÉUTILISE ce composant (même
-   * type, même place dans l'arbre), donc un état posé « une seule
-   * fois » ne se rejouait jamais et la consigne restait lettre morte.
-   * On relit donc à CHAQUE changement de fiche.
-   * ⚠️ ET ON COMPARE AU SLUG RENDU, pas à `location.pathname` : le
-   * composant sait quelle fiche il montre, l'adresse peut être en
-   * retard d'un rendu (la leçon de PileFiches, prise à l'envers).
-   */
-  const [ficheLue, setFicheLue] = useState<string | null>(null);
-  const [sansPhoto, setSansPhoto] = useState(false);
-  if (typeof window !== "undefined" && ficheLue !== tatoueur.slug) {
-    setFicheLue(tatoueur.slug);
-    setSansPhoto(
-      apercu ? false : consommerArriveeSansPhoto(`/tatoueur/${tatoueur.slug}`)
-    );
-  }
-  useEffect(() => oublierArriveeSansPhoto, []);
+  const sansPhoto = !apercu && entreeInitiale === ENTREE_LIEN;
 
   const cadrePhoto = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -848,6 +840,9 @@ export function FicheTatoueur({
                grille à deux colonnes, la photo, et les boutons posés
                dessus. */}
           <ContenuFiche
+            //  §3 (nº 329) — LA PAGE A UNE ADRESSE À ELLE : c'est elle
+            //  qui porte l'onglet. La fenêtre du web, non.
+            adresseALui
             tatoueur={tatoueur}
             groupes={groupes}
             studioCourant={studioCourant}

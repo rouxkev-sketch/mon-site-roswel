@@ -1,3 +1,5 @@
+import { poserLaPosition } from "@/lib/restitution-position";
+
 /**
  * LE GEL DU CORPS — L'ÉCRITURE UNIQUE (extraite nº 259-§3)
  * ==================================================================
@@ -39,6 +41,10 @@ let surfacesQuiGelent = 0;
 /** LA POSITION À RENDRE — celle de la PREMIÈRE surface qui a gelé. */
 let positionRetenue = 0;
 
+/** §1 (nº 329) — LE CHEMIN SUR LEQUEL LA POSITION A UN SENS. `null` :
+    la surface ne l'a pas dit, on repose comme avant. */
+let cheminDuGel: string | null = null;
+
 /**
  * LA POSITION QUE LE GEL RENDRA — celle du corps DÉJÀ gelé quand une
  * surface vit dessous (`window.scrollY` y vaut zéro), la position
@@ -66,12 +72,16 @@ export function corpsGele(): boolean {
  * le routeur déplace brièvement le défilement, et le lire après
  * donnerait n'importe quoi.
  */
-export function gelerLeCorps(position = positionSousLeGel()): () => void {
+export function gelerLeCorps(
+  position = positionSousLeGel(),
+  cheminAttendu?: string
+): () => void {
   if (typeof document === "undefined") return () => {};
   const corps = document.body.style;
   surfacesQuiGelent += 1;
   if (surfacesQuiGelent === 1) {
     positionRetenue = position;
+    cheminDuGel = cheminAttendu ?? null;
     corps.position = "fixed";
     corps.top = `-${position}px`;
     corps.left = "0";
@@ -89,6 +99,55 @@ export function gelerLeCorps(position = positionSousLeGel()): () => void {
     corps.left = "";
     corps.right = "";
     corps.width = "";
-    window.scrollTo({ top: positionRetenue, left: 0, behavior: "instant" });
+    /*  §1 (nº 329) — ON NE REPOSE PAS UNE POSITION SUR UNE PAGE QUI
+        N'EST PAS LA SIENNE.
+        ------------------------------------------------------------------
+        LE DÉFAUT, MESURÉ : depuis la fenêtre de carrousel, toucher le
+        logo mène à l'accueil — et l'accueil s'ouvrait À 488 px,
+        c'est-à-dire À LA POSITION DE LA FICHE qui était gelée dessous.
+        Le dégel rendait fidèlement la place qu'il avait retenue, mais
+        sur un écran qui n'avait rien à voir.
+        ⚠️ C'EST LA nº 328-§4 QUI L'A OUVERT, et il faut le dire : ces
+        deux commandes étaient des `<a>` — une navigation de DOCUMENT
+        repart de zéro, le gel meurt avec la page. En les passant en
+        navigation de CLIENT, le dégel s'est mis à survivre à la
+        navigation. La note de la nº 285 avait raison sur ce point
+        précis ; le §2 de la nº 328 réglait l'ÉCRITURE d'une position
+        mémorisée, pas la RESTITUTION du gel.
+        LA RÈGLE : une surface qui sait sur quelle page elle est posée
+        le DIT au gel. Au dégel, si l'on n'est plus là, on ne repose
+        rien — la page d'arrivée s'ouvre comme toute arrivée neuve,
+        c'est-à-dire en haut (point 3 de la règle de navigation).
+        ⚠️ CELLES QUI NE LE DISENT PAS gardent le comportement d'avant,
+        à la lettre : `cheminDuGel` vaut alors `null` et l'on repose
+        toujours. Aucune surface n'a changé de comportement sans
+        l'avoir demandé. */
+    if (cheminDuGel !== null && location.pathname !== cheminDuGel) {
+      cheminDuGel = null;
+      return;
+    }
+    cheminDuGel = null;
+    /*  §2 (nº 329) — LA POSITION EST RENDUE AVEC SA RÉSERVE DE HAUTEUR.
+        ------------------------------------------------------------------
+        CE QUI ÉTAIT ÉCRIT : un `scrollTo` NU. Il suppose que le
+        document a déjà sa hauteur définitive — or au moment où une
+        surface se referme, la page dessous vient d'être rendue et ses
+        images ne sont pas encore posées. Le document est donc PLUS
+        COURT qu'il ne sera, et le navigateur RABOTE la demande à ce
+        qu'il peut : on retombe « presque en haut », jamais à la place
+        quittée. C'est exactement le défaut décrit au §2 de la nº 329.
+        `poserLaPosition` fait les deux gestes dans le bon ordre —
+        réserver la hauteur sur <html>, puis poser —, et libère la
+        réserve dès que le contenu réel l'atteint. C'est l'écriture
+        unique de la restitution depuis la nº 191 : le gel la rejoint
+        au lieu d'en garder une seconde.
+        ⚠️ SANS CLÉ D'ADRESSE : `poserLaPosition` refuse une position
+        dont la clé ne correspond plus à la page. Ici la question est
+        déjà tranchée juste au-dessus, par `cheminDuGel` — et la
+        position d'un gel n'appartient pas à une RECHERCHE, elle
+        appartient à la page qu'on a figée.
+        ⚠️ UNE POSITION NULLE NE DÉCLENCHE RIEN, et c'est juste : le gel
+        avait mis la page à zéro, elle y est encore. */
+    poserLaPosition(positionRetenue);
   };
 }

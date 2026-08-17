@@ -1142,17 +1142,13 @@ input[data-sans-remplissage]:-webkit-autofill:focus {
   transition: background-color 9999s ease-in-out 0s;
 }
 
-/*  §3 (nº 295) — « PAS DE PHOTO EN HAUT », POSÉ PAR LE LIEN LUI-MÊME
+/*  §4 (nº 329) — LA RÈGLE DE STYLE DE LA nº 295 EST SUPPRIMÉE.
     -------------------------------------------------------------------
-    Un lien INTERNE à une fiche (équipe, guest, salon, studio, adresse)
-    mène, AU DOIGT, à un portfolio qui commence par Profil / Portfolio.
-    C'est le LIEN qui porte la consigne — la page d'arrivée ne devine
-    rien (voir lib/arrivee-sans-photo).
-    ⚠️ POURQUOI UNE RÈGLE DE STYLE EN PLUS DE L'ÉTAT REACT : l'attribut
-    est posé AU CLIC, donc AVANT que la page d'arrivée ne se rende. La
-    photo est masquée dès le premier pixel, sans le clignotement d'une
-    image qui s'afficherait puis disparaîtrait. L'état React prend le
-    relais aussitôt et démonte le carrousel — plus aucune requête. */
-[data-fiche-sans-photo] [data-photo-fiche] {
-  display: none;
-}
+    Elle masquait la photo du haut dès le premier pixel, à partir d'un
+    attribut que le LIEN posait au clic — parce que la consigne vivait
+    dans une mémoire de session, lue trop tard par React.
+    LA CONSIGNE EST DANS L'ADRESSE DEPUIS LA nº 329 (`?entree=lien`,
+    voir ContenuFiche) : la page d'arrivée la connaît AVANT son premier
+    rendu, et ne monte donc jamais la photo. Il n'y a plus rien à
+    masquer après coup — cette règle n'avait plus d'objet, et
+    l'attribut qu'elle visait n'existe plus. */

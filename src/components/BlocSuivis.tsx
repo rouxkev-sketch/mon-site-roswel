@@ -10,6 +10,7 @@ import {
   CLASSES_LIGNE_CLIQUABLE_SANS_ENCADRE,
   PhotoRonde,
 } from "@/components/BlocLieux";
+import { adresseDeLienInterne } from "@/components/ContenuFiche";
 import {
   bandeDeTrois,
   groupesDeSuivis,
@@ -222,7 +223,10 @@ function BlocDUnSuivi({
     <div data-suivi={suivi.slug} className="flex flex-col">
       {/* 1 · LA LIGNE D'IDENTITÉ — UN SEUL LIEN, pastille comprise. */}
       <Link
-        href={`/tatoueur/${suivi.slug}`}
+        /*  §4 (nº 329) — UN LIEN INTERNE : la fiche s'ouvre SANS
+            photo en haut (point 6 de la règle). La consigne est
+            dans l'adresse, elle survit donc au retour. */
+        href={adresseDeLienInterne(suivi.slug)}
         data-ligne-suivi=""
         /*  §2 (nº 312) — EN WEB, LA FICHE S'OUVRE PAR-DESSUS. Le lien
             reste un vrai lien : au doigt il navigue, et un clic du

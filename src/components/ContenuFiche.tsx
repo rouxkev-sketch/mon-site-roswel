@@ -61,6 +61,41 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  * nº 198, la fenêtre les garde groupés en haut à droite).
  */
 
+/** §3 (nº 329) — LE NOM DU PARAMÈTRE D'ONGLET, écrit une seule fois.
+    Absent = « Profil », l'onglet d'arrivée : une adresse nue reste
+    exactement ce qu'elle était avant cette passe. */
+export const PARAM_ONGLET = "onglet";
+
+/**
+ * §4 (nº 329) — COMMENT ON EST ARRIVÉ SUR CETTE FICHE.
+ * ------------------------------------------------------------------
+ * `entree=lien` : par un LIEN INTERNE à un autre portfolio — équipe,
+ * guest, salon, studio, adresse, rond de profil de « Ma sélection ».
+ * La fiche s'ouvre alors SANS PHOTO EN HAUT : on commence par
+ * Profil / Portfolio (point 6 de la règle de navigation).
+ * Absent : arrivée par une CARTE ou un LIEN DE PARTAGE — la photo
+ * est là, comme toujours.
+ *
+ * ⚠️ POURQUOI DANS L'ADRESSE, ALORS QUE LA nº 295 L'AVAIT MISE
+ * AILLEURS EXPRÈS. Elle vivait dans le `sessionStorage`, pour qu'un
+ * lien partagé ne l'emporte pas chez quelqu'un qui arrive de
+ * l'extérieur. Mais cette mémoire SE CONSOMMAIT À LA PREMIÈRE
+ * LECTURE : un retour la perdait, et la photo revenait. Le
+ * propriétaire a tranché à la nº 329 — la consigne vit dans
+ * l'adresse, comme l'onglet, pour que le retour ET le pas en avant
+ * la retrouvent tout seuls. Le prix est connu et accepté : quelqu'un
+ * qui copie une adresse portant `entree=lien` la partagera telle
+ * quelle.
+ */
+export const PARAM_ENTREE = "entree";
+export const ENTREE_LIEN = "lien";
+
+/** L'adresse d'un portfolio ouvert DEPUIS UN AUTRE PORTFOLIO. Écrite
+    une fois, employée par tous les liens internes. */
+export function adresseDeLienInterne(slug: string): string {
+  return `/tatoueur/${slug}?${PARAM_ENTREE}=${ENTREE_LIEN}`;
+}
+
 export function ContenuFiche({
   tatoueur,
   groupes,
@@ -69,6 +104,7 @@ export function ContenuFiche({
   apercu = false,
   surSerieChoisie,
   suiviAuDepart = false,
+  adresseALui = false,
 }: {
   tatoueur: Tatoueur;
   /** LE PORTFOLIO GROUPÉ PAR STYLE — l'enveloppe le calcule (elle en a
@@ -89,13 +125,62 @@ export function ContenuFiche({
   /** SUIT-ON DÉJÀ CE TATOUEUR ? — lu par le SERVEUR (nº 208-§1) : le
       bouton naît dans le bon état, il ne se corrige plus à l'écran. */
   suiviAuDepart?: boolean;
+  /** §3 (nº 329) — CE CONTENU A-T-IL UNE ADRESSE À LUI ? VRAI sur la
+      PAGE d'une fiche (FicheTatoueur), FAUX dans la fenêtre du web
+      (FenetreFiche), dont l'adresse est celle d'une surface posée
+      par-dessus une autre page. Seule une page écrit dans l'adresse.
+      Faux par défaut : rien ne se met à écrire sans l'avoir demandé. */
+  adresseALui?: boolean;
 }) {
   /**
    * LES DEUX ONGLETS DE L'AFFICHE (nº 197-§1)
    * « Profil » montre le contenu de la fiche ; « Portfolio » montre les
    * styles publiés, catégorie par catégorie.
    */
-  const [onglet, setOnglet] = useState<OngletAffiche>("profil");
+  /**
+   * §3 (nº 329) — L'ONGLET VIT DANS L'ADRESSE, PLUS DANS REACT.
+   * ==================================================================
+   * C'est le POINT 5 de la règle de navigation (lib/navigation-session).
+   * LE DÉFAUT : l'onglet vivait dans un `useState`. On quittait la
+   * fiche en Portfolio, on revenait à la liste, on RAVANÇAIT — et la
+   * fiche rouvrait sur Profil. La position, elle, revenait juste :
+   * seul l'onglet se perdait, parce qu'il n'était nulle part.
+   *
+   * ⚠️ CHANGER D'ONGLET **REMPLACE** L'ENTRÉE, IL N'EN AJOUTE AUCUNE —
+   * et c'est une exigence du propriétaire, pas un détail
+   * d'implémentation : le retour doit continuer de QUITTER la fiche,
+   * exactement comme avant. Un `pushState` par onglet obligerait à
+   * appuyer deux ou trois fois sur « précédent » pour sortir d'une
+   * fiche qu'on a parcourue. C'est le pas EN AVANT qui retrouve
+   * l'onglet, parce que l'adresse de l'étape le porte.
+   *
+   * ⚠️ ET SEULEMENT QUAND CE CONTENU A UNE ADRESSE À LUI. Dans la
+   * FENÊTRE du web (FenetreFiche), l'adresse est celle de la fiche
+   * ouverte par-dessus la mosaïque : y écrire un onglet reviendrait à
+   * réécrire l'adresse d'une surface qui n'est pas une page. Le
+   * drapeau `adresseALui` tranche, et il est faux par défaut — aucune
+   * surface ne se met à écrire dans l'adresse sans l'avoir demandé.
+   */
+  const ongletDeLAdresse = (): OngletAffiche =>
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get(PARAM_ONGLET) ===
+      "portfolio"
+      ? "portfolio"
+      : "profil";
+  const [onglet, setOnglet] = useState<OngletAffiche>(ongletDeLAdresse);
+  /*  L'ADRESSE MÈNE, MÊME QUAND ELLE CHANGE SOUS NOS PIEDS : un retour
+      ou un pas en avant ne remonte pas ce composant (même route), il
+      ne fait que changer la requête. On se réaligne PENDANT LE RENDU,
+      le motif de PileFiches. */
+  const [requeteLue, setRequeteLue] = useState<string | null>(null);
+  if (adresseALui && typeof window !== "undefined") {
+    const requete = window.location.search;
+    if (requeteLue !== requete) {
+      setRequeteLue(requete);
+      const voulu = ongletDeLAdresse();
+      if (voulu !== onglet) setOnglet(voulu);
+    }
+  }
   /*  §3 (nº 276) — PLUS AUCUN ÉTAT DE CATÉGORIE NI DE RENDU : les deux
       sélecteurs du portfolio sont SUPPRIMÉS, code compris. Le panneau
       montre les deux sections empilées ; il n'a plus rien à retenir,
@@ -282,10 +367,26 @@ export function ContenuFiche({
     //  le seul déclencheur, et c'est voulu.
   }, [remonteeDemandee]);
 
-  /** Changer d'onglet : le contenu change, la page remonte. */
+  /** Changer d'onglet : le contenu change, la page remonte — et
+      l'adresse suit, EN REMPLAÇANT son entrée (nº 329-§3). */
   function choisirOnglet(suivant: OngletAffiche) {
     noterSonde(`SÉLECTEUR onglet → « ${suivant} »`);
     setOnglet(suivant);
+    if (adresseALui && typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search);
+      if (suivant === "portfolio") p.set(PARAM_ONGLET, "portfolio");
+      else p.delete(PARAM_ONGLET);
+      const requete = p.toString();
+      //  ⚠️ `replaceState`, JAMAIS `pushState` : voir la note de
+      //  l'état ci-dessus — le retour doit continuer de quitter la
+      //  fiche d'un seul appui.
+      window.history.replaceState(
+        window.history.state,
+        "",
+        window.location.pathname + (requete ? `?${requete}` : "")
+      );
+      setRequeteLue(window.location.search);
+    }
     remonterSousLaBarre();
   }
 

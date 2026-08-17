@@ -6,6 +6,12 @@ import {
   styleDuCatalogue,
   valeurExplorer,
 } from "@/config/tatouage";
+//  §5 (nº 329) — LA REMONTÉE ANNONCÉE (voir `poserSelection`).
+//  ⚠️ Ce module reste utilisable par le SERVEUR : `entreesDuFiltre`
+//  est pure et la page serveur l'appelle. L'import ci-dessous ne
+//  s'exécute qu'au moment où une fonction du navigateur l'appelle,
+//  et `poserSelection` se garde déjà de `window`.
+import { defilerSansGeste } from "@/lib/defilement-programme";
 
 /**
  * LES DEUX MENUS DE « MA SÉLECTION » — L'ADRESSE EST LA VÉRITÉ
@@ -135,6 +141,25 @@ export function poserSelection(menu: MenuSelection, valeur: string): void {
     "",
     window.location.pathname + (requete ? `?${requete}` : "")
   );
+  /*  §5 (nº 329) — UNE LISTE FILTRÉE COMMENCE EN HAUT.
+      ------------------------------------------------------------------
+      LE DÉFAUT : on descend dans « Ma sélection », on ouvre le menu, on
+      choisit un filtre — et les résultats s'affichaient LÀ OÙ ON ÉTAIT.
+      La page ne change pas d'adresse au sens du routeur (c'est un
+      `replaceState`), donc rien ne remontait : ni `DefilementEnHaut`,
+      qui ne se rejoue qu'au changement de CHEMIN, ni le navigateur.
+      On se retrouvait au milieu d'une liste qu'on n'avait jamais
+      parcourue.
+      LA RÈGLE : un filtre appliqué, c'est une liste NEUVE — elle se
+      pose en haut (point 3 de la règle de navigation).
+      ⚠️ `defilerSansGeste`, ET PAS `window.scrollTo` : la barre du site
+      surveille le défilement pour replier sa rangée de recherche, et
+      elle lirait un mouvement non annoncé comme un GESTE de
+      l'utilisateur (la leçon de la nº 154-§6A).
+      ⚠️ TOUT DE SUITE, sans attendre le nouveau rendu : la liste ne
+      peut que RACCOURCIR ou s'allonger sous nous, et dans les deux cas
+      zéro reste zéro. */
+  defilerSansGeste({ top: 0, left: 0 });
 }
 
 /** CE QUE PORTE UN MENU : sa valeur d'Explorer s'il mène la recherche,

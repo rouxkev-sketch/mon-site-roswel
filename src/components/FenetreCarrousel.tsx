@@ -175,14 +175,18 @@ export function FenetreCarrousel({
    */
   useEffect(() => {
     if (!superposee) return;
-    const degeler = gelerLeCorps(positionPage);
+    //  §1 (nº 329) — LA FENÊTRE DIT SUR QUELLE PAGE ELLE EST POSÉE :
+    //  la fiche. Si l'on part ailleurs (le logo → l'accueil), le
+    //  dégel ne reposera pas la position de la fiche sur une page
+    //  qui n'est pas la sienne.
+    const degeler = gelerLeCorps(positionPage, `/tatoueur/${tatoueur.slug}`);
     document.documentElement.setAttribute("data-fenetre-fiche", "1");
     return () => {
       degeler();
       if (corpsGele()) return;
       document.documentElement.removeAttribute("data-fenetre-fiche");
     };
-  }, [superposee, positionPage]);
+  }, [superposee, positionPage, tatoueur.slug]);
 
   /**
    * PAGE À PART ENTIÈRE, ÉCRAN NON TACTILE : LA FENÊTRE N'EXISTE PAS.

@@ -164,10 +164,20 @@ export default async function PageFicheTatoueur({
         vignette. Introuvable : la fiche s'ouvre comme avant. */
     photo?: string;
     studio?: string;
+    /** §4 (nº 329) — COMMENT ON EST ARRIVÉ. `entree=lien` : par un lien
+        interne à un autre portfolio — la fiche s'ouvre alors SANS photo
+        en haut (point 6 de la règle, lib/navigation-session).
+        ⚠️ LU ICI, PAR LE SERVEUR, ET NON DANS LE NAVIGATEUR : mesuré à
+        la nº 329, `window.location.search` est EN RETARD D'UN RENDU au
+        premier clic sur un lien interne — la consigne n'était pas vue et
+        la photo montait quand même. L'adresse de l'étape, elle, est
+        connue du serveur dès le premier pixel, et Next la rejoue
+        telle quelle au retour comme au pas en avant. */
+    entree?: string;
   }>;
 }) {
   const { slug } = await params;
-  const { style, rendu, nature, photo, studio } = await searchParams;
+  const { style, rendu, nature, photo, studio, entree } = await searchParams;
   const { tatoueur, demonstration } = await ficheVisible(slug);
 
   // LE PROPRIÉTAIRE VOIT SA FICHE même pas encore publiée, et ses
@@ -246,6 +256,9 @@ export default async function PageFicheTatoueur({
         //  §4 (nº 302) — la photo demandée, telle quelle : c'est
         //  `ouvertureGalerie` qui décide si elle existe.
         photoInitiale={typeof photo === "string" ? photo : ""}
+        //  §4 (nº 329) — la consigne d'arrivée, telle quelle : c'est la
+        //  fiche qui sait ce que « lien » veut dire.
+        entreeInitiale={typeof entree === "string" ? entree : ""}
         suiviAuDepart={suiviAuDepart}
       />
       {/* ⚠️ CE BLOC EST INVISIBLE, ET C'EST LE PLUS IMPORTANT DE LA
