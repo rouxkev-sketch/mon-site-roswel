@@ -595,6 +595,24 @@ export function SondeRetour({
     }
 
     if (neuf) {
+      /*  §1 (nº 344) — QUELLE MISE EN PAGE A ÉTÉ SERVIE, ET POURQUOI.
+          Le propriétaire a reçu la mise en page ORDINATEUR sur son
+          iPhone. Mesuré à la nº 344 : le HTML servi est IDENTIQUE AU
+          CARACTÈRE PRÈS pour un iPhone et pour un ordinateur — la mise
+          en page est décidée DANS LE NAVIGATEUR, par l'attribut
+          `data-appareil` que le script d'avant peinture pose d'après
+          `matchMedia("(pointer: coarse)")`, et la variante `mobile` de
+          globals.css ne regarde QUE cet attribut. Autrement dit : si le
+          propriétaire voit la version ordinateur, c'est que cet
+          attribut manquait ou valait « web ». Cette ligne le dit, et
+          c'est la seule façon de l'attraper au moment où ça arrive. */
+      noter(
+        `mise en page : data-appareil="${
+          document.documentElement.dataset.appareil ?? "(ABSENT — version ordinateur servie)"
+        }" · pointeur grossier : ${
+          matchMedia("(pointer: coarse)").matches ? "oui" : "NON"
+        } · largeur ${window.innerWidth}`
+      );
       // D'OÙ VIENT LE GRIS ? Ce que le site peint, et ce que le
       // navigateur peint autour de lui.
       const styleRacine = getComputedStyle(document.documentElement);
