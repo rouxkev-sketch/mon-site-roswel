@@ -50,6 +50,7 @@ import { SondeRetour } from "@/components/SondeRetour";
 import { SondeBascule } from "@/components/SondeBascule";
 import { SondeCarrousel } from "@/components/SondeCarrousel";
 import { SondeCartes } from "@/components/SondeCartes";
+import { SondeRemontee } from "@/components/SondeRemontee";
 import { COMPTES_YOKOFOLIO } from "@/config/tatouage";
 import { COOKIE_DEJA_CONNECTE } from "@/lib/deja-connecte";
 import { utilisateurDepuisCookies } from "@/lib/session-cookie";
@@ -246,6 +247,16 @@ export default async function MiseEnPageTatouage({
         src/components/SondeCartes.tsx, le module
         src/lib/journal-cartes.ts et les appels qui le nomment. */}
     <SondeCartes />
+    {/* ⚠️ TEMPORAIRE — LA SONDE DE LA REMONTÉE (`?sonde-remontee=1`,
+        nº 330-§1). Elle expose au banc les VRAIES fonctions du gel et
+        de l'écriture unique « une liste neuve commence en haut », pour
+        que la correction se prouve EN VIVANT sur une page publique —
+        le seul panneau du bas du site vit derrière une session. Elle
+        n'affiche rien et ne modifie rien.
+        Pour la retirer : cette ligne, son import, le fichier
+        src/components/SondeRemontee.tsx, et sa mention au bandeau des
+        chantiers ouverts (src/lib/navigation-session.ts). */}
+    <SondeRemontee />
     {/* ⚠️ L'ÉCOUTEUR GLOBAL DE REMONTÉE EST SUPPRIMÉ (nº 162-§1). La
         règle de la nº 155-§1 — « TOUS les champs du site remontent » —
         est annulée : la remontée ne sert qu'à dégager de la place SOUS

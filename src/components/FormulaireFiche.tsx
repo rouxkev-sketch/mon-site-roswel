@@ -2716,7 +2716,20 @@ export function FormulaireFiche() {
           // Directement dans le <main> : aucune marge ajoutée — la
           // géométrie (photo contre la barre sur smartphone, hauteur
           // d'écran sur le web) est EXACTEMENT celle de la vraie page.
-          <FicheTatoueur tatoueur={tatoueurApercu} demonstration={false} apercu />
+          //  §4 (nº 330) — LA CONSIGNE D'ARRIVÉE, LUE DANS L'ADRESSE.
+          //  « Mon portfolio » la pose (`entree=lien`, MenuEspace) :
+          //  on arrive ici par un LIEN, la photo du haut ne monte pas.
+          //  ⚠️ ELLE EST LUE PAR `useSearchParams`, ET NON PAR
+          //  `window.location.search` : celui-ci est en retard d'un
+          //  rendu au premier clic, c'est la leçon payée à la nº 329-§4.
+          //  Une adresse sans consigne — un rechargement, un signet —
+          //  garde sa photo, exactement comme avant.
+          <FicheTatoueur
+            tatoueur={tatoueurApercu}
+            demonstration={false}
+            apercu
+            entreeInitiale={parametres.get("entree") ?? ""}
+          />
         ) : (
           <p className="mx-auto w-full max-w-[640px] py-6 text-sombre-texte-doux">
             L&apos;aperçu n&apos;a pas pu être chargé — réessaie en

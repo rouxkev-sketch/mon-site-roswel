@@ -11,6 +11,9 @@ import {
   famillesStyles,
 } from "@/config/tatouage";
 import { estCourrielAdmin } from "@/lib/admin-yokofolio-client";
+//  §3 (nº 330) — l'étape d'historique, écriture unique des quatre
+//  surfaces qui couvrent l'écran.
+import { useEtapeQuiSeReferme } from "@/lib/etape-refermable";
 import { AdminDemarchage } from "@/components/AdminDemarchage";
 import { LogoYokofolio } from "@/components/LogoYokofolio";
 import { Patience, SqueletteLignes } from "@/components/Squelette";
@@ -161,6 +164,20 @@ export function AdminYokofolio() {
   /* ---- Fiches à valider ---- */
   const [fiches, setFiches] = useState<FicheAdmin[] | null>(null);
   const [ficheOuverte, setFicheOuverte] = useState<FicheAdmin | null>(null);
+  /**
+   * §3 (nº 330) — LE RETOUR REFERME LA FICHE OUVERTE, il ne quitte pas
+   * l'administration.
+   * ------------------------------------------------------------------
+   * Quatrième et dernière des surfaces du C-4 (inventaire nº 327).
+   * Elle repose sur LE MÊME MÉCANISME que les trois autres — un état
+   * de composant qui remplace ce qu'on regardait sans changer
+   * d'adresse : l'écriture unique (lib/etape-refermable) s'y applique
+   * telle quelle, sans rien d'inventé pour elle.
+   * ⚠️ LA SECTION D'ADMINISTRATION N'EST PAS TOUCHÉE : c'est un état de
+   * page (C-6), et le propriétaire l'a explicitement réservée à la
+   * passe suivante.
+   */
+  useEtapeQuiSeReferme(ficheOuverte !== null, () => setFicheOuverte(null));
   const [erreurFiches, setErreurFiches] = useState<string | null>(null);
   /* ---- La demande de modifications ---- */
   const [motifsCoches, setMotifsCoches] = useState<string[]>([]);

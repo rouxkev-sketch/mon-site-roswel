@@ -21,6 +21,9 @@ import { AucunResultat } from "@/components/AucunResultat";
 import { EnTeteTatouage } from "@/components/EnTeteTatouage";
 import { GrilleTatoueurs } from "@/components/GrilleTatoueurs";
 import { noterDemontage, noterMontage } from "@/lib/journal-bascule";
+//  §2 (nº 330) — L'ÉCRITURE UNIQUE DE « UNE LISTE NEUVE COMMENCE EN
+//  HAUT », partagée avec les filtres de « Ma sélection ».
+import { ouvrirLaListeEnHaut } from "@/lib/liste-neuve";
 import { LigneResultats } from "@/components/LigneResultats";
 import {
   criteresComplets,
@@ -234,6 +237,23 @@ export function IndexTatoueurs({
   function chercher(suivants: CritèresTatouage) {
     //  Le champ répond tout de suite ; l'adresse tranchera.
     setCriteres(suivants);
+    /*  §2 (nº 330) — UNE RECHERCHE OUVRE SA LISTE EN HAUT.
+        ------------------------------------------------------------------
+        LE DÉFAUT : on descend dans l'accueil, on choisit un style, et
+        l'on arrive AU MILIEU des résultats. Rien ne remontait — la
+        navigation porte `scroll: false` (voulu : la grille ne doit pas
+        sauter pendant qu'on affine), et `DefilementEnHaut` ne se
+        rejoue qu'au changement de CHEMIN : `/` → `/?style=…` n'en
+        change pas.
+        ⚠️ LE PIÈGE QU'ON N'OUVRE PAS : rendre `DefilementEnHaut`
+        sensible à la REQUÊTE. Un retour en arrière arrive lui aussi
+        avec une requête, et lui doit garder sa position — on casserait
+        la restitution réparée à la nº 329-§2. La remontée est donc
+        posée PAR LE GESTE, ici, dans la fonction que seul un clic
+        appelle ; elle n'est jamais déduite de l'adresse.
+        ⚠️ ET PAS DANS `voirPlus` : « Voir plus » allonge la MÊME liste
+        par le bas, on continue de lire là où on est (nº 224-§3). */
+    ouvrirLaListeEnHaut();
     const adresse = adresseDe(suivants, 1);
     demarrerTransition(() => {
       //  UNE RECHERCHE QUI NE CHANGE RIEN N'AJOUTE PAS D'ÉTAPE : rouvrir

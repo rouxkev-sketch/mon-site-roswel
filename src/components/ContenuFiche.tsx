@@ -90,10 +90,28 @@ export const PARAM_ONGLET = "onglet";
 export const PARAM_ENTREE = "entree";
 export const ENTREE_LIEN = "lien";
 
+/**
+ * §4 (nº 330) — LA CONSIGNE, POSÉE SUR N'IMPORTE QUELLE ADRESSE.
+ * ------------------------------------------------------------------
+ * `adresseDeLienInterne` ne savait écrire que l'adresse PUBLIQUE d'un
+ * portfolio (`/tatoueur/<slug>`). Or « Mon portfolio », dans le menu
+ * « Mon espace », mène au portfolio par une AUTRE route — celle de
+ * l'espace tatoueur, en aperçu (`/devenir-tatoueur/fiche?…&vue=apercu`).
+ * C'est le même geste et la même attente : on arrive sur un portfolio
+ * par un lien, la photo du haut ne monte pas.
+ * L'ÉCRITURE RESTE UNIQUE — c'est celle-ci, et `adresseDeLienInterne`
+ * n'est plus que son cas particulier. Aucun appelant n'écrit
+ * « entree=lien » à la main.
+ */
+export function avecConsigneDeLienInterne(adresse: string): string {
+  const separateur = adresse.includes("?") ? "&" : "?";
+  return `${adresse}${separateur}${PARAM_ENTREE}=${ENTREE_LIEN}`;
+}
+
 /** L'adresse d'un portfolio ouvert DEPUIS UN AUTRE PORTFOLIO. Écrite
     une fois, employée par tous les liens internes. */
 export function adresseDeLienInterne(slug: string): string {
-  return `/tatoueur/${slug}?${PARAM_ENTREE}=${ENTREE_LIEN}`;
+  return avecConsigneDeLienInterne(`/tatoueur/${slug}`);
 }
 
 export function ContenuFiche({

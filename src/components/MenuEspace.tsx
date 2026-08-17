@@ -34,6 +34,13 @@ import type { Notification } from "@/lib/notifications";
 import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
 import { travailEnCours } from "@/lib/travail-en-cours";
 import { useVoileDeLaPage } from "@/components/VoileDeLaPage";
+import { useAppareilMobile } from "@/lib/appareil";
+//  §4 (nº 330) — la consigne « pas de photo en haut » des liens
+//  internes, posée par l'écriture unique.
+import { avecConsigneDeLienInterne } from "@/components/ContenuFiche";
+//  §3 (nº 330) — l'étape d'historique, écriture unique des quatre
+//  surfaces qui couvrent l'écran.
+import { useEtapeQuiSeReferme } from "@/lib/etape-refermable";
 
 /**
  * LE MENU « MON ESPACE » — le compte du tatoueur, depuis la barre
@@ -117,6 +124,23 @@ export function MenuEspace({
   //  l'écran, et son déclencheur reste clair. Web uniquement : le
   //  crochet s'écarte de lui-même au doigt.
   useVoileDeLaPage(ouvert, zone);
+  /**
+   * §3 (nº 330) — LE RETOUR DU TÉLÉPHONE REFERME CE MENU.
+   * ------------------------------------------------------------------
+   * Troisième des quatre surfaces du C-4 (inventaire nº 327). Au
+   * doigt, ce menu occupe l'écran derrière son voile : le bouton
+   * retour doit le refermer, pas quitter la page qu'on regardait.
+   * ⚠️ AU DOIGT SEULEMENT. Sur le web c'est une fenêtre posée SOUS LE
+   * BOUTON, qui ne recouvre rien : elle n'a aucune raison de peser sur
+   * l'historique. `useAppareilMobile` lit `data-appareil` — un DOIGT,
+   * jamais une largeur (la règle du site depuis la nº 60).
+   * ⚠️ ET SI UNE ENTRÉE MÈNE AILLEURS (« Ma sélection », « Mon
+   * portfolio »…), l'écriture unique ne reprend pas son étape : elle
+   * n'est plus celle du dessus, et reculer annulerait la navigation
+   * qu'on vient de demander.
+   */
+  const auDoigt = useAppareilMobile();
+  useEtapeQuiSeReferme(auDoigt && ouvert, () => setOuvert(false));
   /** La plaque du menu web — montée dans le corps du document
       (nº 238-§4) : la fermeture au clic dehors doit la connaître.
       ⚠️ L'ANCRE DU MENU EST `zone`, PAS UN DES DEUX BOUTONS : il y en a
@@ -606,9 +630,16 @@ export function MenuEspace({
             Modification
           </Link>
 
-          {/* L'aperçu public réel. */}
+          {/* L'aperçu public réel.
+              §4 (nº 330) — ET IL PORTE LA CONSIGNE DES LIENS INTERNES.
+              « Mon portfolio » mène à un portfolio par un LIEN : la
+              photo du haut ne monte pas, exactement comme depuis une
+              fiche d'équipe ou le rond de profil de « Ma sélection »
+              (point 6 de la règle, lib/navigation-session). La
+              consigne vit dans l'adresse et s'écrit par l'écriture
+              unique — jamais à la main. */}
           <Link
-            href={versFiche("vue=apercu")}
+            href={avecConsigneDeLienInterne(versFiche("vue=apercu"))}
             onClick={() => setOuvert(false)}
             className={classeEntree}
           >

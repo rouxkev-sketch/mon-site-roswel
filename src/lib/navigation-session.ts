@@ -47,28 +47,42 @@
  *
  * OÙ CHAQUE POINT S'APPLIQUE, POUR QU'AUCUN NE SE PERDE :
  *  · 1 et 2 — `PileFiches`, `FicheTatoueur` (fenêtre de carrousel),
- *    `GrilleTatoueurs`, `PageFavoris`. ⚠️ QUATRE SURFACES NE LE FONT
- *    TOUJOURS PAS : la feuille du bas des menus, la page de recherche,
- *    le menu « Mon espace » et l'administration (C-4 de l'inventaire
- *    nº 327). ELLES RESTENT LE SEUL CHANTIER OUVERT après la nº 329 —
- *    le propriétaire les a explicitement réservées à une passe à part.
+ *    `GrilleTatoueurs`, `PageFavoris`, et depuis la nº 330-§3 LES
+ *    QUATRE DERNIÈRES : la feuille du bas des menus (`MenuDeroulant`),
+ *    la page de recherche du smartphone (`PageRechercheMobile`), le
+ *    menu « Mon espace » (`MenuEspace`) et le détail d'une fiche dans
+ *    l'administration (`AdminYokofolio`) — le C-4 de l'inventaire
+ *    nº 327. Elles passent TOUTES par l'écriture unique
+ *    `useEtapeQuiSeReferme` (lib/etape-refermable), qui pose l'étape,
+ *    referme au `popstate`, et ne reprend son étape que si elle est
+ *    encore la sienne.
  *  · 3 — `DefilementEnHaut` (l'arrivée, avant la peinture),
  *    `MemoireNavigation` (la mémorisation, et le filet après),
  *    `gel-du-corps` (le dégel, avec sa réserve depuis la nº 329-§2) et
- *    `poserSelection` (un filtre appliqué ouvre en haut, nº 329-§5).
+ *    `ouvrirLaListeEnHaut` (lib/liste-neuve) — L'ÉCRITURE UNIQUE de
+ *    « une liste neuve commence en haut », appelée par le filtre de
+ *    « Ma sélection » (`poserSelection`) ET par la recherche
+ *    (`IndexTatoueurs.chercher`) depuis la nº 330-§1 et §2. ⚠️ ELLE EST
+ *    APPELÉE PAR LE GESTE, JAMAIS DÉDUITE DE L'ADRESSE : un retour
+ *    arrive lui aussi avec une requête, et lui doit garder sa place.
  *  · 4 — `positionSousLeGel` (lib/gel-du-corps), appelée par TOUS
  *    ceux qui écrivent une position depuis la nº 328-§2.
  *  · 5 — l'onglet Profil / Portfolio (`?onglet=`) et la consigne
  *    d'arrivée (`?entree=lien`) vivent dans l'adresse depuis la
  *    nº 329-§3 et §4 — voir ContenuFiche, qui porte les deux noms.
  *    ⚠️ DEUX ÉTATS N'Y SONT TOUJOURS PAS : la section
- *    d'administration et l'étape du formulaire. Ils attendent la même
- *    passe que les quatre surfaces ci-dessus.
- *  · 6 — `?entree=lien`, posé par `adresseDeLienInterne` (ContenuFiche)
- *    sur TOUS les liens qui mènent d'un portfolio à un autre, et LU PAR
- *    LE SERVEUR (page d'une fiche) qui le passe en accessoire à
- *    `FicheTatoueur` : au premier clic, `window.location.search` est
- *    encore celui de la fiche quittée, et la photo montait quand même.
+ *    d'administration et l'étape du formulaire. C'est le C-6, et il
+ *    reste le SEUL chantier ouvert après la nº 330 — le propriétaire
+ *    l'a explicitement réservé à la passe suivante.
+ *  · 6 — `?entree=lien`, posé par `avecConsigneDeLienInterne`
+ *    (ContenuFiche) — l'écriture unique, dont `adresseDeLienInterne`
+ *    n'est que le cas d'une adresse publique de portfolio. Elle
+ *    couvre TOUS les liens qui mènent à un portfolio : équipe, guest,
+ *    salon, studio, rond de profil de « Ma sélection », et « Mon
+ *    portfolio » du menu « Mon espace » (nº 330-§4). Elle est LUE PAR
+ *    LE SERVEUR sur la page d'une fiche, et par `useSearchParams` en
+ *    aperçu — jamais par `window.location.search`, en retard d'un
+ *    rendu au premier clic (la leçon de la nº 329-§4).
  *    ⚠️ `lib/arrivee-sans-photo` A ÉTÉ SUPPRIMÉ, code compris
  *    (nº 329-§4) : sa mémoire de session se consommait à la première
  *    lecture, et un retour perdait la consigne.
@@ -76,7 +90,11 @@
  *  · 8 — conséquence des points 1 et 5 : une surface qui vit dans
  *    l'historique et dont l'état vit dans l'adresse se rouvre telle
  *    quelle. Tenu pour la fiche (onglet et consigne d'arrivée) depuis
- *    la nº 329 ; pas encore pour les quatre surfaces du point 1.
+ *    la nº 329. Les quatre surfaces du point 1 vivent dans
+ *    l'historique depuis la nº 330 ; leur ÉTAT, lui, ne vit pas dans
+ *    l'adresse — elles se referment au retour, elles ne se rouvrent
+ *    pas au pas en avant. C'est voulu : une surface qu'on vient de
+ *    fermer n'a pas à se rouvrir toute seule.
  *
  * ------------------------------------------------------------------
  * CE QUE CHAQUE PASSE A APPLIQUÉ, ET CE QUI RESTE :
@@ -88,9 +106,21 @@
  *    n'est pas la sienne (§1) et le fait AVEC RÉSERVE DE HAUTEUR
  *    (§2) ; l'onglet et la consigne d'arrivée passent dans l'adresse
  *    (§3, §4) ; un filtre appliqué ouvre la liste en haut (§5).
- *  · IL RESTE : C-4 — les quatre surfaces qui ne posent aucune entrée
- *    d'historique, et que le bouton retour du téléphone ne referme
- *    donc pas.
+ *  · nº 330 — la remontée d'une liste neuve devient UNE ÉCRITURE
+ *    UNIQUE qui survit au gel d'un panneau (§1) et sert aussi la
+ *    recherche (§2) ; C-4 est traité — les quatre dernières surfaces
+ *    posent leur étape d'historique (§3) ; « Mon portfolio » porte la
+ *    consigne des liens internes (§4).
+ *  · IL RESTE : C-6 — deux états qui ne vivent pas dans l'adresse (la
+ *    section d'administration, l'étape du formulaire).
+ *
+ * ------------------------------------------------------------------
+ * CHANTIERS OUVERTS — À RETIRER AVANT LA MISE EN LIGNE :
+ *  · `?sonde-remontee=1` (nº 330-§1) — src/components/SondeRemontee.tsx,
+ *    sa ligne et son import dans app/(tatouage)/layout.tsx. Elle
+ *    expose au banc les vraies fonctions du gel et de la remontée,
+ *    parce que le seul panneau du bas du site vit derrière une session
+ *    que le conteneur d'épreuve ne sait pas signer.
  * ██████████████████████████████████████████████████████████████████
  */
 
@@ -250,6 +280,24 @@ export function memoriserDefilement(url: string, y: number) {
     );
   } catch {
     // stockage indisponible : la page reviendra simplement en haut
+  }
+}
+
+/**
+ * §1 (nº 330) — OUBLIER LA POSITION D'UNE PAGE, EXPLICITEMENT.
+ * ------------------------------------------------------------------
+ * Quand une liste est REFAITE (un filtre posé, une recherche lancée),
+ * la place qu'on avait mémorisée pour elle ne décrit plus rien : la
+ * liste qu'elle décrivait n'existe plus. On l'EFFACE, plutôt que d'y
+ * écrire zéro — `memoriserDefilement` ajoute l'écart de réserve de la
+ * barre à ce qu'on lui donne, et zéro n'y resterait donc pas zéro.
+ * Seul appelant : `ouvrirLaListeEnHaut` (lib/liste-neuve).
+ */
+export function oublierDefilementDe(url: string) {
+  try {
+    localStorage.removeItem(cleDePosition(url));
+  } catch {
+    // stockage indisponible : il n'y avait rien à oublier
   }
 }
 

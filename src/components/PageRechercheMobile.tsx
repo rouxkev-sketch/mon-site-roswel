@@ -3,6 +3,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { positionSousLeGel } from "@/lib/gel-du-corps";
+//  §3 (nº 330) — l'étape d'historique, écriture unique des quatre
+//  surfaces qui couvrent l'écran.
+import { useEtapeQuiSeReferme } from "@/lib/etape-refermable";
 import { IconeCroix, IconeLoupe } from "@/components/Icones";
 import { OngletsLigne } from "@/components/OngletsLigne";
 import {
@@ -270,8 +273,9 @@ export function PageRechercheMobile({
       requestAnimationFrame(() => setEnPlace(false))
     );
     aLaFinDeLaGlissade(DUREE_SORTIE_MS, () => {
-      //  Aucune étape d'historique n'a été posée : il n'y a rien à
-      //  attendre, on conclut (nº 194-§4).
+      //  §3 (nº 330) — L'ÉTAPE EST REPRISE PAR `useEtapeQuiSeReferme`,
+      //  au démontage de cette page et à ce moment-là seulement : il
+      //  n'y a rien à attendre ici, on conclut.
       const { onValider: valide, onAbandonner: abandonne } = sorties.current;
       if (valider) valide();
       else abandonne();
@@ -299,37 +303,52 @@ export function PageRechercheMobile({
     });
   }, [phase, validerEnSortant]);
 
-  /** LA CROIX ET « VALIDER » — ils glissent, et rien d'autre : aucune
-      étape n'a été posée, il n'y a donc rien à dépiler (nº 194-§4). */
+  /** LA CROIX ET « VALIDER » — ils glissent, et rien d'autre : c'est le
+      démontage qui reprend l'étape posée à l'ouverture (nº 330-§3), et
+      lui seul. */
   function fermer(valider: boolean) {
     glisserDehors(valider);
   }
 
   /**
-   * LE RETOUR ARRIÈRE DU NAVIGATEUR — et le geste depuis le bord de
-   * l'écran, qui est le même événement. Il referme la page comme
-   * n'importe quelle autre : c'est tout l'intérêt d'avoir une vraie
-   * étape d'historique.
-   * Sans tableau de dépendances : l'écouteur voit toujours la phase
-   * courante.
+   * §3 (nº 330) — ELLE POSE DE NOUVEAU UNE ÉTAPE, ET LE RETOUR LA
+   * REFERME AU LIEU DE QUITTER LA PAGE.
+   * ==================================================================
+   * ⚠️ CECI REVIENT SUR LA DÉCISION DE LA nº 194-§4, ET IL FAUT LE
+   * DIRE. Cette page posait une étape puis LA RETIRAIT ELLE-MÊME
+   * (`history.back()`) AVANT DE VALIDER — un va-et-vient qui exigeait
+   * du navigateur qu'il dépile exactement quand on le lui demandait.
+   * Sur Chrome pour iPhone, une étape de trop retirée effaçait
+   * l'accueil : on sortait du site. C'est ce défaut-là qui avait fait
+   * renoncer à toute étape.
+   * CE N'EST PAS LE MÊME MÉCANISME QU'ON REMET. Celui-ci
+   * (lib/etape-refermable) ne dépile QUE dans un cas, et seulement
+   * après avoir VÉRIFIÉ que l'étape du dessus porte sa propre marque :
+   * une fermeture par la croix ou par Échap. Le retour du navigateur,
+   * lui, ne dépile rien du tout — le navigateur l'a déjà fait. Il n'y
+   * a plus aucun aller-retour à la main, donc plus rien à retirer « de
+   * trop ». Le propriétaire l'a redemandé explicitement à la nº 330 :
+   * sur un téléphone, le retour doit refermer ce qui est ouvert.
    */
+  useEtapeQuiSeReferme(
+    true,
+    () => glisserDehors(false),
+    //  « VALIDER » CHANGE D'ADRESSE : on ne reprend pas notre étape à
+    //  cet instant-là — elle serait en course avec la navigation du
+    //  routeur, et la recherche pourrait être perdue. Le retour y
+    //  retombe sur l'adresse d'avant l'ouverture : un seul appui, la
+    //  bonne destination. La croix et Échap, elles, la reprennent.
+    !validerEnSortant
+  );
+
+  /** Échap referme comme la croix. Sans tableau de dépendances :
+      l'écouteur voit toujours la phase courante. */
   useEffect(() => {
-    function auRetour() {
-      //  ⚠️ ON NE CONSOMME AUCUNE ÉTAPE (nº 194-§4) : la page n'en a
-      //  posé aucune. Un retour du navigateur quitte donc la page en
-      //  cours ; on referme simplement le panneau, sans rien appliquer
-      //  et sans toucher à l'historique.
-      glisserDehors(false);
-    }
     function auClavier(evenement: KeyboardEvent) {
       if (evenement.key === "Escape") fermer(false);
     }
-    window.addEventListener("popstate", auRetour);
     document.addEventListener("keydown", auClavier);
-    return () => {
-      window.removeEventListener("popstate", auRetour);
-      document.removeEventListener("keydown", auClavier);
-    };
+    return () => document.removeEventListener("keydown", auClavier);
   });
 
   const enGlissade = phase !== "posee";

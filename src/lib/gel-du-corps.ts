@@ -66,6 +66,40 @@ export function corpsGele(): boolean {
 }
 
 /**
+ * §1 (nº 330) — LA PAGE GELÉE REPARTIRA DE ZÉRO.
+ * ==================================================================
+ * LE DÉFAUT, RELEVÉ SUR L'iPHONE DU PROPRIÉTAIRE. Au doigt, un filtre
+ * se choisit dans un PANNEAU DU BAS — et un panneau GÈLE LE CORPS. La
+ * remontée demandée par `poserSelection` s'exécutait donc pendant le
+ * gel, où `window.scrollTo` ne peut rien : le corps est
+ * `position: fixed`, il n'y a plus rien à faire défiler. Puis le
+ * panneau se refermait, et le DÉGEL reposait fidèlement l'ancienne
+ * position. On restait au milieu de la liste.
+ * ⚠️ ET LA nº 329-§2 A RENFORCÉ CE DÉFAUT-LÀ EN EN CORRIGEANT UN
+ * AUTRE : depuis qu'il passe par `poserLaPosition`, le dégel est
+ * devenu BIEN MEILLEUR à reposer exactement où l'on était. Il faut le
+ * dire — la correction précédente est juste, c'est la remontée qui
+ * arrivait au mauvais moment.
+ * ⚠️ ET LE GARDE-FOU DU §1 DE LA nº 329 NE JOUE PAS ICI : il compare
+ * les CHEMINS, et un filtre ne change que ce qui suit le `?`.
+ *
+ * CE QU'ON FAIT : on ne touche NI au corps figé, NI au défilement. On
+ * change seulement la position QUE LE DÉGEL RENDRA. Rien ne bouge sous
+ * le panneau encore ouvert (aucun saut visible), et quand il se ferme,
+ * le corps rendu au flux repart naturellement de zéro — `poserLaPosition`
+ * ne déplace alors rien (une position nulle ne déclenche rien).
+ *
+ * ⚠️ SANS GEL, ELLE NE FAIT RIEN, et c'est voulu : sur le web le
+ * panneau ne recouvre pas la page et ne gèle rien. C'est l'appelant
+ * qui fait défiler — voir `ouvrirLaListeEnHaut` (lib/liste-neuve),
+ * l'écriture unique qui appelle les deux.
+ */
+export function laPositionDuGelRepartDeZero(): void {
+  if (surfacesQuiGelent === 0) return;
+  positionRetenue = 0;
+}
+
+/**
  * GELER LE CORPS — rend la fonction qui dégèle.
  * `position` : celle à retenir (par défaut, celle du moment). La
  * fenêtre de fiche donne la sienne, capturée AVANT son `pushState` :

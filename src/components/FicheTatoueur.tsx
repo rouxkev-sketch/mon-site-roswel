@@ -438,9 +438,15 @@ export function FicheTatoueur({
    * en accessoire (`entreeInitiale`), et il n'y a plus aucun rendu
    * intermédiaire à rattraper — donc aucun clignotement, et rien à
    * garder d'un rendu à l'autre.
-   * ⚠️ EN APERÇU (« Ma fiche »), jamais : on n'y arrive pas par un lien.
+   *
+   * ⚠️ L'APERÇU N'EST PLUS EXCLU (nº 330-§4). Il l'était sur une raison
+   * qui a cessé d'être vraie : « on n'y arrive pas par un lien ». On y
+   * arrive par « Mon portfolio », dans le menu « Mon espace » — et le
+   * propriétaire attend là exactement ce qu'il attend ailleurs. C'est
+   * donc la CONSIGNE qui décide, dans les deux modes, et rien d'autre :
+   * un aperçu ouvert sans consigne garde sa photo, comme avant.
    */
-  const sansPhoto = !apercu && entreeInitiale === ENTREE_LIEN;
+  const sansPhoto = entreeInitiale === ENTREE_LIEN;
 
   const cadrePhoto = useRef<HTMLDivElement | null>(null);
   useEffect(() => {

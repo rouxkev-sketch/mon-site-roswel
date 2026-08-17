@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { gelerLeCorps } from "@/lib/gel-du-corps";
+//  §3 (nº 330) — L'ÉTAPE D'HISTORIQUE D'UNE SURFACE QUI COUVRE
+//  L'ÉCRAN : l'écriture unique des quatre surfaces du C-4.
+import { useEtapeQuiSeReferme } from "@/lib/etape-refermable";
 import { createPortal } from "react-dom";
 import { COULEURS } from "@/config/roswel";
 import {
@@ -405,6 +408,12 @@ export function MenuDeroulant({
    * Le défilement INTERNE, lui, reste vivant — et il ne se propage pas
    * à la page en bout de liste (`overscroll-contain` sur la liste).
    */
+  /** §3 (nº 330) — VRAI TANT QUE LA FEUILLE COUVRE VRAIMENT L'ÉCRAN.
+      Le gel s'en servait déjà sans le nommer ; l'étape d'historique en
+      a besoin AU RENDU, et pas seulement dans un effet — d'où l'état.
+      Sur le web (panneau sous le champ) il reste faux : le panneau ne
+      recouvre pas la page, il ne gèle rien et ne pose rien. */
+  const [feuilleALEcran, setFeuilleALEcran] = useState(false);
   useEffect(() => {
     if (!feuilleMobile || !listeVisible) return;
     //  La feuille ne vit qu'au doigt (`md:hidden`) : au-dessus de cette
@@ -412,6 +421,37 @@ export function MenuDeroulant({
     if (!window.matchMedia("(max-width: 767.98px)").matches) return;
     return gelerLeCorps();
   }, [feuilleMobile, listeVisible]);
+  /*  La MÊME question, posée pour l'historique — et posée dans une
+      image, jamais dans le corps de l'effet : c'est le motif de
+      `useAppareilMobile`, celui que React recommande pour lire le
+      document sans enchaîner les rendus. */
+  useEffect(() => {
+    const ouvertePourDeVrai = feuilleMobile && listeVisible;
+    const image = requestAnimationFrame(() => {
+      setFeuilleALEcran(
+        ouvertePourDeVrai &&
+          window.matchMedia("(max-width: 767.98px)").matches
+      );
+    });
+    return () => cancelAnimationFrame(image);
+  }, [feuilleMobile, listeVisible]);
+  /**
+   * §3 (nº 330) — LE RETOUR DU TÉLÉPHONE REFERME LA FEUILLE.
+   * ------------------------------------------------------------------
+   * C'est la première des quatre surfaces du C-4 (inventaire nº 327),
+   * et le point 1 de la règle de navigation : une surface qui couvre
+   * l'écran pose une entrée d'historique, et le retour la referme —
+   * au lieu de QUITTER la page, ce qu'il faisait jusqu'ici.
+   * ⚠️ L'ÉCRITURE EST UNIQUE (lib/etape-refermable), partagée par les
+   * quatre surfaces. C'est elle aussi qui préserve l'adresse écrite
+   * pendant l'ouverture — le filtre de « Ma sélection » s'écrit par
+   * `replaceState` SUR l'étape de la feuille, et serait perdu sans
+   * cela.
+   * ⚠️ LE GEL N'EST PAS CONCERNÉ : il reste posé et repris par l'effet
+   * ci-dessus, une fois et une seule, quel que soit le chemin de
+   * fermeture (le retour, la croix, un choix, le glissement).
+   */
+  useEtapeQuiSeReferme(feuilleALEcran, () => fermer());
   /**
    * LA REMONTÉE D'ABORD, LE MENU ENSUITE — UN ENCHAÎNEMENT, PAS UNE
    * SURVEILLANCE (nº 195-§2)
