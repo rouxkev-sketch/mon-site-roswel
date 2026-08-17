@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { corpsGele, gelerLeCorps } from "@/lib/gel-du-corps";
 import { PORTRAIT_ROND } from "@/config/tatouage";
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
@@ -198,9 +199,24 @@ export function FenetreCarrousel({
   /** LE ROND DE PROFIL — la photo du compte, ou l'initiale (le même
       dessin que la fiche : aucun contour, le fond détache). */
   const rondDeProfil = (
-    <a
+    <Link
       /*  §2-6 (nº 285) — `#profil` : la fiche joue à l'arrivée LA MÊME
-          remontée que l'onglet « Profil » (voir ContenuFiche). */
+          remontée que l'onglet « Profil » (voir ContenuFiche).
+          §4 (nº 328) — ET C'EST UN `<Link>`, PLUS UN `<a>`.
+          ------------------------------------------------------------
+          IL ÉTAIT UN `<a>` VOLONTAIREMENT (nº 285) : « depuis une
+          fenêtre posée sur un corps gelé, une navigation de client
+          laisserait le dégel reposer l'ancienne position sur la
+          nouvelle page ». LE DÉFAUT QUI JUSTIFIAIT CELA EST RÉPARÉ —
+          c'est le §2 de cette passe : la position se lit désormais
+          SOUS LE GEL (`positionSousLeGel`), donc plus personne ne
+          repose un zéro ni une place étrangère.
+          ⚠️ ET C'ÉTAIT LE PRIX FORT : une navigation de document
+          DÉTRUISAIT la fenêtre en laissant son entrée d'historique
+          derrière elle, et le retour ressortait une PAGE PLEINE
+          bâtarde (C-1 de l'inventaire nº 327). En client, la fiche
+          reste montée — c'est la même route Next —, et le retour
+          rouvre la fenêtre depuis l'adresse (voir FicheTatoueur). */
       href={`/tatoueur/${tatoueur.slug}#profil`}
       aria-label={`Voir le profil de ${tatoueur.nom}`}
       className="flex h-11 w-11 shrink-0 items-center justify-center
@@ -225,7 +241,7 @@ export function FenetreCarrousel({
           {tatoueur.nom.trim().charAt(0).toUpperCase()}
         </span>
       )}
-    </a>
+    </Link>
   );
 
   /** LE CŒUR — l'existant, tel quel : il aime TOUT le carrousel d'un
@@ -340,14 +356,27 @@ export function FenetreCarrousel({
             </svg>
           </a>
         )}
-        {/* eslint-disable-next-line @next/next/no-html-link-for-pages --
-            VOULU : une navigation de DOCUMENT, pas de client. Depuis
-            une fenêtre posée sur un corps gelé, un <Link> laisserait
-            le dégel reposer l'ancienne position sur l'accueil (voir la
-            note de tête) ; un <a> repart de zéro, en haut. */}
-        <a href="/" aria-label="Accueil YokoFolio" className="flex items-center">
+        {/*  §4 (nº 328) — IL DEVIENT UN `<Link>`, comme le rond de
+            profil, ET POUR LA MÊME RAISON. Il était un `<a>` parce
+            qu'« un <Link> laisserait le dégel reposer l'ancienne
+            position sur l'accueil » : ce défaut est réparé au §2 de
+            cette passe (la position se lit sous le gel). Le
+            rechargement complet du document, lui, ne coûtait que du
+            temps et de la donnée.
+            ⚠️ CE QUE CE CHEMIN NE TIENT PAS ENCORE, ET IL FAUT LE
+            SAVOIR : le logo QUITTE la route `/tatoueur/[slug]`, donc
+            la fiche est démontée. Un retour ramène alors l'ADRESSE du
+            carrousel, que la route serveur sert en page à part
+            entière — pas la fenêtre superposée. Pour que le retour
+            rende la fenêtre AUSSI par ce chemin, il faudrait que la
+            route `/carrousel` monte la fiche dessous sur smartphone :
+            c'est une décision de produit (elle changerait aussi ce que
+            voit celui qui reçoit un lien de partage), et elle n'est
+            pas prise ici. Le rond de profil, lui, ne quitte pas la
+            route : il tient la promesse entièrement. */}
+        <Link href="/" aria-label="Accueil YokoFolio" className="flex items-center">
           <LogoYokofolio hauteur={24} />
-        </a>
+        </Link>
         {/*  §2-1 (nº 285) — LE COMPTEUR, À DROITE, EN GRIS. Il tient la
              place du vide de la nº 284 : la barre garde ses trois
              éléments alignés, et le logo reste au centre VRAI (les deux

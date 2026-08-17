@@ -174,6 +174,11 @@ export function PileFiches({
   const pathname = usePathname();
   const [pile, setPile] = useState<EntreePile[]>([]);
   const ouvertures = useRef(0);
+  /** §5 (nº 328) — COMBIEN D'ENTRÉES CETTE PILE A POUSSÉES. Un
+      COMPTEUR et non un drapeau : les fenêtres s'empilent, et
+      chaque fermeture ne rend qu'un cran (point 7 de la règle —
+      voir `fermer`). */
+  const entreesPoussees = useRef(0);
 
   /**
    * LA PILE SUIT L'ADRESSE — ajustée PENDANT LE RENDU, jamais dans un
@@ -237,6 +242,7 @@ export function PileFiches({
         `/tatoueur/${slug}`
       );
       ouvertures.current += 1;
+      entreesPoussees.current += 1;
       setPile((courante) => [
         ...courante,
         { fiche, position, ouverture: ouvertures.current },
@@ -245,8 +251,15 @@ export function PileFiches({
   }, []);
 
   /** Fermer = machine arrière : l'adresse recule d'un cran, et le
-      rendu ci-dessus défait le cran de pile correspondant. */
+      rendu ci-dessus défait le cran de pile correspondant.
+      §5 (nº 328) — ET SEULEMENT SI CETTE PILE A POUSSÉ (point 7 de la
+      règle) : au doigt, un lien interne NAVIGUE (voir BlocLieux, qui
+      s'arrête sous 1024 px) et cette pile n'a rien empilé — une
+      fermeture y consommerait l'entrée du dessous. Le compteur répond
+      à « ai-je poussé ? », la seule question qui vaille. */
   const fermer = useCallback(() => {
+    if (entreesPoussees.current <= 0) return;
+    entreesPoussees.current -= 1;
     window.history.back();
   }, []);
 

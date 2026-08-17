@@ -10,6 +10,7 @@ import {
 import { usePathname } from "next/navigation";
 import { CarteTatoueur } from "@/components/CarteTatoueur";
 import { FenetreFiche } from "@/components/FenetreFiche";
+import { positionSousLeGel } from "@/lib/gel-du-corps";
 import { PileFiches } from "@/components/PileFiches";
 import {
   CLE_FENETRE_FICHE,
@@ -305,6 +306,9 @@ export function GrilleTatoueurs({
       depuis la fenêtre change l'adresse, et la fenêtre de base ne
       doit pas se fermer pour autant. */
   const [profondeurPile, setProfondeurPile] = useState(0);
+  /** §5 (nº 328) — CETTE GRILLE A-T-ELLE POUSSÉ L'ENTRÉE ? (point 7
+      de la règle — voir `fermer`.) */
+  const entreePoussee = useRef(false);
 
   // La fenêtre ne vit que si l'adresse est la sienne : le bouton
   // « précédent » (l'adresse redevient celle de la grille) ou une
@@ -330,14 +334,19 @@ export function GrilleTatoueurs({
       const note: ContexteFenetreFiche = {
         slug: tatoueur.slug,
         retour: window.location.pathname + window.location.search,
-        defilement: window.scrollY,
+        //  §2 (nº 328) — SOUS LE GEL, jamais brute (point 4 de la
+        //  règle). Ici le corps n'est normalement pas gelé — une
+        //  carte de la mosaïque ne se touche pas sous un voile —
+        //  mais la règle ne souffre pas d'exception locale : deux
+        //  façons de lire une position, c'est deux vérités.
+        defilement: positionSousLeGel(),
       };
       sessionStorage.setItem(CLE_FENETRE_FICHE, JSON.stringify(note));
     } catch {
       // Stockage indisponible : le rechargement servira la page
       // complète, comme avant — jamais bloquant.
     }
-    setPositionGrille(window.scrollY);
+    setPositionGrille(positionSousLeGel());
     //  Une ouverture de plus : la fenêtre qui suit est une fenêtre
     //  NEUVE (voir la clé plus bas).
     setOuvertures((n) => n + 1);
@@ -367,6 +376,7 @@ export function GrilleTatoueurs({
       "",
       `/tatoueur/${tatoueur.slug}${suite}`
     );
+    entreePoussee.current = true;
     setFicheOuverte(tatoueur);
     // LE PORTFOLIO ENTIER ARRIVE JUSTE APRÈS — la fenêtre est déjà
     // ouverte, avec sa photo. On ne remplace la fiche que si c'est
@@ -397,6 +407,21 @@ export function GrilleTatoueurs({
   // retombe tout seul. (Stable d'un rendu à l'autre : la fenêtre s'en
   // sert dans un effet qui ne doit tourner qu'une fois par ouverture.)
   const fermer = useCallback(() => {
+  /**
+   * §5 (nº 328) — UNE FERMETURE NE CONSOMME QUE CE QU'ELLE A CRÉÉ.
+   * ------------------------------------------------------------------
+   * C'est le POINT 7 de la règle (lib/navigation-session). `fermer`
+   * faisait `history.back()` SANS CONDITION — or l'entrée n'existe que
+   * si c'est bien CETTE surface qui l'a poussée. Sur smartphone,
+   * l'ouverture passe par un `<Link>` ordinaire et ne pousse rien
+   * d'ici : une fermeture consommerait alors l'entrée du dessous, et
+   * l'on reculerait d'un cran de trop.
+   * ⚠️ UN DRAPEAU, PAS UN TEST D'APPAREIL. « Ai-je poussé ? » est la
+   * question exacte ; « suis-je sur un mobile ? » n'en est qu'un
+   * indice, et il serait faux le jour où une largeur change d'avis.
+   */
+    if (!entreePoussee.current) return;
+    entreePoussee.current = false;
     window.history.back();
   }, []);
 

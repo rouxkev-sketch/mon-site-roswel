@@ -12,6 +12,61 @@
  * (posé dans le layout).
  */
 
+/**
+ * ██████████████████████████████████████████████████████████████████
+ * ██  LA RÈGLE DE NAVIGATION DU SMARTPHONE — ELLE FAIT AUTORITÉ   ██
+ * ██████████████████████████████████████████████████████████████████
+ *
+ * « Décidée par le propriétaire à la passe nº 328, après l'inventaire
+ * de la nº 327. Aucune passe future ne doit la contredire : si un
+ * écran a besoin d'une exception, elle s'écrit ici, nommée et datée. »
+ *
+ *  1. Toute surface qui couvre l'écran pose une entrée d'historique,
+ *     et le bouton retour la referme.
+ *  2. Le retour ne referme qu'une chose à la fois — la dernière
+ *     ouverte.
+ *  3. Un écran neuf s'ouvre en haut. Un écran où l'on revient se pose
+ *     là où on l'avait quitté. C'est le CHEMIN qui décide, jamais
+ *     l'écran.
+ *  4. La position se lit toujours par la fonction qui sait lire sous
+ *     le gel, jamais par la valeur brute.
+ *  5. L'état d'un écran vit dans l'adresse, pas dans React.
+ *  6. Un lien interne vers un autre portfolio n'affiche pas la photo
+ *     en haut. Une arrivée depuis une carte ou un lien de partage
+ *     l'affiche.
+ *  7. Une fermeture ne consomme une entrée que si elle l'a créée.
+ *  8. Le pas en avant rouvre ce que le retour vient de fermer, dans le
+ *     même état.
+ *
+ * ------------------------------------------------------------------
+ * POURQUOI ELLE VIT ICI, ET PAS AILLEURS. Ce module portait déjà LA
+ * RÈGLE UNIQUE DE RESTITUTION (plus bas, avant `arriveeQuiRestitue`) —
+ * c'est-à-dire le point 3 avant qu'il ne soit nommé. La règle entière
+ * le rejoint plutôt que de vivre dans un fichier de plus : elle décide
+ * de ce que ce module décide déjà.
+ *
+ * OÙ CHAQUE POINT S'APPLIQUE, POUR QU'AUCUN NE SE PERDE :
+ *  · 1 et 2 — `PileFiches`, `FicheTatoueur` (fenêtre de carrousel),
+ *    `GrilleTatoueurs`, `PageFavoris`. ⚠️ QUATRE SURFACES NE LE FONT
+ *    PAS ENCORE : la feuille du bas des menus, la page de recherche,
+ *    le menu « Mon espace » et l'administration (C-4 de l'inventaire).
+ *    C'EST LA PASSE SUIVANTE QUI LES TRAITE — ce n'est pas un oubli.
+ *  · 3 — `DefilementEnHaut` (l'arrivée, avant la peinture) et
+ *    `MemoireNavigation` (la mémorisation, et le filet après).
+ *  · 4 — `positionSousLeGel` (lib/gel-du-corps), appelée par TOUS
+ *    ceux qui écrivent une position depuis la nº 328-§2.
+ *  · 5 — ⚠️ QUATRE ÉTATS N'Y SONT PAS ENCORE : l'onglet Profil /
+ *    Portfolio, la consigne « sans photo », la section
+ *    d'administration et l'étape du formulaire (C-6). PASSE SUIVANTE.
+ *  · 6 — `lib/arrivee-sans-photo` (nº 295).
+ *  · 7 — chaque `fermer` du site vérifie qu'il a poussé son entrée.
+ *  · 8 — conséquence des points 1 et 5 : une surface qui vit dans
+ *    l'historique et dont l'état vit dans l'adresse se rouvre telle
+ *    quelle. Tant que le point 5 n'est pas tenu partout, le point 8
+ *    ne l'est pas non plus.
+ * ██████████████████████████████████████████████████████████████████
+ */
+
 import { adresseDeRecherche } from "@/lib/adresse-recherche";
 
 export const CLE_JOURNAL = "roswel:pages-visitees";
@@ -381,6 +436,27 @@ export function oublierRestaurationPosition() {
     sessionStorage.removeItem(CLE_RESTAURER);
   } catch {
     // rien à oublier
+  }
+}
+
+/**
+ * LA MÊME QUESTION, SANS CONSOMMER (§3, nº 328).
+ * ------------------------------------------------------------------
+ * `DefilementEnHaut` doit savoir, AVANT LA PEINTURE, s'il a le droit
+ * de remonter la page — c'est-à-dire si une restitution est attendue.
+ * Il ne peut pas appeler `consommerRestaurationPosition` pour cela :
+ * il MANGERAIT la demande que `MemoireNavigation` doit consommer un
+ * instant plus tard, et la position ne serait jamais rendue.
+ * Cette lecture-ci ne retire rien. Elle répond à « une demande est-elle
+ * posée pour CETTE adresse ? », et rien d'autre.
+ */
+export function restaurationDemandeePour(url: string): boolean {
+  try {
+    const brut = sessionStorage.getItem(CLE_RESTAURER);
+    if (!brut) return false;
+    return brut === "1" || brut === url;
+  } catch {
+    return false;
   }
 }
 

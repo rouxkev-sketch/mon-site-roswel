@@ -302,21 +302,78 @@ export function FicheTatoueur({
    * (le carrousel principal change, la page remonte — nº 197-§4).
    */
   const pathname = usePathname();
+
+  /**
+   * CE QUE L'ADRESSE DU CARROUSEL DÉCRIT — style, série, photo.
+   * La MÊME lecture que la route serveur (`/carrousel/page.tsx`) et
+   * que `cheminDeLaFenetreCarrousel` qui l'écrit : trois paramètres,
+   * pas un de plus. C'est elle qui permet à un RETOUR de rouvrir la
+   * fenêtre exactement telle qu'elle était (nº 328-§4).
+   */
+  function fenetreDeLAdresse() {
+    const p = new URLSearchParams(window.location.search);
+    const style = p.get("style") ?? "";
+    const nature = p.get("nature") ?? "";
+    const rendu = p.get("rendu") ?? "";
+    return {
+      style,
+      serie: nature || style ? { nature, rendu } : null,
+      photo: Math.max(0, Math.floor(Number(p.get("photo")) || 0)),
+      position: positionSousLeGel(),
+    };
+  }
+
   const [fenetreCarrousel, setFenetreCarrousel] = useState<{
     style: string;
     serie: { nature: string; rendu: string } | null;
     photo: number;
     position: number;
   } | null>(null);
-  //  LA FENÊTRE SUIT L'ADRESSE — ajustée PENDANT LE RENDU, jamais dans
-  //  un effet (le motif de PileFiches, avec la même vérité :
-  //  `location.pathname`, car `usePathname` reste en retard d'un rendu
-  //  et ne sert que de réveil).
+  /**
+   * §4 (nº 328) — L'ADRESSE OUVRE LA FENÊTRE AUTANT QU'ELLE LA FERME.
+   * ==================================================================
+   * CE QUI ÉTAIT ÉCRIT : l'ajustement ne jouait QUE DANS UN SENS —
+   * l'adresse qui ne correspond plus REFERME la fenêtre, mais
+   * l'adresse qui redevient celle du carrousel ne la ROUVRAIT pas. La
+   * fenêtre ne s'ouvrait que par le geste (`ouvrirLaFenetreCarrousel`).
+   *
+   * CE QUE CELA CASSAIT (C-1 de l'inventaire nº 327). Depuis la
+   * fenêtre, le rond de profil menait à la fiche ; l'entrée du
+   * carrousel restait dans l'historique, mais plus rien ne la montait.
+   * Un retour ramenait donc l'ADRESSE du carrousel sans la fenêtre :
+   * la route serveur répondait, et l'on tombait sur une PAGE PLEINE
+   * sans barre, dont la flèche était devenue un lien. On ne revenait
+   * jamais à ce qu'on venait de quitter.
+   *
+   * LA CORRECTION, ET C'EST LE POINT 5 DE LA RÈGLE (l'état d'un écran
+   * vit dans l'adresse) : l'ajustement devient SYMÉTRIQUE. L'adresse
+   * dit tout — si elle est celle du carrousel, la fenêtre est montée,
+   * avec le style, la série et la photo QU'ELLE PORTE. Le retour la
+   * rouvre donc dans le même état (point 8), sans repasser par le
+   * serveur, et sans qu'aucun geste n'ait à être rejoué.
+   *
+   * ⚠️ LA POSITION DE LA PAGE DESSOUS, à la réouverture : celle du
+   * moment, lue SOUS LE GEL (point 4). Au retour, le corps n'est plus
+   * gelé — le dégel de la fermeture précédente l'a rendu à sa place —
+   * et c'est donc bien la position de la fiche qu'on relit.
+   * ⚠️ AJUSTÉ PENDANT LE RENDU, jamais dans un effet (le motif de
+   * PileFiches), avec la même vérité : `location`, car `usePathname`
+   * reste en retard d'un rendu et ne sert que de réveil.
+   */
   const adresseDeLaFenetre = `/tatoueur/${tatoueur.slug}/carrousel`;
   const cheminReel =
     typeof window === "undefined" ? pathname : window.location.pathname;
   if (fenetreCarrousel && cheminReel !== adresseDeLaFenetre) {
     setFenetreCarrousel(null);
+  }
+  if (
+    !fenetreCarrousel &&
+    !apercu &&
+    cheminReel === adresseDeLaFenetre &&
+    typeof window !== "undefined" &&
+    document.documentElement.dataset.appareil === "mobile"
+  ) {
+    setFenetreCarrousel(fenetreDeLAdresse());
   }
 
   /**

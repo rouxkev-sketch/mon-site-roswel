@@ -2,8 +2,13 @@
 
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
-import { arriveeQuiRestitue } from "@/lib/navigation-session";
-import { positionDejaPosee } from "@/lib/restitution-position";
+import {
+  arriveeQuiRestitue,
+  lireDefilement,
+  restaurationDemandeePour,
+} from "@/lib/navigation-session";
+import { adresseDeRecherche } from "@/lib/adresse-recherche";
+import { poserLaPosition, positionDejaPosee } from "@/lib/restitution-position";
 
 /**
  * CHAQUE NAVIGATION OUVRE LA PAGE TOUT EN HAUT
@@ -76,14 +81,42 @@ export function DefilementEnHaut() {
 
   useEffetAvantPeinture(() => {
     /**
-     * ⚠️ UNE PAGE DE DÉTAIL EST TOUJOURS EN HAUT — RETOUR COMME AVANCE
-     * (nº 193-§2).
-     * LE CONSTAT : en AVANÇANT sur une fiche, on arrivait « tout en
-     * bas, à un endroit où l'on n'a jamais été ». C'est le défilement
-     * de la LISTE qui reste en place : le site a coupé la restauration
-     * du navigateur, la page de fiche est plus courte, et le navigateur
-     * rabote la position à son bas. Une traversée ne dispensait pas de
-     * remonter — elle le faisait, et c'était le trou.
+     * §3 (nº 328) — C-2 : LE CHEMIN DÉCIDE, ET LA DÉCISION EST PRISE
+     * ICI, AVANT LA PEINTURE.
+     * ==================================================================
+     * CE QUI ÉTAIT ÉCRIT, ET LE DÉFAUT QU'IL CAUSAIT. Cette branche
+     * remontait la page en haut sur TOUTE adresse `/tatoueur/`, SANS
+     * CONDITION — « une page de détail est toujours en haut » (nº 193-
+     * §2). Depuis la nº 230-§3, ce n'est plus vrai : une fiche ouverte
+     * DEPUIS UNE FICHE écrit sa position, et le retour doit la rendre.
+     * Les deux règles se contredisaient à un rendu d'intervalle : cette
+     * remontée-ci s'exécute AVANT la peinture, la restitution de
+     * `MemoireNavigation` APRÈS. La page s'affichait donc en haut, PUIS
+     * sautait à sa place. C'est le « parfois ça remonte, parfois non »
+     * du propriétaire, et c'est le point 3 de la règle qui tranche.
+     *
+     * LA RÈGLE : un écran NEUF s'ouvre en haut, un écran où l'on
+     * REVIENT se pose là où on l'a quitté — le CHEMIN décide.
+     *
+     * COMMENT ON RECONNAÎT UN RETOUR, SANS RIEN CONSOMMER. Trois
+     * signaux, tous LUS et jamais mangés — c'est essentiel :
+     * `MemoireNavigation` doit pouvoir consommer les siens un instant
+     * plus tard, et deux consommateurs pour un jeton, c'est une
+     * restitution perdue sur deux.
+     *  · le popstate de ce document, avec l'adresse qu'il visait ;
+     *  · une demande NOMMÉE pour cette adresse
+     *    (`restaurationDemandeePour`, lecture non destructive ajoutée
+     *    à cette passe) ;
+     *  · un document né d'un retour, d'une avance ou d'un rechargement
+     *    (`arriveeQuiRestitue`, mémoïsé, non destructif).
+     *
+     * ET LA POSITION EST POSÉE ICI, PAS PLUS TARD — c'est l'exigence
+     * (b) du §3 : `useLayoutEffect` s'exécute ENTRE la pose du DOM et
+     * la peinture. Aucune image n'est peinte avec la page au mauvais
+     * endroit, donc aucun saut. `MemoireNavigation` repose la même
+     * valeur après ; poser deux fois la même position ne déplace rien
+     * — c'est un filet, pas un second mouvement.
+     *
      * ⚠️ APRÈS la fenêtre de fiche (le web ouvre la fiche PAR-DESSUS la
      * mosaïque : là, il ne faut toucher à rien).
      */
@@ -91,9 +124,24 @@ export function DefilementEnHaut() {
       chemin.startsWith("/tatoueur/") &&
       !document.documentElement.dataset.fenetreFiche
     ) {
+      const url = chemin + window.location.search;
+      const revient =
+        (retourNavigateur.current && adresseRetour.current === url) ||
+        restaurationDemandeePour(url) ||
+        (premierRendu.current && arriveeQuiRestitue());
       retourNavigateur.current = false;
       adresseRetour.current = "";
       premierRendu.current = false;
+      if (revient) {
+        //  ON REVIENT : la place est rendue AVANT la peinture. Rien à
+        //  rendre (une fiche ouverte depuis une liste n'en a jamais
+        //  écrit) : `poserLaPosition` ne bouge rien, et la page reste
+        //  où le navigateur l'a mise — c'est-à-dire en haut.
+        if (!positionDejaPosee()) {
+          poserLaPosition(lireDefilement(url), adresseDeRecherche(url));
+        }
+        return;
+      }
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
       return;
     }

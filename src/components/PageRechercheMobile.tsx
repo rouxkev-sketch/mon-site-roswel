@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { positionSousLeGel } from "@/lib/gel-du-corps";
 import { IconeCroix, IconeLoupe } from "@/components/Icones";
 import { OngletsLigne } from "@/components/OngletsLigne";
 import {
@@ -211,7 +212,12 @@ export function PageRechercheMobile({
     //  (`data-recherche`), le reste du site a quitté le flux, et relire
     //  `scrollY` écraserait la bonne valeur par un zéro.
     if (!document.documentElement.dataset.recherche) {
-      memoriserDefilementResultats(window.scrollY);
+      //  §2 (nº 328) — sous le gel, jamais brute (point 4). La
+      //  garde `data-recherche` ci-dessus reste : elle dit que les
+      //  résultats sont ENCORE DANS LE FLUX. Celle-ci dit qu'ils ne
+      //  sont pas SOUS UNE SURFACE — une feuille de menu ouverte
+      //  quand on touche la barre, par exemple.
+      memoriserDefilementResultats(positionSousLeGel());
     }
 
     //  ⚠️ DEUX IMAGES, PAS UNE (nº 153-§3) : une seule laissait le

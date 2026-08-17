@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LARGEUR_SITE } from "@/config/tatouage";
@@ -9,6 +15,7 @@ import { lireRequeteCourante, souscrireAdresse } from "@/lib/adresse-courante";
 import { CarteTatoueur } from "@/components/CarteTatoueur";
 import { CLASSES_GRILLE_CARTES } from "@/components/GrilleTatoueurs";
 import { useVuePhototheque } from "@/components/AffichageMosaique";
+import { positionSousLeGel } from "@/lib/gel-du-corps";
 import { BlocSuivis } from "@/components/BlocSuivis";
 import { FenetreFiche } from "@/components/FenetreFiche";
 import { PileFiches } from "@/components/PileFiches";
@@ -156,6 +163,10 @@ export function PageFavoris({
    */
   const pathname = usePathname();
   const [ficheOuverte, setFicheOuverte] = useState<Tatoueur | null>(null);
+  /** §5 (nº 328) — CETTE PAGE A-T-ELLE POUSSÉ L'ENTRÉE ? Voir
+      `fermerLaFiche` : une fermeture ne consomme que ce qu'elle a
+      créé (point 7 de la règle). */
+  const entreePoussee = useRef(false);
   const [positionPage, setPositionPage] = useState(0);
   /**
    * §1 (nº 247) — LES TROIS TAGS DE L'ENSEMBLE OUVERT, ET PLUS LE SEUL
@@ -207,13 +218,14 @@ export function PageFavoris({
         const note: ContexteFenetreFiche = {
           slug,
           retour: window.location.pathname + window.location.search,
-          defilement: window.scrollY,
+          //  §2 (nº 328) — sous le gel, jamais brute (point 4).
+          defilement: positionSousLeGel(),
         };
         sessionStorage.setItem(CLE_FENETRE_FICHE, JSON.stringify(note));
       } catch {
         // Stockage indisponible : le rechargement servira la page.
       }
-      setPositionPage(window.scrollY);
+      setPositionPage(positionSousLeGel());
       setSerieOuverte(serie);
       document.documentElement.setAttribute("data-fenetre-fiche", "1");
       /**
@@ -240,6 +252,7 @@ export function PageFavoris({
         "",
         `/tatoueur/${slug}${window.location.search}`
       );
+      entreePoussee.current = true;
       setFicheOuverte(fiche);
     },
     []
@@ -261,6 +274,21 @@ export function PageFavoris({
         divergeait de celui de la pile posée à cette passe (une entrée
         par fenêtre, un cran par retour). Le bouton « précédent »,
         lui, passait déjà par là — c'est le même chemin désormais. */
+  /**
+   * §5 (nº 328) — UNE FERMETURE NE CONSOMME QUE CE QU'ELLE A CRÉÉ.
+   * ------------------------------------------------------------------
+   * C'est le POINT 7 de la règle (lib/navigation-session). `fermer`
+   * faisait `history.back()` SANS CONDITION — or l'entrée n'existe que
+   * si c'est bien CETTE surface qui l'a poussée. Sur smartphone,
+   * l'ouverture passe par un `<Link>` ordinaire et ne pousse rien
+   * d'ici : une fermeture consommerait alors l'entrée du dessous, et
+   * l'on reculerait d'un cran de trop.
+   * ⚠️ UN DRAPEAU, PAS UN TEST D'APPAREIL. « Ai-je poussé ? » est la
+   * question exacte ; « suis-je sur un mobile ? » n'en est qu'un
+   * indice, et il serait faux le jour où une largeur change d'avis.
+   */
+    if (!entreePoussee.current) return;
+    entreePoussee.current = false;
     window.history.back();
   }, []);
 

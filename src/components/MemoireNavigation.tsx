@@ -15,6 +15,9 @@ import {
   purgerDefilementsAnciens,
   signalerTraversee,
 } from "@/lib/navigation-session";
+//  §2 (nº 328) — LA POSITION SE LIT SOUS LE GEL, JAMAIS BRUTE.
+//  C'est le point 4 de la règle de navigation (lib/navigation-session).
+import { positionSousLeGel } from "@/lib/gel-du-corps";
 import { adresseDeRecherche } from "@/lib/adresse-recherche";
 import {
   poserLaPosition,
@@ -186,7 +189,7 @@ export function MemoireNavigation() {
         if (estUnePageDeDetail(location.pathname)) return;
         memoriserDefilement(
           location.pathname + location.search,
-          window.scrollY
+          positionSousLeGel()
         );
       });
     };
@@ -195,7 +198,10 @@ export function MemoireNavigation() {
     const ecrireMaintenant = () => {
       if (document.documentElement.dataset.recherche) return;
       if (estUnePageDeDetail(location.pathname)) return;
-      memoriserDefilement(location.pathname + location.search, window.scrollY);
+      memoriserDefilement(
+        location.pathname + location.search,
+        positionSousLeGel()
+      );
     };
     const auDepart = (evenement: MouseEvent) => {
       const cible = evenement.target;
@@ -237,9 +243,24 @@ export function MemoireNavigation() {
        * la nº 191 n'est pas touchée, elle est bornée.
        */
       if (estUnePageDeDetail(location.pathname)) {
+        /*  §2 (nº 328) — C-3 : LA POSITION SOUS LE GEL, ET C'ÉTAIT LE
+            BUG LE PLUS SILENCIEUX DU SITE.
+            ------------------------------------------------------------
+            CE QUI ÉTAIT ÉCRIT : `window.scrollY`. Or quand on part
+            depuis une SURFACE SUPERPOSÉE — la fenêtre de carrousel du
+            smartphone, une fenêtre de fiche du web —, le corps est
+            `position: fixed` et `window.scrollY` VAUT ZÉRO
+            (lib/gel-du-corps). On écrasait donc la position de la
+            fiche par 0 à chaque départ depuis une fenêtre, et le
+            retour suivant la rouvrait en haut.
+            `positionSousLeGel()` rend la position DU CORPS GELÉ quand
+            il l'est (elle la relit dans son `top: -Ypx`), et
+            `window.scrollY` sinon. Elle existait déjà — la fenêtre de
+            carrousel et la pile de fiches l'appellent depuis la
+            nº 259-§3 ; c'est ce fichier-ci qui ne l'appelait pas. */
         memoriserDefilement(
           location.pathname + location.search,
-          window.scrollY
+          positionSousLeGel()
         );
         demanderRestaurationPosition(location.pathname + location.search);
         gele = true;
