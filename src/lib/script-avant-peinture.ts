@@ -1,4 +1,7 @@
 import { COULEURS_SOMBRE } from "@/config/tatouage";
+//  §1 (nº 335) — LA RÈGLE DE LA CLÉ N'EST PLUS RECOPIÉE ICI : elle est
+//  fabriquée par le module qui la porte (lib/adresse-recherche).
+import { conditionDeReglagePourLeScript } from "@/lib/adresse-recherche";
 import {
   COOKIE_COLONNES,
   expressionColonnes,
@@ -12,6 +15,13 @@ import {
   CLE_RESTAURER,
   PREFIXE_DEFILEMENT,
 } from "@/lib/navigation-session";
+//  §1 (nº 335) — la marque « nais avec la rangée repliée », écrite une
+//  seule fois (lib/reserve-barre) et lue par la barre à sa naissance.
+import {
+  MARQUE_RANGEE,
+  RESERVE_LOGO,
+  VARIABLE_RESERVE_REPLIEE,
+} from "@/lib/reserve-barre";
 
 /**
  * TOUT CE QUI DOIT ÊTRE DÉCIDÉ AVANT LA PREMIÈRE PEINTURE
@@ -71,24 +81,31 @@ import {
  *    src/lib/restitution-position.ts, qui applique exactement la même
  *    mécanique pour les retours qui ne changent pas de document.)
  *
- *    ⚠️ ET LE DÉFILEMENT SE POSE PAR `scrollTo(0, y)`, LA FORME À DEUX
- *    ARGUMENTS — surtout pas par la forme à options. Mesuré à la passe
- *    115, dans les deux sens :
- *     · la forme à deux arguments n'a pas d'option, elle obéit donc au
- *       défilement doux déclaré globalement par le site : la page
- *       GLISSE jusqu'à sa position au lieu de s'y poser (filmé image
- *       par image : y=0 à 46 ms, puis 133, 348, 648… et 900 seulement
- *       à 593 ms). C'est visible, et j'ai voulu le corriger en
- *       demandant un défilement instantané.
- *     · ESSAYÉ, MESURÉ, ANNULÉ : la reprise de session repartait alors
- *       à ZÉRO. À cet instant, le document vient d'être remplacé et
- *       n'a pas encore sa hauteur ; un défilement instantané est donc
- *       raboté sur-le-champ, tandis que le défilement doux continue de
- *       progresser pendant que la page grandit, et finit par atteindre
- *       sa cible. Le lissage rattrape ici une hauteur qui n'existe pas
- *       encore.
- *    Le glissement visible ne se corrigera qu'en garantissant la
- *    hauteur AVANT de défiler sur ce chemin-là. Il reste à faire.
+ *    ⚠️ LE DÉFILEMENT EST DÉSORMAIS IMMÉDIAT (§1, nº 335) — ET C'EST LA
+ *    DETTE DE LA PASSE 115 QUI SE SOLDE. L'histoire, en clair :
+ *     · la forme à DEUX arguments — `scrollTo(0, y)` — n'a pas
+ *       d'option : elle obéit au défilement doux déclaré globalement
+ *       par le site, et la page GLISSE jusqu'à sa position au lieu de
+ *       s'y poser (filmé image par image à la passe 115 : y=0 à 46 ms,
+ *       puis 133, 348, 648… et 900 seulement à 593 ms) ;
+ *     · l'immédiat avait été ESSAYÉ, MESURÉ, ANNULÉ : la position
+ *       repartait à ZÉRO, parce que le document venait d'être remplacé
+ *       et n'avait pas encore sa hauteur — un défilement instantané y
+ *       est raboté sur-le-champ, là où le glissement continue de
+ *       progresser pendant que la page grandit ;
+ *     · la note de l'époque concluait : « le glissement visible ne se
+ *       corrigera qu'en garantissant la hauteur AVANT de défiler ».
+ *       C'EST FAIT DEPUIS, deux lignes plus haut : la réserve
+ *       (`min-height`) est posée avant le défilement. La raison qui
+ *       imposait le glissement n'existe plus.
+ *    ET IL FALLAIT LE SOLDER, parce que ce glissement n'était pas
+ *    seulement visible : la barre y lisait un GESTE. Six cents
+ *    millisecondes de défilement vers le bas que personne n'a faits,
+ *    et le seuil des 24 px est franchi — la rangée de recherche se
+ *    repliait toute seule APRÈS la première image. C'est cela, « les
+ *    cartes s'affichent puis remontent légèrement » (nº 335-§1), et
+ *    c'est cela aussi les 58 px de trop : la réserve avait rétréci
+ *    sous une position posée pour la réserve dépliée.
  *
  * ⚠️ RIEN N'EST ÉCRIT SUR <body>. React le rend : tout attribut ou
  * style posé dessus avant l'hydratation est un écart d'hydratation
@@ -145,22 +162,27 @@ var attendue=demande&&(demande==="1"||demande===adresse);
 if(attendue){try{sessionStorage.removeItem(${restaurer})}catch(e){}}
 if(nav==="navigate"&&!attendue)return;
 /* ⚠️ LA CLÉ EST L'ADRESSE CANONIQUE DE LA RECHERCHE (nº 184-§2) :
-   critères compris, réglages de sonde exclus, paramètres triés. LA
-   MÊME LOGIQUE QU'EN lib/adresse-recherche — si l'une change,
-   l'autre aussi, sinon on irait chercher une clé que personne
-   n'écrit. */
+   critères compris, réglages de sonde exclus, paramètres triés.
+   §1 (nº 335) — LA CONDITION CI-DESSOUS EST FABRIQUÉE PAR
+   lib/adresse-recherche, à partir des MÊMES constantes que le reste
+   du site : il n'y a plus deux copies de la règle à tenir d'accord. */
 var p=new URLSearchParams(location.search);var noms=[];
 p.forEach(function(v,n){noms.push(n)});
 for(var i=0;i<noms.length;i++){var n=noms[i];
-if(n.indexOf("sonde")===0||n==="clair"||n==="verre"||n==="flou"||n==="sans"||n==="disposition"||n==="texte")p.delete(n)}
+if(${conditionDeReglagePourLeScript('n')})p.delete(n)}
 p.sort();var q=p.toString();
 var cle=location.pathname+(q?"?"+q:"");
 var note=jour(${prefixe}+cle,localStorage);
 if(!note||!note.y||maintenant-(note.date||0)>agePosition)return;
 r.style.minHeight=(note.y+innerHeight)+"px";
 r.dataset.positionPosee=String(note.y);
-/* Forme à DEUX ARGUMENTS : voir le point 4 de l'en-tête. */
-scrollTo(0,note.y);
+/* §1 (nº 335) — LA RANGÉE NAÎT DANS L'ÉTAT OÙ ON L'A LAISSÉE. La
+   place gardée porte les deux (lib/navigation-session) ; la barre
+   lit cette marque à sa naissance (lib/reserve-barre). Sans elle,
+   la réserve renaît dépliée et tout le contenu descend d'un cran. */
+if(note.p){r.style.setProperty(${JSON.stringify(VARIABLE_RESERVE_REPLIEE)},${JSON.stringify(`${RESERVE_LOGO}px`)});r.dataset[${JSON.stringify(MARQUE_RANGEE)}]="1"}
+/* IMMÉDIAT, ET PLUS EN GLISSANT : voir le point 4 de l'en-tête. */
+scrollTo({top:note.y,left:0,behavior:"instant"});
 /* FILET : si React ne démarre jamais, la réserve part quand même. */
 setTimeout(function(){if(r.dataset.positionPosee){r.style.minHeight="";delete r.dataset.positionPosee}},6000);
 }catch(e){}

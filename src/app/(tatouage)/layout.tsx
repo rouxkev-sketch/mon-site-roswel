@@ -52,6 +52,7 @@ import { SondeCarrousel } from "@/components/SondeCarrousel";
 import { SondeCartes } from "@/components/SondeCartes";
 import { SondeRemontee } from "@/components/SondeRemontee";
 import { SondeHistorique } from "@/components/SondeHistorique";
+import { SondeClic } from "@/components/SondeClic";
 import { COMPTES_YOKOFOLIO } from "@/config/tatouage";
 import { COOKIE_DEJA_CONNECTE } from "@/lib/deja-connecte";
 import { utilisateurDepuisCookies } from "@/lib/session-cookie";
@@ -269,6 +270,15 @@ export default async function MiseEnPageTatouage({
         src/lib/journal-historique.ts, et sa mention au bandeau des
         chantiers ouverts (src/lib/navigation-session.ts). */}
     <SondeHistorique />
+    {/* ⚠️ TEMPORAIRE — LA SONDE DU CLIC (`?sonde-clic=1`, nº 335-§3).
+        Elle dit QUEL ÉLÉMENT reçoit réellement un toucher, avec toute
+        la pile empilée à ce point, le lien trouvé s'il y en a un, et
+        si l'événement est arrivé jusqu'au document ou s'il a été
+        arrêté en route. Elle n'annule rien et ne retarde rien.
+        Pour la retirer : cette ligne, son import, le fichier
+        src/components/SondeClic.tsx, et sa mention au bandeau des
+        chantiers ouverts (src/lib/navigation-session.ts). */}
+    <SondeClic />
     {/* ⚠️ L'ÉCOUTEUR GLOBAL DE REMONTÉE EST SUPPRIMÉ (nº 162-§1). La
         règle de la nº 155-§1 — « TOUS les champs du site remontent » —
         est annulée : la remontée ne sert qu'à dégager de la place SOUS

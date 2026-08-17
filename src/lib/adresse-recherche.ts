@@ -57,7 +57,7 @@
  * (§3). La position se range désormais sous LES SEULS CRITÈRES, et un
  * retour la retrouve quelle que soit la façon de regarder.
  */
-const HORS_RECHERCHE = [
+export const HORS_RECHERCHE = [
   "clair",
   "verre",
   "flou",
@@ -66,9 +66,36 @@ const HORS_RECHERCHE = [
   "texte",
 ];
 
+/** §1 (nº 335) — LE PRÉFIXE DES SONDES, nommé une seule fois. Le
+    script d'avant peinture le reprend TEL QUEL (voir plus bas) : il ne
+    peut pas appeler ce module, mais il ne doit pas non plus recopier
+    sa règle à la main. */
+export const PREFIXE_REGLAGE = "sonde";
+
 /** Vrai pour un paramètre de sonde ou de mesure. */
 function estUnReglage(nom: string): boolean {
-  return nom.startsWith("sonde") || HORS_RECHERCHE.includes(nom);
+  return nom.startsWith(PREFIXE_REGLAGE) || HORS_RECHERCHE.includes(nom);
+}
+
+/**
+ * §1 (nº 335) — LA MÊME RÈGLE, EN TEXTE, POUR LE SCRIPT D'AVANT
+ * PEINTURE.
+ * ------------------------------------------------------------------
+ * Ce script s'exécute AVANT que le moindre module ne soit chargé : il
+ * ne peut pas appeler `estUnReglage`. Jusqu'à la nº 335 il en gardait
+ * une COPIE à la main — et l'en-tête de ce fichier avertissait déjà
+ * « si l'une des deux change, l'AUTRE AUSSI ». Deux copies d'une
+ * règle, c'est exactement ce qui a coûté les passes nº 328 à 334.
+ * DÉSORMAIS IL N'Y EN A QU'UNE : cette fonction rend la CONDITION
+ * JavaScript, fabriquée à partir des mêmes constantes. Ajouter un
+ * réglage à la liste ci-dessus le retire du script au même instant.
+ */
+export function conditionDeReglagePourLeScript(variable: string): string {
+  const noms = HORS_RECHERCHE.map((nom) => `${variable}===${JSON.stringify(nom)}`);
+  return [
+    `${variable}.indexOf(${JSON.stringify(PREFIXE_REGLAGE)})===0`,
+    ...noms,
+  ].join("||");
 }
 
 /** LES CRITÈRES SEULS, triés et nettoyés — sans le chemin. Vide quand

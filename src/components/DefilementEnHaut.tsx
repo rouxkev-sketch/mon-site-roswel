@@ -4,11 +4,9 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import {
   arriveeQuiRestitue,
-  lireDefilement,
   restaurationDemandeePour,
 } from "@/lib/navigation-session";
-import { adresseDeRecherche } from "@/lib/adresse-recherche";
-import { poserLaPosition, positionDejaPosee } from "@/lib/restitution-position";
+import { rendreLaPlace, positionDejaPosee } from "@/lib/restitution-position";
 
 /**
  * CHAQUE NAVIGATION OUVRE LA PAGE TOUT EN HAUT
@@ -138,7 +136,8 @@ export function DefilementEnHaut() {
         //  écrit) : `poserLaPosition` ne bouge rien, et la page reste
         //  où le navigateur l'a mise — c'est-à-dire en haut.
         if (!positionDejaPosee()) {
-          poserLaPosition(lireDefilement(url), adresseDeRecherche(url));
+          //  §1 (nº 335) — la position ET l'état de la rangée, ensemble.
+          rendreLaPlace(url);
         }
         return;
       }

@@ -191,16 +191,30 @@ export function FenetreCarrousel({
   }, [superposee, positionPage, tatoueur.slug]);
 
   /**
-   * PAGE À PART ENTIÈRE, ÉCRAN NON TACTILE : LA FENÊTRE N'EXISTE PAS.
-   * La version web ne change en rien (nº 284) — on repart vers la
-   * fiche, sur ce carrousel, sans laisser d'entrée d'historique
-   * (`replace` : le bouton précédent ne retombe pas sur la fenêtre).
+   * §2 (nº 335) — LE REPLI VERS LA FICHE EST PARTI D'ICI, ET IL NE DOIT
+   * PAS Y REVENIR.
+   * ==================================================================
+   * CE QUI ÉTAIT ÉCRIT : un effet qui, sur une page à part entière et
+   * sur un écran non tactile, repartait vers la fiche
+   * (`location.replace`). C'était la règle de la nº 284 — « sur un
+   * écran non tactile, la fenêtre n'existe pas » — et elle reste
+   * vraie ; c'est l'ENDROIT qui était faux.
+   *
+   * POURQUOI. Un effet s'exécute APRÈS le premier affichage. Il y avait
+   * donc forcément une image de cette page, puis une autre de la fiche
+   * — et comme la fiche relit les tags de l'adresse et ROUVRE la
+   * fenêtre par-dessus, le propriétaire voyait « la fiche pendant une
+   * seconde, puis la photo partagée ». Aucune correction ici n'aurait
+   * pu supprimer cette seconde : elle est le temps qu'il faut au
+   * navigateur pour exister.
+   *
+   * LA DÉCISION EST DÉSORMAIS PRISE PAR LE SERVEUR, d'après l'adresse,
+   * avant que le HTML ne parte — voir
+   * app/(tatouage)/tatoueur/[slug]/carrousel/page.tsx. Quand ce
+   * composant est rendu en page à part entière, la question est déjà
+   * tranchée : c'est un écran tactile, la fenêtre est CE QU'IL FAUT
+   * SERVIR, et il n'y a plus rien à décider.
    */
-  useEffect(() => {
-    if (superposee) return;
-    if (document.documentElement.dataset.appareil === "mobile") return;
-    window.location.replace(adresseFiche);
-  }, [superposee, adresseFiche]);
 
   /** LE ROND DE PROFIL — la photo du compte, ou l'initiale (le même
       dessin que la fiche : aucun contour, le fond détache). */

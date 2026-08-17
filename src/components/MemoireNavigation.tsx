@@ -7,7 +7,6 @@ import {
   consommerRestaurationPosition,
   demanderRestaurationPosition,
   oublierRestaurationPosition,
-  lireDefilement,
   marquerHydratation,
   memoriserDefilement,
   noterPageOnglet,
@@ -18,9 +17,8 @@ import {
 //  §2 (nº 328) — LA POSITION SE LIT SOUS LE GEL, JAMAIS BRUTE.
 //  C'est le point 4 de la règle de navigation (lib/navigation-session).
 import { positionSousLeGel } from "@/lib/gel-du-corps";
-import { adresseDeRecherche } from "@/lib/adresse-recherche";
 import {
-  poserLaPosition,
+  rendreLaPlace,
   reprendreLaReserveDuScript,
 } from "@/lib/restitution-position";
 import {
@@ -207,7 +205,23 @@ export function MemoireNavigation() {
     const memoriserPosition = () => {
       if (gele || ecriturePrevue) return;
       ecriturePrevue = true;
-      requestAnimationFrame(() => {
+      /**
+       * §1 (nº 335) — DEUX IMAGES, PAS UNE, ET C'EST À CAUSE DE LA
+       * RANGÉE.
+       * ------------------------------------------------------------
+       * Depuis cette passe, on ne range pas que la position : on range
+       * aussi L'ÉTAT DE LA RANGÉE de recherche (lib/reserve-barre). Or
+       * cet état est décidé PAR CE MÊME ÉVÉNEMENT de défilement : la
+       * barre l'entend, elle aussi, et se replie. À une image d'écart,
+       * on relevait donc l'ANCIEN état — mesuré au banc de la nº 333 :
+       * « repliée » écrit `p: false` juste après le geste, puis
+       * `p: true` à l'écriture suivante. La seconde image suffit : la
+       * barre a alors rendu, et son attribut dit la vérité.
+       * ⚠️ CELA NE RETARDE RIEN D'AUTRE : cette écriture était déjà
+       * différée d'une image, et la position relue une image plus tard
+       * est simplement plus récente — jamais fausse.
+       */
+      requestAnimationFrame(() => requestAnimationFrame(() => {
         ecriturePrevue = false;
         // ⚠️ LA PAGE DE RECHERCHE OCCUPE LE DOCUMENT SANS CHANGER
         // D'ADRESSE. Quand elle se pose, le reste du site quitte le
@@ -230,7 +244,7 @@ export function MemoireNavigation() {
           location.pathname + location.search,
           positionSousLeGel()
         );
-      });
+      }));
     };
 
     /** L'écriture tout de suite, sans attendre l'image suivante. */
@@ -437,7 +451,9 @@ export function MemoireNavigation() {
     //  ⚠️ LA POSITION VOYAGE AVEC SA CLÉ (nº 185-c) : celle d'une
     //  mosaïque complète ne doit jamais être appliquée à une mosaïque
     //  filtrée. La pose la revérifie à chaque tentative.
-    poserLaPosition(lireDefilement(url), adresseDeRecherche(url));
+    //  §1 (nº 335) — ET AVEC L'ÉTAT DE LA RANGÉE : `rendreLaPlace` rend
+    //  les deux ensemble (lib/restitution-position).
+    rendreLaPlace(url);
   }, [pathname, requete, reveils]);
 
   return null;

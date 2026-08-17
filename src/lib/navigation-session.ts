@@ -41,6 +41,16 @@
  *  9. UN RETOUR NE FAIT JAMAIS QUITTER LE SITE — sauf s'il n'y a
  *     jamais rien eu d'autre dans l'onglet, auquel cas le visiteur a
  *     le droit de repartir d'où il venait (nº 332-§2, RetourGaranti).
+ * 10. UNE PLACE, C'EST UNE POSITION **ET** L'ÉTAT DE LA BARRE QUI
+ *     ALLAIT AVEC ; on range les deux, on rend les deux (nº 335-§1,
+ *     lib/reserve-barre). Rendre la position seule, c'était le « cran »
+ *     de 58 px et les cartes qui remontent après s'être affichées.
+ * 11. QUAND LA DÉCISION N'EST PAS « QUOI AFFICHER » MAIS « QUELLE PAGE
+ *     SERVIR », C'EST LE SERVEUR QUI TRANCHE, d'après l'adresse
+ *     (nº 335-§2, lib/appareil-serveur). Décidée dans le navigateur,
+ *     une telle bascule se voit toujours : il y a une image, puis une
+ *     autre. La règle du DOIGT (nº 60) reste seule maîtresse de tout
+ *     ce qui s'AFFICHE.
  *
  * ------------------------------------------------------------------
  * POURQUOI ELLE VIT ICI, ET PAS AILLEURS. Ce module portait déjà LA
@@ -102,6 +112,18 @@
  *    (nº 329-§4) : sa mémoire de session se consommait à la première
  *    lecture, et un retour perdait la consigne.
  *  · 7 — chaque `fermer` du site vérifie qu'il a poussé son entrée.
+ *  · 10 — `lib/reserve-barre` (la règle et les deux hauteurs, écrites
+ *    une seule fois), `memoriserDefilement` / `lireLaPlace` ici même
+ *    (le rangement), `rendreLaPlace` (lib/restitution-position, LA
+ *    SEULE PORTE du retour), `EnTeteTatouage` (la rangée naît dans
+ *    l'état demandé) et le script d'avant peinture (la marque, posée
+ *    avant que React n'existe). La feuille de style porte les deux
+ *    règles qui font que rien ne bouge à la première image
+ *    (`data-rangee-repliee`, `data-rangee-immediate`, globals.css).
+ *  · 11 — `lib/appareil-serveur`, appelé par la page du carrousel
+ *    partagé (app/(tatouage)/tatoueur/[slug]/carrousel/page.tsx). Un
+ *    seul appelant à ce jour : c'est voulu, ce n'est pas une règle
+ *    d'affichage.
  *  · 8 — conséquence des points 1 et 5 : une surface qui vit dans
  *    l'historique et dont l'état vit dans l'adresse se rouvre telle
  *    quelle. Tenu pour la fiche (onglet et consigne d'arrivée) depuis
@@ -133,6 +155,15 @@
  *    le rond de profil d'un carrousel PARTAGÉ porte la consigne des
  *    liens internes (§3) ; la section d'administration vit dans
  *    l'adresse, une entrée par pas (§4).
+ *  · nº 333 — un filtre validé laisse UNE entrée, et une seule (§1) ;
+ *    l'effet de restitution est réveillé quand le routeur remet
+ *    l'adresse avant le `popstate` (§2, `attenteDeTraversee`).
+ *  · nº 334 — les trois remontages qui visaient la page QU'ON QUITTE
+ *    sont partis ; la liste neuve est posée en haut à SON arrivée,
+ *    avant sa peinture.
+ *  · nº 335 — LA PLACE EST RENDUE AVEC L'ÉTAT DE LA BARRE (§1, point
+ *    10 ci-dessus) ; le lien de partage est tranché par le SERVEUR
+ *    (§2, point 11) ; la sonde du clic répond au rond de profil (§3).
  *  · IL RESTE : la moitié du C-6 sans objet — voir le point 5.
  *
  * ------------------------------------------------------------------
@@ -142,6 +173,11 @@
  *    expose au banc les vraies fonctions du gel et de la remontée,
  *    parce que le seul panneau du bas du site vit derrière une session
  *    que le conteneur d'épreuve ne sait pas signer.
+ *  · `?sonde-clic=1` (nº 335-§3) — src/components/SondeClic.tsx, sa
+ *    ligne et son import dans app/(tatouage)/layout.tsx. Elle dit quel
+ *    élément reçoit réellement un toucher, et si l'événement a été
+ *    arrêté en route : c'est l'instrument du rond de profil qui ne
+ *    répond pas dans la fenêtre partagée.
  *  · `?sonde-historique=1` (nº 331-§4) — src/components/SondeHistorique.tsx,
  *    src/lib/journal-historique.ts, sa ligne et son import dans
  *    app/(tatouage)/layout.tsx. Elle tient le journal de TOUT ce qui
@@ -153,6 +189,8 @@
  */
 
 import { adresseDeRecherche } from "@/lib/adresse-recherche";
+//  §1 (nº 335) — la règle du « cran » du retour, écrite une seule fois.
+import { rangeeReplieeMaintenant } from "@/lib/reserve-barre";
 
 export const CLE_JOURNAL = "roswel:pages-visitees";
 const CLE = CLE_JOURNAL;
@@ -254,58 +292,31 @@ function cleDePosition(url: string): string {
 }
 
 /**
- * L'ÉCART DE LA RÉSERVE DE BARRE — le « cran » du retour (nº 218-§4)
- * ==================================================================
- * LE DÉFAUT : au retour d'une fiche, la mosaïque se replaçait
- * SYSTÉMATIQUEMENT un peu plus haut que la position quittée, dans les
- * deux dispositions.
- *
- * LA CAUSE : sur mobile, la barre a quitté le flux et un bloc
- * invisible tient sa place (`data-reserve-barre`, nº 195-§1a). Ce bloc
- * mesure 128 px rangée de recherche DÉPLIÉE, 64 px REPLIÉE — et il est
- * DANS LE FLUX : tout le contenu descend ou monte de 64 px avec lui.
- * Or on quitte toujours la mosaïque APRÈS avoir défilé, donc rangée
- * repliée (réserve 64), et l'on y revient sur une page neuve, rangée
- * dépliée (réserve 128). Le contenu est alors 64 px plus bas, mais on
- * rendait le `scrollY` brut : l'œil se retrouvait 64 px plus haut dans
- * la liste. Un cran, exactement.
- *
- * LA CORRECTION : la position est rangée dans le repère de la RANGÉE
- * DÉPLIÉE — celui de toute page qui s'ouvre. On ajoute donc, à
- * l'écriture, l'écart entre la réserve dépliée et la réserve du
- * moment. Rien à changer côté lecture : le script d'avant peinture
- * comme `lireDefilement` posent la valeur telle quelle, et elle est
- * juste, parce qu'une page s'ouvre toujours rangée dépliée.
- *
- * ⚠️ DES NOMBRES ANNONCÉS, JAMAIS UNE MESURE : la réserve s'anime sur
- * 300 ms, et `offsetHeight` pris au milieu ne vaut ni 64 ni 128. La
- * barre écrit donc ses deux valeurs en attributs (EnTeteTatouage).
- * ⚠️ ET SUR LE WEB, ZÉRO : la réserve y est `display:none` (la barre
- * est restée dans le flux, en `sticky`). Le seul test qui vaille est
- * celui-là même qui conditionne son affichage — `data-appareil`.
+ * §1 (nº 335) — UNE PLACE, C'EST UNE POSITION **ET** UN ÉTAT DE RANGÉE.
+ * ------------------------------------------------------------------
+ * La règle du « cran » du retour (nº 218-§4) vit désormais dans UN SEUL
+ * module — `lib/reserve-barre` — et elle a changé de nature : on ne
+ * calcule plus un écart, on RANGE L'ÉTAT DE LA RANGÉE avec la position
+ * et on rend les deux ensemble. Ce fichier ne fait que ranger et
+ * relire ; c'est `lib/restitution-position` qui rend l'un et l'autre.
+ * Le pourquoi est écrit en tête de `lib/reserve-barre`.
  */
-function ecartDeReserveBarre(): number {
-  if (typeof document === "undefined") return 0;
-  if (document.documentElement.dataset.appareil !== "mobile") return 0;
-  const reserve = document.querySelector<HTMLElement>("[data-reserve-barre]");
-  if (!reserve) return 0;
-  const posee = Number(reserve.dataset.reservePosee);
-  const depliee = Number(reserve.dataset.reserveDepliee);
-  if (!Number.isFinite(posee) || !Number.isFinite(depliee)) return 0;
-  return depliee - posee;
-}
 
-/** Mémorise la position de défilement d'une adresse */
+/** Ce qu'on garde d'une page qu'on quitte. `p` : la rangée de recherche
+    était-elle repliée ? (absent : la question n'avait pas de sens —
+    web, pas de barre… ou note écrite avant la nº 335). */
+export type PlaceGardee = { y: number; p?: boolean; date: number };
+
+/** Mémorise la place d'une adresse : la position ET l'état de la rangée */
 export function memoriserDefilement(url: string, y: number) {
   try {
-    localStorage.setItem(
-      cleDePosition(url),
-      JSON.stringify({
-        //  Rangée dans le repère de la rangée dépliée (voir ci-dessus).
-        y: Math.round(y + ecartDeReserveBarre()),
-        date: Date.now(),
-      })
-    );
+    const repliee = rangeeReplieeMaintenant();
+    const place: PlaceGardee = { y: Math.round(y), date: Date.now() };
+    //  ⚠️ LA POSITION EST BRUTE (nº 335-§1) : plus aucun écart n'y est
+    //  ajouté. C'est l'état ci-dessous qui porte la différence, et il
+    //  la porte sans arithmétique — donc sans valeur en dur.
+    if (repliee !== null) place.p = repliee;
+    localStorage.setItem(cleDePosition(url), JSON.stringify(place));
   } catch {
     // stockage indisponible : la page reviendra simplement en haut
   }
@@ -329,18 +340,29 @@ export function oublierDefilementDe(url: string) {
   }
 }
 
-/** La position mémorisée (0 si aucune ou trop ancienne) */
-export function lireDefilement(url: string): number {
+/** La place mémorisée pour une adresse (null : aucune, ou trop
+    ancienne). Un seul lecteur : `rendreLaPlace`
+    (lib/restitution-position), qui rend la position et la rangée
+    ensemble — les séparer, c'est rouvrir le défaut de la nº 335-§1. */
+export function lireLaPlace(url: string): PlaceGardee | null {
   try {
     const brut = localStorage.getItem(cleDePosition(url));
-    if (!brut) return 0;
-    const { y, date } = JSON.parse(brut) as { y: number; date: number };
+    if (!brut) return null;
+    const place = JSON.parse(brut) as PlaceGardee;
     //  ⚠️ TRENTE MINUTES, et plus vingt-quatre heures (nº 181-§1c).
-    if (Date.now() - (date ?? 0) > AGE_POSITION_MS) return 0;
-    return y || 0;
+    if (Date.now() - (place.date ?? 0) > AGE_POSITION_MS) return null;
+    if (!place.y) return null;
+    return place;
   } catch {
-    return 0;
+    return null;
   }
+}
+
+/** La position mémorisée seule (0 si aucune). Pour ce qui n'a que faire
+    de la rangée — la sonde, un banc. Le retour, lui, passe par
+    `rendreLaPlace`. */
+export function lireDefilement(url: string): number {
+  return lireLaPlace(url)?.y ?? 0;
 }
 
 /* ------------------------------------------------------------

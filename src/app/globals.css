@@ -114,6 +114,36 @@ html {
   overflow-anchor: none;
 }
 
+/* §1 (nº 335) — PENDANT UN RETOUR, LA BARRE NE S'ANIME PAS.
+   ------------------------------------------------------------------
+   Rendre une place, c'est rendre la position ET l'état de la rangée de
+   recherche (lib/reserve-barre). Les deux changent dans la même image ;
+   si la RÉSERVE, elle, mettait 300 ms à passer d'une hauteur à l'autre,
+   tout le contenu glisserait sous l'œil pendant ce temps-là — c'est
+   exactement le « les cartes s'affichent puis remontent » du
+   propriétaire. La marque est posée le temps de deux images, par la
+   restitution, et par elle seule : hors d'un retour, la barre se replie
+   et se déplie avec sa durée habituelle, inchangée. */
+html[data-rangee-immediate] [data-reserve-barre],
+html[data-rangee-immediate] [data-barre-fixe],
+html[data-rangee-immediate] [data-barre-fixe] * {
+  transition: none !important;
+}
+
+/* §1 (nº 335) — LA RÉSERVE NAÎT REPLIÉE QUAND LE RETOUR LE DEMANDE.
+   ------------------------------------------------------------------
+   Sur un document NEUF, la première image peinte est celle du SERVEUR,
+   qui rend toujours la réserve dépliée : React n'a pas encore repris la
+   main. La marque, elle, est posée AVANT la peinture par le script
+   d'avant peinture — cette règle-ci donne donc la bonne hauteur dès
+   cette première image, et React pose la même un instant plus tard.
+   Sans elle, les cartes s'affichaient 58 px trop haut puis sautaient.
+   La hauteur n'est PAS écrite ici : elle arrive par la variable, depuis
+   l'unique endroit qui la connaît (lib/reserve-barre). */
+html[data-rangee-repliee] [data-reserve-barre] {
+  height: var(--rw-reserve-repliee) !important;
+}
+
 body {
   color: var(--rw-encre);
   font-family: var(--font-geist-sans), system-ui, sans-serif;

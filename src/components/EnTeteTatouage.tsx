@@ -47,6 +47,14 @@ import {
   type CritèresTatouage,
 } from "@/components/MoteurTatouage";
 import { ouvrirRecherche } from "@/lib/recherche-mobile";
+//  §1 (nº 335) — les deux hauteurs de la réserve et la règle du retour
+//  vivent dans UN SEUL module. Voir l'en-tête de lib/reserve-barre.
+import {
+  EVENEMENT_RANGEE,
+  rangeeNaitRepliee,
+  RESERVE_LOGO,
+  RESERVE_RANGEE,
+} from "@/lib/reserve-barre";
 
 /**
  * LA BARRE FIXE DE YOKOFOLIO
@@ -495,6 +503,33 @@ export function EnTeteTatouage({
     //  seule vérité est l'état React — un doigt et un défilement ne
     //  peuvent donc plus se contredire.
     const poserReplie = (valeur: boolean) => setMoteurReplie(valeur);
+    /**
+     * §1 (nº 335) — LA RANGÉE NAÎT DANS L'ÉTAT OÙ LE RETOUR L'A LAISSÉE.
+     * ------------------------------------------------------------------
+     * C'est la promesse écrite juste au-dessus depuis la nº 156-§2 —
+     * « une page ouverte à une position mémorisée doit naître avec la
+     * rangée déjà juste » — et elle n'était pas tenue : la première
+     * lecture ne voit AUCUN delta (la position est déjà posée quand la
+     * barre naît), elle ne décidait donc rien, et la rangée renaissait
+     * dépliée. Toute la mosaïque descendait d'un cran.
+     * DEUX CHEMINS, UNE SEULE RÈGLE (lib/reserve-barre) :
+     *  · DOCUMENT NEUF — le script d'avant peinture a laissé la marque
+     *    sur <html> avant que React n'existe : on la lit ici, et la
+     *    rangée est juste dès la toute première image ;
+     *  · RETOUR EN NAVIGATION DE CLIENT — la barre est déjà née, elle
+     *    ne relira jamais la marque : la restitution la lui annonce.
+     * ⚠️ CECI NE TOUCHE PAS AU COMPORTEMENT DE LA BARRE PENDANT LA
+     * NAVIGATION : les seuils (24 px, 12 px, 64 px) et la durée ne
+     * bougent pas d'un chiffre, et rien de tout cela ne se déclenche
+     * hors d'un retour.
+     */
+    const naissance = rangeeNaitRepliee();
+    if (naissance !== null) poserReplie(naissance);
+    const auRetourDUnePlace = (evenement: Event) => {
+      const detail = (evenement as CustomEvent<{ repliee?: boolean }>).detail;
+      poserReplie(Boolean(detail?.repliee));
+    };
+    window.addEventListener(EVENEMENT_RANGEE, auRetourDUnePlace);
     const lire = () => {
       const y = window.scrollY;
       const delta = y - yPrecedent;
@@ -530,7 +565,10 @@ export function EnTeteTatouage({
     };
     lire();
     window.addEventListener("scroll", lire, { passive: true });
-    return () => window.removeEventListener("scroll", lire);
+    return () => {
+      window.removeEventListener("scroll", lire);
+      window.removeEventListener(EVENEMENT_RANGEE, auRetourDUnePlace);
+    };
   }, []);
 
   return (
@@ -1038,26 +1076,23 @@ export function EnTeteTatouage({
         aria-hidden
         data-reserve-barre=""
         //  §1/§3 (nº 258) — DEUX HAUTEURS, PLUS TROIS, et des
-        //  ADDITIONS, jamais des choix :
-        //   · DÉPLIÉE : 122 = 64 (la rangée du logo : 40 d'icônes +
-        //     `py-3`) + 12 (`max-lg:pt-3`) + 46 (les blocs descendus
-        //     de 11 % — 52 × 0,89 = 46,28 → 46 au pixel entier, la
-        //     hauteur même des cercles du web). L'espace libéré est
-        //     RETIRÉ de la barre : elle ne garde pas un vide.
-        //   · REPLIÉE : 64 — la rangée du logo, rien d'autre. La
-        //     TROISIÈME hauteur (104, la ligne étroite de la rangée
-        //     libre) est partie avec la ligne étroite elle-même
-        //     (nº 258-§3) : une barre qui se replie ne laisse rien
-        //     derrière elle, et « Ma sélection » se replie désormais
-        //     comme le moteur, aux mêmes deux hauteurs.
-        data-reserve-posee={rangeePresente && !moteurReplie ? 122 : 64}
-        data-reserve-depliee={rangeePresente ? 122 : 64}
-        className={`hidden mobile:block shrink-0 transition-[height]
-                    duration-300 ease-out ${
-                      rangeePresente && !moteurReplie
-                        ? "h-[122px]"
-                        : "h-16"
-                    }`}
+        //  ADDITIONS, jamais des choix. Le détail du calcul est écrit
+        //  avec les deux constantes, dans lib/reserve-barre.
+        //  §1 (nº 335) — ELLES N'ONT PLUS QU'UNE ÉCRITURE : elles
+        //  étaient recopiées ici trois fois (deux attributs, deux
+        //  classes) et une quatrième dans la mémoire de position. La
+        //  hauteur vient donc du style, pas d'une classe : une classe
+        //  Tailwind ne sait pas lire une constante.
+        data-reserve-posee={
+          rangeePresente && !moteurReplie ? RESERVE_RANGEE : RESERVE_LOGO
+        }
+        data-reserve-depliee={rangeePresente ? RESERVE_RANGEE : RESERVE_LOGO}
+        style={{
+          height:
+            rangeePresente && !moteurReplie ? RESERVE_RANGEE : RESERVE_LOGO,
+        }}
+        className="hidden mobile:block shrink-0 transition-[height]
+                   duration-300 ease-out"
       />
     </>
   );

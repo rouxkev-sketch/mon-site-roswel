@@ -1,8 +1,13 @@
 "use client";
 
 import { defilerSansGeste } from "@/lib/defilement-programme";
-import { adresseDeRechercheCourante } from "@/lib/adresse-recherche";
+import {
+  adresseDeRecherche,
+  adresseDeRechercheCourante,
+} from "@/lib/adresse-recherche";
 import { noter } from "@/lib/journal-bascule";
+import { lireLaPlace } from "@/lib/navigation-session";
+import { rendreLEtatDeRangee } from "@/lib/reserve-barre";
 
 /**
  * LA POSITION EST POSÉE, UNE FOIS, ET C'EST TOUT
@@ -105,6 +110,35 @@ export function poserLaPosition(position: number, cle?: string) {
   document.documentElement.style.minHeight = `${reserve}px`;
   defilerSansGeste({ top: position, left: 0 });
   surveillerLaReserve(reserve);
+}
+
+/**
+ * RENDRE LA PLACE D'UNE ADRESSE — LA SEULE PORTE DU RETOUR
+ * ==================================================================
+ * §1 (nº 335) — UNE PLACE, C'EST DEUX CHOSES, ET ELLES SE RENDENT
+ * ENSEMBLE : la position de défilement, et l'état de la rangée de
+ * recherche qui allait avec. Les rendre séparément, c'était le défaut :
+ * la position revenait juste, la réserve de la barre revenait dépliée,
+ * et le contenu se retrouvait un cran plus bas — puis remontait tout
+ * seul quand la barre se repliait enfin. Voir lib/reserve-barre.
+ *
+ * ⚠️ LA RANGÉE D'ABORD, LA POSITION ENSUITE, DANS LA MÊME TÂCHE : React
+ * vide sa file avant la peinture suivante, la réserve et le défilement
+ * changent donc pour la MÊME image. Aucune image intermédiaire.
+ *
+ * DEUX APPELANTS, ET DEUX SEULEMENT : `MemoireNavigation` et
+ * `DefilementEnHaut`. Toute autre restitution passerait à côté de la
+ * rangée.
+ */
+export function rendreLaPlace(url: string) {
+  const place = lireLaPlace(url);
+  if (!place) {
+    //  Rien à rendre : on ne touche à rien, ni à la page ni à la barre.
+    poserLaPosition(0);
+    return;
+  }
+  rendreLEtatDeRangee(place.p);
+  poserLaPosition(place.y, adresseDeRecherche(url));
 }
 
 /**
