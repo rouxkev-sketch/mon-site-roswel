@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import {
   arriveeQuiRestitue,
@@ -120,6 +120,38 @@ export function MemoireNavigation() {
   const quandTraversee = useRef(0);
   /** Faux jusqu'à la fin du tout premier rendu de ce document. */
   const premierRendu = useRef(true);
+  /**
+   * §2 (nº 333) — L'ADRESSE ARRIVE AVANT LE DRAPEAU, ET C'EST LE
+   * DÉFAUT.
+   * ==================================================================
+   * MESURÉ, PAS DÉDUIT. Au retour depuis des résultats vers l'accueil,
+   * le relevé donne :
+   *
+   *     +16 ms  replaceState → /   (le routeur de Next)
+   *     +21 ms  popstate     /     (le navigateur)
+   *     …et AUCUNE lecture de la position mémorisée.
+   *
+   * Le routeur remet l'adresse EN PREMIER. Le magasin d'adresse
+   * (`souscrireAdresse`) le voit, ce composant se rend de nouveau, et
+   * l'effet de restitution s'exécute AVANT que `marquerTraversee` n'ait
+   * posé son drapeau — cinq millisecondes plus tôt. Il ne voit donc
+   * aucune traversée, il sort… et il ne se rejoue plus jamais, puisque
+   * ni le chemin ni la requête ne changeront ensuite. La position était
+   * bien en mémoire (900 px, relevé) : personne n'allait plus la lire.
+   * C'est la piste que le propriétaire avait donnée à la nº 333 — elle
+   * était juste, à ceci près que ce `replaceState` n'EFFACE rien : il
+   * ARRIVE TROP TÔT.
+   *
+   * LE REMÈDE, ET SA BORNE. On note l'adresse pour laquelle l'effet
+   * est sorti FAUTE DE SIGNAL ; si un `popstate` arrive juste après
+   * POUR CETTE MÊME ADRESSE, on réveille l'effet une fois. Rien
+   * d'autre ne le réveille : un `popstate` qui referme une surface
+   * n'a pas changé d'adresse, l'effet n'était donc pas en attente, et
+   * il ne se rejoue pas — sans quoi on reposerait une position par
+   * dessus le dégel, et l'on rouvrirait le défaut de la nº 329.
+   */
+  const attenteDeTraversee = useRef<string | null>(null);
+  const [reveils, setReveils] = useState(0);
 
   useEffect(() => {
     // La restauration native provoque le sursaut : on la coupe
@@ -146,6 +178,13 @@ export function MemoireNavigation() {
       adresseTraversee.current = location.pathname + location.search;
       // La liste de résultats restaure aussi SA position interne
       signalerTraversee();
+      //  §2 (nº 333) — L'EFFET ÉTAIT-IL SORTI FAUTE DE CE DRAPEAU, POUR
+      //  CETTE ADRESSE ? Alors on le réveille : il a désormais de quoi
+      //  répondre. Une seule fois, et seulement dans ce cas-là.
+      if (attenteDeTraversee.current === adresseTraversee.current) {
+        attenteDeTraversee.current = null;
+        setReveils((n) => n + 1);
+      }
     };
 
     /**
@@ -379,7 +418,14 @@ export function MemoireNavigation() {
     //    historique).
     const restaurationDemandee = consommerRestaurationPosition();
 
-    if (!vraieTraversee && !documentRestitue && !restaurationDemandee) return;
+    if (!vraieTraversee && !documentRestitue && !restaurationDemandee) {
+      //  §2 (nº 333) — ON SORT SANS AVOIR SERVI : on le NOTE. Si le
+      //  `popstate` de cette même adresse arrive juste après (le
+      //  routeur remet l'adresse avant lui, mesuré), il nous rappellera.
+      attenteDeTraversee.current = url;
+      return;
+    }
+    attenteDeTraversee.current = null;
     //  ⚠️ UNE FICHE PEUT DÉSORMAIS RENDRE SA PLACE (nº 230-§3) — mais
     //  SEULEMENT par l'un des trois chemins ci-dessus, qui tous
     //  disent un RETOUR. Une navigation neuve vers une fiche n'allume
@@ -392,7 +438,7 @@ export function MemoireNavigation() {
     //  mosaïque complète ne doit jamais être appliquée à une mosaïque
     //  filtrée. La pose la revérifie à chaque tentative.
     poserLaPosition(lireDefilement(url), adresseDeRecherche(url));
-  }, [pathname, requete]);
+  }, [pathname, requete, reveils]);
 
   return null;
 }

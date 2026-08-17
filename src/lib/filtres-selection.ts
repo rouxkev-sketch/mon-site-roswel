@@ -12,6 +12,10 @@ import {
 //  s'exécute qu'au moment où une fonction du navigateur l'appelle,
 //  et `poserSelection` se garde déjà de `window`.
 import { ouvrirLaListeEnHaut } from "@/lib/liste-neuve";
+//  §1 (nº 333) — « cette surface se referme pour naviguer » : écrire un
+//  filtre, c'est changer d'adresse. Le module commun le sait, et laisse
+//  alors l'étape du panneau — celle qui porte le filtre.
+import { laSurfaceVaNaviguer } from "@/lib/etape-refermable";
 
 /**
  * LES DEUX MENUS DE « MA SÉLECTION » — L'ADRESSE EST LA VÉRITÉ
@@ -136,6 +140,40 @@ export function poserSelection(menu: MenuSelection, valeur: string): void {
   if (menu === MENU_FAVORIS && !valeur) params.delete(PARAM_SELECTION);
   else params.set(PARAM_SELECTION, valeur ? `${menu}:${valeur}` : menu);
   const requete = params.toString();
+  /*  §1 (nº 333) — UN FILTRE VALIDÉ LAISSE SON ENTRÉE.
+      ==================================================================
+      LE DÉFAUT, RELEVÉ PAR LE PROPRIÉTAIRE DANS SON JOURNAL, cinq fois
+      de suite et à l'identique :
+
+          POSÉE      /mes-favoris                  par la surface
+          REMPLACÉE  /mes-favoris?selection=…      par la surface
+          REPRISE    (history.back)                par la surface
+          popstate   /mes-favoris                  par le navigateur
+          REMPLACÉE  /mes-favoris?selection=…      par le routeur
+
+      SOLDE NUL. Le panneau posait son étape, écrivait le filtre DESSUS
+      (ce `replaceState`), puis la REPRENAIT en se refermant — parce que
+      rien ne lui avait dit que l'adresse avait changé. Il ne restait
+      donc rien à défaire : le retour suivant quittait la page.
+
+      LE REMÈDE EST LE MÉCANISME DE LA RECHERCHE, PAS UN SECOND. Écrire
+      le filtre, c'est changer d'adresse : on le DIT au module commun
+      (`laSurfaceVaNaviguer`, lib/etape-refermable), exactement comme
+      « Valider » de la page de recherche le dit depuis la nº 331. Le
+      panneau laisse alors son étape — laquelle PORTE DÉJÀ le filtre,
+      puisqu'on vient de l'écrire dessus par `replaceState`. L'étape est
+      CONSOMMÉE par le filtre, pas doublée : une entrée par filtre,
+      jamais deux.
+
+      ⚠️ ET ANNULER NE COÛTE TOUJOURS RIEN. Refermer le panneau sans
+      rien choisir n'appelle pas cette fonction : aucune marque, le
+      module reprend son étape comme depuis la nº 330, et un seul appui
+      de retour rend la page. Valider coûte une entrée, annuler zéro —
+      c'est la distinction demandée, et elle tient toute seule.
+
+      ⚠️ SUR LE WEB, où le menu ne pose aucune étape, la marque ne
+      trouve rien à retenir : elle est sans effet. Rien ne change. */
+  laSurfaceVaNaviguer();
   window.history.replaceState(
     window.history.state,
     "",

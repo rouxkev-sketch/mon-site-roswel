@@ -29,9 +29,19 @@ import {
  *  1. ELLE OUBLIE LA DEMANDE DE RESTITUTION. Une demande nommée
  *     (`demanderRestaurationPosition`) posée juste avant survivrait à
  *     la remontée et reposerait l'ancienne place au rendu suivant.
- *  2. ELLE EFFACE LA POSITION MÉMORISÉE DE CETTE ADRESSE. C'est
- *     l'annulation explicite : la place écrite pour cette page ne
- *     décrit plus rien — la liste qu'elle décrivait n'existe plus.
+ *  2. ELLE EFFACE LA POSITION MÉMORISÉE DE LA LISTE QUI VA S'AFFICHER.
+ *     C'est l'annulation explicite : la place écrite pour cet écran-là
+ *     ne décrit plus rien — la liste qu'elle décrivait n'existe plus.
+ *     ⚠️ DE LA LISTE QUI ARRIVE, ET SURTOUT PAS DE CELLE QU'ON QUITTE.
+ *     C'est le §2 de la nº 332… et le défaut que la nº 330 avait
+ *     introduit sans le voir. MESURÉ : sur l'accueil descendu à 900 px,
+ *     une recherche validée effaçait `roswel:defilement:/` — l'adresse
+ *     courante AU MOMENT DU GESTE est encore celle de l'accueil, pas
+ *     celle des résultats. Le retour rendait donc 0 au lieu de 900.
+ *     `poserSelection` (un filtre) écrit son adresse AVANT d'appeler :
+ *     l'adresse courante y est déjà la bonne, et elle ne passe rien.
+ *     `chercher` (une recherche) appelle AVANT de naviguer : elle
+ *     PASSE la destination, et l'accueil garde sa place.
  *  3. ELLE DIT AU GEL DE REPARTIR DE ZÉRO. Sans cela, le panneau du
  *     bas qui se referme repose l'ancienne position par-dessus tout le
  *     reste — c'est le défaut relevé par le propriétaire à la nº 330.
@@ -50,10 +60,18 @@ import {
  * garder sa position. Rendre `DefilementEnHaut` sensible à la requête
  * casserait le retour ; poser la remontée sur le clic, non.
  */
-export function ouvrirLaListeEnHaut(): void {
+export function ouvrirLaListeEnHaut(
+  /** L'adresse de la liste QUI VA S'AFFICHER, quand elle n'est pas
+      encore l'adresse courante (une recherche appelle avant de
+      naviguer). Omise : l'adresse courante — c'est déjà la bonne pour
+      un filtre, qui a écrit la sienne juste avant. */
+  adresseDeLaListe?: string
+): void {
   if (typeof window === "undefined") return;
   oublierRestaurationPosition();
-  oublierDefilementDe(window.location.pathname + window.location.search);
+  oublierDefilementDe(
+    adresseDeLaListe ?? window.location.pathname + window.location.search
+  );
   laPositionDuGelRepartDeZero();
   defilerSansGeste({ top: 0, left: 0 });
 }

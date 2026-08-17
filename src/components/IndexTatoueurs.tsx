@@ -256,8 +256,20 @@ export function IndexTatoueurs({
         appelle ; elle n'est jamais déduite de l'adresse.
         ⚠️ ET PAS DANS `voirPlus` : « Voir plus » allonge la MÊME liste
         par le bas, on continue de lire là où on est (nº 224-§3). */
-    ouvrirLaListeEnHaut();
+    /*  §2 (nº 333) — ET ON LUI DONNE L'ADRESSE DE LA LISTE QUI ARRIVE.
+        ------------------------------------------------------------------
+        LE DÉFAUT, MESURÉ : sans elle, `ouvrirLaListeEnHaut` effaçait la
+        position mémorisée de L'ADRESSE COURANTE — c'est-à-dire de
+        L'ACCUEIL QU'ON QUITTE, puisqu'on appelle AVANT de naviguer.
+        Relevé : `roswel:defilement:/` valait 900 avant la recherche, la
+        mémoire était VIDE après, et le retour rendait 0. Le propriétaire
+        l'a vu sur son iPhone à la nº 333 (« j'arrive bien sur l'accueil,
+        mais pas là où j'étais ») : ce n'était pas l'historique, c'était
+        la position — et c'est la nº 330 qui l'avait cassée.
+        L'adresse de destination est calculée juste au-dessus : on la
+        passe, et l'accueil garde sa place. */
     const adresse = adresseDe(suivants, 1);
+    ouvrirLaListeEnHaut(adresse);
     /*  §1 (nº 332) — L'ÉTAPE DE LA PAGE DE RECHERCHE EST CONSOMMÉE PAR
         CETTE NAVIGATION, PAS DOUBLÉE.
         ------------------------------------------------------------------
