@@ -23,6 +23,9 @@ import { ChampLocalisation } from "@/components/ChampLocalisation";
 import { MenuDeroulant } from "@/components/MenuDeroulant";
 import { useVoileDeLaPage } from "@/components/VoileDeLaPage";
 import { PageRechercheMobile } from "@/components/PageRechercheMobile";
+//  §1 (nº 331) — « la navigation gagne » : l'écriture commune, celle
+//  que les liens arment tout seuls (lib/etape-refermable).
+import { laSurfaceVaNaviguer } from "@/lib/etape-refermable";
 import {
   IconeDeuxColonnes,
   IconeLoupe,
@@ -342,6 +345,12 @@ export function MoteurTatouage({
   /** « VALIDER » — LE SEUL GESTE QUI LANCE LA RECHERCHE sur mobile. */
   function validerLaPage() {
     const retenus = brouillon;
+    //  §1 (nº 331) — LA NAVIGATION GAGNE. « Valider » referme la page
+    //  ET change d'adresse : on le dit AVANT de refermer, pour que
+    //  l'étape de la page ne recule pas au moment où le routeur
+    //  avance. C'est l'écriture commune (lib/etape-refermable), la
+    //  même que les liens arment tout seuls.
+    laSurfaceVaNaviguer();
     fermerRecherche();
     //  ⚠️ VALIDER, C'EST CHANGER D'ADRESSE (refonte nº 191) : le
     //  routeur pose alors SON étape d'historique, une seule, et le

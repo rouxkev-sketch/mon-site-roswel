@@ -51,6 +51,7 @@ import { SondeBascule } from "@/components/SondeBascule";
 import { SondeCarrousel } from "@/components/SondeCarrousel";
 import { SondeCartes } from "@/components/SondeCartes";
 import { SondeRemontee } from "@/components/SondeRemontee";
+import { SondeHistorique } from "@/components/SondeHistorique";
 import { COMPTES_YOKOFOLIO } from "@/config/tatouage";
 import { COOKIE_DEJA_CONNECTE } from "@/lib/deja-connecte";
 import { utilisateurDepuisCookies } from "@/lib/session-cookie";
@@ -257,6 +258,17 @@ export default async function MiseEnPageTatouage({
         src/components/SondeRemontee.tsx, et sa mention au bandeau des
         chantiers ouverts (src/lib/navigation-session.ts). */}
     <SondeRemontee />
+    {/* ⚠️ TEMPORAIRE — LE JOURNAL DE L'HISTORIQUE (`?sonde-historique=1`,
+        nº 331-§4). Il note, dans l'ordre et EN TRAVERSANT LES PAGES,
+        chaque entrée posée, remplacée ou reprise, avec son adresse, son
+        origine et la profondeur de la pile — et se recopie d'un geste.
+        Il n'ajoute aucune entrée, ne gèle rien, ne défile pas et
+        n'entoure la page d'aucun conteneur.
+        Pour le retirer : cette ligne, son import, le fichier
+        src/components/SondeHistorique.tsx, le module
+        src/lib/journal-historique.ts, et sa mention au bandeau des
+        chantiers ouverts (src/lib/navigation-session.ts). */}
+    <SondeHistorique />
     {/* ⚠️ L'ÉCOUTEUR GLOBAL DE REMONTÉE EST SUPPRIMÉ (nº 162-§1). La
         règle de la nº 155-§1 — « TOUS les champs du site remontent » —
         est annulée : la remontée ne sert qu'à dégager de la place SOUS

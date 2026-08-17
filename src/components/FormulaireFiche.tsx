@@ -2724,11 +2724,29 @@ export function FormulaireFiche() {
           //  rendu au premier clic, c'est la leçon payée à la nº 329-§4.
           //  Une adresse sans consigne — un rechargement, un signet —
           //  garde sa photo, exactement comme avant.
+          //
+          //  §2 (nº 331) — ET AU DOIGT SEULEMENT. La nº 330 avait levé
+          //  l'exclusion de l'aperçu sans la borner : la consigne
+          //  s'appliquait aussi SUR ORDINATEUR, où le propriétaire ne
+          //  l'a jamais demandée — sa grande photo de « Mon portfolio »
+          //  avait disparu du web. Sur ordinateur, cette page redevient
+          //  EXACTEMENT celle d'avant la nº 330 : la consigne ne lui est
+          //  pas transmise, `sansPhoto` reste faux, rien d'autre n'a
+          //  bougé. Le retrait ne concerne que le SMARTPHONE, et c'est
+          //  ce qu'il voulait dire.
+          //  ⚠️ LE SEUIL EST CELUI DU SITE, pas un nouveau :
+          //  `data-appareil="mobile"` — un DOIGT, jamais une largeur de
+          //  fenêtre (la règle depuis la nº 60), celui-là même que la
+          //  variante `mobile:` de la feuille de style emploie.
+          //  ⚠️ AUCUN CLIGNOTEMENT À CRAINDRE : cet aperçu n'est monté
+          //  qu'une fois la fiche chargée, donc bien après que le
+          //  script de tête a écrit `data-appareil` — la réponse est
+          //  déjà juste au premier rendu de cette photo.
           <FicheTatoueur
             tatoueur={tatoueurApercu}
             demonstration={false}
             apercu
-            entreeInitiale={parametres.get("entree") ?? ""}
+            entreeInitiale={surMobile ? (parametres.get("entree") ?? "") : ""}
           />
         ) : (
           <p className="mx-auto w-full max-w-[640px] py-6 text-sombre-texte-doux">

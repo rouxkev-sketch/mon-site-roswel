@@ -54,12 +54,11 @@ import { useEffect, useRef } from "react";
  * de l'historique — c'est le `fermer` de la surface qui, en repassant
  * son état à faux, fait jouer son dégel une fois et une seule.
  *
- * ⚠️ ET SI L'ON A NAVIGUÉ AILLEURS pendant que la surface était
- * ouverte (une entrée de menu qui mène à une page), notre étape n'est
- * plus celle du dessus : on ne reprend rien. Reculer d'un cran
- * annulerait la navigation que la personne vient de demander. La
- * marque posée dans l'état de l'étape répond à cette question-là, et
- * elle seule.
+ * ⚠️ ET SI L'ON A NAVIGUÉ pendant que la surface était ouverte (une
+ * entrée de menu qui mène à une page), ON NE REPREND RIEN : reculer
+ * d'un cran annulerait la navigation que la personne vient de
+ * demander. C'est le §1 de la nº 331 — voir `laSurfaceVaNaviguer`
+ * plus bas, et la raison pour laquelle la règle y est INVERSÉE.
  */
 
 /** La marque de nos étapes, dans l'état d'historique. */
@@ -89,27 +88,59 @@ let rangSuivant = 0;
  */
 let repriseEnAttente: { rang: number; minuteur: number } | null = null;
 
+/**
+ * §1 (nº 331) — LA NAVIGATION GAGNE TOUJOURS.
+ * ==================================================================
+ * LE DÉFAUT, RELEVÉ PAR LE PROPRIÉTAIRE SUR SON iPHONE : dans le menu
+ * « Mon espace », AUCUN lien ne fonctionnait plus. Sa lecture était
+ * juste — l'étape que la fenêtre avait posée AVALAIT LE CLIC. Le lien
+ * demandait au routeur d'avancer, la fenêtre reculait d'un cran pour
+ * se refermer, et les deux s'annulaient.
+ *
+ * ⚠️ CE QUI ÉTAIT FAUX DANS LA nº 330, ET QU'IL FAUT DIRE : la garde
+ * y était posée DANS LE MAUVAIS SENS. Elle reculait par défaut, et ne
+ * s'abstenait que si elle pouvait PROUVER qu'une navigation était
+ * passée — en regardant si l'étape du dessus portait encore sa marque.
+ * Or cette preuve arrive trop tard : le routeur n'a pas encore écrit
+ * l'historique au moment où React démonte la surface. On pariait donc
+ * sur l'ordre de deux événements, et le pari se perdait.
+ *
+ * LA RÈGLE EST INVERSÉE, ET ELLE EST DÉTERMINISTE. Reculer est le
+ * geste DANGEREUX ; ne rien faire est toujours sans risque (l'étape
+ * reste sous la nouvelle, et le retour y retombe sur l'adresse d'avant
+ * l'ouverture — la bonne destination, en un seul appui). On ne recule
+ * donc QUE si aucune navigation n'a été demandée, et la demande est
+ * relevée AU CLIC — c'est-à-dire AVANT que React n'ait quoi que ce
+ * soit à démonter. Ce n'est plus une course entre deux événements :
+ * l'un précède l'autre, toujours.
+ *
+ * DEUX PORTES, UNE SEULE ÉCRITURE :
+ *  · LES LIENS — le module écoute lui-même les clics, en phase de
+ *    CAPTURE : tout clic qui touche un `<a href>` du site arme la
+ *    marque. Aucune surface n'a une ligne à écrire pour cela, et les
+ *    quatre entrées de « Mon espace » sont couvertes sans les nommer.
+ *  · LE CODE QUI NAVIGUE SANS LIEN — `router.push` depuis un bouton :
+ *    il APPELLE `laSurfaceVaNaviguer()`. Une ligne, la même fonction
+ *    que le module s'appelle à lui-même : ce n'est pas une rustine,
+ *    c'est le vocabulaire commun.
+ */
+let navigationDemandee = false;
+
+/**
+ * « CETTE SURFACE SE REFERME POUR NAVIGUER » — à appeler AVANT la
+ * navigation, par tout code qui change d'adresse autrement que par un
+ * lien (`router.push` depuis un bouton, « Valider » de la page de
+ * recherche). La surface laissera alors son étape en place, plutôt que
+ * d'entrer en course avec le routeur.
+ */
+export function laSurfaceVaNaviguer(): void {
+  navigationDemandee = true;
+}
+
 export function useEtapeQuiSeReferme(
   ouverte: boolean,
-  fermer: () => void,
-  /**
-   * ⚠️ FAUX QUAND LA SURFACE SE FERME **POUR NAVIGUER** (nº 330-§3).
-   * Le cas est réel : « Valider », sur la page de recherche, referme
-   * la page ET change d'adresse. Reculer d'un cran à cet instant-là
-   * entrerait en course avec la navigation du routeur — au mieux pour
-   * rien, au pire en l'annulant, et la recherche serait perdue. On ne
-   * PARIE PAS sur l'ordre : la surface le DIT, et l'étape reste alors
-   * en place, sous la nouvelle. Le retour y retombe, sur la même
-   * adresse que celle d'avant l'ouverture : un seul appui, la bonne
-   * destination — au prix d'une étape jumelle dans la pile, qui ne se
-   * voit pas.
-   */
-  reprendreSonEtape = true
+  fermer: () => void
 ): void {
-  const reprendre = useRef(reprendreSonEtape);
-  useEffect(() => {
-    reprendre.current = reprendreSonEtape;
-  }, [reprendreSonEtape]);
   /*  LA FERMETURE SE LIT DANS UNE RÉFÉRENCE : elle est recréée à
       chaque rendu de la surface, et la mettre en dépendance rejouerait
       l'effet — donc POSERAIT UNE ÉTAPE DE PLUS — à chaque rendu. */
@@ -137,6 +168,10 @@ export function useEtapeQuiSeReferme(
         ""
       );
     }
+    //  UNE SURFACE QUI S'OUVRE PART D'UNE ARDOISE PROPRE : la marque
+    //  d'une navigation passée ne doit pas éteindre la reprise de
+    //  celle-ci.
+    navigationDemandee = false;
     let aNous = true;
 
     const auRetour = () => {
@@ -146,13 +181,30 @@ export function useEtapeQuiSeReferme(
     };
     window.addEventListener("popstate", auRetour);
 
+    /*  §1 (nº 331) — LE CLIC SUR UN LIEN ARME LA MARQUE, EN CAPTURE.
+        La phase de capture passe AVANT le gestionnaire du lien et
+        avant tout changement d'état de React : quand le démontage
+        arrive, la marque est déjà posée. C'est ce qui rend la règle
+        déterministe au lieu de dépendre d'un ordre.
+        ⚠️ TOUT `<a href>`, PAS SEULEMENT CEUX DE LA SURFACE : un lien
+        touché ailleurs dans la page referme aussi la surface, et la
+        navigation doit gagner là aussi. */
+    const auClic = (evenement: MouseEvent) => {
+      const cible = evenement.target;
+      if (cible instanceof Element && cible.closest("a[href]")) {
+        navigationDemandee = true;
+      }
+    };
+    document.addEventListener("click", auClic, true);
+
     return () => {
       window.removeEventListener("popstate", auRetour);
+      document.removeEventListener("click", auClic, true);
       //  Le retour a déjà consommé l'étape : il n'y a rien à reprendre.
       if (!aNous) return;
       aNous = false;
-      //  La surface se ferme POUR NAVIGUER : on laisse son étape.
-      if (!reprendre.current) return;
+      //  LA NAVIGATION GAGNE TOUJOURS : on laisse l'étape en place.
+      if (navigationDemandee) return;
       const etat = window.history.state as Record<string, unknown> | null;
       //  On a navigué : l'étape du dessus n'est plus la nôtre.
       if (etat?.[CLE] !== rang) return;

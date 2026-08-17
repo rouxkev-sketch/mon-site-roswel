@@ -40,7 +40,10 @@ import { useAppareilMobile } from "@/lib/appareil";
 import { avecConsigneDeLienInterne } from "@/components/ContenuFiche";
 //  §3 (nº 330) — l'étape d'historique, écriture unique des quatre
 //  surfaces qui couvrent l'écran.
-import { useEtapeQuiSeReferme } from "@/lib/etape-refermable";
+import {
+  laSurfaceVaNaviguer,
+  useEtapeQuiSeReferme,
+} from "@/lib/etape-refermable";
 
 /**
  * LE MENU « MON ESPACE » — le compte du tatoueur, depuis la barre
@@ -258,6 +261,11 @@ export function MenuEspace({
          formulaire neuf. Sans ce cas, cliquer deux fois de suite
          « Ajouter un portfolio » laissait la première saisie à l'écran. */
   function allerCreerUneFiche() {
+    //  §1 (nº 331) — LA NAVIGATION GAGNE. Cette entrée-là n'est pas un
+    //  lien mais un bouton (elle sait reconnaître « on y est déjà ») :
+    //  le module ne peut pas l'armer tout seul au clic, elle le dit
+    //  donc elle-même, par l'écriture commune.
+    laSurfaceVaNaviguer();
     setOuvert(false);
     setSelecteurOuvert(false);
     setAvertirAvantCreation(false);

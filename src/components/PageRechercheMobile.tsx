@@ -330,16 +330,12 @@ export function PageRechercheMobile({
    * trop ». Le propriétaire l'a redemandé explicitement à la nº 330 :
    * sur un téléphone, le retour doit refermer ce qui est ouvert.
    */
-  useEtapeQuiSeReferme(
-    true,
-    () => glisserDehors(false),
-    //  « VALIDER » CHANGE D'ADRESSE : on ne reprend pas notre étape à
-    //  cet instant-là — elle serait en course avec la navigation du
-    //  routeur, et la recherche pourrait être perdue. Le retour y
-    //  retombe sur l'adresse d'avant l'ouverture : un seul appui, la
-    //  bonne destination. La croix et Échap, elles, la reprennent.
-    !validerEnSortant
-  );
+  /*  §1 (nº 331) — « VALIDER » CHANGE D'ADRESSE, et c'est `validerLaPage`
+      (MoteurTatouage) qui le DIT au module commun, par
+      `laSurfaceVaNaviguer()`. Le drapeau qui vivait ici a disparu :
+      il n'y a plus qu'une seule façon de dire « la navigation gagne »,
+      la même pour les liens et pour le code qui navigue. */
+  useEtapeQuiSeReferme(true, () => glisserDehors(false));
 
   /** Échap referme comme la croix. Sans tableau de dépendances :
       l'écouteur voit toujours la phase courante. */

@@ -121,6 +121,13 @@
  *    expose au banc les vraies fonctions du gel et de la remontée,
  *    parce que le seul panneau du bas du site vit derrière une session
  *    que le conteneur d'épreuve ne sait pas signer.
+ *  · `?sonde-historique=1` (nº 331-§4) — src/components/SondeHistorique.tsx,
+ *    src/lib/journal-historique.ts, sa ligne et son import dans
+ *    app/(tatouage)/layout.tsx. Elle tient le journal de TOUT ce qui
+ *    arrive à la pile d'historique, en traversant les pages, et le
+ *    recopie en texte : c'est l'instrument du relevé demandé au §3 de
+ *    la nº 331, et le seul moyen de voir l'accumulation qui fait
+ *    retomber sur l'accueil.
  * ██████████████████████████████████████████████████████████████████
  */
 
