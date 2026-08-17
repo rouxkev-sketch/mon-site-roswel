@@ -112,6 +112,40 @@ self.addEventListener("fetch", (event) => {
   //    n'en ressort aucune : le repli est la page « hors ligne », qui
   //    ne dépend de rien.
   if (requete.mode === "navigate") {
+    /**
+     * §2 (nº 336) — UN RETOUR OU UNE AVANCE, ON NE S'EN MÊLE PAS.
+     * ==================================================================
+     * CE QUI SE PASSAIT, ET C'EST « L'ÉCRAN VIDE QUAND JE GLISSE POUR
+     * REVENIR ». Cette interception vaut pour TOUTES les navigations —
+     * y compris celles de l'HISTORIQUE. Or, pour un retour, le
+     * navigateur a DÉJÀ sa propre copie de la page : c'est elle qu'il
+     * fait glisser sous le doigt, et c'est ce qui rend le geste
+     * instantané. En répondant `fetch(requete)`, on la lui reprenait :
+     * il repartait chercher la page sur le réseau, et pendant ce
+     * temps-là il n'y avait rien à peindre — le fond anthracite du site,
+     * nu, puis la page. Sur un téléphone en 4G, cela dure.
+     *
+     * LA RAISON D'ÊTRE DE CETTE RÈGLE — « une page HTML gardée désigne
+     * des scripts qui n'existent plus après une mise en ligne » — reste
+     * ENTIÈREMENT VRAIE, et rien n'y touche : elle interdit de RANGER
+     * une page dans NOTRE cache, et on n'en range toujours aucune. Le
+     * navigateur, lui, ne garde pas une page pour la resservir plus
+     * tard : il garde CELLE QU'IL VIENT D'AFFICHER, avec les scripts
+     * qu'elle a réellement chargés. Les deux n'ont rien à voir.
+     *
+     * COMMENT ON RECONNAÎT UN RETOUR, SANS RIEN DEVINER : une
+     * navigation d'historique demande sa page en « force-cache » —
+     * c'est la spécification qui l'impose, et c'est lisible ici.
+     * Un navigateur qui ne le poserait pas retombe simplement sur le
+     * comportement d'avant : rien ne casse.
+     *
+     * ⚠️ ET HORS LIGNE ? Un retour hors ligne est mieux servi par le
+     * navigateur (il a la page) que par notre page « hors ligne ». Une
+     * navigation NEUVE, elle, garde son repli inchangé.
+     */
+    if (requete.cache === "force-cache" || requete.cache === "only-if-cached") {
+      return;
+    }
     event.respondWith(
       fetch(requete).catch(() =>
         caches.open(VERSION).then((cache) => cache.match(PAGE_HORS_LIGNE))

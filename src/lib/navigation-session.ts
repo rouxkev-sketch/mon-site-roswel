@@ -51,6 +51,15 @@
  *     une telle bascule se voit toujours : il y a une image, puis une
  *     autre. La règle du DOIGT (nº 60) reste seule maîtresse de tout
  *     ce qui s'AFFICHE.
+ * 12. PENDANT UNE NAVIGATION, LES DEUX ADRESSES NE DISENT PAS LA MÊME
+ *     CHOSE, ET CHACUNE EST EN RETARD À SON TOUR (nº 336-§1). Le
+ *     ROUTEUR (`usePathname`) sait vers quelle page on VA — dès le
+ *     premier rendu ; le NAVIGATEUR (`location`) sait quelle adresse
+ *     est COMMISE — et lui seul voit les `pushState` bruts et les
+ *     `popstate`. Une surface qui vit dans l'adresse demande donc au
+ *     routeur À SA NAISSANCE, et au navigateur ensuite. S'en remettre
+ *     à un seul des deux, c'est ouvrir une surface sur une adresse
+ *     qu'on est en train de quitter — et plus rien ne la referme.
  *
  * ------------------------------------------------------------------
  * POURQUOI ELLE VIT ICI, ET PAS AILLEURS. Ce module portait déjà LA
@@ -124,6 +133,10 @@
  *    partagé (app/(tatouage)/tatoueur/[slug]/carrousel/page.tsx). Un
  *    seul appelant à ce jour : c'est voulu, ce n'est pas une règle
  *    d'affichage.
+ *  · 12 — `FicheTatoueur` (l'ajustement pendant le rendu de la fenêtre
+ *    de carrousel, `ficheDejaPosee`). C'est la seule surface du site
+ *    qui s'ouvre depuis l'adresse ; toute autre qui le ferait un jour
+ *    doit reprendre la même règle, et non la recopier de travers.
  *  · 8 — conséquence des points 1 et 5 : une surface qui vit dans
  *    l'historique et dont l'état vit dans l'adresse se rouvre telle
  *    quelle. Tenu pour la fiche (onglet et consigne d'arrivée) depuis
@@ -164,6 +177,11 @@
  *  · nº 335 — LA PLACE EST RENDUE AVEC L'ÉTAT DE LA BARRE (§1, point
  *    10 ci-dessus) ; le lien de partage est tranché par le SERVEUR
  *    (§2, point 11) ; la sonde du clic répond au rond de profil (§3).
+ *  · nº 336 — LA FENÊTRE NE SE ROUVRE PLUS PAR-DESSUS LA PAGE OÙ L'ON
+ *    ARRIVE (§1, point 12 ci-dessous) ; l'ancre `#profil` reste dans
+ *    l'adresse, et le « une seule fois » passe dans l'étape
+ *    d'historique (§1) ; le service worker laisse les retours au
+ *    navigateur, qui a déjà sa copie de la page (§2).
  *  · IL RESTE : la moitié du C-6 sans objet — voir le point 5.
  *
  * ------------------------------------------------------------------

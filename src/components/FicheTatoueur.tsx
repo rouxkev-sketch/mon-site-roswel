@@ -361,10 +361,59 @@ export function FicheTatoueur({
    * ⚠️ AJUSTÉ PENDANT LE RENDU, jamais dans un effet (le motif de
    * PileFiches), avec la même vérité : `location`, car `usePathname`
    * reste en retard d'un rendu et ne sert que de réveil.
+   *
+   * §1 (nº 336) — SAUF AU TOUT PREMIER RENDU, OÙ C'EST L'INVERSE, ET
+   * C'EST LÀ QUE LA FENÊTRE NE SE REFERMAIT PAS.
+   * ==================================================================
+   * MESURÉ, PAS SUPPOSÉ. Depuis un lien de partage, on touche le rond
+   * de profil de la fenêtre : le relevé image par image donne
+   *
+   *     +0 ms     /tatoueur/…/carrousel?…   FENÊTRE
+   *     +1177 ms  /tatoueur/…?entree=lien   FENÊTRE   ← et pour toujours
+   *
+   * La fiche est bien arrivée (barre, réserve, onglets Profil et
+   * Portfolio, tous absents de la page partagée) — ET ELLE A ROUVERT
+   * LA FENÊTRE PAR-DESSUS ELLE-MÊME. C'est exactement ce que le
+   * propriétaire voyait depuis trois passes : « je touche, rien ne se
+   * passe ». Rien ne se passait, en effet : la fiche était dessous.
+   *
+   * POURQUOI. Pendant une navigation de client, le routeur rend LA
+   * NOUVELLE PAGE AVANT que le navigateur n'ait commis l'adresse. Au
+   * TOUT PREMIER rendu de la fiche, `usePathname()` dit déjà
+   * `/tatoueur/<slug>` (la route où l'on va), tandis que
+   * `window.location.pathname` dit encore `/tatoueur/<slug>/carrousel`
+   * (l'adresse d'où l'on vient). C'est l'INVERSE du retard décrit
+   * ci-dessus. La fenêtre s'ouvrait donc sur une adresse qu'on était en
+   * train de QUITTER — et plus rien ne la refermait ensuite : l'adresse
+   * commise ne provoque aucun nouveau rendu, puisque `usePathname` ne
+   * change pas (il donnait déjà la bonne route).
+   *
+   * LA RÈGLE : au premier rendu, c'est LE ROUTEUR qui dit la vérité —
+   * lui seul sait vers quelle page on va. Ensuite, et pour toute la vie
+   * du composant, c'est `location` — lui seul voit les `pushState`
+   * bruts de l'ouverture au doigt et les `popstate` du retour, que le
+   * routeur ne traduit pas toujours.
+   * ⚠️ CECI NE TOUCHE NI À L'OUVERTURE AU DOIGT (elle pose l'état
+   * elle-même, `ouvrirLaFenetreCarrousel`), NI À LA RÉOUVERTURE AU
+   * RETOUR (nº 328-§4 : le `popstate` change `location`, on n'est plus
+   * au premier rendu), NI À LA FERMETURE D'UN SEUL APPUI (nº 330).
    */
   const adresseDeLaFenetre = `/tatoueur/${tatoueur.slug}/carrousel`;
+  //  ⚠️ UN ÉTAT, PAS UNE RÉFÉRENCE : une référence ne se lit pas
+  //  pendant le rendu (règle de React, et le linte le refuse). Faux au
+  //  tout premier rendu, vrai pour toujours ensuite.
+  const [ficheDejaPosee, setFicheDejaPosee] = useState(false);
+  useEffect(() => {
+    //  Une image plus tard — le motif de `useAppareilMobile` : poser
+    //  un état SYNCHRONEMENT dans un effet enchaîne les rendus, et le
+    //  linte le refuse. À cet instant, l'adresse est commise.
+    const image = requestAnimationFrame(() => setFicheDejaPosee(true));
+    return () => cancelAnimationFrame(image);
+  }, []);
   const cheminReel =
-    typeof window === "undefined" ? pathname : window.location.pathname;
+    typeof window === "undefined" || !ficheDejaPosee
+      ? pathname
+      : window.location.pathname;
   if (fenetreCarrousel && cheminReel !== adresseDeLaFenetre) {
     setFenetreCarrousel(null);
   }

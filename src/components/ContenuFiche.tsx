@@ -420,22 +420,44 @@ export function ContenuFiche({
    * l'onglet « Profil » étant déjà celui d'arrivée, il n'y a que la
    * remontée à jouer.
    * ⚠️ AU DOIGT SEULEMENT, comme la remontée elle-même (elle sort
-   * d'elle-même sur le web) ; et UNE SEULE FOIS, à l'arrivée — on
-   * efface l'ancre aussitôt, pour qu'un rechargement ou un retour ne
-   * rejoue pas un mouvement que personne n'a demandé.
+   * d'elle-même sur le web) ; et UNE SEULE FOIS, à l'arrivée — sans
+   * quoi un rechargement ou un retour rejouerait un mouvement que
+   * personne n'a demandé.
    * ⚠️ APRÈS DEUX IMAGES : la photo du haut doit avoir sa hauteur
    * définitive, sans quoi on viserait un repère qui n'existe pas
    * encore (la leçon de `remonteeDemandee`, nº 238-§1).
+   *
+   * §1 (nº 336) — « UNE SEULE FOIS » NE S'ÉCRIT PLUS EN EFFAÇANT
+   * L'ANCRE.
+   * ------------------------------------------------------------------
+   * CE QUI ÉTAIT ÉCRIT : l'ancre était RETIRÉE de l'adresse aussitôt
+   * lue. Le propriétaire l'a relevé sur son iPhone — le lien portait
+   * `#profil`, l'adresse d'arrivée ne le portait plus : « il disparaît
+   * en route ». Et c'est vrai qu'il disparaissait, mais pas d'un défaut
+   * : d'une décision, prise ici, et mal placée.
+   * POURQUOI ELLE ÉTAIT MAL PLACÉE. Une adresse DÉCRIT un écran (point
+   * 5 de la règle de navigation) : `/tatoueur/x#profil`, c'est « la
+   * fiche, à sa section profil ». La mutiler pour se souvenir qu'on a
+   * déjà joué un mouvement, c'est ranger un souvenir dans la
+   * description. Le souvenir a désormais sa place : LA MARQUE DANS
+   * L'ÉTAPE D'HISTORIQUE, comme toutes les autres marques du site
+   * (`fenetreFiche`, `retourReconstruit`, `etapeRefermable`).
+   * L'ADRESSE, ELLE, GARDE SON ANCRE — on peut la relire, la partager,
+   * et le propriétaire peut la voir.
    */
   useEffect(() => {
     if (window.location.hash !== "#profil") return;
-    const propre = window.location.href.replace(/#profil$/, "");
-    //  §2 (nº 332) — L'ÉTAT EST RECOPIÉ, plus effacé. Cette ligne
-    //  ne veut que NETTOYER L'ADRESSE ; passer `null` jetait au
-    //  passage les marques que le site pose dans l'étape (le filet
-    //  `retourReconstruit`, l'étape d'une surface refermable), et
+    //  §2 (nº 332) — L'ÉTAT EST RECOPIÉ, jamais effacé : passer `null`
+    //  jetait au passage les marques que le site pose dans l'étape (le
+    //  filet `retourReconstruit`, l'étape d'une surface refermable), et
     //  le retour ne savait plus où il en était.
-    window.history.replaceState(window.history.state, "", propre);
+    const etape = (window.history.state ?? {}) as { profilJoue?: boolean };
+    //  DÉJÀ JOUÉ SUR CETTE ÉTAPE : un rechargement ou un retour ne
+    //  rejoue rien. (L'état d'historique survit aux deux.)
+    if (etape.profilJoue) return;
+    //  ⚠️ DEUX ARGUMENTS, PAS TROIS : sans adresse, `replaceState`
+    //  garde celle qui est là — ancre comprise. C'est tout le point.
+    window.history.replaceState({ ...etape, profilJoue: true }, "");
     let seconde = 0;
     const premiere = requestAnimationFrame(() => {
       seconde = requestAnimationFrame(() => remonterSousLaBarre());
