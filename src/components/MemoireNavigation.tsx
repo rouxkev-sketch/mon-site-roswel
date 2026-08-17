@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { usePathname } from "next/navigation";
 import {
   arriveeQuiRestitue,
@@ -58,6 +64,11 @@ import {
 function estUnePageDeDetail(chemin: string): boolean {
   return chemin.startsWith("/tatoueur/");
 }
+
+/** useLayoutEffect côté navigateur, useEffect côté serveur (silencieux).
+    Le même que celui de `DefilementEnHaut`, pour la même raison. */
+const useEffetAvantPeinture =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 export function MemoireNavigation() {
   const pathname = usePathname();
@@ -363,7 +374,33 @@ export function MemoireNavigation() {
     };
   }, []);
 
-  useEffect(() => {
+  /**
+   * §1 (nº 340) — CET EFFET S'EXÉCUTE AVANT LA PEINTURE, ET C'ÉTAIT LÀ
+   * LE DEMI-SECONDE DE PAGE AU MAUVAIS ENDROIT.
+   * ==================================================================
+   * CE QUI ÉTAIT ÉCRIT : un `useEffect` ordinaire. Or un effet ordinaire
+   * s'exécute APRÈS que le navigateur a peint. La restitution de
+   * position arrivait donc systématiquement une image trop tard : LA
+   * PAGE ÉTAIT PEINTE EN HAUT, puis remise à sa place.
+   *
+   * MESURÉ SUR L'iPHONE DU PROPRIÉTAIRE, retour vers l'accueil depuis
+   * une fiche (production, réseau réel) :
+   *
+   *     GESTE → routeur 14 ms → mise en page 465 ms → PEINTURE 508 ms
+   *     défilement : 0 à l'arrivée → 506 une fois posé
+   *
+   * Zéro à l'arrivée, 506 après : pendant tout le geste, sa page était
+   * affichée EN HAUT alors qu'il revenait à 506.
+   *
+   * LA CORRECTION EST CELLE QUE LE SITE APPLIQUE DÉJÀ AILLEURS, et son
+   * pourquoi est écrit depuis la nº 143-§5 dans `DefilementEnHaut` :
+   * « `useLayoutEffect` s'exécute ENTRE la pose du DOM et la peinture ;
+   * aucune image n'est peinte avec la page au mauvais endroit ». Cette
+   * moitié-ci de la règle 3 ne l'avait jamais reçue.
+   * ⚠️ AUCUN AUTRE CHANGEMENT : mêmes conditions, mêmes drapeaux, même
+   * `rendreLaPlace`. C'est L'INSTANT qui change, pas la décision.
+   */
+  useEffetAvantPeinture(() => {
     /**
      * ⚠️ ON N'ÉCRIT QUE SUR UNE ADRESSE STABLE (passe nº 154).
      * Le chemin vient du ROUTEUR, les critères du NAVIGATEUR, et les
