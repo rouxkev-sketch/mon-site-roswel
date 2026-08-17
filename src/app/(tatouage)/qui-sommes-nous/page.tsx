@@ -44,9 +44,16 @@ import { LogoYokofolio } from "@/components/LogoYokofolio";
  *    l'Instagram de celui qui les tatoue. », en style normal ;
  *  · « Personne ne commente… ici » devient « Ici, personne ne
  *    commente… » — le lieu ouvre la phrase.
- * IL Y A DÉSORMAIS CINQ GRAS, dans cet ordre : « Ici, c'est toi. » ·
+ * ⚠️ CE QUE LA nº 326 A CHANGÉ, et rien d'autre : LES DEUX APPELS de
+ * la fin de section. « Crée ton portfolio : un style montré est un
+ * style trouvable. » devient « Montre tes styles, c'est par eux qu'on
+ * te trouvera. » ; et « Curieux ? Cherche, et découvre ton prochain
+ * tatouage. » devient « Envie d'un tatouage ? Cherche le style, tu
+ * trouveras l'artiste. » — l'amorce elle-même change, « Curieux ? »
+ * cédant la place à « Envie d'un tatouage ? ».
+ * IL Y A TOUJOURS CINQ GRAS, dans cet ordre : « Ici, c'est toi. » ·
  * « Choisis un style, une ville et un rayon : » · « Tatoueur ? » ·
- * « Curieux ? » · « À toi de te faire ton avis. »
+ * « Envie d'un tatouage ? » · « À toi de te faire ton avis. »
  * (Côté /contact : les deux libellés « Nom » et « E-mail », qui
  * restent DANS leur champ. Voir FormulaireContactYokofolio.)
  *
@@ -184,14 +191,24 @@ export default function PageQuiSommesNous() {
             conduit jusqu&apos;à l&apos;Instagram de celui qui les
             tatoue.
           </p>
+          {/*  LES DEUX APPELS (nº 326) — un par public, dans le même
+               moule : une AMORCE en gras qui dit à qui l'on parle, puis
+               la phrase en style normal. Les deux disent la même chose
+               par les deux bouts — le style est ce qui relie l'artiste
+               et celui qui le cherche.
+               ⚠️ L'ESPACE APRÈS L'AMORCE S'ÉCRIT `{" "}`, ET C'EST ICI
+               QUE LE DÉFAUT EST NÉ : « Tatoueur ?Crée » à la nº 319.
+               Les deux la portent, et le banc de la nº 326 relit les
+               deux phrases SUR LA PAGE RENDUE. */}
           <p>
             <strong className="text-sombre-texte">Tatoueur&nbsp;?</strong>{" "}
-            Crée ton portfolio&nbsp;: un style montré est un style
-            trouvable.
+            Montre tes styles, c&apos;est par eux qu&apos;on te trouvera.
           </p>
           <p>
-            <strong className="text-sombre-texte">Curieux&nbsp;?</strong>{" "}
-            Cherche, et découvre ton prochain tatouage.
+            <strong className="text-sombre-texte">
+              Envie d&apos;un tatouage&nbsp;?
+            </strong>{" "}
+            Cherche le style, tu trouveras l&apos;artiste.
           </p>
         </Section>
 

@@ -45,8 +45,16 @@ const ATTENDUS = [
   "Essaie de chercher « du réalisme autour de Lyon » sur Instagram : c'est l'algorithme qui décide ce que tu verras. Ici, c'est toi.",
   "Choisis un style, une ville et un rayon : les tatoueurs qui correspondent s'affichent, chacun avec un portfolio consacré à son travail dans le style recherché.",
   "YokoFolio n'a pas d'algorithme, il a des styles — et il te conduit jusqu'à l'Instagram de celui qui les tatoue.",
-  "Tatoueur ? Crée ton portfolio : un style montré est un style trouvable.",
-  "Curieux ? Cherche, et découvre ton prochain tatouage.",
+  //  ⚠️ AMENDÉ PAR LA nº 326 : les DEUX APPELS ont été réécrits par
+  //  le propriétaire. Ils sont mis à jour ici PLUTÔT QUE RETIRÉS,
+  //  parce que ce banc en a besoin pour ce qui reste SON sujet — la
+  //  réécriture du §1 de la nº 324 (l'algorithme, la phrase sur
+  //  Instagram, le « Ici » qui ouvre la dernière) : ces trois-là se
+  //  mesurent sur les NEUF paragraphes, pas sur deux. La mesure
+  //  PROPRE aux deux appels, elle, vit dans `verif-p326.mjs`, avec
+  //  leurs virgules et le collage d'espaces après chaque amorce.
+  "Tatoueur ? Montre tes styles, c'est par eux qu'on te trouvera.",
+  "Envie d'un tatouage ? Cherche le style, tu trouveras l'artiste.",
   "Pas d'avis, pas de notes.",
   "Ici, personne ne commente ni ne juge le travail d'un tatoueur. Son portfolio parle pour lui. À toi de te faire ton avis.",
 ];
@@ -54,7 +62,9 @@ const GRAS = [
   "Ici, c'est toi.",
   "Choisis un style, une ville et un rayon :",
   "Tatoueur ?",
-  "Curieux ?",
+  //  ⚠️ « Curieux ? » a cédé la place à la nº 326 — le compte reste
+  //  de cinq, seule cette amorce-ci a changé de mots.
+  "Envie d'un tatouage ?",
   "À toi de te faire ton avis.",
 ];
 
