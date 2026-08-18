@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { infosConnexionSupabase } from "@/lib/supabase/env";
+import { COOKIE_NU_TOTAL } from "@/lib/variantes-essai";
 
 /**
  * PROXY (exécuté avant chaque page)
@@ -25,6 +26,19 @@ export async function proxy(request: NextRequest) {
   // l'habillage du produit artisans. Cet habillage est descendu dans
   // src/app/(artisans)/layout.tsx : il n'atteint plus que les pages de
   // ce groupe, et personne n'a plus besoin de connaître l'adresse.
+  /*  nº 354 — LE NU TOTAL SE DÉCIDE AU SERVEUR, et c'est ici que le
+      cookie se pose : la mise en page ne reçoit pas les paramètres
+      d'adresse, le proxy si. `?variante=nu-total` pose le cookie SUR
+      LA REQUÊTE MÊME (le premier rendu est déjà nu) et sur la réponse
+      (les suivants aussi) ; tout autre `?variante=` le retire. Sans
+      paramètre : rien. */
+  const varianteDemandee = request.nextUrl.searchParams.get("variante");
+  if (varianteDemandee === "nu-total") {
+    request.cookies.set(COOKIE_NU_TOTAL, "1");
+  } else if (varianteDemandee !== null) {
+    request.cookies.delete(COOKIE_NU_TOTAL);
+  }
+
   let reponse = NextResponse.next({ request });
 
   const { url, clePublishable } = infosConnexionSupabase();
@@ -49,6 +63,17 @@ export async function proxy(request: NextRequest) {
   // Cette lecture déclenche le renouvellement de la session si besoin.
   // Ne pas ajouter de code entre la création du client et cette ligne.
   await supabase.auth.getClaims();
+
+  //  nº 354 — la moitié durable du cookie du nu total (voir plus haut).
+  if (varianteDemandee === "nu-total") {
+    reponse.cookies.set(COOKIE_NU_TOTAL, "1", {
+      path: "/",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24,
+    });
+  } else if (varianteDemandee !== null) {
+    reponse.cookies.delete(COOKIE_NU_TOTAL);
+  }
 
   return reponse;
 }

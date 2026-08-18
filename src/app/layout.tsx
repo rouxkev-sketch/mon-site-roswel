@@ -7,6 +7,8 @@ import { variablesCssCouleurs } from "@/lib/theme";
 import { EnregistrementServiceWorker } from "@/components/EnregistrementServiceWorker";
 import { DefinitionsIcones } from "@/components/Icones";
 import { MemoireNavigation } from "@/components/MemoireNavigation";
+import { cookies } from "next/headers";
+import { COOKIE_NU_TOTAL } from "@/lib/variantes-essai";
 import "./globals.css";
 
 // Police du site (moderne et très lisible sur mobile)
@@ -80,11 +82,17 @@ export const viewport: Viewport = {
  * est descendu dans src/app/(artisans)/layout.tsx, où il ne peut plus
  * atteindre que les pages de ce groupe.
  */
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  //  nº 354 — LE NU TOTAL (lib/variantes-essai) : quand son cookie est
+  //  posé, la racine ne rend NI la mémoire de navigation NI
+  //  l'enregistreur du service worker — un site Next vierge n'a ni
+  //  l'un ni l'autre. Sans cookie : rien ne change.
+  const nuTotal =
+    (await cookies()).get(COOKIE_NU_TOTAL)?.value === "1";
   return (
     // `suppressHydrationWarning` : le détecteur d'appareil de yokofolio
     // (src/app/(tatouage)/layout.tsx) pose `data-appareil` sur <html>
@@ -133,9 +141,9 @@ export default function RootLayout({
             n'impose plus rien à personne. */}
         {children}
         {/* Journal de navigation (bouton retour de la fiche) */}
-        <MemoireNavigation />
+        {!nuTotal && <MemoireNavigation />}
         {/* Active le mode "application installable" (PWA) */}
-        <EnregistrementServiceWorker />
+        {!nuTotal && <EnregistrementServiceWorker />}
       </body>
     </html>
   );

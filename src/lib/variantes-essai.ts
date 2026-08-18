@@ -55,6 +55,7 @@
  */
 
 export const VARIANTES = [
+  "nu-total",
   "nu",
   "sans-filet",
   "sans-surfaces",
@@ -96,8 +97,48 @@ export function varianteActive(): NomDeVariante | null {
 export function mecanismeCoupe(mecanisme: Mecanisme): boolean {
   const variante = varianteActive();
   if (!variante) return false;
-  if (variante === "nu") return true;
+  if (variante === "nu" || variante === "nu-total") return true;
   return variante === `sans-${mecanisme}`;
+}
+
+/* ==================================================================
+ * nº 354 — LE NU TOTAL : zéro code à nous, décidé PAR LE SERVEUR
+ * ==================================================================
+ * Le relevé de la nº 354 a prouvé que `nu` n'était pas nu : il coupait
+ * les huit mécanismes mais laissait tourner tout le reste — journal de
+ * bord (qui enveloppe `pushState`/`replaceState` POUR TOUT LE MONDE et
+ * tire une balise `sendBeacon` À L'INTÉRIEUR de chaque écriture
+ * d'historique), script d'avant peinture, service worker, sondes.
+ * `nu-total` retire TOUT : le serveur lit un cookie (posé par le proxy
+ * quand l'adresse porte `?variante=nu-total`, retiré par tout autre
+ * `?variante=`) et ne REND simplement pas ces morceaux. Il ne reste
+ * que trois lignes de script, décrites dans `scriptNuTotalPourLaPage`,
+ * et un badge « NU TOTAL » rendu par le serveur, sans JavaScript.
+ */
+export const COOKIE_NU_TOTAL = "yf_nu_total";
+
+/**
+ * LES TROIS SEULES LIGNES DE SCRIPT DU NU TOTAL, dites une à une :
+ *  1. `data-appareil` — sans elle la mise en page mobile n'existe pas
+ *     (la variante CSS `mobile:` ne regarde que cet attribut) et le
+ *     protocole serait faussé par une page d'ordinateur ;
+ *  2. `data-variante="nu-total"` — pour que les portes des composants
+ *     encore rendus (cartes, fiches) coupent leurs mécanismes ;
+ *  3. la DÉSINSCRIPTION du service worker déjà installé par les
+ *     visites précédentes — sans elle, l'ancien continuerait de
+ *     contrôler les pages et le test ne serait pas vierge.
+ * AUCUN accès à l'historique, AUCUNE écriture de stockage. C'est tout
+ * ce qui sépare `nu-total` d'un create-next-app, et c'est dit.
+ */
+export function scriptNuTotalPourLaPage(): string {
+  return (
+    `(function(){var r=document.documentElement;` +
+    `r.dataset.appareil=matchMedia("(pointer: coarse)").matches?"mobile":"web";` +
+    `r.dataset.${MARQUE_VARIANTE}="nu-total";` +
+    `if(navigator.serviceWorker){navigator.serviceWorker.getRegistrations()` +
+    `.then(function(l){l.forEach(function(x){x.unregister()})}).catch(function(){})}` +
+    `})()`
+  );
 }
 
 /**
