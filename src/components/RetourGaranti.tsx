@@ -142,6 +142,26 @@ function dire(decision: string): void {
   }
 }
 
+/**
+ * §4 (nº 352) — CE QUI VAUT POUR LE DOCUMENT, PAS POUR LA PAGE.
+ * ------------------------------------------------------------------
+ * L'effet ci-dessous vit et meurt avec CHAQUE adresse (navigations
+ * douces comprises) ; le CRAN, lui, vit avec le DOCUMENT. Ces deux
+ * drapeaux vivent donc ici, à l'échelle du module — remis à zéro par
+ * un vrai chargement, jamais par une navigation douce :
+ *  · le cran est-il posé quelque part sous nous ? (l'état de l'entrée
+ *    courante ne sait pas le dire : la marque est plus bas dans la
+ *    pile) ;
+ *  · l'attente d'un appui franc a-t-elle déjà été dite ?
+ * SANS EUX, LE JOURNAL MENTAIT (relevé nº 352) : chaque arrivée de
+ * fiche rejouait « EN ATTENTE — le cran attend un appui franc » alors
+ * que le cran était posé depuis l'accueil. La ligne n'est désormais
+ * écrite que si elle est VRAIE : aucun cran encore posé dans ce
+ * document, et une seule fois.
+ */
+let cranPoseDansCeDocument = false;
+let attenteDejaDiteDansCeDocument = false;
+
 export function RetourGaranti() {
   const chemin = usePathname();
 
@@ -194,6 +214,7 @@ export function RetourGaranti() {
         { ...((window.history.state as object | null) ?? {}), [MARQUE]: true },
         ""
       );
+      cranPoseDansCeDocument = true;
       window.addEventListener("popstate", auRetour);
       ecoutePose = true;
     }
@@ -253,7 +274,6 @@ export function RetourGaranti() {
         (« EN ATTENTE »), pour que le relevé montre la distinction. */
     const SEUIL_APPUI_PX = 10;
     let debut: { id: number; x: number; y: number } | null = null;
-    let attenteDite = false;
 
     const poserSurCeGeste = () => {
       retirerLesDeclencheurs();
@@ -278,8 +298,12 @@ export function RetourGaranti() {
       const dy = evenement.clientY - debut.y;
       debut = null;
       if (Math.hypot(dx, dy) > SEUIL_APPUI_PX) {
-        if (!attenteDite) {
-          attenteDite = true;
+        /*  §4 (nº 352) — LA LIGNE NE SORT QUE SI ELLE EST VRAIE : cran
+            pas encore posé dans CE document, et une seule fois. Le
+            relevé nº 352 la montrait sur chaque arrivée de fiche alors
+            que le cran était posé depuis l'accueil — elle mentait. */
+        if (!cranPoseDansCeDocument && !attenteDejaDiteDansCeDocument) {
+          attenteDejaDiteDansCeDocument = true;
           dire(
             "EN ATTENTE — le premier geste était un défilement, le cran attend un appui franc"
           );

@@ -294,6 +294,23 @@
  *    Si l'appui franc ne suffit pas, la suite est déjà cadrée par le
  *    propriétaire : dire si un filet est tenable sur ces navigateurs,
  *    ou le restreindre à ceux qui le respectent.
+ *  · nº 352 — LE VERDICT EST RENDU : l'appui franc a GUÉRI BRAVE (onze
+ *    cycles, onze popstate, zéro éjection) mais PAS CHROME iPHONE, où
+ *    l'éjection reste possible À TOUT RANG de retour, aléatoirement,
+ *    cran d'appui franc compris — et où un cran peut être consommé EN
+ *    SILENCE (retour qui atterrit une entrée trop bas, sans que rien ne
+ *    le dise). UN FILET GARANTI N'EST PAS TENABLE SUR CHROME iPHONE :
+ *    le juge siège dans la couche applicative du navigateur, hors de
+ *    portée de la page, et aucun popstate n'accompagne ses sauts — le
+ *    filet ne peut même pas OBSERVER ce qu'il devrait rattraper. Il
+ *    reste naturellement inerte là où il est ignoré (un saut ne produit
+ *    aucun popstate) et pleinement actif sur Safari et Brave. La
+ *    décision d'aller plus loin (statu quo ou navigations pleines sur
+ *    Chrome) appartient au propriétaire — rien ne s'implémente sans
+ *    son accord (nº 352-§3). La fausse ligne « EN ATTENTE » sur chaque
+ *    fiche est corrigée (§4 : elle ne sort que si aucun cran n'est posé
+ *    dans le document, une seule fois — drapeaux à l'échelle du
+ *    module, RetourGaranti).
  *  · IL RESTE : la moitié du C-6 sans objet — voir le point 5.
  *
  * ------------------------------------------------------------------
