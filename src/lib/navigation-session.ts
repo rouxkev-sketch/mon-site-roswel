@@ -270,6 +270,16 @@
  *    nº 333 : « +16 ms replaceState → / (le routeur de Next) ») ; pour
  *    une REMPLACÉE, une marque ne désigne l'appelant que si elle est
  *    NEUVE (`quiRemplace`, journal-historique).
+ *  · nº 350 — LA RÈGLE DES ÉJECTIONS EST TROUVÉE, sourcée par le
+ *    propriétaire : Chrome 127 / iOS 17.5+ SAUTE au retour les entrées
+ *    créées SANS interaction (anti-piège, crédit ~10 s). LE CRAN DU
+ *    FILET EST DONC POSÉ À LA PREMIÈRE INTERACTION, synchrone dans le
+ *    gestionnaire (`pointerdown`/`keydown` en capture, RetourGaranti) —
+ *    avant le premier toucher, pas de cran, et un retour immédiat sort
+ *    du site : accepté. L'attente du document fini (nº 348) est
+ *    retirée — c'était la même plaie, la mauvaise cause. Audit : le
+ *    cran était la seule entrée du site posée sans geste ; surfaces,
+ *    carrousel et fenêtres de fiche naissent toutes d'un toucher.
  *  · IL RESTE : la moitié du C-6 sans objet — voir le point 5.
  *
  * ------------------------------------------------------------------

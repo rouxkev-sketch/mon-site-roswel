@@ -364,11 +364,17 @@ function verserLeVerdictALOuverture(): void {
     marquerLeVerdictVerse();
   }
   const reference = depose?.quand ?? 0;
-  //  §4 (nº 348) — LE COMPTE À REBOURS NE PART QU'AU DOCUMENT FINI :
-  //  le filet ne décide plus qu'à `load` (RetourGaranti), donc mesurer
-  //  son silence avant `load`, c'était le déclarer muet à tort sur
-  //  chaque chargement lent — précisément ceux qu'on instrumente.
+  //  §nº 350 — LE COMPTE À REBOURS PART DU PREMIER GESTE, plus du
+  //  document fini : le filet ne décide désormais qu'à la première
+  //  interaction (RetourGaranti — c'est elle qui porte le crédit
+  //  d'activation). Mesurer son silence avant tout geste, c'était le
+  //  déclarer muet à tort sur chaque arrivée tranquille. Sans geste,
+  //  aucune ligne : il n'y a rien à décider. Écouteurs en phase de
+  //  BOUILLONNEMENT : le filet écoute en capture, il décide donc
+  //  AVANT que notre compte à rebours ne parte.
   const armerLeCompteARebours = () => {
+    window.removeEventListener("pointerdown", armerLeCompteARebours);
+    window.removeEventListener("keydown", armerLeCompteARebours);
     setTimeout(() => {
       const apres = lireLeVerdict();
       //  Une décision est arrivée pour ce document-ci : sa ligne est
@@ -379,12 +385,14 @@ function verserLeVerdictALOuverture(): void {
         "ARRIVÉE SUR LA PAGE",
         `FILET — aucune décision du filet reçue` +
           `${depose ? " pour CE document" : ""}` +
-          ` (1,2 s après le document fini) · ${tracesAvantPeinture()}`
+          ` (1,2 s après le premier geste) · ${tracesAvantPeinture()}`
       );
     }, 1200);
   };
-  if (document.readyState === "complete") armerLeCompteARebours();
-  else window.addEventListener("load", armerLeCompteARebours, { once: true });
+  window.addEventListener("pointerdown", armerLeCompteARebours, {
+    passive: true,
+  });
+  window.addEventListener("keydown", armerLeCompteARebours);
 }
 
 /* ==================================================================

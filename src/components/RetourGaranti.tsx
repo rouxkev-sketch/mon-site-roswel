@@ -147,7 +147,6 @@ export function RetourGaranti() {
 
   useEffect(() => {
     let aNous = true;
-    let minuterie: ReturnType<typeof setTimeout> | null = null;
     let ecoutePose = false;
 
     function auRetour() {
@@ -199,45 +198,60 @@ export function RetourGaranti() {
       ecoutePose = true;
     }
 
-    /*  §4 (nº 348) — LE CRAN N'EST POSÉ QUE SUR UN DOCUMENT FINI.
+    /*  ██ LE CRAN N'EST POSÉ QUE SUR UN GESTE DU VISITEUR (nº 350) ██
         ------------------------------------------------------------
-        LA CAUSE NOMMÉE : une entrée d'historique posée PENDANT que le
-        document se construit peut être mal accrochée à la liste
-        interne du navigateur — la liste de JavaScript dit alors
-        « pile 4 » quand celle du navigateur n'a pas l'entrée, et le
-        retour suivant SAUTE hors du site sans un seul `popstate`.
-        C'est la signature exacte des éjections relevées en ligne, et
-        elle colle au fait nouveau du propriétaire : sur le MÊME
-        iPhone, contre le serveur local, tout est impeccable — en
-        local le document est fini en quelques dizaines de
-        millisecondes et la fenêtre de course n'existe pas ; en
-        production, sur un réseau lent, l'hydratation tombe en plein
-        chargement et la fenêtre est grande ouverte. L'aléatoire suit
-        la lenteur du réseau : ce sont ses mots, et c'est ce que fait
-        une course.
-        ON ATTEND DONC `readyState === "complete"` (l'événement `load`),
-        plus une respiration, avant de décider ET de poser. Le prix,
-        dit honnêtement : pendant le chargement, un retour reste
-        natif — mais c'était déjà le cas quand le cran, posé trop tôt,
-        n'était pas accroché ; l'éjection de la visite 2, elle, arrivait
-        APRÈS 35 secondes de consultation, très loin de cette fenêtre. */
-    if (document.readyState === "complete") {
-      minuterie = setTimeout(decider, 0);
-    } else {
-      const auComplet = () => {
-        minuterie = setTimeout(decider, 0);
-      };
-      window.addEventListener("load", auComplet, { once: true });
-      return () => {
-        aNous = false;
-        window.removeEventListener("load", auComplet);
-        if (minuterie !== null) clearTimeout(minuterie);
-        if (ecoutePose) window.removeEventListener("popstate", auRetour);
-      };
-    }
+        LA RÈGLE, TROUVÉE ET SOURCÉE PAR LE PROPRIÉTAIRE : depuis
+        Chrome 127 / iOS 17.5+, le navigateur SAUTE au retour les
+        entrées d'historique créées SANS interaction (protection
+        anti-piège ; fil navigation-dev de Chromium, « Issue with
+        Browser Back Button Skipping Pages in History on Chrome for
+        iOS »). Le crédit d'interaction vaut ~10 s et se consomme —
+        d'où l'aléatoire des relevés. Notre cran était poussé au
+        chargement, sans geste : STRUCTURELLEMENT SAUTABLE. Les POSÉE
+        du routeur, nées d'un toucher, sont créditées, elles. Et le
+        local s'explique enfin : l'ancien filet (`history.length <= 1`)
+        ne s'armait jamais sur Chrome — pas de cran, pas de saut.
+
+        DONC : le cran est posé À LA PREMIÈRE INTERACTION RÉELLE,
+        SYNCHRONE dans le gestionnaire de l'événement, pour que
+        l'entrée porte le crédit d'activation. `pointerdown` et
+        `keydown` sont tous deux des événements qui accordent ce
+        crédit ; la CAPTURE nous fait passer AVANT le clic d'un lien —
+        si le premier geste ouvre déjà une fiche, le cran se pose
+        sous elle, dans le bon ordre, dans le même geste. Avant le
+        premier toucher, pas de cran : un retour immédiat sort du
+        site, et c'est le comportement normal du web — accepté par le
+        propriétaire, nº 350.
+
+        ⚠️ LA nº 348 (attendre le document fini) visait la même plaie
+        avec la mauvaise cause : c'est le CRÉDIT qui manquait, pas la
+        stabilité du document. Son attente est retirée — le geste est
+        désormais l'unique déclencheur.
+
+        L'AUDIT DEMANDÉ (nº 350) — les autres entrées du site : les
+        surfaces refermables, la fenêtre de carrousel et les fenêtres
+        de fiche posent toutes leur étape en réponse à un toucher
+        (gestionnaire de clic, ou effet déclenché par lui, quelques
+        millisecondes après — dans le crédit) ; les POSÉE du routeur
+        naissent des liens. Le cran était LA SEULE entrée posée sans
+        aucun geste. */
+    const surPremierGeste = () => {
+      retirerLesDeclencheurs();
+      decider();
+    };
+    const retirerLesDeclencheurs = () => {
+      window.removeEventListener("pointerdown", surPremierGeste, true);
+      window.removeEventListener("keydown", surPremierGeste, true);
+    };
+    window.addEventListener("pointerdown", surPremierGeste, {
+      capture: true,
+      passive: true,
+    });
+    window.addEventListener("keydown", surPremierGeste, { capture: true });
+
     return () => {
       aNous = false;
-      if (minuterie !== null) clearTimeout(minuterie);
+      retirerLesDeclencheurs();
       if (ecoutePose) window.removeEventListener("popstate", auRetour);
     };
   }, [chemin]);
