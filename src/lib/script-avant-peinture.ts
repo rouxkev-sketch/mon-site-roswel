@@ -36,6 +36,9 @@ import { amorceDuJournalPourLeScript } from "@/lib/journal-historique";
 //  est écrite une fois (lib/bas-de-la-pile) et rend son relevé TOUT
 //  FAIT : aucune copie à la main ici non plus.
 import { releveDuBasPourLeScript } from "@/lib/bas-de-la-pile";
+//  nº 353 — le banc d'épreuve par variantes : le texte est fabriqué
+//  par le module qui porte la règle (lib/variantes-essai).
+import { variantePourLeScript } from "@/lib/variantes-essai";
 
 /**
  * TOUT CE QUI DOIT ÊTRE DÉCIDÉ AVANT LA PREMIÈRE PEINTURE
@@ -146,7 +149,7 @@ r.dataset.appareil=matchMedia("(pointer: coarse)").matches?"mobile":"web";
    avec un vieux), la page servie est PÉRIMÉE — un cache la retient —
    et aucun des blocs récents n'y a jamais été. À INCRÉMENTER à chaque
    passe qui modifie ce script. */
-r.dataset.versionScript="352";
+r.dataset.versionScript="353";
 r.style.backgroundColor=${fond};
 /* 0. LE NOMBRE DE COLONNES, POUR LA PROCHAINE RÉPONSE DU SERVEUR
    (nº 226-§1). La politique du cookie — validité, portée, samesite —
@@ -162,6 +165,9 @@ try{history.scrollRestoration="manual"}catch(e){}
    ⚠️ DÉSARMÉ, CE BLOC NE FAIT QU'UNE LECTURE : aucune écriture, aucun
    attribut, aucun écouteur. */
 try{${armementPourLeScript()}}catch(e){}
+/* nº 353 — LA VARIANTE D'ESSAI, lue au plus tôt : chaque porte du
+   site lit la marque qu'elle pose. Sans variante : une lecture. */
+try{${variantePourLeScript()}}catch(e){}
 /* §2 (nº 343) — ET LE JOURNAL DE L'HISTORIQUE COMMENCE ICI. Armé
    seulement : les toutes premières entrées de la pile — celles qui
    expulsent du site — sont enregistrées avant que React n'existe. */

@@ -91,6 +91,7 @@ import { IconeAjouterPhoto } from "@/components/IconeAjouterPhoto";
 import { OngletsLigne } from "@/components/OngletsLigne";
 import { slugFiche, slugifier } from "@/lib/slug";
 import type { Tatoueur } from "@/lib/tatoueurs";
+import { mecanismeCoupe } from "@/lib/variantes-essai";
 import {
   chargerFichesDuCompte,
   ficheActive,
@@ -1141,7 +1142,9 @@ export function FormulaireFiche() {
     //  passage les marques que le site pose dans l'étape (le filet
     //  `retourReconstruit`, l'étape d'une surface refermable), et
     //  le retour ne savait plus où il en était.
-    window.history.replaceState(window.history.state, "", propre.toString());
+    if (!mecanismeCoupe("nettoyages")) {
+      window.history.replaceState(window.history.state, "", propre.toString());
+    }
     setPhotosEnRelecture(photosDemandees);
     setAnnonceValidation(true);
   }, [annonceDemandee, photosDemandees, vueApercuDemandee]);

@@ -62,6 +62,9 @@ import {
   lireLeVerdict,
   marquerLeVerdictVerse,
 } from "@/lib/bas-de-la-pile";
+//  nº 353 — la variante d'essai active est écrite à chaque arrivée :
+//  les relevés du banc par variantes doivent être indiscutables.
+import { varianteActive } from "@/lib/variantes-essai";
 
 export type LigneHistorique = {
   /** Le rang, continu d'une page à l'autre. */
@@ -334,8 +337,15 @@ export function tracesAvantPeinture(): string {
   const releve = bas ? `oui [${bas.origine}]` : "AUCUN";
   return (
     `script nº ${version} · armement ${armement} · amorce ${amorce}` +
-    ` · relevé du bas ${releve}`
+    ` · relevé du bas ${releve}${etiquetteDeVariante()}`
   );
+}
+
+/** nº 353 — « · VARIANTE nu » quand le banc par variantes est armé,
+    rien sinon : les relevés du protocole se lisent sans ambiguïté. */
+function etiquetteDeVariante(): string {
+  const variante = varianteActive();
+  return variante ? ` · VARIANTE ${variante}` : "";
 }
 
 /**
@@ -423,7 +433,10 @@ export function armerLeJournalDHistorique(): () => void {
       SECONDE enveloppe par-dessus doublerait chaque ligne. On prend
       acte, on note notre arrivée, et on ne touche à rien. */
   if ((window as unknown as Record<string, unknown>)[MARQUE_AMORCE]) {
-    noter("ARRIVÉE SUR LA PAGE", "sonde (enveloppes déjà posées)");
+    noter(
+      "ARRIVÉE SUR LA PAGE",
+      `sonde (enveloppes déjà posées)${etiquetteDeVariante()}`
+    );
     //  §A (nº 347) — l'ouverture du journal verse le verdict du filet,
     //  ou écrit son absence : sur les DEUX chemins d'armement.
     verserLeVerdictALOuverture();
@@ -470,7 +483,7 @@ export function armerLeJournalDHistorique(): () => void {
   window.addEventListener("popstate", auPopstate, { passive: true });
   window.addEventListener("pagehide", auDepart, { passive: true });
 
-  noter("ARRIVÉE SUR LA PAGE", "sonde");
+  noter("ARRIVÉE SUR LA PAGE", `sonde${etiquetteDeVariante()}`);
   //  §A (nº 347) — même chose quand c'est le module qui pose les
   //  enveloppes : le verdict du filet ne peut plus être invisible.
   verserLeVerdictALOuverture();

@@ -43,6 +43,7 @@ import {
 //  de carrousel depuis la photo du haut.
 import { NATURE_PAR_DEFAUT } from "@/lib/photos-tatoueur";
 import type { Tatoueur } from "@/lib/tatoueurs";
+import { mecanismeCoupe } from "@/lib/variantes-essai";
 
 /**
  * LA FICHE COMPLÈTE D'UN TATOUEUR — le mode d'ARRIVÉE DIRECTE
@@ -631,6 +632,9 @@ export function FicheTatoueur({
     photo: number
   ): boolean {
     if (apercu) return false;
+    //  nº 353 — porte du banc : dans cette variante, la fenêtre de
+    //  carrousel ne s'ouvre pas du tout (aucune étape posée).
+    if (mecanismeCoupe("fenetres")) return false;
     //  ⚠️ LU AU MOMENT DU GESTE, jamais au rendu (la règle de
     //  PileFiches) : le serveur ne connaît pas l'appareil.
     if (document.documentElement.dataset.appareil !== "mobile") return false;

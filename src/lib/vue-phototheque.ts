@@ -49,6 +49,7 @@
  */
 
 import { SUFFIXE_COOKIE_AFFICHAGE } from "@/lib/colonnes-mosaique";
+import { mecanismeCoupe } from "@/lib/variantes-essai";
 import {
   cleDeSurface,
   surfaceCourante,
@@ -159,11 +160,13 @@ function ecrireDansLAdresse(voulue: boolean) {
     if (voulue) parametres.set(PARAMETRE_TEXTE, "sans");
     else parametres.delete(PARAMETRE_TEXTE);
     const requete = parametres.toString();
-    window.history.replaceState(
-      window.history.state,
-      "",
-      window.location.pathname + (requete ? `?${requete}` : "") + window.location.hash
-    );
+    if (!mecanismeCoupe("nettoyages")) {
+      window.history.replaceState(
+        window.history.state,
+        "",
+        window.location.pathname + (requete ? `?${requete}` : "") + window.location.hash
+      );
+    }
   } catch {
     // Adresse inaccessible : la vue vivra le temps de la page.
   }

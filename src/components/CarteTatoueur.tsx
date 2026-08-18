@@ -32,6 +32,7 @@ import type { Tatoueur } from "@/lib/tatoueurs";
 //  ⚠️ TEMPORAIRE (nº 175-§6) — la sonde-journal note l'ouverture d'une
 //  fiche. Elle n'écrit RIEN sans `?sonde-bascule=1`.
 import { noter, sauvegarderMaintenant } from "@/lib/journal-bascule";
+import { mecanismeCoupe } from "@/lib/variantes-essai";
 
 /**
  * LA CARTE D'UN TATOUEUR
@@ -222,6 +223,10 @@ function CarteTatoueurNue({
       sans retarder la navigation, et survit même au départ de la
       page. Jamais bloquant, jamais d'erreur visible. */
   function signalerClic() {
+    //  nº 353 — porte du banc (FAMILLE 2 du complément) : la balise
+    //  est la seule API de la chaîne du toucher — la couper dit si
+    //  elle consomme l'activation que l'auto-réparation dépense.
+    if (mecanismeCoupe("balise")) return;
     try {
       const corps = new Blob([JSON.stringify({ slug: tatoueur.slug })], {
         type: "application/json",

@@ -311,6 +311,22 @@
  *    fiche est corrigée (§4 : elle ne sort que si aucun cran n'est posé
  *    dans le document, une seule fois — drapeaux à l'échelle du
  *    module, RetourGaranti).
+ *  · nº 353 — LE BANC D'ÉPREUVE PAR VARIANTES (lib/variantes-essai,
+ *    TEMPORAIRE) : l'argument du propriétaire — les sites Next
+ *    ordinaires ont un retour fiable sur Chrome iPhone, le juge punit
+ *    LE NÔTRE — impose de couper nos écritures d'historique une par
+ *    une (`?variante=nu`, `sans-filet`, `sans-surfaces`,
+ *    `sans-consommation`, `sans-fenetres`, `sans-profil`,
+ *    `sans-nettoyages`, `sans-balise` ; `normal` désarme). Portes dans
+ *    RetourGaranti, etape-refermable, FicheTatoueur, ContenuFiche,
+ *    GrilleTatoueurs, FormulaireFiche, disposition-grille,
+ *    filtres-selection, vue-phototheque, CarteTatoueur. La variante
+ *    active est écrite dans le journal à chaque arrivée. Sans
+ *    paramètre : rien ne change. Doc officielle intégrée (complément
+ *    nº 353) : les étapes sans activation sont « sautables », chaque
+ *    geste RÉPARE toutes les étapes du document, sauf activation
+ *    CONSOMMÉE — d'où `sans-balise`, la seule API de la chaîne du
+ *    toucher (sendBeacon).
  *  · IL RESTE : la moitié du C-6 sans objet — voir le point 5.
  *
  * ------------------------------------------------------------------

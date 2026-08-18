@@ -32,6 +32,7 @@ import type { Tatoueur } from "@/lib/tatoueurs";
 //  observateurs vivants. Sans `?sonde-cartes=1`, ces appels ne coûtent
 //  rien.
 import { observateurMort, observateurNe } from "@/lib/journal-cartes";
+import { mecanismeCoupe } from "@/lib/variantes-essai";
 
 /** UN PIXEL TRANSPARENT — ce qu'une image lointaine porte à la place
     de sa source (nº 224-§4). Une chaîne, aucune requête réseau. */
@@ -504,7 +505,9 @@ export function GrilleTatoueurs({
       //  passage les marques que le site pose dans l'étape (le filet
       //  `retourReconstruit`, l'étape d'une surface refermable), et
       //  le retour ne savait plus où il en était.
-      window.history.replaceState(window.history.state, "", adressePropre);
+      if (!mecanismeCoupe("nettoyages")) {
+        window.history.replaceState(window.history.state, "", adressePropre);
+      }
       if (!cible) return; // la fiche n'est plus dans ces résultats.
       window.scrollTo({ top: defilement, left: 0, behavior: "instant" });
       ouvrir(cible);

@@ -13,6 +13,7 @@ import {
   noterDansLeJournal,
   tracesAvantPeinture,
 } from "@/lib/journal-historique";
+import { mecanismeCoupe } from "@/lib/variantes-essai";
 
 /**
  * ON NE SORT JAMAIS DU SITE PAR UN RETOUR — LE FILET
@@ -166,6 +167,9 @@ export function RetourGaranti() {
   const chemin = usePathname();
 
   useEffect(() => {
+    //  nº 353 — LA PORTE DU BANC : `?variante=nu` ou `sans-filet`
+    //  coupe le filet entier — ni écouteurs, ni cran, ni lignes.
+    if (mecanismeCoupe("filet")) return;
     let aNous = true;
     let ecoutePose = false;
 

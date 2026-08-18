@@ -34,6 +34,7 @@ import {
   BlocProfilsArtiste,
 } from "@/components/BlocLieux";
 import type { Tatoueur } from "@/lib/tatoueurs";
+import { mecanismeCoupe } from "@/lib/variantes-essai";
 
 /**
  * LE CONTENU D'UNE FICHE — UN SEUL EXEMPLAIRE, POUR LES DEUX ENVELOPPES
@@ -455,6 +456,9 @@ export function ContenuFiche({
     //  DÉJÀ JOUÉ SUR CETTE ÉTAPE : un rechargement ou un retour ne
     //  rejoue rien. (L'état d'historique survit aux deux.)
     if (etape.profilJoue) return;
+    //  nº 353 — porte du banc : sans la marque, l'ancre peut rejouer
+    //  aux retours ; c'est le prix assumé de la variante.
+    if (mecanismeCoupe("profil")) return;
     //  ⚠️ DEUX ARGUMENTS, PAS TROIS : sans adresse, `replaceState`
     //  garde celle qui est là — ancre comprise. C'est tout le point.
     window.history.replaceState({ ...etape, profilJoue: true }, "");

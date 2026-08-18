@@ -34,6 +34,7 @@
  * changer (première lecture, popstate, remise au pas par l'accueil).
  */
 
+import { mecanismeCoupe } from "@/lib/variantes-essai";
 import {
   cleDeSurface,
   surfaceCourante,
@@ -148,11 +149,13 @@ function ecrireDansLAdresse(voulue: DispositionGrille) {
     if (voulue === "une") parametres.set(PARAMETRE_DISPOSITION, "une");
     else parametres.delete(PARAMETRE_DISPOSITION);
     const requete = parametres.toString();
-    window.history.replaceState(
-      window.history.state,
-      "",
-      window.location.pathname + (requete ? `?${requete}` : "") + window.location.hash
-    );
+    if (!mecanismeCoupe("nettoyages")) {
+      window.history.replaceState(
+        window.history.state,
+        "",
+        window.location.pathname + (requete ? `?${requete}` : "") + window.location.hash
+      );
+    }
   } catch {
     // Adresse inaccessible : la bascule vivra le temps de la page.
   }
