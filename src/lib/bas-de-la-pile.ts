@@ -66,6 +66,14 @@
  * incomparablement plus petit que celui qu'on paie aujourd'hui : SUR
  * CHROME, LE FILET N'EXISTE PAS DU TOUT.
  *
+ * ⚠️ UN RÉFÉRENT VIDE NE VEUT PAS DIRE « UNE PAGE ÉTRANGÈRE EST
+ * DERRIÈRE » — IL VEUT DIRE L'EXACT CONTRAIRE, et le code l'a toujours
+ * écrit ainsi (`referentEtranger` ci-dessous rend `false` sur une
+ * chaîne vide). C'est l'hypothèse que le propriétaire a formée à la
+ * nº 346 en cherchant pourquoi le filet ne s'armait pas ; elle est
+ * fausse, et la vraie cause est plus bas (le relevé de secours). On
+ * l'écrit ici pour qu'aucune passe ne la reprenne.
+ *
  * ⚠️ UN RÉFÉRENT DE NOTRE PROPRE ORIGINE NE COMPTE PAS. Quand le filet
  * a joué, il fait `location.replace("/")` : le document qui suit porte
  * un référent — le nôtre. Il ne désigne AUCUNE entrée derrière nous
@@ -86,17 +94,91 @@ export type BasDeLaPile = {
   etranger: boolean;
 };
 
+/**
+ * ██ LA RÈGLE DU RÉFÉRENT, ÉCRITE UNE FOIS ET SANS AMBIGUÏTÉ ██
+ * ------------------------------------------------------------------
+ * UNE PAGE ÉTRANGÈRE EST DERRIÈRE MOI **SEULEMENT SI** LE RÉFÉRENT EST
+ * UNE VRAIE ADRESSE D'UNE AUTRE ORIGINE.
+ *  · référent VIDE      → personne ne m'a envoyé. C'est le cas de
+ *    l'adresse tapée à la main, du signet, du code QR, de la session
+ *    restaurée — et de l'entrée FANTÔME que Chrome pose lui-même dans
+ *    tout onglet neuf. AUCUNE page étrangère. Le filet doit s'armer.
+ *  · référent DE NOTRE ORIGINE → c'est nous. Pas une page étrangère.
+ *  · référent D'UNE AUTRE ORIGINE (instagram.com) → LÀ, et là seulement,
+ *    le visiteur vient d'ailleurs, et son retour doit l'y ramener.
+ *    C'est la borne de la nº 332-§2, entière.
+ * Un référent illisible est traité comme vide : on ne renonce jamais
+ * sur un doute.
+ */
+function referentEtranger(): boolean {
+  try {
+    const referent = document.referrer;
+    if (!referent) return false;
+    return new URL(referent).origin !== location.origin;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * ⚠️ LE RELEVÉ DE SECOURS, ET POURQUOI IL EXISTE (nº 346).
+ * ------------------------------------------------------------------
+ * À la nº 345, le relevé n'était fait QUE par le script d'avant
+ * peinture, et l'absence de relevé retombait sur `history.length <= 1`
+ * — c'est-à-dire EXACTEMENT la condition que la passe venait de
+ * retirer. Le filet redevenait donc inexistant dès que ce bloc du
+ * script ne s'exécutait pas, sans que rien ne le dise.
+ *
+ * Le relevé du propriétaire, en ligne, montre que ce bloc NE S'EXÉCUTE
+ * PAS sur son Chrome : sa toute première ligne de journal est
+ * « ARRIVÉE SUR LA PAGE · sonde » — jamais « DOCUMENT OUVERT (avant
+ * peinture) », et jamais la mention « enveloppes déjà posées » que le
+ * module inscrit quand le script l'a précédé. Or notre relevé est posé
+ * dans ce même bloc.
+ *
+ * DEUX CHANGEMENTS, DONC :
+ *  1. LE REPLI SUR `history.length <= 1` EST SUPPRIMÉ. Jamais une
+ *     absence de mesure ne doit rétablir en silence la règle fausse.
+ *  2. CE MODULE PREND LA MESURE LUI-MÊME s'il ne la trouve pas — au
+ *     CHARGEMENT du module, c'est-à-dire avant le premier effet de
+ *     React et donc avant qu'aucune entrée n'ait pu être empilée par
+ *     le routeur, une surface ou le filet.
+ * Le script d'avant peinture reste le meilleur endroit quand il
+ * s'exécute : il précède même l'hydratation. Il n'est plus le seul.
+ */
+const RELEVE_AU_CHARGEMENT: BasDeLaPile | null =
+  typeof window === "undefined"
+    ? null
+    : { profondeur: window.history.length, etranger: referentEtranger() };
+
+/** D'où vient la mesure qu'on a utilisée — le journal le dit. */
+let origineDuReleve = "aucune";
+
 export function lireLeBasDeLaPile(): BasDeLaPile | null {
   if (typeof window === "undefined") return null;
   try {
     const brut = sessionStorage.getItem(CLE_BAS);
-    if (!brut) return null;
-    const lu = JSON.parse(brut) as Partial<BasDeLaPile>;
-    if (typeof lu?.profondeur !== "number") return null;
-    return { profondeur: lu.profondeur, etranger: Boolean(lu.etranger) };
+    if (brut) {
+      const lu = JSON.parse(brut) as Partial<BasDeLaPile>;
+      if (typeof lu?.profondeur === "number") {
+        origineDuReleve = "avant peinture";
+        return { profondeur: lu.profondeur, etranger: Boolean(lu.etranger) };
+      }
+    }
   } catch {
-    return null;
+    // mémoire d'onglet refusée : on continue avec la mesure de secours
   }
+  if (!RELEVE_AU_CHARGEMENT) return null;
+  origineDuReleve = "secours (chargement du module)";
+  //  On l'écrit pour les documents suivants de cet onglet, si on peut.
+  try {
+    if (sessionStorage.getItem(CLE_BAS) === null) {
+      sessionStorage.setItem(CLE_BAS, JSON.stringify(RELEVE_AU_CHARGEMENT));
+    }
+  } catch {
+    // stockage refusé : la mesure vit alors le temps du document
+  }
+  return RELEVE_AU_CHARGEMENT;
 }
 
 /**
@@ -112,9 +194,8 @@ export function lireLeBasDeLaPile(): BasDeLaPile | null {
  */
 export function aucunePageDuSiteDerriere(): boolean {
   const bas = lireLeBasDeLaPile();
-  //  Mémoire d'onglet refusée (navigation privée stricte) : on retombe
-  //  sur l'ancienne règle, qui était juste sur Safari et seulement là.
-  if (!bas) return window.history.length <= 1;
+  //  Aucune mesure du tout (rendu serveur) : on ne décide rien.
+  if (!bas) return false;
   return window.history.length <= bas.profondeur;
 }
 
@@ -128,6 +209,26 @@ export function unePageEtrangereEstDerriere(): boolean {
     derrière — ni à nous, ni à personne. */
 export function rienDeVraiDerriere(): boolean {
   return aucunePageDuSiteDerriere() && !unePageEtrangereEstDerriere();
+}
+
+/**
+ * LA LIGNE UNIQUE QUI DIT CE QUI A DÉCIDÉ (nº 346).
+ * ------------------------------------------------------------------
+ * Demandée par le propriétaire : la profondeur de pile, le référent
+ * EXACT, et laquelle des deux questions a fait renoncer le filet. Une
+ * seule ligne, à l'arrivée, pour qu'une hypothèse fausse se voie en une
+ * lecture au lieu d'un tour perdu.
+ */
+export function ligneDeDecision(decision: string): string {
+  const bas = lireLeBasDeLaPile();
+  const referent = typeof document === "undefined" ? "" : document.referrer;
+  return (
+    `FILET ${decision} · pile ${window.history.length}` +
+    ` · profondeur d'arrivée ${bas ? bas.profondeur : "(aucune)"}` +
+    ` [${origineDuReleve}]` +
+    ` · référent «${referent}»` +
+    ` · étrangère derrière : ${bas?.etranger ? "OUI" : "non"}`
+  );
 }
 
 /*  ⚠️ AUCUNE SONDE N'EST TOUCHÉE PAR CETTE PASSE, et c'est une consigne

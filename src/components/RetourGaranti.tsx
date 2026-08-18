@@ -4,8 +4,10 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import {
   aucunePageDuSiteDerriere,
+  ligneDeDecision,
   unePageEtrangereEstDerriere,
 } from "@/lib/bas-de-la-pile";
+import { noterDansLeJournal } from "@/lib/journal-historique";
 
 /**
  * ON NE SORT JAMAIS DU SITE PAR UN RETOUR — LE FILET
@@ -60,6 +62,25 @@ import {
  *    relevée à l'arrivée, avant que rien n'ait pu empiler) ;
  *  · UNE PAGE ÉTRANGÈRE ? le référent répond, et lui seul.
  *
+ * §1 (nº 346) — CE QUI L'EMPÊCHAIT ENCORE DE S'ARMER.
+ * ------------------------------------------------------------------
+ * Le relevé en ligne du propriétaire, en navigation privée, montre
+ * qu'après la nº 345 le filet ne s'armait toujours pas sur Chrome.
+ * ⚠️ CE N'EST PAS LA QUESTION DU RÉFÉRENT : un référent VIDE donne
+ * `etranger = false` dans le code de la nº 345 comme dans celui-ci —
+ * elle ne pouvait pas faire renoncer le filet. C'est LE RELEVÉ
+ * LUI-MÊME QUI MANQUAIT : il n'était fait que par le script d'avant
+ * peinture, et sans lui la nº 345 retombait sur `history.length <= 1`,
+ * c'est-à-dire sur la règle qu'elle venait de retirer. Le journal du
+ * propriétaire le montre : sa première ligne est « ARRIVÉE SUR LA PAGE
+ * · sonde », jamais « DOCUMENT OUVERT (avant peinture) » ni la mention
+ * « enveloppes déjà posées » — ce bloc du script ne s'exécute pas chez
+ * lui, et notre relevé y était.
+ * DEUX CHANGEMENTS : le repli sur l'ancienne condition est SUPPRIMÉ
+ * (une absence de mesure ne doit jamais rétablir une règle fausse en
+ * silence), et lib/bas-de-la-pile PREND LA MESURE LUI-MÊME au
+ * chargement du module si le script ne l'a pas faite.
+ *
  * LA BORNE QU'ON NE FRANCHIT PAS RESTE ENTIÈRE. Si le visiteur est
  * arrivé depuis Instagram DANS LE MÊME ONGLET, son retour doit le
  * RAMENER À INSTAGRAM — c'est son droit, et le retenir de force serait
@@ -86,6 +107,24 @@ import {
 /** La marque de notre étape, recopiée par toute étape posée au-dessus. */
 const MARQUE = "retourReconstruit";
 
+/**
+ * §1 (nº 346) — LE VOYANT : UNE LIGNE, À L'ARRIVÉE, QUI DIT QUI A DÉCIDÉ.
+ * ------------------------------------------------------------------
+ * Quatre passes ont été dépensées à DEVINER pourquoi le filet ne
+ * s'armait pas, faute de cette ligne. Elle porte la profondeur de pile,
+ * le référent EXACT, d'où vient la mesure, et LAQUELLE des deux
+ * questions a fermé la porte.
+ *
+ * ⚠️ ELLE N'EXISTE QUE SI LE JOURNAL EST OUVERT (voir
+ * `noterDansLeJournal`) : sondes désarmées, elle ne coûte qu'une
+ * lecture, et n'écrit rien. Le type d'événement est un type EXISTANT —
+ * « ARRIVÉE SUR LA PAGE » — à la demande du propriétaire : aucune sonde
+ * n'a de nouveau vocabulaire à apprendre.
+ */
+function dire(decision: string): void {
+  noterDansLeJournal("ARRIVÉE SUR LA PAGE", ligneDeDecision(decision));
+}
+
 export function RetourGaranti() {
   const chemin = usePathname();
 
@@ -93,12 +132,22 @@ export function RetourGaranti() {
     //  Déjà posée (un effet rejoué, un remontage, ou l'étape du filet
     //  elle-même) : on n'en pose pas une seconde.
     const etat = window.history.state as Record<string, unknown> | null;
-    if (etat?.[MARQUE]) return;
+    if (etat?.[MARQUE]) {
+      dire("RENONCE — étape déjà posée");
+      return;
+    }
     //  §1 (nº 345) — LES DEUX MOITIÉS DE LA QUESTION (lib/bas-de-la-pile).
     //  Une page DU SITE derrière : le navigateur fait son travail.
-    if (!aucunePageDuSiteDerriere()) return;
+    if (!aucunePageDuSiteDerriere()) {
+      dire("RENONCE — une page du site est derrière");
+      return;
+    }
     //  LA BORNE : il est arrivé d'ailleurs, son retour doit l'y rendre.
-    if (unePageEtrangereEstDerriere()) return;
+    if (unePageEtrangereEstDerriere()) {
+      dire("RENONCE — une page étrangère est derrière");
+      return;
+    }
+    dire("ARMÉ");
 
     let aNous = true;
     window.history.pushState(

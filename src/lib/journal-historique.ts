@@ -230,6 +230,41 @@ function noter(quoi: string, qui: string): void {
   for (const abonne of abonnes) abonne();
 }
 
+/**
+ * ██ UNE LIGNE ÉCRITE PAR LE SITE, ET NON PAR UNE ENVELOPPE (nº 346) ██
+ * ==================================================================
+ * Le propriétaire a demandé UNE ligne à l'arrivée qui dise ce qui a
+ * décidé le filet du retour. Ce module tient déjà le journal ; c'est
+ * donc lui qui l'écrit, et personne d'autre.
+ *
+ * ⚠️ LE TYPE D'ÉVÉNEMENT EST UN TYPE EXISTANT, à la demande du
+ * propriétaire : « ARRIVÉE SUR LA PAGE », celui qu'il voit déjà
+ * fonctionner. Tout le détail tient dans la colonne « par … ». Aucune
+ * sonde n'est modifiée, et le panneau n'a rien de nouveau à savoir.
+ *
+ * ⚠️ RIEN N'EST ÉCRIT SI LE JOURNAL N'EST PAS OUVERT. Deux témoins,
+ * parce qu'un seul ne suffit pas : la marque d'armement sur <html>
+ * (posée par le script d'avant peinture) OU la présence du journal
+ * lui-même. Le relevé en ligne du propriétaire montre que ce script
+ * n'exécute pas toujours tous ses blocs ; s'en remettre à la seule
+ * marque, c'était risquer de n'avoir aucune ligne le jour où l'on en a
+ * besoin. Sondes désarmées et journal absent : une lecture, rien de
+ * plus — aucune écriture.
+ */
+export function noterDansLeJournal(quoi: string, qui: string): void {
+  if (typeof window === "undefined") return;
+  let ouvert = false;
+  try {
+    ouvert =
+      (document.documentElement.dataset.sondes ?? "").includes("historique") ||
+      localStorage.getItem(CLE) !== null;
+  } catch {
+    return;
+  }
+  if (!ouvert) return;
+  noter(quoi, qui);
+}
+
 /* ==================================================================
  * L'ARMEMENT — et son démontage complet
  * ================================================================== */

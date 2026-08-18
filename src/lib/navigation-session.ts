@@ -225,8 +225,16 @@
  *    en `private, no-cache`. `Vary` ne peut PAS être déclaré depuis
  *    l'application : Next le réécrit (essayé par `next.config.headers`
  *    et par le proxy, les deux essais annulés).
- *  · nº 345 — LE FILET S'ARME QUEL QUE SOIT LE NAVIGATEUR (§1, point 9
- *    ci-dessus, lib/bas-de-la-pile). Il ne s'armait que sur Safari.
+ *  · nº 345 — LE FILET NE DEMANDE PLUS SI LA PILE EST VIDE, mais s'il y
+ *    a une VRAIE page derrière (§1, point 9 ci-dessus,
+ *    lib/bas-de-la-pile). Il ne s'armait que sur Safari.
+ *  · nº 346 — ET IL NE DÉPEND PLUS DU SCRIPT D'AVANT PEINTURE (§1). Le
+ *    relevé n'était fait que là ; son absence retombait sur
+ *    `history.length <= 1`, c'est-à-dire sur la règle que la nº 345
+ *    venait de retirer — et le relevé en ligne du propriétaire montre
+ *    que ce bloc du script ne s'exécute pas sur son Chrome. Le repli est
+ *    SUPPRIMÉ, le module prend la mesure lui-même au chargement, et une
+ *    ligne de journal dit désormais qui a décidé (`ligneDeDecision`).
  *  · IL RESTE : la moitié du C-6 sans objet — voir le point 5.
  *
  * ------------------------------------------------------------------
