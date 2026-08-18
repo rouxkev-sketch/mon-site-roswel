@@ -33,13 +33,19 @@ import {
  * 1. Tient le journal des pages visitées (bouton retour de la
  *    fiche : lib/navigation-session) — persistant, il ne s'efface
  *    pas avec l'inactivité.
- * 2. Reprend en main la restauration du défilement lors d'un
- *    retour arrière. Laissée au navigateur, elle s'applique
- *    IMMÉDIATEMENT — pendant que l'ancienne page est encore à
- *    l'écran — d'où un sursaut de quelques pixels avant
- *    l'affichage de la page cible. Ici : position mémorisée en
- *    continu, puis réappliquée seulement APRÈS l'affichage de la
- *    page cible (la transition reste parfaitement immobile).
+ * 2. Mémorise la position en continu et la réapplique APRÈS
+ *    l'affichage de la page cible, au retour.
+ *    ⚠️ nº 363 — CE COMPOSANT NE COUPE PLUS LA RESTAURATION NATIVE.
+ *    Il posait `scrollRestoration = "manual"` depuis la nº 143 (la
+ *    restauration du navigateur s'applique pendant que l'ancienne
+ *    page est encore à l'écran, d'où un sursaut de quelques pixels).
+ *    Le réglage est rendu au moteur — « auto », écrit une seule fois
+ *    dans le script d'avant peinture — parce que la mesure de la
+ *    nº 362 ne laissait plus que lui pour expliquer l'écran noir du
+ *    glissement retour. CE QUE FAIT CE FICHIER N'A PAS CHANGÉ D'UNE
+ *    LIGNE : il reste l'autorité sur les positions, et il pose la
+ *    MÊME valeur que celle que le moteur a rangée dans l'entrée
+ *    d'historique (la position du départ).
  * N'affiche rien.
  */
 /*  ⚠️ L'ABONNEMENT A CHANGÉ (passe nº 154) — il ne suffisait pas.
@@ -156,10 +162,16 @@ export function MemoireNavigation() {
     //  racine est prérendue et ne lit plus le cookie. Une lecture,
     //  rien d'autre, et le composant se tait.
     if (document.cookie.indexOf("yf_nu_total=1") >= 0) return;
-    // La restauration native provoque le sursaut : on la coupe
-    if ("scrollRestoration" in window.history) {
-      window.history.scrollRestoration = "manual";
-    }
+    /*  nº 363 — PLUS RIEN N'EST POSÉ ICI. Ces trois lignes coupaient la
+        restauration native (« manual »), depuis la nº 143 et pour une
+        vraie raison : elle s'applique pendant que l'ancienne page est
+        encore à l'écran, d'où un sursaut. La mesure de la nº 362 a
+        renversé la balance — l'écran noir du glissement retour ne
+        s'explique plus que par elle — et le réglage est rendu au
+        moteur, EN UN SEUL ENDROIT : le script d'avant peinture, qui
+        s'exécute avant toute ligne d'application (lib/script-avant-
+        peinture, « auto »). Le reste de ce fichier ne bouge pas d'une
+        ligne : c'est toujours lui qui mémorise et qui rend la place. */
 
     // L'hydratation est finie : les navigations internes pourront
     // lire leur mémoire dès le premier rendu (liste sans flash)

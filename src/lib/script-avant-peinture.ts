@@ -149,7 +149,7 @@ r.dataset.appareil=matchMedia("(pointer: coarse)").matches?"mobile":"web";
    avec un vieux), la page servie est PÉRIMÉE — un cache la retient —
    et aucun des blocs récents n'y a jamais été. À INCRÉMENTER à chaque
    passe qui modifie ce script. */
-r.dataset.versionScript="362";
+r.dataset.versionScript="363";
 r.style.backgroundColor=${fond};
 /* nº 357 — LE COMPTE, DIT AVANT LA PREMIÈRE PEINTURE. L'accueil est
    prérendu : le serveur ne connaît plus la session, et c'est CE
@@ -181,7 +181,30 @@ if(ck.indexOf("yf_nu_total=1")>=0)r.dataset.variante="nu-total";
    est écrite UNE fois (SUFFIXE_COOKIE_AFFICHAGE, lib/colonnes-
    mosaique) et partagée avec le cookie de mise en page (nº 257-§2). */
 try{document.cookie=${JSON.stringify(COOKIE_COLONNES)}+"="+(${expressionColonnes()})+${JSON.stringify(SUFFIXE_COOKIE_AFFICHAGE)}}catch(e){}
-try{history.scrollRestoration="manual"}catch(e){}
+/* ██ nº 363 — LA RESTAURATION REDEVIENT AUTOMATIQUE ██
+   Le site posait « manual » depuis la nº 143, pour une raison exacte :
+   la restauration native s'applique IMMÉDIATEMENT au retour, pendant
+   que l'ancienne page est encore à l'écran, d'où un sursaut de quelques
+   pixels. Nous reposions donc la position nous-mêmes, après coup.
+   CE QUI A CHANGÉ, ET C'EST LA MESURE DE LA nº 362 : au retour par
+   GLISSEMENT, l'écran est noir pendant tout le geste dès que la page
+   était défilée — et le relevé du propriétaire a innocenté tout le
+   reste (position conservée à l'instant du changement d'adresse, aucun
+   masque, aucun effondrement du document, 6 Mo décodés). Il ne restait
+   que le moteur. Or un retour de carte est une navigation DANS LE MÊME
+   DOCUMENT : pendant le geste, le moteur n'a que l'entrée d'historique
+   pour savoir OÙ se placer — et « manual » lui dit précisément de ne
+   rien placer. On lui rend donc la main : « auto ».
+   ⚠️ ÉCRIT EXPLICITEMENT, pas retiré : « auto » est le défaut, mais
+   l'écrire dit que c'est un choix, et un seul mot suffit à revenir.
+   ⚠️ NOS POSITIONS NE DÉPENDENT PAS DE CE RÉGLAGE, et c'est ce qui
+   rend l'essai sûr : la mémoire de navigation, la réserve de hauteur
+   du bloc 4 ci-dessous et « rendreLaPlace » (lib/restitution-position)
+   restent l'autorité — elles posent la MÊME valeur que celle que le
+   moteur a rangée dans l'entrée (la position du départ), et la réserve
+   garantit que le document est assez haut au moment où l'un ou l'autre
+   la pose. */
+try{history.scrollRestoration="auto"}catch(e){}
 /* §1 (nº 343) — L'ARMEMENT DURABLE DES SONDES, LU AU PLUS TÔT.
    Le défaut que le propriétaire poursuit ne se produit QU'À L'ADRESSE
    NUE : une sonde armée par l'adresse le fait disparaître. L'armement

@@ -366,6 +366,20 @@
  *    celle d'avant la nº 359, à la lettre : une page lit SA requête,
  *    une fois l'adresse à elle ; les surfaces n'existent pas pour
  *    elle (FicheSelonLAdresse, lecture gelée hors de son chemin).
+ *  · nº 363 — LA RESTAURATION DU DÉFILEMENT EST RENDUE AU MOTEUR
+ *    (« auto », script d'avant peinture). Elle était coupée depuis la
+ *    nº 143 ; la mesure de la nº 362 (départ instrumenté : position
+ *    conservée à l'instant du changement d'adresse, aucun masque,
+ *    aucun effondrement, 6 Mo décodés) n'a laissé qu'elle pour
+ *    expliquer l'écran noir du glissement retour — un retour de carte
+ *    étant une navigation DANS LE MÊME DOCUMENT, le moteur n'a que
+ *    l'entrée d'historique pour savoir où se placer pendant le geste,
+ *    et « manual » lui disait de ne rien placer. ⚠️ LE POINT 4 NE
+ *    BOUGE PAS : la position reste écrite, lue et posée par nous
+ *    (mémoire de navigation + réserve de hauteur + rendreLaPlace) ;
+ *    le moteur vise la même valeur, celle qu'il a rangée au départ.
+ *    ESSAI EMPIRIQUE, à trancher par le téléphone du propriétaire :
+ *    en cas d'échec, un seul mot revient en arrière.
  *  · IL RESTE : la moitié du C-6 sans objet — voir le point 5.
  *
  * ------------------------------------------------------------------
