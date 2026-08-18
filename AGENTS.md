@@ -4,32 +4,33 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
-# Livraisons zip (règle permanente et non négociable)
+# Livraisons zip (règle mise à jour par le propriétaire, passe nº 356)
 
 Une extraction a déjà ÉCRASÉ le dossier de travail du propriétaire parce que
 le zip livré contenait un dossier racine nommé `mon-site-roswel`, identique
-au sien. Pour que cela ne se reproduise JAMAIS :
+au sien. Les garde-fous d'origine restent entiers ; seule la FORME du nom a
+changé, sur ordre du propriétaire (après la passe nº 355) :
 
-- chaque zip livré doit avoir un dossier racine à nom UNIQUE, daté et
-  versionné : `roswel-AAAA-MM-JJ-<sujet-court>`
-  (ex. `roswel-2026-07-15-corrections-moteur`) ;
-- JAMAIS deux livraisons avec le même nom — si deux livraisons ont lieu le
-  même jour, ajouter un suffixe (`-2`, `-3`…) ;
+- le nom du zip livré = LE NUMÉRO DE LA PASSE, rien d'autre : `356.zip`,
+  racine `356/` ; la passe suivante `357.zip`, etc. — chaque numéro est
+  unique par construction, aucune réutilisation possible ;
 - JAMAIS le nom `mon-site-roswel` (ni comme racine du zip, ni comme nom de
   fichier zip) ;
 - le fichier zip porte le même nom que son dossier racine ;
-- technique : créer un lien symbolique au nom de la livraison puis zipper à
-  travers ce lien (zip suit les liens par défaut), en gardant TOUTES les
-  exclusions habituelles :
+- technique : créer un lien symbolique au nom de la passe puis zipper à
+  travers ce lien (zip suit les liens par défaut) :
 
-      ln -s /chemin/du/projet /tmp/roswel-AAAA-MM-JJ-sujet
-      cd /tmp && zip -r roswel-AAAA-MM-JJ-sujet.zip roswel-AAAA-MM-JJ-sujet \
+      ln -s /chemin/du/projet /tmp/356
+      cd /tmp && zip -r 356.zip 356 \
         -x "*/node_modules/*" -x "*/.next/*" -x "*/.git/*" \
-        -x "*/public/images/roswel-logo.png" \
-        -x "*/public/images/roswel-icone.png"
+        -x "*/journal-de-bord*.ndjson"
 
-- avant livraison, vérifier avec `unzip -l` que la racine est bien le nom
-  daté et que ni `node_modules`, ni `.git`, ni les deux logos n'y figurent.
+- LES IMAGES DE `public/` SONT DÉSORMAIS INCLUSES dans chaque zip (règle du
+  propriétaire, passe nº 356 — voir « Les images officielles » plus bas) :
+  plus AUCUNE exclusion d'image ;
+- avant livraison, vérifier avec `unzip -l` que la racine est bien le numéro
+  de la passe et que ni `node_modules`, ni `.next`, ni `.git`, ni le journal
+  `.ndjson` n'y figurent — et que les images de `public/` Y FIGURENT ;
 - ne JAMAIS exclure `.env.local` du zip (voir « Inclure `.env.local` dans
   chaque livraison » ci-dessous) : il doit TOUJOURS être livré.
 
@@ -57,42 +58,28 @@ utiles, mais AUCUNE image ne doit être produite pour le propriétaire ni
 envoyée avec une livraison : il valide lui-même visuellement sur son
 environnement.
 
-# Fichiers INTOUCHABLES — logos définitifs (règle stricte, non négociable)
+# Les images officielles de `public/` (règle mise à jour, passe nº 356)
 
-`public/images/roswel-logo.png` et `public/images/roswel-icone.png` sont les
-logos DÉFINITIFS, déposés à la main par le propriétaire du projet et lui
-appartenant EXCLUSIVEMENT. Ils sont intouchables, exactement comme
-`.env.local`. Cette règle s'applique à TOUTES les futures livraisons, aucune
-session ne doit la remettre en cause :
+L'ANCIENNE règle excluait des zips toutes les images déposées à la main et
+demandait au propriétaire de les recopier après chaque extraction. LE
+PROPRIÉTAIRE L'A REMPLACÉE (message du 18-08-2026, avant la passe nº 356) :
 
-1. **JAMAIS dans les zips livrés.** Toujours EXCLURE `roswel-icone.png` et
-   `roswel-logo.png` au moment de l'archivage (comme `.env.local`), même si on
-   les voit passer dans l'environnement de travail :
-   `-x "*/public/images/roswel-logo.png" -x "*/public/images/roswel-icone.png"`.
-   Vérifier avec `unzip -l` qu'ils n'y figurent pas.
-2. **JAMAIS les modifier, recréer, régénérer, recadrer ni compresser.** Ne
-   JAMAIS proposer d'« en générer une nouvelle version » ni d'« ajuster le
-   design ». Ils sont intouchables, point.
-3. **JAMAIS deviner leur contenu pour créer des variantes** (favicon.ico,
-   apple-touch-icon, autre nom, autre dossier, copie dans `src/app/`…). Si une
-   variante technique est nécessaire, la DEMANDER au propriétaire — ne jamais
-   la fabriquer soi-même.
-4. **Le propriétaire les recopie à la main** depuis son ordinateur à chaque
-   nouveau zip : c'est la SEULE façon dont ils entrent dans le projet. S'ils
-   sont absents du clone (ils ne sont pas toujours poussés sur GitHub), ne pas
-   les recréer.
-
-Le code doit les référencer uniquement par ces deux chemins
-(`/images/roswel-logo.png`, `/images/roswel-icone.png`) — composants
-`LogoIcone` / `LogoComplet` dans `src/components/Logo.tsx`, favicon dans
-`src/app/layout.tsx`, icônes PWA dans `src/app/manifest.ts`, page
-`public/offline.html`.
-
-## La même règle vaut pour TOUTES les images déposées à la main
-
-Le propriétaire recopie aussi d'autres fichiers dans `public/`. Ils suivent
-EXACTEMENT les quatre points ci-dessus — jamais dans un zip, jamais modifiés,
-jamais devinés, recopiés à la main. La liste, à jour :
+1. **LES IMAGES SONT INCLUSES dans chaque zip livré**, à leur emplacement
+   exact dans `public/`, pour qu'il n'ait plus rien à recopier. Les versions
+   du dépôt font foi ; il a confirmé comme OFFICIELLES les quatre qu'il a
+   rejointes ce jour-là : `yokofolio-icone.png`, `yokofolio-logo.png`,
+   `adresse.png`, `ajouter-une-photo.png`.
+2. **TOUJOURS INTERDIT, et sans changement** : les modifier, les recréer,
+   les régénérer, les recadrer, les compresser, ou en DEVINER le contenu
+   pour fabriquer une variante (favicon.ico, apple-touch-icon, copie sous un
+   autre nom…). Si une variante technique est nécessaire, la DEMANDER.
+3. **Si une image de la liste est ABSENTE du clone, ne pas la recréer** — la
+   dire absente dans le compte rendu, c'est tout. État au 18-08-2026 :
+   `public/icone-partage.png` est absente du clone, ainsi que
+   `public/images/roswel-logo.png` et `public/images/roswel-icone.png` (les
+   logos du produit artisans) — le propriétaire les fournira s'il les veut
+   dans les zips.
+4. La liste des images officielles de `public/`, à jour :
 
     public/yokofolio-logo.png      public/yokofolio-icone.png
     public/icone-partage.png       public/icone-instagram.png
@@ -104,7 +91,13 @@ jamais devinés, recopiés à la main. La liste, à jour :
 marqué d'un plus : il remplace « ronde » dans le cercle du profil et
 « + Ajouter » dans une case vide de galerie (`IconeAjouterPhoto`).
 
-Ce sont des GLYPHES NOIRS sur fond transparent : le code les éclaircit par
-`invert` + opacité (jamais en retouchant le fichier) pour qu'ils se lisent sur
-l'anthracite. Chacune doit figurer dans les exclusions du `zip -x`, et
-`unzip -l` doit le confirmer.
+Les glyphes (adresse, site, partage, réseaux, ajouter-une-photo) sont des
+GLYPHES NOIRS sur fond transparent : le code les éclaircit par `invert` +
+opacité (jamais en retouchant le fichier) pour qu'ils se lisent sur
+l'anthracite.
+
+Le code référence les logos roswel uniquement par leurs deux chemins
+(`/images/roswel-logo.png`, `/images/roswel-icone.png`) — composants
+`LogoIcone` / `LogoComplet` dans `src/components/Logo.tsx`, favicon dans
+`src/app/layout.tsx`, icônes PWA dans `src/app/manifest.ts`, page
+`public/offline.html`.
