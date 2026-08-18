@@ -87,6 +87,37 @@ export function lireRequeteCourante(): string {
 }
 
 /**
+ * LA REQUÊTE D'UNE PAGE DONNÉE — GELÉE DÈS QUE L'ADRESSE N'EST PLUS
+ * LA SIENNE (nº 360).
+ * ==================================================================
+ * `lireRequeteCourante` dit l'adresse DU MOMENT, quelle qu'elle soit.
+ * Or une page préparée d'avance qui sème ses accessoires d'arrivée
+ * (FicheSelonLAdresse) ne doit lire que LA SIENNE :
+ *  · au premier rendu d'une navigation douce, l'adresse n'est pas
+ *    encore commise (mesure nº 336) — lire là, c'est lire la page
+ *    PRÉCÉDENTE ; on rend `null` : « je n'ai encore rien possédé » ;
+ *  · pendant sa vie, une SURFACE peut posséder l'adresse (fenêtre de
+ *    carrousel, pile des fiches — des pushState bruts) ; on rend la
+ *    valeur MÉMORISÉE, inchangée — donc AUCUN rendu chez l'abonné.
+ * LA MÉMOIRE VIT ICI, à l'échelle du module : une seule PAGE la lit à
+ * la fois (c'est une lecture de page, jamais de surface), et changer
+ * de chemin la remet à zéro — une navigation de fiche à fiche repart
+ * de rien.
+ */
+let cheminGele = "";
+let requeteGelee: string | null = null;
+export function lireRequeteDeLaPage(chemin: string): string | null {
+  if (cheminGele !== chemin) {
+    cheminGele = chemin;
+    requeteGelee = null;
+  }
+  if (window.location.pathname === chemin) {
+    requeteGelee = window.location.search;
+  }
+  return requeteGelee;
+}
+
+/**
  * LE CHEMIN DE L'ADRESSE COURANTE, côté navigateur.
  * §2 (nº 337) — POURQUOI IL A FALLU L'AJOUTER. `usePathname()` ne dit
  * pas tout : une surface qui pose son adresse par un `pushState` BRUT

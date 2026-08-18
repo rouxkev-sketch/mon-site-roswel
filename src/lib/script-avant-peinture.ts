@@ -149,7 +149,7 @@ r.dataset.appareil=matchMedia("(pointer: coarse)").matches?"mobile":"web";
    avec un vieux), la page servie est PÉRIMÉE — un cache la retient —
    et aucun des blocs récents n'y a jamais été. À INCRÉMENTER à chaque
    passe qui modifie ce script. */
-r.dataset.versionScript="359";
+r.dataset.versionScript="360";
 r.style.backgroundColor=${fond};
 /* nº 357 — LE COMPTE, DIT AVANT LA PREMIÈRE PEINTURE. L'accueil est
    prérendu : le serveur ne connaît plus la session, et c'est CE
@@ -163,8 +163,13 @@ r.style.backgroundColor=${fond};
    jamais un état que l'adresse contredit, la colonne de photo est
    tenue masquée (CSS, globals.css) quand l'adresse porte des tags —
    et c'est FicheSelonLAdresse qui lève la garde, une fois la fiche
-   resemée. « entree=lien » (règle 6) retire la photo tout court. */
-try{if(location.pathname.indexOf("/tatoueur/")===0){var qf=location.search;
+   resemée. « entree=lien » (règle 6) retire la photo tout court.
+   nº 360 — L'ADRESSE EXACTE D'UNE FICHE, et elle seule : l'ancien
+   test (« commence par /tatoueur/ ») posait la garde aussi sur la
+   page de carrousel partagé et sur le jumeau complet — où PERSONNE ne
+   la lève (FicheSelonLAdresse n'y est pas montée) : photo masquée
+   pour toujours. */
+try{if(/^\\/tatoueur\\/[^\\/]+$/.test(location.pathname)){var qf=location.search;
 if(qf&&/[?&](style|rendu|nature|photo|studio|entree)=/.test(qf)){r.dataset.ficheParametree="1";
 if(/[?&]entree=lien(&|$)/.test(qf))r.dataset.entreeLien="1";}}}catch(e){}
 try{var ck=document.cookie;

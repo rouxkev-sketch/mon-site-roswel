@@ -356,6 +356,16 @@
  *    RESTENT DYNAMIQUES, par nature : le carrousel partagé (règle 11),
  *    l'espace connecté, « Ma sélection », et le jumeau de recherche de
  *    l'accueil — périmètre des tranches suivantes.
+ *  · nº 360 — LE LECTEUR DES TAGS NE LIT QUE SA PROPRE ADRESSE. La
+ *    première écriture lisait TOUS les changements d'adresse : à
+ *    l'arrivée elle semait les tags de la page PRÉCÉDENTE (l'adresse
+ *    n'est commise qu'après le premier rendu — la mesure nº 336), et
+ *    pendant la vie de la fiche elle resemait sous les SURFACES (le
+ *    pushState de la fenêtre de carrousel la détruisait — retour du
+ *    « remplacement sur place » retiré à la nº 304). La règle est
+ *    celle d'avant la nº 359, à la lettre : une page lit SA requête,
+ *    une fois l'adresse à elle ; les surfaces n'existent pas pour
+ *    elle (FicheSelonLAdresse, lecture gelée hors de son chemin).
  *  · IL RESTE : la moitié du C-6 sans objet — voir le point 5.
  *
  * ------------------------------------------------------------------
