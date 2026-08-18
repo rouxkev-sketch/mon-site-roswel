@@ -280,6 +280,20 @@
  *    retirée — c'était la même plaie, la mauvaise cause. Audit : le
  *    cran était la seule entrée du site posée sans geste ; surfaces,
  *    carrousel et fenêtres de fiche naissent toutes d'un toucher.
+ *  · nº 351 — L'APPUI FRANC, PAS LE DÉBUT DE DÉFILEMENT : mesuré en
+ *    ligne, un cran né d'un `pointerdown` de défilement reste sauté
+ *    (Chrome, Brave) quand Safari est parfait. La pose passe au
+ *    RELÂCHEMENT d'un appui de moins de dix pixels (`pointerup`,
+ *    `keydown` hors touches mortes, `click` en filet), toujours
+ *    synchrone et en capture ; un défilement n'arme rien et le journal
+ *    le dit une fois (« EN ATTENTE »). Le relevé de la nº 351 note
+ *    aussi : au retour, Chrome peut TRAVERSER le cran une fois puis
+ *    sauter par-dessus lui ET par-dessus l'accueil — le crédit est
+ *    donc jugé AU MOMENT DU RETOUR, sur un budget qui se consomme,
+ *    par GROUPE de document, pas seulement à la création de l'entrée.
+ *    Si l'appui franc ne suffit pas, la suite est déjà cadrée par le
+ *    propriétaire : dire si un filet est tenable sur ces navigateurs,
+ *    ou le restreindre à ceux qui le respectent.
  *  · IL RESTE : la moitié du C-6 sans objet — voir le point 5.
  *
  * ------------------------------------------------------------------

@@ -214,14 +214,14 @@ export function RetourGaranti() {
 
         DONC : le cran est posé À LA PREMIÈRE INTERACTION RÉELLE,
         SYNCHRONE dans le gestionnaire de l'événement, pour que
-        l'entrée porte le crédit d'activation. `pointerdown` et
-        `keydown` sont tous deux des événements qui accordent ce
-        crédit ; la CAPTURE nous fait passer AVANT le clic d'un lien —
-        si le premier geste ouvre déjà une fiche, le cran se pose
-        sous elle, dans le bon ordre, dans le même geste. Avant le
-        premier toucher, pas de cran : un retour immédiat sort du
-        site, et c'est le comportement normal du web — accepté par le
-        propriétaire, nº 350.
+        l'entrée porte le crédit d'activation ; la CAPTURE nous fait
+        passer AVANT le clic d'un lien — si le premier geste ouvre
+        déjà une fiche, le cran se pose sous elle, dans le bon ordre,
+        dans le même geste. Avant le premier toucher, pas de cran : un
+        retour immédiat sort du site, et c'est le comportement normal
+        du web — accepté par le propriétaire, nº 350. Depuis la
+        nº 351, « interaction réelle » veut dire APPUI FRANC RELÂCHÉ,
+        plus début de geste — voir le bloc §1 (nº 351) plus bas.
 
         ⚠️ LA nº 348 (attendre le document fini) visait la même plaie
         avec la mauvaise cause : c'est le CRÉDIT qui manquait, pas la
@@ -235,19 +235,93 @@ export function RetourGaranti() {
         millisecondes après — dans le crédit) ; les POSÉE du routeur
         naissent des liens. Le cran était LA SEULE entrée posée sans
         aucun geste. */
-    const surPremierGeste = () => {
+    /*  §1 (nº 351) — L'APPUI FRANC, PAS LE DÉBUT DE DÉFILEMENT.
+        ------------------------------------------------------------
+        Le relevé de la nº 351 a tranché ma branche annoncée : sur
+        Chrome et Brave, le cran posé au `pointerdown` d'un DÉFILEMENT
+        (POSÉE·RetourGaranti seule, une seconde avant le premier lien)
+        a encore été sauté ; sur Safari, dix retours d'affilée, zéro
+        éjection. Un début de défilement n'est pas un geste au crédit
+        plein. LA POSE PASSE DONC AU RELÂCHEMENT D'UN APPUI FRANC :
+        `pointerup` du même doigt, à moins de dix pixels de son point
+        de départ — ou une touche du clavier, ou un `click` là où les
+        événements de pointeur n'existent pas. Toujours SYNCHRONE dans
+        le gestionnaire, toujours en CAPTURE : si ce premier appui
+        franc est le clic d'un lien, le cran se glisse sous la
+        navigation dans le même geste. Un défilement n'arme rien —
+        l'appui suivant armera ; le journal le dit UNE fois
+        (« EN ATTENTE »), pour que le relevé montre la distinction. */
+    const SEUIL_APPUI_PX = 10;
+    let debut: { id: number; x: number; y: number } | null = null;
+    let attenteDite = false;
+
+    const poserSurCeGeste = () => {
       retirerLesDeclencheurs();
       decider();
     };
-    const retirerLesDeclencheurs = () => {
-      window.removeEventListener("pointerdown", surPremierGeste, true);
-      window.removeEventListener("keydown", surPremierGeste, true);
+    const surAppui = (evenement: PointerEvent) => {
+      if (!evenement.isPrimary) return;
+      debut = {
+        id: evenement.pointerId,
+        x: evenement.clientX,
+        y: evenement.clientY,
+      };
     };
-    window.addEventListener("pointerdown", surPremierGeste, {
+    const surAbandon = (evenement: PointerEvent) => {
+      //  Le navigateur a pris le geste pour lui (défilement au doigt) :
+      //  ce n'était pas un appui.
+      if (debut && evenement.pointerId === debut.id) debut = null;
+    };
+    const surRelachement = (evenement: PointerEvent) => {
+      if (!debut || evenement.pointerId !== debut.id) return;
+      const dx = evenement.clientX - debut.x;
+      const dy = evenement.clientY - debut.y;
+      debut = null;
+      if (Math.hypot(dx, dy) > SEUIL_APPUI_PX) {
+        if (!attenteDite) {
+          attenteDite = true;
+          dire(
+            "EN ATTENTE — le premier geste était un défilement, le cran attend un appui franc"
+          );
+        }
+        return;
+      }
+      poserSurCeGeste();
+    };
+    const surTouche = (evenement: KeyboardEvent) => {
+      //  Les touches mortes ne portent pas le crédit d'activation.
+      if (["Escape", "Shift", "Control", "Alt", "Meta"].includes(evenement.key)) {
+        return;
+      }
+      poserSurCeGeste();
+    };
+    //  Filet des navigateurs sans événements de pointeur : un clic est
+    //  un appui franc par définition (le navigateur l'a déjà distingué
+    //  d'un défilement). Sur le chemin normal, `pointerup` a posé et
+    //  retiré cet écouteur avant que le clic n'arrive.
+    const surClic = () => poserSurCeGeste();
+
+    const retirerLesDeclencheurs = () => {
+      window.removeEventListener("pointerdown", surAppui, true);
+      window.removeEventListener("pointercancel", surAbandon, true);
+      window.removeEventListener("pointerup", surRelachement, true);
+      window.removeEventListener("keydown", surTouche, true);
+      window.removeEventListener("click", surClic, true);
+    };
+    window.addEventListener("pointerdown", surAppui, {
       capture: true,
       passive: true,
     });
-    window.addEventListener("keydown", surPremierGeste, { capture: true });
+    window.addEventListener("pointercancel", surAbandon, {
+      capture: true,
+      passive: true,
+    });
+    window.addEventListener("pointerup", surRelachement, {
+      capture: true,
+      passive: true,
+    });
+    window.addEventListener("keydown", surTouche, { capture: true });
+    window.addEventListener("click", surClic, { capture: true });
 
     return () => {
       aNous = false;

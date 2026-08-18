@@ -372,9 +372,16 @@ function verserLeVerdictALOuverture(): void {
   //  aucune ligne : il n'y a rien à décider. Écouteurs en phase de
   //  BOUILLONNEMENT : le filet écoute en capture, il décide donc
   //  AVANT que notre compte à rebours ne parte.
+  //  §1 (nº 351) — AU GESTE RELÂCHÉ (`pointerup`/`click`), plus au
+  //  `pointerdown` : le filet ne pose plus sur un début de défilement,
+  //  et un défilement au doigt se termine par un `pointercancel` qui
+  //  n'arme rien — ni lui, ni nous. Quand un relâchement est un
+  //  glissement (pas un appui), le filet écrit « EN ATTENTE » : c'est
+  //  une décision reçue, le compte à rebours se tait.
   const armerLeCompteARebours = () => {
-    window.removeEventListener("pointerdown", armerLeCompteARebours);
+    window.removeEventListener("pointerup", armerLeCompteARebours);
     window.removeEventListener("keydown", armerLeCompteARebours);
+    window.removeEventListener("click", armerLeCompteARebours);
     setTimeout(() => {
       const apres = lireLeVerdict();
       //  Une décision est arrivée pour ce document-ci : sa ligne est
@@ -389,10 +396,11 @@ function verserLeVerdictALOuverture(): void {
       );
     }, 1200);
   };
-  window.addEventListener("pointerdown", armerLeCompteARebours, {
+  window.addEventListener("pointerup", armerLeCompteARebours, {
     passive: true,
   });
   window.addEventListener("keydown", armerLeCompteARebours);
+  window.addEventListener("click", armerLeCompteARebours);
 }
 
 /* ==================================================================
