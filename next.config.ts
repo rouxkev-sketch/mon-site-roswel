@@ -163,17 +163,36 @@ const nextConfig: NextConfig = {
         value: "private, no-cache, max-age=0, must-revalidate",
       },
     ];
-    return [
-      { source: "/", headers: cachePage },
-      { source: "/tatoueur/:slug", headers: cachePage },
-      { source: "/tatouage/:style/:ville", headers: cachePage },
-      { source: "/devenir-tatoueur/:chemin*", headers: cachePage },
-      { source: "/qui-sommes-nous", headers: cachePage },
-      { source: "/contact", headers: cachePage },
-      { source: "/mentions-legales", headers: cachePage },
-      { source: "/rendez-vous", headers: cachePage },
-      { source: "/favoris", headers: cachePage },
+    /*  nº 355 — L'ÉPREUVE DES EN-TÊTES. Le code entier a été innocenté
+        (nu-total éjecte encore ; nextjs.org — même moteur, même
+        hébergeur — tient) : restent NOS EN-TÊTES et le domaine. Quand
+        le cookie du nu total est posé (lib/variantes-essai), les pages
+        sont servies avec L'EN-TÊTE D'UN SITE ORDINAIRE — `public,
+        max-age=0, must-revalidate` : toujours revalidé (aucune page
+        personnalisée ne peut être resservie périmée), mais sans
+        `private` ni `no-cache`, les deux jetons qui nous séparent d'un
+        site vierge. Un seul essai tranche : nu-total éjectait AVEC les
+        en-têtes de la nº 344, le même nu-total tourne désormais SANS.
+        Sans le cookie : rien ne change. */
+    const cachePageEssai = [
+      { key: "Cache-Control", value: "public, max-age=0, must-revalidate" },
     ];
+    const temoinNuTotal = { type: "cookie" as const, key: "yf_nu_total" };
+    const chemins = [
+      "/",
+      "/tatoueur/:slug",
+      "/tatouage/:style/:ville",
+      "/devenir-tatoueur/:chemin*",
+      "/qui-sommes-nous",
+      "/contact",
+      "/mentions-legales",
+      "/rendez-vous",
+      "/favoris",
+    ];
+    return chemins.flatMap((source) => [
+      { source, headers: cachePage, missing: [temoinNuTotal] },
+      { source, headers: cachePageEssai, has: [temoinNuTotal] },
+    ]);
   },
 };
 

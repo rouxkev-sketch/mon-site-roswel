@@ -149,7 +149,7 @@ r.dataset.appareil=matchMedia("(pointer: coarse)").matches?"mobile":"web";
    avec un vieux), la page servie est PÉRIMÉE — un cache la retient —
    et aucun des blocs récents n'y a jamais été. À INCRÉMENTER à chaque
    passe qui modifie ce script. */
-r.dataset.versionScript="354";
+r.dataset.versionScript="355";
 r.style.backgroundColor=${fond};
 /* 0. LE NOMBRE DE COLONNES, POUR LA PROCHAINE RÉPONSE DU SERVEUR
    (nº 226-§1). La politique du cookie — validité, portée, samesite —
