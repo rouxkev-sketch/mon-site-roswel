@@ -12,6 +12,12 @@ import { usePathname } from "next/navigation";
 //  §1 (nº 339) — la clé canonique d'une position : voir plus bas.
 import { adresseDeRecherche } from "@/lib/adresse-recherche";
 import { desarmerLesSondes, sondeArmee } from "@/lib/sondes-armees";
+//  §1 (nº 362) — l'instant où l'entrée d'historique change, donné par
+//  l'écriture commune des changements d'adresse : la sonde n'enveloppe
+//  rien elle-même, elle écoute ce qui existe déjà.
+import { souscrireAdresse } from "@/lib/adresse-courante";
+//  §1 (nº 362) — la marque du masque, lue là où elle est définie.
+import { MARQUE_ATTENTE } from "@/lib/pose-sur-contenu";
 
 /**
  * LA SONDE DU RETOUR — elle mesure le cache de navigation sur le vrai
@@ -238,6 +244,170 @@ function guetterLaPremiereImagePleine(
   };
   image = requestAnimationFrame(regarder);
   return () => cancelAnimationFrame(image);
+}
+
+/**
+ * ██ §1 (nº 362) — LE DÉPART : CE QUE LE MOTEUR A SOUS LA MAIN QUAND IL
+ * PREND SA PHOTO ██
+ * ==================================================================
+ * CE QUI MANQUAIT À CETTE SONDE, ET C'EST LA MOITIÉ DU TRAJET. Elle
+ * mesurait tout de L'ARRIVÉE (retour, masque, première image, réseau) et
+ * RIEN DU DÉPART — or la photo que le geste de retour affiche est prise
+ * AU DÉPART, à l'instant où l'entrée d'historique change. On ne peut pas
+ * voir cette photo depuis une page (aucune API ne l'expose) ; on peut
+ * mesurer LA SEULE CHOSE QUI LA DÉTERMINE : ce qu'il y avait à
+ * photographier, et ce que la page coûtait au téléphone à cet instant.
+ *
+ * CINQ NOMBRES, RELEVÉS AU CLIC PUIS SUIVIS DOUZE IMAGES :
+ *  · le DÉFILEMENT — et surtout ses changements. Une chute à 0 est une
+ *    remise à zéro (la nôtre, ou celle du routeur) ; une chute vers une
+ *    valeur intermédiaire est un RABOTAGE du navigateur, qui ne peut
+ *    arriver que si le document a rétréci sous nos pieds ;
+ *  · la HAUTEUR DU DOCUMENT — son effondrement dit l'instant précis où
+ *    la mosaïque quitte le DOM ;
+ *  · les CARTES en place — le même instant, vu autrement ;
+ *  · le POIDS DÉCODÉ des images (largeur × hauteur × 4 octets, la
+ *    règle de calcul d'un pixel en mémoire). C'est LE nombre de la
+ *    piste « pression mémoire » : un onglet de Safari sur iPhone vit
+ *    avec quelques centaines de mégaoctets, et le système reprend en
+ *    premier les surfaces VOLATILES — dont les photos de retour ;
+ *  · le MASQUE (nº 337) — si c'est lui qui peint le noir au départ, la
+ *    ligne le dit et l'enquête s'arrête là.
+ *
+ * ⚠️ ELLE NE FAIT QUE LIRE : un écouteur de clic en phase de capture
+ * (jamais annulant), un abonnement d'adresse, douze images. Rien d'écrit
+ * hors du journal.
+ */
+type EtatDuDepart = {
+  y: number;
+  docH: number;
+  corpsH: number;
+  cartes: number;
+  images: number;
+  chargees: number;
+  poids: number;
+  masque: boolean;
+};
+
+function releverLEtat(): EtatDuDepart {
+  const images = [...document.querySelectorAll("img")] as HTMLImageElement[];
+  let poids = 0;
+  let chargees = 0;
+  for (const image of images) {
+    if (!image.complete || !image.naturalWidth) continue;
+    chargees += 1;
+    //  QUATRE OCTETS PAR PIXEL — la taille d'une image DÉCODÉE en
+    //  mémoire, quel que soit le poids du fichier téléchargé.
+    poids += image.naturalWidth * image.naturalHeight * 4;
+  }
+  return {
+    y: Math.round(window.scrollY),
+    docH: Math.round(document.documentElement.scrollHeight),
+    corpsH: Math.round(document.body.getBoundingClientRect().height),
+    cartes: document.querySelectorAll("[data-carte]").length,
+    images: images.length,
+    chargees,
+    poids: Math.round(poids / 1048576),
+    masque:
+      Boolean(document.documentElement.dataset[MARQUE_ATTENTE]) ||
+      document.documentElement.style.visibility === "hidden",
+  };
+}
+
+function surveillerLeDepart(noterLigne: (t: string) => void): () => void {
+  let arreterLAdresse: (() => void) | null = null;
+  let image = 0;
+
+  const auClic = (evenement: MouseEvent) => {
+    const cible = evenement.target;
+    const lien = cible instanceof Element ? cible.closest("a[href]") : null;
+    const href = lien?.getAttribute("href") ?? "";
+    //  LE DÉPART QUI NOUS INTÉRESSE : une carte vers une fiche, depuis
+    //  une page qui n'en est pas une. C'est le trajet de la repro.
+    if (!href.startsWith("/tatoueur/")) return;
+    if (window.location.pathname.startsWith("/tatoueur/")) return;
+
+    const debut = performance.now();
+    const initial = releverLEtat();
+    noterLigne(
+      `── DÉPART vers ${href.slice(0, 40)} · défilement ${initial.y} · ` +
+        `document ${initial.docH} px · corps ${initial.corpsH} px · ` +
+        `${initial.cartes} cartes · ${initial.chargees}/${initial.images} images chargées · ` +
+        `POIDS DÉCODÉ ≈ ${initial.poids} Mo` +
+        (initial.masque ? " · ⚠️ MASQUE DÉJÀ POSÉ" : "")
+    );
+
+    //  L'INSTANT OÙ L'ENTRÉE D'HISTORIQUE CHANGE — c'est là que le
+    //  moteur prend sa photo. L'écriture commune nous le donne sans
+    //  qu'on enveloppe quoi que ce soit nous-mêmes (lib/adresse-courante).
+    let adresseChangee = 0;
+    arreterLAdresse?.();
+    arreterLAdresse = souscrireAdresse(() => {
+      if (adresseChangee) return;
+      adresseChangee = performance.now() - debut;
+      const e = releverLEtat();
+      noterLigne(
+        `  +${Math.round(adresseChangee)} ms ADRESSE CHANGÉE (la photo se prend ici) · ` +
+          `défilement ${e.y} · document ${e.docH} · ${e.cartes} cartes` +
+          (e.masque ? " · ⚠️ MASQUÉ" : "")
+      );
+    });
+
+    //  DOUZE IMAGES, ET L'ON N'ÉCRIT QUE LES CHANGEMENTS : un journal
+    //  de douze lignes identiques ne se lit pas.
+    let precedent = initial;
+    let reste = 12;
+    const suivre = () => {
+      const e = releverLEtat();
+      const t = Math.round(performance.now() - debut);
+      const dits: string[] = [];
+      if (e.y !== precedent.y) {
+        dits.push(
+          e.y === 0
+            ? `défilement REMIS À ZÉRO (${precedent.y} → 0)`
+            : `défilement RABOTÉ par le navigateur (${precedent.y} → ${e.y})`
+        );
+      }
+      if (Math.abs(e.docH - precedent.docH) > 8) {
+        dits.push(
+          `document ${precedent.docH} → ${e.docH} px` +
+            (e.docH < precedent.docH ? " (EFFONDREMENT)" : "")
+        );
+      }
+      if (e.cartes !== precedent.cartes) {
+        dits.push(`cartes ${precedent.cartes} → ${e.cartes}`);
+      }
+      if (e.masque !== precedent.masque) {
+        dits.push(e.masque ? "⚠️ MASQUE POSÉ (écran = fond)" : "masque levé");
+      }
+      if (dits.length) noterLigne(`  +${t} ms ${dits.join(" · ")}`);
+      precedent = e;
+      reste -= 1;
+      if (reste > 0) {
+        image = requestAnimationFrame(suivre);
+        return;
+      }
+      noterLigne(
+        `  = APRÈS 12 IMAGES (+${t} ms) : défilement ${e.y} · document ${e.docH} px · ` +
+          `${e.cartes} cartes · ${e.chargees}/${e.images} images · ≈ ${e.poids} Mo décodés` +
+          (adresseChangee
+            ? ` · adresse changée à +${Math.round(adresseChangee)} ms`
+            : " · ⚠️ ADRESSE JAMAIS CHANGÉE dans cette fenêtre")
+      );
+      arreterLAdresse?.();
+      arreterLAdresse = null;
+    };
+    image = requestAnimationFrame(suivre);
+  };
+
+  //  EN CAPTURE, comme la mémoire de navigation : on passe avant tout
+  //  le monde, et l'on n'annule jamais rien.
+  document.addEventListener("click", auClic, true);
+  return () => {
+    document.removeEventListener("click", auClic, true);
+    arreterLAdresse?.();
+    cancelAnimationFrame(image);
+  };
 }
 
 /** Ce que dit `notRestoredReasons`, en clair. */
@@ -682,11 +852,18 @@ export function SondeRetour({
       noter(t);
       rafraichir();
     });
+    /*  §1 (nº 362) — ET LE DÉPART, la moitié qui manquait : ce que le
+        moteur a sous la main à l'instant où il prendrait sa photo. */
+    const arreterLeDepart = surveillerLeDepart((t) => {
+      noter(t);
+      rafraichir();
+    });
 
     rafraichir();
     return () => {
       arreterLeMasque();
       arreterLImage();
+      arreterLeDepart();
     };
   }, [armee, chemin, secFetchDest, enDeveloppement]);
 
