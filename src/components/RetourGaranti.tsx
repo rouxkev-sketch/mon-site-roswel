@@ -2,6 +2,10 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
+import {
+  aucunePageDuSiteDerriere,
+  unePageEtrangereEstDerriere,
+} from "@/lib/bas-de-la-pile";
 
 /**
  * ON NE SORT JAMAIS DU SITE PAR UN RETOUR — LE FILET
@@ -33,11 +37,34 @@ import { usePathname } from "next/navigation";
  * suivant sortait. Le filet est posé AVANT toute surface, il est donc
  * toujours dessous — voir la garde `auRetour`.
  *
- * LA BORNE QU'ON NE FRANCHIT PAS : `history.length <= 1`. Si le
- * visiteur est arrivé depuis Instagram DANS LE MÊME ONGLET, son retour
- * doit le RAMENER À INSTAGRAM — c'est son droit, et le retenir de
- * force serait malhonnête. Le filet ne joue que quand il n'y a
- * VRAIMENT rien derrière.
+ * §1 (nº 345) — IL S'ARME MAINTENANT QUEL QUE SOIT LE NAVIGATEUR.
+ * ------------------------------------------------------------------
+ * ⚠️ CE QUI ÉTAIT ÉCRIT, ET POURQUOI C'ÉTAIT FAUX : `history.length
+ * <= 1`. Le propriétaire a relevé, en ligne, sur son iPhone :
+ *
+ *    SAFARI  — arrivée pile 1 → le filet s'arme → huit allers-retours
+ *              sans faute.
+ *    CHROME  — arrivée pile 2 → LE FILET NE S'ARME JAMAIS → il sort du
+ *              site au premier retour.
+ *
+ * CHROME SUR IPHONE OUVRE SES ONGLETS AVEC UNE ENTRÉE DÉJÀ EN PLACE.
+ * Sur ce navigateur, la condition ne pouvait donc pas être vraie une
+ * seule fois : le filet n'existait pas. Reproduit au banc p345-§1.
+ *
+ * « LA PILE EST-ELLE VIDE ? » N'ÉTAIT PAS LA BONNE QUESTION — ce n'est
+ * pas parce qu'il y a une entrée derrière soi qu'elle appartient à
+ * quelqu'un. La bonne question, et c'est celle du propriétaire, est
+ * « Y A-T-IL UNE VRAIE PAGE DERRIÈRE MOI DANS CET ONGLET ? ». Elle a
+ * une écriture unique — lib/bas-de-la-pile — et deux moitiés :
+ *  · UNE PAGE DE CE SITE ? notre propre marque répond (la profondeur
+ *    relevée à l'arrivée, avant que rien n'ait pu empiler) ;
+ *  · UNE PAGE ÉTRANGÈRE ? le référent répond, et lui seul.
+ *
+ * LA BORNE QU'ON NE FRANCHIT PAS RESTE ENTIÈRE. Si le visiteur est
+ * arrivé depuis Instagram DANS LE MÊME ONGLET, son retour doit le
+ * RAMENER À INSTAGRAM — c'est son droit, et le retenir de force serait
+ * malhonnête. Le filet ne joue que quand il n'y a VRAIMENT rien
+ * derrière : ni à nous, ni à personne.
  *
  * COMMENT : on empile une étape SANS ADRESSE (`pushState` à deux
  * arguments — jamais trois : passer une adresse fait repartir le
@@ -63,13 +90,15 @@ export function RetourGaranti() {
   const chemin = usePathname();
 
   useEffect(() => {
-    //  Il reste une étape derrière : le navigateur fait son travail, et
-    //  c'est le droit du visiteur (Instagram, un moteur de recherche…).
-    if (window.history.length > 1) return;
-    //  Déjà posée sur cette page (un effet rejoué, un remontage) : on
-    //  n'en pose pas une seconde.
+    //  Déjà posée (un effet rejoué, un remontage, ou l'étape du filet
+    //  elle-même) : on n'en pose pas une seconde.
     const etat = window.history.state as Record<string, unknown> | null;
     if (etat?.[MARQUE]) return;
+    //  §1 (nº 345) — LES DEUX MOITIÉS DE LA QUESTION (lib/bas-de-la-pile).
+    //  Une page DU SITE derrière : le navigateur fait son travail.
+    if (!aucunePageDuSiteDerriere()) return;
+    //  LA BORNE : il est arrivé d'ailleurs, son retour doit l'y rendre.
+    if (unePageEtrangereEstDerriere()) return;
 
     let aNous = true;
     window.history.pushState(

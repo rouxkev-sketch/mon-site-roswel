@@ -38,9 +38,19 @@
  *  7. Une fermeture ne consomme une entrée que si elle l'a créée.
  *  8. Le pas en avant rouvre ce que le retour vient de fermer, dans le
  *     même état.
- *  9. UN RETOUR NE FAIT JAMAIS QUITTER LE SITE — sauf s'il n'y a
- *     jamais rien eu d'autre dans l'onglet, auquel cas le visiteur a
- *     le droit de repartir d'où il venait (nº 332-§2, RetourGaranti).
+ *  9. UN RETOUR NE FAIT JAMAIS QUITTER LE SITE — sauf s'il y a une
+ *     VRAIE page derrière, auquel cas le visiteur a le droit de
+ *     repartir d'où il venait (nº 332-§2, RetourGaranti).
+ *     ⚠️ « UNE VRAIE PAGE », ET NON « UNE ENTRÉE » (nº 345-§1). Chrome
+ *     sur iPhone ouvre ses onglets avec UNE ENTRÉE FANTÔME déjà en
+ *     place : la pile y vaut 2 à l'arrivée, et l'ancienne condition
+ *     (`history.length <= 1`) rendait le filet INEXISTANT sur ce
+ *     navigateur — mesuré par le propriétaire en ligne, reproduit au
+ *     banc p345. La question se pose désormais en deux moitiés, écrites
+ *     une seule fois dans lib/bas-de-la-pile : une page DE CE SITE
+ *     derrière ? (notre propre marque : la profondeur relevée à
+ *     l'arrivée) ; une page ÉTRANGÈRE derrière ? (le référent, seul
+ *     témoin qui distingue une entrée fantôme d'Instagram).
  * 10. UNE PLACE, C'EST UNE POSITION **ET** L'ÉTAT DE LA BARRE QUI
  *     ALLAIT AVEC ; on range les deux, on rend les deux (nº 335-§1,
  *     lib/reserve-barre). Rendre la position seule, c'était le « cran »
@@ -129,6 +139,13 @@
  *    (nº 329-§4) : sa mémoire de session se consommait à la première
  *    lecture, et un retour perdait la consigne.
  *  · 7 — chaque `fermer` du site vérifie qu'il a poussé son entrée.
+ *  · 9 — `RetourGaranti` (le filet lui-même, posé dans la mise en page
+ *    du groupe avant toute surface, donc toujours dessous) et
+ *    `lib/bas-de-la-pile`, qui porte la QUESTION — « y a-t-il une
+ *    vraie page derrière moi dans cet onglet ? » — et son relevé, fait
+ *    par le script d'avant peinture parce que c'est le seul endroit
+ *    qui précède tout le monde. Un relevé plus tardif compterait nos
+ *    propres entrées comme si elles étaient là avant nous.
  *  · 10 — `lib/reserve-barre` (la règle et les deux hauteurs, écrites
  *    une seule fois), `memoriserDefilement` / `lireLaPlace` ici même
  *    (le rangement), `rendreLaPlace` (lib/restitution-position, LA
@@ -201,6 +218,15 @@
  *    l'adresse, et le « une seule fois » passe dans l'étape
  *    d'historique (§1) ; le service worker laisse les retours au
  *    navigateur, qui a déjà sa copie de la page (§2).
+ *  · nº 344 — CE QUI VARIE CÔTÉ SERVEUR, MESURÉ : le HTML servi est
+ *    identique au caractère près pour un iPhone et pour un ordinateur ;
+ *    les deux seules variations réelles sont l'appareil (page du
+ *    carrousel partagé, point 11) et les cookies, toutes deux servies
+ *    en `private, no-cache`. `Vary` ne peut PAS être déclaré depuis
+ *    l'application : Next le réécrit (essayé par `next.config.headers`
+ *    et par le proxy, les deux essais annulés).
+ *  · nº 345 — LE FILET S'ARME QUEL QUE SOIT LE NAVIGATEUR (§1, point 9
+ *    ci-dessus, lib/bas-de-la-pile). Il ne s'armait que sur Safari.
  *  · IL RESTE : la moitié du C-6 sans objet — voir le point 5.
  *
  * ------------------------------------------------------------------

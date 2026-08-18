@@ -32,6 +32,10 @@ import { boucleDAttentePourLeScript } from "@/lib/pose-sur-contenu";
 //  copie à la main ici.
 import { armementPourLeScript, MARQUE_SONDES } from "@/lib/sondes-armees";
 import { amorceDuJournalPourLeScript } from "@/lib/journal-historique";
+//  §1 (nº 345) — « y a-t-il une VRAIE page derrière moi ? ». La règle
+//  est écrite une fois (lib/bas-de-la-pile) et rend son relevé TOUT
+//  FAIT : aucune copie à la main ici non plus.
+import { releveDuBasPourLeScript } from "@/lib/bas-de-la-pile";
 
 /**
  * TOUT CE QUI DOIT ÊTRE DÉCIDÉ AVANT LA PREMIÈRE PEINTURE
@@ -154,6 +158,14 @@ try{${armementPourLeScript()}}catch(e){}
    seulement : les toutes premières entrées de la pile — celles qui
    expulsent du site — sont enregistrées avant que React n'existe. */
 try{if((r.dataset[${JSON.stringify(MARQUE_SONDES)}]||"").indexOf("historique")>=0){${amorceDuJournalPourLeScript()}}}catch(e){}
+/* §1 (nº 345) — LA PROFONDEUR DE LA PILE À NOTRE ARRIVÉE, et le
+   référent qui va avec. C'est ce que le filet du retour compare pour
+   savoir s'il y a une VRAIE page derrière (lib/bas-de-la-pile).
+   ⚠️ ICI ET NULLE PART AILLEURS : relevé plus tard, il aurait compté
+   nos propres entrées — celle du routeur, celle d'une surface, celle
+   du filet lui-même — comme si elles étaient là avant nous. Une seule
+   écriture, au PREMIER document de l'onglet ; les suivants passent. */
+try{${releveDuBasPourLeScript()}}catch(e){}
 try{
 var adresse=location.pathname+location.search;
 var nav=(performance.getEntriesByType("navigation")[0]||{}).type||"navigate";

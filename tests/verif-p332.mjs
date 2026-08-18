@@ -239,10 +239,18 @@ titre("§2 — un retour ne fait jamais quitter le site");
       !/dataset\.appareil/.test(filet),
     "toute page, au doigt comme sur ordinateur"
   );
+  /*  ⚠️ CETTE ASSERTION A ÉTÉ RÉÉCRITE À LA nº 345, ET IL FAUT DIRE
+      POURQUOI. Elle exigeait la condition `history.length > 1`. Le
+      propriétaire a mesuré en ligne que cette condition rendait le
+      filet INEXISTANT sur Chrome iOS, qui ouvre ses onglets avec une
+      entrée déjà en place, et il a ordonné qu'elle change. La BORNE,
+      elle, n'a pas bougé d'un pouce — c'est elle qu'on vérifie ici,
+      dans sa nouvelle écriture (lib/bas-de-la-pile). */
   verif(
-    "LA BORNE EST GARDÉE : `history.length <= 1`",
-    /if \(window\.history\.length > 1\) return;/.test(filet),
-    "arrivé d'Instagram dans le même onglet, le retour y ramène"
+    "LA BORNE EST GARDÉE — une page ÉTRANGÈRE derrière, et le filet se tait",
+    /unePageEtrangereEstDerriere\(\)/.test(filet) &&
+      /aucunePageDuSiteDerriere\(\)/.test(filet),
+    "arrivé d'Instagram dans le même onglet, le retour y ramène (nº 345-§1)"
   );
   verif(
     "IL POSE SON ÉTAPE SANS ADRESSE, et recopie l'état",
@@ -274,12 +282,13 @@ titre("§2 — un retour ne fait jamais quitter le site");
   );
 
   /* ---------- EN VIVANT : LE FILET, PUIS UNE SURFACE PAR-DESSUS ---- */
-  /*  ⚠️ ON ARRIVE PAR `location.replace`, ET C'EST LE SEUL MOYEN JUSTE.
-      Un `goto` de Playwright laisse la page blanche initiale derrière
-      lui : l'onglet a DEUX étapes, et le filet — qui ne joue que
-      lorsqu'il n'y a VRAIMENT rien derrière — se tait, à raison. Un
-      remplacement depuis la page blanche reproduit ce que fait un lien
-      partagé ouvert dans un onglet neuf : une seule étape. */
+  /*  ⚠️ ON ARRIVE PAR `location.replace` : un remplacement depuis la
+      page blanche reproduit ce que fait un lien partagé ouvert dans un
+      onglet neuf — une seule étape.
+      ⚠️ ET DEPUIS LA nº 345, UN `goto` CONVIENDRAIT AUSSI : la page
+      blanche qu'il laisse derrière lui est une entrée FANTÔME, sans
+      référent, et le filet s'arme quand même. C'était tout le défaut —
+      voir le banc p345, qui prend précisément ce chemin-là. */
   const p2 = await ctx.newPage();
   await p2.evaluate((u) => window.location.replace(u), `${BASE}${FICHE_B}`);
   await p2.waitForTimeout(2500);
