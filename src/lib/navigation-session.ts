@@ -235,6 +235,14 @@
  *    que ce bloc du script ne s'exécute pas sur son Chrome. Le repli est
  *    SUPPRIMÉ, le module prend la mesure lui-même au chargement, et une
  *    ligne de journal dit désormais qui a décidé (`ligneDeDecision`).
+ *  · nº 347 — LE VERDICT DU FILET NE PEUT PLUS ÊTRE INVISIBLE (§A) : la
+ *    décision est DÉPOSÉE (mémoire d'onglet, lib/bas-de-la-pile), le
+ *    journal la verse à son ouverture, et écrit LUI-MÊME « aucune
+ *    décision du filet reçue » si rien n'arrive — le silence devient
+ *    une ligne. Et le script d'avant peinture porte un MILLÉSIME
+ *    (`data-version-script`, §B) que le journal relève : un HTML servi
+ *    sans numéro est un HTML périmé, retenu par un cache — la piste
+ *    commune aux deux blocs qui ne tournent jamais en ligne.
  *  · IL RESTE : la moitié du C-6 sans objet — voir le point 5.
  *
  * ------------------------------------------------------------------

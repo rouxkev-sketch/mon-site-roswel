@@ -92,6 +92,12 @@ export type BasDeLaPile = {
   profondeur: number;
   /** Une vraie page d'un AUTRE site nous a-t-elle menés ici ? */
   etranger: boolean;
+  /** §B (nº 347) — QUI a pris la mesure : « avant peinture » (le
+      script bloquant) ou « secours (chargement du module) ». C'est le
+      témoin qui départage les deux branches du propriétaire : si le
+      relevé en ligne dit toujours « secours », le bloc du script ne
+      tourne pas là-bas, et la cause est dans la page SERVIE. */
+  origine: string;
 };
 
 /**
@@ -149,10 +155,11 @@ function referentEtranger(): boolean {
 const RELEVE_AU_CHARGEMENT: BasDeLaPile | null =
   typeof window === "undefined"
     ? null
-    : { profondeur: window.history.length, etranger: referentEtranger() };
-
-/** D'où vient la mesure qu'on a utilisée — le journal le dit. */
-let origineDuReleve = "aucune";
+    : {
+        profondeur: window.history.length,
+        etranger: referentEtranger(),
+        origine: "secours (chargement du module)",
+      };
 
 export function lireLeBasDeLaPile(): BasDeLaPile | null {
   if (typeof window === "undefined") return null;
@@ -161,15 +168,20 @@ export function lireLeBasDeLaPile(): BasDeLaPile | null {
     if (brut) {
       const lu = JSON.parse(brut) as Partial<BasDeLaPile>;
       if (typeof lu?.profondeur === "number") {
-        origineDuReleve = "avant peinture";
-        return { profondeur: lu.profondeur, etranger: Boolean(lu.etranger) };
+        return {
+          profondeur: lu.profondeur,
+          etranger: Boolean(lu.etranger),
+          //  §B (nº 347) — le relevé porte désormais SA SIGNATURE. Une
+          //  écriture d'une passe d'avant en est dépourvue : on le dit,
+          //  plutôt que de le déguiser en l'une des deux vraies.
+          origine: lu.origine ?? "(écriture d'avant la nº 347)",
+        };
       }
     }
   } catch {
     // mémoire d'onglet refusée : on continue avec la mesure de secours
   }
   if (!RELEVE_AU_CHARGEMENT) return null;
-  origineDuReleve = "secours (chargement du module)";
   //  On l'écrit pour les documents suivants de cet onglet, si on peut.
   try {
     if (sessionStorage.getItem(CLE_BAS) === null) {
@@ -225,19 +237,101 @@ export function ligneDeDecision(decision: string): string {
   return (
     `FILET ${decision} · pile ${window.history.length}` +
     ` · profondeur d'arrivée ${bas ? bas.profondeur : "(aucune)"}` +
-    ` [${origineDuReleve}]` +
+    ` [${bas ? bas.origine : "aucune mesure"}]` +
     ` · référent «${referent}»` +
     ` · étrangère derrière : ${bas?.etranger ? "OUI" : "non"}`
   );
 }
 
-/*  ⚠️ AUCUNE SONDE N'EST TOUCHÉE PAR CETTE PASSE, et c'est une consigne
-    du propriétaire : `?sonde-historique=1` et `?sonde-retour=1`
-    fonctionnent exactement comme avant. Le voyant n'a rien à ajouter —
-    le journal de l'historique NOMME déjà l'auteur de chaque entrée
-    d'après la marque de son état (`origineDeLEtat`, journal-historique),
-    et l'étape du filet porte `retourReconstruit`. Une ligne
-    « POSÉE · RetourGaranti » dans le journal EST le voyant. */
+/* ==================================================================
+ * §A (nº 347) — LE VERDICT DU FILET EST GARDÉ, PAS SEULEMENT ÉCRIT
+ * ==================================================================
+ * LE DÉFAUT QUE CE BLOC CORRIGE. À la nº 346, la décision du filet
+ * n'était écrite qu'au moment où elle se prenait : si le journal
+ * n'était pas là pour l'entendre — ou si le code du filet ne tournait
+ * pas du tout, ce que le relevé en ligne n'a pas permis d'exclure —,
+ * elle était INVISIBLE, et le propriétaire a perdu un tour à le
+ * constater. Règle nouvelle : UNE DÉCISION DU FILET NE PEUT PLUS ÊTRE
+ * INVISIBLE.
+ *
+ * COMMENT : la décision est DÉPOSÉE dans la mémoire d'onglet, en plus
+ * d'être proposée au journal. Le journal, à SON ouverture, verse tout
+ * verdict déposé qu'il n'a pas encore entendu — et s'il n'en reçoit
+ * aucun, il l'écrit AUSSI (voir journal-historique) : le silence
+ * lui-même devient une ligne lisible.
+ *
+ * ⚠️ CE DÉPÔT EST UNE ÉCRITURE DU SITE, pas une sonde : une par
+ * décision, ~200 octets, dans la mémoire de l'onglet. C'est le prix
+ * pour que le verdict survive à un journal qui s'ouvre plus tard —
+ * le même prix que le relevé du bas, et pour la même raison.
+ */
+
+export const CLE_VERDICT = "roswel:verdict-du-filet";
+
+export type VerdictDuFilet = {
+  /** La ligne complète, telle que le filet l'a formulée. */
+  texte: string;
+  /** L'adresse où la décision s'est prise. */
+  ou: string;
+  /** L'instant du dépôt — c'est lui qui distingue « une décision est
+      arrivée pour CE document » d'un reste de la page d'avant. */
+  quand: number;
+  /** Le journal l'a-t-il déjà entendue ? (pas de double ligne) */
+  verse: boolean;
+};
+
+export function deposerLeVerdict(texte: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    const verdict: VerdictDuFilet = {
+      texte,
+      ou: location.pathname,
+      quand: Date.now(),
+      verse: false,
+    };
+    sessionStorage.setItem(CLE_VERDICT, JSON.stringify(verdict));
+  } catch {
+    // stockage refusé : le verdict ne vivra que s'il est écrit tout de suite
+  }
+}
+
+export function lireLeVerdict(): VerdictDuFilet | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const brut = sessionStorage.getItem(CLE_VERDICT);
+    if (!brut) return null;
+    const lu = JSON.parse(brut) as Partial<VerdictDuFilet>;
+    if (typeof lu?.texte !== "string" || typeof lu?.quand !== "number") {
+      return null;
+    }
+    return {
+      texte: lu.texte,
+      ou: typeof lu.ou === "string" ? lu.ou : "(adresse inconnue)",
+      quand: lu.quand,
+      verse: Boolean(lu.verse),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function marquerLeVerdictVerse(): void {
+  const verdict = lireLeVerdict();
+  if (!verdict) return;
+  try {
+    sessionStorage.setItem(
+      CLE_VERDICT,
+      JSON.stringify({ ...verdict, verse: true })
+    );
+  } catch {
+    // au pire, le journal versera la même ligne deux fois : lisible quand même
+  }
+}
+
+/*  ⚠️ LES COMPOSANTS DE SONDE NE SONT PAS TOUCHÉS (consigne des
+    nº 345 à 347) : `?sonde-historique=1` et `?sonde-retour=1`
+    fonctionnent exactement comme avant. Tout ce qui précède est écrit
+    par LE SITE dans le journal EXISTANT, via journal-historique. */
 
 /* ==================================================================
  * CE QUE LE SCRIPT D'AVANT PEINTURE EXÉCUTE
@@ -263,10 +357,14 @@ export function ligneDeDecision(decision: string): string {
  */
 export function releveDuBasPourLeScript(): string {
   const cle = JSON.stringify(CLE_BAS);
+  //  §B (nº 347) — le relevé SIGNE d'où il vient. Si le relevé en
+  //  ligne du propriétaire dit toujours « secours », ce bloc-ci ne
+  //  tourne pas là-bas — et la cause est dans la page servie, pas
+  //  dans la règle.
   return `(function(){
 if(sessionStorage.getItem(${cle})!==null)return;
 var e=false;
 try{e=!!document.referrer&&new URL(document.referrer).origin!==location.origin}catch(x){}
-sessionStorage.setItem(${cle},JSON.stringify({profondeur:history.length,etranger:e}));
+sessionStorage.setItem(${cle},JSON.stringify({profondeur:history.length,etranger:e,origine:"avant peinture"}));
 })()`;
 }

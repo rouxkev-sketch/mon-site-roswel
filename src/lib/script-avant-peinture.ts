@@ -139,6 +139,14 @@ export function scriptAvantPeinture(): string {
   return `(function(){
 var r=document.documentElement;
 r.dataset.appareil=matchMedia("(pointer: coarse)").matches?"mobile":"web";
+/* §B (nº 347) — LE MILLÉSIME DU SCRIPT. Deux passes de suite, des
+   blocs de ce script ont semblé ne jamais tourner sur le téléphone du
+   propriétaire alors qu'ils tournent ici. Ce numéro tranche : le
+   journal le relève à son ouverture. S'il lit un HTML SANS numéro (ou
+   avec un vieux), la page servie est PÉRIMÉE — un cache la retient —
+   et aucun des blocs récents n'y a jamais été. À INCRÉMENTER à chaque
+   passe qui modifie ce script. */
+r.dataset.versionScript="347";
 r.style.backgroundColor=${fond};
 /* 0. LE NOMBRE DE COLONNES, POUR LA PROCHAINE RÉPONSE DU SERVEUR
    (nº 226-§1). La politique du cookie — validité, portée, samesite —

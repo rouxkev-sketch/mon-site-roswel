@@ -53,6 +53,16 @@
  * (lib/navigation-session), à retirer avant la mise en ligne.
  */
 
+//  §A et §B (nº 347) — le dépôt du verdict du filet et le relevé du
+//  bas vivent dans lib/bas-de-la-pile ; ce module ne fait que les
+//  LIRE et les verser dans le journal. Sens unique : bas-de-la-pile
+//  n'importe jamais ce module.
+import {
+  lireLeBasDeLaPile,
+  lireLeVerdict,
+  marquerLeVerdictVerse,
+} from "@/lib/bas-de-la-pile";
+
 export type LigneHistorique = {
   /** Le rang, continu d'une page à l'autre. */
   n: number;
@@ -250,19 +260,99 @@ function noter(quoi: string, qui: string): void {
  * marque, c'était risquer de n'avoir aucune ligne le jour où l'on en a
  * besoin. Sondes désarmées et journal absent : une lecture, rien de
  * plus — aucune écriture.
+ *
+ * §A (nº 347) — ELLE RÉPOND désormais si la ligne a été écrite : c'est
+ * ce qui permet au filet de savoir si son verdict a été ENTENDU, ou
+ * s'il ne vit que dans son dépôt (lib/bas-de-la-pile) en attendant
+ * l'ouverture du journal.
  */
-export function noterDansLeJournal(quoi: string, qui: string): void {
-  if (typeof window === "undefined") return;
+export function noterDansLeJournal(quoi: string, qui: string): boolean {
+  if (typeof window === "undefined") return false;
   let ouvert = false;
   try {
     ouvert =
       (document.documentElement.dataset.sondes ?? "").includes("historique") ||
       localStorage.getItem(CLE) !== null;
   } catch {
-    return;
+    return false;
   }
-  if (!ouvert) return;
+  if (!ouvert) return false;
   noter(quoi, qui);
+  return true;
+}
+
+/**
+ * ██ §B (nº 347) — LES TRACES D'AVANT PEINTURE, EN UNE LIGNE ██
+ * ==================================================================
+ * Deux passes de suite, des blocs du script d'avant peinture ont
+ * semblé ne jamais tourner sur le téléphone du propriétaire alors
+ * qu'ils tournent ici. Cette fonction relève ce que chacun LAISSE
+ * COMME TRACE quand il tourne, pour que le prochain relevé dise
+ * lesquels ont réellement tourné là-bas :
+ *  · le MILLÉSIME du script (`data-version-script`, posé en tête du
+ *    script — absent = HTML PÉRIMÉ servi par un cache) ;
+ *  · l'ARMEMENT (la marque des sondes sur <html>) ;
+ *  · l'AMORCE du journal (la marque sur `window`) ;
+ *  · le RELEVÉ du bas, et QUI l'a pris (« avant peinture » ou
+ *    « secours ») — lib/bas-de-la-pile.
+ */
+export function tracesAvantPeinture(): string {
+  if (typeof window === "undefined") return "";
+  const racine = document.documentElement;
+  const version =
+    racine.dataset.versionScript ??
+    "AUCUN — HTML d'avant la nº 347, page servie PÉRIMÉE";
+  const armement = racine.dataset.sondes ? "oui" : "NON";
+  const amorce = (window as unknown as Record<string, unknown>)[MARQUE_AMORCE]
+    ? "oui"
+    : "NON";
+  const bas = lireLeBasDeLaPile();
+  const releve = bas ? `oui [${bas.origine}]` : "AUCUN";
+  return (
+    `script nº ${version} · armement ${armement} · amorce ${amorce}` +
+    ` · relevé du bas ${releve}`
+  );
+}
+
+/**
+ * ██ §A (nº 347) — LE VERDICT DU FILET NE PEUT PLUS ÊTRE INVISIBLE ██
+ * ==================================================================
+ * À l'ouverture du journal, TROIS issues, et chacune est une ligne :
+ *  1. un verdict déposé que le journal n'a pas encore entendu (il a
+ *     été pris quand le journal n'était pas là) → il est VERSÉ, avec
+ *     l'adresse où il avait été pris ;
+ *  2. un verdict arrive pour CE document dans la foulée (le filet
+ *     décide quelques instants après l'ouverture — c'est l'ordre
+ *     normal des effets) → sa propre ligne suffit, on se tait ;
+ *  3. RIEN n'arrive : 1,2 s après l'ouverture, le journal l'écrit
+ *     LUI-MÊME — « aucune décision du filet reçue » — avec les traces
+ *     d'avant peinture. Le silence du filet devient une ligne lisible :
+ *     c'est la demande expresse de la passe nº 347, pour que la
+ *     prochaine lecture tranche quelle que soit la branche.
+ */
+function verserLeVerdictALOuverture(): void {
+  const depose = lireLeVerdict();
+  if (depose && !depose.verse) {
+    noter(
+      "ARRIVÉE SUR LA PAGE",
+      `${depose.texte} · (décision prise sur ${depose.ou}, versée à l'ouverture du journal)`
+    );
+    marquerLeVerdictVerse();
+  }
+  const reference = depose?.quand ?? 0;
+  setTimeout(() => {
+    const apres = lireLeVerdict();
+    //  Une décision est arrivée pour ce document-ci : sa ligne est déjà
+    //  dans le journal (le filet écrit lui-même quand le journal est
+    //  ouvert, et il l'est — nous sommes son ouverture).
+    if (apres && apres.quand !== reference) return;
+    noterDansLeJournal(
+      "ARRIVÉE SUR LA PAGE",
+      `FILET — aucune décision du filet reçue` +
+        `${depose ? " pour CE document" : ""}` +
+        ` (1,2 s après l'ouverture du journal) · ${tracesAvantPeinture()}`
+    );
+  }, 1200);
 }
 
 /* ==================================================================
@@ -286,6 +376,9 @@ export function armerLeJournalDHistorique(): () => void {
       acte, on note notre arrivée, et on ne touche à rien. */
   if ((window as unknown as Record<string, unknown>)[MARQUE_AMORCE]) {
     noter("ARRIVÉE SUR LA PAGE", "sonde (enveloppes déjà posées)");
+    //  §A (nº 347) — l'ouverture du journal verse le verdict du filet,
+    //  ou écrit son absence : sur les DEUX chemins d'armement.
+    verserLeVerdictALOuverture();
     desarmer = () => {
       desarmer = null;
     };
@@ -330,6 +423,9 @@ export function armerLeJournalDHistorique(): () => void {
   window.addEventListener("pagehide", auDepart, { passive: true });
 
   noter("ARRIVÉE SUR LA PAGE", "sonde");
+  //  §A (nº 347) — même chose quand c'est le module qui pose les
+  //  enveloppes : le verdict du filet ne peut plus être invisible.
+  verserLeVerdictALOuverture();
 
   desarmer = () => {
     history.pushState = pushOriginal;

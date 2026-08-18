@@ -4,10 +4,15 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import {
   aucunePageDuSiteDerriere,
+  deposerLeVerdict,
   ligneDeDecision,
+  marquerLeVerdictVerse,
   unePageEtrangereEstDerriere,
 } from "@/lib/bas-de-la-pile";
-import { noterDansLeJournal } from "@/lib/journal-historique";
+import {
+  noterDansLeJournal,
+  tracesAvantPeinture,
+} from "@/lib/journal-historique";
 
 /**
  * ON NE SORT JAMAIS DU SITE PAR UN RETOUR — LE FILET
@@ -115,14 +120,26 @@ const MARQUE = "retourReconstruit";
  * le référent EXACT, d'où vient la mesure, et LAQUELLE des deux
  * questions a fermé la porte.
  *
- * ⚠️ ELLE N'EXISTE QUE SI LE JOURNAL EST OUVERT (voir
- * `noterDansLeJournal`) : sondes désarmées, elle ne coûte qu'une
- * lecture, et n'écrit rien. Le type d'événement est un type EXISTANT —
- * « ARRIVÉE SUR LA PAGE » — à la demande du propriétaire : aucune sonde
- * n'a de nouveau vocabulaire à apprendre.
+ * Le type d'événement est un type EXISTANT — « ARRIVÉE SUR LA PAGE » —
+ * à la demande du propriétaire : aucune sonde n'a de nouveau
+ * vocabulaire à apprendre.
+ *
+ * §A (nº 347) — LA DÉCISION EST D'ABORD DÉPOSÉE, ENSUITE PROPOSÉE AU
+ * JOURNAL. À la nº 346 elle n'était qu'écrite : si le journal n'était
+ * pas là pour l'entendre, elle disparaissait sans trace, et le
+ * propriétaire a perdu un tour à le constater. Désormais le dépôt
+ * (lib/bas-de-la-pile) survit, le journal le verse à son ouverture, et
+ * son silence même devient une ligne (« aucune décision du filet
+ * reçue », journal-historique). La ligne porte AUSSI les traces
+ * d'avant peinture — le millésime du script servi en tête — pour
+ * démasquer une page périmée sortie d'un cache (branche B).
  */
 function dire(decision: string): void {
-  noterDansLeJournal("ARRIVÉE SUR LA PAGE", ligneDeDecision(decision));
+  const ligne = `${ligneDeDecision(decision)} · ${tracesAvantPeinture()}`;
+  deposerLeVerdict(ligne);
+  if (noterDansLeJournal("ARRIVÉE SUR LA PAGE", ligne)) {
+    marquerLeVerdictVerse();
+  }
 }
 
 export function RetourGaranti() {
