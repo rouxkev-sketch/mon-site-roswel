@@ -85,33 +85,54 @@ const CLE = CLE_JOURNAL;
 const MAXIMUM = 500;
 
 let lignes: LigneHistorique[] = [];
-let charge = false;
+/** Le texte brut tel qu'on l'a lu ou écrit en dernier : c'est LUI qui
+    dit si la mémoire a bougé sous nos pieds. */
+let dernierBrut = "";
 const abonnes = new Set<() => void>();
 
-function relire(): void {
-  if (charge) return;
-  charge = true;
+/**
+ * ██ §1 (nº 348) — LE JOURNAL NE GARDE PLUS DE COPIE PÉRIMÉE ██
+ * ==================================================================
+ * LE DÉFAUT RÉPARÉ, ET IL EXPLIQUE LES LIGNES DISPARUES DU RELEVÉ DE
+ * LA nº 348 : depuis que l'amorce d'avant peinture tourne réellement
+ * en ligne (déploiement de la nº 347), DEUX écritures se partagent le
+ * même journal — l'amorce (qui relit la mémoire à chaque ligne) et ce
+ * module (qui gardait une copie en mémoire, chargée UNE fois). Chaque
+ * écriture du module repartait de sa copie et ÉCRASAIT les lignes que
+ * l'amorce avait ajoutées entre-temps : toutes les lignes POSÉE,
+ * REMPLACÉE et RETOUR du routeur disparaissaient — sauf le DÉPART
+ * (pagehide), écrit en dernier, que plus personne n'écrasait.
+ * RÈGLE : ON RELIT LA MÉMOIRE AVANT CHAQUE ÉCRITURE, comme l'amorce.
+ */
+function lignesFraiches(): LigneHistorique[] {
   try {
-    const brut = localStorage.getItem(CLE);
-    if (brut) lignes = JSON.parse(brut) as LigneHistorique[];
+    const brut = localStorage.getItem(CLE) ?? "[]";
+    if (brut !== dernierBrut) {
+      dernierBrut = brut;
+      lignes = JSON.parse(brut) as LigneHistorique[];
+    }
   } catch {
-    lignes = [];
+    // mémoire refusée : la copie en cours fait foi le temps de la page
   }
+  return lignes;
 }
 
 function ecrire(): void {
   try {
-    localStorage.setItem(CLE, JSON.stringify(lignes));
+    const brut = JSON.stringify(lignes);
+    localStorage.setItem(CLE, brut);
+    dernierBrut = brut;
   } catch {
     // mémoire pleine ou refusée : le journal vit alors le temps de la page
   }
 }
 
 /** ⚠️ RÉFÉRENCE STABLE tant que rien n'a changé — la règle de
-    `useSyncExternalStore`, sans quoi React boucle. */
+    `useSyncExternalStore`, sans quoi React boucle. `lignesFraiches` la
+    tient : la référence ne change que si le texte rangé a changé. */
 export function lireLeJournal(): LigneHistorique[] {
-  relire();
-  return lignes;
+  if (typeof window === "undefined") return VIDE;
+  return lignesFraiches();
 }
 
 /** Côté serveur : un journal vide, toujours la même référence. */
@@ -135,7 +156,7 @@ export function viderLeJournal(): void {
 
 /** LE RELEVÉ EN TEXTE — c'est lui que le bouton « COPIER » rend. */
 export function texteDuJournal(): string {
-  relire();
+  lignesFraiches();
   const entete =
     `JOURNAL DE L'HISTORIQUE — ${lignes.length} ligne(s)\n` +
     `onglet ouvert sur ${location.host}\n` +
@@ -218,7 +239,10 @@ function origineDeLAppel(etat?: unknown): string {
 }
 
 function noter(quoi: string, qui: string): void {
-  relire();
+  //  §1 (nº 348) — LA RELECTURE AVANT L'ÉCRITURE : l'amorce a pu
+  //  écrire depuis notre dernier passage, et ses lignes sont à nous
+  //  aussi. Écrire depuis une copie, c'était les effacer.
+  lignesFraiches();
   const maintenant = new Date();
   const t =
     `${String(maintenant.getHours()).padStart(2, "0")}:` +
@@ -340,19 +364,27 @@ function verserLeVerdictALOuverture(): void {
     marquerLeVerdictVerse();
   }
   const reference = depose?.quand ?? 0;
-  setTimeout(() => {
-    const apres = lireLeVerdict();
-    //  Une décision est arrivée pour ce document-ci : sa ligne est déjà
-    //  dans le journal (le filet écrit lui-même quand le journal est
-    //  ouvert, et il l'est — nous sommes son ouverture).
-    if (apres && apres.quand !== reference) return;
-    noterDansLeJournal(
-      "ARRIVÉE SUR LA PAGE",
-      `FILET — aucune décision du filet reçue` +
-        `${depose ? " pour CE document" : ""}` +
-        ` (1,2 s après l'ouverture du journal) · ${tracesAvantPeinture()}`
-    );
-  }, 1200);
+  //  §4 (nº 348) — LE COMPTE À REBOURS NE PART QU'AU DOCUMENT FINI :
+  //  le filet ne décide plus qu'à `load` (RetourGaranti), donc mesurer
+  //  son silence avant `load`, c'était le déclarer muet à tort sur
+  //  chaque chargement lent — précisément ceux qu'on instrumente.
+  const armerLeCompteARebours = () => {
+    setTimeout(() => {
+      const apres = lireLeVerdict();
+      //  Une décision est arrivée pour ce document-ci : sa ligne est
+      //  déjà dans le journal (le filet écrit lui-même quand le journal
+      //  est ouvert, et il l'est — nous sommes son ouverture).
+      if (apres && apres.quand !== reference) return;
+      noterDansLeJournal(
+        "ARRIVÉE SUR LA PAGE",
+        `FILET — aucune décision du filet reçue` +
+          `${depose ? " pour CE document" : ""}` +
+          ` (1,2 s après le document fini) · ${tracesAvantPeinture()}`
+      );
+    }, 1200);
+  };
+  if (document.readyState === "complete") armerLeCompteARebours();
+  else window.addEventListener("load", armerLeCompteARebours, { once: true });
 }
 
 /* ==================================================================
@@ -457,6 +489,15 @@ export function armerLeJournalDHistorique(): () => void {
  * démarre. Ce n'est pas une copie : c'est ce module qui le fabrique,
  * à partir de ses propres constantes.
  *
+ * §1 (nº 348) — SES ÉTIQUETTES DISENT QUI A VRAIMENT APPELÉ. Ses
+ * enveloppes marquaient « avant peinture » pour TOUT appel qu'elles
+ * attrapaient : le relevé du propriétaire portait une « REMPLACÉE ·
+ * avant peinture » à chaque chargement qui était en réalité le
+ * routeur de Next posant son état à l'hydratation. La petite fonction
+ * `qui` ci-dessous lit les MÊMES marques d'état que `origineDeLEtat`
+ * plus haut — c'est ce module qui fabrique les deux, il n'y a pas de
+ * seconde copie de la règle à tenir d'accord.
+ *
  * ⚠️ IL N'EST INCLUS QUE SI LA SONDE DE L'HISTORIQUE EST ARMÉE — le
  * script vérifie la marque avant de l'exécuter.
  *
@@ -480,8 +521,15 @@ localStorage.setItem(${cle},JSON.stringify(l.slice(-${maximum})))}catch(e){}};
 var pousser=history.pushState.bind(history);
 var remplacer=history.replaceState.bind(history);
 var reculer=history.back.bind(history);
-history.pushState=function(){var v=pousser.apply(history,arguments);noter("POSÉE","avant peinture");return v};
-history.replaceState=function(){var v=remplacer.apply(history,arguments);noter("REMPLACÉE","avant peinture");return v};
+var qui=function(e){e=e||{};
+if(e.etapeRefermable!==undefined)return "surface refermable (lib/etape-refermable)";
+if(e.fenetreCarrousel)return "fenêtre de carrousel (FicheTatoueur)";
+if(e.fenetreFiche)return "fenêtre de fiche (PileFiches · GrilleTatoueurs · PageFavoris)";
+if(e.retourReconstruit)return "RetourGaranti";
+if(e.__PRIVATE_NEXTJS_INTERNALS_TREE!==undefined||e.__NA)return "routeur Next";
+return "appel sans marque (avant peinture)"};
+history.pushState=function(){var v=pousser.apply(history,arguments);noter("POSÉE",qui(arguments[0]));return v};
+history.replaceState=function(){var v=remplacer.apply(history,arguments);noter("REMPLACÉE",qui(arguments[0]));return v};
 history.back=function(){noter("REPRISE (history.back)","avant peinture");return reculer()};
 addEventListener("popstate",function(){noter("RETOUR / AVANT (popstate)","navigateur")},{passive:true});
 addEventListener("pagehide",function(){noter("DÉPART DU SITE (pagehide)","navigateur")},{passive:true});

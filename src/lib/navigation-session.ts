@@ -243,6 +243,20 @@
  *    (`data-version-script`, §B) que le journal relève : un HTML servi
  *    sans numéro est un HTML périmé, retenu par un cache — la piste
  *    commune aux deux blocs qui ne tournent jamais en ligne.
+ *  · nº 348 — LE JOURNAL NE S'EFFACE PLUS LUI-MÊME (§1 : le module
+ *    relit la mémoire avant chaque écriture — sa copie unique écrasait
+ *    les lignes de l'amorce ; et les enveloppes de l'amorce lisent les
+ *    marques d'état au lieu d'étiqueter tout « avant peinture »). ET LE
+ *    CRAN DU FILET N'EST POSÉ QUE SUR UN DOCUMENT FINI (§4,
+ *    RetourGaranti) : une entrée posée pendant le chargement peut être
+ *    mal accrochée à la liste interne du navigateur — c'est la fenêtre
+ *    de course des éjections aléatoires de production, inexistante en
+ *    local où le document est fini avant l'hydratation. RESTE OUVERT :
+ *    la pile d'arrivée qui grossit de visite en visite (le relevé du
+ *    bas est pris une fois par ONGLET ; les entrées d'une visite morte
+ *    comptent comme « du site » à la visite suivante — la règle « une
+ *    fois par VIE », re-relevé à chaque document de type navigate, est
+ *    la correction désignée si le propriétaire la commande).
  *  · IL RESTE : la moitié du C-6 sans objet — voir le point 5.
  *
  * ------------------------------------------------------------------

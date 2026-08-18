@@ -146,31 +146,9 @@ export function RetourGaranti() {
   const chemin = usePathname();
 
   useEffect(() => {
-    //  Déjà posée (un effet rejoué, un remontage, ou l'étape du filet
-    //  elle-même) : on n'en pose pas une seconde.
-    const etat = window.history.state as Record<string, unknown> | null;
-    if (etat?.[MARQUE]) {
-      dire("RENONCE — étape déjà posée");
-      return;
-    }
-    //  §1 (nº 345) — LES DEUX MOITIÉS DE LA QUESTION (lib/bas-de-la-pile).
-    //  Une page DU SITE derrière : le navigateur fait son travail.
-    if (!aucunePageDuSiteDerriere()) {
-      dire("RENONCE — une page du site est derrière");
-      return;
-    }
-    //  LA BORNE : il est arrivé d'ailleurs, son retour doit l'y rendre.
-    if (unePageEtrangereEstDerriere()) {
-      dire("RENONCE — une page étrangère est derrière");
-      return;
-    }
-    dire("ARMÉ");
-
     let aNous = true;
-    window.history.pushState(
-      { ...((window.history.state as object | null) ?? {}), [MARQUE]: true },
-      ""
-    );
+    let minuterie: ReturnType<typeof setTimeout> | null = null;
+    let ecoutePose = false;
 
     function auRetour() {
       if (!aNous) return;
@@ -192,10 +170,75 @@ export function RetourGaranti() {
       window.location.replace("/");
     }
 
-    window.addEventListener("popstate", auRetour);
+    function decider() {
+      if (!aNous) return;
+      //  Déjà posée (un effet rejoué, un remontage, ou l'étape du filet
+      //  elle-même) : on n'en pose pas une seconde.
+      const etat = window.history.state as Record<string, unknown> | null;
+      if (etat?.[MARQUE]) {
+        dire("RENONCE — étape déjà posée");
+        return;
+      }
+      //  §1 (nº 345) — LES DEUX MOITIÉS DE LA QUESTION (lib/bas-de-la-pile).
+      //  Une page DU SITE derrière : le navigateur fait son travail.
+      if (!aucunePageDuSiteDerriere()) {
+        dire("RENONCE — une page du site est derrière");
+        return;
+      }
+      //  LA BORNE : il est arrivé d'ailleurs, son retour doit l'y rendre.
+      if (unePageEtrangereEstDerriere()) {
+        dire("RENONCE — une page étrangère est derrière");
+        return;
+      }
+      dire("ARMÉ");
+      window.history.pushState(
+        { ...((window.history.state as object | null) ?? {}), [MARQUE]: true },
+        ""
+      );
+      window.addEventListener("popstate", auRetour);
+      ecoutePose = true;
+    }
+
+    /*  §4 (nº 348) — LE CRAN N'EST POSÉ QUE SUR UN DOCUMENT FINI.
+        ------------------------------------------------------------
+        LA CAUSE NOMMÉE : une entrée d'historique posée PENDANT que le
+        document se construit peut être mal accrochée à la liste
+        interne du navigateur — la liste de JavaScript dit alors
+        « pile 4 » quand celle du navigateur n'a pas l'entrée, et le
+        retour suivant SAUTE hors du site sans un seul `popstate`.
+        C'est la signature exacte des éjections relevées en ligne, et
+        elle colle au fait nouveau du propriétaire : sur le MÊME
+        iPhone, contre le serveur local, tout est impeccable — en
+        local le document est fini en quelques dizaines de
+        millisecondes et la fenêtre de course n'existe pas ; en
+        production, sur un réseau lent, l'hydratation tombe en plein
+        chargement et la fenêtre est grande ouverte. L'aléatoire suit
+        la lenteur du réseau : ce sont ses mots, et c'est ce que fait
+        une course.
+        ON ATTEND DONC `readyState === "complete"` (l'événement `load`),
+        plus une respiration, avant de décider ET de poser. Le prix,
+        dit honnêtement : pendant le chargement, un retour reste
+        natif — mais c'était déjà le cas quand le cran, posé trop tôt,
+        n'était pas accroché ; l'éjection de la visite 2, elle, arrivait
+        APRÈS 35 secondes de consultation, très loin de cette fenêtre. */
+    if (document.readyState === "complete") {
+      minuterie = setTimeout(decider, 0);
+    } else {
+      const auComplet = () => {
+        minuterie = setTimeout(decider, 0);
+      };
+      window.addEventListener("load", auComplet, { once: true });
+      return () => {
+        aNous = false;
+        window.removeEventListener("load", auComplet);
+        if (minuterie !== null) clearTimeout(minuterie);
+        if (ecoutePose) window.removeEventListener("popstate", auRetour);
+      };
+    }
     return () => {
       aNous = false;
-      window.removeEventListener("popstate", auRetour);
+      if (minuterie !== null) clearTimeout(minuterie);
+      if (ecoutePose) window.removeEventListener("popstate", auRetour);
     };
   }, [chemin]);
 
