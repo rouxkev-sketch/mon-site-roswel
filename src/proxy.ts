@@ -39,7 +39,24 @@ export async function proxy(request: NextRequest) {
     request.cookies.delete(COOKIE_NU_TOTAL);
   }
 
-  let reponse = NextResponse.next({ request });
+  /*  nº 357 — L'ACCUEIL NU EST PRÉRENDU ; dès que « / » porte une
+      requête (?style=…, ?page=…, ?sonde-…), on SERT LE JUMEAU
+      DYNAMIQUE par réécriture : l'adresse du navigateur reste « / »,
+      l'état continue de vivre dans l'adresse (règle nº 328), et le
+      rendu serveur des recherches (nº 203) est préservé. */
+  const versLeJumeau =
+    request.nextUrl.pathname === "/" && request.nextUrl.search !== "";
+  const fabriquerReponse = () =>
+    versLeJumeau
+      ? NextResponse.rewrite(
+          new URL(
+            "/accueil-recherche" + request.nextUrl.search,
+            request.url
+          ),
+          { request }
+        )
+      : NextResponse.next({ request });
+  let reponse = fabriquerReponse();
 
   const { url, clePublishable } = infosConnexionSupabase();
 
@@ -52,7 +69,7 @@ export async function proxy(request: NextRequest) {
         cookiesAPoser.forEach(({ name, value }) =>
           request.cookies.set(name, value)
         );
-        reponse = NextResponse.next({ request });
+        reponse = fabriquerReponse();
         cookiesAPoser.forEach(({ name, value, options }) =>
           reponse.cookies.set(name, value, options)
         );

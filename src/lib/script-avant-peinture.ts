@@ -149,8 +149,19 @@ r.dataset.appareil=matchMedia("(pointer: coarse)").matches?"mobile":"web";
    avec un vieux), la page servie est PÉRIMÉE — un cache la retient —
    et aucun des blocs récents n'y a jamais été. À INCRÉMENTER à chaque
    passe qui modifie ce script. */
-r.dataset.versionScript="355";
+r.dataset.versionScript="357";
 r.style.backgroundColor=${fond};
+/* nº 357 — LE COMPTE, DIT AVANT LA PREMIÈRE PEINTURE. L'accueil est
+   prérendu : le serveur ne connaît plus la session, et c'est CE
+   script qui la dit à la garde CSS (globals.css) — connecté (cookie
+   de session Supabase présent), revenant (déjà connecté ici), ou
+   nouveau. Aucun état faux peint, jamais : la promesse nº 203, tenue
+   sans rendu dynamique. Et la marque du nu total (nº 354) passe elle
+   aussi au client — même lecture, même endroit. */
+try{var ck=document.cookie;
+r.dataset.compte=/(^|; )sb-[^=]*-auth-token/.test(ck)?"connecte":(ck.indexOf("yf_deja_connecte=1")>=0?"revenant":"nouveau");
+if(ck.indexOf("yf_nu_total=1")>=0)r.dataset.variante="nu-total";
+}catch(e){}
 /* 0. LE NOMBRE DE COLONNES, POUR LA PROCHAINE RÉPONSE DU SERVEUR
    (nº 226-§1). La politique du cookie — validité, portée, samesite —
    est écrite UNE fois (SUFFIXE_COOKIE_AFFICHAGE, lib/colonnes-

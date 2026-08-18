@@ -14,6 +14,10 @@ import { useEffect } from "react";
  */
 export function EnregistrementServiceWorker() {
   useEffect(() => {
+        //  nº 357 — LE NU TOTAL (nº 354) se décide ici, côté client : la
+    //  racine est prérendue et ne lit plus le cookie. Une lecture,
+    //  rien d'autre, et le composant se tait.
+    if (document.cookie.indexOf("yf_nu_total=1") >= 0) return;
     if (!("serviceWorker" in navigator)) return;
 
     if (process.env.NODE_ENV === "production") {

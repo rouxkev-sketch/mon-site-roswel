@@ -37,7 +37,10 @@ import {
   MESSAGE_INDISPONIBLE,
 } from "@/lib/catalogue-demonstration";
 import { classerCarrousels } from "@/lib/classement-carrousels";
-import { creerClientSupabaseServeur } from "@/lib/supabase/server";
+//  nº 357 — LE CATALOGUE LIT EN ANONYME : la session n'y change rien
+//  (nº 275), et la lecture des cookies rendait dynamique toute page
+//  qui liste des tatoueurs — voir lib/supabase/server.
+import { creerClientSupabaseAnonyme } from "@/lib/supabase/server";
 import { TATOUEURS_DEMO } from "@/lib/tatoueurs-demo";
 import { nomVilleCourt } from "@/lib/villes";
 import { slugifier } from "@/lib/slug";
@@ -546,7 +549,7 @@ function normaliser(ligne: Tatoueur): Tatoueur {
  */
 async function lirePopularite(): Promise<Map<string, number>> {
   try {
-    const supabase = await creerClientSupabaseServeur();
+    const supabase = creerClientSupabaseAnonyme();
     const { data, error } = await supabase
       .from("popularite_tatoueurs")
       .select("slug, score");
@@ -1117,7 +1120,7 @@ export async function lireVilleParSlug(
   slug: string
 ): Promise<ResultatTatoueurs["ville"]> {
   try {
-    const supabase = await creerClientSupabaseServeur();
+    const supabase = creerClientSupabaseAnonyme();
     const { data } = await supabase
       .from("tatoueurs")
       .select("ville_nom, latitude, longitude")
@@ -1171,7 +1174,7 @@ export async function lireVilleParSlug(
  * `colonneAbsente`).
  */
 async function garnirFiches<T extends Tatoueur>(
-  supabase: Awaited<ReturnType<typeof creerClientSupabaseServeur>>,
+  supabase: ReturnType<typeof creerClientSupabaseAnonyme>,
   fiches: T[]
 ): Promise<T[]> {
   if (fiches.length === 0) return fiches;
@@ -1473,7 +1476,7 @@ export async function listerTatoueurs(
   const clics = scores;
 
   try {
-    const supabase = await creerClientSupabaseServeur();
+    const supabase = creerClientSupabaseAnonyme();
     // CE QUI PEUT SE FILTRER SANS LA MIGRATION Nº 32 le fait déjà ici :
     // les fiches en cours de suppression et, quand il est demandé, le
     // style. Deux `where` de plus ne coûtent rien et retirent parfois
@@ -1706,7 +1709,7 @@ async function rechercheEnBase(
   ville: ResultatTatoueurs["ville"]
 ): Promise<ResultatTatoueurs | null> {
   try {
-    const supabase = await creerClientSupabaseServeur();
+    const supabase = creerClientSupabaseAnonyme();
     const eteints = new Set(filtresConnus(filtres.exclure));
     const parGroupe = new Map<string, string[] | null>(
       GROUPES_FILTRES.map((groupe) => [
@@ -1833,7 +1836,7 @@ export async function lireTatoueur(slug: string): Promise<{
   demonstration: boolean;
 }> {
   try {
-    const supabase = await creerClientSupabaseServeur();
+    const supabase = creerClientSupabaseAnonyme();
     const reponse = await lireEnRetirantLInconnu((colonnes: string) =>
       supabase
         .from("tatoueurs")
@@ -1881,7 +1884,7 @@ export async function slugActuelDepuisAncien(
   ancien: string
 ): Promise<string | null> {
   try {
-    const supabase = await creerClientSupabaseServeur();
+    const supabase = creerClientSupabaseAnonyme();
     const { data } = await supabase
       .from("tatoueurs")
       .select("slug")

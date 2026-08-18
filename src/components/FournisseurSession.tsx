@@ -31,15 +31,23 @@ export const ContexteDejaConnecteServeur = createContext(false);
 export function FournisseurSession({
   utilisateur,
   dejaConnecte = false,
+  pretServeur = true,
   children,
 }: {
   utilisateur: User | null;
   /** Le drapeau « déjà connecté sur ce navigateur », lu dans le cookie
       par la mise en page. */
   dejaConnecte?: boolean;
+  /*  nº 357 — L'ACCUEIL EST PRÉRENDU : la mise en page ne lit plus la
+      session au serveur et passe `pretServeur={false}`. L'instantané
+      d'hydratation est alors « muet » (personne, pas prêt) — et c'est
+      le script d'avant peinture + la garde CSS (`data-compte`,
+      globals.css) qui tiennent la promesse de la nº 203 : aucun état
+      FAUX peint, jamais. Voir EnTeteTatouage. */
+  pretServeur?: boolean;
   children: ReactNode;
 }) {
-  const [valeur] = useState(() => ({ utilisateur, pret: true }));
+  const [valeur] = useState(() => ({ utilisateur, pret: pretServeur }));
   return (
     <ContexteSessionServeur.Provider value={valeur}>
       <ContexteDejaConnecteServeur.Provider value={dejaConnecte}>

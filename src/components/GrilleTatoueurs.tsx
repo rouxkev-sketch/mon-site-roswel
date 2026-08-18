@@ -599,6 +599,9 @@ export function GrilleTatoueurs({
             : {}),
           overflowAnchor: "none",
         }}
+        //  nº 357 — le nom de la grille, pour la garde des rangées de
+        //  l'accueil prérendu (globals.css, `data-mosaique-nue`).
+        data-grille-tatoueurs=""
         //  ⚠️ COMPOSÉE DES MORCEAUX PARTAGÉS (nº 249-§4) : le socle,
         //  les colonnes et la gouttière deux-colonnes sont l'écriture
         //  unique — celle que « Ma sélection » consomme entière

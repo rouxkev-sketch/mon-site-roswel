@@ -1182,3 +1182,49 @@ input[data-sans-remplissage]:-webkit-autofill:focus {
     rendu, et ne monte donc jamais la photo. Il n'y a plus rien à
     masquer après coup — cette règle n'avait plus d'objet, et
     l'attribut qu'elle visait n'existe plus. */
+
+/* ==================================================================
+   nº 357 — L'AMORTI DU COMPTE (l'accueil est prérendu)
+   ==================================================================
+   Le serveur ne connaît plus la session : pendant l'hydratation, la
+   zone de compte de la barre est « muette » et c'est ICI que l'état
+   peint se décide, d'après `data-compte`, posé sur <html> AVANT la
+   première peinture (script d'avant peinture). La promesse nº 203
+   reste tenue : aucun état FAUX peint, jamais.
+    · nouveau  → le badge invite à rejoindre (rendu par défaut) ;
+    · revenant → le badge dit « Se connecter » dès le premier pixel ;
+    · connecté → la zone reste invisible un souffle (l'espace est
+      réservé, rien ne bouge), puis « Mon espace » la remplace après
+      l'hydratation — le visiteur connecté ne voit JAMAIS le badge
+      d'invitation. */
+[data-zone-compte][data-session="muette"] .etat-revenant {
+  display: none;
+}
+html[data-compte="revenant"]
+  [data-zone-compte][data-session="muette"]
+  .etat-revenant {
+  display: inline;
+}
+html[data-compte="revenant"]
+  [data-zone-compte][data-session="muette"]
+  .etat-nouveau {
+  display: none;
+}
+html[data-compte="connecte"] [data-zone-compte][data-session="muette"] {
+  visibility: hidden;
+}
+
+/* ==================================================================
+   nº 357 — LA GARDE DES RANGÉES DE L'ACCUEIL PRÉRENDU
+   ==================================================================
+   La page nue sert le repli de 24 cartes (nº 226) — un multiple de
+   2, 3, 4 et 6 colonnes. Seul le palier de CINQ colonnes (96 à
+   104 rem) laisserait quatre cartes orphelines : on les masque, la
+   mosaïque montre vingt cartes en quatre rangées pleines. Dès que
+   l'adresse porte une requête, le jumeau dynamique reprend la taille
+   exacte au cookie et cette garde ne s'applique plus. */
+@media (min-width: 96rem) and (max-width: 103.9999rem) {
+  [data-mosaique-nue] [data-grille-tatoueurs] > *:nth-child(n + 21) {
+    display: none;
+  }
+}

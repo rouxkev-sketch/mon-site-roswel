@@ -25,7 +25,6 @@
 
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
-import { cookies, headers } from "next/headers";
 import {
   COULEURS_SOMBRE,
   MARQUE_YOKOFOLIO,
@@ -40,10 +39,6 @@ import { JournalDeBord } from "@/components/JournalDeBord";
 import { GardeSaisie } from "@/components/GardeSaisie";
 import { RetourGaranti } from "@/components/RetourGaranti";
 import { scriptAvantPeinture } from "@/lib/script-avant-peinture";
-import {
-  COOKIE_NU_TOTAL,
-  scriptNuTotalPourLaPage,
-} from "@/lib/variantes-essai";
 import { chargerStylesAjoutes } from "@/lib/styles-ajoutes";
 import { SondeClavier } from "@/components/SondeClavier";
 import { SondeNavigation } from "@/components/SondeNavigation";
@@ -58,8 +53,6 @@ import { SondeRemontee } from "@/components/SondeRemontee";
 import { SondeHistorique } from "@/components/SondeHistorique";
 import { SondeClic } from "@/components/SondeClic";
 import { COMPTES_YOKOFOLIO } from "@/config/tatouage";
-import { COOKIE_DEJA_CONNECTE } from "@/lib/deja-connecte";
-import { utilisateurDepuisCookies } from "@/lib/session-cookie";
 
 /**
  * L'ICÔNE D'ONGLET — le CŒUR SEUL (public/yokofolio-icone.png).
@@ -141,26 +134,34 @@ export default async function MiseEnPageTatouage({
   // l'état connecté (nom du compte dans la barre) — c'est la moitié
   // « premier chargement » de la correction du clignotement, l'autre
   // moitié (navigations) vivant dans src/lib/use-utilisateur.ts.
-  const magasin = await cookies();
-  const utilisateur = utilisateurDepuisCookies(magasin.getAll());
+  /*  ██ nº 357 — CETTE MISE EN PAGE NE LIT PLUS LA REQUÊTE ██
+      Le verdict de la nº 356 (trois jours d'épreuves sur le téléphone
+      du propriétaire) : le RENDU DYNAMIQUE est la cause des éjections
+      de retour sur Chrome iPhone. Or une seule lecture de cookies ou
+      d'en-têtes ICI rendait TOUTES les pages du groupe dynamiques.
+      Ce qui a déménagé, et où :
+       · LA SESSION — plus lue au serveur : la barre s'amortit par le
+         script d'avant peinture + la garde CSS (`data-compte`,
+         globals.css) — aucun état faux peint, promesse nº 203 tenue
+         autrement (voir EnTeteTatouage et FournisseurSession) ;
+       · `sec-fetch-dest` (sonde du retour) — plus relevable sans
+         en-têtes : la sonde reçoit la mention, composant inchangé ;
+       · LE NU TOTAL (nº 354) — sa force serveur (retrait des
+         composants au rendu) est retirée avec ce prérendu ; sa marque
+         cliente reste (script d'avant peinture → data-variante), les
+         portes des mécanismes continuent de couper. Le banc a rendu
+         son verdict ; s'il refaut un jour une épreuve serveur, elle
+         sera refaite ciblée. */
+  const utilisateur = null;
   // LE DRAPEAU « DÉJÀ CONNECTÉ SUR CE NAVIGATEUR » (nº 203-§1a) — un
   // cookie, donc lisible ICI : le bouton « Se connecter » de la barre
   // est juste dès le HTML, sans correction après l'hydratation.
-  const dejaConnecte =
-    magasin.get(COOKIE_DEJA_CONNECTE)?.value === "1" || utilisateur !== null;
-  /*  nº 354 — LE NU TOTAL : posé par le proxy quand l'adresse porte
-      `?variante=nu-total`, retiré par tout autre `?variante=`. Quand il
-      est là, cette mise en page ne rend NI le script d'avant peinture,
-      NI le journal de bord (qui enveloppe l'historique pour tout le
-      monde), NI aucune sonde, NI le filet, NI la garde de saisie — le
-      strict équivalent d'un site Next vierge, avec un badge rendu par
-      le serveur pour le prouver sans JavaScript. */
-  const nuTotal = magasin.get(COOKIE_NU_TOTAL)?.value === "1";
+
+
   // ⚠️ POUR LA SONDE DU RETOUR, ET SEULEMENT POUR ELLE : l'en-tête que
   // le TÉLÉPHONE a réellement envoyé. C'est la seule façon de le savoir
   // — un `fetch` depuis la page en enverrait un autre.
-  const entetes = await headers();
-  const secFetchDest = entetes.get("sec-fetch-dest") ?? "(absent)";
+  const secFetchDest = "(page prérendue — en-tête non relevé au serveur)";
   //  LE CATALOGUE DES STYLES, RELU AVANT LE RENDU (passe nº 122).
   //  Les styles nés d'une suggestion acceptée vivent en base ; ils sont
   //  posés ici, dans le registre du fichier de réglages, AVANT que la
@@ -180,7 +181,7 @@ export default async function MiseEnPageTatouage({
         quand la page de recherche est ouverte, cette enveloppe quitte
         le flux (voir globals.css) — la sonde y aurait disparu au
         moment précis où l'on veut la lire. */}
-    {!nuTotal && <SondeClavier />}
+    <SondeClavier />
     {/* LE JOURNAL DE BORD (nº 272-§2) — PERMANENT, lui : le témoin
         qui survit à l'écran noir. Il note côté serveur (fichier
         journal-de-bord.ndjson, en développement — voir la route) les
@@ -188,7 +189,7 @@ export default async function MiseEnPageTatouage({
         fil de l'eau ; et son coupe-circuit arrête les boucles de
         redirection au lieu de laisser le site clignoter jusqu'à
         mourir. Aucun rendu, aucun effet sur le site. */}
-    {!nuTotal && <JournalDeBord />}
+    <JournalDeBord />
     {/* ⚠️ TEMPORAIRE — LA SONDE DE NAVIGATION (`?sonde-nav=1`). Elle
         MESURE chez le propriétaire (retour arrière, barre fixe,
         remontée des champs) et ne corrige rien. Pour la retirer :
@@ -202,20 +203,20 @@ export default async function MiseEnPageTatouage({
         corps du document — donc frère des plaques de verre, jamais
         leur ancêtre (le piège du nº 234).
         HORS de l'enveloppe `data-fond`, comme les sondes. */}
-    {!nuTotal && <VoileDeLaPage />}
-    {!nuTotal && <SondeNavigation />}
+    <VoileDeLaPage />
+    <SondeNavigation />
     {/* ⚠️ TEMPORAIRE — LA SONDE DES FILTRES (`?sonde-filtres=1`). Elle
         mesure le panneau réellement ouvert chez le propriétaire (marges
         gauche, haute à l'encre, basse) et DIT QUEL FICHIER le rend.
         Pour la retirer : cette ligne, son import, et le fichier
         src/components/SondeFiltres.tsx. */}
-    {!nuTotal && <SondeFiltres />}
+    <SondeFiltres />
     {/* ⚠️ TEMPORAIRE — LA SONDE DU VERRE (`?sonde-verre=1`). Elle dit
         pourquoi le flou de la barre est annulé chez le propriétaire :
         elle déroule la chaîne des parents et signale ce qui isole.
         Pour la retirer : cette ligne, son import, et le fichier
         src/components/SondeVerre.tsx. */}
-    {!nuTotal && <SondeVerre />}
+    <SondeVerre />
     {/* ⚠️ TEMPORAIRE — LA SONDE-JOURNAL DE LA BASCULE
         (`?sonde-bascule=1`, nº 173). Elle ENREGISTRE, elle ne corrige
         rien : les clics sur les deux boutons de bascule, les
@@ -228,7 +229,7 @@ export default async function MiseEnPageTatouage({
         src/components/SondeBascule.tsx, le module
         src/lib/journal-bascule.ts et les appels à `noter…`.
         HORS de l'enveloppe `data-fond`, comme les autres sondes. */}
-    {!nuTotal && <SondeBascule />}
+    <SondeBascule />
     {/* ⚠️ TEMPORAIRE — LA SONDE DU CARROUSEL ET DU PORTFOLIO
         (`?sonde-carrousel=1`, nº 218-§1). Deux défauts ont résisté aux
         passes 210, 214, 216 et 217 — le scintillement en fin de
@@ -246,7 +247,7 @@ export default async function MiseEnPageTatouage({
         src/lib/journal-carrousel.ts et les appels qui le nomment
         (CarrouselPortfolio, ZoomPincement, ContenuFiche).
         HORS de l'enveloppe `data-fond`, comme les autres sondes. */}
-    {!nuTotal && <SondeCarrousel />}
+    <SondeCarrousel />
     {/* ⚠️ TEMPORAIRE — LA SONDE DES CARTES (`?sonde-cartes=1`,
         nº 224-§5). Elle relève, à chaque « Voir plus de portfolios » :
         `scrollY` avant / après / après 1 s, le nombre de cartes
@@ -260,7 +261,7 @@ export default async function MiseEnPageTatouage({
         Pour la retirer : cette ligne, son import, le fichier
         src/components/SondeCartes.tsx, le module
         src/lib/journal-cartes.ts et les appels qui le nomment. */}
-    {!nuTotal && <SondeCartes />}
+    <SondeCartes />
     {/* ⚠️ TEMPORAIRE — LA SONDE DE LA REMONTÉE (`?sonde-remontee=1`,
         nº 330-§1). Elle expose au banc les VRAIES fonctions du gel et
         de l'écriture unique « une liste neuve commence en haut », pour
@@ -270,7 +271,7 @@ export default async function MiseEnPageTatouage({
         Pour la retirer : cette ligne, son import, le fichier
         src/components/SondeRemontee.tsx, et sa mention au bandeau des
         chantiers ouverts (src/lib/navigation-session.ts). */}
-    {!nuTotal && <SondeRemontee />}
+    <SondeRemontee />
     {/* ⚠️ TEMPORAIRE — LE JOURNAL DE L'HISTORIQUE (`?sonde-historique=1`,
         nº 331-§4). Il note, dans l'ordre et EN TRAVERSANT LES PAGES,
         chaque entrée posée, remplacée ou reprise, avec son adresse, son
@@ -281,7 +282,7 @@ export default async function MiseEnPageTatouage({
         src/components/SondeHistorique.tsx, le module
         src/lib/journal-historique.ts, et sa mention au bandeau des
         chantiers ouverts (src/lib/navigation-session.ts). */}
-    {!nuTotal && <SondeHistorique />}
+    <SondeHistorique />
     {/* ⚠️ TEMPORAIRE — LA SONDE DU CLIC (`?sonde-clic=1`, nº 335-§3).
         Elle dit QUEL ÉLÉMENT reçoit réellement un toucher, avec toute
         la pile empilée à ce point, le lien trouvé s'il y en a un, et
@@ -290,7 +291,7 @@ export default async function MiseEnPageTatouage({
         Pour la retirer : cette ligne, son import, le fichier
         src/components/SondeClic.tsx, et sa mention au bandeau des
         chantiers ouverts (src/lib/navigation-session.ts). */}
-    {!nuTotal && <SondeClic />}
+    <SondeClic />
     {/* ⚠️ L'ÉCOUTEUR GLOBAL DE REMONTÉE EST SUPPRIMÉ (nº 162-§1). La
         règle de la nº 155-§1 — « TOUS les champs du site remontent » —
         est annulée : la remontée ne sert qu'à dégager de la place SOUS
@@ -302,12 +303,10 @@ export default async function MiseEnPageTatouage({
         mesure le cache de navigation sur le vrai iPhone et ne corrige
         rien. Pour la retirer : cette ligne, son import, et le fichier
         src/components/SondeRetour.tsx. */}
-    {!nuTotal && (
-      <SondeRetour
-        secFetchDest={secFetchDest}
-        enDeveloppement={process.env.NODE_ENV !== "production"}
-      />
-    )}
+    <SondeRetour
+      secFetchDest={secFetchDest}
+      enDeveloppement={process.env.NODE_ENV !== "production"}
+    />
     <div
       // Marqueur du fond sombre — il double la règle CSS de
       // `globals.css`. La vraie garantie est le script plus bas, qui
@@ -327,48 +326,21 @@ export default async function MiseEnPageTatouage({
           de ces quatre points ne peut PAS être traité plus tard —
           c'était la page fantôme d'une seconde et la descente visible
           jusqu'à la bonne position. */}
-      {nuTotal ? (
-        <script
-          dangerouslySetInnerHTML={{ __html: scriptNuTotalPourLaPage() }}
-        />
-      ) : (
-        <script dangerouslySetInnerHTML={{ __html: scriptAvantPeinture() }} />
-      )}
-      {nuTotal && (
-        /* Le badge du protocole : rendu par le SERVEUR, aucun
-           JavaScript — sa présence prouve à l'œil que la page est bien
-           la variante nu-total. */
-        <div
-          style={{
-            position: "fixed",
-            bottom: 8,
-            left: 8,
-            zIndex: 2147483647,
-            padding: "4px 10px",
-            borderRadius: 8,
-            background: "#EE3D6F",
-            color: "#FFFFFF",
-            font: "700 12px system-ui, sans-serif",
-            pointerEvents: "none",
-          }}
-        >
-          NU TOTAL
-        </div>
-      )}
+      <script dangerouslySetInnerHTML={{ __html: scriptAvantPeinture() }} />
       {/* Une fiche ouverte sans historique derrière elle (navigateur
           fermé puis rouvert, lien partagé) reconstruit son étape de
           retour : le balayage depuis le bord ramène à la mosaïque au
           lieu de ne rien faire. N'affiche rien. */}
-      {!nuTotal && <RetourGaranti />}
+      <RetourGaranti />
       {/* Chaque navigation ouvre sa page TOUT EN HAUT (n'affiche rien,
           voir le composant pour la cause du bug qu'il corrige). */}
-      {!nuTotal && <DefilementEnHaut />}
+      <DefilementEnHaut />
       {/* LA GARDE DE SAISIE (passe nº 116) : pendant qu'un formulaire
           est en cours, TOUT lien qui quitterait la page — logo, menu,
           barre fixe, pied de page — ouvre d'abord la fenêtre
           « Modifications non enregistrées ». Inerte partout ailleurs. */}
-      {!nuTotal && <GardeSaisie />}
-      <FournisseurSession utilisateur={utilisateur} dejaConnecte={dejaConnecte}>
+      <GardeSaisie />
+      <FournisseurSession utilisateur={utilisateur} pretServeur={false}>
         {/* LES CŒURS DÉJÀ POSÉS (passe nº 137) — une seule demande par
             page, qui allume d'un coup toute la mosaïque. Il n'affiche
             rien ; sans session, il ne demande même pas. */}

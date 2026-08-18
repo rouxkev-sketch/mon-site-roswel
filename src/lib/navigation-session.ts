@@ -327,6 +327,17 @@
  *    geste RÉPARE toutes les étapes du document, sauf activation
  *    CONSOMMÉE — d'où `sans-balise`, la seule API de la chaîne du
  *    toucher (sendBeacon).
+ *  · nº 357 — ÉTAPE 1 DU CHANTIER DES PAGES PRÉPARÉES D'AVANCE :
+ *    L'ACCUEIL NU EST PRÉRENDU (verdict nº 356 : le rendu dynamique
+ *    est la cause signée des éjections). La mise en page du groupe et
+ *    la racine ne lisent PLUS la requête ; le jumeau dynamique
+ *    accueil-recherche est servi par RÉÉCRITURE du proxy dès que « / »
+ *    porte une requête (l'adresse du navigateur reste « / ») ; le
+ *    catalogue lit Supabase en ANONYME (lib/supabase/server) ; la
+ *    barre s'amortit par `data-compte` posé avant peinture + garde CSS
+ *    (promesse nº 203 tenue sans rendu dynamique) ; la page nue sert
+ *    le repli de 24 cartes avec garde CSS au palier 5 colonnes. Les
+ *    fiches et vitrines restent dynamiques — étapes suivantes.
  *  · IL RESTE : la moitié du C-6 sans objet — voir le point 5.
  *
  * ------------------------------------------------------------------

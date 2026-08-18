@@ -7,8 +7,6 @@ import { variablesCssCouleurs } from "@/lib/theme";
 import { EnregistrementServiceWorker } from "@/components/EnregistrementServiceWorker";
 import { DefinitionsIcones } from "@/components/Icones";
 import { MemoireNavigation } from "@/components/MemoireNavigation";
-import { cookies } from "next/headers";
-import { COOKIE_NU_TOTAL } from "@/lib/variantes-essai";
 import "./globals.css";
 
 // Police du site (moderne et très lisible sur mobile)
@@ -82,17 +80,15 @@ export const viewport: Viewport = {
  * est descendu dans src/app/(artisans)/layout.tsx, où il ne peut plus
  * atteindre que les pages de ce groupe.
  */
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  //  nº 354 — LE NU TOTAL (lib/variantes-essai) : quand son cookie est
-  //  posé, la racine ne rend NI la mémoire de navigation NI
-  //  l'enregistreur du service worker — un site Next vierge n'a ni
-  //  l'un ni l'autre. Sans cookie : rien ne change.
-  const nuTotal =
-    (await cookies()).get(COOKIE_NU_TOTAL)?.value === "1";
+  //  nº 357 — PLUS AUCUNE LECTURE DE REQUÊTE ICI : une seule ligne de
+  //  cookies dans la racine rendait TOUT le site dynamique — la cause
+  //  signée des éjections (verdict nº 356). Le nu total (nº 354) se
+  //  décide désormais côté client, dans les deux composants ci-dessous.
   return (
     // `suppressHydrationWarning` : le détecteur d'appareil de yokofolio
     // (src/app/(tatouage)/layout.tsx) pose `data-appareil` sur <html>
@@ -141,9 +137,9 @@ export default async function RootLayout({
             n'impose plus rien à personne. */}
         {children}
         {/* Journal de navigation (bouton retour de la fiche) */}
-        {!nuTotal && <MemoireNavigation />}
+        <MemoireNavigation />
         {/* Active le mode "application installable" (PWA) */}
-        {!nuTotal && <EnregistrementServiceWorker />}
+        <EnregistrementServiceWorker />
       </body>
     </html>
   );

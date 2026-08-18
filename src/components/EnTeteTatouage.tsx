@@ -130,7 +130,7 @@ export function EnTeteTatouage({
   rangee?: () => React.ReactNode;
 }) {
   const router = useRouter();
-  const { utilisateur, nom } = useUtilisateur();
+  const { utilisateur, nom, pret } = useUtilisateur();
   const connecte = utilisateur !== null;
 
   /** Vrai si un compte s'est DÉJÀ connecté sur ce navigateur : le
@@ -844,6 +844,17 @@ export function EnTeteTatouage({
         )}
 
         <nav
+          /*  §nº 357 — L'AMORTI DU COMPTE, l'autre moitié de la
+              promesse nº 203. L'accueil étant prérendu, le serveur ne
+              connaît plus la session : pendant l'hydratation la zone
+              est « muette », et c'est le CSS (globals.css) qui décide
+              d'après `data-compte`, posé AVANT la première peinture
+              par le script : un visiteur CONNECTÉ ne voit jamais le
+              badge « Rejoindre » — sa zone reste invisible un souffle,
+              puis « Mon espace » ; un revenant lit « Se connecter »
+              dès le premier pixel. Aucun état faux peint, jamais. */
+          data-zone-compte=""
+          data-session={pret ? "prete" : "muette"}
           aria-label="Langue et compte"
           //  gap-3 (nº 141-§7) : le cœur — ou le globe — respirait mal
           //  contre « Mon espace ».
@@ -1025,9 +1036,20 @@ export function EnTeteTatouage({
               >
                 <IconeUtilisateur taille={24} classe="shrink-0" />
                 <span className="grid text-center">
-                  <span className="col-start-1 row-start-1">
-                    {libelleDeconnecte}
-                  </span>
+                  {pret ? (
+                    <span className="col-start-1 row-start-1">
+                      {libelleDeconnecte}
+                    </span>
+                  ) : (
+                    <>
+                      <span className="col-start-1 row-start-1 etat-revenant">
+                        Se connecter
+                      </span>
+                      <span className="col-start-1 row-start-1 etat-nouveau">
+                        {TEXTES_TATOUAGE.lienInscription}
+                      </span>
+                    </>
+                  )}
                   <span aria-hidden="true" className="col-start-1 row-start-1 invisible">
                     Se connecter
                   </span>
