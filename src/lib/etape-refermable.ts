@@ -257,8 +257,33 @@ export function useEtapeQuiSeReferme(
           if (window.location.pathname + window.location.search === adresse) {
             return;
           }
-          //  §4 ci-dessus — l'adresse écrite pendant l'ouverture survit.
-          window.history.replaceState(window.history.state, "", adresse);
+          /*  §1 (nº 349) — LA RÉÉCRITURE ATTEND QUE LA TRAVERSÉE SOIT
+              RÉELLEMENT FINIE. Elle s'exécutait ICI MÊME, dans le
+              gestionnaire du `popstate` : une réécriture de l'entrée
+              pendant que le navigateur règle encore sa transition de
+              retour — exactement la fenêtre que le propriétaire a
+              désignée à la nº 349, et la seule réécriture DE CE SITE
+              qui s'y trouvait. Deux images puis un tour de boucle :
+              la transition est peinte et rendue avant qu'on touche à
+              l'entrée. La borne nº 332-§1 est intacte — aucune entrée
+              ajoutée ni retirée, la même adresse est reposée, on
+              revérifie seulement qu'une navigation n'est pas passée
+              entre-temps. */
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() =>
+              window.setTimeout(() => {
+                if (
+                  window.location.pathname + window.location.search ===
+                  adresse
+                ) {
+                  return;
+                }
+                //  §4 ci-dessus — l'adresse écrite pendant l'ouverture
+                //  survit.
+                window.history.replaceState(window.history.state, "", adresse);
+              }, 0)
+            )
+          );
         };
         window.addEventListener("popstate", remettre);
         window.history.back();

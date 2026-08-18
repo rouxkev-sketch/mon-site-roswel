@@ -257,6 +257,19 @@
  *    comptent comme « du site » à la visite suivante — la règle « une
  *    fois par VIE », re-relevé à chaque document de type navigate, est
  *    la correction désignée si le propriétaire la commande).
+ *  · nº 349 — LE PLANCHER PASSE « UNE FOIS PAR VIE » (§2, commandé :
+ *    une arrivée `navigate` reprend le relevé, les restes d'une visite
+ *    morte ne comptent plus ; `reload` et `back_forward` gardent le
+ *    leur — lib/bas-de-la-pile et le bloc du script). LA RÉÉCRITURE DE
+ *    LA CONSOMMATION D'ÉTAPE ATTEND LA FIN DE LA TRAVERSÉE (§1,
+ *    etape-refermable : elle s'exécutait DANS le gestionnaire du
+ *    popstate — la seule réécriture du site dans la fenêtre de
+ *    transition). ET LE JOURNAL NE PREND PLUS UNE RECOPIE POUR UNE
+ *    SIGNATURE : la « REMPLACÉE · RetourGaranti » à 8 ms du popstate
+ *    était LE ROUTEUR recopiant l'état marqué de l'étape (mesure
+ *    nº 333 : « +16 ms replaceState → / (le routeur de Next) ») ; pour
+ *    une REMPLACÉE, une marque ne désigne l'appelant que si elle est
+ *    NEUVE (`quiRemplace`, journal-historique).
  *  · IL RESTE : la moitié du C-6 sans objet — voir le point 5.
  *
  * ------------------------------------------------------------------

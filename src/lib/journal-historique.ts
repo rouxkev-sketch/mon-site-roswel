@@ -498,6 +498,18 @@ export function armerLeJournalDHistorique(): () => void {
  * plus haut — c'est ce module qui fabrique les deux, il n'y a pas de
  * seconde copie de la règle à tenir d'accord.
  *
+ * §1 (nº 349) — UNE MARQUE PORTÉE N'EST PAS UNE SIGNATURE. La leçon
+ * coûteuse de la nº 349 : la « REMPLACÉE · RetourGaranti » du relevé
+ * (8 ms après un popstate) n'était PAS une écriture du filet — le
+ * filet n'appelle jamais `replaceState`. C'était le routeur de Next
+ * RECOPIANT l'état de l'étape où le retour venait de se poser, marque
+ * comprise ; l'étiquette accusait le propriétaire de la marque au lieu
+ * de l'auteur de l'appel. Pour une REMPLACÉE, une marque ne désigne
+ * donc l'appelant que si elle est NEUVE (absente de l'état d'avant) ;
+ * une recopie est rendue au routeur, nommée comme telle
+ * (`quiRemplace`). Les POSÉE gardent la lecture par propriétaire :
+ * une étape posée appartient à qui la marque.
+ *
  * ⚠️ IL N'EST INCLUS QUE SI LA SONDE DE L'HISTORIQUE EST ARMÉE — le
  * script vérifie la marque avant de l'exécuter.
  *
@@ -528,8 +540,17 @@ if(e.fenetreFiche)return "fenêtre de fiche (PileFiches · GrilleTatoueurs · Pa
 if(e.retourReconstruit)return "RetourGaranti";
 if(e.__PRIVATE_NEXTJS_INTERNALS_TREE!==undefined||e.__NA)return "routeur Next";
 return "appel sans marque (avant peinture)"};
+var quiRemplace=function(e,avant){e=e||{};avant=avant||{};
+var neuve=function(k){return e[k]!==undefined&&avant[k]===undefined};
+if(neuve("etapeRefermable"))return "surface refermable (lib/etape-refermable)";
+if(neuve("fenetreCarrousel"))return "fenêtre de carrousel (FicheTatoueur)";
+if(neuve("fenetreFiche"))return "fenêtre de fiche (PileFiches · GrilleTatoueurs · PageFavoris)";
+if(neuve("retourReconstruit"))return "RetourGaranti";
+if(e.__PRIVATE_NEXTJS_INTERNALS_TREE!==undefined||e.__NA)
+return "routeur Next"+(e.retourReconstruit?" (recopie d'une étape marquée)":"");
+return "appel sans marque (avant peinture)"};
 history.pushState=function(){var v=pousser.apply(history,arguments);noter("POSÉE",qui(arguments[0]));return v};
-history.replaceState=function(){var v=remplacer.apply(history,arguments);noter("REMPLACÉE",qui(arguments[0]));return v};
+history.replaceState=function(){var avant=history.state;var v=remplacer.apply(history,arguments);noter("REMPLACÉE",quiRemplace(arguments[0],avant));return v};
 history.back=function(){noter("REPRISE (history.back)","avant peinture");return reculer()};
 addEventListener("popstate",function(){noter("RETOUR / AVANT (popstate)","navigateur")},{passive:true});
 addEventListener("pagehide",function(){noter("DÉPART DU SITE (pagehide)","navigateur")},{passive:true});

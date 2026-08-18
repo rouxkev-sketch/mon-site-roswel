@@ -98,7 +98,32 @@ export type BasDeLaPile = {
       relevé en ligne dit toujours « secours », le bloc du script ne
       tourne pas là-bas, et la cause est dans la page SERVIE. */
   origine: string;
+  /** §2 (nº 349) — LA NAISSANCE DU DOCUMENT qui a pris la mesure
+      (`performance.timeOrigin`, arrondi). C'est elle qui distingue
+      « déjà relevé pour CE document » d'un relevé hérité d'une vie
+      morte. Absente des écritures d'avant la nº 349 — traitée alors
+      comme une autre vie, ce qui est la vérité. */
+  ne?: number;
 };
+
+/** La naissance de CE document — la même valeur que le script d'avant
+    peinture calcule de son côté, arrondie pareil. */
+const NAISSANCE =
+  typeof performance === "undefined" ? 0 : Math.round(performance.timeOrigin || 0);
+
+/** Comment ce document est-il arrivé ? `navigate` = une VIE NEUVE du
+    site dans cet onglet ; `reload` et `back_forward` = la même vie qui
+    continue. */
+function typeDArrivee(): string {
+  try {
+    const entree = performance.getEntriesByType("navigation")[0] as
+      | PerformanceNavigationTiming
+      | undefined;
+    return entree?.type ?? "navigate";
+  } catch {
+    return "navigate";
+  }
+}
 
 /**
  * ██ LA RÈGLE DU RÉFÉRENT, ÉCRITE UNE FOIS ET SANS AMBIGUÏTÉ ██
@@ -159,7 +184,46 @@ const RELEVE_AU_CHARGEMENT: BasDeLaPile | null =
         profondeur: window.history.length,
         etranger: referentEtranger(),
         origine: "secours (chargement du module)",
+        ne: NAISSANCE,
       };
+
+/**
+ * ██ §2 (nº 349) — LE PLANCHER SE RELÈVE « UNE FOIS PAR VIE » ██
+ * ------------------------------------------------------------------
+ * LE DÉFAUT CORRIGÉ, mesuré par le propriétaire (relevé nº 348,
+ * visite 4) : le relevé était pris UNE FOIS PAR ONGLET. Or chaque
+ * éjection laisse les entrées du site ORPHELINES dans l'onglet ; la
+ * visite suivante empile par-dessus (piles d'arrivée 2, 2, 3, 4…), et
+ * le filet comparait la pile neuve au plancher d'une vie MORTE : il
+ * renonçait en croyant « une page du site derrière », alors que
+ * personne ne peut redescendre proprement dans un cadavre de visite.
+ *
+ * LA RÈGLE : une arrivée de type `navigate` est une VIE NEUVE — le
+ * plancher redevient la pile de CETTE arrivée, et le filet se réarme
+ * au-dessus des restes morts. `reload` et `back_forward` sont la même
+ * vie qui continue : le plancher tient. LA BORNE RESTE ENTIÈRE : le
+ * référent est réévalué au même instant — arrivé d'Instagram, le
+ * filet se tait, comme toujours.
+ *
+ * Le script d'avant peinture applique la même règle, plus tôt
+ * (`releveDuBasPourLeScript`) ; ce bloc-ci est son secours, au
+ * chargement du module — avant tout effet, donc avant toute entrée
+ * posée par nous. La naissance (`ne`) empêche d'écraser deux fois
+ * dans la même vie.
+ */
+if (typeof window !== "undefined" && RELEVE_AU_CHARGEMENT) {
+  try {
+    const brut = JSON.parse(
+      sessionStorage.getItem(CLE_BAS) ?? "null"
+    ) as Partial<BasDeLaPile> | null;
+    const memeVie = Boolean(brut && brut.ne === NAISSANCE);
+    if (!brut || (typeDArrivee() === "navigate" && !memeVie)) {
+      sessionStorage.setItem(CLE_BAS, JSON.stringify(RELEVE_AU_CHARGEMENT));
+    }
+  } catch {
+    // stockage refusé : la mesure en mémoire de module servira seule
+  }
+}
 
 export function lireLeBasDeLaPile(): BasDeLaPile | null {
   if (typeof window === "undefined") return null;
@@ -175,6 +239,7 @@ export function lireLeBasDeLaPile(): BasDeLaPile | null {
           //  écriture d'une passe d'avant en est dépourvue : on le dit,
           //  plutôt que de le déguiser en l'une des deux vraies.
           origine: lu.origine ?? "(écriture d'avant la nº 347)",
+          ne: typeof lu.ne === "number" ? lu.ne : undefined,
         };
       }
     }
@@ -361,10 +426,19 @@ export function releveDuBasPourLeScript(): string {
   //  ligne du propriétaire dit toujours « secours », ce bloc-ci ne
   //  tourne pas là-bas — et la cause est dans la page servie, pas
   //  dans la règle.
+  //  §2 (nº 349) — « UNE FOIS PAR VIE », plus « une fois par onglet » :
+  //  une arrivée `navigate` reprend le plancher (les entrées restées
+  //  d'une visite morte ne comptent plus comme « du site ») ; `reload`
+  //  et `back_forward` gardent le relevé de leur vie. Même règle que
+  //  le secours du module, mêmes champs, même arrondi de naissance.
   return `(function(){
-if(sessionStorage.getItem(${cle})!==null)return;
+var ne=Math.round(performance.timeOrigin||0);
+var t="navigate";
+try{t=(performance.getEntriesByType("navigation")[0]||{}).type||"navigate"}catch(x){}
+var brut=null;try{brut=JSON.parse(sessionStorage.getItem(${cle})||"null")}catch(x){}
+if(brut&&(t!=="navigate"||brut.ne===ne))return;
 var e=false;
 try{e=!!document.referrer&&new URL(document.referrer).origin!==location.origin}catch(x){}
-sessionStorage.setItem(${cle},JSON.stringify({profondeur:history.length,etranger:e,origine:"avant peinture"}));
+sessionStorage.setItem(${cle},JSON.stringify({profondeur:history.length,etranger:e,origine:"avant peinture",ne:ne}));
 })()`;
 }
