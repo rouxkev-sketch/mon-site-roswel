@@ -1,23 +1,42 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { notFound, permanentRedirect } from "next/navigation";
-import { libelleStyle, TEXTES_TATOUAGE } from "@/config/tatouage";
+import { cache } from "react";
+import { libelleStyle, renduConnu, TEXTES_TATOUAGE } from "@/config/tatouage";
 import {
-  estEnLigne,
   ficheExistanteNonPubliee,
+  lireFicheProprietaire,
+  lireTatoueur,
+  natureCherchee,
   slugActuelDepuisAncien,
+  styleConnu,
 } from "@/lib/tatoueurs";
-import { creerClientSupabaseAnonyme } from "@/lib/supabase/server";
 import { PageMessageSombre } from "@/components/PageMessageSombre";
 import { ficheLue } from "@/lib/fiche-lue";
+import { suitCeTatoueur } from "@/lib/favoris-serveur";
+import { utilisateurDepuisCookies } from "@/lib/session-cookie";
 import { adresseDuSite } from "@/lib/site";
 import { adresseStructuree } from "@/lib/adresse";
 import { EnTeteTatouage } from "@/components/EnTeteTatouage";
-import { FicheSelonLAdresse } from "@/components/FicheSelonLAdresse";
-import { PontApercuFiche } from "@/components/PontApercuFiche";
+import { FicheTatoueur } from "@/components/FicheTatoueur";
 import { JsonLd } from "@/components/JsonLd";
 import { RetourFenetreFiche } from "@/components/RetourFenetreFiche";
 import { CompteurConsultation } from "@/components/CompteurConsultation";
 import { SondeCadre } from "@/components/SondeCadre";
+
+/*  ██ nº 359 — LE JUMEAU COMPLET DE LA FICHE ██
+    PERSONNE NE TAPE CETTE ADRESSE. Deux chemins y mènent :
+     · le PROXY y réécrit les adresses de fiche À REQUÊTE pour les
+       ROBOTS D'APERÇU et d'indexation (WhatsApp, Facebook, Google…) :
+       eux seuls ont besoin des métadonnées taillées par tags
+       (nº 281-§2) rendues PAR LE SERVEUR — l'adresse qu'ils voient
+       reste /tatoueur/<slug>?… ;
+     · le PONT DU PROPRIÉTAIRE (fiche pas encore publiée) y envoie son
+       aperçu : ce jumeau lit la session, la page publique ne le peut
+       plus.
+    La page publique (../page.tsx) est PRÉPARÉE D'AVANCE depuis la
+    nº 359 — c'est elle que les visiteurs traversent. */
+export const dynamic = "force-dynamic";
 
 /**
  * LA FICHE D'UN TATOUEUR — une page par tatoueur
@@ -33,36 +52,87 @@ import { SondeCadre } from "@/components/SondeCadre";
 // corps de page ET le texte de l'image de partage la demandent tous
 // les trois : ils appellent tous la même instance (lib/fiche-lue).
 const charger = ficheLue;
+/** La même prudence pour la lecture RÉSERVÉE AU PROPRIÉTAIRE (fiche
+    pas encore publiée, ou fiche d'essai d'un administrateur). */
+const chargerProprietaire = cache(lireFicheProprietaire);
 
 /**
- * nº 359 — LA FICHE PUBLIQUE, ET ELLE SEULE. Cette page est PRÉPARÉE
- * D'AVANCE : elle ne peut plus lire la session, donc plus servir
- * l'aperçu du propriétaire (fiche pas encore publiée) — c'est le
- * JUMEAU COMPLET (complet/page.tsx) qui s'en charge, et le PONT
- * ci-dessous qui y mène.
+ * LA FICHE TELLE QUE CETTE REQUÊTE PEUT LA VOIR — une seule règle,
+ * partagée par les métadonnées et par la page.
+ * `privee` : elle n'est visible QUE de son propriétaire (fiche en
+ * attente, ou fiche d'essai d'administrateur). Elle s'affiche pour
+ * lui, et ne doit JAMAIS entrer dans un index.
  */
-async function fichePublique(slug: string) {
+async function ficheVisible(slug: string): Promise<{
+  tatoueur: Awaited<ReturnType<typeof lireTatoueur>>["tatoueur"];
+  demonstration: boolean;
+  privee: boolean;
+}> {
   const { tatoueur, demonstration } = await charger(slug);
-  return { tatoueur, demonstration, privee: false };
+  if (tatoueur) return { tatoueur, demonstration, privee: false };
+  const session = utilisateurDepuisCookies((await cookies()).getAll());
+  if (!session?.id) return { tatoueur: null, demonstration: false, privee: false };
+  const duProprietaire = await chargerProprietaire(slug, session.id);
+  return {
+    tatoueur: duProprietaire.tatoueur,
+    demonstration: false,
+    privee: duProprietaire.tatoueur !== null,
+  };
 }
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const { tatoueur, demonstration, privee } = await fichePublique(slug);
+  const { tatoueur, demonstration, privee } = await ficheVisible(slug);
   if (!tatoueur) {
     return { title: "Tatoueur introuvable", robots: { index: false, follow: false } };
   }
 
-  /*  §2 (nº 281) — L'APERÇU PAR TAGS A DÉMÉNAGÉ AU JUMEAU COMPLET
-      (nº 359) : il exige la lecture de la requête, que cette page
-      préparée d'avance ne fait plus. Le proxy sert le jumeau aux
-      robots d'aperçu — WhatsApp et Facebook reçoivent donc toujours
-      l'image du carrousel désigné, à l'adresse publique inchangée. */
-  const imageDuCarrousel = null;
+  /**
+   * §2 (nº 281) — L'APERÇU SUIT LE CARROUSEL PARTAGÉ.
+   * ------------------------------------------------------------------
+   * Le lien partagé porte les trois tags depuis la nº 280-§3 ; l'image
+   * que fabriquent WhatsApp et Facebook, elle, venait d'un fichier que
+   * Next appelle SANS les paramètres d'adresse — elle montrait donc la
+   * vitrine de la fiche pendant que le lien menait ailleurs.
+   * On annonce donc, quand (et seulement quand) l'adresse désigne un
+   * carrousel, la route `/tatoueur/<slug>/partage`, qui rend LA MÊME
+   * composition avec la première photo de CE carrousel. Sans tag :
+   * rien n'est annoncé ici, et l'aperçu par défaut
+   * (`opengraph-image.tsx`) s'applique comme avant.
+   */
+  const criteres = await searchParams;
+  const seul = (valeur: string | string[] | undefined) =>
+    Array.isArray(valeur) ? (valeur[0] ?? "") : (valeur ?? "");
+  const styleCarrousel = styleConnu(seul(criteres.style));
+  const natureCarrousel = natureCherchee(seul(criteres.nature));
+  const renduCarrousel = renduConnu(seul(criteres.rendu));
+  const tagsPartage = new URLSearchParams();
+  if (styleCarrousel) tagsPartage.set("style", styleCarrousel);
+  if (natureCarrousel) tagsPartage.set("nature", natureCarrousel);
+  if (renduCarrousel) tagsPartage.set("rendu", renduCarrousel);
+  const imageDuCarrousel = tagsPartage.toString()
+    ? {
+        images: [
+          {
+            url:
+              `${adresseDuSite()}/tatoueur/${tatoueur.slug}/partage` +
+              `?${tagsPartage.toString()}`,
+            width: 1200,
+            height: 630,
+            alt:
+              `Portfolio de ${tatoueur.nom} à ${tatoueur.ville_nom}` +
+              (styleCarrousel ? ` — ${libelleStyle(styleCarrousel)}` : "") +
+              " · yokofolio",
+          },
+        ],
+      }
+    : null;
 
   const styles = tatoueur.styles.map(libelleStyle).join(", ");
   return {
@@ -89,57 +159,40 @@ export async function generateMetadata({
   };
 }
 
-/**
- * ██ nº 359 — LA FICHE EST PRÉPARÉE D'AVANCE (étape 2, tranche 1) ██
- * ==================================================================
- * Le témoin mixte de la nº 358 a signé la cause des éjections de
- * retour sur Chrome iPhone : des fiches DYNAMIQUES traversées en
- * douceur suffisent, même depuis un accueil prérendu. Cette page est
- * donc prérendue et régénérée (5 min, comme l'accueil — mêmes
- * raisons), et TOUT ce qui variait par la requête a déménagé :
- *  · les tags de carte (?style=…&photo=…) et la consigne d'arrivée
- *    (?entree=lien) sont lus PAR LE NAVIGATEUR (FicheSelonLAdresse ;
- *    la règle nº 6 est tenue au pixel par la garde d'avant peinture —
- *    voir globals.css et le script) ;
- *  · l'aperçu du propriétaire et les métadonnées par tags vivent au
- *    JUMEAU COMPLET (complet/page.tsx) ;
- *  · le bouton « Suivre » naît neutre et se remplit à la charge des
- *    favoris — le modèle des cœurs (nº 137), déjà accepté partout.
- */
-export const revalidate = 300;
-
-/** Les fiches EN LIGNE, préparées à la compilation — la même règle et
-    les mêmes colonnes que le plan du site (sitemap.ts). Base
-    injoignable à la compilation : liste vide, chaque fiche se prépare
-    à sa première visite puis reste prête (régénération à la demande). */
-export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
-  try {
-    const supabase = creerClientSupabaseAnonyme();
-    const COLONNES = "slug, cree_le, decide_le, supprime_le, publie";
-    const lire = (colonnes: string) =>
-      supabase
-        .from("tatoueurs")
-        .select(colonnes)
-        .eq("publie", true)
-        .is("supprime_le", null);
-    let { data, error } = await lire(`${COLONNES}, hors_ligne, statut`);
-    if (error) ({ data, error } = await lire(COLONNES));
-    if (error) return [];
-    return ((data ?? []) as unknown as Array<Record<string, unknown>>)
-      .filter((ligne) => typeof ligne.slug === "string" && estEnLigne(ligne))
-      .map((ligne) => ({ slug: ligne.slug as string }));
-  } catch {
-    return [];
-  }
-}
-
 export default async function PageFicheTatoueur({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{
+    style?: string;
+    rendu?: string;
+    /** LA CATÉGORIE (nº 210-§1) — avec le style et le rendu, elle
+        désigne UN ENSEMBLE : la fiche s'ouvre alors sur cette série
+        seule, comme au toucher d'une vignette du portfolio. C'est ce
+        que « Ma sélection » écrit dans ses liens. */
+    nature?: string;
+    /** §4 (nº 302) — L'IDENTIFIANT D'UNE PHOTO PRÉCISE. Le carrousel
+        s'ouvre SUR ELLE — « 8/19 », pas « 1/19 ». C'est ce qu'écrit la
+        galerie de « Ma sélection » quand on touche sa huitième
+        vignette. Introuvable : la fiche s'ouvre comme avant. */
+    photo?: string;
+    studio?: string;
+    /** §4 (nº 329) — COMMENT ON EST ARRIVÉ. `entree=lien` : par un lien
+        interne à un autre portfolio — la fiche s'ouvre alors SANS photo
+        en haut (point 6 de la règle, lib/navigation-session).
+        ⚠️ LU ICI, PAR LE SERVEUR, ET NON DANS LE NAVIGATEUR : mesuré à
+        la nº 329, `window.location.search` est EN RETARD D'UN RENDU au
+        premier clic sur un lien interne — la consigne n'était pas vue et
+        la photo montait quand même. L'adresse de l'étape, elle, est
+        connue du serveur dès le premier pixel, et Next la rejoue
+        telle quelle au retour comme au pas en avant. */
+    entree?: string;
+  }>;
 }) {
   const { slug } = await params;
-  const { tatoueur, demonstration } = await fichePublique(slug);
+  const { style, rendu, nature, photo, studio, entree } = await searchParams;
+  const { tatoueur, demonstration } = await ficheVisible(slug);
 
   // LE PROPRIÉTAIRE VOIT SA FICHE même pas encore publiée, et ses
   // fiches d'essai s'il est administrateur (les visiteurs, eux, ne
@@ -157,10 +210,9 @@ export default async function PageFicheTatoueur({
   if (!tatoueur) {
     const actuel = await slugActuelDepuisAncien(slug);
     if (actuel && actuel !== slug) {
-      //  nº 359 — la cible est NUE : cette page ne lit plus la requête.
-      //  Les tags d'un très vieux lien se perdent au passage ; l'adresse
-      //  moderne, elle, arrive telle quelle (aucune redirection).
-      permanentRedirect(`/tatoueur/${actuel}`);
+      permanentRedirect(
+        style ? `/tatoueur/${actuel}?style=${style}` : `/tatoueur/${actuel}`
+      );
     }
   }
   //  ⚠️ UNE FICHE QUI EXISTE MAIS N'EST PAS EN LIGNE N'EST PAS UN 404
@@ -170,22 +222,20 @@ export default async function PageFicheTatoueur({
   //  (La question est posée par la clé de service et ne rend qu'un oui
   //  ou un non : rien de la fiche ne sort de là.)
   if (!tatoueur && (await ficheExistanteNonPubliee(slug))) {
-    return (
-      <>
-        <PageMessageSombre titre="Cette fiche n'est pas encore en ligne." pleinEcran={false} />
-        {/* nº 359 — LE PONT DU PROPRIÉTAIRE : cette page préparée
-            d'avance ne connaît pas la session ; si un compte est
-            connecté sur ce navigateur, le pont l'emmène au jumeau
-            complet, qui sait montrer sa fiche en attente. Pour un
-            visiteur sans compte : rien, le message reste. */}
-        <PontApercuFiche slug={slug} />
-      </>
-    );
+    return <PageMessageSombre titre="Cette fiche n'est pas encore en ligne." pleinEcran={false} />;
   }
   if (!tatoueur) notFound();
 
   const stylePrincipal = tatoueur.styles[0];
 
+  //  SUIT-ON DÉJÀ CE TATOUEUR ? (nº 208-§1) — la question est posée
+  //  ICI, côté serveur, qui a le cookie de session : le bouton naît
+  //  donc dans le bon état, et ne se corrige plus sous les yeux. Une
+  //  visite sans compte ne coûte aucune requête.
+  const session = utilisateurDepuisCookies((await cookies()).getAll());
+  const suiviAuDepart = session?.id
+    ? await suitCeTatoueur(session.id, tatoueur.id)
+    : false;
 
   return (
     <>
@@ -210,11 +260,21 @@ export default async function PageFicheTatoueur({
            Elle vit sur CETTE page — celle d'une fiche de partage —,
            là où le propriétaire voit la bande à gauche du cadre. */}
       <SondeCadre />
-      {/*  nº 359 — les tags de l'adresse sont lus PAR LE NAVIGATEUR :
-           même adresse, mêmes règles (5 et 6), seul le lecteur change.
-           Le bouton « Suivre » naît neutre — la charge des favoris le
-           remplit, comme les cœurs (nº 137). */}
-      <FicheSelonLAdresse tatoueur={tatoueur} demonstration={demonstration} />
+      <FicheTatoueur
+        studioCourant={studio ?? null}
+        tatoueur={tatoueur}
+        demonstration={demonstration}
+        styleInitial={styleConnu(style)}
+        renduInitial={renduConnu(rendu)}
+        natureInitiale={natureCherchee(nature)}
+        //  §4 (nº 302) — la photo demandée, telle quelle : c'est
+        //  `ouvertureGalerie` qui décide si elle existe.
+        photoInitiale={typeof photo === "string" ? photo : ""}
+        //  §4 (nº 329) — la consigne d'arrivée, telle quelle : c'est la
+        //  fiche qui sait ce que « lien » veut dire.
+        entreeInitiale={typeof entree === "string" ? entree : ""}
+        suiviAuDepart={suiviAuDepart}
+      />
       {/* ⚠️ CE BLOC EST INVISIBLE, ET C'EST LE PLUS IMPORTANT DE LA
           PAGE POUR LE RÉFÉRENCEMENT LOCAL (passe nº 114). Il ne
           reprend PAS l'adresse affichée : celle-ci est volontairement

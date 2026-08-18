@@ -787,7 +787,12 @@ export function FicheTatoueur({
              Portfolio. Le carrousel n'est même pas monté — aucune image
              n'est demandée. */}
         {!sansPhoto && (
-        <div className="flex flex-col gap-3 min-w-0">
+        <div
+          //  nº 359 — le nom de la colonne, pour la garde d'avant
+          //  peinture de la fiche préparée d'avance (globals.css).
+          data-photo-de-tete=""
+          className="flex flex-col gap-3 min-w-0"
+        >
           {/* SMARTPHONE : RIEN au-dessus de la photo — ni flèche
               retour (le site n'en a nulle part), ni partage : la page
               commence par l'image. */}

@@ -46,6 +46,22 @@ export async function proxy(request: NextRequest) {
       rendu serveur des recherches (nº 203) est préservé. */
   const versLeJumeau =
     request.nextUrl.pathname === "/" && request.nextUrl.search !== "";
+  /*  nº 359 — LES FICHES AUSSI SONT PRÉPARÉES D'AVANCE, et leurs tags
+      (?style=…) sont lus par le navigateur. Les ROBOTS D'APERÇU et
+      d'indexation, eux, ne lisent pas le navigateur : pour eux seuls,
+      une adresse de fiche À REQUÊTE est servie par le JUMEAU COMPLET
+      (rendu dynamique, métadonnées par tags de la nº 281-§2) —
+      l'adresse publique ne change pas. Les visiteurs, eux, reçoivent
+      la page préparée d'avance. */
+  const agent = request.headers.get("user-agent") ?? "";
+  const robotDApercu =
+    /facebookexternalhit|WhatsApp|Twitterbot|Slackbot|LinkedInBot|TelegramBot|Discordbot|Googlebot|bingbot|Applebot|DuckDuckBot/i.test(
+      agent
+    );
+  const ficheTaguee =
+    /^\/tatoueur\/[^/]+$/.test(request.nextUrl.pathname) &&
+    request.nextUrl.search !== "";
+  const versLeJumeauDeFiche = robotDApercu && ficheTaguee;
   const fabriquerReponse = () =>
     versLeJumeau
       ? NextResponse.rewrite(
@@ -55,7 +71,15 @@ export async function proxy(request: NextRequest) {
           ),
           { request }
         )
-      : NextResponse.next({ request });
+      : versLeJumeauDeFiche
+        ? NextResponse.rewrite(
+            new URL(
+              request.nextUrl.pathname + "/complet" + request.nextUrl.search,
+              request.url
+            ),
+            { request }
+          )
+        : NextResponse.next({ request });
   let reponse = fabriquerReponse();
 
   const { url, clePublishable } = infosConnexionSupabase();

@@ -9,7 +9,7 @@ import {
   renduCherche,
   slugDuGenreMode,
   SLUGS_FILTRES,
-  styleDuCatalogue,
+  styleConnu,
 } from "@/config/tatouage";
 import { distanceKm } from "@/lib/geo";
 import {
@@ -24,8 +24,8 @@ import {
 } from "@/lib/modes-exercice";
 import type { LieuTrouve } from "@/lib/geocodage/types";
 import {
+  natureCherchee,
   natureConnue,
-  SLUGS_NATURES,
   type PhotoTatoueur,
 } from "@/lib/photos-tatoueur";
 import {
@@ -591,20 +591,13 @@ async function lirePopularite(): Promise<Map<string, number>> {
  * sa coupe, et nulle part ailleurs.
  */
 
-/** Le style demandé est-il connu ? Sinon on l'ignore plutôt que de vider la page. */
-export function styleConnu(slug: string | undefined): string {
-  return slug && styleDuCatalogue(slug) ? slug : "";
-}
-
-/** LA NATURE CHERCHÉE — « tatouage », « flash », ou la chaîne vide.
-    ⚠️ DIFFÉRENT DE `natureConnue` (lib/photos-tatoueur), qui rend
-    « tatouage » par défaut : ici, l'absence est une VRAIE réponse —
-    « je n'ai rien demandé » — et ne doit surtout pas devenir un
-    filtre. Une adresse bricolée à la main ne vide donc pas la page,
-    elle cherche simplement tout. */
-export function natureCherchee(slug: string | undefined): string {
-  return slug && SLUGS_NATURES.has(slug) ? slug : "";
-}
+/*  `styleConnu` et `natureCherchee` vivaient ici (leur histoire est
+    restée sur leurs nouvelles définitions). Déménagées chez leurs
+    données (nº 359) pour que FicheSelonLAdresse — composant client —
+    puisse les lire sans entraîner ce module, qui parle à la base.
+    Importées en tête (ce fichier s'en sert), ré-exportées ici : aucun
+    appelant serveur n'a bougé. */
+export { natureCherchee, styleConnu };
 
 /** Ne garde que les slugs de filtre CONNUS (adresse ou API malmenée). */
 export function filtresConnus(slugs: string[] | undefined): string[] {

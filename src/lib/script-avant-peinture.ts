@@ -149,7 +149,7 @@ r.dataset.appareil=matchMedia("(pointer: coarse)").matches?"mobile":"web";
    avec un vieux), la page servie est PÉRIMÉE — un cache la retient —
    et aucun des blocs récents n'y a jamais été. À INCRÉMENTER à chaque
    passe qui modifie ce script. */
-r.dataset.versionScript="357";
+r.dataset.versionScript="359";
 r.style.backgroundColor=${fond};
 /* nº 357 — LE COMPTE, DIT AVANT LA PREMIÈRE PEINTURE. L'accueil est
    prérendu : le serveur ne connaît plus la session, et c'est CE
@@ -158,6 +158,15 @@ r.style.backgroundColor=${fond};
    nouveau. Aucun état faux peint, jamais : la promesse nº 203, tenue
    sans rendu dynamique. Et la marque du nu total (nº 354) passe elle
    aussi au client — même lecture, même endroit. */
+/* nº 359 — LA GARDE DE LA FICHE PRÉPARÉE D'AVANCE. Ses tags sont lus
+   par le navigateur APRÈS l'hydratation ; pour que l'œil ne voie
+   jamais un état que l'adresse contredit, la colonne de photo est
+   tenue masquée (CSS, globals.css) quand l'adresse porte des tags —
+   et c'est FicheSelonLAdresse qui lève la garde, une fois la fiche
+   resemée. « entree=lien » (règle 6) retire la photo tout court. */
+try{if(location.pathname.indexOf("/tatoueur/")===0){var qf=location.search;
+if(qf&&/[?&](style|rendu|nature|photo|studio|entree)=/.test(qf)){r.dataset.ficheParametree="1";
+if(/[?&]entree=lien(&|$)/.test(qf))r.dataset.entreeLien="1";}}}catch(e){}
 try{var ck=document.cookie;
 r.dataset.compte=/(^|; )sb-[^=]*-auth-token/.test(ck)?"connecte":(ck.indexOf("yf_deja_connecte=1")>=0?"revenant":"nouveau");
 if(ck.indexOf("yf_nu_total=1")>=0)r.dataset.variante="nu-total";

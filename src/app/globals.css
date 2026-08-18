@@ -1228,3 +1228,22 @@ html[data-compte="connecte"] [data-zone-compte][data-session="muette"] {
     display: none;
   }
 }
+
+/* ==================================================================
+   nº 359 — LA GARDE DE LA FICHE PRÉPARÉE D'AVANCE
+   ==================================================================
+   La page de fiche est prérendue : ses tags (?style=…, ?photo=…,
+   ?entree=lien) sont lus par le navigateur après l'hydratation. Pour
+   que l'œil ne voie JAMAIS un état que l'adresse contredit :
+    · adresse à tags → la colonne de photo attend, INVISIBLE mais en
+      place (aucun saut de page), la fiche resemée la remplace ;
+    · `entree=lien` (règle 6) → la photo est RETIRÉE du flux, comme le
+      rendu final la retirera — un lien interne n'affiche jamais la
+      photo en haut, pas même un instant.
+   C'est FicheSelonLAdresse qui lève la garde, après le remontage. */
+html[data-fiche-parametree] [data-photo-de-tete] {
+  visibility: hidden;
+}
+html[data-entree-lien] [data-photo-de-tete] {
+  display: none;
+}

@@ -35,6 +35,12 @@
  *  6. Un lien interne vers un autre portfolio n'affiche pas la photo
  *     en haut. Une arrivée depuis une carte ou un lien de partage
  *     l'affiche.
+ *     ⚠️ DEPUIS LA nº 359, LE LECTEUR A CHANGÉ, PAS LA RÈGLE : la
+ *     fiche est préparée d'avance, le serveur ne lit plus la requête.
+ *     La consigne est lue AVANT LA PREMIÈRE PEINTURE par le script
+ *     (garde CSS : la photo d'un `entree=lien` n'existe jamais à
+ *     l'écran, pas même un instant), puis par le navigateur
+ *     (FicheSelonLAdresse), qui resème la fiche par sa clé.
  *  7. Une fermeture ne consomme une entrée que si elle l'a créée.
  *  8. Le pas en avant rouvre ce que le retour vient de fermer, dans le
  *     même état.
@@ -338,6 +344,18 @@
  *    (promesse nº 203 tenue sans rendu dynamique) ; la page nue sert
  *    le repli de 24 cartes avec garde CSS au palier 5 colonnes. Les
  *    fiches et vitrines restent dynamiques — étapes suivantes.
+ *  · nº 359 — ÉTAPE 2, TRANCHE 1 : LES FICHES SONT PRÉPARÉES D'AVANCE
+ *    (le témoin mixte de la nº 358 a signé : des fiches dynamiques
+ *    traversées en douceur suffisent à faire éjecter). La page
+ *    publique ne lit plus ni cookies ni requête — tags et consigne
+ *    lus par le navigateur (FicheSelonLAdresse + garde d'avant
+ *    peinture) ; l'aperçu du propriétaire et les métadonnées par tags
+ *    vivent au JUMEAU COMPLET (tatoueur/[slug]/complet), servi par le
+ *    proxy aux robots d'aperçu ; le bouton « Suivre » naît neutre et
+ *    se remplit à la charge des favoris (le modèle des cœurs nº 137).
+ *    RESTENT DYNAMIQUES, par nature : le carrousel partagé (règle 11),
+ *    l'espace connecté, « Ma sélection », et le jumeau de recherche de
+ *    l'accueil — périmètre des tranches suivantes.
  *  · IL RESTE : la moitié du C-6 sans objet — voir le point 5.
  *
  * ------------------------------------------------------------------

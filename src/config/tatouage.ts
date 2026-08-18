@@ -324,6 +324,15 @@ export function styleDuCatalogue(slug: string | null | undefined): boolean {
   return Boolean(slug) && catalogueStyles().some((s) => s.slug === slug);
 }
 
+/** Le style demandé est-il connu ? Sinon on l'ignore plutôt que de vider
+    la page. Vivait dans lib/tatoueurs ; déménagée ici (nº 359) parce que
+    la fiche préparée d'avance lit ses tags DANS LE NAVIGATEUR
+    (FicheSelonLAdresse) — et lib/tatoueurs, qui parle à la base, ne peut
+    pas y entrer. lib/tatoueurs la ré-exporte : aucun appelant n'a bougé. */
+export function styleConnu(slug: string | undefined): string {
+  return slug && styleDuCatalogue(slug) ? slug : "";
+}
+
 /* ================================================================
  * L'ORDRE ALPHABÉTIQUE — CALCULÉ, JAMAIS ÉCRIT
  * ================================================================ */

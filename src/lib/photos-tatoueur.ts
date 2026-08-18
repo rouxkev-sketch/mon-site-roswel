@@ -180,6 +180,18 @@ export function natureConnue(slug: string | null | undefined): string {
   return slug && SLUGS_NATURES.has(slug) ? slug : NATURE_PAR_DEFAUT;
 }
 
+/** LA NATURE CHERCHÉE — « tatouage », « flash », ou la chaîne vide.
+    ⚠️ DIFFÉRENT DE `natureConnue` juste au-dessus, qui rend
+    « tatouage » par défaut : ici, l'absence est une VRAIE réponse —
+    « je n'ai rien demandé » — et ne doit surtout pas devenir un
+    filtre. Une adresse bricolée à la main ne vide donc pas la page,
+    elle cherche simplement tout. Vivait dans lib/tatoueurs ; déménagée
+    ici (nº 359) pour la même raison que `styleConnu` (config/tatouage) :
+    la fiche préparée d'avance lit ses tags dans le navigateur. */
+export function natureCherchee(slug: string | undefined): string {
+  return slug && SLUGS_NATURES.has(slug) ? slug : "";
+}
+
 export function libelleNature(slug: string | null | undefined): string {
   return NATURES_PHOTO.find((n) => n.slug === slug)?.label ?? (slug ?? "");
 }
