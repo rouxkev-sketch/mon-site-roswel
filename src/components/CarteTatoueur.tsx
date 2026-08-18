@@ -523,6 +523,12 @@ function CarteTatoueurNue({
             href={adresseFiche}
             aria-label={`Voir la fiche de ${tatoueur.nom}`}
             onClick={auClic}
+            //  nº 361 — PAS DE SAUT DU ROUTEUR : sa remise à zéro part
+            //  AVANT que le navigateur n'ait pris la photo d'adieu de
+            //  la mosaïque (l'écran noir du glissement retour). C'est
+            //  DefilementEnHaut qui remonte, à l'adresse commise —
+            //  après la photo, toujours avant la peinture.
+            scroll={false}
             className="absolute inset-0 z-[1] outline-none
                        focus-visible:outline-2 focus-visible:-outline-offset-2
                        focus-visible:outline-primaire"
@@ -614,6 +620,10 @@ function CarteTatoueurNue({
             // Dix-huit cartes, dix-huit demandes inutiles. Le web, lui,
             // garde son préchargement — sa fenêtre s'en sert vraiment.
             onClick={auClic}
+            //  nº 361 — PAS DE SAUT DU ROUTEUR (voir le lien de la
+            //  photothèque ci-dessus) : DefilementEnHaut remonte à
+            //  l'adresse commise, après la photo d'adieu du navigateur.
+            scroll={false}
             className="outline-none after:absolute after:inset-0 after:content-['']
                        focus-visible:underline"
           >

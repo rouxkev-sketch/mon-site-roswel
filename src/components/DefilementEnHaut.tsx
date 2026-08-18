@@ -7,6 +7,74 @@ import {
   restaurationDemandeePour,
 } from "@/lib/navigation-session";
 import { rendreLaPlace, positionDejaPosee } from "@/lib/restitution-position";
+import { souscrireAdresse } from "@/lib/adresse-courante";
+
+/**
+ * ██ nº 361 — LA REMONTÉE ATTEND QUE L'ADRESSE SOIT COMMISE ██
+ * ==================================================================
+ * L'ÉCRAN NOIR DU GLISSEMENT RETOUR, ET SA MÉCANIQUE. Pendant le
+ * geste, le navigateur ne montre pas la page : il montre la PHOTO
+ * D'ADIEU qu'il a prise de la page qu'on quittait. WebKit (le moteur
+ * des trois navigateurs de l'iPhone) prend cette photo AU MOMENT OÙ
+ * L'ENTRÉE D'HISTORIQUE CHANGE — donc au `pushState` du routeur. Or
+ * chez nous (mesure nº 336), le routeur rend la nouvelle page AVANT
+ * de commettre l'adresse : la remontée instantanée de ce composant
+ * partait donc AVANT la photo. Sur un accueil DÉFILÉ, ce saut à zéro
+ * pointe l'écran vers une zone que le moteur n'a jamais rasterisée
+ * (il ne garde de tuiles qu'autour de la position courante) : l'écran
+ * montre alors le FOND — notre anthracite — et c'est LUI que la photo
+ * fige. Le geste rejouait ensuite cette photo noire. Sans défilement,
+ * le saut ne bouge rien : la photo est bonne — exactement la variable
+ * du propriétaire, sur les trois navigateurs.
+ *
+ * LA CORRECTION : quand l'adresse n'est pas encore commise, la
+ * remontée ATTEND l'écriture d'adresse (`souscrireAdresse` — l'
+ * événement part DANS le `pushState`, donc dans la même tâche, avant
+ * toute peinture : l'exigence nº 143-§5 « aucune image ailleurs qu'en
+ * haut » reste tenue). La photo est alors prise sur l'accueil ENCORE
+ * INTACT, à sa vraie position, et le saut part juste après elle.
+ * ⚠️ LA POSITION NE COMPTE QUE SI L'ADRESSE EST LA BONNE : un autre
+ * événement (un nettoyage d'adresse, un retour pendant le battement)
+ * ne remonte rien — et le filet d'une image (rAF) retire l'écoute si
+ * l'adresse ne vient jamais.
+ * ⚠️ ADRESSE DÉJÀ COMMISE (rechargement, routeur en avance) : la
+ * remontée part tout de suite, exactement comme avant cette passe.
+ */
+function remonterALAdresseCommise(chemin: string): (() => void) | undefined {
+  const remonter = () =>
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  if (window.location.pathname === chemin) {
+    remonter();
+    return undefined;
+  }
+  let retirer: () => void = () => {};
+  let fait = false;
+  const desAConfirmation = () => {
+    if (fait || window.location.pathname !== chemin) return;
+    fait = true;
+    retirer();
+    remonter();
+  };
+  const desabonner = souscrireAdresse(desAConfirmation);
+  //  LE FILET : deux images au plus, puis tout est retiré — aucune
+  //  écoute ne survit à son battement. (Adresse jamais commise —
+  //  navigation abandonnée : on ne remonte rien, la garde d'adresse
+  //  protège la page où l'on est resté.)
+  let secondeImage = 0;
+  const premiereImage = requestAnimationFrame(() => {
+    desAConfirmation();
+    secondeImage = requestAnimationFrame(() => {
+      desAConfirmation();
+      retirer();
+    });
+  });
+  retirer = () => {
+    desabonner();
+    cancelAnimationFrame(premiereImage);
+    cancelAnimationFrame(secondeImage);
+  };
+  return retirer;
+}
 
 /**
  * CHAQUE NAVIGATION OUVRE LA PAGE TOUT EN HAUT
@@ -141,8 +209,8 @@ export function DefilementEnHaut() {
         }
         return;
       }
-      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-      return;
+      //  nº 361 — après la photo d'adieu du navigateur (voir l'en-tête).
+      return remonterALAdresseCommise(chemin);
     }
 
     const versLAdresseDuRetour =
@@ -168,7 +236,8 @@ export function DefilementEnHaut() {
     // La fenêtre de fiche est ouverte (ou vient de changer l'adresse) :
     // la grille reste où elle est.
     if (document.documentElement.dataset.fenetreFiche) return;
-    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    //  nº 361 — après la photo d'adieu du navigateur (voir l'en-tête).
+    return remonterALAdresseCommise(chemin);
   }, [chemin]);
 
   return null;

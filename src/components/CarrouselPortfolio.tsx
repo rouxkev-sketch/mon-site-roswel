@@ -1118,6 +1118,12 @@ export function CarrouselPortfolio({
                     href={lien.href}
                     onClick={lien.onClick}
                     aria-label={lien.label}
+                    //  nº 361 — PAS DE SAUT DU ROUTEUR : sa remise à
+                    //  zéro part AVANT la photo d'adieu du navigateur
+                    //  (l'écran noir du glissement retour). C'est
+                    //  DefilementEnHaut qui remonte, à l'adresse
+                    //  commise — après la photo, avant la peinture.
+                    scroll={false}
                     tabIndex={rang === indice ? 0 : -1}
                     className="absolute inset-0 outline-none
                                focus-visible:outline-2 focus-visible:-outline-offset-2
