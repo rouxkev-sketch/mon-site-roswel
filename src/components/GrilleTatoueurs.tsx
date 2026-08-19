@@ -649,6 +649,14 @@ export function GrilleTatoueurs({
             natureRecherche={tatoueur.carrousel?.nature ?? natureRecherche}
             prioritaire={rang < CARTES_PRIORITAIRES}
             phototheque={phototheque}
+            /*  §1-2 (nº 365) — CETTE MOSAÏQUE EST CELLE DU MOTEUR :
+                accueil, jumeau de recherche, vitrines, résultats
+                passent tous par elle. Le fanion n'y reste QUE sur les
+                cartes pleine largeur du doigt ; « Ma sélection »
+                (PageFavoris, qui monte la même carte) garde le sien —
+                elle ne passe pas par ici, et son réglage par défaut ne
+                bouge pas. */
+            fanion="pleine-largeur-seulement"
             surApproche={precharger}
             surOuverture={ouvrir}
           />

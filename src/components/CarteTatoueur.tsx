@@ -10,6 +10,7 @@ import {
   PORTRAIT_ROND,
 } from "@/config/tatouage";
 import { useDispositionGrille } from "@/components/AffichageMosaique";
+import { useAppareilMobile } from "@/lib/appareil";
 import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
 import { legendeDeCarte, photoChoisie, photoPourStyle } from "@/lib/photo-tatoueur";
 import {
@@ -76,13 +77,33 @@ function CarteTatoueurNue({
   photoRecherche = "",
   prioritaire = false,
   phototheque = false,
+  fanion = "toujours",
   surOuverture,
   surApproche,
 }: {
   /** LA VUE PHOTOTHÈQUE (nº 140) : la photo seule — ni badge, ni
-      portrait, ni nom, ni adresse. SEUL LE CŒUR des favoris reste,
-      dans l'angle. Le clic mène à la fiche, comme toujours. */
+      portrait, ni nom, ni adresse. SEUL LE FANION des favoris reste,
+      dans l'angle (et seulement là où il est encore posé — voir
+      `fanion` ci-dessous). Le clic mène à la fiche, comme toujours. */
   phototheque?: boolean;
+  /**
+   * §1-2 (nº 365) — LE FANION EST-IL POSÉ SUR CETTE CARTE ?
+   * ------------------------------------------------------------------
+   * LE MÊME COMPOSANT sert deux surfaces, et le propriétaire les
+   * sépare : la MOSAÏQUE DU MOTEUR (accueil, jumeau de recherche,
+   * vitrines, résultats — toutes rendues par `GrilleTatoueurs`) n'a
+   * plus de fanion ; « MA SÉLECTION » (PageFavoris) garde le sien,
+   * exactement comme aujourd'hui.
+   * ⚠️ UN RÉGLAGE EXPLICITE, JAMAIS UNE DEVINETTE D'ADRESSE : c'est
+   * l'appelant qui sait sur quelle surface il est, et lui seul.
+   *  · `toujours` (par défaut) — le fanion est là, comme avant ;
+   *  · `pleine-largeur-seulement` — il ne reste QUE sur les cartes
+   *    pleine largeur DU DOIGT (§2). Le web n'en a donc plus nulle
+   *    part dans le moteur : la pleine largeur y est atteignable par
+   *    l'adresse (`?disposition=une`), et c'est l'APPAREIL qui tranche,
+   *    pas la largeur (règle du site depuis la nº 60, lib/appareil).
+   */
+  fanion?: "toujours" | "pleine-largeur-seulement";
   tatoueur: Tatoueur;
   /** Le style demandé dans le moteur, s'il y en a un. */
   styleRecherche?: string;
@@ -135,6 +156,13 @@ function CarteTatoueurNue({
       vient de L'ADRESSE (nº 203-§1b), servie par le serveur. */
   const disposition = useDispositionGrille();
   const uneColonne = disposition === "une";
+  /*  §2 (nº 365) — L'APPAREIL, ET NON LA LARGEUR (règle du site depuis
+      la nº 60 : `data-appareil`, posé avant peinture d'après
+      `pointer: coarse`). La pleine largeur est un affichage DU DOIGT ;
+      la même adresse ouverte sur un ordinateur ne doit pas y ramener
+      le fanion. Le crochet répond « web » au premier rendu et corrige
+      une image plus tard — aucune discordance d'hydratation. */
+  const surMobile = useAppareilMobile();
 
   /**
    * §5 (nº 211) — LES PHOTOS QUI DÉFILENT DANS LA CARTE
@@ -166,6 +194,23 @@ function CarteTatoueurNue({
   const carrouselDansLaCarte = uneColonne && photosDeLaCarte.length > 1;
   /** La photo regardée DANS la carte — le carrousel la possède. */
   const [indicePhoto, setIndicePhoto] = useState(0);
+  /**
+   * §3 (nº 365) — LA PHOTO QUE LE FANION ENREGISTRE : celle qu'on
+   * REGARDE. Sans défilé (deux colonnes, ou une seule photo), c'est la
+   * photo choisie de la carte — comme avant. Avec défilé, c'est celle
+   * du rang courant ; le repli garde la photo choisie si le rang sort
+   * de la liste (recomposition, filtre qui change).
+   */
+  const photoDuFanion =
+    photosDeLaCarte[indicePhoto]?.cle ?? photoEnregistrable?.id ?? "";
+  /**
+   * §1-2 (nº 365) — LE FANION EST-IL POSÉ ICI ?
+   * « Ma sélection » : toujours (réglage par défaut). La mosaïque du
+   * moteur : seulement sur les cartes PLEINE LARGEUR DU DOIGT. Sur le
+   * web, jamais — l'appareil tranche, pas la largeur de la fenêtre.
+   */
+  const fanionPose =
+    fanion === "toujours" || (surMobile && uneColonne);
 
   /** Le lieu de la fiche, tel que les deux écritures de la ligne le
       lisent (voir plus bas, nº 212-§6). */
@@ -475,16 +520,16 @@ function CarteTatoueurNue({
              nº 213 l'avait remis dans l'angle bas gauche par erreur de
              lecture — le propriétaire demandait sa SUPPRESSION. Rien ne
              se pose plus sur la photo hormis le cœur. */}
-        {photoEnregistrable && (
+        {photoEnregistrable && fanionPose && (
           /*  ⚠️ LE COIN SE MESURE AU GLYPHE, PAS À LA BOÎTE
               (nº 212-§5). Le bouton porte sa zone tactile tout autour
-              du cœur : posé à 8 px du bord, c'est le CŒUR qui se
+              du fanion : posé à 8 px du bord, c'est le GLYPHE qui se
               retrouve à 16 px — il flottait donc trop haut dans son
               angle. Le décalage compense la moitié de cet ourlet
               (`-mb-1 -mr-1` en deux colonnes) : le glyphe retrouve le
               même air que les autres coins de l'interface, alors que
               la cible, elle, ne perd pas un pixel. En pleine largeur,
-              le cœur est celui de la fiche et garde sa place. */
+              le fanion est celui de la fiche et garde sa place. */
           <div
             className={
               uneColonne
@@ -493,7 +538,22 @@ function CarteTatoueurNue({
             }
           >
             <BoutonCoeurPhoto
-              photoId={photoEnregistrable.id}
+              /*  §3 (nº 365) — LE FANION SUIT LA PHOTO REGARDÉE, et
+                  c'était tout le bug : il recevait `photoEnregistrable`,
+                  la photo CHOISIE de la carte (la première de
+                  l'ensemble), figée pour toute la vie de la carte —
+                  quelle que soit la photo sous les yeux, c'est elle qui
+                  partait en favori. L'index du défilé était pourtant
+                  tenu à jour ici même (`indicePhoto`, que le carrousel
+                  remonte par `surChangement`) : personne ne le LISAIT.
+                  ⚠️ `key` : chaque photo a son PROPRE bouton — son état
+                  plein ou vide est celui de SA photo, et le rebond de
+                  pose ne se rejoue jamais sur la voisine. En faisant
+                  défiler, le fanion se remplit et se vide photo par
+                  photo, sans qu'aucune requête ne parte (l'état vient
+                  du magasin partagé, rempli après coup — règle 137). */
+              key={photoDuFanion}
+              photoId={photoDuFanion}
               //  ⚠️ LE GABARIT SUIT LA CARTE (nº 211-§3 et §4) : en
               //  pleine largeur au doigt, il prend EXACTEMENT la taille
               //  du cœur de la fiche ; partout ailleurs, le gabarit
