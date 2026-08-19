@@ -282,12 +282,25 @@ function HorairesEnLigne({
   const suite = reste.join(" • ");
 
   return (
-    <div className="mt-4">
+    /*  §3 (nº 389) — LE VOLET SE RAPPROCHE : `mt-4` (16 px) devient
+         `mt-1.5` (6 px). Seize pixels avaient un sens quand le volet
+         suivait un bloc coiffé d'un titre et d'une photo ; sous une
+         simple ligne d'adresse, il flottait. Six pixels, c'est l'écart
+         que la fiche emploie déjà entre une étiquette et sa valeur
+         (`mt-1.5`, AdresseCliquable). Le mécanisme, la flèche, le
+         contenu et les couleurs ne changent pas d'un caractère. */
+    <div className="mt-1.5">
       <button
         type="button"
         onClick={() => setOuvert((etait) => !etait)}
         aria-expanded={ouvert}
-        className="flex items-center gap-1.5 text-left text-[15px] leading-snug"
+        /*  §4 (nº 389) — LA MAIN AU SURVOL. Tailwind v4 ne pose plus
+             `cursor: pointer` sur les boutons — c'est une rupture
+             annoncée de la version : la feuille de base rend au
+             navigateur son curseur par défaut, et une flèche sur un
+             élément cliquable ne dit rien à personne. On la déclare
+             donc, ici, sur le bouton qui déplie les horaires. */
+        className="flex cursor-pointer items-center gap-1.5 text-left text-[15px] leading-snug"
       >
         <span
           suppressHydrationWarning
@@ -449,7 +462,30 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
   //  rôle en gris dessous, ligne entière cliquable, ordre fondateurs ·
   //  résidents · guests, dates de guest en blanc.
   return (
-    <ul className="mt-8 flex flex-col gap-8">
+    <ul
+      /**
+       * ██ §7 (nº 389) — PLUS DE DOUBLE AIR EN TÊTE DE SECTION ██
+       * ==================================================================
+       * MESURÉ, ET C'EST UNE VRAIE INÉGALITÉ ÉCRITE — pas un effet
+       * d'optique comme celle de la nº 385 : la section porte
+       * `mt-10 pt-10` (40 px au-dessus du trait, 40 en dessous), et ce
+       * bloc ajoutait SES 32 px par-dessus. Au-dessus de la photo :
+       * 40 + 32 = 72 px. En dessous du bloc, jusqu'au trait suivant :
+       * 40 px. Soixante-douze contre quarante.
+       * D'OÙ ÇA VIENT : ces 32 px séparaient l'équipe de l'ADRESSE qui
+       * la précédait dans le même bloc. La nº 388 a fait descendre
+       * l'adresse dans les lignes du profil ; l'équipe s'est retrouvée
+       * EN TÊTE, et sa marge n'avait plus rien à séparer.
+       * LE REMÈDE : `first:mt-0`. En tête de section, le bloc n'ajoute
+       * rien et l'air vaut les 40 px du conteneur, des deux côtés.
+       * Derrière une autre adresse, les 32 px reviennent d'eux-mêmes —
+       * ils n'ont jamais été de trop là.
+       * ⚠️ AUCUN CONTENEUR N'EST TOUCHÉ : la correction est sur
+       * l'élément qui portait la marge, comme le propriétaire l'a
+       * demandé depuis la nº 380.
+       */
+      className="mt-8 first:mt-0 flex flex-col gap-8"
+    >
       {membres.map((membre) => {
         /*  ⚠️ LA PASTILLE EST LÀ MÊME SANS PHOTO (nº 224-§1) : un
             rond gris uni, rien dedans. C'est elle qui tient la
@@ -773,11 +809,23 @@ function LienAdresse({
   texte,
   lieu,
   classeTexte,
+  soulignement = SOULIGNEMENT_LIEN,
 }: {
   texte: string;
   /** `null` = rien à chercher : le texte reste du texte. */
   lieu: LieuAffichable | null;
   classeTexte: string;
+  /**
+   * §2 (nº 389) — LE SOULIGNEMENT AU SURVOL, RÉGLABLE.
+   * ------------------------------------------------------------------
+   * Il est la règle du site depuis la nº 271 — « dehors on souligne »
+   * — et rien ne change pour les adresses des AUTRES lieux, qui le
+   * gardent par défaut. Mais la ligne d'adresse du profil (nº 388) est
+   * désormais BLEUE : le bleu dit déjà qu'elle sort du site, et le
+   * propriétaire n'a pas demandé de trait. Elle passe donc une chaîne
+   * vide, et son seul effet de survol est l'éclaircissement du bleu.
+   */
+  soulignement?: string;
 }) {
   const [fenetre, setFenetre] = useState(false);
   if (!lieu || !texte) return <span className={classeTexte}>{texte}</span>;
@@ -807,7 +855,7 @@ function LienAdresse({
         }}
         className="group rounded transition-colors active:bg-white/10"
       >
-        <span className={`${classeTexte} ${SOULIGNEMENT_LIEN}`}>{texte}</span>
+        <span className={`${classeTexte} ${soulignement}`}>{texte}</span>
       </a>
       {fenetre && (
         <FenetreAdresse
@@ -991,6 +1039,9 @@ export function LigneAdresseDuLieu({
             texte={adresse}
             lieu={lieuPrincipal}
             classeTexte={LIEN_QUI_SORT}
+            //  §2 (nº 389) — aucun trait : le bleu dit déjà que la
+            //  destination sort du site, et il s'éclaircit au survol.
+            soulignement=""
           />
         </span>
       </p>
@@ -1095,7 +1146,13 @@ export function BlocAdressesFiche({
            nº 276-§2) ; il ne coûte rien et protège le rythme si une
            marge d'enfant revenait un jour. */}
       {autres.map((studio) => (
-        <div key={studio.id} className="mt-8 flex flex-col">
+        <div
+              key={studio.id}
+              /*  §7 (nº 389) — `first:mt-0` : voir la note de l'équipe,
+                   juste dessous. Une autre adresse en tête de section
+                   ne doit pas ajouter ses 32 px aux 40 du conteneur. */
+              className="mt-8 first:mt-0 flex flex-col"
+            >
           <AdresseCliquable
             etiquette={etiquetteAutres}
             adresse={ligneFiche(lieuDuStudio(studio))}

@@ -41,6 +41,7 @@ import { capsulesPratiques } from "@/lib/pratique-fiche";
 import {
   BOITE_ICONE_LIGNE,
   ECRITURE_LIGNE_FICHE,
+  LIGNE_GRISE,
 } from "@/components/lignes-profil";
 import type { StyleGalerie } from "@/lib/photo-tatoueur";
 import { FenetreSignalement } from "@/components/FenetreSignalement";
@@ -726,10 +727,14 @@ export function ContenuFiche({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
+      /*  §1 (nº 389) — UNE SEULE CLASSE DE COULEUR, ET C'EST LA
+           CORRECTION : `ECRITURE_LIGNE_FICHE` n'en porte plus aucune
+           (voir lignes-profil), le bleu et le gris ne se disputent
+           donc plus l'ordre de la feuille. */
       className={`group flex items-center gap-2.5 ${ECRITURE_LIGNE_FICHE} ${
         sortDuSite
           ? "text-sombre-lien hover:text-sombre-lien-clair"
-          : "hover:text-sombre-texte"
+          : `${LIGNE_GRISE} hover:text-sombre-texte`
       } transition-colors`}
     >
       <span className={`${BOITE_ICONE_LIGNE} text-sombre-texte-doux`}>
@@ -811,7 +816,7 @@ export function ContenuFiche({
     <span
       key="booking"
       data-booking-fiche={tatoueur.booking}
-      className={`flex items-center gap-2.5 ${ECRITURE_LIGNE_FICHE}`}
+      className={`flex items-center gap-2.5 ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE}`}
     >
       {/*  §1 (nº 273) — LE CALENDRIER, hors de tout ternaire d'état :
            une seule écriture couvre les trois états PAR CONSTRUCTION —
@@ -1034,7 +1039,7 @@ export function ContenuFiche({
     <p
       key="pratique"
       data-pratique-fiche=""
-      className={`flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE}`}
+      className={`flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE}`}
     >
       <span className={BOITE_ICONE_LIGNE}>
         <IconeEtoile taille={20} />
@@ -1058,7 +1063,7 @@ export function ContenuFiche({
     <p
       key="styles"
       data-styles-fiche=""
-      className={`flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE}`}
+      className={`flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE}`}
     >
       <span className={BOITE_ICONE_LIGNE}>
         <IconeGoutte taille={20} />
@@ -1464,7 +1469,16 @@ export function ContenuFiche({
             ligneDuSite.length > 0 ||
             ligneDesStyles ||
             ligneDesPratiques) && (
-            <div className="mt-10 flex w-full flex-col items-start gap-y-4">
+            <div
+              /*  §5 (nº 389) — L'ÉCART PARTAGÉ MONTE D'UN CRAN :
+                   `gap-y-4` (16 px) devient `gap-y-5` (20 px). C'est le
+                   SEUL endroit touché — aucune marge n'est posée sur les
+                   lignes elles-mêmes, elles n'en ont toujours aucune. Les
+                   deux rangées en grille gardent leur `gap-y-4` interne :
+                   il sépare deux liens d'une MÊME rangée, pas deux
+                   lignes. */
+              className="mt-10 flex w-full flex-col items-start gap-y-5"
+            >
               {premiereLigne.length > 0 && (
                 <div className="grid w-full grid-cols-2 items-center justify-items-start gap-x-7 gap-y-4">
                   {premiereLigne}
