@@ -44,9 +44,6 @@ import {
 import { NATURE_PAR_DEFAUT, titreDeGalerie } from "@/lib/photos-tatoueur";
 import type { Tatoueur } from "@/lib/tatoueurs";
 import { mecanismeCoupe } from "@/lib/variantes-essai";
-//  §1 (nº 390) — l'état d'une surface recopie celui d'en dessous
-//  (voir lib/etape-refermable).
-import { etatDeSurface } from "@/lib/etape-refermable";
 
 /**
  * LA FICHE COMPLÈTE D'UN TATOUEUR — le mode d'ARRIVÉE DIRECTE
@@ -676,8 +673,7 @@ export function FicheTatoueur({
     const position = positionSousLeGel();
     document.documentElement.setAttribute("data-fenetre-fiche", "1");
     window.history.pushState(
-      //  §1 (nº 390) — l'état recopie celui d'en dessous.
-      etatDeSurface({ fenetreFiche: true, fenetreCarrousel: true }),
+      { fenetreFiche: true, fenetreCarrousel: true },
       "",
       cheminDeLaFenetreCarrousel(tatoueur.slug, styleVoulu, serie, photo)
     );

@@ -34,10 +34,6 @@ import type { Tatoueur } from "@/lib/tatoueurs";
 //  rien.
 import { observateurMort, observateurNe } from "@/lib/journal-cartes";
 import { mecanismeCoupe } from "@/lib/variantes-essai";
-//  §1 (nº 390) — l'état d'une surface recopie celui d'en dessous :
-//  sans cela la marque du filet est effacée et le retour recharge le
-//  document entier (voir lib/etape-refermable).
-import { etatDeSurface } from "@/lib/etape-refermable";
 
 /** UN PIXEL TRANSPARENT — ce qu'une image lointaine porte à la place
     de sa source (nº 224-§4). Une chaîne, aucune requête réseau. */
@@ -394,10 +390,7 @@ export function GrilleTatoueurs({
     if (photoRegardee) parametres.set("photo", photoRegardee);
     const requete = parametres.toString();
     window.history.pushState(
-      //  §1 (nº 390) — l'état RECOPIE celui d'en dessous : sans cela,
-      //  la marque du filet est effacée et le retour recharge le
-      //  document entier (voir lib/etape-refermable).
-      etatDeSurface({ fenetreFiche: true }),
+      { fenetreFiche: true },
       "",
       `/tatoueur/${tatoueur.slug}${requete ? `?${requete}` : ""}`
     );

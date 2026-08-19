@@ -202,39 +202,6 @@ export function RetourGaranti() {
         dire("RENONCE — étape déjà posée");
         return;
       }
-      /**
-       * ██ §2 (nº 390) — LE FILET NE S'ARME JAMAIS AU-DESSUS D'UNE
-       * SURFACE À NOUS ██
-       * ==================================================================
-       * SI L'ÉTAPE COURANTE EST CELLE D'UNE FENÊTRE (`fenetreFiche`),
-       * ALORS IL Y A FORCÉMENT UNE PAGE DU SITE DERRIÈRE : celle depuis
-       * laquelle la fenêtre s'est ouverte. Le filet n'a rien à faire là,
-       * et s'y armer produisait exactement les deux défauts relevés —
-       * une SECONDE entrée à la même adresse, puis un
-       * `location.replace("/")` au retour, c'est-à-dire le rechargement
-       * complet du document.
-       *
-       * ⚠️ POURQUOI LA QUESTION D'EN DESSOUS NE SUFFISAIT PAS. Elle
-       * compare `history.length` à une profondeur relevée AU PREMIER
-       * DOCUMENT DE LA SESSION et rangée en session (lib/bas-de-la-pile).
-       * Après un `location.replace`, la pile n'a pas grandi : la mesure
-       * redevient vraie — c'est écrit et c'est voulu. Mais un
-       * rechargement provoqué par le filet lui-même remet donc le
-       * compteur à zéro, et le tour recommence à l'identique. C'est ce
-       * que montre le journal du propriétaire : la même séquence, une
-       * vingtaine de fois.
-       * Cette garde-ci ne dépend d'aucun compteur : elle lit CE QUI EST
-       * SOUS LES YEUX — l'étape courante appartient à une surface, donc
-       * on ne s'empile pas dessus.
-       *
-       * ⚠️ ELLE NE PEUT QUE FAIRE RENONCER, JAMAIS ARMER : la borne de
-       * la nº 332-§2 (un visiteur venu d'Instagram doit pouvoir y
-       * retourner) ne peut donc pas être franchie par cette passe.
-       */
-      if (etat?.fenetreFiche) {
-        dire("RENONCE — une surface du site occupe l'étape courante");
-        return;
-      }
       //  §1 (nº 345) — LES DEUX MOITIÉS DE LA QUESTION (lib/bas-de-la-pile).
       //  Une page DU SITE derrière : le navigateur fait son travail.
       if (!aucunePageDuSiteDerriere()) {

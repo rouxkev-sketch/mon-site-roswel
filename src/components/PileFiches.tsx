@@ -13,10 +13,6 @@ import { positionSousLeGel } from "@/lib/gel-du-corps";
 import { FenetreFiche } from "@/components/FenetreFiche";
 import { ficheComplete } from "@/lib/fiche-complete";
 import type { Tatoueur } from "@/lib/tatoueurs";
-//  §1 (nº 390) — l'état d'une surface recopie celui d'en dessous :
-//  sans cela la marque du filet est effacée et le retour recharge le
-//  document entier (voir lib/etape-refermable).
-import { etatDeSurface } from "@/lib/etape-refermable";
 
 /**
  * LA PILE DES FICHES SUPERPOSÉES (passe nº 226-§5)
@@ -241,10 +237,7 @@ export function PileFiches({
       //  moment où l'adresse change (même règle que la mosaïque).
       document.documentElement.setAttribute("data-fenetre-fiche", "1");
       window.history.pushState(
-        //  §1 (nº 390) — l'état RECOPIE celui d'en dessous : sans cela,
-        //  la marque du filet est effacée et le retour recharge le
-        //  document entier (voir lib/etape-refermable).
-        etatDeSurface({ fenetreFiche: true }),
+        { fenetreFiche: true },
         "",
         `/tatoueur/${slug}`
       );
