@@ -731,17 +731,22 @@ export function FenetreFiche({
                de tête (nº 376). Le propriétaire a demandé « rien de neuf
                sur mobile » : c'est cette seconde garde qui le tient.
 
-               APPARENCE : 20 px, gras, blanc plein — contre les 13 px du
-               fil d'Ariane en `text-white/70`. Les 20 px ne sont pas une
-               valeur inventée : c'est la taille du NOM de la fiche au
-               doigt (`text-[20px]`, ContenuFiche), l'échelle d'un titre
-               dans ce produit. */}
+               APPARENCE : 16 px (nº 394 — c'était 20 à la nº 393, le
+               propriétaire l'a trouvé trop imposant), gras, blanc plein
+               — contre les 13 px du fil d'Ariane en `text-white/70`.
+               L'écart reste net : +23 % de corps, plus le gras et le
+               blanc plein contre un gris.
+               ⚠️ SEUL LE CORPS CHANGE : même ancrage, même `mt-2`, même
+               couleur, même graisse — et la fenêtre ne bouge pas d'un
+               pixel, pour la raison dite juste au-dessus (ce texte est
+               hors du flux, sa taille n'entre dans aucun calcul de
+               centrage). Il gagne même 4 px de dégagement en bas. */}
           {titreDeLaGalerie && (
             <p
               data-titre-fenetre=""
               className="pointer-events-none absolute top-full left-0 mt-2
                          w-max max-w-full hidden lg:block mobile:hidden
-                         text-[20px] font-bold text-white"
+                         text-[16px] font-bold text-white"
             >
               {titreDeLaGalerie}
             </p>

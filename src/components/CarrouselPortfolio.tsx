@@ -351,6 +351,79 @@ export function CarrouselPortfolio({
     };
   }, [compteurVisible, reveils, indice]);
 
+  /**
+   * ██ §2 (nº 394) — LES FLÈCHES DORMENT, ET SE RÉVEILLENT À LA SOURIS ██
+   * ==================================================================
+   * LE COMPORTEMENT DEMANDÉ, sur une FICHE et à la SOURIS seulement :
+   * au repos les deux flèches sont invisibles ; le moindre mouvement de
+   * souris SUR LA PHOTO les rallume ; trois secondes après le dernier
+   * mouvement, elles s'éteignent. C'est exactement le cycle de la
+   * capsule (nº 198 et nº 367) transposé au geste de la souris — même
+   * délai, même « le compte repart à chaque réveil ».
+   *
+   * ⚠️ SORTIE DE LA PHOTO : ON ÉTEINT TOUT DE SUITE, sans attendre les
+   * trois secondes, et c'est un choix. Une flèche ne sert qu'à être
+   * cliquée : le curseur parti, plus personne ne peut l'atteindre sans
+   * revenir sur la photo — et revenir déclenche un mouvement, donc les
+   * rallume. Attendre laisserait donc trois secondes de flèches
+   * allumées sur une image que personne ne pointe : précisément ce
+   * qu'on veut supprimer. C'est aussi le moins cher — la sortie ANNULE
+   * la minuterie au lieu d'en armer une de plus.
+   *
+   * ⚠️ CE QUE ÇA COÛTE, ET C'EST LA QUESTION DU PROPRIÉTAIRE :
+   *  · AUCUN écouteur de `document`, AUCUN `addEventListener` : ce sont
+   *    deux PROPRIÉTÉS React (`onPointerMove`, `onPointerLeave`) sur
+   *    la racine du carrousel. React n'attache qu'un seul écouteur
+   *    délégué à la racine de l'application, pour tout l'arbre : ce
+   *    dispositif n'en ajoute donc pas un seul de plus, ni par
+   *    carrousel, ni par photo ;
+   *  · ELLES NE SONT MÊME PAS POSÉES quand elles n'ont rien à faire —
+   *    `flechesQuiDorment` est faux sur une carte de mosaïque (nº 369
+   *    garde son survol, intact) et faux avec une seule photo (il n'y a
+   *    alors aucune flèche) : le carrousel reçoit `undefined`, donc
+   *    aucune fonction ;
+   *  · LA MINUTERIE N'EXISTE QUE PENDANT L'ÉVEIL. Au repos il n'y en a
+   *    aucune. Chaque mouvement remplace la précédente (`clearTimeout`
+   *    puis `setTimeout`) : il n'y en a jamais deux ;
+   *  · FERMETURE DE LA FENÊTRE OU CHANGEMENT DE FICHE : le composant
+   *    est démonté, l'effet de nettoyage ci-dessous efface la minuterie
+   *    en cours, et les deux propriétés partent avec l'arbre. Rien ne
+   *    survit, rien ne réveille un carrousel qu'on ne regarde plus.
+   *
+   * ⚠️ ET PAS UN RENDU DE PLUS QU'IL N'EN FAUT : `mousemove` part
+   * soixante fois par seconde, mais `setFlechesEveillees(true)` sur un
+   * état DÉJÀ vrai est un non-événement pour React (il abandonne le
+   * rendu quand la valeur ne change pas). Le réarmement, lui, ne passe
+   * pas par React du tout : c'est une référence, pas un état. Deux
+   * rendus par cycle — l'allumage, l'extinction —, jamais davantage.
+   */
+  const [flechesEveillees, setFlechesEveillees] = useState(false);
+  const minuteurFleches = useRef(0);
+  const flechesQuiDorment = !surCarte && n > 1;
+  /*  ⚠️ UN DOIGT NE RÉVEILLE RIEN, et c'est une garde de COÛT autant
+       que de sens. Au doigt les flèches n'existent pas (`hidden` sans
+       `pointer-fine`) — mais un navigateur tactile émet quand même un
+       `mousemove` de synthèse juste avant chaque appui. Sans ce test,
+       taper la photo armerait une minuterie et provoquerait deux
+       rendus de ce composant, pour des boutons que personne ne peut
+       voir. On lit le TYPE du pointeur au moment de l'événement (jamais
+       au rendu : ce serait un écart d'hydratation) et on écarte le seul
+       cas qui n'a rien à y gagner. La souris et le stylet passent. */
+  const reveillerLesFleches = (evenement: React.PointerEvent) => {
+    if (evenement.pointerType === "touch") return;
+    setFlechesEveillees(true);
+    window.clearTimeout(minuteurFleches.current);
+    minuteurFleches.current = window.setTimeout(
+      () => setFlechesEveillees(false),
+      3000
+    );
+  };
+  const endormirLesFleches = () => {
+    window.clearTimeout(minuteurFleches.current);
+    setFlechesEveillees(false);
+  };
+  useEffect(() => () => window.clearTimeout(minuteurFleches.current), []);
+
   /** LE CADRE QUI DÉFILE, et les colonnes qu'il contient. */
   const cadre = useRef<HTMLDivElement>(null);
   const colonnes = useRef<(HTMLDivElement | null)[]>([]);
@@ -1017,10 +1090,32 @@ export function CarrouselPortfolio({
         //  (`pointer-fine:flex`, comme la fiche), puis elle est rendue
         //  INVISIBLE tant que la carte n'est pas survolée. Au doigt,
         //  rien de tout cela ne s'applique : `hidden` seul, aucune
-        //  flèche, comme avant. Sur une fiche : inchangé (nº 208).
+        //  flèche, comme avant.
+        /*  §2 (nº 394) — SUR UNE FICHE, ELLE S'ÉTEINT AU REPOS.
+             ------------------------------------------------------
+             L'OPACITÉ, ET PAS LA VISIBILITÉ : le propriétaire veut une
+             disparition DOUCE, or `visibility` ne se dégrade pas — elle
+             saute. `opacity` s'anime, et elle ne retire RIEN de la mise
+             en page : la flèche garde sa boîte, sa position, sa taille,
+             rien ne se décale à l'allumage comme à l'extinction.
+             ⚠️ ELLE RESTE CLIQUABLE MÊME ÉTEINTE, et c'est voulu : si
+             le curseur s'est arrêté juste dessus, les trois secondes
+             passent et un clic doit quand même faire défiler. On ne
+             pose donc pas `pointer-events-none` — l'éteindre ne la
+             désarme pas.
+             ⚠️ LA TRANSITION EST DÉPLACÉE DANS CE TERNAIRE, et c'est
+             une nécessité, pas un goût : `transition-property` est UNE
+             déclaration — deux classes de transition sur le même
+             élément se disputeraient l'ordre de la feuille (le piège de
+             la nº 389). Chaque branche écrit donc la sienne, une seule
+             fois. LA CARTE GARDE EXACTEMENT `transition-colors` : son
+             survol de la nº 368-369 n'est pas touché d'un pixel ni
+             d'une milliseconde. */
         surCarte
-          ? "pointer-fine:invisible pointer-fine:group-hover:visible"
-          : ""
+          ? "pointer-fine:invisible pointer-fine:group-hover:visible transition-colors"
+          : `${
+              flechesEveillees ? "opacity-100" : "opacity-0"
+            } transition-[opacity,background-color] duration-200`
       } ${sens === 1 ? "right-2.5" : "left-2.5"}
       top-1/2 -translate-y-1/2 rounded-full
       ${
@@ -1030,7 +1125,7 @@ export function CarrouselPortfolio({
         surCarte ? "w-7 h-7" : "w-9 h-9"
       }
       bg-sombre-fond/55 backdrop-blur items-center justify-center
-      text-sombre-texte hover:bg-sombre-eleve/75 transition-colors`}
+      text-sombre-texte hover:bg-sombre-eleve/75`}
     >
       <svg
         width={surCarte ? "14" : "18"}
@@ -1104,6 +1199,19 @@ export function CarrouselPortfolio({
       //  §1 (nº 247) — CE QUE CE CARROUSEL DÉCLARE MONTRER. Vide : un
       //  style entier, il ne promet aucune catégorie.
       data-serie-nature={natureDeLaSerie || undefined}
+      /*  §2 (nº 394) — LE GESTE QUI RÉVEILLE LES FLÈCHES SE LIT ICI, ET
+           NULLE PART AILLEURS. Cette racine est EXACTEMENT la surface de
+           la photo : c'est elle qui porte le cadre, les colonnes et les
+           flèches (elle est leur `relative`). Un mouvement ailleurs sur
+           la page ne la traverse donc pas — le déclencheur est bien « la
+           souris SUR LA PHOTO », comme demandé, sans qu'aucune
+           géométrie n'ait à être calculée.
+           ⚠️ `undefined` QUAND IL N'Y A RIEN À RÉVEILLER : une carte de
+           mosaïque (son survol de la nº 369 est intact) et un carrousel
+           d'une seule photo (aucune flèche n'existe) ne reçoivent aucune
+           fonction. Voir la note complète du réveil, plus haut. */
+      onPointerMove={flechesQuiDorment ? reveillerLesFleches : undefined}
+      onPointerLeave={flechesQuiDorment ? endormirLesFleches : undefined}
       /*  §1 (nº 294) — LA RACINE NE PEINT PLUS RIEN. C'ÉTAIT ELLE, LE
            LISERÉ : `bg-sombre-carte` (#28282D) est UN CRAN PLUS CLAIR
            que la page, et il occupait toute la boîte du carrousel —
