@@ -12,8 +12,9 @@ import {
 //  ce que le carrousel reçoit. Sans `?sonde-carrousel=1`, ne coûte rien.
 import { noter as noterSonde } from "@/lib/journal-carrousel";
 import {
-  ARRONDI_ETIQUETTE,
-  ECRITURE_TITRE_SECTION,
+  //  §1 (nº 386) — `ARRONDI_ETIQUETTE` et `ECRITURE_TITRE_SECTION`
+  //  sont partis avec la section « Pratique » : plus une seule
+  //  capsule ni un seul titre de section dans ce fichier.
   libelleFiltre,
   libelleStyle,
   PORTRAIT_ROND,
@@ -24,6 +25,7 @@ import {
   IconeCalendrier,
   IconeDuLien,
   IconeEtoile,
+  IconePalette,
 } from "@/components/IconeReseau";
 import { BoutonSuivre } from "@/components/BoutonSuivre";
 import {
@@ -962,6 +964,57 @@ export function ContenuFiche({
    * replient sur SON bord gauche — jamais sous l'icône. Le texte forme
    * un bloc, l'icône reste seule dans sa colonne.
    */
+  /**
+   * ██ §1 (nº 386) — LES PRATIQUES DEVIENNENT UNE LIGNE, SOUS LES
+   * STYLES ██
+   * ==================================================================
+   * CE QUI DISPARAÎT : la section « Pratique » de la nº 315-§2 — son
+   * titre en capitales, son trait de séparation, ses capsules à fond
+   * `sombre-eleve`. La section ENTIÈRE part, donc son trait avec elle :
+   * il n'y a pas de séparateur orphelin à ramasser, et pas de vide non
+   * plus — le bloc était déjà conditionné par la longueur de la liste,
+   * et ce qui le suit (le signalement) porte son propre `mt-10 pt-10`.
+   *
+   * CE QUI PREND SA PLACE : LA LIGNE DES STYLES, à la lettre — mêmes
+   * constantes partagées (`ECRITURE_LIGNE_FICHE`, `BOITE_ICONE_LIGNE`),
+   * mêmes puces, même `items-start` qui replie le texte sur le début
+   * de la première valeur et jamais sous l'icône. Les deux lignes ne
+   * peuvent pas diverger : elles lisent les mêmes classes.
+   *
+   * ⚠️ AUCUN LIEN N'EST CRÉÉ, ET C'EST VÉRIFIÉ : les capsules de
+   * pratique étaient des `<li>` de TEXTE NU — jamais un `<a>`, jamais
+   * un `<Link>`, aucune destination nulle part. Elles restent donc du
+   * texte. (Les styles, eux, étaient et demeurent des liens vers
+   * `/tatouage/<style>/<ville>`.) La différence est voulue et tient à
+   * ce qui existait, pas à une décision prise ici.
+   * ⚠️ RIEN DE DÉCLARÉ, PAS D'ICÔNE ORPHELINE : toute la ligne est
+   * conditionnée par `capsulesPratique.length`.
+   * ⚠️ UNE SEULE VALEUR : aucune puce, par construction (`rang > 0`).
+   */
+  const ligneDesPratiques = capsulesPratique.length > 0 && (
+    <p
+      key="pratique"
+      data-pratique-fiche=""
+      className={`flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE}`}
+    >
+      <span className={BOITE_ICONE_LIGNE}>
+        <IconePalette taille={20} />
+      </span>
+      <span className="min-w-0">
+        {capsulesPratique.map((slug, rang) => (
+          <Fragment key={slug}>
+            {rang > 0 && (
+              <span aria-hidden="true" className="px-1.5">
+                •
+              </span>
+            )}
+            {libelleFiltre(slug)}
+          </Fragment>
+        ))}
+      </span>
+    </p>
+  );
+
   const ligneDesStyles = tatoueur.styles.length > 0 && (
     <p
       key="styles"
@@ -1367,7 +1420,8 @@ export function ContenuFiche({
           {(premiereLigne.length > 0 ||
             ligneDuSite.length > 0 ||
             secondeLigne.length > 0 ||
-            ligneDesStyles) && (
+            ligneDesStyles ||
+            ligneDesPratiques) && (
             <div className="mt-10 flex w-full flex-col items-start gap-y-4">
               {premiereLigne.length > 0 && (
                 <div className="grid w-full grid-cols-2 items-center justify-items-start gap-x-7 gap-y-4">
@@ -1385,6 +1439,7 @@ export function ContenuFiche({
                 </div>
               )}
               {ligneDesStyles}
+              {ligneDesPratiques}
             </div>
           )}
 
@@ -1438,26 +1493,18 @@ export function ContenuFiche({
               entière ne s'affiche pas quand la liste est vide.
               ⚠️ ET LES CAPSULES N'ONT PLUS DE CONTOUR (charte) : chaque
               niveau s'éclaircit — la page, le bloc, la capsule. */}
-          {capsulesPratique.length > 0 && (
-            <div className={`mt-10 pt-10 ${separation}`}>
-              {/*  §3 (nº 276) — l'écriture de la nº 223, désormais en
-                   constante partagée (les titres du Portfolio la
-                   consomment aussi) : une seule écriture, partout. */}
-              <h2 className={ECRITURE_TITRE_SECTION}>Pratique</h2>
-              <ul className="mt-4 flex flex-wrap gap-2">
-                {capsulesPratique.map((slug) => (
-                  <li
-                    key={slug}
-                    data-capsule-pratique=""
-                    className={`inline-flex items-center ${ARRONDI_ETIQUETTE} px-3.5 min-h-[32px]
-                               bg-sombre-eleve text-[13px] font-medium text-sombre-texte`}
-                  >
-                    {libelleFiltre(slug)}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          {/*  §1 (nº 386) — LA SECTION « PRATIQUE » VIVAIT ICI : titre
+               en capitales, trait de séparation, capsules à fond. Elle
+               est SUPPRIMÉE EN ENTIER — son contenu est devenu la
+               quatrième ligne du profil, sous les styles.
+               ⚠️ RIEN NE RESTE DERRIÈRE, et c'est structurel : le
+               trait qu'on voyait ici n'était pas posé entre deux
+               sections, il appartenait à CE bloc (`mt-10 pt-10
+               border-t` sur son propre `<div>`, la règle « c'est
+               l'enveloppe qui sépare ses sections »). Le bloc parti,
+               son trait part avec lui — aucun séparateur orphelin,
+               aucun espace vide. Le signalement, qui suivait, porte
+               son propre dégagement et remonte simplement d'un cran. */}
 
           {/* LE SIGNALEMENT — DERRIÈRE L'UNIQUE TRAIT qui suit les
               badges (nº 222-§6). En dessous, la mise hors ligne : un

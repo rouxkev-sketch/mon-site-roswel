@@ -180,6 +180,47 @@ export function IconeEtoile({ taille = 20 }: ProprietesIconeLien) {
   );
 }
 
+/**
+ * §1 (nº 386) — LA PALETTE, POUR LA LIGNE DES PRATIQUES.
+ * ==================================================================
+ * Elle coiffe la quatrième ligne du profil, sous l'étoile des styles.
+ * Aucun fichier ajouté au dépôt : un tracé, comme ses voisines.
+ *
+ * MÊME TRAITEMENT QUE L'ÉTOILE ET QU'INSTAGRAM, sans rien choisir :
+ * `fill="none"`, trait de 1,8 sur la grille de 24, `currentColor`
+ * (donc aucune couleur déclarée — celle du texte de sa ligne), 20 px
+ * dans la boîte de 22 px partagée par toutes les lignes du profil.
+ *
+ * LE TRACÉ : la silhouette classique — un disque légèrement débordant
+ * à droite, refermé en bas par l'ENCOCHE DU POUCE, qui est ce qui fait
+ * lire « palette » et non « tache ». Elle est décrite en une seule
+ * courbe fermée, ici parcourue AU TRAIT (et non remplie) : le contour
+ * de la silhouette EST le dessin.
+ *
+ * ⚠️ PAS DE PASTILLES DE COULEUR, ET C'EST UN CHOIX ASSUMÉ. À 20 px,
+ * une pastille n'a que deux formes possibles : un aplat, que le
+ * propriétaire ne veut pas ici, ou un anneau de 1,8 de trait — c'est-
+ * à-dire une tache floue, la raison même pour laquelle le point
+ * d'Instagram est PLEIN dans ce fichier (voir sa note). Plutôt qu'un
+ * troisième compromis, la palette se lit par sa forme seule, comme le
+ * calendrier se lit sans chiffres.
+ */
+export function IconePalette({ taille = 20 }: ProprietesIconeLien) {
+  return (
+    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M12 3.6c-4.8 0-8.7 3.9-8.7 8.7s3.9 8.7 8.7 8.7c.8 0
+           1.45-.65 1.45-1.45 0-.38-.14-.72-.38-.98-.22-.25-.37-.59-.37-.96
+           0-.8.65-1.45 1.45-1.45h1.71c2.67 0 4.83-2.16 4.83-4.83
+           0-4.27-3.9-7.73-8.7-7.73Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function IconeLienLibre({ taille = 20 }: ProprietesIconeLien) {
   return (
     <svg
