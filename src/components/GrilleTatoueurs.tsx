@@ -119,6 +119,7 @@ export function GrilleTatoueurs({
   styleRecherche = "",
   renduRecherche = "",
   natureRecherche = "",
+  premiereLigne = "nom",
   estompee = false,
 }: {
   tatoueurs: Tatoueur[];
@@ -131,6 +132,11 @@ export function GrilleTatoueurs({
   /** LA CATÉGORIE demandée — elle décide, avec le style et le rendu,
       de la photo que chaque carte met en avant (nº 216-§1). */
   natureRecherche?: string;
+  /** §2 (nº 395) — CE QUE LA CARTE ÉCRIT SUR SA PREMIÈRE LIGNE : le
+      nom de l'artiste (défaut, partout) ou le style de la photo
+      montrée. La grille ne tranche pas — voir la note au passage de la
+      propriété, plus bas. */
+  premiereLigne?: "nom" | "style";
   /** Vrai pendant une recherche : la grille s'estompe. */
   estompee?: boolean;
 }) {
@@ -675,6 +681,13 @@ export function GrilleTatoueurs({
                 carte) garde le sien partout — elle ne passe pas par
                 ici, et son réglage par défaut ne bouge pas. */
             fanion="au-doigt-seulement"
+            /*  §2 (nº 395) — ELLE NE DÉCIDE RIEN, ELLE TRANSMET. Cette
+                 grille sert l'accueil, son jumeau de recherche, les
+                 résultats ET les vitrines : elle ne peut pas savoir
+                 laquelle. Celle qui sait le lui dit (IndexTatoueurs) ;
+                 les vitrines, qui la montent en direct, ne passent rien
+                 et gardent le nom par le défaut de la carte. */
+            premiereLigne={premiereLigne}
             surApproche={precharger}
             surOuverture={ouvrir}
           />

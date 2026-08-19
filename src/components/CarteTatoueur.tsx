@@ -84,9 +84,29 @@ function CarteTatoueurNue({
   prioritaire = false,
   phototheque = false,
   fanion = "toujours",
+  premiereLigne = "nom",
   surOuverture,
   surApproche,
 }: {
+  /**
+   * ██ §2 (nº 395) — CE QUE PORTE LA PREMIÈRE LIGNE, SOUS LA CARTE ██
+   * ==================================================================
+   * `nom` (par défaut) — LE NOM DE L'ARTISTE, comme depuis toujours.
+   * `style` — LE STYLE de la photo montrée, et le propriétaire ne le
+   * demande QUE sur la page d'accueil au repos.
+   *
+   * ⚠️ UN RÉGLAGE EXPLICITE, JAMAIS UNE DEVINETTE D'ADRESSE — c'est le
+   * mot d'ordre de `fanion` (nº 365), juste au-dessus, et la même
+   * raison : ce composant sert quatre surfaces, il n'a pas à deviner
+   * laquelle. La valeur descend de celle qui SAIT (IndexTatoueurs), en
+   * passant par la grille. Les trois autres surfaces ne la passent pas
+   * et gardent donc le nom, sans avoir rien à écrire :
+   *  · les VITRINES rendent `GrilleTatoueurs` en direct ;
+   *  · « MA SÉLECTION » rend cette carte en direct ;
+   *  · les RÉSULTATS passent bien par IndexTatoueurs, mais celle-ci
+   *    n'envoie `style` que lorsque AUCUN critère n'est posé.
+   */
+  premiereLigne?: "nom" | "style";
   /** LA VUE PHOTOTHÈQUE (nº 140) : la photo seule — ni badge, ni
       portrait, ni nom, ni adresse. SEUL LE FANION des favoris reste,
       dans l'angle (et seulement là où il est encore posé — voir
@@ -248,6 +268,40 @@ function CarteTatoueurNue({
    * retélécharger.
    */
   const carrouselDansLaCarte = photosDeLaCarte.length > 1;
+  /**
+   * ██ §2 (nº 395) — LE STYLE ÉCRIT SOUS LA CARTE ██
+   * ==================================================================
+   * QUEL STYLE, ET POURQUOI CELUI-LÀ : celui de LA PHOTO QU'ON REGARDE
+   * (`photoEnregistrable.style`). C'est la seule réponse qui ne mente
+   * pas — la photo d'une carte est choisie par `photoPourStyle` selon
+   * ce que le moteur cherche, elle n'est pas « la première image de
+   * l'artiste ».
+   *
+   * ⚠️ LE LIBELLÉ NE SUIT PAS LE DÉFILÉ, ET IL N'A PAS À LE SUIVRE :
+   * `photosDeLaCarte` est L'ENSEMBLE de la photo montrée — même style,
+   * même catégorie, même rendu (§5, nº 211, et `ensembleDeLaPhoto`).
+   * Une carte ne fait donc défiler QU'UN SEUL style : faire suivre le
+   * texte reviendrait à réécrire le même mot. C'est exactement la
+   * raison écrite à la nº 376 pour le titre de galerie de la fiche.
+   *
+   * ⚠️ LES DEUX REPLIS, DANS CET ORDRE, ET LA LIGNE N'EST JAMAIS VIDE :
+   *  · pas de photo en base (fiche d'avant le portfolio catalogué, ou
+   *    fiche de démonstration) → LE PREMIER STYLE DÉCLARÉ de l'artiste,
+   *    qui reste vrai de lui même si aucune image ne l'illustre ;
+   *  · aucun style déclaré non plus → LE NOM DE L'ARTISTE, c'est-à-dire
+   *    EXACTEMENT la ligne d'aujourd'hui. Jamais un blanc, jamais une
+   *    ligne vide : la hauteur du bloc de texte est la même au pixel
+   *    dans les trois cas (règle nº 226), donc la carte ne change ni de
+   *    taille ni de place.
+   * ⚠️ LE MOT DU CATALOGUE, PAS LE SLUG : `libelleStyle` — l'écriture
+   * unique de la charte, celle que la fiche et les filtres emploient.
+   */
+  const styleDeLaCarte =
+    photoEnregistrable?.style || tatoueur.styles?.[0] || "";
+  const titreDeLaCarte =
+    premiereLigne === "style" && styleDeLaCarte
+      ? libelleStyle(styleDeLaCarte)
+      : tatoueur.nom;
   /**
    * §2 (nº 372) — LA CLÉ DE CETTE CARTE, pour la mémoire des photos.
    * La même que celle de la mosaïque (`carrousel.cle`, sinon
@@ -845,10 +899,20 @@ function CarteTatoueurNue({
             //  photothèque ci-dessus) : DefilementEnHaut remonte à
             //  l'adresse commise, après la photo d'adieu du navigateur.
             scroll={false}
+            /*  §2 (nº 395) — LE LIEN GARDE LE NOM POUR QUI NE VOIT PAS.
+                 Ce lien s'étire sur toute la carte : son texte EST son
+                 nom accessible. Quand la ligne montre le style, dix-huit
+                 cartes s'appelleraient « Réalisme » — or la destination,
+                 elle, reste la fiche de l'artiste. On lui rend donc le
+                 nom explicitement. Rien ne change à l'écran : c'est du
+                 texte de lecteur d'écran, pas du texte peint. */
+            aria-label={
+              titreDeLaCarte === tatoueur.nom ? undefined : tatoueur.nom
+            }
             className="outline-none after:absolute after:inset-0 after:content-['']
                        focus-visible:underline"
           >
-            {tatoueur.nom}
+            {titreDeLaCarte}
           </Link>
         </h3>
         <p
@@ -869,13 +933,26 @@ function CarteTatoueurNue({
                USA ») — sinon la ligne déborde. Sur le web, la place ne
                manque pas : le pays reste en toutes lettres. Les deux
                sont posées, une seule s'affiche. */}
+          {/*  §1 (nº 395) — LA PUCE REMPLACE LE POINT MÉDIAN, ici et
+               dans la variante du doigt juste dessous. Le site n'a plus
+               qu'une ponctuation pour séparer deux valeurs : celle des
+               pratiques, des styles, du bloc artiste et — depuis la
+               nº 393 — des titres de galerie.
+               ⚠️ CE LIBELLÉ N'EST PAS FACTORISÉ, et ce n'est pas un
+               oubli : les deux écritures ci-dessous ne partagent pas la
+               même règle de lieu (`ligneCarte` au large, `ligneCarteMobile`
+               au doigt, nº 212-§6). Elles vivent donc où elles sont, et
+               la puce est changée aux DEUX. Il n'y en a pas d'autre :
+               toutes les surfaces qui montrent cette ligne — accueil,
+               jumeau de recherche, résultats, vitrines, Ma sélection —
+               rendent CETTE carte. */}
           <span className="mobile:hidden">
             {[
               libelleTypeFiche(tatoueur.type_fiche, tatoueur.etablissement),
               ligneCarte(lieuDeLaCarte),
             ]
               .filter(Boolean)
-              .join(" · ")}
+              .join(" • ")}
           </span>
           <span className="hidden mobile:inline">
             {[
@@ -883,7 +960,7 @@ function CarteTatoueurNue({
               ligneCarteMobile(lieuDeLaCarte),
             ]
               .filter(Boolean)
-              .join(" · ")}
+              .join(" • ")}
           </span>
         </p>
         </div>

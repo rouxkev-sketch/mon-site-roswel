@@ -397,6 +397,48 @@ export function IndexTatoueurs({
       ceux que le doigt vient de poser. */
   const affiches = criteresServis;
 
+  /**
+   * ██ §2 (nº 395) — L'ACCUEIL AU REPOS ÉCRIT LE STYLE, LES RÉSULTATS
+   * ÉCRIVENT LE NOM ██
+   * ==================================================================
+   * CE QUE J'APPELLE « LA PAGE D'ACCUEIL », et c'est la question du
+   * propriétaire : la mosaïque SANS AUCUN CRITÈRE. Pas une adresse,
+   * pas un fichier — un ÉTAT.
+   *
+   * POURQUOI PAS L'ADRESSE : depuis la nº 357 l'accueil a un jumeau
+   * dynamique (`/accueil-recherche`) qui sert les adresses à requête,
+   * et LES DEUX montent le même `RenduAccueil`, donc ce composant-ci.
+   * Trancher sur le chemin dirait « accueil » aussi bien pour une
+   * recherche servie par le jumeau que pour la page nue — et le
+   * propriétaire interdit la devinette d'adresse. Trancher sur les
+   * CRITÈRES dit exactement ce qu'on voulait dire.
+   *
+   * CE QUI SE PASSE DONC, CAS PAR CAS :
+   *  · `/` prérendue, aucun critère → LE STYLE ;
+   *  · une recherche depuis l'accueil (style, catégorie, lieu, ou un
+   *    interrupteur éteint) → l'adresse porte une requête, le jumeau
+   *    la sert, `criteresServis` n'est plus vide → LE NOM DE
+   *    L'ARTISTE. La bascule est immédiate et vaut dans les deux
+   *    sens : effacer la recherche ramène le style ;
+   *  · les VITRINES montent `GrilleTatoueurs` en direct, elles ne
+   *    passent pas ici → LE NOM ;
+   *  · « MA SÉLECTION » monte la carte en direct → LE NOM.
+   *
+   * ⚠️ CE SONT LES CRITÈRES **SERVIS**, jamais ceux que le doigt vient
+   * de poser dans les champs : `criteres` n'est qu'un état d'affichage
+   * des champs, il ne décide d'AUCUNE carte (voir sa note plus haut).
+   * Le libellé suit donc les cartes qui sont à l'écran, jamais une
+   * frappe en cours.
+   * ⚠️ `rayonKm` N'ENTRE PAS DANS LE COMPTE : il a une valeur par
+   * défaut et ne veut rien dire sans lieu — le lire ferait croire à une
+   * recherche là où il n'y en a aucune.
+   */
+  const aucuneRecherche =
+    !affiches.style &&
+    !affiches.nature &&
+    !affiches.lieu &&
+    affiches.exclure.length === 0;
+
   /** L'affichage servi, fourni à la grille, aux cartes et aux boutons
       de bascule : c'est LUI que le HTML du serveur montre (nº 203-§1b). */
   const affichageServi = useMemo(
@@ -546,6 +588,11 @@ export function IndexTatoueurs({
             //  avant une photo QUI EN EST — plus de réalisation
             //  affichée quand on cherche des flashs.
             natureRecherche={affiches.nature}
+            //  §2 (nº 395) — LE RÉGLAGE EXPLICITE, décidé juste
+            //  au-dessus (`aucuneRecherche`) : c'est cette surface, et
+            //  elle seule, qui sait si l'on est sur l'accueil au repos
+            //  ou devant des résultats.
+            premiereLigne={aucuneRecherche ? "style" : "nom"}
             estompee={enTransition}
           />
         }
