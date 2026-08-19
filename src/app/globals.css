@@ -81,6 +81,10 @@
   --color-sombre-haut-clair: var(--rw-sombre-haut-clair);
   --color-sombre-texte: var(--rw-sombre-texte);
   --color-sombre-texte-doux: var(--rw-sombre-texte-doux);
+  /*  §5 (nº 388) — le bleu des liens qui sortent du site, et son
+      éclaircissement au survol. */
+  --color-sombre-lien: var(--rw-sombre-lien);
+  --color-sombre-lien-clair: var(--rw-sombre-lien-clair);
 
   --font-sans: var(--font-geist-sans);
 }

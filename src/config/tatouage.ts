@@ -1436,6 +1436,23 @@ export const COULEURS_SOMBRE = {
   texte: "#F2F2F4",
   /** Le texte discret (ville, styles, mentions). */
   texteDoux: "#A8A8B0",
+  /**
+   * §5 (nº 388) — LE BLEU DES LIENS QUI SORTENT DU SITE.
+   * ------------------------------------------------------------------
+   * IL N'EXISTAIT PAS : la charte n'avait que le rose de l'action, les
+   * gris de l'échelle et le rouge d'erreur. Instagram et l'adresse
+   * mènent DEHORS — c'est le seul endroit du site où la convention du
+   * web (un lien est bleu) a quelque chose à dire, et le propriétaire
+   * la demande.
+   * LA VALEUR : un bleu ÉCLAIRCI, pas le #0000EE des navigateurs.
+   * Sur l'anthracite (#1A1A1D), un bleu foncé ne se lit pas ; celui-ci
+   * est monté jusqu'à rendre autant de lumière que le gris doux qu'il
+   * remplace, pour que la ligne ne pèse pas plus qu'une autre.
+   * ⚠️ SA VARIANTE D'ÉCLAIRCISSEMENT est le survol, et rien d'autre :
+   * même famille, deux crans plus clair. Aucune troisième valeur.
+   */
+  lien: "#7FA9EE",
+  lienClair: "#A8C6F6",
 };
 
 /** Les textes du site, au même endroit que le reste. */

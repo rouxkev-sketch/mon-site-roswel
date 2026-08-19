@@ -173,6 +173,7 @@ export function MenuDeroulant({
   titreFeuille,
   compact = false,
   sombre = false,
+  fondRepos,
   repliable = false,
   libelleValeur,
   positionFleche,
@@ -239,6 +240,18 @@ export function MenuDeroulant({
       seules les couleurs changent. Les pages artisans ne passent
       jamais cette option. */
   sombre?: boolean;
+  /**
+   * §1 (nº 388) — LE FOND AU REPOS, RÉGLABLE PAR L'APPELANT.
+   * ------------------------------------------------------------------
+   * La palette sombre pose `bg-sombre-eleve`. Sur le formulaire de
+   * fiche, le menu du booking se retrouvait ainsi un cran plus sombre
+   * que les champs qui l'entourent (`bg-sombre-eleve-clair`) — c'est
+   * le défaut relevé. Mais cette palette est PARTAGÉE avec le moteur
+   * de recherche, qui n'a rien demandé : on ne la change donc pas, on
+   * laisse l'appelant dire son fond. Sans réglage, rien ne bouge —
+   * le moteur garde le sien au pixel.
+   */
+  fondRepos?: string;
   /** §2 (nº 270) — LE MENU PEUT ÊTRE EN FAUTE, comme un champ : le
       formulaire de fiche exige le Booking, et un manque s'y dit par
       un bord rouge — la même écriture que tous ses champs
@@ -353,7 +366,11 @@ export function MenuDeroulant({
     ? "bg-transparent"
     : sombre
       ? `${rayon} transition-colors ${
-          ouvert ? ROBE_CHAMP_SOMBRE.actif : ROBE_CHAMP_SOMBRE.repos
+          ouvert
+            ? ROBE_CHAMP_SOMBRE.actif
+            : //  §1 (nº 388) — le fond au repos, dit par l'appelant quand
+              //  il en a un ; sinon celui de la palette, inchangé.
+              (fondRepos ?? ROBE_CHAMP_SOMBRE.repos)
         }${bordDuManque}`
       : `${rayon} border bg-fond ${
           ouvert

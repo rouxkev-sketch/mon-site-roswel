@@ -3235,6 +3235,8 @@ export function FormulaireFiche() {
                   ariaLabel="L'état de ton booking"
                   placeholder="Booking"
                   sombre
+                  //  §1 (nº 388) — le fond des champs voisins.
+                  fondRepos="bg-sombre-eleve-clair"
                   arrondi="rounded-lg"
                   hauteur="min-h-[48px]"
                   enErreur={Boolean(erreurs.booking)}
@@ -3252,6 +3254,7 @@ export function FormulaireFiche() {
                     ariaLabel="Le délai d'attente, en mois"
                     placeholder="Mois"
                     sombre
+                    fondRepos="bg-sombre-eleve-clair"
                     arrondi="rounded-lg"
                     hauteur="min-h-[48px]"
                     enErreur={Boolean(erreurs.bookingMois)}

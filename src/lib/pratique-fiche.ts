@@ -1,4 +1,38 @@
 import { rendusDuPortfolio } from "@/lib/photos-tatoueur";
+import { FILTRES_TATOUAGE } from "@/config/tatouage";
+
+/**
+ * §2 (nº 388) — L'ORDRE D'UN GROUPE EST CELUI DE LA CHARTE, JAMAIS
+ * CELUI DES CASES COCHÉES.
+ * ==================================================================
+ * LE DÉFAUT : « Bodysuit » passait devant « Grandes pièces » sur
+ * certaines fiches. L'ordre venait du TABLEAU ENREGISTRÉ EN BASE,
+ * c'est-à-dire de l'ordre dans lequel le tatoueur avait coché ses
+ * cases — il changeait donc d'une fiche à l'autre, alors que le
+ * formulaire, lui, affiche toujours l'ordre déclaré dans
+ * `FILTRES_TATOUAGE`.
+ * LE REMÈDE, À LA SOURCE : chaque groupe est rangé selon la position
+ * de ses valeurs DANS LA CHARTE. Le formulaire et la fiche lisent
+ * ainsi le même ordre par construction, et il suffit de déplacer une
+ * ligne dans `FILTRES_TATOUAGE` pour le changer partout.
+ * ⚠️ UNE VALEUR INCONNUE DE LA CHARTE (un vieux slug retiré d'une
+ * migration) part en fin de groupe plutôt que de disparaître : on
+ * n'efface pas ce qu'un tatoueur a déclaré.
+ */
+function rangesCommeLaCharte(groupe: string, valeurs: string[]): string[] {
+  const declares =
+    FILTRES_TATOUAGE.find((famille) => famille.groupe === groupe)?.options ?? [];
+  const rang = new Map<string, number>(
+    declares.map((option, i) => [String(option.slug), i])
+  );
+  return valeurs
+    .slice()
+    .sort(
+      (a, b) =>
+        (rang.get(a) ?? Number.MAX_SAFE_INTEGER) -
+        (rang.get(b) ?? Number.MAX_SAFE_INTEGER)
+    );
+}
 
 /**
  * §2 (nº 315) — LA SECTION « PRATIQUE » D'UNE FICHE
@@ -42,8 +76,8 @@ export function capsulesPratiques(fiche: {
 }): string[] {
   return [
     ...rendusDuPortfolio(fiche.galerie),
-    ...(fiche.filtres_technique ?? []),
-    ...(fiche.filtres_composition ?? []),
-    ...(fiche.filtres_besoins ?? []),
+    ...rangesCommeLaCharte("technique", fiche.filtres_technique ?? []),
+    ...rangesCommeLaCharte("composition", fiche.filtres_composition ?? []),
+    ...rangesCommeLaCharte("besoins", fiche.filtres_besoins ?? []),
   ];
 }

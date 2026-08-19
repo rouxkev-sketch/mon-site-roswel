@@ -48,6 +48,9 @@ export function variablesCssCouleurs(): string {
     "--rw-sombre-haut-clair": COULEURS_SOMBRE.hautClair,
     "--rw-sombre-texte": COULEURS_SOMBRE.texte,
     "--rw-sombre-texte-doux": COULEURS_SOMBRE.texteDoux,
+    //  §5 (nº 388) — le bleu des liens qui sortent du site.
+    "--rw-sombre-lien": COULEURS_SOMBRE.lien,
+    "--rw-sombre-lien-clair": COULEURS_SOMBRE.lienClair,
   };
 
   const lignes = Object.entries(variables)

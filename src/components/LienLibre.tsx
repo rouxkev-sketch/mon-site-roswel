@@ -118,8 +118,14 @@ export function LienLibre({
         id={id}
         type="button"
         onClick={() => surChangement({ ...valeur, etat: "edition" })}
+        /*  §1 (nº 388) — MÊME FOND QUE LES AUTRES CHAMPS : il était
+             sur `bg-sombre-eleve`, un cran plus sombre que le champ
+             de saisie qu'il ouvre (voir `CHAMP`, juste au-dessus, sur
+             `bg-sombre-eleve-clair`). Le bouton et le champ qu'il
+             remplace se ressemblent enfin. Le survol rose ne bouge
+             pas. */
         className="flex w-full min-h-[52px] items-center gap-3 rounded-lg
-                   bg-sombre-eleve px-4 text-left text-base
+                   bg-sombre-eleve-clair px-4 text-left text-base
                    text-sombre-texte-doux transition-colors
                    hover:bg-primaire/10 hover:text-primaire"
       >

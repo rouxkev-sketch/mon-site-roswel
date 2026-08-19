@@ -4,6 +4,14 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { IconeChevronBas } from "@/components/Icones";
+//  §3 (nº 388) — l'icône de la ligne d'adresse, et l'écriture des
+//  lignes de profil (module sans dépendance : voir lignes-profil).
+import { IconeLocalisation } from "@/components/IconeReseau";
+import {
+  BOITE_ICONE_LIGNE,
+  ECRITURE_LIGNE_FICHE,
+  LIEN_QUI_SORT,
+} from "@/components/lignes-profil";
 import { adresseDeLienInterne } from "@/components/ContenuFiche";
 import {
   laLargeurVeutUneFenetre,
@@ -921,6 +929,83 @@ function AdresseCliquable({
   );
 }
 
+/**
+ * ██ §3 (nº 388) — L'ADRESSE DESCEND DANS LA SÉRIE DES LIGNES ██
+ * ==================================================================
+ * CE QUI DISPARAÎT : le titre « Adresse du salon » et la PHOTO ronde
+ * qui l'accompagnait. L'adresse n'est plus une section coiffée d'une
+ * étiquette : c'est une LIGNE, la sixième, sous Booking, le site, les
+ * pratiques et les styles.
+ *
+ * CE QU'ELLE DEVIENT : exactement la forme de ses voisines —
+ * `BOITE_ICONE_LIGNE` pour l'icône de localisation,
+ * `ECRITURE_LIGNE_FICHE` pour le texte. Aucune valeur n'est écrite
+ * ici : les deux constantes sont celles que toutes les lignes lisent.
+ * Elle est BLEUE, comme Instagram et pour la même raison (§5) : elle
+ * mène dehors, sur un plan.
+ *
+ * LE VOLET DES HORAIRES EST DÉPLACÉ, PAS RÉÉCRIT : c'est le même
+ * `HorairesEnLigne`, avec son mécanisme d'ouverture, sa flèche, son
+ * contenu et ses couleurs (« Ouvert » vert, « Fermé » rouge). Il se
+ * pose juste sous l'adresse, aligné sur elle — son retrait gauche
+ * n'est plus les 66 px de la pastille disparue, mais les 32 px de la
+ * colonne d'icônes (22 de boîte + 10 d'écart), c'est-à-dire
+ * l'alignement du texte de toutes les lignes.
+ *
+ * ⚠️ RIEN D'ORPHELIN : sans adresse lisible, la ligne entière ne rend
+ * rien — ni icône, ni volet. Sans horaires, `HorairesEnLigne` ne rend
+ * rien de lui-même, comme avant.
+ * ⚠️ SALONS ET STUDIOS SEULEMENT : c'est l'appelant qui décide (voir
+ * ContenuFiche) — une fiche d'artiste garde ses profils inchangés.
+ */
+export function LigneAdresseDuLieu({
+  tatoueur,
+}: {
+  tatoueur: Tatoueur;
+}) {
+  const studios = (tatoueur.studios ?? [])
+    .slice()
+    .sort((a, b) => a.ordre - b.ordre);
+  const principal =
+    studios.find((studio) => studio.principal) ?? studios[0] ?? null;
+  const lieuPrincipal: LieuAffichable = principal
+    ? lieuDuStudio(principal)
+    : {
+        adresse: tatoueur.adresse,
+        code_postal: tatoueur.code_postal,
+        ville: tatoueur.ville_nom,
+        region: tatoueur.region,
+        pays: tatoueur.pays,
+        code_pays: tatoueur.code_pays,
+      };
+  const adresse = ligneFiche(lieuPrincipal);
+  if (!adresse) return null;
+  return (
+    <div>
+      <p className={`flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE}`}>
+        <span className={`${BOITE_ICONE_LIGNE} text-sombre-texte-doux`}>
+          <IconeLocalisation taille={20} />
+        </span>
+        <span className="min-w-0 [overflow-wrap:anywhere]">
+          <LienAdresse
+            texte={adresse}
+            lieu={lieuPrincipal}
+            classeTexte={LIEN_QUI_SORT}
+          />
+        </span>
+      </p>
+      {/*  LE VOLET DES HORAIRES — déplacé tel quel, aligné sous le
+           texte de la ligne (22 px d'icône + 10 px d'écart). */}
+      <div className="pl-8">
+        <HorairesEnLigne
+          horaires={principal?.horaires}
+          fuseau={principal?.fuseau}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function BlocAdressesFiche({
   tatoueur,
   studioCourantId,
@@ -941,20 +1026,9 @@ export function BlocAdressesFiche({
     studios[0] ??
     null;
   const autres = studios.filter((studio) => studio.id !== principal?.id);
-
-  //  AUCUN STUDIO ENREGISTRÉ (fiche d'avant la migration nº 26) : on
-  //  retombe sur l'adresse portée par la fiche elle-même.
-  const lieuPrincipal: LieuAffichable = principal
-    ? lieuDuStudio(principal)
-    : {
-        adresse: tatoueur.adresse,
-        code_postal: tatoueur.code_postal,
-        ville: tatoueur.ville_nom,
-        region: tatoueur.region,
-        pays: tatoueur.pays,
-        code_pays: tatoueur.code_pays,
-      };
-  const adressePrincipale = ligneFiche(lieuPrincipal);
+  //  §3 (nº 388) — `lieuPrincipal`, `adressePrincipale` et
+  //  `etiquettePrincipale` sont partis avec l'adresse : elle se
+  //  dessine maintenant dans `LigneAdresseDuLieu`, plus haut.
 
   /**
    * §4 (nº 286) — L'ÉTIQUETTE PORTE LE TYPE DE LIEU : « ADRESSE DU
@@ -972,7 +1046,6 @@ export function BlocAdressesFiche({
     "studio-prive"
       ? "studio"
       : "salon";
-  const etiquettePrincipale = `Adresse du ${typeDuLieu}`;
   const etiquetteAutres =
     autres.length > 1
       ? `Autres adresses du ${typeDuLieu}`
@@ -1005,22 +1078,15 @@ export function BlocAdressesFiche({
            l'adresse. Leur retrait gauche (66 px = 52 de pastille + 14
            d'écart) les garde alignés sous la colonne de texte, là où
            ils ont toujours été. */}
-      <div className="flex flex-col">
-        <AdresseCliquable
-          etiquette={etiquettePrincipale}
-          adresse={adressePrincipale}
-          lieu={lieuPrincipal}
-          //  ⚠️ LA PHOTO DU LIEU EST CELLE DE LA FICHE : un studio n'a
-          //  pas d'image à lui en base (voir `StudioFiche`).
-          pastille={<PhotoRonde source={tatoueur.photo_profil} nature="lieu" />}
-        />
-        <div className="pl-[66px]">
-          <HorairesEnLigne
-            horaires={principal?.horaires}
-            fuseau={principal?.fuseau}
-          />
-        </div>
-      </div>
+      {/*  §3 (nº 388) — L'ADRESSE PRINCIPALE ET SES HORAIRES ONT
+           QUITTÉ CE BLOC : ils sont descendus dans la série des lignes
+           de profil (`LigneAdresseDuLieu`, plus haut), sans titre ni
+           photo. Rien ne reste ici à leur place — ce bloc commençait
+           par eux, il commence maintenant par les AUTRES adresses,
+           chacune avec sa propre marge. Un salon à une seule adresse
+           ne rend donc plus que son équipe, et un salon sans équipe ne
+           rend plus rien du tout : la section entière disparaît avec
+           son trait, exactement comme « Pratique » à la nº 386. */}
 
       {/*  2. LES AUTRES ADRESSES — une ligne chacune, au bord gauche
            du bloc, comme l'équipe dessous. Le rythme du bloc est de

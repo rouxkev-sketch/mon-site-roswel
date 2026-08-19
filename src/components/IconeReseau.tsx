@@ -212,6 +212,36 @@ export function IconeGoutte({ taille = 20 }: ProprietesIconeLien) {
   );
 }
 
+/**
+ * §3 (nº 388) — LA LOCALISATION, POUR LA LIGNE DE L'ADRESSE.
+ * ==================================================================
+ * Elle coiffe l'adresse d'un salon ou d'un studio, descendue dans la
+ * série des lignes de profil. Aucun fichier ajouté au dépôt.
+ *
+ * MÊME TRAITEMENT QUE SES VOISINES, sans rien choisir : `fill="none"`,
+ * trait de 1,8 sur la grille de 24, `currentColor`, 20 px dans la
+ * boîte de 22.
+ *
+ * LE TRACÉ : la goutte de plan classique — une tête ronde qui se
+ * referme en pointe vers le bas — et son ANNEAU intérieur, celui qui
+ * la distingue de la goutte d'encre des styles. Deux formes, pas une
+ * de plus : à 20 px, tout détail supplémentaire se referme.
+ */
+export function IconeLocalisation({ taille = 20 }: ProprietesIconeLien) {
+  return (
+    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M12 21.2c4-4.6 6.4-8 6.4-11.2a6.4 6.4 0 1 0-12.8 0c0 3.2
+           2.4 6.6 6.4 11.2Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="9.8" r="2.5" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
 export function IconeLienLibre({ taille = 20 }: ProprietesIconeLien) {
   return (
     <svg

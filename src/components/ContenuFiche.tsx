@@ -35,11 +35,19 @@ import {
   type SerieChoisie,
 } from "@/components/PortfolioDeLAffiche";
 import { capsulesPratiques } from "@/lib/pratique-fiche";
+//  §3 (nº 388) — l'écriture d'une ligne de profil a déménagé dans un
+//  module sans dépendance : l'adresse se dessine dans BlocLieux, et un
+//  cercle d'imports se paie cher (voir lignes-profil).
+import {
+  BOITE_ICONE_LIGNE,
+  ECRITURE_LIGNE_FICHE,
+} from "@/components/lignes-profil";
 import type { StyleGalerie } from "@/lib/photo-tatoueur";
 import { FenetreSignalement } from "@/components/FenetreSignalement";
 import { libelleDuLien } from "@/lib/liens-fiche";
 import { sousLeNom } from "@/components/BlocsFiche";
 import {
+  LigneAdresseDuLieu,
   BlocAdressesFiche,
   BlocProfilsArtiste,
 } from "@/components/BlocLieux";
@@ -131,25 +139,6 @@ export function avecConsigneDeLienInterne(adresse: string): string {
 export function adresseDeLienInterne(slug: string): string {
   return avecConsigneDeLienInterne(`/tatoueur/${slug}`);
 }
-
-/**
- * ██ §2 (nº 384) — L'ÉCRITURE D'UNE LIGNE DE PROFIL, UNE SEULE FOIS ██
- * ==================================================================
- * « Booking ouvert », le site, Instagram, TikTok et — depuis cette
- * passe — les STYLES sont la MÊME ligne : une icône de 22 px à gauche,
- * un texte de 15 px en gris doux, dix pixels entre les deux.
- * ELLE ÉTAIT ÉCRITE DEUX FOIS (la ligne du booking et `lienEnLigne`),
- * mot pour mot. Une troisième copie pour les styles, et la divergence
- * n'était plus qu'une question de temps : le propriétaire demande
- * « exactement l'apparence de Booking ouvert », pas « à peu près ».
- * Les deux constantes ci-dessous sont donc CONSOMMÉES par les trois —
- * il n'y a plus d'apparence à faire correspondre, il n'y en a qu'une.
- * ⚠️ AUCUNE VALEUR N'A CHANGÉ : ce sont exactement les classes que
- * portaient déjà les deux lignes existantes.
- */
-const ECRITURE_LIGNE_FICHE = "text-[15px] leading-snug text-sombre-texte-doux";
-const BOITE_ICONE_LIGNE =
-  "flex h-[22px] w-[22px] shrink-0 items-center justify-center";
 
 export function ContenuFiche({
   tatoueur,
@@ -696,22 +685,56 @@ export function ContenuFiche({
       d'un cran (voile blanc, annulé par des marges négatives — rien
       ne bouge d'un pixel), un fin soulignement décalé sur le libellé.
       Au doigt : un bref état enfoncé, jamais un état qui reste. */
+  /**
+   * ██ §4 et §5 (nº 388) — PLUS DE PILULE, ET UN BLEU POUR CE QUI SORT
+   * DU SITE ██
+   * ==================================================================
+   * §4 — L'ENCADRÉ DE SURVOL EST SUPPRIMÉ. Il était fait de cinq
+   * classes qui allaient ensemble : `rounded-lg` (l'arrondi),
+   * `hover:bg-white/5` et `active:bg-white/10` (le fond), et
+   * `-mx-1.5 -my-1 px-1.5 py-1` (le débord compensé qui donnait à la
+   * pilule sa chair sans déplacer le texte). Les cinq partent : il ne
+   * reste QUE le texte qui s'éclaircit.
+   * ⚠️ LA ZONE CLIQUABLE NE RÉTRÉCIT PAS. Ce débord compensé était
+   * NUL par construction — six pixels de marge négative rendus en six
+   * pixels de rembourrage : la boîte cliquable avait donc exactement
+   * la taille qu'elle a aujourd'hui. Ce qui disparaît est la
+   * PEINTURE, pas la surface. Le lien reste une ligne entière
+   * (`flex`), icône comprise.
+   *
+   * §5 — LE BLEU EST UN RÉGLAGE, PAS UNE FATALITÉ. Avant cette passe,
+   * le booking, le site, Instagram et l'adresse partageaient une seule
+   * et même écriture : rendre Instagram bleu ici les aurait TOUS
+   * emportés. `sortDuSite` tranche donc appelant par appelant — seuls
+   * Instagram et l'adresse le passent, le booking et le site restent
+   * dans le gris doux commun, et les styles n'utilisent même pas
+   * cette fonction.
+   * ⚠️ L'ICÔNE RESTE GRISE : elle est peinte en `currentColor`, donc
+   * elle suivrait le bleu du texte. On lui rend donc explicitement le
+   * gris de la colonne (`text-sombre-texte-doux` sur sa boîte), ce qui
+   * la détache du libellé sans rien changer à son tracé.
+   */
   const lienEnLigne = (
     cle: string,
     href: string,
     libelle: string,
-    icone: React.ReactNode
+    icone: React.ReactNode,
+    sortDuSite = false
   ) => (
     <a
       key={cle}
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className={`group flex items-center gap-2.5 ${ECRITURE_LIGNE_FICHE}
-                 rounded-lg -mx-1.5 -my-1 px-1.5 py-1
-                 transition-colors hover:bg-white/5 active:bg-white/10`}
+      className={`group flex items-center gap-2.5 ${ECRITURE_LIGNE_FICHE} ${
+        sortDuSite
+          ? "text-sombre-lien hover:text-sombre-lien-clair"
+          : "hover:text-sombre-texte"
+      } transition-colors`}
     >
-      <span className={BOITE_ICONE_LIGNE}>{icone}</span>
+      <span className={`${BOITE_ICONE_LIGNE} text-sombre-texte-doux`}>
+        {icone}
+      </span>
       {/*  §2 (nº 273) — PLUS DE SOULIGNEMENT ICI : le fond qui monte
            au survol (`hover:bg-white/5`, la ligne cliquable de la
            nº 227) dit déjà que la ligne se clique — le trait faisait
@@ -806,7 +829,10 @@ export function ContenuFiche({
       "instagram",
       tatoueur.lien_instagram,
       "Instagram",
-      iconeDeLien("instagram")
+      iconeDeLien("instagram"),
+      //  §5 (nº 388) — Instagram SORT DU SITE : bleu, et lui seul avec
+      //  l'adresse. Le booking et le site gardent le gris doux.
+      true
     );
   /**
    * ██ §2 (nº 387) — TIKTOK NE S'AFFICHE PLUS NULLE PART ██
@@ -1047,7 +1073,11 @@ export function ContenuFiche({
             )}
             <Link
               href={`/tatouage/${slug}/${tatoueur.ville_slug}`}
-              className="rounded transition-colors hover:bg-white/5 active:bg-white/10"
+              //  §4 et §5 (nº 388) — plus de pilule ici non plus, et LES
+              //  STYLES RESTENT GRIS : ils mènent à une page DU site,
+              //  la convention du bleu ne les concerne pas. Ils
+              //  s'éclaircissent au survol, comme les autres lignes.
+              className="transition-colors hover:text-sombre-texte"
             >
               {libelleStyle(slug)}
             </Link>
@@ -1447,6 +1477,15 @@ export function ContenuFiche({
               )}
               {ligneDesPratiques}
               {ligneDesStyles}
+              {/*  §3 (nº 388) — L'ADRESSE FERME LA SÉRIE, et seulement
+                   sur un salon ou un studio : une fiche d'artiste
+                   montre ses PROFILS (à domicile, en salon, guest),
+                   pas une adresse unique — elle ne change pas. Sans
+                   adresse lisible, la ligne ne rend rien (voir
+                   `LigneAdresseDuLieu`). */}
+              {tatoueur.type_fiche !== "artiste" && (
+                <LigneAdresseDuLieu tatoueur={tatoueur} />
+              )}
             </div>
           )}
 
