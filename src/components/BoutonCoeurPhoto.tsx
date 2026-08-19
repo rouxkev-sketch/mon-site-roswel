@@ -2,7 +2,18 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { IconeCoeur } from "@/components/Icones";
+//  ██ nº 364 — LE FANION REMPLACE LE CŒUR, PARTOUT ██
+//  C'est L'ICÔNE DE LA BARRE FIXE, celle de « Ma sélection »
+//  (IconeFanion, components/Icones) — pas un second dessin : le même
+//  composant, appelé ici. La nº 145-§3 avait posé la règle inverse
+//  (« le fanion ne remplace pas le cœur des photos ») ; le
+//  propriétaire la change à cette passe, et c'est le seul endroit du
+//  produit YOKOFOLIO où ce dessin est choisi — cartes de la mosaïque,
+//  vitrines, résultats, fiches, fenêtres et « Ma sélection » passent
+//  tous par ce bouton. RIEN D'AUTRE NE CHANGE : gabarits (24 / 30),
+//  couleurs (blanc, plein une fois enregistré), ombre portée,
+//  animation de pose, zone tactile.
+import { IconeFanion } from "@/components/Icones";
 import { useUtilisateur } from "@/lib/use-utilisateur";
 import {
   amorcer,
@@ -16,14 +27,23 @@ import {
 } from "@/lib/favoris-yokofolio";
 
 /**
- * LE CŒUR — enregistrer une photo
- * ================================
+ * LE FANION — enregistrer une photo (nº 364 ; c'était un CŒUR jusque-là)
+ * ======================================================================
  * IL VIT DANS L'IMAGE, jamais à côté : sur les cartes de la mosaïque
  * en HAUT À DROITE, sur les fiches en bas à droite (smartphone) ou à
  * gauche du partage (web). C'est le geste d'Instagram et de Pinterest,
  * et il n'a pas besoin d'être expliqué.
  *
- * SON DESSIN : le trait blanc sur une pastille sombre allégée — le
+ * ⚠️ SON DESSIN EST CELUI DE LA BARRE FIXE — le fanion de « Ma
+ * sélection » (IconeFanion), appelé ici, jamais recopié : une seule
+ * main dessine, les deux endroits ne peuvent plus diverger. Décision du
+ * propriétaire, nº 364, qui renverse la règle de la nº 145-§3 (« le
+ * fanion ne remplace pas le cœur des photos ») : le geste et l'endroit
+ * portent désormais le MÊME signe — on range dans sa sélection.
+ * SEULE LA FORME CHANGE : gabarits, couleurs, ombre, animation de pose
+ * et zone tactile sont ceux du cœur, à l'identique.
+ *
+ * SON HABILLAGE : le trait blanc sur une pastille sombre allégée — le
  * même vocabulaire que le badge « Artiste / Salon » posé dans l'autre
  * angle. Enregistré, il se remplit de ROSE : c'est l'un des emplois
  * réservés de la couleur (l'état d'un objet), et il se voit sur
@@ -149,8 +169,9 @@ export function BoutonCoeurPhoto({
       aria-pressed={enregistree}
       //  ⚠️ LE MOT SUIT LA PAGE (nº 145-§3) : on retire « de ma
       //  sélection », plus « des favoris » — c'est le seul endroit du
-      //  site où le cœur prononçait encore l'ancien mot. LE DESSIN, LUI,
-      //  RESTE UN CŒUR : sur une photo, il dit un goût, pas un rangement.
+      //  site où le cœur prononçait encore l'ancien mot. ET LE DESSIN
+      //  SUIT LE MOT DEPUIS LA nº 364 : c'est le fanion de la barre
+      //  fixe, le signe du rangement, ici comme là-bas.
       aria-label={
         enregistree
           ? "Retirer cette photo de ma sélection"
@@ -176,7 +197,7 @@ export function BoutonCoeurPhoto({
                   focus-visible:outline-2 focus-visible:outline-offset-2
                   focus-visible:outline-primaire ${pulse ? "rw-coeur-anime" : ""}`}
     >
-      <IconeCoeur
+      <IconeFanion
         taille={variante === "carte" ? 24 : 30}
         classe={`[filter:drop-shadow(0_1px_2px_rgba(0,0,0,0.55))] ${
           enregistree

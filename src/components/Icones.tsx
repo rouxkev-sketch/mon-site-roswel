@@ -49,15 +49,21 @@ export function IconeCoeur({ taille = 24, classe = "" }: ProprietesIcone) {
 /**
  * LE FANION — « MA SÉLECTION » (passe nº 145-§3)
  * ----------------------------------------------
- * Le signet que l'on pose sur ce qu'on veut retrouver. Il remplace le
+ * Le signet que l'on pose sur ce qu'on veut retrouver. Il remplaçait le
  * cœur AUX DEUX ENDROITS QUI DÉSIGNENT LA PAGE : l'entrée « Ma
  * sélection » de la fenêtre « Mon compte », et l'icône de la barre
  * fixe.
  *
- * ⚠️ IL NE REMPLACE PAS LE CŒUR DES PHOTOS NI DES FICHES. Là, le cœur
- * dit un GESTE — « celle-ci me plaît » — et il reste un cœur. Le
- * fanion, lui, ne dit pas un goût : il dit un ENDROIT, la pochette où
- * l'on range. Deux idées, deux dessins.
+ * ⚠️ ET DEPUIS LA nº 364, IL LES REMPLACE TOUS — décision du
+ * propriétaire, qui renverse la borne posée ici à la nº 145-§3 (« il ne
+ * remplace pas le cœur des photos ni des fiches »). Le geste et
+ * l'endroit portent le MÊME signe : enregistrer, c'est ranger dans sa
+ * sélection. Un seul appelant le choisit pour tout YOKOFOLIO —
+ * `BoutonCoeurPhoto` (cartes, fiches, fenêtres, « Ma sélection ») ;
+ * personne ne redessine ce tracé ailleurs.
+ * ⚠️ LE PRODUIT ARTISANS N'EST PAS CONCERNÉ : son en-tête
+ * (components/EnTete) et son bouton (BoutonFavoriCarte) gardent leur
+ * cœur — c'est l'autre produit, on n'y touche pas.
  *
  * Dessiné comme les autres : trait de 1.8, viewBox de 24, angles
  * arrondis — un rectangle ouvert en bas, échancré en V.

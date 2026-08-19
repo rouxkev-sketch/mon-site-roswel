@@ -895,7 +895,9 @@ export function EnTeteTatouage({
           {/* ⚠️ LA PLACE À GAUCHE DU COMPTE CHANGE DE MAIN SELON QU'ON
               EST CONNECTÉ (passe nº 137) :
                · DÉCONNECTÉ — le GLOBE des langues, comme toujours ;
-               · CONNECTÉ — le CŒUR des favoris. Le globe, lui,
+               · CONNECTÉ — le FANION de « Ma sélection » (il s'appelait
+                 le cœur avant la nº 145 ; depuis la nº 364, c'est le
+                 même fanion qui marque les photos). Le globe, lui,
                  déménage dans la fenêtre « Mon compte », au-dessus de
                  Sécurité.
               Pourquoi un échange et non un ajout : la barre du

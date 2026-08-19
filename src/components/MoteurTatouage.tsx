@@ -269,6 +269,39 @@ export function MoteurTatouage({
   );
   /** Le panneau des interrupteurs (web, sous le bouton rond). */
   const [filtresOuverts, setFiltresOuverts] = useState(false);
+  /**
+   * ██ nº 364 — LE PANNEAU WEB TRAVAILLE SUR UN BROUILLON ██
+   * ==================================================================
+   * LA CAUSE, ET CE N'EST NI UN FOCUS PERDU NI UNE FERMETURE EXPLICITE.
+   * Chaque badge appelait `annoncer` → `surChangement` → `chercher`
+   * (EnTeteTatouage), c'est-à-dire `router.push("/?exclure=…")`. Or
+   * DEPUIS LA nº 357, l'accueil nu est PRÉRENDU et l'accueil À REQUÊTE
+   * est servi par le jumeau `/accueil-recherche` (réécriture du proxy) :
+   * ce sont DEUX ROUTES. Le premier badge quitte donc « / » pour le
+   * jumeau — et comme la barre est rendue PAR LA PAGE (page → Rendu
+   * Accueil → IndexTatoueurs → EnTeteTatouage → ce moteur), tout ce
+   * sous-arbre est DÉMONTÉ puis REMONTÉ : `filtresOuverts` repart de
+   * `false`, et la fenêtre se referme. Un REMONTAGE, donc, provoqué par
+   * une navigation — pas une perte de focus.
+   *
+   * LA CORRECTION, ET C'EST LE MOTIF QUI EXISTE DÉJÀ SUR MOBILE : tant
+   * que la fenêtre est ouverte, les badges écrivent dans un BROUILLON
+   * local ; à la fermeture, UNE seule annonce part avec l'état final.
+   * Aucune navigation pendant que la fenêtre vit — donc aucun
+   * remontage, donc elle reste ouverte.
+   *
+   * ⚠️ RÈGLE 332-§1, ET ELLE Y GAGNE : c'était UNE ENTRÉE D'HISTORIQUE
+   * PAR BADGE (quatre badges = quatre appuis sur « précédent » pour
+   * sortir). C'est désormais UNE SEULE entrée par ouverture de fenêtre.
+   * ⚠️ RÈGLES 328/329 : l'état continue de vivre dans l'adresse — il y
+   * arrive simplement à la fermeture, exactement comme le brouillon de
+   * la page mobile attend « Valider ».
+   * ⚠️ MOBILE INCHANGÉ : la page plein écran garde son propre brouillon
+   * (`poserDansLeBrouillon`) et son bouton « Valider ».
+   */
+  const [filtresEnAttente, setFiltresEnAttente] = useState<string[] | null>(
+    null
+  );
   /** Combien de fois « Effacer » a été pressé — sert de clé au champ
       de localité pour le reconstruire à neuf (voir plus bas). */
   const [effacements, setEffacements] = useState(0);
@@ -290,6 +323,47 @@ export function MoteurTatouage({
       dans `BoutonPhototheque`, l'écriture extraite que les deux barres
       consomment — c'est lui qui s'abonne au magasin. */
 
+  /**
+   * nº 364 — POSER UN BADGE DANS LE BROUILLON DU PANNEAU WEB.
+   * Les badges ne changent QUE `exclure` (voir `basculerBadge`) : c'est
+   * donc la seule chose que le brouillon retient.
+   */
+  function poserDansLePanneau(suivant: Partial<CritèresTatouage>) {
+    setFiltresEnAttente(suivant.exclure ?? criteres.exclure);
+  }
+
+  /**
+   * nº 364 — FERMER LE PANNEAU WEB, ET N'ANNONCER QU'ICI.
+   * Tous les chemins de fermeture passent par cette fonction — la
+   * croix n'existe pas sur ce panneau, il se ferme par le bouton rond,
+   * par un clic ailleurs, par Échap, ou en touchant les champs de
+   * recherche. TOUS APPLIQUENT : ce panneau n'a jamais eu de geste
+   * d'abandon, et en inventer un silencieux ferait perdre des choix
+   * sans le dire.
+   * ⚠️ RIEN N'EST ANNONCÉ SI RIEN N'A CHANGÉ : ouvrir puis refermer la
+   * fenêtre ne pousse aucune entrée d'historique et ne rejoue aucune
+   * recherche.
+   */
+  function fermerLesFiltres() {
+    setFiltresOuverts(false);
+    setFiltresEnAttente(null);
+    if (!filtresEnAttente) return;
+    const avant = [...criteres.exclure].sort().join(",");
+    const apres = [...filtresEnAttente].sort().join(",");
+    if (avant === apres) return;
+    surChangement({ ...criteres, exclure: filtresEnAttente });
+  }
+
+  /*  LA VERSION FRAÎCHE DE LA FERMETURE, pour les écouteurs de
+      document : ils sont posés une seule fois par ouverture, et
+      appelleraient sinon la fermeture du rendu où ils ont été posés —
+      celle d'un brouillon vide, qui n'annoncerait jamais rien. La
+      référence est réécrite APRÈS chaque rendu (jamais pendant). */
+  const fermerVive = useRef(fermerLesFiltres);
+  useEffect(() => {
+    fermerVive.current = fermerLesFiltres;
+  });
+
   // Le panneau des filtres du web : Échap et clic ailleurs referment.
   useEffect(() => {
     if (!filtresOuverts) return;
@@ -299,11 +373,13 @@ export function MoteurTatouage({
       //  ce second test, chaque badge coché refermait le panneau.
       if (plaqueFiltres.current?.contains(cible)) return;
       if (!zoneFiltres.current?.contains(cible)) {
-        setFiltresOuverts(false);
+        //  nº 364 — LA FERMETURE ANNONCE : c'est ici que la recherche
+        //  part, une seule fois, avec l'état final des badges.
+        fermerVive.current();
       }
     }
     function auClavier(evenement: KeyboardEvent) {
-      if (evenement.key === "Escape") setFiltresOuverts(false);
+      if (evenement.key === "Escape") fermerVive.current();
     }
     document.addEventListener("mousedown", auClic);
     document.addEventListener("keydown", auClavier);
@@ -1048,15 +1124,21 @@ export function MoteurTatouage({
               `onFocusCapture` couvre l'arrivée au clavier. */}
           <div
             className="flex-1 min-w-0"
-            onPointerDownCapture={() => setFiltresOuverts(false)}
-            onFocusCapture={() => setFiltresOuverts(false)}
+            //  nº 364 — toucher les champs referme LE PANNEAU, et la
+            //  fermeture annonce (rien si aucun badge n'a bougé).
+            onPointerDownCapture={() => fermerLesFiltres()}
+            onFocusCapture={() => fermerLesFiltres()}
           >
             {encadreChamps(id)}
           </div>
           <button
             ref={boutonFiltres}
             type="button"
-            onClick={() => setFiltresOuverts((etat) => !etat)}
+            //  nº 364 — le même bouton ouvre et ferme ; la FERMETURE
+            //  est celle qui annonce (voir `fermerLesFiltres`).
+            onClick={() =>
+              filtresOuverts ? fermerLesFiltres() : setFiltresOuverts(true)
+            }
             aria-expanded={filtresOuverts}
             aria-label="Filtres"
             title="Filtres"
@@ -1129,7 +1211,17 @@ export function MoteurTatouage({
               data-source-composant="MoteurTatouage · panneau web des filtres"
               className="px-5 pb-5 pt-[15px]"
             >
-              {blocFiltres(criteres, annoncer, true)}
+              {/*  nº 364 — LE PANNEAU LIT SON BROUILLON, et n'annonce
+                   rien : `poserDansLePanneau` retient, `fermerLesFiltres`
+                   annonce. Sans brouillon en cours, il montre les vrais
+                   critères — l'ouverture est donc toujours juste. */}
+              {blocFiltres(
+                filtresEnAttente
+                  ? { ...criteres, exclure: filtresEnAttente }
+                  : criteres,
+                poserDansLePanneau,
+                true
+              )}
             </MenuDeVerre>
           )}
         </div>
