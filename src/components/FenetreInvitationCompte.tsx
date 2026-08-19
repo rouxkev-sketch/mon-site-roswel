@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FenetreDeVerre } from "@/components/SurfaceDeVerre";
-import { IconeCroix } from "@/components/Icones";
 import { retenirLeGeste, versLaConnexion } from "@/lib/favoris-yokofolio";
 
 /**
@@ -38,7 +37,7 @@ export type GesteInvite = "photo" | "tatoueur";
  */
 const PHRASES: Record<GesteInvite, string> = {
   photo: "Envie de retrouver cette photo ?",
-  tatoueur: "Envie de garder ce portfolio ?",
+  tatoueur: "Envie de suivre ce portfolio ?",
 };
 
 export function FenetreInvitationCompte({
@@ -102,31 +101,24 @@ export function FenetreInvitationCompte({
       surFermeture={surFermeture}
       largeur="max-w-[400px]"
     >
-      {/*  LA CROIX — l'écriture du sélecteur de langue (la seule croix
-           de fenêtre sombre du site) : rond de 36, gris doux qui
-           blanchit au survol, `IconeCroix` de 18. Elle est ici SEULE
-           sur sa ligne, calée à droite : le titre est une phrase, pas
-           un titre de section, et le propriétaire le veut centré sur
-           son propre bloc. */}
-      <div className="flex justify-end">
-        <button
-          type="button"
-          onClick={surFermeture}
-          aria-label="Fermer"
-          className="-mr-2 -mt-2 flex h-9 w-9 shrink-0 items-center justify-center
-                     rounded-full text-sombre-texte-doux
-                     transition-colors hover:text-sombre-texte"
-        >
-          <IconeCroix taille={18} />
-        </button>
-      </div>
-
+      {/*  ██ §1 (nº 397) — LA CROIX EST PARTIE ██
+           Le propriétaire la retire : l'appui à côté et Échap
+           referment, et ce sont les deux gestes que toutes les fenêtres
+           de verre du site portent déjà (partage d'une fiche, langues).
+           ⚠️ ET L'AIR DU HAUT PART AVEC ELLE. La croix occupait une
+           ligne entière : rond de 36 px remonté de 8 (`-mt-2`), plus
+           les 4 px de `mt-1` sous elle. Le haut de la phrase était donc
+           à 24 (le `p-6` de la plaque) + 28 + 4 = 56 px du bord.
+           IL EST MAINTENANT À 24 px — le rembourrage de la plaque, et
+           rien d'autre. Ce n'est pas une valeur inventée : c'est le
+           `rembourrage` par défaut de `FenetreDeVerre`, l'air intérieur
+           de toutes les fenêtres de verre. */}
       {/*  1. LA PHRASE — blanche et grasse, comme demandé. La taille et
            la graisse sont celles du TITRE des fenêtres sombres
            (SelecteurLangue) : 17 px, `font-bold`, `tracking-tight`. */}
       <h2
         id="titre-invitation-compte"
-        className="mt-1 text-[17px] font-bold tracking-tight text-sombre-texte"
+        className="text-[17px] font-bold tracking-tight text-sombre-texte"
       >
         {PHRASES[geste]}
       </h2>
@@ -146,37 +138,75 @@ export function FenetreInvitationCompte({
                non plus au premier appui. Sans quoi refermer cette
                fenêtre laisserait derrière soi une intention qui
                s'exécuterait plus tard, toute seule.
-               LA DESTINATION NE CHANGE PAS D'UN CARACTÈRE :
-               `versLaConnexion()`, celle-là même où le fanion menait
-               jusqu'ici, chemin de retour compris. */
+               §5 (nº 397) — ET IL DIT DÉSORMAIS SON ONGLET : « creer ».
+               La page portait deux onglets et choisissait le sien
+               d'après un drapeau « ce navigateur a déjà connu un
+               compte » ; ce bouton-ci ouvre TOUJOURS la création, quoi
+               qu'il y ait sur l'appareil. Le chemin de retour, lui, ne
+               bouge pas : `suite` reste le premier paramètre. */
           retenirLeGeste({ genre: geste, id });
-          router.push(versLaConnexion());
+          router.push(versLaConnexion("creer"));
         }}
+        /*  §2 (nº 397) — LE BLANC EST CELUI DU SITE. C'était
+             `text-white` (#FFFFFF), venu de l'écriture d'origine du
+             bouton ; c'est désormais `text-sombre-texte` (#F2F2F4), le
+             jeton de la charte — CELUI DE LA PHRASE juste au-dessus. Un
+             seul blanc dans la fenêtre, et il est en charte. */
         className="mt-5 w-full inline-flex items-center justify-center rounded-full
                    px-7 min-h-[54px] bg-primaire hover:bg-primaire-fonce
-                   text-white font-semibold transition-colors
+                   text-sombre-texte font-semibold transition-colors
                    focus-visible:outline-2 focus-visible:outline-offset-2
                    focus-visible:outline-primaire"
       >
         Créer mon compte
       </button>
 
-      {/*  3. LE LIEN DISCRET — gris doux qui blanchit au survol, le
-           traitement de toutes les lignes secondaires de la charte
-           sombre. */}
+      {/*  3. LE LIEN DISCRET — blanc comme le reste depuis la nº 397 ;
+           c'est sa TAILLE et sa GRAISSE qui le mettent en retrait, plus
+           sa couleur (voir la note de son `className`). */}
       <button
         type="button"
         onClick={() => {
-          /*  MÊME ADRESSE, ET C'EST VOULU : le site n'a qu'UNE page de
-               compte (`/devenir-tatoueur`), qui porte les deux modes —
-               « Créer mon compte » et « Me connecter » — sur une
-               bascule interne. Il n'existe aucune adresse de connexion
-               séparée. On ne change donc aucune destination, comme
-               demandé, et le chemin de retour voyage pareil. */
-          router.push(versLaConnexion());
+          /*  ██ §5 (nº 397) — CE BOUTON OUVRE L'ONGLET CONNEXION ██
+               Le site n'a qu'UNE page de compte (`/devenir-tatoueur`),
+               qui porte les deux modes sur une bascule interne — il
+               n'existe pas d'adresse de connexion séparée. Jusqu'à cette
+               passe, les deux boutons y menaient sans rien dire, et la
+               page choisissait son onglet d'après un drapeau local.
+               DÉSORMAIS L'ADRESSE LE DIT : « connexion », et ce choix
+               l'emporte sur tout — session en cours, compte déjà créé
+               sur cet appareil, préférence mémorisée. C'est un site
+               consulté sur des ordinateurs partagés : rien ne doit être
+               présumé de qui est devant l'écran.
+               ⚠️ LE GESTE EST RETENU ICI AUSSI, exactement comme sur
+               l'autre bouton — et c'est ce que faisait le site AVANT la
+               fenêtre : un seul chemin menait au compte, et il notait
+               l'intention pour tout le monde. La reprise de la nº 137
+               se joue sur « connecté », pas sur « vient de s'inscrire » :
+               ne la noter que d'un côté aurait fait perdre son geste à
+               qui possède déjà un compte. Rien n'est ajouté au
+               mécanisme, il est seulement servi par les deux portes.
+               ⚠️ LE CHEMIN DE RETOUR VOYAGE PAREIL : `suite` d'abord,
+               le mode derrière. */
+          retenirLeGeste({ genre: geste, id });
+          router.push(versLaConnexion("connexion"));
         }}
-        className="mt-3 w-full text-center text-[14px] text-sombre-texte-doux
-                   transition-colors hover:text-sombre-texte"
+        /*  §2 et §3 (nº 397) — BLANC, ET PLUS D'AIR AU-DESSUS.
+             LA COULEUR : c'était `text-sombre-texte-doux` (#A8A8B0), le
+             gris doux — illisible sur une plaque translucide de 22 %.
+             C'est maintenant `text-sombre-texte` (#F2F2F4), le MÊME
+             blanc que la phrase et que le bouton.
+             LA HIÉRARCHIE TIENT SANS LA COULEUR, et c'est ce que le
+             propriétaire demande : 14 px en graisse normale contre
+             17 px en gras pour la phrase et un semi-gras sur capsule
+             rose pour le bouton. Trois poids, une seule couleur.
+             ⚠️ LE SURVOL NE CHANGE DONC PLUS RIEN : il éclaircissait le
+             gris vers ce blanc-ci, et il n'y a plus d'écart à parcourir.
+             La règle est retirée plutôt que laissée sans effet ; aucun
+             autre traitement n'est inventé à la place.
+             L'AIR : `mt-3` (12 px) devient `mt-5` (20 px) — la valeur
+             qui sépare DÉJÀ la phrase du bouton, sur cette fenêtre. */
+        className="mt-5 w-full text-center text-[14px] text-sombre-texte"
       >
         Déjà inscrit ? Se connecter
       </button>

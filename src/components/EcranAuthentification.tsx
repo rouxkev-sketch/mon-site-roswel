@@ -108,7 +108,19 @@ const ERREUR =
 export function EcranAuthentification({
   rattachement,
   suite,
+  modeDemande,
 }: {
+  /**
+   * ██ §5 (nº 397) — L'ONGLET DEMANDÉ PAR CELUI QUI ENVOIE ICI ██
+   * ------------------------------------------------------------------
+   * « creer » ou « connexion ». Décodé par le SERVEUR depuis `?mode=`
+   * (voir devenir-tatoueur/page.tsx) et passé ici : le bon onglet est
+   * donc dans le HTML dès la première image.
+   * ⚠️ IL L'EMPORTE SUR TOUT LE RESTE — voir la dérivation du mode plus
+   * bas. Absent : rien ne change, l'écran retrouve son comportement
+   * d'avant cette passe.
+   */
+  modeDemande?: Mode;
   /** LE CHEMIN DU RETOUR (passe nº 137) — d'où l'on vient quand un
       cœur ou un « Suivre » a mené ici sans compte. Une fois connecté,
       on y retourne : la page qu'on regardait n'est pas perdue.
@@ -155,9 +167,29 @@ export function EcranAuthentification({
   //  un navigateur qui a déjà connu un compte. Le drapeau « déjà
   //  connecté » sert à deviner ce que veut un visiteur ordinaire ; ici
   //  on le sait, il vient de cliquer sur un lien qui le lui propose.
-  const mode: Mode = enRattachement
-    ? (modeChoisi ?? "creer")
-    : (modeChoisi ?? (dejaConnecte ? "connexion" : "creer"));
+  /**
+   * ██ §5 (nº 397) — L'ORDRE DE PRIORITÉ, ET IL EST EXPLICITE ██
+   * ------------------------------------------------------------------
+   *  1. `modeChoisi` — L'ONGLET QU'ON VIENT DE TOUCHER ICI. Il gagne
+   *     toujours : une fois sur la page, on change d'avis librement.
+   *  2. `modeDemande` — L'ONGLET DEMANDÉ PAR L'ADRESSE (`?mode=`). Le
+   *     bouton cliqué dans la fenêtre d'invitation le dit, et RIEN ne
+   *     peut le contredire : ni une session existante, ni un compte
+   *     déjà créé sur cet appareil, ni le drapeau `dejaConnecte`, ni le
+   *     rattachement. Sur un ordinateur PARTAGÉ, présumer qui est
+   *     devant l'écran est une faute — c'est la règle posée par le
+   *     propriétaire à la nº 397.
+   *  3. LE DÉFAUT D'AVANT, inchangé pour qui arrive sans rien demander :
+   *     « créer » en rattachement, sinon le drapeau du navigateur.
+   * ⚠️ LE DRAPEAU N'EST PAS SUPPRIMÉ : il reste ce qu'il était pour
+   * quelqu'un qui vient directement sur la page de compte, par le menu
+   * ou par un lien nu. Il n'est plus qu'écarté quand un bouton a dit
+   * explicitement où il voulait aller.
+   */
+  const mode: Mode =
+    modeChoisi ??
+    modeDemande ??
+    (enRattachement ? "creer" : dejaConnecte ? "connexion" : "creer");
   const [email, setEmail] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
   const [confirmation, setConfirmation] = useState("");

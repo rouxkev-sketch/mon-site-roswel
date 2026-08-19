@@ -120,9 +120,26 @@ export function reprendreLeGeste(genre: Genre, id: string): boolean {
  * venue d'ailleurs) : c'est ce qui empêche qu'un lien fabriqué renvoie
  * quelqu'un hors du site après sa connexion.
  */
-export function versLaConnexion(): string {
+/**
+ * ██ §5 (nº 397) — L'ONGLET EST DEMANDÉ, JAMAIS DEVINÉ ██
+ * ------------------------------------------------------------------
+ * La page de compte porte DEUX onglets — créer, se connecter — et
+ * choisissait le sien d'après un drapeau « ce navigateur a déjà connu
+ * un compte » (cookie de la nº 203-§1a). Sur un ordinateur PARTAGÉ,
+ * c'est présumer qui est devant l'écran : le propriétaire l'interdit.
+ * Le bouton cliqué le dit désormais LUI-MÊME, dans l'adresse, et ce
+ * choix l'emporte sur tout le reste (voir EcranAuthentification).
+ * ⚠️ LE CHEMIN DE RETOUR NE BOUGE PAS D'UN CARACTÈRE : `suite` reste
+ * le premier paramètre, écrit comme avant. Le mode s'ajoute derrière,
+ * il ne remplace rien — l'inscription comme la connexion ramènent donc
+ * toujours à la page qu'on regardait.
+ * ⚠️ SANS ARGUMENT, L'ADRESSE EST EXACTEMENT CELLE D'AVANT : aucun
+ * appelant existant ne change de comportement.
+ */
+export function versLaConnexion(mode?: "creer" | "connexion"): string {
   const ici = `${window.location.pathname}${window.location.search}`;
-  return `/devenir-tatoueur?suite=${encodeURIComponent(ici)}`;
+  const suite = `suite=${encodeURIComponent(ici)}`;
+  return `/devenir-tatoueur?${suite}${mode ? `&mode=${mode}` : ""}`;
 }
 
 /** Le chemin de retour, nettoyé : interne, et rien d'autre. */

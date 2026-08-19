@@ -27,16 +27,32 @@ export const metadata: Metadata = {
  * l'adresse depuis le composant client aurait obligé à l'envelopper
  * d'un <Suspense> (exigence de `useSearchParams`) pour rien.
  */
+/**
+ * ⚠️ `?mode=` — L'ONGLET DEMANDÉ (passe nº 397). La fenêtre
+ * d'invitation (FenetreInvitationCompte) a DEUX boutons, et chacun doit
+ * ouvrir SON onglet : « Créer mon compte » la création, « Déjà
+ * inscrit ? » la connexion. Sans ce paramètre, l'écran choisissait
+ * d'après un drapeau « ce navigateur a déjà connu un compte » — une
+ * présomption inacceptable sur un ordinateur partagé.
+ * IL EST LU PAR LE SERVEUR, comme `suite`, et passé en propriété : le
+ * bon onglet est donc dans le HTML dès la première image, sans bascule
+ * visible après l'hydratation.
+ * ⚠️ FILTRÉ ICI, ET PAS AILLEURS : seules les deux valeurs connues
+ * passent. Tout le reste vaut « rien demandé », et l'écran retrouve
+ * exactement son comportement d'avant cette passe.
+ */
 export default async function PageCompte({
   searchParams,
 }: {
-  searchParams: Promise<{ suite?: string }>;
+  searchParams: Promise<{ suite?: string; mode?: string }>;
 }) {
-  const { suite } = await searchParams;
+  const { suite, mode } = await searchParams;
+  const modeDemande =
+    mode === "creer" || mode === "connexion" ? mode : undefined;
   return (
     <>
       <EnTeteTatouage />
-      <EcranAuthentification suite={suite} />
+      <EcranAuthentification suite={suite} modeDemande={modeDemande} />
     </>
   );
 }
