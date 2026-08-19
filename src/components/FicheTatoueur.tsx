@@ -853,7 +853,18 @@ export function FicheTatoueur({
                     {boutonPartage}
                   </div>
                   {photoAffichee && (
-                    <div className="mobile:hidden absolute top-3 right-3 z-[2]">
+                    /*  §1 (nº 375) — LE FANION DESCEND, LA CAPSULE
+                        MONTE. Sur le web, les deux échangent leurs
+                        places : le fanion prend l'angle BAS droit,
+                        la capsule du compteur prend le HAUT droit
+                        (CarrouselPortfolio). Le partage ne bouge
+                        pas — il reste seul dans l'angle haut gauche.
+                        ⚠️ LE DOIGT N'EST PAS CONCERNÉ : ce bloc est
+                        `mobile:hidden`, et le cœur tactile plus bas
+                        garde son `bottom-3 right-3` d'origine. Même
+                        gabarit, même variante, même marge de 12 px
+                        au bord : seule l'ancre verticale change. */
+                    <div className="mobile:hidden absolute bottom-3 right-3 z-[2]">
                       <BoutonCoeurPhoto
                         photoId={photoAffichee.cle}
                         variante="fiche"

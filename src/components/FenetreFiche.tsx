@@ -564,7 +564,15 @@ export function FenetreFiche({
                   />
                 </div>
                 {photoEnregistrable && (
-                  <div className="absolute top-3 right-3 z-[2]">
+                  /*  §1 (nº 375) — LA FENÊTRE SUIT LA PAGE, PARCE
+                      QU'ELLE EST LA PAGE. Elle n'existe QUE sur le
+                      web et consomme LE MÊME `CarrouselPortfolio` :
+                      sa capsule est donc déjà remontée en haut à
+                      droite par le même réglage. Laisser le fanion
+                      en haut ici, c'est le superposer à la capsule
+                      et faire diverger la fenêtre de la page — il
+                      descend avec elle, à l'identique. */
+                  <div className="absolute bottom-3 right-3 z-[2]">
                     <BoutonCoeurPhoto
                       photoId={photoEnregistrable}
                       //  L'ENSEMBLE DE LA PHOTO REGARDÉE — calculé

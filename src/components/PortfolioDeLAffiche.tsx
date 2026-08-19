@@ -44,6 +44,18 @@ import type { PhotoGalerie, StyleGalerie } from "@/lib/photo-tatoueur";
  *    « Couleur » ne s'écrivent nulle part ;
  *  · une section vide NE REND RIEN — ni titre, ni espace.
  *
+ * ██ §2 (nº 375) — LES DEUX TITRES DE SECTION DEVIENNENT UN SURTITRE ██
+ * ==================================================================
+ * CE QUI CHANGE : « RÉALISATIONS » et « FLASHS » ne coiffent plus une
+ * section. Le mot descend AU-DESSUS DU TITRE DE CHAQUE GALERIE et s'y
+ * RÉPÈTE — cinq galeries de réalisations, cinq fois « RÉALISATIONS ».
+ * Le portfolio n'est donc plus deux blocs, mais UNE SUITE de galeries
+ * qui portent chacune sa catégorie ; l'ordre ne bouge pas (toutes les
+ * réalisations, puis tous les flashs), et le mot garde son écriture au
+ * cheveu près — c'est toujours `ECRITURE_TITRE_SECTION`, on ne
+ * redéclare ni sa taille, ni sa graisse, ni son gris, ni son
+ * espacement de lettres.
+ *
  * UNE SÉRIE = STYLE + CATÉGORIE + RENDU — exactement une galerie de
  * dépôt, donc vingt photos au plus PAR CONSTRUCTION : rien de tronqué.
  * Un toucher de vignette ouvre cette série dans la galerie de
@@ -155,8 +167,9 @@ function seriesDeLaCategorie(
 }
 
 /**
- * LE PANNEAU « PORTFOLIO » — deux sections empilées, sans plus aucun
- * sélecteur (nº 276-§3).
+ * LE PANNEAU « PORTFOLIO » — UNE SUITE DE GALERIES, sans plus aucun
+ * sélecteur (nº 276-§3) ni aucun titre de section (nº 375-§2). Chaque
+ * galerie porte sa catégorie en surtitre.
  */
 export function PanneauPortfolio({
   groupes,
@@ -178,6 +191,28 @@ export function PanneauPortfolio({
     titre: categorie.titre,
     series: seriesDeLaCategorie(groupes, categorie.nature),
   })).filter((section) => section.series.length > 0);
+
+  /**
+   * §2 (nº 375) — UNE SEULE SUITE DE GALERIES, CHACUNE PORTANT SA
+   * CATÉGORIE.
+   * ------------------------------------------------------------------
+   * On aplatit les sections dans l'ordre où elles arrivent : toutes les
+   * réalisations, puis tous les flashs — `CATEGORIES_EXPLORER` donne
+   * l'ordre, il ne change pas. Chaque galerie emporte le MOT de sa
+   * catégorie, qui s'écrira au-dessus de son titre.
+   * ⚠️ LE FILTRE DU DESSUS FAIT DÉJÀ LE TRAVAIL DES CAS LIMITES : un
+   * tatoueur sans flash n'a qu'une section, donc aucune galerie ne porte
+   * « Flashs », et l'inverse est vrai aussi. Rien ne peut rester
+   * orphelin — il n'y a plus de titre qui existe indépendamment d'une
+   * galerie.
+   */
+  const galeries = sections.flatMap((section) =>
+    section.series.map((serie) => ({
+      serie,
+      nature: section.nature,
+      titre: section.titre,
+    }))
+  );
 
   if (sections.length === 0) {
     /*  §5 (nº 197) — LE TITRE SEUL, centré. Aucune phrase, aucune
@@ -259,204 +294,239 @@ export function PanneauPortfolio({
       </li>
     ));
 
+  /**
+   * §2 (nº 375) — LE SURTITRE D'UNE GALERIE — « RÉALISATIONS » ou
+   * « FLASHS », écrit une fois pour les deux appareils.
+   * ------------------------------------------------------------------
+   * MÊME ÉCRITURE QU'HIER, AU CHEVEU : `ECRITURE_TITRE_SECTION`, la
+   * classe que portait le `<h2>` — mêmes capitales, même gris, mêmes
+   * 13 px, même graisse, même espacement de lettres. On ne la recopie
+   * pas, on la consomme ; il n'y a donc rien à faire diverger.
+   * L'ÉLÉMENT CHANGE (`<p>` et non `<h2>`) et c'est voulu : ce n'est
+   * plus le titre d'une section, c'est la catégorie de la galerie qui
+   * suit, répétée autant de fois qu'il y a de galeries. Un `<h2>`
+   * répété cinq fois avec le même texte mentirait au plan du document
+   * et aux lecteurs d'écran.
+   * ⚠️ AUCUNE MARGE : le surtitre est collé au titre de sa galerie —
+   * c'est ce qui les fait lire comme un seul bloc, et c'est ce qui
+   * garantit qu'aucun espace neuf n'entre dans le portfolio.
+   */
+  const surtitre = (titre: string) => (
+    <p data-surtitre-galerie="" className={ECRITURE_TITRE_SECTION}>
+      {titre}
+    </p>
+  );
+
   return (
+    /*  §2 (nº 375) — LE RYTHME, ET CE QU'IL DEVIENT.
+        ------------------------------------------------------------
+        CE QUI DISPARAÎT, entièrement :
+         · le `mt-10` que portait CHAQUE `<section>` — 40 px avant
+           « RÉALISATIONS », 40 px avant « FLASHS » ;
+         · la ligne du `<h2>` lui-même, deux fois ;
+         · le `mt-5` (20 px) qui séparait un titre de sa première
+           galerie, deux fois.
+        CE QUI EST CONSERVÉ, à la valeur près :
+         · les 40 px qui ouvrent le portfolio sous la rangée Profil /
+           Portfolio — le `mt-10` ne disparaît pas, il REMONTE d'un
+           cran, du `<section>` au conteneur des galeries. Le premier
+           mot du portfolio se pose donc exactement là où se posait
+           « RÉALISATIONS » ;
+         · le `mt-7 first:mt-0` (28 px) entre deux galeries — pas
+           touché d'un pixel, y compris à la jointure réalisations /
+           flashs, qui n'est plus une frontière de section mais deux
+           galeries qui se suivent ;
+         · le `mt-2.5` (10 px) entre un titre de galerie et sa rangée,
+           et le `gap-[3px]` dans la rangée.
+        AUCUNE VALEUR NEUVE N'EST INTRODUITE : le surtitre s'empile sur
+        le titre sans marge du tout. */
     <div>
-      {sections.map((section) => (
-        /*  §2 (nº 277) — L'AÉRATION DES SECTIONS, et sa règle : PLUS
-            D'ESPACE AVANT UN TITRE QU'APRÈS LUI — c'est ce qui rattache
-            un titre à ce qui le SUIT. Les valeurs, dans le rythme du
-            site : 40 px avant chaque titre (`mt-10` — sous la rangée
-            Profil / Portfolio pour « RÉALISATIONS », sous le dernier
-            carrousel des réalisations pour « FLASHS ») et 20 px entre
-            un titre et son premier carrousel (`mt-5`, sur la grille).
-            L'écart entre deux carrousels d'une même section ne change
-            pas (le `gap` de la grille, plus bas). 40 > 20 : la preuve
-            est au banc, mesurée au pixel. */
-        <section key={section.nature} className="mt-10">
-          {/*  LE TITRE DE SECTION — l'écriture des titres du profil
-               (nº 223), consommée telle quelle : capitales grises
-               espacées, 13 px. Aucune valeur choisie ici. */}
-          <h2 className={ECRITURE_TITRE_SECTION}>{section.titre}</h2>
-
-          {/*  LES VIGNETTES — une par SÉRIE publiée, le nom du style
-               dessous. Angles arrondis, aucun contour, aucun encadré :
-               l'image et son nom, rien de plus. (Le cœur de série de
-               la nº 203 est ANNULÉ par la nº 204-§1 : le cœur vit sur
-               chaque photo, dans la galerie — jamais ici.) Un style
-               publié dans les deux rendus a DEUX vignettes, sous le
-               même nom : c'est la première photo de chaque série qui
-               les distingue — jamais un mot de rendu. */}
-          {/*  §2 (nº 277) — 20 px sous le titre (`mt-5`) : moins que
-               les 40 au-dessus, le titre appartient à sa section. Le
-               `gap` entre carrousels, lui, NE CHANGE PAS. */}
-          {/*  §3 (nº 314) — AU DOIGT AUSSI, DES GALERIES QUI DÉFILENT.
-               ------------------------------------------------------
-               CE QUI EST REMPLACÉ : la GRILLE DE VIGNETTES par lignes
-               de deux (une vignette par SÉRIE, sa première photo et le
-               nom du style dessous). Elle ne montrait qu'une image par
-               carrousel ; on ne voyait le reste qu'après avoir touché.
-               CE QUI PREND SA PLACE : la présentation du web — un titre
-               « Réalisme · Couleur » et, sous lui, TOUTES les photos du
-               carrousel dans une galerie qui défile.
-               LA SEULE DIFFÉRENCE AVEC LE WEB, et c'est le cœur du
-               point : AU DOIGT, LA GALERIE VA BORD À BORD DE L'ÉCRAN et
-               s'efface dans les marges de la page.
-               ⚠️ RIEN N'EST INVENTÉ ICI : ce débord et cet effacement
-               sont EXACTEMENT ceux de « Ma sélection » au doigt
-               (BlocSuivis) — mêmes marges négatives rendues en
-               rembourrage (`-mx-4 px-4 sm:-mx-6 sm:px-6`), et les deux
-               FONDUS ANTHRACITE du dessin partagé, qui sont son
-               comportement PAR DÉFAUT (`avecVoiles`, `decalageGauche`
-               et `decalageDroite` de `GalerieQuiDefile`). On ne les
-               repasse même pas : ne rien passer, c'est déjà les
-               demander.
-               ⚠️ ET C'EST LE MÊME COMPOSANT : le débord et l'effacement
-               étaient déjà des réglages, comme l'écart et la taille des
-               chevrons. Aucun second dessin. */}
-          <div data-galeries="doigt" className="mt-5 lg:hidden">
-            {section.series.map((serie) => (
-              <div
-                key={`doigt-${serie.style}-${serie.rendu}`}
-                data-galerie-serie={`${serie.style}·${serie.rendu}`}
-                className="mt-7 first:mt-0"
-              >
-                <p
-                  data-titre-galerie=""
-                  className="text-[15px] font-medium text-sombre-texte"
-                >
-                  {serie.label} · {libelleRendu(serie.rendu)}
-                </p>
-                <GalerieQuiDefile
-                  classeEnveloppe="mt-2.5"
-                  /*  LE DÉBORD DE « MA SÉLECTION », À LA LETTRE : la
-                       rangée sort jusqu'aux bords de l'écran (marges
-                       négatives de la largeur des marges de page) et se
-                       les reprend en REMBOURRAGE — au repos, la
-                       première photo reste donc alignée sur les titres,
-                       et ce qui défile passe SOUS les marges, où les
-                       fondus l'effacent.
-                       ⚠️ ET LE REMBOURRAGE DE DÉFILEMENT AVEC (`scroll-pl`),
-                       MESURÉ : sans lui, la rangée s'ouvrait décalée de
-                       16 px (`scrollLeft: 16`) et la première photo
-                       collait au bord de l'écran, à moitié effacée. LA
-                       RAISON : `snap-start` aligne sur le SNAPPORT, qui
-                       est la boîte de REMBOURRAGE — le rembourrage de
-                       débord en faisait donc partie, et le navigateur
-                       « rattrapait » les 16 px pour poser la première
-                       case au bord. « Ma sélection » ne connaît pas ce
-                       défaut parce que ses cases sont en `snap-center`,
-                       pas en `snap-start` ; les nôtres suivent le web
-                       (nº 308), qui n'a aucun rembourrage. On ne change
-                       donc NI les cases NI le web : on dit seulement au
-                       défilement où est le bord utile, et le débord se
-                       comporte enfin comme celui de « Ma sélection ». */
-                  classeRangee="-mx-4 px-4 scroll-pl-4 sm:-mx-6 sm:px-6 sm:scroll-pl-6"
-                  //  L'écart de la fiche (nº 308), le même qu'en web :
-                  //  le portfolio se lit pareil sur les deux appareils.
-                  ecart="gap-[3px]"
-                  cleDuContenu={`${serie.style}-${serie.rendu}-${serie.photos.length}`}
-                  etiquette={`${serie.label} · ${libelleRendu(serie.rendu)}`}
-                >
-                  {casesDe(serie, section.nature)}
-                </GalerieQuiDefile>
-              </div>
-            ))}
+      {/*  LES VIGNETTES — une par SÉRIE publiée, le nom du style
+           dessous. Angles arrondis, aucun contour, aucun encadré :
+           l'image et son nom, rien de plus. (Le cœur de série de
+           la nº 203 est ANNULÉ par la nº 204-§1 : le cœur vit sur
+           chaque photo, dans la galerie — jamais ici.) Un style
+           publié dans les deux rendus a DEUX vignettes, sous le
+           même nom : c'est la première photo de chaque série qui
+           les distingue — jamais un mot de rendu. */}
+      {/*  §3 (nº 314) — AU DOIGT AUSSI, DES GALERIES QUI DÉFILENT.
+           ------------------------------------------------------
+           CE QUI EST REMPLACÉ : la GRILLE DE VIGNETTES par lignes
+           de deux (une vignette par SÉRIE, sa première photo et le
+           nom du style dessous). Elle ne montrait qu'une image par
+           carrousel ; on ne voyait le reste qu'après avoir touché.
+           CE QUI PREND SA PLACE : la présentation du web — un titre
+           « Réalisme · Couleur » et, sous lui, TOUTES les photos du
+           carrousel dans une galerie qui défile.
+           LA SEULE DIFFÉRENCE AVEC LE WEB, et c'est le cœur du
+           point : AU DOIGT, LA GALERIE VA BORD À BORD DE L'ÉCRAN et
+           s'efface dans les marges de la page.
+           ⚠️ RIEN N'EST INVENTÉ ICI : ce débord et cet effacement
+           sont EXACTEMENT ceux de « Ma sélection » au doigt
+           (BlocSuivis) — mêmes marges négatives rendues en
+           rembourrage (`-mx-4 px-4 sm:-mx-6 sm:px-6`), et les deux
+           FONDUS ANTHRACITE du dessin partagé, qui sont son
+           comportement PAR DÉFAUT (`avecVoiles`, `decalageGauche`
+           et `decalageDroite` de `GalerieQuiDefile`). On ne les
+           repasse même pas : ne rien passer, c'est déjà les
+           demander.
+           ⚠️ ET C'EST LE MÊME COMPOSANT : le débord et l'effacement
+           étaient déjà des réglages, comme l'écart et la taille des
+           chevrons. Aucun second dessin. */}
+      <div data-galeries="doigt" className="mt-10 lg:hidden">
+        {galeries.map(({ serie, nature, titre }) => (
+          <div
+            /*  §2 (nº 375) — LA NATURE ENTRE DANS LA CLÉ, et il le
+                 faut : la liste est APLATIE, or un même style dans
+                 un même rendu peut exister en réalisation ET en
+                 flash. Sans elle, deux galeries porteraient la
+                 même clé — et le même nom de sonde. */
+            key={`doigt-${nature}-${serie.style}-${serie.rendu}`}
+            data-galerie-serie={`${nature}·${serie.style}·${serie.rendu}`}
+            className="mt-7 first:mt-0"
+          >
+            {surtitre(titre)}
+            <p
+              data-titre-galerie=""
+              className="text-[15px] font-medium text-sombre-texte"
+            >
+              {serie.label} · {libelleRendu(serie.rendu)}
+            </p>
+            <GalerieQuiDefile
+              classeEnveloppe="mt-2.5"
+              /*  LE DÉBORD DE « MA SÉLECTION », À LA LETTRE : la
+                   rangée sort jusqu'aux bords de l'écran (marges
+                   négatives de la largeur des marges de page) et se
+                   les reprend en REMBOURRAGE — au repos, la
+                   première photo reste donc alignée sur les titres,
+                   et ce qui défile passe SOUS les marges, où les
+                   fondus l'effacent.
+                   ⚠️ ET LE REMBOURRAGE DE DÉFILEMENT AVEC (`scroll-pl`),
+                   MESURÉ : sans lui, la rangée s'ouvrait décalée de
+                   16 px (`scrollLeft: 16`) et la première photo
+                   collait au bord de l'écran, à moitié effacée. LA
+                   RAISON : `snap-start` aligne sur le SNAPPORT, qui
+                   est la boîte de REMBOURRAGE — le rembourrage de
+                   débord en faisait donc partie, et le navigateur
+                   « rattrapait » les 16 px pour poser la première
+                   case au bord. « Ma sélection » ne connaît pas ce
+                   défaut parce que ses cases sont en `snap-center`,
+                   pas en `snap-start` ; les nôtres suivent le web
+                   (nº 308), qui n'a aucun rembourrage. On ne change
+                   donc NI les cases NI le web : on dit seulement au
+                   défilement où est le bord utile, et le débord se
+                   comporte enfin comme celui de « Ma sélection ». */
+              classeRangee="-mx-4 px-4 scroll-pl-4 sm:-mx-6 sm:px-6 sm:scroll-pl-6"
+              //  L'écart de la fiche (nº 308), le même qu'en web :
+              //  le portfolio se lit pareil sur les deux appareils.
+              ecart="gap-[3px]"
+              cleDuContenu={`${serie.style}-${serie.rendu}-${serie.photos.length}`}
+              etiquette={`${serie.label} · ${libelleRendu(serie.rendu)}`}
+            >
+              {casesDe(serie, nature)}
+            </GalerieQuiDefile>
           </div>
+        ))}
+      </div>
 
-          {/*  §1 (nº 306) — LE WEB : UNE GALERIE QUI DÉFILE PAR
-               CARROUSEL, la présentation de « Ma sélection »
-               (`GalerieQuiDefile`, partagée — aucun second dessin).
-               ------------------------------------------------------
-               RÈGLE 2 — LE TITRE PORTE LE STYLE ET LE RENDU :
-               « Réalisme · Couleur », « Réalisme · Noir et gris ».
-               Deux carrousels d'un même style mais de rendus
-               différents portent donc deux titres distincts, et c'est
-               le but. Les mots viennent de `libelleRendu` : aucun
-               libellé n'est écrit ici.
-               RÈGLE 3 — TOUTES les photos du carrousel. Le plafond de
-               vingt de « Ma sélection » ne s'applique pas à cette
-               page, et il n'y a pas de « Voir plus ».
-               RÈGLE 4 — DEUX PHOTOS PLEINES ET 10 % DE LA TROISIÈME,
-               son bord droit collé au bord droit du cadre :
-               `2,1 × case + 2 écarts = 100 %` de la boîte de CONTENU,
-               d'où `case = (100 % − 6px) / 2,1` avec l'écart de 3 px.
-               Aucune largeur en dur — la règle tient à toute largeur
-               de colonne.
-               RÈGLE 5 — ANNULÉE PAR LA Nº 312-§1, SUR CONSIGNE.
-               ------------------------------------------------------
-               Elle faisait DÉBORDER la galerie de 40 px vers la grande
-               photo et effaçait cette bande en dégradé. Le propriétaire
-               n'en veut plus : LA GALERIE S'ARRÊTE À L'ALIGNEMENT DU
-               TEXTE, la même ligne verticale que les titres, et une
-               photo qui sort à gauche disparaît NETTEMENT sur cette
-               ligne. Plus de débord, plus de masque, plus de dégradé —
-               la rangée n'a donc plus ni marge négative, ni
-               rembourrage, ni rembourrage de défilement : sa boîte est
-               celle de la colonne, et `snap-start` s'aligne dessus
-               sans qu'on ait rien à corriger. */}
-          <div data-galeries="web" className="mt-5 hidden lg:block">
-            {section.series.map((serie) => (
-              <div
-                key={`galerie-${serie.style}-${serie.rendu}`}
-                data-galerie-serie={`${serie.style}·${serie.rendu}`}
-                className="mt-7 first:mt-0"
-              >
-                {/*  LE TITRE, AU-DESSUS DE SA GALERIE — l'écriture des
-                     noms de style de la grille (15 px, `medium`,
-                     blanche), reprise telle quelle. */}
-                <p
-                  data-titre-galerie=""
-                  className="text-[15px] font-medium text-sombre-texte"
-                >
-                  {serie.label} · {libelleRendu(serie.rendu)}
-                </p>
-                <GalerieQuiDefile
-                  /*  §1 (nº 312) — PLUS AUCUN DÉBORD, PLUS AUCUN MASQUE.
-                       ------------------------------------------------
-                       LA GALERIE TIENT DANS LA COLONNE, exactement : ni
-                       marge négative sur l'enveloppe, ni marge négative
-                       sur la rangée, ni rembourrage pour la compenser.
-                       Son bord gauche EST l'alignement du texte, parce
-                       que c'est la même boîte que celle des titres — ce
-                       n'est plus un réglage qui tombe juste, c'est une
-                       identité.
-                       CE QUE ÇA SIMPLIFIE AU PASSAGE : `scroll-pl-10`
-                       n'a plus de raison d'être (il remettait le
-                       snapport sur la boîte de contenu quand la rangée
-                       avait 40 px de rembourrage), et les deux lignes
-                       de masque disparaissent avec l'effacement — donc
-                       aussi la racine d'arrière-plan qu'un masque crée
-                       pour ses descendants, et toutes les précautions
-                       qui allaient avec (nº 234). */
-                  classeEnveloppe="mt-2.5"
-                  /*  §4-a (nº 308) — L'ÉCART PASSE DE 6 À 3 px, la
-                       moitié. Il est donné au dessin partagé en
-                       RÉGLAGE : « Ma sélection » garde ses 6 px. */
-                  ecart="gap-[3px]"
-                  //  §4 (nº 310) — le petit chevron est demandé ICI,
-                  //  et seulement ici : « Ma sélection » garde celui
-                  //  de la nº 301 (le défaut du dessin partagé).
-                  chevron={CHEVRON_GALERIE_PETIT}
-                  /*  §3-b ET §4-c (nº 308) — LES DEUX CHEVRONS SONT
-                       POSÉS DE LA MÊME FAÇON, chacun contre SON bord
-                       de la galerie : `left-0` et `right-0`, donc la
-                       même distance des deux côtés. Ils vivent DANS la
-                       rangée — jamais dans une gouttière collée à la
-                       grande photo, d'où venait « à moitié coupée »
-                       (nº 308-§3, puis nº 310-§3). */
-                  decalageGauche="left-0"
-                  decalageDroite="right-0"
-                  avecVoiles={false}
-                  cleDuContenu={`${serie.style}-${serie.rendu}-${serie.photos.length}`}
-                  etiquette={`${serie.label} · ${libelleRendu(serie.rendu)}`}
-                >
-                  {casesDe(serie, section.nature)}
-                </GalerieQuiDefile>
-              </div>
-            ))}
+      {/*  §1 (nº 306) — LE WEB : UNE GALERIE QUI DÉFILE PAR
+           CARROUSEL, la présentation de « Ma sélection »
+           (`GalerieQuiDefile`, partagée — aucun second dessin).
+           ------------------------------------------------------
+           RÈGLE 2 — LE TITRE PORTE LE STYLE ET LE RENDU :
+           « Réalisme · Couleur », « Réalisme · Noir et gris ».
+           Deux carrousels d'un même style mais de rendus
+           différents portent donc deux titres distincts, et c'est
+           le but. Les mots viennent de `libelleRendu` : aucun
+           libellé n'est écrit ici.
+           RÈGLE 3 — TOUTES les photos du carrousel. Le plafond de
+           vingt de « Ma sélection » ne s'applique pas à cette
+           page, et il n'y a pas de « Voir plus ».
+           RÈGLE 4 — DEUX PHOTOS PLEINES ET 10 % DE LA TROISIÈME,
+           son bord droit collé au bord droit du cadre :
+           `2,1 × case + 2 écarts = 100 %` de la boîte de CONTENU,
+           d'où `case = (100 % − 6px) / 2,1` avec l'écart de 3 px.
+           Aucune largeur en dur — la règle tient à toute largeur
+           de colonne.
+           RÈGLE 5 — ANNULÉE PAR LA Nº 312-§1, SUR CONSIGNE.
+           ------------------------------------------------------
+           Elle faisait DÉBORDER la galerie de 40 px vers la grande
+           photo et effaçait cette bande en dégradé. Le propriétaire
+           n'en veut plus : LA GALERIE S'ARRÊTE À L'ALIGNEMENT DU
+           TEXTE, la même ligne verticale que les titres, et une
+           photo qui sort à gauche disparaît NETTEMENT sur cette
+           ligne. Plus de débord, plus de masque, plus de dégradé —
+           la rangée n'a donc plus ni marge négative, ni
+           rembourrage, ni rembourrage de défilement : sa boîte est
+           celle de la colonne, et `snap-start` s'aligne dessus
+           sans qu'on ait rien à corriger. */}
+      <div data-galeries="web" className="mt-10 hidden lg:block">
+        {galeries.map(({ serie, nature, titre }) => (
+          <div
+            //  §2 (nº 375) — la nature dans la clé, même raison
+            //  qu'au doigt : la liste est aplatie.
+            key={`galerie-${nature}-${serie.style}-${serie.rendu}`}
+            data-galerie-serie={`${nature}·${serie.style}·${serie.rendu}`}
+            className="mt-7 first:mt-0"
+          >
+            {/*  §2 (nº 375) — LE SURTITRE : « RÉALISATIONS » ou
+                 « FLASHS », l'écriture de l'ancien titre de
+                 section, collée au titre de la galerie. */}
+            {surtitre(titre)}
+            {/*  LE TITRE, AU-DESSUS DE SA GALERIE — l'écriture des
+                 noms de style de la grille (15 px, `medium`,
+                 blanche), reprise telle quelle. */}
+            <p
+              data-titre-galerie=""
+              className="text-[15px] font-medium text-sombre-texte"
+            >
+              {serie.label} · {libelleRendu(serie.rendu)}
+            </p>
+            <GalerieQuiDefile
+              /*  §1 (nº 312) — PLUS AUCUN DÉBORD, PLUS AUCUN MASQUE.
+                   ------------------------------------------------
+                   LA GALERIE TIENT DANS LA COLONNE, exactement : ni
+                   marge négative sur l'enveloppe, ni marge négative
+                   sur la rangée, ni rembourrage pour la compenser.
+                   Son bord gauche EST l'alignement du texte, parce
+                   que c'est la même boîte que celle des titres — ce
+                   n'est plus un réglage qui tombe juste, c'est une
+                   identité.
+                   CE QUE ÇA SIMPLIFIE AU PASSAGE : `scroll-pl-10`
+                   n'a plus de raison d'être (il remettait le
+                   snapport sur la boîte de contenu quand la rangée
+                   avait 40 px de rembourrage), et les deux lignes
+                   de masque disparaissent avec l'effacement — donc
+                   aussi la racine d'arrière-plan qu'un masque crée
+                   pour ses descendants, et toutes les précautions
+                   qui allaient avec (nº 234). */
+              classeEnveloppe="mt-2.5"
+              /*  §4-a (nº 308) — L'ÉCART PASSE DE 6 À 3 px, la
+                   moitié. Il est donné au dessin partagé en
+                   RÉGLAGE : « Ma sélection » garde ses 6 px. */
+              ecart="gap-[3px]"
+              //  §4 (nº 310) — le petit chevron est demandé ICI,
+              //  et seulement ici : « Ma sélection » garde celui
+              //  de la nº 301 (le défaut du dessin partagé).
+              chevron={CHEVRON_GALERIE_PETIT}
+              /*  §3-b ET §4-c (nº 308) — LES DEUX CHEVRONS SONT
+                   POSÉS DE LA MÊME FAÇON, chacun contre SON bord
+                   de la galerie : `left-0` et `right-0`, donc la
+                   même distance des deux côtés. Ils vivent DANS la
+                   rangée — jamais dans une gouttière collée à la
+                   grande photo, d'où venait « à moitié coupée »
+                   (nº 308-§3, puis nº 310-§3). */
+              decalageGauche="left-0"
+              decalageDroite="right-0"
+              avecVoiles={false}
+              cleDuContenu={`${serie.style}-${serie.rendu}-${serie.photos.length}`}
+              etiquette={`${serie.label} · ${libelleRendu(serie.rendu)}`}
+            >
+              {casesDe(serie, nature)}
+            </GalerieQuiDefile>
           </div>
-        </section>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }

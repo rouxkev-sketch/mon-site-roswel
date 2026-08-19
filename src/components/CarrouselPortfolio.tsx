@@ -922,7 +922,20 @@ export function CarrouselPortfolio({
                         pointer-fine:group-hover:visible top-2 right-2 ${
                           badgeReduit ? "px-2 py-1" : "px-2.5 py-1.5"
                         }`
-                     : "inline-flex right-3 bottom-3 mobile:bottom-auto mobile:top-3 px-2.5 py-1.5"
+                     : //  §1 (nº 375) — SUR UNE FICHE, LA CAPSULE EST EN
+                       //  HAUT, SUR LES DEUX APPAREILS.
+                       //  ------------------------------------------
+                       //  Elle était en bas sur le web et en haut au
+                       //  doigt (`mobile:bottom-auto mobile:top-3`) —
+                       //  c'est ce couple qui disparaît, le web
+                       //  rejoignant la place du doigt. Au doigt,
+                       //  RIEN NE CHANGE : `top-3` y était déjà la
+                       //  valeur retenue, elle est simplement écrite
+                       //  une fois au lieu de deux. Le fanion fait le
+                       //  chemin inverse (FicheTatoueur, FenetreFiche).
+                       //  ⚠️ Ni gabarit, ni rembourrage, ni couleur, ni
+                       //  angle : seule l'ancre verticale bouge.
+                       "inline-flex right-3 top-3 px-2.5 py-1.5"
                  }`}
     >
       <span
