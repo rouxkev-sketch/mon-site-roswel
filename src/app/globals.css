@@ -89,6 +89,79 @@
   --font-sans: var(--font-geist-sans);
 }
 
+/* ██ §1 (nº 398) — LA MAIN REVIENT SUR TOUT CE QUI SE CLIQUE ██
+   ==================================================================
+   LA CAUSE, RELEVÉE À LA nº 383 ET LAISSÉE SANS SUITE : Tailwind v4 a
+   RETIRÉ de sa feuille de base le `cursor: pointer` que la v3 posait
+   sur les boutons. Le navigateur rend donc son curseur par défaut — la
+   flèche — sur TOUT le site : fanions, flèches de carrousel, onglets
+   Profil / Portfolio, barre fixe, filtres, menus. La nº 383 l'avait
+   traité au cas par cas, sur le seul volet des horaires ; le
+   propriétaire demande la source.
+
+   ⚠️ POURQUOI DANS `@layer base`, ET C'EST TOUTE LA PRUDENCE DE CETTE
+   PASSE. Les règles de ce fichier sont écrites HORS COUCHE, et du CSS
+   hors couche l'emporte sur TOUT ce qui est en couche — utilitaires
+   compris. Écrite ainsi, cette règle aurait battu chaque `cursor-*` du
+   site : `cursor-not-allowed` sur le curseur de rayon, `cursor-default`
+   partout où quelqu'un en pose un, `disabled:cursor-*`… Dans la couche
+   `base`, elle est au contraire battue par la couche `utilities`, qui
+   vient après — donc PAR CONSTRUCTION toute classe Tailwind reprend la
+   main sur elle, quel que soit son nom.
+   ⚠️ ET LE PIÈGE DE LA nº 389 NE PEUT PAS SE REPRODUIRE : là-bas, deux
+   classes de MÊME poids se disputaient l'ORDRE ALPHABÉTIQUE de la
+   feuille. Ici il n'y a pas de dispute possible — ce sont deux COUCHES,
+   et l'ordre des couches est déclaré, pas alphabétique.
+
+   CE QU'ELLE COUVRE :
+    · les boutons, sauf désactivés (`:disabled` et `aria-disabled`) ;
+    · tout ce qui porte un RÔLE cliquable — bouton, onglet, option,
+      entrée de menu, interrupteur, case, radio ;
+    · les liens qui MÈNENT quelque part (`a[href]`) : un `<a>` sans
+      destination n'est pas un lien ;
+    · `<summary>`, `<select>`, et les cases à cocher et boutons radio,
+      avec l'étiquette qui les ENVELOPPE — `label:has(...)` et non
+      `label[for]` : une étiquette de champ de texte ou de curseur de
+      rayon ne se clique pas comme un bouton (celle du rayon dirait la
+      main pour un simple mot).
+
+   CE QU'ELLE NE COUVRE PAS, ET C'EST RECENSÉ : un `<div>` rendu
+   cliquable par un `onClick` de React. Aucune règle CSS ne peut les
+   atteindre — React n'écrit pas d'attribut `onclick` dans le HTML. Il
+   y en a DIX dans tout le site, et ce sont TOUS des voiles de fermeture
+   ou des cadres de fenêtre (BlocSuppressions, BoutonHorsLigne,
+   FenetreSignalement, FenetreModale ×2, RecadreurPhoto,
+   FormulaireFiche ×2, FenetreFiche, PageRattachement) : aucun ne doit
+   afficher la main — un voile n'est pas un bouton, il referme.
+   ⚠️ LES CHAMPS DE SAISIE NE SONT PAS TOUCHÉS : ni `input[type=text]`,
+   ni `textarea`, ni le curseur de rayon (`type=range`) ne figurent
+   ici. Ils gardent leur curseur. */
+@layer base {
+  button:not(:disabled):not([aria-disabled="true"]),
+  select:not(:disabled),
+  summary,
+  a[href],
+  [role="button"]:not([aria-disabled="true"]),
+  [role="tab"]:not([aria-disabled="true"]),
+  [role="option"]:not([aria-disabled="true"]),
+  [role="menuitem"]:not([aria-disabled="true"]),
+  [role="menuitemcheckbox"]:not([aria-disabled="true"]),
+  [role="menuitemradio"]:not([aria-disabled="true"]),
+  [role="switch"]:not([aria-disabled="true"]),
+  [role="checkbox"]:not([aria-disabled="true"]),
+  [role="radio"]:not([aria-disabled="true"]),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  input[type="submit"]:not(:disabled),
+  input[type="button"]:not(:disabled),
+  input[type="reset"]:not(:disabled),
+  input[type="file"]:not(:disabled),
+  label:has(input[type="checkbox"]:not(:disabled)),
+  label:has(input[type="radio"]:not(:disabled)) {
+    cursor: pointer;
+  }
+}
+
 /* ⚠️ LE FOND DE BASE EST SUR <html>, ET PLUS SUR LE CORPS — C'EST
    L'ÉCRAN BLANC DU GESTE DE RETOUR.
    Le corps portait le fond du produit ARTISANS, qui est BLANC. Tant

@@ -841,7 +841,25 @@ function CarteTatoueurNue({
           EN DEUX COLONNES SUR SMARTPHONE, il disparaît : la carte n'y
           fait que 190 px de large, le portrait mangerait le nom. */}
       {!phototheque && (
-      <div className="pt-3 px-0.5 mobile:px-4 mobile:pt-2.5 flex items-center gap-2.5">
+      <div
+        /*  ██ §3 (nº 398) — L'AIR AU-DESSUS DE LA PHOTO DE PROFIL ██
+             PLEINE LARGEUR AU DOIGT SEULEMENT. C'était `mobile:pt-2.5`
+             (10 px) entre le bas de l'image et le rond de profil ; le
+             propriétaire le trouve trop serré. Il passe à 16 px, et ce
+             n'est pas une valeur inventée : c'est le `mobile:px-4` que
+             CETTE MÊME rangée porte déjà de chaque côté — le carré de
+             marge de la carte au doigt.
+             ⚠️ LES CARTES CÔTE À CÔTE NE BOUGENT PAS : elles gardent
+             `mobile:pt-2.5` par le ternaire. Le web non plus — son
+             `pt-3` est hors variante `mobile:`.
+             ⚠️ L'ESPACE SOUS LA PHOTO N'EST PAS ICI : cette rangée n'a
+             aucun rembourrage bas, la carte s'arrête sur son texte. Ce
+             qui suit est la gouttière de la grille — voir
+             GrilleTatoueurs, où elle passe de 32 à 24 px. */
+        className={`pt-3 px-0.5 mobile:px-4 flex items-center gap-2.5 ${
+          uneColonne ? "mobile:pt-4" : "mobile:pt-2.5"
+        }`}
+      >
         <span
           className={`shrink-0 h-10 w-10 flex items-center
                      justify-center overflow-hidden rounded-full

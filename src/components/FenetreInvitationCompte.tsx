@@ -205,8 +205,27 @@ export function FenetreInvitationCompte({
              La règle est retirée plutôt que laissée sans effet ; aucun
              autre traitement n'est inventé à la place.
              L'AIR : `mt-3` (12 px) devient `mt-5` (20 px) — la valeur
-             qui sépare DÉJÀ la phrase du bouton, sur cette fenêtre. */
-        className="mt-5 w-full text-center text-[14px] text-sombre-texte"
+             qui sépare DÉJÀ la phrase du bouton, sur cette fenêtre.
+
+             ██ §2 (nº 398) — LE SURVOL LUI REVIENT ██
+             Passé au blanc, ce lien n'avait plus aucun retour au survol
+             (la nº 397 avait retiré l'éclaircissement, devenu sans
+             objet). Il reprend LE VOILE TRANSLUCIDE DES LIGNES
+             CLIQUABLES — `hover:bg-white/5 active:bg-white/10`, le
+             traitement de `CLASSES_LIGNE_CLIQUABLE` (nº 232), des
+             lignes de menu (nº 237-§2), du sélecteur de langue et des
+             quatre partages de la fenêtre de verre. C'est le seul
+             survol de la charte sombre qui ne touche pas à la couleur
+             du texte — exactement ce qu'il faut ici, puisque le blanc
+             ne doit plus bouger. Rien n'est inventé.
+             ⚠️ L'ÉCART VISIBLE NE CHANGE PAS D'UN PIXEL : le lien porte
+             maintenant 8 px de rembourrage (`py-2`) pour que le voile
+             ait un corps, donc sa marge passe de 20 à 12 px. Du bas du
+             bouton au texte du lien : 12 + 8 = 20 px, la valeur posée à
+             la nº 397. Deux écritures, une seule distance. */
+        className="mt-3 w-full rounded-xl py-2 text-center text-[14px]
+                   text-sombre-texte transition-colors
+                   hover:bg-white/5 active:bg-white/10"
       >
         Déjà inscrit ? Se connecter
       </button>

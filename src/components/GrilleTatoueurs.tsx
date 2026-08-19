@@ -639,7 +639,19 @@ export function GrilleTatoueurs({
               ? "mobile:gap-y-[2px]"
               : "mobile:gap-[2px]"
             : disposition === "une"
-              ? "mobile:gap-y-8"
+              ? //  §3 (nº 398) — L'ESPACE SOUS LA PHOTO DE PROFIL SE
+                //  RESSERRE : `gap-y-8` (32 px) devient `gap-y-6`
+                //  (24 px). C'est la seule gouttière du site qui vaut
+                //  cet espace-là — une carte pleine largeur n'a aucun
+                //  rembourrage bas, elle s'arrête sur son texte, et ce
+                //  qui suit est donc cet écart. 24 px est le cran
+                //  au-dessous dans l'échelle, celui du socle des
+                //  grilles.
+                //  ⚠️ CE SEUL CAS : la photothèque (juste au-dessus),
+                //  les cartes côte à côte (GOUTTIERES_DEUX_COLONNES) et
+                //  « Ma sélection » (qui consomme CLASSES_GRILLE_CARTES,
+                //  jamais cette branche) ne changent pas.
+                "mobile:gap-y-6"
               : GOUTTIERES_DEUX_COLONNES
         } ${
           //  L'ESTOMPE DE RECHERCHE — la seule opacité de la mosaïque
