@@ -108,15 +108,42 @@ export function BoutonSuivre({
           MÊME typographie que « Profil » et « Portfolio » : 14 px
           semi-gras (SelecteurOngletAffiche). La rangée `items-center`
           de l'enveloppe cale les centres optiques. */
+      /**
+       * ██ §1 (nº 383) — LE BADGE DEVIENT UN CONTOUR ██
+       * ==================================================================
+       * Le fond plein disparaît des DEUX états. Ne restent qu'un trait
+       * d'un pixel et le mot, de la même couleur :
+       *  · PAS ENCORE SUIVI — rose sur rose : `border-primaire` +
+       *    `text-primaire`, le jeton rose du site (`--rw-primaire`),
+       *    celui-là même que le fond portait avant et que le
+       *    soulignement des onglets porte depuis la nº 382 ;
+       *  · DÉJÀ SUIVI — gris sur gris : `border-sombre-texte-doux` +
+       *    `text-sombre-texte-doux`, le gris doux que ce bouton
+       *    utilisait DÉJÀ pour son texte dans cet état. Aucune couleur
+       *    n'est inventée : les deux existaient sur ce bouton.
+       * Le survol reprend le même jeu d'un cran : le rose foncé et le
+       * texte plein, tous deux déjà en charte.
+       *
+       * ⚠️ MÊME TYPOGRAPHIE DANS LES DEUX ÉTATS — 14 px semi-gras,
+       * inchangés ; seuls la couleur et le mot changent, et le mot
+       * changeait déjà (« Suivre » / « Suivi », nº 208-§1, avec ses
+       * deux libellés superposés pour que la largeur ne bouge pas).
+       *
+       * ⚠️ LA RANGÉE NE GRANDIT PAS. Le bouton passe de 30 à 32 px
+       * (les deux pixels du trait), mais ce n'est pas lui qui commande :
+       * le bloc des onglets fait 47 px depuis la nº 382, et c'est le
+       * plus haut de la rangée. La cible tactile GAGNE donc deux
+       * pixels au lieu d'en perdre.
+       */
       className={`inline-flex min-h-[30px] items-center justify-center rounded-full
-                  px-3.5 text-[14px] font-semibold transition-colors
+                  border px-3.5 text-[14px] font-semibold transition-colors
                   focus-visible:outline-2 focus-visible:outline-offset-2
                   focus-visible:outline-primaire ${
                     pleineLargeur ? "w-full" : ""
                   } ${
                     suivi
-                      ? "bg-sombre-eleve text-sombre-texte-doux hover:bg-sombre-eleve-clair"
-                      : "bg-primaire text-white hover:bg-primaire-fonce"
+                      ? "border-sombre-texte-doux text-sombre-texte-doux hover:text-sombre-texte hover:border-sombre-texte"
+                      : "border-primaire text-primaire hover:border-primaire-fonce hover:text-primaire-fonce"
                   }`}
     >
       {/*  ⚠️ LES DEUX LIBELLÉS OCCUPENT LA MÊME LARGEUR (nº 208-§1) :

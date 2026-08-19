@@ -599,7 +599,16 @@ export function FenetreFiche({
                  l'œil. */}
             <div
               ref={colonneRef}
-              className="w-full lg:w-[380px] shrink-0 lg:h-full lg:overflow-y-auto p-5 sm:p-6 flex flex-col bg-sombre-carte [--fond-colonne:var(--rw-sombre-carte)]"
+              /*  §3 (nº 383) — LA MÊME CORRECTION QUE LA PAGE, ÉCRITE
+                  ICI PARCE QUE CETTE COLONNE EST LA SIENNE. Son
+                  `lg:overflow-y-auto` déclarait lui aussi, sans le
+                  dire, un défilement HORIZONTAL (règle du langage : un
+                  axe réglé rend l'autre `auto`), et le débord de la
+                  rangée du haut (nº 381) suffisait à le rendre
+                  glissant. `lg:overflow-x-clip` rogne au même pixel
+                  sans créer de port de défilement. Rien de
+                  géométrique : ni largeur, ni rembourrage, ni marge. */
+              className="w-full lg:w-[380px] shrink-0 lg:h-full lg:overflow-y-auto lg:overflow-x-clip p-5 sm:p-6 flex flex-col bg-sombre-carte [--fond-colonne:var(--rw-sombre-carte)]"
             >
               <ContenuFiche
                 tatoueur={tatoueur}

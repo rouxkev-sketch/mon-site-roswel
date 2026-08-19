@@ -1076,7 +1076,49 @@ export function FicheTatoueur({
             sortiraient de la fenêtre sur un écran étroit (marge de
             page 24 px à 1024) et ÉLARGIRAIENT le document — le piège
             de la nº 228. */}
-        <div className="lg:sticky lg:top-[99px] lg:self-start lg:max-h-[calc(100vh-119px)] lg:overflow-y-auto lg:px-3 lg:-mx-3 min-w-0 flex flex-col bg-sombre-fond [--fond-colonne:var(--rw-sombre-fond)]">
+        {/**
+          * ██ §3 (nº 383) — ELLE NE DÉFILERA PLUS JAMAIS LATÉRALEMENT ██
+          * ==================================================================
+          * LA CAUSE, ET C'EST UNE RÈGLE DU LANGAGE, PAS UN BOGUE DU SITE :
+          * quand un seul axe reçoit une valeur de débordement, L'AUTRE
+          * CESSE D'ÊTRE `visible` ET DEVIENT `auto`. En écrivant
+          * `lg:overflow-y-auto`, on a donc AUSSI déclaré un défilement
+          * HORIZONTAL, sans jamais l'écrire. La nº 298 l'avait vu comme
+          * un ROGNAGE (« la colonne devient un conteneur qui rogne aussi
+          * latéralement ») — mais `auto` ne rogne pas : il rogne ET
+          * défile. Il suffit qu'un pixel dépasse pour que la colonne
+          * devienne glissante, et elle ne revient pas toute seule.
+          * CE QUI DÉPASSE ICI : la rangée du haut déborde de 12 px de
+          * chaque côté depuis la nº 381 (`lg:-mx-3 lg:px-3`, pour aller
+          * d'un bord à l'autre), et les encadrés de survol de 8 px
+          * (nº 298). Aucun n'était censé être ATTEIGNABLE.
+          * LES DEUX SYMPTÔMES N'EN FONT QU'UN : le geste horizontal du
+          * trackpad entre deux galeries ne trouve aucune galerie sous le
+          * curseur, il remonte donc au premier conteneur défilant —
+          * cette colonne ; et les flèches du clavier font défiler, elles
+          * aussi, le conteneur défilant le plus proche. Même cause,
+          * deux entrées.
+          * ⚠️ CE N'EST PAS L'ÉCOUTEUR DE LA Nº 371 : `ClavierCartes`
+          * n'est monté que par la mosaïque (GrilleTatoueurs) et par
+          * « Ma sélection » (PageFavoris). La fiche ne le monte nulle
+          * part — vérifié. Ce sont les flèches natives du navigateur.
+          *
+          * LE REMÈDE, ET C'EST UN SEUL MOT : `overflow-x: clip`. Il
+          * rogne EXACTEMENT comme `auto` — même bord, au pixel — mais
+          * il ne crée AUCUN port de défilement : la colonne devient
+          * incapable de bouger latéralement, quel que soit le geste,
+          * et même par programme. Le débordement vertical, lui, ne
+          * change pas d'un cheveu.
+          * ⚠️ RIEN DE GÉOMÉTRIQUE : ni marge, ni rembourrage, ni écart,
+          * ni largeur. Le débord de la nº 381 et les encadrés de la
+          * nº 298 restent visibles exactement comme avant.
+          * ⚠️ ET CETTE COLONNE N'EST PARTAGÉE AVEC RIEN : la fenêtre
+          * superposée écrit la SIENNE, dans son propre fichier
+          * (FenetreFiche). Les deux ne partagent que le contrat
+          * `--fond-colonne` et le contenu qu'elles montent. La même
+          * correction y est posée séparément, à un mot près.
+          */}
+        <div className="lg:sticky lg:top-[99px] lg:self-start lg:max-h-[calc(100vh-119px)] lg:overflow-y-auto lg:overflow-x-clip lg:px-3 lg:-mx-3 min-w-0 flex flex-col bg-sombre-fond [--fond-colonne:var(--rw-sombre-fond)]">
           {/*  ⚠️ LE CONTENU DE LA FICHE VIT DANS UN SEUL COMPOSANT
                (nº 199) : cette page et la fenêtre superposée du web
                affichent le MÊME. Ce qui reste ici est l'enveloppe — la

@@ -3,7 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import Link from "next/link";
-import { defilerEnDouceur } from "@/lib/defilement-programme";
+import {
+  defilerEnDouceur,
+  defilerSansGeste,
+} from "@/lib/defilement-programme";
 //  ⚠️ TEMPORAIRE (nº 218-§1) — la sonde du carrousel : elle veut
 //  savoir CE QUI A ÉTÉ DEMANDÉ (style, catégorie, rendu) juste avant
 //  ce que le carrousel reçoit. Sans `?sonde-carrousel=1`, ne coûte rien.
@@ -411,6 +414,84 @@ export function ContenuFiche({
   }, [remonteeDemandee]);
 
   /**
+   * ██ §2 (nº 383) — CHAQUE ONGLET S'OUVRE À SON DÉBUT ██
+   * ==================================================================
+   * LE DÉFAUT : on descend dans « Profil », on touche « Portfolio », et
+   * l'on arrive au milieu — le navigateur garde la position de
+   * défilement, alors que le contenu, lui, a entièrement changé.
+   *
+   * CE QUE JE NE REFAIS PAS, ET LA Nº 377 L'AVAIT SUPPRIMÉ SUR
+   * CONSIGNE : le mouvement ANIMÉ de `remonterSousLaBarre`
+   * (`defilerEnDouceur`, ~300 ms) suivi d'une garantie qui REMESURAIT
+   * à l'arrivée. Ses deux défauts tenaient à l'animation :
+   *  · on VOYAIT la page glisser — le « saut désagréable » ;
+   *  · pendant ces 300 ms, la barre lisait un GESTE vers le bas et
+   *    pouvait se replier (le piège nommé à la nº 335-§1), et la
+   *    mesure prise AVANT le mouvement vieillissait pendant.
+   * Rien de tout cela n'existe ici : le mouvement est INSTANTANÉ.
+   *
+   * DEUX CHEMINS, PARCE QU'IL Y A DEUX DÉFILEMENTS :
+   *  1. LÀ OÙ LE CONTENU A SON PROPRE DÉFILEMENT — la colonne de
+   *     lecture du web, et la fenêtre superposée — on remet SA position
+   *     à zéro. LA PAGE NE BOUGE PAS DU TOUT : rien ne glisse, rien ne
+   *     saute, la photo de gauche ne bronche pas. C'est exactement « le
+   *     contenu repart de son début » ;
+   *  2. AU DOIGT, le contenu EST la page : il n'y a pas d'autre
+   *     défilement à remettre à zéro. On ramène donc la page à la
+   *     position où la rangée touche sa butée — et comme la rangée y
+   *     est DÉJÀ collée quand on est plus bas, RIEN NE BOUGE À L'ŒIL
+   *     sauf le contenu qui reprend à son début.
+   *     ⚠️ ET SEULEMENT VERS LE HAUT (`scrollY > cible`) : ce mouvement
+   *     ne peut jamais pousser la page vers le bas ni masquer la photo
+   *     quand on est déjà en haut.
+   *
+   * ⚠️ LE REPÈRE NE VIEILLIT PAS : c'est le PARENT de la rangée qui est
+   * mesuré, pas la rangée — un élément collant ment sur sa position dès
+   * qu'il est collé. Et la lecture est suivie du mouvement dans la même
+   * tâche, sans animation entre les deux.
+   * ⚠️ `defilerSansGeste` : la barre ne doit pas lire une intention là
+   * où il n'y a que du code (nº 154-§6A). Il est « instantané » par
+   * défaut.
+   * ⚠️ AUCUNE ÉCRITURE D'ADRESSE, AUCUNE ENTRÉE D'HISTORIQUE
+   * (règle 332-§1) : ce bloc ne touche qu'à une position de défilement.
+   */
+  /** §2 (nº 383) — LA RANGÉE DU HAUT, pour retrouver le défilement du
+      contenu sans que les enveloppes aient à se nommer. */
+  const rangeeDuHaut = useRef<HTMLDivElement | null>(null);
+
+  function ouvrirLOngletAuDebut() {
+    if (typeof window === "undefined") return;
+    const rangee = rangeeDuHaut.current;
+    if (!rangee) return;
+    //  1 · LE DÉFILEMENT PROPRE AU CONTENU, s'il existe. On le cherche
+    //  en remontant : ni la page ni la fenêtre n'ont à se nommer, et
+    //  les deux enveloppes marchent sans rien changer chez elles.
+    let noeud: HTMLElement | null = rangee.parentElement;
+    while (noeud && noeud !== document.body) {
+      const vertical = getComputedStyle(noeud).overflowY;
+      if (
+        (vertical === "auto" || vertical === "scroll") &&
+        noeud.scrollHeight > noeud.clientHeight
+      ) {
+        noeud.scrollTop = 0;
+        return;
+      }
+      noeud = noeud.parentElement;
+    }
+    //  2 · SINON, LA PAGE — vers le haut seulement, et d'un seul coup.
+    const parent = rangee.parentElement;
+    if (!parent) return;
+    const cible = Math.max(
+      0,
+      Math.round(
+        parent.getBoundingClientRect().top + window.scrollY - RESERVE_LOGO
+      )
+    );
+    if (window.scrollY <= cible) return;
+    defilerSansGeste({ top: cible });
+  }
+
+  /**
    * Changer d'onglet : le contenu change, et l'adresse suit, EN
    * REMPLAÇANT son entrée (nº 329-§3).
    *
@@ -451,6 +532,7 @@ export function ContenuFiche({
       );
       setRequeteLue(window.location.search);
     }
+    ouvrirLOngletAuDebut();
   }
 
   /**
@@ -917,6 +999,7 @@ export function ContenuFiche({
         * — le produit artisans, que la fiche tatoueur ne monte pas.)
         */}
       <div
+        ref={rangeeDuHaut}
         style={
           collantSousLaBarre
             ? ({
