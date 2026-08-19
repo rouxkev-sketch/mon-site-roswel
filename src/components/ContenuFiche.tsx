@@ -23,7 +23,7 @@ import { BoutonHorsLigne } from "@/components/BoutonHorsLigne";
 import {
   IconeCalendrier,
   IconeDuLien,
-  IconeMachineATatouer,
+  IconeEtoile,
 } from "@/components/IconeReseau";
 import { BoutonSuivre } from "@/components/BoutonSuivre";
 import {
@@ -951,6 +951,10 @@ export function ContenuFiche({
    * ⚠️ AUCUN STYLE : rien du tout, pas même l'icône — la ligne entière
    * est conditionnée par `tatoueur.styles.length`.
    *
+   * §2 (nº 385) — L'ICÔNE EST UNE ÉTOILE À CINQ BRANCHES, au
+   * traitement d'Instagram (contour, trait 1,8, `currentColor`, 20 px).
+   * La machine à tatouer de la nº 384 est supprimée, code compris.
+   *
    * L'ALIGNEMENT DU RETOUR À LA LIGNE, ET C'EST LE POINT PRÉCIS :
    * `items-start` (et non `items-center` comme les lignes d'un seul
    * mot) pose l'icône au niveau de la PREMIÈRE ligne ; et comme le
@@ -965,7 +969,7 @@ export function ContenuFiche({
       className={`flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE}`}
     >
       <span className={BOITE_ICONE_LIGNE}>
-        <IconeMachineATatouer taille={20} />
+        <IconeEtoile taille={20} />
       </span>
       <span className="min-w-0">
         {tatoueur.styles.map((slug, rang) => (

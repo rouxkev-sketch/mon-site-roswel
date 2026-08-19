@@ -2,9 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-//  §1 (nº 384) — le jeton des traits du site, pour le contour de
-//  l'état « Suivi » (voir plus bas).
-import { TRAIT_SEPARATION } from "@/config/tatouage";
 import { useUtilisateur } from "@/lib/use-utilisateur";
 import {
   amorcer,
@@ -145,20 +142,17 @@ export function BoutonSuivre({
                     pleineLargeur ? "w-full" : ""
                   } ${
                     suivi
-                      ? //  §1 (nº 384) — LE CONTOUR DE « SUIVI »
-                        //  S'ASSOMBRIT, ET LE TEXTE NE BOUGE PAS.
+                      ? //  §1 (nº 385) — RETOUR AU GRIS DE LA Nº 383.
                         //  ------------------------------------------
-                        //  Le trait passe du gris du TEXTE
-                        //  (`sombre-texte-doux`, trop clair pour un
-                        //  contour) au gris des TRAITS :
-                        //  `TRAIT_SEPARATION`, l'écriture unique des
-                        //  séparations du site depuis la nº 315 —
-                        //  celle du filet sous la rangée (nº 381) et
-                        //  du soulignement des onglets. Aucun gris
-                        //  inventé : c'est le jeton que la charte
-                        //  réserve précisément aux traits.
-                        //  Le texte, lui, garde `sombre-texte-doux`.
-                        `${TRAIT_SEPARATION} text-sombre-texte-doux hover:text-sombre-texte hover:border-sombre-texte`
+                        //  La nº 384 avait poussé ce contour jusqu'au
+                        //  jeton des TRAITS (`sombre-trait`, #3B3B42) :
+                        //  trop sombre au jugement du propriétaire. Il
+                        //  reprend le gris du TEXTE de cet état,
+                        //  `sombre-texte-doux` — les deux, trait et
+                        //  mot, redeviennent d'un seul gris. Le texte
+                        //  n'a pas bougé entre les deux passes, et le
+                        //  contour rose de « Suivre » non plus.
+                        "border-sombre-texte-doux text-sombre-texte-doux hover:text-sombre-texte hover:border-sombre-texte"
                       : "border-primaire text-primaire hover:border-primaire-fonce hover:text-primaire-fonce"
                   }`}
     >

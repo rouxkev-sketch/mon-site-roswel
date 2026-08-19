@@ -142,55 +142,40 @@ export function IconeCalendrier({ taille = 20 }: ProprietesIconeLien) {
 }
 
 /**
- * §2 (nº 384) — LA MACHINE À TATOUER, DESSINÉE ICI ET NULLE PART
- * AILLEURS.
+ * §2 (nº 385) — L'ÉTOILE À CINQ BRANCHES, POUR LA LIGNE DES STYLES.
  * ==================================================================
- * Elle coiffe la ligne des styles sur l'onglet Profil. AUCUN FICHIER
- * n'est ajouté au dépôt : c'est un tracé, comme le calendrier et les
- * réseaux — même cadre `0 0 24 24`, même `strokeWidth` de 1,8, même
- * `currentColor`, donc la couleur du texte de sa ligne, sans un seul
- * réglage.
+ * Elle REMPLACE la machine à tatouer de la nº 384, que le propriétaire
+ * n'a pas retenue. Aucun fichier n'est ajouté au dépôt : c'est un
+ * tracé, comme ses voisines.
  *
- * LE DESSIN, EN QUATRE TRAITS ET EN BIAIS (c'est l'inclinaison qui
- * fait lire « machine » plutôt que « stylo ») :
- *  · le CORPS — une capsule, la poignée que tient l'artiste ;
- *  · la BANDE du haut — l'armature, ce qui coiffe la poignée ;
- *  · le COLLIER du bas — la bouche du tube ;
- *  · l'AIGUILLE — le trait qui en sort, vers la pointe basse gauche.
- * Tout est posé dans un groupe tourné de 45° autour du centre : une
- * seule rotation, donc aucun point à recalculer si le dessin change.
+ * SON TRAITEMENT EST CELUI D'INSTAGRAM, REPRIS SANS RIEN CHOISIR :
+ *  · EN CONTOUR — `fill="none"` et un trait, comme l'appareil photo
+ *    d'Instagram et le calendrier du booking. Aucune icône de cette
+ *    liste n'a d'aplat ;
+ *  · MÊME ÉPAISSEUR — 1,8 sur la grille de 24 ;
+ *  · MÊME COULEUR — `currentColor`, c'est-à-dire AUCUNE couleur
+ *    déclarée : elle prend celle du texte de sa ligne, le gris doux
+ *    `sombre-texte-doux` d'`ECRITURE_LIGNE_FICHE`. Exactement ce que
+ *    fait Instagram, par le même moyen ;
+ *  · MÊME TAILLE — 20 px, dans la boîte de 22 px partagée par toutes
+ *    les lignes du profil (`BOITE_ICONE_LIGNE`).
+ *
+ * LE TRACÉ : cinq branches, rayon extérieur 8,6 et rayon intérieur
+ * 3,285 (le rapport classique 0,382), centrées sur (12, 12), la
+ * première pointe vers le haut. Les jonctions sont arrondies —
+ * à 20 px, des angles vifs sur un trait de 1,8 se remplissent et
+ * l'étoile devient une tache.
  */
-export function IconeMachineATatouer({ taille = 20 }: ProprietesIconeLien) {
+export function IconeEtoile({ taille = 20 }: ProprietesIconeLien) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <g transform="rotate(-45 12 12)">
-        {/*  LE CORPS — la poignée. */}
-        <rect
-          x="8.8"
-          y="3.2"
-          width="6.4"
-          height="9.6"
-          rx="3.2"
-          stroke="currentColor"
-          strokeWidth="1.8"
-        />
-        {/*  L'ARMATURE — la bande qui coiffe la poignée. */}
-        <path d="M8.8 6.6h6.4" stroke="currentColor" strokeWidth="1.8" />
-        {/*  LE COLLIER — la bouche du tube. */}
-        <path
-          d="M9.8 12.8h4.4"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-        />
-        {/*  L'AIGUILLE. */}
-        <path
-          d="M12 12.8v6.6"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-        />
-      </g>
+      <path
+        d="M12 3.4 13.93 9.34 20.18 9.34 15.12 13.02 17.06 18.96
+           12 15.29 6.94 18.96 8.88 13.02 3.82 9.34 10.07 9.34 Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
