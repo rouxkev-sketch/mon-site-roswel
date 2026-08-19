@@ -14,6 +14,7 @@ import { lireSelection, MENU_FAVORIS } from "@/lib/filtres-selection";
 import { lireRequeteCourante, souscrireAdresse } from "@/lib/adresse-courante";
 import { CarteTatoueur } from "@/components/CarteTatoueur";
 import { CLASSES_GRILLE_CARTES } from "@/components/GrilleTatoueurs";
+import { ClavierCartes } from "@/components/ClavierCartes";
 import { useVuePhototheque } from "@/components/AffichageMosaique";
 import { positionSousLeGel } from "@/lib/gel-du-corps";
 import { BlocSuivis } from "@/components/BlocSuivis";
@@ -353,6 +354,11 @@ export function PageFavoris({
         (une entrée par fiche, un cran par retour) — rien n'est réécrit
         ici. La règle entière vit dans PileFiches, où elle est écrite. */
     <PileFiches surProfondeur={setProfondeurPile} voileDejaPose>
+    {/*  §1 (nº 371) — LE MÊME ÉCOUTEUR DE CLAVIER QUE LA MOSAÏQUE, monté
+         UNE FOIS pour toute la page : « Ma sélection » rend les mêmes
+         cartes, elles répondent donc aux mêmes flèches. Les deux
+         surfaces ne coexistent jamais : jamais plus d'un écouteur. */}
+    <ClavierCartes />
     {/*  ⚠️ LA LARGEUR DE LA MOSAÏQUE (nº 213-§3a) : `LARGEUR_SITE` et
         les mêmes marges latérales que l'accueil — cette page montre
         les mêmes cartes, elle doit occuper le même espace. */}
@@ -509,7 +515,16 @@ export function PageFavoris({
                     //  drapeau que la carte attend depuis toujours, et
                     //  que cette page ne lui donnait pas.
                     phototheque={phototheque}
-                    surOuverture={() =>
+                    /*  §2 (nº 371) — LA PHOTO REGARDÉE, ET NON PLUS
+                        SEULEMENT CELLE DE LA CARTE. La carte de « Ma
+                        sélection » naît sur `photo.id` ; dès qu'on fait
+                        défiler son carrousel, c'est le rang courant
+                        qu'elle annonce, et la fiche s'ouvre dessus —
+                        exactement comme dans la mosaïque. Sans défilé,
+                        la valeur reçue EST `photo.id` : cette page se
+                        comporte comme avant, au caractère près. */
+                    surOuverture={(_, photoRegardee) => {
+                      const photoVoulue = photoRegardee || photo.id;
                       void ouvrirLaFiche(
                         photo.tatoueurSlug,
                         {
@@ -518,14 +533,14 @@ export function PageFavoris({
                           nature: natureConnue(photo.nature),
                           rendu: photo.rendu ?? RENDU_PAR_DEFAUT,
                           //  §4 (nº 302) — la photo elle-même.
-                          photo: photo.id,
+                          photo: photoVoulue,
                         },
                         `/tatoueur/${photo.tatoueurSlug}?style=${photo.style}` +
                           `&nature=${natureConnue(photo.nature)}&rendu=${
                             photo.rendu ?? RENDU_PAR_DEFAUT
-                          }&photo=${photo.id}`
-                      )
-                    }
+                          }&photo=${photoVoulue}`
+                      );
+                    }}
                   />
                 </li>
               ))}

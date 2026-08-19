@@ -138,7 +138,11 @@ function CarteTatoueurNue({
       grille au lieu de naviguer (mécanique d'Instagram). Le lien reste
       un vrai lien : clic du milieu, Ctrl+clic et moteurs de recherche
       vont toujours à la page /tatoueur/nom. */
-  surOuverture?: (tatoueur: Tatoueur) => void;
+  /** §2 (nº 371) — L'OUVERTURE EN FENÊTRE reçoit désormais LA PHOTO
+      REGARDÉE : sans elle, le web rouvrait la première du carrousel
+      alors que le doigt, lui, l'emportait déjà dans l'adresse. Les
+      deux chemins disent maintenant la même chose. */
+  surOuverture?: (tatoueur: Tatoueur, photoRegardee: string) => void;
   /** LE SURVOL (web) : la grille en profite pour demander d'avance la
       fiche complète — au clic, la fenêtre a déjà tout. N'a aucun effet
       visible. */
@@ -243,14 +247,28 @@ function CarteTatoueurNue({
   /** La photo regardée DANS la carte — le carrousel la possède. */
   const [indicePhoto, setIndicePhoto] = useState(0);
   /**
-   * §3 (nº 365) — LA PHOTO QUE LE FANION ENREGISTRE : celle qu'on
-   * REGARDE. Sans défilé (deux colonnes, ou une seule photo), c'est la
-   * photo choisie de la carte — comme avant. Avec défilé, c'est celle
-   * du rang courant ; le repli garde la photo choisie si le rang sort
-   * de la liste (recomposition, filtre qui change).
+   * §3 (nº 365) — LA PHOTO QU'ON REGARDE. Sans défilé (une seule
+   * photo), c'est la photo choisie de la carte — comme avant. Avec
+   * défilé, c'est celle du rang courant ; le repli garde la photo
+   * choisie si le rang sort de la liste (recomposition, filtre qui
+   * change).
+   * §2 (nº 371) — ELLE SERT MAINTENANT DEUX FOIS, et c'est voulu :
+   * le FANION l'enregistre (nº 365), et le LIEN l'emporte jusqu'à la
+   * fiche. Une seule valeur, donc jamais deux vérités sur « quelle
+   * photo je regarde ». `photoRecherche` (« Ma sélection », nº 302)
+   * reste le point de départ quand la carte EST une photo précise :
+   * c'est aussi le rang 0 de son défilé, les deux disent la même
+   * chose tant qu'on n'a pas fait défiler.
    */
-  const photoDuFanion =
-    photosDeLaCarte[indicePhoto]?.cle ?? photoEnregistrable?.id ?? "";
+  //  ⚠️ `||` ET NON `??` : `photoRecherche` vaut la CHAÎNE VIDE quand
+  //  personne ne l'a passée — `??` ne la sauterait pas, et la carte
+  //  perdrait sa photo. Ici, « vide » veut dire « rien à dire ».
+  const photoRegardee =
+    photosDeLaCarte[indicePhoto]?.cle ||
+    photoRecherche ||
+    photoEnregistrable?.id ||
+    "";
+  const photoDuFanion = photoRegardee;
   /**
    * §1-2 (nº 365) — LE FANION EST-IL POSÉ ICI ?
    * « Ma sélection » : toujours (réglage par défaut). La mosaïque du
@@ -316,8 +334,24 @@ function CarteTatoueurNue({
     //  LA CATÉGORIE VOYAGE AVEC (nº 216-§1) : la fiche s'ouvre alors
     //  sur l'ensemble qu'on regardait, pas sur tout le style.
     if (natureRecherche) suite.set("nature", natureRecherche);
-    //  §4 (nº 302) — la photo touchée, quand la carte en désigne une.
-    if (photoRecherche) suite.set("photo", photoRecherche);
+    /*  §2 (nº 371) — LA PHOTO QU'ON REGARDE PART AVEC LE LIEN.
+        ------------------------------------------------------------
+        AVANT : seule « Ma sélection » désignait une photo
+        (`photoRecherche`, nº 302-§4) ; une carte de mosaïque n'en
+        disait rien, et la fiche s'ouvrait sur la première du
+        carrousel — même si l'on avait fait défiler jusqu'à la sixième.
+        DÉSORMAIS : c'est LA PHOTO AFFICHÉE à l'instant du clic
+        (`photoRegardee`, le rang du défilé — la même valeur que le
+        fanion enregistre depuis la nº 365). Sans défilé, c'est la
+        photo choisie de la carte : l'adresse dit alors exactement ce
+        qu'elle montrait déjà.
+        ⚠️ AUCUN MÉCANISME NOUVEAU : `?photo=` existe depuis la nº 302,
+        la fiche sait le lire (FicheSelonLAdresse → `photoInitiale` →
+        `ouvertureSurUnePhoto`), et l'adresse reste la SEULE mémoire de
+        cet état (règles 328/329). Le lien change de cible à mesure
+        qu'on fait défiler — un attribut, pas une navigation : le
+        défilement ne crée toujours aucune entrée d'historique. */
+    if (photoRegardee) suite.set("photo", photoRegardee);
     const requete = suite.toString();
     return requete
       ? `/tatoueur/${tatoueur.slug}?${requete}`
@@ -409,7 +443,8 @@ function CarteTatoueurNue({
 
     if (!surOuverture) return;
     evenement.preventDefault();
-    surOuverture(tatoueur);
+    //  §2 (nº 371) — la photo affichée à CET instant part avec.
+    surOuverture(tatoueur, photoRegardee);
   }
 
   return (

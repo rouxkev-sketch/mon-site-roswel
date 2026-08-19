@@ -9,6 +9,7 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 import { CarteTatoueur } from "@/components/CarteTatoueur";
+import { ClavierCartes } from "@/components/ClavierCartes";
 import { FenetreFiche } from "@/components/FenetreFiche";
 import { positionSousLeGel } from "@/lib/gel-du-corps";
 import { PileFiches } from "@/components/PileFiches";
@@ -278,6 +279,13 @@ export function GrilleTatoueurs({
   }, [disposition, phototheque]);
 
   const [ficheOuverte, setFicheOuverte] = useState<Tatoueur | null>(null);
+  /** §2 (nº 371) — LA PHOTO SUR LAQUELLE LA FENÊTRE DOIT S'OUVRIR :
+      celle que la carte affichait au clic. La fenêtre sait déjà la
+      lire (`photoRecherche`, FenetreFiche → `ouvertureSurUnePhoto`) —
+      personne ne la lui donnait. Elle est posée AVANT la fenêtre, donc
+      la première image peinte est déjà la bonne : jamais la photo 1
+      puis un saut à la 6. */
+  const [photoOuverte, setPhotoOuverte] = useState("");
   /**
    * COMBIEN DE FOIS UNE FENÊTRE A ÉTÉ OUVERTE (passe nº 220-§3)
    * ------------------------------------------------------------------
@@ -326,7 +334,7 @@ export function GrilleTatoueurs({
       aux cartes d'être mémorisées. Elle ne lit aucune valeur du rendu —
       seulement l'argument reçu et deux poseurs d'état, eux-mêmes
       constants. */
-  const ouvrir = useCallback((tatoueur: Tatoueur) => {
+  const ouvrir = useCallback((tatoueur: Tatoueur, photoRegardee = "") => {
     // La note de rechargement : d'où l'on part (adresse de la grille,
     // critères compris — chercher() la tient à jour) et où l'on en
     // était. Elle ne sert QUE si la page est rechargée fenêtre ouverte
@@ -366,18 +374,28 @@ export function GrilleTatoueurs({
      * premier F5. L'adresse dit maintenant exactement ce qu'on
      * regarde, et c'est la même que celle du lien du smartphone.
      */
+    /*  §2 (nº 371) — ET LA PHOTO REGARDÉE VOYAGE AVEC LES TAGS, dans
+        LA MÊME et UNIQUE entrée d'historique : c'est un paramètre de
+        plus dans l'adresse poussée, pas une seconde poussée (règle
+        332-§1). Recharger la page fenêtre ouverte, ou coller
+        l'adresse, rouvre donc exactement la photo qu'on regardait —
+        et le retour la referme toujours d'un seul appui (332-§4). */
     const tags = tatoueur.carrousel;
-    const suite = tags
-      ? `?style=${encodeURIComponent(tags.style)}&rendu=${encodeURIComponent(
-          tags.rendu
-        )}&nature=${encodeURIComponent(tags.nature)}`
-      : "";
+    const parametres = new URLSearchParams();
+    if (tags) {
+      parametres.set("style", tags.style);
+      parametres.set("rendu", tags.rendu);
+      parametres.set("nature", tags.nature);
+    }
+    if (photoRegardee) parametres.set("photo", photoRegardee);
+    const requete = parametres.toString();
     window.history.pushState(
       { fenetreFiche: true },
       "",
-      `/tatoueur/${tatoueur.slug}${suite}`
+      `/tatoueur/${tatoueur.slug}${requete ? `?${requete}` : ""}`
     );
     entreePoussee.current = true;
+    setPhotoOuverte(photoRegardee);
     setFicheOuverte(tatoueur);
     // LE PORTFOLIO ENTIER ARRIVE JUSTE APRÈS — la fenêtre est déjà
     // ouverte, avec sa photo. On ne remplace la fiche que si c'est
@@ -663,6 +681,12 @@ export function GrilleTatoueurs({
         ))}
       </div>
 
+      {/*  §1 (nº 371) — LES FLÈCHES DU CLAVIER : un seul écouteur pour
+           toute la mosaïque, qui trouve la carte SURVOLÉE et pousse son
+           cadre d'une colonne. Il n'affiche rien et ne touche à aucune
+           géométrie (voir ClavierCartes). */}
+      <ClavierCartes />
+
       {/* `key` : CHAQUE OUVERTURE repart de la photo du style cherché,
           jamais de l'état d'une fenêtre précédente — y compris quand
           c'est la MÊME fiche qu'on rouvre (nº 220-§3). */}
@@ -677,6 +701,9 @@ export function GrilleTatoueurs({
         //  LA CATÉGORIE VA JUSQU'À LA FENÊTRE (nº 217-§3) : elle
         //  s'arrêtait à la carte depuis la nº 216.
         natureRecherche={ficheOuverte?.carrousel?.nature ?? natureRecherche}
+        //  §2 (nº 371) — LA PHOTO REGARDÉE SUR LA CARTE : la fenêtre
+        //  s'ouvre dessus, pas sur la première du carrousel.
+        photoRecherche={photoOuverte}
         positionGrille={positionGrille}
         surFermeture={fermer}
       />
