@@ -924,7 +924,69 @@ export function ContenuFiche({
               } as CSSProperties)
             : undefined
         }
+        /**
+         * ██ §1 et §2 (nº 381) — LA BARRE VA D'UN BORD À L'AUTRE, ET
+         * ELLE PORTE SON TRAIT ██
+         * ==================================================================
+         * PAR QUOI LA RANGÉE ÉTAIT BORNÉE, ET CE N'EST JAMAIS ELLE :
+         *  · PAGE AU DOIGT — le `px-4 sm:px-6` de la racine `<main>`
+         *    (16 px, 24 au-delà de 640) ;
+         *  · PAGE DU WEB — le `lg:px-3` de la colonne de lecture
+         *    (12 px), posé à la nº 298 pour que le bord qui rogne
+         *    s'écarte des encadrés de survol ;
+         *  · FENÊTRE SUPERPOSÉE — le `p-5 sm:p-6` de SA colonne
+         *    (20 px, 24 au-delà de 640).
+         * Trois rembourrages, trois PARENTS. Les toucher, c'est la
+         * faute qui a tué les nº 378 et 379.
+         *
+         * CE QU'ON FAIT À LA PLACE, ET TOUT SE PASSE SUR LA RANGÉE :
+         * LE DÉBORD COMPENSÉ — `-mx-N px-N`. La marge négative pousse
+         * la boîte de N pixels au-delà de son parent, de chaque côté ;
+         * le rembourrage de MÊME valeur remet le contenu là où il
+         * était. La BOÎTE grandit, la BOÎTE DE CONTENU ne bouge pas :
+         * le fond et le trait s'étendent, le badge et « Suivre » ne
+         * partent nulle part.
+         * ⚠️ CE N'EST PAS UNE INVENTION DE CETTE PASSE : c'est
+         * l'écriture des galeries du portfolio au doigt
+         * (`-mx-4 px-4 sm:-mx-6 sm:px-6`, PortfolioDeLAffiche) et celle
+         * de la colonne de lecture elle-même (`lg:px-3 lg:-mx-3`).
+         *
+         * CHAQUE VALEUR RÉPOND EXACTEMENT AU REMBOURRAGE QU'ELLE
+         * ANNULE — c'est ce qui fait que le débord s'arrête AU bord et
+         * jamais au-delà :
+         *  · page : `-mx-4 px-4` puis `sm:-mx-6 sm:px-6` (la racine),
+         *    puis `lg:-mx-3 lg:px-3` (la colonne, dès 1024) ;
+         *  · fenêtre : `-mx-5 px-5` puis `sm:-mx-6 sm:px-6` (sa
+         *    colonne).
+         * ⚠️ ET C'EST POURQUOI RIEN NE DÉBORDE NULLE PART : les deux
+         * colonnes rognent (`lg:overflow-y-auto`), et le débord vient
+         * mourir PILE sur leur boîte de rembourrage — le bord qui
+         * rogne. Aucune barre de défilement horizontale ne peut naître.
+         * Au doigt, la rangée s'arrête sur la boîte de bordure de
+         * `<main>`, c'est-à-dire le bord de l'écran : pas un pixel plus
+         * loin, donc aucun débordement du document (la règle nº 228-§3
+         * interdit de le masquer, et il n'y en a pas à masquer).
+         *
+         * « DE BORD À BORD » DANS LA FENÊTRE, C'EST LES BORDS DE LA
+         * FENÊTRE — confirmé, et c'est mécanique : le débord est
+         * calculé sur le rembourrage de SA colonne, laquelle est
+         * `w-full` dans la fenêtre. La rangée atteint donc le bord
+         * intérieur de la fenêtre, que ses angles arrondis et son
+         * `overflow-hidden` referment. L'écran n'entre jamais dans ce
+         * calcul.
+         *
+         * LE TRAIT (§2) : `border-b` + `TRAIT_SEPARATION` — UN pixel,
+         * `#3B3B42`, le jeton unique des séparations du site (nº 315,
+         * config/tatouage). Aucune couleur ni épaisseur inventée, et
+         * comme il est porté par la rangée débordée, il court d'un bord
+         * à l'autre, marges comprises. Partout : page et fenêtre.
+         *
+         * ⚠️ LE CAPOT SUIT SANS RIEN FAIRE : il est `absolute
+         * inset-x-0` DANS cette boîte — il s'élargit avec elle, et
+         * couvre donc enfin toute la largeur au-dessus de la rangée.
+         */
         className={`relative flex items-center justify-between gap-3
+                   border-b ${TRAIT_SEPARATION}
                    lg:sticky lg:top-0 lg:z-[2] bg-[var(--fond-colonne)] ${
                      /**
                       * ██ §1 (nº 380) — DE L'AIR AUTOUR DU BADGE ██
@@ -981,9 +1043,17 @@ export function ContenuFiche({
                       * agrandit la boîte AUTOUR de ses enfants ; ni le
                       * sélecteur ni « Suivre » ne changent de gabarit.
                       */
+                     /**
+                      * §3 (nº 381) — L'AIR RESTE EN HAUT, IL PART EN
+                      * BAS : `mobile:py-3` devient `mobile:pt-3`. Le
+                      * badge vient toucher le bas de la rangée, et le
+                      * trait passe donc juste sous lui. Sur le web,
+                      * c'était déjà le cas — aucune classe n'y est
+                      * ajoutée.
+                      */
                      collantSousLaBarre
-                       ? "mobile:sticky mobile:top-[var(--rw-rangee-collante)] mobile:z-[3] mobile:py-3"
-                       : ""
+                       ? "mobile:sticky mobile:top-[var(--rw-rangee-collante)] mobile:z-[3] mobile:pt-3 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-3 lg:px-3"
+                       : "-mx-5 px-5 sm:-mx-6 sm:px-6"
                    }`}
       >
         {/*  LE CAPOT — la colonne de la fenêtre superposée porte un
