@@ -32,6 +32,42 @@ const nextConfig: NextConfig = {
         pathname: "/storage/v1/object/public/**",
       },
     ],
+    /**
+     * ██ nº 366 — LA NETTETÉ DES CARTES, SANS LE POIDS ██
+     * ================================================================
+     * LES CARTES SERVAIENT LA MINIATURE DE 320 px À DES ÉCRANS QUI EN
+     * DEMANDENT 570 À 1170 (densité comprise) : c'était le grain, et
+     * il ne venait pas de la source (l'original stocké fait
+     * 1080 × 1350). Elles partent désormais de l'original et laissent
+     * l'optimiseur fabriquer la taille exacte de CET écran
+     * (components/PhotoDeCarte).
+     *
+     * `formats` — AVIF D'ABORD, WebP ensuite. C'est ce qui paie le
+     * changement : à qualité perçue égale, un AVIF pèse environ la
+     * moitié d'un JPEG. On quadruple les pixels sans doubler les
+     * octets. Le navigateur qui ne sait lire ni l'un ni l'autre reçoit
+     * l'original, comme avant.
+     *
+     * `qualities` — ⚠️ OBLIGATOIRE DEPUIS NEXT 16 : toute qualité
+     * employée doit être déclarée ici, sans quoi la demande est
+     * refusée. 65 est celle des cartes (PhotoDeCarte) ; 75 reste la
+     * valeur par défaut du composant, gardée pour tout le reste.
+     *
+     * `imageSizes` — la liste par défaut, PLUS 512. C'est le palier qui
+     * manquait entre 384 et 640 : une carte de deux colonnes sur un
+     * écran Retina de bureau y tombe pile, au lieu de sauter à 640 et
+     * de payer un quart de poids pour des pixels que personne ne voit.
+     * (Ces largeurs ne servent qu'aux images qui déclarent `sizes`, et
+     * doivent toutes rester sous la plus petite de `deviceSizes` —
+     * 640. C'est le cas.)
+     *
+     * ⚠️ `deviceSizes` N'EST PAS TOUCHÉ : la liste par défaut (640,
+     * 750, 828, 1080, 1200, 1920, 2048, 3840) couvre déjà nos cas, et
+     * la rogner ferait dégringoler d'autres pages sans prévenir.
+     */
+    formats: ["image/avif", "image/webp"],
+    qualities: [65, 75],
+    imageSizes: [32, 48, 64, 96, 128, 256, 384, 512],
   },
 
   /**

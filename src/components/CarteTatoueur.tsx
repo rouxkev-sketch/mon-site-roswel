@@ -6,7 +6,9 @@ import {
   CADRE_PHOTO_PORTFOLIO,
   libelleStyle,
   libelleTypeFiche,
-  PHOTO_PORTFOLIO,
+  //  nº 366 — les dimensions intrinsèques de la photo sont désormais
+  //  déclarées par `PhotoDeCarte`, l'écriture unique de l'image d'une
+  //  carte : la réserve de hauteur ne se fait plus qu'à un endroit.
   PORTRAIT_ROND,
 } from "@/config/tatouage";
 import { useDispositionGrille } from "@/components/AffichageMosaique";
@@ -19,6 +21,7 @@ import {
   vignetteDe,
 } from "@/lib/photos-tatoueur";
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
+import { PhotoDeCarte, TAILLES_CARTE } from "@/components/PhotoDeCarte";
 import { ligneCarte, ligneCarteMobile } from "@/lib/adresse";
 import { pincementRecent, usePincement } from "@/components/ZoomPincement";
 //  ⚠️ TEMPORAIRE (nº 219-§1) — la sonde du carrousel compte les
@@ -458,11 +461,18 @@ function CarteTatoueurNue({
               />
             </div>
           ) : (
-          /* eslint-disable-next-line @next/next/no-img-element --
-              les images de démonstration sont des SVG dessinés à la
-              volée ; l'optimiseur de Next n'a rien à y gagner. */
-          <img
-            src={photo}
+          /*  §1 (nº 366) — L'ÉCRITURE UNIQUE DE LA PHOTO DE CARTE
+              (components/PhotoDeCarte) : elle part de l'ORIGINAL quand
+              la photo est cataloguée, et laisse l'optimiseur fabriquer
+              la taille exacte de l'écran, densité comprise. La
+              démonstration (SVG) et les fiches d'avant le catalogue
+              n'ont pas d'original : elles sont servies telles quelles,
+              exactement comme avant. La réserve de hauteur, le
+              chargement paresseux et la priorité ne bougent pas. */
+          <PhotoDeCarte
+            url={photo}
+            urlPleine={photoEnregistrable?.url}
+            tailles={TAILLES_CARTE}
             // CE QUE MONTRE VRAIMENT LA CARTE : le nom, la ville, et le
             // style (avec le rendu quand la photo est taguée) — voir
             // `legendeDeCarte`.
@@ -474,16 +484,9 @@ function CarteTatoueurNue({
             )}
             // LES PREMIÈRES CARTES NE SONT PAS DIFFÉRÉES : l'image
             // mesurée par Google ne doit pas attendre le défilement.
-            loading={prioritaire ? "eager" : "lazy"}
-            fetchPriority={prioritaire ? "high" : undefined}
-            // LA PLACE EST RÉSERVÉE AVANT L'ARRIVÉE DE LA PHOTO. Le
-            // cadre au-dessus impose déjà le format 4:5, mais déclarer
-            // les dimensions intrinsèques rend la réserve indépendante
-            // de la feuille de style : si elle tarde, la page ne bouge
-            // pas davantage.
-            width={PHOTO_PORTFOLIO.largeur}
-            height={PHOTO_PORTFOLIO.hauteur}
-            className="w-full h-full object-cover"
+            chargement={prioritaire ? "eager" : "lazy"}
+            priorite={prioritaire ? "high" : undefined}
+            classe="w-full h-full object-cover"
           />
           )}
         </div>

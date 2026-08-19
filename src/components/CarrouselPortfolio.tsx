@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { PhotoProgressive } from "@/components/PhotoProgressive";
+import { PhotoDeCarte, TAILLES_CARTE } from "@/components/PhotoDeCarte";
 import { ZoomPincement } from "@/components/ZoomPincement";
 import { CADRE_PHOTO_PORTFOLIO } from "@/config/tatouage";
 import type { PhotoGalerie } from "@/lib/photo-tatoueur";
@@ -1021,18 +1022,29 @@ export function CarrouselPortfolio({
             ? rang === 0 || eveille
             : montees.has(rang);
           const image = surCarte ? (
-            /* eslint-disable-next-line @next/next/no-img-element --
-               miniature déjà découpée, servie telle quelle : c'est la
-               règle des cartes depuis toujours (voir CarteTatoueur). */
-            <img
-              src={photo.miniature}
+            /*  §1 (nº 366) — LA PHOTO D'UNE CARTE A SON ÉCRITURE :
+                components/PhotoDeCarte. Elle part de l'ORIGINAL et
+                laisse l'optimiseur fabriquer la taille exacte de
+                l'écran (densité comprise) — la miniature de 320 px
+                servie ici était deux à quatre fois trop petite, et
+                c'était tout le grain. La démonstration et les fiches
+                d'avant le catalogue gardent leur image telle quelle. */
+            <PhotoDeCarte
+              url={photo.miniature}
+              urlPleine={photo.url}
+              //  ⚠️ LA MÊME LISTE EN DEUX COLONNES ET EN PLEINE LARGEUR
+              //  (règle nº 175-§5, voir PhotoDeCarte) : la bascule de
+              //  disposition ne doit RIEN faire redemander.
+              tailles={TAILLES_CARTE}
               alt={rang === indice ? texteDe(photo) : ""}
               //  ⚠️ `lazy` PARTOUT SAUF LES PREMIÈRES CARTES : une
               //  carte hors écran ne demande aucune image, et les
               //  photos suivantes d'une carte ne sont demandées qu'une
               //  fois montées — c'est-à-dire au premier geste.
-              loading={rang === 0 && prioritaire ? undefined : "lazy"}
-              fetchPriority={rang === 0 && prioritaire ? "high" : undefined}
+              //  (nº 366 : passé tel quel, l'ordre de priorité de la
+              //  mosaïque ne change pas d'un cran.)
+              chargement={rang === 0 && prioritaire ? undefined : "lazy"}
+              priorite={rang === 0 && prioritaire ? "high" : undefined}
               //  §2 (nº 295) — LE DÉBORDEMENT D'UN PIXEL DE LA nº 294 EST
               //  ANNULÉ : c'est LUI qui posait la dernière colonne de
               //  pixels de la photo précédente au bord gauche de celle
@@ -1045,7 +1057,7 @@ export function CarrouselPortfolio({
               //  §1 (nº 297) — inchangé ici : une CARTE de mosaïque
               //  garde sa photo pleine colonne (voir la note de
               //  `PHOTO_DANS_SA_COLONNE`).
-              className={PHOTO_DANS_SA_COLONNE}
+              classe={PHOTO_DANS_SA_COLONNE}
             />
           ) : (
             /*  §1 (nº 280) — PLUS D'APERÇU : la pleine résolution, et
