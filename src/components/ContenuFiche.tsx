@@ -749,21 +749,23 @@ export function ContenuFiche({
           : `${LIGNE_GRISE} hover:text-sombre-texte`
       } transition-colors`}
     >
-      {/*  §1 (nº 391) — L'ICÔNE SUIT DÉSORMAIS LE MOT quand la ligne
-           SORT DU SITE : plus aucune couleur n'est posée sur sa boîte,
-           le tracé est en `currentColor`, il prend donc le bleu du lien
-           — et son éclaircissement au survol avec. Les lignes qui
-           restent dans le site gardent, elles, le gris explicite.
+      {/*  ██ §1 (nº 392) — L'ICÔNE REVIENT AU GRIS, SANS CONDITION ██
+           La nº 391 laissait la boîte sans couleur quand la ligne sortait
+           du site : le tracé étant en `currentColor`, l'icône prenait le
+           bleu du lien. Le propriétaire est revenu dessus — TOUTES les
+           icônes de la colonne sont grises, comme à la nº 389. Le
+           ternaire disparaît, il n'y a plus qu'une écriture.
+           ⚠️ SEULE L'ICÔNE REVIENT : le MOT garde son bleu et son
+           éclaircissement au survol — ils sont posés sur le `<a>`, pas
+           ici.
            ⚠️ UNE SEULE CLASSE DE COULEUR SUR CETTE BOÎTE, JAMAIS DEUX :
            c'est tout le piège de la nº 389 (Tailwind range ses
            utilitaires par ordre alphabétique, `sombre-lien` tombe AVANT
-           `sombre-texte-doux`, le gris gagnait donc toujours). Ici le
-           ternaire n'en pose qu'une, ou aucune. */}
-      <span
-        className={`${BOITE_ICONE_LIGNE}${
-          sortDuSite ? "" : " text-sombre-texte-doux"
-        }`}
-      >
+           `sombre-texte-doux`, le gris gagnait donc toujours, quel que
+           soit l'ordre d'écriture). Le bleu du lien vit sur un AUTRE
+           élément — le `<a>` parent — donc il n'y a pas de dispute :
+           c'est un héritage, que ce gris-ci recouvre proprement. */}
+      <span className={`${BOITE_ICONE_LIGNE} text-sombre-texte-doux`}>
         {icone}
       </span>
       {/*  §2 (nº 273) — PLUS DE SOULIGNEMENT ICI : le fond qui monte

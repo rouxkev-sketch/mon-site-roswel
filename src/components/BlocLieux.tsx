@@ -508,13 +508,53 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
                    survol (CLASSES_LIGNE_CLIQUABLE) dit déjà qu'elle se
                    clique. Le soulignement reste réservé à ce qui SORT
                    du site (l'adresse). */}
+              {/*  ██ §2 (nº 392) — LE RÔLE REMONTE SUR LA LIGNE DU NOM ██
+                   ==============================================================
+                   TROIS LIGNES DEVENAIENT DEUX : « Funambulink Ttt »,
+                   « Fondateur » et « Trash Polka » s'empilaient ; le nom et
+                   le rôle partagent désormais la première, le style garde la
+                   seconde.
+                   CE QUI NE CHANGE PAS D'UN POIL : le NOM. Même balise, même
+                   `text-[15px] font-medium leading-snug text-sombre-texte`,
+                   même `[overflow-wrap:anywhere]`. Le rôle n'est plus un
+                   paragraphe à lui, c'est un morceau de celui-ci.
+                   LES GRIS SONT CEUX QUI EXISTENT DÉJÀ, aucun n'est inventé :
+                   la puce et le rôle prennent `text-sombre-texte-doux` — le
+                   gris que le rôle portait DÉJÀ sur sa propre ligne, et celui
+                   de la ligne des styles juste en dessous.
+                   `font-normal` SUR LE RÔLE : le paragraphe du nom porte
+                   `font-medium`, et le rôle, lui, n'a jamais été en demi-gras.
+                   On lui rend donc sa graisse d'avant, explicitement.
+                   PLUS DE `leading-relaxed` SUR LE RÔLE : cet interligne
+                   dimensionnait SA ligne, celle qu'il n'a plus. Il vit
+                   maintenant dans la ligne du nom, dont l'interligne
+                   (`leading-snug`) commande — sans quoi il l'aurait fait
+                   grandir de deux pixels pour rien.
+                   LA PUCE EST CELLE DE TOUTE LA FICHE : même caractère, même
+                   `px-1.5`, même `aria-hidden` que les pratiques et les
+                   styles — pas un second séparateur.
+                   ⚠️ ET SON `<wbr />`, LEÇON DE LA Nº 391 : sans caractère
+                   d'espace autour d'elle, et « • » étant de classe de coupure
+                   alphabétique, « Ttt•Fondateur » serait un seul mot pour le
+                   navigateur. L'occasion de coupure de largeur nulle lui rend
+                   le droit de replier proprement entre le nom et le rôle
+                   quand la colonne est étroite. Elle ne dessine rien et
+                   n'ajoute aucun pixel. */}
               <p className="text-[15px] font-medium leading-snug text-sombre-texte [overflow-wrap:anywhere]">
                 {membre.nom}
+                <span aria-hidden="true" className="px-1.5 text-sombre-texte-doux">
+                  •
+                </span>
+                <wbr />
+                <span className="text-[14px] font-normal text-sombre-texte-doux">
+                  {roleDuMembre(membre)}
+                </span>
               </p>
-              <p className="mt-0.5 text-[14px] leading-relaxed text-sombre-texte-doux">
-                {roleDuMembre(membre)}
-              </p>
-              {/*  §3 (nº 313) — SES STYLES, SOUS SON RÔLE.
+              {/*  §3 (nº 313) — SES STYLES, SOUS SON RÔLE — et depuis la
+                   nº 392, sous la ligne QUI PORTE son nom ET son rôle :
+                   c'est donc la DEUXIÈME et dernière ligne du bloc.
+                   ⚠️ RIEN N'Y CHANGE : même taille (13 px), même gris,
+                   même `mt-0.5`. Le propriétaire l'a demandé tel quel.
                    ------------------------------------------------------
                    Ils viennent de SA déclaration, sur sa propre fiche —
                    jamais d'une recopie dans le salon (voir
@@ -1031,24 +1071,22 @@ export function LigneAdresseDuLieu({
   return (
     <div>
       <p className={`flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE}`}>
-        {/*  §1 (nº 391) — L'ICÔNE DE LOCALISATION PASSE AU BLEU.
-             Elle portait le gris doux explicite ; elle porte désormais
-             le MÊME jeton que le mot, `text-sombre-lien` — celui de la
-             charte (`COULEURS_SOMBRE.lien`), jamais une couleur écrite
-             en dur. Le tracé est en `currentColor` : il n'y a rien
-             d'autre à faire que de lui donner cette couleur-là.
-             ⚠️ POURQUOI PAS `LIEN_QUI_SORT` ENTIER ICI : ce raccourci
-             porte aussi un survol, et le survol de CETTE boîte ne
-             couvrirait que l'icône, pas le mot — les deux
-             s'éclairciraient séparément selon l'endroit du curseur.
-             L'icône prend donc le bleu de repos, et lui seul ; c'est le
-             MOT qui s'éclaircit au survol, comme avant. (Sur Instagram
-             la question ne se pose pas : là-bas l'icône et le mot sont
-             dans le MÊME `<a>`, elle suit donc le survol toute seule.)
+        {/*  ██ §1 (nº 392) — L'ICÔNE DE LOCALISATION REVIENT AU GRIS ██
+             La nº 391 lui avait donné `text-sombre-lien`, le jeton du
+             mot. Le propriétaire est revenu dessus : elle reprend le
+             gris doux de la nº 389, celui de toutes les autres icônes
+             de la colonne.
+             ⚠️ L'ADRESSE, ELLE, RESTE BLEUE : sa couleur n'est pas ici,
+             elle est posée sur le LIEN (`classeTexte={LIEN_QUI_SORT}`,
+             juste dessous) — cette boîte-ci ne porte que l'icône. Rien
+             d'autre ne bouge, ni le survol, ni le soulignement retiré à
+             la nº 389.
              ⚠️ UNE SEULE CLASSE DE COULEUR SUR CETTE BOÎTE : le piège
              de la nº 389 (l'ordre alphabétique de Tailwind tranche entre
-             deux classes de même poids) ne peut pas se reproduire. */}
-        <span className={`${BOITE_ICONE_LIGNE} text-sombre-lien`}>
+             deux classes de même poids posées sur le MÊME élément) ne
+             peut pas se reproduire — il n'y en a qu'une, et le bleu vit
+             sur un autre élément. */}
+        <span className={`${BOITE_ICONE_LIGNE} text-sombre-texte-doux`}>
           <IconeLocalisation taille={20} />
         </span>
         <span className="min-w-0 [overflow-wrap:anywhere]">
