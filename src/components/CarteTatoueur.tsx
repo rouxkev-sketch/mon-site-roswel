@@ -239,7 +239,23 @@ function CarteTatoueurNue({
    * moteur : seulement sur les cartes PLEINE LARGEUR DU DOIGT. Sur le
    * web, jamais — l'appareil tranche, pas la largeur de la fenêtre.
    */
-  const fanionPose = fanion === "toujours" || surMobile;
+  /**
+   * §3 (nº 368) — LE FANION EST PARTOUT ; C'EST SON APPARITION QUI
+   * CHANGE. Sur « Ma sélection » (`toujours`), il est là sans
+   * condition, comme aujourd'hui. Sur les cartes du moteur
+   * (`au-doigt-seulement`), il reste permanent AU DOIGT et n'apparaît
+   * AU WEB QU'AU SURVOL de la carte — la photo est nue quand la souris
+   * est ailleurs.
+   * ⚠️ `invisible`, PAS `opacity-0` : un élément seulement transparent
+   * continue de recevoir les clics — on cliquerait un fanion qu'on ne
+   * voit pas. Et `pointer-fine:` borne la règle aux pointeurs fins :
+   * le doigt n'a pas de survol, il ne doit donc rien perdre.
+   */
+  const fanionPose = true;
+  const fanionAuSurvol =
+    fanion === "au-doigt-seulement"
+      ? "pointer-fine:invisible pointer-fine:group-hover:visible"
+      : "";
 
   /** Le lieu de la fiche, tel que les deux écritures de la ligne le
       lisent (voir plus bas, nº 212-§6). */
@@ -563,11 +579,13 @@ function CarteTatoueurNue({
               la cible, elle, ne perd pas un pixel. En pleine largeur,
               le fanion est celui de la fiche et garde sa place. */
           <div
-            className={
+            className={`${
               uneColonne
                 ? "absolute bottom-2 right-2"
                 : "absolute bottom-2 right-2 -mb-1 -mr-1"
-            }
+              //  §3 (nº 368) — l'apparition au survol, sur le web
+              //  seulement (voir `fanionAuSurvol`).
+            } ${fanionAuSurvol}`}
           >
             <BoutonCoeurPhoto
               /*  §3 (nº 365) — LE FANION SUIT LA PHOTO REGARDÉE, et

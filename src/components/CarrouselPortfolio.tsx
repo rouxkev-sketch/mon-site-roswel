@@ -98,6 +98,42 @@ import {
  */
 const VOISINES = 2;
 
+/**
+ * ██ §2 (nº 368) — LES CARTES ONT ENFIN DES VOISINES ██
+ * ==================================================================
+ * LE DÉFAUT, ET SA CAUSE EXACTE. Sur une carte, chaque photo mettait
+ * un temps à arriver, avec un fond sombre entre deux ; sur une fiche,
+ * non. La différence n'était ni le chargement paresseux (les deux
+ * l'emploient), ni la couleur du fond (c'est bien la réserve du cadre
+ * qu'on voit — mais on ne devrait pas avoir le temps de la voir), ni
+ * l'optimiseur (il ne fabrique qu'à la première visite, puis sert du
+ * cache) : LES VOISINES DE LA CARTE N'EXISTAIENT PAS DANS LA PAGE.
+ *
+ *   · FICHE — `montees` contient {i−2 … i+2} DÈS LE PREMIER RENDU :
+ *     quand on fait défiler, la photo suivante est déjà là, et son
+ *     image déjà demandée ;
+ *   · CARTE — `rang === 0 || eveille` : AVANT le premier geste, une
+ *     seule colonne existe ; le geste les monte TOUTES d'un coup, et
+ *     c'est seulement à cet instant que le navigateur commence à
+ *     télécharger celle qu'on est déjà en train de faire glisser.
+ *     D'où le temps d'attente, à chaque photo, la première fois.
+ *
+ * LA MÊME RECETTE, RESSERRÉE. Une carte monte désormais {i−1 … i+1} —
+ * UNE voisine de chaque côté au lieu de deux, parce qu'une carte a
+ * beaucoup de sœurs et qu'il y en a vingt par page.
+ *
+ * CE QUE ÇA COÛTE, ET LA BORNE : au repos, une carte monte DEUX
+ * colonnes (la photo 0 et sa voisine) au lieu d'une. La voisine est
+ * `lazy` — le navigateur ne la télécharge donc QUE si la carte est à
+ * l'écran ; les cartes hors champ ne demandent rien (`lazy`, et
+ * `content-visibility: auto` sur la carte). Le premier écran coûte
+ * ainsi au plus UNE photo de plus par carte VISIBLE, demandée après la
+ * peinture. Zéro photo de plus pour les cartes qu'on ne voit pas.
+ * ⚠️ LE BOUTON, S'IL FAUT REVENIR : mettre 0 ici rend le comportement
+ * d'avant la nº 368 (aucune voisine montée d'avance).
+ */
+const VOISINES_CARTE = 1;
+
 export function CarrouselPortfolio({
   photos,
   nomTatoueur,
@@ -110,7 +146,10 @@ export function CarrouselPortfolio({
   badgeReduit = false,
   lien,
   sansCompteur = false,
-  sansPoints = false,
+  //  §1 (nº 368) — `sansPoints` n'est plus LU : la frise a quitté les
+  //  cartes, et personne d'autre ne la rendait ici. La propriété reste
+  //  DÉCLARÉE (voir plus bas) pour que l'appel de la fenêtre de
+  //  carrousel n'ait pas à changer, mais elle ne commande plus rien.
   dansLaFenetre = false,
   children,
 }: {
@@ -217,21 +256,22 @@ export function CarrouselPortfolio({
   }, [surCarte]);
 
   /**
-   * §5 (nº 211) — LE CHARGEMENT DIFFÉRÉ DES CARTES
+   * §5 (nº 211) — LE CHARGEMENT DIFFÉRÉ DES CARTES, ET SA FIN (nº 368)
    * ==================================================================
-   * À l'affichage d'une mosaïque, chaque carte ne demande QU'UNE
-   * image : la première de son ensemble — exactement ce qu'elle
-   * demandait avant cette passe. Les suivantes n'existent même pas
-   * comme balises tant que le doigt n'a pas touché CETTE carte : une
-   * mosaïque de vingt cartes charge donc vingt miniatures, et pas une
-   * de plus, qu'un artiste ait publié une photo ou vingt.
-   * Le réveil se fait au premier contact ou au premier défilement —
-   * c'est-à-dire AVANT que la photo suivante n'entre à l'écran.
+   * LA RÈGLE D'ORIGINE : une carte ne montait qu'UNE colonne, et les
+   * suivantes n'existaient même pas comme balises tant que le doigt
+   * n'avait pas touché CETTE carte (`eveille`). Vingt cartes = vingt
+   * images, quel que soit le nombre de photos publiées.
+   * CE QU'ELLE COÛTAIT, mesuré par le propriétaire à la nº 368 : la
+   * photo suivante n'était demandée qu'AU MOMENT du geste, et l'on
+   * attendait devant le fond du cadre à chaque photo.
+   * L'ÉTAT `eveille` EST DONC SUPPRIMÉ, code compris : c'est la même
+   * fenêtre montée que la fiche qui décide désormais, resserrée à une
+   * voisine (VOISINES_CARTE). La promesse de tenue en charge est
+   * conservée autrement, et elle est même plus stricte qu'avant : la
+   * voisine est `lazy`, donc jamais téléchargée pour une carte hors
+   * champ, là où le réveil montait TOUTES les colonnes d'un coup.
    */
-  const [eveille, setEveille] = useState(false);
-  const reveiller = () => {
-    if (surCarte && !eveille) setEveille(true);
-  };
 
   /**
    * §4 (nº 198) — L'INDICATEUR DE VOLUME S'EFFACE ET REVIENT
@@ -515,7 +555,10 @@ export function CarrouselPortfolio({
    */
   const fenetreCourante = () => {
     const rangs = new Set<number>();
-    for (let rang = indice - VOISINES; rang <= indice + VOISINES; rang += 1) {
+    //  §2 (nº 368) — une carte prend UNE voisine de chaque côté, une
+    //  fiche en garde DEUX (voir les deux notes en tête de fichier).
+    const rayon = surCarte ? VOISINES_CARTE : VOISINES;
+    for (let rang = indice - rayon; rang <= indice + rayon; rang += 1) {
       if (rang >= 0 && rang < n) rangs.add(rang);
     }
     return rangs;
@@ -819,9 +862,16 @@ export function CarrouselPortfolio({
       className={`absolute z-[2] items-center rounded-full bg-black/60
                  backdrop-blur text-white ${
                    surCarte
-                     ? `hidden mobile:inline-flex top-2 right-2 ${
-                         badgeReduit ? "px-2 py-1" : "px-2.5 py-1.5"
-                       }`
+                     ? //  §3 (nº 368) — AU DOIGT elle est là en
+                       //  permanence ; AU WEB elle n'apparaît QUE
+                       //  quand la souris est sur la carte
+                       //  (`group-hover`, le groupe étant l'article de
+                       //  CarteTatoueur). Souris ailleurs : la photo
+                       //  est nue.
+                       `hidden mobile:inline-flex pointer-fine:group-hover:inline-flex
+                        top-2 right-2 ${
+                          badgeReduit ? "px-2 py-1" : "px-2.5 py-1.5"
+                        }`
                      : "inline-flex right-3 bottom-3 mobile:bottom-auto mobile:top-3 px-2.5 py-1.5"
                  }`}
     >
@@ -874,14 +924,38 @@ export function CarrouselPortfolio({
       type="button"
       aria-label={sens === 1 ? "Photo suivante" : "Photo précédente"}
       data-role={sens === 1 ? "flèche droite" : "flèche gauche"}
-      onClick={() => aller(sens)}
-      className={`hidden pointer-fine:flex absolute z-[2] ${
-        sens === 1 ? "right-2.5" : "left-2.5"
-      } top-1/2 -translate-y-1/2 w-9 h-9 rounded-full
+      //  §4 (nº 368) — ⚠️ LES DEUX GARDES : sur une carte, le bouton
+      //  est posé au-dessus du lien étiré ; sans elles, un clic
+      //  ouvrirait la fiche EN PLUS de faire défiler.
+      onClick={(evenement) => {
+        evenement.preventDefault();
+        evenement.stopPropagation();
+        aller(sens);
+      }}
+      className={`hidden absolute z-[2] ${
+        //  §4 (nº 368) — SUR UNE CARTE, elles n'apparaissent qu'au
+        //  SURVOL (et jamais au doigt : `pointer-fine`). Sur une
+        //  fiche, rien ne change — elles sont là dès que la souris
+        //  existe, comme depuis la nº 208.
+        surCarte ? "pointer-fine:group-hover:flex" : "pointer-fine:flex"
+      } ${sens === 1 ? "right-2.5" : "left-2.5"}
+      top-1/2 -translate-y-1/2 rounded-full
+      ${
+        //  §5 (nº 368) — LE GABARIT SUIT LA CARTE : 28 px sur une carte
+        //  de mosaïque (l'image n'y fait que 300 à 340 px de large),
+        //  36 px sur une fiche — inchangé.
+        surCarte ? "w-7 h-7" : "w-9 h-9"
+      }
       bg-sombre-fond/55 backdrop-blur items-center justify-center
       text-sombre-texte hover:bg-sombre-eleve/75 transition-colors`}
     >
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <svg
+        width={surCarte ? "14" : "18"}
+        height={surCarte ? "14" : "18"}
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+      >
         <path
           d={sens === 1 ? "M9.5 5.5 16 12l-6.5 6.5" : "M14.5 5.5 8 12l6.5 6.5"}
           stroke="currentColor"
@@ -912,30 +986,11 @@ export function CarrouselPortfolio({
    *  · À LA FIN, la frise cesse de glisser et l'actif migre vers la
    *    droite jusqu'au dernier rond.
    */
-  //  ⚠️ UNE FONCTION APPELÉE DANS LE JSX, comme `fleche` — et non une
-  //  valeur calculée pendant le rendu : ses boutons commandent le
-  //  défilement, donc ils touchent au cadre (une ref), ce qui n'a le
-  //  droit de se produire QUE dans un gestionnaire d'événement.
-  //  ⚠️ LA FRISE ELLE-MÊME EST EXTRAITE (`PointsDuCarrousel`, en bas de
-  //  ce fichier — nº 284) : la fenêtre de carrousel du smartphone rend
-  //  LES MÊMES points, sous la photo. Ici, rien n'a changé : le même
-  //  DOM, à la même place, avec le même comportement.
-  function paginationWeb() {
-    return (
-      <div
-        data-role="pagination"
-        //  §1 (nº 307) — plus qu'un seul emploi (les CARTES de la
-        //  mosaïque), donc plus de bascule de largeur à écrire ici.
-        className="flex absolute bottom-3 inset-x-0 z-[2] justify-center pointer-events-none"
-      >
-        <PointsDuCarrousel
-          photos={photos}
-          indice={indice}
-          surRang={(rang) => allerA(rang, true, "rond")}
-        />
-      </div>
-    );
-  }
+  //  §1 (nº 368) — `paginationWeb` EST SUPPRIMÉE, code compris : elle
+  //  n'avait plus qu'un emploi (les cartes de la mosaïque), et le
+  //  propriétaire retire les points des cartes. La frise elle-même
+  //  (`PointsDuCarrousel`, en bas de ce fichier) reste : la fenêtre de
+  //  carrousel du smartphone la rend sous la photo (nº 284).
 
   /**
    * ⚠️ LA BRANCHE « UNE SEULE PHOTO » A ÉTÉ SUPPRIMÉE (nº 219-§3)
@@ -1024,8 +1079,6 @@ export function CarrouselPortfolio({
       <div
         ref={cadre}
         data-role="cadre"
-        onPointerDown={reveiller}
-        onScroll={reveiller}
         /*  §1 (nº 292) — LA HAUTEUR DU CADRE DÉCOULE DE SA LARGEUR, ET
              DE RIEN D'AUTRE.
              ------------------------------------------------------------
@@ -1078,9 +1131,12 @@ export function CarrouselPortfolio({
           //  SUR UNE CARTE : la première photo, et les autres seulement
           //  une fois la carte réveillée. Sur une fiche : tout ce qui a
           //  été monté une fois le reste (voir `montees`).
-          const montee = surCarte
-            ? rang === 0 || eveille
-            : montees.has(rang);
+          //  §2 (nº 368) — LA MÊME RÈGLE POUR LES DEUX : la fenêtre
+          //  montée, cumulative, autour de la photo regardée. Les
+          //  cartes n'ont plus leur « tout ou rien » (une seule colonne
+          //  jusqu'au premier geste, puis toutes d'un coup), qui était
+          //  la cause du temps d'attente entre deux photos.
+          const montee = montees.has(rang);
           const image = surCarte ? (
             /*  §1 (nº 366) — LA PHOTO D'UNE CARTE A SON ÉCRITURE :
                 components/PhotoDeCarte. Elle part de l'ORIGINAL et
@@ -1243,8 +1299,14 @@ export function CarrouselPortfolio({
         })}
       </div>
 
-      {!surCarte && indice > 0 && fleche(-1)}
-      {!surCarte && indice < n - 1 && fleche(1)}
+      {/*  §4 (nº 368) — LES FLÈCHES SONT AUSSI SUR LES CARTES : le
+           MÊME bouton, avec ses deux règles d'affichage inchangées —
+           pas de flèche gauche sur la première photo, pas de droite
+           sur la dernière (c'est ce que fait la fiche, et les cartes
+           font pareil). Une seule photo : les deux conditions sont
+           fausses, donc aucune flèche. */}
+      {indice > 0 && fleche(-1)}
+      {indice < n - 1 && fleche(1)}
       {/*  §Fenêtre (nº 284) — la capsule ne se pose pas quand la photo
            doit rester nette (fenêtre de carrousel).
            §2 (nº 367) — ELLE SE POSE DÉSORMAIS SUR LES CARTES AUSSI,
@@ -1264,7 +1326,19 @@ export function CarrouselPortfolio({
           de la photo est rendu à la photo : c'est la capsule du
           compteur, seule, qui dit le volume. Deux repères pour le même
           renseignement, au même endroit, se gênaient. */}
-      {surCarte && n > 1 && !sansPoints && paginationWeb()}
+      {/*  §1 (nº 368) — LES POINTS ONT QUITTÉ LES CARTES, et la frise
+           n'est plus rendue nulle part par ce composant. La capsule de
+           la nº 367 (flèche + compte) dit déjà le volume, et deux
+           repères pour le même renseignement se gênaient — c'est le
+           raisonnement de la nº 307, appliqué cette fois aux cartes.
+           Ils ne coûtaient AUCUNE place (`absolute bottom-3`) : la
+           carte garde exactement sa hauteur, et la mosaïque ses
+           rangées.
+           ⚠️ `PointsDuCarrousel` RESTE EXPORTÉ, et c'est voulu : la
+           fenêtre de carrousel du smartphone rend la frise elle-même,
+           sous la photo (nº 284). Le drapeau `sansPoints` qu'elle
+           passait n'a plus d'objet ici — il est conservé pour ne pas
+           casser son appel, et ne commande plus rien. */}
     </div>
   );
 }
