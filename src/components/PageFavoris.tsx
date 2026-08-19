@@ -36,6 +36,10 @@ import {
 import { ficheComplete } from "@/lib/fiche-complete";
 import type { PhotoFavorite, TatoueurSuivi } from "@/lib/favoris-serveur";
 import type { Tatoueur } from "@/lib/tatoueurs";
+//  §1 (nº 390) — l'état d'une surface recopie celui d'en dessous :
+//  sans cela la marque du filet est effacée et le retour recharge le
+//  document entier (voir lib/etape-refermable).
+import { etatDeSurface } from "@/lib/etape-refermable";
 
 /**
  * MA SÉLECTION — les photos gardées, et les tatoueurs suivis
@@ -249,7 +253,10 @@ export function PageFavoris({
        * fermeture rend la page exactement telle qu'elle était.
        */
       window.history.pushState(
-        { fenetreFiche: true },
+        //  §1 (nº 390) — l'état RECOPIE celui d'en dessous : sans cela,
+        //  la marque du filet est effacée et le retour recharge le
+        //  document entier (voir lib/etape-refermable).
+        etatDeSurface({ fenetreFiche: true }),
         "",
         `/tatoueur/${slug}${window.location.search}`
       );
