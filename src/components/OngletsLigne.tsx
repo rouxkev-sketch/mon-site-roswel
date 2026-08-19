@@ -34,6 +34,8 @@ export function OngletsLigne({
   surChoix,
   ariaLabel,
   fige = false,
+  classeOnglet = "px-1 min-h-[46px]",
+  avecLigneGrise = true,
 }: {
   options: Array<{ cle: string; label: string }>;
   /** La clé de l'onglet actif — `null` tant que rien n'est choisi. */
@@ -42,6 +44,33 @@ export function OngletsLigne({
   ariaLabel: string;
   /** Choix verrouillé (bloc 1 confirmé) : lisible, plus cliquable. */
   fige?: boolean;
+  /**
+   * §2 (nº 382) — LA BOÎTE D'UN ONGLET, RÉGLABLE PAR L'APPELANT.
+   * ------------------------------------------------------------------
+   * Rembourrage horizontal et hauteur minimale, rien d'autre : la
+   * typographie, les couleurs et la transition restent celles du
+   * composant — un seul dessin, deux réglages, comme les deux tailles
+   * de chevron de `GalerieQuiDefile`.
+   * ⚠️ LE DÉFAUT REPRODUIT EXACTEMENT L'ÉCRITURE D'AVANT (`px-1
+   * min-h-[46px]`) : les quatre appelants existants (authentification,
+   * bascule à deux choix, lieux, démarchage, portfolio de l'espace)
+   * ne passent rien et ne changent donc pas d'un pixel.
+   * POURQUOI LA FICHE EN A BESOIN : sa rangée n'est pas une pleine
+   * largeur, c'est une ligne où « Suivre » occupe la droite. Ses
+   * onglets doivent garder LA CIBLE TACTILE du badge qu'ils
+   * remplacent — 44 px de haut, 20 px de rembourrage de chaque côté.
+   */
+  classeOnglet?: string;
+  /**
+   * §3 (nº 382) — LE FILET GRIS SOUS LES DEUX ONGLETS.
+   * ------------------------------------------------------------------
+   * Vrai partout, sauf là où la ligne existe DÉJÀ : sur la fiche, la
+   * rangée porte son propre trait de séparation depuis la nº 381, sur
+   * toute sa largeur, marges comprises. En laisser un second sous les
+   * seuls onglets ferait deux gris empilés, épais de deux pixels sous
+   * les onglets et d'un seul ailleurs.
+   */
+  avecLigneGrise?: boolean;
 }) {
   const index = options.findIndex((option) => option.cle === cleActive);
 
@@ -65,7 +94,7 @@ export function OngletsLigne({
               aria-checked={actif}
               disabled={fige && !actif}
               onClick={() => surChoix(option.cle)}
-              className={`flex items-center justify-center px-1 min-h-[46px]
+              className={`flex items-center justify-center ${classeOnglet}
                          text-[15px] font-semibold transition-colors ${
                            actif
                              ? "text-white"
@@ -89,9 +118,11 @@ export function OngletsLigne({
           l'écran. Les deux lisent désormais la même variable — il ne
           peut plus y en avoir qu'un (voir TRAIT_SEPARATION). */}
       <div className="relative h-[3px]" aria-hidden="true">
-        <span
-          className={`absolute inset-x-0 bottom-0 h-px ${TRAIT_SEPARATION_FOND}`}
-        />
+        {avecLigneGrise && (
+          <span
+            className={`absolute inset-x-0 bottom-0 h-px ${TRAIT_SEPARATION_FOND}`}
+          />
+        )}
         {index >= 0 && (
           <span
             className="absolute bottom-0 left-0 h-[3px] rounded-full bg-primaire

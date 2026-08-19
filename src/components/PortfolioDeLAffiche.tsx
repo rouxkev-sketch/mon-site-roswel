@@ -1,6 +1,6 @@
 "use client";
 
-import { SelecteurCapsule } from "@/components/SelecteurCapsule";
+import { OngletsLigne } from "@/components/OngletsLigne";
 import {
   CATEGORIES_EXPLORER,
   ECRITURE_TITRE_SECTION,
@@ -90,14 +90,47 @@ function renduDe(photo: PhotoGalerie): string {
 }
 
 /**
- * LE SÉLECTEUR « PROFIL / PORTFOLIO » — deux mots nus, une capsule qui
- * glisse (nº 205-§1).
+ * LE SÉLECTEUR « PROFIL / PORTFOLIO »
+ * ==================================================================
+ * (nº 205-§1, puis nº 255-§1 — REFAIT PAR LA nº 382-§2.)
  *
- * ⚠️ SON ÉCRITURE A ÉTÉ EXTRAITE (nº 255-§1) : la capsule, sa mesure,
- * ses couleurs et sa glissade vivent dans `SelecteurCapsule`, et la
- * barre de « Ma sélection » consomme LA MÊME — deux emplois, une seule
- * écriture. Rien n'a changé de ce qu'il dessine ici : mêmes mots,
- * même `w-fit` (la rangée du haut pose « Suivre » à sa droite).
+ * ██ §2 (nº 382) — LA CAPSULE CÈDE LA PLACE AU SOULIGNEMENT ROSE ██
+ * L'onglet actif était encadré par un badge opaque qui glissait
+ * (`SelecteurCapsule`). Il porte désormais LE SOULIGNEMENT DE LA
+ * CRÉATION DE PORTFOLIO — celui qui choisit entre « Réalisation » et
+ * « Flash » dans l'espace tatoueur (BlocPortfolio) : les mots nus,
+ * l'actif en blanc, et un trait rose de trois pixels qui GLISSE d'un
+ * mot à l'autre.
+ *
+ * CE QUE JE RÉEMPLOIE, ET C'EST LE COMPOSANT LUI-MÊME :
+ * `OngletsLigne`. Aucun second système n'est dessiné — ni la couleur
+ * (`bg-primaire`), ni l'épaisseur (3 px), ni la courbe de glissement
+ * (300 ms, `cubic-bezier(0.32,0.72,0,1)`), ni l'ARIA (`radiogroup` +
+ * `radio`) ne sont réécrits ici. Il a simplement reçu deux RÉGLAGES
+ * facultatifs (nº 382, voir OngletsLigne), dont les défauts
+ * reproduisent son écriture d'avant au caractère près : ses cinq
+ * autres appelants ne bougent pas d'un pixel.
+ *
+ * LES DEUX RÉGLAGES, ET POURQUOI :
+ *  · `classeOnglet="px-5 min-h-[44px]"` — LA CIBLE TACTILE DU BADGE
+ *    QU'IL REMPLACE, reprise au pixel : la capsule posait ses mots en
+ *    `px-5 min-h-[44px]` (SelecteurCapsule). Sans ce réglage, les
+ *    onglets tomberaient au `px-1` de la pleine largeur et la cible se
+ *    réduirait presque au texte — c'est le piège nommé par le
+ *    propriétaire ;
+ *  · `avecLigneGrise={false}` — la rangée porte DÉJÀ son trait, sur
+ *    toute sa largeur, depuis la nº 381. Deux gris empilés feraient
+ *    deux pixels sous les onglets et un seul ailleurs.
+ *
+ * OÙ TOMBE LE ROSE (§3) : le bloc d'onglets mesure 44 + 3 = 47 px et
+ * c'est le PLUS HAUT de la rangée (« Suivre » fait 30). Il occupe donc
+ * toute la boîte de contenu, et son trait rose — posé sur son bord
+ * bas — se retrouve COLLÉ au trait fin de la rangée, qui commence
+ * exactement là. Aucun calcul, aucune valeur : une identité de boîtes.
+ *
+ * ⚠️ « SUIVRE » N'EST PAS TOUCHÉ : il n'est pas rendu ici, c'est la
+ * rangée de ContenuFiche qui le pose à droite. Rien de ce fichier ne
+ * le concerne.
  */
 export function SelecteurOngletAffiche({
   valeur,
@@ -107,11 +140,15 @@ export function SelecteurOngletAffiche({
   surChoix: (onglet: OngletAffiche) => void;
 }) {
   return (
-    <SelecteurCapsule
-      valeur={valeur}
+    <OngletsLigne
       options={ONGLETS}
-      surChoix={surChoix}
+      cleActive={valeur}
+      //  Les clés sont celles de `ONGLETS`, donc des `OngletAffiche` :
+      //  le composant partagé, lui, parle en chaînes.
+      surChoix={(cle) => surChoix(cle as OngletAffiche)}
       ariaLabel="Profil ou portfolio"
+      classeOnglet="px-5 min-h-[44px]"
+      avecLigneGrise={false}
     />
   );
 }
@@ -339,8 +376,52 @@ export function PanneauPortfolio({
          · le `mt-2.5` (10 px) entre un titre de galerie et sa rangée,
            et le `gap-[3px]` dans la rangée.
         AUCUNE VALEUR NEUVE N'EST INTRODUITE : le surtitre s'empile sur
-        le titre sans marge du tout. */
-    <div>
+        le titre sans marge du tout.
+
+        ██ §1 (nº 382) — LE PORTFOLIO REÇOIT SON PROPRE PLAN ██
+        ============================================================
+        LE DÉFAUT : sur le web, en remontant dans les galeries, LES
+        FLÈCHES DE DÉFILEMENT PASSENT PAR-DESSUS LA BARRE FIXE.
+        LES RANGS EN PRÉSENCE :
+         · la flèche d'une galerie — `z-[2]`, et son enveloppe
+           (`GalerieQuiDefile`) est `relative` SANS rang : elle ne
+           fabrique donc aucun plan, et la flèche se compare
+           DIRECTEMENT au premier plan rencontré en remontant ;
+         · le voile de bord d'une galerie — `z-[1]`, même situation ;
+         · la photo agrandie au pincement — `z-[60]` (ZoomPincement,
+           monté par `CarrouselPortfolio`, donc présent sur cette
+           page) : au-dessus de la barre, et c'est le rang qui prouve
+           que la comparaison directe est dangereuse ;
+         · la barre fixe du logo — `z-50` ;
+         · la rangée collante — `lg:z-[2]` sur le web, `mobile:z-[3]`
+           au doigt (nº 377).
+        LA CAUSE, ET ELLE EST DÉJÀ DOCUMENTÉE : c'est très exactement
+        le défaut de la nº 193-§3, où les cartes passaient devant la
+        barre. « La barre est au rang 50, mais la mosaïque
+        n'appartenait à aucun plan à elle — ses enfants pouvaient donc
+        se comparer DIRECTEMENT à la barre… et l'ordre de peinture
+        entre un calque neuf et une barre en verre dépoli n'est pas
+        garanti. » Le portfolio est dans la même situation : aucun
+        plan à lui.
+        LE REMÈDE EST LE SIEN, MOT POUR MOT : un plan au rang 0.
+        Tout ce que le portfolio contient s'ordonne À L'INTÉRIEUR
+        (les voiles sous les flèches, comme avant), et le plan entier
+        reste sous la barre — quoi qu'il arrive, y compris si un
+        navigateur promeut la zone sur son propre calque.
+        ⚠️ ET LA RÈGLE DE LA Nº 377 EN SORT RENFORCÉE, PAS CASSÉE : la
+        rangée collante est au rang 2 (web) ou 3 (doigt), ce plan au
+        rang 0 — elle passe donc au-dessus du portfolio, ce qui est
+        précisément ce que la nº 377 demandait. Aujourd'hui les
+        flèches (`z-[2]`) ÉGALAIENT la rangée du web et passaient
+        devant elle par l'ordre du flux ; elles ne le peuvent plus.
+        ⚠️ RIEN DE GÉOMÉTRIQUE : `relative` sans décalage ne déplace
+        rien, et le rang 0 ne change aucun ordre interne.
+        ⚠️ ET RIEN AU-DESSUS DE LA RANGÉE : ce bloc est un frère
+        SUIVANT de la rangée, jamais un de ses parents — la règle de
+        cette passe est tenue. La fenêtre d'adresse (`z-[80]`,
+        BlocLieux) vit dans l'onglet Profil, hors de ce plan : son
+        échappée reste entière. */
+    <div className="relative z-0">
       {/*  LES VIGNETTES — une par SÉRIE publiée, le nom du style
            dessous. Angles arrondis, aucun contour, aucun encadré :
            l'image et son nom, rien de plus. (Le cœur de série de
