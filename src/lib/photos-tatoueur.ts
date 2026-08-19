@@ -223,27 +223,45 @@ export function libelleRendu(slug: string | null | undefined): string {
 }
 
 /**
- * §1 (nº 376) — LE TITRE D'UNE GALERIE — « Trash Polka · Couleur ».
+ * §1 (nº 376) — LE TITRE D'UNE GALERIE — « Trash Polka • Couleur ».
  * ==================================================================
- * UNE SEULE ÉCRITURE POUR LES DEUX ENDROITS QUI L'AFFICHENT : les
- * titres de galerie du portfolio (PortfolioDeLAffiche) et, depuis la
- * nº 376, la ligne sous la photo de la fiche au doigt
- * (FicheTatoueur). La composition vivait en quatre exemplaires dans
- * le portfolio — deux titres et deux étiquettes ; elle vit ici, et
- * les deux endroits ne peuvent plus diverger.
+ * UNE SEULE ÉCRITURE POUR LES ENDROITS QUI L'AFFICHENT : les titres de
+ * galerie du portfolio (PortfolioDeLAffiche), la ligne sous la photo de
+ * la fiche au doigt depuis la nº 376 (FicheTatoueur) et, depuis la
+ * nº 393, la ligne sous la fenêtre superposée du web (FenetreFiche).
+ * La composition vivait en quatre exemplaires dans le portfolio — deux
+ * titres et deux étiquettes ; elle vit ici, et ces endroits ne peuvent
+ * plus diverger.
  *
  * DEUX CAS, ET PAS UN DE PLUS :
- *  · un rendu est donné → « Style · Rendu ». C'est le cas de TOUTES
+ *  · un rendu est donné → « Style • Rendu ». C'est le cas de TOUTES
  *    les galeries du portfolio : une série y vaut exactement un style,
- *    une catégorie et un rendu, le rendu n'y est donc jamais vide, et
- *    le texte rendu est identique au caractère près à celui d'avant ;
+ *    une catégorie et un rendu, le rendu n'y est donc jamais vide ;
  *  · aucun rendu → LE STYLE SEUL. Sur la fiche, un carrousel peut
  *    montrer un style ENTIER, noir & gris et couleur mêlés (`rendu`
  *    vide veut dire « tous les rendus ») : écrire un rendu là serait
  *    mentir sur ce qui est à l'écran.
  * ⚠️ SANS STYLE, RIEN — la chaîne vide, et l'appelant n'affiche pas de
- * ligne. Jamais un « · Couleur » orphelin, jamais un blanc à la place
- * du texte.
+ * ligne. Jamais une puce orpheline, jamais un blanc à la place du
+ * texte. C'EST CETTE GARDE-LÀ, ET ELLE SEULE, qui protège les trois
+ * appelants du séparateur solitaire : ils testent tous la chaîne avant
+ * de rendre quoi que ce soit.
+ *
+ * ██ §1 (nº 393) — LE SÉPARATEUR DEVIENT « • » ██
+ * ------------------------------------------------------------------
+ * C'était « · » (U+00B7, le point médian) ; c'est désormais « • »
+ * (U+2022, la puce) — CELLE DE LA FICHE : la même que les pratiques,
+ * les styles et le bloc artiste. Une seule ponctuation pour séparer
+ * deux valeurs, partout.
+ * ⚠️ CORRIGÉ À LA SOURCE, ET C'EST TOUT L'INTÉRÊT DE LA nº 376 : les
+ * cinq appels (quatre dans PortfolioDeLAffiche, un dans FicheTatoueur)
+ * et celui de la nº 393 suivent SANS ÊTRE TOUCHÉS. Aucun endroit ne
+ * peut rester en arrière.
+ * ⚠️ CE QUI N'EST PAS CONCERNÉ : les autres « · » du site ne sont pas
+ * ce libellé — la légende d'une photo (`legendePhoto`, plus bas), les
+ * horaires, le pied de page, les sous-titres de carte, les styles d'un
+ * membre d'équipe (`libelleStylesEquipe`). Ce sont d'autres textes, et
+ * le propriétaire n'a demandé que celui-ci.
  */
 export function titreDeGalerie(
   label: string | null | undefined,
@@ -252,7 +270,7 @@ export function titreDeGalerie(
   const style = (label ?? "").trim();
   if (!style) return "";
   const precision = rendu ? libelleRendu(rendu) : "";
-  return precision ? `${style} · ${precision}` : style;
+  return precision ? `${style} • ${precision}` : style;
 }
 
 /* ================================================================

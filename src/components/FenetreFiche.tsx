@@ -18,7 +18,7 @@ import {
   serieDeLOuverture,
   serieMontree,
 } from "@/lib/photo-tatoueur";
-import { NATURE_PAR_DEFAUT } from "@/lib/photos-tatoueur";
+import { NATURE_PAR_DEFAUT, titreDeGalerie } from "@/lib/photos-tatoueur";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
@@ -286,6 +286,46 @@ export function FenetreFiche({
   const photosDuStyleAffiche =
     photosRestreintes.length > 0 ? photosRestreintes : photosDuStyleEntier;
   const n = photosDuStyleAffiche.length;
+
+  /**
+   * ██ §2 (nº 393) — LE TITRE DE LA GALERIE MONTRÉE ██
+   * ==================================================================
+   * LE PENDANT EXACT DE LA nº 376, qui a posé ce titre sous la photo de
+   * tête AU DOIGT : la même chaîne, composée par la même écriture
+   * unique (`titreDeGalerie`, lib/photos-tatoueur). Rien n'est
+   * recomposé ici — le portfolio, la fiche au doigt et cette fenêtre ne
+   * peuvent pas dire trois choses différentes de la même galerie, et le
+   * changement de séparateur de la §1 les emporte tous les trois d'un
+   * coup.
+   *
+   * LE RENDU VIENT DE `serieEffective`, PAS DE `serieOuverte`, et pour
+   * la raison écrite à la nº 376 : quand la série demandée ne donne
+   * aucune photo, le carrousel montre le STYLE ENTIER (rendus mêlés) et
+   * `serieEffective` retombe à `null` — le titre ne dit alors que le
+   * style, ce qui est exactement ce qui est à l'écran.
+   *
+   * IL SUIT LE CONTENU DE LA FENÊTRE : `groupeAffiche` et
+   * `serieEffective` sont les MÊMES valeurs que celles qui décident des
+   * photos (`photosDuStyleAffiche`, deux lignes plus haut). Choisir une
+   * autre galerie dans le panneau de droite (`surSerieChoisie`) change
+   * `styleAffiche` et `serieOuverte` : le titre se recompose dans le
+   * même rendu que la photo. Il ne suit PAS le défilement du carrousel,
+   * et il n'a pas à le faire — une galerie ne contient qu'un style, donc
+   * `indice` n'entre pas dans ce calcul.
+   *
+   * ⚠️ LES DEUX CAS OÙ RIEN NE DOIT S'AFFICHER, ET ILS SONT COUVERTS
+   * SANS UNE LIGNE DE PLUS :
+   *  · une fiche sans aucune publication → `n` vaut 0, la chaîne est
+   *    vide ;
+   *  · une galerie sans libellé exploitable → `titreDeGalerie` rend la
+   *    chaîne vide par construction (elle sort avant d'écrire quoi que
+   *    ce soit quand le style est vide).
+   * Dans les deux cas le rendu est gardé par `titreDeLaGalerie && (…)`
+   * plus bas : pas de ligne, pas d'espace, et JAMAIS une puce orpheline
+   * — le séparateur n'existe que lorsqu'il a un texte de chaque côté.
+   */
+  const titreDeLaGalerie =
+    n > 0 ? titreDeGalerie(groupeAffiche?.label, serieEffective?.rendu) : "";
 
   const ouverte = tatoueur !== null;
 
@@ -647,6 +687,65 @@ export function FenetreFiche({
               />
             </div>
           </div>
+
+          {/*  ██ §2 (nº 393) — LE TITRE DE LA GALERIE, SOUS LA FENÊTRE ██
+               ==============================================================
+               LE MÉCANISME EST CELUI DU FIL D'ARIANE, AU MIROIR, et rien
+               d'autre n'a été inventé : le fil s'accroche à cette même
+               enveloppe `relative` par `absolute bottom-full left-0 mb-2`
+               — il s'écrit dans le voile VERS LE HAUT. Ce titre-ci prend
+               l'exact symétrique : `absolute top-full left-0 mt-2`, il
+               s'écrit dans le voile VERS LE BAS. Même ancrage, même
+               alignement à gauche sur le bord de la fenêtre, même air de
+               8 px, même `w-max max-w-full` (il ne s'étire pas, et ne
+               peut pas dépasser la largeur de la fenêtre).
+
+               ⚠️ COMMENT ON S'ASSURE QUE LA FENÊTRE NE BOUGE PAS — c'est
+               la note de la nº 202, mot pour mot, et elle vaut ici parce
+               que c'est le MÊME dispositif : ce texte est HORS DU FLUX
+               (`absolute`). Il ne pèse donc RIEN dans l'enveloppe — ni
+               dans sa largeur, ni dans sa hauteur. Or c'est l'enveloppe,
+               et elle seule, que le conteneur du dessus centre
+               (`flex items-center justify-center`). La fenêtre garde
+               exactement la position et la taille qu'elle avait : ni au
+               chargement, ni quand le titre change de longueur, ni quand
+               il disparaît, il n'existe de chemin par lequel il pourrait
+               la déplacer. C'est aussi pourquoi il est écrit APRÈS elle
+               dans le fichier : l'ordre du source suit l'ordre de l'œil,
+               sans rien changer à la mise en page.
+
+               ⚠️ `pointer-events-none`, ET C'EST VOULU : le conteneur
+               parent est `pointer-events-none`, le fil d'Ariane s'en
+               réveille (`pointer-events-auto`) parce qu'il porte des
+               liens. Celui-ci n'en porte aucun : le laisser transparent
+               au clic fait que cliquer dessus referme la fiche, comme
+               partout ailleurs dans le voile.
+
+               ⚠️ WEB UNIQUEMENT, avec DEUX gardes qui disent deux choses
+               différentes : `hidden lg:block` demande la largeur à deux
+               colonnes (sous 1024 px la fenêtre est en UNE colonne et
+               défile — il n'y a pas d'espace sous elle), et
+               `mobile:hidden` écarte le doigt quelle que soit la
+               largeur, parce que cette fenêtre s'ouvre AUSSI au doigt
+               (nº 226-§5) et qu'au doigt le titre vit déjà sous la photo
+               de tête (nº 376). Le propriétaire a demandé « rien de neuf
+               sur mobile » : c'est cette seconde garde qui le tient.
+
+               APPARENCE : 20 px, gras, blanc plein — contre les 13 px du
+               fil d'Ariane en `text-white/70`. Les 20 px ne sont pas une
+               valeur inventée : c'est la taille du NOM de la fiche au
+               doigt (`text-[20px]`, ContenuFiche), l'échelle d'un titre
+               dans ce produit. */}
+          {titreDeLaGalerie && (
+            <p
+              data-titre-fenetre=""
+              className="pointer-events-none absolute top-full left-0 mt-2
+                         w-max max-w-full hidden lg:block mobile:hidden
+                         text-[20px] font-bold text-white"
+            >
+              {titreDeLaGalerie}
+            </p>
+          )}
         </div>
       </div>
     </div>
