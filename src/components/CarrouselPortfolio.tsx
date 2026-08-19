@@ -1141,50 +1141,8 @@ export function CarrouselPortfolio({
              rectangle noir là où, avant elle, il n'y avait rien du
              tout. Un carrousel vide ne réserve donc aucune place :
              c'est au reste de la page de dire ce qui manque. */
-        /**
-         * ██ §1 (nº 370) — SUR UNE CARTE, LE CADRE COUVRE TOUT ██
-         * ----------------------------------------------------------
-         * LE DÉFAUT, ET SA MÉCANIQUE EXACTE. Depuis que le défilé est
-         * monté sur le web (nº 369), une bande sombre apparaissait le
-         * long de la photo — c'est le fond du CADRE DE LA CARTE
-         * (`bg-sombre-eleve`, CarteTatoueur) qui se voyait par-dessous,
-         * parce que ce conteneur ne le couvrait plus entièrement :
-         *  · `w-[round(down,100%,1px)]` le rend jusqu'à UN PIXEL PLUS
-         *    ÉTROIT que le cadre — voulu sur une fiche (nº 280 : les
-         *    positions d'arrêt du défilement sont des entiers, une
-         *    largeur fractionnaire décale les photos), sans objet ici ;
-         *  · `aspect-4/5` lui donnait SA PROPRE hauteur, calculée sur
-         *    cette largeur rognée : jusqu'à 1,25 px plus court que le
-         *    cadre, d'où la bande DU BAS.
-         * POURQUOI LE WEB SEUL, ET PAS L'IPHONE : au doigt, la largeur
-         * d'une carte tombe sur un entier — l'arrondi ne retire rien.
-         * Sur le web, les colonnes de la grille sont fluides et
-         * fractionnaires : il retire à chaque fois.
-         * ⚠️ CE N'EST NI LA BARRE DE DÉFILEMENT (elle est masquée deux
-         * lignes plus bas, et ne prend donc aucune place), NI
-         * `object-contain` (la photo est en `cover`, voir
-         * `PHOTO_DANS_SA_COLONNE`), NI une proportion différente.
-         *
-         * LE REMÈDE, QUI GARDE LES DEUX EXIGENCES : sur une carte, le
-         * conteneur ÉPOUSE le cadre (`absolute inset-0`, donc sa
-         * hauteur EXACTE — le format 4:5 et la réservation sont déjà
-         * portés par le cadre lui-même), et sa largeur est arrondie AU
-         * PIXEL SUPÉRIEUR : les colonnes restent d'une largeur entière
-         * (les arrêts du défilement tombent juste, nº 280) et le
-         * demi-pixel excédentaire est rogné par le `overflow-hidden` du
-         * cadre. Plus rien à découvrir dessous, sur aucune largeur de
-         * fenêtre.
-         * ⚠️ LA FICHE NE BOUGE PAS D'UN PIXEL : elle garde sa largeur
-         * arrondie vers le BAS, son format et son `min-h-0`.
-         */
-        className={`flex ${
-          surCarte
-            ? "absolute inset-0 w-[round(up,100%,1px)]"
-            : `relative w-[round(down,100%,1px)] ${
-                dansLaFenetre
-                  ? ""
-                  : `${n > 0 ? CADRE_PHOTO_PORTFOLIO : ""} min-h-0`
-              }`
+        className={`relative flex w-[round(down,100%,1px)] ${
+          dansLaFenetre ? "" : `${n > 0 ? CADRE_PHOTO_PORTFOLIO : ""} min-h-0`
         } ${
           zoomEnCours
             ? "overflow-hidden"

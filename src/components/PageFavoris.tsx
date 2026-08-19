@@ -14,7 +14,6 @@ import { lireSelection, MENU_FAVORIS } from "@/lib/filtres-selection";
 import { lireRequeteCourante, souscrireAdresse } from "@/lib/adresse-courante";
 import { CarteTatoueur } from "@/components/CarteTatoueur";
 import { CLASSES_GRILLE_CARTES } from "@/components/GrilleTatoueurs";
-import { ClavierDefileCarte } from "@/components/ClavierDefileCarte";
 import { useVuePhototheque } from "@/components/AffichageMosaique";
 import { positionSousLeGel } from "@/lib/gel-du-corps";
 import { BlocSuivis } from "@/components/BlocSuivis";
@@ -354,12 +353,6 @@ export function PageFavoris({
         (une entrée par fiche, un cran par retour) — rien n'est réécrit
         ici. La règle entière vit dans PileFiches, où elle est écrite. */
     <PileFiches surProfondeur={setProfondeurPile} voileDejaPose>
-    {/*  §2 (nº 370) — LE MÊME ÉCOUTEUR DE CLAVIER QUE LA MOSAÏQUE, monté
-         UNE FOIS pour toute la page : « Ma sélection » rend les mêmes
-         cartes, elles répondent donc aux mêmes flèches. Les deux
-         surfaces ne coexistent jamais : il n'y a jamais qu'un écouteur
-         de document dans la page, quel que soit le nombre de cartes. */}
-    <ClavierDefileCarte />
     {/*  ⚠️ LA LARGEUR DE LA MOSAÏQUE (nº 213-§3a) : `LARGEUR_SITE` et
         les mêmes marges latérales que l'accueil — cette page montre
         les mêmes cartes, elle doit occuper le même espace. */}
