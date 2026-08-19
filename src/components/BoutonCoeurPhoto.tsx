@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 //  ██ nº 364 — LE FANION REMPLACE LE CŒUR, PARTOUT ██
 //  C'est L'ICÔNE DE LA BARRE FIXE, celle de « Ma sélection »
 //  (IconeFanion, components/Icones) — pas un second dessin : le même
@@ -14,6 +13,9 @@ import { useRouter } from "next/navigation";
 //  couleurs (blanc, plein une fois enregistré), ombre portée,
 //  animation de pose, zone tactile.
 import { IconeFanion } from "@/components/Icones";
+//  §1 (nº 396) — l'invitation à créer un compte, écrite UNE fois et
+//  posée par les deux gestes concernés (ici le fanion, et « Suivre »).
+import { FenetreInvitationCompte } from "@/components/FenetreInvitationCompte";
 import { useUtilisateur } from "@/lib/use-utilisateur";
 import {
   amorcer,
@@ -21,9 +23,7 @@ import {
   ecrireFavori,
   estIdentifiantDeBase,
   reprendreLeGeste,
-  retenirLeGeste,
   useEtatFavori,
-  versLaConnexion,
 } from "@/lib/favoris-yokofolio";
 
 /**
@@ -87,12 +87,15 @@ export function BoutonCoeurPhoto({
       de 44), glyphe à 30. Les deux autres gabarits ne bougent pas. */
   variante?: "carte" | "fiche" | "fiche-mobile";
 }) {
-  const router = useRouter();
   const { utilisateur, pret } = useUtilisateur();
   amorcer("photo", photoId, enregistreeAuDepart);
   const enregistree = useEtatFavori("photo", photoId, enregistreeAuDepart);
   /** L'animation de pose — un rebond court, jamais au retrait. */
   const [pulse, setPulse] = useState(false);
+  /** §1 (nº 396) — LA FENÊTRE D'INVITATION EST OUVERTE. Un ÉTAT REACT,
+      rien d'autre : aucune adresse, aucune entrée d'historique (voir la
+      note du rendu, tout en bas). */
+  const [invitation, setInvitation] = useState(false);
   const dejaRejoue = useRef(false);
 
   /** LE GESTE REPRIS APRÈS LA CONNEXION. On revient sur la page qu'on
@@ -119,9 +122,27 @@ export function BoutonCoeurPhoto({
     evenement.preventDefault();
     evenement.stopPropagation();
 
+    /**
+     * ██ §1 (nº 396) — L'INVITATION REMPLACE LE DÉPART ██
+     * ==============================================================
+     * ⚠️ `pret` D'ABORD, ET C'EST LA RÈGLE 137/203 : l'état de
+     * connexion se charge côté navigateur, APRÈS le premier rendu.
+     * Tant qu'il n'est pas connu, `utilisateur` vaut `null` — ce qui
+     * ne veut PAS dire « non connecté », mais « on ne sait pas
+     * encore ». Ouvrir la fenêtre sur cette valeur-là la montrerait
+     * une fraction de seconde à quelqu'un qui EST connecté. On ne fait
+     * donc rien : l'état arrive en quelques dizaines de millisecondes,
+     * et un second appui agit. C'est aussi ce qui manquait avant cette
+     * passe — le même appui envoyait alors un connecté sur la page de
+     * compte.
+     * ⚠️ LE GESTE RETENU A DÉMÉNAGÉ, IL N'A PAS DISPARU : il est noté
+     * au DÉPART vers le compte (voir FenetreInvitationCompte), et non
+     * plus ici. Sans ce déplacement, refermer la fenêtre laisserait une
+     * intention derrière soi, qui se jouerait à la prochaine connexion.
+     */
+    if (!pret) return;
     if (!utilisateur) {
-      retenirLeGeste({ genre: "photo", id: photoId });
-      router.push(versLaConnexion());
+      setInvitation(true);
       return;
     }
 
@@ -162,6 +183,7 @@ export function BoutonCoeurPhoto({
         "h-12 w-12";
 
   return (
+    <>
     <button
       type="button"
       onClick={basculer}
@@ -209,5 +231,33 @@ export function BoutonCoeurPhoto({
         }`}
       />
     </button>
+      {/*  ██ §1 (nº 396) — L'INVITATION, POSÉE PAR LE BOUTON LUI-MÊME ██
+           ==========================================================
+           ELLE EST ÉCRITE ICI, ET NULLE PART AILLEURS, et c'est ce qui
+           couvre TOUTES les surfaces d'un coup : ce bouton est le seul
+           fanion du produit — cartes de la mosaïque, vitrines,
+           résultats, « Ma sélection », page de fiche, fenêtre de fiche
+           du web et fenêtre de carrousel montent CE composant. Aucune
+           surface ne peut donc en être privée, et aucune n'a une ligne
+           à écrire.
+           ⚠️ AUCUNE ENTRÉE D'HISTORIQUE (règle 332-§1) : `invitation`
+           est un état React, la fenêtre est peinte par un portail dans
+           <body>. Ni `pushState`, ni `replaceState`, ni paramètre
+           d'adresse — donc rien à consommer en refermant, et le bouton
+           « précédent » quitte la page comme si la fenêtre n'existait
+           pas. C'est déjà le régime des fenêtres de partage et de
+           langue ; celle-ci ne fait pas exception.
+           ⚠️ ELLE EST DANS LE <button>, ET ÇA NE PÈSE RIEN : le portail
+           la sort du flux et de tout contexte d'empilement — sa place
+           dans l'arbre React n'a aucun effet sur la mise en page de la
+           carte ni de la fiche. */}
+      {invitation && (
+        <FenetreInvitationCompte
+          geste="photo"
+          id={photoId}
+          surFermeture={() => setInvitation(false)}
+        />
+      )}
+    </>
   );
 }

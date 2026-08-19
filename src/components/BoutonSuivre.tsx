@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+//  §1 (nº 396) — l'invitation à créer un compte : la MÊME fenêtre
+//  que le fanion, écrite une seule fois.
+import { FenetreInvitationCompte } from "@/components/FenetreInvitationCompte";
 import { useUtilisateur } from "@/lib/use-utilisateur";
 import {
   amorcer,
@@ -9,9 +11,7 @@ import {
   ecrireFavori,
   estIdentifiantDeBase,
   reprendreLeGeste,
-  retenirLeGeste,
   useEtatFavori,
-  versLaConnexion,
 } from "@/lib/favoris-yokofolio";
 
 /**
@@ -57,10 +57,12 @@ export function BoutonSuivre({
   suiviAuDepart?: boolean;
   pleineLargeur?: boolean;
 }) {
-  const router = useRouter();
   const { utilisateur, pret } = useUtilisateur();
   amorcer("tatoueur", tatoueurId, suiviAuDepart);
   const suivi = useEtatFavori("tatoueur", tatoueurId, suiviAuDepart);
+  /** §1 (nº 396) — LA FENÊTRE D'INVITATION EST OUVERTE. Un état
+      React, rien d'autre : aucune entrée d'historique. */
+  const [invitation, setInvitation] = useState(false);
   const dejaRejoue = useRef(false);
 
   /** Le geste repris après la connexion — une seule fois. */
@@ -73,9 +75,21 @@ export function BoutonSuivre({
   }, [pret, utilisateur, tatoueurId]);
 
   function basculer() {
+    /**
+     * ██ §1 (nº 396) — L'INVITATION REMPLACE LE DÉPART ██
+     * ==============================================================
+     * La note complète est dans BoutonCoeurPhoto : même règle, même
+     * ordre, même raison. En résumé — `pret` d'abord (règle 137/203 :
+     * tant que l'état de connexion n'est pas chargé, `utilisateur`
+     * vaut `null` sans vouloir dire « non connecté », et la fenêtre ne
+     * doit jamais s'ouvrir devant un connecté) ; puis la fenêtre au
+     * lieu du départ ; et le geste retenu déménage au moment du départ
+     * vers le compte, pour qu'une fenêtre refermée ne laisse aucune
+     * intention derrière elle.
+     */
+    if (!pret) return;
     if (!utilisateur) {
-      retenirLeGeste({ genre: "tatoueur", id: tatoueurId });
-      router.push(versLaConnexion());
+      setInvitation(true);
       return;
     }
     const suivant = !suivi;
@@ -92,6 +106,7 @@ export function BoutonSuivre({
   if (!estIdentifiantDeBase(tatoueurId)) return null;
 
   return (
+    <>
     <button
       type="button"
       onClick={basculer}
@@ -173,5 +188,21 @@ export function BoutonSuivre({
         </span>
       </span>
     </button>
+      {/*  §1 (nº 396) — L'INVITATION, POSÉE PAR LE BOUTON LUI-MÊME.
+           « Suivre » n'existe qu'à UN endroit du code (ContenuFiche),
+           mais ce contenu est monté par DEUX surfaces — la page de
+           fiche et la fenêtre superposée du web. L'écrire ici les sert
+           donc toutes les deux, sans qu'aucune ait une ligne à ajouter.
+           ⚠️ AUCUNE ENTRÉE D'HISTORIQUE (règle 332-§1) : un état React
+           et un portail, ni `pushState` ni paramètre d'adresse — rien à
+           consommer en refermant. */}
+      {invitation && (
+        <FenetreInvitationCompte
+          geste="tatoueur"
+          id={tatoueurId}
+          surFermeture={() => setInvitation(false)}
+        />
+      )}
+    </>
   );
 }
