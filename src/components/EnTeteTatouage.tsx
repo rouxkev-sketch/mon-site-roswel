@@ -21,7 +21,6 @@ import {
   IconeFanion,
   IconeLoupe,
   IconeSilhouette,
-  IconeUtilisateur,
 } from "@/components/Icones";
 import { LogoYokofolio } from "@/components/LogoYokofolio";
 import { MenuEspace } from "@/components/MenuEspace";
@@ -999,27 +998,40 @@ export function EnTeteTatouage({
                    devenu invisible, il n'a pas disparu — le retirer
                    rétrécirait le badge de 4 px en largeur comme en
                    hauteur, et la rangée entière bougerait.
-                   Ce qu'il porte, et rien d'autre :
-                    · AU REPOS, le fond ET le contour valent `#38383F`
-                      (`bg-sombre-bordure border-sombre-bordure`) — le
-                      gris des traits du site, aucune couleur nouvelle.
-                      Le badge n'est plus un trou dans le verre de la
-                      barre : c'est un bloc plein d'une seule teinte ;
+                   ██ nº 399 — LE BADGE PASSE AU ROSE PLEIN ██
+                   Le propriétaire renverse la robe : le fond gris et le
+                   texte rose deviennent un fond ROSE et un texte BLANC,
+                   et l'icône s'en va. Ce qu'il porte désormais :
+                    · AU REPOS, le fond ET le contour valent le ROSE DU
+                      SITE (`bg-primaire border-primaire`, `#EE3D6F`) —
+                      le jeton de la charte, celui du bouton « Créer mon
+                      compte » de la fenêtre d'invitation (nº 396-397),
+                      lui-même repris de « qui-sommes-nous ». Aucune
+                      couleur n'est inventée ;
                     · AU SURVOL, LES DEUX MONTENT ENSEMBLE D'UN CRAN, à
-                      `#4A4A53` (`hover:bg-sombre-haut
-                      hover:border-sombre-haut`) — le barreau au-dessus
-                      dans l'échelle du site ;
-                    · le CONTOUR ÉPAIS DE 2 px (nº 311-§1b) — invisible
-                      dans les deux états, gardé pour la taille seule ;
-                    · le texte en ROSE (`#EE3D6F`, `text-primaire`) ;
-                    · l'icône de connexion DANS le badge, avec le texte :
-                      `IconeUtilisateur`, le rond avec une personne
-                      dedans, qui existe déjà — on ne la redessine pas.
-                      §1-a (nº 311) — ELLE EST AU RANG 24, celui du
-                      GLOBE de la barre juste à sa gauche (voir
-                      `SelecteurLangue`, et la note de rang de la
-                      nº 147-§6). Les deux icônes de cette rangée font
-                      donc la même taille, au pixel.
+                      `hover:bg-primaire-fonce hover:border-primaire-fonce`
+                      — LE TRAITEMENT DU BOUTON ROSE EXISTANT, au
+                      caractère près. Ce bouton-là n'a pas d'état pressé
+                      distinct dans le site : on n'en invente pas un ;
+                    · le CONTOUR ÉPAIS DE 2 px (nº 311-§1b) — toujours
+                      invisible puisqu'il suit exactement le fond dans
+                      les deux états (règle nº 321), et toujours gardé
+                      POUR LA TAILLE SEULE ;
+                    · le texte en BLANC (`text-sombre-texte`, `#F2F2F4`)
+                      — le blanc de la charte sombre, celui de la phrase
+                      de la fenêtre d'invitation et de son bouton ;
+                    · PLUS AUCUNE ICÔNE. `IconeUtilisateur` occupait
+                      24 px, plus les 8 px de son écart (`gap-2`) : 32 px
+                      de largeur s'en vont avec elle.
+                      ⚠️ ET C'EST POURQUOI LE REMBOURRAGE PASSE DE 20 À
+                      36 px (`px-5` → `px-9`) : 16 px de chaque côté
+                      remplacent EXACTEMENT les 32 px libérés. Le bouton
+                      garde donc sa largeur AU PIXEL — même taille, même
+                      place, et rien dans la barre ne se décale. Sans
+                      cette compensation, ce badge étant le DERNIER
+                      d'une rangée calée à droite (`justify-end`), son
+                      bord gauche aurait reculé de 32 px et le globe
+                      comme la loupe auraient glissé d'autant.
                    ⚠️ WEB UNIQUEMENT (`hidden sm:flex`) : au doigt, c'est
                    la silhouette ronde ci-dessus qui mène à la connexion,
                    et elle ne change pas. */}
@@ -1028,15 +1040,14 @@ export function EnTeteTatouage({
                 aria-label={libelleDeconnecte}
                 data-bouton-connexion=""
                 style={{ height: HAUTEUR_ACTIONS }}
-                className="hidden sm:flex rounded-full px-5 items-center gap-2
-                           bg-sombre-bordure border-2 border-sombre-bordure
-                           hover:bg-sombre-haut hover:border-sombre-haut
-                           text-primaire
+                className="hidden sm:flex rounded-full px-9 items-center
+                           bg-primaire border-2 border-primaire
+                           hover:bg-primaire-fonce hover:border-primaire-fonce
+                           text-sombre-texte
                            text-sm font-semibold transition-colors whitespace-nowrap
                            focus-visible:outline-2 focus-visible:outline-offset-2
                            focus-visible:outline-primaire"
               >
-                <IconeUtilisateur taille={24} classe="shrink-0" />
                 <span className="grid text-center">
                   {pret ? (
                     <span className="col-start-1 row-start-1">
