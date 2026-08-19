@@ -222,6 +222,39 @@ export function libelleRendu(slug: string | null | undefined): string {
   return RENDUS_PHOTO.find((r) => r.slug === slug)?.label ?? (slug ?? "");
 }
 
+/**
+ * §1 (nº 376) — LE TITRE D'UNE GALERIE — « Trash Polka · Couleur ».
+ * ==================================================================
+ * UNE SEULE ÉCRITURE POUR LES DEUX ENDROITS QUI L'AFFICHENT : les
+ * titres de galerie du portfolio (PortfolioDeLAffiche) et, depuis la
+ * nº 376, la ligne sous la photo de la fiche au doigt
+ * (FicheTatoueur). La composition vivait en quatre exemplaires dans
+ * le portfolio — deux titres et deux étiquettes ; elle vit ici, et
+ * les deux endroits ne peuvent plus diverger.
+ *
+ * DEUX CAS, ET PAS UN DE PLUS :
+ *  · un rendu est donné → « Style · Rendu ». C'est le cas de TOUTES
+ *    les galeries du portfolio : une série y vaut exactement un style,
+ *    une catégorie et un rendu, le rendu n'y est donc jamais vide, et
+ *    le texte rendu est identique au caractère près à celui d'avant ;
+ *  · aucun rendu → LE STYLE SEUL. Sur la fiche, un carrousel peut
+ *    montrer un style ENTIER, noir & gris et couleur mêlés (`rendu`
+ *    vide veut dire « tous les rendus ») : écrire un rendu là serait
+ *    mentir sur ce qui est à l'écran.
+ * ⚠️ SANS STYLE, RIEN — la chaîne vide, et l'appelant n'affiche pas de
+ * ligne. Jamais un « · Couleur » orphelin, jamais un blanc à la place
+ * du texte.
+ */
+export function titreDeGalerie(
+  label: string | null | undefined,
+  rendu: string | null | undefined
+): string {
+  const style = (label ?? "").trim();
+  if (!style) return "";
+  const precision = rendu ? libelleRendu(rendu) : "";
+  return precision ? `${style} · ${precision}` : style;
+}
+
 /* ================================================================
  * LA PHOTO
  * ================================================================ */

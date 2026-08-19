@@ -8,7 +8,7 @@ import {
 import {
   RENDU_PAR_DEFAUT,
   RENDUS_PHOTO,
-  libelleRendu,
+  titreDeGalerie,
 } from "@/lib/photos-tatoueur";
 import {
   CHEVRON_GALERIE_PETIT,
@@ -390,7 +390,7 @@ export function PanneauPortfolio({
               data-titre-galerie=""
               className="text-[15px] font-medium text-sombre-texte"
             >
-              {serie.label} · {libelleRendu(serie.rendu)}
+              {titreDeGalerie(serie.label, serie.rendu)}
             </p>
             <GalerieQuiDefile
               classeEnveloppe="mt-2.5"
@@ -421,7 +421,7 @@ export function PanneauPortfolio({
               //  le portfolio se lit pareil sur les deux appareils.
               ecart="gap-[3px]"
               cleDuContenu={`${serie.style}-${serie.rendu}-${serie.photos.length}`}
-              etiquette={`${serie.label} · ${libelleRendu(serie.rendu)}`}
+              etiquette={titreDeGalerie(serie.label, serie.rendu)}
             >
               {casesDe(serie, nature)}
             </GalerieQuiDefile>
@@ -437,8 +437,9 @@ export function PanneauPortfolio({
            « Réalisme · Couleur », « Réalisme · Noir et gris ».
            Deux carrousels d'un même style mais de rendus
            différents portent donc deux titres distincts, et c'est
-           le but. Les mots viennent de `libelleRendu` : aucun
-           libellé n'est écrit ici.
+           le but. Les mots viennent de `titreDeGalerie` (nº 376) :
+           aucun libellé n'est écrit ici, et la ligne sous la photo
+           de la fiche au doigt affiche EXACTEMENT la même chaîne.
            RÈGLE 3 — TOUTES les photos du carrousel. Le plafond de
            vingt de « Ma sélection » ne s'applique pas à cette
            page, et il n'y a pas de « Voir plus ».
@@ -480,7 +481,7 @@ export function PanneauPortfolio({
               data-titre-galerie=""
               className="text-[15px] font-medium text-sombre-texte"
             >
-              {serie.label} · {libelleRendu(serie.rendu)}
+              {titreDeGalerie(serie.label, serie.rendu)}
             </p>
             <GalerieQuiDefile
               /*  §1 (nº 312) — PLUS AUCUN DÉBORD, PLUS AUCUN MASQUE.
@@ -520,7 +521,7 @@ export function PanneauPortfolio({
               decalageDroite="right-0"
               avecVoiles={false}
               cleDuContenu={`${serie.style}-${serie.rendu}-${serie.photos.length}`}
-              etiquette={`${serie.label} · ${libelleRendu(serie.rendu)}`}
+              etiquette={titreDeGalerie(serie.label, serie.rendu)}
             >
               {casesDe(serie, nature)}
             </GalerieQuiDefile>

@@ -41,7 +41,7 @@ import {
 //  (`RENDU_PAR_DEFAUT`, `ensembleDeLaPhoto`, `natureConnue`), et
 //  `pincementRecent` avec eux : ils ne servaient qu'à ouvrir la fenêtre
 //  de carrousel depuis la photo du haut.
-import { NATURE_PAR_DEFAUT } from "@/lib/photos-tatoueur";
+import { NATURE_PAR_DEFAUT, titreDeGalerie } from "@/lib/photos-tatoueur";
 import type { Tatoueur } from "@/lib/tatoueurs";
 import { mecanismeCoupe } from "@/lib/variantes-essai";
 
@@ -269,6 +269,36 @@ export function FicheTatoueur({
   const serieEffective = photosRestreintes.length > 0 ? serieOuverte : null;
   const photosDuCarrousel =
     photosRestreintes.length > 0 ? photosRestreintes : photosDuStyleEntier;
+
+  /**
+   * §1 (nº 376) — LE TITRE DE LA GALERIE, sous la photo, AU DOIGT.
+   * ------------------------------------------------------------------
+   * LA MÊME CHAÎNE QUE LE PORTFOLIO, et c'est le point : elle est
+   * composée par `titreDeGalerie` (lib/photos-tatoueur), l'écriture
+   * unique que les titres de galerie du portfolio consomment aussi.
+   * Rien n'est recomposé ici — les deux endroits ne peuvent pas dire
+   * deux choses différentes de la même galerie.
+   *
+   * LE RENDU VIENT DE `serieEffective`, PAS DE `serieOuverte` : quand
+   * la série demandée ne donne aucune photo, le carrousel montre le
+   * STYLE ENTIER (rendus mêlés) et `serieEffective` retombe à `null` —
+   * le titre ne dit alors que le style, ce qui est exactement ce qui
+   * est à l'écran.
+   *
+   * ⚠️ CALCULÉ AU RENDU, DONC PRÉSENT DANS LE HTML PRÉRENDU : ni
+   * mesure, ni effet, ni lecture de navigateur. `groupeAffiche` et
+   * `serieEffective` sortent des mêmes données que la photo elle-même.
+   * Ce qui décide de le MONTRER (le doigt) est une bascule de feuille
+   * de style, pas un rendu conditionnel — voir plus bas.
+   *
+   * ⚠️ IL NE SUIT PAS LE DÉFILEMENT, ET IL N'A PAS À LE FAIRE : une
+   * galerie ne contient qu'un style. `indicePhoto` n'entre pas dans ce
+   * calcul, le titre ne se recalcule donc jamais quand on fait défiler.
+   */
+  const titreDuCarrousel =
+    photosDuCarrousel.length > 0
+      ? titreDeGalerie(groupeAffiche?.label, serieEffective?.rendu)
+      : "";
 
   /** LA PHOTO SOUS LES YEUX — celle que le cœur enregistre. Elle suit
       le carrousel : changer de photo change ce qu'on enregistre, et le
@@ -780,7 +810,24 @@ export function FicheTatoueur({
            qu'aucune marge soit écrite nulle part.
            ⚠️ CE QUI NE BOUGE PAS : la photo (sa largeur découle de la
            hauteur de l'écran, nº 290) et la gouttière (`lg:gap-10`). */}
-      <div className="grid gap-8 lg:gap-10 lg:grid-cols-[auto_340px] lg:justify-center">
+      {/*  §1 (nº 376) — `mobile:gap-5` QUAND, ET SEULEMENT QUAND, LE
+           TITRE DE GALERIE EXISTE.
+           ------------------------------------------------------------
+           Les 32 px du `gap-8` étaient TOUT le blanc entre la photo et
+           les liens Profil / Portfolio. Le titre s'y loge : 12 px
+           au-dessus de lui (le `gap-3` de la colonne de tête), 20 px en
+           dessous — 12 + 20 = 32, le blanc est le même, il est
+           seulement réparti. Sans titre (fiche sans photo, style sans
+           libellé), la classe n'est pas posée et l'espacement est celui
+           d'hier, au pixel.
+           ⚠️ LE WEB N'EST JAMAIS CONCERNÉ : `mobile:` ne s'applique
+           qu'au doigt, et `lg:gap-10` reste seul maître de la
+           gouttière des deux colonnes. */}
+      <div
+        className={`grid gap-8 lg:gap-10 lg:grid-cols-[auto_340px] lg:justify-center ${
+          titreDuCarrousel ? "mobile:gap-5" : ""
+        }`}
+      >
         {/* ---------- La photo — calée dans la hauteur visible (web) ----------
              §3 (nº 295) — SAUF QUAND LE LIEN A DIT « PAS DE PHOTO » :
              la colonne entière disparaît, la page commence par Profil /
@@ -889,6 +936,77 @@ export function FicheTatoueur({
               )}
             </CarrouselPortfolio>
           </div>
+
+          {/**
+            * §1 (nº 376) — LE TITRE DE LA GALERIE, SOUS LA PHOTO.
+            * ------------------------------------------------------
+            * OÙ IL VIT : deuxième enfant de la colonne de tête, donc
+            * HORS du cadre de la photo — celui-ci saigne jusqu'aux
+            * bords de l'écran (`mobile:-mx-4`), le titre non : il
+            * s'aligne à gauche sur les marges de la page, comme tout
+            * le reste de la fiche.
+            *
+            * AU DOIGT SEULEMENT (`hidden mobile:block`) — l'écriture
+            * du cœur tactile, quinze lignes plus haut. C'EST UNE
+            * BASCULE DE FEUILLE DE STYLE, PAS UN RENDU CONDITIONNEL :
+            * la balise est dans le HTML prérendu, `data-appareil` est
+            * posé par le script d'avant peinture, et la règle CSS
+            * s'applique donc dès la première image — le mécanisme est
+            * celui qui fait déjà saigner la photo au doigt. Sur le
+            * web l'élément est `display:none`, il n'est donc même pas
+            * un élément de la boîte souple : le `gap-3` de la colonne
+            * ne s'applique pas, et la mise en page du web ne bouge
+            * pas d'un pixel.
+            *
+            * L'ESPACE, ET IL N'EN NAÎT AUCUN : le blanc entre la
+            * photo et les liens Profil / Portfolio valait 32 px (le
+            * `gap-8` de la grille). Il en vaut toujours 32, RÉPARTIS
+            * AUTOUR DU TITRE — 12 px au-dessus (le `gap-3` de cette
+            * colonne, écrit depuis toujours et resté sans emploi
+            * jusqu'ici) et 20 px en dessous (`mobile:gap-5` sur la
+            * grille, posé seulement quand ce titre existe). Le titre
+            * est donc PLUS PRÈS DE LA PHOTO QUE DES LIENS : il nomme
+            * ce qui le précède — c'est la règle d'aération de la
+            * nº 277, prise à l'envers parce que le titre vient après
+            * ce qu'il nomme. La page ne s'allonge que de la ligne de
+            * texte elle-même.
+            *
+            * L'ÉCRITURE : 15 px, `font-semibold`, blanc plein.
+            *  · 15 px — la taille que CE MÊME libellé porte déjà dans
+            *    le portfolio, et celle du texte courant de la fiche :
+            *    les mêmes mots ne changent pas de taille selon
+            *    l'endroit de la page où ils apparaissent ;
+            *  · `font-semibold` — le gras du site pour tout ce qui
+            *    n'est pas le `<h1>`. Le nom du tatoueur est en 20 px
+            *    `font-bold` quelques centimètres plus bas ; monter ce
+            *    titre-ci à `font-bold` mettrait deux titres au même
+            *    poids en haut de la page ;
+            *  · `text-sombre-texte` — le blanc plein du site, le jeton
+            *    déjà porté par les titres de galerie du portfolio.
+            *    Aucune couleur neuve.
+            *
+            * UN TITRE LONG NE POUSSE RIEN : `truncate` le tient sur
+            * UNE ligne et le coupe par des points de suspension. La
+            * hauteur du bloc est donc constante quoi qu'il arrive, et
+            * les liens Profil / Portfolio ne peuvent pas être
+            * repoussés. (`min-w-0` est déjà sur la colonne : sans lui
+            * une boîte souple refuse de rétrécir sous son contenu.)
+            *
+            * ET S'IL N'Y A RIEN À DIRE, IL N'Y A PAS DE LIGNE :
+            * `titreDuCarrousel` est vide quand la fiche n'a aucune
+            * photo, ou quand le style n'a pas de libellé — on ne rend
+            * alors NI la balise, NI son `gap`, NI le `mobile:gap-5`.
+            * Aucun blanc réservé à un texte absent.
+            */}
+          {titreDuCarrousel && (
+            <p
+              data-titre-carrousel=""
+              className="hidden mobile:block truncate text-[15px]
+                         font-semibold text-sombre-texte"
+            >
+              {titreDuCarrousel}
+            </p>
+          )}
 
           {/*  L'AVERTISSEMENT DE DÉMONSTRATION a rejoint le contenu
                partagé (nº 199) : il s'affiche en tête de la colonne,
