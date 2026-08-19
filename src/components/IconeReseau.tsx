@@ -181,38 +181,29 @@ export function IconeEtoile({ taille = 20 }: ProprietesIconeLien) {
 }
 
 /**
- * §1 (nº 386) — LA PALETTE, POUR LA LIGNE DES PRATIQUES.
+ * §3 (nº 387) — LA GOUTTE D'ENCRE, POUR LA LIGNE DES STYLES.
  * ==================================================================
- * Elle coiffe la quatrième ligne du profil, sous l'étoile des styles.
+ * Elle REMPLACE la palette de la nº 386, supprimée avec elle : à la
+ * nº 387 les deux lignes échangent leur place, l'étoile passe aux
+ * PRATIQUES et les STYLES reçoivent cette goutte.
  * Aucun fichier ajouté au dépôt : un tracé, comme ses voisines.
  *
  * MÊME TRAITEMENT QUE L'ÉTOILE ET QU'INSTAGRAM, sans rien choisir :
  * `fill="none"`, trait de 1,8 sur la grille de 24, `currentColor`
- * (donc aucune couleur déclarée — celle du texte de sa ligne), 20 px
- * dans la boîte de 22 px partagée par toutes les lignes du profil.
+ * (aucune couleur déclarée — celle du texte de sa ligne), 20 px dans
+ * la boîte de 22 px partagée par toutes les lignes du profil.
  *
- * LE TRACÉ : la silhouette classique — un disque légèrement débordant
- * à droite, refermé en bas par l'ENCOCHE DU POUCE, qui est ce qui fait
- * lire « palette » et non « tache ». Elle est décrite en une seule
- * courbe fermée, ici parcourue AU TRAIT (et non remplie) : le contour
- * de la silhouette EST le dessin.
- *
- * ⚠️ PAS DE PASTILLES DE COULEUR, ET C'EST UN CHOIX ASSUMÉ. À 20 px,
- * une pastille n'a que deux formes possibles : un aplat, que le
- * propriétaire ne veut pas ici, ou un anneau de 1,8 de trait — c'est-
- * à-dire une tache floue, la raison même pour laquelle le point
- * d'Instagram est PLEIN dans ce fichier (voir sa note). Plutôt qu'un
- * troisième compromis, la palette se lit par sa forme seule, comme le
- * calendrier se lit sans chiffres.
+ * LE TRACÉ, SIMPLE ET FRANC : une pointe en haut, deux flancs qui
+ * s'écartent en courbe, un ventre rond en bas — la goutte se ferme sur
+ * elle-même. Deux courbes symétriques, rien de plus : à 20 px, tout
+ * détail de plus (reflet, ombre) se referme en tache.
  */
-export function IconePalette({ taille = 20 }: ProprietesIconeLien) {
+export function IconeGoutte({ taille = 20 }: ProprietesIconeLien) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
-        d="M12 3.6c-4.8 0-8.7 3.9-8.7 8.7s3.9 8.7 8.7 8.7c.8 0
-           1.45-.65 1.45-1.45 0-.38-.14-.72-.38-.98-.22-.25-.37-.59-.37-.96
-           0-.8.65-1.45 1.45-1.45h1.71c2.67 0 4.83-2.16 4.83-4.83
-           0-4.27-3.9-7.73-8.7-7.73Z"
+        d="M12 3.2c3.9 4.4 6.4 7.6 6.4 10.4a6.4 6.4 0 1 1-12.8 0c0-2.8
+           2.5-6 6.4-10.4Z"
         stroke="currentColor"
         strokeWidth="1.8"
         strokeLinejoin="round"

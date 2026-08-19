@@ -25,7 +25,7 @@ import {
   IconeCalendrier,
   IconeDuLien,
   IconeEtoile,
-  IconePalette,
+  IconeGoutte,
 } from "@/components/IconeReseau";
 import { BoutonSuivre } from "@/components/BoutonSuivre";
 import {
@@ -736,7 +736,7 @@ export function ContenuFiche({
    * ils prennent la couleur du texte du lien — gris doux ici, et ses
    * survols — sans un seul réglage. Aucun disque, aucun fond.
    */
-  const iconeDeLien = (reseau: "instagram" | "tiktok" | "site") => (
+  const iconeDeLien = (reseau: "instagram" | "site") => (
     <IconeDuLien reseau={reseau} taille={20} />
   );
 
@@ -808,14 +808,28 @@ export function ContenuFiche({
       "Instagram",
       iconeDeLien("instagram")
     );
-  const lienTiktok =
-    tatoueur.lien_tiktok &&
-    lienEnLigne(
-      "tiktok",
-      tatoueur.lien_tiktok,
-      "TikTok",
-      iconeDeLien("tiktok")
-    );
+  /**
+   * ██ §2 (nº 387) — TIKTOK NE S'AFFICHE PLUS NULLE PART ██
+   * ==================================================================
+   * Le champ a quitté le formulaire (FormulaireFiche) ; sa LECTURE
+   * quitte les fiches ici. Les valeurs déjà écrites en base restent
+   * dans leur colonne — on ne les efface pas, on ne les lit plus.
+   * C'est exactement le traitement réservé à YouTube à la nº 101, et
+   * pour la même raison : ne rien effacer qu'on n'a pas demandé à
+   * effacer.
+   *
+   * ⚠️ CE QUE DEVIENT LA RÈGLE nº 227-§4 : elle avait DEUX branches —
+   * « avec TikTok, les deux réseaux prennent leur propre rangée ;
+   * sans TikTok, Instagram remonte auprès du booking ». La première
+   * branche n'a plus de condition capable de se vérifier : TikTok
+   * n'existe plus à l'affichage. La règle se réduit donc à son
+   * exception, qui devient le cas UNIQUE — Instagram est toujours sur
+   * la première rangée, à côté du booking. La seconde rangée n'est pas
+   * laissée inerte, elle est SUPPRIMÉE : une rangée qui ne peut plus
+   * jamais avoir de contenu est du code mort, pas une réserve.
+   * Aucune ligne vide, aucune icône orpheline ne peut donc subsister.
+   */
+  const lienInstagramEnPremiereLigne = lienInstagram;
   /**
    * §2 (nº 384) — LE SITE DESCEND D'UNE LIGNE.
    * ------------------------------------------------------------------
@@ -850,12 +864,11 @@ export function ContenuFiche({
         iconeDeLien("site")
       ),
   ].filter(Boolean);
-  const secondeLigne: React.ReactNode[] = [];
-  if (lienTiktok) {
-    if (lienInstagram) secondeLigne.push(lienInstagram);
-    secondeLigne.push(lienTiktok);
-  } else if (lienInstagram) {
-    premiereLigne.push(lienInstagram);
+  //  §2 (nº 387) — INSTAGRAM EST TOUJOURS SUR LA PREMIÈRE RANGÉE,
+  //  auprès du booking : voir la note de la règle nº 227-§4 plus haut.
+  //  La seconde rangée est supprimée avec TikTok.
+  if (lienInstagramEnPremiereLigne) {
+    premiereLigne.push(lienInstagramEnPremiereLigne);
   }
 
   /**
@@ -998,7 +1011,7 @@ export function ContenuFiche({
       className={`flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE}`}
     >
       <span className={BOITE_ICONE_LIGNE}>
-        <IconePalette taille={20} />
+        <IconeEtoile taille={20} />
       </span>
       <span className="min-w-0">
         {capsulesPratique.map((slug, rang) => (
@@ -1022,7 +1035,7 @@ export function ContenuFiche({
       className={`flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE}`}
     >
       <span className={BOITE_ICONE_LIGNE}>
-        <IconeEtoile taille={20} />
+        <IconeGoutte taille={20} />
       </span>
       <span className="min-w-0">
         {tatoueur.styles.map((slug, rang) => (
@@ -1419,7 +1432,6 @@ export function ContenuFiche({
                orpheline. */}
           {(premiereLigne.length > 0 ||
             ligneDuSite.length > 0 ||
-            secondeLigne.length > 0 ||
             ligneDesStyles ||
             ligneDesPratiques) && (
             <div className="mt-10 flex w-full flex-col items-start gap-y-4">
@@ -1433,13 +1445,8 @@ export function ContenuFiche({
                   {ligneDuSite}
                 </div>
               )}
-              {secondeLigne.length > 0 && (
-                <div className="grid w-full grid-cols-2 items-center justify-items-start gap-x-7 gap-y-4">
-                  {secondeLigne}
-                </div>
-              )}
-              {ligneDesStyles}
               {ligneDesPratiques}
+              {ligneDesStyles}
             </div>
           )}
 

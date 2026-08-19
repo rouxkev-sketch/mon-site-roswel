@@ -272,7 +272,9 @@ export default async function PageFicheTatoueur({
             knowsAbout: tatoueur.styles.map(libelleStyle),
             // Les comptes officiels du tatoueur : ce sont eux, et non
             // notre fiche, qui font autorité aux yeux des moteurs.
-            sameAs: [tatoueur.lien_instagram, tatoueur.lien_tiktok].filter(
+            //  §2 (nº 387) — TikTok a quitté le produit : il ne part plus
+            //  dans les données structurées non plus.
+            sameAs: [tatoueur.lien_instagram].filter(
               (lien): lien is string => Boolean(lien)
             ),
           },

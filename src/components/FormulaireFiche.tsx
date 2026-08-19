@@ -75,7 +75,6 @@ import {
   IconeHorloge,
   IconeInstagram,
   IconePlus,
-  IconeTikTok,
 } from "@/components/Icones";
 import { Interrupteur } from "@/components/Interrupteur";
 import { RecadreurPhoto } from "@/components/RecadreurPhoto";
@@ -151,7 +150,6 @@ function normaliserLien(
 }
 
 const FORME_INSTAGRAM = /^https:\/\/(www\.)?instagram\.com\/[A-Za-z0-9._]{2,}\/?$/i;
-const FORME_TIKTOK = /^https:\/\/(www\.)?tiktok\.com\/@[A-Za-z0-9._-]{2,}\/?$/i;
 
 /**
  * §2 (nº 270) — LE CHAMP BOOKING : TROIS ENTRÉES, MOT POUR MOT.
@@ -850,7 +848,6 @@ export function FormulaireFiche() {
     fichier: File;
   } | null>(null);
   const [instagram, setInstagram] = useState("");
-  const [tiktok, setTiktok] = useState("");
   /** §2 (nº 270) — L'ÉTAT DES CARNETS : "" (rien déclaré — un manque
       à la validation), 'ouvert', 'delai' ou 'ferme'. */
   const [booking, setBooking] = useState("");
@@ -1398,7 +1395,6 @@ export function FormulaireFiche() {
             .filter(Boolean) as string[];
           setPhotosPortfolio(portfolioLu);
           setInstagram(String(source.lien_instagram ?? ""));
-          setTiktok(String(source.lien_tiktok ?? ""));
           //  §2 (nº 270) — L'ÉTAT DES CARNETS, relu tel que déclaré.
           //  On ne garde que les trois valeurs connues (et un mois
           //  entre 1 et 12) : une donnée d'avant les garde-fous ne
@@ -1531,7 +1527,7 @@ export function FormulaireFiche() {
        3 la bio : FACULTATIVE (aucun minimum — seul le plafond de 150,
          tenu par le champ) · 4 au moins un style, et sa photo pour
          CHAQUE style choisi · 5 et 6 au moins UN interrupteur allumé
-         par groupe · 7 Instagram OBLIGATOIRE (TikTok et le site
+         par groupe · 7 Instagram OBLIGATOIRE (le site
          restent libres, mais doivent être bien formés s'ils sont
          donnés). */
   function valider(): Record<string, string> {
@@ -1609,16 +1605,12 @@ export function FormulaireFiche() {
       trouvees.bookingMois = MANQUE;
     }
     const lienInstagram = normaliserLien(instagram, FORME_INSTAGRAM);
-    const lienTiktok = normaliserLien(tiktok, FORME_TIKTOK);
     if (lienInstagram === undefined) {
       trouvees.instagram = MANQUE;
     } else if (lienInstagram === null) {
       //  ⚠️ MENTION COURTE (passe nº 112) : elle s'affiche DANS le
       //  champ, à droite — plus de phrase d'exemple sous le champ.
       trouvees.instagram = "Instagram non valide";
-    }
-    if (lienTiktok === null) {
-      trouvees.tiktok = "TikTok non valide";
     }
     //  ⚠️ PLUS DE VALIDATION YOUTUBE (passe nº 101). Le champ a
     //  disparu de l'écran : refuser l'enregistrement à cause de lui
@@ -1660,7 +1652,6 @@ export function FormulaireFiche() {
     ["booking", "fiche-booking"],
     ["bookingMois", "fiche-booking-mois"],
     ["instagram", "fiche-instagram"],
-    ["tiktok", "fiche-tiktok"],
     ["lien1", "fiche-lien-1"],
     ["styles", "section-styles"],
     ["photos", "section-styles"],
@@ -1752,7 +1743,6 @@ export function FormulaireFiche() {
     photosPortfolio,
     filtresCoches,
     instagram,
-    tiktok,
     booking,
     bookingMois,
     lienLibre,
@@ -1886,7 +1876,6 @@ export function FormulaireFiche() {
       //    porte DÉJÀ tout (ville, code postal, région, pays, code
       //    pays, coordonnées, identifiant OpenStreetMap).
       const lienInstagram = normaliserLien(instagram, FORME_INSTAGRAM);
-      const lienTiktok = normaliserLien(tiktok, FORME_TIKTOK);
       //  LE LIEN LIBRE (un seul depuis la nº 270-§1) : validé, il part
       //  dans `site_web` — la colonne historique, pour que rien ne
       //  casse. Son titre suit (migration nº 51). La validation a déjà
@@ -1937,7 +1926,6 @@ export function FormulaireFiche() {
         photos: [] as string[],
         // Instagram est OBLIGATOIRE (la validation l'a garanti).
         lien_instagram: lienInstagram ?? "",
-        lien_tiktok: lienTiktok ?? null,
         //  §2 (nº 270) — L'ÉTAT DES CARNETS, déclaré et obligatoire
         //  (la validation l'a garanti). Le mois n'a de sens qu'avec
         //  « délai d'attente » : sur 'ouvert' et 'ferme' il part en
@@ -2273,6 +2261,56 @@ export function FormulaireFiche() {
           .update(maj)
           .eq("id", ficheChargee.id);
       }
+      /**
+       * ██ §1 (nº 387) — QUAND LA BASE REFUSE LA BIO, LE DIRE OÙ IL
+       * FAUT ██
+       * ==================================================================
+       * LE DÉFAUT RAPPORTÉ : on modifie sa biographie, on enregistre,
+       * et rien ne change — ni au rechargement du formulaire, ni sur la
+       * fiche publique.
+       *
+       * LA CAUSE, TROUVÉE EN BASE ET NON DANS LE CODE : la contrainte
+       * `tatoueurs_bio_longueur`. La migration nº 13 l'avait posée en
+       * « between 80 and 150 » — un MINIMUM de 80 caractères. La nº 18
+       * l'a remplacée par une borne haute seule, mais elle fait dix
+       * autres choses : une base où elle n'est pas passée garde le
+       * minimum. Or le formulaire n'en connaît AUCUN : il annonce la
+       * bio facultative et ne contrôle que le plafond. Une bio courte
+       * est donc acceptée à l'écran, envoyée, puis refusée par
+       * Postgres — et comme toute la fiche s'écrit en UN SEUL `update`,
+       * c'est l'enregistrement ENTIER qui est annulé. D'où le
+       * symptôme : rien nulle part.
+       * LE VRAI REMÈDE est la migration `yokofolio-bio-sans-minimum.sql`,
+       * livrée avec cette passe — trois lignes, sans danger, à passer
+       * une fois.
+       *
+       * CE QUE FAIT CE BLOC, ET C'EST TOUT AUTRE CHOSE : il empêche que
+       * l'échec soit MUET. Jusqu'ici le message de Postgres partait
+       * dans le bandeau général, en anglais et en bas d'un formulaire
+       * très long — on pouvait ne jamais le voir et croire que
+       * l'enregistrement avait abouti. Il s'affiche désormais SUR LE
+       * CHAMP DE LA BIO, en français, et la page y descend d'elle-même
+       * (`ORDRE_ERREURS` porte déjà l'ancre `fiche-bio`).
+       */
+      if (
+        modification.error &&
+        modification.error.message
+          .toLowerCase()
+          .includes("tatoueurs_bio_longueur")
+      ) {
+        setAvancee(null);
+        setErreurs((courantes) => ({
+          ...courantes,
+          bio:
+            "Ta base de données refuse encore les biographies de moins de " +
+            "80 caractères. Rien n'a été enregistré. Deux façons de s'en " +
+            "sortir : écrire une présentation un peu plus longue, ou " +
+            "passer une fois la migration " +
+            "supabase/yokofolio-bio-sans-minimum.sql dans Supabase.",
+        }));
+        defilerVersErreur({ bio: "1" });
+        return;
+      }
       if (modification.error) throw new Error(modification.error.message);
 
       // LES MODES ET LES STUDIOS sont écrits DIRECTEMENT, sans passer
@@ -2565,7 +2603,9 @@ export function FormulaireFiche() {
           longitude: Number(sourceFiche.longitude) || 0,
           styles: (sourceFiche.styles as string[]) ?? [],
           lien_instagram: String(sourceFiche.lien_instagram ?? ""),
-          lien_tiktok: (sourceFiche.lien_tiktok as string | null) ?? null,
+          //  §2 (nº 387) — l'aperçu ne montre plus TikTok : la fiche
+          //  ne l'affiche plus (ContenuFiche).
+          lien_tiktok: null,
           adresse: (sourceFiche.adresse as string | null) ?? null,
           code_postal: (sourceFiche.code_postal as string | null) ?? null,
           region: (sourceFiche.region as string | null) ?? null,
@@ -3028,7 +3068,7 @@ export function FormulaireFiche() {
             L'ORDRE DE LECTURE : le logo d'abord (c'est le visage de la
             fiche), le nom, la présentation, puis les liens.
             LES OBLIGATIONS NE BOUGENT PAS : nom, photo de profil et
-            Instagram obligatoires ; bio, TikTok, site et Linktree
+            Instagram obligatoires ; bio, site et Linktree
             libres. */}
         <Section
           numero={numeroBloc("profil")}
@@ -3168,8 +3208,8 @@ export function FormulaireFiche() {
           </div>
 
           {/* LES LIENS — quatre lignes, dans CET ordre et lui seul
-              (§1, nº 270) : 1. le Booking · 2. Instagram · 3. TikTok
-              · 4. le lien libre. Instagram OBLIGATOIRE : c'est là que
+              (§1, nº 270, TIKTOK RETIRÉ À LA nº 387) : 1. le Booking ·
+              2. Instagram · 3. le lien libre. Instagram OBLIGATOIRE : c'est là que
               vit le travail d'un tatoueur ; le Booking aussi (l'état
               des carnets se déclare) ; les deux autres sont libres. */}
           <div className="flex flex-col gap-3">
@@ -3229,16 +3269,17 @@ export function FormulaireFiche() {
               erreur={erreurs.instagram ?? null}
               motif={motifsParChamp.instagram ?? null}
             />
-            <ChampLienVerifie
-              id="fiche-tiktok"
-              champ="tiktok"
-              indication="TikTok"
-              icone={<IconeTikTok taille={18} />}
-              valeur={tiktok}
-              surChangement={setTiktok}
-              erreur={erreurs.tiktok ?? null}
-              motif={motifsParChamp.tiktok ?? null}
-            />
+            {/*  §2 (nº 387) — LE CHAMP TIKTOK EST SUPPRIMÉ, sur
+                 décision du propriétaire. Instagram reste, intact.
+                 ⚠️ LA COLONNE `lien_tiktok` N'EST PAS TOUCHÉE, et
+                 elle ne l'est plus JAMAIS : elle a quitté l'envoi,
+                 exactement comme `lien_youtube` à la nº 101. Ne pas
+                 la mentionner est la garantie la plus forte qu'aucun
+                 enregistrement ne peut désormais l'écraser ni la
+                 vider — écrire `lien_tiktok: null` aurait effacé en
+                 silence, à la première modification, une adresse que
+                 personne n'avait demandé à retirer. Les fiches, elles,
+                 ne la lisent plus (ContenuFiche, §2 nº 387). */}
             {/* ⚠️ LES CHAMPS « Site web » ET « Linktree » ONT DISPARU
                 (passe nº 116) : à leur place, UN EMPLACEMENT LIBRE —
                 « Ajouter un lien », URL + TITRE choisi par la
