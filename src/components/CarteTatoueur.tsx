@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   CADRE_PHOTO_PORTFOLIO,
@@ -266,22 +266,40 @@ function CarteTatoueurNue({
    * vraiment : une carte dont la série a changé repart de zéro plutôt
    * que de viser une photo qui n'existe plus.
    */
-  const [indicePhoto, setIndicePhoto] = useState(() =>
-    Math.min(
+  const [indicePhoto, setIndicePhoto] = useState(() => {
+    //  §2 (nº 373) — LA MÉMOIRE NE SÈME QU'AU DOIGT, et c'est la borne
+    //  de cette passe : sur le web, la fenêtre se pose PAR-DESSUS la
+    //  mosaïque sans rien démonter — les positions y survivaient
+    //  d'elles-mêmes bien avant que cette mémoire existe. Là où rien
+    //  n'a jamais manqué, on ne fait plus rien.
+    if (typeof document === "undefined") return 0;
+    if (document.documentElement.dataset.appareil !== "mobile") return 0;
+    return Math.min(
       photoRetenueDeCarte(cleDeLaCarte),
       Math.max(0, photosDeLaCarte.length - 1)
-    )
-  );
-  /** Le carrousel annonce la photo regardée : on la retient au passage.
-      ⚠️ DANS UN GESTIONNAIRE, jamais pendant un rendu — c'est
-      l'observateur de défilement du carrousel qui appelle. */
-  const noterLaPhoto = useCallback(
-    (rang: number) => {
-      setIndicePhoto(rang);
-      retenirPhotoDeCarte(cleDeLaCarte, rang);
-    },
-    [cleDeLaCarte]
-  );
+    );
+  });
+  /**
+   * §1 (nº 373) — LA PHOTO EST RETENUE PAR UN EFFET, PLUS PAR LE
+   * RAPPEL DU CARROUSEL.
+   * ------------------------------------------------------------------
+   * CE QUE LA nº 372 AVAIT FAIT, ET C'EST LA RÉGRESSION : elle passait
+   * au carrousel un rappel FABRIQUÉ ICI (`useCallback`) à la place de
+   * `setIndicePhoto`. Or `surChangement` est une DÉPENDANCE de l'effet
+   * qui construit l'observateur de défilement (CarrouselPortfolio), et
+   * cet effet REPOSITIONNE la piste quand il se rejoue :
+   * `zone.scrollLeft = colonneVoulue ? colonneVoulue.offsetLeft : 0`.
+   * Un rappel de React (`setIndicePhoto`) est stable POUR TOUJOURS ; le
+   * mien ne l'était que tant que rien ne le refabriquait. Le seul fil
+   * que la nº 372 ait tendu dans la mécanique vivante d'une carte du
+   * web, c'était celui-là — il est coupé.
+   * On retient donc APRÈS coup, dans un effet qui ne touche à rien
+   * d'autre : le carrousel retrouve EXACTEMENT la propriété qu'il
+   * recevait avant la nº 372.
+   */
+  useEffect(() => {
+    retenirPhotoDeCarte(cleDeLaCarte, indicePhoto);
+  }, [cleDeLaCarte, indicePhoto]);
   /**
    * §3 (nº 365) — LA PHOTO QU'ON REGARDE. Sans défilé (une seule
    * photo), c'est la photo choisie de la carte — comme avant. Avec
@@ -580,9 +598,12 @@ function CarteTatoueurNue({
                   photoEnregistrable?.style ?? styleRecherche
                 )}
                 indice={indicePhoto}
-                //  §2 (nº 372) — la photo regardée est retenue au
-                //  passage (mémoire des cartes) : le retour la rend.
-                surChangement={noterLaPhoto}
+                //  §1 (nº 373) — LE RAPPEL DE REACT, ET RIEN
+                //  D'AUTRE : c'est une dépendance de l'observateur du
+                //  carrousel, elle doit être stable pour toujours (la
+                //  régression de la nº 372 est venue de là). La photo
+                //  est retenue par un effet, plus haut.
+                surChangement={setIndicePhoto}
                 variante="carte"
                 prioritaire={prioritaire}
                 //  §5 (nº 367) — la petite carte porte une capsule

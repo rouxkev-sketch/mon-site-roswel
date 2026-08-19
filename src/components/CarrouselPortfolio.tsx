@@ -773,8 +773,19 @@ export function CarrouselPortfolio({
    * classe, aucune largeur, aucune hauteur n'est touchée.
    * ⚠️ LES CARTES SEULEMENT : une fiche s'ouvre par son adresse, elle a
    * son propre chemin (nº 302) et ne doit rien recevoir d'ici.
+   *
+   * ██ §2 (nº 373) — ET AU DOIGT SEULEMENT ██
+   * Sur le web, la fenêtre se pose PAR-DESSUS la mosaïque : rien n'est
+   * démonté, donc rien n'est à replacer — cette pose n'y a jamais servi
+   * à quoi que ce soit. On la borne à l'appareil tactile, le seul où le
+   * retour démonte vraiment la mosaïque. Une écriture de `scrollLeft` de
+   * moins sur le web, c'est une occasion de moins de déplacer une piste
+   * que personne n'avait demandé de déplacer.
    */
   useEffetAvantPeinture(() => {
+    if (typeof document !== "undefined") {
+      if (document.documentElement.dataset.appareil !== "mobile") return;
+    }
     if (!surCarte || indice <= 0) return;
     const zone = cadre.current;
     const colonne = colonnes.current[indice];
