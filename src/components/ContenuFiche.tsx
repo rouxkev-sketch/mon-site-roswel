@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import {
@@ -20,7 +20,11 @@ import {
   TRAIT_SEPARATION,
 } from "@/config/tatouage";
 import { BoutonHorsLigne } from "@/components/BoutonHorsLigne";
-import { IconeCalendrier, IconeDuLien } from "@/components/IconeReseau";
+import {
+  IconeCalendrier,
+  IconeDuLien,
+  IconeMachineATatouer,
+} from "@/components/IconeReseau";
 import { BoutonSuivre } from "@/components/BoutonSuivre";
 import {
   PanneauPortfolio,
@@ -125,6 +129,25 @@ export function avecConsigneDeLienInterne(adresse: string): string {
 export function adresseDeLienInterne(slug: string): string {
   return avecConsigneDeLienInterne(`/tatoueur/${slug}`);
 }
+
+/**
+ * ██ §2 (nº 384) — L'ÉCRITURE D'UNE LIGNE DE PROFIL, UNE SEULE FOIS ██
+ * ==================================================================
+ * « Booking ouvert », le site, Instagram, TikTok et — depuis cette
+ * passe — les STYLES sont la MÊME ligne : une icône de 22 px à gauche,
+ * un texte de 15 px en gris doux, dix pixels entre les deux.
+ * ELLE ÉTAIT ÉCRITE DEUX FOIS (la ligne du booking et `lienEnLigne`),
+ * mot pour mot. Une troisième copie pour les styles, et la divergence
+ * n'était plus qu'une question de temps : le propriétaire demande
+ * « exactement l'apparence de Booking ouvert », pas « à peu près ».
+ * Les deux constantes ci-dessous sont donc CONSOMMÉES par les trois —
+ * il n'y a plus d'apparence à faire correspondre, il n'y en a qu'une.
+ * ⚠️ AUCUNE VALEUR N'A CHANGÉ : ce sont exactement les classes que
+ * portaient déjà les deux lignes existantes.
+ */
+const ECRITURE_LIGNE_FICHE = "text-[15px] leading-snug text-sombre-texte-doux";
+const BOITE_ICONE_LIGNE =
+  "flex h-[22px] w-[22px] shrink-0 items-center justify-center";
 
 export function ContenuFiche({
   tatoueur,
@@ -682,13 +705,11 @@ export function ContenuFiche({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex items-center gap-2.5 text-[15px] leading-snug
-                 text-sombre-texte-doux rounded-lg -mx-1.5 -my-1 px-1.5 py-1
-                 transition-colors hover:bg-white/5 active:bg-white/10"
+      className={`group flex items-center gap-2.5 ${ECRITURE_LIGNE_FICHE}
+                 rounded-lg -mx-1.5 -my-1 px-1.5 py-1
+                 transition-colors hover:bg-white/5 active:bg-white/10`}
     >
-      <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center">
-        {icone}
-      </span>
+      <span className={BOITE_ICONE_LIGNE}>{icone}</span>
       {/*  §2 (nº 273) — PLUS DE SOULIGNEMENT ICI : le fond qui monte
            au survol (`hover:bg-white/5`, la ligne cliquable de la
            nº 227) dit déjà que la ligne se clique — le trait faisait
@@ -765,13 +786,12 @@ export function ContenuFiche({
     <span
       key="booking"
       data-booking-fiche={tatoueur.booking}
-      className="flex items-center gap-2.5 text-[15px] leading-snug
-                 text-sombre-texte-doux"
+      className={`flex items-center gap-2.5 ${ECRITURE_LIGNE_FICHE}`}
     >
       {/*  §1 (nº 273) — LE CALENDRIER, hors de tout ternaire d'état :
            une seule écriture couvre les trois états PAR CONSTRUCTION —
            aucune variante n'est seulement possible. */}
-      <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center">
+      <span className={BOITE_ICONE_LIGNE}>
         <IconeCalendrier taille={20} />
       </span>
       <span className="min-w-0 truncate">{libelleBooking}</span>
@@ -794,10 +814,25 @@ export function ContenuFiche({
       "TikTok",
       iconeDeLien("tiktok")
     );
+  /**
+   * §2 (nº 384) — LE SITE DESCEND D'UNE LIGNE.
+   * ------------------------------------------------------------------
+   * L'ORDRE DEMANDÉ : Booking et Instagram d'abord, LE SITE EN
+   * DESSOUS, les styles en dernier. Les liens de site quittent donc la
+   * première rangée pour la leur — un seul tableau déplacé, aucune
+   * autre règle touchée.
+   * ⚠️ LA RÈGLE DE LA Nº 227-§4 SUR TIKTOK NE BOUGE PAS : sans TikTok,
+   * Instagram remonte auprès du booking (c'est ce qui donne « Booking
+   * et Instagram » sur une même ligne) ; avec TikTok, les deux réseaux
+   * restent ensemble sur leur propre rangée. Je n'ai pas touché à
+   * cela : le propriétaire ne l'a pas demandé.
+   */
   const premiereLigne = [
     //  §3 (nº 270) — LE BOOKING OUVRE LA LISTE, devant tout le reste :
     //  la PREMIÈRE position des liens, comme dans le formulaire.
     entreeBooking,
+  ].filter(Boolean);
+  const ligneDuSite = [
     tatoueur.site_web &&
       lienEnLigne(
         "site",
@@ -893,21 +928,63 @@ export function ContenuFiche({
    * ⚠️ ET CE SONT TOUJOURS DES LIENS (§1, la consigne insiste) : vers
    * /tatouage/<style>/<ville>, la valeur de référencement du site.
    */
-  const badgesDeStyle = tatoueur.styles.length > 0 && (
-    <ul data-badges-style="" className="mt-7 flex flex-wrap gap-2">
-      {tatoueur.styles.map((slug) => (
-        <li key={slug}>
-          <Link
-            href={`/tatouage/${slug}/${tatoueur.ville_slug}`}
-            className={`inline-flex items-center ${ARRONDI_ETIQUETTE} px-3.5 min-h-[32px]
-                       bg-sombre-eleve text-[13px] font-medium text-sombre-texte
-                       transition-colors hover:bg-sombre-haut`}
-          >
-            {libelleStyle(slug)}
-          </Link>
-        </li>
-      ))}
-    </ul>
+  /**
+   * ██ §2 (nº 384) — LES STYLES QUITTENT LES CAPSULES POUR UNE LIGNE ██
+   * ==================================================================
+   * CE QUI DISPARAÎT : les capsules (`ARRONDI_ETIQUETTE`, fond
+   * `sombre-eleve`, 13 px, 32 px de haut) de la nº 315.
+   * CE QUI PREND LEUR PLACE : L'ÉCRITURE DE « BOOKING OUVERT », et pas
+   * une imitation — `ECRITURE_LIGNE_FICHE` et `BOITE_ICONE_LIGNE` sont
+   * les constantes que cette ligne-là consomme désormais elle aussi
+   * (voir en tête de fichier). Même gris doux, mêmes 15 px, même
+   * interligne, même boîte d'icône de 22 px, même écart de 10 px.
+   *
+   * LES STYLES RESTENT DES LIENS : `/tatouage/<style>/<ville>`,
+   * inchangé — c'est la valeur de référencement du site, et la
+   * consigne a toujours insisté dessus. Seule leur PEAU change ; le
+   * survol reprend celui des lignes cliquables (le fond monte d'un
+   * cran, nº 227-§5), à la taille d'un mot.
+   * ⚠️ LES SÉPARATEURS NE SE CLIQUENT PAS : ils vivent HORS des liens,
+   * dans le texte, et sont `aria-hidden` — une liste lue à voix haute
+   * ne doit pas égrener des puces.
+   * ⚠️ UN SEUL STYLE : aucun séparateur, par construction (`rang > 0`).
+   * ⚠️ AUCUN STYLE : rien du tout, pas même l'icône — la ligne entière
+   * est conditionnée par `tatoueur.styles.length`.
+   *
+   * L'ALIGNEMENT DU RETOUR À LA LIGNE, ET C'EST LE POINT PRÉCIS :
+   * `items-start` (et non `items-center` comme les lignes d'un seul
+   * mot) pose l'icône au niveau de la PREMIÈRE ligne ; et comme le
+   * texte est un élément SOUPLE À PART, ses lignes suivantes se
+   * replient sur SON bord gauche — jamais sous l'icône. Le texte forme
+   * un bloc, l'icône reste seule dans sa colonne.
+   */
+  const ligneDesStyles = tatoueur.styles.length > 0 && (
+    <p
+      key="styles"
+      data-styles-fiche=""
+      className={`flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE}`}
+    >
+      <span className={BOITE_ICONE_LIGNE}>
+        <IconeMachineATatouer taille={20} />
+      </span>
+      <span className="min-w-0">
+        {tatoueur.styles.map((slug, rang) => (
+          <Fragment key={slug}>
+            {rang > 0 && (
+              <span aria-hidden="true" className="px-1.5">
+                •
+              </span>
+            )}
+            <Link
+              href={`/tatouage/${slug}/${tatoueur.ville_slug}`}
+              className="rounded transition-colors hover:bg-white/5 active:bg-white/10"
+            >
+              {libelleStyle(slug)}
+            </Link>
+          </Fragment>
+        ))}
+      </span>
+    </p>
   );
 
   return (
@@ -1274,11 +1351,28 @@ export function ContenuFiche({
                TikTok se range sous le deuxième lien. `justify-items-
                start` : la colonne est large, le lien garde sa taille.
                L'ordre de la nº 227 ne bouge pas. */}
-          {(premiereLigne.length > 0 || secondeLigne.length > 0) && (
+          {/*  §2 (nº 384) — TROIS RANGÉES, ET L'ESPACE ENTRE ELLES NE
+               CHANGE PAS : c'est le `gap-y-4` (16 px) de ce conteneur,
+               celui-là même qui sépare aujourd'hui Booking d'Instagram
+               (nº 229-§3). La ligne du site et celle des styles s'y
+               rangent sans qu'aucune marge soit écrite : une rangée
+               absente ne rend rien, donc ne laisse aucun vide — un
+               tatoueur sans site n'a pas de trou entre Booking et ses
+               styles, et un tatoueur sans style n'a pas d'icône
+               orpheline. */}
+          {(premiereLigne.length > 0 ||
+            ligneDuSite.length > 0 ||
+            secondeLigne.length > 0 ||
+            ligneDesStyles) && (
             <div className="mt-10 flex w-full flex-col items-start gap-y-4">
               {premiereLigne.length > 0 && (
                 <div className="grid w-full grid-cols-2 items-center justify-items-start gap-x-7 gap-y-4">
                   {premiereLigne}
+                </div>
+              )}
+              {ligneDuSite.length > 0 && (
+                <div className="grid w-full grid-cols-2 items-center justify-items-start gap-x-7 gap-y-4">
+                  {ligneDuSite}
                 </div>
               )}
               {secondeLigne.length > 0 && (
@@ -1286,6 +1380,7 @@ export function ContenuFiche({
                   {secondeLigne}
                 </div>
               )}
+              {ligneDesStyles}
             </div>
           )}
 
@@ -1297,11 +1392,12 @@ export function ContenuFiche({
             </p>
           )}
 
-          {/*  §1 (nº 315) — LES BADGES DE STYLE, DIRECTEMENT SOUS LA
-               BIO. Sans titre, sans trait : la fin de la présentation,
-               pas une section. Les sections titrées ne commencent
-               qu'après eux. (Voir `badgesDeStyle` plus haut.) */}
-          {badgesDeStyle}
+          {/*  §1 (nº 315) — LES BADGES DE STYLE VIVAIENT ICI, sous la
+               bio. §2 (nº 384) : ils ne sont plus des badges et ils
+               ont REJOINT LE BLOC DES LIGNES, en troisième rangée —
+               c'est le placement demandé par le propriétaire. Rien ne
+               reste à rendre à cet endroit ; la bio est donc suivie
+               directement des sections. */}
 
           {/* ==========================================================
               §4 et §5 — OÙ TRAVAILLE CETTE FICHE

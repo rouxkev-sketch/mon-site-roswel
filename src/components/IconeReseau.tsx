@@ -141,6 +141,60 @@ export function IconeCalendrier({ taille = 20 }: ProprietesIconeLien) {
   );
 }
 
+/**
+ * §2 (nº 384) — LA MACHINE À TATOUER, DESSINÉE ICI ET NULLE PART
+ * AILLEURS.
+ * ==================================================================
+ * Elle coiffe la ligne des styles sur l'onglet Profil. AUCUN FICHIER
+ * n'est ajouté au dépôt : c'est un tracé, comme le calendrier et les
+ * réseaux — même cadre `0 0 24 24`, même `strokeWidth` de 1,8, même
+ * `currentColor`, donc la couleur du texte de sa ligne, sans un seul
+ * réglage.
+ *
+ * LE DESSIN, EN QUATRE TRAITS ET EN BIAIS (c'est l'inclinaison qui
+ * fait lire « machine » plutôt que « stylo ») :
+ *  · le CORPS — une capsule, la poignée que tient l'artiste ;
+ *  · la BANDE du haut — l'armature, ce qui coiffe la poignée ;
+ *  · le COLLIER du bas — la bouche du tube ;
+ *  · l'AIGUILLE — le trait qui en sort, vers la pointe basse gauche.
+ * Tout est posé dans un groupe tourné de 45° autour du centre : une
+ * seule rotation, donc aucun point à recalculer si le dessin change.
+ */
+export function IconeMachineATatouer({ taille = 20 }: ProprietesIconeLien) {
+  return (
+    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <g transform="rotate(-45 12 12)">
+        {/*  LE CORPS — la poignée. */}
+        <rect
+          x="8.8"
+          y="3.2"
+          width="6.4"
+          height="9.6"
+          rx="3.2"
+          stroke="currentColor"
+          strokeWidth="1.8"
+        />
+        {/*  L'ARMATURE — la bande qui coiffe la poignée. */}
+        <path d="M8.8 6.6h6.4" stroke="currentColor" strokeWidth="1.8" />
+        {/*  LE COLLIER — la bouche du tube. */}
+        <path
+          d="M9.8 12.8h4.4"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+        />
+        {/*  L'AIGUILLE. */}
+        <path
+          d="M12 12.8v6.6"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+        />
+      </g>
+    </svg>
+  );
+}
+
 export function IconeLienLibre({ taille = 20 }: ProprietesIconeLien) {
   return (
     <svg

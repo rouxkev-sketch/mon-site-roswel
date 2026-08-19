@@ -2,6 +2,9 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+//  §1 (nº 384) — le jeton des traits du site, pour le contour de
+//  l'état « Suivi » (voir plus bas).
+import { TRAIT_SEPARATION } from "@/config/tatouage";
 import { useUtilisateur } from "@/lib/use-utilisateur";
 import {
   amorcer,
@@ -142,7 +145,20 @@ export function BoutonSuivre({
                     pleineLargeur ? "w-full" : ""
                   } ${
                     suivi
-                      ? "border-sombre-texte-doux text-sombre-texte-doux hover:text-sombre-texte hover:border-sombre-texte"
+                      ? //  §1 (nº 384) — LE CONTOUR DE « SUIVI »
+                        //  S'ASSOMBRIT, ET LE TEXTE NE BOUGE PAS.
+                        //  ------------------------------------------
+                        //  Le trait passe du gris du TEXTE
+                        //  (`sombre-texte-doux`, trop clair pour un
+                        //  contour) au gris des TRAITS :
+                        //  `TRAIT_SEPARATION`, l'écriture unique des
+                        //  séparations du site depuis la nº 315 —
+                        //  celle du filet sous la rangée (nº 381) et
+                        //  du soulignement des onglets. Aucun gris
+                        //  inventé : c'est le jeton que la charte
+                        //  réserve précisément aux traits.
+                        //  Le texte, lui, garde `sombre-texte-doux`.
+                        `${TRAIT_SEPARATION} text-sombre-texte-doux hover:text-sombre-texte hover:border-sombre-texte`
                       : "border-primaire text-primaire hover:border-primaire-fonce hover:text-primaire-fonce"
                   }`}
     >
