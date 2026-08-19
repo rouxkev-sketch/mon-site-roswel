@@ -12,7 +12,6 @@ import {
   PORTRAIT_ROND,
 } from "@/config/tatouage";
 import { useDispositionGrille } from "@/components/AffichageMosaique";
-import { useAppareilMobile } from "@/lib/appareil";
 import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
 import { legendeDeCarte, photoChoisie, photoPourStyle } from "@/lib/photo-tatoueur";
 import {
@@ -167,13 +166,16 @@ function CarteTatoueurNue({
       vient de L'ADRESSE (nº 203-§1b), servie par le serveur. */
   const disposition = useDispositionGrille();
   const uneColonne = disposition === "une";
-  /*  §2 (nº 365) — L'APPAREIL, ET NON LA LARGEUR (règle du site depuis
-      la nº 60 : `data-appareil`, posé avant peinture d'après
-      `pointer: coarse`). La pleine largeur est un affichage DU DOIGT ;
-      la même adresse ouverte sur un ordinateur ne doit pas y ramener
-      le fanion. Le crochet répond « web » au premier rendu et corrige
-      une image plus tard — aucune discordance d'hydratation. */
-  const surMobile = useAppareilMobile();
+  /*  §2 (nº 365), levé à la nº 369 — LE CROCHET D'APPAREIL A DISPARU
+      D'ICI, et c'est un gain. Il servait à décider en JavaScript ce que
+      la carte montre selon le doigt ou la souris ; tout cela se décide
+      désormais EN CSS (variantes `mobile:` et `pointer-fine:`, posées
+      sur `data-appareil` et sur le média du pointeur). Deux
+      conséquences : le rendu du serveur est déjà le bon — plus de
+      première image « web » corrigée une image plus tard —, et il n'y a
+      plus qu'une seule autorité sur cette question, la feuille de
+      style. La règle de la nº 60 (l'appareil, jamais la largeur) est
+      tenue par la variante elle-même. */
 
   /**
    * §5 (nº 211) — LES PHOTOS QUI DÉFILENT DANS LA CARTE
@@ -220,8 +222,24 @@ function CarteTatoueurNue({
    * l'ordre de l'artiste — lib/photo-tatoueur). Même adresse d'image,
    * donc rien à retélécharger et rien à voir passer.
    */
-  const carrouselDansLaCarte =
-    (surMobile || uneColonne) && photosDeLaCarte.length > 1;
+  /**
+   * ██ nº 369 — ET C'EST POURQUOI RIEN N'APPARAISSAIT SUR LE WEB ██
+   * ------------------------------------------------------------------
+   * Ce n'était NI une variante manquante, NI une classe écrasée, NI un
+   * `group` mal posé — les trois ont été vérifiés (la variante
+   * `pointer-fine` est déclarée dans globals.css, les classes sont bien
+   * dans la feuille produite, et `group` est sur l'article). LA CAPSULE
+   * ET LES FLÈCHES VIVENT DANS LE CARROUSEL, et le carrousel n'était
+   * PAS MONTÉ sur le web : la condition exigeait le doigt ou la pleine
+   * largeur. Une carte web rendait donc l'image simple, sans rien
+   * autour. Le fanion, lui, est rendu par CETTE carte — voilà pourquoi
+   * il était le seul à répondre.
+   * LA CONDITION NE GARDE QUE CE QUI A UN SENS : plus d'une photo.
+   * ⚠️ AUCUNE PHOTO NE CHANGE À L'ÉCRAN : la colonne 0 du défilé est la
+   * photo que l'image simple montrait (nº 367), même adresse — rien à
+   * retélécharger.
+   */
+  const carrouselDansLaCarte = photosDeLaCarte.length > 1;
   /** La photo regardée DANS la carte — le carrousel la possède. */
   const [indicePhoto, setIndicePhoto] = useState(0);
   /**
@@ -251,7 +269,6 @@ function CarteTatoueurNue({
    * voit pas. Et `pointer-fine:` borne la règle aux pointeurs fins :
    * le doigt n'a pas de survol, il ne doit donc rien perdre.
    */
-  const fanionPose = true;
   const fanionAuSurvol =
     fanion === "au-doigt-seulement"
       ? "pointer-fine:invisible pointer-fine:group-hover:visible"
@@ -568,7 +585,7 @@ function CarteTatoueurNue({
              nº 213 l'avait remis dans l'angle bas gauche par erreur de
              lecture — le propriétaire demandait sa SUPPRESSION. Rien ne
              se pose plus sur la photo hormis le cœur. */}
-        {photoEnregistrable && fanionPose && (
+        {photoEnregistrable && (
           /*  ⚠️ LE COIN SE MESURE AU GLYPHE, PAS À LA BOÎTE
               (nº 212-§5). Le bouton porte sa zone tactile tout autour
               du fanion : posé à 8 px du bord, c'est le GLYPHE qui se

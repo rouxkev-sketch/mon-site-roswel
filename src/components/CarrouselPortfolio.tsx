@@ -862,14 +862,20 @@ export function CarrouselPortfolio({
       className={`absolute z-[2] items-center rounded-full bg-black/60
                  backdrop-blur text-white ${
                    surCarte
-                     ? //  §3 (nº 368) — AU DOIGT elle est là en
-                       //  permanence ; AU WEB elle n'apparaît QUE
-                       //  quand la souris est sur la carte
-                       //  (`group-hover`, le groupe étant l'article de
-                       //  CarteTatoueur). Souris ailleurs : la photo
-                       //  est nue.
-                       `hidden mobile:inline-flex pointer-fine:group-hover:inline-flex
-                        top-2 right-2 ${
+                     ? //  §2 (nº 369) — L'ÉCRITURE DU FANION, LA SEULE
+                       //  ÉPROUVÉE, ET ELLE EST LA MÊME POUR LES TROIS :
+                       //  l'élément est RENDU, puis rendu INVISIBLE sur
+                       //  un pointeur fin, et redevenu visible au survol
+                       //  de la carte (le `group` est l'article de
+                       //  CarteTatoueur). Au doigt, `pointer-fine` ne
+                       //  s'applique pas : la capsule est là en
+                       //  permanence, comme à la nº 367.
+                       //  ⚠️ `invisible`, PAS `hidden` : la visibilité
+                       //  ne retire pas la place — rien ne bouge quand
+                       //  la souris arrive — et un élément invisible ne
+                       //  reçoit aucun clic.
+                       `inline-flex pointer-fine:invisible
+                        pointer-fine:group-hover:visible top-2 right-2 ${
                           badgeReduit ? "px-2 py-1" : "px-2.5 py-1.5"
                         }`
                      : "inline-flex right-3 bottom-3 mobile:bottom-auto mobile:top-3 px-2.5 py-1.5"
@@ -886,6 +892,22 @@ export function CarrouselPortfolio({
                            badgeReduit && surCarte ? "mr-1" : "mr-1.5"
                          }`
                        : "max-w-0 opacity-0 mr-0 duration-500"
+                   } ${
+                     //  §3 (nº 369) — SUR LE WEB, LA CAPSULE MONTRE LE
+                     //  COMPTE dès qu'elle apparaît : le repli des trois
+                     //  secondes est une mécanique DU DOIGT (elle se
+                     //  déplie au défilé), et la souris ne défile pas.
+                     //  Le survol ouvre donc le texte, en CSS, sans
+                     //  toucher à l'état — celui-ci continue de mener au
+                     //  doigt, exactement comme à la nº 367.
+                     surCarte
+                       ? `pointer-fine:group-hover:max-w-[64px]
+                          pointer-fine:group-hover:opacity-100 ${
+                            badgeReduit
+                              ? "pointer-fine:group-hover:mr-1"
+                              : "pointer-fine:group-hover:mr-1.5"
+                          }`
+                       : ""
                    }`}
       >
         {indice + 1}/{n}
@@ -932,12 +954,16 @@ export function CarrouselPortfolio({
         evenement.stopPropagation();
         aller(sens);
       }}
-      className={`hidden absolute z-[2] ${
-        //  §4 (nº 368) — SUR UNE CARTE, elles n'apparaissent qu'au
-        //  SURVOL (et jamais au doigt : `pointer-fine`). Sur une
-        //  fiche, rien ne change — elles sont là dès que la souris
-        //  existe, comme depuis la nº 208.
-        surCarte ? "pointer-fine:group-hover:flex" : "pointer-fine:flex"
+      className={`hidden pointer-fine:flex absolute z-[2] ${
+        //  §2 (nº 369) — LA MÊME ÉCRITURE QUE LE FANION : sur une
+        //  carte, la flèche EXISTE dès que la souris existe
+        //  (`pointer-fine:flex`, comme la fiche), puis elle est rendue
+        //  INVISIBLE tant que la carte n'est pas survolée. Au doigt,
+        //  rien de tout cela ne s'applique : `hidden` seul, aucune
+        //  flèche, comme avant. Sur une fiche : inchangé (nº 208).
+        surCarte
+          ? "pointer-fine:invisible pointer-fine:group-hover:visible"
+          : ""
       } ${sens === 1 ? "right-2.5" : "left-2.5"}
       top-1/2 -translate-y-1/2 rounded-full
       ${
