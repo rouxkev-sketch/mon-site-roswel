@@ -100,13 +100,21 @@ function CarteTatoueurNue({
    * ⚠️ UN RÉGLAGE EXPLICITE, JAMAIS UNE DEVINETTE D'ADRESSE : c'est
    * l'appelant qui sait sur quelle surface il est, et lui seul.
    *  · `toujours` (par défaut) — le fanion est là, comme avant ;
-   *  · `pleine-largeur-seulement` — il ne reste QUE sur les cartes
-   *    pleine largeur DU DOIGT (§2). Le web n'en a donc plus nulle
-   *    part dans le moteur : la pleine largeur y est atteignable par
-   *    l'adresse (`?disposition=une`), et c'est l'APPAREIL qui tranche,
-   *    pas la largeur (règle du site depuis la nº 60, lib/appareil).
+   *  · `au-doigt-seulement` — il ne se pose que sur un vrai mobile.
+   *
+   * §4 (nº 367) — LA PROPRIÉTÉ RESTE, SA VALEUR CHANGE DE NOM. Elle ne
+   * distingue plus les deux DISPOSITIONS (le propriétaire remet le
+   * fanion sur les cartes côte à côte) : elle ne sépare plus que les
+   * deux SURFACES — la mosaïque du moteur, qui n'en veut pas sur le
+   * web, et « Ma sélection », qui le garde partout. La supprimer
+   * reviendrait à faire deviner cette différence au composant ; elle
+   * reste donc, avec un seul sens et un nom qui le dit.
+   * ⚠️ C'EST L'APPAREIL QUI TRANCHE, pas la largeur de la fenêtre
+   * (règle du site depuis la nº 60, lib/appareil) : la pleine largeur
+   * est atteignable sur le web par l'adresse (`?disposition=une`), et
+   * n'y ramène aucun fanion.
    */
-  fanion?: "toujours" | "pleine-largeur-seulement";
+  fanion?: "toujours" | "au-doigt-seulement";
   tatoueur: Tatoueur;
   /** Le style demandé dans le moteur, s'il y en a un. */
   styleRecherche?: string;
@@ -194,7 +202,26 @@ function CarteTatoueurNue({
       photothèque masque les TEXTES, elle n'a jamais eu à décider si
       les photos défilent. La condition `!phototheque` les liait, et
       retirer le texte emportait le défilement et ses ronds. */
-  const carrouselDansLaCarte = uneColonne && photosDeLaCarte.length > 1;
+  /**
+   * §1 (nº 367) — LES DEUX FORMATS DÉFILENT, AU DOIGT.
+   * ------------------------------------------------------------------
+   * CE QUI L'EMPÊCHAIT : rien n'était désactivé, et aucune photo ne
+   * manquait — LE CARROUSEL N'ÉTAIT PAS MONTÉ. La condition exigeait
+   * `uneColonne` : en deux colonnes, la carte rendait une image simple,
+   * et il n'y avait donc rien à faire défiler. La borne datait de la
+   * nº 211-§5 (« une carte de 190 px : y faire défiler des images
+   * n'apporterait rien ») ; le propriétaire la lève.
+   * ⚠️ LE WEB NE BOUGE PAS : il garde exactement sa condition d'avant
+   * (`uneColonne`), et n'a donc de défilé que si l'adresse demande la
+   * pleine largeur — comme aujourd'hui.
+   * ⚠️ AUCUNE PHOTO NE CHANGE À L'ÉCRAN : la première du défilé est
+   * `photosDeLaCarte[0]`, et c'est exactement celle que l'image simple
+   * montrait (`photoChoisie` rend la PREMIÈRE de l'ensemble dans
+   * l'ordre de l'artiste — lib/photo-tatoueur). Même adresse d'image,
+   * donc rien à retélécharger et rien à voir passer.
+   */
+  const carrouselDansLaCarte =
+    (surMobile || uneColonne) && photosDeLaCarte.length > 1;
   /** La photo regardée DANS la carte — le carrousel la possède. */
   const [indicePhoto, setIndicePhoto] = useState(0);
   /**
@@ -212,8 +239,7 @@ function CarteTatoueurNue({
    * moteur : seulement sur les cartes PLEINE LARGEUR DU DOIGT. Sur le
    * web, jamais — l'appareil tranche, pas la largeur de la fenêtre.
    */
-  const fanionPose =
-    fanion === "toujours" || (surMobile && uneColonne);
+  const fanionPose = fanion === "toujours" || surMobile;
 
   /** Le lieu de la fiche, tel que les deux écritures de la ligne le
       lisent (voir plus bas, nº 212-§6). */
@@ -453,6 +479,9 @@ function CarteTatoueurNue({
                 surChangement={setIndicePhoto}
                 variante="carte"
                 prioritaire={prioritaire}
+                //  §5 (nº 367) — la petite carte porte une capsule
+                //  réduite ; la pleine largeur garde celle de la fiche.
+                badgeReduit={!uneColonne}
                 lien={{
                   href: adresseFiche,
                   onClick: auClic,

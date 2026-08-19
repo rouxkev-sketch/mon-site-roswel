@@ -107,6 +107,7 @@ export function CarrouselPortfolio({
   variante = "fiche",
   prioritaire = false,
   natureDeLaSerie = "",
+  badgeReduit = false,
   lien,
   sansCompteur = false,
   sansPoints = false,
@@ -151,6 +152,12 @@ export function CarrouselPortfolio({
       défilement — les autres restent `lazy`, donc une carte hors écran
       ne demande RIEN (nº 211-§5). */
   prioritaire?: boolean;
+  /** §5 (nº 367) — LA PETITE CARTE (deux colonnes au doigt) : la
+      capsule du compteur y descend d'un cran — 8/4 de rembourrage,
+      texte 10, flèche 8 — pour rester proportionnée à une image de
+      190 px. Sans effet sur une fiche, ni sur une carte pleine
+      largeur : elles gardent le gabarit d'origine. */
+  badgeReduit?: boolean;
   /** En variante « carte » : chaque photo est un LIEN vers la fiche —
       un toucher navigue, un glissement fait défiler (le navigateur
       n'émet aucun clic après un glissement). */
@@ -243,7 +250,17 @@ export function CarrouselPortfolio({
    *    RENDU (le motif React officiel) ;
    *  · seul le minuteur — asynchrone par nature — éteint le texte.
    */
-  const [compteurVisible, setCompteurVisible] = useState(true);
+  /**
+   * §3 (nº 367) — SUR UNE CARTE, LA CAPSULE NAÎT REPLIÉE.
+   * ------------------------------------------------------------------
+   * Sur une FICHE, rien ne change : elle s'ouvre dépliée, montre le
+   * compte, et se replie trois secondes plus tard. Sur une CARTE, on
+   * ne voit d'abord QUE LA FLÈCHE : le compte apparaît au premier
+   * défilement (l'ajustement pendant le rendu, juste dessous, s'en
+   * charge) et repart trois secondes après le dernier. C'est le MÊME
+   * mécanisme, à sa valeur de départ près — il n'y en a pas deux.
+   */
+  const [compteurVisible, setCompteurVisible] = useState(!surCarte);
   const [reveils, setReveils] = useState(0);
   //  Le changement de photo est un geste : le texte revient, pendant
   //  le rendu — jamais dans un effet.
@@ -253,6 +270,12 @@ export function CarrouselPortfolio({
     setCompteurVisible(true);
   }
   useEffect(() => {
+    //  §3 (nº 367) — PAS SUR UNE CARTE, et pour deux raisons. D'abord
+    //  le sens : sur une carte, SEUL LE DÉFILEMENT déplie la capsule —
+    //  toucher l'écran ailleurs déplierait les vingt cartes de la
+    //  mosaïque d'un coup. Ensuite le coût : c'était un écouteur de
+    //  document PAR CARTE, pour un geste qui ne la concernait pas.
+    if (surCarte) return;
     const auToucher = () => {
       setCompteurVisible(true);
       setReveils((n) => n + 1);
@@ -263,17 +286,25 @@ export function CarrouselPortfolio({
       document.removeEventListener("touchstart", auToucher);
       ressource("écouteur touchstart", -1);
     };
-  }, []);
+    //  `surCarte` ne change jamais pour une instance donnée (une carte
+    //  ne devient pas une fiche) — mais le linte veut le voir écrit,
+    //  et il a raison : la garde du dessus le lit.
+  }, [surCarte]);
   //  LE CYCLE DE TROIS SECONDES — réarmé par chaque réveil et chaque
   //  changement de photo. S'il expire, le texte s'estompe en douceur.
+  //  §3 (nº 367) — ET IL NE TOURNE QUE QUAND IL Y A QUELQUE CHOSE À
+  //  REPLIER : une carte qu'on ne touche pas (capsule déjà repliée)
+  //  n'arme aucune minuterie. Sur la fiche, rien ne change — la
+  //  capsule y naît dépliée, donc la minuterie part comme avant.
   useEffect(() => {
+    if (!compteurVisible) return;
     const minuteur = window.setTimeout(() => setCompteurVisible(false), 3000);
     ressource("minuteur compteur", 1);
     return () => {
       window.clearTimeout(minuteur);
       ressource("minuteur compteur", -1);
     };
-  }, [reveils, indice]);
+  }, [compteurVisible, reveils, indice]);
 
   /** LE CADRE QUI DÉFILE, et les colonnes qu'il contient. */
   const cadre = useRef<HTMLDivElement>(null);
@@ -759,24 +790,51 @@ export function CarrouselPortfolio({
      (`[data-appareil="mobile"]`, voir globals.css) : la bascule suit
      l'appareil, comme partout ailleurs dans ce fichier. */
   const enFinDeGalerie = indice >= n - 1;
+  /**
+   * §2 et §5 (nº 367) — LA MÊME CAPSULE SUR LES CARTES, ET SES TROIS
+   * GABARITS.
+   * ------------------------------------------------------------------
+   * · FICHE (page ou fenêtre) : capsule 10/6, texte 12, flèche 10 —
+   *   inchangé, au pixel ;
+   * · CARTE PLEINE LARGEUR : la même, à l'identique — l'image y occupe
+   *   tout l'écran, rien ne justifie de la rapetisser ;
+   * · CARTE CÔTE À CÔTE : réduite — capsule 8/4, texte 10, flèche 8.
+   *   Une carte de 190 px ne peut pas porter le même bandeau qu'une
+   *   photo de 390.
+   * ⚠️ SUR UNE CARTE, ELLE EST RÉSERVÉE AU DOIGT : `hidden
+   *   mobile:inline-flex`. Le web ne montre RIEN de neuf sur les cartes
+   *   du moteur (ni fanion, ni capsule) — et c'est une bascule de
+   *   feuille de style, pas un rendu conditionnel : aucun risque
+   *   d'écart d'hydratation, aucun décalage.
+   * ⚠️ ELLE N'OUVRE JAMAIS LA FICHE : elle est posée HORS du lien de
+   *   chaque photo, au-dessus (`z-[2]`), et ne laisse pas passer le
+   *   toucher (surtout pas de `pointer-events-none` ici).
+   */
   const compteur = n > 1 && (
     <span
       /*  ⚠️ TEMPORAIRE (nº 218-§1) : la sonde nomme ce qui apparaît ou
           disparaît dans le cadre. Sans ce nom, son relevé dirait
           « SPAN » — inexploitable. */
       data-role="compteur"
-      className="inline-flex absolute right-3 bottom-3
-                 mobile:bottom-auto mobile:top-3 z-[2]
-                 items-center rounded-full bg-black/60 backdrop-blur
-                 px-2.5 py-1.5 text-white"
+      className={`absolute z-[2] items-center rounded-full bg-black/60
+                 backdrop-blur text-white ${
+                   surCarte
+                     ? `hidden mobile:inline-flex top-2 right-2 ${
+                         badgeReduit ? "px-2 py-1" : "px-2.5 py-1.5"
+                       }`
+                     : "inline-flex right-3 bottom-3 mobile:bottom-auto mobile:top-3 px-2.5 py-1.5"
+                 }`}
     >
       <span
         aria-hidden={!compteurVisible}
-        className={`overflow-hidden whitespace-nowrap text-[12px]
+        className={`overflow-hidden whitespace-nowrap
+                   ${badgeReduit && surCarte ? "text-[10px]" : "text-[12px]"}
                    font-semibold tabular-nums
                    transition-[max-width,opacity,margin-right] ease-out ${
                      compteurVisible
-                       ? "max-w-[64px] opacity-100 mr-1.5 duration-150"
+                       ? `max-w-[64px] opacity-100 duration-150 ${
+                           badgeReduit && surCarte ? "mr-1" : "mr-1.5"
+                         }`
                        : "max-w-0 opacity-0 mr-0 duration-500"
                    }`}
       >
@@ -786,8 +844,10 @@ export function CarrouselPortfolio({
            tant qu'il reste des photos, vers la gauche en fin de
            galerie. Elle pivote en douceur, elle ne clignote pas. */}
       <svg
-        width="10"
-        height="10"
+        //  §5 (nº 367) — 8 px sur une carte côte à côte, 10 partout
+        //  ailleurs (fiche et carte pleine largeur).
+        width={badgeReduit && surCarte ? "8" : "10"}
+        height={badgeReduit && surCarte ? "8" : "10"}
         viewBox="0 0 24 24"
         fill="none"
         aria-hidden="true"
@@ -1186,8 +1246,13 @@ export function CarrouselPortfolio({
       {!surCarte && indice > 0 && fleche(-1)}
       {!surCarte && indice < n - 1 && fleche(1)}
       {/*  §Fenêtre (nº 284) — la capsule ne se pose pas quand la photo
-           doit rester nette (fenêtre de carrousel). */}
-      {!surCarte && !sansCompteur && compteur}
+           doit rester nette (fenêtre de carrousel).
+           §2 (nº 367) — ELLE SE POSE DÉSORMAIS SUR LES CARTES AUSSI,
+           les deux formats, en haut à droite et au doigt seulement :
+           c'est LE MÊME élément que la fiche, avec sa mécanique de
+           trois secondes — il n'y en a pas deux. Une seule photo :
+           `compteur` ne rend rien (n > 1), donc rien du tout. */}
+      {!sansCompteur && compteur}
       {children}
 
       {/* LA PAGINATION FAÇON INSTAGRAM, EN BAS AU CENTRE de l'image
