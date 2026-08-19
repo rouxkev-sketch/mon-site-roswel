@@ -926,8 +926,63 @@ export function ContenuFiche({
         }
         className={`relative flex items-center justify-between gap-3
                    lg:sticky lg:top-0 lg:z-[2] bg-[var(--fond-colonne)] ${
+                     /**
+                      * ██ §1 (nº 380) — DE L'AIR AUTOUR DU BADGE ██
+                      * ==================================================
+                      * `mobile:py-3` — DOUZE PIXELS au-dessus et douze
+                      * en dessous, pour qu'une fois collée sous la
+                      * barre fixe la rangée ne présente plus le badge
+                      * à ras du verre.
+                      *
+                      * D'OÙ VIENT LE CHIFFRE : de la rangée
+                      * ELLE-MÊME. Elle porte `gap-3` depuis toujours —
+                      * douze pixels entre le sélecteur et « Suivre ».
+                      * On applique donc à l'autre axe l'air qu'elle
+                      * s'était déjà choisi : douze horizontalement,
+                      * douze verticalement. Rien n'est emprunté à un
+                      * parent, et c'est tout le sujet de cette passe.
+                      *
+                      * ⚠️ CE QUE ÇA NE FAIT PAS, ET LA Nº 378 EST MORTE
+                      * DE L'AVOIR FAIT : aucune compensation. On ne
+                      * retire pas l'écart de la grille, on ne rogne pas
+                      * le rembourrage de la page, on ne reprend rien
+                      * nulle part pour « équilibrer ». La rangée
+                      * grandit de 24 px et la page s'allonge d'autant —
+                      * c'est accepté, et c'est le prix de ne toucher à
+                      * AUCUN conteneur parent.
+                      *
+                      * ⚠️ TROIS VERROUS INDÉPENDANTS TIENNENT LA
+                      * FENÊTRE SUPERPOSÉE HORS DE PORTÉE :
+                      *  1. LE DRAPEAU — cette chaîne n'est concaténée
+                      *     que si `collantSousLaBarre`. `FenetreFiche`
+                      *     ne le passe jamais : la rangée de la fenêtre
+                      *     ne reçoit même pas la classe dans son
+                      *     attribut `class` ;
+                      *  2. LA VARIANTE — `mobile:` compile en
+                      *     `:where([data-appareil="mobile"], …)`. Sur
+                      *     le web, `<html>` porte `data-appareil="web"` :
+                      *     la règle ne peut pas s'appliquer, même si la
+                      *     classe s'y trouvait ;
+                      *  3. LA PROPRIÉTÉ — un rembourrage sur CETTE
+                      *     boîte. Ni marge, ni écart, ni largeur, ni
+                      *     hauteur : rien dont la taille d'une AUTRE
+                      *     boîte serait déduite. La rangée est un
+                      *     élément d'une colonne souple dans les deux
+                      *     enveloppes ; son rembourrage la fait grandir
+                      *     elle, et ne peut pas changer la largeur de
+                      *     la colonne, le format de la photo, ni les
+                      *     dimensions de la fenêtre.
+                      *
+                      * ⚠️ LE FOND SUIT SANS RIEN FAIRE :
+                      * `bg-[var(--fond-colonne)]` est sur cette boîte,
+                      * un fond couvre son rembourrage — la rangée reste
+                      * opaque du haut de l'air au bas.
+                      * ⚠️ AUCUNE ZONE TACTILE RÉTRÉCIE : un rembourrage
+                      * agrandit la boîte AUTOUR de ses enfants ; ni le
+                      * sélecteur ni « Suivre » ne changent de gabarit.
+                      */
                      collantSousLaBarre
-                       ? "mobile:sticky mobile:top-[var(--rw-rangee-collante)] mobile:z-[3]"
+                       ? "mobile:sticky mobile:top-[var(--rw-rangee-collante)] mobile:z-[3] mobile:py-3"
                        : ""
                    }`}
       >
