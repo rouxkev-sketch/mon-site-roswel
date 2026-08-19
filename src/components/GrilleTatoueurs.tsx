@@ -9,6 +9,7 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 import { CarteTatoueur } from "@/components/CarteTatoueur";
+import { ClavierDefileCarte } from "@/components/ClavierDefileCarte";
 import { FenetreFiche } from "@/components/FenetreFiche";
 import { positionSousLeGel } from "@/lib/gel-du-corps";
 import { PileFiches } from "@/components/PileFiches";
@@ -662,6 +663,12 @@ export function GrilleTatoueurs({
           />
         ))}
       </div>
+
+      {/*  §2 (nº 370) — LES FLÈCHES DU CLAVIER, UN SEUL ÉCOUTEUR POUR
+           TOUTE LA MOSAÏQUE : il trouve la carte SURVOLÉE par le
+           sélecteur `:hover` et pousse son cadre d'une colonne. Aucun
+           écouteur par carte, aucun état de survol à tenir. */}
+      <ClavierDefileCarte />
 
       {/* `key` : CHAQUE OUVERTURE repart de la photo du style cherché,
           jamais de l'état d'une fenêtre précédente — y compris quand
