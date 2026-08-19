@@ -769,49 +769,10 @@ export function FicheTatoueur({
       // WEB : le bas de page se réduit à la MÊME marge que le haut
       // (20 px) — c'est elle qui ferme la géométrie du point d'équerre
       // photo/écran (voir la piste photo).
-      /**
-       * ██ §1 (nº 379) — SANS PHOTO, LE `pt-4` N'EST ANNULÉ PAR RIEN ██
-       * ==================================================================
-       * L'ESPACE RÉSIDUEL, ET C'ÉTAIT CELUI-CI : `pt-4`, seize pixels de
-       * rembourrage haut, sur CETTE racine. La nº 378 n'a traité que
-       * l'écart de la grille ; ces seize-là vivent un cran plus haut,
-       * sur la page elle-même.
-       *
-       * POURQUOI ON NE LES VOYAIT PAS AVEC UNE PHOTO : la photo les
-       * ANNULE. Son cadre porte `mobile:-mt-4` (voir plus bas) —
-       * exactement seize pixels de marge négative — pour venir TOUCHER
-       * la barre fixe et sortir bord à bord. Avec photo, le compte est
-       * donc déjà nul au doigt ; sans photo, plus rien ne les reprend,
-       * et la rangée collante commence seize pixels trop bas. Elle les
-       * parcourt avant d'atteindre sa butée : c'est le petit
-       * mouvement résiduel.
-       *
-       * CE QU'ON FAIT : on les RETIRE, au doigt et dans ce cas SEUL
-       * (`mobile:pt-0`). On ne les fait pas entrer dans la rangée — la
-       * rangée a déjà son air (les 20 px de la nº 378), et les
-       * additionner aurait décalé le badge de la fiche sans photo par
-       * rapport à celui de la fiche avec photo. Les supprimer met les
-       * deux cas au MÊME point de départ : le premier élément de la
-       * page touche la réserve de la barre, avec photo comme sans.
-       *
-       * ⚠️ LE CAS AVEC PHOTO N'EST PAS TOUCHÉ : la classe n'est posée
-       * que si `sansPhoto`. Et `sansPhoto` est aussi la condition qui
-       * retire la colonne photo — les deux ne peuvent pas se
-       * contredire, c'est la même variable.
-       * ⚠️ UNE FICHE SANS PUBLICATION N'EST PAS CONCERNÉE NON PLUS :
-       * elle garde sa colonne photo (vide), donc son `mobile:-mt-4`,
-       * donc son annulation.
-       * ⚠️ RIEN SUR LE WEB : `mobile:` n'y vaut pas, `lg:pt-5` tient la
-       * pleine page, et `pt-4` tient toujours une fenêtre étroite de
-       * navigateur. L'aperçu (« Ma fiche ») n'a pas de `pt` du tout et
-       * garde sa branche intacte.
-       */
       className={
         apercu
           ? "w-full pb-16 lg:pb-5"
-          : `flex-1 mx-auto w-full max-w-[1760px] px-4 sm:px-6 pt-4 lg:pt-5 pb-16 lg:pb-5${
-              sansPhoto ? " mobile:pt-0" : ""
-            }`
+          : "flex-1 mx-auto w-full max-w-[1760px] px-4 sm:px-6 pt-4 lg:pt-5 pb-16 lg:pb-5"
       }
     >
       {/* Les DEUX COLONNES FORMENT UN ENSEMBLE CENTRÉ : la piste photo
