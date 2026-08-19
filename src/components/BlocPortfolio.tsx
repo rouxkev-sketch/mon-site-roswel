@@ -12,6 +12,7 @@ import {
 } from "@/components/Icones";
 import { IconeAjouterPhoto } from "@/components/IconeAjouterPhoto";
 import { RecadreurPhoto } from "@/components/RecadreurPhoto";
+import { estStyleMonochrome } from "@/config/tatouage";
 import { texteErreur } from "@/lib/erreurs-formulaire";
 import { OngletsLigne } from "@/components/OngletsLigne";
 import {
@@ -309,9 +310,49 @@ export function BlocPortfolio({
        premier badge est ouvert PAR CE CALCUL, sans que `basculerStyle`
        ne soit jamais appelé. Poser la règle dans la seule bascule
        l'aurait laissée muette là où elle sert le plus. */
-  const renduActif =
-    renduOuvert ??
-    (styleActif ? ouvertureSur(styleActif, natureActive) : RENDUS_PHOTO[0].slug);
+  /**
+   * ██ §2 (nº 400) — LE RENDU N'A PAS DE SENS SUR UN STYLE TOUT NOIR ██
+   * ==================================================================
+   * Un style ENTIÈREMENT NOIR — le blackwork — porte l'étiquette
+   * `monochrome` dans le catalogue (config/tatouage). Lui proposer
+   * « Noir et gris » OU « Couleur » n'a aucun sens : il ne reste qu'un
+   * encadré, inerte, déjà posé sur « Noir et gris ».
+   *
+   * ⚠️ MAIS PAS SI DES PHOTOS SONT DÉJÀ RANGÉES EN COULEUR, et c'est
+   * LE cas que le propriétaire demande de traiter. Replier l'encadré
+   * sans regarder cacherait ces photos-là : elles resteraient en base,
+   * invisibles dans le formulaire, impossibles à déplacer ou à
+   * supprimer — une PERTE SILENCIEUSE. La règle est donc conditionnée
+   * à ce qui existe VRAIMENT :
+   *  · aucune photo de ce style rangée sous un autre rendu → un seul
+   *    encadré, et la valeur enregistrée reste « noir et gris » ;
+   *  · au moins une → LES DEUX ENCADRÉS RESTENT, exactement comme
+   *    avant cette passe. Le tatoueur voit ses photos, les déplace ou
+   *    les retire ; l'encadré unique apparaît de lui-même quand la
+   *    galerie couleur est vide.
+   * ⚠️ TOUTES NATURES CONFONDUES (réalisation ET flash) : replier d'un
+   * côté et pas de l'autre donnerait un formulaire qui change de forme
+   * en changeant d'onglet, pour la même question.
+   */
+  const styleToutNoir = Boolean(styleActif) && estStyleMonochrome(styleActif!);
+  const aDesPhotosEnCouleur =
+    styleToutNoir &&
+    photos.some(
+      (photo) => photo.style === styleActif && photo.rendu !== RENDUS_PHOTO[0].slug
+    );
+  /** L'encadré unique, inerte : le style est tout noir ET rien n'est
+      rangé ailleurs qu'en noir et gris. */
+  const renduReplie = styleToutNoir && !aDesPhotosEnCouleur;
+
+  /*  §2-b (nº 309) — LA DÉRIVATION SUIT LA MÊME RÈGLE QUE L'OUVERTURE.
+       §2 (nº 400) — SAUF SUR UN STYLE REPLIÉ : là, le rendu est IMPOSÉ.
+       Ce n'est pas un défaut par lequel on passerait au premier rendu,
+       c'est la seule valeur possible — `renduOuvert` lui-même ne peut
+       plus la contredire, puisque plus aucun bouton ne l'écrit. */
+  const renduActif = renduReplie
+    ? RENDUS_PHOTO[0].slug
+    : (renduOuvert ??
+      (styleActif ? ouvertureSur(styleActif, natureActive) : RENDUS_PHOTO[0].slug));
 
   /** OUVRIR UN STYLE — et poser les DEUX niveaux sur leur première
       position (passe nº 117, points 6 et 9) : la nature d'abord
@@ -866,7 +907,53 @@ export function BlocPortfolio({
               où un nombre s'affiche : ici, il est utile — il dit ce
               qu'il y a dans chacune des deux galeries de la nature
               choisie. */}
-          {natureActive && (
+          {/*  ██ §2 (nº 400) — UN STYLE TOUT NOIR N'A QU'UN ENCADRÉ ██
+               ==========================================================
+               Il occupe TOUTE LA LARGEUR, il est présenté DANS SON ÉTAT
+               SÉLECTIONNÉ (`bg-sombre-eleve-clair`, titre blanc — les
+               couleurs exactes du rectangle choisi juste en dessous), et
+               il est INERTE : c'est un `<div>`, pas un `<button>`. Ce
+               seul choix de balise emporte tout ce que le propriétaire
+               demande — aucun survol, aucun clic, et AUCUN CURSEUR MAIN
+               (la règle de la nº 398 ne vise que les boutons, les liens
+               et les rôles cliquables : un `<div>` nu n'en est pas un).
+               Il informe, il ne se choisit pas.
+               ⚠️ PAS DE SOULIGNEMENT ROSE : le trait de la nº 309 disait
+               « c'est celui-ci des deux ». Avec un seul encadré, il ne
+               distingue plus rien — il est retiré, comme demandé.
+               ⚠️ LE COMPTE RESTE : « n/20 photos » est la seule chose du
+               bloc qui dise ce que contient la galerie et où est le
+               plafond. Le retirer serait une perte que personne n'a
+               demandée. */}
+          {natureActive && renduReplie && (
+            <div
+              data-rendu-choix={RENDUS_PHOTO[0].slug}
+              data-rendu-actif=""
+              data-rendu-replie=""
+              className="mt-3 w-full rounded-lg bg-sombre-eleve-clair px-3 py-2.5 text-left"
+            >
+              <span className="flex items-center gap-2.5 text-[14px] font-semibold text-white">
+                {libelleRendu(RENDUS_PHOTO[0].slug)}
+                {/*  LE PETIT TRAIT VERTICAL — le séparateur demandé.
+                     Il reprend le gris des traits du site
+                     (`bg-sombre-trait`) et la hauteur d'une capitale,
+                     pour qu'il sépare sans peser. */}
+                <span
+                  aria-hidden="true"
+                  className="h-[1em] w-px shrink-0 bg-sombre-trait"
+                />
+                <span className="font-normal text-sombre-texte-doux">
+                  Noir et gris inclut le tout noir.
+                </span>
+              </span>
+              <span className="mt-0.5 block text-[12.5px] text-white">
+                {duTriplet(styleActif!, RENDUS_PHOTO[0].slug, natureActive).length}
+                /{PLAFOND_GALERIE} photos
+              </span>
+            </div>
+          )}
+
+          {natureActive && !renduReplie && (
             <div className="mt-3 grid grid-cols-2 gap-2">
               {RENDUS_PHOTO.map((rendu) => {
                 const nombre = duTriplet(

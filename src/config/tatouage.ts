@@ -148,7 +148,19 @@ export const STYLES_TATOUAGE = [
   { slug: "realisme", label: "Réalisme", couleur: "#3C4650" },
   { slug: "fine-line", label: "Fine Line", couleur: "#6E5B7B" },
   { slug: "minimaliste", label: "Minimaliste", couleur: "#4A4A55" },
-  { slug: "blackwork", label: "Blackwork", couleur: "#26262B" },
+  /**
+   * ██ §2 (nº 400) — L'ÉTIQUETTE « MONOCHROME » ██
+   * Un style ENTIÈREMENT NOIR : lui demander « noir et gris ou
+   * couleur ? » n'a aucun sens. Le formulaire de l'espace tatoueur lit
+   * cette étiquette (voir `estStyleMonochrome`, plus bas) et n'y montre
+   * qu'un seul encadré, inerte, déjà posé sur « Noir et gris ».
+   * ⚠️ EN AJOUTER UN NE DEMANDE QU'UNE LIGNE : `monochrome: true` sur
+   * son entrée, ici. Aucun nom de style n'est écrit en dur ailleurs.
+   * ⚠️ LE VISITEUR NE VOIT RIEN DE TOUT ÇA : filtres, fiches, titres de
+   * galerie et vitrines continuent d'afficher « Noir et gris » et
+   * « Couleur » comme avant. L'étiquette ne parle qu'au formulaire.
+   */
+  { slug: "blackwork", label: "Blackwork", couleur: "#26262B", monochrome: true },
   { slug: "dotwork", label: "Dotwork", couleur: "#4E4A42" },
   { slug: "geometrique", label: "Géométrique", couleur: "#3B5B7A" },
   { slug: "ornemental", label: "Ornemental", couleur: "#6B5540" },
@@ -216,6 +228,19 @@ export const STYLES_TATOUAGE = [
 ] as const;
 
 export type StyleTatouage = (typeof STYLES_TATOUAGE)[number]["slug"];
+
+/**
+ * §2 (nº 400) — CE STYLE EST-IL ENTIÈREMENT NOIR ?
+ * ------------------------------------------------------------------
+ * La seule lecture de l'étiquette posée ci-dessus. Un style AJOUTÉ par
+ * l'administration (STYLES_AJOUTES, nº 122) vient de la base et n'en
+ * porte pas : il répond donc « non », ce qui est le comportement
+ * d'avant cette passe — jamais une surprise.
+ */
+export function estStyleMonochrome(slug: string): boolean {
+  const style = STYLES_TATOUAGE.find((entree) => entree.slug === slug);
+  return Boolean(style && "monochrome" in style && style.monochrome);
+}
 
 /* ================================================================
  * LE CATALOGUE S'AGRANDIT — les styles nés d'une suggestion (nº 122)

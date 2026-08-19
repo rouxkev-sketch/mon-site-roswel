@@ -1023,15 +1023,27 @@ export function EnTeteTatouage({
                     · PLUS AUCUNE ICÔNE. `IconeUtilisateur` occupait
                       24 px, plus les 8 px de son écart (`gap-2`) : 32 px
                       de largeur s'en vont avec elle.
-                      ⚠️ ET C'EST POURQUOI LE REMBOURRAGE PASSE DE 20 À
-                      36 px (`px-5` → `px-9`) : 16 px de chaque côté
-                      remplacent EXACTEMENT les 32 px libérés. Le bouton
-                      garde donc sa largeur AU PIXEL — même taille, même
-                      place, et rien dans la barre ne se décale. Sans
-                      cette compensation, ce badge étant le DERNIER
-                      d'une rangée calée à droite (`justify-end`), son
-                      bord gauche aurait reculé de 32 px et le globe
-                      comme la loupe auraient glissé d'autant.
+                      ██ §1 (nº 400) — LA COMPENSATION EST ANNULÉE ██
+                      La nº 399 avait poussé le rembourrage de 20 à
+                      36 px (`px-5` → `px-9`) pour que la largeur ne
+                      change pas d'un pixel. Le propriétaire trouve le
+                      bouton trop étiré — le texte flottait au milieu —
+                      et refuse explicitement qu'on le regonfle. RETOUR
+                      À `px-5`, ET CE N'EST PAS UNE VALEUR NEUVE : c'est
+                      celle que ce badge portait depuis sa création,
+                      jusqu'à la passe précédente. Vingt pixels de part
+                      et d'autre sur une capsule de 40 px de haut, pour
+                      un texte de 14 px : la proportion d'un bouton de
+                      barre qui respire sans s'étaler.
+                      ⚠️ CE QUE ÇA DÉPLACE, ET C'EST ASSUMÉ : ce badge
+                      est le DERNIER d'une rangée calée à droite
+                      (`justify-end`), son bord droit ne bouge donc pas,
+                      mais son bord gauche recule de 32 px. Le globe et
+                      la loupe glissent d'autant vers la droite. Et au
+                      large (`lg`), le bloc central étant centré par
+                      deux marges automatiques (`lg:mx-auto`), les
+                      32 px libérés se partagent à égalité : il se
+                      déplace de 16 px vers la droite.
                    ⚠️ WEB UNIQUEMENT (`hidden sm:flex`) : au doigt, c'est
                    la silhouette ronde ci-dessus qui mène à la connexion,
                    et elle ne change pas. */}
@@ -1040,7 +1052,7 @@ export function EnTeteTatouage({
                 aria-label={libelleDeconnecte}
                 data-bouton-connexion=""
                 style={{ height: HAUTEUR_ACTIONS }}
-                className="hidden sm:flex rounded-full px-9 items-center
+                className="hidden sm:flex rounded-full px-5 items-center
                            bg-primaire border-2 border-primaire
                            hover:bg-primaire-fonce hover:border-primaire-fonce
                            text-sombre-texte
