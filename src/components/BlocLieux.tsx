@@ -1031,7 +1031,24 @@ export function LigneAdresseDuLieu({
   return (
     <div>
       <p className={`flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE}`}>
-        <span className={`${BOITE_ICONE_LIGNE} text-sombre-texte-doux`}>
+        {/*  §1 (nº 391) — L'ICÔNE DE LOCALISATION PASSE AU BLEU.
+             Elle portait le gris doux explicite ; elle porte désormais
+             le MÊME jeton que le mot, `text-sombre-lien` — celui de la
+             charte (`COULEURS_SOMBRE.lien`), jamais une couleur écrite
+             en dur. Le tracé est en `currentColor` : il n'y a rien
+             d'autre à faire que de lui donner cette couleur-là.
+             ⚠️ POURQUOI PAS `LIEN_QUI_SORT` ENTIER ICI : ce raccourci
+             porte aussi un survol, et le survol de CETTE boîte ne
+             couvrirait que l'icône, pas le mot — les deux
+             s'éclairciraient séparément selon l'endroit du curseur.
+             L'icône prend donc le bleu de repos, et lui seul ; c'est le
+             MOT qui s'éclaircit au survol, comme avant. (Sur Instagram
+             la question ne se pose pas : là-bas l'icône et le mot sont
+             dans le MÊME `<a>`, elle suit donc le survol toute seule.)
+             ⚠️ UNE SEULE CLASSE DE COULEUR SUR CETTE BOÎTE : le piège
+             de la nº 389 (l'ordre alphabétique de Tailwind tranche entre
+             deux classes de même poids) ne peut pas se reproduire. */}
+        <span className={`${BOITE_ICONE_LIGNE} text-sombre-lien`}>
           <IconeLocalisation taille={20} />
         </span>
         <span className="min-w-0 [overflow-wrap:anywhere]">

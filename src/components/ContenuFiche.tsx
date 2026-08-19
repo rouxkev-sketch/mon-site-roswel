@@ -731,13 +731,39 @@ export function ContenuFiche({
            CORRECTION : `ECRITURE_LIGNE_FICHE` n'en porte plus aucune
            (voir lignes-profil), le bleu et le gris ne se disputent
            donc plus l'ordre de la feuille. */
-      className={`group flex items-center gap-2.5 ${ECRITURE_LIGNE_FICHE} ${
+      /*  §3 (nº 391) — `max-w-full` BORNE LA CASE À SA PISTE. Sans lui,
+           `justify-items-start` taille la case sur SON CONTENU, et le
+           `white-space: nowrap` du `truncate` rend ce contenu
+           INCOMPRESSIBLE : la case ignorait sa moitié de colonne et
+           partait à droite. Mesuré : deux domaines longs donnaient une
+           case de 354,9 px dans une piste de 152, et la seconde case
+           finissait à 534,9 px dans une colonne de 332 — donc 203 px
+           HORS de la colonne, tranchés net par son `overflow-x: clip`,
+           sans points de suspension. `max-width: 100%` d'un enfant de
+           grille se mesure sur SA PISTE : la case s'y arrête, le
+           libellé peut enfin rétrécir, et le `truncate` fait ce pour
+           quoi il est là — une ellipse, à l'intérieur. */
+      className={`group flex max-w-full items-center gap-2.5 ${ECRITURE_LIGNE_FICHE} ${
         sortDuSite
           ? "text-sombre-lien hover:text-sombre-lien-clair"
           : `${LIGNE_GRISE} hover:text-sombre-texte`
       } transition-colors`}
     >
-      <span className={`${BOITE_ICONE_LIGNE} text-sombre-texte-doux`}>
+      {/*  §1 (nº 391) — L'ICÔNE SUIT DÉSORMAIS LE MOT quand la ligne
+           SORT DU SITE : plus aucune couleur n'est posée sur sa boîte,
+           le tracé est en `currentColor`, il prend donc le bleu du lien
+           — et son éclaircissement au survol avec. Les lignes qui
+           restent dans le site gardent, elles, le gris explicite.
+           ⚠️ UNE SEULE CLASSE DE COULEUR SUR CETTE BOÎTE, JAMAIS DEUX :
+           c'est tout le piège de la nº 389 (Tailwind range ses
+           utilitaires par ordre alphabétique, `sombre-lien` tombe AVANT
+           `sombre-texte-doux`, le gris gagnait donc toujours). Ici le
+           ternaire n'en pose qu'une, ou aucune. */}
+      <span
+        className={`${BOITE_ICONE_LIGNE}${
+          sortDuSite ? "" : " text-sombre-texte-doux"
+        }`}
+      >
         {icone}
       </span>
       {/*  §2 (nº 273) — PLUS DE SOULIGNEMENT ICI : le fond qui monte
@@ -816,7 +842,17 @@ export function ContenuFiche({
     <span
       key="booking"
       data-booking-fiche={tatoueur.booking}
-      className={`flex items-center gap-2.5 ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE}`}
+      /*  §3 (nº 391) — MÊME BORNE QUE LES LIENS, ET POUR LA MÊME
+           RAISON : mesuré dans la fenêtre superposée, « Booking ouvert »
+           fait une case de 146,1 px dans une piste de 152 — il reste
+           5,9 px, moins d'un caractère. Tout ce qui entoure ce texte est
+           en `rem` (`gap-x-7` = 1,75 rem, `gap-2.5` = 0,625 rem, le
+           `p-6` de la fenêtre = 1,5 rem) alors que le texte, lui, est
+           figé à 15 px : au moindre écart de rendu, la case passe en
+           débordement. Et « Booking · 12 mois » y est DÉJÀ : 166,5 px
+           dans 152, soit 14,5 px qui partent sur la case voisine.
+           `max-w-full` referme la case sur sa piste. */
+      className={`flex max-w-full items-center gap-2.5 ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE}`}
     >
       {/*  §1 (nº 273) — LE CALENDRIER, hors de tout ternaire d'état :
            une seule écriture couvre les trois états PAR CONSTRUCTION —
@@ -824,7 +860,28 @@ export function ContenuFiche({
       <span className={BOITE_ICONE_LIGNE}>
         <IconeCalendrier taille={20} />
       </span>
-      <span className="min-w-0 truncate">{libelleBooking}</span>
+      {/*  §3 (nº 391) — PLUS DE `truncate` ICI, ET C'EST LE CŒUR DE LA
+           CORRECTION. Il ne servait à rien : son `white-space: nowrap`
+           empêchait le libellé de se plier, la case se taillait donc sur
+           le texte entier et l'ellipse ne se déclenchait JAMAIS
+           (mesuré : `ellipse=false` dans les trois formulations). Il ne
+           faisait qu'une chose — interdire le repli — et c'est
+           exactement ce qui envoyait le texte hors de sa case, là où un
+           `overflow` de conteneur le tranche au milieu d'une lettre,
+           sans points de suspension.
+           SANS LUI : le libellé peut se plier. Le plus court mot
+           (« Booking ») devient sa largeur minimale, la case tient donc
+           dans n'importe quelle piste, et le texte est TOUJOURS lisible
+           en entier — sur une ligne quand il y a la place (mesuré :
+           146,1 px, rigoureusement identique à aujourd'hui pour
+           « Booking ouvert » et « Booking fermé », page et fenêtre), sur
+           deux quand il n'y en a pas. Rien n'est plus jamais caché.
+           ⚠️ LE `truncate` DES LIENS RESTE : un nom de domaine long doit
+           bien s'arrêter quelque part, et l'ellipse est la bonne réponse
+           pour lui — elle fonctionne enfin, grâce au `max-w-full`
+           ci-dessus. Les trois formulations du booking, elles, forment
+           un vocabulaire fermé : il n'y a rien à abréger. */}
+      <span className="min-w-0">{libelleBooking}</span>
     </span>
   );
 
@@ -1048,9 +1105,43 @@ export function ContenuFiche({
         {capsulesPratique.map((slug, rang) => (
           <Fragment key={slug}>
             {rang > 0 && (
-              <span aria-hidden="true" className="px-1.5">
-                •
-              </span>
+              <>
+                <span aria-hidden="true" className="px-1.5">
+                  •
+                </span>
+                {/*  ██ §2 (nº 391) — LA PUCE N'OFFRAIT AUCUNE COUPURE ██
+                     LE DÉFAUT : la ligne revenait à la ligne alors qu'il
+                     restait de la place à droite, et pas sur les mêmes
+                     fiches. LA CAUSE : entre deux valeurs il n'y a AUCUN
+                     caractère d'espace — l'écart est le `px-1.5` de la
+                     puce, du rembourrage, pas du texte — et le point
+                     « • » (U+2022) appartient à la classe de coupure
+                     ALPHABÉTIQUE : le navigateur n'a donc le droit de
+                     couper NI avant NI après. « Machine•Petit » est un
+                     seul mot à ses yeux. Les seules coupures possibles
+                     sont les espaces INTERNES aux libellés — c'est ce
+                     qui rend le défaut ALÉATOIRE D'UNE FICHE À L'AUTRE :
+                     il dépend entièrement des libellés de la fiche et de
+                     l'endroit où tombent leurs espaces. Une fiche dont
+                     les pratiques sont des mots simples ne montre rien ;
+                     une fiche à libellés composés perd une demi-largeur.
+                     MESURÉ sur l'exemple exact du propriétaire
+                     (« Couleur • Machine • Petit tatouage • Grandes
+                     pièces »), colonne de la page : la première ligne
+                     n'utilisait que 196,4 px des 308 disponibles —
+                     111,6 px PERDUS à droite.
+                     LE REMÈDE : `<wbr />`, une occasion de coupure de
+                     LARGEUR NULLE, posée après la puce. Elle ne dessine
+                     rien, ne décale rien, n'ajoute pas un pixel : elle
+                     dit seulement au navigateur qu'il a le droit de
+                     couper ici. La même ligne monte alors à 289,6 px sur
+                     308 — 18,4 px de reste, la marge normale d'un mot
+                     qui ne tient plus. Et la coupure tombe APRÈS la
+                     puce : la ligne suivante commence sur la valeur, à
+                     l'aplomb exact de la première (l'alignement du
+                     retour à la ligne de la nº 384 ne bouge pas). */}
+                <wbr />
+              </>
             )}
             {libelleFiltre(slug)}
           </Fragment>
@@ -1072,9 +1163,18 @@ export function ContenuFiche({
         {tatoueur.styles.map((slug, rang) => (
           <Fragment key={slug}>
             {rang > 0 && (
-              <span aria-hidden="true" className="px-1.5">
-                •
-              </span>
+              <>
+                <span aria-hidden="true" className="px-1.5">
+                  •
+                </span>
+                {/*  §2 (nº 391) — LA MÊME OCCASION DE COUPURE QUE LES
+                     PRATIQUES (voir la note complète juste au-dessus) :
+                     cette ligne est écrite à l'identique, puce comprise,
+                     donc elle porte exactement le même défaut. La
+                     corriger d'un côté seulement l'aurait laissé
+                     visible une ligne plus bas. */}
+                <wbr />
+              </>
             )}
             <Link
               href={`/tatouage/${slug}/${tatoueur.ville_slug}`}
