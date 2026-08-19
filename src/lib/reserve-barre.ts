@@ -93,6 +93,25 @@ export const MARQUE_RANGEE = "rangeeRepliee";
  */
 export const VARIABLE_RESERVE_REPLIEE = "--rw-reserve-repliee";
 
+/**
+ * §2 (nº 377) — LA HAUTEUR DE LA BARRE DU LOGO, DONNÉE À UNE CLASSE.
+ * ------------------------------------------------------------------
+ * Même problème que ci-dessus, autre client : la rangée Profil /
+ * Portfolio / Suivre de la fiche se colle SOUS la barre fixe au doigt,
+ * et sa butée haute vaut donc exactement la hauteur de cette barre.
+ * Une classe Tailwind ne sait pas lire `RESERVE_LOGO` ; ContenuFiche
+ * pose donc cette variable en style en ligne, et la classe la
+ * consomme. La valeur reste écrite UNE SEULE FOIS, ici, au même
+ * endroit que la réserve qui tient la place de la barre — les deux ne
+ * peuvent pas diverger.
+ * ⚠️ Le nom est écrit en toutes lettres dans la classe de ContenuFiche
+ * (`mobile:top-[var(--rw-rangee-collante)]`) : Tailwind lit des chaînes
+ * littérales, il ne résout aucune constante. Les deux se lisent l'un
+ * l'autre — ne renommer qu'un seul côté casserait le collage en
+ * silence.
+ */
+export const VARIABLE_RANGEE_COLLANTE = "--rw-rangee-collante";
+
 /** La marque qui coupe l'animation de hauteur, le temps d'un retour :
     une réserve qui s'anime pendant qu'on repose la position, c'est le
     contenu qui glisse sous l'œil. Voir globals.css. */

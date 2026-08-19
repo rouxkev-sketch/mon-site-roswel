@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { defilerEnDouceur } from "@/lib/defilement-programme";
 //  ⚠️ TEMPORAIRE (nº 218-§1) — la sonde du carrousel : elle veut
@@ -35,6 +36,13 @@ import {
 } from "@/components/BlocLieux";
 import type { Tatoueur } from "@/lib/tatoueurs";
 import { mecanismeCoupe } from "@/lib/variantes-essai";
+//  §2 (nº 377) — la hauteur de la barre du logo et le nom de la
+//  variable qui la porte jusqu'à la classe : une seule écriture, dans
+//  le module qui la détient déjà.
+import {
+  RESERVE_LOGO,
+  VARIABLE_RANGEE_COLLANTE,
+} from "@/lib/reserve-barre";
 
 /**
  * LE CONTENU D'UNE FICHE — UN SEUL EXEMPLAIRE, POUR LES DEUX ENVELOPPES
@@ -124,6 +132,7 @@ export function ContenuFiche({
   surSerieChoisie,
   suiviAuDepart = false,
   adresseALui = false,
+  collantSousLaBarre = false,
 }: {
   tatoueur: Tatoueur;
   /** LE PORTFOLIO GROUPÉ PAR STYLE — l'enveloppe le calcule (elle en a
@@ -150,6 +159,21 @@ export function ContenuFiche({
       par-dessus une autre page. Seule une page écrit dans l'adresse.
       Faux par défaut : rien ne se met à écrire sans l'avoir demandé. */
   adresseALui?: boolean;
+  /**
+   * §2 (nº 377) — LA RANGÉE DU HAUT SE COLLE-T-ELLE SOUS LA BARRE
+   * FIXE, AU DOIGT ?
+   * ------------------------------------------------------------------
+   * VRAI SUR LA PAGE D'UNE FICHE, ET NULLE PART AILLEURS. C'est un
+   * drapeau, pas une déduction, et il fallait qu'il en soit un : ce
+   * contenu est monté à DEUX endroits, et le second n'est PAS réservé
+   * au web. Depuis une fiche, un membre d'équipe ou le salon d'un
+   * profil s'ouvre en FENÊTRE SUPERPOSÉE — « au doigt comme à la
+   * souris » (nº 226-§5, voir l'en-tête de FenetreFiche). Une fenêtre
+   * n'a pas de barre fixe au-dessus d'elle : y coller la rangée à
+   * 64 px du haut ouvrirait une bande vide sous son bord.
+   * Faux par défaut, donc : seule la page demande ce comportement.
+   */
+  collantSousLaBarre?: boolean;
 }) {
   /**
    * LES DEUX ONGLETS DE L'AFFICHE (nº 197-§1)
@@ -386,8 +410,29 @@ export function ContenuFiche({
     //  le seul déclencheur, et c'est voulu.
   }, [remonteeDemandee]);
 
-  /** Changer d'onglet : le contenu change, la page remonte — et
-      l'adresse suit, EN REMPLAÇANT son entrée (nº 329-§3). */
+  /**
+   * Changer d'onglet : le contenu change, et l'adresse suit, EN
+   * REMPLAÇANT son entrée (nº 329-§3).
+   *
+   * ██ §1 (nº 377) — LA PAGE NE REMONTE PLUS ██
+   * ==================================================================
+   * CE QUI EST RETIRÉ : l'appel à `remonterSousLaBarre()` qui fermait
+   * cette fonction. C'était lui, et lui seul, le saut automatique —
+   * la page glissait jusqu'à poser le bas de la photo pile sous la
+   * barre fixe (règle nº 208-§7, puis nº 304-§4). Toucher Profil ou
+   * Portfolio change désormais le contenu affiché, et rien d'autre.
+   *
+   * CE QUI RESTE, ET POURQUOI : `remonterSousLaBarre` n'est PAS
+   * supprimée — elle a un second appelant, l'arrivée par `#profil`
+   * depuis le rond de profil de la fenêtre de carrousel (nº 285-§2-6,
+   * plus bas). Ce mouvement-là n'est pas un changement d'onglet : le
+   * visiteur vient d'ailleurs et doit être déposé au bon endroit. Le
+   * propriétaire n'a pas demandé d'y toucher, et je n'y touche pas.
+   *
+   * ⚠️ CE QUE LE JOURNAL NE DIRA PLUS : la ligne « REMONTÉE demandée
+   * (mobile) » n'apparaît plus au toucher d'un onglet. C'est la
+   * preuve, à l'écran, que le mécanisme est bien parti.
+   */
   function choisirOnglet(suivant: OngletAffiche) {
     noterSonde(`SÉLECTEUR onglet → « ${suivant} »`);
     setOnglet(suivant);
@@ -406,7 +451,6 @@ export function ContenuFiche({
       );
       setRequeteLue(window.location.search);
     }
-    remonterSousLaBarre();
   }
 
   /**
@@ -807,9 +851,85 @@ export function ContenuFiche({
            derrière eux. `--fond-colonne` est posée par l'enveloppe
            (anthracite sur la page, carte dans la fenêtre) et traverse
            tout l'arbre : les bandeaux sont opaques, partout. */}
+      {/**
+        * ██ §2 (nº 377) — AU DOIGT, LA RANGÉE SE COLLE SOUS LA BARRE ██
+        * ==================================================================
+        * `position: sticky`, ET RIEN D'AUTRE — aucun écouteur de
+        * défilement, aucune mesure, aucun état React. Le mouvement est
+        * tenu par le moteur, dans le fil de composition : il ne peut
+        * donc rien perturber de la restitution de position au retour,
+        * qui est le sujet sensible de ce site. Aucune écriture
+        * d'adresse, aucune entrée d'historique.
+        *
+        * ⚠️ `sticky` ET SURTOUT PAS `fixed` : un élément collant RESTE
+        * DANS LE FLUX — il garde sa place et sa hauteur tant qu'il ne
+        * touche pas sa butée. Rien à réserver, donc rien qui s'effondre
+        * au moment où il s'accroche : PAS DE SAUT. (C'est exactement
+        * l'inverse du choix fait pour la barre fixe elle-même, qui est
+        * en `fixed` au doigt et qui doit, elle, réserver sa place —
+        * voir EnTeteTatouage et lib/reserve-barre.)
+        *
+        * LA BUTÉE — 64 px, ET CE NOMBRE N'EST PAS ÉCRIT ICI :
+        * `RESERVE_LOGO` (lib/reserve-barre) est la SEULE écriture de la
+        * hauteur de la barre du logo dans tout le site. C'est déjà elle
+        * qui dimensionne le bloc invisible tenant la place de la barre
+        * au doigt ; la rangée se cale donc sur la même valeur, par
+        * construction. Si la charte change cette hauteur, les deux
+        * bougent ensemble.
+        * ⚠️ ET SUR UNE FICHE, LA BARRE NE CHANGE JAMAIS DE HAUTEUR :
+        * elle se replie en escamotant sa RANGÉE DE RECHERCHE, que la
+        * fiche ne monte pas (`rangeePresente` y est faux). Il n'y a
+        * donc aucun état où la butée serait fausse.
+        * ⚠️ UNE CLASSE TAILWIND NE SAIT PAS LIRE UNE CONSTANTE : la
+        * valeur passe par une variable de style posée en ligne, que la
+        * classe consomme. C'est l'écriture déjà employée pour la
+        * réserve repliée (`VARIABLE_RESERVE_REPLIEE`).
+        *
+        * LE FOND : `bg-[var(--fond-colonne)]`, celui qu'elle porte
+        * DÉJÀ — l'anthracite plein de la page (`--rw-sombre-fond`,
+        * posé par l'enveloppe dans FicheTatoueur). Opaque, sans
+        * transparence ni flou : rien ne transparaît derrière elle. Je
+        * n'ajoute aucune couleur.
+        *
+        * LES RANGS D'EMPILEMENT : `z-[3]` au doigt.
+        *  · SOUS LA BARRE FIXE, qui est au rang 50 — et sous la fenêtre
+        *    d'adresse, au rang 80 ;
+        *  · AU-DESSUS DU CONTENU : ce que la fiche pose de plus haut au
+        *    doigt est le voile de bord d'une galerie (`z-[1]`) ; les
+        *    chevrons (`z-[2]`) n'existent PAS au doigt
+        *    (`hidden pointer-fine:flex`). 3 passe donc au-dessus de
+        *    tout, sans égalité possible que l'ordre du flux trancherait.
+        *
+        * ELLE EST COLLANTE EN BLOC : c'est CE `<div>` qui colle, et il
+        * porte les trois — Profil, Portfolio et Suivre. Ils ne peuvent
+        * pas se séparer, il n'y a qu'un seul élément.
+        *
+        * LES PARENTS, VÉRIFIÉS UN PAR UN de la rangée jusqu'à `<body>` :
+        * la colonne de lecture (`flex flex-col`, dont le
+        * `lg:overflow-y-auto` ne vaut QUE sur le web), la grille des
+        * deux colonnes, la racine `<main>`, l'enveloppe de la mise en
+        * page, `<body>`. Aucun débordement caché, aucune
+        * transformation, aucun filtre, aucun `contain` : rien qui
+        * fabrique un bloc conteneur et neutraliserait le collage.
+        * (L'`overflow-x: hidden` de `body` a été retiré à la nº 228-§3
+        * et ne doit pas revenir ; les deux `overflow: hidden` de
+        * globals.css visent `main.recherche-fixe` et `main.mode-double`
+        * — le produit artisans, que la fiche tatoueur ne monte pas.)
+        */}
       <div
-        className="relative flex items-center justify-between gap-3
-                   lg:sticky lg:top-0 lg:z-[2] bg-[var(--fond-colonne)]"
+        style={
+          collantSousLaBarre
+            ? ({
+                [VARIABLE_RANGEE_COLLANTE]: `${RESERVE_LOGO}px`,
+              } as CSSProperties)
+            : undefined
+        }
+        className={`relative flex items-center justify-between gap-3
+                   lg:sticky lg:top-0 lg:z-[2] bg-[var(--fond-colonne)] ${
+                     collantSousLaBarre
+                       ? "mobile:sticky mobile:top-[var(--rw-rangee-collante)] mobile:z-[3]"
+                       : ""
+                   }`}
       >
         {/*  LE CAPOT — la colonne de la fenêtre superposée porte un
              rembourrage haut (24 px) : sans lui, le contenu défilerait

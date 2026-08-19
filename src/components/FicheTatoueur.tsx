@@ -1086,6 +1086,13 @@ export function FicheTatoueur({
             //  §3 (nº 329) — LA PAGE A UNE ADRESSE À ELLE : c'est elle
             //  qui porte l'onglet. La fenêtre du web, non.
             adresseALui
+            /*  §2 (nº 377) — ET C'EST LA PAGE, ET ELLE SEULE, QUI A UNE
+                BARRE FIXE AU-DESSUS D'ELLE : sa rangée Profil /
+                Portfolio / Suivre s'y colle au doigt. Les fenêtres
+                superposées montent le même contenu — au doigt comme à
+                la souris — et ne doivent pas hériter de ce
+                comportement : elles ne passent pas ce drapeau. */
+            collantSousLaBarre
             tatoueur={tatoueur}
             groupes={groupes}
             studioCourant={studioCourant}
