@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   CADRE_PHOTO_PORTFOLIO,
@@ -21,6 +21,10 @@ import {
 } from "@/lib/photos-tatoueur";
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import { PhotoDeCarte, TAILLES_CARTE } from "@/components/PhotoDeCarte";
+import {
+  photoRetenueDeCarte,
+  retenirPhotoDeCarte,
+} from "@/lib/memoire-cartes";
 import { ligneCarte, ligneCarteMobile } from "@/lib/adresse";
 import { pincementRecent, usePincement } from "@/components/ZoomPincement";
 //  ⚠️ TEMPORAIRE (nº 219-§1) — la sonde du carrousel compte les
@@ -244,8 +248,40 @@ function CarteTatoueurNue({
    * retélécharger.
    */
   const carrouselDansLaCarte = photosDeLaCarte.length > 1;
-  /** La photo regardée DANS la carte — le carrousel la possède. */
-  const [indicePhoto, setIndicePhoto] = useState(0);
+  /**
+   * §2 (nº 372) — LA CLÉ DE CETTE CARTE, pour la mémoire des photos.
+   * La même que celle de la mosaïque (`carrousel.cle`, sinon
+   * l'identifiant de la fiche — deux galeries d'un même artiste sont
+   * deux cartes), plus la photo que « Ma sélection » désigne : sur
+   * cette page, une même fiche peut avoir plusieurs cartes.
+   */
+  const cleDeLaCarte = `${tatoueur.carrousel?.cle ?? tatoueur.id}|${photoRecherche}`;
+  /**
+   * La photo regardée DANS la carte — le carrousel la possède.
+   * §2 (nº 372) — ET ELLE REVIENT DU RETOUR. La mosaïque est démontée
+   * quand on ouvre une fiche au doigt : sans cette semence, chaque
+   * carte repartait de sa première photo. La valeur vient d'une simple
+   * table en mémoire vive (lib/memoire-cartes) — ni adresse, ni
+   * historique, ni stockage. Bornée à ce que la galerie contient
+   * vraiment : une carte dont la série a changé repart de zéro plutôt
+   * que de viser une photo qui n'existe plus.
+   */
+  const [indicePhoto, setIndicePhoto] = useState(() =>
+    Math.min(
+      photoRetenueDeCarte(cleDeLaCarte),
+      Math.max(0, photosDeLaCarte.length - 1)
+    )
+  );
+  /** Le carrousel annonce la photo regardée : on la retient au passage.
+      ⚠️ DANS UN GESTIONNAIRE, jamais pendant un rendu — c'est
+      l'observateur de défilement du carrousel qui appelle. */
+  const noterLaPhoto = useCallback(
+    (rang: number) => {
+      setIndicePhoto(rang);
+      retenirPhotoDeCarte(cleDeLaCarte, rang);
+    },
+    [cleDeLaCarte]
+  );
   /**
    * §3 (nº 365) — LA PHOTO QU'ON REGARDE. Sans défilé (une seule
    * photo), c'est la photo choisie de la carte — comme avant. Avec
@@ -544,7 +580,9 @@ function CarteTatoueurNue({
                   photoEnregistrable?.style ?? styleRecherche
                 )}
                 indice={indicePhoto}
-                surChangement={setIndicePhoto}
+                //  §2 (nº 372) — la photo regardée est retenue au
+                //  passage (mémoire des cartes) : le retour la rend.
+                surChangement={noterLaPhoto}
                 variante="carte"
                 prioritaire={prioritaire}
                 //  §5 (nº 367) — la petite carte porte une capsule

@@ -210,6 +210,40 @@ export function FenetreFiche({
   const [indice, setIndice] = useState(
     surUnePhoto ? surUnePhoto.indice : serieCherchee ? 0 : ouverture.indice
   );
+  /**
+   * ██ §1 (nº 372) — LA PHOTO REGARDÉE ARRIVAIT APRÈS LA SEMENCE ██
+   * ------------------------------------------------------------------
+   * CE QUI SE PASSAIT, et c'est un défaut de TIMING, pas de câblage :
+   * les deux `useState` ci-dessus ne sont évalués QU'AU MONTAGE. Or
+   * cette fenêtre est montée EN PERMANENCE (avec `tatoueur = null`
+   * quand elle est fermée), et son état d'ouverture ne dépend pas
+   * seulement de sa clé : `visible` attend que le chemin du routeur
+   * rattrape l'adresse poussée à la main (`pushState` brut — la mesure
+   * de la nº 337-§2). Au premier rendu qui suit le clic, la fiche peut
+   * donc être encore `null` : `groupes` est vide, `ouvertureSurUnePhoto`
+   * ne trouve rien, et l'indice est SEMÉ À ZÉRO. Quand la fiche arrive
+   * un rendu plus tard, plus personne ne relit la photo — d'où la
+   * première photo, sur le web seulement (au doigt, la page de fiche
+   * naît, elle, avec l'adresse déjà complète).
+   * LA CORRECTION, sans nouveau mécanisme : un AJUSTEMENT PENDANT LE
+   * RENDU — le motif officiel de React, déjà employé dans
+   * CarrouselPortfolio (`indiceVu`) et ContenuFiche (`requeteLue`).
+   * Dès que le couple (fiche, photo demandée) change, on resème. Comme
+   * cela se joue PENDANT le rendu, aucune image intermédiaire n'est
+   * peinte : jamais la photo 1 puis un saut.
+   * ⚠️ ET SEULEMENT SUR CE COUPLE : une fois la fenêtre ouverte, faire
+   * défiler ses photos ne change ni la fiche ni la photo demandée —
+   * l'ajustement ne se déclenche donc pas, et le geste garde la main.
+   */
+  const semence = `${tatoueur?.slug ?? ""}|${photoRecherche}`;
+  const [semenceVue, setSemenceVue] = useState(semence);
+  if (semence !== semenceVue) {
+    setSemenceVue(semence);
+    if (surUnePhoto) {
+      setSerieOuverte(surUnePhoto.serie);
+      setIndice(surUnePhoto.indice);
+    }
+  }
 
   /** LES DEUX BOÎTES QUI DÉFILENT — la fenêtre entière quand elle est
       en une colonne, la colonne de droite quand elle est en deux. Un

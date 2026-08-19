@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { PhotoProgressive } from "@/components/PhotoProgressive";
 import { PhotoDeCarte, TAILLES_CARTE } from "@/components/PhotoDeCarte";
@@ -133,6 +133,11 @@ const VOISINES = 2;
  * d'avant la nº 368 (aucune voisine montée d'avance).
  */
 const VOISINES_CARTE = 1;
+
+/** useLayoutEffect côté navigateur, useEffect côté serveur (silencieux)
+    — le motif du projet (voir DefilementEnHaut, GrilleTatoueurs). */
+const useEffetAvantPeinture =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 export function CarrouselPortfolio({
   photos,
@@ -754,6 +759,34 @@ export function CarrouselPortfolio({
     }
     dernierPose.current = indice;
   }, [indice, n]);
+
+  /**
+   * §2 (nº 372) — SUR UNE CARTE, LA PHOTO RETENUE EST LÀ DÈS LA
+   * PREMIÈRE IMAGE.
+   * ------------------------------------------------------------------
+   * L'effet ci-dessus se place APRÈS la peinture : au retour, une carte
+   * semée sur sa photo 5 aurait montré la 1 pendant une image, puis
+   * sauté. Ici, on pose le défilement AVANT la peinture, une seule fois,
+   * au montage — la première image peinte est déjà la bonne photo.
+   * ⚠️ RIEN DE GÉOMÉTRIQUE : on écrit `scrollLeft`, exactement ce que
+   * fait `allerA` — au même endroit, simplement plus tôt. Aucune
+   * classe, aucune largeur, aucune hauteur n'est touchée.
+   * ⚠️ LES CARTES SEULEMENT : une fiche s'ouvre par son adresse, elle a
+   * son propre chemin (nº 302) et ne doit rien recevoir d'ici.
+   */
+  useEffetAvantPeinture(() => {
+    if (!surCarte || indice <= 0) return;
+    const zone = cadre.current;
+    const colonne = colonnes.current[indice];
+    if (!zone || !colonne) return;
+    zone.scrollLeft = colonne.offsetLeft;
+    //  L'observateur ne doit pas croire à un geste, et l'effet
+    //  d'au-dessus n'a plus rien à rattraper.
+    dernierPose.current = indice;
+    //  AU MONTAGE, UNE FOIS : `indice` est lu à cet instant et ne doit
+    //  pas relancer la pose (le défilement du doigt s'en charge, et
+    //  l'effet du dessus rattrape tout changement venu de la fiche).
+  }, []);
 
   /** Avance (+1) ou recule (−1) — DANS les bornes, c'est tout. */
   function aller(sens: 1 | -1) {
