@@ -165,7 +165,22 @@ export const STYLES_TATOUAGE = [
   { slug: "geometrique", label: "Géométrique", couleur: "#3B5B7A" },
   { slug: "ornemental", label: "Ornemental", couleur: "#6B5540" },
   { slug: "old-school", label: "Old School", couleur: "#A2402F" },
-  { slug: "neo-traditionnel", label: "Neo-Traditional", couleur: "#7A3A55" },
+  /**
+   * ██ §1 (nº 401) — LE LIBELLÉ PASSE EN FRANÇAIS ██
+   * « Neo-Traditional » devient « Néo-traditionnel ».
+   * ⚠️ LE SLUG NE BOUGE PAS, ET C'EST TOUT CE QUI COMPTE : il était
+   * DÉJÀ français (`neo-traditionnel`). C'est lui qui est écrit en base
+   * (colonne `styles` des fiches, colonne `style` des photos), lui qui
+   * fait l'adresse de la vitrine (`/tatouage/neo-traditionnel/<ville>`),
+   * lui que portent les favoris et les liens déjà partagés. Changer le
+   * seul libellé ne touche donc QUE ce qui s'affiche — aucune galerie
+   * ne peut disparaître, aucune migration n'est nécessaire.
+   * ⚠️ ET IL N'Y A QU'UN ENDROIT À CHANGER : tout le site lit ce mot
+   * par `libelleStyle(slug)`, juste plus bas. Menus, filtres,
+   * formulaire, titres de galerie, fiches, cartes, vitrines et données
+   * structurées suivent sans être touchés.
+   */
+  { slug: "neo-traditionnel", label: "Néo-traditionnel", couleur: "#7A3A55" },
   { slug: "new-school", label: "New School", couleur: "#8A5A2E" },
   //  §1 (nº 291) — IL FIGURE AUSSI DANS « Cultures du monde », SANS
   //  quitter le premier niveau (voir `aussi`, plus bas). Un seul

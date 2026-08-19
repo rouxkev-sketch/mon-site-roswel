@@ -935,14 +935,24 @@ export function BlocPortfolio({
               <span className="flex items-center gap-2.5 text-[14px] font-semibold text-white">
                 {libelleRendu(RENDUS_PHOTO[0].slug)}
                 {/*  LE PETIT TRAIT VERTICAL — le séparateur demandé.
-                     Il reprend le gris des traits du site
-                     (`bg-sombre-trait`) et la hauteur d'une capitale,
-                     pour qu'il sépare sans peser. */}
+                     §2 (nº 401) — IL PASSE DU GRIS DES TRAITS AU GRIS
+                     DOUX : `bg-sombre-trait` (#3B3B42) se perdait sur le
+                     fond de l'encadré sélectionné, qui est déjà clair.
+                     `bg-sombre-texte-doux` (#A8A8B0) est le gris que
+                     tout le site emploie pour ce qui doit se voir sans
+                     dominer — aucune couleur n'est inventée. La hauteur
+                     d'une capitale (`h-[1em]`) ne change pas. */}
                 <span
                   aria-hidden="true"
-                  className="h-[1em] w-px shrink-0 bg-sombre-trait"
+                  className="h-[1em] w-px shrink-0 bg-sombre-texte-doux"
                 />
-                <span className="font-normal text-sombre-texte-doux">
+                {/*  §2 (nº 401) — LA MENTION PASSE AU BLANC. Elle était
+                     en `text-sombre-texte-doux` et se lisait mal ; elle
+                     prend `text-white`, LE MÊME BLANC QUE « Noir et
+                     gris » à sa gauche (voir le `span` englobant). Elle
+                     reste en graisse normale : c'est elle, et non la
+                     couleur, qui la met en retrait du titre. */}
+                <span className="font-normal text-white">
                   Noir et gris inclut le tout noir.
                 </span>
               </span>

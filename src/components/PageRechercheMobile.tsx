@@ -460,7 +460,24 @@ export function PageRechercheMobile({
                        text-sombre-texte-doux active:text-sombre-texte
                        transition-colors"
           >
-            <IconeCroix taille={18} />
+            {/*  §3 (nº 401) — LA CROIX PASSE DE 18 À 22 px.
+                 D'OÙ VIENT CETTE VALEUR : c'est LE RANG DE LA LOUPE DE
+                 CETTE MÊME LIGNE (`IconeLoupe taille={22}`, posé par la
+                 nº 149-§1). Les deux glyphes de l'en-tête sont donc à
+                 la même échelle, ce qu'ils n'étaient pas — une croix de
+                 18 en face d'une loupe de 22 et d'un titre de 20 px
+                 paraissait rabougrie. Le rang 24 de la barre fixe
+                 aurait dépassé l'échelle propre à cette page.
+                 ⚠️ RIEN NE BOUGE AUTOUR : la ZONE TACTILE ne change
+                 pas — elle vaut toujours 44 px (`h-11 w-11`), et c'est
+                 la boîte, pas le glyphe, qui la donne. Le glyphe
+                 grandit À L'INTÉRIEUR d'une boîte fixe : ni la position
+                 du bouton, ni le `-mr-2`, ni la hauteur de la rangée
+                 (que ce bouton de 44 px commande déjà, contre les
+                 ~28 px du titre) ne changent d'un pixel.
+                 ⚠️ LE WEB N'EST PAS CONCERNÉ : cette page n'est montée
+                 que par le moteur au doigt (`PageRechercheMobile`). */}
+            <IconeCroix taille={22} />
           </button>
         </div>
         {/*  ⚠️ PLEINE LARGEUR (nº 149-§3) : le max-w-[260px] arrêtait
