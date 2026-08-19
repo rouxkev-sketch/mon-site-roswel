@@ -915,45 +915,6 @@ export function ContenuFiche({
         * et ne doit pas revenir ; les deux `overflow: hidden` de
         * globals.css visent `main.recherche-fixe` et `main.mode-double`
         * — le produit artisans, que la fiche tatoueur ne monte pas.)
-        *
-        * ██ §1 (nº 378) — L'AIR DU HAUT LUI APPARTIENT MAINTENANT ██
-        * ==================================================================
-        * LE DÉFAUT, ET LE DIAGNOSTIC DU PROPRIÉTAIRE ÉTAIT LE BON : la
-        * rangée remontait d'un cran avant de se caler, et une fois
-        * collée le badge touchait le bas de la barre fixe, sans air.
-        * D'OÙ VENAIT CET ESPACE, EXACTEMENT : de l'ÉCART DE LA GRILLE
-        * DES DEUX COLONNES (`gap`, dans FicheTatoueur) — 20 px au doigt
-        * depuis la nº 376. Il n'appartenait donc ni à la rangée ni même
-        * à la colonne de lecture : c'est la GRILLE qui le tenait, entre
-        * ses deux éléments. Un écart de grille est dans le flux : il
-        * défile, et rien de collant ne peut l'emporter avec soi.
-        *
-        * LA CORRECTION : ces 20 px deviennent le REMBOURRAGE de la
-        * rangée (`mobile:py-5`), et l'écart de grille est rendu à zéro
-        * au doigt (FicheTatoueur). L'air ne change pas de taille, il
-        * change de PROPRIÉTAIRE — il est maintenant DANS la boîte
-        * collante, donc il colle avec elle.
-        * ⚠️ 20 px N'EST PAS UN NOMBRE INVENTÉ : c'est exactement la
-        * valeur qui se trouvait au-dessus du badge (`mobile:gap-5`,
-        * nº 376). On la déplace, on ne la choisit pas.
-        *
-        * LA MÊME EN DESSOUS, ET C'EST LA SEULE HAUTEUR AJOUTÉE : la
-        * rangée devient symétrique (`py`, pas `pt`). Le fond opaque
-        * qu'elle portait déjà couvre désormais tout le bloc, du haut du
-        * rembourrage au bas — rien ne peut transparaître au-dessus ni
-        * en dessous du badge quand le contenu défile derrière.
-        *
-        * ⚠️ MÊME HAUTEUR EN PERMANENCE, COLLÉE OU NON : c'est un
-        * rembourrage statique, aucune classe conditionnelle, aucune
-        * mesure. La rangée ne peut pas changer de taille au moment où
-        * elle s'accroche.
-        * ⚠️ AUCUNE ZONE TACTILE RÉTRÉCIE : un rembourrage AGRANDIT la
-        * boîte autour de ses enfants ; ni le sélecteur ni « Suivre » ne
-        * changent de gabarit.
-        * ⚠️ ET RIEN EN DEHORS DU DOIGT : `mobile:` ne s'applique ni sur
-        * le web, ni dans la fenêtre superposée (qui ne demande pas
-        * `collantSousLaBarre`). Le `lg:` de la ligne du dessus est
-        * intact.
         */}
       <div
         style={
@@ -966,7 +927,7 @@ export function ContenuFiche({
         className={`relative flex items-center justify-between gap-3
                    lg:sticky lg:top-0 lg:z-[2] bg-[var(--fond-colonne)] ${
                      collantSousLaBarre
-                       ? "mobile:sticky mobile:top-[var(--rw-rangee-collante)] mobile:z-[3] mobile:py-5"
+                       ? "mobile:sticky mobile:top-[var(--rw-rangee-collante)] mobile:z-[3]"
                        : ""
                    }`}
       >

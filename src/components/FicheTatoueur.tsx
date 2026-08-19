@@ -810,37 +810,24 @@ export function FicheTatoueur({
            qu'aucune marge soit écrite nulle part.
            ⚠️ CE QUI NE BOUGE PAS : la photo (sa largeur découle de la
            hauteur de l'écran, nº 290) et la gouttière (`lg:gap-10`). */}
-      {/*  §1 (nº 376), RÉÉCRIT PAR LA §1 (nº 378) — L'ÉCART DE LA
-           GRILLE EST RENDU À ZÉRO AU DOIGT.
+      {/*  §1 (nº 376) — `mobile:gap-5` QUAND, ET SEULEMENT QUAND, LE
+           TITRE DE GALERIE EXISTE.
            ------------------------------------------------------------
-           L'HISTOIRE, POUR QU'ON NE LA REFASSE PAS. Les 32 px du
-           `gap-8` étaient TOUT le blanc entre la photo et les liens
-           Profil / Portfolio. La nº 376 y a logé le titre de galerie :
-           12 px au-dessus de lui (le `gap-3` de la colonne de tête) et
-           20 px en dessous (`mobile:gap-5`) — 12 + 20 = 32, le blanc
-           inchangé, seulement réparti.
-           CE QUE LA Nº 378 CHANGE, ET RIEN D'AUTRE : ces 20 px
-           changent de PROPRIÉTAIRE. Un écart de grille est dans le
-           flux ; il défilait donc, et la rangée collante ne pouvait pas
-           l'emporter avec elle — d'où le petit cran avant le calage, et
-           le badge collé sous la barre. Ils vivent maintenant DANS la
-           rangée, en rembourrage (`mobile:py-5`, ContenuFiche), et
-           l'écart de grille n'a plus rien à tenir au doigt.
-           ⚠️ LA GÉOMÉTRIE DE LA Nº 376 EST INTACTE : le titre de
-           galerie reste à 12 px sous la photo, et le badge reste à
-           20 px sous le titre — ces 20 px sont simplement comptés dans
-           la rangée au lieu de la grille. Rien ne bouge à l'œil, au
-           repos.
-           ⚠️ CE QUI CHANGE VRAIMENT, ET C'EST LE SEUL CAS : une fiche
-           SANS aucune publication n'avait pas de titre, donc gardait
-           `gap-8` (32 px). Elle passe à 20. Douze pixels de moins entre
-           une colonne photo VIDE et le badge — dit au propriétaire,
-           pas caché.
+           Les 32 px du `gap-8` étaient TOUT le blanc entre la photo et
+           les liens Profil / Portfolio. Le titre s'y loge : 12 px
+           au-dessus de lui (le `gap-3` de la colonne de tête), 20 px en
+           dessous — 12 + 20 = 32, le blanc est le même, il est
+           seulement réparti. Sans titre (fiche sans photo, style sans
+           libellé), la classe n'est pas posée et l'espacement est celui
+           d'hier, au pixel.
            ⚠️ LE WEB N'EST JAMAIS CONCERNÉ : `mobile:` ne s'applique
-           qu'au doigt ; `gap-8` tient toujours une fenêtre de
-           navigateur étroite, et `lg:gap-10` la gouttière des deux
-           colonnes. */}
-      <div className="grid gap-8 lg:gap-10 mobile:gap-0 lg:grid-cols-[auto_340px] lg:justify-center">
+           qu'au doigt, et `lg:gap-10` reste seul maître de la
+           gouttière des deux colonnes. */}
+      <div
+        className={`grid gap-8 lg:gap-10 lg:grid-cols-[auto_340px] lg:justify-center ${
+          titreDuCarrousel ? "mobile:gap-5" : ""
+        }`}
+      >
         {/* ---------- La photo — calée dans la hauteur visible (web) ----------
              §3 (nº 295) — SAUF QUAND LE LIEN A DIT « PAS DE PHOTO » :
              la colonne entière disparaît, la page commence par Profil /
@@ -976,13 +963,9 @@ export function FicheTatoueur({
             * `gap-8` de la grille). Il en vaut toujours 32, RÉPARTIS
             * AUTOUR DU TITRE — 12 px au-dessus (le `gap-3` de cette
             * colonne, écrit depuis toujours et resté sans emploi
-            * jusqu'ici) et 20 px en dessous. ⚠️ CES 20 px ONT CHANGÉ
-            * DE MAIN À LA Nº 378 : ils étaient l'écart de la grille,
-            * ils sont maintenant le rembourrage haut de la rangée
-            * collante (ContenuFiche). Même valeur, même position à
-            * l'œil — mais un écart de grille défile, un rembourrage
-            * colle avec sa rangée. Le titre est donc toujours
-            * PLUS PRÈS DE LA PHOTO QUE DES LIENS : il nomme
+            * jusqu'ici) et 20 px en dessous (`mobile:gap-5` sur la
+            * grille, posé seulement quand ce titre existe). Le titre
+            * est donc PLUS PRÈS DE LA PHOTO QUE DES LIENS : il nomme
             * ce qui le précède — c'est la règle d'aération de la
             * nº 277, prise à l'envers parce que le titre vient après
             * ce qu'il nomme. La page ne s'allonge que de la ligne de
@@ -1012,12 +995,8 @@ export function FicheTatoueur({
             * ET S'IL N'Y A RIEN À DIRE, IL N'Y A PAS DE LIGNE :
             * `titreDuCarrousel` est vide quand la fiche n'a aucune
             * photo, ou quand le style n'a pas de libellé — on ne rend
-            * alors NI la balise, NI son `gap` : un enfant en
-            * `display:none` n'est pas un élément de la boîte souple.
+            * alors NI la balise, NI son `gap`, NI le `mobile:gap-5`.
             * Aucun blanc réservé à un texte absent.
-            * ⚠️ Nº 378 : le réglage d'écart de grille qui accompagnait
-            * ce titre n'est plus conditionnel — l'air vit désormais
-            * dans la rangée, qui est là dans tous les cas.
             */}
           {titreDuCarrousel && (
             <p
