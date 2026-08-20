@@ -38,11 +38,7 @@ import {
   type StudioFiche,
 } from "@/lib/modes-exercice";
 import { ligneFiche, ligneMaps, type LieuAffichable } from "@/lib/adresse";
-import {
-  ECRITURE_TITRE_SECTION,
-  profilDeLaFiche,
-  TRAIT_SEPARATION,
-} from "@/config/tatouage";
+import { ECRITURE_TITRE_SECTION, profilDeLaFiche } from "@/config/tatouage";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
@@ -456,128 +452,24 @@ export const SOULIGNEMENT_LIEN =
   "underline-offset-4 decoration-1 decoration-sombre-texte-doux " +
   "group-hover:underline";
 
-/**
- * ██ §5 (nº 409) — LES GUESTS ONT LEUR SECTION, SOUS L'ÉQUIPE ██
- * ==================================================================
- * CE QUI EXISTAIT DÉJÀ, ET C'EST L'ESSENTIEL DU DIAGNOSTIC : un guest
- * déclaré CHEZ UNE FICHE DU SITE arrive jusqu'ici tout seul. La chaîne
- * est entière — `modes_exercice.salon_id` reçoit la fiche retenue,
- * `demanderLesRattachements` en fait une liaison VALIDÉE D'EMBLÉE
- * (api/tatoueur/liaison), la vue `equipe_salon` la rend avec ses dates
- * et écarte les sessions périmées, `membreDepuisVue` la traduit en
- * membre de genre « guest ». AUCUNE MIGRATION N'EST NÉCESSAIRE.
- * CE QUI MANQUAIT : les guests étaient MÊLÉS aux résidents dans la
- * même liste (rangés en dernier par `equipeOrdonnee`), sans rien qui
- * les distingue qu'une ligne de dates. Ils ont maintenant LEUR
- * section, sous les membres.
- * ⚠️ ELLE NE PARAÎT JAMAIS VIDE : le composant rend `null` quand la
- * liste est vide, comme l'équipe au-dessus. Un salon sans guest
- * n'affiche rien du tout — pas un titre, pas un espace.
- * ⚠️ LE TITRE EST CELUI DES AUTRES SECTIONS (`ECRITURE_TITRE_SECTION`,
- * les capitales grises espacées de STYLES, RENDU, TECHNIQUE) : aucune
- * écriture nouvelle. L'équipe, elle, n'en porte pas — c'est la règle
- * de la nº 288-§1, et c'est justement ce titre-ci qui sépare les deux
- * listes sans avoir à tracer un trait.
- */
-function GuestsDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined }) {
-  const clicVersFiche = useClicVersFiche();
-  const guests = equipeOrdonnee(equipe).filter(
-    (membre) => membre.genre === "guest"
-  );
-  if (guests.length === 0) return null;
-  return (
-    /*  ██ §2 (nº 410) — UN TRAIT, PLUS UN TITRE ██
-         Le titre « GUESTS » posé à la nº 409 est supprimé. À sa place,
-         LE SÉPARATEUR DE LA FICHE — `mt-10 pt-10 border-t` avec le
-         jeton `TRAIT_SEPARATION` (config/tatouage), exactement
-         l'écriture qui sépare déjà les sections dans ContenuFiche
-         (l.1773, 1777, 1816). Aucun trait n'est dessiné ici, aucune
-         couleur n'est écrite.
-         ⚠️ L'AIR EST ÉGAL DES DEUX CÔTÉS, ET C'EST VÉRIFIABLE :
-         `mt-10` pose 40 px au-dessus du trait, `pt-10` 40 px en
-         dessous. Le piège de la nº 385 aurait été la PLAQUE DE SURVOL
-         des lignes : `CLASSES_LIGNE_CLIQUABLE` porte `-m-2 p-2`, deux
-         valeurs qui S'ANNULENT — la boîte de mise en page d'une ligne
-         reste donc son texte, et les 40 px se mesurent bien de texte à
-         trait, dans les deux sens. La plaque déborde de 8 px au survol,
-         mais symétriquement en haut et en bas : elle ne peut pas créer
-         d'inégalité.
-         ⚠️ RIEN QUAND IL N'Y A PAS DE GUEST : le composant est déjà
-         sorti plus haut (`guests.length === 0`), donc ni trait, ni
-         section, ni espace. */
-    <div className={`mt-10 pt-10 border-t ${TRAIT_SEPARATION}`}>
-      <ul className="flex flex-col gap-8">
-        {guests.map((membre) => {
-          /*  LA MÊME LIGNE QUE L'ÉQUIPE AU-DESSUS — pastille ronde,
-               colonne de texte, ligne entière cliquable — et la mise en
-               forme du §4 : le NOM en gras et en blanc, puis le rôle en
-               blanc suivi du reste en gris.
-               ⚠️ CE QUI SUIT « Guest », CE SONT SES DATES, et non le
-               lieu : sur la fiche du salon, le lieu est la page qu'on
-               regarde. L'écrire serait le répéter. */
-          const ligne = () => (
-            <>
-              <PhotoRonde source={membre.photo} nature="personne" />
-              <div className="flex min-h-13 min-w-0 flex-1 flex-col justify-center">
-                <p className="text-[15px] font-semibold leading-snug text-sombre-texte [overflow-wrap:anywhere]">
-                  {membre.nom}
-                </p>
-                {/*  LIGNE 2 — LE RÔLE, EN BLANC, comme au §4. Il n'est
-                     suivi de rien ici : sur la fiche du salon, le LIEU
-                     est la page qu'on regarde, l'écrire serait le
-                     répéter. Le mot vient de `roleDuMembre` — « Guest »
-                     — et non d'une chaîne posée ici. */}
-                <p className="mt-1.5 text-[15px] font-medium leading-snug text-sombre-texte">
-                  {roleDuMembre(membre)}
-                </p>
-                {/*  LES DATES — `DatesDeSession`, l'écriture EXACTE de
-                     l'équipe au-dessus (blanc, deux lignes « Du… » /
-                     « Au… »). Elle ne se rend pas sans ses deux dates :
-                     rien ne peut rester orphelin, et il n'y a aucune
-                     date recomposée ici. */}
-                <DatesDeSession
-                  debut={membre.debut_le}
-                  fin={membre.fin_le}
-                  enBlanc
-                />
-              </div>
-            </>
-          );
-          /*  §1 (nº 410) — LA CLÉ EST CELLE DE LA LIGNE, pas de la
-               personne : un artiste peut être MEMBRE ET GUEST du même
-               lieu, donc apparaître deux fois. `cle` vaut son
-               identifiant de liaison ; à défaut (migration nº 410 pas
-               passée) elle retombe sur l'artiste, comme avant. */
-          return (
-            <li key={membre.cle ?? membre.artiste_id}>
-              {membre.slug ? (
-                <Link
-                  href={adresseDeLienInterne(membre.slug)}
-                  onClick={clicVersFiche?.(membre.slug)}
-                  className={CLASSES_LIGNE_CLIQUABLE}
-                >
-                  {ligne()}
-                </Link>
-              ) : (
-                <div className="flex items-start gap-3.5">{ligne()}</div>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
-}
-
 function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined }) {
   const clicVersFiche = useClicVersFiche();
-  /*  §5 (nº 409) — LES GUESTS SORTENT DE CETTE LISTE : ils ont leur
-       section, juste en dessous (`GuestsDuLieu`). L'ordre des membres
-       restants ne bouge pas — `equipeOrdonnee` les rangeait déjà en
-       dernier, il n'y a donc rien à retrier. */
-  const membres = equipeOrdonnee(equipe).filter(
-    (membre) => membre.genre !== "guest"
-  );
+  /*  ██ §2 (nº 411) — UNE SEULE LISTE, DE NOUVEAU ██
+       La nº 409 avait sorti les guests d'ici pour leur donner une
+       section, et la nº 410 l'avait séparée par un trait. Le
+       propriétaire abandonne les deux : membres et guests reviennent
+       dans la MÊME liste continue, présentés de la même façon, sans
+       trait ni titre ni section.
+       ⚠️ CE N'EST PAS UN RETOUR EN ARRIÈRE COMPLET : l'ORDRE, lui, est
+       celui de la nº 411 — tous les membres par ordre alphabétique,
+       puis tous les guests par date (voir `equipeOrdonnee`). Et un
+       artiste À LA FOIS membre ET guest apparaît toujours DEUX fois,
+       l'acquis de la nº 410 : ce sont deux LIGNES de la vue, chacune
+       avec sa clé, et rien ici ne les rapproche.
+       ⚠️ LES GUESTS GARDENT LEURS DATES : elles se rendent plus bas,
+       sous la condition `membre.genre === "guest"` qui n'a jamais
+       quitté cette liste. Les membres n'en ont pas. */
+  const membres = equipeOrdonnee(equipe);
   if (membres.length === 0) return null;
   //  §1 (nº 288) — PAS DE TITRE « ÉQUIPE ». Celui de la nº 286 venait
   //  d'une proposition, jamais d'une demande : il est retiré. Les
@@ -1340,13 +1232,10 @@ export function BlocAdressesFiche({
       ))}
 
       {/*  3. L'ÉQUIPE — après TOUTES les adresses, toujours. */}
+      {/*  §2 (nº 411) — LES GUESTS SONT DEDANS. La section séparée de
+           la nº 409 et le trait de la nº 410 sont supprimés : une
+           seule liste, un seul composant. */}
       <EquipeDuLieu equipe={tatoueur.equipe} />
-      {/*  4. LES GUESTS — SOUS l'équipe, dans leur propre section
-           (§5, nº 409). Les deux composants lisent LA MÊME liste et se
-           la partagent par le genre : aucun membre ne peut donc
-           apparaître deux fois, ni disparaître entre les deux. Un
-           salon sans guest ne rend rien — pas même un titre. */}
-      <GuestsDuLieu equipe={tatoueur.equipe} />
     </div>
   );
 }

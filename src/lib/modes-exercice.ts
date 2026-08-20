@@ -328,21 +328,58 @@ export function roleDuMembre(membre: MembreEquipe): string {
  * lointain, par date de début. Un ordre imposé, écrit une seule fois :
  * la page et la fenêtre superposée le lisent toutes les deux.
  */
+/**
+ * ██ §2 (nº 411) — UNE SEULE LISTE, DEUX RANGS ██
+ * ==================================================================
+ * L'ORDRE DICTÉ PAR LE PROPRIÉTAIRE :
+ *  1. TOUS LES MEMBRES, par ordre ALPHABÉTIQUE de leur nom ;
+ *  2. PUIS TOUS LES GUESTS, par date, du plus proche au plus lointain.
+ * Un guest passe donc toujours après le dernier membre, quelle que
+ * soit sa date — c'est le rang qui tranche d'abord, jamais la date.
+ *
+ * ⚠️ CE QUI DISPARAÎT, ET JE LE SIGNALE : LES FONDATEURS N'OUVRENT
+ * PLUS LA MARCHE. Le rang valait `fondateur = 0, résident = 1,
+ * guest = 2` depuis la nº 222 ; le propriétaire demande maintenant
+ * « TOUS LES MEMBRES par ordre alphabétique », sans distinction de
+ * rôle. Un fondateur nommé Zoé passe donc après une résidente nommée
+ * Angéline. C'est une règle d'affichage qui change, rien d'autre — les
+ * rôles eux-mêmes ne bougent ni à l'écran ni en base.
+ *
+ * ⚠️ LES ACCENTS SONT TRIÉS COMME ON LES LIT, et c'est `localeCompare`
+ * qui le fait : « Angéline », « Émile », « Zoé » sortent dans cet
+ * ordre. Une comparaison brute (`<`, `sort()` par défaut) les range
+ * par POINT DE CODE — le « É » (U+00C9) tombe alors APRÈS le « Z »
+ * (U+005A), et Émile se retrouve en fin de liste. L'étiquette « fr »
+ * est passée explicitement : sans elle, l'ordre dépendrait de la
+ * langue du navigateur ET du serveur, qui ne sont pas la même — deux
+ * rendus possibles pour une page prérendue.
+ *
+ * ⚠️ SUR QUELLE DATE ON TRIE : LE DÉBUT (`debut_le`) — « la session la
+ * plus proche d'abord » se lit sur celle qui COMMENCE le plus tôt.
+ * DEUX GUESTS QUI COMMENCENT LE MÊME JOUR : c'est la FIN qui départage,
+ * la plus courte d'abord — celle qui libère la place le plus tôt. Et
+ * si les deux dates sont identiques, le NOM, par le même
+ * `localeCompare`. Aucun couple ne reste donc départagé par le hasard
+ * de la lecture en base : deux chargements rendent le même ordre, ce
+ * qui compte doublement sur une page prérendue.
+ */
 export function equipeOrdonnee(
   equipe: MembreEquipe[] | null | undefined
 ): MembreEquipe[] {
-  const rang = (membre: MembreEquipe) =>
-    membre.genre === "guest" ? 2 : membre.role === "fondateur" ? 0 : 1;
+  const rang = (membre: MembreEquipe) => (membre.genre === "guest" ? 1 : 0);
+  const parNom = (a: MembreEquipe, b: MembreEquipe) =>
+    a.nom.localeCompare(b.nom, "fr");
   return membresActifs(equipe)
     .slice()
     .sort((a, b) => {
       const ecart = rang(a) - rang(b);
       if (ecart !== 0) return ecart;
-      if (rang(a) === 2) {
-        //  Les guests : la session la plus proche d'abord.
-        return (a.debut_le ?? "").localeCompare(b.debut_le ?? "");
-      }
-      return a.nom.localeCompare(b.nom, "fr");
+      if (rang(a) === 0) return parNom(a, b);
+      //  LES GUESTS : début, puis fin, puis nom.
+      const debut = (a.debut_le ?? "").localeCompare(b.debut_le ?? "");
+      if (debut !== 0) return debut;
+      const fin = (a.fin_le ?? "").localeCompare(b.fin_le ?? "");
+      return fin !== 0 ? fin : parNom(a, b);
     });
 }
 

@@ -45,6 +45,37 @@
 --    qui rend le cas des deux modes JUSTE, pas ce qui rend le site
 --    vivant.
 --
+-- ██ POURQUOI `create or replace` ET NON `drop view` (nº 411) ██
+-- LA PREMIÈRE ÉCRITURE DE CETTE MIGRATION ÉCHOUAIT dans Supabase :
+--
+--   ERROR: 42P16: cannot change name of view column "artiste_nom"
+--                 to "liaison_id"
+--
+-- `create or replace view` ne REMPLACE que le corps : la liste des
+-- colonnes ne peut qu'être ALLONGÉE, jamais réordonnée ni renommée.
+-- Les deux nouvelles colonnes avaient été glissées AU MILIEU, en
+-- troisième et quatrième position : PostgreSQL a donc lu « la
+-- troisième colonne s'appelait artiste_nom, elle s'appelle maintenant
+-- liaison_id » et a refusé. Elles sont désormais EN DERNIER, derrière
+-- les dix colonnes de la nº 65 laissées dans leur ordre exact.
+--
+-- DEUX VOIES ÉTAIENT POSSIBLES ; VOICI POURQUOI CELLE-CI :
+--  · `drop view ... cascade` puis recréation aurait tout autorisé,
+--    MAIS UNE VUE SUPPRIMÉE PERD SES DROITS. La migration nº 59
+--    (yokofolio-lecture-publique.sql) a posé
+--    `grant select on public.equipe_salon to anon, authenticated` :
+--    c'est ce droit-là qui permet à la fiche publique, PRÉRENDUE et
+--    lue par le rôle ANONYME, de voir une équipe. Le `drop` l'aurait
+--    emporté en silence, et il aurait fallu penser à le reposer ;
+--  · `cascade` aurait en plus détruit sans un mot tout objet
+--    dépendant. RECENSÉ : aucune autre vue, fonction ou politique ne
+--    dépend de `equipe_salon` — les autres fichiers ne la citent que
+--    dans des commentaires ou des requêtes de vérification. Le risque
+--    était donc théorique ici, mais le droit de lecture, lui, ne
+--    l'était pas.
+-- L'ordre des colonnes n'a AUCUNE importance pour le site : il lit la
+-- vue par `select *` et nomme ses champs.
+--
 -- IDEMPOTENTE : `create or replace view` — rejouable telle quelle.
 -- ============================================================
 
@@ -52,11 +83,10 @@ begin;
 
 create or replace view public.equipe_salon as
   select
+    --  ⚠️ LES DIX PREMIÈRES COLONNES SONT CELLES DE LA nº 65, DANS LEUR
+    --  ORDRE EXACT — ne pas y toucher (voir la note ci-dessus).
     l.salon_id,
     l.artiste_id,
-    --  nº 410 — CE QUI DISTINGUE DEUX LIGNES D'UN MÊME ARTISTE.
-    l.id           as liaison_id,
-    l.mode_id      as mode_id,
     a.nom          as artiste_nom,
     a.slug         as artiste_slug,
     a.photo_profil as artiste_photo,
@@ -64,7 +94,11 @@ create or replace view public.equipe_salon as
     m.role         as role,
     m.debut_le,
     m.fin_le,
-    l.demandee_le
+    l.demandee_le,
+    --  ██ LES DEUX NOUVELLES, ET ELLES VIENNENT APRÈS TOUTES LES
+    --  AUTRES ██ — ce qui distingue deux lignes d'un même artiste.
+    l.id           as liaison_id,
+    l.mode_id      as mode_id
   from public.liaisons_artiste_salon as l
   join public.tatoueurs as a on a.id = l.artiste_id
   left join public.modes_exercice as m on m.id = l.mode_id
