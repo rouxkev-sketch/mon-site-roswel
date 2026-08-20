@@ -349,14 +349,13 @@ export function DeuxZonesLieu({
 
 /**
  * UNE SEULE ZONE — pour le mode qui n'a RIEN à chercher.
- * « Freelance » (nº 414 ; « Disponible » jusqu'à la nº 415) ne se
- * cherche pas sur yokofolio : il n'y a
- * PAS de lieu — l'artiste en cherche un, et son encadré ne porte
- * qu'une ville (et son rayon, glissé en `souscrit`). Lui proposer une
- * recherche de portfolio serait un cul-de-sac déguisé en choix.
- * (C'était la zone du mode « à domicile » jusqu'à la nº 402 ; le
- * composant a traversé la suppression sans appelant, il en retrouve
- * un ici.)
+ * ⚠️ SANS APPELANT DEPUIS LA nº 418, et gardé pour la même raison
+ * qu'à la nº 402 : les deux modes qui n'avaient RIEN à chercher — « à
+ * domicile » (supprimé nº 402) puis le mode sans lieu (nº 414-417,
+ * supprimé nº 418) — se sont succédé sur cette zone. Elle a déjà
+ * traversé une suppression sans appelant avant d'en retrouver un ;
+ * la détruire deux fois pour la réécrire deux fois n'apprendrait
+ * rien.
  *
  * ⚠️ LE TITRE EST L'ÉCRITURE EXACTE DE LA QUESTION DE DeuxZonesLieu
  * (nº 414). Le propriétaire demande que la phrase « Je suis
@@ -385,7 +384,7 @@ export function ZoneLieuSeule({
   /** Ce qu'on lit dans le champ. */
   indication?: string;
   /** Ce qui se glisse SOUS le champ une fois le lieu choisi — le
-      rayon de déplacement du mode « Freelance » (nº 414). */
+      rayon de déplacement du mode sans lieu (nº 414-417). */
   souscrit?: React.ReactNode;
   lieu: LieuTrouve | null;
   surLieu: (lieu: LieuTrouve | null) => void;

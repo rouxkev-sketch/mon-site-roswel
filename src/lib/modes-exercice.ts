@@ -8,15 +8,7 @@ import {
 } from "@/config/tatouage";
 import type { Plage, SemaineStudio } from "@/lib/horaires-studio";
 import type { LieuTrouve } from "@/lib/geocodage/types";
-//  `ligneMaps` (nº 416) — la requête que Google Maps recevra : elle
-//  sert ici à VÉRIFIER qu'il y a quelque chose à chercher avant de
-//  rendre une localité cliquable (voir `lieuCherchableDuFreelance`).
-import {
-  ligneCarte,
-  ligneCarteMobile,
-  ligneFiche,
-  ligneMaps,
-} from "@/lib/adresse";
+import { ligneCarte, ligneCarteMobile, ligneFiche } from "@/lib/adresse";
 
 /**
  * LES MODES D'EXERCICE, LES STUDIOS ET LES ÉQUIPES
@@ -596,13 +588,11 @@ export function libelleLieuDuMode(mode: ModeExerciceFiche): string {
     pays: mode.pays,
     code_pays: mode.code_pays,
   };
-  // ⚠️ LES DEUX MODES SANS VITRINE — « studio privé » et
-  // « Disponible » (nº 414) — ne montrent JAMAIS la rue. Un studio
-  // privé est privé, c'est tout son sens ; un artiste disponible n'a
-  // PAS de lieu à montrer — la ville qu'il a saisie dit où il cherche,
-  // pas où l'on vient. (La promesse était celle d'« à domicile »
-  // jusqu'à la nº 402 ; « Disponible » la reprend.)
-  if (mode.genre === "prive" || mode.genre === "disponible") {
+  // ⚠️ LE STUDIO PRIVÉ NE MONTRE JAMAIS LA RUE : il est privé, c'est
+  // tout son sens. (« À domicile » partageait cette promesse jusqu'à
+  // la nº 402 ; le mode sans lieu des nº 414-417 aussi — tous deux
+  // sont supprimés du site, celui-ci par la nº 418.)
+  if (mode.genre === "prive") {
     return ligneCarte(lieu);
   }
   return ligneFiche({ ...lieu, adresse: mode.adresse });
@@ -667,11 +657,6 @@ export function typeDeLieuDuMode(mode: ModeExerciceFiche): string {
  * leur apparence — celle des étiquettes STYLES, RENDU, TECHNIQUE.
  */
 export function etiquetteDuLieu(mode: ModeExerciceFiche): string {
-  //  INDEPENDENT (nº 414 ; « Disponible » jusqu'à la nº 415, puis
-  //  « Freelance » jusqu'à la nº 416) — ni type de lieu, ni rôle :
-  //  l'artiste CHERCHE un endroit, le mot seul dit tout. Il vient du
-  //  catalogue, jamais d'une chaîne écrite ici.
-  if (mode.genre === "disponible") return genreMode(mode.genre).label;
   //  « Salon » ou « Studio », en toutes lettres dans la phrase.
   const lieu = typeDeLieuDuMode(mode).toLowerCase();
   //  EN GUEST AU SALON / AU STUDIO — la préposition suit le lieu ;
@@ -797,11 +782,7 @@ export function lieuEnDeuxLignes(mode: ModeExerciceFiche): {
 } {
   const nom = nomDuLieuDuMode(mode);
   const role =
-    mode.genre === "guest"
-      ? "Guest"
-      : mode.genre === "disponible"
-        ? genreMode(mode.genre).label
-        : libelleRoleCourt(mode.role) || "";
+    mode.genre === "guest" ? "Guest" : libelleRoleCourt(mode.role) || "";
   const suite = [typeDeLieuDuMode(mode), villeEtPaysDuMode(mode)]
     .map((morceau) => (morceau ?? "").trim())
     .filter(Boolean);
@@ -814,22 +795,6 @@ export function troisLignesDuMode(mode: ModeExerciceFiche): {
   adresse: string;
 } {
   const etiquette = etiquetteDuLieu(mode);
-  //  DISPONIBLE (nº 414) : la ville, puis le rayon. Aucune adresse,
-  //  jamais — le bloc que portait « à domicile » avant la nº 402.
-  if (mode.genre === "disponible") {
-    const lieu = {
-      ville: villeDuMode(mode),
-      region: mode.region,
-      pays: mode.pays,
-      code_pays: mode.code_pays,
-    };
-    const rayon = mode.rayon_km ?? 0;
-    return {
-      etiquette,
-      nom: ligneCarte(lieu),
-      adresse: rayon > 0 ? `Dans un rayon de ${rayon} km` : "",
-    };
-  }
   const adresse = libelleLieuDuMode(mode);
   const nom = nomDuLieuDuMode(mode);
   //  NI FICHE NI NOM SAISI : l'adresse monte sur la ligne blanche, et
@@ -840,35 +805,6 @@ export function troisLignesDuMode(mode: ModeExerciceFiche): {
 }
 
 /**
- * §6 · LE SECTEUR D'UN MODE « DISPONIBLE », avec son rayon :
- * « Lyon, France · Rayon 200 km ». (Rétablie à la nº 414 — c'était la
- * fonction du mode « à domicile », supprimée à la nº 402 ; le sens du
- * mode change, la géométrie non.)
- * ⚠️ « SECTEUR », PAS « ZONE » : le mot `zone` a désigné jusqu'à la
- * migration nº 48 les ZONES DU CORPS du portfolio, abandonnées depuis.
- * Le reprendre ici pour un secteur géographique rouvrirait une
- * confusion qu'une passe entière a servi à fermer — et c'est déjà le
- * mot que la fiche emploie (« Studio privé / Secteur : … »).
- * ⚠️ PAS DE RAYON AUTOUR D'UN ÉTAT NI D'UN PAYS : « FL, États-Unis »
- * s'affiche seul. Un cercle autour du centre d'un pays ne veut rien
- * dire — c'est exactement le bug corrigé à la passe nº 69, et la
- * règle vaut aussi ici.
- */
-export function libelleSecteurDuMode(mode: ModeExerciceFiche): string {
-  const lieu = {
-    ville: villeDuMode(mode),
-    region: mode.region,
-    pays: mode.pays,
-    code_pays: mode.code_pays,
-  };
-  const ligne = ligneCarte(lieu);
-  const rayon = mode.rayon_km ?? 0;
-  //  Sans ville, le lieu est une division ou un pays : aucun rayon.
-  if (!lieu.ville || rayon <= 0) return ligne;
-  return `${ligne} · Rayon ${rayon} km`;
-}
-
-/**
  * LA LIGNE COMPLÈTE D'UN MODE — ce que l'œil lit, de gauche à droite.
  * Cinq cas, exactement ceux du cahier des charges :
  *   · salon lié      → « Résident chez X — 12 rue de la Paix, Lyon »
@@ -876,7 +812,6 @@ export function libelleSecteurDuMode(mode: ModeExerciceFiche): string {
  *   · guest lié      → « En Guest chez X (du 01/09 au 15/09) — 45 av… »
  *   · guest à la main → « En session Guest à Paris (du…) — 45 av… »
  *   · studio privé   → « Studio privé / Secteur : Lyon (69000) »
- *   · disponible     → « Disponible / Secteur : Lyon · Rayon 50 km »
  * `nomSalon` est renvoyé à part : c'est LUI, et lui seul, qui devient
  * cliquable — le reste de la ligne est du texte brut.
  */
@@ -889,15 +824,8 @@ export function ligneDuMode(mode: ModeExerciceFiche): {
   const lie = Boolean(mode.salon_id && mode.salon_nom);
   const lieu = libelleLieuDuMode(mode);
 
-  if (mode.genre === "prive" || mode.genre === "disponible") {
-    //  ⚠️ LE MODE « DISPONIBLE » DIT SA ZONE ET SON RAYON (nº 414,
-    //  règle héritée de la nº 114) : « Lyon, France · Rayon 200 km ».
-    //  C'est l'information qui compte pour qui cherche quelqu'un qui
-    //  se déplace — sans elle, une ville seule laisse croire que
-    //  l'artiste ne bouge pas.
-    const secteur =
-      mode.genre === "disponible" ? libelleSecteurDuMode(mode) : lieu;
-    return { avant: `${genre.phrase} ${secteur}`, nomSalon: null, apres: "" };
+  if (mode.genre === "prive") {
+    return { avant: `${genre.phrase} ${lieu}`, nomSalon: null, apres: "" };
   }
 
   // EN STUDIO : le RÔLE précède le reste — « Fondateur de », « Résident
@@ -944,11 +872,10 @@ export function ligneDuMode(mode: ModeExerciceFiche): {
 /**
  * L'ORDRE IMPOSÉ DES PROFILS (passe nº 222-§1g)
  * ==================================================================
- * 1. Independent   2. Studio   3. Salon   4. Guest
- * (« à domicile » : supprimé nº 402 ; le mode sans lieu revient à la
- * nº 414 ; la nº 415 le met EN TÊTE et la nº 416 le nomme
- * « Independent » — la place et le mot que le propriétaire leur donne
- * au sélecteur comme aux filtres.)
+ * 1. Studio   2. Salon   3. Guest
+ * (« à domicile » : supprimé nº 402 ; le mode SANS LIEU, né à la
+ * nº 414 et nommé « Independent » à la nº 416, est ABANDONNÉ par le
+ * propriétaire — nº 418. Il ne reste que ces trois-là.)
  * Il vaut PARTOUT où plusieurs profils se suivent : le sous-titre du
  * nom, la liste des profils d'un artiste, et tout ce qui viendra. Un
  * ordre écrit une seule fois ne peut pas diverger d'un écran à
@@ -956,10 +883,9 @@ export function ligneDuMode(mode: ModeExerciceFiche): {
  * s'affiche « Studio », `salon` s'affiche « Salon » — nº 402.)
  */
 const RANG_DU_GENRE: Record<string, number> = {
-  disponible: 0,
-  prive: 1,
-  salon: 2,
-  guest: 3,
+  prive: 0,
+  salon: 1,
+  guest: 2,
 };
 
 export function modesOrdonnes(
@@ -976,191 +902,6 @@ export function modesOrdonnes(
       }
       return a.ordre - b.ordre;
     });
-}
-
-/**
- * ██ §6 (nº 415) — DEUX FAMILLES DE MODES, ET LA FICHE LES SÉPARE ██
- * ==================================================================
- * LE PROPRIÉTAIRE RETIRE LE FREELANCE DE LA LISTE DES LIEUX. C'est
- * cohérent : cette liste montre des ENDROITS où l'on travaille — une
- * pastille, un nom, une adresse cliquable. Un freelance n'a rien de
- * tout cela ; il occupait la place avec deux traits, une photo de
- * profil et une ville. Il devient UNE LIGNE DU PROFIL, sous les
- * styles (voir ContenuFiche).
- *
- * LA COUPURE EST ÉCRITE ICI, ET UNE SEULE FOIS, parce que DEUX
- * lecteurs en dépendent et qu'ils ne doivent jamais diverger :
- *  · `BlocProfilsArtiste` construit sa liste avec `modesDeLieu` ;
- *  · `ContenuFiche` DÉCIDE AVEC LA MÊME FONCTION s'il pose le trait
- *    de séparation qui coiffe cette liste.
- * ⚠️ C'EST LE PIÈGE DE LA nº 386, ET IL EST STRUCTUREL : le trait
- * (`mt-10 pt-10 border-t`) n'appartient pas au bloc, il est posé par
- * l'ENVELOPPE. Un artiste qui n'a QUE des modes freelance rendrait
- * donc un trait et 80 px de vide au-dessus d'un bloc qui, lui, ne
- * rend rien. Deux règles séparées auraient fini par se contredire ;
- * il n'y en a qu'une.
- * ⚠️ LES DEUX FONCTIONS PARTENT DE `modesOrdonnes` : sessions guest
- * périmées déjà écartées, ordre imposé déjà appliqué.
- */
-export function modesDeLieu(
-  modes: ModeExerciceFiche[] | null | undefined
-): ModeExerciceFiche[] {
-  return modesOrdonnes(modes).filter((mode) => mode.genre !== "disponible");
-}
-
-/** L'AUTRE FAMILLE — les modes SANS lieu, ceux qui deviennent une
-    ligne du profil. Un artiste peut en déclarer plusieurs (le
-    formulaire propose « + Ajouter une ville ») : la fonction rend
-    donc une LISTE, et l'appelant écrit une ligne par mode. */
-export function modesFreelance(
-  modes: ModeExerciceFiche[] | null | undefined
-): ModeExerciceFiche[] {
-  return modesOrdonnes(modes).filter((mode) => mode.genre === "disponible");
-}
-
-/**
- * ██ §2 (nº 416) — LA PHRASE QUI ANNONCE LA LOCALITÉ ██
- * ==================================================================
- * « Actuellement basé à : » — elle sert DEUX FOIS, et c'est pour cela
- * qu'elle est écrite ICI et nulle part ailleurs :
- *  · dans le FORMULAIRE, en titre du champ de localité de l'encadré
- *    Independent (`ZoneLieuSeule`, BlocModesExercice) ;
- *  · sur la FICHE, en queue de la première ligne du profil
- *    (« Independent • Actuellement basé à : », ContenuFiche).
- * Recopiée aux deux endroits, elle aurait fini par diverger d'un mot —
- * et c'est exactement la même phrase que l'artiste écrit et que le
- * visiteur lit. (nº 415 : « Je suis à la recherche d'un lieu. » ;
- * nº 416 : « Actuellement basé à : » ; nº 417 : la voici raccourcie —
- * une seule ligne à changer, c'était tout l'objet de la mettre ici.)
- */
-export const PHRASE_LOCALITE_INDEPENDENT = "Basé à :";
-
-/** Une localité déclarée par un Independent, prête à être posée. */
-export type LocaliteIndependent = {
-  /** La clé React — l'identifiant du mode qui la porte. */
-  cle: string;
-  /** Ce qui s'écrit, BLEU et cliquable : « Lyon, France ». */
-  texte: string;
-  /** Le rayon qui la suit, en gris : « 200 km ». Vide = pas de puce. */
-  rayon: string;
-  /** Ce que Google Maps cherchera, ou `null` — le texte reste alors
-      gris et mort (voir `lieuCherchableDuFreelance`). */
-  lieu: LieuCherchable | null;
-};
-
-/**
- * ██ §3 (nº 416), REFONDU PAR LE §2 (nº 417) — LE BLOC INDEPENDENT ██
- * ==================================================================
- * CE QUE LA nº 415 RENDAIT : un rang de morceaux par mode.
- * CE QUE LA nº 416 A FAIT : deux lignes, sur le modèle du booking et
- * de son délai (nº 408-§3).
- * CE QUE LE §2 DE LA nº 417 CORRIGE : à DEUX localités, l'en-tête se
- * répétait — « Independent • Basé à : » deux fois, une par mode, parce
- * que le rendu bouclait sur les modes et que chacun rendait son propre
- * en-tête. LA STRUCTURE SUIT DÉSORMAIS CE QU'ON LIT :
- *      Independent • Basé à :        ← UNE fois, quel qu'en soit le nombre
- *      Lyon, France • 200 km         ← une ligne par localité
- *      Espagne
- * D'où une fonction qui prend LA LISTE des modes et rend UN bloc, là
- * où la nº 416 en rendait un par mode. L'en-tête n'a plus d'endroit
- * où se répéter : il n'existe qu'une fois dans la structure.
- *
- * CETTE FONCTION NE PEINT RIEN : elle rend les MORCEAUX, l'appelant
- * pose les puces, les couleurs et l'air — c'est ce qui permet à la
- * localité d'être le SEUL morceau bleu et cliquable (ContenuFiche).
- *
- * ⚠️ AUCUN MORCEAU VIDE N'EN SORT, et c'est garanti à la source plutôt
- * que dans le rendu : ni ligne vide, ni puce orpheline ne peuvent être
- * écrites. Les cas demandés en découlent :
- *  · UN ÉTAT OU UN PAYS → aucun rayon n'a pu être demandé (voir
- *    `rayonRequis` : les badges ne s'affichent qu'autour d'un point),
- *    donc `rayon` est vide : PAS de dernière puce ;
- *  · UNE VILLE SANS PAYS (ou l'inverse) → `villeEtPaysDuMode` joint ce
- *    qu'elle a, et rend "" si elle n'a rien : la localité SAUTE, elle
- *    n'entre pas dans la liste ;
- *  · AUCUNE LOCALITÉ NULLE PART → la liste est vide et L'EN-TÊTE PERD
- *    SA PHRASE : « Basé à : » finit par un deux-points qui PROMET un
- *    lieu — l'écrire au-dessus du vide serait une promesse non tenue.
- *    Reste « Independent », seul, qui est l'information même que la
- *    ligne porte.
- *  · AUCUN MODE INDEPENDENT → `null` : l'appelant ne rend rien du tout.
- * ⚠️ LE MOT VIENT DU CATALOGUE (`genreMode(...).label`), jamais d'une
- * chaîne écrite ici : le renommer une fois de plus (« Disponible » →
- * « Freelance » → « Independent » en trois passes) ne doit toucher
- * qu'un seul endroit.
- */
-export function blocIndependent(
-  modes: ModeExerciceFiche[] | null | undefined
-): {
-  /** LIGNE 1, en gris — les morceaux, à joindre par des puces. */
-  entete: string[];
-  /** LES LIGNES SUIVANTES, une par localité déclarée. */
-  localites: LocaliteIndependent[];
-} | null {
-  const declares = modesFreelance(modes);
-  if (declares.length === 0) return null;
-  const localites: LocaliteIndependent[] = [];
-  for (const mode of declares) {
-    const texte = (villeEtPaysDuMode(mode) ?? "").trim();
-    if (!texte) continue;
-    const kilometres = mode.rayon_km ?? 0;
-    localites.push({
-      cle: mode.id,
-      texte,
-      rayon: kilometres > 0 ? `${kilometres} km` : "",
-      lieu: lieuCherchableDuFreelance(mode),
-    });
-  }
-  //  LE MOT EST CELUI DU GENRE, et tous ces modes ont le même : le
-  //  premier suffit à l'interroger.
-  const mot = genreMode(declares[0].genre).label;
-  return {
-    entete:
-      localites.length > 0 ? [mot, PHRASE_LOCALITE_INDEPENDENT] : [mot],
-    localites,
-  };
-}
-
-/**
- * §3 (nº 416) — CE QUE GOOGLE MAPS CHERCHERA, et RIEN DE PLUS.
- * ------------------------------------------------------------------
- * ⚠️ LA RUE N'ENTRE PAS DANS LE LIEN, et c'est un point de vie privée,
- * pas de présentation. Un mode Independent ne publie JAMAIS son
- * adresse précise (`libelleLieuDuMode`, la promesse héritée d'« à
- * domicile »). Or la colonne `adresse` PEUT être remplie — le champ
- * accepte une adresse complète si la personne en choisit une dans la
- * liste. Bâtir le lieu du lien avec `...mode` aurait donc glissé la
- * rue dans la requête Google : invisible à l'écran, mais lisible dans
- * la barre d'état et sur la carte d'arrivée. On ne recopie donc que
- * les quatre colonnes que la ligne AFFICHE déjà.
- * ⚠️ RIEN À CHERCHER = PAS DE LIEN : sans ville, sans région et sans
- * pays, `ligneMaps` rend une chaîne vide et le lien mènerait à une
- * recherche vide. La fonction rend alors `null`, et l'appelant laisse
- * la localité en TEXTE GRIS — c'est la règle de `LienAdresse`
- * (BlocLieux), qui rend le texte nu quand son `lieu` est nul.
- */
-export type LieuCherchable = {
-  adresse: null;
-  code_postal: null;
-  ville: string | null;
-  region: string | null;
-  pays: string | null;
-  code_pays: string | null;
-};
-
-export function lieuCherchableDuFreelance(
-  mode: ModeExerciceFiche
-): LieuCherchable | null {
-  const lieu = {
-    //  LES DEUX COLONNES QUI DÉSIGNENT UN POINT PRÉCIS RESTENT DEHORS.
-    adresse: null,
-    code_postal: null,
-    ville: villeDuMode(mode),
-    region: mode.region,
-    pays: mode.pays,
-    code_pays: mode.code_pays,
-  };
-  return ligneMaps(lieu) ? lieu : null;
 }
 
 /**
@@ -1341,13 +1082,13 @@ export function lieuxDeLaFiche(fiche: {
       codePays: mode.code_pays,
       adresse: mode.adresse,
       codePostal: mode.code_postal,
-      //  nº 414 — LE DISQUE REVIENT, sous le mode « Disponible » : son
-      //  rayon de déplacement compte, comme celui d'« à domicile »
-      //  avant la nº 402. Partout ailleurs, un lieu reste un point.
-      //  ⚠️ MÊME RÈGLE QUE LA VUE `lieux_tatoueur` en base (le `case
-      //  when genre = 'disponible'` de yokofolio-mode-disponible.sql) :
-      //  les deux chemins doivent répondre pareil.
-      rayonKm: mode.genre === "disponible" ? (mode.rayon_km ?? 0) : 0,
+      //  nº 418 — PLUS AUCUN MODE N'EST UN DISQUE : le mode sans lieu
+      //  des nº 414-417, seul porteur d'un rayon depuis la disparition
+      //  d'« à domicile » (nº 402), est supprimé du site. La colonne
+      //  `rayon_km` reste en base, toujours écrite à null.
+      //  ⚠️ MÊME RÈGLE QUE LES VUES `lieux_tatoueur` / `zones_tatoueur`
+      //  en base (migration nº 418) : les deux chemins répondent pareil.
+      rayonKm: 0,
     });
   }
   return lieux;
@@ -1482,10 +1223,6 @@ export function cleNeuve(prefixe: string): string {
  *   · GUEST      → le même lieu, PLUS deux dates cohérentes (la fin
  *     ne précède pas le début). Une session sans dates n'est pas une
  *     session.
- *   · DISPONIBLE → une ville retenue dans la liste, PLUS le rayon de
- *     déplacement dès qu'elle est un point (nº 414 — la règle de
- *     l'ancien « à domicile », voir `rayonRequis`). Pas de studio
- *     inscrit : il n'y a pas de lieu, c'est tout le sens du mode.
  *   · SALON (la fiche) → l'adresse de son STUDIO PRINCIPAL, le
  *     premier de la liste. Les autres studios peuvent attendre.
  * ET DANS TOUS LES CAS : le lieu retenu doit porter des COORDONNÉES.
@@ -1644,22 +1381,6 @@ export function modesDeclares(modes: ModeEnSaisie[]): ModeEnSaisie[] {
   return modes.filter((mode) => !modeVide(mode));
 }
 
-/**
- * LE RAYON EST-IL EXIGIBLE sur ce mode « Disponible » ? (nº 414 —
- * rétablie, avec ses trois contrôles, telle que l'« à domicile »
- * d'avant la nº 402 la portait : mêmes règles d'obligation.)
- * ⚠️ MÊME RÈGLE QUE SON AFFICHAGE (voir `leRayon` dans
- * BlocModesExercice) : un rayon n'a de sens qu'autour d'un POINT —
- * une ville ou une adresse. Autour d'une région ou d'un pays, le
- * sélecteur ne s'affiche même pas : exiger là ce qu'on ne montre pas
- * bloquerait sans rien désigner.
- */
-export function rayonRequis(mode: ModeEnSaisie): boolean {
-  if (mode.genre !== "disponible") return false;
-  const precision = mode.lieu?.precision;
-  return precision === "ville" || precision === "adresse";
-}
-
 /** CE MODE EST-IL COMPLET ? La règle est la même à l'écran et en
     base (voir la contrainte `modes_exercice_dates_coherentes`). */
 export function modeComplet(mode: ModeEnSaisie): boolean {
@@ -1677,11 +1398,6 @@ export function modeComplet(mode: ModeEnSaisie): boolean {
   //  saisie à la main : sans lui, la fiche dit OÙ l'on travaille sans
   //  dire CHEZ QUI. Un lieu trouvé par la recherche porte déjà le sien.
   if (nomLieuRequis(mode) && !(mode.nomLieu ?? "").trim()) return false;
-  //  ⚠️ LE RAYON EST OBLIGATOIRE SUR « DISPONIBLE » (nº 414, règle de
-  //  la nº 124) : une ville sans rayon laisserait croire que l'artiste
-  //  ne bouge pas — et la recherche par distance n'aurait rien à
-  //  mesurer.
-  if (rayonRequis(mode) && mode.rayonKm == null) return false;
   if (mode.genre !== "guest") return true;
   return Boolean(mode.debut_le && mode.fin_le && mode.fin_le >= mode.debut_le);
 }
@@ -1899,18 +1615,6 @@ export function premierManque(
         message: "Donne le nom de ce lieu.",
       };
     }
-    //  ⚠️ LE RAYON EST OBLIGATOIRE SUR « DISPONIBLE » (nº 414, règle
-    //  de la nº 124), mais seulement là où il s'affiche : autour d'une
-    //  ville ou d'une adresse (voir `rayonRequis`). Les badges
-    //  rougissent, et cette phrase ne sert qu'à l'infobulle et aux
-    //  lecteurs d'écran.
-    if (rayonRequis(mode) && mode.rayonKm == null) {
-      return {
-        cle: mode.cle,
-        champ: "rayon",
-        message: "Choisis ton rayon de déplacement.",
-      };
-    }
     if (mode.genre === "guest" && !(mode.debut_le && mode.fin_le)) {
       return {
         cle: mode.cle,
@@ -1955,9 +1659,6 @@ export function premierManque(
  * corriger. Les deux ne peuvent plus diverger.
  *
  * LES CHAMPS OBLIGATOIRES, PAR MODE (la liste que le code connaît) :
- *  · DISPONIBLE      — la ville, puis LE RAYON dès que le lieu est un
- *                      point (une ville ou une adresse : `rayonRequis`,
- *                      nº 414 — la règle de l'ancien « à domicile ») ;
  *  · EN STUDIO       — le lieu (le portfolio du studio OU une ville /
  *    (studio privé)    adresse), et LE NOM DU LIEU si l'adresse est
  *                      saisie à la main (nº 266). Le rôle y est
@@ -2049,15 +1750,6 @@ export function tousLesManques(
         cle: mode.cle,
         champ: "nomLieu",
         message: "Donne le nom de ce lieu.",
-      });
-    }
-    //  LE RAYON — obligatoire sur « Disponible », là où il s'affiche
-    //  (nº 414, voir `rayonRequis`).
-    if (rayonRequis(mode) && mode.rayonKm == null) {
-      manques.push({
-        cle: mode.cle,
-        champ: "rayon",
-        message: "Choisis ton rayon de déplacement.",
       });
     }
     //  LES DATES d'une session guest : les deux, et dans l'ordre.

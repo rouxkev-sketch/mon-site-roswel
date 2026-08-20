@@ -781,12 +781,11 @@ export const FILTRE_TYPE_FICHE = {
  *
  * DEUX AXES INDÉPENDANTS, DONC DEUX GROUPES :
  *   · PROFIL       — ce qu'est la fiche : Artiste · Salon · Studio privé
- *   · OÙ IL TATOUE — comment l'artiste travaille : Independent ·
- *                    Studio · Salon · Guest (nº 402 — « à domicile »
- *                    est supprimé ; nº 414 — un quatrième mode le
- *                    remplace, sous un autre sens : l'artiste qui
- *                    cherche un lieu ; nº 415 — il passe en tête ;
- *                    nº 416 — il se nomme « Independent »)
+ *   · OÙ IL TATOUE — comment l'artiste travaille : Studio · Salon ·
+ *                    Guest (nº 402 — « à domicile » est supprimé ;
+ *                    nº 414-417 — un quatrième mode l'a remplacé un
+ *                    temps ; nº 418 — il est abandonné à son tour, et
+ *                    il ne reste que ces trois-là)
  *
  * ⚠️ LA GRAMMAIRE QUI SÉPARAIT LES DEUX GROUPES (noms d'un côté,
  * compléments de lieu de l'autre) N'EXISTE PLUS depuis la nº 402 : le
@@ -858,7 +857,6 @@ export const FILTRE_MODE_ACTIVITE = {
   //  apprendre à personne. C'est la règle des nº 402 et 403 : le
   //  libellé change, la valeur jamais.
   options: [
-    { slug: "disponible", label: "Independent", genre: "disponible" },
     { slug: "en-studio-prive", label: "Studio", genre: "prive" },
     { slug: "en-salon", label: "Salon", genre: "salon" },
     { slug: "en-guest", label: "Guest", genre: "guest" },
@@ -1226,19 +1224,6 @@ export function aDesHoraires(
  * Salon · Guest — l'ordre dicté du sélecteur du formulaire.
  */
 export const GENRES_MODE = [
-  {
-    slug: "disponible",
-    /** Sur la fiche publique, en tête de la ligne du profil (nº 416) :
-        « Independent • Actuellement basé à : / Lyon, France • 200 km ».
-        ⚠️ « INDEPENDENT » S'ÉCRIT EN ANGLAIS, SANS ACCENT — c'est le
-        mot voulu par le propriétaire (nº 416), pas une faute à
-        franciser en « Indépendant ». */
-    label: "Independent",
-    titre: "Independent",
-    /** Aucun lieu à lier : les deux phrases disent la même chose. */
-    phrase: "Independent / Secteur :",
-    phraseLiee: "Independent / Secteur :",
-  },
   {
     slug: "prive",
     label: "Studio",

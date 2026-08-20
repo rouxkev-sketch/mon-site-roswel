@@ -29,7 +29,7 @@ import {
 import {
   equipeOrdonnee,
   libelleStylesEquipe,
-  modesDeLieu,
+  modesOrdonnes,
   roleDuMembre,
   lieuEnDeuxLignes,
   periodeDeSession,
@@ -897,17 +897,11 @@ function FenetreAdresse({
  * NU, exactement comme avant. C'est la seule exception, et elle ne
  * change pas.
  *
- * ⚠️ EXPORTÉ DEPUIS LA nº 416 — un TROISIÈME chemin le consomme : la
- * ligne du profil d'un artiste Independent (ContenuFiche), dont la
- * localité doit se cliquer « exactement comme l'adresse d'un salon ».
- * C'est la raison d'être de ce composant : un seul mécanisme de lien
- * d'adresse sur tout le site. L'import va de ContenuFiche VERS
- * BlocLieux — le sens qui existe déjà (BlocProfilsArtiste,
- * BlocAdressesFiche, LigneAdresseDuLieu) ; aucun cercle n'est créé,
- * BlocLieux ne remonte jamais vers ContenuFiche (voir la note de
- * `lignes-profil.ts`, qui existe précisément pour cela).
+ * (Il a été EXPORTÉ le temps des nº 416-417, pour la ligne du profil
+ * du mode sans lieu ; ce mode est supprimé — nº 418 — et l'export avec
+ * lui : ses deux appelants sont de nouveau dans ce fichier.)
  */
-export function LienAdresse({
+function LienAdresse({
   texte,
   lieu,
   classeTexte,
@@ -1338,11 +1332,10 @@ function TroisLignesDuLieu({
    * que partout ailleurs (`LieuAffichable`), lus sur le mode.
    * `ligneMaps` compose la requête avec ce qu'il a — rue si elle
    * existe, sinon ville, région, pays.
-   * ⚠️ LE CAS DU FREELANCE A DISPARU D'ICI (§6, nº 415) : il ne passe
-   * plus par cette colonne du tout — il est devenu UNE LIGNE DU PROFIL,
-   * sous les styles (ContenuFiche). `BlocProfilsArtiste` ne reçoit que
-   * des modes qui ont un lieu (`modesDeLieu`), donc `sansLien` reste le
-   * seul cas de texte nu, comme avant la nº 414.
+   * (Le mode SANS LIEU des nº 414-417 avait ici un cas à lui — jamais
+   * d'adresse à ouvrir. Il est supprimé du site — nº 418 —, et
+   * `sansLien` redevient le seul cas de texte nu, comme avant la
+   * nº 414.)
    */
   const lieu: LieuAffichable | null = sansLien
     ? null
@@ -1439,18 +1432,16 @@ export function BlocProfilsArtiste({
   /** Le salon lié d'un profil s'ouvre en fenêtre superposée
       (nº 226-§5), comme un membre d'équipe. */
   const clicVersFiche = useClicVersFiche();
-  /*  ██ §6 (nº 415) — LE FREELANCE N'EST PLUS UN LIEU ██
-      Cette liste montre des ENDROITS : une pastille, un nom, une
-      adresse cliquable. Un freelance n'a rien de tout cela — il
-      occupait la place avec sa photo de profil et une ville, entre
-      deux traits. Il est devenu UNE LIGNE DU PROFIL, sous les styles
-      (ContenuFiche). `modesDeLieu` écarte donc son genre ici.
-      ⚠️ LA MÊME FONCTION DÉCIDE DU TRAIT, dans l'enveloppe : sans
-      elle, un artiste qui n'a QUE des modes freelance afficherait le
-      trait de séparation et son dégagement au-dessus d'un bloc vide —
-      le piège de la nº 386. Une seule règle, deux lecteurs (voir
-      lib/modes-exercice). */
-  const modes = modesDeLieu(tatoueur.modes);
+  /*  §6 (nº 415, simplifié par la nº 418) — TOUS LES MODES SONT DES
+      LIEUX À NOUVEAU : le mode SANS lieu, qui devait être écarté
+      d'ici, est supprimé du site. `modesOrdonnes` suffit.
+      ⚠️ LA GARDE DU TRAIT RESTE, ELLE, dans l'enveloppe (ContenuFiche)
+      et elle garde tout son sens : un artiste SANS AUCUN mode fait
+      rendre `null` à ce bloc, et le trait de séparation — posé par
+      l'enveloppe, jamais par le bloc — s'afficherait seul au-dessus du
+      vide. C'est le piège de la nº 386, et il précède le mode
+      supprimé : il ne part pas avec lui. */
+  const modes = modesOrdonnes(tatoueur.modes);
   if (modes.length === 0) return null;
 
   return (
@@ -1463,13 +1454,10 @@ export function BlocProfilsArtiste({
       {modes.map((mode) => {
         /*  LA PASTILLE : le logo du salon lié, ou le glyphe d'adresse
             quand le lieu a été saisi à la main.
-            (§6, nº 415 — LE CAS DU FREELANCE EST PARTI D'ICI : sa
-            pastille était la photo de profil de l'artiste, faute
-            d'autre lieu à montrer. Il ne passe plus par cette liste du
-            tout ; sa ville se lit désormais sur une LIGNE DU PROFIL,
-            sous les styles. Le cas « à domicile » de la nº 224-§1, que
-            la nº 414 avait rétabli sous un autre nom, n'a donc plus
-            d'objet.) */
+            (Le cas « à domicile » de la nº 224-§1 montrait ici la
+            photo de profil de l'artiste, faute d'autre lieu ; la
+            nº 414 l'avait rétabli sous un autre nom, la nº 418
+            supprime ce mode — il n'a plus d'objet.) */
         const pastille = (
           <PhotoRonde source={mode.salon_photo} nature="lieu" />
         );

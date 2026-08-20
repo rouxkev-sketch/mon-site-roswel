@@ -960,7 +960,8 @@ export function FormulaireFiche() {
       qu'il a saisie peut être la sienne. La promesse de vie privée
       vaut aussi pour la ligne d'adresse de la fiche, pas seulement
       pour ses modes. (C'était la règle d'« à domicile » avant la
-      nº 402 ; le mode « Freelance » la reprend.)
+      nº 402 ; le mode sans lieu des nº 414-417 aussi, supprimé
+      nº 418.)
       ⚠️ UN ENCADRÉ VIERGE NE COMPTE PAS DU TOUT (passe nº 124) :
       ouvrir un onglet par curiosité crée un mode sans rien dedans —
       seuls les modes où quelque chose est saisi (ceux qui partent en
@@ -968,10 +969,7 @@ export function FormulaireFiche() {
   const adressePubliable =
     typeFiche === "salon" ||
     modesExercice.some(
-      (mode) =>
-        !modeVide(mode) &&
-        mode.genre !== "prive" &&
-        mode.genre !== "disponible"
+      (mode) => !modeVide(mode) && mode.genre !== "prive"
     );
 
   /** Choisir le type efface ce qui appartenait à l'autre : un salon

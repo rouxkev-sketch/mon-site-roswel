@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import {
-  RAYONS_DEPLACEMENT,
   ROLES_STUDIO,
   type GenreMode,
   type NatureEtablissement,
@@ -10,7 +9,7 @@ import {
 } from "@/config/tatouage";
 import { BasculeDeuxChoix } from "@/components/BasculeDeuxChoix";
 import { ChampsPlageDates } from "@/components/CalendrierPlage";
-import { DeuxZonesLieu, ZoneLieuSeule } from "@/components/DeuxZonesLieu";
+import { DeuxZonesLieu } from "@/components/DeuxZonesLieu";
 import { IconeChevronBas, IconeCroix } from "@/components/Icones";
 import type { FicheInscrite } from "@/components/RechercheFicheInscrite";
 import { texteErreur } from "@/lib/erreurs-formulaire";
@@ -18,9 +17,6 @@ import {
   cleNeuve,
   modeVide,
   datesSuiventLeLieu,
-  //  §2 (nº 416) — la phrase qui annonce la localité est PARTAGÉE avec
-  //  la fiche publique : une seule écriture, deux lecteurs.
-  PHRASE_LOCALITE_INDEPENDENT,
   type ManqueBloc,
   type ModeEnSaisie,
 } from "@/lib/modes-exercice";
@@ -119,36 +115,30 @@ const TITRE_INTERTITRE =
 //  L'artiste qui CHERCHE un lieu. La mécanique est celle de l'ancien
 //  « à domicile » (ville + rayon), le nom et le sens sont neufs — et
 //  le slug aussi (`disponible`, voir GENRES_MODE).
-//  ██ nº 415 puis nº 416 — IL PASSE EN PREMIER, ET IL SE NOMME ██
-//  Le mot seul change (« Disponible », puis « Freelance », puis
-//  « Independent » — EN ANGLAIS, SANS ACCENT) : le slug `disponible`
-//  reste la valeur écrite en base (voir GENRES_MODE, où la décision
-//  est motivée).
+//  ██ nº 418 — LE QUATRIÈME MODE EST ABANDONNÉ ██
+//  Né à la nº 414, renommé deux fois, il est SUPPRIMÉ du site sur
+//  décision du propriétaire. Il ne reste que les trois d'avant.
 const LIBELLES_MODES: Record<GenreMode, string> = {
-  disponible: "Independent",
   prive: "Studio",
   salon: "Salon",
   guest: "Guest",
 };
 
 /** L'ORDRE DU SÉLECTEUR — celui que le propriétaire a dicté (nº 403,
-    complété par la nº 414, réordonné par la nº 415) :
-        Freelance · Studio · Salon · Guest
+    rétabli tel quel par la nº 418) :
+        Studio · Salon · Guest
     C'est un ordre d'AFFICHAGE : les slugs ne bougent jamais.
-    ⚠️ CE N'EST PLUS LE SEUL ENDROIT À TENIR CET ORDRE : le filtre de
+    ⚠️ CE N'EST PAS LE SEUL ENDROIT À TENIR CET ORDRE : le filtre de
     recherche (FILTRE_MODE_ACTIVITE), l'ordre des profils sur une
     fiche (RANG_DU_GENRE) et le catalogue (GENRES_MODE) disent la même
     chose. Les quatre listes doivent bouger ensemble. */
-const ORDRE_SELECTEUR: GenreMode[] = ["disponible", "prive", "salon", "guest"];
+const ORDRE_SELECTEUR: GenreMode[] = ["prive", "salon", "guest"];
 
 /** Le mot du bouton d'ajout — « + Ajouter un studio », etc. Le Guest
-    n'y figure pas : il garde « + Ajouter une autre date ».
-    « Freelance » (nº 414) dit « une ville » : c'est ce que son
-    encadré contient — une ville et un rayon, pas un lieu. */
+    n'y figure pas : il garde « + Ajouter une autre date ». */
 const MOTS_AJOUT: Record<Exclude<GenreMode, "guest">, string> = {
   prive: "un studio",
   salon: "un salon",
-  disponible: "une ville",
 };
 
 /** Un mode neuf — sans genre : c'est le sélecteur qui pose la
@@ -236,12 +226,11 @@ function modeVierge(
     //  seconde : un guest neuf part donc sur « Studio ».
     natureLieu: genre === "guest" ? "prive" : null,
     rayonKm: null,
-    //  nº 414 — « DISPONIBLE » N'A PAS DE FICHE À CHERCHER : il n'y a
-    //  pas de lieu, l'artiste en cherche un. Il est donc le seul mode
-    //  « manuel » — les trois autres passent par la recherche de
-    //  portfolio inscrit. (La nº 402 avait posé « inscrit » partout,
-    //  « à domicile » — l'ancien cas manuel — ayant disparu.)
-    source: genre === "disponible" ? "manuel" : "inscrit",
+    //  nº 418 — PLUS AUCUN MODE « MANUEL » : le seul qui n'avait pas
+    //  de fiche à chercher (nº 414-417) est supprimé du site. Les
+    //  trois modes restants passent tous par la recherche de
+    //  portfolio inscrit.
+    source: "inscrit",
   };
 }
 
@@ -528,142 +517,14 @@ export function BlocModesExercice({
   }
 
   /** LA LOCALISATION : deux zones, ou une seule. */
-  /**
-   * LE RAYON DE DÉPLACEMENT — SEULEMENT AUTOUR D'UNE VILLE.
-   * (nº 414 — rétabli, à l'identique de l'« à domicile » d'avant la
-   * nº 402 : mêmes badges, mêmes valeurs, mêmes obligations.)
-   * ⚠️ MÊME RÈGLE QUE LE MOTEUR DE RECHERCHE : un rayon n'a de sens
-   * qu'autour d'un POINT. Autour d'une région ou d'un pays, il ne veut
-   * rien dire — « 50 km autour de la France » n'est pas une
-   * information. Le sélecteur ne s'affiche donc que si le lieu choisi
-   * est une ville (ou une adresse).
-   * ⚠️ ET IL EST OBLIGATOIRE (passe nº 124) : tant qu'aucun rayon
-   * n'est choisi, « Je confirme mon choix » ne valide pas (voir
-   * `rayonRequis` dans lib/modes-exercice), et après la tentative les
-   * badges S'ENCADRENT DE ROUGE — la seule exception aux « plus aucun
-   * contour » de la charte. Le rouge s'éteint au premier rayon choisi
-   * (le geste efface la tentative, comme partout).
-   */
-  function leRayon(mode: ModeEnSaisie) {
-    /*  ██ LA LIGNE QUI TIENT LE POINT 4 DE LA nº 415 ██
-        La localité RÉPOND ELLE-MÊME à la question : `precision` vaut
-        « adresse », « ville », « region » ou « pays » (voir
-        lib/geocodage/types) — c'est OpenStreetMap qui le dit, pas une
-        liste de pays écrite à la main. Un ÉTAT (« region ») et un PAYS
-        n'affichent donc AUCUN badge, et `rayonRequis` (lib/modes-
-        exercice) lit exactement la même condition : rien n'est exigé
-        là où rien n'est montré. Le mode reste valide sans rayon. */
-    const precision = mode.lieu?.precision;
-    if (precision !== "ville" && precision !== "adresse") return null;
-    //  ⚠️ LE TITRE NOMME LA VILLE (passe nº 100) : « Rayon autour de
-    //  Lyon », et non plus « Jusqu'où te déplaces-tu ? ». Le rayon
-    //  n'a de sens qu'AUTOUR D'UN POINT ; l'écrire fait relire le
-    //  point choisi au moment même où l'on en fixe la portée.
-    //  LE NOM VIENT DU LIEU RETENU, dans cet ordre : sa ville, sinon
-    //  son intitulé (une adresse choisie n'a pas toujours de `ville`).
-    const ville = mode.lieu?.ville || mode.lieu?.intitule || "";
-    const enFaute = manquant(mode.cle, "rayon");
-    return (
-      //  ⚠️ LE TITRE RESPIRE (passe nº 117, point 4) : « Rayon autour
-      //  de Marseille » était pris en étau entre le champ d'adresse
-      //  au-dessus et sa rangée de distances en dessous. 20 px de
-      //  chaque côté — l'air d'un intertitre, pas d'une légende.
-      <div className="mt-5">
-        <p className="mb-3 text-[13px] font-semibold text-sombre-texte">
-          {ville ? `Rayon autour de ${ville}` : "Rayon de déplacement"}
-        </p>
-        <div role="radiogroup" className="flex flex-wrap gap-2">
-          {RAYONS_DEPLACEMENT.map((rayon) => {
-            const actif = mode.rayonKm === rayon;
-            return (
-              <button
-                key={rayon}
-                type="button"
-                role="radio"
-                aria-checked={actif}
-                onClick={() => modifier(mode.cle, { rayonKm: rayon })}
-                //  ⚠️ PLUS DE CONTOUR (passe nº 112) : fond un cran
-                //  plus clair, rose pâle quand le rayon est choisi.
-                //  La bordure n'existe que transparente — sauf le
-                //  ROUGE DU MANQUE (nº 124), qui encadre les badges
-                //  sans faire bouger la rangée d'un pixel.
-                className={`inline-flex items-center rounded-full border px-4
-                           min-h-[40px] text-[13.5px] font-semibold
-                           transition-colors ${
-                             actif
-                               ? "border-transparent bg-sombre-eleve-clair text-primaire"
-                               : enFaute
-                                 ? "border-erreur bg-sombre-eleve text-sombre-texte-doux hover:text-sombre-texte"
-                                 : "border-transparent bg-sombre-eleve text-sombre-texte-doux hover:text-sombre-texte"
-                           }`}
-              >
-                {rayon} km
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
-
   function leLieu(mode: ModeEnSaisie) {
     const enFaute = manquant(mode.cle, "lieu");
-    /*  ██ nº 414 — LA BRANCHE « MANUELLE » REVIENT, POUR LE SEUL MODE
-        SANS LIEU ██ (la nº 402 l'avait retirée avec « à domicile »).
-        Il n'y a AUCUNE fiche à chercher : l'artiste n'a pas de lieu,
-        il en cherche un. L'encadré dit trois choses, dans l'ordre
-        dicté par le propriétaire :
-         1. LA PHRASE « Actuellement basé à : » (nº 416 ; « Je suis à
-            la recherche d'un lieu. » à la nº 415) — présentée
-            EXACTEMENT comme la question qui coiffe le champ des modes
-            Studio et Salon (« Le studio a-t-il son portfolio sur
-            YokoFolio ? ») : même écriture, même place, même air. C'est
-            la prop `titre` de ZoneLieuSeule, qui rend depuis la nº 414
-            le paragraphe au pixel de celui de DeuxZonesLieu (mt-2,
-            13,5 px semi-gras blanc, 12 px avant le champ).
-            ⚠️ ELLE N'EST PAS ÉCRITE ICI (nº 416) : la MÊME phrase se
-            lit sur la fiche publique, en queue de la première ligne
-            du profil (« Independent • Actuellement basé à : »). Elle
-            vit donc dans lib/modes-exercice, à un seul endroit —
-            recopiée aux deux, elle aurait fini par diverger d'un mot ;
-         2. LE CHAMP DE LOCALITÉ, « Ville ou État/Pays » en indication
-            (nº 415, point 4) : l'artiste peut se déclarer sur une
-            ville, mais aussi sur un État ou un pays entier ;
-         3. LE SÉLECTEUR DE RAYON (`leRayon`), sous le champ — la
-            présentation exacte de l'ancien « à domicile », ET SEULEMENT
-            AUTOUR D'UN POINT : sur un État ou un pays, `leRayon` ne
-            rend rien et `rayonRequis` n'exige rien (nº 415). */
-    if (mode.genre === "disponible") {
-      return (
-        /*  §3 (nº 269, élargie par la nº 272) — CHAQUE MODE EST UNE
-            INSTANCE À PART : l'identité vit sur le BLOC entier du mode
-            (la clé posée par le panneau, plus bas) — le champ n'a pas
-            de clé à lui. */
-        <ZoneLieuSeule
-          prefixe={`mode-${mode.cle}`}
-          titre={PHRASE_LOCALITE_INDEPENDENT}
-          indication="Ville ou État/Pays"
-          lieu={mode.lieu}
-          surLieu={(lieu) =>
-            /*  CHANGER DE LIEU REMET LE RAYON À ZÉRO : un rayon de
-                100 km autour d'une ville n'a aucun sens autour d'une
-                autre, et le garder ferait passer une valeur qu'on n'a
-                jamais choisie pour celle-là.
-                ⚠️ C'EST AUSSI LA RÉPONSE AU CAS DU POINT 4 (nº 415) :
-                « une ville avec un rayon, puis un pays ». Le rayon
-                déjà choisi est EFFACÉ ICI, dans la même écriture que
-                le nouveau lieu — jamais conservé en silence sous une
-                échelle où les badges n'existent même plus. La règle ne
-                connaît pas de cas particulier : TOUT changement de
-                lieu remet le rayon à null. */
-            modifier(mode.cle, { lieu, rayonKm: null })
-          }
-          surMobile={surMobile}
-          enErreur={enFaute}
-          souscrit={leRayon(mode)}
-        />
-      );
-    }
+    /*  nº 418 — LA BRANCHE « MANUELLE » EST REPARTIE AVEC LE MODE
+        SANS LIEU (nº 414-417), comme elle était partie avec « à
+        domicile » à la nº 402 : c'était le seul mode sans fiche à
+        chercher, le seul à porter un rayon de déplacement. Les trois
+        modes restants passent tous par la recherche de portfolio
+        inscrit ci-dessous. */
     // GUEST : ce n'est pas « mon » studio, c'est celui qui m'accueille.
     const guest = mode.genre === "guest";
 
@@ -782,7 +643,17 @@ export function BlocModesExercice({
           //  un studio, un salon veut son adresse complète (c'est la
           //  règle d'`adresseSuffisante`, écrite ici en mots).
           indicationInscrit="Recherche"
-          titreAdresse="Où se trouve-t-il ?"
+          /*  §3 (nº 418) — LA QUESTION DE LA ZONE D'ADRESSE. Elle
+               demandait « Où se trouve-t-il ? » depuis la nº 266 ; le
+               propriétaire lui préfère une phrase qui dit à QUOI SERT
+               ce second champ — on n'y saisit une adresse que si le
+               lieu n'a pas son portfolio sur YokoFolio.
+               ⚠️ ÉCRITE UNE SEULE FOIS, ET C'EST DÉJÀ LE CAS : ce
+               `titreAdresse` est passé au MÊME `DeuxZonesLieu` pour
+               les trois modes (Studio, Salon, Guest) — la branche
+               unique de `leLieu`. Une ligne suffit donc à les servir
+               tous les trois. */
+          titreAdresse="Pas de portfolio ? Ajoutez ses coordonnées."
           indicationManuel={
             prive ? "Ville ou adresse complète" : "Adresse complète"
           }
@@ -987,30 +858,27 @@ export function BlocModesExercice({
 
   return (
     <div>
-      {/* LE SÉLECTEUR — QUATRE RECTANGLES (nº 125 ; trois depuis la
-          nº 402, QUATRE depuis la nº 414) : Freelance · Studio ·
-          Salon · Guest, l'ordre dicté par le propriétaire (nº 415).
-          ⚠️ LES DEUX LIGNES DE DEUX REVIENNENT SOUS `sm` (la règle de
-          la nº 128, éteinte par la nº 402 faute de quatrième mot) :
-          « Freelance » mesure ~67 px à 14 px semi-gras (mesuré sur le
-          Geist réellement servi ; « Disponible » en faisait 71 et « À
-          domicile » 70) — et quatre rectangles à 320 px n'en
-          laisseraient que ~64 chacun, rembourrage compris : le mot ne
-          tient pas. Sous 640 px, donc, dans le nouvel ordre :
-                Freelance · Studio
-                Salon     · Guest
-          (~124 px par rectangle à 320 px). Dès `sm` (640 px), la place
-          revient : UNE LIGNE DE QUATRE (~132 px par rectangle à
-          640 px, et davantage au-delà) — c'est le web.
+      {/* LE SÉLECTEUR — TROIS RECTANGLES (nº 125 ; quatre le temps
+          des nº 414-417, trois de nouveau depuis la nº 418) :
+          Studio · Salon · Guest, l'ordre dicté.
+          ⚠️ UNE SEULE LIGNE, PARTOUT — Y COMPRIS AU DOIGT. C'est le
+          réglage de la nº 402, rétabli : les deux lignes de deux
+          n'existaient QUE parce qu'un quatrième mot devait tenir
+          (les mots des quatrièmes modes faisaient ~67 à ~70 px à
+          14 px semi-gras, quand quatre rectangles n'en laissent que
+          ~64 à 320 px). À trois, chaque rectangle fait ~101 px pour un mot
+          d'au plus ~44 px (« Studio », mesuré sur le Geist servi) :
+          la ligne unique tient au doigt comme au large, sans
+          variante.
           Le reste ne bouge pas : mêmes angles (rounded-lg), même
           remplissage (py-2.5), mêmes couleurs, mot centré.
-          UN MANQUE DE CHOIX : les quatre mots rougissent — rien
+          UN MANQUE DE CHOIX : les trois mots rougissent — rien
           d'autre (règle nº 111).
           L'ARIA NE BOUGE PAS : radiogroup + radio/aria-checked. */}
       <div
         role="radiogroup"
         aria-label="Le mode d'activité"
-        className="grid grid-cols-2 gap-2 sm:grid-cols-4"
+        className="grid grid-cols-3 gap-2"
       >
         {ORDRE_SELECTEUR.map((genre) => {
           const actif = genreAffiche === genre;
@@ -1050,9 +918,8 @@ export function BlocModesExercice({
                   : "bg-sombre-eleve hover:bg-sombre-eleve-clair active:bg-sombre-eleve-clair"
               }`}
             >
-              {/* Quatre mots (nº 414) — deux par ligne au doigt, une
-                  ligne de quatre dès `sm` : chacun a sa place (voir la
-                  mesure sur le radiogroup, plus haut). */}
+              {/* Trois mots courts sur une ligne (nº 402, rétabli
+                  nº 418) : chacun a sa place même à 320 px. */}
               <span
                 className={`block text-[14px] font-semibold ${
                   actif
