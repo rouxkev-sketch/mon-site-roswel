@@ -896,8 +896,18 @@ function FenetreAdresse({
  * DOMICILE n'expose jamais d'adresse) ou sans texte, il rend le texte
  * NU, exactement comme avant. C'est la seule exception, et elle ne
  * change pas.
+ *
+ * ⚠️ EXPORTÉ DEPUIS LA nº 416 — un TROISIÈME chemin le consomme : la
+ * ligne du profil d'un artiste Independent (ContenuFiche), dont la
+ * localité doit se cliquer « exactement comme l'adresse d'un salon ».
+ * C'est la raison d'être de ce composant : un seul mécanisme de lien
+ * d'adresse sur tout le site. L'import va de ContenuFiche VERS
+ * BlocLieux — le sens qui existe déjà (BlocProfilsArtiste,
+ * BlocAdressesFiche, LigneAdresseDuLieu) ; aucun cercle n'est créé,
+ * BlocLieux ne remonte jamais vers ContenuFiche (voir la note de
+ * `lignes-profil.ts`, qui existe précisément pour cela).
  */
-function LienAdresse({
+export function LienAdresse({
   texte,
   lieu,
   classeTexte,

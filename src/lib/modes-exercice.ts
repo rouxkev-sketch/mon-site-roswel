@@ -8,7 +8,15 @@ import {
 } from "@/config/tatouage";
 import type { Plage, SemaineStudio } from "@/lib/horaires-studio";
 import type { LieuTrouve } from "@/lib/geocodage/types";
-import { ligneCarte, ligneCarteMobile, ligneFiche } from "@/lib/adresse";
+//  `ligneMaps` (nº 416) — la requête que Google Maps recevra : elle
+//  sert ici à VÉRIFIER qu'il y a quelque chose à chercher avant de
+//  rendre une localité cliquable (voir `lieuCherchableDuFreelance`).
+import {
+  ligneCarte,
+  ligneCarteMobile,
+  ligneFiche,
+  ligneMaps,
+} from "@/lib/adresse";
 
 /**
  * LES MODES D'EXERCICE, LES STUDIOS ET LES ÉQUIPES
@@ -614,10 +622,11 @@ export function typeDeLieuDuMode(mode: ModeExerciceFiche): string {
  * leur apparence — celle des étiquettes STYLES, RENDU, TECHNIQUE.
  */
 export function etiquetteDuLieu(mode: ModeExerciceFiche): string {
-  //  FREELANCE (nº 414 ; « Disponible » jusqu'à la nº 415) — ni type
-  //  de lieu, ni rôle : l'artiste CHERCHE un endroit, le mot seul dit
-  //  tout.
-  if (mode.genre === "disponible") return "Freelance";
+  //  INDEPENDENT (nº 414 ; « Disponible » jusqu'à la nº 415, puis
+  //  « Freelance » jusqu'à la nº 416) — ni type de lieu, ni rôle :
+  //  l'artiste CHERCHE un endroit, le mot seul dit tout. Il vient du
+  //  catalogue, jamais d'une chaîne écrite ici.
+  if (mode.genre === "disponible") return genreMode(mode.genre).label;
   //  « Salon » ou « Studio », en toutes lettres dans la phrase.
   const lieu = typeDeLieuDuMode(mode).toLowerCase();
   //  EN GUEST AU SALON / AU STUDIO — la préposition suit le lieu ;
@@ -721,12 +730,12 @@ export function villeEtPaysDuMode(mode: ModeExerciceFiche): string {
  * ⚠️ LE TYPE DE LIEU : « Salon » ou « Studio », le vocabulaire de la
  * nº 402, par `typeDeLieuDuMode` — jamais deviné, jamais réécrit.
  * ██ nº 414 — LE MODE SANS LIEU PREND LA PLACE DU RÔLE ██
- * Un mode Freelance n'a ni nom de lieu (il n'y a pas de lieu — c'est
+ * Un mode Independent n'a ni nom de lieu (il n'y a pas de lieu — c'est
  * tout le sens du mode) ni type : `nom` est vide, `suite` n'a que la
  * ville. Le MOT monte donc dans `role`, le morceau BLANC de la
  * seconde ligne.
  * ⚠️ PLUS PERSONNE NE LIT CE CAS DEPUIS LA nº 415, et c'est voulu : le
- * freelance a QUITTÉ la liste des lieux de la fiche (`BlocProfilsArtiste`
+ * mode sans lieu a QUITTÉ la liste des lieux de la fiche (`BlocProfilsArtiste`
  * ne reçoit plus que les modes qui ont un lieu — voir `modesDeLieu`)
  * pour devenir UNE LIGNE DU PROFIL, sous les styles (ContenuFiche).
  * La branche reste ici parce qu'elle est la réponse juste à la
@@ -746,7 +755,7 @@ export function lieuEnDeuxLignes(mode: ModeExerciceFiche): {
     mode.genre === "guest"
       ? "Guest"
       : mode.genre === "disponible"
-        ? "Freelance"
+        ? genreMode(mode.genre).label
         : libelleRoleCourt(mode.role) || "";
   const suite = [typeDeLieuDuMode(mode), villeEtPaysDuMode(mode)]
     .map((morceau) => (morceau ?? "").trim())
@@ -890,10 +899,11 @@ export function ligneDuMode(mode: ModeExerciceFiche): {
 /**
  * L'ORDRE IMPOSÉ DES PROFILS (passe nº 222-§1g)
  * ==================================================================
- * 1. Freelance   2. Studio   3. Salon   4. Guest
+ * 1. Independent   2. Studio   3. Salon   4. Guest
  * (« à domicile » : supprimé nº 402 ; le mode sans lieu revient à la
- * nº 414, et la nº 415 le nomme « Freelance » et le met EN TÊTE — la
- * place que le propriétaire lui donne au sélecteur et aux filtres.)
+ * nº 414 ; la nº 415 le met EN TÊTE et la nº 416 le nomme
+ * « Independent » — la place et le mot que le propriétaire leur donne
+ * au sélecteur comme aux filtres.)
  * Il vaut PARTOUT où plusieurs profils se suivent : le sous-titre du
  * nom, la liste des profils d'un artiste, et tout ce qui viendra. Un
  * ordre écrit une seule fois ne peut pas diverger d'un écran à
@@ -964,33 +974,107 @@ export function modesFreelance(
 }
 
 /**
- * ██ §6 (nº 415) — LA LIGNE D'UN FREELANCE, EN MORCEAUX ██
+ * ██ §2 (nº 416) — LA PHRASE QUI ANNONCE LA LOCALITÉ ██
  * ==================================================================
- * « Freelance • Lyon, France • 50 km » — et c'est l'appelant qui pose
- * les puces, comme pour les pratiques et les styles (ContenuFiche).
- * ⚠️ LA LISTE NE CONTIENT JAMAIS DE VIDE, et c'est garanti ICI plutôt
- * que dans le rendu : l'appelant peut donc joindre sans réfléchir, et
- * aucune puce ne peut rester orpheline. Les trois cas que le
- * propriétaire demande de traiter en découlent :
- *  · UN ÉTAT OU UN PAYS → aucun rayon n'a été demandé (voir
- *    `rayonRequis`), donc `rayon_km` est nul : PAS de dernière puce ;
- *  · UNE VILLE SANS PAYS (ou l'inverse) → `villeEtPaysDuMode` joint ce
- *    qu'elle a et rend "" si elle n'a rien : le morceau saute ;
- *  · RIEN QUE LE MOT → la liste se réduit à « Freelance », qui est
- *    l'information même que la ligne porte.
- * ⚠️ LE RAYON S'ÉCRIT ENFIN QUELQUE PART (nº 415) : il était saisi
- * depuis la nº 414 et n'apparaissait sur aucune page. Il vient EN
- * DERNIER, après la ville et le pays.
+ * « Actuellement basé à : » — elle sert DEUX FOIS, et c'est pour cela
+ * qu'elle est écrite ICI et nulle part ailleurs :
+ *  · dans le FORMULAIRE, en titre du champ de localité de l'encadré
+ *    Independent (`ZoneLieuSeule`, BlocModesExercice) ;
+ *  · sur la FICHE, en queue de la première ligne du profil
+ *    (« Independent • Actuellement basé à : », ContenuFiche).
+ * Recopiée aux deux endroits, elle aurait fini par diverger d'un mot —
+ * et c'est exactement la même phrase que l'artiste écrit et que le
+ * visiteur lit. (nº 415 : « Je suis à la recherche d'un lieu. »)
  */
-export function morceauxDuFreelance(mode: ModeExerciceFiche): string[] {
-  const rayon = mode.rayon_km ?? 0;
-  return [
-    "Freelance",
-    villeEtPaysDuMode(mode),
-    rayon > 0 ? `${rayon} km` : "",
-  ]
-    .map((morceau) => (morceau ?? "").trim())
-    .filter(Boolean);
+export const PHRASE_LOCALITE_INDEPENDENT = "Actuellement basé à :";
+
+/**
+ * ██ §3 (nº 416) — LA LIGNE D'UN INDEPENDENT, SUR DEUX LIGNES ██
+ * ==================================================================
+ * CE QUE LA nº 415 RENDAIT : un seul rang de morceaux —
+ * « Freelance • Lyon, France • 200 km ».
+ * CE QUE LE PROPRIÉTAIRE VEUT, sur le modèle du booking et de son
+ * délai (nº 408-§3) :
+ *      Independent • Actuellement basé à :
+ *      Lyon, France • 200 km
+ *
+ * CETTE FONCTION NE PEINT RIEN : elle rend les MORCEAUX, l'appelant
+ * pose les puces et les couleurs — c'est ce qui permet à la localité
+ * d'être le SEUL morceau bleu et cliquable (ContenuFiche).
+ *
+ * ⚠️ AUCUN MORCEAU VIDE NE SORT D'ICI, et c'est garanti à la source
+ * plutôt que dans le rendu : ni ligne vide, ni puce orpheline ne
+ * peuvent être écrites. Les cas demandés en découlent :
+ *  · UN ÉTAT OU UN PAYS → aucun rayon n'a pu être demandé (voir
+ *    `rayonRequis` : les badges ne s'affichent qu'autour d'un point),
+ *    donc `rayon` est vide : PAS de dernière puce ;
+ *  · UNE VILLE SANS PAYS (ou l'inverse) → `villeEtPaysDuMode` joint ce
+ *    qu'elle a, et rend "" si elle n'a rien ;
+ *  · AUCUNE LOCALITÉ CONNUE → la seconde ligne n'existe pas, et
+ *    L'EN-TÊTE PERD SA PHRASE : « Actuellement basé à : » finit par un
+ *    deux-points qui PROMET un lieu — l'écrire au-dessus du vide
+ *    serait une promesse non tenue. Reste « Independent », seul, qui
+ *    est l'information même que la ligne porte.
+ * ⚠️ LE MOT VIENT DU CATALOGUE (`genreMode(...).label`), jamais d'une
+ * chaîne écrite ici : le renommer une fois de plus (« Disponible » →
+ * « Freelance » → « Independent » en trois passes) ne doit toucher
+ * qu'un seul endroit.
+ */
+export function lignesDuFreelance(mode: ModeExerciceFiche): {
+  /** LIGNE 1, en gris — les morceaux, à joindre par des puces. */
+  entete: string[];
+  /** LIGNE 2, premier morceau : la localité. BLEUE et cliquable chez
+      l'appelant. Vide = pas de seconde ligne à écrire. */
+  localite: string;
+  /** LIGNE 2, second morceau : le rayon, en gris. Vide = pas de puce. */
+  rayon: string;
+} {
+  const localite = (villeEtPaysDuMode(mode) ?? "").trim();
+  const kilometres = mode.rayon_km ?? 0;
+  const mot = genreMode(mode.genre).label;
+  return {
+    entete: localite ? [mot, PHRASE_LOCALITE_INDEPENDENT] : [mot],
+    localite,
+    rayon: kilometres > 0 ? `${kilometres} km` : "",
+  };
+}
+
+/**
+ * §3 (nº 416) — CE QUE GOOGLE MAPS CHERCHERA, et RIEN DE PLUS.
+ * ------------------------------------------------------------------
+ * ⚠️ LA RUE N'ENTRE PAS DANS LE LIEN, et c'est un point de vie privée,
+ * pas de présentation. Un mode Independent ne publie JAMAIS son
+ * adresse précise (`libelleLieuDuMode`, la promesse héritée d'« à
+ * domicile »). Or la colonne `adresse` PEUT être remplie — le champ
+ * accepte une adresse complète si la personne en choisit une dans la
+ * liste. Bâtir le lieu du lien avec `...mode` aurait donc glissé la
+ * rue dans la requête Google : invisible à l'écran, mais lisible dans
+ * la barre d'état et sur la carte d'arrivée. On ne recopie donc que
+ * les quatre colonnes que la ligne AFFICHE déjà.
+ * ⚠️ RIEN À CHERCHER = PAS DE LIEN : sans ville, sans région et sans
+ * pays, `ligneMaps` rend une chaîne vide et le lien mènerait à une
+ * recherche vide. La fonction rend alors `null`, et l'appelant laisse
+ * la localité en TEXTE GRIS — c'est la règle de `LienAdresse`
+ * (BlocLieux), qui rend le texte nu quand son `lieu` est nul.
+ */
+export function lieuCherchableDuFreelance(mode: ModeExerciceFiche): {
+  adresse: null;
+  code_postal: null;
+  ville: string | null;
+  region: string | null;
+  pays: string | null;
+  code_pays: string | null;
+} | null {
+  const lieu = {
+    //  LES DEUX COLONNES QUI DÉSIGNENT UN POINT PRÉCIS RESTENT DEHORS.
+    adresse: null,
+    code_postal: null,
+    ville: mode.ville ?? mode.intitule,
+    region: mode.region,
+    pays: mode.pays,
+    code_pays: mode.code_pays,
+  };
+  return ligneMaps(lieu) ? lieu : null;
 }
 
 /**

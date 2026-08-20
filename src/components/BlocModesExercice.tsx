@@ -18,6 +18,9 @@ import {
   cleNeuve,
   modeVide,
   datesSuiventLeLieu,
+  //  §2 (nº 416) — la phrase qui annonce la localité est PARTAGÉE avec
+  //  la fiche publique : une seule écriture, deux lecteurs.
+  PHRASE_LOCALITE_INDEPENDENT,
   type ManqueBloc,
   type ModeEnSaisie,
 } from "@/lib/modes-exercice";
@@ -116,11 +119,13 @@ const TITRE_INTERTITRE =
 //  L'artiste qui CHERCHE un lieu. La mécanique est celle de l'ancien
 //  « à domicile » (ville + rayon), le nom et le sens sont neufs — et
 //  le slug aussi (`disponible`, voir GENRES_MODE).
-//  ██ nº 415 — IL SE NOMME « FREELANCE », ET IL PASSE EN PREMIER ██
-//  Le mot seul change : le slug `disponible` reste la valeur écrite
-//  en base (voir GENRES_MODE, où la décision est motivée).
+//  ██ nº 415 puis nº 416 — IL PASSE EN PREMIER, ET IL SE NOMME ██
+//  Le mot seul change (« Disponible », puis « Freelance », puis
+//  « Independent » — EN ANGLAIS, SANS ACCENT) : le slug `disponible`
+//  reste la valeur écrite en base (voir GENRES_MODE, où la décision
+//  est motivée).
 const LIBELLES_MODES: Record<GenreMode, string> = {
-  disponible: "Freelance",
+  disponible: "Independent",
   prive: "Studio",
   salon: "Salon",
   guest: "Guest",
@@ -608,15 +613,19 @@ export function BlocModesExercice({
         Il n'y a AUCUNE fiche à chercher : l'artiste n'a pas de lieu,
         il en cherche un. L'encadré dit trois choses, dans l'ordre
         dicté par le propriétaire :
-         1. LA PHRASE « Je suis à la recherche d'un lieu. » (raccourcie
-            par la nº 415 — « actuellement » disait ce que le présent
-            disait déjà) — présentée EXACTEMENT comme la question qui
-            coiffe le champ des modes Studio et Salon (« Le studio
-            a-t-il son portfolio sur YokoFolio ? ») : même écriture,
-            même place, même air. C'est la prop `titre` de
-            ZoneLieuSeule, qui rend depuis la nº 414 le paragraphe au
-            pixel de celui de DeuxZonesLieu (mt-2, 13,5 px semi-gras
-            blanc, 12 px avant le champ) ;
+         1. LA PHRASE « Actuellement basé à : » (nº 416 ; « Je suis à
+            la recherche d'un lieu. » à la nº 415) — présentée
+            EXACTEMENT comme la question qui coiffe le champ des modes
+            Studio et Salon (« Le studio a-t-il son portfolio sur
+            YokoFolio ? ») : même écriture, même place, même air. C'est
+            la prop `titre` de ZoneLieuSeule, qui rend depuis la nº 414
+            le paragraphe au pixel de celui de DeuxZonesLieu (mt-2,
+            13,5 px semi-gras blanc, 12 px avant le champ).
+            ⚠️ ELLE N'EST PAS ÉCRITE ICI (nº 416) : la MÊME phrase se
+            lit sur la fiche publique, en queue de la première ligne
+            du profil (« Independent • Actuellement basé à : »). Elle
+            vit donc dans lib/modes-exercice, à un seul endroit —
+            recopiée aux deux, elle aurait fini par diverger d'un mot ;
          2. LE CHAMP DE LOCALITÉ, « Ville ou État/Pays » en indication
             (nº 415, point 4) : l'artiste peut se déclarer sur une
             ville, mais aussi sur un État ou un pays entier ;
@@ -632,7 +641,7 @@ export function BlocModesExercice({
             de clé à lui. */
         <ZoneLieuSeule
           prefixe={`mode-${mode.cle}`}
-          titre="Je suis à la recherche d'un lieu."
+          titre={PHRASE_LOCALITE_INDEPENDENT}
           indication="Ville ou État/Pays"
           lieu={mode.lieu}
           surLieu={(lieu) =>

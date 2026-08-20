@@ -45,6 +45,9 @@ import { capsulesPratiques } from "@/lib/pratique-fiche";
 import {
   BOITE_ICONE_LIGNE,
   ECRITURE_LIGNE_FICHE,
+  //  §3 (nº 416) — le bleu de ce qui sort du site : la localité d'un
+  //  Independent mène à Google Maps, comme l'adresse d'un salon.
+  LIEN_QUI_SORT,
   LIGNE_GRISE,
 } from "@/components/lignes-profil";
 import type { StyleGalerie } from "@/lib/photo-tatoueur";
@@ -55,14 +58,20 @@ import {
   LigneAdresseDuLieu,
   BlocAdressesFiche,
   BlocProfilsArtiste,
+  //  §3 (nº 416) — LE MÊME LIEN D'ADRESSE QUE LES SALONS : la localité
+  //  d'un Independent se clique « exactement comme l'adresse d'un
+  //  salon », donc par le composant qui la porte déjà — jamais par une
+  //  seconde écriture.
+  LienAdresse,
 } from "@/components/BlocLieux";
 //  §6 (nº 415) — les deux familles de modes (ceux qui ont un lieu,
-//  ceux qui n'en ont pas) et les morceaux de la ligne du freelance :
+//  ceux qui n'en ont pas) et les morceaux de la ligne du profil :
 //  une seule règle, lue ici comme dans BlocLieux.
 import {
+  lieuCherchableDuFreelance,
+  lignesDuFreelance,
   modesDeLieu,
   modesFreelance,
-  morceauxDuFreelance,
 } from "@/lib/modes-exercice";
 import type { Tatoueur } from "@/lib/tatoueurs";
 import { mecanismeCoupe } from "@/lib/variantes-essai";
@@ -1314,39 +1323,84 @@ export function ContenuFiche({
    * où l'on travaille ; un freelance n'en a pas, c'est tout son sens.
    * CE QU'ELLE DEVIENT : la dernière ligne de la série du profil,
    * derrière Booking, Instagram, le site, les pratiques et les styles.
-   * « Freelance • Lyon, France • 50 km ».
+   *
+   * ██ §3 (nº 416) — ET ELLE PASSE SUR DEUX LIGNES ██
+   *      Independent • Actuellement basé à :
+   *      Lyon, France • 200 km
+   * C'est le dessin du BOOKING ET DE SON DÉLAI (nº 408-§3), repris au
+   * jeton près : une colonne flex (`flex min-w-0 flex-col`) derrière
+   * l'icône. Les deux lignes commencent donc EXACTEMENT au même x — le
+   * navigateur ne décale rien —, et une localité trop longue se replie
+   * sur le DÉBUT DE SA PROPRE LIGNE, jamais sous l'icône : c'est le
+   * `min-w-0` de la colonne qui l'autorise (leçon de la nº 391) et sa
+   * position derrière l'icône qui borne le repli (règle de la nº 384).
+   *
+   * ⚠️ L'ALIGNEMENT OPTIQUE A ÉTÉ MESURÉ, PAS SUPPOSÉ (nº 416).
+   * La nº 409 avait dû compenser 0,072 em entre « Booking » et
+   * « Attente » : le navigateur aligne des ORIGINES, pas de l'encre, et
+   * les approches gauches de la police diffèrent d'une lettre à
+   * l'autre. Relevé dans la table `hmtx` de Geist (1000 unités par
+   * cadratin), après avoir revérifié que la méthode reproduit bien les
+   * chiffres de la nº 409 (B = 92, A = 20) :
+   *      « I » d'Independent = 92     « L » de Lyon = 92
+   * ÉCART NUL — le L tombe déjà au pixel sous le I. AUCUNE COMPENSATION
+   * N'EST POSÉE, et surtout PAS un `pl-[0.072em]` recopié de la nº 409 :
+   * il déplacerait la seconde ligne de 1,08 px vers la droite pour
+   * réparer un défaut qui n'existe pas.
+   * ⚠️ ET ELLE NE DOIT PAS ÊTRE POSÉE PLUS TARD « PAR SYMÉTRIE » : la
+   * seconde ligne commence par une DONNÉE (un nom de ville), pas par un
+   * mot d'un vocabulaire fermé comme « Attente ». Dans Geist, quatorze
+   * capitales partagent l'approche 92 (B D E F H I K L M N P R É È) —
+   * la grande majorité des initiales de villes tombe donc pile ; les
+   * rondes (C G O Q = 45) et les diagonales (A V = 20, T = 12, Y = −6)
+   * commencent de 0,55 à 1,47 px plus à gauche. Une compensation FIXE
+   * casserait le cas exact pour rattraper le cas rare : on ne compense
+   * pas ce qui dépend de la donnée.
+   *
+   * ⚠️ LA LOCALITÉ EST UN LIEN, LE RESTE NON. « Lyon, France » est le
+   * SEUL morceau bleu et cliquable — même composant que l'adresse d'un
+   * salon (`LienAdresse`, BlocLieux), même bleu (`LIEN_QUI_SORT`), même
+   * éclaircissement au survol, pas de soulignement (`soulignement=""`,
+   * la règle de la nº 389-§2). Le mot, la phrase et le rayon restent
+   * gris et morts.
+   * ⚠️ PIÈGE DE LA nº 389 — UNE SEULE CLASSE DE COULEUR PAR ÉLÉMENT :
+   * le gris vit sur le `<p>` (LIGNE_GRISE), le bleu sur le `<span>`
+   * INTÉRIEUR au lien (`classeTexte`), l'icône a le sien sur sa boîte.
+   * Aucun élément n'en porte deux : rien ne peut être départagé par
+   * l'ordre alphabétique de Tailwind.
+   * ⚠️ LE LIEN NE MÈNE JAMAIS NULLE PART : `lieuCherchableDuFreelance`
+   * (lib/modes-exercice) rend `null` quand il n'y a rien à chercher —
+   * `LienAdresse` rend alors le texte NU, en gris. Et il ne porte PAS
+   * la rue : un Independent ne publie jamais son adresse précise, la
+   * requête Google se limite donc aux colonnes que la ligne affiche.
    *
    * ⚠️ AUCUNE VALEUR GRAPHIQUE N'EST ÉCRITE ICI, et c'est la demande :
    * `ECRITURE_LIGNE_FICHE` (15 px, `leading-snug`), `LIGNE_GRISE` (le
    * gris doux commun), `BOITE_ICONE_LIGNE` (la boîte de 22 px, haute
-   * d'une ligne exactement — nº 389-§6), `items-start` + `min-w-0` pour
-   * que le retour à la ligne tombe sur le PREMIER MOT et jamais sous
-   * l'icône. Ce sont les classes des lignes voisines, au caractère
-   * près : elles ne peuvent pas diverger.
+   * d'une ligne exactement — nº 389-§6), `items-start` pour que l'icône
+   * se cale sur la PREMIÈRE ligne. Ce sont les classes des lignes
+   * voisines, au caractère près : elles ne peuvent pas diverger.
    * ⚠️ L'ICÔNE EST CELLE DE L'ADRESSE D'UN SALON (`IconeLocalisation`,
    * 20 px dans la boîte de 22), grise comme toutes les autres de la
-   * colonne (nº 392-§1) — et une seule classe de couleur sur cette
-   * boîte : le piège de la nº 389 ne peut pas se reproduire.
-   * ⚠️ LE RAYON APPARAÎT ENFIN (nº 415) : saisi depuis la nº 414, il ne
-   * se lisait sur aucune page. Il vient EN DERNIER, précédé d'une puce.
-   * ⚠️ NI LIGNE VIDE NI PUCE ORPHELINE : `morceauxDuFreelance`
-   * (lib/modes-exercice) rend une liste DÉJÀ purgée de ses vides — un
-   * État ou un pays n'a pas de rayon donc pas de dernière puce, une
-   * ville sans pays écrit ce qu'elle a. La puce ne s'écrit qu'entre
-   * deux morceaux présents (`rang > 0`), et le `<wbr />` lui donne son
-   * occasion de coupure (nº 391-§2) : la ligne se replie sur le mot
-   * suivant, jamais au milieu.
-   * ⚠️ UNE LIGNE PAR MODE FREELANCE : le formulaire permet d'en
-   * déclarer plusieurs (« + Ajouter une ville »). Une seule dans le cas
-   * courant ; deux villes déclarées font deux lignes, jamais une ligne
-   * à rallonge.
+   * colonne (nº 392-§1).
+   * ⚠️ NI LIGNE VIDE NI PUCE ORPHELINE : `lignesDuFreelance` rend des
+   * morceaux DÉJÀ purgés — un État ou un pays n'a pas de rayon donc pas
+   * de dernière puce ; une ville sans pays écrit ce qu'elle a ; sans
+   * localité du tout, la seconde ligne n'existe pas ET l'en-tête perd
+   * sa phrase (un deux-points qui promet un lieu ne peut pas coiffer le
+   * vide). Le `<wbr />` donne à chaque puce son occasion de coupure
+   * (nº 391-§2) : la ligne se replie sur le mot suivant, jamais au
+   * milieu.
+   * ⚠️ UNE LIGNE PAR MODE : le formulaire permet d'en déclarer
+   * plusieurs (« + Ajouter une ville »). Une seule dans le cas courant.
    * ⚠️ SUR UNE FICHE D'ARTISTE SEULEMENT : `modesFreelance` part de
    * `modesOrdonnes`, et un salon n'a pas de mode d'exercice — la liste
    * est vide, rien ne se rend.
    */
   const lignesFreelance = modesFreelance(tatoueur.modes).map((mode) => {
-    const morceaux = morceauxDuFreelance(mode);
-    if (morceaux.length === 0) return null;
+    const { entete, localite, rayon } = lignesDuFreelance(mode);
+    if (entete.length === 0) return null;
+    const lieuCherchable = lieuCherchableDuFreelance(mode);
     return (
       <p
         key={`freelance-${mode.id}`}
@@ -1356,20 +1410,56 @@ export function ContenuFiche({
         <span className={`${BOITE_ICONE_LIGNE} text-sombre-texte-doux`}>
           <IconeLocalisation taille={20} />
         </span>
-        <span className="min-w-0">
-          {morceaux.map((morceau, rang) => (
-            <Fragment key={morceau}>
-              {rang > 0 && (
+        {/*  LA COLONNE DES DEUX LIGNES — le dessin exact du booking
+             (nº 408-§3). Elle est le seul enfant souple de la rangée et
+             garde le `min-w-0` qui autorise le repli du texte. */}
+        <span className="flex min-w-0 flex-col">
+          <span>
+            {entete.map((morceau, rang) => (
+              <Fragment key={morceau}>
+                {rang > 0 && (
+                  <>
+                    <span aria-hidden="true" className="px-1.5">
+                      •
+                    </span>
+                    <wbr />
+                  </>
+                )}
+                {morceau}
+              </Fragment>
+            ))}
+          </span>
+          {/*  LA SECONDE LIGNE — la localité (bleue, cliquable) puis le
+               rayon (gris). Elle ne s'écrit que si l'un des deux
+               existe ; la puce, qu'entre les deux. */}
+          {(localite || rayon) && (
+            <span>
+              {localite && (
+                <LienAdresse
+                  texte={localite}
+                  lieu={lieuCherchable}
+                  classeTexte={LIEN_QUI_SORT}
+                  //  §2 (nº 389) — aucun trait : le bleu dit déjà que la
+                  //  destination sort du site, et il s'éclaircit au
+                  //  survol. C'est le réglage de la ligne d'adresse.
+                  soulignement=""
+                />
+              )}
+              {rayon && (
                 <>
-                  <span aria-hidden="true" className="px-1.5">
-                    •
-                  </span>
-                  <wbr />
+                  {localite && (
+                    <>
+                      <span aria-hidden="true" className="px-1.5">
+                        •
+                      </span>
+                      <wbr />
+                    </>
+                  )}
+                  {rayon}
                 </>
               )}
-              {morceau}
-            </Fragment>
-          ))}
+            </span>
+          )}
         </span>
       </p>
     );
