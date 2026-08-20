@@ -781,8 +781,10 @@ export const FILTRE_TYPE_FICHE = {
  *
  * DEUX AXES INDÉPENDANTS, DONC DEUX GROUPES :
  *   · PROFIL       — ce qu'est la fiche : Artiste · Salon · Studio privé
- *   · OÙ IL TATOUE — comment l'artiste travaille : Salon · Studio ·
- *                    Guest (nº 402 — « à domicile » est supprimé)
+ *   · OÙ IL TATOUE — comment l'artiste travaille : Studio · Salon ·
+ *                    Guest · Disponible (nº 402 — « à domicile » est
+ *                    supprimé ; nº 414 — « Disponible » le remplace,
+ *                    sous un autre sens : l'artiste qui cherche un lieu)
  *
  * ⚠️ LA GRAMMAIRE QUI SÉPARAIT LES DEUX GROUPES (noms d'un côté,
  * compléments de lieu de l'autre) N'EXISTE PLUS depuis la nº 402 : le
@@ -828,10 +830,22 @@ export const FILTRE_MODE_ACTIVITE = {
   //  désormais. LES SLUGS NE BOUGENT PAS : l'ordre d'un groupe n'a
   //  aucun effet sur ce qui part vers la base — `exclure=` est un
   //  ENSEMBLE, pas une liste.
+  //  ██ nº 414 — « DISPONIBLE » ENTRE, EN DERNIER ██
+  //  Le quatrième mode (l'artiste qui CHERCHE un lieu) prend la place
+  //  qu'occupait « à domicile » dans ce groupe : une option de plus,
+  //  même position dans la liste que dans le sélecteur du formulaire —
+  //  Studio · Salon · Guest · Disponible. Les trois listes ordonnées
+  //  (ORDRE_SELECTEUR, celle-ci, RANG_DU_GENRE) bougent ENSEMBLE.
+  //  ⚠️ LE SLUG DU FILTRE EST `disponible`, PAS `a-domicile` : l'ancien
+  //  slug portait l'ancien sens. Un vieux lien `exclure=a-domicile`
+  //  reste simplement ignoré (`filtresConnus` ne garde que les slugs
+  //  connus) — il n'éteint donc RIEN, la recherche se fait comme si le
+  //  filtre n'avait pas été touché.
   options: [
     { slug: "en-studio-prive", label: "Studio", genre: "prive" },
     { slug: "en-salon", label: "Salon", genre: "salon" },
     { slug: "en-guest", label: "Guest", genre: "guest" },
+    { slug: "disponible", label: "Disponible", genre: "disponible" },
   ],
 } as const;
 
@@ -1153,6 +1167,30 @@ export function aDesHoraires(
  * elle purge les lignes `domicile` (les démos en avaient deux) et
  * resserre la contrainte à trois valeurs.
  */
+/**
+ * ██ nº 414 — LE QUATRIÈME MODE : « DISPONIBLE » ██
+ * ==================================================================
+ * L'ARTISTE QUI CHERCHE UN LIEU. C'est le RETOUR de la mécanique du
+ * mode « à domicile » (ville + rayon de déplacement, supprimés à la
+ * nº 402) sous un AUTRE nom et un AUTRE sens : « à domicile » disait
+ * « je reçois chez moi / je me déplace », « Disponible » dit « je
+ * n'ai pas de lieu, je suis à la recherche d'un endroit où exercer ».
+ * ⚠️ LE SLUG EST `disponible`, PAS `domicile` : le slug est la valeur
+ * écrite en base (`modes_exercice.genre`) et il PORTE le sens —
+ * réutiliser `domicile` aurait fait mentir chaque ligne future, et
+ * toute requête, migration ou relecture qui tomberait dessus. Le mot
+ * est neuf parce que le sens est neuf ; la mécanique, elle, est
+ * l'héritage exact (colonne `rayon_km` conservée par la nº 402).
+ * ⚠️ LA CONTRAINTE `modes_exercice_genre_connu` a été RESSERRÉE à
+ * ('salon','guest','prive') par la nº 402 : sans migration, la base
+ * REFUSE une ligne `disponible`. La migration de ce zip
+ * (`yokofolio-mode-disponible.sql`) l'élargit — À COLLER AVANT LE
+ * DÉPLOIEMENT (l'ancien site n'écrit jamais `disponible`, elle ne
+ * risque rien ; dans l'autre ordre, enregistrer un mode Disponible
+ * échouerait sur la contrainte jusqu'à son passage).
+ * EN DERNIER dans cette liste, comme partout : Studio · Salon ·
+ * Guest · Disponible — l'ordre dicté du sélecteur du formulaire.
+ */
 export const GENRES_MODE = [
   {
     slug: "prive",
@@ -1179,12 +1217,22 @@ export const GENRES_MODE = [
     phrase: "En session Guest à",
     phraseLiee: "En Guest chez",
   },
+  {
+    slug: "disponible",
+    /** Sur la fiche publique : « Disponible • Lyon, France ». */
+    label: "Disponible",
+    titre: "Disponible",
+    /** Aucun lieu à lier : les deux phrases disent la même chose. */
+    phrase: "Disponible / Secteur :",
+    phraseLiee: "Disponible / Secteur :",
+  },
 ] as const;
 
 export type GenreMode = (typeof GENRES_MODE)[number]["slug"];
 
 /**
- * JUSQU'OÙ UN ARTISTE SE DÉPLACE — le rayon du mode « à domicile ».
+ * JUSQU'OÙ UN ARTISTE SE DÉPLACE — le rayon du mode « Disponible »
+ * (nº 414 ; hérité de l'ancien « à domicile », mêmes paliers).
  * ⚠️ IL NE S'AFFICHE QU'AUTOUR D'UNE VILLE, jamais autour d'une
  * région ni d'un pays : « 50 km autour de la France » ne veut rien
  * dire. C'est exactement la règle du champ de localité du moteur.

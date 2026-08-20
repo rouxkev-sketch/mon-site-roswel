@@ -1328,17 +1328,22 @@ function TroisLignesDuLieu({
    * que partout ailleurs (`LieuAffichable`), lus sur le mode.
    * `ligneMaps` compose la requête avec ce qu'il a — rue si elle
    * existe, sinon ville, région, pays.
+   * ⚠️ « DISPONIBLE » N'EXPOSE JAMAIS D'ADRESSE (nº 414) : sa ligne
+   * dit où l'artiste CHERCHE, pas un lieu où aller — `null`, donc du
+   * texte nu, sans lien vers le plan. (C'était le traitement d'« à
+   * domicile » avant la nº 402, repris sous le nouveau nom.)
    */
-  const lieu: LieuAffichable | null = sansLien
-    ? null
-    : {
-        adresse: mode.adresse,
-        code_postal: mode.code_postal,
-        ville: mode.ville ?? mode.intitule,
-        region: mode.region,
-        pays: mode.pays,
-        code_pays: mode.code_pays,
-      };
+  const lieu: LieuAffichable | null =
+    sansLien || mode.genre === "disponible"
+      ? null
+      : {
+          adresse: mode.adresse,
+          code_postal: mode.code_postal,
+          ville: mode.ville ?? mode.intitule,
+          region: mode.region,
+          pays: mode.pays,
+          code_pays: mode.code_pays,
+        };
   return (
     <div className="flex min-h-13 min-w-0 flex-1 flex-col justify-center">
       {/*  LIGNE 1 — LE NOM DU LIEU, EN GRAS ET EN BLANC. C'est ce
@@ -1435,12 +1440,25 @@ export function BlocProfilsArtiste({
         (`gap-8`), 14 px entre pastille et texte. */
     <ul className="flex flex-col gap-8">
       {modes.map((mode) => {
-        /*  LA PASTILLE : le logo du salon lié, ou le glyphe d'adresse
-            quand le lieu a été saisi à la main. (nº 402 — le cas « à
-            domicile », qui montrait la photo de l'artiste, est
-            supprimé du site.) */
+        /*  ⚠️ « DISPONIBLE », C'EST L'ARTISTE LUI-MÊME (nº 414, la
+            règle d'« à domicile » de la nº 224-§1 reprise sous le
+            nouveau nom) : la pastille est SA photo de profil, pas un
+            glyphe d'adresse — il n'y a pas d'autre lieu à montrer.
+            Les autres modes portent le logo du salon lié, ou le
+            glyphe d'adresse quand le lieu a été saisi à la main.
+            ⚠️ LA HAUTEUR NE BOUGE PAS : même PhotoRonde, même boîte —
+            et la colonne de texte garde son plancher `min-h-13` +
+            `justify-center` (nº 229), qui commande l'alignement de la
+            photo quelle que soit la source de l'image. */
         const pastille = (
-          <PhotoRonde source={mode.salon_photo} nature="lieu" />
+          <PhotoRonde
+            source={
+              mode.genre === "disponible"
+                ? tatoueur.photo_profil
+                : mode.salon_photo
+            }
+            nature="lieu"
+          />
         );
         const lie = Boolean(mode.salon_slug && mode.salon_nom);
         const colonne = <TroisLignesDuLieu mode={mode} sansLien={lie} />;

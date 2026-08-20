@@ -954,10 +954,13 @@ export function FormulaireFiche() {
   const aucunLieuChoisi = manqueDesigne?.champ === "aucun-lieu";
 
   /** L'ADRESSE PRÉCISE (rue et numéro) est-elle publiable ? Elle ne
-      l'est pas quand la fiche ne tient que par des STUDIOS PRIVÉS : la
-      promesse de vie privée vaut aussi pour la ligne d'adresse de la
-      fiche, pas seulement pour ses modes. (nº 402 — « à domicile »,
-      qui partageait la promesse, est supprimé du site.)
+      l'est pas quand la fiche ne tient que par des modes SANS VITRINE :
+      le STUDIO PRIVÉ, et « DISPONIBLE » (nº 414) — un artiste qui
+      cherche un lieu n'a pas d'adresse où l'on vient, et la ville
+      qu'il a saisie peut être la sienne. La promesse de vie privée
+      vaut aussi pour la ligne d'adresse de la fiche, pas seulement
+      pour ses modes. (C'était la règle d'« à domicile » avant la
+      nº 402 ; « Disponible » la reprend.)
       ⚠️ UN ENCADRÉ VIERGE NE COMPTE PAS DU TOUT (passe nº 124) :
       ouvrir un onglet par curiosité crée un mode sans rien dedans —
       seuls les modes où quelque chose est saisi (ceux qui partent en
@@ -965,7 +968,10 @@ export function FormulaireFiche() {
   const adressePubliable =
     typeFiche === "salon" ||
     modesExercice.some(
-      (mode) => !modeVide(mode) && mode.genre !== "prive"
+      (mode) =>
+        !modeVide(mode) &&
+        mode.genre !== "prive" &&
+        mode.genre !== "disponible"
     );
 
   /** Choisir le type efface ce qui appartenait à l'autre : un salon

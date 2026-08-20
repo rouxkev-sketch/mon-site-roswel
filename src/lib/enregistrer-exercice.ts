@@ -52,8 +52,9 @@ const COLONNES_MIGRATION_33 = [
   "role",
   "horaires",
   "fuseau",
-  //  ⚠️ AJOUTÉE PAR LA nº 40 (rayon du mode « à domicile »). Même
-  //  logique : tant qu'elle manque, le reste part quand même.
+  //  ⚠️ AJOUTÉE PAR LA nº 40 (rayon du mode « à domicile », porté
+  //  depuis la nº 414 par le mode « Disponible »). Même logique :
+  //  tant qu'elle manque, le reste part quand même.
   "rayon_km",
   //  ⚠️ AJOUTÉE PAR LA nº 41 (nature du lieu d'une session guest).
   "nature_lieu",
@@ -232,7 +233,7 @@ async function ecrireModes(
       genre: mode.genre,
       //  LE SOUS-CHOIX A DE SENS POUR LES DEUX LIEUX QUI ONT UNE
       //  ÉQUIPE : « en salon » ET, depuis la passe nº 100, « en studio
-      //  privé ». Partout ailleurs (guest, à domicile) il vaut null.
+      //  privé ». Partout ailleurs (guest, disponible) il vaut null.
       //  ⚠️ LA BASE LE VÉRIFIE : la contrainte
       //  `modes_exercice_role_coherent` interdisait tout rôle hors du
       //  genre « salon » (migration nº 33) ; la migration nº 44
@@ -244,16 +245,20 @@ async function ecrireModes(
           : null,
       salon_id: mode.salon?.id ?? null,
       ...lieu,
-      //  nº 402 — LE RAYON N'EXISTE PLUS : « à domicile », seul mode
-      //  qui en portait un, est supprimé du site. La colonne reste en
-      //  base, toujours écrite à null.
-      rayon_km: null,
+      //  nº 414 — LE RAYON N'A DE SENS QUE POUR « DISPONIBLE » (la
+      //  colonne, héritée d'« à domicile », était écrite null depuis
+      //  la nº 402) : ailleurs il vaut null, comme le sous-choix de
+      //  rôle.
+      //  ⚠️ LA CONTRAINTE `modes_exercice_genre_connu` doit connaître
+      //  'disponible' AVANT que le site ne l'écrive : la migration
+      //  yokofolio-mode-disponible.sql se colle AVANT le déploiement.
+      rayon_km: mode.genre === "disponible" ? (mode.rayonKm ?? null) : null,
       //  LA NATURE DU LIEU VISITÉ n'a de sens que pour un guest.
       nature_lieu: mode.genre === "guest" ? (mode.natureLieu ?? null) : null,
       //  §1 (nº 266) — LE NOM DU LIEU SAISI À LA MAIN. Il n'a de sens
       //  que là où le champ existe (`nomLieuRequis` : un lieu qui a
-      //  son portfolio porte déjà le sien, « à domicile » n'en a pas)
-      //  — ailleurs null, comme le rayon et la nature.
+      //  son portfolio porte déjà le sien, « Disponible » n'a pas de
+      //  lieu du tout) — ailleurs null, comme le rayon et la nature.
       nom_lieu: nomLieuRequis(mode)
         ? (mode.nomLieu ?? "").trim() || null
         : null,

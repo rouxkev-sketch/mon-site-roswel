@@ -348,25 +348,26 @@ export function DeuxZonesLieu({
 }
 
 /**
- * UNE SEULE ZONE — pour les lieux qui n'ont RIEN à chercher.
- * « À domicile » et « Studio privé » ne se cherchent pas sur
- * yokofolio : on ne devient pas résident de son propre salon, et un
- * studio privé n'a par définition pas de page publique. Leur proposer
- * une recherche de studio inscrit serait un cul-de-sac déguisé en
- * choix.
- * Ils gardent donc UN champ.
+ * UNE SEULE ZONE — pour le mode qui n'a RIEN à chercher.
+ * « Disponible » (nº 414) ne se cherche pas sur yokofolio : il n'y a
+ * PAS de lieu — l'artiste en cherche un, et son encadré ne porte
+ * qu'une ville (et son rayon, glissé en `souscrit`). Lui proposer une
+ * recherche de portfolio serait un cul-de-sac déguisé en choix.
+ * (C'était la zone du mode « à domicile » jusqu'à la nº 402 ; le
+ * composant a traversé la suppression sans appelant, il en retrouve
+ * un ici.)
  *
- * ⚠️ DEUX LIGNES ONT DISPARU ICI (passe nº 100), et c'est voulu :
- *  · LE TITRE est devenu FACULTATIF. « Où te déplaces-tu ? » vit
- *    désormais DANS le champ, comme indication : un titre et un
- *    fantôme qui disent la même chose à deux centimètres l'un de
- *    l'autre, c'est une ligne de trop dans un formulaire déjà long.
- *  · LA PROMESSE DE VIE PRIVÉE (« Seuls la ville et le code postal
- *    seront publics — jamais la rue ni le numéro. ») a été retirée.
- *    ⚠️ SEULE LA PHRASE PART, PAS LA RÈGLE : elle vit dans
- *    `adressePubliable` (FormulaireFiche) et décide pour de bon ce
- *    que la fiche publie. Le texte ne la portait pas, il la
- *    racontait.
+ * ⚠️ LE TITRE EST L'ÉCRITURE EXACTE DE LA QUESTION DE DeuxZonesLieu
+ * (nº 414). Le propriétaire demande que la phrase « Je suis
+ * actuellement à la recherche d'un lieu. » soit présentée EXACTEMENT
+ * comme « Le studio a-t-il son portfolio sur YokoFolio ? » : même
+ * paragraphe (`mt-2`, 13,5 px semi-gras, blanc), même distance au
+ * champ (le `gap-3` du conteneur, 12 px). Les deux écritures sont
+ * donc les MÊMES jetons, dans les deux composants de ce fichier — si
+ * l'une bouge, l'autre doit suivre.
+ * ⚠️ LE TITRE NE ROUGIT JAMAIS (nº 116) — seul le champ s'encadre.
+ * `souscrit` (le rayon) reste collé au bloc du champ, hors du gap :
+ * il garde sa propre marge (`mt-5`), comme avant la nº 402.
  */
 export function ZoneLieuSeule({
   prefixe,
@@ -383,7 +384,7 @@ export function ZoneLieuSeule({
   /** Ce qu'on lit dans le champ. */
   indication?: string;
   /** Ce qui se glisse SOUS le champ une fois le lieu choisi — le
-      rayon de déplacement du mode « À domicile ». */
+      rayon de déplacement du mode « Disponible » (nº 414). */
   souscrit?: React.ReactNode;
   lieu: LieuTrouve | null;
   surLieu: (lieu: LieuTrouve | null) => void;
@@ -391,25 +392,26 @@ export function ZoneLieuSeule({
   enErreur?: boolean;
 }) {
   return (
-    <div>
+    <div className={titre ? "flex flex-col gap-3" : undefined}>
       {titre && (
-        //  Le titre ne rougit jamais (nº 116) — seul le champ le fait.
-        <p className="mb-2 text-[13.5px] font-semibold text-sombre-texte">
+        <p className="mt-2 text-[13.5px] font-semibold text-sombre-texte">
           {titre}
         </p>
       )}
-      <ChampLocalisation
-        id={`${prefixe}-adresse`}
-        etiquette={null}
-        texteIndicatif={indication}
-        lieuInitial={lieu}
-        surChoix={surLieu}
-        panneauDansLeFlux={surMobile}
-        remonterAuToucher={surMobile}
-        croixEffacement
-        enErreur={enErreur}
-      />
-      {souscrit}
+      <div>
+        <ChampLocalisation
+          id={`${prefixe}-adresse`}
+          etiquette={null}
+          texteIndicatif={indication}
+          lieuInitial={lieu}
+          surChoix={surLieu}
+          panneauDansLeFlux={surMobile}
+          remonterAuToucher={surMobile}
+          croixEffacement
+          enErreur={enErreur}
+        />
+        {souscrit}
+      </div>
     </div>
   );
 }
