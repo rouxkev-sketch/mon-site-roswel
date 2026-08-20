@@ -454,7 +454,7 @@ export function FenetreCarrousel({
            l'autre bout.
            ⚠️ LE BLOC DE TEXTE EST CONTENU DANS LA HAUTEUR DU ROND et
            centré sur elle : `items-center` aligne les trois, et les
-           deux lignes (17 px + 13 px, interlignes serrés) tiennent
+           deux lignes (17 px + 14 px, interlignes serrés) tiennent
            dans les 44 px du rond — rien ne dépasse, rien ne flotte.
            `min-w-0` + `truncate` : un nom de style long s'arrête
            proprement au lieu de pousser le cœur hors de l'écran.
@@ -467,8 +467,24 @@ export function FenetreCarrousel({
           <h1 className="truncate text-[17px] font-bold leading-tight text-sombre-texte">
             {groupeAffiche?.label ?? ""}
           </h1>
+          {/*  §1 (nº 421) — LA SECONDE LIGNE PASSE DE 13 À 14 px. Elle
+               porte la nature de la série et, s'il y en a un, le rendu
+               (« Tatouages · Noir et gris ») ; à 13 px elle passait
+               sous le seuil de lecture au doigt.
+               D'OÙ VIENT LE CRAN : c'est celui de la ligne secondaire
+               sous le nom du tatoueur sur la fiche — `ContenuFiche`,
+               le sous-titre en gris doux, passé de 12 à 14 px à la
+               nº 293 pour exactement la même raison. Même rôle (une
+               ligne grise sous un titre), donc même taille ; aucune
+               valeur inventée.
+               LA HAUTEUR DU BLOC NE BOUGE PAS : la colonne de texte
+               passe de 37,5 px (17 × 1,25 + 13 × 1,25) à 38,75 px
+               (17 × 1,25 + 14 × 1,25) et reste sous les 44 px du rond,
+               qui commande seul la hauteur de la ligne — l'air autour
+               du texte tombe de 6,5 à 5,25 px, et `items-center` garde
+               la photo de profil centrée sur la même ligne. */}
           {serieEffective && (
-            <p className="truncate text-[13px] leading-tight text-sombre-texte-doux">
+            <p className="truncate text-[14px] leading-tight text-sombre-texte-doux">
               {libelleNature(serieEffective.nature)}
               {serieEffective.rendu
                 ? ` · ${libelleRendu(serieEffective.rendu)}`
