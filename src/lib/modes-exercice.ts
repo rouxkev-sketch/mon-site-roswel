@@ -1338,6 +1338,40 @@ export function nomLieuRequis(mode: ModeEnSaisie): boolean {
 }
 
 /**
+ * ██ §1 (nº 419) — LE LIEU EST-IL RENSEIGNÉ ? ██
+ * ==================================================================
+ * C'est la question de L'AFFICHAGE des dates d'une session guest : on
+ * ne demande pas QUAND avant de savoir OÙ. Deux façons de renseigner
+ * un lieu, et la réponse vaut pour les deux :
+ *  · LE LIEU A SA FICHE sur le site → `salon` retenu, et c'est tout :
+ *    son nom et son adresse viennent avec ;
+ *  · LE LIEU N'A PAS DE FICHE → il faut LES DEUX : l'adresse choisie
+ *    dans la liste (`lieu`) ET le nom saisi (`nomLieu`). Une adresse
+ *    sans nom ne dit pas CHEZ QUI l'on est reçu — c'est déjà la règle
+ *    de `nomLieuRequis` (nº 266), interrogée ici plutôt que recopiée.
+ *
+ * ⚠️ CETTE QUESTION N'EST PAS CELLE DE `datesSuiventLeLieu`, ET LA
+ * DIFFÉRENCE EST VOULUE (elle répond mot pour mot à la demande du
+ * propriétaire, « elles s'effacent quand LES DEUX sont vidés — pas
+ * quand un seul l'est ») :
+ *  · AFFICHER demande un lieu COMPLET — on sait chez qui ;
+ *  · EFFACER demande que le lieu ait DISPARU — il n'y a plus rien à
+ *    quoi rattacher des dates.
+ * Entre les deux vit un état intermédiaire : adresse choisie, nom pas
+ * encore tapé (ou effacé). Les dates s'y CACHENT sans être perdues —
+ * retaper le nom les ramène telles quelles. C'est exactement ce qu'il
+ * faut : effacer sur la disparition d'un seul des deux champs
+ * détruirait du travail à la première faute de frappe.
+ */
+export function lieuRenseigne(mode: ModeEnSaisie): boolean {
+  if (mode.salon) return true;
+  if (!mode.lieu) return false;
+  //  `nomLieuRequis` est vrai dès qu'une adresse est choisie sans
+  //  fiche : c'est donc bien « les deux » qu'on exige ici.
+  return !nomLieuRequis(mode) || Boolean((mode.nomLieu ?? "").trim());
+}
+
+/**
  * ██ §5 (nº 413) — PLUS DE LIEU, PLUS DE DATES ██
  * ==================================================================
  * LE RELEVÉ : on supprime l'établissement d'une session guest — qu'il
@@ -1362,6 +1396,28 @@ export function nomLieuRequis(mode: ModeEnSaisie): boolean {
  *
  * ⚠️ ELLE NE VAUT QUE POUR UN GUEST : lui seul a des dates. Sur les
  * autres genres, `debut_le` et `fin_le` sont déjà nuls et le resteront.
+ *
+ * ██ §1 (nº 419) — CETTE RÈGLE EST GARDÉE TELLE QUELLE, ET VOICI CE
+ * QU'ELLE COUVRE ██
+ * Vérifiée cas par cas contre la demande du propriétaire :
+ *  · fiche retenue puis RETIRÉE → `salon` disparaît, rien ne le
+ *    remplace : les dates s'effacent. ✔ (Si DeuxZonesLieu restitue une
+ *    adresse mise de côté — nº 105 —, `lieu` prend le relais : rien ne
+ *    s'efface, et c'est juste, le mode a encore un lieu.)
+ *  · adresse choisie puis EFFACÉE par la croix → même transition, les
+ *    dates s'effacent. ✔ Le nom saisi, lui, n'est plus atteignable
+ *    (son champ ne s'affiche qu'avec une adresse) : le compter comme
+ *    « un lieu » ferait manquer cet effacement. C'est pourquoi cette
+ *    fonction ne regarde QUE `salon` et `lieu`, et c'était déjà juste.
+ *  · NOM effacé seul, adresse toujours là → aucune transition : les
+ *    dates restent en mémoire et se CACHENT (voir `lieuRenseigne`). ✔
+ *    « pas quand un seul l'est ».
+ *  · établissement REMPLACÉ par un autre → aucune transition : les
+ *    dates sont préservées. ✔ C'est ce que la nº 413 protégeait, et
+ *    rien ici ne l'entame.
+ * ⚠️ ELLE NE TOURNE QU'À LA SAISIE (`modifier`, BlocModesExercice) et
+ * JAMAIS À LA LECTURE : un guest déjà enregistré rouvre son formulaire
+ * avec ses dates intactes — `chargerModes` ne passe pas par ici.
  */
 export function datesSuiventLeLieu(
   avant: ModeEnSaisie,

@@ -239,7 +239,22 @@ export function RechercheFicheInscrite({
             qui mentait. La charte tranche — aucun contour, un fond
             d'un cran plus clair, le rose réservé aux badges
             sélectionnés, au bouton final et à la ligne du sélecteur. */}
-        <div className="flex items-center gap-3 rounded-lg bg-sombre-eleve px-3 py-2.5">
+        {/*  ██ §2 (nº 419) — LA PALETTE DU FORMULAIRE ██
+             CE QUE CE CHAMP PORTAIT : `bg-sombre-eleve`, un cran plus
+             sombre que le champ de recherche juste au-dessus, qui est
+             sur `bg-sombre-eleve-clair` (l. ~342) — alors que c'est LE
+             MÊME champ, une fois la fiche retenue. La cause est celle
+             de la nº 419 tout entière : la paire du MOTEUR
+             (`ROBE_CHAMP_SOMBRE`) au lieu de celle du FORMULAIRE
+             (`CHAMP`, champs-formulaire). Il prend donc le niveau de
+             son propre champ de saisie, et de tous les autres.
+             ⚠️ LA PASTILLE DE LA PHOTO RESTE UN CRAN EN DESSOUS
+             (`bg-sombre-eleve`) : ce n'est pas un champ, c'est le
+             LOGEMENT d'une image — le creux qui se voit quand la fiche
+             n'a pas de photo, exactement comme les pastilles de
+             `PhotoRonde` (BlocLieux). Le fond ne monte que d'un cran,
+             il ne se met pas à niveau avec ce qu'il creuse. */}
+        <div className="flex items-center gap-3 rounded-lg bg-sombre-eleve-clair px-3 py-2.5">
           <span
             className="flex h-9 w-9 shrink-0 items-center justify-center
                        overflow-hidden rounded-full bg-sombre-eleve"
@@ -278,9 +293,13 @@ export function RechercheFicheInscrite({
               setResultats([]);
               setOuverte(false);
             }}
+            //  §2 (nº 419) — LA CROIX SUIT SON CHAMP : son survol
+            //  était `bg-sombre-eleve`, désormais la couleur DU champ
+            //  qui la porte — il ne s'y verrait plus. Elle monte d'un
+            //  cran, comme tout le reste.
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full
                        text-sombre-texte-doux transition-colors
-                       hover:bg-sombre-eleve hover:text-sombre-texte"
+                       hover:bg-sombre-haut hover:text-sombre-texte"
           >
             <IconeCroix taille={16} />
           </button>

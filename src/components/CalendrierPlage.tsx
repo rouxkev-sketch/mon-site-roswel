@@ -195,13 +195,36 @@ export function ChampsPlageDates({
     return isoLocal(d.getFullYear(), d.getMonth() + 1, d.getDate());
   })();
 
-  /** L'HABILLAGE D'UN CHAMP — celui de tous les champs du formulaire :
-      fond un cran plus clair, bordure transparente qui ne s'allume
-      qu'en rouge, fond éclairci quand il a la main (charte nº 116). */
+  /**
+   * ██ §2 (nº 419) — LA PALETTE DU FORMULAIRE, PAS CELLE DU MOTEUR ██
+   * ------------------------------------------------------------------
+   * CE QUE CES DEUX CHAMPS PORTAIENT : `bg-sombre-eleve` au repos,
+   * `bg-sombre-eleve-clair` une fois ouverts. Leur commentaire disait
+   * pourtant « celui de tous les champs du formulaire » — il décrivait
+   * l'intention, le code appliquait une AUTRE paire.
+   * LA CAUSE, ET ELLE EXPLIQUE AUSSI LES nº 399 ET 409 : le site a DEUX
+   * palettes de champ, distantes d'un cran.
+   *  · LE MOTEUR DE RECHERCHE — `ROBE_CHAMP_SOMBRE` (MenuDeroulant),
+   *    règle nº 141-2B : repos `bg-sombre-eleve`, actif
+   *    `bg-sombre-eleve-clair` ;
+   *  · LE FORMULAIRE — `CHAMP` (champs-formulaire) : repos
+   *    `bg-sombre-eleve-clair`, actif `bg-sombre-haut`.
+   * Un champ DU FORMULAIRE écrit avec la paire DU MOTEUR paraît donc
+   * exactement un cran trop sombre à côté de ses voisins. C'est ce qui
+   * s'est produit ici, comme pour les trois champs de la nº 399 et le
+   * champ de titre de la nº 409.
+   * CE QU'ILS PRENNENT : la paire du formulaire, et rien d'autre — au
+   * repos `bg-sombre-eleve-clair` comme la bio, Instagram et le lien
+   * libre ; ouverts `bg-sombre-haut`, le cran que ces mêmes champs
+   * prennent au focus. Aucune couleur n'est inventée.
+   * ⚠️ PAS DE SURVOL AJOUTÉ : `CHAMP` n'en a pas. En ajouter un ferait
+   * diverger ces deux champs-ci de tous les autres — ils gardent donc
+   * leur couleur de repos sous la souris, comme leurs voisins.
+   */
   function classesDuChamp(cible: "debut" | "fin", enFaute: boolean): string {
     return `flex w-full min-w-0 min-h-[48px] items-center rounded-lg border
       px-3.5 text-left text-base transition-colors ${
-        ouvert === cible ? "bg-sombre-eleve-clair" : "bg-sombre-eleve"
+        ouvert === cible ? "bg-sombre-haut" : "bg-sombre-eleve-clair"
       } ${enFaute ? "border-erreur" : "border-transparent"}`;
   }
 
@@ -244,7 +267,13 @@ export function ChampsPlageDates({
           ne sort jamais de l'écran. ---------- */}
       {ouvert && (
         <div
-          className="mt-2 rounded-lg bg-sombre-eleve p-3
+          /*  §2 (nº 419) — LE PANNEAU SUIT SES CHAMPS, D'UN CRAN.
+               Il pendait à `bg-sombre-eleve` : sous des champs passés à
+               `bg-sombre-eleve-clair`, il serait devenu plus sombre que
+               ce qui l'ouvre. Il prend donc le niveau du champ, et ses
+               états internes montent d'autant (voir plus bas) — le
+               calendrier entier change de palette, jamais à moitié. */
+          className="mt-2 rounded-lg bg-sombre-eleve-clair p-3
                      opacity-100 transition-opacity duration-200 starting:opacity-0"
         >
           {/* L'EN-TÊTE : le mois, encadré par ses deux flèches. */}
@@ -255,7 +284,7 @@ export function ChampsPlageDates({
               aria-label="Mois précédent"
               className="flex h-9 w-9 items-center justify-center rounded-full
                          text-sombre-texte-doux transition-colors
-                         hover:bg-sombre-eleve-clair hover:text-sombre-texte"
+                         hover:bg-sombre-haut hover:text-sombre-texte"
             >
               <IconeChevronBas taille={16} classe="rotate-90" />
             </button>
@@ -268,7 +297,7 @@ export function ChampsPlageDates({
               aria-label="Mois suivant"
               className="flex h-9 w-9 items-center justify-center rounded-full
                          text-sombre-texte-doux transition-colors
-                         hover:bg-sombre-eleve-clair hover:text-sombre-texte"
+                         hover:bg-sombre-haut hover:text-sombre-texte"
             >
               <IconeChevronBas taille={16} classe="-rotate-90" />
             </button>
@@ -321,10 +350,10 @@ export function ChampsPlageDates({
                                      : eteint
                                        ? "text-sombre-texte-doux/40"
                                        : dansLaPlage
-                                         ? "bg-sombre-eleve-clair text-primaire"
+                                         ? "bg-sombre-haut text-primaire"
                                          : estAujourdHui
-                                           ? "font-bold text-primaire hover:bg-sombre-eleve-clair"
-                                           : "text-sombre-texte hover:bg-sombre-eleve-clair"
+                                           ? "font-bold text-primaire hover:bg-sombre-haut"
+                                           : "text-sombre-texte hover:bg-sombre-haut"
                                  }`}
                     >
                       {jour}

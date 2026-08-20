@@ -242,8 +242,8 @@ export function ChampLienVerifie({
             className="absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8
                        items-center justify-center rounded-full
                        text-sombre-texte-doux transition-colors
-                       hover:bg-sombre-eleve hover:text-sombre-texte
-                       active:bg-sombre-eleve"
+                       hover:bg-sombre-haut hover:text-sombre-texte
+                       active:bg-sombre-haut"
           >
             <IconeCroix taille={16} />
           </button>

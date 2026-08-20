@@ -17,6 +17,9 @@ import {
   cleNeuve,
   modeVide,
   datesSuiventLeLieu,
+  //  §1 (nº 419) — « le lieu est-il renseigné ? », la condition
+  //  d'affichage des dates d'une session guest.
+  lieuRenseigne,
   type ManqueBloc,
   type ModeEnSaisie,
 } from "@/lib/modes-exercice";
@@ -762,14 +765,23 @@ export function BlocModesExercice({
   }
 
   /** LES CHAMPS D'UN LIEU — le rôle puis la localisation, ou la
-      localisation puis les dates pour une session guest. */
+      localisation puis les dates pour une session guest.
+      ██ §1 (nº 419) — LES DATES N'APPARAISSENT QU'APRÈS LE LIEU ██
+      Elles étaient là d'emblée : on demandait QUAND avant de savoir
+      OÙ. Elles attendent désormais que le lieu soit RENSEIGNÉ — une
+      fiche retenue, ou une adresse ET son nom (`lieuRenseigne`,
+      lib/modes-exercice, qui porte la règle et l'explique).
+      ⚠️ SE CACHER N'EST PAS S'EFFACER : ce qui a été saisi reste en
+      mémoire tant que le lieu n'a pas DISPARU (`datesSuiventLeLieu`,
+      nº 413). Effacer le nom d'un lieu cache donc les dates ; le
+      retaper les ramène telles quelles. */
   function lesChamps(session: ModeEnSaisie) {
     const guest = session.genre === "guest";
     return (
       <div className="flex flex-col gap-5">
         {!guest && leRole(session)}
         {leLieu(session)}
-        {guest && lesDates(session)}
+        {guest && lieuRenseigne(session) && lesDates(session)}
       </div>
     );
   }
@@ -1094,10 +1106,24 @@ export function BlocModesExercice({
           <button
             type="button"
             onClick={() => ajouterUnLieu(genreAffiche)}
-            className="mt-5 w-fit rounded-full bg-sombre-eleve px-4 min-h-[40px]
+            /*  ██ §2 (nº 419) — LA PALETTE DU FORMULAIRE, ICI AUSSI ██
+                 CE QU'IL PORTAIT : `bg-sombre-eleve` au repos,
+                 `bg-sombre-eleve-clair` au survol — la paire du MOTEUR
+                 (`ROBE_CHAMP_SOMBRE`), pas celle du FORMULAIRE. Il
+                 paraissait donc un cran trop gris à côté des champs
+                 qu'il prolonge. Il prend la paire des champs : repos
+                 `bg-sombre-eleve-clair`, survol `bg-sombre-haut` — les
+                 deux mêmes jetons que le bouton refermé d'un lien
+                 (LienLibre, nº 409-§2).
+                 ⚠️ UNE SEULE ÉCRITURE POUR LES TROIS MODES : ce bouton
+                 est rendu une fois, son libellé seul change
+                 (`MOTS_AJOUT` / « + Ajouter une autre date »). Le
+                 défaut valait donc pour Studio, Salon ET Guest, et la
+                 correction aussi — il n'y a rien à répéter. */
+            className="mt-5 w-fit rounded-full bg-sombre-eleve-clair px-4 min-h-[40px]
                        text-[13.5px] font-semibold text-sombre-texte-doux
-                       transition-colors hover:bg-sombre-eleve-clair hover:text-primaire
-                       active:bg-sombre-eleve-clair active:text-primaire"
+                       transition-colors hover:bg-sombre-haut hover:text-primaire
+                       active:bg-sombre-haut active:text-primaire"
           >
             {genreAffiche === "guest"
               ? "+ Ajouter une autre date"
