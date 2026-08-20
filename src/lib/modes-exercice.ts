@@ -614,9 +614,10 @@ export function typeDeLieuDuMode(mode: ModeExerciceFiche): string {
  * leur apparence — celle des étiquettes STYLES, RENDU, TECHNIQUE.
  */
 export function etiquetteDuLieu(mode: ModeExerciceFiche): string {
-  //  DISPONIBLE (nº 414) — ni type de lieu, ni rôle : l'artiste
-  //  CHERCHE un endroit, le mot seul dit tout.
-  if (mode.genre === "disponible") return "Disponible";
+  //  FREELANCE (nº 414 ; « Disponible » jusqu'à la nº 415) — ni type
+  //  de lieu, ni rôle : l'artiste CHERCHE un endroit, le mot seul dit
+  //  tout.
+  if (mode.genre === "disponible") return "Freelance";
   //  « Salon » ou « Studio », en toutes lettres dans la phrase.
   const lieu = typeDeLieuDuMode(mode).toLowerCase();
   //  EN GUEST AU SALON / AU STUDIO — la préposition suit le lieu ;
@@ -719,13 +720,18 @@ export function villeEtPaysDuMode(mode: ModeExerciceFiche): string {
  * c'est la règle de `roleDuMembre` (nº 222-§4), reprise telle quelle.
  * ⚠️ LE TYPE DE LIEU : « Salon » ou « Studio », le vocabulaire de la
  * nº 402, par `typeDeLieuDuMode` — jamais deviné, jamais réécrit.
- * ██ nº 414 — « DISPONIBLE » PREND LA PLACE DU RÔLE ██
- * Un mode Disponible n'a ni nom de lieu (il n'y a pas de lieu — c'est
+ * ██ nº 414 — LE MODE SANS LIEU PREND LA PLACE DU RÔLE ██
+ * Un mode Freelance n'a ni nom de lieu (il n'y a pas de lieu — c'est
  * tout le sens du mode) ni type : `nom` est vide, `suite` n'a que la
- * ville. Le MOT « Disponible » monte donc dans `role` — le morceau
- * BLANC de la seconde ligne — et l'appelant rend exactement ce que le
- * propriétaire demande : « Disponible • Lyon, France », le mot en
- * blanc, le reste en gris, dans la mise en forme de la nº 409.
+ * ville. Le MOT monte donc dans `role`, le morceau BLANC de la
+ * seconde ligne.
+ * ⚠️ PLUS PERSONNE NE LIT CE CAS DEPUIS LA nº 415, et c'est voulu : le
+ * freelance a QUITTÉ la liste des lieux de la fiche (`BlocProfilsArtiste`
+ * ne reçoit plus que les modes qui ont un lieu — voir `modesDeLieu`)
+ * pour devenir UNE LIGNE DU PROFIL, sous les styles (ContenuFiche).
+ * La branche reste ici parce qu'elle est la réponse juste à la
+ * question posée — quel mot blanc pour ce mode — et qu'un appelant
+ * futur ne doit pas retomber sur une chaîne vide.
  */
 export function lieuEnDeuxLignes(mode: ModeExerciceFiche): {
   /** La première ligne : le nom du lieu. Vide = pas de nom connu. */
@@ -740,7 +746,7 @@ export function lieuEnDeuxLignes(mode: ModeExerciceFiche): {
     mode.genre === "guest"
       ? "Guest"
       : mode.genre === "disponible"
-        ? "Disponible"
+        ? "Freelance"
         : libelleRoleCourt(mode.role) || "";
   const suite = [typeDeLieuDuMode(mode), villeEtPaysDuMode(mode)]
     .map((morceau) => (morceau ?? "").trim())
@@ -884,9 +890,10 @@ export function ligneDuMode(mode: ModeExerciceFiche): {
 /**
  * L'ORDRE IMPOSÉ DES PROFILS (passe nº 222-§1g)
  * ==================================================================
- * 1. Studio   2. Salon   3. Guest   4. Disponible
- * (« à domicile » : supprimé nº 402 ; « Disponible » : nº 414, en
- * DERNIER — la place que le propriétaire lui donne au sélecteur.)
+ * 1. Freelance   2. Studio   3. Salon   4. Guest
+ * (« à domicile » : supprimé nº 402 ; le mode sans lieu revient à la
+ * nº 414, et la nº 415 le nomme « Freelance » et le met EN TÊTE — la
+ * place que le propriétaire lui donne au sélecteur et aux filtres.)
  * Il vaut PARTOUT où plusieurs profils se suivent : le sous-titre du
  * nom, la liste des profils d'un artiste, et tout ce qui viendra. Un
  * ordre écrit une seule fois ne peut pas diverger d'un écran à
@@ -894,10 +901,10 @@ export function ligneDuMode(mode: ModeExerciceFiche): {
  * s'affiche « Studio », `salon` s'affiche « Salon » — nº 402.)
  */
 const RANG_DU_GENRE: Record<string, number> = {
-  prive: 0,
-  salon: 1,
-  guest: 2,
-  disponible: 3,
+  disponible: 0,
+  prive: 1,
+  salon: 2,
+  guest: 3,
 };
 
 export function modesOrdonnes(
@@ -914,6 +921,76 @@ export function modesOrdonnes(
       }
       return a.ordre - b.ordre;
     });
+}
+
+/**
+ * ██ §6 (nº 415) — DEUX FAMILLES DE MODES, ET LA FICHE LES SÉPARE ██
+ * ==================================================================
+ * LE PROPRIÉTAIRE RETIRE LE FREELANCE DE LA LISTE DES LIEUX. C'est
+ * cohérent : cette liste montre des ENDROITS où l'on travaille — une
+ * pastille, un nom, une adresse cliquable. Un freelance n'a rien de
+ * tout cela ; il occupait la place avec deux traits, une photo de
+ * profil et une ville. Il devient UNE LIGNE DU PROFIL, sous les
+ * styles (voir ContenuFiche).
+ *
+ * LA COUPURE EST ÉCRITE ICI, ET UNE SEULE FOIS, parce que DEUX
+ * lecteurs en dépendent et qu'ils ne doivent jamais diverger :
+ *  · `BlocProfilsArtiste` construit sa liste avec `modesDeLieu` ;
+ *  · `ContenuFiche` DÉCIDE AVEC LA MÊME FONCTION s'il pose le trait
+ *    de séparation qui coiffe cette liste.
+ * ⚠️ C'EST LE PIÈGE DE LA nº 386, ET IL EST STRUCTUREL : le trait
+ * (`mt-10 pt-10 border-t`) n'appartient pas au bloc, il est posé par
+ * l'ENVELOPPE. Un artiste qui n'a QUE des modes freelance rendrait
+ * donc un trait et 80 px de vide au-dessus d'un bloc qui, lui, ne
+ * rend rien. Deux règles séparées auraient fini par se contredire ;
+ * il n'y en a qu'une.
+ * ⚠️ LES DEUX FONCTIONS PARTENT DE `modesOrdonnes` : sessions guest
+ * périmées déjà écartées, ordre imposé déjà appliqué.
+ */
+export function modesDeLieu(
+  modes: ModeExerciceFiche[] | null | undefined
+): ModeExerciceFiche[] {
+  return modesOrdonnes(modes).filter((mode) => mode.genre !== "disponible");
+}
+
+/** L'AUTRE FAMILLE — les modes SANS lieu, ceux qui deviennent une
+    ligne du profil. Un artiste peut en déclarer plusieurs (le
+    formulaire propose « + Ajouter une ville ») : la fonction rend
+    donc une LISTE, et l'appelant écrit une ligne par mode. */
+export function modesFreelance(
+  modes: ModeExerciceFiche[] | null | undefined
+): ModeExerciceFiche[] {
+  return modesOrdonnes(modes).filter((mode) => mode.genre === "disponible");
+}
+
+/**
+ * ██ §6 (nº 415) — LA LIGNE D'UN FREELANCE, EN MORCEAUX ██
+ * ==================================================================
+ * « Freelance • Lyon, France • 50 km » — et c'est l'appelant qui pose
+ * les puces, comme pour les pratiques et les styles (ContenuFiche).
+ * ⚠️ LA LISTE NE CONTIENT JAMAIS DE VIDE, et c'est garanti ICI plutôt
+ * que dans le rendu : l'appelant peut donc joindre sans réfléchir, et
+ * aucune puce ne peut rester orpheline. Les trois cas que le
+ * propriétaire demande de traiter en découlent :
+ *  · UN ÉTAT OU UN PAYS → aucun rayon n'a été demandé (voir
+ *    `rayonRequis`), donc `rayon_km` est nul : PAS de dernière puce ;
+ *  · UNE VILLE SANS PAYS (ou l'inverse) → `villeEtPaysDuMode` joint ce
+ *    qu'elle a et rend "" si elle n'a rien : le morceau saute ;
+ *  · RIEN QUE LE MOT → la liste se réduit à « Freelance », qui est
+ *    l'information même que la ligne porte.
+ * ⚠️ LE RAYON S'ÉCRIT ENFIN QUELQUE PART (nº 415) : il était saisi
+ * depuis la nº 414 et n'apparaissait sur aucune page. Il vient EN
+ * DERNIER, après la ville et le pays.
+ */
+export function morceauxDuFreelance(mode: ModeExerciceFiche): string[] {
+  const rayon = mode.rayon_km ?? 0;
+  return [
+    "Freelance",
+    villeEtPaysDuMode(mode),
+    rayon > 0 ? `${rayon} km` : "",
+  ]
+    .map((morceau) => (morceau ?? "").trim())
+    .filter(Boolean);
 }
 
 /**

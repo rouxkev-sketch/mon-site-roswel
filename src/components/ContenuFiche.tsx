@@ -26,6 +26,10 @@ import {
   IconeDiamant,
   IconeDuLien,
   IconeEtoile,
+  //  §6 (nº 415) — la ligne du freelance porte L'ICÔNE DE LOCALISATION,
+  //  la même que l'adresse d'un salon (voir `LigneAdresseDuLieu`,
+  //  BlocLieux) : c'est un lieu qu'elle annonce, le glyphe le dit.
+  IconeLocalisation,
 } from "@/components/IconeReseau";
 import { BoutonSuivre } from "@/components/BoutonSuivre";
 import {
@@ -52,6 +56,14 @@ import {
   BlocAdressesFiche,
   BlocProfilsArtiste,
 } from "@/components/BlocLieux";
+//  §6 (nº 415) — les deux familles de modes (ceux qui ont un lieu,
+//  ceux qui n'en ont pas) et les morceaux de la ligne du freelance :
+//  une seule règle, lue ici comme dans BlocLieux.
+import {
+  modesDeLieu,
+  modesFreelance,
+  morceauxDuFreelance,
+} from "@/lib/modes-exercice";
 import type { Tatoueur } from "@/lib/tatoueurs";
 import { mecanismeCoupe } from "@/lib/variantes-essai";
 //  §2 (nº 377) — la hauteur de la barre du logo et le nom de la
@@ -1293,6 +1305,84 @@ export function ContenuFiche({
     </p>
   );
 
+  /**
+   * ██ §6 (nº 415) — LA LIGNE DU FREELANCE, SOUS LES STYLES ██
+   * ==================================================================
+   * CE QU'ELLE REMPLACE : le freelance s'affichait dans la LISTE DES
+   * LIEUX de la fiche — deux traits de séparation, la photo de profil
+   * de l'artiste, et sa ville à droite. C'était la place d'un ENDROIT
+   * où l'on travaille ; un freelance n'en a pas, c'est tout son sens.
+   * CE QU'ELLE DEVIENT : la dernière ligne de la série du profil,
+   * derrière Booking, Instagram, le site, les pratiques et les styles.
+   * « Freelance • Lyon, France • 50 km ».
+   *
+   * ⚠️ AUCUNE VALEUR GRAPHIQUE N'EST ÉCRITE ICI, et c'est la demande :
+   * `ECRITURE_LIGNE_FICHE` (15 px, `leading-snug`), `LIGNE_GRISE` (le
+   * gris doux commun), `BOITE_ICONE_LIGNE` (la boîte de 22 px, haute
+   * d'une ligne exactement — nº 389-§6), `items-start` + `min-w-0` pour
+   * que le retour à la ligne tombe sur le PREMIER MOT et jamais sous
+   * l'icône. Ce sont les classes des lignes voisines, au caractère
+   * près : elles ne peuvent pas diverger.
+   * ⚠️ L'ICÔNE EST CELLE DE L'ADRESSE D'UN SALON (`IconeLocalisation`,
+   * 20 px dans la boîte de 22), grise comme toutes les autres de la
+   * colonne (nº 392-§1) — et une seule classe de couleur sur cette
+   * boîte : le piège de la nº 389 ne peut pas se reproduire.
+   * ⚠️ LE RAYON APPARAÎT ENFIN (nº 415) : saisi depuis la nº 414, il ne
+   * se lisait sur aucune page. Il vient EN DERNIER, précédé d'une puce.
+   * ⚠️ NI LIGNE VIDE NI PUCE ORPHELINE : `morceauxDuFreelance`
+   * (lib/modes-exercice) rend une liste DÉJÀ purgée de ses vides — un
+   * État ou un pays n'a pas de rayon donc pas de dernière puce, une
+   * ville sans pays écrit ce qu'elle a. La puce ne s'écrit qu'entre
+   * deux morceaux présents (`rang > 0`), et le `<wbr />` lui donne son
+   * occasion de coupure (nº 391-§2) : la ligne se replie sur le mot
+   * suivant, jamais au milieu.
+   * ⚠️ UNE LIGNE PAR MODE FREELANCE : le formulaire permet d'en
+   * déclarer plusieurs (« + Ajouter une ville »). Une seule dans le cas
+   * courant ; deux villes déclarées font deux lignes, jamais une ligne
+   * à rallonge.
+   * ⚠️ SUR UNE FICHE D'ARTISTE SEULEMENT : `modesFreelance` part de
+   * `modesOrdonnes`, et un salon n'a pas de mode d'exercice — la liste
+   * est vide, rien ne se rend.
+   */
+  const lignesFreelance = modesFreelance(tatoueur.modes).map((mode) => {
+    const morceaux = morceauxDuFreelance(mode);
+    if (morceaux.length === 0) return null;
+    return (
+      <p
+        key={`freelance-${mode.id}`}
+        data-freelance-fiche=""
+        className={`flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE}`}
+      >
+        <span className={`${BOITE_ICONE_LIGNE} text-sombre-texte-doux`}>
+          <IconeLocalisation taille={20} />
+        </span>
+        <span className="min-w-0">
+          {morceaux.map((morceau, rang) => (
+            <Fragment key={morceau}>
+              {rang > 0 && (
+                <>
+                  <span aria-hidden="true" className="px-1.5">
+                    •
+                  </span>
+                  <wbr />
+                </>
+              )}
+              {morceau}
+            </Fragment>
+          ))}
+        </span>
+      </p>
+    );
+  });
+
+  /*  §6 (nº 415) — LA LISTE DES LIEUX A-T-ELLE QUELQUE CHOSE À DIRE ?
+      C'est `modesDeLieu` qui répond, la MÊME fonction que celle dont
+      `BlocProfilsArtiste` construit sa liste (lib/modes-exercice). Sans
+      cette question, un artiste qui n'a QUE des modes freelance
+      afficherait le trait de séparation et ses 80 px de dégagement
+      au-dessus d'un bloc qui ne rend rien — le piège de la nº 386. */
+  const aDesLieuxAMontrer = modesDeLieu(tatoueur.modes).length > 0;
+
   return (
     <>
       {demonstration && noteDemonstration("mb-6")}
@@ -1669,7 +1759,11 @@ export function ContenuFiche({
           {(premiereLigne.length > 0 ||
             ligneDuSite.length > 0 ||
             ligneDesStyles ||
-            ligneDesPratiques) && (
+            ligneDesPratiques ||
+            //  §6 (nº 415) — une fiche qui n'aurait QUE sa ligne de
+            //  freelance ouvre quand même la série : sans cette
+            //  condition, la ligne existerait sans son conteneur.
+            lignesFreelance.length > 0) && (
             <div
               /*  §5 (nº 389) — L'ÉCART PARTAGÉ MONTE D'UN CRAN :
                    `gap-y-4` (16 px) devient `gap-y-5` (20 px). C'est le
@@ -1731,6 +1825,11 @@ export function ContenuFiche({
               )}
               {ligneDesPratiques}
               {ligneDesStyles}
+              {/*  §6 (nº 415) — LA LIGNE DU FREELANCE, SOUS LES STYLES :
+                   c'est la place que le propriétaire lui donne, et elle
+                   est la sienne — sur une fiche d'artiste, l'adresse
+                   ci-dessous ne se rend jamais. */}
+              {lignesFreelance}
               {/*  §3 (nº 388) — L'ADRESSE FERME LA SÉRIE, et seulement
                    sur un salon ou un studio : une fiche d'artiste
                    montre ses PROFILS (à domicile, en salon, guest),
@@ -1766,13 +1865,25 @@ export function ContenuFiche({
               autre adresse sur sa ligne, puis l'équipe — toujours
               après toutes les adresses.
               UN ARTISTE montre ses PROFILS, dans l'ordre imposé
-              (nº 222-§1g) : à domicile, en studio, en salon, guest.
+              (nº 222-§1g) : studio, salon, guest.
               ⚠️ LA LIGNE DE SÉPARATION EST POSÉE ICI, jamais dans le
-              bloc : c'est l'enveloppe qui sépare ses sections. */}
+              bloc : c'est l'enveloppe qui sépare ses sections.
+              ██ §6 (nº 415) — ET C'EST POUR ÇA QU'ELLE SE CONDITIONNE ██
+              Le freelance a quitté cette liste (voir `modesDeLieu`) :
+              un artiste peut donc n'avoir AUCUN lieu à montrer, et
+              `BlocProfilsArtiste` ne rend alors rien. Le trait, lui,
+              vit ICI — il se serait affiché seul, avec ses 40 px de
+              marge et ses 40 px de dégagement, au-dessus du vide.
+              C'est exactement le piège de la nº 386, et la parade est
+              la même : le conteneur ne se rend que s'il a un contenu,
+              et la question est posée par la MÊME fonction que celle
+              qui construit la liste. */}
           {tatoueur.type_fiche === "artiste" ? (
-            <div className={`mt-10 pt-10 ${separation}`}>
-              <BlocProfilsArtiste tatoueur={tatoueur} />
-            </div>
+            aDesLieuxAMontrer && (
+              <div className={`mt-10 pt-10 ${separation}`}>
+                <BlocProfilsArtiste tatoueur={tatoueur} />
+              </div>
+            )
           ) : (
             <div className={`mt-10 pt-10 ${separation}`}>
               <BlocAdressesFiche

@@ -29,7 +29,7 @@ import {
 import {
   equipeOrdonnee,
   libelleStylesEquipe,
-  modesOrdonnes,
+  modesDeLieu,
   roleDuMembre,
   lieuEnDeuxLignes,
   periodeDeSession,
@@ -1328,22 +1328,22 @@ function TroisLignesDuLieu({
    * que partout ailleurs (`LieuAffichable`), lus sur le mode.
    * `ligneMaps` compose la requête avec ce qu'il a — rue si elle
    * existe, sinon ville, région, pays.
-   * ⚠️ « DISPONIBLE » N'EXPOSE JAMAIS D'ADRESSE (nº 414) : sa ligne
-   * dit où l'artiste CHERCHE, pas un lieu où aller — `null`, donc du
-   * texte nu, sans lien vers le plan. (C'était le traitement d'« à
-   * domicile » avant la nº 402, repris sous le nouveau nom.)
+   * ⚠️ LE CAS DU FREELANCE A DISPARU D'ICI (§6, nº 415) : il ne passe
+   * plus par cette colonne du tout — il est devenu UNE LIGNE DU PROFIL,
+   * sous les styles (ContenuFiche). `BlocProfilsArtiste` ne reçoit que
+   * des modes qui ont un lieu (`modesDeLieu`), donc `sansLien` reste le
+   * seul cas de texte nu, comme avant la nº 414.
    */
-  const lieu: LieuAffichable | null =
-    sansLien || mode.genre === "disponible"
-      ? null
-      : {
-          adresse: mode.adresse,
-          code_postal: mode.code_postal,
-          ville: mode.ville ?? mode.intitule,
-          region: mode.region,
-          pays: mode.pays,
-          code_pays: mode.code_pays,
-        };
+  const lieu: LieuAffichable | null = sansLien
+    ? null
+    : {
+        adresse: mode.adresse,
+        code_postal: mode.code_postal,
+        ville: mode.ville ?? mode.intitule,
+        region: mode.region,
+        pays: mode.pays,
+        code_pays: mode.code_pays,
+      };
   return (
     <div className="flex min-h-13 min-w-0 flex-1 flex-col justify-center">
       {/*  LIGNE 1 — LE NOM DU LIEU, EN GRAS ET EN BLANC. C'est ce
@@ -1429,7 +1429,18 @@ export function BlocProfilsArtiste({
   /** Le salon lié d'un profil s'ouvre en fenêtre superposée
       (nº 226-§5), comme un membre d'équipe. */
   const clicVersFiche = useClicVersFiche();
-  const modes = modesOrdonnes(tatoueur.modes);
+  /*  ██ §6 (nº 415) — LE FREELANCE N'EST PLUS UN LIEU ██
+      Cette liste montre des ENDROITS : une pastille, un nom, une
+      adresse cliquable. Un freelance n'a rien de tout cela — il
+      occupait la place avec sa photo de profil et une ville, entre
+      deux traits. Il est devenu UNE LIGNE DU PROFIL, sous les styles
+      (ContenuFiche). `modesDeLieu` écarte donc son genre ici.
+      ⚠️ LA MÊME FONCTION DÉCIDE DU TRAIT, dans l'enveloppe : sans
+      elle, un artiste qui n'a QUE des modes freelance afficherait le
+      trait de séparation et son dégagement au-dessus d'un bloc vide —
+      le piège de la nº 386. Une seule règle, deux lecteurs (voir
+      lib/modes-exercice). */
+  const modes = modesDeLieu(tatoueur.modes);
   if (modes.length === 0) return null;
 
   return (
@@ -1440,25 +1451,17 @@ export function BlocProfilsArtiste({
         (`gap-8`), 14 px entre pastille et texte. */
     <ul className="flex flex-col gap-8">
       {modes.map((mode) => {
-        /*  ⚠️ « DISPONIBLE », C'EST L'ARTISTE LUI-MÊME (nº 414, la
-            règle d'« à domicile » de la nº 224-§1 reprise sous le
-            nouveau nom) : la pastille est SA photo de profil, pas un
-            glyphe d'adresse — il n'y a pas d'autre lieu à montrer.
-            Les autres modes portent le logo du salon lié, ou le
-            glyphe d'adresse quand le lieu a été saisi à la main.
-            ⚠️ LA HAUTEUR NE BOUGE PAS : même PhotoRonde, même boîte —
-            et la colonne de texte garde son plancher `min-h-13` +
-            `justify-center` (nº 229), qui commande l'alignement de la
-            photo quelle que soit la source de l'image. */
+        /*  LA PASTILLE : le logo du salon lié, ou le glyphe d'adresse
+            quand le lieu a été saisi à la main.
+            (§6, nº 415 — LE CAS DU FREELANCE EST PARTI D'ICI : sa
+            pastille était la photo de profil de l'artiste, faute
+            d'autre lieu à montrer. Il ne passe plus par cette liste du
+            tout ; sa ville se lit désormais sur une LIGNE DU PROFIL,
+            sous les styles. Le cas « à domicile » de la nº 224-§1, que
+            la nº 414 avait rétabli sous un autre nom, n'a donc plus
+            d'objet.) */
         const pastille = (
-          <PhotoRonde
-            source={
-              mode.genre === "disponible"
-                ? tatoueur.photo_profil
-                : mode.salon_photo
-            }
-            nature="lieu"
-          />
+          <PhotoRonde source={mode.salon_photo} nature="lieu" />
         );
         const lie = Boolean(mode.salon_slug && mode.salon_nom);
         const colonne = <TroisLignesDuLieu mode={mode} sansLien={lie} />;

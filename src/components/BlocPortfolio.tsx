@@ -198,21 +198,33 @@ export function BlocPortfolio({
       la zone s'allume pour dire « dépose ici ». */
   const [deposeEnVue, setDeposeEnVue] = useState(false);
   const entreeFichier = useRef<HTMLInputElement>(null);
-  /** ⚠️ LA PRÉPARATION DES PHOTOS (passe nº 127) — LE VRAI TEMPS MORT.
-      Entre le « Valider » de la galerie du téléphone et l'arrivée des
-      fichiers dans la page, c'est le NAVIGATEUR qui travaille : il doit
-      sortir chaque photo de la photothèque et la mettre à disposition.
-      Ce travail-là bloque le fil principal, et il est PROPORTIONNEL au
-      nombre de photos — mesuré sur une page nue, sans une ligne de ce
-      site : 1,2 s pour une photo, 5,4 s pour cinq, 29,5 s pour vingt
-      (téléphone simulé). Pendant ce temps, rien ne peut être repeint :
-      l'écran reste tel qu'il était, et tout appui semble sans effet.
-      D'où ce drapeau, et surtout LE MOMENT où on le lève : JUSTE AVANT
-      d'ouvrir la galerie, pas au retour. La phrase est donc PEINTE
-      pendant que la galerie s'ouvre — elle est déjà à l'écran quand
-      celle-ci se referme, et elle y reste, visible, pendant tout le
-      gel. Levée après coup, elle n'aurait jamais pu s'afficher. */
-  const [preparation, setPreparation] = useState(false);
+  /**
+   * ██ §7 (nº 415) — « PRÉPARATION DES PHOTOS… » EST SUPPRIMÉE ██
+   * ==================================================================
+   * CE QU'ELLE SIGNALAIT (nº 127), et la mesure est conservée ici :
+   * entre le « Valider » de la galerie du téléphone et l'arrivée des
+   * fichiers dans la page, c'est LE NAVIGATEUR qui travaille — il sort
+   * chaque photo de la photothèque. Ce travail bloque le fil principal
+   * et il est PROPORTIONNEL au nombre de photos : 1,2 s pour une, 5,4 s
+   * pour cinq, 29,5 s pour vingt (mesuré sur une page nue, téléphone
+   * simulé). Pendant ce gel, rien ne se repeint et tout appui semble
+   * sans effet. La phrase était levée JUSTE AVANT l'ouverture de la
+   * galerie — donc peinte à temps pour être visible pendant le gel —
+   * puis baissée au retour des fichiers, à l'annulation (`cancel`) ou
+   * au retour du focus.
+   *
+   * LE PROPRIÉTAIRE LA SUPPRIME : « elle ne doit jamais apparaître ».
+   * ⚠️ CE QUE CELA COÛTE, DIT SANS DÉTOUR : sur un téléphone et sur un
+   * dépôt nombreux, l'artiste n'a plus AUCUN repère pendant le gel —
+   * l'écran paraît figé, et rien ne lui dit que ses photos arrivent.
+   * Le compromis est assumé par lui ; il est réversible en une passe si
+   * le silence se révèle pire que la phrase.
+   * ⚠️ TOUT L'ÉTAT PART AVEC ELLE, pas seulement le paragraphe : le
+   * drapeau `preparation`, ses deux appels (`ouvrirLeSelecteur`,
+   * `fichierChoisi`) et l'effet qui le baissait (écoute de `cancel` et
+   * du retour de focus). Un drapeau que personne ne lit est un piège
+   * pour la passe suivante.
+   */
 
   /* ---------- « UN STYLE MANQUE ? » (passe nº 122) ----------
      Le bas de la fenêtre des styles. Quatre états, et rien de plus :
@@ -442,49 +454,27 @@ export function BlocPortfolio({
     setRecadrage({ fichier: gardees[0] });
   }
 
-  /** OUVRIR LA GALERIE DU TÉLÉPHONE — et le dire AVANT de l'ouvrir.
-      L'ordre compte : la phrase d'attente doit être peinte pendant que
-      la galerie s'affiche, sinon elle n'a plus aucune chance de l'être
-      (voir la note de `preparation`). */
+  /** OUVRIR LA GALERIE DU TÉLÉPHONE.
+      (§7, nº 415 — la phrase d'attente qui se levait ici est
+      supprimée : voir la note en tête du composant.) */
   function ouvrirLeSelecteur() {
     setErreurFichier(null);
-    setPreparation(true);
     entreeFichier.current?.click();
   }
 
   function fichierChoisi(evenement: React.ChangeEvent<HTMLInputElement>) {
-    setPreparation(false);
     const fichiers = Array.from(evenement.target.files ?? []);
     evenement.target.value = "";
     if (fichiers.length === 0) return;
     demarrerDepot(fichiers);
   }
 
-  /** LE FILET DE SÉCURITÉ de la phrase d'attente : tous les navigateurs
-      ne signalent pas qu'on a refermé la galerie sans rien choisir. Le
-      retour du focus sur la page le dit aussi bien — passé un court
-      délai, pour ne pas prendre le focus de l'ouverture elle-même. */
-  useEffect(() => {
-    if (!preparation) return;
-    const entree = entreeFichier.current;
-    const retirer = () => setPreparation(false);
-    //  `cancel` : la galerie refermée sans rien choisir. React ne le
-    //  déclare pas dans ses types — on l'écoute donc à la main.
-    entree?.addEventListener("cancel", retirer);
-    let arme = false;
-    const minuteur = setTimeout(() => {
-      arme = true;
-    }, 800);
-    const surRetour = () => {
-      if (arme) retirer();
-    };
-    window.addEventListener("focus", surRetour);
-    return () => {
-      clearTimeout(minuteur);
-      entree?.removeEventListener("cancel", retirer);
-      window.removeEventListener("focus", surRetour);
-    };
-  }, [preparation]);
+  /*  §7 (nº 415) — LE FILET DE SÉCURITÉ DE LA PHRASE D'ATTENTE VIVAIT
+      ICI : il écoutait `cancel` (la galerie refermée sans rien choisir,
+      que tous les navigateurs ne signalent pas) et le retour du focus,
+      armé après 800 ms. Il ne servait QU'À BAISSER le drapeau
+      `preparation` ; la phrase supprimée, il n'a plus rien à faire — un
+      écouteur de fenêtre qui ne pilote rien est un coût et un piège. */
 
   /** UNE PHOTO QUE CE NAVIGATEUR NE SAIT PAS LIRE. Elle laissait la
       fenêtre sur un cadre noir et un bouton sourd, pour toujours ; elle
@@ -1162,20 +1152,11 @@ export function BlocPortfolio({
                   )
                 }
               />
-              {/* ⚠️ L'ATTENTE SE DIT DANS LE FORMULAIRE (passe nº 127),
-                  jamais dans la fenêtre de recadrage. Elle couvre le
-                  seul moment vraiment long : celui où le navigateur
-                  sort les photos de la photothèque. Une ligne, à la
-                  place exacte du message d'erreur — en gris, parce
-                  qu'elle n'annonce rien de fâcheux. */}
-              {preparation && (
-                <p
-                  role="status"
-                  className="mt-2 text-[13px] text-sombre-texte-doux"
-                >
-                  Préparation des photos…
-                </p>
-              )}
+              {/* §7 (nº 415) — « Préparation des photos… » se rendait
+                  ici (nº 127). Elle est SUPPRIMÉE sur demande du
+                  propriétaire : plus aucune phrase d'attente sous
+                  l'encadré. Le message d'erreur, lui, garde sa place
+                  et son écriture — c'est le même endroit. */}
               {erreurFichier && (
                 <p role="alert" className="mt-2 text-[13px] text-erreur">
                   {erreurFichier}

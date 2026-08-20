@@ -112,31 +112,33 @@ const TITRE_INTERTITRE =
 //  « À domicile » est supprimé du site (le type `GenreMode` ne le
 //  connaît même plus — voir GENRES_MODE, config/tatouage) ; « En
 //  studio » et « En salon » deviennent « Studio » et « Salon ».
-//  ██ nº 414 — QUATRE MODES : « DISPONIBLE » ARRIVE ██
+//  ██ nº 414 — QUATRE MODES : LE MODE SANS LIEU ARRIVE ██
 //  L'artiste qui CHERCHE un lieu. La mécanique est celle de l'ancien
 //  « à domicile » (ville + rayon), le nom et le sens sont neufs — et
 //  le slug aussi (`disponible`, voir GENRES_MODE).
+//  ██ nº 415 — IL SE NOMME « FREELANCE », ET IL PASSE EN PREMIER ██
+//  Le mot seul change : le slug `disponible` reste la valeur écrite
+//  en base (voir GENRES_MODE, où la décision est motivée).
 const LIBELLES_MODES: Record<GenreMode, string> = {
+  disponible: "Freelance",
   prive: "Studio",
   salon: "Salon",
   guest: "Guest",
-  disponible: "Disponible",
 };
 
 /** L'ORDRE DU SÉLECTEUR — celui que le propriétaire a dicté (nº 403,
-    complété par la nº 414) :
-        Studio · Salon · Guest · Disponible
-    C'est un ordre d'AFFICHAGE : GENRES_MODE, qui sert aussi les
-    fiches publiques, ne bouge pas — et les slugs jamais.
+    complété par la nº 414, réordonné par la nº 415) :
+        Freelance · Studio · Salon · Guest
+    C'est un ordre d'AFFICHAGE : les slugs ne bougent jamais.
     ⚠️ CE N'EST PLUS LE SEUL ENDROIT À TENIR CET ORDRE : le filtre de
-    recherche (FILTRE_MODE_ACTIVITE) et l'ordre des profils sur une
-    fiche (RANG_DU_GENRE) disent la même chose. Les trois listes
-    doivent bouger ensemble. */
-const ORDRE_SELECTEUR: GenreMode[] = ["prive", "salon", "guest", "disponible"];
+    recherche (FILTRE_MODE_ACTIVITE), l'ordre des profils sur une
+    fiche (RANG_DU_GENRE) et le catalogue (GENRES_MODE) disent la même
+    chose. Les quatre listes doivent bouger ensemble. */
+const ORDRE_SELECTEUR: GenreMode[] = ["disponible", "prive", "salon", "guest"];
 
 /** Le mot du bouton d'ajout — « + Ajouter un studio », etc. Le Guest
     n'y figure pas : il garde « + Ajouter une autre date ».
-    « Disponible » (nº 414) dit « une ville » : c'est ce que son
+    « Freelance » (nº 414) dit « une ville » : c'est ce que son
     encadré contient — une ville et un rayon, pas un lieu. */
 const MOTS_AJOUT: Record<Exclude<GenreMode, "guest">, string> = {
   prive: "un studio",
@@ -538,6 +540,14 @@ export function BlocModesExercice({
    * (le geste efface la tentative, comme partout).
    */
   function leRayon(mode: ModeEnSaisie) {
+    /*  ██ LA LIGNE QUI TIENT LE POINT 4 DE LA nº 415 ██
+        La localité RÉPOND ELLE-MÊME à la question : `precision` vaut
+        « adresse », « ville », « region » ou « pays » (voir
+        lib/geocodage/types) — c'est OpenStreetMap qui le dit, pas une
+        liste de pays écrite à la main. Un ÉTAT (« region ») et un PAYS
+        n'affichent donc AUCUN badge, et `rayonRequis` (lib/modes-
+        exercice) lit exactement la même condition : rien n'est exigé
+        là où rien n'est montré. Le mode reste valide sans rayon. */
     const precision = mode.lieu?.precision;
     if (precision !== "ville" && precision !== "adresse") return null;
     //  ⚠️ LE TITRE NOMME LA VILLE (passe nº 100) : « Rayon autour de
@@ -594,21 +604,26 @@ export function BlocModesExercice({
   function leLieu(mode: ModeEnSaisie) {
     const enFaute = manquant(mode.cle, "lieu");
     /*  ██ nº 414 — LA BRANCHE « MANUELLE » REVIENT, POUR LE SEUL MODE
-        « DISPONIBLE » ██ (la nº 402 l'avait retirée avec « à
-        domicile »). Il n'y a AUCUNE fiche à chercher : l'artiste n'a
-        pas de lieu, il en cherche un. L'encadré dit trois choses, dans
-        l'ordre dicté par le propriétaire :
-         1. LA PHRASE « Je suis actuellement à la recherche d'un
-            lieu. » — présentée EXACTEMENT comme la question qui coiffe
-            le champ des modes Studio et Salon (« Le studio a-t-il son
-            portfolio sur YokoFolio ? ») : même écriture, même place,
-            même air. C'est la prop `titre` de ZoneLieuSeule, qui rend
-            depuis la nº 414 le paragraphe au pixel de celui de
-            DeuxZonesLieu (mt-2, 13,5 px semi-gras blanc, 12 px avant
-            le champ) ;
-         2. LE CHAMP DE LOCALITÉ, « Ville » en indication ;
+        SANS LIEU ██ (la nº 402 l'avait retirée avec « à domicile »).
+        Il n'y a AUCUNE fiche à chercher : l'artiste n'a pas de lieu,
+        il en cherche un. L'encadré dit trois choses, dans l'ordre
+        dicté par le propriétaire :
+         1. LA PHRASE « Je suis à la recherche d'un lieu. » (raccourcie
+            par la nº 415 — « actuellement » disait ce que le présent
+            disait déjà) — présentée EXACTEMENT comme la question qui
+            coiffe le champ des modes Studio et Salon (« Le studio
+            a-t-il son portfolio sur YokoFolio ? ») : même écriture,
+            même place, même air. C'est la prop `titre` de
+            ZoneLieuSeule, qui rend depuis la nº 414 le paragraphe au
+            pixel de celui de DeuxZonesLieu (mt-2, 13,5 px semi-gras
+            blanc, 12 px avant le champ) ;
+         2. LE CHAMP DE LOCALITÉ, « Ville ou État/Pays » en indication
+            (nº 415, point 4) : l'artiste peut se déclarer sur une
+            ville, mais aussi sur un État ou un pays entier ;
          3. LE SÉLECTEUR DE RAYON (`leRayon`), sous le champ — la
-            présentation exacte de l'ancien « à domicile ». */
+            présentation exacte de l'ancien « à domicile », ET SEULEMENT
+            AUTOUR D'UN POINT : sur un État ou un pays, `leRayon` ne
+            rend rien et `rayonRequis` n'exige rien (nº 415). */
     if (mode.genre === "disponible") {
       return (
         /*  §3 (nº 269, élargie par la nº 272) — CHAQUE MODE EST UNE
@@ -617,14 +632,21 @@ export function BlocModesExercice({
             de clé à lui. */
         <ZoneLieuSeule
           prefixe={`mode-${mode.cle}`}
-          titre="Je suis actuellement à la recherche d'un lieu."
-          indication="Ville"
+          titre="Je suis à la recherche d'un lieu."
+          indication="Ville ou État/Pays"
           lieu={mode.lieu}
           surLieu={(lieu) =>
-            //  CHANGER DE LIEU REMET LE RAYON À ZÉRO : un rayon de
-            //  100 km autour d'une ville n'a aucun sens autour d'une
-            //  autre, et le garder ferait passer une valeur qu'on n'a
-            //  jamais choisie pour celle-là.
+            /*  CHANGER DE LIEU REMET LE RAYON À ZÉRO : un rayon de
+                100 km autour d'une ville n'a aucun sens autour d'une
+                autre, et le garder ferait passer une valeur qu'on n'a
+                jamais choisie pour celle-là.
+                ⚠️ C'EST AUSSI LA RÉPONSE AU CAS DU POINT 4 (nº 415) :
+                « une ville avec un rayon, puis un pays ». Le rayon
+                déjà choisi est EFFACÉ ICI, dans la même écriture que
+                le nouveau lieu — jamais conservé en silence sous une
+                échelle où les badges n'existent même plus. La règle ne
+                connaît pas de cas particulier : TOUT changement de
+                lieu remet le rayon à null. */
             modifier(mode.cle, { lieu, rayonKm: null })
           }
           surMobile={surMobile}
@@ -957,16 +979,17 @@ export function BlocModesExercice({
   return (
     <div>
       {/* LE SÉLECTEUR — QUATRE RECTANGLES (nº 125 ; trois depuis la
-          nº 402, QUATRE depuis la nº 414) : Studio · Salon · Guest ·
-          Disponible, l'ordre dicté par le propriétaire.
+          nº 402, QUATRE depuis la nº 414) : Freelance · Studio ·
+          Salon · Guest, l'ordre dicté par le propriétaire (nº 415).
           ⚠️ LES DEUX LIGNES DE DEUX REVIENNENT SOUS `sm` (la règle de
           la nº 128, éteinte par la nº 402 faute de quatrième mot) :
-          « Disponible » mesure ~71 px à 14 px semi-gras — le gabarit
-          exact d'« À domicile » (~70 px) — et quatre rectangles à
-          320 px n'en laisseraient que ~64 chacun : le mot ne tient
-          pas. Sous 640 px, donc :
-                Studio · Salon
-                Guest  · Disponible
+          « Freelance » mesure ~67 px à 14 px semi-gras (mesuré sur le
+          Geist réellement servi ; « Disponible » en faisait 71 et « À
+          domicile » 70) — et quatre rectangles à 320 px n'en
+          laisseraient que ~64 chacun, rembourrage compris : le mot ne
+          tient pas. Sous 640 px, donc, dans le nouvel ordre :
+                Freelance · Studio
+                Salon     · Guest
           (~124 px par rectangle à 320 px). Dès `sm` (640 px), la place
           revient : UNE LIGNE DE QUATRE (~132 px par rectangle à
           640 px, et davantage au-delà) — c'est le web.

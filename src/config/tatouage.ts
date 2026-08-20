@@ -781,10 +781,12 @@ export const FILTRE_TYPE_FICHE = {
  *
  * DEUX AXES INDÉPENDANTS, DONC DEUX GROUPES :
  *   · PROFIL       — ce qu'est la fiche : Artiste · Salon · Studio privé
- *   · OÙ IL TATOUE — comment l'artiste travaille : Studio · Salon ·
- *                    Guest · Disponible (nº 402 — « à domicile » est
- *                    supprimé ; nº 414 — « Disponible » le remplace,
- *                    sous un autre sens : l'artiste qui cherche un lieu)
+ *   · OÙ IL TATOUE — comment l'artiste travaille : Freelance · Studio ·
+ *                    Salon · Guest (nº 402 — « à domicile » est
+ *                    supprimé ; nº 414 — un quatrième mode le remplace,
+ *                    sous un autre sens : l'artiste qui cherche un
+ *                    lieu ; nº 415 — il se nomme « Freelance » et passe
+ *                    en tête)
  *
  * ⚠️ LA GRAMMAIRE QUI SÉPARAIT LES DEUX GROUPES (noms d'un côté,
  * compléments de lieu de l'autre) N'EXISTE PLUS depuis la nº 402 : le
@@ -833,19 +835,33 @@ export const FILTRE_MODE_ACTIVITE = {
   //  ██ nº 414 — « DISPONIBLE » ENTRE, EN DERNIER ██
   //  Le quatrième mode (l'artiste qui CHERCHE un lieu) prend la place
   //  qu'occupait « à domicile » dans ce groupe : une option de plus,
-  //  même position dans la liste que dans le sélecteur du formulaire —
-  //  Studio · Salon · Guest · Disponible. Les trois listes ordonnées
-  //  (ORDRE_SELECTEUR, celle-ci, RANG_DU_GENRE) bougent ENSEMBLE.
+  //  même position dans la liste que dans le sélecteur du formulaire.
   //  ⚠️ LE SLUG DU FILTRE EST `disponible`, PAS `a-domicile` : l'ancien
   //  slug portait l'ancien sens. Un vieux lien `exclure=a-domicile`
   //  reste simplement ignoré (`filtresConnus` ne garde que les slugs
   //  connus) — il n'éteint donc RIEN, la recherche se fait comme si le
   //  filtre n'avait pas été touché.
+  //  ██ nº 415 — « FREELANCE », ET IL PASSE EN PREMIER ██
+  //  DEUX CHANGEMENTS, ET UN SEUL EST VISIBLE :
+  //   · LE LIBELLÉ devient « Freelance » — « Disponible » laissait
+  //     croire à un carnet ouvert, « Freelance » dit qu'il n'est
+  //     rattaché à aucun établissement ;
+  //   · L'ORDRE devient Freelance · Studio · Salon · Guest, ici comme
+  //     au sélecteur du formulaire et comme RANG_DU_GENRE. Les trois
+  //     listes ordonnées bougent ENSEMBLE (règle nº 403).
+  //  ⚠️ LE SLUG NE BOUGE PAS, ET C'EST UN CHOIX (nº 415) : `disponible`
+  //  voyage dans l'adresse (`exclure=disponible`) et vaut la valeur
+  //  écrite en base. Rien ne l'impose — « disponible » ne CONTREDIT pas
+  //  « freelance » (un artiste sans établissement est disponible), à la
+  //  différence de `domicile`, qui affirmait un lieu qui n'existait
+  //  plus. Le renommer casserait les liens déjà partagés sans rien
+  //  apprendre à personne. C'est la règle des nº 402 et 403 : le
+  //  libellé change, la valeur jamais.
   options: [
+    { slug: "disponible", label: "Freelance", genre: "disponible" },
     { slug: "en-studio-prive", label: "Studio", genre: "prive" },
     { slug: "en-salon", label: "Salon", genre: "salon" },
     { slug: "en-guest", label: "Guest", genre: "guest" },
-    { slug: "disponible", label: "Disponible", genre: "disponible" },
   ],
 } as const;
 
@@ -1181,6 +1197,22 @@ export function aDesHoraires(
  * toute requête, migration ou relecture qui tomberait dessus. Le mot
  * est neuf parce que le sens est neuf ; la mécanique, elle, est
  * l'héritage exact (colonne `rayon_km` conservée par la nº 402).
+ * ██ nº 415 — LE MOT AFFICHÉ DEVIENT « FREELANCE », LE SLUG RESTE ██
+ * « Disponible » laissait croire à un carnet de rendez-vous ouvert ;
+ * « Freelance » dit ce qu'il faut : aucun établissement de rattache-
+ * ment. LE SLUG `disponible` NE BOUGE PAS — il est déjà écrit en base
+ * et rien ne l'impose : « disponible » ne contredit pas « freelance »
+ * (c'est le même artiste, décrit d'un autre bout), là où `domicile`
+ * affirmait un lieu. Le changer imposerait de RÉÉCRIRE les lignes
+ * existantes et de rejouer la contrainte, pour zéro gain visible.
+ * C'est la règle des nº 402 et 403, appliquée une fois de plus : le
+ * LIBELLÉ change, la VALEUR jamais.
+ * ⚠️ ET L'ENTRÉE PASSE EN TÊTE (nº 415) : Freelance · Studio · Salon ·
+ * Guest, l'ordre du sélecteur du formulaire, du filtre et de
+ * RANG_DU_GENRE. Cette liste-ci n'ordonne rien à elle seule (on y
+ * cherche par slug, et le repli de `genreMode` est NOMMÉ, pas
+ * positionnel) : elle suit pour que les quatre listes se lisent dans
+ * le même ordre.
  * ⚠️ LA CONTRAINTE `modes_exercice_genre_connu` a été RESSERRÉE à
  * ('salon','guest','prive') par la nº 402 : sans migration, la base
  * REFUSE une ligne `disponible`. La migration de ce zip
@@ -1192,6 +1224,15 @@ export function aDesHoraires(
  * Guest · Disponible — l'ordre dicté du sélecteur du formulaire.
  */
 export const GENRES_MODE = [
+  {
+    slug: "disponible",
+    /** Sur la fiche publique : « Freelance • Lyon, France • 50 km ». */
+    label: "Freelance",
+    titre: "Freelance",
+    /** Aucun lieu à lier : les deux phrases disent la même chose. */
+    phrase: "Freelance / Secteur :",
+    phraseLiee: "Freelance / Secteur :",
+  },
   {
     slug: "prive",
     label: "Studio",
@@ -1217,25 +1258,20 @@ export const GENRES_MODE = [
     phrase: "En session Guest à",
     phraseLiee: "En Guest chez",
   },
-  {
-    slug: "disponible",
-    /** Sur la fiche publique : « Disponible • Lyon, France ». */
-    label: "Disponible",
-    titre: "Disponible",
-    /** Aucun lieu à lier : les deux phrases disent la même chose. */
-    phrase: "Disponible / Secteur :",
-    phraseLiee: "Disponible / Secteur :",
-  },
 ] as const;
 
 export type GenreMode = (typeof GENRES_MODE)[number]["slug"];
 
 /**
- * JUSQU'OÙ UN ARTISTE SE DÉPLACE — le rayon du mode « Disponible »
+ * JUSQU'OÙ UN ARTISTE SE DÉPLACE — le rayon du mode « Freelance »
  * (nº 414 ; hérité de l'ancien « à domicile », mêmes paliers).
  * ⚠️ IL NE S'AFFICHE QU'AUTOUR D'UNE VILLE, jamais autour d'une
  * région ni d'un pays : « 50 km autour de la France » ne veut rien
- * dire. C'est exactement la règle du champ de localité du moteur.
+ * dire. C'est exactement la règle du champ de localité du moteur, et
+ * elle est TENUE À DEUX ENDROITS (nº 415, point 4) : `leRayon`
+ * n'affiche les badges que sur une précision « ville » ou « adresse »,
+ * `rayonRequis` n'exige le rayon que là — un État ou un pays n'en
+ * demande donc aucun, et le mode reste valide sans lui.
  */
 export const RAYONS_DEPLACEMENT = [10, 25, 50, 100, 200] as const;
 

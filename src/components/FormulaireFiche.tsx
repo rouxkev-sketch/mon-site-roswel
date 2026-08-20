@@ -960,7 +960,7 @@ export function FormulaireFiche() {
       qu'il a saisie peut être la sienne. La promesse de vie privée
       vaut aussi pour la ligne d'adresse de la fiche, pas seulement
       pour ses modes. (C'était la règle d'« à domicile » avant la
-      nº 402 ; « Disponible » la reprend.)
+      nº 402 ; le mode « Freelance » la reprend.)
       ⚠️ UN ENCADRÉ VIERGE NE COMPTE PAS DU TOUT (passe nº 124) :
       ouvrir un onglet par curiosité crée un mode sans rien dedans —
       seuls les modes où quelque chose est saisi (ceux qui partent en
@@ -3052,9 +3052,35 @@ export function FormulaireFiche() {
              bouton — « à droite, sur son alignement ».
              ⚠️ RIEN NE BOUGE QUAND LA PHRASE EST ABSENTE : une rangée
              flex d'un seul enfant occupe exactement la place de cet
-             enfant. */}
+             enfant.
+             ██ §5 (nº 415) — AU DOIGT, LA PHRASE PASSE AU-DESSUS ██
+             À droite du bouton, elle n'avait qu'une poignée de pixels
+             sur un téléphone : elle se cassait en trois lignes contre
+             le bord. `mobile:flex-col-reverse` la fait passer AU-DESSUS
+             sans toucher à l'ordre du HTML — le bouton reste le premier
+             élément lu et le premier tabulé, la phrase garde son
+             `role="status"`. Sur le web, rien ne change : la rangée
+             reste horizontale, la phrase à droite.
+             ⚠️ `mobile:` SUIT LE POINTEUR, PAS LA LARGEUR (variante
+             maison, globals.css l.34) : une fenêtre de bureau
+             rétrécie garde donc la disposition du web, comme partout
+             ailleurs sur le site.
+             ⚠️ L'AIR AU-DESSUS DU BOUTON N'AUGMENTE QU'AVEC LA PHRASE,
+             et c'est la propriété même du `gap` : un écart flex ne
+             s'écrit QU'ENTRE DEUX ENFANTS. Au repos (phrase absente),
+             la rangée n'a qu'un enfant — 0 px ajouté, l'espacement
+             au-dessus du bouton reste exactement celui d'aujourd'hui.
+             Quand la phrase paraît, c'est `gap-4` — 16 px, la MÊME
+             valeur qui les sépare horizontalement sur le web : aucune
+             valeur neuve n'est introduite.
+             `mobile:items-start` : la phrase et le bouton s'alignent à
+             gauche une fois empilés (`items-center` les aurait
+             centrés dans la colonne). */}
         {!exerciceConfirme && typeFiche && (
-          <div className="flex items-center gap-4 self-start">
+          <div
+            className="flex items-center gap-4 self-start
+                       mobile:flex-col-reverse mobile:items-start"
+          >
           <button
             type="button"
             title={!blocUnComplet ? (raisonIncomplet ?? undefined) : undefined}

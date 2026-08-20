@@ -53,7 +53,7 @@ const COLONNES_MIGRATION_33 = [
   "horaires",
   "fuseau",
   //  ⚠️ AJOUTÉE PAR LA nº 40 (rayon du mode « à domicile », porté
-  //  depuis la nº 414 par le mode « Disponible »). Même logique :
+  //  depuis la nº 414 par le mode « Freelance »). Même logique :
   //  tant qu'elle manque, le reste part quand même.
   "rayon_km",
   //  ⚠️ AJOUTÉE PAR LA nº 41 (nature du lieu d'une session guest).
@@ -257,7 +257,7 @@ async function ecrireModes(
       nature_lieu: mode.genre === "guest" ? (mode.natureLieu ?? null) : null,
       //  §1 (nº 266) — LE NOM DU LIEU SAISI À LA MAIN. Il n'a de sens
       //  que là où le champ existe (`nomLieuRequis` : un lieu qui a
-      //  son portfolio porte déjà le sien, « Disponible » n'a pas de
+      //  son portfolio porte déjà le sien, « Freelance » n'a pas de
       //  lieu du tout) — ailleurs null, comme le rayon et la nature.
       nom_lieu: nomLieuRequis(mode)
         ? (mode.nomLieu ?? "").trim() || null

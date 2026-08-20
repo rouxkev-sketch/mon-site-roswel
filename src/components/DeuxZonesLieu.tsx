@@ -349,7 +349,8 @@ export function DeuxZonesLieu({
 
 /**
  * UNE SEULE ZONE — pour le mode qui n'a RIEN à chercher.
- * « Disponible » (nº 414) ne se cherche pas sur yokofolio : il n'y a
+ * « Freelance » (nº 414 ; « Disponible » jusqu'à la nº 415) ne se
+ * cherche pas sur yokofolio : il n'y a
  * PAS de lieu — l'artiste en cherche un, et son encadré ne porte
  * qu'une ville (et son rayon, glissé en `souscrit`). Lui proposer une
  * recherche de portfolio serait un cul-de-sac déguisé en choix.
@@ -384,7 +385,7 @@ export function ZoneLieuSeule({
   /** Ce qu'on lit dans le champ. */
   indication?: string;
   /** Ce qui se glisse SOUS le champ une fois le lieu choisi — le
-      rayon de déplacement du mode « Disponible » (nº 414). */
+      rayon de déplacement du mode « Freelance » (nº 414). */
   souscrit?: React.ReactNode;
   lieu: LieuTrouve | null;
   surLieu: (lieu: LieuTrouve | null) => void;
