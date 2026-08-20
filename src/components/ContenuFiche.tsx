@@ -25,7 +25,7 @@ import {
   IconeCalendrier,
   IconeDuLien,
   IconeEtoile,
-  IconeGoutte,
+  IconeMachineATatouer,
 } from "@/components/IconeReseau";
 import { BoutonSuivre } from "@/components/BoutonSuivre";
 import {
@@ -1183,7 +1183,7 @@ export function ContenuFiche({
       className={`flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE}`}
     >
       <span className={BOITE_ICONE_LIGNE}>
-        <IconeGoutte taille={20} />
+        <IconeMachineATatouer taille={20} />
       </span>
       <span className="min-w-0">
         {tatoueur.styles.map((slug, rang) => (

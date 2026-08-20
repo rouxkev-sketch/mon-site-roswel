@@ -181,33 +181,102 @@ export function IconeEtoile({ taille = 20 }: ProprietesIconeLien) {
 }
 
 /**
- * §3 (nº 387) — LA GOUTTE D'ENCRE, POUR LA LIGNE DES STYLES.
+ * ██ LA MACHINE À TATOUER, POUR LA LIGNE DES STYLES ██
  * ==================================================================
- * Elle REMPLACE la palette de la nº 386, supprimée avec elle : à la
- * nº 387 les deux lignes échangent leur place, l'étoile passe aux
- * PRATIQUES et les STYLES reçoivent cette goutte.
- * Aucun fichier ajouté au dépôt : un tracé, comme ses voisines.
+ * Elle REMPLACE `IconeGoutte` (la goutte d'encre de la nº 387), et le
+ * motif du remplacement est net : la goutte et le repère de
+ * localisation avaient LA MÊME SILHOUETTE, l'une étant l'autre
+ * retournée — deux lignes voisines d'une même fiche portaient donc
+ * presque le même dessin. Aucun fichier n'est ajouté au dépôt : c'est
+ * un tracé, comme toutes ses voisines.
+ * (Une machine avait déjà servi cette ligne à la nº 384 ; elle n'avait
+ * pas été retenue. Celle-ci est un dessin neuf, construit pour 20 px.)
  *
- * MÊME TRAITEMENT QUE L'ÉTOILE ET QU'INSTAGRAM, sans rien choisir :
- * `fill="none"`, trait de 1,8 sur la grille de 24, `currentColor`
- * (aucune couleur déclarée — celle du texte de sa ligne), 20 px dans
- * la boîte de 22 px partagée par toutes les lignes du profil.
+ * MÊME TRAITEMENT QUE SES VOISINES, sans rien choisir : `fill="none"`,
+ * trait de 1,8 sur la grille de 24, jonctions et extrémités arrondies,
+ * `currentColor` (aucune couleur déclarée — celle du texte de sa
+ * ligne), 20 px dans la boîte de 22 px des lignes de profil.
  *
- * LE TRACÉ, SIMPLE ET FRANC : une pointe en haut, deux flancs qui
- * s'écartent en courbe, un ventre rond en bas — la goutte se ferme sur
- * elle-même. Deux courbes symétriques, rien de plus : à 20 px, tout
- * détail de plus (reflet, ombre) se referme en tache.
+ * ██ CE QUE LE DESSIN GARDE DE LA RÉFÉRENCE, ET CE QU'IL ABANDONNE ██
+ * La référence est en APLATS PLEINS et vue en diagonale. Elle est
+ * REDESSINÉE AU TRAIT, contour vide : un aplat au milieu de cette
+ * liste jurerait (seul TikTok en porte un, et pour une raison qui lui
+ * est propre). De la référence, il ne reste que ce qui survit à 20 px :
+ *  · LE CORPS EN DIAGONALE, du bas-gauche au haut-droite ;
+ *  · LA POINTE FINE qui en sort, en bas à gauche ;
+ *  · UN TRAIT EN TRAVERS près du haut, qui sépare la tête de la
+ *    poignée — c'est lui qui fait lire « machine » plutôt que
+ *    « stylo », et c'est le procédé du bandeau d'`IconeCalendrier`.
+ * ABANDONNÉ, parce qu'illisible à cette taille : le cadre ajouré, la
+ * bobine, la vis, l'étage du haut. Trois traits, comme le calendrier.
+ *
+ * ██ COMMENT ELLE EST CONSTRUITE ██
+ * Elle est dessinée DEBOUT — pointe en bas, tête en haut —, puis
+ * PIVOTÉE d'un quart de quart de tour (`rotate(45 12 12)`, sens
+ * horaire en SVG). C'est ce qui envoie la pointe en bas à gauche et la
+ * tête en haut à droite, comme sur la référence. Écrire le dessin
+ * droit puis le faire pivoter, plutôt que de calculer chaque point en
+ * biais, garde des coordonnées lisibles et une symétrie exacte.
+ * ⚠️ CE QUE LA ROTATION COÛTE, ET POURQUOI LE CORPS EST COURT : une
+ * forme oblique occupe plus de place que la même forme droite — la
+ * diagonale d'une boîte vaut une fois et demie son côté. Les
+ * proportions sont calculées pour que l'encre PIVOTÉE tienne dans
+ * x et y ∈ [2,81 ; 21,19], c'est-à-dire la marge d'Instagram (2,50) en
+ * un peu plus large. Rien ne touche le bord de la boîte.
+ * ⚠️ AUCUNE ARÊTE PARTAGÉE, ET C'EST LE PIÈGE ÉVITÉ : deux formes qui
+ * se touchent bord à bord font, à 20 px, un double trait qui se remplit
+ * et devient une tache. Le corps est UNE SEULE forme fermée, la bande
+ * le traverse, et l'aiguille sort par le bas en le croisant à angle
+ * droit — une jonction en T se lit, un empilement de traits parallèles
+ * non.
+ * ⚠️ LES TROIS JOURS SONT MESURÉS, sur le rendu réel à 20 px et non à
+ * l'estime — c'est ce qui a réglé le dessin, et le trait lui-même vaut
+ * 1,50 px :
+ *  · la chambre du haut (le cadre) ....... 2,17 px
+ *  · la chambre du bas (la poignée) ...... 2,50 px
+ *  · l'aiguille, hors du corps ........... 5,67 px
+ * Un premier tracé donnait un corps plus long et une aiguille de
+ * 3,3 px : elle se noyait dans la masse au lieu d'en sortir. Le corps
+ * a donc raccourci pour qu'elle s'allonge.
  */
-export function IconeGoutte({ taille = 20 }: ProprietesIconeLien) {
+export function IconeMachineATatouer({ taille = 20 }: ProprietesIconeLien) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M12 3.2c3.9 4.4 6.4 7.6 6.4 10.4a6.4 6.4 0 1 1-12.8 0c0-2.8
-           2.5-6 6.4-10.4Z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
+      <g transform="rotate(45 12 12)">
+        {/*  L'AIGUILLE — elle part de DANS le corps (y = 12,6 contre un
+             bord à 13,2, six dixièmes de recouvrement) : aucun trou ne
+             peut s'ouvrir entre les deux, quelle que soit la façon dont
+             le rendu arrondit. Elle est aussi fine que la charte
+             l'autorise — 1,8, le trait de toutes les icônes du
+             fichier ; c'est SA LONGUEUR NUE et le contraste avec la
+             masse du corps qui la font lire comme une pointe, pas une
+             épaisseur plus faible qui serait hors charte. */}
+        <path
+          d="M12 12.6v7.4"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+        />
+        {/*  LE CORPS — cadre et poignée d'un seul tenant. `rx` vaut 2,2
+             pour une largeur de 6,4 : les flancs gardent donc du droit
+             (2,2 < 3,2), et la forme reste un corps de machine, pas une
+             gélule. */}
+        <rect
+          x="8.8"
+          y="4"
+          width="6.4"
+          height="9.2"
+          rx="2.2"
+          stroke="currentColor"
+          strokeWidth="1.8"
+        />
+        {/*  LA BANDE — le trait qui sépare le cadre de la poignée, et
+             qui fait lire « machine » plutôt que « stylo ». Sa hauteur
+             (8,4) partage le corps en deux chambres presque égales :
+             plus haut, celle du cadre se bouchait ; plus bas, c'est
+             celle de la poignée qui se bouchait. */}
+        <path d="M8.8 8.4h6.4" stroke="currentColor" strokeWidth="1.8" />
+      </g>
     </svg>
   );
 }
@@ -222,22 +291,54 @@ export function IconeGoutte({ taille = 20 }: ProprietesIconeLien) {
  * trait de 1,8 sur la grille de 24, `currentColor`, 20 px dans la
  * boîte de 22.
  *
- * LE TRACÉ : la goutte de plan classique — une tête ronde qui se
- * referme en pointe vers le bas — et son ANNEAU intérieur, celui qui
- * la distingue de la goutte d'encre des styles. Deux formes, pas une
- * de plus : à 20 px, tout détail supplémentaire se referme.
+ * ██ LE TRACÉ EST REFAIT (passe des icônes) ██
+ * ------------------------------------------------------------------
+ * CE QUI N'ALLAIT PAS, ET CE N'ÉTAIT PAS UNE QUESTION DE GOÛT : les
+ * deux flancs partaient des EXTRÊMES HORIZONTAUX du cercle — de son
+ * point le plus à gauche et de son point le plus à droite. Le repère
+ * était donc large à mi-hauteur puis rentrait d'un coup : la
+ * silhouette d'une goutte retournée, exactement celle qu'`IconeGoutte`
+ * portait sur la ligne voisine. Et la tête, d'un rayon de 6,4 pour une
+ * boîte de 24, pesait trop lourd — 12,8 unités de large, plus de la
+ * moitié du dessin.
+ * ⚠️ CE QUI ALLAIT, ET QU'IL FAUT DIRE : l'anneau n'était pas en
+ * cause. Il avait 1,75 px de jour, un peu PLUS que celui d'aujourd'hui
+ * (1,50 px) — la tête ayant maigri, l'anneau a suivi. Le défaut était
+ * la forme, pas l'espacement.
+ *
+ * LE TRACÉ D'AUJOURD'HUI, LE REPÈRE DE PLAN CLASSIQUE : les flancs
+ * sont les DEUX TANGENTES menées depuis la pointe au cercle de la
+ * tête. C'est ce qui donne sa forme au repère — des flancs droits qui
+ * rejoignent la tête sans cassure, parce qu'une tangente touche le
+ * cercle sans le couper. Les valeurs ne sont pas dessinées à vue,
+ * elles se déduisent (tête centrée en (12 ; 9,2), rayon 5,8, pointe en
+ * (12 ; 20,6)) :
+ *  · les points de contact tombent en (7,01 ; 12,15) et (16,99 ; 12,15) ;
+ *  · l'arc qui les relie par le haut vaut 241,2° — plus d'un
+ *    demi-tour, d'où le drapeau `large-arc` à 1 ;
+ *  · la pointe fait un angle de 61,2°, largement au-dessus des ~30° en
+ *    dessous desquels un sommet arrondi se bouche à 20 px.
+ * L'encre va de y = 2,5 à y = 21,5 : elle est centrée dans la boîte.
+ *
+ * ⚠️ L'ANNEAU EST RÉGLÉ SUR LE TRAIT : rayon 2,2 dans une tête de 5,8.
+ * Le jour entre les deux cercles vaut alors 1,50 px — EXACTEMENT
+ * l'épaisseur du trait — et le trou du milieu 2,17 px, soit une fois
+ * et demie. C'est la règle qui tient à cette taille : en dessous d'un
+ * trait de jour, deux courbes voisines se rejoignent à l'affichage et
+ * l'anneau devient une pastille.
+ * ⚠️ DEUX FORMES, PAS UNE DE PLUS : à 20 px, tout détail supplémentaire
+ * se referme.
  */
 export function IconeLocalisation({ taille = 20 }: ProprietesIconeLien) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
-        d="M12 21.2c4-4.6 6.4-8 6.4-11.2a6.4 6.4 0 1 0-12.8 0c0 3.2
-           2.4 6.6 6.4 11.2Z"
+        d="M12 20.6 7.01 12.15A5.8 5.8 0 1 1 16.99 12.15Z"
         stroke="currentColor"
         strokeWidth="1.8"
         strokeLinejoin="round"
       />
-      <circle cx="12" cy="9.8" r="2.5" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="12" cy="9.2" r="2.2" stroke="currentColor" strokeWidth="1.8" />
     </svg>
   );
 }
