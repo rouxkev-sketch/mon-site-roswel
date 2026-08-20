@@ -848,6 +848,10 @@ export function FormulaireFiche() {
     fichier: File;
   } | null>(null);
   const [instagram, setInstagram] = useState("");
+  /*  §2 (nº 408) — LES DEMANDES PAR DM. Décoché par défaut : une fiche
+       neuve n'annonce rien que son auteur n'ait choisi, et la colonne
+       est `default false` en base (yokofolio-dm-instagram.sql). */
+  const [dmInstagram, setDmInstagram] = useState(false);
   /** §2 (nº 270) — L'ÉTAT DES CARNETS : "" (rien déclaré — un manque
       à la validation), 'ouvert', 'delai' ou 'ferme'. */
   const [booking, setBooking] = useState("");
@@ -933,6 +937,21 @@ export function FormulaireFiche() {
     ? tousLesManques(typeFiche, modesExercice, studios, etablissement)
     : [];
   const manqueDesigne = manquesDesignes[0] ?? null;
+  /**
+   * §5 (nº 408) — AUCUN LIEU COMMENCÉ : UNE PHRASE, PAS UN CADRE.
+   * ------------------------------------------------------------------
+   * `aucun-lieu` est le manque qui ne désigne AUCUN champ (voir
+   * lib/modes-exercice) : personne ne le reconnaît, donc rien ne
+   * rougit — ni un encadré de lieu, ni le sélecteur. Reste à le DIRE,
+   * et c'est ici, à côté du bouton.
+   * ⚠️ LES DEUX SIGNALEMENTS NE PEUVENT PAS COEXISTER, PAR
+   * CONSTRUCTION : ce manque n'est rendu QUE lorsque la liste des
+   * lieux déclarés est vide. Dès qu'un lieu est commencé, il disparaît
+   * de lui-même et les manques de ce lieu prennent le relais, en
+   * rouge, comme depuis la nº 407. Aucune condition n'est à tenir à
+   * jour des deux côtés.
+   */
+  const aucunLieuChoisi = manqueDesigne?.champ === "aucun-lieu";
 
   /** L'ADRESSE PRÉCISE (rue et numéro) est-elle publiable ? Elle ne
       l'est pas quand la fiche ne tient que par des STUDIOS PRIVÉS : la
@@ -1388,6 +1407,9 @@ export function FormulaireFiche() {
             .filter(Boolean) as string[];
           setPhotosPortfolio(portfolioLu);
           setInstagram(String(source.lien_instagram ?? ""));
+          //  §2 (nº 408) — absent (migration pas passée) se relit
+          //  « décoché » : on ne coche jamais une case pour personne.
+          setDmInstagram(Boolean(source.dm_instagram));
           //  §2 (nº 270) — L'ÉTAT DES CARNETS, relu tel que déclaré.
           //  On ne garde que les trois valeurs connues (et un mois
           //  entre 1 et 12) : une donnée d'avant les garde-fous ne
@@ -1919,6 +1941,11 @@ export function FormulaireFiche() {
         photos: [] as string[],
         // Instagram est OBLIGATOIRE (la validation l'a garanti).
         lien_instagram: lienInstagram ?? "",
+        //  §2 (nº 408) — la case DM. Elle n'a de sens qu'avec un
+        //  Instagram, et Instagram est obligatoire : pas de garde à
+        //  poser ici. Sur une base non migrée, l'envoi la retire et
+        //  continue (voir `optionnelles`).
+        dm_instagram: dmInstagram,
         //  §2 (nº 270) — L'ÉTAT DES CARNETS, déclaré et obligatoire
         //  (la validation l'a garanti). Le mois n'a de sens qu'avec
         //  « délai d'attente » : sur 'ouvert' et 'ferme' il part en
@@ -1991,6 +2018,10 @@ export function FormulaireFiche() {
         "annonce_vue_le",
         "exercice_verrouille",
         "filtres_besoins",
+        //  §2 (nº 408) — la case DM (yokofolio-dm-instagram.sql).
+        //  Aucun autre nom de colonne ne la contient : sa place dans
+        //  la liste est libre (voir la note de `booking_mois`).
+        "dm_instagram",
       ];
 
       if (!ficheChargee) {
@@ -3007,7 +3038,17 @@ export function FormulaireFiche() {
             d'origine, conservé : tant que le bloc est incomplet, il ne
             confirme rien, mais l'appui ALLUME le champ fautif et en
             donne la raison. Un bouton éteint ne peut rien expliquer. */}
+        {/*  §5 (nº 408) — LE BOUTON ET SA PHRASE, SUR UNE MÊME RANGÉE.
+             Le bouton portait `self-start` parce que la colonne du
+             formulaire étire ses enfants ; c'est désormais LA RANGÉE
+             qui le porte, et le bouton garde sa taille naturelle à
+             l'intérieur. `items-center` cale la phrase sur l'axe du
+             bouton — « à droite, sur son alignement ».
+             ⚠️ RIEN NE BOUGE QUAND LA PHRASE EST ABSENTE : une rangée
+             flex d'un seul enfant occupe exactement la place de cet
+             enfant. */}
         {!exerciceConfirme && typeFiche && (
+          <div className="flex items-center gap-4 self-start">
           <button
             type="button"
             title={!blocUnComplet ? (raisonIncomplet ?? undefined) : undefined}
@@ -3032,7 +3073,7 @@ export function FormulaireFiche() {
             //  parce que la colonne du formulaire ÉTIRE ses enfants
             //  par défaut : sans lui, la capsule redevenait pleine
             //  largeur sans qu'aucune classe ne le demande.
-            className={`self-start inline-flex items-center justify-center rounded-full
+            className={`inline-flex shrink-0 items-center justify-center rounded-full
                        px-7 min-h-[48px] text-[15px] font-semibold
                        transition-colors ${
                          blocUnComplet
@@ -3042,6 +3083,22 @@ export function FormulaireFiche() {
           >
             Je confirme mon choix
           </button>
+          {/*  LA PHRASE — le message du manque lui-même, jamais une
+               chaîne recopiée : si le mot change dans
+               lib/modes-exercice, il change ici sans qu'on y touche.
+               `role="status"` la fait lire par les lecteurs d'écran au
+               moment où elle paraît, comme les autres messages du
+               formulaire. */}
+          {aucunLieuChoisi && (
+            <p
+              role="status"
+              data-manque-aucun-lieu=""
+              className="text-[14px] font-semibold leading-snug text-erreur"
+            >
+              {manqueDesigne?.message}
+            </p>
+          )}
+          </div>
         )}
 
         {/* ⚠️ TOUT CE QUI SUIT N'EXISTE QU'APRÈS LA CONFIRMATION.
@@ -3273,6 +3330,44 @@ export function FormulaireFiche() {
               erreur={erreurs.instagram ?? null}
               motif={motifsParChamp.instagram ?? null}
             />
+            {/*  ██ §2 (nº 408) — LA CASE « DEMANDES PAR DM » ██
+                 ELLE N'EXISTE QU'AVEC UN INSTAGRAM SAISI : proposer
+                 d'accepter les DM d'un compte qu'on n'a pas donné
+                 n'aurait aucun sens, et la mention de la fiche se
+                 pose sur la ligne Instagram — sans lien, pas de ligne.
+                 ⚠️ LA CASE N'EST PAS UN DESSIN NEUF : c'est celle du
+                 site, reprise au caractère près de `FenetreSignalement`
+                 et de `BoutonHorsLigne` — une case NATIVE (`<input
+                 type="checkbox">`) de 16 px, teintée du rose de la
+                 charte par `accent-(--rw-primaire)`, dans un `<label>`
+                 qui rend la phrase entière cliquable. Ses angles
+                 légèrement arrondis viennent du système, comme sur les
+                 autres cases du site : les redessiner demanderait de
+                 remettre à zéro l'apparence native, ce qui coûterait
+                 l'état indéterminé, le focus clavier et le rendu de
+                 chaque plateforme — pour un arrondi qui est déjà là.
+                 ⚠️ ELLE NE DÉCOCHE RIEN TOUTE SEULE : effacer son
+                 Instagram masque la case mais garde la valeur, et le
+                 champ étant OBLIGATOIRE, on ne peut pas enregistrer
+                 une fiche sans lui — la valeur ne peut donc jamais
+                 partir en base sans son compte. */}
+            {instagram.trim() !== "" && (
+              <label
+                className="flex items-center gap-2.5 min-h-[36px] text-[14.5px]
+                           text-sombre-texte cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  checked={dmInstagram}
+                  onChange={(evenement) => {
+                    marquerModifie();
+                    setDmInstagram(evenement.target.checked);
+                  }}
+                  className="w-4 h-4 accent-(--rw-primaire)"
+                />
+                J&apos;accepte les demandes par DM Instagram.
+              </label>
+            )}
             {/*  §2 (nº 387) — LE CHAMP TIKTOK EST SUPPRIMÉ, sur
                  décision du propriétaire. Instagram reste, intact.
                  ⚠️ LA COLONNE `lien_tiktok` N'EST PAS TOUCHÉE, et

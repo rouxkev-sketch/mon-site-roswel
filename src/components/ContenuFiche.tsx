@@ -834,15 +834,38 @@ export function ContenuFiche({
    * décrit ne se clique pas). Elle partage la famille des liens :
    * même taille, même gris doux, même colonne de 22 px.
    */
+  /*  ██ §3 (nº 408) — LE DÉLAI PASSE SUR DEUX LIGNES ██
+       CE QU'IL Y AVAIT : « Booking · 12 mois », tout sur une ligne —
+       et l'état du carnet n'y était jamais dit en toutes lettres.
+       CE QUE C'EST DEVENU, sur deux lignes alignées l'une sous
+       l'autre :
+             Booking ouvert
+             Attente : 12 mois
+       Un délai, c'est un booking OUVERT avec une attente : la
+       première ligne le dit, la seconde chiffre. « Attente » remplace
+       « Délai d'attente », plus court comme demandé.
+       ⚠️ LES DEUX AUTRES ÉTATS NE BOUGENT PAS : une seule ligne,
+       « Booking ouvert » ou « Booking fermé », au mot près.
+       ⚠️ ET LE SILENCE NON PLUS : un « delai » sans mois (donnée
+       d'avant les garde-fous) reste muet — on n'écrit pas
+       « Attente : ? mois ». */
   const libelleBooking =
-    tatoueur.booking === "ouvert"
+    tatoueur.booking === "ouvert" || tatoueur.booking === "delai"
       ? "Booking ouvert"
       : tatoueur.booking === "ferme"
         ? "Booking fermé"
-        : tatoueur.booking === "delai" && tatoueur.booking_mois
-          ? `Booking · ${tatoueur.booking_mois} mois`
-          : null;
-  const entreeBooking = tatoueur.booking && libelleBooking && (
+        : null;
+  const attenteBooking =
+    tatoueur.booking === "delai" && tatoueur.booking_mois
+      ? `Attente : ${tatoueur.booking_mois} mois`
+      : null;
+  //  ⚠️ UN « delai » SANS MOIS SE TAIT, comme avant la nº 408 : sans
+  //  chiffre, la première ligne dirait « Booking ouvert » là où
+  //  l'artiste a déclaré une attente — ce serait lui faire dire autre
+  //  chose que ce qu'il a coché.
+  const bookingLisible =
+    tatoueur.booking === "delai" ? Boolean(attenteBooking) : true;
+  const entreeBooking = tatoueur.booking && libelleBooking && bookingLisible && (
     <span
       key="booking"
       data-booking-fiche={tatoueur.booking}
@@ -856,7 +879,14 @@ export function ContenuFiche({
            débordement. Et « Booking · 12 mois » y est DÉJÀ : 166,5 px
            dans 152, soit 14,5 px qui partent sur la case voisine.
            `max-w-full` referme la case sur sa piste. */
-      className={`flex max-w-full items-center gap-2.5 ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE}`}
+      /*  §3 (nº 408) — `items-start` REMPLACE `items-center` : avec
+           deux lignes, centrer l'icône la ferait flotter entre elles.
+           `BOITE_ICONE_LIGNE` fait exactement UNE hauteur de ligne
+           (`h-[1.375em]`, le `leading-snug` de 15 px) : posée en haut,
+           elle se centre donc sur la PREMIÈRE ligne, au pixel — et
+           rien ne bouge sur les fiches à une seule ligne, où les deux
+           alignements donnent le même résultat. */
+      className={`flex max-w-full items-start gap-2.5 ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE}`}
     >
       {/*  §1 (nº 273) — LE CALENDRIER, hors de tout ternaire d'état :
            une seule écriture couvre les trois états PAR CONSTRUCTION —
@@ -885,16 +915,37 @@ export function ContenuFiche({
            pour lui — elle fonctionne enfin, grâce au `max-w-full`
            ci-dessus. Les trois formulations du booking, elles, forment
            un vocabulaire fermé : il n'y a rien à abréger. */}
-      <span className="min-w-0">{libelleBooking}</span>
+      {/*  §3 (nº 408) — LES DEUX LIGNES DANS UNE COLONNE, derrière
+           l'icône : la seconde commence donc EXACTEMENT sous la
+           première, aucune des deux ne se décale. La colonne est le
+           seul enfant souple de la rangée, elle garde le `min-w-0` qui
+           autorise le repli du texte (leçon de la nº 391). */}
+      <span className="flex min-w-0 flex-col">
+        <span>{libelleBooking}</span>
+        {attenteBooking && <span>{attenteBooking}</span>}
+      </span>
     </span>
   );
 
+  /*  ██ §2 (nº 408) — « Instagram • DM » QUAND LA CASE EST COCHÉE ██
+       LE TOUT EN BLEU — le mot, la puce et « DM » —, et c'est GRATUIT :
+       le bleu est posé sur le `<a>` entier par `sortDuSite` (cinquième
+       argument, déjà `true` pour Instagram depuis la nº 388), donc
+       tout ce que le libellé contient l'hérite. L'ICÔNE RESTE GRISE
+       par le même mécanisme qu'ailleurs : son gris vit sur SA boîte,
+       un autre élément (nº 392). Aucune classe de couleur n'est
+       ajoutée ici — donc aucun risque de rejouer la nº 389.
+       ⚠️ LA PUCE EST CELLE DU SITE (U+2022, nº 393) : la même que les
+       pratiques, les styles et les titres de galerie.
+       ⚠️ NON COCHÉE, LA LIGNE NE BOUGE PAS D'UN CARACTÈRE : « Instagram »,
+       comme avant. Et sans la migration, `dm_instagram` est absent,
+       donc faux : la mention ne peut pas apparaître par accident. */
   const lienInstagram =
     tatoueur.lien_instagram &&
     lienEnLigne(
       "instagram",
       tatoueur.lien_instagram,
-      "Instagram",
+      tatoueur.dm_instagram ? "Instagram • DM" : "Instagram",
       iconeDeLien("instagram"),
       //  §5 (nº 388) — Instagram SORT DU SITE : bleu, et lui seul avec
       //  l'adresse. Le booking et le site gardent le gris doux.
@@ -1125,7 +1176,7 @@ export function ContenuFiche({
       className={`flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE}`}
     >
       <span className={BOITE_ICONE_LIGNE}>
-        <IconeEtoile taille={20} />
+        <IconeDiamant taille={20} />
       </span>
       <span className="min-w-0">
         {capsulesPratique.map((slug, rang) => (
@@ -1183,7 +1234,7 @@ export function ContenuFiche({
       className={`flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE}`}
     >
       <span className={BOITE_ICONE_LIGNE}>
-        <IconeDiamant taille={20} />
+        <IconeEtoile taille={20} />
       </span>
       <span className="min-w-0">
         {tatoueur.styles.map((slug, rang) => (
@@ -1605,8 +1656,18 @@ export function ContenuFiche({
                    lignes. */
               className="mt-10 flex w-full flex-col items-start gap-y-5"
             >
+              {/*  §3 (nº 408) — `items-start` SUR CETTE RANGÉE, et sur elle
+                   seule. Le booking peut désormais faire DEUX lignes ;
+                   `items-center` aurait alors centré Instagram sur la
+                   hauteur totale, c'est-à-dire l'aurait fait descendre
+                   entre les deux. Aligné en haut, il reste en face de
+                   « Booking ouvert », comme demandé.
+                   ⚠️ LA LARGEUR ET LE PARTAGE EN DEUX COLONNES NE
+                   CHANGENT PAS : `grid-cols-2`, `gap-x-7` et
+                   `justify-items-start` sont intouchés. Seule la
+                   hauteur de la rangée suit son plus grand contenu. */}
               {premiereLigne.length > 0 && (
-                <div className="grid w-full grid-cols-2 items-center justify-items-start gap-x-7 gap-y-4">
+                <div className="grid w-full grid-cols-2 items-start justify-items-start gap-x-7 gap-y-4">
                   {premiereLigne}
                 </div>
               )}

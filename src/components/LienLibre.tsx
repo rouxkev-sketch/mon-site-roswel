@@ -5,6 +5,7 @@ import { IconeCroix, IconeLien, IconePlus } from "@/components/Icones";
 import { MANQUE } from "@/lib/erreurs-formulaire";
 import { normaliserUrlLibre } from "@/lib/liens-fiche";
 import { sansRemplissageAuto } from "@/lib/champs-sans-remplissage";
+import { CHAMP as CHAMP_FORMULAIRE } from "@/components/champs-formulaire";
 
 /**
  * UN LIEN LIBRE — « AJOUTER UN LIEN », URL + TITRE (passe nº 116)
@@ -70,26 +71,32 @@ export const LIEN_LIBRE_VIDE: LienLibreSaisie = {
  */
 export const TITRE_LIEN_MAXIMUM = 30;
 
-//  Le même habillage que tous les champs du formulaire : fond un cran
-//  plus clair, éclairci au focus (nº 116), bordure rouge en faute.
-/*  ██ §2c (nº 407) — LA VOIE DE LA CROIX N'EST PLUS RÉSERVÉE ██
-     LA nº 405 POSAIT `pr-11` EN PERMANENCE, pour que la largeur de
-     frappe ne bouge jamais. Le propriétaire a tranché contre : au
-     repos, ces 44 px vides éloignaient l'URL et le compteur du bord de
-     l'encadré pour rien. « Je préfère le décalage au vide. »
-     LE CHAMP REVIENT DONC À `px-4` — le texte va jusqu'au bord — et
-     c'est L'APPELANT qui ajoute la voie, seulement quand la croix est
-     là (voir les deux `<input>` plus bas).
-     ⚠️ ET LE DÉCALAGE EST GLISSÉ, PAS SAUTÉ : `transition-colors` ne
-     couvrait que les couleurs, un changement de rembourrage aurait
-     donc claqué d'un coup. La liste est écrite en toutes lettres et
-     comprend `padding-right` : le texte se replie en 150 ms au lieu de
-     se couper net. Les trois couleurs qui transitaient (le fond au
-     focus, le bord d'une faute) sont conservées, aucune n'est perdue. */
-const CHAMP = `w-full min-h-[48px] rounded-lg border bg-sombre-eleve-clair px-4
-  text-base text-sombre-texte placeholder:text-sombre-texte-doux outline-none
-  transition-[background-color,border-color,color,padding-right]
-  focus:bg-sombre-haut`;
+/**
+ * ██ §1 (nº 408) — LE CHAMP CONSOMME L'ÉCRITURE PARTAGÉE ██
+ * ==================================================================
+ * CE QU'IL PORTAIT : une COPIE LOCALE de l'habillage des champs.
+ * La couleur y était déjà la bonne (`bg-sombre-eleve-clair`,
+ * `focus:bg-sombre-haut`), mais la BOÎTE ne l'était pas — 48 px de
+ * haut et `rounded-lg` (8 px), contre 52 px et `rounded-xl` (12 px)
+ * pour la bio, Instagram et le nom d'un lieu. Rouvrir un lien
+ * enregistré faisait donc apparaître deux champs plus courts et plus
+ * anguleux que tous leurs voisins, dans un encadré de 52 px qu'ils ne
+ * remplissaient pas : c'est ce décalage que le propriétaire voit.
+ * CE QU'IL PREND : `CHAMP` de `champs-formulaire`, LA source unique
+ * (nº 266) — mêmes 52 px, même arrondi, mêmes deux fonds. Une copie
+ * de moins à maintenir, et le lien rentre dans le rang.
+ * ⚠️ UNE SEULE CHOSE EST REMPLACÉE, ET IL LE FAUT : `transition-colors`
+ * ne couvre pas le rembourrage, or la nº 407 fait glisser
+ * `padding-right` quand la croix entre en scène. Les deux utilitaires
+ * écrivent la même propriété CSS (`transition-property`) — les poser
+ * côte à côte laisserait l'ordre de la feuille trancher, pas nous. On
+ * SUBSTITUE donc, et la liste écrite ici en toutes lettres garde les
+ * trois couleurs d'origine (fond, bord, texte) plus le rembourrage.
+ */
+const CHAMP = CHAMP_FORMULAIRE.replace(
+  "transition-colors",
+  "transition-[background-color,border-color,color,padding-right]"
+);
 
 /**
  * ██ §3 (nº 405) — LA CROIX QUI VIDE UN CHAMP ██

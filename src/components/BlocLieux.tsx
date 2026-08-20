@@ -33,6 +33,8 @@ import {
   modesOrdonnes,
   roleDuMembre,
   troisLignesDuMode,
+  villeEtPaysDuMode,
+  nomDuLieuDuMode,
   type MembreEquipe,
   type ModeExerciceFiche,
   type StudioFiche,
@@ -1261,7 +1263,17 @@ function TroisLignesDuLieu({
       elle est déjà cliquable. */
   sansLien?: boolean;
 }) {
-  const { etiquette, nom, adresse } = troisLignesDuMode(mode);
+  const { etiquette, nom } = troisLignesDuMode(mode);
+  /*  §6 (nº 408) — LA VILLE ET LE PAYS, SANS LA RUE. Ils viennent de
+       COLONNES (ville, region, pays, code_pays), pas d'un découpage de
+       l'adresse : voir `villeEtPaysDuMode`, qui porte la règle et ses
+       garde-fous.
+       ⚠️ QUAND `troisLignesDuMode` A FAIT MONTER L'ADRESSE À LA PLACE
+       DU NOM (aucun nom saisi), le nom PORTE DÉJÀ le lieu : on ne
+       l'écrirait pas deux fois. `nom` vaut alors l'ancienne ligne
+       d'adresse, et cette ligne-ci reste seule — c'est exactement ce
+       que faisait la troisième ligne, qui restait vide dans ce cas. */
+  const villePays = nomDuLieuDuMode(mode) ? villeEtPaysDuMode(mode) : "";
   /**
    * §1 (nº 290) — LE LIEU QUE LE PLAN VA CHERCHER.
    * ------------------------------------------------------------------
@@ -1294,18 +1306,46 @@ function TroisLignesDuLieu({
            (aucun nom saisi), c'est ELLE qui se clique : sinon le lieu
            serait cliquable ou non selon qu'un nom a été tapé, ce qui
            n'a aucun sens pour le visiteur. */}
-      {nom && (
-        <p className="mt-1.5 text-[15px] font-medium leading-snug text-sombre-texte [overflow-wrap:anywhere]">
-          <LienAdresse
-            texte={nom}
-            lieu={adresse ? null : lieu}
-            classeTexte=""
-          />
-        </p>
-      )}
-      {adresse && (
-        <p className="mt-0.5 text-[14px] leading-relaxed text-sombre-texte-doux [overflow-wrap:anywhere]">
-          <LienAdresse texte={adresse} lieu={lieu} classeTexte="" />
+      {/*  ██ §6 (nº 408) — DEUX LIGNES, PLUS TROIS ██
+           CE QU'IL Y AVAIT : le nom sur une ligne, l'adresse COMPLÈTE
+           (« 44 Rue Trousseau, Paris, France ») sur une troisième.
+           CE QUE C'EST DEVENU : « Hand In Glove Tattoo • Paris,
+           France » — la rue disparaît, la ville et le pays rejoignent
+           le nom derrière la puce du site (U+2022, celle des
+           pratiques, des styles et des titres de galerie).
+           ⚠️ LES DEUX TRAITEMENTS SONT CONSERVÉS, ET C'EST DÉLIBÉRÉ :
+           le nom garde son blanc `font-medium`, le lieu son gris doux.
+           Seul le CORPS s'unifie à 15 px — deux tailles sur une même
+           ligne se liraient comme un accident (l'adresse était à
+           14 px quand elle vivait seule sur sa ligne). Aucune couleur
+           n'est inventée, aucune n'est perdue.
+           ⚠️ NI PUCE ORPHELINE, NI LIGNE VIDE : la puce ne s'écrit que
+           si LES DEUX morceaux existent, et le paragraphe entier ne
+           s'écrit que si l'un des deux existe. Une fiche ancienne sans
+           ville rend `villePays` vide (voir `villeEtPaysDuMode`) et ne
+           laisse donc rien traîner.
+           ⚠️ LE PLAN RESTE ATTEIGNABLE : c'est le LIEU qui porte le
+           lien Maps, comme la troisième ligne le faisait ; le nom
+           garde le sien (la fiche du salon) quand il en a un. */}
+      {(nom || villePays) && (
+        <p className="mt-1.5 text-[15px] leading-snug [overflow-wrap:anywhere]">
+          {nom && (
+            <span className="font-medium text-sombre-texte">
+              <LienAdresse
+                texte={nom}
+                lieu={villePays ? null : lieu}
+                classeTexte=""
+              />
+            </span>
+          )}
+          {nom && villePays && (
+            <span className="text-sombre-texte-doux">{" • "}</span>
+          )}
+          {villePays && (
+            <span className="text-sombre-texte-doux">
+              <LienAdresse texte={villePays} lieu={lieu} classeTexte="" />
+            </span>
+          )}
         </p>
       )}
       {/*  UN GUEST PORTE SES DATES EN BLANC, et c'est voulu : c'est

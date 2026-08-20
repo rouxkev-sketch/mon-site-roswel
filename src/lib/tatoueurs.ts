@@ -160,6 +160,15 @@ export type Tatoueur = {
       C'est la photo qui est limitée — une par style (photos_styles). */
   styles: string[];
   lien_instagram: string;
+  /**
+   * §2 (nº 408) — L'ARTISTE ACCEPTE-T-IL LES DEMANDES PAR DM ?
+   * DÉCLARÉ par lui dans le formulaire, jamais deviné. Vrai → la fiche
+   * écrit « Instagram • DM » à la place de « Instagram ».
+   * ⚠️ FACULTATIF DANS LE TYPE, comme les autres colonnes récentes : la
+   * migration `yokofolio-dm-instagram.sql` peut ne pas être passée, et
+   * le site doit lire les fiches sans elle. Absent se lit « non ».
+   */
+  dm_instagram?: boolean | null;
   /** TikTok : facultatif. Vide ou absent = pas de bouton TikTok. */
   lien_tiktok?: string | null;
   /** La chaîne YouTube — facultative (migration nº 34). */
@@ -393,7 +402,7 @@ const COLONNES: string =
   `adresse, code_postal, bio, site_web, titre_site_web, titre_page_de_liens, ` +
   `filtres_technique, filtres_composition, filtres_besoins, region, pays, code_pays, lieu_id, ` +
   `type_fiche, etablissement, mode_exercice, rayon_zone_km, villes, photo_profil, ancien_slug, supprime_le, ` +
-  `user_id, booking, booking_mois`;
+  `user_id, booking, booking_mois, dm_instagram`;
 
 /**
  * LA MIGRATION N'EST PAS ENCORE PASSÉE ?
@@ -501,6 +510,8 @@ function normaliser(ligne: Tatoueur): Tatoueur {
     bio: ligne.bio ?? null,
     site_web: ligne.site_web ?? null,
     titre_site_web: ligne.titre_site_web ?? null,
+    //  §2 (nº 408) — absent (migration pas passée) se lit « non ».
+    dm_instagram: ligne.dm_instagram ?? false,
     titre_page_de_liens: ligne.titre_page_de_liens ?? null,
     filtres_technique: ligne.filtres_technique ?? [],
     filtres_composition: ligne.filtres_composition ?? [],

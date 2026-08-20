@@ -8,7 +8,7 @@ import {
 } from "@/config/tatouage";
 import type { Plage, SemaineStudio } from "@/lib/horaires-studio";
 import type { LieuTrouve } from "@/lib/geocodage/types";
-import { ligneCarte, ligneFiche } from "@/lib/adresse";
+import { ligneCarte, ligneCarteMobile, ligneFiche } from "@/lib/adresse";
 
 /**
  * LES MODES D'EXERCICE, LES STUDIOS ET LES ÉQUIPES
@@ -501,6 +501,41 @@ export function nomDuLieuDuMode(mode: ModeExerciceFiche): string {
  *  · `adresse`   : la ligne grise, vide quand il n'y a rien à écrire
  *    de plus (le nom manquait, l'adresse a pris sa place).
  */
+/**
+ * ██ §6 (nº 408) — LA VILLE ET LE PAYS D'UN MODE, SANS LA RUE ██
+ * ==================================================================
+ * LA QUESTION POSÉE : « d'où tires-tu la ville et le pays ? d'un
+ * champ existant, ou en découpant l'adresse complète ? »
+ * RÉPONSE : DE CHAMPS EXISTANTS, ET RIEN N'EST DÉCOUPÉ. Un mode porte
+ * `ville`, `region`, `pays` et `code_pays` en colonnes séparées,
+ * remplies par le choix DANS LA LISTE de suggestions — la même source
+ * que les cartes et la barre de recherche. La rue vit dans `adresse`,
+ * une autre colonne : ne pas l'écrire suffit à la faire disparaître,
+ * il n'y a aucune chaîne à couper.
+ * ⚠️ IL N'Y A DONC PAS D'« ADRESSE MAL FORMÉE » POSSIBLE ICI : le pire
+ * cas n'est pas une découpe ratée, c'est un CHAMP VIDE — une fiche
+ * ancienne sans ville. `ligneCarteMobile` joint alors ce qu'elle a
+ * (`joindre` écarte les vides), et si elle n'a rien, elle rend la
+ * chaîne VIDE. L'appelant teste cette chaîne avant d'écrire la puce :
+ * ni ligne vide, ni puce orpheline, ni bout de rue.
+ *
+ * ⚠️ POURQUOI `ligneCarteMobile` ET NON `ligneCarte` : c'est la seule
+ * des deux qui abrège le pays QUAND UNE DIVISION S'ÉCRIT — « Austin,
+ * TX, USA » aux États-Unis, « Paris, France » ailleurs. C'est mot pour
+ * mot la règle demandée. Son nom garde la trace de l'écran où elle est
+ * née (nº 212-§6) ; sa RÈGLE, elle, n'a rien de propre au téléphone,
+ * et aucune table d'abréviations n'est recopiée — elle réutilise celle
+ * de la barre de recherche.
+ */
+export function villeEtPaysDuMode(mode: ModeExerciceFiche): string {
+  return ligneCarteMobile({
+    ville: mode.ville ?? mode.intitule,
+    region: mode.region,
+    pays: mode.pays,
+    code_pays: mode.code_pays,
+  });
+}
+
 export function troisLignesDuMode(mode: ModeExerciceFiche): {
   etiquette: string;
   nom: string;
@@ -1163,7 +1198,26 @@ export function blocExerciceComplet(
 export type ManqueBloc = {
   /** La clé du mode en cause — null quand c'est le bloc entier. */
   cle: string | null;
-  champ: "type" | "genre" | "role" | "lieu" | "nomLieu" | "rayon" | "dates";
+  /**
+   * §5 (nº 408) — `aucun-lieu` EST À PART, ET C'EST TOUT SON RÔLE.
+   * ------------------------------------------------------------------
+   * Les sept autres valeurs DÉSIGNENT UN CHAMP : un encadré rougit,
+   * la page y remonte. Celle-ci n'en désigne aucun — elle dit qu'il
+   * n'y a RIEN à désigner, parce que rien n'a été commencé. Aucun
+   * consommateur ne la reconnaît (ni `manque.champ === "genre"` du
+   * sélecteur, ni la comparaison par `cle` des encadrés), donc AUCUN
+   * ROUGE ne se pose : c'est la phrase à côté du bouton qui parle,
+   * et elle seule (FormulaireFiche).
+   */
+  champ:
+    | "type"
+    | "genre"
+    | "role"
+    | "lieu"
+    | "nomLieu"
+    | "rayon"
+    | "dates"
+    | "aucun-lieu";
   message: string;
 };
 
@@ -1202,22 +1256,27 @@ export function premierManque(
   //  désigner.
   const declares = modesDeclares(modes);
   if (declares.length === 0) {
-    //  RIEN DE SAISI NULLE PART. Si un onglet est déjà ouvert (un mode
-    //  porte son genre), c'est SON lieu qu'on désigne — le champ
-    //  rougit là où la personne se trouve. Sinon, c'est le sélecteur
-    //  lui-même : les quatre mots rougissent.
-    const ouvert = modes.find((mode) => mode.genre);
-    if (ouvert) {
-      return {
-        cle: ouvert.cle,
-        champ: "lieu",
-        message: "Renseigne le lieu de ce mode.",
-      };
-    }
+    /*  ██ §5 (nº 408) — RIEN DE COMMENCÉ : ON N'ENCADRE PLUS RIEN ██
+         CE QU'IL Y AVAIT, ET LE RELEVÉ DU PROPRIÉTAIRE : si un onglet
+         était ouvert — et le formulaire en ouvre un d'office —, on
+         désignait SON lieu. Comme Studio ouvre la marche depuis la
+         nº 403, c'est Studio qui se cadrait de rouge, seul, « ce qui
+         laisse croire qu'il est obligatoire ». Il ne l'est pas : les
+         trois lieux sont interchangeables, il en faut UN, n'importe
+         lequel. Le second cas (aucun onglet ouvert) rougissait le
+         sélecteur entier — même reproche, en plus large.
+         CE QUE C'EST DEVENU : UN SEUL manque, qui ne désigne AUCUN
+         champ (`aucun-lieu`, voir le type ci-dessus). Personne ne le
+         reconnaît, donc rien ne rougit ; le formulaire l'affiche en
+         toutes lettres à côté du bouton « Je confirme mon choix ».
+         ⚠️ CE N'EST PAS UN ASSOUPLISSEMENT : la fonction rend toujours
+         un manque, donc `blocExerciceComplet` reste faux et
+         l'enregistrement reste bloqué. Ce qui change, c'est OÙ on le
+         dit — une phrase au lieu d'un cadre mensonger. */
     return {
       cle: null,
-      champ: "genre",
-      message: "Choisis un mode d'activité.",
+      champ: "aucun-lieu",
+      message: "Choisissez un lieu d'exercice",
     };
   }
   for (const mode of declares) {
