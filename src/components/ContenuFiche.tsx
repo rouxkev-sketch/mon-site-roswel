@@ -1610,8 +1610,37 @@ export function ContenuFiche({
                   {premiereLigne}
                 </div>
               )}
+              {/*  ██ §2d (nº 407) — UN LIEN SEUL PREND TOUTE LA LARGEUR ██
+                   LE RELEVÉ : sur la fiche, le titre d'un lien s'abrégeait
+                   par une ellipse « alors que la place ne manque pas ».
+                   LA CAUSE, ET ELLE EST STRUCTURELLE : cette rangée était
+                   en `grid-cols-2` FIXE. Deux pistes existent toujours,
+                   même quand il n'y a QU'UN lien — celui-ci occupe alors
+                   la première et se voit borné à la MOITIÉ de la rangée
+                   par le `max-w-full` de la nº 391. La seconde piste
+                   reste vide à côté. Le `truncate` faisait donc
+                   exactement son travail, sur une piste deux fois trop
+                   étroite.
+                   LE REMÈDE : le nombre de colonnes suit le nombre de
+                   liens. Un lien → UNE piste, pleine largeur, et les
+                   trente caractères tiennent. Deux liens → les deux
+                   pistes d'avant, au pixel près.
+                   ⚠️ LA nº 391 N'EST PAS DÉFAITE, et c'est le point
+                   délicat : `max-w-full` et `truncate` RESTENT sur le
+                   lien (voir `lienEnLigne`). C'est eux qui empêchent une
+                   case de déborder de sa piste — le défaut que la nº 391
+                   réparait. On ne retire pas la borne, on donne à la
+                   piste la largeur qu'elle aurait dû avoir.
+                   ⚠️ LA PREMIÈRE RANGÉE (booking, Instagram) GARDE SES
+                   DEUX COLONNES : ses libellés sont un vocabulaire fermé
+                   et court, il n'y a rien à y abréger (note de la
+                   nº 391) — et le propriétaire n'a signalé que celle-ci. */}
               {ligneDuSite.length > 0 && (
-                <div className="grid w-full grid-cols-2 items-center justify-items-start gap-x-7 gap-y-4">
+                <div
+                  className={`grid w-full items-center justify-items-start gap-x-7 gap-y-4 ${
+                    ligneDuSite.length > 1 ? "grid-cols-2" : "grid-cols-1"
+                  }`}
+                >
                   {ligneDuSite}
                 </div>
               )}

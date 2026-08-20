@@ -17,6 +17,8 @@ import { legendeDeCarte, photoChoisie, photoPourStyle } from "@/lib/photo-tatoue
 import {
   ensembleDeLaPhoto,
   natureConnue,
+  partiesDeGalerie,
+  SEPARATEUR_GALERIE,
   titreDeGalerie,
   vignetteDe,
 } from "@/lib/photos-tatoueur";
@@ -323,16 +325,37 @@ function CarteTatoueurNue({
    */
   const styleDeLaCarte =
     photoEnregistrable?.style || tatoueur.styles?.[0] || "";
-  const titreDeLaCarte =
-    (premiereLigne === "style" &&
-      titreDeGalerie(
-        styleDeLaCarte ? libelleStyle(styleDeLaCarte) : "",
-        //  LE RENDU DE LA PHOTO MONTRÉE, et rien d'autre : le repli
-        //  « premier style déclaré » n'a pas de photo, donc pas de
-        //  rendu — `titreDeGalerie` rend alors le style seul.
+  /**
+   * ██ §1 (nº 407) — LE STYLE EN GRAS, LE RESTE EN NORMAL ██
+   * ------------------------------------------------------------------
+   * « **Réalisme** • Noir et gris ». Il faut donc les DEUX PARTIES,
+   * là où la nº 405 se contentait de la chaîne entière.
+   * ⚠️ ELLES NE SONT PAS RECOMPOSÉES ICI : `partiesDeGalerie` est
+   * devenue LA SOURCE du libellé (lib/photos-tatoueur), et
+   * `titreDeGalerie` sa mise bout à bout. La puce et le mot du rendu
+   * ne sont écrits qu'à cet endroit-là ; cette carte ne fait que
+   * peindre ce qu'on lui rend. Aucune divergence possible avec le
+   * titre de la fiche ou celui de la fenêtre du web.
+   */
+  const partiesDuTitre =
+    premiereLigne === "style"
+      ? partiesDeGalerie(
+          styleDeLaCarte ? libelleStyle(styleDeLaCarte) : "",
+          //  LE RENDU DE LA PHOTO MONTRÉE, et rien d'autre : le repli
+          //  « premier style déclaré » n'a pas de photo, donc pas de
+          //  rendu — la fonction rend alors le style seul.
+          photoEnregistrable?.style ? photoEnregistrable.rendu : null
+        )
+      : null;
+  /*  LA CHAÎNE ENTIÈRE reste calculée : elle sert au repli sur le nom
+       et à la comparaison qui décide de l'`aria-label` (voir plus
+       bas). C'est la MÊME écriture, par la même source. */
+  const titreDeLaCarte = partiesDuTitre
+    ? titreDeGalerie(
+        libelleStyle(styleDeLaCarte),
         photoEnregistrable?.style ? photoEnregistrable.rendu : null
-      )) ||
-    tatoueur.nom;
+      )
+    : tatoueur.nom;
   /**
    * §2 (nº 372) — LA CLÉ DE CETTE CARTE, pour la mémoire des photos.
    * La même que celle de la mosaïque (`carrousel.cle`, sinon
@@ -961,7 +984,35 @@ function CarteTatoueurNue({
             className="outline-none after:absolute after:inset-0 after:content-['']
                        focus-visible:underline"
           >
-            {titreDeLaCarte}
+            {/*  §1 (nº 407) — LE STYLE EN GRAS, LA PUCE ET LE RENDU EN
+                 NORMAL. Le `<h3>` porte déjà `font-semibold` : c'est
+                 donc le RESTE qui est allégé (`font-normal`), pas le
+                 style qui est alourdi — une graisse de plus sur un
+                 titre déjà semi-gras aurait pesé sur une ligne de
+                 15 px. Deux `<span>` dans le même lien, sans espace
+                 ajouté : le séparateur porte les siens.
+                 ⚠️ LA HAUTEUR NE BOUGE PAS : même police, même corps,
+                 même `leading`, et le `line-clamp-1` du `<h3>` tient
+                 toujours la ligne unique. Ce qui change, c'est que le
+                 gras étant un peu plus large, un libellé long atteint
+                 l'ellipse un peu plus tôt — il s'abrège, il ne
+                 déborde ni ne passe à la ligne.
+                 ⚠️ SANS PARTIES (les trois autres surfaces, ou un
+                 artiste sans style), c'est le NOM qui s'écrit, tel
+                 quel — aucun morceau, aucune puce. */}
+            {partiesDuTitre ? (
+              <>
+                <span>{partiesDuTitre.style}</span>
+                {partiesDuTitre.rendu && (
+                  <span className="font-normal">
+                    {SEPARATEUR_GALERIE}
+                    {partiesDuTitre.rendu}
+                  </span>
+                )}
+              </>
+            ) : (
+              titreDeLaCarte
+            )}
           </Link>
         </h3>
         <p

@@ -72,16 +72,24 @@ export const TITRE_LIEN_MAXIMUM = 30;
 
 //  Le même habillage que tous les champs du formulaire : fond un cran
 //  plus clair, éclairci au focus (nº 116), bordure rouge en faute.
-//  ⚠️ nº 405 — `pr-11` REMPLACE LA MOITIÉ DROITE DE `px-4` : c'est la
-//  VOIE DE LA CROIX, réservée UNE FOIS POUR TOUTES (44 px, la mesure de
-//  `ChampLienVerifie`). Réservée en permanence, et non posée à
-//  l'entrée dans le champ : une largeur qui changerait au focus ferait
-//  glisser le texte sous le curseur au moment précis où l'on écrit.
-//  Le texte tapé ne passe donc JAMAIS sous la croix, et la zone de
-//  frappe ne bouge pas d'un pixel entre le repos et la saisie.
-const CHAMP = `w-full min-h-[48px] rounded-lg border bg-sombre-eleve-clair pl-4 pr-11
+/*  ██ §2c (nº 407) — LA VOIE DE LA CROIX N'EST PLUS RÉSERVÉE ██
+     LA nº 405 POSAIT `pr-11` EN PERMANENCE, pour que la largeur de
+     frappe ne bouge jamais. Le propriétaire a tranché contre : au
+     repos, ces 44 px vides éloignaient l'URL et le compteur du bord de
+     l'encadré pour rien. « Je préfère le décalage au vide. »
+     LE CHAMP REVIENT DONC À `px-4` — le texte va jusqu'au bord — et
+     c'est L'APPELANT qui ajoute la voie, seulement quand la croix est
+     là (voir les deux `<input>` plus bas).
+     ⚠️ ET LE DÉCALAGE EST GLISSÉ, PAS SAUTÉ : `transition-colors` ne
+     couvrait que les couleurs, un changement de rembourrage aurait
+     donc claqué d'un coup. La liste est écrite en toutes lettres et
+     comprend `padding-right` : le texte se replie en 150 ms au lieu de
+     se couper net. Les trois couleurs qui transitaient (le fond au
+     focus, le bord d'une faute) sont conservées, aucune n'est perdue. */
+const CHAMP = `w-full min-h-[48px] rounded-lg border bg-sombre-eleve-clair px-4
   text-base text-sombre-texte placeholder:text-sombre-texte-doux outline-none
-  transition-colors focus:bg-sombre-haut`;
+  transition-[background-color,border-color,color,padding-right]
+  focus:bg-sombre-haut`;
 
 /**
  * ██ §3 (nº 405) — LA CROIX QUI VIDE UN CHAMP ██
@@ -181,6 +189,21 @@ export function LienLibre({
       formée → la ligne se replie sur son titre. Sinon, les marques
       rouges s'allument — sans un mot, sauf la mention de forme. */
   function validerLeLien() {
+    /*  §2a (nº 407) — DEUX CHAMPS VIDES = PAS DE LIEN, ET L'EMPLACEMENT
+         SE REFERME. C'est le chemin de SUPPRESSION, maintenant que la
+         croix de retrait a quitté la ligne validée : on rouvre le lien
+         en cliquant son titre, on vide les deux champs (chacun a sa
+         croix), on valide — l'emplacement redevient « + Ajouter un
+         lien » et la colonne partira à `null`.
+         ⚠️ CE N'EST PAS UNE RÈGLE NEUVE, c'est celle qu'`erreurDuLienLibre`
+         applique déjà à l'envoi du formulaire depuis toujours : « vide
+         et vide → rien (les liens sont libres) ». Sans cette ligne, le
+         même geste allumait deux bords rouges au lieu de refermer —
+         le formulaire et le bouton se contredisaient. */
+    if (urlVide && titreVide) {
+      retirerLeLien();
+      return;
+    }
     if (urlVide || titreVide || urlRefusee) {
       setTente(true);
       return;
@@ -241,66 +264,71 @@ export function LienLibre({
     );
   }
 
-  /* ---------- VALIDÉ — le titre choisi, et sa croix. ---------- */
+  /* ---------- VALIDÉ — le titre choisi, et rien d'autre. ---------- */
   if (valeur.etat === "valide") {
     return (
-      <div
+      /*  ██ §2a-2b (nº 407) — L'ENCADRÉ ENTIER EST LA PORTE ██
+           CE QU'IL Y AVAIT : un `<div>` portant le titre cliquable
+           (nº 405) ET une croix de retrait. Deux reproches, tous deux
+           justes :
+            · LA CROIX NE SERVAIT À RIEN ICI. Depuis que le titre
+              rouvre l'édition, retirer un lien se fait en le vidant
+              (voir `validerLeLien` plus bas, et `erreurDuLienLibre` :
+              deux champs vides = pas de lien, la colonne part à
+              `null`). Une croix de suppression posée à côté d'un
+              titre, dans un formulaire, invite surtout à la cliquer
+              par erreur ;
+            · LE SURVOL ROSE ne ressemblait à rien d'autre. Le rose du
+              site dit « ceci s'ajoute » (le bouton « + Ajouter un
+              lien » juste au-dessus) ou « ceci est actif » ; il ne dit
+              pas « ceci s'ouvre ».
+           CE QUE C'EST DEVENU : `<div>` + `<button>` fusionnent en UN
+           SEUL bouton pleine largeur. Le survol est celui des encadrés
+           de la page — un cran plus clair, `bg-sombre-eleve` →
+           `hover:bg-sombre-eleve-clair`, l'écriture EXACTE des
+           encadrés de rendu du portfolio (BlocPortfolio). Aucune
+           couleur n'est inventée, et le titre ne change plus de
+           couleur du tout.
+           ⚠️ LA GÉOMÉTRIE NE BOUGE PAS : mêmes `min-h-[52px]`, `px-4`,
+           `gap-3`, `rounded-lg` et même fond au repos qu'avant. Seule
+           la balise change, et le `w-full` + `text-left` rendent au
+           bouton l'alignement du `<div>`.
+           ⚠️ L'INFOBULLE RESTE : elle dit l'URL au survol, ce qui ne
+           coûte rien à qui a une souris. Au doigt, c'est l'ouverture
+           qui la montre. */
+      <button
         id={id}
-        className="flex min-h-[52px] items-center gap-3 rounded-lg
-                   bg-sombre-eleve px-4"
+        type="button"
+        onClick={() => {
+          //  §4 (nº 405) — ON PHOTOGRAPHIE AVANT D'OUVRIR : c'est ce
+          //  que « Annuler » remettra (voir `avantEdition`).
+          setAvantEdition({ ...valeur });
+          surChangement({ ...valeur, etat: "edition" });
+        }}
+        title={valeur.url}
+        aria-label={`Modifier le lien ${valeur.titre} — ${valeur.url}`}
+        className="flex w-full min-h-[52px] items-center gap-3 rounded-lg
+                   bg-sombre-eleve px-4 text-left transition-colors
+                   hover:bg-sombre-eleve-clair"
       >
         <span aria-hidden="true" className="shrink-0 text-sombre-texte-doux">
           <IconeLien taille={20} />
         </span>
-        {/*  ██ §4 (nº 405) — LE TITRE REDEVIENT UNE PORTE ██
-             CE QU'IL Y AVAIT : une fois le lien validé, seul le titre
-             s'affichait, dans un `<span>` INERTE. L'URL n'était plus
-             lisible qu'en survolant le texte à la souris (l'infobulle
-             `title`) — au doigt, elle n'était plus atteignable DU
-             TOUT, et la seule façon de la corriger était de supprimer
-             le lien par la croix et de tout retaper.
-             CE QUI CHANGE : ce `<span>` devient un `<button>` qui
-             REPOSE L'ÉTAT SUR « edition ». L'URL et le titre
-             réapparaissent dans leurs deux champs, remplis de ce qui
-             était enregistré — on corrige, on revalide par
-             « Ajouter ». Rien n'est effacé au passage.
-             ⚠️ LA LIGNE NE CHANGE PAS D'ALLURE : mêmes classes de
-             texte, `text-left` et `w-full` rendent au bouton la
-             géométrie exacte du `<span>` qu'il remplace (un bouton est
-             `inline-block` et centré par défaut). Le curseur main
-             arrive de la règle de la nº 398, qui vise les boutons.
-             ⚠️ L'INFOBULLE RESTE : elle dit l'URL au survol, ce qui ne
-             coûte rien à qui a une souris. */}
-        <button
-          type="button"
-          onClick={() => {
-            //  §4 (nº 405) — ON PHOTOGRAPHIE AVANT D'OUVRIR : c'est ce
-            //  que « Annuler » remettra (voir `avantEdition`).
-            setAvantEdition({ ...valeur });
-            surChangement({ ...valeur, etat: "edition" });
-          }}
-          title={valeur.url}
-          aria-label={`Modifier le lien ${valeur.titre} — ${valeur.url}`}
-          className="min-w-0 flex-1 truncate rounded text-left text-base
-                     font-semibold text-sombre-texte transition-colors
-                     hover:text-primaire"
-        >
+        <span className="min-w-0 flex-1 truncate text-base font-semibold text-sombre-texte">
           {valeur.titre}
-        </button>
-        <button
-          type="button"
-          onClick={retirerLeLien}
-          aria-label={`Retirer le lien ${valeur.titre}`}
-          title="Retirer ce lien"
-          className="flex h-9 w-9 shrink-0 items-center justify-center
-                     rounded-full text-sombre-texte-doux transition-colors
-                     hover:bg-sombre-eleve-clair hover:text-sombre-texte"
-        >
-          <IconeCroix taille={16} />
-        </button>
-      </div>
+        </span>
+      </button>
     );
   }
+
+  /*  §2c (nº 407) — LA VOIE DE LA CROIX, POSÉE SEULEMENT QUAND ELLE
+       EST LÀ. La croix ne vit que sur le champ EN SAISIE et NON VIDE
+       (la règle de la nº 405, inchangée) : ces deux booléens disent
+       exactement la même condition, et ce sont eux qui commandent le
+       rembourrage. Au repos, aucune voie n'est réservée — l'URL et le
+       décompte vont jusqu'au bord de l'encadré. */
+  const croixSurUrl = champEnSaisie === "url" && valeur.url !== "";
+  const croixSurTitre = champEnSaisie === "titre" && valeur.titre !== "";
 
   /* ---------- ÉDITION — URL, Titre, Ajouter / Annuler. ---------- */
   return (
@@ -318,20 +346,33 @@ export function LienLibre({
           aria-invalid={fauteUrl}
           className={`${CHAMP} ${
             fauteUrl ? "border-erreur" : "border-transparent"
-          } ${accuse && urlRefusee ? "pr-36" : ""}`}
+          } ${
+            //  §2c (nº 407) — LES QUATRE CAS, ET AUCUN VIDE INUTILE :
+            //  la mention « Lien non valide » réserve sa place, la
+            //  croix la sienne, et les deux ensemble se cumulent.
+            accuse && urlRefusee
+              ? croixSurUrl
+                ? "pr-36"
+                : "pr-32"
+              : croixSurUrl
+                ? "pr-11"
+                : ""
+          }`}
         />
         {/* LA MENTION COURTE, dans le champ (règle nº 112) : une URL
             qu'on ne sait pas lire, le rouge seul laisserait buter.
-            §3 (nº 405) — ELLE RECULE À `right-11` : la voie de droite
-            appartient désormais à la croix, et deux marques
-            superposées ne se liraient pas. Elle y reste MÊME SANS
-            croix (au repos), plutôt que de sauter de 28 px chaque
-            fois qu'on entre dans le champ pour se corriger. */}
+            §2c (nº 407) — ELLE RECULE DEVANT LA CROIX, mais SEULEMENT
+            quand la croix est là : `right-4` au repos (contre le bord,
+            comme avant la nº 405), `right-11` pendant la saisie. Deux
+            marques superposées ne se liraient pas ; un vide permanent
+            à droite d'une mention d'erreur ne se justifiait pas
+            davantage. Le glissement suit celui du rembourrage. */}
         {accuse && urlRefusee && (
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute right-11 top-1/2
-                       -translate-y-1/2 text-[12.5px] font-semibold text-erreur"
+            className={`pointer-events-none absolute top-1/2 -translate-y-1/2
+                        text-[12.5px] font-semibold text-erreur
+                        transition-[right] ${croixSurUrl ? "right-11" : "right-4"}`}
           >
             Lien non valide
           </span>
@@ -349,12 +390,17 @@ export function LienLibre({
           dit à l'avance — MÊME FORME que celui de « Ta présentation » :
           « 0/30 », dans le champ, à droite, en chiffres tabulaires et
           gris doux.
-          §3 (nº 405) — LE DÉCOMPTE ET LA CROIX COHABITENT, chacun sa
-          voie : la croix garde la sienne (44 px, `pr-11` du CHAMP), le
-          décompte recule juste devant elle (`right-11`). Le
-          rembourrage total passe donc de 64 à 80 px (`pr-20`), réservé
-          EN PERMANENCE — le décompte ne disparaît pas pendant la
-          frappe, qui est justement le moment où il sert.
+          §2c (nº 407) — LE DÉCOMPTE VA AU BORD, PUIS RECULE. Au repos
+          il tient sa place historique (`right-3.5`, contre le bord) et
+          le champ ne réserve que ses 64 px (`pr-16`) : plus aucun vide.
+          DÈS QU'ON ENTRE DANS LE CHAMP et qu'il porte quelque chose, la
+          croix prend la voie de droite, le décompte recule devant elle
+          (`right-11`) et le rembourrage passe à 80 px (`pr-20`). Le
+          décompte NE DISPARAÎT JAMAIS pendant la frappe — c'est
+          justement le moment où il sert.
+          ⚠️ LES DEUX GLISSENT ENSEMBLE, en 150 ms : le rembourrage par
+          la liste de transition du CHAMP, le décompte par la sienne
+          (`transition-[right]`). Rien ne saute, rien ne se coupe net.
           ⚠️ LE DÉCOMPTE NE S'ÉLARGIT PAS EN PASSANT À 30 : « 30/30 » et
           « 16/16 » font tous deux 28,5 px (mesuré sur le woff2 Geist
           servi par le site) — les chiffres sont tabulaires. */}
@@ -375,16 +421,16 @@ export function LienLibre({
           aria-label={`Le titre du lien (${TITRE_LIEN_MAXIMUM} caractères au plus)`}
           aria-describedby={`${id}-compteur`}
           aria-invalid={fauteTitre}
-          className={`${CHAMP} pr-20 ${
+          className={`${CHAMP} ${croixSurTitre ? "pr-20" : "pr-16"} ${
             fauteTitre ? "border-erreur" : "border-transparent"
           }`}
         />
         <p
           id={`${id}-compteur`}
           role="status"
-          className="pointer-events-none absolute right-11 top-1/2
-                     -translate-y-1/2 text-[12.5px] tabular-nums
-                     text-sombre-texte-doux"
+          className={`pointer-events-none absolute top-1/2 -translate-y-1/2
+                      text-[12.5px] tabular-nums text-sombre-texte-doux
+                      transition-[right] ${croixSurTitre ? "right-11" : "right-3.5"}`}
         >
           {valeur.titre.length}/{TITRE_LIEN_MAXIMUM}
         </p>

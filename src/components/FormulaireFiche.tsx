@@ -3229,7 +3229,14 @@ export function FormulaireFiche() {
                   placeholder="Booking"
                   sombre
                   //  §1 (nº 388) — le fond des champs voisins.
+                  //  §3 (nº 407) — ET LE CRAN QUI MANQUAIT À L'OUVERTURE :
+                  //  sans lui, l'état ouvert valait `bg-sombre-eleve-clair`
+                  //  comme le repos, et le menu ne répondait plus au clic.
+                  //  `bg-sombre-haut` est le fond que TOUS les champs de ce
+                  //  formulaire prennent quand ils deviennent actifs
+                  //  (`focus:bg-sombre-haut`) — aucune couleur inventée.
                   fondRepos="bg-sombre-eleve-clair"
+                  fondActif="bg-sombre-haut"
                   arrondi="rounded-lg"
                   hauteur="min-h-[48px]"
                   enErreur={Boolean(erreurs.booking)}
@@ -3248,6 +3255,7 @@ export function FormulaireFiche() {
                     placeholder="Mois"
                     sombre
                     fondRepos="bg-sombre-eleve-clair"
+                    fondActif="bg-sombre-haut"
                     arrondi="rounded-lg"
                     hauteur="min-h-[48px]"
                     enErreur={Boolean(erreurs.bookingMois)}

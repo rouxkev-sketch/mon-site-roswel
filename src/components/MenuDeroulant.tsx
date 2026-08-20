@@ -174,6 +174,7 @@ export function MenuDeroulant({
   compact = false,
   sombre = false,
   fondRepos,
+  fondActif,
   repliable = false,
   libelleValeur,
   positionFleche,
@@ -252,6 +253,22 @@ export function MenuDeroulant({
    * le moteur garde le sien au pixel.
    */
   fondRepos?: string;
+  /**
+   * §3 (nº 407) — LE FOND À L'OUVERTURE, RÉGLABLE LUI AUSSI.
+   * ------------------------------------------------------------------
+   * MÊME MÉTHODE QUE `fondRepos` CI-DESSUS, ET POUR LA MÊME RAISON —
+   * cette palette est PARTAGÉE avec le moteur de recherche, qui n'a
+   * rien demandé. Sans réglage, rien ne bouge : le moteur garde son
+   * `ROBE_CHAMP_SOMBRE.actif` au pixel.
+   * CE QUE ÇA RÉPARE : la nº 388 avait posé `fondRepos` à
+   * `bg-sombre-eleve-clair` sur le formulaire, pour que le menu du
+   * booking soit au niveau des champs qui l'entourent. Mais l'état
+   * OUVERT vaut lui aussi `bg-sombre-eleve-clair` — le menu ne
+   * changeait donc PLUS DU TOUT au clic, là où tous les champs voisins
+   * s'éclaircissent d'un cran (`focus:bg-sombre-haut`). Le formulaire
+   * dit désormais ses DEUX fonds, et retrouve le cran manquant.
+   */
+  fondActif?: string;
   /** §2 (nº 270) — LE MENU PEUT ÊTRE EN FAUTE, comme un champ : le
       formulaire de fiche exige le Booking, et un manque s'y dit par
       un bord rouge — la même écriture que tous ses champs
@@ -367,7 +384,9 @@ export function MenuDeroulant({
     : sombre
       ? `${rayon} transition-colors ${
           ouvert
-            ? ROBE_CHAMP_SOMBRE.actif
+            ? //  §3 (nº 407) — le fond à l'ouverture, dit par l'appelant
+              //  quand il en a un ; sinon celui de la palette, inchangé.
+              (fondActif ?? ROBE_CHAMP_SOMBRE.actif)
             : //  §1 (nº 388) — le fond au repos, dit par l'appelant quand
               //  il en a un ; sinon celui de la palette, inchangé.
               (fondRepos ?? ROBE_CHAMP_SOMBRE.repos)

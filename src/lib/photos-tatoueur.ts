@@ -288,14 +288,50 @@ export function libelleRendu(slug: string | null | undefined): string {
  * membre d'équipe (`libelleStylesEquipe`). Ce sont d'autres textes, et
  * le propriétaire n'a demandé que celui-ci.
  */
+/**
+ * ██ §1 (nº 407) — LE MÊME LIBELLÉ, EN DEUX MORCEAUX ██
+ * ==================================================================
+ * L'accueil doit écrire le STYLE EN GRAS et le reste en graisse
+ * normale : « **Réalisme** • Noir et gris ». Il lui faut donc les deux
+ * parties séparément, là où `titreDeGalerie` rend UNE chaîne.
+ *
+ * ⚠️ LA RÉPONSE N'EST PAS DE RECOMPOSER LE LIBELLÉ À LA MAIN dans la
+ * carte : ce serait une deuxième écriture du séparateur et du mot du
+ * rendu, et les deux finiraient par diverger — c'est exactement ce que
+ * la nº 376 a supprimé en factorisant ce titre.
+ * C'EST L'INVERSE QUI EST FAIT : cette fonction devient LA SOURCE, et
+ * `titreDeGalerie` n'est plus que sa mise bout à bout. Le séparateur
+ * n'est écrit qu'ICI, une fois. Changer la puce, le mot d'un rendu ou
+ * l'ordre des deux parties se fait à un seul endroit, et l'accueil
+ * comme la fiche suivent sans être touchés.
+ *
+ * ⚠️ LES DEUX GARDES DE LA nº 376 SONT LES SIENNES, PAS CELLES DE
+ * L'APPELANT : sans style, elle rend `null` — jamais une puce
+ * orpheline, jamais une ligne vide ; sans rendu, `rendu` vaut la
+ * chaîne vide et l'appelant n'écrit ni puce ni second morceau.
+ */
+export function partiesDeGalerie(
+  label: string | null | undefined,
+  rendu: string | null | undefined
+): { style: string; rendu: string } | null {
+  const style = (label ?? "").trim();
+  if (!style) return null;
+  return { style, rendu: rendu ? libelleRendu(rendu) : "" };
+}
+
+/** LE SÉPARATEUR DU LIBELLÉ — la puce U+2022 de la nº 393, écrite une
+    seule fois pour les deux lectures (la chaîne et les morceaux). */
+export const SEPARATEUR_GALERIE = " • ";
+
 export function titreDeGalerie(
   label: string | null | undefined,
   rendu: string | null | undefined
 ): string {
-  const style = (label ?? "").trim();
-  if (!style) return "";
-  const precision = rendu ? libelleRendu(rendu) : "";
-  return precision ? `${style} • ${precision}` : style;
+  const parties = partiesDeGalerie(label, rendu);
+  if (!parties) return "";
+  return parties.rendu
+    ? `${parties.style}${SEPARATEUR_GALERIE}${parties.rendu}`
+    : parties.style;
 }
 
 /* ================================================================

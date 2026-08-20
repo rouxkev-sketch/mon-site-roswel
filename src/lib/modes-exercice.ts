@@ -980,6 +980,33 @@ export function pointDuMode(mode: ModeEnSaisie): LieuTrouve | null {
  * (voir enregistrer-exercice) — visiter un onglet ne doit ni bloquer
  * « Je confirme », ni écrire une ligne en base.
  */
+/**
+ * ██ §4 (nº 407) — C'EST LA SEULE DÉFINITION DE « VIDE » DU BLOC ██
+ * ------------------------------------------------------------------
+ * Depuis la nº 407, LES TROIS lectures du bloc s'y branchent :
+ * `blocExerciceComplet` (le bouton), `premierManque` (la remontée) et
+ * `tousLesManques` (le rouge). Aucune ne peut plus être plus sévère
+ * que les autres.
+ *
+ * CE QUI COMPTE — et c'est une liste de SAISIES, uniquement des
+ * gestes que personne n'a faits à la place de l'artiste :
+ *  · `salon`    — une fiche YokoFolio retenue dans la recherche ;
+ *  · `lieu`     — une ville ou une adresse choisie dans la liste ;
+ *  · `debut_le`, `fin_le` — les dates d'une session guest ;
+ *  · `rayonKm`  — un rayon (hérité ; toujours nul depuis que « à
+ *                 domicile » a disparu à la nº 402) ;
+ *  · `nomLieu`  — le nom saisi à la main (§1, nº 266).
+ *
+ * CE QUI NE COMPTE PAS, ET C'EST TOUT LE SUJET : les valeurs que le
+ * FORMULAIRE pose lui-même en ouvrant un encadré. Les compter ferait
+ * naître un lieu « commencé » d'un simple clic d'onglet :
+ *  · `genre`     — posé par l'ouverture de l'onglet (`modeVierge`) ;
+ *  · `role`      — « resident » d'office depuis la nº 405 ;
+ *  · `natureLieu`— « Studio » d'office sur un guest neuf (nº 128).
+ * ⚠️ CES TROIS-LÀ SONT DES DÉFAUTS D'AFFICHAGE, pas des réponses. Un
+ * encadré qui ne porte QU'EUX n'a jamais rien reçu : il est vide, il
+ * reste facultatif, et il redevient facultatif si on le revide.
+ */
 export function modeVide(mode: ModeEnSaisie): boolean {
   return (
     !mode.salon &&
@@ -1307,19 +1334,28 @@ export function tousLesManques(
     return seul ? [seul] : [];
   }
   const manques: ManqueBloc[] = [];
-  /*  §4 (nº 269) — UN MODE OUVERT DIT TOUS SES MANQUES, MÊME VIERGE.
-      `modesDeclares` écarte les encadrés où RIEN n'est saisi (la règle
-      de la nº 124 : ouvrir un onglet par curiosité ne coûte rien).
-      Mais un guest neuf, ouvert et laissé vide, BLOQUE la validation —
-      et il ne montrait alors qu'un seul rouge, celui du lieu : ni la
-      recherche, ni l'adresse, ni les deux dates. On garde donc AUSSI
-      les encadrés qui portent un GENRE : ils sont une déclaration en
-      cours, et tout ce qui leur manque doit se voir d'un coup.
-      ⚠️ UN ENCADRÉ SANS GENRE reste hors du compte — c'est le
-      formulaire vierge, il n'y a rien à reprocher. */
-  const declares = modes.filter(
-    (mode) => !modeVide(mode) || Boolean(mode.genre)
-  );
+  /*  §4 (nº 269) — UN MODE OUVERT DISAIT TOUS SES MANQUES, MÊME VIERGE.
+      Le filtre était ici `!modeVide(mode) || Boolean(mode.genre)` : il
+      gardait les encadrés SEULEMENT OUVERTS, pour qu'un guest neuf
+      laissé vide montre d'un coup tout ce qui lui manque.
+      ██ §4 (nº 407) — CE `|| genre` EST SUPPRIMÉ, C'ÉTAIT LE DÉFAUT ██
+      OUVRIR UN ONGLET POSE SON GENRE (`modeVierge`, BlocModesExercice)
+      — c'est un choix de navigation, pas une déclaration. Le relevé du
+      propriétaire : on ouvre Studio, on n'y saisit rien, on va remplir
+      Salon en oubliant un champ, et « Je confirme » rougit LES DEUX.
+      Le Studio n'avait jamais rien reçu.
+      ⚠️ ET CETTE LIGNE MENTAIT AUX DEUX AUTRES. `blocExerciceComplet`
+      et `premierManque` filtrent par `modesDeclares` — un encadré vide
+      n'y compte pas et ne bloque donc rien. Ce filtre-ci en gardait
+      plus : il posait du ROUGE sur un encadré qui n'empêchait pas
+      d'enregistrer. Les trois lisent désormais la même liste, et une
+      seule règle décide.
+      ⚠️ CE QUE LE CAS DE LA nº 269 DEVIENT — un guest ouvert et vide,
+      SEUL sur la fiche : `declares` est alors VIDE, et la branche
+      juste au-dessus rend `premierManque`, qui désigne le lieu de
+      l'onglet ouvert. Le cas reste traité ; il l'est par un seul
+      rouge, à l'endroit où la personne se trouve, au lieu de quatre. */
+  const declares = modesDeclares(modes);
   if (declares.length === 0) {
     const seul = premierManque(typeFiche, modes, studios, etablissement);
     return seul ? [seul] : [];
