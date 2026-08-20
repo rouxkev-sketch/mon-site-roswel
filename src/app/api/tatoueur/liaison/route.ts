@@ -146,6 +146,56 @@ export async function POST(requete: NextRequest) {
       .eq("id", ancienne.id);
   }
 
+  /*  ██ §1 (nº 412) — DEUX GARDES, POUR QU'UN RÉENREGISTREMENT NE
+       MULTIPLIE PLUS JAMAIS LES LIGNES ██
+       ================================================================
+       LE RELEVÉ (Gaston, trois lignes) : la fiche du salon portait une
+       liaison SANS MODE — l'écriture d'AVANT que les liaisons pendent
+       aux modes, ou une invitation partie du salon. La nº 410 juge le
+       doublon PAR MODE : cette vieille ligne ne répondait à aucune des
+       deux recherches, elle est donc restée, et les deux liaisons par
+       mode se sont ajoutées À CÔTÉ — une ligne de trop.
+       LA RÈGLE POSÉE : pour un même (artiste, salon), une liaison SANS
+       mode n'est légitime QUE s'il n'existe aucune liaison PAR MODE.
+       La déclaration de l'artiste dit tout ce que l'invitation disait,
+       et plus précisément — les deux ne s'empilent jamais. */
+  if (corps.modeId) {
+    //  L'artiste déclare un mode ici : la ligne sans mode du même
+    //  couple, si elle existe, est REMPLACÉE par celle-ci.
+    await supabase
+      .from("liaisons_artiste_salon")
+      .delete()
+      .eq("artiste_id", corps.artisteId)
+      .eq("salon_id", corps.salonId)
+      .is("mode_id", null);
+    //  ET LE MODE NE VIT QU'À UN ENDROIT : s'il désignait un AUTRE
+    //  salon avant (l'artiste a changé le lieu de son encadré sans le
+    //  fermer), sa liaison là-bas ne dit plus rien de vrai — elle
+    //  part. Sans cette ligne, l'artiste resterait affiché dans
+    //  l'équipe de son ancien salon.
+    await supabase
+      .from("liaisons_artiste_salon")
+      .delete()
+      .eq("mode_id", corps.modeId)
+      .neq("salon_id", corps.salonId);
+  } else {
+    //  Une invitation (du salon) ou un lien d'adresse : si l'artiste
+    //  est DÉJÀ là par l'un de ses modes, il n'y a rien à ajouter —
+    //  répondre « déjà fait » est la vérité, et c'est ce qui empêche
+    //  de recréer la ligne parasite par l'autre bout.
+    const { data: parUnMode } = await supabase
+      .from("liaisons_artiste_salon")
+      .select("id")
+      .eq("artiste_id", corps.artisteId)
+      .eq("salon_id", corps.salonId)
+      .not("mode_id", "is", null)
+      .limit(1)
+      .maybeSingle();
+    if (parUnMode) {
+      return NextResponse.json({ ok: true, deja: true });
+    }
+  }
+
   const { data, error } = await supabase
     .from("liaisons_artiste_salon")
     .insert({

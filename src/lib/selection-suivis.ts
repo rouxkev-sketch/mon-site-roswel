@@ -44,15 +44,6 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  * avec lui.
  */
 
-/** Les sept jours qui font « cette semaine ». */
-export const JOURS_PROCHES = 7;
-
-export type GroupeSuivis = {
-  cle: "semaine" | "avenir" | "tous";
-  titre: string;
-  suivis: TatoueurSuivi[];
-};
-
 /** LE JOUR CIVIL, en « AAAA-MM-JJ » — la forme des dates en base, donc
     comparable telle quelle, sans fuseau ni objet Date. */
 export function jourCivil(decalageEnJours = 0): string {
@@ -82,57 +73,33 @@ export function guestDuSuivi(
 }
 
 /**
- * LES TROIS GROUPES, DANS L'ORDRE (§2) — « cette semaine » d'abord :
- * ce qui arrive le plus tôt se lit en premier.
- *  · CETTE SEMAINE — une session guest commence ou se déroule dans les
- *    sept prochains jours (donc déjà commencée et pas finie, aussi) ;
- *  · À VENIR — elle commence au-delà de sept jours ;
- *  · TOUS LES SUIVIS — tous les autres.
- * Tri : par date de début croissante dans les deux premiers, par
- * publication la plus récente dans le troisième.
- * ⚠️ UN GROUPE VIDE N'EST PAS RENDU : il n'est pas dans la liste.
+ * ██ §2 (nº 412) — UNE SEULE LISTE, LES TROIS GROUPES SONT SUPPRIMÉS ██
+ * ==================================================================
+ * CE QU'IL Y AVAIT ICI : `groupesDeSuivis` (nº 243) rangeait les
+ * suivis en « Cette semaine », « À venir », « Tous les portfolios »
+ * selon les sessions guest, et l'onglet Portfolios écrivait un titre
+ * par groupe — masqués depuis la nº 249 tant qu'il n'y avait QU'UN
+ * groupe. Le classement a dormi des mois : aucun artiste suivi n'avait
+ * de session guest, tout tombait dans « tous », aucun titre ne
+ * s'écrivait. La première vraie session (nº 410-411) l'a réveillé — et
+ * le propriétaire a découvert des titres et un trait qu'il n'avait
+ * jamais demandés. Il les supprime : LA LISTE SEULE.
+ *
+ * L'ORDRE QUI RESTE est celui que la liste avait pendant tout ce
+ * temps : la PUBLICATION LA PLUS RÉCENTE d'abord — l'ordre du groupe
+ * « tous », c'est-à-dire la présentation qu'il a toujours vue. Une
+ * session guest ne fait plus remonter personne.
+ * ⚠️ `guestDuSuivi` et `periodeDuGuest` RESTENT : elles servent la
+ * ligne de dates DANS le bloc d'un artiste, qui ne change pas.
  */
-export function groupesDeSuivis(
-  suivis: TatoueurSuivi[],
-  aujourdhui = jourCivil()
-): GroupeSuivis[] {
-  const limite = jourCivilDepuis(aujourdhui, JOURS_PROCHES);
-  const semaine: TatoueurSuivi[] = [];
-  const avenir: TatoueurSuivi[] = [];
-  const tous: TatoueurSuivi[] = [];
-
-  for (const suivi of suivis) {
-    const guest = guestDuSuivi(suivi, aujourdhui);
-    if (!guest || !guest.debut_le) {
-      tous.push(suivi);
-      continue;
-    }
-    if (guest.debut_le <= limite) semaine.push(suivi);
-    else avenir.push(suivi);
-  }
-
-  const parDebut = (a: TatoueurSuivi, b: TatoueurSuivi) =>
-    (guestDuSuivi(a, aujourdhui)?.debut_le ?? "").localeCompare(
-      guestDuSuivi(b, aujourdhui)?.debut_le ?? ""
+export function suivisAPlat(suivis: TatoueurSuivi[]): TatoueurSuivi[] {
+  return suivis
+    .slice()
+    .sort((a, b) =>
+      (b.recentes[0]?.creeLe ?? "").localeCompare(a.recentes[0]?.creeLe ?? "")
     );
-  //  « Publication la plus récente » : la date de la photo la plus
-  //  fraîche (les publications arrivent déjà triées).
-  const parPublication = (a: TatoueurSuivi, b: TatoueurSuivi) =>
-    (b.recentes[0]?.creeLe ?? "").localeCompare(a.recentes[0]?.creeLe ?? "");
-
-  return [
-    { cle: "semaine" as const, titre: "Cette semaine", suivis: semaine.sort(parDebut) },
-    { cle: "avenir" as const, titre: "À venir", suivis: avenir.sort(parDebut) },
-    { cle: "tous" as const, titre: "Tous les portfolios", suivis: tous.sort(parPublication) },
-  ].filter((groupe) => groupe.suivis.length > 0);
 }
 
-/** Le jour civil obtenu en avançant de N jours à partir d'un autre. */
-export function jourCivilDepuis(jour: string, jours: number): string {
-  const date = new Date(`${jour}T12:00:00Z`);
-  date.setUTCDate(date.getUTCDate() + jours);
-  return date.toISOString().slice(0, 10);
-}
 
 /* ==================================================================
  * LA LIGNE D'INFORMATION (§3)

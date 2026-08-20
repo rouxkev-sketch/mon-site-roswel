@@ -2,10 +2,7 @@
 
 import Link from "next/link";
 import { GalerieQuiDefile } from "@/components/GalerieQuiDefile";
-import {
-  CADRE_PHOTO_PORTFOLIO,
-  ECRITURE_TITRE_SECTION,
-} from "@/config/tatouage";
+import { CADRE_PHOTO_PORTFOLIO } from "@/config/tatouage";
 import {
   CLASSES_LIGNE_CLIQUABLE_SANS_ENCADRE,
   PhotoRonde,
@@ -13,7 +10,7 @@ import {
 import { adresseDeLienInterne } from "@/components/ContenuFiche";
 import {
   bandeDeTrois,
-  groupesDeSuivis,
+  suivisAPlat,
   libelleNouveautes,
   ligneDIdentite,
 } from "@/lib/selection-suivis";
@@ -32,24 +29,25 @@ import type { TatoueurSuivi } from "@/lib/favoris-serveur";
  * les photos dans la page, et c'est le menu « Mes suivis » de la
  * barre qui décide de ce qu'elle montre.
  *
- * CE QUI SE DÉCIDE N'EST PAS ICI : les trois groupes, leur tri, le
+ * CE QUI SE DÉCIDE N'EST PAS ICI : le tri de la liste (nº 412 — les
+ * trois groupes de la nº 243 sont supprimés, voir `suivisAPlat`), le
  * choix des trois photos et les libellés vivent dans
  * `lib/selection-suivis`. Ce fichier POSE, il ne juge pas.
  *
  * ⚠️ AUCUNE VALEUR GRAPHIQUE INVENTÉE : la ligne d'identité reprend
  * `CLASSES_LIGNE_CLIQUABLE` (nº 232) et `PhotoRonde` (nº 224/227) —
  * les mêmes briques que les lignes d'équipe et d'adresse d'une fiche.
- * LA FINITION EST CELLE DE LA nº 244-§2 : titres de groupe aux
- * capitales des sections de fiche (13 px), 40 px de part et d'autre
- * des lignes de séparation, 34 px entre blocs, 12/8 px autour de la
+ * LA FINITION EST CELLE DE LA nº 244-§2 (moins les titres de groupe
+ * et leurs séparations, partis avec le regroupement à la nº 412) :
+ * 34 px entre blocs, 12/8 px autour de la
  * ligne de provenance, bande à 6 px d'écart et rayon 10 — le rythme
  * du site, pas des valeurs inventées. L'urgence d'une date proche est
  * TYPOGRAPHIQUE (§3) : blanc semi-gras, jamais une couleur.
  *
  * ⚠️ CE QUI EST CLIQUABLE, ET RIEN D'AUTRE (§3) : la ligne d'identité
  * ouvre la fiche — pastille comprise, elle est DANS le lien —, une
- * vignette ouvre la photo. La petite ligne de provenance, les titres
- * de groupe et le compte de nouveautés ne sont pas des boutons.
+ * vignette ouvre la photo. La petite ligne de provenance et le compte
+ * de nouveautés ne sont pas des boutons.
  */
 
 //  §1 (nº 302) — LES FAVORIS DU VISITEUR NE SONT PLUS DEMANDÉS : la
@@ -113,7 +111,14 @@ export function BlocSuivis({
   /** Fournie par « Ma sélection » sur le web ; absente ailleurs. */
   surOuverture?: OuvertureDepuisSuivis;
 }) {
-  const groupes = groupesDeSuivis(suivis);
+  /*  ██ §2 (nº 412) — LA LISTE SEULE ██
+       Les trois groupes de la nº 243 sont supprimés (voir
+       `suivisAPlat`, lib/selection-suivis) : plus de titres « Cette
+       semaine » / « Tous les portfolios », plus de trait entre les
+       groupes. L'ordre est celui que la liste a toujours montré — la
+       publication la plus récente d'abord. L'onglet FAVORIS ne passe
+       pas par ce composant : il ne change pas. */
+  const liste = suivisAPlat(suivis);
 
   if (suivis.length === 0) {
     return (
@@ -130,79 +135,30 @@ export function BlocSuivis({
   return (
     /*  §2 (nº 249) — LES CAPITALES ONT DISPARU : « MES SUIVIS » (le
         titre de section de la nº 245) est parti — c'est le TITRE de la
-        page qui dit désormais « Mes suivis » (LigneResultats, comme la
-        page de recherche). Et « TOUS LES SUIVIS » ne s'écrit plus
-        quand il est SEUL : un unique groupe sous un titre qui dit déjà
-        la même chose n'apprenait rien. Les titres de groupe ne
-        reviennent que quand le classement de la nº 243 a quelque chose
-        à dire — une session guest classe les artistes en « Cette
-        semaine », « À venir », « Tous les suivis ». */
+        page qui dit « Mes suivis » (LigneResultats, comme la page de
+        recherche). La nº 249 gardait les titres de groupe pour le jour
+        où une session guest classerait les artistes ; ce jour est venu
+        à la nº 411, le propriétaire les a vus, et il les a supprimés
+        (nº 412) : ils ne reviennent plus jamais. */
     /*  §2 (nº 264) — PLUS AUCUNE MARGE AJOUTÉE SOUS LE BLOC DU TITRE :
         le `pb` de LigneResultats suffit, comme sur la page de
         recherche (relevé vivant : 20 px au doigt, 24 sur le web) — le
         `mt-4` d'ici s'y ajoutait. */
     <div data-section-suivis="">
-      {groupes.map((groupe, rang) => (
-        /*  ⚠️ UN GROUPE VIDE NE REND RIEN — ni titre, ni espace : il
-             n'est même pas dans la liste (voir `groupesDeSuivis`).
-             §2 (nº 244) — 40 px DE PART ET D'AUTRE de la ligne de
-             séparation entre deux groupes (`mt-10 pt-10`), le rythme
-             des sections de fiche depuis la nº 223. Le premier groupe
-             n'a pas de ligne au-dessus de lui. */
-        <section
-          key={groupe.cle}
-          data-groupe-suivis={groupe.cle}
-          className={
-            rang > 0 ? "mt-10 border-t border-sombre-bordure/60 pt-10" : ""
-          }
-        >
-          {/*  §2 (nº 244) — LES CAPITALES DES SECTIONS DE FICHE
-               (nº 223) : 13 px, grises, espacées — la classe exacte
-               des titres de l'onglet Profil. §2 (nº 249) — SEULEMENT
-               quand il y a PLUSIEURS groupes : voir plus haut. */}
-          {groupes.length > 1 && (
-            //  §3 (nº 276) — la classe exacte vit désormais dans
-            //  ECRITURE_TITRE_SECTION (config), partagée avec l'onglet
-            //  Profil et les titres du Portfolio.
-            <h2 className={ECRITURE_TITRE_SECTION}>
-              {groupe.titre}
-            </h2>
-          )}
-          {/*  34 px entre deux blocs d'artiste (nº 244-§2).
-               §5 (nº 247) — UNE FICHE PAR LIGNE, PLEINE LARGEUR : les
-               deux colonnes de la nº 245 sont ABANDONNÉES. Le format
-               du bloc (nº 243/244) ne change pas d'un pixel ; c'est sa
-               bande de vignettes qui prend la largeur gagnée.
-               ⚠️ `minmax(0,1fr)` ET NON `1fr` — c'est le piège de la
-               nº 228 : une colonne `1fr` se dimensionne à son contenu
-               (un nom long, une adresse), et la page déborde en
-               largeur. Avec le plancher à zéro, la colonne cède, et
-               `scrollWidth` reste égal à `clientWidth`. */}
-          {/*  §2 (nº 254) — 48 px ENTRE DEUX ARTISTES SUR LE WEB : à
-               20 px d'écart interne, les 34 px de la nº 244 ne se
-               distinguaient plus assez (14 px de différence) — la
-               hiérarchie doit se LIRE. Le doigt garde ses 34 px
-               (écart interne 8 : la différence y est nette).
-               §3 (nº 264) — L'ESPACEMENT WEB S'ÉLARGIT DE 30 % :
-               48 × 1,3 = 62,4 → 62 px, le pixel entier le plus
-               proche. Le doigt ne bouge pas.
-               §2 (nº 264) — LE `mt-5` N'EXISTE QUE SOUS UN TITRE DE
-               GROUPE : groupe unique, pas de titre — la liste part du
-               `pb` du bloc de titre, comme la grille de la
-               recherche. */}
-          <ul
-            className={`${
-              groupes.length > 1 ? "mt-5 " : ""
-            }grid gap-[34px] lg:gap-[62px] grid-cols-[minmax(0,1fr)]`}
-          >
-            {groupe.suivis.map((suivi) => (
-              <li key={suivi.id}>
-                <BlocDUnSuivi suivi={suivi} surOuverture={surOuverture} />
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))}
+      {/*  §2 (nº 412) — UNE SEULE LISTE, SANS SECTION : le `<ul>` est
+           celui d'avant, au pixel — mêmes écarts de 34 px au doigt et
+           62 px au web (nº 254/264), même grille à une colonne
+           `minmax(0,1fr)` (le piège de la nº 228). Le `mt-5` qui ne
+           vivait QUE sous un titre de groupe part avec les titres : la
+           liste repart du `pb` du bloc de titre de la page, comme la
+           grille de la recherche — ni espace vide, ni décalage. */}
+      <ul className="grid gap-[34px] lg:gap-[62px] grid-cols-[minmax(0,1fr)]">
+        {liste.map((suivi) => (
+          <li key={suivi.id}>
+            <BlocDUnSuivi suivi={suivi} surOuverture={surOuverture} />
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

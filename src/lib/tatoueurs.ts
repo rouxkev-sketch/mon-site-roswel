@@ -1335,20 +1335,25 @@ async function garnirFiches<T extends Tatoueur>(
      * le comportement d'avant cette passe.
      */
     /**
-     * ██ §1 (nº 410) — LA DÉCLARATION SE RANGE PAR MODE ██
+     * ██ §1 (nº 412) — LA DÉCLARATION NE COMBLE PLUS QUE LES TROUS ██
      * ------------------------------------------------------------------
-     * ELLE ÉTAIT INDEXÉE PAR (salon, artiste), ET C'ÉTAIT LA SECONDE
-     * MOITIÉ DU DÉFAUT : un artiste qui déclare DEUX modes chez un même
-     * lieu (résident + guest) écrasait sa propre entrée — la dernière
-     * ligne lue gagnait —, et cette valeur unique était ensuite posée
-     * sur LES DEUX lignes de la vue. Les deux se seraient donc
-     * affichées avec le même genre et le même rôle.
-     * ELLE EST DÉSORMAIS INDEXÉE PAR MODE quand la vue le donne : à
-     * chaque ligne sa déclaration, sans mélange possible.
-     * ⚠️ LES DEUX CLÉS COHABITENT, et il le faut : la clé par artiste
-     * reste écrite pour les bases où la migration nº 410 n'est pas
-     * passée (`mode_id` absent) — le repli est alors exactement le
-     * comportement d'avant cette passe.
+     * LE RELEVÉ DU PROPRIÉTAIRE (Gaston, trois lignes « Résident » sans
+     * dates) A MONTRÉ QUE LA PRÉSÉANCE DE LA nº 288 ÉTAIT DEVENUE
+     * FAUSSE. Elle faisait TOUJOURS gagner la déclaration sur la vue —
+     * juste quand chaque artiste n'avait qu'un mode, faux depuis qu'il
+     * peut en avoir deux : indexée par (salon, artiste), la déclaration
+     * du DERNIER mode lu écrasait l'autre, puis se posait sur TOUTES
+     * les lignes de la vue — le guest devenait « Résident » et, son
+     * genre étant faussé, SES DATES DISPARAISSAIENT.
+     * LA RÈGLE JUSTE, ET ELLE TIENT SANS LA MIGRATION nº 410-411 : une
+     * ligne de la vue QUI PORTE UN MODE (genre non nul) est DÉJÀ la
+     * déclaration de l'artiste — la vue joint `modes_exercice`, la
+     * MÊME table que cette requête-ci. Il n'y a rien à corriger, donc
+     * rien à écraser : la déclaration ne sert plus QU'AUX lignes SANS
+     * mode (l'invitation partie du salon, le cas exact de la nº 288).
+     * La carte par (salon, artiste) suffit à nouveau ; la clé par mode
+     * de la nº 410 partait d'un bon constat mais soignait le mauvais
+     * endroit — et ne marchait qu'avec la migration passée.
      */
     const declarations = new Map<string, { genre: string | null; role: string | null }>();
     const artistesDeLEquipe = [
@@ -1357,25 +1362,20 @@ async function garnirFiches<T extends Tatoueur>(
     if (artistesDeLEquipe.length > 0) {
       const reponse = await supabase
         .from("modes_exercice")
-        .select("id, tatoueur_id, salon_id, genre, role")
+        .select("tatoueur_id, salon_id, genre, role")
         .in("tatoueur_id", artistesDeLEquipe)
         .in("salon_id", identifiants);
       for (const ligne of (reponse.data ?? []) as unknown as {
-        id: string;
         tatoueur_id: string;
         salon_id: string | null;
         genre: string | null;
         role: string | null;
       }[]) {
         if (!ligne.salon_id) continue;
-        const declaration = { genre: ligne.genre, role: ligne.role };
-        //  LA CLÉ PRÉCISE — une par mode. C'est elle qui sert dès que
-        //  la vue rend `mode_id`.
-        declarations.set(`mode|${ligne.id}`, declaration);
-        //  LE REPLI D'AVANT — une par (salon, artiste). Sur deux modes
-        //  d'un même lieu, la dernière lue l'emporte, exactement comme
-        //  avant la nº 410 : c'est ce que la clé précise remplace.
-        declarations.set(`${ligne.salon_id}|${ligne.tatoueur_id}`, declaration);
+        declarations.set(`${ligne.salon_id}|${ligne.tatoueur_id}`, {
+          genre: ligne.genre,
+          role: ligne.role,
+        });
       }
     }
 
@@ -1416,12 +1416,15 @@ async function garnirFiches<T extends Tatoueur>(
       // reçoit désormais la déclaration de l'artiste (§3, nº 288).
       liste.push(
         membreDepuisVue(ligne, {
-          //  §1 (nº 410) — LE MODE D'ABORD, l'artiste à défaut.
-          ...((ligne.mode_id
-            ? declarations.get(`mode|${ligne.mode_id}`)
-            : null) ??
-            declarations.get(`${ligne.salon_id}|${ligne.artiste_id}`) ??
-            {}),
+          //  §1 (nº 412) — LA VUE D'ABORD : une ligne qui porte un mode
+          //  dit déjà son genre et son rôle (même table que la
+          //  déclaration) — on ne lui passe RIEN qui puisse l'écraser.
+          //  La déclaration ne comble que la ligne SANS mode,
+          //  l'invitation partie du salon (nº 288).
+          ...(ligne.genre
+            ? {}
+            : (declarations.get(`${ligne.salon_id}|${ligne.artiste_id}`) ??
+              {})),
           //  §3 (nº 313) — sa déclaration de styles, quand on l'a lue.
           styles: stylesDesMembres.get(ligne.artiste_id) ?? null,
         })
