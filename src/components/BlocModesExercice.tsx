@@ -116,11 +116,16 @@ const LIBELLES_MODES: Record<GenreMode, string> = {
   guest: "Guest",
 };
 
-/** L'ORDRE DU SÉLECTEUR — celui que le propriétaire a dicté (nº 402) :
-        Salon · Studio · Guest
-    C'est un ordre d'AFFICHAGE : GENRES_MODE, qui sert aussi les
-    fiches publiques, ne bouge pas — et les slugs jamais. */
-const ORDRE_SELECTEUR: GenreMode[] = ["salon", "prive", "guest"];
+/** L'ORDRE DU SÉLECTEUR — celui que le propriétaire a dicté (nº 403) :
+        Studio · Salon · Guest
+    (la nº 402 disait « Salon · Studio · Guest » ; les deux premiers
+    s'échangent.) C'est un ordre d'AFFICHAGE : GENRES_MODE, qui sert
+    aussi les fiches publiques, ne bouge pas — et les slugs jamais.
+    ⚠️ CE N'EST PLUS LE SEUL ENDROIT À TENIR CET ORDRE : le filtre de
+    recherche (FILTRE_MODE_ACTIVITE) et l'ordre des profils sur une
+    fiche (RANG_DU_GENRE) disent la même chose. Les trois listes
+    doivent bouger ensemble. */
+const ORDRE_SELECTEUR: GenreMode[] = ["prive", "salon", "guest"];
 
 /** Le mot du bouton d'ajout — « + Ajouter un studio », etc. Le Guest
     n'y figure pas : il garde « + Ajouter une autre date ». */
@@ -189,7 +194,13 @@ function modeVierge(
         existence ; celui qu'on choisit ensuite est le seul enregistré.
         ⚠️ UN ONGLET NEUF garde son rôle d'ouverture : là, aucune ligne
         n'existe encore, et la bascule doit bien s'ouvrir quelque
-        part. */
+        part.
+        ⚠️ nº 403 — « FONDATEUR » N'EST PLUS LA PREMIÈRE POSITION (le
+        récit ci-dessus date de la nº 267, où elle l'était) : la bascule
+        s'ouvre désormais sur « Résident » à gauche. LE DÉFAUT
+        ENREGISTRÉ, LUI, NE CHANGE PAS — il est écrit ICI, EN TOUTES
+        LETTRES, et non déduit d'une position. Un onglet neuf naît donc
+        toujours sur `fondateur`, comme avant l'inversion. */
     role:
       vide || (genre !== "salon" && genre !== "prive") ? null : "fondateur",
     //  LA NATURE DU LIEU ne concerne qu'un guest. « Studio » d'abord
@@ -435,20 +446,34 @@ export function BlocModesExercice({
       l'exiger, pour que les lignes déjà enregistrées restent valables. */
   function leRole(mode: ModeEnSaisie) {
     if (mode.genre !== "salon" && mode.genre !== "prive") return null;
-    //  LE MOT SUIT LE LIEU : « Fondateur du salon » pour un salon,
-    //  « Fondateur du studio » pour un studio privé. « Artiste
-    //  résident » ne change pas — un résident est un résident.
-    const fondateur =
-      mode.genre === "prive" ? "Fondateur du studio" : "Fondateur du salon";
+    /*  ██ nº 403 — DEUX MOTS, ET RIEN D'AUTRE ██
+         LE MOT NE SUIT PLUS LE LIEU : « Fondateur du salon » /
+         « Fondateur du studio » se choisissaient selon le genre, et
+         « Artiste résident » portait un mot de trop. Le lieu est déjà
+         nommé par l'encadré qu'on vient de choisir, deux lignes plus
+         haut — le répéter ici n'apprenait rien. Restent « Résident »
+         et « Fondateur », dans cet ordre.
+         ⚠️ LES DEUX MOTS VIENNENT DU CATALOGUE, DANS SON ORDRE : plus
+         un seul libellé écrit ici. Renommer un rôle ou les inverser se
+         fait dans ROLES_STUDIO, et nulle part ailleurs. (La paire reste
+         écrite en deux lignes parce que `BasculeDeuxChoix` attend un
+         couple, pas une liste — deux choix, par construction.)
+         ⚠️ LE DÉFAUT EST LU PAR NOM, PLUS PAR POSITION. C'était
+         `ROLES_STUDIO[0].slug` : inverser la liste aurait fait basculer
+         le repli de « fondateur » à « résident » sans qu'une ligne le
+         dise. Un mode neuf naît toujours sur `fondateur` (voir
+         `modeVierge`), et ce repli-ci — qui ne sert qu'aux lignes
+         anciennes sans rôle — dit maintenant le même mot, en toutes
+         lettres. */
     return (
       <div className="opacity-100 transition-opacity duration-200 starting:opacity-0">
         <BasculeDeuxChoix
           etiquette="Ton rôle dans ce lieu"
           choix={[
-            { slug: ROLES_STUDIO[0].slug as RoleStudio, label: fondateur },
-            { slug: ROLES_STUDIO[1].slug as RoleStudio, label: "Artiste résident" },
+            { slug: ROLES_STUDIO[0].slug as RoleStudio, label: ROLES_STUDIO[0].choix },
+            { slug: ROLES_STUDIO[1].slug as RoleStudio, label: ROLES_STUDIO[1].choix },
           ]}
-          valeur={(mode.role ?? ROLES_STUDIO[0].slug) as RoleStudio}
+          valeur={(mode.role ?? "fondateur") as RoleStudio}
           surChoix={(role) => modifier(mode.cle, { role })}
         />
       </div>

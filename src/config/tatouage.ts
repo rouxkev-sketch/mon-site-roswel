@@ -819,9 +819,18 @@ export const FILTRE_MODE_ACTIVITE = {
   //  BOUGENT PAS : ce sont les clés du langage `exclure=` — un vieux
   //  lien `exclure=a-domicile` est simplement ignoré (`filtresConnus`
   //  ne garde que les slugs connus).
+  //  ██ nº 403 — STUDIO PASSE DEVANT SALON ██
+  //  Le propriétaire veut UN SEUL ordre sur tout le site : Studio ·
+  //  Salon · Guest. Ce groupe était le dernier à ne pas le suivre —
+  //  la nº 402 l'avait posé en « Salon · Studio · Guest » alors que
+  //  GENRES_MODE et RANG_DU_GENRE (l'ordre des profils sur une fiche)
+  //  disaient déjà Studio d'abord. Les trois listes concordent
+  //  désormais. LES SLUGS NE BOUGENT PAS : l'ordre d'un groupe n'a
+  //  aucun effet sur ce qui part vers la base — `exclure=` est un
+  //  ENSEMBLE, pas une liste.
   options: [
-    { slug: "en-salon", label: "Salon", genre: "salon" },
     { slug: "en-studio-prive", label: "Studio", genre: "prive" },
+    { slug: "en-salon", label: "Salon", genre: "salon" },
     { slug: "en-guest", label: "Guest", genre: "guest" },
   ],
 } as const;
@@ -1181,15 +1190,35 @@ export const RAYONS_DEPLACEMENT = [10, 25, 50, 100, 200] as const;
  * OBLIGATOIRE dès que « En studio » est choisi : un mode sans ce
  * sous-choix ne dit qu'une demi-vérité (voir `modeComplet`).
  */
+/**
+ * ██ nº 403 — L'ORDRE S'INVERSE, LES MOTS SE RÉDUISENT ██
+ * ------------------------------------------------------------------
+ * DEUX DEMANDES DU PROPRIÉTAIRE, ET AUCUNE NE TOUCHE AUX DONNÉES :
+ *  · « Résident » PASSE DEVANT — c'est le cas de loin le plus
+ *    fréquent, et une bascule se lit de gauche à droite ;
+ *  · LES DEUX FORMES LONGUES DISPARAISSENT. « Fondateur du salon » et
+ *    « Artiste résident » deviennent « Fondateur » et « Résident »,
+ *    tout court. Le lieu est déjà nommé partout où le rôle s'affiche
+ *    (l'encadré du formulaire, « Salon · … » sur la fiche) : le
+ *    répéter dans le rôle allongeait sans rien apprendre.
+ * ⚠️ LES SLUGS SONT LES VALEURS ÉCRITES EN BASE (`modes_exercice.role`,
+ * contrainte `modes_exercice_role_connu`) : `fondateur` et `resident`
+ * ne bougent pas d'une lettre. Personne ne change de rôle, et la
+ * contrainte n'a pas à être touchée. Seul l'ordre de cette liste et
+ * les deux mots affichés changent.
+ * ⚠️ `label` ET `choix` DISENT MAINTENANT LA MÊME CHOSE POUR LES DEUX
+ * (ce n'était le cas que de « Fondateur »). Les deux champs restent :
+ * `libelleRoleStudio` et `libelleRoleCourt` ont chacun leurs
+ * appelants, et les fusionner ne changerait rien à l'écran.
+ * ⚠️ CE N'EST PAS LE DÉFAUT QUI CHANGE. Un mode neuf naît toujours sur
+ * `fondateur` (voir `modeVierge`, BlocModesExercice), et la bascule ne
+ * le lit plus par POSITION mais par NOM — sans quoi cette inversion
+ * aurait silencieusement fait naître les nouveaux modes en
+ * « résident ».
+ */
 export const ROLES_STUDIO = [
-  // UN SEUL MOT, AU FORMULAIRE COMME SUR LA FICHE. « Fondateur /
-  // Gérant » cherchait à couvrir les deux situations au moment de
-  // choisir ; le double libellé pesait dans une pilule de 14 px et
-  // faisait hésiter là où il n'y a pas à hésiter. « Fondateur » se
-  // comprend seul — `choix` et `label` disent désormais la même
-  // chose, et le slug (écrit en base) ne bouge pas d'une lettre.
-  { slug: "fondateur", label: "Fondateur du salon", choix: "Fondateur" },
-  { slug: "resident", label: "Artiste résident", choix: "Résident" },
+  { slug: "resident", label: "Résident", choix: "Résident" },
+  { slug: "fondateur", label: "Fondateur", choix: "Fondateur" },
 ] as const;
 
 export type RoleStudio = (typeof ROLES_STUDIO)[number]["slug"];
@@ -1201,12 +1230,11 @@ export function libelleRoleStudio(slug: string | null | undefined): string {
 
 /**
  * LE RÔLE EN UN SEUL MOT — « Fondateur », « Résident » (nº 222-§1f).
- * ⚠️ CE N'EST PAS `libelleRoleStudio`, qui rend la forme longue
- * (« Artiste résident », « Fondateur du salon »). Sous un nom de
- * profil, le lieu est déjà dit juste avant : « En salon · Artiste
- * résident » répète « salon » et allonge une étiquette qui doit tenir
- * en deux mots. C'est `choix` — le mot du formulaire — qui sert ici,
- * et à la fiche comme au formulaire on lit donc le même mot.
+ * ⚠️ DEPUIS LA nº 403, `libelleRoleStudio` REND LE MÊME MOT : les
+ * formes longues (« Artiste résident », « Fondateur du salon ») sont
+ * supprimées. Les deux fonctions subsistent parce qu'elles ont chacune
+ * leurs appelants ; elles ne peuvent plus diverger, puisque `label` et
+ * `choix` portent la même valeur.
  */
 export function libelleRoleCourt(slug: string | null | undefined): string {
   return ROLES_STUDIO.find((r) => r.slug === slug)?.choix ?? "";
