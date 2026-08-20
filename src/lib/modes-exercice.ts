@@ -130,6 +130,19 @@ export type StudioFiche = {
 /** UN MEMBRE D'ÉQUIPE, tel que la fiche d'un salon l'affiche. */
 export type MembreEquipe = {
   artiste_id: string;
+  /**
+   * §1 (nº 410) — L'IDENTITÉ D'UNE LIGNE, ET NON D'UNE PERSONNE.
+   * ------------------------------------------------------------------
+   * UN MÊME ARTISTE PEUT AVOIR DEUX LIGNES chez un même lieu : résident
+   * ET guest, deux modes distincts. `artiste_id` ne suffit donc plus à
+   * les distinguer — ni pour la clé de liste à l'écran, ni pour savoir
+   * à laquelle rattacher quelle déclaration.
+   * ⚠️ FACULTATIF, comme toutes les colonnes récentes : la vue ne rend
+   * `liaison_id` que depuis la migration nº 410. Sans elle, l'appelant
+   * retombe sur `artiste_id` et le site se comporte exactement comme
+   * avant — le cas des deux modes reste mal rendu, rien ne casse.
+   */
+  cle?: string;
   nom: string;
   slug: string | null;
   photo: string | null;
@@ -237,6 +250,9 @@ export function modesActifs(
 export function membreDepuisVue(
   ligne: {
     artiste_id: string;
+    /** §1 (nº 410) — l'identifiant de la liaison. Facultatif : la vue
+        ne le rend que depuis la migration de cette passe. */
+    liaison_id?: string | null;
     artiste_nom: string;
     artiste_slug: string | null;
     artiste_photo: string | null;
@@ -276,6 +292,10 @@ export function membreDepuisVue(
   const role = declaration?.role ?? ligne.role;
   return {
     artiste_id: ligne.artiste_id,
+    //  §1 (nº 410) — une ligne, une clé. À défaut de liaison connue
+    //  (migration pas passée), l'artiste redevient sa propre identité :
+    //  c'est le comportement d'avant, ni meilleur ni pire.
+    cle: ligne.liaison_id ?? ligne.artiste_id,
     nom: ligne.artiste_nom,
     slug: ligne.artiste_slug,
     photo: ligne.artiste_photo,

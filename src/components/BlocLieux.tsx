@@ -38,7 +38,11 @@ import {
   type StudioFiche,
 } from "@/lib/modes-exercice";
 import { ligneFiche, ligneMaps, type LieuAffichable } from "@/lib/adresse";
-import { ECRITURE_TITRE_SECTION, profilDeLaFiche } from "@/config/tatouage";
+import {
+  ECRITURE_TITRE_SECTION,
+  profilDeLaFiche,
+  TRAIT_SEPARATION,
+} from "@/config/tatouage";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
@@ -482,9 +486,27 @@ function GuestsDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
   );
   if (guests.length === 0) return null;
   return (
-    <div className="mt-8">
-      <p className={ECRITURE_TITRE_SECTION}>Guests</p>
-      <ul className="mt-4 flex flex-col gap-8">
+    /*  ██ §2 (nº 410) — UN TRAIT, PLUS UN TITRE ██
+         Le titre « GUESTS » posé à la nº 409 est supprimé. À sa place,
+         LE SÉPARATEUR DE LA FICHE — `mt-10 pt-10 border-t` avec le
+         jeton `TRAIT_SEPARATION` (config/tatouage), exactement
+         l'écriture qui sépare déjà les sections dans ContenuFiche
+         (l.1773, 1777, 1816). Aucun trait n'est dessiné ici, aucune
+         couleur n'est écrite.
+         ⚠️ L'AIR EST ÉGAL DES DEUX CÔTÉS, ET C'EST VÉRIFIABLE :
+         `mt-10` pose 40 px au-dessus du trait, `pt-10` 40 px en
+         dessous. Le piège de la nº 385 aurait été la PLAQUE DE SURVOL
+         des lignes : `CLASSES_LIGNE_CLIQUABLE` porte `-m-2 p-2`, deux
+         valeurs qui S'ANNULENT — la boîte de mise en page d'une ligne
+         reste donc son texte, et les 40 px se mesurent bien de texte à
+         trait, dans les deux sens. La plaque déborde de 8 px au survol,
+         mais symétriquement en haut et en bas : elle ne peut pas créer
+         d'inégalité.
+         ⚠️ RIEN QUAND IL N'Y A PAS DE GUEST : le composant est déjà
+         sorti plus haut (`guests.length === 0`), donc ni trait, ni
+         section, ni espace. */
+    <div className={`mt-10 pt-10 border-t ${TRAIT_SEPARATION}`}>
+      <ul className="flex flex-col gap-8">
         {guests.map((membre) => {
           /*  LA MÊME LIGNE QUE L'ÉQUIPE AU-DESSUS — pastille ronde,
                colonne de texte, ligne entière cliquable — et la mise en
@@ -521,8 +543,13 @@ function GuestsDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
               </div>
             </>
           );
+          /*  §1 (nº 410) — LA CLÉ EST CELLE DE LA LIGNE, pas de la
+               personne : un artiste peut être MEMBRE ET GUEST du même
+               lieu, donc apparaître deux fois. `cle` vaut son
+               identifiant de liaison ; à défaut (migration nº 410 pas
+               passée) elle retombe sur l'artiste, comme avant. */
           return (
-            <li key={membre.artiste_id}>
+            <li key={membre.cle ?? membre.artiste_id}>
               {membre.slug ? (
                 <Link
                   href={adresseDeLienInterne(membre.slug)}
@@ -685,7 +712,7 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
           </>
         );
         return (
-          <li key={membre.artiste_id}>
+          <li key={membre.cle ?? membre.artiste_id}>
             {membre.slug ? (
               <Link
                 href={adresseDeLienInterne(membre.slug)}
@@ -1413,8 +1440,26 @@ function TroisLignesDuLieu({
            ⚠️ LE LIEU RESTE CLIQUABLE VERS LE PLAN, comme l'était la
            troisième ligne : c'est le DERNIER morceau qui le porte —
            celui qui nomme la ville. */}
+      {/*  ██ §3 (nº 410) — LES DEUX LIGNES SE RESSERRENT ██
+           C'ÉTAIT `mt-1.5` (6 px), hérité de l'ancienne ligne du nom
+           qui suivait une étiquette en capitales — un écart de
+           SECTION, pas d'un titre à son sous-titre. Trop pour deux
+           lignes qui disent la même chose.
+           CE QUE JE PRENDS : `mt-0.5` (2 px). D'OÙ ÇA VIENT : c'est
+           l'écart que la ligne des STYLES d'un membre d'équipe porte
+           déjà sous son nom (`mt-0.5`, nº 313), à quelques pixels
+           d'ici et dans la même colonne. Aucune valeur neuve.
+           ⚠️ LA HAUTEUR DU BLOC NE CHANGE PAS D'UN PIXEL, et c'est
+           mesurable : la colonne porte `min-h-13` (52 px) et
+           `justify-center` depuis la nº 229. Deux lignes de 15 px en
+           `leading-snug` font 20,6 px chacune ; avec 6 px d'écart le
+           texte occupait 47,2 px, avec 2 px il occupe 43,2 px — sous
+           les 52 px dans les DEUX cas. C'est donc le plancher qui
+           commande la hauteur, hier comme aujourd'hui, et la photo de
+           profil recentrée à la nº 389 ne bouge pas. Seul l'écart
+           INTERNE se resserre. */}
       {(role || suite.length > 0) && (
-        <p className="mt-1.5 text-[15px] leading-snug [overflow-wrap:anywhere]">
+        <p className="mt-0.5 text-[15px] leading-snug [overflow-wrap:anywhere]">
           {role && (
             <span className="font-medium text-sombre-texte">{role}</span>
           )}

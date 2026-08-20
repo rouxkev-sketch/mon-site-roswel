@@ -102,12 +102,39 @@ export async function POST(requete: NextRequest) {
   //  succès, et l'équipe restait vide — la vue ne lit que les
   //  validées. On efface donc le refus (les deux bouts en ont le
   //  droit) et on repart sur un rattachement neuf.
-  const { data: dejaLa } = await supabase
+  /*  ██ §1 (nº 410) — LE DOUBLON SE JUGE PAR MODE, PAS PAR SALON ██
+       ============================================================
+       C'ÉTAIT LA CAUSE, ET ELLE EST ICI. Cette recherche ne portait
+       que sur (artiste, salon) : un artiste RÉSIDENT d'un studio qui
+       déclarait EN PLUS un guest chez ce même studio voyait sa
+       seconde demande répondre « déjà fait » — la liaison du guest
+       n'était jamais créée, donc la vue `equipe_salon` n'avait qu'une
+       ligne à rendre, et le guest n'existait nulle part.
+       ⚠️ LA BASE, ELLE, AVAIT RAISON DEPUIS LE DÉBUT : son index
+       d'unicité s'appelle `idx_liaisons_unique` et porte sur
+       (artiste_id, salon_id, coalesce(mode_id, …)) — « UNE SEULE
+       liaison par (artiste, salon, MODE) », dit son commentaire
+       (yokofolio-modes-et-liaisons.sql). C'est le code qui était plus
+       sévère que le schéma, et qui refusait ce que la base autorisait.
+       ⚠️ ET `maybeSingle()` SERAIT DEVENU UNE BOMBE : dès qu'un artiste
+       a deux liaisons chez un même salon, une recherche sans `mode_id`
+       en trouve deux et `maybeSingle` LÈVE UNE ERREUR. Ajouter le mode
+       ne fait donc pas que réparer le cas manquant — c'est ce qui rend
+       cette ligne juste.
+       ⚠️ AUCUN VRAI DOUBLON N'EST OUVERT : un mode donné n'a toujours
+       qu'une liaison, et une invitation partie DU SALON (sans mode)
+       reste unique elle aussi — `mode_id is null` est une valeur comme
+       une autre pour cette recherche, exactement comme le
+       `coalesce(...)` de l'index. */
+  const rechercheLiaison = supabase
     .from("liaisons_artiste_salon")
     .select("id, statut")
     .eq("artiste_id", corps.artisteId)
-    .eq("salon_id", corps.salonId)
-    .maybeSingle();
+    .eq("salon_id", corps.salonId);
+  const { data: dejaLa } = await (corps.modeId
+    ? rechercheLiaison.eq("mode_id", corps.modeId)
+    : rechercheLiaison.is("mode_id", null)
+  ).maybeSingle();
   const ancienne = dejaLa as { id: string; statut: string } | null;
   if (ancienne && ancienne.statut !== "refusee") {
     return NextResponse.json({ ok: true, deja: true });

@@ -1299,6 +1299,11 @@ async function garnirFiches<T extends Tatoueur>(
     const lignesEquipe = (equipe.data ?? []) as unknown as {
       salon_id: string;
       artiste_id: string;
+      //  §1 (nº 410) — ce qui distingue deux lignes d'un même artiste
+      //  chez un même lieu. Absents tant que la migration
+      //  `yokofolio-equipe-par-mode.sql` n'est pas passée.
+      liaison_id?: string | null;
+      mode_id?: string | null;
       artiste_nom: string;
       artiste_slug: string | null;
       artiste_photo: string | null;
@@ -1329,6 +1334,22 @@ async function garnirFiches<T extends Tatoueur>(
      * ⚠️ JAMAIS BLOQUANTE : en cas d'échec, on retombe exactement sur
      * le comportement d'avant cette passe.
      */
+    /**
+     * ██ §1 (nº 410) — LA DÉCLARATION SE RANGE PAR MODE ██
+     * ------------------------------------------------------------------
+     * ELLE ÉTAIT INDEXÉE PAR (salon, artiste), ET C'ÉTAIT LA SECONDE
+     * MOITIÉ DU DÉFAUT : un artiste qui déclare DEUX modes chez un même
+     * lieu (résident + guest) écrasait sa propre entrée — la dernière
+     * ligne lue gagnait —, et cette valeur unique était ensuite posée
+     * sur LES DEUX lignes de la vue. Les deux se seraient donc
+     * affichées avec le même genre et le même rôle.
+     * ELLE EST DÉSORMAIS INDEXÉE PAR MODE quand la vue le donne : à
+     * chaque ligne sa déclaration, sans mélange possible.
+     * ⚠️ LES DEUX CLÉS COHABITENT, et il le faut : la clé par artiste
+     * reste écrite pour les bases où la migration nº 410 n'est pas
+     * passée (`mode_id` absent) — le repli est alors exactement le
+     * comportement d'avant cette passe.
+     */
     const declarations = new Map<string, { genre: string | null; role: string | null }>();
     const artistesDeLEquipe = [
       ...new Set(lignesEquipe.map((ligne) => ligne.artiste_id)),
@@ -1336,20 +1357,25 @@ async function garnirFiches<T extends Tatoueur>(
     if (artistesDeLEquipe.length > 0) {
       const reponse = await supabase
         .from("modes_exercice")
-        .select("tatoueur_id, salon_id, genre, role")
+        .select("id, tatoueur_id, salon_id, genre, role")
         .in("tatoueur_id", artistesDeLEquipe)
         .in("salon_id", identifiants);
       for (const ligne of (reponse.data ?? []) as unknown as {
+        id: string;
         tatoueur_id: string;
         salon_id: string | null;
         genre: string | null;
         role: string | null;
       }[]) {
         if (!ligne.salon_id) continue;
-        declarations.set(`${ligne.salon_id}|${ligne.tatoueur_id}`, {
-          genre: ligne.genre,
-          role: ligne.role,
-        });
+        const declaration = { genre: ligne.genre, role: ligne.role };
+        //  LA CLÉ PRÉCISE — une par mode. C'est elle qui sert dès que
+        //  la vue rend `mode_id`.
+        declarations.set(`mode|${ligne.id}`, declaration);
+        //  LE REPLI D'AVANT — une par (salon, artiste). Sur deux modes
+        //  d'un même lieu, la dernière lue l'emporte, exactement comme
+        //  avant la nº 410 : c'est ce que la clé précise remplace.
+        declarations.set(`${ligne.salon_id}|${ligne.tatoueur_id}`, declaration);
       }
     }
 
@@ -1390,7 +1416,12 @@ async function garnirFiches<T extends Tatoueur>(
       // reçoit désormais la déclaration de l'artiste (§3, nº 288).
       liste.push(
         membreDepuisVue(ligne, {
-          ...(declarations.get(`${ligne.salon_id}|${ligne.artiste_id}`) ?? {}),
+          //  §1 (nº 410) — LE MODE D'ABORD, l'artiste à défaut.
+          ...((ligne.mode_id
+            ? declarations.get(`mode|${ligne.mode_id}`)
+            : null) ??
+            declarations.get(`${ligne.salon_id}|${ligne.artiste_id}`) ??
+            {}),
           //  §3 (nº 313) — sa déclaration de styles, quand on l'a lue.
           styles: stylesDesMembres.get(ligne.artiste_id) ?? null,
         })
