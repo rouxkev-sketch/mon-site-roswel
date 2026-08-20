@@ -70,8 +70,18 @@ import { libelleStyle } from "@/config/tatouage";
  * galerie reste une sélection et pas un vrac.
  */
 
-/** LE RENDU — deux entrées, et deux seulement. */
+/** LE RENDU — trois entrées, dans L'ORDRE DU PROPRIÉTAIRE (nº 404) :
+    Noir, Noir et gris, Couleur. « Noir » est né à la nº 404 — c'est le
+    rendu des styles monochromes (blackwork), jusqu'ici rangés en
+    « noir et gris » ; la migration `yokofolio-rendu-noir.sql` élargit
+    la contrainte de base et bascule leurs photos. TROIS RENDUS
+    DISTINCTS, AUCUN ENGLOBEMENT : « Noir et gris » ne contient plus le
+    tout noir. Cet ordre est celui de PARTOUT — les encadrés du
+    formulaire, le filtre du moteur (FILTRE_RENDU, config/tatouage) et
+    les galeries d'une fiche (`seriesDeLaCategorie`,
+    `rendusDuPortfolio`) le lisent tous ici. */
 export const RENDUS_PHOTO = [
+  { slug: "black", label: "Noir" },
   { slug: "black_and_grey", label: "Noir et gris" },
   { slug: "color", label: "Couleur" },
 ] as const;
@@ -80,10 +90,22 @@ export type SlugRendu = (typeof RENDUS_PHOTO)[number]["slug"];
 
 export const SLUGS_RENDUS = new Set<string>(RENDUS_PHOTO.map((r) => r.slug));
 
+/** LE RENDU D'UN STYLE MONOCHROME — « Noir », la seule galerie qu'un
+    style tout noir propose (nº 404 ; l'étiquette `monochrome` vient de
+    la nº 400 — voir `estStyleMonochrome`, config/tatouage). PAR NOM,
+    JAMAIS PAR POSITION : c'est une VALEUR — celle que les dépôts
+    écrivent sur un style replié et que la migration pose — pas un rang
+    d'affichage ; réordonner `RENDUS_PHOTO` ne doit pas pouvoir la
+    changer (la leçon de la nº 403 sur le rôle par défaut). */
+export const RENDU_TOUT_NOIR: SlugRendu = "black";
+
 /** LE RENDU PAR DÉFAUT — celui qu'on prête à une ligne qui n'en porte
     pas : photo d'avant la migration nº 48, ou ligne écrite par les
     migrations nº 55 et 57, qui font le même choix. « Noir et gris » est
     celui qui se trompe le moins, et deux gestes le corrigent.
+    ⚠️ L'ARRIVÉE DE « NOIR » (nº 404) NE LE CHANGE PAS : une ligne sans
+    rendu date d'avant l'existence même de « noir » — la présumer noire
+    serait se tromper plus souvent, pas moins.
     ⚠️ IL SERT À MONTRER, JAMAIS À CACHER : une photo sans rendu doit
     apparaître dans le formulaire comme sur la fiche — l'écarter
     revenait à l'effacer au premier enregistrement (passe nº 151). */
@@ -111,9 +133,12 @@ export const RENDU_PAR_DEFAUT: SlugRendu = "black_and_grey";
  * serveur, qu'un banc ne peut pas fabriquer. Écrite en fonction pure,
  * elle s'exécute hors navigateur, cas par cas — c'est plus fort qu'une
  * capture d'écran.
- * ⚠️ LE COMPTE SE FAIT SUR LE TRIPLET, nature comprise : les deux
+ * ⚠️ LE COMPTE SE FAIT SUR LE TRIPLET, nature comprise : les
  * galeries comparées sont bien celles que le formulaire montre côte à
  * côte.
+ * ⚠️ nº 404 — LA RÈGLE VAUT TELLE QUELLE À TROIS RENDUS : un seul
+ * garni → on ouvre dessus ; zéro, deux ou trois garnis → la première
+ * position, qui est désormais « Noir ».
  */
 export function renduDOuverture(
   photos: readonly { style: string; rendu: string; nature: string }[],
@@ -315,9 +340,9 @@ export type PhotoTatoueur = {
  * publique les affiche donc au même titre que Styles ou Technique —
  * mais sans que personne n'ait rien eu à cocher.
  *
- * L'ORDRE EST CELUI DE LA CONFIGURATION (noir et gris, puis couleur)
- * et non celui des photos : deux fiches ne doivent pas ranger la même
- * information dans deux ordres différents.
+ * L'ORDRE EST CELUI DE LA CONFIGURATION (noir, noir et gris, puis
+ * couleur — nº 404) et non celui des photos : deux fiches ne doivent
+ * pas ranger la même information dans deux ordres différents.
  */
 export function rendusDuPortfolio(
   galerie: Array<{ rendu: string | null }> | null | undefined

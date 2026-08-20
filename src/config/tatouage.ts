@@ -873,11 +873,19 @@ export function profilDeLaFiche(
  * FILTRES_TATOUAGE (qui, lui, dessine aussi les interrupteurs du
  * formulaire).
  * ⚠️ SLUGS EN ANGLAIS, les mêmes qu'en base (voir photos-tatoueur).
+ * ██ nº 404 — « NOIR » ARRIVE, AVANT « NOIR ET GRIS » ██
+ * TROIS RENDUS DISTINCTS, TROIS FILTRES DISTINCTS, AUCUN ENGLOBEMENT :
+ * chercher « Noir et gris » ne remonte PAS les galeries « Noir » — la
+ * comparaison est une égalité de slug, en base (`p2.rendu =
+ * p_photo_rendu`) comme en mémoire (`carrousel.rendu === renduVoulu`).
+ * L'ordre est celui de RENDUS_PHOTO (lib/photos-tatoueur) : les deux
+ * listes doivent bouger ensemble.
  */
 export const FILTRE_RENDU = {
   groupe: "rendu",
   titre: "Rendu",
   options: [
+    { slug: "black", label: "Noir" },
     { slug: "black_and_grey", label: "Noir et gris" },
     { slug: "color", label: "Couleur" },
   ],
@@ -910,11 +918,15 @@ export function renduConnu(slug: string | undefined): string {
 /**
  * LA RECHERCHE PORTE-T-ELLE SUR UN RENDU ?
  * =========================================
- * Le rendu ne se coche pas : il s'ÉTEINT. Les deux interrupteurs sont
- * allumés par défaut ; éteindre « Noir et gris », c'est chercher de la
- * couleur. Il n'y a donc recherche par rendu que lorsqu'il en reste
- * EXACTEMENT UN d'allumé — deux allumés (ou zéro) ne désignent rien,
- * et la fiche s'ouvre alors comme d'habitude.
+ * Le rendu ne se coche pas : il s'ÉTEINT. Les interrupteurs — TROIS
+ * depuis la nº 404 : Noir, Noir et gris, Couleur — sont tous allumés
+ * par défaut ; éteindre les autres, c'est chercher celui qui reste. Il
+ * n'y a donc recherche par rendu que lorsqu'il en reste EXACTEMENT UN
+ * d'allumé — plusieurs allumés (ou zéro) ne désignent rien, et la
+ * fiche s'ouvre alors comme d'habitude. (Deux allumés sur trois
+ * restreignent quand même LES FICHES : il faut une photo dans l'un des
+ * deux — `p_rendus`, `allumesDuGroupe` — mais aucun rendu unique n'est
+ * cherché.)
  */
 export function renduCherche(exclure: string[] | undefined): string {
   const eteints = new Set(exclure ?? []);

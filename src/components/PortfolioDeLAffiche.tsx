@@ -37,11 +37,11 @@ import type { PhotoGalerie, StyleGalerie } from "@/lib/photo-tatoueur";
  *    nomment), rendus par L'ÉCRITURE DES TITRES DE SECTION DU PROFIL
  *    (`ECRITURE_TITRE_SECTION`, les capitales grises espacées de la
  *    nº 223) — aucune valeur choisie ici, on réutilise la leur ;
- *  · sous chaque titre, TOUTES SES SÉRIES en vignettes, noir & gris
- *    et couleur MÊLÉS, dans leur ordre existant — les styles de A à Z
- *    (nº 208-§4), et dans un style, l'ordre de `RENDUS_PHOTO` — SANS
- *    aucun titre intermédiaire : les mots « Noir & gris » et
- *    « Couleur » ne s'écrivent nulle part ;
+ *  · sous chaque titre, TOUTES SES SÉRIES en vignettes, tous rendus
+ *    MÊLÉS (noir, noir & gris, couleur — nº 404), dans leur ordre
+ *    existant — les styles de A à Z (nº 208-§4), et dans un style,
+ *    l'ordre de `RENDUS_PHOTO` — SANS aucun titre intermédiaire : les
+ *    mots des rendus ne s'écrivent nulle part ;
  *  · une section vide NE REND RIEN — ni titre, ni espace.
  *
  * ██ §2 (nº 375) — LES DEUX TITRES DE SECTION DEVIENNENT UN SURTITRE ██
@@ -171,11 +171,11 @@ type SeriePubliee = {
  * TOUTES LES SÉRIES PUBLIÉES D'UNE CATÉGORIE, APLATIES (nº 276-§3).
  * Les styles de A à Z (`localeCompare` en français, nº 208-§4 — les
  * accents se rangent où on les attend) ; DANS un style, les rendus
- * présents dans l'ordre de `RENDUS_PHOTO` (noir & gris, puis couleur)
- * — « leur ordre existant », celui que les sélecteurs parcouraient.
- * Les deux rendus sont MÊLÉS dans la même grille : aucun mot de rendu
- * ne s'écrit, nulle part. Un style sans photo dans cette catégorie n'a
- * pas de vignette.
+ * présents dans l'ordre de `RENDUS_PHOTO` (noir, noir & gris, puis
+ * couleur — nº 404) — « leur ordre existant », celui que les
+ * sélecteurs parcouraient. Les rendus sont MÊLÉS dans la même
+ * grille : aucun mot de rendu ne s'écrit, nulle part. Un style sans
+ * photo dans cette catégorie n'a pas de vignette.
  */
 function seriesDeLaCategorie(
   groupes: StyleGalerie[],
