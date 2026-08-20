@@ -441,7 +441,7 @@ export function BlocEquipeSalon({
                   aria-label={`Retirer ${liaison.nom} de l'équipe`}
                   className="grid h-11 w-11 shrink-0 place-items-center rounded-full
                              text-sombre-texte-doux transition-colors
-                             hover:text-primaire
+                             hover:text-sombre-texte
                              disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <IconeCroix classe="h-4 w-4" />

@@ -712,6 +712,15 @@ export function BlocModesExercice({
                     //  fiche : garder l'ancien en mémoire, invisible,
                     //  le ferait ressortir au premier retrait.
                     nomLieu: null,
+                    //  ██ §2 (nº 420) — LES DATES NE SONT PAS ÉCRITES
+                    //  ICI, ET C'EST LE POINT ██ C'est le même guest,
+                    //  aux mêmes dates, simplement mieux désigné : ce
+                    //  qu'il a saisi doit lui rester. L'écriture ne
+                    //  touche donc QUE le lieu (`salon`, `lieu`,
+                    //  `nomLieu`), et `datesSuiventLeLieu` — qui relit
+                    //  cette transition — y voit un REMPLACEMENT, pas
+                    //  une disparition : les dates passent intactes.
+                    //  Y ajouter `debut_le`/`fin_le` les perdrait.
                   }
                 : { salon: null }
             )
@@ -853,8 +862,8 @@ export function BlocModesExercice({
         //  s'y fondrait.
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full
                    text-sombre-texte-doux transition-colors
-                   hover:bg-sombre-eleve hover:text-primaire
-                   active:bg-sombre-eleve active:text-primaire"
+                   hover:bg-sombre-eleve hover:text-sombre-texte
+                   active:bg-sombre-eleve active:text-sombre-texte"
       >
         <IconeCroix taille={16} />
       </button>
@@ -933,12 +942,20 @@ export function BlocModesExercice({
               {/* Trois mots courts sur une ligne (nº 402, rétabli
                   nº 418) : chacun a sa place même à 320 px. */}
               <span
+                /*  ██ §3 (nº 420) — PLUS AUCUN ROSE SUR DU TEXTE ██
+                 LA RÈGLE, posée par le propriétaire pour TOUT le
+                 formulaire : le texte reste BLANC en toutes
+                 circonstances, et c'est le FOND — lui seul — qui dit la
+                 sélection et le survol.
+                 LA RÉFÉRENCE EST DÉJÀ DANS LE SITE : les encadrés de
+                 rendu du portfolio (Noir / Noir et gris / Couleur,
+                 BlocPortfolio). La nº 309 y avait fait quitter le rose
+                 au titre, la nº 311 l'a rendu BLANC DANS LES DEUX
+                 ÉTATS, la nº 405 a retiré jusqu'au trait rose : « le
+                 fond dit tout ». On ne fait ici que généraliser leur
+                 traitement — aucun jeton neuf. */
                 className={`block text-[14px] font-semibold ${
-                  actif
-                    ? "text-primaire"
-                    : enFauteGenre
-                      ? "text-erreur"
-                      : "text-sombre-texte"
+                  enFauteGenre ? "text-erreur" : "text-sombre-texte"
                 }`}
               >
                 {LIBELLES_MODES[genre]}
@@ -1120,10 +1137,13 @@ export function BlocModesExercice({
                  (`MOTS_AJOUT` / « + Ajouter une autre date »). Le
                  défaut valait donc pour Studio, Salon ET Guest, et la
                  correction aussi — il n'y a rien à répéter. */
+            //  §3 (nº 420) — TEXTE BLANC DANS LES DEUX ÉTATS : le
+            //  fond dit le survol, le mot ne change plus de couleur
+            //  (la règle des encadrés de rendu, généralisée).
             className="mt-5 w-fit rounded-full bg-sombre-eleve-clair px-4 min-h-[40px]
-                       text-[13.5px] font-semibold text-sombre-texte-doux
-                       transition-colors hover:bg-sombre-haut hover:text-primaire
-                       active:bg-sombre-haut active:text-primaire"
+                       text-[13.5px] font-semibold text-sombre-texte
+                       transition-colors hover:bg-sombre-haut
+                       active:bg-sombre-haut"
           >
             {genreAffiche === "guest"
               ? "+ Ajouter une autre date"

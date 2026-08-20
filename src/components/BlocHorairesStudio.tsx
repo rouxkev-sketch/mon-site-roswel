@@ -207,10 +207,11 @@ export function BlocHorairesStudio({
                       //  §2 (nº 419) — la paire du FORMULAIRE, comme
                       //  « + Ajouter un studio » : ce bouton en est le
                       //  jumeau, il ne peut pas rester d'un autre gris.
+                      //  §3 (nº 420) — le mot reste blanc, le fond dit
+                      //  le survol (la règle des encadrés de rendu).
                       className="ml-auto rounded-full bg-sombre-eleve-clair px-3.5 min-h-[34px]
                                  text-[13px] font-semibold text-sombre-texte
-                                 transition-colors hover:bg-sombre-haut
-                                 hover:text-primaire"
+                                 transition-colors hover:bg-sombre-haut"
                     >
                       + Ajouter des horaires
                     </button>
@@ -287,10 +288,13 @@ export function BlocHorairesStudio({
                           type="button"
                           onClick={() => ajouterUneCoupure(jour.index)}
                           //  §2 (nº 419) — même paire que ses voisins.
+                          //  §3 (nº 420) — BLANC DANS LES DEUX ÉTATS :
+                          //  il était gris au repos et rose au survol,
+                          //  les deux écarts que la règle supprime.
                           className="rounded-full bg-sombre-eleve-clair px-2 min-h-[32px]
-                                     text-[12px] font-semibold text-sombre-texte-doux
+                                     text-[12px] font-semibold text-sombre-texte
                                      transition-colors hover:bg-sombre-haut
-                                     hover:text-primaire sm:px-3 sm:text-[12.5px]"
+                                     sm:px-3 sm:text-[12.5px]"
                         >
                           + Coupure du midi
                         </button>
@@ -301,8 +305,8 @@ export function BlocHorairesStudio({
                         className={`rounded-full px-2 min-h-[32px] text-[12px]
                                    font-semibold transition-colors sm:px-3 sm:text-[12.5px] ${
                                      copieFaite === jour.index
-                                       ? "bg-sombre-haut text-primaire"
-                                       : "bg-sombre-eleve-clair text-sombre-texte-doux hover:bg-sombre-haut hover:text-primaire"
+                                       ? "bg-sombre-haut text-sombre-texte"
+                                       : "bg-sombre-eleve-clair text-sombre-texte hover:bg-sombre-haut"
                                    }`}
                       >
                         {/* « DUPLIQUER LES HORAIRES » (passe nº 107) —

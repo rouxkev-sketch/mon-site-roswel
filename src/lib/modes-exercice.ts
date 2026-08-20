@@ -1418,6 +1418,29 @@ export function lieuRenseigne(mode: ModeEnSaisie): boolean {
  * ⚠️ ELLE NE TOURNE QU'À LA SAISIE (`modifier`, BlocModesExercice) et
  * JAMAIS À LA LECTURE : un guest déjà enregistré rouvre son formulaire
  * avec ses dates intactes — `chargerModes` ne passe pas par ici.
+ *
+ * ██ §2 (nº 420) — « LIEU SAISI À LA MAIN → FICHE RETENUE » CONSERVE
+ * LES DATES, ET C'EST DÉJÀ CE QUE FAIT CETTE LIGNE ██
+ * Le propriétaire soupçonnait cette règle (ou `lieuRenseigne`) d'y
+ * lire une disparition du lieu. VÉRIFIÉ EN L'EXÉCUTANT, pas en la
+ * relisant : sur cette transition, `avant.lieu` est renseigné ET
+ * `apres.salon` l'est — `aUnLieu` est donc VRAI, la fonction rend
+ * `apres` inchangé, et les deux dates passent telles quelles.
+ * C'est le sens même du test : ce qui compte n'est pas QUEL lieu, mais
+ * qu'il y EN AIT un de chaque côté. Remplacer une adresse par une
+ * fiche est un remplacement comme un autre — exactement comme
+ * remplacer une fiche par une autre, que la nº 413 protégeait déjà.
+ * ⚠️ LE CHEMIN QUI PERD LES DATES, ET IL N'EST PAS CELUI-CI : RETIRER
+ * L'ADRESSE D'ABORD (la croix du champ de localité), PUIS chercher la
+ * fiche. Le retrait est alors une vraie disparition — plus rien ne
+ * porte le lieu à cet instant —, les dates s'effacent, et la fiche
+ * retenue ensuite trouve les champs vides. C'est la règle du retrait,
+ * celle que le propriétaire veut garder pour la fiche ; on ne peut pas
+ * l'annuler ici sans l'annuler là-bas.
+ * ⚠️ IL N'Y A RIEN À RETIRER POUR CHERCHER : la zone de recherche
+ * reste ouverte en permanence, adresse saisie ou non (règle d'en-tête
+ * de DeuxZonesLieu). Le chemin direct — chercher, puis retenir — est
+ * donc toujours disponible, et c'est lui qui conserve les dates.
  */
 export function datesSuiventLeLieu(
   avant: ModeEnSaisie,

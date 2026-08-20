@@ -261,7 +261,7 @@ export function LienLibre({
         className="flex w-full min-h-[52px] items-center gap-3 rounded-lg
                    bg-sombre-eleve-clair px-4 text-left text-base
                    text-sombre-texte-doux transition-colors
-                   hover:bg-primaire/10 hover:text-primaire"
+                   hover:bg-sombre-haut"
       >
         <span aria-hidden="true" className="shrink-0">
           <IconePlus taille={16} />
@@ -479,7 +479,7 @@ export function LienLibre({
           className="inline-flex items-center rounded-full bg-sombre-eleve
                      px-5 min-h-[42px] text-[14px] font-semibold
                      text-sombre-texte transition-colors
-                     hover:bg-sombre-eleve-clair hover:text-primaire"
+                     hover:bg-sombre-eleve-clair"
         >
           Ajouter
         </button>

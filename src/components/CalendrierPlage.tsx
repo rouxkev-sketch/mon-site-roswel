@@ -332,7 +332,36 @@ export function ChampsPlageDates({
                   //  QUAND ON CHOISIT LA FIN, les jours antérieurs au
                   //  début sont éteints : une fin avant le début ne
                   //  peut plus être saisie.
-                  const eteint = ouvert === "fin" && Boolean(debut) && iso < debut;
+                  const avantLeDebut =
+                    ouvert === "fin" && Boolean(debut) && iso < debut;
+                  /*  ██ §1 (nº 420) — AUCUNE DATE PASSÉE NE SE CHOISIT ██
+                       On annonce une session guest à VENIR : un jour
+                       déjà écoulé n'a rien à faire dans ce choix.
+                       COMMENT C'EST EMPÊCHÉ : par le CALENDRIER, et là
+                       seulement — les jours antérieurs à aujourd'hui
+                       sont `disabled`, exactement par le mécanisme qui
+                       éteint déjà les jours antérieurs au début quand on
+                       choisit la fin. Il n'y a donc rien à contourner :
+                       les deux champs n'ont pas d'autre saisie que ce
+                       calendrier (le `<input type="date">` du navigateur
+                       a disparu à la nº 116).
+                       ⚠️ ET RIEN N'EST AJOUTÉ À LA VALIDATION, C'EST
+                       DÉLIBÉRÉ : un guest DÉJÀ ENREGISTRÉ dont les dates
+                       sont maintenant passées garde ses valeurs telles
+                       quelles, et sa fiche continue de s'enregistrer —
+                       `modeComplet` n'exige que deux dates cohérentes
+                       (la fin pas avant le début), et n'en demandera pas
+                       davantage. Interdire ici ce qui existe déjà là
+                       aurait bloqué des fiches sur une règle née après
+                       elles.
+                       ⚠️ SES PROPRES DATES RESTENT VISIBLES : le jour
+                       retenu garde son fond rose (le premier cas du
+                       ternaire, plus bas) même éteint — on ne peut plus
+                       le RECHOISIR, on ne le perd pas. Et le calendrier
+                       s'ouvre sur le mois de son début (voir
+                       `moisAffiche`) : il lit son ancienne période, puis
+                       navigue vers l'avant pour la renouveler. */
+                  const eteint = avantLeDebut || iso < aujourdHui;
                   const estAujourdHui = iso === aujourdHui;
                   return (
                     <button
@@ -350,9 +379,9 @@ export function ChampsPlageDates({
                                      : eteint
                                        ? "text-sombre-texte-doux/40"
                                        : dansLaPlage
-                                         ? "bg-sombre-haut text-primaire"
+                                         ? "bg-sombre-haut text-sombre-texte"
                                          : estAujourdHui
-                                           ? "font-bold text-primaire hover:bg-sombre-haut"
+                                           ? "font-bold text-sombre-texte hover:bg-sombre-haut"
                                            : "text-sombre-texte hover:bg-sombre-haut"
                                  }`}
                     >

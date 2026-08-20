@@ -742,8 +742,8 @@ export function BlocPortfolio({
           aria-hidden="true"
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full
                      bg-sombre-eleve text-sombre-texte transition-colors
-                     group-hover:bg-sombre-eleve-clair group-hover:text-primaire
-                     group-active:bg-sombre-eleve-clair group-active:text-primaire"
+                     group-hover:bg-sombre-eleve-clair
+                     group-active:bg-sombre-eleve-clair"
         >
           <IconePlus taille={18} />
         </span>
@@ -757,7 +757,7 @@ export function BlocPortfolio({
         <span
           className="text-[14.5px] max-[359px]:text-[13px] font-semibold
                      text-sombre-texte transition-colors
-                     group-hover:text-primaire group-active:text-primaire"
+                     group-hover:text-sombre-texte group-active:text-sombre-texte"
         >
           Ajouter un style &amp; des photos
         </span>

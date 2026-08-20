@@ -3206,15 +3206,15 @@ export function FormulaireFiche() {
                 aria-hidden="true"
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full
                            bg-sombre-eleve text-sombre-texte transition-colors
-                           group-hover:bg-sombre-eleve-clair group-hover:text-primaire
-                           group-active:bg-sombre-eleve-clair group-active:text-primaire"
+                           group-hover:bg-sombre-eleve-clair
+                           group-active:bg-sombre-eleve-clair"
               >
                 <IconePlus taille={18} />
               </span>
               <span
                 className="text-[14.5px] font-semibold text-sombre-texte
-                           transition-colors group-hover:text-primaire
-                           group-active:text-primaire"
+                           transition-colors group-hover:text-sombre-texte
+                           group-active:text-sombre-texte"
               >
                 {apercuProfil ? "Remplacer" : "Choisir la photo"}
               </span>

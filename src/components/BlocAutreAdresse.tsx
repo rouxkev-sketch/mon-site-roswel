@@ -334,7 +334,7 @@ export function BlocAutreAdresse({
                 aria-label={`Détacher ${fiche.nom}`}
                 className="grid h-11 w-11 place-items-center rounded-full
                            text-sombre-texte-doux transition-colors
-                           hover:text-primaire"
+                           hover:text-sombre-texte"
               >
                 <IconeCroix classe="h-4 w-4" />
               </button>
