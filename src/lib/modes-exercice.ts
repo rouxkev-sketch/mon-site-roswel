@@ -536,6 +536,56 @@ export function villeEtPaysDuMode(mode: ModeExerciceFiche): string {
   });
 }
 
+/**
+ * ██ §4 (nº 409) — LES DEUX LIGNES D'UN LIEU, VERSION PUBLIQUE ██
+ * ==================================================================
+ * CE QU'IL Y AVAIT (nº 408) : une étiquette en capitales grises
+ * (« RÉSIDENT DU SALON ») au-dessus de « Nom • Ville, Pays ».
+ * CE QUE LE PROPRIÉTAIRE VEUT :
+ *       Hand In Glove Tattoo          (gras, blanc)
+ *       Résident • Salon • Paris, France
+ * où SEUL LE RÔLE est blanc ; la puce, le type de lieu, la ville et le
+ * pays sont gris.
+ *
+ * CETTE FONCTION NE PEINT RIEN : elle rend les MORCEAUX, et l'appelant
+ * pose les couleurs. C'est ce qui permet à la fiche d'artiste et à la
+ * section des guests d'un salon de dire la même chose sans se recopier.
+ *
+ * ⚠️ LA PUCE NE S'ÉCRIT QU'ENTRE DEUX MORCEAUX PRÉSENTS, et c'est
+ * garanti ICI plutôt que dans le rendu : `suite` ne contient JAMAIS de
+ * vide (elle est filtrée), donc l'appelant peut joindre sans réfléchir.
+ * Les trois cas que le propriétaire demande de traiter en découlent :
+ *  · un lieu SANS VILLE NI PAYS → `suite` n'a que le type de lieu ;
+ *  · un GUEST SANS TYPE DE LIEU → `suite` n'a que la ville et le pays ;
+ *  · les DEUX manquants → `suite` est VIDE, la ligne se réduit au rôle
+ *    seul, et si le rôle lui-même manque (cas impossible aujourd'hui,
+ *    `genreMode` rendant toujours un mot) la ligne ne se rend pas.
+ * Aucune ligne vide, aucune puce orpheline ne peut donc être écrite.
+ *
+ * ⚠️ LE RÔLE : « Résident », « Fondateur » — les mots du formulaire,
+ * par `libelleRoleCourt` (nº 403) — ou « Guest » pour une session.
+ * Un invité est un invité : sa place dans le lieu EST sa session,
+ * c'est la règle de `roleDuMembre` (nº 222-§4), reprise telle quelle.
+ * ⚠️ LE TYPE DE LIEU : « Salon » ou « Studio », le vocabulaire de la
+ * nº 402, par `typeDeLieuDuMode` — jamais deviné, jamais réécrit.
+ */
+export function lieuEnDeuxLignes(mode: ModeExerciceFiche): {
+  /** La première ligne : le nom du lieu. Vide = pas de nom connu. */
+  nom: string;
+  /** Le premier mot de la seconde ligne, en blanc. */
+  role: string;
+  /** Ce qui suit, en gris — déjà purgé de ses vides. */
+  suite: string[];
+} {
+  const nom = nomDuLieuDuMode(mode);
+  const role =
+    mode.genre === "guest" ? "Guest" : libelleRoleCourt(mode.role) || "";
+  const suite = [typeDeLieuDuMode(mode), villeEtPaysDuMode(mode)]
+    .map((morceau) => (morceau ?? "").trim())
+    .filter(Boolean);
+  return { nom, role, suite };
+}
+
 export function troisLignesDuMode(mode: ModeExerciceFiche): {
   etiquette: string;
   nom: string;

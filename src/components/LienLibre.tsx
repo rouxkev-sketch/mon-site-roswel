@@ -314,9 +314,31 @@ export function LienLibre({
         }}
         title={valeur.url}
         aria-label={`Modifier le lien ${valeur.titre} — ${valeur.url}`}
-        className="flex w-full min-h-[52px] items-center gap-3 rounded-lg
-                   bg-sombre-eleve px-4 text-left transition-colors
-                   hover:bg-sombre-eleve-clair"
+        /*  ██ §2 (nº 409) — LA COULEUR REJOINT CELLE DES CHAMPS ██
+             CE QU'IL PORTAIT : `bg-sombre-eleve` (#33333A) au repos et
+             `bg-sombre-eleve-clair` (#3F3F47) au survol — l'écriture
+             des ENCADRÉS de la page, posée à la nº 407. Or cet état-ci
+             n'est pas un encadré : c'est LE CHAMP DU TITRE, refermé.
+             À côté de la bio et d'Instagram, qui reposent tous deux sur
+             `bg-sombre-eleve-clair`, il paraissait donc plus sombre —
+             et c'est ce que le propriétaire voit.
+             CE QU'IL PREND : la paire des champs, et rien d'autre.
+             Au REPOS `bg-sombre-eleve-clair`, exactement comme eux ;
+             AU SURVOL `bg-sombre-haut` (#4A4A53), qui est le cran que
+             ces mêmes champs prennent quand ils deviennent actifs
+             (`focus:bg-sombre-haut`) ; UNE FOIS CLIQUÉ, ce sont les
+             deux vrais champs qui s'affichent, sur cette même paire.
+             Les trois états sont donc ceux des autres champs.
+             ⚠️ LA nº 407 N'EST PAS DÉFAITE : le survol reste un
+             ÉCLAIRCISSEMENT D'UN CRAN de l'encadré entier — c'est la
+             mécanique demandée alors, avec la palette des champs au
+             lieu de celle des encadrés. Et le titre lui-même ne change
+             toujours pas de couleur : aucun survol rose n'est revenu.
+             ⚠️ AUCUNE COULEUR N'EST INVENTÉE : les deux jetons sont
+             ceux que `champs-formulaire` emploie déjà. */
+        className="flex w-full min-h-[52px] items-center gap-3 rounded-xl
+                   bg-sombre-eleve-clair px-4 text-left transition-colors
+                   hover:bg-sombre-haut"
       >
         <span aria-hidden="true" className="shrink-0 text-sombre-texte-doux">
           <IconeLien taille={20} />

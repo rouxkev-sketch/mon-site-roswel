@@ -32,9 +32,7 @@ import {
   libelleStylesEquipe,
   modesOrdonnes,
   roleDuMembre,
-  troisLignesDuMode,
-  villeEtPaysDuMode,
-  nomDuLieuDuMode,
+  lieuEnDeuxLignes,
   type MembreEquipe,
   type ModeExerciceFiche,
   type StudioFiche,
@@ -454,9 +452,105 @@ export const SOULIGNEMENT_LIEN =
   "underline-offset-4 decoration-1 decoration-sombre-texte-doux " +
   "group-hover:underline";
 
+/**
+ * ██ §5 (nº 409) — LES GUESTS ONT LEUR SECTION, SOUS L'ÉQUIPE ██
+ * ==================================================================
+ * CE QUI EXISTAIT DÉJÀ, ET C'EST L'ESSENTIEL DU DIAGNOSTIC : un guest
+ * déclaré CHEZ UNE FICHE DU SITE arrive jusqu'ici tout seul. La chaîne
+ * est entière — `modes_exercice.salon_id` reçoit la fiche retenue,
+ * `demanderLesRattachements` en fait une liaison VALIDÉE D'EMBLÉE
+ * (api/tatoueur/liaison), la vue `equipe_salon` la rend avec ses dates
+ * et écarte les sessions périmées, `membreDepuisVue` la traduit en
+ * membre de genre « guest ». AUCUNE MIGRATION N'EST NÉCESSAIRE.
+ * CE QUI MANQUAIT : les guests étaient MÊLÉS aux résidents dans la
+ * même liste (rangés en dernier par `equipeOrdonnee`), sans rien qui
+ * les distingue qu'une ligne de dates. Ils ont maintenant LEUR
+ * section, sous les membres.
+ * ⚠️ ELLE NE PARAÎT JAMAIS VIDE : le composant rend `null` quand la
+ * liste est vide, comme l'équipe au-dessus. Un salon sans guest
+ * n'affiche rien du tout — pas un titre, pas un espace.
+ * ⚠️ LE TITRE EST CELUI DES AUTRES SECTIONS (`ECRITURE_TITRE_SECTION`,
+ * les capitales grises espacées de STYLES, RENDU, TECHNIQUE) : aucune
+ * écriture nouvelle. L'équipe, elle, n'en porte pas — c'est la règle
+ * de la nº 288-§1, et c'est justement ce titre-ci qui sépare les deux
+ * listes sans avoir à tracer un trait.
+ */
+function GuestsDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined }) {
+  const clicVersFiche = useClicVersFiche();
+  const guests = equipeOrdonnee(equipe).filter(
+    (membre) => membre.genre === "guest"
+  );
+  if (guests.length === 0) return null;
+  return (
+    <div className="mt-8">
+      <p className={ECRITURE_TITRE_SECTION}>Guests</p>
+      <ul className="mt-4 flex flex-col gap-8">
+        {guests.map((membre) => {
+          /*  LA MÊME LIGNE QUE L'ÉQUIPE AU-DESSUS — pastille ronde,
+               colonne de texte, ligne entière cliquable — et la mise en
+               forme du §4 : le NOM en gras et en blanc, puis le rôle en
+               blanc suivi du reste en gris.
+               ⚠️ CE QUI SUIT « Guest », CE SONT SES DATES, et non le
+               lieu : sur la fiche du salon, le lieu est la page qu'on
+               regarde. L'écrire serait le répéter. */
+          const ligne = () => (
+            <>
+              <PhotoRonde source={membre.photo} nature="personne" />
+              <div className="flex min-h-13 min-w-0 flex-1 flex-col justify-center">
+                <p className="text-[15px] font-semibold leading-snug text-sombre-texte [overflow-wrap:anywhere]">
+                  {membre.nom}
+                </p>
+                {/*  LIGNE 2 — LE RÔLE, EN BLANC, comme au §4. Il n'est
+                     suivi de rien ici : sur la fiche du salon, le LIEU
+                     est la page qu'on regarde, l'écrire serait le
+                     répéter. Le mot vient de `roleDuMembre` — « Guest »
+                     — et non d'une chaîne posée ici. */}
+                <p className="mt-1.5 text-[15px] font-medium leading-snug text-sombre-texte">
+                  {roleDuMembre(membre)}
+                </p>
+                {/*  LES DATES — `DatesDeSession`, l'écriture EXACTE de
+                     l'équipe au-dessus (blanc, deux lignes « Du… » /
+                     « Au… »). Elle ne se rend pas sans ses deux dates :
+                     rien ne peut rester orphelin, et il n'y a aucune
+                     date recomposée ici. */}
+                <DatesDeSession
+                  debut={membre.debut_le}
+                  fin={membre.fin_le}
+                  enBlanc
+                />
+              </div>
+            </>
+          );
+          return (
+            <li key={membre.artiste_id}>
+              {membre.slug ? (
+                <Link
+                  href={adresseDeLienInterne(membre.slug)}
+                  onClick={clicVersFiche?.(membre.slug)}
+                  className={CLASSES_LIGNE_CLIQUABLE}
+                >
+                  {ligne()}
+                </Link>
+              ) : (
+                <div className="flex items-start gap-3.5">{ligne()}</div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined }) {
   const clicVersFiche = useClicVersFiche();
-  const membres = equipeOrdonnee(equipe);
+  /*  §5 (nº 409) — LES GUESTS SORTENT DE CETTE LISTE : ils ont leur
+       section, juste en dessous (`GuestsDuLieu`). L'ordre des membres
+       restants ne bouge pas — `equipeOrdonnee` les rangeait déjà en
+       dernier, il n'y a donc rien à retrier. */
+  const membres = equipeOrdonnee(equipe).filter(
+    (membre) => membre.genre !== "guest"
+  );
   if (membres.length === 0) return null;
   //  §1 (nº 288) — PAS DE TITRE « ÉQUIPE ». Celui de la nº 286 venait
   //  d'une proposition, jamais d'une demande : il est retiré. Les
@@ -1220,6 +1314,12 @@ export function BlocAdressesFiche({
 
       {/*  3. L'ÉQUIPE — après TOUTES les adresses, toujours. */}
       <EquipeDuLieu equipe={tatoueur.equipe} />
+      {/*  4. LES GUESTS — SOUS l'équipe, dans leur propre section
+           (§5, nº 409). Les deux composants lisent LA MÊME liste et se
+           la partagent par le genre : aucun membre ne peut donc
+           apparaître deux fois, ni disparaître entre les deux. Un
+           salon sans guest ne rend rien — pas même un titre. */}
+      <GuestsDuLieu equipe={tatoueur.equipe} />
     </div>
   );
 }
@@ -1263,89 +1363,76 @@ function TroisLignesDuLieu({
       elle est déjà cliquable. */
   sansLien?: boolean;
 }) {
-  const { etiquette, nom } = troisLignesDuMode(mode);
-  /*  §6 (nº 408) — LA VILLE ET LE PAYS, SANS LA RUE. Ils viennent de
-       COLONNES (ville, region, pays, code_pays), pas d'un découpage de
-       l'adresse : voir `villeEtPaysDuMode`, qui porte la règle et ses
-       garde-fous.
-       ⚠️ QUAND `troisLignesDuMode` A FAIT MONTER L'ADRESSE À LA PLACE
-       DU NOM (aucun nom saisi), le nom PORTE DÉJÀ le lieu : on ne
-       l'écrirait pas deux fois. `nom` vaut alors l'ancienne ligne
-       d'adresse, et cette ligne-ci reste seule — c'est exactement ce
-       que faisait la troisième ligne, qui restait vide dans ce cas. */
-  const villePays = nomDuLieuDuMode(mode) ? villeEtPaysDuMode(mode) : "";
+  /*  ██ §4 (nº 409) — DEUX LIGNES, ET LE NOM PASSE EN TÊTE ██
+       L'étiquette en capitales (« RÉSIDENT DU SALON ») disparaît : le
+       rôle descend sur la seconde ligne, en blanc, suivi du type de
+       lieu et du lieu, en gris. Les morceaux viennent de
+       `lieuEnDeuxLignes` (lib/modes-exercice), qui garantit qu'aucun
+       n'est vide — la puce ne peut donc pas rester orpheline. */
+  const { nom, role, suite } = lieuEnDeuxLignes(mode);
   /**
-   * §1 (nº 290) — LE LIEU QUE LE PLAN VA CHERCHER.
-   * ------------------------------------------------------------------
-   * Les mêmes champs que partout ailleurs (`LieuAffichable`), lus sur
-   * le mode d'exercice : `ligneMaps` compose la requête avec ce qu'il
-   * a — rue si elle existe, sinon ville, région, pays (la règle levée
-   * en nº 288-§4).
-   * (nº 402 — « à domicile », qui n'exposait jamais d'adresse, est
-   * supprimé du site : `sansLien` reste le seul cas de texte nu.)
+   * §1 (nº 290) — LE LIEU QUE LE PLAN VA CHERCHER : les mêmes champs
+   * que partout ailleurs (`LieuAffichable`), lus sur le mode.
+   * `ligneMaps` compose la requête avec ce qu'il a — rue si elle
+   * existe, sinon ville, région, pays.
    */
-  const lieu: LieuAffichable | null =
-    sansLien
-      ? null
-      : {
-          adresse: mode.adresse,
-          code_postal: mode.code_postal,
-          ville: mode.ville ?? mode.intitule,
-          region: mode.region,
-          pays: mode.pays,
-          code_pays: mode.code_pays,
-        };
+  const lieu: LieuAffichable | null = sansLien
+    ? null
+    : {
+        adresse: mode.adresse,
+        code_postal: mode.code_postal,
+        ville: mode.ville ?? mode.intitule,
+        region: mode.region,
+        pays: mode.pays,
+        code_pays: mode.code_pays,
+      };
   return (
     <div className="flex min-h-13 min-w-0 flex-1 flex-col justify-center">
-      <p className={ECRITURE_TITRE_SECTION}>{etiquette}</p>
-      {/*  LA LIGNE BLANCHE — le nom du lieu, ou l'adresse quand il n'y
-           a pas de nom (elle ne s'écrit alors qu'ICI, jamais deux
-           fois). Le `lie` ne dessine rien de plus : la ligne entière
-           est déjà le lien (voir plus bas), et « dedans on encadre ».
-           §1 (nº 290) — QUAND C'EST L'ADRESSE QUI EST MONTÉE ICI
-           (aucun nom saisi), c'est ELLE qui se clique : sinon le lieu
-           serait cliquable ou non selon qu'un nom a été tapé, ce qui
-           n'a aucun sens pour le visiteur. */}
-      {/*  ██ §6 (nº 408) — DEUX LIGNES, PLUS TROIS ██
-           CE QU'IL Y AVAIT : le nom sur une ligne, l'adresse COMPLÈTE
-           (« 44 Rue Trousseau, Paris, France ») sur une troisième.
-           CE QUE C'EST DEVENU : « Hand In Glove Tattoo • Paris,
-           France » — la rue disparaît, la ville et le pays rejoignent
-           le nom derrière la puce du site (U+2022, celle des
-           pratiques, des styles et des titres de galerie).
-           ⚠️ LES DEUX TRAITEMENTS SONT CONSERVÉS, ET C'EST DÉLIBÉRÉ :
-           le nom garde son blanc `font-medium`, le lieu son gris doux.
-           Seul le CORPS s'unifie à 15 px — deux tailles sur une même
-           ligne se liraient comme un accident (l'adresse était à
-           14 px quand elle vivait seule sur sa ligne). Aucune couleur
-           n'est inventée, aucune n'est perdue.
-           ⚠️ NI PUCE ORPHELINE, NI LIGNE VIDE : la puce ne s'écrit que
-           si LES DEUX morceaux existent, et le paragraphe entier ne
-           s'écrit que si l'un des deux existe. Une fiche ancienne sans
-           ville rend `villePays` vide (voir `villeEtPaysDuMode`) et ne
-           laisse donc rien traîner.
-           ⚠️ LE PLAN RESTE ATTEIGNABLE : c'est le LIEU qui porte le
-           lien Maps, comme la troisième ligne le faisait ; le nom
-           garde le sien (la fiche du salon) quand il en a un. */}
-      {(nom || villePays) && (
+      {/*  LIGNE 1 — LE NOM DU LIEU, EN GRAS ET EN BLANC. C'est ce
+           qu'on cherche des yeux : il passe donc devant le rôle, qui
+           occupait cette place en capitales grises jusqu'à la nº 408.
+           ⚠️ LA HAUTEUR NE CHANGE PAS : cette ligne prend exactement la
+           place de l'ancienne étiquette. Les deux paragraphes de
+           `ECRITURE_TITRE_SECTION` (11 px, `leading-relaxed`) et de
+           cette ligne-ci (15 px, `leading-snug`) ne font pas la même
+           hauteur — le bloc garde donc son plancher `min-h-13` et son
+           `justify-center`, qui sont ce qui aligne la colonne sur la
+           pastille depuis la nº 229. C'est lui, pas la somme des
+           lignes, qui décide de la hauteur. */}
+      {nom && (
+        <p className="text-[15px] font-semibold leading-snug text-sombre-texte [overflow-wrap:anywhere]">
+          <LienAdresse texte={nom} lieu={null} classeTexte="" />
+        </p>
+      )}
+      {/*  LIGNE 2 — LE RÔLE EN BLANC, LE RESTE EN GRIS.
+           La puce est celle du site (U+2022), dans le même gris que ce
+           qu'elle sépare, avec le `px-1.5` des autres puces de la
+           fiche. Elle ne s'écrit qu'ENTRE deux morceaux — `suite` ne
+           contient jamais de vide (voir `lieuEnDeuxLignes`), et le
+           rôle précède toujours le premier d'entre eux.
+           ⚠️ LE LIEU RESTE CLIQUABLE VERS LE PLAN, comme l'était la
+           troisième ligne : c'est le DERNIER morceau qui le porte —
+           celui qui nomme la ville. */}
+      {(role || suite.length > 0) && (
         <p className="mt-1.5 text-[15px] leading-snug [overflow-wrap:anywhere]">
-          {nom && (
-            <span className="font-medium text-sombre-texte">
-              <LienAdresse
-                texte={nom}
-                lieu={villePays ? null : lieu}
-                classeTexte=""
-              />
+          {role && (
+            <span className="font-medium text-sombre-texte">{role}</span>
+          )}
+          {suite.map((morceau, rang) => (
+            <span key={morceau} className="text-sombre-texte-doux">
+              {(rang > 0 || role) && (
+                <span aria-hidden="true" className="px-1.5">
+                  •
+                </span>
+              )}
+              <wbr />
+              {rang === suite.length - 1 ? (
+                <LienAdresse texte={morceau} lieu={lieu} classeTexte="" />
+              ) : (
+                morceau
+              )}
             </span>
-          )}
-          {nom && villePays && (
-            <span className="text-sombre-texte-doux">{" • "}</span>
-          )}
-          {villePays && (
-            <span className="text-sombre-texte-doux">
-              <LienAdresse texte={villePays} lieu={lieu} classeTexte="" />
-            </span>
-          )}
+          ))}
         </p>
       )}
       {/*  UN GUEST PORTE SES DATES EN BLANC, et c'est voulu : c'est

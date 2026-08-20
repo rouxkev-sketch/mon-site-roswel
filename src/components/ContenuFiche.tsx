@@ -922,7 +922,28 @@ export function ContenuFiche({
            autorise le repli du texte (leçon de la nº 391). */}
       <span className="flex min-w-0 flex-col">
         <span>{libelleBooking}</span>
-        {attenteBooking && <span>{attenteBooking}</span>}
+        {/*  ██ §1 (nº 409) — POURQUOI « Attente » DÉBORDAIT À GAUCHE ██
+             CE N'EST NI UNE MARGE NI UN ESPACE : les deux lignes sont
+             deux enfants d'une même colonne flex, de même corps et de
+             même graisse — leurs ORIGINES sont au même pixel. C'est
+             l'APPROCHE GAUCHE des glyphes qui diffère, une donnée de
+             la police elle-même. Relevé dans la table `hmtx` de Geist
+             (1000 unités par cadratin) : le « B » de « Booking » a une
+             approche de 92 unités, le « A » d'« Attente » de 20. À
+             15 px, l'encre du A commence donc 1,08 px PLUS À GAUCHE
+             que celle du B — exactement ce qui se voit.
+             LA COMPENSATION : (92 − 20) / 1000 = 0,072 em, posé en
+             rembourrage gauche sur la seconde ligne SEULE. En `em`,
+             elle suit le corps du texte si celui-ci change.
+             ⚠️ ELLE EST LIÉE À CES DEUX MOTS-LÀ. Changer « Attente »
+             ou « Booking » — ou changer de police — change l'écart et
+             oblige à recalculer cette valeur. C'est le prix d'un
+             alignement optique : le navigateur aligne des origines,
+             pas de l'encre, et aucune propriété CSS ne fait ce travail
+             à notre place. */}
+        {attenteBooking && (
+          <span className="pl-[0.072em]">{attenteBooking}</span>
+        )}
       </span>
     </span>
   );
@@ -945,7 +966,10 @@ export function ContenuFiche({
     lienEnLigne(
       "instagram",
       tatoueur.lien_instagram,
-      tatoueur.dm_instagram ? "Instagram • DM" : "Instagram",
+      //  §3 (nº 409) — DM PASSE DEVANT : « DM • Instagram ». La
+      //  destination du lien ne change pas d'un caractère, et le bleu
+      //  comme le gris de l'icône continuent de venir d'ailleurs.
+      tatoueur.dm_instagram ? "DM • Instagram" : "Instagram",
       iconeDeLien("instagram"),
       //  §5 (nº 388) — Instagram SORT DU SITE : bleu, et lui seul avec
       //  l'adresse. Le booking et le site gardent le gris doux.
