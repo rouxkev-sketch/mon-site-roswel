@@ -295,8 +295,34 @@ export function PanneauPortfolio({
              reste. `shrink-0` les empêche toujours de rétrécir, donc
              dès trois photos la rangée déborde, l'espace libre est
              négatif, et `grow` n'a rien à distribuer — la règle des
-             10 % est intacte, au pixel. */
-        className="grow shrink-0 snap-start basis-[calc((100%_-_6px)/2.1)]"
+             10 % est intacte, au pixel.
+             ██ §4 (nº 417) — ET C'ÉTAIT AUSSI LA PHOTO PLEINE LARGEUR ██
+             LE RELEVÉ : une galerie qui ne contient QU'UNE photo
+             l'affiche sur toute la largeur, au lieu du format d'une
+             galerie ordinaire.
+             LA CAUSE EST CE MÊME `grow`, ET SA MESURE ÉTAIT DÉJÀ ÉCRITE
+             DEUX LIGNES PLUS HAUT : « 202 px à une seule » photo. À
+             deux photos il rattrape 21 px, ce qui se voit à peine ; à
+             une seule il en rattrape DIX FOIS PLUS — la case unique
+             absorbe tout l'espace libre et occupe la rangée entière.
+             Le défaut ne vient donc pas de l'origine : il est né AVEC
+             le remède de la nº 310 (commit du 16-08-2026), et il vaut
+             pour LE WEB COMME POUR LE DOIGT — les deux rendus posent
+             les mêmes cases, par cette seule fonction.
+             LE REMÈDE, MINIMAL : `grow` ne s'applique plus qu'À PARTIR
+             DE DEUX photos. Une case seule garde donc sa largeur de
+             gabarit — `basis` intacte, exactement celle qu'elle aurait
+             au milieu d'une galerie de dix —, et la nº 310 n'est pas
+             défaite d'un pixel là où elle réparait quelque chose.
+             ⚠️ LES CHEVRONS, EUX, N'APPARAISSENT PAS POUR AUTANT, et
+             c'est par construction : `GalerieQuiDefile` les allume sur
+             les BOUTS DE COURSE réels (`scrollWidth` contre
+             `clientWidth`) — une rangée qui ne déborde pas n'en a
+             aucun, ni fondu. Les points ont été supprimés à la nº 301,
+             et cette galerie n'a jamais porté de badge de comptage. */
+        className={`${
+          serie.photos.length > 1 ? "grow " : ""
+        }shrink-0 snap-start basis-[calc((100%_-_6px)/2.1)]`}
       >
         {/*  RÈGLE 6 (nº 306) — TOUCHER UNE PHOTO L'OUVRE, ELLE ET PAS
              UNE AUTRE. C'est le chemin qui existe déjà (`surSerie`),

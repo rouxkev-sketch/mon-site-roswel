@@ -67,12 +67,7 @@ import {
 //  §6 (nº 415) — les deux familles de modes (ceux qui ont un lieu,
 //  ceux qui n'en ont pas) et les morceaux de la ligne du profil :
 //  une seule règle, lue ici comme dans BlocLieux.
-import {
-  lieuCherchableDuFreelance,
-  lignesDuFreelance,
-  modesDeLieu,
-  modesFreelance,
-} from "@/lib/modes-exercice";
+import { blocIndependent, modesDeLieu } from "@/lib/modes-exercice";
 import type { Tatoueur } from "@/lib/tatoueurs";
 import { mecanismeCoupe } from "@/lib/variantes-essai";
 //  §2 (nº 377) — la hauteur de la barre du logo et le nom de la
@@ -1397,73 +1392,95 @@ export function ContenuFiche({
    * `modesOrdonnes`, et un salon n'a pas de mode d'exercice — la liste
    * est vide, rien ne se rend.
    */
-  const lignesFreelance = modesFreelance(tatoueur.modes).map((mode) => {
-    const { entete, localite, rayon } = lignesDuFreelance(mode);
-    if (entete.length === 0) return null;
-    const lieuCherchable = lieuCherchableDuFreelance(mode);
-    return (
-      <p
-        key={`freelance-${mode.id}`}
-        data-freelance-fiche=""
-        className={`flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE}`}
-      >
-        <span className={`${BOITE_ICONE_LIGNE} text-sombre-texte-doux`}>
-          <IconeLocalisation taille={20} />
-        </span>
-        {/*  LA COLONNE DES DEUX LIGNES — le dessin exact du booking
-             (nº 408-§3). Elle est le seul enfant souple de la rangée et
-             garde le `min-w-0` qui autorise le repli du texte. */}
-        <span className="flex min-w-0 flex-col">
-          <span>
-            {entete.map((morceau, rang) => (
-              <Fragment key={morceau}>
-                {rang > 0 && (
-                  <>
-                    <span aria-hidden="true" className="px-1.5">
-                      •
-                    </span>
-                    <wbr />
-                  </>
-                )}
-                {morceau}
-              </Fragment>
-            ))}
-          </span>
-          {/*  LA SECONDE LIGNE — la localité (bleue, cliquable) puis le
-               rayon (gris). Elle ne s'écrit que si l'un des deux
-               existe ; la puce, qu'entre les deux. */}
-          {(localite || rayon) && (
-            <span>
-              {localite && (
-                <LienAdresse
-                  texte={localite}
-                  lieu={lieuCherchable}
-                  classeTexte={LIEN_QUI_SORT}
-                  //  §2 (nº 389) — aucun trait : le bleu dit déjà que la
-                  //  destination sort du site, et il s'éclaircit au
-                  //  survol. C'est le réglage de la ligne d'adresse.
-                  soulignement=""
-                />
-              )}
-              {rayon && (
+  const independent = blocIndependent(tatoueur.modes);
+  const ligneIndependent = independent && (
+    <p
+      key="independent"
+      data-freelance-fiche=""
+      className={`flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE}`}
+    >
+      {/*  UNE SEULE ICÔNE, calée sur la PREMIÈRE ligne : c'est
+           `items-start` + la boîte haute d'exactement une ligne
+           (`BOITE_ICONE_LIGNE`, nº 389-§6) qui l'y tiennent, quel que
+           soit le nombre de localités en dessous. */}
+      <span className={`${BOITE_ICONE_LIGNE} text-sombre-texte-doux`}>
+        <IconeLocalisation taille={20} />
+      </span>
+      {/*  LA COLONNE — le dessin exact du booking et de son délai
+           (nº 408-§3). Toutes les lignes y commencent au MÊME x, et le
+           `min-w-0` autorise une localité longue à se replier sur le
+           début de SA ligne, jamais sous l'icône. */}
+      <span className="flex min-w-0 flex-col">
+        <span>
+          {independent.entete.map((morceau, rang) => (
+            <Fragment key={morceau}>
+              {rang > 0 && (
                 <>
-                  {localite && (
-                    <>
-                      <span aria-hidden="true" className="px-1.5">
-                        •
-                      </span>
-                      <wbr />
-                    </>
-                  )}
-                  {rayon}
+                  <span aria-hidden="true" className="px-1.5">
+                    •
+                  </span>
+                  <wbr />
                 </>
               )}
-            </span>
-          )}
+              {morceau}
+            </Fragment>
+          ))}
         </span>
-      </p>
-    );
-  });
+        {independent.localites.map((localite, rang) => (
+          <span
+            key={localite.cle}
+            /*  ██ §2 (nº 417) — L'AIR SOUS L'EN-TÊTE, ET SEULEMENT À
+                 PLUSIEURS ██
+                 LES DEUX VALEURS :
+                  · UNE SEULE LOCALITÉ → 0 px ajouté. Les deux lignes se
+                    suivent exactement comme aujourd'hui, c'est-à-dire
+                    comme « Booking » et son délai : une colonne flex
+                    sans écart, les lignes se touchent par leur
+                    `leading-snug`. Rien ne bouge sur ces fiches-là ;
+                  · DEUX LOCALITÉS OU PLUS → `mt-1.5`, soit 6 px, posés
+                    sur la PREMIÈRE d'entre elles seulement. L'en-tête
+                    cesse d'être une ligne parmi d'autres pour devenir
+                    le titre d'une liste, et il se décolle d'autant.
+                 D'OÙ VIENT LE 6 px : c'est l'écart `mt-1.5` que le bloc
+                 des lieux posait entre l'étiquette d'un mode et son nom
+                 (BlocLieux) jusqu'à la nº 410 — l'écart « d'un titre à
+                 ce qu'il annonce », dans cette même colonne de fiche.
+                 La nº 410 l'avait ramené à `mt-0.5` POUR DEUX LIGNES QUI
+                 DISENT LA MÊME CHOSE ; ici l'en-tête et les localités
+                 ne disent pas la même chose, et la valeur d'origine
+                 retrouve son sens. Aucune valeur neuve n'entre dans la
+                 fiche.
+                 ⚠️ ENTRE DEUX LOCALITÉS, RIEN : elles forment une liste,
+                 et une liste se lit serrée. */
+            className={
+              rang === 0 && independent.localites.length > 1
+                ? "mt-1.5"
+                : undefined
+            }
+          >
+            <LienAdresse
+              texte={localite.texte}
+              lieu={localite.lieu}
+              classeTexte={LIEN_QUI_SORT}
+              //  §2 (nº 389) — aucun trait : le bleu dit déjà que la
+              //  destination sort du site, et il s'éclaircit au survol.
+              //  C'est le réglage de la ligne d'adresse.
+              soulignement=""
+            />
+            {localite.rayon && (
+              <>
+                <span aria-hidden="true" className="px-1.5">
+                  •
+                </span>
+                <wbr />
+                {localite.rayon}
+              </>
+            )}
+          </span>
+        ))}
+      </span>
+    </p>
+  );
 
   /*  §6 (nº 415) — LA LISTE DES LIEUX A-T-ELLE QUELQUE CHOSE À DIRE ?
       C'est `modesDeLieu` qui répond, la MÊME fonction que celle dont
@@ -1850,10 +1867,10 @@ export function ContenuFiche({
             ligneDuSite.length > 0 ||
             ligneDesStyles ||
             ligneDesPratiques ||
-            //  §6 (nº 415) — une fiche qui n'aurait QUE sa ligne de
-            //  freelance ouvre quand même la série : sans cette
+            //  §6 (nº 415) — une fiche qui n'aurait QUE sa ligne
+            //  Independent ouvre quand même la série : sans cette
             //  condition, la ligne existerait sans son conteneur.
-            lignesFreelance.length > 0) && (
+            ligneIndependent) && (
             <div
               /*  §5 (nº 389) — L'ÉCART PARTAGÉ MONTE D'UN CRAN :
                    `gap-y-4` (16 px) devient `gap-y-5` (20 px). C'est le
@@ -1915,11 +1932,12 @@ export function ContenuFiche({
               )}
               {ligneDesPratiques}
               {ligneDesStyles}
-              {/*  §6 (nº 415) — LA LIGNE DU FREELANCE, SOUS LES STYLES :
+              {/*  §6 (nº 415) — LA LIGNE INDEPENDENT, SOUS LES STYLES :
                    c'est la place que le propriétaire lui donne, et elle
                    est la sienne — sur une fiche d'artiste, l'adresse
-                   ci-dessous ne se rend jamais. */}
-              {lignesFreelance}
+                   ci-dessous ne se rend jamais. UNE SEULE LIGNE, quel
+                   que soit le nombre de localités (§2, nº 417). */}
+              {ligneIndependent}
               {/*  §3 (nº 388) — L'ADRESSE FERME LA SÉRIE, et seulement
                    sur un salon ou un studio : une fiche d'artiste
                    montre ses PROFILS (à domicile, en salon, guest),

@@ -532,6 +532,51 @@ export function periodeCourte(mode: {
  * ================================================================ */
 
 /**
+ * ██ §3 (nº 417) — LA VILLE D'UN MODE, SANS DOUBLER LE PAYS ██
+ * ==================================================================
+ * LE RELEVÉ : un artiste saisit un PAYS SEUL, et la fiche écrit
+ * « Espagne, Espagne ».
+ *
+ * LA CAUSE, ET ELLE EST DANS L'AFFICHAGE — la donnée est SAINE.
+ * Le repli `mode.ville ?? mode.intitule` était écrit à cinq endroits.
+ * Il existe pour les lignes ANCIENNES, où la ville n'avait pas encore
+ * sa colonne et vivait dans `intitule`. Or `intitule` n'est pas « la
+ * ville » : c'est L'ÉTIQUETTE de ce qui a été choisi dans la liste
+ * (`ligneRue ?? nom ?? ville ?? region ?? pays`, lib/geocodage/photon).
+ * Choisir « Espagne » écrit donc `intitule = "Espagne"`, `ville =
+ * null`, `pays = "Espagne"` — et le repli promeut le nom du pays au
+ * rang de ville, que `ligneCarteMobile` écrit ensuite AVANT le pays.
+ * D'où le doublon. C'est arrivé à la nº 416 sans se voir parce que
+ * mon relevé d'alors construisait le mode à la main, avec un
+ * `intitule` vide — une saisie réelle en a toujours un.
+ *
+ * ⚠️ UN SECOND CAS TOMBAIT DANS LE MÊME TROU, et il est réparé du
+ * même geste : un ÉTAT AMÉRICAIN affichait « Texas, TX, USA » —
+ * l'État écrit deux fois, en toutes lettres puis abrégé.
+ *
+ * LA RÈGLE POSÉE : `intitule` ne sert de ville QUE s'il n'est pas
+ * DÉJÀ dit par une autre colonne (la région ou le pays). Comparaison
+ * insensible à la casse et aux espaces.
+ * CE QUI NE CHANGE PAS, et c'est ce qui compte :
+ *  · « Luxembourg, Luxembourg » RESTE — la ville y est une VRAIE
+ *    donnée (`mode.ville`), le repli n'est même pas consulté ;
+ *  · « Bordeaux, France » sur une ligne ancienne (ville seulement
+ *    dans `intitule`) RESTE — « Bordeaux » n'est ni la région ni le
+ *    pays, le repli joue son rôle d'origine ;
+ *  · « Bavière, Allemagne » (région seule) RESTE — `villeEtPays`
+ *    écrit alors la division à la place de la ville.
+ */
+function villeDuMode(mode: ModeExerciceFiche): string | null {
+  if (mode.ville) return mode.ville;
+  const etiquette = (mode.intitule ?? "").trim();
+  if (!etiquette) return null;
+  const memeMot = (autre: string | null) =>
+    (autre ?? "").trim().toLocaleLowerCase() === etiquette.toLocaleLowerCase();
+  //  L'ÉTIQUETTE NE RÉPÈTE RIEN → c'est bien une ville sans colonne.
+  return memeMot(mode.region) || memeMot(mode.pays) ? null : etiquette;
+}
+
+/**
  * LE LIEU D'UN MODE, TEL QU'IL S'AFFICHE.
  * ⚠️ LE MODE « À DOMICILE » NE MONTRE JAMAIS LA RUE — c'est ici, et
  * nulle part ailleurs, que cette promesse est tenue. L'adresse exacte
@@ -546,7 +591,7 @@ export function periodeCourte(mode: {
  */
 export function libelleLieuDuMode(mode: ModeExerciceFiche): string {
   const lieu = {
-    ville: mode.ville ?? mode.intitule,
+    ville: villeDuMode(mode),
     region: mode.region,
     pays: mode.pays,
     code_pays: mode.code_pays,
@@ -690,7 +735,7 @@ export function nomDuLieuDuMode(mode: ModeExerciceFiche): string {
  */
 export function villeEtPaysDuMode(mode: ModeExerciceFiche): string {
   return ligneCarteMobile({
-    ville: mode.ville ?? mode.intitule,
+    ville: villeDuMode(mode),
     region: mode.region,
     pays: mode.pays,
     code_pays: mode.code_pays,
@@ -773,7 +818,7 @@ export function troisLignesDuMode(mode: ModeExerciceFiche): {
   //  jamais — le bloc que portait « à domicile » avant la nº 402.
   if (mode.genre === "disponible") {
     const lieu = {
-      ville: mode.ville ?? mode.intitule,
+      ville: villeDuMode(mode),
       region: mode.region,
       pays: mode.pays,
       code_pays: mode.code_pays,
@@ -811,7 +856,7 @@ export function troisLignesDuMode(mode: ModeExerciceFiche): {
  */
 export function libelleSecteurDuMode(mode: ModeExerciceFiche): string {
   const lieu = {
-    ville: mode.ville ?? mode.intitule,
+    ville: villeDuMode(mode),
     region: mode.region,
     pays: mode.pays,
     code_pays: mode.code_pays,
@@ -984,58 +1029,95 @@ export function modesFreelance(
  *    (« Independent • Actuellement basé à : », ContenuFiche).
  * Recopiée aux deux endroits, elle aurait fini par diverger d'un mot —
  * et c'est exactement la même phrase que l'artiste écrit et que le
- * visiteur lit. (nº 415 : « Je suis à la recherche d'un lieu. »)
+ * visiteur lit. (nº 415 : « Je suis à la recherche d'un lieu. » ;
+ * nº 416 : « Actuellement basé à : » ; nº 417 : la voici raccourcie —
+ * une seule ligne à changer, c'était tout l'objet de la mettre ici.)
  */
-export const PHRASE_LOCALITE_INDEPENDENT = "Actuellement basé à :";
+export const PHRASE_LOCALITE_INDEPENDENT = "Basé à :";
+
+/** Une localité déclarée par un Independent, prête à être posée. */
+export type LocaliteIndependent = {
+  /** La clé React — l'identifiant du mode qui la porte. */
+  cle: string;
+  /** Ce qui s'écrit, BLEU et cliquable : « Lyon, France ». */
+  texte: string;
+  /** Le rayon qui la suit, en gris : « 200 km ». Vide = pas de puce. */
+  rayon: string;
+  /** Ce que Google Maps cherchera, ou `null` — le texte reste alors
+      gris et mort (voir `lieuCherchableDuFreelance`). */
+  lieu: LieuCherchable | null;
+};
 
 /**
- * ██ §3 (nº 416) — LA LIGNE D'UN INDEPENDENT, SUR DEUX LIGNES ██
+ * ██ §3 (nº 416), REFONDU PAR LE §2 (nº 417) — LE BLOC INDEPENDENT ██
  * ==================================================================
- * CE QUE LA nº 415 RENDAIT : un seul rang de morceaux —
- * « Freelance • Lyon, France • 200 km ».
- * CE QUE LE PROPRIÉTAIRE VEUT, sur le modèle du booking et de son
- * délai (nº 408-§3) :
- *      Independent • Actuellement basé à :
- *      Lyon, France • 200 km
+ * CE QUE LA nº 415 RENDAIT : un rang de morceaux par mode.
+ * CE QUE LA nº 416 A FAIT : deux lignes, sur le modèle du booking et
+ * de son délai (nº 408-§3).
+ * CE QUE LE §2 DE LA nº 417 CORRIGE : à DEUX localités, l'en-tête se
+ * répétait — « Independent • Basé à : » deux fois, une par mode, parce
+ * que le rendu bouclait sur les modes et que chacun rendait son propre
+ * en-tête. LA STRUCTURE SUIT DÉSORMAIS CE QU'ON LIT :
+ *      Independent • Basé à :        ← UNE fois, quel qu'en soit le nombre
+ *      Lyon, France • 200 km         ← une ligne par localité
+ *      Espagne
+ * D'où une fonction qui prend LA LISTE des modes et rend UN bloc, là
+ * où la nº 416 en rendait un par mode. L'en-tête n'a plus d'endroit
+ * où se répéter : il n'existe qu'une fois dans la structure.
  *
  * CETTE FONCTION NE PEINT RIEN : elle rend les MORCEAUX, l'appelant
- * pose les puces et les couleurs — c'est ce qui permet à la localité
- * d'être le SEUL morceau bleu et cliquable (ContenuFiche).
+ * pose les puces, les couleurs et l'air — c'est ce qui permet à la
+ * localité d'être le SEUL morceau bleu et cliquable (ContenuFiche).
  *
- * ⚠️ AUCUN MORCEAU VIDE NE SORT D'ICI, et c'est garanti à la source
- * plutôt que dans le rendu : ni ligne vide, ni puce orpheline ne
- * peuvent être écrites. Les cas demandés en découlent :
+ * ⚠️ AUCUN MORCEAU VIDE N'EN SORT, et c'est garanti à la source plutôt
+ * que dans le rendu : ni ligne vide, ni puce orpheline ne peuvent être
+ * écrites. Les cas demandés en découlent :
  *  · UN ÉTAT OU UN PAYS → aucun rayon n'a pu être demandé (voir
  *    `rayonRequis` : les badges ne s'affichent qu'autour d'un point),
  *    donc `rayon` est vide : PAS de dernière puce ;
  *  · UNE VILLE SANS PAYS (ou l'inverse) → `villeEtPaysDuMode` joint ce
- *    qu'elle a, et rend "" si elle n'a rien ;
- *  · AUCUNE LOCALITÉ CONNUE → la seconde ligne n'existe pas, et
- *    L'EN-TÊTE PERD SA PHRASE : « Actuellement basé à : » finit par un
- *    deux-points qui PROMET un lieu — l'écrire au-dessus du vide
- *    serait une promesse non tenue. Reste « Independent », seul, qui
- *    est l'information même que la ligne porte.
+ *    qu'elle a, et rend "" si elle n'a rien : la localité SAUTE, elle
+ *    n'entre pas dans la liste ;
+ *  · AUCUNE LOCALITÉ NULLE PART → la liste est vide et L'EN-TÊTE PERD
+ *    SA PHRASE : « Basé à : » finit par un deux-points qui PROMET un
+ *    lieu — l'écrire au-dessus du vide serait une promesse non tenue.
+ *    Reste « Independent », seul, qui est l'information même que la
+ *    ligne porte.
+ *  · AUCUN MODE INDEPENDENT → `null` : l'appelant ne rend rien du tout.
  * ⚠️ LE MOT VIENT DU CATALOGUE (`genreMode(...).label`), jamais d'une
  * chaîne écrite ici : le renommer une fois de plus (« Disponible » →
  * « Freelance » → « Independent » en trois passes) ne doit toucher
  * qu'un seul endroit.
  */
-export function lignesDuFreelance(mode: ModeExerciceFiche): {
+export function blocIndependent(
+  modes: ModeExerciceFiche[] | null | undefined
+): {
   /** LIGNE 1, en gris — les morceaux, à joindre par des puces. */
   entete: string[];
-  /** LIGNE 2, premier morceau : la localité. BLEUE et cliquable chez
-      l'appelant. Vide = pas de seconde ligne à écrire. */
-  localite: string;
-  /** LIGNE 2, second morceau : le rayon, en gris. Vide = pas de puce. */
-  rayon: string;
-} {
-  const localite = (villeEtPaysDuMode(mode) ?? "").trim();
-  const kilometres = mode.rayon_km ?? 0;
-  const mot = genreMode(mode.genre).label;
+  /** LES LIGNES SUIVANTES, une par localité déclarée. */
+  localites: LocaliteIndependent[];
+} | null {
+  const declares = modesFreelance(modes);
+  if (declares.length === 0) return null;
+  const localites: LocaliteIndependent[] = [];
+  for (const mode of declares) {
+    const texte = (villeEtPaysDuMode(mode) ?? "").trim();
+    if (!texte) continue;
+    const kilometres = mode.rayon_km ?? 0;
+    localites.push({
+      cle: mode.id,
+      texte,
+      rayon: kilometres > 0 ? `${kilometres} km` : "",
+      lieu: lieuCherchableDuFreelance(mode),
+    });
+  }
+  //  LE MOT EST CELUI DU GENRE, et tous ces modes ont le même : le
+  //  premier suffit à l'interroger.
+  const mot = genreMode(declares[0].genre).label;
   return {
-    entete: localite ? [mot, PHRASE_LOCALITE_INDEPENDENT] : [mot],
-    localite,
-    rayon: kilometres > 0 ? `${kilometres} km` : "",
+    entete:
+      localites.length > 0 ? [mot, PHRASE_LOCALITE_INDEPENDENT] : [mot],
+    localites,
   };
 }
 
@@ -1057,19 +1139,23 @@ export function lignesDuFreelance(mode: ModeExerciceFiche): {
  * la localité en TEXTE GRIS — c'est la règle de `LienAdresse`
  * (BlocLieux), qui rend le texte nu quand son `lieu` est nul.
  */
-export function lieuCherchableDuFreelance(mode: ModeExerciceFiche): {
+export type LieuCherchable = {
   adresse: null;
   code_postal: null;
   ville: string | null;
   region: string | null;
   pays: string | null;
   code_pays: string | null;
-} | null {
+};
+
+export function lieuCherchableDuFreelance(
+  mode: ModeExerciceFiche
+): LieuCherchable | null {
   const lieu = {
     //  LES DEUX COLONNES QUI DÉSIGNENT UN POINT PRÉCIS RESTENT DEHORS.
     adresse: null,
     code_postal: null,
-    ville: mode.ville ?? mode.intitule,
+    ville: villeDuMode(mode),
     region: mode.region,
     pays: mode.pays,
     code_pays: mode.code_pays,
