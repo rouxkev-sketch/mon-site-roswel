@@ -16,6 +16,7 @@ import { texteErreur } from "@/lib/erreurs-formulaire";
 import {
   cleNeuve,
   modeVide,
+  datesSuiventLeLieu,
   type ManqueBloc,
   type ModeEnSaisie,
 } from "@/lib/modes-exercice";
@@ -352,7 +353,20 @@ export function BlocModesExercice({
 
   function modifier(cle: string, morceau: Partial<ModeEnSaisie>) {
     surChangement(
-      modes.map((mode) => (mode.cle === cle ? { ...mode, ...morceau } : mode))
+      modes.map((mode) =>
+        mode.cle === cle
+          ? //  §5 (nº 413) — PLUS DE LIEU, PLUS DE DATES. La règle vit
+            //  dans `datesSuiventLeLieu` (lib/modes-exercice), qui
+            //  compare l'AVANT et l'APRÈS : elle n'efface que sur une
+            //  vraie suppression, jamais sur un remplacement.
+            //  ⚠️ POSÉE ICI, ET NULLE PART AILLEURS : `modifier` est le
+            //  SEUL passage par lequel un encadré change (la recherche
+            //  de fiche, l'adresse, le nom, les dates, le rôle — tout
+            //  y revient). Une règle posée à l'un des appelants aurait
+            //  manqué les autres.
+            datesSuiventLeLieu(mode, { ...mode, ...morceau })
+          : mode
+      )
     );
   }
 
@@ -593,17 +607,37 @@ export function BlocModesExercice({
           //  aussi bien un salon qu'un studio privé. « Studio »
           //  proposait donc des salons, et « Salon » des studios.
           //  La nature (`etablissement`) tranche : elle vaut « prive »
-          //  pour un studio, « salon » pour un salon, et RIEN pour un
-          //  guest — celui-là est accueilli par les deux.
+          //  pour un studio, « salon » pour un salon.
+          /*  ██ §4 (nº 413) — LE GUEST FILTRE, LUI AUSSI ██
+               IL PASSAIT `undefined`, ET C'ÉTAIT DÉLIBÉRÉ : la note de
+               la nº 121 disait « RIEN pour un guest — celui-là est
+               accueilli par les deux ». C'était vrai AVANT que le guest
+               ait sa propre bascule Salon / Studio (`natureLieu`,
+               migration nº 41) : on ne savait pas quoi filtrer, on
+               montrait tout.
+               MAINTENANT IL LE DIT — la bascule est juste au-dessus du
+               champ, et c'est ce choix qu'on lui a demandé. Chercher un
+               studio et se voir proposer un salon, c'est lui rendre sa
+               réponse pour rien. La nature choisie devient donc le
+               filtre, comme pour les deux autres genres.
+               ⚠️ LE REPLI EST « salon », le même que la bascule
+               elle-même (`mode.natureLieu ?? "salon"`, plus haut) : les
+               deux ne peuvent pas se contredire. */
           etablissement={
-            guest ? undefined : mode.genre === "prive" ? "prive" : "salon"
-          }
-          messageVide={
             guest
-              ? "Aucun studio / salon trouvé"
+              ? ((mode.natureLieu ?? "salon") as NatureEtablissement)
               : mode.genre === "prive"
-                ? "Aucun studio trouvé"
-                : "Aucun salon trouvé"
+                ? "prive"
+                : "salon"
+          }
+          /*  §4 (nº 413) — ET LE MESSAGE SUIT LE FILTRE : dire « Aucun
+               studio / salon trouvé » quand on ne cherche QUE des
+               studios laisserait croire qu'on a tout regardé. Chaque
+               genre nomme donc ce qu'il n'a pas trouvé. */
+          messageVide={
+            (guest ? (mode.natureLieu ?? "salon") : mode.genre) === "prive"
+              ? "Aucun studio trouvé"
+              : "Aucun salon trouvé"
           }
           //  LES DEUX CHAMPS SE PRÉSENTENT SEULS : ce qu'ils attendent
           //  est écrit DEDANS, plus au-dessus.

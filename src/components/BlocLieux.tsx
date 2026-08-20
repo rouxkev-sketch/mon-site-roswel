@@ -27,12 +27,12 @@ import {
   semaineRenseignee,
 } from "@/lib/horaires-studio";
 import {
-  dateLongue,
   equipeOrdonnee,
   libelleStylesEquipe,
   modesOrdonnes,
   roleDuMembre,
   lieuEnDeuxLignes,
+  periodeDeSession,
   type MembreEquipe,
   type ModeExerciceFiche,
   type StudioFiche,
@@ -239,16 +239,33 @@ function DatesDeSession({
       gris. Ailleurs (le reste du site), rien ne change. */
   enBlanc?: boolean;
 }) {
-  if (!debut || !fin) return null;
+  /*  ██ §3 (nº 413) — UNE SEULE LIGNE, ET LA RÈGLE VIT AILLEURS ██
+       CE QU'IL Y AVAIT : deux paragraphes, « Du … » puis « Au … », et
+       une garde qui exigeait LES DEUX dates — un guest sans date de
+       fin n'affichait donc RIEN, silencieusement.
+       CE QUE C'EST DEVENU : une ligne, composée par `periodeDeSession`
+       (lib/modes-exercice), qui porte la règle de l'année, celle des
+       mois abrégés et les quatre cas limites. CE COMPOSANT NE DÉCIDE
+       PLUS RIEN — il pose, comme le reste du fichier.
+       ⚠️ LA GARDE EST MAINTENANT LA CHAÎNE ELLE-MÊME : vide, on ne rend
+       rien. C'est elle, et elle seule, qui protège d'une ligne vide ou
+       d'un tiret orphelin — les deux fiches la partagent, puisqu'elles
+       partagent ce composant.
+       ⚠️ `mt-2.5` ET LA COULEUR NE BOUGENT PAS : le blanc des dates
+       (nº 286-§4) reste ce qui décide le visiteur à prendre rendez-vous
+       maintenant. Seul `leading-relaxed` part avec la seconde ligne
+       qu'il espaçait — une ligne unique prend l'interligne du bloc. */
+  const periode = periodeDeSession(debut, fin);
+  if (!periode) return null;
   return (
-    <div
-      className={`mt-2.5 text-[14px] leading-relaxed ${
+    <p
+      data-periode-guest=""
+      className={`mt-2.5 text-[14px] ${
         enBlanc ? "text-sombre-texte" : "text-sombre-texte-doux"
       }`}
     >
-      <p>Du {dateLongue(debut)}</p>
-      <p>Au {dateLongue(fin)}</p>
-    </div>
+      {periode}
+    </p>
   );
 }
 
@@ -588,7 +605,27 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
               {libelleStylesEquipe(membre.styles) && (
                 <p
                   data-styles-membre=""
-                  className="mt-0.5 text-[13px] leading-relaxed text-sombre-texte-doux"
+                  /*  ██ §2 (nº 413) — LA LIGNE DES STYLES PASSE À 15 px ██
+                       Elle était à 13 px (nº 313) sous une ligne de
+                       15 px : deux corps différents pour deux lignes du
+                       même bloc, et le propriétaire veut la même
+                       taille. C'est la ligne du dessus qui donne la
+                       valeur — aucune n'est inventée.
+                       ⚠️ `leading-relaxed` PART AVEC : cet interligne
+                       (1,625) était calibré pour du 13 px. Gardé à
+                       15 px il aurait ajouté 3 px de hauteur à lui
+                       seul ; on prend `leading-snug` (1,375), celui de
+                       la ligne du dessus — les deux lignes du bloc ont
+                       ainsi le même corps ET le même interligne.
+                       ⚠️ CE QUE ÇA COÛTE EN HAUTEUR, ET POURQUOI RIEN NE
+                       BOUGE : la ligne passe de 21,1 px (13 × 1,625) à
+                       20,6 px (15 × 1,375) — elle MAIGRIT d'un demi-
+                       pixel. Le bloc de texte d'un membre à deux lignes
+                       fait donc ~43 px, toujours sous le plancher de
+                       52 px (`min-h-13`, nº 229 et 410) qui commande la
+                       hauteur et l'alignement sur la photo de profil
+                       recentrée à la nº 389. Rien ne se décale. */
+                  className="mt-0.5 text-[15px] leading-snug text-sombre-texte-doux"
                 >
                   {libelleStylesEquipe(membre.styles)}
                 </p>

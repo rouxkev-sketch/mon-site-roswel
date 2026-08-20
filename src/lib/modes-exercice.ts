@@ -422,6 +422,92 @@ export function dateLongue(iso: string | null | undefined): string {
   return `${quantieme} ${nom} ${annee}`;
 }
 
+/**
+ * ██ §3 (nº 413) — LA PÉRIODE D'UN GUEST, SUR UNE SEULE LIGNE ██
+ * ==================================================================
+ * CE QU'IL Y AVAIT : deux lignes, « Du 23 août 2026 » / « Au 18
+ * octobre 2026 » — l'année répétée, et deux lignes là où une suffit.
+ * CE QUE ÇA DEVIENT : « 23 août – 18 octobre », avec le TIRET DEMI-CADRATIN
+ * (U+2013), celui des intervalles en typographie française — pas le
+ * trait d'union, qui joint des mots.
+ *
+ * ██ L'ANNÉE : UNE RÈGLE, PAS UNE MESURE ██
+ * Elle ne s'écrit PAS quand TOUTE la période tombe dans l'année en
+ * cours — c'est le cas courant, et l'année n'y apprend rien.
+ * Elle s'écrit dès qu'un des deux bouts sort de l'année en cours, et
+ * alors SUR LES DEUX DATES, jamais sur une seule :
+ *      « 18 déc. 2026 – 12 janv. 2027 »
+ * Écrire l'année d'un seul côté ferait lire « du 18 décembre [de
+ * quelle année ?] au 12 janvier 2027 » : l'ambiguïté qu'on voulait
+ * lever reviendrait par l'autre bout.
+ *
+ * ██ LES MOIS : LA MÊME RÈGLE, ET C'EST VOULU ██
+ * Le propriétaire préfère « une règle prévisible à une mesure
+ * fragile ». La règle est donc SANS MESURE ET SANS SEUIL DE
+ * LONGUEUR : les mois s'écrivent EN ENTIER quand l'année est tue,
+ * ABRÉGÉS quand elle s'écrit. Un seul booléen commande les deux
+ * décisions — la ligne ne peut donc jamais porter à la fois deux
+ * années et deux mois longs, qui est le seul cas où elle déborderait.
+ * Aucune police n'est interrogée, aucun pixel n'est compté : la même
+ * période produit toujours exactement la même chaîne, sur le serveur
+ * prérendu comme dans le navigateur.
+ * L'ABRÉVIATION EST CELLE DE L'USAGE : trois lettres et un point
+ * (« janv. », « oct. »), sauf mai, juin et juillet qui ne s'abrègent
+ * pas — les abréger n'économise rien et se lit mal.
+ *
+ * ██ LES CAS QUI NE DOIVENT RIEN LAISSER D'ORPHELIN ██
+ *  · UN SEUL JOUR (début = fin) → la date SEULE, sans tiret :
+ *    « 23 août ». Un intervalle d'un jour n'est pas un intervalle ;
+ *  · PAS DE DATE DE FIN → « À partir du 23 août ». La session est
+ *    ouverte, on le dit — jamais « 23 août – », qui laisserait un
+ *    tiret pendant ;
+ *  · PAS DE DATE DE DÉBUT (donnée incomplète) → « Jusqu'au 18
+ *    octobre », par symétrie ;
+ *  · AUCUNE DES DEUX → la chaîne VIDE. L'appelant teste cette chaîne
+ *    avant de rendre quoi que ce soit : ni ligne vide, ni tiret seul.
+ * ⚠️ L'ANNÉE EN COURS EST CELLE DU RENDU, et cette page est prérendue
+ * toutes les cinq minutes : le 31 décembre à minuit, une période de
+ * l'année suivante gagne ses années au plus cinq minutes plus tard.
+ */
+const MOIS_ABREGES = [
+  "janv.", "févr.", "mars", "avril", "mai", "juin",
+  "juil.", "août", "sept.", "oct.", "nov.", "déc.",
+];
+
+/** Un jour écrit — « 23 août », « 1er oct. 2027 ». */
+function jourEcrit(iso: string, avecAnnee: boolean): string {
+  const [annee, mois, jour] = iso.split("-");
+  const table = avecAnnee ? MOIS_ABREGES : MOIS_EN_TOUTES_LETTRES;
+  const nom = table[Number(mois) - 1];
+  if (!annee || !nom || !jour) return iso;
+  const quantieme = Number(jour) === 1 ? "1er" : String(Number(jour));
+  return avecAnnee
+    ? `${quantieme} ${nom} ${annee}`
+    : `${quantieme} ${nom}`;
+}
+
+export function periodeDeSession(
+  debut: string | null | undefined,
+  fin: string | null | undefined,
+  /** L'année en cours, injectée pour rester une fonction pure. */
+  anneeCourante = new Date().getFullYear()
+): string {
+  const d = (debut ?? "").trim() || null;
+  const f = (fin ?? "").trim() || null;
+  if (!d && !f) return "";
+  //  L'ANNÉE S'ÉCRIT DÈS QU'UN BOUT SORT DE L'ANNÉE EN COURS — et
+  //  alors sur les deux dates (voir la note ci-dessus).
+  const horsAnnee = [d, f].some(
+    (iso) => iso && Number(iso.slice(0, 4)) !== anneeCourante
+  );
+  if (d && f) {
+    if (d === f) return jourEcrit(d, horsAnnee);
+    return `${jourEcrit(d, horsAnnee)} – ${jourEcrit(f, horsAnnee)}`;
+  }
+  if (d) return `À partir du ${jourEcrit(d, horsAnnee)}`;
+  return `Jusqu'au ${jourEcrit(f as string, horsAnnee)}`;
+}
+
 /** « (du 01/09 au 15/09) » — la parenthèse d'une session guest. */
 export function periodeCourte(mode: {
   debut_le: string | null;
@@ -1181,6 +1267,43 @@ export function nomLieuRequis(mode: ModeEnSaisie): boolean {
   }
   if (mode.salon) return false;
   return Boolean(mode.lieu);
+}
+
+/**
+ * ██ §5 (nº 413) — PLUS DE LIEU, PLUS DE DATES ██
+ * ==================================================================
+ * LE RELEVÉ : on supprime l'établissement d'une session guest — qu'il
+ * vienne de la recherche (`salon`) ou d'une adresse saisie à la main
+ * (`lieu`) — et LES DATES RESTENT, orphelines : une période sans
+ * endroit, qui bloque « Je confirme » sans qu'on voie pourquoi.
+ *
+ * ⚠️ C'EST UNE TRANSITION QU'ON REGARDE, PAS UN ÉTAT, et c'est toute
+ * la finesse demandée : « ne l'applique qu'à la SUPPRESSION du lieu ;
+ * modifier ou remplacer un établissement ne doit pas effacer des dates
+ * déjà saisies ». Un état (« ce mode n'a pas de lieu ») ne distingue
+ * pas les deux — il effacerait aussi les dates de qui saisit ses dates
+ * AVANT son lieu, ce que le formulaire autorise (les deux champs sont
+ * toujours à l'écran pour un guest).
+ * LA RÈGLE COMPARE DONC L'AVANT ET L'APRÈS :
+ *  · AVAIT un lieu et N'EN A PLUS      → les dates s'effacent ;
+ *  · avait un lieu et EN A UN AUTRE    → rien (remplacement) ;
+ *  · n'en avait pas et n'en a toujours pas → rien (saisie en cours).
+ * « Avoir un lieu », c'est porter L'UN OU L'AUTRE : `salon` (une fiche
+ * retenue) ou `lieu` (une adresse choisie dans la liste). Les deux
+ * façons sont donc couvertes par la même ligne, sans les nommer.
+ *
+ * ⚠️ ELLE NE VAUT QUE POUR UN GUEST : lui seul a des dates. Sur les
+ * autres genres, `debut_le` et `fin_le` sont déjà nuls et le resteront.
+ */
+export function datesSuiventLeLieu(
+  avant: ModeEnSaisie,
+  apres: ModeEnSaisie
+): ModeEnSaisie {
+  if (apres.genre !== "guest") return apres;
+  const avaitUnLieu = Boolean(avant.salon || avant.lieu);
+  const aUnLieu = Boolean(apres.salon || apres.lieu);
+  if (!avaitUnLieu || aUnLieu) return apres;
+  return { ...apres, debut_le: "", fin_le: "" };
 }
 
 /** LES MODES QUI COMPTENT — ceux où quelque chose a été saisi. C'est
