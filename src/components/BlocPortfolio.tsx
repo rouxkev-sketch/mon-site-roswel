@@ -886,7 +886,27 @@ export function BlocPortfolio({
                          text-sombre-texte-doux opacity-60 transition-opacity
                          hover:opacity-100 focus-visible:opacity-100"
             >
-              <IconeCroix taille={16} />
+              {/*  ██ §6 (nº 405) — LA CROIX PASSE DE 16 À 20 px ██
+                   D'OÙ VIENT CETTE VALEUR : c'est UN RANG DÉJÀ POSÉ
+                   DANS CE MÊME BLOC — celui du chevron du menu des
+                   styles (`IconeChevronBas taille={20}`, plus bas), et
+                   celui de l'icône de lien des lignes de formulaire.
+                   16 px la mettait au rang du texte des onglets
+                   « Réalisation / Flash » (15 px) qu'elle jouxte :
+                   seule dans son angle, elle s'y perdait. 20 px est UN
+                   CRAN de l'échelle du site (16 · 18 · 20 · 22), et
+                   l'on s'arrête là : 22 est le rang de l'en-tête de
+                   recherche (nº 401), trop haut pour un coin de
+                   section.
+                   ⚠️ RIEN NE BOUGE AUTOUR, et c'est la méthode de la
+                   nº 401 : la ZONE TACTILE ne change pas — elle vaut
+                   toujours 36 px (`h-9 w-9`), et c'est la BOÎTE, pas le
+                   glyphe, qui la donne. Le glyphe grandit À
+                   L'INTÉRIEUR d'une boîte fixe : ni la position du
+                   bouton (`absolute right-4 top-0`), ni l'alignement
+                   des onglets, ni la hauteur de la ligne ne changent
+                   d'un pixel. */}
+              <IconeCroix taille={20} />
             </button>
           </div>
 
@@ -999,9 +1019,14 @@ export function BlocPortfolio({
                     //  ⚠️ PLUS DE CONTOUR (passe nº 112) : le fond dit
                     //  tout — un cran plus clair au repos, teinté de
                     //  rose quand la galerie est ouverte.
-                    /*  §2-a (nº 309) — `relative` : c'est ce qui porte le
-                        soulignement rose de l'actif, posé DANS le
-                        rectangle (voir plus bas). */
+                    /*  §2-a (nº 309) — `relative` portait le soulignement
+                        rose de l'actif, posé DANS le rectangle.
+                        §5 (nº 405) — LE TRAIT EST PARTI ; les deux
+                        classes restent : `overflow-hidden` borne le fond
+                        aux coins arrondis, et `relative` ne coûte rien
+                        (aucun enfant absolu, aucune peinture). Les
+                        retirer serait un remaniement que personne n'a
+                        demandé, sur un bouton qui ne doit pas bouger. */
                     className={`relative overflow-hidden rounded-lg px-3 py-2.5
                                text-left transition-colors ${
                                  actif
@@ -1010,9 +1035,11 @@ export function BlocPortfolio({
                                }`}
                   >
                     {/*  §2-a (nº 309) — LE TITRE A QUITTÉ LE ROSE POUR
-                         LE BLANC : le rose ne vit plus que dans le
-                         trait, où il dit « c'est ici » sans se
-                         disputer la lecture avec le texte.
+                         LE BLANC : le rose ne vivait plus que dans le
+                         trait, où il disait « c'est ici » sans se
+                         disputer la lecture avec le texte. (Le trait
+                         est supprimé à la nº 405 : plus aucun rose dans
+                         ces encadrés — le fond dit tout.)
                          §3-b (nº 311) — ET IL EST BLANC DANS LES DEUX
                          ÉTATS. La nº 309 avait aussi grisé le titre du
                          rendu non choisi ; le propriétaire le veut
@@ -1034,29 +1061,25 @@ export function BlocPortfolio({
                     >
                       {nombre}/{PLAFOND_GALERIE} photos
                     </span>
-                    {/*  §2-a (nº 309) — LE TRAIT ROSE, SUR L'ACTIF ET
-                         SUR LUI SEUL. Léger : 2 px.
-                         §4 (nº 312) — ANNULATION DE LA nº 311, SUR
-                         CONSIGNE : IL REVIENT EN BAS. Elle l'avait fait
-                         passer au bord GAUCHE, vertical ; le
-                         propriétaire le veut comme à la nº 309 —
-                         HORIZONTAL, le long du BORD BAS de l'encadré,
-                         d'un bord à l'autre, sous le seul bouton
-                         choisi. C'est le procédé des onglets de la
-                         ligne au-dessus (`OngletsLigne` : trait rose
-                         sous l'onglet choisi) — on ne réinvente pas un
-                         marqueur, on reprend celui que la page emploie
-                         déjà.
-                         ⚠️ LE RESTE DE LA nº 311 EST CONSERVÉ : les
-                         quatre états de couleur ne bougent pas (voir
-                         le titre et le sous-titre, plus haut). */}
-                    {actif && (
-                      <span
-                        aria-hidden="true"
-                        data-soulignement-rendu=""
-                        className="absolute inset-x-0 bottom-0 h-[2px] bg-primaire"
-                      />
-                    )}
+                    {/*  ██ §5 (nº 405) — LE TRAIT ROSE EST SUPPRIMÉ ██
+                         =================================================
+                         Il venait de la nº 309 (§2-a) et avait fait
+                         l'aller-retour de la nº 311 à la nº 312 : 2 px
+                         de rose le long du bord bas, sous le seul
+                         encadré choisi, repris des onglets de la ligne
+                         au-dessus. Le propriétaire le retire.
+                         CE QUI DIT ENCORE « C'EST CELUI-CI », et qui ne
+                         bouge pas : LE FOND (`bg-sombre-eleve-clair`
+                         sur l'actif, `bg-sombre-eleve` sur les autres)
+                         et LE SOUS-TITRE (blanc sur l'actif, gris doux
+                         sur les autres). Deux marques valent mieux
+                         qu'une troisième.
+                         ⚠️ RIEN NE SE DÉCALE : le trait était en
+                         `absolute`, donc HORS DU FLUX — il ne poussait
+                         rien. Sa disparition ne rend aucun pixel de
+                         hauteur, et les encadrés gardent leur taille.
+                         Le `relative` du bouton reste : il porte aussi
+                         l'`overflow-hidden` des coins arrondis. */}
                   </button>
                 );
               })}

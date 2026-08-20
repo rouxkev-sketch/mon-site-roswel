@@ -703,13 +703,15 @@ export function ContenuFiche({
    * PEINTURE, pas la surface. Le lien reste une ligne entière
    * (`flex`), icône comprise.
    *
-   * §5 — LE BLEU EST UN RÉGLAGE, PAS UNE FATALITÉ. Avant cette passe,
+   * §5 — LE BLEU EST UN RÉGLAGE, PAS UNE FATALITÉ. Avant la nº 388,
    * le booking, le site, Instagram et l'adresse partageaient une seule
-   * et même écriture : rendre Instagram bleu ici les aurait TOUS
-   * emportés. `sortDuSite` tranche donc appelant par appelant — seuls
-   * Instagram et l'adresse le passent, le booking et le site restent
-   * dans le gris doux commun, et les styles n'utilisent même pas
-   * cette fonction.
+   * et même écriture : rendre Instagram bleu les aurait TOUS emportés.
+   * `sortDuSite` tranche donc appelant par appelant — et c'est ce qui
+   * permet à la nº 405 d'y ajouter LES DEUX LIENS DE SITE sans toucher
+   * à une ligne de couleur. Le passent aujourd'hui : Instagram,
+   * l'adresse, le site et la page de liens. Ne le passent pas : le
+   * booking (gris doux) ; les styles n'utilisent même pas cette
+   * fonction.
    * ⚠️ L'ICÔNE RESTE GRISE : elle est peinte en `currentColor`, donc
    * elle suivrait le bleu du texte. On lui rend donc explicitement le
    * gris de la colonne (`text-sombre-texte-doux` sur sa boîte), ce qui
@@ -938,20 +940,42 @@ export function ContenuFiche({
     //  la PREMIÈRE position des liens, comme dans le formulaire.
     entreeBooking,
   ].filter(Boolean);
+  /**
+   * ██ §7 (nº 405) — LES LIENS DE SITE PASSENT AU BLEU ██
+   * ==================================================================
+   * Ils sortent du site, exactement comme Instagram et l'adresse : ils
+   * prennent donc le MÊME bleu, le même éclaircissement au survol, et
+   * toujours aucun soulignement — c'est le cinquième argument de
+   * `lienEnLigne` (`sortDuSite`) qui le dit, et rien d'autre. Aucune
+   * couleur n'est écrite ici.
+   * ⚠️ AUCUN PIÈGE DE LA nº 389 : le bleu ne vient pas d'une seconde
+   * classe posée à côté d'un gris — c'est un TERNAIRE, une classe OU
+   * l'autre, jamais les deux (voir `lienEnLigne`). Et l'ICÔNE RESTE
+   * GRISE sans condition depuis la nº 392 : son gris vit sur la boîte
+   * de l'icône, un AUTRE élément que le `<a>` qui porte le bleu — un
+   * héritage recouvert, pas une dispute d'ordre alphabétique.
+   * ⚠️ LES DEUX EMPLACEMENTS PASSENT ENSEMBLE. Ce sont deux exemplaires
+   * du même objet (`LienLibre` : une URL, un titre) ; en laisser un
+   * gris et l'autre bleu ferait croire à deux natures de lien.
+   * ⚠️ CE QUI NE BOUGE PAS, comme demandé : le booking, les pratiques
+   * et les styles restent dans le gris doux commun.
+   */
   const ligneDuSite = [
     tatoueur.site_web &&
       lienEnLigne(
         "site",
         tatoueur.site_web,
         tatoueur.titre_site_web || libelleDuLien(tatoueur.site_web),
-        iconeDeLien("site")
+        iconeDeLien("site"),
+        true
       ),
     tatoueur.page_de_liens &&
       lienEnLigne(
         "liens",
         tatoueur.page_de_liens,
         tatoueur.titre_page_de_liens || libelleDuLien(tatoueur.page_de_liens),
-        iconeDeLien("site")
+        iconeDeLien("site"),
+        true
       ),
   ].filter(Boolean);
   //  §2 (nº 387) — INSTAGRAM EST TOUJOURS SUR LA PREMIÈRE RANGÉE,

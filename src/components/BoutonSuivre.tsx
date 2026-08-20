@@ -149,6 +149,33 @@ export function BoutonSuivre({
        * le bloc des onglets fait 47 px depuis la nº 382, et c'est le
        * plus haut de la rangée. La cible tactile GAGNE donc deux
        * pixels au lieu d'en perdre.
+       *
+       * ██ §8 (nº 405) — « SUIVRE » REDEVIENT UN BOUTON ROSE PLEIN ██
+       * ==================================================================
+       * LE PROPRIÉTAIRE RENVERSE À NOUVEAU LA ROBE DE CET ÉTAT, et dans
+       * l'écriture QUI EXISTE DÉJÀ — celle du badge de compte de la
+       * barre fixe (nº 399) et du bouton « Créer mon compte » de la
+       * fenêtre d'invitation (nº 396-397), elle-même reprise de
+       * « qui-sommes-nous ». Aucune couleur n'est inventée :
+       *  · PAS ENCORE SUIVI — fond ET contour au ROSE DU SITE
+       *    (`bg-primaire border-primaire`, `#EE3D6F`), texte BLANC
+       *    (`text-sombre-texte`, `#F2F2F4` — le blanc de la charte
+       *    sombre, celui du bouton rose de la fenêtre d'invitation).
+       *    AU SURVOL, LE FOND ET LE CONTOUR MONTENT ENSEMBLE D'UN CRAN
+       *    (`hover:bg-primaire-fonce hover:border-primaire-fonce`) — le
+       *    traitement du bouton rose du site, au caractère près ; le
+       *    texte reste blanc, comme là-bas ;
+       *  · DÉJÀ SUIVI — INCHANGÉ dans son principe : fond transparent,
+       *    texte gris doux. SEUL LE CONTOUR S'ASSOMBRIT (voir plus
+       *    bas).
+       *
+       * ⚠️ NI LE BOUTON NI LA RANGÉE NE BOUGENT. Le contour d'un pixel
+       * RESTE dans les deux états — c'est lui qui donne les 32 px de
+       * haut. Le remplacer par un fond sans trait aurait fait maigrir
+       * le bouton de 2 px en hauteur comme en largeur (la règle nº 321,
+       * déjà appliquée au badge de la barre fixe). Le rembourrage, la
+       * typographie et la mécanique des deux libellés superposés ne
+       * changent pas d'un pixel.
        */
       className={`inline-flex min-h-[30px] items-center justify-center rounded-full
                   border px-3.5 text-[14px] font-semibold transition-colors
@@ -157,18 +184,36 @@ export function BoutonSuivre({
                     pleineLargeur ? "w-full" : ""
                   } ${
                     suivi
-                      ? //  §1 (nº 385) — RETOUR AU GRIS DE LA Nº 383.
-                        //  ------------------------------------------
-                        //  La nº 384 avait poussé ce contour jusqu'au
-                        //  jeton des TRAITS (`sombre-trait`, #3B3B42) :
-                        //  trop sombre au jugement du propriétaire. Il
-                        //  reprend le gris du TEXTE de cet état,
-                        //  `sombre-texte-doux` — les deux, trait et
-                        //  mot, redeviennent d'un seul gris. Le texte
-                        //  n'a pas bougé entre les deux passes, et le
-                        //  contour rose de « Suivre » non plus.
-                        "border-sombre-texte-doux text-sombre-texte-doux hover:text-sombre-texte hover:border-sombre-texte"
-                      : "border-primaire text-primaire hover:border-primaire-fonce hover:text-primaire-fonce"
+                      ? /*  §1 (nº 385) — LE GRIS DU TEXTE POUR LE
+                             TRAIT. La nº 384 avait poussé ce contour
+                             jusqu'au jeton des TRAITS (`sombre-trait`,
+                             #3B3B42) : TROP SOMBRE au jugement du
+                             propriétaire, elle fut annulée.
+                             ██ §8 (nº 405) — ET `sombre-texte-doux`
+                             EST TROP CLAIR ██
+                             Le propriétaire tranche entre les deux
+                             refus. Le contour prend
+                             `sombre-haut-clair` (#55555F), UN JETON DE
+                             LA CHARTE, et c'est celui qui tombe entre
+                             les deux valeurs jugées : plus sombre que
+                             le #A8A8B0 d'aujourd'hui, nettement plus
+                             clair que le #3B3B42 refusé à la nº 384
+                             (les deux seuls jetons intermédiaires sont
+                             `sombre-haut` #4A4A53 et celui-ci ; #55555F
+                             est le plus proche du milieu). Aucune
+                             couleur n'est inventée.
+                             ⚠️ LE TEXTE NE CHANGE PAS — il garde
+                             `sombre-texte-doux`, et le survol des deux
+                             garde son cran. Trait et mot ne sont donc
+                             plus du même gris : c'est ce qui est
+                             demandé. */
+                        "border-sombre-haut-clair text-sombre-texte-doux hover:text-sombre-texte hover:border-sombre-texte"
+                      : //  §8 (nº 405) — LE ROSE PLEIN DU SITE (voir la
+                        //  note ci-dessus) : fond et contour au même
+                        //  jeton, texte blanc, et le survol monte les
+                        //  deux d'un cran. C'est l'écriture du badge de
+                        //  la barre fixe (nº 399), au caractère près.
+                        "bg-primaire border-primaire text-sombre-texte hover:bg-primaire-fonce hover:border-primaire-fonce"
                   }`}
     >
       {/*  ⚠️ LES DEUX LIBELLÉS OCCUPENT LA MÊME LARGEUR (nº 208-§1) :

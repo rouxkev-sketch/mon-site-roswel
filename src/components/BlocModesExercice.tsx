@@ -197,12 +197,22 @@ function modeVierge(
         part.
         ⚠️ nº 403 — « FONDATEUR » N'EST PLUS LA PREMIÈRE POSITION (le
         récit ci-dessus date de la nº 267, où elle l'était) : la bascule
-        s'ouvre désormais sur « Résident » à gauche. LE DÉFAUT
-        ENREGISTRÉ, LUI, NE CHANGE PAS — il est écrit ICI, EN TOUTES
-        LETTRES, et non déduit d'une position. Un onglet neuf naît donc
-        toujours sur `fondateur`, comme avant l'inversion. */
+        s'ouvre sur « Résident », à gauche. La nº 403 avait gardé
+        `fondateur` comme valeur de naissance, écrite ici en toutes
+        lettres — l'inversion d'affichage ne devait rien changer à
+        l'enregistrement.
+        ██ nº 405 — LE DÉFAUT REJOINT L'AFFICHAGE : « RÉSIDENT » ██
+        Le propriétaire tranche : un lieu NEUF naît désormais
+        `resident`, pour un artiste comme pour un studio ou un salon —
+        c'est le cas de loin le plus fréquent, et la bascule s'ouvrira
+        donc sur le choix déjà sélectionné, à gauche.
+        ⚠️ CE DÉFAUT NE VAUT QUE POUR CE QUI N'EXISTE PAS ENCORE. Une
+        ligne DÉJÀ ENREGISTRÉE garde son rôle : elle arrive avec sa
+        valeur, relue par FormulaireFiche — dont le repli des lignes
+        d'avant la nº 100 (`ligne.role ?? …`) n'est PAS touché, sans
+        quoi des fiches existantes changeraient de rôle en silence. */
     role:
-      vide || (genre !== "salon" && genre !== "prive") ? null : "fondateur",
+      vide || (genre !== "salon" && genre !== "prive") ? null : "resident",
     //  LA NATURE DU LIEU ne concerne qu'un guest. « Studio » d'abord
     //  depuis la passe nº 128 (l'ordre de la bascule s'est inversé) —
     //  et une bascule s'ouvre sur sa PREMIÈRE position, jamais sur la
@@ -459,12 +469,16 @@ export function BlocModesExercice({
          écrite en deux lignes parce que `BasculeDeuxChoix` attend un
          couple, pas une liste — deux choix, par construction.)
          ⚠️ LE DÉFAUT EST LU PAR NOM, PLUS PAR POSITION. C'était
-         `ROLES_STUDIO[0].slug` : inverser la liste aurait fait basculer
-         le repli de « fondateur » à « résident » sans qu'une ligne le
-         dise. Un mode neuf naît toujours sur `fondateur` (voir
-         `modeVierge`), et ce repli-ci — qui ne sert qu'aux lignes
-         anciennes sans rôle — dit maintenant le même mot, en toutes
-         lettres. */
+         `ROLES_STUDIO[0].slug` : inverser la liste (nº 403) aurait fait
+         basculer le repli sans qu'une ligne le dise. Il est donc écrit
+         en toutes lettres — et il vaut `resident` depuis la nº 405,
+         COMME `modeVierge` : les deux endroits qui décident ce défaut
+         disent le même mot, et ils sont les deux seuls.
+         ⚠️ CE REPLI-CI NE SERT QU'AUX LIGNES SANS RÔLE. Une ligne
+         enregistrée arrive avec le sien et n'y touche pas ; celles
+         d'avant la nº 100 reçoivent le leur à la relecture
+         (FormulaireFiche), qui n'a pas bougé. Aucune fiche existante
+         ne change de rôle. */
     return (
       <div className="opacity-100 transition-opacity duration-200 starting:opacity-0">
         <BasculeDeuxChoix
@@ -473,7 +487,7 @@ export function BlocModesExercice({
             { slug: ROLES_STUDIO[0].slug as RoleStudio, label: ROLES_STUDIO[0].choix },
             { slug: ROLES_STUDIO[1].slug as RoleStudio, label: ROLES_STUDIO[1].choix },
           ]}
-          valeur={(mode.role ?? "fondateur") as RoleStudio}
+          valeur={(mode.role ?? "resident") as RoleStudio}
           surChoix={(role) => modifier(mode.cle, { role })}
         />
       </div>

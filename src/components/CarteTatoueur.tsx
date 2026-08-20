@@ -17,6 +17,7 @@ import { legendeDeCarte, photoChoisie, photoPourStyle } from "@/lib/photo-tatoue
 import {
   ensembleDeLaPhoto,
   natureConnue,
+  titreDeGalerie,
   vignetteDe,
 } from "@/lib/photos-tatoueur";
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
@@ -295,13 +296,43 @@ function CarteTatoueurNue({
    *    taille ni de place.
    * ⚠️ LE MOT DU CATALOGUE, PAS LE SLUG : `libelleStyle` — l'écriture
    * unique de la charte, celle que la fiche et les filtres emploient.
+   *
+   * ██ §9 (nº 405) — LE RENDU SUIT LE STYLE : « Réalisme • Noir et gris » ██
+   * ==================================================================
+   * C'EST `titreDeGalerie` QUI L'ÉCRIT, et non une recomposition
+   * locale : le libellé demandé est EXACTEMENT le sien — « Style •
+   * Rendu », la puce U+2022 de la nº 393, le mot du catalogue pour le
+   * rendu (`libelleRendu`). Le consommer plutôt que de le refaire, ce
+   * n'est pas seulement plus court : c'est ce qui garantit que la
+   * ligne sous une carte, le titre sous la fenêtre du web (nº 393) et
+   * la ligne sous la photo au doigt (nº 376) ne pourront jamais
+   * diverger — la nº 404 vient d'ajouter « Noir » à la liste des
+   * rendus, et cette carte l'a suivi sans qu'on la touche.
+   *
+   * ⚠️ IL PORTE DÉJÀ LES DEUX GARDES DONT CETTE LIGNE A BESOIN :
+   *  · rendu absent → LE STYLE SEUL, jamais une puce orpheline. C'est
+   *    le cas des replis ci-dessous (le premier style DÉCLARÉ d'un
+   *    artiste sans photo n'a évidemment pas de rendu) ;
+   *  · style absent → la chaîne VIDE, que le `||` suivant rattrape en
+   *    retombant sur le nom de l'artiste.
+   * ⚠️ LE RENDU NE SUIT PAS LE DÉFILÉ, POUR LA RAISON QUI VAUT DÉJÀ
+   * POUR LE STYLE : `photosDeLaCarte` est L'ENSEMBLE de la photo
+   * montrée — même style, même catégorie, MÊME RENDU. Une carte ne
+   * fait donc défiler qu'un seul rendu ; le libellé est figé par
+   * construction, il n'y a rien à synchroniser.
    */
   const styleDeLaCarte =
     photoEnregistrable?.style || tatoueur.styles?.[0] || "";
   const titreDeLaCarte =
-    premiereLigne === "style" && styleDeLaCarte
-      ? libelleStyle(styleDeLaCarte)
-      : tatoueur.nom;
+    (premiereLigne === "style" &&
+      titreDeGalerie(
+        styleDeLaCarte ? libelleStyle(styleDeLaCarte) : "",
+        //  LE RENDU DE LA PHOTO MONTRÉE, et rien d'autre : le repli
+        //  « premier style déclaré » n'a pas de photo, donc pas de
+        //  rendu — `titreDeGalerie` rend alors le style seul.
+        photoEnregistrable?.style ? photoEnregistrable.rendu : null
+      )) ||
+    tatoueur.nom;
   /**
    * §2 (nº 372) — LA CLÉ DE CETTE CARTE, pour la mémoire des photos.
    * La même que celle de la mosaïque (`carrousel.cle`, sinon
