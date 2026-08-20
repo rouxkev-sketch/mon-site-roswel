@@ -913,7 +913,8 @@ type LieuDemo = {
 };
 
 type ModeDemo = {
-  genre: "salon" | "guest" | "domicile" | "prive";
+  //  nº 402 — « domicile » a quitté le catalogue (GENRES_MODE).
+  genre: "salon" | "guest" | "prive";
   /** EN STUDIO : fondateur ou résident (migration nº 33). */
   role?: "fondateur" | "resident";
   /** Le slug du studio inscrit auquel ce mode est rattaché. */
@@ -1041,17 +1042,6 @@ const EXERCICE_DEMO: Record<string, ExerciceDemo> = {
         fin_le: "2026-05-15",
       },
       {
-        genre: "domicile",
-        lieu: {
-          intitule: "Strasbourg",
-          adresse: null,
-          code_postal: "67000",
-          ville: "Strasbourg",
-          latitude: 48.5734,
-          longitude: 7.7521,
-        },
-      },
-      {
         // LE QUATRIÈME MODE, pour que « En studio privé » ait de quoi
         // répondre hors ligne comme en base (migration nº 38).
         genre: "prive",
@@ -1087,17 +1077,6 @@ const EXERCICE_DEMO: Record<string, ExerciceDemo> = {
         salon: "ligne-claire-studio-nantes",
         debut_le: "2026-03-02",
         fin_le: "2026-03-12",
-      },
-      {
-        genre: "domicile",
-        lieu: {
-          intitule: "Bordeaux",
-          adresse: null,
-          code_postal: "33000",
-          ville: "Bordeaux",
-          latitude: 44.8496,
-          longitude: -0.5722,
-        },
       },
     ],
   },

@@ -781,14 +781,14 @@ export const FILTRE_TYPE_FICHE = {
  *
  * DEUX AXES INDÉPENDANTS, DONC DEUX GROUPES :
  *   · PROFIL       — ce qu'est la fiche : Artiste · Salon · Studio privé
- *   · OÙ IL TATOUE — comment l'artiste travaille : En salon · En guest ·
- *                    À domicile · En studio privé
+ *   · OÙ IL TATOUE — comment l'artiste travaille : Salon · Studio ·
+ *                    Guest (nº 402 — « à domicile » est supprimé)
  *
- * LA GRAMMAIRE PORTE LA DISTINCTION, et ce n'est pas un ornement :
- * c'est ce qui évite de relire deux fois. Le profil prend des NOMS
- * (« Salon » : la chose), le mode des COMPLÉMENTS DE LIEU (« En
- * salon » : l'endroit où l'on va). Aucune entrée ne se lit deux fois
- * de la même façon.
+ * ⚠️ LA GRAMMAIRE QUI SÉPARAIT LES DEUX GROUPES (noms d'un côté,
+ * compléments de lieu de l'autre) N'EXISTE PLUS depuis la nº 402 : le
+ * propriétaire fait tomber le « en » — « Salon », « Studio », « Guest »
+ * des deux côtés. C'est le TITRE du groupe qui distingue désormais
+ * (« Profil » / « Artiste »), et lui seul.
  *
  * ⚠️ CE GROUPE NE CONCERNE QUE LES ARTISTES. Un salon n'a pas de mode
  * d'exercice — il a des adresses. Éteindre « En guest » ne doit donc
@@ -813,10 +813,15 @@ export const FILTRE_MODE_ACTIVITE = {
   //  effet sur ce qui part vers la base (des ensembles, pas des
   //  listes). « En studio privé » se raccourcit en « En studio » sur
   //  demande explicite de cette passe.
+  //  ██ nº 402 — TROIS OPTIONS : « à domicile » est supprimé du site,
+  //  et les libellés tombent le « en » — « Salon », « Studio »,
+  //  « Guest », dans l'ordre du sélecteur du formulaire. LES SLUGS NE
+  //  BOUGENT PAS : ce sont les clés du langage `exclure=` — un vieux
+  //  lien `exclure=a-domicile` est simplement ignoré (`filtresConnus`
+  //  ne garde que les slugs connus).
   options: [
-    { slug: "a-domicile", label: "À domicile", genre: "domicile" },
-    { slug: "en-studio-prive", label: "En studio", genre: "prive" },
-    { slug: "en-salon", label: "En salon", genre: "salon" },
+    { slug: "en-salon", label: "Salon", genre: "salon" },
+    { slug: "en-studio-prive", label: "Studio", genre: "prive" },
     { slug: "en-guest", label: "Guest", genre: "guest" },
   ],
 } as const;
@@ -1107,31 +1112,44 @@ export function aDesHoraires(
 //  en cohérence avec le sélecteur du bloc 1 (« Studio »). Le slug
 //  `prive` et les phrases descriptives de la fiche publique (qui
 //  qualifient le LIEU, pas le mode) ne changent pas.
+/**
+ * ██ nº 402 — « À DOMICILE » EST SUPPRIMÉ, ET LES NOMS TOMBENT LE
+ * « EN » ██
+ * ==================================================================
+ * DEUX DÉCISIONS DU PROPRIÉTAIRE, D'UN COUP :
+ *  · le mode « à domicile » DISPARAÎT ENTIÈREMENT — du formulaire, des
+ *    filtres, des fiches. Le site n'est pas en ligne et aucune fiche
+ *    ne l'utilise : il n'y a rien à préserver. Retirer l'entrée D'ICI
+ *    rétrécit le type `GenreMode` : le compilateur a désigné chaque
+ *    branche morte, aucune n'a pu être oubliée ;
+ *  · « En salon » et « En studio » deviennent « Salon » et « Studio »,
+ *    partout — le libellé seul : les slugs `salon` et `prive`, écrits
+ *    dans `modes_exercice.genre`, ne bougent pas d'une lettre.
+ * ⚠️ LA CONTRAINTE DE BASE (`modes_exercice_genre_connu`) accepte
+ * toujours `('salon','guest','domicile','prive')` : rien de ce qu'on
+ * écrit désormais n'en sort, l'enregistrement marche SANS migration.
+ * Celle du zip (`yokofolio-fin-du-mode-domicile.sql`) est un VERROU :
+ * elle purge les lignes `domicile` (les démos en avaient deux) et
+ * resserre la contrainte à trois valeurs.
+ */
 export const GENRES_MODE = [
   {
     slug: "prive",
-    label: "En studio",
-    titre: "En studio",
+    label: "Studio",
+    titre: "Studio",
     phrase: "Studio privé / Secteur :",
     phraseLiee: "Studio privé / Secteur :",
   },
   {
     slug: "salon",
     /** Ce qu'on lit sous le nom, sur la fiche publique. */
-    label: "En salon",
+    label: "Salon",
     /** Ce qu'on lit dans le sélecteur du formulaire. */
-    titre: "En salon",
+    titre: "Salon",
     /** Ce qui précède l'adresse quand aucun studio inscrit n'est lié. */
     phrase: "Artiste en studio fixe",
     /** Ce qui précède le nom du studio quand il est lié. */
     phraseLiee: "Résident chez",
-  },
-  {
-    slug: "domicile",
-    label: "À domicile",
-    titre: "À domicile",
-    phrase: "À domicile / Secteur :",
-    phraseLiee: "À domicile / Secteur :",
   },
   {
     slug: "guest",

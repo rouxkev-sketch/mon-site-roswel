@@ -244,9 +244,10 @@ async function ecrireModes(
           : null,
       salon_id: mode.salon?.id ?? null,
       ...lieu,
-      //  LE RAYON N'A DE SENS QUE POUR « À DOMICILE » : ailleurs il
-      //  vaut null, comme le sous-choix de rôle.
-      rayon_km: mode.genre === "domicile" ? (mode.rayonKm ?? null) : null,
+      //  nº 402 — LE RAYON N'EXISTE PLUS : « à domicile », seul mode
+      //  qui en portait un, est supprimé du site. La colonne reste en
+      //  base, toujours écrite à null.
+      rayon_km: null,
       //  LA NATURE DU LIEU VISITÉ n'a de sens que pour un guest.
       nature_lieu: mode.genre === "guest" ? (mode.natureLieu ?? null) : null,
       //  §1 (nº 266) — LE NOM DU LIEU SAISI À LA MAIN. Il n'a de sens

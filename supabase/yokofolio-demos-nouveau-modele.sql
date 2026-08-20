@@ -201,18 +201,13 @@ select a.id, m.genre, null,
      '12 quai des Bateliers, 67000 Strasbourg', '12 quai des Bateliers',
      '67000', 'Strasbourg', 48.5806, 7.7529,
      date '2026-05-01', date '2026-05-15', 0),
-    -- À DOMICILE : ni rue ni numéro à l'affichage (la promesse de
-    -- vie privée est tenue par le code, pas par la base).
-    ('trait-nord-strasbourg', 'domicile',
-     'Strasbourg', null, '67000', 'Strasbourg', 48.5734, 7.7521,
-     null, null, 1),
+    -- (nº 402 — les deux modes « domicile » de la démonstration sont
+    -- supprimés : le mode a quitté le site, et la contrainte resserrée
+    -- par yokofolio-fin-du-mode-domicile.sql les refuserait.)
     ('studio-cameleon-bordeaux', 'salon',
      '5 place Fernand-Lafargue, 33000 Bordeaux', '5 place Fernand-Lafargue',
      '33000', 'Bordeaux', 44.8383, -0.5707,
-     null, null, 0),
-    ('studio-cameleon-bordeaux', 'domicile',
-     'Bordeaux', null, '33000', 'Bordeaux', 44.8496, -0.5722,
-     null, null, 2)
+     null, null, 0)
   ) as m(artiste_slug, genre, intitule, adresse, code_postal, ville,
          latitude, longitude, debut_le, fin_le, ordre)
   join demos_yokofolio a on a.slug = m.artiste_slug;

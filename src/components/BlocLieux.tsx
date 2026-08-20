@@ -1269,12 +1269,11 @@ function TroisLignesDuLieu({
    * le mode d'exercice : `ligneMaps` compose la requête avec ce qu'il
    * a — rue si elle existe, sinon ville, région, pays (la règle levée
    * en nº 288-§4).
-   * ⚠️ « À DOMICILE » N'EXPOSE JAMAIS D'ADRESSE : ses deux lignes sont
-   * la ville et le rayon, pas un lieu — `null`, donc du texte nu.
-   * C'est la seule exception, et elle ne change pas.
+   * (nº 402 — « à domicile », qui n'exposait jamais d'adresse, est
+   * supprimé du site : `sansLien` reste le seul cas de texte nu.)
    */
   const lieu: LieuAffichable | null =
-    sansLien || mode.genre === "domicile"
+    sansLien
       ? null
       : {
           adresse: mode.adresse,
@@ -1338,20 +1337,12 @@ export function BlocProfilsArtiste({
         (`gap-8`), 14 px entre pastille et texte. */
     <ul className="flex flex-col gap-8">
       {modes.map((mode) => {
-        /*  ⚠️ « À DOMICILE », C'EST CHEZ L'ARTISTE (nº 224-§1) : la
-            pastille est SA photo de profil, pas un glyphe d'adresse
-            — il n'y a pas d'autre lieu à montrer. Les autres modes
-            portent le logo du salon lié, ou le glyphe d'adresse
-            quand le lieu a été saisi à la main. */
+        /*  LA PASTILLE : le logo du salon lié, ou le glyphe d'adresse
+            quand le lieu a été saisi à la main. (nº 402 — le cas « à
+            domicile », qui montrait la photo de l'artiste, est
+            supprimé du site.) */
         const pastille = (
-          <PhotoRonde
-            source={
-              mode.genre === "domicile"
-                ? tatoueur.photo_profil
-                : mode.salon_photo
-            }
-            nature="lieu"
-          />
+          <PhotoRonde source={mode.salon_photo} nature="lieu" />
         );
         const lie = Boolean(mode.salon_slug && mode.salon_nom);
         const colonne = <TroisLignesDuLieu mode={mode} sansLien={lie} />;

@@ -924,7 +924,7 @@ export function FormulaireFiche() {
   //  (rue et numéro) que pour un studio privé (sa ville suffit).
   /*  §1 (nº 267) — TOUS LES MANQUES, PAS SEULEMENT LE PREMIER. Le
       rouge se branchait sur `premierManque`, qui s'arrête au premier
-      trouvé : un « à domicile » sans rayon ET un guest sans dates ne
+      trouvé : deux modes en faute ne
       pouvaient pas rougir ensemble. La liste complète part au bloc ;
       LE PREMIER, lui, garde son office — la remontée de page et la
       bascule d'onglet mènent au premier endroit à corriger. Une seule
@@ -935,25 +935,18 @@ export function FormulaireFiche() {
   const manqueDesigne = manquesDesignes[0] ?? null;
 
   /** L'ADRESSE PRÉCISE (rue et numéro) est-elle publiable ? Elle ne
-      l'est pas quand la fiche ne tient que par des modes « à
-      domicile » : la promesse de vie privée vaut aussi pour la ligne
-      d'adresse de la fiche, pas seulement pour ses modes. */
+      l'est pas quand la fiche ne tient que par des STUDIOS PRIVÉS : la
+      promesse de vie privée vaut aussi pour la ligne d'adresse de la
+      fiche, pas seulement pour ses modes. (nº 402 — « à domicile »,
+      qui partageait la promesse, est supprimé du site.)
+      ⚠️ UN ENCADRÉ VIERGE NE COMPTE PAS DU TOUT (passe nº 124) :
+      ouvrir un onglet par curiosité crée un mode sans rien dedans —
+      seuls les modes où quelque chose est saisi (ceux qui partent en
+      base) entrent dans la promesse. */
   const adressePubliable =
     typeFiche === "salon" ||
-    // ⚠️ LES DEUX MODES SANS VITRINE comptent pour un : « à domicile »
-    // et « studio privé » promettent tous les deux que la rue ne sera
-    // jamais publique.
-    // ⚠️ ET UN ENCADRÉ VIERGE NE COMPTE PAS DU TOUT (passe nº 124) :
-    // ouvrir l'onglet « Guest » par curiosité crée un mode guest sans
-    // rien dedans — le laisser peser ici aurait PUBLIÉ LA RUE d'un
-    // artiste qui n'exerce qu'à domicile. Seuls les modes où quelque
-    // chose est saisi (ceux qui partent en base) entrent dans la
-    // promesse.
     modesExercice.some(
-      (mode) =>
-        !modeVide(mode) &&
-        mode.genre !== "domicile" &&
-        mode.genre !== "prive"
+      (mode) => !modeVide(mode) && mode.genre !== "prive"
     );
 
   /** Choisir le type efface ce qui appartenait à l'autre : un salon
