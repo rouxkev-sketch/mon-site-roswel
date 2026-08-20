@@ -181,102 +181,62 @@ export function IconeEtoile({ taille = 20 }: ProprietesIconeLien) {
 }
 
 /**
- * ██ LA MACHINE À TATOUER, POUR LA LIGNE DES STYLES ██
+ * ██ LE DIAMANT, POUR LA LIGNE DES STYLES ██
  * ==================================================================
- * Elle REMPLACE `IconeGoutte` (la goutte d'encre de la nº 387), et le
- * motif du remplacement est net : la goutte et le repère de
- * localisation avaient LA MÊME SILHOUETTE, l'une étant l'autre
- * retournée — deux lignes voisines d'une même fiche portaient donc
- * presque le même dessin. Aucun fichier n'est ajouté au dépôt : c'est
- * un tracé, comme toutes ses voisines.
- * (Une machine avait déjà servi cette ligne à la nº 384 ; elle n'avait
- * pas été retenue. Celle-ci est un dessin neuf, construit pour 20 px.)
+ * Il REMPLACE `IconeMachineATatouer` (la machine de la nº 406, qui
+ * remplaçait elle-même la goutte d'encre de la nº 387). Le diamant
+ * facetté est un motif du tatouage traditionnel, et il a sur la
+ * machine l'avantage d'être une FORME SIMPLE : une silhouette fermée,
+ * là où la machine demandait un corps, une bande et une aiguille.
+ * Aucun fichier n'est ajouté au dépôt : c'est un tracé, comme toutes
+ * ses voisines.
  *
  * MÊME TRAITEMENT QUE SES VOISINES, sans rien choisir : `fill="none"`,
  * trait de 1,8 sur la grille de 24, jonctions et extrémités arrondies,
  * `currentColor` (aucune couleur déclarée — celle du texte de sa
  * ligne), 20 px dans la boîte de 22 px des lignes de profil.
  *
- * ██ CE QUE LE DESSIN GARDE DE LA RÉFÉRENCE, ET CE QU'IL ABANDONNE ██
- * La référence est en APLATS PLEINS et vue en diagonale. Elle est
- * REDESSINÉE AU TRAIT, contour vide : un aplat au milieu de cette
- * liste jurerait (seul TikTok en porte un, et pour une raison qui lui
- * est propre). De la référence, il ne reste que ce qui survit à 20 px :
- *  · LE CORPS EN DIAGONALE, du bas-gauche au haut-droite ;
- *  · LA POINTE FINE qui en sort, en bas à gauche ;
- *  · UN TRAIT EN TRAVERS près du haut, qui sépare la tête de la
- *    poignée — c'est lui qui fait lire « machine » plutôt que
- *    « stylo », et c'est le procédé du bandeau d'`IconeCalendrier`.
- * ABANDONNÉ, parce qu'illisible à cette taille : le cadre ajouré, la
- * bobine, la vis, l'étage du haut. Trois traits, comme le calendrier.
+ * ██ DEUX TRACÉS, ET C'EST TOUT — LE COMPTE DE FACETTES MINIMUM ██
+ * LA SILHOUETTE est un hexagone : la TABLE en haut (le méplat), deux
+ * ÉPAULES qui s'ouvrent jusqu'à la CEINTURE (la ligne la plus large),
+ * puis deux FLANCS qui descendent vers la POINTE.
+ * LA CEINTURE est le seul trait intérieur. C'est lui qui fait lire un
+ * diamant TAILLÉ plutôt qu'un simple hexagone : il sépare la couronne
+ * du pavillon. Il court d'un coin à l'autre, comme la vraie ceinture
+ * d'une pierre.
+ * ⚠️ CE QUI A ÉTÉ ESSAYÉ PUIS ÉCARTÉ, sur le rendu réel à 20 px et non
+ * à l'estime :
+ *  · LES FACETTES DE COURONNE (deux traits des coins de table vers la
+ *    ceinture) — la couronne ne fait que 2,67 px de haut, ces traits
+ *    la remplissaient ;
+ *  · LES FACETTES DE PAVILLON (deux traits des coins de table vers la
+ *    pointe) — les trois lignes se rejoignent au même endroit et
+ *    l'encre s'y agglutine : la pointe devenait un pâté. C'est
+ *    exactement le piège des facettes serrées.
+ * Restent la table et les flancs, qui suffisent.
  *
- * ██ COMMENT ELLE EST CONSTRUITE ██
- * Elle est dessinée DEBOUT — pointe en bas, tête en haut —, puis
- * PIVOTÉE d'un quart de quart de tour (`rotate(45 12 12)`, sens
- * horaire en SVG). C'est ce qui envoie la pointe en bas à gauche et la
- * tête en haut à droite, comme sur la référence. Écrire le dessin
- * droit puis le faire pivoter, plutôt que de calculer chaque point en
- * biais, garde des coordonnées lisibles et une symétrie exacte.
- * ⚠️ CE QUE LA ROTATION COÛTE, ET POURQUOI LE CORPS EST COURT : une
- * forme oblique occupe plus de place que la même forme droite — la
- * diagonale d'une boîte vaut une fois et demie son côté. Les
- * proportions sont calculées pour que l'encre PIVOTÉE tienne dans
- * x et y ∈ [2,81 ; 21,19], c'est-à-dire la marge d'Instagram (2,50) en
- * un peu plus large. Rien ne touche le bord de la boîte.
- * ⚠️ AUCUNE ARÊTE PARTAGÉE, ET C'EST LE PIÈGE ÉVITÉ : deux formes qui
- * se touchent bord à bord font, à 20 px, un double trait qui se remplit
- * et devient une tache. Le corps est UNE SEULE forme fermée, la bande
- * le traverse, et l'aiguille sort par le bas en le croisant à angle
- * droit — une jonction en T se lit, un empilement de traits parallèles
- * non.
- * ⚠️ LES TROIS JOURS SONT MESURÉS, sur le rendu réel à 20 px et non à
- * l'estime — c'est ce qui a réglé le dessin, et le trait lui-même vaut
- * 1,50 px :
- *  · la chambre du haut (le cadre) ....... 2,17 px
- *  · la chambre du bas (la poignée) ...... 2,50 px
- *  · l'aiguille, hors du corps ........... 5,67 px
- * Un premier tracé donnait un corps plus long et une aiguille de
- * 3,3 px : elle se noyait dans la masse au lieu d'en sortir. Le corps
- * a donc raccourci pour qu'elle s'allonge.
+ * ██ LES ANGLES SONT CALCULÉS, PAS DESSINÉS À VUE ██
+ * Table de (8 ; 4) à (16 ; 4), ceinture de (3,8 ; 9) à (20,2 ; 9),
+ * pointe en (12 ; 20). Il en découle :
+ *  · la POINTE ouvre à 73,4°, très au-dessus des ~30° en dessous
+ *    desquels un sommet arrondi se bouche à cette taille ;
+ *  · les COINS DE CEINTURE font 103,3°, ceux de la TABLE 130° — aucun
+ *    angle vif, donc aucune accumulation d'encre dans un coin ;
+ *  · l'encre occupe x ∈ [2,9 ; 21,1] et y ∈ [3,1 ; 20,9], centrée sur
+ *    la boîte ; la marge vaut 2,9 contre 2,5 à Instagram.
  */
-export function IconeMachineATatouer({ taille = 20 }: ProprietesIconeLien) {
+export function IconeDiamant({ taille = 20 }: ProprietesIconeLien) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <g transform="rotate(45 12 12)">
-        {/*  L'AIGUILLE — elle part de DANS le corps (y = 12,6 contre un
-             bord à 13,2, six dixièmes de recouvrement) : aucun trou ne
-             peut s'ouvrir entre les deux, quelle que soit la façon dont
-             le rendu arrondit. Elle est aussi fine que la charte
-             l'autorise — 1,8, le trait de toutes les icônes du
-             fichier ; c'est SA LONGUEUR NUE et le contraste avec la
-             masse du corps qui la font lire comme une pointe, pas une
-             épaisseur plus faible qui serait hors charte. */}
-        <path
-          d="M12 12.6v7.4"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-        />
-        {/*  LE CORPS — cadre et poignée d'un seul tenant. `rx` vaut 2,2
-             pour une largeur de 6,4 : les flancs gardent donc du droit
-             (2,2 < 3,2), et la forme reste un corps de machine, pas une
-             gélule. */}
-        <rect
-          x="8.8"
-          y="4"
-          width="6.4"
-          height="9.2"
-          rx="2.2"
-          stroke="currentColor"
-          strokeWidth="1.8"
-        />
-        {/*  LA BANDE — le trait qui sépare le cadre de la poignée, et
-             qui fait lire « machine » plutôt que « stylo ». Sa hauteur
-             (8,4) partage le corps en deux chambres presque égales :
-             plus haut, celle du cadre se bouchait ; plus bas, c'est
-             celle de la poignée qui se bouchait. */}
-        <path d="M8.8 8.4h6.4" stroke="currentColor" strokeWidth="1.8" />
-      </g>
+      {/*  LA SILHOUETTE — table, épaules, ceinture, flancs, pointe. */}
+      <path
+        d="M8 4h8l4.2 5-8.2 11L3.8 9Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      {/*  LA CEINTURE — le seul trait intérieur, d'un coin à l'autre. */}
+      <path d="M3.8 9h16.4" stroke="currentColor" strokeWidth="1.8" />
     </svg>
   );
 }
