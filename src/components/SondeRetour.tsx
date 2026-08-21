@@ -509,6 +509,160 @@ export function SondeRetour({
   const documentNeuf = useRef(true);
 
   /**
+   * ⚠️ TEMPORAIRE (nº 435) — MESURE DU LISERÉ DE LA FENÊTRE SUPERPOSÉE.
+   * ==================================================================
+   * AUCUNE CORRECTION : cette passe POSE UNE MESURE, c'est tout. Le
+   * liseré (haut + gauche) survit aux nº 433/434 sur l'ordinateur du
+   * propriétaire — la théorie de l'arrondi fractionnaire est donc
+   * fausse ou incomplète pour SON cas, et il faut des nombres pris sur
+   * SON écran. Quand une fenêtre superposée à photo est là (et à
+   * chaque redimensionnement, après 400 ms de calme), ce bloc écrit au
+   * journal les lignes « MESURE DU LISERÉ · … » : taille de fenêtre et
+   * zoom, rectangle peint de chaque maillon (image → colonne → cadre →
+   * boîte noire → enveloppe), écart par bord, LE COUPABLE (l'élément
+   * dont le fond apparaît), l'agrandissement réellement calculé sur
+   * l'image (le 1,01 de la nº 434 est-il appliqué DU TOUT ?), et les
+   * styles capables de fabriquer l'écart.
+   * POUR LE RETIRER (passe ultérieure) : ce bloc entier, et rien
+   * d'autre — il ne touche à aucune mise en page, il lit et il écrit.
+   */
+  useEffect(() => {
+    if (!armee) return;
+    const une = (v: number) => (Math.round(v * 10) / 10).toFixed(1).replace(".", ",");
+    const rect4 = (r: DOMRect) =>
+      `gauche ${une(r.left)} · haut ${une(r.top)} · largeur ${une(r.width)} · hauteur ${une(r.height)}`;
+    const peint = (el: Element) => {
+      const c = getComputedStyle(el).backgroundColor;
+      return c && c !== "rgba(0, 0, 0, 0)" && c !== "transparent" ? c : null;
+    };
+    let derniereSignature = "";
+    let calme = 0;
+
+    const mesurer = () => {
+      //  LA BOÎTE DE LA PHOTO DE LA FENÊTRE — les mêmes repères que la
+      //  fenêtre elle-même : fond noir + format 4/5 (FenetreFiche).
+      const boiteNoire = [...document.querySelectorAll("div")].find(
+        (d) =>
+          String(d.className).includes("bg-black") &&
+          String(d.className).includes("aspect-[4/5]")
+      );
+      if (!boiteNoire) return; // pas de fenêtre superposée : rien à mesurer
+      const colonne =
+        boiteNoire.querySelector('[data-role^="colonne"][aria-hidden="false"]') ??
+        boiteNoire.querySelector('[data-role="colonne 0"]');
+      const img = colonne?.querySelector("img");
+      const cadre = boiteNoire.querySelector('[data-role="cadre"]');
+      const enveloppe = boiteNoire.parentElement;
+      if (!colonne || !img || !cadre || !enveloppe) {
+        noter("MESURE DU LISERÉ · chaîne INCOMPLÈTE : " +
+          `colonne ${colonne ? "oui" : "NON"} · image ${img ? "oui" : "NON"} · cadre ${cadre ? "oui" : "NON"}`);
+        return;
+      }
+      const b = boiteNoire.getBoundingClientRect();
+      const m = img.getBoundingClientRect();
+      const signature = [innerWidth, innerHeight, Math.round(b.width), Math.round(m.left * 10)].join("|");
+      if (signature === derniereSignature) return;
+      derniereSignature = signature;
+
+      const zoomProbable = Math.round((window.outerWidth / window.innerWidth) * 100);
+      noter(
+        `MESURE DU LISERÉ · fenêtre du navigateur : ${innerWidth} × ${innerHeight} · ` +
+          `devicePixelRatio ${une(window.devicePixelRatio)} · zoom probable ≈ ${zoomProbable} %` +
+          (Number.isInteger(window.devicePixelRatio) ? "" : " · dpr NON ENTIER : zoom actif probable")
+      );
+      noter(`MESURE DU LISERÉ · image (peinte) : ${rect4(m)}`);
+      noter(`MESURE DU LISERÉ · colonne du carrousel : ${rect4(colonne.getBoundingClientRect())}`);
+      noter(`MESURE DU LISERÉ · cadre du carrousel : ${rect4(cadre.getBoundingClientRect())}`);
+      noter(`MESURE DU LISERÉ · boîte de la photo (fond noir) : ${rect4(b)}`);
+      noter(`MESURE DU LISERÉ · enveloppe de la fenêtre : ${rect4(enveloppe.getBoundingClientRect())}`);
+      //  Les fonds peints entre l'image et l'enveloppe : chacun peut
+      //  être la bande visible.
+      const fonds: string[] = [];
+      let p: Element | null = img.parentElement;
+      while (p && p !== enveloppe.parentElement) {
+        const fond = peint(p);
+        if (fond) fonds.push(`${p.tagName.toLowerCase()}(${String(p.className).split(" ")[0] || "sans classe"}) → ${fond}`);
+        p = p.parentElement;
+      }
+      noter(`MESURE DU LISERÉ · fonds peints dans la chaîne : ${fonds.length ? fonds.join(" · ") : "AUCUN"}`);
+      const ecarts = {
+        HAUT: m.top - b.top,
+        GAUCHE: m.left - b.left,
+        DROITE: b.right - m.right,
+        BAS: b.bottom - m.bottom,
+      };
+      noter(
+        "MESURE DU LISERÉ · écart image/boîte (positif = fond visible, négatif = bord couvert) — " +
+          Object.entries(ecarts).map(([n, v]) => `${n} : ${une(v)} px`).join(" · ")
+      );
+      const decouverts = Object.entries(ecarts).filter(([, v]) => v > 0.05);
+      if (decouverts.length === 0) {
+        noter("MESURE DU LISERÉ · LE COUPABLE : aucun écart positif image/boîte — si une bande reste VISIBLE, elle est HORS de cette boîte (lis la ligne enveloppe/fonds peints)");
+      } else {
+        for (const [bord] of decouverts) {
+          //  Le premier ancêtre PEINT dont la boîte s'étend au-delà de
+          //  l'image sur ce bord : c'est son fond qu'on voit.
+          let coupable = "la page derrière (aucun fond dans la chaîne)";
+          let q: Element | null = img.parentElement;
+          while (q && q !== enveloppe.parentElement) {
+            const fond = peint(q);
+            if (fond) {
+              const r = q.getBoundingClientRect();
+              const depasse =
+                bord === "HAUT" ? r.top < m.top - 0.05 :
+                bord === "GAUCHE" ? r.left < m.left - 0.05 :
+                bord === "DROITE" ? r.right > m.right + 0.05 :
+                r.bottom > m.bottom + 0.05;
+              if (depasse) {
+                coupable = `${q.tagName.toLowerCase()}(${String(q.className).split(" ")[0] || "sans classe"}) · fond ${fond}`;
+                break;
+              }
+            }
+            q = q.parentElement;
+          }
+          noter(`MESURE DU LISERÉ · LE COUPABLE (bord ${bord}) : ${coupable}`);
+        }
+      }
+      const cs = getComputedStyle(img);
+      const scaleLu = (cs as CSSStyleDeclaration & { scale?: string }).scale ?? "(illisible)";
+      const classePresente = String(img.className).includes("scale-[1.01]");
+      const applique = scaleLu === "1.01";
+      noter(
+        `MESURE DU LISERÉ · agrandissement : scale calculé « ${scaleLu} » · transform « ${cs.transform} » · ` +
+          `classe scale-[1.01] dans l'attribut : ${classePresente ? "oui" : "NON"}` +
+          (applique
+            ? " — APPLIQUÉ"
+            : " — ⚠️ L'AGRANDISSEMENT 1,01 N'EST PAS APPLIQUÉ : c'est déjà le coupable (classe absente, écrasée, ou purgée du CSS)")
+      );
+      noter(
+        `MESURE DU LISERÉ · styles de l'image : object-fit ${cs.objectFit} · object-position ${cs.objectPosition} · ` +
+          `padding ${cs.padding} · bordure ${cs.borderWidth} · arrondi ${cs.borderRadius} · marge ${cs.margin}`
+      );
+    };
+
+    //  L'APPARITION de la fenêtre : guettée toutes les 500 ms ; la
+    //  mesure part deux images après (la peinture est faite). Le
+    //  REDIMENSIONNEMENT : 400 ms de calme, puis re-mesure — la
+    //  signature (taille + boîte) évite toute ligne en double.
+    const guet = window.setInterval(() => {
+      requestAnimationFrame(() => requestAnimationFrame(mesurer));
+    }, 500);
+    const auRedimensionnement = () => {
+      window.clearTimeout(calme);
+      calme = window.setTimeout(() => {
+        derniereSignature = "";
+        requestAnimationFrame(() => requestAnimationFrame(mesurer));
+      }, 400);
+    };
+    window.addEventListener("resize", auRedimensionnement);
+    return () => {
+      window.clearInterval(guet);
+      window.clearTimeout(calme);
+      window.removeEventListener("resize", auRedimensionnement);
+    };
+  }, [armee]);
+
+  /**
    * 1. L'ENREGISTREMENT — UNE SECTION PAR PAGE, ET NON PAR DOCUMENT.
    * ⚠️ C'ÉTAIT LE DÉFAUT : le relevé du propriétaire ne contenait
    * qu'une seule page, alors qu'il avait ouvert une fiche et fait deux
