@@ -76,8 +76,18 @@ let departY = 0;
 let finDeLancee = 0;
 /** Le moment où la lancée a été armée, pour le plafond absolu. */
 let departDeLancee = 0;
+/** §3 (nº 428) — le dernier événement de TOUCHER, pour démasquer les
+    clics de souris SIMULÉS : après un tap, le téléphone rejoue le
+    toucher en événements de souris (mousedown/click, quelques
+    centaines de millisecondes plus tard). Le relevé Safari de la
+    nº 428 montre une garde « levée (l'utilisateur a repris la
+    main) » qu'aucun doigt n'explique : c'est ce fantôme-là. Un
+    mousedown qui suit un toucher de moins de 1200 ms n'est PAS un
+    geste neuf — il est ignoré. */
+let dernierToucherA = -10_000;
+const FANTOME_SOURIS_MS = 1200;
 
-const abonnesAuDebut = new Set<() => void>();
+const abonnesAuDebut = new Set<(source: string) => void>();
 
 /** L'APPAREIL A-T-IL UN ÉCRAN TACTILE ? Décidé une fois. Sur un écran
     sans toucher, le principe ne s'applique PAS : l'ascenseur de la
@@ -108,16 +118,22 @@ export function gesteDeDefilementPlausible(): boolean {
  * touche de défilement, un bouton de souris — appeler `rappel`. Rend
  * le désabonnement. C'est la levée de la garde de position : « la
  * garde se lève au premier vrai toucher » (nº 427).
+ * §3 (nº 428) — le rappel reçoit la SOURCE du geste (« doigt posé »,
+ * « molette », « touche de défilement », « souris ») : la ligne de
+ * levée la nomme, et le prochain relevé dira si une levée était
+ * légitime ou déguisée.
  */
-export function auDebutDuGeste(rappel: () => void): () => void {
+export function auDebutDuGeste(
+  rappel: (source: string) => void
+): () => void {
   abonnesAuDebut.add(rappel);
   return () => {
     abonnesAuDebut.delete(rappel);
   };
 }
 
-function annoncerLeDebut(): void {
-  for (const rappel of abonnesAuDebut) rappel();
+function annoncerLeDebut(source: string): void {
+  for (const rappel of abonnesAuDebut) rappel(source);
 }
 
 function armerLaLancee(): void {
@@ -134,12 +150,13 @@ if (typeof window !== "undefined") {
     (evenement: TouchEvent) => {
       doigtPose = true;
       doigtABouge = false;
+      dernierToucherA = performance.now();
       const premier = evenement.touches[0];
       if (premier) {
         departX = premier.clientX;
         departY = premier.clientY;
       }
-      annoncerLeDebut();
+      annoncerLeDebut("doigt posé");
     },
     { capture: true, passive: true }
   );
@@ -159,6 +176,7 @@ if (typeof window !== "undefined") {
     { capture: true, passive: true }
   );
   const finDuToucher = (evenement: TouchEvent) => {
+    dernierToucherA = performance.now();
     //  Tant qu'un doigt reste posé, le geste continue.
     if (evenement.touches.length > 0) return;
     //  Seul un toucher qui a BOUGÉ laisse une lancée ; un tap, rien.
@@ -180,16 +198,22 @@ if (typeof window !== "undefined") {
     "wheel",
     () => {
       armerLaLancee();
-      annoncerLeDebut();
+      annoncerLeDebut("molette");
     },
     { capture: true, passive: true }
   );
   //  Le clic : aucune lancée (un clic ne défile pas), mais c'est bien
   //  l'utilisateur qui a la main — la garde de position doit s'y lever.
+  //  §3 (nº 428) — SAUF LE FANTÔME : après un tap, le téléphone rejoue
+  //  le toucher en événements de souris. Ce mousedown-là n'est pas un
+  //  geste neuf (le touchstart du tap a déjà parlé) : il est ignoré —
+  //  sans quoi il levait la garde de position quelques centaines de
+  //  millisecondes APRÈS la pose qu'elle venait de prendre en charge.
   window.addEventListener(
     "mousedown",
     () => {
-      annoncerLeDebut();
+      if (performance.now() - dernierToucherA < FANTOME_SOURIS_MS) return;
+      annoncerLeDebut("souris");
     },
     { capture: true, passive: true }
   );
@@ -198,7 +222,7 @@ if (typeof window !== "undefined") {
     (evenement: KeyboardEvent) => {
       if (!TOUCHES_DE_DEFILEMENT.has(evenement.key)) return;
       armerLaLancee();
-      annoncerLeDebut();
+      annoncerLeDebut("touche de défilement");
     },
     { capture: true, passive: true }
   );

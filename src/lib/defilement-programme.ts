@@ -193,11 +193,13 @@ function poserLaVeilleuse(): void {
   veilleusePosee = true;
   //  « La garde se lève au premier vrai toucher » — et il n'a même pas
   //  besoin de faire défiler : dès que l'utilisateur a la main, la
-  //  position lui appartient.
-  auDebutDuGeste(() => {
+  //  position lui appartient. §3 (nº 428) — la SOURCE du geste est
+  //  nommée dans la ligne : le relevé dira si une levée était légitime
+  //  (doigt posé, molette) ou n'aurait pas dû exister.
+  auDebutDuGeste((source) => {
     if (!garde) return;
     noter(
-      `GARDE DE POSITION · levée (l'utilisateur a repris la main) · ` +
+      `GARDE DE POSITION · levée (geste : ${source}) · ` +
         `elle tenait ${garde.position} pour « ${garde.signature} »`
     );
     garde = null;

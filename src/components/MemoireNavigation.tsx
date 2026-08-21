@@ -9,6 +9,7 @@ import {
   oublierRestaurationPosition,
   marquerHydratation,
   memoriserDefilement,
+  noterDepartOnglet,
   noterPageOnglet,
   noterPageVisitee,
   purgerDefilementsAnciens,
@@ -400,8 +401,21 @@ export function MemoireNavigation() {
       oublierRestaurationPosition();
     };
 
+    /*  §1 (nº 428) — AU DÉPART DU DOCUMENT, LA MÉMOIRE D'ONGLET EST
+        MISE À L'HEURE (adresse affichée + instant). C'est ce qui
+        permet au script d'avant-peinture de RÉPARER un repli de
+        navigation du routeur : quand une navigation douce échoue,
+        Next recharge le document — et le relevé de la nº 428 a montré
+        qu'il peut partir sur « / » NU, les critères et la page perdus
+        en route. Le document suivant lit cette note et rend l'adresse
+        complète. */
+    const auDepartDuDocument = () => {
+      noterDepartOnglet();
+    };
+
     window.addEventListener("popstate", marquerTraversee);
     window.addEventListener("scroll", memoriserPosition, { passive: true });
+    window.addEventListener("pagehide", auDepartDuDocument);
     document.addEventListener("click", auDepart, true);
     for (const geste of ["touchstart", "wheel", "keydown"] as const) {
       window.addEventListener(geste, auGeste, { passive: true });
@@ -409,6 +423,7 @@ export function MemoireNavigation() {
     return () => {
       window.removeEventListener("popstate", marquerTraversee);
       window.removeEventListener("scroll", memoriserPosition);
+      window.removeEventListener("pagehide", auDepartDuDocument);
       document.removeEventListener("click", auDepart, true);
       for (const geste of ["touchstart", "wheel", "keydown"] as const) {
         window.removeEventListener(geste, auGeste);

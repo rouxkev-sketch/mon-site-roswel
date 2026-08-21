@@ -12,9 +12,20 @@ import {
   AGE_POSITION_MS,
   CLE_JOURNAL,
   CLE_ONGLET,
+  CLE_RATTRAPAGE_FILET,
   CLE_RESTAURER,
   PREFIXE_DEFILEMENT,
 } from "@/lib/navigation-session";
+//  §2 (nº 428) — le filet de réparation du repli écrit sa ligne au
+//  journal de la SONDE (sonde-bascule) : mêmes clés, même format —
+//  aucune copie de la règle ici. ⚠️ Les clés viennent du module NU
+//  (lib/cles-sonde-bascule), pas de journal-bascule : « use client »
+//  n'expose au serveur que des références opaques, et l'interpolation
+//  rendait « undefined » (mesuré sur le HTML prérendu de cette passe).
+import {
+  CLE_ARMEE as CLE_ARMEE_SONDE,
+  CLE_JOURNAL as CLE_JOURNAL_SONDE,
+} from "@/lib/cles-sonde-bascule";
 //  §1 (nº 335) — la marque « nais avec la rangée repliée », écrite une
 //  seule fois (lib/reserve-barre) et lue par la barre à sa naissance.
 import {
@@ -138,6 +149,10 @@ export function scriptAvantPeinture(): string {
   const restaurer = JSON.stringify(CLE_RESTAURER);
   const prefixe = JSON.stringify(PREFIXE_DEFILEMENT);
   const fond = JSON.stringify(COULEURS_SOMBRE.fond);
+  //  §2 (nº 428) — le filet de réparation du repli de navigation.
+  const rattrapage = JSON.stringify(CLE_RATTRAPAGE_FILET);
+  const armeeSonde = JSON.stringify(CLE_ARMEE_SONDE);
+  const journalSonde = JSON.stringify(CLE_JOURNAL_SONDE);
 
   return `(function(){
 var r=document.documentElement;
@@ -149,7 +164,7 @@ r.dataset.appareil=matchMedia("(pointer: coarse)").matches?"mobile":"web";
    avec un vieux), la page servie est PÉRIMÉE — un cache la retient —
    et aucun des blocs récents n'y a jamais été. À INCRÉMENTER à chaque
    passe qui modifie ce script. */
-r.dataset.versionScript="427";
+r.dataset.versionScript="428";
 r.style.backgroundColor=${fond};
 /* nº 357 — LE COMPTE, DIT AVANT LA PREMIÈRE PEINTURE. L'accueil est
    prérendu : le serveur ne connaît plus la session, et c'est CE
@@ -243,8 +258,37 @@ var derniereOnglet=memoireOnglet.derniere||null;
 var visites=jour(${journal},localStorage);
 if(visites&&maintenant-(visites.date||0)>age)visites=null;
 var vers=null;
+/* §2 (nº 428) — la marque du rattrapage du filet (RetourGaranti) : ce
+   départ vers l'accueil nu était VOULU. Consommée ICI, une fois, quel
+   que soit le chemin : elle ne concerne que CE document-ci. */
+var marqueRattrapage=null;
+try{marqueRattrapage=sessionStorage.getItem(${rattrapage});if(marqueRattrapage)sessionStorage.removeItem(${rattrapage})}catch(e){}
 if(nav==="reload"&&derniereOnglet&&derniereOnglet!==adresse){vers=derniereOnglet}
 else if(nav==="navigate"&&!derniereOnglet&&adresse==="/"&&visites&&visites.courante&&visites.courante!=="/"&&(matchMedia("(display-mode: standalone)").matches||navigator.standalone===true)){vers=visites.courante}
+/* ██ §2 (nº 428) — LE FILET DE RÉPARATION DU REPLI DE NAVIGATION ██
+   Le relevé (Chrome iPhone ET Safari) : « Voir plus » part PARFOIS en
+   NAVIGATION DE DOCUMENT — le repli du routeur quand la navigation
+   douce échoue (deux désaccords d'arbre d'affilée ; la réécriture de
+   « / » vers le jumeau les fabrique) — et ce repli navigue vers
+   l'adresse canonique INTERNE du routeur, restée « / » NU : critères,
+   page et mélange perdus en route. ICI, avant toute peinture : ce
+   document naît en « navigate » sur une adresse sans AUCUN paramètre
+   de recherche, alors que la même session vient de quitter (< 8 s,
+   pagehide noté par MemoireNavigation) une adresse de « / » qui en
+   portait — c'est ce repli : on rend l'adresse complète. Une adresse
+   tapée à la main ne tombe pas dans la fenêtre des 8 secondes ; le
+   rattrapage du filet a sa marque (ci-dessus) et passe au travers.
+   La ligne s'écrit au journal de la sonde : aucun repli muet. */
+else if(nav==="navigate"&&location.pathname==="/"&&!marqueRattrapage&&derniereOnglet&&derniereOnglet.indexOf("/?")===0&&memoireOnglet.quand&&maintenant-memoireOnglet.quand<8000){
+var pn=new URLSearchParams(location.search);var nue=true;
+pn.forEach(function(v,n){if(!(${conditionDeReglagePourLeScript("n")}))nue=false});
+var pd=new URLSearchParams(derniereOnglet.slice(derniereOnglet.indexOf("?")+1));var pleine=false;
+pd.forEach(function(v,n){if(!(${conditionDeReglagePourLeScript("n")}))pleine=true});
+if(nue&&pleine){vers=derniereOnglet;
+try{if(sessionStorage.getItem(${armeeSonde})==="1"){var jr=[];
+try{jr=JSON.parse(sessionStorage.getItem(${journalSonde})||"[]")}catch(e2){jr=[]}
+jr.push({t:0,texte:"⚠️ REPLI DOCUMENT RÉPARÉ · le routeur a rechargé sur "+adresse+" (navigation de document, les critères perdus en route) · l'adresse complète est rendue : "+vers});
+sessionStorage.setItem(${journalSonde},JSON.stringify(jr))}}catch(e3){}}}
 if(vers){
 try{sessionStorage.setItem(${restaurer},vers)}catch(e){}
 r.style.visibility="hidden";

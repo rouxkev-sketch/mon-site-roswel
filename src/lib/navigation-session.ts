@@ -667,7 +667,25 @@ export function purgerDefilementsAnciens() {
 
 export const CLE_ONGLET = "roswel:onglet";
 
-type EtatOnglet = { derniere: string | null; pages: number };
+/** §2 (nº 428) — LA MARQUE DU RATTRAPAGE DU FILET : posée par
+    RetourGaranti juste avant son `location.replace("/")`, lue et
+    consommée par le script d'avant-peinture. Sans elle, le filet de
+    réparation du repli (voir script-avant-peinture, bloc 3) prendrait
+    ce départ VOULU vers l'accueil nu pour un repli de navigation qui
+    a perdu ses critères, et renverrait l'utilisateur là d'où le
+    rattrapage venait précisément de le tirer. */
+export const CLE_RATTRAPAGE_FILET = "roswel:rattrapage-filet";
+
+type EtatOnglet = {
+  derniere: string | null;
+  pages: number;
+  /** §1 (nº 428) — l'instant du DERNIER DÉPART de page (pagehide),
+      écrit par `noterDepartOnglet`. C'est lui qui permet au filet de
+      réparation de distinguer un repli de navigation (le document
+      suivant naît dans la seconde) d'une adresse tapée à la main
+      (absent des vieilles mémoires : le filet ne joue alors pas). */
+  quand?: number;
+};
 
 function lireOnglet(): EtatOnglet {
   try {
@@ -690,6 +708,41 @@ export function noterPageOnglet(url: string) {
     );
   } catch {
     // sans mémoire d'onglet, le retour sera reconstruit — sans danger
+  }
+}
+
+/**
+ * §1 (nº 428) — AU DÉPART DU DOCUMENT (pagehide), LA MÉMOIRE D'ONGLET
+ * EST MISE À L'HEURE : l'adresse VRAIMENT affichée à cet instant, et
+ * l'instant lui-même. C'est la matière première du filet de réparation
+ * du script d'avant-peinture : quand un repli de navigation du routeur
+ * (une navigation de document née d'un échec de la douce) atterrit sur
+ * « / » NU en ayant perdu les critères en route, le document suivant
+ * retrouve ici l'adresse complète qui vient d'être quittée — et l'âge
+ * de la note dit si c'est bien un repli (quelques centaines de
+ * millisecondes) ou une visite sans rapport.
+ * ⚠️ UNE FENÊTRE DE FICHE N'EST PAS UNE PAGE (même règle que
+ * `noterPageOnglet`) : son adresse est celle de la fiche posée
+ * par-dessus la mosaïque — on ne la note pas, on garde la dernière
+ * vraie page et on ne met à jour que l'instant.
+ */
+export function noterDepartOnglet() {
+  const etat = lireOnglet();
+  const fenetre = Boolean(
+    (window.history.state as { fenetreFiche?: boolean } | null)?.fenetreFiche
+  );
+  const adresse = window.location.pathname + window.location.search;
+  try {
+    sessionStorage.setItem(
+      CLE_ONGLET,
+      JSON.stringify({
+        derniere: fenetre ? etat.derniere : adresse,
+        pages: etat.pages,
+        quand: Date.now(),
+      })
+    );
+  } catch {
+    // sans mémoire d'onglet, le filet de réparation ne jouera pas
   }
 }
 

@@ -48,8 +48,13 @@ const LIGNES_GARDEES = 400;
  * sans quoi la sonde s'éteindrait au premier lien, c'est-à-dire au
  * moment précis où l'on veut la lire.
  */
-const CLE_JOURNAL = "yokofolio:sonde-bascule:journal";
-const CLE_ARMEE = "yokofolio:sonde-bascule";
+//  §2 (nº 428) — les deux clés vivent dans lib/cles-sonde-bascule, un
+//  module SANS « use client » : le script d'avant-peinture (généré au
+//  serveur) doit les interpoler pour écrire sa ligne de repli réparé,
+//  et un module client n'expose au serveur que des références opaques
+//  (l'interpolation rendait « undefined », mesuré sur le HTML
+//  prérendu). Ce module-ci reste l'unique écrivain du journal.
+import { CLE_ARMEE, CLE_JOURNAL } from "@/lib/cles-sonde-bascule";
 
 const journal: Ligne[] = [];
 const abonnes = new Set<() => void>();

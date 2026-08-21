@@ -13,6 +13,9 @@ import {
   noterDansLeJournal,
   tracesAvantPeinture,
 } from "@/lib/journal-historique";
+//  §2 (nº 428) — la marque qui dit au filet de réparation du script
+//  d'avant-peinture : « ce départ vers l'accueil nu est VOULU ».
+import { CLE_RATTRAPAGE_FILET } from "@/lib/navigation-session";
 import { mecanismeCoupe } from "@/lib/variantes-essai";
 
 /**
@@ -250,7 +253,18 @@ export function RetourGaranti() {
           qu'on vient de provoquer. Le remplacement du navigateur, lui,
           aboutit toujours, et l'étape consommée disparaît proprement.
           ⚠️ AUCUNE RESTITUTION DE POSITION DEMANDÉE : l'accueil s'ouvre
-          EN HAUT (nº 332-§2), c'est un écran neuf. */
+          EN HAUT (nº 332-§2), c'est un écran neuf.
+          §2 (nº 428) — LA MARQUE, D'ABORD : ce départ vers « / » nu est
+          VOULU. Sans elle, le filet de réparation du script
+          d'avant-peinture y verrait un repli de navigation qui a perdu
+          ses critères, et renverrait l'utilisateur là d'où le
+          rattrapage vient précisément de le tirer. */
+      try {
+        sessionStorage.setItem(CLE_RATTRAPAGE_FILET, "1");
+      } catch {
+        //  Sans mémoire d'onglet, le filet de réparation ne joue pas
+        //  non plus : aucune interférence possible.
+      }
       window.location.replace("/");
     }
 
