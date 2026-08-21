@@ -1059,6 +1059,10 @@ export function EnTeteTatouage({
                 href="/devenir-tatoueur"
                 aria-label={libelleDeconnecte}
                 title={libelleDeconnecte}
+                //  §1 (nº 439) — un ACCÈS DÉCONNECTÉ au compte : pendant
+                //  la phase muette d'un CONNECTÉ, il s'efface au profit
+                //  de la réserve neutre (voir data-reserve-compte).
+                data-acces-compte=""
                 style={{ height: HAUTEUR_ACTIONS, width: HAUTEUR_ACTIONS }}
                 className={`sm:hidden flex items-center justify-center rounded-full
                            transition-colors ${ETATS_ROND_BARRE}
@@ -1154,6 +1158,12 @@ export function EnTeteTatouage({
                 href="/devenir-tatoueur"
                 aria-label={libelleDeconnecte}
                 data-bouton-connexion=""
+                //  §1 (nº 439) — l'autre ACCÈS DÉCONNECTÉ (le badge du
+                //  web) : même effacement pendant la phase muette d'un
+                //  connecté — c'est LUI qui faisait la différence de
+                //  largeur (capsule px-5, ≈ 137 px, contre un rond de
+                //  40 px après l'hydratation).
+                data-acces-compte=""
                 style={{ height: HAUTEUR_ACTIONS }}
                 className="hidden sm:flex rounded-full px-5 items-center
                            bg-primaire border-2 border-primaire
@@ -1186,6 +1196,54 @@ export function EnTeteTatouage({
                   </span>
                 </span>
               </Link>
+
+              {/**
+                * ██ §1 (nº 439) — LA RÉSERVE DU COMPTE CONNECTÉ ██
+                * ------------------------------------------------------
+                * LE DÉFAUT (relevé du propriétaire, version ordinateur) :
+                * clic sur le logo → « / » prérendu → pendant le
+                * chargement, le bloc central de la barre est calé À
+                * GAUCHE, puis « reprend sa place ».
+                * LE COUPABLE, PROUVÉ : le rond « Mon espace »
+                * (MenuEspace) naît SEULEMENT à l'hydratation — la
+                * branche `connecte && utilisateur` ci-dessus lit
+                * useUtilisateur(), dont l'instantané du prérendu est
+                * « personne, pas prêt » (lib/use-utilisateur : le
+                * premier rendu client lit le cookie et bascule tout
+                * d'un coup). Pendant la phase muette, l'amorti nº 357
+                * cache la zone d'un `visibility: hidden` — aucun état
+                * faux peint (nº 203) — mais l'empreinte gardée est
+                * celle du DÉCONNECTÉ : globe 40 + écart 12 + badge
+                * « Se connecter » (capsule px-5 + contour 2 px,
+                * ≈ 137 px) ≈ 189 px — le chiffre écrit plus haut dans
+                * ce fichier (« 189 (langue et compte) », bloc nº 248).
+                * L'état connecté final : fanion 40 + écart 12 + rond
+                * « Mon espace » 40 = 92 px. Le bloc central, centré
+                * par ses deux marges automatiques entre deux côtés
+                * flex-none, se recentrait donc d'environ 48 px vers la
+                * droite quand MenuEspace remplaçait le badge.
+                * LE REMÈDE : pendant la phase muette d'un CONNECTÉ
+                * (html[data-compte="connecte"], posé avant la première
+                * peinture), le CSS (globals.css, bloc nº 357/439)
+                * efface les deux accès déconnectés (data-acces-compte)
+                * et affiche CET espace neutre à la place — le gabarit
+                * exact du rond « Mon espace », 40 × 40. La zone garde
+                * la même largeur au pixel avant et après
+                * l'hydratation : le bloc central ne bouge plus.
+                * ⚠️ NEUTRE au sens de la règle nº 203 : un espace vide,
+                * ni faux bouton ni faux avatar — et la zone entière
+                * reste sous le `visibility: hidden` de la nº 357, rien
+                * n'est peint du tout.
+                * ⚠️ HORS phase muette-connectée, il reste `hidden` :
+                * les visiteurs nouveaux et revenants gardent leur
+                * barre à l'identique, au caractère près.
+                */}
+              <span
+                aria-hidden="true"
+                data-reserve-compte=""
+                style={{ height: HAUTEUR_ACTIONS, width: HAUTEUR_ACTIONS }}
+                className="hidden shrink-0"
+              />
             </>
           )}
         </nav>

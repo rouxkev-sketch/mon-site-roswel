@@ -1290,6 +1290,31 @@ html[data-compte="revenant"]
 html[data-compte="connecte"] [data-zone-compte][data-session="muette"] {
   visibility: hidden;
 }
+/* nº 439 — L'EMPREINTE DE LA RÉSERVE ÉTAIT À LA MAUVAISE TAILLE POUR
+   UN CONNECTÉ. Le `visibility: hidden` ci-dessus ne peint rien (la
+   promesse nº 203 tient), mais il gardait l'empreinte du DÉCONNECTÉ :
+   globe 40 + écart 12 + badge « Se connecter » ≈ 189 px. À
+   l'hydratation, fanion + rond « Mon espace » (92 px) la remplaçaient,
+   et le bloc central de la barre — centré par deux marges automatiques
+   entre deux côtés flex-none — glissait d'environ 48 px : calé à
+   gauche pendant le chargement, « reprenant sa place » ensuite.
+   PENDANT LA PHASE MUETTE D'UN CONNECTÉ, ON ÉCHANGE DONC L'EMPREINTE :
+   les deux accès déconnectés au compte s'effacent, et l'espace NEUTRE
+   de 40 px (le gabarit exact du rond « Mon espace », posé dans
+   EnTeteTatouage) prend leur place. Largeur de zone identique au
+   pixel avant et après l'hydratation : le bloc central ne bouge plus.
+   Ces deux règles ne jouent QUE sous [data-session="muette"] : dès que
+   la session est prête, la barre est exactement celle d'avant. */
+html[data-compte="connecte"]
+  [data-zone-compte][data-session="muette"]
+  [data-acces-compte] {
+  display: none;
+}
+html[data-compte="connecte"]
+  [data-zone-compte][data-session="muette"]
+  [data-reserve-compte] {
+  display: block;
+}
 
 /* ==================================================================
    nº 357 — LA GARDE DES RANGÉES DE L'ACCUEIL PRÉRENDU
