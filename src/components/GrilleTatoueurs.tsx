@@ -34,6 +34,10 @@ import type { Tatoueur } from "@/lib/tatoueurs";
 //  rien.
 import { observateurMort, observateurNe } from "@/lib/journal-cartes";
 import { mecanismeCoupe } from "@/lib/variantes-essai";
+//  §1 (nº 438) — la fermeture passe par history.back() : elle se
+//  déclare, pour que le rattrapage du filet ne la prenne jamais pour
+//  un atterrissage accidentel au fond de la pile.
+import { annoncerRepriseDuSite } from "@/lib/navigation-session";
 
 /** UN PIXEL TRANSPARENT — ce qu'une image lointaine porte à la place
     de sa source (nº 224-§4). Une chaîne, aucune requête réseau. */
@@ -447,6 +451,10 @@ export function GrilleTatoueurs({
    */
     if (!entreePoussee.current) return;
     entreePoussee.current = false;
+    //  §1 (nº 438) — reprise déclarée AVANT le back : le rattrapage du
+    //  filet la lit au popstate et se tait (relevé nº 438 : sans elle,
+    //  à pile saturée, fermer rechargeait le site vers l'accueil).
+    annoncerRepriseDuSite();
     window.history.back();
   }, []);
 

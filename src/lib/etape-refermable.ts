@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+//  §1 (nº 438) — la reprise différée passe par history.back() : elle
+//  se déclare, pour que le rattrapage du filet ne la prenne jamais
+//  pour un atterrissage accidentel au fond de la pile.
+import { annoncerRepriseDuSite } from "@/lib/navigation-session";
 import { mecanismeCoupe } from "@/lib/variantes-essai";
 
 /**
@@ -294,6 +298,9 @@ export function useEtapeQuiSeReferme(
           );
         };
         window.addEventListener("popstate", remettre);
+        //  §1 (nº 438) — reprise déclarée AVANT le back : le
+        //  rattrapage du filet la lit au popstate et se tait.
+        annoncerRepriseDuSite();
         window.history.back();
       }, 0);
       repriseEnAttente = { rang, minuteur };

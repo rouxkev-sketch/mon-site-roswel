@@ -15,7 +15,13 @@ import {
 } from "@/lib/journal-historique";
 //  §2 (nº 428) — la marque qui dit au filet de réparation du script
 //  d'avant-peinture : « ce départ vers l'accueil nu est VOULU ».
-import { CLE_RATTRAPAGE_FILET } from "@/lib/navigation-session";
+//  §1 (nº 438) — et la déclaration inverse, pour les REPRISES : une
+//  fermeture de fenêtre passe par `history.back()`, et ce popstate-là
+//  est VOULU — le rattrapage le lit et se tait.
+import {
+  CLE_RATTRAPAGE_FILET,
+  laRepriseVientDuSite,
+} from "@/lib/navigation-session";
 import { mecanismeCoupe } from "@/lib/variantes-essai";
 
 /**
@@ -220,6 +226,28 @@ export function RetourGaranti() {
      */
     function auRetour() {
       if (!aNous) return;
+      /*  ██ §1 (nº 438) — UNE REPRISE DU SITE NE DÉCLENCHE JAMAIS LE
+          RATTRAPAGE, ET ELLE SE LIT EN PREMIER. Fermer une fenêtre
+          superposée (croix, voile, Échap) passe par `history.back()` :
+          le popstate qui suit est VOULU, émis par le site lui-même —
+          pas un atterrissage accidentel au fond de la pile. Relevé du
+          propriétaire (nº 438, ordinateur, pile saturée à 100) : ce
+          rattrapage prenait cette fermeture pour « plus rien du site
+          derrière » et RECHARGEAIT tout le site vers l'accueil, en
+          plein geste de fermeture. La déclaration (navigation-session,
+          posée par chaque `fermer` juste avant son back) est consommée
+          ICI, avant toute autre lecture : consommée même quand la
+          marque ou la garde d'adresse auraient retenu de toute façon,
+          pour qu'un drapeau ne traîne jamais jusqu'à un vrai retour du
+          visiteur. Les retours du NAVIGATEUR ne déclarent rien : le
+          rattrapage reste entier pour ses vrais cas. */
+      if (laRepriseVientDuSite()) {
+        noterDansLeJournal(
+          "RATTRAPAGE DU FILET",
+          "RETENU — reprise déclenchée par le site lui-même (une surface se referme) : fermeture voulue, pas un atterrissage"
+        );
+        return;
+      }
       /*  ⚠️ ON NE BOUGE QUE SI LE RETOUR NOUS A DÉPASSÉS PAR LE BAS.
           Une surface refermable pose son étape AU-DESSUS de la nôtre,
           en recopiant notre marque : la refermer ramène sur une étape
@@ -275,6 +303,40 @@ export function RetourGaranti() {
       const etat = window.history.state as Record<string, unknown> | null;
       if (etat?.[MARQUE]) {
         dire("RENONCE — étape déjà posée");
+        return;
+      }
+      /*  ██ §2 (nº 438) — PAS DE CRAN PAR-DESSUS L'ÉTAPE D'UNE SURFACE ██
+          ------------------------------------------------------------
+          C'EST LE DOUBLON DU RELEVÉ nº 438. À pile SATURÉE (100, le
+          plafond du navigateur), `aucunePageDuSiteDerriere` ne sait
+          plus répondre : la pile ne grandit plus jamais, la mesure
+          (« length <= profondeur d'arrivée ») répond « rien derrière »
+          à tort. Le premier appui franc DANS la fenêtre de fiche
+          (l'effet se rejoue au changement de chemin) posait alors un
+          cran PAR-DESSUS l'étape de la fenêtre : deux entrées à la
+          même adresse pour une seule navigation — la 332-§1 violée —
+          et le journal étiquetait ce cran « fenêtre de fiche », car il
+          RECOPIE l'état courant, drapeau `fenetreFiche` compris. À la
+          fermeture, `history.back()` dépilait le cran, atterrissait
+          sur l'étape jumelle SANS marque à l'adresse même du cran, et
+          le rattrapage rechargeait tout le site.
+          OR UNE ÉTAPE DE SURFACE AU SOMMET DIT, PAR CONSTRUCTION,
+          QU'UNE PAGE DU SITE VIT DESSOUS : celle d'où la surface s'est
+          ouverte, dans ce même document — le retour la referme, il n'y
+          a rien à garantir ici. Le cran attendra une page nue (sur la
+          mosaïque, l'effet se rejoue dès la fermeture — le chemin
+          change). Les étapes des surfaces refermables recopient déjà
+          la marque du cran quand il est dessous (premier test) ; ce
+          test-ci couvre les fenêtres de fiche et de carrousel, qui
+          poussent un état neuf sans recopie. */
+      if (
+        etat?.etapeRefermable !== undefined ||
+        Boolean(etat?.fenetreFiche) ||
+        Boolean(etat?.fenetreCarrousel)
+      ) {
+        dire(
+          "RENONCE — l'étape d'une surface est au sommet (son retour la referme : une page du site vit dessous, par construction)"
+        );
         return;
       }
       //  §1 (nº 345) — LES DEUX MOITIÉS DE LA QUESTION (lib/bas-de-la-pile).

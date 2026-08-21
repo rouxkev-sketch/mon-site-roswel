@@ -709,6 +709,52 @@ export function declarerDepartVouluVersLAccueil() {
   }
 }
 
+/**
+ * §1 (nº 438) — « CETTE REPRISE VIENT DU SITE » : LA FERMETURE DÉCLARÉE
+ * ==================================================================
+ * LE DÉFAUT QU'ELLE FERME (relevé du propriétaire, nº 438 — ordinateur,
+ * pile saturée à 100) : fermer la fenêtre superposée (croix, voile,
+ * Échap) passe par `history.back()` — une reprise VOULUE, émise par le
+ * site lui-même. Le rattrapage du filet (RetourGaranti, §1 nº 423) n'y
+ * voyait qu'un popstate atterri sans marque à l'adresse du cran — la
+ * signature exacte de « plus rien du site derrière » — et rechargeait
+ * tout le site vers l'accueil, en plein geste de fermeture.
+ *
+ * LA RÈGLE — CELLE DE LA nº 429, APPLIQUÉE AUX REPRISES : tout
+ * `history.back()` émis PAR LE SITE (une fenêtre qui se referme, une
+ * étape qui se reprend) SE DÉCLARE juste avant de partir ; le
+ * rattrapage lit la déclaration au popstate, la consomme, et se tait.
+ * Une reprise du site n'est jamais un atterrissage accidentel au fond
+ * de la pile. Le rattrapage reste entier pour ses vrais cas : un
+ * retour du NAVIGATEUR (bouton, geste, clavier) ne déclare rien.
+ *
+ * ⚠️ EN MÉMOIRE DE MODULE, PAS EN MÉMOIRE D'ONGLET : la déclaration ne
+ * doit vivre que le temps du popstate qui suit — quelques
+ * millisecondes — et mourir avec le document. Deux secondes de
+ * validité au plus, consommation à la première lecture : un drapeau
+ * qui traînerait ne pourrait jamais couvrir un vrai retour du
+ * visiteur.
+ */
+let repriseDuSiteAnnonceeLe = 0;
+
+/** À appeler juste avant tout `window.history.back()` émis par le
+    site (fermeture de fenêtre superposée, reprise d'étape). Jamais un
+    frein : la reprise part exactement comme avant. */
+export function annoncerRepriseDuSite() {
+  repriseDuSiteAnnonceeLe = Date.now();
+}
+
+/** Lue et CONSOMMÉE par le rattrapage du filet (RetourGaranti) au
+    popstate : vrai si une reprise du site a été annoncée il y a moins
+    de deux secondes. La lecture éteint la déclaration. */
+export function laRepriseVientDuSite(): boolean {
+  const annoncee =
+    repriseDuSiteAnnonceeLe !== 0 &&
+    Date.now() - repriseDuSiteAnnonceeLe < 2000;
+  repriseDuSiteAnnonceeLe = 0;
+  return annoncee;
+}
+
 type EtatOnglet = {
   derniere: string | null;
   pages: number;

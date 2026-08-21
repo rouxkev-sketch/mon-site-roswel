@@ -42,6 +42,10 @@ import {
 //  `pincementRecent` avec eux : ils ne servaient qu'à ouvrir la fenêtre
 //  de carrousel depuis la photo du haut.
 import { NATURE_PAR_DEFAUT, titreDeGalerie } from "@/lib/photos-tatoueur";
+//  §1 (nº 438) — la fermeture de la fenêtre de carrousel passe par
+//  history.back() : elle se déclare, pour que le rattrapage du filet
+//  ne la prenne jamais pour un atterrissage au fond de la pile.
+import { annoncerRepriseDuSite } from "@/lib/navigation-session";
 import type { Tatoueur } from "@/lib/tatoueurs";
 import { mecanismeCoupe } from "@/lib/variantes-essai";
 
@@ -1228,7 +1232,12 @@ export function FicheTatoueur({
           serie={fenetreCarrousel.serie}
           photoInitiale={fenetreCarrousel.photo}
           positionPage={fenetreCarrousel.position}
-          surFermeture={() => window.history.back()}
+          surFermeture={() => {
+            //  §1 (nº 438) — reprise déclarée AVANT le back : le
+            //  rattrapage du filet la lit au popstate et se tait.
+            annoncerRepriseDuSite();
+            window.history.back();
+          }}
         />
       )}
     </PileFiches>
