@@ -73,27 +73,22 @@ type Rect = {
   left: number;
   width: number;
   height: number;
-  /** §4 (nº 449) — les rayons des coins de la découpe : gauche puis
-      droite. Lus sur le bloc épargné (`data-voile-rayons`, sinon son
-      border-radius calculé) : la découpe ÉPOUSE les arrondis au lieu
-      de couper à angles droits. */
+  /** §4 (nº 449, §1 nº 450) — les rayons des coins de la découpe :
+      gauche puis droite. Lus sur le border-radius CALCULÉ de chaque
+      élément épargné : la découpe ÉPOUSE les arrondis au lieu de
+      couper à angles droits. */
   rayonGauche: number;
   rayonDroit: number;
 };
 
-/** §4 (nº 449) — LES RAYONS DE LA DÉCOUPE. La rangée du moteur les
-    DÉCLARE (`data-voile-rayons="12 23"` — elle n'a pas de
-    border-radius à elle) ; un encadré ordinaire les porte déjà dans
-    son style calculé (l'encadré capsule de « Ma sélection » rend ses
-    26 px tout seul). Bornés à la demi-hauteur : un rayon ne peut pas
-    dépasser le demi-côté. */
+/** §4 (nº 449, simplifié §1 nº 450) — LES RAYONS DE LA DÉCOUPE, lus
+    sur L'ÉLÉMENT LUI-MÊME (son border-radius calculé) : l'encadré
+    rend ses 12 px, le bouton rond son 9999 — borné à la demi-hauteur,
+    donc son cercle exact. Plus aucun rayon déclaré à la main :
+    l'attribut `data-voile-rayons` de la nº 449 a disparu avec le trou
+    unique. */
 function rayonsDeLaDecoupe(bloc: HTMLElement, hauteur: number): [number, number] {
-  const declares = bloc.dataset.voileRayons;
   const plafond = hauteur / 2;
-  if (declares) {
-    const [gauche = 0, droite = 0] = declares.split(" ").map(Number);
-    return [Math.min(gauche || 0, plafond), Math.min(droite || 0, plafond)];
-  }
   const calcule = getComputedStyle(bloc);
   return [
     Math.min(parseFloat(calcule.borderTopLeftRadius) || 0, plafond),
@@ -103,7 +98,10 @@ function rayonsDeLaDecoupe(bloc: HTMLElement, hauteur: number): [number, number]
 
 export function VoileDeLaPage() {
   const [actif, setActif] = useState(false);
-  const [trou, setTrou] = useState<Rect | null>(null);
+  /** §1 (nº 450) — DES TROUS, AU PLURIEL : le voile épargne chaque
+      ÉLÉMENT marqué du périmètre, séparément (l'encadré ET le bouton
+      rond) — l'air entre eux est assombri comme le reste. */
+  const [trous, setTrous] = useState<Rect[] | null>(null);
   const empreinte = useRef("");
 
   useEffect(() => sAbonnerAuVoile(() => setActif(voilePose())), []);
@@ -122,13 +120,29 @@ export function VoileDeLaPage() {
       if (!vivante) return;
       trame = requestAnimationFrame(suivre);
       const bloc = blocEpargne();
-      const frais = bloc
-        ? (() => {
-            const boite = bloc.getBoundingClientRect();
-            //  §4 (nº 449) — les rayons voyagent avec le rectangle :
-            //  la découpe les épouse (voir les quatre coins plus bas).
+      /*  §1 (nº 450) — LES ÉLÉMENTS DU PÉRIMÈTRE, chacun son trou. Le
+          périmètre (la rangée du moteur) CONTIENT les éléments
+          marqués — l'encadré (`data-encadre-barre`) et le bouton rond
+          (`data-voile-element`) : chacun devient un trou à ses
+          propres arrondis, et l'air entre eux reste au voile. Sans
+          élément marqué dedans (« Ma sélection », dont le bloc EST
+          l'encadré), le bloc entier reste l'unique trou — le
+          comportement de la nº 449, inchangé.
+          ⚠️ L'HYPOTHÈSE GÉOMÉTRIQUE, écrite : les éléments d'un même
+          périmètre vivent sur UNE RANGÉE, disjoints horizontalement —
+          c'est le cas des deux nôtres, et le tri par gauche rend le
+          rendu par colonnes correct. */
+      let frais: Rect[] | null = null;
+      if (bloc) {
+        const marques = bloc.querySelectorAll<HTMLElement>(
+          "[data-encadre-barre], [data-voile-element]"
+        );
+        const cibles = marques.length > 0 ? Array.from(marques) : [bloc];
+        frais = cibles
+          .map((element) => {
+            const boite = element.getBoundingClientRect();
             const [rayonGauche, rayonDroit] = rayonsDeLaDecoupe(
-              bloc,
+              element,
               boite.height
             );
             return {
@@ -139,12 +153,13 @@ export function VoileDeLaPage() {
               rayonGauche,
               rayonDroit,
             };
-          })()
-        : null;
+          })
+          .sort((a, b) => a.left - b.left);
+      }
       const signature = JSON.stringify(frais);
       if (signature === empreinte.current) return;
       empreinte.current = signature;
-      setTrou(frais);
+      setTrous(frais);
     };
     trame = requestAnimationFrame(suivre);
     return () => {
@@ -221,53 +236,92 @@ export function VoileDeLaPage() {
     );
   };
 
-  //  SANS BLOC À ÉPARGNER : un seul pan, plein écran.
-  const pans = !trou
-    ? [pan("plein", { inset: 0 })]
-    : [
-        //  AU-DESSUS DU BLOC, puis EN DESSOUS, puis les deux CÔTÉS à sa
-        //  hauteur : les quatre pans se touchent sans se recouvrir, et
-        //  le bloc reste entièrement à découvert.
-        pan("haut", { top: 0, left: 0, right: 0, height: Math.max(0, trou.top) }),
-        pan("bas", { top: trou.top + trou.height, left: 0, right: 0, bottom: 0 }),
-        pan("gauche", {
-          top: trou.top,
-          left: 0,
-          width: Math.max(0, trou.left),
-          height: trou.height,
+  /**
+   * §1 (nº 450) — LE VOILE À PLUSIEURS TROUS, PAR COLONNES.
+   * ------------------------------------------------------------------
+   * Les trous d'un périmètre vivent sur une rangée, triés par gauche.
+   * L'écran est découpé en COLONNES PLEINE HAUTEUR : à gauche du
+   * premier trou, ENTRE chaque paire (l'air entre l'encadré et le
+   * bouton — assombri, désormais), à droite du dernier. Puis, dans la
+   * colonne de chaque trou : un pan au-dessus, un pan en dessous, et
+   * ses quatre coins masqués (nº 449). Les pans se touchent sans se
+   * recouvrir ; les interstices reçoivent les clics comme le reste du
+   * voile (clic extérieur = fermeture, rien de nouveau à écrire).
+   */
+  const pans: React.ReactNode[] = [];
+  if (!trous || trous.length === 0) {
+    pans.push(pan("plein", { inset: 0 }));
+  } else {
+    pans.push(
+      pan("colonne-gauche", {
+        top: 0,
+        bottom: 0,
+        left: 0,
+        width: Math.max(0, trous[0].left),
+      })
+    );
+    trous.forEach((trou, rang) => {
+      const suivant = trous[rang + 1];
+      if (suivant) {
+        pans.push(
+          pan(`interstice-${rang}`, {
+            top: 0,
+            bottom: 0,
+            left: trou.left + trou.width,
+            width: Math.max(0, suivant.left - (trou.left + trou.width)),
+          })
+        );
+      }
+      pans.push(
+        pan(`haut-${rang}`, {
+          top: 0,
+          left: trou.left,
+          width: trou.width,
+          height: Math.max(0, trou.top),
         }),
-        pan("droite", {
-          top: trou.top,
-          left: trou.left + trou.width,
-          right: 0,
-          height: trou.height,
+        pan(`bas-${rang}`, {
+          top: trou.top + trou.height,
+          bottom: 0,
+          left: trou.left,
+          width: trou.width,
         }),
-        //  §4 (nº 449) — les quatre coins, chacun masqué par SON quart
-        //  de cercle : rayon gauche pour les coins gauches, droit pour
-        //  les droits (l'encadré et le bouton rond n'ont pas le même).
-        coin("coin-hg", trou.left, trou.top, trou.rayonGauche, "100% 100%"),
+        //  nº 449 — les quatre coins du trou, chacun masqué par SON
+        //  quart de cercle : rayon gauche pour les coins gauches,
+        //  droit pour les droits.
+        coin(`coin-hg-${rang}`, trou.left, trou.top, trou.rayonGauche, "100% 100%"),
         coin(
-          "coin-hd",
+          `coin-hd-${rang}`,
           trou.left + trou.width - trou.rayonDroit,
           trou.top,
           trou.rayonDroit,
           "0% 100%"
         ),
         coin(
-          "coin-bg",
+          `coin-bg-${rang}`,
           trou.left,
           trou.top + trou.height - trou.rayonGauche,
           trou.rayonGauche,
           "100% 0%"
         ),
         coin(
-          "coin-bd",
+          `coin-bd-${rang}`,
           trou.left + trou.width - trou.rayonDroit,
           trou.top + trou.height - trou.rayonDroit,
           trou.rayonDroit,
           "0% 0%"
-        ),
-      ];
+        )
+      );
+    });
+    const dernier = trous[trous.length - 1];
+    pans.push(
+      pan("colonne-droite", {
+        top: 0,
+        bottom: 0,
+        left: dernier.left + dernier.width,
+        right: 0,
+      })
+    );
+  }
 
   return createPortal(<>{pans}</>, document.body);
 }

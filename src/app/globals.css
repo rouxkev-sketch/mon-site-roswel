@@ -296,11 +296,16 @@ html:has([data-fond="sombre"]) {
     servent plus qu'à la sonde, qui les affiche.
     ⚠️ La préfixée est déclarée EN PREMIER : Safari ne lit qu'elle. */
 :root {
-  --rw-verre: 0.75;
+  --rw-verre: 0.88;
   --rw-flou: 40px;
 }
+/*  §2 (nº 450) — LA BARRE PLUS SOMBRE : l'opacité du fond passe de
+    0.75 à 0.88 (la teinte 26,26,29 ne change pas, le flou et la
+    saturation non plus). Une seule règle pour le doigt et la souris :
+    `data-barre-fixe` est portée par les deux barres. Le réglage
+    `?verre=` (style en ligne d'EnTeteTatouage) reste le banc d'essai. */
 [data-barre-fixe] {
-  background-color: rgba(26, 26, 29, 0.75);
+  background-color: rgba(26, 26, 29, 0.88);
   -webkit-backdrop-filter: blur(40px) saturate(150%);
   backdrop-filter: blur(40px) saturate(150%);
 }

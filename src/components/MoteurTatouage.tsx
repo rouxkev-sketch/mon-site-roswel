@@ -1195,18 +1195,18 @@ export function MoteurTatouage({
           //  §2 (nº 258) — LA BARRE NE CHANGE PAS SUR LE WEB : la
           //  rangée garde sa zone de 52 px et y CENTRE l'encadré
           //  descendu à 46 (items-center, déjà là).
-          //  ██ §4 (nº 449) — LA ZONE QUE LE VOILE ÉPARGNE, LES DEUX
-          //  SENS CONFONDUS : cette rangée ENTIÈRE (l'encadré
-          //  style+localité ET le bouton rond des filtres). Avant, le
-          //  sens « menu ouvert » remontait à l'encadré seul — le
-          //  bouton rond tombait dans le pan de droite du voile et
-          //  s'assombrissait. Les rayons de la découpe sont déclarés
-          //  ici (gauche : l'encadré, 12 px depuis cette passe ;
-          //  droite : le bouton rond de 46 px, donc 23) — la rangée
-          //  n'a pas de border-radius à elle que le voile pourrait
-          //  lire.
+          //  ██ §4 (nº 449, resserré §1 nº 450) — LE PÉRIMÈTRE QUE LE
+          //  VOILE ÉPARGNE, LES TROIS SENS CONFONDUS (menu des styles,
+          //  panneau de filtres, liste de localité) : cette rangée.
+          //  §1 (nº 450) — MAIS PLUS EN UN SEUL RECTANGLE : le voile
+          //  épargne désormais CHAQUE ÉLÉMENT marqué dedans, avec ses
+          //  propres arrondis lus au style calculé — l'encadré
+          //  (data-encadre-barre, 12 px) et le bouton rond
+          //  (data-voile-element, un cercle) — et l'air entre les deux
+          //  est assombri comme le reste de la page. L'attribut
+          //  data-voile-rayons de la nº 449 est parti avec le trou
+          //  unique : plus rien à déclarer à la main.
           data-voile-epargne=""
-          data-voile-rayons="12 23"
           className="relative flex mobile:hidden items-center gap-2.5 min-h-[52px]"
         >
           {/* OUVRIR LE STYLE OU LA LOCALITÉ FERME LE PANNEAU DES
@@ -1225,6 +1225,10 @@ export function MoteurTatouage({
           <button
             ref={boutonFiltres}
             type="button"
+            //  §1 (nº 450) — un ÉLÉMENT ÉPARGNÉ PAR LE VOILE, à part
+            //  entière : la découpe épouse son cercle (le rayon est lu
+            //  au style calculé, borné à la demi-hauteur).
+            data-voile-element=""
             //  nº 364 — le même bouton ouvre et ferme ; la FERMETURE
             //  est celle qui annonce (voir `fermerLesFiltres`).
             onClick={() =>
