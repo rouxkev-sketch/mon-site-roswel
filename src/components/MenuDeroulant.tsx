@@ -146,10 +146,19 @@ export type OptionMenu = {
  * qu'on ait à y penser.
  */
 export const ROBE_CHAMP_SOMBRE = {
-  /** L'arrondi — 16 px (`rounded-2xl`). */
-  rayon: "rounded-2xl",
-  /** Le fond au repos. */
-  repos: "bg-sombre-eleve",
+  /** §3 (nº 449) — L'arrondi descend de 16 à 12 px (`rounded-xl`) :
+      un rayon un cran au-dessus de celui des badges (8 px depuis la
+      même passe), pour un ensemble homogène — champs plus grands,
+      rayon un peu plus grand. */
+  rayon: "rounded-xl",
+  /** §1 (nº 449) — Le fond au repos prend LA COULEUR DES BADGES
+      ACTIVÉS (`bg-sombre-eleve-clair`, le jeton exact de
+      `robeDuBadge` actif — BadgesCharte) : sur la page mobile, les
+      champs du style et de la localité, la piste du rayon et les
+      badges allumés se disent dans la même couleur. Repos et ouvert
+      valent désormais le même fond — le menu ouvert se dit par sa
+      liste, plus par une teinte. */
+  repos: "bg-sombre-eleve-clair",
   /** Le fond quand le champ est ouvert (menu) ou actif (saisie) : un
       cran plus clair, la règle de la charte en sombre (nº 141-2B). */
   actif: "bg-sombre-eleve-clair",

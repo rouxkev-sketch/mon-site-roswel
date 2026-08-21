@@ -68,7 +68,38 @@ const NOIRCEUR = "rgba(0, 0, 0, 0.28)";
     plaques des menus (80) : elles doivent rester claires. */
 const ETAGE = 60;
 
-type Rect = { top: number; left: number; width: number; height: number };
+type Rect = {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+  /** §4 (nº 449) — les rayons des coins de la découpe : gauche puis
+      droite. Lus sur le bloc épargné (`data-voile-rayons`, sinon son
+      border-radius calculé) : la découpe ÉPOUSE les arrondis au lieu
+      de couper à angles droits. */
+  rayonGauche: number;
+  rayonDroit: number;
+};
+
+/** §4 (nº 449) — LES RAYONS DE LA DÉCOUPE. La rangée du moteur les
+    DÉCLARE (`data-voile-rayons="12 23"` — elle n'a pas de
+    border-radius à elle) ; un encadré ordinaire les porte déjà dans
+    son style calculé (l'encadré capsule de « Ma sélection » rend ses
+    26 px tout seul). Bornés à la demi-hauteur : un rayon ne peut pas
+    dépasser le demi-côté. */
+function rayonsDeLaDecoupe(bloc: HTMLElement, hauteur: number): [number, number] {
+  const declares = bloc.dataset.voileRayons;
+  const plafond = hauteur / 2;
+  if (declares) {
+    const [gauche = 0, droite = 0] = declares.split(" ").map(Number);
+    return [Math.min(gauche || 0, plafond), Math.min(droite || 0, plafond)];
+  }
+  const calcule = getComputedStyle(bloc);
+  return [
+    Math.min(parseFloat(calcule.borderTopLeftRadius) || 0, plafond),
+    Math.min(parseFloat(calcule.borderTopRightRadius) || 0, plafond),
+  ];
+}
 
 export function VoileDeLaPage() {
   const [actif, setActif] = useState(false);
@@ -94,11 +125,19 @@ export function VoileDeLaPage() {
       const frais = bloc
         ? (() => {
             const boite = bloc.getBoundingClientRect();
+            //  §4 (nº 449) — les rayons voyagent avec le rectangle :
+            //  la découpe les épouse (voir les quatre coins plus bas).
+            const [rayonGauche, rayonDroit] = rayonsDeLaDecoupe(
+              bloc,
+              boite.height
+            );
             return {
               top: boite.top,
               left: boite.left,
               width: boite.width,
               height: boite.height,
+              rayonGauche,
+              rayonDroit,
             };
           })()
         : null;
@@ -135,6 +174,53 @@ export function VoileDeLaPage() {
     />
   );
 
+  /**
+   * ██ §4 (nº 449) — LES COINS DE LA DÉCOUPE ÉPOUSENT LES ARRONDIS ██
+   * ------------------------------------------------------------------
+   * CE QUI PRODUISAIT LES ANGLES DROITS, nommé : le trou est fait de
+   * QUATRE RECTANGLES (les pans ci-dessous), et un rectangle n'a pas
+   * de congé — aux quatre coins du bloc épargné, un petit carré
+   * restait clair au-delà de la courbe de l'encadré (et, côté droit,
+   * du bouton rond). LE REMÈDE : quatre petits carrés de la taille du
+   * rayon, posés DANS les coins du trou, peints de la même noirceur
+   * et MASQUÉS par un quart de cercle (`radial-gradient` centré sur
+   * le coin intérieur) : le voile suit exactement la courbe.
+   * `pointerEvents: none` — un clic au coin traverse vers le bloc,
+   * comme aujourd'hui (le coin est dans SA boîte).
+   */
+  const coin = (
+    cle: string,
+    x: number,
+    y: number,
+    rayon: number,
+    centre: string
+  ) => {
+    if (rayon <= 0) return null;
+    const masque = `radial-gradient(circle at ${centre}, transparent ${
+      rayon - 0.5
+    }px, black ${rayon}px)`;
+    return (
+      <div
+        key={cle}
+        data-voile-page={cle}
+        aria-hidden="true"
+        style={{
+          position: "fixed",
+          zIndex: ETAGE,
+          backgroundColor: NOIRCEUR,
+          transition: "none",
+          pointerEvents: "none",
+          top: y,
+          left: x,
+          width: rayon,
+          height: rayon,
+          WebkitMaskImage: masque,
+          maskImage: masque,
+        }}
+      />
+    );
+  };
+
   //  SANS BLOC À ÉPARGNER : un seul pan, plein écran.
   const pans = !trou
     ? [pan("plein", { inset: 0 })]
@@ -156,6 +242,31 @@ export function VoileDeLaPage() {
           right: 0,
           height: trou.height,
         }),
+        //  §4 (nº 449) — les quatre coins, chacun masqué par SON quart
+        //  de cercle : rayon gauche pour les coins gauches, droit pour
+        //  les droits (l'encadré et le bouton rond n'ont pas le même).
+        coin("coin-hg", trou.left, trou.top, trou.rayonGauche, "100% 100%"),
+        coin(
+          "coin-hd",
+          trou.left + trou.width - trou.rayonDroit,
+          trou.top,
+          trou.rayonDroit,
+          "0% 100%"
+        ),
+        coin(
+          "coin-bg",
+          trou.left,
+          trou.top + trou.height - trou.rayonGauche,
+          trou.rayonGauche,
+          "100% 0%"
+        ),
+        coin(
+          "coin-bd",
+          trou.left + trou.width - trou.rayonDroit,
+          trou.top + trou.height - trou.rayonDroit,
+          trou.rayonDroit,
+          "0% 0%"
+        ),
       ];
 
   return createPortal(<>{pans}</>, document.body);
@@ -187,8 +298,17 @@ export function useVoileDeLaPage(
     const jeton = poserLeVoile(() => {
       const surface = bloc?.current ?? null;
       if (!surface) return null;
+      /*  ██ §4 (nº 449) — LA RANGÉE MARQUÉE D'ABORD. Le moteur du web
+          marque SA rangée entière (`data-voile-epargne` — l'encadré
+          style+localité ET le bouton rond des filtres) : quel que
+          soit le sens (menu ouvert, filtres ouverts), le voile
+          épargne LA MÊME zone — le bouton rond n'est plus jamais
+          assombri par le sens « menu ». Sans rangée marquée
+          (« Ma sélection »), l'encadré, comme avant. */
       return (
-        surface.closest<HTMLElement>("[data-encadre-barre]") ?? surface
+        surface.closest<HTMLElement>("[data-voile-epargne]") ??
+        surface.closest<HTMLElement>("[data-encadre-barre]") ??
+        surface
       );
     });
     return () => retirerLeVoile(jeton);

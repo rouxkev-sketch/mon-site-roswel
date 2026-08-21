@@ -64,8 +64,13 @@ export function EncadreDeuxChamps({
           globals.css). Le champ du moteur, lui, garde le sien : on y
           tape vraiment, et la nº 175 ne bouge pas d'une ligne. */
       {...(porteBadge ? { "data-clair-fixe": "" } : { "data-clair-barre": "" })}
+      /*  §3 (nº 449) — l'encadré du moteur descend de 16 à 12 px
+          (`rounded-xl`) : le même rayon que les champs mobiles, un
+          cran au-dessus des badges (8 px) — l'ensemble est homogène.
+          L'encadré à badge de « Ma sélection » garde sa capsule : il
+          épouse le badge ovale qui glisse (nº 256-§1). */
       className={`flex items-stretch overflow-visible transition-colors ${
-        porteBadge ? "rounded-full" : "rounded-2xl"
+        porteBadge ? "rounded-full" : "rounded-xl"
       }`}
     >
       <div

@@ -106,8 +106,13 @@ export function BadgeCharte({
       //  ⚠️ LA LARGEUR NE BOUGE JAMAIS (nº 153-§1) : l'espace du POINT
       //  est réservé EN PERMANENCE, actif ou non — la mise en page est
       //  juste dès l'ouverture, rien ne bouge au clic.
+      //  §2 (nº 449) — DES ANGLES ARRONDIS, PLUS LA PILULE : le badge
+      //  devient un rectangle à coins arrondis (8 px, `rounded-lg`),
+      //  partout — page mobile, panneau web, rayon. Le POINT, lui,
+      //  reste rond. Rien d'autre ne bouge : hauteur, retraits, zone
+      //  tactile au pixel près.
       className={`relative inline-flex items-center justify-center
-                 rounded-full pl-[22px] pr-4 min-h-[38px] text-[13.5px]
+                 rounded-lg pl-[22px] pr-4 min-h-[38px] text-[13.5px]
                  font-semibold transition-colors
                  before:absolute before:-inset-y-[3px] before:inset-x-0
                  before:content-[''] ${robeDuBadge(actif, surPanneau)}`}

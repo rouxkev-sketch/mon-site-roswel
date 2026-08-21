@@ -1195,6 +1195,18 @@ export function MoteurTatouage({
           //  §2 (nº 258) — LA BARRE NE CHANGE PAS SUR LE WEB : la
           //  rangée garde sa zone de 52 px et y CENTRE l'encadré
           //  descendu à 46 (items-center, déjà là).
+          //  ██ §4 (nº 449) — LA ZONE QUE LE VOILE ÉPARGNE, LES DEUX
+          //  SENS CONFONDUS : cette rangée ENTIÈRE (l'encadré
+          //  style+localité ET le bouton rond des filtres). Avant, le
+          //  sens « menu ouvert » remontait à l'encadré seul — le
+          //  bouton rond tombait dans le pan de droite du voile et
+          //  s'assombrissait. Les rayons de la découpe sont déclarés
+          //  ici (gauche : l'encadré, 12 px depuis cette passe ;
+          //  droite : le bouton rond de 46 px, donc 23) — la rangée
+          //  n'a pas de border-radius à elle que le voile pourrait
+          //  lire.
+          data-voile-epargne=""
+          data-voile-rayons="12 23"
           className="relative flex mobile:hidden items-center gap-2.5 min-h-[52px]"
         >
           {/* OUVRIR LE STYLE OU LA LOCALITÉ FERME LE PANNEAU DES
