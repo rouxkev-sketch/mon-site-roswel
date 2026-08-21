@@ -120,7 +120,8 @@ export function PageRechercheMobile({
   onEffacer,
   children,
 }: {
-  /** La vue affichée — « recherche » ou « filtres ». */
+  /** L'onglet affiché — « tatouage » (Réalisation) ou « flash »
+      (§1, nº 447). */
   vue: VueRecherche;
   surVue: (vue: VueRecherche) => void;
   /** « Valider » : la SEULE porte qui lance la recherche. */
@@ -520,13 +521,19 @@ export function PageRechercheMobile({
              px-4 des deux côtés). Et mt-4 (§2) : elle respirait mal
              sous le titre. */}
         <div className="mt-4">
+          {/*  §1 (nº 447) — LE VA-ET-VIENT DEVIENT « Réalisation |
+               Flash » : deux onglets DE NATURE, même présentation
+               dedans (style, localité, rayon, Technique, Rendu), et
+               chacun ses critères. Les clés sont les natures du
+               catalogue — c'est l'onglet qui porte la nature de la
+               recherche validée. */}
           <OngletsLigne
-            ariaLabel="Explorer ou filtres"
+            ariaLabel="Réalisation ou flash"
             cleActive={vue}
             surChoix={(cle) => surVue(cle as VueRecherche)}
             options={[
-              { cle: "recherche", label: "Explorer" },
-              { cle: "filtres", label: "Filtres" },
+              { cle: "tatouage", label: "Réalisation" },
+              { cle: "flash", label: "Flash" },
             ]}
           />
         </div>

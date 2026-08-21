@@ -40,6 +40,7 @@ import {
   poserBrouillon,
   poserVueRecherche,
   souscrireRecherche,
+  type VueRecherche,
 } from "@/lib/recherche-mobile";
 import type { LieuTrouve } from "@/lib/geocodage";
 
@@ -250,17 +251,20 @@ export function MoteurTatouage({
    *   coup. La croix, le retour arrière et Échap les ABANDONNENT.
    *   `null` = page fermée, le moteur lit les vrais critères.
    */
-  //  LA « VUE » EST DE RETOUR AVEC LA BASCULE (nº 141) — le module
-  //  recherche-mobile ne l'avait jamais perdue.
+  //  §1 (nº 447) — LA « VUE » EST DEVENUE L'ONGLET DE NATURE
+  //  (« tatouage » | « flash »), et chaque onglet a SON brouillon.
   const {
     ouverte: pageOuverte,
     vue: vuePage,
-    brouillon,
+    brouillons,
   } = useSyncExternalStore(
     souscrireRecherche,
     lireRecherche,
     lireRechercheServeur
   );
+  /** Le brouillon de l'onglet affiché — `null` tant qu'on n'y a rien
+      posé (l'onglet part alors d'une page vierge, §1 nº 447). */
+  const brouillon = brouillons[vuePage];
   /** Le panneau des interrupteurs (web, sous le bouton rond). */
   const [filtresOuverts, setFiltresOuverts] = useState(false);
   /**
@@ -388,13 +392,16 @@ export function MoteurTatouage({
     surChangement({ ...criteres, ...suivant });
   }
 
-  /** CE QUE LA PAGE AFFICHE : son brouillon si elle est ouverte, les
-      vrais critères sinon. */
-  const enFenetre = brouillon ?? criteres;
+  /** CE QUE L'ONGLET AFFICHE : son brouillon s'il en a un, une page
+      VIERGE sinon (§1, nº 447 — l'onglet ensemencé à l'ouverture est
+      celui de la nature en cours ; l'autre part de rien, jamais des
+      critères du voisin). */
+  const enFenetre = brouillon ?? criteresComplets();
 
-  /** POSER UN CHOIX DANS LE BROUILLON — aucune recherche déclenchée. */
+  /** POSER UN CHOIX DANS LE BROUILLON DE L'ONGLET AFFICHÉ — aucune
+      recherche déclenchée, rien d'écrit chez le voisin. */
   function poserDansLeBrouillon(suivant: Partial<CritèresTatouage>) {
-    poserBrouillon({ ...(brouillon ?? criteres), ...suivant });
+    poserBrouillon({ ...(brouillon ?? criteresComplets()), ...suivant });
   }
 
   /** OUVRIR LA PAGE, toujours sur la vue « Recherche », et sur un
@@ -410,9 +417,17 @@ export function MoteurTatouage({
     fermerRecherche();
   }
 
-  /** « VALIDER » — LE SEUL GESTE QUI LANCE LA RECHERCHE sur mobile. */
+  /** « VALIDER » — LE SEUL GESTE QUI LANCE LA RECHERCHE sur mobile.
+      §1 (nº 447) — IL NE VALIDE QUE L'ONGLET AFFICHÉ, ET LA RECHERCHE
+      PORTE SA NATURE : valider depuis Réalisation cherche des
+      réalisations, depuis Flash des flashs — même sans style choisi
+      (la nature seule, « Toutes les réalisations » / « Tous les
+      flashs »). Les critères du voisin ne partent jamais. */
   function validerLaPage() {
-    const retenus = brouillon;
+    const retenus = {
+      ...(brouillon ?? criteresComplets()),
+      nature: vuePage,
+    };
     //  §1 (nº 331) — LA NAVIGATION GAGNE. « Valider » referme la page
     //  ET change d'adresse : on le dit AVANT de refermer, pour que
     //  l'étape de la page ne recule pas au moment où le routeur
@@ -425,7 +440,7 @@ export function MoteurTatouage({
     //  retour ramène à l'étape d'avant. Plus aucun drapeau, plus aucune
     //  étape posée à la main — c'est ce qui faisait grandir l'historique
     //  à chaque retour.
-    if (retenus) surChangement(retenus);
+    surChangement(retenus);
     /*  §1 (nº 334) — LE `window.scrollTo({ top: 0 })` QUI VIVAIT ICI EST
         PARTI, ET C'ÉTAIT LE TROISIÈME REMONTAGE DE LA PAGE QU'ON QUITTE.
         ------------------------------------------------------------------
@@ -444,18 +459,14 @@ export function MoteurTatouage({
         juste au-dessus, par le geste. */
   }
 
-  /** « EFFACER » N'EFFACE QUE CE QUI EST SOUS LES YEUX (règle
-      historique, de retour avec la bascule — nº 141) : sur
-      « Recherche », le style, le lieu et le rayon ; sur « Filtres »,
-      les badges. Il ne CHERCHE toujours pas : rien ne bouge tant que
-      « Valider » n'a pas été pressé. */
+  /** « EFFACER » N'EFFACE QUE L'ONGLET AFFICHÉ (§1, nº 447) : son
+      style, son lieu, son rayon ET ses filtres — l'onglet redevient
+      une page vierge. Le voisin garde tous ses choix. Il ne CHERCHE
+      toujours pas : rien ne bouge tant que « Valider » n'a pas été
+      pressé. */
   function effacerLaVue() {
-    if (vuePage === "filtres") {
-      poserDansLeBrouillon({ exclure: [] });
-      return;
-    }
     setEffacements((n) => n + 1);
-    poserBrouillon({ ...criteresComplets(), exclure: enFenetre.exclure });
+    poserBrouillon(criteresComplets());
   }
 
   /*  ⚠️ PLUS D'INTERRUPTEURS DANS LE MOTEUR (nº 139) : les filtres
@@ -827,6 +838,49 @@ export function MoteurTatouage({
           }))
     ),
   ]);
+
+  /**
+   * §1 (nº 447) — LES OPTIONS D'UN SEUL ONGLET (page mobile).
+   * ------------------------------------------------------------------
+   * Même matière que `options` ci-dessus — les catégories du
+   * catalogue, les mêmes comptes — mais SANS les portes
+   * Réalisations/Flashs : l'onglet a déjà choisi la nature, le menu
+   * liste donc DIRECTEMENT « Tous les … » puis les styles (aucun
+   * `groupe` → aucune porte, voir lib/repli-menu §2 nº 304), et la
+   * famille « Cultures du monde » garde sa porte telle quelle
+   * (`sousGroupe`, une vraie porte). Aucune option ajoutée ni
+   * retirée : ce sont celles de la catégorie, à l'identique — seules
+   * les portes de section ont disparu, avec le besoin de choisir la
+   * nature dans le menu.
+   */
+  const optionsDeLOnglet = (nature: VueRecherche) => {
+    const categorie = CATEGORIES_EXPLORER.find((c) => c.nature === nature)!;
+    return [
+      {
+        value: valeurExplorer(categorie.nature, ""),
+        label: categorie.tous,
+        compte: nombresSus
+          ? compteDeLaCategorie(comptes, categorie.nature)
+          : undefined,
+      },
+      ...entreesExplorer().flatMap((entree) =>
+        entree.genre === "style"
+          ? [
+              {
+                value: valeurExplorer(categorie.nature, entree.slug),
+                label: entree.label,
+                compte: compteStyle(categorie.nature, entree.slug),
+              },
+            ]
+          : entree.styles.map((style) => ({
+              value: valeurExplorer(categorie.nature, style.slug),
+              label: style.label,
+              sousGroupe: entree.label,
+              compte: compteStyle(categorie.nature, style.slug),
+            }))
+      ),
+    ];
+  };
 
   /** Ce que le menu porte aujourd'hui — le couple nature + style,
       encodé. Vide quand rien n'a été cherché. */
@@ -1300,10 +1354,11 @@ export function MoteurTatouage({
       )}
 
       {pageOuverte && (
-        /*  LA BASCULE EST DE RETOUR (nº 141) : « Recherche » (style,
-            localité, rayon) et « Filtres » (les deux rectangles et
-            leurs badges) — la page unique de la nº 139 était trop
-            chargée. */
+        /*  §1 (nº 447) — LES DEUX ONGLETS « Réalisation | Flash » : la
+            MÊME présentation dans chacun (style, localité, rayon, puis
+            les blocs Technique et Rendu), chacun ses critères. L'ancien
+            panneau « Filtres » séparé a disparu — ses blocs vivent
+            dans chaque onglet, en dessous du rayon. */
         <PageRechercheMobile
           vue={vuePage}
           surVue={poserVueRecherche}
@@ -1311,10 +1366,7 @@ export function MoteurTatouage({
           onAbandonner={abandonnerLaPage}
           onEffacer={effacerLaVue}
         >
-          {vuePage === "filtres" ? (
-            blocFiltres(enFenetre, poserDansLeBrouillon)
-          ) : (
-            <>
+          <>
           {/* 1. LE STYLE — le menu déroulant seul : son fantôme
               (« Explorer ») dit déjà tout, aucun titre.
               IL NE DIT PLUS RIEN À PERSONNE en s'ouvrant : il n'y a
@@ -1333,12 +1385,16 @@ export function MoteurTatouage({
                de la localité (globals.css). */}
           <div ref={blocExplorer} data-remonte-au-menu="">
             <MenuDeroulant
+              //  §1 (nº 447) — UN MENU PAR ONGLET : changer d'onglet
+              //  reconstruit le menu à neuf (état d'ouverture et replis
+              //  compris) sur LES OPTIONS DE SA NATURE.
+              key={`${id}-style-${vuePage}`}
               valeur={valeurExplorer(enFenetre.nature, enFenetre.style)}
               surChangement={(valeur) =>
                 choisirDansExplorer(valeur, poserDansLeBrouillon)
               }
               onOuvertureChange={surOuvertureExplorer}
-              options={options}
+              options={optionsDeLOnglet(vuePage)}
               //  §3 (nº 303) — le même mot qu'en web : « Style ».
               ariaLabel="Style"
               placeholder="Choose a style"
@@ -1370,7 +1426,10 @@ export function MoteurTatouage({
               // le champ est reconstruit sur « aucun lieu ». Sans
               // ça, il continuerait d'afficher « Lyon » alors que la
               // recherche est redevenue mondiale.
-              key={`${id}-fenetre-lieu-${effacements}`}
+              //  §1 (nº 447) — ET L'ONGLET AUSSI : chaque onglet a SON
+              //  lieu — changer d'onglet reconstruit le champ sur le
+              //  lieu du brouillon affiché.
+              key={`${id}-fenetre-lieu-${vuePage}-${effacements}`}
               id={`${id}-fenetre-lieu`}
               etiquette={null}
               texteIndicatif={TEXTES_TATOUAGE.ouLabel}
@@ -1393,8 +1452,15 @@ export function MoteurTatouage({
 
           {/* 3. LE RAYON — dessous, inactif sans point de départ. */}
           {curseurRayon(enFenetre, poserDansLeBrouillon)}
-            </>
-          )}
+
+          {/* 4. LES FILTRES — §1 (nº 447) : Technique puis Rendu, EN
+              DESSOUS du rayon, DANS CHAQUE ONGLET. C'est le même
+              `blocFiltres` que le panneau du web (une seule écriture,
+              nº 149-§6) ; il écrit dans le brouillon de l'onglet
+              affiché, et « Valider » emporte le tout d'un coup.
+              L'ancien panneau « Filtres » séparé n'existe plus. */}
+          {blocFiltres(enFenetre, poserDansLeBrouillon)}
+          </>
         </PageRechercheMobile>
       )}
     </div>

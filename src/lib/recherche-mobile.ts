@@ -33,19 +33,38 @@ import type { CritèresTatouage } from "@/components/MoteurTatouage";
  *
  * ON Y RANGE TOUT CE QUI DOIT SURVIVRE À UN REMONTAGE :
  *  · `ouverte`     — la page est-elle à l'écran ;
- *  · `vue`         — « recherche » ou « filtres » ;
- *  · `brouillon`   — les choix en cours, tant que « Valider » n'a pas
- *                    été pressé (aucune recherche ne part avant) ;
+ *  · `vue`         — l'onglet affiché, « tatouage » ou « flash »
+ *                    (§1, nº 447 : Réalisation | Flash) ;
+ *  · `brouillons`  — les choix en cours DE CHAQUE ONGLET, tant que
+ *                    « Valider » n'a pas été pressé (aucune recherche
+ *                    ne part avant) ;
  *  · `defilement`  — où en étaient les résultats quand on est parti.
  */
 
-/** Les deux vues de la page de recherche (smartphone). */
-export type VueRecherche = "recherche" | "filtres";
+/**
+ * ██ §1 (nº 447) — LES DEUX ONGLETS « RÉALISATION | FLASH » ██
+ * ------------------------------------------------------------------
+ * L'ancien va-et-vient « Explorer | Filtres » séparait les CHAMPS des
+ * FILTRES ; le propriétaire le remplace par deux onglets DE NATURE —
+ * Réalisation et Flash — qui portent chacun la même page complète
+ * (style, localité, rayon, Technique, Rendu) et CHACUN SES PROPRES
+ * critères. Les clés sont les natures du catalogue
+ * (CATEGORIES_EXPLORER : « tatouage », « flash ») — aucune liste
+ * inventée. « Valider » cherche l'onglet en cours, nature comprise ;
+ * « Effacer » ne vide que lui. Le type garde son nom (VueRecherche) :
+ * une vue EST un onglet désormais, et les deux consommateurs
+ * (PageRechercheMobile, MoteurTatouage) lisent ce même mot.
+ */
+export type VueRecherche = "tatouage" | "flash";
 
 export type EtatRecherche = {
   ouverte: boolean;
+  /** L'onglet affiché — la NATURE qu'il cherche. */
   vue: VueRecherche;
-  brouillon: CritèresTatouage | null;
+  /** §1 (nº 447) — UN BROUILLON PAR ONGLET : chacun garde ses choix
+      (style, lieu/rayon, filtres) tant que la page vit. `null` =
+      onglet jamais touché — le moteur y lit une page vierge. */
+  brouillons: Record<VueRecherche, CritèresTatouage | null>;
 };
 
 /** L'état FERMÉ, en un seul exemplaire — c'est aussi la réponse du
@@ -54,8 +73,8 @@ export type EtatRecherche = {
     chaque appel, sans quoi React boucle. */
 const FERME: EtatRecherche = {
   ouverte: false,
-  vue: "recherche",
-  brouillon: null,
+  vue: "tatouage",
+  brouillons: { tatouage: null, flash: null },
 };
 
 let etat: EtatRecherche = FERME;
@@ -94,10 +113,17 @@ export function lireRechercheServeur(): EtatRecherche {
   return FERME;
 }
 
-/** OUVRIR — toujours sur la vue « Recherche », et sur un brouillon qui
-    part de la recherche en cours. */
+/** OUVRIR — sur l'onglet de la NATURE en cours (Flash si la recherche
+    active cherche des flashs, Réalisation sinon), son brouillon
+    ensemencé par la recherche en cours ; l'autre onglet part vierge
+    (§1, nº 447). */
 export function ouvrirRecherche(depuis: CritèresTatouage) {
-  etat = { ouverte: true, vue: "recherche", brouillon: depuis };
+  const onglet: VueRecherche = depuis.nature === "flash" ? "flash" : "tatouage";
+  etat = {
+    ouverte: true,
+    vue: onglet,
+    brouillons: { tatouage: null, flash: null, [onglet]: depuis },
+  };
   prevenir();
 }
 
@@ -113,9 +139,14 @@ export function poserVueRecherche(vue: VueRecherche) {
   prevenir();
 }
 
-/** Poser des choix DANS LE BROUILLON — aucune recherche déclenchée. */
+/** Poser des choix DANS LE BROUILLON DE L'ONGLET AFFICHÉ — aucune
+    recherche déclenchée, et jamais un mot dans l'autre onglet
+    (§1, nº 447). */
 export function poserBrouillon(brouillon: CritèresTatouage) {
-  etat = { ...etat, brouillon };
+  etat = {
+    ...etat,
+    brouillons: { ...etat.brouillons, [etat.vue]: brouillon },
+  };
   prevenir();
 }
 
