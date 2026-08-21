@@ -45,6 +45,13 @@ const MARQUEUR = "defilementProgramme";
 //  rabotage relevé. Le journal est celui de la sonde (journal-bascule),
 //  il ne coûte rien désarmé.
 import { noter } from "@/lib/journal-bascule";
+//  §2 (nº 427) — le témoin du geste : la garde de position ne défend
+//  une pose que contre les mouvements qu'AUCUN doigt n'explique.
+import {
+  appareilTactile,
+  auDebutDuGeste,
+  gesteDeDefilementPlausible,
+} from "@/lib/geste-toucher";
 
 /** La fenêtre pendant laquelle les défilements ne sont pas des gestes.
     Assez large pour couvrir le re-bornage d'une recomposition de
@@ -94,6 +101,162 @@ export function defilerSansGeste(
   } else {
     noter(`POSE DE DÉFILEMENT · vers ${cible ?? "?"} · par ${signature}`);
   }
+  lever(FENETRE_MS);
+  /*  §2 (nº 427) — LA POSE ARME LA GARDE : ce qui vient d'être posé
+      sera TENU tant qu'aucun geste ne reprend la main (voir le bloc de
+      la garde plus bas). Sur la CIBLE, pas sur l'obtenu : si le
+      document n'était pas encore assez haut, la première annulation
+      s'alignera d'elle-même sur ce qui existe. Une pose douce
+      (`smooth`) n'arme rien : sa position finale appartient au
+      navigateur, on ne saurait pas quoi défendre. */
+  if (cible !== null && options.behavior !== "smooth") {
+    armerLaGardeDePosition(cible, signature);
+  }
+}
+
+/**
+ * ██ §2 (nº 427) — LA GARDE DE POSITION : UNE POSE TIENT SANS DOIGT ██
+ * ==================================================================
+ * LE RELEVÉ QUI L'A RENDUE NÉCESSAIRE (iPhone, sonde de la nº 426) :
+ * une recherche validée, la liste neuve posée à 0… puis « RANGÉE ·
+ * delta 1730 px ignoré (mouvement du site) » — SANS AUCUNE LIGNE POSE
+ * entre les deux. C'est l'ancrage de WebKit qui recale le défilement
+ * après le rendu de la nouvelle liste, APRÈS notre pose. La ligne
+ * « ignoré » protégeait le volet ; PERSONNE ne corrigeait la
+ * position : l'ancre gagnait, et la recherche s'ouvrait en bas.
+ * `overflow-anchor: none` est posé partout depuis la nº 150 — WebKit
+ * est le seul moteur à l'ignorer (mesuré nº 424), et il n'offre aucun
+ * autre interrupteur.
+ *
+ * LA RÈGLE, POSÉE PAR LE PROPRIÉTAIRE : après une pose du site, la
+ * position TIENT tant que l'utilisateur n'a pas repris la main. Tout
+ * déplacement sans toucher ni lancée plausible (lib/geste-toucher) est
+ * REPOSÉ sur-le-champ, et s'écrit — « RECALAGE D'ANCRE ANNULÉ ». La
+ * garde se lève au premier début de geste : un doigt, une molette, une
+ * touche de défilement.
+ *
+ * ⚠️ ELLE NE VIT QUE SUR ÉCRAN TACTILE : ailleurs, l'ascenseur défile
+ * sans émettre le moindre événement de toucher — la garde y lirait un
+ * recalage et collerait la page — et l'ancrage y est déjà coupé par le
+ * CSS, que tous les moteurs sauf WebKit honorent.
+ * ⚠️ ELLE NE SE FIE PAS AU DRAPEAU ci-dessus : le relevé montre le
+ * recalage tombant EN PLEIN DANS la fenêtre du drapeau (6 ms après le
+ * rendu). Elle compare des POSITIONS : notre propre pose retombe
+ * exactement sur la position gardée — un recalage, non.
+ * ⚠️ ELLE MEURT AVEC SA PAGE : l'adresse est retenue à l'armement ;
+ * si elle a changé, la position gardée ne décrit plus rien et la
+ * garde se tait.
+ */
+const TOLERANCE_DE_GARDE_PX = 2;
+/** Au-delà, on cède : un mécanisme inconnu repose en boucle, et se
+    battre contre lui ferait pire que le laisser faire. Chaque
+    annulation s'écrit — le journal montrera qui c'était. */
+const RECALAGES_ANNULES_MAX = 12;
+
+type GardeDePosition = {
+  position: number;
+  signature: string;
+  adresse: string;
+  annulations: number;
+};
+let garde: GardeDePosition | null = null;
+let veilleusePosee = false;
+
+/** ARMER LA GARDE sur `position`. Appelée par chaque pose instantanée
+    de ce module, et par les deux poses brutes de PageRechercheMobile.
+    Sans écran tactile, ne fait rien (voir le bloc ci-dessus). */
+export function armerLaGardeDePosition(
+  position: number,
+  signature: string
+): void {
+  if (typeof window === "undefined" || !appareilTactile()) return;
+  garde = {
+    position: Math.round(position),
+    signature,
+    adresse: window.location.pathname + window.location.search,
+    annulations: 0,
+  };
+  poserLaVeilleuse();
+}
+
+/** DÉSARMER LA GARDE — pour une surface qui déplace la page POUR
+    ELLE-MÊME (le gel d'une fiche, l'ouverture de la page de
+    recherche) : la position gardée ne décrit plus l'écran, la
+    défendre combattrait la surface. Le dégel et la sortie re-arment
+    en reposant. */
+export function desarmerLaGardeDePosition(): void {
+  garde = null;
+}
+
+function poserLaVeilleuse(): void {
+  if (veilleusePosee) return;
+  veilleusePosee = true;
+  //  « La garde se lève au premier vrai toucher » — et il n'a même pas
+  //  besoin de faire défiler : dès que l'utilisateur a la main, la
+  //  position lui appartient.
+  auDebutDuGeste(() => {
+    if (!garde) return;
+    noter(
+      `GARDE DE POSITION · levée (l'utilisateur a repris la main) · ` +
+        `elle tenait ${garde.position} pour « ${garde.signature} »`
+    );
+    garde = null;
+  });
+  window.addEventListener("scroll", surDefilementSousGarde, {
+    passive: true,
+  });
+}
+
+function surDefilementSousGarde(): void {
+  const g = garde;
+  if (!g) return;
+  //  La page a changé d'adresse depuis l'armement : cette position ne
+  //  décrit plus rien ici, on se tait.
+  if (window.location.pathname + window.location.search !== g.adresse) {
+    garde = null;
+    return;
+  }
+  const y = Math.round(window.scrollY);
+  const ecart = y - g.position;
+  if (Math.abs(ecart) <= TOLERANCE_DE_GARDE_PX) return;
+  //  Un mouvement porté par un geste : l'utilisateur a la main, la
+  //  garde n'a plus rien à défendre. (Le doigt était peut-être déjà
+  //  posé avant l'armement — l'abonnement au DÉBUT du geste ne l'a
+  //  alors pas vu passer ; ce second chemin le couvre.)
+  if (gesteDeDefilementPlausible()) {
+    noter(
+      `GARDE DE POSITION · levée (défilement porté par un geste) · ` +
+        `elle tenait ${g.position} pour « ${g.signature} »`
+    );
+    garde = null;
+    return;
+  }
+  g.annulations += 1;
+  if (g.annulations > RECALAGES_ANNULES_MAX) {
+    noter(
+      `GARDE DE POSITION · RENDUE (${RECALAGES_ANNULES_MAX} recalages ` +
+        `annulés sans geste — un mécanisme repose en boucle, je cède)`
+    );
+    garde = null;
+    return;
+  }
+  //  LE RECALAGE EST ANNULÉ : on repose la position gardée, en
+  //  l'annonçant (la barre ne doit pas lire NOTRE re-pose comme un
+  //  geste). `scrollTo` « instant » est synchrone : l'événement que ce
+  //  re-pose déclenchera retombera exactement sur la position gardée,
+  //  et repassera ici sans rien faire — aucune boucle possible.
+  document.documentElement.dataset[MARQUEUR] = "1";
+  window.scrollTo({ top: g.position, left: 0, behavior: "instant" });
+  const obtenu = Math.round(window.scrollY);
+  noter(
+    `RECALAGE D'ANCRE ANNULÉ · ${ecart > 0 ? "+" : ""}${ecart} px → ` +
+      `reposé à ${g.position}` +
+      (Math.abs(obtenu - g.position) > 1
+        ? ` (obtenu ${obtenu} : le document s'arrête là — la garde s'y range)`
+        : "") +
+      ` · garde de « ${g.signature} »`
+  );
+  if (Math.abs(obtenu - g.position) > 1) g.position = obtenu;
   lever(FENETRE_MS);
 }
 
@@ -193,6 +356,10 @@ export function defilerEnDouceur(cible: number): void {
   //  quoi que ce soit du document : sa réserve est déjà rendue, la
   //  hauteur qu'on s'apprête à lire est donc la vraie.
   finirAnimation?.();
+  //  §2 (nº 427) — l'animation va produire une pluie de positions
+  //  intermédiaires : aucune n'est « la » position à défendre. La
+  //  garde se tait pendant le trajet, et se re-arme à l'arrivée.
+  desarmerLaGardeDePosition();
   const depart = window.scrollY;
   const distance = cible - depart;
   document.documentElement.dataset[MARQUEUR] = "1";
@@ -234,6 +401,7 @@ export function defilerEnDouceur(cible: number): void {
     finirAnimation = relacher;
     requestAnimationFrame(relacher);
     lever(FENETRE_MS);
+    armerLaGardeDePosition(cible, "défilement en douceur");
     return;
   }
 
@@ -288,6 +456,10 @@ export function defilerEnDouceur(cible: number): void {
     }
     clore(true);
     lever(FENETRE_MS);
+    //  §2 (nº 427) — arrivé au bout du trajet, ce qui est posé se
+    //  défend comme toute pose. (Une interruption par un geste, elle,
+    //  n'arme rien : le doigt a la main.)
+    armerLaGardeDePosition(cible, "défilement en douceur");
   };
   animationEnCours = requestAnimationFrame(avancer);
 }

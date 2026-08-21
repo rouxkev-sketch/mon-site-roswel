@@ -1,3 +1,8 @@
+//  §2 (nº 427) — geler, c'est mettre le défilement à zéro SANS geste :
+//  la garde de position y lirait un recalage d'ancre et combattrait la
+//  surface. Elle est donc désarmée au gel ; le dégel re-arme en
+//  reposant (poserLaPosition → defilerSansGeste).
+import { desarmerLaGardeDePosition } from "@/lib/defilement-programme";
 import { poserLaPosition } from "@/lib/restitution-position";
 
 /**
@@ -114,6 +119,9 @@ export function gelerLeCorps(
   const corps = document.body.style;
   surfacesQuiGelent += 1;
   if (surfacesQuiGelent === 1) {
+    //  §2 (nº 427) — voir l'import : le gel déplace le défilement pour
+    //  lui-même, la garde n'a plus rien à y défendre.
+    desarmerLaGardeDePosition();
     positionRetenue = position;
     cheminDuGel = cheminAttendu ?? null;
     corps.position = "fixed";

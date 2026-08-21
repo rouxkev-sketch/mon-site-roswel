@@ -12,6 +12,12 @@ import {
   defilerSansGeste,
   estDefilementProgramme,
 } from "@/lib/defilement-programme";
+//  §1 (nº 427) — « aucun doigt posé → pas un geste » : le témoin du
+//  toucher, qui distingue un vrai défilement d'un recalage d'ancrage.
+import {
+  appareilTactile,
+  gesteDeDefilementPlausible,
+} from "@/lib/geste-toucher";
 //  §3 (nº 426) — les bascules de la rangée s'écrivent au journal.
 import { noter } from "@/lib/journal-bascule";
 import Link from "next/link";
@@ -574,6 +580,31 @@ export function EnTeteTatouage({
         return;
       }
       if (delta === 0) return;
+      /*  ██ §1 (nº 427) — AUCUN DOIGT POSÉ → PAS UN GESTE ██
+          Le relevé de la nº 426 l'a pris sur le fait : les recalages
+          de l'ancrage WebKit tombent parfois des SECONDES après une
+          insertion de cartes (les images chargent, les hauteurs
+          bougent encore), hors de TOUTE fenêtre temporelle — et le
+          cumul y lisait un geste : le volet se rouvrait après « Voir
+          plus ». Sur un écran tactile, un vrai défilement commence par
+          un toucher : un delta sans toucher actif ni lancée plausible
+          (lib/geste-toucher) est un recalage du navigateur — il ne
+          COMPTE pas, et il s'écrit, chacun.
+          ⚠️ Sur écran sans toucher (le web), rien ne change : molette
+          et clavier n'émettent pas de toucher, le principe ne s'y
+          applique pas — l'ancrage y est déjà coupé pour de bon
+          (`overflow-anchor: none`, que seul WebKit ignore).
+          ⚠️ APRÈS le chemin « haut de page » : à moins de 64 px du
+          haut, la rangée se montre QUEL QUE SOIT le porteur du
+          mouvement — c'est un invariant d'écran, pas un comptage de
+          geste. */
+      if (appareilTactile() && !gesteDeDefilementPlausible()) {
+        noter(
+          `RANGÉE · delta ${Math.round(delta)} px écarté (sans toucher — recalage du navigateur)`
+        );
+        cumulDuGeste.current = 0;
+        return;
+      }
       const yMax = document.documentElement.scrollHeight - window.innerHeight;
       if (delta < 0 && y >= yMax - 2) return;
       const cumul = cumulDuGeste.current;

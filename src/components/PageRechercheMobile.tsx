@@ -3,6 +3,14 @@
 import { noter } from "@/lib/journal-bascule";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+//  §2 (nº 427) — la garde de position : l'OUVERTURE la désarme (cette
+//  page déplace le défilement pour elle-même, la garde combattrait le
+//  scrollTo vers 0 ci-dessous) ; la SORTIE l'arme sur la place rendue
+//  (l'ancrage de WebKit peut recaler après le retour aux résultats).
+import {
+  armerLaGardeDePosition,
+  desarmerLaGardeDePosition,
+} from "@/lib/defilement-programme";
 import { positionSousLeGel } from "@/lib/gel-du-corps";
 //  §3 (nº 330) — l'étape d'historique, écriture unique des quatre
 //  surfaces qui couvrent l'écran.
@@ -238,6 +246,11 @@ export function PageRechercheMobile({
       document.documentElement.dataset.recherche = "ouverte";
       setPhase("posee");
       // Le document ne contient plus qu'elle : on repart de son haut.
+      //  §2 (nº 427) — une garde encore armée (une restitution, une
+      //  liste neuve) défendrait l'ancienne position CONTRE ce
+      //  scrollTo : cette page déplace le défilement pour elle-même,
+      //  la garde n'a plus rien à y défendre.
+      desarmerLaGardeDePosition();
       //  §3 (nº 426) — la pose s'écrit (aucun poseur anonyme).
       noter("POSE DE DÉFILEMENT · vers 0 · par PageRechercheMobile (ouverture)");
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
@@ -316,15 +329,26 @@ export function PageRechercheMobile({
     /*  §3 (nº 426) — la pose s'écrit, avec la valeur relue : c'est la
         position d'AVANT l'ouverture, rendue au site pendant la
         glissade de sortie (nº 334-§1). */
+    const place = lireDefilementResultats();
     noter(
-      `POSE DE DÉFILEMENT · vers ${Math.round(lireDefilementResultats())} · ` +
+      `POSE DE DÉFILEMENT · vers ${Math.round(place)} · ` +
         "par PageRechercheMobile (sortie — la place d'avant l'ouverture)"
     );
     window.scrollTo({
-      top: lireDefilementResultats(),
+      top: place,
       left: 0,
       behavior: "instant",
     });
+    /*  §2 (nº 427) — la place rendue se DÉFEND, comme toute pose : les
+        cartes des résultats rechargent leurs images derrière la
+        glissade, et l'ancrage de WebKit peut recaler. Une validation
+        re-armera la garde sur 0 quand la liste neuve posera la sienne
+        (lib/liste-neuve) — la dernière pose gagne, c'est l'ordre
+        naturel. */
+    armerLaGardeDePosition(
+      place,
+      "PageRechercheMobile (sortie — la place d'avant l'ouverture)"
+    );
   }, [phase, validerEnSortant]);
 
   /** LA CROIX ET « VALIDER » — ils glissent, et rien d'autre : c'est le
