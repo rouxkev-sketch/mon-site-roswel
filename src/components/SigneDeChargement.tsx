@@ -48,6 +48,30 @@ import { usePathname, useSearchParams } from "next/navigation";
  *     destination passe, lui, normalement (changer d'avis est un
  *     droit — c'est le routeur qui arbitre, comme aujourd'hui).
  *
+ *  5. ██ §1 (nº 442) — JAMAIS DEUX INDICATEURS EN MÊME TEMPS ██
+ *     Certains liens sont NATIFS — le logo en tête (règle 247 :
+ *     chaque clic y est une navigation de document VOULUE) — et le
+ *     navigateur affiche alors SON propre indicateur de chargement.
+ *     Le trait rose ne vit que là où le navigateur est muet : les
+ *     navigations douces du routeur. Deux ceintures :
+ *      · LE NON-ARMEMENT DES LIENS NATIFS — à la fin du clic
+ *        (setTimeout 0 : après TOUS les gestionnaires, capture et
+ *        bouillonnement — une microtâche s'exécuterait entre deux
+ *        écouteurs, AVANT le gestionnaire du lien, trop tôt), on lit
+ *        qui a pris la navigation. Le Link de Next et les cartes
+ *        PRÉVIENNENT le geste par défaut : navigation douce, le
+ *        trait est à nous. Personne ne l'a prévenu : c'est le
+ *        navigateur qui navigue — l'armement est éteint dans
+ *        l'instant, bien avant le seuil des 200 ms, le trait
+ *        n'apparaît jamais. (L'armement, lui, reste posé en
+ *        SYNCHRONE au clic : l'avalement du re-clic de la 441 ne
+ *        perd pas une milliseconde.)
+ *      · L'EXTINCTION AU DÉCHARGEMENT (`pagehide`) — une navigation
+ *        douce peut DÉGÉNÉRER en chargement de document (le repli
+ *        nº 428, une fiche injoignable passée à location.assign) :
+ *        au déchargement, tout s'éteint — attente comprise, pour
+ *        qu'un retour depuis le cache du navigateur reparte propre.
+ *
  * ⚠️ CE QU'IL NE FAIT JAMAIS : il n'écrit RIEN dans l'historique
  * (aucun pushState, replaceState, back), ne mémorise rien (règles
  * 328/329 : le signe est purement visuel), ne peint aucun état de
@@ -128,6 +152,17 @@ function Signe() {
       }, ATTENTE_MAXIMALE_MS);
     };
 
+    /*  §1 (nº 442) — tout s'éteint d'un coup : l'attente, les deux
+        minuteurs, le trait. Appelée quand le navigateur prend la
+        navigation à son compte (lien natif, déchargement) : son
+        indicateur remplace le nôtre. */
+    const eteindre = () => {
+      attente.current = null;
+      window.clearTimeout(minuteurSigne.current);
+      window.clearTimeout(minuteurLimite.current);
+      setVisible(false);
+    };
+
     const surClic = (evenement: MouseEvent) => {
       if (evenement.defaultPrevented) return;
       if (evenement.button !== 0) return;
@@ -172,7 +207,23 @@ function Signe() {
         evenement.stopPropagation();
         return;
       }
+      //  L'armement reste SYNCHRONE (l'avalement du re-clic de la 441
+      //  ne perd pas une milliseconde)…
       demarrer(adresse);
+      //  §1 (nº 442) — …mais à la FIN du clic, on lit qui a pris la
+      //  navigation. Le Link de Next et les cartes préviennent le
+      //  geste par défaut : navigation douce, le trait est à nous.
+      //  Personne ne l'a prévenu : c'est le NAVIGATEUR qui navigue
+      //  (le logo, règle 247 — un lien natif), il montre son propre
+      //  indicateur — le nôtre s'éteint dans l'instant, bien avant le
+      //  seuil des 200 ms : jamais deux traits. setTimeout(0) et non
+      //  une microtâche : la microtâche s'exécute entre deux
+      //  écouteurs, AVANT le gestionnaire du lien — trop tôt pour
+      //  lire defaultPrevented.
+      window.setTimeout(() => {
+        if (evenement.defaultPrevented) return;
+        eteindre();
+      }, 0);
     };
 
     const surTraversee = () => {
@@ -186,14 +237,25 @@ function Signe() {
       demarrer(ici);
     };
 
+    //  §1 (nº 442) — LE DÉCHARGEMENT ÉTEINT TOUT : une navigation
+    //  douce qui dégénère en chargement de document (repli nº 428,
+    //  fiche injoignable) passe le relais à l'indicateur du
+    //  navigateur — et l'attente s'efface, pour qu'un retour depuis
+    //  le cache du navigateur reparte propre.
+    const surDechargement = () => {
+      eteindre();
+    };
+
     //  CAPTURE, et sans « passif » : l'avalement du re-clic (§4) doit
     //  pouvoir prévenir le geste. Les clics ordinaires, eux, ne sont
     //  ni retardés ni modifiés — une lecture, rien de plus.
     document.addEventListener("click", surClic, true);
     window.addEventListener("popstate", surTraversee, { passive: true });
+    window.addEventListener("pagehide", surDechargement, { passive: true });
     return () => {
       document.removeEventListener("click", surClic, true);
       window.removeEventListener("popstate", surTraversee);
+      window.removeEventListener("pagehide", surDechargement);
       window.clearTimeout(minuteurSigne.current);
       window.clearTimeout(minuteurLimite.current);
     };
