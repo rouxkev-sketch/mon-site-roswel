@@ -112,7 +112,14 @@ export function BoutonPartageFiche({
   /** Chemin de la fiche à partager (variante « carte ») ; à défaut, la
       page courante (variante « fiche »). */
   cheminFiche?: string;
-  variante?: "fiche" | "carte";
+  /** §1-2 (nº 458) — « icone » : la flèche de partage NUE (le dessin
+      `IconePartageIOS`, la flèche vers le haut), sans disque ni fond —
+      cible de 40 px, trait couleur du texte. C'est l'écriture UNIQUE
+      des deux emplacements de la passe : la colonne gauche de la vue
+      photo mobile et la rangée du profil, à gauche de « Suivre ».
+      MÊME action `partager` que les autres habillages : rien d'autre
+      ne change. */
+  variante?: "fiche" | "carte" | "icone";
   couleurContour?: string;
   /** AUCUN contour (variante « carte ») : fond blanc seul — le rendu du
       bandeau de la fiche artisan ≥ 768 px. Les CARTES gardent le leur. */
@@ -492,6 +499,38 @@ export function BoutonPartageFiche({
       </>
     </FenetreModale>
   ) : null;
+
+  if (variante === "icone") {
+    return (
+      <div className="relative shrink-0">
+        <button
+          ref={declencheur}
+          type="button"
+          onClick={partager}
+          aria-haspopup={avecFenetre ? "dialog" : undefined}
+          aria-label={`Partager la fiche de ${nomArtisan}`}
+          //  §1-2 (nº 458) — l'icône nue sur le fond de la page : la
+          //  cible tactile de 40 px (le gabarit du fanion des cartes),
+          //  le trait au blanc du site, un bref enfoncement — aucun
+          //  disque, aucun verre.
+          className="flex h-10 w-10 items-center justify-center
+                     text-sombre-texte transition-transform active:scale-95"
+        >
+          <IconePartageIOS taille={22} />
+        </button>
+        {copie && (
+          <span
+            role="status"
+            className="absolute top-11 right-0 whitespace-nowrap rounded-full bg-encre text-white text-xs font-medium px-3 py-1.5 shadow-lg z-20"
+          >
+            Lien copié !
+          </span>
+        )}
+        {fenetre}
+        {fenetreSombre}
+      </div>
+    );
+  }
 
   if (variante === "carte") {
     return (

@@ -1059,8 +1059,45 @@ export function FicheTatoueur({
           {/*  §2 (nº 453) — LA LIGNE REMONTE : l'air photo → titre passe
                de 12 px (le `gap-3` de la colonne) à 8 px
                (`mobile:-mt-1` en reprend 4). */}
+          {/*  ██ §1 (nº 458) — LA COLONNE DE GAUCHE : LE PARTAGE
+               AU-DESSUS DE L'AVATAR ██
+               La zone sous la photo se lit en colonnes alignées :
+                 [partage]  Titre                    [fanion]
+                 [avatar]   Nom                      [Profil]
+                            Artiste • Ville, Pays
+               L'icône de partage (la flèche vers le haut,
+               `IconePartageIOS` — le dessin existant du site) vit dans
+               une boîte de la LARGEUR DE L'AVATAR (40 px), centrée :
+               son axe vertical est celui de l'avatar d'en dessous. Le
+               TITRE prend le même départ que le nom : 40 px de colonne
+               + l'écart de 10 px (`gap-2.5`, celui qui sépare l'avatar
+               de ses textes dans la rangée du profil) — les deux
+               textes commencent à la même verticale.
+               L'ACTION EST CELLE QUI EXISTE : le même
+               `BoutonPartageFiche` que le bouton du web, avec LE MÊME
+               lien partagé (`cheminDuCarrousel` — le carrousel
+               ouvert, nº 280-§3). Rien d'inventé, rien d'écrit dans
+               l'historique. */}
           {rangeeSousLaPhoto && (
-            <div className="hidden mobile:flex items-center gap-3 mobile:-mt-1">
+            <div className="hidden mobile:flex items-center gap-2.5 mobile:-mt-1">
+              {!apercu && (
+                <div className="flex w-10 shrink-0 justify-center">
+                  <BoutonPartageFiche
+                    nomArtisan={tatoueur.nom}
+                    cheminFiche={cheminDuCarrousel(
+                      tatoueur.slug,
+                      styleAffiche,
+                      serieEffective
+                    )}
+                    variante="icone"
+                    avecFenetre
+                    sombre
+                    metier={stylePrincipal?.label}
+                    commune={villeAffichee(tatoueur.ville_nom)}
+                    marque={MARQUE_YOKOFOLIO.nom}
+                  />
+                </div>
+              )}
               <p
                 data-titre-carrousel=""
                 className="flex-1 min-w-0 truncate text-[15px]

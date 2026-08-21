@@ -17,10 +17,19 @@ import {
   //  capsule ni un seul titre de section dans ce fichier.
   libelleFiltre,
   libelleStyle,
+  //  §2 (nº 458) — la marque, pour la fenêtre de partage du profil.
+  MARQUE_YOKOFOLIO,
   PORTRAIT_ROND,
   TRAIT_SEPARATION,
 } from "@/config/tatouage";
+//  §2 (nº 458) — la ville lisible partout, pour le partage du profil.
+import { villeAffichee } from "@/lib/adresse";
 import { BoutonHorsLigne } from "@/components/BoutonHorsLigne";
+//  §2 (nº 458) — le partage du PROFIL, à gauche de « Suivre » : le
+//  MÊME bouton que partout (l'action existante), en habillage
+//  « icone » — la flèche nue, l'écriture unique des deux emplacements
+//  de la passe.
+import { BoutonPartageFiche } from "@/components/BoutonPartageFiche";
 import {
   IconeCalendrier,
   IconeDiamant,
@@ -1533,8 +1542,43 @@ export function ContenuFiche({
                       * c'était déjà le cas — aucune classe n'y est
                       * ajoutée.
                       */
+                     /**
+                      * ██ §3 (nº 458) — LE COLLAGE SANS SURSAUT ██
+                      * ==================================================
+                      * LA CAUSE, NOMMÉE : un DÉCALAGE DE 16 px ENTRE LA
+                      * POSITION NATURELLE ET LE HAUT DE COLLAGE. La
+                      * rangée est le premier élément de la colonne, dont
+                      * la racine porte `pt-4` (16 px) : au repos elle vit
+                      * à réserve (64) + 16 = 80 px du haut du document,
+                      * alors que son collage est écrit à 64
+                      * (`--rw-rangee-collante`). Un élément collant
+                      * VOYAGE librement entre sa position naturelle et
+                      * son haut de collage : la rangée parcourait donc
+                      * ces 16 px à l'écran — elle « remontait » — avant
+                      * de se bloquer, et les reparcourait en sens
+                      * inverse en haut de page.
+                      * LE REMÈDE : supprimer le trajet — `mobile:-mt-4`
+                      * annule le `pt-4` pour cette rangée : sa position
+                      * naturelle DEVIENT le haut de collage (64 = 64),
+                      * et elle est parfaitement statique, collée dès le
+                      * premier pixel de défilement. C'est aussi la
+                      * réduction d'air demandée : l'air entre la barre
+                      * et la rangée passe de 16 px à 0 — l'air INTERNE
+                      * au-dessus des badges (`mobile:pt-3`, 12 px,
+                      * nº 380/381) ne bouge pas : l'œil garde 12 px
+                      * entre le verre et le va-et-vient, contre 28
+                      * avant.
+                      * ⚠️ HORS APERÇU : la racine de « Ma fiche » n'a
+                      * pas ce `pt-4` — la marge négative y déborderait
+                      * sur le bandeau de l'espace. ⚠️ LE WEB N'A JAMAIS
+                      * EU CE TRAJET : sa rangée colle à `lg:top-0` de la
+                      * colonne dont elle est le premier élément —
+                      * position naturelle 0, collage 0.
+                      */
                      collantSousLaBarre
-                       ? "mobile:sticky mobile:top-[var(--rw-rangee-collante)] mobile:z-[3] mobile:pt-3 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-3 lg:px-3"
+                       ? `mobile:sticky mobile:top-[var(--rw-rangee-collante)] mobile:z-[3] mobile:pt-3 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-3 lg:px-3${
+                           apercu ? "" : " mobile:-mt-4"
+                         }`
                        : "-mx-5 px-5 sm:-mx-6 sm:px-6"
                    }`}
       >
@@ -1546,12 +1590,34 @@ export function ContenuFiche({
           className="pointer-events-none absolute inset-x-0 bottom-full hidden h-8 bg-[var(--fond-colonne)] lg:block"
         />
         <SelecteurOngletAffiche valeur={onglet} surChoix={choisirOnglet} />
+        {/*  §2 (nº 458) — LE PARTAGE DU PROFIL, À GAUCHE DE « SUIVRE ».
+             La rangée est `justify-between` : les deux vivent groupés à
+             droite dans une petite rangée (l'écart de 12 px de la
+             rangée). Même bouton que partout (`BoutonPartageFiche`,
+             l'action existante), habillage « icone » — la flèche nue,
+             cible de 40 px —, et le lien partagé est LE PROFIL
+             (`/tatoueur/<slug>`). L'aperçu n'a ni partage ni suivi,
+             comme toujours. */}
         {!apercu && (
-          <BoutonSuivre
-            tatoueurId={tatoueur.id}
-            nomTatoueur={tatoueur.nom}
-            suiviAuDepart={suiviAuDepart}
-          />
+          <div className="flex shrink-0 items-center gap-3">
+            <BoutonPartageFiche
+              nomArtisan={tatoueur.nom}
+              cheminFiche={`/tatoueur/${tatoueur.slug}`}
+              variante="icone"
+              avecFenetre
+              sombre
+              metier={
+                tatoueur.styles?.[0] ? libelleStyle(tatoueur.styles[0]) : undefined
+              }
+              commune={villeAffichee(tatoueur.ville_nom)}
+              marque={MARQUE_YOKOFOLIO.nom}
+            />
+            <BoutonSuivre
+              tatoueurId={tatoueur.id}
+              nomTatoueur={tatoueur.nom}
+              suiviAuDepart={suiviAuDepart}
+            />
+          </div>
         )}
       </div>
 
