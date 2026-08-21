@@ -411,6 +411,42 @@ export function MemoireNavigation() {
         complète. */
     const auDepartDuDocument = () => {
       noterDepartOnglet();
+      /*  ██ §3 (nº 431) — LA NOTE FINALE, AU DÉPART DU DOCUMENT ██
+          LE DÉFAUT (Brave, section profil d'une fiche) : au
+          rechargement tiré du doigt, la page renaissait « catapultée
+          au milieu ». La note restituée par le script (règle 332 :
+          un rechargement rend la place) ne décrivait PAS la position
+          du moment du rechargement : l'écriture au fil du défilement
+          est différée de DEUX images (voir memoriserPosition) — un
+          rechargement les coupe — et, sur une fiche, la seule note
+          existante venait d'un clic fiche → fiche (nº 230-§3),
+          vieille parfois de plusieurs minutes. LE COMPORTEMENT JUSTE
+          d'un rafraîchissement volontaire : rendre la position DU
+          MOMENT — celle que le navigateur lui-même rendrait. On
+          photographie donc la place au pagehide, synchronement, en
+          écrasant toute vieille note. Un rechargement tiré du doigt
+          part toujours du haut : la note dit alors ~0, et la page
+          renaît en haut — sur les trois navigateurs pareil.
+          ⚠️ PAS d'exclusion de page de détail ICI, et c'est voulu :
+          la photographie du départ est exacte par construction — au
+          reload elle rend l'écran quitté, et au retour de document
+          elle dit la même chose que la restauration native (auto,
+          nº 363). La règle « une fiche s'ouvre en haut » vaut pour
+          les navigations NEUVES, que le script refuse déjà
+          (« navigate » sans marque). Deux gardes restent : la page
+          de recherche occupe l'écran (sa position ne décrit pas la
+          liste), et la fenêtre de fiche (l'adresse est celle de la
+          fiche, la position celle de la grille : rien à écrire). */
+      if (
+        !document.documentElement.dataset.recherche &&
+        !(window.history.state as { fenetreFiche?: boolean } | null)
+          ?.fenetreFiche
+      ) {
+        memoriserDefilement(
+          location.pathname + location.search,
+          positionSousLeGel()
+        );
+      }
     };
 
     window.addEventListener("popstate", marquerTraversee);

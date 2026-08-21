@@ -159,7 +159,33 @@ export function scriptAvantPeinture(): string {
 
   return `(function(){
 var r=document.documentElement;
-r.dataset.appareil=matchMedia("(pointer: coarse)").matches?"mobile":"web";
+/* ██ §1 (nº 431) — L'APPAREIL, JUSTE DÈS LA PREMIÈRE IMAGE, MÊME AU
+   RECHARGEMENT TIRÉ DU DOIGT. Le relevé du propriétaire (Safari,
+   Chrome ET Brave — un seul moteur, WebKit) : après un pull-to-refresh
+   d'une fiche, l'interface WEB s'installe sur le téléphone et
+   PERSISTE. Or « data-appareil » n'a qu'un écrivain — ce bloc-ci — et
+   toute la mise en page (« mobile: », globals.css), les portes de
+   geste (fenêtre de carrousel, pile des fiches…) et le crochet
+   useAppareilMobile ne font que le LIRE : pour que le symptôme
+   existe, il faut que matchMedia("(pointer: coarse)") ait répondu
+   FAUX à l'instant où ce script tourne — l'analyse du document
+   PROVISOIRE d'un rechargement tiré du doigt, avant que le moteur ne
+   soit attaché à la vraie fenêtre. UN APPAREIL NE CHANGE PAS ENTRE
+   DEUX PAGES D'UN MÊME ONGLET : la dernière réponse SÛRE (mémoire de
+   session, écrite aux instants fiables) fait donc foi pour la
+   première image — un pull-to-refresh a toujours une page avant lui,
+   la mémoire est toujours là. La mesure est reprise aux instants
+   FIABLES (première image peinte, pageshow, événement de changement
+   du média) et remet mémoire et attribut à jour : un vrai changement
+   d'appareil (souris branchée sur tablette) est suivi, jamais figé. */
+var appMemo=null;try{appMemo=sessionStorage.getItem("roswel:appareil")}catch(e){}
+var appMedia=matchMedia("(pointer: coarse)");
+r.dataset.appareil=(appMemo==="mobile"||appMemo==="web")?appMemo:(appMedia.matches?"mobile":"web");
+var appFixer=function(){var v=matchMedia("(pointer: coarse)").matches?"mobile":"web";
+r.dataset.appareil=v;try{sessionStorage.setItem("roswel:appareil",v)}catch(e){}};
+requestAnimationFrame(appFixer);
+addEventListener("pageshow",appFixer);
+try{appMedia.addEventListener("change",appFixer)}catch(e){}
 /* §B (nº 347) — LE MILLÉSIME DU SCRIPT. Deux passes de suite, des
    blocs de ce script ont semblé ne jamais tourner sur le téléphone du
    propriétaire alors qu'ils tournent ici. Ce numéro tranche : le
@@ -167,7 +193,7 @@ r.dataset.appareil=matchMedia("(pointer: coarse)").matches?"mobile":"web";
    avec un vieux), la page servie est PÉRIMÉE — un cache la retient —
    et aucun des blocs récents n'y a jamais été. À INCRÉMENTER à chaque
    passe qui modifie ce script. */
-r.dataset.versionScript="430";
+r.dataset.versionScript="431";
 r.style.backgroundColor=${fond};
 /* nº 357 — LE COMPTE, DIT AVANT LA PREMIÈRE PEINTURE. L'accueil est
    prérendu : le serveur ne connaît plus la session, et c'est CE

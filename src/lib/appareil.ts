@@ -24,10 +24,29 @@ export function useAppareilMobile(): boolean {
   useEffect(() => {
     // Dans un effet, et par une fonction : rien n'est posé dans le
     // corps de l'effet (React le déconseille).
-    const image = requestAnimationFrame(() => {
+    const lire = () => {
       setMobile(document.documentElement.dataset.appareil === "mobile");
-    });
-    return () => cancelAnimationFrame(image);
+    };
+    const image = requestAnimationFrame(lire);
+    /*  §2 (nº 431) — ET RESTER JUSTE, PAS SEULEMENT L'ÊTRE UNE FOIS :
+        le script d'avant-peinture RECALE `data-appareil` aux instants
+        fiables (première image, pageshow, changement du média) — le
+        relevé du propriétaire a montré `matchMedia("(pointer:
+        coarse)")` répondant FAUX à l'analyse du document d'un
+        rechargement tiré du doigt. Une lecture unique figeait alors
+        « web » pour toute la vie du composant. Le crochet suit
+        désormais les mêmes instants : il relit l'attribut — jamais le
+        média directement, l'écrivain reste unique. (Les abonnements
+        du script tournent avant les nôtres : à `pageshow`, l'attribut
+        est déjà recalé quand on le lit.) */
+    const media = matchMedia("(pointer: coarse)");
+    media.addEventListener?.("change", lire);
+    window.addEventListener("pageshow", lire);
+    return () => {
+      cancelAnimationFrame(image);
+      media.removeEventListener?.("change", lire);
+      window.removeEventListener("pageshow", lire);
+    };
   }, []);
   //  ⚠️ TEMPORAIRE (nº 173) — LE JOURNAL, à chaque CHANGEMENT de la
   //  valeur rendue : la valeur, la largeur du moment, et le critère qui
