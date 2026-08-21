@@ -890,111 +890,12 @@ export function FicheTatoueur({
           data-photo-de-tete=""
           className="flex flex-col gap-3 min-w-0"
         >
-          {/*  ██ §1 (nº 452) — L'HABILLAGE SORT DE LA PHOTO : LA RANGÉE
-               AU-DESSUS DE L'IMAGE, DANS LE FLUX ██
-               ==================================================
-               La règle « rien au-dessus de la photo » (nº 293) est
-               REMPLACÉE au doigt, sur consigne : la rangée de la
-               nº 451 (avatar 40 px + nom blanc gras + ligne grise
-               « Artiste • Paris, France », badge « Profil » à droite)
-               quitte l'INTÉRIEUR de l'image et devient le premier
-               enfant de la colonne de tête. PLUS AUCUN VOILE : posée
-               sur l'anthracite de la page, elle prend les jetons du
-               site (nom `text-sombre-texte`, ligne
-               `text-sombre-texte-doux` — ceux du sous-titre des
-               cartes ; badge `bg-sombre-eleve-clair`, le jeton des
-               badges activés hors verre, nº 449). Les écritures du
-               contenu ne changent pas : `libelleTypeFiche` +
-               `ligneCarteMobile`, l'avatar au motif de la fiche
-               (photo_profil, sinon l'initiale — nº 224-§1).
-               LE BADGE EST CENTRÉ SUR L'AVATAR : `items-center` de la
-               rangée — l'avatar (40 px) et le badge (38 px) partagent
-               le même axe. Sa navigation ne change pas d'une lettre
-               (nº 451-§2 : `adresseDeLienInterne`, UNE entrée, le
-               retour rend la vue photo).
-               ⚠️ WEB ET APERÇU : RIEN — `hidden mobile:flex`, aperçu
-               exclu comme le partage. La garde d'avant peinture
-               (nº 359) couvre la COLONNE entière : une arrivée
-               `entree=lien` cache la rangée avec la photo. */}
-          {/*  §1 (nº 453) — LA RANGÉE AFFINÉE, en nombres :
-               · l'air sous la barre passe de 16 px (le `pt-4` de la
-                 racine) à 8 px — `mobile:-mt-2` en reprend la moitié ;
-               · le badge « Profil » descend de 38 à 30 px de haut
-                 (l'ourlet tactile grandit d'autant : la cible reste
-                 44 px) ;
-               · la ligne grise monte de 11,5 à 13 px, et gagne 4 px
-                 d'air sous le nom (`mt-1`). */}
-          {!apercu && (
-            <div
-              data-habillage-photo=""
-              className="hidden mobile:flex items-center gap-3 mobile:-mt-2"
-            >
-              <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                <span
-                  className="flex h-10 w-10 shrink-0 items-center justify-center
-                             overflow-hidden rounded-full bg-sombre-eleve"
-                >
-                  {tatoueur.photo_profil ? (
-                    /* eslint-disable-next-line @next/next/no-img-element --
-                       photo déposée par le tatoueur, servie telle quelle. */
-                    <img
-                      src={tatoueur.photo_profil}
-                      alt=""
-                      width={40}
-                      height={40}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <span
-                      aria-hidden="true"
-                      className="text-[16px] font-bold text-sombre-texte-doux"
-                    >
-                      {tatoueur.nom.trim().charAt(0).toUpperCase()}
-                    </span>
-                  )}
-                </span>
-                <span className="min-w-0">
-                  <span className="block truncate text-[13.5px] font-semibold leading-tight text-sombre-texte">
-                    {tatoueur.nom}
-                  </span>
-                  {/*  La puce « • » : la seule ponctuation du site entre
-                       deux valeurs (nº 395). §1 (nº 453) : 13 px (au
-                       lieu de 11,5) et 4 px d'air sous le nom. */}
-                  <span className="block truncate text-[13px] leading-tight text-sombre-texte-doux mt-1">
-                    {[
-                      libelleTypeFiche(
-                        tatoueur.type_fiche,
-                        tatoueur.etablissement
-                      ),
-                      ligneCarteMobile({
-                        ville: tatoueur.ville_nom,
-                        region: tatoueur.region,
-                        pays: tatoueur.pays,
-                        code_pays: tatoueur.code_pays,
-                      }),
-                    ]
-                      .filter(Boolean)
-                      .join(" • ")}
-                  </span>
-                </span>
-              </div>
-              {/*  §1 (nº 453) — 30 px de haut (au lieu des 38 de
-                   BadgeCharte) : le badge s'affine, le texte ne change
-                   pas. L'ourlet `before:` grandit de 3 à 7 px par
-                   côté : la cible tactile reste 44 px. */}
-              <Link
-                href={adresseDeLienInterne(tatoueur.slug)}
-                data-badge-profil=""
-                className="relative inline-flex min-h-[30px] shrink-0 items-center
-                           rounded-lg bg-sombre-eleve-clair px-3.5 text-[13.5px]
-                           font-semibold text-sombre-texte before:absolute
-                           before:-inset-y-[7px] before:inset-x-0
-                           before:content-['']"
-              >
-                Profil
-              </Link>
-            </div>
-          )}
+          {/*  §1 (nº 454) — LA PHOTO REMONTE EN TÊTE : la rangée du
+               profil (nº 452, affinée nº 453) ne vit plus au-dessus de
+               l'image — elle est descendue SOUS la ligne du titre, en
+               dernier bloc de la colonne (voir plus bas). L'ordre de la
+               vue photo au doigt : photo · titre + fanion · rangée du
+               profil, et rien après (la coupe nº 453 suit). */}
 
           {/* LA HAUTEUR DE LA PHOTO ÉPOUSE L'ÉCRAN (web) : la marge
               entre le BAS de l'image et le bas de la fenêtre doit être
@@ -1021,13 +922,17 @@ export function FicheTatoueur({
                 relevé qui commande, et il tient compte de TOUT ce qui
                 surmonte la photo — barre fixe, bandeau de l'espace,
                 marge du haut. */
-            /*  §1 (nº 452) — `mobile:-mt-4` NE VAUT PLUS QU'EN APERÇU :
-                sur la page publique, la rangée d'habillage vit
-                AU-DESSUS de la photo — la remontée qui collait l'image
-                à la barre fixe la ferait chevaucher. L'aperçu « Ma
-                fiche », sans rangée, garde la sienne au pixel. */
+            /*  §1 (nº 452, revu nº 454) — LA REMONTÉE SUIT LA VUE. En
+                APERÇU (« Ma fiche »), la photo colle à la barre comme
+                depuis toujours (`-mt-4`, les 16 px du `pt` rendus). Sur
+                la PAGE PUBLIQUE, la photo est redevenue LE PREMIER
+                élément (nº 454 : la rangée du profil est descendue sous
+                le titre) : elle vit directement sous la barre avec un
+                air PROPRE de 8 px — `mobile:-mt-2` reprend la moitié du
+                `pt-4` de la racine, la même valeur que l'air choisi à
+                la nº 453. */
             className={`lg:w-[var(--photo-largeur,calc((100vh_-_119px)*0.8))] max-w-full mobile:-mx-4 mobile:max-w-none ${
-              apercu ? "mobile:-mt-4" : ""
+              apercu ? "mobile:-mt-4" : "mobile:-mt-2"
             }`}
           >
             <CarrouselPortfolio
@@ -1178,6 +1083,97 @@ export function FicheTatoueur({
                   />
                 </div>
               )}
+            </div>
+          )}
+
+          {/*  ██ §1 (nº 454) — LA RANGÉE DU PROFIL, SOUS LA LIGNE DU
+               TITRE ██
+               ==================================================
+               Posée au-dessus de la photo à la nº 452, elle DESCEND en
+               dernier bloc de la colonne : photo · titre + fanion ·
+               cette rangée — et rien après (la coupe nº 453 retire la
+               colonne de lecture de la vue photo). Elle garde TOUT de
+               la nº 453 : avatar 40 px, nom blanc gras, ligne grise
+               13 px avec ses 4 px d'air sous le nom, badge « Profil »
+               de 30 px (cible tactile 44), jetons du site, navigation
+               inchangée (`adresseDeLienInterne`, UNE entrée, le retour
+               rend la vue photo). SEULE SA PLACE change — le
+               `mobile:-mt-2` de la nº 453 (l'air sous la barre) part
+               avec elle : sous le titre, l'air est le `gap-3` de la
+               colonne, 12 px.
+               ⚠️ WEB ET APERÇU : RIEN — `hidden mobile:flex`, aperçu
+               exclu comme le partage. La garde d'avant peinture
+               (nº 359) couvre la COLONNE entière : une arrivée
+               `entree=lien` cache la rangée avec la photo. */}
+          {!apercu && (
+            <div
+              data-habillage-photo=""
+              className="hidden mobile:flex items-center gap-3"
+            >
+              <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                <span
+                  className="flex h-10 w-10 shrink-0 items-center justify-center
+                             overflow-hidden rounded-full bg-sombre-eleve"
+                >
+                  {tatoueur.photo_profil ? (
+                    /* eslint-disable-next-line @next/next/no-img-element --
+                       photo déposée par le tatoueur, servie telle quelle. */
+                    <img
+                      src={tatoueur.photo_profil}
+                      alt=""
+                      width={40}
+                      height={40}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span
+                      aria-hidden="true"
+                      className="text-[16px] font-bold text-sombre-texte-doux"
+                    >
+                      {tatoueur.nom.trim().charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-[13.5px] font-semibold leading-tight text-sombre-texte">
+                    {tatoueur.nom}
+                  </span>
+                  {/*  La puce « • » : la seule ponctuation du site entre
+                       deux valeurs (nº 395). §1 (nº 453) : 13 px (au
+                       lieu de 11,5) et 4 px d'air sous le nom. */}
+                  <span className="block truncate text-[13px] leading-tight text-sombre-texte-doux mt-1">
+                    {[
+                      libelleTypeFiche(
+                        tatoueur.type_fiche,
+                        tatoueur.etablissement
+                      ),
+                      ligneCarteMobile({
+                        ville: tatoueur.ville_nom,
+                        region: tatoueur.region,
+                        pays: tatoueur.pays,
+                        code_pays: tatoueur.code_pays,
+                      }),
+                    ]
+                      .filter(Boolean)
+                      .join(" • ")}
+                  </span>
+                </span>
+              </div>
+              {/*  §1 (nº 453) — 30 px de haut (au lieu des 38 de
+                   BadgeCharte) : le badge s'affine, le texte ne change
+                   pas. L'ourlet `before:` grandit de 3 à 7 px par
+                   côté : la cible tactile reste 44 px. */}
+              <Link
+                href={adresseDeLienInterne(tatoueur.slug)}
+                data-badge-profil=""
+                className="relative inline-flex min-h-[30px] shrink-0 items-center
+                           rounded-lg bg-sombre-eleve-clair px-3.5 text-[13.5px]
+                           font-semibold text-sombre-texte before:absolute
+                           before:-inset-y-[7px] before:inset-x-0
+                           before:content-['']"
+              >
+                Profil
+              </Link>
             </div>
           )}
 
