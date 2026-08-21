@@ -1100,7 +1100,21 @@ export function CarrouselPortfolio({
                        //  chemin inverse (FicheTatoueur, FenetreFiche).
                        //  ⚠️ Ni gabarit, ni rembourrage, ni couleur, ni
                        //  angle : seule l'ancre verticale bouge.
-                       "inline-flex right-3 top-3 px-2.5 py-1.5"
+                       //  §3 (nº 451) — SUR LA PAGE DE FICHE AU DOIGT,
+                       //  ELLE REDESCEND EN BAS À DROITE : le haut droit
+                       //  revient au badge « Profil » (FicheTatoueur), et
+                       //  le bas droit est libéré par le fanion, parti
+                       //  sous la photo. Le couple `mobile:top-auto
+                       //  mobile:bottom-3` est celui d'avant la nº 375, à
+                       //  l'envers — le motif éprouvé de ce fichier. La
+                       //  FENÊTRE superposée n'est PAS concernée (son
+                       //  fanion vit toujours en bas droit, nº 375) : elle
+                       //  garde le haut, par `dansLaFenetre`. Le web ne
+                       //  bouge pas d'un pixel (`mobile:` est un pointeur
+                       //  d'appareil, jamais une largeur).
+                       dansLaFenetre
+                         ? "inline-flex right-3 top-3 px-2.5 py-1.5"
+                         : "inline-flex right-3 top-3 mobile:top-auto mobile:bottom-3 px-2.5 py-1.5"
                  }`}
     >
       <span

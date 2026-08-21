@@ -7,6 +7,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 //  §2 (nº 337) — le chemin lu là où il est vrai, et le réveil par les
 //  DEUX portes : voir la note de `cheminDuNavigateur` plus bas.
@@ -17,14 +18,26 @@ import {
 } from "@/lib/adresse-courante";
 import {
   libelleStyle,
+  //  §1 (nº 451) — le mot « Artiste / Salon / Studio » de la ligne
+  //  grise, la MÊME écriture que le sous-titre des cartes (nº 211-§2).
+  libelleTypeFiche,
   MARQUE_YOKOFOLIO,
 } from "@/config/tatouage";
-import { villeAffichee } from "@/lib/adresse";
+//  §1 (nº 451) — le lieu de la ligne grise : l'écriture du sous-titre
+//  MOBILE des cartes (nº 212-§6), jamais recomposée ici.
+import { ligneCarteMobile, villeAffichee } from "@/lib/adresse";
 import { positionSousLeGel } from "@/lib/gel-du-corps";
 import { BoutonPartageFiche } from "@/components/BoutonPartageFiche";
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
-import { ContenuFiche, ENTREE_LIEN } from "@/components/ContenuFiche";
+//  §2 (nº 451) — `adresseDeLienInterne` : l'adresse de la vue profil
+//  (« ?entree=lien », sans photo en haut), l'écriture UNIQUE des liens
+//  internes — le badge « Profil » de la photo mobile la consomme.
+import {
+  adresseDeLienInterne,
+  ContenuFiche,
+  ENTREE_LIEN,
+} from "@/components/ContenuFiche";
 import { FenetreCarrousel } from "@/components/FenetreCarrousel";
 import { PileFiches } from "@/components/PileFiches";
 import { SondePhoto } from "@/components/SondePhoto";
@@ -320,6 +333,21 @@ export function FicheTatoueur({
       nº 31 avait laissés de côté : après elle, la réponse est oui
       partout.) */
   const photoAffichee = photosDuCarrousel[indicePhoto] ?? photosDuCarrousel[0];
+
+  /**
+   * §3 (nº 451) — LA RANGÉE SOUS LA PHOTO, AU DOIGT : le titre de la
+   * galerie À GAUCHE (nº 376, inchangé), et désormais LE FANION À
+   * DROITE — il quitte l'angle bas droit de l'image, seule sa place
+   * change. La rangée existe dès que l'un des deux existe : un style
+   * sans libellé garde son fanion (seul, à droite) ; l'aperçu « Ma
+   * fiche » et une fiche sans photo n'ont ni l'un ni l'autre, et la
+   * ligne n'est pas rendue — aucun blanc réservé.
+   * ⚠️ CALCULÉ AU RENDU, DONC DANS LE HTML PRÉRENDU : les deux
+   * drapeaux ne sortent que des données de la fiche (règle 137 — le
+   * fanion lui-même continue de juger sa photo côté navigateur).
+   */
+  const fanionSousLaPhoto = !apercu && Boolean(photoAffichee);
+  const rangeeSousLaPhoto = Boolean(titreDuCarrousel) || fanionSousLaPhoto;
   /*  §3 (nº 302) — LA GALERIE AFFICHÉE N'EST PLUS CALCULÉE ICI, et
       elle n'a plus de lecteur : elle ne servait qu'au cœur, pour
       enregistrer TOUT le carrousel d'un geste (nº 208-§6). Cette règle
@@ -827,9 +855,12 @@ export function FicheTatoueur({
            ⚠️ LE WEB N'EST JAMAIS CONCERNÉ : `mobile:` ne s'applique
            qu'au doigt, et `lg:gap-10` reste seul maître de la
            gouttière des deux colonnes. */}
+      {/*  §3 (nº 451) — la condition suit LA RANGÉE (titre OU fanion),
+           plus le seul titre : le blanc réparti de la nº 376 vaut dès
+           que quelque chose vit sous la photo. */}
       <div
         className={`grid gap-8 lg:gap-10 lg:grid-cols-[auto_340px] lg:justify-center ${
-          titreDuCarrousel ? "mobile:gap-5" : ""
+          rangeeSousLaPhoto ? "mobile:gap-5" : ""
         }`}
       >
         {/* ---------- La photo — calée dans la hauteur visible (web) ----------
@@ -925,19 +956,120 @@ export function FicheTatoueur({
                 </>
               )}
 
-              {/* SMARTPHONE : le cœur DANS l'image, angle BAS DROIT —
-                  au pouce, et loin de la barre fixe du haut. */}
-              {!apercu && photoAffichee && (
-                <div className="hidden mobile:block absolute bottom-3 right-3">
-                  {/*  ⚠️ LE GABARIT TACTILE (nº 198-§2) : 48 px de
-                       cible, glyphe à 30 — l'ombre portée du trait le
-                       garde lisible sur photo claire comme sombre. */}
-                  <BoutonCoeurPhoto
-                    photoId={photoAffichee.cle}
-                    variante="fiche-mobile"
-                  />
+              {/*  ██ §1 (nº 451) — L'HABILLAGE DU HAUT DE LA PHOTO, AU
+                   DOIGT ██
+                   ==================================================
+                   À GAUCHE : l'avatar rond du profil (40 px — plus
+                   petit que les 52 px des ronds d'équipe d'un salon,
+                   `PhotoRonde` de BlocLieux, mais nettement lisible),
+                   puis deux lignes — le NOM en blanc gras, et dessous
+                   la ligne grise « Artiste • Paris, France » : le MOT
+                   vient de `libelleTypeFiche` et le LIEU de
+                   `ligneCarteMobile`, les écritures du sous-titre des
+                   cartes (nº 211-§2, nº 212-§6) — rien n'est recomposé.
+                   L'AVATAR reprend le motif de la fiche (photo_profil,
+                   sinon l'initiale — jamais de trou, nº 224-§1).
+                   LA LISIBILITÉ SUR TOUTE PHOTO : le voile qui vit déjà
+                   sous les icônes posées sur l'image — la capsule du
+                   compteur (`bg-black/60 backdrop-blur`,
+                   CarrouselPortfolio) — jamais un style neuf.
+                   `max-w` : le bloc s'arrête avant le badge « Profil »
+                   (droite) — le nom long se coupe, il ne passe jamais
+                   dessous.
+                   ⚠️ WEB ET APERÇU : RIEN — `hidden mobile:flex`, et
+                   l'aperçu « Ma fiche » est exclu comme le partage. */}
+              {!apercu && (
+                <div
+                  data-habillage-photo=""
+                  className="hidden mobile:flex absolute top-3 left-3 z-[2]
+                             max-w-[calc(100%-104px)] items-center gap-2.5
+                             rounded-full bg-black/60 p-1 pr-3.5 backdrop-blur"
+                >
+                  <span
+                    className="flex h-10 w-10 shrink-0 items-center justify-center
+                               overflow-hidden rounded-full bg-sombre-eleve"
+                  >
+                    {tatoueur.photo_profil ? (
+                      /* eslint-disable-next-line @next/next/no-img-element --
+                         photo déposée par le tatoueur, servie telle quelle. */
+                      <img
+                        src={tatoueur.photo_profil}
+                        alt=""
+                        width={40}
+                        height={40}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span
+                        aria-hidden="true"
+                        className="text-[16px] font-bold text-sombre-texte-doux"
+                      >
+                        {tatoueur.nom.trim().charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-[13.5px] font-semibold leading-tight text-white">
+                      {tatoueur.nom}
+                    </span>
+                    {/*  La puce « • » : la seule ponctuation du site
+                         entre deux valeurs (nº 395). Gris de voile
+                         (`text-white/70`) : celui du fil d'Ariane sur
+                         le voile des fenêtres — pas une teinte neuve. */}
+                    <span className="block truncate text-[11.5px] leading-tight text-white/70">
+                      {[
+                        libelleTypeFiche(
+                          tatoueur.type_fiche,
+                          tatoueur.etablissement
+                        ),
+                        ligneCarteMobile({
+                          ville: tatoueur.ville_nom,
+                          region: tatoueur.region,
+                          pays: tatoueur.pays,
+                          code_pays: tatoueur.code_pays,
+                        }),
+                      ]
+                        .filter(Boolean)
+                        .join(" • ")}
+                    </span>
+                  </span>
                 </div>
               )}
+              {/*  §2 (nº 451) — LE BADGE « PROFIL », haut DROIT de la
+                   photo, au doigt. Texte blanc, le MÊME voile que
+                   l'habillage de gauche (bg-black/60 + flou), angles
+                   `rounded-lg` — les 8 px des badges de la charte
+                   (nº 449-§2). Hauteur 38 px et ourlet tactile
+                   `before:` : les gabarits de BadgeCharte, repris tels
+                   quels.
+                   IL OUVRE LA VUE PROFIL : la MÊME fiche, sans la photo
+                   au-dessus — `adresseDeLienInterne` écrit l'adresse
+                   `?entree=lien` (nº 329-§4), celle des liens internes,
+                   SANS le paramètre de photo. Un `<Link>` du routeur :
+                   UNE entrée d'historique (332-§1), et le RETOUR rend
+                   l'adresse d'avant — la vue photo, position restituée
+                   par la mémoire de navigation. En vue profil, la
+                   colonne photo n'est pas rendue : le badge n'existe
+                   plus, il ne peut pas s'empiler. */}
+              {!apercu && (
+                <Link
+                  href={adresseDeLienInterne(tatoueur.slug)}
+                  data-badge-profil=""
+                  className="hidden mobile:inline-flex absolute top-3 right-3 z-[2]
+                             min-h-[38px] items-center rounded-lg bg-black/60
+                             px-3.5 text-[13.5px] font-semibold text-white
+                             backdrop-blur before:absolute
+                             before:-inset-y-[3px] before:inset-x-0
+                             before:content-['']"
+                >
+                  Profil
+                </Link>
+              )}
+              {/*  §3 (nº 451) — LE FANION A QUITTÉ LA PHOTO : il vit
+                   désormais SOUS elle, à droite du titre de la galerie
+                   (voir la rangée sous le cadre, plus bas). Le bas
+                   droit de l'image revient à la capsule du compteur
+                   (CarrouselPortfolio, §3 nº 451). */}
             </CarrouselPortfolio>
           </div>
 
@@ -1002,14 +1134,31 @@ export function FicheTatoueur({
             * alors NI la balise, NI son `gap`, NI le `mobile:gap-5`.
             * Aucun blanc réservé à un texte absent.
             */}
-          {titreDuCarrousel && (
-            <p
-              data-titre-carrousel=""
-              className="hidden mobile:block truncate text-[15px]
-                         font-semibold text-sombre-texte"
-            >
-              {titreDuCarrousel}
-            </p>
+          {/*  §3 (nº 451) — LA LIGNE DEVIENT UNE RANGÉE : le titre garde
+               sa gauche, LE FANION prend la droite — même bouton, même
+               variante, même comportement (nº 198-§2) : seule sa place
+               change, de l'angle bas droit de l'image à cette ligne.
+               `items-center` : le titre se centre sur la hauteur du
+               fanion (48 px de cible). Un titre long se coupe toujours
+               (`truncate` + `min-w-0`) — le fanion ne bouge pas. */}
+          {rangeeSousLaPhoto && (
+            <div className="hidden mobile:flex items-center gap-3">
+              <p
+                data-titre-carrousel=""
+                className="flex-1 min-w-0 truncate text-[15px]
+                           font-semibold text-sombre-texte"
+              >
+                {titreDuCarrousel}
+              </p>
+              {!apercu && photoAffichee && (
+                <div className="shrink-0">
+                  <BoutonCoeurPhoto
+                    photoId={photoAffichee.cle}
+                    variante="fiche-mobile"
+                  />
+                </div>
+              )}
+            </div>
           )}
 
           {/*  L'AVERTISSEMENT DE DÉMONSTRATION a rejoint le contenu
