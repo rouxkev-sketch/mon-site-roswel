@@ -5,7 +5,6 @@ import { EncadreDeuxChamps } from "@/components/EncadreBarre";
 import { IconeReglages } from "@/components/Icones";
 import { MenuDeroulant } from "@/components/MenuDeroulant";
 import { SelecteurCapsule } from "@/components/SelecteurCapsule";
-import { BoutonPhototheque } from "@/components/BoutonPhototheque";
 import { CATEGORIES_EXPLORER, libelleStyle } from "@/config/tatouage";
 import { libelleExplorer } from "@/components/MoteurTatouage";
 import {
@@ -296,24 +295,16 @@ export function MenusSelection({
             <div className="flex-1 min-w-0">
               <EncadreDeuxChamps gauche={badge} droite={filtre()} porteBadge />
             </div>
-            {/*  §4 (nº 256) — L'EMPLACEMENT DE L'ICÔNE EST RÉSERVÉ EN
-                 PERMANENCE. La nº 255 la MONTAIT sur « Favoris » et la
-                 DÉMONTAIT sur « Suivis » : la largeur du groupe
-                 changeait, le centrage recalculait, et tout le bloc
-                 glissait à chaque bascule — les mots bougeaient sous le
-                 doigt. Elle reste donc TOUJOURS montée ; sur « Suivis »
-                 elle est `invisible` (la visibilité, jamais un
-                 démontage ni une opacité) : son emplacement demeure,
-                 rien ne se referme, rien ne se réajuste — le champ
-                 garde sa largeur et « Favoris » son pixel. Invisible,
-                 elle ne reçoit ni clic ni focus : c'est la propriété
-                 même de `visibility: hidden`. */}
-            <div
-              data-mise-en-page-selection=""
-              className={`hidden lg:flex ${surLesFavoris ? "" : "invisible"}`}
-            >
-              <BoutonPhototheque contexte="Ma sélection" />
-            </div>
+            {/*  nº 443 — LE ROND « SANS TEXTE » (BoutonPhototheque) EST
+                 SUPPRIMÉ de « Ma sélection » aussi : la vue photothèque
+                 quitte le produit entier — toutes les mises en page
+                 affichent le texte des cartes. Son emplacement réservé
+                 (§4 nº 256) part avec lui, ENTIER : plus d'icône sur
+                 « Favoris » NI de fantôme invisible sur « Suivis », la
+                 largeur du groupe est donc la même sur les deux
+                 onglets — la leçon de la nº 256 (rien ne doit glisser
+                 à la bascule) reste vraie par construction. L'encadré
+                 (`flex-1`) se prolonge dans l'espace libéré. */}
           </div>
       {/*  §3 (nº 258) — LA LIGNE ÉTROITE A DISPARU, entièrement. Une
            barre qui se replie ne laisse rien derrière elle : il ne

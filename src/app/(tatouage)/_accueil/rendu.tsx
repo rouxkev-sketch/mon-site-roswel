@@ -301,12 +301,18 @@ export async function RenduAccueil({
       //  §1 (nº 263) — LE COOKIE EST CELUI DE LA SURFACE « recherche » :
       //  « Ma sélection » a le sien (mes-favoris/page.tsx), et les deux
       //  pages ne parlent plus d'une seule voix.
+      //  nº 443 — LES DEUX RÉGLAGES SONT SUPPRIMÉS DU PRODUIT : la
+      //  disposition vaut « deux » pour toujours, et le texte est
+      //  toujours affiché (`phototequeSansTexte` passe par
+      //  `phototequeDuCookie`, qui répond faux quoi que dise un vieux
+      //  cookie). Les paramètres « disposition » et « texte » restent
+      //  RECONNUS plus haut (un vieux lien ne casse rien — ni
+      //  recherche, ni erreur), mais ne sont plus obéis : le serveur
+      //  et le navigateur (lib/disposition-grille, lib/vue-phototheque,
+      //  neutralisés) disent la même chose — aucun écart d'hydratation.
       affichage={{
-        disposition: params.disposition === "une" ? "une" : "deux",
-        phototheque:
-          params.texte === undefined
-            ? phototequeSansTexte
-            : params.texte === "sans",
+        disposition: "deux",
+        phototheque: phototequeSansTexte,
       }}
     />
     </div>

@@ -26,23 +26,11 @@ import { PageRechercheMobile } from "@/components/PageRechercheMobile";
 //  §1 (nº 331) — « la navigation gagne » : l'écriture commune, celle
 //  que les liens arment tout seuls (lib/etape-refermable).
 import { laSurfaceVaNaviguer } from "@/lib/etape-refermable";
-import {
-  IconeDeuxColonnes,
-  IconeLoupe,
-  IconeReglages,
-  IconeUneColonne,
-} from "@/components/Icones";
+import { IconeLoupe, IconeReglages } from "@/components/Icones";
 import { BadgeCharte, GroupeBadges } from "@/components/BadgesCharte";
-import { BoutonPhototheque } from "@/components/BoutonPhototheque";
 import { MenuDeVerre } from "@/components/SurfaceDeVerre";
 import { EncadreDeuxChamps } from "@/components/EncadreBarre";
 import { GLISSADE_MS, remonterSansClavier } from "@/lib/remontee-champ";
-import { basculerSansSaut } from "@/lib/bascule-verrouillee";
-//  ⚠️ TEMPORAIRE (nº 173) — la sonde-journal enregistre les clics sur
-//  les deux boutons de bascule. Elle n'écrit RIEN sans `?sonde-bascule=1`.
-import { noter } from "@/lib/journal-bascule";
-import { poserDisposition } from "@/lib/disposition-grille";
-import { useDispositionGrille } from "@/components/AffichageMosaique";
 import {
   fermerRecherche,
   lireRecherche,
@@ -316,12 +304,10 @@ export function MoteurTatouage({
       n'est plus « dans » la zone — la fermeture au clic dehors doit la
       connaître, sans quoi toucher un badge referme le panneau. */
   const plaqueFiltres = useRef<HTMLDivElement>(null);
-  /** La disposition de la mosaïque (mobile) — celle de L'ADRESSE
-      (nº 203-§1b), servie par le serveur. */
-  const disposition = useDispositionGrille();
-  /*  ⚠️ LA VUE PHOTOTHÈQUE N'EST PLUS LUE ICI (nº 255-§4) : elle vit
-      dans `BoutonPhototheque`, l'écriture extraite que les deux barres
-      consomment — c'est lui qui s'abonne au magasin. */
+  /*  nº 443 — LES DEUX RÉGLAGES DE MISE EN PAGE SONT SUPPRIMÉS : plus
+      de disposition (une/deux colonnes) ni de vue photothèque (« sans
+      texte ») — donc plus rien à lire ici. Les ronds de bascule des
+      deux barres sont partis avec (voir les rangées plus bas). */
 
   /**
    * nº 364 — POSER UN BADGE DANS LE BROUILLON DU PANNEAU WEB.
@@ -1164,15 +1150,10 @@ export function MoteurTatouage({
             <IconeReglages taille={20} />
           </button>
 
-          {/* LA VUE PHOTOTHÈQUE — à côté du bouton de filtres, même
-              taille (46 px), ronde. ⚠️ AUCUNE COULEUR D'ÉTAT (nº 141-
-              4C) : robe constante, le DESSIN dit l'état — comme le
-              bouton de disposition.
-              ⚠️ SON ÉCRITURE EST EXTRAITE (nº 255-§4) : elle vit dans
-              `BoutonPhototheque`, et la barre de « Ma sélection »
-              consomme LA MÊME. Rien n'a changé de ce qu'elle dessine —
-              46 px, `data-clair-barre`, le dessin qui dit l'état. */}
-          <BoutonPhototheque contexte="barre web" />
+          {/*  nº 443 — LE ROND « SANS TEXTE » (BoutonPhototheque) EST
+               SUPPRIMÉ de la barre web : toutes les mises en page de
+               l'ordinateur affichent le texte des cartes. Le champ et
+               le bouton de filtres ne bougent pas d'un pixel. */}
 
           {filtresOuverts && (
             //  LE PANNEAU — la robe des fenêtres du web depuis la
@@ -1231,7 +1212,10 @@ export function MoteurTatouage({
           UNE SEULE LIGNE, pleine largeur : la loupe à gauche, puis
           « style · localité » — tronqué d'un seul tenant s'il déborde. */}
       {/* LA RANGÉE DE LA BARRE (vrais mobiles) : la pilule de
-          recherche, et à sa DROITE le bouton rond de DISPOSITION.
+          recherche, SEULE depuis la nº 443 — les deux ronds de mise en
+          page (disposition une/deux, vue « sans texte ») sont
+          supprimés, et la pilule (`flex-1`) se prolonge d'elle-même
+          dans tout l'espace libéré.
           ⚠️ SUR L'ACCUEIL SEULEMENT (nº 150-§3, `rangeeMobile`). */}
       {rangeeMobile && (
       <div className="hidden mobile:flex w-full items-center gap-2.5">
@@ -1268,84 +1252,33 @@ export function MoteurTatouage({
                      rounded-full
                      px-5 min-h-[46px] transition-colors"
         >
-          {/*  ⚠️ TOUJOURS LE MÊME MOT (passe nº 140) : la loupe et
-               « Recherche », qu'une recherche soit active ou non. Les
-               critères en cours se lisent désormais dans le TITRE de
-               la page, au-dessus de la mosaïque — la pilule est une
-               PORTE, plus un résumé. L'aria-label, lui, garde le
-               détail : un lecteur d'écran ne voit pas le titre à côté. */}
+          {/*  nº 443 — LE TITRE VISIBLE CHANGE : « Find your tattoo
+               style… » (l'anglais est un choix du propriétaire, mobile
+               uniquement — cette pilule ne vit que dans la rangée du
+               doigt). La pilule reste une PORTE (nº 140), pas un
+               résumé ; l'aria-label garde le détail en français : un
+               lecteur d'écran ne voit pas le titre de la mosaïque à
+               côté. */}
           <IconeLoupe taille={18} classe="shrink-0 text-sombre-texte-doux" />
           <span
             aria-hidden="true"
             className="min-w-0 flex-1 truncate text-[15px] leading-tight
                        font-semibold text-sombre-texte"
           >
-            Recherche
+            Find your tattoo style…
           </span>
         </button>
 
-        {/* LE BOUTON DE DISPOSITION — un cercle à la hauteur de
-            l'encadré, JAMAIS rose : son apparence ne bouge pas, seule
-            l'ICÔNE change et montre la disposition VERS LAQUELLE on
-            bascule (en deux colonnes, elle propose la grande image ;
-            en une colonne, la mosaïque). Le choix est mémorisé d'une
-            visite à l'autre (voir src/lib/disposition-grille.ts). */}
-        <button
-          type="button"
-          onClick={() => {
-            // ⚠️ NOTER AVANT DE BASCULER. En une colonne, une carte
-            // occupe presque tout l'écran : la même position de
-            // défilement ne montre plus du tout le même tatoueur. On
-            // retient donc la carte qu'on regarde, et la grille la
-            // remet sous les yeux (voir src/lib/carte-du-haut.ts).
-            // ⚠️ ET LE TOUT SOUS VERROU (nº 162-§2) : note, changement
-            // et remise en place dans UNE SEULE tâche — aucune image
-            // intermédiaire ne peut être peinte, quelle que soit la
-            // charge du téléphone (voir lib/bascule-verrouillee).
-            // ⚠️ UNE VALEUR EXPLICITE (nº 164) : le bouton demande la
-            // disposition qu'il ANNONCE, il n'inverse pas l'état — deux
-            // déclenchements ne peuvent plus se défaire l'un l'autre.
-            noter(
-              `CLIC bouton DISPOSITION (barre mobile) · ${disposition} → ${
-                disposition === "deux" ? "une" : "deux"
-              }`
-            );
-            basculerSansSaut(() =>
-              poserDisposition(disposition === "deux" ? "une" : "deux")
-            );
-          }}
-          aria-label={
-            disposition === "deux"
-              ? "Afficher une image par ligne"
-              : "Afficher deux colonnes"
-          }
-          //  ⚠️ FOND GOUVERNÉ PAR `[data-clair-barre]` (nº 174-§1).
-          data-clair-barre=""
-          //  §1 (nº 258) — 46, comme le champ et l'autre rond : les
-          //  trois blocs de la rangée restent alignés au pixel.
-          className="shrink-0 w-[46px] h-[46px] rounded-full
-                     text-sombre-texte
-                     flex items-center justify-center active:opacity-80
-                     transition-opacity"
-        >
-          {disposition === "deux" ? (
-            <IconeUneColonne taille={20} />
-          ) : (
-            <IconeDeuxColonnes taille={20} />
-          )}
-        </button>
-
-        {/* LA VUE PHOTOTHÈQUE — à DROITE du bouton de disposition.
-            ⚠️ AUCUNE COULEUR D'ÉTAT (nº 141-4C) : exactement le
-            traitement du bouton de disposition — la robe ne bouge
-            pas, c'est le DESSIN qui change et montre la vue VERS
-            LAQUELLE on bascule (la photo → images seules ; la carte →
-            retour aux cartes).
-            ⚠️ LA MÊME ÉCRITURE QUE LA BARRE WEB (extraite nº 255-§4,
-            `BoutonPhototheque`) : ici en 52 px, avec le retour à
-            l'appui de la rangée du doigt — les deux seules valeurs qui
-            distinguaient les deux barres, et elles ne bougent pas. */}
-        <BoutonPhototheque contexte="barre mobile" diametre={46} retourAuDoigt />
+        {/*  nº 443 — LES DEUX RONDS DE MISE EN PAGE SONT SUPPRIMÉS :
+             le bouton de DISPOSITION (une image par ligne ↔ deux
+             colonnes) et le rond de la VUE PHOTOTHÈQUE (« sans
+             texte »). Une seule mise en page subsiste — les cartes
+             côte à côte avec leur texte — et la pilule ci-dessus
+             (`flex-1`) occupe désormais toute la largeur de la rangée.
+             Leur mécanique est neutralisée à la source
+             (lib/disposition-grille, lib/vue-phototheque) : un vieux
+             lien ou une vieille mémoire retombe sur la mise en page
+             standard, sans casse. */}
       </div>
       )}
 
