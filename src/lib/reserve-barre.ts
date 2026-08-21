@@ -125,6 +125,46 @@ export const MARQUE_IMMEDIATE = "rangeeImmediate";
 export const EVENEMENT_RANGEE = "roswel:rangee-a-rendre";
 
 /**
+ * ██ §1 (nº 430) — L'ÉTAT DU VOLET SURVIT AU REMONTAGE ██
+ * ==================================================================
+ * LE RELEVÉ QUI L'A EXIGÉ (iPhone, sonde nº 429) : au « Voir plus »
+ * depuis l'adresse nue, AUCUN rechargement — mais « ⚠️ DÉMONTAGE page
+ * (IndexTatoueurs) · ⚠️ DÉMONTAGE mosaïque · MONTAGE mosaïque ». La
+ * cause est STRUCTURELLE : l'accueil prérendu et le jumeau de
+ * recherche sont DEUX pages, la première pagination (ou la première
+ * recherche) traverse la frontière, et React reconstruit l'arbre — or
+ * la barre est rendue PAR la page (IndexTatoueurs) : son état
+ * `moteurReplie` meurt avec l'arbre, et la rangée renaissait DÉPLIÉE.
+ * Contre-cas mesuré par le propriétaire : en partant du jumeau (adresse
+ * à sonde), aucun croisement, le volet ne s'ouvrait jamais.
+ *
+ * LA SURVIE : une variable de MODULE — le chemin le plus inerte qui
+ * existe, le modèle exact de lib/memoire-cartes (nº 372) : aucune
+ * écriture d'adresse, aucune entrée d'historique, aucun stockage,
+ * aucune requête ; elle vit tant que le document vit, et meurt avec
+ * lui. Écrite à CHAQUE bascule réelle (le doigt, le haut de page, une
+ * restitution) ; lue à la naissance de la barre. Sur un document NEUF,
+ * le module est frais (`null`) : la marque du script d'avant-peinture
+ * garde son rôle exactement comme avant — le repli réparé de la nº 428
+ * passe par elle (nouveau document), pas par cette mémoire.
+ */
+let dernierEtatDeRangee: boolean | null = null;
+
+/** Écrite par la barre à chaque bascule réelle, et par la restitution
+    quand elle rend un état (la barre peut ne pas être montée à cet
+    instant — la fenêtre d'un remontage). */
+export function memoriserEtatDeRangee(repliee: boolean): void {
+  dernierEtatDeRangee = repliee;
+}
+
+/** Ce que la barre doit adopter à un REMONTAGE dans le même document.
+    `null` : aucun état vécu ici — document neuf, la marque du script
+    décide. NE SE CONSOMME PAS : dix remontages relisent dix fois. */
+export function etatDeRangeeMemorise(): boolean | null {
+  return dernierEtatDeRangee;
+}
+
+/**
  * LA RANGÉE EST-ELLE REPLIÉE EN CE MOMENT ?
  * `null` quand la question n'a pas de sens : pas de barre, pas de
  * réserve, ou le web. On ne range alors aucun état.
@@ -162,6 +202,9 @@ export function rendreLEtatDeRangee(
   if (repliee === null || repliee === undefined) return;
   const racine = document.documentElement;
   if (racine.dataset.appareil !== "mobile") return;
+  //  §1 (nº 430) — la mémoire de module suit : un remontage juste après
+  //  ce retour doit renaître dans l'état RENDU, pas dans un plus vieux.
+  memoriserEtatDeRangee(repliee);
   //  La hauteur ne s'anime pas pendant un retour (voir globals.css).
   racine.dataset[MARQUE_IMMEDIATE] = "1";
   if (repliee) {

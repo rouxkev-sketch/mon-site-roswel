@@ -60,7 +60,9 @@ import { ouvrirRecherche } from "@/lib/recherche-mobile";
 //  §1 (nº 335) — les deux hauteurs de la réserve et la règle du retour
 //  vivent dans UN SEUL module. Voir l'en-tête de lib/reserve-barre.
 import {
+  etatDeRangeeMemorise,
   EVENEMENT_RANGEE,
+  memoriserEtatDeRangee,
   rangeeNaitRepliee,
   RESERVE_LOGO,
   RESERVE_RANGEE,
@@ -397,7 +399,18 @@ export function EnTeteTatouage({
       Près du haut (moins de 64 px), elle est toujours dépliée. Le
       seuil de 4 px par lecture ignore l'élastique du défilement.
       ⚠️ LA RANGÉE DU LOGO NE BOUGE JAMAIS : sans lui, plus de repère. */
-  const [moteurReplie, setMoteurReplie] = useState(false);
+  /*  §1 (nº 430) — LA BARRE NAÎT DANS L'ÉTAT MÉMORISÉ AU MODULE : elle
+      vit dans l'arbre de la PAGE (IndexTatoueurs), et le croisement
+      accueil-nu ↔ jumeau démonte cet arbre — l'état mourait avec lui,
+      la rangée renaissait dépliée (« le volet s'ouvre au Voir plus »,
+      relevé nº 429). L'initialisation paresseuse rend l'état juste dès
+      le PREMIER rendu du remontage — aucune image intermédiaire.
+      ⚠️ SANS ÉCART D'HYDRATATION : sur un document neuf, la mémoire de
+      module est vide (`null`) → `false`, exactement ce que le serveur
+      a rendu. Voir lib/reserve-barre, §1 (nº 430). */
+  const [moteurReplie, setMoteurReplie] = useState(
+    () => etatDeRangeeMemorise() ?? false
+  );
   /**
    * §6 (nº 247) — L'ÉTAT DU REPLI TIENT DANS DEUX RÉFÉRENCES, ET C'EST
    * LA CORRECTION DE « LE BANDEAU NE SE RÉTRACTE PLUS ».
@@ -517,6 +530,10 @@ export function EnTeteTatouage({
     //  une ligne par événement de défilement).
     let replieMiroir: boolean | null = null;
     const poserReplie = (valeur: boolean, cause = "(cause non dite)") => {
+      //  §1 (nº 430) — chaque bascule réelle nourrit la mémoire de
+      //  module : c'est elle qui fera renaître la rangée dans le bon
+      //  état au prochain remontage (croisement accueil-nu ↔ jumeau).
+      memoriserEtatDeRangee(valeur);
       if (replieMiroir !== valeur) {
         replieMiroir = valeur;
         noter(`RANGÉE ${valeur ? "REPLIÉE" : "DÉPLIÉE"} · ${cause}`);
@@ -543,8 +560,27 @@ export function EnTeteTatouage({
      * bougent pas d'un chiffre, et rien de tout cela ne se déclenche
      * hors d'un retour.
      */
-    const naissance = rangeeNaitRepliee();
-    if (naissance !== null) poserReplie(naissance, "naissance (marque du script)");
+    /*  ██ §1 (nº 430) — LA RENAISSANCE LIT D'ABORD LA MÉMOIRE DE
+        MODULE. Un REMONTAGE dans le même document (le croisement
+        accueil-nu ↔ jumeau : « Voir plus », première recherche) trouve
+        ici l'état vécu et le reprend — l'initialisation paresseuse du
+        `useState` l'a déjà rendu au premier rendu, ce bloc aligne le
+        miroir et ÉCRIT LA LECTURE au journal, comme le propriétaire
+        l'a demandé. Sur un document NEUF, la mémoire est vide : la
+        marque du script d'avant-peinture décide, comme depuis la
+        nº 335 (le repli réparé de la nº 428 passe par elle). */
+    const souvenir = etatDeRangeeMemorise();
+    if (souvenir !== null) {
+      replieMiroir = souvenir;
+      noter(
+        `RANGÉE RENDUE · ${souvenir ? "repliée" : "dépliée"} · mémoire de module (remontage)`
+      );
+      setMoteurReplie(souvenir);
+    } else {
+      const naissance = rangeeNaitRepliee();
+      if (naissance !== null)
+        poserReplie(naissance, "naissance (marque du script)");
+    }
     const auRetourDUnePlace = (evenement: Event) => {
       const detail = (evenement as CustomEvent<{ repliee?: boolean }>).detail;
       poserReplie(Boolean(detail?.repliee), "restitution (événement de rangée)");
