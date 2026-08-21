@@ -6,6 +6,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   useTransition,
 } from "react";
 import Link, { useLinkStatus } from "next/link";
@@ -49,6 +50,10 @@ import {
 } from "@/lib/disposition-grille";
 import { lirePhototheque, reprendrePhototheque } from "@/lib/vue-phototheque";
 import { memoriserRechercheTatouage } from "@/lib/derniere-recherche";
+//  §1 (nº 425) — la taille de page de CET écran, lue au cookie des
+//  colonnes : le lien « Voir plus » calcule sa page d'après ce qui est
+//  AFFICHÉ, pas d'après la numérotation du serveur qui a rendu.
+import { COOKIE_COLONNES, taillePageServie } from "@/lib/colonnes-mosaique";
 //  ⚠️ TEMPORAIRE (nº 224-§5) — la sonde des cartes. Sans
 //  `?sonde-cartes=1`, ces deux appels sortent à leur première ligne.
 import {
@@ -132,12 +137,50 @@ export function parametresDeRecherche(
     texte des cartes vivent dans l'adresse — une nouvelle recherche ou
     un « Voir plus » ne doivent pas les remettre au défaut. On relit
     donc les valeurs courantes au moment de fabriquer l'adresse. */
-function adresseDe(criteres: CritèresTatouage, page = 1): string {
+function adresseDe(
+  criteres: CritèresTatouage,
+  page = 1,
+  /** §2 (nº 425) — le jour du mélange du rendu AFFICHÉ. Écrit dans
+      l'adresse par la seule PAGINATION (page > 1) : la page suivante
+      prolonge alors exactement l'ordre de celle-ci, même quand minuit
+      UTC ou une régénération de l'accueil passe entre deux clics. Une
+      RECHERCHE n'en écrit jamais : une liste neuve prend l'ordre du
+      moment. */
+  jourMelange?: number
+): string {
   const parametres = parametresDeRecherche(criteres, page);
+  if (page > 1 && jourMelange !== undefined) {
+    parametres.set("melange", String(jourMelange));
+  }
   if (lireDisposition() === "une") parametres.set("disposition", "une");
   if (lirePhototheque()) parametres.set("texte", "sans");
   const requete = parametres.toString();
   return requete ? `/?${requete}` : "/";
+}
+
+/** §1 (nº 425) — LA TAILLE DE PAGE DE CET ÉCRAN, lue UNE FOIS au
+    cookie des colonnes (posé par le script d'avant peinture, donc
+    toujours là quand React s'hydrate) et gardée pour la visite. Servie
+    par `useSyncExternalStore` : au serveur elle est inconnue (null),
+    et le lien garde alors la numérotation du rendu — aucun écart
+    d'hydratation, la correction arrive au premier rendu client. */
+let taillePageEcranMemo: number | null = null;
+function lireTaillePageEcran(): number | null {
+  if (taillePageEcranMemo === null) {
+    const valeur = document.cookie
+      .split("; ")
+      .find((morceau) => morceau.startsWith(`${COOKIE_COLONNES}=`))
+      ?.split("=")[1];
+    taillePageEcranMemo = taillePageServie(valeur);
+  }
+  return taillePageEcranMemo;
+}
+/** Rien à écouter : le cookie ne bouge pas pendant la vie de la page. */
+function sourisMuette(): () => void {
+  return () => {};
+}
+function tailleInconnueAuServeur(): null {
+  return null;
 }
 
 /** §2 (nº 422) — LE LIBELLÉ DU LIEN « VOIR PLUS ». `useLinkStatus` ne
@@ -155,6 +198,7 @@ export function IndexTatoueurs({
   message,
   total,
   page,
+  jourMelange,
   affichage = { disposition: "deux", phototheque: false },
 }: {
   /** LES CARTES DE CETTE ADRESSE — toutes celles qu'elle demande,
@@ -173,6 +217,10 @@ export function IndexTatoueurs({
   total: number;
   /** La page demandée par l'adresse (1 par défaut). */
   page: number;
+  /** §2 (nº 425) — le jour du mélange utilisé par CE rendu (voir
+      `jourDuMelange`, lib/tatoueurs). Le lien « Voir plus » le
+      transmet pour que la page suivante prolonge cet ordre-ci. */
+  jourMelange: number;
   /** L'AFFICHAGE demandé par l'adresse (nº 203-§1b) : la disposition
       de la mosaïque et le texte des cartes — décodés par le serveur,
       comme les critères. */
@@ -419,6 +467,39 @@ export function IndexTatoueurs({
   const visibles = premiers;
   const resteAVoir = total > visibles.length;
 
+  /**
+   * ██ §1 (nº 425) — LA PAGE SUIVANTE SE CALCULE SUR CE QUI EST
+   * AFFICHÉ, PAS SUR LA NUMÉROTATION DU SERVEUR QUI A RENDU ██
+   * ==================================================================
+   * LE DÉFAUT, prouvé par les nombres du relevé du propriétaire
+   * (« 24/27 figé au premier clic, tout au deuxième ») : la page
+   * PRÉRENDUE sert 24 cartes — le repli de la nº 226, elle ne peut pas
+   * lire le cookie des colonnes — et se dit « page 1 ». Sur un
+   * téléphone à deux colonnes, le JUMEAU compte en pages de DOUZE
+   * (cookie) : le premier clic demandait `page=2`, soit 12 × 2 =
+   * 24 cartes — EXACTEMENT ce qui était déjà à l'écran. Rien de neuf,
+   * compteur figé. Le deuxième clic (page 3 → 36) « débloquait ».
+   * LA RÈGLE : le lien vise la première page (au sens de CET écran,
+   * son cookie) qui apporte des cartes de plus que l'affiché —
+   * `floor(affichées ÷ taille de l'écran) + 1`. Avec 24 affichées et
+   * des pages de 12 : page 3 (36 cartes servies, 12 nouvelles). Sur le
+   * web à 24 par page : page 2, comme avant — rien ne change.
+   * ⚠️ LA LECTURE DU COOKIE EST FAITE APRÈS L'HYDRATATION (un effet) :
+   * le HTML du serveur garde son lien d'origine, aucun écart
+   * d'hydratation ; l'effet corrige le lien dans la foulée. La règle
+   * nº 226 (rangées complètes) est intacte : les limites servies
+   * restent des multiples de la taille de page du cookie.
+   */
+  const taillePageEcran = useSyncExternalStore(
+    sourisMuette,
+    lireTaillePageEcran,
+    tailleInconnueAuServeur
+  );
+  const pageSuivante =
+    taillePageEcran !== null && visibles.length > 0
+      ? Math.floor(visibles.length / taillePageEcran) + 1
+      : page + 1;
+
   /*  ⚠️ PLUS AUCUNE REMISE EN PLACE (nº 224-§3) : la page ne doit pas
       bouger, donc personne ne la déplace. Cet effet ne fait plus que
       FERMER le relevé de la sonde, une fois les nouvelles cartes
@@ -660,7 +741,7 @@ export function IndexTatoueurs({
                  sombre (`eleve` → `haut`) et le texte reste BLANC :
                  le même geste que le focus d'un champ. */}
             <Link
-              href={adresseDe(criteresServis, page + 1)}
+              href={adresseDe(criteresServis, pageSuivante, jourMelange)}
               replace
               scroll={false}
               prefetch={true}

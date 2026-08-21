@@ -311,16 +311,39 @@ export type FiltresTatoueurs = {
       l'accueil, lui, tire au hasard du jour puis reclasse la page. */
   prioriserClics?: boolean;
   /**
-   * §1 (nº 279) — LA TAILLE D'UNE PAGE, pour l'étalement des artistes.
-   * ⚠️ DIFFÉRENTE DE `limite` : `limite` est ce qu'on demande MAINTENANT
-   * (elle grandit à chaque « Voir plus » — `taillePage × page`), tandis
-   * que celle-ci est la taille d'UNE page, fixe. C'est elle que la
-   * règle « au plus deux carrousels par artiste et par page » utilise ;
-   * la confondre avec `limite` ferait bouger les cartes déjà affichées
-   * à chaque chargement. Défaut : `CARTES_PAR_PAGE`.
+   * ██ §2 (nº 425) — LA GRAINE DU MÉLANGE, TRANSMISE PAR LA PAGINATION ██
+   * ------------------------------------------------------------------
+   * Le mélange du jour (`melangerDuJour`, et `p_jour` de la fonction de
+   * base) se fonde sur le jour UTC. Deux rendus d'une même journée
+   * voient donc le même ordre… sauf à cheval sur minuit UTC — 1 h ou
+   * 2 h du matin en France : un « Voir plus » cliqué là recevait la
+   * page 2 D'UN AUTRE JOUR que la page 1 affichée. Le lien de
+   * pagination transmet désormais le jour du rendu affiché
+   * (`?melange=…`), et le serveur le reprend — borné par
+   * `jourDuMelange` : une adresse bricolée n'impose rien.
+   * Absent : le jour courant, comme avant.
    */
-  taillePage?: number;
+  jourMelange?: number;
 };
+
+/**
+ * §2 (nº 425) — LE JOUR QUE LE MÉLANGE UTILISE. La demande (le
+ * `?melange=` d'une pagination) n'est retenue que si elle désigne un
+ * jour à moins de deux jours du courant : assez pour traverser minuit
+ * UTC et la régénération de l'accueil, trop peu pour rejouer un ordre
+ * ancien depuis une adresse fabriquée.
+ */
+export function jourDuMelange(demande?: number): number {
+  const courant = Math.floor(Date.now() / 86_400_000);
+  if (
+    demande !== undefined &&
+    Number.isInteger(demande) &&
+    Math.abs(demande - courant) <= 2
+  ) {
+    return demande;
+  }
+  return courant;
+}
 
 /** Les critères que le LIEU décide à lui seul. */
 type CriteresDeLieu = Pick<
@@ -739,14 +762,16 @@ function passeLesFiltres(tatoueur: Tatoueur, exclus: string[]): boolean {
  * UN ORDRE STABLE MAIS QUI CHANGE CHAQUE JOUR
  * -------------------------------------------
  * « Des cartes au hasard » à l'arrivée : sans ville ni style, on
- * mélange. Mais un vrai hasard changerait à chaque rendu — la page
+* mélange. Mais un vrai hasard changerait à chaque rendu — la page
  * serait différente entre le serveur et le navigateur, et React
  * signalerait une incohérence. On mélange donc avec une graine
  * fondée sur LE JOUR : identique des deux côtés, renouvelée chaque
  * matin.
+ * §2 (nº 425) — LE JOUR EST REÇU, plus calculé ici : c'est
+ * `jourDuMelange` qui le fixe (le jour courant, ou celui qu'une
+ * pagination transmet pour prolonger l'ordre de sa page 1).
  */
-function melangerDuJour<T>(liste: T[]): T[] {
-  const jour = Math.floor(Date.now() / 86_400_000);
+function melangerDuJour<T>(liste: T[], jour: number): T[] {
   return [...liste]
     .map((element, index) => ({
       element,
@@ -935,7 +960,8 @@ function filtrer(
         lieuxDeLaFiche(t).some(
           (lieu) => (lieu.codePays ?? "").toUpperCase() === cible
         )
-      )
+      ),
+      jourDuMelange(filtres.jourMelange)
     );
   } else if (niveau === "region" && filtres.region) {
     // TOUTE LA RÉGION — son nom, comparé sans casse ni accents. Le
@@ -952,7 +978,8 @@ function filtrer(
             memeNom(lieu.region, filtres.region) &&
             (!cible || (lieu.codePays ?? "").toUpperCase() === cible)
         )
-      )
+      ),
+      jourDuMelange(filtres.jourMelange)
     );
   } else if (ville) {
     // AUTOUR D'UN POINT — la même fonction de distance que les
@@ -1015,7 +1042,7 @@ function filtrer(
         : parDistance.filter(({ km }) => km <= 2).map(({ t }) => t);
     }
   } else {
-    retenus = melangerDuJour(retenus);
+    retenus = melangerDuJour(retenus, jourDuMelange(filtres.jourMelange));
   }
 
   // LE LIEU AFFICHÉ EST CELUI QUI RÉPOND À LA RECHERCHE, pas
@@ -1653,11 +1680,16 @@ function pageDeResultats(
     proximite: false,
     varieteDesArtistes: true,
     //  L'ÉTALEMENT SE RAPPORTE À UNE PAGE DE TAILLE FIXE — jamais à la
-    //  limite demandée, qui grandit à chaque « Voir plus » (l'accueil
-    //  demande `taillePage × page`). Sans cela, la place d'un
-    //  carrousel changerait d'un chargement à l'autre : le défaut
-    //  exact des nº 61 et 63.
-    parPage: filtres.taillePage ?? CARTES_PAR_PAGE,
+    //  limite demandée, qui grandit à chaque « Voir plus ».
+    //  ██ §1 (nº 425) — ET CETTE TAILLE EST UNE CONSTANTE, PLUS LA
+    //  TAILLE DE PAGE SERVIE. L'accueil prérendu étale au repli
+    //  (24, sans cookie) quand le jumeau étalait au cookie (12 sur un
+    //  téléphone) : DEUX DÉCOUPAGES pour la même liste, et l'ordre
+    //  divergeait localement aux frontières — les cartes déjà
+    //  affichées se réorganisaient au premier « Voir plus ». La
+    //  fonction de base n'a jamais eu ce paramètre : elle étale à
+    //  fenêtre constante — ce chemin de secours fait pareil désormais.
+    parPage: CARTES_PAR_PAGE,
   });
   return {
     ...reste,
@@ -1813,7 +1845,10 @@ async function rechercheEnBase(
       p_prioriser_clics: Boolean(filtres.prioriserClics),
       // LE MÉLANGE DU JOUR : la même graine que le code (voir
       // `melangerDuJour`) — le tirage ne change qu'une fois par jour.
-      p_jour: Math.floor(Date.now() / 86_400_000),
+      // §2 (nº 425) — et une pagination peut IMPOSER son jour
+      // (`?melange=`), borné par `jourDuMelange` : la page 2 prolonge
+      // l'ordre de la page 1 affichée, même à cheval sur minuit UTC.
+      p_jour: jourDuMelange(filtres.jourMelange),
     });
     if (error || !Array.isArray(data)) return null;
 

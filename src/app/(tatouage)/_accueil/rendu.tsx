@@ -7,6 +7,7 @@ import { PHOTOS_PAR_CARROUSEL } from "@/lib/photos-tatoueur";
 import {
   criteresDeLieu,
   filtresConnus,
+  jourDuMelange,
   listerTatoueurs,
   natureCherchee,
   styleConnu,
@@ -44,6 +45,11 @@ const PARAMETRES_RECHERCHE = [
   //  sans une mémoire parallèle — et c'est très exactement ce qu'on
   //  vient de supprimer.
   "page",
+  //  §2 (nº 425) — LA GRAINE DU MÉLANGE, transmise par « Voir plus »
+  //  seulement : la page 2 prolonge l'ordre de la page 1 affichée,
+  //  même quand minuit UTC ou une régénération passe entre les deux.
+  //  Comme « page », elle ne fait pas une recherche.
+  "melange",
   //  ⚠️ ET L'AFFICHAGE (nº 203-§1b) : la disposition de la mosaïque
   //  (« disposition=une ») et le texte des cartes (« texte=sans »)
   //  vivent dans l'adresse comme les critères — le serveur rend donc
@@ -55,7 +61,7 @@ const PARAMETRES_RECHERCHE = [
 /** Les paramètres qui ne décrivent PAS une recherche : la pagination
     et l'affichage — « /?page=2 » ou « /?texte=sans », c'est toujours
     l'accueil. */
-const PARAMETRES_HORS_RECHERCHE = new Set(["page", "disposition", "texte"]);
+const PARAMETRES_HORS_RECHERCHE = new Set(["page", "melange", "disposition", "texte"]);
 
 export type ParametresAccueil = Partial<
   Record<(typeof PARAMETRES_RECHERCHE)[number], string>
@@ -99,6 +105,11 @@ const chargerAccueil = cache(async (requete: string, taillePage: number) => {
   //  au retour de retrouver sa place sans qu'aucune mémoire n'ait eu à
   //  garder les cartes.
   const page = pageDemandee(params);
+  /*  §2 (nº 425) — la graine demandée par la pagination, bornée par
+      `jourDuMelange` (deux jours au plus autour du courant). */
+  const jourMelange = jourDuMelange(
+    params.melange !== undefined ? Math.floor(Number(params.melange)) : undefined
+  );
   const style = styleConnu(params.style);
   //  ⚠️ LA NATURE N'EST GARDÉE QUE SI ELLE EST CONNUE, comme le
   //  style : une adresse bricolée à la main ne doit pas vider la page.
@@ -128,11 +139,12 @@ const chargerAccueil = cache(async (requete: string, taillePage: number) => {
     //  taille de page entre deux chargements ne rejoue jamais une
     //  carte déjà vue.
     limite: taillePage * page,
-    //  §1 (nº 279) — LA TAILLE D'UNE PAGE, à part de la limite : c'est
-    //  elle que la règle « au plus deux carrousels d'un même artiste
-    //  par page » utilise. La limite, elle, grandit à chaque « Voir
-    //  plus » — les confondre ferait bouger les cartes déjà affichées.
-    taillePage,
+    //  §1 (nº 425) — LA TAILLE DE PAGE N'EST PLUS TRANSMISE : la règle
+    //  « deux carrousels d'un même artiste par page » travaille sur une
+    //  fenêtre CONSTANTE (lib/tatoueurs), identique pour la page
+    //  prérendue (repli 24) et le jumeau (cookie) — c'était la source
+    //  de la réorganisation des cartes au premier « Voir plus ».
+    jourMelange,
     //  ⚠️ PLUS D'UNE PHOTO PAR CARTE (nº 212-§2). La mosaïque n'en
     //  recevait qu'UNE (`sansGalerieInutile`, migration nº 32) : la
     //  carte ne pouvait donc jamais faire défiler quoi que ce soit —
@@ -147,7 +159,7 @@ const chargerAccueil = cache(async (requete: string, taillePage: number) => {
     //  et les suivantes au premier geste (nº 211-§5).
     photosMax: PHOTOS_PAR_CARROUSEL,
   });
-  return { resultat, style, nature, lieu, rayonKm, exclure, page };
+  return { resultat, style, nature, lieu, rayonKm, exclure, page, jourMelange };
 });
 
 /** L'adresse remise à plat, toujours dans le même ordre : c'est la
@@ -263,7 +275,7 @@ export async function RenduAccueil({
   // La MÊME lecture que les métadonnées : le lieu est décodé de
   // l'adresse, le rayon ramené à un palier connu, les interrupteurs
   // éteints validés — voir `chargerAccueil`.
-  const { resultat, style, nature, lieu, rayonKm, exclure, page } =
+  const { resultat, style, nature, lieu, rayonKm, exclure, page, jourMelange } =
     await chargerAccueil(requeteNormalisee(params), taillePage);
 
   return (
@@ -272,6 +284,10 @@ export async function RenduAccueil({
       premiers={resultat.tatoueurs}
       total={resultat.total}
       page={page}
+      //  §2 (nº 425) — le jour du mélange de CE rendu : le lien
+      //  « Voir plus » l'écrit dans l'adresse de pagination, pour que
+      //  la page suivante prolonge exactement cet ordre-ci.
+      jourMelange={jourMelange}
       message={resultat.message}
       criteresInitiaux={{ style, nature, rayonKm, exclure, lieu }}
       //  L'AFFICHAGE DEMANDÉ PAR L'ADRESSE (nº 203-§1b) — décodé ici,
