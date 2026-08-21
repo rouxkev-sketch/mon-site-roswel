@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import {
+  arriveeEnHautVoulue,
   arriveeQuiRestitue,
   restaurationDemandeePour,
 } from "@/lib/navigation-session";
@@ -198,7 +199,12 @@ export function DefilementEnHaut() {
       retourNavigateur.current = false;
       adresseRetour.current = "";
       premierRendu.current = false;
-      if (revient) {
+      //  §1 (nº 446) — UNE SORTIE CONFIRMÉE ARRIVE EN HAUT, même quand
+      //  son véhicule est une traversée d'historique (le go(-2) de la
+      //  garde de saisie) : la déclaration l'emporte sur les signaux
+      //  de retour. Lecture NON destructive — MemoireNavigation, le
+      //  dernier de la chaîne, consomme.
+      if (revient && !arriveeEnHautVoulue()) {
         //  ON REVIENT : la place est rendue AVANT la peinture. Rien à
         //  rendre (une fiche ouverte depuis une liste n'en a jamais
         //  écrit) : `poserLaPosition` ne bouge rien, et la page reste
@@ -218,7 +224,12 @@ export function DefilementEnHaut() {
       adresseRetour.current === chemin + window.location.search;
     retourNavigateur.current = false;
     adresseRetour.current = "";
-    if (versLAdresseDuRetour) return;
+    //  §1 (nº 446) — même règle que la branche des fiches : une sortie
+    //  confirmée (déclarée) arrive en haut, traversée d'historique ou
+    //  pas. C'est LA branche du symptôme — le go(-2) de la garde de
+    //  saisie atterrit sur l'accueil par un popstate, et sans la
+    //  déclaration on s'effaçait ici devant la restitution.
+    if (versLAdresseDuRetour && !arriveeEnHautVoulue()) return;
     // ⚠️ ET LA MÊME RÈGLE QUE LA MÉMOIRE DE NAVIGATION, sans quoi les
     // deux se contredisent. Un document NÉ d'un retour, d'une avance ou
     // d'un rechargement (réouverture du navigateur comprise) n'a pas

@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import {
+  arriveeEnHautVoulue,
   arriveeQuiRestitue,
+  consommerArriveeEnHaut,
   consommerRestaurationPosition,
   demanderRestaurationPosition,
   oublierRestaurationPosition,
@@ -19,6 +21,7 @@ import {
 //  C'est le point 4 de la règle de navigation (lib/navigation-session).
 import { positionSousLeGel } from "@/lib/gel-du-corps";
 import {
+  poserLaPosition,
   rendreLaPlace,
   reprendreLaReserveDuScript,
 } from "@/lib/restitution-position";
@@ -535,6 +538,32 @@ export function MemoireNavigation() {
     //    sur sa page (le retour reconstruit d'une fiche sans
     //    historique).
     const restaurationDemandee = consommerRestaurationPosition();
+
+    /*  ██ §1 (nº 446) — LA SORTIE CONFIRMÉE ARRIVE EN HAUT ██
+        ------------------------------------------------------------
+        Le « Quitter sans enregistrer » de la garde de saisie a
+        DÉCLARÉ son départ (declarerArriveeEnHaut) : même si son
+        véhicule est une traversée d'historique (le go(-2) du bouton
+        « précédent » — un popstate, donc `vraieTraversee` VRAI), on
+        ne restitue RIEN : c'est une navigation en avant dans la tête
+        du visiteur, elle arrive en haut. DefilementEnHaut a déjà
+        remonté la page avant la peinture (lecture non destructive) ;
+        ici, DERNIER lecteur de la chaîne, on CONSOMME la déclaration
+        et on signe la décision au journal — la ligne POSE dit 0, et
+        pourquoi. Les vrais retours ne déclarent jamais rien : aucune
+        restitution légitime (423, 426, 431, fermeture 438) ne passe
+        par cette branche. */
+    const sortieConfirmee = arriveeEnHautVoulue();
+    consommerArriveeEnHaut();
+    if (sortieConfirmee) {
+      attenteDeTraversee.current = null;
+      poserLaPosition(
+        0,
+        undefined,
+        "sortie confirmée — l'arrivée en haut est voulue (nº 446)"
+      );
+      return;
+    }
 
     if (!vraieTraversee && !documentRestitue && !restaurationDemandee) {
       //  §2 (nº 333) — ON SORT SANS AVOIR SERVI : on le NOTE. Si le

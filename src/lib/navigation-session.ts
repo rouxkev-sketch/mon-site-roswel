@@ -755,6 +755,59 @@ export function laRepriseVientDuSite(): boolean {
   return annoncee;
 }
 
+/**
+ * §1 (nº 446) — « CETTE ARRIVÉE VEUT LE HAUT » : LA SORTIE CONFIRMÉE
+ * ==================================================================
+ * LE DÉFAUT QU'ELLE FERME (relevé du propriétaire, mobile) : sur la
+ * fiche de création (/devenir-tatoueur/fiche), quitter par le bouton
+ * « précédent » ouvre la fenêtre de confirmation (la sentinelle de
+ * GardeSaisie) ; « Quitter sans enregistrer » repart alors par
+ * `history.go(-2)` — une VRAIE traversée d'historique. À l'arrivée
+ * sur l'accueil, MemoireNavigation y lit un retour (popstate,
+ * `vraieTraversee`) et RESTITUE la position mémorisée — celle du bas
+ * de la page, notée quand on avait quitté l'accueil. Or une SORTIE
+ * CONFIRMÉE est une navigation EN AVANT dans la tête du visiteur :
+ * elle doit arriver EN HAUT, quel que soit le mécanisme qui la porte.
+ *
+ * LA RÈGLE — le modèle des déclarations nº 429 et nº 438 : le geste
+ * qui SAIT (le « Quitter sans enregistrer » de la fenêtre) déclare
+ * l'intention juste avant de partir ; l'arrivée la lit et n'y
+ * restitue rien. Les vrais retours (bouton « précédent » sans
+ * confirmation, fermeture de fenêtre nº 438) ne déclarent RIEN : les
+ * restitutions légitimes — recherche nº 423, place de la mosaïque,
+ * restitution datée nº 426, note finale nº 431 — ne rencontrent
+ * jamais ce drapeau.
+ *
+ * ⚠️ LA LECTURE EST NON DESTRUCTIVE, ET LA CONSOMMATION UNIQUE — la
+ * leçon de la nº 426 (« deux consommateurs pour un jeton, c'est une
+ * restitution perdue sur deux ») : DefilementEnHaut LIT (avant la
+ * peinture, pour remonter), MemoireNavigation LIT PUIS CONSOMME (le
+ * dernier de la chaîne, après la peinture). Trois secondes de
+ * validité au plus : un drapeau qui traînerait ne peut pas manger un
+ * vrai retour fait juste après.
+ */
+let arriveeEnHautVoulueLe = 0;
+
+/** À appeler juste avant une SORTIE CONFIRMÉE (le « Quitter sans
+    enregistrer » de la garde de saisie) — quelle que soit sa
+    mécanique : history.go, router.push, location. Jamais un frein. */
+export function declarerArriveeEnHaut() {
+  arriveeEnHautVoulueLe = Date.now();
+}
+
+/** Lecture NON destructive : l'arrivée en cours veut-elle le haut ? */
+export function arriveeEnHautVoulue(): boolean {
+  return (
+    arriveeEnHautVoulueLe !== 0 && Date.now() - arriveeEnHautVoulueLe < 3000
+  );
+}
+
+/** La consommation, par le DERNIER lecteur de la chaîne
+    (MemoireNavigation) : une déclaration sert UNE arrivée. */
+export function consommerArriveeEnHaut() {
+  arriveeEnHautVoulueLe = 0;
+}
+
 type EtatOnglet = {
   derniere: string | null;
   pages: number;
