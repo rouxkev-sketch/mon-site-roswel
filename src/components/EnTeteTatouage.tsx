@@ -12,6 +12,8 @@ import {
   defilerSansGeste,
   estDefilementProgramme,
 } from "@/lib/defilement-programme";
+//  §3 (nº 426) — les bascules de la rangée s'écrivent au journal.
+import { noter } from "@/lib/journal-bascule";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { lieuVersParametres } from "@/lib/geocodage";
@@ -348,7 +350,7 @@ export function EnTeteTatouage({
     if (evenement.metaKey || evenement.ctrlKey || evenement.shiftKey) return;
     if (window.location.pathname !== chemin) return;
     evenement.preventDefault();
-    defilerSansGeste({ top: 0 });
+    defilerSansGeste({ top: 0 }, "rafraîchissement de la page courante (icône)");
     router.refresh();
   };
 
@@ -501,7 +503,17 @@ export function EnTeteTatouage({
     //  est idempotent, React ne redessine pas pour la même valeur. La
     //  seule vérité est l'état React — un doigt et un défilement ne
     //  peuvent donc plus se contredire.
-    const poserReplie = (valeur: boolean) => setMoteurReplie(valeur);
+    //  §3 (nº 426) — CHAQUE BASCULE S'ÉCRIT, avec sa cause : le miroir
+    //  ci-dessous ne sert qu'à ne noter que les VRAIS changements (pas
+    //  une ligne par événement de défilement).
+    let replieMiroir: boolean | null = null;
+    const poserReplie = (valeur: boolean, cause = "(cause non dite)") => {
+      if (replieMiroir !== valeur) {
+        replieMiroir = valeur;
+        noter(`RANGÉE ${valeur ? "REPLIÉE" : "DÉPLIÉE"} · ${cause}`);
+      }
+      setMoteurReplie(valeur);
+    };
     /**
      * §1 (nº 335) — LA RANGÉE NAÎT DANS L'ÉTAT OÙ LE RETOUR L'A LAISSÉE.
      * ------------------------------------------------------------------
@@ -523,10 +535,10 @@ export function EnTeteTatouage({
      * hors d'un retour.
      */
     const naissance = rangeeNaitRepliee();
-    if (naissance !== null) poserReplie(naissance);
+    if (naissance !== null) poserReplie(naissance, "naissance (marque du script)");
     const auRetourDUnePlace = (evenement: Event) => {
       const detail = (evenement as CustomEvent<{ repliee?: boolean }>).detail;
-      poserReplie(Boolean(detail?.repliee));
+      poserReplie(Boolean(detail?.repliee), "restitution (événement de rangée)");
     };
     window.addEventListener(EVENEMENT_RANGEE, auRetourDUnePlace);
     const lire = () => {
@@ -545,11 +557,19 @@ export function EnTeteTatouage({
       //  (nº 161) : il est la couleur du fond du site, à toutes les
       //  positions — l'hystérésis 8 px / 2 px est partie avec lui.
       if (estDefilementProgramme()) {
+        //  §3 (nº 426) — un mouvement du site (pose, insertion de
+        //  cartes) n'est pas un geste ; les gros deltas s'écrivent,
+        //  pour que le relevé montre ce qui a été ignoré.
+        if (Math.abs(delta) > 24) {
+          noter(
+            `RANGÉE · delta ${Math.round(delta)} px ignoré (mouvement du site)`
+          );
+        }
         cumulDuGeste.current = 0;
         return;
       }
       if (y < 64) {
-        poserReplie(false);
+        poserReplie(false, "haut de page (moins de 64 px)");
         cumulDuGeste.current = 0;
         return;
       }
@@ -559,8 +579,11 @@ export function EnTeteTatouage({
       const cumul = cumulDuGeste.current;
       cumulDuGeste.current =
         Math.sign(delta) === Math.sign(cumul) ? cumul + delta : delta;
-      if (cumulDuGeste.current > 24) poserReplie(true);
-      else if (cumulDuGeste.current < -12) poserReplie(false);
+      if (cumulDuGeste.current > 24) {
+        poserReplie(true, `geste vers le bas (cumul ${Math.round(cumulDuGeste.current)} px)`);
+      } else if (cumulDuGeste.current < -12) {
+        poserReplie(false, `geste vers le haut (cumul ${Math.round(cumulDuGeste.current)} px)`);
+      }
     };
     lire();
     window.addEventListener("scroll", lire, { passive: true });

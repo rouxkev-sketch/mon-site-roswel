@@ -182,6 +182,6 @@ export function gelerLeCorps(
         appartient à la page qu'on a figée.
         ⚠️ UNE POSITION NULLE NE DÉCLENCHE RIEN, et c'est juste : le gel
         avait mis la page à zéro, elle y est encore. */
-    poserLaPosition(positionRetenue);
+    poserLaPosition(positionRetenue, undefined, "dégel d\u2019une surface");
   };
 }

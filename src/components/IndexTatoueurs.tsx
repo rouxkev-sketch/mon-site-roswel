@@ -54,6 +54,8 @@ import { memoriserRechercheTatouage } from "@/lib/derniere-recherche";
 //  colonnes : le lien « Voir plus » calcule sa page d'après ce qui est
 //  AFFICHÉ, pas d'après la numérotation du serveur qui a rendu.
 import { COOKIE_COLONNES, taillePageServie } from "@/lib/colonnes-mosaique";
+//  §1 (nº 426) — l'insertion des cartes s'annonce (l'ancrage WebKit).
+import { annoncerMouvementDuSite } from "@/lib/defilement-programme";
 //  ⚠️ TEMPORAIRE (nº 224-§5) — la sonde des cartes. Sans
 //  `?sonde-cartes=1`, ces deux appels sortent à leur première ligne.
 import {
@@ -508,6 +510,21 @@ export function IndexTatoueurs({
   useEffetAvantPeinture(() => {
     if (visibles.length === nombreAffiche.current) return;
     nombreAffiche.current = visibles.length;
+    /*  ██ §1 (nº 426) — L'INSERTION DES CARTES EST ANNONCÉE, comme un
+        défilement posé par le site.
+        LE DÉFAUT (relevé du propriétaire, iPhone) : au premier « Voir
+        plus » qui marche (nº 425), douze cartes s'insèrent AU-DESSUS
+        du lien qu'on vient de toucher. Sur WebKit — Chrome iPhone EST
+        WebKit — `overflow-anchor: none` n'existe pas (mesuré nº 424) :
+        l'ancrage natif garde le lien immobile en AJUSTANT le
+        défilement, et ces ajustements arrivent en événements `scroll`
+        qu'aucun doigt n'a faits. La barre y lisait un GESTE : cumul
+        basculé, et la rangée de recherche (le volet) se rouvrait toute
+        seule après le clic. La fenêtre de `defilement-programme`
+        (300 ms + deux images) couvre ces ajustements : la barre prend
+        acte, sans y lire d'intention — la règle nº 154-§6A, étendue
+        aux mouvements que le NAVIGATEUR fait pour nous. */
+    annoncerMouvementDuSite();
     fermerReleveCartes();
   }, [visibles.length]);
   /** Ce que la ligne de résultats annonce : les critères SERVIS, jamais

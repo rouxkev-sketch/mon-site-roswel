@@ -126,9 +126,12 @@ function poserLaPageSurLaCarte(visee: string | null): boolean {
   // un doigt qui défile. Sans l'annoncer, la barre y lisait un geste
   // vers le bas et REPLIAIT sa rangée de recherche — on touchait un
   // bouton d'affichage, et la barre se rétractait toute seule.
-  defilerSansGeste({
+  defilerSansGeste(
+    {
     top: Math.max(0, window.scrollY + boite.top - repere),
     left: 0,
-  });
+  },
+    "carte du haut (changement de disposition)"
+  );
   return true;
 }

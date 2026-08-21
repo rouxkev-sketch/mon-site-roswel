@@ -93,23 +93,29 @@ function surveillerLaReserve(reserve: number) {
  * laquelle cette position a été rangée : sans correspondance avec
  * l'adresse courante, on ne touche à rien.
  */
-export function poserLaPosition(position: number, cle?: string) {
+export function poserLaPosition(
+  position: number,
+  cle?: string,
+  /** §3 (nº 426) — POURQUOI cette pose : écrit dans la ligne POSE du
+      journal. Plus aucun poseur anonyme. */
+  raison = "(raison non dite)"
+) {
   const hauteur = Math.round(document.body.getBoundingClientRect().height);
   //  RIEN À RESTITUER : ON NE TOUCHE À RIEN (nº 185-b).
   if (position <= 0) {
-    noter(`POSE · demandée 0 · document ${hauteur} · AUCUN DÉPLACEMENT`);
+    noter(`POSE · demandée 0 · document ${hauteur} · ${raison} · AUCUN DÉPLACEMENT`);
     return;
   }
   //  UNE POSITION APPARTIENT À SA RECHERCHE (nº 185-c).
   const adresse = adresseDeRechercheCourante();
   if (cle !== undefined && cle !== adresse) {
     noter(
-      `POSE · demandée ${position} · document ${hauteur} · ` +
+      `POSE · demandée ${position} · document ${hauteur} · ${raison} · ` +
         `REFUSÉE (clé « ${cle} » ≠ adresse « ${adresse} »)`
     );
     return;
   }
-  noter(`POSE · demandée ${position} · document ${hauteur} · POSÉE`);
+  noter(`POSE · demandée ${position} · document ${hauteur} · ${raison} · POSÉE`);
   /**
    * §1 (nº 337) — ON ATTEND QUE LE CONTENU SOIT LÀ.
    * ------------------------------------------------------------------
@@ -129,7 +135,7 @@ export function poserLaPosition(position: number, cle?: string) {
     //  repliait sa rangée de recherche à l'arrivée sur la page.
     const reserve = position + window.innerHeight;
     document.documentElement.style.minHeight = `${reserve}px`;
-    defilerSansGeste({ top: position, left: 0 });
+    defilerSansGeste({ top: position, left: 0 }, `restitution — ${raison}`);
     surveillerLaReserve(reserve);
   });
 }
@@ -216,15 +222,15 @@ export function annulerLaRestitutionEnCours() {
  * `DefilementEnHaut`. Toute autre restitution passerait à côté de la
  * rangée.
  */
-export function rendreLaPlace(url: string) {
+export function rendreLaPlace(url: string, raison = "(raison non dite)") {
   const place = lireLaPlace(url);
   if (!place) {
     //  Rien à rendre : on ne touche à rien, ni à la page ni à la barre.
-    poserLaPosition(0);
+    poserLaPosition(0, undefined, raison);
     return;
   }
-  rendreLEtatDeRangee(place.p);
-  poserLaPosition(place.y, adresseDeRecherche(url));
+  rendreLEtatDeRangee(place.p, raison);
+  poserLaPosition(place.y, adresseDeRecherche(url), raison);
 }
 
 /**

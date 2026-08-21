@@ -509,7 +509,7 @@ export function ContenuFiche({
       )
     );
     if (window.scrollY <= cible) return;
-    defilerSansGeste({ top: cible });
+    defilerSansGeste({ top: cible }, "ContenuFiche (ancre de section)");
   }
 
   /**

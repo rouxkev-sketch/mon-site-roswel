@@ -121,7 +121,7 @@ export function ouvrirLaListeEnHaut(
     //  LA LISTE NEUVE EST ICI MÊME (un filtre : l'adresse a été écrite
     //  par `replaceState`, la page ne change pas). On remonte tout de
     //  suite — c'est ce que le propriétaire a validé à la nº 330-§1.
-    defilerSansGeste({ top: 0, left: 0 });
+    defilerSansGeste({ top: 0, left: 0 }, "liste neuve, ici même (filtre)");
     return;
   }
   //  LA LISTE NEUVE EST AILLEURS : on n'y touche pas maintenant.
@@ -139,5 +139,5 @@ export function laListeServieEstArrivee(): void {
   if (typeof window === "undefined") return;
   if (!remonteeEnAttente) return;
   remonteeEnAttente = false;
-  defilerSansGeste({ top: 0, left: 0 });
+  defilerSansGeste({ top: 0, left: 0 }, "liste neuve, à son arrivée (recherche)");
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { noter } from "@/lib/journal-bascule";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { positionSousLeGel } from "@/lib/gel-du-corps";
@@ -237,6 +238,8 @@ export function PageRechercheMobile({
       document.documentElement.dataset.recherche = "ouverte";
       setPhase("posee");
       // Le document ne contient plus qu'elle : on repart de son haut.
+      //  §3 (nº 426) — la pose s'écrit (aucun poseur anonyme).
+      noter("POSE DE DÉFILEMENT · vers 0 · par PageRechercheMobile (ouverture)");
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     });
 
@@ -310,6 +313,13 @@ export function PageRechercheMobile({
   useLayoutEffect(() => {
     if (phase !== "part") return;
     delete document.documentElement.dataset.recherche;
+    /*  §3 (nº 426) — la pose s'écrit, avec la valeur relue : c'est la
+        position d'AVANT l'ouverture, rendue au site pendant la
+        glissade de sortie (nº 334-§1). */
+    noter(
+      `POSE DE DÉFILEMENT · vers ${Math.round(lireDefilementResultats())} · ` +
+        "par PageRechercheMobile (sortie — la place d'avant l'ouverture)"
+    );
     window.scrollTo({
       top: lireDefilementResultats(),
       left: 0,

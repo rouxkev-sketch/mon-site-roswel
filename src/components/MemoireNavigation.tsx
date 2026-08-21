@@ -21,6 +21,8 @@ import {
   rendreLaPlace,
   reprendreLaReserveDuScript,
 } from "@/lib/restitution-position";
+//  §2-§3 (nº 426) — le refus de réveil s'écrit au journal de la sonde.
+import { noter } from "@/lib/journal-bascule";
 import {
   lireRequeteCourante,
   lireRequeteServeur,
@@ -154,7 +156,31 @@ export function MemoireNavigation() {
    * il ne se rejoue pas — sans quoi on reposerait une position par
    * dessus le dégel, et l'on rouvrirait le défaut de la nº 329.
    */
-  const attenteDeTraversee = useRef<string | null>(null);
+  /**
+   * ██ §2 (nº 426) — L'ATTENTE EST DATÉE, ET LE RÉVEIL EST BORNÉ ██
+   * ------------------------------------------------------------------
+   * LE DÉFAUT, et c'était LE poseur « aléatoire » de la recherche en
+   * bas de page : CHAQUE navigation sans restitution note ici son
+   * adresse (« au cas où le popstate du routeur arrive juste après »,
+   * nº 333-§2). Mais la note restait posée SANS LIMITE DE TEMPS. Or la
+   * FERMETURE D'UNE SURFACE — la croix ou Échap sur la page de
+   * recherche, le retour qui referme un panneau — produit exactement la
+   * signature attendue : un popstate SUR L'ADRESSE COURANTE. Des
+   * secondes ou des minutes après la note, ce popstate-là réveillait
+   * l'effet, qui se croyait dans le cas nº 333-§2 (vraie traversée) et
+   * RENDAIT LA PLACE mémorisée de la liste — celle d'une visite
+   * précédente, en bas. D'où l'aléatoire : il fallait une place
+   * mémorisée (moins de 30 min) ET une fermeture par croix/Échap/retour
+   * au bon moment. Et « même depuis le haut » : la place posée est
+   * celle de la MÉMOIRE, pas celle de l'écran.
+   * LA BORNE : le popstate du routeur suit son replaceState de
+   * quelques millisecondes (mesuré nº 333 : +16 ms → +21 ms). Une
+   * attente de plus de 400 ms n'est PAS ce cas-là — le réveil est
+   * refusé, et le refus s'écrit au journal.
+   */
+  const attenteDeTraversee = useRef<{ url: string; quand: number } | null>(
+    null
+  );
   const [reveils, setReveils] = useState(0);
 
   useEffect(() => {
@@ -195,9 +221,20 @@ export function MemoireNavigation() {
       //  §2 (nº 333) — L'EFFET ÉTAIT-IL SORTI FAUTE DE CE DRAPEAU, POUR
       //  CETTE ADRESSE ? Alors on le réveille : il a désormais de quoi
       //  répondre. Une seule fois, et seulement dans ce cas-là.
-      if (attenteDeTraversee.current === adresseTraversee.current) {
-        attenteDeTraversee.current = null;
-        setReveils((n) => n + 1);
+      const attente = attenteDeTraversee.current;
+      if (attente !== null && attente.url === adresseTraversee.current) {
+        //  §2 (nº 426) — le réveil n'est légitime que COLLÉ au
+        //  replaceState du routeur (nº 333-§2 : mesuré à ~20 ms).
+        if (Date.now() - attente.quand < 400) {
+          attenteDeTraversee.current = null;
+          setReveils((n) => n + 1);
+        } else {
+          noter(
+            `RÉVEIL REFUSÉ · popstate sur ${attente.url} · l'attente date ` +
+              `de ${Date.now() - attente.quand} ms (fermeture de surface ` +
+              `probable, pas la traversée du routeur)`
+          );
+        }
       }
     };
 
@@ -452,7 +489,7 @@ export function MemoireNavigation() {
       //  §2 (nº 333) — ON SORT SANS AVOIR SERVI : on le NOTE. Si le
       //  `popstate` de cette même adresse arrive juste après (le
       //  routeur remet l'adresse avant lui, mesuré), il nous rappellera.
-      attenteDeTraversee.current = url;
+      attenteDeTraversee.current = { url, quand: Date.now() };
       return;
     }
     attenteDeTraversee.current = null;
@@ -469,7 +506,16 @@ export function MemoireNavigation() {
     //  filtrée. La pose la revérifie à chaque tentative.
     //  §1 (nº 335) — ET AVEC L'ÉTAT DE LA RANGÉE : `rendreLaPlace` rend
     //  les deux ensemble (lib/restitution-position).
-    rendreLaPlace(url);
+    /*  §3 (nº 426) — LA POSE EST SIGNÉE : la raison voyage jusqu'à la
+        ligne POSE du journal (lib/restitution-position). */
+    rendreLaPlace(
+      url,
+      vraieTraversee
+        ? "retour ou avance (popstate)"
+        : documentRestitue
+          ? "document restitué (rechargement ou retour de document)"
+          : "demande explicite (retour reconstruit)"
+    );
   }, [pathname, requete, reveils]);
 
   return null;

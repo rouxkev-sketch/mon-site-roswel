@@ -287,7 +287,10 @@ export function remonterSansClavier(cible: HTMLElement): () => void {
     rendreLaMarge();
     //  1. LA POSITION D'ORIGINE, rendue — et JAMAIS lue comme un geste
     //     (sans quoi la barre du site replierait sa rangée, nº 154-§6A).
-    defilerSansGeste({ top: depart, left: 0, behavior: "smooth" });
+    defilerSansGeste(
+      { top: depart, left: 0, behavior: "smooth" },
+      "remontée du champ à suggestions"
+    );
     //  2. L'ESPACE se replie une fois la glissade finie : le document
     //     raccourcit alors sans tirer la page au passage.
     window.setTimeout(() => espace.replier(), GLISSADE_MS);

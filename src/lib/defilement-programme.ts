@@ -41,6 +41,11 @@
 
 const MARQUEUR = "defilementProgramme";
 
+//  §3 (nº 426) — TOUTE POSE S'ÉCRIT : la ligne signée du poseur, et le
+//  rabotage relevé. Le journal est celui de la sonde (journal-bascule),
+//  il ne coûte rien désarmé.
+import { noter } from "@/lib/journal-bascule";
+
 /** La fenêtre pendant laquelle les défilements ne sont pas des gestes.
     Assez large pour couvrir le re-bornage d'une recomposition de
     mosaïque, assez courte pour ne jamais avaler un vrai geste : un
@@ -64,10 +69,53 @@ export function estDefilementProgramme(): boolean {
  */
 let leveeEnCours = 0;
 
-export function defilerSansGeste(options: ScrollToOptions): void {
+export function defilerSansGeste(
+  options: ScrollToOptions,
+  /** §3 (nº 426) — QUI POSE. Chaque pose écrit sa ligne au journal :
+      plus aucun poseur anonyme. Les appelants se nomment ; un appel
+      sans signature s'écrit « (non signé) » — c'est déjà un indice. */
+  signature = "(non signé)"
+): void {
   if (typeof window === "undefined") return;
   document.documentElement.dataset[MARQUEUR] = "1";
+  const cible = typeof options.top === "number" ? Math.round(options.top) : null;
   window.scrollTo({ behavior: "instant", ...options });
+  /*  §3 (nº 426) — LE RABOTAGE, RELEVÉ SUR-LE-CHAMP : `scrollTo`
+      « instant » est synchrone, la position d'après l'appel est déjà
+      la position rabotée si le document était trop court. */
+  const obtenu = Math.round(window.scrollY);
+  if (cible !== null && Math.abs(obtenu - cible) > 1) {
+    noter(
+      `POSE DE DÉFILEMENT · vers ${cible} · par ${signature} · ` +
+        `RABOTÉE à ${obtenu} (document ${Math.round(
+          document.documentElement.scrollHeight
+        )})`
+    );
+  } else {
+    noter(`POSE DE DÉFILEMENT · vers ${cible ?? "?"} · par ${signature}`);
+  }
+  lever(FENETRE_MS);
+}
+
+/**
+ * ██ §1 (nº 426) — LE SITE ANNONCE AUSSI SES CHANGEMENTS DE HAUTEUR ██
+ * ==================================================================
+ * LE DÉFAUT VISÉ : au premier « Voir plus » qui marche (nº 425), douze
+ * cartes s'insèrent AU-DESSUS du lien qu'on vient de toucher. Sur
+ * WebKit — Chrome sur iPhone EST WebKit — `overflow-anchor: none`
+ * n'existe pas (la leçon mesurée de la nº 424) : l'ANCRAGE NATIF
+ * garde le lien immobile à l'écran en AJUSTANT le défilement, et ces
+ * ajustements arrivent comme des événements `scroll` qu'aucun doigt
+ * n'a faits. La barre y lisait un GESTE : son cumul basculait, et la
+ * rangée de recherche se rouvrait toute seule après le clic.
+ * LA RÈGLE, LA MÊME QUE POUR NOS POSES : le site annonce. Celui qui
+ * INSÈRE du contenu au-dessus du point de lecture appelle ceci ; les
+ * écouteurs de geste se taisent le temps de la fenêtre (300 ms + deux
+ * images), exactement comme pour un `defilerSansGeste`.
+ */
+export function annoncerMouvementDuSite(): void {
+  if (typeof window === "undefined") return;
+  document.documentElement.dataset[MARQUEUR] = "1";
   lever(FENETRE_MS);
 }
 
