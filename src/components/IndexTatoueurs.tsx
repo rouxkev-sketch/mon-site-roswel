@@ -8,7 +8,7 @@ import {
   useState,
   useTransition,
 } from "react";
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { useRouter } from "next/navigation";
 import {
   LARGEUR_SITE,
@@ -138,6 +138,15 @@ function adresseDe(criteres: CritèresTatouage, page = 1): string {
   if (lirePhototheque()) parametres.set("texte", "sans");
   const requete = parametres.toString();
   return requete ? `/?${requete}` : "/";
+}
+
+/** §2 (nº 422) — LE LIBELLÉ DU LIEN « VOIR PLUS ». `useLinkStatus` ne
+    se lit que SOUS le Link : ce petit composant y vit, et dit
+    « Chargement… » tant que la navigation du lien est en route — le
+    même message que portait l'ancien bouton pendant sa transition. */
+function LibelleVoirPlus() {
+  const { pending } = useLinkStatus();
+  return pending ? "Chargement…" : "Voir plus";
 }
 
 export function IndexTatoueurs({
@@ -370,15 +379,42 @@ export function IndexTatoueurs({
    *     (cadre `aspect-4/5` + `width`/`height` déclarés sur la
    *     balise) : aucune photo qui se pose ne pousse quoi que ce soit.
    */
-  function voirPlus() {
-    //  SONDE (nº 224-§5) : le relevé s'ouvre AVANT la transition et se
-    //  ferme après le rendu — c'est lui qui prouve que `scrollY` n'a
-    //  pas bougé. Sans `?sonde-cartes=1`, ne coûte rien.
-    ouvrirReleveCartes();
-    demarrerTransition(() => {
-      router.replace(adresseDe(criteresServis, page + 1), { scroll: false });
-    });
-  }
+  /**
+   * ██ §2 (nº 422) — « VOIR PLUS » EST UN LIEN PRÉCHARGÉ, PLUS UN
+   * BOUTON QUI DÉCLENCHE ██
+   * ==================================================================
+   * LE DÉFAUT, constaté en ligne : au premier clic, AUCUNE nouvelle
+   * carte ne semblait s'afficher, et la remontée qui suivait était
+   * saccadée ; au deuxième clic, tout marchait. INSTRUIT au banc de
+   * navigation de cette passe : le clic déclenchait bien UNE vraie
+   * requête serveur (le jumeau de recherche rend les cartes — vérifié
+   * requête par requête), mais elle ne PARTAIT qu'au clic. En ligne,
+   * le temps qu'elle revienne (réseau + session + base), le visiteur
+   * était déjà reparti vers le haut : les cartes arrivaient DERRIÈRE
+   * lui — invisibles depuis le bouton — et leur pose tombait au beau
+   * milieu de son geste de remontée, d'où les à-coups. Le deuxième
+   * clic, servi juste après la pose, paraissait « réparer ».
+   *
+   * LA CORRECTION : le bouton devient un `<Link prefetch>` vers la
+   * page suivante. `prefetch={true}` (doc Next : « The full route will
+   * be prefetched for both static and dynamic routes ») précharge la
+   * RÉPONSE ENTIÈRE dès que le lien ENTRE À L'ÉCRAN — c'est-à-dire
+   * seulement pour qui est descendu jusqu'en bas, exactement celui qui
+   * va cliquer. Au clic, la réponse est déjà là : les cartes se posent
+   * IMMÉDIATEMENT, sous ses yeux, pendant qu'il est encore en bas — et
+   * plus rien ne se commet en retard pendant la remontée.
+   *
+   * CE QUI NE CHANGE PAS : `replace` (la pagination ne pose JAMAIS
+   * d'étape d'historique, nº 332-§1) ; `scroll={false}` (la page ne
+   * bouge pas d'un pixel, nº 224-§3) ; l'adresse est la même
+   * (`adresseDe`, disposition et texte compris, nº 203-§1b) ; la sonde
+   * des cartes s'ouvre toujours AVANT la navigation (nº 224-§5).
+   * CE QUI CHANGE, ET C'EST DIT : la grille ne s'estompe plus pendant
+   * un « Voir plus » (l'estompe venait de la transition du bouton) —
+   * elle reste entière, les cartes s'ajoutent dessous ; l'estompe
+   * demeure pour les vraies recherches (`chercher`). Le libellé
+   * « Chargement… » demeure, par `useLinkStatus` (LibelleVoirPlus).
+   */
 
   const visibles = premiers;
   const resteAVoir = total > visibles.length;
@@ -623,22 +659,23 @@ export function IndexTatoueurs({
                  rien. Au survol, le fond monte d'UN CRAN sur l'échelle
                  sombre (`eleve` → `haut`) et le texte reste BLANC :
                  le même geste que le focus d'un champ. */}
-            <button
-              type="button"
-              onClick={voirPlus}
-              disabled={enTransition}
+            <Link
+              href={adresseDe(criteresServis, page + 1)}
+              replace
+              scroll={false}
+              prefetch={true}
+              onClick={() => ouvrirReleveCartes()}
               className="inline-flex items-center justify-center rounded-full
                          bg-sombre-eleve px-5 min-h-[42px] text-[14px] font-semibold
                          text-sombre-texte transition-colors
-                         hover:bg-sombre-haut
-                         disabled:opacity-60"
+                         hover:bg-sombre-haut"
             >
               {/*  §5 (nº 280) — « VOIR PLUS », TOUT COURT. Le bouton
                    charge des GALERIES depuis la nº 279, plus des
                    portfolios : le mot promettait autre chose que ce
                    qu'il apporte. (Le compteur, lui, ne change pas.) */}
-              {enTransition ? "Chargement…" : "Voir plus"}
-            </button>
+              <LibelleVoirPlus />
+            </Link>
             <p className="text-[13px] text-sombre-texte-doux">
               {visibles.length} sur {total}
             </p>
