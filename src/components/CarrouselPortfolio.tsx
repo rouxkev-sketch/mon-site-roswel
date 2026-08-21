@@ -971,6 +971,37 @@ export function CarrouselPortfolio({
          facteur ≥ 1,0075 — arrondi à 1,01. Sur la boîte de 589 px,
          cela couvre 2,9 px par côté et en rogne autant : le prix,
          accepté, du « plus aucune ligne nulle part ».
+      ██ §1 (nº 437) — EN FENÊTRE, LE DÉBORD PASSE EN BOÎTE : PLUS
+      AUCUN `transform` ██
+      ------------------------------------------------------------------
+      LE VERDICT DES MESURES 435/436, prises sur l'écran du
+      propriétaire : la géométrie était PARFAITE — l'image débordait sa
+      boîte de 2 à 8 px sur les QUATRE bords à toutes les tailles,
+      aucun cadre plus grand, aucune couche peinte au coin — et la
+      bande restait visible, sur Safari seulement. C'est le défaut de
+      rendu pré-annoncé : un élément TRANSFORMÉ est rastérisé sur sa
+      propre couche, et Safari (comme Chrome sur écran dense) peint le
+      bord de coupe avec un pixel de TRANSITION — le fond noir de la
+      boîte transparaît dans ce bord, en haut et à gauche (la coupe du
+      bas tombe sous la boîte : rien à voir là).
+      LE REMÈDE : le MÊME débord, obtenu par la GÉOMÉTRIE — l'image
+      est physiquement plus grande que sa boîte de référence (0,5 %
+      par bord, l'ampleur exacte du 1,01 : 2,2 à 8,4 px selon la
+      taille, le pire cas de la grille nº 434 couvert à l'identique),
+      centrée par des décalages négatifs. Plus de couche de
+      rastérisation, plus de bord de transition : le rognage est celui
+      du cadre existant (`overflow-x-auto overflow-y-hidden`, nº 434),
+      un rognage de FLUX que les moteurs peignent net.
+      `object-cover` inchangé : la boîte grandit uniformément
+      (101 % × 101 % d'un conteneur au format constant), aucune
+      déformation, la source d'image intacte (règle 175-§5).
+      ⚠️ Les pourcentages se réfèrent à la MÊME boîte que l'`inset-0`
+      remplacé (le premier ancêtre positionné — la colonne) : les
+      dimensions de référence n'ont pas changé, seule la taille finale.
+      ⚠️ LE MOBILE GARDE SON `scale` (mobile:scale-[1.008]) : le bord à
+      bord mobile est un acquis CONFIRMÉ par le propriétaire, et le
+      défaut de rendu n'y a jamais été observé — on ne touche pas à ce
+      qui marche.
       ⚠️ LA PAGE PLEINE DU WEB NE BOUGE PAS D'UN PIXEL : le facteur
       mobile vit sous la variante `mobile:` (l'attribut d'appareil) —
       sur le web pleine page, la classe rendue est STRICTEMENT celle
@@ -979,9 +1010,9 @@ export function CarrouselPortfolio({
     surCarte
       ? "absolute inset-0 h-full w-full object-cover"
       : dansLaFenetre
-        ? `absolute inset-0 h-full w-full object-cover${
-            regardee ? " scale-[1.01]" : ""
-          }`
+        ? regardee
+          ? "absolute -left-[0.5%] -top-[0.5%] h-[101%] w-[101%] object-cover"
+          : "absolute inset-0 h-full w-full object-cover"
         : `absolute inset-y-0 left-px h-full w-[calc(100%_-_2px)] object-cover${
             regardee ? " mobile:scale-[1.008]" : ""
           }`;

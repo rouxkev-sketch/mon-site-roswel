@@ -625,14 +625,18 @@ export function SondeRetour({
       }
       const cs = getComputedStyle(img);
       const scaleLu = (cs as CSSStyleDeclaration & { scale?: string }).scale ?? "(illisible)";
-      const classePresente = String(img.className).includes("scale-[1.01]");
-      const applique = scaleLu === "1.01";
+      const classeScale = String(img.className).includes("scale-[1.01]");
+      //  nº 437 — le débord est passé EN BOÎTE (sans transform) : la
+      //  marque de la nouvelle classe remplace le verdict du scale.
+      const classeDebord = String(img.className).includes("-left-[0.5%]");
       noter(
         `MESURE DU LISERÉ · agrandissement : scale calculé « ${scaleLu} » · transform « ${cs.transform} » · ` +
-          `classe scale-[1.01] dans l'attribut : ${classePresente ? "oui" : "NON"}` +
-          (applique
-            ? " — APPLIQUÉ"
-            : " — ⚠️ L'AGRANDISSEMENT 1,01 N'EST PAS APPLIQUÉ : c'est déjà le coupable (classe absente, écrasée, ou purgée du CSS)")
+          (classeDebord
+            ? "DÉBORD EN BOÎTE nº 437 (sans transform) — l'attendu : scale « none », transform « none », et tous les écarts image/boîte NÉGATIFS ci-dessus"
+            : `classe scale-[1.01] dans l'attribut : ${classeScale ? "oui" : "NON"}` +
+              (scaleLu === "1.01"
+                ? " — APPLIQUÉ"
+                : " — ⚠️ NI scale NI débord en boîte : la photo regardée n'est pas agrandie du tout, c'est le coupable"))
       );
       noter(
         `MESURE DU LISERÉ · styles de l'image : object-fit ${cs.objectFit} · object-position ${cs.objectPosition} · ` +
