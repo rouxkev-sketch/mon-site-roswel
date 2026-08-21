@@ -172,7 +172,49 @@ export function RetourGaranti() {
     if (mecanismeCoupe("filet")) return;
     let aNous = true;
     let ecoutePose = false;
+    /*  §1 (nº 423) — L'ADRESSE À LAQUELLE LE CRAN A ÉTÉ POSÉ. C'est
+        elle qui permet à `auRetour` de distinguer « le retour m'a
+        dépassé par le bas » d'« le retour vit au-dessus de moi, sur
+        une entrée écrite par le routeur ». Posée par `decider`, juste
+        avant le pushState du cran. */
+    let adresseDuCran: string | null = null;
 
+    /**
+     * ██ §1 (nº 423) — LE RATTRAPAGE NE JOUE QU'À L'ADRESSE DU CRAN ██
+     * ==================================================================
+     * LE DÉFAUT, relevé par le propriétaire (onglet privé neuf, sonde
+     * historique) : trois recherches d'affilée — chacune une REMPLACÉE
+     * du routeur par-dessus l'étape de la page de recherche —, puis UN
+     * retour. Le popstate atterrissait CORRECTEMENT sur la recherche
+     * précédente… et 109 ms plus tard une navigation de document
+     * partait vers « / » : l'accueil nu, la recherche écrasée. C'était
+     * CE rattrapage.
+     *
+     * LE MÉCANISME RÉEL — et il inverse l'hypothèse de la propagation :
+     * la marque ne se propage PAS par les remplacements du routeur.
+     * Les étapes des surfaces recopient l'état courant, marque comprise
+     * (etape-refermable, son pushState d'ouverture) ; mais quand la
+     * navigation CONSOMME l'étape (nº 332-§1), le routeur de Next écrit
+     * son `replaceState` avec `preserveCustomHistoryState: false` : il
+     * JETTE tout l'état qui n'est pas à lui — la marque comprise. Les
+     * entrées de recherche AU-DESSUS du cran n'ont donc JAMAIS la
+     * marque, et l'ancienne garde (« pas de marque = on m'a dépassé par
+     * le bas ») prenait chaque retour de recherche pour une sortie.
+     * L'écouteur, lui, restait vivant à travers toutes les recherches :
+     * l'effet ne se rejoue qu'au changement de CHEMIN (`usePathname`),
+     * et `/?style=…` ne change pas le chemin. D'où « à coup sûr ».
+     *
+     * LA RÈGLE NOUVELLE : le rattrapage exige DEUX choses — pas de
+     * marque, ET l'adresse du cran. Le cran est un duplicata de la page
+     * d'arrivée : lui et l'entrée d'arrivée (la seule qui vive dessous)
+     * portent la même adresse. Un atterrissage à une AUTRE adresse est
+     * par construction une entrée réelle du site au-dessus du cran —
+     * une recherche, une page — et le filet se tait.
+     *
+     * ET LA DÉCISION S'ÉCRIT (demande de la passe) : le rattrapage
+     * était invisible aux relevés — aucune ligne. Chaque issue en
+     * écrit une désormais (« RATTRAPAGE DU FILET »), sonde armée.
+     */
     function auRetour() {
       if (!aNous) return;
       /*  ⚠️ ON NE BOUGE QUE SI LE RETOUR NOUS A DÉPASSÉS PAR LE BAS.
@@ -181,8 +223,27 @@ export function RetourGaranti() {
           qui la porte encore, et le filet doit alors se taire. Sans
           cette garde, refermer un panneau enverrait à l'accueil. */
       const ici = window.history.state as Record<string, unknown> | null;
-      if (ici?.[MARQUE]) return;
+      if (ici?.[MARQUE]) {
+        noterDansLeJournal(
+          "RATTRAPAGE DU FILET",
+          "RETENU — l'entrée porte la marque (le cran, ou une surface qui l'a recopiée)"
+        );
+        return;
+      }
+      /*  §1 (nº 423) — LA GARDE D'ADRESSE, voir le bloc ci-dessus. */
+      const adresseIci = window.location.pathname + window.location.search;
+      if (adresseDuCran !== null && adresseIci !== adresseDuCran) {
+        noterDansLeJournal(
+          "RATTRAPAGE DU FILET",
+          `RETENU — atterri sur ${adresseIci}, une entrée réelle du site au-dessus du cran (posé à ${adresseDuCran} ; le routeur ne recopie pas la marque)`
+        );
+        return;
+      }
       aNous = false;
+      noterDansLeJournal(
+        "RATTRAPAGE DU FILET",
+        `DÉCLENCHÉ — atterri sous le cran (${adresseIci}, sans marque) : plus rien du site derrière, cap sur l'accueil`
+      );
       /*  ⚠️ `location.replace` ET NON le routeur de Next. Mesuré à la
           nº 190 : une navigation du routeur lancée DEPUIS un `popstate`
           ne part pas — le routeur est occupé à traiter la traversée
@@ -214,6 +275,11 @@ export function RetourGaranti() {
         return;
       }
       dire("ARMÉ");
+      /*  §1 (nº 423) — l'adresse du cran, relevée à l'instant de la
+          pose : le pushState à deux arguments garde l'adresse courante,
+          c'est donc elle que le cran (et l'entrée d'arrivée dessous)
+          porteront — et la seule où le rattrapage a le droit de jouer. */
+      adresseDuCran = window.location.pathname + window.location.search;
       window.history.pushState(
         { ...((window.history.state as object | null) ?? {}), [MARQUE]: true },
         ""
