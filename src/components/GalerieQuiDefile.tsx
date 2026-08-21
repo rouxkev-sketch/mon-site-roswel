@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+//  §4 (nº 459) — la mémoire de module des positions de défilement :
+//  elle survit aux remontages (leçon nº 430), voir lib/memoire-galeries.
+import {
+  defilementGalerieRetenu,
+  retenirDefilementGalerie,
+} from "@/lib/memoire-galeries";
 
 /**
  * LA GALERIE QUI DÉFILE — UN SEUL DESSIN, DEUX EMPLOIS (nº 306)
@@ -107,6 +113,14 @@ export function GalerieQuiDefile({
   avecVoiles = true,
   /** Ce qui relance la mesure des deux bouts de course. */
   cleDuContenu,
+  /**
+   * §4 (nº 459) — LA GALERIE SE SOUVIENT DE SA POSITION, quand
+   * l'appelant lui donne une clé (les galeries du doigt d'une fiche :
+   * `slug|nature|style|rendu`). Sans clé, RIEN ne change — « Ma
+   * sélection » et le web gardent leur comportement au caractère
+   * près. Voir lib/memoire-galeries pour la règle complète.
+   */
+  cleMemoire,
   etiquette,
 }: {
   children: React.ReactNode;
@@ -119,9 +133,40 @@ export function GalerieQuiDefile({
   decalageDroite?: string;
   avecVoiles?: boolean;
   cleDuContenu: string | number;
+  cleMemoire?: string;
   etiquette?: string;
 }) {
   const zone = useRef<HTMLUListElement>(null);
+
+  /**
+   * §4 (nº 459) — LA RESTITUTION, AVANT LA PEINTURE.
+   * ------------------------------------------------------------------
+   * Au montage, si une position a été retenue pour cette clé, elle est
+   * REPOSÉE en `useLayoutEffect` — après la mise en page, AVANT la
+   * peinture : l'œil ne voit jamais la première case (aucun éclair),
+   * et la pose est INSTANTANÉE (écriture directe de `scrollLeft`,
+   * jamais un `scrollTo` animé) — une pose programmée, que rien ne
+   * peut lire comme un geste : le seul écouteur de cette rangée est
+   * `lire` (l'état des chevrons et des fondus), qui doit justement
+   * refléter la position restituée.
+   * AU DÉMONTAGE, la position du moment est NOTÉE — le nettoyage
+   * d'effet s'exécute pendant que le nœud est encore là. C'est le
+   * couple exact de la leçon nº 430 : la mémoire vit dans le module,
+   * le composant ne fait que la lire et l'écrire aux deux bouts de sa
+   * vie.
+   */
+  useLayoutEffect(() => {
+    if (!cleMemoire) return;
+    const cadre = zone.current;
+    if (!cadre) return;
+    const retenue = defilementGalerieRetenu(cleMemoire);
+    if (retenue !== undefined && retenue > 0) {
+      cadre.scrollLeft = retenue;
+    }
+    return () => {
+      retenirDefilementGalerie(cleMemoire, cadre.scrollLeft);
+    };
+  }, [cleMemoire]);
 
   /*  §3 (nº 264) — LA LARGEUR DE CONTENU, PAS LE `clientWidth` : la
       rangée déborde de son cadre (rembourrage interne), et

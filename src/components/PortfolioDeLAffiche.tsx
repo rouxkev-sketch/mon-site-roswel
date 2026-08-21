@@ -1,6 +1,14 @@
 "use client";
 
+//  §4 (nº 459) — `useEffect` : la purge d'arrivée de la mémoire des
+//  galeries (voir PanneauPortfolio).
+import { useEffect } from "react";
 import { OngletsLigne } from "@/components/OngletsLigne";
+//  §4 (nº 459) — la mémoire de défilement des galeries du doigt.
+import {
+  cleDeGalerie,
+  oublierLesAutresGaleries,
+} from "@/lib/memoire-galeries";
 import {
   CATEGORIES_EXPLORER,
   ECRITURE_TITRE_SECTION,
@@ -212,6 +220,7 @@ export function PanneauPortfolio({
   groupes,
   surSerie,
   nomTatoueur,
+  slugTatoueur = "",
 }: {
   groupes: StyleGalerie[];
   /** Un toucher sur une vignette : la galerie principale montre CETTE
@@ -219,7 +228,19 @@ export function PanneauPortfolio({
       page remonte en haut (nº 197-§4, précisé par la nº 204-§3). */
   surSerie: (serie: SerieChoisie) => void;
   nomTatoueur: string;
+  /** §4 (nº 459) — L'IDENTITÉ DE LA FICHE, pour la mémoire de
+      défilement des galeries du doigt (lib/memoire-galeries) : la clé
+      de chaque galerie commence par lui, et son arrivée purge les
+      positions des AUTRES fiches. Vide : aucune mémoire — rien ne
+      change. */
+  slugTatoueur?: string;
 }) {
+  /*  §4 (nº 459) — LA PURGE D'ARRIVÉE : les positions retenues des
+      autres fiches meurent quand ce panneau se monte — aucune
+      position fantôme ne voyage d'un profil à l'autre. */
+  useEffect(() => {
+    if (slugTatoueur) oublierLesAutresGaleries(slugTatoueur);
+  }, [slugTatoueur]);
   /*  LES DEUX SECTIONS — « Réalisations » puis « Flashs », les
       libellés de CATEGORIES_EXPLORER. UNE SECTION VIDE NE REND RIEN :
       ni titre, ni espace (nº 276-§3). */
@@ -528,6 +549,18 @@ export function PanneauPortfolio({
               //  le portfolio se lit pareil sur les deux appareils.
               ecart="gap-[3px]"
               cleDuContenu={`${serie.style}-${serie.rendu}-${serie.photos.length}`}
+              /*  §4 (nº 459) — CHAQUE GALERIE DU DOIGT SE SOUVIENT DE
+                   SA POSITION au retour d'une vue photo (le remontage
+                   la remettait au début) : la clé porte la fiche et
+                   l'identité de la série. Sans slug (aucun appelant
+                   aujourd'hui), pas de mémoire — comportement
+                   d'avant. Le web n'est pas concerné : sur lui, une
+                   vignette ne démonte rien. */
+              cleMemoire={
+                slugTatoueur
+                  ? cleDeGalerie(slugTatoueur, nature, serie.style, serie.rendu)
+                  : undefined
+              }
               etiquette={titreDeGalerie(serie.label, serie.rendu)}
             >
               {casesDe(serie, nature)}

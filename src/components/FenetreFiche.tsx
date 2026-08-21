@@ -4,15 +4,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { corpsGele, gelerLeCorps } from "@/lib/gel-du-corps";
 import { declarerDepartVouluVersLAccueil } from "@/lib/navigation-session";
 import Link from "next/link";
-import { villeAffichee } from "@/lib/adresse";
-import { libelleStyle, MARQUE_YOKOFOLIO } from "@/config/tatouage";
-import { BoutonPartageFiche } from "@/components/BoutonPartageFiche";
+//  §1 (nº 459) — `villeAffichee`, `MARQUE_YOKOFOLIO`,
+//  `BoutonPartageFiche` et `cheminDuCarrousel` sont partis avec la
+//  pastille de partage de la photo : le partage vit dans la rangée du
+//  va-et-vient (ContenuFiche, nº 458-§2).
+import { libelleStyle } from "@/config/tatouage";
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
 import { ContenuFiche } from "@/components/ContenuFiche";
 import { SondePhoto } from "@/components/SondePhoto";
 import {
-  cheminDuCarrousel,
   galerieParStyles,
   ouvertureGalerie,
   ouvertureSurUnePhoto,
@@ -620,29 +621,13 @@ export function FenetreFiche({
                 indice={rang}
                 surChangement={setIndice}
               >
-                {/* LE PARTAGE À GAUCHE, LE CŒUR À DROITE — la place des
-                    deux boutons du web depuis la nº 198-§3, celle de la
-                    page. Chacun seul dans son angle (nº 201-§3 : le
-                    bandeau parti, plus rien ne recouvre le haut de la
-                    photo, ils reprennent leurs angles). */}
-                <div className="absolute top-3 left-3 z-[2]">
-                  <BoutonPartageFiche
-                    nomArtisan={tatoueur.nom}
-                    /*  §3 (nº 280) — le carrousel ouvert, comme sur la
-                        page de fiche : une seule écriture d'adresse. */
-                    cheminFiche={cheminDuCarrousel(
-                      tatoueur.slug,
-                      styleAffiche,
-                      serieEffective
-                    )}
-                    variante="fiche"
-                    avecFenetre
-                    sombre
-                    metier={stylePrincipal?.label}
-                    commune={villeAffichee(tatoueur.ville_nom)}
-                    marque={MARQUE_YOKOFOLIO.nom}
-                  />
-                </div>
+                {/*  §1 (nº 459) — LA PASTILLE DE PARTAGE A QUITTÉ LA
+                     PHOTO (l'angle haut gauche, nº 198-§3) : le
+                     partage du profil vit dans la rangée du
+                     va-et-vient (à gauche de « Suivre », nº 458-§2 —
+                     ContenuFiche, que cette fenêtre monte). Sur la
+                     photo, il ne reste que le fanion (bas droit,
+                     nº 375). */}
                 {photoEnregistrable && (
                   /*  §1 (nº 375) — LA FENÊTRE SUIT LA PAGE, PARCE
                       QU'ELLE EST LA PAGE. Elle n'existe QUE sur le
@@ -688,6 +673,24 @@ export function FenetreFiche({
                   glissant. `lg:overflow-x-clip` rogne au même pixel
                   sans créer de port de défilement. Rien de
                   géométrique : ni largeur, ni rembourrage, ni marge. */
+              /*  ██ §5 (nº 459) — `data-signe-muet` : DEPUIS UNE
+                  FENÊTRE SUPERPOSÉE, OUVRIR UNE FICHE PAR-DESSUS NE
+                  MONTRE PAS LE TRAIT ROSE ██
+                  La marque d'exemption de la nº 452, posée sur LA
+                  COLONNE DE CONTENU (le fil d'Ariane, hors d'elle,
+                  garde son trait) : un clic sur un profil, un studio,
+                  un salon ou un membre d'équipe EMPILE une fenêtre
+                  (PileFiches) — ce n'est pas un chargement de page,
+                  le trait mentait. L'attente reste armée (l'avalement
+                  du re-clic 332-§1 et le nettoyage à l'arrivée ne
+                  changent pas), seul l'affichage se tait.
+                  ⚠️ ASSUMÉ ET DIT : les badges de style de la fenêtre
+                  (qui NAVIGUENT vers la recherche en fermant la pile)
+                  vivent dans cette colonne — leur trait se tait
+                  aussi, sur ce chemin marginal. La PAGE de fiche,
+                  elle, n'est pas marquée : ses liens gardent le trait
+                  (au doigt, ils naviguent réellement). */
+              data-signe-muet=""
               className="w-full lg:w-[380px] shrink-0 lg:h-full lg:overflow-y-auto lg:overflow-x-clip p-5 sm:p-6 flex flex-col bg-sombre-carte [--fond-colonne:var(--rw-sombre-carte)]"
             >
               <ContenuFiche

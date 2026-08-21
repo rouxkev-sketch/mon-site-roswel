@@ -212,7 +212,20 @@ export function BoutonSuivre({
                              garde son cran. Trait et mot ne sont donc
                              plus du même gris : c'est ce qui est
                              demandé. */
-                        "border-sombre-haut-clair text-sombre-texte-doux hover:text-sombre-texte hover:border-sombre-texte"
+                        /*  ██ §3 (nº 459) — « SUIVI » SE REMPLIT ██
+                             L'intérieur prend LA COULEUR DU CONTOUR
+                             (`sombre-haut-clair`, #55555F — le jeton
+                             posé à la nº 405), et le mot passe au
+                             BLANC de la charte (`sombre-texte`) : un
+                             état plein, lisible d'un coup d'œil, le
+                             miroir gris du « Suivre » rose. Au survol,
+                             fond et contour descendent ENSEMBLE d'un
+                             cran (`sombre-haut`, #4A4A53) — le
+                             traitement du bouton rose, transposé ; le
+                             texte reste blanc. Piège 389 : une seule
+                             couleur de fond par état, remplacée au
+                             survol, jamais empilée. */
+                        "bg-sombre-haut-clair border-sombre-haut-clair text-sombre-texte hover:bg-sombre-haut hover:border-sombre-haut"
                       : //  §8 (nº 405) — LE ROSE PLEIN DU SITE (voir la
                         //  note ci-dessus) : fond et contour au même
                         //  jeton, texte blanc, et le survol monte les

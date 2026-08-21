@@ -1625,6 +1625,9 @@ export function ContenuFiche({
         <PanneauPortfolio
           groupes={groupes}
           nomTatoueur={tatoueur.nom}
+          //  §4 (nº 459) — l'identité de la fiche, pour la mémoire de
+          //  défilement des galeries du doigt (et sa purge d'arrivée).
+          slugTatoueur={tatoueur.slug}
           surSerie={(serie) => {
             noterSonde(
               `VIGNETTE demandée · style « ${serie.style} » · catégorie ` +

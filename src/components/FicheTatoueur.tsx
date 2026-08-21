@@ -736,33 +736,12 @@ export function FicheTatoueur({
       celui qui travaille sur zone, TOUTES LES VILLES pour un
       itinérant. Chacune ouvre la carte : d'où le rose. */
 
-  /** LA PHOTO DE PROFIL, RONDE, à côté du nom — 92 px : elle ne
-      décore plus, elle ANCRE le haut de la fiche. En dessous, elle
-      passait pour une vignette posée à côté d'un titre ; à cette
-      taille, c'est un portrait, et le nom lui répond.
-      Une fiche d'avant la refonte n'en a pas encore : l'initiale du
-      nom tient sa place — jamais de trou dans la mise en page. */  const boutonPartage = (
-    <BoutonPartageFiche
-      nomArtisan={tatoueur.nom}
-      /*  §3 (nº 280) — ON PARTAGE LE CARROUSEL OUVERT, pas la fiche en
-          général : celui qui regarde des flashs en réalisme partage
-          des flashs en réalisme (règle 3 du §0 de la nº 278). Les
-          trois tags sont ceux de la série AFFICHÉE — vignette du
-          portfolio comprise —, et l'adresse qu'ils forment est celle
-          que la fiche sait rouvrir (nº 279-§2). */
-      cheminFiche={cheminDuCarrousel(
-        tatoueur.slug,
-        styleAffiche,
-        serieEffective
-      )}
-      variante="fiche"
-      avecFenetre
-      sombre
-      metier={stylePrincipal?.label}
-      commune={villeAffichee(tatoueur.ville_nom)}
-      marque={MARQUE_YOKOFOLIO.nom}
-    />
-  );
+  /*  §1 (nº 459) — LA PASTILLE DE PARTAGE DU WEB (`boutonPartage`,
+      posée dans l'angle haut gauche de la photo) EST SUPPRIMÉE, code
+      compris : le partage du profil vit dans la rangée du va-et-vient
+      (à gauche de « Suivre », nº 458-§2), et la vue photo du doigt a
+      sa flèche (nº 458-§1) — le partage du carrousel ouvert
+      (`cheminDuCarrousel`, règle nº 280-§3) continue par elle. */
 
   /** L'avertissement des fiches de démonstration — sa place change :
       au-dessus de tout sur le web, SOUS la photo sur smartphone (la
@@ -940,22 +919,13 @@ export function FicheTatoueur({
               indice={indicePhoto}
               surChangement={setIndicePhoto}
             >
-              {/* WEB : le CŒUR puis le PARTAGE dans la photo, angle
-                  haut droit — la page rejoint la fenêtre. Le cœur est
-                  À GAUCHE du partage (passe nº 137) : enregistrer est
-                  le geste courant, partager l'exception.
-                  Pas d'aperçu : l'espace tatoueur montre la fiche sans
-                  ces boutons. */}
-              {/*  §3 (nº 198) — LES DEUX BOUTONS DU WEB CHANGENT DE
-                   COIN : le partage passe dans l'angle GAUCHE de la
-                   photo (la place libérée par le menu de style), et le
-                   cœur prend la place qu'il occupait, à droite. Chacun
-                   seul dans son angle — plus de paire. */}
+              {/*  §1 (nº 459) — LA PASTILLE DE PARTAGE A QUITTÉ LA
+                   PHOTO (l'angle haut gauche, nº 198-§3) : le partage
+                   du profil vit dans la rangée du va-et-vient
+                   (nº 458-§2). Sur la photo du web, il ne reste que le
+                   fanion (angle bas droit, nº 375). */}
               {!apercu && (
                 <>
-                  <div className="mobile:hidden absolute top-3 left-3 z-[2]">
-                    {boutonPartage}
-                  </div>
                   {photoAffichee && (
                     /*  §1 (nº 375) — LE FANION DESCEND, LA CAPSULE
                         MONTE. Sur le web, les deux échangent leurs
@@ -1090,6 +1060,10 @@ export function FicheTatoueur({
                       serieEffective
                     )}
                     variante="icone"
+                    //  §2 (nº 459) — la flèche passe de 22 à 28 px
+                    //  (la cible reste 40) : nettement visible, à
+                    //  l'échelle du fanion d'en face (glyphe 30).
+                    tailleIcone={28}
                     avecFenetre
                     sombre
                     metier={stylePrincipal?.label}

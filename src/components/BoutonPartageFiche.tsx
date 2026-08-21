@@ -107,6 +107,7 @@ export function BoutonPartageFiche({
   marque = MARQUE.nom,
   sombre = false,
   contour = false,
+  tailleIcone = 22,
 }: {
   nomArtisan: string;
   /** Chemin de la fiche à partager (variante « carte ») ; à défaut, la
@@ -120,6 +121,11 @@ export function BoutonPartageFiche({
       MÊME action `partager` que les autres habillages : rien d'autre
       ne change. */
   variante?: "fiche" | "carte" | "icone";
+  /** §2 (nº 459) — LA TAILLE DU GLYPHE de la variante « icone » (les
+      autres habillages ne la lisent pas). 22 par défaut (le profil, à
+      gauche de « Suivre ») ; la vue photo du doigt demande 28 — la
+      flèche nettement visible, la cible de 40 px inchangée. */
+  tailleIcone?: number;
   couleurContour?: string;
   /** AUCUN contour (variante « carte ») : fond blanc seul — le rendu du
       bandeau de la fiche artisan ≥ 768 px. Les CARTES gardent le leur. */
@@ -516,7 +522,7 @@ export function BoutonPartageFiche({
           className="flex h-10 w-10 items-center justify-center
                      text-sombre-texte transition-transform active:scale-95"
         >
-          <IconePartageIOS taille={22} />
+          <IconePartageIOS taille={tailleIcone} />
         </button>
         {copie && (
           <span
