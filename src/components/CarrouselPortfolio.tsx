@@ -955,8 +955,22 @@ export function CarrouselPortfolio({
          chaque côté : le pixel de garde est couvert, ~0,55 px de
          photo rognés par bord (le propriétaire autorise « un ou
          deux ») ;
-       · fenêtre : 1,002 — 0,59 px par côté sur 589 : les virgules
-         mesurées (≤ 0,30) sont couvertes, sans rogner plus.
+       · fenêtre : 1,01 — §2 (nº 434), et voici le pire cas qui l'a
+         fixé. Le 1,002 de la nº 433 (0,45 px par bord) était calculé
+         sur UNE taille de fenêtre ; la mesure sur SIX tailles a
+         montré que l'image est ancrée en HAUT-GAUCHE de sa boîte (la
+         colonne s'arrondit au pixel inférieur, nº 280) : le manque
+         tombe asymétriquement, jusqu'à ~1 px sur UN seul bord, et à
+         plusieurs tailles la couverture restait NÉGATIVE (photo en
+         retrait de 0,2 à 0,5 px : la ligne que le propriétaire a
+         revue — 1280×720 droite/bas, 1180×900 droite, 1366×768 bas).
+         La consigne de la nº 434 : AU MOINS UN PIXEL ENTIER couvert
+         par bord, sur toute taille raisonnable. Il faut donc
+         (facteur−1)/2 × largeur ≥ 1 px + le déport (~0,5 px) sur la
+         plus petite boîte de fenêtre (~400 px en 1024×600) :
+         facteur ≥ 1,0075 — arrondi à 1,01. Sur la boîte de 589 px,
+         cela couvre 2,9 px par côté et en rogne autant : le prix,
+         accepté, du « plus aucune ligne nulle part ».
       ⚠️ LA PAGE PLEINE DU WEB NE BOUGE PAS D'UN PIXEL : le facteur
       mobile vit sous la variante `mobile:` (l'attribut d'appareil) —
       sur le web pleine page, la classe rendue est STRICTEMENT celle
@@ -966,7 +980,7 @@ export function CarrouselPortfolio({
       ? "absolute inset-0 h-full w-full object-cover"
       : dansLaFenetre
         ? `absolute inset-0 h-full w-full object-cover${
-            regardee ? " scale-[1.002]" : ""
+            regardee ? " scale-[1.01]" : ""
           }`
         : `absolute inset-y-0 left-px h-full w-[calc(100%_-_2px)] object-cover${
             regardee ? " mobile:scale-[1.008]" : ""
@@ -1353,12 +1367,22 @@ export function CarrouselPortfolio({
              rectangle noir là où, avant elle, il n'y avait rien du
              tout. Un carrousel vide ne réserve donc aucune place :
              c'est au reste de la page de dire ce qui manque. */
+        /*  §2 (nº 434) — `overflow-y-hidden`, EXPLICITE : un axe `auto`
+             rend l'autre `auto` aussi, et le débord VERTICAL de la
+             photo regardée agrandie (§1 nº 433/§2 nº 434) devenait
+             DÉFILABLE dans la fenêtre superposée — mesuré : la molette
+             déplaçait la photo de 4 px (`scrollTop` 0 → 4). Un
+             carrousel n'a AUCUN défilement vertical légitime (une
+             seule rangée) : l'axe est fermé, partout — sans effet là
+             où rien ne déborde (page : la colonne rogne déjà), et le
+             défilement horizontal, l'accrochage et `touch-action`
+             ne bougent pas. */
         className={`relative flex w-[round(down,100%,1px)] ${
           dansLaFenetre ? "" : `${n > 0 ? CADRE_PHOTO_PORTFOLIO : ""} min-h-0`
         } ${
           zoomEnCours
             ? "overflow-hidden"
-            : "overflow-x-auto snap-x snap-mandatory"
+            : "overflow-x-auto overflow-y-hidden snap-x snap-mandatory"
         } [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}
         //  §2 (nº 282) — LE CALAGE SUR LA GRILLE DE PIXELS : moins d'un
         //  pixel, jamais une largeur. Zéro tant que le bord tombe déjà
