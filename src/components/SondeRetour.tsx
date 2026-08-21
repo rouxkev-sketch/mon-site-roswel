@@ -638,6 +638,100 @@ export function SondeRetour({
         `MESURE DU LISERÉ · styles de l'image : object-fit ${cs.objectFit} · object-position ${cs.objectPosition} · ` +
           `padding ${cs.padding} · bordure ${cs.borderWidth} · arrondi ${cs.borderRadius} · marge ${cs.margin}`
       );
+
+      /* ⚠️ TEMPORAIRE (nº 436) — « QUI PEINT CE PIXEL ? », l'extension.
+         La 435 a prouvé : la photo déborde sa boîte de 3 à 8 px sur les
+         QUATRE bords, et la bande reste visible — Safari seulement.
+         Elle est donc peinte par un élément que la chaîne n'a pas
+         nommé : un habillage AUTOUR de la boîte, ou une couche posée
+         PAR-DESSUS la photo — ou c'est un défaut de rendu WebKit pur,
+         et alors ces lignes diront « rien d'anormal ». */
+
+      //  L'identité courte d'un élément, lisible : balise, data-role
+      //  s'il en a un, sinon la première classe.
+      const identite = (el: Element) => {
+        const role = (el as HTMLElement).dataset?.role;
+        const premiere = String(el.className).split(" ")[0] || "";
+        return `${el.tagName.toLowerCase()}${role ? `[${role}]` : premiere ? `(${premiere.slice(0, 24)})` : ""}`;
+      };
+      const horsSonde = (liste: Element[]) =>
+        liste.find((el) => !el.closest("[data-panneau-sonde]"));
+
+      /* 1 · LE SONDAGE PAR POINTS — le long des bords HAUT et GAUCHE
+         de la boîte : trois positions (25, 50, 75 %), six profondeurs
+         (−8, −4, −2 dehors · +2, +4, +8 dedans). Chaque point dit QUI
+         est touché, son fond, et sa RELATION à la photo. Une « couche
+         AU-DESSUS de l'image » au bord est le coupable probable. */
+      for (const bord of ["HAUT", "GAUCHE"] as const) {
+        for (const part of [0.25, 0.5, 0.75]) {
+          for (const prof of [-8, -4, -2, 2, 4, 8]) {
+            const x = bord === "HAUT" ? b.left + b.width * part : b.left + prof;
+            const y = bord === "HAUT" ? b.top + prof : b.top + b.height * part;
+            const touche = horsSonde(document.elementsFromPoint(x, y));
+            let ligne: string;
+            if (!touche) {
+              ligne = "(hors écran ou rien)";
+            } else {
+              const fond = getComputedStyle(touche).backgroundColor;
+              const relation =
+                touche === img
+                  ? "c'est l'image"
+                  : touche.contains(img)
+                    ? "ancêtre de l'image"
+                    : "COUCHE AU-DESSUS de l'image";
+              ligne = `${identite(touche)} · fond ${fond} · ${relation}`;
+            }
+            noter(
+              `MESURE DU PIXEL · bord ${bord} · ${Math.round(part * 100)} % · ` +
+                `${prof > 0 ? "+" : ""}${prof} px (${prof < 0 ? "dehors" : "dedans"}) : ${ligne}`
+            );
+          }
+        }
+      }
+
+      /* 2 · LES RECTANGLES DES FONDS PEINTS — la 435 les nommait sans
+         leurs boîtes : un fond PLUS GRAND que la boîte de la photo
+         expliquerait la bande à lui seul. */
+      let q2: Element | null = img.parentElement;
+      while (q2 && q2 !== enveloppe.parentElement) {
+        const fond = peint(q2);
+        if (fond) {
+          const r = q2.getBoundingClientRect();
+          const c2 = getComputedStyle(q2);
+          noter(
+            `MESURE DU PIXEL · fond peint : ${identite(q2)} · ${rect4(r)} · ` +
+              `arrondi ${c2.borderRadius} · fond ${fond}`
+          );
+        }
+        q2 = q2.parentElement;
+      }
+
+      /* 3 · LES COUCHES SUPERPOSÉES AU COIN HAUT-GAUCHE — tout élément
+         qui chevauche les 60 premiers pixels du coin de la photo SANS
+         être un ancêtre de l'image : voiles, dégradés, boutons,
+         légendes. Dix au plus, les premiers dans l'ordre du document. */
+      const coin = { gauche: m.left, haut: m.top, droite: m.left + 60, bas: m.top + 60 };
+      let comptees = 0;
+      for (const el of enveloppe.querySelectorAll("*")) {
+        if (comptees >= 10) break;
+        if (el === img || el.contains(img)) continue;
+        if (el.closest("[data-panneau-sonde]")) continue;
+        const r = el.getBoundingClientRect();
+        if (r.width === 0 || r.height === 0) continue;
+        if (r.right < coin.gauche || r.left > coin.droite || r.bottom < coin.haut || r.top > coin.bas) continue;
+        const c3 = getComputedStyle(el);
+        const degrade = c3.backgroundImage && c3.backgroundImage !== "none"
+          ? c3.backgroundImage.slice(0, 60)
+          : "(aucun)";
+        noter(
+          `MESURE DU PIXEL · couche au coin haut-gauche : ${identite(el)} · ${rect4(r)} · ` +
+            `fond ${c3.backgroundColor} · dégradé ${degrade} · opacité ${c3.opacity}`
+        );
+        comptees += 1;
+      }
+      if (comptees === 0) {
+        noter("MESURE DU PIXEL · couche au coin haut-gauche : AUCUNE — rien ne chevauche le coin hors la lignée de l'image");
+      }
     };
 
     //  L'APPARITION de la fenêtre : guettée toutes les 500 ms ; la
@@ -1054,6 +1148,9 @@ export function SondeRetour({
     return (
       <button
         type="button"
+        //  ⚠️ TEMPORAIRE (nº 436) — le sondage par points doit ignorer
+        //  la sonde elle-même : ce marqueur l'identifie, rien d'autre.
+        data-panneau-sonde=""
         onClick={() => {
           setJournal(lireJournal());
           setOuvert(true);
@@ -1079,6 +1176,8 @@ export function SondeRetour({
 
   return (
     <div
+      //  ⚠️ TEMPORAIRE (nº 436) — même marqueur que le bouton replié.
+      data-panneau-sonde=""
       style={{
         position: "fixed",
         inset: "auto 8px 8px 8px",
