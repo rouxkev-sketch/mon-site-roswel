@@ -924,10 +924,53 @@ export function CarrouselPortfolio({
    *    remise dans son état d'avant la nº 292 (`dansLaFenetre`) et
    *    n'aurait jamais dû être touchée.
    */
-  const PHOTO_DANS_SA_COLONNE =
-    surCarte || dansLaFenetre
+  /*  ██ §1 (nº 433) — LA PHOTO REGARDÉE ÉPOUSE SON CADRE ; SES
+      VOISINES GARDENT LEUR PIXEL DE GARDE ██
+      ==================================================================
+      LE LISERÉ, MESURÉ SUR LE RENDU RÉEL (la méthode des nº 406-416) :
+       · PAGE MOBILE (photo bord à bord depuis `mobile:-mx-4`) : la
+         rétraction nº 297 ci-dessus laisse 1 px de page de CHAQUE
+         CÔTÉ — relevé : colonne 0→390, image 1→389. Invisible tant
+         que la photo vivait au milieu d'une page anthracite ; contre
+         les bords de l'écran, ce pixel se voit.
+       · FENÊTRE SUPERPOSÉE : pas de rétraction (image pleine
+         colonne), mais des FRACTIONS DE PIXEL — la boîte photo tire
+         sa largeur de la hauteur (589,234 px au relevé), le cadre
+         s'arrondit au pixel inférieur (589, nº 280) : 0,09 à 0,30 px
+         du FOND NOIR de la boîte restent visibles sur les côtés et
+         en bas, « tout autour » selon où tombent les virgules.
+      LA CORRECTION, celle demandée : AGRANDIR LA PHOTO — un
+      agrandissement UNIFORME (`scale`, aucune déformation, la source
+      inchangée — règle 175-§5), appliqué À LA PHOTO REGARDÉE SEULE.
+      Ses voisines gardent la rétraction nº 297 : leur photo ne peut
+      toujours pas atteindre le bord du cadre, le trait intermittent
+      de la voisine reste une impossibilité géométrique — les deux
+      acquis tiennent ensemble. Le débord de l'agrandissement est
+      rogné par la colonne (`overflow-hidden`, page) ou l'enveloppe de
+      la fenêtre : rien n'atteint jamais la colonne d'à côté, et ni le
+      flux, ni `offsetLeft`, ni le pas d'accrochage ne bougent (un
+      `transform` ne déplace aucune boîte).
+      LES DEUX FACTEURS, calculés sur les relevés :
+       · mobile : 1,008 — l'image de 388 px s'étend de 1,55 px de
+         chaque côté : le pixel de garde est couvert, ~0,55 px de
+         photo rognés par bord (le propriétaire autorise « un ou
+         deux ») ;
+       · fenêtre : 1,002 — 0,59 px par côté sur 589 : les virgules
+         mesurées (≤ 0,30) sont couvertes, sans rogner plus.
+      ⚠️ LA PAGE PLEINE DU WEB NE BOUGE PAS D'UN PIXEL : le facteur
+      mobile vit sous la variante `mobile:` (l'attribut d'appareil) —
+      sur le web pleine page, la classe rendue est STRICTEMENT celle
+      d'avant. Les cartes de la mosaïque : inchangées aussi. */
+  const photoDansSaColonne = (regardee: boolean) =>
+    surCarte
       ? "absolute inset-0 h-full w-full object-cover"
-      : "absolute inset-y-0 left-px h-full w-[calc(100%_-_2px)] object-cover";
+      : dansLaFenetre
+        ? `absolute inset-0 h-full w-full object-cover${
+            regardee ? " scale-[1.002]" : ""
+          }`
+        : `absolute inset-y-0 left-px h-full w-[calc(100%_-_2px)] object-cover${
+            regardee ? " mobile:scale-[1.008]" : ""
+          }`;
 
   /** Le texte de remplacement d'une photo : le style, et sa légende
       quand elle est taguée (« Avant-bras · Couleur »). */
@@ -1368,7 +1411,7 @@ export function CarrouselPortfolio({
               //  §1 (nº 297) — inchangé ici : une CARTE de mosaïque
               //  garde sa photo pleine colonne (voir la note de
               //  `PHOTO_DANS_SA_COLONNE`).
-              classe={PHOTO_DANS_SA_COLONNE}
+              classe={photoDansSaColonne(rang === indice)}
             />
           ) : (
             /*  §1 (nº 280) — PLUS D'APERÇU : la pleine résolution, et
@@ -1386,7 +1429,7 @@ export function CarrouselPortfolio({
               //  deux pixels, centrée : il reste un pixel de page de
               //  chaque côté, que la voisine ne peut plus franchir
               //  (voir la note de `PHOTO_DANS_SA_COLONNE`).
-              classe={PHOTO_DANS_SA_COLONNE}
+              classe={photoDansSaColonne(rang === indice)}
             />
           );
           return (
