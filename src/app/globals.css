@@ -1317,6 +1317,29 @@ html[data-compte="connecte"]
 }
 
 /* ==================================================================
+   nº 441 — LE SIGNE DE CHARGEMENT (SigneDeChargement)
+   ==================================================================
+   Le fin trait rose en haut de l'écran pendant une navigation qui
+   dure (au-delà de 200 ms). Son avancée est ASYMPTOTIQUE : rapide au
+   départ, elle ralentit et ne prétend jamais finir — c'est l'arrivée
+   réelle de la page qui l'éteint (le composant se démonte). Pas de
+   boucle : « forwards » le laisse posé à 94 % tant que ça charge. */
+@keyframes signe-chargement {
+  0% {
+    transform: scaleX(0);
+  }
+  12% {
+    transform: scaleX(0.3);
+  }
+  40% {
+    transform: scaleX(0.65);
+  }
+  100% {
+    transform: scaleX(0.94);
+  }
+}
+
+/* ==================================================================
    nº 357 — LA GARDE DES RANGÉES DE L'ACCUEIL PRÉRENDU
    ==================================================================
    La page nue sert le repli de 24 cartes (nº 226) — un multiple de

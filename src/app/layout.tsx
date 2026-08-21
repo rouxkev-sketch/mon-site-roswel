@@ -7,6 +7,7 @@ import { variablesCssCouleurs } from "@/lib/theme";
 import { EnregistrementServiceWorker } from "@/components/EnregistrementServiceWorker";
 import { DefinitionsIcones } from "@/components/Icones";
 import { MemoireNavigation } from "@/components/MemoireNavigation";
+import { SigneDeChargement } from "@/components/SigneDeChargement";
 import "./globals.css";
 
 // Police du site (moderne et très lisible sur mobile)
@@ -138,6 +139,11 @@ export default function RootLayout({
         {children}
         {/* Journal de navigation (bouton retour de la fiche) */}
         <MemoireNavigation />
+        {/*  §1 (nº 441) — le signe de chargement des navigations qui
+            durent : un seul mécanisme, pour tout le site (il porte sa
+            propre frontière <Suspense> — le prérendu de « / » ne lui
+            doit rien). */}
+        <SigneDeChargement />
         {/* Active le mode "application installable" (PWA) */}
         <EnregistrementServiceWorker />
       </body>
