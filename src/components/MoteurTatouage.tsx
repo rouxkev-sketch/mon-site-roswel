@@ -636,7 +636,9 @@ export function MoteurTatouage({
     titre: string,
     valeurs: CritèresTatouage,
     poser: (suivant: Partial<CritèresTatouage>) => void,
-    surPanneau = false
+    surPanneau = false,
+    /** §1 (nº 448) — l'habillage ponctuel du groupe (voir GroupeBadges). */
+    classeDeGroupe = ""
   ) => {
     const selection = selectionDuGroupe(groupe, valeurs.exclure);
     //  ⚠️ LE DESSIN DU BADGE A DÉMÉNAGÉ (nº 174-§2) : il vit dans
@@ -661,7 +663,12 @@ export function MoteurTatouage({
     //  fieldset et legend.
     const idTitre = `${groupe.groupe}-titre`;
     return (
-      <GroupeBadges key={groupe.groupe} titre={titre} idTitre={idTitre}>
+      <GroupeBadges
+        key={groupe.groupe}
+        titre={titre}
+        idTitre={idTitre}
+        classe={classeDeGroupe}
+      >
         {/*  Seules les options VISIBLES ont un badge (nº 149-§6) :
              « Artistes » du groupe Lieu n'en a plus. */}
         {groupe.options
@@ -761,7 +768,22 @@ export function MoteurTatouage({
         poser,
         surPanneau
       )}
-      {groupeDeBadges(parGroupe.get("rendu")!, "Rendu", valeurs, poser, surPanneau)}
+      {/*  §1 (nº 448) — L'AIR AU-DESSUS DE « RENDU », AU DOIGT : 8 px
+           de rembourrage haut (`mobile:pt-2`) qui S'AJOUTENT aux 16 px
+           d'espacement entre groupes portés par le conteneur — un
+           padding et non une marge, précisément pour ne jamais entrer
+           en conflit de cascade avec le `mt-4` du sélecteur d'enfants.
+           Le bloc étant partagé, l'air vaut dans les DEUX onglets de
+           la page mobile ; la variante `mobile:` (le vrai appareil)
+           laisse le panneau de l'ordinateur au pixel près. */}
+      {groupeDeBadges(
+        parGroupe.get("rendu")!,
+        "Rendu",
+        valeurs,
+        poser,
+        surPanneau,
+        "mobile:pt-2"
+      )}
     </div>
   );
 

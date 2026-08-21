@@ -138,14 +138,24 @@ export function BadgeCharte({
 export function GroupeBadges({
   titre,
   idTitre,
+  classe = "",
   children,
 }: {
   titre: ReactNode;
   idTitre: string;
+  /** §1 (nº 448) — un habillage PONCTUEL du groupe, passé par
+      l'appelant (l'air mobile au-dessus de « Rendu ») : jamais une
+      couleur, jamais une structure — une respiration. */
+  classe?: string;
   children: ReactNode;
 }) {
   return (
-    <div role="group" aria-labelledby={idTitre} data-groupe-filtres="">
+    <div
+      role="group"
+      aria-labelledby={idTitre}
+      data-groupe-filtres=""
+      className={classe || undefined}
+    >
       <p
         id={idTitre}
         className="text-[12px] font-semibold uppercase tracking-wide text-sombre-texte-doux"

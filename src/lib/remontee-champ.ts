@@ -135,24 +135,27 @@ import { defilerSansGeste } from "@/lib/defilement-programme";
  *    76 px. Aucun code spécifique à l'un ou à l'autre — une seule
  *    question, posée au viewport.
  *
- * LE RETOUR — QUAND LE CLAVIER SE REFERME. La barre revient ; le
- * champ, monté à 12 px, se retrouverait dessous. On refait donc
- * exactement le même geste, à l'envers et sans à-coup :
+ * LE RETOUR — QUAND LE CLAVIER SE REFERME (réécrit §2, nº 448).
+ * ------------------------------------------------------------------
+ * ⚠️ CE QUI RENDAIT LE REPLI DE LA LOCALITÉ BRUTAL, ET C'EST NOMMÉ :
+ * l'animation n'était pas ABSENTE — c'était une AUTRE chorégraphie
+ * que celle du menu du style. La localité repliait l'ESPACE D'ABORD
+ * (le document raccourcit, et c'est le NAVIGATEUR qui tire la page
+ * dans ses bornes — un serrage subi, pas une glissade choisie), puis
+ * un SECOND défilement (`scrollIntoView`) reposait le champ sous la
+ * barre : deux mouvements enchaînés, le premier sec. Le menu du
+ * style (`remonterSansClavier`, nº 175-§4), lui, fait UNE glissade
+ * contrôlée vers la position d'origine, PUIS replie l'espace quand
+ * la page est déjà posée — le raccourcissement ne tire plus rien.
+ *
+ * LES DEUX REPLIS PARTAGENT DÉSORMAIS LA MÊME ÉCRITURE
+ * (`rendreLaPlaceDOrigine`) :
  *  1. la marge redevient 76 px (l'attribut tombe) ;
- *  2. l'espace de fin de document se REPLIE en douceur (sa hauteur
- *     s'anime jusqu'à zéro) au lieu d'être arraché : sur une page
- *     courte, le navigateur ramène la position dans ses bornes IMAGE
- *     PAR IMAGE — une glissade, et non le saut sec qu'aurait produit
- *     un `remove()` d'un écran de vide ;
- *  3. le MÊME `scrollIntoView` natif repose alors le champ sous la
- *     barre — un no-op si le repli l'y a déjà ramené.
- * ⚠️ L'ORDRE (replier PUIS reposer) N'EST PAS UN DÉTAIL : reposer
- * d'abord, c'est déplacer la page vers une position que le repli
- * invalide l'instant d'après — deux mouvements opposés, l'à-coup
- * qu'on veut éviter. Dans cet ordre-ci, chaque page ne fait qu'UN
- * mouvement : la courte glisse avec le repli (le défilement final n'a
- * plus rien à corriger), la longue ne bouge qu'au défilement final
- * (le repli ne la borne pas).
+ *  2. la page GLISSE vers la position notée à l'ouverture — le même
+ *     `defilerSansGeste` doux que le style, jamais lu comme un geste ;
+ *  3. l'espace de fin de document se replie UNE FOIS la glissade
+ *     finie : la position rendue était valide sans lui, le document
+ *     peut raccourcir sans tirer personne.
  *
  * On reconnaît la fermeture au même signal que l'ouverture : la zone
  * visible REDEVIENT GRANDE (`visualViewport.height` remonte
@@ -254,6 +257,27 @@ export function armerLaRemontee(cible: HTMLElement): () => void {
  * modifiée. Les deux partagent l'espace de fin de document (un seul à
  * la fois), et une remontée en cours cède la place à l'autre.
  */
+/**
+ * ██ §2 (nº 448) — LA GLISSADE DE RETOUR : UNE SEULE ÉCRITURE ██
+ * ------------------------------------------------------------------
+ * Le rangement du menu du style et le retour du clavier de la
+ * localité font DÉSORMAIS le même geste, ici : la marge rendue, la
+ * page ramenée en douceur à la position d'origine (jamais lue comme
+ * un geste — nº 154-§6A), et l'espace replié seulement quand la
+ * glissade est finie. C'est la chorégraphie que le propriétaire
+ * trouvait douce sur le style ; la localité la partage au lieu de la
+ * recopier.
+ */
+function rendreLaPlaceDOrigine(
+  depart: number,
+  espace: { replier: () => void },
+  signature: string
+) {
+  rendreLaMarge();
+  defilerSansGeste({ top: depart, left: 0, behavior: "smooth" }, signature);
+  window.setTimeout(() => espace.replier(), GLISSADE_MS);
+}
+
 export function remonterSansClavier(cible: HTMLElement): () => void {
   enCours?.abandonner();
   enCours = null;
@@ -283,22 +307,18 @@ export function remonterSansClavier(cible: HTMLElement): () => void {
     if (rangee) return;
     rangee = true;
     cancelAnimationFrame(image);
-    //  0. L'ÉTAT « CLAVIER » EST RENDU : l'en-tête redevient collant.
-    rendreLaMarge();
-    //  1. LA POSITION D'ORIGINE, rendue — et JAMAIS lue comme un geste
-    //     (sans quoi la barre du site replierait sa rangée, nº 154-§6A).
-    defilerSansGeste(
-      { top: depart, left: 0, behavior: "smooth" },
-      "remontée du champ à suggestions"
-    );
-    //  2. L'ESPACE se replie une fois la glissade finie : le document
-    //     raccourcit alors sans tirer la page au passage.
-    window.setTimeout(() => espace.replier(), GLISSADE_MS);
+    //  §2 (nº 448) — l'écriture unique : marge rendue, glissade vers
+    //  la position d'origine, espace replié après elle.
+    rendreLaPlaceDOrigine(depart, espace, "remontée du champ à suggestions");
   };
 }
 
 function ouvrirUneRemontee(cible: HTMLElement): Session {
   const visuel = window.visualViewport;
+  //  §2 (nº 448) — LA POSITION D'ORIGINE, notée AVANT tout mouvement :
+  //  c'est elle que le retour du clavier rendra, par la même glissade
+  //  que le menu du style.
+  const depart = window.scrollY;
   //  L'ESPACE, POSÉ TOUT DE SUITE : il doit exister AVANT le
   //  `scrollIntoView`, sinon il n'y a toujours rien à faire défiler.
   const espace = poserLEspace();
@@ -359,16 +379,17 @@ function ouvrirUneRemontee(cible: HTMLElement): Session {
     window.clearTimeout(minuteur);
     window.clearTimeout(filet);
     ecouter(false);
-    //  1. LA MARGE D'ABORD : le défilement qui vient doit la lire.
-    rendreLaMarge();
-    //  2. L'ESPACE SE REPLIE — la page courte glisse dans ses bornes.
-    espace.replier();
-    //  3. LE MÊME DÉFILEMENT NATIF, une fois le repli achevé : il
-    //     repose le champ sous la barre — no-op si le repli l'a fait.
-    minuteur = window.setTimeout(() => {
-      cible.scrollIntoView({ block: "start", behavior: "smooth" });
-      minuteur = window.setTimeout(ranger, GLISSADE_MS);
-    }, REPLI_ESPACE_MS + 60);
+    //  §2 (nº 448) — LA MÊME GLISSADE QUE LE MENU DU STYLE, par
+    //  l'écriture unique : la page revient en douceur à sa position
+    //  d'origine, l'espace se replie après elle. Fini le repli-espace
+    //  d'abord (le serrage subi) suivi d'un second défilement — un
+    //  seul mouvement, choisi.
+    rendreLaPlaceDOrigine(
+      depart,
+      espace,
+      "remontée du champ à suggestions (retour du clavier)"
+    );
+    minuteur = window.setTimeout(ranger, GLISSADE_MS + REPLI_ESPACE_MS + 60);
   }
 
   function auRedimensionnement() {
