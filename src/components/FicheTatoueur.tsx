@@ -8,7 +8,9 @@ import {
   useSyncExternalStore,
 } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+//  §2 (nº 455) — `useRouter` : la vignette du Portfolio navigue vers
+//  la vue photo au doigt (une entrée, le retour rend le profil).
+import { usePathname, useRouter } from "next/navigation";
 //  §2 (nº 337) — le chemin lu là où il est vrai, et le réveil par les
 //  DEUX portes : voir la note de `cheminDuNavigateur` plus bas.
 import {
@@ -41,8 +43,10 @@ import {
 import { FenetreCarrousel } from "@/components/FenetreCarrousel";
 import { PileFiches } from "@/components/PileFiches";
 import { SondePhoto } from "@/components/SondePhoto";
+//  §2 (nº 455) — `cheminDeLaFenetreCarrousel` est parti avec
+//  `ouvrirLaFenetreCarrousel` : plus aucun geste n'écrit l'adresse de
+//  la fenêtre de carrousel (elle reste LUE — routes 328/329).
 import {
-  cheminDeLaFenetreCarrousel,
   cheminDuCarrousel,
   galerieParStyles,
   ouvertureGalerie,
@@ -60,7 +64,8 @@ import { NATURE_PAR_DEFAUT, titreDeGalerie } from "@/lib/photos-tatoueur";
 //  ne la prenne jamais pour un atterrissage au fond de la pile.
 import { annoncerRepriseDuSite } from "@/lib/navigation-session";
 import type { Tatoueur } from "@/lib/tatoueurs";
-import { mecanismeCoupe } from "@/lib/variantes-essai";
+//  §2 (nº 455) — l'import `mecanismeCoupe` est parti avec la porte de
+//  banc « fenetres » d'`ouvrirLaFenetreCarrousel`, son seul emploi ici.
 
 /**
  * LA FICHE COMPLÈTE D'UN TATOUEUR — le mode d'ARRIVÉE DIRECTE
@@ -380,6 +385,8 @@ export function FicheTatoueur({
    * (le carrousel principal change, la page remonte — nº 197-§4).
    */
   const pathname = usePathname();
+  //  §2 (nº 455) — la navigation des vignettes du Portfolio, au doigt.
+  const router = useRouter();
 
   /**
    * CE QUE L'ADRESSE DU CARROUSEL DÉCRIT — style, série, photo.
@@ -686,46 +693,32 @@ export function FicheTatoueur({
     };
   }, []);
 
-  /** OUVRIR LA FENÊTRE — vrai si elle s'ouvre (smartphone), faux si
-      l'appelant doit garder son comportement (web, aperçu). */
-  function ouvrirLaFenetreCarrousel(
-    styleVoulu: string,
-    serie: { nature: string; rendu: string } | null,
-    photo: number
-  ): boolean {
-    if (apercu) return false;
-    //  nº 353 — porte du banc : dans cette variante, la fenêtre de
-    //  carrousel ne s'ouvre pas du tout (aucune étape posée).
-    if (mecanismeCoupe("fenetres")) return false;
-    //  ⚠️ LU AU MOMENT DU GESTE, jamais au rendu (la règle de
-    //  PileFiches) : le serveur ne connaît pas l'appareil.
-    if (document.documentElement.dataset.appareil !== "mobile") return false;
-    //  La position à rendre, capturée AVANT le pushState (le routeur
-    //  déplace brièvement le défilement après lui).
-    const position = positionSousLeGel();
-    document.documentElement.setAttribute("data-fenetre-fiche", "1");
-    window.history.pushState(
-      { fenetreFiche: true, fenetreCarrousel: true },
-      "",
-      cheminDeLaFenetreCarrousel(tatoueur.slug, styleVoulu, serie, photo)
-    );
-    setFenetreCarrousel({ style: styleVoulu, serie, photo, position });
-    return true;
-  }
+  /*  ██ §2 (nº 455) — `ouvrirLaFenetreCarrousel` EST SUPPRIMÉE, CODE
+      COMPRIS.
+      ------------------------------------------------------------------
+      Son unique appelant (la vignette de l'onglet Portfolio,
+      `surSerieChoisie` plus bas) n'ouvre PLUS la fenêtre de carrousel
+      au doigt : il navigue vers LA VUE PHOTO — la même page qu'un clic
+      de carte (nº 453/454). La fenêtre n'a donc plus aucun POINT
+      D'ENTRÉE par geste ; la porte de banc `mecanismeCoupe("fenetres")`
+      part avec elle (plus rien à couper).
+      ⚠️ CE QUI RESTE, ET DOIT RESTER (règles 328/329 — les vieilles
+      adresses vivent) : la route serveur `/tatoueur/<slug>/carrousel`
+      et la RÉOUVERTURE PAR L'ADRESSE (l'ajustement symétrique
+      nº 328-§4, plus haut) — un vieux lien partagé, un retour ou un pas
+      en avant vers une adresse de carrousel montent la fenêtre
+      exactement comme avant. Seule l'entrée par geste a changé de
+      destination. */
 
   /*  §3 (nº 304) — LA PHOTO DU HAUT N'OUVRE PLUS RIEN, et
       `surToucherDeLaPhoto` est SUPPRIMÉE, code compris.
       ------------------------------------------------------------------
-      LA RÈGLE DU PROPRIÉTAIRE : la fenêtre de carrousel (nº 284) est
-      RÉSERVÉE À LA PARTIE PORTFOLIO de la fiche. On y entre en touchant
-      un style dans l'onglet Portfolio, et NULLE PART AILLEURS. Toucher
-      la photo principale l'ouvrait aussi — ce n'était pas voulu.
+      LA RÈGLE DU PROPRIÉTAIRE : la fenêtre de carrousel (nº 284) était
+      RÉSERVÉE À LA PARTIE PORTFOLIO de la fiche. Toucher la photo
+      principale l'ouvrait aussi — ce n'était pas voulu.
       ⚠️ LA PHOTO GARDE TOUT LE RESTE : son défilement latéral, son
-      compteur « 3/12 », ses flèches. C'est SEULEMENT l'ouverture de la
-      fenêtre qui part — le gestionnaire de clic, et lui seul.
-      ⚠️ ET `ouvrirLaFenetreCarrousel` RESTE : elle a toujours son
-      appelant, l'unique et le bon — la vignette de l'onglet Portfolio
-      (`surSerieChoisie`, plus bas). */
+      compteur « 3/12 », ses flèches. (Depuis la nº 455, la vignette du
+      Portfolio ouvre la VUE PHOTO — voir la note ci-dessus.) */
 
   /*  ⚠️ LE SÉLECTEUR DE STYLE POSÉ SUR LA PHOTO A ÉTÉ SUPPRIMÉ
       (nº 198-§1) — le badge déroulant du bas gauche (mobile) comme le
@@ -1110,7 +1103,23 @@ export function FicheTatoueur({
               data-habillage-photo=""
               className="hidden mobile:flex items-center gap-3"
             >
-              <div className="flex min-w-0 flex-1 items-center gap-2.5">
+              {/*  §1 (nº 455) — TOUTE LA RANGÉE MÈNE AU PROFIL : le bloc
+                   avatar + nom + ligne devient un `<Link>` vers la MÊME
+                   destination que le badge (`adresseDeLienInterne` —
+                   UNE entrée, le retour rend la vue photo ; un re-clic
+                   pendant l'attente est avalé par le signe, 332-§1).
+                   Deux liens, une destination : un lien DANS un lien
+                   est interdit — le badge reste donc son propre lien, à
+                   côté.
+                   LA TYPO GRANDIT : le nom passe de 13,5 à 15 px — LA
+                   taille du titre de la galerie sous la photo
+                   (nº 376) ; la ligne d'adresse suit en proportion,
+                   de 13 à 14,5 px (le corps du sous-titre des cartes en
+                   pleine largeur). */}
+              <Link
+                href={adresseDeLienInterne(tatoueur.slug)}
+                className="flex min-w-0 flex-1 items-center gap-2.5"
+              >
                 <span
                   className="flex h-10 w-10 shrink-0 items-center justify-center
                              overflow-hidden rounded-full bg-sombre-eleve"
@@ -1135,13 +1144,13 @@ export function FicheTatoueur({
                   )}
                 </span>
                 <span className="min-w-0">
-                  <span className="block truncate text-[13.5px] font-semibold leading-tight text-sombre-texte">
+                  <span className="block truncate text-[15px] font-semibold leading-tight text-sombre-texte">
                     {tatoueur.nom}
                   </span>
                   {/*  La puce « • » : la seule ponctuation du site entre
-                       deux valeurs (nº 395). §1 (nº 453) : 13 px (au
-                       lieu de 11,5) et 4 px d'air sous le nom. */}
-                  <span className="block truncate text-[13px] leading-tight text-sombre-texte-doux mt-1">
+                       deux valeurs (nº 395). §1 (nº 455) : 14,5 px (13 à
+                       la nº 453), les 4 px d'air sous le nom restent. */}
+                  <span className="block truncate text-[14.5px] leading-tight text-sombre-texte-doux mt-1">
                     {[
                       libelleTypeFiche(
                         tatoueur.type_fiche,
@@ -1158,7 +1167,7 @@ export function FicheTatoueur({
                       .join(" • ")}
                   </span>
                 </span>
-              </div>
+              </Link>
               {/*  §1 (nº 453) — 30 px de haut (au lieu des 38 de
                    BadgeCharte) : le badge s'affine, le texte ne change
                    pas. L'ourlet `before:` grandit de 3 à 7 px par
@@ -1322,33 +1331,51 @@ export function FicheTatoueur({
             //  elle, d'ouvrir le carrousel ci-dessus (serieCherchee).
             suiviAuDepart={suiviAuDepart}
             surSerieChoisie={(serie) => {
-              /*  §Fenêtre (nº 284) — AU DOIGT, LA VIGNETTE OUVRE LA
-                  FENÊTRE DE CARROUSEL, par-dessus : plus AUCUNE
-                  remontée, la page ne bouge pas d'un pixel — la
-                  refermer repose le doigt sur la grille, là où il
-                  était. La photo touchée est celle de la vignette, la
-                  première de sa série. SUR LE WEB (et en aperçu), tout
-                  ce qui suit reste le comportement d'avant. */
-              /*  §3-d (nº 314) — LA FENÊTRE S'OUVRE SUR LA PHOTO
-                  TOUCHÉE, PLUS SUR LA PREMIÈRE.
+              /*  ██ §2 (nº 455) — AU DOIGT, UNE GALERIE OUVRE LA VUE
+                  PHOTO, la même page qu'un clic de carte ██
                   --------------------------------------------------
-                  C'ÉTAIT `0` EN DUR, et c'était juste tant que le
-                  doigt voyait une GRILLE DE VIGNETTES : une vignette
-                  DÉSIGNAIT une série, pas une image — sa première
-                  photo était donc la bonne. Depuis que le doigt montre
-                  les galeries qui défilent (§3, nº 314), on touche une
-                  PHOTO précise, et c'est elle qu'on veut voir.
-                  ⚠️ AUCUN SECOND MÉCANISME : le rang voyage dans
-                  l'adresse (`?photo=`), lue par `ouvertureSurUnePhoto`
-                  — celui de la nº 302, tel quel. Le repli sur zéro
-                  reste pour tout appelant qui n'envoie pas de rang. */
+                  La fenêtre de carrousel (nº 284) n'est plus le chemin
+                  des vignettes : le geste NAVIGUE, par le routeur, vers
+                  l'adresse que les CARTES écrivent (nº 371 — style,
+                  rendu, nature, photo ; `URLSearchParams`, mêmes
+                  paramètres, même page servie par le jumeau dynamique).
+                  UNE entrée d'historique (332-§1) ; l'arrivée se fait
+                  en haut (nº 446, DefilementEnHaut) ; le RETOUR rend le
+                  profil à sa position (mémoire de navigation) — comme
+                  depuis une carte, parce que c'est le même chemin.
+                  LA PHOTO TOUCHÉE (nº 314-§3d) voyage désormais par son
+                  IDENTIFIANT : le rang touché est traduit dans la série
+                  affichée (`serieMontree`, l'écriture unique nº 247) —
+                  `ouvertureSurUnePhoto` la retrouve à l'arrivée
+                  (nº 302-§4). Sans photo trouvée (série vide), l'adresse
+                  porte les trois tags et la fiche ouvre leur série.
+                  ⚠️ LU AU MOMENT DU GESTE, jamais au rendu (la règle de
+                  PileFiches) : le serveur ne connaît pas l'appareil.
+                  SUR LE WEB (et en aperçu), tout ce qui suit reste le
+                  comportement d'avant, à la lettre. */
               if (
-                ouvrirLaFenetreCarrousel(
-                  serie.style,
-                  { nature: serie.nature, rendu: serie.rendu },
-                  serie.indice ?? 0
-                )
+                !apercu &&
+                document.documentElement.dataset.appareil === "mobile"
               ) {
+                const groupeTouche = groupes.find(
+                  (groupe) => groupe.slug === serie.style
+                );
+                const photosDeLaSerie = serieMontree(
+                  groupeTouche?.photos ?? [],
+                  { nature: serie.nature, rendu: serie.rendu }
+                );
+                const photoTouchee = photosDeLaSerie[serie.indice ?? 0];
+                const suite = new URLSearchParams();
+                if (serie.style) suite.set("style", serie.style);
+                if (serie.rendu) suite.set("rendu", serie.rendu);
+                if (serie.nature) suite.set("nature", serie.nature);
+                if (photoTouchee?.cle) suite.set("photo", photoTouchee.cle);
+                const requete = suite.toString();
+                router.push(
+                  requete
+                    ? `/tatoueur/${tatoueur.slug}?${requete}`
+                    : `/tatoueur/${tatoueur.slug}`
+                );
                 return;
               }
               setStyleAffiche(serie.style);
