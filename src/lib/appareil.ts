@@ -25,7 +25,27 @@ export function useAppareilMobile(): boolean {
     // Dans un effet, et par une fonction : rien n'est posé dans le
     // corps de l'effet (React le déconseille).
     const lire = () => {
-      setMobile(document.documentElement.dataset.appareil === "mobile");
+      const racine = document.documentElement;
+      /*  ██ §2 (nº 432) — L'ÉCRIVAIN DE SECOURS ██
+          L'écrivain NORMAL de « data-appareil » reste le script
+          d'avant-peinture, unique et premier. Mais le relevé de la
+          nº 432 a montré un document SANS l'attribut sur le téléphone
+          du propriétaire : une copie de cache figée d'un autre temps
+          (la réponse robot capturée, voir src/proxy.ts §1 nº 432) —
+          un document où le script n'a jamais tourné. Sur un tel
+          document, PERSONNE ne posait l'attribut : l'interface
+          « ordinateur » s'installait et PERSISTAIT. Désormais, si
+          l'attribut manque au moment où ce crochet lit, il le pose
+          lui-même d'après la même mesure que le script — la barre est
+          montée sur toutes les pages du produit : le secours couvre
+          tout le site. Jamais deux écritures concurrentes : le
+          secours n'écrit QUE dans le vide. */
+      if (!racine.dataset.appareil) {
+        racine.dataset.appareil = matchMedia("(pointer: coarse)").matches
+          ? "mobile"
+          : "web";
+      }
+      setMobile(racine.dataset.appareil === "mobile");
     };
     const image = requestAnimationFrame(lire);
     /*  §2 (nº 431) — ET RESTER JUSTE, PAS SEULEMENT L'ÊTRE UNE FOIS :

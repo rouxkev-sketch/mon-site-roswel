@@ -116,6 +116,46 @@ export async function proxy(request: NextRequest) {
     reponse.cookies.delete(COOKIE_NU_TOTAL);
   }
 
+  /*  ██ §1 (nº 432) — L'AIGUILLAGE DES FICHES TAGUÉES EST DÉCLARÉ AUX
+      CACHES, ET LA COPIE ROBOT N'EST PLUS CAPTURABLE ██
+      ------------------------------------------------------------------
+      LE RELEVÉ (iPhone, trois navigateurs) : au rechargement d'une
+      fiche dont l'adresse porte des tags, un HUMAIN recevait « la page
+      des robots » — un document SANS l'habillage d'appareil. Or
+      l'aiguillage direct est JUSTE (vérifié en local au user-agent
+      près : l'humain reçoit la fiche préparée d'avance, script
+      compris ; le jumeau des robots contient LUI AUSSI le script du
+      layout). Ce que l'humain recevait était donc une COPIE EN CACHE
+      de la réponse robot : la même adresse sert DEUX documents selon
+      le user-agent, et rien ne le déclarait — aucun « Vary:
+      User-Agent ». N'importe quel cache entre le téléphone et le
+      serveur (celui de l'hébergeur, un relais) pouvait donc capturer
+      la version robot et la resservir à tout le monde.
+      LA RÈGLE, DÉSORMAIS : la réponse du JUMEAU (celle des robots)
+      part en « private, no-store » — un aperçu se refabrique à chaque
+      demande, il n'a RIEN à faire dans un cache. Une réponse que
+      personne ne stocke ne peut plus être resservie à personne : le
+      vecteur robot → humain est mort à la source.
+      ⚠️ POURQUOI PAS UN « Vary: User-Agent » : essayé, et MESURÉ
+      inopérant — le serveur de Next recompose l'en-tête Vary de
+      routage après le proxy et écrase toute valeur posée ici. Il
+      devient de toute façon inutile : la SEULE réponse qui diverge
+      par user-agent sous cette adresse est le jumeau, désormais
+      jamais stocké ; la fiche préparée d'avance, elle, est identique
+      pour tous les humains.
+      ⚠️ LES APERÇUS DES ROBOTS NE CHANGENT PAS : l'aiguillage par
+      user-agent est intact, le jumeau rend toujours ses métadonnées
+      par tags (nº 281-§2) — seul un en-tête s'ajoute, et les robots
+      d'aperçu ne mettent pas leurs requêtes en cache.
+      ⚠️ Une copie DÉJÀ capturée par un cache amont ne meurt que par
+      expiration ou purge — cet en-tête empêche toute NOUVELLE
+      capture, et l'écrivain de secours du crochet d'appareil
+      (lib/appareil, §2 nº 432) habille toute vieille copie qui
+      atteindrait encore un humain. */
+  if (ficheTaguee && robotDApercu) {
+    reponse.headers.set("Cache-Control", "private, no-store");
+  }
+
   return reponse;
 }
 
