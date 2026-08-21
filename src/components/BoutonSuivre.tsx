@@ -177,7 +177,12 @@ export function BoutonSuivre({
        * typographie et la mécanique des deux libellés superposés ne
        * changent pas d'un pixel.
        */
-      className={`inline-flex min-h-[30px] items-center justify-center rounded-full
+      /*  §3 (nº 456) — LES EXTRÉMITÉS RONDES DEVIENNENT DES ANGLES
+          ARRONDIS : `rounded-lg` (8 px), le rayon des badges de la
+          charte depuis la nº 449 — la pilule de la nº 233-§3 est
+          remplacée. Rien d'autre ne bouge : hauteur, contour,
+          rembourrage, typographie au pixel. */
+      className={`inline-flex min-h-[30px] items-center justify-center rounded-lg
                   border px-3.5 text-[14px] font-semibold transition-colors
                   focus-visible:outline-2 focus-visible:outline-offset-2
                   focus-visible:outline-primaire ${

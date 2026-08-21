@@ -147,6 +147,12 @@ export function adresseDeLienInterne(slug: string): string {
   return avecConsigneDeLienInterne(`/tatoueur/${slug}`);
 }
 
+/** §2 (nº 456) — LA HAUTEUR DE L'IDENTITÉ (l'avatar de 92 px impose la
+    sienne à sa rangée, `min-h-[92px]` — un nom de deux lignes reste en
+    dessous) : c'est la part de l'en-tête que le repli fait glisser
+    sous la barre, et le diviseur de la progression `--repli`. */
+const HAUTEUR_IDENTITE = 92;
+
 export function ContenuFiche({
   tatoueur,
   groupes,
@@ -479,6 +485,71 @@ export function ContenuFiche({
   /** §2 (nº 383) — LA RANGÉE DU HAUT, pour retrouver le défilement du
       contenu sans que les enveloppes aient à se nommer. */
   const rangeeDuHaut = useRef<HTMLDivElement | null>(null);
+
+  /**
+   * ██ §2 (nº 456) — L'EN-TÊTE SE REPLIE AU DÉFILEMENT, AU DOIGT ██
+   * ==================================================================
+   * LE BLOC : [identité (avatar + nom + type, 92 px)] + [nom compact] +
+   * [rangée Profil | Portfolio], collant au doigt avec un HAUT NÉGATIF
+   * (`top: RESERVE_LOGO − 92`) : en défilant, le navigateur fait
+   * GLISSER l'identité sous la barre fixe — c'est le défilement natif
+   * qui déplace, jamais un calcul de mise en page — et il ne reste
+   * collé que le bloc compact : le nom + le va-et-vient.
+   *
+   * LA PROGRESSION `--repli` (0 → 1) suit la position du bloc :
+   *   p = (RESERVE_LOGO − haut du bloc) / 92
+   * — 0 tant que le bloc n'a pas touché la barre, 1 une fois collé.
+   * Elle ne pilote QUE des opacités et des transformations (jamais une
+   * hauteur, une marge ou un rembourrage) : l'avatar et la ligne de
+   * type s'effacent (`opacity: 1 − p`), le nom compact apparaît en
+   * GLISSANT DE 112 px VERS LA GAUCHE (l'avatar 92 + l'écart 20 : il
+   * part de l'ancienne colonne de texte et vient s'aligner au bord).
+   * En remontant, p redescend : tout revient, dans la même douceur —
+   * aucune transition écrite, la continuité vient du défilement.
+   *
+   * LE COÛT PAR IMAGE : une lecture (`getBoundingClientRect().top`,
+   * après que le navigateur a posé sa mise en page) et l'écriture d'UNE
+   * variable sur UN élément — opacité et transformation se composent
+   * sans repasser par la mise en page. L'écouteur est passif et
+   * regroupé par `requestAnimationFrame` ; la valeur est arrondie au
+   * centième pour ne pas réécrire à l'identique.
+   *
+   * ⚠️ PUREMENT VISUEL : aucune adresse, aucune entrée d'historique,
+   * aucune position écrite (332-§1 — les acquis 423/427/438/446 ne
+   * passent pas par ici). ⚠️ LA PAGE SEULE (`collantSousLaBarre`), au
+   * doigt seul : la fenêtre superposée et le web gardent leur en-tête
+   * immobile.
+   */
+  const enTeteRepliable = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!collantSousLaBarre) return;
+    if (document.documentElement.dataset.appareil !== "mobile") return;
+    const bloc = enTeteRepliable.current;
+    if (!bloc) return;
+    let trame = 0;
+    let posee = -1;
+    const mesurer = () => {
+      trame = 0;
+      const haut = bloc.getBoundingClientRect().top;
+      const brute = (RESERVE_LOGO - haut) / HAUTEUR_IDENTITE;
+      const p = Math.round(Math.min(1, Math.max(0, brute)) * 100) / 100;
+      if (p === posee) return;
+      posee = p;
+      bloc.style.setProperty("--repli", String(p));
+    };
+    const surDefilement = () => {
+      if (trame) return;
+      trame = requestAnimationFrame(mesurer);
+    };
+    mesurer();
+    window.addEventListener("scroll", surDefilement, { passive: true });
+    window.addEventListener("resize", surDefilement, { passive: true });
+    return () => {
+      if (trame) cancelAnimationFrame(trame);
+      window.removeEventListener("scroll", surDefilement);
+      window.removeEventListener("resize", surDefilement);
+    };
+  }, [collantSousLaBarre]);
 
   function ouvrirLOngletAuDebut() {
     if (typeof window === "undefined") return;
@@ -1397,6 +1468,74 @@ export function ContenuFiche({
         * globals.css visent `main.recherche-fixe` et `main.mode-double`
         * — le produit artisans, que la fiche tatoueur ne monte pas.)
         */}
+      {/*  ██ §1 (nº 456) — L'EN-TÊTE : L'IDENTITÉ AU-DESSUS DU
+           VA-ET-VIENT, ET LE BLOC QUI SE REPLIE AU DOIGT ██
+           ==================================================
+           L'AVATAR PASSE AU-DESSUS de Profil | Portfolio, web ET
+           mobile (la borne des conteneurs partagés est levée par le
+           propriétaire pour CE déplacement, et lui seul) : l'identité
+           quitte l'onglet « Profil » et vit ici, visible dans les deux
+           onglets — l'ordre des profils d'aujourd'hui.
+           CE WRAPPER : `display: contents` partout (il ne fabrique
+           AUCUNE boîte — le `lg:sticky` de la rangée continue de se
+           coller à la colonne, la fenêtre superposée ne voit rien) ;
+           au DOIGT sur la PAGE seulement, il devient le BLOC COLLANT
+           du repli (§2 — voir l'effet `--repli` plus haut) : haut
+           négatif, fond de colonne, et l'ancien collage de la rangée
+           (mobile:sticky de la nº 377) remonte d'un cran, porté par
+           lui. */}
+      <div
+        ref={enTeteRepliable}
+        className={
+          collantSousLaBarre
+            ? "contents mobile:block mobile:sticky mobile:z-[3] mobile:bg-[var(--fond-colonne)]"
+            : "contents"
+        }
+        style={
+          collantSousLaBarre
+            ? { top: `${RESERVE_LOGO - HAUTEUR_IDENTITE}px` }
+            : undefined
+        }
+      >
+        {/*  §1 — L'IDENTITÉ (l'écriture de la nº 222/241/292/293,
+             déplacée telle quelle ; son `mt-10` est parti — elle ouvre
+             l'en-tête). Au doigt, l'avatar, le nom et la ligne de type
+             portent l'opacité du repli (`1 − --repli`) : ils
+             s'effacent en glissant sous la barre — ailleurs la
+             variable n'existe pas, l'opacité vaut 1. */}
+        <div className="flex items-start gap-5">
+          <div className="shrink-0 [opacity:calc(1-var(--repli,0))]">
+            {avatarProfil}
+          </div>
+          <div className="flex min-h-[92px] min-w-0 flex-1 flex-col justify-center">
+            <h1 className="line-clamp-2 text-[20px] lg:text-[19px] font-bold tracking-tight text-sombre-texte leading-[1.25] [opacity:calc(1-var(--repli,0))]">
+              {tatoueur.nom}
+            </h1>
+            <p className="mt-2 text-[14px] font-semibold uppercase tracking-[0.12em] text-sombre-texte-doux [opacity:calc(1-var(--repli,0))]">
+              {sousLeNom(tatoueur)}
+            </p>
+          </div>
+        </div>
+        {/*  §2 (nº 456) — LE NOM COMPACT, au doigt sur la page : la
+             ligne qui RESTE une fois l'identité repliée. Il GLISSE DE
+             112 px VERS LA GAUCHE (l'avatar 92 + l'écart 20) en
+             apparaissant (`--repli`) — l'œil voit le nom quitter sa
+             colonne et venir s'aligner au bord, pendant que l'original
+             s'efface. Même corps que le nom (20 px gras), une seule
+             ligne. `aria-hidden` + aucun clic : c'est un reflet,
+             jamais un second titre. */}
+        {collantSousLaBarre && (
+          <p
+            aria-hidden="true"
+            className="hidden mobile:block pointer-events-none line-clamp-1
+                       pb-1 pt-2 text-[20px] font-bold tracking-tight
+                       leading-[1.25] text-sombre-texte
+                       [opacity:var(--repli,0)]
+                       [transform:translateX(calc((1-var(--repli,0))*112px))]"
+          >
+            {tatoueur.nom}
+          </p>
+        )}
       <div
         ref={rangeeDuHaut}
         style={
@@ -1467,7 +1606,13 @@ export function ContenuFiche({
          * inset-x-0` DANS cette boîte — il s'élargit avec elle, et
          * couvre donc enfin toute la largeur au-dessus de la rangée.
          */
-        className={`relative flex items-center justify-between gap-3
+        /*  §1 (nº 456) — `mt-5` : l'air entre l'identité (désormais
+            au-dessus) et cette rangée — 20 px, web et fenêtre. Au
+            doigt sur la page, il est REMPLACÉ par zéro
+            (`mobile:mt-0`, branche collante) : c'est le nom compact
+            qui donne l'air, et une marge ici ferait un trou dans le
+            bloc replié. */
+        className={`relative mt-5 flex items-center justify-between gap-3
                    border-b ${TRAIT_SEPARATION}
                    lg:sticky lg:top-0 lg:z-[2] bg-[var(--fond-colonne)] ${
                      /**
@@ -1533,8 +1678,18 @@ export function ContenuFiche({
                       * c'était déjà le cas — aucune classe n'y est
                       * ajoutée.
                       */
+                     /**
+                      * §2 (nº 456) — LE COLLAGE MOBILE REMONTE D'UN
+                      * CRAN : `mobile:sticky mobile:top-[var]
+                      * mobile:z-[3]` (nº 377) est désormais porté par
+                      * le WRAPPER de l'en-tête (le bloc qui se
+                      * replie), qui colle avec un haut négatif — la
+                      * rangée s'y range en dernier, et le compact
+                      * [nom + va-et-vient] reste sous la barre. Le web
+                      * (`lg:sticky lg:top-0`) ne bouge pas.
+                      */
                      collantSousLaBarre
-                       ? "mobile:sticky mobile:top-[var(--rw-rangee-collante)] mobile:z-[3] mobile:pt-3 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-3 lg:px-3"
+                       ? "mobile:mt-0 mobile:pt-3 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-3 lg:px-3"
                        : "-mx-5 px-5 sm:-mx-6 sm:px-6"
                    }`}
       >
@@ -1553,6 +1708,7 @@ export function ContenuFiche({
             suiviAuDepart={suiviAuDepart}
           />
         )}
+      </div>
       </div>
 
       {onglet === "portfolio" && (
@@ -1585,78 +1741,14 @@ export function ContenuFiche({
 
       {onglet === "profil" && (
         <>
-          {/* ==========================================================
-              §1 — L'IDENTITÉ
-              ==========================================================
-              ⚠️ `items-start`, ET C'EST LA RÈGLE DE MISE EN PAGE
-              (nº 222-§1e) : le haut du nom ne dépasse JAMAIS le haut de
-              la photo. Le bloc était centré verticalement — un nom sur
-              deux lignes remontait donc AU-DESSUS d'elle. Calé en haut,
-              il commence à sa hauteur et se prolonge SOUS elle s'il est
-              long, en gardant son alignement sur le bord gauche DU
-              TEXTE (sa colonne), jamais sur celui de la photo.
-              ⚠️ ET UNE MARGE AU-DESSUS (nº 222-§1b) : la photo touchait
-              la rangée Profil / Portfolio / Suivre. */}
-          {/*  §1 (nº 241) — 40 px AU-DESSUS ET AU-DESSOUS de la
-               photo, égaux : EXACTEMENT l'espacement qui entoure les
-               lignes de séparation depuis la nº 223 (`mt-10 pt-10`) —
-               le rythme de la fiche, pas une valeur inventée. (La
-               nº 225 les tenait à 32 ; le bloc des liens porte
-               toujours la marge basse : son `mt-10` MESURE cette
-               marge, il ne s'y ajoute pas.)
-               §2 — LE CENTRAGE CONDITIONNEL, en CSS pur et au pixel :
-               la colonne de texte porte `min-height` = hauteur de la
-               photo (92 px) et centre son contenu (`justify-center`).
-               Un bloc MOINS haut que la photo est donc centré sur
-               elle ; un bloc PLUS haut fait grandir sa boîte vers le
-               bas (le parent est calé en haut, `items-start`) : son
-               sommet reste exactement au haut de la photo, et la
-               suite continue dessous, dans la même colonne. Aucun
-               JavaScript, aucune mesure — la bascule est celle de la
-               boîte elle-même. */}
-          <div className="mt-10 flex items-start gap-5">
-            {avatarProfil}
-            <div className="flex min-h-[92px] min-w-0 flex-1 flex-col justify-center">
-              {/*  LE NOM — une taille de titre de profil, DEUX LIGNES
-                   AU PLUS, puis des points de suspension (nº 222-§1c
-                   et §1d). La passe de finition ajustera la valeur. */}
-              {/*  20 px au doigt, 22 px au large — l'échelle d'un
-                   titre de profil : nettement au-dessus du sous-titre,
-                   sans crier, et deux lignes d'un nom long tiennent à
-                   390 px.
-                   §3 (nº 292) — LE WEB REDESCEND À 19 px. Le
-                   propriétaire le trouvait trop imposant : 22 px dans
-                   une colonne de lecture de 340 à 400 px, c'était le
-                   poids d'un titre de page, pas d'un titre de profil.
-                   LA HIÉRARCHIE TIENT, et c'est ce qui décide : 19 px
-                   en gras contre les 12 px en capitales du sous-titre
-                   juste dessous, et contre les 15 px des valeurs de la
-                   fiche — il reste le plus important de la page, de
-                   loin. LE DOIGT NE BOUGE PAS (20 px) : c'est le web
-                   seul qui était trop grand. */}
-              <h1 className="line-clamp-2 text-[20px] lg:text-[19px] font-bold tracking-tight text-sombre-texte leading-[1.25]">
-                {tatoueur.nom}
-              </h1>
-              {/*  LE SOUS-TITRE — UN SEUL MOT (nº 228-§2) :
-                   « ARTISTE », « SALON » ou « STUDIO ». Le lieu et le
-                   rôle qui vivaient ici sont descendus dans le bloc
-                   des lieux, devant chaque adresse — la règle vit dans
-                   `sousLeNom` (BlocsFiche) et `etiquetteDuMode`
-                   (BlocLieux). */}
-              {/*  §4 (nº 293) — LE SOUS-TITRE PASSE DE 12 À 14 px, aux
-                   DEUX largeurs. À 12 px, en capitales et en gris doux,
-                   il se lisait comme une mention légale ; c'est
-                   pourtant lui qui dit ce QU'EST le portfolio.
-                   LA HIÉRARCHIE TIENT, et c'est ce qui décide : les
-                   capitales de 14 px ont une hauteur d'œil d'environ
-                   10 px, contre 13 à 14 pour le nom (19 px au web,
-                   20 au doigt) — il reste nettement dessous, et le gris
-                   doux l'y maintient. */}
-              <p className="mt-2 text-[14px] font-semibold uppercase tracking-[0.12em] text-sombre-texte-doux">
-                {sousLeNom(tatoueur)}
-              </p>
-            </div>
-          </div>
+          {/*  ██ §1 (nº 456) — L'IDENTITÉ A QUITTÉ CET ONGLET ██
+               L'avatar, le nom et la ligne de type vivent désormais
+               AU-DESSUS du va-et-vient Profil | Portfolio (voir
+               l'en-tête, plus haut) — visibles dans les deux onglets,
+               web et mobile. Les écritures n'ont pas changé (nº 222,
+               241, 292, 293) ; seule la place. Le bloc des liens
+               ci-dessous garde son `mt-10` : les 40 px sous la rangée
+               du haut, le rythme de la fiche. */}
 
           {/* ==========================================================
               §2 — LES LIENS, SOUS LA PHOTO
