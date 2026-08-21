@@ -115,8 +115,13 @@ function Signe() {
   const parametres = useSearchParams();
   const [visible, setVisible] = useState(false);
 
-  /** La navigation en route : sa destination et son départ. */
-  const attente = useRef<{ adresse: string; depuis: number } | null>(null);
+  /** La navigation en route : sa destination, son départ — et depuis
+      la nº 452, si elle est MUETTE (voir la marque d'exemption). */
+  const attente = useRef<{
+    adresse: string;
+    depuis: number;
+    muette: boolean;
+  } | null>(null);
   /** La dernière adresse que React a COMMISE — c'est elle qui permet
       de reconnaître une traversée qui n'a rien à charger (le cran du
       filet : même adresse avant et après). */
@@ -139,13 +144,29 @@ function Signe() {
   }, [pathname, parametres]);
 
   useEffect(() => {
-    const demarrer = (adresse: string) => {
-      attente.current = { adresse, depuis: Date.now() };
+    /*  ██ §3 (nº 452) — L'ATTENTE PEUT ÊTRE MUETTE ██
+        --------------------------------------------------------------
+        Une navigation marquée `data-signe-muet` (le lien lui-même ou
+        n'importe quel ancêtre — « Ma sélection » marque le conteneur
+        de ses cartes et son bloc de suivis) garde TOUTE la mécanique
+        de l'attente — l'avalement du re-clic (§4 nº 441, règle
+        332-§1), le nettoyage à l'arrivée, le garde-fou — mais ne
+        montre JAMAIS le trait : le minuteur d'affichage n'est pas
+        posé. Ce n'est pas un pansement par lien : une marque, lue au
+        même endroit pour tout le site. */
+    const demarrer = (adresse: string, muette = false) => {
+      attente.current = { adresse, depuis: Date.now(), muette };
       window.clearTimeout(minuteurSigne.current);
       window.clearTimeout(minuteurLimite.current);
-      minuteurSigne.current = window.setTimeout(() => {
-        if (attente.current) setVisible(true);
-      }, DELAI_AVANT_SIGNE_MS);
+      if (muette) {
+        //  Jamais de trait pour elle — et jamais un trait ORPHELIN
+        //  d'une attente précédente qu'elle vient de remplacer.
+        setVisible(false);
+      } else {
+        minuteurSigne.current = window.setTimeout(() => {
+          if (attente.current) setVisible(true);
+        }, DELAI_AVANT_SIGNE_MS);
+      }
       minuteurLimite.current = window.setTimeout(() => {
         attente.current = null;
         setVisible(false);
@@ -207,9 +228,13 @@ function Signe() {
         evenement.stopPropagation();
         return;
       }
+      //  §3 (nº 452) — LA MARQUE D'EXEMPTION, lue sur le lien et ses
+      //  ancêtres : l'attente s'arme (avalement compris) mais reste
+      //  muette — aucun trait pour ce départ.
+      const muette = lien.closest("[data-signe-muet]") !== null;
       //  L'armement reste SYNCHRONE (l'avalement du re-clic de la 441
       //  ne perd pas une milliseconde)…
-      demarrer(adresse);
+      demarrer(adresse, muette);
       //  §1 (nº 442) — …mais à la FIN du clic, on lit qui a pris la
       //  navigation. Le Link de Next et les cartes préviennent le
       //  geste par défaut : navigation douce, le trait est à nous.

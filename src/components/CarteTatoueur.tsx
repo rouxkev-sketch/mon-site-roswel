@@ -21,6 +21,9 @@ import {
   titreDeGalerie,
   vignetteDe,
 } from "@/lib/photos-tatoueur";
+//  §2 (nº 452) — le fanion revient sur les cartes de « Ma sélection »
+//  (et d'elles seules) : l'import que la nº 445 avait retiré.
+import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import { PhotoDeCarte, TAILLES_CARTE } from "@/components/PhotoDeCarte";
 import { ligneCarte, ligneCarteMobile } from "@/lib/adresse";
 import { pincementRecent, usePincement } from "@/components/ZoomPincement";
@@ -80,6 +83,7 @@ function CarteTatoueurNue({
   photoRecherche = "",
   prioritaire = false,
   phototheque = false,
+  fanion = false,
   premiereLigne = "nom",
   surOuverture,
   surApproche,
@@ -108,10 +112,19 @@ function CarteTatoueurNue({
       dans l'angle (et seulement là où il est encore posé — voir
       `fanion` ci-dessous). Le clic mène à la fiche, comme toujours. */
   phototheque?: boolean;
-  /*  §2 (nº 445) — LE RÉGLAGE `fanion` EST SUPPRIMÉ AVEC LUI : plus
-      aucune surface ne pose de fanion sur une carte, il n'y a donc
-      plus rien à régler. Les favoris se mettent et se retirent
-      depuis la fiche. */
+  /**
+   * §2 (nº 452) — LE FANION REVIENT, ET SEULEMENT SUR « MA SÉLECTION ».
+   * ------------------------------------------------------------------
+   * La nº 445 l'avait retiré de TOUTES les cartes ; le propriétaire le
+   * rend à la page « Ma sélection » (retirer un favori depuis la page
+   * redevient possible) et à elle seule — la mosaïque du moteur reste
+   * sans fanion. UN RÉGLAGE EXPLICITE, JAMAIS UNE DEVINETTE D'ADRESSE
+   * (le mot d'ordre de la nº 365) : PageFavoris le passe, personne
+   * d'autre. Vrai : le fanion vit dans l'angle bas droit de l'image,
+   * VISIBLE EN PERMANENCE (l'ancien réglage `toujours`), même
+   * comportement (règle 137 : son état se charge côté navigateur).
+   */
+  fanion?: boolean;
   tatoueur: Tatoueur;
   /** Le style demandé dans le moteur, s'il y en a un. */
   styleRecherche?: string;
@@ -669,22 +682,36 @@ function CarteTatoueurNue({
              au CŒUR, qui est un geste et mérite l'angle le plus
              accessible au pouce. */}
 
-        {/*  ██ §2 (nº 445) — LE FANION DE FAVORIS QUITTE LA CARTE ██
+        {/*  ██ §2 (nº 445, rouvert nº 452) — LE FANION : PARTI DE
+             PARTOUT, REVENU SUR « MA SÉLECTION » SEULE ██
              ------------------------------------------------------
-             DÉCISION DU PROPRIÉTAIRE (passe nº 445) : plus de fanion
-             dans l'angle de la photo, mobile comme ordinateur, sur
-             TOUTES les surfaces qui montent cette carte — la mosaïque
-             du moteur ET « Ma sélection ». Mettre ou retirer un favori
-             se fait depuis LA FICHE, qui garde son cœur intact.
-             ⚠️ CE QUE « Ma sélection » PERD, et c'est dit au
-             propriétaire : ses cartes n'y portaient le fanion QUE là
-             (le réglage `toujours`) — retirer un favori depuis cette
-             page passe désormais par l'ouverture de la fiche. Rien
-             n'est perdu côté données : le magasin des favoris, ses
-             requêtes et la fiche ne bougent pas d'une ligne.
-             ⚠️ RIEN NE SE POSE PLUS SUR LA PHOTO : ni compteur
-             (nº 214-§0), ni badge (nº 211-§2), ni fanion — l'image est
-             nue, et le clic ouvre la fiche. */}
+             La nº 445 l'avait retiré de toutes les cartes ; la nº 452
+             le rend à « Ma sélection » (le drapeau `fanion`, passé par
+             PageFavoris et par personne d'autre) : l'angle bas droit
+             de l'image, VISIBLE EN PERMANENCE — l'ancien réglage
+             `toujours`, au pixel (nº 212-§5 : le coin se mesure au
+             GLYPHE, d'où le `-mb-1 -mr-1` hors pleine largeur). Même
+             bouton que partout (BoutonCoeurPhoto : preventDefault +
+             stopPropagation — toucher le fanion n'ouvre jamais la
+             fiche), même clé par photo, règle 137 intacte.
+             ⚠️ LA MOSAÏQUE DU MOTEUR RESTE NUE : sans le drapeau, rien
+             ne se pose sur la photo — ni compteur (nº 214-§0), ni
+             badge (nº 211-§2), ni fanion. */}
+        {fanion && photoRegardee && (
+          <div
+            className={
+              uneColonne
+                ? "absolute bottom-2 right-2"
+                : "absolute bottom-2 right-2 -mb-1 -mr-1"
+            }
+          >
+            <BoutonCoeurPhoto
+              key={photoRegardee}
+              photoId={photoRegardee}
+              variante={uneColonne ? "fiche-mobile" : "carte"}
+            />
+          </div>
+        )}
 
         {/* EN PHOTOTHÈQUE, LE LIEN DE FICHE RECOUVRE L'IMAGE : le bloc
             de texte qui portait le lien étiré est masqué, la photo

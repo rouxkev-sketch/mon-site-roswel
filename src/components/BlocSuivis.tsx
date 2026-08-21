@@ -144,7 +144,11 @@ export function BlocSuivis({
         le `pb` de LigneResultats suffit, comme sur la page de
         recherche (relevé vivant : 20 px au doigt, 24 sur le web) — le
         `mt-4` d'ici s'y ajoutait. */
-    <div data-section-suivis="">
+    /*  §3 (nº 452) — `data-signe-muet` : ouvrir un profil depuis les
+        suivis n'affiche jamais le trait de chargement rose (la marque
+        d'exemption de SigneDeChargement — l'avalement du re-clic et
+        le nettoyage à l'arrivée restent entiers). */
+    <div data-section-suivis="" data-signe-muet="">
       {/*  §2 (nº 412) — UNE SEULE LISTE, SANS SECTION : le `<ul>` est
            celui d'avant, au pixel — mêmes écarts de 34 px au doigt et
            62 px au web (nº 254/264), même grille à une colonne

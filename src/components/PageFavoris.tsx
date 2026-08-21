@@ -493,7 +493,13 @@ export function PageFavoris({
                 d'ici s'y AJOUTAIT, et le bloc ne respectait plus les
                 marges de la page de recherche. Même écriture, même
                 rythme, plus rien d'ajouté. */
-            <ul className={CLASSES_GRILLE_CARTES}>
+            /*  §3 (nº 452) — `data-signe-muet` : ouvrir une image
+                depuis cette grille n'affiche JAMAIS le trait de
+                chargement rose — la marque d'exemption que
+                SigneDeChargement lit en remontant du lien cliqué
+                (l'attente reste armée : l'avalement du re-clic et le
+                nettoyage à l'arrivée ne changent pas). */
+            <ul data-signe-muet="" className={CLASSES_GRILLE_CARTES}>
               {ensemblesVisibles.map(({ cle, fiche, photo }) => (
                 <li key={cle}>
                   {/*  ⚠️ LA CARTE DE LA MOSAÏQUE, SANS VARIANTE
@@ -509,6 +515,13 @@ export function PageFavoris({
                        moitié mobile du défaut. */}
                   <CarteTatoueur
                     tatoueur={fiche}
+                    //  §2 (nº 452) — LE FANION REVIENT SUR CES CARTES,
+                    //  et sur elles seules : visible en permanence dans
+                    //  l'angle de l'image (l'état d'avant la nº 445) —
+                    //  retirer un favori depuis la page redevient
+                    //  possible. La mosaïque du moteur ne passe pas ce
+                    //  drapeau et reste nue.
+                    fanion
                     styleRecherche={photo.style}
                     renduRecherche={photo.rendu ?? ""}
                     natureRecherche={natureConnue(photo.nature)}
