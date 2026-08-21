@@ -12,7 +12,6 @@ import {
   PORTRAIT_ROND,
 } from "@/config/tatouage";
 import { useDispositionGrille } from "@/components/AffichageMosaique";
-import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
 import { legendeDeCarte, photoChoisie, photoPourStyle } from "@/lib/photo-tatoueur";
 import {
   ensembleDeLaPhoto,
@@ -22,12 +21,7 @@ import {
   titreDeGalerie,
   vignetteDe,
 } from "@/lib/photos-tatoueur";
-import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import { PhotoDeCarte, TAILLES_CARTE } from "@/components/PhotoDeCarte";
-import {
-  photoRetenueDeCarte,
-  retenirPhotoDeCarte,
-} from "@/lib/memoire-cartes";
 import { ligneCarte, ligneCarteMobile } from "@/lib/adresse";
 import { pincementRecent, usePincement } from "@/components/ZoomPincement";
 //  ⚠️ TEMPORAIRE (nº 219-§1) — la sonde du carrousel compte les
@@ -86,7 +80,6 @@ function CarteTatoueurNue({
   photoRecherche = "",
   prioritaire = false,
   phototheque = false,
-  fanion = "toujours",
   premiereLigne = "nom",
   surOuverture,
   surApproche,
@@ -115,32 +108,10 @@ function CarteTatoueurNue({
       dans l'angle (et seulement là où il est encore posé — voir
       `fanion` ci-dessous). Le clic mène à la fiche, comme toujours. */
   phototheque?: boolean;
-  /**
-   * §1-2 (nº 365) — LE FANION EST-IL POSÉ SUR CETTE CARTE ?
-   * ------------------------------------------------------------------
-   * LE MÊME COMPOSANT sert deux surfaces, et le propriétaire les
-   * sépare : la MOSAÏQUE DU MOTEUR (accueil, jumeau de recherche,
-   * vitrines, résultats — toutes rendues par `GrilleTatoueurs`) n'a
-   * plus de fanion ; « MA SÉLECTION » (PageFavoris) garde le sien,
-   * exactement comme aujourd'hui.
-   * ⚠️ UN RÉGLAGE EXPLICITE, JAMAIS UNE DEVINETTE D'ADRESSE : c'est
-   * l'appelant qui sait sur quelle surface il est, et lui seul.
-   *  · `toujours` (par défaut) — le fanion est là, comme avant ;
-   *  · `au-doigt-seulement` — il ne se pose que sur un vrai mobile.
-   *
-   * §4 (nº 367) — LA PROPRIÉTÉ RESTE, SA VALEUR CHANGE DE NOM. Elle ne
-   * distingue plus les deux DISPOSITIONS (le propriétaire remet le
-   * fanion sur les cartes côte à côte) : elle ne sépare plus que les
-   * deux SURFACES — la mosaïque du moteur, qui n'en veut pas sur le
-   * web, et « Ma sélection », qui le garde partout. La supprimer
-   * reviendrait à faire deviner cette différence au composant ; elle
-   * reste donc, avec un seul sens et un nom qui le dit.
-   * ⚠️ C'EST L'APPAREIL QUI TRANCHE, pas la largeur de la fenêtre
-   * (règle du site depuis la nº 60, lib/appareil) : la pleine largeur
-   * est atteignable sur le web par l'adresse (`?disposition=une`), et
-   * n'y ramène aucun fanion.
-   */
-  fanion?: "toujours" | "au-doigt-seulement";
+  /*  §2 (nº 445) — LE RÉGLAGE `fanion` EST SUPPRIMÉ AVEC LUI : plus
+      aucune surface ne pose de fanion sur une carte, il n'y a donc
+      plus rien à régler. Les favoris se mettent et se retirent
+      depuis la fiche. */
   tatoueur: Tatoueur;
   /** Le style demandé dans le moteur, s'il y en a un. */
   styleRecherche?: string;
@@ -254,24 +225,6 @@ function CarteTatoueurNue({
    * donc rien à retélécharger et rien à voir passer.
    */
   /**
-   * ██ nº 369 — ET C'EST POURQUOI RIEN N'APPARAISSAIT SUR LE WEB ██
-   * ------------------------------------------------------------------
-   * Ce n'était NI une variante manquante, NI une classe écrasée, NI un
-   * `group` mal posé — les trois ont été vérifiés (la variante
-   * `pointer-fine` est déclarée dans globals.css, les classes sont bien
-   * dans la feuille produite, et `group` est sur l'article). LA CAPSULE
-   * ET LES FLÈCHES VIVENT DANS LE CARROUSEL, et le carrousel n'était
-   * PAS MONTÉ sur le web : la condition exigeait le doigt ou la pleine
-   * largeur. Une carte web rendait donc l'image simple, sans rien
-   * autour. Le fanion, lui, est rendu par CETTE carte — voilà pourquoi
-   * il était le seul à répondre.
-   * LA CONDITION NE GARDE QUE CE QUI A UN SENS : plus d'une photo.
-   * ⚠️ AUCUNE PHOTO NE CHANGE À L'ÉCRAN : la colonne 0 du défilé est la
-   * photo que l'image simple montrait (nº 367), même adresse — rien à
-   * retélécharger.
-   */
-  const carrouselDansLaCarte = photosDeLaCarte.length > 1;
-  /**
    * ██ §2 (nº 395) — LE STYLE ÉCRIT SOUS LA CARTE ██
    * ==================================================================
    * QUEL STYLE, ET POURQUOI CELUI-LÀ : celui de LA PHOTO QU'ON REGARDE
@@ -364,50 +317,12 @@ function CarteTatoueurNue({
    * cette page, une même fiche peut avoir plusieurs cartes.
    */
   const cleDeLaCarte = `${tatoueur.carrousel?.cle ?? tatoueur.id}|${photoRecherche}`;
-  /**
-   * La photo regardée DANS la carte — le carrousel la possède.
-   * §2 (nº 372) — ET ELLE REVIENT DU RETOUR. La mosaïque est démontée
-   * quand on ouvre une fiche au doigt : sans cette semence, chaque
-   * carte repartait de sa première photo. La valeur vient d'une simple
-   * table en mémoire vive (lib/memoire-cartes) — ni adresse, ni
-   * historique, ni stockage. Bornée à ce que la galerie contient
-   * vraiment : une carte dont la série a changé repart de zéro plutôt
-   * que de viser une photo qui n'existe plus.
-   */
-  const [indicePhoto, setIndicePhoto] = useState(() => {
-    //  §2 (nº 373) — LA MÉMOIRE NE SÈME QU'AU DOIGT, et c'est la borne
-    //  de cette passe : sur le web, la fenêtre se pose PAR-DESSUS la
-    //  mosaïque sans rien démonter — les positions y survivaient
-    //  d'elles-mêmes bien avant que cette mémoire existe. Là où rien
-    //  n'a jamais manqué, on ne fait plus rien.
-    if (typeof document === "undefined") return 0;
-    if (document.documentElement.dataset.appareil !== "mobile") return 0;
-    return Math.min(
-      photoRetenueDeCarte(cleDeLaCarte),
-      Math.max(0, photosDeLaCarte.length - 1)
-    );
-  });
-  /**
-   * §1 (nº 373) — LA PHOTO EST RETENUE PAR UN EFFET, PLUS PAR LE
-   * RAPPEL DU CARROUSEL.
-   * ------------------------------------------------------------------
-   * CE QUE LA nº 372 AVAIT FAIT, ET C'EST LA RÉGRESSION : elle passait
-   * au carrousel un rappel FABRIQUÉ ICI (`useCallback`) à la place de
-   * `setIndicePhoto`. Or `surChangement` est une DÉPENDANCE de l'effet
-   * qui construit l'observateur de défilement (CarrouselPortfolio), et
-   * cet effet REPOSITIONNE la piste quand il se rejoue :
-   * `zone.scrollLeft = colonneVoulue ? colonneVoulue.offsetLeft : 0`.
-   * Un rappel de React (`setIndicePhoto`) est stable POUR TOUJOURS ; le
-   * mien ne l'était que tant que rien ne le refabriquait. Le seul fil
-   * que la nº 372 ait tendu dans la mécanique vivante d'une carte du
-   * web, c'était celui-là — il est coupé.
-   * On retient donc APRÈS coup, dans un effet qui ne touche à rien
-   * d'autre : le carrousel retrouve EXACTEMENT la propriété qu'il
-   * recevait avant la nº 372.
-   */
-  useEffect(() => {
-    retenirPhotoDeCarte(cleDeLaCarte, indicePhoto);
-  }, [cleDeLaCarte, indicePhoto]);
+  /*  §1 (nº 445) — PLUS D'ÉTAT DE POSITION DANS LA CARTE : le
+      carrousel parti, il n'y a plus de rang courant à tenir, ni de
+      mémoire de photo à semer d'une visite à l'autre
+      (lib/memoire-cartes n'est plus appelée d'ici). La photo est
+      fixe : c'est celle que `photoPourStyle` choisit, comme la
+      colonne 0 du défilé d'hier. */
   /**
    * §3 (nº 365) — LA PHOTO QU'ON REGARDE. Sans défilé (une seule
    * photo), c'est la photo choisie de la carte — comme avant. Avec
@@ -426,33 +341,10 @@ function CarteTatoueurNue({
   //  personne ne l'a passée — `??` ne la sauterait pas, et la carte
   //  perdrait sa photo. Ici, « vide » veut dire « rien à dire ».
   const photoRegardee =
-    photosDeLaCarte[indicePhoto]?.cle ||
+    photosDeLaCarte[0]?.cle ||
     photoRecherche ||
     photoEnregistrable?.id ||
     "";
-  const photoDuFanion = photoRegardee;
-  /**
-   * §1-2 (nº 365) — LE FANION EST-IL POSÉ ICI ?
-   * « Ma sélection » : toujours (réglage par défaut). La mosaïque du
-   * moteur : seulement sur les cartes PLEINE LARGEUR DU DOIGT. Sur le
-   * web, jamais — l'appareil tranche, pas la largeur de la fenêtre.
-   */
-  /**
-   * §3 (nº 368) — LE FANION EST PARTOUT ; C'EST SON APPARITION QUI
-   * CHANGE. Sur « Ma sélection » (`toujours`), il est là sans
-   * condition, comme aujourd'hui. Sur les cartes du moteur
-   * (`au-doigt-seulement`), il reste permanent AU DOIGT et n'apparaît
-   * AU WEB QU'AU SURVOL de la carte — la photo est nue quand la souris
-   * est ailleurs.
-   * ⚠️ `invisible`, PAS `opacity-0` : un élément seulement transparent
-   * continue de recevoir les clics — on cliquerait un fanion qu'on ne
-   * voit pas. Et `pointer-fine:` borne la règle aux pointeurs fins :
-   * le doigt n'a pas de survol, il ne doit donc rien perdre.
-   */
-  const fanionAuSurvol =
-    fanion === "au-doigt-seulement"
-      ? "pointer-fine:invisible pointer-fine:group-hover:visible"
-      : "";
 
   /** Le lieu de la fiche, tel que les deux écritures de la ligne le
       lisent (voir plus bas, nº 212-§6). */
@@ -706,42 +598,34 @@ function CarteTatoueurNue({
                un toucher ouvre la fiche, un glissement défile.
                En deux colonnes et sur le web : l'image simple d'avant,
                inchangée. */}
-          {carrouselDansLaCarte ? (
-            <div className="absolute inset-0 z-[1]">
-              <CarrouselPortfolio
-                photos={photosDeLaCarte}
-                nomTatoueur={tatoueur.nom}
-                styleLabel={libelleStyle(
-                  photoEnregistrable?.style ?? styleRecherche
-                )}
-                indice={indicePhoto}
-                //  §1 (nº 373) — LE RAPPEL DE REACT, ET RIEN
-                //  D'AUTRE : c'est une dépendance de l'observateur du
-                //  carrousel, elle doit être stable pour toujours (la
-                //  régression de la nº 372 est venue de là). La photo
-                //  est retenue par un effet, plus haut.
-                surChangement={setIndicePhoto}
-                variante="carte"
-                prioritaire={prioritaire}
-                //  §5 (nº 367) — la petite carte porte une capsule
-                //  réduite ; la pleine largeur garde celle de la fiche.
-                badgeReduit={!uneColonne}
-                lien={{
-                  href: adresseFiche,
-                  onClick: auClic,
-                  label: `Voir la fiche de ${tatoueur.nom}`,
-                }}
-              />
-            </div>
-          ) : (
-          /*  §1 (nº 366) — L'ÉCRITURE UNIQUE DE LA PHOTO DE CARTE
+          {/*  ██ §1 (nº 445) — LA CARTE NE FAIT PLUS DÉFILER : UNE SEULE
+               PHOTO, FIXE ██
+               ------------------------------------------------------
+               DÉCISION DU PROPRIÉTAIRE (passe nº 445) : le carrousel de
+               la carte est retiré, mobile comme ordinateur. Partent
+               avec lui, tous portés par ce carrousel : le glissement
+               sur la photo, les FLÈCHES du web et la CAPSULE de
+               défilement (le compteur, en haut de l'image).
+               ⚠️ AUCUNE PHOTO NE CHANGE À L'ÉCRAN, et c'est la règle
+               175-§5 : la colonne 0 du défilé ÉTAIT déjà l'image que
+               PhotoDeCarte affiche ci-dessous (`photoPourStyle`, la
+               même source, la même adresse — la note nº 367/369 le
+               disait dans l'autre sens). Rien à retélécharger, rien à
+               voir passer.
+               ⚠️ LES CARROUSELS DES FICHES NE SONT PAS CONCERNÉS : la
+               page de fiche et la fenêtre superposée montent leur
+               propre CarrouselPortfolio, intact — ils défilent comme
+               avant.
+               ⚠️ LE PINCEMENT RESTE (nº 276) : il vit sur la carte,
+               pas sur le carrousel.
+               §1 (nº 366) — L'ÉCRITURE UNIQUE DE LA PHOTO DE CARTE
               (components/PhotoDeCarte) : elle part de l'ORIGINAL quand
               la photo est cataloguée, et laisse l'optimiseur fabriquer
               la taille exacte de l'écran, densité comprise. La
               démonstration (SVG) et les fiches d'avant le catalogue
               n'ont pas d'original : elles sont servies telles quelles,
               exactement comme avant. La réserve de hauteur, le
-              chargement paresseux et la priorité ne bougent pas. */
+              chargement paresseux et la priorité ne bougent pas. */}
           <PhotoDeCarte
             url={photo}
             urlPleine={photoEnregistrable?.url}
@@ -761,7 +645,6 @@ function CarteTatoueurNue({
             priorite={prioritaire ? "high" : undefined}
             classe="w-full h-full object-cover"
           />
-          )}
         </div>
 
         {/* LE BADGE « Artiste » / « Salon » — DANS l'image, angle bas
@@ -786,64 +669,22 @@ function CarteTatoueurNue({
              au CŒUR, qui est un geste et mérite l'angle le plus
              accessible au pouce. */}
 
-        {/* LE CŒUR — DANS l'image, angle HAUT DROIT : l'angle opposé
-            au badge, celui que tous les sites d'images réservent à ce
-            geste. Il est posé APRÈS le lien étiré dans l'ordre du
-            document et porte `z-10` : le doigt le trouve avant la
-            carte, et n'ouvre donc jamais la fiche par erreur.
-            ⚠️ C'EST LE SEUL ÉLÉMENT QUE LA PHOTOTHÈQUE CONSERVE. */}
-        {/*  ⚠️ AUCUN COMPTEUR DE PHOTOS SUR L'IMAGE (nº 214-§0) : la
-             nº 213 l'avait remis dans l'angle bas gauche par erreur de
-             lecture — le propriétaire demandait sa SUPPRESSION. Rien ne
-             se pose plus sur la photo hormis le cœur. */}
-        {photoEnregistrable && (
-          /*  ⚠️ LE COIN SE MESURE AU GLYPHE, PAS À LA BOÎTE
-              (nº 212-§5). Le bouton porte sa zone tactile tout autour
-              du fanion : posé à 8 px du bord, c'est le GLYPHE qui se
-              retrouve à 16 px — il flottait donc trop haut dans son
-              angle. Le décalage compense la moitié de cet ourlet
-              (`-mb-1 -mr-1` en deux colonnes) : le glyphe retrouve le
-              même air que les autres coins de l'interface, alors que
-              la cible, elle, ne perd pas un pixel. En pleine largeur,
-              le fanion est celui de la fiche et garde sa place. */
-          <div
-            className={`${
-              uneColonne
-                ? "absolute bottom-2 right-2"
-                : "absolute bottom-2 right-2 -mb-1 -mr-1"
-              //  §3 (nº 368) — l'apparition au survol, sur le web
-              //  seulement (voir `fanionAuSurvol`).
-            } ${fanionAuSurvol}`}
-          >
-            <BoutonCoeurPhoto
-              /*  §3 (nº 365) — LE FANION SUIT LA PHOTO REGARDÉE, et
-                  c'était tout le bug : il recevait `photoEnregistrable`,
-                  la photo CHOISIE de la carte (la première de
-                  l'ensemble), figée pour toute la vie de la carte —
-                  quelle que soit la photo sous les yeux, c'est elle qui
-                  partait en favori. L'index du défilé était pourtant
-                  tenu à jour ici même (`indicePhoto`, que le carrousel
-                  remonte par `surChangement`) : personne ne le LISAIT.
-                  ⚠️ `key` : chaque photo a son PROPRE bouton — son état
-                  plein ou vide est celui de SA photo, et le rebond de
-                  pose ne se rejoue jamais sur la voisine. En faisant
-                  défiler, le fanion se remplit et se vide photo par
-                  photo, sans qu'aucune requête ne parte (l'état vient
-                  du magasin partagé, rempli après coup — règle 137). */
-              key={photoDuFanion}
-              photoId={photoDuFanion}
-              //  ⚠️ LE GABARIT SUIT LA CARTE (nº 211-§3 et §4) : en
-              //  pleine largeur au doigt, il prend EXACTEMENT la taille
-              //  du cœur de la fiche ; partout ailleurs, le gabarit
-              //  des cartes, agrandi lui aussi.
-              variante={uneColonne ? "fiche-mobile" : "carte"}
-              //  L'ENSEMBLE DE CETTE PHOTO (nº 209-§3) — même style,
-              //  même catégorie, même rendu, chez ce tatoueur : la
-              //  règle est la même depuis la mosaïque que depuis une
-              //  fiche.
-            />
-          </div>
-        )}
+        {/*  ██ §2 (nº 445) — LE FANION DE FAVORIS QUITTE LA CARTE ██
+             ------------------------------------------------------
+             DÉCISION DU PROPRIÉTAIRE (passe nº 445) : plus de fanion
+             dans l'angle de la photo, mobile comme ordinateur, sur
+             TOUTES les surfaces qui montent cette carte — la mosaïque
+             du moteur ET « Ma sélection ». Mettre ou retirer un favori
+             se fait depuis LA FICHE, qui garde son cœur intact.
+             ⚠️ CE QUE « Ma sélection » PERD, et c'est dit au
+             propriétaire : ses cartes n'y portaient le fanion QUE là
+             (le réglage `toujours`) — retirer un favori depuis cette
+             page passe désormais par l'ouverture de la fiche. Rien
+             n'est perdu côté données : le magasin des favoris, ses
+             requêtes et la fiche ne bougent pas d'une ligne.
+             ⚠️ RIEN NE SE POSE PLUS SUR LA PHOTO : ni compteur
+             (nº 214-§0), ni badge (nº 211-§2), ni fanion — l'image est
+             nue, et le clic ouvre la fiche. */}
 
         {/* EN PHOTOTHÈQUE, LE LIEN DE FICHE RECOUVRE L'IMAGE : le bloc
             de texte qui portait le lien étiré est masqué, la photo
@@ -856,7 +697,7 @@ function CarteTatoueurNue({
              porte DÉJÀ un lien par photo (nº 211-§5). Deux liens
              superposés se disputeraient le doigt, et celui-ci
              recouvrirait le défilement. */}
-        {phototheque && !carrouselDansLaCarte && (
+        {phototheque && (
           <Link
             href={adresseFiche}
             aria-label={`Voir la fiche de ${tatoueur.nom}`}

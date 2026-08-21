@@ -696,14 +696,6 @@ export function GrilleTatoueurs({
             natureRecherche={tatoueur.carrousel?.nature ?? natureRecherche}
             prioritaire={rang < CARTES_PRIORITAIRES}
             phototheque={phototheque}
-            /*  §1-2 (nº 365), §4 (nº 367) — CETTE MOSAÏQUE EST CELLE DU
-                MOTEUR : accueil, jumeau de recherche, vitrines,
-                résultats passent tous par elle. Le fanion y revient sur
-                LES DEUX formats du doigt (nº 367) et reste absent du
-                web ; « Ma sélection » (PageFavoris, qui monte la même
-                carte) garde le sien partout — elle ne passe pas par
-                ici, et son réglage par défaut ne bouge pas. */
-            fanion="au-doigt-seulement"
             /*  §2 (nº 395) — ELLE NE DÉCIDE RIEN, ELLE TRANSMET. Cette
                  grille sert l'accueil, son jumeau de recherche, les
                  résultats ET les vitrines : elle ne peut pas savoir

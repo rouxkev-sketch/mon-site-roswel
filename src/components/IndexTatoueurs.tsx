@@ -626,7 +626,22 @@ export function IndexTatoueurs({
           const compte = `${total} création${total > 1 ? "s" : ""}`;
           if (!quoi && !lieu) {
             //  SANS RECHERCHE : l'invitation, et ce que le site est.
+            //  §2 (nº 445) — ET L'AIR SOUS LA BARRE, AU DOIGT : la
+            //  phrase d'introduction ayant quitté le mobile (nº 444),
+            //  les cartes touchaient presque la barre fixe. Ce bloc
+            //  vide de 14 px rend cet air — et LUI SEUL : il ne vit
+            //  que sur l'accueil SANS recherche (là où le titre est
+            //  masqué), au doigt seulement (`mobile:`, le vrai
+            //  appareil), et ne touche aucun conteneur partagé. Quand
+            //  une recherche est active, c'est le titre qui donne
+            //  l'air, comme avant — rien n'y est ajouté.
             return (
+              <>
+              <div
+                aria-hidden="true"
+                data-air-sous-barre=""
+                className="h-3.5 hidden mobile:block"
+              />
               <LigneResultats
                 titre={TEXTES_TATOUAGE.titreMosaique}
                 sousTitre={TEXTES_TATOUAGE.sousTitreMosaique}
@@ -638,6 +653,7 @@ export function IndexTatoueurs({
                 //  ses deux affichages intacts.
                 masqueAuDoigt
               />
+              </>
             );
           }
           //  AVEC UNE RECHERCHE : le titre dit CE QU'ON CHERCHE, le
