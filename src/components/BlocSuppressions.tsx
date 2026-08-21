@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { DELAI_SUPPRESSION_JOURS } from "@/config/tatouage";
+import { declarerDepartVouluVersLAccueil } from "@/lib/navigation-session";
 import { sansRemplissageAuto } from "@/lib/champs-sans-remplissage";
 import {
   chargerFichesDuCompte,
@@ -103,6 +104,9 @@ export function BlocSuppressions() {
         // Session déjà invalide : c'est le but.
       }
       setCompteAConfirmer(false);
+      //  §1 (nº 429) — départ voulu vers l'accueil : le filet de
+      //  réparation du repli n'a pas à s'en mêler.
+      declarerDepartVouluVersLAccueil();
       window.location.assign("/");
     } catch (e) {
       setErreur(

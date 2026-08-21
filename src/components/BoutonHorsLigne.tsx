@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { MOTIFS_MODERATION } from "@/config/tatouage";
+import { declarerDepartVouluVersLAccueil } from "@/lib/navigation-session";
 import { sansRemplissageAuto } from "@/lib/champs-sans-remplissage";
 import { IconeHorsLigne } from "@/components/Icones";
 import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
@@ -163,7 +164,12 @@ export function BoutonHorsLigne({
                 </p>
                 <button
                   type="button"
-                  onClick={() => window.location.assign("/")}
+                  onClick={() => {
+                    //  §1 (nº 429) — départ voulu vers l'accueil : le
+                    //  filet de réparation du repli s'abstient.
+                    declarerDepartVouluVersLAccueil();
+                    window.location.assign("/");
+                  }}
                   className="mt-6 inline-flex items-center justify-center rounded-full
                              px-6 min-h-[46px] bg-primaire hover:bg-primaire-fonce
                              text-white font-semibold transition-colors"

@@ -10,6 +10,7 @@ import {
 import {
   AGE_MAXIMUM_MS,
   AGE_POSITION_MS,
+  CLE_DEPART_VOULU,
   CLE_JOURNAL,
   CLE_ONGLET,
   CLE_RATTRAPAGE_FILET,
@@ -153,6 +154,8 @@ export function scriptAvantPeinture(): string {
   const rattrapage = JSON.stringify(CLE_RATTRAPAGE_FILET);
   const armeeSonde = JSON.stringify(CLE_ARMEE_SONDE);
   const journalSonde = JSON.stringify(CLE_JOURNAL_SONDE);
+  //  §1 (nº 429) — la déclaration « départ voulu vers l'accueil ».
+  const intention = JSON.stringify(CLE_DEPART_VOULU);
 
   return `(function(){
 var r=document.documentElement;
@@ -164,7 +167,7 @@ r.dataset.appareil=matchMedia("(pointer: coarse)").matches?"mobile":"web";
    avec un vieux), la page servie est PÉRIMÉE — un cache la retient —
    et aucun des blocs récents n'y a jamais été. À INCRÉMENTER à chaque
    passe qui modifie ce script. */
-r.dataset.versionScript="428";
+r.dataset.versionScript="429";
 r.style.backgroundColor=${fond};
 /* nº 357 — LE COMPTE, DIT AVANT LA PREMIÈRE PEINTURE. L'accueil est
    prérendu : le serveur ne connaît plus la session, et c'est CE
@@ -263,23 +266,47 @@ var vers=null;
    que soit le chemin : elle ne concerne que CE document-ci. */
 var marqueRattrapage=null;
 try{marqueRattrapage=sessionStorage.getItem(${rattrapage});if(marqueRattrapage)sessionStorage.removeItem(${rattrapage})}catch(e){}
+/* §1 (nº 429) — LA DÉCLARATION D'INTENTION, posée au clic par tout
+   lien interne du site vers l'accueil nu (le logo en tête — un <a>
+   NATIF : chaque clic est une navigation de document, et le filet la
+   prenait pour un repli : « le logo ne ramène plus à l'accueil »,
+   relevé nº 429). Consommée ici, une fois, fraîche huit secondes —
+   une navigation douce qui n'a pas déchargé le document la laisse
+   simplement expirer. */
+var intentionAccueil=null;
+try{intentionAccueil=sessionStorage.getItem(${intention});if(intentionAccueil)sessionStorage.removeItem(${intention})}catch(e){}
+var departVouluFrais=Boolean(intentionAccueil)&&maintenant-(Number(intentionAccueil)||0)<8000;
+/* §1 (nº 429) — LE RÉFÉRENT TRANCHE LA SAISIE À LA MAIN : une adresse
+   tapée (ou un favori, ou un lien d'ailleurs) n'envoie AUCUN référent
+   de notre origine ; le repli du routeur, lui, est un
+   location.replace lancé PAR une page du site — son référent est la
+   page quittée, même origine. Vide, illisible ou étranger : le filet
+   S'ABSTIENT — « un visiteur bloqué contre son gré est pire qu'un
+   repli non réparé » (la règle du propriétaire, nº 429). */
+var refDuSite=false;
+try{var refD=document.referrer||"";refDuSite=refD===location.origin||refD.indexOf(location.origin+"/")===0}catch(e){}
 if(nav==="reload"&&derniereOnglet&&derniereOnglet!==adresse){vers=derniereOnglet}
 else if(nav==="navigate"&&!derniereOnglet&&adresse==="/"&&visites&&visites.courante&&visites.courante!=="/"&&(matchMedia("(display-mode: standalone)").matches||navigator.standalone===true)){vers=visites.courante}
-/* ██ §2 (nº 428) — LE FILET DE RÉPARATION DU REPLI DE NAVIGATION ██
-   Le relevé (Chrome iPhone ET Safari) : « Voir plus » part PARFOIS en
-   NAVIGATION DE DOCUMENT — le repli du routeur quand la navigation
-   douce échoue (deux désaccords d'arbre d'affilée ; la réécriture de
-   « / » vers le jumeau les fabrique) — et ce repli navigue vers
-   l'adresse canonique INTERNE du routeur, restée « / » NU : critères,
-   page et mélange perdus en route. ICI, avant toute peinture : ce
-   document naît en « navigate » sur une adresse sans AUCUN paramètre
-   de recherche, alors que la même session vient de quitter (< 8 s,
-   pagehide noté par MemoireNavigation) une adresse de « / » qui en
-   portait — c'est ce repli : on rend l'adresse complète. Une adresse
-   tapée à la main ne tombe pas dans la fenêtre des 8 secondes ; le
-   rattrapage du filet a sa marque (ci-dessus) et passe au travers.
+/* ██ §2 (nº 428, CIVILISÉ nº 429) — LE FILET DE RÉPARATION DU REPLI ██
+   Le repli du routeur (deux désaccords d'arbre d'affilée, ou un échec
+   réseau — la réécriture de « / » vers le jumeau les fabrique) part
+   en NAVIGATION DE DOCUMENT vers l'adresse canonique INTERNE restée
+   « / » NU : critères, page et mélange perdus en route. ICI, avant
+   toute peinture, la table de décision — et elle exige TOUT :
+    · le document naît en « navigate » sur une adresse sans AUCUN
+      paramètre de recherche ;
+    · la même session vient de quitter (< 8 s, pagehide noté par
+      MemoireNavigation) une adresse de « / » qui en portait ;
+    · le RÉFÉRENT est une page du site — un repli est toujours lancé
+      PAR une page ; une saisie à la main n'en envoie aucun (la leçon
+      de la nº 429 : le pari des huit secondes seul était faux) ;
+    · AUCUNE intention d'accueil déclarée (le logo…), AUCUN rattrapage
+      du filet (RetourGaranti) — leurs marques ci-dessus.
+   Alors seulement : l'adresse complète est rendue. Dans tout autre
+   cas — et dans le doute — le filet NE RÉPARE PAS : un visiteur
+   bloqué contre son gré est pire qu'un repli non réparé.
    La ligne s'écrit au journal de la sonde : aucun repli muet. */
-else if(nav==="navigate"&&location.pathname==="/"&&!marqueRattrapage&&derniereOnglet&&derniereOnglet.indexOf("/?")===0&&memoireOnglet.quand&&maintenant-memoireOnglet.quand<8000){
+else if(nav==="navigate"&&location.pathname==="/"&&!marqueRattrapage&&!departVouluFrais&&refDuSite&&derniereOnglet&&derniereOnglet.indexOf("/?")===0&&memoireOnglet.quand&&maintenant-memoireOnglet.quand<8000){
 var pn=new URLSearchParams(location.search);var nue=true;
 pn.forEach(function(v,n){if(!(${conditionDeReglagePourLeScript("n")}))nue=false});
 var pd=new URLSearchParams(derniereOnglet.slice(derniereOnglet.indexOf("?")+1));var pleine=false;

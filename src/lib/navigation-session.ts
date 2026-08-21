@@ -676,6 +676,39 @@ export const CLE_ONGLET = "roswel:onglet";
     rattrapage venait précisément de le tirer. */
 export const CLE_RATTRAPAGE_FILET = "roswel:rattrapage-filet";
 
+/**
+ * §1 (nº 429) — « DÉPART VOULU VERS L'ACCUEIL » : L'INTENTION DÉCLARÉE
+ * ==================================================================
+ * LE DÉFAUT QU'ELLE FERME (relevé du propriétaire, nº 429) : le LOGO
+ * de la barre est un `<a href="/">` NATIF — chaque clic est donc une
+ * navigation de document vers « / » nu, VOULUE. Le filet de
+ * réparation de la nº 428 n'y voyait qu'un document né « navigate »
+ * sur l'accueil nu juste après le départ d'une adresse à critères —
+ * la signature exacte du repli — et RENVOYAIT l'utilisateur vers la
+ * recherche qu'il venait précisément de quitter : le logo ne ramenait
+ * plus à l'accueil.
+ * LA RÈGLE, POSÉE PAR LE PROPRIÉTAIRE : tout lien interne du site
+ * vers l'accueil nu DÉCLARE son intention avant de partir ; le filet
+ * la lit, la consomme, et s'abstient. La déclaration est un
+ * horodatage : elle ne vaut que huit secondes (même fenêtre que le
+ * filet), et une navigation douce qui n'a pas déchargé le document la
+ * laisse expirer sans effet.
+ */
+export const CLE_DEPART_VOULU = "roswel:depart-voulu-accueil";
+
+/** À appeler au CLIC de tout lien interne qui mène à l'accueil nu
+    (le logo de la barre en tête). Un simple horodatage de session —
+    jamais un frein : la navigation part comme avant. */
+export function declarerDepartVouluVersLAccueil() {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(CLE_DEPART_VOULU, String(Date.now()));
+  } catch {
+    //  Sans stockage de session, le filet de réparation ne joue pas
+    //  non plus (il lit la même mémoire) : aucune interférence.
+  }
+}
+
 type EtatOnglet = {
   derniere: string | null;
   pages: number;

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { corpsGele, gelerLeCorps } from "@/lib/gel-du-corps";
+import { declarerDepartVouluVersLAccueil } from "@/lib/navigation-session";
 import Link from "next/link";
 import { villeAffichee } from "@/lib/adresse";
 import { libelleStyle, MARQUE_YOKOFOLIO } from "@/config/tatouage";
@@ -509,7 +510,15 @@ export function FenetreFiche({
           >
             <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-white/70">
               <li>
-                <Link href="/" className="hover:text-white transition-colors">
+                {/*  §1 (nº 429) — l'intention est déclarée : si cette
+                     navigation douce dégénère en document (repli du
+                     routeur), le filet de réparation la respecte au
+                     lieu de renvoyer vers la mosaïque quittée. */}
+                <Link
+                  href="/"
+                  onClick={() => declarerDepartVouluVersLAccueil()}
+                  className="hover:text-white transition-colors"
+                >
                   Accueil
                 </Link>
               </li>

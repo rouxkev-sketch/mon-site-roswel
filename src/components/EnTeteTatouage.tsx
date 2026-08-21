@@ -20,6 +20,9 @@ import {
 } from "@/lib/geste-toucher";
 //  §3 (nº 426) — les bascules de la rangée s'écrivent au journal.
 import { noter } from "@/lib/journal-bascule";
+//  §1 (nº 429) — le clic du logo déclare son intention : « départ voulu
+//  vers l'accueil » — le filet de réparation du repli s'abstient.
+import { declarerDepartVouluVersLAccueil } from "@/lib/navigation-session";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { lieuVersParametres } from "@/lib/geocodage";
@@ -727,6 +730,16 @@ export function EnTeteTatouage({
             href="/"
             aria-label={`Accueil ${MARQUE_YOKOFOLIO.nom}`}
             draggable={false}
+            /*  §1 (nº 429) — L'INTENTION EST DÉCLARÉE AVANT DE PARTIR :
+                ce lien est un <a> NATIF (voulu, voir ci-dessus), chaque
+                clic est donc une navigation de document vers « / » nu.
+                Sans cette note de session, le filet de réparation du
+                repli (script d'avant-peinture) prenait ce départ VOULU
+                pour un repli du routeur et renvoyait l'utilisateur vers
+                la recherche qu'il venait de quitter — « le logo ne
+                ramène plus à l'accueil » (relevé nº 429). Aucun frein :
+                la navigation part exactement comme avant. */
+            onClick={() => declarerDepartVouluVersLAccueil()}
             className="block w-fit cursor-pointer rounded-lg
                        focus-visible:outline-2 focus-visible:outline-offset-4
                        focus-visible:outline-primaire"
