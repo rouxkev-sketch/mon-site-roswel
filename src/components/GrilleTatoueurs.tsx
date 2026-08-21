@@ -593,10 +593,13 @@ export function GrilleTatoueurs({
          * ------------------------------------------------------------
          * LE DÉFAUT MESURÉ : à 390 px en pleine largeur, la page
          * faisait 461 px de large et glissait vers la droite.
-         * LA CHAÎNE, relevée nœud par nœud :
-         *  1. une carte hors champ porte `content-visibility: auto` et
-         *     `contain-intrinsic-size: auto 460px` (nº 224-§4, la
-         *     correction mémoire — elle reste, elle est juste) ;
+         * LA CHAÎNE, relevée nœud par nœud (⚠️ nº 424-§3 : la carte ne
+         * porte PLUS `content-visibility` — le maillon 1 est mort, mais
+         * `minmax(0, 1fr)` reste : le minimum automatique d'une grille
+         * peut déborder pour d'autres raisons, un contenu large suffit) :
+         *  1. une carte hors champ portait `content-visibility: auto` et
+         *     `contain-intrinsic-size: auto 460px` (nº 224-§4, retirés
+         *     par la nº 424-§3 — la remontée par paliers) ;
          *  2. cette taille intrinsèque est écrite en UNE valeur : elle
          *     vaut donc pour LES DEUX AXES. La carte hors champ
          *     annonce 460 px de LARGE autant que de haut ;

@@ -125,8 +125,9 @@ const VOISINES = 2;
  * CE QUE ÇA COÛTE, ET LA BORNE : au repos, une carte monte DEUX
  * colonnes (la photo 0 et sa voisine) au lieu d'une. La voisine est
  * `lazy` — le navigateur ne la télécharge donc QUE si la carte est à
- * l'écran ; les cartes hors champ ne demandent rien (`lazy`, et
- * `content-visibility: auto` sur la carte). Le premier écran coûte
+ * l'écran ; les cartes hors champ ne demandent rien (`lazy` seul
+ * depuis la nº 424-§3, et il suffit : une image paresseuse hors
+ * écran n'est jamais demandée). Le premier écran coûte
  * ainsi au plus UNE photo de plus par carte VISIBLE, demandée après la
  * peinture. Zéro photo de plus pour les cartes qu'on ne voit pas.
  * ⚠️ LE BOUTON, S'IL FAUT REVENIR : mettre 0 ici rend le comportement
@@ -500,9 +501,12 @@ export function CarrouselPortfolio({
    * restauration de position et la fenêtre superposée ne voient rien
    * passer. Au doigt, où la photo touche les deux bords de l'écran,
    * le bord vaut déjà 0 : la correction est nulle et rien ne bouge.
-   * ⚠️ RÉSERVÉ AUX FICHES (`variante="fiche"`) : une carte de mosaïque
-   * porte `content-visibility:auto` (nº 224) et n'est pas mise en page
-   * tant qu'elle est hors écran — on y mesurerait du vent.
+   * ⚠️ RÉSERVÉ AUX FICHES (`variante="fiche"`) : la raison d'origine
+   * (« une carte de mosaïque porte `content-visibility` et n'est pas
+   * mise en page hors écran ») est tombée avec la nº 424-§3, mais la
+   * borne reste : au doigt le bord vaut déjà 0, et la mosaïque n'a
+   * jamais montré le besoin de cette correction — on ne l'élargit pas
+   * sans motif.
    */
   /**
    * §2 (nº 296) — LA POSITION DU DÉFILEMENT S'ARRÊTE SUR UN MULTIPLE

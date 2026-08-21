@@ -178,6 +178,27 @@ function attendreLeContenu(position: number, poser: () => void) {
 }
 
 /**
+ * §1 (nº 424) — ANNULER LA RESTITUTION EN VOL, EXPLICITEMENT.
+ * ==================================================================
+ * LE DÉFAUT QU'ELLE FERME : une restitution est un travail DIFFÉRÉ —
+ * `attendreLeContenu` guette jusqu'à 2,5 s que le document atteigne la
+ * position avant de poser, et `surveillerLaReserve` tient la hauteur
+ * réservée jusqu'à 5 s. Si, PENDANT cette fenêtre, l'utilisateur lance
+ * une RECHERCHE (une liste neuve, qui doit s'ouvrir en haut), la vieille
+ * pose se déclenchait quand le nouveau contenu atteignait enfin la
+ * position… et redescendait la liste neuve à la place de l'ancienne —
+ * « les résultats s'affichent mais je suis en bas de page ». En ligne,
+ * où les cartes mettent des secondes à monter le document, la fenêtre
+ * est grande ouverte ; au banc local, elle est presque infranchissable.
+ * L'appelant est UNIQUE : `ouvrirLaListeEnHaut` (lib/liste-neuve) — le
+ * geste qui dit « liste neuve » tue toute restitution pendante.
+ */
+export function annulerLaRestitutionEnCours() {
+  attenteEnCours?.();
+  arreter?.();
+}
+
+/**
  * RENDRE LA PLACE D'UNE ADRESSE — LA SEULE PORTE DU RETOUR
  * ==================================================================
  * §1 (nº 335) — UNE PLACE, C'EST DEUX CHOSES, ET ELLES SE RENDENT

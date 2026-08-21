@@ -620,27 +620,36 @@ function CarteTatoueurNue({
       //  distinguer — l'identifiant de la fiche ne le peut plus.
       data-carte={tatoueur.carrousel?.cle ?? tatoueur.id}
       /**
-       * §4 (nº 224) — LA MÉMOIRE NE CROÎT PLUS AVEC LES CARTES
+       * ██ §3 (nº 424) — `content-visibility: auto` EST RETIRÉ DE LA
+       * CARTE, ET VOICI POURQUOI ██
        * ------------------------------------------------------------
-       * `content-visibility: auto` : le navigateur ne met en page, ne
-       * peint ni ne garde en mémoire le contenu d'une carte HORS
-       * CHAMP. À quatre-vingt-douze cartes sur un iPhone, c'est la
-       * différence entre un onglet qui vit et un moteur de rendu que
-       * le système tue.
+       * CE QU'IL FAISAIT (nº 224-§4) : une carte hors champ n'était ni
+       * mise en page ni peinte, et `contain-intrinsic-size: auto 460px`
+       * tenait sa place — la hauteur MÉMORISÉE pour une carte déjà vue,
+       * 460 px d'estimation pour les autres.
        *
-       * ⚠️ `contain-intrinsic-size: auto 460px` — LE MOT `auto` EST
-       * L'ESSENTIEL, et c'est lui qui rend la chose compatible avec
-       * le §3 (la page ne bouge pas) : le navigateur MÉMORISE la
-       * hauteur réelle de la carte dès qu'il l'a rendue une fois, et
-       * la réutilise ensuite quand elle sort du champ. La hauteur
-       * réservée est donc EXACTE pour toute carte déjà vue — jamais
-       * une estimation. Les 460 px ne servent qu'aux cartes JAMAIS
-       * rendues, c'est-à-dire loin sous l'écran, là où une erreur de
-       * hauteur ne déplace rien de ce qu'on regarde.
+       * CE QU'IL COÛTAIT, constaté sur l'iPhone du propriétaire : LA
+       * REMONTÉE PAR PALIERS après une pagination — « la première ligne
+       * de cartes descend, se bloque, remonte de plusieurs centimètres,
+       * puis la suivante fait pareil ». Le mécanisme : en remontant,
+       * chaque rangée qui rentre dans le champ est REMISE EN PAGE à sa
+       * hauteur réelle (≈ 300 px en deux colonnes, ≈ 550 en une — les
+       * 460 estimés ne sont justes nulle part) ; et sur WebKit — Chrome
+       * sur iPhone EST WebKit — le garde-fou de la nº 224-§3 n'existe
+       * pas : `overflow-anchor: none` n'y est pas implémenté, l'ANCRAGE
+       * NATIF reste actif, et il « compense » chaque correction de
+       * hauteur en déplaçant le défilement. Une rangée, un à-coup.
+       * (La hauteur mémorisée n'y sauve rien : WebKit rejoue la mise en
+       * page des cartes dé-sautées par vagues, et chaque vague ancre.)
+       *
+       * CE QUI GARDE LA MÉMOIRE SOUS CONTRÔLE SANS LUI : le SECOND
+       * levier de la nº 224-§4 — l'observateur unique de la grille qui
+       * rend la SOURCE des images à plus de deux écrans (les bitmaps
+       * décodés, le vrai poids) — reste entier. Le squelette DOM d'une
+       * carte (une image, trois lignes) est léger ; c'est l'image
+       * décodée qui tuait l'onglet, et elle reste libérée.
        */
-      className="group relative flex flex-col
-                 [content-visibility:auto]
-                 [contain-intrinsic-size:auto_460px]"
+      className="group relative flex flex-col"
       // Le doigt garde le défilement ; le pincement, non — il zoome
       // la photo (jamais la page).
       style={{ touchAction: "pan-x pan-y" }}

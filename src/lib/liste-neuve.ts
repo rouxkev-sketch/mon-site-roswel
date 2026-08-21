@@ -6,6 +6,8 @@ import {
   oublierDefilementDe,
   oublierRestaurationPosition,
 } from "@/lib/navigation-session";
+//  §1 (nº 424) — le cinquième geste : tuer la restitution en vol.
+import { annulerLaRestitutionEnCours } from "@/lib/restitution-position";
 
 /**
  * UNE LISTE NEUVE COMMENCE EN HAUT — L'ÉCRITURE UNIQUE
@@ -24,7 +26,8 @@ import {
  * et un correctif par surface aurait fini par diverger. Tout ce qui
  * ouvre une liste neuve appelle DONC cette fonction, et rien d'autre.
  *
- * ELLE FAIT QUATRE GESTES, ET C'EST L'ENSEMBLE QUI TIENT :
+ * ELLE FAIT CINQ GESTES, ET C'EST L'ENSEMBLE QUI TIENT (le cinquième,
+ * nº 424 : tuer la restitution en vol — voir son bloc plus bas) :
  *
  *  1. ELLE OUBLIE LA DEMANDE DE RESTITUTION. Une demande nommée
  *     (`demanderRestaurationPosition`) posée juste avant survivrait à
@@ -103,6 +106,17 @@ export function ouvrirLaListeEnHaut(
   oublierRestaurationPosition();
   oublierDefilementDe(cible);
   laPositionDuGelRepartDeZero();
+  /*  §1 (nº 424) — LE CINQUIÈME GESTE : TUER LA RESTITUTION EN VOL.
+      ------------------------------------------------------------------
+      LE DÉFAUT, constaté en ligne : un RETOUR venait de rendre sa place
+      à une longue liste — un travail DIFFÉRÉ (`poserLaPosition` attend
+      jusqu'à 2,5 s que le contenu atteigne la position, et la réserve
+      de hauteur vit 5 s). Une recherche validée PENDANT cette fenêtre
+      remontait bien sa liste neuve… puis la vieille pose se déclenchait
+      — le nouveau contenu venait d'atteindre la position guettée — et
+      redescendait tout en bas. Les quatre gestes ci-dessus effacent les
+      MÉMOIRES ; aucun ne touchait au travail DÉJÀ LANCÉ. */
+  annulerLaRestitutionEnCours();
   if (cible === ici) {
     //  LA LISTE NEUVE EST ICI MÊME (un filtre : l'adresse a été écrite
     //  par `replaceState`, la page ne change pas). On remonte tout de
