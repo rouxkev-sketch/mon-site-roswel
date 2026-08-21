@@ -794,6 +794,21 @@ export function FicheTatoueur({
       //  et un relevé qui ne nomme pas sa page ne prouve rien. Une
       //  marque, aucune conséquence de mise en page.
       data-fiche-vue={apercu ? "apercu" : "publique"}
+      /*  ██ §3 (nº 453) — LA VUE PHOTO MOBILE EST MINIMALE ██
+          La fiche publique EN VUE PHOTO (pas d'`entree=lien`) se nomme :
+          au doigt, la feuille de style (globals.css, à côté de la garde
+          nº 359) y RETIRE LA COLONNE DE LECTURE de l'affichage — la
+          page ne montre que la rangée du profil, la photo et la ligne
+          titre + fanion. Tout le reste vit dans la VUE PROFIL, par le
+          badge « Profil » (nº 451-§2, inchangé).
+          ⚠️ UNE BASCULE DE FEUILLE DE STYLE, JAMAIS UN RENDU
+          CONDITIONNEL D'APPAREIL : la marque sort des données que le
+          SERVEUR connaît (`apercu`, `entreeInitiale`) — le HTML
+          prérendu est le même pour les deux appareils, la borne ○/●
+          tient. Aucune mécanique d'historique ne bouge : la coupe est
+          un affichage, le retour et la restitution de position (423,
+          438, 446) traversent les mêmes chemins qu'hier. */
+      data-vue-photo={!apercu && !sansPhoto ? "" : undefined}
       // En aperçu (« Ma fiche »), l'ESPACE fournit déjà le cadre
       // (largeur, marges latérales, marge du haut) : ne pas les
       // doubler — la photo mobile reste ainsi bord à bord et vient
@@ -901,10 +916,18 @@ export function FicheTatoueur({
                exclu comme le partage. La garde d'avant peinture
                (nº 359) couvre la COLONNE entière : une arrivée
                `entree=lien` cache la rangée avec la photo. */}
+          {/*  §1 (nº 453) — LA RANGÉE AFFINÉE, en nombres :
+               · l'air sous la barre passe de 16 px (le `pt-4` de la
+                 racine) à 8 px — `mobile:-mt-2` en reprend la moitié ;
+               · le badge « Profil » descend de 38 à 30 px de haut
+                 (l'ourlet tactile grandit d'autant : la cible reste
+                 44 px) ;
+               · la ligne grise monte de 11,5 à 13 px, et gagne 4 px
+                 d'air sous le nom (`mt-1`). */}
           {!apercu && (
             <div
               data-habillage-photo=""
-              className="hidden mobile:flex items-center gap-3"
+              className="hidden mobile:flex items-center gap-3 mobile:-mt-2"
             >
               <div className="flex min-w-0 flex-1 items-center gap-2.5">
                 <span
@@ -935,8 +958,9 @@ export function FicheTatoueur({
                     {tatoueur.nom}
                   </span>
                   {/*  La puce « • » : la seule ponctuation du site entre
-                       deux valeurs (nº 395). */}
-                  <span className="block truncate text-[11.5px] leading-tight text-sombre-texte-doux">
+                       deux valeurs (nº 395). §1 (nº 453) : 13 px (au
+                       lieu de 11,5) et 4 px d'air sous le nom. */}
+                  <span className="block truncate text-[13px] leading-tight text-sombre-texte-doux mt-1">
                     {[
                       libelleTypeFiche(
                         tatoueur.type_fiche,
@@ -954,13 +978,17 @@ export function FicheTatoueur({
                   </span>
                 </span>
               </div>
+              {/*  §1 (nº 453) — 30 px de haut (au lieu des 38 de
+                   BadgeCharte) : le badge s'affine, le texte ne change
+                   pas. L'ourlet `before:` grandit de 3 à 7 px par
+                   côté : la cible tactile reste 44 px. */}
               <Link
                 href={adresseDeLienInterne(tatoueur.slug)}
                 data-badge-profil=""
-                className="relative inline-flex min-h-[38px] shrink-0 items-center
+                className="relative inline-flex min-h-[30px] shrink-0 items-center
                            rounded-lg bg-sombre-eleve-clair px-3.5 text-[13.5px]
                            font-semibold text-sombre-texte before:absolute
-                           before:-inset-y-[3px] before:inset-x-0
+                           before:-inset-y-[7px] before:inset-x-0
                            before:content-['']"
               >
                 Profil
@@ -1130,8 +1158,11 @@ export function FicheTatoueur({
                `items-center` : le titre se centre sur la hauteur du
                fanion (48 px de cible). Un titre long se coupe toujours
                (`truncate` + `min-w-0`) — le fanion ne bouge pas. */}
+          {/*  §2 (nº 453) — LA LIGNE REMONTE : l'air photo → titre passe
+               de 12 px (le `gap-3` de la colonne) à 8 px
+               (`mobile:-mt-1` en reprend 4). */}
           {rangeeSousLaPhoto && (
-            <div className="hidden mobile:flex items-center gap-3">
+            <div className="hidden mobile:flex items-center gap-3 mobile:-mt-1">
               <p
                 data-titre-carrousel=""
                 className="flex-1 min-w-0 truncate text-[15px]
@@ -1260,7 +1291,14 @@ export function FicheTatoueur({
           * `--fond-colonne` et le contenu qu'elles montent. La même
           * correction y est posée séparément, à un mot près.
           */}
-        <div className="lg:sticky lg:top-[99px] lg:self-start lg:max-h-[calc(100vh-119px)] lg:overflow-y-auto lg:overflow-x-clip lg:px-3 lg:-mx-3 min-w-0 flex flex-col bg-sombre-fond [--fond-colonne:var(--rw-sombre-fond)]">
+        {/*  §3 (nº 453) — LA COLONNE SE NOMME : c'est elle que la vue
+             photo mobile retire de l'affichage (globals.css — le HTML
+             reste rendu, seul `display` bascule ; la vue profil et le
+             web l'affichent comme toujours). */}
+        <div
+          data-colonne-lecture=""
+          className="lg:sticky lg:top-[99px] lg:self-start lg:max-h-[calc(100vh-119px)] lg:overflow-y-auto lg:overflow-x-clip lg:px-3 lg:-mx-3 min-w-0 flex flex-col bg-sombre-fond [--fond-colonne:var(--rw-sombre-fond)]"
+        >
           {/*  ⚠️ LE CONTENU DE LA FICHE VIT DANS UN SEUL COMPOSANT
                (nº 199) : cette page et la fenêtre superposée du web
                affichent le MÊME. Ce qui reste ici est l'enveloppe — la

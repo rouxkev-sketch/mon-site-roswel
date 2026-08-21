@@ -1377,3 +1377,28 @@ html[data-fiche-parametree] [data-photo-de-tete] {
 html[data-entree-lien] [data-photo-de-tete] {
   display: none;
 }
+
+/*  ██ §3 (nº 453) — LA VUE PHOTO MOBILE EST MINIMALE ██
+    Sur la PAGE publique d'une fiche en VUE PHOTO (`data-vue-photo`,
+    posé par FicheTatoueur quand le serveur sait qu'il n'y a ni aperçu
+    ni `entree=lien`), le doigt ne montre QUE la colonne de tête —
+    rangée du profil, photo, titre + fanion. La colonne de lecture
+    (`data-colonne-lecture`) est retirée de l'affichage : son HTML
+    reste rendu (le prérendu est partagé entre les appareils), seul
+    `display` bascule — le motif des bascules d'appareil du site.
+    Le WEB n'est jamais concerné (`data-appareil`), la VUE PROFIL non
+    plus (pas de marque), l'APERÇU non plus.
+    ⚠️ LA SECONDE RÈGLE EST LA GARDE JUMELLE DE CELLE DU DESSUS : une
+    fiche préparée d'avance peut être PEINTE en vue photo alors que
+    l'adresse dit déjà `entree=lien` (vue profil). Le script d'avant
+    peinture pose alors `data-entree-lien` : la photo est retirée
+    (règle ci-dessus) et la colonne de lecture doit se MONTRER — sans
+    quoi l'écran serait vide jusqu'au remontage. Elle est écrite APRÈS
+    la première, à spécificité égale : elle gagne quand les deux
+    s'appliquent. */
+html[data-appareil="mobile"] [data-vue-photo] [data-colonne-lecture] {
+  display: none;
+}
+html[data-entree-lien] [data-vue-photo] [data-colonne-lecture] {
+  display: flex;
+}
