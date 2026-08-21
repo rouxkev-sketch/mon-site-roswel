@@ -630,6 +630,13 @@ export function IndexTatoueurs({
               <LigneResultats
                 titre={TEXTES_TATOUAGE.titreMosaique}
                 sousTitre={TEXTES_TATOUAGE.sousTitreMosaique}
+                //  §1 (nº 444) — AU DOIGT, CETTE PHRASE NE S'AFFICHE
+                //  PLUS : les cartes commencent tout de suite. Sur
+                //  ordinateur, rien ne change. Le drapeau n'est passé
+                //  QUE par cet appel-ci (l'accueil SANS recherche) :
+                //  le titre d'une recherche, juste en dessous, garde
+                //  ses deux affichages intacts.
+                masqueAuDoigt
               />
             );
           }

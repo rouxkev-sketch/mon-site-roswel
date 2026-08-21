@@ -31,6 +31,7 @@ export function LigneResultats({
   balise = "h1",
   degagementConstant = false,
   airEnBas = false,
+  masqueAuDoigt = false,
 }: {
   /** « Explorer toutes les créations », ou ce qui a été cherché.
       ⚠️ UN NŒUD depuis la nº 249-§3 : sur « Ma sélection », le titre
@@ -91,6 +92,30 @@ export function LigneResultats({
    * l'onglet, ce qui est une ligne de plus, pas une refonte.
    */
   airEnBas?: boolean;
+  /**
+   * §1 (nº 444) — LA PHRASE D'INTRODUCTION NE VIT PLUS AU DOIGT.
+   * ------------------------------------------------------------------
+   * DEMANDE DU PROPRIÉTAIRE : sur MOBILE, l'accueil sans recherche
+   * n'affiche plus « Découvre ton prochain tatouage » ni son
+   * sous-titre — les cartes commencent tout de suite. Sur ORDINATEUR,
+   * la phrase reste telle quelle.
+   * ⚠️ UN DRAPEAU, ET UN SEUL APPELANT : l'accueil SANS recherche
+   * (IndexTatoueurs). Les titres de recherche, ceux de « Ma
+   * sélection » et le reste du site ne le passent pas — rien ne bouge
+   * chez eux, pas même d'un pixel. C'est le procédé de
+   * `degagementConstant` (nº 301) et `airEnBas` (nº 325), et pour la
+   * même raison : ce composant sert plusieurs surfaces.
+   * ⚠️ `mobile:hidden` — LE VRAI APPAREIL, pas une largeur de fenêtre
+   * (la variante de globals.css, `[data-appareil="mobile"]`) : une
+   * fenêtre d'ordinateur rétrécie garde donc sa phrase, comme partout
+   * ailleurs dans le site.
+   * ⚠️ ET C'EST BIEN `display` : la garantie nº 171 (globals.css) force
+   * l'opacité et la visibilité de ce bloc pour qu'aucune bascule ne
+   * puisse l'effacer — elle ne dit rien de `display`, que cette
+   * variante seule gouverne. Le bloc entier part : titre, sous-titre
+   * et son rembourrage — aucun blanc résiduel au-dessus des cartes.
+   */
+  masqueAuDoigt?: boolean;
 }) {
   const Titre = balise;
   return (
@@ -99,7 +124,9 @@ export function LigneResultats({
     <div
       data-titre-mosaique=""
       data-air-en-bas={airEnBas ? "" : undefined}
-      className={`pt-6 pb-5 sm:pt-8 sm:pb-6 ${airEnBas ? "lg:pb-10" : ""}`}
+      className={`pt-6 pb-5 sm:pt-8 sm:pb-6 ${airEnBas ? "lg:pb-10" : ""}${
+        masqueAuDoigt ? " mobile:hidden" : ""
+      }`}
     >
       <Titre className="text-[clamp(1.25rem,2.4vw,1.65rem)] font-bold leading-tight text-sombre-texte">
         {titre}

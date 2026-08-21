@@ -5,6 +5,7 @@ import {
   CATEGORIES_EXPLORER,
   entreesExplorer,
   GROUPES_FILTRES,
+  filtresVivants,
   lireValeurExplorer,
   RAYONS_TATOUAGE,
   RAYON_TATOUAGE_DEFAUT,
@@ -137,7 +138,12 @@ export function criteresComplets(
     nature: partiels?.nature ?? "",
     lieu: partiels?.lieu ?? null,
     rayonKm: partiels?.rayonKm ?? RAYON_TATOUAGE_DEFAUT,
-    exclure: partiels?.exclure ?? [],
+    //  nº 444 — LA GARDE DES VIEUX LIENS, côté navigateur : les slugs
+    //  des deux groupes retirés de l'écran (ARTISTE, LIEU) sont
+    //  écartés ici, à la porte unique des critères. Un lien
+    //  « ?exclure=studio-prive%2Csalon » s'ouvre donc normalement, et
+    //  aucun badge invisible ne peut plus filtrer la mosaïque.
+    exclure: filtresVivants(partiels?.exclure),
   };
 }
 
@@ -724,8 +730,19 @@ export function MoteurTatouage({
                  [&>[data-groupe-filtres]:last-child]:mb-0
                  [&>[data-groupe-filtres]:last-child]:pb-0"
     >
-      {groupeDeBadges(parGroupe.get("mode")!, "Artiste", valeurs, poser, surPanneau)}
-      {groupeDeBadges(parGroupe.get("type")!, "Lieu", valeurs, poser, surPanneau)}
+      {/*  nº 444 — LES BLOCS « ARTISTE » (groupe `mode`) ET « LIEU »
+           (groupe `type`) SONT SUPPRIMÉS, titres et choix, dans les
+           DEUX volets (le panneau web et la page mobile lisent ce même
+           bloc). Il reste TECHNIQUE puis RENDU, au caractère près —
+           l'espacement se recompose tout seul : il est porté par
+           chaque groupe SAUF LE PREMIER (`fieldset + fieldset`,
+           nº 166-§3), donc TECHNIQUE devient le premier sans marge
+           haute et RENDU garde la sienne, exactement comme LIEU et
+           RENDU se comportaient hier.
+           Leurs slugs restent connus de la base et des adresses : la
+           garde des vieux liens vit dans `filtresVivants`
+           (config/tatouage), appelée par `criteresComplets` ici même
+           et par `filtresConnus` au serveur. */}
       {groupeDeBadges(
         parGroupe.get("technique")!,
         "Technique",
@@ -1051,7 +1068,7 @@ export function MoteurTatouage({
             //  choisit un style, le champ le dit. Web et smartphone
             //  portent le même mot — c'est le même champ.
             ariaLabel="Style"
-            placeholder="Style"
+            placeholder="Choose a style"
             //  §2 (nº 258) — LA HAUTEUR DES CERCLES (46 px, relevée
             //  sur les deux ronds voisins — jamais choisie) : le bloc
             //  était plus haut que tout ce qui l'entoure.
@@ -1324,7 +1341,7 @@ export function MoteurTatouage({
               options={options}
               //  §3 (nº 303) — le même mot qu'en web : « Style ».
               ariaLabel="Style"
-              placeholder="Style"
+              placeholder="Choose a style"
               hauteur="min-h-[54px]"
               taillePolice="text-[16px]"
               sombre

@@ -938,6 +938,40 @@ export const SLUGS_FILTRES = new Set<string>(
   GROUPES_FILTRES.flatMap((g) => g.options.map((o) => o.slug))
 );
 
+/**
+ * ██ nº 444 — LES DEUX GROUPES RETIRÉS DE L'ÉCRAN ██
+ * ==================================================================
+ * LA DÉCISION DU PROPRIÉTAIRE (passe nº 444) : les blocs ARTISTE (le
+ * groupe `mode` — Studio, Salon, Guest) et LIEU (le groupe `type` —
+ * Studio, Salon) sont supprimés du volet de filtres, mobile comme
+ * ordinateur.
+ *
+ * ⚠️ LEURS GROUPES RESTENT DÉFINIS ICI, ET C'EST VOULU : la base les
+ * connaît (`etablissement`, `modes_exercice.genre`), le formulaire de
+ * fiche s'en sert, et les libellés servent encore à écrire une fiche.
+ * Ce qui disparaît, c'est leur pouvoir de FILTRER une recherche.
+ *
+ * LA GARDE DES VIEUX LIENS (règles 328/329) : une adresse qui porte
+ * encore un de ces slugs (« ?exclure=studio-prive%2Csalon », un lien
+ * partagé, un signet) doit s'ouvrir NORMALEMENT — sans erreur, et sans
+ * mosaïque secrètement filtrée par un critère que plus aucun bouton ne
+ * peut défaire. `filtresVivants` les retire donc partout où `exclure`
+ * est lu : au serveur (lib/tatoueurs, `filtresConnus` — la porte
+ * unique de la recherche) comme au navigateur (MoteurTatouage,
+ * `criteresComplets` — la porte unique des critères). Le paramètre
+ * survit dans l'adresse sans plus rien faire, exactement comme les
+ * réglages de mise en page de la nº 443.
+ */
+export const SLUGS_FILTRES_RETIRES = new Set<string>([
+  ...FILTRE_MODE_ACTIVITE.options.map((o) => o.slug as string),
+  ...FILTRE_TYPE_FICHE.options.map((o) => o.slug as string),
+]);
+
+/** Ne garde que les slugs des groupes ENCORE AFFICHÉS (nº 444). */
+export function filtresVivants(slugs: string[] | undefined): string[] {
+  return (slugs ?? []).filter((slug) => !SLUGS_FILTRES_RETIRES.has(slug));
+}
+
 /** Un slug de RENDU connu, ou la chaîne vide (adresse malmenée). */
 export function renduConnu(slug: string | undefined): string {
   return slug && FILTRE_RENDU.options.some((o) => o.slug === slug) ? slug : "";
@@ -1703,7 +1737,10 @@ export const TEXTES_TATOUAGE = {
    */
   partoutLabel: "Partout",
   /** Le libellé fantôme du champ de localité. */
-  ouLabel: "Où ?",
+  //  nº 444 — le fantôme du champ de localité, en anglais (texte
+  //  exact demandé par le proprietaire). Web et mobile le partagent :
+  //  c est le meme champ, il porte donc le meme mot.
+  ouLabel: "Enter city or country",
   descriptionSite:
     "Compare les portfolios des tatoueurs par style et par ville : " +
     "réalisme, fine line, old school, japonais, blackwork et bien d'autres.",

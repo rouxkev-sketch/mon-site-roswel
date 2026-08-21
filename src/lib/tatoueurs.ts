@@ -9,6 +9,7 @@ import {
   renduCherche,
   slugDuGenreMode,
   SLUGS_FILTRES,
+  filtresVivants,
   styleConnu,
 } from "@/config/tatouage";
 import { distanceKm } from "@/lib/geo";
@@ -633,9 +634,16 @@ async function lirePopularite(): Promise<Map<string, number>> {
     appelant serveur n'a bougé. */
 export { natureCherchee, styleConnu };
 
-/** Ne garde que les slugs de filtre CONNUS (adresse ou API malmenée). */
+/** Ne garde que les slugs de filtre CONNUS (adresse ou API malmenée)
+    ET ENCORE VIVANTS — nº 444 : les groupes ARTISTE (`mode`) et LIEU
+    (`type`) ont quitté l'écran, un vieux lien qui les porte encore est
+    ignoré proprement (voir SLUGS_FILTRES_RETIRES, config/tatouage).
+    C'est LA porte unique de la recherche : la garde y suffit pour le
+    serveur, la base et l'API. */
 export function filtresConnus(slugs: string[] | undefined): string[] {
-  return (slugs ?? []).filter((slug) => SLUGS_FILTRES.has(slug));
+  return filtresVivants(
+    (slugs ?? []).filter((slug) => SLUGS_FILTRES.has(slug))
+  );
 }
 
 /**
