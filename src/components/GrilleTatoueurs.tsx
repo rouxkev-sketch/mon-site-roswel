@@ -741,6 +741,11 @@ export function GrilleTatoueurs({
         //  s'ouvre dessus, pas sur la première du carrousel.
         photoRecherche={photoOuverte}
         positionGrille={positionGrille}
+        //  §1 (nº 440) — des fiches empilées par-dessus (nº 226-§5) :
+        //  la fenêtre de base efface son fil d'Ariane et son titre
+        //  tant qu'elle n'est pas le sommet, et les retrouve quand la
+        //  pile se vide (profondeurPile redescend à zéro).
+        habillageEfface={profondeurPile > 0}
         surFermeture={fermer}
       />
     </PileFiches>

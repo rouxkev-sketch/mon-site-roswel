@@ -109,6 +109,7 @@ export function FenetreFiche({
   photoRecherche = "",
   positionGrille = 0,
   avecVoile = true,
+  habillageEfface = false,
   surFermeture,
 }: {
   /** La fiche à montrer — null : fenêtre fermée. */
@@ -146,6 +147,32 @@ export function FenetreFiche({
    * toutes les surfaces du site.
    */
   avecVoile?: boolean;
+  /**
+   * ██ §1 (nº 440) — UN SEUL HABILLAGE À LA FOIS DANS LA PILE ██
+   * ------------------------------------------------------------------
+   * LE DÉFAUT (relevé du propriétaire, version ordinateur) : quand des
+   * fiches s'empilent (fiche ouverte depuis une fiche), CHAQUE fenêtre
+   * gardait son fil d'Ariane (au-dessus d'elle, dans le voile) et son
+   * titre de galerie (au-dessous) — les fenêtres étant toutes centrées
+   * au même endroit, les textes de toutes les couches se superposaient,
+   * illisibles.
+   * LA RÈGLE : seule la fiche DU SOMMET montre son habillage. VRAI ici
+   * quand une autre fiche vit PAR-DESSUS celle-ci : le fil d'Ariane et
+   * le titre passent alors en `invisible` — la VISIBILITÉ seule change,
+   * jamais la place ni le style (les deux textes sont hors du flux,
+   * `absolute` : visibles ou non, ils ne pèsent rien — la fenêtre ne
+   * bouge pas d'un pixel). `visibility: hidden` coupe aussi les clics :
+   * les liens du fil d'une couche cachée ne peuvent pas voler ceux de
+   * la couche du dessus.
+   * QUI LE SAIT : la position dans la pile, jamais un bricolage visuel —
+   * PileFiches le dit à chaque fenêtre empilée (dernier rang = sommet),
+   * la mosaïque et « Ma sélection » à leur fenêtre de base
+   * (`profondeurPile > 0` = une fiche vit dessus). À la fermeture de la
+   * fiche du dessus, le rendu suivant rend son habillage à celle qui
+   * redevient le sommet — la mécanique de fermeture (nº 438) n'est pas
+   * touchée.
+   */
+  habillageEfface?: boolean;
   /** Referme (la grille fait alors machine arrière dans l'historique). */
   surFermeture: () => void;
 }) {
@@ -506,7 +533,11 @@ export function FenetreFiche({
               rose. */}
           <nav
             aria-label="Fil d'Ariane"
-            className="pointer-events-auto absolute bottom-full left-0 mb-2 w-max max-w-full"
+            //  §1 (nº 440) — sous une autre fiche, le fil s'efface
+            //  (visibilité seule : même place, même style, zéro clic).
+            className={`pointer-events-auto absolute bottom-full left-0 mb-2 w-max max-w-full${
+              habillageEfface ? " invisible" : ""
+            }`}
           >
             <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-white/70">
               <li>
@@ -753,9 +784,13 @@ export function FenetreFiche({
           {titreDeLaGalerie && (
             <p
               data-titre-fenetre=""
-              className="pointer-events-none absolute top-full left-0 mt-2
+              //  §1 (nº 440) — même règle que le fil d'Ariane : sous une
+              //  autre fiche, le titre s'efface (visibilité seule).
+              className={`pointer-events-none absolute top-full left-0 mt-2
                          w-max max-w-full hidden lg:block mobile:hidden
-                         text-[16px] font-bold text-white"
+                         text-[16px] font-bold text-white${
+                           habillageEfface ? " invisible" : ""
+                         }`}
             >
               {titreDeLaGalerie}
             </p>

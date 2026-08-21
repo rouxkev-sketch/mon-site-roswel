@@ -290,6 +290,11 @@ export function PileFiches({
           tatoueur={entree.fiche}
           positionGrille={entree.position}
           avecVoile={rang === 0 && !voileDejaPose}
+          //  §1 (nº 440) — seul le SOMMET de la pile garde son fil
+          //  d'Ariane et son titre : toute fenêtre recouverte les
+          //  efface, et les retrouve au rendu qui suit la fermeture
+          //  de celle du dessus (la position dans la pile fait foi).
+          habillageEfface={rang !== visibles.length - 1}
           surFermeture={fermer}
         />
       ))}

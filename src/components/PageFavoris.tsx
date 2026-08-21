@@ -616,6 +616,9 @@ export function PageFavoris({
             fenêtre s'ouvre dessus. */
         photoRecherche={serieOuverte.photo}
         positionGrille={positionPage}
+        //  §1 (nº 440) — même règle que la mosaïque : la fenêtre de
+        //  base efface son habillage tant qu'une fiche vit dessus.
+        habillageEfface={profondeurPile > 0}
         surFermeture={fermerLaFiche}
       />
     </main>
