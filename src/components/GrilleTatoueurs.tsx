@@ -105,8 +105,27 @@ const CARTES_PRIORITAIRES = 4;
  * sont donc NOMMÉS ici, et la mosaïque comme « Ma sélection » les
  * consomment : il n'existe plus de seconde écriture.
  */
+/**
+ * ██ §1 (nº 472) — QUATRE PHOTOS PAR RANGÉE, AU MAXIMUM ██
+ * ------------------------------------------------------------------
+ * CE QUI ÉTAIT ÉCRIT, ET CE QUE LE RELEVÉ nº 471 A MONTRÉ : quatre
+ * colonnes dès « xl », cinq dès « 2xl », six dès « 3xl » — cela
+ * faisait RÉTRÉCIR
+ * les photos à mesure que l'écran grandissait — la largeur du site
+ * est plafonnée à 1760 px (LARGEUR_SITE) pendant que la grille
+ * ajoutait des colonnes : 397 px par photo à 1279 px de fenêtre,
+ * 293 px à 1280, 282 px à 1536, 253 px à 1664. Le maximum absolu du
+ * site tombait à 269 px, atteint dès 1760 px et jamais dépassé.
+ * LA RÈGLE DU PROPRIÉTAIRE : deux colonnes au doigt (inchangé), TROIS
+ * jusqu'à 1439 px, QUATRE au-delà — plus jamais cinq ni six. Le
+ * palier de 1440 px est le `grille:` nommé dans globals.css (90 rem).
+ * ⚠️ CETTE LIGNE A UNE JUMELLE : `PALIERS_COLONNES`
+ * (lib/colonnes-mosaique) dit au SERVEUR combien de cartes servir.
+ * Les deux doivent bouger ENSEMBLE, sans quoi la dernière rangée
+ * redevient incomplète (nº 226-§1).
+ */
 export const COLONNES_MOSAIQUE =
-  "grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6";
+  "grid-cols-2 md:grid-cols-3 grille:grid-cols-4";
 /** Le socle : gouttières web, marges de bord au doigt. */
 export const SOCLE_GRILLE_CARTES = "grid gap-4 sm:gap-5 mobile:-mx-4";
 /** Les gouttières du smartphone en deux colonnes — le rythme

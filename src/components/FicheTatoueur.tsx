@@ -903,8 +903,19 @@ export function FicheTatoueur({
                 air PROPRE de 8 px — `mobile:-mt-2` reprend la moitié du
                 `pt-4` de la racine, la même valeur que l'air choisi à
                 la nº 453. */
+            /*  §2 (nº 472) — L'AIR SE RESSERRE : 8 px → 4 px. Le calcul
+                est celui de la nº 453/454, au même endroit : la racine
+                de la page pose `pt-4` (16 px) et cette remontée en
+                reprend une part — `-mt-2` (8) en rendait 8, `-mt-3`
+                (12) n'en laisse plus que 4. La photo reste DÉCOLLÉE de
+                la barre (elle ne la touche pas : c'est `-mt-4`, la
+                valeur de l'aperçu, qui collerait). Rien d'autre de la
+                vue ne bouge — ordre des blocs, ligne du titre, rangée
+                du profil, compteur et la coupe `data-vue-photo` /
+                `data-colonne-lecture` sont intacts, et le web n'est pas
+                concerné (variante `mobile:`). */
             className={`lg:w-[var(--photo-largeur,calc((100vh_-_119px)*0.8))] max-w-full mobile:-mx-4 mobile:max-w-none ${
-              apercu ? "mobile:-mt-4" : "mobile:-mt-2"
+              apercu ? "mobile:-mt-4" : "mobile:-mt-3"
             }`}
           >
             <CarrouselPortfolio

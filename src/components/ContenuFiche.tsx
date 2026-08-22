@@ -1589,7 +1589,30 @@ export function ContenuFiche({
           aria-hidden="true"
           className="pointer-events-none absolute inset-x-0 bottom-full hidden h-8 bg-[var(--fond-colonne)] lg:block"
         />
-        <SelecteurOngletAffiche valeur={onglet} surChoix={choisirOnglet} />
+        {/*  ██ §4 (nº 472) — EN APERÇU, LE VA-ET-VIENT PREND TOUTE LA
+             LARGEUR ██
+             CE QUI LE TASSAIT À GAUCHE, nommé : cette rangée est
+             `justify-between`, et le sélecteur y est un élément de
+             flex ordinaire — il prend donc la largeur de SON CONTENU.
+             Sur la fiche publique cela ne se voit pas : le partage et
+             « Suivre » occupent la droite (§2 nº 458). Dans « Mon
+             compte → Mon portfolio » (l'aperçu), ces deux-là n'existent
+             pas — le va-et-vient restait donc collé à gauche avec un
+             vide à sa droite, là où « Ma sélection » l'étale d'un bord
+             à l'autre.
+             LE REMÈDE : en aperçu SEULEMENT, il devient l'élément qui
+             prend la place libre (`flex-1`), et ses deux côtés se
+             partagent la largeur à parts égales — c'est la grille
+             `repeat(2, 1fr)` d'`OngletsLigne`, le MÊME composant que
+             « Ma sélection », qui s'en charge sans une ligne de plus.
+             `min-w-0` : la règle du site pour un élément de flex qui
+             peut rétrécir. Hors aperçu, l'enveloppe est neutre (un div
+             de flex à largeur de contenu, exactement l'état d'avant) :
+             la fiche publique ne bouge pas d'un pixel, au doigt comme
+             au web. */}
+        <div className={apercu ? "min-w-0 flex-1" : ""}>
+          <SelecteurOngletAffiche valeur={onglet} surChoix={choisirOnglet} />
+        </div>
         {/*  §2 (nº 458) — LE PARTAGE DU PROFIL, À GAUCHE DE « SUIVRE ».
              La rangée est `justify-between` : les deux vivent groupés à
              droite dans une petite rangée (l'écart de 12 px de la

@@ -8,18 +8,30 @@
  * Ce bloc les rend simplement utilisables dans les classes Tailwind :
  * ex. "bg-primaire", "text-encre", "border-bordure", etc.
  */
-/* LE PALIER DES TRÈS GRANDS ÉCRANS — 104 rem, soit 1664 px.
+/*  ██ §1 (nº 472) — LE PALIER DEVIENT CELUI DES QUATRE COLONNES ██
+    Il valait 104 rem (1664 px) et ouvrait la SIXIÈME colonne. Le
+    relevé de la nº 471 a montré ce que cela donnait : à 1664 px, une
+    photo tombe à 253 px — PLUS PETITE que sur un portable de 1400 px
+    (357 px), parce que la largeur du site est plafonnée à 1760 px
+    pendant que la grille ajoutait des colonnes. Le propriétaire
+    tranche : QUATRE PHOTOS PAR RANGÉE AU MAXIMUM, et le passage à
+    quatre se fait à 1440 px — d'où 90 rem ici.
+    ⚠️ IL RESTE NOMMÉ ET EN REM (la leçon d'origine, ci-dessous) : un
+    palier improvisé dans les classes (`min-[1440px]:`) sortirait AVANT
+    tous les paliers nommés dans la feuille, et la règle serait
+    recouverte. Le nom change avec la valeur — `3xl` (au-delà de 2xl)
+    ne décrirait plus rien à 90 rem, qui vit ENTRE `xl` (80) et `2xl`
+    (96). Ses deux seuls consommateurs sont la grille et les paliers
+    jumeaux de lib/colonnes-mosaique. */
+/* LE PALIER DES GRANDS ÉCRANS — 90 rem, soit 1440 px.
    Deux précautions, et les deux comptent :
    1. c'est un palier NOMMÉ, pas un palier improvisé dans les classes
-      (min-[1664px]:…) — ceux-là sortent AVANT tous les autres dans la
-      feuille de style, donc la règle « 2xl » repassait après eux ;
+      (min-[1440px]:) — ceux-là sortent AVANT tous les autres dans la
+      feuille de style, donc la règle nommée repassait après eux ;
    2. il est exprimé en REM, comme les paliers d'origine (40rem…96rem).
-      Mélanger les unités empêche Tailwind de les ranger par largeur —
-      et le palier retombait avant « 2xl », sans effet.
-   Sans ces deux points, la sixième colonne de cartes n'apparaissait
-   jamais sur les très grands écrans. */
+      Mélanger les unités empêche Tailwind de les ranger par largeur. */
 @theme {
-  --breakpoint-3xl: 104rem;
+  --breakpoint-grille: 90rem;
 }
 
 /* L'AFFICHAGE MOBILE EST RÉSERVÉ AUX VRAIS MOBILES (yokofolio).

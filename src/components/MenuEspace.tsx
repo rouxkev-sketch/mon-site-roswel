@@ -187,6 +187,11 @@ export function MenuEspace({
 
   const fiche = ficheActive(fiches, idFiche);
   const etat: EtatFiche = etatDeLaFiche(fiche);
+  /*  §3-b (nº 472) — Y A-T-IL DE QUOI CHOISIR ? Un seul portfolio :
+      pas de menu déroulant (il n'ouvrirait qu'une liste d'un nom) et
+      pas de fond clair (il n'annonce plus un choix). Les deux
+      reviennent ensemble au DEUXIÈME portfolio. */
+  const plusieursFiches = fiches.length > 1;
   const nonLues = notifications.filter((n) => !n.lue_le).length;
 
   /** L'adresse d'une entrée qui travaille sur LA fiche choisie : elle
@@ -564,8 +569,21 @@ export function MenuEspace({
         //  ⚠️ `eleve-clair/70` depuis la nº 144-§3 : posé sur la fenêtre
         //  `eleve`, l'ancien `eleve/70` disparaissait. Le contraste
         //  relatif est LE MÊME qu'avant (≈ 6 points), mesuré.
-        className="my-1.5 bg-sombre-eleve-clair/70
-                   px-2 py-2.5 flex flex-col gap-1"
+        /*  ██ §3-b (nº 472) — UN SEUL PORTFOLIO : PLUS DE FOND CLAIR ██
+            Ce fond dit « tout ce qui suit dépend du portfolio choisi
+            en tête » — il n'a de sens qu'en FACE D'UN CHOIX. Avec un
+            seul portfolio il n'y a rien à choisir (le sélecteur est
+            retiré juste dessous) : le bloc reste sur le fond sombre du
+            menu, comme les autres entrées, et les deux couleurs
+            disparaissent. AUCUN CONTOUR ne le remplace — la charte
+            l'interdit, et rien n'a besoin d'être délimité.
+            La géométrie ne bouge pas : mêmes marges, mêmes
+            rembourrages, les entrées restent alignées sur celles du
+            dessus. Le fond revient AVEC le sélecteur, dès qu'un
+            deuxième portfolio existe. */
+        className={`my-1.5 ${
+          plusieursFiches ? "bg-sombre-eleve-clair/70 " : ""
+        }px-2 py-2.5 flex flex-col gap-1`}
       >
         {/* PAS DE TITRE DE GROUPE. « La fiche choisie » nommait ce que
             le sélecteur montre déjà : le nom du portfolio est écrit en
@@ -579,6 +597,17 @@ export function MenuEspace({
             pastille de 6 px et un mot. C'était un encadré entier, avec
             un gros rond de couleur et une phrase — l'élément le plus
             voyant d'un menu où il n'est qu'un renseignement. */}
+        {/*  ██ §3-b (nº 472) — PAS DE DÉROULANT POUR UN SEUL PORTFOLIO ██
+             Il n'y a rien à choisir : le champ n'ouvrait qu'une liste
+             d'un seul nom, celui-là même qu'il affichait. Il est donc
+             RETIRÉ tant qu'il n'y a qu'un portfolio — pas masqué :
+             non rendu. L'état de la fiche (la pastille et son mot) part
+             avec lui ; il reste lisible d'un geste, sur le portfolio
+             lui-même. Le déroulant revient tel quel dès le DEUXIÈME
+             portfolio, avec sa liste, ses pastilles et son fond clair
+             — le comportement à deux et plus ne change pas d'une
+             ligne. */}
+        {plusieursFiches && (
         <div className="relative">
           <button
             type="button"
@@ -697,27 +726,14 @@ export function MenuEspace({
             </div>
           )}
         </div>
+        )}
 
         <nav aria-label="Le portfolio choisi" className="flex flex-col gap-0.5">
-          {/* Le formulaire, en haut de page. L'ÉVÉNEMENT prévient le
-              formulaire s'il est DÉJÀ affiché (naviguer vers la même
-              adresse ne déclenche rien) : il remonte alors la page et
-              rouvre l'annonce de validation lui-même. */}
-          <Link
-            href={versFiche()}
-            replace={liensRemplacent}
-            onClick={() => {
-              setOuvert(false);
-              window.dispatchEvent(new Event("yokofolio-modification-demandee"));
-            }}
-            className={classeEntree}
-          >
-            <span className={boiteIcone}>
-              <IconeReglages taille={22} />
-            </span>
-            Modification
-          </Link>
-
+          {/*  ██ §3-a (nº 472) — « MON PORTFOLIO » PASSE EN PREMIER ██
+               Les deux entrées sont ÉCHANGÉES, sur consigne : on
+               regarde son portfolio avant de le modifier. Rien d'autre
+               ne bouge — mêmes liens, mêmes icônes, mêmes adresses,
+               mêmes consignes de navigation. */}
           {/* L'aperçu public réel.
               §4 (nº 330) — ET IL PORTE LA CONSIGNE DES LIENS INTERNES.
               « Mon portfolio » mène à un portfolio par un LIEN : la
@@ -736,6 +752,25 @@ export function MenuEspace({
               <IconeUtilisateur taille={22} />
             </span>
             Mon portfolio
+          </Link>
+
+          {/* Le formulaire, en haut de page. L'ÉVÉNEMENT prévient le
+              formulaire s'il est DÉJÀ affiché (naviguer vers la même
+              adresse ne déclenche rien) : il remonte alors la page et
+              rouvre l'annonce de validation lui-même. */}
+          <Link
+            href={versFiche()}
+            replace={liensRemplacent}
+            onClick={() => {
+              setOuvert(false);
+              window.dispatchEvent(new Event("yokofolio-modification-demandee"));
+            }}
+            className={classeEntree}
+          >
+            <span className={boiteIcone}>
+              <IconeReglages taille={22} />
+            </span>
+            Modification
           </Link>
         </nav>
       </div>

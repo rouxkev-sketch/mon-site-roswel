@@ -20,8 +20,8 @@ import { CARTES_PAR_PAGE } from "@/config/tatouage";
  *
  * ⚠️ LE NOMBRE DE COLONNES EST UNE QUESTION DE CSS, ET LE SERVEUR NE
  * VOIT PAS L'ÉCRAN. Les paliers ci-dessous sont EXACTEMENT ceux que la
- * grille écrit en classes (`grid-cols-2 md:grid-cols-3 xl:grid-cols-4
- * 2xl:grid-cols-5 3xl:grid-cols-6`, voir GrilleTatoueurs) : ils sont
+ * grille écrit en classes (`COLONNES_MOSAIQUE`, voir
+ * GrilleTatoueurs) : ils sont
  * la SEULE écriture de cette correspondance, et le script d'avant
  * peinture les interroge avec `matchMedia` — il pose donc au navigateur
  * la question même que se pose la feuille de style, jamais une
@@ -70,10 +70,15 @@ export const CARTES_PAR_COLONNE = 6;
     valeurs que les classes de GrilleTatoueurs, écrites en `rem` comme
     les points de rupture de Tailwind (`--breakpoint-3xl: 104rem` vit
     dans globals.css). */
+//  ██ §1 (nº 472) — QUATRE COLONNES AU MAXIMUM, LE PASSAGE À 1440 px ██
+//  La jumelle de `COLONNES_MOSAIQUE` (GrilleTatoueurs) : mêmes deux
+//  seuils, dans le même ordre. Les cinq et six colonnes sont parties
+//  avec le rétrécissement qu'elles causaient (relevé nº 471 : une
+//  photo tombait à 253 px sur grand écran contre 357 px sur un
+//  portable). Les deux lignes ne peuvent pas diverger sans que la
+//  dernière rangée redevienne incomplète.
 export const PALIERS_COLONNES = [
-  { requete: "(min-width: 104rem)", colonnes: 6 }, // 3xl
-  { requete: "(min-width: 96rem)", colonnes: 5 }, // 2xl
-  { requete: "(min-width: 80rem)", colonnes: 4 }, // xl
+  { requete: "(min-width: 90rem)", colonnes: 4 }, // grille (1440 px)
   { requete: "(min-width: 48rem)", colonnes: 3 }, // md
 ] as const;
 
