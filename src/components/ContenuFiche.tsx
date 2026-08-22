@@ -31,6 +31,9 @@ import { BoutonHorsLigne } from "@/components/BoutonHorsLigne";
 import { BoutonPartageFiche } from "@/components/BoutonPartageFiche";
 import {
   IconeCalendrier,
+  //  §1 (nº 489) — le diamant revient ouvrir la ligne des techniques :
+  //  l'icône existante, jamais redessinée.
+  IconeDiamant,
   IconeDuLien,
   IconeEtoile,
 } from "@/components/IconeReseau";
@@ -1194,39 +1197,42 @@ export function ContenuFiche({
    * foi est celle juste dessous.
    */
   /**
-   * ██ §1 (nº 488) — TECHNIQUES ET STYLES DEVIENNENT DES CAPSULES,
-   * SUR UNE SEULE LIGNE ██
+   * ██ §1 (nº 488, REPRIS À LA nº 489) — TECHNIQUES ET STYLES : DEUX
+   * LIGNES, DES CAPSULES ██
    * ==================================================================
-   * CE QU'IL Y AVAIT : DEUX lignes de texte, chacune ouverte par son
-   * icône — un DIAMANT pour les techniques, une ÉTOILE pour les
-   * styles —, les valeurs séparées par des puces.
-   * CE QU'IL Y A : UNE seule ligne, ouverte par la SEULE ÉTOILE, et
-   * les valeurs devenues des ÉTIQUETTES À FOND UNI. Le diamant s'en
-   * va entièrement — icône comprise.
+   * CE QUE LA nº 488 AVAIT FAIT, et que cette passe ANNULE : elle
+   * avait fondu les deux familles sur UNE seule ligne, ouverte par la
+   * seule étoile, et retiré le diamant. Le propriétaire revient
+   * dessus — les DEUX lignes reprennent leur place, chacune avec son
+   * icône : le DIAMANT ouvre les techniques, l'ÉTOILE ouvre les
+   * styles, l'une et l'autre à la taille, à la couleur et à la place
+   * qu'elles avaient (les boîtes partagées de la liste, rien de
+   * redessiné).
+   * CE QUE LA nº 488 GARDE, ET QUI NE BOUGE PAS : les valeurs restent
+   * des ÉTIQUETTES À FOND UNI, sans bordure, non cliquables ; les
+   * techniques sur `bg-sombre-eleve`, les styles d'un cran plus clair
+   * sur `bg-sombre-eleve-clair` — deux crans voisins de l'échelle
+   * (nº 466), distingués par la CLARTÉ et jamais par un trait.
    *
-   * DEUX FAMILLES, DEUX FONDS, ET AUCUN TRAIT : les techniques
-   * portent `bg-sombre-eleve`, les styles `bg-sombre-eleve-clair` —
-   * deux crans voisins de l'échelle de profondeur (nº 466), qui se
-   * distinguent par la CLARTÉ et non par une bordure (la charte les
-   * proscrit). Aucun rose : il reste réservé au sélectionné.
-   * L'AIR ENTRE LES DEUX GROUPES vaut SEIZE pixels (`gap-x-4`),
-   * contre SIX à l'intérieur d'un groupe (`gap-1.5`) : le
-   * regroupement se lit sans qu'on ait à l'expliquer.
+   * L'AIR ENTRE LES DEUX LIGNES EST CELUI DE LA LISTE : elles sont
+   * rendues comme SŒURS des autres informations, donc les VINGT
+   * pixels du `gap-y-5` de leur conteneur les séparent — exactement
+   * l'air qui vaut entre le booking, le site, l'adresse et les
+   * horaires. Aucune marge n'est posée sur les lignes elles-mêmes.
+   * (L'écart de seize pixels que la nº 488 posait ENTRE LES DEUX
+   * GROUPES d'une même ligne n'a plus d'objet : il n'y a plus qu'une
+   * famille par ligne. Les six pixels entre capsules d'une même
+   * famille, eux, restent.)
    *
-   * ⚠️ CE QU'ON PERD, ET IL FAUT LE DIRE : les styles étaient des
-   * LIENS vers `/tatouage/<style>/<ville>` — la vitrine « ce style,
-   * dans cette ville ». Depuis une fiche, on ne rebondit donc plus
-   * vers la liste des artistes d'un même style. Les techniques,
-   * elles, n'ont jamais été cliquables. Le propriétaire a tranché :
-   * ce sont des étiquettes, rien ne se passe au clic.
-   *
-   * ⚠️ LE RAYON EST CELUI DES BADGES DU SITE (`rounded-lg`, 8 px,
-   * nº 449) : c'est l'acquis, et il ne se change pas sans qu'on le
-   * demande.
-   * ⚠️ ELLES PASSENT À LA LIGNE PROPREMENT : `flex-wrap` sur les deux
-   * étages — les groupes entre eux, et les capsules d'un même groupe.
-   * Aucune ne se coupe ni ne déborde, au doigt comme au web ; la
-   * ligne est donc la même partout, sans variante d'appareil.
+   * ⚠️ CE QU'ON A PERDU À LA nº 488, ET QUI RESTE PERDU : les styles
+   * étaient des LIENS vers la vitrine « ce style, dans cette ville ».
+   * Ce sont des étiquettes depuis, sur décision du propriétaire, et
+   * cette passe ne les rend pas cliquables.
+   * ⚠️ CHAQUE LIGNE SE CONDITIONNE SÉPARÉMENT : une fiche sans
+   * technique n'affiche pas de diamant orphelin, une fiche sans style
+   * pas d'étoile — le piège de la nº 386.
+   * ⚠️ RAYON `rounded-lg` (8 px, nº 449), et retour à la ligne propre
+   * par `flex-wrap` : au doigt comme au web, sans variante.
    */
   const CAPSULE_LIGNE =
     "inline-flex items-center rounded-lg px-2.5 py-1 text-[13.5px] leading-[18px]";
@@ -1235,34 +1241,45 @@ export function ContenuFiche({
       {texte}
     </span>
   );
-  const ligneDesEtiquettes = (capsulesPratique.length > 0 ||
-    tatoueur.styles.length > 0) && (
-    <p
-      key="etiquettes"
-      data-pratique-fiche=""
-      data-styles-fiche=""
-      className={`flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE}`}
-    >
-      <span className={BOITE_ICONE_LIGNE}>
-        <IconeEtoile taille={20} />
-      </span>
-      <span className="min-w-0 flex flex-wrap items-center gap-x-4 gap-y-1.5">
-        {capsulesPratique.length > 0 && (
-          <span className="flex flex-wrap gap-1.5">
-            {capsulesPratique.map((slug) =>
-              capsuleDe(slug, libelleFiltre(slug), "bg-sombre-eleve")
-            )}
-          </span>
-        )}
-        {tatoueur.styles.length > 0 && (
-          <span className="flex flex-wrap gap-1.5">
-            {tatoueur.styles.map((slug) =>
-              capsuleDe(slug, libelleStyle(slug), "bg-sombre-eleve-clair")
-            )}
-          </span>
-        )}
-      </span>
-    </p>
+  /** L'habillage commun des deux lignes : même écriture, même icône
+      en tête, mêmes capsules qui se replient. Elles ne peuvent pas
+      diverger — il n'y a qu'un dessin pour les deux. */
+  const ligneDeCapsules = (
+    cle: string,
+    marqueur: string,
+    icone: React.ReactNode,
+    valeurs: readonly string[],
+    libelle: (slug: string) => string,
+    fond: string
+  ) =>
+    valeurs.length > 0 && (
+      <p
+        key={cle}
+        {...{ [marqueur]: "" }}
+        className={`flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE}`}
+      >
+        <span className={BOITE_ICONE_LIGNE}>{icone}</span>
+        <span className="min-w-0 flex flex-wrap gap-1.5">
+          {valeurs.map((slug) => capsuleDe(slug, libelle(slug), fond))}
+        </span>
+      </p>
+    );
+
+  const ligneDesPratiques = ligneDeCapsules(
+    "pratique",
+    "data-pratique-fiche",
+    <IconeDiamant taille={20} />,
+    capsulesPratique,
+    libelleFiltre,
+    "bg-sombre-eleve"
+  );
+  const ligneDesStyles = ligneDeCapsules(
+    "styles",
+    "data-styles-fiche",
+    <IconeEtoile taille={20} />,
+    tatoueur.styles,
+    libelleStyle,
+    "bg-sombre-eleve-clair"
   );
 
   /*  §6 (nº 415) — LA LISTE DES LIEUX A-T-ELLE QUELQUE CHOSE À DIRE ?
@@ -1774,7 +1791,8 @@ export function ContenuFiche({
                orpheline. */}
           {(premiereLigne.length > 0 ||
             ligneDuSite.length > 0 ||
-            ligneDesEtiquettes) && (
+            ligneDesPratiques ||
+            ligneDesStyles) && (
             <div
               /*  §5 (nº 389) — L'ÉCART PARTAGÉ MONTE D'UN CRAN :
                    `gap-y-4` (16 px) devient `gap-y-5` (20 px). C'est le
@@ -1834,7 +1852,8 @@ export function ContenuFiche({
                   {ligneDuSite}
                 </div>
               )}
-              {ligneDesEtiquettes}
+              {ligneDesPratiques}
+              {ligneDesStyles}
               {/*  §3 (nº 388) — L'ADRESSE FERME LA SÉRIE, et seulement
                    sur un salon ou un studio : une fiche d'artiste
                    montre ses PROFILS (à domicile, en salon, guest),

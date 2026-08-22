@@ -301,14 +301,34 @@ function HorairesEnLigne({
   const suite = reste.join(" • ");
 
   return (
-    /*  §3 (nº 389) — LE VOLET SE RAPPROCHE : `mt-4` (16 px) devient
-         `mt-1.5` (6 px). Seize pixels avaient un sens quand le volet
-         suivait un bloc coiffé d'un titre et d'une photo ; sous une
-         simple ligne d'adresse, il flottait. Six pixels, c'est l'écart
-         que la fiche emploie déjà entre une étiquette et sa valeur
-         (`mt-1.5`, AdresseCliquable). Le mécanisme, la flèche, le
-         contenu et les couleurs ne changent pas d'un caractère. */
-    <div className="mt-1.5">
+    /*  ██ §2 (nº 489) — LA MARGE DU HAUT S'EN VA : C'EST ELLE QUI
+         DÉCALAIT L'HORLOGE ██
+         ------------------------------------------------------------
+         LA CAUSE, NOMMÉE. Ce volet s'ouvrait par six pixels de marge
+         haute (§3 nº 389) : à l'époque il était ACCOLÉ sous l'adresse,
+         dans la même boîte, et il fallait l'en décoller. Depuis la
+         nº 488 il n'est plus accolé à rien — il est le CONTENU d'une
+         ligne à part, avec sa propre icône. Ces six pixels poussaient
+         donc son TEXTE vers le bas, tandis que l'icône, alignée en
+         haut de la ligne comme toutes les autres (`items-start`),
+         restait où elle était : elle paraissait plus haute d'exactement
+         cette marge.
+         ⚠️ CE N'ÉTAIT PAS LE VOLET DÉROULANT : l'hypothèse d'un centrage
+         sur la hauteur totale ne tient pas — la ligne aligne EN HAUT,
+         et la boîte de l'icône fait la hauteur d'UNE ligne de texte
+         (`BOITE_ICONE_LIGNE`, hauteur en `em`, nº 389-§6). Volet ouvert
+         ou fermé, rien ne bougeait de ce côté-là.
+         LE REMÈDE, SANS AUCUN DÉCALAGE À LA MAIN : la marge disparaît.
+         Le procédé des autres lignes s'applique alors tel quel — le
+         texte du volet commence au même point que celui de l'adresse
+         ou du site, et son bouton porte déjà la même écriture
+         (`text-[15px] leading-snug`, celle d'`ECRITURE_LIGNE_FICHE`).
+         L'air au-dessus, lui, est celui de la liste : les vingt pixels
+         de son écart commun (nº 488).
+         ⚠️ LE VOLET NE CHANGE EN RIEN D'AUTRE : mécanisme d'ouverture,
+         flèche, contenu, couleurs, calcul d'état dans le fuseau du
+         lieu — tout est intact. */
+    <div>
       <button
         type="button"
         onClick={() => setOuvert((etait) => !etait)}
