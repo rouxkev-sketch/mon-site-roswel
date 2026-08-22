@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
+//  §1 (nº 495) — le millésime, en constante : plus aucune lecture du
+//  DOM dans l'identité du service worker (voir la note, plus bas).
+import { MILLESIME_SCRIPT } from "@/lib/millesime-script";
 
 /**
  * Active le "service worker" : un petit programme que le navigateur
@@ -34,10 +37,32 @@ export function EnregistrementServiceWorker() {
           rend le nom du cache LISIBLE dans les outils du navigateur —
           « yokofolio-<empreinte>-<millésime> » se rapproche du
           « script nº N » qu'affiche la sonde, et l'on voit d'un coup
-          d'œil quelle version est réellement servie. Il est lu sur
-          <html>, où le script d'avant-peinture l'écrit : aucune
-          variable d'environnement de plus. */
-      const millesime = document.documentElement.dataset.versionScript ?? "0";
+          d'œil quelle version est réellement servie.
+          ██ §1 (nº 495) — IL NE SE LIT PLUS SUR <html> ██
+          ------------------------------------------------------------
+          LE DÉFAUT, ET IL ÉTAIT GRAVE : cette ligne valait
+          `document.documentElement.dataset.versionScript ?? "0"`. Elle
+          suppose que le script d'avant peinture a DÉJÀ tourné — or il
+          vit dans un layout ENFANT, donc plus bas dans le document,
+          tandis que ce composant-ci est monté dans le layout RACINE.
+          Sur une page STREAMÉE (toutes les routes dynamiques : le
+          jumeau `/complet`, `/accueil-recherche`), l'effet peut
+          s'exécuter AVANT que l'analyseur n'atteigne le script. La
+          lecture rendait alors `undefined`, le repli `"0"` entrait
+          dans l'ADRESSE du programme, et le navigateur voyait un
+          service worker NEUF : installation, purge de TOUS les caches,
+          prise de main, `controllerchange` — et le rechargement
+          ci-dessous. Au chargement suivant le millésime était lisible,
+          l'adresse redevenait `…-<millésime>`, donc encore un
+          programme « neuf » : le cycle se refermait, et chaque tour
+          rechargeait la page en interrompant tout ce qui était en
+          train d'arriver — les photos comprises.
+          LE REMÈDE : le millésime est une CONSTANTE DE COMPILATION
+          (lib/millesime-script), lue ici comme dans le script. Il ne
+          peut plus manquer, il ne peut plus valoir « 0 », et
+          l'identité du programme ne dépend plus de l'ordre d'arrivée
+          des morceaux du document. */
+      const millesime = MILLESIME_SCRIPT;
       /*  ██ §1 (nº 479) — LE RECHARGEMENT, UNE FOIS ET UNE SEULE ██
           POURQUOI IL FAUT EN AVOIR UN : le nouveau programme prend la
           main IMMÉDIATEMENT (`skipWaiting` + `clients.claim`, voir

@@ -43,6 +43,11 @@ import { boucleDAttentePourLeScript } from "@/lib/pose-sur-contenu";
 //  textes sont FABRIQUÉS par les modules qui portent la règle : aucune
 //  copie à la main ici.
 import { armementPourLeScript, MARQUE_SONDES } from "@/lib/sondes-armees";
+//  §1 (nº 495) — le millésime ne s'écrit plus ici : il vit dans sa
+//  propre constante, que l'enregistrement du service worker lit AUSSI
+//  — au lieu de le relire sur <html>, ce qui était la cause du cycle
+//  de réinstallation (voir lib/millesime-script).
+import { MILLESIME_SCRIPT } from "@/lib/millesime-script";
 import { amorceDuJournalPourLeScript } from "@/lib/journal-historique";
 //  §1 (nº 345) — « y a-t-il une VRAIE page derrière moi ? ». La règle
 //  est écrite une fois (lib/bas-de-la-pile) et rend son relevé TOUT
@@ -193,7 +198,7 @@ try{appMedia.addEventListener("change",appFixer)}catch(e){}
    avec un vieux), la page servie est PÉRIMÉE — un cache la retient —
    et aucun des blocs récents n'y a jamais été. À INCRÉMENTER à chaque
    passe qui modifie ce script. */
-r.dataset.versionScript="494";
+r.dataset.versionScript=${JSON.stringify(MILLESIME_SCRIPT)};
 r.style.backgroundColor=${fond};
 /* nº 357 — LE COMPTE, DIT AVANT LA PREMIÈRE PEINTURE. L'accueil est
    prérendu : le serveur ne connaît plus la session, et c'est CE
