@@ -1,5 +1,6 @@
-import Link from "next/link";
 import { COULEURS_SOMBRE } from "@/config/tatouage";
+//  §4 (nº 475) — le lien vers l'accueil qui déclare son départ.
+import { LienAccueil } from "@/components/LienAccueil";
 
 /**
  * UNE PAGE QUI NE DIT QU'UNE CHOSE — à la charte (passe nº 176)
@@ -54,15 +55,21 @@ export function PageMessageSombre({
         </h1>
         {/* LE SEUL GESTE : pleine largeur, capsule rose, 52 px de haut
             — la hauteur des boutons de validation du site. */}
-        <Link
-          href="/"
+        {/*  §4 (nº 475) — LE DÉPART VERS L'ACCUEIL SE DÉCLARE : ce
+             bouton finit un parcours, il va EN AVANT — sans
+             déclaration, la chaîne de restitution pouvait y rendre la
+             place mémorisée de l'accueil (le bas). `LienAccueil` pose
+             les deux déclarations existantes (nº 429 et nº 446) ; cette
+             page reste un composant serveur, c'est le lien qui est
+             client. */}
+        <LienAccueil
           className="mt-8 flex w-full items-center justify-center
                      rounded-full bg-primaire px-6 min-h-[52px]
                      text-[15px] font-semibold text-white
                      transition-opacity active:opacity-80 hover:opacity-90"
         >
           {libelleRetour}
-        </Link>
+        </LienAccueil>
       </div>
     </main>
   );

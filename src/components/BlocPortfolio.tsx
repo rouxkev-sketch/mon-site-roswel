@@ -2,7 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { entreesExplorer, libelleStyle } from "@/config/tatouage";
+import {
+  entreesExplorer,
+  libelleStyle,
+  //  §2-b (nº 475) — le jeton de trait du site, écriture unique.
+  TRAIT_SEPARATION_FOND,
+} from "@/config/tatouage";
 import { GrilleGalerie } from "@/components/GrilleGalerie";
 import {
   IconeChevronBas,
@@ -846,8 +851,24 @@ export function BlocPortfolio({
               //  champ monte d'un niveau avec lui, et le focus
               //  éclaircit encore d'un cran (la charte, sans
               //  contour ni rose).
+              /*  ██ §3 (nº 475) — CE CHAMP FAISAIT ZOOMER TOUT LE SITE ██
+                  LA CAUSE, NOMMÉE : sa taille de texte était
+                  `text-[15px]`. Sous SEIZE pixels, Safari/iOS ZOOME la
+                  page d'autorité quand un champ prend le focus — et il
+                  ne dézoome pas tout seul quand le champ s'en va : la
+                  demande partait, la confirmation s'affichait, et
+                  l'interface restait agrandie, débordant à droite. Le
+                  symptôme apparaissait À L'ENVOI parce que c'est là que
+                  le clavier se referme et laisse voir la page.
+                  LE REMÈDE EST L'ÉCRITURE DÉJÀ EN PLACE, pas une valeur
+                  neuve : `text-base` — SEIZE pixels —, exactement ce
+                  que porte le champ partagé du formulaire
+                  (components/champs-formulaire.ts, l. 32), qui n'a
+                  jamais fait zoomer quoi que ce soit. Rien d'autre ne
+                  change : ni le fond, ni le focus, ni la hauteur de 44
+                  px, ni les deux palettes de champs (piège nº 419). */
               className={`w-full h-11 rounded-lg bg-sombre-eleve-clair pl-3
-                         text-[15px] text-sombre-texte
+                         text-base text-sombre-texte
                          placeholder:text-sombre-texte-doux/70
                          outline-none transition-colors
                          focus:bg-sombre-bordure ${
@@ -891,7 +912,19 @@ export function BlocPortfolio({
             //  que rien n'est saisi, la capsule reste grise et
             //  éteinte ; dès deux caractères, elle passe en
             //  ROSE PLEIN — impossible de la croire bloquée.
-            className="shrink-0 h-11 rounded-full px-5 text-[14px]
+            /*  §2-a (nº 475) — LE MÊME RAYON QUE LE CHAMP QU'IL SUIT :
+                la capsule ronde (`rounded-full`) devient `rounded-lg`,
+                HUIT pixels — le rayon EXACT du champ de saisie
+                ci-dessus, relevé sur lui et non choisi. (Ce n'est pas
+                le `rounded-xl` de 12 px de la nº 449 : celui-là est le
+                rayon des champs du FORMULAIRE partagé,
+                components/champs-formulaire.ts l. 32 — ce champ-ci, né
+                à la nº 122 dans le bandeau, a toujours porté 8.) Le
+                bandeau est une écriture unique depuis la nº 474 : la
+                fenêtre du web prend donc le même rayon que la page du
+                doigt — deux dessins pour un seul bouton seraient une
+                divergence de plus à tenir. */
+            className="shrink-0 h-11 rounded-lg px-5 text-[14px]
                        font-semibold transition-colors
                        bg-primaire text-white hover:opacity-90
                        active:opacity-90
@@ -1552,6 +1585,30 @@ export function BlocPortfolio({
           ariaLabel="Ajouter un style"
           surFermer={fermerFenetreStyles}
           classeCadre="z-[80]"
+          /*  §2-b (nº 475) — LA LIGNE DE SÉPARATION SOUS LE TITRE.
+              Elle vit DANS le bloc collant de l'en-tête (le canal
+              `sousLeTitre`, ouvert à cette passe) : elle reste donc
+              sous le titre pendant tout le défilement de la liste, au
+              lieu de s'en aller avec la première ligne.
+              · SA COULEUR est le jeton de trait du site, par son
+                écriture unique — `TRAIT_SEPARATION_FOND`
+                (`bg-sombre-trait`, config/tatouage l. 2030) : aucune
+                couleur en dur, aucun contour (la charte les proscrit
+                hors erreur) — un filet d'un pixel, pas une bordure.
+              · ELLE S'ARRÊTE AUX MARGES DE L'INTERFACE : posée dans
+                l'en-tête, qui porte `px-4`, elle commence et finit
+                exactement où commencent et finissent le titre et les
+                lignes de style — jamais bord à bord.
+              · SES DEUX AIRS SONT ÉGAUX, à DOUZE pixels : au-dessus,
+                les 12 de `mt-3` (sous la rangée du titre) ; en dessous,
+                les 4 du `pb-1` de l'en-tête plus les 8 du `pt-2` de la
+                liste — 12 aussi, jusqu'à la première ligne. */
+          sousLeTitre={
+            <div
+              aria-hidden="true"
+              className={`mt-3 h-px ${TRAIT_SEPARATION_FOND}`}
+            />
+          }
         >
           <ul aria-label="Les styles, de A à Z" className="grow pt-2 pb-2">
             {lignesDesStyles}

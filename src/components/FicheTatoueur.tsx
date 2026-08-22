@@ -924,8 +924,27 @@ export function FicheTatoueur({
                 que l'aperçu, lui, garde. Rien d'autre de la vue ne
                 bouge, et le web n'est pas concerné (variante du
                 doigt). */
+            /*  ██ §1 (nº 475) — L'AIR SE CALE SUR CELUI DU LOGO ██
+                LA VALEUR N'EST PLUS CHOISIE, ELLE EST MESURÉE. Dans la
+                barre fixe (EnTeteTatouage, l. 719-720), la rangée porte
+                `py-3` — DOUZE pixels en haut comme en bas, la barre est
+                symétrique — et ses éléments sont centrés sur une rangée
+                dont la hauteur est celle des ronds d'action
+                (HAUTEUR_ACTIONS = 40, l. 110). Le logo, lui, fait 36 px
+                de haut au doigt (`h-9`, l. 793) : il est donc centré
+                dans ces 40 px et descend de 2 px de plus.
+                AIR AU-DESSUS DU LOGO = 12 + (40 − 36) / 2 = QUATORZE
+                PIXELS. (Contrôle indépendant : 12 + 40 + 12 = 64, la
+                hauteur de barre que lit `--rw-rangee-collante`.)
+                LA PHOTO PREND EXACTEMENT CETTE VALEUR : la racine pose
+                16 px de rembourrage haut, la remontée n'en reprend plus
+                que DEUX (`mobile:-mt-0.5`) — il reste 14. L'aperçu
+                garde son collage (`-mt-4`), la barre ne bouge en rien
+                (ni hauteur, ni rembourrage, ni place du logo : c'est la
+                photo qui vient s'aligner), et le web n'est pas concerné
+                (variante du doigt). */
             className={`lg:w-[var(--photo-largeur,calc((100vh_-_119px)*0.8))] max-w-full mobile:-mx-4 mobile:max-w-none ${
-              apercu ? "mobile:-mt-4" : "mobile:-mt-3.5"
+              apercu ? "mobile:-mt-4" : "mobile:-mt-0.5"
             }`}
           >
             <CarrouselPortfolio

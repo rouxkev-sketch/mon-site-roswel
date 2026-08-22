@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { MARQUE_YOKOFOLIO, TEXTES_TATOUAGE } from "@/config/tatouage";
 import { adresseDuSite } from "@/lib/site";
 import { BoutonCreerPortfolio } from "@/components/BoutonCreerPortfolio";
 import { EnTeteTatouage } from "@/components/EnTeteTatouage";
 import { LogoYokofolio } from "@/components/LogoYokofolio";
+//  §4 (nº 475) — le lien vers l'accueil qui déclare son départ.
+import { LienAccueil } from "@/components/LienAccueil";
 
 /**
  * QUI SOMMES-NOUS
@@ -227,8 +228,13 @@ export default function PageQuiSommesNous() {
         </Section>
 
         <div className="mt-16 flex flex-col sm:flex-row gap-3">
-          <Link
-            href="/"
+          {/*  §4 (nº 475) — LE DÉPART VERS L'ACCUEIL SE DÉCLARE :
+               chercher un style est une navigation EN AVANT ; sans
+               déclaration, la chaîne de restitution pouvait rendre la
+               place mémorisée de l'accueil (le bas de la mosaïque).
+               La page reste un composant serveur — seul le lien est
+               client (LienAccueil, nº 429 + nº 446). */}
+          <LienAccueil
             className="inline-flex items-center justify-center rounded-full
                        px-7 min-h-[54px] bg-primaire hover:bg-primaire-fonce
                        text-white font-semibold transition-colors
@@ -246,7 +252,7 @@ export default function PageQuiSommesNous() {
                  ses deux champs, et le propriétaire n'a rien demandé
                  pour lui. Deux endroits, deux phrases. */}
             Chercher un style
-          </Link>
+          </LienAccueil>
           {/*  §5 (nº 321) — LE SECOND BOUTON : « Crée ton portfolio »,
                UNE CAPSULE PLEINE, SANS AUCUN CONTOUR.
                ------------------------------------------------------

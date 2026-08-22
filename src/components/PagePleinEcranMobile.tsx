@@ -109,6 +109,7 @@ export function PagePleinEcranMobile({
   surFermer,
   ariaLabelFermer,
   actions,
+  sousLeTitre,
   classeCadre = "z-[70]",
   children,
 }: {
@@ -118,6 +119,14 @@ export function PagePleinEcranMobile({
   surFermer: () => void;
   ariaLabelFermer?: string;
   actions?: React.ReactNode;
+  /** §2-b (nº 475) — CE QUI VIT SOUS LA LIGNE DU TITRE, DANS LE BLOC
+      COLLANT : le canal existait déjà dans `EnTetePleinEcran` (les
+      `children` — la bascule Réalisation | Flash de la recherche) ;
+      cette page ne le transmettait simplement pas. Il s'ouvre ici pour
+      la ligne de séparation de « Ajouter un style », et il est
+      FACULTATIF : les porteurs qui ne le passent pas (Mon compte,
+      Notifications, Langue) ne changent pas d'un pixel. */
+  sousLeTitre?: React.ReactNode;
   /** Le rang d'empilement du porteur (z-[70] compte, z-[85] langue et
       notifications — les valeurs de leurs fenêtres d'origine). */
   classeCadre?: string;
@@ -139,7 +148,9 @@ export function PagePleinEcranMobile({
         surFermer={surFermer}
         ariaLabelFermer={ariaLabelFermer}
         actions={actions}
-      />
+      >
+        {sousLeTitre}
+      </EnTetePleinEcran>
       {children}
     </div>,
     document.body

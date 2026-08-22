@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { MARQUE_YOKOFOLIO } from "@/config/tatouage";
 import { adresseDuSite } from "@/lib/site";
 import { EnTeteTatouage } from "@/components/EnTeteTatouage";
+//  §4 (nº 475) — le lien vers l'accueil qui déclare son départ.
+import { LienAccueil } from "@/components/LienAccueil";
 
 /**
  * LES MENTIONS LÉGALES DE YOKOFOLIO
@@ -339,15 +340,19 @@ export default function PageMentionsLegales() {
           Dernière mise à jour : 16 août 2026
         </p>
 
-        <Link
-          href="/"
+        {/*  §4 (nº 475) — LE DÉPART VERS L'ACCUEIL SE DÉCLARE : ce
+             bouton finit le parcours et va EN AVANT ; sans les deux
+             déclarations (nº 429 et nº 446), l'arrivée pouvait rendre
+             la place mémorisée de l'accueil — le bas. La page reste
+             serveur, seul le lien est client. */}
+        <LienAccueil
           className="mt-12 inline-flex items-center justify-center rounded-full
                      px-6 min-h-[48px] border border-sombre-bordure
                      text-sombre-texte hover:border-primaire hover:text-primaire
                      transition-colors"
         >
           Retour à l&apos;accueil
-        </Link>
+        </LienAccueil>
       </main>
     </>
   );

@@ -40,6 +40,8 @@ import { ficheComplete } from "@/lib/fiche-complete";
 import { annoncerRepriseDuSite } from "@/lib/navigation-session";
 import type { PhotoFavorite, TatoueurSuivi } from "@/lib/favoris-serveur";
 import type { Tatoueur } from "@/lib/tatoueurs";
+//  §4 (nº 475) — le lien vers l'accueil qui déclare son départ.
+import { LienAccueil } from "@/components/LienAccueil";
 
 /**
  * MA SÉLECTION — les photos gardées, et les tatoueurs suivis
@@ -462,14 +464,18 @@ export function PageFavoris({
           <p className="text-[14.5px] leading-relaxed text-sombre-texte-doux">
             Touche le cœur d&apos;une photo pour la retrouver ici.
           </p>
-          <Link
-            href="/"
+          {/*  §4 (nº 475) — IL VA EN AVANT, ET IL LE DÉCLARE : partir
+               explorer depuis « Ma sélection » vide n'est pas un
+               retour ; sans les deux déclarations (nº 429 et nº 446),
+               la chaîne de restitution pouvait rendre la place
+               mémorisée de l'accueil — le bas de la mosaïque. */}
+          <LienAccueil
             className="mt-4 inline-flex min-h-[44px] items-center justify-center
                        rounded-full bg-sombre-eleve px-6 text-[14.5px] font-semibold
                        text-sombre-texte transition-colors hover:bg-sombre-eleve-clair"
           >
             Explorer les portfolios
-          </Link>
+          </LienAccueil>
         </div>
       ) : (
         <>

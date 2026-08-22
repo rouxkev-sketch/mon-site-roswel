@@ -21,6 +21,8 @@ import {
   libelleRendu,
 } from "@/lib/photos-tatoueur";
 import type { Tatoueur } from "@/lib/tatoueurs";
+//  §4 (nº 475) — le lien vers l'accueil qui déclare son départ.
+import { LienAccueil } from "@/components/LienAccueil";
 
 /**
  * ██ LA FENÊTRE DE CARROUSEL — SMARTPHONE SEULEMENT (nº 284) ██
@@ -414,9 +416,12 @@ export function FenetreCarrousel({
             voit celui qui reçoit un lien de partage), et elle n'est
             pas prise ici. Le rond de profil, lui, ne quitte pas la
             route : il tient la promesse entièrement. */}
-        <Link href="/" aria-label="Accueil YokoFolio" className="flex items-center">
+        {/*  §4 (nº 475) — LE LOGO DÉCLARE SON DÉPART, ICI COMME DANS LA
+             BARRE : c'est le geste du logo (nº 429) et il doit arriver
+             en haut de l'accueil, jamais à la place mémorisée. */}
+        <LienAccueil ariaLabel="Accueil YokoFolio" className="flex items-center">
           <LogoYokofolio hauteur={24} />
-        </Link>
+        </LienAccueil>
         {/*  §2-1 (nº 285) — LE COMPTEUR, À DROITE, EN GRIS. Il tient la
              place du vide de la nº 284 : la barre garde ses trois
              éléments alignés, et le logo reste au centre VRAI (les deux
