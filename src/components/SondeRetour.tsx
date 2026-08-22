@@ -566,6 +566,165 @@ export function SondeRetour({
   }, [armee, chemin]);
 
   /**
+   * ⚠️ TEMPORAIRE (nº 468) — MESURE DE LA PHOTO : POURQUOI UNE IMAGE
+   * S'AFFICHE-T-ELLE À MOITIÉ ?
+   * ==================================================================
+   * AUCUNE CORRECTION : ce bloc POSE UNE MESURE, c'est tout. Le
+   * symptôme (ancien, ALÉATOIRE, web et doigt) : une photo de profil
+   * ou de carrousel n'est peinte qu'à moitié — la moitié haute, le
+   * reste vide — et un aller-retour (profil ouvert puis refermé) la
+   * rend entière. Deux corrections à l'aveugle sont interdites tant
+   * qu'une sonde n'a pas nommé le coupable : ce journal doit permettre
+   * de dire QUI décide de la hauteur de l'image, et si la moitié
+   * manquante vient d'un CHARGEMENT incomplet, d'une BOÎTE trop
+   * courte, ou d'une peinture faite AVANT que les dimensions soient
+   * connues.
+   * CE QUI EST RELEVÉ, pour chaque image de PROFIL (les ronds
+   * `PhotoRonde`, la photo de tête d'une fiche) et de CARROUSEL (le
+   * carrousel d'une fiche, les galeries/bandes qui défilent), web ET
+   * doigt, sur toutes les pages :
+   *  · au MONTAGE : source, `loading`/`decoding`/`sizes`,
+   *    `naturalWidth×naturalHeight`, `complete`, la boîte rendue,
+   *    next/image ou balise nue, REMONTAGE (même source déjà montée
+   *    dans ce document), et si la boîte a une hauteur RÉSERVÉE avant
+   *    le chargement ou part de 0 ;
+   *  · à l'ARRIVÉE (`load`, avec le délai depuis l'arrivée sur la
+   *    page) et à l'échec (`error`) — plus une ligne si la boîte a
+   *    GRANDI après coup ;
+   *  · un RE-CONTRÔLE unique 1,2 s après chaque arrivée : le recalage
+   *    tardif d'une mise en page s'y lit aussi.
+   * LA LIGNE QUI COMPTE : « ⚠️ À MOITIÉ » — la hauteur rendue est
+   * INFÉRIEURE à celle qu'attend le rapport naturel de l'image pour sa
+   * largeur rendue (tolérance 2 px). C'est le cas du propriétaire.
+   * ⚠️ L'observateur vit avec le DOCUMENT (pas avec la page) : les
+   * compteurs de remontage traversent les navigations — c'est le
+   * scénario « j'ouvre un profil puis je reviens ».
+   * POUR LE RETIRER (passe ultérieure) : ce bloc entier, rien d'autre.
+   */
+  useEffect(() => {
+    if (!armee) return;
+    const arriveePage = performance.now();
+    const vues = new WeakSet<HTMLImageElement>();
+    const montagesParSource = new Map<string, number>();
+    const minuteurs: number[] = [];
+    let releves = 0;
+    const PLAFOND = 140;
+    const delai = () => Math.round(performance.now() - arriveePage);
+    const bout = (brut: string) => {
+      const sansRequete = (brut || "").split("?")[0];
+      return sansRequete.length > 46 ? "…" + sansRequete.slice(-46) : sansRequete;
+    };
+    const familleDe = (img: HTMLImageElement): string | null => {
+      if (img.closest("[data-galerie-defilante]")) return "galerie/bande";
+      if (img.closest("[data-carrousel]")) return "carrousel";
+      if (img.closest("[data-photo-de-tete], [data-photo-fiche]"))
+        return "photo de tête de fiche";
+      if (img.closest(".rounded-full")) return "profil (rond)";
+      return null;
+    };
+    const ecrire = (
+      img: HTMLImageElement,
+      famille: string,
+      moment: string,
+      extra = ""
+    ) => {
+      if (releves >= PLAFOND) return;
+      releves += 1;
+      const boite = img.getBoundingClientRect();
+      const nW = img.naturalWidth;
+      const nH = img.naturalHeight;
+      const attendue =
+        nW > 0 && boite.width > 0 ? (boite.width * nH) / nW : null;
+      const objectCover = getComputedStyle(img).objectFit === "cover";
+      //  Une image en `object-cover` remplit sa boîte quel que soit son
+      //  rapport : « à moitié » ne peut s'y lire QUE si la boîte
+      //  elle-même est plus courte que ce que le dessin lui promet —
+      //  on relève donc l'écart SANS le marquer, et la boîte parle.
+      const aMoitie =
+        !objectCover &&
+        attendue !== null &&
+        boite.height > 0 &&
+        boite.height < attendue - 2;
+      noter(
+        `MESURE DE LA PHOTO · ${famille} · ${moment} (+${delai()} ms) · ${bout(
+          img.currentSrc || img.src
+        )} · loading=${img.loading || "(défaut)"} decoding=${
+          img.decoding || "(défaut)"
+        } sizes=${img.sizes || "(aucun)"} · naturelle ${nW}×${nH} · complete=${
+          img.complete
+        } · boîte ${Math.round(boite.width)}×${Math.round(boite.height)} px${
+          objectCover ? " (cover)" : ""
+        } · ${img.hasAttribute("data-nimg") ? "next/image" : "balise nue"}${extra}${
+          aMoitie
+            ? ` · ⚠️ À MOITIÉ : hauteur rendue ${Math.round(
+                boite.height
+              )} < attendue ${Math.round(attendue as number)}`
+            : ""
+        }`
+      );
+    };
+    const observerImage = (img: HTMLImageElement) => {
+      if (vues.has(img)) return;
+      vues.add(img);
+      const famille = familleDe(img);
+      if (!famille) return;
+      const source = (img.currentSrc || img.src || "").split("?")[0];
+      const deja = montagesParSource.get(source) ?? 0;
+      montagesParSource.set(source, deja + 1);
+      const remontage =
+        deja > 0 ? ` · REMONTAGE (montage nº ${deja + 1} de cette source)` : "";
+      const hauteurAuMontage = Math.round(img.getBoundingClientRect().height);
+      const reservation = img.complete
+        ? ""
+        : hauteurAuMontage > 0
+          ? ` · hauteur RÉSERVÉE avant chargement (${hauteurAuMontage} px)`
+          : " · hauteur NON réservée (0 px avant chargement)";
+      ecrire(img, famille, "montage", remontage + reservation);
+      const surArrivee = () => {
+        const grandie =
+          hauteurAuMontage <= 0 && img.getBoundingClientRect().height > 0
+            ? " · la boîte a GRANDI après coup (0 px au montage)"
+            : "";
+        ecrire(img, famille, "load", grandie);
+        minuteurs.push(
+          window.setTimeout(() => ecrire(img, famille, "re-contrôle 1,2 s"), 1200)
+        );
+      };
+      if (img.complete && img.naturalWidth > 0) {
+        //  Déjà arrivée avant qu'on la voie (cache) : l'« arrivée »
+        //  est relevée tout de suite, re-contrôle compris.
+        surArrivee();
+      } else {
+        img.addEventListener("load", surArrivee, { once: true });
+        img.addEventListener(
+          "error",
+          () => ecrire(img, famille, "⚠️ ERROR"),
+          { once: true }
+        );
+      }
+    };
+    const balayer = (racine: ParentNode) => {
+      racine
+        .querySelectorAll?.("img")
+        .forEach((i) => observerImage(i as HTMLImageElement));
+    };
+    balayer(document);
+    const observateur = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const noeud of mutation.addedNodes) {
+          if (noeud instanceof HTMLImageElement) observerImage(noeud);
+          else if (noeud instanceof Element) balayer(noeud);
+        }
+      }
+    });
+    observateur.observe(document.body, { childList: true, subtree: true });
+    return () => {
+      observateur.disconnect();
+      for (const m of minuteurs) window.clearTimeout(m);
+    };
+  }, [armee]);
+
+  /**
    * ⚠️ TEMPORAIRE (nº 435) — MESURE DU LISERÉ DE LA FENÊTRE SUPERPOSÉE.
    * ==================================================================
    * AUCUNE CORRECTION : cette passe POSE UNE MESURE, c'est tout. Le

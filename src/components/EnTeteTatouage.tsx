@@ -1036,33 +1036,53 @@ export function EnTeteTatouage({
                moteur PLEIN ÉCRAN, celui du téléphone. Au web ce n'est
                pas ce qu'il faut — la loupe doit ramener LÀ OÙ LE
                MOTEUR CENTRAL EXISTE, c'est-à-dire l'accueil.
-               L'ÉCRITURE EST CELLE DU SITE (l'idiome de la nº 312,
-               `ouvrirEnFenetre` dans BlocSuivis) : un VRAI LIEN, dont
-               le clic est intercepté AU DOIGT SEULEMENT — la question
-               se pose au moment du clic, côté navigateur, sur
-               `data-appareil` (un doigt, jamais une largeur — la règle
-               depuis la nº 60) : aucune discordance d'hydratation,
-               aucun état client dans le rendu.
                 · AU DOIGT — `preventDefault` puis `ouvrirRecherche` :
                   la page plein écran s'ouvre, exactement comme avant ;
-                · AU WEB — le lien navigue, tout simplement : UNE seule
-                  entrée d'historique (nº 332-§1), le retour ramène en
-                  un appui (nº 332-§4), et le clic du milieu ouvre
-                  l'accueil dans un onglet, ce qu'un bouton ne savait
-                  pas faire.
+                · AU WEB — le lien navigue : UNE seule entrée
+                  d'historique (nº 332-§1), le retour ramène en un
+                  appui (nº 332-§4), et le clic du milieu ouvre
+                  l'accueil dans un onglet.
                LA RÈGLE D'AFFICHAGE NE BOUGE PAS (`loupeVisible` et le
                `lg:hidden` conditionnel de la nº 465), la boîte de
-               40 px et le glyphe non plus : seul le rôle change.
-               ⚠️ AUCUN « rafraîchir si déjà là » (nº 247-§6) ici : au
-               web la loupe ne paraît que sur les pages à RANGÉE LIBRE
-               (« Ma sélection »), et l'accueil n'en est pas une — on
-               n'est donc jamais déjà à destination. */}
-          <Link
+               40 px et le glyphe non plus : seul le rôle change. */}
+          {/*  ██ §2 (nº 468) — L'ACCUEIL ARRIVE EN HAUT : LE PROCÉDÉ DU
+               LOGO, À LA LETTRE ██
+               LA CAUSE DU BAS DE PAGE, nommée : le lien posé à la
+               nº 467 était un <Link> de navigation douce parti SANS
+               AUCUNE DÉCLARATION — ni le départ voulu du logo
+               (nº 429), ni l'arrivée en haut (nº 446). L'arrivée sur
+               « / » n'était donc pas reconnue comme une navigation EN
+               AVANT par la chaîne de restitution : la note d'attente
+               de MemoireNavigation (nº 333-§2) et son réveil sur un
+               popstate proche (borné nº 426), ou — quand le routeur se
+               replie en navigation de document à la frontière du
+               prérendu (nº 428/430) — le bloc 4 du script
+               d'avant-peinture, pouvaient rendre la place mémorisée de
+               « / » (moins de 30 min — celle du bas). Le LOGO, lui,
+               n'a jamais eu le défaut : un <a> NATIF qui DÉCLARE son
+               départ (nº 429) — le document arrive neuf, le script lit
+               « navigate » sans demande de restitution et n'y touche
+               pas : EN HAUT, toujours ; et la déclaration neutralise
+               le filet de repli. LA LOUPE PREND DONC EXACTEMENT CE
+               PROCÉDÉ — le même <a>, la même déclaration, aucun
+               mécanisme parallèle. Un VRAI retour vers l'accueil
+               (bouton « précédent ») ne déclare rien et restitue
+               toujours sa position ; le retour depuis l'accueil vers
+               « Ma sélection » reste un appui — une navigation de
+               document est UNE entrée d'historique. Le doigt ne change
+               pas : `preventDefault` part avant toute navigation. */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages --
+              un <a> natif PAR CHOIX : le procédé du logo (nº 429),
+              repris à l'identique. */}
+          <a
             href="/"
             onClick={(evenement) => {
-              if (document.documentElement.dataset.appareil !== "mobile") return;
-              evenement.preventDefault();
-              ouvrirRecherche(valeur);
+              if (document.documentElement.dataset.appareil === "mobile") {
+                evenement.preventDefault();
+                ouvrirRecherche(valeur);
+                return;
+              }
+              declarerDepartVouluVersLAccueil();
             }}
             aria-label="Rechercher"
             title="Rechercher"
@@ -1080,7 +1100,7 @@ export function EnTeteTatouage({
                        }`}
           >
             <IconeLoupe taille={28} classe="mobile:h-6 mobile:w-6" />
-          </Link>
+          </a>
           {/* ⚠️ LA PLACE À GAUCHE DU COMPTE CHANGE DE MAIN SELON QU'ON
               EST CONNECTÉ (passe nº 137) :
                · DÉCONNECTÉ — le GLOBE des langues, comme toujours ;
