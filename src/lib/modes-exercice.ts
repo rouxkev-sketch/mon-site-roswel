@@ -170,7 +170,7 @@ export type MembreEquipe = {
    * porter.
    * ⚠️ FACULTATIFS : sans eux, la ligne du dessus ne dit que le
    * statut, et aucun séparateur n'apparaît (voir
-   * `ligneStatutEtBooking`).
+   * `mentionDuMembre`).
    */
   booking?: "ouvert" | "delai" | "ferme" | null;
   booking_mois?: number | null;
@@ -376,12 +376,31 @@ export function roleDuMembre(membre: MembreEquipe): string {
  *  · absent / inconnu    → « Résident » SEUL.
  *
  * ⚠️ PAS UNE PUCE ORPHELINE : le séparateur n'existe que s'il y a
- * quelque chose des deux côtés — il est posé PAR la jointure, jamais
- * écrit à la main autour d'un morceau qui peut manquer (piège nº 386).
+ * quelque chose des deux côtés — il est posé PAR l'appelant SEULEMENT
+ * quand la seconde moitié existe (piège nº 386).
+ *
+ * ██ §2 (nº 493) — DEUX MORCEAUX, ET VOICI POURQUOI ██
+ * Cette fonction rendait UNE chaîne. Le propriétaire veut désormais le
+ * STATUT en majuscules et le booking dans sa casse : deux traitements
+ * typographiques, donc deux morceaux à rendre séparément. La règle,
+ * elle, ne change pas d'une virgule — mêmes mots, mêmes silences,
+ * mêmes séparateurs.
+ * ⚠️ LES MAJUSCULES SE FONT EN CSS, PAS ICI, et c'est ce qui permet à
+ * la traduction anglaise de suivre sans travail : « Founder » passera
+ * en « FOUNDER » tout seul. Un `toUpperCase()` posé dans le code
+ * aurait figé la casse d'un texte français dans une fonction qui n'est
+ * pas censée savoir dans quelle langue elle parle.
  *
  * ⚠️ FONCTION PURE : la règle s'exécute sans base ni session.
  */
-export function ligneStatutEtBooking(membre: MembreEquipe): string {
+/** Le point médian qui sépare le statut du booking. Écrit ici, avec
+    ses espaces, pour qu'aucun appelant ne le recopie. */
+export const SEPARATEUR_MENTION = " • ";
+
+export function mentionDuMembre(membre: MembreEquipe): {
+  statut: string;
+  booking: string | null;
+} {
   const etat =
     membre.booking === "ouvert" || membre.booking === "delai"
       ? "Booking ouvert"
@@ -393,9 +412,11 @@ export function ligneStatutEtBooking(membre: MembreEquipe): string {
       ? `${membre.booking_mois} mois d'attente`
       : null;
   const muet = membre.booking === "delai" && !attente;
-  const morceaux = [roleDuMembre(membre)];
-  if (etat && !muet) morceaux.push(attente ? `${etat} · ${attente}` : etat);
-  return morceaux.join(" • ");
+  return {
+    statut: roleDuMembre(membre),
+    booking:
+      etat && !muet ? (attente ? `${etat} · ${attente}` : etat) : null,
+  };
 }
 
 /**
@@ -405,21 +426,29 @@ export function ligneStatutEtBooking(membre: MembreEquipe): string {
  * la page et la fenêtre superposée le lisent toutes les deux.
  */
 /**
- * ██ §2 (nº 411) — UNE SEULE LISTE, DEUX RANGS ██
+ * ██ §3 (nº 493) — LES FONDATEURS REPRENNENT LA TÊTE ██
  * ==================================================================
- * L'ORDRE DICTÉ PAR LE PROPRIÉTAIRE :
- *  1. TOUS LES MEMBRES, par ordre ALPHABÉTIQUE de leur nom ;
- *  2. PUIS TOUS LES GUESTS, par date, du plus proche au plus lointain.
- * Un guest passe donc toujours après le dernier membre, quelle que
- * soit sa date — c'est le rang qui tranche d'abord, jamais la date.
+ * L'ORDRE DEMANDÉ, ET IL N'ÉTAIT PAS CELUI DU CODE :
+ *  1. LES FONDATEURS, par ordre alphabétique ;
+ *  2. PUIS LES RÉSIDENTS, par ordre alphabétique ;
+ *  3. PUIS LES GUESTS, par date, du plus proche au plus lointain.
  *
- * ⚠️ CE QUI DISPARAÎT, ET JE LE SIGNALE : LES FONDATEURS N'OUVRENT
- * PLUS LA MARCHE. Le rang valait `fondateur = 0, résident = 1,
- * guest = 2` depuis la nº 222 ; le propriétaire demande maintenant
- * « TOUS LES MEMBRES par ordre alphabétique », sans distinction de
- * rôle. Un fondateur nommé Zoé passe donc après une résidente nommée
- * Angéline. C'est une règle d'affichage qui change, rien d'autre — les
- * rôles eux-mêmes ne bougent ni à l'écran ni en base.
+ * ⚠️ CE QUE CETTE PASSE ANNULE, ET IL FAUT LE DIRE : la nº 411 avait
+ * FONDU fondateurs et résidents en un seul rang « membres », trié par
+ * nom — c'était alors une demande explicite du propriétaire, et le
+ * relevé de la nº 493 montre que ce n'est plus ce qu'il attend. On
+ * revient donc aux TROIS rangs de la nº 222 : un fondateur nommé Zoé
+ * repasse devant une résidente nommée Angéline.
+ * ⚠️ CE QUI NE BOUGE PAS DE LA nº 411 : le tri à l'intérieur d'un
+ * rang. Alphabétique pour les fondateurs comme pour les résidents,
+ * par date pour les guests — au caractère près.
+ * ⚠️ RIEN NE CHANGE EN BASE : c'est une règle d'affichage, et les
+ * rôles eux-mêmes ne bougent pas.
+ * ⚠️ LE RÔLE PEUT MANQUER : une liaison partie DU salon ne pend à
+ * aucun mode, donc à aucun rôle. `roleDuMembre` la lit déjà comme
+ * « résident » (par construction, voir sa note) et le rang suit la
+ * même règle — un membre sans rôle déclaré est un résident, jamais un
+ * fondateur.
  *
  * ⚠️ LES ACCENTS SONT TRIÉS COMME ON LES LIT, et c'est `localeCompare`
  * qui le fait : « Angéline », « Émile », « Zoé » sortent dans cet
@@ -442,7 +471,11 @@ export function ligneStatutEtBooking(membre: MembreEquipe): string {
 export function equipeOrdonnee(
   equipe: MembreEquipe[] | null | undefined
 ): MembreEquipe[] {
-  const rang = (membre: MembreEquipe) => (membre.genre === "guest" ? 1 : 0);
+  //  §3 (nº 493) — TROIS RANGS, plus deux : 0 fondateur, 1 résident,
+  //  2 guest. Un membre sans rôle déclaré tombe sur 1, comme
+  //  `roleDuMembre` le lit déjà.
+  const rang = (membre: MembreEquipe) =>
+    membre.genre === "guest" ? 2 : membre.role === "fondateur" ? 0 : 1;
   const parNom = (a: MembreEquipe, b: MembreEquipe) =>
     a.nom.localeCompare(b.nom, "fr");
   return membresActifs(equipe)
@@ -450,7 +483,7 @@ export function equipeOrdonnee(
     .sort((a, b) => {
       const ecart = rang(a) - rang(b);
       if (ecart !== 0) return ecart;
-      if (rang(a) === 0) return parNom(a, b);
+      if (rang(a) !== 2) return parNom(a, b);
       //  LES GUESTS : début, puis fin, puis nom.
       const debut = (a.debut_le ?? "").localeCompare(b.debut_le ?? "");
       if (debut !== 0) return debut;

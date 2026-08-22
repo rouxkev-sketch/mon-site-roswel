@@ -31,12 +31,15 @@ import {
 import {
   equipeOrdonnee,
   libelleStylesEquipe,
-  //  §6 (nº 492) — « Résident • Booking ouvert · 12 mois d'attente » :
-  //  l'écriture unique de la mention posée au-dessus d'un encadré.
-  ligneStatutEtBooking,
+  //  §6 (nº 492), EN DEUX MORCEAUX DEPUIS LA nº 493 — « RÉSIDENT •
+  //  Booking ouvert · 12 mois d'attente » : l'écriture unique de la
+  //  mention posée au-dessus d'un encadré, statut d'un côté (il se
+  //  peint en capitales) et booking de l'autre.
+  mentionDuMembre,
   modesOrdonnes,
+  SEPARATEUR_MENTION,
   //  §5 (nº 492) — `roleDuMembre` n'est plus lu ICI : le rôle a quitté
-  //  la ligne du nom, et c'est `ligneStatutEtBooking` qui l'appelle
+  //  la ligne du nom, et c'est `mentionDuMembre` qui l'appelle
   //  désormais, dans le module où il vit.
   lieuEnDeuxLignes,
   periodeDeSession,
@@ -529,9 +532,10 @@ export const SOULIGNEMENT_LIEN =
  * (le bleu nuit de la nº 466) ET la carte de la fenêtre superposée. Un
  * cran plus bas serait la couleur même de la fenêtre, donc invisible
  * au web : c'est la leçon du compteur de capsules (nº 491-§1).
- * L'ANGLE HAUT-GAUCHE EST DROIT, les trois autres gardent leurs 12 px
- * (`rounded-xl`) : c'est le coin sur lequel la mention du dessus vient
- * s'appuyer. Aucun contour, aucune bordure — un fond, rien d'autre.
+ * ⚠️ §1 (nº 493) — LES QUATRE COINS SONT ARRONDIS. La nº 492 avait
+ * carré celui d'en haut à gauche, pour que la mention grise vienne s'y
+ * appuyer ; le propriétaire annule. Les quatre valent 12 px, sans
+ * exception. Aucun contour, aucune bordure — un fond, rien d'autre.
  *
  * §3 — IL S'ARRÊTE AUX MARGES, ET VOICI CE QUI LE FAISAIT DÉBORDER.
  * `CLASSES_LIGNE_CLIQUABLE` porte `-m-2 p-2` : huit pixels de
@@ -551,7 +555,7 @@ export const SOULIGNEMENT_LIEN =
  * bouge pas (14 px, `gap-3.5`, depuis la nº 227).
  */
 const ENCADRE_MEMBRE =
-  "flex items-start gap-3.5 rounded-xl rounded-tl-none bg-sombre-eleve px-3 py-2";
+  "flex items-start gap-3.5 rounded-xl bg-sombre-eleve px-3 py-2";
 
 /** Le même encadré, cliquable : le fond monte d'un cran au survol, et
     l'appui le tient au doigt, où il n'y a pas de survol. */
@@ -567,9 +571,10 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
        propriétaire abandonne les deux : membres et guests reviennent
        dans la MÊME liste continue, présentés de la même façon, sans
        trait ni titre ni section.
-       ⚠️ CE N'EST PAS UN RETOUR EN ARRIÈRE COMPLET : l'ORDRE, lui, est
-       celui de la nº 411 — tous les membres par ordre alphabétique,
-       puis tous les guests par date (voir `equipeOrdonnee`). Et un
+       ⚠️ L'ORDRE N'EST PLUS CELUI DE LA nº 411 (§3, nº 493) : les
+       fondateurs reprennent la tête, puis les résidents, puis les
+       guests par date — trois rangs, et non plus deux. La règle vit
+       entièrement dans `equipeOrdonnee`. Et un
        artiste À LA FOIS membre ET guest apparaît toujours DEUX fois,
        l'acquis de la nº 410 : ce sont deux LIGNES de la vue, chacune
        avec sa clé, et rien ici ne les rapproche.
@@ -609,6 +614,10 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
       className="mt-8 first:mt-0 flex flex-col gap-8"
     >
       {membres.map((membre) => {
+        //  §2 (nº 493) — les deux morceaux de la mention du dessus :
+        //  le statut, qui se peint en capitales, et le booking, qui
+        //  garde sa casse. Lus UNE fois pour la ligne.
+        const mention = mentionDuMembre(membre);
         /*  ⚠️ LA PASTILLE EST LÀ MÊME SANS PHOTO (nº 224-§1) : un
             rond gris uni, rien dedans. C'est elle qui tient la
             colonne — sans elle, une équipe où un seul membre a
@@ -749,19 +758,33 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
           <li key={membre.cle ?? membre.artiste_id}>
             {/*  ██ §6 (nº 492) — LA MENTION, AU-DESSUS ET DEHORS ██
                  Le STATUT du membre puis l'état de son CARNET, en gris,
-                 posés en haut à gauche À L'EXTÉRIEUR de l'encadré : c'est
-                 sous elle que vient se ranger l'angle carré de la plaque
-                 (§2, le coin haut-gauche). Le texte s'écrit une fois, dans
-                 `ligneStatutEtBooking` — c'est là que vivent les deux
-                 séparateurs et le silence des données absentes.
+                 posés en haut à gauche À L'EXTÉRIEUR de l'encadré. Les
+                 mots, les séparateurs et le silence des données absentes
+                 s'écrivent une seule fois, dans `mentionDuMembre`.
                  ⚠️ ELLE N'EST PAS DANS LE LIEN, et c'est voulu : le lien,
                  c'est la plaque. Une mention au-dessus ne se clique pas.
                  ⚠️ QUATORZE PIXELS — un cran sous les 15 px du nom, et
                  exactement la taille que le rôle portait déjà quand il
                  vivait sur la ligne du nom : rien de neuf n'est inventé.
-                 Quatre pixels la séparent de l'encadré (`mb-1`). */}
+                 Quatre pixels la séparent de l'encadré (`mb-1`).
+                 ██ §2 (nº 493) — LE STATUT EN MAJUSCULES, ET LUI SEUL ██
+                 `uppercase` est une TRANSFORMATION D'AFFICHAGE : le texte
+                 reste « Résident » dans le code et dans le document, et
+                 c'est le navigateur qui le peint en capitales. Deux
+                 conséquences voulues : les ACCENTS SONT CONSERVÉS
+                 (« RÉSIDENT », jamais « RESIDENT » — la règle CSS suit
+                 l'Unicode, contrairement à une écriture en dur), et une
+                 traduction anglaise passera en capitales toute seule.
+                 Le booking, lui, garde sa casse : la classe est posée sur
+                 le SEUL morceau du statut, pas sur le paragraphe. */}
             <p className="mb-1 text-[14px] leading-snug text-sombre-texte-doux [overflow-wrap:anywhere]">
-              {ligneStatutEtBooking(membre)}
+              <span className="uppercase">{mention.statut}</span>
+              {mention.booking && (
+                <>
+                  {SEPARATEUR_MENTION}
+                  {mention.booking}
+                </>
+              )}
             </p>
             {membre.slug ? (
               <Link
@@ -770,12 +793,45 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
                 className={ENCADRE_MEMBRE_CLIQUABLE}
               >
                 {ligne()}
+                {/*  ██ §4 (nº 493) — LE CHEVRON DIT QUE ÇA S'OUVRE ██
+                     Rien ne le disait : au doigt il n'y a pas de survol,
+                     et une plaque permanente (nº 492) ne signale plus le
+                     clic à elle seule. La FORME s'en charge — pas la
+                     couleur : il prend le gris des textes secondaires,
+                     jamais le bleu des liens qui sortent ni le rose.
+                     C'EST L'ICÔNE DES HORAIRES, pivotée d'un quart de
+                     tour vers la gauche pour pointer à droite — le même
+                     procédé que son `rotate-180` à l'ouverture d'un
+                     volet. Aucun dessin nouveau.
+                     ⚠️ IL EST DANS LE LIEN, ET SEULEMENT LÀ : un membre
+                     sans fiche n'a pas de chevron (voir la branche
+                     juste dessous) — on ne promet pas une page qui
+                     n'existe pas.
+                     ⚠️ CENTRÉ SUR TOUTE LA PLAQUE, pas sur le nom :
+                     `self-center` le sort du `items-start` de la rangée,
+                     qui cale la photo en haut. Les rembourrages haut et
+                     bas étant égaux (8 px), le centre de la rangée EST
+                     le centre de la plaque.
+                     ⚠️ LE TEXTE SE RÉDUIT, IL NE DÉBORDE PAS : la
+                     colonne du milieu porte `min-w-0 flex-1` et le
+                     chevron `shrink-0`. Les 14 px du `gap-3.5` de la
+                     rangée s'intercalent entre les deux, et les 12 px de
+                     rembourrage droit (nº 492-§4) le tiennent à distance
+                     du bord. */}
+                <span
+                  aria-hidden="true"
+                  className="-rotate-90 self-center shrink-0 text-sombre-texte-doux"
+                >
+                  <IconeChevronBas taille={16} />
+                </span>
               </Link>
             ) : (
               /*  §2 (nº 492) — UN MEMBRE SANS FICHE GARDE SA PLAQUE : le
                   fond ne dit plus « ça se clique » (il est permanent), il
-                  dit « voici une personne ». Seuls le survol et l'appui
-                  lui manquent, puisqu'il n'y a rien à ouvrir. */
+                  dit « voici une personne ». Le survol, l'appui — et
+                  depuis la nº 493 le CHEVRON — lui manquent, puisqu'il
+                  n'y a rien à ouvrir. C'est la MÊME condition qui décide
+                  des quatre : `membre.slug`. */
               <div className={ENCADRE_MEMBRE}>{ligne()}</div>
             )}
           </li>
