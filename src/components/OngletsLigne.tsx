@@ -36,6 +36,7 @@ export function OngletsLigne({
   fige = false,
   classeOnglet = "px-1 min-h-[46px]",
   avecLigneGrise = true,
+  classeLigne = "",
 }: {
   /** §1 (nº 460) — le label devient un NŒUD : le va-et-vient de « Ma
       sélection » y pose « Favoris 10 ⌄ » (mot + nombre + chevron).
@@ -74,6 +75,17 @@ export function OngletsLigne({
    * les onglets et d'un seul ailleurs.
    */
   avecLigneGrise?: boolean;
+  /**
+   * §1 (nº 461) — LE DÉBORD DE LA LIGNE GRISE, réglé par l'appelant.
+   * ------------------------------------------------------------------
+   * « Ma sélection » au doigt veut sa ligne BORD À BORD de l'écran :
+   * elle passe ici un débord négatif (`mobile:-inset-x-4 …`) posé SUR
+   * LA LIGNE elle-même — jamais sur un conteneur (piège 378). Le trait
+   * rose de l'onglet actif, les mots et la hauteur ne bougent pas ;
+   * sans argument, tous les autres appelants (Réalisation | Flash de
+   * la nº 447 compris) gardent leur ligne au pixel.
+   */
+  classeLigne?: string;
 }) {
   const index = options.findIndex((option) => option.cle === cleActive);
 
@@ -123,7 +135,7 @@ export function OngletsLigne({
       <div className="relative h-[3px]" aria-hidden="true">
         {avecLigneGrise && (
           <span
-            className={`absolute inset-x-0 bottom-0 h-px ${TRAIT_SEPARATION_FOND}`}
+            className={`absolute inset-x-0 bottom-0 h-px ${TRAIT_SEPARATION_FOND} ${classeLigne}`}
           />
         )}
         {index >= 0 && (

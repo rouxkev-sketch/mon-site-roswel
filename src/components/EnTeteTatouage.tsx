@@ -1036,7 +1036,7 @@ export function EnTeteTatouage({
                   RANG 24 (nº 147-§6) : les icônes de la barre — globe,
                   fanion, compte — montent de 22 à 24, web et
                   smartphone. */}
-              <IconeFanion taille={24} />
+              <IconeFanion taille={28} classe="mobile:h-6 mobile:w-6" />
             </Link>
           ) : (
             <SelecteurLangue hauteur={HAUTEUR_ACTIONS} />
@@ -1071,7 +1071,7 @@ export function EnTeteTatouage({
                            text-sombre-texte`}
               >
                 {/*  LA SILHOUETTE SEULE, rang 24 (nº 147-§5 et §6). */}
-                <IconeSilhouette taille={24} />
+                <IconeSilhouette taille={28} classe="mobile:h-6 mobile:w-6" />
               </Link>
 
               {/* WEB : le badge de connexion. Jamais venu, il invite ;

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { EncadreDeuxChamps } from "@/components/EncadreBarre";
 //  §2 (nº 460) — le chevron du côté choisi du va-et-vient mobile : le
 //  dessin des accordéons, jamais un second.
 import { IconeChevronBas, IconeReglages } from "@/components/Icones";
@@ -9,7 +8,6 @@ import { MenuDeroulant } from "@/components/MenuDeroulant";
 //  §1 (nº 460) — le va-et-vient du doigt : les onglets soulignés de la
 //  page de recherche mobile (nº 447), le même composant.
 import { OngletsLigne } from "@/components/OngletsLigne";
-import { SelecteurCapsule } from "@/components/SelecteurCapsule";
 //  §3 (nº 460) — les comptes filtrés, posés par la page (PageFavoris)
 //  et lus ici : le côté choisi affiche ce qui est réellement montré.
 import {
@@ -93,20 +91,8 @@ import { lireRequeteCourante, souscrireAdresse } from "@/lib/adresse-courante";
  * au retour d'une fiche.
  */
 
-/** LES DEUX MOTS DU BADGE — l'ordre de la page : ce qu'on a gardé,
-    puis ceux qu'on suit. */
-const MOTS_DU_BADGE: ReadonlyArray<{ cle: MenuSelection; label: string }> = [
-  { cle: MENU_FAVORIS, label: "Favoris" },
-  //  §5 (nº 301) — « SUIVIS » → « PORTFOLIOS ». La consigne est
-  //  explicite : le mot « suivis » disparaît PARTOUT de cette page, et
-  //  le badge en était le dernier porteur avec le titre de groupe
-  //  « Tous les suivis ». Le mot suit le titre du §1 (« Ma sélection de
-  //  portfolios ») et couvre, lui, les artistes comme les salons et les
-  //  studios. Le mot « Favoris » n'est pas concerné : rien ne demandait
-  //  de le changer, et c'est celui de l'icône de la barre et de
-  //  l'adresse `/mes-favoris`.
-  { cle: MENU_SUIVIS, label: "Portfolios" },
-];
+/*  §2 (nº 461) — `MOTS_DU_BADGE` est parti avec le badge : les
+    deux mots vivent dans les options du va-et-vient, plus bas. */
 
 export function MenusSelection({
   entreesFavoris,
@@ -146,12 +132,13 @@ export function MenusSelection({
   }, []);
 
   /**
-   * ██ §1-3 (nº 460) — LE VA-ET-VIENT DU DOIGT : `Favoris | Suivis` ██
+   * ██ §1-3 (nº 460, porté au web nº 461) — LE VA-ET-VIENT
+   * `Favoris | Suivis`, AUX DEUX APPAREILS ██
    * ==================================================================
-   * AU DOIGT SEULEMENT, l'encadré-capsule (badge + champ « Filtrer »)
-   * est REMPLACÉ par les onglets soulignés de la page de recherche
-   * mobile (nº 447 — le même composant, `OngletsLigne`). Le web garde
-   * son bloc au caractère près, « Portfolios » compris.
+   * L'encadré-capsule (badge + champ « Filtrer ») est REMPLACÉ par les
+   * onglets soulignés de la page de recherche mobile (nº 447 — le même
+   * composant, `OngletsLigne`) : au doigt depuis la nº 460, au web
+   * depuis la nº 461 — « Portfolios » y devient « Suivis » aussi.
    *  · CÔTÉ CHOISI : mot + NOMBRE + chevron. Le nombre est ce qui est
    *    RÉELLEMENT AFFICHÉ après filtrage — posé par la page à chaque
    *    rendu (lib/compte-selection) ; tant qu'il n'est pas connu
@@ -184,31 +171,11 @@ export function MenusSelection({
     );
   };
 
-  /*  §2 — LE BADGE. Un appui repose le paramètre sur l'autre menu, sans
-      critère : le filtre d'un menu ne vaut pas pour l'autre (leurs
-      entrées sont calculées sur des données différentes), et l'écran
-      d'arrivée d'un menu est son écran entier. */
-  const badge = (
-    <SelecteurCapsule
-      valeur={choix.menu}
-      options={MOTS_DU_BADGE}
-      surChoix={(menu) => poserSelection(menu, "")}
-      ariaLabel="Favoris ou portfolios"
-      pleineLargeur
-      //  §4 (nº 258) — LA ROBE NE SE PASSE PLUS ICI : dans l'encadré,
-      //  la pilule est habillée par la règle `[data-clair-barre]
-      //  [data-capsule-glissante]` de globals.css — un cran au-dessus
-      //  du fond DE SON ENCADRÉ, au repos comme au survol et au focus
-      //  (l'écart était absolu depuis la nº 256, et le survol
-      //  l'annulait : le fond montait à la couleur de la pilule). La
-      //  fiche, hors encadré, garde son défaut (`bg-sombre-haut`).
-      robeCapsule=""
-      //  §1 (nº 258) — LA HAUTEUR DES MOTS SUIT L'ENCADRÉ : 46 − 2 × 4
-      //  d'air (le même air qu'à la nº 256) = 38. La fiche garde ses
-      //  44 (son défaut) : c'est le paramètre de l'écriture unique.
-      hauteurMot="min-h-[38px]"
-    />
-  );
+  /*  §2 (nº 461) — LE BADGE (SelecteurCapsule) EST PARTI, code
+      compris : le va-et-vient souligné le remplace aux deux
+      appareils — et l'encadré-capsule (EncadreDeuxChamps) avec lui.
+      « Ma sélection » ne consomme plus ni l'un ni l'autre ; les deux
+      écritures restent vivantes ailleurs (la fiche, le moteur). */
 
   /**
    * §3 — LE CHAMP DU FILTRE. Il porte le filtre DE CE QUE LE BADGE A
@@ -237,11 +204,12 @@ export function MenusSelection({
    * pas, et un champ qui n'ouvre rien ment. La moitié reste nue — le
    * badge, lui, reste la commande.
    */
-  /*  §2 (nº 460) — `surLeDoigt` : l'instance rendue pour le
-      va-et-vient mobile — déclencheur caché, ouverte par la COMMANDE
-      (le second appui), feuille décollée des bords. L'instance du web
-      (l'encadré) ne passe rien et ne change pas. */
-  const filtre = (surLeDoigt = false) => {
+  /*  §2 (nº 460, unifié nº 461) — L'UNIQUE INSTANCE DU MENU DES
+      FILTRES : déclencheur fantôme (voir le rendu), ouverte par la
+      COMMANDE du second appui. Au web elle rend le PANNEAU classique,
+      au doigt la FEUILLE décollée — c'est le MenuDeroulant qui
+      tranche, comme toujours. */
+  const filtre = () => {
     if (entrees.length === 0) return <span />;
     const valeur = valeurDuMenu(choix, choix.menu);
     return (
@@ -297,7 +265,10 @@ export function MenusSelection({
         //  neuve) : à 14 px du bord elle touchait presque la courbe de
         //  la capsule. Le plancher demandé est 12 px.
         positionFleche="right 1.25rem center"
-        hauteur="min-h-[46px]"
+        /*  §2 (nº 461) — LE BOUTON DÉCLENCHEUR N'EST PLUS QU'UNE
+            ANCRE : haut de zéro, dans une boîte invisible — le
+            va-et-vient est le vrai déclencheur (la commande). */
+        hauteur="h-0 min-h-0"
         taillePolice="text-base"
         sansBordure
         sombre
@@ -314,9 +285,10 @@ export function MenusSelection({
         //  §2 (nº 293) — la page s'assombrit derrière ce menu, en WEB :
         //  au doigt cette page ouvre sa feuille, et le crochet s'écarte.
         avecVoile
-        //  §2/§4 (nº 460) — voir `surLeDoigt` ci-dessus.
-        commandeOuverture={surLeDoigt ? commandeFiltres : 0}
-        feuilleDecollee={surLeDoigt}
+        //  §2 (nº 460/461) — le second appui du va-et-vient commande
+        //  l'ouverture ; la feuille du doigt reste décollée des bords.
+        commandeOuverture={commandeFiltres}
+        feuilleDecollee
       />
     );
   };
@@ -348,36 +320,27 @@ export function MenusSelection({
                l'encadré. Au doigt, l'espace libéré est RETIRÉ de la
                barre (`mobile:min-h-0`) : la réserve suit
                (64 + 12 + 46 = 122, voir EnTeteTatouage). */}
-          {/*  §1 (nº 460) — L'ENCADRÉ NE VIT PLUS QU'AU WEB
-               (`mobile:hidden`) : au doigt, le va-et-vient le
-               remplace, juste dessous. Le `mobile:min-h-0` d'hier n'a
-               plus d'objet — la boîte entière est retirée du doigt. */}
-          <div className="flex items-center gap-2.5 min-h-[52px] mobile:hidden">
-            <div className="flex-1 min-w-0">
-              <EncadreDeuxChamps gauche={badge} droite={filtre()} porteBadge />
-            </div>
-            {/*  nº 443 — LE ROND « SANS TEXTE » (BoutonPhototheque) EST
-                 SUPPRIMÉ de « Ma sélection » aussi : la vue photothèque
-                 quitte le produit entier — toutes les mises en page
-                 affichent le texte des cartes. Son emplacement réservé
-                 (§4 nº 256) part avec lui, ENTIER : plus d'icône sur
-                 « Favoris » NI de fantôme invisible sur « Suivis », la
-                 largeur du groupe est donc la même sur les deux
-                 onglets — la leçon de la nº 256 (rien ne doit glisser
-                 à la bascule) reste vraie par construction. L'encadré
-                 (`flex-1`) se prolonge dans l'espace libéré. */}
-          </div>
-          {/*  ██ §1-2 (nº 460) — LE VA-ET-VIENT DU DOIGT ██
-               `Favoris | Suivis`, les onglets soulignés de la nº 447.
-               `min-h-[43px]` + la ligne de 3 px = 46 : LA HAUTEUR DE
-               L'ENCADRÉ REMPLACÉ, au pixel — la réserve de la barre
-               (64 + 12 + 46 = 122, EnTeteTatouage) ne bouge pas.
-               L'appui sur le côté déjà choisi ouvre la feuille de
-               filtres (la commande) ; sur l'autre, la bascule de
-               toujours. Le MenuDeroulant commandé est rendu dessous,
-               déclencheur caché : sa FEUILLE, elle, vit dans un
-               portail — elle monte du bas comme aujourd'hui. */}
-          <div className="hidden mobile:block">
+          {/*  ██ §2 (nº 461) — LE VA-ET-VIENT, AUX DEUX APPAREILS ██
+               `Favoris | Suivis`, les onglets soulignés de la nº 447 —
+               posés au doigt à la nº 460, portés AU WEB à celle-ci :
+               l'encadré-capsule (badge « Favoris / Portfolios » +
+               champ « Filtrer ») est REMPLACÉ, et « Portfolios »
+               devient « Suivis » au web aussi. Même objet partout :
+               côté choisi = mot + nombre filtré + chevron ; l'autre =
+               le mot seul ; premier clic = bascule, second clic sur le
+               côté choisi = LES FILTRES (la commande) — au web le
+               PANNEAU CLASSIQUE ancré sous la rangée, au doigt la
+               feuille du bas décollée (nº 460, intacte).
+               `min-h-[43px]` + la ligne de 3 px = 46 : la hauteur de
+               l'encadré remplacé — la rangée web garde ses 52
+               (centrage), la réserve du doigt (122) ne bouge pas.
+               §1 (nº 461) — AU DOIGT SEULEMENT, la ligne grise va
+               BORD À BORD : le débord négatif (`classeLigne`) rend
+               les 16 px (24 dès 640) de marge de la barre — posé sur
+               la ligne, jamais sur un conteneur ; les mots et le
+               trait rose ne bougent pas, et le débord meurt PILE au
+               bord de l'écran : aucun défilement horizontal. */}
+          <div className="flex min-h-[52px] flex-col justify-center mobile:block mobile:min-h-0">
             <OngletsLigne
               options={[
                 {
@@ -399,8 +362,21 @@ export function MenusSelection({
               }}
               ariaLabel="Favoris ou suivis"
               classeOnglet="px-1 min-h-[43px]"
+              classeLigne="mobile:-inset-x-4 sm:mobile:-inset-x-6"
             />
-            <div className="hidden">{filtre(true)}</div>
+          </div>
+          {/*  §2 (nº 461) — LE MENU COMMANDÉ, DÉCLENCHEUR FANTÔME.
+               La boîte est `invisible` et haute de zéro — RIEN à
+               l'écran, aucun clic, aucun focus — mais elle SE MESURE :
+               le panneau du web (un portail ancré par
+               `usePlacementMenu` sur le bouton) s'ouvre à sa
+               position — sous le va-et-vient, à sa largeur. Au doigt,
+               la feuille vit dans son propre portail : la boîte n'y
+               joue aucun rôle. `display:none` (l'écriture de la
+               nº 460) rendait le bouton immesurable — c'est TOUT ce
+               qui change ici. */}
+          <div aria-hidden className="invisible h-0">
+            {filtre()}
           </div>
       {/*  §3 (nº 258) — LA LIGNE ÉTROITE A DISPARU, entièrement. Une
            barre qui se replie ne laisse rien derrière elle : il ne

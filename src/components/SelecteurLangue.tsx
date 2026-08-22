@@ -336,7 +336,7 @@ export function SelecteurLangue({ hauteur = 40 }: { hauteur?: number }) {
             RANG 24 (nº 147-§6) : les icônes de la BARRE — globe,
             fanion, compte — montent de 22 à 24 ; l'entrée « Langue »
             de la fenêtre « Mon compte », elle, garde son 22. */}
-        <IconeMonde taille={24} />
+        <IconeMonde taille={28} classe="mobile:h-6 mobile:w-6" />
       </button>
 
       {/* ---- LE MENU SOUS LA BARRE (web) ----
