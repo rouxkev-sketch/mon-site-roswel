@@ -1031,9 +1031,39 @@ export function EnTeteTatouage({
                barre ne bouge pas : rien ne saute au chargement
                (nº 439 — le bouton est rendu par le serveur, ses
                classes ne dépendent d'aucun état client). */}
-          <button
-            type="button"
-            onClick={() => ouvrirRecherche(valeur)}
+          {/*  ██ §3 (nº 467) — AU WEB, LA LOUPE RAMÈNE À L'ACCUEIL ██
+               La nº 465 lui avait donné l'action du doigt : ouvrir le
+               moteur PLEIN ÉCRAN, celui du téléphone. Au web ce n'est
+               pas ce qu'il faut — la loupe doit ramener LÀ OÙ LE
+               MOTEUR CENTRAL EXISTE, c'est-à-dire l'accueil.
+               L'ÉCRITURE EST CELLE DU SITE (l'idiome de la nº 312,
+               `ouvrirEnFenetre` dans BlocSuivis) : un VRAI LIEN, dont
+               le clic est intercepté AU DOIGT SEULEMENT — la question
+               se pose au moment du clic, côté navigateur, sur
+               `data-appareil` (un doigt, jamais une largeur — la règle
+               depuis la nº 60) : aucune discordance d'hydratation,
+               aucun état client dans le rendu.
+                · AU DOIGT — `preventDefault` puis `ouvrirRecherche` :
+                  la page plein écran s'ouvre, exactement comme avant ;
+                · AU WEB — le lien navigue, tout simplement : UNE seule
+                  entrée d'historique (nº 332-§1), le retour ramène en
+                  un appui (nº 332-§4), et le clic du milieu ouvre
+                  l'accueil dans un onglet, ce qu'un bouton ne savait
+                  pas faire.
+               LA RÈGLE D'AFFICHAGE NE BOUGE PAS (`loupeVisible` et le
+               `lg:hidden` conditionnel de la nº 465), la boîte de
+               40 px et le glyphe non plus : seul le rôle change.
+               ⚠️ AUCUN « rafraîchir si déjà là » (nº 247-§6) ici : au
+               web la loupe ne paraît que sur les pages à RANGÉE LIBRE
+               (« Ma sélection »), et l'accueil n'en est pas une — on
+               n'est donc jamais déjà à destination. */}
+          <Link
+            href="/"
+            onClick={(evenement) => {
+              if (document.documentElement.dataset.appareil !== "mobile") return;
+              evenement.preventDefault();
+              ouvrirRecherche(valeur);
+            }}
             aria-label="Rechercher"
             title="Rechercher"
             aria-hidden={!loupeVisible || undefined}
@@ -1050,7 +1080,7 @@ export function EnTeteTatouage({
                        }`}
           >
             <IconeLoupe taille={28} classe="mobile:h-6 mobile:w-6" />
-          </button>
+          </Link>
           {/* ⚠️ LA PLACE À GAUCHE DU COMPTE CHANGE DE MAIN SELON QU'ON
               EST CONNECTÉ (passe nº 137) :
                · DÉCONNECTÉ — le GLOBE des langues, comme toujours ;

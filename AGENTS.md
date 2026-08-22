@@ -79,22 +79,31 @@ PROPRIÉTAIRE L'A REMPLACÉE (message du 18-08-2026, avant la passe nº 356) :
    `public/images/roswel-logo.png` et `public/images/roswel-icone.png` (les
    logos du produit artisans) — le propriétaire les fournira s'il les veut
    dans les zips.
-4. La liste des images officielles de `public/`, à jour :
+4. **LES DEUX IMAGES DE MARQUE SONT TOUJOURS DANS LE ZIP** (règle du
+   propriétaire, passe nº 467) : `public/yokofolio-logo.png` et
+   `public/yokofolio-icone.png`, à chaque livraison, sans exception. Il en
+   a fourni de NOUVELLES VERSIONS à la nº 467 (logo 1590 × 336, icône
+   300 × 336) : ce sont elles qui font foi.
+5. **CINQ IMAGES ONT ÉTÉ SUPPRIMÉES DU PROJET** (passe nº 467, sur ordre du
+   propriétaire) : `site.png`, `icone-instagram.png`, `icone-tiktok.png`,
+   `icone-youtube.png`, `icone-world.png`. Elles ne servaient plus (les
+   icônes de liens sont DESSINÉES dans le code depuis la nº 240-§1) ; le
+   composant mort `IconeWorld` est parti avec elles. Ne pas les recréer, ne
+   pas s'étonner de leur absence.
+6. La liste des images officielles de `public/`, à jour (nº 467) :
 
     public/yokofolio-logo.png      public/yokofolio-icone.png
-    public/icone-partage.png       public/icone-instagram.png
-    public/icone-tiktok.png        public/icone-youtube.png
-    public/icone-world.png         public/adresse.png
-    public/site.png                public/ajouter-une-photo.png
+    public/icone-partage.png       public/adresse.png
+    public/ajouter-une-photo.png
 
 `ajouter-une-photo.png` (passe nº 111) est un appareil photo au trait fin
 marqué d'un plus : il remplace « ronde » dans le cercle du profil et
 « + Ajouter » dans une case vide de galerie (`IconeAjouterPhoto`).
 
-Les glyphes (adresse, site, partage, réseaux, ajouter-une-photo) sont des
-GLYPHES NOIRS sur fond transparent : le code les éclaircit par `invert` +
-opacité (jamais en retouchant le fichier) pour qu'ils se lisent sur
-l'anthracite.
+Les glyphes restants (adresse, partage, ajouter-une-photo) sont des GLYPHES
+NOIRS sur fond transparent : le code les éclaircit par `invert` + opacité
+(jamais en retouchant le fichier) pour qu'ils se lisent sur le fond sombre
+(le bleu nuit `#0B0F14` depuis la nº 466).
 
 Le code référence les logos roswel uniquement par leurs deux chemins
 (`/images/roswel-logo.png`, `/images/roswel-icone.png`) — composants

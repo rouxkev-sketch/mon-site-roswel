@@ -647,49 +647,15 @@ export function IconeBadgeVerifie({
 //  alias provisoire d'`IconeCocheListe`, laquelle reste : elle sert
 //  ailleurs, et n'a jamais été propre à ce champ.
 
-/**
- * L'ICÔNE « WORLD » DU PROPRIÉTAIRE — /icone-world.png
- * =====================================================
- * Le fichier est déposé À LA MAIN dans public/, comme adresse.png et
- * les icônes de réseaux : on ne le fabrique pas, on le RÉFÉRENCE.
- *
- * ⚠️ ELLE N'EST PAS POSÉE COMME UNE IMAGE, MAIS COMME UN MASQUE.
- * Une image garde ses couleurs : ce glyphe sombre s'effacerait sur
- * l'anthracite, et surtout il ne pourrait pas passer au ROSE quand le
- * sélecteur de langue est ouvert ou quand on survole le lien du site.
- * Le masque, lui, ne retient que la FORME du fichier (son canal alpha)
- * et la remplit de la couleur du texte courant : l'icône prend la
- * charte partout où on la pose — gris doux au repos, rose à
- * l'activation — sans qu'on touche au fichier, qui reste intouchable.
- *
- * ⚠️ UN SEUL ENDROIT L'EMPLOIE : le lien « Site internet ou Linktree »
- * de la fiche publique (la page ET la fenêtre). Le globe de la barre
- * fixe garde le sien, DESSINÉ dans ce fichier (`IconeMonde`).
- */
-export function IconeWorld({ taille = 20, classe = "" }: ProprietesIcone) {
-  const masque = {
-    WebkitMaskImage: "url(/icone-world.png)",
-    maskImage: "url(/icone-world.png)",
-    WebkitMaskRepeat: "no-repeat",
-    maskRepeat: "no-repeat",
-    WebkitMaskPosition: "center",
-    maskPosition: "center",
-    WebkitMaskSize: "contain",
-    maskSize: "contain",
-  } as React.CSSProperties;
-  return (
-    <span
-      aria-hidden="true"
-      style={{
-        width: taille,
-        height: taille,
-        backgroundColor: "currentColor",
-        ...masque,
-      }}
-      className={`inline-block shrink-0 ${classe}`}
-    />
-  );
-}
+//  ██ §2 (nº 467) — « IconeWorld » EST SUPPRIMÉE, AVEC SON FICHIER ██
+//  Elle posait `/icone-world.png` en MASQUE (la forme du fichier,
+//  remplie de `currentColor`). Le lien « Site internet ou Linktree »
+//  qu'elle servait est DESSINÉ DANS LE CODE depuis la nº 240-§1
+//  (`IconeDuLien`, components/IconeReseau) : plus aucun appelant —
+//  vérifié dans tout `src/` avant la suppression. Le fichier
+//  `public/icone-world.png` part avec elle, sur consigne du
+//  propriétaire. ⚠️ CE N'EST PAS LE GLOBE DE LA BARRE : celui-là est
+//  `IconeMonde`, dessiné juste dessous, et il ne bouge pas.
 
 /** Globe terrestre (colonne « Internet » de la fiche : « Voir le site ») */
 export function IconeMonde({ taille = 20, classe = "" }: ProprietesIcone) {
