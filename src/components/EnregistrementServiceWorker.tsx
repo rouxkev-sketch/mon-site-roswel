@@ -28,10 +28,69 @@ export function EnregistrementServiceWorker() {
       // worker neuf, qui efface tous les caches précédents en
       // s'activant (voir public/sw.js).
       const version = process.env.NEXT_PUBLIC_VERSION_SITE ?? "1";
-      navigator.serviceWorker.register(`/sw.js?v=${version}`).catch(() => {
-        // Si l'activation échoue, le site fonctionne quand même
-        // normalement : on ne bloque rien.
-      });
+      /*  §1 (nº 479) — LE MILLÉSIME REJOINT L'EMPREINTE. L'empreinte
+          (l'heure de la compilation) garantit qu'il y a bien un
+          programme NEUF à chaque mise en ligne ; le millésime, lui,
+          rend le nom du cache LISIBLE dans les outils du navigateur —
+          « yokofolio-<empreinte>-<millésime> » se rapproche du
+          « script nº N » qu'affiche la sonde, et l'on voit d'un coup
+          d'œil quelle version est réellement servie. Il est lu sur
+          <html>, où le script d'avant-peinture l'écrit : aucune
+          variable d'environnement de plus. */
+      const millesime = document.documentElement.dataset.versionScript ?? "0";
+      /*  ██ §1 (nº 479) — LE RECHARGEMENT, UNE FOIS ET UNE SEULE ██
+          POURQUOI IL FAUT EN AVOIR UN : le nouveau programme prend la
+          main IMMÉDIATEMENT (`skipWaiting` + `clients.claim`, voir
+          public/sw.js) — c'est ce qui évite qu'un ancien cache survive
+          à la mise en ligne. Mais cela veut dire qu'une page OUVERTE,
+          servie par l'ancienne version, se retrouve pilotée par le
+          programme neuf : elle demandera plus tard des fichiers de
+          l'ancienne compilation, qui n'existent plus. La recharger une
+          fois la remet d'aplomb, et c'est le seul moment où le site se
+          recharge tout seul.
+          ⚠️ LES TROIS GARDE-FOUS CONTRE LA BOUCLE, et ils comptent :
+           1. ON N'AGIT QUE S'IL Y AVAIT DÉJÀ UN CONTRÔLEUR AU DÉPART.
+              `controllerchange` se déclenche AUSSI à la toute première
+              visite, quand le programme s'installe pour la première
+              fois — recharger là serait un rechargement gratuit à
+              chaque nouveau visiteur. On note donc l'état AVANT
+              d'écouter : rien à remplacer, rien à recharger.
+           2. UNE SEULE FOIS PAR ONGLET, gravé dans la mémoire de
+              session : même si l'événement se répétait, le second
+              passage ne fait rien. La mémoire de session meurt avec
+              l'onglet — le prochain déploiement aura donc de nouveau
+              droit à son unique rechargement.
+           3. UN DRAPEAU DE MODULE en plus, pour les deux événements qui
+              arriveraient dans le même souffle, avant que l'écriture ne
+              soit relue.
+          Un `location.reload()` ne crée AUCUNE entrée d'historique :
+          la règle nº 332-§1 n'est pas concernée. */
+      const CLE_RECHARGE = "yf:sw-recharge";
+      const avaitUnControleur = Boolean(navigator.serviceWorker.controller);
+      let dejaRecharge = false;
+      const auChangementDeProgramme = () => {
+        if (!avaitUnControleur || dejaRecharge) return;
+        dejaRecharge = true;
+        try {
+          if (sessionStorage.getItem(CLE_RECHARGE) === "1") return;
+          sessionStorage.setItem(CLE_RECHARGE, "1");
+        } catch {
+          //  Sans mémoire de session (navigation privée stricte), le
+          //  drapeau de module ci-dessus reste le garde-fou : un seul
+          //  rechargement pour la vie de ce document.
+        }
+        window.location.reload();
+      };
+      navigator.serviceWorker.addEventListener(
+        "controllerchange",
+        auChangementDeProgramme
+      );
+      navigator.serviceWorker
+        .register(`/sw.js?v=${version}-${millesime}`)
+        .catch(() => {
+          // Si l'activation échoue, le site fonctionne quand même
+          // normalement : on ne bloque rien.
+        });
     } else {
       // En développement : on désactive tout service worker
       // resté en mémoire d'une session précédente.

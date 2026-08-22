@@ -6,7 +6,7 @@
  *  1. mettre en cache les fichiers du site pour un affichage rapide ;
  *  2. afficher une page « hors ligne » si la connexion est coupée.
  *
- * Sa VERSION suit automatiquement la compilation (voir plus bas) :
+ * Sa VERSION suit automatiquement la mise en ligne (voir plus bas) :
  * il n'y a plus aucun numéro à incrémenter à la main.
  *
  * ⚠️ LES ICÔNES NE SONT JAMAIS MISES EN CACHE ICI. L'ancienne version
@@ -16,23 +16,92 @@
  * fichier disparu du projet. Désormais, toute demande d'icône ou de
  * logo part TOUJOURS sur le réseau (le cache ne sert qu'en secours,
  * hors ligne, pour le logo de la page « hors ligne »).
+ *
+ * ██████████████████████████████████████████████████████████████████
+ * ██  §1 (nº 479) — POURQUOI LE SITE CASSAIT APRÈS UNE MISE EN     ██
+ * ██  LIGNE, ET CE QUI A CHANGÉ                                    ██
+ * ██████████████████████████████████████████████████████████████████
+ * Le symptôme : « This page couldn't load » sur Safari, en session
+ * normale seulement — jamais en navigation privée (qui n'a ni cache ni
+ * service worker), et réglé en effaçant les données du site (ce qui
+ * supprime ce programme-ci). Le fautif était donc ce fichier. TROIS
+ * défauts s'y trouvaient, tous capables de produire cet écran :
+ *
+ *  A. LE REPLI POUVAIT NE RIEN RENDRE DU TOUT. La branche des
+ *     navigations répondait `cache.match(PAGE_HORS_LIGNE)` : quand
+ *     cette page n'est PAS dans le cache, cette expression vaut
+ *     `undefined` — et répondre `undefined` à une navigation, c'est
+ *     exactement l'écran d'échec du navigateur. Or le cache pouvait
+ *     très bien être vide : `skipWaiting()` était appelé EN DEHORS du
+ *     `waitUntil` de l'installation, donc le programme pouvait passer
+ *     à l'activation — qui efface tous les caches sauf le sien — sans
+ *     que la mise en cache de la page « hors ligne » ait eu le temps de
+ *     s'écrire. Un simple hoquet de réseau suffisait ensuite à montrer
+ *     l'écran d'échec, et cela DURAIT : la mise en cache ne se rejoue
+ *     qu'à l'installation, qui ne revient pas.
+ *  B. N'IMPORTE QUELLE RÉPONSE ÉTAIT MÉMORISÉE. La branche des
+ *     fichiers rangeait dans le cache TOUT ce que le réseau rendait —
+ *     y compris une 404 ou une erreur de serveur. Pendant les quelques
+ *     secondes d'une mise en ligne, un fichier peut très bien répondre
+ *     404 : cette 404 était alors gardée, puis RESSERVIE à chaque
+ *     visite (« le cache d'abord »), longtemps après que le site fût
+ *     redevenu sain. Un script de l'application servi en 404, c'est la
+ *     page qui casse.
+ *  C. UN RÉSEAU QUI FLANCHE CASSAIT LA RESSOURCE. Cette même branche
+ *     n'avait AUCUN filet : si le `fetch` échouait, la promesse rendue
+ *     était rejetée — et une promesse rejetée dans `respondWith`, c'est
+ *     une erreur dure, pas un repli.
+ *
+ * CE QUI EST ÉCRIT MAINTENANT — les mêmes principes, mais sans trou :
+ *  · le cache est versionné par mise en ligne ET porte le millésime du
+ *    site, pour se lire d'un coup d'œil dans les outils du navigateur ;
+ *  · l'installation met la page « hors ligne » de côté AVANT de prendre
+ *    la main, et l'activation efface tous les autres caches ;
+ *  · AUCUNE réponse invalide n'entre dans le cache : 200 seulement, et
+ *    seulement les réponses de notre propre serveur ;
+ *  · AUCUNE branche ne peut rendre `undefined` ni une promesse rejetée :
+ *    il y a toujours une réponse au bout, et en dernier recours une
+ *    page « hors ligne » écrite ici même, qui ne dépend de rien.
  */
 
 /**
  * ⚠️ LA VERSION VIENT DE LA MISE EN LIGNE, PLUS D'UN NUMÉRO À LA MAIN.
- * Elle était écrite en dur (`yokofolio-v6`), à incrémenter soi-même à
- * chaque mise en ligne. Un oubli, et le cache d'une ancienne version
- * survivait à la nouvelle. Désormais, la page enregistre ce fichier
- * avec l'empreinte de la compilation dans son adresse
- * (`/sw.js?v=…`, voir EnregistrementServiceWorker) : chaque mise en
- * ligne donne donc un service worker NEUF, un cache NEUF, et
- * l'activation efface tous les autres. Plus rien à penser.
+ * La page enregistre ce fichier avec, dans son adresse, l'empreinte de
+ * la compilation ET le millésime du script d'avant-peinture
+ * (`/sw.js?v=<empreinte>-<millésime>`, voir
+ * EnregistrementServiceWorker) : chaque mise en ligne donne donc un
+ * service worker NEUF, un cache NEUF, et l'activation efface tous les
+ * autres. Plus rien à penser.
  */
 const VERSION =
   "yokofolio-" +
   (new URL(self.location.href).searchParams.get("v") || "sans-version");
 const PAGE_HORS_LIGNE = "/offline.html";
 const LOGO_HORS_LIGNE = "/yokofolio-icone.png";
+
+/**
+ * §1 (nº 479) — LE DERNIER RECOURS, ÉCRIT ICI ET DÉPENDANT DE RIEN.
+ * Si la page « hors ligne » elle-même manque au cache (installation
+ * interrompue, cache vidé par le système), on rend CE document plutôt
+ * que `undefined` : le visiteur lit une phrase et peut réessayer, au
+ * lieu de tomber sur l'écran d'échec du navigateur.
+ */
+function pageDeSecours() {
+  return new Response(
+    "<!doctype html><html lang=\"fr\"><meta charset=\"utf-8\">" +
+      "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">" +
+      "<title>Hors ligne</title>" +
+      "<body style=\"margin:0;display:flex;align-items:center;justify-content:center;" +
+      "min-height:100vh;background:#0B0F14;color:#F2F2F4;" +
+      "font-family:system-ui,-apple-system,sans-serif;text-align:center;padding:24px\">" +
+      "<p style=\"font-size:16px;line-height:1.6\">Connexion perdue.<br>" +
+      "Réessaie dans un instant.</p></body></html>",
+    {
+      status: 503,
+      headers: { "Content-Type": "text/html; charset=utf-8" },
+    }
+  );
+}
 
 /**
  * Une adresse d'icône ou de logo ? Large exprès : favicon, .ico,
@@ -49,17 +118,48 @@ function estIcone(url) {
   );
 }
 
-// À l'installation : on met de côté la page « hors ligne » et le
-// logo qu'elle affiche (sans bloquer si le logo manque en local)
+/**
+ * §1 (nº 479) — CE QUI A LE DROIT D'ENTRER DANS LE CACHE.
+ * Trois conditions, et les trois comptent :
+ *  · une réponse qui existe (un `fetch` peut rendre `undefined` si le
+ *    navigateur a coupé) ;
+ *  · un statut 200 EXACTEMENT — ni 404, ni 500, ni 206 (une réponse
+ *    partielle, comme un morceau de vidéo, ne se ressert pas) ;
+ *  · une réponse « basic », c'est-à-dire venue de NOTRE serveur : une
+ *    réponse opaque (autre domaine) ne se lit pas et ne se vérifie pas.
+ * C'est ce filtre qui empêche une 404 de mise en ligne de s'installer
+ * pour des jours (le défaut B de l'en-tête).
+ */
+function peutEtreGardee(reponse) {
+  return Boolean(
+    reponse && reponse.status === 200 && reponse.type === "basic"
+  );
+}
+
+/**
+ * À l'installation : on met de côté la page « hors ligne » et le logo
+ * qu'elle affiche.
+ * §1 (nº 479) — `skipWaiting()` EST DÉSORMAIS DANS LE `waitUntil`, et
+ * APRÈS la mise en cache : le programme ne prend la main qu'une fois
+ * son repli en place (défaut A). Et l'installation ne peut plus
+ * ÉCHOUER sur ce seul motif — si la page « hors ligne » n'est pas
+ * joignable, on prend quand même la main : le dernier recours écrit
+ * ci-dessus couvre ce cas, et un service worker qui refuse de
+ * s'installer laisserait l'ANCIEN en place, c'est-à-dire le problème
+ * qu'on répare.
+ */
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(VERSION).then((cache) =>
-      cache
-        .add(PAGE_HORS_LIGNE)
-        .then(() => cache.add(LOGO_HORS_LIGNE).catch(() => {}))
-    )
+    caches
+      .open(VERSION)
+      .then((cache) =>
+        cache
+          .add(PAGE_HORS_LIGNE)
+          .then(() => cache.add(LOGO_HORS_LIGNE).catch(() => {}))
+      )
+      .catch(() => {})
+      .then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
 // À l'activation : on supprime les caches de TOUTES les autres
@@ -86,13 +186,29 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(requete.url);
   if (url.origin !== self.location.origin) return;
 
+  /*  §1 (nº 479) — LES ROUTES DE DONNÉES NE PASSENT JAMAIS PAR ICI, et
+      c'est écrit noir sur blanc plutôt que déduit. `/api/` sert les
+      réponses PERSONNELLES (compte, favoris, Ma sélection,
+      notifications) : une seule d'entre elles gardée dans un cache
+      partagé par l'appareil, et le visiteur suivant lirait les données
+      du précédent. On ne les intercepte pas — le navigateur les
+      demande au serveur, à chaque fois, comme s'il n'y avait pas de
+      service worker. (Les pages personnelles, elles, sont des
+      navigations : la branche 1 ci-dessous ne range JAMAIS une page.) */
+  if (url.pathname.startsWith("/api/")) return;
+
   // 0) ICÔNES ET LOGOS : le réseau, TOUJOURS — jamais de copie gardée.
   //    Le cache (où seul le logo yokofolio est rangé, à l'installation)
   //    ne répond qu'en secours, quand la connexion est coupée.
   if (estIcone(url)) {
     event.respondWith(
       fetch(requete).catch(() =>
-        caches.open(VERSION).then((cache) => cache.match(requete))
+        caches
+          .open(VERSION)
+          .then((cache) => cache.match(requete))
+          //  §1 (nº 479) — jamais `undefined` : une icône introuvable
+          //  hors ligne rend une réponse vide, pas une erreur dure.
+          .then((enCache) => enCache || new Response("", { status: 504 }))
       )
     );
     return;
@@ -148,7 +264,16 @@ self.addEventListener("fetch", (event) => {
     }
     event.respondWith(
       fetch(requete).catch(() =>
-        caches.open(VERSION).then((cache) => cache.match(PAGE_HORS_LIGNE))
+        caches
+          .open(VERSION)
+          .then((cache) => cache.match(PAGE_HORS_LIGNE))
+          //  §1 (nº 479) — LE TROU DU DÉFAUT A EST BOUCHÉ ICI : si la
+          //  page « hors ligne » manque au cache, on rend le dernier
+          //  recours écrit en tête de ce fichier. Cette branche ne peut
+          //  plus rendre `undefined`, donc plus produire l'écran
+          //  d'échec du navigateur.
+          .then((horsLigne) => horsLigne || pageDeSecours())
+          .catch(() => pageDeSecours())
       )
     );
     return;
@@ -156,7 +281,9 @@ self.addEventListener("fetch", (event) => {
 
   // 2) Autres fichiers statiques (scripts, styles, images de contenu,
   //    polices) : le cache d'abord (rapidité), le réseau sinon. On ne
-  //    regarde QUE le cache de la version courante.
+  //    regarde QUE le cache de la version courante — et celui-ci a été
+  //    vidé à l'activation de cette version : il ne peut donc contenir
+  //    que des fichiers de la mise en ligne courante.
   const estStatique =
     url.pathname.startsWith("/_next/static/") ||
     url.pathname.startsWith("/images/") ||
@@ -169,16 +296,30 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       caches
         .open(VERSION)
-        .then((cache) => cache.match(requete))
-        .then(
-          (enCache) =>
-            enCache ||
-            fetch(requete).then((reponse) => {
-              // On garde une copie en cache pour la prochaine fois
-              const copie = reponse.clone();
-              caches.open(VERSION).then((cache) => cache.put(requete, copie));
+        .then((cache) =>
+          cache.match(requete).then((enCache) => {
+            if (enCache) return enCache;
+            return fetch(requete).then((reponse) => {
+              /*  §1 (nº 479) — ON NE GARDE QUE CE QUI EST BON (défaut
+                  B) : une 404 rendue pendant les secondes d'une mise en
+                  ligne n'est plus mémorisée, donc plus resservie
+                  ensuite. La copie est prise AVANT de rendre la
+                  réponse — un corps ne se lit qu'une fois. */
+              if (peutEtreGardee(reponse)) {
+                const copie = reponse.clone();
+                cache.put(requete, copie).catch(() => {});
+              }
               return reponse;
-            })
+            });
+          })
+        )
+        /*  §1 (nº 479) — LE FILET (défaut C) : si le réseau flanche ou
+            si le cache refuse de s'ouvrir, on tente une dernière fois
+            le réseau nu, et l'on rend une réponse d'erreur LISIBLE
+            plutôt qu'une promesse rejetée — qui, elle, casse la
+            ressource et souvent la page avec. */
+        .catch(() =>
+          fetch(requete).catch(() => new Response("", { status: 504 }))
         )
     );
   }
