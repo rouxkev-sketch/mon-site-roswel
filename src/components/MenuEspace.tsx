@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -19,6 +18,9 @@ import {
 import { EntreeLangue, FenetreLangue } from "@/components/SelecteurLangue";
 import { FenetreNotifications } from "@/components/FenetreNotifications";
 import { MenuDeVerre } from "@/components/SurfaceDeVerre";
+//  §4 (nº 465) — au doigt, « Mon compte » est une PAGE plein écran (le
+//  gabarit de la page de recherche), plus une fenêtre centrée.
+import { PagePleinEcranMobile } from "@/components/PagePleinEcranMobile";
 import { FenetreNonEnregistre } from "@/components/GardeSaisie";
 import {
   COULEUR_ETAT,
@@ -87,10 +89,11 @@ import {
  * DEUX HABILLAGES, UN PAR APPAREIL :
  *  - WEB : la fenêtre posée SOUS le bouton de compte, au format exact
  *    du panneau des filtres (même encadré, même ombre) ;
- *  - SMARTPHONE : une fenêtre CENTRÉE, derrière un voile sombre, plus
- *    étroite que celle du moteur. Elle est POSÉE DANS <body>
- *    (createPortal) : le flou d'arrière-plan de la barre fixe ferait
- *    sinon d'elle le repère des éléments « fixes ».
+ *  - SMARTPHONE (§4, nº 465) : une PAGE PLEIN ÉCRAN — le gabarit de la
+ *    page de recherche du doigt (`PagePleinEcranMobile`), qui remplace
+ *    la fenêtre centrée à voile de la nº 238. Elle est posée dans
+ *    <body> (le portail du composant partagé) : le flou d'arrière-plan
+ *    de la barre fixe ferait sinon d'elle le repère des « fixes ».
  */
 
 export function MenuEspace({
@@ -323,6 +326,12 @@ export function MenuEspace({
     if (!ouvert) return;
     const surMobile = document.documentElement.dataset.appareil === "mobile";
     function auClavier(evenement: KeyboardEvent) {
+      //  §4 (nº 465) — au doigt, « Langue » ou « Notifications »
+      //  peuvent être OUVERTES PAR-DESSUS ce menu resté monté : Échap
+      //  appartient alors à la surface du dessus (chacune a son propre
+      //  écouteur) — sans cette garde, un seul Échap fermait les deux
+      //  d'un coup.
+      if (notificationsOuvertes || langueOuverte) return;
       if (evenement.key === "Escape") setOuvert(false);
     }
     function auPointeur(evenement: MouseEvent) {
@@ -342,7 +351,11 @@ export function MenuEspace({
       document.removeEventListener("mousedown", auPointeur);
       if (surMobile) document.body.style.overflow = defilementAvant;
     };
-  }, [ouvert]);
+    //  §4 (nº 465) — les deux états du dessus entrent dans les
+    //  dépendances : la garde d'Échap ci-dessus les lit. Le
+    //  rejeu de l'effet restaure puis repose l'overflow dans le même
+    //  tour — aucune peinture entre les deux.
+  }, [ouvert, notificationsOuvertes, langueOuverte]);
 
   /* Échap referme l'avertissement — c'est la fenêtre partagée
      (FenetreNonEnregistre) qui s'en charge elle-même. */
@@ -408,7 +421,16 @@ export function MenuEspace({
             //  restaient superposées, et la fenêtre du dessous se
             //  voyait par transparence à travers celle du dessus.
             //  La fermer, elle, rend la page : elle ne rouvre rien.
-            setOuvert(false);
+            //  ██ §4 (nº 465) — AU DOIGT, C'EST L'INVERSE, sur
+            //  consigne : « Mon compte » est devenu une PAGE OPAQUE
+            //  (rien ne se voit par transparence — la raison du §5
+            //  nº 238 ne s'applique plus), et il RESTE OUVERT sous
+            //  « Notifications » : refermer celles-ci fait RETOMBER
+            //  sur « Mon compte », pas sur la page d'où il venait.
+            //  Chaque surface a son étape d'historique (C-4), la
+            //  garde de rang nº 465 (etape-refermable) fait que le
+            //  retour n'en referme qu'une. Le web ne change pas.
+            if (!auDoigt) setOuvert(false);
             setNotificationsOuvertes(true);
           }}
           className={classeEntree}
@@ -699,7 +721,11 @@ export function MenuEspace({
         <EntreeLangue
           classe={classeEntree}
           surOuvrir={() => {
-            setOuvert(false);
+            //  §4 (nº 465) — même règle que « Notifications » : au
+            //  doigt, « Mon compte » (devenu une page opaque) RESTE
+            //  ouvert sous « Langue » — la refermer y fait retomber.
+            //  Le web garde son enchaînement d'aujourd'hui.
+            if (!auDoigt) setOuvert(false);
             setLangueOuverte(true);
           }}
         />
@@ -730,7 +756,19 @@ export function MenuEspace({
   );
 
   return (
-    <div ref={zone} className="relative flex items-center gap-1.5">
+    /*  ██ §2 (nº 465) — LE GLYPHE DU COMPTE SE CALE SUR LA MARGE ██
+        CE QUI LE RENTRAIT, mesuré : la BOÎTE cliquable de 40 px
+        (`hauteur`) affleure la marge de l'interface (le nav de la
+        barre est ancré au bord de son `px-4 sm:px-6`), mais le GLYPHE
+        de 24 px, centré dedans, s'arrête à (40 − 24) / 2 = 8 px du
+        bord de boîte — web comme doigt (les deux boutons ci-dessous
+        portent `taille={24}`). LE REMÈDE : `-mr-2` (8 px) sur cette
+        racine — la boîte déborde de 8 px dans le rembourrage de la
+        barre (16/24 px, elle y tient : aucun défilement horizontal),
+        le glyphe tombe sur la marge, la CIBLE reste 40 px. Le nav
+        étant ancré à droite, la loupe et le fanion glissent d'autant,
+        à écarts (`gap-3`) constants. */
+    <div ref={zone} className="-mr-2 relative flex items-center gap-1.5">
       {/* ÉCRAN ÉTROIT : l'icône personnage, ROSE (connecté). */}
       <button
         type="button"
@@ -806,50 +844,32 @@ export function MenuEspace({
             {contenuMenu}
           </MenuDeVerre>
 
-          {/* SMARTPHONE : la fenêtre CENTRÉE derrière son voile — le
-              traitement exact de la fenêtre du moteur de recherche.
-              Le voile encaisse le toucher (rien ne traverse vers la
-              carte du dessous) et referme au relâchement.
-
-              ELLE EST PLUS ÉTROITE QUE CELLE DU MOTEUR, ET CELA SE
-              VOIT. Un menu de compte n'a que des lignes de texte à
-              montrer : rien ne justifiait qu'il occupe presque toute
-              la largeur de l'écran, où il ne laissait qu'un liseré de
-              voile — donc l'impression d'une PAGE, pas d'une fenêtre.
-              32 px de marge garantie de chaque côté (px-8) et un
-              plafond à 320 px (contre 420 px pour le moteur) : le
-              voile redevient franchement visible, et la hiérarchie
-              entre les deux fenêtres se lit d'un coup d'œil. */}
-          {createPortal(
-            <div
-              role="dialog"
-              aria-modal="true"
-              aria-label="Mon espace"
-              className="hidden mobile:flex fixed inset-0 z-[70] items-center
-                         justify-center px-8 py-6"
-            >
-              <button
-                type="button"
-                aria-label="Fermer le menu"
-                onClick={() => setOuvert(false)}
-                className="absolute inset-0 bg-black/25 cursor-default
-                           opacity-100 transition-opacity duration-200 starting:opacity-0"
-              />
-              <div
-                data-verre-fenetre=""
-                //  §3 (nº 240) — 45 %, comme les langues et les
-                //  notifications : ces trois fenêtres s'ouvrent
-                //  au-dessus de la mosaïque, souvent blanche côté
-                //  flashs. Voile, flou et liseré inchangés.
-                data-verre-dense=""
-                className="relative w-full max-w-[320px] max-h-[min(92dvh,700px)]
-                           overflow-y-auto overscroll-contain rounded-3xl"
-              >
-                {contenuMenu}
-              </div>
-            </div>,
-            document.body
-          )}
+          {/*  ██ SMARTPHONE — UNE PAGE, PLUS UNE FENÊTRE (§4, nº 465) ██
+               La fenêtre centrée de la nº 238 (voile, plaque de verre
+               étroite) est REMPLACÉE, sur consigne : « Mon compte »
+               adopte le gabarit de la page de recherche du doigt —
+               le titre et sa silhouette en haut à gauche, la croix à
+               l'opposé (`EnTetePleinEcran`, l'écriture partagée), le
+               fond opaque plein écran, le contenu qui défile dessous.
+               L'étape d'historique du menu (posée plus haut,
+               `useEtapeQuiSeReferme(auDoigt && ouvert)`) ne bouge
+               pas : le retour du téléphone referme la page, la croix
+               reprend l'étape — un appui, une surface (nº 332-§1/§4).
+               LE CONTENU EST LE MÊME OBJET (`contenuMenu`) : pas une
+               ligne des entrées n'est réécrite. « Langue » et
+               « Notifications » s'ouvrent PAR-DESSUS (z-[85] contre
+               z-[70] ici) pendant que cette page reste montée
+               dessous : les refermer y fait retomber. */}
+          <PagePleinEcranMobile
+            titre="Mon compte"
+            icone={<IconeSilhouette taille={22} classe="shrink-0 text-white" />}
+            ariaLabel="Mon compte"
+            surFermer={() => setOuvert(false)}
+          >
+            <div className="grow pt-2 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+              {contenuMenu}
+            </div>
+          </PagePleinEcranMobile>
         </>
       )}
 

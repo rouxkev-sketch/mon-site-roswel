@@ -95,10 +95,15 @@ export const COMPTES_YOKOFOLIO = {
  * langue et brancher la traduction. Aucun autre fichier ne change.
  */
 export const LANGUES_YOKOFOLIO = [
-  { code: "fr", label: "Français", actif: true },
-  { code: "en", label: "English", actif: false },
+  //  §4 (nº 465) — LA DISPONIBILITÉ S'INVERSE, sur consigne : ENGLISH
+  //  est la langue en ligne (choisissable), FRANÇAIS passe « bientôt »
+  //  — et il REPREND SA PLACE DANS L'ORDRE ALPHABÉTIQUE de la liste,
+  //  après Deutsch, au lieu de rester en tête. Le reste de la liste et
+  //  son ordre ne changent pas.
+  { code: "en", label: "English", actif: true },
   { code: "es", label: "Español", actif: false },
   { code: "de", label: "Deutsch", actif: false },
+  { code: "fr", label: "Français", actif: false },
   { code: "it", label: "Italiano", actif: false },
   { code: "pt", label: "Português", actif: false },
   { code: "ja", label: "日本語", actif: false },
@@ -676,8 +681,13 @@ export const FILTRES_TATOUAGE = [
     groupe: "technique",
     titre: "Technique",
     options: [
-      { slug: "handpoke", label: "Handpoke" },
+      //  §3 (nº 465) — TEBORI AVANT HANDPOKE, sur consigne. L'ordre
+      //  d'affichage de ce groupe se lit ICI, la source unique : les
+      //  filtres du doigt, ceux du web et les badges du moteur posent
+      //  la liste telle quelle. Machine reste en dernier, rien
+      //  d'autre ne bouge.
       { slug: "tebori", label: "Tebori" },
+      { slug: "handpoke", label: "Handpoke" },
       { slug: "machine", label: "Machine" },
     ],
   },

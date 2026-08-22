@@ -223,6 +223,30 @@ export function useEtapeQuiSeReferme(
 
     const auRetour = () => {
       if (!aNous) return;
+      /*  ██ §4 (nº 465) — LE RETOUR NE FERME QUE LA SURFACE DONT
+          L'ÉTAPE A SAUTÉ ██
+          Deux surfaces peuvent être EMPILÉES — « Mon compte » puis
+          « Langue » ou « Notifications » au doigt : chacune a posé SON
+          étape, avec son rang. Or un `popstate` est reçu par TOUS les
+          écouteurs montés : sans cette garde, un seul retour (ou la
+          reprise `history.back()` d'une fermeture par la croix)
+          fermait TOUTES les surfaces d'un coup — refermer « Langue »
+          emportait « Mon compte » avec elle.
+          LA LECTURE EST DÉTERMINISTE, comme le reste du module : on
+          lit l'état d'ARRIVÉE du retour. S'il porte encore un rang au
+          moins égal au mien, MON étape n'a pas été consommée — ce
+          retour ne me concerne pas, je reste. S'il porte un rang plus
+          petit, ou aucun, mon étape a sauté : je me ferme. Une surface
+          SEULE garde son comportement au caractère près (l'état
+          d'arrivée est celui de la page, sans rang) — et le compte
+          d'étapes de la nº 332-§1 ne bouge pas : ce bloc ne pose ni ne
+          retire rien, il choisit seulement QUI répond. */
+      const etatDArrivee = window.history.state as Record<
+        string,
+        unknown
+      > | null;
+      const rangDuDessus = etatDArrivee?.[CLE];
+      if (typeof rangDuDessus === "number" && rangDuDessus >= rang) return;
       aNous = false;
       fermerRef.current();
     };

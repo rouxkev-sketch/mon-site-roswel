@@ -5,6 +5,11 @@ import { LANGUES_YOKOFOLIO } from "@/config/tatouage";
 import { IconeCroix, IconeMonde } from "@/components/Icones";
 import { FenetreDeVerre, MenuDeVerre } from "@/components/SurfaceDeVerre";
 import { useVoileDeLaPage } from "@/components/VoileDeLaPage";
+//  §4 (nº 465) — au doigt, l'écran devient une PAGE plein écran (le
+//  gabarit de la page de recherche), avec son étape d'historique.
+import { PagePleinEcranMobile } from "@/components/PagePleinEcranMobile";
+import { useAppareilMobile } from "@/lib/appareil";
+import { useEtapeQuiSeReferme } from "@/lib/etape-refermable";
 
 /**
  * LE SÉLECTEUR DE LANGUE
@@ -131,6 +136,24 @@ function ListeDesLangues({ surChoix }: { surChoix: () => void }) {
  */
 export function FenetreLangue({ surFermeture }: { surFermeture: () => void }) {
   const plaque = useRef<HTMLDivElement>(null);
+  /*  ██ §4 (nº 465) — AU DOIGT, C'EST UNE PAGE, PLUS UNE FENÊTRE ██
+      L'écran « Langue » adopte le gabarit de la page de recherche du
+      smartphone : le titre et son globe en haut à gauche, la croix à
+      l'opposé (`EnTetePleinEcran` — l'écriture partagée, pas une
+      copie), le fond opaque plein écran. LE WEB NE CHANGE PAS : la
+      fenêtre de verre ci-dessous reste son habillage, cachée au doigt
+      par `mobile:hidden` (aucune bifurcation d'état : pas d'éclair du
+      mauvais habillage au montage).
+      ET ELLE POSE SON ÉTAPE (C-4, nº 330) — au doigt seulement : une
+      surface qui couvre l'écran, une entrée d'historique. Le retour du
+      téléphone la referme ; la croix, un choix ou Échap la REPRENNENT
+      (l'écriture unique, lib/etape-refermable) — jamais deux entrées
+      pour une navigation (nº 332-§1). Ouverte DEPUIS « Mon compte »
+      resté ouvert dessous, son étape s'empile sur la sienne : le
+      retour ou la croix ne referment qu'ELLE, et l'on retombe sur
+      « Mon compte » (la garde de rang, nº 465 — etape-refermable). */
+  const auDoigt = useAppareilMobile();
+  useEtapeQuiSeReferme(auDoigt, surFermeture);
 
   //  Échap ferme, et la page ne défile plus derrière.
   useEffect(() => {
@@ -174,37 +197,61 @@ export function FenetreLangue({ surFermeture }: { surFermeture: () => void }) {
   }, []);
 
   return (
-    <FenetreDeVerre
-      ariaLabel="Choisir la langue"
-      //  §3 (nº 240) — 45 % : elle s'ouvre au-dessus de la mosaïque,
-      //  et les cartes de flashs sont souvent blanches.
-      dense
-      surFermeture={surFermeture}
-      largeur="max-w-[320px]"
-      rembourrage="p-0"
-      classeCadre="px-8 py-6 z-[85]"
-      classePlaque="max-h-[min(88dvh,640px)] flex flex-col overflow-hidden"
-    >
-      <div ref={plaque} className="flex min-h-0 flex-col">
-        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/10">
-          <h2 className="flex-1 min-w-0 text-[17px] font-bold tracking-tight text-sombre-texte">
-            Langue
-          </h2>
-          <button
-            type="button"
-            onClick={surFermeture}
-            aria-label="Fermer"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full
-                       text-sombre-texte-doux transition-colors hover:text-sombre-texte"
-          >
-            <IconeCroix taille={18} />
-          </button>
+    <>
+      {/*  LE WEB — la fenêtre de verre, inchangée (cachée au doigt). */}
+      <FenetreDeVerre
+        ariaLabel="Choisir la langue"
+        //  §3 (nº 240) — 45 % : elle s'ouvre au-dessus de la mosaïque,
+        //  et les cartes de flashs sont souvent blanches.
+        dense
+        surFermeture={surFermeture}
+        largeur="max-w-[320px]"
+        rembourrage="p-0"
+        classeCadre="px-8 py-6 z-[85] mobile:hidden"
+        classePlaque="max-h-[min(88dvh,640px)] flex flex-col overflow-hidden"
+      >
+        {/*  La ref du piège de focus suit l'habillage VISIBLE : la
+             fenêtre au web, la page au doigt (juste en dessous). */}
+        <div ref={auDoigt ? undefined : plaque} className="flex min-h-0 flex-col">
+          <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/10">
+            <h2 className="flex-1 min-w-0 text-[17px] font-bold tracking-tight text-sombre-texte">
+              Langue
+            </h2>
+            <button
+              type="button"
+              onClick={surFermeture}
+              aria-label="Fermer"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full
+                         text-sombre-texte-doux transition-colors hover:text-sombre-texte"
+            >
+              <IconeCroix taille={18} />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto overscroll-contain px-2 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+            <ListeDesLangues surChoix={surFermeture} />
+          </div>
         </div>
-        <div className="flex-1 overflow-y-auto overscroll-contain px-2 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+      </FenetreDeVerre>
+
+      {/*  LE DOIGT — la page plein écran (§4, nº 465) : le globe au
+           rang 22 en blanc (l'écriture de la loupe du titre de la
+           recherche), la liste telle quelle dessous — les mêmes
+           rembourrages que dans la fenêtre. */}
+      <PagePleinEcranMobile
+        titre="Langue"
+        icone={<IconeMonde taille={22} classe="shrink-0 text-white" />}
+        ariaLabel="Choisir la langue"
+        surFermer={surFermeture}
+        classeCadre="z-[85]"
+      >
+        <div
+          ref={auDoigt ? plaque : undefined}
+          className="grow px-2 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))]"
+        >
           <ListeDesLangues surChoix={surFermeture} />
         </div>
-      </div>
-    </FenetreDeVerre>
+      </PagePleinEcranMobile>
+    </>
   );
 }
 

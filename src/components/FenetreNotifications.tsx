@@ -13,6 +13,11 @@ import {
   IconeHorsLigne,
 } from "@/components/Icones";
 import type { GenreNotification, Notification } from "@/lib/notifications";
+//  §4 (nº 465) — au doigt, l'écran devient une PAGE plein écran (le
+//  gabarit de la page de recherche), avec son étape d'historique.
+import { PagePleinEcranMobile } from "@/components/PagePleinEcranMobile";
+import { useAppareilMobile } from "@/lib/appareil";
+import { useEtapeQuiSeReferme } from "@/lib/etape-refermable";
 
 /**
  * LES NOTIFICATIONS DU COMPTE — la boîte de nouvelles
@@ -206,6 +211,21 @@ export function FenetreNotifications({
 
   const [enCours, setEnCours] = useState(false);
   const restantes = notifications.filter((n) => !n.lue_le).length;
+  /*  ██ §4 (nº 465) — AU DOIGT, C'EST UNE PAGE, PLUS UNE FENÊTRE ██
+      L'écran « Notifications » adopte le gabarit de la page de
+      recherche du smartphone (`EnTetePleinEcran` — l'écriture
+      partagée) : la cloche et le titre en haut à gauche, la croix à
+      l'opposé, la double coche « tout marquer » juste à sa gauche. LE
+      WEB NE CHANGE PAS : la fenêtre de verre ci-dessous reste son
+      habillage, cachée au doigt par `mobile:hidden`.
+      ET ELLE POSE SON ÉTAPE (C-4, nº 330) — au doigt seulement : le
+      retour du téléphone la referme, la croix ou Échap la reprennent
+      (nº 332-§1 : jamais deux entrées pour une navigation). Ouverte
+      DEPUIS « Mon compte » resté ouvert dessous, son étape s'empile
+      sur la sienne : la fermer — retour ou croix — fait RETOMBER sur
+      « Mon compte » (la garde de rang nº 465, etape-refermable). */
+  const auDoigt = useAppareilMobile();
+  useEtapeQuiSeReferme(auDoigt, onFermer);
 
   async function marquer(id: string) {
     onLue(id);
@@ -239,83 +259,35 @@ export function FenetreNotifications({
 
   if (typeof document === "undefined") return null;
 
-  return createPortal(
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="Mes notifications"
-      className="fixed inset-0 z-[85] flex items-center justify-center p-4"
+  /*  §4 (nº 465) — LES MORCEAUX PARTAGÉS DES DEUX HABILLAGES : la
+      double coche « tout marquer » et le corps (l'état vide ou la
+      liste) s'écrivent UNE fois ; la fenêtre du web et la page du
+      doigt les posent chacune à sa place. */
+  const boutonToutLu = restantes > 0 && (
+    //  « TOUT MARQUER COMME LU » — la DOUBLE COCHE, seule sur
+    //  écran étroit (le texte débordait), accompagnée du texte
+    //  dès 640 px. C'est le signe que font toutes les boîtes
+    //  de réception : il se découvre en explorant, il n'a pas
+    //  besoin de crier.
+    <button
+      type="button"
+      onClick={toutMarquer}
+      aria-label="Tout marquer comme lu"
+      title="Tout marquer comme lu"
+      className="flex h-9 shrink-0 items-center gap-1.5 rounded-full px-2
+                 text-sombre-texte-doux hover:text-primaire
+                 transition-colors"
     >
-      <button
-        type="button"
-        aria-label="Fermer les notifications"
-        onClick={onFermer}
-        className="absolute inset-0 bg-black/25 cursor-default
-                   opacity-100 transition-opacity duration-200 starting:opacity-0"
-      />
+      <IconeDoubleCoche taille={18} />
+      <span className="hidden sm:inline text-[13px] font-medium">
+        Tout marquer comme lu
+      </span>
+    </button>
+  );
 
-      {/* LE PANNEAU — un fond éclairci d'un cran sur le voile, sans
-          contour ni ombre : la grammaire des fenêtres depuis la
-          nº 130 (Sécurité, retour de suppression). */}
-      <div
-        data-verre-fenetre=""
-        //  §3 (nº 240) — 45 % : au-dessus des cartes de flashs,
-        //  souvent blanches, la plaque à 22 % ne tenait pas. Voile,
-        //  flou et liseré inchangés.
-        data-verre-dense=""
-        className="relative w-full max-w-[520px] max-h-[min(88dvh,720px)]
-                   flex flex-col rounded-2xl sm:rounded-3xl
-                   overflow-hidden"
-      >
-        {/* L'EN-TÊTE — la cloche, le titre, la double coche, la croix.
-            La ligne qui le sépare de la liste court d'un bord à
-            l'autre (charte), et l'espace est égal de part et d'autre. */}
-        <div className="flex items-center gap-3 px-4 sm:px-6 py-4 border-b border-sombre-bordure/60">
-          {/* LA CLOCHE (nº 132) — elle dit d'un signe ce que la
-              fenêtre contient, avant même le mot. */}
-          <IconeCloche
-            taille={20}
-            classe="shrink-0 text-sombre-texte/80"
-          />
-          <h2 className="flex-1 min-w-0 text-[17px] font-bold tracking-tight text-sombre-texte">
-            Notifications
-          </h2>
-          {restantes > 0 && (
-            //  « TOUT MARQUER COMME LU » — la DOUBLE COCHE, seule sur
-            //  écran étroit (le texte débordait), accompagnée du texte
-            //  dès 640 px. C'est le signe que font toutes les boîtes
-            //  de réception : il se découvre en explorant, il n'a pas
-            //  besoin de crier.
-            <button
-              type="button"
-              onClick={toutMarquer}
-              aria-label="Tout marquer comme lu"
-              title="Tout marquer comme lu"
-              className="flex h-9 shrink-0 items-center gap-1.5 rounded-full px-2
-                         text-sombre-texte-doux hover:text-primaire
-                         transition-colors"
-            >
-              <IconeDoubleCoche taille={18} />
-              <span className="hidden sm:inline text-[13px] font-medium">
-                Tout marquer comme lu
-              </span>
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={onFermer}
-            aria-label="Fermer"
-            className="-mr-1 w-9 h-9 shrink-0 flex items-center justify-center
-                       rounded-full text-sombre-texte-doux
-                       hover:text-sombre-texte hover:bg-sombre-eleve
-                       transition-colors"
-          >
-            <IconeCroix taille={18} />
-          </button>
-        </div>
-
-        {/* LA LISTE — ou le vide, dit gentiment. */}
-        {notifications.length === 0 ? (
+  /* LA LISTE — ou le vide, dit gentiment. */
+  const corps =
+    notifications.length === 0 ? (
           <div className="px-6 py-14 text-center">
             <span
               aria-hidden="true"
@@ -396,9 +368,89 @@ export function FenetreNotifications({
               );
             })}
           </ul>
-        )}
-      </div>
-    </div>,
-    document.body
+        );
+
+  return (
+    <>
+      {/*  LE WEB — la fenêtre de verre, INCHANGÉE (cachée au doigt par
+           `mobile:hidden`, §4 nº 465). */}
+      {createPortal(
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Mes notifications"
+          className="mobile:hidden fixed inset-0 z-[85] flex items-center justify-center p-4"
+        >
+          <button
+            type="button"
+            aria-label="Fermer les notifications"
+            onClick={onFermer}
+            className="absolute inset-0 bg-black/25 cursor-default
+                       opacity-100 transition-opacity duration-200 starting:opacity-0"
+          />
+
+          {/* LE PANNEAU — un fond éclairci d'un cran sur le voile, sans
+              contour ni ombre : la grammaire des fenêtres depuis la
+              nº 130 (Sécurité, retour de suppression). */}
+          <div
+            data-verre-fenetre=""
+            //  §3 (nº 240) — 45 % : au-dessus des cartes de flashs,
+            //  souvent blanches, la plaque à 22 % ne tenait pas. Voile,
+            //  flou et liseré inchangés.
+            data-verre-dense=""
+            className="relative w-full max-w-[520px] max-h-[min(88dvh,720px)]
+                       flex flex-col rounded-2xl sm:rounded-3xl
+                       overflow-hidden"
+          >
+            {/* L'EN-TÊTE — la cloche, le titre, la double coche, la
+                croix. La ligne qui le sépare de la liste court d'un
+                bord à l'autre (charte), l'espace égal des deux côtés. */}
+            <div className="flex items-center gap-3 px-4 sm:px-6 py-4 border-b border-sombre-bordure/60">
+              {/* LA CLOCHE (nº 132) — elle dit d'un signe ce que la
+                  fenêtre contient, avant même le mot. */}
+              <IconeCloche
+                taille={20}
+                classe="shrink-0 text-sombre-texte/80"
+              />
+              <h2 className="flex-1 min-w-0 text-[17px] font-bold tracking-tight text-sombre-texte">
+                Notifications
+              </h2>
+              {boutonToutLu}
+              <button
+                type="button"
+                onClick={onFermer}
+                aria-label="Fermer"
+                className="-mr-1 w-9 h-9 shrink-0 flex items-center justify-center
+                           rounded-full text-sombre-texte-doux
+                           hover:text-sombre-texte hover:bg-sombre-eleve
+                           transition-colors"
+              >
+                <IconeCroix taille={18} />
+              </button>
+            </div>
+            {corps}
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/*  LE DOIGT — la page plein écran (§4, nº 465) : la cloche au
+           rang 22 en blanc (l'écriture du titre de la recherche), la
+           double coche à gauche de la croix, le corps tel quel — ses
+           rangées portent déjà le `px-4` de l'interface. */}
+      <PagePleinEcranMobile
+        titre="Notifications"
+        icone={<IconeCloche taille={22} classe="shrink-0 text-white" />}
+        ariaLabel="Mes notifications"
+        surFermer={onFermer}
+        ariaLabelFermer="Fermer les notifications"
+        actions={boutonToutLu}
+        classeCadre="z-[85]"
+      >
+        <div className="grow pb-[max(1rem,env(safe-area-inset-bottom))]">
+          {corps}
+        </div>
+      </PagePleinEcranMobile>
+    </>
   );
 }

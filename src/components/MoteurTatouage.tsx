@@ -529,7 +529,7 @@ export function MoteurTatouage({
 
   /**
    * LES DEUX GROUPES QUI GARDENT TOUJOURS UN BADGE (passe nº 151-§3).
-   * « Technique » (Handpoke · Tebori · Machine) et « Rendu » (Noir et
+   * « Technique » (Tebori · Handpoke · Machine, l'ordre nº 465) et « Rendu » (Noir et
    * gris · Couleur) décrivent DES IMAGES, pas des personnes : chaque
    * photo du site a forcément une technique et un rendu. Vider l'un de
    * ces deux groupes reviendrait donc à demander une photo qui n'est ni

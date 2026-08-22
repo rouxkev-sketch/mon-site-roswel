@@ -1012,6 +1012,24 @@ export function EnTeteTatouage({
               (opacité seule) : son apparition ne décale jamais les
               icônes voisines, et elle suit le repli sans décalage.
               Rang 24, l'échelle de la barre. */}
+          {/*  ██ §1 (nº 465) — LA LOUPE EXISTE AUSSI AU WEB, quand le
+               bloc de recherche central est ABSENT ██
+               C'est la règle du doigt, reprise telle quelle : la loupe
+               vit là où le moteur n'est pas. Au web, le moteur est dans
+               la barre de TOUTES les pages sauf celles à RANGÉE LIBRE
+               (« Ma sélection », où le va-et-vient le remplace) : le
+               `lg:hidden` d'origine tombe donc quand `rangeeLibre` —
+               même bouton, même condition d'opacité (`loupeVisible`,
+               vraie hors accueil), même action : `ouvrirRecherche`
+               passe par le moteur hôte caché (`data-hote-recherche`,
+               plus haut), rendu précisément quand la rangée est libre.
+               Partout ailleurs au web, rien ne change.
+               LE GLYPHE REJOINT L'ÉCHELLE DE LA nº 461 : 28 px au web,
+               24 au doigt (`mobile:h-6 w-6`) — le rang des trois autres
+               icônes de droite. La BOÎTE reste 40 px et la hauteur de
+               barre ne bouge pas : rien ne saute au chargement
+               (nº 439 — le bouton est rendu par le serveur, ses
+               classes ne dépendent d'aucun état client). */}
           <button
             type="button"
             onClick={() => ouvrirRecherche(valeur)}
@@ -1020,7 +1038,7 @@ export function EnTeteTatouage({
             aria-hidden={!loupeVisible || undefined}
             tabIndex={loupeVisible ? 0 : -1}
             style={{ height: HAUTEUR_ACTIONS, width: HAUTEUR_ACTIONS }}
-            className={`flex lg:hidden shrink-0 items-center justify-center rounded-full
+            className={`flex ${rangeeLibre ? "" : "lg:hidden "}shrink-0 items-center justify-center rounded-full
                        transition-opacity duration-200 ${ETATS_ROND_BARRE}
                        text-sombre-texte
                        focus-visible:outline-2 focus-visible:outline-offset-2
@@ -1030,7 +1048,7 @@ export function EnTeteTatouage({
                            : "opacity-0 pointer-events-none"
                        }`}
           >
-            <IconeLoupe taille={24} />
+            <IconeLoupe taille={28} classe="mobile:h-6 mobile:w-6" />
           </button>
           {/* ⚠️ LA PLACE À GAUCHE DU COMPTE CHANGE DE MAIN SELON QU'ON
               EST CONNECTÉ (passe nº 137) :
@@ -1102,7 +1120,24 @@ export function EnTeteTatouage({
                 //  de la réserve neutre (voir data-reserve-compte).
                 data-acces-compte=""
                 style={{ height: HAUTEUR_ACTIONS, width: HAUTEUR_ACTIONS }}
-                className={`sm:hidden flex items-center justify-center rounded-full
+                /*  ██ §2 (nº 465) — LE GLYPHE SE CALE SUR LA MARGE ██
+                    CE QUI LE RENTRAIT, mesuré : la BOÎTE cliquable de
+                    40 px affleure la marge de l'interface (le nav est
+                    ancré au bord du `px-4 sm:px-6` de la barre), mais
+                    le GLYPHE, centré dedans, s'arrête à
+                    (40 − glyphe) / 2 du bord de boîte — 8 px au doigt
+                    (glyphe 24), 6 px en fenêtre étroite non-doigt
+                    (glyphe 28, nº 461). LE REMÈDE : une marge droite
+                    négative de CET excédent — la boîte déborde dans le
+                    rembourrage de la barre (16 px, elle y tient), le
+                    glyphe tombe sur la marge, la CIBLE reste 40 px.
+                    Le nav étant ancré à droite, la loupe et le globe
+                    glissent d'autant : leurs écarts (`gap-3`) ne
+                    bougent pas. Aucun défilement horizontal — le
+                    débord meurt dans le rembourrage. ≥ 640, ce lien
+                    est `hidden` : le badge « Se connecter », qui n'a
+                    pas de boîte excédentaire, ne bouge pas. */
+                className={`sm:hidden -mr-1.5 mobile:-mr-2 flex items-center justify-center rounded-full
                            transition-colors ${ETATS_ROND_BARRE}
                            focus-visible:outline-2 focus-visible:outline-offset-2
                            focus-visible:outline-primaire

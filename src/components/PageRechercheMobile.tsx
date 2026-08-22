@@ -15,8 +15,11 @@ import { positionSousLeGel } from "@/lib/gel-du-corps";
 //  §3 (nº 330) — l'étape d'historique, écriture unique des quatre
 //  surfaces qui couvrent l'écran.
 import { useEtapeQuiSeReferme } from "@/lib/etape-refermable";
-import { IconeCroix, IconeLoupe } from "@/components/Icones";
+import { IconeLoupe } from "@/components/Icones";
 import { OngletsLigne } from "@/components/OngletsLigne";
+//  §4 (nº 465) — l'en-tête de cette page est devenu l'écriture
+//  partagée des pages plein écran du doigt (la croix vit là-bas).
+import { EnTetePleinEcran } from "@/components/PagePleinEcranMobile";
 import {
   lireDefilementResultats,
   memoriserDefilementResultats,
@@ -467,54 +470,26 @@ export function PageRechercheMobile({
            Le bloc entier reste COLLANT : quand le champ de localité
            remonte la page, la sortie et la bascule restent
            atteignables. */}
-      <div
-        //  ⚠️ 24 px EN HAUT (nº 149-§5) : le titre était collé au bord
-        //  de l'écran. La marge de sécurité des encoches reste.
-        //  ⚠️ ET IL SE NOMME (nº 180-§1) : c'est LUI qui reste collé en
-        //  haut quand un champ remonte. Le marqueur `data-clavier`
-        //  — celui que pose la remontée, clavier ou menu — le libère le
-        //  temps du geste : il redevient un bloc ordinaire et s'en va
-        //  par le haut avec la page (globals.css). Rien n'est mesuré.
-        data-entete-recherche=""
-        className="sticky top-0 z-10 bg-sombre-fond px-4 pb-1
-                   pt-[max(24px,env(safe-area-inset-top))]"
+      {/*  ██ §4 (nº 465) — L'EN-TÊTE EST DEVENU L'ÉCRITURE PARTAGÉE ██
+           Le bloc est EXTRAIT, au caractère près, dans
+           `EnTetePleinEcran` (PagePleinEcranMobile) : les écrans
+           « Mon compte », « Notifications » et « Langue » du doigt le
+           portent désormais aussi — une seule écriture, sur consigne.
+           TOUT ce que ce bloc disait vit là-bas (le sticky et ses
+           24 px sous l'encoche nº 149-§5, le titre 20 px et son icône
+           au rang 22 nº 149-§1, la croix 22 dans sa boîte de 44
+           nº 401/141-2A). `marqueRecherche` : SEULE cette page pose
+           `data-entete-recherche`, le marqueur que `data-clavier`
+           libère du collage pendant la remontée d'un champ
+           (nº 180-§1) — les trois autres écrans n'ont aucun champ qui
+           remonte. */}
+      <EnTetePleinEcran
+        marqueRecherche
+        icone={<IconeLoupe taille={22} classe="shrink-0 text-white" />}
+        titre="Recherche"
+        surFermer={() => fermer(false)}
+        ariaLabelFermer="Fermer la recherche"
       >
-        <div className="flex items-center justify-between gap-4">
-          {/*  LE TITRE ET SA LOUPE, agrandis et en BLANC (nº 149-§1) :
-               20 px de corps, loupe au rang 22 — les deux en blanc
-               pur, c'est le nom de la page. */}
-          <h1 className="flex items-center gap-2.5 text-[20px] font-bold text-white">
-            <IconeLoupe taille={22} classe="shrink-0 text-white" />
-            Recherche
-          </h1>
-          <button
-            type="button"
-            onClick={() => fermer(false)}
-            aria-label="Fermer la recherche"
-            className="flex h-11 w-11 -mr-2 items-center justify-center
-                       text-sombre-texte-doux active:text-sombre-texte
-                       transition-colors"
-          >
-            {/*  §3 (nº 401) — LA CROIX PASSE DE 18 À 22 px.
-                 D'OÙ VIENT CETTE VALEUR : c'est LE RANG DE LA LOUPE DE
-                 CETTE MÊME LIGNE (`IconeLoupe taille={22}`, posé par la
-                 nº 149-§1). Les deux glyphes de l'en-tête sont donc à
-                 la même échelle, ce qu'ils n'étaient pas — une croix de
-                 18 en face d'une loupe de 22 et d'un titre de 20 px
-                 paraissait rabougrie. Le rang 24 de la barre fixe
-                 aurait dépassé l'échelle propre à cette page.
-                 ⚠️ RIEN NE BOUGE AUTOUR : la ZONE TACTILE ne change
-                 pas — elle vaut toujours 44 px (`h-11 w-11`), et c'est
-                 la boîte, pas le glyphe, qui la donne. Le glyphe
-                 grandit À L'INTÉRIEUR d'une boîte fixe : ni la position
-                 du bouton, ni le `-mr-2`, ni la hauteur de la rangée
-                 (que ce bouton de 44 px commande déjà, contre les
-                 ~28 px du titre) ne changent d'un pixel.
-                 ⚠️ LE WEB N'EST PAS CONCERNÉ : cette page n'est montée
-                 que par le moteur au doigt (`PageRechercheMobile`). */}
-            <IconeCroix taille={22} />
-          </button>
-        </div>
         {/*  ⚠️ PLEINE LARGEUR (nº 149-§3) : le max-w-[260px] arrêtait
              la ligne du sélecteur avant le bord droit des champs — la
              bascule occupe désormais exactement leur largeur (même
@@ -537,7 +512,7 @@ export function PageRechercheMobile({
             ]}
           />
         </div>
-      </div>
+      </EnTetePleinEcran>
 
       {/* LA VUE — elle prend toute la hauteur restante, et s'allonge
           quand la liste de suggestions s'ouvre DANS LE FLUX sous le
