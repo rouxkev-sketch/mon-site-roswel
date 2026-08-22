@@ -21,6 +21,17 @@ import { MenuDeVerre } from "@/components/SurfaceDeVerre";
 //  §4 (nº 465) — au doigt, « Mon compte » est une PAGE plein écran (le
 //  gabarit de la page de recherche), plus une fenêtre centrée.
 import { PagePleinEcranMobile } from "@/components/PagePleinEcranMobile";
+//  §1 (nº 469) — le verrou de défilement compté (surfaces empilées).
+import {
+  poserLeVerrouDeDefilement,
+  retirerLeVerrouDeDefilement,
+} from "@/lib/verrou-defilement";
+//  §3 (nº 469) — le trait de chargement, commandé à la main quand la
+//  PREMIÈRE ouverture de « Mon compte » attend sa lecture (nº 142).
+import {
+  demarrerLeSigneManuel,
+  finirLeSigneManuel,
+} from "@/components/SigneDeChargement";
 import { FenetreNonEnregistre } from "@/components/GardeSaisie";
 import {
   COULEUR_ETAT,
@@ -255,9 +266,20 @@ export function MenuEspace({
       return;
     }
     void (async () => {
+      /*  §3 (nº 469) — LE TRAIT ROSE PENDANT L'ATTENTE, AU DOIGT.
+          La PREMIÈRE ouverture attend sa lecture (nº 142) : pendant ce
+          temps, rien ne bouge à l'écran — exactement le défaut que le
+          signe central ferme pour les navigations (nº 441). Il est
+          COMMANDÉ ici à la main : même composant, même seuil de
+          200 ms — une ouverture rapide ne montre rien. Les ouvertures
+          suivantes sont immédiates (dejaLu) : aucun appel. */
+      const auDoigt =
+        document.documentElement.dataset.appareil === "mobile";
+      if (auDoigt) demarrerLeSigneManuel("mon-compte");
       await lireLeCompte();
       dejaLu.current = true;
       setOuvert(true);
+      if (auDoigt) finirLeSigneManuel("mon-compte");
     })();
   }, [ouvert, lireLeCompte]);
 
@@ -342,20 +364,33 @@ export function MenuEspace({
       if (plaqueWeb.current?.contains(cible)) return;
       if (!zone.current?.contains(cible)) setOuvert(false);
     }
-    const defilementAvant = document.body.style.overflow;
-    if (surMobile) document.body.style.overflow = "hidden";
     document.addEventListener("keydown", auClavier);
     document.addEventListener("mousedown", auPointeur);
     return () => {
       document.removeEventListener("keydown", auClavier);
       document.removeEventListener("mousedown", auPointeur);
-      if (surMobile) document.body.style.overflow = defilementAvant;
     };
     //  §4 (nº 465) — les deux états du dessus entrent dans les
-    //  dépendances : la garde d'Échap ci-dessus les lit. Le
-    //  rejeu de l'effet restaure puis repose l'overflow dans le même
-    //  tour — aucune peinture entre les deux.
+    //  dépendances : la garde d'Échap ci-dessus les lit.
   }, [ouvert, notificationsOuvertes, langueOuverte]);
+
+  /*  ██ §1 (nº 469) — LE VERROU DE DÉFILEMENT, COMPTÉ ET SÉPARÉ ██
+      Il vivait DANS l'effet du clavier ci-dessus, en « sauver puis
+      rendre » : quand `langueOuverte` changeait, le rejeu de l'effet
+      relisait le corps APRÈS le nettoyage de la fenêtre fermée et
+      sauvait « hidden » comme valeur d'origine — la fermeture de
+      « Mon compte » restituait alors ce « hidden », et le site ne
+      défilait plus (le bug de blocage du propriétaire). Le verrou vit
+      désormais dans SON effet, sur la seule ouverture, par l'écriture
+      COMPTÉE (lib/verrou-defilement) : la dernière surface fermée
+      libère le corps, jamais la première — et le nettoyage couvre
+      tous les chemins de fermeture, navigation comprise. */
+  useEffect(() => {
+    if (!ouvert) return;
+    if (document.documentElement.dataset.appareil !== "mobile") return;
+    poserLeVerrouDeDefilement();
+    return retirerLeVerrouDeDefilement;
+  }, [ouvert]);
 
   /* Échap referme l'avertissement — c'est la fenêtre partagée
      (FenetreNonEnregistre) qui s'en charge elle-même. */

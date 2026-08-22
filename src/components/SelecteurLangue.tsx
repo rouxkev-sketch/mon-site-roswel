@@ -10,6 +10,11 @@ import { useVoileDeLaPage } from "@/components/VoileDeLaPage";
 import { PagePleinEcranMobile } from "@/components/PagePleinEcranMobile";
 import { useAppareilMobile } from "@/lib/appareil";
 import { useEtapeQuiSeReferme } from "@/lib/etape-refermable";
+//  §1 (nº 469) — le verrou de défilement compté (surfaces empilées).
+import {
+  poserLeVerrouDeDefilement,
+  retirerLeVerrouDeDefilement,
+} from "@/lib/verrou-defilement";
 
 /**
  * LE SÉLECTEUR DE LANGUE
@@ -156,16 +161,19 @@ export function FenetreLangue({ surFermeture }: { surFermeture: () => void }) {
   useEtapeQuiSeReferme(auDoigt, surFermeture);
 
   //  Échap ferme, et la page ne défile plus derrière.
+  //  §1 (nº 469) — le blocage passe par le VERROU COMPTÉ
+  //  (lib/verrou-defilement) : cette fenêtre s'EMPILE sur « Mon
+  //  compte » au doigt (nº 465) — le « sauver puis rendre » d'avant
+  //  capturait le « hidden » du dessous et le laissait pour toujours.
   useEffect(() => {
     function auClavier(evenement: KeyboardEvent) {
       if (evenement.key === "Escape") surFermeture();
     }
-    const defilementAvant = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    poserLeVerrouDeDefilement();
     document.addEventListener("keydown", auClavier);
     return () => {
       document.removeEventListener("keydown", auClavier);
-      document.body.style.overflow = defilementAvant;
+      retirerLeVerrouDeDefilement();
     };
   }, [surFermeture]);
 

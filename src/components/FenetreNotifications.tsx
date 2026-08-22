@@ -18,6 +18,11 @@ import type { GenreNotification, Notification } from "@/lib/notifications";
 import { PagePleinEcranMobile } from "@/components/PagePleinEcranMobile";
 import { useAppareilMobile } from "@/lib/appareil";
 import { useEtapeQuiSeReferme } from "@/lib/etape-refermable";
+//  §1 (nº 469) — le verrou de défilement compté (surfaces empilées).
+import {
+  poserLeVerrouDeDefilement,
+  retirerLeVerrouDeDefilement,
+} from "@/lib/verrou-defilement";
 
 /**
  * LES NOTIFICATIONS DU COMPTE — la boîte de nouvelles
@@ -196,15 +201,18 @@ export function FenetreNotifications({
   onLue: (id: string) => void;
   onToutLu: () => void;
 }) {
+  //  §1 (nº 469) — le blocage passe par le VERROU COMPTÉ
+  //  (lib/verrou-defilement) : cette fenêtre s'EMPILE sur « Mon
+  //  compte » au doigt (nº 465) — le « sauver puis rendre » d'avant
+  //  capturait le « hidden » du dessous et le laissait pour toujours.
   useEffect(() => {
-    const avant = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    poserLeVerrouDeDefilement();
     function auClavier(evenement: KeyboardEvent) {
       if (evenement.key === "Escape") onFermer();
     }
     document.addEventListener("keydown", auClavier);
     return () => {
-      document.body.style.overflow = avant;
+      retirerLeVerrouDeDefilement();
       document.removeEventListener("keydown", auClavier);
     };
   }, [onFermer]);

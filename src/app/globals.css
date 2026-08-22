@@ -314,6 +314,23 @@ html:has([data-fond="sombre"]) {
   -webkit-backdrop-filter: blur(40px) saturate(150%);
   backdrop-filter: blur(40px) saturate(150%);
 }
+/*  §2 (nº 469) — AU DOIGT, LA BARRE EST UN APLAT OPAQUE : plus de
+    verre, plus de flou, plus de transparence — le fond du site plein
+    (#0B0F14 = COULEURS_SOMBRE.fond, nº 466), sur consigne du
+    propriétaire. La valeur est EN DUR comme tout ce bloc (la règle
+    nº 172 : ces déclarations ne passent pas par `var()`) : si le fond
+    change encore, elle se change À LA MAIN, avec les autres. LE WEB
+    GARDE SON VERRE (la règle au-dessus — 0.88, flou 40, l'acquis
+    nº 450) : cette règle ne vit que sous `data-appareil="mobile"`.
+    Ni la hauteur de la barre ni sa naissance ne changent (nº 439 :
+    une règle statique, lue avant la première peinture). Le réglage
+    d'essai `?verre=` (style en ligne, EnTeteTatouage) garde le
+    dernier mot — c'est un banc. */
+html[data-appareil="mobile"] [data-barre-fixe] {
+  background-color: #0b0f14;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
 
 /*  LA FENÊTRE D'ADRESSE — la plaque de VERRE LIQUIDE du smartphone
     (nº 225-§3, refaite nº 227-§6). MÊMES RÈGLES DURES QUE LA BARRE

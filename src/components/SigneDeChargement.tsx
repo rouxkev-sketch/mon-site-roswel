@@ -98,6 +98,61 @@ const DELAI_AVANT_SIGNE_MS = 200;
     légitime bien plus tard. */
 const ATTENTE_MAXIMALE_MS = 12000;
 
+/**
+ * ██ §4 (nº 469) — LE TRAIT NE VIT PLUS QU'À DEUX ENDROITS ██
+ * ==================================================================
+ * Sur consigne du propriétaire : le trait rose n'apparaît QUE pour
+ *  · l'ouverture de « Ma sélection » (`/mes-favoris`) — par un lien
+ *    ou par une traversée d'historique qui doit la recharger ;
+ *  · l'ouverture de « Mon compte » au doigt (le signe COMMANDÉ,
+ *    §3 ci-dessous).
+ * PARTOUT AILLEURS il est supprimé — la page de recherche du doigt en
+ * tête (le tap de loupe armait une attente vers « / » qu'aucune
+ * navigation ne venait clore : un trait pour rien).
+ * ⚠️ LE MÉCANISME, LUI, NE CHANGE PAS : chaque départ ARME toujours
+ * son attente — l'avalement du re-clic (§4 nº 441, règle 332-§1), le
+ * nettoyage à l'arrivée, le non-armement des liens natifs (nº 442) et
+ * le garde-fou restent entiers pour TOUTES les navigations. C'est la
+ * LISTE DE CE QUI SE MONTRE qui se réduit : toute destination hors
+ * liste est une attente MUETTE (le canal de la nº 452). L'exemption
+ * `data-signe-muet` reste lue là où elle est posée.
+ */
+const DESTINATIONS_A_TRAIT = new Set(["/mes-favoris"]);
+function destinationMontreLeTrait(adresse: string): boolean {
+  return DESTINATIONS_A_TRAIT.has(adresse.split("?")[0]);
+}
+
+/**
+ * ██ §3 (nº 469) — LE SIGNE COMMANDÉ À LA MAIN ██
+ * ==================================================================
+ * L'ouverture de « Mon compte » au doigt n'est PAS une navigation :
+ * c'est une surface, et sa PREMIÈRE ouverture attend une lecture
+ * (nº 142) — le même « rien ne bouge » que le signe ferme pour les
+ * pages. Ces deux portes le commandent : MÊME composant, MÊME seuil
+ * de 200 ms, même garde-fou — aucun second mécanisme. La clé fait le
+ * lien entre le départ et la fin ; une « adresse » préfixée
+ * (`manuel:`) qu'aucune navigation ne peut commettre porte l'attente.
+ */
+const EVENEMENT_SIGNE_MANUEL = "roswel:signe-manuel";
+
+export function demarrerLeSigneManuel(cle: string): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(
+    new CustomEvent(EVENEMENT_SIGNE_MANUEL, {
+      detail: { cle, action: "demarrer" },
+    })
+  );
+}
+
+export function finirLeSigneManuel(cle: string): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(
+    new CustomEvent(EVENEMENT_SIGNE_MANUEL, {
+      detail: { cle, action: "finir" },
+    })
+  );
+}
+
 export function SigneDeChargement() {
   /*  La frontière <Suspense> est ICI, dans le composant : la mise en
       page racine n'a qu'à le poser. Sans elle, useSearchParams dans
@@ -231,7 +286,12 @@ function Signe() {
       //  §3 (nº 452) — LA MARQUE D'EXEMPTION, lue sur le lien et ses
       //  ancêtres : l'attente s'arme (avalement compris) mais reste
       //  muette — aucun trait pour ce départ.
-      const muette = lien.closest("[data-signe-muet]") !== null;
+      //  §4 (nº 469) — ET LA LISTE BLANCHE : toute destination hors
+      //  liste est muette aussi — même attente, même avalement, aucun
+      //  trait.
+      const muette =
+        lien.closest("[data-signe-muet]") !== null ||
+        !destinationMontreLeTrait(adresse);
       //  L'armement reste SYNCHRONE (l'avalement du re-clic de la 441
       //  ne perd pas une milliseconde)…
       demarrer(adresse, muette);
@@ -259,7 +319,28 @@ function Signe() {
       //  même seuil que les clics.
       const ici = window.location.pathname + window.location.search;
       if (ici === adresseCommise.current) return;
-      demarrer(ici);
+      //  §4 (nº 469) — la liste blanche vaut aussi pour les
+      //  traversées : seule « Ma sélection » montre le trait, le
+      //  reste garde une attente muette.
+      demarrer(ici, !destinationMontreLeTrait(ici));
+    };
+
+    /*  §3 (nº 469) — LE SIGNE COMMANDÉ (« Mon compte » au doigt) :
+        `demarrer` porte l'attente sous une adresse `manuel:` qu'aucune
+        navigation ne peut commettre ; la fin l'éteint si c'est bien
+        ELLE qui est en route (une navigation partie entre-temps garde
+        son attente à elle). Seuil des 200 ms et garde-fou : les mêmes. */
+    const surSigneManuel = (evenement: Event) => {
+      const detail = (evenement as CustomEvent).detail as
+        | { cle?: string; action?: string }
+        | undefined;
+      if (!detail?.cle) return;
+      const adresse = `manuel:${detail.cle}`;
+      if (detail.action === "demarrer") {
+        demarrer(adresse);
+        return;
+      }
+      if (attente.current?.adresse === adresse) eteindre();
     };
 
     //  §1 (nº 442) — LE DÉCHARGEMENT ÉTEINT TOUT : une navigation
@@ -277,10 +358,13 @@ function Signe() {
     document.addEventListener("click", surClic, true);
     window.addEventListener("popstate", surTraversee, { passive: true });
     window.addEventListener("pagehide", surDechargement, { passive: true });
+    //  §3 (nº 469) — la porte du signe commandé (« Mon compte »).
+    window.addEventListener(EVENEMENT_SIGNE_MANUEL, surSigneManuel);
     return () => {
       document.removeEventListener("click", surClic, true);
       window.removeEventListener("popstate", surTraversee);
       window.removeEventListener("pagehide", surDechargement);
+      window.removeEventListener(EVENEMENT_SIGNE_MANUEL, surSigneManuel);
       window.clearTimeout(minuteurSigne.current);
       window.clearTimeout(minuteurLimite.current);
     };

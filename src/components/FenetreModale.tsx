@@ -3,6 +3,11 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { IconeCroix } from "@/components/Icones";
+//  §1 (nº 469) — le verrou de défilement compté (surfaces empilées).
+import {
+  poserLeVerrouDeDefilement,
+  retirerLeVerrouDeDefilement,
+} from "@/lib/verrou-defilement";
 
 /**
  * LA COQUE DES FENÊTRES MODALES
@@ -119,14 +124,15 @@ export function FenetreModale({
     declencheur.current = document.activeElement as HTMLElement | null;
     cadre.current?.focus();
 
-    // La page derrière ne défile plus. On note la valeur d'origine
-    // pour la rendre telle quelle : certaines pages (fiche, résultats)
-    // posent déjà leur propre règle de défilement.
-    const corps = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    // La page derrière ne défile plus.
+    // §1 (nº 469) — par le VERROU COMPTÉ (lib/verrou-defilement) : une
+    // modale peut s'ouvrir PENDANT qu'une surface plein écran tient
+    // déjà le corps — le « sauver puis rendre » d'avant capturait le
+    // « hidden » du dessous et le laissait à sa fermeture.
+    poserLeVerrouDeDefilement();
 
     return () => {
-      document.body.style.overflow = corps;
+      retirerLeVerrouDeDefilement();
       declencheur.current?.focus?.();
     };
   }, [ouvert]);
