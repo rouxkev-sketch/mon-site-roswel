@@ -24,7 +24,10 @@ import {
 //  (et d'elles seules) : l'import que la nº 445 avait retiré.
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import { PhotoDeCarte, TAILLES_CARTE } from "@/components/PhotoDeCarte";
-import { ligneCarte, ligneCarteMobile } from "@/lib/adresse";
+//  §2 (nº 486) — la ligne de lieu DES CARTES : « Ville, Pays »,
+//  sans État ni région (lib/adresse) — une seule écriture, les deux
+//  appareils.
+import { ligneLieuDeCarte } from "@/lib/adresse";
 import { pincementRecent, usePincement } from "@/components/ZoomPincement";
 //  ⚠️ TEMPORAIRE (nº 219-§1) — la sonde du carrousel compte les
 //  cartes vivantes : c'est la ligne qui dit si naviguer dans un
@@ -756,6 +759,32 @@ function CarteTatoueurNue({
           très long tronqué, la mesure ne bouge pas.
           EN DEUX COLONNES SUR SMARTPHONE, il disparaît : la carte n'y
           fait que 190 px de large, le portrait mangerait le nom. */}
+      {/*  ██ §1 (nº 486) — LE LIEN DE LA CARTE, AU DOIGT ██
+           POURQUOI IL FAUT CELUI-CI : le lien qui étire la carte
+           entière vit DANS la ligne du nom (`after:absolute
+           after:inset-0`, plus bas) — et cette ligne disparaît au
+           doigt. Sans ce relais, la carte cesserait d'être cliquable
+           là où l'on ne clique QUE du doigt. Il est donc posé au rang
+           de l'article, qui est le repère (`relative`), et il couvre
+           tout : la photo ET les deux lignes.
+           ⚠️ MÊME DESTINATION, MÊME CLIC, MÊME NOM ACCESSIBLE que le
+           lien du nom : `adresseFiche`, `auClic` (la balise de
+           popularité, la sonde, la fenêtre du web), `scroll={false}`
+           de la nº 361. Rien n'est réinventé — c'est le lien de la
+           photothèque, à la variante d'appareil près.
+           ⚠️ `z-[1]` : au-dessus de la photo, SOUS le fanion (z-10) —
+           toucher le fanion n'ouvre donc jamais la fiche. Et il ne se
+           rend pas en photothèque, qui pose déjà le sien sur l'image. */}
+      {!phototheque && (
+        <Link
+          href={adresseFiche}
+          aria-label={`Voir la fiche de ${tatoueur.nom}`}
+          onClick={auClic}
+          scroll={false}
+          className="hidden mobile:block absolute inset-0 z-[1] outline-none"
+        />
+      )}
+
       {!phototheque && (
       <div
         /*  ██ §3 (nº 398) — L'AIR AU-DESSUS DE LA PHOTO DE PROFIL ██
@@ -893,18 +922,29 @@ function CarteTatoueurNue({
                 pixels au web, seize au doigt côte à côte, vingt en
                 pleine largeur — voir la note de la hauteur, sur la
                 ligne du nom. */
-            className={`font-normal leading-[18px] line-clamp-1 mb-4 mobile:mb-3 text-[15px] text-sombre-texte ${
+            className={`font-normal leading-[18px] line-clamp-1 mb-4 mobile:mb-1 text-[15px] text-sombre-texte ${
               uneColonne
                 ? "mobile:text-[17px] mobile:leading-[20px]"
                 : "mobile:leading-[16px] mobile:text-[14px]"
             }`}
           >
             {partiesDuTitre.style}
+            {/*  §1 (nº 486) — LE RENDU NE S'ÉCRIT PLUS AU DOIGT. Sur une
+                 vignette de 190 px, « Neo-Japanese • Black and grey »
+                 n'a jamais tenu : le style seul y reste lisible, et le
+                 rendu se lit de toute façon dans le titre de la vue
+                 photo, qui l'affiche déjà. Le WEB le garde — sa carte
+                 est plus large et sa ligne 1 vit seule au-dessus du
+                 rond de profil.
+                 ⚠️ UNE BASCULE DE FEUILLE DE STYLE, pas un rendu
+                 conditionnel : le serveur écrit la même chose pour
+                 tout le monde, donc aucun écart d'hydratation, et rien
+                 ne clignote au montage. */}
             {partiesDuTitre.rendu && (
-              <>
+              <span className="mobile:hidden">
                 {SEPARATEUR_GALERIE}
                 {partiesDuTitre.rendu}
-              </>
+              </span>
             )}
           </p>
         )}
@@ -916,11 +956,17 @@ function CarteTatoueurNue({
              pas bougé. */}
         <div className="flex items-center gap-2.5">
         <span
-          className={`shrink-0 h-10 w-10 flex items-center
+          /*  §1 (nº 486) — LE ROND DE PROFIL QUITTE LES CARTES DU
+              DOIGT, LES DEUX DISPOSITIONS. Il n'était rendu que POUR
+              ACCOMPAGNER LE NOM (il en reprend la hauteur, écart
+              compris) : le nom parti, il n'a plus personne à côté de
+              qui se tenir. Il vivait déjà caché sur les cartes côte à
+              côte ; il l'est désormais aussi en pleine largeur.
+              ⚠️ LE WEB LE GARDE, à quarante pixels — son équation avec
+              la hauteur des lignes 2 et 3 (nº 485) est intacte. */
+          className="shrink-0 h-10 w-10 flex items-center
                      justify-center overflow-hidden rounded-full
-                     bg-sombre-eleve ${
-                       uneColonne ? "mobile:h-11 mobile:w-11" : "mobile:hidden"
-                     }`}
+                     bg-sombre-eleve mobile:hidden"
         >
           {tatoueur.photo_profil ? (
             /* eslint-disable-next-line @next/next/no-img-element --
@@ -1015,7 +1061,7 @@ function CarteTatoueurNue({
               elles est le même qu'avant, d'un cran, mais il pèse
               désormais moins lourd à l'œil. Le blanc vient du jeton,
               comme avant. */
-          className={`font-semibold leading-[18px] line-clamp-1 text-[15px] text-sombre-texte ${
+          className={`font-semibold leading-[18px] line-clamp-1 mobile:hidden text-[15px] text-sombre-texte ${
             uneColonne
               ? "mobile:text-[17px] mobile:leading-[20px]"
               : "mobile:leading-[16px] mobile:text-[14px]"
@@ -1079,40 +1125,34 @@ function CarteTatoueurNue({
               nº 114) — avec le code de l'État pour les pays qui
               l'écrivent (« Miami, FL, États-Unis »). La règle du lieu
               vit dans lib/adresse, jamais ici. */}
-          {/*  ⚠️ DEUX ÉCRITURES DU MÊME LIEU (nº 212-§6) : au doigt, le
-               pays s'abrège dès qu'un état s'écrit (« Austin, TX,
-               USA ») — sinon la ligne déborde. Sur le web, la place ne
-               manque pas : le pays reste en toutes lettres. Les deux
-               sont posées, une seule s'affiche. */}
-          {/*  §1 (nº 395) — LA PUCE REMPLACE LE POINT MÉDIAN, ici et
-               dans la variante du doigt juste dessous. Le site n'a plus
-               qu'une ponctuation pour séparer deux valeurs : celle des
-               pratiques, des styles, du bloc artiste et — depuis la
-               nº 393 — des titres de galerie.
-               ⚠️ CE LIBELLÉ N'EST PAS FACTORISÉ, et ce n'est pas un
-               oubli : les deux écritures ci-dessous ne partagent pas la
-               même règle de lieu (`ligneCarte` au large, `ligneCarteMobile`
-               au doigt, nº 212-§6). Elles vivent donc où elles sont, et
-               la puce est changée aux DEUX. Il n'y en a pas d'autre :
-               toutes les surfaces qui montrent cette ligne — accueil,
-               jumeau de recherche, résultats, vitrines, Ma sélection —
-               rendent CETTE carte. */}
-          <span className="mobile:hidden">
-            {[
-              libelleTypeFiche(tatoueur.type_fiche, tatoueur.etablissement),
-              ligneCarte(lieuDeLaCarte),
-            ]
-              .filter(Boolean)
-              .join(" • ")}
-          </span>
-          <span className="hidden mobile:inline">
-            {[
-              libelleTypeFiche(tatoueur.type_fiche, tatoueur.etablissement),
-              ligneCarteMobile(lieuDeLaCarte),
-            ]
-              .filter(Boolean)
-              .join(" • ")}
-          </span>
+          {/*  §1 (nº 395) — LA PUCE SÉPARE LES DEUX VALEURS. Le site
+               n'a qu'une ponctuation pour cela : celle des pratiques,
+               des styles, du bloc artiste et — depuis la nº 393 — des
+               titres de galerie.
+               ⚠️ LES DEUX ÉCRITURES DE LIEU DE LA nº 212-§6 ONT QUITTÉ
+               CETTE CARTE À LA nº 486 : elles ne divergeaient que par
+               l'État, qui ne s'écrit plus ici. Elles restent entières
+               pour ceux qui en vivent — la FICHE (la rangée du profil
+               de la vue photo, les modes d'exercice) et le MOTEUR —,
+               mais la carte, elle, n'en consomme plus qu'une seule,
+               écrite pour elle. Toutes les surfaces qui montrent cette
+               ligne — accueil, jumeau de recherche, résultats,
+               vitrines, Ma sélection — rendent CETTE carte, et disent
+               donc la même chose. */}
+          {/*  §2 (nº 486) — UNE SEULE ÉCRITURE, LES DEUX APPAREILS. Les
+               deux `<span>` d'avant ne se distinguaient que par l'ÉTAT
+               (le doigt abrégeait le pays quand une division
+               s'écrivait, nº 212-§6) : l'État parti des cartes, ils
+               diraient mot pour mot la même chose. Un seul reste.
+               ⚠️ LE SÉPARATEUR SUIT SA VALEUR : `filter(Boolean)`
+               écarte ce qui manque avant de joindre — pas de type, pas
+               de lieu, et jamais une puce orpheline. */}
+          {[
+            libelleTypeFiche(tatoueur.type_fiche, tatoueur.etablissement),
+            ligneLieuDeCarte(lieuDeLaCarte),
+          ]
+            .filter(Boolean)
+            .join(" • ")}
         </p>
         </div>
         </div>

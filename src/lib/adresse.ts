@@ -527,6 +527,46 @@ export function ligneMoteur(lieu: LieuAffichable): string {
 }
 
 /**
+ * ██ §2-bis (nº 486) · LA LIGNE D'UNE CARTE : « VILLE, PAYS » ██
+ * ==================================================================
+ *   « Austin, United States » · « Tokyo, Japan » · « Lyon, France »
+ *
+ * NI ÉTAT, NI RÉGION — et c'est tout ce qui la distingue de
+ * `ligneCarte` ci-dessus. Le site s'ouvre à l'international : sur une
+ * vignette, « Studio • Austin, Texas, United States » ne tient pas, et
+ * l'État n'apprend rien à qui découvre des artistes du monde entier.
+ * Le PAYS, lui, est toujours écrit : c'est LUI l'information — le
+ * visiteur n'a choisi aucune destination, il faut donc lui dire où il
+ * regarde.
+ *
+ * ⚠️ POURQUOI UNE ÉCRITURE DE PLUS PLUTÔT QUE DE CHANGER LES DEUX
+ * AUTRES, et c'est la raison qui compte : `ligneCarte` et
+ * `ligneCarteMobile` ne servent PAS qu'aux cartes, malgré leurs noms.
+ * La FICHE les consomme (la rangée du profil de la vue photo au doigt,
+ * FicheTatoueur ; les modes d'exercice, lib/modes-exercice), le MOTEUR
+ * aussi (le titre des résultats, IndexTatoueurs), et trois formulaires
+ * avec eux. Leur retirer l'État aurait donc appauvri la fiche — que le
+ * propriétaire veut complète — pour régler un problème de vignette.
+ * Une carte a désormais SA ligne ; les autres gardent la leur.
+ *
+ * ⚠️ ET ELLE VAUT POUR LES DEUX APPAREILS. Les deux écritures de la
+ * nº 212-§6 se justifiaient par l'ÉTAT : `ligneCarteMobile` abrégeait
+ * le pays quand une division s'écrivait, parce que « Austin, TX,
+ * États-Unis d'Amérique » débordait. Sans division, il n'y a plus rien
+ * à abréger — les deux lignes diraient mot pour mot la même chose, et
+ * la carte n'a plus qu'une seule écriture au lieu de deux.
+ *
+ * SANS VILLE, on retombe sur ce qu'on a — le pays seul, ou la région
+ * si elle est le seul nom connu : `joindre` écarte les morceaux vides,
+ * donc jamais de virgule orpheline.
+ */
+export function ligneLieuDeCarte(lieu: LieuAffichable): string {
+  const ville = villeAffichee(lieu.ville);
+  if (!ville) return joindre([(lieu.region ?? "").trim(), nomPaysAffiche(lieu)]);
+  return joindre([ville, nomPaysAffiche(lieu)]);
+}
+
+/**
  * §4bis · LA MÊME LIGNE, RESSERRÉE POUR LE SMARTPHONE (nº 212-§6)
  *   « Austin, TX, USA » · « Lyon, France »
  * ⚠️ LE PAYS N'EST ABRÉGÉ QUE LORSQU'UNE DIVISION S'ÉCRIT, et c'est
