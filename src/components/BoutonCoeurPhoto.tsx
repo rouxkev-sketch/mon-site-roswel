@@ -220,7 +220,22 @@ export function BoutonCoeurPhoto({
                   focus-visible:outline-primaire ${pulse ? "rw-coeur-anime" : ""}`}
     >
       <IconeFanion
-        taille={variante === "carte" ? 24 : 30}
+        /*  §1 (nº 487) — LE GLYPHE DE LA VUE PHOTO DESCEND À 26. Il
+            partageait les trente pixels de la fiche du WEB ; le
+            propriétaire le trouve un peu gros au doigt, sur la ligne
+            du titre où il voisine la flèche de partage. Les DEUX
+            variantes se séparent donc ici, et le web garde ses trente
+            — c'est la seule façon de bouger l'un sans l'autre.
+            ⚠️ LA CIBLE NE CHANGE PAS (48 px, la même pour les deux) :
+            c'est le DESSIN qui rétrécit, pas la surface qu'on touche.
+            ⚠️ ET LE DÉCALAGE QUI LE CALE SUR LA MARGE SUIT (nº 483,
+            recalculé nº 487) : le vide autour du glyphe vaut
+            (48 − 26) / 2 = ONZE pixels, contre neuf auparavant. La
+            valeur vit chez l'appelant — FicheTatoueur, la ligne du
+            titre — et elle y a été reprise. */
+        taille={
+          variante === "carte" ? 24 : variante === "fiche-mobile" ? 26 : 30
+        }
         classe={`[filter:drop-shadow(0_1px_2px_rgba(0,0,0,0.55))] ${
           enregistree
             ? //  ⚠️ BLANC PLEIN une fois enregistré (nº 141-6B) — plus

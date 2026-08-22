@@ -1006,7 +1006,10 @@ export function CarrouselPortfolio({
      ⚠️ `mobile:` n'est pas une largeur mais un POINTEUR
      (`[data-appareil="mobile"]`, voir globals.css) : la bascule suit
      l'appareil, comme partout ailleurs dans ce fichier. */
-  const enFinDeGalerie = indice >= n - 1;
+  /*  §2 (nº 487) — `enFinDeGalerie` A ÉTÉ RETIRÉ AVEC LA FLÈCHE
+      DU COMPTEUR : il ne servait qu'à la faire pivoter en fin de
+      galerie. Les flèches de la SOURIS, elles, ont leurs propres
+      gardes (`indice > 0`, `indice < n - 1`) et ne bougent pas. */
   /**
    * §2 et §5 (nº 367) — LA MÊME CAPSULE SUR LES CARTES, ET SES TROIS
    * GABARITS.
@@ -1074,42 +1077,29 @@ export function CarrouselPortfolio({
                        "inline-flex right-3 top-3 px-2.5 py-1.5"
                  }`}
     >
-      {/*  §2 (nº 483) — LE NOMBRE, SANS CONDITION. Il ne porte plus ni
-           largeur maximale, ni opacité, ni transition : les trois
-           servaient le repli, qui n'existe plus. Ne restent que sa
-           taille, sa graisse, ses chiffres de largeur fixe
-           (`tabular-nums` — le compte ne tremble pas d'une photo à
-           l'autre) et l'écart qui le sépare de la flèche. */}
+      {/*  §2 (nº 483, complété nº 487) — LE NOMBRE, ET RIEN QUE LUI.
+           Il ne porte plus ni largeur maximale, ni opacité, ni
+           transition (elles servaient le repli, retiré à la nº 483),
+           ni écart à droite — celui-ci ne séparait le compte que de LA
+           FLÈCHE, supprimée à cette passe. Ne restent que sa taille, sa
+           graisse et ses chiffres de largeur fixe (`tabular-nums` : le
+           compte ne tremble pas d'une photo à l'autre).
+           ⚠️ CE QUI EST PARTI AVEC LA FLÈCHE, et non pas seulement
+           masqué : le dessin lui-même, ses deux tailles (8 px sur une
+           carte côte à côte, 10 ailleurs — la nº 367), sa rotation de
+           fin de galerie et son animation, plus le drapeau qui la
+           pilotait (voir plus haut). Rien d'autre n'en dépendait : les
+           flèches de la SOURIS, à mi-hauteur de l'image, sont un autre
+           mécanisme, avec leurs propres gardes.
+           ⚠️ LE BADGE NE CHANGE PAS AUTOUR : même place, même fond,
+           même rayon, mêmes rembourrages, et toujours ouvert. */}
       <span
         className={`whitespace-nowrap
-                   ${badgeReduit && surCarte ? "text-[10px] mr-1" : "text-[12px] mr-1.5"}
+                   ${badgeReduit && surCarte ? "text-[10px]" : "text-[12px]"}
                    font-semibold tabular-nums`}
       >
         {indice + 1}/{n}
       </span>
-      {/*  LA FLÈCHE MINIMALE — le repère permanent : vers la droite
-           tant qu'il reste des photos, vers la gauche en fin de
-           galerie. Elle pivote en douceur, elle ne clignote pas. */}
-      <svg
-        //  §5 (nº 367) — 8 px sur une carte côte à côte, 10 partout
-        //  ailleurs (fiche et carte pleine largeur).
-        width={badgeReduit && surCarte ? "8" : "10"}
-        height={badgeReduit && surCarte ? "8" : "10"}
-        viewBox="0 0 24 24"
-        fill="none"
-        aria-hidden="true"
-        className={`shrink-0 transition-transform duration-500 ${
-          enFinDeGalerie ? "rotate-180" : ""
-        }`}
-      >
-        <path
-          d="M9.5 5.5 16 12l-6.5 6.5"
-          stroke="currentColor"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
     </span>
   );
 

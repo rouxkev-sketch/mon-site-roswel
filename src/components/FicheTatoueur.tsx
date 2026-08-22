@@ -1131,17 +1131,23 @@ export function FicheTatoueur({
                    rentré d'autant par rapport au bord de l'interface,
                    alors que sa BOÎTE, elle, y touchait déjà. C'est le
                    défaut exact de la silhouette « mon compte » à la
-                   nº 465, et le remède est le sien : on tire la boîte de
-                   neuf pixels vers la droite pour que le GLYPHE tombe
-                   sur la marge. La cible ne change ni de taille ni de
-                   forme — elle déborde dans la marge, où rien d'autre
-                   ne vit.
+                   nº 465, et le remède est le sien : on tire la boîte
+                   vers la droite d'exactement ce vide, pour que le
+                   GLYPHE tombe sur la marge. La cible ne change ni de
+                   taille ni de forme — elle déborde dans la marge, où
+                   rien d'autre ne vit.
+                   §1 (nº 487) — LA VALEUR EST RECALCULÉE avec le
+                   glyphe réduit : (48 − 26) / 2 = ONZE pixels, contre
+                   neuf quand il en faisait trente. Sans ce recalcul, le
+                   fanion se serait décalé de deux pixels vers
+                   l'intérieur en rapetissant.
                    ⚠️ LES DEUX GESTES SONT GROUPÉS SANS ÉCART : leurs
                    cibles se touchent, mais chaque glyphe garde son
-                   retrait interne — six pixels pour la flèche (28 dans
-                   40), neuf pour le fanion. À l'œil, quinze pixels les
-                   séparent, et aucune des deux cibles n'a rétréci. */}
-              <div className="flex shrink-0 items-center -mr-[9px]">
+                   retrait interne — huit pixels pour la flèche (24 dans
+                   40), onze pour le fanion. À l'œil, dix-neuf pixels
+                   les séparent, et AUCUNE des deux cibles n'a rétréci :
+                   quarante et quarante-huit pixels, comme avant. */}
+              <div className="flex shrink-0 items-center -mr-[11px]">
                 {!apercu && (
                   <BoutonPartageFiche
                     nomArtisan={tatoueur.nom}
@@ -1151,10 +1157,17 @@ export function FicheTatoueur({
                       serieEffective
                     )}
                     variante="icone"
-                    //  §2 (nº 459) — la flèche passe de 22 à 28 px
-                    //  (la cible reste 40) : nettement visible, à
-                    //  l'échelle du fanion d'en face (glyphe 30).
-                    tailleIcone={28}
+                    /*  §2 (nº 459), REVU nº 487 — LA FLÈCHE À 24 px.
+                        Elle était montée de 22 à 28 pour se tenir à
+                        l'échelle du fanion d'en face ; les deux
+                        descendent ensemble d'un même cran (28 → 24 ici,
+                        30 → 26 pour le fanion), donc l'équilibre entre
+                        elles est celui d'avant — le fanion reste plus
+                        gros de deux pixels, ni plus ni moins.
+                        ⚠️ LA CIBLE RESTE À 40 px (variante « icone »,
+                        nº 458) : le dessin rétrécit, pas la surface
+                        qu'on touche. */
+                    tailleIcone={24}
                     avecFenetre
                     sombre
                     metier={stylePrincipal?.label}
