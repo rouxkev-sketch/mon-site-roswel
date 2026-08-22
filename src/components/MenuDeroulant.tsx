@@ -193,6 +193,8 @@ export function MenuDeroulant({
   arrondi,
   familleSoulignee = false,
   avecVoile = false,
+  commandeOuverture = 0,
+  feuilleDecollee = false,
 }: {
   valeur: string;
   surChangement: (valeur: string) => void;
@@ -315,9 +317,35 @@ export function MenuDeroulant({
    * contact et le menu métier des artisans ne l'ont pas demandé.
    */
   avecVoile?: boolean;
+  /**
+   * §2 (nº 460) — L'OUVERTURE COMMANDÉE DE L'EXTÉRIEUR : un COMPTEUR.
+   * Chaque incrément (> 0) OUVRE le menu — le va-et-vient mobile de
+   * « Ma sélection » s'en sert : son côté déjà choisi, appuyé une
+   * seconde fois, ouvre la feuille de filtres alors que le champ
+   * déclencheur du menu n'est pas affiché. Rien d'autre ne change :
+   * la fermeture, le choix et le clic dehors restent les siens.
+   */
+  commandeOuverture?: number;
+  /**
+   * §4 (nº 460) — LA FEUILLE DÉCOLLÉE DES BORDS : l'encadré de la
+   * feuille du bas prend la marge latérale de l'interface (16 px, le
+   * `px-4` des pages) au lieu de toucher les bords de l'écran. Sur
+   * demande — seule « Ma sélection » le passe ; hauteur, contenu et
+   * animation ne changent pas.
+   */
+  feuilleDecollee?: boolean;
 }) {
   const [ouvert, setOuvert] = useState(false);
   const conteneur = useRef<HTMLDivElement>(null);
+  /*  §2 (nº 460) — L'OUVERTURE COMMANDÉE, ajustée PENDANT LE RENDU
+      (le motif officiel de React, celui de `ouvertureConnue` plus
+      bas) : chaque incrément du compteur ouvre le menu — jamais un
+      effet, jamais un rendu intermédiaire fermé. */
+  const [commandeVue, setCommandeVue] = useState(commandeOuverture);
+  if (commandeOuverture !== commandeVue) {
+    setCommandeVue(commandeOuverture);
+    if (commandeOuverture > 0 && !ouvert) setOuvert(true);
+  }
   /**
    * §2 (nº 253) — LA PLAQUE DE LA FEUILLE, NOMMÉE.
    * ------------------------------------------------------------------
@@ -1269,9 +1297,14 @@ export function MenuDeroulant({
             ref={feuille}
             role="listbox"
             aria-label={ariaLabel}
+            /*  §4 (nº 460) — `feuilleDecollee` : l'encadré ne touche
+                plus les bords de l'écran — `mx-4`, la marge latérale
+                de l'interface (le `px-4` des pages), posée sur la
+                plaque ELLE-MÊME (jamais sur un parent — piège 378).
+                Hauteur, contenu, animation : rien d'autre ne bouge. */
             className={`relative rounded-t-3xl max-h-[80vh] flex flex-col pb-[max(1rem,env(safe-area-inset-bottom))] ${
-              sombre ? "text-sombre-texte" : "bg-fond shadow-2xl"
-            }`}
+              feuilleDecollee ? "mx-4 " : ""
+            }${sombre ? "text-sombre-texte" : "bg-fond shadow-2xl"}`}
             style={{
               transform: `translateY(${dragY}px)`,
               transition: enGlissement ? "none" : "transform .25s ease",

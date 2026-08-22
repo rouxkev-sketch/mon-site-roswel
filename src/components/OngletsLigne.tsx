@@ -37,7 +37,10 @@ export function OngletsLigne({
   classeOnglet = "px-1 min-h-[46px]",
   avecLigneGrise = true,
 }: {
-  options: Array<{ cle: string; label: string }>;
+  /** §1 (nº 460) — le label devient un NŒUD : le va-et-vient de « Ma
+      sélection » y pose « Favoris 10 ⌄ » (mot + nombre + chevron).
+      Tous les appelants à chaînes restent valides tels quels. */
+  options: Array<{ cle: string; label: React.ReactNode }>;
   /** La clé de l'onglet actif — `null` tant que rien n'est choisi. */
   cleActive: string | null;
   surChoix: (cle: string) => void;

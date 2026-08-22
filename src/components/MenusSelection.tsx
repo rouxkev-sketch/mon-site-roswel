@@ -2,9 +2,20 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { EncadreDeuxChamps } from "@/components/EncadreBarre";
-import { IconeReglages } from "@/components/Icones";
+//  §2 (nº 460) — le chevron du côté choisi du va-et-vient mobile : le
+//  dessin des accordéons, jamais un second.
+import { IconeChevronBas, IconeReglages } from "@/components/Icones";
 import { MenuDeroulant } from "@/components/MenuDeroulant";
+//  §1 (nº 460) — le va-et-vient du doigt : les onglets soulignés de la
+//  page de recherche mobile (nº 447), le même composant.
+import { OngletsLigne } from "@/components/OngletsLigne";
 import { SelecteurCapsule } from "@/components/SelecteurCapsule";
+//  §3 (nº 460) — les comptes filtrés, posés par la page (PageFavoris)
+//  et lus ici : le côté choisi affiche ce qui est réellement montré.
+import {
+  lireComptesSelection,
+  souscrireComptesSelection,
+} from "@/lib/compte-selection";
 import { CATEGORIES_EXPLORER, libelleStyle } from "@/config/tatouage";
 import { libelleExplorer } from "@/components/MoteurTatouage";
 import {
@@ -134,6 +145,45 @@ export function MenusSelection({
     return () => borne.removeEventListener("change", lire);
   }, []);
 
+  /**
+   * ██ §1-3 (nº 460) — LE VA-ET-VIENT DU DOIGT : `Favoris | Suivis` ██
+   * ==================================================================
+   * AU DOIGT SEULEMENT, l'encadré-capsule (badge + champ « Filtrer »)
+   * est REMPLACÉ par les onglets soulignés de la page de recherche
+   * mobile (nº 447 — le même composant, `OngletsLigne`). Le web garde
+   * son bloc au caractère près, « Portfolios » compris.
+   *  · CÔTÉ CHOISI : mot + NOMBRE + chevron. Le nombre est ce qui est
+   *    RÉELLEMENT AFFICHÉ après filtrage — posé par la page à chaque
+   *    rendu (lib/compte-selection) ; tant qu'il n'est pas connu
+   *    (premier rendu), rien n'est écrit — jamais un « 0 » menteur
+   *    (règles 137/203). « Suivis » reprend le contenu de l'ancien
+   *    « Portfolios », seul le mot change, au doigt seulement.
+   *  · CÔTÉ NON CHOISI : le mot seul.
+   *  · PREMIER APPUI sur l'autre côté : la bascule (`poserSelection`,
+   *    l'écriture de toujours). SECOND APPUI sur le côté déjà choisi :
+   *    la FEUILLE DE FILTRES — la commande incrémente un compteur que
+   *    le MenuDeroulant (rendu ci-dessous, déclencheur caché) lit
+   *    (`commandeOuverture`). La feuille est CELLE d'aujourd'hui, avec
+   *    ses marges (`feuilleDecollee`).
+   */
+  const comptes = useSyncExternalStore(
+    souscrireComptesSelection,
+    lireComptesSelection,
+    lireComptesSelection
+  );
+  const [commandeFiltres, setCommandeFiltres] = useState(0);
+  const motDuVaEtVient = (label: string, cle: MenuSelection) => {
+    if (choix.menu !== cle) return label;
+    const compte = cle === MENU_FAVORIS ? comptes.favoris : comptes.suivis;
+    return (
+      <span className="flex items-center gap-1.5">
+        {label}
+        {compte !== null && <span>{compte}</span>}
+        <IconeChevronBas taille={16} classe="shrink-0 text-sombre-texte-doux" />
+      </span>
+    );
+  };
+
   /*  §2 — LE BADGE. Un appui repose le paramètre sur l'autre menu, sans
       critère : le filtre d'un menu ne vaut pas pour l'autre (leurs
       entrées sont calculées sur des données différentes), et l'écran
@@ -187,7 +237,11 @@ export function MenusSelection({
    * pas, et un champ qui n'ouvre rien ment. La moitié reste nue — le
    * badge, lui, reste la commande.
    */
-  const filtre = () => {
+  /*  §2 (nº 460) — `surLeDoigt` : l'instance rendue pour le
+      va-et-vient mobile — déclencheur caché, ouverte par la COMMANDE
+      (le second appui), feuille décollée des bords. L'instance du web
+      (l'encadré) ne passe rien et ne change pas. */
+  const filtre = (surLeDoigt = false) => {
     if (entrees.length === 0) return <span />;
     const valeur = valeurDuMenu(choix, choix.menu);
     return (
@@ -260,6 +314,9 @@ export function MenusSelection({
         //  §2 (nº 293) — la page s'assombrit derrière ce menu, en WEB :
         //  au doigt cette page ouvre sa feuille, et le crochet s'écarte.
         avecVoile
+        //  §2/§4 (nº 460) — voir `surLeDoigt` ci-dessus.
+        commandeOuverture={surLeDoigt ? commandeFiltres : 0}
+        feuilleDecollee={surLeDoigt}
       />
     );
   };
@@ -291,7 +348,11 @@ export function MenusSelection({
                l'encadré. Au doigt, l'espace libéré est RETIRÉ de la
                barre (`mobile:min-h-0`) : la réserve suit
                (64 + 12 + 46 = 122, voir EnTeteTatouage). */}
-          <div className="flex items-center gap-2.5 min-h-[52px] mobile:min-h-0">
+          {/*  §1 (nº 460) — L'ENCADRÉ NE VIT PLUS QU'AU WEB
+               (`mobile:hidden`) : au doigt, le va-et-vient le
+               remplace, juste dessous. Le `mobile:min-h-0` d'hier n'a
+               plus d'objet — la boîte entière est retirée du doigt. */}
+          <div className="flex items-center gap-2.5 min-h-[52px] mobile:hidden">
             <div className="flex-1 min-w-0">
               <EncadreDeuxChamps gauche={badge} droite={filtre()} porteBadge />
             </div>
@@ -305,6 +366,41 @@ export function MenusSelection({
                  onglets — la leçon de la nº 256 (rien ne doit glisser
                  à la bascule) reste vraie par construction. L'encadré
                  (`flex-1`) se prolonge dans l'espace libéré. */}
+          </div>
+          {/*  ██ §1-2 (nº 460) — LE VA-ET-VIENT DU DOIGT ██
+               `Favoris | Suivis`, les onglets soulignés de la nº 447.
+               `min-h-[43px]` + la ligne de 3 px = 46 : LA HAUTEUR DE
+               L'ENCADRÉ REMPLACÉ, au pixel — la réserve de la barre
+               (64 + 12 + 46 = 122, EnTeteTatouage) ne bouge pas.
+               L'appui sur le côté déjà choisi ouvre la feuille de
+               filtres (la commande) ; sur l'autre, la bascule de
+               toujours. Le MenuDeroulant commandé est rendu dessous,
+               déclencheur caché : sa FEUILLE, elle, vit dans un
+               portail — elle monte du bas comme aujourd'hui. */}
+          <div className="hidden mobile:block">
+            <OngletsLigne
+              options={[
+                {
+                  cle: MENU_FAVORIS,
+                  label: motDuVaEtVient("Favoris", MENU_FAVORIS),
+                },
+                {
+                  cle: MENU_SUIVIS,
+                  label: motDuVaEtVient("Suivis", MENU_SUIVIS),
+                },
+              ]}
+              cleActive={choix.menu}
+              surChoix={(cle) => {
+                if (cle === choix.menu) {
+                  setCommandeFiltres((tour) => tour + 1);
+                  return;
+                }
+                poserSelection(cle as MenuSelection, "");
+              }}
+              ariaLabel="Favoris ou suivis"
+              classeOnglet="px-1 min-h-[43px]"
+            />
+            <div className="hidden">{filtre(true)}</div>
           </div>
       {/*  §3 (nº 258) — LA LIGNE ÉTROITE A DISPARU, entièrement. Une
            barre qui se replie ne laisse rien derrière elle : il ne

@@ -22,6 +22,9 @@ import { FenetreFiche } from "@/components/FenetreFiche";
 import { PileFiches } from "@/components/PileFiches";
 import { LigneResultats } from "@/components/LigneResultats";
 import { libelleDuChoix } from "@/components/MenusSelection";
+//  §3 (nº 460) — le pont vers le va-et-vient de la barre : la page
+//  pose les comptes filtrés, la barre les affiche.
+import { poserComptesSelection } from "@/lib/compte-selection";
 import {
   CLE_FENETRE_FICHE,
   type ContexteFenetreFiche,
@@ -347,6 +350,24 @@ export function PageFavoris({
       Sortie d'ici, elle s'exécute — donc elle se prouve. */
   const ensemblesVisibles = cartesDesFavoris(visibles);
 
+  /**
+   * §3 (nº 460) — LES COMPTES DU VA-ET-VIENT DE LA BARRE (mobile).
+   * ------------------------------------------------------------------
+   * Le côté choisi du va-et-vient affiche LE NOMBRE DE CE QUI EST
+   * RÉELLEMENT MONTRÉ après filtrage — les longueurs mêmes que le
+   * sous-titre du web (`visibles`, `suivisVisibles`), posées dans le
+   * petit magasin que la barre lit (lib/compte-selection). Le côté
+   * inactif reste `null` : ses listes ne sont pas calculées (les deux
+   * menus sont exclusifs, nº 247), et il n'affiche pas de nombre.
+   * Reposé à CHAQUE rendu filtré : le nombre suit les filtres.
+   */
+  useEffect(() => {
+    poserComptesSelection(
+      surLesFavoris ? visibles.length : null,
+      surLesFavoris ? null : suivisVisibles.length
+    );
+  }, [surLesFavoris, visibles.length, suivisVisibles.length]);
+
   return (
     /*  §1 (nº 318) — LA PILE DES FICHES SUPERPOSÉES ENVELOPPE LA PAGE.
         C'ÉTAIT LE CHAÎNON MANQUANT, et tout le défaut : la fenêtre de
@@ -443,7 +464,20 @@ export function PageFavoris({
             sait ; s'il n'en veut que d'un côté, ce drapeau se lira
             `airEnBas={!surLesFavoris}` — une ligne, pas une refonte. */
         airEnBas
+        /*  §5 (nº 460) — AU DOIGT, PLUS AUCUN TITRE NI SOUS-TITRE sur
+            cette page (« Ma sélection de photos », « 10 photos »…) :
+            le bloc entier part en `display` (le drapeau de la nº 444 —
+            la garantie nº 171 ne force qu'opacité et visibilité).
+            L'écran du doigt commence par le va-et-vient de la barre
+            (MenusSelection), qui porte désormais le compte. Le web ne
+            change pas d'un pixel. */
+        masqueAuDoigt
       />
+      {/*  §5 (nº 460) — L'AIR SOUS LA BARRE, l'écriture de la nº 445 :
+           le titre parti, les cartes touchaient la rangée collante —
+           les mêmes 14 px que l'accueil sans recherche, au doigt
+           seulement. */}
+      <div aria-hidden data-air-sous-barre className="h-3.5 hidden mobile:block" />
 
       {/* ---------- LES PHOTOS GARDÉES ----------
            §2 (nº 247) — LES DEUX MENUS SONT EXCLUSIFS : cette section
