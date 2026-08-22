@@ -906,7 +906,25 @@ export function EnTeteTatouage({
                l'écran — le débord de la ligne passe, et rien ne peut
                dépasser l'écran (aucun défilement horizontal possible,
                le rognage reste). Le repli vertical est inchangé. */}
-          <div className="max-lg:min-h-0 max-lg:overflow-hidden max-lg:-mx-4 max-lg:px-4 sm:max-lg:-mx-6 sm:max-lg:px-6 flex w-full justify-center">
+          {/*  §1 (nº 463) — LA LARGEUR COMPENSÉE, la pièce qui manquait
+               à la nº 462, MESURÉE sur l'iPhone : cette boîte porte
+               `w-full` — une largeur EXPLICITE (100 % du parent). Sur
+               un tel élément, la marge négative DÉCALE la boîte mais
+               ne l'AGRANDIT pas (les marges n'entrent pas dans le
+               calcul d'une largeur explicite) : le relevé la montrait
+               à 0..358 au lieu de 0..390 — 32 px manquants à droite,
+               et le `px-4` rentrait le contenu à 16..342 (les 32 px de
+               marge en trop que Kevin voyait). LE REMÈDE : au repli
+               (`max-lg:`), la largeur DEVIENT 100 % + les deux marges
+               rendues — `calc(100%+2rem)` (3rem dès 640). La boîte va
+               de 0 au bord droit (0..390), le `px-4` remet le contenu
+               à 16..374 : les positions d'AVANT la nº 462, au pixel —
+               l'accueil les retrouve aussi (sa rangée était rentrée de
+               32 px à droite depuis la nº 462, même cause). Le rognage
+               vertical du repli et l'absence de défilement horizontal
+               ne changent pas (la boîte s'arrête AU bord, jamais
+               au-delà). */}
+          <div className="max-lg:min-h-0 max-lg:overflow-hidden max-lg:-mx-4 max-lg:px-4 max-lg:w-[calc(100%+2rem)] sm:max-lg:-mx-6 sm:max-lg:px-6 sm:max-lg:w-[calc(100%+3rem)] flex w-full justify-center">
             {/*  Le pt-3 remplace l'ancien gap-y-3 du parent : il
                  appartient à la rangée et se replie avec elle. */}
             <div

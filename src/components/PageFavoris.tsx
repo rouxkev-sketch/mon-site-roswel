@@ -442,7 +442,13 @@ export function PageFavoris({
            L'AIR qui le remplace est celui du doigt (nº 445,
            `data-air-sous-barre`, 14 px), désormais aux deux
            largeurs — aucune bande vide à l'ancienne hauteur du titre. */}
-      <div aria-hidden data-air-sous-barre className="h-3.5" />
+      {/*  §2 (nº 463) — L'AIR GRANDIT AU WEB SEULEMENT : 14 px au
+           doigt (l'écriture nº 445, bien réglée — pas un pixel de
+           plus), 32 px au web (`lg:h-8`) — le `sm:pt-8` que les blocs
+           de tête des pages web portaient (LigneResultats), le jeton
+           d'air des têtes de page, rien d'inventé. Posé sur CE
+           séparateur, jamais sur un conteneur partagé. */}
+      <div aria-hidden data-air-sous-barre className="h-3.5 lg:h-8" />
 
       {/* ---------- LES PHOTOS GARDÉES ----------
            §2 (nº 247) — LES DEUX MENUS SONT EXCLUSIFS : cette section
