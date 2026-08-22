@@ -808,82 +808,18 @@ export function consommerArriveeEnHaut() {
   arriveeEnHautVoulueLe = 0;
 }
 
-/**
- * ██ §2 (nº 477) — LA RESTAURATION DU NAVIGATEUR, SUSPENDUE LE TEMPS
- * D'UNE TRAVERSÉE VOULUE ██
- * ==================================================================
- * LA CAUSE QUE TROIS PASSES N'AVAIENT PAS ATTEINTE, et c'est le code
- * qui l'établit, pas une hypothèse :
- *  · le site pose `history.scrollRestoration = "auto"` avant toute
- *    peinture (lib/script-avant-peinture, l. 251 — c'est un ACQUIS,
- *    nº 363 : sans lui, le retour par glissement laissait un écran
- *    noir pendant tout le geste). « auto » veut dire : à chaque
- *    TRAVERSÉE d'historique, le navigateur repose lui-même la position
- *    qu'il avait rangée dans l'entrée — et il le fait AVANT que la
- *    moindre ligne du site ne s'exécute ;
- *  · or la sortie confirmée par le bouton « précédent » est
- *    exactement cela : un `history.go(-2)` DANS LE MÊME DOCUMENT
- *    (GardeSaisie). Aucun document ne naît, donc le script
- *    d'avant-peinture NE TOURNE PAS — et c'est pourquoi la nº 476,
- *    qui posait la déclaration nº 429 juste avant ce `go(-2)`, n'a rien
- *    pu changer : cette déclaration-là n'a qu'UN lecteur, ce script,
- *    et il ne s'exécute jamais sur ce chemin. Elle y était inerte.
- * POURQUOI LES DEUX AUTRES PASSES AVAIENT RÉUSSI AILLEURS : la loupe
- * (nº 468) part en navigation de DOCUMENT — le script tourne, la
- * déclaration est lue ; l'abandon depuis le profil (nº 475) part en
- * `router.push`, une navigation EN AVANT — le navigateur n'y restaure
- * rien, et la déclaration de la nº 446 (mémoire de module, lue par
- * DefilementEnHaut et MemoireNavigation) suffit. Le chemin du
- * portfolio est le seul des trois à passer par une TRAVERSÉE : la
- * déclaration nº 446 y était bien lue, mais elle arrivait APRÈS que le
- * navigateur eut déjà reposé le bas de l'accueil.
- *
- * CE QU'ON FAIT, ET RIEN DE PLUS : on rend la restauration MANUELLE le
- * temps de la traversée, puis on la rend au navigateur. Le site
- * reprend alors la main comme sur tout autre chemin — la déclaration
- * de la nº 446 est lue par DefilementEnHaut avant la peinture, et
- * MemoireNavigation pose zéro et la consomme (l'ordre de la nº 426 est
- * intact : deux lecteurs, un seul consommateur).
- * ⚠️ LE VÉHICULE NE CHANGE PAS : c'est toujours le même `go(-2)`.
- * Aucune entrée d'historique n'est ajoutée ni retirée (nº 332-§1), et
- * le retour reste en un appui (nº 332-§4).
- * ⚠️ ET « auto » REVIENT TOUJOURS : au popstate d'arrivée (après deux
- * images, la traversée finie), ou au plus tard au bout de deux
- * secondes si aucun popstate n'arrive. Un vrai retour du visiteur ne
- * passe jamais par ici : il garde la restauration native de la nº 363,
- * et toutes les restitutions légitimes jouent comme avant.
- */
-export function suspendreLaRestaurationNative(): void {
-  if (typeof window === "undefined") return;
-  try {
-    if (window.history.scrollRestoration === "manual") return;
-    window.history.scrollRestoration = "manual";
-  } catch {
-    //  Navigateur qui refuse le réglage : il n'y a rien à suspendre,
-    //  et rien à rendre non plus.
-    return;
-  }
-  let rendue = false;
-  const rendreLaMain = () => {
-    if (rendue) return;
-    rendue = true;
-    window.removeEventListener("popstate", auRetour);
-    window.clearTimeout(filet);
-    try {
-      window.history.scrollRestoration = "auto";
-    } catch {
-      //  Rien à faire : le réglage n'était pas modifiable.
-    }
-  };
-  //  DEUX IMAGES : la traversée est peinte et rendue avant qu'on ne
-  //  rende le réglage — le navigateur ne doit pas retrouver « auto »
-  //  pendant qu'il règle encore son arrivée.
-  const auRetour = () => {
-    requestAnimationFrame(() => requestAnimationFrame(rendreLaMain));
-  };
-  const filet = window.setTimeout(rendreLaMain, 2000);
-  window.addEventListener("popstate", auRetour);
-}
+/*  §1 (nº 478) — LA SUSPENSION DE LA RESTAURATION NATIVE EST PARTIE.
+    Elle avait été écrite à la nº 477 pour un seul appelant : la sortie
+    confirmée de la garde de saisie, qui passait alors par une TRAVERSÉE
+    d'historique (`history.go(-2)`) — le seul chemin où le navigateur
+    repose la position avant toute ligne du site. Cette passe a changé
+    le véhicule : cette sortie est devenue une navigation EN AVANT vers
+    l'accueil, comme le logo. Il n'y a donc plus rien à suspendre, et
+    l'acquis nº 363 — `scrollRestoration = "auto"`, sans quoi le retour
+    par glissement laisse un écran noir — reste entier, sans exception
+    ni parenthèse. Une écriture qui n'a plus d'appelant est un piège
+    pour la passe suivante : elle s'en va avec son motif. */
+
 
 type EtatOnglet = {
   derniere: string | null;
