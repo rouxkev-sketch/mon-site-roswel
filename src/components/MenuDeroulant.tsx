@@ -377,7 +377,18 @@ export function MenuDeroulant({
    * dehors doit connaître TOUTES les surfaces montées en portail),
    * qu'il fallait rejouer ici.
    */
-  const feuille = useRef<HTMLDivElement>(null);
+  /*  ██ §2 (nº 464) — LA REF COUVRE LE PORTAIL ENTIER, VOILE COMPRIS ██
+      Elle vivait sur la seule PLAQUE de la feuille : le VOILE, sa sœur,
+      n'était couvert par aucune des gardes de `surClic` — la leçon
+      nº 238-§3 ci-dessus (« connaître TOUTES les surfaces montées en
+      portail ») s'appliquait à lui aussi, et c'est la moitié du tap qui
+      traversait (l'autre : le `onPointerDown` du voile lui-même — voir
+      la feuille, tout en bas). La ref remonte sur la RACINE du portail
+      (`fixed inset-0`) : plaque ET voile sont excusés d'un coup, et la
+      fermeture de la feuille n'appartient plus qu'à ses propres
+      chemins — le voile (au `click`), le glissement, Échap, le retour,
+      un choix. */
+  const racineFeuille = useRef<HTMLDivElement>(null);
   const bouton = useRef<HTMLButtonElement>(null);
   /**
    * §3 (nº 262) — SOMMES-NOUS SUR SMARTPHONE ? Seul le champ qui reçoit
@@ -587,7 +598,15 @@ export function MenuDeroulant({
       //  §2 (nº 253) — ET LA FEUILLE, montée en portail depuis la
       //  nº 251 : sans cette ligne, ses portes s'ouvraient puis le
       //  menu se fermait sous elles.
-      if (feuille.current?.contains(cible)) return;
+      //  ██ §2 (nº 464) — LE VOILE AUSSI : la garde ne couvrait que la
+      //  PLAQUE (`feuille`), et le voile — sa SŒUR dans le portail —
+      //  restait un « dehors » : un tap dessus fermait ICI, au
+      //  `pointerdown`, et le `click` du même tap partait sur la page.
+      //  La ref couvre désormais la RACINE du portail (voile + plaque) :
+      //  cet écouteur ne tire plus jamais sur la feuille — au doigt,
+      //  c'est le voile qui ferme, au `click` (voir la feuille). Le
+      //  panneau WEB, lui, garde ce chemin tel quel.
+      if (racineFeuille.current?.contains(cible)) return;
       setOuvert(false);
     };
     const surTouche = (evenement: KeyboardEvent) => {
@@ -1293,19 +1312,38 @@ export function MenuDeroulant({
         feuilleMobile &&
         typeof document !== "undefined" &&
         createPortal(
-        <div className="md:hidden fixed inset-0 z-[70] flex flex-col justify-end">
-          {/* LE VOILE — il porte le fondu (la plaque, jamais). Tap =
-              fermeture. */}
+        <div
+          //  §2 (nº 464) — la ref vit sur la RACINE : voile + plaque,
+          //  tout le portail est connu de `surClic` (leçon nº 238-§3).
+          ref={racineFeuille}
+          className="md:hidden fixed inset-0 z-[70] flex flex-col justify-end"
+        >
+          {/*  LE VOILE — il porte le fondu (la plaque, jamais). Tap =
+               fermeture.
+               ██ §2 (nº 464) — AU `click`, PLUS JAMAIS AU `pointerdown` ██
+               LE TAP TRAVERSAIT : fermer à l'appui démonte le portail
+               dans la foulée (React vide sa file avant de rendre la
+               main — et l'ajustement « !ouvert → listeVisible=false »
+               retire le portail au même rendu) ; au LEVER du doigt, le
+               navigateur fabrique le `click` du tap, refait son
+               hit-test dans un document où le voile n'existe plus, et
+               ce `click` atterrit sur ce qui se trouve SOUS le doigt —
+               une carte, un onglet, un lien — et l'actionne. En fermant
+               au `click` — le DERNIER événement de la séquence d'un
+               tap —, le voile est encore là pour le recevoir : il le
+               CONSOMME, le démontage vient après, rien ne traverse.
+               Un tap dehors ferme, RIEN d'autre. (Un glissement sur le
+               voile ne produit pas de `click` : il ne ferme plus — un
+               glissement n'est pas un tap, et le corps est gelé.) */}
           <div
             className="absolute inset-0 bg-black/40 opacity-100
                        transition-opacity duration-200 starting:opacity-0"
-            onPointerDown={fermer}
+            onClick={fermer}
             aria-hidden
           />
           {/* La feuille — SŒUR du voile, jamais son enfant. */}
           <div
             {...(sombre ? { "data-verre-menu": "" } : {})}
-            ref={feuille}
             role="listbox"
             aria-label={ariaLabel}
             /*  §4 (nº 460) — `feuilleDecollee` : l'encadré ne touche

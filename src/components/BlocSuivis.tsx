@@ -159,7 +159,27 @@ export function BlocSuivis({
            vivait QUE sous un titre de groupe part avec les titres : la
            liste repart du `pb` du bloc de titre de la page, comme la
            grille de la recherche — ni espace vide, ni décalage. */}
-      <ul className="grid gap-[34px] lg:gap-[62px] grid-cols-[minmax(0,1fr)]">
+      {/*  ██ §1 (nº 464) — L'AIR ENTRE DEUX SUIVIS = L'AIR DU HAUT DE
+           LISTE ██
+           Le propriétaire trouve l'air entre le bas d'une galerie et
+           la photo de profil du suivi SUIVANT trop grand : il doit
+           reprendre EXACTEMENT celui qui sépare le bas du va-et-vient
+           (la ligne grise) de la PREMIÈRE photo de profil. Cette
+           référence, MESURÉE dans le code, par affichage :
+            · doigt : 12 px (le bas du `py-3` de la barre,
+              EnTeteTatouage) + 14 px (le séparateur
+              `data-air-sous-barre h-3.5`, PageFavoris) = 26 px ;
+            · web : 3 px (les 46 px du va-et-vient centrés dans le
+              `min-h-[52px]` de sa rangée, MenusSelection) + 12 px (le
+              bas du `py-3` de la barre) + 32 px (`lg:h-8` du même
+              séparateur, nº 463) = 47 px.
+           Les 34/62 px d'avant (nº 254/264) dataient du temps des
+           titres de groupe. L'air se pose ICI, sur le `gap` de la
+           liste — L'ÉLÉMENT DE SÉPARATION, jamais un bloc ni un
+           conteneur partagé : l'air INTERNE d'un suivi (le `mt-5` de
+           sa bande, nº 325) et l'air de bas de page (le `pb-16` du
+           <main> de PageFavoris) ne bougent pas d'un pixel. */}
+      <ul className="grid gap-[26px] lg:gap-[47px] grid-cols-[minmax(0,1fr)]">
         {liste.map((suivi) => (
           <li key={suivi.id}>
             <BlocDUnSuivi suivi={suivi} surOuverture={surOuverture} />
