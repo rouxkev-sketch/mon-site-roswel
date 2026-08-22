@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { IconeChevronBas } from "@/components/Icones";
+//  §2 (nº 488) — l'horloge de la ligne des horaires : le dessin
+//  existait déjà, rien n'est ajouté au catalogue d'icônes.
+import { IconeChevronBas, IconeHorloge } from "@/components/Icones";
 //  §3 (nº 388) — l'icône de la ligne d'adresse, et l'écriture des
 //  lignes de profil (module sans dépendance : voir lignes-profil).
 import { IconeLocalisation } from "@/components/IconeReseau";
@@ -1124,8 +1126,34 @@ export function LigneAdresseDuLieu({
       };
   const adresse = ligneFiche(lieuPrincipal);
   if (!adresse) return null;
+  /*  ██ §2 (nº 488) — LES HORAIRES QUITTENT L'ADRESSE ██
+      ==================================================
+      CE QU'IL Y AVAIT : le volet était ACCOLÉ sous l'adresse, dans une
+      boîte commune, aligné par un simple retrait à gauche — il se
+      lisait comme une suite de l'adresse, sans étiquette à lui.
+      CE QU'IL Y A : DEUX LIGNES SŒURS, rendues côte à côte dans un
+      fragment. Elles deviennent donc des enfants DIRECTS de la liste
+      d'informations, et c'est ce qui donne l'air demandé : les VINGT
+      pixels de son `gap-y-5` (ContenuFiche) — exactement l'air qui
+      sépare déjà le booking, le site et les étiquettes. Aucune marge
+      n'est posée ici : la liste seule commande, comme pour toutes les
+      autres lignes.
+      SON ICÔNE : l'HORLOGE, qui existait déjà (components/Icones,
+      `IconeHorloge`) — rien de dessiné pour l'occasion. Elle est au
+      rang des autres (20 px dans la boîte partagée) et porte le même
+      gris doux.
+      ⚠️ LE VOLET LUI-MÊME N'EST PAS TOUCHÉ : `HorairesEnLigne` garde
+      son ouverture, sa fermeture, son contenu, son calcul d'état dans
+      le fuseau du lieu. Ce sont sa PLACE et son ÉTIQUETTE qui
+      changent.
+      ⚠️ ET IL RESTE MUET QUAND IL N'A RIEN À DIRE : sans horaires
+      renseignés, `HorairesEnLigne` rend `null` — la ligne entière
+      disparaît alors, icône comprise, au lieu de laisser une horloge
+      orpheline. C'est le piège de la nº 386, et c'est pourquoi la
+      garde interroge la MÊME donnée que le volet. */
+  const aDesHoraires = semaineRenseignee(semaineDepuisBase(principal?.horaires));
   return (
-    <div>
+    <>
       <p className={`flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE}`}>
         {/*  ██ §1 (nº 392) — L'ICÔNE DE LOCALISATION REVIENT AU GRIS ██
              La nº 391 lui avait donné `text-sombre-lien`, le jeton du
@@ -1156,15 +1184,20 @@ export function LigneAdresseDuLieu({
           />
         </span>
       </p>
-      {/*  LE VOLET DES HORAIRES — déplacé tel quel, aligné sous le
-           texte de la ligne (22 px d'icône + 10 px d'écart). */}
-      <div className="pl-8">
-        <HorairesEnLigne
-          horaires={principal?.horaires}
-          fuseau={principal?.fuseau}
-        />
-      </div>
-    </div>
+      {aDesHoraires && (
+        <p className={`flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE}`}>
+          <span className={`${BOITE_ICONE_LIGNE} text-sombre-texte-doux`}>
+            <IconeHorloge taille={20} />
+          </span>
+          <span className="min-w-0">
+            <HorairesEnLigne
+              horaires={principal?.horaires}
+              fuseau={principal?.fuseau}
+            />
+          </span>
+        </p>
+      )}
+    </>
   );
 }
 

@@ -2,7 +2,6 @@
 
 import { Fragment, useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import Link from "next/link";
 import {
   defilerEnDouceur,
   defilerSansGeste,
@@ -32,7 +31,6 @@ import { BoutonHorsLigne } from "@/components/BoutonHorsLigne";
 import { BoutonPartageFiche } from "@/components/BoutonPartageFiche";
 import {
   IconeCalendrier,
-  IconeDiamant,
   IconeDuLien,
   IconeEtoile,
 } from "@/components/IconeReseau";
@@ -1182,128 +1180,87 @@ export function ContenuFiche({
    * un bloc, l'icône reste seule dans sa colonne.
    */
   /**
-   * ██ §1 (nº 386) — LES PRATIQUES DEVIENNENT UNE LIGNE, SOUS LES
-   * STYLES ██
+   * §1 (nº 386), DÉPASSÉ PAR LA nº 488 — LES PRATIQUES AVAIENT
+   * REJOINT LA LISTE D'INFORMATIONS.
    * ==================================================================
-   * CE QUI DISPARAÎT : la section « Pratique » de la nº 315-§2 — son
-   * titre en capitales, son trait de séparation, ses capsules à fond
-   * `sombre-eleve`. La section ENTIÈRE part, donc son trait avec elle :
-   * il n'y a pas de séparateur orphelin à ramasser, et pas de vide non
-   * plus — le bloc était déjà conditionné par la longueur de la liste,
-   * et ce qui le suit (le signalement) porte son propre `mt-10 pt-10`.
-   *
-   * CE QUI PREND SA PLACE : LA LIGNE DES STYLES, à la lettre — mêmes
-   * constantes partagées (`ECRITURE_LIGNE_FICHE`, `BOITE_ICONE_LIGNE`),
-   * mêmes puces, même `items-start` qui replie le texte sur le début
-   * de la première valeur et jamais sous l'icône. Les deux lignes ne
-   * peuvent pas diverger : elles lisent les mêmes classes.
-   *
-   * ⚠️ AUCUN LIEN N'EST CRÉÉ, ET C'EST VÉRIFIÉ : les capsules de
-   * pratique étaient des `<li>` de TEXTE NU — jamais un `<a>`, jamais
-   * un `<Link>`, aucune destination nulle part. Elles restent donc du
-   * texte. (Les styles, eux, étaient et demeurent des liens vers
-   * `/tatouage/<style>/<ville>`.) La différence est voulue et tient à
-   * ce qui existait, pas à une décision prise ici.
-   * ⚠️ RIEN DE DÉCLARÉ, PAS D'ICÔNE ORPHELINE : toute la ligne est
-   * conditionnée par `capsulesPratique.length`.
-   * ⚠️ UNE SEULE VALEUR : aucune puce, par construction (`rang > 0`).
+   * CE QUE CETTE PASSE AVAIT FAIT, et qui tient toujours : la section
+   * « Pratique » de la nº 315-§2 — titre en capitales, trait de
+   * séparation, capsules — a disparu, section entière, trait compris.
+   * Les pratiques sont devenues une LIGNE de la liste, écrite comme
+   * celle des styles.
+   * ⚠️ CE QUI N'EST PLUS VRAI DEPUIS LA nº 488 : les deux lignes n'en
+   * font plus qu'UNE, leurs valeurs sont redevenues des étiquettes à
+   * fond uni, et les styles ne sont plus des liens. La note qui fait
+   * foi est celle juste dessous.
    */
-  const ligneDesPratiques = capsulesPratique.length > 0 && (
-    <p
-      key="pratique"
-      data-pratique-fiche=""
-      className={`flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE}`}
-    >
-      <span className={BOITE_ICONE_LIGNE}>
-        <IconeDiamant taille={20} />
-      </span>
-      <span className="min-w-0">
-        {capsulesPratique.map((slug, rang) => (
-          <Fragment key={slug}>
-            {rang > 0 && (
-              <>
-                <span aria-hidden="true" className="px-1.5">
-                  •
-                </span>
-                {/*  ██ §2 (nº 391) — LA PUCE N'OFFRAIT AUCUNE COUPURE ██
-                     LE DÉFAUT : la ligne revenait à la ligne alors qu'il
-                     restait de la place à droite, et pas sur les mêmes
-                     fiches. LA CAUSE : entre deux valeurs il n'y a AUCUN
-                     caractère d'espace — l'écart est le `px-1.5` de la
-                     puce, du rembourrage, pas du texte — et le point
-                     « • » (U+2022) appartient à la classe de coupure
-                     ALPHABÉTIQUE : le navigateur n'a donc le droit de
-                     couper NI avant NI après. « Machine•Petit » est un
-                     seul mot à ses yeux. Les seules coupures possibles
-                     sont les espaces INTERNES aux libellés — c'est ce
-                     qui rend le défaut ALÉATOIRE D'UNE FICHE À L'AUTRE :
-                     il dépend entièrement des libellés de la fiche et de
-                     l'endroit où tombent leurs espaces. Une fiche dont
-                     les pratiques sont des mots simples ne montre rien ;
-                     une fiche à libellés composés perd une demi-largeur.
-                     MESURÉ sur l'exemple exact du propriétaire
-                     (« Couleur • Machine • Petit tatouage • Grandes
-                     pièces »), colonne de la page : la première ligne
-                     n'utilisait que 196,4 px des 308 disponibles —
-                     111,6 px PERDUS à droite.
-                     LE REMÈDE : `<wbr />`, une occasion de coupure de
-                     LARGEUR NULLE, posée après la puce. Elle ne dessine
-                     rien, ne décale rien, n'ajoute pas un pixel : elle
-                     dit seulement au navigateur qu'il a le droit de
-                     couper ici. La même ligne monte alors à 289,6 px sur
-                     308 — 18,4 px de reste, la marge normale d'un mot
-                     qui ne tient plus. Et la coupure tombe APRÈS la
-                     puce : la ligne suivante commence sur la valeur, à
-                     l'aplomb exact de la première (l'alignement du
-                     retour à la ligne de la nº 384 ne bouge pas). */}
-                <wbr />
-              </>
-            )}
-            {libelleFiltre(slug)}
-          </Fragment>
-        ))}
-      </span>
-    </p>
+  /**
+   * ██ §1 (nº 488) — TECHNIQUES ET STYLES DEVIENNENT DES CAPSULES,
+   * SUR UNE SEULE LIGNE ██
+   * ==================================================================
+   * CE QU'IL Y AVAIT : DEUX lignes de texte, chacune ouverte par son
+   * icône — un DIAMANT pour les techniques, une ÉTOILE pour les
+   * styles —, les valeurs séparées par des puces.
+   * CE QU'IL Y A : UNE seule ligne, ouverte par la SEULE ÉTOILE, et
+   * les valeurs devenues des ÉTIQUETTES À FOND UNI. Le diamant s'en
+   * va entièrement — icône comprise.
+   *
+   * DEUX FAMILLES, DEUX FONDS, ET AUCUN TRAIT : les techniques
+   * portent `bg-sombre-eleve`, les styles `bg-sombre-eleve-clair` —
+   * deux crans voisins de l'échelle de profondeur (nº 466), qui se
+   * distinguent par la CLARTÉ et non par une bordure (la charte les
+   * proscrit). Aucun rose : il reste réservé au sélectionné.
+   * L'AIR ENTRE LES DEUX GROUPES vaut SEIZE pixels (`gap-x-4`),
+   * contre SIX à l'intérieur d'un groupe (`gap-1.5`) : le
+   * regroupement se lit sans qu'on ait à l'expliquer.
+   *
+   * ⚠️ CE QU'ON PERD, ET IL FAUT LE DIRE : les styles étaient des
+   * LIENS vers `/tatouage/<style>/<ville>` — la vitrine « ce style,
+   * dans cette ville ». Depuis une fiche, on ne rebondit donc plus
+   * vers la liste des artistes d'un même style. Les techniques,
+   * elles, n'ont jamais été cliquables. Le propriétaire a tranché :
+   * ce sont des étiquettes, rien ne se passe au clic.
+   *
+   * ⚠️ LE RAYON EST CELUI DES BADGES DU SITE (`rounded-lg`, 8 px,
+   * nº 449) : c'est l'acquis, et il ne se change pas sans qu'on le
+   * demande.
+   * ⚠️ ELLES PASSENT À LA LIGNE PROPREMENT : `flex-wrap` sur les deux
+   * étages — les groupes entre eux, et les capsules d'un même groupe.
+   * Aucune ne se coupe ni ne déborde, au doigt comme au web ; la
+   * ligne est donc la même partout, sans variante d'appareil.
+   */
+  const CAPSULE_LIGNE =
+    "inline-flex items-center rounded-lg px-2.5 py-1 text-[13.5px] leading-[18px]";
+  const capsuleDe = (cle: string, texte: string, fond: string) => (
+    <span key={cle} className={`${CAPSULE_LIGNE} ${fond}`}>
+      {texte}
+    </span>
   );
-
-  const ligneDesStyles = tatoueur.styles.length > 0 && (
+  const ligneDesEtiquettes = (capsulesPratique.length > 0 ||
+    tatoueur.styles.length > 0) && (
     <p
-      key="styles"
+      key="etiquettes"
+      data-pratique-fiche=""
       data-styles-fiche=""
       className={`flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE}`}
     >
       <span className={BOITE_ICONE_LIGNE}>
         <IconeEtoile taille={20} />
       </span>
-      <span className="min-w-0">
-        {tatoueur.styles.map((slug, rang) => (
-          <Fragment key={slug}>
-            {rang > 0 && (
-              <>
-                <span aria-hidden="true" className="px-1.5">
-                  •
-                </span>
-                {/*  §2 (nº 391) — LA MÊME OCCASION DE COUPURE QUE LES
-                     PRATIQUES (voir la note complète juste au-dessus) :
-                     cette ligne est écrite à l'identique, puce comprise,
-                     donc elle porte exactement le même défaut. La
-                     corriger d'un côté seulement l'aurait laissé
-                     visible une ligne plus bas. */}
-                <wbr />
-              </>
+      <span className="min-w-0 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+        {capsulesPratique.length > 0 && (
+          <span className="flex flex-wrap gap-1.5">
+            {capsulesPratique.map((slug) =>
+              capsuleDe(slug, libelleFiltre(slug), "bg-sombre-eleve")
             )}
-            <Link
-              href={`/tatouage/${slug}/${tatoueur.ville_slug}`}
-              //  §4 et §5 (nº 388) — plus de pilule ici non plus, et LES
-              //  STYLES RESTENT GRIS : ils mènent à une page DU site,
-              //  la convention du bleu ne les concerne pas. Ils
-              //  s'éclaircissent au survol, comme les autres lignes.
-              className="transition-colors hover:text-sombre-texte"
-            >
-              {libelleStyle(slug)}
-            </Link>
-          </Fragment>
-        ))}
+          </span>
+        )}
+        {tatoueur.styles.length > 0 && (
+          <span className="flex flex-wrap gap-1.5">
+            {tatoueur.styles.map((slug) =>
+              capsuleDe(slug, libelleStyle(slug), "bg-sombre-eleve-clair")
+            )}
+          </span>
+        )}
       </span>
     </p>
   );
@@ -1817,8 +1774,7 @@ export function ContenuFiche({
                orpheline. */}
           {(premiereLigne.length > 0 ||
             ligneDuSite.length > 0 ||
-            ligneDesStyles ||
-            ligneDesPratiques) && (
+            ligneDesEtiquettes) && (
             <div
               /*  §5 (nº 389) — L'ÉCART PARTAGÉ MONTE D'UN CRAN :
                    `gap-y-4` (16 px) devient `gap-y-5` (20 px). C'est le
@@ -1878,8 +1834,7 @@ export function ContenuFiche({
                   {ligneDuSite}
                 </div>
               )}
-              {ligneDesPratiques}
-              {ligneDesStyles}
+              {ligneDesEtiquettes}
               {/*  §3 (nº 388) — L'ADRESSE FERME LA SÉRIE, et seulement
                    sur un salon ou un studio : une fiche d'artiste
                    montre ses PROFILS (à domicile, en salon, guest),
