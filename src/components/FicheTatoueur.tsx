@@ -917,17 +917,29 @@ export function FicheTatoueur({
             /*  §3 (nº 474) — ENCORE UN CRAN : 4 px → 2 px. Le même
                 calcul, au même endroit : la racine pose 16 px de
                 rembourrage haut, et cette remontée en reprend désormais
-                QUATORZE (`mobile:-mt-3.5`) — le cran d'avant, douze,
+                QUATORZE (en toutes lettres : le piège des
+                commentaires, nº 472) — le cran d'avant, douze,
                 en laissait quatre. La photo reste DÉCOLLÉE de la
                 barre : c'est `mobile:-mt-4` — seize repris, plus un
                 pixel d'air — qui la ferait TOUCHER, et c'est la valeur
                 que l'aperçu, lui, garde. Rien d'autre de la vue ne
                 bouge, et le web n'est pas concerné (variante du
                 doigt). */
+            /*  ██ §1-a (nº 483) — ENCORE UN PIXEL, ET C'EST LE DERNIER ██
+                L'air passe de DEUX pixels à UN : la racine pose seize
+                pixels de rembourrage haut, et cette remontée en reprend
+                désormais QUINZE. Il n'y a pas de cran intermédiaire
+                au-delà : à seize repris — la valeur de l'aperçu — la
+                photo TOUCHERAIT la barre. Un pixel est donc tout ce qui
+                la sépare encore du contact, et c'est voulu : elle reste
+                décollée, mais de justesse.
+                L'aperçu garde son collage, le web n'est pas concerné
+                (variante du doigt), et rien d'autre de la vue ne
+                bouge. */
             /*  ██ §1 (nº 476) — LE CALAGE SUR LE LOGO EST ANNULÉ ██
                 Le propriétaire a regardé les 14 px de la nº 475 sur son
                 téléphone : c'est TROP. L'air revient à la valeur de la
-                nº 474 — DEUX pixels (`mobile:-mt-3.5` : la remontée
+                nº 474 — DEUX pixels (la remontée
                 reprend 14 des 16 px de rembourrage de la racine). Le
                 relevé de la nº 475 reste écrit ci-dessous parce qu'il
                 est juste et qu'il resservira si la question revient :
@@ -957,7 +969,7 @@ export function FicheTatoueur({
                 photo qui vient s'aligner), et le web n'est pas concerné
                 (variante du doigt). */
             className={`lg:w-[var(--photo-largeur,calc((100vh_-_119px)*0.8))] max-w-full mobile:-mx-4 mobile:max-w-none ${
-              apercu ? "mobile:-mt-4" : "mobile:-mt-3.5"
+              apercu ? "mobile:-mt-4" : "mobile:-mt-[15px]"
             }`}
           >
             <CarrouselPortfolio
@@ -1082,29 +1094,55 @@ export function FicheTatoueur({
           {/*  §2 (nº 453) — LA LIGNE REMONTE : l'air photo → titre passe
                de 12 px (le `gap-3` de la colonne) à 8 px
                (`mobile:-mt-1` en reprend 4). */}
-          {/*  ██ §1 (nº 458) — LA COLONNE DE GAUCHE : LE PARTAGE
-               AU-DESSUS DE L'AVATAR ██
-               La zone sous la photo se lit en colonnes alignées :
-                 [partage]  Titre                    [fanion]
-                 [avatar]   Nom                      [Profil]
+          {/*  ██ §1 (nº 458), REDISPOSÉ À LA nº 483 — LA LIGNE DU TITRE ██
+               La zone sous la photo se lit désormais ainsi :
+                 Titre                      [partage] [fanion]
+                 [avatar]   Nom                       [Profil]
                             Artiste • Ville, Pays
-               L'icône de partage (la flèche vers le haut,
-               `IconePartageIOS` — le dessin existant du site) vit dans
-               une boîte de la LARGEUR DE L'AVATAR (40 px), centrée :
-               son axe vertical est celui de l'avatar d'en dessous. Le
-               TITRE prend le même départ que le nom : 40 px de colonne
-               + l'écart de 10 px (`gap-2.5`, celui qui sépare l'avatar
-               de ses textes dans la rangée du profil) — les deux
-               textes commencent à la même verticale.
-               L'ACTION EST CELLE QUI EXISTE : le même
-               `BoutonPartageFiche` que le bouton du web, avec LE MÊME
-               lien partagé (`cheminDuCarrousel` — le carrousel
-               ouvert, nº 280-§3). Rien d'inventé, rien d'écrit dans
-               l'historique. */}
+               CE QUE LA nº 458 AVAIT ÉCRIT, et pourquoi cela tombe : le
+               partage occupait à gauche une colonne de la largeur de
+               l'avatar, et le titre commençait après elle pour tomber à
+               l'aplomb du NOM. Le propriétaire veut l'inverse — le
+               titre à l'aplomb du BORD GAUCHE DE L'AVATAR, donc au bord
+               de la colonne, sans rien devant lui ; et les deux gestes
+               réunis à droite.
+               ⚠️ LE COMPOSANT DE PARTAGE NE CHANGE PAS D'UN CARACTÈRE :
+               même `BoutonPartageFiche`, même variante « icone » de la
+               nº 458 (glyphe 28 dans une cible de 40), même lien
+               partagé (`cheminDuCarrousel`, nº 280-§3). C'est sa PLACE
+               qui bouge, et elle seule.
+               ⚠️ L'ÉCART DE 10 px (`gap-2.5`) NE SERT PLUS QU'À UNE
+               CHOSE : séparer le titre du groupe de droite. Le titre
+               reste souple (`flex-1 min-w-0 truncate`) — un long
+               libellé s'abrège, il ne pousse jamais les deux icônes. */}
           {rangeeSousLaPhoto && (
             <div className="hidden mobile:flex items-center gap-2.5 mobile:-mt-1">
-              {!apercu && (
-                <div className="flex w-10 shrink-0 justify-center">
+              <p
+                data-titre-carrousel=""
+                className="flex-1 min-w-0 truncate text-[15px]
+                           font-semibold text-sombre-texte"
+              >
+                {titreDuCarrousel}
+              </p>
+              {/*  ██ §1-d (nº 483) — LE FANION SE CALE SUR LA MARGE ██
+                   L'ÉCART, MESURÉ : la cible du fanion fait 48 px et son
+                   glyphe 30 — le dessin est donc centré, et il lui reste
+                   NEUF pixels de vide à droite. Le fanion paraissait
+                   rentré d'autant par rapport au bord de l'interface,
+                   alors que sa BOÎTE, elle, y touchait déjà. C'est le
+                   défaut exact de la silhouette « mon compte » à la
+                   nº 465, et le remède est le sien : on tire la boîte de
+                   neuf pixels vers la droite pour que le GLYPHE tombe
+                   sur la marge. La cible ne change ni de taille ni de
+                   forme — elle déborde dans la marge, où rien d'autre
+                   ne vit.
+                   ⚠️ LES DEUX GESTES SONT GROUPÉS SANS ÉCART : leurs
+                   cibles se touchent, mais chaque glyphe garde son
+                   retrait interne — six pixels pour la flèche (28 dans
+                   40), neuf pour le fanion. À l'œil, quinze pixels les
+                   séparent, et aucune des deux cibles n'a rétréci. */}
+              <div className="flex shrink-0 items-center -mr-[9px]">
+                {!apercu && (
                   <BoutonPartageFiche
                     nomArtisan={tatoueur.nom}
                     cheminFiche={cheminDuCarrousel(
@@ -1123,23 +1161,14 @@ export function FicheTatoueur({
                     commune={villeAffichee(tatoueur.ville_nom)}
                     marque={MARQUE_YOKOFOLIO.nom}
                   />
-                </div>
-              )}
-              <p
-                data-titre-carrousel=""
-                className="flex-1 min-w-0 truncate text-[15px]
-                           font-semibold text-sombre-texte"
-              >
-                {titreDuCarrousel}
-              </p>
-              {!apercu && photoAffichee && (
-                <div className="shrink-0">
+                )}
+                {!apercu && photoAffichee && (
                   <BoutonCoeurPhoto
                     photoId={photoAffichee.cle}
                     variante="fiche-mobile"
                   />
-                </div>
-              )}
+                )}
+              </div>
             </div>
           )}
 

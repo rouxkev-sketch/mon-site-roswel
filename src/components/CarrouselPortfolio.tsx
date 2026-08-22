@@ -296,61 +296,27 @@ export function CarrouselPortfolio({
    *    RENDU (le motif React officiel) ;
    *  · seul le minuteur — asynchrone par nature — éteint le texte.
    */
-  /**
-   * §3 (nº 367) — SUR UNE CARTE, LA CAPSULE NAÎT REPLIÉE.
-   * ------------------------------------------------------------------
-   * Sur une FICHE, rien ne change : elle s'ouvre dépliée, montre le
-   * compte, et se replie trois secondes plus tard. Sur une CARTE, on
-   * ne voit d'abord QUE LA FLÈCHE : le compte apparaît au premier
-   * défilement (l'ajustement pendant le rendu, juste dessous, s'en
-   * charge) et repart trois secondes après le dernier. C'est le MÊME
-   * mécanisme, à sa valeur de départ près — il n'y en a pas deux.
-   */
-  const [compteurVisible, setCompteurVisible] = useState(!surCarte);
-  const [reveils, setReveils] = useState(0);
-  //  Le changement de photo est un geste : le texte revient, pendant
-  //  le rendu — jamais dans un effet.
-  const [indiceVu, setIndiceVu] = useState(indice);
-  if (indice !== indiceVu) {
-    setIndiceVu(indice);
-    setCompteurVisible(true);
-  }
-  useEffect(() => {
-    //  §3 (nº 367) — PAS SUR UNE CARTE, et pour deux raisons. D'abord
-    //  le sens : sur une carte, SEUL LE DÉFILEMENT déplie la capsule —
-    //  toucher l'écran ailleurs déplierait les vingt cartes de la
-    //  mosaïque d'un coup. Ensuite le coût : c'était un écouteur de
-    //  document PAR CARTE, pour un geste qui ne la concernait pas.
-    if (surCarte) return;
-    const auToucher = () => {
-      setCompteurVisible(true);
-      setReveils((n) => n + 1);
-    };
-    document.addEventListener("touchstart", auToucher, { passive: true });
-    ressource("écouteur touchstart", 1);
-    return () => {
-      document.removeEventListener("touchstart", auToucher);
-      ressource("écouteur touchstart", -1);
-    };
-    //  `surCarte` ne change jamais pour une instance donnée (une carte
-    //  ne devient pas une fiche) — mais le linte veut le voir écrit,
-    //  et il a raison : la garde du dessus le lit.
-  }, [surCarte]);
-  //  LE CYCLE DE TROIS SECONDES — réarmé par chaque réveil et chaque
-  //  changement de photo. S'il expire, le texte s'estompe en douceur.
-  //  §3 (nº 367) — ET IL NE TOURNE QUE QUAND IL Y A QUELQUE CHOSE À
-  //  REPLIER : une carte qu'on ne touche pas (capsule déjà repliée)
-  //  n'arme aucune minuterie. Sur la fiche, rien ne change — la
-  //  capsule y naît dépliée, donc la minuterie part comme avant.
-  useEffect(() => {
-    if (!compteurVisible) return;
-    const minuteur = window.setTimeout(() => setCompteurVisible(false), 3000);
-    ressource("minuteur compteur", 1);
-    return () => {
-      window.clearTimeout(minuteur);
-      ressource("minuteur compteur", -1);
-    };
-  }, [compteurVisible, reveils, indice]);
+  /*  ██ §2 (nº 483) — LA CAPSULE NE SE REPLIE PLUS : ELLE MONTRE
+      TOUJOURS LE COMPTE ██
+      ------------------------------------------------------------------
+      CE QUI VIVAIT ICI, et qui s'en va ENTIER — pas seulement son
+      déclencheur : un état de visibilité (replié au départ sur une
+      carte, déplié sur une fiche), un ajustement pendant le rendu qui
+      le rallumait à chaque changement de photo, un écouteur de
+      `touchstart` posé sur le document qui le rallumait au moindre
+      geste, un compteur de réveils pour réarmer, et une minuterie de
+      trois secondes qui l'éteignait. Cinq pièces pour une seule
+      question — « le nombre est-il visible ? » — à laquelle la réponse
+      est désormais OUI, toujours, sur toutes les vues et sur les deux
+      appareils (décision du propriétaire, nº 483).
+      ⚠️ CE QUI NE CHANGE PAS : la capsule garde son apparence, sa
+      place, son rayon, ses trois gabarits et sa flèche. Sur une CARTE
+      au web, elle reste cachée jusqu'au survol — c'est une autre règle
+      (nº 369, en CSS pur sur le `group` de la carte), elle ne dépendait
+      pas de la rétractation et n'est pas touchée.
+      ⚠️ ET LES DEUX APPELS DE SONDE PARTENT AVEC LEURS PIÈCES :
+      l'écouteur et la minuterie qu'ils comptaient n'existent plus ; les
+      compter encore aurait faussé le relevé. */
 
   /**
    * ██ §2 (nº 394) — LES FLÈCHES DORMENT, ET SE RÉVEILLENT À LA SOURIS ██
@@ -1025,14 +991,13 @@ export function CarrouselPortfolio({
     }`;
 
   /* LA CAPSULE « 3/12 » — AUCUNE quand l'ensemble n'a qu'une photo. Le
-     texte se replie (largeur ET opacité) pour ne laisser que la
-     flèche ; les deux mouvements sont doux, la réapparition est quasi
-     immédiate — jamais de clignotement.
+     texte y reste OUVERT en permanence depuis la nº 483 : le nombre se
+     lit toujours, la flèche l'accompagne.
      §1 (nº 307) — ELLE S'AFFICHE AUSSI SUR LE WEB, et c'est LE MÊME
-     ÉLÉMENT, pas une copie : la mécanique des trois secondes
-     (`compteurVisible`, réarmée par `reveils` et par `indice`) et la
-     flèche minimale qui reste sont donc rigoureusement identiques aux
-     deux largeurs — elles ne peuvent pas diverger, il n'y en a qu'une.
+     ÉLÉMENT, pas une copie : ce qu'elle montre est donc rigoureusement
+     identique aux deux largeurs — cela ne peut pas diverger, il n'y en
+     a qu'une. (La mécanique des trois secondes qui repliait le texte a
+     été retirée à la nº 483 : le compte reste ouvert en permanence.)
      SEULE LA PLACE CHANGE, et c'est imposé par les boutons déjà là :
       · au doigt, l'angle HAUT DROIT (inchangé) — le cœur occupe le bas
         droit (voir FicheTatoueur, `variante="fiche-mobile"`) ;
@@ -1109,34 +1074,16 @@ export function CarrouselPortfolio({
                        "inline-flex right-3 top-3 px-2.5 py-1.5"
                  }`}
     >
+      {/*  §2 (nº 483) — LE NOMBRE, SANS CONDITION. Il ne porte plus ni
+           largeur maximale, ni opacité, ni transition : les trois
+           servaient le repli, qui n'existe plus. Ne restent que sa
+           taille, sa graisse, ses chiffres de largeur fixe
+           (`tabular-nums` — le compte ne tremble pas d'une photo à
+           l'autre) et l'écart qui le sépare de la flèche. */}
       <span
-        aria-hidden={!compteurVisible}
-        className={`overflow-hidden whitespace-nowrap
-                   ${badgeReduit && surCarte ? "text-[10px]" : "text-[12px]"}
-                   font-semibold tabular-nums
-                   transition-[max-width,opacity,margin-right] ease-out ${
-                     compteurVisible
-                       ? `max-w-[64px] opacity-100 duration-150 ${
-                           badgeReduit && surCarte ? "mr-1" : "mr-1.5"
-                         }`
-                       : "max-w-0 opacity-0 mr-0 duration-500"
-                   } ${
-                     //  §3 (nº 369) — SUR LE WEB, LA CAPSULE MONTRE LE
-                     //  COMPTE dès qu'elle apparaît : le repli des trois
-                     //  secondes est une mécanique DU DOIGT (elle se
-                     //  déplie au défilé), et la souris ne défile pas.
-                     //  Le survol ouvre donc le texte, en CSS, sans
-                     //  toucher à l'état — celui-ci continue de mener au
-                     //  doigt, exactement comme à la nº 367.
-                     surCarte
-                       ? `pointer-fine:group-hover:max-w-[64px]
-                          pointer-fine:group-hover:opacity-100 ${
-                            badgeReduit
-                              ? "pointer-fine:group-hover:mr-1"
-                              : "pointer-fine:group-hover:mr-1.5"
-                          }`
-                       : ""
-                   }`}
+        className={`whitespace-nowrap
+                   ${badgeReduit && surCarte ? "text-[10px] mr-1" : "text-[12px] mr-1.5"}
+                   font-semibold tabular-nums`}
       >
         {indice + 1}/{n}
       </span>
