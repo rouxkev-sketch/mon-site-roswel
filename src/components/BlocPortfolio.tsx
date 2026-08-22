@@ -15,6 +15,16 @@ import { RecadreurPhoto } from "@/components/RecadreurPhoto";
 import { estStyleMonochrome } from "@/config/tatouage";
 import { texteErreur } from "@/lib/erreurs-formulaire";
 import { OngletsLigne } from "@/components/OngletsLigne";
+//  §4 (nº 474) — au doigt, la fenêtre des styles devient une PAGE
+//  plein écran : le gabarit partagé de la nº 465, l'étape d'historique
+//  du C-4 (nº 330/332-§1) et le verrou de défilement compté (nº 469).
+import { PagePleinEcranMobile } from "@/components/PagePleinEcranMobile";
+import { useAppareilMobile } from "@/lib/appareil";
+import { useEtapeQuiSeReferme } from "@/lib/etape-refermable";
+import {
+  poserLeVerrouDeDefilement,
+  retirerLeVerrouDeDefilement,
+} from "@/lib/verrou-defilement";
 import {
   NATURES_PHOTO,
   PLAFOND_GALERIE,
@@ -675,6 +685,36 @@ export function BlocPortfolio({
     //  réabonner entre deux rendus.
   }, [fenetreStyles]);
 
+  /*  ██ §4 (nº 474) — AU DOIGT, LA FENÊTRE DES STYLES EST UNE PAGE ██
+      Elle adopte le gabarit plein écran de la nº 465 (voir le rendu,
+      tout en bas) ; ici vivent ses deux servitudes de page :
+      · L'ÉTAPE D'HISTORIQUE (C-4, nº 330 ; règle nº 332-§1) — au
+        doigt seulement : le RETOUR du téléphone referme la page et
+        rend le formulaire, saisie intacte (rien ne navigue — l'étape
+        n'est qu'une entrée d'historique, le formulaire reste monté
+        dessous). La croix, un choix de style, l'envoi d'une
+        suggestion ou Échap la REPRENNENT (l'écriture unique,
+        lib/etape-refermable) : jamais deux entrées pour un même
+        écran. Le web ne pose RIEN — sa fenêtre superposée, qui ne
+        couvre pas l'écran d'une page, ne change pas.
+      · LE VERROU DE DÉFILEMENT COMPTÉ (nº 469) — l'effet séparé, le
+        motif exact de MenuEspace : posé à l'ouverture au doigt,
+        retiré par le nettoyage. Tous les chemins de fermeture
+        passent par la même bascule d'état (croix, retour, choix
+        d'un style, suggestion envoyée, Échap, démontage) : le
+        nettoyage les couvre tous, et le compteur rend le corps au
+        dernier retrait — le défilement REVIENT à la fermeture.
+        `?sonde-bascule=1` en journalise la preuve : « verrou
+        posé (1) » à l'ouverture, « verrou retiré (0) » après. */
+  const auDoigt = useAppareilMobile();
+  useEtapeQuiSeReferme(auDoigt && fenetreStyles, fermerFenetreStyles);
+  useEffect(() => {
+    if (!fenetreStyles) return;
+    if (document.documentElement.dataset.appareil !== "mobile") return;
+    poserLeVerrouDeDefilement();
+    return retirerLeVerrouDeDefilement;
+  }, [fenetreStyles]);
+
   /** « supprimer », tapé dans n'importe quelle casse, confirme. */
   const suppressionConfirmee =
     saisieSuppression.trim().toLowerCase() === "supprimer";
@@ -714,6 +754,164 @@ export function BlocPortfolio({
           )}
         </button>
       </li>
+    );
+  }
+
+  /*  §4 (nº 474) — LA LISTE, FABRIQUÉE UNE FOIS : la fenêtre du web et
+      la page plein écran du doigt (voir le rendu) montrent LES MÊMES
+      lignes — l'écriture unique du contenu, comme pour les porteurs de
+      la nº 465. Rien du dedans n'a changé : c'est le bloc qui vivait
+      dans l'ul de la fenêtre, déplacé tel quel. */
+  const lignesDesStyles = entreesExplorer().map((entree) => {
+    if (entree.genre === "famille") {
+      const depliee = familleDepliee === entree.slug;
+      return (
+        <li key={entree.slug}>
+          {/* LA PORTE DE LA FAMILLE — sa flèche est GRANDE et pleine
+              couleur : impossible de la manquer, c'est elle qui dit
+              « il y a onze styles là-dessous ». */}
+          <button
+            type="button"
+            aria-expanded={depliee}
+            onClick={() => setFamilleDepliee(depliee ? null : entree.slug)}
+            className="flex w-full items-center justify-between gap-3
+                       px-5 min-h-[52px] text-left text-[15px]
+                       font-semibold text-sombre-texte
+                       transition-colors hover:bg-sombre-eleve"
+          >
+            {entree.label}
+            {/* ⚠️ BAS QUAND C'EST FERMÉ, HAUT QUAND C'EST OUVERT
+                (passe nº 117, point 10). Elle pointait vers la DROITE
+                fermée — le signe d'un sous-menu qui s'ouvre À CÔTÉ,
+                alors que les onze styles se déplient DESSOUS. Le
+                chevron dit maintenant ce que le clic fait : « ça
+                descend », puis « ça se replie ». */}
+            {/*  §1-c (nº 304) — LE CHEVRON EST ROSE DANS LES DEUX
+                 ÉTATS, comme dans le menu du moteur de recherche
+                 (MenuDeroulant : « la flèche de la porte est ROSE,
+                 pointée en bas comme en haut — c'est elle, et elle
+                 seule, qui dit ceci s'ouvre au lieu de se
+                 choisir »). Il n'était rose qu'OUVERT : fermé, plus
+                 rien ne distinguait la porte d'un style. */}
+            <IconeChevronBas
+              taille={20}
+              classe={`shrink-0 transition-transform text-primaire ${
+                depliee ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+          {depliee && (
+            <ul aria-label={`Les styles — ${entree.label}`}>
+              {entree.styles.map((style) => ligneDeStyle(style, true))}
+            </ul>
+          )}
+        </li>
+      );
+    }
+    return ligneDeStyle(entree, false);
+  });
+
+  /*  §4 (nº 474) — LE BANDEAU « UN STYLE MANQUE ? », FABRIQUÉ UNE FOIS
+      lui aussi : seule sa BOÎTE change d'habits — pied de plaque dans
+      la fenêtre du web, bord bas de l'écran sur la page du doigt (la
+      classe vient de l'appelant). Le dedans — champ, croix
+      d'effacement, « Envoyer », refus — est celui des nº 122/124/304,
+      au caractère près. */
+  function bandeauStyleManquant(classeBoite: string) {
+    return (
+      <div className={classeBoite}>
+        <div className="flex items-center gap-2">
+          <div className="relative min-w-0 flex-1">
+            <input
+              type="text"
+              value={suggestion}
+              maxLength={40}
+              onChange={(evenement) => {
+                setSuggestion(evenement.target.value);
+                setRefusSuggestion(null);
+              }}
+              onKeyDown={(evenement) => {
+                //  Entrée envoie — le champ est seul, il n'y a
+                //  aucune autre action à déclencher. `prevent`
+                //  parce que ce champ vit DANS le formulaire de
+                //  la fiche : sans lui, Entrée l'enverrait.
+                if (evenement.key !== "Enter") return;
+                evenement.preventDefault();
+                void envoyerLaSuggestion();
+              }}
+              placeholder={"Un style manque ?"}
+              aria-label="Le style à suggérer"
+              aria-invalid={refusSuggestion ? true : undefined}
+              //  Le bandeau est déjà un cran plus clair : le
+              //  champ monte d'un niveau avec lui, et le focus
+              //  éclaircit encore d'un cran (la charte, sans
+              //  contour ni rose).
+              className={`w-full h-11 rounded-lg bg-sombre-eleve-clair pl-3
+                         text-[15px] text-sombre-texte
+                         placeholder:text-sombre-texte-doux/70
+                         outline-none transition-colors
+                         focus:bg-sombre-bordure ${
+                           suggestion ? "pr-10" : "pr-3"
+                         }`}
+            />
+            {/* LA CROIX D'EFFACEMENT — le motif des champs de
+                recherche du formulaire (voir ChampLocalisation) :
+                dans le champ, à droite, seulement quand il y a
+                quelque chose à effacer. À la souris, l'appui est
+                neutralisé pour que le champ garde le focus. */}
+            {suggestion && (
+              <button
+                type="button"
+                aria-label="Effacer la suggestion"
+                title="Effacer la suggestion"
+                onPointerDown={(evenement) => {
+                  if (evenement.pointerType === "mouse") {
+                    evenement.preventDefault();
+                  }
+                }}
+                onClick={() => {
+                  setSuggestion("");
+                  setRefusSuggestion(null);
+                }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 flex
+                           h-8 w-8 items-center justify-center rounded-full
+                           text-sombre-texte-doux transition-colors
+                           hover:bg-sombre-bordure hover:text-sombre-texte
+                           active:bg-sombre-bordure"
+              >
+                <IconeCroix taille={16} />
+              </button>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => void envoyerLaSuggestion()}
+            disabled={suggestion.trim().length < 2 || envoiSuggestion}
+            //  ⚠️ L'ACTIVATION SE VOIT (passe nº 124) : tant
+            //  que rien n'est saisi, la capsule reste grise et
+            //  éteinte ; dès deux caractères, elle passe en
+            //  ROSE PLEIN — impossible de la croire bloquée.
+            className="shrink-0 h-11 rounded-full px-5 text-[14px]
+                       font-semibold transition-colors
+                       bg-primaire text-white hover:opacity-90
+                       active:opacity-90
+                       disabled:bg-sombre-eleve-clair
+                       disabled:text-sombre-texte-doux
+                       disabled:opacity-100 disabled:hover:opacity-100"
+          >
+            {envoiSuggestion ? "Envoi…" : "Envoyer"}
+          </button>
+        </div>
+        {/* LE SEUL TEXTE SOUS LE CHAMP EST UN REFUS — jamais
+            une explication (charte). Il dit ce qui bloque : le
+            style existe déjà, ou la demande est en cours.
+            §1-d (nº 304) — plus aucun refus de volume. */}
+        {refusSuggestion && (
+          <p role="alert" className="mt-2 text-[13px] text-erreur">
+            {refusSuggestion}
+          </p>
+        )}
+      </div>
     );
   }
 
@@ -1230,7 +1428,12 @@ export function BlocPortfolio({
           clic déploie ses onze styles dessous, décalés à droite pour
           montrer qu'ils lui appartiennent. Les styles déjà choisis
           restent listés, cochés et inertes. Choisir ferme la fenêtre
-          et pose le badge. Voile, croix et Échap referment. ------- */}
+          et pose le badge. Voile, croix et Échap referment.
+          §4 (nº 474) — LE WEB SEULEMENT, désormais : au doigt, cette
+          fenêtre est cachée par sa variante (l'écriture de la fenêtre
+          des langues, nº 465) et la PAGE plein écran, plus bas, prend
+          le relais — aucune bifurcation d'état, donc aucun éclair du
+          mauvais habillage au montage. ------- */}
       {fenetreStyles &&
         typeof document !== "undefined" &&
         createPortal(
@@ -1238,7 +1441,7 @@ export function BlocPortfolio({
             role="dialog"
             aria-modal="true"
             aria-label="Ajouter un style"
-            className="fixed inset-0 z-[80] flex items-center justify-center p-4"
+            className="mobile:hidden fixed inset-0 z-[80] flex items-center justify-center p-4"
           >
             <button
               type="button"
@@ -1295,64 +1498,7 @@ export function BlocPortfolio({
                 className="min-h-0 flex-1 overflow-y-auto overscroll-contain
                            defilement-visible pb-2"
               >
-                {entreesExplorer().map((entree) => {
-                  if (entree.genre === "famille") {
-                    const depliee = familleDepliee === entree.slug;
-                    return (
-                      <li key={entree.slug}>
-                        {/* LA PORTE DE LA FAMILLE — sa flèche est
-                            GRANDE et pleine couleur : impossible de
-                            la manquer, c'est elle qui dit « il y a
-                            onze styles là-dessous ». */}
-                        <button
-                          type="button"
-                          aria-expanded={depliee}
-                          onClick={() =>
-                            setFamilleDepliee(depliee ? null : entree.slug)
-                          }
-                          className="flex w-full items-center justify-between gap-3
-                                     px-5 min-h-[52px] text-left text-[15px]
-                                     font-semibold text-sombre-texte
-                                     transition-colors hover:bg-sombre-eleve"
-                        >
-                          {entree.label}
-                          {/* ⚠️ BAS QUAND C'EST FERMÉ, HAUT QUAND
-                              C'EST OUVERT (passe nº 117, point 10).
-                              Elle pointait vers la DROITE fermée — le
-                              signe d'un sous-menu qui s'ouvre À CÔTÉ,
-                              alors que les onze styles se déplient
-                              DESSOUS. Le chevron dit maintenant ce que
-                              le clic fait : « ça descend », puis « ça
-                              se replie ». */}
-                          {/*  §1-c (nº 304) — LE CHEVRON EST ROSE DANS
-                               LES DEUX ÉTATS, comme dans le menu du
-                               moteur de recherche (MenuDeroulant : « la
-                               flèche de la porte est ROSE, pointée en
-                               bas comme en haut — c'est elle, et elle
-                               seule, qui dit ceci s'ouvre au lieu de se
-                               choisir »). Il n'était rose qu'OUVERT :
-                               fermé, plus rien ne distinguait la porte
-                               d'un style. */}
-                          <IconeChevronBas
-                            taille={20}
-                            classe={`shrink-0 transition-transform text-primaire ${
-                              depliee ? "rotate-180" : ""
-                            }`}
-                          />
-                        </button>
-                        {depliee && (
-                          <ul aria-label={`Les styles — ${entree.label}`}>
-                            {entree.styles.map((style) =>
-                              ligneDeStyle(style, true)
-                            )}
-                          </ul>
-                        )}
-                      </li>
-                    );
-                  }
-                  return ligneDeStyle(entree, false);
-                })}
-
+                {lignesDesStyles}
               </ul>
 
               {/* ---------- « UN STYLE MANQUE ? » — LE BANDEAU FIXE
@@ -1376,104 +1522,45 @@ export function BlocPortfolio({
                      confirmation), plus un gris qui semblait bloqué ;
                    · LA CROIX D'EFFACEMENT du champ, comme sur les
                      autres champs de recherche du formulaire. */}
-              <div className="relative z-10 shrink-0 bg-sombre-eleve px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <div className="relative min-w-0 flex-1">
-                    <input
-                      type="text"
-                      value={suggestion}
-                      maxLength={40}
-                      onChange={(evenement) => {
-                        setSuggestion(evenement.target.value);
-                        setRefusSuggestion(null);
-                      }}
-                      onKeyDown={(evenement) => {
-                        //  Entrée envoie — le champ est seul, il n'y a
-                        //  aucune autre action à déclencher. `prevent`
-                        //  parce que ce champ vit DANS le formulaire de
-                        //  la fiche : sans lui, Entrée l'enverrait.
-                        if (evenement.key !== "Enter") return;
-                        evenement.preventDefault();
-                        void envoyerLaSuggestion();
-                      }}
-                      placeholder={"Un style manque ?"}
-                      aria-label="Le style à suggérer"
-                      aria-invalid={refusSuggestion ? true : undefined}
-                      //  Le bandeau est déjà un cran plus clair : le
-                      //  champ monte d'un niveau avec lui, et le focus
-                      //  éclaircit encore d'un cran (la charte, sans
-                      //  contour ni rose).
-                      className={`w-full h-11 rounded-lg bg-sombre-eleve-clair pl-3
-                                 text-[15px] text-sombre-texte
-                                 placeholder:text-sombre-texte-doux/70
-                                 outline-none transition-colors
-                                 focus:bg-sombre-bordure ${
-                                   suggestion ? "pr-10" : "pr-3"
-                                 }`}
-                    />
-                    {/* LA CROIX D'EFFACEMENT — le motif des champs de
-                        recherche du formulaire (voir
-                        ChampLocalisation) : dans le champ, à droite,
-                        seulement quand il y a quelque chose à
-                        effacer. À la souris, l'appui est neutralisé
-                        pour que le champ garde le focus. */}
-                    {suggestion && (
-                      <button
-                        type="button"
-                        aria-label="Effacer la suggestion"
-                        title="Effacer la suggestion"
-                        onPointerDown={(evenement) => {
-                          if (evenement.pointerType === "mouse") {
-                            evenement.preventDefault();
-                          }
-                        }}
-                        onClick={() => {
-                          setSuggestion("");
-                          setRefusSuggestion(null);
-                        }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 flex
-                                   h-8 w-8 items-center justify-center rounded-full
-                                   text-sombre-texte-doux transition-colors
-                                   hover:bg-sombre-bordure hover:text-sombre-texte
-                                   active:bg-sombre-bordure"
-                      >
-                        <IconeCroix taille={16} />
-                      </button>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => void envoyerLaSuggestion()}
-                    disabled={suggestion.trim().length < 2 || envoiSuggestion}
-                    //  ⚠️ L'ACTIVATION SE VOIT (passe nº 124) : tant
-                    //  que rien n'est saisi, la capsule reste grise et
-                    //  éteinte ; dès deux caractères, elle passe en
-                    //  ROSE PLEIN — impossible de la croire bloquée.
-                    className="shrink-0 h-11 rounded-full px-5 text-[14px]
-                               font-semibold transition-colors
-                               bg-primaire text-white hover:opacity-90
-                               active:opacity-90
-                               disabled:bg-sombre-eleve-clair
-                               disabled:text-sombre-texte-doux
-                               disabled:opacity-100 disabled:hover:opacity-100"
-                  >
-                    {envoiSuggestion ? "Envoi…" : "Envoyer"}
-                  </button>
-                </div>
-                {/* LE SEUL TEXTE SOUS LE CHAMP EST UN REFUS — jamais
-                    une explication (charte). Il dit ce qui bloque : le
-                    style existe déjà, ou la demande est en cours.
-                    §1-d (nº 304) — plus aucun refus de volume. */}
-                {refusSuggestion && (
-                  <p role="alert" className="mt-2 text-[13px] text-erreur">
-                    {refusSuggestion}
-                  </p>
-                )}
-              </div>
+              {bandeauStyleManquant(
+                "relative z-10 shrink-0 bg-sombre-eleve px-4 py-3"
+              )}
             </div>
           </div>,
           document.body
         )}
+
+      {/* ---------- LA MÊME LISTE, EN PAGE PLEIN ÉCRAN (§4, nº 474) —
+          Au doigt, « Ajouter un style » n'est plus une fenêtre : une
+          PAGE au gabarit de la nº 465 (PagePleinEcranMobile — rien
+          d'inventé), qui ne se montre qu'au doigt par sa propre
+          écriture, comme la fenêtre ci-dessus ne se montre qu'au web.
+          Le rond « + » du bouton d'ouverture donne son icône au
+          titre, comme la silhouette pour « Mon compte ». La croix de
+          l'en-tête ET le retour du téléphone rendent le formulaire,
+          saisie intacte (l'étape d'historique et le verrou de
+          défilement vivent avec les crochets, plus haut). Les lignes
+          sont LES MÊMES que dans la fenêtre (`lignesDesStyles`) ; le
+          bandeau « Un style manque ? » se colle au BAS de l'écran
+          pendant le défilement — rester en vue durant tout le
+          parcours est sa raison d'être (nº 124) — et son rembourrage
+          bas s'agrandit de la zone sûre du téléphone. ------- */}
+      {fenetreStyles && (
+        <PagePleinEcranMobile
+          titre="Ajouter un style"
+          icone={<IconePlus taille={22} classe="shrink-0 text-white" />}
+          ariaLabel="Ajouter un style"
+          surFermer={fermerFenetreStyles}
+          classeCadre="z-[80]"
+        >
+          <ul aria-label="Les styles, de A à Z" className="grow pt-2 pb-2">
+            {lignesDesStyles}
+          </ul>
+          {bandeauStyleManquant(
+            "sticky bottom-0 z-10 shrink-0 bg-sombre-eleve px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+          )}
+        </PagePleinEcranMobile>
+      )}
 
       {/* ---------- « DEMANDE ENVOYÉE » (passe nº 122) ----------
           Elle remplace la fenêtre des styles, qui vient de se fermer :

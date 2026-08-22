@@ -1536,7 +1536,8 @@ export function ContenuFiche({
                       */
                      /**
                       * §3 (nº 381) — L'AIR RESTE EN HAUT, IL PART EN
-                      * BAS : `mobile:py-3` devient `mobile:pt-3`. Le
+                      * BAS : le rembourrage des deux bords (12 px en
+                      * haut comme en bas) ne garde que son HAUT. Le
                       * badge vient toucher le bas de la rangée, et le
                       * trait passe donc juste sous lui. Sur le web,
                       * c'était déjà le cas — aucune classe n'y est
@@ -1564,7 +1565,7 @@ export function ContenuFiche({
                       * premier pixel de défilement. C'est aussi la
                       * réduction d'air demandée : l'air entre la barre
                       * et la rangée passe de 16 px à 0 — l'air INTERNE
-                      * au-dessus des badges (`mobile:pt-3`, 12 px,
+                      * au-dessus des badges (12 px de rembourrage,
                       * nº 380/381) ne bouge pas : l'œil garde 12 px
                       * entre le verre et le va-et-vient, contre 28
                       * avant.
@@ -1593,8 +1594,23 @@ export function ContenuFiche({
                       * à 12 px : la fiche publique au pixel, et elle,
                       * ne bouge pas d'un cheveu.
                       */
+                     /**
+                      * §2 (nº 474) — L'AIR AU-DESSUS DU VA-ET-VIENT SE
+                      * RESSERRE : 12 px → 8 px (`mobile:pt-2`). C'est
+                      * le rembourrage INTERNE du haut de cette rangée —
+                      * la SEULE écriture de cet air (nº 380/381), et
+                      * elle est UNIFIÉE depuis la nº 473 : la fiche
+                      * publique et l'aperçu suivent ensemble, au pixel.
+                      * RIEN NE SE COLLE : le collage de la nº 458 ne
+                      * passe pas par ce rembourrage (position naturelle
+                      * = haut de collage, avec ou sans lui), le fond
+                      * opaque couvre toujours l'air restant, et 8 px
+                      * séparent encore le verre du va-et-vient — c'est
+                      * un rembourrage nul qui les collerait. Le web
+                      * n'est pas concerné (variante du doigt).
+                      */
                      collantSousLaBarre
-                       ? "mobile:sticky mobile:top-[var(--rw-rangee-collante)] mobile:z-[3] mobile:pt-3 mobile:-mt-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-3 lg:px-3"
+                       ? "mobile:sticky mobile:top-[var(--rw-rangee-collante)] mobile:z-[3] mobile:pt-2 mobile:-mt-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-3 lg:px-3"
                        : "-mx-5 px-5 sm:-mx-6 sm:px-6"
                    }`}
       >

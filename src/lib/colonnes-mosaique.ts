@@ -87,9 +87,11 @@ export const CARTES_PAR_COLONNE = 6;
 //  §1 (nº 473) — le palier des CINQ colonnes s'ajoute, à 1600 px. Du
 //  plus large au plus étroit, comme toujours : la première requête qui
 //  répond « oui » donne le nombre.
+//  §1 (nº 474) — le palier des quatre colonnes descend : 90rem
+//  (1440 px) devient 80rem (1280 px), pour les petits portables.
 export const PALIERS_COLONNES = [
   { requete: "(min-width: 100rem)", colonnes: 5 }, // grille5 (1600 px)
-  { requete: "(min-width: 90rem)", colonnes: 4 }, // grille (1440 px)
+  { requete: "(min-width: 80rem)", colonnes: 4 }, // grille (1280 px)
   { requete: "(min-width: 48rem)", colonnes: 3 }, // md
 ] as const;
 

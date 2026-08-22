@@ -914,8 +914,18 @@ export function FicheTatoueur({
                 du profil, compteur et la coupe `data-vue-photo` /
                 `data-colonne-lecture` sont intacts, et le web n'est pas
                 concerné (variante `mobile:`). */
+            /*  §3 (nº 474) — ENCORE UN CRAN : 4 px → 2 px. Le même
+                calcul, au même endroit : la racine pose 16 px de
+                rembourrage haut, et cette remontée en reprend désormais
+                QUATORZE (`mobile:-mt-3.5`) — le cran d'avant, douze,
+                en laissait quatre. La photo reste DÉCOLLÉE de la
+                barre : c'est `mobile:-mt-4` — seize repris, plus un
+                pixel d'air — qui la ferait TOUCHER, et c'est la valeur
+                que l'aperçu, lui, garde. Rien d'autre de la vue ne
+                bouge, et le web n'est pas concerné (variante du
+                doigt). */
             className={`lg:w-[var(--photo-largeur,calc((100vh_-_119px)*0.8))] max-w-full mobile:-mx-4 mobile:max-w-none ${
-              apercu ? "mobile:-mt-4" : "mobile:-mt-3"
+              apercu ? "mobile:-mt-4" : "mobile:-mt-3.5"
             }`}
           >
             <CarrouselPortfolio
