@@ -1575,24 +1575,37 @@ export const BIO_MAXIMUM = 150;
  * plus claires que le fond — c'est ce décalage, et non un contour
  * marqué, qui les fait exister.
  *
- * Contrastes vérifiés sur le fond #1A1A1D :
- *  - texte principal #F2F2F4 → 15,4:1 (AAA)
- *  - texte discret  #A8A8B0 → 7,4:1  (AAA pour le petit texte)
- *  - rose #EE3D6F           → 4,9:1  (AA, et AAA en gras 18 px+)
+ * ██ §1-§2 (nº 466) — LE FOND DEVIENT LE BLEU NUIT #0B0F14, ET TOUTE
+ * L'ÉCHELLE EST RECALCULÉE DESSUS ██
+ * Le nouveau fond est plus sombre ET plus bleuté que l'anthracite
+ * #1A1A1D d'avant : des niveaux restés au gris neutre auraient l'air
+ * de taches sales posées dessus. Chaque barreau reprend donc la teinte
+ * de la base (B > V > R, un écart qui grandit doucement en montant
+ * pour rester perceptible), et l'ORDRE comme les ÉCARTS de la nº 287
+ * (~13 points par niveau) sont conservés — l'escalier se lit pareil,
+ * toujours sans le moindre contour.
+ *
+ * Contrastes vérifiés sur le fond #0B0F14 :
+ *  - texte principal #F2F2F4 → 17,1:1 (AAA)
+ *  - texte discret  #A8A8B0 → 8,1:1  (AAA pour le petit texte)
+ *  - rose #FF2E6C           → 5,4:1  (AA, et AAA en gras 18 px+)
  * Aucun gris plus sombre que #A8A8B0 ne doit servir à du texte.
  */
 export const COULEURS_SOMBRE = {
-  /** Le fond de page. */
-  fond: "#1A1A1D",
+  /** Le fond de page. §1 (nº 466) : #1A1A1D → #0B0F14 (11, 15, 20). */
+  fond: "#0B0F14",
   /** Les cartes et les blocs : un cran plus clair que le fond. */
   //  §1 (nº 287) — L'ÉCHELLE EST RETENDUE : le bloc se confondait avec
   //  la page (écart de 9 sur 255 — le relevé du propriétaire). L'ordre
   //  ne change pas, les ÉCARTS si : page #1A1A1D · bloc #28282D ·
   //  badge #33333A · champ #3F3F47 — quatre niveaux, chacun lisible à
   //  côté de sa voisine, sans un seul contour.
-  carte: "#28282D",
-  /** Un cran encore au-dessus : champs, éléments survolés. */
-  eleve: "#33333A",
+  //  §2 (nº 466) — recalculé sur le bleu nuit : #28282D → #1A1F26
+  //  (26, 31, 38). C'est aussi le fond du pied de page (nº 138).
+  carte: "#1A1F26",
+  /** Un cran encore au-dessus : champs, éléments survolés.
+      §2 (nº 466) : #33333A → #262C34 (38, 44, 52). */
+  eleve: "#262C34",
   /** LE FOCUS D'UN CHAMP (passe nº 116) : le fond s'éclaircit très
       légèrement, et le curseur clignote — c'est tout. Le contour rose
       au focus a disparu : le rose est réservé à ce qui compte (badges
@@ -1601,13 +1614,16 @@ export const COULEURS_SOMBRE = {
   //  charte a toujours dit « badge plus sombre que le champ », mais les
   //  deux vivaient sur `eleve`. Les champs de saisie et de recherche
   //  montent ici ; leur focus monte d'autant (`haut`).
-  eleveClair: "#3F3F47",
+  //  §2 (nº 466) : #3F3F47 → #323942 (50, 57, 66).
+  eleveClair: "#323942",
   /** Les traits : présents, jamais visibles avant qu'on les cherche.
       ⚠️ CE JETON N'EST PLUS CELUI DES LIGNES DE SÉPARATION (nº 315-§4) :
       voir `trait` juste dessous. Il reste ce qu'il a toujours été
       ailleurs — le fond de survol du badge « Se connecter » (nº 313),
-      les traits des fenêtres et des listes. */
-  bordure: "#38383F",
+      les traits des fenêtres et des listes.
+      §2 (nº 466) : #38383F → #2C323B (44, 50, 59) — il garde sa place
+      entre `eleve` et `eleveClair`. */
+  bordure: "#2C323B",
   /**
    * §4 (nº 315) — LE TRAIT QUI SÉPARE DEUX SECTIONS.
    * ------------------------------------------------------------------
@@ -1632,23 +1648,29 @@ export const COULEURS_SOMBRE = {
    * variable. C'est accepté, et c'est le prix de l'unicité — deux
    * valeurs finiraient par diverger.
    * ⚠️ ET IL RESTE UN TRAIT, PAS UNE BARRE : un pixel, jamais deux.
+   * §2 (nº 466) : #3B3B42 → #2F353E (47, 53, 62) — même place dans
+   * l'échelle (entre `bordure` et `eleveClair`), même retenue.
    */
-  trait: "#3B3B42",
+  trait: "#2F353E",
   /** LE HAUT DE L'ÉCHELLE (passe nº 144). Les fenêtres du web ont été
       éclaircies d'un cran (`carte` → `eleve`) pour mieux se détacher
       de la page : tout ce qui est POSÉ SUR ELLES devait grimper
       d'autant, et l'échelle manquait d'un barreau au-dessus de
       `bordure`. C'est lui — jamais employé ailleurs que comme dernier
       niveau d'un empilement (sélecteur ouvert dans « Mon compte »,
-      badge sélectionné dans le panneau des filtres). */
-  haut: "#4A4A53",
+      badge sélectionné dans le panneau des filtres).
+      §2 (nº 466) : #4A4A53 → #3E4650 (62, 70, 80) — c'est aussi le
+      focus d'un champ (le cran au-dessus de son repos `eleveClair`),
+      toujours sans contour, sans halo, sans rose. */
+  haut: "#3E4650",
   /** LE CRAN AU-DESSUS DE `haut` (passe nº 146-§3). Le sélecteur de
       portfolios se confondait avec le fond de la fenêtre « Mon
       compte » : son repos monte à `haut`, et son état ouvert — ainsi
       que sa liste, qui le prolonge — avait donc besoin d'un barreau de
       plus. Même usage strict que `haut` : le DERNIER niveau d'un
-      empilement, jamais un fond courant. */
-  hautClair: "#55555F",
+      empilement, jamais un fond courant.
+      §2 (nº 466) : #55555F → #4A525D (74, 82, 93). */
+  hautClair: "#4A525D",
   /** Le texte principal. */
   texte: "#F2F2F4",
   /** Le texte discret (ville, styles, mentions). */
@@ -1662,14 +1684,45 @@ export const COULEURS_SOMBRE = {
    * web (un lien est bleu) a quelque chose à dire, et le propriétaire
    * la demande.
    * LA VALEUR : un bleu ÉCLAIRCI, pas le #0000EE des navigateurs.
-   * Sur l'anthracite (#1A1A1D), un bleu foncé ne se lit pas ; celui-ci
-   * est monté jusqu'à rendre autant de lumière que le gris doux qu'il
-   * remplace, pour que la ligne ne pèse pas plus qu'une autre.
+   * Sur le fond sombre (l'anthracite d'alors, le bleu nuit #0B0F14
+   * depuis la nº 466 — le contraste y monte encore), un bleu foncé ne
+   * se lit pas ; celui-ci est monté jusqu'à rendre autant de lumière
+   * que le gris doux qu'il remplace, pour que la ligne ne pèse pas
+   * plus qu'une autre.
    * ⚠️ SA VARIANTE D'ÉCLAIRCISSEMENT est le survol, et rien d'autre :
    * même famille, deux crans plus clair. Aucune troisième valeur.
    */
   lien: "#7FA9EE",
   lienClair: "#A8C6F6",
+  /**
+   * ██ §4 (nº 466) — LE ROSE DU PRODUIT TATOUAGE, RAVIVÉ ██
+   * ------------------------------------------------------------------
+   * Sur le bleu nuit #0B0F14, le #EE3D6F historique paraît délavé : sa
+   * saturation (84 %) se perd sur une base plus sombre et plus froide.
+   * LES TROIS VALEURS CI-DESSOUS LE REMPLACENT, pour CE produit seul :
+   *  · `primaire` #FF2E6C — même famille (teinte ~342°, celle du
+   *    #EE3D6F), saturation portée à 100 % : le canal rouge à plein,
+   *    c'est lui qui fait claquer l'accent sur une base froide.
+   *    Contraste 5,4:1 sur #0B0F14 (l'ancien faisait 4,9:1 sur
+   *    l'ancien fond) ;
+   *  · `primaireFonce` #E51C59 — l'appui/survol des boutons roses,
+   *    le même écart sous `primaire` que #D42A5C sous #EE3D6F ;
+   *  · `primaireVoile` #291320 — le fond d'un badge sélectionné : le
+   *    même surcroît de rose que #381E29 portait sur l'anthracite,
+   *    reposé sur la nouvelle base — le mot rose s'y détache plus
+   *    franchement qu'avant.
+   * ⚠️ LES ARTISANS NE CHANGENT PAS : leurs pages lisent toujours les
+   * valeurs de src/config/roswel.ts. Celles-ci ne les remplacent que
+   * DANS LE PÉRIMÈTRE TATOUAGE, par la surcharge des variables
+   * `--rw-primaire*` que pose app/(tatouage)/layout.tsx — les classes
+   * (`bg-primaire`, `text-primaire`…) restent les mêmes partout, seul
+   * ce qu'elles valent change selon le produit. AUCUN usage nouveau :
+   * le rose reste réservé au badge sélectionné, au bouton d'action
+   * finale, à la ligne du sélecteur actif et à l'état d'une fiche.
+   */
+  primaire: "#FF2E6C",
+  primaireFonce: "#E51C59",
+  primaireVoile: "#291320",
 };
 
 /** Les textes du site, au même endroit que le reste. */

@@ -39,7 +39,9 @@ export const TYPE_PARTAGE = "image/png";
     630 × 0,8. La photo n'est ainsi JAMAIS recadrée. */
 export const LARGEUR_PHOTO = Math.round(TAILLE_PARTAGE.height * 0.8);
 
-export const ROSE = "#EE3D6F";
+//  §4 (nº 466) — le rose ravivé se lit AU JETON de la charte tatouage,
+//  plus jamais en dur : les images de partage suivent la marque.
+export const ROSE = COULEURS_SOMBRE.primaire;
 export const FOND = COULEURS_SOMBRE.fond;
 export const TEXTE = COULEURS_SOMBRE.texte;
 export const TEXTE_DOUX = COULEURS_SOMBRE.texteDoux;

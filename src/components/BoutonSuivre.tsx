@@ -158,7 +158,8 @@ export function BoutonSuivre({
        * fenêtre d'invitation (nº 396-397), elle-même reprise de
        * « qui-sommes-nous ». Aucune couleur n'est inventée :
        *  · PAS ENCORE SUIVI — fond ET contour au ROSE DU SITE
-       *    (`bg-primaire border-primaire`, `#EE3D6F`), texte BLANC
+       *    (`bg-primaire border-primaire`, `#FF2E6C` depuis la
+       *    nº 466), texte BLANC
        *    (`text-sombre-texte`, `#F2F2F4` — le blanc de la charte
        *    sombre, celui du bouton rose de la fenêtre d'invitation).
        *    AU SURVOL, LE FOND ET LE CONTOUR MONTENT ENSEMBLE D'UN CRAN

@@ -1044,7 +1044,8 @@ export function MenuDeroulant({
              chevron compris). C'est un second `span`, EN LIGNE, qui
              le reçoit — la largeur du texte, et rien de plus.
              ⚠️ `decoration-primaire` : le rose de la charte
-             (`#EE3D6F`), lu au jeton — jamais recopié. */}
+             (`#FF2E6C` depuis la nº 466), lu au jeton — jamais
+             recopié. */}
         <span className="flex-1">
           <span
             data-porte-soulignee={souligne ? "" : undefined}

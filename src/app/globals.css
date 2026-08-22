@@ -300,12 +300,17 @@ html:has([data-fond="sombre"]) {
   --rw-flou: 40px;
 }
 /*  §2 (nº 450) — LA BARRE PLUS SOMBRE : l'opacité du fond passe de
-    0.75 à 0.88 (la teinte 26,26,29 ne change pas, le flou et la
+    0.75 à 0.88 (la teinte ne change pas, le flou et la
     saturation non plus). Une seule règle pour le doigt et la souris :
     `data-barre-fixe` est portée par les deux barres. Le réglage
-    `?verre=` (style en ligne d'EnTeteTatouage) reste le banc d'essai. */
+    `?verre=` (style en ligne d'EnTeteTatouage) reste le banc d'essai.
+    §1 (nº 466) — LA TEINTE SUIT LE NOUVEAU FOND : 26,26,29 devient
+    11,15,20 (#0B0F14) — mêmes opacités, même flou : la barre reste à
+    0.88, dense sur les photos blanches (l'acquis nº 450). Ces valeurs
+    sont EN DUR par nécessité WebKit (le relevé nº 172 ci-dessus) :
+    elles doivent être changées À LA MAIN si le fond change encore. */
 [data-barre-fixe] {
-  background-color: rgba(26, 26, 29, 0.88);
+  background-color: rgba(11, 15, 20, 0.88);
   -webkit-backdrop-filter: blur(40px) saturate(150%);
   backdrop-filter: blur(40px) saturate(150%);
 }
@@ -344,7 +349,9 @@ html:has([data-fond="sombre"]) {
       s'éclaircit d'un cran (22 % contre 30) et son contour est
       nettement atténué — il se devine, il ne se lit plus. Flou et
       saturation inchangés : ce sont eux qui font le verre. */
-  background-color: rgba(26, 26, 29, 0.22);
+  /*  §1 (nº 466) — la teinte suit le nouveau fond (11,15,20), même
+      opacité de 22 %. */
+  background-color: rgba(11, 15, 20, 0.22);
   -webkit-backdrop-filter: blur(40px) saturate(200%);
   backdrop-filter: blur(40px) saturate(200%);
   box-shadow:
@@ -370,7 +377,9 @@ html:has([data-fond="sombre"]) {
     Les mêmes règles dures s'appliquent : deux lignes littérales,
     préfixée d'abord, ni `@supports`, ni `var()`. */
 [data-verre-menu] {
-  background-color: rgba(26, 26, 29, 0.45);
+  /*  §1 (nº 466) — la teinte suit le nouveau fond (11,15,20), les
+      45 % tranchés à la nº 238-§6 ne bougent pas. */
+  background-color: rgba(11, 15, 20, 0.45);
   -webkit-backdrop-filter: blur(60px) saturate(200%);
   backdrop-filter: blur(60px) saturate(200%);
   /*  §1 (nº 237) — LE LISERÉ D'UN MENU DESCEND ENCORE D'UN CRAN
@@ -460,7 +469,10 @@ html:has([data-fond="sombre"]) {
     capsule blanche : on voit la page floutée par la plaque à travers
     les deux. */
 [data-verre-action] {
-  background-color: rgba(238, 61, 111, 0.4);
+  /*  §4 (nº 466) — le rose ravivé du produit (255,46,108 = #FF2E6C,
+      voir COULEURS_SOMBRE.primaire), même opacité de 40 %. En dur par
+      la règle du verre (aucun `var()` dans ces blocs — nº 172). */
+  background-color: rgba(255, 46, 108, 0.4);
 }
 
 /*  ⚠️ LA LUMIÈRE DU VERRE (nº 242) A ÉTÉ RETIRÉE PAR LA nº 244-§1 :
@@ -479,7 +491,8 @@ html:has([data-fond="sombre"]) {
     aucune ligne de filtre à réécrire). Les AUTRES fenêtres restent à
     22 %. */
 [data-verre-fenetre][data-verre-dense] {
-  background-color: rgba(26, 26, 29, 0.45);
+  /*  §1 (nº 466) — la teinte suit le nouveau fond, mêmes 45 %. */
+  background-color: rgba(11, 15, 20, 0.45);
 }
 
 /*  LE CHAMP ET LES DEUX ICÔNES DE LA BARRE FIXE — LISIBLES SUR

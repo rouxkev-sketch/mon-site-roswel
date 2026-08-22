@@ -204,7 +204,8 @@ export function EnTeteTatouage({
         //  La variable, pour que la sonde la montre…
         racine.style.setProperty("--rw-verre", String(pourcent / 100));
         //  …et la VALEUR FINALE, écrite en clair.
-        declarations.push(`background-color: rgba(26, 26, 29, ${pourcent / 100})`);
+        //  §1 (nº 466) — la teinte suit le nouveau fond #0B0F14.
+        declarations.push(`background-color: rgba(11, 15, 20, ${pourcent / 100})`);
       }
     }
     //  ⚠️ LE CRAN D'ÉCLAIRCISSEMENT DU CHAMP ET DES DEUX ICÔNES
@@ -1183,7 +1184,8 @@ export function EnTeteTatouage({
                    texte rose deviennent un fond ROSE et un texte BLANC,
                    et l'icône s'en va. Ce qu'il porte désormais :
                     · AU REPOS, le fond ET le contour valent le ROSE DU
-                      SITE (`bg-primaire border-primaire`, `#EE3D6F`) —
+                      SITE (`bg-primaire border-primaire`, `#FF2E6C`
+                      depuis la nº 466) —
                       le jeton de la charte, celui du bouton « Créer mon
                       compte » de la fenêtre d'invitation (nº 396-397),
                       lui-même repris de « qui-sommes-nous ». Aucune

@@ -1248,7 +1248,7 @@ export function SondeRetour({
         display: "flex",
         flexDirection: "column",
         gap: 8,
-        background: "#1A1A1D",
+        background: "#0B0F14",
         border: "1px solid #EE3D6F",
         borderRadius: 12,
         padding: 12,

@@ -327,6 +327,27 @@ export default async function MiseEnPageTatouage({
           c'était la page fantôme d'une seconde et la descente visible
           jusqu'à la bonne position. */}
       <script dangerouslySetInnerHTML={{ __html: scriptAvantPeinture() }} />
+      {/*  ██ §4 (nº 466) — LE ROSE RAVIVÉ, POUR CE PRODUIT SEUL ██
+           Les trois variables `--rw-primaire*` sont SURCHARGÉES ici
+           avec les valeurs de la charte tatouage (COULEURS_SOMBRE —
+           #FF2E6C sur le bleu nuit, voir la note du jeton). Le
+           `:root` du <head> (variables-couleurs, layout racine) garde
+           les valeurs de roswel.ts : ce <style> venant APRÈS dans le
+           document, il gagne à spécificité égale — mais UNIQUEMENT sur
+           les pages qui rendent ce layout. Les pages artisans ne le
+           rendent pas : leur rose ne bouge pas d'un cheveu. Rendu par
+           le serveur, avant tout contenu : aucun éclair de l'ancienne
+           couleur (nº 439). `primaire-clair` n'est pas surchargé — il
+           ne sert que des fonds clairs, hors de ce produit. */}
+      <style
+        id="rose-tatouage"
+        dangerouslySetInnerHTML={{
+          __html:
+            `:root{--rw-primaire:${COULEURS_SOMBRE.primaire};` +
+            `--rw-primaire-fonce:${COULEURS_SOMBRE.primaireFonce};` +
+            `--rw-primaire-voile:${COULEURS_SOMBRE.primaireVoile};}`,
+        }}
+      />
       {/* Une fiche ouverte sans historique derrière elle (navigateur
           fermé puis rouvert, lien partagé) reconstruit son étape de
           retour : le balayage depuis le bord ramène à la mosaïque au
