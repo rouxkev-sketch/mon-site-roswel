@@ -53,11 +53,23 @@ export function defilementGalerieRetenu(cle: string): number | undefined {
   return positions.get(cle);
 }
 
+/** §4 (nº 462) — LE PRÉFIXE RÉSERVÉ DE « MA SÉLECTION » : les bandes
+    des suivis (BlocSuivis) mémorisent leur défilement sous ce
+    préfixe. Il est ÉPARGNÉ par la purge des fiches ci-dessous — sans
+    quoi ouvrir le portfolio d'une fiche effacerait la position des
+    galeries de la page qu'on vient de quitter, et le retour la
+    perdrait. Ces entrées meurent avec l'onglet, comme la page. */
+export const PREFIXE_SELECTION = "selection";
+
 /** La purge d'arrivée : seules les galeries de LA fiche montrée
-    gardent leur position — les autres meurent ici. */
+    gardent leur position — les autres FICHES meurent ici. Les entrées
+    de « Ma sélection » (préfixe réservé) survivent : elles
+    n'appartiennent à aucune fiche. */
 export function oublierLesAutresGaleries(slug: string): void {
   const prefixe = `${slug}|`;
+  const epargne = `${PREFIXE_SELECTION}|`;
   for (const cle of positions.keys()) {
+    if (cle.startsWith(epargne)) continue;
     if (!cle.startsWith(prefixe)) positions.delete(cle);
   }
 }

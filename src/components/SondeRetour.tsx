@@ -509,6 +509,63 @@ export function SondeRetour({
   const documentNeuf = useRef(true);
 
   /**
+   * ⚠️ TEMPORAIRE (nº 462) — MESURE DE LA LIGNE : QUI COUPE LA LIGNE
+   * GRISE DU VA-ET-VIENT DE « MA SÉLECTION » ?
+   * ==================================================================
+   * La nº 461 a posé le débord (`-inset-x-4`) et le CSS produit était
+   * juste ; à l'écran, la ligne s'arrêtait AUX MARGES. Ce bloc écrit
+   * au journal, sur `/mes-favoris` au doigt : le rectangle de la ligne
+   * (`data-ligne-grise`), la largeur de la fenêtre, puis pour CHAQUE
+   * ancêtre jusqu'à `body` — son nom, ses classes, son rectangle, son
+   * `overflow-x` calculé et son rembourrage latéral. La ligne coupée
+   * se lit au premier ancêtre dont `overflow-x` n'est pas `visible`
+   * et dont le rectangle est plus étroit que l'écran.
+   * POUR LE RETIRER (passe ultérieure) : ce bloc entier, rien d'autre.
+   */
+  useEffect(() => {
+    if (!armee) return;
+    if (chemin !== "/mes-favoris") return;
+    if (document.documentElement.dataset.appareil !== "mobile") return;
+    const arrondi = (v: number) => Math.round(v * 10) / 10;
+    const image = requestAnimationFrame(() => {
+      const ligne = document.querySelector("[data-ligne-grise]");
+      if (!ligne) {
+        noter("MESURE DE LA LIGNE · [data-ligne-grise] INTROUVABLE");
+        return;
+      }
+      const r = ligne.getBoundingClientRect();
+      noter(
+        `MESURE DE LA LIGNE · fenêtre ${window.innerWidth} px · ligne : ` +
+          `gauche ${arrondi(r.left)} · droite ${arrondi(r.right)} · largeur ${arrondi(r.width)}`
+      );
+      let parent = ligne.parentElement;
+      let rang = 1;
+      while (parent && parent !== document.body && rang <= 14) {
+        const boite = parent.getBoundingClientRect();
+        const calcule = getComputedStyle(parent);
+        const nom =
+          parent.tagName.toLowerCase() +
+          (parent.getAttribute("data-rangee-moteur") !== null
+            ? "[data-rangee-moteur]"
+            : "") +
+          (String(parent.className).includes("overflow-hidden")
+            ? "(.overflow-hidden)"
+            : "");
+        noter(
+          `MESURE DE LA LIGNE · ancêtre ${rang} ${nom} · gauche ${arrondi(
+            boite.left
+          )} · droite ${arrondi(boite.right)} · overflow-x ${
+            calcule.overflowX
+          } · rembourrage ${calcule.paddingLeft}/${calcule.paddingRight}`
+        );
+        parent = parent.parentElement;
+        rang += 1;
+      }
+    });
+    return () => cancelAnimationFrame(image);
+  }, [armee, chemin]);
+
+  /**
    * ⚠️ TEMPORAIRE (nº 435) — MESURE DU LISERÉ DE LA FENÊTRE SUPERPOSÉE.
    * ==================================================================
    * AUCUNE CORRECTION : cette passe POSE UNE MESURE, c'est tout. Le

@@ -886,7 +886,27 @@ export function EnTeteTatouage({
           aria-hidden={rangeeEscamotee || undefined}
           inert={rangeeEscamotee || undefined}
         >
-          <div className="max-lg:min-h-0 max-lg:overflow-hidden flex w-full justify-center">
+          {/*  ██ §5 (nº 462) — LE ROGNAGE S'ÉLARGIT JUSQU'AU BORD DE
+               L'ÉCRAN, LE CONTENU NE BOUGE PAS D'UN PIXEL ██
+               LE COUPABLE DE LA LIGNE COUPÉE, nommé : ce conteneur.
+               Son `max-lg:overflow-hidden` sert le repli VERTICAL de
+               la rangée (les grid-rows de la nº 259) — mais `hidden`
+               vaut pour LES DEUX AXES (la règle du langage, celle de
+               la nº 383) : le débord latéral de la ligne grise du
+               va-et-vient (`-inset-x-4`, nº 461) mourait sur SA boîte,
+               qui s'arrête aux marges de la barre (`px-4 sm:px-6` de
+               l'enveloppe). La ligne « bord à bord » était donc coupée
+               PILE aux marges — le symptôme exact.
+               LE REMÈDE : le DÉBORD COMPENSÉ (le motif de la nº 381) —
+               la marge négative pousse la boîte de rognage jusqu'au
+               bord physique de l'écran, le rembourrage de même valeur
+               remet le contenu où il était. Rien ne bouge à l'œil pour
+               le moteur ni pour la rangée libre ; seul ce que le
+               rognage COUPE change : il coupe désormais au bord de
+               l'écran — le débord de la ligne passe, et rien ne peut
+               dépasser l'écran (aucun défilement horizontal possible,
+               le rognage reste). Le repli vertical est inchangé. */}
+          <div className="max-lg:min-h-0 max-lg:overflow-hidden max-lg:-mx-4 max-lg:px-4 sm:max-lg:-mx-6 sm:max-lg:px-6 flex w-full justify-center">
             {/*  Le pt-3 remplace l'ancien gap-y-3 du parent : il
                  appartient à la rangée et se replie avec elle. */}
             <div

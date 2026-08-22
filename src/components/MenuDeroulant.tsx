@@ -195,6 +195,7 @@ export function MenuDeroulant({
   avecVoile = false,
   commandeOuverture = 0,
   feuilleDecollee = false,
+  panneauCaleSurAncre = false,
 }: {
   valeur: string;
   surChangement: (valeur: string) => void;
@@ -326,6 +327,16 @@ export function MenuDeroulant({
    * la fermeture, le choix et le clic dehors restent les siens.
    */
   commandeOuverture?: number;
+  /**
+   * §2 (nº 462) — LE PANNEAU DU WEB SE CALE SUR L'ANCRE, NI PLUS NI
+   * MOINS : largeur = celle du bouton mesuré (la branche `width` de
+   * `stylePanneau`), au lieu du régime « au contenu » (minWidth +
+   * max-content). « Ma sélection » le passe : son ancre fantôme fait
+   * la largeur de l'ONGLET ACTIF, et le déroulant ne doit pas la
+   * dépasser. Les autres déroulants ne passent rien et gardent leur
+   * largeur actuelle.
+   */
+  panneauCaleSurAncre?: boolean;
   /**
    * §4 (nº 460) — LA FEUILLE DÉCOLLÉE DES BORDS : l'encadré de la
    * feuille du bas prend la marge latérale de l'interface (16 px, le
@@ -1121,7 +1132,7 @@ export function MenuDeroulant({
           //  ⚠️ LARGEUR AU CONTENU (nº 144-§5) : le champ n'est plus
           //  qu'un plancher — le panneau s'élargit jusqu'au style le
           //  plus long, et plus aucune entrée ne revient à la ligne.
-          style={stylePanneau(cadre, ouvreVersLeHaut, hauteurMax, true)}
+          style={stylePanneau(cadre, ouvreVersLeHaut, hauteurMax, !panneauCaleSurAncre)}
           //  ⚠️ EN SOMBRE, LES CLASSES CLAIRES SONT RETIRÉES, pas
           //  recouvertes (même règle que `optionSombre`) — et le
           //  panneau suit la charte : ni contour ni ombre, le fond

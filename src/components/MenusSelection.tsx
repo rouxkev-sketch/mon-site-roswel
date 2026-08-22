@@ -165,7 +165,13 @@ export function MenusSelection({
     return (
       <span className="flex items-center gap-1.5">
         {label}
-        {compte !== null && <span>{compte}</span>}
+        {/*  §3 (nº 462) — LE NOMBRE : graisse normale et GRIS des
+             textes secondaires (`text-sombre-texte-doux`, le jeton de
+             toujours) — son propre élément, une seule classe de
+             couleur, le mot et le chevron ne changent pas. */}
+        {compte !== null && (
+          <span className="font-normal text-sombre-texte-doux">{compte}</span>
+        )}
         <IconeChevronBas taille={16} classe="shrink-0 text-sombre-texte-doux" />
       </span>
     );
@@ -289,6 +295,9 @@ export function MenusSelection({
         //  l'ouverture ; la feuille du doigt reste décollée des bords.
         commandeOuverture={commandeFiltres}
         feuilleDecollee
+        //  §2 (nº 462) — le panneau du web prend LA LARGEUR DE
+        //  L'ANCRE (l'onglet actif), jamais plus.
+        panneauCaleSurAncre
       />
     );
   };
@@ -365,17 +374,26 @@ export function MenusSelection({
               classeLigne="mobile:-inset-x-4 sm:mobile:-inset-x-6"
             />
           </div>
-          {/*  §2 (nº 461) — LE MENU COMMANDÉ, DÉCLENCHEUR FANTÔME.
+          {/*  §2 (nº 461, resserré nº 462) — LE MENU COMMANDÉ,
+               DÉCLENCHEUR FANTÔME CALÉ SUR L'ONGLET ACTIF.
                La boîte est `invisible` et haute de zéro — RIEN à
-               l'écran, aucun clic, aucun focus — mais elle SE MESURE :
-               le panneau du web (un portail ancré par
-               `usePlacementMenu` sur le bouton) s'ouvre à sa
-               position — sous le va-et-vient, à sa largeur. Au doigt,
-               la feuille vit dans son propre portail : la boîte n'y
-               joue aucun rôle. `display:none` (l'écriture de la
-               nº 460) rendait le bouton immesurable — c'est TOUT ce
-               qui change ici. */}
-          <div aria-hidden className="invisible h-0">
+               l'écran — mais elle SE MESURE : le panneau du web (un
+               portail ancré par `usePlacementMenu` sur le bouton)
+               s'ouvre à sa position. §2 (nº 462) : elle ne fait plus
+               la rangée entière mais LA MOITIÉ (`w-1/2` — la largeur
+               exacte du soulignement rose d'un onglet), poussée sous
+               l'onglet CHOISI (`ml-[50%]` sur « Suivis ») : le
+               déroulant s'aligne à gauche de l'onglet actif et n'en
+               dépasse pas la largeur (`panneauCaleSurAncre` — la
+               branche `width` de stylePanneau, plus de max-content).
+               Changer d'onglet déplace la boîte : le panneau se
+               recale (le placement suit l'ancre en continu). Au
+               doigt, la feuille vit dans son portail : la boîte n'y
+               joue aucun rôle. */}
+          <div
+            aria-hidden
+            className={`invisible h-0 w-1/2${surLesFavoris ? "" : " ml-[50%]"}`}
+          >
             {filtre()}
           </div>
       {/*  §3 (nº 258) — LA LIGNE ÉTROITE A DISPARU, entièrement. Une

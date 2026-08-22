@@ -20,8 +20,6 @@ import { positionSousLeGel } from "@/lib/gel-du-corps";
 import { BlocSuivis } from "@/components/BlocSuivis";
 import { FenetreFiche } from "@/components/FenetreFiche";
 import { PileFiches } from "@/components/PileFiches";
-import { LigneResultats } from "@/components/LigneResultats";
-import { libelleDuChoix } from "@/components/MenusSelection";
 //  §3 (nº 460) — le pont vers le va-et-vient de la barre : la page
 //  pose les comptes filtrés, la barre les affiche.
 import { poserComptesSelection } from "@/lib/compte-selection";
@@ -32,7 +30,6 @@ import {
 import { natureConnue, RENDU_PAR_DEFAUT } from "@/lib/photos-tatoueur";
 import {
   cartesDesFavoris,
-  compteDeLaSelection,
   photoDuChoix,
   suivisDuChoix,
 } from "@/lib/selection-suivis";
@@ -436,48 +433,16 @@ export function PageFavoris({
            Abstrait ») ; les deux tiennent ensemble — « Réalisme ·
            7 portfolios sur 18 ». Les trois cas (un, aucun, filtré)
            vivent dans `compteDeLaSelection`, pas ici. */}
-      <LigneResultats
-        titre={
-          surLesFavoris ? "Ma sélection de photos" : "Ma sélection de portfolios"
-        }
-        sousTitre={
-          [
-            libelleDuChoix(choix),
-            compteDeLaSelection({
-              surLesFavoris,
-              total: surLesFavoris ? photos.length : suivis.length,
-              visibles: surLesFavoris ? visibles.length : suivisVisibles.length,
-              filtreActif: Boolean(choix.nature || choix.style),
-            }),
-          ]
-            .filter(Boolean)
-            .join(" · ") || null
-        }
-        degagementConstant
-        /*  §2 (nº 325) — DE L'AIR SOUS LE BLOC DE TÊTE, sur le web :
-            24 → 40 px. Le titre de la page et son compte touchaient
-            presque la première photo de profil — rien d'autre ne
-            sépare les deux que le rembourrage de ce bloc.
-            ⚠️ IL VAUT POUR LES DEUX ONGLETS, et c'est inévitable ici :
-            ce `LigneResultats` est UNIQUE, seul son titre bascule
-            entre « portfolios » et « photos ». Le propriétaire le
-            sait ; s'il n'en veut que d'un côté, ce drapeau se lira
-            `airEnBas={!surLesFavoris}` — une ligne, pas une refonte. */
-        airEnBas
-        /*  §5 (nº 460) — AU DOIGT, PLUS AUCUN TITRE NI SOUS-TITRE sur
-            cette page (« Ma sélection de photos », « 10 photos »…) :
-            le bloc entier part en `display` (le drapeau de la nº 444 —
-            la garantie nº 171 ne force qu'opacité et visibilité).
-            L'écran du doigt commence par le va-et-vient de la barre
-            (MenusSelection), qui porte désormais le compte. Le web ne
-            change pas d'un pixel. */
-        masqueAuDoigt
-      />
-      {/*  §5 (nº 460) — L'AIR SOUS LA BARRE, l'écriture de la nº 445 :
-           le titre parti, les cartes touchaient la rangée collante —
-           les mêmes 14 px que l'accueil sans recherche, au doigt
-           seulement. */}
-      <div aria-hidden data-air-sous-barre className="h-3.5 hidden mobile:block" />
+      {/*  ██ §1 (nº 462) — PLUS AUCUN TITRE, WEB COMPRIS ██
+           Le bloc de tête (« Ma sélection de photos » / « 10 photos »,
+           « 7 portfolios sur 18 »…) avait quitté le DOIGT à la nº 460
+           (`masqueAuDoigt`) ; il part désormais DES DEUX CÔTÉS, code
+           compris — filtré ou non. Le va-et-vient de la barre porte le
+           compte (nº 460/461), il n'y a plus rien à répéter ici.
+           L'AIR qui le remplace est celui du doigt (nº 445,
+           `data-air-sous-barre`, 14 px), désormais aux deux
+           largeurs — aucune bande vide à l'ancienne hauteur du titre. */}
+      <div aria-hidden data-air-sous-barre className="h-3.5" />
 
       {/* ---------- LES PHOTOS GARDÉES ----------
            §2 (nº 247) — LES DEUX MENUS SONT EXCLUSIFS : cette section

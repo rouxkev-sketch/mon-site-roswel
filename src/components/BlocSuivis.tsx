@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { GalerieQuiDefile } from "@/components/GalerieQuiDefile";
+//  §4 (nº 462) — la mémoire de défilement des bandes (leçon nº 430),
+//  sous le préfixe réservé que la purge des fiches épargne.
+import { cleDeGalerie, PREFIXE_SELECTION } from "@/lib/memoire-galeries";
 import { CADRE_PHOTO_PORTFOLIO } from "@/config/tatouage";
 import {
   CLASSES_LIGNE_CLIQUABLE_SANS_ENCADRE,
@@ -401,6 +404,17 @@ function RangeeDeVignettes({
       classeRangee="-mx-4 px-4 sm:-mx-6 sm:px-6"
       ecart="gap-[3px] lg:gap-1.5"
       cleDuContenu={bande.photos.length}
+      /*  ██ §4 (nº 462) — LA BANDE SE SOUVIENT DE SA POSITION ██
+           LA CAUSE DU DÉFAUT, nommée : cet appel ne passait PAS
+           `cleMemoire` — la mémoire de la nº 459 est un réglage
+           demandé, et seule la colonne Portfolio des fiches le
+           demandait. Au retour d'une photo, la bande remontait donc
+           neuve, à sa première vignette. LA CLÉ : le préfixe réservé
+           de « Ma sélection » (épargné par la purge des fiches —
+           lib/memoire-galeries) + le slug du suivi : une bande par
+           artiste, chacune la sienne. Restitution avant peinture,
+           écriture au démontage — rien d'autre ne change. */
+      cleMemoire={cleDeGalerie(PREFIXE_SELECTION, "suivis", suivi.slug, "bande")}
     >
         {bande.photos.map((photo) => (
         <li key={photo.id} className={CASE_RANGEE}>
