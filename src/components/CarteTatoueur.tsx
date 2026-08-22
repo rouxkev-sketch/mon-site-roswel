@@ -774,62 +774,58 @@ function CarteTatoueurNue({
              aucun rembourrage bas, la carte s'arrête sur son texte. Ce
              qui suit est la gouttière de la grille — voir
              GrilleTatoueurs, où elle passe de 32 à 24 px. */
-        /*  ██ §2 ET §3 (nº 481) — L'AIR SOUS LA PHOTO, ET LA MARGE DU
-             TEXTE AU DOIGT ██
+        /*  ██ §3 (nº 481) — LA MARGE LATÉRALE DU TEXTE, AU DOIGT ██
              ------------------------------------------------------
-             LE WEB — L'AIR ENTRE LE BAS DE LA PHOTO ET LA PREMIÈRE
-             LIGNE PASSE DE 12 À 6 PIXELS (la moitié, `pt-1.5`). Il ne
-             vaut QUE pour la souris : le doigt a ses propres valeurs
-             juste en dessous, dans la variante, et elles ne bougent pas
-             — dix pixels côte à côte, seize en pleine largeur.
-             LE DOIGT — LA MARGE LATÉRALE DU TEXTE PASSE DE 16 À 8
-             PIXELS (`mobile:px-2`), c'est-à-dire la moitié demandée :
-             au doigt la photo touche les bords de l'écran, et le texte
+             ELLE PASSE DE SEIZE À HUIT PIXELS (`mobile:px-2`) : au
+             doigt la photo touche les bords de l'écran, et le texte
              commençait bien trop loin de son bord gauche. Les DEUX
              côtés suivent, pour que la ligne reste centrée dans la
              carte — et les trois lignes bougent ensemble, puisqu'elles
              vivent toutes dans cette boîte : elles restent alignées
-             entre elles au pixel. Le web garde sa marge (deux pixels),
-             hors variante.
-             ⚠️ UNE JUSTIFICATION DEVENUE FAUSSE, ET JE LA CORRIGE ICI :
-             la nº 398 avait choisi les seize pixels d'air du haut en
-             pleine largeur PARCE QUE cette rangée portait alors la même
-             valeur de chaque côté. Ce n'est plus vrai — les côtés
-             valent huit désormais, le haut garde ses seize. La valeur
-             du haut ne change pas pour autant : le propriétaire l'a
-             réglée à l'œil, elle lui appartient. */
-        /*  ██ §1 (nº 484) — LES AIRS DU DOIGT SUIVENT UNE SEULE
-             ÉCHELLE, ET UN SEUL PRINCIPE ██
+             entre elles au pixel. Le web garde ses deux pixels, hors
+             variante.
+             ⚠️ L'AIR DU HAUT, LUI, A ÉTÉ REPRIS DEPUIS (nº 484 puis
+             nº 485) et vit dans la note suivante : cette passe-ci
+             l'avait réglé au web seul, les deux appareils l'ont
+             maintenant en commun.
+             ⚠️ ET UNE JUSTIFICATION DEVENUE FAUSSE, CORRIGÉE AU
+             PASSAGE : la nº 398 avait choisi l'air du haut en pleine
+             largeur PARCE QUE cette rangée portait alors la même
+             valeur de chaque côté. Ce n'est plus vrai depuis que les
+             côtés valent huit — et l'air du haut a été refait deux
+             fois depuis, sur d'autres principes. */
+        /*  ██ §1 (nº 484, ÉTENDU AU WEB À LA nº 485) — UNE SEULE
+             ÉCHELLE, UN SEUL PRINCIPE, SUR LES DEUX APPAREILS ██
              ==================================================
              CE QUI N'ALLAIT PAS, et ce n'était pas une affaire de
-             millimètre : trois passes de réglage à l'œil (nº 480 à
-             nº 482) avaient laissé des écarts qui ne se répondaient
-             pas — un pixel ici, six là, dix ailleurs. Des valeurs
-             hors échelle ne peuvent pas former un rythme, quel que
-             soit le soin mis à chacune.
-             L'ÉCHELLE, DÉSORMAIS : tous les airs de ce bloc sont des
-             multiples de QUATRE — quatre, huit, douze. Aucune valeur
-             en dehors.
+             millimètre : des passes de réglage à l'œil avaient laissé
+             des écarts qui ne se répondaient pas. Des valeurs hors
+             échelle ne peuvent pas former un rythme, quel que soit le
+             soin mis à chacune.
+             L'ÉCHELLE : tous les airs de ce bloc sont des multiples de
+             QUATRE — quatre, huit, douze, seize. Aucune valeur en
+             dehors, sur aucun des deux appareils.
              LE PRINCIPE QUI LES DISTRIBUE — la proximité : ce qui
              parle du même sujet se serre, ce qui parle d'autre chose
              s'éloigne.
               · LA LIGNE DU STYLE DÉCRIT LA PHOTO qui la surmonte :
-                elle en reste PROCHE — HUIT pixels (`mobile:pt-2`),
-                ici même ;
+                elle en reste PROCHE — HUIT pixels (`pt-2`), ici même,
+                et c'est désormais la MÊME valeur des deux côtés ;
               · LE NOM ET LA LOCALITÉ parlent du même portfolio : ils
-                forment un bloc SERRÉ — QUATRE pixels (voir leur
-                bloc, plus bas) ;
-              · ENTRE LES DEUX, la césure : DOUZE pixels. Trois fois
-                l'écart interne du bloc du bas, et la moitié en plus
-                que l'air de la photo. L'œil range alors tout seul :
-                une photo et sa description, puis un portfolio.
-             ⚠️ UNE SEULE VALEUR POUR LES DEUX DISPOSITIONS DU DOIGT :
-             le ternaire qui distinguait les cartes côte à côte de la
-             pleine largeur disparaît. Deux valeurs pour une même
-             question, c'était déjà une entorse à l'échelle.
-             ⚠️ LE WEB NE BOUGE PAS — six pixels sous la photo, hors
-             variante du doigt ; sa marge latérale non plus. */
-        className="pt-1.5 px-0.5 mobile:pt-2 mobile:px-2"
+                forment un bloc SERRÉ — QUATRE pixels (voir leur bloc,
+                plus bas), la même valeur des deux côtés elle aussi ;
+              · ENTRE LES DEUX, la césure — et c'est LE SEUL air qui
+                diffère selon l'appareil : DOUZE pixels au doigt, SEIZE
+                au web (voir la ligne du style).
+             ⚠️ DEUX VARIANTES DU DOIGT ONT DISPARU EN CHEMIN, et c'est
+             un gain : l'air sous la photo et l'écart du bloc du bas
+             valent maintenant la même chose partout. Une classe qui
+             répète la valeur de sa base ne dit rien — elle donne juste
+             deux endroits où se tromper.
+             ⚠️ LA MARGE LATÉRALE, ELLE, RESTE SÉPARÉE : deux pixels au
+             web, huit au doigt (nº 481) — la photo y touche les bords
+             de l'écran, le texte ne peut pas partir du même endroit. */
+        className="pt-2 px-0.5 mobile:px-2"
       >
         {/*  ██ §1 (nº 480) — LA LIGNE 1 : LE STYLE ET LE RENDU ██
              ------------------------------------------------------
@@ -877,21 +873,27 @@ function CarteTatoueurNue({
                 fait maintenant d'un cran, sans crier. Ni la taille ni
                 la couleur ne bougent : même corps que le nom, même
                 jeton de blanc.
-                L'AIR SOUS ELLE VAUT DOUZE PIXELS (`mb-3`), et c'est
-                LA CÉSURE de la carte : cette ligne parle de la photo,
-                le bloc du dessous parle du portfolio — les deux ne
-                doivent pas se lire ensemble.
-                §1 (nº 484) — LES DEUX APPAREILS PARTAGENT DÉSORMAIS
-                CETTE VALEUR : le doigt en avait six, ce qui ne
-                détachait plus assez la ligne une fois le bloc du bas
-                resserré. La variante qui les séparait disparaît — une
-                seule classe, donc un seul comportement, et rien à
-                tenir d'accord.
-                LA HAUTEUR DE LIGNE, ELLE, RESTE SÉPARÉE : dix-neuf
-                pixels au web (inchangés), seize au doigt côte à côte,
-                vingt en pleine largeur — voir la note de la hauteur,
-                sur la ligne du nom. */
-            className={`font-normal leading-[19px] line-clamp-1 mb-3 text-[15px] text-sombre-texte ${
+                L'AIR SOUS ELLE EST LA CÉSURE de la carte : cette
+                ligne parle de la photo, le bloc du dessous parle du
+                portfolio — les deux ne doivent pas se lire ensemble.
+                §1 (nº 485) — ET C'EST LE SEUL AIR QUI DIFFÈRE SELON
+                L'APPAREIL : SEIZE pixels au web (`mb-4`), DOUZE au
+                doigt (`mobile:mb-3`). La raison tient à la
+                DISPOSITION, pas à la taille de l'écran : au doigt les
+                trois lignes s'empilent, et douze pixels suffisent à
+                séparer deux textes ; au web, ce qui suit cette ligne
+                n'est pas un texte mais LE ROND DE PROFIL — un objet
+                de quarante pixels, qui pèse à l'œil bien plus qu'une
+                ligne. Il lui faut donc plus d'air pour ne pas paraître
+                accroché au style.
+                LE RYTHME DU WEB SE LIT ALORS SEUL : quatre à
+                l'intérieur du bloc du bas, huit sous la photo, seize
+                pour la césure — chaque cran double le précédent.
+                LA HAUTEUR DE LIGNE EST SÉPARÉE, elle aussi : dix-huit
+                pixels au web, seize au doigt côte à côte, vingt en
+                pleine largeur — voir la note de la hauteur, sur la
+                ligne du nom. */
+            className={`font-normal leading-[18px] line-clamp-1 mb-4 mobile:mb-3 text-[15px] text-sombre-texte ${
               uneColonne
                 ? "mobile:text-[17px] mobile:leading-[20px]"
                 : "mobile:leading-[16px] mobile:text-[14px]"
@@ -946,50 +948,64 @@ function CarteTatoueurNue({
         {/* LE BLOC DE TEXTE — deux lignes, hauteur au pixel : 19 + 2 +
             19 = 40 px (21 + 2 + 21 = 44 px en une colonne sur
             smartphone). C'est cette hauteur que le portrait reprend. */}
-        {/*  ██ §1 (nº 484) — LE BLOC SERRÉ : LE NOM ET SA LOCALITÉ ██
-             QUATRE PIXELS au doigt (`mobile:gap-1`), le premier cran
-             de l'échelle. Ces deux lignes parlent du MÊME portfolio :
-             elles se lisent d'un seul tenant, et douze pixels les
-             séparent de la ligne du style, qui parle d'autre chose.
-             ⚠️ POURQUOI QUATRE, ALORS QUE LA nº 482 ÉTAIT DESCENDUE À
-             UN : parce que la hauteur de ligne se resserre en même
-             temps (voir la note de la ligne du nom). Le pixel unique
-             ne faisait que compenser le blanc que la hauteur de ligne
-             posait autour de chaque texte ; ce blanc parti, quatre
-             pixels d'écart RÉEL serrent mieux les deux lignes qu'un
-             pixel n'y parvenait — et cette fois la valeur est dans
-             l'échelle.
-             ⚠️ LE WEB GARDE SES DEUX PIXELS (`gap-0.5`, hors variante),
-             avec sa hauteur de ligne inchangée. */}
-        <div className="min-w-0 flex-1 flex flex-col gap-0.5 mobile:gap-1">
+        {/*  ██ §1 (nº 484, ÉTENDU AU WEB À LA nº 485) — LE BLOC SERRÉ :
+             LE NOM ET SA LOCALITÉ ██
+             QUATRE PIXELS (`gap-1`), le premier cran de l'échelle, et
+             la MÊME valeur sur les deux appareils : ces deux lignes
+             parlent du MÊME portfolio, elles se lisent d'un seul
+             tenant. La césure qui les sépare de la ligne du style vaut
+             trois à quatre fois cet écart, selon l'appareil.
+             ⚠️ POURQUOI QUATRE, ALORS QUE LES PASSES PRÉCÉDENTES
+             ÉTAIENT DESCENDUES À UN PIXEL AU DOIGT ET DEUX AU WEB :
+             parce que la hauteur de ligne se resserre en même temps
+             (voir la note de la ligne du nom). Ces valeurs minuscules
+             ne faisaient que compenser le blanc que la hauteur de
+             ligne posait autour de chaque texte ; ce blanc réduit,
+             quatre pixels d'écart RÉEL serrent mieux les deux lignes
+             qu'un ou deux n'y parvenaient — et cette fois la valeur
+             est dans l'échelle.
+             ⚠️ ET C'EST CET ÉCART QUI TIENT LE ROND DE PROFIL À SA
+             TAILLE : voir l'équation, sur la ligne du nom. */}
+        <div className="min-w-0 flex-1 flex flex-col gap-1">
         <h3
-          /*  ██ §1 (nº 484) — LA HAUTEUR DE LIGNE SE RESSERRE, AU
-              DOIGT ██
+          /*  ██ §1 (nº 484, ÉTENDU AU WEB À LA nº 485) — LA HAUTEUR
+              DE LIGNE SE RESSERRE ██
               ------------------------------------------------------
               POURQUOI ELLE COMPTE PLUS QUE LES ÉCARTS EUX-MÊMES :
-              dix-neuf pixels de hauteur pour un texte de quatorze,
-              cela pose environ deux pixels et demi de blanc AU-DESSUS
-              et EN DESSOUS de chaque ligne — un blanc qu'on ne voit
-              pas, qu'aucun réglage d'écart ne peut retirer, et qui
-              fausse toutes les mesures faites à côté. C'est lui qui a
-              fait descendre l'écart du bas jusqu'à un pixel à la
-              nº 482 : on compensait un blanc au lieu de le supprimer.
-              LES VALEURS, DANS L'ÉCHELLE DE QUATRE : SEIZE pixels
-              pour les cartes côte à côte (textes de 14 et 13), VINGT
-              en pleine largeur (textes de 17 et 14,5). Les trois
-              lignes suivent ensemble — sans quoi elles ne
-              s'aligneraient plus entre elles.
-              ⚠️ LE ROND DE PROFIL N'EST PAS CASSÉ, ET C'EST VÉRIFIÉ :
-              sa taille reprend la hauteur des lignes 2 et 3, écart
-              compris. En pleine largeur au doigt, celles-ci mesurent
-              désormais 20 + 4 + 20 = QUARANTE-QUATRE pixels — très
-              exactement la taille qu'il porte déjà (44). Au web, rien
-              ne change : 19 + 2 + 19 = QUARANTE, sa taille de base.
-              Et sur les cartes côte à côte, il ne se rend pas. Le
-              rond garde donc sa taille dans les trois cas, sans qu'on
-              ait eu à la figer ni à la recalculer.
-              ⚠️ LE WEB GARDE SA HAUTEUR (dix-neuf pixels, classe de
-              base) : seules les variantes du doigt changent. */
+              dix-neuf pixels de hauteur pour un texte de quinze, cela
+              pose deux pixels de blanc AU-DESSUS et EN DESSOUS de
+              chaque ligne — un blanc qu'on ne voit pas, qu'aucun
+              réglage d'écart ne peut retirer, et qui fausse toutes les
+              mesures faites à côté. C'est lui qui avait fait descendre
+              les écarts jusqu'à un ou deux pixels : on compensait un
+              blanc au lieu de le supprimer.
+              LES VALEURS : DIX-HUIT pixels au web (textes de 15 et 13),
+              SEIZE au doigt côte à côte (14 et 13), VINGT en pleine
+              largeur (17 et 14,5). Les trois lignes suivent ensemble —
+              sans quoi elles ne s'aligneraient plus entre elles.
+              ⚠️ POURQUOI DIX-HUIT AU WEB, ET NON SEIZE COMME AU DOIGT :
+              deux raisons, et elles vont dans le même sens.
+               · LE TEXTE Y EST PLUS GRAND (quinze pixels contre
+                 quatorze) : seize ne lui laisserait qu'un pixel, et les
+                 jambages des lettres descendantes viendraient toucher
+                 le bord de leur ligne, que le rognage d'une seule ligne
+                 coupe net ;
+               · L'ÉQUATION DU ROND DE PROFIL, surtout. Sa taille
+                 reprend la hauteur des lignes 2 et 3, écart compris —
+                 c'est un acquis ancien. Au web : 18 + 4 + 18 = QUARANTE
+                 pixels, très exactement sa taille (`h-10 w-10`). Il ne
+                 bouge donc pas d'un pixel, et il n'y avait pas à
+                 choisir entre le resserrer et le figer.
+                 (Au doigt, l'équation tombait déjà juste à la nº 484 :
+                 20 + 4 + 20 = 44 en pleine largeur, sa taille là-bas ;
+                 et sur les cartes côte à côte, il ne se rend pas.)
+              ⚠️ C'EST DONC L'ÉCART DU BLOC DU BAS QUI TIENT LE ROND :
+              le porter à huit ferait quarante-quatre au web et
+              dépasser le rond ; le laisser à deux ferait trente-huit.
+              Quatre est la seule valeur de l'échelle qui garde
+              l'équation juste — le principe et la mécanique disent ici
+              la même chose. */
+
           /*  §1 (nº 480, réglé nº 481) — LA LIGNE 2 : LE NOM DU
               PORTFOLIO. Même corps que la ligne du style juste
               au-dessus — les deux premières lignes se répondent au
@@ -999,7 +1015,7 @@ function CarteTatoueurNue({
               elles est le même qu'avant, d'un cran, mais il pèse
               désormais moins lourd à l'œil. Le blanc vient du jeton,
               comme avant. */
-          className={`font-semibold leading-[19px] line-clamp-1 text-[15px] text-sombre-texte ${
+          className={`font-semibold leading-[18px] line-clamp-1 text-[15px] text-sombre-texte ${
             uneColonne
               ? "mobile:text-[17px] mobile:leading-[20px]"
               : "mobile:leading-[16px] mobile:text-[14px]"
@@ -1051,7 +1067,7 @@ function CarteTatoueurNue({
           </Link>
         </h3>
         <p
-          className={`text-sombre-texte-doux leading-[19px] line-clamp-1 ${
+          className={`text-sombre-texte-doux leading-[18px] line-clamp-1 ${
             uneColonne
               ? "text-[14.5px] mobile:leading-[20px]"
               : "text-[13px] mobile:leading-[16px]"
