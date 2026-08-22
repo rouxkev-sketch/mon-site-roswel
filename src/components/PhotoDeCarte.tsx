@@ -123,6 +123,7 @@ export function PhotoDeCarte({
         alt={alt}
         loading={chargement}
         fetchPriority={priorite}
+        decoding="async"
         width={PHOTO_MINIATURE.largeur}
         height={PHOTO_MINIATURE.hauteur}
         className={classe}

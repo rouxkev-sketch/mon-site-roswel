@@ -992,6 +992,7 @@ export function ContenuFiche({
         <img
           src={tatoueur.photo_profil}
           alt={`Photo de ${tatoueur.nom}`}
+          decoding="async"
           width={PORTRAIT_ROND}
           height={PORTRAIT_ROND}
           className="h-full w-full object-cover"

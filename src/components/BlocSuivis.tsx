@@ -488,6 +488,7 @@ function RangeeDeVignettes({
               src={photo.miniature}
               alt=""
               loading="lazy"
+              decoding="async"
               className="h-full w-full object-cover"
             />
             {/*  §2 (nº 302) — PLUS AUCUN CŒUR SUR CES VIGNETTES,

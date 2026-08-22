@@ -1236,6 +1236,7 @@ export function FicheTatoueur({
                     <img
                       src={tatoueur.photo_profil}
                       alt=""
+                      decoding="async"
                       width={40}
                       height={40}
                       className="h-full w-full object-cover"

@@ -975,6 +975,7 @@ function CarteTatoueurNue({
               src={tatoueur.photo_profil}
               alt=""
               loading="lazy"
+              decoding="async"
               width={PORTRAIT_ROND}
               height={PORTRAIT_ROND}
               className="h-full w-full object-cover"

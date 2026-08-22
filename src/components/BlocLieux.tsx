@@ -148,6 +148,22 @@ export function PhotoRonde({
   /** Le glyphe du repli « lieu » suit la même échelle (28 → 40). */
   classeGlyphe?: string;
 }) {
+  /**
+   * ██ nº 494 — `decoding="async"`, LE MODÈLE DES CARROUSELS ██
+   * ------------------------------------------------------------------
+   * L'EXAMEN DE CETTE PASSE a relevé que les familles d'images du site
+   * ne sont pas protégées de la même façon : `PhotoProgressive` (les
+   * carrousels) déclare `loading`, `fetchPriority`, `decoding="async"`
+   * ET ses dimensions intrinsèques ; ce rond-ci ne déclarait que ses
+   * dimensions. Le relevé de sonde du propriétaire dit la même chose —
+   * « les ronds sont en `decoding=auto` alors que les carrousels sont
+   * en `decoding=async` », et ce sont les ronds qui montrent le défaut.
+   * ⚠️ CE N'EST PAS UNE CORRECTION DU DÉFAUT, et il ne faut pas le lire
+   * comme telle : `decoding` dit QUAND une image décodée est présentée,
+   * il ne répare pas un transfert qui s'arrête en route. C'est
+   * l'alignement sur la famille la mieux tenue, pas un remède nommé.
+   * ⚠️ AUCUN PIXEL NE BOUGE : `decoding` ne touche pas la mise en page.
+   */
   return (
     <span
       className={`flex ${classeTaille} shrink-0 items-center justify-center overflow-hidden rounded-full ${classeFond}`}
@@ -158,6 +174,7 @@ export function PhotoRonde({
         <img
           src={source}
           alt=""
+          decoding="async"
           width={PORTRAIT_ROND}
           height={PORTRAIT_ROND}
           className="h-full w-full object-cover"

@@ -271,6 +271,7 @@ export function FenetreCarrousel({
         <img
           src={tatoueur.photo_profil}
           alt=""
+          decoding="async"
           width={PORTRAIT_ROND}
           height={PORTRAIT_ROND}
           className="h-full w-full object-cover"

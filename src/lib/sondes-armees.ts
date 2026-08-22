@@ -61,9 +61,68 @@ export const PREFIXE_PARAMETRE = "sonde-";
  * CE QUE LE SITE LIT
  * ================================================================== */
 
-/** La liste des sondes armées, telle que la marque l'annonce. */
+/** Les sondes que l'ADRESSE COURANTE réclame, ici et maintenant. */
+function sondesDeLAdresse(): NomDeSonde[] {
+  if (typeof location === "undefined") return [];
+  try {
+    const parametres = new URLSearchParams(location.search);
+    return SONDES.filter((nom) => parametres.has(PREFIXE_PARAMETRE + nom));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * ██ LE RÉARMEMENT PAR L'ADRESSE — LA SECONDE VOIE (nº 494) ██
+ * ==================================================================
+ * LE DÉFAUT RELEVÉ PAR LE PROPRIÉTAIRE : après un désarmement, rouvrir
+ * une adresse avec `?sonde-retour=1` ne rallumait plus rien, même dans
+ * un onglet neuf. Une sonde qu'on ne peut plus rallumer ne sert à rien.
+ *
+ * ⚠️ CE QUE JE N'AI PAS ÉTABLI, ET JE LE DIS : la lecture du code ne
+ * montre PAS pourquoi la première voie tombe en panne. Le script
+ * d'avant peinture lit bien `location.search`, ajoute les sondes
+ * demandées à celles de la mémoire, et pose la marque — cette
+ * mécanique-là est juste, ligne à ligne.
+ * CE QUE JE CHANGE EST DONC UNE SECONDE VOIE, PAS UNE RÉPARATION DE LA
+ * PREMIÈRE : jusqu'ici, le paramètre d'adresse n'était lu QU'À UN SEUL
+ * ENDROIT du site, ce script. S'il ne tourne pas — page servie par un
+ * cache, script d'une mise en ligne antérieure (le millésime existe
+ * parce que c'est arrivé deux fois, note §B nº 347), stockage refusé —
+ * plus RIEN ne regarde l'adresse, et aucun rechargement n'y change
+ * quoi que ce soit. Le site lit désormais l'adresse lui-même, à la
+ * première question posée sur l'armement.
+ * ⚠️ UNE FOIS PAR ADRESSE, ET NON UNE FOIS PAR CHARGEMENT : on retient
+ * la requête déjà lue. La réconciliation ÉCRIT, la question est posée
+ * à chaque rendu — sans cette mémoire, on écrirait des dizaines de
+ * fois pour rien. Et en retenant l'ADRESSE plutôt qu'un simple
+ * « déjà fait », une navigation interne vers `?sonde-…=1` réarme elle
+ * aussi : le module n'est pas rechargé dans ce cas-là.
+ * ⚠️ L'ADRESSE AJOUTE, ELLE NE RETIRE PAS : une sonde armée
+ * durablement reste armée même si l'adresse ne la nomme pas — c'est
+ * tout l'acquis de la nº 343 (armer une fois, mesurer à l'adresse nue).
+ */
+let derniereAdresseLue: string | null = null;
+
+function reconcilierAvecLAdresse(): void {
+  if (typeof document === "undefined" || typeof location === "undefined") return;
+  if (location.search === derniereAdresseLue) return;
+  derniereAdresseLue = location.search;
+  const demandees = sondesDeLAdresse();
+  if (demandees.length === 0) return;
+  const marque = document.documentElement.dataset[MARQUE_SONDES];
+  const deja = marque
+    ? SONDES.filter((nom) => marque.split(" ").includes(nom))
+    : [];
+  const manquantes = demandees.filter((nom) => !deja.includes(nom));
+  if (manquantes.length > 0) poser([...deja, ...manquantes]);
+}
+
+/** La liste des sondes armées, telle que la marque l'annonce — après
+    que l'adresse a eu son mot à dire. */
 export function sondesArmees(): NomDeSonde[] {
   if (typeof document === "undefined") return [];
+  reconcilierAvecLAdresse();
   const marque = document.documentElement.dataset[MARQUE_SONDES];
   if (!marque) return [];
   return SONDES.filter((nom) => marque.split(" ").includes(nom));

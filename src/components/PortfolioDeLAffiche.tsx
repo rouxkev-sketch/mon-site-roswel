@@ -370,6 +370,7 @@ export function PanneauPortfolio({
               src={photo.miniature}
               alt={`${serie.label} — ${nomTatoueur}`}
               loading="lazy"
+              decoding="async"
               className="h-full w-full object-cover
                          transition-opacity group-hover/case:opacity-90"
             />
