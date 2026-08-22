@@ -134,25 +134,59 @@ export function PagePleinEcranMobile({
 }) {
   if (typeof document === "undefined") return null;
   return createPortal(
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={ariaLabel}
-      className={`hidden mobile:flex fixed inset-0 ${classeCadre} flex-col
-                 overflow-y-auto overscroll-contain
-                 bg-sombre-fond text-sombre-texte`}
-    >
-      <EnTetePleinEcran
-        icone={icone}
-        titre={titre}
-        surFermer={surFermer}
-        ariaLabelFermer={ariaLabelFermer}
-        actions={actions}
+    <>
+      {/*  ██ §3 (nº 476) — LE CLAVIER NE DÉCOUVRE PLUS LA PAGE DU
+           DESSOUS ██
+           LA CAUSE, NOMMÉE : cette surface est `fixed inset-0` (juste
+           en dessous) — elle est donc ancrée au VIEWPORT DE MISE EN
+           PAGE. Or à l'ouverture du clavier, iOS ne rétrécit pas ce
+           viewport-là : il fait GLISSER le viewport VISUEL vers le bas
+           pour amener le champ au-dessus des touches. La surface, elle,
+           reste accrochée au haut de la page — donc elle sort de
+           l'écran par le haut, et le bas de ce qu'on voit n'est plus
+           couvert : le formulaire qui vit dessous apparaît.
+           POURQUOI LA PAGE DE RECHERCHE N'A JAMAIS EU CE DÉFAUT : une
+           fois posée, elle n'est PAS fixe — elle est en flux
+           (`relative min-h-[100dvh]`, PageRechercheMobile l. 444) :
+           « le navigateur fait défiler le document pour dégager le
+           champ, et c'est tout ». Il n'y a rien dessous à découvrir.
+           LE REMÈDE, SANS TOUCHER AU POSITIONNEMENT DES QUATRE
+           PORTEURS : un fond de la même couleur, ancré au même
+           viewport, qui DESCEND BIEN PLUS BAS QUE L'ÉCRAN. Quel que
+           soit le glissement du viewport visuel, ce qui se découvre
+           sous la surface est ce fond — jamais la page. Il est inerte
+           (ni pointeur, ni lecteur d'écran), il vit au même rang que la
+           surface mais AVANT elle dans le document : elle se peint
+           par-dessus, rien ne change à l'écran clavier fermé.
+           ⚠️ LES QUATRE PORTEURS EN BÉNÉFICIENT (le gabarit est
+           partagé) : « Mon compte », « Notifications » et « Langue »
+           n'ouvrent aucun clavier — ils avaient donc la même faiblesse
+           sans jamais la montrer ; elle est fermée pour eux aussi. */}
+      <div
+        aria-hidden="true"
+        className={`hidden mobile:block fixed inset-x-0 top-0 h-[200dvh]
+                   ${classeCadre} pointer-events-none bg-sombre-fond`}
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={ariaLabel}
+        className={`hidden mobile:flex fixed inset-0 ${classeCadre} flex-col
+                   overflow-y-auto overscroll-contain
+                   bg-sombre-fond text-sombre-texte`}
       >
-        {sousLeTitre}
-      </EnTetePleinEcran>
-      {children}
-    </div>,
+        <EnTetePleinEcran
+          icone={icone}
+          titre={titre}
+          surFermer={surFermer}
+          ariaLabelFermer={ariaLabelFermer}
+          actions={actions}
+        >
+          {sousLeTitre}
+        </EnTetePleinEcran>
+        {children}
+      </div>
+    </>,
     document.body
   );
 }

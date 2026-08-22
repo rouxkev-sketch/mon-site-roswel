@@ -212,6 +212,12 @@ export function BlocPortfolio({
   /** VRAI pendant qu'un glisser de FICHIERS survole la grille (web) :
       la zone s'allume pour dire « dépose ici ». */
   const [deposeEnVue, setDeposeEnVue] = useState(false);
+  /** §2 (nº 476) — LE CLIC À AVALER : levé à l'appui quand un champ de
+      saisie avait encore le focus (le clavier était ouvert), consommé
+      par le clic qui suit — voir la liste de la page plein écran. Une
+      référence, pas un état : la réponse doit être prête DANS le
+      gestionnaire, sans attendre un rendu. */
+  const avalerLeProchainClic = useRef(false);
   const entreeFichier = useRef<HTMLInputElement>(null);
   /**
    * ██ §7 (nº 415) — « PRÉPARATION DES PHOTOS… » EST SUPPRIMÉE ██
@@ -1610,7 +1616,52 @@ export function BlocPortfolio({
             />
           }
         >
-          <ul aria-label="Les styles, de A à Z" className="grow pt-2 pb-2">
+          {/*  ██ §2 (nº 476) — LE TAP QUI REFERME LE CLAVIER NE CHOISIT
+               PLUS UN STYLE ██
+               LA CAUSE, NOMMÉE : rien ne retenait ce tap. Quand le
+               champ « Un style manque ? » a le focus, toucher la liste
+               fait DEUX choses d'un coup — le navigateur retire le
+               focus (le clavier se referme) ET le lever du doigt envoie
+               son `click` au bouton qui se trouvait dessous : le style
+               était donc ajouté par le geste qui ne voulait que ranger
+               le clavier. C'est le mécanisme de la nº 464, à un détail
+               près : là-bas une fermeture posée sur l'appui laissait
+               filer le clic ; ici c'est le navigateur lui-même qui
+               défocalise à l'appui, et le clic file pareil.
+               LE REMÈDE — le premier geste ne sert qu'à refermer :
+               · à l'APPUI, on regarde qui a le focus. Si c'est un champ
+                 de saisie, on le note et on le referme à la main ;
+               · au CLIC qui suit, si la note est là, on l'AVALE
+                 (`preventDefault` + `stopPropagation`) : le bouton du
+                 dessous ne le voit jamais.
+               ⚠️ AUCUN `preventDefault` À L'APPUI : il couperait le
+               DÉFILEMENT tactile de la liste. Et la note est RECALCULÉE
+               à chaque appui — un glissement qui ne produit aucun clic
+               ne peut donc pas laisser un avalement en embuscade pour
+               plus tard.
+               ⚠️ CE QUI NE CHANGE PAS : le tap suivant, clavier déjà
+               fermé, choisit le style normalement (plus personne n'a le
+               focus, rien n'est avalé) ; la croix, le retour du
+               téléphone et Échap referment l'écran comme avant — ce
+               garde ne vit que sur la liste. */}
+          <ul
+            aria-label="Les styles, de A à Z"
+            className="grow pt-2 pb-2"
+            onPointerDownCapture={() => {
+              const auClavier = document.activeElement;
+              const enSaisie =
+                auClavier instanceof HTMLInputElement ||
+                auClavier instanceof HTMLTextAreaElement;
+              avalerLeProchainClic.current = enSaisie;
+              if (enSaisie) (auClavier as HTMLElement).blur();
+            }}
+            onClickCapture={(evenement) => {
+              if (!avalerLeProchainClic.current) return;
+              avalerLeProchainClic.current = false;
+              evenement.preventDefault();
+              evenement.stopPropagation();
+            }}
+          >
             {lignesDesStyles}
           </ul>
           {bandeauStyleManquant(

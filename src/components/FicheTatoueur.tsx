@@ -924,7 +924,18 @@ export function FicheTatoueur({
                 que l'aperçu, lui, garde. Rien d'autre de la vue ne
                 bouge, et le web n'est pas concerné (variante du
                 doigt). */
-            /*  ██ §1 (nº 475) — L'AIR SE CALE SUR CELUI DU LOGO ██
+            /*  ██ §1 (nº 476) — LE CALAGE SUR LE LOGO EST ANNULÉ ██
+                Le propriétaire a regardé les 14 px de la nº 475 sur son
+                téléphone : c'est TROP. L'air revient à la valeur de la
+                nº 474 — DEUX pixels (`mobile:-mt-3.5` : la remontée
+                reprend 14 des 16 px de rembourrage de la racine). Le
+                relevé de la nº 475 reste écrit ci-dessous parce qu'il
+                est juste et qu'il resservira si la question revient :
+                c'est la CONCLUSION qui est abandonnée, pas la mesure.
+                Rien d'autre de la vue ne bouge ; l'aperçu garde son
+                collage (`-mt-4`) et le web n'est pas concerné. */
+            /*  §1 (nº 475, ANNULÉE À LA nº 476) — L'AIR SE CALE SUR
+                CELUI DU LOGO ██
                 LA VALEUR N'EST PLUS CHOISIE, ELLE EST MESURÉE. Dans la
                 barre fixe (EnTeteTatouage, l. 719-720), la rangée porte
                 `py-3` — DOUZE pixels en haut comme en bas, la barre est
@@ -938,13 +949,15 @@ export function FicheTatoueur({
                 hauteur de barre que lit `--rw-rangee-collante`.)
                 LA PHOTO PREND EXACTEMENT CETTE VALEUR : la racine pose
                 16 px de rembourrage haut, la remontée n'en reprend plus
-                que DEUX (`mobile:-mt-0.5`) — il reste 14. L'aperçu
+                que DEUX (une remontée d'un demi-cran, en toutes lettres
+                pour ne pas fabriquer une règle morte — le piège des
+                commentaires de la nº 472) — il reste 14. L'aperçu
                 garde son collage (`-mt-4`), la barre ne bouge en rien
                 (ni hauteur, ni rembourrage, ni place du logo : c'est la
                 photo qui vient s'aligner), et le web n'est pas concerné
                 (variante du doigt). */
             className={`lg:w-[var(--photo-largeur,calc((100vh_-_119px)*0.8))] max-w-full mobile:-mx-4 mobile:max-w-none ${
-              apercu ? "mobile:-mt-4" : "mobile:-mt-0.5"
+              apercu ? "mobile:-mt-4" : "mobile:-mt-3.5"
             }`}
           >
             <CarrouselPortfolio
