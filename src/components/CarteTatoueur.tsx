@@ -762,17 +762,44 @@ function CarteTatoueurNue({
              PLEINE LARGEUR AU DOIGT SEULEMENT. C'était `mobile:pt-2.5`
              (10 px) entre le bas de l'image et le rond de profil ; le
              propriétaire le trouve trop serré. Il passe à 16 px, et ce
-             n'est pas une valeur inventée : c'est le `mobile:px-4` que
-             CETTE MÊME rangée porte déjà de chaque côté — le carré de
-             marge de la carte au doigt.
+             n'est pas une valeur inventée : c'était alors la marge que
+             CETTE MÊME rangée portait de chaque côté — le carré de
+             marge de la carte au doigt. (Cette marge latérale est
+             tombée à huit pixels à la nº 481 ; les seize du haut, eux,
+             restent — voir la note de cette passe, juste dessous.)
              ⚠️ LES CARTES CÔTE À CÔTE NE BOUGENT PAS : elles gardent
              `mobile:pt-2.5` par le ternaire. Le web non plus — son
-             `pt-3` est hors variante `mobile:`.
+             rembourrage du haut est hors variante du doigt, et c'est
+             lui que la nº 481 a réduit de moitié.
              ⚠️ L'ESPACE SOUS LA PHOTO N'EST PAS ICI : cette rangée n'a
              aucun rembourrage bas, la carte s'arrête sur son texte. Ce
              qui suit est la gouttière de la grille — voir
              GrilleTatoueurs, où elle passe de 32 à 24 px. */
-        className={`pt-3 px-0.5 mobile:px-4 ${
+        /*  ██ §2 ET §3 (nº 481) — L'AIR SOUS LA PHOTO, ET LA MARGE DU
+             TEXTE AU DOIGT ██
+             ------------------------------------------------------
+             LE WEB — L'AIR ENTRE LE BAS DE LA PHOTO ET LA PREMIÈRE
+             LIGNE PASSE DE 12 À 6 PIXELS (la moitié, `pt-1.5`). Il ne
+             vaut QUE pour la souris : le doigt a ses propres valeurs
+             juste en dessous, dans la variante, et elles ne bougent pas
+             — dix pixels côte à côte, seize en pleine largeur.
+             LE DOIGT — LA MARGE LATÉRALE DU TEXTE PASSE DE 16 À 8
+             PIXELS (`mobile:px-2`), c'est-à-dire la moitié demandée :
+             au doigt la photo touche les bords de l'écran, et le texte
+             commençait bien trop loin de son bord gauche. Les DEUX
+             côtés suivent, pour que la ligne reste centrée dans la
+             carte — et les trois lignes bougent ensemble, puisqu'elles
+             vivent toutes dans cette boîte : elles restent alignées
+             entre elles au pixel. Le web garde sa marge (deux pixels),
+             hors variante.
+             ⚠️ UNE JUSTIFICATION DEVENUE FAUSSE, ET JE LA CORRIGE ICI :
+             la nº 398 avait choisi les seize pixels d'air du haut en
+             pleine largeur PARCE QUE cette rangée portait alors la même
+             valeur de chaque côté. Ce n'est plus vrai — les côtés
+             valent huit désormais, le haut garde ses seize. La valeur
+             du haut ne change pas pour autant : le propriétaire l'a
+             réglée à l'œil, elle lui appartient. */
+        className={`pt-1.5 px-0.5 mobile:px-2 ${
           uneColonne ? "mobile:pt-4" : "mobile:pt-2.5"
         }`}
       >
@@ -793,25 +820,47 @@ function CarteTatoueurNue({
              colonne, le rond ouvre la rangée suivante. AU DOIGT, où le
              rond ne se rend pas (deux colonnes), les trois lignes
              s'empilent d'elles-mêmes.
-             L'AIR SOUS ELLE : 6 px (`mb-1.5`), contre 2 px entre les
-             lignes 2 et 3 (le `gap-0.5` de leur bloc, inchangé) — le
-             respir demandé est donc trois fois plus grand au-dessus du
-             nom qu'au-dessus de la localité.
-             SA GRAISSE ET SA TAILLE : demi-gras, blanc, et EXACTEMENT
-             le corps du nom (15 px, 14 au doigt côte à côte, 17 en
-             pleine largeur) — les deux premières lignes se répondent,
-             la troisième descend d'un cran.
+             L'AIR SOUS ELLE — RELEVÉ À LA nº 481 : douze pixels au web,
+             six au doigt, contre deux entre les lignes 2 et 3 (le
+             `gap-0.5` de leur bloc, inchangé). Le respir reste donc
+             bien plus grand au-dessus du nom qu'au-dessus de la
+             localité, des deux côtés.
+             SA GRAISSE ET SA TAILLE — LA GRAISSE A CHANGÉ À LA nº 481 :
+             graisse normale (le nom, lui, est demi-gras), blanc, et
+             EXACTEMENT le corps du nom (15 px, 14 au doigt côte à côte,
+             17 en pleine largeur) — les deux premières lignes se
+             répondent, la troisième descend d'un cran.
              ⚠️ LA NUANCE DE LA nº 407 EST LEVÉE ICI : le rendu y
              passait en graisse normale pour se distinguer du style
              DANS UNE LIGNE UNIQUE. Trois lignes portent désormais
-             cette hiérarchie ; la consigne de cette passe demande une
-             ligne d'une seule graisse, et c'est ce qui est écrit.
+             cette hiérarchie, et la ligne entière tient une seule
+             graisse — celle que la nº 481 a fixée.
              ⚠️ LA PUCE EST CELLE DU SITE (`SEPARATEUR_GALERIE`,
              lib/photos-tatoueur) : aucune ponctuation inventée, et le
              rendu absent ne laisse jamais de puce orpheline. */}
         {partiesDuTitre && (
           <p
-            className={`font-semibold leading-[19px] line-clamp-1 mb-1.5 text-[15px] text-sombre-texte ${
+            /*  ██ §1 ET §3 (nº 481) — LA GRAISSE ET L'AIR DE LA LIGNE 1 ██
+                LA GRAISSE S'INVERSE AVEC CELLE DU NOM : cette ligne
+                était demi-grasse et le nom gras ; elle passe en graisse
+                NORMALE, et le nom prend le demi-gras (voir plus bas).
+                C'est le nom qui doit peser le plus des deux, et il le
+                fait maintenant d'un cran, sans crier. Ni la taille ni
+                la couleur ne bougent : même corps que le nom, même
+                jeton de blanc.
+                L'AIR SOUS ELLE, AU WEB, PASSE DE 6 À 12 PIXELS
+                (`mb-3`) : la première ligne se détache du bloc qui
+                suit — le rond de profil et le nom —, exactement ce que
+                le rapprochement du haut (six pixels sous la photo)
+                appelait.
+                ⚠️ LE DOIGT GARDE SES SIX PIXELS (`mobile:mb-1.5`), et
+                c'est délibéré : là-bas cet air doit rester plus grand
+                que les deux pixels qui séparent le nom de la localité
+                — l'acquis de la nº 480 — mais pas davantage. La classe
+                de base sert donc la souris, la variante sert le doigt :
+                les deux réglages sont séparés, ils ne peuvent plus
+                s'entraîner l'un l'autre. */
+            className={`font-normal leading-[19px] line-clamp-1 mb-3 mobile:mb-1.5 text-[15px] text-sombre-texte ${
               uneColonne
                 ? "mobile:text-[17px] mobile:leading-[21px]"
                 : "mobile:text-[14px]"
@@ -868,12 +917,16 @@ function CarteTatoueurNue({
             smartphone). C'est cette hauteur que le portrait reprend. */}
         <div className="min-w-0 flex-1 flex flex-col gap-0.5">
         <h3
-          /*  §1 (nº 480) — LA LIGNE 2 : LE NOM DU PORTFOLIO. Même
-              corps que la ligne du style juste au-dessus — les deux
-              premières lignes se répondent au pixel —, mais en GRAS
-              là où elle est demi-grasse : c'est le nom qui porte la
-              carte. Le blanc vient du jeton, comme avant. */
-          className={`font-bold leading-[19px] line-clamp-1 text-[15px] text-sombre-texte ${
+          /*  §1 (nº 480, réglé nº 481) — LA LIGNE 2 : LE NOM DU
+              PORTFOLIO. Même corps que la ligne du style juste
+              au-dessus — les deux premières lignes se répondent au
+              pixel —, et c'est la GRAISSE qui les distingue : le nom
+              est demi-gras, le style est en graisse normale. Les deux
+              valeurs viennent d'être échangées (nº 481) ; l'écart entre
+              elles est le même qu'avant, d'un cran, mais il pèse
+              désormais moins lourd à l'œil. Le blanc vient du jeton,
+              comme avant. */
+          className={`font-semibold leading-[19px] line-clamp-1 text-[15px] text-sombre-texte ${
             uneColonne
               ? "mobile:text-[17px] mobile:leading-[21px]"
               : "mobile:text-[14px]"
