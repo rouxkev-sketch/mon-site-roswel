@@ -27,7 +27,11 @@ import { PageRechercheMobile } from "@/components/PageRechercheMobile";
 //  §1 (nº 331) — « la navigation gagne » : l'écriture commune, celle
 //  que les liens arment tout seuls (lib/etape-refermable).
 import { laSurfaceVaNaviguer } from "@/lib/etape-refermable";
-import { IconeLoupe, IconeReglages } from "@/components/Icones";
+import {
+  ETATS_ROND_BARRE,
+  IconeLoupe,
+  IconeReglages,
+} from "@/components/Icones";
 import { BadgeCharte, GroupeBadges } from "@/components/BadgesCharte";
 import { MenuDeVerre } from "@/components/SurfaceDeVerre";
 import { EncadreDeuxChamps } from "@/components/EncadreBarre";
@@ -1184,8 +1188,10 @@ export function MoteurTatouage({
   return (
     <div className="w-full">
       {/* ---------- APPAREILS À SOURIS (toute largeur) ----------
-          L'encadré épuré, et à sa droite le BOUTON ROND des filtres
-          (diamètre 46 px — un peu moins que les 52 px de l'encadré).
+          L'encadré épuré, et à sa droite le BOUTON DES FILTRES : sa
+          boîte fait toujours 46 px (un peu moins que les 52 px de
+          l'encadré), mais son cercle gris est parti à la nº 470 —
+          l'icône y est NUE, au rang 28 de la barre.
           `mobile:hidden` : la bascule se fait PAR APPAREIL, plus
           jamais par largeur de fenêtre. Retiré tant que la page de
           recherche est ouverte : un seul moteur vivant à la fois. */}
@@ -1237,26 +1243,39 @@ export function MoteurTatouage({
             aria-expanded={filtresOuverts}
             aria-label="Filtres"
             title="Filtres"
-            //  ⚠️ PLUS DE ROSE OUVERT (nº 144-§2) : le rose est réservé
-            //  aux accents forts, et une fenêtre ouverte n'en est pas
-            //  un. Ouvert, le FOND S'ÉCLAIRCIT d'un cran — la même
-            //  langue que le focus d'un champ — et l'icône reste
-            //  blanche. Fermé, la robe par défaut, même avec des
-            //  filtres actifs.
-            //  ⚠️ UN CRAN PLUS CLAIR (nº 150-§2), comme l'encadré :
-            //  `eleve-clair` au repos, `haut` ouvert.
-            //  ⚠️ SON FOND VIENT DE `[data-clair-barre]` (nº 174-§1),
-            //  comme l'encadré et l'autre icône. Ouvert, il porte en
-            //  plus `data-clair-vif` : le barreau du dessus — la règle
-            //  qui servait déjà au survol et au focus. Rien d'autre ne
-            //  change : ni contour, ni rose.
-            data-clair-barre=""
-            data-clair-vif={filtresOuverts ? "" : undefined}
-            className="relative shrink-0 w-[46px] h-[46px] rounded-full
-                       text-sombre-texte
-                       flex items-center justify-center transition-colors"
+            /*  ██ §2 (nº 470) — LE CERCLE GRIS EST SUPPRIMÉ, L'ICÔNE
+                PREND L'ÉCHELLE DE LA BARRE ██
+                CE QU'IL PORTAIT, ET QUI PART : le fond de
+                `[data-clair-barre]` (nº 174-§1) — le disque gris au
+                repos — et son cran d'éclaircissement `data-clair-vif`
+                quand le panneau était ouvert (nº 144-§2/150-§2). Le
+                propriétaire n'en veut plus : L'ICÔNE EST NUE, comme le
+                fanion, le globe et la silhouette de la barre fixe.
+                ELLE EN PREND DONC L'ÉCRITURE EXACTE — `ETATS_ROND_BARRE`
+                (components/Icones) : rien au repos, le rond gris et le
+                rose SEULEMENT au survol et à l'appui. Aucun contour,
+                aucune bordure ne remplace le cercle : la charte
+                l'interdit, et il n'y a rien à remplacer.
+                LE GLYPHE : 20 → 28 px, le rang des trois icônes de la
+                barre depuis la nº 461 — l'équilibre demandé.
+                LA CIBLE NE RÉTRÉCIT PAS : la boîte reste 46 × 46
+                (`w-[46px] h-[46px]`, la valeur de la nº 258-§2), le
+                `rounded-full` reste — il dessine le rond du survol et
+                la découpe du voile. Position, hauteur du moteur et
+                voisinage : pas un pixel.
+                CE QUI DIT « OUVERT » MAINTENANT : le panneau lui-même,
+                et le voile de la nº 450 qui assombrit tout SAUF ce
+                bouton (`data-voile-element`, conservé). `aria-expanded`
+                le dit aux lecteurs d'écran — la règle nº 155-§5A, déjà
+                appliquée au menu du compte : l'œil voit la fenêtre,
+                l'indicateur ne disait rien de plus.
+                ⚠️ LE DOIGT NE CHANGE PAS : cette rangée est
+                `mobile:hidden` (voir son conteneur). */
+            className={`relative shrink-0 w-[46px] h-[46px] rounded-full
+                       ${ETATS_ROND_BARRE} text-sombre-texte
+                       flex items-center justify-center transition-colors`}
           >
-            <IconeReglages taille={20} />
+            <IconeReglages taille={28} />
           </button>
 
           {/*  nº 443 — LE ROND « SANS TEXTE » (BoutonPhototheque) EST
