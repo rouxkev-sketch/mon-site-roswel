@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { IconeCroix } from "@/components/Icones";
 
@@ -132,61 +133,125 @@ export function PagePleinEcranMobile({
   classeCadre?: string;
   children: React.ReactNode;
 }) {
+  /**
+   * ██ §1 (nº 477) — LA SURFACE ÉPOUSE CE QUI EST RÉELLEMENT VISIBLE ██
+   * ==================================================================
+   * POURQUOI LA nº 476 NE POUVAIT PAS MARCHER, et c'est le code qui le
+   * dit : elle ajoutait un fond de secours… LUI AUSSI `fixed`, ancré au
+   * même viewport de mise en page que la surface qu'il devait rattraper.
+   * Deux boîtes ancrées au même repère subissent EXACTEMENT le même
+   * déplacement : quand l'une sort de l'écran, l'autre sort avec elle.
+   * Ce fond n'aurait servi que si le défaut avait été une HAUTEUR trop
+   * courte ; il ne pouvait rien contre un DÉPLACEMENT.
+   * CE QUI SE PASSE VRAIMENT, sur iPhone : à l'ouverture du clavier,
+   * WebKit garde le viewport de mise en page à la taille de l'écran et
+   * fait GLISSER par-dessus une fenêtre plus petite — le viewport
+   * VISUEL — pour amener le champ au-dessus des touches. Tout ce qui
+   * est `fixed` reste accroché au premier repère, donc se décale par
+   * rapport à ce que l'œil voit : le bas de l'écran cesse d'être
+   * couvert, et le formulaire qui vit dessous apparaît.
+   * LE REMÈDE : ne plus DEVINER où est l'écran — le DEMANDER.
+   * `visualViewport` donne à chaque image la position et la hauteur de
+   * ce qui est réellement visible ; la surface s'y recale. Elle couvre
+   * alors la zone visible EXACTEMENT, clavier ouvert comme fermé, et
+   * son contenu (l'en-tête, la liste, le champ) reste dans cette zone
+   * au lieu d'en sortir par le haut.
+   *
+   * POURQUOI PAS LE PROCÉDÉ DE LA PAGE DE RECHERCHE (le site sort du
+   * flux, la surface passe en flux) — la piste était juste, et c'est
+   * son PRIX qui la fait écarter, pas son principe : il faudrait
+   * retirer le VERROU DE DÉFILEMENT COMPTÉ des quatre porteurs (un
+   * `overflow: hidden` sur le corps empêcherait la page en flux de
+   * défiler — l'acquis nº 469, exigé explicitement pour cette page à
+   * la nº 474), et rendre à chacun des quatre la position du site
+   * qu'il a fait quitter le flux, comme la recherche le fait avec
+   * `memoriserDefilementResultats`. Deux acquis démontés et quatre
+   * restitutions neuves pour un défaut d'affichage : le recalage
+   * ci-dessous obtient le même résultat sans toucher à rien de tout
+   * cela.
+   *
+   * CE QUI NE BOUGE PAS, ET C'EST LE POINT : la surface reste `fixed`,
+   * dans son portail, au rang de son porteur. Le verrou compté
+   * (nº 469), l'étape d'historique par surface et le retour en un appui
+   * (nº 465, nº 474, nº 332-§1 et §4), l'empilement (« Langue » ou
+   * « Notifications » par-dessus « Mon compte », et la fermeture qui
+   * retombe sur « Mon compte »), la saisie conservée dans le formulaire
+   * resté monté dessous (nº 474) : tout cela vit chez les porteurs, et
+   * aucun n'est touché. Les quatre pages profitent du recalage puisque
+   * le gabarit est partagé.
+   *
+   * ⚠️ AUCUNE SACCADE, et voici comment : on ne pose RIEN pendant
+   * l'événement — on demande une image (`requestAnimationFrame`), et le
+   * navigateur peint la nouvelle position dans le même souffle que le
+   * mouvement du clavier ; une demande déjà en attente n'est pas
+   * doublée. Les valeurs sont arrondies et COMPARÉES à celles déjà
+   * posées : une rafale d'événements identiques (iOS en émet beaucoup)
+   * n'écrit rien du tout. Et surtout AUCUNE transition n'est déclarée
+   * sur ces propriétés : le recalage suit le clavier au lieu de courir
+   * après lui.
+   * ⚠️ AU DOIGT SEULEMENT (`data-appareil`), et sans `visualViewport`
+   * (navigateur ancien) l'effet s'abstient : la surface garde alors le
+   * comportement d'avant, au pixel.
+   */
+  const surface = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const zoneVisible = window.visualViewport;
+    const boite = surface.current;
+    if (!zoneVisible || !boite) return;
+    if (document.documentElement.dataset.appareil !== "mobile") return;
+    let image = 0;
+    let posee = "";
+    const epouser = () => {
+      image = 0;
+      const haut = Math.round(zoneVisible.offsetTop);
+      const hauteur = Math.round(zoneVisible.height);
+      const valeurs = `${haut}:${hauteur}`;
+      if (valeurs === posee) return;
+      posee = valeurs;
+      boite.style.top = `${haut}px`;
+      boite.style.height = `${hauteur}px`;
+      //  `inset-0` pose un bas : il doit céder la main à la hauteur.
+      boite.style.bottom = "auto";
+    };
+    const planifier = () => {
+      if (image) return;
+      image = requestAnimationFrame(epouser);
+    };
+    epouser();
+    zoneVisible.addEventListener("resize", planifier);
+    zoneVisible.addEventListener("scroll", planifier);
+    return () => {
+      if (image) cancelAnimationFrame(image);
+      zoneVisible.removeEventListener("resize", planifier);
+      zoneVisible.removeEventListener("scroll", planifier);
+      boite.style.top = "";
+      boite.style.height = "";
+      boite.style.bottom = "";
+    };
+  }, []);
+
   if (typeof document === "undefined") return null;
   return createPortal(
-    <>
-      {/*  ██ §3 (nº 476) — LE CLAVIER NE DÉCOUVRE PLUS LA PAGE DU
-           DESSOUS ██
-           LA CAUSE, NOMMÉE : cette surface est `fixed inset-0` (juste
-           en dessous) — elle est donc ancrée au VIEWPORT DE MISE EN
-           PAGE. Or à l'ouverture du clavier, iOS ne rétrécit pas ce
-           viewport-là : il fait GLISSER le viewport VISUEL vers le bas
-           pour amener le champ au-dessus des touches. La surface, elle,
-           reste accrochée au haut de la page — donc elle sort de
-           l'écran par le haut, et le bas de ce qu'on voit n'est plus
-           couvert : le formulaire qui vit dessous apparaît.
-           POURQUOI LA PAGE DE RECHERCHE N'A JAMAIS EU CE DÉFAUT : une
-           fois posée, elle n'est PAS fixe — elle est en flux
-           (`relative min-h-[100dvh]`, PageRechercheMobile l. 444) :
-           « le navigateur fait défiler le document pour dégager le
-           champ, et c'est tout ». Il n'y a rien dessous à découvrir.
-           LE REMÈDE, SANS TOUCHER AU POSITIONNEMENT DES QUATRE
-           PORTEURS : un fond de la même couleur, ancré au même
-           viewport, qui DESCEND BIEN PLUS BAS QUE L'ÉCRAN. Quel que
-           soit le glissement du viewport visuel, ce qui se découvre
-           sous la surface est ce fond — jamais la page. Il est inerte
-           (ni pointeur, ni lecteur d'écran), il vit au même rang que la
-           surface mais AVANT elle dans le document : elle se peint
-           par-dessus, rien ne change à l'écran clavier fermé.
-           ⚠️ LES QUATRE PORTEURS EN BÉNÉFICIENT (le gabarit est
-           partagé) : « Mon compte », « Notifications » et « Langue »
-           n'ouvrent aucun clavier — ils avaient donc la même faiblesse
-           sans jamais la montrer ; elle est fermée pour eux aussi. */}
-      <div
-        aria-hidden="true"
-        className={`hidden mobile:block fixed inset-x-0 top-0 h-[200dvh]
-                   ${classeCadre} pointer-events-none bg-sombre-fond`}
-      />
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={ariaLabel}
-        className={`hidden mobile:flex fixed inset-0 ${classeCadre} flex-col
-                   overflow-y-auto overscroll-contain
-                   bg-sombre-fond text-sombre-texte`}
+    <div
+      ref={surface}
+      role="dialog"
+      aria-modal="true"
+      aria-label={ariaLabel}
+      className={`hidden mobile:flex fixed inset-0 ${classeCadre} flex-col
+                 overflow-y-auto overscroll-contain
+                 bg-sombre-fond text-sombre-texte`}
+    >
+      <EnTetePleinEcran
+        icone={icone}
+        titre={titre}
+        surFermer={surFermer}
+        ariaLabelFermer={ariaLabelFermer}
+        actions={actions}
       >
-        <EnTetePleinEcran
-          icone={icone}
-          titre={titre}
-          surFermer={surFermer}
-          ariaLabelFermer={ariaLabelFermer}
-          actions={actions}
-        >
-          {sousLeTitre}
-        </EnTetePleinEcran>
-        {children}
-      </div>
-    </>,
+        {sousLeTitre}
+      </EnTetePleinEcran>
+      {children}
+    </div>,
     document.body
   );
 }
