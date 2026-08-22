@@ -2235,7 +2235,23 @@ export function ContenuFiche({
               </div>
             )
           ) : (
-            <div className={`mt-10 pt-10 ${separation}`}>
+            /*  ██ §1 (nº 492) — LE TRAIT AU-DESSUS DE L'ÉQUIPE S'EN VA ██
+                 Sur un lieu, ce bloc ne rend le plus souvent QUE
+                 l'équipe (l'adresse principale est descendue dans les
+                 lignes de profil à la nº 388, et un salon à une seule
+                 adresse n'a pas d'« autre adresse ») : ce trait était
+                 donc le trait DU HAUT de l'équipe, celui que le
+                 propriétaire fait retirer.
+                 L'AIR NE SE PARTAGE PLUS, IL SE LIT SEUL : la
+                 séparation valait 40 px au-dessus du trait et 40 en
+                 dessous — égaux, comme la charte l'exige. Sans trait,
+                 ces deux airs n'ont plus rien à encadrer et se
+                 cumuleraient en 80 px de vide. Il n'en reste donc QU'UN,
+                 les 40 px du `mt-10`, l'unité d'air majeure de la fiche.
+                 ⚠️ LA BRANCHE ARTISTE, JUSTE AU-DESSUS, GARDE LE SIEN :
+                 un artiste n'a pas d'équipe, et sa section de profils
+                 n'est pas visée par la demande. */
+            <div className="mt-10">
               <BlocAdressesFiche
                 tatoueur={tatoueur}
                 studioCourantId={studioCourant}
@@ -2273,9 +2289,17 @@ export function ContenuFiche({
               faire sur la même ligne (le composant ne rend rien tant
               que le SERVEUR n'a pas reconnu l'administrateur). */}
           {!apercu && (
-            <div
-              className={`mt-10 pt-10 ${separation} flex flex-col items-start gap-4`}
-            >
+            /*  ██ §1 (nº 492) — ET VOICI LE TRAIT DU BAS DE L'ÉQUIPE ██
+                 Sur un lieu, ce trait-ci est celui qui FERME le bloc de
+                 l'équipe : c'est le second des deux que le propriétaire
+                 fait retirer. Il part, et les 80 px qu'il partageait se
+                 ramènent aux 40 px du `mt-10`, comme au-dessus.
+                 ⚠️ IL PART AUSSI POUR UN ARTISTE, et je le dis : c'est le
+                 MÊME trait, posé une seule fois sur le signalement. Une
+                 fiche d'artiste garde donc la séparation qui ouvre ses
+                 profils, et n'en a plus au-dessus du signalement. Une
+                 fiche de lieu n'en a plus du tout. */
+            <div className="mt-10 flex flex-col items-start gap-4">
               <FenetreSignalement slug={tatoueur.slug} nom={tatoueur.nom} />
               <BoutonHorsLigne idFiche={tatoueur.id} nom={tatoueur.nom} />
             </div>

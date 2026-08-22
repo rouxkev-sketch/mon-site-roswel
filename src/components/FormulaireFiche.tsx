@@ -756,14 +756,54 @@ async function chargerEquipe(
       .select("*")
       .eq("salon_id", ficheId);
     if (error || !Array.isArray(data)) return [];
+    const lignes = data as unknown as Parameters<typeof membreDepuisVue>[0][];
+    /**
+     * ██ §6 (nº 492) — L'APERÇU VA CHERCHER LA DÉCLARATION, LUI AUSSI ██
+     * ------------------------------------------------------------------
+     * CE QUI ÉTAIT VRAI JUSQU'ICI, et que cette passe corrige : l'aperçu
+     * ne lisait QUE la vue — donc pas les styles des membres (nº 313),
+     * et il n'aurait pas eu leur booking non plus. La ligne du dessus y
+     * aurait dit « Résident » là où la fiche publique dit « Résident •
+     * Booking ouvert » : deux écrans, deux textes, c'est exactement ce
+     * que la nº 473 interdit.
+     * On lit donc ici la MÊME chose que `garnirFiches` : une requête sur
+     * les fiches des membres, styles et carnet compris.
+     * ⚠️ JAMAIS BLOQUANTE : si elle échoue, les membres gardent ce que
+     * la vue donne et l'aperçu se comporte comme avant.
+     */
+    const artistes = [...new Set(lignes.map((ligne) => ligne.artiste_id))];
+    const declarations = new Map<
+      string,
+      { styles: string[] | null; booking: string | null; booking_mois: number | null }
+    >();
+    if (artistes.length > 0) {
+      const fiches = await supabase
+        .from("tatoueurs")
+        .select("id, styles, booking, booking_mois")
+        .in("id", artistes);
+      for (const ligne of (fiches.data ?? []) as unknown as {
+        id: string;
+        styles: string[] | null;
+        booking?: string | null;
+        booking_mois?: number | null;
+      }[]) {
+        declarations.set(ligne.id, {
+          styles: ligne.styles?.length ? ligne.styles : null,
+          booking: ligne.booking ?? null,
+          booking_mois: ligne.booking_mois ?? null,
+        });
+      }
+    }
     //  ⚠️ L'APPEL EST EXPLICITE (nº 288-§3) : `membreDepuisVue` prend
-    //  désormais un SECOND argument — la déclaration de l'artiste —, et
+    //  un SECOND argument — la déclaration de l'artiste —, et
     //  `.map(membreDepuisVue)` lui aurait passé l'INDICE à sa place.
-    //  L'aperçu du salon, lui, n'a pas cette déclaration sous la main :
-    //  il lit la vue, comme avant cette passe.
-    return (
-      data as unknown as Parameters<typeof membreDepuisVue>[0][]
-    ).map((ligne) => membreDepuisVue(ligne));
+    return lignes.map((ligne) =>
+      membreDepuisVue(ligne, {
+        styles: declarations.get(ligne.artiste_id)?.styles ?? null,
+        booking: declarations.get(ligne.artiste_id)?.booking ?? null,
+        booking_mois: declarations.get(ligne.artiste_id)?.booking_mois ?? null,
+      })
+    );
   } catch {
     return [];
   }

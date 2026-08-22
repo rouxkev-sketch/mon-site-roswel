@@ -1232,6 +1232,13 @@ for (const salon of TATOUEURS_DEMO) {
         //  §3 (nº 313) — SES STYLES, comme en production : ils viennent
         //  de la fiche de l'artiste lui-même, jamais du salon.
         styles: artiste.styles,
+        //  §6 (nº 492) — SON CARNET, du même endroit et pour la même
+        //  raison : c'est la fiche de l'artiste qui le porte. La
+        //  démonstration suit la production, sinon la ligne posée
+        //  au-dessus de son encadré dirait son statut sans son booking
+        //  ici et les deux ensemble là-bas.
+        booking: artiste.booking ?? null,
+        booking_mois: artiste.booking_mois ?? null,
       });
     }
   }

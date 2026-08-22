@@ -1429,17 +1429,38 @@ async function garnirFiches<T extends Tatoueur>(
      * styles et la troisième ligne ne se rend pas — c'est exactement le
      * comportement d'avant cette passe.
      */
-    const stylesDesMembres = new Map<string, string[]>();
+    /**
+     * ██ §6 (nº 492) — LE CARNET DU MEMBRE VOYAGE AVEC SES STYLES ██
+     * ------------------------------------------------------------------
+     * La ligne posée au-dessus de l'encadré d'un membre dit son statut
+     * PUIS l'état de son carnet. Cet état n'est pas une donnée du
+     * salon : c'est celle que l'ARTISTE a cochée sur SA fiche, la même
+     * que sa propre ligne « Booking ouvert ». On la lit donc là où elle
+     * vit — dans la MÊME requête que les styles, deux colonnes de plus,
+     * aucune requête supplémentaire, aucune migration.
+     * ⚠️ RIEN N'EST FABRIQUÉ : un artiste qui n'a rien coché n'a pas de
+     * booking, et sa ligne ne dira que son statut.
+     */
+    const declarationsDesMembres = new Map<
+      string,
+      { styles: string[] | null; booking: string | null; booking_mois: number | null }
+    >();
     if (artistesDeLEquipe.length > 0) {
       const reponse = await supabase
         .from("tatoueurs")
-        .select("id, styles")
+        .select("id, styles, booking, booking_mois")
         .in("id", artistesDeLEquipe);
       for (const ligne of (reponse.data ?? []) as unknown as {
         id: string;
         styles: string[] | null;
+        booking?: string | null;
+        booking_mois?: number | null;
       }[]) {
-        if (ligne.styles?.length) stylesDesMembres.set(ligne.id, ligne.styles);
+        declarationsDesMembres.set(ligne.id, {
+          styles: ligne.styles?.length ? ligne.styles : null,
+          booking: ligne.booking ?? null,
+          booking_mois: ligne.booking_mois ?? null,
+        });
       }
     }
 
@@ -1460,8 +1481,12 @@ async function garnirFiches<T extends Tatoueur>(
             ? {}
             : (declarations.get(`${ligne.salon_id}|${ligne.artiste_id}`) ??
               {})),
-          //  §3 (nº 313) — sa déclaration de styles, quand on l'a lue.
-          styles: stylesDesMembres.get(ligne.artiste_id) ?? null,
+          //  §3 (nº 313) — sa déclaration de styles, quand on l'a lue,
+          //  et §6 (nº 492) — l'état de son carnet, du même endroit.
+          styles: declarationsDesMembres.get(ligne.artiste_id)?.styles ?? null,
+          booking: declarationsDesMembres.get(ligne.artiste_id)?.booking ?? null,
+          booking_mois:
+            declarationsDesMembres.get(ligne.artiste_id)?.booking_mois ?? null,
         })
       );
       equipeParSalon.set(ligne.salon_id, liste);

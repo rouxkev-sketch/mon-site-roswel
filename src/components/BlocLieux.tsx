@@ -31,8 +31,13 @@ import {
 import {
   equipeOrdonnee,
   libelleStylesEquipe,
+  //  §6 (nº 492) — « Résident • Booking ouvert · 12 mois d'attente » :
+  //  l'écriture unique de la mention posée au-dessus d'un encadré.
+  ligneStatutEtBooking,
   modesOrdonnes,
-  roleDuMembre,
+  //  §5 (nº 492) — `roleDuMembre` n'est plus lu ICI : le rôle a quitté
+  //  la ligne du nom, et c'est `ligneStatutEtBooking` qui l'appelle
+  //  désormais, dans le module où il vit.
   lieuEnDeuxLignes,
   periodeDeSession,
   type MembreEquipe,
@@ -110,11 +115,28 @@ export function PhotoRonde({
   nature,
   classeTaille = "h-13 w-13",
   classeGlyphe = "h-7 w-7",
+  classeFond = "bg-sombre-eleve",
 }: {
   source: string | null | undefined;
   /** « lieu » porte le glyphe d'adresse à défaut de photo ;
       « personne » ne porte rien. */
   nature: "lieu" | "personne";
+  /**
+   * ██ §2 (nº 492) — LE FOND DU ROND EST DEVENU UN PARAMÈTRE ██
+   * ------------------------------------------------------------------
+   * POURQUOI : le rond de repli valait `bg-sombre-eleve` en dur, et
+   * l'encadré permanent des membres d'équipe prend EXACTEMENT ce
+   * jeton-là. Un membre sans photo aurait donc eu un rond de la
+   * couleur de sa plaque — invisible, c'est-à-dire un texte décalé de
+   * 66 px sans rien pour tenir la colonne. C'est le même piège que le
+   * compteur de capsules au web (nº 491-§1) : un fond ne se voit que
+   * s'il diffère de son support.
+   * LA RÈGLE : le porteur dit sur quoi il pose le rond ; l'écriture du
+   * rond, elle, reste UNIQUE — comme pour sa taille (nº 254-§3).
+   * ⚠️ UN SEUL JETON DE COULEUR À LA FOIS : la valeur REMPLACE le
+   * défaut, elle ne s'y ajoute pas (piège nº 389).
+   */
+  classeFond?: string;
   /** §3 (nº 254) — LA TAILLE EN PARAMÈTRE, l'écriture reste UNIQUE :
       « Ma sélection » agrandit sa pastille sur le web (72 px) sans
       recopier le rond — une seconde écriture divergerait à la passe
@@ -125,7 +147,7 @@ export function PhotoRonde({
 }) {
   return (
     <span
-      className={`flex ${classeTaille} shrink-0 items-center justify-center overflow-hidden rounded-full bg-sombre-eleve`}
+      className={`flex ${classeTaille} shrink-0 items-center justify-center overflow-hidden rounded-full ${classeFond}`}
     >
       {source ? (
         /* eslint-disable-next-line @next/next/no-img-element --
@@ -491,6 +513,52 @@ export const SOULIGNEMENT_LIEN =
   "underline-offset-4 decoration-1 decoration-sombre-texte-doux " +
   "group-hover:underline";
 
+/**
+ * ██ §2, §3 ET §4 (nº 492) — L'ENCADRÉ D'UN MEMBRE D'ÉQUIPE ██
+ * ==================================================================
+ * IL NE RESSEMBLE PLUS À CELUI DES AUTRES LIGNES CLIQUABLES, ET C'EST
+ * POUR ÇA QU'IL A SON ÉCRITURE À LUI. `CLASSES_LIGNE_CLIQUABLE` reste
+ * intacte pour son autre porteur — le lieu d'un profil d'artiste
+ * (§5) — et rien n'y est touché.
+ *
+ * §2 — LE FOND EST PERMANENT. Il n'apparaissait qu'AU SURVOL
+ * (`hover:bg-white/5`) : une plaque qui se montre au passage de la
+ * souris n'existe pas au doigt, et n'existe pas non plus à l'arrêt.
+ * Elle est maintenant TOUJOURS là. Le jeton est `bg-sombre-eleve` — le
+ * seul cran qui se détache des DEUX supports de cette ligne : la page
+ * (le bleu nuit de la nº 466) ET la carte de la fenêtre superposée. Un
+ * cran plus bas serait la couleur même de la fenêtre, donc invisible
+ * au web : c'est la leçon du compteur de capsules (nº 491-§1).
+ * L'ANGLE HAUT-GAUCHE EST DROIT, les trois autres gardent leurs 12 px
+ * (`rounded-xl`) : c'est le coin sur lequel la mention du dessus vient
+ * s'appuyer. Aucun contour, aucune bordure — un fond, rien d'autre.
+ *
+ * §3 — IL S'ARRÊTE AUX MARGES, ET VOICI CE QUI LE FAISAIT DÉBORDER.
+ * `CLASSES_LIGNE_CLIQUABLE` porte `-m-2 p-2` : huit pixels de
+ * rembourrage annulés par huit pixels de marge NÉGATIVE. Le texte
+ * restait donc aligné sur la colonne, et la plaque, elle, sortait de
+ * HUIT PIXELS de chaque côté — c'est exactement le débord relevé. La
+ * marge négative part : la plaque commence et finit désormais où le
+ * reste du contenu commence et finit.
+ * ⚠️ LA COLONNE DE LECTURE N'EST PAS TOUCHÉE (piège 378/379) : son
+ * `lg:px-3 lg:-mx-3` (nº 298/312) reste, et il sert toujours — l'autre
+ * porteur de `CLASSES_LIGNE_CLIQUABLE` déborde encore, lui.
+ *
+ * §4 — L'AIR DEDANS, DANS L'ÉCHELLE DE 4 : DOUZE pixels à gauche et à
+ * droite (l'avatar ne touche plus le bord, le texte non plus), HUIT en
+ * haut et en bas — la valeur qu'avait déjà le rembourrage, gardée
+ * telle quelle. Le nombre de pixels entre l'avatar et son texte ne
+ * bouge pas (14 px, `gap-3.5`, depuis la nº 227).
+ */
+const ENCADRE_MEMBRE =
+  "flex items-start gap-3.5 rounded-xl rounded-tl-none bg-sombre-eleve px-3 py-2";
+
+/** Le même encadré, cliquable : le fond monte d'un cran au survol, et
+    l'appui le tient au doigt, où il n'y a pas de survol. */
+const ENCADRE_MEMBRE_CLIQUABLE =
+  `group ${ENCADRE_MEMBRE} transition-colors ` +
+  "hover:bg-sombre-eleve-clair active:bg-sombre-eleve-clair";
+
 function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined }) {
   const clicVersFiche = useClicVersFiche();
   /*  ██ §2 (nº 411) — UNE SEULE LISTE, DE NOUVEAU ██
@@ -546,11 +614,24 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
             colonne — sans elle, une équipe où un seul membre a
             déposé sa photo s'affichait en escalier. */
         //  §2 (nº 273) — la ligne s'écrit PAREIL avec ou sans fiche :
-        //  le soulignement qui les distinguait est parti, seul
-        //  l'encadré du Link (au survol) dit encore le clic.
+        //  le soulignement qui les distinguait est parti.
+        //  §2 (nº 492) — et l'encadré ne dit plus le clic non plus : il
+        //  est permanent. Ce qui distingue une ligne cliquable, c'est
+        //  son survol et son appui, rien d'autre.
         const ligne = () => (
           <>
-            <PhotoRonde source={membre.photo} nature="personne" />
+            {/*  §2 (nº 492) — DEUX CRANS AU-DESSUS DE LA PLAQUE, et pas
+                 un : au repos elle vaut `bg-sombre-eleve`, au survol elle
+                 monte à `bg-sombre-eleve-clair`. Un rond posé sur ce
+                 deuxième cran disparaîtrait au passage de la souris. Le
+                 cran d'encore au-dessus le garde lisible dans les deux
+                 états — et il ne concerne QUE le repli sans photo : une
+                 vraie photo couvre le rond entièrement. */}
+            <PhotoRonde
+              source={membre.photo}
+              nature="personne"
+              classeFond="bg-sombre-haut"
+            />
             <div className="flex min-h-13 min-w-0 flex-1 flex-col justify-center">
               {/*  §4 (nº 286) — LE NOM D'ABORD, EN BLANC ; LE RÔLE
                    DESSOUS, EN GRIS. La forme « Résident · Kevin Roux »
@@ -593,16 +674,18 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
                    navigateur. L'occasion de coupure de largeur nulle lui rend
                    le droit de replier proprement entre le nom et le rôle
                    quand la colonne est étroite. Elle ne dessine rien et
-                   n'ajoute aucun pixel. */}
+                   n'ajoute aucun pixel.
+                   ██ §5 (nº 492) — CETTE NOTE DÉCRIT UN ÉTAT PÉRIMÉ ██
+                   Le rôle a QUITTÉ la ligne du nom : il est remonté au-dessus
+                   de l'encadré, dans la mention grise, avec le booking (§6).
+                   La première ligne ne porte donc plus QUE LE NOM — la puce,
+                   son `<wbr />` et le morceau gris sont partis avec lui. Ce
+                   qui reste ci-dessus vaut comme histoire, pas comme
+                   description : c'est la ligne juste dessous qui fait foi.
+                   ⚠️ LE NOM, LUI, N'A PAS BOUGÉ D'UN POIL : même balise,
+                   mêmes classes, même `[overflow-wrap:anywhere]`. */}
               <p className="text-[15px] font-medium leading-snug text-sombre-texte [overflow-wrap:anywhere]">
                 {membre.nom}
-                <span aria-hidden="true" className="px-1.5 text-sombre-texte-doux">
-                  •
-                </span>
-                <wbr />
-                <span className="text-[14px] font-normal text-sombre-texte-doux">
-                  {roleDuMembre(membre)}
-                </span>
               </p>
               {/*  §3 (nº 313) — SES STYLES, SOUS SON RÔLE — et depuis la
                    nº 392, sous la ligne QUI PORTE son nom ET son rôle :
@@ -664,16 +747,36 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
         );
         return (
           <li key={membre.cle ?? membre.artiste_id}>
+            {/*  ██ §6 (nº 492) — LA MENTION, AU-DESSUS ET DEHORS ██
+                 Le STATUT du membre puis l'état de son CARNET, en gris,
+                 posés en haut à gauche À L'EXTÉRIEUR de l'encadré : c'est
+                 sous elle que vient se ranger l'angle carré de la plaque
+                 (§2, le coin haut-gauche). Le texte s'écrit une fois, dans
+                 `ligneStatutEtBooking` — c'est là que vivent les deux
+                 séparateurs et le silence des données absentes.
+                 ⚠️ ELLE N'EST PAS DANS LE LIEN, et c'est voulu : le lien,
+                 c'est la plaque. Une mention au-dessus ne se clique pas.
+                 ⚠️ QUATORZE PIXELS — un cran sous les 15 px du nom, et
+                 exactement la taille que le rôle portait déjà quand il
+                 vivait sur la ligne du nom : rien de neuf n'est inventé.
+                 Quatre pixels la séparent de l'encadré (`mb-1`). */}
+            <p className="mb-1 text-[14px] leading-snug text-sombre-texte-doux [overflow-wrap:anywhere]">
+              {ligneStatutEtBooking(membre)}
+            </p>
             {membre.slug ? (
               <Link
                 href={adresseDeLienInterne(membre.slug)}
                 onClick={clicVersFiche?.(membre.slug)}
-                className={CLASSES_LIGNE_CLIQUABLE}
+                className={ENCADRE_MEMBRE_CLIQUABLE}
               >
                 {ligne()}
               </Link>
             ) : (
-              <div className="flex items-start gap-3.5">{ligne()}</div>
+              /*  §2 (nº 492) — UN MEMBRE SANS FICHE GARDE SA PLAQUE : le
+                  fond ne dit plus « ça se clique » (il est permanent), il
+                  dit « voici une personne ». Seuls le survol et l'appui
+                  lui manquent, puisqu'il n'y a rien à ouvrir. */
+              <div className={ENCADRE_MEMBRE}>{ligne()}</div>
             )}
           </li>
         );

@@ -162,6 +162,18 @@ export type MembreEquipe = {
       vue `equipe_salon`, qui ne les porte pas — il n'affiche alors pas
       la troisième ligne, et rien ne bouge d'un pixel. */
   styles?: string[];
+  /**
+   * §6 (nº 492) — L'ÉTAT DU CARNET DE L'ARTISTE, du MÊME endroit et
+   * pour la même raison que ses styles : sa déclaration sur SA fiche
+   * (`tatoueurs.booking` / `booking_mois`). Rien n'est recopié dans le
+   * salon, rien n'est deviné — et la vue `equipe_salon` n'a pas à les
+   * porter.
+   * ⚠️ FACULTATIFS : sans eux, la ligne du dessus ne dit que le
+   * statut, et aucun séparateur n'apparaît (voir
+   * `ligneStatutEtBooking`).
+   */
+  booking?: "ouvert" | "delai" | "ferme" | null;
+  booking_mois?: number | null;
 };
 
 /** §3 (nº 313) — COMBIEN DE STYLES S'ÉCRIVENT SUR UNE LIGNE D'ÉQUIPE. */
@@ -288,6 +300,10 @@ export function membreDepuisVue(
         fiche. La vue `equipe_salon` ne les porte pas ; l'appelant qui
         a pu aller les chercher les passe ici (voir `garnirFiches`). */
     styles?: string[] | null;
+    /** §6 (nº 492) — l'état de son carnet, exactement au même titre
+        que ses styles : lu sur SA fiche, jamais recopié ni deviné. */
+    booking?: string | null;
+    booking_mois?: number | null;
   } | null
 ): MembreEquipe {
   const genre = declaration?.genre ?? ligne.genre;
@@ -308,6 +324,18 @@ export function membreDepuisVue(
     //  Absents : la troisième ligne ne se rend pas (voir
     //  `libelleStylesEquipe`).
     ...(declaration?.styles ? { styles: declaration.styles } : {}),
+    //  §6 (nº 492) — l'état du carnet, borné aux trois valeurs
+    //  connues : tout autre mot (base plus ancienne, saisie
+    //  inattendue) vaut ABSENT, et la ligne du dessus se tait sur le
+    //  booking plutôt que d'afficher un état qu'on ne sait pas lire.
+    ...(declaration?.booking === "ouvert" ||
+    declaration?.booking === "delai" ||
+    declaration?.booking === "ferme"
+      ? { booking: declaration.booking }
+      : {}),
+    ...(typeof declaration?.booking_mois === "number"
+      ? { booking_mois: declaration.booking_mois }
+      : {}),
   };
 }
 
@@ -322,6 +350,52 @@ export function membreDepuisVue(
 export function roleDuMembre(membre: MembreEquipe): string {
   if (membre.genre === "guest") return "Guest";
   return libelleRoleCourt(membre.role) || libelleRoleCourt("resident");
+}
+
+/**
+ * ██ §6 (nº 492) — LA LIGNE AU-DESSUS DE L'ENCADRÉ D'UN MEMBRE ██
+ * ==================================================================
+ * « Résident • Booking ouvert », « Guest • Booking ouvert · 12 mois
+ * d'attente », « Fondateur » tout seul. Le STATUT d'abord — il est
+ * toujours là —, puis l'état du carnet quand l'artiste l'a déclaré.
+ *
+ * LES DEUX SÉPARATEURS SONT DIFFÉRENTS, ET C'EST VOULU (consigne du
+ * propriétaire) : le point médian « • » sépare le statut du booking,
+ * le point médian bas « · » sépare le booking de son délai. Deux
+ * niveaux de lecture, deux signes.
+ *
+ * CE QUE CHAQUE ÉTAT DONNE, ET RIEN N'EST FABRIQUÉ :
+ *  · `ouvert`            → « Résident • Booking ouvert »
+ *  · `delai` + des mois  → « … • Booking ouvert · 12 mois d'attente »
+ *    (un délai EST un carnet ouvert, avec une attente — c'est la
+ *    grammaire déjà tenue sur la fiche depuis la nº 408) ;
+ *  · `delai` SANS mois   → « Résident » SEUL. Sans chiffre, écrire
+ *    « Booking ouvert » ferait dire à l'artiste autre chose que ce
+ *    qu'il a coché : on se tait, comme la fiche le fait déjà ;
+ *  · `ferme`             → « Résident • Booking fermé » ;
+ *  · absent / inconnu    → « Résident » SEUL.
+ *
+ * ⚠️ PAS UNE PUCE ORPHELINE : le séparateur n'existe que s'il y a
+ * quelque chose des deux côtés — il est posé PAR la jointure, jamais
+ * écrit à la main autour d'un morceau qui peut manquer (piège nº 386).
+ *
+ * ⚠️ FONCTION PURE : la règle s'exécute sans base ni session.
+ */
+export function ligneStatutEtBooking(membre: MembreEquipe): string {
+  const etat =
+    membre.booking === "ouvert" || membre.booking === "delai"
+      ? "Booking ouvert"
+      : membre.booking === "ferme"
+        ? "Booking fermé"
+        : null;
+  const attente =
+    membre.booking === "delai" && membre.booking_mois
+      ? `${membre.booking_mois} mois d'attente`
+      : null;
+  const muet = membre.booking === "delai" && !attente;
+  const morceaux = [roleDuMembre(membre)];
+  if (etat && !muet) morceaux.push(attente ? `${etat} · ${attente}` : etat);
+  return morceaux.join(" • ");
 }
 
 /**
