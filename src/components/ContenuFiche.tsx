@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import {
   defilerEnDouceur,
@@ -187,9 +187,26 @@ export function adresseDeLienInterne(slug: string): string {
  * §2 — LE PLI AU-DELÀ DE DEUX LIGNES. Une fiche à vingt styles
  * empilait autant de rangées qu'il fallait ; on s'arrête maintenant à
  * DEUX, le reste passant derrière une capsule compteur « +N ⌄ » qui
- * déplie tout, et replie au second appui. Sa flèche est CELLE DES
- * HORAIRES (`IconeChevronBas` au rang 16, pivotée de 180°) : le même
- * geste porte le même dessin.
+ * déplie tout. DÉPLIÉE, elle dit « Réduire ⌃ » (nº 491-§3) : le
+ * libellé et le sens de la flèche changent, la forme et le fond ne
+ * bougent pas. Sa flèche est CELLE DES HORAIRES (`IconeChevronBas` au
+ * rang 16, pivotée de 180°) : le même geste porte le même dessin.
+ *
+ * ██ §1 (nº 491) — POURQUOI LE COMPTEUR N'AVAIT PAS DE FOND AU WEB ██
+ * Il en avait un. Il était `bg-sombre-carte` — et la fenêtre de fiche
+ * du web est peinte de CE JETON-LÀ (`FenetreFiche`, la fenêtre et sa
+ * colonne de droite). Fond et support avaient donc exactement la même
+ * couleur : contraste nul, capsule invisible, texte qui semblait nu.
+ * Au doigt la fiche est une PAGE, posée sur le fond du site : le même
+ * jeton s'y détachait, d'où la différence.
+ * LE REMÈDE, ET SON PRIX ASSUMÉ : le compteur passe à
+ * `bg-sombre-eleve` — UNE seule couleur pour lui, sur les deux lignes,
+ * dans les deux enveloppes. Il se détache du support partout. Il reste
+ * un cran PLUS DISCRET que les capsules de STYLE ; sur la ligne des
+ * TECHNIQUES il est au même niveau qu'elles, faute de mieux : sous
+ * `eleve`, l'échelle de la nº 466 n'offre que `carte`, c'est-à-dire
+ * précisément la couleur du support. « Plus discret » n'y est pas
+ * dessinable sans redevenir invisible.
  *
  * COMMENT « DEUX LIGNES » EST DÉTERMINÉ — et c'est une MESURE, pas un
  * nombre de capsules : combien en tiennent dépend de la largeur de la
@@ -201,28 +218,54 @@ export function adresseDeLienInterne(slug: string): string {
  *     état faux n'est peint (règles 137/203) : le premier affichage
  *     montre déjà exactement deux lignes, avant toute mesure et même
  *     si le JavaScript n'arrive jamais.
- *  2. LA MESURE VIENT ENSUITE, dans le navigateur : on relève la
- *     largeur réelle de chaque capsule — une seule fois, les libellés
- *     ne changent jamais — puis on garnit les deux lignes par le
- *     calcul, en réservant la place du compteur sur la seconde. Le
- *     nombre de capsules affichées change alors, mais PAS LA HAUTEUR
- *     du bloc : il faisait déjà deux lignes. Rien ne saute ; seul le
- *     compteur apparaît, à la place des capsules qu'il remplace.
- *  3. LE REDIMENSIONNEMENT EST SUIVI par un `ResizeObserver` sur le
- *     conteneur : élargir la fenêtre fait rentrer plus de capsules et
- *     le compte se refait. Les largeurs mémorisées restent valables —
- *     c'est la place disponible qui change, pas les mots.
- * ⚠️ CE QUE CE PROCÉDÉ NE SAIT PAS FAIRE, ET IL FAUT LE DIRE : la
- * largeur du compteur n'est PAS mesurée, elle est RÉSERVÉE au jugé
- * (72 px). La mesurer serait circulaire — sa largeur dépend du nombre
- * qu'il affiche, ce nombre dépend de la coupe, et la coupe dépend de
- * sa largeur. La réserve est donc prise LARGE : 72 px couvrent
- * « +999 », le pire cas imaginable. Le sens de l'erreur est choisi
- * exprès — on réserve un peu TROP plutôt que trop peu, si bien
- * qu'AUCUNE capsule ne peut être poussée hors des deux lignes par un
- * compteur trop gros. Le prix, c'est qu'à « +3 » la seconde ligne
- * peut porter UNE capsule de moins qu'elle n'aurait pu : quelques
- * pixels de blanc en fin de ligne, jamais un débordement.
+ *  2. LA MESURE VIENT ENSUITE, avant la peinture (`useLayoutEffect`) :
+ *     on relève la largeur de chaque capsule pendant qu'elles sont
+ *     TOUTES rendues, puis on garnit les deux lignes par le calcul, en
+ *     réservant la place du compteur sur la seconde. La hauteur du
+ *     bloc ne change pas — il faisait déjà deux lignes. Rien ne saute.
+ *  3. LE FILET, ET C'EST LUI QUI TIENT LA RÈGLE ABSOLUE : après chaque
+ *     rendu, on demande au navigateur s'il ROGNE encore quelque chose
+ *     (`scrollHeight` contre `clientHeight`). Si oui, on retire une
+ *     capsule de plus — donc le compteur apparaît, ou son nombre
+ *     monte — et on recommence, avant peinture. Une capsule ne peut
+ *     donc PAS être cachée sans compteur pour la rejoindre, quelle que
+ *     soit la qualité du calcul du point 2.
+ *  4. LE REDIMENSIONNEMENT EST SUIVI par un `ResizeObserver` sur le
+ *     conteneur, et le calcul ne se refait QUE si la LARGEUR a changé
+ *     — sinon le filet (qui change la hauteur) et le calcul (qui la
+ *     regarde) se renverraient la balle sans fin.
+ *
+ * ██ §2 (nº 491) — POURQUOI LE WEB PERDAIT UNE CAPSULE SANS COMPTEUR ██
+ * LE RELEVÉ : six capsules, cinq affichées au web, aucun compteur —
+ * de l'information perdue sans moyen de l'atteindre. Le doigt, lui,
+ * repliait proprement.
+ * LA CAUSE, ET ELLE EST ENTIÈREMENT DANS LA MESURE : la nº 490
+ * relevait les largeurs par `getBoundingClientRect()`, qui rend la
+ * largeur PEINTE — mise à l'échelle comprise. Or la fenêtre de fiche
+ * du web s'ouvre en grandissant (une transition de `transform` de
+ * 0,97 à 1). Les capsules étaient donc mesurées jusqu'à 3 % TROP
+ * ÉTROITES, tandis que la place disponible, elle, était lue par
+ * `clientWidth` — une largeur de MISE EN PAGE, que la mise à l'échelle
+ * n'affecte pas. On comparait des largeurs rapetissées à une place à
+ * taille réelle : le calcul croyait qu'il rentrait 3 % de plus qu'en
+ * vrai. Sur six capsules, ces 3 % suffisaient à conclure « les six
+ * tiennent » — donc aucun compteur — pendant que la coupe CSS, elle
+ * bien réelle, mangeait la sixième. Et comme les largeurs étaient
+ * mémorisées UNE FOIS, l'erreur était figée pour toute la vie de la
+ * fiche. La page du doigt n'a aucune mise à l'échelle : elle mesurait
+ * juste, d'où l'écart entre les deux affichages.
+ * LE REMÈDE EST DOUBLE : les largeurs se relèvent désormais par
+ * `offsetWidth`, une grandeur de MISE EN PAGE — la même famille que
+ * `clientWidth`, insensible aux `transform`, donc les deux nombres
+ * sont enfin comparables ; et le filet du point 3 rattrape tout ce que
+ * le calcul pourrait encore rater.
+ * ⚠️ ON NE MÉMORISE PLUS UNE MESURE DOUTEUSE : les largeurs ne sont
+ * gardées que si elles sont TOUTES non nulles (une fenêtre pas encore
+ * mesurable en rendrait zéro). Tant qu'on n'a rien de fiable, on ne
+ * coupe pas par le calcul — le filet, lui, travaille quand même.
+ * ⚠️ LA LARGEUR DU COMPTEUR n'est plus devinée : `LARGEUR_COMPTEUR`
+ * n'est que sa valeur de DÉPART, remplacée par sa largeur réelle dès
+ * qu'il a été rendu une fois.
  *
  * ⚠️ CHAQUE LIGNE EST TRAITÉE SÉPARÉMENT : les techniques et les
  * styles ont chacune leur mesure et leur compteur, et n'en ont un que
@@ -236,11 +279,20 @@ export function adresseDeLienInterne(slug: string): string {
 const HAUTEUR_CAPSULE = 26;
 /** L'écart entre deux capsules (`gap-1.5`). */
 const ECART_CAPSULES = 6;
-/** La place réservée au compteur en fin de deuxième ligne. Prise
-    LARGE à dessein (voir la note, ⚠️ « ce que ce procédé ne sait pas
-    faire ») : la capsule ne porte pas cette largeur, elle épouse son
-    texte comme les autres. */
+/** La place réservée au compteur en fin de deuxième ligne, AVANT
+    qu'il ait jamais été rendu : dès son premier rendu, c'est sa
+    largeur réelle qui prend le relais (nº 491). Prise large — 72 px
+    couvrent « +999 » — pour que le tout premier calcul se trompe du
+    bon côté. */
 const LARGEUR_COMPTEUR = 72;
+
+/** `useLayoutEffect` mesure AVANT la peinture — c'est ce qui empêche
+    de voir les capsules se retirer une à une. Il n'existe pas au
+    rendu du serveur : on y retombe sur `useEffect`, qui n'y fait rien
+    non plus, plutôt que de laisser React avertir. Constante de
+    module : l'ordre des crochets ne change jamais. */
+const useEffetDeMiseEnPage =
+  typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 /** Combien de capsules tiennent en deux lignes, la place du compteur
     réservée ou non. Un garnissage simple, de gauche à droite. */
@@ -285,38 +337,92 @@ function LigneDeCapsules({
 }) {
   const [montrees, setMontrees] = useState(valeurs.length);
   const [deplie, setDeplie] = useState(false);
+  //  Le seul rôle de cet état : faire retourner la mesure quand le
+  //  conteneur change de taille. Sa valeur ne sert à personne.
+  const [, setTic] = useState(0);
   const zone = useRef<HTMLSpanElement>(null);
   const largeurs = useRef<number[]>([]);
+  const largeurCompteur = useRef(LARGEUR_COMPTEUR);
+  const largeurMesuree = useRef(-1);
 
   useEffect(() => {
     const boite = zone.current;
-    if (!boite || valeurs.length === 0) return;
-    const mesurer = () => {
-      if (largeurs.current.length !== valeurs.length) {
-        const enfants = Array.from(boite.children) as HTMLElement[];
-        if (enfants.length < valeurs.length) return;
-        largeurs.current = enfants
-          .slice(0, valeurs.length)
-          .map((enfant) => enfant.getBoundingClientRect().width);
-      }
-      const dispo = boite.clientWidth;
-      if (dispo <= 0) return;
-      const sansCompteur = capsulesQuiTiennent(largeurs.current, dispo, 0);
-      setMontrees(
-        sansCompteur >= valeurs.length
-          ? valeurs.length
-          : capsulesQuiTiennent(
-              largeurs.current,
-              dispo,
-              LARGEUR_COMPTEUR + ECART_CAPSULES
-            )
-      );
-    };
-    mesurer();
-    const observateur = new ResizeObserver(mesurer);
+    if (!boite) return;
+    const observateur = new ResizeObserver(() => setTic((tour) => tour + 1));
     observateur.observe(boite);
     return () => observateur.disconnect();
-  }, [valeurs.length]);
+  }, []);
+
+  //  APRÈS CHAQUE RENDU, AVANT LA PEINTURE — sans tableau de
+  //  dépendances, c'est voulu : le filet doit pouvoir se rejouer
+  //  jusqu'à ce que plus rien ne soit rogné.
+  useEffetDeMiseEnPage(() => {
+    const boite = zone.current;
+    if (!boite || valeurs.length === 0 || deplie) return;
+    const enfants = Array.from(boite.children) as HTMLElement[];
+
+    //  Une AUTRE fiche est passée sous le composant : on repart de
+    //  zéro plutôt que de couper avec les mesures de la précédente.
+    if (montrees > valeurs.length) {
+      largeurs.current = [];
+      largeurMesuree.current = -1;
+      setMontrees(valeurs.length);
+      return;
+    }
+    //  LES LARGEURS NE SE RELÈVENT QUE TOUT RENDU, et ne se gardent
+    //  que si elles sont plausibles (voir la note, nº 491-§2).
+    if (montrees === valeurs.length && enfants.length >= valeurs.length) {
+      const relevees = enfants
+        .slice(0, valeurs.length)
+        .map((enfant) => enfant.offsetWidth);
+      if (relevees.every((largeur) => largeur > 0)) largeurs.current = relevees;
+    }
+    //  Le compteur est le dernier enfant quand il y en a un : sa
+    //  largeur réelle remplace la valeur de départ.
+    if (montrees < valeurs.length && enfants.length === montrees + 1) {
+      const large = enfants[montrees].offsetWidth;
+      if (large > 0) largeurCompteur.current = large;
+    }
+
+    const dispo = boite.clientWidth;
+    if (dispo <= 0) return;
+    //  LE CALCUL NE SE REFAIT QU'AU CHANGEMENT DE LARGEUR : sinon il
+    //  proposerait de remettre ce que le filet vient de retirer.
+    if (dispo !== largeurMesuree.current) {
+      largeurMesuree.current = dispo;
+      if (largeurs.current.length === valeurs.length) {
+        const sansCompteur = capsulesQuiTiennent(largeurs.current, dispo, 0);
+        const cible =
+          sansCompteur >= valeurs.length
+            ? valeurs.length
+            : Math.max(
+                1,
+                capsulesQuiTiennent(
+                  largeurs.current,
+                  dispo,
+                  largeurCompteur.current + ECART_CAPSULES
+                )
+              );
+        if (cible !== montrees) {
+          setMontrees(cible);
+          return;
+        }
+      } else if (montrees !== valeurs.length) {
+        //  Rien de fiable en mémoire : on remet tout pour pouvoir
+        //  mesurer. Le CSS coupe pendant ce temps, le filet suit.
+        setMontrees(valeurs.length);
+        return;
+      }
+    }
+
+    //  ██ LE FILET (nº 491) ██ — la règle absolue : si le navigateur
+    //  rogne encore quelque chose, une capsule est cachée SANS moyen
+    //  de l'atteindre. On en retire une de plus, ce qui fait monter le
+    //  compteur — et on recommence au rendu suivant.
+    if (montrees > 1 && boite.scrollHeight > boite.clientHeight + 1) {
+      setMontrees(montrees - 1);
+    }
+  });
 
   if (valeurs.length === 0) return null;
   const restant = valeurs.length - montrees;
@@ -352,20 +458,26 @@ function LigneDeCapsules({
           </span>
         ))}
         {restant > 0 && (
-          /*  §2 (nº 490) — LA CAPSULE COMPTEUR : même rayon, même
-              hauteur, même écriture que les autres, sur un fond PLUS
-              DISCRET (`bg-sombre-carte`, un cran sous celui des
-              techniques) — elle ouvre une action, elle ne doit pas
-              peser plus lourd que les valeurs elles-mêmes. Aucun
-              contour, aucun rose. */
+          /*  §1 ET §3 (nº 491) — LA CAPSULE COMPTEUR : même rayon,
+              même hauteur, même écriture que les autres, et un fond
+              qui se détache de son support dans les DEUX enveloppes
+              (`bg-sombre-eleve` — voir la note, §1 de la nº 491 :
+              `bg-sombre-carte` était la couleur même de la fenêtre du
+              web). Aucun contour, aucun rose.
+              LE LIBELLÉ DIT L'ÉTAT : « +N ⌄ » tant qu'il reste à
+              déplier, « Réduire ⌃ » une fois tout montré. La forme et
+              le fond ne changent pas d'un état à l'autre ; seuls le
+              mot et le sens de la flèche. La largeur, elle, suit le
+              texte — sans conséquence : « Réduire » ne s'affiche que
+              DÉPLIÉ, état où la coupe à deux lignes n'existe plus. */
           <button
             type="button"
             onClick={() => setDeplie((etait) => !etait)}
             aria-expanded={deplie}
             className="inline-flex cursor-pointer items-center gap-1 whitespace-nowrap
-                       rounded-lg bg-sombre-carte px-2.5 py-1 text-[13.5px] leading-[18px]"
+                       rounded-lg bg-sombre-eleve px-2.5 py-1 text-[13.5px] leading-[18px]"
           >
-            +{restant}
+            {deplie ? "Réduire" : `+${restant}`}
             <span
               aria-hidden="true"
               className={`shrink-0 transition-transform duration-200 ${
