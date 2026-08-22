@@ -759,18 +759,17 @@ function CarteTatoueurNue({
       {!phototheque && (
       <div
         /*  ██ §3 (nº 398) — L'AIR AU-DESSUS DE LA PHOTO DE PROFIL ██
-             PLEINE LARGEUR AU DOIGT SEULEMENT. C'était `mobile:pt-2.5`
-             (10 px) entre le bas de l'image et le rond de profil ; le
-             propriétaire le trouve trop serré. Il passe à 16 px, et ce
-             n'est pas une valeur inventée : c'était alors la marge que
-             CETTE MÊME rangée portait de chaque côté — le carré de
-             marge de la carte au doigt. (Cette marge latérale est
-             tombée à huit pixels à la nº 481 ; les seize du haut, eux,
-             restent — voir la note de cette passe, juste dessous.)
-             ⚠️ LES CARTES CÔTE À CÔTE NE BOUGENT PAS : elles gardent
-             `mobile:pt-2.5` par le ternaire. Le web non plus — son
-             rembourrage du haut est hors variante du doigt, et c'est
-             lui que la nº 481 a réduit de moitié.
+             PLEINE LARGEUR AU DOIGT SEULEMENT. L'air entre le bas de
+             l'image et le rond de profil y valait dix pixels ; le
+             propriétaire les trouvait trop serrés, et cette passe-là
+             les avait portés à seize — la marge que cette même rangée
+             portait alors de chaque côté.
+             ⚠️ CES DEUX VALEURS ONT ÉTÉ REVUES DEPUIS, et cette note ne
+             tient plus que pour l'histoire : la marge latérale est
+             tombée à huit pixels à la nº 481, et les airs du haut ont
+             été resserrés à la nº 482 — six pixels côte à côte, dix en
+             pleine largeur. Les valeurs qui font foi sont celles de la
+             note suivante.
              ⚠️ L'ESPACE SOUS LA PHOTO N'EST PAS ICI : cette rangée n'a
              aucun rembourrage bas, la carte s'arrête sur son texte. Ce
              qui suit est la gouttière de la grille — voir
@@ -799,8 +798,23 @@ function CarteTatoueurNue({
              valent huit désormais, le haut garde ses seize. La valeur
              du haut ne change pas pour autant : le propriétaire l'a
              réglée à l'œil, elle lui appartient. */
+        /*  ██ §1 (nº 482) — L'AIR SOUS LA PHOTO SE RESSERRE, AU DOIGT ██
+             Deux valeurs, parce que la carte n'a pas la même allure
+             selon qu'elle est côte à côte ou seule sur la largeur :
+              · CÔTE À CÔTE — dix pixels deviennent SIX
+                (`mobile:pt-1.5`), la valeur même du web : la ligne du
+                style se rapproche de son image sans jamais la toucher,
+                et les deux appareils disent enfin la même chose ;
+              · EN PLEINE LARGEUR — seize deviennent DIX
+                (`mobile:pt-2.5`), la valeur que les cartes côte à côte
+                portaient jusqu'ici. La grande image garde un peu plus
+                d'air que les petites : elle occupe tout l'écran, un
+                texte collé à elle paraîtrait tomber dedans.
+             ⚠️ LE WEB NE BOUGE PAS — six pixels depuis la nº 481, hors
+             variante du doigt : les deux réglages restent séparés, et
+             celui-ci ne peut pas l'entraîner. */
         className={`pt-1.5 px-0.5 mobile:px-2 ${
-          uneColonne ? "mobile:pt-4" : "mobile:pt-2.5"
+          uneColonne ? "mobile:pt-2.5" : "mobile:pt-1.5"
         }`}
       >
         {/*  ██ §1 (nº 480) — LA LIGNE 1 : LE STYLE ET LE RENDU ██
@@ -820,11 +834,12 @@ function CarteTatoueurNue({
              colonne, le rond ouvre la rangée suivante. AU DOIGT, où le
              rond ne se rend pas (deux colonnes), les trois lignes
              s'empilent d'elles-mêmes.
-             L'AIR SOUS ELLE — RELEVÉ À LA nº 481 : douze pixels au web,
-             six au doigt, contre deux entre les lignes 2 et 3 (le
-             `gap-0.5` de leur bloc, inchangé). Le respir reste donc
-             bien plus grand au-dessus du nom qu'au-dessus de la
-             localité, des deux côtés.
+             L'AIR SOUS ELLE — RELEVÉ À LA nº 481, PUIS À LA nº 482 :
+             douze pixels au web, six au doigt ; en face, l'écart entre
+             les lignes 2 et 3 vaut deux pixels au web et UN au doigt
+             (voir leur bloc, plus bas). Le respir reste donc bien plus
+             grand au-dessus du nom qu'au-dessus de la localité, des
+             deux côtés — et l'écart s'est même creusé au doigt.
              SA GRAISSE ET SA TAILLE — LA GRAISSE A CHANGÉ À LA nº 481 :
              graisse normale (le nom, lui, est demi-gras), blanc, et
              EXACTEMENT le corps du nom (15 px, 14 au doigt côte à côte,
@@ -855,8 +870,9 @@ function CarteTatoueurNue({
                 appelait.
                 ⚠️ LE DOIGT GARDE SES SIX PIXELS (`mobile:mb-1.5`), et
                 c'est délibéré : là-bas cet air doit rester plus grand
-                que les deux pixels qui séparent le nom de la localité
-                — l'acquis de la nº 480 — mais pas davantage. La classe
+                que l'écart qui sépare le nom de la localité — un seul
+                pixel au doigt depuis la nº 482, l'acquis de la nº 480
+                étant ainsi tenu avec de la marge — mais pas davantage. La classe
                 de base sert donc la souris, la variante sert le doigt :
                 les deux réglages sont séparés, ils ne peuvent plus
                 s'entraîner l'un l'autre. */
@@ -915,7 +931,26 @@ function CarteTatoueurNue({
         {/* LE BLOC DE TEXTE — deux lignes, hauteur au pixel : 19 + 2 +
             19 = 40 px (21 + 2 + 21 = 44 px en une colonne sur
             smartphone). C'est cette hauteur que le portrait reprend. */}
-        <div className="min-w-0 flex-1 flex flex-col gap-0.5">
+        {/*  ██ §2 (nº 482) — L'ÉCART ENTRE LE NOM ET LA LOCALITÉ ██
+             DEUX PIXELS DEVIENNENT UN, au doigt seulement
+             (`mobile:gap-px`). Et il faut le dire franchement : c'était
+             DÉJÀ le plus petit cran de l'échelle du site, et le suivant
+             — le pixel unique — est le dernier avant zéro, qui
+             collerait les deux lignes. L'ajustement est donc réel mais
+             minuscule : il ne fera pas à lui seul la différence que
+             l'œil cherche.
+             ⚠️ LÀ OÙ SE TROUVE LA VRAIE RÉSERVE, si tu veux resserrer
+             davantage : ce n'est pas l'écart, c'est la HAUTEUR DE LIGNE.
+             Les deux lignes valent 19 px de hauteur pour des textes de
+             14 et 13 px — soit environ cinq pixels de blanc au-dessus
+             et en dessous de chaque texte, bien plus que l'écart
+             lui-même. Les rapprocher pour de bon veut dire descendre
+             cette hauteur, ce qui touche aussi le rond de profil dont
+             elle commande la taille (il fait exactement la hauteur des
+             deux lignes). Je ne le fais pas de mon chef : c'est une
+             décision de mise en page, elle t'appartient.
+             ⚠️ LE WEB GARDE SES DEUX PIXELS (`gap-0.5`, hors variante). */}
+        <div className="min-w-0 flex-1 flex flex-col gap-0.5 mobile:gap-px">
         <h3
           /*  §1 (nº 480, réglé nº 481) — LA LIGNE 2 : LE NOM DU
               PORTFOLIO. Même corps que la ligne du style juste
