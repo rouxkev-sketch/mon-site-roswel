@@ -146,7 +146,6 @@ export function GrilleTatoueurs({
   styleRecherche = "",
   renduRecherche = "",
   natureRecherche = "",
-  premiereLigne = "nom",
   estompee = false,
 }: {
   tatoueurs: Tatoueur[];
@@ -163,7 +162,6 @@ export function GrilleTatoueurs({
       nom de l'artiste (défaut, partout) ou le style de la photo
       montrée. La grille ne tranche pas — voir la note au passage de la
       propriété, plus bas. */
-  premiereLigne?: "nom" | "style";
   /** Vrai pendant une recherche : la grille s'estompe. */
   estompee?: boolean;
 }) {
@@ -725,7 +723,6 @@ export function GrilleTatoueurs({
                  laquelle. Celle qui sait le lui dit (IndexTatoueurs) ;
                  les vitrines, qui la montent en direct, ne passent rien
                  et gardent le nom par le défaut de la carte. */
-            premiereLigne={premiereLigne}
             surApproche={precharger}
             surOuverture={ouvrir}
           />

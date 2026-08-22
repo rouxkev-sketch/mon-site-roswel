@@ -18,7 +18,6 @@ import {
   natureConnue,
   partiesDeGalerie,
   SEPARATEUR_GALERIE,
-  titreDeGalerie,
   vignetteDe,
 } from "@/lib/photos-tatoueur";
 //  §2 (nº 452) — le fanion revient sur les cartes de « Ma sélection »
@@ -84,29 +83,9 @@ function CarteTatoueurNue({
   prioritaire = false,
   phototheque = false,
   fanion = false,
-  premiereLigne = "nom",
   surOuverture,
   surApproche,
 }: {
-  /**
-   * ██ §2 (nº 395) — CE QUE PORTE LA PREMIÈRE LIGNE, SOUS LA CARTE ██
-   * ==================================================================
-   * `nom` (par défaut) — LE NOM DE L'ARTISTE, comme depuis toujours.
-   * `style` — LE STYLE de la photo montrée, et le propriétaire ne le
-   * demande QUE sur la page d'accueil au repos.
-   *
-   * ⚠️ UN RÉGLAGE EXPLICITE, JAMAIS UNE DEVINETTE D'ADRESSE — c'est le
-   * mot d'ordre de `fanion` (nº 365), juste au-dessus, et la même
-   * raison : ce composant sert quatre surfaces, il n'a pas à deviner
-   * laquelle. La valeur descend de celle qui SAIT (IndexTatoueurs), en
-   * passant par la grille. Les trois autres surfaces ne la passent pas
-   * et gardent donc le nom, sans avoir rien à écrire :
-   *  · les VITRINES rendent `GrilleTatoueurs` en direct ;
-   *  · « MA SÉLECTION » rend cette carte en direct ;
-   *  · les RÉSULTATS passent bien par IndexTatoueurs, mais celle-ci
-   *    n'envoie `style` que lorsque AUCUN critère n'est posé.
-   */
-  premiereLigne?: "nom" | "style";
   /** LA VUE PHOTOTHÈQUE (nº 140) : la photo seule — ni badge, ni
       portrait, ni nom, ni adresse. SEUL LE FANION des favoris reste,
       dans l'angle (et seulement là où il est encore posé — voir
@@ -303,25 +282,31 @@ function CarteTatoueurNue({
    * peindre ce qu'on lui rend. Aucune divergence possible avec le
    * titre de la fiche ou celui de la fenêtre du web.
    */
-  const partiesDuTitre =
-    premiereLigne === "style"
-      ? partiesDeGalerie(
-          styleDeLaCarte ? libelleStyle(styleDeLaCarte) : "",
-          //  LE RENDU DE LA PHOTO MONTRÉE, et rien d'autre : le repli
-          //  « premier style déclaré » n'a pas de photo, donc pas de
-          //  rendu — la fonction rend alors le style seul.
-          photoEnregistrable?.style ? photoEnregistrable.rendu : null
-        )
-      : null;
-  /*  LA CHAÎNE ENTIÈRE reste calculée : elle sert au repli sur le nom
-       et à la comparaison qui décide de l'`aria-label` (voir plus
-       bas). C'est la MÊME écriture, par la même source. */
-  const titreDeLaCarte = partiesDuTitre
-    ? titreDeGalerie(
-        libelleStyle(styleDeLaCarte),
-        photoEnregistrable?.style ? photoEnregistrable.rendu : null
-      )
-    : tatoueur.nom;
+  /**
+   * ██ §1 (nº 480) — LE STYLE S'ÉCRIT MAINTENANT SUR TOUTES LES CARTES ██
+   * ------------------------------------------------------------------
+   * IL NE DÉPEND PLUS DE LA SURFACE. La nº 395 réservait cette ligne à
+   * l'accueil au repos, parce qu'elle PRENAIT LA PLACE du nom : il
+   * fallait choisir. La carte a désormais TROIS lignes — le style au
+   * premier rang, le nom au deuxième —, et le choix n'existe plus : les
+   * deux sont là, partout. Le réglage `premiereLigne` est donc retiré
+   * de ce composant et de ceux qui le passaient (GrilleTatoueurs,
+   * IndexTatoueurs) : un réglage sans objet est un piège pour la passe
+   * suivante.
+   * ⚠️ RIEN D'AUTRE NE CHANGE DANS LE CALCUL : même source
+   * (`partiesDeGalerie`, lib/photos-tatoueur), mêmes replis, même
+   * rendu — celui de la photo montrée, et rien d'autre : le repli
+   * « premier style déclaré » n'a pas de photo, donc pas de rendu, et
+   * la fonction rend alors le style seul (jamais une puce orpheline).
+   * ⚠️ ET QUAND IL N'Y A RIEN À DIRE, LA LIGNE NE S'ÉCRIT PAS : sans
+   * style connu, `partiesDeGalerie` rend `null` et la première ligne
+   * est simplement absente (voir le rendu). On n'invente pas un
+   * contenu de remplacement, et l'on n'écrit pas une ligne vide.
+   */
+  const partiesDuTitre = partiesDeGalerie(
+    styleDeLaCarte ? libelleStyle(styleDeLaCarte) : "",
+    photoEnregistrable?.style ? photoEnregistrable.rendu : null
+  );
   /**
    * §2 (nº 372) — LA CLÉ DE CETTE CARTE, pour la mémoire des photos.
    * La même que celle de la mosaïque (`carrousel.cle`, sinon
@@ -787,10 +772,67 @@ function CarteTatoueurNue({
              aucun rembourrage bas, la carte s'arrête sur son texte. Ce
              qui suit est la gouttière de la grille — voir
              GrilleTatoueurs, où elle passe de 32 à 24 px. */
-        className={`pt-3 px-0.5 mobile:px-4 flex items-center gap-2.5 ${
+        className={`pt-3 px-0.5 mobile:px-4 ${
           uneColonne ? "mobile:pt-4" : "mobile:pt-2.5"
         }`}
       >
+        {/*  ██ §1 (nº 480) — LA LIGNE 1 : LE STYLE ET LE RENDU ██
+             ------------------------------------------------------
+             CE QUE LA CARTE MONTRAIT AVANT, en deux lignes : le NOM de
+             l'artiste (ou, sur le seul accueil au repos, « Style •
+             Rendu » À SA PLACE), puis « Type de fiche • Localité » en
+             gris. Le nom et le style ne pouvaient pas coexister.
+             CE QU'ELLE MONTRE MAINTENANT, en trois : le style et son
+             rendu ICI, le nom du portfolio dessous, la localité en
+             troisième. Plus de choix à faire, et la même chose PARTOUT
+             — accueil, résultats, page style + ville, Ma sélection
+             (favoris comme suivis) : ces surfaces rendent toutes CETTE
+             carte, l'unique écriture du texte sous une image.
+             SA PLACE AU WEB : au-dessus du rond de profil, et alignée
+             sur SON bord gauche — elle est le premier élément de la
+             colonne, le rond ouvre la rangée suivante. AU DOIGT, où le
+             rond ne se rend pas (deux colonnes), les trois lignes
+             s'empilent d'elles-mêmes.
+             L'AIR SOUS ELLE : 6 px (`mb-1.5`), contre 2 px entre les
+             lignes 2 et 3 (le `gap-0.5` de leur bloc, inchangé) — le
+             respir demandé est donc trois fois plus grand au-dessus du
+             nom qu'au-dessus de la localité.
+             SA GRAISSE ET SA TAILLE : demi-gras, blanc, et EXACTEMENT
+             le corps du nom (15 px, 14 au doigt côte à côte, 17 en
+             pleine largeur) — les deux premières lignes se répondent,
+             la troisième descend d'un cran.
+             ⚠️ LA NUANCE DE LA nº 407 EST LEVÉE ICI : le rendu y
+             passait en graisse normale pour se distinguer du style
+             DANS UNE LIGNE UNIQUE. Trois lignes portent désormais
+             cette hiérarchie ; la consigne de cette passe demande une
+             ligne d'une seule graisse, et c'est ce qui est écrit.
+             ⚠️ LA PUCE EST CELLE DU SITE (`SEPARATEUR_GALERIE`,
+             lib/photos-tatoueur) : aucune ponctuation inventée, et le
+             rendu absent ne laisse jamais de puce orpheline. */}
+        {partiesDuTitre && (
+          <p
+            className={`font-semibold leading-[19px] line-clamp-1 mb-1.5 text-[15px] text-sombre-texte ${
+              uneColonne
+                ? "mobile:text-[17px] mobile:leading-[21px]"
+                : "mobile:text-[14px]"
+            }`}
+          >
+            {partiesDuTitre.style}
+            {partiesDuTitre.rendu && (
+              <>
+                {SEPARATEUR_GALERIE}
+                {partiesDuTitre.rendu}
+              </>
+            )}
+          </p>
+        )}
+
+        {/*  §1 (nº 480) — LA RANGÉE DES LIGNES 2 ET 3 : le rond de
+             profil, puis le nom et la localité. C'est l'ancienne
+             rangée, déplacée d'un cran sous la ligne du style — ses
+             classes, son écart de 10 px et la hauteur du rond n'ont
+             pas bougé. */}
+        <div className="flex items-center gap-2.5">
         <span
           className={`shrink-0 h-10 w-10 flex items-center
                      justify-center overflow-hidden rounded-full
@@ -826,7 +868,12 @@ function CarteTatoueurNue({
             smartphone). C'est cette hauteur que le portrait reprend. */}
         <div className="min-w-0 flex-1 flex flex-col gap-0.5">
         <h3
-          className={`font-semibold text-[15px] text-sombre-texte leading-[19px] line-clamp-1 ${
+          /*  §1 (nº 480) — LA LIGNE 2 : LE NOM DU PORTFOLIO. Même
+              corps que la ligne du style juste au-dessus — les deux
+              premières lignes se répondent au pixel —, mais en GRAS
+              là où elle est demi-grasse : c'est le nom qui porte la
+              carte. Le blanc vient du jeton, comme avant. */
+          className={`font-bold leading-[19px] line-clamp-1 text-[15px] text-sombre-texte ${
             uneColonne
               ? "mobile:text-[17px] mobile:leading-[21px]"
               : "mobile:text-[14px]"
@@ -848,16 +895,13 @@ function CarteTatoueurNue({
             //  photothèque ci-dessus) : DefilementEnHaut remonte à
             //  l'adresse commise, après la photo d'adieu du navigateur.
             scroll={false}
-            /*  §2 (nº 395) — LE LIEN GARDE LE NOM POUR QUI NE VOIT PAS.
-                 Ce lien s'étire sur toute la carte : son texte EST son
-                 nom accessible. Quand la ligne montre le style, dix-huit
-                 cartes s'appelleraient « Réalisme » — or la destination,
-                 elle, reste la fiche de l'artiste. On lui rend donc le
-                 nom explicitement. Rien ne change à l'écran : c'est du
-                 texte de lecteur d'écran, pas du texte peint. */
-            aria-label={
-              titreDeLaCarte === tatoueur.nom ? undefined : tatoueur.nom
-            }
+            /*  §2 (nº 395), RÉGLÉ AUTREMENT À LA nº 480 — LE LIEN DIT
+                 LE NOM DE LUI-MÊME. Il fallait un `aria-label` tant que
+                 cette ligne pouvait porter le STYLE à la place du nom :
+                 dix-huit cartes se seraient appelées « Réalisme » pour
+                 qui ne voit pas. Le nom occupe désormais cette ligne à
+                 lui seul, et le texte du lien EST donc son nom
+                 accessible — l'étiquette de secours n'a plus d'objet. */
             className="outline-none after:absolute after:inset-0 after:content-['']
                        focus-visible:underline"
           >
@@ -877,19 +921,7 @@ function CarteTatoueurNue({
                  ⚠️ SANS PARTIES (les trois autres surfaces, ou un
                  artiste sans style), c'est le NOM qui s'écrit, tel
                  quel — aucun morceau, aucune puce. */}
-            {partiesDuTitre ? (
-              <>
-                <span>{partiesDuTitre.style}</span>
-                {partiesDuTitre.rendu && (
-                  <span className="font-normal">
-                    {SEPARATEUR_GALERIE}
-                    {partiesDuTitre.rendu}
-                  </span>
-                )}
-              </>
-            ) : (
-              titreDeLaCarte
-            )}
+            {tatoueur.nom}
           </Link>
         </h3>
         <p
@@ -940,6 +972,7 @@ function CarteTatoueurNue({
               .join(" • ")}
           </span>
         </p>
+        </div>
         </div>
       </div>
       )}
