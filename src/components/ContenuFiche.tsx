@@ -37,6 +37,9 @@ import {
   IconeDuLien,
   IconeEtoile,
 } from "@/components/IconeReseau";
+//  §2 (nº 490) — la flèche du compteur « +N ⌄ » : CELLE DES HORAIRES,
+//  au même rang 16 et pivotée de la même façon. Aucun dessin nouveau.
+import { IconeChevronBas } from "@/components/Icones";
 import { BoutonSuivre } from "@/components/BoutonSuivre";
 import {
   PanneauPortfolio,
@@ -51,6 +54,7 @@ import { capsulesPratiques } from "@/lib/pratique-fiche";
 import {
   BOITE_ICONE_LIGNE,
   ECRITURE_LIGNE_FICHE,
+  FORME_BOITE_ICONE,
   LIGNE_GRISE,
 } from "@/components/lignes-profil";
 import type { StyleGalerie } from "@/lib/photo-tatoueur";
@@ -155,6 +159,226 @@ export function avecConsigneDeLienInterne(adresse: string): string {
     une fois, employée par tous les liens internes. */
 export function adresseDeLienInterne(slug: string): string {
   return avecConsigneDeLienInterne(`/tatoueur/${slug}`);
+}
+
+/**
+ * ██ §1 ET §2 (nº 490) — UNE LIGNE DE CAPSULES : ALIGNÉE, ET REPLIÉE
+ * AU-DELÀ DE DEUX LIGNES ██
+ * ==================================================================
+ *
+ * §1 — L'ICÔNE ÉTAIT TROP HAUTE, ET VOICI POURQUOI. La boîte des
+ * icônes de la liste (`BOITE_ICONE_LIGNE`) mesure `1.375em`, c'est-à-
+ * dire EXACTEMENT la hauteur d'une ligne de TEXTE à `leading-snug` —
+ * 20,6 px pour les 15 px de la liste (la règle nº 389-§6). Or depuis
+ * la nº 488 le contenu de ces deux lignes n'est plus du texte : ce
+ * sont des CAPSULES, et une capsule est plus haute que sa ligne de
+ * texte — 18 px de hauteur de ligne plus deux fois 4 px de
+ * rembourrage, soit VINGT-SIX. L'icône, centrée dans ses 20,6 px,
+ * tombait donc environ 2,7 px au-dessus du centre de la première
+ * capsule. Le diamant avait exactement le même défaut que l'étoile :
+ * les deux lignes partagent cet habillage.
+ * LE REMÈDE EST LE PROCÉDÉ DES AUTRES LIGNES, PAS UN DÉCALAGE : la
+ * règle est « la boîte de l'icône épouse la PREMIÈRE LIGNE du
+ * contenu ». Pour du texte, c'est la hauteur de ligne ; ici, c'est la
+ * hauteur d'une capsule. La boîte prend donc cette hauteur-là, et le
+ * glyphe s'y centre par construction — volet replié comme déplié,
+ * quel que soit le nombre de lignes.
+ *
+ * §2 — LE PLI AU-DELÀ DE DEUX LIGNES. Une fiche à vingt styles
+ * empilait autant de rangées qu'il fallait ; on s'arrête maintenant à
+ * DEUX, le reste passant derrière une capsule compteur « +N ⌄ » qui
+ * déplie tout, et replie au second appui. Sa flèche est CELLE DES
+ * HORAIRES (`IconeChevronBas` au rang 16, pivotée de 180°) : le même
+ * geste porte le même dessin.
+ *
+ * COMMENT « DEUX LIGNES » EST DÉTERMINÉ — et c'est une MESURE, pas un
+ * nombre de capsules : combien en tiennent dépend de la largeur de la
+ * colonne et de la longueur des mots, qui changent d'une fiche, d'un
+ * écran et d'une langue à l'autre.
+ *  1. LA COUPE EST D'ABORD FAITE PAR LE CSS, donc DÈS LE RENDU DU
+ *     SERVEUR : le conteneur est borné à la hauteur de deux lignes de
+ *     capsules et rogne ce qui dépasse. C'est ce qui garantit qu'AUCUN
+ *     état faux n'est peint (règles 137/203) : le premier affichage
+ *     montre déjà exactement deux lignes, avant toute mesure et même
+ *     si le JavaScript n'arrive jamais.
+ *  2. LA MESURE VIENT ENSUITE, dans le navigateur : on relève la
+ *     largeur réelle de chaque capsule — une seule fois, les libellés
+ *     ne changent jamais — puis on garnit les deux lignes par le
+ *     calcul, en réservant la place du compteur sur la seconde. Le
+ *     nombre de capsules affichées change alors, mais PAS LA HAUTEUR
+ *     du bloc : il faisait déjà deux lignes. Rien ne saute ; seul le
+ *     compteur apparaît, à la place des capsules qu'il remplace.
+ *  3. LE REDIMENSIONNEMENT EST SUIVI par un `ResizeObserver` sur le
+ *     conteneur : élargir la fenêtre fait rentrer plus de capsules et
+ *     le compte se refait. Les largeurs mémorisées restent valables —
+ *     c'est la place disponible qui change, pas les mots.
+ * ⚠️ CE QUE CE PROCÉDÉ NE SAIT PAS FAIRE, ET IL FAUT LE DIRE : la
+ * largeur du compteur n'est PAS mesurée, elle est RÉSERVÉE au jugé
+ * (72 px). La mesurer serait circulaire — sa largeur dépend du nombre
+ * qu'il affiche, ce nombre dépend de la coupe, et la coupe dépend de
+ * sa largeur. La réserve est donc prise LARGE : 72 px couvrent
+ * « +999 », le pire cas imaginable. Le sens de l'erreur est choisi
+ * exprès — on réserve un peu TROP plutôt que trop peu, si bien
+ * qu'AUCUNE capsule ne peut être poussée hors des deux lignes par un
+ * compteur trop gros. Le prix, c'est qu'à « +3 » la seconde ligne
+ * peut porter UNE capsule de moins qu'elle n'aurait pu : quelques
+ * pixels de blanc en fin de ligne, jamais un débordement.
+ *
+ * ⚠️ CHAQUE LIGNE EST TRAITÉE SÉPARÉMENT : les techniques et les
+ * styles ont chacune leur mesure et leur compteur, et n'en ont un que
+ * si elles débordent. Sans débordement, aucun compteur n'apparaît.
+ * ⚠️ LE COMPTEUR EST LE SEUL ÉLÉMENT CLIQUABLE : les capsules de
+ * valeur restent inertes (acquis nº 488).
+ */
+/** La hauteur d'une capsule : 18 px de ligne + 2 × 4 px de
+    rembourrage. C'est elle qui donne la hauteur de la boîte d'icône
+    ET la borne des deux lignes. */
+const HAUTEUR_CAPSULE = 26;
+/** L'écart entre deux capsules (`gap-1.5`). */
+const ECART_CAPSULES = 6;
+/** La place réservée au compteur en fin de deuxième ligne. Prise
+    LARGE à dessein (voir la note, ⚠️ « ce que ce procédé ne sait pas
+    faire ») : la capsule ne porte pas cette largeur, elle épouse son
+    texte comme les autres. */
+const LARGEUR_COMPTEUR = 72;
+
+/** Combien de capsules tiennent en deux lignes, la place du compteur
+    réservée ou non. Un garnissage simple, de gauche à droite. */
+function capsulesQuiTiennent(
+  largeurs: readonly number[],
+  dispo: number,
+  reserve: number
+): number {
+  let ligne = 1;
+  let reste = dispo;
+  let placees = 0;
+  for (const largeur of largeurs) {
+    const ecart = reste === dispo ? 0 : ECART_CAPSULES;
+    const aGarder = ligne === 2 ? reserve : 0;
+    if (largeur + ecart + aGarder <= reste) {
+      reste -= largeur + ecart;
+      placees += 1;
+      continue;
+    }
+    if (ligne === 2) break;
+    ligne = 2;
+    reste = dispo;
+    if (largeur + reserve > reste) break;
+    reste -= largeur;
+    placees += 1;
+  }
+  return placees;
+}
+
+function LigneDeCapsules({
+  marqueur,
+  icone,
+  valeurs,
+  libelle,
+  fond,
+}: {
+  marqueur: string;
+  icone: React.ReactNode;
+  valeurs: readonly string[];
+  libelle: (slug: string) => string;
+  fond: string;
+}) {
+  const [montrees, setMontrees] = useState(valeurs.length);
+  const [deplie, setDeplie] = useState(false);
+  const zone = useRef<HTMLSpanElement>(null);
+  const largeurs = useRef<number[]>([]);
+
+  useEffect(() => {
+    const boite = zone.current;
+    if (!boite || valeurs.length === 0) return;
+    const mesurer = () => {
+      if (largeurs.current.length !== valeurs.length) {
+        const enfants = Array.from(boite.children) as HTMLElement[];
+        if (enfants.length < valeurs.length) return;
+        largeurs.current = enfants
+          .slice(0, valeurs.length)
+          .map((enfant) => enfant.getBoundingClientRect().width);
+      }
+      const dispo = boite.clientWidth;
+      if (dispo <= 0) return;
+      const sansCompteur = capsulesQuiTiennent(largeurs.current, dispo, 0);
+      setMontrees(
+        sansCompteur >= valeurs.length
+          ? valeurs.length
+          : capsulesQuiTiennent(
+              largeurs.current,
+              dispo,
+              LARGEUR_COMPTEUR + ECART_CAPSULES
+            )
+      );
+    };
+    mesurer();
+    const observateur = new ResizeObserver(mesurer);
+    observateur.observe(boite);
+    return () => observateur.disconnect();
+  }, [valeurs.length]);
+
+  if (valeurs.length === 0) return null;
+  const restant = valeurs.length - montrees;
+  const visibles = deplie ? valeurs : valeurs.slice(0, montrees);
+  return (
+    <p
+      {...{ [marqueur]: "" }}
+      className={`flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE}`}
+    >
+      {/*  §1 (nº 490) — LA BOÎTE ÉPOUSE LA HAUTEUR D'UNE CAPSULE, pas
+           celle d'une ligne de texte : c'est ce qui recale le glyphe
+           sur la première capsule (voir la note, plus haut). */}
+      <span className={FORME_BOITE_ICONE} style={{ height: HAUTEUR_CAPSULE }}>
+        {icone}
+      </span>
+      <span
+        ref={zone}
+        className={`min-w-0 flex flex-1 flex-wrap gap-1.5 ${
+          deplie ? "" : "overflow-hidden"
+        }`}
+        style={
+          deplie
+            ? undefined
+            : { maxHeight: HAUTEUR_CAPSULE * 2 + ECART_CAPSULES }
+        }
+      >
+        {visibles.map((slug) => (
+          <span
+            key={slug}
+            className={`inline-flex items-center whitespace-nowrap rounded-lg px-2.5 py-1 text-[13.5px] leading-[18px] ${fond}`}
+          >
+            {libelle(slug)}
+          </span>
+        ))}
+        {restant > 0 && (
+          /*  §2 (nº 490) — LA CAPSULE COMPTEUR : même rayon, même
+              hauteur, même écriture que les autres, sur un fond PLUS
+              DISCRET (`bg-sombre-carte`, un cran sous celui des
+              techniques) — elle ouvre une action, elle ne doit pas
+              peser plus lourd que les valeurs elles-mêmes. Aucun
+              contour, aucun rose. */
+          <button
+            type="button"
+            onClick={() => setDeplie((etait) => !etait)}
+            aria-expanded={deplie}
+            className="inline-flex cursor-pointer items-center gap-1 whitespace-nowrap
+                       rounded-lg bg-sombre-carte px-2.5 py-1 text-[13.5px] leading-[18px]"
+          >
+            +{restant}
+            <span
+              aria-hidden="true"
+              className={`shrink-0 transition-transform duration-200 ${
+                deplie ? "rotate-180" : ""
+              }`}
+            >
+              <IconeChevronBas taille={16} />
+            </span>
+          </button>
+        )}
+      </span>
+    </p>
+  );
 }
 
 export function ContenuFiche({
@@ -1233,53 +1457,35 @@ export function ContenuFiche({
    * pas d'étoile — le piège de la nº 386.
    * ⚠️ RAYON `rounded-lg` (8 px, nº 449), et retour à la ligne propre
    * par `flex-wrap` : au doigt comme au web, sans variante.
+   *
+   * ⚠️ DEPUIS LA nº 490, LE DESSIN N'EST PLUS ÉCRIT ICI : il vit dans
+   * `LigneDeCapsules`, en tête de ce fichier, parce qu'il lui faut un
+   * état (le pli) et une mesure — deux choses qu'une fonction locale
+   * appelée au fil du rendu ne peut pas tenir. Ce qui est décrit
+   * ci-dessus n'a pas changé pour autant : mêmes fonds, même écriture,
+   * même rayon, mêmes deux lignes conditionnées séparément. S'y
+   * ajoutent la boîte d'icône à la hauteur d'une capsule (§1) et le
+   * pli au-delà de deux lignes (§2).
    */
-  const CAPSULE_LIGNE =
-    "inline-flex items-center rounded-lg px-2.5 py-1 text-[13.5px] leading-[18px]";
-  const capsuleDe = (cle: string, texte: string, fond: string) => (
-    <span key={cle} className={`${CAPSULE_LIGNE} ${fond}`}>
-      {texte}
-    </span>
+  const aDesPratiques = capsulesPratique.length > 0;
+  const aDesStyles = tatoueur.styles.length > 0;
+  const ligneDesPratiques = (
+    <LigneDeCapsules
+      marqueur="data-pratique-fiche"
+      icone={<IconeDiamant taille={20} />}
+      valeurs={capsulesPratique}
+      libelle={libelleFiltre}
+      fond="bg-sombre-eleve"
+    />
   );
-  /** L'habillage commun des deux lignes : même écriture, même icône
-      en tête, mêmes capsules qui se replient. Elles ne peuvent pas
-      diverger — il n'y a qu'un dessin pour les deux. */
-  const ligneDeCapsules = (
-    cle: string,
-    marqueur: string,
-    icone: React.ReactNode,
-    valeurs: readonly string[],
-    libelle: (slug: string) => string,
-    fond: string
-  ) =>
-    valeurs.length > 0 && (
-      <p
-        key={cle}
-        {...{ [marqueur]: "" }}
-        className={`flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE}`}
-      >
-        <span className={BOITE_ICONE_LIGNE}>{icone}</span>
-        <span className="min-w-0 flex flex-wrap gap-1.5">
-          {valeurs.map((slug) => capsuleDe(slug, libelle(slug), fond))}
-        </span>
-      </p>
-    );
-
-  const ligneDesPratiques = ligneDeCapsules(
-    "pratique",
-    "data-pratique-fiche",
-    <IconeDiamant taille={20} />,
-    capsulesPratique,
-    libelleFiltre,
-    "bg-sombre-eleve"
-  );
-  const ligneDesStyles = ligneDeCapsules(
-    "styles",
-    "data-styles-fiche",
-    <IconeEtoile taille={20} />,
-    tatoueur.styles,
-    libelleStyle,
-    "bg-sombre-eleve-clair"
+  const ligneDesStyles = (
+    <LigneDeCapsules
+      marqueur="data-styles-fiche"
+      icone={<IconeEtoile taille={20} />}
+      valeurs={tatoueur.styles}
+      libelle={libelleStyle}
+      fond="bg-sombre-eleve-clair"
+    />
   );
 
   /*  §6 (nº 415) — LA LISTE DES LIEUX A-T-ELLE QUELQUE CHOSE À DIRE ?
@@ -1789,10 +1995,19 @@ export function ContenuFiche({
                tatoueur sans site n'a pas de trou entre Booking et ses
                styles, et un tatoueur sans style n'a pas d'icône
                orpheline. */}
+          {/*  §2 (nº 490) — LA GARDE INTERROGE LES LISTES, PLUS LES
+               ÉLÉMENTS. Tant que les deux lignes étaient fabriquées par
+               une fonction qui rendait `false` sur une liste vide, les
+               nommer suffisait. `LigneDeCapsules` est un COMPOSANT :
+               l'élément JSX existe toujours, même quand il ne rendra
+               rien — il serait donc toujours « vrai » et ouvrirait ce
+               conteneur pour rien (une fiche sans lien, sans technique
+               et sans style aurait gagné 40 px de vide). On teste les
+               longueurs, qui sont la vérité. */}
           {(premiereLigne.length > 0 ||
             ligneDuSite.length > 0 ||
-            ligneDesPratiques ||
-            ligneDesStyles) && (
+            aDesPratiques ||
+            aDesStyles) && (
             <div
               /*  §5 (nº 389) — L'ÉCART PARTAGÉ MONTE D'UN CRAN :
                    `gap-y-4` (16 px) devient `gap-y-5` (20 px). C'est le

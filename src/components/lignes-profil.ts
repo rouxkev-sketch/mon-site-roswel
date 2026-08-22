@@ -59,9 +59,28 @@ export const LIGNE_GRISE = "text-sombre-texte-doux";
  * sur la première ligne par construction. La largeur ne bouge pas —
  * la colonne d'icônes garde ses 22 px, donc l'alignement du texte de
  * toutes les lignes est inchangé au pixel.
+ *
+ * ██ §1 (nº 490) — LA HAUTEUR SE DÉTACHE DE LA FORME ██
+ * ------------------------------------------------------------------
+ * LE DÉFAUT : depuis la nº 488, deux lignes de la liste ne portent
+ * plus du texte mais des CAPSULES, plus hautes que leur ligne de
+ * texte (26 px contre 20,6). L'icône, centrée dans une boîte taillée
+ * pour du texte, tombait ~2,7 px trop haut — l'étoile des styles et
+ * le diamant des techniques, tous les deux.
+ * LE REMÈDE EST LA RÈGLE DE LA nº 389, PAS UNE EXCEPTION : « la boîte
+ * épouse la PREMIÈRE LIGNE du contenu ». Pour du texte, c'est la
+ * hauteur de ligne ; pour des capsules, la hauteur d'une capsule. La
+ * FORME (largeur, centrage, non-rétrécissement) est donc dite ici une
+ * seule fois, et la hauteur s'y ajoute — `1.375em` pour les lignes de
+ * texte, celle d'une capsule pour les deux lignes de `ContenuFiche`.
+ * ⚠️ `BOITE_ICONE_LIGNE` NE CHANGE PAS D'UN CARACTÈRE : c'est la même
+ * chaîne qu'avant, écrite en deux morceaux. Aucune ligne existante
+ * n'est touchée.
  */
-export const BOITE_ICONE_LIGNE =
-  "flex h-[1.375em] w-[22px] shrink-0 items-center justify-center";
+export const FORME_BOITE_ICONE =
+  "flex w-[22px] shrink-0 items-center justify-center";
+
+export const BOITE_ICONE_LIGNE = `${FORME_BOITE_ICONE} h-[1.375em]`;
 
 /**
  * §5 (nº 388) — CE QUI SORT DU SITE EST BLEU, ET S'ÉCLAIRCIT.
