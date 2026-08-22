@@ -1568,17 +1568,33 @@ export function ContenuFiche({
                       * nº 380/381) ne bouge pas : l'œil garde 12 px
                       * entre le verre et le va-et-vient, contre 28
                       * avant.
-                      * ⚠️ HORS APERÇU : la racine de « Ma fiche » n'a
-                      * pas ce `pt-4` — la marge négative y déborderait
-                      * sur le bandeau de l'espace. ⚠️ LE WEB N'A JAMAIS
-                      * EU CE TRAJET : sa rangée colle à `lg:top-0` de la
-                      * colonne dont elle est le premier élément —
-                      * position naturelle 0, collage 0.
+                      * ⚠️ LE WEB N'A JAMAIS EU CE TRAJET : sa rangée
+                      * colle à `lg:top-0` de la colonne dont elle est
+                      * le premier élément — position naturelle 0,
+                      * collage 0.
+                      *
+                      * ██ §3 (nº 473) — L'APERÇU L'APPLIQUE AUSSI ██
+                      * LA nº 458 EN AVAIT EXCEPTÉ L'APERÇU, sur une
+                      * raison qui n'est pas (ou plus) exacte : « la
+                      * racine de Ma fiche n'a pas ce `pt-4` ». Elle
+                      * l'a — `FormulaireFiche` enveloppe l'aperçu dans
+                      * `px-3 sm:px-6 pt-4 lg:pt-5 pb-0` (l. 2701).
+                      * CE QUE CELA DONNAIT, mesuré dans le code :
+                      *  · fiche publique — 16 (pt-4 de la racine) − 16
+                      *    (cette remontée) + 12 (le `pt-3` interne)
+                      *    = 12 px entre la barre et les onglets ;
+                      *  · aperçu — 16 + 12 = 28 px, SANS la remontée.
+                      * Seize pixels de trop : l'espacement que le
+                      * propriétaire voit au-dessus du va-et-vient.
+                      * La remontée s'applique donc aux DEUX vues, avec
+                      * la même valeur — elle annule le `pt-4` qui la
+                      * précède, dans un cas comme dans l'autre, et rien
+                      * ne peut déborder sur le bandeau. L'aperçu tombe
+                      * à 12 px : la fiche publique au pixel, et elle,
+                      * ne bouge pas d'un cheveu.
                       */
                      collantSousLaBarre
-                       ? `mobile:sticky mobile:top-[var(--rw-rangee-collante)] mobile:z-[3] mobile:pt-3 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-3 lg:px-3${
-                           apercu ? "" : " mobile:-mt-4"
-                         }`
+                       ? "mobile:sticky mobile:top-[var(--rw-rangee-collante)] mobile:z-[3] mobile:pt-3 mobile:-mt-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-3 lg:px-3"
                        : "-mx-5 px-5 sm:-mx-6 sm:px-6"
                    }`}
       >
@@ -1589,59 +1605,68 @@ export function ContenuFiche({
           aria-hidden="true"
           className="pointer-events-none absolute inset-x-0 bottom-full hidden h-8 bg-[var(--fond-colonne)] lg:block"
         />
-        {/*  ██ §4 (nº 472) — EN APERÇU, LE VA-ET-VIENT PREND TOUTE LA
-             LARGEUR ██
-             CE QUI LE TASSAIT À GAUCHE, nommé : cette rangée est
-             `justify-between`, et le sélecteur y est un élément de
-             flex ordinaire — il prend donc la largeur de SON CONTENU.
-             Sur la fiche publique cela ne se voit pas : le partage et
-             « Suivre » occupent la droite (§2 nº 458). Dans « Mon
-             compte → Mon portfolio » (l'aperçu), ces deux-là n'existent
-             pas — le va-et-vient restait donc collé à gauche avec un
-             vide à sa droite, là où « Ma sélection » l'étale d'un bord
-             à l'autre.
-             LE REMÈDE : en aperçu SEULEMENT, il devient l'élément qui
-             prend la place libre (`flex-1`), et ses deux côtés se
-             partagent la largeur à parts égales — c'est la grille
-             `repeat(2, 1fr)` d'`OngletsLigne`, le MÊME composant que
-             « Ma sélection », qui s'en charge sans une ligne de plus.
-             `min-w-0` : la règle du site pour un élément de flex qui
-             peut rétrécir. Hors aperçu, l'enveloppe est neutre (un div
-             de flex à largeur de contenu, exactement l'état d'avant) :
-             la fiche publique ne bouge pas d'un pixel, au doigt comme
-             au web. */}
-        <div className={apercu ? "min-w-0 flex-1" : ""}>
-          <SelecteurOngletAffiche valeur={onglet} surChoix={choisirOnglet} />
-        </div>
+        {/*  §4 (nº 472) — ANNULÉ PAR LA nº 473 : le `flex-1` qui
+             étirait le va-et-vient en aperçu est retiré. Il reprend sa
+             largeur naturelle, à gauche — celle de la fiche publique,
+             qui est désormais LA référence des deux vues. */}
+        <SelecteurOngletAffiche valeur={onglet} surChoix={choisirOnglet} />
         {/*  §2 (nº 458) — LE PARTAGE DU PROFIL, À GAUCHE DE « SUIVRE ».
              La rangée est `justify-between` : les deux vivent groupés à
              droite dans une petite rangée (l'écart de 12 px de la
              rangée). Même bouton que partout (`BoutonPartageFiche`,
              l'action existante), habillage « icone » — la flèche nue,
              cible de 40 px —, et le lien partagé est LE PROFIL
-             (`/tatoueur/<slug>`). L'aperçu n'a ni partage ni suivi,
-             comme toujours. */}
-        {!apercu && (
-          <div className="flex shrink-0 items-center gap-3">
-            <BoutonPartageFiche
-              nomArtisan={tatoueur.nom}
-              cheminFiche={`/tatoueur/${tatoueur.slug}`}
-              variante="icone"
-              avecFenetre
-              sombre
-              metier={
-                tatoueur.styles?.[0] ? libelleStyle(tatoueur.styles[0]) : undefined
-              }
-              commune={villeAffichee(tatoueur.ville_nom)}
-              marque={MARQUE_YOKOFOLIO.nom}
-            />
+             (`/tatoueur/<slug>`).
+             ██ §2 (nº 473) — ET L'APERÇU LES A AUSSI ██
+             La condition `!apercu` est levée : « Mon compte → Mon
+             portfolio » doit montrer CE QUE LE PUBLIC VOIT, à
+             l'identique — c'est tout l'objet d'un aperçu. Leur absence
+             était précisément ce qui laissait le va-et-vient seul à
+             gauche.
+             ⚠️ « SUIVRE » Y EST INERTE, ET C'EST DIT : on ne se suit
+             pas soi-même. Il est donc RENDU (mêmes mots, même boîte,
+             même place — l'apparence demandée) mais ne répond ni au
+             doigt ni au clavier (`pointer-events-none`, retiré de
+             l'ordre de tabulation et des lecteurs d'écran). Le bouton
+             lui-même n'est pas touché d'une ligne : la fiche publique
+             garde le sien, vivant. Si le propriétaire veut qu'il
+             FONCTIONNE en aperçu, c'est sa décision, pas la mienne.
+             Le PARTAGE, lui, reste vivant : il partage l'adresse
+             publique de son propre portfolio — la même action, au même
+             endroit. */}
+        <div className="flex shrink-0 items-center gap-3">
+          <BoutonPartageFiche
+            nomArtisan={tatoueur.nom}
+            cheminFiche={`/tatoueur/${tatoueur.slug}`}
+            variante="icone"
+            avecFenetre
+            sombre
+            metier={
+              tatoueur.styles?.[0] ? libelleStyle(tatoueur.styles[0]) : undefined
+            }
+            commune={villeAffichee(tatoueur.ville_nom)}
+            marque={MARQUE_YOKOFOLIO.nom}
+          />
+          {apercu ? (
+            <span
+              aria-hidden="true"
+              className="pointer-events-none contents"
+              inert
+            >
+              <BoutonSuivre
+                tatoueurId={tatoueur.id}
+                nomTatoueur={tatoueur.nom}
+                suiviAuDepart={suiviAuDepart}
+              />
+            </span>
+          ) : (
             <BoutonSuivre
               tatoueurId={tatoueur.id}
               nomTatoueur={tatoueur.nom}
               suiviAuDepart={suiviAuDepart}
             />
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {onglet === "portfolio" && (

@@ -113,6 +113,7 @@ export function MenuDeVerre({
   refPanneau,
   largeur,
   alignement = "droite",
+  largeurAuContenu = false,
   className = "",
   children,
   ...reste
@@ -126,6 +127,18 @@ export function MenuDeVerre({
   largeur: number;
   /** Le bord du bouton sur lequel le menu s'aligne. */
   alignement?: "droite" | "gauche";
+  /**
+   * ██ §4-a (nº 473) — LA LARGEUR ÉPOUSE LE CONTENU ██
+   * `largeur` devient alors un PLAFOND, plus une consigne : le panneau
+   * prend la place que son contenu demande (`max-content`) sans jamais
+   * dépasser ni ce plafond ni l'écran. C'est ce qu'il faut au panneau
+   * des filtres, dont les badges sont bien plus étroits que les 420 px
+   * imposés — le vide tombait tout entier à droite, contre un
+   * rembourrage régulier à gauche.
+   * ⚠️ SANS CE DRAPEAU, RIEN NE CHANGE : les autres menus de verre
+   * (le compte, les langues) gardent leur largeur fixe au pixel.
+   */
+  largeurAuContenu?: boolean;
   className?: string;
   children: React.ReactNode;
 } & React.HTMLAttributes<HTMLDivElement>) {
@@ -152,8 +165,22 @@ export function MenuDeVerre({
       className={`z-[75] rounded-2xl overflow-y-auto overscroll-contain ${className}`}
       style={{
         position: "fixed",
-        left: gauche,
-        width: large,
+        /*  §4-a (nº 473) — DEUX POSES, UNE SEULE GÉOMÉTRIE. À largeur
+            fixe (le cas de toujours) : on calcule `left` et l'on pose
+            la largeur. À largeur AU CONTENU : on ancre le BORD qui
+            sert d'alignement — le droit du bouton pour un menu aligné
+            à droite — et c'est le navigateur qui déduit l'autre, une
+            fois le contenu mesuré ; `maxWidth` garde le plafond ET la
+            marge d'écran. Le calage vertical, la hauteur maximale et
+            la règle du verre ne changent pas. */
+        ...(largeurAuContenu
+          ? alignement === "droite"
+            ? { right: Math.max(marge, window.innerWidth - bordDroit) }
+            : { left: Math.max(marge, cadre?.gauche ?? marge) }
+          : { left: gauche, width: large }),
+        ...(largeurAuContenu
+          ? { width: "max-content" as const, maxWidth: large }
+          : {}),
         ...(cadre
           ? ouvreVersLeHaut
             ? { bottom: cadre.bas }

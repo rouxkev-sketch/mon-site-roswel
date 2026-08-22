@@ -33,11 +33,18 @@ import { CARTES_PAR_PAGE } from "@/config/tatouage";
  * CE QUE CELA COÛTE, ET IL FAUT LE DIRE : à la TOUTE PREMIÈRE visite
  * d'un navigateur, le cookie n'existe pas encore — la première page
  * est alors servie au repli de vingt-quatre cartes. Vingt-quatre se
- * range exactement en 2, 3, 4 et 6 colonnes ; SEULE la bande à cinq
- * colonnes (1536 à 1663 px) voit une dernière rangée incomplète, et
- * seulement ce premier écran-là : le cookie est posé dans le même
- * souffle, et tout ce qui suit — le premier « Voir plus » compris —
- * est déjà au bon compte.
+ * range exactement en 2, 3 et 4 colonnes ; SEULE la bande à cinq
+ * colonnes (1600 px et au-delà, §1 nº 473) voit une dernière rangée
+ * incomplète — quatre cartes au lieu de cinq —, et seulement ce
+ * premier écran-là : le cookie est posé dans le même souffle, et tout
+ * ce qui suit — le premier « Voir plus » compris — est déjà au bon
+ * compte (trente cartes à cinq colonnes).
+ * ⚠️ AUCUN NOMBRE NE RÈGLE CE CAS SANS EN CRÉER UN AUTRE : le plus
+ * petit multiple commun de 2, 3, 4 et 5 vaut SOIXANTE — une première
+ * page deux fois et demie plus lourde pour tout le monde, sur tous
+ * les écrans, afin de compléter une seule rangée d'un seul premier
+ * affichage. Le propriétaire tranchera s'il veut ce prix ; en
+ * attendant, le repli reste à vingt-quatre.
  *
  * ⚠️ LA TAILLE EST DÉCIDÉE UNE SEULE FOIS PAR CHARGEMENT. Le cookie
  * n'est écrit QUE par le script d'avant peinture, jamais au
@@ -77,7 +84,11 @@ export const CARTES_PAR_COLONNE = 6;
 //  photo tombait à 253 px sur grand écran contre 357 px sur un
 //  portable). Les deux lignes ne peuvent pas diverger sans que la
 //  dernière rangée redevienne incomplète.
+//  §1 (nº 473) — le palier des CINQ colonnes s'ajoute, à 1600 px. Du
+//  plus large au plus étroit, comme toujours : la première requête qui
+//  répond « oui » donne le nombre.
 export const PALIERS_COLONNES = [
+  { requete: "(min-width: 100rem)", colonnes: 5 }, // grille5 (1600 px)
   { requete: "(min-width: 90rem)", colonnes: 4 }, // grille (1440 px)
   { requete: "(min-width: 48rem)", colonnes: 3 }, // md
 ] as const;

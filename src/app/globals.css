@@ -30,8 +30,16 @@
       feuille de style, donc la règle nommée repassait après eux ;
    2. il est exprimé en REM, comme les paliers d'origine (40rem…96rem).
       Mélanger les unités empêche Tailwind de les ranger par largeur. */
+/*  §1 (nº 473) — ET UN SECOND PALIER, À 1600 px (100 rem) : la
+    CINQUIÈME colonne. La nº 472 avait plafonné à quatre ; le
+    propriétaire en veut cinq sur grand écran, mais SANS revenir aux
+    photos minuscules — d'où 1600 px et non 1536 : à 1600, cinq photos
+    font encore 293 px, et la barre des 1760 px les porte à 326.
+    Six colonnes ne reviennent pas. Mêmes précautions que ci-dessus
+    pour celui-ci : NOMMÉ et en REM. */
 @theme {
   --breakpoint-grille: 90rem;
+  --breakpoint-grille5: 100rem;
 }
 
 /* L'AFFICHAGE MOBILE EST RÉSERVÉ AUX VRAIS MOBILES (yokofolio).

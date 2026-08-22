@@ -773,20 +773,22 @@ export function MoteurTatouage({
         surPanneau
       )}
       {/*  §1 (nº 448) — L'AIR AU-DESSUS DE « RENDU », AU DOIGT : 8 px
-           de rembourrage haut (`mobile:pt-2`) qui S'AJOUTENT aux 16 px
-           d'espacement entre groupes portés par le conteneur — un
-           padding et non une marge, précisément pour ne jamais entrer
-           en conflit de cascade avec le `mt-4` du sélecteur d'enfants.
-           Le bloc étant partagé, l'air vaut dans les DEUX onglets de
-           la page mobile ; la variante `mobile:` (le vrai appareil)
-           laisse le panneau de l'ordinateur au pixel près. */}
+           de rembourrage haut qui S'AJOUTENT aux 16 px d'espacement
+           entre groupes portés par le conteneur — un padding et non
+           une marge, précisément pour ne jamais entrer en conflit de
+           cascade avec le `mt-4` du sélecteur d'enfants.
+           §4-c (nº 473) — ET LE WEB L'A AUSSI : la variante `mobile:`
+           tombe, la classe vaut désormais partout. Le DOIGT NE CHANGE
+           PAS D'UN PIXEL (c'étaient déjà ses 8 px, et un padding ne se
+           cumule pas avec lui-même) ; le panneau de l'ordinateur passe
+           de 16 à 24 px au-dessus de « RENDU ». */}
       {groupeDeBadges(
         parGroupe.get("rendu")!,
         "Rendu",
         valeurs,
         poser,
         surPanneau,
-        "mobile:pt-2"
+        "pt-2"
       )}
     </div>
   );
@@ -1309,16 +1311,43 @@ export function MoteurTatouage({
             //  réels en haut pour 20 en bas, avec `p-5` partout. Le
             //  rembourrage haut descend donc à 15 px : l'encre du titre
             //  est à 20 px du bord, comme la capsule du bas.
+            /*  ██ §4 (nº 473) — LES TROIS RÉGLAGES DU PANNEAU WEB ██
+                 (a) LA MARGE DROITE ÉNORME, cause nommée : `largeur`
+                 était une CONSIGNE — 420 px posés en dur sur le
+                 panneau (`width`, MenuDeVerre) — alors que les badges
+                 (« Tebori », « Machine », « Couleur »…) en occupent
+                 bien moins. Le panneau étant aligné à DROITE, tout le
+                 vide se retrouvait entre le dernier badge et le bord
+                 droit, contre un `px-5` régulier à gauche. Avec
+                 `largeurAuContenu`, les 420 deviennent un PLAFOND : la
+                 boîte épouse les badges, et les deux marges valent
+                 exactement le rembourrage — le même à gauche et à
+                 droite, par construction.
+                 (b) L'AIR INTÉRIEUR MONTE D'UN CRAN : 20 px → 24 px
+                 (`p-5` → `p-6`, le cran des fenêtres de la charte —
+                 en-têtes de Notifications et des langues). Le haut
+                 garde sa compensation de la nº 163-§3A : le titre
+                 « TECHNIQUE » est du texte nu dont la boîte de ligne
+                 pose ~5 px d'air invisible au-dessus de l'encre —
+                 24 − 5 = 19 px déclarés pour 24 px vus, comme les
+                 trois autres côtés.
+                 ⚠️ LE DOIGT NE CHANGE PAS : sa feuille est montée
+                 ailleurs (la page mobile), avec ses propres marges et
+                 son décollement des bords (nº 460).
+                 ⚠️ LE CALAGE SUR L'ANCRE TIENT (nº 462) : le bord
+                 d'alignement reste le bord DROIT du bouton — c'est lui
+                 qui est ancré, la largeur se déduit ensuite. */
             <MenuDeVerre
               ouvert={filtresOuverts}
               ancre={boutonFiltres}
               refPanneau={plaqueFiltres}
               largeur={420}
+              largeurAuContenu
               alignement="droite"
               data-panneau-filtres=""
               data-source-fichier="src/components/MoteurTatouage.tsx"
               data-source-composant="MoteurTatouage · panneau web des filtres"
-              className="px-5 pb-5 pt-[15px]"
+              className="px-6 pb-6 pt-[19px]"
             >
               {/*  nº 364 — LE PANNEAU LIT SON BROUILLON, et n'annonce
                    rien : `poserDansLePanneau` retient, `fermerLesFiltres`

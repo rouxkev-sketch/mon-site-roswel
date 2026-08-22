@@ -124,8 +124,12 @@ const CARTES_PRIORITAIRES = 4;
  * Les deux doivent bouger ENSEMBLE, sans quoi la dernière rangée
  * redevient incomplète (nº 226-§1).
  */
+/*  §1 (nº 473) — LA CINQUIÈME COLONNE REVIENT, À 1600 px ET PAS
+    AVANT (`grille5`, 100 rem — globals.css). Le plafond de quatre de
+    la nº 472 est levé d'un cran, jamais de deux : six colonnes ne
+    reviennent pas. */
 export const COLONNES_MOSAIQUE =
-  "grid-cols-2 md:grid-cols-3 grille:grid-cols-4";
+  "grid-cols-2 md:grid-cols-3 grille:grid-cols-4 grille5:grid-cols-5";
 /** Le socle : gouttières web, marges de bord au doigt. */
 export const SOCLE_GRILLE_CARTES = "grid gap-4 sm:gap-5 mobile:-mx-4";
 /** Les gouttières du smartphone en deux colonnes — le rythme
