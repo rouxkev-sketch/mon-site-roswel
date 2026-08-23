@@ -761,7 +761,29 @@ export function FicheTatoueur({
         par-dessus — web comme mobile — et le retour rend cette page,
         à sa position de défilement. Inactive en aperçu (« Ma fiche ») :
         les liens y restent des liens. */
-    <PileFiches actif={!apercu}>
+    /*  ██ §5 (nº 505) — LA PILE S'ACTIVE AUSSI DANS L'APERÇU ██
+        LE RELEVÉ : depuis « Mon compte → Mon profil » sur le web,
+        toucher un membre d'équipe ouvrait une PAGE PLEINE au lieu
+        d'une fenêtre superposée.
+        LA CAUSE : cette ligne portait `actif={!apercu}`. Sans pile
+        active, `useOuvertureFiche` rend `null`, `useClicVersFiche`
+        rend `undefined`, et le lien redevient un lien ordinaire — la
+        page complète. C'était voulu : « on n'empile rien par-dessus un
+        formulaire ». Le propriétaire tranche autrement, et la nº 473
+        lui donne raison : l'aperçu doit se comporter comme la fiche
+        publique.
+        ⚠️ RIEN N'EST ÉCRIT DE NEUF : c'est le mécanisme existant, avec
+        son historique (une entrée poussée par ouverture, un cran rendu
+        par fermeture) et son gel compté (nº 469). La fenêtre se
+        superpose au formulaire, qui reste monté dessous ; la fermeture
+        rend l'adresse du formulaire et la pile se défait d'un cran.
+        ⚠️ LA GARDE DE SAISIE N'EST PAS CONCERNÉE : l'ouverture annule
+        le lien (`preventDefault`) et pousse l'adresse elle-même — il
+        n'y a aucune navigation à intercepter, donc aucune fenêtre
+        « Modifications non enregistrées » intempestive.
+        ⚠️ AU DOIGT, RIEN NE CHANGE : la pile ne s'ouvre qu'au-dessus de
+        1024 px (`laLargeurVeutUneFenetre`, nº 230-§3). */
+    <PileFiches actif>
     <Racine
       //  §3 (nº 290) — LA RACINE SE NOMME : c'est sur elle qu'est
       //  ÉCRITE la marge du bas de la photo (`lg:pb-5`, jumelle de

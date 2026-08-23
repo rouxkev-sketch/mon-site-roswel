@@ -287,6 +287,22 @@ const ECART_CAPSULES = 6;
     bon côté. */
 const LARGEUR_COMPTEUR = 72;
 
+/**
+ * ██ §1 (nº 505) — LE FOND DES CAPSULES MONTE D'UN CRAN ██
+ * ------------------------------------------------------------------
+ * Elles portaient celui des PLAQUES depuis la nº 504, et se
+ * confondaient donc avec les boutons et le reste de la page. Elles
+ * prennent le cran au-dessus : `eleveClair` (#323942).
+ * ⚠️ LES DEUX FAMILLES GARDENT LE MÊME FOND ENTRE ELLES (acquis
+ * nº 504) — d'où cette constante, écrite une fois et lue par les deux
+ * lignes : elles ne peuvent plus diverger. Ce qui les distingue reste
+ * l'ICÔNE en tête (diamant / étoile, nº 489).
+ * ⚠️ ET LE COMPTEUR RESTE, LUI, AU FOND DES PLAQUES (§3) : c'est ce
+ * décalage d'un cran qui le fait reculer derrière les valeurs qu'il
+ * compte, sans qu'on ait rien à lui ajouter.
+ */
+const FOND_CAPSULE = "bg-sombre-eleve-clair";
+
 /** `useLayoutEffect` mesure AVANT la peinture — c'est ce qui empêche
     de voir les capsules se retirer une à une. Il n'existe pas au
     rendu du serveur : on y retombe sur `useEffect`, qui n'y fait rien
@@ -462,25 +478,33 @@ function LigneDeCapsules({
           /*  §1 ET §3 (nº 491) — LA CAPSULE COMPTEUR : même rayon,
               même hauteur, même écriture que les autres. Aucun
               contour, aucun rose.
-              ██ §2 (nº 504) — ELLE DESCEND SOUS LES CAPSULES ██
+              ██ §3 (nº 505) — IL PREND LE FOND DES PLAQUES, ET IL
+              RECULE PAR CONSTRUCTION ██
               --------------------------------------------------------
-              POURQUOI MAINTENANT : le §1 de cette passe vient de mettre
-              les DEUX familles de capsules au même fond. Le compteur,
-              qui portait déjà celui des techniques, se serait confondu
-              avec toutes ses voisines — contraste 1,00, c'est-à-dire
-              rien du tout.
-              IL PASSE DONC AU CRAN EN DESSOUS, et le sens est juste :
-              sur un fond noir, ce qui est plus sombre RECULE. Le
-              compteur est un bouton, pas une information — il ne doit
-              pas peser plus lourd que les valeurs qu'il compte.
-              ⚠️ CE QUE ÇA VAUT, MESURÉ, ET IL FAUT LE DIRE : contre une
-              capsule voisine, 1,18 — mieux que le 1,00 qu'il aurait eu,
-              mais peu. Contre le fond de la page (et donc de la
-              fenêtre du web, qui porte la même couleur depuis les
-              nº 499-501), 1,16. LE COMPTEUR SE LIT DONC SURTOUT PAR SON
-              TEXTE — qui rend 7,01 sur ce fond-là — et par sa forme.
-              C'est le meilleur cran disponible sous celui des capsules :
-              le suivant serait la couleur de la page elle-même.
+              LA nº 504 L'AVAIT DESCENDU À `carte` pour qu'il se
+              distingue de capsules devenues identiques à lui. Ce
+              détour n'a plus lieu d'être : le §1 de cette passe fait
+              MONTER les capsules d'un cran. Le compteur peut donc
+              rester au fond des PLAQUES — le niveau du contenu — et se
+              retrouve NATURELLEMENT plus sombre qu'elles, sans qu'on
+              lui ajoute rien.
+              ET C'EST LE BON SENS : sur un fond noir, ce qui est plus
+              sombre recule. Un compteur est un bouton, pas une
+              information — il ne doit pas peser plus lourd que les
+              valeurs qu'il compte.
+              ⚠️ CE QUE ÇA VAUT, MESURÉ : contre une capsule voisine,
+              1,21 ; contre le fond de la page (et de la fenêtre du web,
+              même couleur depuis les nº 499-501), 1,37 — près de trois
+              fois le 1,16 que la nº 504 lui laissait. Il se détache
+              donc mieux de son support ET reste en retrait de ses
+              voisines : les deux à la fois, ce que le détour par
+              `carte` ne donnait pas.
+              ⚠️ ET IL RÉPOND ENFIN AU SURVOL, dans les DEUX états
+              (« +N ⌄ » comme « Réduire ⌃ ») : il monte au fond des
+              CAPSULES (1,21 de sa propre couleur), et l'appui le tient
+              au doigt, où il n'y a pas de survol. C'est le traitement
+              exact des plaques (nº 492), transposé : un cran vers le
+              haut, jamais deux, et une seule couleur de fond par état.
               LE LIBELLÉ DIT L'ÉTAT : « +N ⌄ » tant qu'il reste à
               déplier, « Réduire ⌃ » une fois tout montré. La forme et
               le fond ne changent pas d'un état à l'autre ; seuls le
@@ -492,7 +516,9 @@ function LigneDeCapsules({
             onClick={() => setDeplie((etait) => !etait)}
             aria-expanded={deplie}
             className="inline-flex cursor-pointer items-center gap-1 whitespace-nowrap
-                       rounded-lg bg-sombre-carte px-2.5 py-1 text-[13.5px] leading-[18px]"
+                       rounded-lg bg-sombre-eleve px-2.5 py-1 text-[13.5px] leading-[18px]
+                       transition-colors hover:bg-sombre-eleve-clair
+                       active:bg-sombre-eleve-clair"
           >
             {deplie ? "Réduire" : `+${restant}`}
             <span
@@ -1615,7 +1641,7 @@ export function ContenuFiche({
       icone={<IconeDiamant taille={20} />}
       valeurs={capsulesPratique}
       libelle={libelleFiltre}
-      fond="bg-sombre-eleve"
+      fond={FOND_CAPSULE}
     />
   );
   const ligneDesStyles = (
@@ -1633,7 +1659,7 @@ export function ContenuFiche({
           ligne — le diamant des techniques, l'étoile des styles
           (acquis nº 489). Une forme se lit ; un demi-cran de gris,
           non. */
-      fond="bg-sombre-eleve"
+      fond={FOND_CAPSULE}
     />
   );
 
@@ -1968,15 +1994,22 @@ export function ContenuFiche({
              l'identique — c'est tout l'objet d'un aperçu. Leur absence
              était précisément ce qui laissait le va-et-vient seul à
              gauche.
-             ⚠️ « SUIVRE » Y EST INERTE, ET C'EST DIT : on ne se suit
-             pas soi-même. Il est donc RENDU (mêmes mots, même boîte,
-             même place — l'apparence demandée) mais ne répond ni au
-             doigt ni au clavier (`pointer-events-none`, retiré de
-             l'ordre de tabulation et des lecteurs d'écran). Le bouton
-             lui-même n'est pas touché d'une ligne : la fiche publique
-             garde le sien, vivant. Si le propriétaire veut qu'il
-             FONCTIONNE en aperçu, c'est sa décision, pas la mienne.
-             Le PARTAGE, lui, reste vivant : il partage l'adresse
+             ██ §4 (nº 505) — ET « SUIVRE » Y REDEVIENT VIVANT ██
+             LE RELEVÉ : dans l'aperçu, le bouton ne répondait plus —
+             ni « Suivre », ni « Suivi », aucune bascule possible.
+             LA CAUSE ÉTAIT ÉCRITE ICI, ET VOULUE : la nº 473 l'avait
+             enveloppé d'un `pointer-events-none` + `inert`, au motif
+             qu'on ne se suit pas soi-même. La note d'alors disait :
+             « Si le propriétaire veut qu'il FONCTIONNE en aperçu,
+             c'est sa décision, pas la mienne. » IL TRANCHE : il doit
+             fonctionner dans les deux sens. L'enveloppe est retirée,
+             et l'aperçu rend EXACTEMENT le même bouton que la fiche
+             publique — un seul rendu, plus de branche.
+             ⚠️ L'ENREGISTREMENT SUIT TOUT SEUL : le bouton n'a jamais
+             été touché d'une ligne, ni ici ni dans son fichier. C'est
+             la même action, la même écriture en base, le même état de
+             départ (`suiviAuDepart`) que sur une fiche publique.
+             Le PARTAGE, lui, était déjà vivant : il partage l'adresse
              publique de son propre portfolio — la même action, au même
              endroit. */}
         <div className="flex shrink-0 items-center gap-3">
@@ -1992,25 +2025,11 @@ export function ContenuFiche({
             commune={villeAffichee(tatoueur.ville_nom)}
             marque={MARQUE_YOKOFOLIO.nom}
           />
-          {apercu ? (
-            <span
-              aria-hidden="true"
-              className="pointer-events-none contents"
-              inert
-            >
-              <BoutonSuivre
-                tatoueurId={tatoueur.id}
-                nomTatoueur={tatoueur.nom}
-                suiviAuDepart={suiviAuDepart}
-              />
-            </span>
-          ) : (
-            <BoutonSuivre
-              tatoueurId={tatoueur.id}
-              nomTatoueur={tatoueur.nom}
-              suiviAuDepart={suiviAuDepart}
-            />
-          )}
+          <BoutonSuivre
+            tatoueurId={tatoueur.id}
+            nomTatoueur={tatoueur.nom}
+            suiviAuDepart={suiviAuDepart}
+          />
         </div>
       </div>
 

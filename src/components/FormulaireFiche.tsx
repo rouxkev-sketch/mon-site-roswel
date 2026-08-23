@@ -2736,9 +2736,39 @@ export function FormulaireFiche() {
       //  smartphone, c'est la SEULE marge entre le texte et l'écran.
       //  ⚠️ ET PLUS RIEN NE L'ANNULE (passe nº 120) : les filets
       //  internes s'arrêtent désormais où s'arrête le texte.
+      /*  ██ §6 (nº 505) — LE GLISSEMENT LATÉRAL DE L'APERÇU AU DOIGT ██
+          ==============================================================
+          LE RELEVÉ : au doigt, poser le doigt sur le va-et-vient
+          « Profil | Portfolio » et glisser de côté déplaçait TOUTE
+          l'interface, à partir de là et vers le bas.
+          LA CAUSE, ET ELLE TIENT À QUATRE PIXELS : cet aperçu posait
+          `px-3` (12 px) là où la fiche PUBLIQUE pose `px-4` (16 px —
+          voir `FicheTatoueur`, la branche de droite du même genre de
+          ternaire). Or tout ce qui va BORD À BORD au doigt sort de sa
+          colonne par une marge négative de SEIZE pixels, calculée sur
+          la marge de la vraie page : la photo (`mobile:-mx-4`), et
+          surtout les rangées du portfolio (`-mx-4 px-4`), qui vivent
+          justement SOUS le va-et-vient. Sur une marge de 12, ces
+          16 px débordaient de QUATRE de chaque côté — huit de plus que
+          l'écran. Le document devenait plus large que la fenêtre, et
+          un glissement le faisait défiler. Rien n'était « capté » par
+          un composant : c'était un vrai débordement.
+          LE REMÈDE EST L'ÉGALITÉ, PAS UN VERROU : l'aperçu prend la
+          MARGE DE LA FICHE PUBLIQUE. Les débords retombent alors
+          exactement sur les bords de l'écran, comme sur la vraie page,
+          et il n'y a plus rien à faire défiler.
+          ⚠️ AUCUN GESTE LÉGITIME N'EST BRIDÉ, et c'est pour ça qu'on ne
+          pose pas `overflow-x-hidden` : les galeries horizontales
+          gardent leur glissement, le retour par glissement du
+          navigateur aussi. On retire la cause, pas le symptôme — la
+          leçon de la nº 228-§3, qui interdit ce masque sur le corps.
+          ⚠️ C'EST AUSSI LA nº 473 TENUE À LA LETTRE : « l'aperçu montre
+          ce que le public voit ». Il le montrait à quatre pixels près.
+          ⚠️ LA VUE FORMULAIRE NE BOUGE PAS : sa marge de 16 px (nº 119)
+          est dans l'autre branche, intouchée. */
       className={`flex-1 mx-auto w-full max-w-[1760px] ${
         vue === "apercu"
-          ? "px-3 sm:px-6 pt-4 lg:pt-5 pb-0"
+          ? "px-4 sm:px-6 pt-4 lg:pt-5 pb-0"
           : "px-4 sm:px-6 pt-8 sm:pt-10 pb-24"
       }`}
     >
