@@ -20,6 +20,10 @@ import {
   BOITE_ICONE_LIGNE,
   ECRITURE_LIGNE_FICHE,
   LIEN_QUI_SORT,
+  //  §2 (nº 524) — le gris doux des lignes de profil : la mention
+  //  au-dessus d'une plaque lit la MÊME constante que la ligne
+  //  « Booking ouvert », au lieu d'en recopier la valeur.
+  LIGNE_GRISE,
 } from "@/components/lignes-profil";
 import { adresseDeLienInterne } from "@/components/ContenuFiche";
 import {
@@ -632,19 +636,28 @@ export const SOULIGNEMENT_LIEN =
 function MentionAuDessus({ mention }: { mention: MentionEnDeuxMorceaux }) {
   if (!mention.statut && !mention.complement) return null;
   return (
-    /*  §1 (nº 523) — LA MENTION PASSE EN GRAS, DANS SON ENTIER : le
-        statut en majuscules COMME le complément qui le suit. La graisse
-        est posée sur le paragraphe, donc UNE seule classe pour les deux
-        morceaux — aucun risque qu'ils divergent, et aucune classe de
-        graisse en double sur un même élément (piège nº 389).
-        ⚠️ RIEN D'AUTRE NE CHANGE : ni le gris des textes secondaires,
-        ni les 14 px, ni la position au-dessus de la plaque, ni le
-        séparateur, ni les majuscules du statut.
+    /*  ██ §2 (nº 524) — LA MENTION S'ALIGNE SUR LA LIGNE « BOOKING
+        OUVERT », ET LE GRAS DE LA nº 523 EST ANNULÉ ██
+        ----------------------------------------------------------
+        LA LIGNE DE RÉFÉRENCE, RELEVÉE (ContenuFiche, l'étiquette
+        d'état du booking) : `ECRITURE_LIGNE_FICHE` — 15 px,
+        `leading-snug` — et `LIGNE_GRISE`, le gris doux. AUCUNE classe
+        de graisse : elle hérite donc de la normale.
+        CE QUI CHANGE ICI : le gras part (il datait de la nº 523), et
+        la TAILLE MONTE DE 14 À 15 PX — c'était le seul écart qui
+        restait, et le propriétaire demandait la même. La couleur, elle,
+        était déjà la bonne.
+        ⚠️ ON NE RECOPIE PAS LES VALEURS, ON LIT LES MÊMES CONSTANTES :
+        deux écritures qui doivent dire la même chose finissent
+        toujours par diverger. Si la ligne du booking change un jour,
+        cette mention la suivra sans qu'on y pense.
+        ⚠️ CE QUI NE BOUGE PAS : les majuscules du statut (nº 493), le
+        séparateur, la place au-dessus de la plaque, et l'air en
+        dessous (`mb-1`).
         ⚠️ ET ÇA VAUT PARTOUT D'UN COUP : cette écriture est la seule du
-        site depuis la nº 496 — les membres d'équipe et les guests d'un
-        salon ou d'un studio la consomment, les lieux d'une fiche
-        d'artiste aussi. Un seul endroit, tous les porteurs. */
-    <p className="mb-1 text-[14px] font-bold leading-snug text-sombre-texte-doux [overflow-wrap:anywhere]">
+        site depuis la nº 496 — membres d'équipe et guests d'un salon ou
+        d'un studio, lieux d'une fiche d'artiste. */
+    <p className={`mb-1 ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE} [overflow-wrap:anywhere]`}>
       {mention.statut && <span className="uppercase">{mention.statut}</span>}
       {mention.complement && (
         <>
@@ -732,10 +745,10 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
             <PhotoRonde
               source={membre.photo}
               nature="personne"
-              //  §2 (nº 523) — LE ROND SUIT SA PLAQUE : elle est
-              //  descendue d'un cran, il descend du même — trois crans
-              //  au-dessus d'elle, comme hier. Voir plaque.ts.
-              classeFond="bg-sombre-eleve-clair"
+              //  §1 (nº 524) — le rond revient à sa valeur d'avant la
+              //  nº 523, avec sa plaque : trois crans au-dessus d'elle,
+              //  pour que l'icône d'un lieu sans fiche reste lisible.
+              classeFond="bg-sombre-haut"
             />
             <div className="flex min-h-13 min-w-0 flex-1 flex-col justify-center">
               {/*  §4 (nº 286) — LE NOM D'ABORD, EN BLANC ; LE RÔLE
@@ -1805,8 +1818,9 @@ export function BlocProfilsArtiste({
           <PhotoRonde
             source={mode.salon_photo}
             nature="lieu"
-            //  §2 (nº 523) — le rond suit sa plaque (voir plaque.ts).
-            classeFond="bg-sombre-eleve-clair"
+            //  §1 (nº 524) — le rond revient à sa valeur d'avant la
+            //  nº 523 (voir plaque.ts).
+            classeFond="bg-sombre-haut"
           />
         );
         const lie = Boolean(mode.salon_slug && mode.salon_nom);

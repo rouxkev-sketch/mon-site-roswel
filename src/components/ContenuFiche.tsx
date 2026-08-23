@@ -200,14 +200,17 @@ export function adresseDeLienInterne(slug: string): string {
  * couleur : contraste nul, capsule invisible, texte qui semblait nu.
  * Au doigt la fiche est une PAGE, posée sur le fond du site : le même
  * jeton s'y détachait, d'où la différence.
- * LE REMÈDE, ET SON PRIX ASSUMÉ : le compteur passe à
- * `bg-sombre-eleve` — UNE seule couleur pour lui, sur les deux lignes,
- * dans les deux enveloppes. Il se détache du support partout. Il reste
- * un cran PLUS DISCRET que les capsules de STYLE ; sur la ligne des
- * TECHNIQUES il est au même niveau qu'elles, faute de mieux : sous
- * `eleve`, l'échelle de la nº 466 n'offre que `carte`, c'est-à-dire
- * précisément la couleur du support. « Plus discret » n'y est pas
- * dessinable sans redevenir invisible.
+ * LE REMÈDE D'ALORS : le compteur passait à `bg-sombre-eleve` — UNE
+ * seule couleur pour lui, sur les deux lignes, dans les deux
+ * enveloppes —, un cran PLUS DISCRET que les capsules de style.
+ * ⚠️ CE RAPPORT EST RENVERSÉ DEPUIS LA nº 524, sur décision du
+ * propriétaire : les capsules sont descendues au fond des plaques
+ * (`eleve`) et le compteur est monté à `eleve-clair`. Il est donc
+ * désormais PLUS CLAIR qu'elles, et non plus effacé derrière — c'est
+ * lui qu'on cherche pour ouvrir la ligne. Ce qui reste entier de cette
+ * note : il n'a toujours qu'UNE couleur, sur les deux lignes et dans
+ * les deux enveloppes, et c'est ce qui le fait se détacher du support
+ * partout.
  *
  * COMMENT « DEUX LIGNES » EST DÉTERMINÉ — et c'est une MESURE, pas un
  * nombre de capsules : combien en tiennent dépend de la largeur de la
@@ -297,11 +300,18 @@ const LARGEUR_COMPTEUR = 72;
  * nº 504) — d'où cette constante, écrite une fois et lue par les deux
  * lignes : elles ne peuvent plus diverger. Ce qui les distingue reste
  * l'ICÔNE en tête (diamant / étoile, nº 489).
- * ⚠️ ET LE COMPTEUR RESTE, LUI, AU FOND DES PLAQUES (§3) : c'est ce
- * décalage d'un cran qui le fait reculer derrière les valeurs qu'il
- * compte, sans qu'on ait rien à lui ajouter.
+ * ██ §3 (nº 524) — LES CAPSULES PRENNENT LE FOND DES PLAQUES ██
+ * ------------------------------------------------------------------
+ * `eleve-clair` → `eleve`, le jeton des plaques (plaque.ts). Les deux
+ * familles descendent ensemble : ce qui les distingue reste l'ICÔNE en
+ * tête, jamais la couleur.
+ * ⚠️ CE QUE ÇA RENVERSE, ET C'EST VOULU (§4) : le compteur était sous
+ * elles d'un cran ; il passe AU-DESSUS. Le propriétaire le veut plus
+ * clair qu'elles — c'est lui qu'on regarde pour ouvrir la ligne, pas
+ * les valeurs qu'il cache. La note de la nº 505, plus haut, décrivait
+ * l'ancien rapport : elle est remise d'aplomb là-bas.
  */
-const FOND_CAPSULE = "bg-sombre-eleve-clair";
+const FOND_CAPSULE = "bg-sombre-eleve";
 
 /** `useLayoutEffect` mesure AVANT la peinture — c'est ce qui empêche
     de voir les capsules se retirer une à une. Il n'existe pas au
@@ -515,10 +525,24 @@ function LigneDeCapsules({
             type="button"
             onClick={() => setDeplie((etait) => !etait)}
             aria-expanded={deplie}
+            /*  ██ §4 (nº 524) — LE COMPTEUR PASSE AU-DESSUS DES
+                 CAPSULES ██
+                 Elles descendent au fond des plaques (§3) ; lui monte
+                 d'un cran, à `eleve-clair` — la valeur qu'elles
+                 portaient. Le rapport s'inverse, et c'est la demande :
+                 c'est le compteur qu'on cherche pour ouvrir la ligne,
+                 pas les valeurs qu'il cache.
+                 ⚠️ SON SURVOL MONTE AVEC LUI, sans quoi il n'en aurait
+                 plus : il vaut `haut`, le cran au-dessus — celui-là
+                 même que le rond d'un lieu sans fiche porte sur sa
+                 plaque. Aucune couleur neuve.
+                 ⚠️ ET IL RÉPOND DANS LES DEUX ÉTATS (acquis nº 505) :
+                 cette écriture sert « +2 » comme « Réduire », le
+                 bouton étant le même. */
             className="inline-flex cursor-pointer items-center gap-1 whitespace-nowrap
-                       rounded-lg bg-sombre-eleve px-2.5 py-1 text-[13.5px] leading-[18px]
-                       transition-colors hover:bg-sombre-eleve-clair
-                       active:bg-sombre-eleve-clair"
+                       rounded-lg bg-sombre-eleve-clair px-2.5 py-1 text-[13.5px] leading-[18px]
+                       transition-colors hover:bg-sombre-haut
+                       active:bg-sombre-haut"
           >
             {deplie ? "Réduire" : `+${restant}`}
             <span

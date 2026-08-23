@@ -33,41 +33,38 @@
  * classe par propriété (piège nº 389), et surtout une seule valeur à
  * lire, donc impossible à désaccorder.
  *
- * ██ §2 (nº 523) — LA PLAQUE DESCEND D'UN CRAN : `eleve` → `carte` ██
- * ==================================================================
- * CE QUE DISAIT LA NOTE D'AVANT, ET POURQUOI ELLE N'EST PLUS VRAIE :
- * « `eleve` est le seul cran qui se détache des DEUX supports d'une
- * plaque — la page et la fenêtre superposée ; un cran plus bas serait
- * la couleur de la page, donc invisible. » C'ÉTAIT JUSTE QUAND ELLE A
- * ÉTÉ ÉCRITE : la fenêtre superposée portait alors le gris `carte`, et
- * une plaque de cette couleur y aurait disparu. LES nº 499 À 501 ONT
- * DONNÉ À LA FENÊTRE LE FOND DE LA PAGE — les deux supports sont
- * devenus le MÊME —, et la contrainte est tombée avec eux. `carte` se
- * détache donc aujourd'hui des deux, puisqu'il n'y en a plus qu'un.
- * ⚠️ CE QUE ÇA COÛTE, DIT FRANCHEMENT : le contraste avec le fond
- * passe de 1,37 à 1,16. C'est peu, et c'est voulu — le propriétaire
- * trouvait les plaques trop claires. Un aplat large se distingue à
- * bien moins que du texte ; mais si elles paraissent maintenant se
- * fondre dans la page, le cran d'avant est le seul retour possible :
- * il n'y a rien entre les deux dans l'échelle.
+ * ⚠️ LE FOND EST `bg-sombre-eleve`, ET IL Y EST REVENU (nº 524) APRÈS
+ * L'ESSAI DE LA nº 523 — qui l'avait fait descendre d'un cran, à
+ * `carte`. Le propriétaire a jugé à l'écran : trop sombre, les plaques
+ * se fondaient dans la page. Tout ce que cet essai avait ajusté en
+ * cascade est revenu avec lui : le survol et le rond du lieu.
+ * ⚠️ CE QUE LA nº 523 AVAIT RAISON DE CORRIGER, ET QUI RESTE ACQUIS :
+ * la note d'alors disait que `eleve` était le seul cran se détachant
+ * des DEUX supports d'une plaque — la page et la fenêtre superposée —,
+ * « un cran plus bas serait la couleur de la page ». C'ÉTAIT VRAI
+ * quand elle a été écrite, et ça ne l'est plus : les nº 499 à 501 ont
+ * donné à la fenêtre le fond de la PAGE, les deux supports sont donc
+ * devenus le même. `carte` n'est donc pas invisible — il est
+ * seulement trop discret, ce qui est un jugement de l'œil, pas une
+ * contrainte de l'échelle. La différence compte pour qui voudra
+ * rouvrir ce dossier.
  *
- * ⚠️ LE SURVOL DESCEND AVEC ELLE, et il le fallait : il montait
- * jusqu'à `eleve-clair`, ce qui aurait fait un saut de trois crans
- * depuis `carte` — un éclair au passage de la souris. Il vaut
- * désormais `eleve`, l'écart que la plaque portait elle-même hier.
- *
- * ⚠️ CE QUI SE POSE SUR UNE PLAQUE DESCEND D'AUTANT : un rond de repli
- * sans photo doit rester lisible AU REPOS COMME AU SURVOL (nº 492).
- * Il valait `bg-sombre-haut`, trois crans au-dessus de `eleve` ; ses
- * porteurs lui passent maintenant `bg-sombre-eleve-clair`, LES MÊMES
- * TROIS CRANS au-dessus de `carte`. Le rapport est conservé sur
- * l'échelle, pas recalculé à l'œil.
+ * ⚠️ CE QUI SE POSE SUR UNE PLAQUE DOIT MONTER D'AUTANT : le rond d'un
+ * LIEU SAISI À LA MAIN — un salon ou un studio sans fiche — porte une
+ * icône par défaut, et il peint `bg-sombre-eleve` s'il n'a pas
+ * d'ordre. Il disparaîtrait dans sa plaque. Ses porteurs lui passent
+ * donc TROIS crans au-dessus (`bg-sombre-haut`), pour que le rond ET
+ * son icône restent lisibles au repos comme au survol — voir la note
+ * de `PhotoRonde` (nº 492).
+ * ⚠️ UN MEMBRE D'ÉQUIPE, LUI, A TOUJOURS UNE PHOTO (précision du
+ * propriétaire, nº 524) : son rond n'a pas d'état de repli, et il
+ * n'existe aucune pastille d'initiales dans une plaque.
  */
 export const ENCADRE_MEMBRE =
-  "flex items-start gap-3.5 rounded-xl bg-sombre-carte p-3";
+  "flex items-start gap-3.5 rounded-xl bg-sombre-eleve p-3";
 
 /** La même plaque, cliquable : le fond monte d'un cran au survol, et
     l'appui le tient au doigt, où il n'y a pas de survol. */
 export const ENCADRE_MEMBRE_CLIQUABLE =
   `group ${ENCADRE_MEMBRE} transition-colors ` +
-  "hover:bg-sombre-eleve active:bg-sombre-eleve";
+  "hover:bg-sombre-eleve-clair active:bg-sombre-eleve-clair";
