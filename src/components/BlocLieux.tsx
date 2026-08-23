@@ -819,10 +819,43 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
         return (
           <li key={membre.cle ?? membre.artiste_id}>
             <MentionAuDessus mention={mention} />
+            {/**
+              * ██ §1 (nº 513) — LE NOM D'UN MEMBRE REDEVIENT
+              * SÉLECTIONNABLE, ET RIEN D'AUTRE NE CHANGE ██
+              * --------------------------------------------------------
+              * LE DÉFAUT (relevé nº 511) : au web, impossible de
+              * surligner le nom d'un membre pour le copier. Ce n'était
+              * PAS `select-none` — il n'y en a aucun ici. C'est que le
+              * texte vit DANS un lien : glisser sur le texte d'un lien
+              * ne surligne pas, ça démarre le GLISSER-DÉPOSER du lien
+              * (le navigateur croit qu'on veut l'emporter ailleurs).
+              * LE REMÈDE, EN UN MOT : l'attribut `draggable` posé à
+              * faux — il est sur le lien, juste en dessous. Le
+              * navigateur cesse de proposer le glisser-déposer, et le
+              * glissement redevient ce qu'il est partout ailleurs :
+              * une sélection. C'est le procédé que le LOGO porte
+              * depuis toujours (EnTeteTatouage), pour la même raison.
+              * ⚠️ CE QUE ÇA NE TOUCHE PAS, et c'est tout l'intérêt :
+              * la plaque reste ENTIÈREMENT cliquable (le lien ne change
+              * ni de taille ni de contenu), son fond s'éclaircit
+              * toujours au survol (nº 492 — c'est du CSS, et cet
+              * attribut n'est pas du CSS), le clic du milieu ouvre
+              * toujours un onglet, le focus au clavier ne bouge pas, et
+              * le doigt ne voit aucune différence : on ne glisse pas un
+              * lien au doigt, il n'y a rien à désactiver là-bas.
+              * ⚠️ UN CLIC SIMPLE NAVIGUE TOUJOURS : pour copier, il
+              * faut un vrai glissement. C'est le comportement normal
+              * de n'importe quel lien de texte, pas un réglage.
+              * ⚠️ ET CETTE NOTE VIT AU-DESSUS DU TERNAIRE, PAS DEDANS :
+              * entre les parenthèses d'une branche, JSX n'accepte
+              * qu'UNE expression — une note s'y compte comme une
+              * seconde, et le fichier ne compile plus.
+              */}
             {membre.slug ? (
               <Link
                 href={adresseDeLienInterne(membre.slug)}
                 onClick={clicVersFiche?.(membre.slug)}
+                draggable={false}
                 className={ENCADRE_MEMBRE_CLIQUABLE}
               >
                 {ligne()}
@@ -1163,6 +1196,16 @@ function LienAdresse({
             setFenetre(true);
           }
         }}
+        //  §1 (nº 513) — L'ADRESSE SE COPIE. C'est le texte du site
+        //  qu'on recopie le plus — pour le coller dans un message, dans
+        //  un autre plan — et il était le plus difficile à prendre :
+        //  glisser dessus emportait le lien au lieu de surligner. Même
+        //  geste que les plaques (la raison est écrite en entier à la
+        //  plaque des membres), et le plan s'ouvre exactement comme
+        //  avant : `href` et `onClick` ne sont pas touchés.
+        //  ⚠️ AU DOIGT, RIEN NE CHANGE — et il y a de toute façon un
+        //  bouton « Copier l'adresse » dans la fenêtre de verre.
+        draggable={false}
         className="group rounded transition-colors active:bg-white/10"
       >
         <span className={`${classeTexte} ${soulignement}`}>{texte}</span>
@@ -1758,6 +1801,12 @@ export function BlocProfilsArtiste({
                 //  `lie` garantit le slug ; le `?? ""` ne sert qu'au
                 //  typage (le rappel exige une chaîne).
                 onClick={clicVersFiche?.(mode.salon_slug ?? "")}
+                //  §1 (nº 513) — le nom du salon se surligne et se
+                //  copie : sans ceci, glisser dessus emporterait le
+                //  lien. Même geste que la plaque des membres, plus
+                //  haut dans ce fichier, où la raison est écrite en
+                //  entier.
+                draggable={false}
                 className={ENCADRE_MEMBRE_CLIQUABLE}
               >
                 {pastille}
