@@ -176,6 +176,53 @@ export function estIdentifiantDeBase(id: string | null | undefined): boolean {
 let chargementLance = false;
 
 /**
+ * ██ §2 (nº 506) — « SAIT-ON CE QUE CETTE PERSONNE A ENREGISTRÉ ? » ██
+ * ==================================================================
+ * LE DÉFAUT QU'IL FERME : les boutons peignaient « Suivre » AVANT que
+ * la liste des favoris n'arrive, puis basculaient sur « Suivi ». Un
+ * état de compte FAUX, peint le temps d'un aller-retour réseau —
+ * exactement ce que la règle 203 interdit.
+ * CE DRAPEAU DIT LA VÉRITÉ SUR LA CONNAISSANCE, pas sur les données :
+ * faux tant que la réponse n'est pas revenue, vrai ensuite — MÊME SI
+ * ELLE A ÉCHOUÉ. Une liste injoignable est une réponse : on sait alors
+ * qu'on ne saura pas, et un bouton muet pour toujours serait pire
+ * qu'un bouton éteint.
+ * ⚠️ IL NE RÉPOND QUE POUR UN COMPTE CONNECTÉ : sans session,
+ * `chargerLesMiens` n'est jamais appelé (ChargeurFavoris ne demande
+ * rien), et ce drapeau resterait faux À JAMAIS. C'est à l'APPELANT de
+ * composer — « prêt ET (pas de compte OU liste arrivée) » —, et c'est
+ * ce que fait `BoutonSuivre`. Le dire ici évite qu'on l'oublie
+ * ailleurs.
+ */
+let listeConnue = false;
+
+const ecouteursConnue = new Set<() => void>();
+
+function sAbonnerConnue(rappel: () => void) {
+  ecouteursConnue.add(rappel);
+  return () => {
+    ecouteursConnue.delete(rappel);
+  };
+}
+
+function poserListeConnue() {
+  if (listeConnue) return;
+  listeConnue = true;
+  ecouteursConnue.forEach((rappel) => rappel());
+}
+
+/** VRAI dès que la liste des favoris du compte a répondu — quelle que
+    soit sa réponse. Voir la note ci-dessus : sans compte, il reste
+    faux, et c'est à l'appelant d'en tenir compte. */
+export function useListeFavorisConnue(): boolean {
+  return useSyncExternalStore(
+    sAbonnerConnue,
+    () => listeConnue,
+    () => false
+  );
+}
+
+/**
  * LES FAVORIS DU COMPTE, EN UNE SEULE DEMANDE.
  * ⚠️ POURQUOI PAS DEPUIS LE SERVEUR, avec les cartes ? Parce que la
  * mosaïque est mise en cache et partagée par tout le monde : y mêler
@@ -197,13 +244,19 @@ export function chargerLesMiens() {
     .catch(() => {
       // Liste injoignable : les cœurs restent éteints, et le geste
       // fonctionne quand même (la base tranchera à l'écriture).
-    });
+    })
+    //  §2 (nº 506) — DANS LES DEUX CAS, ON SAIT : la réponse est
+    //  arrivée, ou elle ne viendra pas. Les boutons peuvent parler.
+    .finally(poserListeConnue);
 }
 
 /** Une déconnexion vide l'ardoise : les cœurs du visiteur suivant ne
     doivent rien porter du compte précédent. */
 export function oublierLesMiens() {
   chargementLance = false;
+  //  §2 (nº 506) — on ne sait plus rien du compte suivant.
+  listeConnue = false;
+  ecouteursConnue.forEach((rappel) => rappel());
   etats.photo.clear();
   etats.tatoueur.clear();
   prevenir();

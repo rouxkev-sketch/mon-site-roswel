@@ -2,6 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+//  §1 (nº 506) — la pile de fenêtres superposées enveloppe les DEUX
+//  vues : montée dans l'aperçu seul, elle se démontait elle-même en
+//  changeant l'adresse (voir sa note, plus bas).
+import { PileFiches } from "@/components/PileFiches";
 import {
   BIO_MAXIMUM,
   FILTRES_TATOUAGE,
@@ -1117,6 +1121,10 @@ export function FormulaireFiche() {
       fiche » — et un changement de vue REMONTE la page (même adresse,
       la remontée automatique de navigation ne joue pas ici). */
   const parametres = useSearchParams();
+  /** §1 (nº 506) — COMBIEN DE FENÊTRES SONT EMPILÉES PAR-DESSUS. La
+      pile la remonte ; la vue s'en sert pour rester « aperçu » tant
+      qu'une fiche est ouverte au-dessus (voir la note de `vue`). */
+  const [profondeurPile, setProfondeurPile] = useState(0);
   const router = useRouter();
   const vueApercuDemandee = parametres.get("vue") === "apercu";
   /** QUELLE FICHE ? Un compte peut en gérer plusieurs : l'adresse
@@ -2721,10 +2729,50 @@ export function FormulaireFiche() {
         }
       : null;
 
+  /**
+   * ██ §1 (nº 506) — LA VUE RESTE « APERÇU » TANT QU'UNE FENÊTRE EST
+   * OUVERTE PAR-DESSUS ██
+   * ------------------------------------------------------------------
+   * SANS CELA, LE DÉFAUT SE REJOUERAIT SOUS UNE AUTRE FORME : ouvrir la
+   * fiche d'un membre d'équipe pousse `/tatoueur/<slug>`, une adresse
+   * SANS `?vue=apercu`. La vue rebasculerait donc sur « modification »,
+   * et l'on verrait le FORMULAIRE apparaître sous la fenêtre — au lieu
+   * de l'aperçu qu'on vient de quitter des yeux.
+   * LA PROFONDEUR DE LA PILE TRANCHE : tant qu'une fenêtre est empilée,
+   * l'aperçu reste affiché dessous. À la fermeture, la profondeur
+   * retombe à zéro ET l'adresse redevient `?vue=apercu` — les deux
+   * concordent, il n'y a pas d'instant où elles se contredisent.
+   * ⚠️ C'EST LE MOTIF DE LA MOSAÏQUE, PAS UN SECOND : `GrilleTatoueurs`
+   * garde exactement de cette façon sa fenêtre de base visible sous les
+   * fiches empilées (`surProfondeur`). Rien de neuf n'est inventé.
+   */
   const vue: "modification" | "apercu" =
-    modification && vueApercuDemandee ? "apercu" : "modification";
+    modification && (vueApercuDemandee || profondeurPile > 0)
+      ? "apercu"
+      : "modification";
 
   return (
+    /*  ██ §1 (nº 506) — LA PILE DE FENÊTRES ENVELOPPE LES DEUX VUES ██
+        ==============================================================
+        LA nº 505 l'avait activée DANS `FicheTatoueur`, c'est-à-dire à
+        l'intérieur du bloc `{vue === "apercu" && …}`. La pile changeait
+        alors l'adresse qui la faisait vivre : le pushState vers
+        `/tatoueur/<slug>` faisait retomber `vue` sur « modification »,
+        démontant le composant et la pile avec lui. La fenêtre
+        n'apparaissait jamais et il ne restait que la page de
+        modification — le défaut relevé par le propriétaire.
+        ELLE EST DONC MONTÉE ICI, au-dessus des deux vues : aucun
+        changement d'adresse ne peut plus la démonter. C'est LA MÊME
+        pile, le même mécanisme, le même historique (une entrée par
+        ouverture, un cran par fermeture) et le même gel compté
+        (nº 469) — rien n'est écrit en double.
+        ⚠️ ELLE POSE SON PROPRE VOILE : contrairement à la mosaïque, il
+        n'y a pas de fenêtre de base ici, donc `voileDejaPose` reste
+        faux (son défaut).
+        ⚠️ EN VUE MODIFICATION ELLE NE COÛTE RIEN : le formulaire ne
+        porte aucun lien vers un profil, personne ne demande à ouvrir
+        quoi que ce soit, et la pile vide ne rend que ses enfants. */
+    <PileFiches surProfondeur={setProfondeurPile}>
     <main
       // La vue « Ma fiche » reprend EXACTEMENT le cadre de la page de
       // fiche publique (20 px sous la barre sur le web, 16 px sur
@@ -3872,5 +3920,6 @@ export function FormulaireFiche() {
         </div>
       )}
     </main>
+    </PileFiches>
   );
 }

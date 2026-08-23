@@ -782,8 +782,25 @@ export function FicheTatoueur({
         n'y a aucune navigation à intercepter, donc aucune fenêtre
         « Modifications non enregistrées » intempestive.
         ⚠️ AU DOIGT, RIEN NE CHANGE : la pile ne s'ouvre qu'au-dessus de
-        1024 px (`laLargeurVeutUneFenetre`, nº 230-§3). */
-    <PileFiches actif>
+        1024 px (`laLargeurVeutUneFenetre`, nº 230-§3).
+        ██ §1 (nº 506) — MAIS PAS ICI : ELLE DÉMÉNAGE D'UN CRAN ██
+        --------------------------------------------------------
+        LA nº 505 AVAIT POSÉ `actif` TOUT COURT, ET C'ÉTAIT UNE BOUCLE.
+        Sur l'aperçu, ce composant est rendu DANS `{vue === "apercu" &&
+        …}` (FormulaireFiche), et `vue` se lit dans l'ADRESSE
+        (`?vue=apercu`). Or la pile, en ouvrant une fenêtre, POUSSE
+        `/tatoueur/<slug>` — une adresse SANS ce paramètre. La vue
+        rebascule donc sur « modification », ce composant est démonté,
+        ET LA PILE AVEC LUI : la fenêtre n'apparaissait jamais, il ne
+        restait que la page de modification. La pile changeait
+        l'adresse qui la faisait vivre.
+        LA PILE EST DONC MONTÉE PLUS HAUT, dans `FormulaireFiche`,
+        AU-DESSUS des deux vues — là où aucun changement d'adresse ne
+        peut la démonter. Ce composant reprend `actif={!apercu}` : en
+        aperçu, il n'en monte pas une seconde, il consomme celle du
+        dessus par le contexte. Sur la fiche PUBLIQUE, rien ne change —
+        c'est toujours lui qui la monte. */
+    <PileFiches actif={!apercu}>
     <Racine
       //  §3 (nº 290) — LA RACINE SE NOMME : c'est sur elle qu'est
       //  ÉCRITE la marge du bas de la photo (`lg:pb-5`, jumelle de

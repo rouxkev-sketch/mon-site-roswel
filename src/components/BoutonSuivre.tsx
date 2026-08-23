@@ -12,6 +12,9 @@ import {
   estIdentifiantDeBase,
   reprendreLeGeste,
   useEtatFavori,
+  //  §2 (nº 506) — « la liste des favoris a-t-elle répondu ? ». Sans
+  //  elle, le bouton peignait « Suivre » avant de savoir.
+  useListeFavorisConnue,
 } from "@/lib/favoris-yokofolio";
 
 /**
@@ -60,6 +63,29 @@ export function BoutonSuivre({
   const { utilisateur, pret } = useUtilisateur();
   amorcer("tatoueur", tatoueurId, suiviAuDepart);
   const suivi = useEtatFavori("tatoueur", tatoueurId, suiviAuDepart);
+  /**
+   * ██ §2 (nº 506) — SAIT-ON, OUI OU NON, SI CETTE FICHE EST SUIVIE ? ██
+   * ==================================================================
+   * LE DÉFAUT : au chargement, le bouton annonçait « Suivre », puis
+   * basculait sur « Suivi » quand la liste des favoris arrivait. Le
+   * délai n'est pas le problème — il est voulu, les favoris se
+   * chargent côté navigateur pour que la mosaïque reste en cache
+   * (règles 137/203). LE PROBLÈME EST D'AVOIR PEINT « Suivre »
+   * PENDANT ce délai : un état de compte FAUX, ce que la règle 203
+   * interdit mot pour mot.
+   * LA QUESTION SE COMPOSE EN DEUX TEMPS, et les deux comptent :
+   *  · `pret` — la SESSION est lue. Avant, `utilisateur` vaut `null`
+   *    sans vouloir dire « personne » ;
+   *  · ensuite, SEULEMENT SI quelqu'un est connecté, la LISTE de ses
+   *    favoris doit être revenue. Sans compte, il n'y a rien à
+   *    attendre : personne ne suit rien, et le bouton peut parler tout
+   *    de suite.
+   * ⚠️ SANS CE SECOND MEMBRE, un visiteur non connecté verrait un
+   * bouton muet POUR TOUJOURS : `chargerLesMiens` n'est jamais appelé
+   * sans session, donc la liste ne serait jamais « connue ».
+   */
+  const listeConnue = useListeFavorisConnue();
+  const etatConnu = pret && (!utilisateur || listeConnue);
   /** §1 (nº 396) — LA FENÊTRE D'INVITATION EST OUVERTE. Un état
       React, rien d'autre : aucune entrée d'historique. */
   const [invitation, setInvitation] = useState(false);
@@ -87,7 +113,9 @@ export function BoutonSuivre({
      * vers le compte, pour qu'une fenêtre refermée ne laisse aucune
      * intention derrière elle.
      */
-    if (!pret) return;
+    //  §2 (nº 506) — on ne bascule pas un état qu'on ne connaît pas
+    //  encore : le bouton est muet, il est aussi sans effet.
+    if (!etatConnu) return;
     if (!utilisateur) {
       setInvitation(true);
       return;
@@ -189,7 +217,25 @@ export function BoutonSuivre({
                   focus-visible:outline-primaire ${
                     pleineLargeur ? "w-full" : ""
                   } ${
-                    suivi
+                    !etatConnu
+                      ? /*  ██ §2 (nº 506) — L'ATTENTE NE DIT RIEN ██
+                             Tant que l'état n'est pas connu, le bouton
+                             ne peut annoncer NI « Suivre » NI « Suivi ».
+                             Il garde donc SA BOÎTE — même hauteur, même
+                             largeur, même rayon — et se tait : le
+                             libellé est masqué juste en dessous.
+                             LE FOND EST CELUI DE « SUIVI » (le gris du
+                             contenu), et ce choix se justifie : aucune
+                             couleur n'est inventée, c'est un jeton que
+                             ce bouton porte déjà, et il est NEUTRE — le
+                             rose, lui, est un appel à l'action, donc
+                             une promesse. On préfère se taire en gris
+                             que promettre en rose.
+                             ⚠️ LE BOUTON EST AUSSI SANS EFFET pendant
+                             ce moment (voir `basculer`) : on ne bascule
+                             pas un état qu'on ne connaît pas. */
+                        "bg-sombre-eleve border-sombre-eleve text-sombre-texte"
+                      : suivi
                       ? /*  ██ §3 (nº 459) — « SUIVI » SE REMPLIT ██
                              L'intérieur prend la couleur du contour, et
                              le mot passe au BLANC de la charte
@@ -258,7 +304,14 @@ export function BoutonSuivre({
            entre « Suivre » et « Suivi » — rien ne peut bouger autour,
            quel que soit l'instant où l'état est connu. */}
       <span className="grid text-center">
-        <span className="col-start-1 row-start-1">
+        {/*  §2 (nº 506) — LE LIBELLÉ SE TAIT TANT QU'ON NE SAIT PAS.
+             `invisible` et non un rendu conditionnel : le mot occupe
+             toujours sa case, donc la grille de réserve ci-dessous
+             continue de tenir la largeur au pixel. Rien ne saute quand
+             le mot arrive — il apparaît, il ne pousse rien. */}
+        <span
+          className={`col-start-1 row-start-1${etatConnu ? "" : " invisible"}`}
+        >
           {suivi ? "Suivi" : "Suivre"}
         </span>
         <span aria-hidden="true" className="col-start-1 row-start-1 invisible">
