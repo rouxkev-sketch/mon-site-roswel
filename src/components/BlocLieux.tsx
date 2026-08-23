@@ -35,7 +35,9 @@ import {
   //  Booking ouvert · 12 mois d'attente » : l'écriture unique de la
   //  mention posée au-dessus d'un encadré, statut d'un côté (il se
   //  peint en capitales) et booking de l'autre.
+  mentionDuLieu,
   mentionDuMembre,
+  type MentionEnDeuxMorceaux,
   modesOrdonnes,
   SEPARATEUR_MENTION,
   //  §5 (nº 492) — `roleDuMembre` n'est plus lu ICI : le rôle a quitté
@@ -477,6 +479,20 @@ function HorairesEnLigne({
  * seule l'adresse s'y clique (voir AdresseCliquable). C'est cette
  * constante qui garantit l'écriture unique — pas de second dessin.
  */
+/**
+ * ⚠️ §2 (nº 496) — CETTE CONSTANTE N'A PLUS AUCUN PORTEUR. Ses deux
+ * derniers étaient le membre d'équipe (passé à la plaque permanente à
+ * la nº 492) et le lieu d'un profil d'artiste (passé à la même plaque
+ * à la nº 496). Elle reste écrite parce qu'elle DIT une règle — « une
+ * fiche du site, on encadre ; dehors, on souligne » — et que quatre
+ * notes du site y renvoient ; elle n'est PAS un modèle à reprendre
+ * pour un bloc neuf. Le modèle, c'est `ENCADRE_MEMBRE`.
+ * ⚠️ SON DÉBORD DE 8 px N'EXISTE DONC PLUS SUR LA FICHE. Le dégagement
+ * que la colonne de lecture porte pour lui (`FicheTatoueur`, nº 298 et
+ * 312) n'est PAS retiré ici : c'est un conteneur partagé, hors de
+ * cette passe (piège 378/379). Il ne coûte rien — il écarte un bord
+ * qui rogne, il ne déplace aucun contenu.
+ */
 export const CLASSES_LIGNE_CLIQUABLE =
   "group flex items-start gap-3.5 rounded-xl -m-2 p-2 " +
   "transition-colors hover:bg-white/5 active:bg-white/10";
@@ -579,6 +595,49 @@ const ENCADRE_MEMBRE =
 const ENCADRE_MEMBRE_CLIQUABLE =
   `group ${ENCADRE_MEMBRE} transition-colors ` +
   "hover:bg-sombre-eleve-clair active:bg-sombre-eleve-clair";
+
+/**
+ * ██ §6 (nº 492), §2 (nº 493), §3 (nº 496) — LA MENTION AU-DESSUS ██
+ * ==================================================================
+ * Le STATUT, puis son complément, en gris, posés en haut à gauche À
+ * L'EXTÉRIEUR de la plaque. Sur un salon, le complément est l'état du
+ * CARNET du membre ; sur une fiche d'artiste, c'est le TYPE DE LIEU.
+ * Le dessin, lui, est le MÊME — et c'est pour ça qu'il est écrit une
+ * seule fois, ici : même gris, même taille, même séparateur, même air
+ * sous le texte. Les deux emplois ne peuvent pas diverger.
+ *
+ * ⚠️ ELLE N'EST PAS DANS LE LIEN, et c'est voulu : le lien, c'est la
+ * plaque. Une mention au-dessus ne se clique pas.
+ * ⚠️ QUATORZE PIXELS — un cran sous les 15 px du nom, et exactement la
+ * taille que le rôle portait déjà quand il vivait dans la plaque :
+ * rien de neuf n'est inventé. Quatre pixels la séparent de la plaque.
+ *
+ * ██ LE STATUT EN MAJUSCULES, ET LUI SEUL (nº 493) ██
+ * `uppercase` est une TRANSFORMATION D'AFFICHAGE : le texte reste
+ * « Résident » dans le code et dans le document, et c'est le
+ * navigateur qui le peint en capitales. Deux conséquences voulues :
+ * les ACCENTS SONT CONSERVÉS (« RÉSIDENT », jamais « RESIDENT » — la
+ * règle CSS suit l'Unicode, contrairement à une écriture en dur), et
+ * une traduction anglaise passera en capitales toute seule.
+ * Le complément, lui, garde sa casse : la classe est posée sur le SEUL
+ * morceau du statut, pas sur le paragraphe.
+ * ⚠️ JAMAIS DE PUCE ORPHELINE : le séparateur n'est posé que si le
+ * complément existe, et le statut manquant ne rend rien du tout.
+ */
+function MentionAuDessus({ mention }: { mention: MentionEnDeuxMorceaux }) {
+  if (!mention.statut && !mention.complement) return null;
+  return (
+    <p className="mb-1 text-[14px] leading-snug text-sombre-texte-doux [overflow-wrap:anywhere]">
+      {mention.statut && <span className="uppercase">{mention.statut}</span>}
+      {mention.complement && (
+        <>
+          {mention.statut && SEPARATEUR_MENTION}
+          {mention.complement}
+        </>
+      )}
+    </p>
+  );
+}
 
 function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined }) {
   const clicVersFiche = useClicVersFiche();
@@ -773,36 +832,7 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
         );
         return (
           <li key={membre.cle ?? membre.artiste_id}>
-            {/*  ██ §6 (nº 492) — LA MENTION, AU-DESSUS ET DEHORS ██
-                 Le STATUT du membre puis l'état de son CARNET, en gris,
-                 posés en haut à gauche À L'EXTÉRIEUR de l'encadré. Les
-                 mots, les séparateurs et le silence des données absentes
-                 s'écrivent une seule fois, dans `mentionDuMembre`.
-                 ⚠️ ELLE N'EST PAS DANS LE LIEN, et c'est voulu : le lien,
-                 c'est la plaque. Une mention au-dessus ne se clique pas.
-                 ⚠️ QUATORZE PIXELS — un cran sous les 15 px du nom, et
-                 exactement la taille que le rôle portait déjà quand il
-                 vivait sur la ligne du nom : rien de neuf n'est inventé.
-                 Quatre pixels la séparent de l'encadré (`mb-1`).
-                 ██ §2 (nº 493) — LE STATUT EN MAJUSCULES, ET LUI SEUL ██
-                 `uppercase` est une TRANSFORMATION D'AFFICHAGE : le texte
-                 reste « Résident » dans le code et dans le document, et
-                 c'est le navigateur qui le peint en capitales. Deux
-                 conséquences voulues : les ACCENTS SONT CONSERVÉS
-                 (« RÉSIDENT », jamais « RESIDENT » — la règle CSS suit
-                 l'Unicode, contrairement à une écriture en dur), et une
-                 traduction anglaise passera en capitales toute seule.
-                 Le booking, lui, garde sa casse : la classe est posée sur
-                 le SEUL morceau du statut, pas sur le paragraphe. */}
-            <p className="mb-1 text-[14px] leading-snug text-sombre-texte-doux [overflow-wrap:anywhere]">
-              <span className="uppercase">{mention.statut}</span>
-              {mention.booking && (
-                <>
-                  {SEPARATEUR_MENTION}
-                  {mention.booking}
-                </>
-              )}
-            </p>
+            <MentionAuDessus mention={mention} />
             {membre.slug ? (
               <Link
                 href={adresseDeLienInterne(membre.slug)}
@@ -1555,7 +1585,13 @@ function TroisLignesDuLieu({
        lieu et du lieu, en gris. Les morceaux viennent de
        `lieuEnDeuxLignes` (lib/modes-exercice), qui garantit qu'aucun
        n'est vide — la puce ne peut donc pas rester orpheline. */
-  const { nom, role, suite } = lieuEnDeuxLignes(mode);
+  //  §4 (nº 496) — de la composition en deux lignes, on ne retient
+  //  plus que le NOM et la VILLE. Le rôle et le type de lieu partent
+  //  dans la mention du dessus (voir `mentionDuLieu`) ; `suite` les
+  //  range dans cet ordre — type de lieu, puis ville — et c'est donc
+  //  son DERNIER morceau qui nomme le lieu.
+  const { nom, suite } = lieuEnDeuxLignes(mode);
+  const adresse = suite.length > 0 ? suite[suite.length - 1] : "";
   /**
    * §1 (nº 290) — LE LIEU QUE LE PLAN VA CHERCHER : les mêmes champs
    * que partout ailleurs (`LieuAffichable`), lus sur le mode.
@@ -1594,15 +1630,12 @@ function TroisLignesDuLieu({
           <LienAdresse texte={nom} lieu={null} classeTexte="" />
         </p>
       )}
-      {/*  LIGNE 2 — LE RÔLE EN BLANC, LE RESTE EN GRIS.
-           La puce est celle du site (U+2022), dans le même gris que ce
-           qu'elle sépare, avec le `px-1.5` des autres puces de la
-           fiche. Elle ne s'écrit qu'ENTRE deux morceaux — `suite` ne
-           contient jamais de vide (voir `lieuEnDeuxLignes`), et le
-           rôle précède toujours le premier d'entre eux.
-           ⚠️ LE LIEU RESTE CLIQUABLE VERS LE PLAN, comme l'était la
-           troisième ligne : c'est le DERNIER morceau qui le porte —
-           celui qui nomme la ville. */}
+      {/*  LIGNE 2 — ELLE PORTAIT le rôle en blanc puis le reste en
+           gris, séparés par la puce du site. CETTE DESCRIPTION EST
+           PÉRIMÉE DEPUIS LA nº 496 : voir le §4 juste dessous, qui
+           fait foi. Ce qui reste vrai de cette note : le lieu est
+           cliquable vers le plan, et c'est le DERNIER morceau qui le
+           porte — celui qui nomme la ville. */}
       {/*  ██ §3 (nº 410) — LES DEUX LIGNES SE RESSERRENT ██
            C'ÉTAIT `mt-1.5` (6 px), hérité de l'ancienne ligne du nom
            qui suivait une étiquette en capitales — un écart de
@@ -1621,26 +1654,26 @@ function TroisLignesDuLieu({
            commande la hauteur, hier comme aujourd'hui, et la photo de
            profil recentrée à la nº 389 ne bouge pas. Seul l'écart
            INTERNE se resserre. */}
-      {(role || suite.length > 0) && (
-        <p className="mt-0.5 text-[15px] leading-snug [overflow-wrap:anywhere]">
-          {role && (
-            <span className="font-medium text-sombre-texte">{role}</span>
-          )}
-          {suite.map((morceau, rang) => (
-            <span key={morceau} className="text-sombre-texte-doux">
-              {(rang > 0 || role) && (
-                <span aria-hidden="true" className="px-1.5">
-                  •
-                </span>
-              )}
-              <wbr />
-              {rang === suite.length - 1 ? (
-                <LienAdresse texte={morceau} lieu={lieu} classeTexte="" />
-              ) : (
-                morceau
-              )}
-            </span>
-          ))}
+      {/*  ██ §4 (nº 496) — LA LIGNE 2 NE PORTE PLUS QUE L'ADRESSE ██
+           ==============================================================
+           CE QU'ELLE CONTENAIT JUSQU'ICI : le RÔLE en blanc, puis le
+           TYPE DE LIEU, puis la ville et le pays, séparés par des puces
+           — « Résident • Salon • Paris, France ».
+           CE QU'ELLE PORTE MAINTENANT : « Paris, France », en gris, et
+           rien d'autre. Le rôle et le type de lieu sont montés dans la
+           mention posée AU-DESSUS de la plaque (§3), où ils forment
+           « RÉSIDENT • Salon ». Aucun mot n'est perdu, ils ont changé
+           de place.
+           ⚠️ LE LIEN VERS LE PLAN NE BOUGE PAS : c'est toujours le
+           DERNIER morceau qui le porte — celui qui nomme la ville —, et
+           c'est justement le seul qui reste. Quand la plaque entière
+           est déjà un lien vers la fiche du lieu, `sansLien` le neutralise
+           comme avant (pas de `<a>` dans un `<a>`).
+           ⚠️ PLUS DE PUCE ICI : il n'y a plus qu'un morceau à écrire,
+           donc plus rien à séparer. */}
+      {adresse && (
+        <p className="mt-0.5 text-[15px] leading-snug text-sombre-texte-doux [overflow-wrap:anywhere]">
+          <LienAdresse texte={adresse} lieu={lieu} classeTexte="" />
         </p>
       )}
       {/*  UN GUEST PORTE SES DATES EN BLANC, et c'est voulu : c'est
@@ -1687,13 +1720,28 @@ export function BlocProfilsArtiste({
             photo de profil de l'artiste, faute d'autre lieu ; la
             nº 414 l'avait rétabli sous un autre nom, la nº 418
             supprime ce mode — il n'a plus d'objet.) */
+        /*  §2 (nº 496) — LE MÊME ROND QUE DANS L'ÉQUIPE, et pour la
+            même raison : posé sur la plaque `bg-sombre-eleve`, un rond
+            de repli de la même couleur disparaîtrait dedans. Deux
+            crans au-dessus, il reste lisible au repos comme au survol
+            (voir la note de `PhotoRonde`, nº 492). */
         const pastille = (
-          <PhotoRonde source={mode.salon_photo} nature="lieu" />
+          <PhotoRonde
+            source={mode.salon_photo}
+            nature="lieu"
+            classeFond="bg-sombre-haut"
+          />
         );
         const lie = Boolean(mode.salon_slug && mode.salon_nom);
         const colonne = <TroisLignesDuLieu mode={mode} sansLien={lie} />;
         return (
           <li key={mode.id}>
+            {/*  §3 (nº 496) — « RÉSIDENT • Salon », au-dessus et dehors :
+                 le MÊME dessin que sur un salon (`MentionAuDessus`), le
+                 même séparateur, la même écriture. Seul le second
+                 morceau change de nature — un type de lieu ici, l'état
+                 d'un carnet là-bas. */}
+            <MentionAuDessus mention={mentionDuLieu(mode)} />
             {lie ? (
               /*  §2 (nº 276) — LE LIEU A SA PROPRE FICHE : TOUT
                   L'ENCADRÉ EST LE LIEN, pastille comprise — exactement
@@ -1704,22 +1752,49 @@ export function BlocProfilsArtiste({
                   texte. La règle tient à la DESTINATION : une fiche DU
                   SITE → l'encadré entier se clique, rien n'est
                   souligné (« dedans on encadre, dehors on souligne —
-                  jamais les deux »). `CLASSES_LIGNE_CLIQUABLE`
-                  (nº 232) reste l'unique écriture de l'encadré. */
+                  jamais les deux »).
+                  ██ §2 (nº 496) — L'ÉCRITURE CHANGE, PAS LA RÈGLE ██
+                  Ce n'est plus `CLASSES_LIGNE_CLIQUABLE` (l'encadré au
+                  survol, débordant de 8 px) mais `ENCADRE_MEMBRE_
+                  CLIQUABLE` — la plaque permanente de la nº 492, celle
+                  de l'équipe des salons : fond uni qui se détache de la
+                  page ET de la fenêtre superposée, quatre coins à
+                  12 px, 12 px d'air à gauche et à droite, 8 en haut et
+                  en bas, arrêt aux marges, aucune bordure. Une seule
+                  écriture pour les deux blocs : ils ne peuvent plus
+                  diverger.
+                  ⚠️ `CLASSES_LIGNE_CLIQUABLE` N'A PLUS DE PORTEUR sur
+                  la fiche, et elle reste pourtant en place : d'autres
+                  surfaces l'importent (voir ses lecteurs). Elle n'est
+                  pas modifiée d'un caractère. */
               <Link
                 href={adresseDeLienInterne(mode.salon_slug ?? "")}
                 //  `lie` garantit le slug ; le `?? ""` ne sert qu'au
                 //  typage (le rappel exige une chaîne).
                 onClick={clicVersFiche?.(mode.salon_slug ?? "")}
-                className={CLASSES_LIGNE_CLIQUABLE}
+                className={ENCADRE_MEMBRE_CLIQUABLE}
               >
                 {pastille}
                 {colonne}
+                {/*  §4 (nº 493, étendu par la nº 496) — LE CHEVRON DIT
+                     QUE ÇA S'OUVRE : la même icône que le volet des
+                     horaires, pivotée d'un quart de tour, dans le gris
+                     des textes secondaires. Centré sur TOUTE la plaque
+                     (`self-center`), et présent SEULEMENT quand le lieu
+                     a une fiche — la branche du dessous n'en a pas. */}
+                <span
+                  aria-hidden="true"
+                  className="-rotate-90 self-center shrink-0 text-sombre-texte-doux"
+                >
+                  <IconeChevronBas taille={16} />
+                </span>
               </Link>
             ) : (
-              /*  AUCUNE FICHE : ni encadré, ni soulignement — rien
-                  n'est cliquable, la ligne garde sa géométrie. */
-              <div className="flex items-start gap-3.5">
+              /*  §2 (nº 496) — AUCUNE FICHE : la plaque reste (elle dit
+                  « voici un lieu », pas « ça se clique »), mais sans
+                  survol, sans appui, et SANS CHEVRON — on ne promet pas
+                  une page qui n'existe pas. */
+              <div className={ENCADRE_MEMBRE}>
                 {pastille}
                 {colonne}
               </div>

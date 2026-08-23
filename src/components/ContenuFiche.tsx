@@ -1470,7 +1470,17 @@ export function ContenuFiche({
       le cherchant. La valeur vit maintenant dans la charte, une seule
       fois, et le soulignement du sélecteur à deux choix lit la même
       (voir TRAIT_SEPARATION). */
-  const separation = `border-t ${TRAIT_SEPARATION}`;
+  /*  ██ §1 (nº 496) — `separation` EST SUPPRIMÉE ██
+      Elle composait le trait horizontal posé au-dessus d'une section
+      de bas de fiche. La nº 492 lui a retiré ses deux porteurs sur un
+      LIEU, la nº 496 le dernier sur un ARTISTE : plus une seule
+      section de cette fiche ne se sépare par un trait. La constante
+      n'avait donc plus de lecteur, et une constante sans lecteur est
+      une invitation à en refabriquer un.
+      ⚠️ `TRAIT_SEPARATION` RESTE, et il sert toujours : le sélecteur
+      « Profil / Portfolio » pose son propre soulignement avec, plus
+      bas dans ce fichier. C'est la COMPOSITION qui part, pas le
+      jeton. */
 
   /**
    * §1 (nº 315) — LES BADGES DE STYLE, SOUS LA BIO ET SANS TITRE.
@@ -2231,7 +2241,18 @@ export function ContenuFiche({
               qui construit la liste. */}
           {tatoueur.type_fiche === "artiste" ? (
             aDesLieuxAMontrer && (
-              <div className={`mt-10 pt-10 ${separation}`}>
+              /*  ██ §1 (nº 496) — LE DERNIER TRAIT DE LA FICHE D'ARTISTE ██
+                   La nº 492 avait retiré les deux traits qui encadraient
+                   l'équipe d'un lieu, et LAISSÉ celui-ci : un artiste
+                   n'a pas d'équipe, sa section de profils n'était pas
+                   visée. Elle l'est maintenant — les lieux d'un artiste
+                   prennent la plaque de l'équipe, ils en prennent aussi
+                   l'absence de trait.
+                   L'AIR SE LIT SEUL, comme à la nº 492 : la séparation
+                   valait 40 px au-dessus et 40 en dessous. Sans trait à
+                   encadrer, ces deux airs se cumuleraient en 80 px de
+                   vide ; il n'en reste QU'UN, les 40 px du `mt-10`. */
+              <div className="mt-10">
                 <BlocProfilsArtiste tatoueur={tatoueur} />
               </div>
             )
@@ -2249,9 +2270,11 @@ export function ContenuFiche({
                  ces deux airs n'ont plus rien à encadrer et se
                  cumuleraient en 80 px de vide. Il n'en reste donc QU'UN,
                  les 40 px du `mt-10`, l'unité d'air majeure de la fiche.
-                 ⚠️ LA BRANCHE ARTISTE, JUSTE AU-DESSUS, GARDE LE SIEN :
-                 un artiste n'a pas d'équipe, et sa section de profils
-                 n'est pas visée par la demande. */
+                 ⚠️ LA BRANCHE ARTISTE, JUSTE AU-DESSUS, A PERDU LE
+                 SIEN À LA nº 496 : ses lieux ont pris la plaque de
+                 l'équipe, donc la même absence de trait. Plus aucune
+                 séparation ne coupe le bas d'une fiche, quel qu'en soit
+                 le type. */
             <div className="mt-10">
               <BlocAdressesFiche
                 tatoueur={tatoueur}

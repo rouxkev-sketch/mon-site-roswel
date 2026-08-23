@@ -393,14 +393,34 @@ export function roleDuMembre(membre: MembreEquipe): string {
  *
  * ⚠️ FONCTION PURE : la règle s'exécute sans base ni session.
  */
-/** Le point médian qui sépare le statut du booking. Écrit ici, avec
-    ses espaces, pour qu'aucun appelant ne le recopie. */
+/** Le point médian qui sépare le statut de son complément. Écrit ici,
+    avec ses espaces, pour qu'aucun appelant ne le recopie. */
 export const SEPARATEUR_MENTION = " • ";
 
-export function mentionDuMembre(membre: MembreEquipe): {
+/**
+ * ██ §3 (nº 496) — LA MENTION EST UNE FORME, PAS UN CONTENU ██
+ * ==================================================================
+ * La nº 493 l'avait taillée pour un seul usage : le statut d'un membre
+ * d'équipe, puis son booking. La nº 496 la demande AUSSI sur les lieux
+ * d'une fiche d'artiste — statut, puis TYPE DE LIEU. Même dessin, même
+ * séparateur, même gris, même place ; seul le second morceau change de
+ * nature.
+ * PLUTÔT QUE DE RECOPIER, ON A NOMMÉ LA FORME : deux morceaux, dont le
+ * second peut manquer. `mentionDuMembre` le remplit avec le booking,
+ * `mentionDuLieu` avec le type de lieu, et le dessin — un seul, dans
+ * BlocLieux — ne sait pas lequel il rend.
+ * ⚠️ LE CHAMP A CHANGÉ DE NOM (`booking` → `complement`) : il ne
+ * décrivait plus qu'un de ses deux emplois. Aucun texte, aucune règle
+ * de silence n'a bougé avec lui.
+ */
+export type MentionEnDeuxMorceaux = {
+  /** Toujours présent, et peint en capitales par l'appelant. */
   statut: string;
-  booking: string | null;
-} {
+  /** Absent quand la donnée manque — le séparateur part avec lui. */
+  complement: string | null;
+};
+
+export function mentionDuMembre(membre: MembreEquipe): MentionEnDeuxMorceaux {
   const etat =
     membre.booking === "ouvert" || membre.booking === "delai"
       ? "Booking ouvert"
@@ -414,9 +434,27 @@ export function mentionDuMembre(membre: MembreEquipe): {
   const muet = membre.booking === "delai" && !attente;
   return {
     statut: roleDuMembre(membre),
-    booking:
+    complement:
       etat && !muet ? (attente ? `${etat} · ${attente}` : etat) : null,
   };
+}
+
+/**
+ * §3 (nº 496) — LA MENTION D'UN LIEU, SUR UNE FICHE D'ARTISTE.
+ * ------------------------------------------------------------------
+ * « FONDATEUR • Salon », « RÉSIDENT • Studio », « GUEST • Salon ».
+ * Les DEUX morceaux existent déjà et ne sont pas réécrits ici : le
+ * statut sort de `lieuEnDeuxLignes` (le rôle, « Guest » compris), le
+ * type de lieu de `typeDeLieuDuMode`. Cette fonction ne fait que les
+ * ranger dans la forme commune.
+ * ⚠️ AUCUN MOT N'EST INVENTÉ, et rien n'est deviné : un mode sans rôle
+ * lisible rend un statut vide, un type de lieu absent rend `null` —
+ * et le séparateur s'en va avec lui (piège nº 386).
+ */
+export function mentionDuLieu(mode: ModeExerciceFiche): MentionEnDeuxMorceaux {
+  const { role } = lieuEnDeuxLignes(mode);
+  const type = (typeDeLieuDuMode(mode) ?? "").trim();
+  return { statut: role, complement: type || null };
 }
 
 /**
