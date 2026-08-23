@@ -194,8 +194,9 @@ export function adresseDeLienInterne(slug: string): string {
  *
  * ██ §1 (nº 491) — POURQUOI LE COMPTEUR N'AVAIT PAS DE FOND AU WEB ██
  * Il en avait un. Il était `bg-sombre-carte` — et la fenêtre de fiche
- * du web est peinte de CE JETON-LÀ (`FenetreFiche`, la fenêtre et sa
- * colonne de droite). Fond et support avaient donc exactement la même
+ * du web était peinte de CE JETON-LÀ (`FenetreFiche`, la fenêtre et sa
+ * colonne de droite ; elle porte le fond de la PAGE depuis l'essai de
+ * la nº 499, ce qui ne change rien au récit ci-dessous ni au remède). Fond et support avaient donc exactement la même
  * couleur : contraste nul, capsule invisible, texte qui semblait nu.
  * Au doigt la fiche est une PAGE, posée sur le fond du site : le même
  * jeton s'y détachait, d'où la différence.
@@ -462,8 +463,10 @@ function LigneDeCapsules({
               même hauteur, même écriture que les autres, et un fond
               qui se détache de son support dans les DEUX enveloppes
               (`bg-sombre-eleve` — voir la note, §1 de la nº 491 :
-              `bg-sombre-carte` était la couleur même de la fenêtre du
-              web). Aucun contour, aucun rose.
+              `bg-sombre-carte` était alors la couleur même de la
+              fenêtre du web ; depuis la nº 499 c'est celle de la PAGE,
+              donc toujours un fond de support, jamais un fond de
+              capsule). Aucun contour, aucun rose.
               LE LIBELLÉ DIT L'ÉTAT : « +N ⌄ » tant qu'il reste à
               déplier, « Réduire ⌃ » une fois tout montré. La forme et
               le fond ne changent pas d'un état à l'autre ; seuls le

@@ -567,9 +567,15 @@ export const SOULIGNEMENT_LIEN =
  * souris n'existe pas au doigt, et n'existe pas non plus à l'arrêt.
  * Elle est maintenant TOUJOURS là. Le jeton est `bg-sombre-eleve` — le
  * seul cran qui se détache des DEUX supports de cette ligne : la page
- * (le bleu nuit de la nº 466) ET la carte de la fenêtre superposée. Un
- * cran plus bas serait la couleur même de la fenêtre, donc invisible
- * au web : c'est la leçon du compteur de capsules (nº 491-§1).
+ * (le bleu nuit de la nº 466) ET la fenêtre superposée. Un cran plus
+ * bas serait la couleur de la PAGE, donc invisible partout.
+ * ⚠️ CETTE PHRASE A CHANGÉ DE RAISON À LA nº 499, pas de conclusion :
+ * la fenêtre du web portait `carte`, et « un cran plus bas » y était
+ * invisible pour CETTE raison-là (la leçon du compteur de capsules,
+ * nº 491-§1). Depuis l'essai de la nº 499 la fenêtre porte le fond de
+ * la PAGE : les deux supports ne font plus qu'un, et `eleve` s'y
+ * détache MIEUX qu'avant (1,37 contre 1,18). Le choix reste le bon,
+ * avec une marge de plus.
  * ⚠️ §1 (nº 493) — LES QUATRE COINS SONT ARRONDIS. La nº 492 avait
  * carré celui d'en haut à gauche, pour que la mention grise vienne s'y
  * appuyer ; le propriétaire annule. Les quatre valent 12 px, sans

@@ -574,6 +574,39 @@ export function FenetreFiche({
             </ol>
           </nav>
 
+          {/*  ██ §1 (nº 499) — ESSAI : LA FENÊTRE PREND LE FOND DE LA
+               PAGE ██
+               ==============================================================
+               CE QU'ELLE PORTAIT : `carte` (#1A1F26). Le relevé de la
+               nº 498 a montré pourquoi elle paraissait grise — à la
+               nº 466 le fond de page a été fortement ASSOMBRI
+               (#1A1A1D → #0B0F14) alors que les autres barreaux n'ont
+               été que RETINTÉS en bleu : la fenêtre se retrouvait donc
+               à peu près à la clarté de l'ancien fond du site.
+               CE QU'ELLE PORTE : `fond` (#0B0F14), le fond de la page.
+
+               ⚠️ LA COULEUR NE DÉLIMITE PLUS RIEN, et c'est le point à
+               juger : le contraste fenêtre / page passe de 1,16 à
+               1,00 — identiques au pixel près. Ce qui reste pour la
+               découper, et qui suffit ou non selon l'œil :
+                1. LE VOILE, et c'est lui le vrai découpage : la page
+                   du dessous reçoit `bg-black/80`, ce qui la ramène à
+                   #020304 — quasi noire. La fenêtre, restée à
+                   #0B0F14, s'en détache de 1,07. C'est peu, mais c'est
+                   dans le bon sens : c'est la PAGE qui s'efface, pas
+                   la fenêtre qui s'allume.
+                2. L'OMBRE PORTÉE, 80 px de flou à 60 % de noir, juste
+                   dessous — le seul trait franc qui reste.
+                3. LES COINS ARRONDIS à droite, et LA PHOTO qui occupe
+                   toute la moitié gauche : c'est elle, en pratique,
+                   qui dit où la fenêtre commence.
+               ⚠️ MON AVIS, PUISQU'IL EST DEMANDÉ : la fenêtre ne
+               devient PAS indistincte — la photo et l'ombre la tiennent
+               —, mais elle perd son côté « panneau posé sur le site »
+               au profit d'un « le site continue ici ». C'est un choix
+               de sens, pas un défaut ; il se juge à l'œil, pas au
+               calcul. Aucun contour n'est ajouté pour compenser
+               (charte). */}
           <div
             ref={fenetreRef}
             className="pointer-events-auto flex flex-col lg:flex-row
@@ -581,7 +614,7 @@ export function FenetreFiche({
                        lg:h-[min(88vh,940px,calc((100vw-476px)*1.25))]
                        lg:max-w-[min(1200px,calc(100vw-96px))]
                        overflow-y-auto lg:overflow-hidden overscroll-contain
-                       rounded-b-lg rounded-t-none lg:rounded-none lg:rounded-r-lg bg-sombre-carte
+                       rounded-b-lg rounded-t-none lg:rounded-none lg:rounded-r-lg bg-sombre-fond
                        shadow-[0_24px_80px_rgba(0,0,0,0.6)]
                        scale-100 transition-transform duration-200 starting:scale-[0.97]"
           >
@@ -691,7 +724,22 @@ export function FenetreFiche({
                   elle, n'est pas marquée : ses liens gardent le trait
                   (au doigt, ils naviguent réellement). */
               data-signe-muet=""
-              className="w-full lg:w-[380px] shrink-0 lg:h-full lg:overflow-y-auto lg:overflow-x-clip p-5 sm:p-6 flex flex-col bg-sombre-carte [--fond-colonne:var(--rw-sombre-carte)]"
+              /*  ██ §1 (nº 499) — LA COLONNE SUIT LA FENÊTRE ██
+                  Elle passe elle aussi de `carte` au fond de la page.
+                  ⚠️ ET SA VARIABLE AVEC : `--fond-colonne` est ce que
+                  les blocs COLLANTS de `ContenuFiche` reprennent pour
+                  masquer le contenu qui défile dessous (le sélecteur
+                  d'onglets, le voile de huit pixels au-dessus de lui).
+                  Laisser la variable sur l'ancien jeton aurait peint
+                  une bande `carte` en travers d'une colonne devenue
+                  noire — le défaut aurait sauté aux yeux dès le
+                  premier défilement. Les deux valeurs se posent donc
+                  ensemble, comme elles l'ont toujours été.
+                  ⚠️ LA PAGE DE FICHE PORTE DÉJÀ CE COUPLE-LÀ
+                  (`FicheTatoueur`, `bg-sombre-fond` +
+                  `--rw-sombre-fond`) : les deux enveloppes de la fiche
+                  disent maintenant exactement la même chose. */
+              className="w-full lg:w-[380px] shrink-0 lg:h-full lg:overflow-y-auto lg:overflow-x-clip p-5 sm:p-6 flex flex-col bg-sombre-fond [--fond-colonne:var(--rw-sombre-fond)]"
             >
               <ContenuFiche
                 tatoueur={tatoueur}
