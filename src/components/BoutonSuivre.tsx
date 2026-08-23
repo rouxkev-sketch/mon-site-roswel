@@ -152,8 +152,14 @@ export function BoutonSuivre({
           semi-gras (SelecteurOngletAffiche). La rangée `items-center`
           de l'enveloppe cale les centres optiques. */
       /**
-       * ██ §1 (nº 383) — LE BADGE DEVIENT UN CONTOUR ██
-       * ==================================================================
+       * §1 (nº 383) — LE BADGE DEVIENT UN CONTOUR.
+       * ⛔ DE L'HISTOIRE : la nº 405 a rendu son fond plein à
+       * « Suivre », la nº 459 à « Suivi », et la nº 528 a retiré le
+       * rose du premier. Aucun des deux états n'est plus un contour.
+       * On garde la note parce qu'elle dit d'où vient la géométrie que
+       * les deux portent encore (le trait d'un pixel, et les 32 px de
+       * haut qu'il donne).
+       * ------------------------------------------------------------------
        * Le fond plein disparaît des DEUX états. Ne restent qu'un trait
        * d'un pixel et le mot, de la même couleur :
        *  · PAS ENCORE SUIVI — rose sur rose : `border-primaire` +
@@ -178,25 +184,13 @@ export function BoutonSuivre({
        * plus haut de la rangée. La cible tactile GAGNE donc deux
        * pixels au lieu d'en perdre.
        *
-       * ██ §8 (nº 405) — « SUIVRE » REDEVIENT UN BOUTON ROSE PLEIN ██
-       * ==================================================================
-       * LE PROPRIÉTAIRE RENVERSE À NOUVEAU LA ROBE DE CET ÉTAT, et dans
-       * l'écriture QUI EXISTE DÉJÀ — celle du badge de compte de la
-       * barre fixe (nº 399) et du bouton « Créer mon compte » de la
-       * fenêtre d'invitation (nº 396-397), elle-même reprise de
-       * « qui-sommes-nous ». Aucune couleur n'est inventée :
-       *  · PAS ENCORE SUIVI — fond ET contour au ROSE DU SITE
-       *    (`bg-primaire border-primaire`, `#FF2E6C` depuis la
-       *    nº 466), texte BLANC
-       *    (`text-sombre-texte`, `#F2F2F4` — le blanc de la charte
-       *    sombre, celui du bouton rose de la fenêtre d'invitation).
-       *    AU SURVOL, LE FOND ET LE CONTOUR MONTENT ENSEMBLE D'UN CRAN
-       *    (`hover:bg-primaire-fonce hover:border-primaire-fonce`) — le
-       *    traitement du bouton rose du site, au caractère près ; le
-       *    texte reste blanc, comme là-bas ;
-       *  · DÉJÀ SUIVI — INCHANGÉ dans son principe : fond transparent,
-       *    texte gris doux. SEUL LE CONTOUR S'ASSOMBRIT (voir plus
-       *    bas).
+       * §8 (nº 405) — « SUIVRE » ÉTAIT UN BOUTON ROSE PLEIN.
+       * ⛔ DE L'HISTOIRE DEPUIS LA nº 528 (note juste dessous) : le
+       * rose est parti de cet état. Ce qui reste vrai de cette
+       * passe-là, et qui n'a jamais bougé depuis : le fond ET le
+       * contour portent LE MÊME jeton, le texte en porte un second, et
+       * le survol remplace les deux premiers d'un cran. C'est le
+       * squelette de l'état, quelle que soit sa couleur.
        *
        * ⚠️ NI LE BOUTON NI LA RANGÉE NE BOUGENT. Le contour d'un pixel
        * RESTE dans les deux états — c'est lui qui donne les 32 px de
@@ -205,6 +199,58 @@ export function BoutonSuivre({
        * déjà appliquée au badge de la barre fixe). Le rembourrage, la
        * typographie et la mécanique des deux libellés superposés ne
        * changent pas d'un pixel.
+       * ⚠️ ET CE CONTOUR N'EST PAS UN CONTOUR AU SENS DE LA CHARTE :
+       * il porte TOUJOURS le jeton du fond, donc il ne se voit pas. Ce
+       * n'est pas une décoration, c'est la mesure du bouton.
+       *
+       * ██ §1 (nº 528) — « SUIVRE » PASSE AU BLANC ██
+       * ==================================================================
+       * LE PROPRIÉTAIRE RETIRE LE ROSE DE CET ÉTAT :
+       *  · LE FOND (et son contour) prennent `sombre-texte`, #F2F2F4 —
+       *    LE BLANC DE LA CHARTE, pas un blanc pur. C'est ce qu'il a
+       *    demandé, et c'est aussi la seule bonne réponse : #FFFFFF
+       *    n'existe nulle part dans la palette sombre (nº 466), et un
+       *    blanc pur au milieu de blancs cassés se voit — il aurait
+       *    fallu l'inventer, puis le tenir ;
+       *  · LE TEXTE prend `sombre-fond`, #0B0F14 — le fond de page
+       *    lui-même. Les deux jetons s'échangent leurs rôles : ce que
+       *    la page porte en fond, le bouton le porte en texte.
+       *
+       * ⚠️ LE SURVOL ET L'APPUI, QU'IL FALLAIT REPRENDRE. Ils visaient
+       * le rose foncé — un jeton qui n'a plus rien à faire ici. Il
+       * n'existe AUCUN blanc intermédiaire dans la charte : entre
+       * `sombre-texte` (#F2F2F4) et `sombre-texte-doux` (#A8A8B0) il
+       * n'y a rien, et le second est un gris franc — le bouton
+       * paraîtrait éteint, pas effleuré. LA RÉPONSE EST DONC LE MÊME
+       * JETON, VOILÉ D'UN DIXIÈME (`/90`) : le blanc de la charte
+       * laisse passer un peu du fond derrière lui et rend #DBDBDE — un
+       * blanc à peine moins vif, exactement ce qui était demandé.
+       * Aucune couleur n'est inventée : c'est le jeton, et le motif du
+       * voile est celui du site (la note de démonstration l'emploie
+       * déjà sur le rose).
+       * ⚠️ L'APPUI PREND LA MÊME VALEUR QUE LE SURVOL, et c'est un
+       * ajout assumé : l'état rose n'avait PAS d'appui, ce qui ne
+       * coûtait rien au web mais laissait le doigt sans réponse.
+       * « Suivi » en a un depuis la nº 504 ; les deux états se
+       * répondent enfin.
+       * ⚠️ LE SENS DU MOUVEMENT EST LE MÊME QUE PARTOUT : on
+       * S'ASSOMBRIT en touchant. Le rose descendait vers son foncé,
+       * « Suivi » descend vers `sombre-carte` (nº 504) ; le blanc
+       * descend vers son voile. Aucun état ne monte au contact.
+       *
+       * ⚠️ CE QUE ÇA COÛTE, ET JE LE DIS : ce bouton devient L'ÉLÉMENT
+       * LE PLUS CLAIR DE LA FICHE — 17,2 de contraste sur le fond,
+       * quand « Suivi » n'en rend que 1,4. C'est voulu (c'est le seul
+       * appel à l'action de la page), mais cela veut dire que l'œil y
+       * va AVANT d'aller à la photo. Le texte courant de la fiche porte
+       * le même jeton, sans que les deux se confondent : ici c'est un
+       * aplat, là des lettres.
+       * ⚠️ CONSÉQUENCE DE CHARTE : plus rien n'est rose AU REPOS sur
+       * une fiche de profil, sauf le trait de 3 px du va-et-vient
+       * Profil / Portfolio (OngletsLigne) — il reste, et il devient le
+       * dernier rose de la page. Les anneaux de focus au clavier
+       * (celui de ce bouton compris) sont rosés eux aussi, mais ils ne
+       * se peignent qu'au clavier.
        */
       /*  §3 (nº 456) — LES EXTRÉMITÉS RONDES DEVIENNENT DES ANGLES
           ARRONDIS : `rounded-lg` (8 px), le rayon des badges de la
@@ -290,12 +336,14 @@ export function BoutonSuivre({
                              la conséquence assumée de « le gris des
                              plaques ». */
                         "bg-sombre-eleve border-sombre-eleve text-sombre-texte hover:bg-sombre-carte hover:border-sombre-carte active:bg-sombre-carte active:border-sombre-carte"
-                      : //  §8 (nº 405) — LE ROSE PLEIN DU SITE (voir la
+                      : //  §1 (nº 528) — LE BLANC DE LA CHARTE (voir la
                         //  note ci-dessus) : fond et contour au même
-                        //  jeton, texte blanc, et le survol monte les
-                        //  deux d'un cran. C'est l'écriture du badge de
-                        //  la barre fixe (nº 399), au caractère près.
-                        "bg-primaire border-primaire text-sombre-texte hover:bg-primaire-fonce hover:border-primaire-fonce"
+                        //  jeton, texte à la couleur du fond de page,
+                        //  et le survol comme l'appui voilent les deux
+                        //  d'un dixième. Une seule couleur par
+                        //  propriété, remplacée — jamais empilée ; et
+                        //  les classes en ordre alphabétique.
+                        "active:bg-sombre-texte/90 active:border-sombre-texte/90 bg-sombre-texte border-sombre-texte hover:bg-sombre-texte/90 hover:border-sombre-texte/90 text-sombre-fond"
                   }`}
     >
       {/*  ⚠️ LES DEUX LIBELLÉS OCCUPENT LA MÊME LARGEUR (nº 208-§1) :
