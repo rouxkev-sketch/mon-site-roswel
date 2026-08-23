@@ -72,6 +72,76 @@ export const CHEVRON_GALERIE_PETIT: TailleChevron = {
   trait: "2.5",
 };
 
+/*  §3 (nº 264) — LA LARGEUR DE CONTENU, PAS LE `clientWidth` : la
+    rangée déborde de son cadre (rembourrage interne), et `clientWidth`
+    le compte. Une PAGE reste une largeur de CONTENU.
+    ⚠️ §2 (nº 522) — CETTE FONCTION ET LA SUIVANTE VIVENT HORS DU
+    COMPOSANT, et c'est délibéré : elles ne lisent RIEN de lui — ni
+    état, ni propriété —, elles ne prennent que le cadre qu'on leur
+    tend. Déclarées dedans, elles se refabriquaient à chaque rendu et
+    l'écouteur de défilement se serait reposé pour rien à chacun. */
+function largeurContenu(cadre: HTMLElement) {
+  const style = getComputedStyle(cadre);
+  return (
+    cadre.clientWidth -
+    parseFloat(style.paddingLeft) -
+    parseFloat(style.paddingRight)
+  );
+}
+
+/**
+ * ██ §2 (nº 522) — LE RANG DE LA DERNIÈRE VIGNETTE VUE ██
+ * ------------------------------------------------------------------
+ * LA nº 521 ANNONÇAIT LA PREMIÈRE, ET C'ÉTAIT UNE ERREUR DE FOND :
+ * sur une galerie de 19 photos qui en montre deux à la fois, la
+ * PREMIÈRE vignette visible ne peut jamais dépasser la 18ᵉ — arrivé
+ * au bout du défilement, il reste une photo à droite d'elle. Le
+ * compteur se bloquait donc à « 18/19 » alors que la 19ᵉ était bien à
+ * l'écran, et disait « 1/19 » quand deux photos étaient déjà vues.
+ * LA RÈGLE, DÉSORMAIS : on annonce LA DERNIÈRE vignette visible. Elle
+ * atteint le total au bout de la course PAR CONSTRUCTION, et elle
+ * répond à la question qu'on se pose vraiment — où en suis-je dans
+ * cette galerie ?
+ * POURQUOI PAS UNE PLAGE (« 1-2/19 » puis « 18-19/19 ») : elle
+ * décrirait mieux ce qu'on voit, mais elle CHANGE DE LARGEUR en
+ * chemin — deux caractères de plus au bout —, et les chiffres de
+ * largeur égale n'y peuvent rien. Elle demanderait en plus un cas à
+ * part dès qu'une seule vignette est visible (« 3-3/19 »).
+ *
+ * COMMENT C'EST MESURÉ, SANS AUCUNE VALEUR ÉCRITE :
+ *  · le PAS entre deux vignettes se lit sur les DEUX PREMIÈRES de la
+ *    rangée — leur écart de position porte déjà la largeur d'une case
+ *    ET l'espace qui les sépare, quels qu'ils soient. Le réglage
+ *    d'écart de l'appelant (`ecart`) ne peut donc pas le désaccorder ;
+ *  · COMBIEN de vignettes tiennent à l'écran se déduit du même pas et
+ *    de la largeur de contenu ;
+ *  · la dernière vue est la première PLUS ce compte, bornée au total.
+ * ⚠️ C'EST LE BORNAGE QUI GARANTIT LA FIN DE COURSE : quand une
+ * vignette n'est visible qu'à moitié, l'arrondi peut viser une case
+ * de trop — la borne la ramène sur la dernière qui existe. Le
+ * compteur atteint donc le total, et ne le dépasse jamais.
+ * ⚠️ L'ARRONDI REND LE CHANGEMENT FRANC : le rang bascule à
+ * mi-parcours entre deux vignettes, jamais progressivement. Au doigt
+ * comme au web, puisque tout se lit sur le défilement lui-même —
+ * l'accrochage (`snap`) fait le reste et pose la rangée pile.
+ * ⚠️ UNE GALERIE QUI TIENT ENTIÈREMENT À L'ÉCRAN annonce d'emblée son
+ * total (« 19/19 ») : tout est vu, il n'y a rien à parcourir. Une
+ * seule photo dit « 1/1 », comme à la nº 521.
+ * ⚠️ UNE RANGÉE PAS ENCORE MESURABLE (une seule case, un pas nul)
+ * rend zéro — donc « 1 » à l'affichage. Jamais de vide, jamais de
+ * division par zéro.
+ */
+function rangDerniereVue(cadre: HTMLElement) {
+  const cases = cadre.children;
+  if (cases.length < 2) return 0;
+  const pas =
+    (cases[1] as HTMLElement).offsetLeft - (cases[0] as HTMLElement).offsetLeft;
+  if (pas <= 0) return 0;
+  const premiere = Math.max(0, Math.round(cadre.scrollLeft / pas));
+  const tiennent = Math.max(1, Math.round(largeurContenu(cadre) / pas));
+  return Math.min(cases.length - 1, premiere + tiennent - 1);
+}
+
 export function GalerieQuiDefile({
   children,
   /**
@@ -89,6 +159,9 @@ export function GalerieQuiDefile({
    * dessin.
    * ⚠️ LE RANG PART DE ZÉRO : c'est un rang, pas un numéro. Celui qui
    * l'affiche ajoute un.
+   * ⚠️ §2 (nº 522) — C'EST LA DERNIÈRE VIGNETTE VUE, plus la première :
+   * seule elle atteint le total au bout de la course. Voir la note de
+   * `rangDerniereVue`, qui dit pourquoi la première ne le pouvait pas.
    */
   surRang,
   classeEnveloppe = "",
@@ -141,7 +214,8 @@ export function GalerieQuiDefile({
   etiquette,
 }: {
   children: React.ReactNode;
-  /** §1 (nº 521) — appelé au défilement avec le rang (base zéro). */
+  /** §1 (nº 521, revu nº 522) — appelé au défilement avec le rang de
+      la DERNIÈRE vignette vue (base zéro). */
   surRang?: (rang: number) => void;
   classeEnveloppe?: string;
   classeRangee?: string;
@@ -187,51 +261,6 @@ export function GalerieQuiDefile({
     };
   }, [cleMemoire]);
 
-  /*  §3 (nº 264) — LA LARGEUR DE CONTENU, PAS LE `clientWidth` : la
-      rangée déborde de son cadre (rembourrage interne), et
-      `clientWidth` le compte. Une PAGE reste une largeur de CONTENU. */
-  const largeurContenu = (cadre: HTMLElement) => {
-    const style = getComputedStyle(cadre);
-    return (
-      cadre.clientWidth -
-      parseFloat(style.paddingLeft) -
-      parseFloat(style.paddingRight)
-    );
-  };
-
-  /**
-   * ██ §1 (nº 521) — LE RANG DE LA PREMIÈRE VIGNETTE VUE ██
-   * ------------------------------------------------------------------
-   * À NE PAS CONFONDRE AVEC `page`, juste en dessous : une PAGE est une
-   * largeur de cadre, donc PLUSIEURS vignettes — c'est le pas des
-   * chevrons, pas un rang de photo. Le compteur d'une galerie du
-   * Portfolio (« 1/20 ») a besoin de l'autre nombre.
-   * COMMENT IL EST MESURÉ, SANS AUCUNE VALEUR ÉCRITE : le PAS entre
-   * deux vignettes se lit sur les DEUX PREMIÈRES de la rangée — leur
-   * écart de position porte déjà la largeur d'une case ET l'espace qui
-   * les sépare, quels qu'ils soient. Le réglage d'écart de l'appelant
-   * (`ecart`) ne peut donc pas le désaccorder, et rien n'est à tenir à
-   * jour ici quand une galerie change de gabarit.
-   * ⚠️ L'ARRONDI REND LE CHANGEMENT FRANC : le rang bascule à
-   * mi-parcours entre deux vignettes, jamais progressivement. Au doigt
-   * comme au web, puisque tout se lit sur le défilement lui-même —
-   * l'accrochage (`snap`) fait le reste et pose la rangée pile.
-   * ⚠️ UNE SEULE VIGNETTE, OU UNE RANGÉE PAS ENCORE MESURABLE : le pas
-   * vaut zéro, et le rang vaut zéro — donc « 1 » à l'affichage. Jamais
-   * de vide, jamais de division par zéro.
-   */
-  const rangPremiereVue = (cadre: HTMLElement) => {
-    const cases = cadre.children;
-    if (cases.length < 2) return 0;
-    const pas =
-      (cases[1] as HTMLElement).offsetLeft - (cases[0] as HTMLElement).offsetLeft;
-    if (pas <= 0) return 0;
-    return Math.min(
-      cases.length - 1,
-      Math.max(0, Math.round(cadre.scrollLeft / pas))
-    );
-  };
-
   /**
    * §4 (nº 253) — UNE PAGE ENTIÈRE, ET RIEN D'AUTRE. On VISE une
    * frontière de page (`page × largeur visible`) au lieu d'ajouter une
@@ -262,7 +291,7 @@ export function GalerieQuiDefile({
       });
       //  §1 (nº 521) — LE RANG DE LA PREMIÈRE VIGNETTE VUE, pour qui
       //  le demande. Voir la note du paramètre.
-      if (surRang) surRang(rangPremiereVue(cadre));
+      if (surRang) surRang(rangDerniereVue(cadre));
     };
     lire();
     cadre.addEventListener("scroll", lire, { passive: true });

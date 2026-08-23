@@ -422,9 +422,15 @@ export function PanneauPortfolio({
    * ⚠️ LES CHIFFRES ONT TOUS LA MÊME LARGEUR (`tabular-nums`, le
    * procédé du compteur de carrousel) : passer de « 9/20 » à « 10/20 »
    * ne fait pas frémir la ligne.
-   * ⚠️ IL DIT « 1 » AVANT TOUT DÉFILEMENT : le rang part de zéro, et
-   * l'affichage ajoute un. Aucune galerie ne s'ouvre sur un compteur
-   * vide.
+   * ⚠️ IL N'EST JAMAIS VIDE : le rang part de zéro, et l'affichage
+   * ajoute un.
+   * ⚠️ §2 (nº 522) — CE QU'IL COMPTE EST LA DERNIÈRE VIGNETTE VUE, plus
+   * la première. Une galerie de 19 photos qui en montre deux ouvre donc
+   * sur « 2/19 » — deux photos SONT vues — et finit sur « 19/19 ». Avec
+   * la première, elle disait « 1/19 » puis se bloquait à « 18/19 », la
+   * dernière photo restant à l'écran sans être comptée : la première
+   * visible ne peut pas dépasser l'avant-dernière quand deux tiennent
+   * côte à côte. Le pourquoi complet vit dans GalerieQuiDefile.
    * ⚠️ CE N'EST PAS LE COMPTEUR DE LA VUE PHOTO (nº 483/487), et les
    * deux restent séparés à dessein : celui-là est une PASTILLE POSÉE
    * SUR L'IMAGE, avec son fond et son placement dans l'angle ; celui-ci
@@ -465,9 +471,14 @@ export function PanneauPortfolio({
                GRIS des textes secondaires (le jeton de la nº 466), et
                la graisse NORMALE : il accompagne le style, il ne le
                concurrence pas. */}
+          {/*  §1 (nº 522) — UN CRAN PLUS PETIT : 15 → 14 px. Il
+               accompagne la ligne du style, il ne la double pas — et
+               c'est la valeur que la ligne d'information d'une carte
+               porte déjà (nº 480), pas un nombre neuf. Le gris, la
+               graisse et la place ne bougent pas. */}
           <p
             data-compteur-galerie=""
-            className="shrink-0 text-[15px] font-normal tabular-nums text-sombre-texte-doux"
+            className="shrink-0 text-[14px] font-normal tabular-nums text-sombre-texte-doux"
           >
             {rang + 1}/{total}
           </p>
