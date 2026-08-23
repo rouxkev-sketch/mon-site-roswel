@@ -638,7 +638,29 @@ export function FenetreFiche({
                  `?sonde-photo=1`, et une seule sonde s'affiche à la
                  fois — la plus récente, donc celle-ci. */}
             <SondePhoto />
-            <div className="relative w-full lg:w-auto lg:h-full aspect-[4/5] min-w-0 shrink-0 lg:shrink bg-black select-none">
+            {/*  ██ §2 (nº 500) — LA BOÎTE DE LA PHOTO NE PEINT PLUS ██
+                 ==============================================================
+                 ELLE PORTAIT `bg-black`, un noir plus sombre que le
+                 fond de la fenêtre. Il ne se voyait que dans deux
+                 situations — pendant le chargement d'une photo, et sur
+                 le demi-pixel que l'arrondi du cadre laisse découvert —
+                 mais dans les deux cas il faisait une SECONDE couleur
+                 dans une fenêtre qui n'en veut qu'une. Décision du
+                 propriétaire : une seule couleur dans toute la fenêtre.
+                 CE QUI CHANGE À L'ŒIL : pendant le chargement, la
+                 moitié gauche montre le fond de la fenêtre au lieu d'un
+                 rectangle noir. Rien d'autre — la photo arrivée le
+                 couvrait déjà entièrement.
+                 ⚠️ LA PLACE RESTE RÉSERVÉE, ET ELLE NE VIENT PAS D'ICI :
+                 `aspect-[4/5]` sur cette boîte et sur la colonne du
+                 carrousel donne la hauteur AVANT la première image
+                 (l'acquis nº 280, redit par la nº 295). Un fond n'a
+                 jamais réservé quoi que ce soit — il ne faisait que
+                 colorer une place déjà tenue.
+                 ⚠️ LA GÉOMÉTRIE NE BOUGE PAS D'UN PIXEL : `aspect-[4/5]`,
+                 `lg:h-full`, `min-w-0`, `shrink-0 lg:shrink` sont
+                 intouchés. Une seule classe de couleur disparaît. */}
+            <div className="relative w-full lg:w-auto lg:h-full aspect-[4/5] min-w-0 shrink-0 lg:shrink select-none">
               <CarrouselPortfolio
                 //  §1 (nº 296) — LA FENÊTRE RETROUVE SON ÉTAT D'AVANT LA
                 //  nº 292 : les corrections des nº 292 à 295 étaient

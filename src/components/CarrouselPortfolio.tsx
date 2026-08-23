@@ -889,6 +889,12 @@ export function CarrouselPortfolio({
    *  · la FENÊTRE CENTRÉE SUPERPOSÉE ne change pas — elle vient d'être
    *    remise dans son état d'avant la nº 292 (`dansLaFenetre`) et
    *    n'aurait jamais dû être touchée.
+   * ⚠️ CETTE EXEMPTION A ÉTÉ ROGNÉE À LA nº 500, et il faut le savoir
+   * pour lire la suite : la fenêtre garde bien la géométrie d'avant la
+   * nº 292 (pas d'`aspect-4/5` sur le cadre, pas de rognage des
+   * colonnes), mais elle a PERDU LE FOND que cette exemption lui avait
+   * rendu. Plus aucune boîte de la chaîne ne peint, nulle part — la
+   * règle (b) de la nº 295 vaut désormais partout, sans exception.
    */
   /*  ██ §1 (nº 433) — LA PHOTO REGARDÉE ÉPOUSE SON CADRE ; SES
       VOISINES GARDENT LEUR PIXEL DE GARDE ██
@@ -1265,8 +1271,36 @@ export function CarrouselPortfolio({
            que soit le moteur de rendu.
            LA RÉSERVATION DE LA nº 280 TIENT SANS COULEUR : elle vient
            du format 4/5 (cadre et colonne), pas d'un fond. La hauteur
-           est connue avant la première image ; la page ne saute pas. */
-      className={`relative select-none${dansLaFenetre ? " bg-sombre-carte" : ""}`}
+           est connue avant la première image ; la page ne saute pas.
+           ██ §1 (nº 500) — ET LA FENÊTRE REJOINT ENFIN LA PAGE ██
+           ------------------------------------------------------------
+           CE QUI RESTAIT : la nº 296 avait REMIS la fenêtre dans son
+           état d'avant la nº 292 — le fond compris —, en jugeant que
+           les corrections des nº 292 à 295 étaient pensées pour la
+           PAGE, « dont la géométrie est l'inverse de la sienne ». Ce
+           `bg-sombre-carte` a donc survécu ici seul, sous le drapeau
+           `dansLaFenetre`. Il était INVISIBLE, mais pour une raison
+           fragile : il avait EXACTEMENT la couleur de la fenêtre.
+           CE QUI L'A RÉVÉLÉ : la nº 499 a fait passer la fenêtre au
+           fond de la page (#0B0F14) sans toucher à ce fond-ci, resté à
+           #1A1F26. Le liseré que la nº 294 décrit plus haut est
+           réapparu, à l'identique — le dernier demi-pixel que l'arrondi
+           du cadre (`w-[round(down,100%,1px)]`, nº 280/292) laisse
+           découvert, sur toute la hauteur, contre la colonne.
+           LE REMÈDE EST CELUI DE LA nº 294, ET C'EST LE MÊME
+           RAISONNEMENT : on ne recolore pas — deux endroits qui doivent
+           dire la même couleur finissent toujours par diverger, et
+           c'est précisément ce qui vient d'arriver entre la nº 296 et
+           la nº 499. ON RETIRE. Plus aucune boîte de la chaîne ne
+           peint, dans la fenêtre comme sur la page : ce qui transparaît
+           est le fond de la fenêtre, quelle que soit sa couleur
+           aujourd'hui et demain.
+           ⚠️ L'ARRONDI AU PIXEL RESTE (nº 280/292) : c'est lui qui
+           évite les photos floues. On n'a jamais cherché à supprimer
+           l'écart, seulement ce qui le rendait visible.
+           ⚠️ AUCUN DÉBORD DE 1 % N'EST AJOUTÉ : on ne rogne pas les
+           tatouages pour cacher un demi-pixel. */
+      className="relative select-none"
     >
       {/* LE CADRE QUI DÉFILE — le navigateur fait tout : l'inertie du
           doigt, l'accrochage d'une photo à la fois (`snap-always`), et

@@ -755,12 +755,21 @@ export function SondeRetour({
     let calme = 0;
 
     const mesurer = () => {
-      //  LA BOÎTE DE LA PHOTO DE LA FENÊTRE — les mêmes repères que la
-      //  fenêtre elle-même : fond noir + format 4/5 (FenetreFiche).
+      /*  LA BOÎTE DE LA PHOTO DE LA FENÊTRE.
+          ██ §2 (nº 500) — SON REPÈRE CHANGE, PAS SA CIBLE ██
+          Elle se retrouvait par « fond noir + format 4/5 ». La nº 500
+          a RETIRÉ le fond noir de cette boîte (une seule couleur dans
+          toute la fenêtre) : le premier des deux repères n'existe plus,
+          et la mesure du liseré serait sortie sans un mot — la sonde
+          aurait été aveugle sur ce qu'elle sert justement à mesurer.
+          LE NOUVEAU REPÈRE EST PLUS SÛR QUE L'ANCIEN, et il ne dépend
+          d'aucune couleur : le format 4/5 ET la présence du cadre du
+          carrousel à l'intérieur. Une couleur peut changer à toute
+          passe ; la structure, elle, EST ce qu'on mesure. */
       const boiteNoire = [...document.querySelectorAll("div")].find(
         (d) =>
-          String(d.className).includes("bg-black") &&
-          String(d.className).includes("aspect-[4/5]")
+          String(d.className).includes("aspect-[4/5]") &&
+          d.querySelector('[data-role="cadre"]') !== null
       );
       if (!boiteNoire) return; // pas de fenêtre superposée : rien à mesurer
       const colonne =
