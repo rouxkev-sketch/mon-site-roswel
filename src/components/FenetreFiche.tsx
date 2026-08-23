@@ -874,12 +874,44 @@ export function FenetreFiche({
                dans le fichier : l'ordre du source suit l'ordre de l'œil,
                sans rien changer à la mise en page.
 
-               ⚠️ `pointer-events-none`, ET C'EST VOULU : le conteneur
-               parent est `pointer-events-none`, le fil d'Ariane s'en
-               réveille (`pointer-events-auto`) parce qu'il porte des
-               liens. Celui-ci n'en porte aucun : le laisser transparent
-               au clic fait que cliquer dessus referme la fiche, comme
-               partout ailleurs dans le voile.
+               ⚠️ IL ÉTAIT TRANSPARENT AU CLIC, ET C'ÉTAIT VOULU : le
+               conteneur parent l'est, le fil d'Ariane s'en réveille
+               parce qu'il porte des liens ; celui-ci n'en portant
+               aucun, le laisser transparent faisait que cliquer dessus
+               refermait la fiche, comme partout ailleurs dans le voile.
+
+               ██ §1 (nº 518) — IL DEVIENT TANGIBLE, ET C'EST TOUTE LA
+               CAUSE DE CETTE PASSE ██
+               ------------------------------------------------------
+               LE SYMPTÔME : sur le web, des deux textes posés HORS de
+               la fenêtre, le fil d'Ariane se surlignait et ce titre
+               non. LA DIFFÉRENCE ÉTAIT ENTRE EUX DEUX, à quelques
+               lignes d'écart : le fil est réveillé au pointeur, ce
+               titre ne l'était pas. Or un élément transparent au clic
+               ne reçoit aucun appui — on ne peut donc pas y DÉMARRER
+               une sélection. Ce n'était ni un lien, ni une couche
+               posée dessus, ni une classe qui interdit la sélection :
+               c'était le texte lui-même, rendu intangible.
+               CE QUE ÇA COÛTAIT DE LE RÉVEILLER, et pourquoi la
+               fermeture est rejouée juste en dessous : la transparence
+               laissait le clic tomber sur le voile, qui referme. En
+               rendant ce texte tangible, on lui prend ce clic — il
+               faut donc le rendre à la main, sans quoi le titre
+               deviendrait un trou dans le voile.
+               ⚠️ ET LA FERMETURE S'ABSTIENT QUAND ON VIENT DE
+               SÉLECTIONNER : un glissement de sélection se termine par
+               un clic. Sans cette garde, surligner le titre le
+               referait disparaître au relâchement — le geste ne
+               servirait à rien.
+               ⚠️ RIEN D'AUTRE N'EST NÉCESSAIRE ICI : ce titre n'est
+               PAS un lien, la copie rend donc déjà le texte (les deux
+               attributs des nº 513-514 n'ont pas d'objet), et il ne
+               contient aucune image (la propriété de glissement de la
+               nº 516 non plus).
+               ⚠️ SOUS UNE AUTRE FICHE, RIEN NE CHANGE : le titre passe
+               en `invisible` (nº 440), ce qui le rend déjà inerte ET
+               insélectionnable — la garde du dessus n'a même pas à s'y
+               appliquer.
 
                ⚠️ WEB UNIQUEMENT, avec DEUX gardes qui disent deux choses
                différentes : `hidden lg:block` demande la largeur à deux
@@ -906,7 +938,16 @@ export function FenetreFiche({
               data-titre-fenetre=""
               //  §1 (nº 440) — même règle que le fil d'Ariane : sous une
               //  autre fiche, le titre s'efface (visibilité seule).
-              className={`pointer-events-none absolute top-full left-0 mt-2
+              //  §1 (nº 518) — LA FERMETURE QUE LA TRANSPARENCE RENDAIT
+              //  GRATUITE, rejouée : un clic sur ce titre referme la
+              //  fiche, comme un clic sur le voile. MAIS PAS QUAND ON
+              //  VIENT DE SURLIGNER — un glissement de sélection finit
+              //  par un clic, et le titre disparaîtrait au relâchement.
+              onClick={() => {
+                if (window.getSelection()?.toString()) return;
+                surFermeture();
+              }}
+              className={`pointer-events-auto absolute top-full left-0 mt-2
                          w-max max-w-full hidden lg:block mobile:hidden
                          text-[16px] font-bold text-white${
                            habillageEfface ? " invisible" : ""
