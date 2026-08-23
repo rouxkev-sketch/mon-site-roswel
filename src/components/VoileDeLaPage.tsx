@@ -141,15 +141,54 @@ export function VoileDeLaPage() {
         frais = cibles
           .map((element) => {
             const boite = element.getBoundingClientRect();
+            /**
+             * ██ §2 (nº 529) — LE TROU SE CALE SUR LE PIXEL ██
+             * ------------------------------------------------------
+             * LE DÉFAUT, ET SA CAUSE EXACTE. Le voile n'est pas une
+             * plaque : c'est un CARRELAGE de rectangles qui se
+             * touchent bord à bord (la colonne de gauche, les pans du
+             * haut et du bas, les interstices, la colonne de droite).
+             * Or leurs bords sont lus sur un `getBoundingClientRect`,
+             * qui rend des FRACTIONS — mesuré sur la rangée du
+             * moteur : 410,921875. Deux pans semi-transparents qui se
+             * rejoignent à 410,92 se partagent la colonne de pixels
+             * 410 : le premier y peint 0,92 de son alpha, le second
+             * 0,08. Composés, ils rendent 0,2743 au lieu de 0,28 —
+             * UNE RAIE PLUS CLAIRE d'un pixel, à l'endroit exact de
+             * la couture. Sur « Ma sélection », la couture la plus à
+             * gauche tombe à quelques pixels du bord de la fenêtre
+             * (la gouttière de la page), et la raie se lit comme une
+             * bande que le voile n'aurait pas couverte — surtout
+             * quand une photo claire passe dessous.
+             * LE REMÈDE : le trou se cale sur des pixels ENTIERS. Les
+             * bords des pans en héritent, chaque couture tombe alors
+             * pile entre deux colonnes de pixels, et aucune ne se
+             * partage plus. Aucun pan n'a changé de règle : ce sont
+             * les NOMBRES qu'on leur donne qui sont propres.
+             * ⚠️ ON ARRONDIT VERS L'EXTÉRIEUR (plancher à gauche et
+             * en haut, plafond à droite et en bas) : le trou ne peut
+             * ainsi que GRANDIR d'un pixel au plus, jamais rétrécir —
+             * le bloc épargné ne peut pas être effleuré par le voile.
+             * ⚠️ ET LE DÉCOUPAGE DE LA nº 450 NE BOUGE PAS D'UN MOT :
+             * mêmes éléments épargnés, mêmes trous, même air assombri
+             * entre eux. Seuls leurs bords sont désormais entiers.
+             * ⚠️ BÉNÉFICE SECOND : l'empreinte ne tremble plus. Elle
+             * comparait des fractions qui bougeaient au moindre
+             * défilement — l'état se reposait pour rien.
+             */
+            const gauche = Math.floor(boite.left);
+            const haut = Math.floor(boite.top);
+            const largeur = Math.ceil(boite.right) - gauche;
+            const hauteur = Math.ceil(boite.bottom) - haut;
             const [rayonGauche, rayonDroit] = rayonsDeLaDecoupe(
               element,
-              boite.height
+              hauteur
             );
             return {
-              top: boite.top,
-              left: boite.left,
-              width: boite.width,
-              height: boite.height,
+              top: haut,
+              left: gauche,
+              width: largeur,
+              height: hauteur,
               rayonGauche,
               rayonDroit,
             };
