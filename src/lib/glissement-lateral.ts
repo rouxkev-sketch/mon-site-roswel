@@ -10,19 +10,34 @@ import { corpsGele } from "@/lib/gel-du-corps";
 /**
  * ██ §2 (nº 526) — LE GLISSEMENT LATÉRAL QUI CHANGE D'ONGLET ██
  * ==================================================================
- * Sur « Ma sélection », au doigt, un glissement horizontal fait passer
- * de « Favoris » à « Portfolios » et retour. Ce module ne connaît NI
- * les onglets NI l'adresse : il RECONNAÎT LE GESTE et dit dans quel
- * sens il est allé. Ce qu'on en fait appartient à l'appelant — c'est
- * ce qui permet de le brancher sur l'écriture qui existe déjà (celle
- * du toucher d'un onglet), sans jamais en écrire une seconde.
+ * Au doigt, un glissement horizontal fait passer d'un onglet à
+ * l'autre : « Favoris » ↔ « Portfolios » sur Ma sélection (nº 526),
+ * « Profil » ↔ « Portfolio » sur une fiche (§2 nº 527). Ce module ne
+ * connaît NI les onglets NI l'adresse : il RECONNAÎT LE GESTE et dit
+ * dans quel sens il est allé. Ce qu'on en fait appartient à
+ * l'appelant — c'est ce qui permet de le brancher sur l'écriture qui
+ * existe déjà (celle du toucher d'un onglet), sans jamais en écrire
+ * une seconde.
  *
- * ⚠️ POURQUOI IL N'EST PAS UN COMPOSANT, ET NE POSE AUCUN MARQUAGE :
- * il rend QUATRE ÉCOUTEURS à poser sur un élément que l'appelant
- * possède déjà. Aucune classe, aucun conteneur, aucune boîte neuve —
- * donc rien de la mise en page ne peut bouger (pièges 378/379).
- * L'élément porteur gagne des écouteurs, il ne change ni de style ni
- * de forme.
+ * ██ §2 (nº 527) — UN SEUL RECONNAISSEUR, DEUX BRANCHEMENTS ██
+ * ------------------------------------------------------------------
+ * La nº 526 rendait des écouteurs REACT à poser sur un élément que
+ * l'appelant possède. Une fiche n'a pas cet élément : le contenu d'une
+ * fiche (ContenuFiche) rend un FRAGMENT — il n'y a aucune boîte à qui
+ * les donner, et en fabriquer une serait ajouter un conteneur dans la
+ * colonne de lecture (pièges 378/379).
+ * D'OÙ LE SECOND BRANCHEMENT, `useGlissementLateralSurLaPage` : les
+ * mêmes écouteurs, posés sur `window`, et une ZONE nommée par un
+ * sélecteur — le geste doit partir dedans, et c'est elle qui borne la
+ * remontée des ancêtres. Une fiche passe `[data-colonne-lecture]`.
+ * ⚠️ LA RECONNAISSANCE, ELLE, N'EST ÉCRITE QU'UNE FOIS : les deux
+ * branchements se contentent de traduire leurs événements vers le
+ * MÊME suiveur (`nouveauSuiveur`, plus bas). Seuils, verrou d'axe et
+ * refus sont donc identiques par construction — ils ne peuvent pas
+ * diverger, il n'y a rien à tenir d'accord.
+ *
+ * ⚠️ AUCUN MARQUAGE, AUCUNE BOÎTE : ce module ne rend rien. Il ne
+ * peut donc rien déplacer à l'écran.
  *
  * ══ POURQUOI DES ÉVÉNEMENTS TACTILES, ET NON DES POINTEURS ═══════
  * C'est LE choix technique de ce module, et il n'est pas un détail de
@@ -31,7 +46,7 @@ import { corpsGele } from "@/lib/gel-du-corps";
  * Or le geste qu'on mesure se déroule sur une page qui défile — le
  * navigateur est un candidat permanent. La parade habituelle est de lui
  * retirer l'axe horizontal (`touch-action`), et ELLE EST INTERDITE ICI :
- * posée sur la racine de page, elle vaudrait pour tout ce qu'elle
+ * posée sur un conteneur de page, elle vaudrait pour tout ce qu'il
  * contient — À COMMENCER PAR LES GALERIES, qui ne défileraient plus.
  * Les événements TACTILES, eux, continuent d'arriver pendant que la
  * page défile : ils permettent de REGARDER le geste sans jamais le
@@ -47,18 +62,20 @@ import { corpsGele } from "@/lib/gel-du-corps";
  *     grossier, jamais une largeur d'écran). Un ordinateur à écran
  *     tactile ne bascule donc pas non plus.
  *
- *  2. UNE GALERIE QUI DÉFILE. Sur « Portfolios », chaque profil porte
- *     une rangée horizontale : le doigt doit y faire défiler la rangée,
- *     pas changer d'onglet. LA MESURE EST GÉNÉRIQUE, pas un marquage :
- *     on remonte les ancêtres du point de départ et on refuse dès que
- *     l'un d'eux DÉBORDE HORIZONTALEMENT et défile. Elle attrape donc
- *     `data-galerie-defilante`, le carrousel d'une fiche, et tout ce
- *     qu'une passe future ajoutera — il n'y a aucun attribut à penser
- *     à poser. Et une galerie qui tient ENTIÈRE dans son cadre n'a rien
- *     à faire défiler : elle ne refuse rien, à raison.
+ *  2. CE QUI DÉFILE LATÉRALEMENT. Une galerie de portfolio, le
+ *     carrousel d'une fiche, la rangée de vignettes d'un profil suivi :
+ *     le doigt doit y faire défiler la rangée, pas changer d'onglet.
+ *     LA MESURE EST GÉNÉRIQUE, pas un marquage : on remonte les
+ *     ancêtres du point de départ et on refuse dès que l'un d'eux
+ *     DÉBORDE HORIZONTALEMENT et défile (`overflow-x` qui défile ET
+ *     une largeur de contenu supérieure à la boîte). Il n'y a donc
+ *     aucun attribut à penser à poser, et ce qu'une passe future
+ *     ajoutera sera attrapé sans qu'on y revienne. Et une rangée qui
+ *     tient ENTIÈRE dans son cadre n'a rien à faire défiler : elle ne
+ *     refuse rien, à raison.
  *     ⚠️ LA QUESTION EST POSÉE UNE SEULE FOIS, AU POSER DU DOIGT : un
- *     glissement parti d'une galerie ne peut donc pas devenir une
- *     bascule en sortant de la galerie en cours de route.
+ *     glissement parti d'une rangée ne peut donc pas devenir une
+ *     bascule en sortant de cette rangée en cours de route.
  *
  *  3. LE RETOUR DU NAVIGATEUR. iOS et Android ouvrent leur geste de
  *     retour (et d'avance) sur les tout premiers millimètres du bord de
@@ -67,17 +84,26 @@ import { corpsGele } from "@/lib/gel-du-corps";
  *     navigateur qui gagne, et il doit gagner.
  *
  *  4. UNE SURFACE OUVERTE PAR-DESSUS — la feuille des filtres, une
- *     fenêtre de fiche, la pile. DEUX gardes, encore : ces surfaces
- *     GÈLENT LE CORPS (`corpsGele`), et la feuille comme le panneau
- *     vivent dans un PORTAIL — leurs événements ne passent jamais par
- *     l'élément porteur. Un menu déroulant ouvert ne peut donc rien
- *     déclencher, ce qui est la consigne.
+ *     fenêtre de fiche ou de carrousel, la pile. Ces surfaces GÈLENT
+ *     LE CORPS (`corpsGele`) : un menu déroulant ouvert ne peut donc
+ *     rien déclencher, ce qui est la consigne. Sur le branchement
+ *     REACT s'ajoute une garde de structure — la feuille et le panneau
+ *     vivent dans un PORTAIL, hors de l'élément porteur.
  *
  *  5. LE PINCEMENT. Le geste est abandonné dès qu'un second doigt
  *     touche l'écran, au poser comme en route : deux doigts, ce n'est
  *     plus un glissement.
  *
  *  6. LE DÉFILEMENT VERTICAL DE LA PAGE. Voir juste dessous.
+ *
+ *  7. CE QUI N'EST PAS DANS LA ZONE (branchement `SurLaPage`). Le
+ *     geste doit PARTIR d'un élément contenu dans le sélecteur donné.
+ *     Sur une fiche, c'est la colonne de lecture — celle qui porte les
+ *     deux onglets et leurs deux panneaux. Conséquence heureuse et
+ *     gratuite : EN VUE PHOTO (nº 453), cette colonne est retirée de
+ *     l'affichage — rien dedans ne peut être touché, le geste ne peut
+ *     donc pas commencer, et l'on ne bascule pas un va-et-vient que
+ *     personne ne voit. Aucune garde n'a eu à le dire.
  *
  * ══ HORIZONTAL OU VERTICAL : L'AXE SE DÉCIDE UNE FOIS ═════════════
  * C'est le motif classique du verrou d'axe, et il tient en une phrase :
@@ -94,11 +120,12 @@ import { corpsGele } from "@/lib/gel-du-corps";
  * un long défilement commencé de biais basculerait à l'arrivée.
  *
  * ⚠️ RIEN N'EST EMPÊCHÉ, JAMAIS : aucun `preventDefault`, aucune
- * propriété `touch-action`. La page défile exactement comme avant
- * pendant qu'on mesure — et le geste reste TOUJOURS disponible pour le
- * navigateur, qui en fait ce qu'il veut. C'est ce qui garantit que ni
- * le défilement vertical ni les galeries ne peuvent être abîmés : il
- * n'y a rien ici qui puisse le leur prendre.
+ * propriété `touch-action`, et les écouteurs de page sont posés en
+ * PASSIF — le navigateur sait d'avance qu'on ne lui prendra rien. La
+ * page défile exactement comme avant pendant qu'on mesure, et le geste
+ * reste toujours disponible pour elle. C'est ce qui garantit que ni le
+ * défilement vertical ni les galeries ne peuvent être abîmés : il n'y
+ * a rien ici qui puisse le leur prendre.
  *
  * ══ LE SEUIL DE DÉCLENCHEMENT ════════════════════════════════════
  * 64 px, une distance FIXE et non une part de l'écran : le geste doit
@@ -109,12 +136,12 @@ import { corpsGele } from "@/lib/gel-du-corps";
  * largeurs de pouce, le sixième d'un écran de 390 px.
  *
  * ══ LE CLIC FANTÔME ══════════════════════════════════════════════
- * Un doigt qui glisse de 64 px sur une carte peut, au relâchement,
- * produire quand même un CLIC sur ce qu'il touchait : on aurait changé
- * d'onglet ET ouvert une fiche. Le premier clic qui suit une bascule
- * est donc avalé, en phase de capture, et l'écouteur se retire de
- * lui-même — au premier clic, ou au bout de 400 ms s'il ne vient
- * jamais.
+ * Un doigt qui glisse de 64 px sur une carte ou une vignette peut, au
+ * relâchement, produire quand même un CLIC sur ce qu'il touchait : on
+ * aurait changé d'onglet ET ouvert une fiche ou une photo. Le premier
+ * clic qui suit une bascule est donc avalé, en phase de capture, et
+ * l'écouteur se retire de lui-même — au premier clic, ou au bout de
+ * 400 ms s'il ne vient jamais.
  */
 
 /** Le tremblement toléré avant de décider de l'axe. */
@@ -140,11 +167,19 @@ type Geste = {
   axe: "indécis" | "horizontal";
 };
 
+/*  CE QU'ON LIT D'UN DOIGT, ET RIEN DE PLUS. Le type le dit à la
+    place d'un commentaire — et il rend le suiveur indifférent à la
+    PROVENANCE de l'événement : React décrit ses touchers avec un type
+    à lui, plus étroit que celui du navigateur (ni `force`, ni rayon).
+    Demander l'un des deux fermerait la porte à l'autre ; on ne demande
+    que les trois valeurs dont on se sert. */
+type Doigt = { identifier: number; clientX: number; clientY: number };
+
 /** Le geste part-il d'une zone qui défile horizontalement ? On s'arrête
-    au porteur : au-dessus de lui, ce n'est plus notre affaire. */
-function partDUneZoneQuiDefile(depart: Element | null, porteur: Element) {
+    à la borne : au-dessus d'elle, ce n'est plus notre affaire. */
+function partDUneZoneQuiDefile(depart: Element | null, borne: Element) {
   let noeud: Element | null = depart;
-  while (noeud && noeud !== porteur) {
+  while (noeud && noeud !== borne) {
     if (noeud instanceof HTMLElement) {
       const debord = getComputedStyle(noeud).overflowX;
       if (
@@ -173,98 +208,174 @@ function avalerLeClicFantome() {
 }
 
 /**
- * Rend les écouteurs à poser sur l'élément qui porte la page.
+ * ██ LE SUIVEUR — LA RECONNAISSANCE, ÉCRITE UNE SEULE FOIS ██
+ * ------------------------------------------------------------------
+ * Quatre entrées, aucune connaissance de React ni du DOM d'un
+ * appelant : les deux branchements ci-dessous lui traduisent leurs
+ * événements. `rappel` est relu à chaque bascule (jamais capturé) :
+ * l'appelant peut donc changer de fonction sans rien reposer.
+ */
+function nouveauSuiveur(rappel: () => (sens: SensGlissement) => void) {
+  let geste: Geste | null = null;
+  return {
+    debut(
+      doigts: number,
+      doigt: Doigt | undefined,
+      depart: Element | null,
+      borne: Element
+    ) {
+      //  §5 — un second doigt, ou un geste déjà en cours : on sort.
+      geste = null;
+      if (doigts !== 1 || !doigt) return;
+      //  §1 — le document doit se dire mobile.
+      if (document.documentElement.dataset.appareil !== "mobile") return;
+      //  §4 — une surface recouvre l'écran.
+      if (corpsGele()) return;
+      //  §3 — la bande que le navigateur se réserve.
+      const x = doigt.clientX;
+      if (x < BORD || x > window.innerWidth - BORD) return;
+      //  §2 — le départ est-il dans une rangée qui défile ?
+      if (partDUneZoneQuiDefile(depart, borne)) return;
+
+      geste = { doigt: doigt.identifier, x, y: doigt.clientY, axe: "indécis" };
+    },
+
+    bouge(doigts: number, doigt: Doigt | undefined) {
+      if (!geste) return;
+      //  §5 — un doigt s'est ajouté : ce n'est plus un glissement.
+      if (doigts !== 1 || !doigt || doigt.identifier !== geste.doigt) {
+        geste = null;
+        return;
+      }
+      const dx = doigt.clientX - geste.x;
+      const dy = doigt.clientY - geste.y;
+
+      if (geste.axe === "indécis") {
+        //  Tant qu'on n'a pas bougé assez, on ne décide rien.
+        if (Math.abs(dx) < TOLERANCE && Math.abs(dy) < TOLERANCE) return;
+        if (Math.abs(dy) >= Math.abs(dx)) {
+          //  Un défilement : on rend la main tout de suite.
+          geste = null;
+          return;
+        }
+        geste.axe = "horizontal";
+      }
+      //  L'axe est tenu, mais le geste peut encore se perdre.
+      if (Math.abs(dy) > DERIVE) geste = null;
+    },
+
+    fin(leves: ArrayLike<Doigt>) {
+      const encours = geste;
+      geste = null;
+      if (!encours || encours.axe !== "horizontal") return;
+      const doigt = Array.from(leves).find(
+        (candidat) => candidat.identifier === encours.doigt
+      );
+      if (!doigt) return;
+      const dx = doigt.clientX - encours.x;
+      if (Math.abs(dx) < SEUIL) return;
+      avalerLeClicFantome();
+      //  Le doigt part à gauche → l'onglet de droite, et l'inverse.
+      rappel()(dx < 0 ? 1 : -1);
+    },
+
+    annule() {
+      geste = null;
+    },
+  };
+}
+
+/** Le rappel le plus récent, dans une référence : les écouteurs ne
+    dépendent ainsi de RIEN et ne se refabriquent jamais — la leçon des
+    nº 521/522, appliquée d'avance. */
+function useRappelFrais(surGlissement: (sens: SensGlissement) => void) {
+  const rappel = useRef(surGlissement);
+  useEffect(() => {
+    rappel.current = surGlissement;
+  });
+  return rappel;
+}
+
+/**
+ * BRANCHEMENT nº 1 (nº 526) — DES ÉCOUTEURS REACT.
+ * Rend les quatre écouteurs à poser sur un élément que l'appelant
+ * possède ; c'est cet élément qui borne la remontée des ancêtres.
  * `surGlissement` reçoit le SENS VOULU (voir `SensGlissement`).
  */
 export function useGlissementLateral(
   surGlissement: (sens: SensGlissement) => void
 ) {
-  /*  LE RAPPEL LE PLUS RÉCENT, DANS UNE RÉFÉRENCE : les écouteurs
-      rendus plus bas ne dépendent ainsi de RIEN et ne se refabriquent
-      jamais — la leçon des nº 521/522, appliquée d'avance. */
-  const rappel = useRef(surGlissement);
-  useEffect(() => {
-    rappel.current = surGlissement;
-  });
-
-  const geste = useRef<Geste | null>(null);
+  const rappel = useRappelFrais(surGlissement);
+  const suiveur = useMemo(() => nouveauSuiveur(() => rappel.current), [rappel]);
 
   return useMemo(
     () => ({
       onTouchStart(evenement: TouchEventReact<HTMLElement>) {
-        //  §5 — un second doigt, ou un geste déjà en cours : on sort.
-        geste.current = null;
-        if (evenement.touches.length !== 1) return;
-        const doigt = evenement.touches[0];
-        //  §1 — le document doit se dire mobile.
-        if (document.documentElement.dataset.appareil !== "mobile") return;
-        //  §4 — une surface recouvre l'écran.
-        if (corpsGele()) return;
-        //  §3 — la bande que le navigateur se réserve.
-        const x = doigt.clientX;
-        if (x < BORD || x > window.innerWidth - BORD) return;
-        //  §2 — le départ est-il dans une rangée qui défile ?
-        const depart =
-          evenement.target instanceof Element ? evenement.target : null;
-        if (partDUneZoneQuiDefile(depart, evenement.currentTarget)) return;
-
-        geste.current = {
-          doigt: doigt.identifier,
-          x,
-          y: doigt.clientY,
-          axe: "indécis",
-        };
-      },
-
-      onTouchMove(evenement: TouchEventReact<HTMLElement>) {
-        const encours = geste.current;
-        if (!encours) return;
-        //  §5 — un doigt s'est ajouté : ce n'est plus un glissement.
-        if (evenement.touches.length !== 1) {
-          geste.current = null;
-          return;
-        }
-        const doigt = evenement.touches[0];
-        if (doigt.identifier !== encours.doigt) {
-          geste.current = null;
-          return;
-        }
-        const dx = doigt.clientX - encours.x;
-        const dy = doigt.clientY - encours.y;
-
-        if (encours.axe === "indécis") {
-          //  Tant qu'on n'a pas bougé assez, on ne décide rien.
-          if (Math.abs(dx) < TOLERANCE && Math.abs(dy) < TOLERANCE) return;
-          if (Math.abs(dy) >= Math.abs(dx)) {
-            //  Un défilement : on rend la main tout de suite.
-            geste.current = null;
-            return;
-          }
-          encours.axe = "horizontal";
-        }
-        //  L'axe est tenu, mais le geste peut encore se perdre.
-        if (Math.abs(dy) > DERIVE) geste.current = null;
-      },
-
-      onTouchEnd(evenement: TouchEventReact<HTMLElement>) {
-        const encours = geste.current;
-        geste.current = null;
-        if (!encours || encours.axe !== "horizontal") return;
-        const doigt = Array.from(evenement.changedTouches).find(
-          (candidat) => candidat.identifier === encours.doigt
+        suiveur.debut(
+          evenement.touches.length,
+          evenement.touches[0],
+          evenement.target instanceof Element ? evenement.target : null,
+          evenement.currentTarget
         );
-        if (!doigt) return;
-        const dx = doigt.clientX - encours.x;
-        if (Math.abs(dx) < SEUIL) return;
-        avalerLeClicFantome();
-        //  Le doigt part à gauche → l'onglet de droite, et l'inverse.
-        rappel.current(dx < 0 ? 1 : -1);
       },
-
+      onTouchMove(evenement: TouchEventReact<HTMLElement>) {
+        suiveur.bouge(evenement.touches.length, evenement.touches[0]);
+      },
+      onTouchEnd(evenement: TouchEventReact<HTMLElement>) {
+        suiveur.fin(evenement.changedTouches);
+      },
       onTouchCancel() {
-        geste.current = null;
+        suiveur.annule();
       },
     }),
-    []
+    [suiveur]
   );
+}
+
+/**
+ * BRANCHEMENT nº 2 (§2 nº 527) — DES ÉCOUTEURS DE PAGE.
+ * Pour un appelant qui n'a aucune boîte à donner (un contenu rendu en
+ * fragment). Le geste doit PARTIR d'un élément contenu dans `zone`, un
+ * sélecteur ; l'élément trouvé borne la remontée des ancêtres — il
+ * joue exactement le rôle du porteur du branchement nº 1.
+ * ⚠️ ÉCOUTEURS PASSIFS, et posés sur `window` : on ne prend rien, et
+ * l'appel se démonte avec le composant.
+ */
+export function useGlissementLateralSurLaPage(
+  surGlissement: (sens: SensGlissement) => void,
+  zone: string
+) {
+  const rappel = useRappelFrais(surGlissement);
+
+  useEffect(() => {
+    const suiveur = nouveauSuiveur(() => rappel.current);
+    const debut = (evenement: TouchEvent) => {
+      const depart =
+        evenement.target instanceof Element ? evenement.target : null;
+      const borne = depart?.closest(zone) ?? null;
+      //  §7 — hors zone : rien à suivre, et on efface un geste resté
+      //  en l'air (un doigt reposé ailleurs ne prolonge pas l'autre).
+      if (!borne) {
+        suiveur.annule();
+        return;
+      }
+      suiveur.debut(evenement.touches.length, evenement.touches[0], depart, borne);
+    };
+    const bouge = (evenement: TouchEvent) =>
+      suiveur.bouge(evenement.touches.length, evenement.touches[0]);
+    const fin = (evenement: TouchEvent) => suiveur.fin(evenement.changedTouches);
+    const annule = () => suiveur.annule();
+
+    const passif = { passive: true } as const;
+    window.addEventListener("touchstart", debut, passif);
+    window.addEventListener("touchmove", bouge, passif);
+    window.addEventListener("touchend", fin, passif);
+    window.addEventListener("touchcancel", annule, passif);
+    return () => {
+      window.removeEventListener("touchstart", debut);
+      window.removeEventListener("touchmove", bouge);
+      window.removeEventListener("touchend", fin);
+      window.removeEventListener("touchcancel", annule);
+    };
+  }, [rappel, zone]);
 }

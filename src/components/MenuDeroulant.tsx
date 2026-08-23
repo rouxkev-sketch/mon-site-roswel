@@ -1386,27 +1386,33 @@ export function MenuDeroulant({
               className="cursor-grab touch-none"
               onPointerDown={(e) => glissementDebut(e, true)}
             >
-              {/*  ██ §1 (nº 526) — L'AIR DU HAUT, ENCORE ██
+              {/*  ██ §1 (nº 527) — L'AIR DU HAUT, RÉPARTI AUTREMENT ██
                    DEUX RÉSERVES, ET ELLES SE LISENT SUR CETTE SEULE
-                   BOÎTE — c'est pour cela qu'elles sont ensemble :
+                   BOÎTE — c'est pour cela qu'elles sont ensemble. La
+                   nº 526 avait mis le gros de l'air AU-DESSUS du trait ;
+                   le propriétaire veut l'inverse — le trait plus haut,
+                   le titre plus dégagé :
                     · AU-DESSUS DU TRAIT (bord haut de la feuille →
-                      trait) : 20 px à la nº 525, 24 px ici ;
-                    · AU-DESSUS DU TITRE (trait → titre) : 8 px depuis
-                      la nº 262, 16 px ici — celle-là n'avait jamais
-                      bougé, et c'est elle qui serrait le titre.
-                   Du bord haut de la feuille au titre : 32 px hier,
-                   44 aujourd'hui. Les deux valeurs restent sur
-                   l'échelle de 4 demandée.
+                      trait) : 24 px à la nº 526, 16 px ici ;
+                    · AU-DESSUS DU TITRE (trait → titre) : 16 px à la
+                      nº 526, 24 px ici.
+                   Les deux valeurs s'échangent, sur l'échelle de 4
+                   demandée. Du bord haut de la feuille au titre :
+                   44 px, comme hier — c'est LA RÉPARTITION qui change,
+                   et c'est bien ce qui était demandé.
+                   HISTORIQUE DES DEUX RÉSERVES, pour ne pas le
+                   rechercher : au-dessus du trait 12 (nº 262) → 20
+                   (nº 525) → 24 (nº 526) → 16 ; au-dessus du titre 8
+                   (nº 262, immobile jusque-là) → 16 (nº 526) → 24.
                    ⚠️ LE TRAIT NE CHANGE PAS : 4 px de haut (nº 525),
                    40 px de large, sa couleur et son centrage.
-                   ⚠️ LA BANDE PRÉHENSIBLE Y GAGNE : elle englobe le
-                   trait ET le titre (voir la note du dessus), et elle
-                   grandit de 12 px — la mesure des 44 px du pouce
-                   (nº 261) reste tenue, avec de la marge.
+                   ⚠️ LA BANDE PRÉHENSIBLE NE CHANGE PAS NON PLUS : elle
+                   englobe le trait ET le titre (voir la note du
+                   dessus), et sa hauteur totale est inchangée — la
+                   mesure des 44 px du pouce (nº 261) reste tenue.
                    ⚠️ Classes en ORDRE ALPHABÉTIQUE, une seule par
-                   propriété : la règle du site, appliquée aux deux
-                   lignes que cette passe réécrit. */}
-              <div className="flex justify-center pb-4 pt-6">
+                   propriété : la règle du site. */}
+              <div className="flex justify-center pb-6 pt-4">
                 <span className="bg-bordure h-1 rounded-full w-10" aria-hidden />
               </div>
               {/*  §3 (nº 262) — l'icône de l'appelant à gauche du

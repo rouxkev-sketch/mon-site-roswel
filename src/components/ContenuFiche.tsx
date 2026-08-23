@@ -6,6 +6,10 @@ import {
   defilerEnDouceur,
   defilerSansGeste,
 } from "@/lib/defilement-programme";
+//  §2 (nº 527) — le glissement horizontal qui change d'onglet, posé
+//  sur Ma sélection à la nº 526 : c'est LE MÊME module, second
+//  branchement (une fiche n'a pas de boîte à lui donner).
+import { useGlissementLateralSurLaPage } from "@/lib/glissement-lateral";
 //  ⚠️ TEMPORAIRE (nº 218-§1) — la sonde du carrousel : elle veut
 //  savoir CE QUI A ÉTÉ DEMANDÉ (style, catégorie, rendu) juste avant
 //  ce que le carrousel reçoit. Sans `?sonde-carrousel=1`, ne coûte rien.
@@ -968,6 +972,63 @@ export function ContenuFiche({
     }
     ouvrirLOngletAuDebut();
   }
+
+  /**
+   * ██ §2 (nº 527) — UN GLISSEMENT HORIZONTAL CHANGE D'ONGLET ██
+   * ==================================================================
+   * Le geste posé sur « Ma sélection » à la nº 526, porté aux fiches.
+   * LE MODULE EST LE MÊME (lib/glissement-lateral) : mêmes seuils,
+   * même verrou d'axe, mêmes refus — rien n'est réécrit ici.
+   *
+   * ⚠️ LE SECOND BRANCHEMENT, ET POURQUOI. La nº 526 posait ses
+   * écouteurs sur la racine de la page « Ma sélection ». CE CONTENU
+   * REND UN FRAGMENT : il n'a aucune boîte à qui les donner, et en
+   * fabriquer une reviendrait à glisser un conteneur dans la colonne de
+   * lecture (pièges 378/379). Les écouteurs vont donc sur la page, et
+   * une ZONE dit d'où le geste doit partir : la COLONNE DE LECTURE
+   * (`data-colonne-lecture`, l'enveloppe qui porte les deux onglets et
+   * leurs deux panneaux). On la NOMME, on ne la touche pas.
+   * Trois conséquences, toutes voulues :
+   *  · le geste marche partout où l'on lit une fiche — profil comme
+   *    portfolio, page publique comme aperçu (nº 473 : les deux montent
+   *    ce contenu dans la même colonne) ;
+   *  · il ne marche PAS sur la photo du haut, qui est hors de la
+   *    colonne : c'est l'affiche, pas le contenu qu'on feuillette ;
+   *  · EN VUE PHOTO (nº 453), la colonne est retirée de l'affichage :
+   *    rien dedans ne peut être touché, le geste ne peut donc pas
+   *    commencer. On ne bascule pas un va-et-vient invisible, et
+   *    aucune garde n'a eu à le dire.
+   *
+   * ⚠️ ET C'EST `choisirOnglet`, PAS UNE SECONDE ÉCRITURE : le geste
+   * appelle exactement ce que le toucher d'un onglet appelle. D'où
+   * trois acquis qu'on n'a pas à obtenir, on les HÉRITE :
+   *  · le va-et-vient suit — trait rose compris : il lit `onglet`, et
+   *    c'est `onglet` qu'on change ;
+   *  · L'HISTORIQUE NE BOUGE PAS D'UN CRAN — `choisirOnglet` écrit par
+   *    `replaceState` (nº 329-§3), jamais `pushState` : le retour
+   *    continue de QUITTER la fiche d'un seul appui (règle 332-§1 et
+   *    §4). Et dans une fenêtre superposée, qui n'a pas d'adresse à
+   *    elle, rien n'est écrit du tout ;
+   *  · LA POSITION SUIT LA MÊME RÈGLE QU'AU TOUCHER : `ouvrirLOngletAuDebut`
+   *    ne remonte que si l'on est DESCENDU sous le début de la section,
+   *    et alors jusqu'à lui — jamais jusqu'en haut de la page (la
+   *    nº 377 a retiré ce saut-là). Rester où l'on est quand on est
+   *    déjà en haut, revenir au début de la section quand on lisait
+   *    plus bas : le contenu change sous les yeux, pas ailleurs.
+   *
+   * ⚠️ RIEN SI L'ON EST DÉJÀ DU BON CÔTÉ : sans cette garde, un
+   * glissement vers la droite en « Profil » rejouerait l'écriture
+   * d'adresse et la remontée pour rien.
+   * ⚠️ LA MÉMOIRE DES GALERIES (nº 459) N'EST PAS CONCERNÉE : elle
+   * s'écrit au défilement d'une galerie et se relit à son montage —
+   * ce geste ne fait ni l'un ni l'autre, et il refuse même de partir
+   * d'une galerie.
+   */
+  useGlissementLateralSurLaPage((sens) => {
+    const cible: OngletAffiche = sens === 1 ? "portfolio" : "profil";
+    if (cible === onglet) return;
+    choisirOnglet(cible);
+  }, "[data-colonne-lecture]");
 
   /**
    * §2-6 (nº 285) — ARRIVER DIRECTEMENT SUR LE PROFIL, À SA PLACE
