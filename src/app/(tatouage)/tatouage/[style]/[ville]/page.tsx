@@ -190,13 +190,27 @@ export default async function PageStyleVille({
               indexable : « une question stable, ce style, cette
               ville ». Un bouton qui promet d'élargir un rayon qui
               n'existe pas trompe le visiteur.
-              IL N'Y RESTE DONC QUE « Chercher partout » — la mosaïque
-              sans lieu, en gardant le style de la page. Sur le MOTEUR,
-              rien ne change : les deux boutons y restent, parce que
-              là-bas le rayon existe pour de bon (voir
-              IndexTatoueurs). */
+              IL N'Y RESTE DONC QU'UNE SEULE ISSUE — la mosaïque sans
+              lieu, en gardant le style de la page. Sur le MOTEUR, il y
+              en a plusieurs, parce que là-bas le rayon existe pour de
+              bon (voir IndexTatoueurs).
+              §2 (nº 509) — ET SON LIBELLÉ DIT MAINTENANT OÙ ELLE MÈNE.
+              ------------------------------------------------------
+              « Chercher partout » a quitté le site : le propriétaire
+              le trouvait brutal (du quartier au monde entier, sans
+              rien entre les deux) et muet sur sa destination. Le
+              moteur a désormais trois paliers — rayon, pays, monde ;
+              CETTE page n'a que le dernier, et elle le NOMME :
+              « Partout dans le monde ». Le lien ne change pas d'un
+              caractère, seul le mot change.
+              ⚠️ ET LE PALIER « PAYS » NE PEUT PAS EXISTER ICI : cette
+              page ne connaît qu'un NOM de ville, jamais un lieu
+              structuré — ni code ISO, ni coordonnées. On ne devine pas
+              un pays à partir d'un nom de commune. */
           <AucunResultat
-            issues={[{ libelle: "Chercher partout", href: `/?style=${style}` }]}
+            issues={[
+              { libelle: "Partout dans le monde", href: `/?style=${style}` },
+            ]}
           />
         ) : (
           // La page porte UN style : chaque carte montre la photo de CE

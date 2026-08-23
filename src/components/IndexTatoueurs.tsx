@@ -18,7 +18,7 @@ import {
   renduCherche,
   TEXTES_TATOUAGE,
 } from "@/config/tatouage";
-import { AucunResultat } from "@/components/AucunResultat";
+import { AucunResultat, type IssueAucunResultat } from "@/components/AucunResultat";
 import { EnTeteTatouage } from "@/components/EnTeteTatouage";
 import { GrilleTatoueurs } from "@/components/GrilleTatoueurs";
 import { noterDemontage, noterMontage } from "@/lib/journal-bascule";
@@ -39,8 +39,9 @@ import {
   type CritèresTatouage,
 } from "@/components/MoteurTatouage";
 import type { Tatoueur } from "@/lib/tatoueurs";
-import { lieuVersParametres } from "@/lib/geocodage";
-import { ligneCarte } from "@/lib/adresse";
+import { lieuVersParametres, paysDuLieu } from "@/lib/geocodage";
+import { ligneCarte, nomPaysAffiche } from "@/lib/adresse";
+import { paysAvecPreposition } from "@/lib/preposition-pays";
 import { useUtilisateur } from "@/lib/use-utilisateur";
 import { ContexteAffichageServi } from "@/components/AffichageMosaique";
 import {
@@ -183,6 +184,77 @@ function sourisMuette(): () => void {
 }
 function tailleInconnueAuServeur(): null {
   return null;
+}
+
+/**
+ * ██ §2 (nº 509) — LES ISSUES DU VIDE : TROIS PALIERS, ET ON N'EN SAUTE
+ * AUCUN ██
+ * ==================================================================
+ * CE QU'IL Y AVAIT, ET LES DEUX DÉFAUTS QUE LE PROPRIÉTAIRE NOMME :
+ *  · « Élargir le rayon » n'annonçait pas JUSQU'OÙ — on cliquait à
+ *    l'aveugle ;
+ *  · « Chercher partout » sautait du quartier AU MONDE ENTIER d'un
+ *    seul geste. Brutal quand on cherchait à Lyon : il reste la France
+ *    entre les deux, et personne ne la proposait.
+ *
+ * LES TROIS PALIERS, DANS CET ORDRE :
+ *  a) LE RAYON — « Élargir à 100 km ». Le badge ANNONCE la valeur
+ *     qu'il va poser, et il DISPARAÎT quand la liste des rayons du
+ *     site est épuisée (elle vaut 10 · 25 · 50 · 100 · 200 : voir
+ *     RAYONS_TATOUAGE). Comme avant, il n'existe qu'autour d'un POINT
+ *     — on n'élargit pas un cercle autour d'un pays.
+ *  b) LE PAYS — « Chercher en France », « aux États-Unis », « au
+ *     Japon ». Le nom vient des données (`nomPaysAffiche`, la forme
+ *     longue : la barre, elle, abrège en « USA », pas ce badge) ; la
+ *     préposition vient d'une table clée par code ISO
+ *     (lib/preposition-pays), qui n'écrit que les cas minoritaires et
+ *     replie tout le reste sur « en ».
+ *  c) LE MONDE — « Partout dans le monde », le seul badge qui reste
+ *     une fois qu'on cherche déjà dans un pays entier.
+ *
+ * ⚠️ B ET C SONT EXCLUSIFS, ET C'EST TOUT L'INTÉRÊT : tant qu'un pays
+ * peut être proposé, le monde ne l'est pas — sinon on rouvrirait
+ * exactement le saut que cette passe supprime. Le monde prend la
+ * relève dans les DEUX cas où le pays n'a pas de sens : on y est déjà,
+ * ou les données ne le nomment pas (`paysDuLieu` rend alors `null`).
+ * ⚠️ ET LE RESTE DE LA RECHERCHE NE BOUGE PAS : le style, la nature et
+ * les filtres sont recopiés tels quels à chaque palier — on élargit le
+ * LIEU, jamais la question.
+ * ⚠️ AUCUN DESSIN NE CHANGE : les capsules restent celles de
+ * AucunResultat (gris élevé, sans contour). Seuls le texte et la
+ * logique sont neufs.
+ */
+function issuesDuVide(
+  affiches: CritèresTatouage,
+  chercher: (suivants: CritèresTatouage) => void
+): IssueAucunResultat[] {
+  const lieu = affiches.lieu;
+  if (!lieu) return [];
+
+  const issues: IssueAucunResultat[] = [];
+
+  const suivant = rayonSuivant(affiches.rayonKm);
+  if (rayonApplicable(lieu) && suivant !== null) {
+    issues.push({
+      libelle: `Élargir à ${suivant} km`,
+      surClic: () => chercher({ ...affiches, rayonKm: suivant }),
+    });
+  }
+
+  const pays = paysDuLieu(lieu);
+  if (pays) {
+    issues.push({
+      libelle: `Chercher ${paysAvecPreposition(nomPaysAffiche(pays), pays.code_pays)}`,
+      surClic: () => chercher({ ...affiches, lieu: pays }),
+    });
+    return issues;
+  }
+
+  issues.push({
+    libelle: "Partout dans le monde",
+    surClic: () => chercher({ ...affiches, lieu: null }),
+  });
+  return issues;
 }
 
 /** §2 (nº 422) — LE LIBELLÉ DU LIEN « VOIR PLUS ». `useLinkStatus` ne
@@ -694,43 +766,13 @@ export function IndexTatoueurs({
         {/*  §2 (nº 307) — LE MESSAGE DU VIDE EST DÉSORMAIS ÉCRIT UNE
              SEULE FOIS (composants/AucunResultat). Ici, on ne décide
              plus que des ISSUES : celles qui ont un sens pour la
-             recherche servie, dans l'ordre où le propriétaire les a
-             demandées.
-              · « Élargir le rayon » — un cran, et seulement quand le
-                rayon veut dire quelque chose (une ville, une adresse :
-                on ne cherche pas « à 50 km de la France ») et qu'il
-                reste un palier au-dessus ;
-              · « Chercher partout » — efface le lieu, rien d'autre :
-                le style, la nature et les filtres restent.
-             SANS LIEU RENSEIGNÉ, ni l'une ni l'autre : la liste est
-             déjà celle du monde entier, il n'y a plus rien à élargir.
-             Il ne reste alors que le titre. */}
+             recherche servie.
+             SANS LIEU RENSEIGNÉ, aucune : la liste est déjà celle du
+             monde entier, il n'y a plus rien à élargir — il ne reste
+             que le titre. Ce qu'on propose quand il y a un lieu se
+             décide dans `issuesDuVide`, juste au-dessus du composant. */}
         {visibles.length === 0 && (
-          <AucunResultat
-            issues={[
-              ...(rayonApplicable(affiches.lieu) &&
-              rayonSuivant(affiches.rayonKm) !== null
-                ? [
-                    {
-                      libelle: "Élargir le rayon",
-                      surClic: () =>
-                        chercher({
-                          ...affiches,
-                          rayonKm: rayonSuivant(affiches.rayonKm)!,
-                        }),
-                    },
-                  ]
-                : []),
-              ...(affiches.lieu
-                ? [
-                    {
-                      libelle: "Chercher partout",
-                      surClic: () => chercher({ ...affiches, lieu: null }),
-                    },
-                  ]
-                : []),
-            ]}
-          />
+          <AucunResultat issues={issuesDuVide(affiches, chercher)} />
         )}
         {
           // La grille porte aussi la FENÊTRE de fiche (grand écran).

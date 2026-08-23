@@ -1360,9 +1360,15 @@ html[data-compte="connecte"] [data-zone-compte][data-session="muette"] {
    gauche pendant le chargement, « reprenant sa place » ensuite.
    PENDANT LA PHASE MUETTE D'UN CONNECTÉ, ON ÉCHANGE DONC L'EMPREINTE :
    les deux accès déconnectés au compte s'effacent, et l'espace NEUTRE
-   de 40 px (le gabarit exact du rond « Mon espace », posé dans
-   EnTeteTatouage) prend leur place. Largeur de zone identique au
-   pixel avant et après l'hydratation : le bloc central ne bouge plus.
+   (le gabarit du rond « Mon espace », posé dans EnTeteTatouage) prend
+   leur place. Largeur de zone identique au pixel avant et après
+   l'hydratation : le bloc central ne bouge plus.
+   ⚠️ nº 509 — CE GABARIT N'EST PAS « 40 px », ET C'EST TOUTE LA
+   CORRECTION DE CETTE PASSE : depuis la nº 465, le rond déborde de
+   8 px dans le rembourrage de la barre (`-mr-2`, pour que son glyphe
+   tombe sur la marge). Il MESURE 40 et n'en OCCUPE que 32. La réserve
+   porte donc la même marge négative — l'empreinte, pas la boîte. Les
+   deux valeurs doivent rester égales.
    Ces deux règles ne jouent QUE sous [data-session="muette"] : dès que
    la session est prête, la barre est exactement celle d'avant. */
 html[data-compte="connecte"]

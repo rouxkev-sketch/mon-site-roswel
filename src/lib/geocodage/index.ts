@@ -183,6 +183,54 @@ export function lieuDepuisFiche(
   };
 }
 
+/**
+ * ██ §2 (nº 509) — LE PAYS D'UN LIEU, COMME LIEU À PART ENTIÈRE ██
+ * ==================================================================
+ * À QUOI ÇA SERT : le palier « pays » des issues de « Aucun résultat ».
+ * Le propriétaire ne veut plus qu'un « Chercher partout » saute du
+ * quartier au monde entier ; on élargit d'abord AU PAYS de la
+ * recherche en cours, et le monde ne vient qu'après.
+ *
+ * CE QUE LE LIEU FABRIQUÉ PORTE, ET CE QU'IL LAISSE :
+ *  · `precision: "pays"` — c'est LUI qui commande : la fonction de
+ *    base (rechercher_tatoueurs) ne regarde alors que `p_code_pays`,
+ *    et ignore la région comme la ville ;
+ *  · la RÉGION ET LA VILLE SONT DONC MISES À NULL, et pas seulement
+ *    « ignorées » : un lieu-pays qui garderait le nom d'une commune
+ *    serait un lieu qui ment, et le premier lecteur distrait s'en
+ *    servirait ;
+ *  · les COORDONNÉES sont celles du lieu de départ. Elles ne servent
+ *    plus à chercher (aucun rayon au niveau d'un pays — voir
+ *    `criteresDeLieu`), mais elles doivent rester VALIDES : c'est à
+ *    elles que `lieuDepuisParametres` reconnaît une adresse portant un
+ *    lieu, au rechargement comme au partage (règle nº 328).
+ *
+ * RIEN N'EST FABRIQUÉ QUAND ON NE SAIT PAS : sans nom de pays ni code
+ * ISO, et quand le lieu EST déjà un pays, la fonction rend `null` —
+ * l'appelant passe alors au palier suivant, le monde.
+ */
+export function paysDuLieu(lieu: LieuTrouve | null): LieuTrouve | null {
+  if (!lieu || lieu.precision === "pays") return null;
+  const nom = (lieu.pays ?? "").trim();
+  const code = (lieu.code_pays ?? "").trim();
+  if (!nom || !code) return null;
+  return {
+    identifiant: `pays:${code.toUpperCase()}`,
+    intitule: nom,
+    //  Un pays se suffit : rien ne lève d'ambiguïté au-dessus de lui.
+    contexte: "",
+    adresse: null,
+    ville: null,
+    code_postal: null,
+    region: null,
+    pays: nom,
+    code_pays: code.toUpperCase(),
+    latitude: lieu.latitude,
+    longitude: lieu.longitude,
+    precision: "pays",
+  };
+}
+
 /** Les paramètres d'adresse pour un lieu (vides s'il n'y en a pas).
     La PRÉCISION voyage avec : c'est elle qui dira au serveur COMMENT
     chercher (distance autour d'un point, région entière, pays

@@ -1347,6 +1347,13 @@ export function EnTeteTatouage({
                 * par ses deux marges automatiques entre deux côtés
                 * flex-none, se recentrait donc d'environ 48 px vers la
                 * droite quand MenuEspace remplaçait le badge.
+                * ⚠️ CES 92 PX SONT LE CHIFFRE DE LA nº 439, ET LA
+                * nº 465 LES A RAMENÉS À 84 : le rond « Mon espace »
+                * déborde depuis lors de 8 px dans le rembourrage de la
+                * barre (`-mr-2`), il n'occupe donc que 32 px dans la
+                * rangée. Voir la note de la nº 509 sur la réserve
+                * elle-même, plus bas — c'est là que l'écart se
+                * rattrape.
                 * LE REMÈDE : pendant la phase muette d'un CONNECTÉ
                 * (html[data-compte="connecte"], posé avant la première
                 * peinture), le CSS (globals.css, bloc nº 357/439)
@@ -1362,12 +1369,45 @@ export function EnTeteTatouage({
                 * ⚠️ HORS phase muette-connectée, il reste `hidden` :
                 * les visiteurs nouveaux et revenants gardent leur
                 * barre à l'identique, au caractère près.
+                *
+                * ██ §1 (nº 509) — LA RÉSERVE ÉTAIT JUSTE, LA nº 465 L'A
+                * PÉRIMÉE : IL Y MANQUAIT 8 PIXELS ██
+                * ------------------------------------------------------
+                * LE DÉFAUT RESTANT, après que la nº 507 eut rendu au
+                * logo ses vraies proportions : au chargement, le bloc
+                * central de la barre paraît encore un peu trop à
+                * GAUCHE, puis se recentre.
+                * LA CAUSE, ET ELLE EST DATÉE. Cette réserve imite le
+                * rond « Mon espace » : 40 × 40, le gabarit exact — et
+                * c'était vrai LE JOUR OÙ ELLE A ÉTÉ ÉCRITE. La nº 465
+                * a ensuite donné à MenuEspace une MARGE DROITE
+                * NÉGATIVE de 8 px (`-mr-2` sur sa racine), pour que le
+                * glyphe de 24 px, centré dans sa boîte de 40, tombe
+                * sur la marge de l'interface au lieu de s'arrêter à
+                * (40 − 24) / 2 du bord. Le rond MESURE toujours 40,
+                * mais il n'en OCCUPE plus que 32 dans la rangée.
+                * La réserve, elle, en occupait 40 : 8 px de trop.
+                * CE QUE 8 PX DE TROP À DROITE FONT AU MILIEU : le bloc
+                * central est centré par deux marges automatiques
+                * (`lg:mx-auto`) qui se partagent l'espace libre à
+                * égalité. Un côté droit qui rétrécit de 8 px à
+                * l'hydratation rend 4 px à chaque marge : le bloc part
+                * de 4 px vers la droite. Il était donc 4 px trop à
+                * gauche au premier pixel — le résidu que le
+                * propriétaire voit encore.
+                * LE REMÈDE : la réserve prend LA MÊME marge négative
+                * que ce qu'elle remplace. Elle imite désormais
+                * l'EMPREINTE du rond, et plus seulement sa boîte.
+                * ⚠️ SI QUELQU'UN CHANGE LE `-mr-2` DE MenuEspace, C'EST
+                * ICI QU'IL FAUT LE SUIVRE. Les deux valeurs doivent
+                * rester égales : c'est tout ce qui tient la barre
+                * immobile pour un visiteur connecté.
                 */}
               <span
                 aria-hidden="true"
                 data-reserve-compte=""
                 style={{ height: HAUTEUR_ACTIONS, width: HAUTEUR_ACTIONS }}
-                className="hidden shrink-0"
+                className="-mr-2 hidden shrink-0"
               />
             </>
           )}

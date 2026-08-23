@@ -23,9 +23,16 @@ import Link from "next/link";
  *
  * ⚠️ LES CAPSULES NE SONT PAS ROSES, et c'est une règle de charte :
  * le rose plein (`primaire`) est réservé à L'ACTION FINALE D'UNE PAGE.
- * Ici, ce sont deux échappatoires équivalentes — aucune n'est « le »
+ * Ici, ce sont des échappatoires équivalentes — aucune n'est « le »
  * geste attendu. Elles prennent donc le gris élevé, comme toutes les
  * actions secondaires du site.
+ *
+ * ⚠️ §2 (nº 509) — CE FICHIER NE DÉCIDE TOUJOURS DE RIEN, ET C'EST
+ * VOULU : il DESSINE des issues, il n'en choisit aucune. Les trois
+ * paliers du moteur — élargir le rayon, chercher dans le pays,
+ * chercher dans le monde — se décident chez l'appelant
+ * (`issuesDuVide`, IndexTatoueurs), qui seul connaît le lieu servi.
+ * Le dessin, lui, n'a pas bougé d'un pixel à cette passe.
  *
  * ⚠️ AUCUNE CAPSULE QUI NE FERAIT RIEN : l'appelant ne passe que les
  * issues qui ont un sens là où il est. Sans lieu renseigné, il n'en
