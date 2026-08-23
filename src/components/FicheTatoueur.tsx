@@ -34,7 +34,9 @@ import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
 //  §2 (nº 451) — `adresseDeLienInterne` : l'adresse de la vue profil
 //  (« ?entree=lien », sans photo en haut), l'écriture UNIQUE des liens
-//  internes — le badge « Profil » de la photo mobile la consomme.
+//  internes — la PLAQUE du profil de la photo mobile la consomme (le
+//  badge « Profil » qui la portait jusqu'à la nº 502 a laissé sa place
+//  au chevron, mais la destination est la même).
 import {
   adresseDeLienInterne,
   ContenuFiche,
@@ -43,6 +45,11 @@ import {
 import { FenetreCarrousel } from "@/components/FenetreCarrousel";
 import { PileFiches } from "@/components/PileFiches";
 import { SondePhoto } from "@/components/SondePhoto";
+//  §1 (nº 502) — la rangée du profil de la vue photo devient une
+//  PLAQUE : l'écriture partagée (celle des membres d'équipe et des
+//  lieux) et le chevron qui dit le lien. Rien n'est recopié.
+import { ENCADRE_MEMBRE_CLIQUABLE } from "@/components/plaque";
+import { IconeChevronBas } from "@/components/Icones";
 //  §2 (nº 455) — `cheminDeLaFenetreCarrousel` est parti avec
 //  `ouvrirLaFenetreCarrousel` : plus aucun geste n'écrit l'adresse de
 //  la fenêtre de carrousel (elle reste LUE — routes 328/329).
@@ -772,7 +779,8 @@ export function FicheTatoueur({
           nº 359) y RETIRE LA COLONNE DE LECTURE de l'affichage — la
           page ne montre que la rangée du profil, la photo et la ligne
           titre + fanion. Tout le reste vit dans la VUE PROFIL, par le
-          badge « Profil » (nº 451-§2, inchangé).
+          plaque du profil (nº 451-§2 ; c'était un badge « Profil »
+          jusqu'à la nº 502, la destination n'a pas changé).
           ⚠️ UNE BASCULE DE FEUILLE DE STYLE, JAMAIS UN RENDU
           CONDITIONNEL D'APPAREIL : la marque sort des données que le
           SERVEUR connaît (`apercu`, `entreeInitiale`) — le HTML
@@ -1097,8 +1105,12 @@ export function FicheTatoueur({
           {/*  ██ §1 (nº 458), REDISPOSÉ À LA nº 483 — LA LIGNE DU TITRE ██
                La zone sous la photo se lit désormais ainsi :
                  Titre                      [partage] [fanion]
-                 [avatar]   Nom                       [Profil]
-                            Artiste • Ville, Pays
+                 ┌──────────────────────────────────────┐
+                 │ [avatar]  Nom                      › │
+                 │           Artiste • Ville, Pays      │
+                 └──────────────────────────────────────┘
+               (la rangée est devenue une PLAQUE à la nº 502, et le
+                badge « Profil » un chevron.)
                CE QUE LA nº 458 AVAIT ÉCRIT, et pourquoi cela tombe : le
                partage occupait à gauche une colonne de la largeur de
                l'avatar, et le titre commençait après elle pour tomber à
@@ -1193,9 +1205,10 @@ export function FicheTatoueur({
                cette rangée — et rien après (la coupe nº 453 retire la
                colonne de lecture de la vue photo). Elle garde TOUT de
                la nº 453 : avatar 40 px, nom blanc gras, ligne grise
-               13 px avec ses 4 px d'air sous le nom, badge « Profil »
-               de 30 px (cible tactile 44), jetons du site, navigation
-               inchangée (`adresseDeLienInterne`, UNE entrée, le retour
+               13 px avec ses 4 px d'air sous le nom, jetons du site,
+               navigation inchangée (le badge « Profil » de 30 px et sa
+               cible tactile de 44 sont remplacés par le chevron à la
+               nº 502 : c'est la plaque entière qui se touche) (`adresseDeLienInterne`, UNE entrée, le retour
                rend la vue photo). SEULE SA PLACE change — le
                `mobile:-mt-2` de la nº 453 (l'air sous la barre) part
                avec elle : sous le titre, l'air est le `gap-3` de la
@@ -1205,30 +1218,58 @@ export function FicheTatoueur({
                (nº 359) couvre la COLONNE entière : une arrivée
                `entree=lien` cache la rangée avec la photo. */}
           {!apercu && (
-            <div
-              data-habillage-photo=""
-              className="hidden mobile:flex items-center gap-3"
-            >
+            <div data-habillage-photo="" className="hidden mobile:block">
               {/*  §1 (nº 455) — TOUTE LA RANGÉE MÈNE AU PROFIL : le bloc
-                   avatar + nom + ligne devient un `<Link>` vers la MÊME
-                   destination que le badge (`adresseDeLienInterne` —
-                   UNE entrée, le retour rend la vue photo ; un re-clic
-                   pendant l'attente est avalé par le signe, 332-§1).
-                   Deux liens, une destination : un lien DANS un lien
-                   est interdit — le badge reste donc son propre lien, à
-                   côté.
+                   avatar + nom + ligne est un `<Link>` vers
+                   `adresseDeLienInterne` — UNE entrée, le retour rend la
+                   vue photo ; un re-clic pendant l'attente est avalé par
+                   le signe (332-§1).
                    LA TYPO GRANDIT : le nom passe de 13,5 à 15 px — LA
                    taille du titre de la galerie sous la photo
                    (nº 376) ; la ligne d'adresse suit en proportion,
                    de 13 à 14,5 px (le corps du sous-titre des cartes en
-                   pleine largeur). */}
+                   pleine largeur).
+                   ██ §1 (nº 502) — LA RANGÉE DEVIENT UNE PLAQUE ██
+                   ==============================================================
+                   Elle prend l'écriture PARTAGÉE des plaques
+                   (`components/plaque`), celle des membres d'équipe et
+                   des lieux : fond uni permanent, quatre coins à 12 px,
+                   douze pixels d'air sur les quatre côtés (nº 497),
+                   aucune bordure, arrêt aux marges. Pas une seconde
+                   écriture — la même, lue au même endroit : les trois
+                   blocs ne peuvent plus diverger.
+                   LE BADGE « Profil » DISPARAÎT, et le CHEVRON prend sa
+                   place à droite (nº 493) : la forme dit le lien, pas un
+                   mot. Ce qui règle du même coup le point délicat de la
+                   nº 455 — il n'y a plus DEUX liens vers une même
+                   destination côte à côte, mais UN SEUL, qui est la
+                   plaque entière.
+                   PAS DE MENTION GRISE AU-DESSUS, contrairement aux
+                   plaques d'équipe : ici il n'y a ni statut ni type de
+                   lieu à annoncer. La plaque commence directement.
+                   ⚠️ CE QUI CHANGE MALGRÉ MOI, ET JE LE DIS : l'écart
+                   entre l'avatar et son texte passe de 10 à 14 px — la
+                   valeur que l'écriture partagée porte depuis la nº 227.
+                   C'est la contrepartie de la réutilisation ; recopier
+                   l'écriture pour garder 10 px ferait exactement ce que
+                   cette passe cherche à éviter.
+                   ⚠️ WEB ET APERÇU : RIEN — `hidden mobile:block`,
+                   aperçu exclu comme le partage. */}
               <Link
                 href={adresseDeLienInterne(tatoueur.slug)}
-                className="flex min-w-0 flex-1 items-center gap-2.5"
+                className={ENCADRE_MEMBRE_CLIQUABLE}
               >
+                {/*  §1 (nº 502) — DEUX CRANS AU-DESSUS DE LA PLAQUE, et
+                     pas un : au repos elle vaut `bg-sombre-eleve`, au
+                     survol elle monte d'un cran. Un rond de repli posé
+                     sur ce cran-là disparaîtrait. C'est le défaut traité
+                     à la nº 492 sur `PhotoRonde`, ici sur le rond écrit
+                     à la main de la vue photo. Il ne concerne QUE le
+                     repli sans photo : une vraie photo couvre le rond
+                     entièrement. */}
                 <span
                   className="flex h-10 w-10 shrink-0 items-center justify-center
-                             overflow-hidden rounded-full bg-sombre-eleve"
+                             overflow-hidden rounded-full bg-sombre-haut"
                 >
                   {tatoueur.photo_profil ? (
                     /* eslint-disable-next-line @next/next/no-img-element --
@@ -1250,7 +1291,7 @@ export function FicheTatoueur({
                     </span>
                   )}
                 </span>
-                <span className="min-w-0">
+                <span className="min-w-0 flex-1">
                   <span className="block truncate text-[15px] font-semibold leading-tight text-sombre-texte">
                     {tatoueur.nom}
                   </span>
@@ -1274,21 +1315,25 @@ export function FicheTatoueur({
                       .join(" • ")}
                   </span>
                 </span>
-              </Link>
-              {/*  §1 (nº 453) — 30 px de haut (au lieu des 38 de
-                   BadgeCharte) : le badge s'affine, le texte ne change
-                   pas. L'ourlet `before:` grandit de 3 à 7 px par
-                   côté : la cible tactile reste 44 px. */}
-              <Link
-                href={adresseDeLienInterne(tatoueur.slug)}
-                data-badge-profil=""
-                className="relative inline-flex min-h-[30px] shrink-0 items-center
-                           rounded-lg bg-sombre-eleve-clair px-3.5 text-[13.5px]
-                           font-semibold text-sombre-texte before:absolute
-                           before:-inset-y-[7px] before:inset-x-0
-                           before:content-['']"
-              >
-                Profil
+                {/*  §1 (nº 502) — LE CHEVRON REMPLACE LE BADGE
+                     « Profil » : la même icône que le volet des horaires,
+                     pivotée d'un quart de tour pour pointer à droite,
+                     dans le gris des textes secondaires — l'écriture
+                     exacte des plaques d'équipe (nº 493). Centré sur
+                     TOUTE la plaque par `self-center`, les rembourrages
+                     haut et bas étant égaux (nº 497).
+                     ⚠️ CE QUE LE BADGE PORTAIT ET QUI N'A PLUS D'OBJET :
+                     ses 30 px de haut, sa cible tactile de 44 px par
+                     ourlet, et son propre lien vers la même destination
+                     (nº 453/455). La plaque ENTIÈRE est la cible
+                     désormais — plus large que 44 px dans les deux
+                     sens —, et il n'y a plus qu'un seul lien. */}
+                <span
+                  aria-hidden="true"
+                  className="-rotate-90 self-center shrink-0 text-sombre-texte-doux"
+                >
+                  <IconeChevronBas taille={16} />
+                </span>
               </Link>
             </div>
           )}

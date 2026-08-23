@@ -6,6 +6,10 @@ import Link from "next/link";
 //  §2 (nº 488) — l'horloge de la ligne des horaires : le dessin
 //  existait déjà, rien n'est ajouté au catalogue d'icônes.
 import { IconeChevronBas, IconeHorloge } from "@/components/Icones";
+//  §1 (nº 502) — l'écriture de la plaque, partagée : elle vivait ici
+//  sans être exportée, elle vit désormais dans un module qui ne dépend
+//  de rien (voir la note, plus bas, à la place qu'elle occupait).
+import { ENCADRE_MEMBRE, ENCADRE_MEMBRE_CLIQUABLE } from "@/components/plaque";
 //  §3 (nº 388) — l'icône de la ligne d'adresse, et l'écriture des
 //  lignes de profil (module sans dépendance : voir lignes-profil).
 import { IconeLocalisation } from "@/components/IconeReseau";
@@ -549,88 +553,20 @@ export const SOULIGNEMENT_LIEN =
   "underline-offset-4 decoration-1 decoration-sombre-texte-doux " +
   "group-hover:underline";
 
-/**
- * ██ LA PLAQUE — L'ÉCRITURE UNIQUE DE TOUTES LES PLAQUES DU SITE ██
- * (§2, §3 et §4 nº 492 · §1 nº 493 · §2 nº 496 · §1 nº 497)
- * ==================================================================
- * ELLE NE RESSEMBLE PLUS AUX AUTRES LIGNES CLIQUABLES, ET C'EST POUR
- * ÇA QU'ELLE A SON ÉCRITURE À ELLE.
- * ⚠️ SES PORTEURS, ET ILS SONT DEUX : les membres d'équipe (guests
- * compris) d'un salon ou d'un studio, et les LIEUX d'une fiche
- * d'artiste — ceux-ci depuis la nº 496. Les deux blocs lisent CETTE
- * constante : un réglage posé ici vaut pour les deux d'un coup, et ils
- * ne peuvent pas diverger. `CLASSES_LIGNE_CLIQUABLE`, elle, n'a plus
- * aucun porteur depuis la nº 496 (voir sa propre note).
- *
- * §2 — LE FOND EST PERMANENT. Il n'apparaissait qu'AU SURVOL
- * (`hover:bg-white/5`) : une plaque qui se montre au passage de la
- * souris n'existe pas au doigt, et n'existe pas non plus à l'arrêt.
- * Elle est maintenant TOUJOURS là. Le jeton est `bg-sombre-eleve` — le
- * seul cran qui se détache des DEUX supports de cette ligne : la page
- * (le bleu nuit de la nº 466) ET la fenêtre superposée. Un cran plus
- * bas serait la couleur de la PAGE, donc invisible partout.
- * ⚠️ CETTE PHRASE A CHANGÉ DE RAISON À LA nº 499, pas de conclusion :
- * la fenêtre du web portait `carte`, et « un cran plus bas » y était
- * invisible pour CETTE raison-là (la leçon du compteur de capsules,
- * nº 491-§1). Depuis l'essai de la nº 499 la fenêtre porte le fond de
- * la PAGE : les deux supports ne font plus qu'un, et `eleve` s'y
- * détache MIEUX qu'avant (1,37 contre 1,18). Le choix reste le bon,
- * avec une marge de plus.
- * ⚠️ §1 (nº 493) — LES QUATRE COINS SONT ARRONDIS. La nº 492 avait
- * carré celui d'en haut à gauche, pour que la mention grise vienne s'y
- * appuyer ; le propriétaire annule. Les quatre valent 12 px, sans
- * exception. Aucun contour, aucune bordure — un fond, rien d'autre.
- *
- * §3 — IL S'ARRÊTE AUX MARGES, ET VOICI CE QUI LE FAISAIT DÉBORDER.
- * `CLASSES_LIGNE_CLIQUABLE` porte `-m-2 p-2` : huit pixels de
- * rembourrage annulés par huit pixels de marge NÉGATIVE. Le texte
- * restait donc aligné sur la colonne, et la plaque, elle, sortait de
- * HUIT PIXELS de chaque côté — c'est exactement le débord relevé. La
- * marge négative part : la plaque commence et finit désormais où le
- * reste du contenu commence et finit.
- * ⚠️ LA COLONNE DE LECTURE N'EST PAS TOUCHÉE (piège 378/379) : son
- * `lg:px-3 lg:-mx-3` (nº 298/312) reste. Il n'a plus de débord à
- * laisser passer depuis la nº 496, et il ne coûte rien — il écarte un
- * bord qui rogne, il ne déplace aucun contenu.
- *
- * ██ §1 (nº 497) — L'AIR INTÉRIEUR EST ÉGAL SUR LES QUATRE CÔTÉS ██
- * ------------------------------------------------------------------
- * ⚠️⚠️ RÈGLE DU SITE, À TENIR PAR TOUTES LES PASSES QUI SUIVENT :
- * DANS UNE PLAQUE, L'AIR INTÉRIEUR EST LE MÊME EN HAUT, EN BAS, À
- * GAUCHE ET À DROITE. Un seul nombre, sur les quatre côtés. Une plaque
- * n'est pas une ligne de texte : elle a une épaisseur, et cette
- * épaisseur ne se lit juste que si elle est constante tout autour. Dès
- * qu'un côté diffère, l'œil voit le contenu « collé » quelque part,
- * même quand tout est aligné au pixel.
- *
- * CE QUE LA nº 492 AVAIT POSÉ, et que cette passe corrige : DOUZE
- * pixels à gauche et à droite, mais HUIT en haut et en bas — le
- * rembourrage vertical d'avant, gardé « tel quel » faute d'une raison
- * de le changer. Le propriétaire l'a vu : le contenu était plus serré
- * verticalement qu'horizontalement.
- * CE QUE C'EST DEVENU : DOUZE PARTOUT, écrit en UNE classe (`p-3`) et
- * non en deux — une seule classe par propriété (piège nº 389), et
- * surtout une seule valeur à lire, donc impossible à désaccorder.
- *
- * CE QUE ÇA COÛTE, ET RIEN NE SE CHEVAUCHE : la plaque grandit de
- * HUIT pixels — quatre en haut, quatre en bas. Son contenu, lui, ne
- * bouge pas d'un cheveu les uns par rapport aux autres : le rond fait
- * toujours 52 px, la colonne de texte porte toujours son plancher de
- * 52 px (`min-h-13`), et les 14 px entre les deux (`gap-3.5`, nº 227)
- * sont intouchés. Le CHEVRON reste centré (nº 493) par construction :
- * `self-center` le pose au milieu de la rangée, et les rembourrages
- * haut et bas étant ÉGAUX — c'est tout le point de cette passe —, le
- * milieu de la rangée EST le milieu de la plaque. L'écart entre deux
- * plaques ne bouge pas non plus (32 px, `gap-8`).
- */
-const ENCADRE_MEMBRE =
-  "flex items-start gap-3.5 rounded-xl bg-sombre-eleve p-3";
-
-/** Le même encadré, cliquable : le fond monte d'un cran au survol, et
-    l'appui le tient au doigt, où il n'y a pas de survol. */
-const ENCADRE_MEMBRE_CLIQUABLE =
-  `group ${ENCADRE_MEMBRE} transition-colors ` +
-  "hover:bg-sombre-eleve-clair active:bg-sombre-eleve-clair";
+/*  ██ §1 (nº 502) — L'ÉCRITURE DE LA PLAQUE A DÉMÉNAGÉ ██
+    Elle vivait ici, sans être exportée : deux constantes que seuls
+    les deux blocs de ce fichier lisaient. La nº 502 en a eu besoin
+    depuis `FicheTatoueur` (la rangée du profil de la vue photo au
+    doigt), qui n'a rien à faire avec le bloc des lieux — et recopier
+    un dessin, c'est le condamner à diverger à la passe suivante.
+    ELLES SONT DONC DANS `components/plaque`, un fichier qui ne dépend
+    de rien, avec TOUTE leur documentation : la règle de l'air égal sur
+    les quatre côtés (nº 497), le choix contraint du fond (nº 491-§1),
+    et l'avertissement sur le rond de repli (nº 492). Aucune valeur n'a
+    changé au passage.
+    ⚠️ LES DEUX BLOCS DE CE FICHIER LES LISENT MAINTENANT DE LÀ-BAS :
+    l'équipe d'un salon et les lieux d'un artiste, exactement comme
+    avant. */
 
 /**
  * ██ §6 (nº 492), §2 (nº 493), §3 (nº 496) — LA MENTION AU-DESSUS ██
