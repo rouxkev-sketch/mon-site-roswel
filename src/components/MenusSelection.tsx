@@ -371,6 +371,31 @@ export function MenusSelection({
               }}
               ariaLabel="Favoris ou suivis"
               classeOnglet="px-1 min-h-[43px]"
+              /*  ██ §2 (nº 515) — LE MOT MONTE D'UN CRAN, AU WEB SEUL ██
+                   Le propriétaire trouvait « Favoris | Suivis » trop
+                   petit sur l'ordinateur : 15 px, la valeur que les
+                   huit appelants de ce composant partageaient en dur.
+                   Elle passe à 17 ICI ET NULLE PART AILLEURS — le
+                   composant a désormais un réglage (`taillePolice`,
+                   voir sa note), et les sept autres n'en passent
+                   aucun : « Réalisation | Flash » du moteur (nº 447),
+                   le va-et-vient d'une fiche, le formulaire,
+                   l'authentification et le démarchage gardent leurs
+                   15 px, par construction.
+                   ⚠️ LE DOIGT NE BOUGE PAS, et c'est le sens de la
+                   variante : la valeur de base reste 15, le cran de
+                   plus ne s'ouvre qu'à partir de 1024 px. Le mobile
+                   était bien réglé, il le reste.
+                   ⚠️ CE QUI SUIT LE MOT : le NOMBRE (« Favoris 10 »)
+                   n'a pas de taille propre — il hérite de celle-ci et
+                   monte donc du même cran, en gardant sa graisse
+                   normale et son gris (nº 462). Le CHEVRON est une
+                   icône de 16 px : il ne change pas.
+                   ⚠️ LA HAUTEUR DE LA RANGÉE NE BOUGE PAS : ce sont
+                   `min-h-[43px]` (l'onglet) et `min-h-[52px]` (la
+                   zone, nº 258) qui commandent, et la hauteur de ligne
+                   de 17 px leur reste très inférieure. */
+              taillePolice="text-[15px] lg:text-[17px]"
               classeLigne="mobile:-inset-x-4 sm:mobile:-inset-x-6"
             />
           </div>

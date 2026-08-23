@@ -11,6 +11,9 @@ import {
   PhotoRonde,
 } from "@/components/BlocLieux";
 import { adresseDeLienInterne } from "@/components/ContenuFiche";
+//  §1 (nº 515) — « ce qui est surligné est ce qui est copié »
+//  (nº 514) : la même écriture que les plaques de la fiche.
+import { garderLeTexteALaCopie } from "@/lib/copie-du-texte";
 import {
   bandeDeTrois,
   suivisAPlat,
@@ -236,6 +239,27 @@ function BlocDUnSuivi({
             la plaque grise disparaît. La géométrie ne bouge pas d'un
             pixel — `-m-2 p-2` s'annulaient (voir la note de
             `CLASSES_LIGNE_CLIQUABLE_SANS_ENCADRE`). */
+        /*  ██ §1 (nº 515) — LE NOM DU PORTFOLIO SE SURLIGNE ET SE COPIE ██
+            Les DEUX attributs ensemble, et ils ne font pas la même
+            chose — c'est la leçon des nº 513 et 514 :
+             · l'attribut de glisser posé à faux rend la SÉLECTION
+               possible. Sans lui, glisser sur le nom emporte le lien
+               au lieu de surligner (le navigateur croit qu'on veut
+               l'emporter ailleurs) ;
+             · le gestionnaire de copie rend la COPIE juste. Sans lui,
+               une sélection entièrement contenue dans un lien fait
+               écrire à WebKit l'ADRESSE du lien à la place du texte.
+            L'un sans l'autre laisserait le geste à moitié fait : on
+            surlignerait le nom et l'on collerait « /tatoueur/le-slug ».
+            La raison complète vit dans lib/copie-du-texte.
+            ⚠️ RIEN D'AUTRE NE CHANGE : le clic ouvre toujours le
+            portfolio — en fenêtre au web, en navigation au doigt
+            (nº 312) —, le clic du milieu ouvre toujours un onglet, le
+            survol et le focus au clavier ne bougent pas, et le doigt
+            ne voit aucune différence : on ne glisse pas un lien au
+            doigt. */
+        draggable={false}
+        onCopy={garderLeTexteALaCopie}
         className={`${CLASSES_LIGNE_CLIQUABLE_SANS_ENCADRE} lg:gap-5`}
       >
         <PhotoRonde

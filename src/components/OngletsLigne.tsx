@@ -37,6 +37,7 @@ export function OngletsLigne({
   classeOnglet = "px-1 min-h-[46px]",
   avecLigneGrise = true,
   classeLigne = "",
+  taillePolice = "text-[15px]",
 }: {
   /** §1 (nº 460) — le label devient un NŒUD : le va-et-vient de « Ma
       sélection » y pose « Favoris 10 ⌄ » (mot + nombre + chevron).
@@ -86,6 +87,35 @@ export function OngletsLigne({
    * la nº 447 compris) gardent leur ligne au pixel.
    */
   classeLigne?: string;
+  /**
+   * ██ §2 (nº 515) — LA TAILLE DU MOT, RÉGLABLE PAR L'APPELANT ██
+   * ------------------------------------------------------------------
+   * LE BESOIN : sur « Ma sélection », le propriétaire trouve le
+   * va-et-vient « Favoris | Suivis » trop petit AU WEB. Sa taille était
+   * écrite EN DUR ici — 15 px pour les huit appelants —, donc
+   * l'agrandir les aurait tous emportés : les onglets « Réalisation |
+   * Flash » du moteur (nº 447), le va-et-vient d'une fiche, ceux du
+   * formulaire, de l'authentification, du démarchage.
+   * ⚠️ LE DÉFAUT REPRODUIT EXACTEMENT L'ÉCRITURE D'AVANT — c'est le
+   * procédé de `classeOnglet` (nº 382) et de `classeLigne` (nº 461),
+   * et pour la même raison : les sept autres appelants ne passent rien
+   * et ne changent donc pas d'un pixel, par construction.
+   * ⚠️ UNE SEULE CLASSE DE TAILLE SUR LE BOUTON, JAMAIS DEUX
+   * SUPERPOSÉES (règle nº 389) : l'appelant REMPLACE la valeur, il ne
+   * s'ajoute pas par-dessus. C'est pourquoi « Ma sélection » écrit sa
+   * taille de base ET sa variante web dans la même chaîne — deux
+   * points de rupture d'une même propriété, pas deux classes qui se
+   * disputent l'ordre de la feuille.
+   * ⚠️ LE NOMBRE ET LE CHEVRON : le nombre posé par « Ma sélection »
+   * (« Favoris 10 ») n'a pas de taille propre — il HÉRITE de celle-ci
+   * et suit donc le mot, en gardant sa graisse normale et son gris
+   * (nº 462). Le chevron, lui, est une icône dimensionnée en pixels :
+   * il ne bouge pas.
+   * ⚠️ LA HAUTEUR NE DÉPEND PAS DE CE RÉGLAGE : c'est le `min-h-` de
+   * `classeOnglet` qui commande, et il est bien plus grand que la
+   * hauteur de ligne du texte à toutes les valeurs employées.
+   */
+  taillePolice?: string;
 }) {
   const index = options.findIndex((option) => option.cle === cleActive);
 
@@ -110,7 +140,7 @@ export function OngletsLigne({
               disabled={fige && !actif}
               onClick={() => surChoix(option.cle)}
               className={`flex items-center justify-center ${classeOnglet}
-                         text-[15px] font-semibold transition-colors ${
+                         ${taillePolice} font-semibold transition-colors ${
                            actif
                              ? "text-white"
                              : fige
