@@ -565,11 +565,15 @@ export function IndexTatoueurs({
       >
         {/* LE TITRE DIT LA RECHERCHE (nº 140) — la pilule de la barre
             dit toujours « Recherche », c'est donc ICI que les critères
-            se lisent. LA RÈGLE : le QUOI en titre (« Flashs ·
-            Réalisme », « Tous les flashs », « Réalisme ») ; un lieu
-            SEUL devient le titre ; les deux → le quoi en titre, le
-            lieu derrière le compte. Sans recherche : « Explorer toutes
-            les créations », sans sous-titre. */}
+            se lisent.
+            LA RÈGLE, À JOUR (nº 508-§2) : le QUOI en titre (« Flashs ·
+            Réalisme », « Tous les flashs », « Réalisations ·
+            Blackwork ») et, quand aucune catégorie n'est choisie, le
+            titre GÉNÉRIQUE — un lieu n'est jamais un titre. Le lieu et
+            le rayon vivent TOUJOURS dans le sous-titre, derrière le
+            compte. Sans recherche du tout : le titre d'invitation de la
+            mosaïque, et une ligne muette à la place du sous-titre
+            (nº 507-§1). */}
         {(() => {
           const quoi =
             libelleExplorer(affiches.nature, affiches.style) ||
@@ -643,12 +647,33 @@ export function IndexTatoueurs({
           //  AVEC UNE RECHERCHE : le titre dit CE QU'ON CHERCHE, le
           //  sous-titre RÉSUME la recherche — compte · lieu · rayon,
           //  séparés par le point médian entouré d'espaces.
+          /*  ██ §2 (nº 508) — UNE VILLE NE PREND PLUS LA PLACE DU
+               TITRE ██
+               CE QUI SE LISAIT AVANT, et que le propriétaire refuse :
+               une ville cherchée SANS catégorie devenait le titre
+               (« Lyon »), et le sous-titre n'en disait plus rien —
+               « 4 créations · 50 km », un rayon autour de nulle part.
+               Le lieu ne titrait que dans ce cas-là : dès qu'une
+               catégorie l'accompagnait, il était déjà dans le
+               sous-titre. C'était donc DEUX écritures pour une même
+               donnée, et le défaut vivait dans l'écart entre les deux.
+               DÉSORMAIS, UNE SEULE : le lieu est TOUJOURS dans le
+               sous-titre, et le titre dit la catégorie — générique
+               quand aucune n'est choisie. Les deux autres cas ne
+               bougent pas d'un caractère : `quoi` gagne toujours, et
+               le lieu occupait déjà la même place quand `quoi`
+               existait.
+               ⚠️ LES SÉPARATEURS SE FONT TOUJOURS PAR `filter(Boolean)`
+               (nº 386) : une donnée absente emporte sa puce — un style
+               seul rend « 16 créations », une région « 4 créations ·
+               Occitanie » sans rayon, jamais de point médian orphelin.
+               ⚠️ `affiches.lieu!.intitule` DISPARAÎT AVEC LA BRANCHE :
+               il n'était atteint que par ce chemin, et son assertion
+               non-nulle avec lui. */
           return (
             <LigneResultats
-              titre={quoi || lieu || affiches.lieu!.intitule}
-              sousTitre={[compte, quoi ? lieu : "", rayon]
-                .filter(Boolean)
-                .join(" · ")}
+              titre={quoi || TEXTES_TATOUAGE.titreRechercheSansCategorie}
+              sousTitre={[compte, lieu, rayon].filter(Boolean).join(" · ")}
             />
           );
         })()}

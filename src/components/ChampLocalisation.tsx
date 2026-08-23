@@ -88,6 +88,78 @@ function texteDuLieu(lieu: LieuTrouve, pourLeMoteur: boolean): string {
   return pourLeMoteur ? ligneMoteur(lieu) : ligneFiche(lieu);
 }
 
+/**
+ * ██ §1 (nº 508) — LE PANNEAU DU RAYON NE SURVIVAIT PAS AU CHANGEMENT
+ * DE PAGE, ET C'EST TOUTE LA CAUSE ██
+ * ==================================================================
+ * LE SYMPTÔME (relevé du propriétaire, web) : on choisit une ville
+ * dans le champ de localité, les pilules de rayon s'affichent
+ * dessous — puis LA LISTE SE REFERME TOUTE SEULE avant qu'on ait pu
+ * cliquer un palier.
+ *
+ * CE QUI SE PASSE, ÉTAPE PAR ÉTAPE.
+ *  1. `choisir()` pose déjà tout ce qu'il faut : la liste reste
+ *     ouverte (`garderOuvertApresChoix`), le champ garde le focus, le
+ *     pied du panneau se remplit du rayon (le lieu vient d'arriver).
+ *     À cet instant, ce que voit le propriétaire est JUSTE.
+ *  2. `surChoix(lieu)` remonte au moteur, qui lance la recherche.
+ *  3. La recherche écrit l'adresse : « / » prend une requête.
+ *  4. ET LÀ, L'ARCHITECTURE nº 357 ENTRE EN JEU. L'accueil NU (« / »,
+ *     prérendu) et son JUMEAU dynamique (« /accueil-recherche », servi
+ *     par réécriture du proxy dès que l'adresse porte une requête)
+ *     sont DEUX PAGES, donc deux segments de route. La barre — et donc
+ *     le moteur, et donc CE CHAMP — est montée PAR LA PAGE
+ *     (IndexTatoueurs rend EnTeteTatouage), jamais par la mise en page
+ *     commune. Le routeur remplace le segment : tout l'arbre est
+ *     DÉMONTÉ et remonté à neuf.
+ *  5. Le champ neuf repart avec `listeOuverte = false`, et son panneau
+ *     — posé dans <body> par un portail — s'en va avec lui.
+ *
+ * POURQUOI `garderOuvertApresChoix` NE SUFFISAIT PAS : il maintient un
+ * état LOCAL dans un composant qui ne survit pas à la navigation. Il
+ * n'était pas en cause, il n'était simplement plus là.
+ * ⚠️ ET POURQUOI LE DÉFAUT NE SE VOIT QU'UNE FOIS : le second choix de
+ * ville part de « /accueil-recherche » et y reste — même segment,
+ * aucun démontage, le panneau tenait déjà.
+ *
+ * LE REMÈDE, ET IL TIENT EN UNE PHRASE : le champ note qu'il DEVAIT
+ * rester ouvert, et le champ qui le remplace reprend le FOCUS. Rien
+ * d'autre — c'est `auToucher()`, le chemin d'ouverture ordinaire, qui
+ * rouvre alors le panneau, avec son placement, son voile et son pied.
+ * Aucun état d'ouverture n'est reconstruit à la main.
+ *
+ * ⚠️ POURQUOI UNE NOTE DE MODULE ET NON UN ÉTAT REACT : justement
+ * parce qu'aucun état React ne traverse un démontage. Elle est
+ * DATÉE et CLÉE PAR CHAMP — l'identifiant du moteur est une constante
+ * (« moteur-tatouage »), donc stable d'une page à l'autre, quand celui
+ * du moteur hôte caché ne l'est pas et ne peut pas la consommer.
+ * ⚠️ ELLE EST EFFACÉE PAR TOUTE FERMETURE VOULUE — la croix, le départ
+ * du champ, le pointeur dehors : un geste de fermeture doit fermer,
+ * même s'il tombe pendant la transition de page.
+ */
+const REPRISE_MS = 4000;
+let repriseAttendue: { cle: string; pose: number } | null = null;
+
+function noterLaReprise(cle: string) {
+  repriseAttendue = { cle, pose: Date.now() };
+}
+
+function oublierLaReprise() {
+  repriseAttendue = null;
+}
+
+/** La note est-elle pour ce champ, et encore fraîche ? Elle n'est PAS
+    consommée à la lecture : deux lectures rendent la même réponse (le
+    double rendu du mode strict ne peut donc pas la manger). */
+function repriseDue(cle: string): boolean {
+  if (!repriseAttendue) return false;
+  if (Date.now() - repriseAttendue.pose > REPRISE_MS) {
+    repriseAttendue = null;
+    return false;
+  }
+  return repriseAttendue.cle === cle;
+}
+
 export function ChampLocalisation({
   surChoix,
   lieuInitial = null,
@@ -241,6 +313,33 @@ export function ChampLocalisation({
   // Le démontage ne laisse aucun écouteur de redimensionnement derrière.
   useEffect(() => () => arret.current?.(), []);
 
+  /**
+   * §1 (nº 508) — LA REPRISE : ce champ remplace celui qu'un changement
+   * de page vient d'emporter, et il en reprend le FOCUS.
+   * ------------------------------------------------------------------
+   * C'est tout ce qu'il y a à faire : le focus appelle `auToucher()`,
+   * qui rouvre le panneau par le chemin ordinaire — même placement,
+   * même voile, même pied de rayon. Aucun état d'ouverture n'est
+   * reconstruit à la main, donc rien ne peut diverger de l'ouverture
+   * normale.
+   * ⚠️ `preventScroll` : la recherche vient de demander la liste EN
+   * HAUT (nº 330). Un focus qui fait défiler la remettrait ailleurs.
+   * ⚠️ ON NE VOLE LE FOCUS À PERSONNE : si quoi que ce soit d'autre
+   * l'a déjà pris pendant la transition, on renonce. La note, elle,
+   * est effacée dans tous les cas — elle ne vaut que pour ce
+   * remplacement-ci.
+   */
+  useEffect(() => {
+    if (!repriseDue(id)) return;
+    oublierLaReprise();
+    const actif = document.activeElement;
+    if (actif && actif !== document.body && actif !== champ.current) return;
+    champ.current?.focus({ preventScroll: true });
+    //  `id` en dépendance plutôt qu'un tableau vide et une exception de
+    //  règle : il ne change jamais en pratique, et s'il changeait, la
+    //  note aurait déjà été effacée — l'effet ne peut agir qu'une fois.
+  }, [id]);
+
   // FERMETURE AU TOUCHER EXTÉRIEUR — le pendant tactile du blur.
   // (Sans tableau de dépendances : l'écouteur voit l'état frais.)
   useEffect(() => {
@@ -258,6 +357,10 @@ export function ChampLocalisation({
       if (!cible.isConnected) return;
       if (racine.current?.contains(cible)) return;
       if (panneau.current?.contains(cible)) return;
+      //  §1 (nº 508) — une fermeture VOULUE annule la reprise en
+      //  attente : un pointeur posé dehors PENDANT la transition de
+      //  page doit fermer, pas se faire rouvrir par le champ neuf.
+      oublierLaReprise();
       setListeOuverte(false);
       restaurerSiAbandon();
       if (viderSiAbandon && !lieuCourant.current) {
@@ -381,6 +484,12 @@ export function ChampLocalisation({
     // (`garderOuvertApresChoix`), c'est qu'il porte encore le RAYON.
     // Le lâcher refermerait le panneau sous la souris.
     if (!garderOuvertApresChoix) champ.current?.blur();
+    //  §1 (nº 508) — ET SI LA RECHERCHE QUI SUIT CHANGE DE PAGE, LE
+    //  CHAMP QUI ME REMPLACE REPRENDRA LE FOCUS. La note est posée
+    //  AVANT `surChoix` : c'est lui qui déclenche la navigation, et
+    //  le champ neuf peut être monté avant que cette fonction ne
+    //  rende la main.
+    if (garderOuvertApresChoix) noterLaReprise(id);
     surChoix(lieu);
   }
 
@@ -391,6 +500,8 @@ export function ChampLocalisation({
     saisieUtilisateur.current = false;
     lieuCourant.current = null;
     memoire.current = null;
+    //  §1 (nº 508) — une fermeture VOULUE annule la reprise en attente.
+    oublierLaReprise();
     setTexte("");
     setSelectionActive(false);
     setListeOuverte(false);
@@ -677,6 +788,18 @@ export function ChampLocalisation({
         onClick={auToucher}
         onBlur={() => {
           if (interactionPanneau.current) return;
+          //  §1 (nº 508) — quitter le champ est une fermeture VOULUE :
+          //  la reprise en attente n'a plus lieu d'être.
+          //  ⚠️ ET LE DÉPART FORCÉ PAR UN DÉMONTAGE N'EN EST PAS UN :
+          //  retirer du document un champ qui a le focus fait émettre
+          //  un `blur` par le navigateur. Ce que la garde du dessus
+          //  empêche déjà — choisir une suggestion est un
+          //  `pointerdown` DANS le panneau, qui tient
+          //  `interactionPanneau` 400 ms, bien plus que le temps de la
+          //  navigation. QUI TOUCHERAIT À CE DÉLAI CASSERAIT LA
+          //  REPRISE : c'est lui qui distingue « la personne s'en va »
+          //  de « la page a changé sous mes pieds ».
+          oublierLaReprise();
           setListeOuverte(false);
           //  ⚠️ LA REMONTÉE EST RENDUE AU DÉPART (nº 162-§1). Sans
           //  cela, un départ SANS clavier (clavier matériel, banc)

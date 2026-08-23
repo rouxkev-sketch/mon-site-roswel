@@ -1791,6 +1791,24 @@ export const TEXTES_TATOUAGE = {
       au pixel, sans qu'aucun nombre ne soit recopié.
       ⚠️ LE TITRE DE RÉFÉRENCEMENT (`titreAccueil`, plus haut) N'EST PAS
       TOUCHÉ : il parle aux moteurs, celui-ci au visiteur. */
+  /**
+   * ██ §2 (nº 508) — LE TITRE D'UNE RECHERCHE SANS CATÉGORIE ██
+   * LE DÉFAUT que cette clé corrige : quand on cherchait une VILLE
+   * SEULE, la ville PRENAIT LA PLACE DU TITRE (« Lyon ») et
+   * disparaissait du sous-titre. Le propriétaire tranche : une ville
+   * n'est jamais un titre. Sans catégorie choisie, le titre est
+   * générique et la ville redescend dans le sous-titre, exactement
+   * comme lorsqu'une catégorie l'accompagne.
+   * ⚠️ CE N'EST PAS `CATEGORIES_EXPLORER` : quand aucune catégorie
+   * n'est choisie, la mosaïque ne filtre RIEN par nature — elle montre
+   * les réalisations ET les flashs (lib/tatoueurs : `!natureVoulue`
+   * laisse tout passer). Emprunter le mot « Toutes les réalisations »
+   * à la catégorie « tatouage » ferait croire à un filtre qui n'existe
+   * pas. C'est donc un texte À PART, et le propriétaire l'a nommé
+   * lui-même à la nº 508.
+   * ⚠️ SANS POINT FINAL, comme tous les titres du site.
+   */
+  titreRechercheSansCategorie: "Toutes les réalisations",
   /** L'APPEL AUX TATOUEURS — en bas de l'accueil, après la mosaïque.
       Pas dans la barre fixe : elle n'a pas la place, et quatre
       visiteurs sur cinq arrivent par le téléphone. */
