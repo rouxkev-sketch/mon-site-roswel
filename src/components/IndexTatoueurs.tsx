@@ -204,11 +204,16 @@ function tailleInconnueAuServeur(): null {
  *     RAYONS_TATOUAGE). Comme avant, il n'existe qu'autour d'un POINT
  *     — on n'élargit pas un cercle autour d'un pays.
  *  b) LE PAYS — « Chercher en France », « aux États-Unis », « au
- *     Japon ». Le nom vient des données (`nomPaysAffiche`, la forme
- *     longue : la barre, elle, abrège en « USA », pas ce badge) ; la
- *     préposition vient d'une table clée par code ISO
+ *     Japon ». Le nom vient du CODE ISO porté par l'adresse
+ *     (`paysDuLieu`, lib/geocodage — voir la nº 510 : le NOM, lui, ne
+ *     voyage pas, et l'exiger rendait ce badge introuvable) ; la
+ *     préposition vient d'une table clée par ce même code
  *     (lib/preposition-pays), qui n'écrit que les cas minoritaires et
  *     replie tout le reste sur « en ».
+ *     ⚠️ LA FORME LONGUE, ICI : `nomPaysAffiche` écrit « États-Unis ».
+ *     La BARRE, elle, abrège en « USA » une fois le lieu posé
+ *     (`nomPaysMoteur`, la règle nº 486) — ce n'est pas une
+ *     incohérence, ce sont deux endroits qui n'ont pas la même place.
  *  c) LE MONDE — « Partout dans le monde », le seul badge qui reste
  *     une fois qu'on cherche déjà dans un pays entier.
  *
@@ -216,7 +221,8 @@ function tailleInconnueAuServeur(): null {
  * peut être proposé, le monde ne l'est pas — sinon on rouvrirait
  * exactement le saut que cette passe supprime. Le monde prend la
  * relève dans les DEUX cas où le pays n'a pas de sens : on y est déjà,
- * ou les données ne le nomment pas (`paysDuLieu` rend alors `null`).
+ * ou l'adresse ne porte pas son code ISO (`paysDuLieu` rend alors
+ * `null` — et c'est le SEUL cas restant depuis la nº 510).
  * ⚠️ ET LE RESTE DE LA RECHERCHE NE BOUGE PAS : le style, la nature et
  * les filtres sont recopiés tels quels à chaque palier — on élargit le
  * LIEU, jamais la question.

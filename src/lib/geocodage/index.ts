@@ -205,17 +205,74 @@ export function lieuDepuisFiche(
  *    elles que `lieuDepuisParametres` reconnaît une adresse portant un
  *    lieu, au rechargement comme au partage (règle nº 328).
  *
- * RIEN N'EST FABRIQUÉ QUAND ON NE SAIT PAS : sans nom de pays ni code
- * ISO, et quand le lieu EST déjà un pays, la fonction rend `null` —
- * l'appelant passe alors au palier suivant, le monde.
+ * RIEN N'EST FABRIQUÉ QUAND ON NE SAIT PAS : sans code ISO, et quand
+ * le lieu EST déjà un pays, la fonction rend `null` — l'appelant passe
+ * alors au palier suivant, le monde.
+ *
+ * ██ §1 (nº 510) — POURQUOI LE BADGE DU PAYS NE PARAISSAIT JAMAIS ██
+ * ==================================================================
+ * LE SYMPTÔME : à Marseille, le badge du rayon marchait, mais le
+ * second disait « Partout dans le monde » au lieu de « Chercher en
+ * France ». Le palier « pays » n'existait pour personne.
+ * LA CAUSE, ET ELLE EST DANS L'ADRESSE. Cette fonction exigeait DEUX
+ * choses — le NOM du pays et son CODE ISO. Le code arrive bien
+ * (`paysCode=FR`) ; le nom, jamais. `lieuVersParametres`, juste en
+ * dessous, ne sérialise PAS `pays` : l'adresse ne porte donc pas ce
+ * nom, et `lieuDepuisParametres` ne peut pas l'inventer — il ne le
+ * rend que lorsque le lieu EST lui-même un pays, où l'intitulé fait
+ * office de nom. Pour toute VILLE, `lieu.pays` vaut `null`, et la
+ * condition tombait à chaque fois.
+ * ⚠️ CE N'EST PAS LA MÊME SOURCE QUE LES CARTES. « Lyon, France » sous
+ * une vignette (nº 486) vient de la colonne `pays` de la FICHE, en
+ * base — le pays du tatoueur, pas celui de la recherche. Les deux ne
+ * se croisent nulle part : que l'un s'affiche n'a jamais rien promis
+ * sur l'autre.
+ * LE REMÈDE : LE CODE ISO SUFFIT, ET LE NOM S'EN DÉDUIT. On garde
+ * `lieu.pays` quand il est là — un lieu frais, sorti du géocodeur, le
+ * porte, et c'est le mot exact que le champ affiche — et on retombe
+ * sinon sur le nom français du code (`Intl.DisplayNames`).
+ * ⚠️ AUCUNE ADRESSE NE CHANGE, et c'est délibéré : ajouter le nom du
+ * pays aux paramètres aurait allongé toutes les adresses ET laissé
+ * sans badge les liens DÉJÀ partagés, qui ne le porteraient pas. En
+ * lisant le code, on répare aussi le passé (règle nº 328 : l'état vit
+ * dans l'adresse — on ne lui ajoute rien qu'on puisse déduire).
  */
+
+/**
+ * LE NOM FRANÇAIS D'UN CODE PAYS — « FR » → « France », « US » →
+ * « États-Unis », « JP » → « Japon ».
+ * ⚠️ AUCUNE TABLE ÉCRITE À LA MAIN : `Intl.DisplayNames` porte les
+ * données de langue du système (les mêmes que celles de l'écriture des
+ * dates), donc les deux cents pays sans qu'on en recopie un seul. La
+ * TABLE DES PRÉPOSITIONS, elle, reste irréductible — le genre d'un nom
+ * de pays ne se calcule pas (voir lib/preposition-pays).
+ * ⚠️ UN CODE INCONNU SE RECONNAÎT : `of()` rend alors le code lui-même
+ * (« XX » → « XX »). On le refuse plutôt que d'écrire deux lettres en
+ * majuscules dans un badge.
+ * ⚠️ ET SI LA FONCTION N'EXISTE PAS (environnement trop ancien), on
+ * rend une chaîne vide : l'appelant passe au palier monde, comme pour
+ * un pays inconnu. Jamais d'exception jetée à l'affichage.
+ */
+function nomFrancaisDuPays(code: string): string {
+  try {
+    const noms = new Intl.DisplayNames(["fr"], { type: "region" });
+    const nom = noms.of(code) ?? "";
+    return nom.toUpperCase() === code.toUpperCase() ? "" : nom;
+  } catch {
+    return "";
+  }
+}
+
 export function paysDuLieu(lieu: LieuTrouve | null): LieuTrouve | null {
   if (!lieu || lieu.precision === "pays") return null;
-  const nom = (lieu.pays ?? "").trim();
-  const code = (lieu.code_pays ?? "").trim();
-  if (!nom || !code) return null;
+  const code = (lieu.code_pays ?? "").trim().toUpperCase();
+  if (!code) return null;
+  //  Le mot du géocodeur d'abord — c'est celui que le champ affiche ;
+  //  le nom du code ensuite, pour tout lieu revenu par l'adresse.
+  const nom = (lieu.pays ?? "").trim() || nomFrancaisDuPays(code);
+  if (!nom) return null;
   return {
-    identifiant: `pays:${code.toUpperCase()}`,
+    identifiant: `pays:${code}`,
     intitule: nom,
     //  Un pays se suffit : rien ne lève d'ambiguïté au-dessus de lui.
     contexte: "",
@@ -224,7 +281,7 @@ export function paysDuLieu(lieu: LieuTrouve | null): LieuTrouve | null {
     code_postal: null,
     region: null,
     pays: nom,
-    code_pays: code.toUpperCase(),
+    code_pays: code,
     latitude: lieu.latitude,
     longitude: lieu.longitude,
     precision: "pays",
