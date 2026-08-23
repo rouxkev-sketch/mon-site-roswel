@@ -2,7 +2,7 @@
 
 //  §4 (nº 459) — `useEffect` : la purge d'arrivée de la mémoire des
 //  galeries (voir PanneauPortfolio).
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { OngletsLigne } from "@/components/OngletsLigne";
 //  §4 (nº 459) — la mémoire de défilement des galeries du doigt.
 import {
@@ -402,6 +402,81 @@ export function PanneauPortfolio({
     </p>
   );
 
+  /**
+   * ██ §1 (nº 521) — LA TÊTE D'UNE GALERIE, AVEC SON COMPTEUR ██
+   * ==================================================================
+   * CE QU'ELLE POSE : la nature (« Réalisation »), puis la ligne du
+   * style — et, À L'OPPOSÉ de celle-ci, le rang de la photo vue sur le
+   * total : « 1/20 ». Enfin la galerie elle-même, que l'appelant
+   * fournit : les deux affichages (doigt et web) gardent chacun leurs
+   * réglages de débord, d'écart et de chevron, qui ne se ressemblent
+   * pas.
+   * ⚠️ POURQUOI UN COMPOSANT ET NON TROIS LIGNES DANS LA BOUCLE : le
+   * rang est un ÉTAT, et il en faut un PAR galerie. Dans une boucle, un
+   * état ne peut pas se déclarer — c'est la règle des crochets. Le
+   * composant est donc la forme, pas un choix de style.
+   * ⚠️ LE COMPTEUR NE POUSSE JAMAIS LE STYLE : c'est le TITRE qui cède
+   * (il prend la place restante et s'abrège), le compteur garde la
+   * sienne. Un style long s'écrit donc avec des points de suspension,
+   * et le nombre reste lisible et entier.
+   * ⚠️ LES CHIFFRES ONT TOUS LA MÊME LARGEUR (`tabular-nums`, le
+   * procédé du compteur de carrousel) : passer de « 9/20 » à « 10/20 »
+   * ne fait pas frémir la ligne.
+   * ⚠️ IL DIT « 1 » AVANT TOUT DÉFILEMENT : le rang part de zéro, et
+   * l'affichage ajoute un. Aucune galerie ne s'ouvre sur un compteur
+   * vide.
+   * ⚠️ CE N'EST PAS LE COMPTEUR DE LA VUE PHOTO (nº 483/487), et les
+   * deux restent séparés à dessein : celui-là est une PASTILLE POSÉE
+   * SUR L'IMAGE, avec son fond et son placement dans l'angle ; celui-ci
+   * est du TEXTE NU au bout d'une ligne de titre. Ils ne partagent ni
+   * habillage ni support — les réunir demanderait de paramétrer les
+   * deux, pour ne mettre en commun qu'une barre oblique.
+   */
+  const TeteDeGalerie = ({
+    nature,
+    titre,
+    total,
+    galerie,
+  }: {
+    nature: string;
+    titre: string;
+    total: number;
+    galerie: (surRang: (rang: number) => void) => React.ReactNode;
+  }) => {
+    const [rang, setRang] = useState(0);
+    return (
+      <>
+        {surtitre(nature)}
+        {/*  `items-baseline` : le nombre s'assoit sur la même ligne
+             d'écriture que le style, quelle que soit la casse. */}
+        <div className="flex items-baseline gap-3">
+          {/*  LE TITRE, AU-DESSUS DE SA GALERIE — l'écriture des noms
+               de style de la grille (15 px, `medium`, blanche),
+               reprise telle quelle. `min-w-0` : sans lui, un titre
+               long refuserait de s'abréger et pousserait le compteur
+               hors de la colonne. */}
+          <p
+            data-titre-galerie=""
+            className="min-w-0 flex-1 truncate text-[15px] font-medium text-sombre-texte"
+          >
+            {titre}
+          </p>
+          {/*  LE COMPTEUR — 15 px comme la ligne qu'il accompagne, le
+               GRIS des textes secondaires (le jeton de la nº 466), et
+               la graisse NORMALE : il accompagne le style, il ne le
+               concurrence pas. */}
+          <p
+            data-compteur-galerie=""
+            className="shrink-0 text-[15px] font-normal tabular-nums text-sombre-texte-doux"
+          >
+            {rang + 1}/{total}
+          </p>
+        </div>
+        {galerie(setRang)}
+      </>
+    );
+  };
+
   return (
     /*  §2 (nº 375) — LE RYTHME, ET CE QU'IL DEVIENT.
         ------------------------------------------------------------
@@ -514,14 +589,13 @@ export function PanneauPortfolio({
             data-galerie-serie={`${nature}·${serie.style}·${serie.rendu}`}
             className="mt-7 first:mt-0"
           >
-            {surtitre(titre)}
-            <p
-              data-titre-galerie=""
-              className="text-[15px] font-medium text-sombre-texte"
-            >
-              {titreDeGalerie(serie.label, serie.rendu)}
-            </p>
+            <TeteDeGalerie
+              nature={titre}
+              titre={titreDeGalerie(serie.label, serie.rendu)}
+              total={serie.photos.length}
+              galerie={(surRang) => (
             <GalerieQuiDefile
+              surRang={surRang}
               classeEnveloppe="mt-2.5"
               /*  LE DÉBORD DE « MA SÉLECTION », À LA LETTRE : la
                    rangée sort jusqu'aux bords de l'écran (marges
@@ -566,6 +640,8 @@ export function PanneauPortfolio({
             >
               {casesDe(serie, nature)}
             </GalerieQuiDefile>
+              )}
+            />
           </div>
         ))}
       </div>
@@ -614,17 +690,13 @@ export function PanneauPortfolio({
             {/*  §2 (nº 375) — LE SURTITRE : « RÉALISATIONS » ou
                  « FLASHS », l'écriture de l'ancien titre de
                  section, collée au titre de la galerie. */}
-            {surtitre(titre)}
-            {/*  LE TITRE, AU-DESSUS DE SA GALERIE — l'écriture des
-                 noms de style de la grille (15 px, `medium`,
-                 blanche), reprise telle quelle. */}
-            <p
-              data-titre-galerie=""
-              className="text-[15px] font-medium text-sombre-texte"
-            >
-              {titreDeGalerie(serie.label, serie.rendu)}
-            </p>
+            <TeteDeGalerie
+              nature={titre}
+              titre={titreDeGalerie(serie.label, serie.rendu)}
+              total={serie.photos.length}
+              galerie={(surRang) => (
             <GalerieQuiDefile
+              surRang={surRang}
               /*  §1 (nº 312) — PLUS AUCUN DÉBORD, PLUS AUCUN MASQUE.
                    ------------------------------------------------
                    LA GALERIE TIENT DANS LA COLONNE, exactement : ni
@@ -666,6 +738,8 @@ export function PanneauPortfolio({
             >
               {casesDe(serie, nature)}
             </GalerieQuiDefile>
+              )}
+            />
           </div>
         ))}
       </div>

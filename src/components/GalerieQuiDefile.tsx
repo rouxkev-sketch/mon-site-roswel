@@ -74,6 +74,23 @@ export const CHEVRON_GALERIE_PETIT: TailleChevron = {
 
 export function GalerieQuiDefile({
   children,
+  /**
+   * ██ §1 (nº 521) — LE RANG DE LA PREMIÈRE VIGNETTE VUE, POUR QUI LE
+   * DEMANDE ██
+   * ------------------------------------------------------------------
+   * Le compteur d'une galerie du Portfolio (« 1/20 ») a besoin de
+   * savoir où en est le défilement. Ce composant le sait déjà — il
+   * écoute la rangée pour ses chevrons —, il le DIT donc, au lieu que
+   * l'appelant remesure la même chose une seconde fois.
+   * ⚠️ RIEN NE CHANGE POUR QUI NE LE DEMANDE PAS : sans ce rappel, la
+   * mesure n'est même pas faite, et les autres appelants (« Ma
+   * sélection », les suivis) ne bougent pas d'un pixel — c'est le
+   * procédé de `ecart` et de `chevron`, des réglages, jamais un second
+   * dessin.
+   * ⚠️ LE RANG PART DE ZÉRO : c'est un rang, pas un numéro. Celui qui
+   * l'affiche ajoute un.
+   */
+  surRang,
   classeEnveloppe = "",
   classeRangee = "",
   styleRangee,
@@ -124,6 +141,8 @@ export function GalerieQuiDefile({
   etiquette,
 }: {
   children: React.ReactNode;
+  /** §1 (nº 521) — appelé au défilement avec le rang (base zéro). */
+  surRang?: (rang: number) => void;
   classeEnveloppe?: string;
   classeRangee?: string;
   styleRangee?: React.CSSProperties;
@@ -181,6 +200,39 @@ export function GalerieQuiDefile({
   };
 
   /**
+   * ██ §1 (nº 521) — LE RANG DE LA PREMIÈRE VIGNETTE VUE ██
+   * ------------------------------------------------------------------
+   * À NE PAS CONFONDRE AVEC `page`, juste en dessous : une PAGE est une
+   * largeur de cadre, donc PLUSIEURS vignettes — c'est le pas des
+   * chevrons, pas un rang de photo. Le compteur d'une galerie du
+   * Portfolio (« 1/20 ») a besoin de l'autre nombre.
+   * COMMENT IL EST MESURÉ, SANS AUCUNE VALEUR ÉCRITE : le PAS entre
+   * deux vignettes se lit sur les DEUX PREMIÈRES de la rangée — leur
+   * écart de position porte déjà la largeur d'une case ET l'espace qui
+   * les sépare, quels qu'ils soient. Le réglage d'écart de l'appelant
+   * (`ecart`) ne peut donc pas le désaccorder, et rien n'est à tenir à
+   * jour ici quand une galerie change de gabarit.
+   * ⚠️ L'ARRONDI REND LE CHANGEMENT FRANC : le rang bascule à
+   * mi-parcours entre deux vignettes, jamais progressivement. Au doigt
+   * comme au web, puisque tout se lit sur le défilement lui-même —
+   * l'accrochage (`snap`) fait le reste et pose la rangée pile.
+   * ⚠️ UNE SEULE VIGNETTE, OU UNE RANGÉE PAS ENCORE MESURABLE : le pas
+   * vaut zéro, et le rang vaut zéro — donc « 1 » à l'affichage. Jamais
+   * de vide, jamais de division par zéro.
+   */
+  const rangPremiereVue = (cadre: HTMLElement) => {
+    const cases = cadre.children;
+    if (cases.length < 2) return 0;
+    const pas =
+      (cases[1] as HTMLElement).offsetLeft - (cases[0] as HTMLElement).offsetLeft;
+    if (pas <= 0) return 0;
+    return Math.min(
+      cases.length - 1,
+      Math.max(0, Math.round(cadre.scrollLeft / pas))
+    );
+  };
+
+  /**
    * §4 (nº 253) — UNE PAGE ENTIÈRE, ET RIEN D'AUTRE. On VISE une
    * frontière de page (`page × largeur visible`) au lieu d'ajouter une
    * largeur à la position courante : les deux font le même pas, mais
@@ -208,6 +260,9 @@ export function GalerieQuiDefile({
         droite: cadre.scrollLeft + cadre.clientWidth < cadre.scrollWidth - 1,
         page: contenu ? Math.round(cadre.scrollLeft / contenu) : 0,
       });
+      //  §1 (nº 521) — LE RANG DE LA PREMIÈRE VIGNETTE VUE, pour qui
+      //  le demande. Voir la note du paramètre.
+      if (surRang) surRang(rangPremiereVue(cadre));
     };
     lire();
     cadre.addEventListener("scroll", lire, { passive: true });
@@ -217,7 +272,11 @@ export function GalerieQuiDefile({
       cadre.removeEventListener("scroll", lire);
       observateur.disconnect();
     };
-  }, [cleDuContenu]);
+    //  §1 (nº 521) — `surRang` entre dans les dépendances plutôt qu'une
+    //  exception de règle : l'appelant passe un poseur d'état, que React
+    //  garantit stable d'un rendu à l'autre — l'écouteur n'est donc pas
+    //  reposé pour rien.
+  }, [cleDuContenu, surRang]);
 
   /*  §6 (nº 264) — LE CHEVRON SE DÉSHABILLE : un chevron NU, blanc —
       ni disque, ni verre, ni fond, ni contour, ni halo —, au survol de
