@@ -28,9 +28,22 @@ changé, sur ordre du propriétaire (après la passe nº 355) :
 - LES IMAGES DE `public/` SONT DÉSORMAIS INCLUSES dans chaque zip (règle du
   propriétaire, passe nº 356 — voir « Les images officielles » plus bas) :
   plus AUCUNE exclusion d'image ;
+- LE SCRIPT DE DÉPLOIEMENT `d` EST INCLUS DANS CHAQUE ZIP (règle du
+  propriétaire, passe nº 503), au même titre que les deux images de marque.
+  C'est lui qui déploie en production sans poser de question ; le propriétaire
+  tape `sh d` dans le dossier dézippé, et rien d'autre. Ne jamais l'exclure,
+  ne jamais le renommer. Le rendre exécutable avant de zipper (`chmod +x d`) ;
+- LE FICHIER DE LIAISON `.vercel/project.json`, LUI, N'EST PAS DANS LE DÉPÔT
+  (il est dans `.gitignore` depuis toujours) : il ne peut donc pas être inclus
+  dans le zip. Ce n'est pas un oubli — c'est le script `d` qui le fabrique
+  tout seul au premier lancement dans un dossier neuf, sans question. Si un
+  jour ce fichier apparaît dans le clone, l'OUVRIR AVANT de l'inclure et
+  vérifier qu'il ne porte qu'un `projectId` et un `orgId` : s'il contient un
+  jeton ou une clé, NE PAS L'INCLURE ;
 - avant livraison, vérifier avec `unzip -l` que la racine est bien le numéro
   de la passe et que ni `node_modules`, ni `.next`, ni `.git`, ni le journal
-  `.ndjson` n'y figurent — et que les images de `public/` Y FIGURENT ;
+  `.ndjson` n'y figurent — et que les images de `public/` ET le script `d`
+  Y FIGURENT ;
 - ne JAMAIS exclure `.env.local` du zip (voir « Inclure `.env.local` dans
   chaque livraison » ci-dessous) : il doit TOUJOURS être livré.
 
