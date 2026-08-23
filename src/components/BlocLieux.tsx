@@ -10,6 +10,9 @@ import { IconeChevronBas, IconeHorloge } from "@/components/Icones";
 //  sans être exportée, elle vit désormais dans un module qui ne dépend
 //  de rien (voir la note, plus bas, à la place qu'elle occupait).
 import { ENCADRE_MEMBRE, ENCADRE_MEMBRE_CLIQUABLE } from "@/components/plaque";
+//  §1 (nº 514) — « ce qui est surligné est ce qui est copié » :
+//  une seule écriture, pour tous les liens qui portent du texte.
+import { garderLeTexteALaCopie } from "@/lib/copie-du-texte";
 //  §3 (nº 388) — l'icône de la ligne d'adresse, et l'écriture des
 //  lignes de profil (module sans dépendance : voir lignes-profil).
 import { IconeLocalisation } from "@/components/IconeReseau";
@@ -856,6 +859,13 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
                 href={adresseDeLienInterne(membre.slug)}
                 onClick={clicVersFiche?.(membre.slug)}
                 draggable={false}
+                //  §1 (nº 514) — SURLIGNER NE SUFFISAIT PAS : copiée,
+                //  une sélection entièrement contenue dans un lien
+                //  rendait l'ADRESSE du lien, pas le texte (le
+                //  comportement de WebKit). On pose donc nous-mêmes ce
+                //  qui est vu. La raison complète vit dans
+                //  lib/copie-du-texte.
+                onCopy={garderLeTexteALaCopie}
                 className={ENCADRE_MEMBRE_CLIQUABLE}
               >
                 {ligne()}
@@ -1206,6 +1216,12 @@ function LienAdresse({
         //  ⚠️ AU DOIGT, RIEN NE CHANGE — et il y a de toute façon un
         //  bouton « Copier l'adresse » dans la fenêtre de verre.
         draggable={false}
+        //  §1 (nº 514) — ET C'EST LE TEXTE QUI PART AU PRESSE-PAPIERS,
+        //  plus l'adresse Google Maps : surligner l'adresse et la
+        //  copier rendait l'URL du plan, parce que la sélection tient
+        //  tout entière dans ce lien (le comportement de WebKit). On
+        //  pose donc nous-mêmes ce qui est vu — voir lib/copie-du-texte.
+        onCopy={garderLeTexteALaCopie}
         className="group rounded transition-colors active:bg-white/10"
       >
         <span className={`${classeTexte} ${soulignement}`}>{texte}</span>
@@ -1807,6 +1823,10 @@ export function BlocProfilsArtiste({
                 //  haut dans ce fichier, où la raison est écrite en
                 //  entier.
                 draggable={false}
+                //  §1 (nº 514) — et c'est le NOM qui part au
+                //  presse-papiers, pas l'adresse de la fiche (voir
+                //  lib/copie-du-texte).
+                onCopy={garderLeTexteALaCopie}
                 className={ENCADRE_MEMBRE_CLIQUABLE}
               >
                 {pastille}
