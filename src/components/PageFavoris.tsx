@@ -10,7 +10,15 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LARGEUR_SITE } from "@/config/tatouage";
-import { lireSelection, MENU_FAVORIS } from "@/lib/filtres-selection";
+import {
+  lireSelection,
+  poserSelection,
+  MENU_FAVORIS,
+  MENU_SUIVIS,
+} from "@/lib/filtres-selection";
+//  §2 (nº 526) — la reconnaissance du glissement horizontal, écrite une
+//  fois et branchée ici sur l'écriture qui existe déjà.
+import { useGlissementLateral } from "@/lib/glissement-lateral";
 import { lireRequeteCourante, souscrireAdresse } from "@/lib/adresse-courante";
 import { CarteTatoueur } from "@/components/CarteTatoueur";
 import { CLASSES_GRILLE_CARTES } from "@/components/GrilleTatoueurs";
@@ -104,6 +112,45 @@ export function PageFavoris({
       (adresse sans paramètre), c'est « Mes favoris » : les favoris
       seuls, aucun suivi. */
   const surLesFavoris = choix.menu === MENU_FAVORIS;
+  /**
+   * ██ §2 (nº 526) — UN GLISSEMENT HORIZONTAL CHANGE D'ONGLET ██
+   * ------------------------------------------------------------------
+   * LE GESTE est reconnu ailleurs (lib/glissement-lateral, où sont
+   * écrits le verrou d'axe, le seuil, et tout ce qui doit le REFUSER —
+   * les galeries, le bord du navigateur, la feuille ouverte, le
+   * pincement). ICI, il ne reste que la traduction : le sens voulu
+   * désigne un onglet, et cet onglet se pose comme si on l'avait
+   * touché.
+   * ⚠️ ET C'EST LITTÉRALEMENT LA MÊME ÉCRITURE : `poserSelection(cible,
+   * "")` est mot pour mot ce que fait le va-et-vient de la barre
+   * (MenusSelection, `surChoix`) quand le doigt touche l'autre côté.
+   * D'où trois conséquences qu'on n'a pas à obtenir, on les HÉRITE :
+   *  · le va-et-vient se met à jour tout seul — trait rose, nombre et
+   *    chevron compris : il lit l'adresse, et c'est l'adresse qu'on
+   *    écrit (les deux composants sont frères depuis la nº 245) ;
+   *  · L'HISTORIQUE NE BOUGE PAS D'UN CRAN. `poserSelection` écrit par
+   *    `replaceState` (nº 333) : une bascule ne pose aucune entrée, un
+   *    seul appui de retour quitte toujours la page — la règle 332
+   *    tient sans qu'on la touche ;
+   *  · la liste neuve se pose EN HAUT (`ouvrirLaListeEnHaut`, nº 329),
+   *    comme après un filtre.
+   * ⚠️ LA BASCULE EST FRANCHE, SANS ANIMATION, et c'est un choix : les
+   * deux sections sont EXCLUSIVES depuis la nº 247 — l'autre n'est même
+   * pas montée. Une glissade d'une section à l'autre demanderait de
+   * monter les deux et de les faire tenir côte à côte dans une piste
+   * translatée : une seconde mise en page, une seconde grille, et le
+   * piège 378/379 en plein. Le va-et-vient a déjà son animation à lui
+   * (le trait rose qui coulisse) : c'est elle qui accuse le geste.
+   * ⚠️ RIEN SI L'ON EST DÉJÀ DU BON CÔTÉ : sans cette garde, un
+   * glissement vers la gauche sur « Portfolios » réécrirait l'adresse
+   * et REMONTERAIT LA LISTE EN HAUT pour rien — on aurait perdu sa
+   * place sans rien avoir changé.
+   */
+  const glissementDOnglet = useGlissementLateral((sens) => {
+    const cible = sens === 1 ? MENU_SUIVIS : MENU_FAVORIS;
+    if (cible === choix.menu) return;
+    poserSelection(cible, "");
+  });
   /*  §4 (nº 255) — LA MISE EN PAGE DES CARTES. L'icône posée dans la
       barre commande la MÊME vue que sur la page de recherche : le
       magasin est partagé (lib/vue-phototheque, lu ici par le même
@@ -397,6 +444,17 @@ export function PageFavoris({
           rapport à la recherche. Mêmes classes, même composant : les
           deux pages sont désormais identiques valeur par valeur. */
       className={`flex-1 mx-auto w-full ${LARGEUR_SITE} px-4 sm:px-6 pb-16`}
+      /*  §2 (nº 526) — LES QUATRE ÉCOUTEURS TACTILES DU GLISSEMENT, ET
+          RIEN D'AUTRE : cette ligne n'ajoute pas une classe, pas un
+          style, pas une boîte — la racine de page ne change ni de forme
+          ni de taille (pièges 378/379). Elle ÉCOUTE, elle n'empêche
+          rien : ni `preventDefault`, ni `touch-action`.
+          ⚠️ ET C'EST LE BON PORTEUR, PAS UN CHOIX DE CONFORT : la
+          feuille des filtres, le panneau du web, leur voile et la pile
+          de fiches vivent dans un PORTAIL — hors de cet élément. Leurs
+          gestes ne passent donc jamais ici, sans qu'aucune garde ait à
+          les nommer. */
+      {...glissementDOnglet}
     >
       {/* ---------- LE TITRE (§2, nº 249) ----------
            « Ma sélection » et le sous-titre en capitales ont DISPARU.

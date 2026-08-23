@@ -1386,22 +1386,28 @@ export function MenuDeroulant({
               className="cursor-grab touch-none"
               onPointerDown={(e) => glissementDebut(e, true)}
             >
-              {/*  ██ §5 (nº 525) — L'AIR DU HAUT, ET LE TRAIT ██
-                   L'AIR AU-DESSUS DU TITRE passe de 12 à 20 px : la
-                   réserve qui coiffe la feuille (elle porte le trait,
-                   puis les 8 px qui le séparent du titre — ces 8-là ne
-                   bougent pas). Du bord haut de la feuille au titre :
-                   26 px hier, 32 aujourd'hui.
-                   LE TRAIT DE FERMETURE S'AMINCIT, de 6 à 4 px de
-                   haut. SA LARGEUR (40 px), SA COULEUR et SA POSITION
-                   (centré) NE CHANGENT PAS — c'est la demande, au mot
-                   près.
+              {/*  ██ §1 (nº 526) — L'AIR DU HAUT, ENCORE ██
+                   DEUX RÉSERVES, ET ELLES SE LISENT SUR CETTE SEULE
+                   BOÎTE — c'est pour cela qu'elles sont ensemble :
+                    · AU-DESSUS DU TRAIT (bord haut de la feuille →
+                      trait) : 20 px à la nº 525, 24 px ici ;
+                    · AU-DESSUS DU TITRE (trait → titre) : 8 px depuis
+                      la nº 262, 16 px ici — celle-là n'avait jamais
+                      bougé, et c'est elle qui serrait le titre.
+                   Du bord haut de la feuille au titre : 32 px hier,
+                   44 aujourd'hui. Les deux valeurs restent sur
+                   l'échelle de 4 demandée.
+                   ⚠️ LE TRAIT NE CHANGE PAS : 4 px de haut (nº 525),
+                   40 px de large, sa couleur et son centrage.
                    ⚠️ LA BANDE PRÉHENSIBLE Y GAGNE : elle englobe le
                    trait ET le titre (voir la note du dessus), et elle
-                   grandit de 6 px — la mesure des 44 px du pouce
-                   (nº 261) reste tenue, avec de la marge. */}
-              <div className="pt-5 pb-2 flex justify-center">
-                <span className="w-10 h-1 rounded-full bg-bordure" aria-hidden />
+                   grandit de 12 px — la mesure des 44 px du pouce
+                   (nº 261) reste tenue, avec de la marge.
+                   ⚠️ Classes en ORDRE ALPHABÉTIQUE, une seule par
+                   propriété : la règle du site, appliquée aux deux
+                   lignes que cette passe réécrit. */}
+              <div className="flex justify-center pb-4 pt-6">
+                <span className="bg-bordure h-1 rounded-full w-10" aria-hidden />
               </div>
               {/*  §3 (nº 262) — l'icône de l'appelant à gauche du
                    titre, à la couleur du titre : dans la barre elle
