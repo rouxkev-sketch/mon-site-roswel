@@ -460,13 +460,27 @@ function LigneDeCapsules({
         ))}
         {restant > 0 && (
           /*  §1 ET §3 (nº 491) — LA CAPSULE COMPTEUR : même rayon,
-              même hauteur, même écriture que les autres, et un fond
-              qui se détache de son support dans les DEUX enveloppes
-              (`bg-sombre-eleve` — voir la note, §1 de la nº 491 :
-              `bg-sombre-carte` était alors la couleur même de la
-              fenêtre du web ; depuis la nº 499 c'est celle de la PAGE,
-              donc toujours un fond de support, jamais un fond de
-              capsule). Aucun contour, aucun rose.
+              même hauteur, même écriture que les autres. Aucun
+              contour, aucun rose.
+              ██ §2 (nº 504) — ELLE DESCEND SOUS LES CAPSULES ██
+              --------------------------------------------------------
+              POURQUOI MAINTENANT : le §1 de cette passe vient de mettre
+              les DEUX familles de capsules au même fond. Le compteur,
+              qui portait déjà celui des techniques, se serait confondu
+              avec toutes ses voisines — contraste 1,00, c'est-à-dire
+              rien du tout.
+              IL PASSE DONC AU CRAN EN DESSOUS, et le sens est juste :
+              sur un fond noir, ce qui est plus sombre RECULE. Le
+              compteur est un bouton, pas une information — il ne doit
+              pas peser plus lourd que les valeurs qu'il compte.
+              ⚠️ CE QUE ÇA VAUT, MESURÉ, ET IL FAUT LE DIRE : contre une
+              capsule voisine, 1,18 — mieux que le 1,00 qu'il aurait eu,
+              mais peu. Contre le fond de la page (et donc de la
+              fenêtre du web, qui porte la même couleur depuis les
+              nº 499-501), 1,16. LE COMPTEUR SE LIT DONC SURTOUT PAR SON
+              TEXTE — qui rend 7,01 sur ce fond-là — et par sa forme.
+              C'est le meilleur cran disponible sous celui des capsules :
+              le suivant serait la couleur de la page elle-même.
               LE LIBELLÉ DIT L'ÉTAT : « +N ⌄ » tant qu'il reste à
               déplier, « Réduire ⌃ » une fois tout montré. La forme et
               le fond ne changent pas d'un état à l'autre ; seuls le
@@ -478,7 +492,7 @@ function LigneDeCapsules({
             onClick={() => setDeplie((etait) => !etait)}
             aria-expanded={deplie}
             className="inline-flex cursor-pointer items-center gap-1 whitespace-nowrap
-                       rounded-lg bg-sombre-eleve px-2.5 py-1 text-[13.5px] leading-[18px]"
+                       rounded-lg bg-sombre-carte px-2.5 py-1 text-[13.5px] leading-[18px]"
           >
             {deplie ? "Réduire" : `+${restant}`}
             <span
@@ -1610,7 +1624,16 @@ export function ContenuFiche({
       icone={<IconeEtoile taille={20} />}
       valeurs={tatoueur.styles}
       libelle={libelleStyle}
-      fond="bg-sombre-eleve-clair"
+      /*  ██ §1 (nº 504) — LES DEUX FAMILLES AU MÊME FOND ██
+          Les styles étaient un cran plus clair que les techniques
+          (`eleve-clair` contre `eleve`) : deux gris séparés par 0,022
+          de luminosité, que le propriétaire ne distinguait pas. Ils
+          prennent donc le fond des PLAQUES, comme les techniques.
+          CE QUI PORTE LA DIFFÉRENCE MAINTENANT : l'ICÔNE en tête de
+          ligne — le diamant des techniques, l'étoile des styles
+          (acquis nº 489). Une forme se lit ; un demi-cran de gris,
+          non. */
+      fond="bg-sombre-eleve"
     />
   );
 

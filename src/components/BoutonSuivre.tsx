@@ -190,43 +190,60 @@ export function BoutonSuivre({
                     pleineLargeur ? "w-full" : ""
                   } ${
                     suivi
-                      ? /*  §1 (nº 385) — LE GRIS DU TEXTE POUR LE
-                             TRAIT. La nº 384 avait poussé ce contour
-                             jusqu'au jeton des TRAITS (`sombre-trait`,
-                             #3B3B42) : TROP SOMBRE au jugement du
-                             propriétaire, elle fut annulée.
-                             ██ §8 (nº 405) — ET `sombre-texte-doux`
-                             EST TROP CLAIR ██
-                             Le propriétaire tranche entre les deux
-                             refus. Le contour prend
-                             `sombre-haut-clair` (#55555F), UN JETON DE
-                             LA CHARTE, et c'est celui qui tombe entre
-                             les deux valeurs jugées : plus sombre que
-                             le #A8A8B0 d'aujourd'hui, nettement plus
-                             clair que le #3B3B42 refusé à la nº 384
-                             (les deux seuls jetons intermédiaires sont
-                             `sombre-haut` #4A4A53 et celui-ci ; #55555F
-                             est le plus proche du milieu). Aucune
-                             couleur n'est inventée.
-                             ⚠️ LE TEXTE NE CHANGE PAS — il garde
-                             `sombre-texte-doux`, et le survol des deux
-                             garde son cran. Trait et mot ne sont donc
-                             plus du même gris : c'est ce qui est
-                             demandé. */
-                        /*  ██ §3 (nº 459) — « SUIVI » SE REMPLIT ██
-                             L'intérieur prend LA COULEUR DU CONTOUR
-                             (`sombre-haut-clair`, #55555F — le jeton
-                             posé à la nº 405), et le mot passe au
-                             BLANC de la charte (`sombre-texte`) : un
-                             état plein, lisible d'un coup d'œil, le
-                             miroir gris du « Suivre » rose. Au survol,
-                             fond et contour descendent ENSEMBLE d'un
-                             cran (`sombre-haut`, #4A4A53) — le
+                      ? /*  ██ §3 (nº 459) — « SUIVI » SE REMPLIT ██
+                             L'intérieur prend la couleur du contour, et
+                             le mot passe au BLANC de la charte
+                             (`sombre-texte`) : un état plein, lisible
+                             d'un coup d'œil, le miroir gris du
+                             « Suivre » rose. Au survol, fond et contour
+                             descendent ENSEMBLE d'un cran — le
                              traitement du bouton rose, transposé ; le
                              texte reste blanc. Piège 389 : une seule
                              couleur de fond par état, remplacée au
-                             survol, jamais empilée. */
-                        "bg-sombre-haut-clair border-sombre-haut-clair text-sombre-texte hover:bg-sombre-haut hover:border-sombre-haut"
+                             survol, jamais empilée.
+                             ⚠️ CE QUE LES NOTES DES nº 385 ET 405
+                             RACONTAIENT ICI EST PÉRIMÉ DEUX FOIS, et je
+                             le retire plutôt que de le laisser tromper :
+                             elles pesaient le choix du gris du CONTOUR
+                             entre trois jetons, en citant #55555F,
+                             #4A4A53 et #3B3B42 — LES VALEURS D'AVANT LA
+                             nº 466, qui a retinté toute l'échelle sur le
+                             bleu nuit. Ces trois nombres n'existent plus
+                             nulle part dans la charte. Et la nº 459 a de
+                             toute façon rempli le bouton, ce qui a ôté
+                             au contour son rôle : il porte le même jeton
+                             que le fond, donc il ne se voit pas.
+                             ██ §4 (nº 504) — « SUIVI » DESCEND AU GRIS
+                             DES PLAQUES ██
+                             ----------------------------------------
+                             LE DÉFAUT, RELEVÉ À LA nº 498 : à
+                             `sombre-haut-clair` (#4A525D depuis la
+                             nº 466), cet état était LE POINT LE PLUS
+                             CLAIR DE TOUTE LA FICHE — pour un état
+                             PASSIF, qui dit « c'est déjà fait ». Il
+                             attirait l'œil plus qu'un bouton rose.
+                             IL PREND DONC `sombre-eleve` (#262C34), le
+                             gris des plaques et des capsules : il
+                             rejoint le niveau du contenu au lieu de
+                             flotter au-dessus. Et il DESCEND ENCORE au
+                             survol et à l'appui (`sombre-carte`,
+                             #1A1F26) — s'enfoncer, c'est le geste qui
+                             dit qu'on va se désabonner ; monter aurait
+                             dit l'inverse.
+                             ⚠️ LE LIBELLÉ RESTE TRÈS LISIBLE, mesuré :
+                             le blanc rend 12,59 sur #262C34 et 14,81 sur
+                             #1A1F26 — il GAGNE en contraste, puisque le
+                             fond s'assombrit (il rendait 7,07 avant).
+                             ⚠️ CE QU'IL PARTAGE MAINTENANT, ET JE LE
+                             DIS : `sombre-eleve` est exactement le fond
+                             des capsules et des plaques. Le bouton n'en
+                             touche aucune — il vit dans la rangée du
+                             haut, à côté du partage, et les capsules
+                             sont plus bas dans la liste des lignes —
+                             mais il partage désormais leur NIVEAU. C'est
+                             la conséquence assumée de « le gris des
+                             plaques ». */
+                        "bg-sombre-eleve border-sombre-eleve text-sombre-texte hover:bg-sombre-carte hover:border-sombre-carte active:bg-sombre-carte active:border-sombre-carte"
                       : //  §8 (nº 405) — LE ROSE PLEIN DU SITE (voir la
                         //  note ci-dessus) : fond et contour au même
                         //  jeton, texte blanc, et le survol monte les

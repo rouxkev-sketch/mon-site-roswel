@@ -310,7 +310,21 @@ function DatesDeSession({
   return (
     <p
       data-periode-guest=""
-      className={`mt-2.5 text-[14px] ${
+      /*  §3 (nº 504) — LA GRAISSE EST DITE EN TOUTES LETTRES.
+          Le propriétaire relève les dates « en gras ». ELLES NE L'ONT
+          JAMAIS ÉTÉ dans le code : ce paragraphe n'a jamais porté de
+          classe de graisse, il hérite donc du 400 du corps de page.
+          `font-normal` est posé ici pour VERROUILLER cette valeur —
+          il ne change pas un pixel aujourd'hui, il empêche qu'une
+          graisse tombe d'un parent demain.
+          ⚠️ CE QUI DONNE L'IMPRESSION DE GRAS, ET C'EST AILLEURS : la
+          COULEUR. Avec `enBlanc`, ces dates sont peintes du blanc de la
+          charte (#F2F2F4) au milieu de voisines en gris doux — et sur
+          un fond sombre, un texte blanc paraît toujours plus épais que
+          son entourage. Le propriétaire a exclu de toucher à la
+          couleur pour cette passe ; c'est donc le seul levier qui
+          reste, et il est nommé ici pour la prochaine. */
+      className={`mt-2.5 text-[14px] font-normal ${
         enBlanc ? "text-sombre-texte" : "text-sombre-texte-doux"
       }`}
     >
