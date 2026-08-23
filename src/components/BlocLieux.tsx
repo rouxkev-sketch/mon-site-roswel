@@ -550,12 +550,17 @@ export const SOULIGNEMENT_LIEN =
   "group-hover:underline";
 
 /**
- * ██ §2, §3 ET §4 (nº 492) — L'ENCADRÉ D'UN MEMBRE D'ÉQUIPE ██
+ * ██ LA PLAQUE — L'ÉCRITURE UNIQUE DE TOUTES LES PLAQUES DU SITE ██
+ * (§2, §3 et §4 nº 492 · §1 nº 493 · §2 nº 496 · §1 nº 497)
  * ==================================================================
- * IL NE RESSEMBLE PLUS À CELUI DES AUTRES LIGNES CLIQUABLES, ET C'EST
- * POUR ÇA QU'IL A SON ÉCRITURE À LUI. `CLASSES_LIGNE_CLIQUABLE` reste
- * intacte pour son autre porteur — le lieu d'un profil d'artiste
- * (§5) — et rien n'y est touché.
+ * ELLE NE RESSEMBLE PLUS AUX AUTRES LIGNES CLIQUABLES, ET C'EST POUR
+ * ÇA QU'ELLE A SON ÉCRITURE À ELLE.
+ * ⚠️ SES PORTEURS, ET ILS SONT DEUX : les membres d'équipe (guests
+ * compris) d'un salon ou d'un studio, et les LIEUX d'une fiche
+ * d'artiste — ceux-ci depuis la nº 496. Les deux blocs lisent CETTE
+ * constante : un réglage posé ici vaut pour les deux d'un coup, et ils
+ * ne peuvent pas diverger. `CLASSES_LIGNE_CLIQUABLE`, elle, n'a plus
+ * aucun porteur depuis la nº 496 (voir sa propre note).
  *
  * §2 — LE FOND EST PERMANENT. Il n'apparaissait qu'AU SURVOL
  * (`hover:bg-white/5`) : une plaque qui se montre au passage de la
@@ -578,17 +583,42 @@ export const SOULIGNEMENT_LIEN =
  * marge négative part : la plaque commence et finit désormais où le
  * reste du contenu commence et finit.
  * ⚠️ LA COLONNE DE LECTURE N'EST PAS TOUCHÉE (piège 378/379) : son
- * `lg:px-3 lg:-mx-3` (nº 298/312) reste, et il sert toujours — l'autre
- * porteur de `CLASSES_LIGNE_CLIQUABLE` déborde encore, lui.
+ * `lg:px-3 lg:-mx-3` (nº 298/312) reste. Il n'a plus de débord à
+ * laisser passer depuis la nº 496, et il ne coûte rien — il écarte un
+ * bord qui rogne, il ne déplace aucun contenu.
  *
- * §4 — L'AIR DEDANS, DANS L'ÉCHELLE DE 4 : DOUZE pixels à gauche et à
- * droite (l'avatar ne touche plus le bord, le texte non plus), HUIT en
- * haut et en bas — la valeur qu'avait déjà le rembourrage, gardée
- * telle quelle. Le nombre de pixels entre l'avatar et son texte ne
- * bouge pas (14 px, `gap-3.5`, depuis la nº 227).
+ * ██ §1 (nº 497) — L'AIR INTÉRIEUR EST ÉGAL SUR LES QUATRE CÔTÉS ██
+ * ------------------------------------------------------------------
+ * ⚠️⚠️ RÈGLE DU SITE, À TENIR PAR TOUTES LES PASSES QUI SUIVENT :
+ * DANS UNE PLAQUE, L'AIR INTÉRIEUR EST LE MÊME EN HAUT, EN BAS, À
+ * GAUCHE ET À DROITE. Un seul nombre, sur les quatre côtés. Une plaque
+ * n'est pas une ligne de texte : elle a une épaisseur, et cette
+ * épaisseur ne se lit juste que si elle est constante tout autour. Dès
+ * qu'un côté diffère, l'œil voit le contenu « collé » quelque part,
+ * même quand tout est aligné au pixel.
+ *
+ * CE QUE LA nº 492 AVAIT POSÉ, et que cette passe corrige : DOUZE
+ * pixels à gauche et à droite, mais HUIT en haut et en bas — le
+ * rembourrage vertical d'avant, gardé « tel quel » faute d'une raison
+ * de le changer. Le propriétaire l'a vu : le contenu était plus serré
+ * verticalement qu'horizontalement.
+ * CE QUE C'EST DEVENU : DOUZE PARTOUT, écrit en UNE classe (`p-3`) et
+ * non en deux — une seule classe par propriété (piège nº 389), et
+ * surtout une seule valeur à lire, donc impossible à désaccorder.
+ *
+ * CE QUE ÇA COÛTE, ET RIEN NE SE CHEVAUCHE : la plaque grandit de
+ * HUIT pixels — quatre en haut, quatre en bas. Son contenu, lui, ne
+ * bouge pas d'un cheveu les uns par rapport aux autres : le rond fait
+ * toujours 52 px, la colonne de texte porte toujours son plancher de
+ * 52 px (`min-h-13`), et les 14 px entre les deux (`gap-3.5`, nº 227)
+ * sont intouchés. Le CHEVRON reste centré (nº 493) par construction :
+ * `self-center` le pose au milieu de la rangée, et les rembourrages
+ * haut et bas étant ÉGAUX — c'est tout le point de cette passe —, le
+ * milieu de la rangée EST le milieu de la plaque. L'écart entre deux
+ * plaques ne bouge pas non plus (32 px, `gap-8`).
  */
 const ENCADRE_MEMBRE =
-  "flex items-start gap-3.5 rounded-xl bg-sombre-eleve px-3 py-2";
+  "flex items-start gap-3.5 rounded-xl bg-sombre-eleve p-3";
 
 /** Le même encadré, cliquable : le fond monte d'un cran au survol, et
     l'appui le tient au doigt, où il n'y a pas de survol. */
@@ -863,8 +893,8 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
                      colonne du milieu porte `min-w-0 flex-1` et le
                      chevron `shrink-0`. Les 14 px du `gap-3.5` de la
                      rangée s'intercalent entre les deux, et les 12 px de
-                     rembourrage droit (nº 492-§4) le tiennent à distance
-                     du bord. */}
+                     rembourrage droit (12 px — la nº 497 l'a porté aux
+                     quatre côtés) le tiennent à distance du bord. */}
                 <span
                   aria-hidden="true"
                   className="-rotate-90 self-center shrink-0 text-sombre-texte-doux"
@@ -1759,8 +1789,8 @@ export function BlocProfilsArtiste({
                   CLIQUABLE` — la plaque permanente de la nº 492, celle
                   de l'équipe des salons : fond uni qui se détache de la
                   page ET de la fenêtre superposée, quatre coins à
-                  12 px, 12 px d'air à gauche et à droite, 8 en haut et
-                  en bas, arrêt aux marges, aucune bordure. Une seule
+                  12 px, DOUZE pixels d'air sur les quatre côtés
+                  (nº 497), arrêt aux marges, aucune bordure. Une seule
                   écriture pour les deux blocs : ils ne peuvent plus
                   diverger.
                   ⚠️ `CLASSES_LIGNE_CLIQUABLE` N'A PLUS DE PORTEUR sur
