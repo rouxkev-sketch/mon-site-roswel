@@ -1495,3 +1495,31 @@ html[data-entree-lien] [data-vue-photo] [data-colonne-lecture] {
 [data-ligne-suivi] {
   -webkit-user-drag: none;
 }
+
+/* ==================================================================
+   nº 517 — LA CARTE DE LA MOSAÏQUE EST UN LIEN QUI CONTIENT SA PHOTO
+   ==================================================================
+   MÊME RAISON QU'AU-DESSUS, ET C'EST LA LEÇON DE LA nº 516 : un lien
+   qui contient une image garde une poignée de glissement — celle de
+   l'image, que l'attribut HTML posé sur le lien n'atteint pas, et
+   celle du lien lui-même, que WebKit gouverne par cette propriété.
+   Sans elle, glisser sur le nom d'une carte emporterait le lien au
+   lieu de surligner le texte, et tout le chantier de la nº 517
+   n'aurait rien rendu de visible.
+   ELLE VISE LE LIEN ET SES DESCENDANTS : la photo de carte est une
+   image montée par PhotoDeCarte, pas par PhotoRonde — l'attribut de
+   la nº 516 ne la couvre pas. Une seule règle les prend tous les deux.
+   ⚠️ POURQUOI ICI ET NON EN CLASSE : cette propriété n'appartient à
+   aucune spécification, et la syntaxe de propriété arbitraire de
+   Tailwind la laisse tomber en silence (constaté à la nº 516, la
+   feuille produite n'en portait rien). Elle est donc posée en clair,
+   sur l'attribut qui NOMME ce lien (`data-lien-carte`, CarteTatoueur)
+   et sur lui seul : aucun conteneur partagé, aucune racine de page.
+   ⚠️ ELLE NE TOUCHE QUE LE GLISSER-DÉPOSER : le clic ouvre toujours la
+   fiche sur toute la carte, le clic du milieu ouvre toujours un
+   onglet, le pincement au doigt n'est pas concerné (il n'est pas un
+   glisser-déposer), et le survol ne bouge pas. */
+[data-lien-carte],
+[data-lien-carte] img {
+  -webkit-user-drag: none;
+}

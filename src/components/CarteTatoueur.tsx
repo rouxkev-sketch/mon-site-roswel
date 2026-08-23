@@ -29,6 +29,9 @@ import { PhotoDeCarte, TAILLES_CARTE } from "@/components/PhotoDeCarte";
 //  appareils.
 import { ligneLieuDeCarte } from "@/lib/adresse";
 import { pincementRecent, usePincement } from "@/components/ZoomPincement";
+//  §1 (nº 517) — « ce qui est surligné est ce qui est copié »
+//  (nº 514) : la carte devient un lien qui CONTIENT son texte.
+import { garderLeTexteALaCopie } from "@/lib/copie-du-texte";
 //  ⚠️ TEMPORAIRE (nº 219-§1) — la sonde du carrousel compte les
 //  cartes vivantes : c'est la ligne qui dit si naviguer dans un
 //  portfolio reconstruit la mosaïque. Sans `?sonde-carrousel=1`,
@@ -549,6 +552,65 @@ function CarteTatoueurNue({
       onPointerEnter={surApproche ? () => surApproche(tatoueur) : undefined}
       {...gestesPincement}
     >
+      {/**
+        * ██ §1 (nº 517) — UN SEUL LIEN, QUI CONTIENT LA CARTE ██
+        * ================================================================
+        * CE QU'IL REMPLACE : TROIS liens vers la même fiche, montés
+        * chacun dans son contexte — le nom ÉTIRÉ par-dessus la carte au
+        * web, un lien plein-carte au doigt, un lien posé sur l'image en
+        * photothèque. Ils devaient porter la même destination, le même
+        * clic, le même `scroll`, et ils ont divergé deux fois (nº 213,
+        * nº 486). Il n'y en a plus qu'un, et il ne se pose plus PAR-DESSUS
+        * la carte : il la CONTIENT.
+        * CE QUE ÇA REND, ET C'ÉTAIT LE BUT DU PROPRIÉTAIRE : le texte
+        * d'une carte redevient SÉLECTIONNABLE. Une surface étirée capte
+        * le pointeur avant le texte — on ne pouvait rien surligner ; un
+        * lien qui contient le texte le laisse atteindre.
+        * CE QUI NE CHANGE PAS D'UN PIXEL : la zone de clic (le lien
+        * occupe toute la carte, blancs compris), `auClic` en entier (la
+        * balise de popularité, la fenêtre superposée du web, la garde du
+        * clic modifié, celle du pincement), le `scroll` retenu de la
+        * nº 361, le survol, et le focus au clavier — qui n'a même plus
+        * qu'UN seul arrêt par carte au lieu de deux selon l'appareil.
+        * ⚠️ L'ÉTIQUETTE EST EXPLICITE, ET ELLE EST OBLIGATOIRE ICI : un
+        * lien qui contient une image et trois lignes de texte s'annonce
+        * en récitant tout son contenu. Le nom seul suffit à dire où l'on
+        * va — c'est le nom accessible que les trois liens portaient déjà.
+        * ⚠️ LES DEUX ATTRIBUTS DE COPIE (nº 513 à 516) : l'attribut de
+        * glisser à faux rend la sélection possible, le gestionnaire de
+        * copie rend la copie juste. Et la carte CONTENANT UNE IMAGE, la
+        * leçon de la nº 516 s'applique — l'image garde une poignée de
+        * glissement propre, neutralisée dans globals.css sur l'attribut
+        * qui nomme ce lien.
+        * ⚠️ LE FANION N'EST PAS DEDANS, et c'est ce qui rend ce lien
+        * possible : un bouton dans un lien est du contenu interactif
+        * imbriqué, que le langage interdit. Il est devenu le VOISIN du
+        * lien, sans bouger d'un pixel — voir sa note, après la fermeture.
+        */}
+      <Link
+        href={adresseFiche}
+        aria-label={`Voir la fiche de ${tatoueur.nom}`}
+        data-lien-carte=""
+        onClick={auClic}
+        //  nº 361 — PAS DE SAUT DU ROUTEUR : sa remise à zéro part AVANT
+        //  que le navigateur n'ait pris la photo d'adieu de la mosaïque.
+        //  C'est DefilementEnHaut qui remonte, à l'adresse commise.
+        scroll={false}
+        draggable={false}
+        onCopy={garderLeTexteALaCopie}
+        //  `flex flex-col` : le lien prend la place que les deux blocs
+        //  occupaient dans l'article — la photo, puis le texte. Aucune
+        //  boîte n'est ajoutée à la mise en page, aucune valeur d'air
+        //  n'est déplacée.
+        //  LE FOCUS SE VOIT SUR LA CARTE ENTIÈRE, et c'est l'écriture
+        //  que le lien de photothèque portait déjà : un contour rose
+        //  posé À L'INTÉRIEUR du bord (`-outline-offset`), donc sans un
+        //  pixel de débord sur la gouttière de la grille. Le
+        //  soulignement d'avant visait le NOM seul ; sur un lien qui
+        //  contient trois lignes et une image, il soulignerait tout.
+        className="flex flex-col outline-none focus-visible:outline-2
+                   focus-visible:-outline-offset-2 focus-visible:outline-primaire"
+      >
       {/* L'ENVELOPPE DE LA PHOTO — elle ne bouge JAMAIS. C'est elle
           qui porte le badge : le pincement ne transforme que le cadre
           intérieur, le badge reste donc à sa place et à sa taille,
@@ -685,49 +747,17 @@ function CarteTatoueurNue({
              ⚠️ LA MOSAÏQUE DU MOTEUR RESTE NUE : sans le drapeau, rien
              ne se pose sur la photo — ni compteur (nº 214-§0), ni
              badge (nº 211-§2), ni fanion. */}
-        {fanion && photoRegardee && (
-          <div
-            className={
-              uneColonne
-                ? "absolute bottom-2 right-2"
-                : "absolute bottom-2 right-2 -mb-1 -mr-1"
-            }
-          >
-            <BoutonCoeurPhoto
-              key={photoRegardee}
-              photoId={photoRegardee}
-              variante={uneColonne ? "fiche-mobile" : "carte"}
-            />
-          </div>
-        )}
-
-        {/* EN PHOTOTHÈQUE, LE LIEN DE FICHE RECOUVRE L'IMAGE : le bloc
-            de texte qui portait le lien étiré est masqué, la photo
-            doit rester cliquable. Même clic, même mécanique (fenêtre
-            sur le web, navigation de document sur mobile), même
-            préchargement — c'est `auClic` qui décide, comme pour le
-            lien du nom. z-[1] : sous le cœur (z-10), au-dessus de la
-            photo. */}
-        {/*  ⚠️ PAS QUAND LES PHOTOS DÉFILENT (nº 213-§1) : le carrousel
-             porte DÉJÀ un lien par photo (nº 211-§5). Deux liens
-             superposés se disputeraient le doigt, et celui-ci
-             recouvrirait le défilement. */}
-        {phototheque && (
-          <Link
-            href={adresseFiche}
-            aria-label={`Voir la fiche de ${tatoueur.nom}`}
-            onClick={auClic}
-            //  nº 361 — PAS DE SAUT DU ROUTEUR : sa remise à zéro part
-            //  AVANT que le navigateur n'ait pris la photo d'adieu de
-            //  la mosaïque (l'écran noir du glissement retour). C'est
-            //  DefilementEnHaut qui remonte, à l'adresse commise —
-            //  après la photo, toujours avant la peinture.
-            scroll={false}
-            className="absolute inset-0 z-[1] outline-none
-                       focus-visible:outline-2 focus-visible:-outline-offset-2
-                       focus-visible:outline-primaire"
-          />
-        )}
+          {/*  §1 (nº 517) — DEUX LIENS ONT DISPARU D'ICI, ET LEURS
+             NOTES AVEC EUX : celui que la PHOTOTHÈQUE posait sur
+             l'image, et celui que le DOIGT posait sur toute la carte.
+             La carte entière est le lien depuis cette passe — il n'y a
+             plus rien à recouvrir, ni cas d'appareil à distinguer.
+             ⚠️ ET UNE NOTE PÉRIMÉE PART AVEC : elle protégeait la photo
+             d'un « carrousel qui porte déjà un lien par photo ». Ce
+             carrousel a été RETIRÉ DES CARTES à la nº 445 — il n'y a
+             plus qu'une photo fixe, et donc plus aucun lien par photo
+             depuis quinze passes. Elle gardait une porte qui n'existe
+             plus. */}
       </div>
 
       {/* SOUS LA CARTE : le portrait, puis deux lignes de texte.
@@ -775,15 +805,6 @@ function CarteTatoueurNue({
            ⚠️ `z-[1]` : au-dessus de la photo, SOUS le fanion (z-10) —
            toucher le fanion n'ouvre donc jamais la fiche. Et il ne se
            rend pas en photothèque, qui pose déjà le sien sur l'image. */}
-      {!phototheque && (
-        <Link
-          href={adresseFiche}
-          aria-label={`Voir la fiche de ${tatoueur.nom}`}
-          onClick={auClic}
-          scroll={false}
-          className="hidden mobile:block absolute inset-0 z-[1] outline-none"
-        />
-      )}
 
       {!phototheque && (
       <div
@@ -1068,50 +1089,17 @@ function CarteTatoueurNue({
               : "mobile:leading-[16px] mobile:text-[14px]"
           }`}
         >
-          {/* Le lien de fiche s'étire sur TOUTE la carte. Il EMPORTE
-              le style cherché (?style=…) : la page de fiche ouvre
-              alors son carrousel sur la photo de CE style — la
-              continuité exacte de la photo de la carte. */}
-          <Link
-            href={adresseFiche}
-            // ⚠️ SUR SMARTPHONE, LE PRÉCHARGEMENT NE SERT PLUS À RIEN :
-            // le clic part en navigation de document, et ce que Next
-            // précharge (la charge du routeur) ne peut pas la servir.
-            // Dix-huit cartes, dix-huit demandes inutiles. Le web, lui,
-            // garde son préchargement — sa fenêtre s'en sert vraiment.
-            onClick={auClic}
-            //  nº 361 — PAS DE SAUT DU ROUTEUR (voir le lien de la
-            //  photothèque ci-dessus) : DefilementEnHaut remonte à
-            //  l'adresse commise, après la photo d'adieu du navigateur.
-            scroll={false}
-            /*  §2 (nº 395), RÉGLÉ AUTREMENT À LA nº 480 — LE LIEN DIT
-                 LE NOM DE LUI-MÊME. Il fallait un `aria-label` tant que
-                 cette ligne pouvait porter le STYLE à la place du nom :
-                 dix-huit cartes se seraient appelées « Réalisme » pour
-                 qui ne voit pas. Le nom occupe désormais cette ligne à
-                 lui seul, et le texte du lien EST donc son nom
-                 accessible — l'étiquette de secours n'a plus d'objet. */
-            className="outline-none after:absolute after:inset-0 after:content-['']
-                       focus-visible:underline"
-          >
-            {/*  §1 (nº 407) — LE STYLE EN GRAS, LA PUCE ET LE RENDU EN
-                 NORMAL. Le `<h3>` porte déjà `font-semibold` : c'est
-                 donc le RESTE qui est allégé (`font-normal`), pas le
-                 style qui est alourdi — une graisse de plus sur un
-                 titre déjà semi-gras aurait pesé sur une ligne de
-                 15 px. Deux `<span>` dans le même lien, sans espace
-                 ajouté : le séparateur porte les siens.
-                 ⚠️ LA HAUTEUR NE BOUGE PAS : même police, même corps,
-                 même `leading`, et le `line-clamp-1` du `<h3>` tient
-                 toujours la ligne unique. Ce qui change, c'est que le
-                 gras étant un peu plus large, un libellé long atteint
-                 l'ellipse un peu plus tôt — il s'abrège, il ne
-                 déborde ni ne passe à la ligne.
-                 ⚠️ SANS PARTIES (les trois autres surfaces, ou un
-                 artiste sans style), c'est le NOM qui s'écrit, tel
-                 quel — aucun morceau, aucune puce. */}
-            {tatoueur.nom}
-          </Link>
+          {/*  §1 (nº 517) — LE NOM N'EST PLUS UN LIEN, ET N'EN A PLUS
+               BESOIN : c'est LA CARTE ENTIÈRE qui est le lien depuis
+               cette passe, et il la contient. Ce qui vivait ici — la
+               destination, le clic, le `scroll` retenu, le
+               préchargement, et la surface étirée sur toute la carte —
+               est monté d'un cran, à l'ouverture de l'article.
+               ⚠️ CE QUI PART AVEC : le nom accessible du lien. Il ne se
+               lit plus dans ce texte mais dans l'étiquette explicite du
+               lien unique — sans quoi une carte s'annoncerait en
+               récitant son style, son nom et sa ville d'un trait. */}
+          {tatoueur.nom}
         </h3>
         <p
           className={`text-sombre-texte-doux leading-[18px] line-clamp-1 ${
@@ -1158,6 +1146,55 @@ function CarteTatoueurNue({
         </div>
         </div>
       </div>
+      )}
+      </Link>
+
+      {/**
+        * ██ §1 (nº 517) — LE FANION EST DEVENU LE VOISIN DU LIEN ██
+        * ================================================================
+        * POURQUOI IL A FALLU LE SORTIR : un bouton DANS un lien est du
+        * contenu interactif imbriqué, que le langage interdit — le
+        * navigateur « répare » alors le document à sa façon, et le
+        * clavier comme les lecteurs d'écran s'y perdent. C'est la seule
+        * chose qui empêchait la carte d'être bâtie comme une plaque.
+        * POURQUOI IL NE BOUGE PAS D'UN PIXEL POUR AUTANT : il était déjà
+        * FLOTTANT — posé en absolu dans l'angle bas droit de l'image,
+        * au-dessus d'elle. Il lui fallait seulement un repère à la même
+        * place. Cette enveloppe le lui rend : elle part du haut de la
+        * carte, prend toute sa largeur, et porte LE FORMAT DE LA PHOTO —
+        * `CADRE_PHOTO_PORTFOLIO`, la constante que la photo elle-même
+        * lit. Aucune valeur n'est recopiée : les deux boîtes ne peuvent
+        * pas diverger, elles lisent la même écriture.
+        * ⚠️ ELLE NE PREND AUCUN CLIC : l'enveloppe est transparente aux
+        * pointeurs, seul le bouton les reçoit. Sans cela, elle
+        * recouvrirait la photo et le lien ne s'ouvrirait plus au clic —
+        * ce serait le lien étiré, à l'envers.
+        * ⚠️ LE RANG RESTE LE SIEN (nº 452) : il se pose au-dessus du
+        * lien, donc toucher le fanion n'ouvre jamais la fiche — c'est le
+        * bouton lui-même qui arrête le geste (BoutonCoeurPhoto), et il
+        * n'est pas touché.
+        * ⚠️ ET IL N'EXISTE TOUJOURS QUE SUR « MA SÉLECTION » : le
+        * drapeau vient de PageFavoris et de personne d'autre. La
+        * mosaïque du moteur reste nue.
+        */}
+      {fanion && photoRegardee && (
+        <div
+          className={`pointer-events-none absolute inset-x-0 top-0 ${CADRE_PHOTO_PORTFOLIO}`}
+        >
+          <div
+            className={`pointer-events-auto z-10 ${
+              uneColonne
+                ? "absolute bottom-2 right-2"
+                : "absolute bottom-2 right-2 -mb-1 -mr-1"
+            }`}
+          >
+            <BoutonCoeurPhoto
+              key={photoRegardee}
+              photoId={photoRegardee}
+              variante={uneColonne ? "fiche-mobile" : "carte"}
+            />
+          </div>
+        </div>
       )}
     </article>
   );
