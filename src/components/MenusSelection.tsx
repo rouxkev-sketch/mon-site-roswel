@@ -133,18 +133,24 @@ export function MenusSelection({
 
   /**
    * ██ §1-3 (nº 460, porté au web nº 461) — LE VA-ET-VIENT
-   * `Favoris | Suivis`, AUX DEUX APPAREILS ██
+   * « Favoris | Portfolios », AUX DEUX APPAREILS ██
    * ==================================================================
    * L'encadré-capsule (badge + champ « Filtrer ») est REMPLACÉ par les
    * onglets soulignés de la page de recherche mobile (nº 447 — le même
    * composant, `OngletsLigne`) : au doigt depuis la nº 460, au web
-   * depuis la nº 461 — « Portfolios » y devient « Suivis » aussi.
+   * depuis la nº 461.
+   * ⚠️ §6 (nº 525) — LE SECOND MOT EST « PORTFOLIOS », AUX DEUX
+   * APPAREILS. La nº 460 l'avait rebaptisé « Suivis » ; le propriétaire
+   * revient dessus, en connaissance de cause. Seul LE MOT change : le
+   * contenu, le nombre, le chevron et la mécanique des deux appuis
+   * restent ceux de la nº 460-462. La clé de menu, elle, ne bouge pas
+   * — c'est `MENU_SUIVIS` (`?selection=suivis:…`) : ce nom-là vit dans
+   * l'adresse et dans la base, il n'est pas un libellé.
    *  · CÔTÉ CHOISI : mot + NOMBRE + chevron. Le nombre est ce qui est
    *    RÉELLEMENT AFFICHÉ après filtrage — posé par la page à chaque
    *    rendu (lib/compte-selection) ; tant qu'il n'est pas connu
    *    (premier rendu), rien n'est écrit — jamais un « 0 » menteur
-   *    (règles 137/203). « Suivis » reprend le contenu de l'ancien
-   *    « Portfolios », seul le mot change, au doigt seulement.
+   *    (règles 137/203).
    *  · CÔTÉ NON CHOISI : le mot seul.
    *  · PREMIER APPUI sur l'autre côté : la bascule (`poserSelection`,
    *    l'écriture de toujours). SECOND APPUI sur le côté déjà choisi :
@@ -185,8 +191,8 @@ export function MenusSelection({
 
   /**
    * §3 — LE CHAMP DU FILTRE. Il porte le filtre DE CE QUE LE BADGE A
-   * CHOISI : sur « Favoris » il filtre les favoris, sur « Suivis » les
-   * suivis — les deux listes d'entrées sont calculées depuis les
+   * CHOISI : sur « Favoris » il filtre les favoris, sur « Portfolios »
+   * les suivis — les deux listes d'entrées sont calculées depuis les
    * données (nº 247-§3), avec les deux portes du menu « Explorer » et
    * les familles en sous-porte (le drapeau `repliable`, sans lequel
    * aucune porte n'existe).
@@ -224,7 +230,21 @@ export function MenusSelection({
           (`data-clair-barre` sur lui, la règle de globals.css). */
       <MenuDeroulant
         valeur={valeur}
-        surChangement={(suivante) => poserSelection(choix.menu, suivante)}
+        /*  ██ §1-§2 (nº 525) — RE-CHOISIR L'ENTRÉE ACTIVE L'ANNULE ██
+             C'EST LE CHEMIN DE RETOUR VERS « TOUT », et il remplace
+             l'entrée neutre que les deux menus viennent de perdre
+             (« Tous les favoris », « Tous les portfolios »). Sans lui,
+             un filtre posé n'aurait plus eu de sortie : rien d'autre
+             dans ces menus n'écrit la valeur vide.
+             LE GESTE EST CELUI DU SITE, pas un neuf : c'est la règle de
+             désélection du moteur (nº 148) — on rappuie sur ce qu'on a
+             choisi, et le choix se défait.
+             ⚠️ LA VALEUR VIDE EST DÉJÀ CE QUI ANNULE : `poserSelection`
+             efface le paramètre d'adresse quand on la lui donne. On ne
+             lui apprend rien, on l'appelle. */
+        surChangement={(suivante) =>
+          poserSelection(choix.menu, suivante === valeur ? "" : suivante)
+        }
         options={entrees}
         ariaLabel="Filtrer"
         placeholder={libelleDuFiltre(entrees, choix, etroit)}
@@ -282,11 +302,11 @@ export function MenusSelection({
         feuilleMobile
         //  §2 (nº 290) — le trait rose sous « Cultures du monde », sur
         //  les DEUX menus de cette page (les suivis et les favoris :
-        //  ils passent tous deux par ici). EN WEB SEULEMENT, et c'est
-        //  automatique : `feuilleMobile` ci-dessus fait qu'au doigt
-        //  cette page ouvre sa feuille glissante, qui ne pose jamais
-        //  le trait — le drapeau ne vaut que pour le panneau
-        //  classique, donc pour le web.
+        //  ils passent tous deux par ici).
+        //  §4 (nº 525) — ET SUR LES DEUX APPAREILS : la feuille du
+        //  doigt pose le même trait que le panneau du web depuis
+        //  cette passe. Rien à passer de plus — c'est ce drapeau-ci
+        //  qui commande les deux, à l'identique.
         familleSoulignee
         //  §2 (nº 293) — la page s'assombrit derrière ce menu, en WEB :
         //  au doigt cette page ouvre sa feuille, et le crochet s'écarte.
@@ -330,11 +350,13 @@ export function MenusSelection({
                barre (`mobile:min-h-0`) : la réserve suit
                (64 + 12 + 46 = 122, voir EnTeteTatouage). */}
           {/*  ██ §2 (nº 461) — LE VA-ET-VIENT, AUX DEUX APPAREILS ██
-               `Favoris | Suivis`, les onglets soulignés de la nº 447 —
-               posés au doigt à la nº 460, portés AU WEB à celle-ci :
-               l'encadré-capsule (badge « Favoris / Portfolios » +
-               champ « Filtrer ») est REMPLACÉ, et « Portfolios »
-               devient « Suivis » au web aussi. Même objet partout :
+               « Favoris | Portfolios », les onglets soulignés de la
+               nº 447 — posés au doigt à la nº 460, portés AU WEB à
+               celle-ci : l'encadré-capsule (badge « Favoris /
+               Portfolios » + champ « Filtrer ») est REMPLACÉ.
+               §6 (nº 525) — le second mot est « Portfolios » aux deux
+               appareils : le « Suivis » de la nº 460 est annulé, le
+               reste du va-et-vient est intact. Même objet partout :
                côté choisi = mot + nombre filtré + chevron ; l'autre =
                le mot seul ; premier clic = bascule, second clic sur le
                côté choisi = LES FILTRES (la commande) — au web le
@@ -358,7 +380,7 @@ export function MenusSelection({
                 },
                 {
                   cle: MENU_SUIVIS,
-                  label: motDuVaEtVient("Suivis", MENU_SUIVIS),
+                  label: motDuVaEtVient("Portfolios", MENU_SUIVIS),
                 },
               ]}
               cleActive={choix.menu}
@@ -372,7 +394,7 @@ export function MenusSelection({
               ariaLabel="Favoris ou suivis"
               classeOnglet="px-1 min-h-[43px]"
               /*  ██ §2 (nº 515) — LE MOT MONTE D'UN CRAN, AU WEB SEUL ██
-                   Le propriétaire trouvait « Favoris | Suivis » trop
+                   Le propriétaire trouvait le va-et-vient trop
                    petit sur l'ordinateur : 15 px, la valeur que les
                    huit appelants de ce composant partageaient en dur.
                    Elle passe à 17 ICI ET NULLE PART AILLEURS — le

@@ -443,6 +443,9 @@ export function entreesDuFiltre(
 ): EntreeFiltre[] {
   if (comptes.size === 0) return [];
   /*  §3 (nº 321) — « TOUS LES FAVORIS » : L'ENTRÉE NEUTRE DE CE MENU.
+      ⛔ CE QUI SUIT EST DE L'HISTOIRE — l'entrée a été retirée à la
+      nº 525 (note juste dessous). On la garde parce qu'elle dit ce
+      qu'il faudrait refaire si on la remettait un jour.
       ------------------------------------------------------------------
       Le menu des portfolios a la sienne depuis la nº 318 (« Tous les
       portfolios ») ; celui des favoris n'en avait aucune. Même place,
@@ -458,13 +461,16 @@ export function entreesDuFiltre(
       la garde « une valeur vide n'est pas un choix » (replieALOuverture)
       tient toujours — et cette entrée n'ayant AUCUN groupe, même sans
       la garde elle n'aurait rien à ouvrir. Le banc éprouve les deux. */
-  const entrees: EntreeFiltre[] = [
-    {
-      value: VALEUR_NEUTRE,
-      label: LIBELLE_TOUS_LES_FAVORIS,
-      compte: comptes.get(CLE_TOTAL) ?? 0,
-    },
-  ];
+  /*  ██ §2 (nº 525) — L'ENTRÉE « TOUS LES FAVORIS » A QUITTÉ LE MENU ██
+      Le propriétaire n'en veut plus dans la liste. CE QU'ELLE FAISAIT
+      NE DISPARAÎT PAS POUR AUTANT : elle était le SEUL chemin de retour
+      vers « tout », et sans elle un filtre choisi aurait enfermé le
+      visiteur. Le retour passe désormais par le RE-CHOIX de l'entrée
+      active, qui l'annule (voir MenusSelection).
+      ⚠️ LE MOT, LUI, RESTE : c'est ce que le champ de la barre affiche
+      quand rien n'est filtré. Il ne nomme plus une entrée de liste, il
+      nomme un ÉTAT — celui de l'absence de filtre. */
+  const entrees: EntreeFiltre[] = [];
 
   for (const categorie of CATEGORIES_EXPLORER) {
     const compteCategorie = comptes.get(valeurExplorer(categorie.nature, ""));
@@ -546,6 +552,9 @@ export function entreesDesStyles(
   return [
     /*  §2-c (nº 318) — L'ENTRÉE NEUTRE S'APPELLE « TOUS LES
         PORTFOLIOS », ET ELLE VIT HORS GROUPE.
+        ⛔ CE QUI SUIT EST DE L'HISTOIRE — l'entrée a été retirée à la
+        nº 525 (note juste dessous), pour la même raison et par le même
+        geste que sa jumelle des favoris.
         --------------------------------------------------------------
         Elle s'appelait « Tous les styles » — ce n'était plus vrai
         depuis que le menu filtre AUSSI par profil (nº 316) : sa valeur
@@ -561,11 +570,10 @@ export function entreesDesStyles(
         (replieALOuverture) tient toujours — et cette entrée n'ayant
         plus AUCUN groupe, même sans la garde elle n'aurait plus rien
         à ouvrir. Le banc éprouve les deux. */
-    {
-      value: VALEUR_NEUTRE,
-      label: LIBELLE_TOUS_LES_PORTFOLIOS,
-      compte: comptes.get(CLE_TOTAL) ?? 0,
-    },
+    /*  ██ §1 (nº 525) — L'ENTRÉE « TOUS LES PORTFOLIOS » A QUITTÉ LE
+         MENU ██ Même geste et même raison que sur les favoris, juste
+         au-dessus : le retour vers « tout » passe par le re-choix de
+         l'entrée active. Le mot reste, pour le champ de la barre. */
     ...styles,
   ];
 }

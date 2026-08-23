@@ -29,12 +29,13 @@ const flecheImage = (couleur: string) =>
   `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(
     `<svg xmlns='http://www.w3.org/2000/svg' width='14' height='8'><path d='M1 1l6 6 6-6' stroke='${couleur}' stroke-width='2' fill='none' stroke-linecap='round'/></svg>`
   )}")`;
-/** §3 (nº 260) — LA TAILLE DES POINTS DE LA FEUILLE : la même pour
-    tous (les styles et la porte de famille). Écrite une fois.
+/** §3 (nº 260) — LA TAILLE DES POINTS DE LA FEUILLE, écrite une fois.
     §1 (nº 262) — PORTÉE À 6 px : les 4 px de la nº 260 étaient trop
-    discrets, on ne les voyait plus. Les couleurs ne bougent pas :
-    la porte de famille seule est rose, tous les autres restent
-    clairs. */
+    discrets, on ne les voyait plus.
+    §3 (nº 525) — ELLE NE SERT PLUS QU'AUX DEUX POINTS ROSES : la
+    PORTE de famille (« Cultures du monde ») et le SOUS-TITRE
+    (« ARTISTE », « LIEU »). Les points gris des styles ont été
+    supprimés — voir la note du rendu d'une entrée, plus bas. */
 const TAILLE_POINT = "w-1.5 h-1.5";
 
 const FLECHE_GRISE = flecheImage(COULEURS.flecheMenus);
@@ -113,7 +114,9 @@ export type OptionMenu = {
  *
  * `feuilleMobile` : sur SMARTPHONE (< 768 px), la liste s'ouvre en
  * FEUILLE GLISSANTE depuis le bas (style Airbnb / Uber) — barre de
- * glissement, titre en gras, options à puce ronde (rose si choisie),
+ * glissement, titre en gras, options NUES (§3 nº 525 : leur puce
+ * ronde est partie ; seules la PORTE de famille et un SOUS-TITRE
+ * gardent la leur, rose),
  * fermeture au tap sur le fond, au glissement vers le bas ou au tap
  * d'une option. Sur iPad / web (≥ 768 px) : le menu déroulant
  * classique. Le contour rose du champ reste actif (le fond de la
@@ -304,10 +307,13 @@ export function MenuDeroulant({
    * même au doigt et au web) et les deux menus de « Ma sélection ».
    * Le formulaire de fiche, le formulaire de contact et le menu métier
    * du produit artisans ne le passent pas : ils ne changent pas.
-   * ⚠️ ET JAMAIS SUR LA FEUILLE GLISSANTE (`feuilleMobile`, la
-   * présentation smartphone de « Ma sélection » : elle monte du bas
-   * avec ses points sur les côtés). Le drapeau ne vaut que pour le
-   * panneau classique — c'est écrit à l'endroit qui le pose, plus bas.
+   * ⚠️ §4 (nº 525) — ET DÉSORMAIS SUR LA FEUILLE GLISSANTE AUSSI
+   * (`feuilleMobile`, la présentation smartphone de « Ma sélection » :
+   * elle monte du bas). La nº 290 avait réservé le trait au panneau
+   * classique ; le propriétaire le veut aux deux appareils, à
+   * l'identique. Le drapeau commande donc les deux présentations —
+   * mais TOUJOURS SUR DEMANDE : qui ne le passe pas ne voit rien
+   * changer.
    */
   familleSoulignee?: boolean;
   /**
@@ -1010,8 +1016,10 @@ export function MenuDeroulant({
     //  c'est ce qui la distingue d'eux, elle ne mène pas à une
     //  sélection, elle ouvre un niveau.
     //  §2 (nº 290) — `souligne` : le trait rose sous les seuls mots de
-    //  la porte. Posé par le panneau classique quand l'appelant l'a
-    //  demandé, JAMAIS par la feuille glissante.
+    //  la porte, quand l'appelant l'a demandé.
+    //  §4 (nº 525) — LES DEUX PRÉSENTATIONS LE POSENT désormais : le
+    //  panneau classique comme la feuille glissante. C'est la même
+    //  ligne d'écriture pour les deux, plus bas — aucun second trait.
     //  §2-b (nº 318) — `sansVoile` A DISPARU AVEC LE VOILE : le
     //  panneau du web perd le sien (voir la note des options — le menu
     //  garde UNE couleur de fond), la feuille l'avait perdu à la
@@ -1378,8 +1386,22 @@ export function MenuDeroulant({
               className="cursor-grab touch-none"
               onPointerDown={(e) => glissementDebut(e, true)}
             >
-              <div className="pt-3 pb-2 flex justify-center">
-                <span className="w-10 h-1.5 rounded-full bg-bordure" aria-hidden />
+              {/*  ██ §5 (nº 525) — L'AIR DU HAUT, ET LE TRAIT ██
+                   L'AIR AU-DESSUS DU TITRE passe de 12 à 20 px : la
+                   réserve qui coiffe la feuille (elle porte le trait,
+                   puis les 8 px qui le séparent du titre — ces 8-là ne
+                   bougent pas). Du bord haut de la feuille au titre :
+                   26 px hier, 32 aujourd'hui.
+                   LE TRAIT DE FERMETURE S'AMINCIT, de 6 à 4 px de
+                   haut. SA LARGEUR (40 px), SA COULEUR et SA POSITION
+                   (centré) NE CHANGENT PAS — c'est la demande, au mot
+                   près.
+                   ⚠️ LA BANDE PRÉHENSIBLE Y GAGNE : elle englobe le
+                   trait ET le titre (voir la note du dessus), et elle
+                   grandit de 6 px — la mesure des 44 px du pouce
+                   (nº 261) reste tenue, avec de la marge. */}
+              <div className="pt-5 pb-2 flex justify-center">
+                <span className="w-10 h-1 rounded-full bg-bordure" aria-hidden />
               </div>
               {/*  §3 (nº 262) — l'icône de l'appelant à gauche du
                    titre, à la couleur du titre : dans la barre elle
@@ -1405,9 +1427,12 @@ export function MenuDeroulant({
                     {/* En-tête de section — étiquette, ou porte repliable */}
                     {entete && enTeteSection(entete, "px-3 pt-3 pb-1")}
                     {/* Porte de sous-section — à la place d'une option.
-                        La puce ronde des options lui est refusée : elle
-                        ne se choisit pas. Le retrait `pl-8` la met à
-                        l'aplomb des libellés voisins. */}
+                        §3 (nº 525) — LA PUCE EST DÉSORMAIS SA MARQUE À
+                        ELLE : les options ont perdu la leur, la porte
+                        garde la sienne, ROSE. Elle part du même bord
+                        gauche que les styles (`pl-3`), son point la
+                        décale ensuite de 18 px — voir la note du rendu
+                        d'une entrée. */}
                     {sousEntete &&
                       sousEnteteVisible(option) &&
                       /*  §2-c (nº 317) — AU DOIGT, LE SOUS-TITRE GARDE
@@ -1447,7 +1472,22 @@ export function MenuDeroulant({
                         //  §3 (nº 260) — le point rose. (Le voile est
                         //  parti PARTOUT à la nº 318-§2-b — plus rien
                         //  à refuser ici.)
-                        { avecPoint: true }
+                        //  ██ §4 (nº 525) — ET LE TRAIT ROSE, ENFIN ██
+                        //  La feuille du doigt était le SEUL endroit
+                        //  où « Cultures du monde » n'avait pas son
+                        //  soulignement : la nº 290 l'avait réservé au
+                        //  panneau classique. Le propriétaire le veut
+                        //  aux deux appareils, et IDENTIQUE — c'est
+                        //  pourquoi on passe le drapeau de l'appelant
+                        //  (`familleSoulignee`) au lieu d'écrire un
+                        //  second trait : les mots sont soulignés par
+                        //  LA MÊME ligne de `porteSousSection`, donc
+                        //  le même rose de la charte, la même finesse
+                        //  et le même décalage, par construction. Les
+                        //  menus qui ne demandent rien (formulaire de
+                        //  fiche, contact, métier des artisans) ne
+                        //  voient toujours aucun trait.
+                        { avecPoint: true, souligne: familleSoulignee }
                       ))}
                     {optionVisible(option) && (
                     <button
@@ -1466,9 +1506,14 @@ export function MenuDeroulant({
                       onClick={() => choisir(value)}
                       // Comme dans le menu déroulant : le LIBELLÉ du choix
                       // courant reste de couleur et de graisse normales.
-                      // Seule la puce ronde à sa gauche le désigne — sans
-                      // elle, la feuille n'indiquerait plus du tout quel
-                      // métier est sélectionné.
+                      // §3 (nº 525) — ET RIEN NE LE DÉSIGNE PLUS DANS LA
+                      // FEUILLE, sans que rien ne se perde : la puce
+                      // ronde était GRISE sur le choix courant comme sur
+                      // les autres depuis la nº 260 — elle ne l'a jamais
+                      // désigné. Ce qui le dit, c'est le CHAMP juste
+                      // au-dessus et le TITRE de la page, comme avant.
+                      // `aria-selected` (ci-dessous) le dit aux lecteurs
+                      // d'écran, et lui ne bouge pas.
                       className={`w-full flex items-center gap-3 min-h-[52px] pr-3 rounded-2xl text-left text-base ${
                         //  Retrait des options d'une VRAIE porte
                         //  (passe nº 113) — même règle que sur le web.
@@ -1488,20 +1533,30 @@ export function MenuDeroulant({
                           : "text-encre hover:bg-fond-doux"
                       }`}
                     >
-                      {/*  §3 (nº 260) — LE POINT D'UN STYLE : 4 px, et
-                           BLANC quoi qu'il arrive. Il faisait 10 px, et
-                           il passait au ROSE sur le style choisi —
-                           trois fois la même information : le champ
-                           juste au-dessus dit lequel est choisi, et le
-                           titre de la page le répète. Le menu n'a pas à
-                           le redire. Le seul point rose de la liste est
-                           celui de la porte de famille. */}
-                      <span
-                        data-point-option=""
-                        className={`${TAILLE_POINT} rounded-full shrink-0`}
-                        style={{ backgroundColor: COULEURS.bordureCarte }}
-                        aria-hidden
-                      />
+                      {/*  ██ §3 (nº 525) — LE POINT D'UN STYLE EST PARTI ██
+                           Chaque entrée de la feuille portait une puce
+                           ronde à sa gauche (nº 260 : 6 px, grise,
+                           `data-point-option`). Elle ne disait RIEN —
+                           ni la sélection (elle était grise sur le
+                           style choisi comme sur les autres, et c'est
+                           la nº 260 qui l'avait voulu ainsi), ni un
+                           niveau : une décoration, répétée trente
+                           fois, qui poussait tous les libellés de
+                           18 px vers la droite. Le propriétaire la
+                           supprime, sur TOUS les menus déroulants du
+                           doigt — c'est ici qu'ils passent tous.
+                           ⚠️ LES DEUX POINTS ROSES RESTENT, et ce ne
+                           sont pas des styles : celui de la PORTE de
+                           famille (« Cultures du monde ») et celui
+                           d'un SOUS-TITRE (« ARTISTE », « LIEU »).
+                           Le rose y dit « ceci ouvre un niveau », et
+                           la note de `sousTitreDeSection` interdit
+                           explicitement de l'effacer (décision du
+                           propriétaire, nº 316, tenue à la nº 317).
+                           CONSÉQUENCE D'ALIGNEMENT, ASSUMÉE : ces
+                           deux lignes-là gardent donc leur retrait de
+                           18 px, quand les styles reviennent au bord
+                           du `pl-3`. */}
                       {/*  §1-b (nº 316) — LE NOMBRE MANQUAIT AU DOIGT.
                            Le panneau du web l'écrivait depuis la
                            nº 216 ; la feuille du bas, non — elle ne
