@@ -606,7 +606,37 @@ export function FenetreFiche({
                au profit d'un « le site continue ici ». C'est un choix
                de sens, pas un défaut ; il se juge à l'œil, pas au
                calcul. Aucun contour n'est ajouté pour compenser
-               (charte). */}
+               (charte).
+
+               ██ §2 (nº 501) — L'ENVELOPPE NE PEINT PLUS ██
+               ==============================================================
+               CE QUI CHANGE : `bg-sombre-fond`, posé ici par la nº 499,
+               est RETIRÉ de ce conteneur. Chacune des deux moitiés
+               porte désormais son fond EN PROPRE — la boîte de la photo
+               depuis cette passe (§1), la colonne de droite depuis la
+               nº 499 (elle ne l'a jamais perdu). L'enveloppe, elle, ne
+               fait plus que les tenir côte à côte.
+               ⚠️ CE QUE ÇA CHANGE À L'ŒIL : RIEN, et c'est voulu — les
+               deux moitiés se partagent toute la largeur, et elles
+               peignent la même couleur qu'avant. C'est un changement de
+               STRUCTURE, décidé en connaissance de cause.
+               ⚠️ CE QUI SE TROUVE DERRIÈRE, MAINTENANT QU'ELLE NE PEINT
+               PLUS : le VOILE (`bg-black/80` sur la page #0B0F14, donc
+               #020304 — presque noir). Ni l'enveloppe de centrage ni
+               le porteur du fil d'Ariane ne peignent quoi que ce soit.
+               Le voile n'est visible QUE si les deux moitiés ne
+               couvrent pas toute la largeur au pixel près — c'est le
+               seul risque de cette passe, et il est symétrique de celui
+               que la nº 500 vient de fermer : un liseré PLUS SOMBRE au
+               lieu d'un liseré plus clair.
+               ⚠️ CE QUI NE DÉPENDAIT PAS DE CE FOND, vérifié un par un :
+               `--fond-colonne` est posée sur LA COLONNE (pas ici), donc
+               les blocs collants gardent leur masque ; les coins
+               arrondis restent dessinés parce que `lg:overflow-hidden`
+               rogne les ENFANTS, qui peignent ; l'ombre portée est
+               dessinée autour de la boîte, qu'elle ait un fond ou non ;
+               et la zone sous la colonne au contenu court est tenue par
+               son `lg:h-full`. */}
           <div
             ref={fenetreRef}
             className="pointer-events-auto flex flex-col lg:flex-row
@@ -614,7 +644,7 @@ export function FenetreFiche({
                        lg:h-[min(88vh,940px,calc((100vw-476px)*1.25))]
                        lg:max-w-[min(1200px,calc(100vw-96px))]
                        overflow-y-auto lg:overflow-hidden overscroll-contain
-                       rounded-b-lg rounded-t-none lg:rounded-none lg:rounded-r-lg bg-sombre-fond
+                       rounded-b-lg rounded-t-none lg:rounded-none lg:rounded-r-lg
                        shadow-[0_24px_80px_rgba(0,0,0,0.6)]
                        scale-100 transition-transform duration-200 starting:scale-[0.97]"
           >
@@ -659,8 +689,25 @@ export function FenetreFiche({
                  colorer une place déjà tenue.
                  ⚠️ LA GÉOMÉTRIE NE BOUGE PAS D'UN PIXEL : `aspect-[4/5]`,
                  `lg:h-full`, `min-w-0`, `shrink-0 lg:shrink` sont
-                 intouchés. Une seule classe de couleur disparaît. */}
-            <div className="relative w-full lg:w-auto lg:h-full aspect-[4/5] min-w-0 shrink-0 lg:shrink select-none">
+                 intouchés. Une seule classe de couleur disparaît.
+                 ██ §1 (nº 501) — UN FOND REVIENT ICI, MAIS PAS LE NOIR ██
+                 --------------------------------------------------------
+                 CE QUI CHANGE PAR RAPPORT À LA nº 500 : cette boîte
+                 peint de nouveau — avec `fond` (#0B0F14), LA COULEUR DU
+                 SITE, jamais le noir pur qu'elle portait avant.
+                 POURQUOI C'EST AUTRE CHOSE QUE LE RETOUR EN ARRIÈRE :
+                 le noir de la nº 500 faisait une SECONDE couleur dans
+                 la fenêtre — il se voyait pendant le chargement et sur
+                 le demi-pixel du cadre. Celui-ci est la MÊME couleur
+                 que tout le reste : il ne peut, par construction, se
+                 distinguer de rien. Il ne rétablit aucun des quatre
+                 défauts fermés à la nº 500, puisqu'aucun d'eux ne
+                 tenait à la PRÉSENCE d'un fond, mais à sa DIFFÉRENCE.
+                 CE QU'IL PORTE MAINTENANT, ET C'EST SON RÔLE : la
+                 moitié gauche de la fenêtre n'a plus d'enveloppe qui
+                 peigne derrière elle (§2, juste au-dessus). C'est donc
+                 CETTE boîte, et elle seule, qui couvre le voile là. */}
+            <div className="relative w-full lg:w-auto lg:h-full aspect-[4/5] min-w-0 shrink-0 lg:shrink bg-sombre-fond select-none">
               <CarrouselPortfolio
                 //  §1 (nº 296) — LA FENÊTRE RETROUVE SON ÉTAT D'AVANT LA
                 //  nº 292 : les corrections des nº 292 à 295 étaient
