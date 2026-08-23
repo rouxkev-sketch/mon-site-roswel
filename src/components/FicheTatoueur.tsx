@@ -1306,9 +1306,13 @@ export function FicheTatoueur({
                      à la main de la vue photo. Il ne concerne QUE le
                      repli sans photo : une vraie photo couvre le rond
                      entièrement. */}
+                {/*  §2 (nº 523) — LE ROND SUIT SA PLAQUE : elle est
+                     descendue d'un cran (`carte`), il descend du même —
+                     trois crans au-dessus d'elle, comme hier, et
+                     toujours au-dessus du survol. Voir plaque.ts. */}
                 <span
                   className="flex h-10 w-10 shrink-0 items-center justify-center
-                             overflow-hidden rounded-full bg-sombre-haut"
+                             overflow-hidden rounded-full bg-sombre-eleve-clair"
                 >
                   {tatoueur.photo_profil ? (
                     /* eslint-disable-next-line @next/next/no-img-element --

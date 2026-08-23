@@ -33,23 +33,41 @@
  * classe par propriété (piège nº 389), et surtout une seule valeur à
  * lire, donc impossible à désaccorder.
  *
- * ⚠️ LE FOND EST `bg-sombre-eleve`, ET CE CHOIX EST CONTRAINT : c'est
- * le seul cran de l'échelle (nº 466) qui se détache des DEUX supports
- * sur lesquels une plaque peut vivre — la page et la fenêtre
- * superposée du web. Un cran plus bas serait la couleur de la page,
- * donc invisible ; c'est la leçon du compteur de capsules (nº 491-§1).
+ * ██ §2 (nº 523) — LA PLAQUE DESCEND D'UN CRAN : `eleve` → `carte` ██
+ * ==================================================================
+ * CE QUE DISAIT LA NOTE D'AVANT, ET POURQUOI ELLE N'EST PLUS VRAIE :
+ * « `eleve` est le seul cran qui se détache des DEUX supports d'une
+ * plaque — la page et la fenêtre superposée ; un cran plus bas serait
+ * la couleur de la page, donc invisible. » C'ÉTAIT JUSTE QUAND ELLE A
+ * ÉTÉ ÉCRITE : la fenêtre superposée portait alors le gris `carte`, et
+ * une plaque de cette couleur y aurait disparu. LES nº 499 À 501 ONT
+ * DONNÉ À LA FENÊTRE LE FOND DE LA PAGE — les deux supports sont
+ * devenus le MÊME —, et la contrainte est tombée avec eux. `carte` se
+ * détache donc aujourd'hui des deux, puisqu'il n'y en a plus qu'un.
+ * ⚠️ CE QUE ÇA COÛTE, DIT FRANCHEMENT : le contraste avec le fond
+ * passe de 1,37 à 1,16. C'est peu, et c'est voulu — le propriétaire
+ * trouvait les plaques trop claires. Un aplat large se distingue à
+ * bien moins que du texte ; mais si elles paraissent maintenant se
+ * fondre dans la page, le cran d'avant est le seul retour possible :
+ * il n'y a rien entre les deux dans l'échelle.
  *
- * ⚠️ CE QUI SE POSE SUR UNE PLAQUE DOIT MONTER D'AUTANT : un rond de
- * repli sans photo peint `bg-sombre-eleve` par défaut disparaîtrait
- * dedans. Ses porteurs lui passent donc DEUX crans au-dessus
- * (`bg-sombre-haut`), pour qu'il reste lisible au repos comme au
- * survol — voir la note de `PhotoRonde` (nº 492).
+ * ⚠️ LE SURVOL DESCEND AVEC ELLE, et il le fallait : il montait
+ * jusqu'à `eleve-clair`, ce qui aurait fait un saut de trois crans
+ * depuis `carte` — un éclair au passage de la souris. Il vaut
+ * désormais `eleve`, l'écart que la plaque portait elle-même hier.
+ *
+ * ⚠️ CE QUI SE POSE SUR UNE PLAQUE DESCEND D'AUTANT : un rond de repli
+ * sans photo doit rester lisible AU REPOS COMME AU SURVOL (nº 492).
+ * Il valait `bg-sombre-haut`, trois crans au-dessus de `eleve` ; ses
+ * porteurs lui passent maintenant `bg-sombre-eleve-clair`, LES MÊMES
+ * TROIS CRANS au-dessus de `carte`. Le rapport est conservé sur
+ * l'échelle, pas recalculé à l'œil.
  */
 export const ENCADRE_MEMBRE =
-  "flex items-start gap-3.5 rounded-xl bg-sombre-eleve p-3";
+  "flex items-start gap-3.5 rounded-xl bg-sombre-carte p-3";
 
 /** La même plaque, cliquable : le fond monte d'un cran au survol, et
     l'appui le tient au doigt, où il n'y a pas de survol. */
 export const ENCADRE_MEMBRE_CLIQUABLE =
   `group ${ENCADRE_MEMBRE} transition-colors ` +
-  "hover:bg-sombre-eleve-clair active:bg-sombre-eleve-clair";
+  "hover:bg-sombre-eleve active:bg-sombre-eleve";

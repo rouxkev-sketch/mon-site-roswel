@@ -632,7 +632,19 @@ export const SOULIGNEMENT_LIEN =
 function MentionAuDessus({ mention }: { mention: MentionEnDeuxMorceaux }) {
   if (!mention.statut && !mention.complement) return null;
   return (
-    <p className="mb-1 text-[14px] leading-snug text-sombre-texte-doux [overflow-wrap:anywhere]">
+    /*  §1 (nº 523) — LA MENTION PASSE EN GRAS, DANS SON ENTIER : le
+        statut en majuscules COMME le complément qui le suit. La graisse
+        est posée sur le paragraphe, donc UNE seule classe pour les deux
+        morceaux — aucun risque qu'ils divergent, et aucune classe de
+        graisse en double sur un même élément (piège nº 389).
+        ⚠️ RIEN D'AUTRE NE CHANGE : ni le gris des textes secondaires,
+        ni les 14 px, ni la position au-dessus de la plaque, ni le
+        séparateur, ni les majuscules du statut.
+        ⚠️ ET ÇA VAUT PARTOUT D'UN COUP : cette écriture est la seule du
+        site depuis la nº 496 — les membres d'équipe et les guests d'un
+        salon ou d'un studio la consomment, les lieux d'une fiche
+        d'artiste aussi. Un seul endroit, tous les porteurs. */
+    <p className="mb-1 text-[14px] font-bold leading-snug text-sombre-texte-doux [overflow-wrap:anywhere]">
       {mention.statut && <span className="uppercase">{mention.statut}</span>}
       {mention.complement && (
         <>
@@ -720,7 +732,10 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
             <PhotoRonde
               source={membre.photo}
               nature="personne"
-              classeFond="bg-sombre-haut"
+              //  §2 (nº 523) — LE ROND SUIT SA PLAQUE : elle est
+              //  descendue d'un cran, il descend du même — trois crans
+              //  au-dessus d'elle, comme hier. Voir plaque.ts.
+              classeFond="bg-sombre-eleve-clair"
             />
             <div className="flex min-h-13 min-w-0 flex-1 flex-col justify-center">
               {/*  §4 (nº 286) — LE NOM D'ABORD, EN BLANC ; LE RÔLE
@@ -1790,7 +1805,8 @@ export function BlocProfilsArtiste({
           <PhotoRonde
             source={mode.salon_photo}
             nature="lieu"
-            classeFond="bg-sombre-haut"
+            //  §2 (nº 523) — le rond suit sa plaque (voir plaque.ts).
+            classeFond="bg-sombre-eleve-clair"
           />
         );
         const lie = Boolean(mode.salon_slug && mode.salon_nom);
