@@ -1463,3 +1463,35 @@ html[data-appareil="mobile"] [data-vue-photo] [data-colonne-lecture] {
 html[data-entree-lien] [data-vue-photo] [data-colonne-lecture] {
   display: flex;
 }
+
+/* ==================================================================
+   nº 516 — LE DÉPART DE SÉLECTION DANS LA LIGNE D'UN PORTFOLIO SUIVI
+   ==================================================================
+   LE DÉFAUT : sur « Ma sélection » → Suivis, poser le curseur sur le
+   nom et glisser ne surlignait rien. La seule zone qui répondait
+   était la marge de la page, à gauche du rond — le seul endroit HORS
+   du lien ; une sélection démarrée là traversait ensuite le lien sans
+   peine. Le texte n'était donc pas protégé : c'est le DÉPART qui
+   était refusé.
+   CE QUI A ÉTÉ ÉLIMINÉ PAR LECTURE : aucun `select-none` ni
+   `user-select` sur cette ligne ni sur ses ancêtres ; aucune couche
+   posée par-dessus le texte ; et l'attribut HTML de glisser est bien
+   transmis au lien (le composant Link de Next ne l'intercepte pas).
+   CE QUI RESTE : WebKit ne se gouverne pas que par cet attribut. Il
+   garde une propriété de glissement qui vaut « element » par défaut
+   pour les liens comme pour les images, et c'est elle qui arme
+   encore le glisser-déposer dans ce lien-là — celui qui contient le
+   rond de profil.
+   ⚠️ POURQUOI ICI ET NON EN CLASSE : cette propriété n'appartient à
+   aucune spécification, et la syntaxe de propriété arbitraire de
+   Tailwind la laisse tomber en silence — vérifié dans la feuille
+   produite, la classe n'y écrivait rien. Elle est donc posée en clair,
+   sur l'attribut qui NOMME ce lien et sur lui seul (`data-ligne-suivi`,
+   BlocSuivis) : aucun conteneur partagé, aucune racine de page.
+   ⚠️ ELLE NE TOUCHE QUE LE GLISSER-DÉPOSER : le clic ouvre toujours le
+   portfolio sur toute la largeur, le clic du milieu ouvre toujours un
+   onglet, le survol et le focus au clavier ne bougent pas, et le doigt
+   ne voit aucune différence. */
+[data-ligne-suivi] {
+  -webkit-user-drag: none;
+}

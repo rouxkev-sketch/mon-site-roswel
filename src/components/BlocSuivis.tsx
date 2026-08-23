@@ -260,6 +260,42 @@ function BlocDUnSuivi({
             doigt. */
         draggable={false}
         onCopy={garderLeTexteALaCopie}
+        /*  ██ §1 (nº 516) — POURQUOI LES DEUX ATTRIBUTS DE LA nº 515 NE
+             SUFFISAIENT PAS ICI ██
+             ----------------------------------------------------------
+             LE SYMPTÔME : poser le curseur sur le nom et glisser ne
+             surlignait rien ; la seule zone qui répondait était la
+             marge de la page, à gauche du rond — c'est-à-dire le seul
+             endroit HORS du lien. Une sélection démarrée là traversait
+             ensuite le lien sans peine : le texte n'était donc pas
+             protégé, c'est le DÉPART qui était refusé.
+             CE QUI A ÉTÉ ÉLIMINÉ PAR LECTURE : aucun `select-none` ni
+             `user-select` sur cette ligne ni sur aucun de ses ancêtres ;
+             aucune couche posée par-dessus le texte ; et l'attribut de
+             glisser est bien transmis au lien (vérifié dans le code de
+             Next : il n'intercepte pas cette propriété).
+             CE QUI RESTE, ET C'EST LA DIFFÉRENCE AVEC L'ADRESSE D'UNE
+             FICHE, QUI ELLE FONCTIONNE (nº 513) : ce lien-ci CONTIENT
+             UNE IMAGE, le rond de profil. Deux conséquences, et il faut
+             les deux :
+              · l'attribut ne descend pas aux enfants — l'image reste
+                traînable pour son compte (c'est réglé dans PhotoRonde,
+                lib partagée) ;
+              · WebKit ne se gouverne pas que par l'attribut HTML : il
+                garde une propriété CSS de glissement, qui vaut
+                « element » par défaut pour les liens ET les images.
+                C'est elle qu'on met à « none » — et elle est posée dans
+                globals.css, sur l'attribut qui nomme ce lien
+                (`data-ligne-suivi`), PARCE QUE TAILWIND NE SAIT PAS LA
+                PRODUIRE : cette propriété n'existe dans aucune
+                spécification, et la syntaxe de propriété arbitraire la
+                laisse tomber en silence. Vérifié dans la feuille
+                produite : la classe n'y écrivait rien.
+             ⚠️ RIEN D'AUTRE NE CHANGE : cette propriété ne touche QUE
+             le glisser-déposer. Le clic ouvre toujours le portfolio sur
+             toute la largeur de la ligne, le clic du milieu ouvre
+             toujours un onglet, le survol et le focus au clavier ne
+             bougent pas, et le doigt ne voit aucune différence. */
         className={`${CLASSES_LIGNE_CLIQUABLE_SANS_ENCADRE} lg:gap-5`}
       >
         <PhotoRonde

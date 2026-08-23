@@ -186,6 +186,18 @@ export function PhotoRonde({
           decoding="async"
           width={PORTRAIT_ROND}
           height={PORTRAIT_ROND}
+          //  §1 (nº 516) — LE ROND NE SE LAISSE PAS TRAÎNER, et c'est
+          //  ce qui rend le NOM sélectionnable à côté de lui : ce rond
+          //  vit DANS un lien (la ligne d'identité d'un portfolio
+          //  suivi, les plaques d'équipe), et l'attribut posé sur le
+          //  lien ne descend pas jusqu'ici — l'image restait donc une
+          //  poignée de glissement à elle seule. Le même geste que le
+          //  logo et que les tuiles de galerie, pour la même raison.
+          //  ⚠️ SANS EFFET AILLEURS : on ne traîne jamais un avatar
+          //  dans ce site, et cet attribut ne touche ni le clic, ni le
+          //  survol, ni le doigt. Écriture unique : tous les ronds du
+          //  site en héritent d'un coup.
+          draggable={false}
           className="h-full w-full object-cover"
         />
       ) : nature === "lieu" ? (
@@ -198,6 +210,10 @@ export function PhotoRonde({
           width={28}
           height={28}
           aria-hidden="true"
+          //  §1 (nº 516) — le glyphe de repli ne se traîne pas non
+          //  plus : même raison que la photo ci-dessus, un rond sans
+          //  photo est le même rond.
+          draggable={false}
           //  §2 (nº 233) — 28 px : un peu plus de la moitié du rond de
           //  52, le glyphe ne se perd plus au milieu. PhotoRonde est
           //  l'unique écriture : TOUS les ronds concernés suivent —
