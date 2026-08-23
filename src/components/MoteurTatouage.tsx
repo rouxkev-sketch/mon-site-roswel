@@ -1272,9 +1272,33 @@ export function MoteurTatouage({
                 appliquée au menu du compte : l'œil voit la fenêtre,
                 l'indicateur ne disait rien de plus.
                 ⚠️ LE DOIGT NE CHANGE PAS : cette rangée est
-                `mobile:hidden` (voir son conteneur). */
+                `mobile:hidden` (voir son conteneur).
+
+                ██ §3 (nº 507) — LE CERCLE RESTE TANT QUE LE PANNEAU
+                EST OUVERT ██
+                LE DÉFAUT, tel que le propriétaire le voit : on survole
+                le bouton, le cercle gris paraît ; on clique, le panneau
+                s'ouvre — ET LE CERCLE DISPARAÎT SOUS LE POINTEUR QUI
+                N'A PAS BOUGÉ. La cause : ce cercle n'était QU'UN
+                SURVOL, et le voile de la nº 450 est une surface posée
+                par-dessus la page — le pointeur survole LE VOILE, plus
+                le bouton, et `:hover` s'éteint. Le paragraphe ci-dessus
+                disait « le panneau lui-même » : ça ne suffit pas, le
+                bouton perdait toute marque au moment précis où il en
+                fallait une.
+                LE REMÈDE : un fond POSÉ, pas un survol, tant que
+                `filtresOuverts`. La valeur est CELLE DU SURVOL —
+                `bg-sombre-eleve`, le jeton de `ETATS_ROND_BARRE` : le
+                cercle ne change pas de couleur en s'ouvrant, il RESTE.
+                ⚠️ LES DEUX ÉTATS SONT EXCLUSIFS (règle nº 389) : ouvert,
+                le fond posé ; fermé, les états de survol et d'appui.
+                Jamais les deux.
+                ⚠️ ET LE GLYPHE NE CHANGE PAS DE COULEUR : `text-sombre-texte`
+                au repos comme ouvert — le rose du survol a quitté la
+                barre entière à la nº 507-§2. */
             className={`relative shrink-0 w-[46px] h-[46px] rounded-full
-                       ${ETATS_ROND_BARRE} text-sombre-texte
+                       ${filtresOuverts ? "bg-sombre-eleve" : ETATS_ROND_BARRE}
+                       text-sombre-texte
                        flex items-center justify-center transition-colors`}
           >
             <IconeReglages taille={28} />

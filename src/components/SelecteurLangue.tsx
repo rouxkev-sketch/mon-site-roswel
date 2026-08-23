@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { LANGUES_YOKOFOLIO } from "@/config/tatouage";
-import { IconeCroix, IconeMonde } from "@/components/Icones";
+import { ETATS_ROND_BARRE, IconeCroix, IconeMonde } from "@/components/Icones";
 import { FenetreDeVerre, MenuDeVerre } from "@/components/SurfaceDeVerre";
 import { useVoileDeLaPage } from "@/components/VoileDeLaPage";
 //  §4 (nº 465) — au doigt, l'écran devient une PAGE plein écran (le
@@ -377,11 +377,23 @@ export function SelecteurLangue({ hauteur = 40 }: { hauteur?: number }) {
         //  aux accents forts, et une fenêtre ouverte n'en est pas
         //  un. Ouvert, le FOND S'ÉCLAIRCIT — le même traitement que
         //  le bouton de filtres — et le globe reste blanc.
+        /*  ██ §2 (nº 507) — LE GLOBE REJOINT L'ÉCRITURE DE LA BARRE ██
+             Il avait la sienne : `hover:bg-sombre-eleve` posé à la
+             main, sans état ENFONCÉ — sous le doigt, le globe était la
+             seule icône de la barre à ne rien répondre. Il prend donc
+             `ETATS_ROND_BARRE` (Icones.tsx), la constante que portent
+             déjà la loupe, le fanion, le compte et le bouton de
+             filtres : même cercle gris au survol, LE MÊME sous le
+             doigt. La couleur ne change pas d'un cran — cette
+             constante EST `hover:bg-sombre-eleve` depuis que le rose
+             en est retiré (nº 507-§2) —, seul l'état enfoncé s'ajoute.
+             ⚠️ LA BRANCHE « OUVERT » NE BOUGE PAS, et elle reste
+             EXCLUSIVE : un seul fond peint à la fois (règle nº 389). */
         className={`shrink-0 flex items-center justify-center rounded-full
                    transition-colors text-sombre-texte
                    focus-visible:outline-2 focus-visible:outline-offset-2
                    focus-visible:outline-primaire ${
-                     ouvert ? "bg-sombre-eleve-clair" : "hover:bg-sombre-eleve"
+                     ouvert ? "bg-sombre-eleve-clair" : ETATS_ROND_BARRE
                    }`}
       >
         {/* LE GLOBE DESSINÉ — celui du code, en `currentColor`.

@@ -1778,12 +1778,19 @@ export const TEXTES_TATOUAGE = {
       ⚠️ À NE PAS CONFONDRE avec `titreAccueil` ci-dessus, qui est le
       titre DESCRIPTIF du bloc de référencement : celui-ci parle au
       visiteur, celui-là aux moteurs de recherche. */
-  titreMosaique: "Découvre ton prochain tatouage",
-  /** Ce que le site EST, sous le titre. Il cède la place au résumé de
-      la recherche dès qu'une recherche est en cours.
-      ⚠️ SANS POINT FINAL (nº 212-§1) : c'est une signature, pas une
-      phrase — et rien d'autre sur cette ligne n'est ponctué. */
-  sousTitreMosaique: "Le portfolio des tatouages et des tatoueurs",
+  titreMosaique: "Find your tattoo style…",
+  /*  ██ §1 (nº 507) — `sousTitreMosaique` EST SUPPRIMÉE ██
+      « Le portfolio des tatouages et des tatoueurs » ne s'écrit plus
+      sous le titre : le propriétaire ne veut qu'UNE ligne au-dessus de
+      la mosaïque. La clé est retirée d'ici plutôt que laissée
+      inutilisée (règle nº 386 : rien d'orphelin).
+      ⚠️ L'AIR QU'ELLE OCCUPAIT NE PART PAS AVEC ELLE : l'appel de
+      l'accueil passe désormais `degagementConstant` à LigneResultats
+      (mécanisme nº 301), qui rend une ligne muette PORTANT LES MÊMES
+      CLASSES à sa place. La hauteur du bloc de tête est donc identique
+      au pixel, sans qu'aucun nombre ne soit recopié.
+      ⚠️ LE TITRE DE RÉFÉRENCEMENT (`titreAccueil`, plus haut) N'EST PAS
+      TOUCHÉ : il parle aux moteurs, celui-ci au visiteur. */
   /** L'APPEL AUX TATOUEURS — en bas de l'accueil, après la mosaïque.
       Pas dans la barre fixe : elle n'a pas la place, et quatre
       visiteurs sur cinq arrivent par le téléphone. */

@@ -12,24 +12,36 @@ type ProprietesIcone = { taille?: number; classe?: string };
 
 /**
  * §1 (nº 250) — LES ÉTATS DU ROND DES ICÔNES DE LA BARRE, écrits UNE
- * FOIS : loupe, fanion, compte (les deux visages du compte compris).
- *  · WEB : le cercle gris au survol — inchangé. (Le rose du survol
- *    reste ce qu'il est : un SURVOL, pas un bouton qui devient rose —
- *    il ne contredit pas la réserve du rose.)
+ * FOIS : loupe, globe, fanion, compte (les deux visages du compte
+ * compris) et le bouton de filtres du moteur.
+ *  · WEB : le cercle gris au survol.
  *  · SMARTPHONE : il n'y a pas de survol au doigt — l'équivalent est
  *    l'état ENFONCÉ : LE MÊME cercle gris apparaît sous le doigt
  *    (`active:`) et repart au relâchement ; il ne reste jamais
  *    affiché. Même géométrie des deux côtés : le rond de 40
  *    (HAUTEUR_ACTIONS) et son `rounded-full`, déjà partagés.
+ *
+ * ██ §2 (nº 507) — LE ROSE DU SURVOL EST RETIRÉ ██
+ * ------------------------------------------------------------------
+ * LA nº 254-§6 faisait passer LE GLYPHE au rose en même temps que le
+ * cercle gris apparaissait, et l'appelait « la seule exception rose de
+ * la barre ». Le propriétaire la supprime : au survol comme sous le
+ * doigt, il ne reste QUE LE CERCLE GRIS — le jeton `bg-sombre-eleve`,
+ * déjà là, aucune couleur nouvelle. Le glyphe garde la couleur de son
+ * bouton, sans exception.
+ * ⚠️ CE QUE CE RETRAIT ALIGNE, d'un seul coup : la loupe, le fanion,
+ * la silhouette du déconnecté, les deux boutons de « Mon espace » et
+ * le bouton de filtres du moteur portaient tous CETTE constante — ils
+ * suivent donc ensemble. Le GLOBE, lui, ne la portait pas (il avait sa
+ * propre écriture, grise et sans état enfoncé) : il la reprend à la
+ * nº 507 pour que la barre n'ait plus qu'UNE seule écriture.
+ * ⚠️ ET LE COMPTE CONNECTÉ RESTE ROSE : sa silhouette porte
+ * `text-primaire` AU REPOS (MenuEspace) — c'est l'état connecté que la
+ * charte peint, pas un survol. Rien ne change pour elle ; elle cesse
+ * seulement de porter deux fois la même couleur (règle nº 389).
  */
-//  §6 (nº 254) — L'ICÔNE AUSSI : au survol du web, elle passe au rose
-//  (`hover:text-primaire` — la seule exception rose de la barre, déjà
-//  en place et voulue) ; à l'appui du doigt, LE MÊME rose, ensemble
-//  avec le cercle gris, et tout repart au relâchement (`active:`).
-//  La valeur est celle du survol, jamais une autre.
 export const ETATS_ROND_BARRE =
-  "hover:bg-sombre-eleve active:bg-sombre-eleve " +
-  "hover:text-primaire active:text-primaire";
+  "hover:bg-sombre-eleve active:bg-sombre-eleve";
 
 /* ============ Icônes du menu (trait fin) ============ */
 

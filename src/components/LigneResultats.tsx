@@ -47,8 +47,7 @@ export function LigneResultats({
   balise?: "h1" | "h2";
   /**
    * §1 (nº 301) — LE TITRE GARDE LE MÊME DÉGAGEMENT, AVEC OU SANS
-   * SOUS-TITRE. Sur le WEB uniquement, et sur « Ma sélection »
-   * uniquement — c'est elle qui demande ce drapeau.
+   * SOUS-TITRE.
    * ------------------------------------------------------------------
    * LE DÉFAUT : le dégagement sous le titre vaut 54 px quand un
    * sous-titre est écrit (6 px d'écart + 24 px de sous-titre + 24 px
@@ -60,8 +59,21 @@ export function LigneResultats({
    * paragraphe, les mêmes classes, une espace insécable, invisible aux
    * lecteurs d'écran (`aria-hidden`). La hauteur est donc identique au
    * pixel près, sans qu'aucune valeur soit recopiée.
-   * ⚠️ RIEN N'EST RÉSERVÉ AILLEURS : la page de recherche ne passe pas
-   * ce drapeau, son rythme ne change pas d'un pixel.
+   *
+   * ██ §1 (nº 507) — SON APPELANT A CHANGÉ, SA PORTÉE AUSSI ██
+   * « Ma sélection » n'a plus de bloc de tête du tout depuis la nº 462
+   * (l'air de la nº 445/463 l'a remplacé) : ce drapeau était donc
+   * devenu ORPHELIN, plus personne ne le passait. C'est L'ACCUEIL SANS
+   * RECHERCHE qui le reprend, parce que son sous-titre est supprimé
+   * (nº 507-§1) et que son air, lui, doit rester.
+   * ⚠️ ET LA RÉSERVE VAUT DÉSORMAIS À TOUTES LES LARGEURS. Elle était
+   * bornée au web parce que « Ma sélection » ne sautait qu'au web ; la
+   * garder ainsi rouvrirait le trou de 30 px entre 768 et 1024 px sur
+   * un ORDINATEUR — là où le bloc de tête de l'accueil est bien
+   * visible, son masquage ne visant que le VRAI appareil tactile
+   * (`masqueAuDoigt`, nº 444). La réserve suit donc exactement le bloc
+   * qu'elle sert : partout où il se voit, elle tient sa ligne ; là où
+   * il n'existe pas, elle n'existe pas non plus.
    */
   degagementConstant?: boolean;
   /**
@@ -137,14 +149,17 @@ export function LigneResultats({
         </p>
       ) : (
         degagementConstant && (
-          //  §1 (nº 301) — LA LIGNE RÉSERVÉE : mêmes classes, donc
-          //  MÊME hauteur, sans qu'aucun nombre soit écrit ici. Web
-          //  seulement (`hidden lg:block`), muette pour les lecteurs
+          //  §1 (nº 301) — LA LIGNE RÉSERVÉE : mêmes classes que le
+          //  sous-titre juste au-dessus, donc MÊME hauteur, sans
+          //  qu'aucun nombre soit écrit ici. Muette pour les lecteurs
           //  d'écran, et sans le moindre pixel peint.
+          //  ⚠️ §1 (nº 507) — LA BORNE DE LARGEUR EST PARTIE : la
+          //  réserve suit le bloc qu'elle sert, à toutes les largeurs
+          //  (voir la note du drapeau, plus haut).
           <p
             aria-hidden="true"
             data-degagement-reserve=""
-            className="hidden lg:block mt-1.5 text-[15.5px] sm:text-[16px] text-sombre-texte-doux"
+            className="mt-1.5 text-[15.5px] sm:text-[16px] text-sombre-texte-doux"
           >
             &nbsp;
           </p>

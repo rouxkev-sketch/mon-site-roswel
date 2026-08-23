@@ -614,7 +614,21 @@ export function IndexTatoueurs({
               />
               <LigneResultats
                 titre={TEXTES_TATOUAGE.titreMosaique}
-                sousTitre={TEXTES_TATOUAGE.sousTitreMosaique}
+                /*  ██ §1 (nº 507) — PLUS DE SOUS-TITRE, ET PAS UN PIXEL
+                     D'AIR EN MOINS ██
+                     La signature « Le portfolio des tatouages et des
+                     tatoueurs » est supprimée (voir la note laissée à
+                     sa place dans config/tatouage.ts). Sans rien
+                     d'autre, le bloc de tête aurait maigri de la
+                     hauteur de cette ligne et la mosaïque serait
+                     montée d'autant. `degagementConstant` — le
+                     mécanisme de la nº 301 — rend à sa place une ligne
+                     muette PORTANT LES MÊMES CLASSES : même écart
+                     au-dessus, même corps, même hauteur de ligne.
+                     L'égalité est structurelle, pas approchée : aucun
+                     nombre n'est écrit ici ni là-bas. */
+                sousTitre={null}
+                degagementConstant
                 //  §1 (nº 444) — AU DOIGT, CETTE PHRASE NE S'AFFICHE
                 //  PLUS : les cartes commencent tout de suite. Sur
                 //  ordinateur, rien ne change. Le drapeau n'est passé
