@@ -296,7 +296,45 @@ function BlocDUnSuivi({
              toute la largeur de la ligne, le clic du milieu ouvre
              toujours un onglet, le survol et le focus au clavier ne
              bougent pas, et le doigt ne voit aucune différence. */
-        className={`${CLASSES_LIGNE_CLIQUABLE_SANS_ENCADRE} lg:gap-5`}
+        /*  ██ §1 (nº 519) — LE LIEN ÉPOUSE SON CONTENU, IL NE S'ÉTIRE
+             PLUS JUSQU'AU BORD DE LA PAGE ██
+             ----------------------------------------------------------
+             CE QUI L'ÉTIRAIT, ET C'ÉTAIT DEUX CHOSES QUI SE
+             CUMULAIENT :
+              · LE PARENT est une colonne flexible (`flex flex-col`,
+                juste au-dessus). Sans consigne contraire, une colonne
+                ÉTIRE ses enfants sur toute sa largeur — c'est son
+                comportement par défaut, pas une valeur écrite quelque
+                part qu'on pourrait chercher ;
+              · et DANS le lien, le bloc de texte porte `flex-1` : il
+                absorbait aussitôt toute la place ainsi obtenue.
+             Résultat : une surface cliquable qui courait jusqu'au bord
+             droit de la page, très loin du dernier mot.
+             LE REMÈDE, EN DEUX CLASSES :
+              · `self-start` dit à ce seul enfant de ne PAS s'étirer —
+                il prend alors la largeur de son contenu, l'avatar plus
+                le texte, et rien de plus. Posé sur le lien, jamais sur
+                la colonne : les autres blocs d'un suivi (la bande de
+                vignettes) gardent leur pleine largeur ;
+              · `max-w-full` le borne quand même à la largeur
+                disponible. SANS LUI, UN NOM TRÈS LONG NE SE TRONQUERAIT
+                PLUS : le `truncate` du nom a besoin d'une largeur qui
+                le contraigne, et un lien libre de s'élargir ne lui en
+                donne aucune — le nom sortirait de la page au lieu de
+                s'abréger.
+             ⚠️ RIEN NE BOUGE À L'ŒIL : l'avatar et les deux lignes
+             restent exactement où ils sont — c'est la BOÎTE du lien qui
+             se rétrécit à droite, pas son contenu, qui était déjà calé
+             à gauche.
+             ⚠️ AUCUN FOND NI SURVOL À AJUSTER : cette ligne n'en porte
+             plus depuis la nº 301 — c'est même la raison d'être de
+             l'écriture qu'elle emploie. Il n'y a donc aucune plaque qui
+             rétrécirait avec la zone.
+             ⚠️ LA SÉLECTION DU NOM (nº 515-516) N'EST PAS TOUCHÉE : les
+             deux attributs et la règle de glissement visent le lien,
+             qui reste le même — seule sa largeur change. */
+        className={`${CLASSES_LIGNE_CLIQUABLE_SANS_ENCADRE} lg:gap-5
+                    max-w-full self-start`}
       >
         <PhotoRonde
           source={suivi.photoProfil}
