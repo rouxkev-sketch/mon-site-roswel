@@ -15,6 +15,9 @@ import {
   IconeSortie,
   IconeUtilisateur,
 } from "@/components/Icones";
+//  §1 (nº 531) — le cœur de la marque en tête de « Mon compte » au
+//  doigt : l'écriture unique de cette image, jamais son chemin.
+import { LogoYokofolio } from "@/components/LogoYokofolio";
 import { EntreeLangue, FenetreLangue } from "@/components/SelecteurLangue";
 import { FenetreNotifications } from "@/components/FenetreNotifications";
 import { MenuDeVerre } from "@/components/SurfaceDeVerre";
@@ -939,6 +942,20 @@ export function MenuEspace({
   const CLASSE_TUILE_MOT =
     "text-[13px] font-semibold leading-tight text-center text-sombre-texte " +
     "[overflow-wrap:anywhere]";
+  /**
+   * §2 (nº 531) — LA TAILLE DES TROIS ICÔNES DE TUILE.
+   * ------------------------------------------------------------------
+   * 22 px à la nº 530 — la taille des icônes d'une LIGNE, héritée du
+   * plan du web où elles vivent à gauche d'un mot. Dans une tuile
+   * l'icône n'accompagne plus le mot : elle le SURMONTE, et c'est elle
+   * qu'on vise. Elle passe donc à 32 — la moitié en plus.
+   * ⚠️ LES TROIS ENSEMBLE, par une seule écriture : trois tuiles à
+   * parts égales ne peuvent pas porter trois tailles.
+   * ⚠️ LES MOTS NE BOUGENT PAS (13 px), et les trois tuiles restent de
+   * même hauteur : la grille étire ses cases, elles grandissent
+   * ensemble de ce que l'icône a gagné.
+   */
+  const TAILLE_ICONE_TUILE = 32;
 
   const contenuMenuDoigt = (
     <div className="flex flex-col gap-3 px-4 pt-1">
@@ -952,14 +969,21 @@ export function MenuEspace({
           {/*  LA PASTILLE DES NON LUES se pose SUR la cloche : dans une
                tuile, le mot est sous l'icône — il n'y a plus de place à
                sa droite. Même écriture qu'au web (le rose des
-               compteurs, son usage d'origine), même contenu. */}
+               compteurs, son usage d'origine), même contenu.
+               §2 (nº 531) — ELLE SUIT LA CLOCHE QUI GRANDIT : 20 → 24 px
+               de haut, chiffres de 11,5 → 12,5 px. Elle ne grandit PAS
+               d'autant que le glyphe (22 → 32, soit la moitié en plus) :
+               une pastille qui suivrait au pixel près couvrirait la
+               cloche. Un cran suffit à la garder lisible et à la garder
+               seconde. Sa position ne change pas — elle est relative au
+               coin de l'icône, quelle que soit sa taille. */}
           <span className={`relative ${CLASSE_TUILE_ICONE}`}>
-            <IconeCloche taille={22} />
+            <IconeCloche taille={TAILLE_ICONE_TUILE} />
             {nonLues > 0 && (
               <span
                 aria-label={`${nonLues} non lue${nonLues > 1 ? "s" : ""}`}
-                className="absolute -right-3 -top-1 min-w-[20px] h-5 px-1.5 rounded-full bg-primaire
-                           text-[11.5px] font-bold text-white leading-5 text-center"
+                className="absolute -right-3 -top-1 min-w-[24px] h-6 px-1.5 rounded-full bg-primaire
+                           text-[12.5px] font-bold text-white leading-6 text-center"
               >
                 {nonLues > 99 ? "99+" : nonLues}
               </span>
@@ -975,7 +999,7 @@ export function MenuEspace({
           className={CLASSE_TUILE}
         >
           <span className={CLASSE_TUILE_ICONE}>
-            <IconeFanion taille={22} />
+            <IconeFanion taille={TAILLE_ICONE_TUILE} />
           </span>
           <span className={CLASSE_TUILE_MOT}>Sélection</span>
         </Link>
@@ -986,7 +1010,7 @@ export function MenuEspace({
           className={CLASSE_TUILE}
         >
           <span className={CLASSE_TUILE_ICONE}>
-            <IconePlus taille={22} />
+            <IconePlus taille={TAILLE_ICONE_TUILE} />
           </span>
           <span className={CLASSE_TUILE_MOT}>Ajouter</span>
         </button>
@@ -996,8 +1020,45 @@ export function MenuEspace({
            Il disparaît entier tant qu'aucun portfolio n'a été envoyé —
            la garde de toujours, celle du plan du web. */}
       {fiches.length > 0 && (
-        <div className={`flex flex-col gap-1 p-2 ${CLASSE_ENCADRE}`}>
-          {selecteurDePortfolio}
+        /**
+         * §3 (nº 531) — PLUS D'AIR EN HAUT ET EN BAS : la réserve
+         * verticale passe de 8 à 12 px. L'horizontale ne bouge pas
+         * (8 px) — c'est elle qui, ajoutée aux 12 px que chaque ligne
+         * porte déjà, pose les icônes à 20 px du bord.
+         */
+        <div className={`flex flex-col px-2 py-3 ${CLASSE_ENCADRE}`}>
+          {/**
+           * ██ §4 (nº 531) — LE DÉROULANT SE CALE SUR LES ICÔNES ██
+           * ----------------------------------------------------------
+           * CE QUI N'ALLAIT PAS, mesuré : le déroulant prenait TOUTE la
+           * largeur du contenu de l'encadré — son bord gauche tombait à
+           * 8 px du bord, quand les icônes des deux lignes du dessous
+           * tombent à 20 px (les 8 px de l'encadré, plus les 12 px que
+           * `classeEntree` porte). Il débordait donc de 12 px à gauche
+           * de la colonne d'icônes, et rien ne s'alignait.
+           * CE SUR QUOI ON S'ALIGNE, exactement : le BORD GAUCHE DE LA
+           * BOÎTE D'ICÔNE d'une ligne (`boiteIcone`, 22 px de large),
+           * c'est-à-dire le bord gauche du glyphe « Mon portfolio ».
+           * COMMENT : 12 px de retrait de chaque côté — le déroulant
+           * commence donc à 8 + 12 = 20 px, pile sur les icônes, et il
+           * s'arrête à 20 px du bord droit.
+           * LES QUATRE AIRS, AVANT PUIS APRÈS :
+           *  · à gauche  8 → 20 px  · à droite 8 → 20 px
+           *  · au-dessus 8 → 20 px  · en dessous 4 → 12 px
+           * ⚠️ LES TROIS PREMIERS AUGMENTENT, ET JE LE DIS PLUTÔT QUE
+           * DE CHOISIR EN SILENCE : la consigne demandait de les
+           * RÉDUIRE **et** d'aligner le bord gauche sur les icônes. Les
+           * deux ne peuvent pas tenir ensemble — aligner sur les icônes,
+           * c'est rentrer le déroulant de 12 px, donc ajouter de l'air à
+           * sa gauche. J'ai retenu L'ALIGNEMENT, qui est la consigne
+           * mesurable, et j'ai rendu les trois airs ÉGAUX comme demandé.
+           * ⚠️ LA LISTE QUI S'OUVRE SUIT LE CHAMP : elle est posée sur
+           * lui (`absolute left-0 right-0`, dans son propre conteneur),
+           * donc elle prend le même retrait sans qu'on le lui dise.
+           */}
+          {selecteurDePortfolio && (
+            <div className="mx-3 mt-2 mb-3">{selecteurDePortfolio}</div>
+          )}
           {entreesDuPortfolio}
         </div>
       )}
@@ -1112,19 +1173,34 @@ export function MenuEspace({
                « Notifications » s'ouvrent PAR-DESSUS (z-[85] contre
                z-[70] ici) pendant que cette page reste montée
                dessous : les refermer y fait retomber. */}
-          {/*  ██ §1 (nº 530) — L'EN-TÊTE CENTRÉE, ET L'ICÔNE DOUBLÉE ██
+          {/*  ██ §1 (nº 530) — L'EN-TÊTE CENTRÉE ██
                `enTeteCentre` déplace l'icône et le titre au centre, la
-               croix ne bouge pas (voir EnTetePleinEcran). LA TAILLE DE
-               L'ICÔNE APPARTIENT À L'APPELANT : elle passe de 22 à 44,
-               le double demandé. Les trois autres porteurs du gabarit
-               ne passent pas le drapeau et gardent leurs 22 px à
-               gauche du titre.
+               croix ne bouge pas (voir EnTetePleinEcran). Les trois
+               autres porteurs du gabarit ne passent pas le drapeau et
+               gardent leur icône de 22 px à gauche du titre.
                ⚠️ ET LE CONTENU CHANGE DE PLAN, LUI AUSSI : c'est
                `contenuMenuDoigt` qui est posé ici, pas `contenuMenu` —
-               celui-ci reste au web, intact. */}
+               celui-ci reste au web, intact.
+               ██ §1 (nº 531) — ET C'EST LE CŒUR DE LA MARQUE ██
+               La silhouette de la nº 530 laisse la place à
+               `yokofolio-icone.png`. TROIS CHOSES À SAVOIR :
+                · LE FICHIER N'EST PAS TOUCHÉ, et il n'est même pas
+                  nommé ici : on passe par `LogoYokofolio`, l'écriture
+                  unique de cette image (son chemin vit dans
+                  `MARQUE_YOKOFOLIO` — règle nº 175-§5, aucune source
+                  d'image ne dépend d'une mise en page) ;
+                · IL N'EST PAS CARRÉ — 297 × 337, relevé à la nº 468 et
+                  DÉCLARÉ dans `LogoYokofolio` depuis la nº 507. On ne
+                  lui donne donc QUE SA HAUTEUR : les 44 px de la
+                  nº 530, inchangés. La largeur se calcule du rapport
+                  natif (39 px) et le composant la déclare au
+                  navigateur : rien n'est étiré, rien ne saute au
+                  chargement ;
+                · LE TITRE reste centré dessous, la CROIX en haut à
+                  droite — la nº 530 ne bouge pas d'un pixel. */}
           <PagePleinEcranMobile
             titre="Mon compte"
-            icone={<IconeSilhouette taille={44} classe="shrink-0 text-white" />}
+            icone={<LogoYokofolio variante="icone" hauteur={44} />}
             ariaLabel="Mon compte"
             enTeteCentre
             surFermer={() => setOuvert(false)}
