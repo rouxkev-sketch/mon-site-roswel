@@ -114,6 +114,7 @@ export function MenuDeVerre({
   largeur,
   alignement = "droite",
   largeurAuContenu = false,
+  opaque = false,
   className = "",
   children,
   ...reste
@@ -139,6 +140,30 @@ export function MenuDeVerre({
    * (le compte, les langues) gardent leur largeur fixe au pixel.
    */
   largeurAuContenu?: boolean;
+  /**
+   * ██ §6 (nº 537) — CE MENU-CI N'EST PAS EN VERRE ██
+   * ------------------------------------------------------------------
+   * « Mon compte » a pris la disposition de la page du doigt (nº 536) :
+   * des encadrés posés les uns sous les autres. Un fond translucide
+   * sous des encadrés, c'est la page qui remonte à travers eux — le
+   * propriétaire le veut OPAQUE.
+   * LA COULEUR N'EST PAS CHOISIE, ELLE EST DÉDUITE : le verre des menus
+   * EST DÉJÀ le fond de page, à 45 % (`rgba(11, 15, 20, 0.45)` —
+   * globals.css, la teinte que la nº 466 y a portée). Le rendre opaque,
+   * c'est donc le MÊME jeton à 100 % : `sombre-fond`, #0B0F14. Aucune
+   * couleur nouvelle, aucun arbitrage.
+   * ⚠️ ET LA FENÊTRE SE DÉTACHE QUAND MÊME : « Mon compte » pose le
+   * voile de la page (nº 293/294), qui assombrit tout SAUF elle. Elle
+   * paraît donc plus claire que son entourage sans porter la moindre
+   * bordure — la charte est tenue.
+   * ⚠️ SUR DEMANDE, ET C'EST TOUT LE POINT : le drapeau est FAUX par
+   * défaut. Les deux autres menus de verre du site (les langues, le
+   * panneau des filtres du moteur) ne le passent pas et gardent leur
+   * plaque au pixel. On ne touche pas non plus à `globals.css`, où les
+   * fonds de verre sont écrits en dur (règle nº 172) : c'est
+   * l'ATTRIBUT qui n'est plus posé, pas la règle qui change.
+   */
+  opaque?: boolean;
   className?: string;
   children: React.ReactNode;
 } & React.HTMLAttributes<HTMLDivElement>) {
@@ -161,8 +186,10 @@ export function MenuDeVerre({
     <div
       {...reste}
       ref={refPanneau}
-      data-verre-menu=""
-      className={`z-[75] rounded-2xl overflow-y-auto overscroll-contain ${className}`}
+      {...(opaque ? {} : { "data-verre-menu": "" })}
+      className={`z-[75] rounded-2xl overflow-y-auto overscroll-contain ${
+        opaque ? "bg-sombre-fond " : ""
+      }${className}`}
       style={{
         position: "fixed",
         /*  §4-a (nº 473) — DEUX POSES, UNE SEULE GÉOMÉTRIE. À largeur

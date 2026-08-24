@@ -497,51 +497,53 @@ export function MenuEspace({
   //  Tailwind v4 ne s'applique qu'aux appareils qui survolent).
   //  MÊME GÉOMÉTRIE des deux côtés : la classe est unique, la hauteur
   //  (46 px), le rayon (`rounded-xl`) et le retrait (`px-3`) aussi.
-  /*  §2 (nº 532) — LA GÉOMÉTRIE D'UN CÔTÉ, LA COULEUR DE L'AUTRE.
-      « Ajouter un portfolio » doit être ROSE au doigt (§2) et rester
-      une entrée en tout point identique aux autres. On sépare donc ce
-      qui ne doit JAMAIS varier — la boîte, la hauteur, le retrait,
-      l'écriture, l'état enfoncé — de la seule chose qui varie : la
-      couleur. Deux chaînes écrites en entier auraient fini par
-      diverger, et c'est précisément ce que la note du dessus interdit. */
-  const GEOMETRIE_ENTREE =
-    "flex w-full items-center gap-3 rounded-xl px-3 min-h-[46px] text-left " +
-    "text-[14.5px] font-semibold " +
-    "hover:bg-white/5 active:bg-white/10 transition-colors";
-  const classeEntree = `${GEOMETRIE_ENTREE} text-sombre-texte`;
-  /** LA MÊME ENTRÉE, EN ROSE — une seule classe de couleur, remplacée. */
-  const classeEntreeAction = `${GEOMETRIE_ENTREE} text-primaire`;
-  // LES ICÔNES SORTENT DU GRIS DOUX : à 22 px, sur fond anthracite,
-  // elles se devinaient plus qu'elles ne se lisaient. Elles prennent
-  // la couleur du texte, à 80 % — présentes, jamais criardes.
   /**
-   * ██ §3 (nº 533) — LA TAILLE DES ICÔNES D'UNE LIGNE, RÉGLABLE ██
-   * ------------------------------------------------------------------
-   * Les entrées des encadrés portaient les 22 px du plan du web — la
-   * taille d'une icône dans une fenêtre étroite. Sur une page, entre
-   * deux encadrés, elles se devinaient. Elles passent à 26 px AU DOIGT,
-   * toutes du même cran : « Ajouter un portfolio », « Mon portfolio »,
-   * « Modification », « Langue », « Sécurité », « Déconnexion ».
-   * ⚠️ LA BOÎTE SUIT LE GLYPHE, et c'est elle qui tient l'alignement :
-   * chaque icône vit dans une boîte de LARGEUR FIXE (la note d'origine
-   * en donne la raison — sans elle, chaque dessin a sa propre chasse et
-   * les libellés partent d'un pixel différent). La boîte passe donc de
-   * 22 à 26 px avec le glyphe : les six libellés restent sur la même
-   * verticale.
-   * ⚠️ ET LE DÉROULANT NE BOUGE PAS (acquis nº 531) : son bord gauche
-   * est calé sur le BORD GAUCHE DE LA BOÎTE — 8 px d'encadré plus les
-   * 12 px de la ligne —, une somme où la LARGEUR de la boîte n'entre
-   * pas. Elle peut grandir, l'aplomb tient.
-   * ⚠️ LE WEB GARDE SES 22 px : il passe l'autre réglage.
+   * ██ §1-§5 (nº 537) — DEUX JEUX DE RÉGLAGES, UN PAR SURFACE ██
+   * ==================================================================
+   * La nº 536 a donné à la FENÊTRE DU WEB la disposition de la PAGE DU
+   * DOIGT, et ramené les réglages à un seul jeu. Le propriétaire la
+   * trouve trop grande pour une fenêtre : les deux surfaces se
+   * séparent de nouveau — mais SUR LES SEULES VALEURS, jamais sur le
+   * dessin. Un unique arbre (`contenuDuCompte`), deux jeux de nombres.
+   * ⚠️ AUCUNE BRANCHE D'APPAREIL N'EST LUE NULLE PART : chaque surface
+   * ne se monte QUE sur son appareil (la fenêtre est `mobile:hidden`,
+   * la page `hidden mobile:flex`). Elle passe donc son jeu, et c'est
+   * tout — rien à interroger, rien qui puisse se tromper.
+   * ⚠️ CE QUI RESTE COMMUN, ET QUI DOIT LE RESTER : la géométrie d'une
+   * entrée (hauteur de 46 px, retrait de 12 px, rayon, état enfoncé),
+   * le dessin des tuiles, les fonds, les arrondis, l'ordre et
+   * l'inventaire des entrées. Seuls des NOMBRES diffèrent.
+   *
+   * §2 (nº 532) — LA GÉOMÉTRIE D'UN CÔTÉ, LA COULEUR DE L'AUTRE.
+   * « Ajouter un portfolio » est ROSE et reste une entrée en tout
+   * point identique aux autres : on sépare ce qui ne doit jamais
+   * varier de la seule chose qui varie — la couleur. Deux chaînes
+   * écrites en entier auraient fini par diverger.
    */
-  const boiteDIcone = (largeur: string) =>
-    `flex ${largeur} shrink-0 justify-center`;
-  /*  §4 (nº 536) — UN SEUL RÉGLAGE, PLUS DEUX. Le web ayant repris la
-      disposition du doigt, il n'y a plus deux plans à accorder : les
-      22 px du plan disparu partent avec lui. Le paramètre reste — il
-      dit ce qui doit rester d'accord entre la boîte et le glyphe. */
-  const REGLAGE_LIGNE = { boite: boiteDIcone("w-[26px]"), taille: 26 };
-  type ReglageLigne = typeof REGLAGE_LIGNE;
+  const reglageDeLigne = (
+    largeurBoite: string,
+    taille: number,
+    ecriture: string
+  ) => {
+    const geometrie =
+      "flex w-full items-center gap-3 rounded-xl px-3 min-h-[46px] text-left " +
+      `${ecriture} font-semibold ` +
+      "hover:bg-white/5 active:bg-white/10 transition-colors";
+    return {
+      /*  LA BOÎTE DE LARGEUR FIXE tient l'alignement : sans elle, chaque
+          dessin a sa propre chasse et les libellés partent d'un pixel
+          différent. Elle suit donc le glyphe.
+          ⚠️ LE DÉROULANT NE BOUGE PAS POUR AUTANT (acquis nº 531) : son
+          bord gauche se cale sur le BORD GAUCHE de cette boîte — 8 px
+          d'encadré plus les 12 px de la ligne —, une somme où sa
+          LARGEUR n'entre pas. */
+      boite: `flex ${largeurBoite} shrink-0 justify-center`,
+      taille,
+      entree: `${geometrie} text-sombre-texte`,
+      entreeAction: `${geometrie} text-primaire`,
+    };
+  };
+  type ReglageLigne = ReturnType<typeof reglageDeLigne>;
 
   /**
    * ██ §1 (nº 530) — LES MORCEAUX, EXTRAITS UNE FOIS POUR DEUX PLANS ██
@@ -604,11 +606,11 @@ export function MenuEspace({
    * sélecteur, un seul réglage — c'est ce qui garantit que la fenêtre
    * et la page ne peuvent plus se désaccorder.
    */
-  const REGLAGES_SELECTEUR = {
-    hauteur: "min-h-[64px]",
-    titre: "text-[16px]",
-    sousTitre: "text-[13px]",
-  };
+  const reglageDuSelecteur = (
+    hauteur: string,
+    titre: string,
+    sousTitre: string
+  ) => ({ hauteur, titre, sousTitre });
 
   /**
    * LE SÉLECTEUR DE PORTFOLIO — `null` tant qu'il n'y a qu'un seul
@@ -773,7 +775,7 @@ export function MenuEspace({
         href={avecConsigneDeLienInterne(versFiche("vue=apercu"))}
         replace={liensRemplacent}
         onClick={() => setOuvert(false)}
-        className={classeEntree}
+        className={reglage.entree}
       >
         <span className={`${reglage.boite} text-sombre-texte/80`}>
           <IconeUtilisateur taille={reglage.taille} />
@@ -792,7 +794,7 @@ export function MenuEspace({
           setOuvert(false);
           window.dispatchEvent(new Event("yokofolio-modification-demandee"));
         }}
-        className={classeEntree}
+        className={reglage.entree}
       >
         <span className={`${reglage.boite} text-sombre-texte/80`}>
           <IconeReglages taille={reglage.taille} />
@@ -826,7 +828,7 @@ export function MenuEspace({
           qu'être empilées. Et la ligne porte enfin la classe
           commune : elle gardait un survol en aplat (nº 237-§2). */}
       <EntreeLangue
-        classe={classeEntree}
+        classe={reglage.entree}
         //  §3 (nº 533) — la même boîte et la même taille que ses cinq
         //  voisines : sans cela, le globe serait resté seul à 22 px.
         boite={reglage.boite}
@@ -845,7 +847,7 @@ export function MenuEspace({
         href="/devenir-tatoueur/securite"
         replace={liensRemplacent}
         onClick={() => setOuvert(false)}
-        className={classeEntree}
+        className={reglage.entree}
       >
         <span className={`${reglage.boite} text-sombre-texte/80`}>
           {/* UN BOUCLIER, plus un cadenas (nº 129) : le cadenas dit
@@ -856,7 +858,7 @@ export function MenuEspace({
         Sécurité
       </Link>
 
-      <button type="button" onClick={deconnecter} className={classeEntree}>
+      <button type="button" onClick={deconnecter} className={reglage.entree}>
         <span className={`${reglage.boite} text-sombre-texte/80`}>
           <IconeSortie taille={reglage.taille} />
         </span>
@@ -880,7 +882,7 @@ export function MenuEspace({
    * décrit une RANGÉE (`flex items-start gap-3.5`) faite pour un
    * avatar suivi d'un texte, avec 12 px sur les quatre côtés. Ici les
    * encadrés sont des COLONNES, et leurs lignes portent DÉJÀ leur
-   * propre retrait (`classeEntree`, 12 px) : reprendre les 12 px de la
+   * propre retrait (12 px) : reprendre les 12 px de la
    * plaque les aurait ajoutés aux leurs — le texte serait parti à
    * 24 px du bord. Ce qui est repris, ce sont les deux valeurs qui
    * font la plaque : sa couleur et son arrondi.
@@ -926,23 +928,64 @@ export function MenuEspace({
   const CLASSE_TUILE_MOT =
     "text-[13px] font-semibold leading-tight text-center text-sombre-texte " +
     "[overflow-wrap:anywhere]";
-  /**
-   * §2 (nº 531) — LA TAILLE DES TROIS ICÔNES DE TUILE.
-   * ------------------------------------------------------------------
-   * 22 px à la nº 530 — la taille des icônes d'une LIGNE, héritée du
-   * plan du web où elles vivent à gauche d'un mot. Dans une tuile
-   * l'icône n'accompagne plus le mot : elle le SURMONTE, et c'est elle
-   * qu'on vise. Elle passe donc à 32 — la moitié en plus.
-   * ⚠️ LES TROIS ENSEMBLE, par une seule écriture : trois tuiles à
-   * parts égales ne peuvent pas porter trois tailles.
-   * ⚠️ LES MOTS NE BOUGENT PAS (13 px), et les trois tuiles restent de
-   * même hauteur : la grille étire ses cases, elles grandissent
-   * ensemble de ce que l'icône a gagné.
-   */
-  const TAILLE_ICONE_TUILE = 32;
 
-  const contenuDuCompte = (
-    <div className="flex flex-col gap-3 px-4 pt-1">
+  /**
+   * ██ LES DEUX JEUX, ET CE QUI LES SÉPARE (§1-§5, nº 537) ██
+   * ------------------------------------------------------------------
+   * LE DOIGT garde EXACTEMENT ce que les nº 530-536 ont posé : rien
+   * de ce qui suit ne le touche. LE WEB se resserre, valeur par
+   * valeur — une fenêtre n'est pas une page.
+   *
+   *                                 doigt        web
+   *   §1 libellé d'une ligne        14,5 px      13,5 px
+   *   §1 icône d'une ligne          26 px        22 px
+   *   §2 nom dans le déroulant      16 px        14,5 px
+   *   §2 état dans le déroulant     13 px        13 px  (inchangé)
+   *   §3 hauteur du déroulant       64 px        54 px
+   *   §4 icône d'une tuile          32 px        28 px
+   *   §5 air au-dessus des tuiles   4 px         16 px
+   *
+   * §4 — LES 28 px DU WEB SONT CEUX DE LA BARRE FIXE, relevés sur ses
+   * trois icônes (loupe, fanion, silhouette — `taille={28}`, avec leur
+   * repli à 24 au doigt depuis la nº 461). La tuile vit sous cette
+   * barre : elle en prend la mesure.
+   * §5 — L'AIR DU HAUT ÉGALE CELUI DES CÔTÉS : les côtés valent 16 px
+   * (le `px-4` du contenu) et le haut n'en valait que 4. Au doigt, ce
+   * 4 px est juste — l'en-tête de la page pose déjà l'air au-dessus.
+   * §1-§2 — LES VALEURS DU WEB SONT CELLES D'AVANT LA nº 536, reprises
+   * telles quelles : 22 px d'icône, 14,5 px de nom, 54 px de champ.
+   * Rien n'est inventé ; on rend à la fenêtre ce qu'elle avait.
+   * ⚠️ L'ÉTAT DU DÉROULANT NE BOUGE PAS (13 px des deux côtés) : la
+   * consigne ne vise que le nom, et l'écart entre les deux se resserre
+   * — 0,81 au doigt, 0,90 au web. Il reste le plus petit.
+   */
+  const REGLAGES_DOIGT = {
+    ligne: reglageDeLigne("w-[26px]", 26, "text-[14.5px]"),
+    selecteur: reglageDuSelecteur("min-h-[64px]", "text-[16px]", "text-[13px]"),
+    tuileIcone: 32,
+    /*  La pastille du doigt — les valeurs de la nº 532, intactes. */
+    pastille:
+      "absolute -right-3 -top-1 min-w-[20px] h-5 px-1.5 rounded-full bg-primaire " +
+      "text-[12.5px] font-bold text-white leading-5 text-center",
+    airHaut: "pt-1",
+  };
+  const REGLAGES_WEB = {
+    ligne: reglageDeLigne("w-[22px]", 22, "text-[13.5px]"),
+    selecteur: reglageDuSelecteur("min-h-[54px]", "text-[14.5px]", "text-[13px]"),
+    tuileIcone: 28,
+    /*  §4 — LA PASTILLE SUIT LA CLOCHE : 20 → 18 px de rond, chiffre de
+        12,5 → 11,5 px (la taille que la pastille du web portait avant
+        la nº 536). Les 18 px restent un PLANCHER : deux chiffres et
+        « 99+ » l'allongent, elle ne coupe jamais son texte. */
+    pastille:
+      "absolute -right-3 -top-1 min-w-[18px] h-[18px] px-1.5 rounded-full bg-primaire " +
+      "text-[11.5px] font-bold text-white leading-[18px] text-center",
+    airHaut: "pt-4",
+  };
+  type ReglagesDuCompte = typeof REGLAGES_DOIGT;
+
+  const contenuDuCompte = (reglages: ReglagesDuCompte) => (
+    <div className={`flex flex-col gap-3 px-4 ${reglages.airHaut}`}>
       {/* ---------- LA RANGÉE DE TROIS ---------- */}
       {/*  §3 (nº 532) — DEUX TUILES, ET ELLES SE PARTAGENT TOUTE LA
            LARGEUR : « Ajouter » a rejoint l'encadré du portfolio, sa
@@ -976,12 +1019,11 @@ export function MenuEspace({
                change pas ici : sa ligne « Notifications » garde sa
                pastille à droite du mot, avec les mêmes valeurs. */}
           <span className={`relative ${CLASSE_TUILE_ICONE}`}>
-            <IconeCloche taille={TAILLE_ICONE_TUILE} />
+            <IconeCloche taille={reglages.tuileIcone} />
             {nonLues > 0 && (
               <span
                 aria-label={`${nonLues} non lue${nonLues > 1 ? "s" : ""}`}
-                className="absolute -right-3 -top-1 min-w-[20px] h-5 px-1.5 rounded-full bg-primaire
-                           text-[12.5px] font-bold text-white leading-5 text-center"
+                className={reglages.pastille}
               >
                 {nonLues > 99 ? "99+" : nonLues}
               </span>
@@ -997,7 +1039,7 @@ export function MenuEspace({
           className={CLASSE_TUILE}
         >
           <span className={CLASSE_TUILE_ICONE}>
-            <IconeFanion taille={TAILLE_ICONE_TUILE} />
+            <IconeFanion taille={reglages.tuileIcone} />
           </span>
           <span className={CLASSE_TUILE_MOT}>Sélection</span>
         </Link>
@@ -1038,12 +1080,12 @@ export function MenuEspace({
              La ligne reprend LA GÉOMÉTRIE des entrées (même
              hauteur, même retrait, même état enfoncé que ses
              voisines) et n'en change QUE la couleur du texte —
-             `classeEntreeAction`, plus haut : une classe de couleur
+             `entreeAction`, plus haut : une classe de couleur
              par élément, jamais deux empilées. */}
         <button
           type="button"
           onClick={demanderUneNouvelleFiche}
-          className={classeEntreeAction}
+          className={reglages.ligne.entreeAction}
         >
           {/*  §1 (nº 533) — L'ICÔNE EST CELLE DE « MON PORTFOLIO »,
                OUVERTE EN HAUT À DROITE, avec un petit « + » dans
@@ -1053,8 +1095,8 @@ export function MenuEspace({
                sa ligne (nº 532). La boîte de largeur fixe, elle, est la
                même que ses voisines — les libellés partent tous du même
                pixel. */}
-          <span className={REGLAGE_LIGNE.boite}>
-            <IconeAjouterPortfolio taille={REGLAGE_LIGNE.taille} />
+          <span className={reglages.ligne.boite}>
+            <IconeAjouterPortfolio taille={reglages.ligne.taille} />
           </span>
           <span className="flex-1">Ajouter un portfolio</span>
         </button>
@@ -1093,10 +1135,10 @@ export function MenuEspace({
          */}
         {plusieursFiches && (
           <div className="mx-3 mt-2 mb-3">
-            {selecteurDePortfolio(REGLAGES_SELECTEUR)}
+            {selecteurDePortfolio(reglages.selecteur)}
           </div>
         )}
-        {fiches.length > 0 && entreesDuPortfolio(REGLAGE_LIGNE)}
+        {fiches.length > 0 && entreesDuPortfolio(reglages.ligne)}
       </div>
 
       {/*  ---------- L'ENCADRÉ DU COMPTE ----------
@@ -1111,7 +1153,7 @@ export function MenuEspace({
            de moins raccourcit la page : le défaut ne peut que s'en
            éloigner. */}
       <div className={`p-2 ${CLASSE_ENCADRE}`}>
-        {entreesDuCompte(REGLAGE_LIGNE)}
+        {entreesDuCompte(reglages.ligne)}
       </div>
     </div>
   );
@@ -1196,6 +1238,9 @@ export function MenuEspace({
             ancre={zone}
             refPanneau={plaqueWeb}
             largeur={290}
+            //  §6 (nº 537) — cette fenêtre-ci n'est plus en verre :
+            //  fond opaque, le jeton du fond de page (voir MenuDeVerre).
+            opaque
             alignement="droite"
             role="dialog"
             aria-label="Mon espace"
@@ -1223,7 +1268,7 @@ export function MenuEspace({
                  une fenêtre posée sous un bouton n'a pas de barre de
                  navigateur sous elle. Le web garde 16 px, l'air d'un
                  encadré. */}
-            <div className="pb-4">{contenuDuCompte}</div>
+            <div className="pb-4">{contenuDuCompte(REGLAGES_WEB)}</div>
           </MenuDeVerre>
 
           {/*  ██ SMARTPHONE — UNE PAGE, PLUS UNE FENÊTRE (§4, nº 465) ██
@@ -1311,7 +1356,7 @@ export function MenuEspace({
                  plus en bas de page, donc encore de la hauteur et un
                  gris de plus près du bord. */}
             <div className="grow pb-[max(4.5rem,env(safe-area-inset-bottom))]">
-              {contenuDuCompte}
+              {contenuDuCompte(REGLAGES_DOIGT)}
             </div>
           </PagePleinEcranMobile>
         </>
