@@ -40,9 +40,12 @@ export function EnTetePleinEcran({
   ariaLabelFermer = "Fermer",
   actions,
   marqueRecherche = false,
+  enTeteCentre = false,
   children,
 }: {
-  /** L'icône du titre — au rang 22, en blanc (celui de la loupe). */
+  /** L'icône du titre — au rang 22, en blanc (celui de la loupe).
+      §1 (nº 530) — SAUF EN TÊTE CENTRÉE, où l'appelant l'agrandit :
+      c'est LUI qui fabrique l'élément, la taille lui appartient. */
   icone: React.ReactNode;
   titre: string;
   /** La croix : on referme sans rien appliquer. */
@@ -52,38 +55,73 @@ export function EnTetePleinEcran({
       notifications) — rien pour les autres porteurs. */
   actions?: React.ReactNode;
   marqueRecherche?: boolean;
+  /**
+   * ██ §1 (nº 530) — L'ICÔNE ET LE TITRE PASSENT AU CENTRE ██
+   * ------------------------------------------------------------------
+   * « Mon compte » veut son icône centrée en haut et son titre CENTRÉ
+   * DESSOUS ; les trois autres porteurs (Notifications, Langue,
+   * Ajouter un style) gardent le gabarit de la nº 465 — titre à
+   * gauche, icône à sa gauche, croix à droite.
+   * ⚠️ SUR DEMANDE, ET C'EST TOUT LE POINT : le drapeau est FAUX par
+   * défaut, un seul appelant le passe. Ce qui n'est pas demandé ne
+   * peut pas changer — ni marge, ni taille, ni collage, ni la croix.
+   * ⚠️ LA CROIX NE BOUGE PAS D'UN PIXEL dans les deux variantes :
+   * c'est LE MÊME bloc de gestes, rendu une seule fois plus bas et
+   * posé par les deux branches. Il n'y a pas deux croix à tenir
+   * d'accord.
+   * ⚠️ ET LE TITRE RESTE LE `h1` : il change de place, pas de rang —
+   * un lecteur d'écran lit la même page.
+   */
+  enTeteCentre?: boolean;
   /** Ce qui vit SOUS la ligne du titre, dans le bloc collant (la
       bascule Réalisation | Flash de la recherche). */
   children?: React.ReactNode;
 }) {
+  /*  Les gestes de droite. Le `-mr-2` de la croix opère à travers
+      cette boîte (débord visible) : sa position est celle d'avant
+      l'extraction, au pixel. */
+  const gestes = (
+    <div className="flex shrink-0 items-center">
+      {actions}
+      <button
+        type="button"
+        onClick={surFermer}
+        aria-label={ariaLabelFermer}
+        className="flex h-11 w-11 -mr-2 items-center justify-center
+                   text-sombre-texte-doux active:text-sombre-texte
+                   transition-colors"
+      >
+        <IconeCroix taille={22} />
+      </button>
+    </div>
+  );
   return (
     <div
       {...(marqueRecherche ? { "data-entete-recherche": "" } : {})}
       className="sticky top-0 z-10 bg-sombre-fond px-4 pb-1
                  pt-[max(24px,env(safe-area-inset-top))]"
     >
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="flex items-center gap-2.5 text-[20px] font-bold text-white">
-          {icone}
-          {titre}
-        </h1>
-        {/*  Les gestes de droite. Le `-mr-2` de la croix opère à
-             travers cette boîte (débord visible) : sa position est
-             celle d'avant l'extraction, au pixel. */}
-        <div className="flex shrink-0 items-center">
-          {actions}
-          <button
-            type="button"
-            onClick={surFermer}
-            aria-label={ariaLabelFermer}
-            className="flex h-11 w-11 -mr-2 items-center justify-center
-                       text-sombre-texte-doux active:text-sombre-texte
-                       transition-colors"
-          >
-            <IconeCroix taille={22} />
-          </button>
+      {enTeteCentre ? (
+        <>
+          {/*  §1 (nº 530) — LA CROIX SEULE SUR SA LIGNE, à sa place
+               d'avant : en haut à droite, même boîte, même débord. */}
+          <div className="flex items-center justify-end">{gestes}</div>
+          {/*  §1 (nº 530) — L'ICÔNE PUIS LE TITRE, centrés. 8 px les
+               séparent, 16 px sous le titre. */}
+          <div className="flex flex-col items-center gap-2 pb-4">
+            {icone}
+            <h1 className="text-[20px] font-bold text-white">{titre}</h1>
+          </div>
+        </>
+      ) : (
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="flex items-center gap-2.5 text-[20px] font-bold text-white">
+            {icone}
+            {titre}
+          </h1>
+          {gestes}
         </div>
-      </div>
+      )}
       {children}
     </div>
   );
@@ -111,6 +149,7 @@ export function PagePleinEcranMobile({
   ariaLabelFermer,
   actions,
   sousLeTitre,
+  enTeteCentre = false,
   classeCadre = "z-[70]",
   children,
 }: {
@@ -120,6 +159,9 @@ export function PagePleinEcranMobile({
   surFermer: () => void;
   ariaLabelFermer?: string;
   actions?: React.ReactNode;
+  /** §1 (nº 530) — le passe-plat vers l'en-tête : voir sa note. Faux
+      par défaut ; seul « Mon compte » le demande. */
+  enTeteCentre?: boolean;
   /** §2-b (nº 475) — CE QUI VIT SOUS LA LIGNE DU TITRE, DANS LE BLOC
       COLLANT : le canal existait déjà dans `EnTetePleinEcran` (les
       `children` — la bascule Réalisation | Flash de la recherche) ;
@@ -247,6 +289,7 @@ export function PagePleinEcranMobile({
         surFermer={surFermer}
         ariaLabelFermer={ariaLabelFermer}
         actions={actions}
+        enTeteCentre={enTeteCentre}
       >
         {sousLeTitre}
       </EnTetePleinEcran>

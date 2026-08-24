@@ -444,8 +444,282 @@ export function MenuEspace({
   const boiteIcone =
     "flex w-[22px] shrink-0 justify-center text-sombre-texte/80";
 
-  /** LE CONTENU DU MENU — le même sur les deux appareils ; seul
-      l'habillage change (fenêtre sous le bouton / fenêtre centrée). */
+  /**
+   * ██ §1 (nº 530) — LES MORCEAUX, EXTRAITS UNE FOIS POUR DEUX PLANS ██
+   * ==================================================================
+   * Au doigt, cette page change de PLAN (des encadrés, plus une
+   * liste) ; au web elle ne change pas d'un pixel. Deux plans, donc —
+   * mais JAMAIS DEUX COMPORTEMENTS : les morceaux qui portent une
+   * adresse, un geste ou une garde sont écrits ICI, une seule fois, et
+   * les deux plans les POSENT. Aucun lien, aucune consigne de
+   * navigation, aucune règle d'enchaînement n'existe en double — c'est
+   * la seule façon qu'ils ne divergent jamais.
+   * ⚠️ CE QUI RESTE PROPRE À CHAQUE PLAN : les boîtes, et elles seules.
+   */
+
+  /**
+   * LES NOTIFICATIONS S'OUVRENT — le geste, écrit une fois (§1 nº 530).
+   * §5 (nº 238) — UNE SEULE SURFACE FLOTTANTE À LA FOIS : ouvrir les
+   * notifications FERME « Mon compte ». Les deux restaient superposées,
+   * et la fenêtre du dessous se voyait par transparence à travers celle
+   * du dessus. La fermer, elle, rend la page : elle ne rouvre rien.
+   * ██ §4 (nº 465) — AU DOIGT, C'EST L'INVERSE, sur consigne : « Mon
+   * compte » est devenu une PAGE OPAQUE (rien ne se voit par
+   * transparence — la raison du §5 nº 238 ne s'applique plus), et il
+   * RESTE OUVERT sous « Notifications » : refermer celles-ci fait
+   * RETOMBER sur « Mon compte », pas sur la page d'où il venait. Chaque
+   * surface a son étape d'historique (C-4), la garde de rang nº 465
+   * (etape-refermable) fait que le retour n'en referme qu'une. Le web
+   * ne change pas.
+   */
+  function ouvrirLesNotifications() {
+    setSelecteurOuvert(false);
+    if (!auDoigt) setOuvert(false);
+    setNotificationsOuvertes(true);
+  }
+
+  /**
+   * ██ §1 (nº 530) — LES MORCEAUX, EXTRAITS UNE FOIS POUR DEUX PLANS ██
+   * ==================================================================
+   * Au doigt, cette page change de PLAN (des encadrés, plus une liste) ;
+   * au web elle ne change pas d'un pixel. Deux plans, donc — mais
+   * JAMAIS DEUX COMPORTEMENTS : ce qui porte une adresse, un geste ou
+   * une garde est écrit ICI, une seule fois, et les deux plans le
+   * POSENT. Aucun lien, aucune consigne de navigation, aucune règle
+   * d'enchaînement n'existe en double — c'est la seule façon qu'ils ne
+   * divergent jamais.
+   * ⚠️ CE QUI RESTE PROPRE À CHAQUE PLAN : les boîtes, et elles seules.
+   */
+
+  /** LE SÉLECTEUR DE PORTFOLIO — `null` tant qu'il n'y a qu'un seul
+      portfolio (acquis nº 472-§3b : rien à choisir, rien à ouvrir). */
+  const selecteurDePortfolio = plusieursFiches ? (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setSelecteurOuvert((v) => !v)}
+        aria-expanded={selecteurOuvert}
+        // IL DOIT SE VOIR QU'ON PEUT L'OUVRIR — mais SANS CONTOUR
+        // (charte, nº 132) : c'est un CHAMP, il se dit par son
+        // FOND et par son chevron. À l'ouverture le fond
+        // s'éclaircit encore — la grammaire du focus des champs,
+        // sans un trait.
+        // ⚠️ ENCORE UN CRAN (passe nº 146-§3, deuxième signalement) :
+        // la fenêtre a été éclaircie à la nº 144 (`carte` → `eleve`)
+        // mais le sélecteur, resté à `bordure` (56,56,63) sur le
+        // bloc `eleve-clair/70`, ne s'en détachait plus. Il prend
+        // `haut` (65,65,73) au repos et `haut-clair` (75,75,84)
+        // ouvert : chaque niveau s'éclaircit, jamais de contour.
+        //  §2 (nº 289) — LE LISERÉ DE VERRE : l'exception de la
+        //  charte, dosée pour se sentir sans se voir (globals.css,
+        //  [data-verre-champ]).
+        data-verre-champ=""
+        className={`flex w-full items-center gap-3 rounded-xl px-3
+                   min-h-[54px] text-left transition-colors ${
+                     selecteurOuvert
+                       ? "bg-sombre-haut-clair"
+                       : "bg-sombre-haut hover:bg-sombre-haut-clair"
+                   }`}
+      >
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[14.5px] font-semibold text-sombre-texte leading-tight">
+            {fiche ? fiche.nom : "Aucun portfolio"}
+          </span>
+          <span className="mt-1 flex items-center gap-1.5">
+            <span
+              aria-hidden="true"
+              className={`h-1.5 w-1.5 shrink-0 rounded-full ${COULEUR_ETAT[etat]}`}
+            />
+            <span className="text-[12px] text-sombre-texte-doux leading-none">
+              {LIBELLE_ETAT[etat]}
+            </span>
+          </span>
+        </span>
+        {/*  ⚠️ LE CHEVRON NE ROSIT PLUS OUVERT (nº 144-§2) : la
+             ROTATION dit déjà l'état, et le rose est réservé aux
+             accents forts — pas aux fenêtres ouvertes. */}
+        <IconeChevronBas
+          taille={16}
+          classe={`shrink-0 transition-transform text-sombre-texte-doux ${
+            selecteurOuvert ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      {selecteurOuvert && (
+        //  La liste au MÊME niveau que le champ ouvert (nº 134) :
+        //  elle le prolonge, elle ne peut pas être plus sombre.
+        <div
+          className="absolute left-0 right-0 top-full z-20 mt-1
+                     rounded-xl bg-sombre-haut-clair overflow-hidden"
+        >
+          {/*  §2 (nº 286) — LA BARRE DE DÉFILEMENT SE VOIT DÈS QUE
+               LA LISTE DÉBORDE.
+               LE DÉFAUT : le propriétaire a CINQ portfolios, la
+               liste en montre trois (220 px), et RIEN ne disait
+               qu'il y en avait d'autres — la règle globale du site
+               masque toutes les barres (`*:not(.defilement-visible)`,
+               globals.css). Son cinquième portfolio était
+               invisible, et rien ne l'invitait à faire défiler.
+               LE REMÈDE EST L'EXCEPTION DÉJÀ ÉCRITE, celle des
+               menus déroulants : `defilement-visible`. Elle ne
+               dessine RIEN quand le contenu tient (c'est
+               `overflow-y: auto` qui décide, pas la classe), et
+               sort un curseur fin et arrondi dès qu'il déborde —
+               sans piste, sans contour, dans le gris des bordures
+               du site. AUCUNE valeur graphique n'est écrite ici :
+               on consomme celle de globals.css. */}
+          <ul className="max-h-[220px] overflow-y-auto overscroll-contain defilement-visible">
+            {fiches.map((entree) => {
+              const etatEntree = etatDeLaFiche(entree);
+              const choisie = entree.id === fiche?.id;
+              return (
+                <li key={entree.id}>
+                  {/* ⚠️ EXACTEMENT LA MÊME COMPOSITION QUE L'ENTRÉE
+                      SÉLECTIONNÉE, au-dessus : le nom sur la
+                      première ligne, puis la pastille et l'état
+                      SOUS le nom, alignés sur lui.
+                      La pastille était posée À GAUCHE du bloc,
+                      centrée entre les deux lignes : les noms de
+                      la liste se retrouvaient décalés par rapport
+                      au nom affiché dans le sélecteur, et l'œil
+                      ne reconnaissait plus la même chose. */}
+                  <button
+                    type="button"
+                    onClick={() => choisirFiche(entree.id)}
+                    className={`block w-full px-3 py-2.5 text-left
+                               transition-colors hover:bg-white/[0.06] ${
+                                 choisie ? "bg-white/[0.04]" : ""
+                               }`}
+                  >
+                    <span className="block truncate text-[14.5px] font-semibold text-sombre-texte leading-tight">
+                      {entree.nom}
+                    </span>
+                    <span className="mt-1 flex items-center gap-1.5">
+                      <span
+                        aria-hidden="true"
+                        className={`h-1.5 w-1.5 shrink-0 rounded-full ${COULEUR_ETAT[etatEntree]}`}
+                      />
+                      <span className="text-[12px] text-sombre-texte-doux leading-none">
+                        {LIBELLE_ETAT[etatEntree]}
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+    </div>
+  ) : null;
+
+  /** LES DEUX ENTRÉES DU PORTFOLIO CHOISI — « Mon portfolio » d'abord
+      (acquis nº 472-§3a), puis « Modification ». */
+  const entreesDuPortfolio = (
+    <nav aria-label="Le portfolio choisi" className="flex flex-col gap-0.5">
+      {/*  ██ §3-a (nº 472) — « MON PORTFOLIO » PASSE EN PREMIER ██
+           Les deux entrées sont ÉCHANGÉES, sur consigne : on
+           regarde son portfolio avant de le modifier. Rien d'autre
+           ne bouge — mêmes liens, mêmes icônes, mêmes adresses,
+           mêmes consignes de navigation. */}
+      {/* L'aperçu public réel.
+          §4 (nº 330) — ET IL PORTE LA CONSIGNE DES LIENS INTERNES.
+          « Mon portfolio » mène à un portfolio par un LIEN : la
+          photo du haut ne monte pas, exactement comme depuis une
+          fiche d'équipe ou le rond de profil de « Ma sélection »
+          (point 6 de la règle, lib/navigation-session). La
+          consigne vit dans l'adresse et s'écrit par l'écriture
+          unique — jamais à la main. */}
+      <Link
+        href={avecConsigneDeLienInterne(versFiche("vue=apercu"))}
+        replace={liensRemplacent}
+        onClick={() => setOuvert(false)}
+        className={classeEntree}
+      >
+        <span className={boiteIcone}>
+          <IconeUtilisateur taille={22} />
+        </span>
+        Mon portfolio
+      </Link>
+
+      {/* Le formulaire, en haut de page. L'ÉVÉNEMENT prévient le
+          formulaire s'il est DÉJÀ affiché (naviguer vers la même
+          adresse ne déclenche rien) : il remonte alors la page et
+          rouvre l'annonce de validation lui-même. */}
+      <Link
+        href={versFiche()}
+        replace={liensRemplacent}
+        onClick={() => {
+          setOuvert(false);
+          window.dispatchEvent(new Event("yokofolio-modification-demandee"));
+        }}
+        className={classeEntree}
+      >
+        <span className={boiteIcone}>
+          <IconeReglages taille={22} />
+        </span>
+        Modification
+      </Link>
+    </nav>
+  );
+
+  /** LES TROIS ENTRÉES DU COMPTE — Langue, Sécurité, Déconnexion. */
+  const entreesDuCompte = (
+    /*  §1 (nº 530) — LE RETRAIT LATÉRAL N'EST PLUS ICI : il
+        appartenait au plan du web (`px-2`), et il l'a rejoint —
+        une enveloppe, juste en dessous. Au doigt, c'est l'encadré
+        qui donne la réserve. La géométrie du web ne bouge pas :
+        mêmes 8 px, sur une boîte au lieu du nav. */
+    <nav aria-label="Mon compte" className="flex flex-col gap-0.5">
+      {/* LA LANGUE — AU-DESSUS DE SÉCURITÉ (passe nº 137). Le globe
+          a quitté la barre fixe, où le CŒUR des favoris a pris sa
+          place une fois connecté : une barre de smartphone n'a pas
+          de quoi porter les deux. Il ouvre EXACTEMENT la même
+          fenêtre que le globe de la barre — c'est le même composant.
+          ⚠️ LA LIGNE SEULE (nº 238-§5) : la fenêtre est montée PLUS
+          BAS, hors du menu. Tant qu'elle vivait ici, refermer « Mon
+          compte » l'aurait emportée avec lui — les deux ne pouvaient
+          qu'être empilées. Et la ligne porte enfin la classe
+          commune : elle gardait un survol en aplat (nº 237-§2). */}
+      <EntreeLangue
+        classe={classeEntree}
+        surOuvrir={() => {
+          //  §4 (nº 465) — même règle que « Notifications » : au
+          //  doigt, « Mon compte » (devenu une page opaque) RESTE
+          //  ouvert sous « Langue » — la refermer y fait retomber.
+          //  Le web garde son enchaînement d'aujourd'hui.
+          if (!auDoigt) setOuvert(false);
+          setLangueOuverte(true);
+        }}
+      />
+
+      <Link
+        href="/devenir-tatoueur/securite"
+        replace={liensRemplacent}
+        onClick={() => setOuvert(false)}
+        className={classeEntree}
+      >
+        <span className={boiteIcone}>
+          {/* UN BOUCLIER, plus un cadenas (nº 129) : le cadenas dit
+              « c'est fermé », le bouclier dit « c'est protégé » —
+              c'est bien de cela qu'il s'agit ici. */}
+          <IconeBouclierTrait taille={22} />
+        </span>
+        Sécurité
+      </Link>
+
+      <button type="button" onClick={deconnecter} className={classeEntree}>
+        <span className={boiteIcone}>
+          <IconeSortie taille={22} />
+        </span>
+        Déconnexion
+      </button>
+    </nav>
+  );
+
+  /** LE CONTENU DU MENU — LE PLAN DU WEB, inchangé depuis toujours :
+      une seule colonne d'entrées, le bloc du portfolio au milieu. */
   const contenuMenu = (
     <div className="py-2 flex flex-col gap-1">
       {/* ---------- 1. LES NOTIFICATIONS — hors du bloc de la fiche :
@@ -454,25 +728,7 @@ export function MenuEspace({
       <div className="px-2">
         <button
           type="button"
-          onClick={() => {
-            setSelecteurOuvert(false);
-            //  §5 (nº 238) — UNE SEULE SURFACE FLOTTANTE À LA FOIS :
-            //  ouvrir les notifications FERME « Mon compte ». Les deux
-            //  restaient superposées, et la fenêtre du dessous se
-            //  voyait par transparence à travers celle du dessus.
-            //  La fermer, elle, rend la page : elle ne rouvre rien.
-            //  ██ §4 (nº 465) — AU DOIGT, C'EST L'INVERSE, sur
-            //  consigne : « Mon compte » est devenu une PAGE OPAQUE
-            //  (rien ne se voit par transparence — la raison du §5
-            //  nº 238 ne s'applique plus), et il RESTE OUVERT sous
-            //  « Notifications » : refermer celles-ci fait RETOMBER
-            //  sur « Mon compte », pas sur la page d'où il venait.
-            //  Chaque surface a son étape d'historique (C-4), la
-            //  garde de rang nº 465 (etape-refermable) fait que le
-            //  retour n'en referme qu'une. Le web ne change pas.
-            if (!auDoigt) setOuvert(false);
-            setNotificationsOuvertes(true);
-          }}
+          onClick={ouvrirLesNotifications}
           className={classeEntree}
         >
           <span className={boiteIcone}>
@@ -489,6 +745,10 @@ export function MenuEspace({
             </span>
           )}
         </button>
+        {/*  §1 (nº 530) — LE GESTE DES NOTIFICATIONS A DÉMÉNAGÉ juste
+             au-dessus de `contenuMenu` (`ouvrirLesNotifications`) : la
+             tuile du doigt appelle LE MÊME. Sa note, qui porte les
+             règles nº 238-§5 et nº 465-§4, l'a suivi. */}
 
         {/* ---------- 2. MA SÉLECTION (passe nº 137, renommée à la
             nº 145-§3) — SOUS Notifications.
@@ -607,221 +867,143 @@ export function MenuEspace({
              portfolio, avec sa liste, ses pastilles et son fond clair
              — le comportement à deux et plus ne change pas d'une
              ligne. */}
-        {plusieursFiches && (
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setSelecteurOuvert((v) => !v)}
-            aria-expanded={selecteurOuvert}
-            // IL DOIT SE VOIR QU'ON PEUT L'OUVRIR — mais SANS CONTOUR
-            // (charte, nº 132) : c'est un CHAMP, il se dit par son
-            // FOND et par son chevron. À l'ouverture le fond
-            // s'éclaircit encore — la grammaire du focus des champs,
-            // sans un trait.
-            // ⚠️ ENCORE UN CRAN (passe nº 146-§3, deuxième signalement) :
-            // la fenêtre a été éclaircie à la nº 144 (`carte` → `eleve`)
-            // mais le sélecteur, resté à `bordure` (56,56,63) sur le
-            // bloc `eleve-clair/70`, ne s'en détachait plus. Il prend
-            // `haut` (65,65,73) au repos et `haut-clair` (75,75,84)
-            // ouvert : chaque niveau s'éclaircit, jamais de contour.
-            //  §2 (nº 289) — LE LISERÉ DE VERRE : l'exception de la
-            //  charte, dosée pour se sentir sans se voir (globals.css,
-            //  [data-verre-champ]).
-            data-verre-champ=""
-            className={`flex w-full items-center gap-3 rounded-xl px-3
-                       min-h-[54px] text-left transition-colors ${
-                         selecteurOuvert
-                           ? "bg-sombre-haut-clair"
-                           : "bg-sombre-haut hover:bg-sombre-haut-clair"
-                       }`}
-          >
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-[14.5px] font-semibold text-sombre-texte leading-tight">
-                {fiche ? fiche.nom : "Aucun portfolio"}
-              </span>
-              <span className="mt-1 flex items-center gap-1.5">
-                <span
-                  aria-hidden="true"
-                  className={`h-1.5 w-1.5 shrink-0 rounded-full ${COULEUR_ETAT[etat]}`}
-                />
-                <span className="text-[12px] text-sombre-texte-doux leading-none">
-                  {LIBELLE_ETAT[etat]}
-                </span>
-              </span>
-            </span>
-            {/*  ⚠️ LE CHEVRON NE ROSIT PLUS OUVERT (nº 144-§2) : la
-                 ROTATION dit déjà l'état, et le rose est réservé aux
-                 accents forts — pas aux fenêtres ouvertes. */}
-            <IconeChevronBas
-              taille={16}
-              classe={`shrink-0 transition-transform text-sombre-texte-doux ${
-                selecteurOuvert ? "rotate-180" : ""
-              }`}
-            />
-          </button>
+        {selecteurDePortfolio}
 
-          {selecteurOuvert && (
-            //  La liste au MÊME niveau que le champ ouvert (nº 134) :
-            //  elle le prolonge, elle ne peut pas être plus sombre.
-            <div
-              className="absolute left-0 right-0 top-full z-20 mt-1
-                         rounded-xl bg-sombre-haut-clair overflow-hidden"
-            >
-              {/*  §2 (nº 286) — LA BARRE DE DÉFILEMENT SE VOIT DÈS QUE
-                   LA LISTE DÉBORDE.
-                   LE DÉFAUT : le propriétaire a CINQ portfolios, la
-                   liste en montre trois (220 px), et RIEN ne disait
-                   qu'il y en avait d'autres — la règle globale du site
-                   masque toutes les barres (`*:not(.defilement-visible)`,
-                   globals.css). Son cinquième portfolio était
-                   invisible, et rien ne l'invitait à faire défiler.
-                   LE REMÈDE EST L'EXCEPTION DÉJÀ ÉCRITE, celle des
-                   menus déroulants : `defilement-visible`. Elle ne
-                   dessine RIEN quand le contenu tient (c'est
-                   `overflow-y: auto` qui décide, pas la classe), et
-                   sort un curseur fin et arrondi dès qu'il déborde —
-                   sans piste, sans contour, dans le gris des bordures
-                   du site. AUCUNE valeur graphique n'est écrite ici :
-                   on consomme celle de globals.css. */}
-              <ul className="max-h-[220px] overflow-y-auto overscroll-contain defilement-visible">
-                {fiches.map((entree) => {
-                  const etatEntree = etatDeLaFiche(entree);
-                  const choisie = entree.id === fiche?.id;
-                  return (
-                    <li key={entree.id}>
-                      {/* ⚠️ EXACTEMENT LA MÊME COMPOSITION QUE L'ENTRÉE
-                          SÉLECTIONNÉE, au-dessus : le nom sur la
-                          première ligne, puis la pastille et l'état
-                          SOUS le nom, alignés sur lui.
-                          La pastille était posée À GAUCHE du bloc,
-                          centrée entre les deux lignes : les noms de
-                          la liste se retrouvaient décalés par rapport
-                          au nom affiché dans le sélecteur, et l'œil
-                          ne reconnaissait plus la même chose. */}
-                      <button
-                        type="button"
-                        onClick={() => choisirFiche(entree.id)}
-                        className={`block w-full px-3 py-2.5 text-left
-                                   transition-colors hover:bg-white/[0.06] ${
-                                     choisie ? "bg-white/[0.04]" : ""
-                                   }`}
-                      >
-                        <span className="block truncate text-[14.5px] font-semibold text-sombre-texte leading-tight">
-                          {entree.nom}
-                        </span>
-                        <span className="mt-1 flex items-center gap-1.5">
-                          <span
-                            aria-hidden="true"
-                            className={`h-1.5 w-1.5 shrink-0 rounded-full ${COULEUR_ETAT[etatEntree]}`}
-                          />
-                          <span className="text-[12px] text-sombre-texte-doux leading-none">
-                            {LIBELLE_ETAT[etatEntree]}
-                          </span>
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          )}
-        </div>
-        )}
-
-        <nav aria-label="Le portfolio choisi" className="flex flex-col gap-0.5">
-          {/*  ██ §3-a (nº 472) — « MON PORTFOLIO » PASSE EN PREMIER ██
-               Les deux entrées sont ÉCHANGÉES, sur consigne : on
-               regarde son portfolio avant de le modifier. Rien d'autre
-               ne bouge — mêmes liens, mêmes icônes, mêmes adresses,
-               mêmes consignes de navigation. */}
-          {/* L'aperçu public réel.
-              §4 (nº 330) — ET IL PORTE LA CONSIGNE DES LIENS INTERNES.
-              « Mon portfolio » mène à un portfolio par un LIEN : la
-              photo du haut ne monte pas, exactement comme depuis une
-              fiche d'équipe ou le rond de profil de « Ma sélection »
-              (point 6 de la règle, lib/navigation-session). La
-              consigne vit dans l'adresse et s'écrit par l'écriture
-              unique — jamais à la main. */}
-          <Link
-            href={avecConsigneDeLienInterne(versFiche("vue=apercu"))}
-            replace={liensRemplacent}
-            onClick={() => setOuvert(false)}
-            className={classeEntree}
-          >
-            <span className={boiteIcone}>
-              <IconeUtilisateur taille={22} />
-            </span>
-            Mon portfolio
-          </Link>
-
-          {/* Le formulaire, en haut de page. L'ÉVÉNEMENT prévient le
-              formulaire s'il est DÉJÀ affiché (naviguer vers la même
-              adresse ne déclenche rien) : il remonte alors la page et
-              rouvre l'annonce de validation lui-même. */}
-          <Link
-            href={versFiche()}
-            replace={liensRemplacent}
-            onClick={() => {
-              setOuvert(false);
-              window.dispatchEvent(new Event("yokofolio-modification-demandee"));
-            }}
-            className={classeEntree}
-          >
-            <span className={boiteIcone}>
-              <IconeReglages taille={22} />
-            </span>
-            Modification
-          </Link>
-        </nav>
+        {entreesDuPortfolio}
       </div>
       )}
 
       {/* ---------- LE COMPTE, hors du bloc : sur le fond normal. */}
-      <nav aria-label="Mon compte" className="px-2 flex flex-col gap-0.5">
-        {/* LA LANGUE — AU-DESSUS DE SÉCURITÉ (passe nº 137). Le globe
-            a quitté la barre fixe, où le CŒUR des favoris a pris sa
-            place une fois connecté : une barre de smartphone n'a pas
-            de quoi porter les deux. Il ouvre EXACTEMENT la même
-            fenêtre que le globe de la barre — c'est le même composant.
-            ⚠️ LA LIGNE SEULE (nº 238-§5) : la fenêtre est montée PLUS
-            BAS, hors du menu. Tant qu'elle vivait ici, refermer « Mon
-            compte » l'aurait emportée avec lui — les deux ne pouvaient
-            qu'être empilées. Et la ligne porte enfin la classe
-            commune : elle gardait un survol en aplat (nº 237-§2). */}
-        <EntreeLangue
-          classe={classeEntree}
-          surOuvrir={() => {
-            //  §4 (nº 465) — même règle que « Notifications » : au
-            //  doigt, « Mon compte » (devenu une page opaque) RESTE
-            //  ouvert sous « Langue » — la refermer y fait retomber.
-            //  Le web garde son enchaînement d'aujourd'hui.
-            if (!auDoigt) setOuvert(false);
-            setLangueOuverte(true);
-          }}
-        />
+      <div className="px-2">{entreesDuCompte}</div>
+    </div>
+  );
+
+  /**
+   * ██ §1 (nº 530) — LE PLAN DU DOIGT : DES ENCADRÉS ██
+   * ==================================================================
+   * La colonne d'entrées du web devient, au doigt, TROIS ENCADRÉS :
+   * une rangée de trois tuiles (Notifications · Sélection · Ajouter),
+   * l'encadré du portfolio, l'encadré du compte. Les gestes et les
+   * adresses sont ceux du plan du web, aux mêmes objets près : seules
+   * les boîtes changent.
+   *
+   * LE FOND ET LE RAYON VIENNENT DES PLAQUES DE PROFIL (nº 502) :
+   * `sombre-eleve` (#262C34) et `rounded-xl`. Je ne consomme PAS la
+   * chaîne `ENCADRE_MEMBRE` de plaque.ts, et voici pourquoi : elle
+   * décrit une RANGÉE (`flex items-start gap-3.5`) faite pour un
+   * avatar suivi d'un texte, avec 12 px sur les quatre côtés. Ici les
+   * encadrés sont des COLONNES, et leurs lignes portent DÉJÀ leur
+   * propre retrait (`classeEntree`, 12 px) : reprendre les 12 px de la
+   * plaque les aurait ajoutés aux leurs — le texte serait parti à
+   * 24 px du bord. Ce qui est repris, ce sont les deux valeurs qui
+   * font la plaque : sa couleur et son arrondi.
+   *
+   * LES AIRS, tous sur l'échelle de 4 :
+   *  · entre les encadrés, et entre les trois tuiles : 12 px ;
+   *  · dans un encadré de liste : 8 px de réserve, plus les 12 px que
+   *    chaque ligne porte déjà — le texte tombe à 20 px du bord, et
+   *    l'état enfoncé d'une ligne garde 8 px de marge tout autour ;
+   *  · dans une tuile : 16 px en haut et en bas, 8 px sur les côtés
+   *    (le mot a besoin de la largeur), 8 px entre l'icône et le mot.
+   *
+   * CE QUI EST CLIQUABLE, ET POURQUOI :
+   *  · UNE TUILE L'EST EN ENTIER — elle ne porte qu'un seul geste, sa
+   *    boîte EST son bouton (le motif des plaques cliquables) ;
+   *  · UN ENCADRÉ DE LISTE NE L'EST PAS — chacune de ses lignes mène
+   *    ailleurs. Une boîte cliquable qui contient trois destinations
+   *    ne saurait pas où aller.
+   *
+   * ⚠️ CE QUE DEVIENT LE FOND CLAIR DE LA nº 472, ET JE LE DIS : au
+   * doigt, il n'existe plus — non pas retiré, mais SANS OBJET. Il
+   * disait « ce bloc dépend du portfolio choisi » en éclaircissant le
+   * fond du menu ; désormais TOUS les blocs de cette page ont le même
+   * fond d'encadré, la nuance ne peut plus rien distinguer. LA RÈGLE
+   * DE LA nº 472 TIENT INTACTE, elle : avec un seul portfolio, pas de
+   * déroulant (`selecteurDePortfolio` rend `null`). Et le web garde le
+   * fond clair au pixel, puisqu'il garde son plan.
+   */
+  const CLASSE_ENCADRE = "rounded-xl bg-sombre-eleve";
+  /*  La tuile : sa boîte est son bouton. Le survol et l'appui
+      reprennent l'écriture des plaques cliquables (nº 502) — une seule
+      couleur de fond, remplacée, jamais empilée. */
+  const CLASSE_TUILE =
+    `flex flex-col items-center gap-2 px-2 py-4 ${CLASSE_ENCADRE} ` +
+    "transition-colors hover:bg-sombre-eleve-clair active:bg-sombre-eleve-clair";
+  const CLASSE_TUILE_ICONE = "flex justify-center text-sombre-texte/80";
+  /*  ⚠️ `[overflow-wrap:anywhere]` : sur un écran très étroit
+      (320 px), « Notifications » est plus long que sa tuile. Sans
+      cela il déborderait — ou pousserait la rangée et ouvrirait un
+      défilement horizontal. Avec, le mot passe à la ligne, et la
+      grille (qui étire ses cases) donne AUX TROIS la hauteur de la
+      plus haute : la rangée reste régulière. */
+  const CLASSE_TUILE_MOT =
+    "text-[13px] font-semibold leading-tight text-center text-sombre-texte " +
+    "[overflow-wrap:anywhere]";
+
+  const contenuMenuDoigt = (
+    <div className="flex flex-col gap-3 px-4 pt-1">
+      {/* ---------- LA RANGÉE DE TROIS ---------- */}
+      <div className="grid grid-cols-3 gap-3">
+        <button
+          type="button"
+          onClick={ouvrirLesNotifications}
+          className={CLASSE_TUILE}
+        >
+          {/*  LA PASTILLE DES NON LUES se pose SUR la cloche : dans une
+               tuile, le mot est sous l'icône — il n'y a plus de place à
+               sa droite. Même écriture qu'au web (le rose des
+               compteurs, son usage d'origine), même contenu. */}
+          <span className={`relative ${CLASSE_TUILE_ICONE}`}>
+            <IconeCloche taille={22} />
+            {nonLues > 0 && (
+              <span
+                aria-label={`${nonLues} non lue${nonLues > 1 ? "s" : ""}`}
+                className="absolute -right-3 -top-1 min-w-[20px] h-5 px-1.5 rounded-full bg-primaire
+                           text-[11.5px] font-bold text-white leading-5 text-center"
+              >
+                {nonLues > 99 ? "99+" : nonLues}
+              </span>
+            )}
+          </span>
+          <span className={CLASSE_TUILE_MOT}>Notifications</span>
+        </button>
 
         <Link
-          href="/devenir-tatoueur/securite"
+          href="/mes-favoris"
           replace={liensRemplacent}
           onClick={() => setOuvert(false)}
-          className={classeEntree}
+          className={CLASSE_TUILE}
         >
-          <span className={boiteIcone}>
-            {/* UN BOUCLIER, plus un cadenas (nº 129) : le cadenas dit
-                « c'est fermé », le bouclier dit « c'est protégé » —
-                c'est bien de cela qu'il s'agit ici. */}
-            <IconeBouclierTrait taille={22} />
+          <span className={CLASSE_TUILE_ICONE}>
+            <IconeFanion taille={22} />
           </span>
-          Sécurité
+          <span className={CLASSE_TUILE_MOT}>Sélection</span>
         </Link>
 
-        <button type="button" onClick={deconnecter} className={classeEntree}>
-          <span className={boiteIcone}>
-            <IconeSortie taille={22} />
+        <button
+          type="button"
+          onClick={demanderUneNouvelleFiche}
+          className={CLASSE_TUILE}
+        >
+          <span className={CLASSE_TUILE_ICONE}>
+            <IconePlus taille={22} />
           </span>
-          Déconnexion
+          <span className={CLASSE_TUILE_MOT}>Ajouter</span>
         </button>
-      </nav>
+      </div>
+
+      {/* ---------- L'ENCADRÉ DU PORTFOLIO ----------
+           Il disparaît entier tant qu'aucun portfolio n'a été envoyé —
+           la garde de toujours, celle du plan du web. */}
+      {fiches.length > 0 && (
+        <div className={`flex flex-col gap-1 p-2 ${CLASSE_ENCADRE}`}>
+          {selecteurDePortfolio}
+          {entreesDuPortfolio}
+        </div>
+      )}
+
+      {/* ---------- L'ENCADRÉ DU COMPTE ---------- */}
+      <div className={`p-2 ${CLASSE_ENCADRE}`}>{entreesDuCompte}</div>
     </div>
   );
 
@@ -930,14 +1112,25 @@ export function MenuEspace({
                « Notifications » s'ouvrent PAR-DESSUS (z-[85] contre
                z-[70] ici) pendant que cette page reste montée
                dessous : les refermer y fait retomber. */}
+          {/*  ██ §1 (nº 530) — L'EN-TÊTE CENTRÉE, ET L'ICÔNE DOUBLÉE ██
+               `enTeteCentre` déplace l'icône et le titre au centre, la
+               croix ne bouge pas (voir EnTetePleinEcran). LA TAILLE DE
+               L'ICÔNE APPARTIENT À L'APPELANT : elle passe de 22 à 44,
+               le double demandé. Les trois autres porteurs du gabarit
+               ne passent pas le drapeau et gardent leurs 22 px à
+               gauche du titre.
+               ⚠️ ET LE CONTENU CHANGE DE PLAN, LUI AUSSI : c'est
+               `contenuMenuDoigt` qui est posé ici, pas `contenuMenu` —
+               celui-ci reste au web, intact. */}
           <PagePleinEcranMobile
             titre="Mon compte"
-            icone={<IconeSilhouette taille={22} classe="shrink-0 text-white" />}
+            icone={<IconeSilhouette taille={44} classe="shrink-0 text-white" />}
             ariaLabel="Mon compte"
+            enTeteCentre
             surFermer={() => setOuvert(false)}
           >
-            <div className="grow pt-2 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-              {contenuMenu}
+            <div className="grow pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+              {contenuMenuDoigt}
             </div>
           </PagePleinEcranMobile>
         </>
