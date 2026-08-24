@@ -100,6 +100,10 @@ export function FenetreInvitationCompte({
       ariaLabelledby="titre-invitation-compte"
       surFermeture={surFermeture}
       largeur="max-w-[400px]"
+      //  §1 (nº 544) — FOND OPAQUE au jeton `carte` : le drapeau de la
+      //  nº 543, la teinte des nº 542-543. Ni la place, ni la largeur,
+      //  ni le voile ne changent.
+      opaque
     >
       {/*  ██ §1 (nº 397) — LA CROIX EST PARTIE ██
            Le propriétaire la retire : l'appui à côté et Échap

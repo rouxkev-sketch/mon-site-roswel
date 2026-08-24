@@ -1119,8 +1119,19 @@ function FenetreAdresse({
            d'arrière-plan pendant l'ouverture (voir la note ci-dessus).
            Le fondu appartient au voile. */}
       <div
-        data-verre-fenetre=""
-        className="relative w-full max-w-[360px] rounded-3xl p-6"
+        /*  §1 (nº 544) — CETTE PLAQUE N'EST PLUS EN VERRE. L'attribut
+             de verre est retiré et le jeton `carte` de la nº 466 le
+             remplace — la teinte des nº 542-543, que le propriétaire
+             étend aux fenêtres superposées. `globals.css` n'est pas
+             touché (règle nº 172). Le LISERÉ part avec l'attribut : il
+             n'a plus d'épaisseur de verre à suggérer.
+             ⚠️ RIEN D'AUTRE NE BOUGE : ni la largeur, ni l'arrondi, ni
+             le rembourrage, ni le voile au-dessus.
+             ⚠️ LES DEUX CAPSULES DE VERRE DE CETTE FENÊTRE (blanc à
+             20 %, et l'action rose à 40 %) NE SONT PAS TOUCHÉES : ce
+             sont des voiles, et un voile blanc se voit MIEUX sur une
+             plaque plus claire (1,82 → 1,92). */
+        className="relative w-full max-w-[360px] rounded-3xl bg-sombre-carte p-6"
       >
         {/*  DEUX CAPSULES, ET RIEN D'AUTRE (nº 231-§2). « Copier
              l'adresse » — LE JUMEAU EXACT du badge d'ouverture : même

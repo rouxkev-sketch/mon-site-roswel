@@ -1506,10 +1506,24 @@ export function BlocPortfolio({
                  le fondu, et l'iPhone montre du noir. Le fondu reste au
                  VOILE, à qui il appartient. */}
             <div
-              data-verre-fenetre=""
+              /*  ██ §1 (nº 544) — LA PLAQUE REDEVIENT OPAQUE ██
+                   La note du §1-a ci-dessus raconte la nº 304, qui
+                   l'avait fait passer d'un aplat `carte` AU VERRE pour
+                   suivre le reste du site. Le site vient de faire le
+                   chemin inverse (nº 542-543) : elle redevient donc un
+                   aplat, au MÊME jeton `carte` qu'à l'époque — la
+                   boucle se referme sur la valeur d'origine.
+                   L'attribut de verre est retiré, `globals.css` n'est
+                   pas touché (règle nº 172), le liseré part avec lui.
+                   ⚠️ CETTE FENÊTRE EST CELLE DU WEB (`mobile:hidden`,
+                   plus haut) : la page plein écran « Ajouter un style »
+                   du doigt n'est pas concernée.
+                   ⚠️ L'ombre portée est antérieure et reste ; ni la
+                   largeur, ni la hauteur maximale, ni le voile ne
+                   changent. */
               className="relative flex w-full max-w-[420px]
                          max-h-[min(80dvh,640px)] flex-col overflow-hidden
-                         rounded-xl
+                         rounded-xl bg-sombre-carte
                          shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
             >
               {/*  §1-b (nº 304) — UNE LIGNE DE SÉPARATION SOUS LE
@@ -1693,8 +1707,13 @@ export function BlocPortfolio({
                    opacity-100 transition-opacity duration-200 starting:opacity-0"
             />
             <div
-              data-verre-fenetre=""
-            className="relative w-full max-w-[380px] rounded-xl p-5
+            /*  §1 (nº 544) — PLUS DE VERRE : l'attribut est retiré, le
+                 jeton `carte` de la nº 466 le remplace (la teinte des
+                 nº 542-543). `globals.css` intact (règle nº 172), le
+                 liseré part avec l'attribut. L'ombre portée est
+                 antérieure et reste ; rien d'autre ne bouge. */
+            className="relative w-full max-w-[380px] rounded-xl
+                         bg-sombre-carte p-5
                          shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
             >
               <h2 className="text-[17px] font-bold text-sombre-texte">
@@ -1739,8 +1758,13 @@ export function BlocPortfolio({
                    opacity-100 transition-opacity duration-200 starting:opacity-0"
             />
             <div
-              data-verre-fenetre=""
-            className="relative w-full max-w-[380px] rounded-xl p-5
+            /*  §1 (nº 544) — PLUS DE VERRE : l'attribut est retiré, le
+                 jeton `carte` de la nº 466 le remplace (la teinte des
+                 nº 542-543). `globals.css` intact (règle nº 172), le
+                 liseré part avec l'attribut. L'ombre portée est
+                 antérieure et reste ; rien d'autre ne bouge. */
+            className="relative w-full max-w-[380px] rounded-xl
+                         bg-sombre-carte p-5
                          shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
             >
               <h2 className="text-[17px] font-bold text-sombre-texte">

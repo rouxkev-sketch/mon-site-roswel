@@ -113,9 +113,14 @@ export function FenetreSignalement({
                    opacity-100 transition-opacity duration-200 starting:opacity-0"
           />
           <div
-            data-verre-fenetre=""
+            /*  §1 (nº 544) — PLUS DE VERRE : l'attribut est retiré, le
+                 jeton `carte` de la nº 466 le remplace (la teinte des
+                 nº 542-543). `globals.css` intact (règle nº 172), le
+                 liseré part avec l'attribut, rien d'autre ne bouge.
+                 ⚠️ LA BORDURE CI-DESSOUS EST ANTÉRIEURE et reste :
+                 cette passe ne touche qu'à la couleur de fond. */
             className="relative w-full max-w-[440px] rounded-2xl
-                       border border-sombre-bordure p-6"
+                       border border-sombre-bordure bg-sombre-carte p-6"
           >
             {envoye ? (
               /* ---- LE REMERCIEMENT ---- */

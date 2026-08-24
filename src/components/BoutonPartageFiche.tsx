@@ -394,6 +394,11 @@ export function BoutonPartageFiche({
       ariaLabel="Partager cette fiche"
       surFermeture={fermerFenetre}
       largeur="max-w-[440px]"
+      //  §1 (nº 544) — FOND OPAQUE au jeton `carte` : le drapeau de la
+      //  nº 543, la teinte des nº 542-543. Ni la place, ni la largeur,
+      //  ni le voile ne changent. Ses capsules de verre (blanc à 20 %)
+      //  se voient MIEUX sur une plaque plus claire, pas moins bien.
+      opaque
     >
       {/*  LES QUATRE PARTAGES — l'icône, le mot dessous ; au survol,
            le voile translucide des lignes de menu (nº 237-§2), jamais

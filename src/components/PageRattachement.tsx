@@ -406,8 +406,11 @@ function BlocSuppression({
                    opacity-100 transition-opacity duration-200 starting:opacity-0"
           />
           <div
-            data-verre-fenetre=""
-            className="relative w-full max-w-[440px] rounded-xl p-6 sm:p-7 text-left"
+            /*  §1 (nº 544) — PLUS DE VERRE : l'attribut est retiré, le
+                 jeton `carte` de la nº 466 le remplace (la teinte des
+                 nº 542-543). `globals.css` intact (règle nº 172), le
+                 liseré part avec l'attribut, rien d'autre ne bouge. */
+            className="relative w-full max-w-[440px] rounded-xl bg-sombre-carte p-6 sm:p-7 text-left"
           >
             <h2 className="text-lg font-bold text-sombre-texte">
               {plusieurs ? "Supprimer mes fiches ?" : "Supprimer ma fiche ?"}

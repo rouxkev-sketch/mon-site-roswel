@@ -3834,9 +3834,13 @@ export function FormulaireFiche() {
                    opacity-100 transition-opacity duration-200 starting:opacity-0" />
           <div
             onClick={(evenement) => evenement.stopPropagation()}
-            data-verre-fenetre=""
+            /*  §1 (nº 544) — PLUS DE VERRE : l'attribut est retiré, le
+                 jeton `carte` de la nº 466 le remplace (la teinte des
+                 nº 542-543). `globals.css` intact (règle nº 172), le
+                 liseré part avec l'attribut. L'ombre portée est
+                 antérieure et reste ; rien d'autre ne bouge. */
             className="relative w-full max-w-[420px] rounded-xl
-                       p-6 sm:p-7 text-center
+                       bg-sombre-carte p-6 sm:p-7 text-center
                        shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
           >
             {/*  §1 (nº 285) — TROIS VOIX, ET PAS UNE DE PLUS.

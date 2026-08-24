@@ -40,9 +40,14 @@ export function FenetreEnvoi({
       <div aria-hidden="true" className="absolute inset-0 bg-black/25
                    opacity-100 transition-opacity duration-200 starting:opacity-0" />
       <div
-        data-verre-fenetre=""
+        /*  §1 (nº 544) — PLUS DE VERRE : l'attribut est retiré, le
+             jeton `carte` de la nº 466 le remplace (la teinte des
+             nº 542-543). `globals.css` intact (règle nº 172), le liseré
+             part avec l'attribut. L'OMBRE PORTÉE, elle, est antérieure
+             et reste : ce n'est pas un contour, et cette passe ne
+             touche qu'à la couleur de fond. */
             className="relative w-full max-w-[400px] rounded-2xl
-                   p-6 sm:p-7 text-center
+                   bg-sombre-carte p-6 sm:p-7 text-center
                    shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
       >
         <p
