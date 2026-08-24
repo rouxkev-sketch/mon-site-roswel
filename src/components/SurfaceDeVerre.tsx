@@ -147,15 +147,33 @@ export function MenuDeVerre({
    * des encadrés posés les uns sous les autres. Un fond translucide
    * sous des encadrés, c'est la page qui remonte à travers eux — le
    * propriétaire le veut OPAQUE.
-   * LA COULEUR N'EST PAS CHOISIE, ELLE EST DÉDUITE : le verre des menus
-   * EST DÉJÀ le fond de page, à 45 % (`rgba(11, 15, 20, 0.45)` —
-   * globals.css, la teinte que la nº 466 y a portée). Le rendre opaque,
-   * c'est donc le MÊME jeton à 100 % : `sombre-fond`, #0B0F14. Aucune
-   * couleur nouvelle, aucun arbitrage.
-   * ⚠️ ET LA FENÊTRE SE DÉTACHE QUAND MÊME : « Mon compte » pose le
-   * voile de la page (nº 293/294), qui assombrit tout SAUF elle. Elle
-   * paraît donc plus claire que son entourage sans porter la moindre
-   * bordure — la charte est tenue.
+   * LA COULEUR, À LA nº 537, ÉTAIT DÉDUITE : le verre des menus EST le
+   * fond de page à 45 % (globals.css, la teinte de la nº 466), et le
+   * rendre opaque revenait au MÊME jeton à 100 % — `sombre-fond`.
+   * ██ §1 (nº 542) — ELLE MONTE D'UN CRAN, ET C'EST UN ESSAI ██
+   * ------------------------------------------------------------------
+   * Le fond de page laissait la fenêtre à 1,00 de contraste avec la
+   * page : rigoureusement la même couleur. Elle prend le cran
+   * au-dessus de l'échelle de la nº 466 — `carte`, #1A1F26 — sur
+   * demande du propriétaire, qui veut JUGER cette teinte avant d'y
+   * soumettre les quatre autres fenêtres du web. Toujours aucune
+   * couleur nouvelle : c'est le jeton voisin, pas une teinte inventée.
+   * ⚠️ CE DRAPEAU N'A QU'UN SEUL PORTEUR, et c'est ce qui rend l'essai
+   * sûr : `MenuEspace` est le seul à le passer. Les autres menus de
+   * verre (les langues, le panneau des filtres du moteur) ne le
+   * passent pas — ils gardent leur plaque au pixel, et rien de ce qui
+   * s'écrit ici ne les atteint.
+   * ⚠️ CE QUE L'ESSAI COÛTE, ET IL FAUT LE SAVOIR AVANT DE L'ÉTENDRE :
+   * les encadrés et les tuiles vivent un cran plus haut (`eleve`) ;
+   * leur écart au fond de la fenêtre tombe de 1,37 à 1,18. Ils se
+   * détachent encore, mais de peu — l'échelle est serrée (le relevé
+   * nº 498). Rien n'est retouché pour compenser : le propriétaire juge
+   * sur pièce.
+   * ⚠️ ET LA FENÊTRE SE DÉTACHAIT DÉJÀ SANS COULEUR : « Mon compte »
+   * pose le voile de la page (nº 293/294), qui assombrit tout SAUF
+   * elle. Ce voile ne change pas ; la teinte lui AJOUTE un second
+   * moyen, elle ne le remplace pas. Toujours aucune bordure, aucune
+   * ombre — la charte est tenue.
    * ⚠️ SUR DEMANDE, ET C'EST TOUT LE POINT : le drapeau est FAUX par
    * défaut. Les deux autres menus de verre du site (les langues, le
    * panneau des filtres du moteur) ne le passent pas et gardent leur
@@ -188,7 +206,7 @@ export function MenuDeVerre({
       ref={refPanneau}
       {...(opaque ? {} : { "data-verre-menu": "" })}
       className={`z-[75] rounded-2xl overflow-y-auto overscroll-contain ${
-        opaque ? "bg-sombre-fond " : ""
+        opaque ? "bg-sombre-carte " : ""
       }${className}`}
       style={{
         position: "fixed",

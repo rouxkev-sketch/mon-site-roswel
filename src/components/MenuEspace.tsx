@@ -1270,8 +1270,10 @@ export function MenuEspace({
             ancre={zone}
             refPanneau={plaqueWeb}
             largeur={290}
-            //  §6 (nº 537) — cette fenêtre-ci n'est plus en verre :
-            //  fond opaque, le jeton du fond de page (voir MenuDeVerre).
+            //  §6 (nº 537) — cette fenêtre-ci n'est plus en verre : fond
+            //  opaque. §1 (nº 542) — et ce fond monte d'un cran, du
+            //  fond de page au jeton `carte` : c'est un ESSAI de teinte,
+            //  la couleur vit dans MenuDeVerre, pas ici.
             opaque
             alignement="droite"
             role="dialog"
