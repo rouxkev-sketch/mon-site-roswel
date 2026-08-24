@@ -824,8 +824,41 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
                    qui reste ci-dessus vaut comme histoire, pas comme
                    description : c'est la ligne juste dessous qui fait foi.
                    ⚠️ LE NOM, LUI, N'A PAS BOUGÉ D'UN POIL : même balise,
-                   mêmes classes, même `[overflow-wrap:anywhere]`. */}
-              <p className="text-[15px] font-medium leading-snug text-sombre-texte [overflow-wrap:anywhere]">
+                   mêmes classes, même `[overflow-wrap:anywhere]`.
+                   ██ §1 ET §2 (nº 555) — CETTE DERNIÈRE PHRASE TOMBE ██
+                   LE NOM BOUGE, sur DEUX points, et c'est le relevé de la
+                   nº 554 qui les a nommés :
+                    · LA GRAISSE — il était `font-medium` quand le nom
+                      d'un LIEU, sur une plaque rigoureusement identique
+                      (même `ENCADRE_MEMBRE`, même colonne, même 15 px,
+                      même blanc), était `font-semibold`. Deux dessins
+                      pour un même objet, sans qu'aucune note ne
+                      l'explique : c'est le défaut de la nº 498 qui se
+                      rejouait. Le membre rejoint le lieu — et rejoint du
+                      même coup la carte de la mosaïque (nº 481) et la
+                      ligne de « Ma sélection », toutes deux en
+                      `font-semibold` depuis longtemps. Il n'y avait pas
+                      de troisième graisse à aligner : les cinq plaques
+                      du site n'en portaient que deux.
+                    · LA TAILLE — 15 → 16 px. La fiche n'avait que DEUX
+                      rangs : le nom en 19-20 px, et TOUT le reste en
+                      15 px. Le nom d'une plaque est le seul texte de ce
+                      second rang qu'on cherche des yeux ; il prend donc
+                      le cran qui manquait entre les deux.
+                   ⚠️ LA HAUTEUR NE BOUGE PAS D'UN PIXEL, et c'est
+                   mesurable : la ligne passe de 20,625 px (15 × 1,375) à
+                   22 px (16 × 1,375). Le bloc de texte d'un membre à deux
+                   lignes passe donc de 43,25 à 44,625 px — toujours SOUS
+                   le plancher de 52 px (`min-h-13`) qui commande la
+                   hauteur et l'alignement sur la photo. C'est le
+                   plancher qui décide, hier comme aujourd'hui.
+                   ⚠️ ET LES NOMS LONGS SE COUPENT COMME AVANT :
+                   `[overflow-wrap:anywhere]` est intact — le nom se
+                   replie, il n'est jamais tranché ni abrégé. Un pli de
+                   plus reste sous le plancher (22 × 2 + 2 + 20,625 =
+                   66,6 px, la plaque grandit alors comme elle le faisait
+                   déjà à 15 px). */}
+              <p className="text-[16px] font-semibold leading-snug text-sombre-texte [overflow-wrap:anywhere]">
                 {membre.nom}
               </p>
               {/*  §3 (nº 313) — SES STYLES, SOUS SON RÔLE — et depuis la
@@ -870,7 +903,13 @@ function EquipeDuLieu({ equipe }: { equipe: MembreEquipe[] | null | undefined })
                        fait donc ~43 px, toujours sous le plancher de
                        52 px (`min-h-13`, nº 229 et 410) qui commande la
                        hauteur et l'alignement sur la photo de profil
-                       recentrée à la nº 389. Rien ne se décale. */
+                       recentrée à la nº 389. Rien ne se décale.
+                       ⚠️ CE TOTAL A CHANGÉ À LA nº 555, la conclusion
+                       NON : le nom au-dessus est passé à 16 px, donc le
+                       bloc à deux lignes fait 44,6 px et non plus 43,25.
+                       Toujours sous les 52 px du plancher — c'est lui
+                       qui commande, et cette ligne-ci n'a pas bougé
+                       d'un caractère. */
                   className="mt-0.5 text-[15px] leading-snug text-sombre-texte-doux"
                 >
                   {libelleStylesEquipe(membre.styles)}
@@ -1743,14 +1782,36 @@ function TroisLignesDuLieu({
            occupait cette place en capitales grises jusqu'à la nº 408.
            ⚠️ LA HAUTEUR NE CHANGE PAS : cette ligne prend exactement la
            place de l'ancienne étiquette. Les deux paragraphes de
-           `ECRITURE_TITRE_SECTION` (11 px, `leading-relaxed`) et de
-           cette ligne-ci (15 px, `leading-snug`) ne font pas la même
-           hauteur — le bloc garde donc son plancher `min-h-13` et son
-           `justify-center`, qui sont ce qui aligne la colonne sur la
+           `ECRITURE_TITRE_SECTION` et de cette ligne-ci ne font pas la
+           même hauteur — le bloc garde donc son plancher `min-h-13` et
+           son `justify-center`, qui sont ce qui aligne la colonne sur la
            pastille depuis la nº 229. C'est lui, pas la somme des
-           lignes, qui décide de la hauteur. */}
+           lignes, qui décide de la hauteur.
+           ⚠️ CETTE NOTE DISAIT « 11 px, `leading-relaxed` » POUR
+           `ECRITURE_TITRE_SECTION` : c'était faux depuis longtemps —
+           la constante vaut 13 px et ne porte aucun interligne (relevé
+           nº 554). Les deux chiffres sont retirés plutôt que corrigés :
+           une note qui recopie une valeur vivant ailleurs se périme à
+           chaque passe, et l'argument tient sans eux.
+           ██ §2 (nº 555) — LE NOM PASSE DE 15 À 16 px ██
+           LA RAISON, ET ELLE EST DE HIÉRARCHIE : la fiche n'avait que
+           deux rangs — le nom du tatoueur en 19-20 px, et TOUT le reste
+           en 15 px (relevé nº 554, §4). Le nom d'une plaque est ce
+           qu'on cherche des yeux dans ce second rang ; il prend le cran
+           qui manquait. Le nom d'un MEMBRE D'ÉQUIPE monte du même cran,
+           dans la même passe : les deux plaques ne peuvent pas
+           diverger, c'est tout le sujet du §1.
+           ⚠️ CE QUI NE MONTE PAS, ET C'EST LA MOITIÉ DE LA DEMANDE :
+           l'adresse juste dessous, les styles d'un membre, la mention
+           grise au-dessus, la bio et les lignes d'information restent
+           à 15 px. Le cran neuf est réservé aux NOMS.
+           ⚠️ LA HAUTEUR NE BOUGE TOUJOURS PAS : 16 × 1,375 = 22 px au
+           lieu de 20,625. Avec l'adresse (20,625) et les 2 px d'écart,
+           le texte occupe 44,6 px au lieu de 43,25 — sous les 52 px du
+           plancher dans les deux cas. La photo ronde recentrée à la
+           nº 389 ne se déplace pas d'un pixel. */}
       {nom && (
-        <p className="text-[15px] font-semibold leading-snug text-sombre-texte [overflow-wrap:anywhere]">
+        <p className="text-[16px] font-semibold leading-snug text-sombre-texte [overflow-wrap:anywhere]">
           <LienAdresse texte={nom} lieu={null} classeTexte="" />
         </p>
       )}
@@ -1777,7 +1838,11 @@ function TroisLignesDuLieu({
            les 52 px dans les DEUX cas. C'est donc le plancher qui
            commande la hauteur, hier comme aujourd'hui, et la photo de
            profil recentrée à la nº 389 ne bouge pas. Seul l'écart
-           INTERNE se resserre. */}
+           INTERNE se resserre.
+           ⚠️ LES CHIFFRES ONT BOUGÉ À LA nº 555, LA CONCLUSION NON : la
+           première ligne est passée à 16 px (22 px de haut), le texte
+           occupe donc 44,6 px au lieu de 43,2. Le plancher de 52 px
+           commande toujours. */}
       {/*  ██ §4 (nº 496) — LA LIGNE 2 NE PORTE PLUS QUE L'ADRESSE ██
            ==============================================================
            CE QU'ELLE CONTENAIT JUSQU'ICI : le RÔLE en blanc, puis le

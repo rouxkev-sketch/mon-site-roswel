@@ -59,6 +59,34 @@
  * ⚠️ UN MEMBRE D'ÉQUIPE, LUI, A TOUJOURS UNE PHOTO (précision du
  * propriétaire, nº 524) : son rond n'a pas d'état de repli, et il
  * n'existe aucune pastille d'initiales dans une plaque.
+ *
+ * ==================================================================
+ * ██ LE NOM SUR UNE PLAQUE (nº 555) — SEIZE PIXELS, DEMI-GRAS ██
+ * ------------------------------------------------------------------
+ * CE FICHIER NE PORTE QUE LA BOÎTE, jamais le texte : les trois
+ * plaques n'ont ni le même interligne (`leading-snug` pour les lieux
+ * et l'équipe, `leading-tight` pour la vue photo) ni la même façon de
+ * couper un nom long (repli pour les deux premières, points de
+ * suspension pour la troisième). Il n'y a donc pas de constante à
+ * lire — mais il y a une RÈGLE, et elle s'écrit ici parce que c'est
+ * ici qu'on vient quand on touche une plaque :
+ *
+ *   LE NOM D'UNE PLAQUE VAUT 16 px ET `font-semibold`.
+ *
+ * SES TROIS PORTEURS, ET IL N'Y EN A PAS UN QUATRIÈME :
+ *  · `BlocLieux` — le nom d'un membre d'équipe ;
+ *  · `BlocLieux` — le nom d'un lieu (`TroisLignesDuLieu`) ;
+ *  · `FicheTatoueur` — le nom dans la rangée du profil, vue photo.
+ *
+ * D'OÙ ELLE VIENT : le relevé de la nº 554 a trouvé DEUX graisses
+ * pour deux plaques identiques (`font-medium` sur l'équipe,
+ * `font-semibold` sur les lieux) et une fiche à DEUX rangs seulement
+ * — le nom du tatoueur en 19-20 px, tout le reste en 15. La nº 555
+ * réunit les graisses et donne aux noms le cran qui manquait.
+ * ⚠️ CE QUI RESTE À 15 px, ET C'EST LA MOITIÉ DE LA RÈGLE : tout ce
+ * qui N'EST PAS un nom — l'adresse sous un nom de lieu, les styles
+ * d'un membre, la mention grise au-dessus de la plaque. Le cran de 16
+ * appartient aux noms, et à eux seuls.
  */
 export const ENCADRE_MEMBRE =
   "flex items-start gap-3.5 rounded-xl bg-sombre-eleve p-3";

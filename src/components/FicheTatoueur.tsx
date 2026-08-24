@@ -1333,7 +1333,32 @@ export function FicheTatoueur({
                   )}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[15px] font-semibold leading-tight text-sombre-texte">
+                  {/*  ██ §2 (nº 555) — CE NOM SUIT LES DEUX AUTRES ██
+                       LA QUESTION POSÉE : cette plaque doit-elle monter
+                       à 16 px avec celles des lieux et de l'équipe ?
+                       OUI, ET POUR LA RAISON QUI A CRÉÉ CE FICHIER À LA
+                       nº 502 : c'est LA MÊME PLAQUE, lue au même endroit
+                       (`ENCADRE_MEMBRE_CLIQUABLE`, components/plaque) —
+                       « les trois blocs ne peuvent plus diverger », dit
+                       la note du dessus. La laisser à 15 px rouvrirait
+                       exactement la divergence que le §1 de cette passe
+                       referme sur la graisse.
+                       ET C'EST LE NOM LE PLUS IMPORTANT DES TROIS : en
+                       vue photo au doigt, le `<h1>` de la fiche n'est
+                       pas à l'écran — cette plaque EST le seul endroit
+                       où le nom du tatoueur se lit.
+                       ⚠️ CELLE-CI GRANDIT, ET JE LE DIS : elle n'a pas
+                       de plancher (les deux autres ont `min-h-13`), sa
+                       hauteur suit son contenu. `leading-tight` (1,25) :
+                       la ligne passe de 18,75 à 20 px, le bloc de texte
+                       de 40,875 à 42,125, et la plaque — 24 px d'air
+                       compris — de 64,9 à 66,1 px. UN PIXEL ET QUART DE
+                       PLUS, une seule fois dans la page.
+                       ⚠️ LA COUPE NE CHANGE PAS DE NATURE : `truncate`
+                       garde le nom sur UNE ligne avec ses points de
+                       suspension — deux ou trois caractères de moins y
+                       tiennent, rien d'autre ne bouge. */}
+                  <span className="block truncate text-[16px] font-semibold leading-tight text-sombre-texte">
                     {tatoueur.nom}
                   </span>
                   {/*  La puce « • » : la seule ponctuation du site entre
