@@ -9,6 +9,7 @@ import {
   IconeChevronBas,
   IconeCloche,
   IconeFanion,
+  IconeAjouterPortfolio,
   IconePlus,
   IconeReglages,
   IconeSilhouette,
@@ -514,7 +515,32 @@ export function MenuEspace({
   // LES ICÔNES SORTENT DU GRIS DOUX : à 22 px, sur fond anthracite,
   // elles se devinaient plus qu'elles ne se lisaient. Elles prennent
   // la couleur du texte, à 80 % — présentes, jamais criardes.
-  const GEOMETRIE_BOITE_ICONE = "flex w-[22px] shrink-0 justify-center";
+  /**
+   * ██ §3 (nº 533) — LA TAILLE DES ICÔNES D'UNE LIGNE, RÉGLABLE ██
+   * ------------------------------------------------------------------
+   * Les entrées des encadrés portaient les 22 px du plan du web — la
+   * taille d'une icône dans une fenêtre étroite. Sur une page, entre
+   * deux encadrés, elles se devinaient. Elles passent à 26 px AU DOIGT,
+   * toutes du même cran : « Ajouter un portfolio », « Mon portfolio »,
+   * « Modification », « Langue », « Sécurité », « Déconnexion ».
+   * ⚠️ LA BOÎTE SUIT LE GLYPHE, et c'est elle qui tient l'alignement :
+   * chaque icône vit dans une boîte de LARGEUR FIXE (la note d'origine
+   * en donne la raison — sans elle, chaque dessin a sa propre chasse et
+   * les libellés partent d'un pixel différent). La boîte passe donc de
+   * 22 à 26 px avec le glyphe : les six libellés restent sur la même
+   * verticale.
+   * ⚠️ ET LE DÉROULANT NE BOUGE PAS (acquis nº 531) : son bord gauche
+   * est calé sur le BORD GAUCHE DE LA BOÎTE — 8 px d'encadré plus les
+   * 12 px de la ligne —, une somme où la LARGEUR de la boîte n'entre
+   * pas. Elle peut grandir, l'aplomb tient.
+   * ⚠️ LE WEB GARDE SES 22 px : il passe l'autre réglage.
+   */
+  const boiteDIcone = (largeur: string) =>
+    `flex ${largeur} shrink-0 justify-center`;
+  const REGLAGE_LIGNE_WEB = { boite: boiteDIcone("w-[22px]"), taille: 22 };
+  const REGLAGE_LIGNE_DOIGT = { boite: boiteDIcone("w-[26px]"), taille: 26 };
+  type ReglageLigne = typeof REGLAGE_LIGNE_WEB;
+  const GEOMETRIE_BOITE_ICONE = REGLAGE_LIGNE_WEB.boite;
   const boiteIcone = `${GEOMETRIE_BOITE_ICONE} text-sombre-texte/80`;
 
   /**
@@ -730,7 +756,7 @@ export function MenuEspace({
 
   /** LES DEUX ENTRÉES DU PORTFOLIO CHOISI — « Mon portfolio » d'abord
       (acquis nº 472-§3a), puis « Modification ». */
-  const entreesDuPortfolio = (
+  const entreesDuPortfolio = (reglage: ReglageLigne) => (
     <nav aria-label="Le portfolio choisi" className="flex flex-col gap-0.5">
       {/*  ██ §3-a (nº 472) — « MON PORTFOLIO » PASSE EN PREMIER ██
            Les deux entrées sont ÉCHANGÉES, sur consigne : on
@@ -751,8 +777,8 @@ export function MenuEspace({
         onClick={() => setOuvert(false)}
         className={classeEntree}
       >
-        <span className={boiteIcone}>
-          <IconeUtilisateur taille={22} />
+        <span className={`${reglage.boite} text-sombre-texte/80`}>
+          <IconeUtilisateur taille={reglage.taille} />
         </span>
         Mon portfolio
       </Link>
@@ -770,16 +796,37 @@ export function MenuEspace({
         }}
         className={classeEntree}
       >
-        <span className={boiteIcone}>
-          <IconeReglages taille={22} />
+        <span className={`${reglage.boite} text-sombre-texte/80`}>
+          <IconeReglages taille={reglage.taille} />
         </span>
         Modification
       </Link>
     </nav>
   );
 
-  /** LES TROIS ENTRÉES DU COMPTE — Langue, Sécurité, Déconnexion. */
+  /** §4 (nº 533) — « DÉCONNEXION », EXTRAITE : le plan du doigt lui
+      donne un encadré à elle, le web la garde dans son groupe. Une
+      seule écriture, deux endroits. */
+  const boutonDeconnexion = (reglage: ReglageLigne) => (
+    <button type="button" onClick={deconnecter} className={classeEntree}>
+      <span className={`${reglage.boite} text-sombre-texte/80`}>
+        <IconeSortie taille={reglage.taille} />
+      </span>
+      Déconnexion
+    </button>
+  );
+
+  /**
+   * LES ENTRÉES DU COMPTE — Langue, Sécurité, et Déconnexion.
+   * §4 (nº 533) — `avecDeconnexion` : le plan du doigt sort
+   * « Déconnexion » de ce groupe pour lui donner un encadré à elle
+   * (voir plus bas). Le web les garde toutes les trois — il ne passe
+   * rien, et rien ne change chez lui.
+   */
   const entreesDuCompte = (
+    reglage: ReglageLigne,
+    { avecDeconnexion = true } = {}
+  ) => (
     /*  §1 (nº 530) — LE RETRAIT LATÉRAL N'EST PLUS ICI : il
         appartenait au plan du web (`px-2`), et il l'a rejoint —
         une enveloppe, juste en dessous. Au doigt, c'est l'encadré
@@ -798,6 +845,10 @@ export function MenuEspace({
           commune : elle gardait un survol en aplat (nº 237-§2). */}
       <EntreeLangue
         classe={classeEntree}
+        //  §3 (nº 533) — la même boîte et la même taille que ses cinq
+        //  voisines : sans cela, le globe serait resté seul à 22 px.
+        boite={reglage.boite}
+        taille={reglage.taille}
         surOuvrir={() => {
           //  §4 (nº 465) — même règle que « Notifications » : au
           //  doigt, « Mon compte » (devenu une page opaque) RESTE
@@ -814,21 +865,16 @@ export function MenuEspace({
         onClick={() => setOuvert(false)}
         className={classeEntree}
       >
-        <span className={boiteIcone}>
+        <span className={`${reglage.boite} text-sombre-texte/80`}>
           {/* UN BOUCLIER, plus un cadenas (nº 129) : le cadenas dit
               « c'est fermé », le bouclier dit « c'est protégé » —
               c'est bien de cela qu'il s'agit ici. */}
-          <IconeBouclierTrait taille={22} />
+          <IconeBouclierTrait taille={reglage.taille} />
         </span>
         Sécurité
       </Link>
 
-      <button type="button" onClick={deconnecter} className={classeEntree}>
-        <span className={boiteIcone}>
-          <IconeSortie taille={22} />
-        </span>
-        Déconnexion
-      </button>
+      {avecDeconnexion && boutonDeconnexion(reglage)}
     </nav>
   );
 
@@ -983,12 +1029,12 @@ export function MenuEspace({
              ligne. */}
         {selecteurDePortfolio(REGLAGES_SELECTEUR_WEB)}
 
-        {entreesDuPortfolio}
+        {entreesDuPortfolio(REGLAGE_LIGNE_WEB)}
       </div>
       )}
 
       {/* ---------- LE COMPTE, hors du bloc : sur le fond normal. */}
-      <div className="px-2">{entreesDuCompte}</div>
+      <div className="px-2">{entreesDuCompte(REGLAGE_LIGNE_WEB)}</div>
     </div>
   );
 
@@ -1082,34 +1128,41 @@ export function MenuEspace({
           onClick={ouvrirLesNotifications}
           className={CLASSE_TUILE}
         >
-          {/*  LA PASTILLE DES NON LUES se pose SUR la cloche : dans une
-               tuile, le mot est sous l'icône — il n'y a plus de place à
-               sa droite. Même écriture qu'au web (le rose des
-               compteurs, son usage d'origine), même contenu.
-               §2 (nº 531) — ELLE SUIT LA CLOCHE QUI GRANDIT : 20 → 24 px
-               de haut, chiffres de 11,5 → 12,5 px.
-               ██ §4 (nº 532) — LE ROND SE RESSERRE SUR LE CHIFFRE ██
-               24 px, c'était trop large : la pastille couvrait la
-               cloche au lieu de se poser dessus. SON DIAMÈTRE DESCEND
-               À 20 px — et LE CHIFFRE NE BOUGE PAS, il garde ses
-               12,5 px. Il reste donc 3,75 px d'air au-dessus et en
-               dessous de lui (la hauteur de ligne épouse le rond), et
-               6 px de chaque côté.
-               ⚠️ CE N'EST PAS UN ROND, C'EST UN PLANCHER : les 20 px
-               sont une largeur MINIMALE. Un nombre à deux chiffres
-               (≈ 14 px de chasse) porte la pastille à 26 px, « 99+ »
-               (≈ 22 px) à 34 : elle s'allonge pour contenir son texte
-               et ne le coupe jamais. Un chiffre seul, lui, tient dans
-               le rond parfait de 20 px.
-               Sa position ne change pas — elle est relative au coin de
-               l'icône, quelle que soit sa taille. */}
+          {/*  ██ §2 (nº 533) — LE COMPTE ENTRE DANS LA CLOCHE ██
+               LA PASTILLE POSÉE PAR-DESSUS A DISPARU. À la place, la
+               cloche S'OUVRE en haut à droite (`ouverte`, voir
+               IconeCloche : son tracé s'interrompt sur 54°, centré sur
+               la diagonale) et LE NOMBRE vient se loger dans ce vide,
+               en ROSE — un compteur, l'usage même que la charte réserve
+               à cette couleur.
+               SANS NOTIFICATION, RIEN : la cloche est refermée et
+               aucun chiffre n'est rendu. C'est le même dessin qu'avant,
+               entier.
+               ⚠️ OÙ LE NOMBRE SE POSE, ET COMMENT IL GRANDIT. Il est
+               ancré PAR SA GAUCHE au bord intérieur de l'ouverture
+               (58 % de la largeur du glyphe, centré sur 18 % de sa
+               hauteur) : un chiffre seul occupe le vide, et un nombre
+               plus long s'allonge VERS LA DROITE — vers l'extérieur du
+               dessin, là où il n'y a rien à recouvrir. « 12 » et
+               « 99+ » débordent donc du carré de l'icône au lieu de
+               mordre sur la cloche, et restent entiers : aucun
+               rognage, aucune largeur maximale. La tuile ne coupe rien
+               (elle n'a pas de débordement caché) et l'icône est
+               centrée dans une tuile deux fois plus large qu'elle : la
+               place est là.
+               ⚠️ AU-DELÀ DE 99, C'EST « 99+ » — la règle de toujours,
+               inchangée.
+               ⚠️ LE WEB NE CHANGE PAS : sa ligne « Notifications »
+               garde sa pastille ronde à droite du mot (elle a la place,
+               elle). C'est le plan du doigt seul qui adopte le compte
+               découpé. */}
           <span className={`relative ${CLASSE_TUILE_ICONE}`}>
-            <IconeCloche taille={TAILLE_ICONE_TUILE} />
+            <IconeCloche taille={TAILLE_ICONE_TUILE} ouverte={nonLues > 0} />
             {nonLues > 0 && (
               <span
                 aria-label={`${nonLues} non lue${nonLues > 1 ? "s" : ""}`}
-                className="absolute -right-3 -top-1 min-w-[20px] h-5 px-1.5 rounded-full bg-primaire
-                           text-[12.5px] font-bold text-white leading-5 text-center"
+                className="absolute font-bold leading-none text-[12.5px] text-primaire"
+                style={{ left: "58%", top: "18%", transform: "translateY(-50%)" }}
               >
                 {nonLues > 99 ? "99+" : nonLues}
               </span>
@@ -1173,11 +1226,16 @@ export function MenuEspace({
           onClick={demanderUneNouvelleFiche}
           className={classeEntreeAction}
         >
-          {/*  L'ICÔNE N'ÉCRIT AUCUNE COULEUR : elle hérite du rose de
-               sa ligne. La boîte de largeur fixe, elle, est la même
-               que partout — les libellés partent tous du même pixel. */}
-          <span className={GEOMETRIE_BOITE_ICONE}>
-            <IconePlus taille={22} />
+          {/*  §1 (nº 533) — L'ICÔNE EST CELLE DE « MON PORTFOLIO »,
+               OUVERTE EN HAUT À DROITE, avec un petit « + » dans
+               l'ouverture (voir IconeAjouterPortfolio). Le lecteur
+               reconnaît l'objet avant de lire le mot.
+               L'ICÔNE N'ÉCRIT AUCUNE COULEUR : elle hérite du rose de
+               sa ligne (nº 532). La boîte de largeur fixe, elle, est la
+               même que ses voisines — les libellés partent tous du même
+               pixel. */}
+          <span className={REGLAGE_LIGNE_DOIGT.boite}>
+            <IconeAjouterPortfolio taille={REGLAGE_LIGNE_DOIGT.taille} />
           </span>
           <span className="flex-1">Ajouter un portfolio</span>
         </button>
@@ -1215,11 +1273,26 @@ export function MenuEspace({
             {selecteurDePortfolio(REGLAGES_SELECTEUR_DOIGT)}
           </div>
         )}
-        {fiches.length > 0 && entreesDuPortfolio}
+        {fiches.length > 0 && entreesDuPortfolio(REGLAGE_LIGNE_DOIGT)}
       </div>
 
       {/* ---------- L'ENCADRÉ DU COMPTE ---------- */}
-      <div className={`p-2 ${CLASSE_ENCADRE}`}>{entreesDuCompte}</div>
+      <div className={`p-2 ${CLASSE_ENCADRE}`}>
+        {entreesDuCompte(REGLAGE_LIGNE_DOIGT, { avecDeconnexion: false })}
+      </div>
+
+      {/*  ██ §4 (nº 533) — « DÉCONNEXION » A SON ENCADRÉ ██
+           Elle vivait avec « Langue » et « Sécurité ». Elle en sort :
+           celles-là mènent à un réglage, elle QUITTE — ce n'est pas le
+           même geste, et un encadré à part le dit sans un mot de plus.
+           Même fond, même arrondi, même réserve (8 px) que les autres,
+           et les 12 px qui séparent déjà deux encadrés (le `gap` de la
+           colonne) l'écartent du précédent : aucune valeur neuve.
+           ⚠️ LE WEB LES GARDE TOUTES LES TROIS : il ne passe pas le
+           drapeau, et son groupe est celui de toujours. */}
+      <div className={`p-2 ${CLASSE_ENCADRE}`}>
+        {boutonDeconnexion(REGLAGE_LIGNE_DOIGT)}
+      </div>
     </div>
   );
 
@@ -1363,7 +1436,40 @@ export function MenuEspace({
             enTeteCentre
             surFermer={() => setOuvert(false)}
           >
-            <div className="grow pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+            {/*  ██ §6 (nº 533) — LA RÉSERVE QUI TIENT LA BARRE DE
+                 SAFARI À DISTANCE ██
+                 LA CAUSE, NOMMÉE. La barre du bas de Safari est
+                 TRANSLUCIDE : elle montre la page à travers elle. Ce
+                 qu'elle montrait jusqu'à la nº 531, c'était le fond de
+                 la page — donc du bleu nuit, donc « rien ». Depuis la
+                 nº 532 elle montre un ENCADRÉ, et c'est le gris des
+                 encadrés qu'on lit. AUCUNE COULEUR N'A CHANGÉ (la
+                 nº 532 n'a touché ni fond ni `theme-color` — celui-ci
+                 vaut le bleu nuit depuis longtemps, dans le gabarit du
+                 produit) : c'est CE QUI PASSE SOUS LA BARRE qui a
+                 changé, parce que la page a GRANDI d'environ 76 px (le
+                 cœur +20, la ligne « Ajouter » +46, le déroulant +10).
+                 Arrivé en bout de course, le dernier encadré se range
+                 désormais sous la barre.
+                 L'INGRÉDIENT EST ANTÉRIEUR, ET JE LE DIS : le gris est
+                 celui des encadrés de la nº 530. La nº 532 n'a pas
+                 fabriqué la couleur, elle l'a amenée là.
+                 LE REMÈDE, INDÉPENDANT DE TOUTE HYPOTHÈSE : garder du
+                 FOND DE PAGE sous la barre en toutes circonstances. La
+                 réserve basse passe de 24 px à 72 px (l'encoche du
+                 bas, quand elle existe, vaut une trentaine de pixels :
+                 le plancher de 72 la couvre et la dépasse). La barre de
+                 Safari mesure une cinquantaine de pixels : elle ne peut
+                 plus atteindre un encadré.
+                 ⚠️ LA FORME EST CELLE QUE LE SITE EMPLOIE DÉJÀ —
+                 `max(<plancher>, env(safe-area-inset-bottom))`. Un
+                 `calc` imbriqué dans le `max` n'était pas produit par
+                 la feuille : vérifié, et écarté.
+                 ⚠️ ET LE §4 AGGRAVE LE DÉFAUT, d'où le traitement des
+                 deux ensemble : « Déconnexion » ajoute un encadré de
+                 plus en bas de page, donc encore de la hauteur et un
+                 gris de plus près du bord. */}
+            <div className="grow pb-[max(4.5rem,env(safe-area-inset-bottom))]">
               {contenuMenuDoigt}
             </div>
           </PagePleinEcranMobile>

@@ -148,6 +148,52 @@ export function IconeUtilisateur({ taille = 24, classe = "" }: ProprietesIcone) 
   );
 }
 
+/**
+ * ██ §1 (nº 533) — AJOUTER UN PORTFOLIO ██
+ * ==================================================================
+ * C'EST `IconeUtilisateur`, ET RIEN D'AUTRE — le même cercle de rayon
+ * 8,5 centré sur (12 ; 12), la même tête, les mêmes épaules, la même
+ * épaisseur de trait. Deux différences, et deux seulement :
+ *  · LE CERCLE N'EST PAS REFERMÉ EN HAUT À DROITE : il est dessiné de
+ *    −18° à −72° en moins — un vide de 54° centré sur la diagonale ;
+ *  · UN PETIT « + » se loge dans ce vide, posé sur la circonférence à
+ *    −45°, en (18 ; 6), long de 4,4 et du même trait que le reste.
+ * C'est le motif que tout le monde connaît : l'objet, et un plus qui
+ * dit « en créer un nouveau ». Le lecteur reconnaît le portfolio AVANT
+ * de lire le mot.
+ * ⚠️ POURQUOI PAS `IconePlus` POSÉE À CÔTÉ : elle serait une seconde
+ * icône dans la boîte, avec sa propre taille et son propre centrage.
+ * Ici le plus fait PARTIE du dessin — il naît à l'échelle du cercle,
+ * quelle que soit la taille demandée.
+ */
+export function IconeAjouterPortfolio({ taille = 24, classe = "" }: ProprietesIcone) {
+  return (
+    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
+      {/*  Le contour, ouvert : de −18° au tour complet moins 54°. */}
+      <path
+        d="M20.08 9.37A8.5 8.5 0 1 1 14.63 3.92"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <circle cx="12" cy="9.8" r="2.6" stroke="currentColor" strokeWidth="1.8" />
+      <path
+        d="M6.5 18.2c1-2.3 3-3.6 5.5-3.6s4.5 1.3 5.5 3.6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      {/*  Le « + », dans l'ouverture. */}
+      <path
+        d="M18 3.8v4.4M15.8 6h4.4"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export function IconeTelephone({ taille = 24, classe = "" }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
@@ -1016,11 +1062,44 @@ export function IconeFlecheAdresse({ taille = 14, classe = "" }: ProprietesIcone
  * pastille dessinée dedans : le compte des non lues est un élément à
  * part, posé À CÔTÉ du titre (voir MenuEspace).
  */
-export function IconeCloche({ taille = 20, classe = "" }: ProprietesIcone) {
+/**
+ * ██ §2 (nº 533) — LA CLOCHE PEUT S'OUVRIR EN HAUT À DROITE ██
+ * ==================================================================
+ * `ouverte` INTERROMPT SON TRACÉ dans l'angle haut droit — un vide de
+ * 54°, centré sur la diagonale — pour que le NOMBRE de notifications
+ * vienne s'y loger. C'est le motif courant du « badge découpé » : la
+ * pastille posée par-dessus la cloche disparaît, le compte prend sa
+ * place DANS le dessin.
+ *
+ * COMMENT, ET SANS RIEN INVENTER : le dôme est un arc de rayon 6
+ * centré sur (12 ; 8,5) — c'est le tracé d'origine, à l'identique. On
+ * le COUPE en deux morceaux au lieu d'un : le grand va de 72° à 180°
+ * (le haut et toute la gauche), puis descend par le corps et remonte
+ * le flanc droit jusqu'à 18°. Entre 18° et 72°, rien. Le corps, le
+ * battant, l'épaisseur de trait et les terminaisons rondes ne
+ * changent pas d'un caractère.
+ * ⚠️ AUCUN MASQUE, AUCUN IDENTIFIANT, AUCUN FOND : une découpe par
+ * masque aurait demandé un `id` unique (donc un état, donc un risque
+ * d'écart d'hydratation), et un disque peint à la couleur du fond
+ * aurait attaché l'icône au support qui la porte. Ici le trait est
+ * simplement plus court.
+ * ⚠️ LE NOMBRE N'EST PAS DANS CE FICHIER : cette icône ne connaît
+ * aucun compte. Elle ouvre une place ; c'est l'appelant qui pose le
+ * chiffre, avec sa couleur et sa taille (voir MenuEspace).
+ */
+export function IconeCloche({
+  taille = 20,
+  classe = "",
+  ouverte = false,
+}: ProprietesIcone & { ouverte?: boolean }) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
       <path
-        d="M18 8.5a6 6 0 1 0-12 0c0 4.5-1.5 5.8-2 6.5h16c-.5-.7-2-2-2-6.5Z"
+        d={
+          ouverte
+            ? "M13.85 2.79A6 6 0 0 0 6 8.5c0 4.5-1.5 5.8-2 6.5h16c-.5-.7-2-2-2-6.5A6 6 0 0 0 17.71 6.65"
+            : "M18 8.5a6 6 0 1 0-12 0c0 4.5-1.5 5.8-2 6.5h16c-.5-.7-2-2-2-6.5Z"
+        }
         stroke="currentColor"
         strokeWidth="1.8"
         strokeLinecap="round"

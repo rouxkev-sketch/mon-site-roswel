@@ -272,9 +272,18 @@ export function FenetreLangue({ surFermeture }: { surFermeture: () => void }) {
 export function EntreeLangue({
   classe,
   surOuvrir,
+  boite = "flex w-[22px] shrink-0 justify-center",
+  taille = 22,
 }: {
   classe: string;
   surOuvrir: () => void;
+  /** §3 (nº 533) — LA BOÎTE ET LA TAILLE DE L'ICÔNE, RÉGLABLES. Cette
+      ligne vit au milieu de cinq autres, dans un menu qui les rend
+      toutes de la même main : quand elles grandissent, le globe doit
+      grandir avec elles. Les DÉFAUTS sont les valeurs de toujours —
+      qui ne passe rien ne voit rien changer. */
+  boite?: string;
+  taille?: number;
 }) {
   const langueActive = langueDuJour();
   return (
@@ -284,8 +293,8 @@ export function EntreeLangue({
       aria-haspopup="dialog"
       className={classe}
     >
-      <span className="flex w-[22px] shrink-0 justify-center text-sombre-texte/80">
-        <IconeMonde taille={22} />
+      <span className={`${boite} text-sombre-texte/80`}>
+        <IconeMonde taille={taille} />
       </span>
       <span className="flex-1">Langue</span>
       <span className="shrink-0 text-[12.5px] font-medium uppercase tracking-wide text-sombre-texte-doux">

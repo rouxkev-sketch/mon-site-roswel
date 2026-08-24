@@ -107,8 +107,25 @@ export function EnTetePleinEcran({
                d'avant : en haut à droite, même boîte, même débord. */}
           <div className="flex items-center justify-end">{gestes}</div>
           {/*  §1 (nº 530) — L'ICÔNE PUIS LE TITRE, centrés. 8 px les
-               séparent, 16 px sous le titre. */}
-          <div className="flex flex-col items-center gap-2 pb-4">
+               séparent, 16 px sous le titre.
+               ██ §5 (nº 533) — LE BLOC REMONTE DE 20 px ██
+               L'air au-dessus de l'icône, c'était la RANGÉE DE LA
+               CROIX : 44 px de haut (une cible de pouce autour d'un
+               glyphe de 22), sous la réserve d'encoche. Le bloc centré
+               remonte donc DANS la moitié libre de cette rangée — il
+               reste 24 px d'air au-dessus de l'icône.
+               ⚠️ LA CROIX NE BOUGE PAS D'UN PIXEL : elle est ancrée à
+               DROITE et l'icône est CENTRÉE — sur l'écran le plus
+               étroit du parc (320 px), l'icône de marque occupe
+               132→188 px et la croix 276→320 : elles ne se croisent
+               jamais.
+               ⚠️ 24 px ET NON 22 : la moitié exacte de 44 aurait
+               demandé une valeur hors de l'échelle de 4. On prend le
+               cran juste au-dessus.
+               ⚠️ LA RÉSERVE D'ENCOCHE N'EST PAS TOUCHÉE : elle protège
+               ce qui se peint sous la barre d'état, et elle est partagée
+               par les quatre porteurs du gabarit. */}
+          <div className="-mt-5 flex flex-col items-center gap-2 pb-4">
             {icone}
             <h1 className="text-[20px] font-bold text-white">{titre}</h1>
           </div>
