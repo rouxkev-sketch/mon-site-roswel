@@ -155,9 +155,17 @@ export function IconeUtilisateur({ taille = 24, classe = "" }: ProprietesIcone) 
  * 8,5 centré sur (12 ; 12), la même tête, les mêmes épaules, la même
  * épaisseur de trait. Deux différences, et deux seulement :
  *  · LE CERCLE N'EST PAS REFERMÉ EN HAUT À DROITE : il est dessiné de
- *    −18° à −72° en moins — un vide de 54° centré sur la diagonale ;
- *  · UN PETIT « + » se loge dans ce vide, posé sur la circonférence à
- *    −45°, en (18 ; 6), long de 4,4 et du même trait que le reste.
+ *    −5° à −85° en moins — un vide de 80° centré sur la diagonale
+ *    (54° à la nº 533 : le plus y était à l'étroit) ;
+ *  · UN « + » se loge dans ce vide, LONG DE 6 (4,4 à la nº 533) et du
+ *    même trait que le reste. Il est posé sur la diagonale à −45°,
+ *    mais un peu PLUS LOIN QUE LA CIRCONFÉRENCE — en (18,5 ; 5,5), à
+ *    9,2 du centre au lieu de 8,5. Mesuré : posé pile sur le cercle,
+ *    sa pointe gauche passait à moins d'un demi-point du bord de la
+ *    TÊTE (qui, trait compris, s'étend jusqu'à 15,5) — à l'œil, les
+ *    deux se touchaient. Décalé, il en reste à plus d'un point, et
+ *    ses trois autres pointes gardent près de six points d'écart avec
+ *    les deux extrémités du tracé interrompu.
  * C'est le motif que tout le monde connaît : l'objet, et un plus qui
  * dit « en créer un nouveau ». Le lecteur reconnaît le portfolio AVANT
  * de lire le mot.
@@ -169,9 +177,9 @@ export function IconeUtilisateur({ taille = 24, classe = "" }: ProprietesIcone) 
 export function IconeAjouterPortfolio({ taille = 24, classe = "" }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
-      {/*  Le contour, ouvert : de −18° au tour complet moins 54°. */}
+      {/*  Le contour, ouvert : de −5° au tour complet moins 80°. */}
       <path
-        d="M20.08 9.37A8.5 8.5 0 1 1 14.63 3.92"
+        d="M20.47 11.26A8.5 8.5 0 1 1 12.74 3.53"
         stroke="currentColor"
         strokeWidth="1.8"
         strokeLinecap="round"
@@ -185,7 +193,7 @@ export function IconeAjouterPortfolio({ taille = 24, classe = "" }: ProprietesIc
       />
       {/*  Le « + », dans l'ouverture. */}
       <path
-        d="M18 3.8v4.4M15.8 6h4.4"
+        d="M18.5 2.5v6M15.5 5.5h6"
         stroke="currentColor"
         strokeWidth="1.8"
         strokeLinecap="round"
@@ -1066,18 +1074,22 @@ export function IconeFlecheAdresse({ taille = 14, classe = "" }: ProprietesIcone
  * ██ §2 (nº 533) — LA CLOCHE PEUT S'OUVRIR EN HAUT À DROITE ██
  * ==================================================================
  * `ouverte` INTERROMPT SON TRACÉ dans l'angle haut droit — un vide de
- * 54°, centré sur la diagonale — pour que le NOMBRE de notifications
- * vienne s'y loger. C'est le motif courant du « badge découpé » : la
+ * 80° (54° à la nº 533 : trop étroit, le nombre n'y tenait pas) —
+ * pour que le NOMBRE de notifications vienne s'y loger. C'est le motif courant du « badge découpé » : la
  * pastille posée par-dessus la cloche disparaît, le compte prend sa
  * place DANS le dessin.
  *
  * COMMENT, ET SANS RIEN INVENTER : le dôme est un arc de rayon 6
  * centré sur (12 ; 8,5) — c'est le tracé d'origine, à l'identique. On
- * le COUPE en deux morceaux au lieu d'un : le grand va de 72° à 180°
- * (le haut et toute la gauche), puis descend par le corps et remonte
- * le flanc droit jusqu'à 18°. Entre 18° et 72°, rien. Le corps, le
- * battant, l'épaisseur de trait et les terminaisons rondes ne
- * changent pas d'un caractère.
+ * l'ARRÊTE À 80° au lieu de le fermer : il part de là, passe par le
+ * haut et toute la gauche jusqu'à 180°, puis descend par le corps et
+ * s'achève à l'angle haut droit de celui-ci (0°). Entre 0° et 80°,
+ * rien. Le corps, le battant, l'épaisseur de trait et les
+ * terminaisons rondes ne changent pas d'un caractère.
+ * §3 (nº 534) — LE MOIGNON DE FLANC DROIT A DISPARU AVEC
+ * L'ÉLARGISSEMENT : à 54° il restait 18° d'arc à droite ; à 80°
+ * l'ouverture descend jusqu'au corps, et ce bout d'arc n'a plus lieu
+ * d'être. Un morceau de moins à dessiner, pas un de plus.
  * ⚠️ AUCUN MASQUE, AUCUN IDENTIFIANT, AUCUN FOND : une découpe par
  * masque aurait demandé un `id` unique (donc un état, donc un risque
  * d'écart d'hydratation), et un disque peint à la couleur du fond
@@ -1097,7 +1109,7 @@ export function IconeCloche({
       <path
         d={
           ouverte
-            ? "M13.85 2.79A6 6 0 0 0 6 8.5c0 4.5-1.5 5.8-2 6.5h16c-.5-.7-2-2-2-6.5A6 6 0 0 0 17.71 6.65"
+            ? "M13.04 2.59A6 6 0 0 0 6 8.5c0 4.5-1.5 5.8-2 6.5h16c-.5-.7-2-2-2-6.5"
             : "M18 8.5a6 6 0 1 0-12 0c0 4.5-1.5 5.8-2 6.5h16c-.5-.7-2-2-2-6.5Z"
         }
         stroke="currentColor"

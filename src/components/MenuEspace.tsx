@@ -804,29 +804,13 @@ export function MenuEspace({
     </nav>
   );
 
-  /** §4 (nº 533) — « DÉCONNEXION », EXTRAITE : le plan du doigt lui
-      donne un encadré à elle, le web la garde dans son groupe. Une
-      seule écriture, deux endroits. */
-  const boutonDeconnexion = (reglage: ReglageLigne) => (
-    <button type="button" onClick={deconnecter} className={classeEntree}>
-      <span className={`${reglage.boite} text-sombre-texte/80`}>
-        <IconeSortie taille={reglage.taille} />
-      </span>
-      Déconnexion
-    </button>
-  );
-
   /**
-   * LES ENTRÉES DU COMPTE — Langue, Sécurité, et Déconnexion.
-   * §4 (nº 533) — `avecDeconnexion` : le plan du doigt sort
-   * « Déconnexion » de ce groupe pour lui donner un encadré à elle
-   * (voir plus bas). Le web les garde toutes les trois — il ne passe
-   * rien, et rien ne change chez lui.
+   * LES ENTRÉES DU COMPTE — Langue, Sécurité, Déconnexion.
+   * §1 (nº 534) — LES TROIS SONT DE NOUVEAU INSÉPARABLES : le drapeau
+   * qui permettait d'en sortir « Déconnexion » (nº 533-§4) part avec
+   * l'encadré qu'il servait. Les deux plans rendent le même groupe.
    */
-  const entreesDuCompte = (
-    reglage: ReglageLigne,
-    { avecDeconnexion = true } = {}
-  ) => (
+  const entreesDuCompte = (reglage: ReglageLigne) => (
     /*  §1 (nº 530) — LE RETRAIT LATÉRAL N'EST PLUS ICI : il
         appartenait au plan du web (`px-2`), et il l'a rejoint —
         une enveloppe, juste en dessous. Au doigt, c'est l'encadré
@@ -874,7 +858,12 @@ export function MenuEspace({
         Sécurité
       </Link>
 
-      {avecDeconnexion && boutonDeconnexion(reglage)}
+      <button type="button" onClick={deconnecter} className={classeEntree}>
+        <span className={`${reglage.boite} text-sombre-texte/80`}>
+          <IconeSortie taille={reglage.taille} />
+        </span>
+        Déconnexion
+      </button>
     </nav>
   );
 
@@ -1138,10 +1127,17 @@ export function MenuEspace({
                SANS NOTIFICATION, RIEN : la cloche est refermée et
                aucun chiffre n'est rendu. C'est le même dessin qu'avant,
                entier.
+               §3 (nº 534) — L'ÉCHANCRURE PASSE DE 54° À 80°, ET LE
+               NOMBRE DE 12,5 À 16 px : à 54° le vide était plus petit
+               que le chiffre qu'il devait loger. Les deux grandissent
+               ensemble, l'ancrage suit le nouveau bord : 54 % de la
+               largeur du glyphe au lieu de 58 %, et 16 % de sa hauteur
+               au lieu de 18 % — ce dernier cran mesuré, pas choisi : à
+               20 %, le bas d'un chiffre de 16 px venait frôler l'angle
+               haut droit du CORPS de la cloche.
                ⚠️ OÙ LE NOMBRE SE POSE, ET COMMENT IL GRANDIT. Il est
-               ancré PAR SA GAUCHE au bord intérieur de l'ouverture
-               (58 % de la largeur du glyphe, centré sur 18 % de sa
-               hauteur) : un chiffre seul occupe le vide, et un nombre
+               ancré PAR SA GAUCHE au bord intérieur de l'ouverture :
+               un chiffre seul occupe le vide, et un nombre
                plus long s'allonge VERS LA DROITE — vers l'extérieur du
                dessin, là où il n'y a rien à recouvrir. « 12 » et
                « 99+ » débordent donc du carré de l'icône au lieu de
@@ -1161,8 +1157,8 @@ export function MenuEspace({
             {nonLues > 0 && (
               <span
                 aria-label={`${nonLues} non lue${nonLues > 1 ? "s" : ""}`}
-                className="absolute font-bold leading-none text-[12.5px] text-primaire"
-                style={{ left: "58%", top: "18%", transform: "translateY(-50%)" }}
+                className="absolute font-bold leading-none text-[16px] text-primaire"
+                style={{ left: "54%", top: "16%", transform: "translateY(-50%)" }}
               >
                 {nonLues > 99 ? "99+" : nonLues}
               </span>
@@ -1276,22 +1272,19 @@ export function MenuEspace({
         {fiches.length > 0 && entreesDuPortfolio(REGLAGE_LIGNE_DOIGT)}
       </div>
 
-      {/* ---------- L'ENCADRÉ DU COMPTE ---------- */}
+      {/*  ---------- L'ENCADRÉ DU COMPTE ----------
+           §1 (nº 534) — « DÉCONNEXION » Y REVIENT : le §4 de la nº 533,
+           qui lui avait donné un encadré à elle, est annulé. Langue,
+           Sécurité et Déconnexion tiennent de nouveau dans un seul
+           encadré, comme avant. La page compte donc trois encadrés : la
+           rangée de deux tuiles, le portfolio, le compte.
+           ⚠️ CE QUI RESTE DE LA nº 533, ET QUI DOIT RESTER : la réserve
+           basse de 72 px, plus bas — c'est elle qui tient la barre
+           translucide de Safari à distance des encadrés gris. Un encadré
+           de moins raccourcit la page : le défaut ne peut que s'en
+           éloigner. */}
       <div className={`p-2 ${CLASSE_ENCADRE}`}>
-        {entreesDuCompte(REGLAGE_LIGNE_DOIGT, { avecDeconnexion: false })}
-      </div>
-
-      {/*  ██ §4 (nº 533) — « DÉCONNEXION » A SON ENCADRÉ ██
-           Elle vivait avec « Langue » et « Sécurité ». Elle en sort :
-           celles-là mènent à un réglage, elle QUITTE — ce n'est pas le
-           même geste, et un encadré à part le dit sans un mot de plus.
-           Même fond, même arrondi, même réserve (8 px) que les autres,
-           et les 12 px qui séparent déjà deux encadrés (le `gap` de la
-           colonne) l'écartent du précédent : aucune valeur neuve.
-           ⚠️ LE WEB LES GARDE TOUTES LES TROIS : il ne passe pas le
-           drapeau, et son groupe est celui de toujours. */}
-      <div className={`p-2 ${CLASSE_ENCADRE}`}>
-        {boutonDeconnexion(REGLAGE_LIGNE_DOIGT)}
+        {entreesDuCompte(REGLAGE_LIGNE_DOIGT)}
       </div>
     </div>
   );

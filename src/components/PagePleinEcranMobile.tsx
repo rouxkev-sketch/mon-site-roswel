@@ -108,24 +108,30 @@ export function EnTetePleinEcran({
           <div className="flex items-center justify-end">{gestes}</div>
           {/*  §1 (nº 530) — L'ICÔNE PUIS LE TITRE, centrés. 8 px les
                séparent, 16 px sous le titre.
-               ██ §5 (nº 533) — LE BLOC REMONTE DE 20 px ██
-               L'air au-dessus de l'icône, c'était la RANGÉE DE LA
-               CROIX : 44 px de haut (une cible de pouce autour d'un
-               glyphe de 22), sous la réserve d'encoche. Le bloc centré
-               remonte donc DANS la moitié libre de cette rangée — il
-               reste 24 px d'air au-dessus de l'icône.
+               ██ §2 (nº 534) — LES DEUX AIRS SONT ÉGAUX ██
+               CE QUI ÉTAIT MESURÉ, DE PART ET D'AUTRE :
+                · SOUS LE TITRE, jusqu'à la première rangée : 16 px de
+                  ce bloc, 4 px de l'en-tête, 4 px du contenu — 24 px ;
+                · AU-DESSUS DU CŒUR : la réserve du haut (24 px, ou
+                  l'encoche quand elle est plus grande) PLUS ce qui
+                  restait de la rangée de la croix — 24 px de plus après
+                  la remontée de 20 px de la nº 533. Soit 48 px, le
+                  double.
+               ON ALIGNE LE HAUT SUR LE BAS, comme demandé : le bloc
+               centré remonte de TOUTE la rangée de la croix (44 px) au
+               lieu de 20. Il ne reste alors, au-dessus du cœur, que la
+               réserve du haut — 24 px, exactement l'air sous le titre.
                ⚠️ LA CROIX NE BOUGE PAS D'UN PIXEL : elle est ancrée à
-               DROITE et l'icône est CENTRÉE — sur l'écran le plus
-               étroit du parc (320 px), l'icône de marque occupe
-               132→188 px et la croix 276→320 : elles ne se croisent
-               jamais.
-               ⚠️ 24 px ET NON 22 : la moitié exacte de 44 aurait
-               demandé une valeur hors de l'échelle de 4. On prend le
-               cran juste au-dessus.
+               DROITE et le cœur est CENTRÉ — sur l'écran le plus étroit
+               du parc (320 px), le cœur occupe 132→188 px et la croix
+               276→320 : ils ne se croisent jamais, quelle que soit la
+               hauteur qu'ils partagent.
                ⚠️ LA RÉSERVE D'ENCOCHE N'EST PAS TOUCHÉE : elle protège
                ce qui se peint sous la barre d'état, et elle est partagée
-               par les quatre porteurs du gabarit. */}
-          <div className="-mt-5 flex flex-col items-center gap-2 pb-4">
+               par les quatre porteurs du gabarit. Sur un téléphone à
+               encoche, c'est elle qui décide de l'air du haut — ce n'est
+               pas de l'air, c'est la barre d'état. */}
+          <div className="-mt-11 flex flex-col items-center gap-2 pb-4">
             {icone}
             <h1 className="text-[20px] font-bold text-white">{titre}</h1>
           </div>
