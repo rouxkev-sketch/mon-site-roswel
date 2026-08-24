@@ -181,6 +181,7 @@ export function ChampLocalisation({
   classeRacine = "",
   enErreur = false,
   pourLeMoteur = false,
+  opaque = false,
 }: {
   surChoix: (lieu: LieuTrouve | null) => void;
   /** Le lieu déjà choisi à l'arrivée (formulaire pré-rempli, moteur). */
@@ -245,6 +246,25 @@ export function ChampLocalisation({
       LUI-MÊME sous le champ : aucune mesure, aucun repère à convertir,
       donc rien qui puisse dériver quand le clavier bouge la page. */
   panneauDansLeFlux?: boolean;
+  /**
+   * ██ §2 (nº 552) — LE PANNEAU DU FLUX SANS VERRE, SUR DEMANDE ██
+   * ------------------------------------------------------------------
+   * LE MÊME DRAPEAU, DU MÊME NOM, QUE `MenuDeroulant` (§2 nº 552),
+   * `MenuDeVerre` (nº 537) et `FenetreDeVerre` (nº 543) : l'attribut
+   * de verre n'est pas posé, et le jeton `carte` (#1A1F26) le
+   * remplace. `globals.css` reste intouché (règle nº 172).
+   * IL NE VISE QUE LA BRANCHE « DANS LE FLUX » (le doigt) : la branche
+   * FLOTTANTE, celle du web, est déjà sur `carte` depuis le §1 de la
+   * nº 543 — qui avait laissé le doigt de côté en le disant. C'est
+   * cette moitié-là qui se referme ici, et les deux branches d'un même
+   * champ montrent enfin le même gris.
+   * ⚠️ SUR DEMANDE, ET POUR LA MÊME RAISON QUE PARTOUT : ce panneau
+   * est PARTAGÉ — trois champs du formulaire de fiche (les deux
+   * adresses de `DeuxZonesLieu`, celle de `BlocStudios`) et LA PAGE DE
+   * RECHERCHE au doigt (`MoteurTatouage`). Le moteur n'a rien demandé.
+   * Sans réglage, rien ne bouge : il garde son verre au pixel.
+   */
+  opaque?: boolean;
   /** LE CHAMP REMONTE EN HAUT DE LA PAGE au premier toucher — un
       défilement de DOCUMENT, rien de plus. La PAGE DE RECHERCHE
       (smartphone) et le FORMULAIRE s'en servent tous les deux : toute
@@ -902,9 +922,22 @@ export function ChampLocalisation({
             //  défaut exact qui a laissé passer la fenêtre du compte et
             //  celle des langues. Mesuré au banc à 390 px : fond opaque
             //  rgb(35, 35, 39), filtre `none`.
-            className="mt-1.5 flex min-h-0 flex-1 flex-col rounded-xl
-                       text-sombre-texte overflow-hidden"
-            data-verre-menu=""
+            //  ⚠️ « EN VERRE » N'EST PLUS VRAI SANS CONDITION (nº 552) :
+            //  il l'est tant que l'appelant ne passe pas `opaque`. Le
+            //  moteur ne le passe pas et garde donc ce verre ; le
+            //  formulaire le passe. Voir juste dessous.
+            /*  §2 (nº 552) — `opaque` REMPLACE LE VERRE PAR LE JETON
+                 `carte`. Mesuré : le verre des menus composé sur le
+                 fond de page uniforme donne rgb(9,15,23), soit un
+                 contraste de 1,00 avec la page — le panneau EST la
+                 page. `carte` (#1A1F26) le remonte à 1,16. Le drapeau
+                 n'est passé que par le formulaire ; la page de
+                 recherche au doigt garde son verre. */
+            className={`mt-1.5 flex min-h-0 flex-1 flex-col rounded-xl
+                       text-sombre-texte overflow-hidden${
+                         opaque ? " bg-sombre-carte" : ""
+                       }`}
+            {...(opaque ? {} : { "data-verre-menu": "" })}
             onPointerDown={() => {
               interactionPanneau.current = true;
               window.setTimeout(() => {

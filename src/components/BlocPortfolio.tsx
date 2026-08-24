@@ -1037,12 +1037,43 @@ export function BlocPortfolio({
                   //  qu'on regardait. Désormais : SÉLECTIONNÉ = rose
                   //  plein, texte blanc ; NORMAL = fond d'un cran plus
                   //  clair, texte blanc. Rien d'autre, nulle part.
+                  /*  ██ §3 (nº 552) — LE REPOS MONTE D'UN CRAN, ET LE
+                       SURVOL AVEC LUI ██
+                       LE DÉFAUT : la capsule NON sélectionnée était
+                       trop sombre. Mesuré sur l'encadré du formulaire
+                       (`bg-sombre-carte`, #1A1F26) : `eleve` (#262C34)
+                       n'en détache la capsule que de 1,18 — elle se
+                       lisait comme du texte posé sur la carte, pas
+                       comme un objet cliquable. `eleveClair` (#323942)
+                       porte l'écart à 1,42.
+                       D'OÙ VIENT CE CRAN, ET IL N'EST PAS INVENTÉ :
+                       c'est le fond des CHAMPS de ce formulaire
+                       (`ROBE_CHAMP_SOMBRE.repos`, MenuDeroulant) et
+                       celui du bouton de `BlocModesExercice` — la
+                       capsule éteinte se range au rang des choses avec
+                       lesquelles on interagit dans cet écran.
+                       LE SURVOL SUIT, SANS QUOI IL DISPARAÎT : il valait
+                       `eleveClair`, c'est-à-dire exactement le nouveau
+                       repos. Il monte à `haut` (#3E4650) — le MÊME
+                       déplacement, à la même paire de jetons, que
+                       `BlocModesExercice` a fait à la nº 419. L'écart
+                       repos → survol est conservé au centième : 1,21
+                       hier, 1,22 aujourd'hui.
+                       ⚠️ LA CAPSULE SÉLECTIONNÉE NE CHANGE PAS D'UN
+                       CARACTÈRE — `bg-primaire text-white`. La
+                       différence entre les deux états ne se joue pas
+                       sur un cran de gris mais sur une TEINTE : rose
+                       plein contre gris. Elle ne peut pas s'émousser.
+                       ⚠️ LE MÊME LIBELLÉ DE CLASSES EXISTE DANS
+                       `AdminYokofolio` (l. 1313) : il est écrit là-bas
+                       en toutes lettres, pas partagé — il ne bouge
+                       pas. */
                   className={`inline-flex items-center rounded-full
                              px-3.5 min-h-[34px] text-[13.5px] font-semibold
                              transition-colors ${
                                ouvert
                                  ? "bg-primaire text-white"
-                                 : "bg-sombre-eleve text-sombre-texte hover:bg-sombre-eleve-clair"
+                                 : "bg-sombre-eleve-clair text-sombre-texte hover:bg-sombre-haut"
                              }`}
                 >
                   {style.label}

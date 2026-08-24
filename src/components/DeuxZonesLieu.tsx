@@ -286,6 +286,10 @@ export function DeuxZonesLieu({
             lieuInitial={lieu}
             surChoix={retenirLeLieu}
             panneauDansLeFlux={surMobile}
+            //  §2 (nº 552) — le panneau des suggestions sans verre :
+            //  le jeton `carte`, comme sa branche du web depuis la
+            //  nº 543. Le CHAMP ne bouge pas.
+            opaque
             remonterAuToucher={surMobile}
             croixEffacement
             enErreur={enErreur}
@@ -406,6 +410,9 @@ export function ZoneLieuSeule({
           lieuInitial={lieu}
           surChoix={surLieu}
           panneauDansLeFlux={surMobile}
+          //  §2 (nº 552) — la seconde adresse du bloc suit la première :
+          //  même panneau, même jeton `carte`.
+          opaque
           remonterAuToucher={surMobile}
           croixEffacement
           enErreur={enErreur}

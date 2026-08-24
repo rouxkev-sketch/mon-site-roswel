@@ -1420,7 +1420,28 @@ export function ContenuFiche({
            première, aucune des deux ne se décale. La colonne est le
            seul enfant souple de la rangée, elle garde le `min-w-0` qui
            autorise le repli du texte (leçon de la nº 391). */}
-      <span className="flex min-w-0 flex-col">
+      {/*  ██ §1 (nº 552) — LE TEXTE DU BOOKING PASSE EN BLANC ██
+           OÙ LA COULEUR EST POSÉE, ET POURQUOI ICI PLUTÔT QU'AU-DESSUS.
+           `LIGNE_GRISE` reste sur la RANGÉE (le `span` parent) : c'est
+           lui qui porte AUSSI la boîte du calendrier, et l'icône prend
+           sa couleur de là par `currentColor`. Poser le blanc sur la
+           rangée aurait donc blanchi le calendrier avec le mot —
+           l'acquis de la nº 392, rejoué à la nº 547 pour les capsules :
+           le gris de l'icône vit sur SA boîte, un autre élément.
+           La colonne des deux lignes, elle, ne contient QUE du texte :
+           le jeton `texte` (#F2F2F4) y est seul de sa propriété, aucune
+           classe de couleur ne s'y dispute la place (piège nº 389).
+           CE QUE ÇA DONNE, MESURÉ sur le fond de la colonne de lecture
+           (`bg-sombre-fond`, #0B0F14, page ET fenêtre superposée) :
+           8,14 hier (`texteDoux`), 17,19 aujourd'hui (`texte`).
+           ⚠️ LES DEUX LIGNES ENSEMBLE — « Booking ouvert » et
+           « Attente : 12 mois » : elles disent UNE seule chose, et un
+           gris sous un blanc en ferait une note de bas de page.
+           ⚠️ RIEN D'AUTRE NE SUIT. `LIGNE_GRISE` n'est PAS touchée :
+           ses trois autres porteurs — la ligne des capsules (l. 464),
+           les liens (l. 1251) et la mention au-dessus des plaques
+           (BlocLieux) — gardent leur gris au caractère près. */}
+      <span className="flex min-w-0 flex-col text-sombre-texte">
         <span>{libelleBooking}</span>
         {/*  ██ §1 (nº 409) — POURQUOI « Attente » DÉBORDAIT À GAUCHE ██
              CE N'EST NI UNE MARGE NI UN ESPACE : les deux lignes sont

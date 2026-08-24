@@ -5,8 +5,16 @@
  *
  * « Booking ouvert », le site, Instagram, les pratiques, les styles
  * et — depuis la nº 388 — l'ADRESSE d'un salon sont la MÊME ligne :
- * une icône de 22 px à gauche, un texte de 15 px en gris doux, dix
- * pixels entre les deux.
+ * une icône de 22 px à gauche, un texte de 15 px, dix pixels entre
+ * les deux.
+ *
+ * ⚠️ « EN GRIS DOUX » A ÉTÉ RETIRÉ DE CETTE PHRASE (nº 552). Ce n'est
+ * plus vrai de toutes : depuis la nº 547 les capsules des styles et
+ * des techniques sont blanches, depuis la nº 552 le texte du booking
+ * aussi. Ce qui est commun, c'est la GÉOMÉTRIE et le CORPS —
+ * `ECRITURE_LIGNE_FICHE` — pas la couleur, qui a quitté l'écriture
+ * commune à la nº 389 (voir juste dessous) et que chaque ligne dit
+ * désormais pour elle-même.
  *
  * ⚠️ POURQUOI CE FICHIER EXISTE, ET C'EST LA RAISON DE
  * `champs-formulaire.ts` À LA LETTRE : ces deux constantes vivaient
@@ -42,7 +50,16 @@
  */
 export const ECRITURE_LIGNE_FICHE = "text-[15px] leading-snug";
 
-/** Le gris doux des lignes qui restent dans le site. */
+/**
+ * Le gris doux des lignes qui restent dans le site.
+ *
+ * ⚠️ QUATRE PORTEURS, ET RIEN DE PLUS (relevé nº 552) : la ligne des
+ * capsules et la ligne des liens de `ContenuFiche`, la RANGÉE de la
+ * ligne du booking — celle qui porte l'icône, pas son texte — et la
+ * mention au-dessus des plaques de `BlocLieux`. Changer cette
+ * constante les emporte tous les quatre d'un coup : une couleur qui
+ * ne vaut que pour UNE ligne se pose sur la ligne, jamais ici.
+ */
 export const LIGNE_GRISE = "text-sombre-texte-doux";
 
 /**
@@ -86,8 +103,13 @@ export const BOITE_ICONE_LIGNE = `${FORME_BOITE_ICONE} h-[1.375em]`;
  * §5 (nº 388) — CE QUI SORT DU SITE EST BLEU, ET S'ÉCLAIRCIT.
  * ------------------------------------------------------------------
  * Instagram et l'adresse mènent DEHORS : la convention du web
- * s'applique à eux, et à eux seuls. Le booking, le site et les styles
- * gardent le gris doux commun.
+ * s'applique à eux, et à eux seuls. Le site, lui, garde le gris doux
+ * commun.
+ * ⚠️ « LE BOOKING ET LES STYLES » ONT QUITTÉ CETTE PHRASE (nº 552) :
+ * les capsules des styles sont blanches depuis la nº 547, le texte du
+ * booking depuis la nº 552. Ni l'un ni l'autre n'est bleu pour autant
+ * — ils ne sortent nulle part. Ce qui reste vrai, et c'est tout le
+ * propos de ce §5 : le BLEU est réservé à ce qui mène dehors.
  * Le jeton et sa variante vivent dans la charte (`COULEURS_SOMBRE`,
  * `lien` / `lienClair`) : aucune couleur n'est écrite ici.
  */

@@ -199,6 +199,7 @@ export function MenuDeroulant({
   commandeOuverture = 0,
   feuilleDecollee = false,
   panneauCaleSurAncre = false,
+  opaque = false,
 }: {
   valeur: string;
   surChangement: (valeur: string) => void;
@@ -256,6 +257,38 @@ export function MenuDeroulant({
       seules les couleurs changent. Les pages artisans ne passent
       jamais cette option. */
   sombre?: boolean;
+  /**
+   * ██ §2 (nº 552) — LE PANNEAU SANS VERRE, SUR DEMANDE ██
+   * ------------------------------------------------------------------
+   * LE DÉFAUT RELEVÉ : les menus déroulants du formulaire de fiche
+   * sont trop sombres UNE FOIS OUVERTS. Ce n'est pas une impression —
+   * c'est mesurable. `data-verre-menu` vaut `rgba(11,15,20,0.45)` sur
+   * un `blur(60px) saturate(200%)` ; posé sur le fond de page
+   * (#0B0F14, uniforme sous un menu), il compose EXACTEMENT
+   * rgb(9,15,23) — contraste 1,00 avec la page. Le panneau n'est pas
+   * « un peu sombre » : il EST le fond de la page, et seul son liseré
+   * le distingue. Posé sur une carte (#1A1F26) il tombe à
+   * rgb(17,24,34), soit PLUS SOMBRE que la carte qui le porte (1,08 à
+   * l'envers). Un menu ouvert doit se poser AU-DESSUS de ce qu'il
+   * recouvre, pas en dessous.
+   * CE QUE FAIT CE DRAPEAU : l'attribut de verre n'est pas posé, et le
+   * jeton `carte` (#1A1F26) le remplace — 1,16 avec la page. C'est le
+   * MÊME drapeau, du même nom, que `MenuDeVerre` (nº 537) et
+   * `FenetreDeVerre` (nº 543) portent déjà : aucun mécanisme neuf,
+   * aucune couleur inventée, `globals.css` intouché (règle nº 172).
+   * ⚠️ POURQUOI UN DRAPEAU PLUTÔT QUE CHANGER L'ÉCRITURE. C'est
+   * exactement le raisonnement de `fondRepos` (nº 388) juste dessous :
+   * ce panneau est PARTAGÉ par cinq appelants — les deux menus du
+   * formulaire, les deux du moteur de recherche et celui de « Ma
+   * sélection ». Le moteur n'a rien demandé. Sans réglage, rien ne
+   * bouge : il garde son verre au pixel.
+   * ⚠️ IL COUVRE LES DEUX HABILLAGES d'un seul coup — le panneau
+   * classique (web, iPad) et la feuille glissante (smartphone) : deux
+   * écritures dans ce fichier, une seule question posée à l'appelant.
+   * ⚠️ SANS EFFET SANS `sombre` : les menus clairs du produit artisans
+   * gardent `bg-fond`, ils n'ont jamais eu de verre.
+   */
+  opaque?: boolean;
   /**
    * §1 (nº 388) — LE FOND AU REPOS, RÉGLABLE PAR L'APPELANT.
    * ------------------------------------------------------------------
@@ -1151,7 +1184,7 @@ export function MenuDeroulant({
         typeof document !== "undefined" &&
         createPortal(
         <div
-          {...(sombre ? { "data-verre-menu": "" } : {})}
+          {...(sombre && !opaque ? { "data-verre-menu": "" } : {})}
           ref={panneau}
           // POSÉ DANS <body>, en coordonnées d'écran : plus aucun cadre
           // ne le découpe. Il déborde donc de la fenêtre du moteur et
@@ -1165,12 +1198,18 @@ export function MenuDeroulant({
           //  recouvertes (même règle que `optionSombre`) — et le
           //  panneau suit la charte : ni contour ni ombre, le fond
           //  carte seul (la robe des fenêtres depuis la nº 130).
+          //  §2 (nº 552) — `opaque` REMET UN FOND À LA PLACE DU VERRE,
+          //  et c'est le seul endroit où il s'écrit pour ce panneau-ci.
+          //  Il vient APRÈS le `.replace("bg-fond", "")` : le retrait
+          //  de la classe claire est fait, on ne le défait pas.
           className={
             sombre
               ? `${listeClassique
                   .replace("border border-bordure", "")
                   .replace("bg-fond", "")
-                  .replace(/shadow-\[[^\]]*\]/, "")} text-sombre-texte`
+                  .replace(/shadow-\[[^\]]*\]/, "")} text-sombre-texte${
+                  opaque ? " bg-sombre-carte" : ""
+                }`
               : listeClassique
           }
         >
@@ -1352,7 +1391,7 @@ export function MenuDeroulant({
           />
           {/* La feuille — SŒUR du voile, jamais son enfant. */}
           <div
-            {...(sombre ? { "data-verre-menu": "" } : {})}
+            {...(sombre && !opaque ? { "data-verre-menu": "" } : {})}
             role="listbox"
             aria-label={ariaLabel}
             /*  §4 (nº 460) — `feuilleDecollee` : l'encadré ne touche
@@ -1360,9 +1399,16 @@ export function MenuDeroulant({
                 de l'interface (le `px-4` des pages), posée sur la
                 plaque ELLE-MÊME (jamais sur un parent — piège 378).
                 Hauteur, contenu, animation : rien d'autre ne bouge. */
+            /*  §2 (nº 552) — LA FEUILLE SUIT LE PANNEAU : `opaque` lui
+                donne le même jeton `carte`, pour que le formulaire ne
+                montre pas deux menus différents selon l'appareil. */
             className={`relative rounded-t-3xl max-h-[80vh] flex flex-col pb-[max(1rem,env(safe-area-inset-bottom))] ${
               feuilleDecollee ? "mx-4 " : ""
-            }${sombre ? "text-sombre-texte" : "bg-fond shadow-2xl"}`}
+            }${
+              sombre
+                ? `text-sombre-texte${opaque ? " bg-sombre-carte" : ""}`
+                : "bg-fond shadow-2xl"
+            }`}
             style={{
               transform: `translateY(${dragY}px)`,
               transition: enGlissement ? "none" : "transform .25s ease",

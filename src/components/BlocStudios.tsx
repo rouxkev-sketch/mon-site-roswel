@@ -331,6 +331,10 @@ export function BlocStudios({
                     lieuInitial={studio.lieu}
                     surChoix={(lieu) => modifier(studio.cle, { lieu })}
                     panneauDansLeFlux={surMobile}
+                    //  §2 (nº 552) — le troisième champ d'adresse du
+                    //  formulaire : même panneau sans verre que les
+                    //  deux de `DeuxZonesLieu`.
+                    opaque
                     remonterAuToucher={surMobile}
                     croixEffacement
                     enErreur={principal && Boolean(enErreur) && !studio.lieu}

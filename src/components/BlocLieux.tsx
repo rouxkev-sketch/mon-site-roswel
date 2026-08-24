@@ -649,8 +649,31 @@ function MentionAuDessus({ mention }: { mention: MentionEnDeuxMorceaux }) {
         était déjà la bonne.
         ⚠️ ON NE RECOPIE PAS LES VALEURS, ON LIT LES MÊMES CONSTANTES :
         deux écritures qui doivent dire la même chose finissent
-        toujours par diverger. Si la ligne du booking change un jour,
-        cette mention la suivra sans qu'on y pense.
+        toujours par diverger.
+
+        ██ §1 (nº 552) — ET LES DEUX SE SÉPARENT SUR LA COULEUR ██
+        ----------------------------------------------------------
+        LA LIGNE DU BOOKING EST PASSÉE EN BLANC (`texte`, ContenuFiche).
+        CETTE MENTION-CI RESTE GRISE, et ce n'est pas un oubli : le
+        blanc a été posé sur la COLONNE DE TEXTE de la ligne du
+        booking, pas sur `LIGNE_GRISE` — donc rien n'a été emporté, et
+        la question « faut-il suivre ? » se pose à part.
+        LA RÉPONSE EST NON, POUR CE QU'ELLE EST : une LÉGENDE posée
+        au-dessus d'une plaque, jamais l'objet qu'on regarde. Le nom
+        DANS la plaque est le blanc de ce bloc ; une légende aussi
+        claire que lui les mettrait au même rang, et il y en a une par
+        plaque — une colonne de membres d'équipe deviendrait une
+        colonne de blanc. Sa lisibilité ne se discute pas :
+        `texteDoux` sur le fond des sections vaut 8,14.
+        ⚠️ CE QUE LA nº 524 A ALIGNÉ RESTE ALIGNÉ, et c'était son
+        sujet : la TAILLE (15 px) et la GRAISSE (normale). La couleur,
+        elle, était déjà celle-ci avant la nº 524 — elle n'a jamais
+        été empruntée à la ligne du booking.
+        ⚠️ DONC `ECRITURE_LIGNE_FICHE` RESTE LU DES DEUX CÔTÉS (taille
+        et interligne, la vraie garantie de la nº 524), et `LIGNE_GRISE`
+        aussi — mais il ne faut plus lire cette dernière comme un lien
+        avec le booking : elle ne dit plus que « cette ligne-ci reste
+        dans le site », et trois autres porteurs la partagent.
         ⚠️ CE QUI NE BOUGE PAS : les majuscules du statut (nº 493), le
         séparateur, la place au-dessus de la plaque, et l'air en
         dessous (`mb-1`).

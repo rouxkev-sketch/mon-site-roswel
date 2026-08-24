@@ -3437,6 +3437,14 @@ export function FormulaireFiche() {
                   ariaLabel="L'état de ton booking"
                   placeholder="Booking"
                   sombre
+                  //  §2 (nº 552) — LE PANNEAU OUVERT SANS VERRE : le
+                  //  verre des menus compose rgb(9,15,23) sur le fond
+                  //  de page, soit 1,00 de contraste — la liste ne se
+                  //  détachait de rien. `opaque` lui donne le jeton
+                  //  `carte` (#1A1F26), celui des fenêtres du site.
+                  //  LE CHAMP NE BOUGE PAS : ses deux fonds restent
+                  //  `fondRepos` / `fondActif`, juste dessous.
+                  opaque
                   //  §1 (nº 388) — le fond des champs voisins.
                   //  §3 (nº 407) — ET LE CRAN QUI MANQUAIT À L'OUVERTURE :
                   //  sans lui, l'état ouvert valait `bg-sombre-eleve-clair`
@@ -3463,6 +3471,10 @@ export function FormulaireFiche() {
                     ariaLabel="Le délai d'attente, en mois"
                     placeholder="Mois"
                     sombre
+                    //  §2 (nº 552) — le même panneau que son voisin :
+                    //  les deux s'ouvrent côte à côte, ils ne peuvent
+                    //  pas montrer deux gris différents.
+                    opaque
                     fondRepos="bg-sombre-eleve-clair"
                     fondActif="bg-sombre-haut"
                     arrondi="rounded-lg"
