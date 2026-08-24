@@ -948,8 +948,32 @@ export function MenuEspace({
    *   §2 état dans le déroulant     13 px        13 px  (inchangé)
    *   §3 hauteur du déroulant       64 px        54 px
    *   §4 icône d'une tuile          32 px        28 px
-   *   §5 air au-dessus des tuiles   4 px         16 px
+   *   §5 air au-dessus des tuiles   4 px         20 px  (16 → 20, nº 557)
+   *   §1 air sur les CÔTÉS          16 px        20 px  (nº 557)
    *
+   * ██ §1 (nº 557) — LES CÔTÉS DE LA FENÊTRE DU WEB S'ÉCARTENT ██
+   * ------------------------------------------------------------------
+   * L'air entre le bord de la fenêtre et ses encadrés était trop
+   * mince. Il monte d'UN cran de l'échelle de quatre : 16 → 20 px, à
+   * GAUCHE, à DROITE et EN BAS (le `pb-5` de l'enveloppe, chez
+   * l'appelant du web).
+   * ET LE HAUT SUIT, à 20 px lui aussi. C'est le §5 de la nº 537 qui le
+   * commande — « l'air du haut égale celui des côtés » —, et le rompre
+   * pour un seul cran donnerait une fenêtre à trois côtés larges et un
+   * quatrième étroit : cela se lirait comme un défaut, pas comme une
+   * décision. Les quatre côtés restent donc égaux.
+   * ⚠️ CONSÉQUENCE ASSUMÉE, ET JE LA DIS : `airHaut` commande DEUX
+   * écarts, pas un (voir la note du titre, chez l'appelant du web) —
+   * l'air au-dessus du titre ET celui entre le titre et la première
+   * rangée. Les deux passent donc de 16 à 20 px ensemble.
+   * ⚠️ LE CÔTÉ SORT DU CORPS COMMUN POUR CELA. Il y était écrit en dur
+   * (`px-4` sur `contenuDuCompte`), donc PARTAGÉ avec la page du
+   * doigt : le monter là aurait élargi les marges du plein écran, que
+   * les nº 530-534 ont réglées. Il rejoint donc les deux jeux, comme
+   * `airHaut` l'avait fait à la nº 537 — le doigt garde ses 16 px au
+   * pixel, le web seul bouge.
+   *
+
    * §4 — LES 28 px DU WEB SONT CEUX DE LA BARRE FIXE, relevés sur ses
    * trois icônes (loupe, fanion, silhouette — `taille={28}`, avec leur
    * repli à 24 au doigt depuis la nº 461). La tuile vit sous cette
@@ -977,6 +1001,10 @@ export function MenuEspace({
       "absolute -right-0.5 -top-0.5 min-w-[16px] h-4 px-1 rounded-full bg-primaire " +
       "text-[11px] font-bold text-white leading-4 text-center",
     airHaut: "pt-1",
+    //  §1 (nº 557) — LES 16 px DE LA PAGE, AU PIXEL PRÈS : c'est la
+    //  valeur qui était écrite en dur dans le corps commun. Elle ne
+    //  change pas, elle change seulement d'endroit.
+    airCote: "px-4",
   };
   const REGLAGES_WEB = {
     ligne: reglageDeLigne("w-[22px]", 22, "text-[13.5px]"),
@@ -990,12 +1018,15 @@ export function MenuEspace({
     pastille:
       "absolute -right-0.5 -top-0.5 min-w-[14px] h-[14px] px-1 rounded-full bg-primaire " +
       "text-[10px] font-bold text-white leading-[14px] text-center",
-    airHaut: "pt-4",
+    //  §1 (nº 557) — 16 → 20 px, et les côtés avec (voir la note du
+    //  tableau) : les quatre côtés de la fenêtre restent égaux.
+    airHaut: "pt-5",
+    airCote: "px-5",
   };
   type ReglagesDuCompte = typeof REGLAGES_DOIGT;
 
   const contenuDuCompte = (reglages: ReglagesDuCompte) => (
-    <div className={`flex flex-col gap-3 px-4 ${reglages.airHaut}`}>
+    <div className={`flex flex-col gap-3 ${reglages.airCote} ${reglages.airHaut}`}>
       {/* ---------- LA RANGÉE DE TROIS ---------- */}
       {/*  §3 (nº 532) — DEUX TUILES, ET ELLES SE PARTAGENT TOUTE LA
            LARGEUR : « Ajouter » a rejoint l'encadré du portfolio, sa
@@ -1344,12 +1375,24 @@ export function MenuEspace({
                  contenu et les 12 px d'écart — 123 px par tuile, quand
                  « Notifications » à 13 px en demande une bonne
                  quatre-vingtaine. Aucun élargissement n'est nécessaire.
+                 ⚠️ LE CALCUL A CHANGÉ À LA nº 557, LA CONCLUSION NON :
+                 les côtés valent 20 px, donc 290 − 40 − 12 = 238, soit
+                 119 px par tuile (123 avant). La tuile porte son propre
+                 air de 8 px de chaque côté : il reste 103 px pour le
+                 mot, contre 107 avant — et « Notifications » en demande
+                 toujours la même quatre-vingtaine. Quatorze pixels de
+                 marge subsistent, et le filet de la nº 532
+                 (`[overflow-wrap:anywhere]` sur le mot, la grille qui
+                 étire les deux tuiles à la même hauteur) reste sous le
+                 tout : même à l'étroit, le mot se replie, il ne déborde
+                 jamais. La fenêtre ne s'élargit donc pas.
                  ⚠️ LA RÉSERVE BASSE DE 72 px NE VIENT PAS NON PLUS :
                  elle tient la barre de Safari à distance (nº 533), et
                  une fenêtre posée sous un bouton n'a pas de barre de
-                 navigateur sous elle. Le web garde 16 px, l'air d'un
-                 encadré. */}
-            <div className="pb-4">
+                 navigateur sous elle. Le web garde l'air d'un encadré —
+                 16 px jusqu'à la nº 556, VINGT depuis la nº 557, comme
+                 les trois autres côtés. */}
+            <div className="pb-5">
               {/*  ██ §1 (nº 540) — LE TITRE DE LA FENÊTRE, AU WEB SEUL ██
                    ==========================================================
                    LA FENÊTRE N'AVAIT AUCUN EN-TÊTE : ni titre, ni croix —
@@ -1391,11 +1434,11 @@ export function MenuEspace({
                    vingtaine. C'est le prix d'une cible confortable, et
                    c'est celui que paient déjà les deux autres écrans.
                    L'AIR SOUS LE TITRE N'EST PAS UN NOMBRE DE PLUS : le
-                   contenu garde SON air du haut (le réglage du web,
-                   16 px), qui devient l'écart entre le titre et la
-                   première rangée. Le titre, lui, reprend ce même réglage
-                   au-dessus de lui — un seul nombre commande les deux, et
-                   il vaut l'air des côtés.
+                   contenu garde SON air du haut (le réglage du web, 20 px
+                   depuis la nº 557 — 16 jusque-là), qui devient l'écart
+                   entre le titre et la première rangée. Le titre, lui,
+                   reprend ce même réglage au-dessus de lui — un seul
+                   nombre commande les deux, et il vaut l'air des côtés.
                    ⚠️ LA PAGE DU DOIGT N'EST PAS CONCERNÉE : elle a son
                    cœur de marque, son titre centré et SA PROPRE CROIX
                    depuis les nº 530-534, posés par son EN-TÊTE, pas par ce
@@ -1405,7 +1448,20 @@ export function MenuEspace({
                    ⚠️ LE NOM ACCESSIBLE DE LA FENÊTRE RESTE « Mon espace »
                    (l'`aria-label` posé plus haut) : il n'est pas visé par
                    cette passe, et je ne le change pas de mon chef. */}
-              <div className={`flex items-center gap-3 px-4 ${REGLAGES_WEB.airHaut}`}>
+              {/*  §1 (nº 557) — LA RANGÉE DU TITRE LIT LE MÊME CÔTÉ QUE
+                   LE CONTENU, et c'est ce qui garde les deux alignements
+                   de la nº 541 : le titre à l'aplomb du bord GAUCHE des
+                   encadrés, la croix à l'aplomb de leur bord DROIT. Elle
+                   écrivait `px-4` en dur ; les deux valeurs se seraient
+                   séparées au premier changement. Un seul réglage, deux
+                   rangées, aucun écart possible.
+                   ⚠️ LA COMPENSATION DE LA CROIX NE BOUGE PAS : ses
+                   −9 px valent (36 − 18) / 2, un écart entre la cible et
+                   son dessin — il ne dépend pas de l'air des côtés. Le
+                   rembourrage déplace la boîte du bouton ET le bord des
+                   encadrés du même nombre : le dessin retombe au même
+                   endroit relatif, quel que soit ce nombre. */}
+              <div className={`flex items-center gap-3 ${REGLAGES_WEB.airCote} ${REGLAGES_WEB.airHaut}`}>
                 <h2 className="flex-1 min-w-0 text-[17px] font-bold tracking-tight text-sombre-texte">
                   Mon compte
                 </h2>
