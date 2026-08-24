@@ -1334,8 +1334,36 @@ input[data-sans-remplissage]:-webkit-autofill:focus {
       réservé, rien ne bouge), puis « Mon espace » la remplace après
       l'hydratation — le visiteur connecté ne voit JAMAIS le badge
       d'invitation. */
-[data-zone-compte][data-session="muette"] .etat-revenant {
+/*  ██ §1 (nº 536) — LA CAPSULE N'ANNONCE RIEN AVANT DE SAVOIR ██
+    ------------------------------------------------------------------
+    LE DÉFAUT, RELEVÉ PAR LE PROPRIÉTAIRE : il a un compte, la barre
+    doit dire « Se connecter » — et au rafraîchissement elle affichait
+    d'abord « Rejoindre », puis basculait. C'est le défaut du bouton
+    « Suivre » de la nº 506, à la lettre : un état de compte PEINT
+    AVANT D'ÊTRE CONNU, ce que la règle 203 interdit.
+    LA CAUSE, NOMMÉE : `.etat-revenant` était caché par défaut, mais
+    `.etat-nouveau` n'avait AUCUNE règle — il s'affichait donc tant que
+    `html[data-compte]` n'était pas encore posé. Le mot « Rejoindre »
+    était le DÉFAUT du document, pas une réponse.
+    LE REMÈDE, SYMÉTRIQUE : les DEUX sont cachés par défaut, et chacun
+    ne se montre que sous SA valeur. Le script d'avant peinture en pose
+    toujours une des trois (`nouveau`, `revenant`, `connecte`) : dès
+    qu'elle est là, le bon mot paraît. Tant qu'elle manque, la capsule
+    se tait.
+    ⚠️ ET SA PLACE EST DÉJÀ TENUE : les deux libellés superposés et
+    invisibles de la nº 203-§1a réservent la largeur du plus long. On
+    s'en sert, on ne la refait pas — rien ne saute quand le mot arrive,
+    et les réserves de la barre (nº 439, nº 509) ne sont pas touchées.
+    ⚠️ LE LIEN RESTE CLIQUABLE PENDANT L'ATTENTE : les deux états
+    mènent à la même adresse, il n'y a rien à empêcher. */
+[data-zone-compte][data-session="muette"] .etat-revenant,
+[data-zone-compte][data-session="muette"] .etat-nouveau {
   display: none;
+}
+html[data-compte="nouveau"]
+  [data-zone-compte][data-session="muette"]
+  .etat-nouveau {
+  display: inline;
 }
 html[data-compte="revenant"]
   [data-zone-compte][data-session="muette"]

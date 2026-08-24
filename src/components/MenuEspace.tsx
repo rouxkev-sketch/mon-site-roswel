@@ -10,7 +10,6 @@ import {
   IconeCloche,
   IconeFanion,
   IconeAjouterPortfolio,
-  IconePlus,
   IconeReglages,
   IconeSilhouette,
   IconeSortie,
@@ -537,11 +536,12 @@ export function MenuEspace({
    */
   const boiteDIcone = (largeur: string) =>
     `flex ${largeur} shrink-0 justify-center`;
-  const REGLAGE_LIGNE_WEB = { boite: boiteDIcone("w-[22px]"), taille: 22 };
-  const REGLAGE_LIGNE_DOIGT = { boite: boiteDIcone("w-[26px]"), taille: 26 };
-  type ReglageLigne = typeof REGLAGE_LIGNE_WEB;
-  const GEOMETRIE_BOITE_ICONE = REGLAGE_LIGNE_WEB.boite;
-  const boiteIcone = `${GEOMETRIE_BOITE_ICONE} text-sombre-texte/80`;
+  /*  §4 (nº 536) — UN SEUL RÉGLAGE, PLUS DEUX. Le web ayant repris la
+      disposition du doigt, il n'y a plus deux plans à accorder : les
+      22 px du plan disparu partent avec lui. Le paramètre reste — il
+      dit ce qui doit rester d'accord entre la boîte et le glyphe. */
+  const REGLAGE_LIGNE = { boite: boiteDIcone("w-[26px]"), taille: 26 };
+  type ReglageLigne = typeof REGLAGE_LIGNE;
 
   /**
    * ██ §1 (nº 530) — LES MORCEAUX, EXTRAITS UNE FOIS POUR DEUX PLANS ██
@@ -590,14 +590,8 @@ export function MenuEspace({
    * ⚠️ CE QUI RESTE PROPRE À CHAQUE PLAN : les boîtes, et elles seules.
    */
 
-  /** LES RÉGLAGES DU WEB — les valeurs de toujours, inchangées. */
-  const REGLAGES_SELECTEUR_WEB = {
-    hauteur: "min-h-[54px]",
-    titre: "text-[14.5px]",
-    sousTitre: "text-[12px]",
-  };
   /**
-   * §5-§6 (nº 532) — LES RÉGLAGES DU DOIGT.
+   * §5-§6 (nº 532) — LES RÉGLAGES DU SÉLECTEUR.
    *  · LA HAUTEUR : 54 → 64 px. Le champ portait la hauteur d'un champ
    *    de fenêtre ; sur une page, entre deux encadrés, il paraissait
    *    écrasé.
@@ -605,8 +599,12 @@ export function MenuEspace({
    *    ensemble et gardent leur rapport (l'état reste le plus petit —
    *    0,83 avant, 0,81 après) : c'est un renseignement sous un nom,
    *    jamais son égal.
+   * §4 (nº 536) — ET LE WEB LES PREND AUSSI : il n'a plus de valeurs à
+   * lui (54 px / 14,5 px), puisqu'il n'a plus de plan à lui. Un seul
+   * sélecteur, un seul réglage — c'est ce qui garantit que la fenêtre
+   * et la page ne peuvent plus se désaccorder.
    */
-  const REGLAGES_SELECTEUR_DOIGT = {
+  const REGLAGES_SELECTEUR = {
     hauteur: "min-h-[64px]",
     titre: "text-[16px]",
     sousTitre: "text-[13px]",
@@ -867,166 +865,6 @@ export function MenuEspace({
     </nav>
   );
 
-  /** LE CONTENU DU MENU — LE PLAN DU WEB, inchangé depuis toujours :
-      une seule colonne d'entrées, le bloc du portfolio au milieu. */
-  const contenuMenu = (
-    <div className="py-2 flex flex-col gap-1">
-      {/* ---------- 1. LES NOTIFICATIONS — hors du bloc de la fiche :
-          elles concernent le COMPTE. Le nombre de non lues se pose à
-          CÔTÉ du titre, en pastille discrète. ---------- */}
-      <div className="px-2">
-        <button
-          type="button"
-          onClick={ouvrirLesNotifications}
-          className={classeEntree}
-        >
-          <span className={boiteIcone}>
-            <IconeCloche taille={22} />
-          </span>
-          <span className="flex-1">Notifications</span>
-          {nonLues > 0 && (
-            <span
-              aria-label={`${nonLues} non lue${nonLues > 1 ? "s" : ""}`}
-              className="shrink-0 min-w-[20px] h-5 px-1.5 rounded-full bg-primaire
-                         text-[11.5px] font-bold text-white leading-5 text-center"
-            >
-              {nonLues > 99 ? "99+" : nonLues}
-            </span>
-          )}
-        </button>
-        {/*  §1 (nº 530) — LE GESTE DES NOTIFICATIONS A DÉMÉNAGÉ juste
-             au-dessus de `contenuMenu` (`ouvrirLesNotifications`) : la
-             tuile du doigt appelle LE MÊME. Sa note, qui porte les
-             règles nº 238-§5 et nº 465-§4, l'a suivi. */}
-
-        {/* ---------- 2. MA SÉLECTION (passe nº 137, renommée à la
-            nº 145-§3) — SOUS Notifications.
-            L'entrée du compte ouvert à tous : les photos gardées et
-            les tatoueurs suivis. Elle vient AVANT « Ajouter un
-            portfolio », parce qu'elle concerne tout le monde quand la
-            suivante ne concerne que ceux qui veulent se montrer.
-            ⚠️ LE FANION, ET PLUS LE CŒUR : ici l'icône désigne un
-            ENDROIT — la pochette où l'on range — quand le cœur des
-            photos désigne un GESTE. Le cœur, lui, ne bouge pas des
-            cartes ni des fiches. Taille et graisse inchangées. */}
-        <Link
-          href="/mes-favoris"
-          replace={liensRemplacent}
-          onClick={() => setOuvert(false)}
-          className={classeEntree}
-        >
-          <span className={boiteIcone}>
-            <IconeFanion taille={22} />
-          </span>
-          <span className="flex-1">Ma sélection</span>
-        </Link>
-
-        {/* ---------- 3. AJOUTER UN PORTFOLIO — une entrée du MENU, et
-            la SEULE : elle a disparu du pied du déroulant. Créer une fiche relève du
-            COMPTE, pas de la fiche qu'on regarde : sa place est ici,
-            juste sous « Notifications ».
-            AUCUNE COULEUR PARTICULIÈRE : même libellé, même graisse,
-            même taille et même gris d'icône que « Notifications ». Le
-            vert du pied de liste disait « attention, création » là où
-            il ne s'agit que d'une entrée de menu de plus. ---------- */}
-        {/* UN BOUTON, PLUS UN LIEN. Un lien vers la même page ne
-            faisait que changer les paramètres d'adresse : le
-            formulaire déjà à l'écran restait en place, avec les
-            données de la fiche précédente. Le bouton, lui, sait
-            reconnaître le cas « on y est déjà » — et surtout, il
-            demande d'abord si une saisie est en cours. */}
-        <button
-          type="button"
-          onClick={demanderUneNouvelleFiche}
-          className={classeEntree}
-        >
-          <span className={boiteIcone}>
-            <IconePlus taille={22} />
-          </span>
-          <span className="flex-1">Ajouter un portfolio</span>
-        </button>
-      </div>
-
-      {/* ---------- LE BLOC DE LA FICHE CHOISIE ----------
-          PAS D'ENCADRÉ : un simple FOND un cran plus clair que celui
-          de la fenêtre, D'UN BORD À L'AUTRE. Un cadre dessiné faisait
-          une boîte dans une boîte ; une nuance de fond dit la même
-          chose sans rien ajouter au dessin — c'est ce que font les
-          menus de compte d'aujourd'hui.
-          Tout ce qui est ici dépend de la fiche choisie en tête. */}
-      {/*  ⚠️ TOUT CE BLOC DISPARAÎT TANT QU'AUCUN PORTFOLIO N'A ÉTÉ
-           ENVOYÉ (passe nº 133). Un compte tout neuf n'a rien à
-           sélectionner, rien à modifier et rien à montrer : le
-           sélecteur affichait « Aucun portfolio · Brouillon », et
-           « Modification » comme « Mon portfolio » menaient au
-           formulaire de création — que « + Ajouter un portfolio »
-           ouvre déjà, en un seul mot clair.
-
-           COMMENT ON SAIT QU'UN PORTFOLIO A ÉTÉ ENVOYÉ : la ligne
-           `tatoueurs` n'est écrite QU'À L'ENVOI (voir `envoyer` dans
-           FormulaireFiche — aucun brouillon n'est créé avant). Une
-           liste non vide EST donc la preuve de l'envoi ; il n'y a
-           rien d'autre à interroger.
-
-           ET DANS L'AUTRE SENS, sans une ligne de plus : un portfolio
-           en cours de suppression EST encore dans la liste (c'est ce
-           qui permet de le réactiver) ; le jour où les 30 jours
-           tombent, la purge efface la ligne, la liste se vide, et le
-           menu revient de lui-même à ses quatre entrées. */}
-      {fiches.length > 0 && (
-      <div
-        //  ⚠️ `eleve-clair/70` depuis la nº 144-§3 : posé sur la fenêtre
-        //  `eleve`, l'ancien `eleve/70` disparaissait. Le contraste
-        //  relatif est LE MÊME qu'avant (≈ 6 points), mesuré.
-        /*  ██ §3-b (nº 472) — UN SEUL PORTFOLIO : PLUS DE FOND CLAIR ██
-            Ce fond dit « tout ce qui suit dépend du portfolio choisi
-            en tête » — il n'a de sens qu'en FACE D'UN CHOIX. Avec un
-            seul portfolio il n'y a rien à choisir (le sélecteur est
-            retiré juste dessous) : le bloc reste sur le fond sombre du
-            menu, comme les autres entrées, et les deux couleurs
-            disparaissent. AUCUN CONTOUR ne le remplace — la charte
-            l'interdit, et rien n'a besoin d'être délimité.
-            La géométrie ne bouge pas : mêmes marges, mêmes
-            rembourrages, les entrées restent alignées sur celles du
-            dessus. Le fond revient AVEC le sélecteur, dès qu'un
-            deuxième portfolio existe. */
-        className={`my-1.5 ${
-          plusieursFiches ? "bg-sombre-eleve-clair/70 " : ""
-        }px-2 py-2.5 flex flex-col gap-1`}
-      >
-        {/* PAS DE TITRE DE GROUPE. « La fiche choisie » nommait ce que
-            le sélecteur montre déjà : le nom du portfolio est écrit en
-            toutes lettres juste dessous, en gras. Une étiquette qui
-            répète son champ n'aide personne — elle ajoute une ligne. */}
-        {/* LE SÉLECTEUR — un VRAI menu déroulant : la liste se pose
-            PAR-DESSUS le menu (absolute), elle ne le pousse pas et ne
-            le remplace pas. Le reste des entrées demeure visible et à
-            sa place pendant qu'elle est ouverte.
-            L'ÉTAT DE LA FICHE VIT ICI, en deuxième ligne : une
-            pastille de 6 px et un mot. C'était un encadré entier, avec
-            un gros rond de couleur et une phrase — l'élément le plus
-            voyant d'un menu où il n'est qu'un renseignement. */}
-        {/*  ██ §3-b (nº 472) — PAS DE DÉROULANT POUR UN SEUL PORTFOLIO ██
-             Il n'y a rien à choisir : le champ n'ouvrait qu'une liste
-             d'un seul nom, celui-là même qu'il affichait. Il est donc
-             RETIRÉ tant qu'il n'y a qu'un portfolio — pas masqué :
-             non rendu. L'état de la fiche (la pastille et son mot) part
-             avec lui ; il reste lisible d'un geste, sur le portfolio
-             lui-même. Le déroulant revient tel quel dès le DEUXIÈME
-             portfolio, avec sa liste, ses pastilles et son fond clair
-             — le comportement à deux et plus ne change pas d'une
-             ligne. */}
-        {selecteurDePortfolio(REGLAGES_SELECTEUR_WEB)}
-
-        {entreesDuPortfolio(REGLAGE_LIGNE_WEB)}
-      </div>
-      )}
-
-      {/* ---------- LE COMPTE, hors du bloc : sur le fond normal. */}
-      <div className="px-2">{entreesDuCompte(REGLAGE_LIGNE_WEB)}</div>
-    </div>
-  );
-
   /**
    * ██ §1 (nº 530) — LE PLAN DU DOIGT : DES ENCADRÉS ██
    * ==================================================================
@@ -1103,7 +941,7 @@ export function MenuEspace({
    */
   const TAILLE_ICONE_TUILE = 32;
 
-  const contenuMenuDoigt = (
+  const contenuDuCompte = (
     <div className="flex flex-col gap-3 px-4 pt-1">
       {/* ---------- LA RANGÉE DE TROIS ---------- */}
       {/*  §3 (nº 532) — DEUX TUILES, ET ELLES SE PARTAGENT TOUTE LA
@@ -1215,8 +1053,8 @@ export function MenuEspace({
                sa ligne (nº 532). La boîte de largeur fixe, elle, est la
                même que ses voisines — les libellés partent tous du même
                pixel. */}
-          <span className={REGLAGE_LIGNE_DOIGT.boite}>
-            <IconeAjouterPortfolio taille={REGLAGE_LIGNE_DOIGT.taille} />
+          <span className={REGLAGE_LIGNE.boite}>
+            <IconeAjouterPortfolio taille={REGLAGE_LIGNE.taille} />
           </span>
           <span className="flex-1">Ajouter un portfolio</span>
         </button>
@@ -1230,8 +1068,12 @@ export function MenuEspace({
          * `classeEntree` porte). Il débordait donc de 12 px à gauche
          * de la colonne d'icônes, et rien ne s'alignait.
          * CE SUR QUOI ON S'ALIGNE, exactement : le BORD GAUCHE DE LA
-         * BOÎTE D'ICÔNE d'une ligne (`boiteIcone`, 22 px de large),
-         * c'est-à-dire le bord gauche du glyphe « Mon portfolio ».
+         * BOÎTE D'ICÔNE d'une ligne — celle que `REGLAGE_LIGNE` décrit,
+         * 26 px de large depuis la nº 533 —, c'est-à-dire le bord
+         * gauche du glyphe « Mon portfolio ».
+         * ⚠️ SA LARGEUR N'ENTRE PAS DANS LE CALCUL, et c'est ce qui
+         * rend l'aplomb durable : 8 px d'encadré plus les 12 px de la
+         * ligne, quelle que soit la taille du glyphe.
          * COMMENT : 12 px de retrait de chaque côté — le déroulant
          * commence donc à 8 + 12 = 20 px, pile sur les icônes, et il
          * s'arrête à 20 px du bord droit.
@@ -1251,10 +1093,10 @@ export function MenuEspace({
          */}
         {plusieursFiches && (
           <div className="mx-3 mt-2 mb-3">
-            {selecteurDePortfolio(REGLAGES_SELECTEUR_DOIGT)}
+            {selecteurDePortfolio(REGLAGES_SELECTEUR)}
           </div>
         )}
-        {fiches.length > 0 && entreesDuPortfolio(REGLAGE_LIGNE_DOIGT)}
+        {fiches.length > 0 && entreesDuPortfolio(REGLAGE_LIGNE)}
       </div>
 
       {/*  ---------- L'ENCADRÉ DU COMPTE ----------
@@ -1269,7 +1111,7 @@ export function MenuEspace({
            de moins raccourcit la page : le défaut ne peut que s'en
            éloigner. */}
       <div className={`p-2 ${CLASSE_ENCADRE}`}>
-        {entreesDuCompte(REGLAGE_LIGNE_DOIGT)}
+        {entreesDuCompte(REGLAGE_LIGNE)}
       </div>
     </div>
   );
@@ -1360,7 +1202,28 @@ export function MenuEspace({
             data-source-composant="MenuEspace · fenêtre web"
             className="mobile:hidden"
           >
-            {contenuMenu}
+            {/*  ██ §4 (nº 536) — LA FENÊTRE DU WEB PREND LA
+                 DISPOSITION DU DOIGT ██
+                 Le plan en colonne d'entrées du web est SUPPRIMÉ, code
+                 compris : la fenêtre monte désormais `contenuDuCompte`,
+                 celui-là même que la page du doigt monte. Deux tuiles,
+                 l'encadré du portfolio avec « Ajouter » en tête, celui
+                 du compte — mêmes fonds, mêmes arrondis, mêmes airs.
+                 ⚠️ CE QUI NE VIENT PAS AU WEB : le cœur de la marque et
+                 le titre centré. Ils appartiennent à l'EN-TÊTE de la
+                 page plein écran, pas au contenu — la fenêtre garde
+                 donc le sien sans qu'on ait rien à écarter.
+                 ⚠️ LES DEUX TUILES TIENNENT, mesuré : la fenêtre fait
+                 290 px, moins les 16 px de marge de chaque côté du
+                 contenu et les 12 px d'écart — 123 px par tuile, quand
+                 « Notifications » à 13 px en demande une bonne
+                 quatre-vingtaine. Aucun élargissement n'est nécessaire.
+                 ⚠️ LA RÉSERVE BASSE DE 72 px NE VIENT PAS NON PLUS :
+                 elle tient la barre de Safari à distance (nº 533), et
+                 une fenêtre posée sous un bouton n'a pas de barre de
+                 navigateur sous elle. Le web garde 16 px, l'air d'un
+                 encadré. */}
+            <div className="pb-4">{contenuDuCompte}</div>
           </MenuDeVerre>
 
           {/*  ██ SMARTPHONE — UNE PAGE, PLUS UNE FENÊTRE (§4, nº 465) ██
@@ -1448,7 +1311,7 @@ export function MenuEspace({
                  plus en bas de page, donc encore de la hauteur et un
                  gris de plus près du bord. */}
             <div className="grow pb-[max(4.5rem,env(safe-area-inset-bottom))]">
-              {contenuMenuDoigt}
+              {contenuDuCompte}
             </div>
           </PagePleinEcranMobile>
         </>

@@ -264,10 +264,14 @@ const NOMS_BLOCS: Record<
   //  Les anciens titres (« Ton nom d'artiste », « Logo du salon »…)
   //  vivent désormais DANS les champs (INDICATIONS_CHAMPS).
   profil: { artiste: "Profil", salon: "Profil", prive: "Profil" },
+  //  §3 (nº 536) — « Yoko Portfolio » DEVIENT « Portfolio » : la marque
+  //  est déjà écrite en haut de l'écran, un titre de bloc n'a pas à la
+  //  répéter. C'est le seul endroit du site où ces deux mots étaient
+  //  accolés — vérifié.
   portfolio: {
-    artiste: "Yoko Portfolio",
-    salon: "Yoko Portfolio",
-    prive: "Yoko Portfolio",
+    artiste: "Portfolio",
+    salon: "Portfolio",
+    prive: "Portfolio",
   },
   specificites: {
     artiste: "Spécificités",

@@ -1292,21 +1292,23 @@ export function EnTeteTatouage({
                 style={{ height: HAUTEUR_ACTIONS }}
                 /*  ██ §2 (nº 535) — LA CAPSULE PREND DES ANGLES ██
                     Ses bords étaient TOUT RONDS ; ils deviennent des
-                    ANGLES ARRONDIS. LE RAYON RETENU EST `rounded-lg`,
-                    8 px — LE RAYON DES BADGES de la charte depuis la
-                    nº 449, et non les 12 px des champs et des encadrés :
-                    ceci est un BADGE (un mot court sur un aplat plein),
-                    pas un champ. C'est exactement le chemin qu'a suivi
-                    le bouton « Suivre » à la nº 456, pour la même
-                    raison — les deux badges du site portent donc le même
-                    rayon.
+                    ANGLES ARRONDIS.
+                    §2 (nº 536) — LE RAYON MONTE À `rounded-xl`, 12 px :
+                    LE RAYON DES CHAMPS DE LA BARRE, relevé sur
+                    l'encadré du moteur (EncadreBarre — les 12 px que la
+                    nº 449 lui a donnés, « le même rayon que les champs
+                    mobiles »). La capsule vit DANS cette barre, à côté
+                    de ces champs : c'est à eux qu'elle doit ressembler,
+                    pas aux badges d'une fiche. Les 8 px de la nº 535 —
+                    le rayon des badges, celui du bouton « Suivre » —
+                    sont donc remplacés.
                     ⚠️ RIEN D'AUTRE NE BOUGE : ni la hauteur (elle vient
                     de `HAUTEUR_ACTIONS`, en ligne), ni le rembourrage de
                     20 px, ni les couleurs, ni la place, ni les deux
                     libellés superposés qui réservent la largeur
                     (nº 203-§1a) — le bloc central de la barre ne peut
                     toujours pas être poussé. */
-                className="hidden sm:flex rounded-lg px-5 items-center
+                className="hidden sm:flex rounded-xl px-5 items-center
                            bg-primaire border-2 border-primaire
                            hover:bg-primaire-fonce hover:border-primaire-fonce
                            text-sombre-texte
