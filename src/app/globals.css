@@ -324,33 +324,60 @@ html:has([data-fond="sombre"]) {
   --rw-verre: 0.88;
   --rw-flou: 40px;
 }
-/*  §2 (nº 450) — LA BARRE PLUS SOMBRE : l'opacité du fond passe de
-    0.75 à 0.88 (la teinte ne change pas, le flou et la
-    saturation non plus). Une seule règle pour le doigt et la souris :
-    `data-barre-fixe` est portée par les deux barres. Le réglage
-    `?verre=` (style en ligne d'EnTeteTatouage) reste le banc d'essai.
-    §1 (nº 466) — LA TEINTE SUIT LE NOUVEAU FOND : 26,26,29 devient
-    11,15,20 (#0B0F14) — mêmes opacités, même flou : la barre reste à
-    0.88, dense sur les photos blanches (l'acquis nº 450). Ces valeurs
-    sont EN DUR par nécessité WebKit (le relevé nº 172 ci-dessus) :
-    elles doivent être changées À LA MAIN si le fond change encore. */
+/*  ██ §3 (nº 541) — LA BARRE DU WEB DEVIENT UN APLAT, ELLE AUSSI ██
+    -------------------------------------------------------------------
+    CE QU'IL Y AVAIT, ET C'EST L'HISTOIRE DE CETTE RÈGLE : un verre
+    dépoli — le fond du site à 0.88 sur un flou de 40 px et une
+    saturation à 150 % (l'opacité montée de 0.75 à 0.88 à la nº 450-§2,
+    la teinte passée de 26,26,29 à 11,15,20 à la nº 466-§1).
+    CE QU'IL Y A : le fond du site PLEIN, sans flou ni saturation — sur
+    consigne du propriétaire. La barre ne laisse plus rien deviner de
+    ce qui passe dessous.
+    ⚠️ LA COULEUR N'EST PAS CHOISIE, ELLE EST RECOPIÉE : c'est
+    littéralement celle de la règle du DOIGT, quinze lignes plus bas
+    (nº 469) — #0B0F14, la valeur du jeton `fond` de la nº 466. Aucune
+    teinte nouvelle n'entre dans la charte, et les deux barres du site
+    disent maintenant la même chose.
+    ⚠️ EN DUR, PAR NÉCESSITÉ WEBKIT (le relevé nº 172 juste au-dessus) :
+    pas de `var()` dans ce bloc. Si le fond change encore, cette valeur
+    se change À LA MAIN, avec celle du doigt.
+    ⚠️ LE FILTRE EST ANNULÉ, PAS SEULEMENT COUVERT : sous un fond
+    opaque il ne se verrait plus, mais il continuerait de faire de la
+    barre une racine d'arrière-plan et de coûter à chaque image. Il est
+    donc mis à `none`, exactement comme au doigt depuis la nº 469 — et
+    depuis tout ce temps, la barre du doigt vit très bien sans lui.
+    ⚠️ CE QUI NE BOUGE PAS : ni la hauteur de la barre, ni sa naissance
+    (nº 439 — une règle statique, lue avant la première peinture), ni
+    son rang, ni son `bg-sombre-fond` de repli (nº 147-§2), qui porte
+    désormais EXACTEMENT la même couleur que cette règle.
+    ⚠️ CE QUI N'EST PAS TOUCHÉ NON PLUS : le VOILE web multi-trous
+    (nº 450) est une tout autre surface — c'est l'opacité 0.88 de cette
+    barre-ci, posée au §2 de cette même passe, que le propriétaire
+    remplace. Et aucune des autres surfaces de verre du site n'a ce
+    sélecteur : elles vivent sous `data-verre-fenetre`, `data-verre-
+    menu`, `data-verre-capsule`, `data-verre-champ`, `data-verre-action`
+    et `data-verre-badge-*`, toutes plus bas et toutes intactes. */
 [data-barre-fixe] {
-  background-color: rgba(11, 15, 20, 0.88);
-  -webkit-backdrop-filter: blur(40px) saturate(150%);
-  backdrop-filter: blur(40px) saturate(150%);
+  background-color: #0b0f14;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 /*  §2 (nº 469) — AU DOIGT, LA BARRE EST UN APLAT OPAQUE : plus de
     verre, plus de flou, plus de transparence — le fond du site plein
     (#0B0F14 = COULEURS_SOMBRE.fond, nº 466), sur consigne du
     propriétaire. La valeur est EN DUR comme tout ce bloc (la règle
     nº 172 : ces déclarations ne passent pas par `var()`) : si le fond
-    change encore, elle se change À LA MAIN, avec les autres. LE WEB
-    GARDE SON VERRE (la règle au-dessus — 0.88, flou 40, l'acquis
-    nº 450) : cette règle ne vit que sous `data-appareil="mobile"`.
+    change encore, elle se change À LA MAIN, avec les autres.
+    ██ §3 (nº 541) — CETTE RÈGLE FAIT DÉSORMAIS DOUBLE EMPLOI, ET ON LA
+    GARDE QUAND MÊME ██ La règle du dessus vient de passer à l'aplat
+    elle aussi : les deux déclarent maintenant la même chose. Ce n'est
+    PAS une raison de supprimer celle-ci — elle est la GARANTIE PROPRE
+    du doigt, l'acquis nº 469 écrit en toutes lettres. Si le web
+    revenait un jour au verre, le doigt resterait opaque sans que
+    personne ait à y repenser ; effacer cette règle le ferait suivre en
+    silence. Elle ne coûte rien et elle dit une intention.
     Ni la hauteur de la barre ni sa naissance ne changent (nº 439 :
-    une règle statique, lue avant la première peinture). Le réglage
-    d'essai `?verre=` (style en ligne, EnTeteTatouage) garde le
-    dernier mot — c'est un banc. */
+    une règle statique, lue avant la première peinture). */
 html[data-appareil="mobile"] [data-barre-fixe] {
   background-color: #0b0f14;
   -webkit-backdrop-filter: none;

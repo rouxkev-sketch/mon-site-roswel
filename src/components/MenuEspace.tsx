@@ -8,6 +8,9 @@ import {
   IconeBouclierTrait,
   IconeChevronBas,
   IconeCloche,
+  //  §2 (nº 541) — la croix de fermeture de la fenêtre du web : le même
+  //  glyphe que celui des écrans « Notifications » et « Langue ».
+  IconeCroix,
   IconeFanion,
   IconeAjouterPortfolio,
   IconeReglages,
@@ -1309,14 +1312,35 @@ export function MenuEspace({
                    eux et non inventée : « Notifications » et « Langue »
                    portent le même titre à 17 px, gras, `tracking-tight`,
                    en blanc de charte (FenetreNotifications, SelecteurLangue).
-                   Et « Notifications » pose devant le sien une icône de
-                   20 px au gris doux des icônes — c'est cette PAIRE
-                   ENTIÈRE qui est reprise, taille de mot ET taille
-                   d'icône, parce que les trois surfaces sont de la même
-                   famille : un titre de fenêtre.
-                   L'ALIGNEMENT : le bloc porte le même air latéral que le
-                   contenu qu'il coiffe — l'icône commence donc exactement
-                   sur la marge de la fenêtre, et le mot juste après.
+                   ██ §1 (nº 541) — L'ICÔNE DEVANT LE TITRE EST RETIRÉE ██
+                   La silhouette que la nº 540 avait posée devant le mot
+                   n'est plus là : le TITRE lui-même se cale désormais sur
+                   la marge du contenu, à l'endroit exact où l'icône
+                   commençait. Le mot ne change ni de corps, ni de graisse,
+                   ni de couleur.
+                   ██ §2 (nº 541) — LA CROIX, À L'OPPOSÉ ██
+                   Elle n'est pas dessinée pour l'occasion : c'est le
+                   bouton de fermeture de « Notifications » repris ENTIER
+                   (FenetreNotifications) — même glyphe (`IconeCroix`), même
+                   corps de 18 px, même cible ronde de 36, même gris doux
+                   qui blanchit au survol sur un rond élevé, même
+                   transition. « Langue » porte le même bouton, à l'ombre
+                   de survol près.
+                   L'ALIGNEMENT, MESURÉ ET COMPENSÉ (la leçon des nº 465 et
+                   nº 483) : la cible est PLUS LARGE que le dessin, et le
+                   dessin se retrouve donc rentré par rapport au bord. Le
+                   vide vaut ici (36 − 18) / 2 = NEUF pixels — la formule
+                   même de la nº 483, recalculée pour cette paire-ci. Le
+                   bouton est donc tiré de neuf pixels vers la droite :
+                   le dessin retombe alors PILE sur le bord droit des
+                   encadrés, qui s'arrêtent à la marge du contenu.
+                   ⚠️ LA CIBLE NE RÉTRÉCIT PAS : ce sont ses trente-six
+                   pixels qui se déplacent, pas sa taille — la règle de la
+                   nº 483, mot pour mot.
+                   ⚠️ LA RANGÉE GRANDIT DE CE QU'IL FAUT : le bouton fait
+                   36 px de haut quand le mot seul en faisait une
+                   vingtaine. C'est le prix d'une cible confortable, et
+                   c'est celui que paient déjà les deux autres écrans.
                    L'AIR SOUS LE TITRE N'EST PAS UN NOMBRE DE PLUS : le
                    contenu garde SON air du haut (le réglage du web,
                    16 px), qui devient l'écart entre le titre et la
@@ -1324,22 +1348,29 @@ export function MenuEspace({
                    au-dessus de lui — un seul nombre commande les deux, et
                    il vaut l'air des côtés.
                    ⚠️ LA PAGE DU DOIGT N'EST PAS CONCERNÉE : elle a son
-                   cœur de marque et son titre centré depuis les nº 530-534,
-                   posés par son EN-TÊTE, pas par ce contenu. Ce bloc-ci
-                   vit chez l'appelant du web et n'entre jamais dans
-                   `contenuDuCompte` — rien n'est partagé, rien n'a eu à
-                   être séparé.
+                   cœur de marque, son titre centré et SA PROPRE CROIX
+                   depuis les nº 530-534, posés par son EN-TÊTE, pas par ce
+                   contenu. Ce bloc-ci vit chez l'appelant du web et
+                   n'entre jamais dans `contenuDuCompte` — rien n'est
+                   partagé, rien n'a eu à être séparé.
                    ⚠️ LE NOM ACCESSIBLE DE LA FENÊTRE RESTE « Mon espace »
                    (l'`aria-label` posé plus haut) : il n'est pas visé par
                    cette passe, et je ne le change pas de mon chef. */}
               <div className={`flex items-center gap-3 px-4 ${REGLAGES_WEB.airHaut}`}>
-                <IconeSilhouette
-                  taille={20}
-                  classe="shrink-0 text-sombre-texte/80"
-                />
-                <h2 className="text-[17px] font-bold tracking-tight text-sombre-texte">
+                <h2 className="flex-1 min-w-0 text-[17px] font-bold tracking-tight text-sombre-texte">
                   Mon compte
                 </h2>
+                <button
+                  type="button"
+                  onClick={() => setOuvert(false)}
+                  aria-label="Fermer"
+                  className="-mr-[9px] w-9 h-9 shrink-0 flex items-center justify-center
+                             rounded-full text-sombre-texte-doux
+                             hover:text-sombre-texte hover:bg-sombre-eleve
+                             transition-colors"
+                >
+                  <IconeCroix taille={18} />
+                </button>
               </div>
               {contenuDuCompte(REGLAGES_WEB)}
             </div>
