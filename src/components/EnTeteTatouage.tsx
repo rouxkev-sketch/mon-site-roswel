@@ -1188,7 +1188,14 @@ export function EnTeteTatouage({
                     débord meurt dans le rembourrage. ≥ 640, ce lien
                     est `hidden` : le badge « Se connecter », qui n'a
                     pas de boîte excédentaire, ne bouge pas. */
-                className={`sm:hidden -mr-1.5 mobile:-mr-2 flex items-center justify-center rounded-full
+                //  §2 (nº 547) — `shrink-0`, LE MOT QUI MANQUAIT : sans
+                //  lui la rangée rétrécit la boîte quand la place vient
+                //  à manquer, la hauteur ne suit pas, et le rond du
+                //  survol devient un rectangle. Le troisième et dernier
+                //  accès au compte à l'avoir perdu ; la loupe, le
+                //  fanion, le globe et le bouton des filtres le portent
+                //  déjà. Voir la note complète dans MenuEspace.
+                className={`sm:hidden -mr-1.5 mobile:-mr-2 flex shrink-0 items-center justify-center rounded-full
                            transition-colors ${ETATS_ROND_BARRE}
                            focus-visible:outline-2 focus-visible:outline-offset-2
                            focus-visible:outline-primaire

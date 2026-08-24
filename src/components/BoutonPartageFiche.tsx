@@ -448,7 +448,17 @@ export function BoutonPartageFiche({
             setTimeout(() => setCopieChamp(false), 2000);
           }}
           data-verre-capsule=""
-          className="shrink-0 rounded-full px-4 min-h-[36px] text-[13px]
+          /*  §3 (nº 547) — DES ANGLES ARRONDIS, PLUS DES BOUTS RONDS.
+               LE RAYON RETENU EST 8 px, celui des BADGES (nº 449), et
+               non les 12 px des champs et des encadrés. Deux raisons,
+               et elles vont dans le même sens : ce bouton EST un badge
+               (il porte l'écriture de verre des capsules, juste
+               au-dessus), et il vit À L'INTÉRIEUR du champ du lien, qui
+               porte 12 px — un enfant doit rester sous le rayon de sa
+               boîte, sans quoi les deux courbes se contrarient.
+               ⚠️ RIEN D'AUTRE NE BOUGE : ni la taille, ni la couleur,
+               ni la place, ni le comportement. */
+          className="shrink-0 rounded-lg px-4 min-h-[36px] text-[13px]
                      font-semibold text-sombre-texte"
         >
           {copieChamp ? "Copié !" : "Copier"}

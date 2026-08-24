@@ -1213,7 +1213,10 @@ export function MenuEspace({
         aria-label={`Mon espace — ${nom}`}
         title={`Mon espace — ${nom}`}
         style={{ height: hauteur, width: hauteur }}
-        className={`sm:hidden flex items-center justify-center rounded-full
+        //  §2 (nº 547) — LE MÊME MOT, POUR LA MÊME RAISON : c'est ce
+        //  bouton-ci dans son autre habillage, il portait le même
+        //  manque. Voir la note complète sur le jumeau du web, plus bas.
+        className={`sm:hidden flex shrink-0 items-center justify-center rounded-full
                    text-primaire transition-colors ${ETATS_ROND_BARRE}
                    focus-visible:outline-2 focus-visible:outline-offset-2
                    focus-visible:outline-primaire`}
@@ -1240,7 +1243,23 @@ export function MenuEspace({
         aria-label={`Mon espace — ${nom}`}
         title={`Mon espace — ${nom}`}
         style={{ height: hauteur, width: hauteur }}
-        className={`hidden sm:flex items-center justify-center rounded-full
+        /*  ██ §2 (nº 547) — POURQUOI LE SURVOL PARAISSAIT CARRÉ ██
+             LA CAUSE : `shrink-0` MANQUAIT. La largeur de 40 px n'est
+             qu'une BASE dans une rangée en flex — sans ce mot, la
+             rangée le rétrécit quand elle manque de place, tandis que
+             la HAUTEUR, elle, ne bouge pas. Une boîte de 28 sur 40
+             portant `rounded-full` ne rend plus un cercle mais un
+             rectangle aux bouts arrondis : c'est le fond de survol que
+             le propriétaire voit carré.
+             LE REMÈDE EST CELUI DU BOUTON DES FILTRES, mot pour mot :
+             lui porte `shrink-0 w-[46px] h-[46px] rounded-full`
+             (MoteurTatouage) — sa boîte reste carrée, son rond reste
+             rond. La loupe, le fanion et le globe le portent aussi ;
+             seuls les trois accès au compte l'avaient perdu.
+             ⚠️ RIEN D'AUTRE NE CHANGE : ni la taille de l'icône, ni
+             celle de la cible (40 px, en ligne juste au-dessus), ni la
+             position, ni la couleur du survol. */
+        className={`hidden sm:flex shrink-0 items-center justify-center rounded-full
                    text-primaire transition-colors ${ETATS_ROND_BARRE}
                    focus-visible:outline-2 focus-visible:outline-offset-2
                    focus-visible:outline-primaire`}

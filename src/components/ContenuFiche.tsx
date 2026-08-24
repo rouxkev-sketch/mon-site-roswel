@@ -483,7 +483,21 @@ function LigneDeCapsules({
         {visibles.map((slug) => (
           <span
             key={slug}
-            className={`inline-flex items-center whitespace-nowrap rounded-lg px-2.5 py-1 text-[13.5px] leading-[18px] ${fond}`}
+            /*  §1 (nº 547) — LE TEXTE S'ÉCLAIRCIT. Les capsules ne
+                 portaient AUCUNE couleur à elles : elles héritaient du
+                 gris doux de la ligne (`LIGNE_GRISE`, posé sur le `p`
+                 qui les contient) — 5,96 de contraste sur leur fond,
+                 trop sombre pour être lu sans effort. Elles prennent le
+                 jeton de texte plein de la nº 466 : 12,59.
+                 ⚠️ ON POSE LA COULEUR ICI, PAS SUR LA LIGNE : le `p`
+                 porte aussi l'ICÔNE en tête (diamant, étoile), qui doit
+                 garder le gris de toutes les icônes de la colonne
+                 (nº 392). Éclaircir la ligne l'aurait emportée.
+                 ⚠️ UNE CAPSULE EST UNE VALEUR, pas une mention : le
+                 site donne déjà le texte plein à ses valeurs. Rien
+                 d'autre ne bouge — ni la taille, ni la graisse, ni le
+                 fond. */
+            className={`inline-flex items-center whitespace-nowrap rounded-lg px-2.5 py-1 text-[13.5px] leading-[18px] text-sombre-texte ${fond}`}
           >
             {libelle(slug)}
           </span>
@@ -543,9 +557,14 @@ function LigneDeCapsules({
                  ⚠️ ET IL RÉPOND DANS LES DEUX ÉTATS (acquis nº 505) :
                  cette écriture sert « +2 » comme « Réduire », le
                  bouton étant le même. */
+            /*  §1 (nº 547) — IL PARTAGEAIT LE MÊME GRIS, il suit donc.
+                 Le compteur n'avait pas plus de couleur à lui que les
+                 capsules : il héritait du même `LIGNE_GRISE`. Il prend
+                 le même texte plein — 4,94 → 10,44 sur son fond, qui
+                 est d'un cran au-dessus du leur. Rien d'autre ne bouge. */
             className="inline-flex cursor-pointer items-center gap-1 whitespace-nowrap
                        rounded-lg bg-sombre-eleve-clair px-2.5 py-1 text-[13.5px] leading-[18px]
-                       transition-colors hover:bg-sombre-haut
+                       text-sombre-texte transition-colors hover:bg-sombre-haut
                        active:bg-sombre-haut"
           >
             {deplie ? "Réduire" : `+${restant}`}
