@@ -210,8 +210,15 @@ export function FenetreLangue({ surFermeture }: { surFermeture: () => void }) {
       <FenetreDeVerre
         ariaLabel="Choisir la langue"
         //  §3 (nº 240) — 45 % : elle s'ouvre au-dessus de la mosaïque,
-        //  et les cartes de flashs sont souvent blanches.
+        //  et les cartes de flashs sont souvent blanches. §1 (nº 543) —
+        //  ce réglage est devenu sans objet, la fenêtre n'étant plus en
+        //  verre ; il reste écrit pour le jour où l'on y reviendrait.
         dense
+        //  §1 (nº 543) — FOND OPAQUE au jeton `carte`, comme « Mon
+        //  compte » depuis la nº 542. NI SA PLACE NI SA TAILLE NE
+        //  CHANGENT : le cadre, la largeur et le rembourrage
+        //  ci-dessous sont ceux d'avant, au caractère près.
+        opaque
         surFermeture={surFermeture}
         largeur="max-w-[320px]"
         rembourrage="p-0"
@@ -416,15 +423,31 @@ export function SelecteurLangue({ hauteur = 40 }: { hauteur?: number }) {
       </button>
 
       {/* ---- LE MENU SOUS LA BARRE (web) ----
-          En VERRE et DANS LE CORPS DU DOCUMENT (nº 238-§4) : la barre
-          fixe porte son propre flou, donc une racine d'arrière-plan —
-          un enfant n'y flouterait que l'intérieur de la barre. */}
+          DANS LE CORPS DU DOCUMENT (nº 238-§4) : la barre fixe portait
+          son propre flou, donc une racine d'arrière-plan — un enfant
+          n'y flouterait que l'intérieur de la barre. (Ce flou a été
+          retiré à la nº 541 ; le portail, lui, reste indispensable pour
+          que la barre ne découpe pas le menu.)
+          ██ §2 (nº 543) — LA CINQUIÈME SURFACE, ET JE LA SIGNALE ██
+          Le propriétaire n'en a nommé QUE QUATRE, et celle-ci n'en
+          était pas : c'est le menu du globe, celui du VISITEUR NON
+          CONNECTÉ. Il m'a laissé le choix de la faire suivre. Elle
+          suit, et voici pourquoi : elle montre EXACTEMENT la même
+          liste de langues que la fenêtre du §1, au web, dans un menu
+          ancré sous un bouton de la même barre. Les laisser diverger
+          donnerait deux menus de langue d'apparence différente selon
+          qu'on est connecté ou non. Et le verre servait ici à tenir
+          au-dessus des photos claires de la mosaïque (nº 238-§6) —
+          un aplat opaque le fait mieux, pas moins bien.
+          ⚠️ UN SEUL MOT, ET IL SE RETIRE AUSSI VITE : ni sa place, ni
+          sa largeur, ni son alignement ne changent. */}
       {ouvert && !superposee && (
         <MenuDeVerre
           ouvert={ouvert}
           ancre={globe}
           refPanneau={plaque}
           largeur={290}
+          opaque
           alignement="droite"
           role="dialog"
           aria-label="Choisir la langue"

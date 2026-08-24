@@ -1367,6 +1367,15 @@ export function MoteurTatouage({
               refPanneau={plaqueFiltres}
               largeur={420}
               largeurAuContenu
+              //  §1 (nº 543) — FOND OPAQUE au jeton `carte` : le drapeau
+              //  de la nº 537, la teinte de la nº 542. Des quatre
+              //  fenêtres de cette passe, celle-ci est la SEULE qui
+              //  passait déjà par `MenuDeVerre` — un mot suffit.
+              //  Ni sa place, ni sa largeur, ni son alignement ne
+              //  changent. Ses badges n'ont AUCUN fond (la robe
+              //  « sur panneau », BadgesCharte) : ils ne perdent donc
+              //  pas un cran d'écart, seuls leurs textes suivent.
+              opaque
               alignement="droite"
               data-panneau-filtres=""
               data-source-fichier="src/components/MoteurTatouage.tsx"

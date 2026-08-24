@@ -258,6 +258,7 @@ export function FenetreDeVerre({
   rembourrage = "p-6",
   classeCadre = "p-6 z-[80]",
   dense = false,
+  opaque = false,
   children,
 }: {
   ariaLabel?: string;
@@ -274,6 +275,32 @@ export function FenetreDeVerre({
       fenêtres qui s'ouvrent au-dessus des cartes de flashs, souvent
       blanches. Voile, flou et liseré inchangés. */
   dense?: boolean;
+  /**
+   * ██ §1 (nº 543) — CETTE FENÊTRE-CI N'EST PAS EN VERRE ██
+   * ------------------------------------------------------------------
+   * LE MÊME PROCÉDÉ QUE CELUI DES MENUS (le drapeau `opaque` de
+   * `MenuDeVerre`, nº 537), transposé aux fenêtres : l'attribut de
+   * verre n'est simplement PAS POSÉ, et la plaque prend le jeton
+   * `carte` de la nº 466 — celui que « Mon compte » porte depuis la
+   * nº 542, et que le propriétaire étend ici. `globals.css` n'est pas
+   * touché (règle nº 172) : c'est l'ATTRIBUT qui disparaît, pas la
+   * règle qui change.
+   * ⚠️ CE QUI PART AVEC L'ATTRIBUT, ET IL FAUT LE SAVOIR : le LISERÉ.
+   * `data-verre-fenetre` porte, en plus du fond et du flou, un fin
+   * trait clair en ombres internes — l'épaisseur de la plaque, seule
+   * exception écrite à « aucun contour ». Sans verre il n'a plus rien
+   * à suggérer, et la charte n'en demande aucun : la fenêtre se dit
+   * désormais par son seul fond.
+   * ⚠️ LE VOILE NE BOUGE PAS : il vit au-dessus, dans le cadre, et
+   * c'est lui qui continue de détacher la fenêtre de la page.
+   * ⚠️ `dense` DEVIENT SANS OBJET quand ce drapeau est passé — il ne
+   * règle que la teinte du VERRE. Les deux ne se contredisent pas :
+   * aucun attribut n'étant posé, aucune des deux règles ne s'applique.
+   * ⚠️ FAUX PAR DÉFAUT : les autres fenêtres de verre du site (Partage,
+   * invitation de compte, adresse, envoi, signalement…) ne le passent
+   * pas et gardent leur plaque au pixel.
+   */
+  opaque?: boolean;
   /** L'air AUTOUR de la fenêtre, et son étage. Une fenêtre ouverte
       depuis une autre monte au-dessus d'elle. */
   classeCadre?: string;
@@ -305,11 +332,19 @@ export function FenetreDeVerre({
         />
       )}
 
-      {/*  LA PLAQUE — aucune opacité, aucune transition d'opacité. */}
+      {/*  LA PLAQUE — aucune opacité, aucune transition d'opacité.
+           §1 (nº 543) — opaque : aucun attribut de verre, le jeton
+           `carte` à la place (voir le drapeau, plus haut). */}
       <div
-        data-verre-fenetre=""
-        {...(dense ? { "data-verre-dense": "" } : {})}
-        className={`relative w-full ${largeur} rounded-3xl ${rembourrage} ${classePlaque}`}
+        {...(opaque
+          ? {}
+          : {
+              "data-verre-fenetre": "",
+              ...(dense ? { "data-verre-dense": "" } : {}),
+            })}
+        className={`relative w-full ${largeur} rounded-3xl ${
+          opaque ? "bg-sombre-carte " : ""
+        }${rembourrage} ${classePlaque}`}
       >
         {children}
       </div>

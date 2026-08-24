@@ -922,18 +922,34 @@ export function ChampLocalisation({
             // moteur ne le découpe plus (web).
             style={stylePanneau(cadre, ouvreVersLeHaut, hauteurMax)}
             //  À LA CHARTE (nº 139) : ni contour ni ombre.
-            //  ⚠️ LE FOND DU PANNEAU DES FILTRES, RECOPIÉ (nº 179-§1).
-            //  Cette fenêtre est celle qui porte le RAYON une fois une
-            //  ville choisie : elle était restée à `carte` (#232327)
-            //  quand les fenêtres du web sont montées à `eleve`
-            //  (#2C2C31) à la nº 144-§3. Deux fenêtres côte à côte, deux
-            //  gris. C'est la valeur du panneau des filtres, telle
-            //  quelle — et les badges qu'elle contient prennent en
-            //  conséquence la robe « sur panneau », comme dans les
-            //  filtres (voir MoteurTatouage, `piedRayon`).
-            data-verre-menu=""
+            //  ⚠️ LE FOND DU PANNEAU DES FILTRES, RECOPIÉ (nº 179-§1),
+            //  ET CE N'EST TOUJOURS PAS UNE VALEUR À ELLE : cette
+            //  fenêtre porte le RAYON une fois une ville choisie, elle
+            //  s'ouvre souvent à côté du panneau des filtres, et les
+            //  deux ne peuvent pas montrer deux gris différents. Elles
+            //  ont donc toujours suivi le même fond — le verre des
+            //  menus hier, le jeton `carte` depuis le §1 ci-dessous.
+            //  C'est aussi pourquoi ses badges portent la robe « sur
+            //  panneau », comme ceux des filtres (voir MoteurTatouage,
+            //  `piedRayon`).
+            /*  ██ §1 (nº 543) — CE PANNEAU-CI N'EST PLUS EN VERRE ██
+                 C'est la « fenêtre du rayon » du propriétaire : celle
+                 qui porte les paliers de distance une fois une ville
+                 choisie. Elle écrit sa plaque À LA MAIN et ne passe pas
+                 par `MenuDeVerre` — l'attribut de verre est donc
+                 simplement retiré ici, et le jeton `carte` de la nº 466
+                 le remplace (la teinte de « Mon compte », nº 542).
+                 `globals.css` n'est pas touché (règle nº 172).
+                 ⚠️ SEULE LA BRANCHE DU WEB EST VISÉE. Celle du DOIGT —
+                 le panneau « dans le flux », juste au-dessus — garde
+                 son verre : les surfaces du doigt ne sont pas dans
+                 cette passe.
+                 ⚠️ RIEN NE BOUGE D'UN PIXEL : le placement, la hauteur
+                 maximale et le portail sont ceux d'avant. Et les badges
+                 de rayon n'ont AUCUN fond (la robe « sur panneau ») :
+                 ils ne perdent pas un cran d'écart. */
             className="z-[80] flex flex-col rounded-xl
-                       text-sombre-texte overflow-hidden"
+                       bg-sombre-carte text-sombre-texte overflow-hidden"
             onPointerDown={() => {
               interactionPanneau.current = true;
               window.setTimeout(() => {

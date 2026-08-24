@@ -405,16 +405,32 @@ export function FenetreNotifications({
 
           {/* LE PANNEAU — un fond éclairci d'un cran sur le voile, sans
               contour ni ombre : la grammaire des fenêtres depuis la
-              nº 130 (Sécurité, retour de suppression). */}
+              nº 130 (Sécurité, retour de suppression).
+              ██ §1 (nº 543) — LA PLAQUE N'EST PLUS EN VERRE ██
+              Cette fenêtre écrit sa plaque À LA MAIN, elle ne passe pas
+              par `FenetreDeVerre` : les deux attributs de verre sont
+              donc simplement retirés ici, et le jeton `carte` de la
+              nº 466 les remplace — la teinte de « Mon compte » depuis
+              la nº 542, que le propriétaire étend. `globals.css` n'est
+              pas touché (règle nº 172).
+              LES DEUX ATTRIBUTS QUI PARTENT : `data-verre-fenetre` (le
+              fond translucide, le flou et le LISERÉ) et
+              `data-verre-dense` (la teinte à 45 % de la nº 240-§3, qui
+              n'a plus d'objet sans verre).
+              ⚠️ RIEN D'AUTRE NE BOUGE : ni la largeur de 520 px, ni la
+              hauteur maximale, ni les arrondis, ni le voile au-dessus
+              — la fenêtre reste EXACTEMENT là où elle était.
+              ⚠️ CE QUE L'OPACITÉ COÛTE ICI, ET C'EST LA SEULE DES CINQ
+              SURFACES QUI PAIE : les rangées se teintent par
+              TRANSPARENCE (`eleve` à 40 % pour une non-lue, 60 % au
+              survol) et les traits de séparation aussi. Plus la plaque
+              est claire, moins ces voiles se voient : la non-lue tombe
+              de 1,11 à 1,06 d'écart avec son fond. Rien n'est retouché
+              pour compenser — le propriétaire juge sur pièce. */}
           <div
-            data-verre-fenetre=""
-            //  §3 (nº 240) — 45 % : au-dessus des cartes de flashs,
-            //  souvent blanches, la plaque à 22 % ne tenait pas. Voile,
-            //  flou et liseré inchangés.
-            data-verre-dense=""
             className="relative w-full max-w-[520px] max-h-[min(88dvh,720px)]
                        flex flex-col rounded-2xl sm:rounded-3xl
-                       overflow-hidden"
+                       bg-sombre-carte overflow-hidden"
           >
             {/* L'EN-TÊTE — la cloche, le titre, la double coche, la
                 croix. La ligne qui le sépare de la liste court d'un
