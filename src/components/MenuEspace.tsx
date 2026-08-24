@@ -1297,7 +1297,52 @@ export function MenuEspace({
                  une fenêtre posée sous un bouton n'a pas de barre de
                  navigateur sous elle. Le web garde 16 px, l'air d'un
                  encadré. */}
-            <div className="pb-4">{contenuDuCompte(REGLAGES_WEB)}</div>
+            <div className="pb-4">
+              {/*  ██ §1 (nº 540) — LE TITRE DE LA FENÊTRE, AU WEB SEUL ██
+                   ==========================================================
+                   LA FENÊTRE N'AVAIT AUCUN EN-TÊTE : ni titre, ni croix —
+                   elle commençait droit sur la première rangée de tuiles.
+                   Il n'y a donc rien à déplacer ni à réorganiser ; ce bloc
+                   s'AJOUTE au-dessus du contenu, et le contenu ne bouge pas
+                   d'un pixel.
+                   L'ÉCRITURE EST CELLE DES DEUX AUTRES ÉCRANS, relevée sur
+                   eux et non inventée : « Notifications » et « Langue »
+                   portent le même titre à 17 px, gras, `tracking-tight`,
+                   en blanc de charte (FenetreNotifications, SelecteurLangue).
+                   Et « Notifications » pose devant le sien une icône de
+                   20 px au gris doux des icônes — c'est cette PAIRE
+                   ENTIÈRE qui est reprise, taille de mot ET taille
+                   d'icône, parce que les trois surfaces sont de la même
+                   famille : un titre de fenêtre.
+                   L'ALIGNEMENT : le bloc porte le même air latéral que le
+                   contenu qu'il coiffe — l'icône commence donc exactement
+                   sur la marge de la fenêtre, et le mot juste après.
+                   L'AIR SOUS LE TITRE N'EST PAS UN NOMBRE DE PLUS : le
+                   contenu garde SON air du haut (le réglage du web,
+                   16 px), qui devient l'écart entre le titre et la
+                   première rangée. Le titre, lui, reprend ce même réglage
+                   au-dessus de lui — un seul nombre commande les deux, et
+                   il vaut l'air des côtés.
+                   ⚠️ LA PAGE DU DOIGT N'EST PAS CONCERNÉE : elle a son
+                   cœur de marque et son titre centré depuis les nº 530-534,
+                   posés par son EN-TÊTE, pas par ce contenu. Ce bloc-ci
+                   vit chez l'appelant du web et n'entre jamais dans
+                   `contenuDuCompte` — rien n'est partagé, rien n'a eu à
+                   être séparé.
+                   ⚠️ LE NOM ACCESSIBLE DE LA FENÊTRE RESTE « Mon espace »
+                   (l'`aria-label` posé plus haut) : il n'est pas visé par
+                   cette passe, et je ne le change pas de mon chef. */}
+              <div className={`flex items-center gap-3 px-4 ${REGLAGES_WEB.airHaut}`}>
+                <IconeSilhouette
+                  taille={20}
+                  classe="shrink-0 text-sombre-texte/80"
+                />
+                <h2 className="text-[17px] font-bold tracking-tight text-sombre-texte">
+                  Mon compte
+                </h2>
+              </div>
+              {contenuDuCompte(REGLAGES_WEB)}
+            </div>
           </MenuDeVerre>
 
           {/*  ██ SMARTPHONE — UNE PAGE, PLUS UNE FENÊTRE (§4, nº 465) ██
