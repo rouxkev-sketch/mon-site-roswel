@@ -304,12 +304,18 @@ export function FenetreNotifications({
             >
               <IconeCloche taille={24} />
             </span>
+            {/*  §1 (nº 539) — LE TITRE RESTE SEUL. La phrase qui le
+                 suivait est supprimée, sur les deux appareils : c'est la
+                 règle de charte des champs et des choix — aucune phrase
+                 explicative sous ce qui se comprend seul.
+                 L'AIR N'A RIEN À RATTRAPER, et la raison est
+                 structurelle : il ne venait pas de la phrase mais du
+                 rembourrage SYMÉTRIQUE de cette boîte, 56 px en haut
+                 comme en bas. Le groupe rond + titre reste donc centré
+                 exactement comme avant, simplement plus court d'une
+                 ligne. Rien n'est ajouté, rien n'est retiré. */}
             <p className="mt-4 text-[15px] font-semibold text-sombre-texte">
               Rien de neuf
-            </p>
-            <p className="mt-1.5 text-[13.5px] leading-relaxed text-sombre-texte-doux">
-              Les nouvelles de tes fiches et de tes demandes
-              s&apos;afficheront ici.
             </p>
           </div>
         ) : (

@@ -136,11 +136,40 @@ export function LigneResultats({
     <div
       data-titre-mosaique=""
       data-air-en-bas={airEnBas ? "" : undefined}
-      className={`pt-6 pb-5 sm:pt-8 sm:pb-6 ${airEnBas ? "lg:pb-10" : ""}${
-        masqueAuDoigt ? " mobile:hidden" : ""
-      }`}
+      /*  ██ §2 (nº 539) — AU DOIGT, LE TITRE EST PLUS PETIT ET MOINS BAS ██
+           LES DEUX VALEURS D'AVANT, MESURÉES : l'air au-dessus valait
+           24 px (le cran de base, `pt-6` — un téléphone en portrait est
+           sous 640 px, `sm:pt-8` ne l'atteint donc pas), et le titre
+           20 px (le PLANCHER du `clamp` : 2,4 % d'une largeur de
+           téléphone fait moins de 10 px, le plancher gagne toujours).
+           LES DEUX NOUVELLES : 12 px d'air, 17 px de titre.
+           ⚠️ LA SÉPARATION SE FAIT PAR `mobile:`, ET C'EST LE POINT.
+           Baisser le plancher du `clamp` ou le cran de base aurait
+           emporté le WEB — une fenêtre d'ordinateur étroite retombe
+           exactement sur ces deux mêmes valeurs. La variante `mobile:`
+           est le VRAI APPAREIL (la règle du site depuis la nº 60),
+           jamais une largeur : un ordinateur, si étroit soit-il, garde
+           ses 24 px et son `clamp` intacts.
+           ⚠️ ET ELLE TIENT EN PAYSAGE, ce qui n'allait pas de soi : un
+           téléphone couché dépasse 640 px, donc `sm:pt-8` s'applique
+           AUSSI. Les deux règles ont la même force (la variante
+           d'appareil s'écrit avec `:where`, qui ne pèse rien) — c'est
+           donc l'ORDRE dans la feuille produite qui tranche, et la
+           variante d'appareil y est écrite APRÈS. Vérifié dans la
+           feuille, pas supposé.
+           ⚠️ CE COMPOSANT N'A QUE DEUX APPELANTS, tous deux dans
+           IndexTatoueurs : l'accueil SANS recherche — qui ne se rend pas
+           du tout au doigt (`masqueAuDoigt`) — et le titre de recherche,
+           celui que le propriétaire vise. Au doigt, ces réglages ne
+           touchent donc QUE lui.
+           ⚠️ LE SOUS-TITRE NE CHANGE PAS, sur consigne : il reste à
+           15,5 px. L'écart de corps se resserre, mais la hiérarchie
+           tient par la GRAISSE et par la COULEUR. */
+      className={`pt-6 pb-5 sm:pt-8 sm:pb-6 mobile:pt-3 ${
+        airEnBas ? "lg:pb-10" : ""
+      }${masqueAuDoigt ? " mobile:hidden" : ""}`}
     >
-      <Titre className="text-[clamp(1.25rem,2.4vw,1.65rem)] font-bold leading-tight text-sombre-texte">
+      <Titre className="text-[clamp(1.25rem,2.4vw,1.65rem)] mobile:text-[17px] font-bold leading-tight text-sombre-texte">
         {titre}
       </Titre>
       {sousTitre ? (
