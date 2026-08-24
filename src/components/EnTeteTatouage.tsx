@@ -288,8 +288,24 @@ export function EnTeteTatouage({
   const valeur = criteres ?? repris;
 
   function chercher(suivants: CritèresTatouage) {
+    /*  ⚠️ TEMPORAIRE (nº 545) — QUELLE BRANCHE PREND LA RECHERCHE.
+        Deux chemins existent, et ils ne font PAS la même chose :
+         · avec `surRecherche` (l'accueil pilote) — la mosaïque bâtit
+           l'adresse par `parametresDeRecherche`, qui écrit la nature ;
+         · sans lui (toute autre page) — l'adresse est bâtie ICI, plus
+           bas, et cette écriture-là N'ÉCRIT PAS la nature (défaut relevé
+           à la nº 545, non corrigé tant que la mesure n'a pas parlé).
+        La ligne dit donc la branche ET les critères qui partent. */
+    noter(
+      `SONDE nº 545 · chercher() · branche=${
+        surRecherche ? "accueil (surRecherche)" : "barre (adresse bâtie ici)"
+      } · nature=${suivants.nature || "(vide)"} style=${
+        suivants.style || "(vide)"
+      }`
+    );
     if (surRecherche) {
       surRecherche(suivants);
+      noter("SONDE nº 545 · surRecherche rendu la main");
       return;
     }
     setInternes(suivants);
@@ -321,6 +337,10 @@ export function EnTeteTatouage({
       parametres.set("disposition", "une");
     if (lirePhototheque(SURFACE_RECHERCHE)) parametres.set("texte", "sans");
     const requete = parametres.toString();
+    //  ⚠️ TEMPORAIRE (nº 545) — L'ADRESSE RÉELLEMENT DEMANDÉE. Si elle
+    //  est écrite mais que la page ne bouge pas, le défaut est dans la
+    //  navigation, pas dans le moteur.
+    noter(`SONDE nº 545 · router.push → ${requete ? `/?${requete}` : "/"}`);
     router.push(requete ? `/?${requete}` : "/");
   }
 
