@@ -303,9 +303,27 @@ export function EntreeLangue({
       <span className={`${boite} text-sombre-texte/80`}>
         <IconeMonde taille={taille} />
       </span>
-      <span className="flex-1">Langue</span>
-      <span className="shrink-0 text-[12.5px] font-medium uppercase tracking-wide text-sombre-texte-doux">
-        {langueActive.code ?? langueActive.label}
+      <span className="flex-1 truncate">Langue</span>
+      {/*  §2 (nº 549) — LE NOM EN TOUTES LETTRES, PLUS LE CODE.
+           D'OÙ IL VIENT : de `LANGUES_YOKOFOLIO` (config/tatouage), la
+           liste unique des langues — c'est le MÊME `label` que l'écran
+           « Langue » affiche dans sa liste (`ListeDesLangues`, plus
+           haut dans ce fichier). Rien n'est écrit de neuf : « English »,
+           « Español », « Deutsch », « Français », « Italiano »,
+           « Português », « 日本語 » — les sept y sont déjà, et la ligne
+           les suivra toutes sans qu'on y revienne.
+           LES CAPITALES PARTENT AVEC LE CODE : elles étaient là pour
+           « EN », un sigle. Un nom propre de langue s'écrit comme il se
+           lit — et « Español » en capitales perdrait son accent à
+           l'œil.
+           ⚠️ ET IL NE POUSSE PAS LE LIBELLÉ : le nom ne peut pas
+           grandir (`shrink-0` le tient à sa taille), et c'est « Langue »
+           qui cède le premier si la place venait à manquer — il porte
+           `flex-1` et, désormais, la coupure propre. Le plus long des
+           sept (« Português », dix signes à 12,5 px ≈ 68 px) tient
+           largement dans les 290 px de la fenêtre. */}
+      <span className="shrink-0 text-[12.5px] font-medium tracking-wide text-sombre-texte-doux">
+        {langueActive.label}
       </span>
     </button>
   );

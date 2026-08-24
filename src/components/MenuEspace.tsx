@@ -20,7 +20,9 @@ import {
 } from "@/components/Icones";
 //  §1 (nº 531) — le cœur de la marque en tête de « Mon compte » au
 //  doigt : l'écriture unique de cette image, jamais son chemin.
-import { LogoYokofolio } from "@/components/LogoYokofolio";
+//  §1 (nº 549) — le rond de tête de la page du doigt : la photo de
+//  profil du portfolio affiché. Écriture unique du rond photo (nº 492).
+import { PhotoRonde } from "@/components/BlocLieux";
 import { EntreeLangue, FenetreLangue } from "@/components/SelecteurLangue";
 import { FenetreNotifications } from "@/components/FenetreNotifications";
 import { MenuDeVerre } from "@/components/SurfaceDeVerre";
@@ -1447,29 +1449,63 @@ export function MenuEspace({
                ⚠️ ET LE CONTENU CHANGE DE PLAN, LUI AUSSI : c'est
                `contenuMenuDoigt` qui est posé ici, pas `contenuMenu` —
                celui-ci reste au web, intact.
-               ██ §1 (nº 531) — ET C'EST LE CŒUR DE LA MARQUE ██
-               La silhouette de la nº 530 laisse la place à
-               `yokofolio-icone.png`. TROIS CHOSES À SAVOIR :
-                · LE FICHIER N'EST PAS TOUCHÉ, et il n'est même pas
-                  nommé ici : on passe par `LogoYokofolio`, l'écriture
-                  unique de cette image (son chemin vit dans
-                  `MARQUE_YOKOFOLIO` — règle nº 175-§5, aucune source
-                  d'image ne dépend d'une mise en page) ;
-                · IL N'EST PAS CARRÉ — 297 × 337, relevé à la nº 468 et
-                  DÉCLARÉ dans `LogoYokofolio` depuis la nº 507. On ne
-                  lui donne donc QUE SA HAUTEUR ; la largeur se
-                  calcule du rapport natif, et le composant la déclare
-                  au navigateur : rien n'est étiré, rien ne saute au
-                  chargement.
-                  §1 (nº 532) — ELLE GRANDIT ENCORE : 44 → 64 px de
-                  haut, donc 56 px de large (64 × 297 / 337, arrondi).
-                  On ne touche toujours QU'À LA HAUTEUR — c'est ce qui
-                  garantit le rapport ;
-                · LE TITRE reste centré dessous, la CROIX en haut à
-                  droite — la nº 530 ne bouge pas d'un pixel. */}
+               ██ §1 (nº 549) — ET CE N'EST PLUS LE CŒUR DE LA MARQUE ██
+               La nº 531 avait mis l'icône de marque à la place de la
+               silhouette de la nº 530, et la nº 532 l'avait portée à
+               64 px. Le propriétaire tranche autrement : ce rond doit
+               dire QUEL PORTFOLIO on regarde, pas quel site on visite.
+               Il montre donc la PHOTO DE PROFIL du portfolio affiché —
+               le détail est écrit sur la propriété `icone`, juste
+               dessous.
+               CE QUI NE BOUGE PAS D'UN PIXEL : la HAUTEUR de 64 px, le
+               centrage, le TITRE centré dessous et la CROIX en haut à
+               droite — la nº 530 tient, la nº 534 aussi. */}
           <PagePleinEcranMobile
             titre="Mon compte"
-            icone={<LogoYokofolio variante="icone" hauteur={64} />}
+            /*  ██ §1 (nº 549) — LA PHOTO DU PORTFOLIO REMPLACE LE CŒUR ██
+                 ==========================================================
+                 CE QUE MONTRE LE ROND, DANS L'ORDRE : la PHOTO DE PROFIL
+                 du portfolio affiché quand il y en a une ; la SILHOUETTE
+                 du compte sinon. Une seule règle, qui couvre les trois
+                 cas — pas de portfolio, portfolio sans photo, et le
+                 moment où le site ne sait pas encore.
+                 IL SUIT LE DÉROULANT SANS RIEN DE PLUS : `fiche` est
+                 `ficheActive(fiches, idFiche)`, la fiche que le sélecteur
+                 désigne. Choisir un autre portfolio réécrit `idFiche` —
+                 le rond se repeint dans le même rendu, comme le nom et
+                 la pastille d'état qui le suivent déjà.
+                 LA PLACE EST RÉSERVÉE DÈS LE PREMIER RENDU : le rond
+                 porte sa taille en classes (64 px), et l'image vit
+                 DEDANS en débord caché. Rien ne saute quand elle arrive
+                 — c'est la même mécanique que les ronds des fiches.
+                 ⚠️ RÈGLES 137/203 — CE QU'ON VOIT AVANT DE SAVOIR : tant
+                 que les fiches ne sont pas lues, la liste est vide, donc
+                 `fiche` n'existe pas, donc c'est la SILHOUETTE qui
+                 s'affiche. C'est l'état NEUTRE du compte, jamais un état
+                 faux : on ne peint pas une photo qu'on n'a pas, et l'on
+                 n'annonce pas non plus « aucun portfolio ».
+                 ⚠️ POURQUOI LE ROND DE REPLI EST ÉCRIT ICI et non pris à
+                 `PhotoRonde` : ce composant (nº 492) ne pose AUCUN glyphe
+                 pour `personne` — il rend un rond vide. Lui en ajouter un
+                 toucherait une écriture partagée par les fiches, pour un
+                 besoin de « Mon compte » : la géométrie du rond est donc
+                 répétée une fois ici, et rien d'autre.
+                 ⚠️ LE WEB N'EST PAS CONCERNÉ : sa fenêtre n'a ni cœur ni
+                 titre centré depuis la nº 536 — cet en-tête-ci
+                 n'appartient qu'à la page du doigt. */
+            icone={
+              fiche?.photo_profil ? (
+                <PhotoRonde
+                  source={fiche.photo_profil}
+                  nature="personne"
+                  classeTaille="h-16 w-16"
+                />
+              ) : (
+                <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-sombre-eleve text-sombre-texte-doux">
+                  <IconeSilhouette taille={34} />
+                </span>
+              )
+            }
             ariaLabel="Mon compte"
             enTeteCentre
             surFermer={() => setOuvert(false)}

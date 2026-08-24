@@ -37,6 +37,14 @@ export type FicheDuCompte = {
   supprime_le: string | null;
   purge_le: string | null;
   cree_le: string | null;
+  /** §1 (nº 549) — LA PHOTO DE PROFIL DU PORTFOLIO. Lue ici parce que
+      la page « Mon compte » du doigt la montre en tête (le rond de
+      64 px qui remplace le cœur de la marque). Elle est écrite DÈS
+      L'ENREGISTREMENT de la fiche, pas à sa publication
+      (FormulaireFiche, la charge principale) : un portfolio en attente
+      de validation porte donc déjà la sienne. Nulle quand rien n'a
+      été déposé. */
+  photo_profil: string | null;
 };
 
 /** L'état d'une fiche, tel que l'espace du compte l'affiche. */
@@ -50,11 +58,15 @@ export type EtatFiche =
 
 /** Les colonnes lues — nommées une seule fois. */
 const COLONNES =
-  "id, nom, slug, publie, statut, brouillon, hors_ligne, supprime_le, purge_le, cree_le";
+  "id, nom, slug, publie, statut, brouillon, hors_ligne, supprime_le, purge_le, cree_le, photo_profil";
 
 /** Les colonnes qui n'existent qu'après une migration récente : si
     l'une manque, on relit sans elle plutôt que de tout perdre. */
-const COLONNES_SOBRES = "id, nom, slug, publie, statut, brouillon";
+//  §1 (nº 549) — `photo_profil` rejoint les DEUX listes : c'est une
+//  colonne de toujours (la fiche publique la lit depuis longtemps),
+//  elle ne peut donc pas faire échouer la lecture de repli.
+const COLONNES_SOBRES =
+  "id, nom, slug, publie, statut, brouillon, photo_profil";
 
 /**
  * TOUTES LES FICHES DU COMPTE, de la plus ancienne à la plus récente
@@ -90,6 +102,7 @@ export async function chargerFichesDuCompte(
     supprime_le: (ligne.supprime_le as string | null) ?? null,
     purge_le: (ligne.purge_le as string | null) ?? null,
     cree_le: (ligne.cree_le as string | null) ?? null,
+    photo_profil: (ligne.photo_profil as string | null) ?? null,
   }));
 }
 
