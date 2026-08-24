@@ -1216,8 +1216,12 @@ export function MenuEspace({
         //  §2 (nº 547) — LE MÊME MOT, POUR LA MÊME RAISON : c'est ce
         //  bouton-ci dans son autre habillage, il portait le même
         //  manque. Voir la note complète sur le jumeau du web, plus bas.
+        //  §1 (nº 548) — LA MÊME BRANCHE, POUR LA MÊME RAISON : c'est ce
+        //  bouton-ci dans son autre habillage, et il commande la MÊME
+        //  surface. Voir la note complète sur le jumeau du web, plus bas.
         className={`sm:hidden flex shrink-0 items-center justify-center rounded-full
-                   text-primaire transition-colors ${ETATS_ROND_BARRE}
+                   text-primaire transition-colors
+                   ${ouvert ? "bg-sombre-eleve" : ETATS_ROND_BARRE}
                    focus-visible:outline-2 focus-visible:outline-offset-2
                    focus-visible:outline-primaire`}
       >
@@ -1259,8 +1263,30 @@ export function MenuEspace({
              ⚠️ RIEN D'AUTRE NE CHANGE : ni la taille de l'icône, ni
              celle de la cible (40 px, en ligne juste au-dessus), ni la
              position, ni la couleur du survol. */
+        /*  ██ §1 (nº 548) — LE ROND RESTE TANT QUE LA FENÊTRE EST
+             OUVERTE ██
+             LE DÉFAUT : le rond gris ne venait que du SURVOL. Ouvrir la
+             fenêtre déplace le pointeur — le survol tombe, le rond avec
+             lui, et le bouton qui commande la fenêtre ouverte n'avait
+             plus l'air d'être enfoncé.
+             LE REMÈDE EST CELUI DU BOUTON DES FILTRES (nº 507,
+             MoteurTatouage), repris mot pour mot : OUVERT, le fond est
+             POSÉ ; FERMÉ, ce sont les états de survol et d'appui.
+             JAMAIS LES DEUX — un seul fond peint à la fois, c'est la
+             règle nº 389, et c'est pourquoi la branche est exclusive.
+             LA COULEUR N'EST PAS CHOISIE : `bg-sombre-eleve` EST le
+             jeton que `ETATS_ROND_BARRE` peint au survol. Ouvert et
+             survolé se ressemblent donc au pixel, comme demandé.
+             ⚠️ LE GLYPHE N'A PAS D'ÉTAT DE SURVOL À REPRENDRE : il est
+             ROSE en permanence (c'est l'état connecté qui le dit,
+             charte) — `ETATS_ROND_BARRE` ne touche que le fond. Il n'y
+             a donc rien de plus à poser.
+             ⚠️ RIEN D'AUTRE NE CHANGE : ni la taille de l'icône, ni
+             celle de la cible (40 px, en ligne plus haut), ni la
+             position. */
         className={`hidden sm:flex shrink-0 items-center justify-center rounded-full
-                   text-primaire transition-colors ${ETATS_ROND_BARRE}
+                   text-primaire transition-colors
+                   ${ouvert ? "bg-sombre-eleve" : ETATS_ROND_BARRE}
                    focus-visible:outline-2 focus-visible:outline-offset-2
                    focus-visible:outline-primaire`}
       >
