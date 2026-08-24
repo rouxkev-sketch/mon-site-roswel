@@ -271,11 +271,28 @@ export function MenuDeroulant({
    * rgb(17,24,34), soit PLUS SOMBRE que la carte qui le porte (1,08 à
    * l'envers). Un menu ouvert doit se poser AU-DESSUS de ce qu'il
    * recouvre, pas en dessous.
-   * CE QUE FAIT CE DRAPEAU : l'attribut de verre n'est pas posé, et le
-   * jeton `carte` (#1A1F26) le remplace — 1,16 avec la page. C'est le
-   * MÊME drapeau, du même nom, que `MenuDeVerre` (nº 537) et
-   * `FenetreDeVerre` (nº 543) portent déjà : aucun mécanisme neuf,
-   * aucune couleur inventée, `globals.css` intouché (règle nº 172).
+   * CE QUE FAIT CE DRAPEAU : l'attribut de verre n'est pas posé, et un
+   * aplat le remplace. C'est le MÊME drapeau, du même nom, que
+   * `MenuDeVerre` (nº 537) et `FenetreDeVerre` (nº 543) portent déjà :
+   * aucun mécanisme neuf, aucune couleur inventée, `globals.css`
+   * intouché (règle nº 172).
+   *
+   * ██ §1 (nº 553) — L'APLAT MONTE DE `carte` À `eleve` ██
+   * ------------------------------------------------------------------
+   * LA nº 552 AVAIT POSÉ `carte` (#1A1F26), et ça n'a pas suffi : ces
+   * menus s'ouvrent DANS le formulaire, dont les encadrés sont
+   * EXACTEMENT à `carte` (`FormulaireFiche`). Le panneau se confondait
+   * donc avec ce qui le porte — contraste 1,00 — et restait invisible
+   * là où il compte. Le défaut avait juste changé de voisin : la page
+   * hier, l'encadré aujourd'hui.
+   * LE JETON EST DÉSORMAIS `eleve` (#262C34), celui des ENCADRÉS du
+   * site : un panneau qui flotte au-dessus d'une surface doit paraître
+   * PLUS HAUT qu'elle. Mesuré : 1,18 avec l'encadré du formulaire,
+   * 1,37 avec la page quand il déborde. Il n'existe pas de cran
+   * au-dessus qui reste sous le plafond — `eleve` EST le plafond.
+   * ⚠️ LES FENÊTRES DU SITE (nº 542-544) NE SUIVENT PAS : elles
+   * restent à `carte`. Une fenêtre se pose sur la page ; un menu se
+   * pose sur une fenêtre. Deux rangs, deux jetons.
    * ⚠️ POURQUOI UN DRAPEAU PLUTÔT QUE CHANGER L'ÉCRITURE. C'est
    * exactement le raisonnement de `fondRepos` (nº 388) juste dessous :
    * ce panneau est PARTAGÉ par cinq appelants — les deux menus du
@@ -1121,11 +1138,37 @@ export function MenuDeroulant({
    * On ne s'en remet plus à l'ordre de la feuille : en sombre, les
    * classes claires sont RETIRÉES avant d'être remplacées.
    */
+  /**
+   * ██ §1 (nº 553) — LE SURVOL D'UNE ENTRÉE SUIT LE FOND DU PANNEAU ██
+   * ------------------------------------------------------------------
+   * IL LE DOIT, SOUS PEINE DE DISPARAÎTRE. Le survol valait
+   * `bg-sombre-eleve` (#262C34) quel que soit le panneau. C'est
+   * EXACTEMENT le fond que `opaque` donne au panneau depuis cette
+   * passe : survol et panneau deviendraient la même couleur, contraste
+   * 1,00 — une liste dont les entrées ne répondent plus au doigt ni à
+   * la souris. Le survol monte donc du même cran que le panneau, à
+   * `bg-sombre-eleve-clair` (#323942) : 1,21 sur le nouveau fond, soit
+   * un peu MIEUX que les 1,18 qu'il avait sur le fond `carte` de la
+   * nº 552.
+   * ⚠️ LES DEUX BRANCHES SONT DES CHAÎNES LITTÉRALES, et ce n'est pas
+   * un détail de style : Tailwind lit le TEXTE des fichiers.
+   * `hover:${…}` assemblé à l'exécution ne produirait aucune règle —
+   * la leçon écrite noir sur blanc au-dessus de `actifAuFocus`.
+   * ⚠️ SANS `opaque`, RIEN NE BOUGE : le moteur de recherche et « Ma
+   * sélection » gardent leur verre ET leur survol au pixel.
+   */
+  const SURVOL_ENTREE = opaque
+    ? "hover:bg-sombre-eleve-clair"
+    : "hover:bg-sombre-eleve";
+  const APPUI_ENTREE = opaque
+    ? "active:bg-sombre-eleve-clair"
+    : "active:bg-sombre-eleve";
+
   const optionSombre = (base: string) =>
     sombre
       ? `${base
           .replace("hover:bg-fond-doux", "")
-          .replace("active:bg-primaire-clair", "")} hover:bg-sombre-eleve active:bg-sombre-eleve`
+          .replace("active:bg-primaire-clair", "")} ${SURVOL_ENTREE} ${APPUI_ENTREE}`
       : base;
 
   return (
@@ -1208,7 +1251,7 @@ export function MenuDeroulant({
                   .replace("border border-bordure", "")
                   .replace("bg-fond", "")
                   .replace(/shadow-\[[^\]]*\]/, "")} text-sombre-texte${
-                  opaque ? " bg-sombre-carte" : ""
+                  opaque ? " bg-sombre-eleve" : ""
                 }`
               : listeClassique
           }
@@ -1406,7 +1449,7 @@ export function MenuDeroulant({
               feuilleDecollee ? "mx-4 " : ""
             }${
               sombre
-                ? `text-sombre-texte${opaque ? " bg-sombre-carte" : ""}`
+                ? `text-sombre-texte${opaque ? " bg-sombre-eleve" : ""}`
                 : "bg-fond shadow-2xl"
             }`}
             style={{
@@ -1522,9 +1565,11 @@ export function MenuDeroulant({
                         //  que pour les styles qu'elle contient, une
                         //  fois ouverte (la branche `sousGroupe` des
                         //  options, ci-dessous).
+                        //  §1 (nº 553) — le survol de la porte suit le
+                        //  fond de la feuille, comme celui des entrées.
                         `min-h-[52px] pl-3 pr-3 rounded-2xl text-base ${
                           sombre
-                            ? "text-sombre-texte hover:bg-sombre-eleve"
+                            ? `text-sombre-texte ${SURVOL_ENTREE}`
                             : "text-encre hover:bg-fond-doux"
                         }`,
                         //  §3 (nº 260) — le point rose. (Le voile est
@@ -1586,8 +1631,10 @@ export function MenuDeroulant({
                           ? "pl-8"
                           : "pl-3"
                       } ${
+                        //  §1 (nº 553) — idem pour les entrées de la
+                        //  feuille glissante.
                         sombre
-                          ? "text-sombre-texte hover:bg-sombre-eleve"
+                          ? `text-sombre-texte ${SURVOL_ENTREE}`
                           : "text-encre hover:bg-fond-doux"
                       }`}
                     >

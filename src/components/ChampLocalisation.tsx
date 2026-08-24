@@ -251,13 +251,19 @@ export function ChampLocalisation({
    * ------------------------------------------------------------------
    * LE MÊME DRAPEAU, DU MÊME NOM, QUE `MenuDeroulant` (§2 nº 552),
    * `MenuDeVerre` (nº 537) et `FenetreDeVerre` (nº 543) : l'attribut
-   * de verre n'est pas posé, et le jeton `carte` (#1A1F26) le
-   * remplace. `globals.css` reste intouché (règle nº 172).
-   * IL NE VISE QUE LA BRANCHE « DANS LE FLUX » (le doigt) : la branche
-   * FLOTTANTE, celle du web, est déjà sur `carte` depuis le §1 de la
-   * nº 543 — qui avait laissé le doigt de côté en le disant. C'est
-   * cette moitié-là qui se referme ici, et les deux branches d'un même
-   * champ montrent enfin le même gris.
+   * de verre n'est pas posé, et un aplat le remplace. `globals.css`
+   * reste intouché (règle nº 172).
+   * IL VISE LES DEUX BRANCHES DEPUIS LA nº 553 — celle « dans le
+   * flux » (le doigt) et la FLOTTANTE (le web). La nº 552 n'avait
+   * traité que la première, la seconde étant déjà sortie du verre à la
+   * nº 543 ; mais la nº 543 l'avait figée à `carte` POUR TOUT LE MONDE,
+   * moteur compris, et il fallait bien l'ouvrir pour que le formulaire
+   * puisse monter sans emmener le moteur. Les deux branches d'un même
+   * champ montrent donc enfin le même gris, et il dépend de qui appelle.
+   * ⚠️ LE JETON EST `eleve` (#262C34), CELUI DES ENCADRÉS (nº 553), et
+   * plus `carte` : ces panneaux s'ouvrent DANS le formulaire, dont les
+   * encadrés SONT à `carte` — le panneau s'y confondait. Mesuré : 1,18
+   * avec l'encadré, 1,37 avec la page. Sans le drapeau, `carte`.
    * ⚠️ SUR DEMANDE, ET POUR LA MÊME RAISON QUE PARTOUT : ce panneau
    * est PARTAGÉ — trois champs du formulaire de fiche (les deux
    * adresses de `DeuxZonesLieu`, celle de `BlocStudios`) et LA PAGE DE
@@ -714,9 +720,21 @@ export function ChampLocalisation({
                     }
                   }}
                   onClick={() => choisir(lieu)}
-                  className="w-full min-h-[52px] px-4 py-2.5 text-left
-                             hover:bg-sombre-eleve active:bg-sombre-eleve
-                             transition-colors"
+                  /*  §1 (nº 553) — LE SURVOL SUIT LE FOND DU PANNEAU.
+                       Il valait `bg-sombre-eleve`, qui est EXACTEMENT
+                       le fond que `opaque` donne au panneau depuis
+                       cette passe : les deux se confondraient et la
+                       suggestion ne répondrait plus. Il monte donc du
+                       même cran (1,21 sur le nouveau fond, contre 1,18
+                       sur celui de la nº 552). Chaînes littérales : un
+                       `hover:${…}` assemblé à l'exécution ne
+                       produirait aucune règle Tailwind. */
+                  className={`w-full min-h-[52px] px-4 py-2.5 text-left
+                             transition-colors ${
+                               opaque
+                                 ? "hover:bg-sombre-eleve-clair active:bg-sombre-eleve-clair"
+                                 : "hover:bg-sombre-eleve active:bg-sombre-eleve"
+                             }`}
                 >
                   {/* DEUX LIGNES : le lieu, puis ce qui le situe. */}
                   <span className="block font-medium leading-tight truncate">
@@ -935,7 +953,7 @@ export function ChampLocalisation({
                  recherche au doigt garde son verre. */
             className={`mt-1.5 flex min-h-0 flex-1 flex-col rounded-xl
                        text-sombre-texte overflow-hidden${
-                         opaque ? " bg-sombre-carte" : ""
+                         opaque ? " bg-sombre-eleve" : ""
                        }`}
             {...(opaque ? {} : { "data-verre-menu": "" })}
             onPointerDown={() => {
@@ -981,8 +999,25 @@ export function ChampLocalisation({
                  maximale et le portail sont ceux d'avant. Et les badges
                  de rayon n'ont AUCUN fond (la robe « sur panneau ») :
                  ils ne perdent pas un cran d'écart. */
-            className="z-[80] flex flex-col rounded-xl
-                       bg-sombre-carte text-sombre-texte overflow-hidden"
+            /*  ██ §1 (nº 553) — `carte` N'EST PLUS DIT POUR TOUT LE
+                 MONDE ██
+                 CE QUE LA nº 543 AVAIT ÉCRIT, ET LE PIÈGE : elle a posé
+                 `bg-sombre-carte` EN DUR sur cette branche. Or elle est
+                 partagée — le formulaire au web l'ouvre, le MOTEUR au
+                 web aussi. Le formulaire doit monter à `eleve` (ses
+                 encadrés sont déjà à `carte`, le panneau s'y noyait) ;
+                 le moteur, lui, ne doit pas bouger d'un cran — c'est là
+                 que vit la « fenêtre du rayon » qui doit rester au même
+                 gris que le panneau des filtres, la raison écrite
+                 au-dessus.
+                 LE JETON EST DONC DIT PAR L'APPELANT, comme partout
+                 ailleurs dans ce fichier : `opaque` → `eleve`, sinon
+                 `carte` au caractère près. Le moteur ne passe pas le
+                 drapeau : il garde EXACTEMENT sa robe de la nº 543. */
+            className={`z-[80] flex flex-col rounded-xl
+                       text-sombre-texte overflow-hidden ${
+                         opaque ? "bg-sombre-eleve" : "bg-sombre-carte"
+                       }`}
             onPointerDown={() => {
               interactionPanneau.current = true;
               window.setTimeout(() => {

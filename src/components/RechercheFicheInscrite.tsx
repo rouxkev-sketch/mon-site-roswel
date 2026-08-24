@@ -418,8 +418,32 @@ export function RechercheFicheInscrite({
               débordement, le panneau retombe sous la règle générale du
               site (« jamais d'ascenseur affiché ») : il n'y a plus de
               pouce à peindre, donc plus de point. */
+          /*  ██ §1 (nº 553) — LE PANNEAU MONTE AU RANG DES ENCADRÉS ██
+              C'est le CINQUIÈME panneau déroulant du formulaire — celui
+              qui cherche un salon, un studio ou un membre d'équipe —, et
+              il n'était dans aucun inventaire précédent : il n'a jamais
+              porté de verre, il était en aplat `carte` depuis toujours.
+              Il souffrait pourtant du même défaut, en pire : les
+              encadrés du formulaire SONT à `carte` (`FormulaireFiche`),
+              donc ce panneau avait très exactement la couleur de ce qui
+              le porte — contraste 1,00. Il passe à `eleve` (#262C34),
+              le rang des encadrés du site : 1,18 avec l'encadré, 1,37
+              avec la page quand il déborde.
+              ██ ET LA BORDURE PART ██
+              `border border-sombre-bordure` était la BÉQUILLE de ce
+              défaut : quand un panneau a la couleur de son support, il
+              ne reste qu'un trait pour dire où il commence. Le fond le
+              dit maintenant tout seul — c'est la charte, mot pour mot
+              (nº 139 : « plus de contour, le panneau se dit par son
+              fond »), et c'était le seul contour des cinq panneaux.
+              Le trait valait 1,28 sur `carte` ; le fond vaut 1,18 sur
+              le même support, sur toute la surface au lieu d'un pixel.
+              ⚠️ SI TU LA VEUX, ELLE REVIENT EN REMETTANT CES DEUX MOTS.
+              ⚠️ LA GÉOMÉTRIE NE BOUGE PAS : `box-sizing: border-box` est
+              posé sur tout le site, la boîte extérieure du panneau est
+              donc au pixel près la même sans son trait. */
           className={`mt-1.5 max-h-[280px] overflow-y-auto overscroll-contain
-                     rounded-lg border border-sombre-bordure bg-sombre-carte${
+                     rounded-lg bg-sombre-eleve${
                        listeDeborde ? " defilement-visible" : ""
                      }`}
         >
@@ -461,16 +485,31 @@ export function RechercheFicheInscrite({
                     //  ligne de liste qu'on effleure n'est aucun des
                     //  trois. L'appui éclaircit le fond d'un cran,
                     //  comme le survol, ni plus ni moins.
+                    //  §1 (nº 553) — ET « UN CRAN » SE COMPTE DEPUIS LE
+                    //  PANNEAU, qui vient de monter à `eleve` : le
+                    //  survol y valait la MÊME couleur, il aurait
+                    //  disparu (1,00). Il monte donc avec lui, à
+                    //  `eleve-clair` — 1,21, soit un peu mieux que les
+                    //  1,18 qu'il avait avant cette passe.
                     className={`flex w-full items-center gap-3 px-3 py-2.5 text-left
                                transition-colors ${
                                  deja
                                    ? "opacity-45 cursor-not-allowed"
-                                   : "hover:bg-sombre-eleve active:bg-sombre-eleve"
+                                   : "hover:bg-sombre-eleve-clair active:bg-sombre-eleve-clair"
                                }`}
                   >
                     <span
+                      //  §1 (nº 553) — LE LOGEMENT DE LA PHOTO SUIT LE
+                      //  PANNEAU. Il se lisait d'un cran au-dessus de
+                      //  lui (`eleve` sur `carte`) ; le panneau étant
+                      //  passé à `eleve`, ce rond serait devenu
+                      //  invisible quand la fiche n'a pas de photo — et
+                      //  c'est justement le cas où il doit se voir,
+                      //  puisqu'il ne montre alors qu'une initiale.
+                      //  L'écart d'un cran est conservé : 1,18 hier,
+                      //  1,21 aujourd'hui.
                       className="flex h-9 w-9 shrink-0 items-center justify-center
-                                 overflow-hidden rounded-full bg-sombre-eleve"
+                                 overflow-hidden rounded-full bg-sombre-eleve-clair"
                     >
                       {fiche.photo_profil ? (
                         /* eslint-disable-next-line @next/next/no-img-element --
@@ -502,8 +541,13 @@ export function RechercheFicheInscrite({
                     {deja && (
                       //  ⚠️ SANS CONTOUR (charte) : le fond d'un cran
                       //  plus clair suffit à détacher le mot.
+                      //  §1 (nº 553) — « UN CRAN PLUS CLAIR » SE COMPTE
+                      //  DEPUIS LE PANNEAU, passé à `eleve` : la
+                      //  pastille monte avec lui, sinon elle n'aurait
+                      //  plus aucun fond à montrer et il ne resterait
+                      //  qu'un mot gris posé dans la ligne.
                       <span
-                        className="shrink-0 rounded-full bg-sombre-eleve
+                        className="shrink-0 rounded-full bg-sombre-eleve-clair
                                    px-2.5 py-[3px] text-[11.5px] font-semibold
                                    text-sombre-texte-doux"
                       >
