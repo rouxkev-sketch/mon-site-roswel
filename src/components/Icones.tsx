@@ -1070,48 +1070,19 @@ export function IconeFlecheAdresse({ taille = 14, classe = "" }: ProprietesIcone
  * pastille dessinée dedans : le compte des non lues est un élément à
  * part, posé À CÔTÉ du titre (voir MenuEspace).
  */
-/**
- * ██ §2 (nº 533) — LA CLOCHE PEUT S'OUVRIR EN HAUT À DROITE ██
- * ==================================================================
- * `ouverte` INTERROMPT SON TRACÉ dans l'angle haut droit — un vide de
- * 80° (54° à la nº 533 : trop étroit, le nombre n'y tenait pas) —
- * pour que le NOMBRE de notifications vienne s'y loger. C'est le motif courant du « badge découpé » : la
- * pastille posée par-dessus la cloche disparaît, le compte prend sa
- * place DANS le dessin.
- *
- * COMMENT, ET SANS RIEN INVENTER : le dôme est un arc de rayon 6
- * centré sur (12 ; 8,5) — c'est le tracé d'origine, à l'identique. On
- * l'ARRÊTE À 80° au lieu de le fermer : il part de là, passe par le
- * haut et toute la gauche jusqu'à 180°, puis descend par le corps et
- * s'achève à l'angle haut droit de celui-ci (0°). Entre 0° et 80°,
- * rien. Le corps, le battant, l'épaisseur de trait et les
- * terminaisons rondes ne changent pas d'un caractère.
- * §3 (nº 534) — LE MOIGNON DE FLANC DROIT A DISPARU AVEC
- * L'ÉLARGISSEMENT : à 54° il restait 18° d'arc à droite ; à 80°
- * l'ouverture descend jusqu'au corps, et ce bout d'arc n'a plus lieu
- * d'être. Un morceau de moins à dessiner, pas un de plus.
- * ⚠️ AUCUN MASQUE, AUCUN IDENTIFIANT, AUCUN FOND : une découpe par
- * masque aurait demandé un `id` unique (donc un état, donc un risque
- * d'écart d'hydratation), et un disque peint à la couleur du fond
- * aurait attaché l'icône au support qui la porte. Ici le trait est
- * simplement plus court.
- * ⚠️ LE NOMBRE N'EST PAS DANS CE FICHIER : cette icône ne connaît
- * aucun compte. Elle ouvre une place ; c'est l'appelant qui pose le
- * chiffre, avec sa couleur et sa taille (voir MenuEspace).
- */
-export function IconeCloche({
-  taille = 20,
-  classe = "",
-  ouverte = false,
-}: ProprietesIcone & { ouverte?: boolean }) {
+export function IconeCloche({ taille = 20, classe = "" }: ProprietesIcone) {
+  /*  §1 (nº 535) — LA CLOCHE EST ENTIÈRE, ET ELLE LE RESTE.
+      L'ÉCHANCRURE DES nº 533-534 EST ANNULÉE : le drapeau `ouverte`,
+      les deux tracés et l'arc coupé sont supprimés, code compris. Ce
+      qui suit est le dessin d'avant la nº 533, au caractère près —
+      un seul chemin fermé pour le dôme et le corps, un second pour le
+      battant. Le compteur des notifications redevient une PASTILLE
+      posée par-dessus (voir MenuEspace) : cette icône ne sait plus
+      rien de lui, comme avant. */
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
       <path
-        d={
-          ouverte
-            ? "M13.04 2.59A6 6 0 0 0 6 8.5c0 4.5-1.5 5.8-2 6.5h16c-.5-.7-2-2-2-6.5"
-            : "M18 8.5a6 6 0 1 0-12 0c0 4.5-1.5 5.8-2 6.5h16c-.5-.7-2-2-2-6.5Z"
-        }
+        d="M18 8.5a6 6 0 1 0-12 0c0 4.5-1.5 5.8-2 6.5h16c-.5-.7-2-2-2-6.5Z"
         stroke="currentColor"
         strokeWidth="1.8"
         strokeLinecap="round"

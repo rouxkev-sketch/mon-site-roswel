@@ -1117,48 +1117,33 @@ export function MenuEspace({
           onClick={ouvrirLesNotifications}
           className={CLASSE_TUILE}
         >
-          {/*  ██ §2 (nº 533) — LE COMPTE ENTRE DANS LA CLOCHE ██
-               LA PASTILLE POSÉE PAR-DESSUS A DISPARU. À la place, la
-               cloche S'OUVRE en haut à droite (`ouverte`, voir
-               IconeCloche : son tracé s'interrompt sur 54°, centré sur
-               la diagonale) et LE NOMBRE vient se loger dans ce vide,
-               en ROSE — un compteur, l'usage même que la charte réserve
-               à cette couleur.
-               SANS NOTIFICATION, RIEN : la cloche est refermée et
-               aucun chiffre n'est rendu. C'est le même dessin qu'avant,
-               entier.
-               §3 (nº 534) — L'ÉCHANCRURE PASSE DE 54° À 80°, ET LE
-               NOMBRE DE 12,5 À 16 px : à 54° le vide était plus petit
-               que le chiffre qu'il devait loger. Les deux grandissent
-               ensemble, l'ancrage suit le nouveau bord : 54 % de la
-               largeur du glyphe au lieu de 58 %, et 16 % de sa hauteur
-               au lieu de 18 % — ce dernier cran mesuré, pas choisi : à
-               20 %, le bas d'un chiffre de 16 px venait frôler l'angle
-               haut droit du CORPS de la cloche.
-               ⚠️ OÙ LE NOMBRE SE POSE, ET COMMENT IL GRANDIT. Il est
-               ancré PAR SA GAUCHE au bord intérieur de l'ouverture :
-               un chiffre seul occupe le vide, et un nombre
-               plus long s'allonge VERS LA DROITE — vers l'extérieur du
-               dessin, là où il n'y a rien à recouvrir. « 12 » et
-               « 99+ » débordent donc du carré de l'icône au lieu de
-               mordre sur la cloche, et restent entiers : aucun
-               rognage, aucune largeur maximale. La tuile ne coupe rien
-               (elle n'a pas de débordement caché) et l'icône est
-               centrée dans une tuile deux fois plus large qu'elle : la
-               place est là.
-               ⚠️ AU-DELÀ DE 99, C'EST « 99+ » — la règle de toujours,
-               inchangée.
-               ⚠️ LE WEB NE CHANGE PAS : sa ligne « Notifications »
-               garde sa pastille ronde à droite du mot (elle a la place,
-               elle). C'est le plan du doigt seul qui adopte le compte
-               découpé. */}
+          {/*  ██ §1 (nº 535) — LA PASTILLE REVIENT, L'ÉCHANCRURE PART ██
+               LES nº 533 ET nº 534 SONT ANNULÉES ICI : la cloche est de
+               nouveau ENTIÈRE (son drapeau d'ouverture a disparu de
+               l'icône, code compris) et le compteur redevient ce qu'il
+               était à la nº 532 — une PASTILLE RONDE ROSE posée sur
+               l'angle haut droit du glyphe, chiffre en BLANC.
+               LES VALEURS SONT CELLES DE LA nº 532, reprises telles
+               quelles : 20 px de diamètre, chiffre à 12,5 px, 6 px d'air
+               de chaque côté, et la position relative au coin de
+               l'icône.
+               ⚠️ LES 20 px SONT UN PLANCHER, pas un carcan : deux
+               chiffres (≈ 14 px de chasse) portent la pastille à ≈ 26 px
+               et « 99+ » (≈ 22 px) à ≈ 34 — elle s'allonge pour contenir
+               son texte et ne le coupe jamais. Un chiffre seul tient
+               dans le rond parfait de 20 px.
+               SANS NOTIFICATION, RIEN : ni pastille, ni marque sur la
+               cloche.
+               ⚠️ LE WEB N'AVAIT PAS CHANGÉ AUX nº 533-534, et il ne
+               change pas ici : sa ligne « Notifications » garde sa
+               pastille à droite du mot, avec les mêmes valeurs. */}
           <span className={`relative ${CLASSE_TUILE_ICONE}`}>
-            <IconeCloche taille={TAILLE_ICONE_TUILE} ouverte={nonLues > 0} />
+            <IconeCloche taille={TAILLE_ICONE_TUILE} />
             {nonLues > 0 && (
               <span
                 aria-label={`${nonLues} non lue${nonLues > 1 ? "s" : ""}`}
-                className="absolute font-bold leading-none text-[16px] text-primaire"
-                style={{ left: "54%", top: "16%", transform: "translateY(-50%)" }}
+                className="absolute -right-3 -top-1 min-w-[20px] h-5 px-1.5 rounded-full bg-primaire
+                           text-[12.5px] font-bold text-white leading-5 text-center"
               >
                 {nonLues > 99 ? "99+" : nonLues}
               </span>

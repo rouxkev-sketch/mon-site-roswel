@@ -1290,7 +1290,23 @@ export function EnTeteTatouage({
                 //  40 px après l'hydratation).
                 data-acces-compte=""
                 style={{ height: HAUTEUR_ACTIONS }}
-                className="hidden sm:flex rounded-full px-5 items-center
+                /*  ██ §2 (nº 535) — LA CAPSULE PREND DES ANGLES ██
+                    Ses bords étaient TOUT RONDS ; ils deviennent des
+                    ANGLES ARRONDIS. LE RAYON RETENU EST `rounded-lg`,
+                    8 px — LE RAYON DES BADGES de la charte depuis la
+                    nº 449, et non les 12 px des champs et des encadrés :
+                    ceci est un BADGE (un mot court sur un aplat plein),
+                    pas un champ. C'est exactement le chemin qu'a suivi
+                    le bouton « Suivre » à la nº 456, pour la même
+                    raison — les deux badges du site portent donc le même
+                    rayon.
+                    ⚠️ RIEN D'AUTRE NE BOUGE : ni la hauteur (elle vient
+                    de `HAUTEUR_ACTIONS`, en ligne), ni le rembourrage de
+                    20 px, ni les couleurs, ni la place, ni les deux
+                    libellés superposés qui réservent la largeur
+                    (nº 203-§1a) — le bloc central de la barre ne peut
+                    toujours pas être poussé. */
+                className="hidden sm:flex rounded-lg px-5 items-center
                            bg-primaire border-2 border-primaire
                            hover:bg-primaire-fonce hover:border-primaire-fonce
                            text-sombre-texte
