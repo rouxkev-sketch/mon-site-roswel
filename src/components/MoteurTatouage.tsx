@@ -21,9 +21,6 @@ import {
   useComptesCreations,
 } from "@/lib/creations-par-style";
 import { ChampLocalisation } from "@/components/ChampLocalisation";
-//  ⚠️ TEMPORAIRE (nº 545) — la mesure du choix de style. `noter` n'écrit
-//  rien sans `?sonde-bascule=1` (lib/journal-bascule).
-import { noter } from "@/lib/journal-bascule";
 import { MenuDeroulant } from "@/components/MenuDeroulant";
 import { useVoileDeLaPage } from "@/components/VoileDeLaPage";
 import { PageRechercheMobile } from "@/components/PageRechercheMobile";
@@ -924,15 +921,6 @@ export function MoteurTatouage({
     poser: (suivant: Partial<CritèresTatouage>) => void
   ) => {
     const { nature, style } = lireValeurExplorer(valeur);
-    //  ⚠️ TEMPORAIRE (nº 545) — LE POINT DE RELECTURE. `lireValeurExplorer`
-    //  VIDE un style qu'elle ne retrouve pas au catalogue : si la ligne
-    //  montre « style=(vide) » alors qu'un style a été choisi, le défaut
-    //  est là, et nulle part ailleurs. Rien n'écrit sans `?sonde-bascule=1`.
-    noter(
-      `SONDE nº 545 · moteur · reçu=${valeur || "(vide)"} → nature=${
-        nature || "(vide)"
-      } style=${style || "(vide)"}`
-    );
     poser({ nature, style });
   };
 

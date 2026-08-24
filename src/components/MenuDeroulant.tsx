@@ -13,9 +13,6 @@ import {
 } from "@/components/champs-recherche";
 import { stylePanneau, usePlacementMenu } from "@/components/placement-menu";
 import { useVoileDeLaPage } from "@/components/VoileDeLaPage";
-//  ⚠️ TEMPORAIRE (nº 545) — la mesure du clic sur une option. `noter`
-//  n'écrit rien sans `?sonde-bascule=1` (lib/journal-bascule).
-import { noter } from "@/lib/journal-bascule";
 //  §1 et §2-a (nº 317) — LES TROIS RÈGLES DE REPLI, SORTIES D'ICI pour
 //  qu'un banc puisse les jouer plutôt que les relire.
 import {
@@ -489,64 +486,6 @@ export function MenuDeroulant({
   //  qui contient ce menu reste clair : on donne notre conteneur, le
   //  crochet remonte tout seul à l'encadré qui l'entoure.
   useVoileDeLaPage(avecVoile && listeVisible, conteneur);
-
-  /**
-   * ⚠️ TEMPORAIRE (nº 545) — MESURE DU CLIC SUR UNE OPTION.
-   * ==================================================================
-   * CE QU'ON CHERCHE : au web, choisir un style ne déclenche rien. La
-   * lecture n'a pas tranché — aucune garde connue n'atteint ce menu
-   * (celle de la nº 532 est bornée au doigt ET au déroulant du
-   * portfolio ; celle de la nº 526/527 n'avale qu'un clic FANTÔME de
-   * geste tactile). Il faut donc voir passer l'événement.
-   * COMMENT ON SAIT SI QUELQU'UN L'ARRÊTE, SANS POUVOIR LE DEMANDER :
-   * `stopPropagation` ne se lit pas. On pose donc DEUX témoins sur
-   * `window` — un en CAPTURE (il voit l'événement AVANT tout le monde,
-   * toujours) et un en BULLE (il ne le voit QUE si rien ne l'a arrêté
-   * en chemin). Deux lignes = l'événement a traversé ; une seule ligne
-   * de capture = quelqu'un l'a stoppé entre les deux, et la ligne dit
-   * sur quel élément.
-   * `defaultPrevented` se lit, lui, et il est écrit tel quel.
-   * ⚠️ ELLE N'ÉCRIT RIEN SANS `?sonde-bascule=1` : `noter` sort à sa
-   * première ligne. Aucun état React, aucun rendu provoqué — le
-   * journal est un tableau de module (nº 173).
-   * ⚠️ ET ELLE N'INTERVIENT PAS : les deux témoins sont PASSIFS, ils
-   * n'appellent ni `preventDefault` ni `stopPropagation`. Ils
-   * regardent, ils ne touchent pas.
-   */
-  useEffect(() => {
-    if (!listeVisible) return;
-    const nommer = (cible: EventTarget | null) => {
-      if (!(cible instanceof Element)) return "hors élément";
-      const role = cible.getAttribute("role");
-      const texte = (cible.textContent ?? "").trim().slice(0, 24);
-      return `${cible.tagName.toLowerCase()}${role ? `[${role}]` : ""} « ${texte} »`;
-    };
-    const enCapture = (evenement: Event) => {
-      noter(
-        `SONDE nº 545 · ${evenement.type} CAPTURE · ${nommer(evenement.target)}` +
-          ` · empêché=${evenement.defaultPrevented}`
-      );
-    };
-    const enBulle = (evenement: Event) => {
-      noter(
-        `SONDE nº 545 · ${evenement.type} BULLE · ${nommer(evenement.target)}` +
-          ` · empêché=${evenement.defaultPrevented}`
-      );
-    };
-    const types = ["pointerdown", "mousedown", "click"];
-    for (const type of types) {
-      window.addEventListener(type, enCapture, { capture: true, passive: true });
-      window.addEventListener(type, enBulle, { passive: true });
-    }
-    noter("SONDE nº 545 · liste OUVERTE, témoins posés");
-    return () => {
-      for (const type of types) {
-        window.removeEventListener(type, enCapture, { capture: true });
-        window.removeEventListener(type, enBulle);
-      }
-      noter("SONDE nº 545 · liste FERMÉE, témoins retirés");
-    };
-  }, [listeVisible]);
   //  À LA FERMETURE, la liste disparaît sur-le-champ — ajusté pendant
   //  le rendu (le motif React officiel), jamais dans un effet.
   if (!ouvert && listeVisible) setListeVisible(false);
@@ -756,15 +695,8 @@ export function MenuDeroulant({
   }
 
   function choisir(value: string) {
-    //  ⚠️ TEMPORAIRE (nº 545) — les trois temps du choix, séparés : si
-    //  la deuxième ligne manque, `surChangement` a levé une erreur ; si
-    //  les trois sortent et que rien ne bouge à l'écran, le défaut est
-    //  EN AVAL du menu, pas ici.
-    noter(`SONDE nº 545 · choisir() appelé · valeur=${value || "(vide)"}`);
     surChangement(value);
-    noter("SONDE nº 545 · surChangement rendu la main");
     fermer();
-    noter("SONDE nº 545 · fermeture du menu demandée");
   }
 
   const listeClassique = feuilleMobile
