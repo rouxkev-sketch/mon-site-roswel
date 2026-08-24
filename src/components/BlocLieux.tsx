@@ -1448,10 +1448,11 @@ export function LigneAdresseDuLieu({
       lisait comme une suite de l'adresse, sans étiquette à lui.
       CE QU'IL Y A : DEUX LIGNES SŒURS, rendues côte à côte dans un
       fragment. Elles deviennent donc des enfants DIRECTS de la liste
-      d'informations, et c'est ce qui donne l'air demandé : les VINGT
-      pixels de son `gap-y-5` (ContenuFiche) — exactement l'air qui
-      sépare déjà le booking, le site et les étiquettes. Aucune marge
-      n'est posée ici : la liste seule commande, comme pour toutes les
+      d'informations, et c'est ce qui donne l'air demandé : l'écart
+      vertical de cette liste (ContenuFiche, §5) — VINGT-QUATRE pixels
+      depuis la nº 538, vingt auparavant, exactement l'air qui sépare
+      déjà le booking, le site et les étiquettes. Aucune marge n'est
+      posée ici : la liste seule commande, comme pour toutes les
       autres lignes.
       SON ICÔNE : l'HORLOGE, qui existait déjà (components/Icones,
       `IconeHorloge`) — rien de dessiné pour l'occasion. Elle est au

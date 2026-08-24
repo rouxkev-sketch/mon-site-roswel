@@ -1690,10 +1690,12 @@ export function ContenuFiche({
    * (nº 466), distingués par la CLARTÉ et jamais par un trait.
    *
    * L'AIR ENTRE LES DEUX LIGNES EST CELUI DE LA LISTE : elles sont
-   * rendues comme SŒURS des autres informations, donc les VINGT
-   * pixels du `gap-y-5` de leur conteneur les séparent — exactement
-   * l'air qui vaut entre le booking, le site, l'adresse et les
-   * horaires. Aucune marge n'est posée sur les lignes elles-mêmes.
+   * rendues comme SŒURS des autres informations, donc l'écart vertical
+   * de leur conteneur les sépare — VINGT-QUATRE pixels depuis la
+   * nº 538 (vingt auparavant), exactement l'air qui vaut entre le
+   * booking, le site, l'adresse et les horaires. Aucune marge n'est
+   * posée sur les lignes elles-mêmes ; la valeur ne s'écrit qu'à un
+   * seul endroit, sur la liste (§5).
    * (L'écart de seize pixels que la nº 488 posait ENTRE LES DEUX
    * GROUPES d'une même ligne n'a plus d'objet : il n'y a plus qu'une
    * famille par ligne. Les six pixels entre capsules d'une même
@@ -2239,10 +2241,10 @@ export function ContenuFiche({
                TikTok se range sous le deuxième lien. `justify-items-
                start` : la colonne est large, le lien garde sa taille.
                L'ordre de la nº 227 ne bouge pas. */}
-          {/*  §2 (nº 384) — TROIS RANGÉES, ET L'ESPACE ENTRE ELLES NE
-               CHANGE PAS : c'est le `gap-y-4` (16 px) de ce conteneur,
-               celui-là même qui sépare aujourd'hui Booking d'Instagram
-               (nº 229-§3). La ligne du site et celle des styles s'y
+          {/*  §2 (nº 384) — TROIS RANGÉES, ET L'ESPACE ENTRE ELLES EST
+               CELUI DE LA LISTE, un seul écart pour toutes (16 px à
+               l'époque de cette note, 24 depuis la nº 538 — voir le §5,
+               qui l'écrit). La ligne du site et celle des styles s'y
                rangent sans qu'aucune marge soit écrite : une rangée
                absente ne rend rien, donc ne laisse aucun vide — un
                tatoueur sans site n'a pas de trou entre Booking et ses
@@ -2262,14 +2264,29 @@ export function ContenuFiche({
             aDesPratiques ||
             aDesStyles) && (
             <div
-              /*  §5 (nº 389) — L'ÉCART PARTAGÉ MONTE D'UN CRAN :
-                   `gap-y-4` (16 px) devient `gap-y-5` (20 px). C'est le
-                   SEUL endroit touché — aucune marge n'est posée sur les
-                   lignes elles-mêmes, elles n'en ont toujours aucune. Les
-                   deux rangées en grille gardent leur `gap-y-4` interne :
-                   il sépare deux liens d'une MÊME rangée, pas deux
-                   lignes. */
-              className="mt-10 flex w-full flex-col items-start gap-y-5"
+              /*  §5 (nº 389, REPRIS À LA nº 538) — L'ÉCART PARTAGÉ MONTE
+                   D'UN CRAN DE PLUS : 16 px à la nº 389, 20 px depuis, et
+                   VINGT-QUATRE aujourd'hui. C'est le SEUL endroit touché
+                   — aucune marge n'est posée sur les lignes elles-mêmes,
+                   elles n'en ont toujours aucune ; c'est la LISTE qui
+                   commande, et une ligne absente ne laisse donc aucun
+                   vide.
+                   POURQUOI 24 ET PAS 28. L'échelle de quatre n'offrait
+                   que ces deux crans, et 28 aurait ÉGALÉ l'air qui
+                   sépare la liste entière de la biographie juste
+                   dessous. Un écart INTERNE aussi grand que l'écart qui
+                   ferme le bloc aplatit la hiérarchie. À 24, elle tient
+                   dans l'ordre : 24 entre deux lignes, 28 jusqu'à la
+                   bio, 40 entre deux sections.
+                   ⚠️ LES DEUX RANGÉES EN GRILLE GARDENT LEUR ÉCART
+                   INTERNE DE 16 px : il sépare deux liens d'une MÊME
+                   rangée, pas deux lignes — et le contraste entre les
+                   deux se lit mieux qu'avant (16 dedans, 24 dehors).
+                   ⚠️ LES PLAQUES ET LEURS MENTIONS (nº 496-497) NE SONT
+                   PAS DANS CETTE LISTE : elles vivent dans les sections
+                   du bas, hors de ce conteneur. Leurs airs propres —
+                   12 px dedans, 40 px de section — ne bougent pas. */
+              className="mt-10 flex w-full flex-col items-start gap-y-6"
             >
               {/*  §3 (nº 408) — `items-start` SUR CETTE RANGÉE, et sur elle
                    seule. Le booking peut désormais faire DEUX lignes ;

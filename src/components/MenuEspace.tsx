@@ -963,23 +963,28 @@ export function MenuEspace({
     ligne: reglageDeLigne("w-[26px]", 26, "text-[14.5px]"),
     selecteur: reglageDuSelecteur("min-h-[64px]", "text-[16px]", "text-[13px]"),
     tuileIcone: 32,
-    /*  La pastille du doigt — les valeurs de la nº 532, intactes. */
+    /*  §1 (nº 538) — LA PASTILLE DU DOIGT : rond 20 → 16 px, chiffre
+        12,5 → 11 px, et le retrait ramené à 2 px. Le rond vaut la
+        MOITIÉ de la cloche (32 px) ; l'air intérieur descend de 6 à
+        4 px pour que le chiffre garde sa place dans un rond plus
+        petit. Voir le §1 posé sur la tuile pour la cause et le calcul. */
     pastille:
-      "absolute -right-3 -top-1 min-w-[20px] h-5 px-1.5 rounded-full bg-primaire " +
-      "text-[12.5px] font-bold text-white leading-5 text-center",
+      "absolute -right-0.5 -top-0.5 min-w-[16px] h-4 px-1 rounded-full bg-primaire " +
+      "text-[11px] font-bold text-white leading-4 text-center",
     airHaut: "pt-1",
   };
   const REGLAGES_WEB = {
     ligne: reglageDeLigne("w-[22px]", 22, "text-[13.5px]"),
     selecteur: reglageDuSelecteur("min-h-[54px]", "text-[14.5px]", "text-[13px]"),
     tuileIcone: 28,
-    /*  §4 — LA PASTILLE SUIT LA CLOCHE : 20 → 18 px de rond, chiffre de
-        12,5 → 11,5 px (la taille que la pastille du web portait avant
-        la nº 536). Les 18 px restent un PLANCHER : deux chiffres et
-        « 99+ » l'allongent, elle ne coupe jamais son texte. */
+    /*  §1 (nº 538) — LA PASTILLE DU WEB : rond 18 → 14 px, chiffre
+        11,5 → 10 px, même retrait de 2 px. Le rond vaut la MOITIÉ de
+        la cloche (28 px), comme au doigt — c'est la cloche qui donne
+        la mesure, et elle diffère d'un appareil à l'autre depuis la
+        nº 537. Voir le §1 posé sur la tuile. */
     pastille:
-      "absolute -right-3 -top-1 min-w-[18px] h-[18px] px-1.5 rounded-full bg-primaire " +
-      "text-[11.5px] font-bold text-white leading-[18px] text-center",
+      "absolute -right-0.5 -top-0.5 min-w-[14px] h-[14px] px-1 rounded-full bg-primaire " +
+      "text-[10px] font-bold text-white leading-[14px] text-center",
     airHaut: "pt-4",
   };
   type ReglagesDuCompte = typeof REGLAGES_DOIGT;
@@ -998,26 +1003,50 @@ export function MenuEspace({
           onClick={ouvrirLesNotifications}
           className={CLASSE_TUILE}
         >
-          {/*  ██ §1 (nº 535) — LA PASTILLE REVIENT, L'ÉCHANCRURE PART ██
-               LES nº 533 ET nº 534 SONT ANNULÉES ICI : la cloche est de
-               nouveau ENTIÈRE (son drapeau d'ouverture a disparu de
-               l'icône, code compris) et le compteur redevient ce qu'il
-               était à la nº 532 — une PASTILLE RONDE ROSE posée sur
-               l'angle haut droit du glyphe, chiffre en BLANC.
-               LES VALEURS SONT CELLES DE LA nº 532, reprises telles
-               quelles : 20 px de diamètre, chiffre à 12,5 px, 6 px d'air
-               de chaque côté, et la position relative au coin de
-               l'icône.
-               ⚠️ LES 20 px SONT UN PLANCHER, pas un carcan : deux
-               chiffres (≈ 14 px de chasse) portent la pastille à ≈ 26 px
-               et « 99+ » (≈ 22 px) à ≈ 34 — elle s'allonge pour contenir
-               son texte et ne le coupe jamais. Un chiffre seul tient
-               dans le rond parfait de 20 px.
+          {/*  ██ §1 (nº 538) — POURQUOI LA PASTILLE TOMBAIT À CÔTÉ DE LA
+               CLOCHE, ET NON DESSUS ██
+               ==========================================================
+               LA CAUSE EST DOUBLE, ET LES DEUX MOITIÉS S'ADDITIONNENT.
+               1) LE RETRAIT ÉTAIT PLUS GRAND QUE LA PASTILLE N'EST
+               LARGE. Elle était calée à `right: -12px` de la boîte de
+               l'icône — donc son bord DROIT sortait de 12 px. Large de
+               18 px au web (20 au doigt), son bord GAUCHE retombait
+               donc à 28 + 12 − 18 = 22 px au web, et 32 + 12 − 20 =
+               24 px au doigt, mesurés depuis la gauche de la boîte.
+               2) LA BOÎTE EST PLUS LARGE QUE LE DESSIN QU'ELLE TIENT.
+               Le carré de l'icône fait 28 px au web, 32 au doigt — mais
+               la CLOCHE n'en occupe pas toute la largeur : dans le
+               repère de 24 unités, le dôme s'arrête à x = 18 (plus la
+               moitié d'un trait de 1,8), c'est-à-dire à 22 px du carré
+               de 28, et à 25 px du carré de 32.
+               LES DEUX BOUTS SE REJOIGNENT : le bord gauche de la
+               pastille (22 / 24) tombait EXACTEMENT là où le dessin
+               s'arrête (22 / 25). Elle ne mordait rien — elle se posait
+               au ras du glyphe, à sa droite. C'est ce que le
+               propriétaire voit.
+               LE REMÈDE, DANS LE MÊME ORDRE. Le retrait revient à 2 px
+               (au lieu de 12) et la pastille rétrécit de moitié :
+               14 px au web, 16 au doigt. Son bord gauche retombe alors
+               à 16 px (web) et 18 px (doigt) — soit 6 et 7 px À
+               L'INTÉRIEUR du dessin. Elle chevauche l'épaule droite du
+               dôme, comme demandé.
+               LE CHIFFRE SUIT LE ROND, D'UN CRAN DE MOINS : 11,5 → 10 px
+               au web, 12,5 → 11 au doigt. Il rétrécit MOINS que le rond
+               (le rapport passe de 0,64 à 0,71) pour rester lisible ;
+               c'est l'air intérieur, ramené de 6 à 4 px, qui absorbe la
+               différence.
+               ⚠️ LE ROND EST UN PLANCHER, PAS UN CARCAN : un chiffre
+               seul tient dans le cercle parfait ; deux chiffres et
+               « 99+ » l'allongent en pastille, vers la gauche — elle ne
+               coupe jamais son texte.
                SANS NOTIFICATION, RIEN : ni pastille, ni marque sur la
                cloche.
-               ⚠️ LE WEB N'AVAIT PAS CHANGÉ AUX nº 533-534, et il ne
-               change pas ici : sa ligne « Notifications » garde sa
-               pastille à droite du mot, avec les mêmes valeurs. */}
+               ⚠️ IL N'Y A PLUS QU'UNE SEULE PASTILLE DANS TOUT CE
+               MENU. Celle que le web portait à droite du mot
+               « Notifications » a disparu AVEC SON PLAN à la nº 536,
+               quand la fenêtre a repris la disposition du doigt : les
+               deux surfaces montent le même arbre, et le compteur n'y
+               est écrit qu'ici. */}
           <span className={`relative ${CLASSE_TUILE_ICONE}`}>
             <IconeCloche taille={reglages.tuileIcone} />
             {nonLues > 0 && (
