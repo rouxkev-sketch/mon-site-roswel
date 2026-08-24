@@ -141,6 +141,9 @@ export function MenuEspace({
   /** L'avertissement « tu as une saisie en cours » — voir plus bas. */
   const [avertirAvantCreation, setAvertirAvantCreation] = useState(false);
   const zone = useRef<HTMLDivElement>(null);
+  /*  §7-a (nº 532) — LE CONTENEUR DU DÉROULANT DE PORTFOLIO : ce qui
+      est DEDANS n'est pas « à côté ». Voir la garde de fermeture. */
+  const conteneurSelecteur = useRef<HTMLDivElement>(null);
   //  §2 (nº 293), §3 (nº 294) — LA FENÊTRE DU COMPTE assombrit tout
   //  l'écran, et son déclencheur reste clair. Web uniquement : le
   //  crochet s'écarte de lui-même au doigt.
@@ -162,6 +165,63 @@ export function MenuEspace({
    */
   const auDoigt = useAppareilMobile();
   useEtapeQuiSeReferme(auDoigt && ouvert, () => setOuvert(false));
+  /**
+   * ██ §7-b (nº 532) — LE RETOUR REFERME LE DÉROULANT, PUIS LA PAGE ██
+   * ------------------------------------------------------------------
+   * Le déroulant du portfolio est une surface de plus : ouvert, il doit
+   * répondre au bouton retour du téléphone AVANT la page qui le porte.
+   * C'est L'ÉCRITURE DÉJÀ LÀ, celle des pages plein écran (nº 465,
+   * nº 474) : elle pose une étape par surface et les EMPILE PAR RANG —
+   * un retour ne referme que celle dont l'étape a sauté. Deux appels du
+   * même crochet dans ce composant se rangent donc d'eux-mêmes : le
+   * déroulant se ferme au premier appui, « Mon compte » au second.
+   * ⚠️ AU DOIGT SEULEMENT, comme le menu lui-même : au web le déroulant
+   * vit dans une fenêtre posée sous un bouton, qui ne pèse pas sur
+   * l'historique. Rien n'y change.
+   * ⚠️ ET LE COMPTE D'ÉTAPES NE DÉRIVE PAS : une ouverture, une entrée ;
+   * la fermeture reprend la sienne (nº 332-§1 et §4).
+   */
+  useEtapeQuiSeReferme(auDoigt && selecteurOuvert, () =>
+    setSelecteurOuvert(false)
+  );
+  /**
+   * ██ §7-a (nº 532) — UN APPUI À CÔTÉ FERME, ET RIEN D'AUTRE ██
+   * ------------------------------------------------------------------
+   * LE DÉROULANT N'AVAIT AUCUNE FERMETURE AU DEHORS : il fallait
+   * retoucher son champ. On en ajoute une — et c'est LA LEÇON DE LA
+   * nº 464 qui dicte comment.
+   * CE QU'ELLE DIT : fermer sur l'APPUI (`pointerdown`) démonte la
+   * cible avant le lever du doigt ; le navigateur fabrique alors le
+   * `click` du tap, refait son test de position dans un document qui a
+   * changé, et ce clic atterrit sur ce qui se trouve dessous — et
+   * l'actionne. On ferme donc sur le `click`, le DERNIER événement du
+   * tap, et on le CONSOMME.
+   * OÙ ON ÉCOUTE, ET POURQUOI C'EST `window` EN CAPTURE : la capture
+   * descend de `window` vers la cible. Un écouteur posé sur `window`
+   * voit donc le clic AVANT tout le monde — avant la cible, et avant
+   * les écouteurs de `document` (celui de l'étape refermable en est
+   * un). `stopPropagation` y arrête l'événement pour de bon : rien ne
+   * s'actionne, et aucune marque de navigation n'est armée à tort.
+   * ⚠️ CE QUI EST DEDANS N'EST PAS « À CÔTÉ » : le champ lui-même (qui
+   * se referme par son propre geste) et les entrées de la liste (qui
+   * choisissent un portfolio) sont dans le conteneur, et passent.
+   * ⚠️ AU DOIGT SEULEMENT : le web n'a pas cette fermeture aujourd'hui,
+   * il ne l'a pas davantage demain.
+   */
+  useEffect(() => {
+    if (!auDoigt || !selecteurOuvert) return;
+    const avaler = (evenement: MouseEvent) => {
+      const cible = evenement.target;
+      if (cible instanceof Node && conteneurSelecteur.current?.contains(cible)) {
+        return;
+      }
+      evenement.preventDefault();
+      evenement.stopPropagation();
+      setSelecteurOuvert(false);
+    };
+    window.addEventListener("click", avaler, true);
+    return () => window.removeEventListener("click", avaler, true);
+  }, [auDoigt, selecteurOuvert]);
   /**
    * §1 (nº 332) — ET SES LIENS CONSOMMENT CETTE ÉTAPE, ils ne
    * l'empilent pas.
@@ -437,15 +497,25 @@ export function MenuEspace({
   //  Tailwind v4 ne s'applique qu'aux appareils qui survolent).
   //  MÊME GÉOMÉTRIE des deux côtés : la classe est unique, la hauteur
   //  (46 px), le rayon (`rounded-xl`) et le retrait (`px-3`) aussi.
-  const classeEntree =
+  /*  §2 (nº 532) — LA GÉOMÉTRIE D'UN CÔTÉ, LA COULEUR DE L'AUTRE.
+      « Ajouter un portfolio » doit être ROSE au doigt (§2) et rester
+      une entrée en tout point identique aux autres. On sépare donc ce
+      qui ne doit JAMAIS varier — la boîte, la hauteur, le retrait,
+      l'écriture, l'état enfoncé — de la seule chose qui varie : la
+      couleur. Deux chaînes écrites en entier auraient fini par
+      diverger, et c'est précisément ce que la note du dessus interdit. */
+  const GEOMETRIE_ENTREE =
     "flex w-full items-center gap-3 rounded-xl px-3 min-h-[46px] text-left " +
-    "text-[14.5px] font-semibold text-sombre-texte " +
+    "text-[14.5px] font-semibold " +
     "hover:bg-white/5 active:bg-white/10 transition-colors";
+  const classeEntree = `${GEOMETRIE_ENTREE} text-sombre-texte`;
+  /** LA MÊME ENTRÉE, EN ROSE — une seule classe de couleur, remplacée. */
+  const classeEntreeAction = `${GEOMETRIE_ENTREE} text-primaire`;
   // LES ICÔNES SORTENT DU GRIS DOUX : à 22 px, sur fond anthracite,
   // elles se devinaient plus qu'elles ne se lisaient. Elles prennent
   // la couleur du texte, à 80 % — présentes, jamais criardes.
-  const boiteIcone =
-    "flex w-[22px] shrink-0 justify-center text-sombre-texte/80";
+  const GEOMETRIE_BOITE_ICONE = "flex w-[22px] shrink-0 justify-center";
+  const boiteIcone = `${GEOMETRIE_BOITE_ICONE} text-sombre-texte/80`;
 
   /**
    * ██ §1 (nº 530) — LES MORCEAUX, EXTRAITS UNE FOIS POUR DEUX PLANS ██
@@ -494,10 +564,51 @@ export function MenuEspace({
    * ⚠️ CE QUI RESTE PROPRE À CHAQUE PLAN : les boîtes, et elles seules.
    */
 
-  /** LE SÉLECTEUR DE PORTFOLIO — `null` tant qu'il n'y a qu'un seul
-      portfolio (acquis nº 472-§3b : rien à choisir, rien à ouvrir). */
-  const selecteurDePortfolio = plusieursFiches ? (
-    <div className="relative">
+  /** LES RÉGLAGES DU WEB — les valeurs de toujours, inchangées. */
+  const REGLAGES_SELECTEUR_WEB = {
+    hauteur: "min-h-[54px]",
+    titre: "text-[14.5px]",
+    sousTitre: "text-[12px]",
+  };
+  /**
+   * §5-§6 (nº 532) — LES RÉGLAGES DU DOIGT.
+   *  · LA HAUTEUR : 54 → 64 px. Le champ portait la hauteur d'un champ
+   *    de fenêtre ; sur une page, entre deux encadrés, il paraissait
+   *    écrasé.
+   *  · LE NOM : 14,5 → 16 px. L'ÉTAT : 12 → 13 px. Les deux montent
+   *    ensemble et gardent leur rapport (l'état reste le plus petit —
+   *    0,83 avant, 0,81 après) : c'est un renseignement sous un nom,
+   *    jamais son égal.
+   */
+  const REGLAGES_SELECTEUR_DOIGT = {
+    hauteur: "min-h-[64px]",
+    titre: "text-[16px]",
+    sousTitre: "text-[13px]",
+  };
+
+  /**
+   * LE SÉLECTEUR DE PORTFOLIO — `null` tant qu'il n'y a qu'un seul
+   * portfolio (acquis nº 472-§3b : rien à choisir, rien à ouvrir).
+   *
+   * ██ §5-§6 (nº 532) — TROIS RÉGLAGES, ET PAS UN SECOND SÉLECTEUR ██
+   * ------------------------------------------------------------------
+   * Le doigt veut un champ plus haut et des mots plus grands ; le web
+   * ne change pas. C'est LE MÊME sélecteur — même liste, même état,
+   * même écriture — qui reçoit trois valeurs de son appelant. Écrire
+   * un second sélecteur pour trois nombres aurait mis en double la
+   * liste, ses pastilles, son chevron et sa mécanique d'ouverture.
+   * Les valeurs du web sont celles de toujours, passées telles quelles.
+   */
+  const selecteurDePortfolio = (reglages: {
+    /** La hauteur minimale du champ fermé. */
+    hauteur: string;
+    /** L'écriture du NOM, dans le champ comme dans la liste. */
+    titre: string;
+    /** L'écriture de l'ÉTAT, sous le nom. Toujours plus petite. */
+    sousTitre: string;
+  }) =>
+    plusieursFiches ? (
+    <div className="relative" ref={conteneurSelecteur}>
       <button
         type="button"
         onClick={() => setSelecteurOuvert((v) => !v)}
@@ -518,14 +629,14 @@ export function MenuEspace({
         //  [data-verre-champ]).
         data-verre-champ=""
         className={`flex w-full items-center gap-3 rounded-xl px-3
-                   min-h-[54px] text-left transition-colors ${
+                   ${reglages.hauteur} text-left transition-colors ${
                      selecteurOuvert
                        ? "bg-sombre-haut-clair"
                        : "bg-sombre-haut hover:bg-sombre-haut-clair"
                    }`}
       >
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[14.5px] font-semibold text-sombre-texte leading-tight">
+          <span className={`block truncate font-semibold text-sombre-texte leading-tight ${reglages.titre}`}>
             {fiche ? fiche.nom : "Aucun portfolio"}
           </span>
           <span className="mt-1 flex items-center gap-1.5">
@@ -533,7 +644,7 @@ export function MenuEspace({
               aria-hidden="true"
               className={`h-1.5 w-1.5 shrink-0 rounded-full ${COULEUR_ETAT[etat]}`}
             />
-            <span className="text-[12px] text-sombre-texte-doux leading-none">
+            <span className={`text-sombre-texte-doux leading-none ${reglages.sousTitre}`}>
               {LIBELLE_ETAT[etat]}
             </span>
           </span>
@@ -595,7 +706,7 @@ export function MenuEspace({
                                  choisie ? "bg-white/[0.04]" : ""
                                }`}
                   >
-                    <span className="block truncate text-[14.5px] font-semibold text-sombre-texte leading-tight">
+                    <span className={`block truncate font-semibold text-sombre-texte leading-tight ${reglages.titre}`}>
                       {entree.nom}
                     </span>
                     <span className="mt-1 flex items-center gap-1.5">
@@ -603,7 +714,7 @@ export function MenuEspace({
                         aria-hidden="true"
                         className={`h-1.5 w-1.5 shrink-0 rounded-full ${COULEUR_ETAT[etatEntree]}`}
                       />
-                      <span className="text-[12px] text-sombre-texte-doux leading-none">
+                      <span className={`text-sombre-texte-doux leading-none ${reglages.sousTitre}`}>
                         {LIBELLE_ETAT[etatEntree]}
                       </span>
                     </span>
@@ -615,7 +726,7 @@ export function MenuEspace({
         </div>
       )}
     </div>
-  ) : null;
+    ) : null;
 
   /** LES DEUX ENTRÉES DU PORTFOLIO CHOISI — « Mon portfolio » d'abord
       (acquis nº 472-§3a), puis « Modification ». */
@@ -870,7 +981,7 @@ export function MenuEspace({
              portfolio, avec sa liste, ses pastilles et son fond clair
              — le comportement à deux et plus ne change pas d'une
              ligne. */}
-        {selecteurDePortfolio}
+        {selecteurDePortfolio(REGLAGES_SELECTEUR_WEB)}
 
         {entreesDuPortfolio}
       </div>
@@ -960,7 +1071,12 @@ export function MenuEspace({
   const contenuMenuDoigt = (
     <div className="flex flex-col gap-3 px-4 pt-1">
       {/* ---------- LA RANGÉE DE TROIS ---------- */}
-      <div className="grid grid-cols-3 gap-3">
+      {/*  §3 (nº 532) — DEUX TUILES, ET ELLES SE PARTAGENT TOUTE LA
+           LARGEUR : « Ajouter » a rejoint l'encadré du portfolio, sa
+           place logique (§2). La grille passe de trois colonnes à
+           deux ; rien d'autre de la tuile ne change — icône centrée,
+           mot dessous, boîte cliquable en entier. */}
+      <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
           onClick={ouvrirLesNotifications}
@@ -971,19 +1087,29 @@ export function MenuEspace({
                sa droite. Même écriture qu'au web (le rose des
                compteurs, son usage d'origine), même contenu.
                §2 (nº 531) — ELLE SUIT LA CLOCHE QUI GRANDIT : 20 → 24 px
-               de haut, chiffres de 11,5 → 12,5 px. Elle ne grandit PAS
-               d'autant que le glyphe (22 → 32, soit la moitié en plus) :
-               une pastille qui suivrait au pixel près couvrirait la
-               cloche. Un cran suffit à la garder lisible et à la garder
-               seconde. Sa position ne change pas — elle est relative au
-               coin de l'icône, quelle que soit sa taille. */}
+               de haut, chiffres de 11,5 → 12,5 px.
+               ██ §4 (nº 532) — LE ROND SE RESSERRE SUR LE CHIFFRE ██
+               24 px, c'était trop large : la pastille couvrait la
+               cloche au lieu de se poser dessus. SON DIAMÈTRE DESCEND
+               À 20 px — et LE CHIFFRE NE BOUGE PAS, il garde ses
+               12,5 px. Il reste donc 3,75 px d'air au-dessus et en
+               dessous de lui (la hauteur de ligne épouse le rond), et
+               6 px de chaque côté.
+               ⚠️ CE N'EST PAS UN ROND, C'EST UN PLANCHER : les 20 px
+               sont une largeur MINIMALE. Un nombre à deux chiffres
+               (≈ 14 px de chasse) porte la pastille à 26 px, « 99+ »
+               (≈ 22 px) à 34 : elle s'allonge pour contenir son texte
+               et ne le coupe jamais. Un chiffre seul, lui, tient dans
+               le rond parfait de 20 px.
+               Sa position ne change pas — elle est relative au coin de
+               l'icône, quelle que soit sa taille. */}
           <span className={`relative ${CLASSE_TUILE_ICONE}`}>
             <IconeCloche taille={TAILLE_ICONE_TUILE} />
             {nonLues > 0 && (
               <span
                 aria-label={`${nonLues} non lue${nonLues > 1 ? "s" : ""}`}
-                className="absolute -right-3 -top-1 min-w-[24px] h-6 px-1.5 rounded-full bg-primaire
-                           text-[12.5px] font-bold text-white leading-6 text-center"
+                className="absolute -right-3 -top-1 min-w-[20px] h-5 px-1.5 rounded-full bg-primaire
+                           text-[12.5px] font-bold text-white leading-5 text-center"
               >
                 {nonLues > 99 ? "99+" : nonLues}
               </span>
@@ -1004,64 +1130,93 @@ export function MenuEspace({
           <span className={CLASSE_TUILE_MOT}>Sélection</span>
         </Link>
 
-        <button
-          type="button"
-          onClick={demanderUneNouvelleFiche}
-          className={CLASSE_TUILE}
-        >
-          <span className={CLASSE_TUILE_ICONE}>
-            <IconePlus taille={TAILLE_ICONE_TUILE} />
-          </span>
-          <span className={CLASSE_TUILE_MOT}>Ajouter</span>
-        </button>
       </div>
 
       {/* ---------- L'ENCADRÉ DU PORTFOLIO ----------
-           Il disparaît entier tant qu'aucun portfolio n'a été envoyé —
-           la garde de toujours, celle du plan du web. */}
-      {fiches.length > 0 && (
-        /**
+           ██ §2 (nº 532) — IL EST TOUJOURS LÀ, ET VOICI POURQUOI ██
+           Il disparaissait entier tant qu'aucun portfolio n'avait été
+           envoyé (la garde de toujours, celle du plan du web). Il ne le
+           peut plus : « Ajouter un portfolio » vient d'y entrer, et
+           c'est précisément l'entrée dont un compte NEUF a besoin — la
+           faire disparaître avec l'encadré l'aurait rendue introuvable.
+           LA GARDE N'EST PAS LEVÉE, ELLE DESCEND D'UN CRAN : elle porte
+           désormais sur les DEUX LIGNES qui dépendent d'un portfolio
+           (« Mon portfolio », « Modification »), là où elle a toujours
+           eu son sens. Le déroulant garde la sienne (deux portfolios au
+           moins, nº 472). Un compte neuf voit donc un encadré d'une
+           seule ligne : « Ajouter un portfolio ».
+           ⚠️ LE PLAN DU WEB NE BOUGE PAS : là-bas « Ajouter » est resté
+           une entrée du haut, et l'encadré garde sa garde d'origine. */}
+      {/**
          * §3 (nº 531) — PLUS D'AIR EN HAUT ET EN BAS : la réserve
          * verticale passe de 8 à 12 px. L'horizontale ne bouge pas
          * (8 px) — c'est elle qui, ajoutée aux 12 px que chaque ligne
          * porte déjà, pose les icônes à 20 px du bord.
-         */
-        <div className={`flex flex-col px-2 py-3 ${CLASSE_ENCADRE}`}>
-          {/**
-           * ██ §4 (nº 531) — LE DÉROULANT SE CALE SUR LES ICÔNES ██
-           * ----------------------------------------------------------
-           * CE QUI N'ALLAIT PAS, mesuré : le déroulant prenait TOUTE la
-           * largeur du contenu de l'encadré — son bord gauche tombait à
-           * 8 px du bord, quand les icônes des deux lignes du dessous
-           * tombent à 20 px (les 8 px de l'encadré, plus les 12 px que
-           * `classeEntree` porte). Il débordait donc de 12 px à gauche
-           * de la colonne d'icônes, et rien ne s'alignait.
-           * CE SUR QUOI ON S'ALIGNE, exactement : le BORD GAUCHE DE LA
-           * BOÎTE D'ICÔNE d'une ligne (`boiteIcone`, 22 px de large),
-           * c'est-à-dire le bord gauche du glyphe « Mon portfolio ».
-           * COMMENT : 12 px de retrait de chaque côté — le déroulant
-           * commence donc à 8 + 12 = 20 px, pile sur les icônes, et il
-           * s'arrête à 20 px du bord droit.
-           * LES QUATRE AIRS, AVANT PUIS APRÈS :
-           *  · à gauche  8 → 20 px  · à droite 8 → 20 px
-           *  · au-dessus 8 → 20 px  · en dessous 4 → 12 px
-           * ⚠️ LES TROIS PREMIERS AUGMENTENT, ET JE LE DIS PLUTÔT QUE
-           * DE CHOISIR EN SILENCE : la consigne demandait de les
-           * RÉDUIRE **et** d'aligner le bord gauche sur les icônes. Les
-           * deux ne peuvent pas tenir ensemble — aligner sur les icônes,
-           * c'est rentrer le déroulant de 12 px, donc ajouter de l'air à
-           * sa gauche. J'ai retenu L'ALIGNEMENT, qui est la consigne
-           * mesurable, et j'ai rendu les trois airs ÉGAUX comme demandé.
-           * ⚠️ LA LISTE QUI S'OUVRE SUIT LE CHAMP : elle est posée sur
-           * lui (`absolute left-0 right-0`, dans son propre conteneur),
-           * donc elle prend le même retrait sans qu'on le lui dise.
-           */}
-          {selecteurDePortfolio && (
-            <div className="mx-3 mt-2 mb-3">{selecteurDePortfolio}</div>
-          )}
-          {entreesDuPortfolio}
-        </div>
-      )}
+         */}
+      <div className={`flex flex-col px-2 py-3 ${CLASSE_ENCADRE}`}>
+        {/*  ██ §2 (nº 532) — « AJOUTER UN PORTFOLIO », EN TÊTE ██
+             Il quitte la rangée de tuiles pour la PREMIÈRE LIGNE de
+             cet encadré, au-dessus du déroulant. Son geste ne change
+             pas d'un caractère : c'est `demanderUneNouvelleFiche`,
+             celui-là même que le plan du web appelle — avec sa garde
+             « une saisie est en cours ».
+             ⚠️ SON ICÔNE ET SON TEXTE SONT ROSES (`primaire`, nº 466)
+             — un usage de charte, pas une dérive : c'est LA SEULE
+             ACTION de cette page, tout le reste y mène quelque part.
+             La ligne reprend LA GÉOMÉTRIE des entrées (même
+             hauteur, même retrait, même état enfoncé que ses
+             voisines) et n'en change QUE la couleur du texte —
+             `classeEntreeAction`, plus haut : une classe de couleur
+             par élément, jamais deux empilées. */}
+        <button
+          type="button"
+          onClick={demanderUneNouvelleFiche}
+          className={classeEntreeAction}
+        >
+          {/*  L'ICÔNE N'ÉCRIT AUCUNE COULEUR : elle hérite du rose de
+               sa ligne. La boîte de largeur fixe, elle, est la même
+               que partout — les libellés partent tous du même pixel. */}
+          <span className={GEOMETRIE_BOITE_ICONE}>
+            <IconePlus taille={22} />
+          </span>
+          <span className="flex-1">Ajouter un portfolio</span>
+        </button>
+        {/**
+         * ██ §4 (nº 531) — LE DÉROULANT SE CALE SUR LES ICÔNES ██
+         * ----------------------------------------------------------
+         * CE QUI N'ALLAIT PAS, mesuré : le déroulant prenait TOUTE la
+         * largeur du contenu de l'encadré — son bord gauche tombait à
+         * 8 px du bord, quand les icônes des deux lignes du dessous
+         * tombent à 20 px (les 8 px de l'encadré, plus les 12 px que
+         * `classeEntree` porte). Il débordait donc de 12 px à gauche
+         * de la colonne d'icônes, et rien ne s'alignait.
+         * CE SUR QUOI ON S'ALIGNE, exactement : le BORD GAUCHE DE LA
+         * BOÎTE D'ICÔNE d'une ligne (`boiteIcone`, 22 px de large),
+         * c'est-à-dire le bord gauche du glyphe « Mon portfolio ».
+         * COMMENT : 12 px de retrait de chaque côté — le déroulant
+         * commence donc à 8 + 12 = 20 px, pile sur les icônes, et il
+         * s'arrête à 20 px du bord droit.
+         * LES QUATRE AIRS, AVANT PUIS APRÈS :
+         *  · à gauche  8 → 20 px  · à droite 8 → 20 px
+         *  · au-dessus 8 → 20 px  · en dessous 4 → 12 px
+         * ⚠️ LES TROIS PREMIERS AUGMENTENT, ET JE LE DIS PLUTÔT QUE
+         * DE CHOISIR EN SILENCE : la consigne demandait de les
+         * RÉDUIRE **et** d'aligner le bord gauche sur les icônes. Les
+         * deux ne peuvent pas tenir ensemble — aligner sur les icônes,
+         * c'est rentrer le déroulant de 12 px, donc ajouter de l'air à
+         * sa gauche. J'ai retenu L'ALIGNEMENT, qui est la consigne
+         * mesurable, et j'ai rendu les trois airs ÉGAUX comme demandé.
+         * ⚠️ LA LISTE QUI S'OUVRE SUIT LE CHAMP : elle est posée sur
+         * lui (`absolute left-0 right-0`, dans son propre conteneur),
+         * donc elle prend le même retrait sans qu'on le lui dise.
+         */}
+        {plusieursFiches && (
+          <div className="mx-3 mt-2 mb-3">
+            {selecteurDePortfolio(REGLAGES_SELECTEUR_DOIGT)}
+          </div>
+        )}
+        {fiches.length > 0 && entreesDuPortfolio}
+      </div>
 
       {/* ---------- L'ENCADRÉ DU COMPTE ---------- */}
       <div className={`p-2 ${CLASSE_ENCADRE}`}>{entreesDuCompte}</div>
@@ -1191,16 +1346,19 @@ export function MenuEspace({
                   d'image ne dépend d'une mise en page) ;
                 · IL N'EST PAS CARRÉ — 297 × 337, relevé à la nº 468 et
                   DÉCLARÉ dans `LogoYokofolio` depuis la nº 507. On ne
-                  lui donne donc QUE SA HAUTEUR : les 44 px de la
-                  nº 530, inchangés. La largeur se calcule du rapport
-                  natif (39 px) et le composant la déclare au
-                  navigateur : rien n'est étiré, rien ne saute au
-                  chargement ;
+                  lui donne donc QUE SA HAUTEUR ; la largeur se
+                  calcule du rapport natif, et le composant la déclare
+                  au navigateur : rien n'est étiré, rien ne saute au
+                  chargement.
+                  §1 (nº 532) — ELLE GRANDIT ENCORE : 44 → 64 px de
+                  haut, donc 56 px de large (64 × 297 / 337, arrondi).
+                  On ne touche toujours QU'À LA HAUTEUR — c'est ce qui
+                  garantit le rapport ;
                 · LE TITRE reste centré dessous, la CROIX en haut à
                   droite — la nº 530 ne bouge pas d'un pixel. */}
           <PagePleinEcranMobile
             titre="Mon compte"
-            icone={<LogoYokofolio variante="icone" hauteur={44} />}
+            icone={<LogoYokofolio variante="icone" hauteur={64} />}
             ariaLabel="Mon compte"
             enTeteCentre
             surFermer={() => setOuvert(false)}
