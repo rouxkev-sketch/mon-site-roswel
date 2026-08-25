@@ -63,7 +63,8 @@
  *     de 58 px et les cartes qui remontent après s'être affichées.
  * 11. QUAND LA DÉCISION N'EST PAS « QUOI AFFICHER » MAIS « QUELLE PAGE
  *     SERVIR », C'EST LE SERVEUR QUI TRANCHE, d'après l'adresse
- *     (nº 335-§2, lib/appareil-serveur). Décidée dans le navigateur,
+ *     (nº 335-§2 ; son seul module, lib/appareil-serveur, est parti
+ *     avec la page du carrousel à la nº 602). Décidée dans le navigateur,
  *     une telle bascule se voit toujours : il y a une image, puis une
  *     autre. La règle du DOIGT (nº 60) reste seule maîtresse de tout
  *     ce qui s'AFFICHE.
@@ -93,8 +94,8 @@
  * de ce que ce module décide déjà.
  *
  * OÙ CHAQUE POINT S'APPLIQUE, POUR QU'AUCUN NE SE PERDE :
- *  · 1 et 2 — `PileFiches`, `FicheTatoueur` (fenêtre de carrousel),
- *    `GrilleTatoueurs`, `PageFavoris`, et depuis la nº 330-§3 LES
+ *  · 1 et 2 — `PileFiches`, `GrilleTatoueurs`, `PageFavoris`, et
+ *    depuis la nº 330-§3 LES
  *    QUATRE DERNIÈRES : la feuille du bas des menus (`MenuDeroulant`),
  *    la page de recherche du smartphone (`PageRechercheMobile`), le
  *    menu « Mon espace » (`MenuEspace`) et le détail d'une fiche dans
@@ -160,18 +161,21 @@
  *    avant que React n'existe). La feuille de style porte les deux
  *    règles qui font que rien ne bouge à la première image
  *    (`data-rangee-repliee`, `data-rangee-immediate`, globals.css).
- *  · 11 — `lib/appareil-serveur`, appelé par la page du carrousel
- *    partagé (app/(tatouage)/tatoueur/[slug]/carrousel/page.tsx). Un
- *    seul appelant à ce jour : c'est voulu, ce n'est pas une règle
- *    d'affichage.
- *  · 12 — `FicheTatoueur` (l'ajustement pendant le rendu de la fenêtre
- *    de carrousel, `ficheDejaPosee`). C'est la seule surface du site
- *    qui s'ouvre depuis l'adresse ; toute autre qui le ferait un jour
- *    doit reprendre la même règle, et non la recopier de travers. Depuis la
- *    nº 337-§2, la seconde moitié passe par l'écriture commune des
- *    changements d'adresse (`souscrireAdresse`, lib/adresse-courante) :
- *    sans réveil, la règle ne s'appliquait qu'une fois, et la fenêtre
- *    restait ouverte jusqu'à un second appui.
+ *  · 11 — PLUS AUCUN APPLICATEUR depuis la nº 602. Ce point n'avait
+ *    qu'un seul lieu d'exercice, `lib/appareil-serveur`, appelé par la
+ *    page du carrousel partagé ; la page a été supprimée, et le module
+ *    avec elle, faute d'autre appelant. La RÈGLE, elle, reste écrite
+ *    ici : le jour où une décision « quelle page servir » se
+ *    représentera, c'est ainsi qu'elle se prendra.
+ *  · 12 — n'a plus d'applicateur non plus depuis la nº 602 : c'était
+ *    l'ajustement de premier rendu de la fenêtre de carrousel
+ *    (`ficheDejaPosee`, FicheTatoueur), parti avec elle — avec son
+ *    réveil par l'écriture commune des changements d'adresse
+ *    (`souscrireAdresse`, nº 337-§2), sans lequel la règle ne jouait
+ *    qu'une fois et la fenêtre restait ouverte jusqu'à un second
+ *    appui. Plus aucune surface du site ne s'ouvre depuis l'adresse ;
+ *    celle qui le ferait un jour doit reprendre cette règle-ci, et non
+ *    la recopier de travers.
  *  · 13 — `lib/pose-sur-contenu` (la règle et la boucle d'attente,
  *    écrites une fois), `poserLaPosition` (lib/restitution-position) et
  *    le script d'avant peinture, qui reçoit sa boucle TOUTE FAITE au
@@ -361,8 +365,8 @@
  *    l'arrivée elle semait les tags de la page PRÉCÉDENTE (l'adresse
  *    n'est commise qu'après le premier rendu — la mesure nº 336), et
  *    pendant la vie de la fiche elle resemait sous les SURFACES (le
- *    pushState de la fenêtre de carrousel la détruisait — retour du
- *    « remplacement sur place » retiré à la nº 304). La règle est
+ *    pushState de la fenêtre de carrousel la détruisait alors — retour
+ *    du « remplacement sur place » retiré à la nº 304). La règle est
  *    celle d'avant la nº 359, à la lettre : une page lit SA requête,
  *    une fois l'adresse à elle ; les surfaces n'existent pas pour
  *    elle (FicheSelonLAdresse, lecture gelée hors de son chemin).

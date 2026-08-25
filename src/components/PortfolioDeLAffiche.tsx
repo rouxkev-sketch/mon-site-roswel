@@ -350,8 +350,10 @@ export function PanneauPortfolio({
         {/*  RÈGLE 6 (nº 306) — TOUCHER UNE PHOTO L'OUVRE, ELLE ET PAS
              UNE AUTRE. C'est le chemin qui existe déjà (`surSerie`),
              avec le RANG en plus : en web il pose la photo dans le
-             cadre du haut, au doigt il ouvre la fenêtre de carrousel
-             dessus (§3-d, nº 314 — voir FicheTatoueur). */}
+             cadre du haut, au doigt il NAVIGUE vers la vue photo
+             (nº 455 — voir `surSerieChoisie` dans FicheTatoueur ; la
+             page plein écran qu'il ouvrait avant n'existe plus depuis
+             la nº 602). */}
         <button
           type="button"
           onClick={() =>

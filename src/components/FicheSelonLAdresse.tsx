@@ -40,8 +40,9 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  *     battement plus tard — le lien « portfolio » (`entree=lien`)
  *     semblait mort.
  *  2. PENDANT LA VIE DE LA FICHE, l'adresse appartient parfois à une
- *     SURFACE : la fenêtre de carrousel pose `/tatoueur/x/carrousel?…`
- *     par un pushState BRUT (et la pile des fiches, `/tatoueur/autre`).
+ *     SURFACE : la pile des fiches pose `/tatoueur/autre` par un
+ *     pushState BRUT (la page plein écran de la nº 284 en posait une
+ *     autre, jusqu'à sa suppression à la nº 602).
  *     Lire ces adresses-là resemait la fiche SOUS la surface : la
  *     photo du haut prenait la photo touchée, et le remontage
  *     DÉTRUISAIT la fenêtre qui venait d'ouvrir — l'ancien
@@ -58,7 +59,7 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  * Une surface qui écrit dans l'adresse rend donc une valeur INCHANGÉE
  * — même chaîne, aucun rendu (c'est la mécanique de
  * `useSyncExternalStore`) : la fiche ne bouge pas d'un pixel sous la
- * fenêtre de carrousel ni sous la pile.
+ * pile.
  *
  * COMMENT, et pourquoi comme ça :
  *  · L'ADRESSE EST LUE PAR L'ÉCRITURE COMMUNE des changements

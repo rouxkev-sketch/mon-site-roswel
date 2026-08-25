@@ -318,33 +318,15 @@ export function cheminDuCarrousel(
   return requete ? `/tatoueur/${slug}?${requete}` : `/tatoueur/${slug}`;
 }
 
-/**
- * §Fenêtre (nº 284) — L'ADRESSE DE LA FENÊTRE DE CARROUSEL, écrite une
- * seule fois.
- * ==================================================================
- * Sur smartphone, un carrousel s'ouvre en PLEINE PAGE par-dessus la
- * fiche (FenetreCarrousel). Cette adresse est celle que l'ouverture
- * pousse dans l'historique, ET une vraie page servie par le serveur
- * (`/tatoueur/<slug>/carrousel`) : partagée, elle ouvre la fenêtre chez
- * quelqu'un qui n'a jamais vu la fiche.
- * `photo` : LE RANG DE LA PHOTO TOUCHÉE — la fenêtre s'ouvre sur elle,
- * jamais sur la première (nº 284). Zéro ne s'écrit pas : l'adresse la
- * plus courante reste propre.
- */
-export function cheminDeLaFenetreCarrousel(
-  slug: string,
-  style: string,
-  serie: { nature: string; rendu: string } | null,
-  photo = 0
-): string {
-  const suite = new URLSearchParams();
-  if (style) suite.set("style", style);
-  if (serie?.nature) suite.set("nature", serie.nature);
-  if (serie?.rendu) suite.set("rendu", serie.rendu);
-  if (photo > 0) suite.set("photo", String(photo));
-  const requete = suite.toString();
-  return `/tatoueur/${slug}/carrousel${requete ? `?${requete}` : ""}`;
-}
+/*  §1 (nº 602) — `cheminDeLaFenetreCarrousel` EST SUPPRIMÉE, CODE
+    COMPRIS. Elle écrivait l'adresse `/tatoueur/<slug>/carrousel` de la
+    page plein écran de la nº 284. La nº 455 lui avait déjà retiré son
+    dernier appelant ; la nº 602 supprime la page, sa route serveur et
+    la surveillance d'adresse qui la montait — cette écriture n'a donc
+    plus de destination.
+    ⚠️ NE PAS LA CONFONDRE AVEC `cheminDuCarrousel`, juste au-dessus,
+    qui est bien vivante : c'est l'adresse PARTAGEABLE d'un carrousel
+    de fiche (nº 280-§3), celle que porte le bouton de partage. */
 
 /**
  * §4 (nº 302) — LA SÉRIE ET LE RANG D'UNE PHOTO DEMANDÉE.

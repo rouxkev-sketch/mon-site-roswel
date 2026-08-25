@@ -1,23 +1,18 @@
 "use client";
 
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 //  §2 (nº 455) — `useRouter` : la vignette du Portfolio navigue vers
 //  la vue photo au doigt (une entrée, le retour rend le profil).
-import { usePathname, useRouter } from "next/navigation";
-//  §2 (nº 337) — le chemin lu là où il est vrai, et le réveil par les
-//  DEUX portes : voir la note de `cheminDuNavigateur` plus bas.
-import {
-  lireCheminCourant,
-  lireCheminServeur,
-  souscrireAdresse,
-} from "@/lib/adresse-courante";
+import { useRouter } from "next/navigation";
+/*  §1 (nº 602) — LA SURVEILLANCE D'ADRESSE EST PARTIE AVEC LA FENÊTRE
+    DE CARROUSEL. Elle ne servait qu'à elle : `usePathname`,
+    `useSyncExternalStore` et les trois lecteurs de `adresse-courante`
+    (nº 336/337) répondaient à UNE seule question — « l'adresse est-elle
+    encore celle du carrousel ? ». Plus de carrousel, plus de question.
+    L'écriture commune `adresse-courante` reste vivante ailleurs (la
+    mémoire de navigation, « Ma sélection », le moteur, la sonde de
+    retour) : c'est ce fichier-ci qui cesse de la lire. */
 import {
   libelleStyle,
   //  §1 (nº 451) — le mot « Artiste / Salon / Studio » de la ligne
@@ -28,7 +23,6 @@ import {
 //  §1 (nº 451) — le lieu de la ligne grise : l'écriture du sous-titre
 //  MOBILE des cartes (nº 212-§6), jamais recomposée ici.
 import { ligneCarteMobile, villeAffichee } from "@/lib/adresse";
-import { positionSousLeGel } from "@/lib/gel-du-corps";
 import { BoutonPartageFiche } from "@/components/BoutonPartageFiche";
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import {
@@ -45,7 +39,6 @@ import {
   ContenuFiche,
   ENTREE_LIEN,
 } from "@/components/ContenuFiche";
-import { FenetreCarrousel } from "@/components/FenetreCarrousel";
 import { PileFiches } from "@/components/PileFiches";
 import { SondePhoto } from "@/components/SondePhoto";
 //  §1 (nº 502) — la rangée du profil de la vue photo devient une
@@ -53,9 +46,9 @@ import { SondePhoto } from "@/components/SondePhoto";
 //  lieux) et le chevron qui dit le lien. Rien n'est recopié.
 import { ENCADRE_MEMBRE_CLIQUABLE } from "@/components/plaque";
 import { IconeChevronBas } from "@/components/Icones";
-//  §2 (nº 455) — `cheminDeLaFenetreCarrousel` est parti avec
-//  `ouvrirLaFenetreCarrousel` : plus aucun geste n'écrit l'adresse de
-//  la fenêtre de carrousel (elle reste LUE — routes 328/329).
+//  §1 (nº 602) — `cheminDuCarrousel` reste, et lui seul : c'est
+//  l'adresse PARTAGEABLE d'un carrousel de fiche (nº 280-§3), rien à
+//  voir avec la fenêtre plein écran supprimée à cette passe.
 import {
   cheminDuCarrousel,
   galerieParStyles,
@@ -69,13 +62,15 @@ import {
 //  `pincementRecent` avec eux : ils ne servaient qu'à ouvrir la fenêtre
 //  de carrousel depuis la photo du haut.
 import { NATURE_PAR_DEFAUT, titreDeGalerie } from "@/lib/photos-tatoueur";
-//  §1 (nº 438) — la fermeture de la fenêtre de carrousel passe par
-//  history.back() : elle se déclare, pour que le rattrapage du filet
-//  ne la prenne jamais pour un atterrissage au fond de la pile.
-import { annoncerRepriseDuSite } from "@/lib/navigation-session";
 import type { Tatoueur } from "@/lib/tatoueurs";
-//  §2 (nº 455) — l'import `mecanismeCoupe` est parti avec la porte de
-//  banc « fenetres » d'`ouvrirLaFenetreCarrousel`, son seul emploi ici.
+/*  §1 (nº 602) — DEUX AUTRES IMPORTS SONT PARTIS AVEC LA FENÊTRE DE
+    CARROUSEL : `positionSousLeGel` (la position de la page dessous, que
+    la fenêtre gelait) et `annoncerRepriseDuSite` (sa fermeture passait
+    par history.back() et devait se déclarer au rattrapage du filet,
+    nº 438). Ni l'un ni l'autre n'avait d'autre emploi ici — le gel du
+    corps et le filet restent en service ailleurs, intacts.
+    (Rappel nº 455 : `mecanismeCoupe` était déjà parti avec la porte de
+    banc « fenetres ».) */
 
 /**
  * LA FICHE COMPLÈTE D'UN TATOUEUR — le mode d'ARRIVÉE DIRECTE
@@ -368,194 +363,29 @@ export function FicheTatoueur({
       enregistrer TOUT le carrousel d'un geste (nº 208-§6). Cette règle
       est annulée — un cœur ne met en favori que sa photo. */
 
-  /**
-   * ██ LA FENÊTRE DE CARROUSEL — SMARTPHONE SEULEMENT (nº 284) ██
-   * ==================================================================
-   * AU DOIGT, toucher un carrousel n'entraîne PLUS AUCUNE remontée :
-   * une page s'ouvre PAR-DESSUS (FenetreCarrousel), et la refermer
-   * retombe EXACTEMENT à l'endroit touché — la page reste MONTÉE
-   * dessous, corps gelé à sa position.
-   *
-   * L'ADRESSE DÉCIDE, comme pour la pile des fiches (nº 226-§5) :
-   *  · OUVRIR pousse UNE entrée d'historique (`pushState` vers
-   *    `/tatoueur/<slug>/carrousel?…` — une vraie page, servie aussi
-   *    par le serveur : c'est elle qu'on partage) ;
-   *  · la fenêtre ne s'affiche que tant que l'adresse correspond —
-   *    le bouton retour du téléphone et le glissement du bord la
-   *    referment donc naturellement, d'un cran ;
-   *  · l'état `fenetreFiche` du pushState dit à la mémoire de
-   *    navigation que ce N'EST PAS une page — le journal d'onglet ne
-   *    la retient pas, la reprise de session ne la rouvrira pas.
-   * ⚠️ LE DRAPEAU `data-fenetre-fiche` EST POSÉ AVANT le pushState :
-   * c'est lui qui retient `DefilementEnHaut` de remonter la page (une
-   * adresse `/tatoueur/…` qui change remonte, sinon — nº 193-§2).
-   *
-   * SUR LE WEB ET EN APERÇU (« Ma fiche »), RIEN NE CHANGE : la
-   * fonction répond faux, et les vignettes gardent leur comportement
-   * (le carrousel principal change, la page remonte — nº 197-§4).
-   */
-  const pathname = usePathname();
+  /*  ██ §1 (nº 602) — LA FENÊTRE DE CARROUSEL A QUITTÉ LE DÉPÔT ██
+      ------------------------------------------------------------------
+      CE QUI ÉTAIT ICI : cent quatre-vingt-huit lignes qui ne servaient
+      qu'à une chose — surveiller l'adresse du navigateur pour monter,
+      puis démonter, la page plein écran de la nº 284 (barre à logo,
+      photo dessous). Un état, sa lecture des paramètres, l'ajustement
+      symétrique de la nº 328-§4, la correction de premier rendu de la
+      nº 336 et son réveil par les deux portes de la nº 337.
+      POURQUOI TOUT PART D'UN COUP. La nº 455 avait déjà supprimé le
+      GESTE qui l'ouvrait : la vignette du Portfolio navigue depuis vers
+      la vue photo (voir `surSerieChoisie`, plus bas). Ne restait que la
+      porte de l'ADRESSE, gardée pour les vieux liens partagés — le
+      propriétaire a tranché à la nº 602 : le site n'est pas en ligne,
+      aucun lien de ce genre n'existe. La porte n'ouvre donc plus sur
+      rien qu'il faille préserver, et le composant, sa route serveur et
+      cette surveillance partent ensemble. Laisser l'un des trois, c'est
+      une adresse qui répond à du vide.
+      ⚠️ CE QUI NE BOUGE PAS, ET C'EST L'ESSENTIEL : la VUE PHOTO du
+      doigt (nº 451 à nº 455) est une AUTRE surface — c'est cette
+      page-ci —, et la FENÊTRE SUPERPOSÉE du web (FenetreFiche) une
+      troisième. Aucune des deux ne consommait ce qui part. */
   //  §2 (nº 455) — la navigation des vignettes du Portfolio, au doigt.
   const router = useRouter();
-
-  /**
-   * CE QUE L'ADRESSE DU CARROUSEL DÉCRIT — style, série, photo.
-   * La MÊME lecture que la route serveur (`/carrousel/page.tsx`) et
-   * que `cheminDeLaFenetreCarrousel` qui l'écrit : trois paramètres,
-   * pas un de plus. C'est elle qui permet à un RETOUR de rouvrir la
-   * fenêtre exactement telle qu'elle était (nº 328-§4).
-   */
-  function fenetreDeLAdresse() {
-    const p = new URLSearchParams(window.location.search);
-    const style = p.get("style") ?? "";
-    const nature = p.get("nature") ?? "";
-    const rendu = p.get("rendu") ?? "";
-    return {
-      style,
-      serie: nature || style ? { nature, rendu } : null,
-      photo: Math.max(0, Math.floor(Number(p.get("photo")) || 0)),
-      position: positionSousLeGel(),
-    };
-  }
-
-  const [fenetreCarrousel, setFenetreCarrousel] = useState<{
-    style: string;
-    serie: { nature: string; rendu: string } | null;
-    photo: number;
-    position: number;
-  } | null>(null);
-  /**
-   * §4 (nº 328) — L'ADRESSE OUVRE LA FENÊTRE AUTANT QU'ELLE LA FERME.
-   * ==================================================================
-   * CE QUI ÉTAIT ÉCRIT : l'ajustement ne jouait QUE DANS UN SENS —
-   * l'adresse qui ne correspond plus REFERME la fenêtre, mais
-   * l'adresse qui redevient celle du carrousel ne la ROUVRAIT pas. La
-   * fenêtre ne s'ouvrait que par le geste (`ouvrirLaFenetreCarrousel`).
-   *
-   * CE QUE CELA CASSAIT (C-1 de l'inventaire nº 327). Depuis la
-   * fenêtre, le rond de profil menait à la fiche ; l'entrée du
-   * carrousel restait dans l'historique, mais plus rien ne la montait.
-   * Un retour ramenait donc l'ADRESSE du carrousel sans la fenêtre :
-   * la route serveur répondait, et l'on tombait sur une PAGE PLEINE
-   * sans barre, dont la flèche était devenue un lien. On ne revenait
-   * jamais à ce qu'on venait de quitter.
-   *
-   * LA CORRECTION, ET C'EST LE POINT 5 DE LA RÈGLE (l'état d'un écran
-   * vit dans l'adresse) : l'ajustement devient SYMÉTRIQUE. L'adresse
-   * dit tout — si elle est celle du carrousel, la fenêtre est montée,
-   * avec le style, la série et la photo QU'ELLE PORTE. Le retour la
-   * rouvre donc dans le même état (point 8), sans repasser par le
-   * serveur, et sans qu'aucun geste n'ait à être rejoué.
-   *
-   * ⚠️ LA POSITION DE LA PAGE DESSOUS, à la réouverture : celle du
-   * moment, lue SOUS LE GEL (point 4). Au retour, le corps n'est plus
-   * gelé — le dégel de la fermeture précédente l'a rendu à sa place —
-   * et c'est donc bien la position de la fiche qu'on relit.
-   * ⚠️ AJUSTÉ PENDANT LE RENDU, jamais dans un effet (le motif de
-   * PileFiches), avec la même vérité : `location`, car `usePathname`
-   * reste en retard d'un rendu et ne sert que de réveil.
-   *
-   * §1 (nº 336) — SAUF AU TOUT PREMIER RENDU, OÙ C'EST L'INVERSE, ET
-   * C'EST LÀ QUE LA FENÊTRE NE SE REFERMAIT PAS.
-   * ==================================================================
-   * MESURÉ, PAS SUPPOSÉ. Depuis un lien de partage, on touche le rond
-   * de profil de la fenêtre : le relevé image par image donne
-   *
-   *     +0 ms     /tatoueur/…/carrousel?…   FENÊTRE
-   *     +1177 ms  /tatoueur/…?entree=lien   FENÊTRE   ← et pour toujours
-   *
-   * La fiche est bien arrivée (barre, réserve, onglets Profil et
-   * Portfolio, tous absents de la page partagée) — ET ELLE A ROUVERT
-   * LA FENÊTRE PAR-DESSUS ELLE-MÊME. C'est exactement ce que le
-   * propriétaire voyait depuis trois passes : « je touche, rien ne se
-   * passe ». Rien ne se passait, en effet : la fiche était dessous.
-   *
-   * POURQUOI. Pendant une navigation de client, le routeur rend LA
-   * NOUVELLE PAGE AVANT que le navigateur n'ait commis l'adresse. Au
-   * TOUT PREMIER rendu de la fiche, `usePathname()` dit déjà
-   * `/tatoueur/<slug>` (la route où l'on va), tandis que
-   * `window.location.pathname` dit encore `/tatoueur/<slug>/carrousel`
-   * (l'adresse d'où l'on vient). C'est l'INVERSE du retard décrit
-   * ci-dessus. La fenêtre s'ouvrait donc sur une adresse qu'on était en
-   * train de QUITTER — et plus rien ne la refermait ensuite : l'adresse
-   * commise ne provoque aucun nouveau rendu, puisque `usePathname` ne
-   * change pas (il donnait déjà la bonne route).
-   *
-   * LA RÈGLE : au premier rendu, c'est LE ROUTEUR qui dit la vérité —
-   * lui seul sait vers quelle page on va. Ensuite, et pour toute la vie
-   * du composant, c'est `location` — lui seul voit les `pushState`
-   * bruts de l'ouverture au doigt et les `popstate` du retour, que le
-   * routeur ne traduit pas toujours.
-   * ⚠️ CECI NE TOUCHE NI À L'OUVERTURE AU DOIGT (elle pose l'état
-   * elle-même, `ouvrirLaFenetreCarrousel`), NI À LA RÉOUVERTURE AU
-   * RETOUR (nº 328-§4 : le `popstate` change `location`, on n'est plus
-   * au premier rendu), NI À LA FERMETURE D'UN SEUL APPUI (nº 330).
-   */
-  const adresseDeLaFenetre = `/tatoueur/${tatoueur.slug}/carrousel`;
-  //  ⚠️ UN ÉTAT, PAS UNE RÉFÉRENCE : une référence ne se lit pas
-  //  pendant le rendu (règle de React, et le linte le refuse). Faux au
-  //  tout premier rendu, vrai pour toujours ensuite.
-  const [ficheDejaPosee, setFicheDejaPosee] = useState(false);
-  useEffect(() => {
-    //  Une image plus tard — le motif de `useAppareilMobile` : poser
-    //  un état SYNCHRONEMENT dans un effet enchaîne les rendus, et le
-    //  linte le refuse. À cet instant, l'adresse est commise.
-    const image = requestAnimationFrame(() => setFicheDejaPosee(true));
-    return () => cancelAnimationFrame(image);
-  }, []);
-  /**
-   * §2 (nº 337) — ET IL FALLAIT ÊTRE RÉVEILLÉ, SANS QUOI LA RÈGLE
-   * CI-DESSUS NE S'APPLIQUAIT JAMAIS DEUX FOIS.
-   * ==================================================================
-   * MESURÉ, RÉSEAU RALENTI ET PROCESSEUR BRIDÉ, SUR LA FENÊTRE
-   * SUPERPOSÉE — le chemin du propriétaire, enfin reproduit :
-   *
-   *     premier appui sur le rond → /tatoueur/x#profil  + FENÊTRE
-   *     second  appui sur le rond → /tatoueur/x#profil  (plus de fenêtre)
-   *
-   * « Au premier appui la page saute et la fenêtre revient ; au second,
-   * j'accède au profil. » Exactement cela.
-   *
-   * POURQUOI. La fenêtre pose son adresse par un `pushState` BRUT — le
-   * routeur de Next n'en sait rien et continue d'annoncer le chemin de
-   * la PAGE, `/tatoueur/<slug>`. Quand le rond ramène à ce même chemin,
-   * `usePathname()` NE CHANGE PAS : il valait déjà cela. Aucun rendu
-   * n'est donc déclenché, l'ajustement ci-dessous n'est jamais rejoué,
-   * et la fenêtre reste. Le second appui, lui, provoque un rendu pour
-   * une autre raison — et c'est ce rendu-là qui refermait.
-   * Ma correction de la nº 336 était juste sur le fond (le routeur dit
-   * la vérité à la naissance) mais elle ne pouvait pas s'appliquer : il
-   * n'y avait pas de second rendu.
-   *
-   * LA CORRECTION : on s'abonne à TOUT changement d'adresse, par les
-   * DEUX portes — le navigateur (`popstate`) et le code
-   * (`pushState`/`replaceState`, Next compris). C'est l'écriture
-   * commune qui existe déjà pour cela (`souscrireAdresse`,
-   * lib/adresse-courante), celle que la mémoire de navigation emploie
-   * depuis la nº 154. Aucun second dispositif.
-   * ⚠️ DÉTERMINISTE, ET NON PLUS DÉPENDANT D'UN ORDRE : quel que soit
-   * l'instant où l'adresse est commise, elle réveille ce composant, et
-   * l'ajustement retrouve la vérité.
-   */
-  const cheminDuNavigateur = useSyncExternalStore(
-    souscrireAdresse,
-    lireCheminCourant,
-    lireCheminServeur
-  );
-  const cheminReel =
-    !ficheDejaPosee || !cheminDuNavigateur ? pathname : cheminDuNavigateur;
-  if (fenetreCarrousel && cheminReel !== adresseDeLaFenetre) {
-    setFenetreCarrousel(null);
-  }
-  if (
-    !fenetreCarrousel &&
-    !apercu &&
-    cheminReel === adresseDeLaFenetre &&
-    typeof window !== "undefined" &&
-    document.documentElement.dataset.appareil === "mobile"
-  ) {
-    setFenetreCarrousel(fenetreDeLAdresse());
-  }
 
   /**
    * §3 (nº 290) — LA PHOTO ÉPOUSE LA HAUTEUR VISIBLE : ON LA MESURE,
@@ -712,20 +542,22 @@ export function FicheTatoueur({
       de carte (nº 453/454). La fenêtre n'a donc plus aucun POINT
       D'ENTRÉE par geste ; la porte de banc `mecanismeCoupe("fenetres")`
       part avec elle (plus rien à couper).
-      ⚠️ CE QUI RESTE, ET DOIT RESTER (règles 328/329 — les vieilles
-      adresses vivent) : la route serveur `/tatoueur/<slug>/carrousel`
-      et la RÉOUVERTURE PAR L'ADRESSE (l'ajustement symétrique
-      nº 328-§4, plus haut) — un vieux lien partagé, un retour ou un pas
-      en avant vers une adresse de carrousel montent la fenêtre
-      exactement comme avant. Seule l'entrée par geste a changé de
-      destination. */
+      ██ SUITE ET FIN À LA nº 602 : IL N'EN RESTE RIEN. Cette note
+      gardait alors la route serveur et la réouverture par l'adresse au
+      nom des règles 328/329 — « les vieilles adresses vivent ». Le
+      propriétaire a levé cette réserve : le site n'est pas en ligne,
+      il n'existe aucun lien partagé à préserver. Le composant, sa page
+      serveur et la surveillance d'adresse sont donc partis ensemble.
+      Une adresse de carrousel ne mène plus nulle part — c'est une page
+      introuvable, ce qu'elle doit être. */
 
   /*  §3 (nº 304) — LA PHOTO DU HAUT N'OUVRE PLUS RIEN, et
       `surToucherDeLaPhoto` est SUPPRIMÉE, code compris.
       ------------------------------------------------------------------
-      LA RÈGLE DU PROPRIÉTAIRE : la fenêtre de carrousel (nº 284) était
+      LA RÈGLE DU PROPRIÉTAIRE : la page plein écran de la nº 284 était
       RÉSERVÉE À LA PARTIE PORTFOLIO de la fiche. Toucher la photo
-      principale l'ouvrait aussi — ce n'était pas voulu.
+      principale l'ouvrait aussi — ce n'était pas voulu. (Cette page
+      n'existe plus du tout depuis la nº 602.)
       ⚠️ LA PHOTO GARDE TOUT LE RESTE : son défilement latéral, son
       compteur « 3/12 », ses flèches. (Depuis la nº 455, la vignette du
       Portfolio ouvre la VUE PHOTO — voir la note ci-dessus.) */
@@ -935,8 +767,8 @@ export function FicheTatoueur({
             ref={cadrePhoto}
             data-photo-fiche=""
             /*  §3 (nº 304) — PLUS AUCUN `onClick` ICI : la photo du
-                haut n'ouvre plus la fenêtre de carrousel (voir la note
-                de la fonction supprimée, plus haut). */
+                haut n'ouvre plus rien (voir la note de la fonction
+                supprimée, plus haut). */
             /*  §3 (nº 290) — LA LARGEUR DÉCOULE DE LA HAUTEUR LIBRE
                 MESURÉE (voir l'effet plus haut). Le repli
                 `100vh − 119px` ne sert plus qu'au tout premier rendu,
@@ -1654,8 +1486,9 @@ export function FicheTatoueur({
               /*  ██ §2 (nº 455) — AU DOIGT, UNE GALERIE OUVRE LA VUE
                   PHOTO, la même page qu'un clic de carte ██
                   --------------------------------------------------
-                  La fenêtre de carrousel (nº 284) n'est plus le chemin
-                  des vignettes : le geste NAVIGUE, par le routeur, vers
+                  La page plein écran de la nº 284 n'est plus le chemin
+                  des vignettes (et n'existe plus depuis la nº 602) :
+                  le geste NAVIGUE, par le routeur, vers
                   l'adresse que les CARTES écrivent (nº 371 — style,
                   rendu, nature, photo ; `URLSearchParams`, mêmes
                   paramètres, même page servie par le jumeau dynamique).
@@ -1739,26 +1572,11 @@ export function FicheTatoueur({
            paramètre dans l'adresse, elle ne rend rien du tout. */}
       <SondePhoto />
     </Racine>
-      {/*  §Fenêtre (nº 284) — LA FENÊTRE DE CARROUSEL, par-dessus la
-           page. Elle ne vit que tant que l'adresse est la sienne
-           (voir l'ajustement pendant le rendu, plus haut) : le retour
-           du téléphone la referme, et le gel du corps rend la page à
-           sa position exacte. */}
-      {fenetreCarrousel && (
-        <FenetreCarrousel
-          tatoueur={tatoueur}
-          style={fenetreCarrousel.style}
-          serie={fenetreCarrousel.serie}
-          photoInitiale={fenetreCarrousel.photo}
-          positionPage={fenetreCarrousel.position}
-          surFermeture={() => {
-            //  §1 (nº 438) — reprise déclarée AVANT le back : le
-            //  rattrapage du filet la lit au popstate et se tait.
-            annoncerRepriseDuSite();
-            window.history.back();
-          }}
-        />
-      )}
+      {/*  §1 (nº 602) — LA FENÊTRE DE CARROUSEL SE RENDAIT ICI, en
+           frère de la racine et sous la pile. Elle est supprimée : la
+           fiche n'a plus qu'UNE surface à elle, cette racine. La pile
+           des fiches (nº 226-§5), elle, reste — c'est une autre
+           mécanique, et c'est elle qui enveloppe. */}
     </PileFiches>
   );
 }

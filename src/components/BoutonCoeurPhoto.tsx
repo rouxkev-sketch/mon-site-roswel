@@ -251,8 +251,8 @@ export function BoutonCoeurPhoto({
            ELLE EST ÉCRITE ICI, ET NULLE PART AILLEURS, et c'est ce qui
            couvre TOUTES les surfaces d'un coup : ce bouton est le seul
            fanion du produit — cartes de la mosaïque, vitrines,
-           résultats, « Ma sélection », page de fiche, fenêtre de fiche
-           du web et fenêtre de carrousel montent CE composant. Aucune
+           résultats, « Ma sélection », page de fiche et fenêtre de
+           fiche du web montent CE composant. Aucune
            surface ne peut donc en être privée, et aucune n'a une ligne
            à écrire.
            ⚠️ AUCUNE ENTRÉE D'HISTORIQUE (règle 332-§1) : `invitation`
