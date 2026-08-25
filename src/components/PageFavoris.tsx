@@ -92,12 +92,29 @@ import { LienAccueil } from "@/components/LienAccueil";
     qu'elle recevait depuis la nº 249 sont retournées à la BARRE, seule
     à commander (l'encadré sur le web, les deux titres au doigt). Elle
     n'ANNONCE plus que ce qui est cherché. */
+/**
+ * ██ §1 (nº 597) — COMBIEN DE PORTFOLIOS PAR DÉPLIEMENT ██
+ * ------------------------------------------------------------------
+ * DOUZE, le nombre demandé par le propriétaire. Il n'a rien à voir
+ * avec les colonnes, et c'est pour une raison de forme : un portfolio
+ * occupe UNE LIGNE ENTIÈRE (`grid-cols-[minmax(0,1fr)]`, BlocSuivis) —
+ * il n'y a donc aucune rangée à compléter, aucun multiple à respecter.
+ * Les FAVORIS, eux, sont des cartes en grille : leur taille de page
+ * suit les colonnes et vient du serveur (voir `taillePage`).
+ */
+const PORTFOLIOS_PAR_DEPLIEMENT = 12;
+
 export function PageFavoris({
   photos,
   suivis,
+  taillePage,
 }: {
   photos: PhotoFavorite[];
   suivis: TatoueurSuivi[];
+  /** §1 (nº 597) — la taille d'une page de FAVORIS, décidée au cookie
+      des colonnes par la page qui nous monte : un multiple du nombre
+      de colonnes, pour que la dernière rangée reste pleine (nº 226). */
+  taillePage: number;
 }) {
   //  LE FILTRE VIENT DE L'ADRESSE — la même source que les menus de la
   //  barre, lue par le même magasin (nº 245-§3, nº 247-§2).
@@ -397,6 +414,93 @@ export function PageFavoris({
   const ensemblesVisibles = cartesDesFavoris(visibles);
 
   /**
+   * ██ §1 (nº 597) — LA PAGINATION DE « MA SÉLECTION » ██
+   * ==================================================================
+   * ELLE N'A RIEN À DEMANDER À PERSONNE, et c'est ce qui la sépare de
+   * celle de l'accueil : tout est DÉJÀ chargé (la page lit ses favoris
+   * en entier, relevé nº 596). Déplier, ici, c'est seulement MONTRER
+   * PLUS DE CE QU'ON A. D'où un BOUTON, jamais un lien : aucune
+   * navigation, aucune adresse à changer, aucun rendu serveur.
+   * ⚠️ CE QUE CELA ÉVITE, ET CE N'EST PAS UN DÉTAIL : le défaut relevé
+   * à la nº 595 sur l'accueil — où « Voir plus » navigue vers `/?page=2`,
+   * fait ressortir la page prérendue du cache du routeur et démonte
+   * tout l'arbre — NE PEUT PAS se produire ici. Deux raisons, et
+   * chacune suffirait : cette page est dynamique (`force-dynamic`),
+   * il n'existe donc aucune version prérendue à ressortir ; et surtout
+   * il n'y a AUCUNE navigation, donc rien à démonter. Les cartes déjà
+   * posées ne sont pas retouchées — React les reconnaît à leur clé et
+   * n'ajoute que les suivantes.
+   *
+   * LE COMPTE REPART À ZÉRO QUAND LE FILTRE CHANGE, et c'est le seul
+   * choix qui se défend : après avoir déplié trente favoris puis choisi
+   * « Flash », garder trente reviendrait à tout montrer d'un coup d'une
+   * liste qu'on vient de restreindre — le dépliement du filtre
+   * précédent n'a aucun sens pour le nouveau. Changer d'ONGLET repart
+   * de zéro pour la même raison (et la taille de page n'est pas la même
+   * des deux côtés).
+   * ⚠️ AJUSTÉ PENDANT LE RENDU, jamais dans un effet : c'est le motif
+   * de React employé au même endroit par la mosaïque (IndexTatoueurs)
+   * et par la pile des fiches. Un effet peindrait d'abord l'ancien
+   * compte, puis le corrigerait — un clignotement pour rien.
+   */
+  const cleDuChoix = `${choix.menu}|${choix.nature}|${choix.style}|${choix.profil}`;
+  const parDepliement = surLesFavoris ? taillePage : PORTFOLIOS_PAR_DEPLIEMENT;
+  const [affiches, setAffiches] = useState(parDepliement);
+  const [choixDeplie, setChoixDeplie] = useState(cleDuChoix);
+  if (choixDeplie !== cleDuChoix) {
+    setChoixDeplie(cleDuChoix);
+    setAffiches(parDepliement);
+  }
+  const cartesDepliees = ensemblesVisibles.slice(0, affiches);
+  const suivisDeplies = suivisVisibles.slice(0, affiches);
+
+  /**
+   * ██ §1 (nº 597) — LE PIED DE LISTE : LE JUMEAU DE CELUI DE L'ACCUEIL ██
+   * ==================================================================
+   * ⚠️ CES VALEURS SONT RECOPIÉES DE L'ACCUEIL (IndexTatoueurs), sur
+   * ordre du propriétaire : capsule, largeur (celle du web en base, la
+   * variante `mobile:` pour le doigt — nº 592 et nº 593), hauteur,
+   * rayon, couleurs, et le compteur gris en dessous. RIEN N'EST
+   * PARTAGÉ : le bouton de l'accueil est un LIEN qui navigue, celui-ci
+   * est un BOUTON qui compte — même apparence, mécanismes étrangers.
+   * ⚠️ LES DEUX DOIVENT DONC ÊTRE CHANGÉS ENSEMBLE. Toucher l'un sans
+   * l'autre les fera diverger sans que rien ne le signale : il n'y a
+   * pas d'écriture commune pour s'en apercevoir. C'est le prix accepté
+   * pour ne pas remanier l'accueil.
+   * ⚠️ LE BLOC RESTE MÊME QUAND IL N'Y A PLUS RIEN À DÉPLIER (la règle
+   * nº 220-§2, reprise telle quelle) : c'est son CONTENU qui s'efface,
+   * jamais le bloc — sinon il quitterait le document d'un coup sous
+   * les pieds de quelqu'un qui est justement en bas de page.
+   */
+  const piedDeListe = (montres: number, total: number) => (
+    <div
+      className={
+        montres < total ? "mt-10 flex flex-col items-center gap-2" : "mt-10"
+      }
+    >
+      {montres < total && (
+        <>
+          <button
+            type="button"
+            onClick={() => setAffiches((deja) => deja + parDepliement)}
+            className="inline-flex items-center justify-center rounded-full
+                       bg-sombre-eleve px-5 min-h-[42px]
+                       w-[328px] mobile:w-[160px]
+                       text-[14px] font-semibold
+                       text-sombre-texte transition-colors
+                       hover:bg-sombre-haut"
+          >
+            Voir plus
+          </button>
+          <p className="text-[13px] text-sombre-texte-doux">
+            {montres} sur {total}
+          </p>
+        </>
+      )}
+    </div>
+  );
+
+  /**
    * §3 (nº 460) — LES COMPTES DU VA-ET-VIENT DE LA BARRE (mobile).
    * ------------------------------------------------------------------
    * Le côté choisi du va-et-vient affiche LE NOMBRE DE CE QUI EST
@@ -569,7 +673,11 @@ export function PageFavoris({
                 (l'attente reste armée : l'avalement du re-clic et le
                 nettoyage à l'arrivée ne changent pas). */
             <ul data-signe-muet="" className={CLASSES_GRILLE_CARTES}>
-              {ensemblesVisibles.map(({ cle, fiche, photo }) => (
+              {/*  §1 (nº 597) — LA TRANCHE DÉPLIÉE, jamais la liste
+                   entière. Les cartes déjà posées gardent leur clé,
+                   donc leur place : le dépliement n'en retouche
+                   aucune, il en ajoute. */}
+              {cartesDepliees.map(({ cle, fiche, photo }) => (
                 <li key={cle}>
                   {/*  ⚠️ LA CARTE DE LA MOSAÏQUE, SANS VARIANTE
                        (nº 213-§3b) — le même composant que la
@@ -635,6 +743,11 @@ export function PageFavoris({
               ))}
             </ul>
           )}
+          {/*  §1 (nº 597) — LE PIED DES FAVORIS : la taille de page
+               suit les colonnes (voir `taillePage`), la rangée reste
+               donc pleine à chaque appui. Voir la note de
+               `piedDeListe`. */}
+          {piedDeListe(cartesDepliees.length, ensemblesVisibles.length)}
         </>
       )}
 
@@ -655,12 +768,17 @@ export function PageFavoris({
             ⚠️ AU DOIGT, RIEN NE CHANGE : `BlocSuivis` n'appelle ce
             rappel que sur un appareil à pointeur fin (voir
             `ouvrirEnFenetre`) — ailleurs, ses liens naviguent. */
+        <>
         <BlocSuivis
-          suivis={suivisVisibles}
+          suivis={suivisDeplies}
           surOuverture={(slug, serie, adresse) =>
             void ouvrirLaFiche(slug, serie, adresse)
           }
         />
+        {/*  §1 (nº 597) — LE PIED DES PORTFOLIOS : douze de plus à
+             chaque appui. Voir la note de `piedDeListe`. */}
+        {piedDeListe(suivisDeplies.length, suivisVisibles.length)}
+        </>
       )}
 
       {/* ---------- LE TITRE INACTIF EST PARTI (§2, nº 263) ----------

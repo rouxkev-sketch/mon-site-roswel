@@ -13,6 +13,9 @@ import {
 } from "@/lib/filtres-selection";
 import { comptesDesFavoris, comptesDesSuivis } from "@/lib/selection-suivis";
 import { cleCookieTexte, phototequeDuCookie } from "@/lib/vue-phototheque";
+//  §1 (nº 597) — la taille d'une page de favoris, au cookie des
+//  colonnes : la même écriture que l'accueil, jamais une seconde.
+import { COOKIE_COLONNES, taillePageServie } from "@/lib/colonnes-mosaique";
 import { SURFACE_SELECTION } from "@/lib/surface-affichage";
 import { FournisseurAffichageServi } from "@/components/AffichageMosaique";
 
@@ -93,6 +96,21 @@ export default async function PageMesFavoris() {
     comptesSuivis
   );
 
+  /*  ██ §1 (nº 597) — LA TAILLE D'UNE PAGE DE FAVORIS ██
+      Elle suit le nombre de colonnes, exactement comme sur l'accueil
+      (`taillePageServie`, la règle nº 226) : la grille des favoris EST
+      celle de la mosaïque (`CLASSES_GRILLE_CARTES`), donc les mêmes
+      2, 3, 4 ou 5 colonnes — et la dernière rangée reste pleine à
+      chaque dépliement, puisqu'on ajoute toujours un multiple.
+      ⚠️ AUCUNE LECTURE AJOUTÉE LÀ OÙ IL N'Y EN AVAIT PAS : cette page
+      est dynamique depuis toujours et lit déjà le magasin de cookies
+      pour sa mise en page. On le lit une fois pour les deux.
+      ⚠️ LA LIMITE CONNUE DE L'ACCUEIL VAUT ICI AUSSI : à la toute
+      première visite d'un navigateur, le cookie n'existe pas encore et
+      le repli de 24 s'applique — un multiple de 2, 3 et 4, mais pas de
+      5. Un écran à cinq colonnes voit alors une dernière rangée de
+      quatre, ce premier écran-là seulement. */
+  const magasin = await cookies();
   return (
     /*  §2 (nº 257) — LA MISE EN PAGE MÉMORISÉE, LUE ICI ET SERVIE À
         TOUTE LA PAGE : les cartes (nº 255-§4) et l'icône de la barre
@@ -105,7 +123,7 @@ export default async function PageMesFavoris() {
           (page.tsx) — retirer le texte sur l'une ne touche plus
           l'autre. Même mécanisme, deux clés (cleCookieTexte). */
       phototheque={phototequeDuCookie(
-        (await cookies()).get(cleCookieTexte(SURFACE_SELECTION))?.value
+        magasin.get(cleCookieTexte(SURFACE_SELECTION))?.value
       )}
     >
       {/* ⚠️ LE BLOC DE RECHERCHE N'A RIEN À FAIRE ICI (nº 245-§1) :
@@ -120,7 +138,11 @@ export default async function PageMesFavoris() {
       {/*  §1 (nº 253) — LA PAGE N'A PLUS BESOIN DES ENTRÉES : les deux
            menus sont retournés à la barre, seule à commander.
            La mise en page, elle, vient du fournisseur au-dessus. */}
-      <PageFavoris photos={photos} suivis={suivis} />
+      <PageFavoris
+        photos={photos}
+        suivis={suivis}
+        taillePage={taillePageServie(magasin.get(COOKIE_COLONNES)?.value)}
+      />
     </FournisseurAffichageServi>
   );
 }
