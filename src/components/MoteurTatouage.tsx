@@ -1412,6 +1412,10 @@ export function MoteurTatouage({
             //  SEULEMENT : ni le menu jumeau du doigt (qui sépare les
             //  deux en va-et-vient), ni aucun autre menu du site.
             entetesCollants
+            //  §3 (nº 573) — la page ne défile plus derrière ce menu.
+            //  ICI SEULEMENT : au doigt, la page de recherche a besoin
+            //  que le document défile (la remontée du champ).
+            verrouilleLaPage
           />
         }
         droite={

@@ -2,6 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { gelerLeCorps } from "@/lib/gel-du-corps";
+//  §3 (nº 573) — LE VERROU DE DÉFILEMENT COMPTÉ de la maison (nº 469),
+//  le même qu'à la nº 560 : le corps ne redéfile qu'au dernier retrait.
+import {
+  poserLeVerrouDeDefilement,
+  retirerLeVerrouDeDefilement,
+} from "@/lib/verrou-defilement";
 //  §3 (nº 330) — L'ÉTAPE D'HISTORIQUE D'UNE SURFACE QUI COUVRE
 //  L'ÉCRAN : l'écriture unique des quatre surfaces du C-4.
 import { useEtapeQuiSeReferme } from "@/lib/etape-refermable";
@@ -201,6 +207,7 @@ export function MenuDeroulant({
   panneauCaleSurAncre = false,
   opaque = false,
   entetesCollants = false,
+  verrouilleLaPage = false,
 }: {
   valeur: string;
   surChangement: (valeur: string) => void;
@@ -234,6 +241,26 @@ export function MenuDeroulant({
    * ce défaut.
    */
   entetesCollants?: boolean;
+  /**
+   * ██ §3 (nº 573) — LA PAGE NE DÉFILE PLUS DERRIÈRE CE MENU ██
+   * ------------------------------------------------------------------
+   * Le panneau classique est un MENU ANCRÉ, et la règle de la maison
+   * (nº 469) veut qu'un menu ancré ne verrouille pas — c'est une fenêtre
+   * centrée à voile qui verrouille. CELUI-CI PORTE UN VOILE (nº 293) :
+   * il assombrit toute la page, et la page continuait de défiler
+   * dessous. Le propriétaire l'a fait retirer.
+   * ⚠️ LE VERROU EST CELUI DE LA MAISON, COMPTÉ (`lib/verrou-defilement`,
+   * nº 469, même emploi qu'à la nº 560) : le corps ne redéfile qu'au
+   * DERNIER retrait, donc une autre surface ouverte en même temps ne se
+   * débloque pas à tort. Et il ne fait pas sauter la page : `globals.css`
+   * cache toutes les barres de défilement, `overflow: hidden` ne reprend
+   * donc aucune largeur.
+   * ⚠️ SUR DEMANDE, ET LE WEB SEUL LE DEMANDE. Ce panneau sert aussi le
+   * menu des styles AU DOIGT, où la page de recherche a besoin que le
+   * document défile (la remontée du champ). Sans ce réglage, rien ne
+   * change nulle part.
+   */
+  verrouilleLaPage?: boolean;
   ariaLabel: string;
   placeholder?: string;
   hauteur?: string;
@@ -566,6 +593,14 @@ export function MenuDeroulant({
   //  qui contient ce menu reste clair : on donne notre conteneur, le
   //  crochet remonte tout seul à l'encadré qui l'entoure.
   useVoileDeLaPage(avecVoile && listeVisible, conteneur);
+  /*  §3 (nº 573) — ET LA PAGE NE DÉFILE PLUS DERRIÈRE. Même forme
+      qu'à la nº 560 : on pose à l'ouverture, le nettoyage retire —
+      quel que soit le chemin de fermeture, y compris un démontage. */
+  useEffect(() => {
+    if (!verrouilleLaPage || !listeVisible) return;
+    poserLeVerrouDeDefilement();
+    return retirerLeVerrouDeDefilement;
+  }, [verrouilleLaPage, listeVisible]);
   //  À LA FERMETURE, la liste disparaît sur-le-champ — ajusté pendant
   //  le rendu (le motif React officiel), jamais dans un effet.
   if (!ouvert && listeVisible) setListeVisible(false);
@@ -928,6 +963,35 @@ export function MenuDeroulant({
   const sousEnteteVisible = (option: OptionMenu) =>
     repliable &&
     (!portesDeGroupe || !option.groupe || option.groupe === groupeDeplie);
+
+  /**
+   * ██ §1 (nº 573) — LA LISTE A-T-ELLE QUELQUE CHOSE À MONTRER ? ██
+   * ------------------------------------------------------------------
+   * LE DÉFAUT : menu ouvert, aucune section dépliée, le panneau montrait
+   * ses deux lignes PUIS une bande plus claire en dessous — le verre du
+   * panneau, que rien ne couvrait.
+   * LA CAUSE, NOMMÉE, ET CE N'EST NI UN PLANCHER NI UNE HAUTEUR
+   * MINIMALE : rien n'impose de hauteur au panneau, `stylePanneau` ne
+   * pose qu'un PLAFOND (`maxHeight`). C'est la LISTE qui garde de la
+   * place alors qu'elle n'a rien à dire. Jusqu'à la nº 572 elle
+   * contenait les deux en-têtes, et son air vertical (`py-1`, 4 px en
+   * haut et en bas) les entourait — c'était juste. La nº 572 a sorti les
+   * en-têtes dans un bloc au-dessus, EN LEUR DONNANT CET AIR ; celui de
+   * la liste est resté, sans plus rien à entourer. Toutes les options
+   * étant repliées, ses `<li>` sont vides et ne mesurent rien : il ne
+   * restait que ces 8 px, et ils montraient le verre.
+   * LE REMÈDE : la liste ne garde son air QUE si elle a quelque chose à
+   * montrer. Elle mesure alors zéro, et le panneau s'arrête sous le
+   * bloc.
+   * ⚠️ ET QUAND UNE SECTION DÉPLIÉE A PEU D'ENTRÉES, il n'y a pas de
+   * bande non plus : le panneau n'a AUCUNE hauteur imposée, donc aucun
+   * espace libre où la liste pourrait s'étirer — `flex-1` ne peut
+   * grandir que dans une place qui existe. Elle grandit jusqu'au plafond
+   * et fait défiler au-delà, comme avant.
+   */
+  const listeGarnie = optionsAvecEntetes.some(
+    ({ option }) => optionVisible(option) || sousEnteteVisible(option)
+  );
 
   /** LA LISTE QUI DÉFILE — pour la remonter en haut (5B, nº 139). Une
       seule référence : un seul habillage est monté à la fois. */
@@ -1322,12 +1386,23 @@ export function MenuDeroulant({
                ⚠️ AUCUN STYLE NE PEUT PASSER DERRIÈRE, et ce n'est pas le
                fond qui l'empêche : la liste CLIPE son contenu (elle est
                son propre conteneur de défilement), lequel ne peut donc
-               pas peindre hors de sa boîte. Le fond est posé quand même,
-               pour que le bloc reste juste si un jour on le déplace —
-               `fond` (#0B0F14) sous verre, où le panneau rend
-               rgb(9,15,23) : 1,00 de contraste, invisible à la jointure ;
-               `eleve` quand l'appelant passe `opaque`. Aucune couleur
-               nouvelle.
+               pas peindre hors de sa boîte. Le fond, lui, sert à DIRE LE
+               BLOC.
+               ⚠️ §2 (nº 573) — ET IL MONTE D'UN CRAN. La nº 572 avait
+               posé `fond` (#0B0F14) pour que la jointure soit invisible :
+               le propriétaire veut au contraire que le bloc se
+               distingue. C'est `carte` (#1A1F26) désormais — le cran
+               au-dessus de ce que le panneau rend vraiment (le verre
+               donne rgb(9,15,23)), donc la règle ordinaire de la
+               nº 144-§3 : ce qui est POSÉ sur une surface monte d'un
+               cran. Mesuré : 1,16 avec le panneau, là où `fond` donnait
+               1,00 — le bloc se lit. Et LE ROSE DES TITRES Y RESTE
+               LISIBLE : 4,62 sur `carte`, au-dessus du seuil des petits
+               textes. Le cran suivant (`eleve`) le ferait tomber à 3,93,
+               sous ce seuil — c'est pourquoi on s'arrête là.
+               Quand l'appelant passe `opaque`, le panneau est un aplat
+               `eleve` et le bloc prend le cran au-dessus,
+               `eleve-clair`. Aucune couleur nouvelle dans les deux cas.
                ⚠️ LE CHEVRON N'A RIEN DEMANDÉ : `enTeteSection` est repris
                tel quel, et il porte déjà le procédé de rotation de la
                maison — `transition-transform duration-200` plus
@@ -1343,7 +1418,7 @@ export function MenuDeroulant({
           {entetesCollants && entetesDesSections.length > 0 && (
             <div
               className={`shrink-0 py-1 ${
-                opaque ? "bg-sombre-eleve" : "bg-sombre-fond"
+                opaque ? "bg-sombre-eleve-clair" : "bg-sombre-carte"
               }`}
             >
               {entetesDesSections.map((entete) => (
@@ -1362,7 +1437,12 @@ export function MenuDeroulant({
             // liste dépasse la place disponible, il faut voir tout de
             // suite qu'il reste des choix plus bas. C'est l'exception
             // assumée à la règle « jamais d'ascenseur affiché ».
-            className="min-h-0 flex-1 overflow-y-auto overscroll-contain defilement-visible py-1"
+            //  §1 (nº 573) — L'AIR VERTICAL N'EST LÀ QUE S'IL ENTOURE
+            //  QUELQUE CHOSE : sans lui, une liste toute repliée mesure
+            //  zéro et le panneau s'arrête sous le bloc des en-têtes.
+            className={`min-h-0 flex-1 overflow-y-auto overscroll-contain defilement-visible${
+              listeGarnie ? " py-1" : ""
+            }`}
           >
             {optionsAvecEntetes.map(({ option, cle, entete, sousEntete }) => (
               <li key={cle}>
