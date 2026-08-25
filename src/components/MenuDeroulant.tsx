@@ -956,6 +956,29 @@ export function MenuDeroulant({
    * catalogue et ne dépendent de personne — il a toujours ses portes.
    */
   const blocEntetes = entetesCollants && portesDeGroupe;
+  /**
+   * ██ §1 (nº 577) — UN TITRE SEUL NE DISTINGUE RIEN ██
+   * ------------------------------------------------------------------
+   * LA nº 575 avait retiré LE BLOC quand il ne reste qu'une section,
+   * mais l'en-tête reprenait alors sa place DANS la liste. Le
+   * propriétaire n'en veut ni l'un ni l'autre : à une seule section,
+   * AUCUN TITRE — le menu est une simple liste d'entrées. Et il a
+   * raison : un titre ne sert qu'à séparer de ce qui n'est pas lui.
+   * « STYLE » au-dessus de la seule liste possible n'apprend rien.
+   *  · PORTFOLIOS : plus que « Style », ou plus que « Profil » (les
+   *    sections que la nº 576 écarte quand elles ne trient rien) ;
+   *  · FAVORIS : plus que « Réalisations », ou plus que « Flash ».
+   * ⚠️ LE MOTEUR NE PEUT PAS Y TOMBER, et ce n'est pas une chance : ses
+   * options sont bâties par un `flatMap` sur TOUTES les catégories du
+   * catalogue, sans condition — les deux sections existent donc
+   * toujours, quoi qu'il y ait en base. La règle est écrite pour lui
+   * comme pour les autres, elle ne s'y déclenchera simplement jamais.
+   * ⚠️ ELLE NE VISE QUE LES MENUS À BLOC (`entetesCollants`) : les
+   * autres — le formulaire de fiche, les sélecteurs tactiles — gardent
+   * leurs en-têtes tels quels, section unique comprise.
+   */
+  const titreEnLigne =
+    !blocEntetes && !(entetesCollants && entetesDesSections.length <= 1);
   const [groupeDeplie, setGroupeDeplie] = useState<string | null>(groupeDuChoix);
   /** LA SOUS-SECTION OUVERTE (passe nº 113) — une seule à la fois, et
       elle repart elle aussi du choix courant à chaque ouverture : on
@@ -1513,7 +1536,10 @@ export function MenuDeroulant({
             {optionsAvecEntetes.map(({ option, cle, entete, sousEntete }) => (
               <li key={cle}>
                 {/* En-tête de section — étiquette, ou porte repliable */}
-                {entete && !blocEntetes && enTeteSection(entete, "px-4 pt-3 pb-1")}
+                {/*  §1 (nº 577) — `titreEnLigne` dit à la fois « le bloc
+                     ne s'en charge pas » ET « il y a de quoi
+                     distinguer ». Voir sa note plus haut. */}
+                {entete && titreEnLigne && enTeteSection(entete, "px-4 pt-3 pb-1")}
                 {/* Porte de sous-section — à la place d'une option */}
                 {sousEntete &&
                   sousEnteteVisible(option) &&
