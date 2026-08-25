@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { gelerLeCorps } from "@/lib/gel-du-corps";
 //  §3 (nº 330) — L'ÉTAPE D'HISTORIQUE D'UNE SURFACE QUI COUVRE
 //  L'ÉCRAN : l'écriture unique des quatre surfaces du C-4.
@@ -200,10 +200,40 @@ export function MenuDeroulant({
   feuilleDecollee = false,
   panneauCaleSurAncre = false,
   opaque = false,
+  entetesCollants = false,
 }: {
   valeur: string;
   surChangement: (valeur: string) => void;
   options: OptionMenu[];
+  /**
+   * ██ §1 (nº 571) — LES EN-TÊTES DE SECTION RESTENT EN HAUT ██
+   * ------------------------------------------------------------------
+   * LE DÉFAUT : le menu des styles a deux sections — « Réalisations » et
+   * « Flash ». Déplier l'une allonge la liste de ses styles, et l'autre
+   * en-tête part loin en bas ; on ne sait plus dans laquelle on se
+   * trouve, et repasser à l'autre demande de tout redéfiler.
+   *
+   * CE QUE FAIT LE DRAPEAU : les deux en-têtes deviennent COLLANTS
+   * (`sticky`) dans la zone qui défile déjà — le comportement ordinaire
+   * d'une longue liste à sections. RIEN N'EST RÉORDONNÉ.
+   *
+   * ⚠️ IL FAUT SORTIR L'EN-TÊTE DE SON `<li>`, et c'est la seule raison
+   * pour laquelle ce drapeau existe au lieu de trois classes. Un élément
+   * collant ne peut pas dépasser LA BOÎTE DE SON PARENT : tant que
+   * l'en-tête vit dans le `<li>` de la première option de sa section, il
+   * ne « colle » que le temps où cette unique option est à l'écran,
+   * c'est-à-dire jamais utilement. Il lui faut être L'ENFANT DIRECT de
+   * la liste qui défile.
+   * ⚠️ SANS LE DRAPEAU, PAS UN NŒUD NE CHANGE : ce menu est partagé par
+   * « Ma sélection », le formulaire de fiche et les sélecteurs de la
+   * page tactile. Aucun d'eux n'a demandé quoi que ce soit, et la
+   * structure qu'ils rendent reste celle d'avant, à l'élément près.
+   * ⚠️ LA FEUILLE GLISSANTE (`feuilleMobile`) NE LE LIT PAS : elle a sa
+   * propre écriture plus bas, et le propriétaire a précisé que le
+   * smartphone, qui sépare Flash et Réalisations en va-et-vient, n'a pas
+   * ce défaut.
+   */
+  entetesCollants?: boolean;
   ariaLabel: string;
   placeholder?: string;
   hauteur?: string;
@@ -929,11 +959,24 @@ export function MenuDeroulant({
         `[data-sous-porte="${CSS.escape(sousGroupe)}"]`
       );
       if (!liste || !porte) return;
+      //  §1 (nº 571) — ET ON S'ARRÊTE SOUS L'EN-TÊTE COLLANT, pas
+      //  dessous lui. « Amener la ligne en haut de la liste » envoyait
+      //  « Cultures du monde » — et son trait rose (nº 525, nº 559) —
+      //  EXACTEMENT sous le titre de section resté en place : le geste
+      //  aurait paru mort, le défaut même que cette remontée corrigeait
+      //  à la nº 238. On retranche donc la hauteur de l'en-tête, LUE SUR
+      //  LE VRAI ÉLÉMENT (tous les en-têtes collants ont la même, c'est
+      //  le même bouton). Sans en-têtes collants il n'y en a aucun, la
+      //  hauteur vaut zéro, et le calcul est celui d'avant au pixel.
+      const enteteCollant = liste.querySelector<HTMLElement>(
+        "[data-entete-collant]"
+      );
       liste.scrollTo({
         top:
           liste.scrollTop +
           (porte.getBoundingClientRect().top -
-            liste.getBoundingClientRect().top),
+            liste.getBoundingClientRect().top) -
+          (enteteCollant?.offsetHeight ?? 0),
         behavior: "instant",
       });
     });
@@ -1270,9 +1313,49 @@ export function MenuDeroulant({
             className="min-h-0 flex-1 overflow-y-auto overscroll-contain defilement-visible py-1"
           >
             {optionsAvecEntetes.map(({ option, cle, entete, sousEntete }) => (
-              <li key={cle}>
+              <Fragment key={cle}>
+              {/*  §1 (nº 571) — L'EN-TÊTE COLLANT VIT DANS SON PROPRE
+                   `<li>`, ENFANT DIRECT DE LA LISTE QUI DÉFILE : c'est
+                   la condition pour qu'il puisse rester en haut (un
+                   élément collant ne dépasse jamais la boîte de son
+                   parent). Le `<li>` ne dessine rien — pas de marge, pas
+                   de fond à lui —, il ne fait qu'ouvrir la bonne boîte ;
+                   `role="presentation"` l'écarte de l'arbre des choix,
+                   où il n'est pas une option.
+                   ⚠️ LE FOND EST OBLIGATOIRE, sinon les styles défilent
+                   À TRAVERS le titre. Le jeton suit CE QUE LE PANNEAU
+                   REND VRAIMENT : sans `opaque` il est en verre
+                   (`data-verre-menu`), lequel, composé sur le fond de
+                   page, donne rgb(9,15,23) — le jeton `fond` (#0B0F14)
+                   en est à 1,00 de contraste, donc invisible à la
+                   jointure. Avec `opaque`, le panneau est un aplat
+                   `eleve` et l'en-tête le reprend tel quel. Aucune
+                   couleur nouvelle dans les deux cas.
+                   ⚠️ DEUX EN-TÊTES COLLANTS AU MÊME `top-0` : celui du
+                   bas monte et RECOUVRE celui du haut quand on l'atteint
+                   (il vient après dans le document, il peint donc
+                   par-dessus). On ne voit jamais deux titres à la fois,
+                   et redescendre redécouvre le premier.
+                   ⚠️ LA HAUTEUR DU PANNEAU NE BOUGE PAS : un élément
+                   collant reste dans le flux et garde sa place. */}
+              {entete && entetesCollants && (
+                <li
+                  role="presentation"
+                  //  §1 (nº 571) — LE MARQUEUR QUE LIT LA REMONTÉE D'UNE
+                  //  SOUS-PORTE, plus haut : elle en retranche la
+                  //  hauteur pour ne pas ranger la ligne ouverte SOUS ce
+                  //  titre-ci.
+                  data-entete-collant=""
+                  className={`sticky top-0 z-10 ${
+                    opaque ? "bg-sombre-eleve" : "bg-sombre-fond"
+                  }`}
+                >
+                  {enTeteSection(entete, "px-4 pt-3 pb-1")}
+                </li>
+              )}
+              <li>
                 {/* En-tête de section — étiquette, ou porte repliable */}
-                {entete && enTeteSection(entete, "px-4 pt-3 pb-1")}
+                {entete && !entetesCollants && enTeteSection(entete, "px-4 pt-3 pb-1")}
                 {/* Porte de sous-section — à la place d'une option */}
                 {sousEntete &&
                   sousEnteteVisible(option) &&
@@ -1372,6 +1455,7 @@ export function MenuDeroulant({
                 </button>
                 )}
               </li>
+              </Fragment>
             ))}
           </ul>
         </div>,

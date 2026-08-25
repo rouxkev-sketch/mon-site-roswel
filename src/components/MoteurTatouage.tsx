@@ -1586,6 +1586,11 @@ export function MoteurTatouage({
             familleSoulignee
             //  §2 (nº 293) — la page s'assombrit derrière ce menu (web).
             avecVoile
+            //  §1 (nº 571) — « Réalisations » et « Flash » restent en
+            //  haut du panneau pendant que leurs styles défilent. ICI
+            //  SEULEMENT : ni le menu jumeau du doigt (qui sépare les
+            //  deux en va-et-vient), ni aucun autre menu du site.
+            entetesCollants
           />
         }
         droite={
