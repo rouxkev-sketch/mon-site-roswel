@@ -182,6 +182,7 @@ export function ChampLocalisation({
   enErreur = false,
   pourLeMoteur = false,
   opaque = false,
+  surFermeturePanneau,
 }: {
   surChoix: (lieu: LieuTrouve | null) => void;
   /** Le lieu déjà choisi à l'arrivée (formulaire pré-rempli, moteur). */
@@ -287,6 +288,24 @@ export function ChampLocalisation({
       ville et du rayon — « Miami, FL, USA ». FAUX dans le FORMULAIRE,
       qui écrit l'adresse comme la fiche la publiera (passe nº 115). */
   pourLeMoteur?: boolean;
+  /**
+   * ██ §2 (nº 564) — LE PANNEAU DIT QUAND IL SE REFERME ██
+   * ------------------------------------------------------------------
+   * Appelé UNE fois à chaque fermeture du panneau, quel que soit le
+   * chemin — clic dehors, Échap, croix, départ du champ, et même un
+   * démontage qui l'emporte alors qu'il était ouvert.
+   * POURQUOI : le pied du panneau (le RAYON, posé par le moteur du web)
+   * a besoin d'un moment pour dire « c'est fini, cherche ». Il ne peut
+   * pas le savoir seul : l'ouverture vit ici, pas chez lui.
+   * ⚠️ C'EST LE MÊME PRINCIPE QUE LA nº 364 pour le panneau des
+   * filtres — « la fermeture annonce » — et pas un second mécanisme :
+   * le brouillon et la comparaison restent chez l'appelant, cette
+   * porte-ci ne fait que donner l'heure.
+   * ⚠️ LES DEUX SIGNAUX SUPPRIMÉS PLUS BAS (`surEtatListe`, `surSaisie`)
+   * étaient d'une autre nature : ils bavardaient à chaque lettre pour
+   * personne. Celui-ci ne parle qu'à la fermeture, et quelqu'un écoute.
+   */
+  surFermeturePanneau?: () => void;
 }) {
   const [texte, setTexte] = useState(
     lieuInitial ? texteDuLieu(lieuInitial, pourLeMoteur) : ""
@@ -390,6 +409,66 @@ export function ChampLocalisation({
   //  droite). Seulement CELUI DU MOTEUR : le champ vit aussi dans le
   //  formulaire de fiche, qui n'a rien demandé.
   useVoileDeLaPage(pourLeMoteur && listeOuverte, racine);
+  /**
+   * ██ §1 (nº 564) — LE VOILE SE POSE AU CLIC, PLUS À LA LISTE ██
+   * ------------------------------------------------------------------
+   * LE DÉFAUT : cliquer dans le champ de localité du moteur
+   * n'assombrissait rien. Le voile n'arrivait qu'une seconde plus tard,
+   * avec les suggestions — le temps de taper trois lettres, d'attendre
+   * la pause de frappe et l'aller-retour réseau.
+   *
+   * LA CAUSE, NOMMÉE : le voile est bien accroché à `listeOuverte`
+   * (juste au-dessus), mais `listeOuverte` ne passait pas à VRAI au
+   * toucher. `auToucher()` n'ouvrait que s'il y avait déjà QUELQUE CHOSE
+   * à montrer — un pied de rayon, des suggestions, une sélection. Sur un
+   * champ vide, aucune des trois : l'ouverture attendait la réponse du
+   * serveur, et le voile avec elle.
+   *
+   * LE CHAMP DE STYLE, LUI, N'A JAMAIS EU CE DÉFAUT — et pour une
+   * raison qui ne s'applique pas ici : sa liste est le catalogue des
+   * styles, il l'a en mémoire, elle s'ouvre donc AU CLIC. Son voile est
+   * accroché de la même façon (`MenuDeroulant`, `avecVoile &&
+   * listeVisible`), et il paraît instantané parce que sa liste l'est.
+   * LES DEUX SONT DONC ALIGNÉS ICI, pas en changeant leur accroche,
+   * mais en donnant à ce champ-ci ce que l'autre avait déjà : une
+   * ouverture qui ne dépend pas du réseau.
+   *
+   * ⚠️ LE PANNEAU RESTE VIDE TANT QU'IL N'A RIEN À DIRE : il n'est
+   * rendu que si des suggestions, un message ou un pied existent (voir
+   * tout en bas). Ce qui s'ouvre au clic, c'est l'ÉTAT — donc le voile,
+   * et la fermeture au clic dehors. Aucune boîte vide n'apparaît.
+   *
+   * ⚠️ LE DOIGT N'A RIEN À SUIVRE, ET CE N'EST PAS UN CHOIX DE STYLE :
+   * `useVoileDeLaPage` REFUSE DE SE POSER sur un appareil tactile (il
+   * lit `data-appareil` et rend la main). Il n'y a donc pas de voile en
+   * retard au doigt — il n'y a pas de voile du tout. Ouvrir l'état au
+   * toucher y changerait autre chose : la REMONTÉE du champ en haut de
+   * l'écran est accrochée à `listeOuverte` (voir plus bas) et partirait
+   * dès le toucher, avant même que la page se soit allongée. Rien ne le
+   * demandait ; on n'y touche pas.
+   * ⚠️ LE FORMULAIRE DE FICHE NON PLUS : il ne passe pas `pourLeMoteur`,
+   * donc il n'a pas de voile, et rien à gagner à ouvrir un panneau vide.
+   */
+  const ouvrirDesLeToucher = pourLeMoteur && !panneauDansLeFlux;
+  /**
+   * §2 (nº 564) — LA FERMETURE, ANNONCÉE UNE FOIS, PAR TOUS LES CHEMINS.
+   * L'effet ne fait rien à l'ouverture : c'est son NETTOYAGE qui parle.
+   * React l'appelle quand `listeOuverte` retombe à faux — d'où que vienne
+   * la fermeture — ET au démontage du champ s'il était encore ouvert.
+   * Aucun chemin ne peut donc l'oublier, y compris ceux qu'on n'a pas
+   * écrits.
+   * ⚠️ LA RÉFÉRENCE VIVE, comme `fermerVive` du panneau des filtres
+   * (nº 364) : l'effet ne se repose pas à chaque rendu, il garderait
+   * sinon la fonction du rendu où il a été posé.
+   */
+  const fermetureVive = useRef(surFermeturePanneau);
+  useEffect(() => {
+    fermetureVive.current = surFermeturePanneau;
+  });
+  useEffect(() => {
+    if (!listeOuverte) return;
+    return () => fermetureVive.current?.();
+  }, [listeOuverte]);
   /** VRAI pendant qu'un doigt est DANS le panneau : le blur du champ
       ne ferme alors rien (un défilement n'est pas un départ). */
   const interactionPanneau = useRef(false);
@@ -453,8 +532,30 @@ export function ChampLocalisation({
         setSelectionActive(false);
       }
     }
+    //  §2 (nº 564) — ÉCHAP REFERME, ET IL N'EXISTAIT PAS ICI.
+    //  Le panneau des filtres l'a depuis la nº 364, le menu des styles
+    //  depuis toujours ; celui de la localité, non — la touche ne
+    //  faisait rien du tout. Elle ne fait pas non plus cavalier seul :
+    //  elle REND LA MAIN, et c'est le départ du champ — déjà écrit
+    //  juste en dessous — qui referme, restaure et annonce. Un chemin
+    //  de sortie de plus, aucune règle de plus.
+    function auClavier(evenement: KeyboardEvent) {
+      if (evenement.key !== "Escape") return;
+      //  ⚠️ ÉCHAP EST UN DÉPART VOULU : le garde-fou du panneau (400 ms
+      //  après un appui DEDANS — une pilule de rayon, par exemple) fait
+      //  taire le blur, et l'aurait avalé.
+      interactionPanneau.current = false;
+      champ.current?.blur();
+      //  Et si le focus était ailleurs, on referme quand même : le
+      //  panneau ne doit jamais survivre à Échap.
+      setListeOuverte(false);
+    }
     document.addEventListener("pointerdown", auPointeurDehors);
-    return () => document.removeEventListener("pointerdown", auPointeurDehors);
+    document.addEventListener("keydown", auClavier);
+    return () => {
+      document.removeEventListener("pointerdown", auPointeurDehors);
+      document.removeEventListener("keydown", auClavier);
+    };
   });
 
   // ⚠️ DEUX SIGNAUX ONT DISPARU ICI (`surEtatListe`, `surSaisie`).
@@ -689,7 +790,14 @@ export function ChampLocalisation({
       second clic ne déclencherait aucun `focus`.) */
   function auToucher() {
     //  ⚠️ ON N'EFFACE PLUS RIEN (nº 180-§2) : on ouvre, c'est tout.
-    if (piedPanneau || suggestions.length > 0 || selectionActive) {
+    //  §1 (nº 564) — ET SUR LE MOTEUR DU WEB, ON OUVRE SANS CONDITION :
+    //  le voile doit se poser au clic, pas à l'arrivée des suggestions.
+    if (
+      ouvrirDesLeToucher ||
+      piedPanneau ||
+      suggestions.length > 0 ||
+      selectionActive
+    ) {
       setListeOuverte(true);
     }
     if (remonterAuToucher) remonterEnHautDeLEcran();

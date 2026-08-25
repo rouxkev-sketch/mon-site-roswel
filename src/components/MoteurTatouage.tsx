@@ -307,6 +307,63 @@ export function MoteurTatouage({
   /** Combien de fois « Effacer » a été pressé — sert de clé au champ
       de localité pour le reconstruire à neuf (voir plus bas). */
   const [effacements, setEffacements] = useState(0);
+
+  /**
+   * ██ §3 (nº 564) — LE RAYON ATTEND LA FERMETURE DU PANNEAU ██
+   * ==================================================================
+   * LE DÉFAUT : chaque pilule de rayon (10, 25, 50, 100, 200 km)
+   * appelait `annoncer` sur-le-champ. Un clic = une recherche = une
+   * mosaïque repeinte ; essayer trois paliers avant de se décider en
+   * coûtait trois, et la page clignotait tant qu'on n'avait pas refermé.
+   *
+   * LE REMÈDE, ET C'EST EXACTEMENT CELUI DE LA nº 364 pour le panneau
+   * des filtres — pas un second mécanisme, le même, appliqué au voisin :
+   *  · le clic écrit dans un BROUILLON (`rayonEnAttente`) ;
+   *  · l'affichage lit le brouillon, donc le palier choisi se voit
+   *    tout de suite (c'est l'AFFICHAGE qui suit le clic) ;
+   *  · LA FERMETURE ANNONCE, une seule fois, avec le palier final.
+   *
+   * QUAND EST-CE FERMÉ ? Le panneau appartient au champ de localité :
+   * c'est lui qui le sait, et il le dit par `surFermeturePanneau` (§2
+   * nº 564). Tous ses chemins de fermeture y passent — clic dehors,
+   * Échap, croix, départ du champ, démontage. On n'a donc aucune liste
+   * de gestes à tenir à jour ici.
+   *
+   * ⚠️ POURQUOI UN COMPTEUR ET NON UN APPEL DIRECT. La fermeture est
+   * annoncée pendant le nettoyage d'un effet DU CHAMP — donc avant que
+   * le moteur ait fini le sien, et à un instant où la fermeture peut
+   * arriver DANS LA MÊME FOURNÉE qu'un changement de critères (la croix
+   * efface la ville ET referme). Une fonction appelée là verrait des
+   * critères d'un rendu en retard, et pourrait ressusciter la ville
+   * qu'on vient d'effacer. Le compteur, lui, ne transporte rien : il
+   * réveille un effet DU MOTEUR, qui lit les critères de SON rendu —
+   * les plus frais qui soient.
+   *
+   * ⚠️ TROIS SILENCES, ET AUCUN N'EST UN OUBLI :
+   *  · aucun brouillon → ouvrir puis refermer ne relance rien ;
+   *  · le même palier qu'avant → rien à dire, donc rien n'est dit
+   *    (ni recherche, ni entrée d'historique) ;
+   *  · plus de point de départ (ville effacée, région, pays) → un rayon
+   *    autour de rien ne veut rien dire : le brouillon est jeté.
+   */
+  const [rayonEnAttente, setRayonEnAttente] = useState<number | null>(null);
+  /** Combien de fois le panneau de localité s'est refermé. Sa seule
+      raison d'être : réveiller l'effet ci-dessous. */
+  const [fermeturesDuLieu, setFermeturesDuLieu] = useState(0);
+  useEffect(() => {
+    if (fermeturesDuLieu === 0) return; // rien ne s'est encore refermé
+    if (rayonEnAttente === null) return; // aucun palier en attente
+    setRayonEnAttente(null);
+    if (!rayonApplicable(criteres.lieu)) return; // un rayon autour de rien
+    if (rayonEnAttente === criteres.rayonKm) return; // rien n'a changé
+    surChangement({ ...criteres, rayonKm: rayonEnAttente });
+    //  LA FERMETURE SEULE DÉCLENCHE : `criteres` et `rayonEnAttente` sont
+    //  lus au moment où l'effet part, et ils sont frais par construction
+    //  (voir « pourquoi un compteur » ci-dessus). Les mettre en
+    //  dépendance ferait annoncer à chaque changement de critères —
+    //  c'est-à-dire le défaut qu'on répare.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fermeturesDuLieu]);
   const zoneFiltres = useRef<HTMLDivElement>(null);
   //  §2 (nº 293), §3 (nº 294) — LA FENÊTRE DES FILTRES assombrit tout
   //  l'écran, et le bloc qui la porte reste clair. Web uniquement (le
@@ -1010,6 +1067,10 @@ export function MoteurTatouage({
   // ne le remplace — la fenêtre garde ainsi la même hauteur quel que
   // soit le lieu choisi, et un réglage éteint se lit tout seul.
   const rayonActif = rayonApplicable(criteres.lieu);
+  /** §3 (nº 564) — LE PALIER QUE L'ON MONTRE : le brouillon s'il y en a
+      un, la recherche en cours sinon. C'est la seule chose qui suit le
+      clic ; la recherche, elle, attend la fermeture. */
+  const rayonAffiche = rayonEnAttente ?? criteres.rayonKm;
 
   /** LES PILULES DE RAYON — posées dans le PANNEAU du champ de
       localisation (web), sous les suggestions, dès qu'une ville ou une
@@ -1041,7 +1102,7 @@ export function MoteurTatouage({
         {RAYONS_TATOUAGE.map((palier) => (
           <BadgeCharte
             key={palier}
-            actif={palier === criteres.rayonKm}
+            actif={palier === rayonAffiche}
             //  ⚠️ SUR PANNEAU (nº 179-§1) : la fenêtre du rayon a pris
             //  le fond du panneau des filtres (`eleve`). Ce qui est
             //  POSÉ dessus grimpe d'autant — exactement la règle de la
@@ -1049,9 +1110,11 @@ export function MoteurTatouage({
             surPanneau
             //  `preventDefault` : le champ garde le focus, le panneau
             //  reste ouvert — on peut ajuster plusieurs fois.
+            //  §3 (nº 564) — ET AJUSTER NE CHERCHE PLUS : le clic pose
+            //  le palier dans le brouillon, la fermeture l'annonce.
             onPointerDown={(evenement) => {
               evenement.preventDefault();
-              annoncer({ rayonKm: palier });
+              setRayonEnAttente(palier);
             }}
           >
             {palier} km
@@ -1175,12 +1238,20 @@ export function MoteurTatouage({
             lieuInitial={criteres.lieu}
             croixEffacement
             viderSiAbandon
-            suffixeLieu={suffixeRayon(criteres)}
+            //  §3 (nº 564) — LE SUFFIXE SUIT LE BROUILLON, LUI AUSSI :
+            //  le champ écrit « Lyon · 50 km » dès le clic sur la
+            //  pilule. Le laisser sur l'ancien palier aurait été le même
+            //  défaut en miniature — le panneau à jour, le champ en
+            //  retard, juste au-dessus.
+            suffixeLieu={suffixeRayon({ ...criteres, rayonKm: rayonAffiche })}
             surChoix={(choisi) => annoncer({ lieu: choisi })}
             sansBordure
             compact
             piedPanneau={piedRayon}
             garderOuvertApresChoix
+            //  §3 (nº 564) — LA FERMETURE ANNONCE LE RAYON. Le champ
+            //  sait quand son panneau se referme ; le moteur, non.
+            surFermeturePanneau={() => setFermeturesDuLieu((n) => n + 1)}
           />
         }
       />
