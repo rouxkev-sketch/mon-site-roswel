@@ -138,11 +138,18 @@ export function periodeDuGuest(mode: {
  *
  *     LE TYPE · OÙ
  *
- *   · Artiste · Paris, France
- *   · Artiste · Austin, TX, États-Unis
- *   · Artiste · Paris, France +2      (il travaille dans 3 villes)
- *   · Studio  · Félines, France
- *   · Salon   · Austin, TX, États-Unis
+ *   · Artiste · Paris · France
+ *   · Artiste · Austin, TX · États-Unis
+ *   · Artiste · Paris, Félines · France        (trois villes, un pays)
+ *   · Artiste · Paris · France | Berlin · Allemagne     (deux pays)
+ *   · Studio  · Félines · France
+ *   · Salon   · Austin, TX · États-Unis
+ *
+ * ⚠️ LA FORME DU SECOND SEGMENT A ÉTÉ REPRISE TROIS FOIS DEPUIS : la
+ * nº 585 a supprimé le « +N » qui comptait les villes sans les nommer,
+ * la nº 586 a mis une barre verticale entre les pays, la nº 587 un
+ * point médian devant le pays. La règle des DEUX SEGMENTS, elle, n'a
+ * pas bougé — c'est `lieuxEcrits` qui écrit le second.
  *
  * CE QUI NE VA PLUS, ET POURQUOI ON L'A CHANGÉ. La liste mélangeait
  * DEUX grammaires : pour un lieu, le premier mot disait CE QU'IL EST
@@ -166,7 +173,9 @@ export function periodeDuGuest(mode: {
  * s'appelle « Artiste » ICI EXACTEMENT COMME AILLEURS, et le jour où ce
  * mot changera il changera partout d'un coup. `ligneCarte` (nº 301)
  * écrit le lieu, avec sa division quand le pays l'écrit (« Austin, TX,
- * États-Unis ») et sans quand il ne l'écrit pas (« Lyon, France »).
+ * États-Unis ») et sans quand il ne l'écrit pas (« Lyon, France ») ;
+ * `lieuxEcrits` n'en reprend ensuite que la ponctuation entre la ville
+ * et le pays, sans jamais renommer ni l'une ni l'autre.
  */
 
 /**
@@ -207,12 +216,16 @@ export function periodeDuGuest(mode: {
  * ██ UN LIEU RETENU : SA LIGNE, ET SON PAYS À PART (nº 585) ██
  * ------------------------------------------------------------------
  * POURQUOI LES DEUX. La ligne est celle du site (`ligneCarte`) —
- * « Lyon, France », « Austin, TX, États-Unis » —, et c'est elle qu'on
- * écrit quand il n'y a qu'un lieu. Mais dès qu'il y en a plusieurs, la
- * règle du propriétaire GROUPE PAR PAYS : il faut donc savoir lequel,
- * et le nom du pays ne se devine pas dans une chaîne déjà composée.
- * On le demande à la MÊME écriture que `ligneCarte` emploie en
- * interne (`nomPaysAffiche`) — aucune seconde grammaire de lieu.
+ * « Lyon, France », « Austin, TX, États-Unis » : c'est elle qui NOMME
+ * le lieu, et elle seule ; c'est aussi sur elle que deux modes se
+ * reconnaissent comme un même endroit (le dédoublonnage, §3-d).
+ * Mais la règle du propriétaire GROUPE PAR PAYS : il faut donc savoir
+ * lequel, et le nom du pays ne se devine pas dans une chaîne déjà
+ * composée. On le demande à la MÊME écriture que `ligneCarte` emploie
+ * en interne (`nomPaysAffiche`) — aucune seconde grammaire de lieu.
+ * ⚠️ DEPUIS LA nº 587, LA LIGNE N'EST PLUS ÉCRITE TELLE QUELLE nulle
+ * part : même seul, un lieu voit sa virgule de pays remplacée par un
+ * point médian. Le champ reste ce qui nomme et ce qui dédoublonne.
  */
 type LieuDuSuivi = { ligne: string; pays: string };
 
@@ -280,15 +293,23 @@ export const LIEUX_AFFICHES = 3;
  * ██ LES LIEUX, ÉCRITS (nº 585, forme reprise nº 586) ██
  * ==================================================================
  * LA RÈGLE DU PROPRIÉTAIRE, mot pour mot :
- *  · UN SEUL LIEU → sa ligne, telle quelle : « Paris, France ». Rien
- *    ne change pour le cas le plus fréquent, division comprise
- *    (« Austin, TX, États-Unis ») ;
- *  · UN SEUL PAYS, plusieurs villes → les villes puis le pays,
- *    SÉPARÉS PAR DES VIRGULES, sans rien d'autre : « Paris, Félines,
- *    France » ;
+ *  · UN SEUL LIEU → « Paris · France », division comprise devant le
+ *    point médian (« Austin, TX · États-Unis ») ;
+ *  · UN SEUL PAYS, plusieurs villes → les villes entre elles par des
+ *    VIRGULES, le pays introduit par un POINT MÉDIAN : « Paris,
+ *    Félines · France » ;
  *  · PLUSIEURS PAYS → chaque groupe s'écrit de cette même façon, et
  *    les groupes sont séparés par UNE BARRE VERTICALE : « Paris,
- *    Félines, France | Berlin, Allemagne ».
+ *    Félines · France | Berlin · Allemagne ».
+ *
+ * ██ §1 (nº 587) — LE PAYS S'ANNONCE PAR UN POINT MÉDIAN ██
+ * La nº 586 le posait après une virgule, au même rang que les villes.
+ * Le propriétaire veut qu'on VOIE le changement de nature : une liste
+ * de villes d'un côté, le pays qui les contient de l'autre. Les trois
+ * cas ci-dessus n'en font donc plus qu'UN SEUL à composer — villes,
+ * point médian, pays — et le raccourci qui rendait la ligne toute
+ * faite pour un lieu unique n'a plus lieu d'être : il écrivait la
+ * virgule de `ligneCarte`.
  *
  * ██ §1 (nº 586) — POURQUOI LA BARRE, ET PAS LE POINT MÉDIAN ██
  * La nº 585 posait le pays après un point médian (« Paris, Lyon ·
@@ -313,10 +334,13 @@ export const LIEUX_AFFICHES = 3;
  * ville s'écrit seul aussi, sans virgule devant lui.
  */
 const SEPARATEUR_DE_PAYS = " | ";
+/** Ce qui annonce le pays derrière ses villes (§1 nº 587). C'est le
+    point médian du site, celui-là même qui sépare le métier de la
+    localisation — un cran plus haut que la virgule des villes. */
+const AVANT_LE_PAYS = " · ";
 
 function lieuxEcrits(lieux: LieuDuSuivi[]): string {
   if (lieux.length === 0) return "";
-  if (lieux.length === 1) return lieux[0].ligne;
 
   const retenus = lieux.slice(0, LIEUX_AFFICHES);
   const groupes: Array<{ pays: string; sujets: string[] }> = [];
@@ -336,7 +360,7 @@ function lieuxEcrits(lieux: LieuDuSuivi[]): string {
     .map((groupe) =>
       [groupe.sujets.filter(Boolean).join(", "), groupe.pays]
         .filter(Boolean)
-        .join(", ")
+        .join(AVANT_LE_PAYS)
     )
     .join(SEPARATEUR_DE_PAYS);
 }
@@ -358,7 +382,7 @@ function sujetDuLieu(lieu: LieuDuSuivi): string {
 }
 
 /**
- * LA LIGNE SOUS LE NOM — « Artiste · Paris, Félines, France ».
+ * LA LIGNE SOUS LE NOM — « Artiste · Paris, Félines · France ».
  * ------------------------------------------------------------------
  * ██ §1 (nº 585) — ON LIT DES VILLES, PLUS UN NOMBRE ██
  * §3-b et §3-c SONT ANNULÉS. La ligne écrivait la première ville en

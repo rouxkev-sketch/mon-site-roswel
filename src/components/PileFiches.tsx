@@ -16,6 +16,9 @@ import { ficheComplete } from "@/lib/fiche-complete";
 //  déclare, pour que le rattrapage du filet ne la prenne jamais pour
 //  un atterrissage accidentel au fond de la pile.
 import { annoncerRepriseDuSite } from "@/lib/navigation-session";
+//  §2 (nº 587) — le nom du paramètre d'onglet de « Ma sélection », lu
+//  là où il est défini : la pile ne le réécrit pas à la main.
+import { PARAM_SELECTION } from "@/lib/filtres-selection";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
@@ -240,10 +243,43 @@ export function PileFiches({
       //  Le drapeau AVANT le pushState : DefilementEnHaut le lit au
       //  moment où l'adresse change (même règle que la mosaïque).
       document.documentElement.setAttribute("data-fenetre-fiche", "1");
+      /**
+       * ██ §2 (nº 587) — L'ADRESSE EMPORTE L'ONGLET DE LA PAGE DE FOND ██
+       * ==================================================================
+       * LE DÉFAUT : sur « Ma sélection » → Portfolios, ouvrir une fiche
+       * puis, DEPUIS elle, un lieu ou un membre d'équipe faisait
+       * BASCULER LA PAGE DE FOND sur l'onglet Favoris.
+       * LA CAUSE, ET C'EST LE JUMEAU EXACT DU §1 DE LA nº 314 : cette
+       * adresse-ci était écrite SANS AUCUNE REQUÊTE. Or l'onglet de
+       * cette page-là vit dans la requête (`?selection=suivis:…`, lu
+       * par `lireSelection` à travers `lireRequeteCourante`, qui rend
+       * `window.location.search`). En l'effaçant, on faisait retomber
+       * la page sur son choix par défaut — « Mes favoris ». La nº 314
+       * avait réglé le MÊME oubli dans `PageFavoris.ouvrirLaFiche` ; il
+       * restait ici, sur le chemin de la PILE.
+       * ⚠️ ON N'EMPORTE QUE CE PARAMÈTRE-LÀ, ET SÛREMENT PAS TOUTE LA
+       * REQUÊTE. Cette pile sert AUSSI la mosaïque et les fiches, dont
+       * l'adresse porte la SÉRIE regardée (`?style=…&photo=…`) : la
+       * recopier ferait hériter à la fiche suivante une photo qui n'est
+       * pas la sienne, qu'un rechargement irait ensuite chercher.
+       * `selection`, lui, n'appartient qu'à « Ma sélection » et n'est lu
+       * nulle part ailleurs — le transporter ne peut donc rien changer
+       * d'autre que ce qu'on veut réparer.
+       * ⚠️ L'HISTORIQUE NE BOUGE PAS : c'est toujours UNE entrée par
+       * ouverture, et le retour en défait toujours une (332-§1 et §4).
+       * Seule l'adresse écrite dans cette entrée gagne son paramètre.
+       */
+      const selection = new URLSearchParams(window.location.search).get(
+        PARAM_SELECTION
+      );
       window.history.pushState(
         { fenetreFiche: true },
         "",
-        `/tatoueur/${slug}`
+        `/tatoueur/${slug}${
+          selection
+            ? `?${new URLSearchParams({ [PARAM_SELECTION]: selection })}`
+            : ""
+        }`
       );
       ouvertures.current += 1;
       entreesPoussees.current += 1;
