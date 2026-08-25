@@ -23,6 +23,14 @@ import {
 //  §1 (nº 451) — le lieu de la ligne grise : l'écriture du sous-titre
 //  MOBILE des cartes (nº 212-§6), jamais recomposée ici.
 import { ligneCarteMobile, villeAffichee } from "@/lib/adresse";
+//  §1 (nº 604) — la mémoire de la nº 459, celle des galeries du
+//  Portfolio : le carrousel de l'affiche y range sa photo sous son
+//  propre préfixe. Aucune seconde mémoire n'est écrite.
+import {
+  cleDuCarrouselDeFiche,
+  photoDuCarrouselRetenue,
+  retenirPhotoDuCarrousel,
+} from "@/lib/memoire-galeries";
 import { BoutonPartageFiche } from "@/components/BoutonPartageFiche";
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import {
@@ -240,12 +248,56 @@ export function FicheTatoueur({
     nature: string;
     rendu: string;
   } | null>(serieInitiale);
+  /**
+   * ██ §1 (nº 604) — L'IDENTITÉ DE CE CARROUSEL POUR LA MÉMOIRE ██
+   * L'ADRESSE COMPLÈTE DE LA FICHE, assemblée des mêmes ingrédients
+   * que la clé de remontage de `FicheSelonLAdresse` — et dans le même
+   * ordre, pour qu'on puisse les comparer d'un coup d'œil. C'est elle
+   * qui distingue un RETOUR (adresse rejouée à l'identique) d'une
+   * NOUVELLE VISITE par un lien (adresse différente) : voir la note
+   * longue de lib/memoire-galeries.
+   */
+  const cleDuCarrousel = cleDuCarrouselDeFiche(
+    [
+      tatoueur.slug,
+      styleInitial,
+      renduInitial,
+      natureInitiale,
+      photoInitiale,
+      entreeInitiale,
+      studioCourant ?? "",
+    ].join("|")
+  );
   /** L'INDICE de la photo affichée, DANS la série montrée. Une série
       restreinte commence à sa première photo — elle répond déjà à tout
-      ce qui a été cherché. */
-  const [indicePhoto, setIndicePhoto] = useState(
-    surUnePhoto ? surUnePhoto.indice : serieCherchee ? 0 : ouverture.indice
-  );
+      ce qui a été cherché.
+      ██ §1 (nº 604) — LA MÉMOIRE PASSE DEVANT, quand elle a quelque
+      chose à dire. Elle n'a rien à dire au premier passage : la valeur
+      d'avant s'applique alors mot pour mot, sur tous les chemins
+      d'arrivée (une carte, « Ma sélection », un lien de partage, une
+      adresse tapée).
+      ⚠️ LU ICI, DANS LA VALEUR INITIALE, ET C'EST CE QUI DONNE LA
+      RESTITUTION AVANT LA PREMIÈRE PEINTURE : l'indice est juste dès le
+      PREMIER rendu, donc la pose de défilement du carrousel (celle de
+      la nº 372, avant peinture) place la bonne colonne sans qu'aucune
+      image intermédiaire n'existe. Un `useLayoutEffect` serait déjà
+      trop tard : il faudrait un second rendu, et la pose du carrousel
+      n'a lieu qu'au montage.
+      ⚠️ AUCUNE DIVERGENCE D'HYDRATATION POSSIBLE, et ce n'est pas une
+      chance : la garde `typeof window` tient le serveur à l'écart, et
+      l'instance d'hydratation de la page publique naît SANS TAGS
+      (`lireRequeteServeur` rend la chaîne vide, nº 359/360) — la
+      mémoire est donc lue par l'instance RESEMÉE, qui n'existe
+      qu'après l'hydratation. */
+  const [indicePhoto, setIndicePhoto] = useState(() => {
+    const parDefaut = surUnePhoto
+      ? surUnePhoto.indice
+      : serieCherchee
+        ? 0
+        : ouverture.indice;
+    if (typeof window === "undefined") return parDefaut;
+    return photoDuCarrouselRetenue(cleDuCarrousel) ?? parDefaut;
+  });
 
   /**
    * §3 (nº 293) — QUEL QUE SOIT LE CHEMIN, LA PHOTO EST EN HAUT.
@@ -296,6 +348,46 @@ export function FicheTatoueur({
   const serieEffective = photosRestreintes.length > 0 ? serieOuverte : null;
   const photosDuCarrousel =
     photosRestreintes.length > 0 ? photosRestreintes : photosDuStyleEntier;
+
+  /*  ██ §1 (nº 604) — ET SI LA PHOTO RETENUE N'EXISTE PLUS ? ██
+      Le tatoueur peut l'avoir retirée entre deux visites, ou la série
+      montrée peut avoir changé sous l'indice. ON REVIENT À LA
+      PREMIÈRE, franchement, plutôt que de garder un rang qui ne
+      désigne rien : le repli de `photoAffichee` plus bas montrait déjà
+      la bonne image, mais le compteur aurait annoncé « 9/6 » et les
+      points auraient cherché un cran absent.
+      ⚠️ AJUSTÉ PENDANT LE RENDU, jamais dans un effet — le motif de
+      PileFiches : la valeur est juste avant la première peinture, il
+      n'y a donc pas d'image à rattraper. React refait le rendu
+      immédiatement, sans repasser par l'écran.
+      ⚠️ CETTE GARDE NE VAUT PAS QUE POUR LA MÉMOIRE : un indice hors
+      bornes n'a jamais de sens, d'où qu'il vienne. */
+  if (indicePhoto > 0 && indicePhoto >= photosDuCarrousel.length) {
+    setIndicePhoto(0);
+  }
+
+  /*  ██ §1 (nº 604) — ON NOTE LA PHOTO REGARDÉE, AU DOIGT SEULEMENT ██
+      QUI ÉCRIT : cet effet, et lui seul — il couvre donc TOUS les
+      gestes d'un coup (le défilement du doigt, les flèches du clavier,
+      un rond de la frise), sans qu'aucun d'eux ait à s'en occuper.
+      ⚠️ L'APPAREIL EST LU DANS L'EFFET, JAMAIS AU RENDU (règle nº 60
+      et la leçon de PileFiches) : le serveur ne connaît aucun
+      appareil, et une lecture au rendu ferait diverger l'hydratation.
+      POURQUOI BORNER AU DOIGT : sur le web, une fiche ne se démonte
+      pas quand on va voir son profil — la colonne de lecture est déjà
+      à côté de la photo, et la rangée du profil n'y existe même pas
+      (`hidden mobile:block`). Il n'y a donc rien à retenir, et une
+      table qui reste vide ne peut rien restituer de travers.
+      ⚠️ RIEN DANS L'ADRESSE, RIEN DANS L'HISTORIQUE, RIEN DANS UN
+      STOCKAGE (règle 332-§1) : une table en mémoire vive, qui meurt
+      avec l'onglet — le chemin le plus inerte qui existe, celui de la
+      nº 459.
+      ⚠️ NI EN APERÇU : « Ma fiche » n'est pas une visite. */
+  useEffect(() => {
+    if (apercu) return;
+    if (document.documentElement.dataset.appareil !== "mobile") return;
+    retenirPhotoDuCarrousel(cleDuCarrousel, indicePhoto);
+  }, [apercu, cleDuCarrousel, indicePhoto]);
 
   /**
    * §1 (nº 376) — LE TITRE DE LA GALERIE, sous la photo, AU DOIGT.

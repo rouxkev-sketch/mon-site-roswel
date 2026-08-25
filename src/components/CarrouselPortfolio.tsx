@@ -804,18 +804,30 @@ export function CarrouselPortfolio({
   }, [indice, n]);
 
   /**
-   * §2 (nº 372) — SUR UNE CARTE, LA PHOTO RETENUE EST LÀ DÈS LA
-   * PREMIÈRE IMAGE.
+   * §2 (nº 372) — LA PHOTO RETENUE EST LÀ DÈS LA PREMIÈRE IMAGE.
    * ------------------------------------------------------------------
-   * L'effet ci-dessus se place APRÈS la peinture : au retour, une carte
-   * semée sur sa photo 5 aurait montré la 1 pendant une image, puis
-   * sauté. Ici, on pose le défilement AVANT la peinture, une seule fois,
+   * L'effet ci-dessus se place APRÈS la peinture : au retour, un
+   * carrousel semé sur sa photo 5 aurait montré la 1 pendant une image,
+   * puis sauté. Ici, on pose le défilement AVANT la peinture, une fois,
    * au montage — la première image peinte est déjà la bonne photo.
    * ⚠️ RIEN DE GÉOMÉTRIQUE : on écrit `scrollLeft`, exactement ce que
    * fait `allerA` — au même endroit, simplement plus tôt. Aucune
    * classe, aucune largeur, aucune hauteur n'est touchée.
-   * ⚠️ LES CARTES SEULEMENT : une fiche s'ouvre par son adresse, elle a
-   * son propre chemin (nº 302) et ne doit rien recevoir d'ici.
+   * ██ §1 (nº 604) — ET LA FICHE AUSSI, DÉSORMAIS ██
+   * CE QUI ÉTAIT ÉCRIT : « les cartes seulement — une fiche s'ouvre par
+   * son adresse, elle a son propre chemin (nº 302) et ne doit rien
+   * recevoir d'ici ». C'était vrai tant que l'indice d'une fiche ne
+   * pouvait venir que de l'adresse : l'effet d'au-dessus le posait
+   * après la peinture, et les images n'étaient de toute façon pas
+   * encore chargées. Depuis la nº 604 l'indice peut venir d'une
+   * MÉMOIRE (la photo où l'on s'était arrêté, retrouvée au retour) : la
+   * page revient alors avec ses images DÉJÀ EN CACHE, et l'éclair de la
+   * première photo se verrait pour de bon.
+   * LA BORNE TOMBE DONC, ET RIEN D'AUTRE NE CHANGE : mêmes gardes
+   * (l'appareil tactile, un indice non nul, une seule fois au montage),
+   * même écriture, même endroit. Une fiche qui s'ouvre sur sa première
+   * photo — le cas de très loin le plus courant — ne passe même pas la
+   * seconde garde et ne coûte rien.
    *
    * ██ §2 (nº 373) — ET AU DOIGT SEULEMENT ██
    * Sur le web, la fenêtre se pose PAR-DESSUS la mosaïque : rien n'est
@@ -829,7 +841,7 @@ export function CarrouselPortfolio({
     if (typeof document !== "undefined") {
       if (document.documentElement.dataset.appareil !== "mobile") return;
     }
-    if (!surCarte || indice <= 0) return;
+    if (indice <= 0) return;
     const zone = cadre.current;
     const colonne = colonnes.current[indice];
     if (!zone || !colonne) return;
