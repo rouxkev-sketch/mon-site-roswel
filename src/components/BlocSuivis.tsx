@@ -470,6 +470,16 @@ function BlocDUnSuivi({
           tatoueurId={suivi.id}
           nomTatoueur={suivi.nom}
           suiviAuDepart
+          /*  §1 (nº 589) — PLUS GRANDE AU WEB, ET LÀ SEULEMENT. Ses
+              30 px sont la mesure du doigt (nº 233) ; à côté d'un rond
+              de 72 px ils ne pèsent plus rien. La capsule monte donc à
+              40 px sur l'ordinateur, avec le rembourrage qui va avec —
+              et le cran `lg:` garantit que le doigt n'en voit rien,
+              comme le rond lui-même (`h-13 lg:h-18`) et comme les deux
+              lignes de texte juste à gauche. Le mot, lui, ne change pas
+              de taille : c'est la BOÎTE qui manquait de présence, pas
+              l'écriture. */
+          classeBoite="lg:min-h-[40px] lg:px-5"
         />
       </div>
       </div>

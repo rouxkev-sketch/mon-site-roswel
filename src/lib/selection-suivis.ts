@@ -6,7 +6,14 @@ import { modesOrdonnes, type ModeExerciceFiche } from "@/lib/modes-exercice";
 //  §1 (nº 585) — ET LE NOM DU PAYS À PART, de la même source : c'est
 //  celle que `ligneCarte` emploie elle-même en interne, pas une
 //  seconde table.
-import { ligneCarte, nomPaysAffiche, type LieuAffichable } from "@/lib/adresse";
+//  §3-b (nº 589) — ET LA DIVISION, de la même source encore : c'est la
+//  fonction que `ligneCarte` consulte pour décider si un État s'écrit.
+import {
+  codeAdministratif,
+  ligneCarte,
+  nomPaysAffiche,
+  type LieuAffichable,
+} from "@/lib/adresse";
 import {
   libelleTypeFiche,
   natureDeLaFiche,
@@ -226,8 +233,12 @@ export function periodeDuGuest(mode: {
  * ⚠️ DEPUIS LA nº 587, LA LIGNE N'EST PLUS ÉCRITE TELLE QUELLE nulle
  * part : même seul, un lieu voit sa virgule de pays remplacée par un
  * point médian. Le champ reste ce qui nomme et ce qui dédoublonne.
+ * ⚠️ ET LA DIVISION EN TROISIÈME (§3-b nº 589) : les États américains
+ * passent entre parenthèses derrière leur ville, ce qui demande de
+ * savoir lequel est une division et lequel est une ville. Comme pour le
+ * pays, on le DEMANDE plutôt que de le deviner dans la chaîne.
  */
-type LieuDuSuivi = { ligne: string; pays: string };
+type LieuDuSuivi = { ligne: string; pays: string; division: string };
 
 /**
  * Le parcours des modes, une fois pour toutes : c'est lui qui décide
@@ -243,7 +254,11 @@ function lieuxDuSuivi(
   const ajouter = (lieu: LieuAffichable) => {
     const ligne = ligneCarte(lieu);
     if (!ligne || lieux.some((autre) => autre.ligne === ligne)) return;
-    lieux.push({ ligne, pays: nomPaysAffiche(lieu) });
+    lieux.push({
+      ligne,
+      pays: nomPaysAffiche(lieu),
+      division: codeAdministratif(lieu.region, lieu.code_pays) ?? "",
+    });
   };
   for (const mode of suivi.modes) {
     if (mode.genre === "guest" && mode.fin_le && mode.fin_le < aujourdhui) {
@@ -333,6 +348,25 @@ export const LIEUX_AFFICHES = 3;
  * pays connu s'écrit seul et ne se groupe avec personne ; un pays sans
  * ville s'écrit seul aussi, sans virgule devant lui.
  */
+/**
+ * ██ §3-a (nº 589) — LA PUCE QUI SÉPARE LE MÉTIER DU LIEU ██
+ * ------------------------------------------------------------------
+ * C'EST UN AUTRE CARACTÈRE, PAS UNE AUTRE TAILLE, et c'est la réponse
+ * à la question du propriétaire. La ligne est UN SEUL TEXTE, dans un
+ * seul élément : lui donner deux tailles demanderait de la découper en
+ * morceaux, donc de rendre du balisage là où il n'y a qu'une chaîne —
+ * et cette chaîne est aussi ce que le banc éprouve, ce qu'un lecteur
+ * d'écran lit et ce qu'une copie emporte. La typographie a le signe
+ * qu'il faut : la PUCE (U+2022), plus grosse et plus ronde que le
+ * point médian (U+00B7) qu'on garde entre les villes et le pays. Deux
+ * signes de tailles différentes, sans une ligne de style.
+ * ⚠️ ET LES TROIS SÉPARATEURS DE LA LIGNE SE DISTINGUENT MAINTENANT
+ * PAR EUX-MÊMES : la puce sépare le métier du lieu, le point médian le
+ * lieu de son pays, la barre verticale deux pays. On lit la hiérarchie
+ * sans rien savoir de la règle.
+ */
+const APRES_LE_TYPE = " • ";
+
 const SEPARATEUR_DE_PAYS = " | ";
 /** Ce qui annonce le pays derrière ses villes (§1 nº 587). C'est le
     point médian du site, celui-là même qui sépare le métier de la
@@ -371,14 +405,42 @@ function lieuxEcrits(lieux: LieuDuSuivi[]): string {
  * c'est la garantie qu'aucune seconde grammaire ne s'installe ici.
  * Un lieu qui n'est QUE son pays n'a rien devant lui ; un lieu sans
  * pays connu est tout entier son propre sujet.
+ *
+ * ██ §3-b (nº 589) — L'ÉTAT PASSE ENTRE PARENTHÈSES ██
+ * ------------------------------------------------------------------
+ * LE DÉFAUT ANNONCÉ PAR LE PROPRIÉTAIRE : une ville américaine s'écrit
+ * « Austin, TX ». À une seule ville, la virgule se lit ; à deux, la
+ * liste devient un fatras où l'on ne sait plus ce qui est une ville et
+ * ce qui est un État — « Austin, TX, Miami, FL · États-Unis ».
+ * LA RÈGLE : l'État se COLLE à sa ville, entre parenthèses. On lit
+ * alors deux noms de villes séparés par une virgule, chacun portant sa
+ * précision — « Austin (TX), Miami (FL) · États-Unis ».
+ * ⚠️ C'EST UNE SUBSTITUTION, PAS UNE RECOMPOSITION : on remplace la
+ * virgule que `ligneCarte` a posée devant la division par la
+ * parenthèse. La ville et le code de l'État restent MOT POUR MOT ceux
+ * du site — on ne réécrit ni l'un ni l'autre.
+ * ⚠️ UN LIEU QUI N'EST QUE SA DIVISION (une fiche sans ville, dans un
+ * État) n'a rien devant elle : la division EST son sujet, et elle
+ * s'écrit nue, sans parenthèses qui n'entoureraient rien (nº 386).
+ * ⚠️ LES CARTES DE LA MOSAÏQUE NE VOIENT RIEN DE TOUT CELA : elles
+ * emploient `ligneLieuDeCarte`, qui écarte l'État depuis la nº 486.
  */
 function sujetDuLieu(lieu: LieuDuSuivi): string {
-  if (!lieu.pays) return lieu.ligne;
+  if (!lieu.pays) return avecEtatColle(lieu.ligne, lieu.division);
   if (lieu.ligne === lieu.pays) return "";
   const suffixe = `, ${lieu.pays}`;
-  return lieu.ligne.endsWith(suffixe)
+  const sujet = lieu.ligne.endsWith(suffixe)
     ? lieu.ligne.slice(0, -suffixe.length)
     : lieu.ligne;
+  return avecEtatColle(sujet, lieu.division);
+}
+
+function avecEtatColle(sujet: string, division: string): string {
+  if (!division) return sujet;
+  const suffixe = `, ${division}`;
+  return sujet.endsWith(suffixe)
+    ? `${sujet.slice(0, -suffixe.length)} (${division})`
+    : sujet;
 }
 
 /**
@@ -404,7 +466,7 @@ export function ligneDIdentite(
 ): string {
   const type = libelleTypeFiche(suivi.typeFiche, suivi.etablissement);
   const ou = lieuxEcrits(lieuxDuSuivi(suivi, aujourdhui));
-  return [type, ou].filter(Boolean).join(" · ");
+  return [type, ou].filter(Boolean).join(APRES_LE_TYPE);
 }
 
 /* ==================================================================

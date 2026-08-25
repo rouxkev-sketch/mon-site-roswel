@@ -54,11 +54,32 @@ export function BoutonSuivre({
   nomTatoueur,
   suiviAuDepart = false,
   pleineLargeur = false,
+  /**
+   * ██ §1 (nº 589) — LA BOÎTE, QUAND UN APPELANT EN VEUT UNE AUTRE ██
+   * ------------------------------------------------------------------
+   * LE DÉFAUT : la capsule posée dans la liste des portfolios à la
+   * nº 586 mesure 30 px de haut — LA MESURE DU DOIGT, celle de la
+   * nº 233. Face au rond de 72 px que le web donne à un portfolio, elle
+   * paraît perdue.
+   * LE RÉGLAGE EST SÉPARÉ, PAS DÉPLACÉ, et c'est le procédé des
+   * nº 537 et nº 557 : un paramètre dont LE DÉFAUT EST LA VALEUR
+   * D'AVANT. Sans argument, la boîte ne bouge pas d'un pixel — la
+   * FICHE de profil, qui n'a rien demandé, garde exactement sa capsule,
+   * et le DOIGT garde partout ses 30 px, qui sont une mesure tactile et
+   * non un choix graphique.
+   * ⚠️ CE QUI EST PASSÉ ICI NE VAUT QU'AU-DELÀ DU CRAN `lg:` : c'est
+   * l'appelant qui l'écrit ainsi, et c'est ce qui garantit que le doigt
+   * ne voit rien. La classe de base (`min-h-[30px]`) reste posée, et la
+   * variante la remplace au-dessus du cran — jamais deux hauteurs qui
+   * se disputeraient au même moment (piège 389).
+   */
+  classeBoite = "",
 }: {
   tatoueurId: string;
   nomTatoueur: string;
   suiviAuDepart?: boolean;
   pleineLargeur?: boolean;
+  classeBoite?: string;
 }) {
   const { utilisateur, pret } = useUtilisateur();
   amorcer("tatoueur", tatoueurId, suiviAuDepart);
@@ -260,7 +281,7 @@ export function BoutonSuivre({
       className={`inline-flex min-h-[30px] items-center justify-center rounded-lg
                   border px-3.5 text-[14px] font-semibold transition-colors
                   focus-visible:outline-2 focus-visible:outline-offset-2
-                  focus-visible:outline-primaire ${
+                  focus-visible:outline-primaire ${classeBoite} ${
                     pleineLargeur ? "w-full" : ""
                   } ${
                     !etatConnu

@@ -9,7 +9,7 @@
  *      valeur est revenue à 20 px. Le contrôle correspondant a été
  *      refait à l'envers plus bas, et la mesure complète vit dans
  *      `verif-p325.mjs`.
- * §3 — UNE SEULE GRAMMAIRE SOUS LE NOM : « LE TYPE · OÙ », pour un
+ * §3 — UNE SEULE GRAMMAIRE SOUS LE NOM : « LE TYPE • OÙ », pour un
  *      artiste comme pour un lieu, web et smartphone.
  *
  * ⚠️ COMMENT LES §1 ET §2 SONT MESURÉS, ET POURQUOI AINSI.
@@ -60,7 +60,7 @@ const SOURCE_NUE = sansNotes(SOURCE);
 /* ==================================================================
  * §3 — LA LIGNE SOUS LE NOM, EXÉCUTÉE SUR LES CINQ CAS
  * ================================================================== */
-titre("§3 — « LE TYPE · OÙ » : les cinq cas du propriétaire, exécutés");
+titre("§3 — « LE TYPE • OÙ » : les cinq cas du propriétaire, exécutés");
 
 /** Un mode d'exercice, réduit à ce que la ligne d'identité en lit. */
 const mode = (genre, ville, region, pays, codePays, extra = {}) => ({
@@ -102,7 +102,7 @@ const suivi = (nom, typeFiche, etablissement, modes, lieu = {}) => ({
       suivi("a1", "artiste", "", [
         mode("salon", "Paris", null, "France", "FR"),
       ]),
-      "Artiste · Paris · France",
+      "Artiste • Paris · France",
     ],
     [
       "…LE MÊME, avec DEUX MODES DANS LA MÊME VILLE — une seule ville (§3-d)",
@@ -110,7 +110,7 @@ const suivi = (nom, typeFiche, etablissement, modes, lieu = {}) => ({
         mode("domicile", "Paris", null, "France", "FR"),
         mode("salon", "Paris", null, "France", "FR"),
       ]),
-      "Artiste · Paris · France",
+      "Artiste • Paris · France",
     ],
     [
       "un ARTISTE dans TROIS villes — les trois s'écrivent (§3-c)",
@@ -119,14 +119,14 @@ const suivi = (nom, typeFiche, etablissement, modes, lieu = {}) => ({
         mode("salon", "Lyon", null, "France", "FR"),
         mode("guest", "Marseille", null, "France", "FR"),
       ]),
-      "Artiste · Paris, Lyon, Marseille · France",
+      "Artiste • Paris, Lyon, Marseille · France",
     ],
     [
       "un ARTISTE avec un ÉTAT — l'écriture internationale (§3-b)",
       suivi("a4", "artiste", "", [
         mode("salon", "Austin", "Texas", "États-Unis", "US"),
       ]),
-      "Artiste · Austin, TX · États-Unis",
+      "Artiste • Austin (TX) · États-Unis",
     ],
     [
       "un SALON — inchangé",
@@ -136,7 +136,7 @@ const suivi = (nom, typeFiche, etablissement, modes, lieu = {}) => ({
         pays: "États-Unis",
         codePays: "US",
       }),
-      "Salon · Austin, TX · États-Unis",
+      "Salon • Austin (TX) · États-Unis",
     ],
   ];
   for (const [nom, cas, attendu] of CAS) {
@@ -150,7 +150,7 @@ const suivi = (nom, typeFiche, etablissement, modes, lieu = {}) => ({
     "…et un STUDIO PRIVÉ dit « Studio », le mot des cartes",
     ligneDIdentite(
       suivi("p1", "salon", "prive", [], { ville: "Félines", pays: "France" })
-    ) === "Studio · Félines · France",
+    ) === "Studio • Félines · France",
     ligneDIdentite(
       suivi("p1", "salon", "prive", [], { ville: "Félines", pays: "France" })
     )
@@ -182,26 +182,31 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
   );
 
   /*  §3-b — LE LIEU VIENT DE `ligneCarte`, MOT POUR MOT.
-      ⚠️ REPRIS À LA nº 587 : la ligne ne recopie plus la ponctuation de
-      `ligneCarte` telle quelle — le PAYS y est désormais introduit par
-      un point médian au lieu d'une virgule. Les MOTS, eux, sont
-      toujours ceux du site : ville, division et pays sortent tous de
-      `ligneCarte`, et le banc le prouve en ne remplaçant que la
-      DERNIÈRE virgule. */
+      ⚠️ CE TEST A ÉTÉ REPRIS DEUX FOIS (nº 587, puis nº 589), et pour
+      la même raison : il comparait la ligne à `ligneCarte` PONCTUATION
+      COMPRISE, alors que c'est précisément la ponctuation que ces
+      passes ont changée — le pays derrière un point médian, l'État
+      entre parenthèses, le métier derrière une puce. Il éprouve
+      désormais CE QU'IL VOULAIT DIRE : que chaque MOT du lieu vient du
+      site et d'aucune copie, et que le métier vient de
+      `libelleTypeFiche`. La FORME, elle, est éprouvée par les cinq cas
+      du propriétaire, plus haut — c'est là qu'elle doit vivre. */
+  const lieuDuSite = ligneCarte({
+    ville: "Austin",
+    region: "Texas",
+    pays: "États-Unis",
+    code_pays: "US",
+  });
+  const ligneAustin = ligneDIdentite(
+    suivi("b", "artiste", "", [
+      mode("salon", "Austin", "Texas", "États-Unis", "US"),
+    ])
+  );
   verif(
-    "§3-b — LE LIEU EST ÉCRIT PAR `ligneCarte` : mêmes mots, seule la ponctuation du pays change",
-    ligneDIdentite(
-      suivi("b", "artiste", "", [
-        mode("salon", "Austin", "Texas", "États-Unis", "US"),
-      ])
-    ) ===
-      `${libelleTypeFiche("artiste", "")} · ${ligneCarte({
-        ville: "Austin",
-        region: "Texas",
-        pays: "États-Unis",
-        code_pays: "US",
-      }).replace(/, ([^,]+)$/, " · $1")}`,
-    "la ligne est composée des DEUX fonctions du site, pas d'une copie"
+    "§3-b — TOUS LES MOTS DU LIEU VIENNENT DE `ligneCarte`, et le métier de `libelleTypeFiche`",
+    lieuDuSite.split(", ").every((mot) => ligneAustin.includes(mot)) &&
+      ligneAustin.startsWith(`${libelleTypeFiche("artiste", "")} `),
+    `« ${ligneAustin} » contre « ${lieuDuSite} »`
   );
   verif(
     "…et le fichier n'écrit AUCUNE seconde grammaire de lieu : tout vient de lib/adresse",
@@ -227,7 +232,7 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
   );
   verif(
     "§3-c — LES TROIS VILLES S'ÉCRIVENT, le pays une seule fois à la fin",
-    trois === "Artiste · Paris, Lyon, Nantes · France" && !/\+\d/.test(trois),
+    trois === "Artiste • Paris, Lyon, Nantes · France" && !/\+\d/.test(trois),
     `« ${trois} »`
   );
   verif(
@@ -237,8 +242,8 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
         mode("salon", "Paris", null, "France", "FR"),
         mode("salon", "Lyon", null, "France", "FR"),
       ])
-    ) === "Artiste · Paris, Lyon · France",
-    "« Paris, Lyon · France »"
+    ) === "Artiste • Paris, Lyon · France",
+    "« Paris, Lyon · France », derrière la puce"
   );
   /*  §1 (nº 586) — ET DEUX PAYS SE SÉPARENT PAR UNE BARRE VERTICALE,
       jamais par le point médian : celui-ci ne sépare plus que le métier
@@ -250,7 +255,7 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
         mode("salon", "Paris", null, "France", "FR"),
         mode("salon", "Berlin", null, "Allemagne", "DE"),
       ])
-    ) === "Artiste · Paris · France | Berlin · Allemagne",
+    ) === "Artiste • Paris · France | Berlin · Allemagne",
     "« Paris · France | Berlin · Allemagne »"
   );
 
@@ -278,7 +283,7 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
   ]);
   verif(
     "§3-e — L'ORDRE EST CELUI DE L'ARTISTE : la PREMIÈRE DÉCLARÉE se lit en tête",
-    ligneDIdentite(declare) === "Artiste · Nantes, Lyon · France",
+    ligneDIdentite(declare) === "Artiste • Nantes, Lyon · France",
     `« ${ligneDIdentite(declare)} » (un classement par genre aurait dit « Lyon » en tête)`
   );
   verif(
@@ -299,7 +304,7 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
   const rendu = ligneDIdentite(avecAdresse);
   verif(
     "§3-f — NI RUE NI NUMÉRO : une adresse posée sur le mode n'entre pas dans la ligne",
-    rendu === "Artiste · Paris · France" && !/\d|Rue|Chemin/.test(rendu),
+    rendu === "Artiste • Paris · France" && !/\d|Rue|Chemin/.test(rendu),
     `« ${rendu} »`
   );
   verif(
@@ -318,7 +323,7 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
   ]);
   verif(
     "UNE SESSION GUEST TERMINÉE NE COMPTE PAS — la règle du §2 de la nº 243 tient",
-    ligneDIdentite(guestFini, "2026-08-16") === "Artiste · Paris · France",
+    ligneDIdentite(guestFini, "2026-08-16") === "Artiste • Paris · France",
     `« ${ligneDIdentite(guestFini, "2026-08-16")} » (Berlin n'y est pas)`
   );
   verif(
@@ -332,7 +337,7 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
         }),
       ]),
       "2026-08-16"
-    ) === "Artiste · Paris · France | Berlin · Allemagne",
+    ) === "Artiste • Paris · France | Berlin · Allemagne",
     "Berlin s'écrit, derrière la barre verticale"
   );
 }

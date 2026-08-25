@@ -222,6 +222,49 @@ export function PileFiches({
     surProfondeur?.(profondeur);
   }, [profondeur, surProfondeur]);
 
+  /**
+   * ██ §2 (nº 589) — LA PROFONDEUR EST AUSSI ANNONCÉE DANS LE GESTE ██
+   * ==================================================================
+   * LE DÉFAUT, RELEVÉ PAR LE PROPRIÉTAIRE : sur « Ma sélection », ouvrir
+   * une PREMIÈRE fiche allait bien ; en ouvrir une SECONDE depuis elle
+   * faisait CLIGNOTER LE FOND — le voile sautait, puis la nouvelle
+   * fenêtre s'ouvrait. La troisième et les suivantes, sans défaut.
+   * LA CAUSE, ET ELLE TIENT AU « SEULEMENT LA DEUXIÈME » : la surface
+   * garde sa fenêtre de base visible tant que L'ADRESSE EST LA SIENNE
+   * **OU** que la pile n'est pas vide (`profondeurPile > 0`, la même
+   * ligne dans la mosaïque et dans « Ma sélection »). Au passage de UN
+   * à DEUX, ces deux conditions changent — mais PAS AU MÊME MOMENT :
+   * l'adresse bascule dans l'instant du `pushState`, tandis que la
+   * profondeur ne remontait que par un EFFET, donc après le rendu. Il
+   * s'intercalait un rendu où l'adresse n'était plus celle de la
+   * fenêtre de base et où la pile paraissait encore vide : la fenêtre
+   * de base se croyait fermée, son voile disparaissait — et revenait au
+   * rendu suivant. Au passage de DEUX à TROIS, la profondeur vaut déjà
+   * un : plus rien ne bascule, et c'est pourquoi seul le deuxième
+   * clignotait.
+   * LE REMÈDE : la profondeur est annoncée DANS LE GESTE, à côté du
+   * `setPile` qui la fait grandir. React groupe les deux poseurs d'état
+   * en un seul rendu — l'enveloppe voit donc la pile grandir et
+   * l'adresse changer ensemble, et plus aucun rendu ne peut les voir en
+   * désaccord.
+   * ⚠️ L'EFFET RESTE, ET IL SERT TOUJOURS : c'est lui qui annonce la
+   * DÉCROISSANCE (une fermeture, un retour, un vidage). Dans ce sens-là
+   * il n'y a rien à devancer — une profondeur qui reste haute un rendu
+   * de trop ne fait que GARDER la fenêtre de base visible, ce qui est
+   * précisément ce qu'on veut. Et réannoncer la même valeur ne coûte
+   * aucun rendu.
+   * ⚠️ RIEN D'AUTRE NE BOUGE : ni l'adresse poussée (une entrée par
+   * ouverture, 332-§1 et §4), ni le paramètre d'onglet qu'elle emporte
+   * depuis la nº 587, ni le voile, ni le gel compté.
+   */
+  const profondeurConnue = useRef(0);
+  profondeurConnue.current = profondeur;
+  //  La main tendue par l'enveloppe, lisible depuis `ouvrir` sans la
+  //  faire entrer dans ses dépendances (les deux surfaces passent leur
+  //  poseur d'état, que React garantit stable).
+  const annoncer = useRef(surProfondeur);
+  annoncer.current = surProfondeur;
+
   const ouvrir = useCallback<OuvertureFiche>((slug, adresse) => {
     //  LA FICHE COMPLÈTE D'ABORD (le cache de lib/fiche-complete : au
     //  survol du web elle est souvent déjà là) ; l'historique n'est
@@ -287,6 +330,11 @@ export function PileFiches({
         ...courante,
         { fiche, position, ouverture: ouvertures.current },
       ]);
+      //  §2 (nº 589) — DANS LE MÊME GESTE : voir la note du compteur,
+      //  plus haut. Les deux poseurs d'état partent ensemble, donc un
+      //  seul rendu — l'enveloppe ne voit jamais l'adresse changée et
+      //  la pile encore vide.
+      annoncer.current?.(profondeurConnue.current + 1);
     });
   }, []);
 
