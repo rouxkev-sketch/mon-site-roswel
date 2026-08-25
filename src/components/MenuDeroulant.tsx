@@ -1066,12 +1066,39 @@ export function MenuDeroulant({
              la barre d'accueil, et elle n'est pas décorative. De 28 px
              au repos (12 + 16) on passe à 16, et sur un téléphone à
              barre d'accueil c'est la hauteur de cette barre, comme
-             avant. La valeur est EXACTEMENT celle que la plaque pose
-             quand il n'y a pas de bloc : l'air du bas est donc le même
-             dans les deux cas, comme demandé.
+             avant.
+             ⚠️ CE PLANCHER A ÉTÉ REPRIS À LA nº 584 (§2 ci-dessous) :
+             ses 16 px deviennent 20. Le PRINCIPE ne bouge pas — on
+             prend toujours le plus grand des deux, le plancher voulu
+             ou la barre d'accueil ; c'est le plancher qui monte.
+
+             ██ §2 (nº 584) — L'AIR SOUS LE DERNIER TITRE ÉGALE CELUI
+             QUI SÉPARE LES DEUX TITRES ██
+             MESURÉ À L'ÉCRAN, en ENCRE et non en boîtes (la méthode est
+             décrite au §1, plus bas) : entre les deux titres, 34 px de
+             blanc ; sous le dernier, 29,67 seulement. La cause est la
+             même qu'au §1 — le bord de la plaque tombe au ras des
+             lettres, quand un TITRE, lui, emporte avec lui le blanc que
+             ses capitales laissent au-dessus d'elles. Le plancher passe
+             donc de 16 à 20 px : 33,67 contre 34, soit un tiers de
+             pixel.
+             ⚠️ LA RÉSERVE N'EST PAS TOUCHÉE, et c'est le « plus grand
+             des deux » qui le garantit : sur un téléphone à barre
+             d'accueil (34 px sur les iPhone récents) c'est toujours
+             elle qui gagne, et le bloc ne la touche pas plus qu'avant.
+             ⚠️ CET AIR-LÀ NE DÉPEND D'AUCUN ÉTAT : les deux titres sont
+             rendus repliés comme ouverts, l'air du bas vaut donc la
+             même chose dans les deux cas — rien ne bouge au moment où
+             une section s'ouvre.
+             CONSÉQUENCE ASSUMÉE : l'égalité que la nº 582 relevait avec
+             la réserve de la plaque (celle des feuilles SANS bloc) n'est
+             plus vraie — 20 ici, 16 là-bas. Ce qui commande ici, c'est
+             l'air entre deux titres, et il n'existe pas là-bas.
 
              ██ §1a (nº 582) — ET PLUS D'AIR EN TÊTE QUAND IL EST EN BAS ██
-             Le bloc perd aussi son `pt-1` dans cette position. AVEC les
+             Le bloc perd aussi son rembourrage de tête dans cette
+             position — il ne le retrouve, et plus grand, que lorsqu'une
+             section est ouverte (§1, plus bas). AVEC les
              8 px de la liste vide (retirés plus bas), c'étaient les
              12 px qui séparaient le trait de préhension du premier
              titre quand tout est replié — alors qu'une section ouverte
@@ -1081,41 +1108,55 @@ export function MenuDeroulant({
              qui suit — 12 px pour un titre, 10 pour une entrée. */
         className={`shrink-0 ${
           enBas
-            ? `border-t pb-[max(1rem,env(safe-area-inset-bottom))]${
-                /*  ██ §1 (nº 583) — L'AIR SOUS LE TRAIT REVIENT QUAND IL
-                     Y A UN TRAIT ██
+            ? `border-t pb-[max(1.25rem,env(safe-area-inset-bottom))]${
+                /*  ██ §1 (nº 584) — L'AIR SOUS LE TRAIT, MESURÉ EN ENCRE
+                     ET NON PLUS EN BOÎTES ██
                      LE DÉFAUT : une section ouverte, l'air entre le
-                     trait de séparation et le premier titre était plus
-                     court que celui qui le sépare de la dernière entrée.
-                     LA CAUSE, ET ELLE EST DE MON FAIT : le §1a de la
-                     nº 582 a retiré le `pt-1` de ce bloc pour rapprocher
-                     les titres du trait de préhension QUAND TOUT EST
-                     REPLIÉ. Or ce même rembourrage servait, une section
-                     ouverte, d'air sous le trait de séparation. UNE
-                     SEULE VALEUR, DEUX EMPLOIS : la retirer réglait le
-                     premier et défaisait le second.
-                     LE REMÈDE : les deux emplois sont séparés. L'air ne
+                     trait de séparation et le premier titre est plus
+                     court que celui qui sépare le trait de la dernière
+                     entrée.
+                     LA CAUSE reste celle nommée à la nº 583, et elle est
+                     de mon fait : le §1a de la nº 582 a retiré le
+                     rembourrage de tête de ce bloc pour rapprocher les
+                     titres du trait de préhension QUAND TOUT EST REPLIÉ,
+                     alors que le même rembourrage servait, une section
+                     ouverte, d'air sous le trait de séparation. Une
+                     seule valeur, deux emplois. La nº 583 les a séparés,
+                     et c'est ce que fait la ligne ci-dessous : l'air ne
                      revient QUE lorsqu'il y a un trait à faire respirer,
                      c'est-à-dire quand une section est ouverte — le
                      trait n'existe pas autrement (il est transparent,
                      §2 nº 574). Replié, le bloc reste collé au trait de
-                     préhension : l'acquis du §1a de la nº 582 ne bouge
-                     pas.
-                     MESURÉ, une section ouverte : au-dessus du trait,
-                     8 px de la liste plus les 14 px que l'entrée garde
-                     sous son texte, soit 22 ; en dessous, 12 px du titre
-                     plus 4,25 de son centrage, soit 16,25 — d'où 4 px
-                     rendus ici, et 20,25 contre 22. L'échelle de 4 ne
-                     permet pas de faire mieux : le cran suivant
-                     dépasserait de 2,25.
+                     préhension : l'acquis du §1a de la nº 582 tient.
+                     CE QUE LA nº 583 A RATÉ, C'EST SA VALEUR. Elle
+                     comparait des BOÎTES — la ligne de texte de
+                     l'entrée contre celle du titre — et concluait qu'il
+                     manquait 1,75 px, donc que l'échelle de 4 ne
+                     pouvait pas tomber juste. Or l'œil ne voit pas des
+                     boîtes, il voit de l'ENCRE, et les deux textes n'en
+                     laissent pas autant dans la leur : l'entrée est en
+                     bas de casse de 16 px et ne descend pas sous sa
+                     ligne de base, le titre est en capitales de 13 px et
+                     laisse du vide au-dessus d'elles. Deux blancs
+                     invisibles, inégaux, dont la boîte ne dit rien.
+                     MESURÉ À L'ÉCRAN cette fois — capture au triple de
+                     la définition, lignes de pixels encrées relevées une
+                     à une, une section ouverte : AU-DESSUS du trait,
+                     28,33 px entre le bas des lettres de la dernière
+                     entrée et le trait ; EN DESSOUS, 24,33 entre le
+                     trait et le haut des capitales du premier titre. Il
+                     manquait donc 4 px pleins : le rembourrage passe de
+                     4 à 8, et les deux blancs valent 28,33. L'échelle de
+                     4 suffit — c'est la nº 583 qui se trompait en
+                     disant le contraire.
                      ⚠️ RIEN NE SAUTE À L'OUVERTURE : le bloc est ancré
-                     EN BAS d'une colonne plafonnée. Ces 4 px allongent
+                     EN BAS d'une colonne plafonnée. Ces 8 px allongent
                      le bloc et raccourcissent la liste ; les titres, eux,
                      ne bougent pas d'un pixel.
                      ⚠️ ET RIEN AU WEB : là-bas le bloc est en haut, son
-                     `pt-1` ne dépend d'aucun état, et le trait qu'il
-                     porte est en dessous de lui (nº 574). */
-                groupeDeplie ? " pt-1" : ""
+                     rembourrage de tête ne dépend d'aucun état, et le
+                     trait qu'il porte est en dessous de lui (nº 574). */
+                groupeDeplie ? " pt-2" : ""
               }`
             : "border-b pt-1 pb-3"
         } ${aplatDeLaSurface} ${
@@ -2195,9 +2236,11 @@ export function MenuDeroulant({
                  ⚠️ LE TRAIT PASSE AU-DESSUS (`border-t`) : c'est la
                  seule chose que ce côté-ci change, et c'est
                  `blocDesEntetes` qui la reçoit. Voir sa note.
-                 ⚠️ IL RESTE AU-DESSUS DE LA RÉSERVE DU BAS de la plaque
-                 (`pb-[max(1rem,env(safe-area-inset-bottom))]`) : la
-                 barre d'accueil du téléphone ne le recouvre donc jamais. */}
+                 ⚠️ IL PORTE LUI-MÊME LA RÉSERVE DU BAS depuis la nº 581
+                 — la plaque ne la pose plus quand le bloc est là — et
+                 son plancher est monté de 16 à 20 px à la nº 584-§2 :
+                 la barre d'accueil du téléphone ne recouvre donc jamais
+                 les titres, et rien ne reste sans surface sous eux. */}
             {blocEntetes && blocDesEntetes("px-3", true)}
           </div>
         </div>,
