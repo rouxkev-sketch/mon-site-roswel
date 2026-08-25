@@ -842,8 +842,36 @@ export function IndexTatoueurs({
               scroll={false}
               prefetch={true}
               onClick={() => ouvrirReleveCartes()}
+              /**
+               * ██ §1 (nº 592) — TROIS FOIS PLUS LARGE, AU WEB SEUL ██
+               * ------------------------------------------------------
+               * LE DÉFAUT, RELEVÉ PAR LE PROPRIÉTAIRE : sous une grille
+               * qui occupe tout l'écran, cette capsule de 109 px se
+               * perdait au milieu du vide. Elle passe à 328 — trois
+               * fois sa largeur, mesurée à l'écran avant d'être posée.
+               * ⚠️ LA SÉPARATION SE FAIT PAR LE CRAN, ET IL N'Y A RIEN
+               * D'AUTRE À SÉPARER : ce bouton n'est écrit qu'ICI, une
+               * seule fois, et aucun appelant ne le paramètre (le
+               * « Voir plus » de l'autre produit du dépôt est un autre
+               * bouton, dans un autre fichier, avec son contour rose).
+               * La classe de base ne porte AUCUNE largeur — la capsule
+               * y épouse son texte, comme depuis toujours —, et la
+               * variante n'en pose une qu'au-dessus du cran : LE DOIGT
+               * NE VOIT RIEN, au pixel près.
+               * ⚠️ LA HAUTEUR NE BOUGE PAS : `min-h-[42px]` reste seul à
+               * la commander, et le rembourrage latéral reste écrit
+               * pour le doigt. Au web il ne fait plus la largeur, il ne
+               * fait qu'empêcher le mot de toucher le bord.
+               * ⚠️ CONSÉQUENCE HEUREUSE, ET JE LA DIS : au web, le
+               * bouton NE CHANGE PLUS DE TAILLE pendant le chargement.
+               * Sa largeur suivait son libellé — 109 px pour « Voir
+               * plus », 151 pour « Chargement… » —, et il se dilatait
+               * donc au clic. Une largeur posée le fige. Au doigt, il
+               * continue de se dilater comme avant : rien n'y change.
+               */
               className="inline-flex items-center justify-center rounded-full
-                         bg-sombre-eleve px-5 min-h-[42px] text-[14px] font-semibold
+                         bg-sombre-eleve px-5 min-h-[42px] lg:w-[328px]
+                         text-[14px] font-semibold
                          text-sombre-texte transition-colors
                          hover:bg-sombre-haut"
             >
