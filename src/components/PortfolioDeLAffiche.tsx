@@ -30,8 +30,9 @@ import type { PhotoGalerie, StyleGalerie } from "@/lib/photo-tatoueur";
  * (passe nº 197 ; refondu par la nº 276-§3)
  *
  *  · « Profil / Portfolio » (nº 205-§1) — DEUX MOTS NUS côte à côte,
- *    l'actif en blanc, l'autre en gris, une CAPSULE opaque qui GLISSE
- *    (`SelecteurCapsule`, l'écriture partagée avec « Ma sélection »).
+ *    l'actif en blanc, l'autre en gris, et sous lui un TRAIT ROSE qui
+ *    GLISSE (`OngletsLigne` — la capsule opaque qui tenait ce rôle a
+ *    cédé la place à la nº 382-§2 ; voir plus bas).
  *    LA RANGÉE DU HAUT (nº 205-§2) : le sélecteur à gauche, « Suivre »
  *    à droite — c'est ContenuFiche qui compose la rangée.
  *
@@ -103,8 +104,9 @@ function renduDe(photo: PhotoGalerie): string {
  * (nº 205-§1, puis nº 255-§1 — REFAIT PAR LA nº 382-§2.)
  *
  * ██ §2 (nº 382) — LA CAPSULE CÈDE LA PLACE AU SOULIGNEMENT ROSE ██
- * L'onglet actif était encadré par un badge opaque qui glissait
- * (`SelecteurCapsule`). Il porte désormais LE SOULIGNEMENT DE LA
+ * L'onglet actif était encadré par un badge opaque qui glissait — un
+ * composant à lui, SUPPRIMÉ du dépôt à la nº 601 une fois son dernier
+ * appelant parti. Il porte désormais LE SOULIGNEMENT DE LA
  * CRÉATION DE PORTFOLIO — celui qui choisit entre « Réalisation » et
  * « Flash » dans l'espace tatoueur (BlocPortfolio) : les mots nus,
  * l'actif en blanc, et un trait rose de trois pixels qui GLISSE d'un
@@ -122,7 +124,7 @@ function renduDe(photo: PhotoGalerie): string {
  * LES DEUX RÉGLAGES, ET POURQUOI :
  *  · `classeOnglet="px-5 min-h-[44px]"` — LA CIBLE TACTILE DU BADGE
  *    QU'IL REMPLACE, reprise au pixel : la capsule posait ses mots en
- *    `px-5 min-h-[44px]` (SelecteurCapsule). Sans ce réglage, les
+ *    `px-5 min-h-[44px]`. Sans ce réglage, les
  *    onglets tomberaient au `px-1` de la pleine largeur et la cible se
  *    réduirait presque au texte — c'est le piège nommé par le
  *    propriétaire ;

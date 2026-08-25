@@ -3804,8 +3804,9 @@ export function FormulaireFiche() {
           ⚠️ L'ACTION N'EST PAS SUPPRIMÉE, ELLE EST AILLEURS : elle vit
           dans /devenir-tatoueur/securite (voir
           BlocSuppressions), où l'on peut retirer UNE fiche ou le compte
-          entier. Le composant `PiedDeCompte` reste au dépôt, intact et
-          prêt à resservir. */}
+          entier. Le composant qui portait ce pied de page a été
+          SUPPRIMÉ du dépôt à la nº 601 — il n'était plus rendu nulle
+          part depuis cette passe-ci. */}
       </div>
 
       {/* LA FENÊTRE D'ENVOI (passe nº 118) — le décompte des photos,

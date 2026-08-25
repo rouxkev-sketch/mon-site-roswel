@@ -70,8 +70,9 @@ import { lireRequeteCourante, souscrireAdresse } from "@/lib/adresse-courante";
  * la page, juste dessous.
  *
  * ⚠️ RIEN N'EST DESSINÉ ICI, TOUT EST CONSOMMÉ (la règle de la passe) :
- *  · le badge qui glisse est `SelecteurCapsule` — le sélecteur
- *    « Profil / Portfolio » des fiches, extrait à cette passe ;
+ *  · le badge qui glissait ici a été REMPLACÉ par le va-et-vient
+ *    souligné à la nº 461 (voir §2 plus bas) : cette ligne décrivait
+ *    l'état d'avant ;
  *  · le champ du filtre est `MenuDeroulant` avec les drapeaux du champ
  *    « Explorer » du moteur (`sansBordure`, `sombre`, `repliable`,
  *    hauteur 52) — son chevron, son panneau web et sa feuille du bas ;
@@ -200,11 +201,14 @@ export function MenusSelection({
     );
   };
 
-  /*  §2 (nº 461) — LE BADGE (SelecteurCapsule) EST PARTI, code
-      compris : le va-et-vient souligné le remplace aux deux
-      appareils — et l'encadré-capsule (EncadreDeuxChamps) avec lui.
-      « Ma sélection » ne consomme plus ni l'un ni l'autre ; les deux
-      écritures restent vivantes ailleurs (la fiche, le moteur). */
+  /*  §2 (nº 461) — LE BADGE EST PARTI, code compris : le va-et-vient
+      souligné le remplace aux deux appareils — et l'encadré-capsule
+      (EncadreDeuxChamps) avec lui. « Ma sélection » ne consomme plus
+      ni l'un ni l'autre.
+      ⚠️ MISE À JOUR nº 601 : l'encadré reste vivant (le moteur le
+      consomme), mais LE COMPOSANT DU BADGE, lui, a été SUPPRIMÉ du
+      dépôt — la fiche l'avait lâché à la nº 382-§2, cette surface-ci à
+      la nº 461, et il ne restait plus un seul appelant. */
 
   /**
    * §3 — LE CHAMP DU FILTRE. Il porte le filtre DE CE QUE LE BADGE A

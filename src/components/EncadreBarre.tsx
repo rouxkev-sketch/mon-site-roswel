@@ -31,8 +31,8 @@ export function EncadreDeuxChamps({
   gauche: React.ReactNode;
   droite: React.ReactNode;
   /** §1 (nº 256) — L'ENCADRÉ QUI PORTE UN BADGE, pas deux champs :
-      celui de « Ma sélection », dont la moitié gauche est le badge
-      ovale qui glisse (SelecteurCapsule). Trois écarts, et rien
+      celui de « Ma sélection », dont la moitié gauche était le badge
+      ovale qui glissait. Trois écarts, et rien
       d'autre :
        · CAPSULE (`rounded-full`, rayon à la moitié de la hauteur) au
          lieu des angles arrondis : l'encadré épouse la forme du badge
