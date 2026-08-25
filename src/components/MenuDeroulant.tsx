@@ -1081,7 +1081,42 @@ export function MenuDeroulant({
              qui suit — 12 px pour un titre, 10 pour une entrée. */
         className={`shrink-0 ${
           enBas
-            ? "border-t pb-[max(1rem,env(safe-area-inset-bottom))]"
+            ? `border-t pb-[max(1rem,env(safe-area-inset-bottom))]${
+                /*  ██ §1 (nº 583) — L'AIR SOUS LE TRAIT REVIENT QUAND IL
+                     Y A UN TRAIT ██
+                     LE DÉFAUT : une section ouverte, l'air entre le
+                     trait de séparation et le premier titre était plus
+                     court que celui qui le sépare de la dernière entrée.
+                     LA CAUSE, ET ELLE EST DE MON FAIT : le §1a de la
+                     nº 582 a retiré le `pt-1` de ce bloc pour rapprocher
+                     les titres du trait de préhension QUAND TOUT EST
+                     REPLIÉ. Or ce même rembourrage servait, une section
+                     ouverte, d'air sous le trait de séparation. UNE
+                     SEULE VALEUR, DEUX EMPLOIS : la retirer réglait le
+                     premier et défaisait le second.
+                     LE REMÈDE : les deux emplois sont séparés. L'air ne
+                     revient QUE lorsqu'il y a un trait à faire respirer,
+                     c'est-à-dire quand une section est ouverte — le
+                     trait n'existe pas autrement (il est transparent,
+                     §2 nº 574). Replié, le bloc reste collé au trait de
+                     préhension : l'acquis du §1a de la nº 582 ne bouge
+                     pas.
+                     MESURÉ, une section ouverte : au-dessus du trait,
+                     8 px de la liste plus les 14 px que l'entrée garde
+                     sous son texte, soit 22 ; en dessous, 12 px du titre
+                     plus 4,25 de son centrage, soit 16,25 — d'où 4 px
+                     rendus ici, et 20,25 contre 22. L'échelle de 4 ne
+                     permet pas de faire mieux : le cran suivant
+                     dépasserait de 2,25.
+                     ⚠️ RIEN NE SAUTE À L'OUVERTURE : le bloc est ancré
+                     EN BAS d'une colonne plafonnée. Ces 4 px allongent
+                     le bloc et raccourcissent la liste ; les titres, eux,
+                     ne bougent pas d'un pixel.
+                     ⚠️ ET RIEN AU WEB : là-bas le bloc est en haut, son
+                     `pt-1` ne dépend d'aucun état, et le trait qu'il
+                     porte est en dessous de lui (nº 574). */
+                groupeDeplie ? " pt-1" : ""
+              }`
             : "border-b pt-1 pb-3"
         } ${aplatDeLaSurface} ${
           groupeDeplie ? "border-sombre-trait" : "border-transparent"
