@@ -1631,10 +1631,34 @@ export function MoteurTatouage({
                  bien moins. Le panneau étant aligné à DROITE, tout le
                  vide se retrouvait entre le dernier badge et le bord
                  droit, contre un `px-5` régulier à gauche. Avec
-                 `largeurAuContenu`, les 420 deviennent un PLAFOND : la
-                 boîte épouse les badges, et les deux marges valent
+                 `largeurAuContenu`, les 420 devenaient un PLAFOND : la
+                 boîte épousait les badges, et les deux marges valaient
                  exactement le rembourrage — le même à gauche et à
                  droite, par construction.
+                 ██ §2 (nº 607) — CE DRAPEAU EST RETIRÉ, ET VOICI
+                 POURQUOI. Il supposait des badges de largeur FIXE :
+                 c'était vrai tant que leur point réservait sa place
+                 dans les deux états. La nº 606 y a posé une coche qui
+                 n'existe qu'à l'état allumé — chaque badge allumé
+                 gagne dix-sept pixels —, si bien qu'une boîte réglée
+                 sur son contenu CHANGEAIT DE LARGEUR à chaque clic.
+                 LA LARGEUR REDEVIENT DONC FIXE, ET ELLE EST MESURÉE,
+                 non devinée : 372 px, la largeur du panneau TOUT
+                 ALLUMÉ (371,48 relevé à l'écran, arrondi au pixel
+                 supérieur) — Technique et Rendu, trois badges chacun,
+                 le contenu le plus large que ce panneau puisse avoir.
+                 Tout éteint, il reste 51 px de vide à droite : c'est
+                 l'écart que la coche creuse, et rien d'autre.
+                 ⚠️ CE N'EST PAS UN RETOUR AUX 420 D'AVANT LA nº 473 :
+                 ceux-là laissaient quarante pixels de vide jusque dans
+                 le cas le plus large. Le défaut que cette passe-là a
+                 fermé reste fermé.
+                 ⚠️ AUCUN DÉBORDEMENT POSSIBLE : ce panneau n'existe
+                 qu'au-dessus du cran web, donc sur 1024 px de fenêtre
+                 au moins — 372 plus ses marges en occupent le tiers.
+                 Et si un libellé s'allongeait un jour, la rangée en
+                 drapeau prendrait une ligne de plus au lieu de sortir
+                 du cadre.
                  (b) L'AIR INTÉRIEUR MONTE D'UN CRAN : 20 px → 24 px
                  (`p-5` → `p-6`, le cran des fenêtres de la charte —
                  en-têtes de Notifications et des langues). Le haut
@@ -1653,8 +1677,7 @@ export function MoteurTatouage({
               ouvert={filtresOuverts}
               ancre={boutonFiltres}
               refPanneau={plaqueFiltres}
-              largeur={420}
-              largeurAuContenu
+              largeur={372}
               //  §1 (nº 543) — FOND OPAQUE au jeton `carte` : le drapeau
               //  de la nº 537, la teinte de la nº 542. Des quatre
               //  fenêtres de cette passe, celle-ci est la SEULE qui

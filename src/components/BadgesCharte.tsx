@@ -152,6 +152,26 @@ export function BadgeCharte({
            Aucun `gap` sur le badge — un gap s'appliquerait aussi quand
            la boîte est refermée et poserait un vide fantôme devant le
            mot d'un badge éteint.
+           ██ §1 (nº 607) — ET LA BOÎTE SE DÉCALE DE TROIS PIXELS ██
+           MESURÉ À L'ÉCRAN, EN ENCRE, sur un badge allumé : dix-neuf
+           pixels entre le bord gauche et le premier trait de la coche,
+           contre seize et demi entre la dernière lettre et le bord
+           droit. L'air n'était pas égal, et la faute n'est pas au
+           rembourrage — il vaut seize des deux côtés — mais AU TRACÉ
+           DE LA COCHE, qui commence à trois pixels du bord de sa
+           propre boîte (nº 606). Ces trois pixels s'ajoutaient au
+           rembourrage.
+           ON LES REPREND ICI, sur la boîte, et non sur le rembourrage
+           du badge : `px-4` reste intact, donc le mot d'un badge
+           ÉTEINT reste centré au pixel près (l'acquis de la nº 605).
+           Le badge RÉTRÉCIT de trois pixels — il grandit déjà bien
+           assez à l'allumage.
+           ⚠️ LA MARGE NE VIT QUE DANS LA BRANCHE ALLUMÉE : posée aussi
+           à l'état éteint, elle tirerait le mot de trois pixels vers
+           la gauche alors que la boîte est refermée.
+           ⚠️ L'AIR ENTRE LA COCHE ET LE MOT NE BOUGE PAS (huit pixels
+           mesurés) : on décale la boîte entière, on ne la rétrécit
+           pas.
            ⚠️ LE BADGE S'ÉLARGIT DE VINGT PIXELS À L'ALLUMAGE, et c'est
            assumé : le propriétaire veut le mot SEUL ET CENTRÉ quand le
            badge est éteint (l'acquis de la nº 605), ce qui interdit de
@@ -170,7 +190,7 @@ export function BadgeCharte({
         aria-hidden="true"
         className={`inline-flex shrink-0 items-center overflow-hidden
                    transition-[width,opacity] duration-200 ease-out ${
-                     actif ? "w-5 opacity-100" : "w-0 opacity-0"
+                     actif ? "-ml-[3px] w-5 opacity-100" : "w-0 opacity-0"
                    }`}
       >
         <IconeCocheListe classe="shrink-0" />
