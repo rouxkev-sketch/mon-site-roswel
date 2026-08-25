@@ -741,7 +741,28 @@ export function BlocPortfolio({
       dans la liste, coché et inerte : le faire disparaître ferait
       croire qu'il n'existe pas, le laisser cliquable créerait des
       doublons. */
-  function ligneDeStyle(style: { slug: string; label: string }, retrait: boolean) {
+  /**
+   * ██ §2 (nº 559) — LE SURVOL D'UNE LIGNE, DIT PAR L'APPELANT ██
+   * ------------------------------------------------------------------
+   * IL LE DOIT, SOUS PEINE DE DISPARAÎTRE. Ces lignes sont FABRIQUÉES
+   * UNE FOIS et montrées à DEUX endroits (nº 474) : dans la fenêtre du
+   * web, et dans la page plein écran du doigt. Or les deux ne reposent
+   * plus sur le même fond depuis cette passe — la fenêtre est passée à
+   * `eleve`, la page vit toujours sur `fond`. Un survol écrit en dur à
+   * `bg-sombre-eleve` valait 1,37 sur la page (juste) et 1,00 dans la
+   * fenêtre (invisible).
+   * LE DÉFAUT PAR DÉFAUT EST CELUI D'AVANT, AU CARACTÈRE PRÈS : la page
+   * du doigt ne passe rien et ne bouge donc pas d'un pixel. Seule la
+   * fenêtre demande le cran du dessus (1,21 sur son nouveau fond).
+   * ⚠️ DEUX CHAÎNES LITTÉRALES, JAMAIS UNE FABRIQUÉE : Tailwind lit le
+   * TEXTE des fichiers — un `hover:${…}` assemblé à l'exécution ne
+   * produirait aucune règle.
+   */
+  function ligneDeStyle(
+    style: { slug: string; label: string },
+    retrait: boolean,
+    survol = "hover:bg-sombre-eleve"
+  ) {
     const dejaChoisi = stylesDesBadges.some((s) => s.slug === style.slug);
     return (
       <li key={style.slug}>
@@ -754,7 +775,7 @@ export function BlocPortfolio({
                      ${retrait ? "pl-10 pr-5" : "px-5"} ${
                        dejaChoisi
                          ? "cursor-not-allowed text-sombre-texte-doux"
-                         : "text-sombre-texte hover:bg-sombre-eleve"
+                         : `text-sombre-texte ${survol}`
                      }`}
         >
           {style.label}
@@ -773,7 +794,8 @@ export function BlocPortfolio({
       lignes — l'écriture unique du contenu, comme pour les porteurs de
       la nº 465. Rien du dedans n'a changé : c'est le bloc qui vivait
       dans l'ul de la fenêtre, déplacé tel quel. */
-  const lignesDesStyles = entreesExplorer().map((entree) => {
+  const lignesDesStyles = (survol = "hover:bg-sombre-eleve") =>
+    entreesExplorer().map((entree) => {
     if (entree.genre === "famille") {
       const depliee = familleDepliee === entree.slug;
       return (
@@ -785,12 +807,45 @@ export function BlocPortfolio({
             type="button"
             aria-expanded={depliee}
             onClick={() => setFamilleDepliee(depliee ? null : entree.slug)}
-            className="flex w-full items-center justify-between gap-3
+            className={`flex w-full items-center justify-between gap-3
                        px-5 min-h-[52px] text-left text-[15px]
                        font-semibold text-sombre-texte
-                       transition-colors hover:bg-sombre-eleve"
+                       transition-colors ${survol}`}
           >
-            {entree.label}
+            {/*  ██ §3 (nº 559) — LE TRAIT ROSE SOUS LA PORTE ██
+                 ==========================================================
+                 « Cultures du monde » occupait la place d'un style et lui
+                 ressemblait en tout : rien, au repos, ne disait qu'elle
+                 OUVRE au lieu de se choisir. Le chevron rose (nº 304) le
+                 dit à droite ; le trait le dit SOUS LES MOTS, comme dans
+                 le menu du moteur de recherche.
+                 L'ÉCRITURE EST CELLE DE LA nº 525, RECOPIÉE AU CARACTÈRE
+                 PRÈS depuis `porteSousSection` (MenuDeroulant) :
+                 `underline decoration-primaire decoration-1
+                 underline-offset-4` — le rose de la charte lu au jeton,
+                 un pixel d'épaisseur, quatre pixels sous la ligne de
+                 base. Aucune valeur n'est choisie ici, aucun second
+                 trait n'est dessiné.
+                 ⚠️ IL TIENT AUX MOTS, ET À EUX SEULS — c'est la leçon du
+                 §2 de la nº 290 : le bouton est une rangée
+                 (`justify-between`) qui porte AUSSI le chevron. Posé sur
+                 lui, le soulignement traverserait toute la ligne. C'est
+                 donc un `span` en ligne, large comme le texte, qui le
+                 reçoit.
+                 ⚠️ ET IL NE PARAÎT QUE SUR UNE PORTE : cette branche-ci
+                 ne se rend que pour `genre === "famille"`. Les styles
+                 ordinaires passent par `ligneDeStyle`, qui n'a pas une
+                 ligne de soulignement. Le catalogue ne compte
+                 aujourd'hui qu'une seule famille — « Cultures du
+                 monde » —, et si une seconde naissait le trait dirait
+                 d'elle la même chose : « ceci s'ouvre ».
+                 ⚠️ AUX DEUX APPAREILS : ces lignes sont fabriquées une
+                 fois pour la fenêtre du web ET la page du doigt
+                 (nº 474). Le trait paraît donc sur les deux, comme
+                 demandé — c'est le survol, lui seul, qui diffère. */}
+            <span className="underline decoration-primaire decoration-1 underline-offset-4">
+              {entree.label}
+            </span>
             {/* ⚠️ BAS QUAND C'EST FERMÉ, HAUT QUAND C'EST OUVERT
                 (passe nº 117, point 10). Elle pointait vers la DROITE
                 fermée — le signe d'un sous-menu qui s'ouvre À CÔTÉ,
@@ -813,13 +868,13 @@ export function BlocPortfolio({
           </button>
           {depliee && (
             <ul aria-label={`Les styles — ${entree.label}`}>
-              {entree.styles.map((style) => ligneDeStyle(style, true))}
+              {entree.styles.map((style) => ligneDeStyle(style, true, survol))}
             </ul>
           )}
         </li>
       );
     }
-    return ligneDeStyle(entree, false);
+    return ligneDeStyle(entree, false, survol);
   });
 
   /*  §4 (nº 474) — LE BANDEAU « UN STYLE MANQUE ? », FABRIQUÉ UNE FOIS
@@ -827,8 +882,27 @@ export function BlocPortfolio({
       la fenêtre du web, bord bas de l'écran sur la page du doigt (la
       classe vient de l'appelant). Le dedans — champ, croix
       d'effacement, « Envoyer », refus — est celui des nº 122/124/304,
-      au caractère près. */
-  function bandeauStyleManquant(classeBoite: string) {
+      au caractère près.
+      ██ §2 (nº 559) — SON CHAMP AUSSI VIENT DE L'APPELANT ██
+      MÊME RAISON QUE LE SURVOL DES LIGNES : le bandeau se détache de
+      ce qu'il surmonte par UN CRAN de fond, et son champ par un cran
+      de plus. Les deux fonds ont donc monté dans la fenêtre du web,
+      qui est passée à `eleve` — sans quoi le bandeau se serait fondu
+      dans la plaque, et le champ dans le bandeau. La page du doigt ne
+      passe rien : elle garde ses deux valeurs au caractère près.
+      ⚠️ LE FOCUS DU WEB CHANGE DE SENS, ET JE LE DIS : il valait
+      `focus:bg-sombre-bordure` (#2C323B) sur un champ à `eleve-clair`
+      (#323942) — un jeton PLUS SOMBRE que le repos, donc un champ qui
+      s'ASSOMBRIT quand on y écrit, à rebours de la charte et de la
+      note posée juste au-dessus de lui (« le focus éclaircit encore
+      d'un cran »). Le jeu du web dit `haut` au repos et `haut-clair`
+      au focus : le cran remonte dans le bon sens. Le jeu du doigt
+      garde l'inversion telle quelle — la corriger là-bas n'est pas
+      demandé, et ce serait une passe à elle. */
+  function bandeauStyleManquant(
+    classeBoite: string,
+    classeChamp = "bg-sombre-eleve-clair focus:bg-sombre-bordure"
+  ) {
     return (
       <div className={classeBoite}>
         <div className="flex items-center gap-2">
@@ -873,13 +947,11 @@ export function BlocPortfolio({
                   jamais fait zoomer quoi que ce soit. Rien d'autre ne
                   change : ni le fond, ni le focus, ni la hauteur de 44
                   px, ni les deux palettes de champs (piège nº 419). */
-              className={`w-full h-11 rounded-lg bg-sombre-eleve-clair pl-3
+              className={`w-full h-11 rounded-lg pl-3
                          text-base text-sombre-texte
                          placeholder:text-sombre-texte-doux/70
                          outline-none transition-colors
-                         focus:bg-sombre-bordure ${
-                           suggestion ? "pr-10" : "pr-3"
-                         }`}
+                         ${classeChamp} ${suggestion ? "pr-10" : "pr-3"}`}
             />
             {/* LA CROIX D'EFFACEMENT — le motif des champs de
                 recherche du formulaire (voir ChampLocalisation) :
@@ -1551,10 +1623,36 @@ export function BlocPortfolio({
                    du doigt n'est pas concernée.
                    ⚠️ L'ombre portée est antérieure et reste ; ni la
                    largeur, ni la hauteur maximale, ni le voile ne
-                   changent. */
+                   changent.
+                   ██ §2 (nº 559) — ELLE MONTE AU RANG DES ENCADRÉS ██
+                   `carte` NE SUFFISAIT PAS, et pour la raison exacte
+                   de la nº 553 : cette fenêtre s'ouvre PAR-DESSUS le
+                   formulaire, dont les encadrés valent EUX AUSSI
+                   `carte` (`FormulaireFiche`). Elle avait donc très
+                   exactement la couleur de ce qu'elle recouvre —
+                   contraste 1,00 — et son ombre portée était seule à
+                   dire où elle commençait.
+                   LE JETON EST `eleve` (#262C34), celui des ENCADRÉS
+                   du site : 1,18 avec l'encadré du formulaire, 1,37
+                   avec la page. C'est le plafond de l'échelle — une
+                   surface qui flotte doit paraître plus haute que son
+                   support, jamais plus claire que les encadrés.
+                   ⚠️ CE QUI EST POSÉ DEDANS MONTE AVEC ELLE, sans
+                   quoi il disparaîtrait : les survols des lignes et
+                   de la croix, le bandeau du bas et son champ. Chacun
+                   porte sa note à son endroit.
+                   ⚠️ ET CE QUI PERD, JE LE DIS PLUTÔT QUE DE LE
+                   RATTRAPER : le filet sous le titre
+                   (`border-sombre-bordure`) passe de 1,28 à 1,09 —
+                   il se devine encore, il ne se lit plus. Le monter
+                   demanderait un autre jeton de trait, ce qui est une
+                   question de charte et non de cette passe.
+                   ⚠️ LA PAGE DU DOIGT N'EST PAS CONCERNÉE : elle vit
+                   sur le fond de page (`bg-sombre-fond`), où rien ne
+                   se confond. */
               className="relative flex w-full max-w-[420px]
                          max-h-[min(80dvh,640px)] flex-col overflow-hidden
-                         rounded-xl bg-sombre-carte
+                         rounded-xl bg-sombre-eleve
                          shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
             >
               {/*  §1-b (nº 304) — UNE LIGNE DE SÉPARATION SOUS LE
@@ -1570,9 +1668,11 @@ export function BlocPortfolio({
                   type="button"
                   onClick={fermerFenetreStyles}
                   aria-label="Fermer"
+                  //  §2 (nº 559) — le survol de la croix suit la plaque
+                  //  passée à `eleve` : à `eleve` il aurait disparu.
                   className="flex h-9 w-9 items-center justify-center rounded-full
                              text-sombre-texte-doux transition-colors
-                             hover:bg-sombre-eleve hover:text-sombre-texte"
+                             hover:bg-sombre-eleve-clair hover:text-sombre-texte"
                 >
                   <IconeCroix taille={16} />
                 </button>
@@ -1582,7 +1682,10 @@ export function BlocPortfolio({
                 className="min-h-0 flex-1 overflow-y-auto overscroll-contain
                            defilement-visible pb-2"
               >
-                {lignesDesStyles}
+                {/*  §2 (nº 559) — la fenêtre demande le survol du cran
+                     au-dessus : sa plaque est passée à `eleve`, où
+                     l'ancien survol ne se verrait plus. */}
+                {lignesDesStyles("hover:bg-sombre-eleve-clair")}
               </ul>
 
               {/* ---------- « UN STYLE MANQUE ? » — LE BANDEAU FIXE
@@ -1606,8 +1709,13 @@ export function BlocPortfolio({
                      confirmation), plus un gris qui semblait bloqué ;
                    · LA CROIX D'EFFACEMENT du champ, comme sur les
                      autres champs de recherche du formulaire. */}
+              {/*  §2 (nº 559) — le bandeau et son champ montent d'un
+                   cran chacun, la plaque étant passée à `eleve` :
+                   bandeau 1,21 sur la plaque, champ 1,22 sur le
+                   bandeau — les deux écarts d'avant, conservés. */}
               {bandeauStyleManquant(
-                "relative z-10 shrink-0 bg-sombre-eleve px-4 py-3"
+                "relative z-10 shrink-0 bg-sombre-eleve-clair px-4 py-3",
+                "bg-sombre-haut focus:bg-sombre-haut-clair"
               )}
             </div>
           </div>,
@@ -1624,7 +1732,9 @@ export function BlocPortfolio({
           l'en-tête ET le retour du téléphone rendent le formulaire,
           saisie intacte (l'étape d'historique et le verrou de
           défilement vivent avec les crochets, plus haut). Les lignes
-          sont LES MÊMES que dans la fenêtre (`lignesDesStyles`) ; le
+          sont LES MÊMES que dans la fenêtre (`lignesDesStyles`) — à
+          UNE classe près depuis la nº 559, le survol, que chaque
+          surface demande selon son fond ; le
           bandeau « Un style manque ? » se colle au BAS de l'écran
           pendant le défilement — rester en vue durant tout le
           parcours est sa raison d'être (nº 124) — et son rembourrage
@@ -1707,7 +1817,11 @@ export function BlocPortfolio({
               evenement.stopPropagation();
             }}
           >
-            {lignesDesStyles}
+            {/*  §2 (nº 559) — la page du doigt NE PASSE RIEN : elle
+                 garde le survol par défaut, celui d'avant cette passe,
+                 au caractère près. Son fond est celui de la page
+                 (`bg-sombre-fond`) — rien ne s'y confond. */}
+            {lignesDesStyles()}
           </ul>
           {bandeauStyleManquant(
             "sticky bottom-0 z-10 shrink-0 bg-sombre-eleve px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"

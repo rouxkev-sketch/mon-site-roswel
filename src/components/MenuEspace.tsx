@@ -345,14 +345,36 @@ export function MenuEspace({
           signe central ferme pour les navigations (nº 441). Il est
           COMMANDÉ ici à la main : même composant, même seuil de
           200 ms — une ouverture rapide ne montre rien. Les ouvertures
-          suivantes sont immédiates (dejaLu) : aucun appel. */
-      const auDoigt =
-        document.documentElement.dataset.appareil === "mobile";
-      if (auDoigt) demarrerLeSigneManuel("mon-compte");
+          suivantes sont immédiates (dejaLu) : aucun appel.
+          ██ §1 (nº 559) — ET AU WEB AUSSI, DÉSORMAIS ██
+          LE DÉFAUT ÉTAIT LE MÊME DES DEUX CÔTÉS : on clique sur la
+          silhouette, la lecture part, et RIEN ne bouge jusqu'à ce
+          qu'elle revienne — la fenêtre ne s'ouvre même pas, puisque
+          cette branche-ci attend `lireLeCompte` avant `setOuvert`. La
+          nº 469 n'avait armé le trait qu'au doigt ; la garde
+          `auDoigt` disparaît, et le web reçoit exactement le même
+          signe. AUCUN SECOND MÉCANISME N'EST ÉCRIT : c'est le signe
+          central du site (`SigneDeChargement`, nº 441), commandé à la
+          main par la même paire d'appels et la même clé.
+          ⚠️ OÙ IL SE VOIT : il n'est PAS dans la fenêtre. C'est le
+          trait de deux pixels posé en haut de l'ÉCRAN
+          (`fixed inset-x-0 top-0 z-[96]`, rendu une seule fois dans
+          la mise en page racine) — et son `z-[96]` le met au-dessus
+          des fenêtres superposées (80) : il se voit pendant que la
+          fenêtre s'ouvre par-dessous.
+          ⚠️ SEULE LA PREMIÈRE OUVERTURE L'ALLUME. Les suivantes
+          passent par `dejaLu` juste au-dessus : la fenêtre s'ouvre
+          sur-le-champ et se met à jour derrière sans jamais se vider
+          — un trait y clignoterait pour rien.
+          ⚠️ LE SEUIL DE 200 ms DU COMPOSANT RESTE LE JUGE : sur une
+          liaison rapide, la lecture revient avant, et le trait
+          n'apparaît jamais. On ne montre pas une attente qui n'a pas
+          eu lieu. */
+      demarrerLeSigneManuel("mon-compte");
       await lireLeCompte();
       dejaLu.current = true;
       setOuvert(true);
-      if (auDoigt) finirLeSigneManuel("mon-compte");
+      finirLeSigneManuel("mon-compte");
     })();
   }, [ouvert, lireLeCompte]);
 
