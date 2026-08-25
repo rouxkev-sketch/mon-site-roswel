@@ -289,11 +289,18 @@ export function ChampLocalisation({
       qui écrit l'adresse comme la fiche la publiera (passe nº 115). */
   pourLeMoteur?: boolean;
   /**
-   * ██ §2 (nº 564) — LE PANNEAU DIT QUAND IL SE REFERME ██
+   * ██ §2 (nº 564) — LE CHAMP DIT QUAND SA RÉPONSE EST ARRÊTÉE ██
    * ------------------------------------------------------------------
    * Appelé UNE fois à chaque fermeture du panneau, quel que soit le
    * chemin — clic dehors, Échap, croix, départ du champ, et même un
    * démontage qui l'emporte alors qu'il était ouvert.
+   * ⚠️ ET UNE FOIS DE PLUS, SANS PANNEAU (§1 nº 566) : la CROIX vit
+   * dans le champ, pas dans le panneau. Cliquée alors que rien n'est
+   * ouvert, elle n'a aucune fermeture à offrir — elle appelle donc
+   * ce réglage elle-même. C'est pourquoi il faut le lire comme « le
+   * champ a rendu sa réponse, va lire le brouillon » et non comme
+   * « une boîte vient de se refermer » : la seconde formule était
+   * vraie à la nº 564, elle ne l'est plus depuis la nº 566.
    * POURQUOI : le pied du panneau (le RAYON, posé par le moteur du web)
    * a besoin d'un moment pour dire « c'est fini, cherche ». Il ne peut
    * pas le savoir seul : l'ouverture vit ici, pas chez lui.
@@ -699,6 +706,40 @@ export function ChampLocalisation({
     setMessage(null);
     champ.current?.blur(); // le clavier se referme, le choix est fait
     annoncerAuMoteur(null);
+    /**
+     * ██ §1 (nº 566) — LA CROIX ANNONCE ELLE-MÊME QUAND RIEN NE SE FERME ██
+     * ----------------------------------------------------------------
+     * LE DÉFAUT : la croix effaçait bien la ville — le champ se vidait,
+     * le brouillon `{ valeur: null }` partait au moteur — mais LA
+     * MOSAÏQUE NE BOUGEAIT PAS. Elle continuait d'afficher « Réalisme à
+     * Lyon · 50 km ».
+     *
+     * LA CAUSE, ET ELLE N'EST NI DANS L'ENVELOPPE NI DANS LA
+     * COMPARAISON (toutes deux font leur travail : l'enveloppe est bien
+     * posée par ce chemin-ci, et « Lyon → rien » compte bien comme un
+     * changement). ELLE EST DANS LE MOMENT DE LA LECTURE. Depuis la
+     * nº 565, le brouillon n'est lu QU'À LA FERMETURE DU PANNEAU. Or
+     * LA CROIX VIT DANS LE CHAMP, PAS DANS LE PANNEAU : elle s'affiche
+     * dès qu'une ville est retenue, panneau ouvert ou fermé. Cliquée
+     * sur un panneau DÉJÀ FERMÉ — le cas ordinaire, une recherche en
+     * cours sous les yeux — le `setListeOuverte(false)` ci-dessus ne
+     * change rien, aucun état ne bascule, aucun nettoyage d'effet ne
+     * part, personne ne prévient le moteur. Le brouillon restait
+     * déposé, et personne ne venait le lire.
+     *
+     * LE REMÈDE : quand rien ne se ferme, la croix le dit elle-même.
+     * C'est le MÊME signal et le MÊME effet de fermeture — on ne double
+     * rien : si le panneau était ouvert, sa fermeture s'en charge, et
+     * la garde ci-dessous empêche la seconde annonce.
+     * ⚠️ LE SIGNAL VEUT DIRE « LE CHAMP A RENDU SA RÉPONSE, LIS LE
+     * BROUILLON » — la fermeture du panneau en est l'occasion la plus
+     * fréquente, pas la seule. Voir le réglage `surFermeturePanneau`
+     * tout en haut.
+     * ⚠️ RIEN NE PART SI RIEN N'ÉCOUTE : le formulaire de fiche et la
+     * page de recherche au doigt ne passent pas ce réglage, l'appel est
+     * alors sans effet.
+     */
+    if (!listeOuverte) fermetureVive.current?.();
   }
 
   /**

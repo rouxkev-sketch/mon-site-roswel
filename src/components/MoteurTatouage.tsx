@@ -338,12 +338,18 @@ export function MoteurTatouage({
    * « brouillon qui efface la ville » s'écriraient pareil, et la croix
    * ne serait jamais annoncée.
    *
-   * QUAND EST-CE FERMÉ ? Le panneau appartient au champ de localité :
-   * c'est lui qui le sait, et il le dit par `surFermeturePanneau` (§2
-   * nº 564). Tous ses chemins de fermeture y passent — clic dehors,
-   * Échap, croix, départ du champ, démontage. On n'a donc aucune liste
-   * de gestes à tenir à jour ici, et la ville hérite sans un mot de
-   * plus des cinq chemins déjà éprouvés.
+   * QUAND LIT-ON LE BROUILLON ? Le panneau appartient au champ de
+   * localité : c'est lui qui sait quand sa réponse est arrêtée, et il
+   * le dit par `surFermeturePanneau` (§2 nº 564). Tous ses chemins de
+   * fermeture y passent — clic dehors, Échap, croix, départ du champ,
+   * démontage. On n'a donc aucune liste de gestes à tenir à jour ici,
+   * et la ville hérite sans un mot de plus des cinq chemins déjà
+   * éprouvés.
+   * ⚠️ Y COMPRIS SANS FERMETURE (§1 nº 566) : la croix vit dans le
+   * champ, pas dans le panneau ; cliquée alors que rien n'est ouvert,
+   * elle appelle ce signal elle-même. Sans quoi le brouillon
+   * « plus aucune ville » restait déposé sans jamais être lu, et la
+   * mosaïque gardait sa ville effacée.
    *
    * ⚠️ POURQUOI UN COMPTEUR ET NON UN APPEL DIRECT. La fermeture est
    * annoncée pendant le nettoyage d'un effet DU CHAMP — donc avant que
