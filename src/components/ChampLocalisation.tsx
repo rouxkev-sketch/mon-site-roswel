@@ -311,6 +311,65 @@ export function ChampLocalisation({
       plus récente. */
   const numeroRequete = useRef(0);
 
+  /**
+   * ██ §1 (nº 563) — ON NE DIT PAS DEUX FOIS « PLUS AUCUN LIEU » ██
+   * ==================================================================
+   * LE DÉFAUT, ÉTABLI PAR LA MESURE DE LA nº 562. En tapant « Lyon »
+   * dans le champ de localité du moteur, la sonde relevait à CHAQUE
+   * LETTRE une pose de défilement « par liste neuve » suivie de deux
+   * rendus de mosaïque : le site relançait une recherche complète et
+   * repeignait ses vingt-quatre cartes quatre fois en une seconde.
+   *
+   * LA CAUSE, NOMMÉE : la ligne `surChoix(null)` de l'`onChange` du
+   * champ (« le texte a changé : plus de lieu validé »). Elle remonte
+   * au moteur, qui fait `annoncer({ lieu: null })` — et `annoncer`
+   * fabrique un OBJET NEUF de critères à chaque appel. Le parent ne
+   * peut donc pas voir que rien n'a changé : il relance. Or, dès la
+   * DEUXIÈME lettre, le lieu est déjà nul chez lui — on lui répétait
+   * une nouvelle qu'il connaissait, et chaque répétition coûtait une
+   * recherche et deux peintures.
+   *
+   * LE REMÈDE, ET C'EST LE PLUS SIMPLE : cette porte-ci se souvient de
+   * ce qu'elle a annoncé en dernier, et REFUSE DE RÉPÉTER UN `null`.
+   * Tout le reste passe comme avant — un lieu, même identique au
+   * précédent, est toujours annoncé (rechoisir une ville doit pouvoir
+   * relancer).
+   *
+   * ██ POURQUOI AUCUN DÉLAI D'ATTENTE, ET C'EST MIEUX QU'UN DÉLAI ██
+   * La consigne demandait « d'attendre la fin de la frappe ». Cette
+   * attente EXISTE DÉJÀ, et à l'endroit où elle a un sens : la
+   * recherche des SUGGESTIONS est temporisée depuis toujours
+   * (`PAUSE_FRAPPE_MS`, voir l'effet de recherche plus bas). Ce qui
+   * n'était pas gardé, c'est l'ANNONCE DES CRITÈRES — et un délai n'y
+   * serait pas le bon outil :
+   *  · il ne ferait que RETARDER quatre recherches là où la garde en
+   *    supprime trois — la quatrième étant elle-même inutile ;
+   *  · il retarderait le seul cas légitime, la première frappe qui
+   *    efface une ville déjà choisie, et le site paraîtrait mou là où
+   *    il est juste ;
+   *  · il ajouterait un minuteur à éteindre au démontage, donc une
+   *    mécanique de plus à tenir.
+   * ZÉRO MILLISECONDE, DONC. Rien n'est différé : ce qui disparaît,
+   * c'est le travail qui n'avait pas lieu d'être.
+   *
+   * ⚠️ CE QUI RESTE IMMÉDIAT, ET LA GARDE N'Y TOUCHE PAS : les
+   * suggestions s'affichent comme avant (elles ne passent pas par
+   * `surChoix`), et le CHOIX d'une ville annonce sur-le-champ — donc
+   * le pied du rayon reste ouvert (acquis nº 508), puisque c'est le
+   * même appel qu'avant.
+   * ⚠️ LA MÉMOIRE PART DE `lieuInitial`, comme `lieuCourant` juste
+   * au-dessus : c'est exactement ce que le parent tient au montage. La
+   * faire partir de `null` avalerait la première frappe utile — celle
+   * qui efface une ville arrivée avec la page.
+   */
+  const dernierAnnonce = useRef<LieuTrouve | null>(lieuInitial ?? null);
+
+  function annoncerAuMoteur(lieu: LieuTrouve | null) {
+    if (lieu === null && dernierAnnonce.current === null) return;
+    dernierAnnonce.current = lieu;
+    surChoix(lieu);
+  }
+
   const champ = useRef<HTMLInputElement>(null);
   const { hauteurMax, ouvreVersLeHaut, cadre } = usePlacementMenu(
     listeOuverte,
@@ -485,7 +544,7 @@ export function ChampLocalisation({
         choisir(suggestions[0]);
         return;
       }
-      if (lieuCourant.current) surChoix(lieuCourant.current);
+      if (lieuCourant.current) annoncerAuMoteur(lieuCourant.current);
     };
     return () => {
       if (actionValider) actionValider.current = null;
@@ -516,7 +575,11 @@ export function ChampLocalisation({
     //  le champ neuf peut être monté avant que cette fonction ne
     //  rende la main.
     if (garderOuvertApresChoix) noterLaReprise(id);
-    surChoix(lieu);
+    //  §1 (nº 563) — LE CHOIX PASSE PAR LA MÊME PORTE, et il annonce
+    //  TOUJOURS : la garde ne refuse que la RÉPÉTITION D'UN `null`.
+    //  Rechoisir la même ville relance donc la recherche comme avant,
+    //  et le pied du rayon s'ouvre dans le même geste (acquis nº 508).
+    annoncerAuMoteur(lieu);
   }
 
   /** LA CROIX : le lieu est effacé, le champ redevient vide — son
@@ -534,7 +597,7 @@ export function ChampLocalisation({
     setSuggestions([]);
     setMessage(null);
     champ.current?.blur(); // le clavier se referme, le choix est fait
-    surChoix(null);
+    annoncerAuMoteur(null);
   }
 
   /**
@@ -643,7 +706,7 @@ export function ChampLocalisation({
     setSelectionActive(true);
     setSuggestions([]);
     setMessage(null);
-    surChoix(lieu);
+    annoncerAuMoteur(lieu);
   }
 
   const habillageChamp = sansBordure
@@ -813,7 +876,10 @@ export function ChampLocalisation({
           saisieUtilisateur.current = true; // vraie frappe : recherche permise
           setSelectionActive(false);
           setTexte(valeur);
-          surChoix(null); // le texte a changé : plus de lieu validé
+          //  §1 (nº 563) — LA PORTE GARDÉE : elle n'annoncera ce
+          //  « plus aucun lieu » qu'UNE fois, à la frappe qui efface
+          //  vraiment une ville. Les suivantes ne coûtent plus rien.
+          annoncerAuMoteur(null); // le texte a changé : plus de lieu validé
           if (valeur.trim().length < SAISIE_MINIMUM) {
             // Trop court pour chercher : on referme (le pied, quand il
             // existe, garde le panneau ouvert).
