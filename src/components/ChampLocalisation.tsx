@@ -993,7 +993,22 @@ export function ChampLocalisation({
             // existe, garde le panneau ouvert).
             setSuggestions([]);
             setMessage(null);
-            setListeOuverte(Boolean(piedPanneau));
+            //  ██ §1 (nº 565) — ET LE VOILE NE SAUTE PLUS À LA FRAPPE ██
+            //  LE DÉFAUT : cliquer ouvrait (acquis nº 564), puis la
+            //  PREMIÈRE LETTRE refermait — cette ligne-ci — et le voile
+            //  disparaissait ; il ne revenait qu'à la TROISIÈME lettre,
+            //  quand les suggestions arrivaient et rouvraient. Un
+            //  clignotement à chaque saisie.
+            //  LA CAUSE : cette ligne date d'AVANT la nº 564. À l'époque
+            //  le panneau ne s'ouvrait que s'il avait quelque chose à
+            //  montrer ; deux lettres ne montrant rien, refermer était
+            //  juste. La nº 564 a changé la règle d'OUVERTURE sans
+            //  changer celle-ci : le clic ouvrait, la frappe refermait.
+            //  ⚠️ REFERMER RESTE JUSTE PARTOUT AILLEURS — au doigt et
+            //  dans le formulaire de fiche, où rien ne s'ouvre à vide.
+            //  C'est le même drapeau qu'à l'ouverture, donc les deux ne
+            //  peuvent plus se contredire.
+            setListeOuverte(ouvrirDesLeToucher || Boolean(piedPanneau));
           }
         }}
         onFocus={auToucher}

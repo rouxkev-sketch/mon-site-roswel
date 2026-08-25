@@ -309,59 +309,88 @@ export function MoteurTatouage({
   const [effacements, setEffacements] = useState(0);
 
   /**
-   * ██ §3 (nº 564) — LE RAYON ATTEND LA FERMETURE DU PANNEAU ██
+   * ██ §3 (nº 564, ÉTENDU À LA VILLE nº 565) — LE PANNEAU DE LOCALITÉ
+   * NE CHERCHE QU'EN SE REFERMANT ██
    * ==================================================================
-   * LE DÉFAUT : chaque pilule de rayon (10, 25, 50, 100, 200 km)
-   * appelait `annoncer` sur-le-champ. Un clic = une recherche = une
-   * mosaïque repeinte ; essayer trois paliers avant de se décider en
-   * coûtait trois, et la page clignotait tant qu'on n'avait pas refermé.
+   * LE DÉFAUT DE DÉPART (nº 564) : chaque pilule de rayon (10, 25, 50,
+   * 100, 200 km) appelait `annoncer` sur-le-champ. Un clic = une
+   * recherche = une mosaïque repeinte ; essayer trois paliers avant de
+   * se décider en coûtait trois, et la page clignotait tant qu'on
+   * n'avait pas refermé.
+   * CE QUI RESTAIT (nº 565) : la nº 564 avait laissé LA VILLE partir
+   * tout de suite. On choisissait Lyon, la mosaïque se refaisait
+   * aussitôt — avant même d'avoir vu les pilules de rayon qui
+   * s'ouvraient dessous. LE PROPRIÉTAIRE N'EN VEUT PLUS : la ville
+   * attend la fermeture, exactement comme le rayon.
    *
    * LE REMÈDE, ET C'EST EXACTEMENT CELUI DE LA nº 364 pour le panneau
-   * des filtres — pas un second mécanisme, le même, appliqué au voisin :
-   *  · le clic écrit dans un BROUILLON (`rayonEnAttente`) ;
-   *  · l'affichage lit le brouillon, donc le palier choisi se voit
-   *    tout de suite (c'est l'AFFICHAGE qui suit le clic) ;
-   *  · LA FERMETURE ANNONCE, une seule fois, avec le palier final.
+   * des filtres — pas un second mécanisme, le même, étendu au voisin
+   * puis à son compagnon :
+   *  · le clic écrit dans un BROUILLON (`lieuEnAttente`, `rayonEnAttente`) ;
+   *  · l'affichage lit le brouillon, donc la ville et le palier choisis
+   *    se voient tout de suite (c'est l'AFFICHAGE qui suit le clic) ;
+   *  · LA FERMETURE ANNONCE, une seule fois, avec l'état final — d'où
+   *    UNE SEULE entrée d'historique par recherche, jamais une par clic.
+   *
+   * ⚠️ POURQUOI UNE ENVELOPPE POUR LA VILLE (`{ valeur }`) et un simple
+   * nombre pour le rayon : `null` est une VILLE VALABLE (« Partout »,
+   * ce que rend la croix). Sans enveloppe, « pas de brouillon » et
+   * « brouillon qui efface la ville » s'écriraient pareil, et la croix
+   * ne serait jamais annoncée.
    *
    * QUAND EST-CE FERMÉ ? Le panneau appartient au champ de localité :
    * c'est lui qui le sait, et il le dit par `surFermeturePanneau` (§2
    * nº 564). Tous ses chemins de fermeture y passent — clic dehors,
    * Échap, croix, départ du champ, démontage. On n'a donc aucune liste
-   * de gestes à tenir à jour ici.
+   * de gestes à tenir à jour ici, et la ville hérite sans un mot de
+   * plus des cinq chemins déjà éprouvés.
    *
    * ⚠️ POURQUOI UN COMPTEUR ET NON UN APPEL DIRECT. La fermeture est
    * annoncée pendant le nettoyage d'un effet DU CHAMP — donc avant que
-   * le moteur ait fini le sien, et à un instant où la fermeture peut
-   * arriver DANS LA MÊME FOURNÉE qu'un changement de critères (la croix
-   * efface la ville ET referme). Une fonction appelée là verrait des
-   * critères d'un rendu en retard, et pourrait ressusciter la ville
-   * qu'on vient d'effacer. Le compteur, lui, ne transporte rien : il
-   * réveille un effet DU MOTEUR, qui lit les critères de SON rendu —
-   * les plus frais qui soient.
+   * le moteur ait fini le sien. Une fonction appelée là verrait les
+   * critères d'un rendu en retard. Le compteur, lui, ne transporte
+   * rien : il réveille un effet DU MOTEUR, qui lit les critères de SON
+   * rendu — les plus frais qui soient.
+   * ⚠️ ET LA CROIX NE PEUT PLUS RESSUSCITER LA VILLE (le risque nommé à
+   * la nº 564) : depuis cette passe, le champ n'annonce plus RIEN de
+   * lui-même — il ne fait que déposer un brouillon. Il n'y a donc plus
+   * qu'un seul écrivain, cet effet-ci, et plus deux qui se croisent.
    *
    * ⚠️ TROIS SILENCES, ET AUCUN N'EST UN OUBLI :
    *  · aucun brouillon → ouvrir puis refermer ne relance rien ;
-   *  · le même palier qu'avant → rien à dire, donc rien n'est dit
-   *    (ni recherche, ni entrée d'historique) ;
+   *  · la même ville ET le même palier qu'avant → rien à dire, donc
+   *    rien n'est dit (ni recherche, ni entrée d'historique) ;
    *  · plus de point de départ (ville effacée, région, pays) → un rayon
-   *    autour de rien ne veut rien dire : le brouillon est jeté.
+   *    autour de rien ne veut rien dire : ce brouillon-là est jeté, et
+   *    la ville, elle, part quand même.
    */
+  const [lieuEnAttente, setLieuEnAttente] = useState<{
+    valeur: LieuTrouve | null;
+  } | null>(null);
   const [rayonEnAttente, setRayonEnAttente] = useState<number | null>(null);
   /** Combien de fois le panneau de localité s'est refermé. Sa seule
       raison d'être : réveiller l'effet ci-dessous. */
   const [fermeturesDuLieu, setFermeturesDuLieu] = useState(0);
   useEffect(() => {
     if (fermeturesDuLieu === 0) return; // rien ne s'est encore refermé
-    if (rayonEnAttente === null) return; // aucun palier en attente
+    if (!lieuEnAttente && rayonEnAttente === null) return; // rien en attente
+    const lieu = lieuEnAttente ? lieuEnAttente.valeur : criteres.lieu;
+    //  Un rayon ne compte que s'il tourne autour d'un point : sinon on
+    //  garde celui d'avant, qui redeviendra utile à la prochaine ville.
+    const rayonKm = rayonApplicable(lieu)
+      ? (rayonEnAttente ?? criteres.rayonKm)
+      : criteres.rayonKm;
+    setLieuEnAttente(null);
     setRayonEnAttente(null);
-    if (!rayonApplicable(criteres.lieu)) return; // un rayon autour de rien
-    if (rayonEnAttente === criteres.rayonKm) return; // rien n'a changé
-    surChangement({ ...criteres, rayonKm: rayonEnAttente });
-    //  LA FERMETURE SEULE DÉCLENCHE : `criteres` et `rayonEnAttente` sont
-    //  lus au moment où l'effet part, et ils sont frais par construction
-    //  (voir « pourquoi un compteur » ci-dessus). Les mettre en
-    //  dépendance ferait annoncer à chaque changement de critères —
-    //  c'est-à-dire le défaut qu'on répare.
+    const memeVille =
+      (lieu?.identifiant ?? null) === (criteres.lieu?.identifiant ?? null);
+    if (memeVille && rayonKm === criteres.rayonKm) return; // rien n'a changé
+    surChangement({ ...criteres, lieu, rayonKm });
+    //  LA FERMETURE SEULE DÉCLENCHE : `criteres` et les deux brouillons
+    //  sont lus au moment où l'effet part, et ils sont frais par
+    //  construction (voir « pourquoi un compteur » ci-dessus). Les
+    //  mettre en dépendance ferait annoncer à chaque changement de
+    //  critères — c'est-à-dire le défaut qu'on répare.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fermeturesDuLieu]);
   const zoneFiltres = useRef<HTMLDivElement>(null);
@@ -1066,10 +1095,14 @@ export function MoteurTatouage({
   // place mais devient inactif : grisé, non manipulable. Aucune phrase
   // ne le remplace — la fenêtre garde ainsi la même hauteur quel que
   // soit le lieu choisi, et un réglage éteint se lit tout seul.
-  const rayonActif = rayonApplicable(criteres.lieu);
-  /** §3 (nº 564) — LE PALIER QUE L'ON MONTRE : le brouillon s'il y en a
-      un, la recherche en cours sinon. C'est la seule chose qui suit le
-      clic ; la recherche, elle, attend la fermeture. */
+  /** §3 (nº 565) — LA VILLE ET LE PALIER QUE L'ON MONTRE : le brouillon
+      s'il y en a un, la recherche en cours sinon. C'est la seule chose
+      qui suit le clic ; la recherche, elle, attend la fermeture.
+      ⚠️ C'EST `lieuAffiche` QUI COMMANDE LES PILULES, et c'est ce qui
+      garde l'acquis nº 508 : choisir une ville fait apparaître ses
+      rayons SUR-LE-CHAMP, alors même que la recherche, elle, attend. */
+  const lieuAffiche = lieuEnAttente ? lieuEnAttente.valeur : criteres.lieu;
+  const rayonActif = rayonApplicable(lieuAffiche);
   const rayonAffiche = rayonEnAttente ?? criteres.rayonKm;
 
   /** LES PILULES DE RAYON — posées dans le PANNEAU du champ de
@@ -1238,13 +1271,22 @@ export function MoteurTatouage({
             lieuInitial={criteres.lieu}
             croixEffacement
             viderSiAbandon
-            //  §3 (nº 564) — LE SUFFIXE SUIT LE BROUILLON, LUI AUSSI :
-            //  le champ écrit « Lyon · 50 km » dès le clic sur la
-            //  pilule. Le laisser sur l'ancien palier aurait été le même
-            //  défaut en miniature — le panneau à jour, le champ en
-            //  retard, juste au-dessus.
-            suffixeLieu={suffixeRayon({ ...criteres, rayonKm: rayonAffiche })}
-            surChoix={(choisi) => annoncer({ lieu: choisi })}
+            //  §3 (nº 564, étendu nº 565) — LE SUFFIXE SUIT LE
+            //  BROUILLON, LUI AUSSI : le champ écrit « Lyon · 50 km »
+            //  dès le clic sur la pilule, et il l'écrit MÊME SI LA
+            //  RECHERCHE N'A PAS ENCORE VU LYON. Le laisser sur les
+            //  critères aurait été le même défaut en miniature — le
+            //  panneau à jour, le champ en retard, juste au-dessus.
+            suffixeLieu={suffixeRayon({
+              ...criteres,
+              lieu: lieuAffiche,
+              rayonKm: rayonAffiche,
+            })}
+            //  §3 (nº 565) — LA VILLE VA AU BROUILLON, ELLE AUSSI. Le
+            //  champ continue d'afficher ce qu'on a choisi (il tient son
+            //  propre texte) ; c'est la RECHERCHE qui attend la
+            //  fermeture, comme le rayon depuis la nº 564.
+            surChoix={(choisi) => setLieuEnAttente({ valeur: choisi })}
             sansBordure
             compact
             piedPanneau={piedRayon}
