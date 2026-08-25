@@ -1,6 +1,9 @@
 "use client";
 
 import type { PointerEvent, ReactNode } from "react";
+//  §1 (nº 606) — la coche de l'état allumé : l'icône des listes du
+//  site, reprise telle quelle. Aucune seconde coche n'est dessinée.
+import { IconeCocheListe } from "@/components/Icones";
 
 /**
  * LE BADGE DE LA CHARTE — UN SEUL, POUR TOUT LE SITE
@@ -20,13 +23,15 @@ import type { PointerEvent, ReactNode } from "react";
  *
  * CE QUE DIT UN BADGE, ET COMMENT (rien n'est inventé ici : ce sont
  * exactement les règles du panneau des filtres) :
- *  · ██ §1 (nº 605) — SON ÉTAT SE LIT AU FOND ET AU TEXTE, ET LÀ
- *    SEULEMENT. Un POINT vivait à gauche du mot — rose allumé, gris
- *    éteint (nº 157-§4). Il est SUPPRIMÉ : le fond et le texte
- *    changeaient DÉJÀ de couleur selon l'état, le point ne faisait que
- *    redire la même chose une seconde fois — et son rose se lisait à
- *    l'envers, plus d'un y voyant la marque d'un badge ÉTEINT. Le mot
- *    est désormais seul et centré ;
+ *  · ██ §1 (nº 605, puis nº 606) — SON ÉTAT SE LIT AU FOND, AU TEXTE
+ *    ET À LA COCHE. Un POINT vivait à gauche du mot — rose allumé,
+ *    gris éteint (nº 157-§4). La nº 605 l'a SUPPRIMÉ : il redisait ce
+ *    que le fond et le texte disaient déjà, et son rose se lisait à
+ *    l'envers, plus d'un y voyant la marque d'un badge ÉTEINT.
+ *    Restaient deux fonds trop proches (1,51 au web, 1,35 au doigt,
+ *    mesurés à la nº 605). La nº 606 pose donc une COCHE, qui ne dit
+ *    rien par sa couleur : elle est là, ou elle n'y est pas. Badge
+ *    éteint, le mot est seul et centré ;
  *  · AUCUN FOND ROSE, jamais, quel que soit l'état (nº 144-§7 —
  *    réaffirmé par la nº 240-§2 : la nº 238 avait teinté de rose le
  *    badge sélectionné du panneau de verre, c'était une erreur, les
@@ -120,11 +125,6 @@ export function BadgeCharte({
           l'ancienne largeur demanderait de réserver un vide que plus
           rien n'occupe. Hauteur (38), rayon (8), zone tactile (44,
           l'ourlet `before:`) et robes ne bougent pas d'un pixel.
-          ⚠️ ET LA LARGEUR NE BOUGE TOUJOURS PAS AU CLIC (l'acquis de
-          la nº 153-§1) : elle ne dépendait de l'état que par le point,
-          dont l'espace était réservé dans les deux états. Sans lui, il
-          n'y a plus rien du tout qui varie — allumer ou éteindre ne
-          change que des couleurs.
           §2 (nº 449) — les angles arrondis (8 px, `rounded-lg`)
           restent, partout : page mobile, panneau web, rayon. */
       className={`relative inline-flex items-center justify-center
@@ -133,6 +133,48 @@ export function BadgeCharte({
                  before:absolute before:-inset-y-[3px] before:inset-x-0
                  before:content-[''] ${robeDuBadge(actif, surPanneau)}`}
     >
+      {/*  ██ §1 (nº 606) — LA COCHE, ET ELLE SEULE QUAND C'EST ALLUMÉ ██
+           ----------------------------------------------------------
+           POURQUOI ELLE EXISTE. Le point supprimé à la nº 605 disait
+           l'état par sa COULEUR, et son rose se lisait à l'envers. Il
+           restait le fond et le texte — mesurés à la nº 605, les deux
+           fonds ne se séparent que de 1,51 au web et 1,35 au doigt.
+           La coche ne dit rien par sa couleur : elle est LÀ, ou elle
+           n'y est pas. C'est le seul signal qu'on ne peut pas lire à
+           l'envers.
+           L'ICÔNE N'EST PAS NEUVE : `IconeCocheListe`, celle des listes
+           du site, à sa taille par défaut (16). Son trait est en
+           `currentColor` — elle prend donc LA COULEUR DU TEXTE du
+           badge, sans qu'on ait rien à lui passer : la coche et le mot
+           sont une seule encre.
+           ⚠️ LA BOÎTE FAIT VINGT, L'ICÔNE SEIZE, et c'est là qu'est
+           l'air : quatre pixels à droite du dessin, DANS la boîte.
+           Aucun `gap` sur le badge — un gap s'appliquerait aussi quand
+           la boîte est refermée et poserait un vide fantôme devant le
+           mot d'un badge éteint.
+           ⚠️ LE BADGE S'ÉLARGIT DE VINGT PIXELS À L'ALLUMAGE, et c'est
+           assumé : le propriétaire veut le mot SEUL ET CENTRÉ quand le
+           badge est éteint (l'acquis de la nº 605), ce qui interdit de
+           réserver la place en permanence — c'était justement ce que
+           faisait le point. On ne peut pas avoir les deux.
+           CE QUI ÉVITE LE SAUT : la boîte s'OUVRE, elle n'apparaît
+           pas. Largeur de zéro à vingt en 200 ms, contenu coupé
+           (`overflow-hidden`), l'opacité suivant le même temps — le
+           mot glisse au lieu de sursauter, et la rangée en drapeau se
+           recompose du même mouvement.
+           ⚠️ ELLE NE PARLE PAS AUX LECTEURS D'ÉCRAN, et c'est voulu :
+           `aria-hidden` vit déjà dans l'icône, et l'état est dit par
+           `aria-pressed` sur le bouton — le redire serait le dire deux
+           fois. */}
+      <span
+        aria-hidden="true"
+        className={`inline-flex shrink-0 items-center overflow-hidden
+                   transition-[width,opacity] duration-200 ease-out ${
+                     actif ? "w-5 opacity-100" : "w-0 opacity-0"
+                   }`}
+      >
+        <IconeCocheListe classe="shrink-0" />
+      </span>
       {children}
     </button>
   );
