@@ -1642,23 +1642,34 @@ export function MoteurTatouage({
                  n'existe qu'à l'état allumé — chaque badge allumé
                  gagne dix-sept pixels —, si bien qu'une boîte réglée
                  sur son contenu CHANGEAIT DE LARGEUR à chaque clic.
-                 LA LARGEUR REDEVIENT DONC FIXE, ET ELLE EST MESURÉE,
-                 non devinée : 372 px, la largeur du panneau TOUT
-                 ALLUMÉ (371,48 relevé à l'écran, arrondi au pixel
-                 supérieur) — Technique et Rendu, trois badges chacun,
-                 le contenu le plus large que ce panneau puisse avoir.
-                 Tout éteint, il reste 51 px de vide à droite : c'est
-                 l'écart que la coche creuse, et rien d'autre.
-                 ⚠️ CE N'EST PAS UN RETOUR AUX 420 D'AVANT LA nº 473 :
-                 ceux-là laissaient quarante pixels de vide jusque dans
-                 le cas le plus large. Le défaut que cette passe-là a
-                 fermé reste fermé.
+                 LA LARGEUR REDEVIENT DONC FIXE, ET ELLE EST MESURÉE.
+                 ██ §1 (nº 608) — LA VALEUR EST CORRIGÉE : 398, ET NON
+                 372. Le premier chiffre venait d'une mesure FAUSSE, et
+                 il vaut mieux dire laquelle : j'avais relevé la
+                 largeur du panneau tout allumé alors qu'il vivait
+                 encore en `max-content` SOUS UN PLAFOND DE 420 — donc
+                 déjà replié. J'ai pris pour la largeur naturelle du
+                 contenu ce qui était la largeur d'un contenu contraint.
+                 CE QUE 372 PRODUISAIT, mesuré sur les soixante-quatre
+                 combinaisons de badges : le panneau prenait TROIS
+                 hauteurs — 175 px sans repli, 221 px avec une rangée
+                 repliée, 267 px avec deux. Chaque clic pouvait donc
+                 faire sauter la plaque de quarante-six pixels, et
+                 pendant les 200 ms où la coche s'ouvre, le repli
+                 basculait parfois en cours de route : c'est le
+                 clignotement que le propriétaire a vu.
+                 398 EST LA PLUS PETITE LARGEUR qui ne replie JAMAIS
+                 aucune rangée, sur aucune des soixante-quatre
+                 combinaisons — mesurée en les essayant toutes. Le
+                 panneau garde donc une hauteur unique, quoi qu'on
+                 allume.
+                 ⚠️ CE N'EST TOUJOURS PAS UN RETOUR AUX 420 D'AVANT LA
+                 nº 473, et l'écart n'est pas symbolique : ceux-là
+                 laissaient du vide même dans le cas le plus large,
+                 ceux-ci sont exactement la place qu'il faut.
                  ⚠️ AUCUN DÉBORDEMENT POSSIBLE : ce panneau n'existe
                  qu'au-dessus du cran web, donc sur 1024 px de fenêtre
-                 au moins — 372 plus ses marges en occupent le tiers.
-                 Et si un libellé s'allongeait un jour, la rangée en
-                 drapeau prendrait une ligne de plus au lieu de sortir
-                 du cadre.
+                 au moins — 398 plus ses marges en occupent le tiers.
                  (b) L'AIR INTÉRIEUR MONTE D'UN CRAN : 20 px → 24 px
                  (`p-5` → `p-6`, le cran des fenêtres de la charte —
                  en-têtes de Notifications et des langues). Le haut
@@ -1677,7 +1688,7 @@ export function MoteurTatouage({
               ouvert={filtresOuverts}
               ancre={boutonFiltres}
               refPanneau={plaqueFiltres}
-              largeur={372}
+              largeur={398}
               //  §1 (nº 543) — FOND OPAQUE au jeton `carte` : le drapeau
               //  de la nº 537, la teinte de la nº 542. Des quatre
               //  fenêtres de cette passe, celle-ci est la SEULE qui
