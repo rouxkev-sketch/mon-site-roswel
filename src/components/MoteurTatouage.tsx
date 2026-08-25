@@ -451,6 +451,30 @@ export function MoteurTatouage({
     surChangement({ ...criteres, exclure: filtresEnAttente });
   }
 
+  /**
+   * ██ §1 (nº 568) — « EFFACER » DANS LE PANNEAU DES FILTRES ██
+   * ------------------------------------------------------------------
+   * IL N'EFFACE QUE LES FILTRES, et c'est la règle posée à la nº 567 :
+   * un panneau efface ce qu'il porte, pas ce que porte le voisin. Le
+   * style, la ville et le rayon ne sont pas touchés — le pied du rayon
+   * s'en charge, chez lui.
+   * ⚠️ « TOUS LES FILTRES EFFACÉS » S'ÉCRIT `exclure: []` : la base ne
+   * connaît que les slugs ÉCARTÉS (voir `basculerBadge`), donc rien
+   * d'écarté = tous les badges allumés = aucun filtrage. C'est le même
+   * mot que la remise à zéro du site.
+   * ⚠️ IL N'APPELLE PAS `fermerLesFiltres` : celle-ci lit le brouillon
+   * DU RENDU où elle a été créée, et poserait donc l'ancien par-dessus
+   * celui qu'on vient de vider. Elle est reprise ici à l'identique, avec
+   * `[]` à la place du brouillon — et le même silence quand il n'y a
+   * rien à effacer.
+   */
+  function effacerLesFiltres() {
+    setFiltresOuverts(false);
+    setFiltresEnAttente(null);
+    if (criteres.exclure.length === 0) return; // aucun filtre : rien à dire
+    surChangement({ ...criteres, exclure: [] });
+  }
+
   /*  LA VERSION FRAÎCHE DE LA FERMETURE, pour les écouteurs de
       document : ils sont posés une seule fois par ouverture, et
       appelleraient sinon la fermeture du rendu où ils ont été posés —
@@ -1164,6 +1188,133 @@ export function MoteurTatouage({
     surChangement({ ...criteresComplets(), exclure: criteres.exclure });
   }
 
+  /**
+   * ██ §3 (nº 568) — UN LIEU SANS RAYON N'A RIEN À FAIRE ATTENDRE ██
+   * ==================================================================
+   * LE DÉFAUT : choisir « France » n'ouvrait aucun pied — un pays n'a
+   * pas de rayon (`rayonApplicable`). Le panneau restait donc ouvert et
+   * VIDE, avec son voile, et il n'y avait RIEN À VALIDER : il fallait
+   * cliquer à côté pour que la recherche parte.
+   *
+   * LES NIVEAUX, ET CELUI QUE JE RETIENS. Un lieu en a quatre :
+   * `adresse`, `ville`, `region`, `pays`. Les deux premiers portent un
+   * rayon, les deux derniers non — une région ou un pays se cherchent
+   * EN ENTIER (25 km autour du centre de la France ne couvrent presque
+   * rien, c'était le bug de la nº 118). LA RÈGLE RETENUE N'EST DONC PAS
+   * « un pays » MAIS « pas de rayon » : elle s'écrit avec le prédicat
+   * qui existe déjà, `rayonApplicable`, et région comme pays en
+   * bénéficient. Si un jour un niveau change de camp, les deux suivent
+   * ensemble — il n'y a pas deux listes à tenir d'accord.
+   *
+   * CE QUE FAIT LA BRANCHE : elle jette les brouillons, referme, et
+   * annonce sur-le-champ. UNE recherche, UNE entrée d'historique — la
+   * fermeture qui suit réveille l'effet du §3, qui trouve les brouillons
+   * vides et se tait (c'est le même verrou que « Valider », nº 567).
+   * ⚠️ JETER LES BROUILLONS EST OBLIGATOIRE, pas une politesse : la
+   * frappe qui a précédé a déposé « plus aucune ville » (nº 563-565).
+   * Sans ce nettoyage, l'effet de fermeture annoncerait ce `null`
+   * APRÈS notre annonce, et effacerait le pays qu'on vient de choisir.
+   * ⚠️ ON N'ANNONCE PAS SI LE LIEU N'A PAS CHANGÉ : le retour d'une
+   * saisie abandonnée (`restaurerSiAbandon`) repasse par cette même
+   * porte avec le lieu d'avant. Sans cette garde, quitter le champ
+   * pousserait une entrée d'historique pour rien.
+   * ⚠️ UNE VILLE NE CHANGE EN RIEN : elle passe par le brouillon, ses
+   * pilules s'ouvrent, et la recherche attend « Valider » ou la
+   * fermeture (acquis nº 564-567).
+   */
+  function choisirUnLieu(choisi: LieuTrouve | null) {
+    if (choisi && !rayonApplicable(choisi)) {
+      setLieuEnAttente(null);
+      setRayonEnAttente(null);
+      commandesDuLieu.current?.fermerLePanneau();
+      if (choisi.identifiant !== criteres.lieu?.identifiant) {
+        surChangement({ ...criteres, lieu: choisi });
+      }
+      return;
+    }
+    setLieuEnAttente({ valeur: choisi });
+  }
+
+  /**
+   * ██ §4 (nº 567, PARTAGÉE nº 568) — LA RANGÉE « EFFACER / VALIDER » ██
+   * ==================================================================
+   * UNE SEULE ÉCRITURE POUR LES DEUX PANNEAUX DU WEB : le pied du rayon
+   * (nº 567) et le panneau des filtres (nº 568). Elle était écrite en
+   * ligne sous les pilules ; la nº 568 l'a sortie ici SANS CHANGER UN
+   * MOT de ce qu'elle dessine, pour ne pas en poser une troisième.
+   * Chaque panneau ne fournit que ses deux gestes.
+   *
+   * ⚠️ C'EST LE JUMEAU DE CELLE DU DOIGT, et les deux doivent être
+   * CHANGÉES ENSEMBLE. L'originale vit dans PageRechercheMobile (la
+   * rangée marquée `data-actions-recherche`) ; ses valeurs sont
+   * recopiées ici À LA MAIN, sur décision du propriétaire, parce
+   * qu'elle n'est PAS transportable telle quelle :
+   *  · elle porte le marqueur `data-actions-recherche`, qu'une règle de
+   *    globals.css cache dès qu'un `role="listbox"` existe dans le
+   *    document — or le panneau du rayon en contient un en permanence :
+   *    la rangée y serait invisible ;
+   *  · elle réserve `env(safe-area-inset-bottom)` pour la barre
+   *    d'accueil du téléphone, qui n'a pas d'objet dans un panneau
+   *    flottant.
+   *
+   * CE QUI EST REPRIS À L'IDENTIQUE : 15 px, demi-gras, gris doux pour
+   * « Effacer » (texte brut, jamais de capsule — c'est une action
+   * négative, nº 141-2C), capsule rose pleine et texte blanc pour
+   * « Valider ». CE QUI DIFFÈRE, ET SEULEMENT CELA :
+   *  · l'état de survol remplace l'état pressé (`hover` au lieu
+   *    d'`active`) — une souris survole, un doigt appuie ;
+   *  · §2 (nº 568) — LA CAPSULE EST PLUS PETITE ICI : 36 px de haut au
+   *    lieu de 44, et `px-4` (16 px) au lieu de `px-6` (24) — le
+   *    propriétaire la trouvait trop volumineuse au web. LE DOIGT GARDE
+   *    SES 44 px et son `px-6` : ce sont les valeurs d'une cible
+   *    tactile, et rien ne les remet en cause là-bas.
+   *    ⚠️ L'ARRONDI, LUI, NE PEUT PAS AUGMENTER : `rounded-full` EST le
+   *    maximum — un demi-cercle à chaque bout. Une capsule plus courte
+   *    reste une capsule parfaite ; elle paraît plus ronde parce que le
+   *    demi-cercle occupe une plus grande part de sa largeur, mais
+   *    aucune valeur ne peut aller au-delà. Rien à changer, donc.
+   *    ⚠️ 36 px RESTE UNE CIBLE CONFORTABLE À LA SOURIS (ces deux
+   *    panneaux sont web uniquement) : 15 px de texte plus 10 px d'air
+   *    en haut et en bas. « EFFACER » garde ses 44 px, qui fixent la
+   *    hauteur de la rangée — elle ne bouge donc pas non plus.
+   *
+   * ⚠️ `preventDefault` À L'APPUI, comme les pilules et comme la croix :
+   * dans le panneau du rayon, le champ garde ainsi le focus et le
+   * panneau ne se referme pas sous le bouton avant que son clic ne
+   * parte. Dans celui des filtres, où rien n'a le focus, c'est sans
+   * effet — d'où une seule écriture pour les deux.
+   */
+  function piedActions(surEffacer: () => void, surValider: () => void) {
+    return (
+      <div className="flex items-center justify-between pt-5">
+        <button
+          type="button"
+          onPointerDown={(evenement) => {
+            if (evenement.pointerType === "mouse") evenement.preventDefault();
+          }}
+          onClick={surEffacer}
+          className="-ml-2 min-h-[44px] px-2 text-[15px] font-semibold
+                     text-sombre-texte-doux transition-colors
+                     hover:text-sombre-texte"
+        >
+          Effacer
+        </button>
+        <button
+          type="button"
+          onPointerDown={(evenement) => {
+            if (evenement.pointerType === "mouse") evenement.preventDefault();
+          }}
+          onClick={surValider}
+          className="min-h-9 rounded-full bg-primaire px-4 text-[15px]
+                     font-semibold text-white transition-colors
+                     hover:bg-primaire-fonce"
+        >
+          Valider
+        </button>
+      </div>
+    );
+  }
+
   /** LES PILULES DE RAYON — posées dans le PANNEAU du champ de
       localisation (web), sous les suggestions, dès qu'une ville ou une
       adresse est choisie. Un palier par pilule, l'actif en rose, à
@@ -1214,60 +1365,7 @@ export function MoteurTatouage({
         ))}
       </GroupeBadges>
 
-      {/*  ██ §4 (nº 567) — LA RANGÉE « EFFACER / VALIDER », VERSION WEB ██
-           ==============================================================
-           ⚠️ C'EST LE JUMEAU DE CELLE DU DOIGT, et les deux doivent être
-           CHANGÉES ENSEMBLE. L'originale vit dans PageRechercheMobile
-           (la rangée marquée `data-actions-recherche`) ; ses valeurs
-           sont recopiées ici À LA MAIN, sur décision du propriétaire,
-           parce qu'elle n'est PAS transportable telle quelle :
-            · elle porte le marqueur `data-actions-recherche`, qu'une
-              règle de globals.css cache dès qu'un `role="listbox"`
-              existe dans le document — or ce panneau-ci en contient un
-              en permanence : la rangée serait invisible ;
-            · elle réserve `env(safe-area-inset-bottom)` pour la barre
-              d'accueil du téléphone, qui n'a pas d'objet dans un
-              panneau flottant.
-           CE QUI EST REPRIS À L'IDENTIQUE : 15 px, demi-gras, gris doux
-           pour « Effacer » (texte brut, jamais de capsule — c'est une
-           action négative, nº 141-2C), capsule rose pleine et texte
-           blanc pour « Valider ». CE QUI DIFFÈRE, ET SEULEMENT CELA :
-           l'état de survol remplace l'état pressé (`hover` au lieu
-           d'`active`) — une souris survole, un doigt appuie.
-           ⚠️ LA HAUTEUR DU PANNEAU NE BOUGE PAS : ce pied est posé SOUS
-           la liste de suggestions, laquelle est `min-h-0 flex-1
-           overflow-y-auto` sous un plafond calculé. La rangée prend donc
-           sa place SUR la liste, qui raccourcit d'autant — rien ne
-           déborde, rien ne se déplace autour.
-           ⚠️ `preventDefault` À L'APPUI, comme les pilules et comme la
-           croix : le champ garde le focus, donc le panneau ne se referme
-           pas sous le bouton avant que son clic ne parte. */}
-      <div className="flex items-center justify-between pt-5">
-        <button
-          type="button"
-          onPointerDown={(evenement) => {
-            if (evenement.pointerType === "mouse") evenement.preventDefault();
-          }}
-          onClick={effacerLaRecherche}
-          className="-ml-2 min-h-[44px] px-2 text-[15px] font-semibold
-                     text-sombre-texte-doux transition-colors
-                     hover:text-sombre-texte"
-        >
-          Effacer
-        </button>
-        <button
-          type="button"
-          onPointerDown={(evenement) => {
-            if (evenement.pointerType === "mouse") evenement.preventDefault();
-          }}
-          onClick={validerLeRayon}
-          className="min-h-[44px] rounded-full bg-primaire px-6 text-[15px]
-                     font-semibold text-white transition-colors
-                     hover:bg-primaire-fonce"
-        >
-          Valider
-        </button>
-      </div>
+      {piedActions(effacerLaRecherche, validerLeRayon)}
     </div>
   ) : undefined;
 
@@ -1400,7 +1498,9 @@ export function MoteurTatouage({
             //  champ continue d'afficher ce qu'on a choisi (il tient son
             //  propre texte) ; c'est la RECHERCHE qui attend la
             //  fermeture, comme le rayon depuis la nº 564.
-            surChoix={(choisi) => setLieuEnAttente({ valeur: choisi })}
+            //  §3 (nº 568) — SAUF QUAND IL N'Y A RIEN À RÉGLER : voir
+            //  `choisirUnLieu` juste au-dessus de `piedActions`.
+            surChoix={choisirUnLieu}
             sansBordure
             compact
             piedPanneau={piedRayon}
@@ -1622,6 +1722,29 @@ export function MoteurTatouage({
                 poserDansLePanneau,
                 true
               )}
+              {/*  §1 (nº 568) — LA MÊME RANGÉE QU'AU PIED DU RAYON, et
+                   c'est la MÊME ÉCRITURE (`piedActions`, plus haut) :
+                   ce panneau ne fournit que ses deux gestes.
+                   ⚠️ ELLE EST POSÉE ICI ET NON DANS `blocFiltres` :
+                   celui-ci est PARTAGÉ avec la page du doigt (nº 149-§6),
+                   qui a déjà sa propre rangée en bas de page. L'y mettre
+                   en aurait donné deux là-bas.
+                   ⚠️ « VALIDER » PASSE PAR LA FERMETURE ORDINAIRE
+                   (`fermerLesFiltres`, nº 364) : c'est elle qui annonce
+                   le brouillon, une fois, et qui se tait s'il n'a pas
+                   bougé. Le clic à l'extérieur et Échap appellent
+                   exactement la même — aucun geste ne peut donc chercher
+                   deux fois.
+                   ⚠️ CE PANNEAU EST DIMENSIONNÉ À SON CONTENU : il
+                   grandit de la hauteur de la rangée (44 px, la hauteur
+                   d'« EFFACER », plus 20 px d'air au-dessus = 64 px).
+                   Il ne peut pas déborder pour autant — `MenuDeVerre`
+                   pose un plafond calculé et fait défiler son contenu
+                   (`overflow-y-auto`). Et le voile n'est pas concerné :
+                   ce panneau est à l'étage 75, le voile à 60, et ce que
+                   le voile épargne est LA RANGÉE DU MOTEUR, jamais le
+                   panneau. */}
+              {piedActions(effacerLesFiltres, fermerLesFiltres)}
             </MenuDeVerre>
           )}
         </div>
