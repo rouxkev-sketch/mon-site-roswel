@@ -160,6 +160,26 @@ function repriseDue(cle: string): boolean {
   return repriseAttendue.cle === cle;
 }
 
+/**
+ * ██ §2 (nº 567) — CE QUE LE PIED PEUT DEMANDER AU CHAMP ██
+ * ====================================================================
+ * Deux commandes, et deux seulement. Elles existent parce que le pied
+ * du panneau est fabriqué DEHORS (par le moteur) et affiché DEDANS : il
+ * n'a aucune prise sur le champ sans elles.
+ * ⚠️ AUCUNE DES DEUX N'ANNONCE DE RECHERCHE — c'est délibéré, et c'est
+ * ce qui garde les nº 564-566 intacts : le moteur reste le seul à
+ * parler, par son effet de fermeture.
+ */
+export type CommandesChampLocalisation = {
+  /** Referme le panneau EXACTEMENT comme un clic à l'extérieur (même
+      corps, donc même restauration d'une saisie abandonnée), et rend la
+      main. La fermeture fait annoncer le brouillon, une fois. */
+  fermerLePanneau: () => void;
+  /** Vide le champ À L'ÉCRAN — texte, sélection, lieu retenu — et
+      referme. N'annonce rien : l'appelant dit ce qui part. */
+  viderLAffichage: () => void;
+};
+
 export function ChampLocalisation({
   surChoix,
   lieuInitial = null,
@@ -183,6 +203,7 @@ export function ChampLocalisation({
   pourLeMoteur = false,
   opaque = false,
   surFermeturePanneau,
+  commandesDuChamp,
 }: {
   surChoix: (lieu: LieuTrouve | null) => void;
   /** Le lieu déjà choisi à l'arrivée (formulaire pré-rempli, moteur). */
@@ -313,6 +334,11 @@ export function ChampLocalisation({
    * personne. Celui-ci ne parle qu'à la fermeture, et quelqu'un écoute.
    */
   surFermeturePanneau?: () => void;
+  /** §2 (nº 567) — LA PRISE DU PIED SUR LE CHAMP. Le champ y dépose ses
+      deux commandes à chaque rendu ; le moteur les tire depuis les
+      boutons qu'il a lui-même posés dans le panneau. Voir le dépôt plus
+      bas pour ce que chacune fait, et ce qu'elle ne fait pas. */
+  commandesDuChamp?: React.MutableRefObject<CommandesChampLocalisation | null>;
 }) {
   const [texte, setTexte] = useState(
     lieuInitial ? texteDuLieu(lieuInitial, pourLeMoteur) : ""
@@ -528,16 +554,12 @@ export function ChampLocalisation({
       if (!cible.isConnected) return;
       if (racine.current?.contains(cible)) return;
       if (panneau.current?.contains(cible)) return;
-      //  §1 (nº 508) — une fermeture VOULUE annule la reprise en
-      //  attente : un pointeur posé dehors PENDANT la transition de
-      //  page doit fermer, pas se faire rouvrir par le champ neuf.
-      oublierLaReprise();
-      setListeOuverte(false);
-      restaurerSiAbandon();
-      if (viderSiAbandon && !lieuCourant.current) {
-        setTexte("");
-        setSelectionActive(false);
-      }
+      //  §2 (nº 567) — LE CORPS DE CETTE FERMETURE A ÉTÉ EXTRAIT tel
+      //  quel dans `fermerLePanneau` (plus bas) : le bouton « Valider »
+      //  du pied doit refermer EXACTEMENT comme un clic ici, sans quoi
+      //  il oublierait la restauration d'une saisie abandonnée. Rien
+      //  n'a changé de ce que cette ligne faisait.
+      fermerLePanneau();
     }
     //  §2 (nº 564) — ÉCHAP REFERME, ET IL N'EXISTAIT PAS ICI.
     //  Le panneau des filtres l'a depuis la nº 364, le menu des styles
@@ -644,6 +666,41 @@ export function ChampLocalisation({
     return () => clearTimeout(minuteur);
   }, [texte]);
 
+  /**
+   * §2 (nº 567) — LES DEUX COMMANDES QUE LE PIED PEUT TIRER.
+   * ------------------------------------------------------------------
+   * LE PROBLÈME : le pied du panneau (les pilules de rayon, et depuis
+   * cette passe la rangée « EFFACER / VALIDER ») est FABRIQUÉ PAR LE
+   * MOTEUR et passé ici comme un contenu opaque. Il s'affiche donc dans
+   * le panneau sans rien pouvoir sur lui : ni le refermer, ni vider le
+   * champ. Or ses deux boutons ont besoin exactement de ça.
+   * LA PRISE : le même mécanisme que `actionValider` juste dessous — le
+   * champ DÉPOSE ses fonctions dans une référence que le parent tient.
+   * Déposées à CHAQUE rendu, elles voient donc toujours l'état frais.
+   * ⚠️ UNE SEULE RÉFÉRENCE POUR LES DEUX : elles naissent du même
+   * besoin et se lisent ensemble ; les séparer inviterait à n'en
+   * brancher qu'une.
+   * ⚠️ NI L'UNE NI L'AUTRE N'ANNONCE : la première referme (et c'est la
+   * fermeture qui fait annoncer le brouillon, §2 nº 564), la seconde ne
+   * fait que vider l'écran. Le moteur reste le seul à parler.
+   */
+  useEffect(() => {
+    if (!commandesDuChamp) return;
+    commandesDuChamp.current = {
+      fermerLePanneau: () => {
+        fermerLePanneau();
+        champ.current?.blur(); // le geste est fini, le curseur s'en va
+      },
+      viderLAffichage: () => {
+        viderLAffichage();
+        champ.current?.blur();
+      },
+    };
+    return () => {
+      if (commandesDuChamp) commandesDuChamp.current = null;
+    };
+  });
+
   // Déposé à CHAQUE rendu : la fonction voit l'état courant.
   useEffect(() => {
     if (!actionValider) return;
@@ -690,10 +747,42 @@ export function ChampLocalisation({
     annoncerAuMoteur(lieu);
   }
 
-  /** LA CROIX : le lieu est effacé, le champ redevient vide — son
-      fantôme (« Où ? ») reprend la parole, et la recherche redevient
-      mondiale (« Partout »). */
-  function effacerLieu() {
+  /**
+   * §2 (nº 567) — LA FERMETURE VOULUE, EN UN SEUL CORPS.
+   * ------------------------------------------------------------------
+   * C'est mot pour mot ce que faisait le pointeur posé dehors ; il
+   * l'appelle désormais, et le bouton « Valider » du pied du rayon
+   * aussi. LES DEUX CHEMINS NE PEUVENT DONC PLUS DIVERGER — et c'est
+   * tout l'intérêt : la restauration d'une saisie abandonnée
+   * (`restaurerSiAbandon`) est facile à oublier quand on écrit une
+   * fermeture de plus, et un « Valider » qui l'oublierait chercherait
+   * « partout » alors qu'une ville était retenue.
+   * ⚠️ IL N'ANNONCE RIEN LUI-MÊME : c'est la bascule de `listeOuverte`
+   * qui réveille l'effet de fermeture du moteur (§2 nº 564), lequel
+   * annonce le brouillon une fois et une seule.
+   */
+  function fermerLePanneau() {
+    //  §1 (nº 508) — une fermeture VOULUE annule la reprise en attente.
+    oublierLaReprise();
+    setListeOuverte(false);
+    restaurerSiAbandon();
+    if (viderSiAbandon && !lieuCourant.current) {
+      setTexte("");
+      setSelectionActive(false);
+    }
+  }
+
+  /**
+   * §2 (nº 567) — LE CHAMP REDEVIENT VIDE À L'ÉCRAN, ET RIEN DE PLUS.
+   * ------------------------------------------------------------------
+   * Extrait du corps de la croix, sans un mot de changé. Il vide le
+   * texte, la sélection, le lieu retenu, la mise de côté, la liste — et
+   * referme. IL N'ANNONCE RIEN : c'est l'appelant qui décide de ce qui
+   * part. La croix, juste dessous, annonce « plus aucun lieu » ; le
+   * bouton « EFFACER » du pied, lui, annonce bien davantage (le style
+   * avec), et le fait lui-même.
+   */
+  function viderLAffichage() {
     saisieUtilisateur.current = false;
     lieuCourant.current = null;
     memoire.current = null;
@@ -704,6 +793,13 @@ export function ChampLocalisation({
     setListeOuverte(false);
     setSuggestions([]);
     setMessage(null);
+  }
+
+  /** LA CROIX : le lieu est effacé, le champ redevient vide — son
+      fantôme (« Où ? ») reprend la parole, et la recherche redevient
+      mondiale (« Partout »). */
+  function effacerLieu() {
+    viderLAffichage();
     champ.current?.blur(); // le clavier se referme, le choix est fait
     annoncerAuMoteur(null);
     /**

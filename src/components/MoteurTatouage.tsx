@@ -21,6 +21,7 @@ import {
   useComptesCreations,
 } from "@/lib/creations-par-style";
 import { ChampLocalisation } from "@/components/ChampLocalisation";
+import type { CommandesChampLocalisation } from "@/components/ChampLocalisation";
 import { MenuDeroulant } from "@/components/MenuDeroulant";
 import { useVoileDeLaPage } from "@/components/VoileDeLaPage";
 import { PageRechercheMobile } from "@/components/PageRechercheMobile";
@@ -377,6 +378,10 @@ export function MoteurTatouage({
   /** Combien de fois le panneau de localité s'est refermé. Sa seule
       raison d'être : réveiller l'effet ci-dessous. */
   const [fermeturesDuLieu, setFermeturesDuLieu] = useState(0);
+  /** §4 (nº 567) — LA PRISE DU PIED SUR LE CHAMP : le champ y dépose
+      « refermer » et « vider l'écran » à chaque rendu, et les deux
+      boutons du pied les tirent. Voir `CommandesChampLocalisation`. */
+  const commandesDuLieu = useRef<CommandesChampLocalisation | null>(null);
   useEffect(() => {
     if (fermeturesDuLieu === 0) return; // rien ne s'est encore refermé
     if (!lieuEnAttente && rayonEnAttente === null) return; // rien en attente
@@ -1111,6 +1116,54 @@ export function MoteurTatouage({
   const rayonActif = rayonApplicable(lieuAffiche);
   const rayonAffiche = rayonEnAttente ?? criteres.rayonKm;
 
+  /**
+   * ██ §4 (nº 567) — « VALIDER » : REFERMER, ET RIEN D'AUTRE ██
+   * ------------------------------------------------------------------
+   * Il n'annonce pas lui-même, et c'est ce qui garantit qu'on ne
+   * cherche pas deux fois : refermer réveille l'effet de fermeture
+   * (§3 nº 564-566), qui VIDE LES DEUX BROUILLONS AVANT d'annoncer.
+   * Le geste est donc rigoureusement celui d'un clic à l'extérieur —
+   * une recherche, une entrée d'historique — avec un bouton pour le
+   * dire. Et si rien n'a bougé, il ne relance rien, comme avant.
+   */
+  function validerLeRayon() {
+    commandesDuLieu.current?.fermerLePanneau();
+  }
+
+  /**
+   * ██ §4 (nº 567) — « EFFACER » : TOUTE LA RECHERCHE S'EN VA ██
+   * ------------------------------------------------------------------
+   * PLUS QUE LA CROIX DU CHAMP (nº 566), et le propriétaire l'a voulu
+   * ainsi : la croix garde le style, ce bouton-ci l'emporte avec le
+   * reste. La mosaïque redevient celle de l'accueil.
+   *
+   * L'ORDRE COMPTE, ET IL EST LE SEUL POSSIBLE :
+   *  1. les deux brouillons sont jetés — sans quoi la fermeture qui
+   *     suit les annoncerait par-dessus ce qu'on vient d'effacer ;
+   *  2. le champ se vide À L'ÉCRAN et se referme (il n'annonce rien) ;
+   *  3. le moteur annonce, une seule fois, la recherche remise à zéro.
+   * Tout tient dans un seul geste, donc une seule fournée : quand
+   * l'effet de fermeture se réveille, il trouve les brouillons vides et
+   * se tait. UNE recherche, UNE entrée d'historique.
+   *
+   * ⚠️ LE STYLE SE VIDE AUSSI À L'ÉCRAN, sans une ligne de plus : le
+   * champ de style est un menu COMMANDÉ par les critères
+   * (`valeurDuMenu`, `libelleChampStyleWeb`) — remettre `style` et
+   * `nature` à vide le rend à son fantôme.
+   * ⚠️ LES FILTRES NE SONT PAS TOUCHÉS (`exclure` est repris tel quel).
+   * Ils ont leur propre panneau, avec leur propre pied à venir : un
+   * panneau efface ce qu'il porte, pas ce que porte le voisin.
+   * ⚠️ `criteresComplets()` SANS ARGUMENT est LA remise à zéro du site —
+   * le seul endroit qui décide des défauts, rayon compris. On ne
+   * recopie aucune valeur ici.
+   */
+  function effacerLaRecherche() {
+    setLieuEnAttente(null);
+    setRayonEnAttente(null);
+    commandesDuLieu.current?.viderLAffichage();
+    surChangement({ ...criteresComplets(), exclure: criteres.exclure });
+  }
+
   /** LES PILULES DE RAYON — posées dans le PANNEAU du champ de
       localisation (web), sous les suggestions, dès qu'une ville ou une
       adresse est choisie. Un palier par pilule, l'actif en rose, à
@@ -1160,6 +1213,61 @@ export function MoteurTatouage({
           </BadgeCharte>
         ))}
       </GroupeBadges>
+
+      {/*  ██ §4 (nº 567) — LA RANGÉE « EFFACER / VALIDER », VERSION WEB ██
+           ==============================================================
+           ⚠️ C'EST LE JUMEAU DE CELLE DU DOIGT, et les deux doivent être
+           CHANGÉES ENSEMBLE. L'originale vit dans PageRechercheMobile
+           (la rangée marquée `data-actions-recherche`) ; ses valeurs
+           sont recopiées ici À LA MAIN, sur décision du propriétaire,
+           parce qu'elle n'est PAS transportable telle quelle :
+            · elle porte le marqueur `data-actions-recherche`, qu'une
+              règle de globals.css cache dès qu'un `role="listbox"`
+              existe dans le document — or ce panneau-ci en contient un
+              en permanence : la rangée serait invisible ;
+            · elle réserve `env(safe-area-inset-bottom)` pour la barre
+              d'accueil du téléphone, qui n'a pas d'objet dans un
+              panneau flottant.
+           CE QUI EST REPRIS À L'IDENTIQUE : 15 px, demi-gras, gris doux
+           pour « Effacer » (texte brut, jamais de capsule — c'est une
+           action négative, nº 141-2C), capsule rose pleine et texte
+           blanc pour « Valider ». CE QUI DIFFÈRE, ET SEULEMENT CELA :
+           l'état de survol remplace l'état pressé (`hover` au lieu
+           d'`active`) — une souris survole, un doigt appuie.
+           ⚠️ LA HAUTEUR DU PANNEAU NE BOUGE PAS : ce pied est posé SOUS
+           la liste de suggestions, laquelle est `min-h-0 flex-1
+           overflow-y-auto` sous un plafond calculé. La rangée prend donc
+           sa place SUR la liste, qui raccourcit d'autant — rien ne
+           déborde, rien ne se déplace autour.
+           ⚠️ `preventDefault` À L'APPUI, comme les pilules et comme la
+           croix : le champ garde le focus, donc le panneau ne se referme
+           pas sous le bouton avant que son clic ne parte. */}
+      <div className="flex items-center justify-between pt-5">
+        <button
+          type="button"
+          onPointerDown={(evenement) => {
+            if (evenement.pointerType === "mouse") evenement.preventDefault();
+          }}
+          onClick={effacerLaRecherche}
+          className="-ml-2 min-h-[44px] px-2 text-[15px] font-semibold
+                     text-sombre-texte-doux transition-colors
+                     hover:text-sombre-texte"
+        >
+          Effacer
+        </button>
+        <button
+          type="button"
+          onPointerDown={(evenement) => {
+            if (evenement.pointerType === "mouse") evenement.preventDefault();
+          }}
+          onClick={validerLeRayon}
+          className="min-h-[44px] rounded-full bg-primaire px-6 text-[15px]
+                     font-semibold text-white transition-colors
+                     hover:bg-primaire-fonce"
+        >
+          Valider
+        </button>
+      </div>
     </div>
   ) : undefined;
 
@@ -1297,6 +1405,8 @@ export function MoteurTatouage({
             compact
             piedPanneau={piedRayon}
             garderOuvertApresChoix
+            //  §4 (nº 567) — la prise des deux boutons du pied.
+            commandesDuChamp={commandesDuLieu}
             //  §3 (nº 564) — LA FERMETURE ANNONCE LE RAYON. Le champ
             //  sait quand son panneau se referme ; le moteur, non.
             surFermeturePanneau={() => setFermeturesDuLieu((n) => n + 1)}
