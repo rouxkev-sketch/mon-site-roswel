@@ -1412,14 +1412,43 @@ export function MenuDeroulant({
                ⚠️ LA HAUTEUR DU PANNEAU NE BOUGE PAS : elle est plafonnée
                par `usePlacementMenu`, et c'est la liste qui raccourcit
                d'autant.
-               ⚠️ `py-1` COMME LA LISTE : le bloc reprend l'air que la
-               liste posait autour de ses en-têtes, pour que rien ne se
-               resserre. */}
+               ⚠️ §1 (nº 574) — L'AIR DU BAS RATTRAPE CELUI DU HAUT.
+               L'air était de 20 px au-dessus de « RÉALISATIONS » et de
+               12 px seulement sous « FLASHS ». LES 8 PX D'ÉCART NE
+               VIENNENT PAS DU BLOC mais du bouton d'en-tête lui-même :
+               son rembourrage est asymétrique (`pt-3` en haut, `pb-1` en
+               bas), parce qu'il a été dessiné pour des titres EMPILÉS
+               DANS UNE LISTE, où le haut sépare une section de la
+               précédente et où le bas colle le titre à ses options. Le
+               bloc rend donc les 8 px manquants : `pt-1 pb-3` au lieu de
+               `py-1`. Le calcul est exact quelle que soit la taille du
+               texte, l'écart valant simplement `pt-3` moins `pb-1`.
+               ⚠️ ET LA LISTE N'Y EST POUR RIEN : elle n'a toujours pas
+               d'air quand elle est vide (§1 nº 573), donc le panneau
+               s'arrête toujours net et aucune bande claire ne revient.
+
+               ██ §2 (nº 574) — LE TRAIT, ET C'EST UNE EXCEPTION VOULUE ██
+               LA CHARTE INTERDIT LES CONTOURS. Celui-ci est une
+               EXCEPTION EXPLICITEMENT DEMANDÉE par le propriétaire,
+               après que je lui aie proposé de séparer par l'air seul :
+               il a préféré le trait. QU'UNE PASSE FUTURE NE LE RETIRE
+               PAS en croyant réparer un oubli.
+               Il ne paraît QUE quand une section est ouverte — rien de
+               déplié, rien à séparer. Jeton `trait` (#2F353E), le plus
+               visible des deux traits de la nº 466 : 1,34 avec le bloc
+               `carte`, là où `bordure` n'aurait donné que 1,28.
+               ⚠️ IL APPARTIENT AU BLOC, PAS À LA LISTE : posé en bas du
+               bloc fixe, il ne peut donc pas bouger quand les styles
+               défilent dessous.
+               ⚠️ LE BORD EXISTE TOUJOURS, IL CHANGE SEULEMENT DE
+               COULEUR (`border-transparent` quand rien n'est déplié) :
+               sans quoi le bloc grandirait d'un pixel à l'ouverture
+               d'une section, et tout ce qu'il porte sauterait d'autant. */}
           {entetesCollants && entetesDesSections.length > 0 && (
             <div
-              className={`shrink-0 py-1 ${
+              className={`shrink-0 border-b pt-1 pb-3 ${
                 opaque ? "bg-sombre-eleve-clair" : "bg-sombre-carte"
-              }`}
+              } ${groupeDeplie ? "border-sombre-trait" : "border-transparent"}`}
             >
               {entetesDesSections.map((entete) => (
                 <div key={entete}>{enTeteSection(entete, "px-4 pt-3 pb-1")}</div>
