@@ -1264,9 +1264,11 @@ export function MoteurTatouage({
     //  point, titre collé à la rangée, marges au petit bonheur.
     //  Ils appellent désormais LE MÊME COMPOSANT que le panneau des
     //  filtres — `GroupeBadges` et `BadgeCharte` — donc, sans qu'on ait
-    //  rien à recopier : point rose actif / gris inactif, aucun fond
-    //  rose, aucun contour, un repos qui se voit, et l'écart
-    //  titre → première rangée de 10 px, celui d'ARTISTE.
+    //  rien à recopier : aucun fond rose, aucun contour, un repos qui
+    //  se voit, et l'écart titre → première rangée de 10 px, celui
+    //  d'ARTISTE. (Le point qui disait l'état à gauche du mot a été
+    //  supprimé À LA SOURCE par la nº 605 : ces badges-ci l'ont perdu
+    //  du même geste, sans qu'une ligne bouge ici.)
     //  LES MARGES DU BLOC SONT CELLES DU PANNEAU DES FILTRES, aux mêmes
     //  valeurs : 20 px à gauche, à droite et en bas ; en haut 15 px,
     //  parce que la boîte de ligne d'un titre en capitales pose ~5 px

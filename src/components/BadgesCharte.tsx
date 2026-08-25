@@ -20,14 +20,18 @@ import type { PointerEvent, ReactNode } from "react";
  *
  * CE QUE DIT UN BADGE, ET COMMENT (rien n'est inventé ici : ce sont
  * exactement les règles du panneau des filtres) :
- *  · un POINT à gauche — ROSE quand le badge est actif, GRIS quand il
- *    ne l'est pas. Il ne disparaît jamais : la géométrie ne bouge pas
- *    d'un pixel au clic (nº 157-§4) ;
+ *  · ██ §1 (nº 605) — SON ÉTAT SE LIT AU FOND ET AU TEXTE, ET LÀ
+ *    SEULEMENT. Un POINT vivait à gauche du mot — rose allumé, gris
+ *    éteint (nº 157-§4). Il est SUPPRIMÉ : le fond et le texte
+ *    changeaient DÉJÀ de couleur selon l'état, le point ne faisait que
+ *    redire la même chose une seconde fois — et son rose se lisait à
+ *    l'envers, plus d'un y voyant la marque d'un badge ÉTEINT. Le mot
+ *    est désormais seul et centré ;
  *  · AUCUN FOND ROSE, jamais, quel que soit l'état (nº 144-§7 —
  *    réaffirmé par la nº 240-§2 : la nº 238 avait teinté de rose le
  *    badge sélectionné du panneau de verre, c'était une erreur, les
- *    badges n'ont JAMAIS été roses ; le rose du badge vit dans son
- *    POINT, et nulle part ailleurs) ;
+ *    badges n'ont JAMAIS été roses). Depuis la nº 605, il n'y a plus
+ *    UN SEUL pixel rose sur un badge : le point était le dernier ;
  *  · AUCUN contour ;
  *  · un badge AU REPOS SE VOIT : son fond est un cran plus clair que
  *    ce qui le porte (nº 155) ;
@@ -55,7 +59,8 @@ export function robeDuBadge(actif: boolean, surPanneau = false): string {
   //  un remplissage TRANSLUCIDE… et GRIS, dans les deux états
   //  (nº 240-§2, qui DÉFAIT le rose introduit par la nº 238 : les
   //  badges n'ont jamais été roses — gris clair allumé, gris foncé
-  //  éteint, et le rose ne vit que dans le POINT).
+  //  éteint ; le seul rose qui restait, celui du point, est parti à la
+  //  nº 605).
   //  Le remplissage vient de `data-verre-badge-…` (voir BadgeCharte) :
   //  ici, il ne reste que la couleur du texte.
   //  ⚠️ AUCUN FILTRE PROPRE sur ces capsules — c'est le flou de la
@@ -96,34 +101,38 @@ export function BadgeCharte({
       //  valeurs vivent dans globals.css (`data-verre-badge-…`), et
       //  AUCUN filtre d'arrière-plan propre — ces badges vivent sur la
       //  plaque du panneau, c'est SON flou qu'on voit à travers.
-      //  Le rose, lui, est dans le POINT ci-dessous, et nulle part
-      //  ailleurs.
+      //  §1 (nº 605) — et il n'y a plus de rose du tout sur un badge :
+      //  le point qui le portait est parti, l'état se lit au fond et
+      //  au texte.
       {...(surPanneau
         ? actif
           ? { "data-verre-badge-allume": "" }
           : { "data-verre-badge-eteint": "" }
         : {})}
-      //  ⚠️ LA LARGEUR NE BOUGE JAMAIS (nº 153-§1) : l'espace du POINT
-      //  est réservé EN PERMANENCE, actif ou non — la mise en page est
-      //  juste dès l'ouverture, rien ne bouge au clic.
-      //  §2 (nº 449) — DES ANGLES ARRONDIS, PLUS LA PILULE : le badge
-      //  devient un rectangle à coins arrondis (8 px, `rounded-lg`),
-      //  partout — page mobile, panneau web, rayon. Le POINT, lui,
-      //  reste rond. Rien d'autre ne bouge : hauteur, retraits, zone
-      //  tactile au pixel près.
+      /*  ██ §1 (nº 605) — LE MOT EST SEUL, ET CENTRÉ ██
+          LE RETRAIT DE GAUCHE ÉTAIT CELUI DU POINT : dix pixels de
+          bord, six de rond, six d'air — vingt-deux, contre seize à
+          droite. Le point parti, cette asymétrie n'a plus d'objet et se
+          verrait ; les deux côtés prennent donc la MÊME valeur, et
+          c'est celle de droite (`px-4`), inchangée depuis toujours.
+          AUCUNE VALEUR NEUVE N'ENTRE ICI.
+          ⚠️ LE BADGE RÉTRÉCIT DE SIX PIXELS, ET C'EST VOULU : garder
+          l'ancienne largeur demanderait de réserver un vide que plus
+          rien n'occupe. Hauteur (38), rayon (8), zone tactile (44,
+          l'ourlet `before:`) et robes ne bougent pas d'un pixel.
+          ⚠️ ET LA LARGEUR NE BOUGE TOUJOURS PAS AU CLIC (l'acquis de
+          la nº 153-§1) : elle ne dépendait de l'état que par le point,
+          dont l'espace était réservé dans les deux états. Sans lui, il
+          n'y a plus rien du tout qui varie — allumer ou éteindre ne
+          change que des couleurs.
+          §2 (nº 449) — les angles arrondis (8 px, `rounded-lg`)
+          restent, partout : page mobile, panneau web, rayon. */
       className={`relative inline-flex items-center justify-center
-                 rounded-lg pl-[22px] pr-4 min-h-[38px] text-[13.5px]
+                 rounded-lg px-4 min-h-[38px] text-[13.5px]
                  font-semibold transition-colors
                  before:absolute before:-inset-y-[3px] before:inset-x-0
                  before:content-[''] ${robeDuBadge(actif, surPanneau)}`}
     >
-      <span
-        aria-hidden="true"
-        className={`absolute left-[10px] top-1/2 h-1.5 w-1.5
-                   -translate-y-1/2 rounded-full ${
-                     actif ? "bg-primaire" : "bg-sombre-texte-doux"
-                   }`}
-      />
       {children}
     </button>
   );
