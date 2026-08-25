@@ -1759,18 +1759,43 @@ export function MoteurTatouage({
                  pendant les 200 ms où la coche s'ouvre, le repli
                  basculait parfois en cours de route : c'est le
                  clignotement que le propriétaire a vu.
-                 398 EST LA PLUS PETITE LARGEUR qui ne replie JAMAIS
-                 aucune rangée, sur aucune des soixante-quatre
-                 combinaisons — mesurée en les essayant toutes. Le
-                 panneau garde donc une hauteur unique, quoi qu'on
-                 allume.
-                 ⚠️ CE N'EST TOUJOURS PAS UN RETOUR AUX 420 D'AVANT LA
-                 nº 473, et l'écart n'est pas symbolique : ceux-là
-                 laissaient du vide même dans le cas le plus large,
-                 ceux-ci sont exactement la place qu'il faut.
+                 398 était alors la plus petite largeur qui ne repliât
+                 jamais aucune rangée — sur un BANC.
+                 ██ §1 (nº 611) — 372, ET CETTE FOIS SUR L'ÉCRAN DU
+                 PROPRIÉTAIRE ██
+                 -----------------------------------------------------
+                 MES DEUX BANCS ONT MENTI, dans les deux sens : celui
+                 de la nº 607 rendait la rangée trop étroite, celui de
+                 la nº 608 trop large — de vingt-six pixels. La mesure
+                 posée à la nº 610 (`releverLesAirsDuPanneau`, plus
+                 haut dans ce fichier) a tranché sur le VRAI panneau,
+                 tous badges allumés :
+                   · rangée TECHNIQUE — 323,5 px, air 24,0 à gauche et
+                     50,5 à droite ; Tebori 88,7 · Handpoke 114,6 ·
+                     Machine 104,1, plus deux écarts de 8 ;
+                   · rangée RENDU — 312,7 px, air 24,0 et 61,3 ;
+                   · les deux rangées à 38 px de haut : à 398, rien ne
+                     se repliait — le vide était bien du vide.
+                 D'OÙ LA VALEUR : 24 + 323,5 + 24 = 371,5, arrondi au
+                 pixel supérieur. L'air à droite de « Machine » rejoint
+                 celui de gauche de « Tebori ».
+                 ⚠️ ET AUCUNE RANGÉE NE PEUT SE REPLIER, ce qui se
+                 démontre sans banc : TECHNIQUE tous badges allumés est
+                 le contenu le plus large possible (éteindre un badge
+                 le rétrécit de dix-sept pixels, et RENDU est plus
+                 courte de onze). 323,5 tient dans les 324 px utiles
+                 que laissent 372 moins les deux rembourrages.
+                 ⚠️ IL RESTE UN DEMI-PIXEL DE MARGE, ET IL FAUT LE
+                 SAVOIR : c'est le prix d'un air exactement égal des
+                 deux côtés. Un zoom de navigateur, une police de repli
+                 qui s'installerait à la place de Geist, ou un libellé
+                 rallongé d'un caractère, et la rangée se replierait —
+                 le clignotement de la nº 607 reviendrait. La mesure de
+                 la nº 610 reste en place précisément pour qu'on puisse
+                 le constater plutôt que le supposer.
                  ⚠️ AUCUN DÉBORDEMENT POSSIBLE : ce panneau n'existe
                  qu'au-dessus du cran web, donc sur 1024 px de fenêtre
-                 au moins — 398 plus ses marges en occupent le tiers.
+                 au moins — 372 plus ses marges en occupent le tiers.
                  (b) L'AIR INTÉRIEUR MONTE D'UN CRAN : 20 px → 24 px
                  (`p-5` → `p-6`, le cran des fenêtres de la charte —
                  en-têtes de Notifications et des langues). Le haut
@@ -1789,7 +1814,7 @@ export function MoteurTatouage({
               ouvert={filtresOuverts}
               ancre={boutonFiltres}
               refPanneau={plaqueFiltres}
-              largeur={398}
+              largeur={372}
               //  §1 (nº 543) — FOND OPAQUE au jeton `carte` : le drapeau
               //  de la nº 537, la teinte de la nº 542. Des quatre
               //  fenêtres de cette passe, celle-ci est la SEULE qui
