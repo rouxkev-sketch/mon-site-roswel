@@ -214,6 +214,70 @@ export function libelleLieu(criteres: CritèresTatouage): string {
   return `${ligneMoteur(criteres.lieu)}${suffixeRayon(criteres)}`;
 }
 
+/**
+ * ██ §2 (nº 569) — LE PANNEAU DES FILTRES SE ROUVRE APRÈS UN REMONTAGE ██
+ * ====================================================================
+ * LE DÉFAUT : une ville est choisie, le panneau du rayon est ouvert. On
+ * clique sur le rond des filtres. Trois choses partent dans le même
+ * geste — le panneau du rayon se referme (donc la recherche de Lyon
+ * part), le panneau des filtres s'ouvre, et la navigation commence. Le
+ * temps qu'elle arrive, LE PANNEAU DES FILTRES A ÉTÉ DÉMONTÉ AVEC LE
+ * RESTE, et il ne revient pas.
+ *
+ * LA CAUSE EST CONNUE ET DÉJÀ ÉCRITE (nº 508, et le §nº 364 juste sous
+ * `filtresOuverts`) : « / » et « /accueil-recherche » sont DEUX
+ * SEGMENTS DE ROUTE, et la barre est montée PAR LA PAGE. Au premier
+ * passage de l'un à l'autre, tout l'arbre est démonté puis remonté ;
+ * `filtresOuverts` repart de `false`. Le brouillon de la nº 364 avait
+ * réglé le cas où c'étaient LES BADGES qui naviguaient ; ici la
+ * navigation vient d'ailleurs — du panneau voisin — et le panneau des
+ * filtres n'y peut rien.
+ * ⚠️ LE VRAI REMÈDE SERAIT QUE LA BARRE NE SOIT PLUS DÉTRUITE (une mise
+ * en page partagée aux deux segments). C'est un chantier à part, et il
+ * n'est PAS commencé ici.
+ *
+ * ██ LE MOYEN EMPLOYÉ, ET POURQUOI IL EST SANS DANGER ██
+ * UNE VARIABLE DE MODULE, DATÉE, CLÉE PAR MOTEUR. C'est exactement la
+ * note de reprise de la nº 508 (`ChampLocalisation`), reprise ici pour
+ * le panneau voisin — pas un mécanisme neuf.
+ *  · ELLE NE SURVIT PAS À UN RECHARGEMENT ni à une nouvelle session :
+ *    c'est de la mémoire vive du module, effacée avec lui. Ce n'est ni
+ *    `localStorage`, ni `sessionStorage`, ni un cookie, ni l'adresse.
+ *  · ELLE S'EFFACE DÈS QU'ELLE A SERVI (la lecture ne la consomme pas,
+ *    pour survivre au double rendu du mode strict ; c'est l'effet de
+ *    montage qui l'efface, juste avant d'en tenir compte).
+ *  · ELLE EXPIRE SEULE si le remontage n'a pas lieu — quatre secondes,
+ *    le même délai que la nº 508.
+ *  · ⚠️ ELLE NE NOMME NI FICHIER NI VERSION, et c'est ce qui la sépare
+ *    du mécanisme qui avait cassé le site aux nº 479 et nº 546 : là-bas
+ *    un millésime mal lu entrait dans L'ADRESSE DU SERVICE WORKER, le
+ *    navigateur croyait à un programme neuf, purgeait ses caches,
+ *    prenait la main et rechargeait — en boucle. Ici, rien n'est mis en
+ *    cache, rien n'est rechargé, aucune adresse n'est fabriquée : au
+ *    pire un panneau s'ouvre une fois de trop, et se referme d'un clic.
+ */
+const REOUVERTURE_FILTRES_MS = 4000;
+let reouvertureFiltresAttendue: { cle: string; pose: number } | null = null;
+
+function noterLaReouvertureDesFiltres(cle: string) {
+  reouvertureFiltresAttendue = { cle, pose: Date.now() };
+}
+
+function oublierLaReouvertureDesFiltres() {
+  reouvertureFiltresAttendue = null;
+}
+
+/** La note est-elle pour ce moteur, et encore fraîche ? Elle n'est PAS
+    consommée à la lecture : deux lectures rendent la même réponse. */
+function reouvertureDesFiltresDue(cle: string): boolean {
+  if (!reouvertureFiltresAttendue) return false;
+  if (Date.now() - reouvertureFiltresAttendue.pose > REOUVERTURE_FILTRES_MS) {
+    reouvertureFiltresAttendue = null;
+    return false;
+  }
+  return reouvertureFiltresAttendue.cle === cle;
+}
+
 export function MoteurTatouage({
   criteres,
   surChangement,
@@ -272,6 +336,29 @@ export function MoteurTatouage({
   const brouillon = brouillons[vuePage];
   /** Le panneau des interrupteurs (web, sous le bouton rond). */
   const [filtresOuverts, setFiltresOuverts] = useState(false);
+  /**
+   * §2 (nº 569) — AU MONTAGE, ON REPREND CE QUI ÉTAIT OUVERT.
+   * ------------------------------------------------------------------
+   * La note est POSÉE PAR LE GESTE D'OUVERTURE (le rond des filtres,
+   * plus bas) et EFFACÉE PAR TOUTE FERMETURE VOULUE — c'est le modèle
+   * exact de la nº 508, et c'est ce qui évite le piège du démontage :
+   * une note posée au démontage arriverait après coup, et une note liée
+   * à l'état rouvrirait le panneau qu'on vient de refermer à la main.
+   * Ici, seul un panneau ENCORE OUVERT quand l'arbre s'en va peut avoir
+   * une note vivante.
+   * ⚠️ ELLE EST EFFACÉE AVANT D'ÊTRE SUIVIE : elle ne vaut que pour ce
+   * remontage-ci, et rien ne reste armé si la réouverture échoue.
+   * ⚠️ LE VOILE SUIT TOUT SEUL — il est accroché à `filtresOuverts`
+   * (`useVoileDeLaPage`, plus bas), donc il se repose avec le panneau.
+   * ⚠️ RIEN N'EST ANNONCÉ : rouvrir un panneau ne change aucun critère,
+   * donc aucune entrée d'historique ne s'ajoute à celle de la recherche
+   * qui vient de partir.
+   */
+  useEffect(() => {
+    if (!reouvertureDesFiltresDue(id)) return;
+    oublierLaReouvertureDesFiltres();
+    setFiltresOuverts(true);
+  }, [id]);
   /**
    * ██ nº 364 — LE PANNEAU WEB TRAVAILLE SUR UN BROUILLON ██
    * ==================================================================
@@ -442,6 +529,8 @@ export function MoteurTatouage({
    * recherche.
    */
   function fermerLesFiltres() {
+    //  §2 (nº 569) — une fermeture VOULUE annule la note de réouverture.
+    oublierLaReouvertureDesFiltres();
     setFiltresOuverts(false);
     setFiltresEnAttente(null);
     if (!filtresEnAttente) return;
@@ -469,6 +558,8 @@ export function MoteurTatouage({
    * rien à effacer.
    */
   function effacerLesFiltres() {
+    //  §2 (nº 569) — une fermeture VOULUE annule la note de réouverture.
+    oublierLaReouvertureDesFiltres();
     setFiltresOuverts(false);
     setFiltresEnAttente(null);
     if (criteres.exclure.length === 0) return; // aucun filtre : rien à dire
@@ -1286,7 +1377,14 @@ export function MoteurTatouage({
    */
   function piedActions(surEffacer: () => void, surValider: () => void) {
     return (
-      <div className="flex items-center justify-between pt-5">
+      //  §1 (nº 569) — 28 px D'AIR AU-DESSUS au lieu de 20 (`pt-7` au
+      //  lieu de `pt-5`) : la rangée collait à ce qui la précède — les
+      //  pilules de rayon dans un panneau, la dernière rangée de badges
+      //  dans l'autre. L'échelle de 4 est respectée, et le changement
+      //  vaut POUR LES DEUX D'UN COUP puisque l'écriture est partagée
+      //  depuis la nº 568. Le doigt garde ses 20 px : sa rangée est
+      //  écrite ailleurs, et son fichier n'est pas touché.
+      <div className="flex items-center justify-between pt-7">
         <button
           type="button"
           onPointerDown={(evenement) => {
@@ -1568,9 +1666,20 @@ export function MoteurTatouage({
             data-voile-element=""
             //  nº 364 — le même bouton ouvre et ferme ; la FERMETURE
             //  est celle qui annonce (voir `fermerLesFiltres`).
-            onClick={() =>
-              filtresOuverts ? fermerLesFiltres() : setFiltresOuverts(true)
-            }
+            //  §2 (nº 569) — ET L'OUVERTURE POSE LA NOTE : si l'arbre
+            //  est démonté dans les quatre secondes (le passage de « / »
+            //  au jumeau, déclenché ici même par la fermeture du panneau
+            //  voisin), le moteur neuf rouvrira ce panneau. Toute
+            //  fermeture voulue l'annule — donc un panneau refermé à la
+            //  main ne peut pas revenir.
+            onClick={() => {
+              if (filtresOuverts) {
+                fermerLesFiltres();
+                return;
+              }
+              noterLaReouvertureDesFiltres(id);
+              setFiltresOuverts(true);
+            }}
             aria-expanded={filtresOuverts}
             aria-label="Filtres"
             title="Filtres"
@@ -1737,7 +1846,8 @@ export function MoteurTatouage({
                    deux fois.
                    ⚠️ CE PANNEAU EST DIMENSIONNÉ À SON CONTENU : il
                    grandit de la hauteur de la rangée (44 px, la hauteur
-                   d'« EFFACER », plus 20 px d'air au-dessus = 64 px).
+                   d'« EFFACER », plus l'air au-dessus — 28 px depuis le
+                   §1 nº 569, soit 72 px en tout).
                    Il ne peut pas déborder pour autant — `MenuDeVerre`
                    pose un plafond calculé et fait défiler son contenu
                    (`overflow-y-auto`). Et le voile n'est pas concerné :
