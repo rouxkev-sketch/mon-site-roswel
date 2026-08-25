@@ -119,7 +119,7 @@ const suivi = (nom, typeFiche, etablissement, modes, lieu = {}) => ({
         mode("salon", "Lyon", null, "France", "FR"),
         mode("guest", "Marseille", null, "France", "FR"),
       ]),
-      "Artiste • Paris · Lyon · Marseille · France",
+      "Artiste • Lyon · Marseille · Paris · France",
     ],
     [
       "un ARTISTE avec un ÉTAT — l'écriture internationale (§3-b)",
@@ -232,7 +232,7 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
   );
   verif(
     "§3-c — LES TROIS VILLES S'ÉCRIVENT, le pays une seule fois à la fin",
-    trois === "Artiste • Paris · Lyon · Nantes · France" && !/\+\d/.test(trois),
+    trois === "Artiste • Lyon · Nantes · Paris · France" && !/\+\d/.test(trois),
     `« ${trois} »`
   );
   verif(
@@ -242,8 +242,8 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
         mode("salon", "Paris", null, "France", "FR"),
         mode("salon", "Lyon", null, "France", "FR"),
       ])
-    ) === "Artiste • Paris · Lyon · France",
-    "« Paris · Lyon · France », derrière la puce"
+    ) === "Artiste • Lyon · Paris · France",
+    "« Lyon · Paris · France », rangé et derrière la puce"
   );
   /*  §1 (nº 586) — ET DEUX PAYS SE SÉPARENT PAR UNE BARRE VERTICALE,
       jamais par le point médian : celui-ci ne sépare plus que le métier
@@ -255,8 +255,8 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
         mode("salon", "Paris", null, "France", "FR"),
         mode("salon", "Berlin", null, "Allemagne", "DE"),
       ])
-    ) === "Artiste • Paris, France | Berlin, Allemagne",
-    "« Paris, France | Berlin, Allemagne »"
+    ) === "Artiste • Berlin, Allemagne | Paris, France",
+    "« Berlin, Allemagne | Paris, France » — l'Allemagne se range avant"
   );
 
   //  §3-d — LE DÉDOUBLONNAGE, éprouvé sur la LISTE DES VILLES.
@@ -273,18 +273,39 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
   );
 
   //  §3-e — L'ORDRE DÉCLARÉ, ET PAS UN CLASSEMENT.
-  /*  LA PREUVE TIENT À CECI : `modesOrdonnes` range par genre — à
-      domicile AVANT en salon. On déclare donc le salon EN PREMIER et le
-      domicile ensuite ; si un classement s'appliquait, « Lyon »
-      passerait devant. C'est « Nantes » qui doit s'écrire. */
+  /*  ⚠️ CE TEST A CHANGÉ DE SENS À LA nº 591, et c'est le propriétaire
+      qui l'a renversé : la ligne était rangée dans l'ordre DÉCLARÉ par
+      l'artiste, elle l'est désormais par ORDRE ALPHABÉTIQUE. Ce qu'il
+      faut éprouver n'est donc plus « la première déclarée se lit en
+      tête » mais l'inverse : QUE LA DÉCLARATION N'Y FAIT PLUS RIEN.
+      LA PREUVE TIENT À DEUX CHOSES À LA FOIS. On déclare « Nantes »
+      en premier et sous un genre (salon) que `modesOrdonnes` classerait
+      APRÈS le domicile de « Lyon » : ni l'ordre de déclaration ni le
+      genre ne peuvent donc expliquer le résultat. Seul l'alphabet
+      met « Lyon » devant. */
   const declare = suivi("e", "artiste", "", [
     mode("salon", "Nantes", null, "France", "FR"),
     mode("domicile", "Lyon", null, "France", "FR"),
   ]);
   verif(
-    "§3-e — L'ORDRE EST CELUI DE L'ARTISTE : la PREMIÈRE DÉCLARÉE se lit en tête",
-    ligneDIdentite(declare) === "Artiste • Nantes · Lyon · France",
-    `« ${ligneDIdentite(declare)} » (un classement par genre aurait dit « Lyon » en tête)`
+    "§3-e (nº 591) — L'ORDRE EST ALPHABÉTIQUE : ni la déclaration ni le genre ne le décident",
+    ligneDIdentite(declare) === "Artiste • Lyon · Nantes · France",
+    `« ${ligneDIdentite(declare)} » (la déclaration disait « Nantes » en premier)`
+  );
+  /*  §1 (nº 591) — ET L'ALPHABET EST CELUI DU FRANÇAIS : un accent ne
+      renvoie pas une ville en fin de liste, une minuscule non plus.
+      Comparées par leurs numéros de caractères, « Évry » tomberait
+      après « Zurich » et « avignon » après les deux. */
+  verif(
+    "…et il range comme un dictionnaire français : accents et casse à leur place",
+    ligneDIdentite(
+      suivi("e2", "artiste", "", [
+        mode("salon", "Zurich", null, "France", "FR"),
+        mode("salon", "Évry", null, "France", "FR"),
+        mode("salon", "avignon", null, "France", "FR"),
+      ])
+    ) === "Artiste • avignon · Évry · Zurich · France",
+    "« avignon · Évry · Zurich »"
   );
   verif(
     "…et `modesOrdonnes` n'est PAS appelé pour construire cette ligne",
@@ -337,7 +358,7 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
         }),
       ]),
       "2026-08-16"
-    ) === "Artiste • Paris, France | Berlin, Allemagne",
+    ) === "Artiste • Berlin, Allemagne | Paris, France",
     "Berlin s'écrit, derrière la barre verticale"
   );
 }

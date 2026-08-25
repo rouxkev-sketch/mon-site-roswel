@@ -143,20 +143,24 @@ export function periodeDuGuest(mode: {
  *
  * LA RÈGLE, EN DEUX SEGMENTS ET PAS UN DE PLUS :
  *
- *     LE TYPE · OÙ
+ *     LE TYPE • OÙ
  *
- *   · Artiste · Paris · France
- *   · Artiste · Austin, TX · États-Unis
- *   · Artiste · Paris, Félines · France        (trois villes, un pays)
- *   · Artiste · Paris · France | Berlin · Allemagne     (deux pays)
- *   · Studio  · Félines · France
- *   · Salon   · Austin, TX · États-Unis
+ *   · Artiste • Paris, France
+ *   · Artiste • Austin, TX, USA
+ *   · Artiste • Lyon · Paris · France        (plusieurs villes, un pays)
+ *   · Artiste • Berlin, Allemagne | Paris, France      (plusieurs pays)
+ *   · Studio  • Félines, France
+ *   · Salon   • Austin, TX, USA
  *
- * ⚠️ LA FORME DU SECOND SEGMENT A ÉTÉ REPRISE TROIS FOIS DEPUIS : la
- * nº 585 a supprimé le « +N » qui comptait les villes sans les nommer,
- * la nº 586 a mis une barre verticale entre les pays, la nº 587 un
- * point médian devant le pays. La règle des DEUX SEGMENTS, elle, n'a
- * pas bougé — c'est `lieuxEcrits` qui écrit le second.
+ * ⚠️ LA FORME DU SECOND SEGMENT A ÉTÉ REPRISE SIX FOIS DEPUIS, et la
+ * règle des DEUX SEGMENTS n'a pas bougé une seule : la nº 585 a
+ * supprimé le « +N » qui comptait les villes sans les nommer, la
+ * nº 586 a mis une barre verticale entre les pays, la nº 587 un point
+ * médian devant le pays, la nº 589 une puce derrière le type, la
+ * nº 590 a fixé la ponctuation définitive (virgule pour une ville,
+ * point médian pour plusieurs) et écrit « USA » partout, la nº 591 a
+ * rangé le tout par ordre alphabétique. C'est `lieuxEcrits` qui écrit
+ * ce second segment, et lui seul.
  *
  * CE QUI NE VA PLUS, ET POURQUOI ON L'A CHANGÉ. La liste mélangeait
  * DEUX grammaires : pour un lieu, le premier mot disait CE QU'IL EST
@@ -188,11 +192,14 @@ export function periodeDuGuest(mode: {
 /**
  * LES VILLES OÙ CET ARTISTE TRAVAILLE, DÉDOUBLONNÉES, DANS SON ORDRE.
  * ------------------------------------------------------------------
- * §3-e — L'ORDRE EST CELUI QU'IL A DÉCLARÉ : on parcourt `suivi.modes`
- * TEL QUEL. ⚠️ SURTOUT PAS `modesOrdonnes`, qui range par genre (à
- * domicile, en studio, en salon, guest) — c'était le bon classement
- * quand chaque mode avait sa ligne ; ici il déciderait à la place de
- * l'artiste QUELLE ville se lit en premier.
+ * §3-e — ON PARCOURT `suivi.modes` TEL QUEL. ⚠️ SURTOUT PAS
+ * `modesOrdonnes`, qui range par genre (à domicile, en studio, en
+ * salon, guest) : ce classement-là mélangerait la façon d'exercer et
+ * l'endroit où l'on exerce, deux questions différentes.
+ * ⚠️ CETTE FONCTION NE CLASSE DONC RIEN, et c'est voulu : elle RELÈVE
+ * les lieux. Le RANGEMENT de la ligne se décide à l'écriture, où il
+ * est alphabétique depuis la nº 591 — voir `lieuxEcrits`. Ce qui sort
+ * d'ici garde l'ordre des modes, et `villesDuSuivi` avec lui.
  *
  * §3-d — DÉDOUBLONNÉES SUR LA LIGNE RENDUE, et non sur le nom brut :
  * deux modes qui s'écrivent pareil à l'écran SONT la même ville pour
@@ -342,10 +349,21 @@ export const LIEUX_AFFICHES = 3;
  * de la MÊME façon — un groupe, c'est ses villes puis son pays — et
  * il n'y a plus qu'une seule forme à composer au lieu de deux.
  *
- * L'ORDRE NE SE DÉCIDE PAS ICI : c'est celui des modes, donc celui que
- * l'artiste a déclaré (§3-e ci-dessus). Les groupes de pays suivent le
- * premier lieu qui les nomme. Trier alphabétiquement déplacerait son
- * lieu principal, qu'il a mis en tête.
+ * ██ §1 (nº 591) — L'ORDRE EST ALPHABÉTIQUE, À DEUX NIVEAUX ██
+ * LES PAYS entre eux, puis LES VILLES de chacun. L'ordre de
+ * DÉCLARATION n'entre plus en ligne de compte : ni le lieu principal,
+ * ni la façon d'exercer (salon, studio, guest) ne donnent la première
+ * place. Le propriétaire l'a demandé ainsi — une liste se lit mieux
+ * quand on sait où chercher un nom.
+ * ⚠️ UN ÉTAT NE CLASSE RIEN : il est collé à sa ville et voyage avec
+ * elle. C'est la VILLE qui décide du rang — « Austin, TX » se range à
+ * la lettre A, jamais à la lettre T.
+ * ⚠️ ET LA TRONCATURE COUPE APRÈS LE TRI : les trois lieux qui restent
+ * sont donc les trois PREMIERS ALPHABÉTIQUEMENT, plus les trois
+ * premiers déclarés. Un artiste qui exerce à Paris, Lyon, Nice et
+ * Brest lira « Brest · Lyon · Nice… · France » — Paris passe derrière
+ * l'élision, alors qu'il était en tête de sa déclaration. C'est la
+ * conséquence directe de ce qui est demandé, et elle est assumée.
  *
  * ⚠️ JAMAIS DE SÉPARATEUR ORPHELIN (charte, nº 386) : un lieu sans
  * pays connu s'écrit seul et ne se groupe avec personne ; un pays sans
@@ -384,17 +402,57 @@ const ENTRE_LES_VILLES = " · ";
 /** La ponctuation d'une adresse ordinaire — une ville, son pays. */
 const APRES_UNE_VILLE = ", ";
 
+/**
+ * ██ §1 (nº 591) — LE RANGEMENT ALPHABÉTIQUE, EN FRANÇAIS ██
+ * ------------------------------------------------------------------
+ * PAS `<` NI `localeCompare` NU, et c'est tout le point : comparer des
+ * chaînes JavaScript, c'est comparer des NUMÉROS DE CARACTÈRES. « Évry »
+ * y tombe après « Zurich », parce que le É porte un numéro bien plus
+ * haut que les lettres nues — et « lyon » avant « Paris » pour la même
+ * raison, les majuscules venant avant les minuscules.
+ * `Intl.Collator` range comme un dictionnaire français : les accents
+ * n'écartent pas une lettre de sa place, et la casse ne compte pas.
+ * `sensitivity: "base"` dit exactement cela — « Évry » et « Evry » sont
+ * la MÊME entrée pour le classement, comme « PARIS » et « Paris ».
+ * ⚠️ CONSTRUIT UNE SEULE FOIS, à l'échelle du module : un comparateur
+ * fabriqué dans le tri se refabriquerait à chaque comparaison, et c'est
+ * l'objet le plus cher de la famille `Intl`.
+ * ⚠️ ON RANGE SUR CE QUI S'ÉCRIT, jamais sur la donnée d'origine. Le
+ * pays a pu être abrégé en chemin (« États-Unis » devenu « USA » à la
+ * nº 590) : trier sur le nom d'origine rangerait « USA » à la lettre É,
+ * et la ligne paraîtrait mal classée à qui la lit. Ce que l'œil
+ * compare, c'est ce que l'œil voit.
+ */
+const ALPHABET = new Intl.Collator("fr", { sensitivity: "base" });
+
 function lieuxEcrits(lieux: LieuDuSuivi[]): string {
   if (lieux.length === 0) return "";
 
-  const retenus = lieux.slice(0, LIEUX_AFFICHES);
+  /*  ██ §1 (nº 591) — TOUT EST RANGÉ PAR ORDRE ALPHABÉTIQUE ██
+      Le pays d'abord, la ville ensuite : un seul tri en amont suffit
+      donc aux DEUX niveaux que le propriétaire demande, puisque le
+      groupement qui suit conserve l'ordre reçu. */
+  const ranges = lieux
+    .map((lieu) => ({ pays: lieu.pays, sujet: sujetDuLieu(lieu) }))
+    .sort(
+      (a, b) =>
+        //  Un lieu SANS PAYS CONNU passe après tous les autres : on ne
+        //  peut pas le ranger entre des pays qu'il ne nomme pas, et lui
+        //  donner la première place mettrait en tête le moins
+        //  renseigné.
+        Number(!a.pays) - Number(!b.pays) ||
+        ALPHABET.compare(a.pays, b.pays) ||
+        ALPHABET.compare(a.sujet, b.sujet)
+    );
+
+  const retenus = ranges.slice(0, LIEUX_AFFICHES);
   const groupes: Array<{ pays: string; sujets: string[] }> = [];
   for (const lieu of retenus) {
     const groupe = lieu.pays
       ? groupes.find((autre) => autre.pays === lieu.pays)
       : undefined;
-    if (groupe) groupe.sujets.push(sujetDuLieu(lieu));
-    else groupes.push({ pays: lieu.pays, sujets: [sujetDuLieu(lieu)] });
+    if (groupe) groupe.sujets.push(lieu.sujet);
+    else groupes.push({ pays: lieu.pays, sujets: [lieu.sujet] });
   }
   if (lieux.length > retenus.length) {
     const dernier = groupes[groupes.length - 1];
