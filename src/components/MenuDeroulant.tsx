@@ -1000,6 +1000,7 @@ export function MenuDeroulant({
    */
   const aplatDeLaSurface = opaque ? "bg-sombre-eleve" : "bg-sombre-carte";
 
+
   /**
    * ██ §2 (nº 578) — LE BLOC DES EN-TÊTES, UNE ÉCRITURE POUR DEUX BORDS ██
    * ------------------------------------------------------------------
@@ -1047,6 +1048,24 @@ export function MenuDeroulant({
     );
   }
   const [groupeDeplie, setGroupeDeplie] = useState<string | null>(groupeDuChoix);
+
+  /**
+   * §1 (nº 580) — LA PLAQUE DE LA FEUILLE : APLAT OU VERRE ?
+   * ------------------------------------------------------------------
+   * UNE SEULE LIGNE POUR LES TROIS CAS que le propriétaire a nommés, et
+   * elle se lit comme sa phrase : la feuille est unie QUAND ELLE A DES
+   * TITRES ET QUE RIEN N'EST DÉPLIÉ. Dès qu'une section s'ouvre, la
+   * plaque repasse en verre et seul le bloc reste opaque — la liste qui
+   * s'ouvre devient translucide, comme au web. Sans titres du tout, il
+   * n'y a rien à distinguer : verre partout.
+   * ⚠️ `opaque` GARDE SON DERNIER MOT (nº 552) : un appelant qui le
+   * passe demande un aplat, et l'état n'a pas à le contredire. Aucune
+   * feuille ne le passe aujourd'hui — la garde est là pour qu'on puisse.
+   * ⚠️ CE RÉGLAGE NE CONCERNE QUE LA FEUILLE. Le panneau du web garde
+   * son verre en toutes circonstances (§2 nº 573) : un panneau ancré
+   * n'a jamais couvert le bas de l'écran, la question ne s'y pose pas.
+   */
+  const feuilleOpaque = opaque || (blocEntetes && !groupeDeplie);
   /** LA SOUS-SECTION OUVERTE (passe nº 113) — une seule à la fois, et
       elle repart elle aussi du choix courant à chaque ouverture : on
       retombe sur son style, fût-il rangé dans une famille. */
@@ -1758,6 +1777,7 @@ export function MenuDeroulant({
           />
           {/* La feuille — SŒUR du voile, jamais son enfant. */}
           <div
+            {...(sombre && !feuilleOpaque ? { "data-verre-menu": "" } : {})}
             role="listbox"
             aria-label={ariaLabel}
             /*  §4 (nº 460) — `feuilleDecollee` : l'encadré ne touche
@@ -1765,41 +1785,43 @@ export function MenuDeroulant({
                 de l'interface (le `px-4` des pages), posée sur la
                 plaque ELLE-MÊME (jamais sur un parent — piège 378).
                 Hauteur, contenu, animation : rien d'autre ne bouge. */
-            /*  ██ §1 (nº 579) — LA FEUILLE SOMBRE EST UN APLAT, PLUS DU
-                 VERRE ██
-                 LE DÉFAUT : la feuille n'avait pas une couleur. Son bloc
-                 de titres portait un APLAT (`carte`, posé à la nº 573)
-                 tandis que la plaque, elle, portait `data-verre-menu` —
-                 le verre des menus, `rgba(11,15,20,0.45)` plus un flou.
-                 Deux natures de fond dans une même surface : le haut et
-                 le bas laissaient voir la page, le milieu non.
-                 LA CAUSE EST DONC LÀ, ET PAS DANS LE BLOC : le bloc a
-                 fait ce qu'on lui demandait ; c'est la plaque qui est
-                 restée en verre.
-                 LE REMÈDE : la plaque prend LE MÊME APLAT que le bloc
-                 (`aplatDeLaSurface`, écrit une fois juste au-dessus du
-                 bloc) et l'attribut de verre s'en va. Une seule surface,
-                 une seule couleur.
-                 ⚠️ `globals.css` N'EST PAS TOUCHÉ (règle nº 172) : les
-                 valeurs du verre y restent écrites en dur, intactes.
-                 On ne les modifie pas — ON N'EN VEUT PLUS ICI, ce qui
-                 se dit en retirant l'attribut, pas en réécrivant la
-                 règle. Toutes les autres surfaces de verre du site la
-                 lisent toujours.
+            /*  ██ §1 (nº 579, RÉGLÉ PAR ÉTAT nº 580) — APLAT OU VERRE ██
+                 CE QUE LA nº 579 A ÉTABLI : la feuille montrait DEUX
+                 natures de fond à la fois — son bloc de titres portait
+                 un aplat (`carte`, nº 573), sa plaque portait le verre
+                 des menus. Le haut et le bas laissaient voir la page, le
+                 milieu non. La plaque avait donc pris l'aplat, et la
+                 feuille était unie.
+                 CE QUE LA nº 580 AJOUTE : le propriétaire veut cette
+                 unité SEULEMENT quand la feuille est repliée. Trois cas,
+                 et une seule ligne les dit tous — `feuilleOpaque`, juste
+                 au-dessus du bloc :
+                  1. DEUX SECTIONS, RIEN DE DÉPLIÉ → plaque en APLAT.
+                     Avec le bloc qui porte le même, la feuille est unie :
+                     c'est l'acquis de la nº 579, intact ;
+                  2. DEUX SECTIONS, UNE DÉPLIÉE → plaque EN VERRE. Le
+                     bloc, lui, garde son aplat : les titres restent
+                     opaques, la liste qui s'ouvre devient translucide.
+                     C'est exactement ce que fait le panneau du web ;
+                  3. UNE SEULE SECTION → pas de bloc, plaque EN VERRE :
+                     la feuille d'avant la nº 579, telle quelle.
+                 ⚠️ IL N'Y A RIEN À FAIRE COHABITER, ET C'EST POURQUOI
+                 CETTE PASSE TIENT EN UNE LIGNE : le bloc a DÉJÀ son
+                 fond à lui. Poser le verre sur la plaque suffit à faire
+                 le cas 2 — le bloc peint par-dessus, comme au web.
+                 ⚠️ `globals.css` N'EST PAS TOUCHÉ (règle nº 172) : on
+                 POSE ou on RETIRE l'attribut, on ne réécrit pas la
+                 règle. C'est la méthode de la nº 579, dans l'autre sens.
                  ⚠️ LA BRANCHE CLAIRE NE BOUGE PAS (`bg-fond shadow-2xl`)
                  et c'est elle que prend la feuille du produit ARTISANS
-                 (`ChampMetier` ne passe pas `sombre`). Elle n'a jamais
-                 été en verre, elle ne le devient pas.
-                 ⚠️ LE BLOC NE SE DISTINGUE PLUS DU RESTE, et c'est
-                 exactement ce qui était demandé : c'est désormais LE
-                 TRAIT qui sépare, seul. Mesuré : `trait` (#2F353E) sur
-                 `carte` rend 1,34 — la même valeur qu'avant, le bloc
-                 étant déjà à `carte`. */
+                 (`ChampMetier` ne passe pas `sombre`).
+                 ⚠️ `opaque` GARDE SON DERNIER MOT (nº 552) : un appelant
+                 qui le passe veut un aplat, quel que soit l'état. */
             className={`relative rounded-t-3xl max-h-[80vh] flex flex-col pb-[max(1rem,env(safe-area-inset-bottom))] ${
               feuilleDecollee ? "mx-4 " : ""
             }${
               sombre
-                ? `text-sombre-texte ${aplatDeLaSurface}`
+                ? `text-sombre-texte${feuilleOpaque ? ` ${aplatDeLaSurface}` : ""}`
                 : "bg-fond shadow-2xl"
             }`}
             style={{
