@@ -716,12 +716,47 @@ export function BlocPortfolio({
         nettoyage les couvre tous, et le compteur rend le corps au
         dernier retrait — le défilement REVIENT à la fermeture.
         `?sonde-bascule=1` en journalise la preuve : « verrou
-        posé (1) » à l'ouverture, « verrou retiré (0) » après. */
+        posé (1) » à l'ouverture, « verrou retiré (0) » après.
+
+      ██ §5 (nº 560) — ET LE WEB LE POSE AUSSI, DÉSORMAIS ██
+      LE DÉFAUT : la fenêtre ouverte, la page continuait de défiler
+      derrière elle. La nº 474 n'avait armé le verrou qu'au doigt ; la
+      garde sur `data-appareil` disparaît.
+      AUCUN SECOND MÉCANISME : c'est le MÊME effet, le MÊME module
+      compté, le MÊME nettoyage. Rien n'est écrit de neuf — une
+      condition est retirée.
+      POURQUOI CETTE FENÊTRE-CI ET PAS « MON COMPTE » : la maison a
+      déjà sa règle, et elle se lit dans les porteurs. Un MENU ancré
+      sous un bouton ne verrouille pas (MenuEspace garde sa garde du
+      doigt) ; une FENÊTRE CENTRÉE À VOILE, elle, verrouille aux deux
+      largeurs — c'est ce que fait `FenetreModale` depuis la nº 469,
+      sans aucune garde d'appareil. « Ajouter un style » est de la
+      seconde famille : `fixed inset-0`, voile noir, plaque centrée.
+      Elle prend donc la règle de sa famille.
+      L'EMPILEMENT TIENT PAR CONSTRUCTION, c'est tout l'objet du
+      compteur : cette fenêtre s'ouvre depuis le FORMULAIRE, qui ne
+      verrouille rien — le compte monte à 1 puis retombe à 0. Et si
+      une surface verrouillait déjà (une modale par-dessus, le menu du
+      compte au doigt), le compte monterait à 2 : refermer celle-ci
+      n'en retirerait qu'un, l'autre garderait le corps. C'est
+      exactement le bug que la nº 469 a fermé, et le remède est celui
+      qu'on réemploie.
+      ⚠️ LA PAGE NE SAUTE NI À LA POSE NI AU RETRAIT, et ce n'est pas
+      une espérance : le verrou pose `overflow: hidden` sur le corps,
+      ce qui ne décale la mise en page que si une barre de défilement
+      OCCUPE DE LA PLACE. Or le site n'en affiche aucune — `globals.css`
+      les retire toutes (`scrollbar-width: none` et
+      `::-webkit-scrollbar { display:none; width:0 }` sur
+      `*:not(.defilement-visible)`), la règle « jamais d'ascenseur
+      affiché ». La barre du document mesure donc zéro pixel : la
+      cacher n'en rend aucun.
+      ⚠️ ET LA PAGE DU DOIGT NE CHANGE PAS : elle avait ce verrou
+      depuis la nº 474 — c'est cet effet-ci, et il continue de le poser
+      pour elle. */
   const auDoigt = useAppareilMobile();
   useEtapeQuiSeReferme(auDoigt && fenetreStyles, fermerFenetreStyles);
   useEffect(() => {
     if (!fenetreStyles) return;
-    if (document.documentElement.dataset.appareil !== "mobile") return;
     poserLeVerrouDeDefilement();
     return retirerLeVerrouDeDefilement;
   }, [fenetreStyles]);
@@ -803,13 +838,32 @@ export function BlocPortfolio({
           {/* LA PORTE DE LA FAMILLE — sa flèche est GRANDE et pleine
               couleur : impossible de la manquer, c'est elle qui dit
               « il y a onze styles là-dessous ». */}
+          {/*  ██ §1 (nº 560) — LA GRAISSE PART, LES DEUX SIGNES RESTENT ██
+               ELLE PORTAIT `font-semibold` quand les styles ordinaires
+               de la liste n'ont AUCUNE classe de graisse — ils héritent
+               du 400 du corps de page. La porte pesait donc plus lourd
+               que ce qu'elle contient, et c'était un TROISIÈME signe
+               par-dessus deux qui suffisent : le chevron rose à droite
+               (nº 304) et le trait rose sous les mots (nº 559). Elle
+               rejoint la graisse des styles ; le chevron et le trait ne
+               bougent pas d'un caractère.
+               ⚠️ AUCUNE CLASSE NE LA REMPLACE : on retire, on ne
+               réécrit pas `font-normal` — la ligne prendrait alors une
+               graisse EXPLICITE que ses voisines n'ont pas, et deux
+               écritures diraient la même chose.
+               ⚠️ AUX DEUX APPAREILS, ET JE LE DIS : ces lignes sont
+               fabriquées une fois (nº 474). Ce n'est pas un réglage de
+               FOND — les deux que la nº 559 a séparés, le survol et le
+               champ, restent séparés — mais une graisse : la porte doit
+               peser pareil partout, sans quoi on aurait créé une
+               divergence là où l'on vient d'en refermer une. */}
           <button
             type="button"
             aria-expanded={depliee}
             onClick={() => setFamilleDepliee(depliee ? null : entree.slug)}
             className={`flex w-full items-center justify-between gap-3
                        px-5 min-h-[52px] text-left text-[15px]
-                       font-semibold text-sombre-texte
+                       text-sombre-texte
                        transition-colors ${survol}`}
           >
             {/*  ██ §3 (nº 559) — LE TRAIT ROSE SOUS LA PORTE ██
@@ -901,7 +955,43 @@ export function BlocPortfolio({
       demandé, et ce serait une passe à elle. */
   function bandeauStyleManquant(
     classeBoite: string,
-    classeChamp = "bg-sombre-eleve-clair focus:bg-sombre-bordure"
+    classeChamp = "bg-sombre-eleve-clair focus:bg-sombre-bordure",
+    /**
+     * ██ §4 (nº 560) — LE BOUTON « ENVOYER », DIT PAR L'APPELANT ██
+     * ----------------------------------------------------------------
+     * DEUX DEMANDES EN UNE, et toutes deux tiennent dans ce réglage.
+     *  a) IL ÉTAIT INVISIBLE AU REPOS. Son fond éteint valait
+     *     `eleve-clair` — exactement le fond que la nº 559 venait de
+     *     donner au bandeau du web : 1,00, un bouton fondu dans sa
+     *     barre. C'est une conséquence directe de cette passe-là.
+     *  b) IL NE DOIT PLUS ÊTRE ROSE UNE FOIS ACTIF. Le rose disait
+     *     « c'est prêt » d'un coup d'œil ; deux gris doivent le dire
+     *     aussi bien, et le propriétaire ne veut plus de rose ici.
+     * COMMENT DEUX GRIS Y ARRIVENT, ET C'EST MESURÉ. Le jeu du web les
+     * place DE PART ET D'AUTRE de sa barre (`haut`) :
+     *  · ÉTEINT — `eleve-clair`, SOUS la barre : il RECULE (1,22). Sur
+     *    un fond noir, ce qui est plus sombre s'éloigne — c'est la
+     *    règle écrite à la nº 505 pour le compteur des capsules ;
+     *  · ALLUMÉ — `haut-clair`, AU-DESSUS de la barre : il AVANCE
+     *    (1,21), et son mot passe du gris doux au blanc plein.
+     * L'ÉCART ENTRE LES DEUX ÉTATS VAUT 1,48 — plus qu'un cran de
+     * l'échelle, et autant que ce qui détache la barre de la plaque.
+     * Et le MOT lui-même gagne : 4,94 éteint, 7,07 allumé, quand le
+     * blanc sur rose n'en donnait que 3,58. L'état allumé est donc plus
+     * lisible qu'il ne l'était en rose.
+     * ⚠️ CE QUE JE SIGNALE : allumé, le bouton porte le même gris que
+     * le CHAMP à sa gauche (`haut-clair` tous les deux) — c'est le
+     * dernier cran de l'échelle, il n'y a rien au-dessus. Ils ne se
+     * confondent pas pour autant : l'un est large et porte une saisie,
+     * l'autre est étroit et porte un mot blanc en demi-gras.
+     * ⚠️ LE DÉFAUT EST CELUI D'AVANT, AU CARACTÈRE PRÈS — rose allumé,
+     * `eleve-clair` éteint : la page du doigt ne passe rien et garde
+     * son bouton tel quel. Son bandeau, lui, n'a pas bougé de la
+     * nº 559 : le rose n'y est pas invisible.
+     */
+    classeBouton = "bg-primaire text-white hover:opacity-90 " +
+      "active:opacity-90 disabled:bg-sombre-eleve-clair " +
+      "disabled:text-sombre-texte-doux"
   ) {
     return (
       <div className={classeBoite}>
@@ -988,8 +1078,14 @@ export function BlocPortfolio({
             disabled={suggestion.trim().length < 2 || envoiSuggestion}
             //  ⚠️ L'ACTIVATION SE VOIT (passe nº 124) : tant
             //  que rien n'est saisi, la capsule reste grise et
-            //  éteinte ; dès deux caractères, elle passe en
-            //  ROSE PLEIN — impossible de la croire bloquée.
+            //  éteinte ; dès deux caractères, elle s'allume —
+            //  impossible de la croire bloquée.
+            //  §4 (nº 560) — « ROSE PLEIN » N'EST PLUS VRAI PARTOUT :
+            //  c'est encore la valeur PAR DÉFAUT (la page du doigt),
+            //  mais la fenêtre du web demande désormais deux gris.
+            //  La règle, elle, ne change pas — l'allumage se voit ;
+            //  seul ce qui le peint est dit par l'appelant (voir le
+            //  §4 posé sur `classeBouton`).
             /*  §2-a (nº 475) — LE MÊME RAYON QUE LE CHAMP QU'IL SUIT :
                 la capsule ronde (`rounded-full`) devient `rounded-lg`,
                 HUIT pixels — le rayon EXACT du champ de saisie
@@ -1002,13 +1098,10 @@ export function BlocPortfolio({
                 fenêtre du web prend donc le même rayon que la page du
                 doigt — deux dessins pour un seul bouton seraient une
                 divergence de plus à tenir. */
-            className="shrink-0 h-11 rounded-lg px-5 text-[14px]
+            className={`shrink-0 h-11 rounded-lg px-5 text-[14px]
                        font-semibold transition-colors
-                       bg-primaire text-white hover:opacity-90
-                       active:opacity-90
-                       disabled:bg-sombre-eleve-clair
-                       disabled:text-sombre-texte-doux
-                       disabled:opacity-100 disabled:hover:opacity-100"
+                       disabled:opacity-100 disabled:hover:opacity-100
+                       ${classeBouton}`}
           >
             {envoiSuggestion ? "Envoi…" : "Envoyer"}
           </button>
@@ -1660,7 +1753,30 @@ export function BlocPortfolio({
                    celui des sections de fiche — aucune valeur neuve.
                    Le `pb-1` passe à `pb-3` pour que le filet ne colle
                    pas au mot. */}
-              <div className="flex items-center justify-between border-b border-sombre-bordure pl-5 pr-3 pt-3 pb-3">
+              {/*  ██ §2 (nº 560) — LE FILET REDEVIENT LISIBLE ██
+                   CE QUE LA nº 559 AVAIT SIGNALÉ SANS LE RATTRAPER : en
+                   passant la plaque de `carte` à `eleve`, ce filet est
+                   tombé de 1,28 à 1,09 — il ne se lisait plus. LA CIBLE
+                   EST DONC CE QU'IL AVAIT : au moins 1,28.
+                   LES CANDIDATS, MESURÉS SUR `eleve` : `bordure` 1,09
+                   (l'actuel), `trait` 1,14, `eleve-clair` 1,21,
+                   `haut` 1,47. Les trois premiers restent SOUS la cible
+                   — même `trait`, pourtant le jeton doctrinal des
+                   séparations (nº 315), ne rendrait que 1,14 : sur un
+                   fond monté de deux crans, un jeton pensé pour `fond`
+                   ne suffit plus. `haut` est le premier qui passe.
+                   ⚠️ CE FILET N'EST PARTAGÉ AVEC PERSONNE : il est écrit
+                   ici, en toutes lettres, pour cette fenêtre seule. La
+                   page du doigt a le SIEN, d'une autre écriture
+                   (`TRAIT_SEPARATION_FOND` dans son `sousLeTitre`, plus
+                   bas) — elle ne bouge pas. Les autres porteurs de
+                   `border-sombre-bordure` vivent tous dans d'AUTRES
+                   fichiers (champs de contact, mot de passe, fenêtres
+                   hors ligne) : aucun n'est emporté.
+                   ⚠️ ET LA CHARTE N'EST PAS ÉTENDUE : c'est le filet qui
+                   existait déjà, on change sa couleur — aucun contour
+                   neuf n'est ajouté nulle part. */}
+              <div className="flex items-center justify-between border-b border-sombre-haut pl-5 pr-3 pt-3 pb-3">
                 <h2 className="text-[16px] font-bold text-sombre-texte">
                   Ajouter un style
                 </h2>
@@ -1712,10 +1828,37 @@ export function BlocPortfolio({
               {/*  §2 (nº 559) — le bandeau et son champ montent d'un
                    cran chacun, la plaque étant passée à `eleve` :
                    bandeau 1,21 sur la plaque, champ 1,22 sur le
-                   bandeau — les deux écarts d'avant, conservés. */}
+                   bandeau — les deux écarts d'avant, conservés.
+                   ██ §3 (nº 560) — LA BARRE MONTE ENCORE D'UN CRAN ██
+                   Les 1,21 de la nº 559 ne suffisaient pas : la barre
+                   se confondait avec la fenêtre. Elle passe à `haut` —
+                   1,47 sur la plaque, le même écart que celui qui
+                   détache la plaque de l'encadré du formulaire. C'est
+                   la première valeur de l'échelle qui la fasse
+                   VRAIMENT ressortir.
+                   ET LE CHAMP SUIT, sans quoi il disparaîtrait dans
+                   elle : `haut` était devenu la couleur de la barre
+                   (1,00) ; il monte à `haut-clair` et retrouve son
+                   écart (1,21).
+                   ⚠️ ET SON FOCUS N'A PLUS DE CRAN AU-DESSUS DE LUI :
+                   `haut-clair` est le dernier de l'échelle. Plutôt
+                   qu'écrire un `focus:` qui repeindrait la couleur
+                   déjà posée — une classe qui ne dirait rien de vrai,
+                   et que la passe suivante croirait active — la
+                   classe de focus est SIMPLEMENT ABSENTE au web : le
+                   champ se dit par son curseur, comme partout où l'on
+                   écrit. Inventer une couleur pour la remplacer est
+                   hors des bornes de cette passe ; je le signale.
+                   ⚠️ TROIS RÉGLAGES DITS PAR L'APPELANT, UN SEUL
+                   APPEL : la page du doigt n'en passe aucun et garde
+                   ses trois valeurs d'avant, au caractère près. */}
               {bandeauStyleManquant(
-                "relative z-10 shrink-0 bg-sombre-eleve-clair px-4 py-3",
-                "bg-sombre-haut focus:bg-sombre-haut-clair"
+                "relative z-10 shrink-0 bg-sombre-haut px-4 py-3",
+                "bg-sombre-haut-clair",
+                "bg-sombre-haut-clair text-sombre-texte " +
+                  "hover:opacity-90 active:opacity-90 " +
+                  "disabled:bg-sombre-eleve-clair " +
+                  "disabled:text-sombre-texte-doux"
               )}
             </div>
           </div>,
