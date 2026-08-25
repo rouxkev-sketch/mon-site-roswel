@@ -1056,11 +1056,33 @@ export function MenuDeroulant({
              barre d'accueil. La plaque, elle, ne la pose plus quand le
              bloc est là (voir sa classe, plus bas).
              ⚠️ EN HAUT (le panneau du web), RIEN DE TOUT CELA : aucune
-             réserve ne vit là-bas, le bloc garde ses 12 px. */
-        className={`shrink-0 pt-1 ${
+             réserve ne vit là-bas, le bloc garde son `pt-1 pb-3`.
+
+             ██ §1b (nº 582) — ET LA RÉSERVE SEULE, RIEN DE PLUS ██
+             La nº 581 avait ADDITIONNÉ les 12 px du bloc et la réserve,
+             pour ne rien déplacer. Le propriétaire trouve l'air trop
+             grand sous le dernier titre : les 12 px s'en vont, LA
+             RÉSERVE RESTE — c'est elle qui empêche le bloc de toucher
+             la barre d'accueil, et elle n'est pas décorative. De 28 px
+             au repos (12 + 16) on passe à 16, et sur un téléphone à
+             barre d'accueil c'est la hauteur de cette barre, comme
+             avant. La valeur est EXACTEMENT celle que la plaque pose
+             quand il n'y a pas de bloc : l'air du bas est donc le même
+             dans les deux cas, comme demandé.
+
+             ██ §1a (nº 582) — ET PLUS D'AIR EN TÊTE QUAND IL EST EN BAS ██
+             Le bloc perd aussi son `pt-1` dans cette position. AVEC les
+             8 px de la liste vide (retirés plus bas), c'étaient les
+             12 px qui séparaient le trait de préhension du premier
+             titre quand tout est replié — alors qu'une section ouverte
+             fait commencer sa première entrée juste sous le trait.
+             L'air sous le trait vaut désormais 24 px DANS LES DEUX
+             CAS ; ce qui reste, ce sont les rembourrages propres de ce
+             qui suit — 12 px pour un titre, 10 pour une entrée. */
+        className={`shrink-0 ${
           enBas
-            ? "border-t pb-[calc(0.75rem+max(1rem,env(safe-area-inset-bottom)))]"
-            : "border-b pb-3"
+            ? "border-t pb-[max(1rem,env(safe-area-inset-bottom))]"
+            : "border-b pt-1 pb-3"
         } ${aplatDeLaSurface} ${
           groupeDeplie ? "border-sombre-trait" : "border-transparent"
         }`}
@@ -1940,7 +1962,13 @@ export function MenuDeroulant({
               //  §3 (nº 259) — `overscroll-contain` : arrivé en bout de
               //  liste, le geste NE SE PROPAGE PAS à la page (la même
               //  écriture que le panneau du web, ci-dessus).
-              className="overflow-y-auto overscroll-contain px-2 pb-2 defilement-visible"
+              //  §1a (nº 582) — L'AIR DU BAS N'EST LÀ QUE S'IL ENTOURE
+              //  QUELQUE CHOSE, la règle du §1 nº 573 portée à la feuille :
+              //  toutes sections repliées, la liste est vide et ces 8 px
+              //  restaient entre le trait de préhension et le bloc.
+              className={`overflow-y-auto overscroll-contain px-2 defilement-visible${
+                listeGarnie ? " pb-2" : ""
+              }`}
             >
               {optionsAvecEntetes.map(({ option, cle, entete, sousEntete }) => {
                 const { value, label } = option;

@@ -165,23 +165,16 @@ export function MenusSelection({
     lireComptesSelection
   );
   const [commandeFiltres, setCommandeFiltres] = useState(0);
-  /**
-   * ██ §1 (nº 529) — LE CHEVRON PIVOTE QUAND LE MENU EST OUVERT ██
-   * ------------------------------------------------------------------
-   * Le chevron du côté choisi (nº 460) pointait vers le bas en toute
-   * circonstance : il disait « ceci ouvre », jamais « c'est ouvert ».
-   * IL SE RETOURNE MAINTENANT, aux deux appareils.
-   * ⚠️ L'ÉTAT VIENT DU MENU LUI-MÊME, il n'est pas deviné : le
-   * déroulant prévient déjà son parent à chaque ouverture et à chaque
-   * fermeture (`onOuvertureChange`, l'écriture qui sert au moteur
-   * depuis la nº 195). Le chevron ne peut donc pas se désaccorder de
-   * la liste — quel que soit le chemin qui la ferme : le clic dehors,
-   * Échap, un choix, ou le glissement de la feuille au doigt.
-   * ⚠️ ET C'EST LA MÊME UNIQUE INSTANCE qui rend le panneau du web et
-   * la feuille du doigt (nº 460-461) : une seule vérité, les deux
-   * présentations.
-   */
-  const [filtresOuverts, setFiltresOuverts] = useState(false);
+  /*  ⚠️ §2 (nº 582) — LE CHEVRON NE PIVOTE PLUS, ET SON ÉTAT EST
+      PARTI AVEC LUI. La nº 529 le retournait quand le menu s'ouvrait,
+      en lisant l'ouverture au menu lui-même (`onOuvertureChange`). Le
+      propriétaire n'en veut plus : le chevron dit « ceci ouvre » en
+      toute circonstance, et rien d'autre. L'état `filtresOuverts` et
+      l'abonnement qui le nourrissait sont retirés — il ne restait
+      qu'eux pour s'en servir.
+      ⚠️ LES CHEVRONS DES EN-TÊTES DE SECTION, EUX, PIVOTENT TOUJOURS
+      (nº 572-574) : c'est un autre mécanisme, dans un autre fichier
+      (`MenuDeroulant`, `enTeteSection`), et il n'est pas touché. */
   const motDuVaEtVient = (label: string, cle: MenuSelection) => {
     if (choix.menu !== cle) return label;
     const compte = cle === MENU_FAVORIS ? comptes.favoris : comptes.suivis;
@@ -195,16 +188,12 @@ export function MenusSelection({
         {compte !== null && (
           <span className="font-normal text-sombre-texte-doux">{compte}</span>
         )}
-        {/*  §1 (nº 529) — LE PIVOT, DANS L'ÉCRITURE QUI EXISTE : une
-             enveloppe qui tourne d'un demi-tour, la même que le volet
-             des horaires et le compteur « +N / Réduire » (nº 490-491).
-             La couleur passe sur l'enveloppe avec la rotation — l'icône
-             hérite, et il n'y a toujours qu'une classe de couleur. */}
-        <span
-          aria-hidden="true"
-          className={`shrink-0 text-sombre-texte-doux transition-transform
-                     duration-200 ${filtresOuverts ? "rotate-180" : ""}`}
-        >
+        {/*  §2 (nº 582) — LE CHEVRON, IMMOBILE. L'enveloppe reste :
+             c'est elle qui porte la couleur, donc une seule classe de
+             couleur sur la ligne — mais elle ne tourne plus, et la
+             transition qui l'accompagnait est partie avec la rotation
+             (une transition sans rien à animer ne dit rien). */}
+        <span aria-hidden="true" className="shrink-0 text-sombre-texte-doux">
           <IconeChevronBas taille={16} />
         </span>
       </span>
@@ -274,9 +263,6 @@ export function MenusSelection({
           poserSelection(choix.menu, suivante === valeur ? "" : suivante)
         }
         options={entrees}
-        //  §1 (nº 529) — le déroulant dit quand il s'ouvre et quand il
-        //  se ferme ; le chevron du va-et-vient s'y accroche.
-        onOuvertureChange={setFiltresOuverts}
         ariaLabel="Filtrer"
         placeholder={libelleDuFiltre(entrees, choix, etroit)}
         libelleValeur={libelleDuFiltre(entrees, choix, etroit)}
