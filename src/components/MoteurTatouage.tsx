@@ -541,7 +541,7 @@ export function MoteurTatouage({
   }
 
   /**
-   * ██ §1 (nº 568) — « EFFACER » DANS LE PANNEAU DES FILTRES ██
+   * ██ §1 (nº 568, REPRIS nº 570) — « EFFACER » DANS LES FILTRES ██
    * ------------------------------------------------------------------
    * IL N'EFFACE QUE LES FILTRES, et c'est la règle posée à la nº 567 :
    * un panneau efface ce qu'il porte, pas ce que porte le voisin. Le
@@ -549,21 +549,37 @@ export function MoteurTatouage({
    * s'en charge, chez lui.
    * ⚠️ « TOUS LES FILTRES EFFACÉS » S'ÉCRIT `exclure: []` : la base ne
    * connaît que les slugs ÉCARTÉS (voir `basculerBadge`), donc rien
-   * d'écarté = tous les badges allumés = aucun filtrage. C'est le même
-   * mot que la remise à zéro du site.
-   * ⚠️ IL N'APPELLE PAS `fermerLesFiltres` : celle-ci lit le brouillon
-   * DU RENDU où elle a été créée, et poserait donc l'ancien par-dessus
-   * celui qu'on vient de vider. Elle est reprise ici à l'identique, avec
-   * `[]` à la place du brouillon — et le même silence quand il n'y a
-   * rien à effacer.
+   * d'écarté = tous les badges allumés = aucun filtrage.
+   *
+   * ██ CE QUI CHANGE À LA nº 570 : IL NE FERME PLUS, ET IL NE CHERCHE
+   * PLUS ██
+   * La nº 568 refermait le panneau et annonçait dans la foulée. Le
+   * propriétaire veut voir les badges se rallumer SOUS SES YEUX et
+   * continuer à choisir. « Effacer » redevient donc ce que sont tous les
+   * autres gestes de ce panneau depuis la nº 364 : UNE ÉCRITURE DANS LE
+   * BROUILLON, rien de plus. Une seule ligne suffit — poser un brouillon
+   * VIDE.
+   *  · l'affichage lit le brouillon (voir le montage du panneau), donc
+   *    les badges se rallument tout de suite ;
+   *  · la recherche part quand on valide ou qu'on ferme, comme pour un
+   *    badge coché — même porte, même silence si rien n'a bougé ;
+   *  · ⚠️ UN TABLEAU VIDE EST UNE VALEUR, PAS UNE ABSENCE : `[]` est
+   *    « vrai » en JavaScript, donc la garde `if (!filtresEnAttente)` de
+   *    `fermerLesFiltres` NE L'AVALE PAS. C'est ce qui fait la
+   *    différence entre « on n'a rien touché » (`null`) et « on a tout
+   *    effacé » (`[]`), exactement comme l'enveloppe de la ville au §3.
+   *  · ⚠️ IL N'ANNULE PLUS LA NOTE DE RÉOUVERTURE (§2 nº 569) : cette
+   *    note n'est annulée que par une fermeture VOULUE, et effacer n'en
+   *    est plus une. Le panneau restant ouvert, il n'y a rien à
+   *    réarmer — mais s'il partait maintenant avec l'arbre, il
+   *    reviendrait, ce qui est la bonne réponse.
+   * ⚠️ LE PIED DU RAYON N'EST PAS CONCERNÉ : son « Effacer » efface tout
+   * et ferme (nº 567), et c'est voulu. Les deux pieds partagent
+   * `piedActions`, qui ne partage QUE LE DESSIN de la rangée — chaque
+   * panneau y branche ses deux gestes à lui.
    */
   function effacerLesFiltres() {
-    //  §2 (nº 569) — une fermeture VOULUE annule la note de réouverture.
-    oublierLaReouvertureDesFiltres();
-    setFiltresOuverts(false);
-    setFiltresEnAttente(null);
-    if (criteres.exclure.length === 0) return; // aucun filtre : rien à dire
-    surChangement({ ...criteres, exclure: [] });
+    setFiltresEnAttente([]);
   }
 
   /*  LA VERSION FRAÎCHE DE LA FERMETURE, pour les écouteurs de
@@ -1844,6 +1860,12 @@ export function MoteurTatouage({
                    bougé. Le clic à l'extérieur et Échap appellent
                    exactement la même — aucun geste ne peut donc chercher
                    deux fois.
+                   ⚠️ « EFFACER » NE FERME PAS (nº 570) : il écrit un
+                   brouillon vide, les badges se rallument sous les yeux,
+                   et l'on continue à choisir. C'est le seul des deux
+                   pieds à se comporter ainsi — celui du rayon efface et
+                   ferme (nº 567). Les deux partagent le DESSIN de la
+                   rangée, jamais leurs gestes.
                    ⚠️ CE PANNEAU EST DIMENSIONNÉ À SON CONTENU : il
                    grandit de la hauteur de la rangée (44 px, la hauteur
                    d'« EFFACER », plus l'air au-dessus — 28 px depuis le
