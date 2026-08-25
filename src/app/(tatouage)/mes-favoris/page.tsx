@@ -9,6 +9,7 @@ import {
   entreesDesStyles,
   entreesDuFiltre,
   entreesDuProfil,
+  sansGroupeSansPrise,
 } from "@/lib/filtres-selection";
 import { comptesDesFavoris, comptesDesSuivis } from "@/lib/selection-suivis";
 import { cleCookieTexte, phototequeDuCookie } from "@/lib/vue-phototheque";
@@ -68,7 +69,16 @@ export default async function PageMesFavoris() {
   //  les suivis, non — on ne suit pas une photo, on suit une personne :
   //  leur menu ne porte que la liste des styles, familles en
   //  sous-porte, précédée de « Tous les styles ».
-  const entreesFavoris = entreesDuFiltre(comptesDesFavoris(photos));
+  /*  §2 (nº 576) — ET LES SECTIONS QUI NE PEUVENT RIEN TRIER SONT
+      ÉCARTÉES, ICI, AU PLUS PRÈS DES DONNÉES : c'est le seul endroit qui
+      tient à la fois les entrées et leur table de comptes. La règle vit
+      dans `sansGroupeSansPrise` — les deux menus la partagent, elle
+      n'est pas écrite deux fois. */
+  const comptesFavoris = comptesDesFavoris(photos);
+  const entreesFavoris = sansGroupeSansPrise(
+    entreesDuFiltre(comptesFavoris),
+    comptesFavoris
+  );
   /*  §2 (nº 316) — LE MENU DES PORTFOLIOS A DÉSORMAIS DEUX GROUPES :
       « Styles », celui qui existait, et « Profil » — comment le
       portfolio suivi exerce. Les deux listes viennent de LA MÊME table
@@ -78,10 +88,10 @@ export default async function PageMesFavoris() {
       alors qu'un groupe — et la règle de la nº 304 rouvre le menu
       sans flèche, d'elle-même. */
   const comptesSuivis = comptesDesSuivis(suivis);
-  const entreesSuivis = [
-    ...entreesDesStyles(comptesSuivis),
-    ...entreesDuProfil(comptesSuivis),
-  ];
+  const entreesSuivis = sansGroupeSansPrise(
+    [...entreesDesStyles(comptesSuivis), ...entreesDuProfil(comptesSuivis)],
+    comptesSuivis
+  );
 
   return (
     /*  §2 (nº 257) — LA MISE EN PAGE MÉMORISÉE, LUE ICI ET SERVIE À

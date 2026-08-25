@@ -366,6 +366,16 @@ export function MenusSelection({
              feuilles qui montent du bas (`feuilleMobile`), et le bloc
              n'existe que dans le panneau classique. */
         entetesCollants
+        /*  §1 (nº 576) — LA PAGE NE DÉFILE PLUS DERRIÈRE CE MENU. Ces
+             deux menus posent un voile (`avecVoile`, juste au-dessus) :
+             la page s'assombrit et continuait pourtant de défiler
+             dessous. C'est le réglage de la nº 573, celui du menu des
+             styles du moteur, qu'il suffisait de passer ici.
+             ⚠️ LE DOIGT N'EST PAS ATTEINT : le menu ne pose ce verrou
+             que lorsque c'est le PANNEAU CLASSIQUE qu'on voit ; sous
+             768 px c'est la feuille qui monte du bas, et elle a son
+             propre gel depuis la nº 259-§3. */
+        verrouilleLaPage
       />
     );
   };

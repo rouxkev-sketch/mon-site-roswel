@@ -438,6 +438,70 @@ function stylesPresents(
   return entrees;
 }
 
+/**
+ * ██ §2 (nº 576) — UN GROUPE QUI NE PEUT RIEN TRIER S'EN VA ██
+ * ====================================================================
+ * LE DÉFAUT : dans le menu des portfolios, la section « Profil »
+ * s'affichait même quand tous les portfolios suivis sont de la même
+ * nature — qui ne suit que des artistes y lisait « Tous les profils » et
+ * « Artiste », deux entrées qui montrent EXACTEMENT la même chose. Une
+ * section qui ne peut rien trier n'a rien à faire à l'écran.
+ *
+ * LE CRITÈRE, ET IL EST EXACT PLUTÔT QU'APPROCHÉ. On pourrait croire
+ * qu'« une seule entrée = inutile » ; C'EST FAUX, et le menu des favoris
+ * le prouve : « Réalisations » n'ayant qu'un style reste utile, parce
+ * que sa tête (« Toutes les réalisations ») écarte quand même les
+ * flashs. LE VRAI CRITÈRE EST LE COMPTE : une entrée dont le compte vaut
+ * LE TOTAL montre tout, donc ne trie rien. Un groupe dont TOUTES les
+ * entrées sont dans ce cas ne peut rien trier du tout — il part.
+ *  · « Profil » avec les seuls artistes : tête = total, « Artiste » =
+ *    total → il part. C'est le cas signalé.
+ *  · « Styles » avec un seul style porté par TOUS les portfolios :
+ *    même compte, même sort — la règle est la même pour les deux
+ *    sections, il n'y en a qu'une écrite.
+ *  · « Styles » avec un seul style porté par DEUX portfolios sur trois :
+ *    son compte est inférieur au total, il trie, il reste. C'est
+ *    précisément ce qu'un « une seule entrée » aveugle aurait perdu.
+ *  · les deux portes des favoris : leur tête compte les photos de LEUR
+ *    catégorie, jamais le total tant que l'autre catégorie existe.
+ *
+ * ⚠️ LE TOTAL EST DÉJÀ DANS LA TABLE (`CLE_TOTAL`, une étoile) : les
+ * deux tables de comptes le posent (voir `selection-suivis`). On ne
+ * recompte rien.
+ * ⚠️ LES ENTRÉES SANS GROUPE NE SONT JAMAIS TOUCHÉES — il n'y en a plus
+ * depuis la nº 525, la garde est là pour qu'on puisse en remettre.
+ * ⚠️ CE QUI ARRIVE ENSUITE VIENT TOUT SEUL, et c'est voulu : s'il ne
+ * reste qu'un groupe, `aDesPortesDeGroupe` rend faux, il n'y a plus de
+ * portes et le bloc fixe de la nº 575 ne s'affiche pas — le menu
+ * redevient une liste simple. Et s'il ne reste AUCUNE entrée, le menu
+ * DISPARAÎT : `MenusSelection` rend un blanc quand sa liste est vide
+ * (règle d'avant cette passe, inchangée).
+ */
+export function sansGroupeSansPrise(
+  entrees: EntreeFiltre[],
+  comptes: Map<string, number>
+): EntreeFiltre[] {
+  const total = comptes.get(CLE_TOTAL) ?? 0;
+  if (!total) return entrees;
+  const parGroupe = new Map<string, EntreeFiltre[]>();
+  for (const entree of entrees) {
+    if (!entree.groupe) continue;
+    const liste = parGroupe.get(entree.groupe);
+    if (liste) liste.push(entree);
+    else parGroupe.set(entree.groupe, [entree]);
+  }
+  const sansPrise = new Set<string>();
+  for (const [groupe, liste] of parGroupe) {
+    if (liste.every((entree) => (entree.compte ?? 0) >= total)) {
+      sansPrise.add(groupe);
+    }
+  }
+  if (sansPrise.size === 0) return entrees;
+  return entrees.filter(
+    (entree) => !entree.groupe || !sansPrise.has(entree.groupe)
+  );
+}
+
 export function entreesDuFiltre(
   comptes: Map<string, number>
 ): EntreeFiltre[] {

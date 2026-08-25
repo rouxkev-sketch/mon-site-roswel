@@ -602,9 +602,24 @@ export function MenuDeroulant({
       quel que soit le chemin de fermeture, y compris un démontage. */
   useEffect(() => {
     if (!verrouilleLaPage || !listeVisible) return;
+    /*  §1 (nº 576) — ET SEULEMENT QUAND C'EST LE PANNEAU CLASSIQUE QU'ON
+        VOIT. Quand l'appelant a une FEUILLE (`feuilleMobile`), les deux
+        habillages sont montés et c'est une borne de largeur qui décide
+        lequel s'affiche : le panneau est caché sous 768 px (`hidden
+        md:flex`), la feuille au-dessus. Sous cette borne, la feuille est
+        déjà gelée par `gelerLeCorps` — poser un second verrou par-dessus
+        opposerait deux mécaniques sur le même corps. C'est la question
+        que se pose déjà le gel de la feuille, juste plus bas, dans les
+        mêmes mots et à la même borne.
+        ⚠️ SANS FEUILLE (le menu des styles du moteur), il n'y a rien à
+        départager : le panneau classique est le seul habillage, à toutes
+        les largeurs. Rien ne change pour lui. */
+    if (feuilleMobile && !window.matchMedia("(min-width: 768px)").matches) {
+      return;
+    }
     poserLeVerrouDeDefilement();
     return retirerLeVerrouDeDefilement;
-  }, [verrouilleLaPage, listeVisible]);
+  }, [verrouilleLaPage, listeVisible, feuilleMobile]);
   //  À LA FERMETURE, la liste disparaît sur-le-champ — ajusté pendant
   //  le rendu (le motif React officiel), jamais dans un effet.
   if (!ouvert && listeVisible) setListeVisible(false);
