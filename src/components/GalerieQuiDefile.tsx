@@ -41,6 +41,37 @@ import {
     DÉFAUT du dessin : « Ma sélection » le garde tel quel. */
 export const ECART_GALERIE = "gap-1.5";
 
+/**
+ * ██ §1 (nº 588) — DE COMBIEN ON PREND DE L'AVANCE : UNE LARGEUR ██
+ * ==================================================================
+ * La marge est donnée EN POURCENTAGE DE LA RANGÉE, pas en pixels, et
+ * c'est ce qui la rend juste partout : la rangée du doigt montre trois
+ * vignettes, celle du web quatre à six, celles d'une fiche deux — une
+ * même valeur en pixels vaudrait une avance de trois cases ici et d'une
+ * demi-case là.
+ *
+ * POURQUOI UNE LARGEUR, ET PAS DEUX :
+ *  · MOINS ne changerait rien. Une demi-largeur, c'est une case et
+ *    demie d'avance : le temps qu'elle arrive, le geste est déjà passé
+ *    devant — c'est exactement ce que le navigateur fait tout seul, et
+ *    c'est ce qui laisse voir le fond du cadre ;
+ *  · PLUS revient à tout charger. Sur le web, une galerie montre six
+ *    vignettes ; deux largeurs d'avance en demandent douze de plus, sur
+ *    les vingt d'une galerie de « Ma sélection ». Le chargement à la
+ *    demande n'aurait plus d'objet, et l'on paierait des photos que
+ *    personne ne regardera — la moitié des galeries ne sont jamais
+ *    déroulées.
+ *  · UNE largeur, c'est la distance qu'un geste de défilement parcourt
+ *    d'un seul coup. On couvre donc le geste EN COURS, et le geste
+ *    suivant redemande d'autant — l'avance se déplace avec la main au
+ *    lieu d'être payée d'un bloc.
+ *
+ * ⚠️ ELLE VAUT DES DEUX CÔTÉS (deux valeurs : le vertical, puis
+ * l'horizontal) : on revient en arrière dans une galerie aussi souvent
+ * qu'on y avance.
+ */
+const AVANCE_DE_CHARGEMENT = "0px 100%";
+
 /** Ce qui décrit un chevron : la largeur de sa zone sensible, la boîte
     de son dessin, l'épaisseur de son trait. */
 export type TailleChevron = {
@@ -306,6 +337,118 @@ export function GalerieQuiDefile({
     //  garantit stable d'un rendu à l'autre — l'écouteur n'est donc pas
     //  reposé pour rien.
   }, [cleDuContenu, surRang]);
+
+  /**
+   * ██ §1 (nº 588) — LES PHOTOS SONT DEMANDÉES AVANT D'ENTRER DANS LE
+   * CADRE ██
+   * ==================================================================
+   * LE DÉFAUT, RELEVÉ PAR LE PROPRIÉTAIRE (nº 587-§3) : en faisant
+   * défiler une galerie, on voit passer des rectangles à la place des
+   * photos. Ce rectangle est le fond du cadre, qui RÉSERVE LA HAUTEUR
+   * (règle nº 226) — il ne peut donc pas être retiré, et il n'est pas
+   * le problème : le problème est que la photo n'est pas encore là.
+   * LA CAUSE, ÉTABLIE À LA nº 587 : les vignettes portent le
+   * chargement à la demande et RIEN D'AUTRE. C'est le navigateur qui
+   * décide seul du moment, et sa marge d'avance est bien plus étroite
+   * de côté que vers le bas — il demande la photo quand elle est
+   * presque dans le cadre, ce qui suffit à un défilement de page mais
+   * jamais à un geste horizontal.
+   *
+   * LE MÉCANISME, EN CLAIR. Un GUETTEUR (`IntersectionObserver`)
+   * regarde les vignettes, non pas depuis la fenêtre du navigateur,
+   * mais DEPUIS LA RANGÉE ELLE-MÊME (`root`) — c'est ce qui change
+   * tout : une vignette sortie du cadre est masquée par le débordement
+   * de la rangée, et aucune marge prise sur la fenêtre ne peut aller la
+   * chercher. Autour de cette rangée, on déclare une marge d'une
+   * largeur (`AVANCE_DE_CHARGEMENT`, sa note dit pourquoi). Toute
+   * vignette qui entre dans cette zone élargie est ANNONCÉE au guetteur
+   * avant d'être vue ; on retire alors son attente à son image, qui
+   * part se chercher, et on cesse de la guetter — une photo ne se
+   * demande qu'une fois.
+   *
+   * ⚠️ DEUX CONDITIONS AVANT DE DEMANDER QUOI QUE CE SOIT, et c'est la
+   * réponse à « la page ne doit pas ralentir » :
+   *  · LA PAGE A FINI D'ARRIVER. Tant qu'elle charge, on ne demande
+   *    rien : les photos d'avance ne peuvent pas disputer la ligne à
+   *    ce qui est déjà à l'écran, puisqu'elles ne partent qu'après ;
+   *  · CETTE RANGÉE-CI EST À L'ÉCRAN. Une VEILLEUSE (un second
+   *    guetteur, celui-là depuis la fenêtre) attend que la galerie
+   *    entre dans la vue, puis s'efface. Une page de « Ma sélection »
+   *    qui liste dix portfolios ne paie donc que pour les galeries
+   *    qu'on regarde, jamais pour les huit qui dorment plus bas.
+   * ⛔ CE QUI A ÉTÉ ESSAYÉ ET QUI NE TIENT PAS : armer au PREMIER
+   * DÉFILEMENT de la rangée. C'était plus simple d'une écriture, et
+   * c'est faux — mesuré : l'accrochage (`scroll-snap`) recale la
+   * rangée dès qu'elle se pose, ce qui émet un défilement que
+   * personne n'a fait. Toutes les galeries de la page s'armaient donc
+   * à l'arrivée, y compris celles qu'on ne voyait pas. La veilleuse
+   * regarde ce qu'on VOIT, ce qu'aucun événement ne sait dire.
+   * ⚠️ ET CE QUI PART S'EST DÉCLARÉ SECONDAIRE (`fetchpriority`) : ces
+   * photos-là ne sont pas encore à l'écran, elles passent donc APRÈS
+   * celles qui y sont. Elles ne peuvent pas leur disputer la ligne.
+   * ⚠️ ON NE TOUCHE NI LA SOURCE NI LA TAILLE DES IMAGES (nº 175-§5) :
+   * seule leur ATTENTE est levée. Le fond du cadre, lui, ne bouge pas.
+   * ⚠️ LE COMPTEUR (nº 521-522) ET LA MÉMOIRE (nº 459) NE SONT PAS
+   * TOUCHÉS : le guetteur ne lit ni ne pose `scrollLeft`, et il ne
+   * regarde pas les cases mais les images qu'elles contiennent.
+   * ⚠️ ET IL SERT LES DEUX GALERIES DU SITE SANS QU'AUCUNE NE CHANGE
+   * D'UNE LIGNE — celles des portfolios suivis (BlocSuivis) comme
+   * celles d'une fiche (PortfolioDeLAffiche) : toutes deux passent par
+   * ce dessin, et c'est lui qui tient la rangée.
+   */
+  useEffect(() => {
+    const cadre = zone.current;
+    if (!cadre || typeof IntersectionObserver === "undefined") return;
+    let guetteur: IntersectionObserver | null = null;
+    let veilleuse: IntersectionObserver | null = null;
+    let renonce = false;
+
+    const armer = () => {
+      if (renonce || guetteur) return;
+      guetteur = new IntersectionObserver(
+        (entrees) => {
+          entrees.forEach((entree) => {
+            if (!entree.isIntersecting) return;
+            const image = entree.target as HTMLImageElement;
+            guetteur?.unobserve(image);
+            //  L'ordre compte : on se déclare secondaire AVANT de
+            //  lever l'attente, sinon la demande partirait au rang
+            //  ordinaire et le mot arriverait trop tard.
+            image.setAttribute("fetchpriority", "low");
+            image.setAttribute("loading", "eager");
+          });
+        },
+        { root: cadre, rootMargin: AVANCE_DE_CHARGEMENT }
+      );
+      cadre
+        .querySelectorAll('img[loading="lazy"]')
+        .forEach((image) => guetteur?.observe(image));
+    };
+
+    //  LA VEILLEUSE : elle ne sert qu'une fois, et s'efface aussitôt.
+    const veiller = () => {
+      if (renonce) return;
+      veilleuse = new IntersectionObserver((entrees) => {
+        if (!entrees.some((entree) => entree.isIntersecting)) return;
+        veilleuse?.disconnect();
+        veilleuse = null;
+        armer();
+      });
+      veilleuse.observe(cadre);
+    };
+
+    if (document.readyState === "complete") veiller();
+    else window.addEventListener("load", veiller, { once: true });
+
+    return () => {
+      renonce = true;
+      window.removeEventListener("load", veiller);
+      veilleuse?.disconnect();
+      guetteur?.disconnect();
+    };
+    //  Le contenu change, les images changent : on reguette. C'est la
+    //  même clé que l'écouteur des bouts de course, juste au-dessus.
+  }, [cleDuContenu]);
 
   /*  §6 (nº 264) — LE CHEVRON SE DÉSHABILLE : un chevron NU, blanc —
       ni disque, ni verre, ni fond, ni contour, ni halo —, au survol de
