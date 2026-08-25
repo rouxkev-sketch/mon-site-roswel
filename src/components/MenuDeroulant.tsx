@@ -1035,8 +1035,32 @@ export function MenuDeroulant({
   function blocDesEntetes(retrait: string, enBas = false) {
     return (
       <div
-        className={`shrink-0 pt-1 pb-3 ${
-          enBas ? "border-t" : "border-b"
+        /*  ██ §1 (nº 581) — QUAND IL EST EN BAS, LE BLOC PORTE LA
+             RÉSERVE DE LA PLAQUE ██
+             LE DÉFAUT : une section ouverte faisait apparaître une bande
+             TRANSLUCIDE sous le bloc opaque, avant le bord de la
+             feuille.
+             LA CAUSE, ET C'EST LE JUMEAU EXACT DE LA nº 573 : un air
+             resté sans surface pour le couvrir. La plaque réserve
+             `max(1rem, safe-area)` en bas pour que rien ne touche la
+             barre d'accueil du téléphone — cette réserve est SOUS le
+             bloc, et rien ne la peint. Tant que la plaque était un aplat
+             de la même couleur que le bloc (cas 1, nº 580), on ne la
+             voyait pas ; dès qu'une section s'ouvre la plaque repasse en
+             verre (cas 2) et la réserve devient une bande où la page se
+             voit. Elle n'était donc pas une jointure : c'était un vide.
+             LE REMÈDE : la réserve entre DANS le bloc, qui la peint. Le
+             `calc` vaut EXACTEMENT ce que les deux valaient ensemble —
+             les 12 px du bloc plus la réserve de la plaque — donc rien
+             ne bouge d'un pixel, ni au repos ni sur un téléphone à
+             barre d'accueil. La plaque, elle, ne la pose plus quand le
+             bloc est là (voir sa classe, plus bas).
+             ⚠️ EN HAUT (le panneau du web), RIEN DE TOUT CELA : aucune
+             réserve ne vit là-bas, le bloc garde ses 12 px. */
+        className={`shrink-0 pt-1 ${
+          enBas
+            ? "border-t pb-[calc(0.75rem+max(1rem,env(safe-area-inset-bottom)))]"
+            : "border-b pb-3"
         } ${aplatDeLaSurface} ${
           groupeDeplie ? "border-sombre-trait" : "border-transparent"
         }`}
@@ -1817,7 +1841,15 @@ export function MenuDeroulant({
                  (`ChampMetier` ne passe pas `sombre`).
                  ⚠️ `opaque` GARDE SON DERNIER MOT (nº 552) : un appelant
                  qui le passe veut un aplat, quel que soit l'état. */
-            className={`relative rounded-t-3xl max-h-[80vh] flex flex-col pb-[max(1rem,env(safe-area-inset-bottom))] ${
+            /*  §1 (nº 581) — LA RÉSERVE DU BAS N'EST PLUS ICI QUAND LE
+                BLOC EST LÀ : c'est lui qui la porte, et qui la peint
+                (voir `blocDesEntetes`). La laisser sur la plaque
+                laissait, dès qu'une section s'ouvrait, une bande que
+                rien ne couvrait. Sans bloc, elle reste sur la plaque,
+                à sa valeur d'origine. */
+            className={`relative rounded-t-3xl max-h-[80vh] flex flex-col ${
+              blocEntetes ? "" : "pb-[max(1rem,env(safe-area-inset-bottom))] "
+            }${
               feuilleDecollee ? "mx-4 " : ""
             }${
               sombre
