@@ -188,8 +188,37 @@ export function BadgeCharte({
            fois. */}
       <span
         aria-hidden="true"
+        /*  ██ §1 (nº 612) — LA MARGE ENTRE DANS LA TRANSITION ██
+            LE DÉFAUT, ET IL ÉTAIT SPECTACULAIRE : en décochant le
+            dernier badge d'une rangée pleine, celui-ci sautait une
+            fraction de seconde au début de la ligne suivante avant de
+            revenir à sa place.
+            LA CAUSE, calculée sur la mesure de la nº 610 : la largeur
+            de cette boîte était animée, `margin-left` NON. En
+            s'éteignant, le badge perdait donc ses trois pixels de
+            marge négative D'UN COUP — il s'élargissait de trois
+            pixels — pendant que sa boîte mettait deux cents
+            millisecondes à se refermer. La rangée TECHNIQUE pleine
+            mesure 323,5 px pour 324 utiles (nº 611) : trois pixels de
+            plus font 326,5, la rangée déborde, et le drapeau
+            (`flex-wrap`) renvoie le dernier badge à la ligne. Deux
+            images plus tard la boîte s'est refermée, la rangée repasse
+            sous 324, et le badge remonte.
+            LE REMÈDE : `margin-left` rejoint `width` dans la liste des
+            propriétés animées. Les deux se rétractent ENSEMBLE, la
+            largeur du badge décroît sans jamais repasser au-dessus de
+            sa valeur allumée, et la rangée ne peut plus déborder à
+            aucun instant.
+            ⚠️ RIEN D'AUTRE NE CHANGE : mêmes valeurs (20 px de boîte,
+            −3 px de marge), même durée, même courbe. C'est la LISTE
+            des propriétés qui s'allonge d'un mot.
+            ⚠️ ET LA MARGE DE 0,5 px RESTE LE FOND DU PROBLÈME (nº 611) :
+            c'est elle qui rend la rangée sensible au moindre pixel de
+            trop. Si un autre défaut de ce genre revient, c'est là
+            qu'il faudra regarder — pas ici. */
         className={`inline-flex shrink-0 items-center overflow-hidden
-                   transition-[width,opacity] duration-200 ease-out ${
+                   transition-[margin-left,width,opacity] duration-200
+                   ease-out ${
                      actif ? "-ml-[3px] w-5 opacity-100" : "w-0 opacity-0"
                    }`}
       >
