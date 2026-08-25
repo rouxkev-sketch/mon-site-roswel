@@ -232,9 +232,13 @@ export function MenuDeroulant({
    * c'est-à-dire jamais utilement. Il lui faut être L'ENFANT DIRECT de
    * la liste qui défile.
    * ⚠️ SANS LE DRAPEAU, PAS UN NŒUD NE CHANGE : ce menu est partagé par
-   * « Ma sélection », le formulaire de fiche et les sélecteurs de la
-   * page tactile. Aucun d'eux n'a demandé quoi que ce soit, et la
-   * structure qu'ils rendent reste celle d'avant, à l'élément près.
+   * le formulaire de fiche et les sélecteurs de la page tactile. Aucun
+   * d'eux n'a demandé quoi que ce soit, et la structure qu'ils rendent
+   * reste celle d'avant, à l'élément près.
+   * ⚠️ DEUX APPELANTS LE PASSENT (nº 575) : le menu des styles du moteur
+   * (nº 571) et les deux menus de « Ma sélection » — favoris et
+   * portfolios. Il ne suffit pas à lui seul : voir `blocEntetes` plus
+   * bas, qui exige aussi de VRAIES portes.
    * ⚠️ LA FEUILLE GLISSANTE (`feuilleMobile`) NE LE LIT PAS : elle a sa
    * propre écriture plus bas, et le propriétaire a précisé que le
    * smartphone, qui sépare Flash et Réalisations en va-et-vient, n'a pas
@@ -919,6 +923,24 @@ export function MenuDeroulant({
    * catégories : il ne voit aucune différence.
    */
   const portesDeGroupe = aDesPortesDeGroupe(options, repliable);
+  /**
+   * §1 (nº 575) — LE BLOC FIXE N'EXISTE QUE S'IL Y A DEUX SECTIONS.
+   * ------------------------------------------------------------------
+   * Le drapeau `entetesCollants` dit qu'on VEUT le bloc ; `portesDeGroupe`
+   * dit qu'il y a de quoi le remplir. Il faut les deux.
+   * LE CAS QUI L'IMPOSE : dans « Ma sélection », les sections d'un menu
+   * sont celles que le visiteur a vraiment. Qui n'a que des réalisations
+   * en favori n'a qu'une section — et `aDesPortesDeGroupe` le sait déjà :
+   * il compte les groupes et rend faux en dessous de deux. Il n'y a alors
+   * ni porte, ni chevron, ni rien à ouvrir : un bloc fixe n'y serait
+   * qu'un titre immobile au-dessus de ses propres entrées, avec un trait
+   * qui ne pourrait jamais apparaître. Le menu reste donc exactement ce
+   * qu'il est aujourd'hui.
+   * ⚠️ LE MOTEUR N'EST PAS CONCERNÉ par cette garde : ses deux
+   * catégories (« Réalisations », « Flashs ») sont écrites dans le
+   * catalogue et ne dépendent de personne — il a toujours ses portes.
+   */
+  const blocEntetes = entetesCollants && portesDeGroupe;
   const [groupeDeplie, setGroupeDeplie] = useState<string | null>(groupeDuChoix);
   /** LA SOUS-SECTION OUVERTE (passe nº 113) — une seule à la fois, et
       elle repart elle aussi du choix courant à chaque ouverture : on
@@ -1444,7 +1466,7 @@ export function MenuDeroulant({
                COULEUR (`border-transparent` quand rien n'est déplié) :
                sans quoi le bloc grandirait d'un pixel à l'ouverture
                d'une section, et tout ce qu'il porte sauterait d'autant. */}
-          {entetesCollants && entetesDesSections.length > 0 && (
+          {blocEntetes && (
             <div
               className={`shrink-0 border-b pt-1 pb-3 ${
                 opaque ? "bg-sombre-eleve-clair" : "bg-sombre-carte"
@@ -1476,7 +1498,7 @@ export function MenuDeroulant({
             {optionsAvecEntetes.map(({ option, cle, entete, sousEntete }) => (
               <li key={cle}>
                 {/* En-tête de section — étiquette, ou porte repliable */}
-                {entete && !entetesCollants && enTeteSection(entete, "px-4 pt-3 pb-1")}
+                {entete && !blocEntetes && enTeteSection(entete, "px-4 pt-3 pb-1")}
                 {/* Porte de sous-section — à la place d'une option */}
                 {sousEntete &&
                   sousEnteteVisible(option) &&

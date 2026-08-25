@@ -349,6 +349,23 @@ export function MenusSelection({
         //  §2 (nº 462) — le panneau du web prend LA LARGEUR DE
         //  L'ANCRE (l'onglet actif), jamais plus.
         panneauCaleSurAncre
+        /*  §1 (nº 575) — LES EN-TÊTES SORTENT DE LA LISTE ET RESTENT EN
+             HAUT, comme au menu des styles du moteur depuis la nº 572 :
+             « Réalisations » / « Flash » sur les favoris, « Style » /
+             « Profil » sur les portfolios. Le bloc emporte avec lui tout
+             ce qui a été réglé aux nº 572-574 — son fond `carte`, ses
+             chevrons qui pivotent, son air égal en haut et en bas, et le
+             trait qui ne paraît qu'une section ouverte.
+             ⚠️ UN SEUL DRAPEAU, AUCUNE MÉCANIQUE NEUVE : celui de la
+             nº 571. Il ne fallait que le passer.
+             ⚠️ ET IL NE FAIT RIEN QUAND LE VISITEUR N'A QU'UNE SECTION :
+             le menu vérifie lui-même qu'il a de vraies portes (voir
+             `blocEntetes`). Qui n'a que des réalisations en favori garde
+             donc son menu d'aujourd'hui, entrées en clair et sans bloc.
+             ⚠️ LE DOIGT N'EST PAS CONCERNÉ : là-bas ces menus sont des
+             feuilles qui montent du bas (`feuilleMobile`), et le bloc
+             n'existe que dans le panneau classique. */
+        entetesCollants
       />
     );
   };
