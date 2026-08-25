@@ -308,23 +308,26 @@ export const LIEUX_AFFICHES = 3;
  * ██ LES LIEUX, ÉCRITS (nº 585, forme reprise nº 586) ██
  * ==================================================================
  * LA RÈGLE DU PROPRIÉTAIRE, mot pour mot :
- *  · UN SEUL LIEU → « Paris · France », division comprise devant le
- *    point médian (« Austin, TX · États-Unis ») ;
- *  · UN SEUL PAYS, plusieurs villes → les villes entre elles par des
- *    VIRGULES, le pays introduit par un POINT MÉDIAN : « Paris,
- *    Félines · France » ;
- *  · PLUSIEURS PAYS → chaque groupe s'écrit de cette même façon, et
- *    les groupes sont séparés par UNE BARRE VERTICALE : « Paris,
- *    Félines · France | Berlin · Allemagne ».
+ *  · UNE SEULE VILLE DANS LE PAYS → une VIRGULE devant le pays :
+ *    « Paris, France », « Austin, TX, USA » ;
+ *  · PLUSIEURS VILLES DANS LE MÊME PAYS → un POINT MÉDIAN entre les
+ *    villes, ET devant le pays : « Paris · Lyon · France »,
+ *    « Austin, TX · Miami, FL · USA » ;
+ *  · PLUSIEURS PAYS → les groupes séparés par une BARRE VERTICALE :
+ *    « Austin, TX · Miami, FL · USA | Paris, France ».
  *
- * ██ §1 (nº 587) — LE PAYS S'ANNONCE PAR UN POINT MÉDIAN ██
- * La nº 586 le posait après une virgule, au même rang que les villes.
- * Le propriétaire veut qu'on VOIE le changement de nature : une liste
- * de villes d'un côté, le pays qui les contient de l'autre. Les trois
- * cas ci-dessus n'en font donc plus qu'UN SEUL à composer — villes,
- * point médian, pays — et le raccourci qui rendait la ligne toute
- * faite pour un lieu unique n'a plus lieu d'être : il écrivait la
- * virgule de `ligneCarte`.
+ * ██ §1 (nº 590) — LA RÈGLE DÉFINITIVE, ET CE QU'ELLE REMPLACE ██
+ * Elle annule la ponctuation des nº 585 à nº 589, essayée en cinq
+ * passes. CE QUI CHANGE PAR RAPPORT À LA nº 589 :
+ *  · LE POINT MÉDIAN N'APPARAÎT PLUS QU'À PARTIR DE DEUX VILLES DANS
+ *    UN MÊME PAYS. À une seule ville, c'est la VIRGULE — la ponctuation
+ *    ordinaire d'une adresse, celle que `ligneCarte` écrit déjà ;
+ *  · L'ÉTAT AMÉRICAIN REVIENT À SA VIRGULE, collée à sa ville. Les
+ *    parenthèses de la nº 589 sont abandonnées : ce n'est pas la
+ *    convention américaine, et l'usage écrit « Austin, TX ».
+ * CE QUE ÇA SIMPLIFIE : le point médian ne sert plus qu'à UNE chose —
+ * dire qu'on énumère. Dès qu'il apparaît, il y a plusieurs villes ; on
+ * lit donc la structure sans connaître la règle.
  *
  * ██ §1 (nº 586) — POURQUOI LA BARRE, ET PAS LE POINT MÉDIAN ██
  * La nº 585 posait le pays après un point médian (« Paris, Lyon ·
@@ -368,10 +371,18 @@ export const LIEUX_AFFICHES = 3;
 const APRES_LE_TYPE = " • ";
 
 const SEPARATEUR_DE_PAYS = " | ";
-/** Ce qui annonce le pays derrière ses villes (§1 nº 587). C'est le
-    point médian du site, celui-là même qui sépare le métier de la
-    localisation — un cran plus haut que la virgule des villes. */
-const AVANT_LE_PAYS = " · ";
+/**
+ * Ce qui sépare DEUX VILLES d'un même pays, et ce qui annonce alors le
+ * pays derrière elles (§1 nº 590) : le même point médian aux deux
+ * places, parce qu'il dit une seule chose — « et aussi ».
+ * ⚠️ IL NE SERT QUE LÀ. Une ville seule garde sa virgule ; c'est ce qui
+ * fait qu'apercevoir un point médian suffit à savoir qu'il y en a
+ * plusieurs.
+ */
+const ENTRE_LES_VILLES = " · ";
+
+/** La ponctuation d'une adresse ordinaire — une ville, son pays. */
+const APRES_UNE_VILLE = ", ";
 
 function lieuxEcrits(lieux: LieuDuSuivi[]): string {
   if (lieux.length === 0) return "";
@@ -391,11 +402,17 @@ function lieuxEcrits(lieux: LieuDuSuivi[]): string {
     dernier.sujets[rang] = `${dernier.sujets[rang]}…`;
   }
   return groupes
-    .map((groupe) =>
-      [groupe.sujets.filter(Boolean).join(", "), groupe.pays]
+    .map((groupe) => {
+      const villes = groupe.sujets.filter(Boolean);
+      //  §1 (nº 590) — LE NOMBRE DE VILLES COMMANDE LA PONCTUATION, et
+      //  c'est toute la règle : une seule ville s'écrit comme une
+      //  adresse, plusieurs s'énumèrent. Le pays suit le signe de
+      //  l'énumération quand il y en a une, la virgule sinon.
+      const entreElles = villes.length > 1 ? ENTRE_LES_VILLES : APRES_UNE_VILLE;
+      return [villes.join(ENTRE_LES_VILLES), groupe.pays]
         .filter(Boolean)
-        .join(AVANT_LE_PAYS)
-    )
+        .join(entreElles);
+    })
     .join(SEPARATEUR_DE_PAYS);
 }
 
@@ -406,41 +423,30 @@ function lieuxEcrits(lieux: LieuDuSuivi[]): string {
  * Un lieu qui n'est QUE son pays n'a rien devant lui ; un lieu sans
  * pays connu est tout entier son propre sujet.
  *
- * ██ §3-b (nº 589) — L'ÉTAT PASSE ENTRE PARENTHÈSES ██
- * ------------------------------------------------------------------
- * LE DÉFAUT ANNONCÉ PAR LE PROPRIÉTAIRE : une ville américaine s'écrit
- * « Austin, TX ». À une seule ville, la virgule se lit ; à deux, la
- * liste devient un fatras où l'on ne sait plus ce qui est une ville et
- * ce qui est un État — « Austin, TX, Miami, FL · États-Unis ».
- * LA RÈGLE : l'État se COLLE à sa ville, entre parenthèses. On lit
- * alors deux noms de villes séparés par une virgule, chacun portant sa
- * précision — « Austin (TX), Miami (FL) · États-Unis ».
- * ⚠️ C'EST UNE SUBSTITUTION, PAS UNE RECOMPOSITION : on remplace la
- * virgule que `ligneCarte` a posée devant la division par la
- * parenthèse. La ville et le code de l'État restent MOT POUR MOT ceux
- * du site — on ne réécrit ni l'un ni l'autre.
- * ⚠️ UN LIEU QUI N'EST QUE SA DIVISION (une fiche sans ville, dans un
- * État) n'a rien devant elle : la division EST son sujet, et elle
- * s'écrit nue, sans parenthèses qui n'entoureraient rien (nº 386).
- * ⚠️ LES CARTES DE LA MOSAÏQUE NE VOIENT RIEN DE TOUT CELA : elles
- * emploient `ligneLieuDeCarte`, qui écarte l'État depuis la nº 486.
+ * ⛔ §3-b (nº 589) — L'ÉTAT ENTRE PARENTHÈSES EST ABANDONNÉ (nº 590).
+ * Cette passe-là écrivait « Austin (TX), Miami (FL) » pour qu'on ne
+ * confonde pas une ville et un État dans une énumération à virgules.
+ * LE PROPRIÉTAIRE A TRANCHÉ AUTREMENT, et mieux : ce n'est pas la
+ * convention américaine — l'usage écrit « Austin, TX ». La confusion
+ * qu'on cherchait à éviter disparaît d'elle-même puisque, à partir de
+ * deux villes, ce sont les VILLES qui se séparent par un point médian
+ * — « Austin, TX · Miami, FL · USA ». La virgule ne relie donc plus
+ * jamais que ce qu'une adresse relie : une ville et sa précision.
+ * ⚠️ CE QUI RESTE DE CETTE PASSE : `division` sur le lieu. Elle n'est
+ * plus employée par cette fonction, mais elle dit ce que la ligne
+ * contient et le type la porte ; la retirer demanderait de la
+ * redemander le jour où la forme rebouge.
+ * ⚠️ LES CARTES DE LA MOSAÏQUE N'ONT JAMAIS VU AUCUNE DE CES FORMES :
+ * elles emploient `ligneLieuDeCarte`, qui écarte l'État depuis la
+ * nº 486.
  */
 function sujetDuLieu(lieu: LieuDuSuivi): string {
-  if (!lieu.pays) return avecEtatColle(lieu.ligne, lieu.division);
+  if (!lieu.pays) return lieu.ligne;
   if (lieu.ligne === lieu.pays) return "";
   const suffixe = `, ${lieu.pays}`;
-  const sujet = lieu.ligne.endsWith(suffixe)
+  return lieu.ligne.endsWith(suffixe)
     ? lieu.ligne.slice(0, -suffixe.length)
     : lieu.ligne;
-  return avecEtatColle(sujet, lieu.division);
-}
-
-function avecEtatColle(sujet: string, division: string): string {
-  if (!division) return sujet;
-  const suffixe = `, ${division}`;
-  return sujet.endsWith(suffixe)
-    ? `${sujet.slice(0, -suffixe.length)} (${division})`
-    : sujet;
 }
 
 /**

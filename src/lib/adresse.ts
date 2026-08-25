@@ -13,15 +13,20 @@
  * EXACTE, code postal compris. Quatre écritures, donc, et une seule
  * source :
  *
- *   ligneCarte()        « Lyon, France » · « Miami, FL, États-Unis »
+ *   ligneCarte()        « Lyon, France » · « Miami, FL, USA »
  *                       Ni rue, ni code postal, ni région hors liste.
  *   ligneFiche()        « 18 Chemin du Bois de la Noue, Vézilly, France »
  *                       La rue revient, le code postal reste dehors :
  *                       le lien Google Maps emmène le client, il n'a
  *                       pas à recopier un code.
- *   ligneMoteur()       « Miami, FL, USA » — la même que ligneCarte,
- *                       le pays ABRÉGÉ : dans la barre de recherche,
- *                       la place manque.
+ *   ligneMoteur()       « Sydney, NSW, Australia » — la même que
+ *                       ligneCarte, le pays sous sa forme
+ *                       internationale : dans la barre de recherche, la
+ *                       place manque. ⚠️ DEPUIS LA nº 590 LES DEUX
+ *                       DISENT « USA » : les États-Unis s'abrègent dès
+ *                       `RACCOURCIS_PAYS`, donc partout. Cette écriture
+ *                       ne se distingue plus que sur les quatre autres
+ *                       pays de `ABREGES_MOTEUR`.
  *   contexteSuggestion() « 69001 Lyon, France » — LE SEUL ENDROIT où
  *                       le code postal s'affiche, et seulement PENDANT
  *                       LA SAISIE : il faut pouvoir trancher entre deux
@@ -59,9 +64,10 @@
  * LE NOM DU PAYS VIENT DES DONNÉES — le géocodeur est interrogé en
  * français — mais il passe par DEUX TABLES, et deux seulement :
  *  · RACCOURCIS_PAYS coupe les formes officielles interminables
- *    (« États-Unis d'Amérique » → « États-Unis ») ;
+ *    (« États-Unis d'Amérique » → « USA » depuis la nº 590, « Royaume-Uni
+ *    de Grande-Bretagne et d'Irlande du Nord » → « Royaume-Uni ») ;
  *  · ABREGES_MOTEUR abrège pour la barre de recherche, et pour elle
- *    seule (« États-Unis » → « USA »).
+ *    seule (« Royaume-Uni » → « UK »).
  * Voir `nomPaysAffiche` et `nomPaysMoteur`.
  */
 
@@ -400,9 +406,25 @@ function joindre(morceaux: Array<string | null | undefined>): string {
  */
 const RACCOURCIS_PAYS: Record<string, string> = {};
 for (const [complet, court] of [
-  ["États-Unis d'Amérique", "États-Unis"],
-  ["United States of America", "États-Unis"],
-  ["United States", "États-Unis"],
+  /*  ██ §2 (nº 590) — LES ÉTATS-UNIS S'ÉCRIVENT « USA », PARTOUT ██
+      LE DÉFAUT, RELEVÉ PAR LE PROPRIÉTAIRE : la fiche écrivait
+      « États-Unis » et la barre de recherche « USA » — deux noms pour
+      un même pays, sur le même écran quand on cherche puis qu'on
+      ouvre. Il aligne sur « USA », qui est la forme que tout le monde
+      lit et celle qui tient sur une ligne.
+      C'EST ICI QUE LE NOM EST PRODUIT, et nulle part ailleurs :
+      `nomPaysAffiche` lit cette table, et TOUT ce qui écrit un lieu
+      passe par elle — les fiches, les cartes de la mosaïque, les
+      formulaires, la ligne des portfolios suivis. Le changement vaut
+      donc pour tout le site, ce qui est exactement ce qui était
+      demandé.
+      ⚠️ ET LA QUATRIÈME ENTRÉE COMPTE AUTANT QUE LES TROIS AUTRES : la
+      base peut porter « États-Unis » sans forme officielle, la table
+      ne l'aurait alors jamais rencontré. */
+  ["États-Unis d'Amérique", "USA"],
+  ["United States of America", "USA"],
+  ["United States", "USA"],
+  ["États-Unis", "USA"],
   ["Royaume-Uni de Grande-Bretagne et d'Irlande du Nord", "Royaume-Uni"],
   ["United Kingdom of Great Britain and Northern Ireland", "Royaume-Uni"],
   ["République populaire de Chine", "Chine"],
@@ -463,10 +485,22 @@ for (const [complet, court] of [
  * internationale du nom, demandée telle quelle : c'est ainsi que le
  * pays s'écrit sur les adresses du monde entier, comme « Canada », qui
  * n'a lui besoin d'aucune entrée.
+ *
+ * ⚠️ §2 (nº 590) — LES ÉTATS-UNIS ONT QUITTÉ CETTE TABLE, et ce n'est
+ * pas un oubli : ils s'écrivent « USA » DÈS `RACCOURCIS_PAYS`, donc
+ * partout et plus seulement ici. L'entrée n'aurait plus rien à
+ * traduire — `nomPaysMoteur` part de `nomPaysAffiche`, qui rend
+ * désormais « USA » directement. La barre de recherche écrit donc le
+ * même mot qu'avant, par un chemin plus court.
+ * ⚠️ LES QUATRE AUTRES RESTENT, ET C'EST DÉLIBÉRÉ : le propriétaire a
+ * demandé « USA », pas un alignement général. « Royaume-Uni » → UK,
+ * « Émirats arabes unis » → UAE, « Australie » → Australia,
+ * « Nouvelle-Zélande » → NZ continuent donc de n'abréger que dans la
+ * barre. Le jour où il voudra les aligner aussi, c'est la même
+ * opération : déplacer la ligne d'une table à l'autre.
  */
 const ABREGES_MOTEUR: Record<string, string> = {};
 for (const [nom, abrege] of [
-  ["États-Unis", "USA"],
   ["Royaume-Uni", "UK"],
   ["Émirats arabes unis", "UAE"],
   ["Australie", "Australia"],

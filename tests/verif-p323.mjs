@@ -102,7 +102,7 @@ const suivi = (nom, typeFiche, etablissement, modes, lieu = {}) => ({
       suivi("a1", "artiste", "", [
         mode("salon", "Paris", null, "France", "FR"),
       ]),
-      "Artiste • Paris · France",
+      "Artiste • Paris, France",
     ],
     [
       "…LE MÊME, avec DEUX MODES DANS LA MÊME VILLE — une seule ville (§3-d)",
@@ -110,7 +110,7 @@ const suivi = (nom, typeFiche, etablissement, modes, lieu = {}) => ({
         mode("domicile", "Paris", null, "France", "FR"),
         mode("salon", "Paris", null, "France", "FR"),
       ]),
-      "Artiste • Paris · France",
+      "Artiste • Paris, France",
     ],
     [
       "un ARTISTE dans TROIS villes — les trois s'écrivent (§3-c)",
@@ -119,14 +119,14 @@ const suivi = (nom, typeFiche, etablissement, modes, lieu = {}) => ({
         mode("salon", "Lyon", null, "France", "FR"),
         mode("guest", "Marseille", null, "France", "FR"),
       ]),
-      "Artiste • Paris, Lyon, Marseille · France",
+      "Artiste • Paris · Lyon · Marseille · France",
     ],
     [
       "un ARTISTE avec un ÉTAT — l'écriture internationale (§3-b)",
       suivi("a4", "artiste", "", [
         mode("salon", "Austin", "Texas", "États-Unis", "US"),
       ]),
-      "Artiste • Austin (TX) · États-Unis",
+      "Artiste • Austin, TX, USA",
     ],
     [
       "un SALON — inchangé",
@@ -136,7 +136,7 @@ const suivi = (nom, typeFiche, etablissement, modes, lieu = {}) => ({
         pays: "États-Unis",
         codePays: "US",
       }),
-      "Salon • Austin (TX) · États-Unis",
+      "Salon • Austin, TX, USA",
     ],
   ];
   for (const [nom, cas, attendu] of CAS) {
@@ -150,7 +150,7 @@ const suivi = (nom, typeFiche, etablissement, modes, lieu = {}) => ({
     "…et un STUDIO PRIVÉ dit « Studio », le mot des cartes",
     ligneDIdentite(
       suivi("p1", "salon", "prive", [], { ville: "Félines", pays: "France" })
-    ) === "Studio • Félines · France",
+    ) === "Studio • Félines, France",
     ligneDIdentite(
       suivi("p1", "salon", "prive", [], { ville: "Félines", pays: "France" })
     )
@@ -232,7 +232,7 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
   );
   verif(
     "§3-c — LES TROIS VILLES S'ÉCRIVENT, le pays une seule fois à la fin",
-    trois === "Artiste • Paris, Lyon, Nantes · France" && !/\+\d/.test(trois),
+    trois === "Artiste • Paris · Lyon · Nantes · France" && !/\+\d/.test(trois),
     `« ${trois} »`
   );
   verif(
@@ -242,8 +242,8 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
         mode("salon", "Paris", null, "France", "FR"),
         mode("salon", "Lyon", null, "France", "FR"),
       ])
-    ) === "Artiste • Paris, Lyon · France",
-    "« Paris, Lyon · France », derrière la puce"
+    ) === "Artiste • Paris · Lyon · France",
+    "« Paris · Lyon · France », derrière la puce"
   );
   /*  §1 (nº 586) — ET DEUX PAYS SE SÉPARENT PAR UNE BARRE VERTICALE,
       jamais par le point médian : celui-ci ne sépare plus que le métier
@@ -255,8 +255,8 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
         mode("salon", "Paris", null, "France", "FR"),
         mode("salon", "Berlin", null, "Allemagne", "DE"),
       ])
-    ) === "Artiste • Paris · France | Berlin · Allemagne",
-    "« Paris · France | Berlin · Allemagne »"
+    ) === "Artiste • Paris, France | Berlin, Allemagne",
+    "« Paris, France | Berlin, Allemagne »"
   );
 
   //  §3-d — LE DÉDOUBLONNAGE, éprouvé sur la LISTE DES VILLES.
@@ -283,7 +283,7 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
   ]);
   verif(
     "§3-e — L'ORDRE EST CELUI DE L'ARTISTE : la PREMIÈRE DÉCLARÉE se lit en tête",
-    ligneDIdentite(declare) === "Artiste • Nantes, Lyon · France",
+    ligneDIdentite(declare) === "Artiste • Nantes · Lyon · France",
     `« ${ligneDIdentite(declare)} » (un classement par genre aurait dit « Lyon » en tête)`
   );
   verif(
@@ -304,7 +304,7 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
   const rendu = ligneDIdentite(avecAdresse);
   verif(
     "§3-f — NI RUE NI NUMÉRO : une adresse posée sur le mode n'entre pas dans la ligne",
-    rendu === "Artiste • Paris · France" && !/\d|Rue|Chemin/.test(rendu),
+    rendu === "Artiste • Paris, France" && !/\d|Rue|Chemin/.test(rendu),
     `« ${rendu} »`
   );
   verif(
@@ -323,7 +323,7 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
   ]);
   verif(
     "UNE SESSION GUEST TERMINÉE NE COMPTE PAS — la règle du §2 de la nº 243 tient",
-    ligneDIdentite(guestFini, "2026-08-16") === "Artiste • Paris · France",
+    ligneDIdentite(guestFini, "2026-08-16") === "Artiste • Paris, France",
     `« ${ligneDIdentite(guestFini, "2026-08-16")} » (Berlin n'y est pas)`
   );
   verif(
@@ -337,7 +337,7 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
         }),
       ]),
       "2026-08-16"
-    ) === "Artiste • Paris · France | Berlin · Allemagne",
+    ) === "Artiste • Paris, France | Berlin, Allemagne",
     "Berlin s'écrit, derrière la barre verticale"
   );
 }
