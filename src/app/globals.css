@@ -1469,7 +1469,26 @@ html[data-compte="connecte"]
    mosaïque montre vingt cartes en quatre rangées pleines. Dès que
    l'adresse porte une requête, le jumeau dynamique reprend la taille
    exacte au cookie et cette garde ne s'applique plus. */
-@media (min-width: 96rem) and (max-width: 103.9999rem) {
+/* ██ §2 (nº 593) — LA GARDE VISAIT UNE PLAGE QUI N'EXISTE PLUS ██
+   LE DÉFAUT, RELEVÉ PAR LE PROPRIÉTAIRE : sur son grand écran, la
+   dernière rangée de l'accueil montrait quatre cartes au lieu de cinq
+   — une case vide au bout.
+   LA CAUSE : cette garde bornait les cinq colonnes à « 96 à 104 rem »,
+   la plage qu'elles occupaient quand elle a été écrite. La nº 473 a
+   DÉPLACÉ le palier — cinq colonnes à partir de 100 rem, et sans borne
+   haute, puisque c'est le palier le plus large. Les deux écritures ont
+   cessé de se correspondre : au-delà de 104 rem la garde ne s'appliquait
+   plus du tout (les quatre cartes de trop revenaient), et de 96 à
+   100 rem elle masquait quatre cartes alors que la grille n'avait que
+   quatre colonnes — ce qui ne se voyait pas, vingt étant aussi un
+   multiple de quatre.
+   ⚠️ LA BORNE HAUTE PART AVEC, et c'est ce qui empêche l'écart de
+   revenir : tant que cinq colonnes est le palier le plus large, la
+   garde vaut du seuil jusqu'à l'infini. Le jour où un palier de six
+   s'ajouterait, c'est ici ET dans `PALIERS_COLONNES` qu'il faudrait
+   écrire — les deux ne peuvent pas diverger sans que la dernière
+   rangée redevienne incomplète. */
+@media (min-width: 100rem) {
   [data-mosaique-nue] [data-grille-tatoueurs] > *:nth-child(n + 21) {
     display: none;
   }

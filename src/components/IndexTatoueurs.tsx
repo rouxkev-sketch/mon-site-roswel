@@ -575,10 +575,39 @@ export function IndexTatoueurs({
     lireTaillePageEcran,
     tailleInconnueAuServeur
   );
-  const pageSuivante =
+  /**
+   * ██ §1 (nº 593) — ON NE PEUT JAMAIS REDEMANDER LA PAGE QU'ON A ██
+   * ==================================================================
+   * LE DÉFAUT, RELEVÉ PAR LE PROPRIÉTAIRE : sur son grand écran,
+   * « Voir plus » clignotait et n'ajoutait RIEN.
+   * LA CAUSE, ET ELLE N'EST PAS CELLE QU'ON CROYAIT (la nº 592 n'a
+   * posé qu'une largeur, et une classe ne peut pas empêcher une
+   * navigation) : c'est cette division-ci, quand la page SERVIE est
+   * plus courte que la page de l'ÉCRAN. L'accueil nu est prérendu — il
+   * ne lit aucun cookie et sert donc toujours le repli de 24 cartes —
+   * tandis que le cookie des colonnes dit 30 sur un écran à cinq
+   * colonnes. `Math.floor(24 / 30)` vaut ZÉRO, la page suivante
+   * devenait donc la page 1 : l'adresse du lien était CELLE OÙ L'ON
+   * ÉTAIT DÉJÀ. Le routeur y naviguait — d'où le clignotement — et
+   * rendait la même chose.
+   * ⚠️ SEUL LE PALIER DE CINQ COLONNES EST TOUCHÉ, et c'est ce qui
+   * explique que le défaut ait pu dormir : à quatre colonnes 24/24
+   * donne 1, à trois 24/18 donne 1, à deux 24/12 donne 2 — toutes
+   * rendent une page suivante qui existe. Il n'y a qu'à cinq, où la
+   * page de l'écran dépasse celle qui est servie, que le quotient
+   * tombe à zéro.
+   * LE REMÈDE : un plancher. La page demandée est toujours au moins
+   * celle d'après l'adresse courante — on ne peut pas demander moins
+   * que ce qu'on a déjà. Le calcul du cookie garde tout son rôle
+   * partout ailleurs (c'est lui qui évite de sauter des cartes quand
+   * la page de l'écran est plus PETITE que celle qui est servie).
+   */
+  const pageSuivante = Math.max(
     taillePageEcran !== null && visibles.length > 0
       ? Math.floor(visibles.length / taillePageEcran) + 1
-      : page + 1;
+      : page + 1,
+    page + 1
+  );
 
   /*  ⚠️ PLUS AUCUNE REMISE EN PLACE (nº 224-§3) : la page ne doit pas
       bouger, donc personne ne la déplace. Cet effet ne fait plus que
@@ -849,28 +878,43 @@ export function IndexTatoueurs({
                * qui occupe tout l'écran, cette capsule de 109 px se
                * perdait au milieu du vide. Elle passe à 328 — trois
                * fois sa largeur, mesurée à l'écran avant d'être posée.
-               * ⚠️ LA SÉPARATION SE FAIT PAR LE CRAN, ET IL N'Y A RIEN
-               * D'AUTRE À SÉPARER : ce bouton n'est écrit qu'ICI, une
-               * seule fois, et aucun appelant ne le paramètre (le
-               * « Voir plus » de l'autre produit du dépôt est un autre
-               * bouton, dans un autre fichier, avec son contour rose).
-               * La classe de base ne porte AUCUNE largeur — la capsule
-               * y épouse son texte, comme depuis toujours —, et la
-               * variante n'en pose une qu'au-dessus du cran : LE DOIGT
-               * NE VOIT RIEN, au pixel près.
                * ⚠️ LA HAUTEUR NE BOUGE PAS : `min-h-[42px]` reste seul à
                * la commander, et le rembourrage latéral reste écrit
-               * pour le doigt. Au web il ne fait plus la largeur, il ne
-               * fait qu'empêcher le mot de toucher le bord.
-               * ⚠️ CONSÉQUENCE HEUREUSE, ET JE LA DIS : au web, le
-               * bouton NE CHANGE PLUS DE TAILLE pendant le chargement.
-               * Sa largeur suivait son libellé — 109 px pour « Voir
-               * plus », 151 pour « Chargement… » —, et il se dilatait
-               * donc au clic. Une largeur posée le fige. Au doigt, il
-               * continue de se dilater comme avant : rien n'y change.
+               * pour le doigt. Il ne fait plus la largeur, il ne fait
+               * qu'empêcher le mot de toucher le bord.
+               * ⚠️ CONSÉQUENCE HEUREUSE, ET JE LA DIS : le bouton NE
+               * CHANGE PLUS DE TAILLE pendant le chargement. Sa largeur
+               * suivait son libellé — 109 px pour « Voir plus », 151
+               * pour « Chargement… » —, et il se dilatait donc au clic.
+               * Une largeur posée le fige.
+               *
+               * ██ §3-c (nº 593) — L'APPAREIL, PAS LA LARGEUR D'ÉCRAN ██
+               * LE DÉFAUT, RELEVÉ PAR LE PROPRIÉTAIRE : en rétrécissant
+               * la fenêtre de son navigateur, le bouton reprenait la
+               * capsule du téléphone.
+               * LA CAUSE EST LA MIENNE, ET C'EST UNE RÈGLE DU SITE QUE
+               * J'AI MANQUÉE (nº 60) : la nº 592 avait posé la largeur
+               * derrière `lg:`, un cran de LARGEUR D'ÉCRAN. Or ici la
+               * question n'est pas « l'écran est-il large ? » mais
+               * « suis-je au doigt ou à la souris ? » — et le site y
+               * répond par `data-appareil`, posé sur `<html>` avant la
+               * première peinture d'après la finesse du pointeur. Un
+               * ordinateur à fenêtre étroite reste un ordinateur.
+               * LE REMÈDE : la largeur du WEB devient celle de base, et
+               * c'est la variante `mobile:` — celle qui lit
+               * `data-appareil` — qui pose celle du doigt. Rétrécir une
+               * fenêtre ne change donc plus rien.
+               *
+               * ██ §3-b (nº 593) — ET LA CAPSULE DU DOIGT S'ÉLARGIT ██
+               * Le propriétaire la trouve trop petite : ses 109 px
+               * passent à 160. Légèrement, comme demandé — et juste
+               * assez pour contenir « Chargement… » (151 px mesurés),
+               * si bien qu'elle ne se dilate plus sous le doigt non
+               * plus.
                */
               className="inline-flex items-center justify-center rounded-full
-                         bg-sombre-eleve px-5 min-h-[42px] lg:w-[328px]
+                         bg-sombre-eleve px-5 min-h-[42px]
+                         w-[328px] mobile:w-[160px]
                          text-[14px] font-semibold
                          text-sombre-texte transition-colors
                          hover:bg-sombre-haut"
