@@ -31,7 +31,10 @@ import { ligneCarteMobile, villeAffichee } from "@/lib/adresse";
 import { positionSousLeGel } from "@/lib/gel-du-corps";
 import { BoutonPartageFiche } from "@/components/BoutonPartageFiche";
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
-import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
+import {
+  CarrouselPortfolio,
+  PointsDuCarrousel,
+} from "@/components/CarrouselPortfolio";
 //  §2 (nº 451) — `adresseDeLienInterne` : l'adresse de la vue profil
 //  (« ?entree=lien », sans photo en haut), l'écriture UNIQUE des liens
 //  internes — la PLAQUE du profil de la photo mobile la consomme (le
@@ -1057,6 +1060,49 @@ export function FicheTatoueur({
                       />
                     </div>
                   )}
+                  {/*  ██ §1 (nº 598) — LES POINTS REVIENNENT DANS LA
+                       PHOTO, AU WEB ██
+                       ----------------------------------------------
+                       LA nº 307 LES AVAIT RETIRÉS D'ICI, au motif que
+                       « la capsule du compteur, seule, dit le volume »
+                       et que deux repères pour le même renseignement
+                       se gênaient. Le propriétaire les rappelle : le
+                       compteur dit COMBIEN, les points montrent OÙ —
+                       et il garde les deux, sur les deux appareils.
+                       ⚠️ L'ÉCRITURE N'EST PAS NEUVE : `PointsDuCarrousel`
+                       n'a jamais quitté ce dépôt (bas de
+                       CarrouselPortfolio). Elle était seulement
+                       devenue morte, plus rendue nulle part. On la
+                       rebranche telle quelle — sept crans au plus,
+                       frise qui glisse, extrémités qui décroissent.
+                       ⚠️ LE BLANC PUR N'EST PAS UN OUBLI, et c'est à
+                       écrire pour qu'une passe future ne le « corrige »
+                       pas : ces ronds vivent SUR UNE PHOTO, pas sur un
+                       fond de charte — aucun jeton de la nº 466 n'y
+                       aurait de sens, puisqu'on ne sait pas ce qu'il y
+                       a dessous. Leur lisibilité vient de l'ombre douce
+                       de la nº 221, la même sur tous, jamais d'une
+                       couleur.
+                       ⚠️ LA BANDE NE PREND AUCUNE PLACE et n'intercepte
+                       aucun clic : elle est posée EN SURIMPRESSION
+                       (`absolute`), et seuls les ronds eux-mêmes
+                       répondent au doigt — c'est ce que
+                       `pointer-events-auto`, écrit sur eux depuis
+                       toujours, permet enfin de servir. La photo garde
+                       donc sa taille, son format et son plein écran
+                       cliquable.
+                       ⚠️ ET RIEN AU DOIGT : ce bloc est `mobile:hidden`,
+                       comme le fanion juste au-dessus. Le doigt a les
+                       siens SOUS la photo (plus bas dans ce fichier). */}
+                  {photosDuCarrousel.length > 1 && (
+                    <div className="mobile:hidden pointer-events-none absolute inset-x-0 bottom-3 z-[2] flex justify-center">
+                      <PointsDuCarrousel
+                        photos={photosDuCarrousel}
+                        indice={indicePhoto}
+                        surRang={setIndicePhoto}
+                      />
+                    </div>
+                  )}
                 </>
               )}
 
@@ -1166,6 +1212,42 @@ export function FicheTatoueur({
                CHOSE : séparer le titre du groupe de droite. Le titre
                reste souple (`flex-1 min-w-0 truncate`) — un long
                libellé s'abrège, il ne pousse jamais les deux icônes. */}
+          {/*  ██ §2 (nº 598) — ET SOUS LA PHOTO, AU DOIGT ██
+               ----------------------------------------------------
+               LE PROPRIÉTAIRE LES VEUT DEHORS ICI, et c'est la
+               différence avec le web : au doigt, la photo saigne
+               jusqu'aux bords de l'écran et rien ne doit être posé
+               dessus (règle nº 452). Les points prennent donc leur
+               place dans le flux, entre la photo et la ligne du titre,
+               centrés.
+               L'AIR, MESURÉ À L'ÉCRAN. La colonne écarte ses enfants
+               de 12 px (`gap-3`), et la ligne du titre en reprenait
+               quatre (`mobile:-mt-1`, §2 nº 453) : il y avait donc
+               8 px entre la photo et le titre. Ce bloc-ci s'intercale
+               avec le MÊME réglage — 8 px sous la photo, ses 6 px de
+               ronds, puis 8 px avant le titre. La zone sous la photo
+               s'allonge de 14 px, et de rien d'autre.
+               ⚠️ LE POINT D'ÉQUERRE PHOTO/ÉCRAN DES nº 472-474 N'EST
+               PAS TOUCHÉ : il se joue AU-DESSUS de la photo (la
+               remontée qui la fait toucher la barre fixe,
+               `mobile:-mt-[15px]`), et rien ici ne le concerne. Ce
+               qu'on ajoute est en dessous.
+               ⚠️ LA LIGNE DU TITRE NE BOUGE PAS D'UN PIXEL PAR
+               RAPPORT À CE QUI LA SUIT : elle garde son écriture, ses
+               deux icônes et son écart de 10 px. Elle descend de
+               14 px, avec tout ce qui est sous elle.
+               ⚠️ ET LE COMPTEUR RESTE (nº 483, nº 487) : il vit dans
+               l'angle de la photo, il n'est pas concerné par cette
+               ligne-ci. */}
+          {rangeeSousLaPhoto && photosDuCarrousel.length > 1 && (
+            <div className="hidden mobile:flex justify-center mobile:-mt-1">
+              <PointsDuCarrousel
+                photos={photosDuCarrousel}
+                indice={indicePhoto}
+                surRang={setIndicePhoto}
+              />
+            </div>
+          )}
           {rangeeSousLaPhoto && (
             <div className="hidden mobile:flex items-center gap-2.5 mobile:-mt-1">
               <p
