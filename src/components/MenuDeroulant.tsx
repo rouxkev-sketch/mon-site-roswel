@@ -981,6 +981,26 @@ export function MenuDeroulant({
     !blocEntetes && !(entetesCollants && entetesDesSections.length <= 1);
 
   /**
+   * §1 (nº 579) — L'APLAT DE CETTE SURFACE, ÉCRIT UNE FOIS.
+   * ------------------------------------------------------------------
+   * LE BLOC DES EN-TÊTES ET LA PLAQUE DE LA FEUILLE LE PARTAGENT : ils
+   * ne peuvent donc plus se contredire, et c'est tout le sujet de la
+   * nº 579 — la feuille montrait deux fonds, un aplat au milieu et du
+   * verre aux deux bouts.
+   * ⚠️ SANS `opaque`, C'EST `carte` (#1A1F26) — la valeur que le bloc
+   * portait déjà depuis la nº 573, et celle que le propriétaire veut
+   * voir sur toute la feuille. Avec `opaque`, c'est `eleve` : le jeton
+   * que la plaque prenait déjà dans ce cas (nº 552), à quoi le bloc
+   * s'aligne au lieu de monter d'un cran de plus. Aucun appelant ne
+   * passe aujourd'hui `opaque` ET des en-têtes collants ; cette branche
+   * ne fait que rester cohérente si l'un le fait un jour.
+   * ⚠️ LE PANNEAU DU WEB N'EST PAS CONCERNÉ : lui reste EN VERRE, et
+   * son bloc garde son `carte` posé dessus (§2 nº 573) — un panneau
+   * ancré n'est pas une feuille qui couvre le bas de l'écran.
+   */
+  const aplatDeLaSurface = opaque ? "bg-sombre-eleve" : "bg-sombre-carte";
+
+  /**
    * ██ §2 (nº 578) — LE BLOC DES EN-TÊTES, UNE ÉCRITURE POUR DEUX BORDS ██
    * ------------------------------------------------------------------
    * Il était écrit en ligne dans le panneau du web (nº 572-574). La
@@ -1014,9 +1034,11 @@ export function MenuDeroulant({
   function blocDesEntetes(retrait: string, enBas = false) {
     return (
       <div
-        className={`shrink-0 pt-1 pb-3 ${enBas ? "border-t" : "border-b"} ${
-          opaque ? "bg-sombre-eleve-clair" : "bg-sombre-carte"
-        } ${groupeDeplie ? "border-sombre-trait" : "border-transparent"}`}
+        className={`shrink-0 pt-1 pb-3 ${
+          enBas ? "border-t" : "border-b"
+        } ${aplatDeLaSurface} ${
+          groupeDeplie ? "border-sombre-trait" : "border-transparent"
+        }`}
       >
         {entetesDesSections.map((entete) => (
           <div key={entete}>{enTeteSection(entete, `${retrait} pt-3 pb-1`)}</div>
@@ -1736,7 +1758,6 @@ export function MenuDeroulant({
           />
           {/* La feuille — SŒUR du voile, jamais son enfant. */}
           <div
-            {...(sombre && !opaque ? { "data-verre-menu": "" } : {})}
             role="listbox"
             aria-label={ariaLabel}
             /*  §4 (nº 460) — `feuilleDecollee` : l'encadré ne touche
@@ -1744,14 +1765,41 @@ export function MenuDeroulant({
                 de l'interface (le `px-4` des pages), posée sur la
                 plaque ELLE-MÊME (jamais sur un parent — piège 378).
                 Hauteur, contenu, animation : rien d'autre ne bouge. */
-            /*  §2 (nº 552) — LA FEUILLE SUIT LE PANNEAU : `opaque` lui
-                donne le même jeton `carte`, pour que le formulaire ne
-                montre pas deux menus différents selon l'appareil. */
+            /*  ██ §1 (nº 579) — LA FEUILLE SOMBRE EST UN APLAT, PLUS DU
+                 VERRE ██
+                 LE DÉFAUT : la feuille n'avait pas une couleur. Son bloc
+                 de titres portait un APLAT (`carte`, posé à la nº 573)
+                 tandis que la plaque, elle, portait `data-verre-menu` —
+                 le verre des menus, `rgba(11,15,20,0.45)` plus un flou.
+                 Deux natures de fond dans une même surface : le haut et
+                 le bas laissaient voir la page, le milieu non.
+                 LA CAUSE EST DONC LÀ, ET PAS DANS LE BLOC : le bloc a
+                 fait ce qu'on lui demandait ; c'est la plaque qui est
+                 restée en verre.
+                 LE REMÈDE : la plaque prend LE MÊME APLAT que le bloc
+                 (`aplatDeLaSurface`, écrit une fois juste au-dessus du
+                 bloc) et l'attribut de verre s'en va. Une seule surface,
+                 une seule couleur.
+                 ⚠️ `globals.css` N'EST PAS TOUCHÉ (règle nº 172) : les
+                 valeurs du verre y restent écrites en dur, intactes.
+                 On ne les modifie pas — ON N'EN VEUT PLUS ICI, ce qui
+                 se dit en retirant l'attribut, pas en réécrivant la
+                 règle. Toutes les autres surfaces de verre du site la
+                 lisent toujours.
+                 ⚠️ LA BRANCHE CLAIRE NE BOUGE PAS (`bg-fond shadow-2xl`)
+                 et c'est elle que prend la feuille du produit ARTISANS
+                 (`ChampMetier` ne passe pas `sombre`). Elle n'a jamais
+                 été en verre, elle ne le devient pas.
+                 ⚠️ LE BLOC NE SE DISTINGUE PLUS DU RESTE, et c'est
+                 exactement ce qui était demandé : c'est désormais LE
+                 TRAIT qui sépare, seul. Mesuré : `trait` (#2F353E) sur
+                 `carte` rend 1,34 — la même valeur qu'avant, le bloc
+                 étant déjà à `carte`. */
             className={`relative rounded-t-3xl max-h-[80vh] flex flex-col pb-[max(1rem,env(safe-area-inset-bottom))] ${
               feuilleDecollee ? "mx-4 " : ""
             }${
               sombre
-                ? `text-sombre-texte${opaque ? " bg-sombre-eleve" : ""}`
+                ? `text-sombre-texte ${aplatDeLaSurface}`
                 : "bg-fond shadow-2xl"
             }`}
             style={{
