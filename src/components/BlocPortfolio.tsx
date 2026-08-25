@@ -422,8 +422,16 @@ export function BlocPortfolio({
     setStylesAjoutes((courants) =>
       courants.includes(style) ? courants : [...courants, style]
     );
-    setFenetreStyles(false);
-    setFamilleDepliee(null);
+    /*  §2 (nº 561) — IL REFERME PAR LA PORTE COMMUNE, désormais.
+        Il recopiait les deux premières lignes de `fermerFenetreStyles`
+        et sautait la troisième : choisir un style laissait donc
+        derrière lui un refus de suggestion affiché — et, depuis cette
+        passe, aurait laissé la saisie. Deux écritures pour une même
+        fermeture, c'est une divergence de plus à chaque passe.
+        ⚠️ RIEN D'AUTRE NE CHANGE : `fermerFenetreStyles` fait
+        EXACTEMENT ce qu'il faisait ici (fenêtre fermée, famille
+        repliée), plus les deux nettoyages qu'il oubliait. */
+    fermerFenetreStyles();
     basculerStyle(style);
   }
 
@@ -682,6 +690,29 @@ export function BlocPortfolio({
     //  Le refus d'une suggestion ne survit pas à la fermeture : à la
     //  réouverture, on repart d'un champ propre (nº 122).
     setRefusSuggestion(null);
+    /*  ██ §2 (nº 561) — ET LE TEXTE NON PLUS ██
+        LA PHRASE CI-DESSUS PROMETTAIT « UN CHAMP PROPRE » ET NE TENAIT
+        QUE LA MOITIÉ : le refus partait, la SAISIE restait. On tapait
+        un style sans l'envoyer, on refermait — et il était encore là à
+        la réouverture, sans qu'on sache s'il avait été envoyé.
+        Le champ se vide donc ici, à côté de son refus.
+        ⚠️ POURQUOI ICI, ET PAS DANS CHAQUE CHEMIN DE FERMETURE : cette
+        fonction EST le chemin, unique. La croix de la fenêtre, celle
+        de la page du doigt, le voile qu'on clique à côté, la touche
+        Échap, le retour du téléphone (`useEtapeQuiSeReferme`) et
+        désormais le CHOIX D'UN STYLE (voir `ajouterUnStyle`) passent
+        tous par elle. Un seul endroit à tenir, aucun chemin à oublier
+        — et les chemins qu'une passe future ajoutera hériteront de la
+        règle sans qu'on y pense.
+        ⚠️ L'ENVOI RÉUSSI VIDE TOUJOURS, ET IL LE FAISAIT DÉJÀ :
+        `envoyerLaSuggestion` pose `setSuggestion("")` avant de fermer,
+        puis ouvre « Demande envoyée ». Rien n'y change ; il vide
+        simplement deux fois, ce qui ne coûte rien.
+        ⚠️ LA PAGE DU DOIGT AVAIT LE MÊME DÉFAUT, et elle est réparée
+        par la même ligne : elle referme par cette fonction (son
+        `surFermer`). C'est le seul point de cette passe qui la
+        concerne — aucune de ses couleurs ne bouge. */
+    setSuggestion("");
   }
 
   /* Échap referme la fenêtre des styles — comme toutes les fenêtres. */
@@ -967,27 +998,21 @@ export function BlocPortfolio({
      *  b) IL NE DOIT PLUS ÊTRE ROSE UNE FOIS ACTIF. Le rose disait
      *     « c'est prêt » d'un coup d'œil ; deux gris doivent le dire
      *     aussi bien, et le propriétaire ne veut plus de rose ici.
-     * COMMENT DEUX GRIS Y ARRIVENT, ET C'EST MESURÉ. Le jeu du web les
-     * place DE PART ET D'AUTRE de sa barre (`haut`) :
-     *  · ÉTEINT — `eleve-clair`, SOUS la barre : il RECULE (1,22). Sur
-     *    un fond noir, ce qui est plus sombre s'éloigne — c'est la
-     *    règle écrite à la nº 505 pour le compteur des capsules ;
-     *  · ALLUMÉ — `haut-clair`, AU-DESSUS de la barre : il AVANCE
-     *    (1,21), et son mot passe du gris doux au blanc plein.
-     * L'ÉCART ENTRE LES DEUX ÉTATS VAUT 1,48 — plus qu'un cran de
-     * l'échelle, et autant que ce qui détache la barre de la plaque.
-     * Et le MOT lui-même gagne : 4,94 éteint, 7,07 allumé, quand le
-     * blanc sur rose n'en donnait que 3,58. L'état allumé est donc plus
-     * lisible qu'il ne l'était en rose.
-     * ⚠️ CE QUE JE SIGNALE : allumé, le bouton porte le même gris que
-     * le CHAMP à sa gauche (`haut-clair` tous les deux) — c'est le
-     * dernier cran de l'échelle, il n'y a rien au-dessus. Ils ne se
-     * confondent pas pour autant : l'un est large et porte une saisie,
-     * l'autre est étroit et porte un mot blanc en demi-gras.
-     * ⚠️ LE DÉFAUT EST CELUI D'AVANT, AU CARACTÈRE PRÈS — rose allumé,
-     * `eleve-clair` éteint : la page du doigt ne passe rien et garde
-     * son bouton tel quel. Son bandeau, lui, n'a pas bougé de la
-     * nº 559 : le rose n'y est pas invisible.
+     * ██ CE QUE LA nº 560 AVAIT ESSAYÉ, ET QUI EST DÉFAIT (nº 561) ██
+     * Elle remplaçait le rose par DEUX GRIS placés de part et d'autre
+     * de la barre — éteint en dessous, allumé au-dessus. Le calcul
+     * tenait (1,48 entre les deux états, et le mot allumé montait à
+     * 7,07 contre 3,58 en rose), mais le propriétaire revient dessus :
+     * LE ROSE REPREND L'ÉTAT ALLUMÉ. Ce qui reste de la nº 560, c'est
+     * la LEÇON — un bouton éteint doit se VOIR : il ne retombe donc
+     * pas sur `eleve-clair`, qui était le fond de la barre à l'époque,
+     * mais prend le gris clair que la nº 560 avait donné à l'allumé.
+     * Les valeurs du web vivent à son point de montage, avec leurs
+     * mesures ; ce paramètre-ci ne fait que les transmettre.
+     * ⚠️ LE DÉFAUT EST CELUI D'AVANT LA nº 560, AU CARACTÈRE PRÈS —
+     * rose allumé, `eleve-clair` éteint : la page du doigt ne passe
+     * rien et garde son bouton tel quel. Son bandeau n'a pas bougé
+     * depuis la nº 559 : le rose n'y a jamais été invisible.
      */
     classeBouton = "bg-primaire text-white hover:opacity-90 " +
       "active:opacity-90 disabled:bg-sombre-eleve-clair " +
@@ -1021,6 +1046,11 @@ export function BlocPortfolio({
               //  champ monte d'un niveau avec lui, et le focus
               //  éclaircit encore d'un cran (la charte, sans
               //  contour ni rose).
+              //  ⚠️ « ET LE FOCUS ÉCLAIRCIT » NE VAUT PLUS QUE POUR LA
+              //  PAGE DU DOIGT (relevé nº 560) : au web, le champ est
+              //  au dernier cran de l'échelle, il n'a plus rien
+              //  au-dessus de lui et se dit par son curseur. Les deux
+              //  valeurs viennent de l'appelant depuis la nº 559.
               /*  ██ §3 (nº 475) — CE CHAMP FAISAIT ZOOMER TOUT LE SITE ██
                   LA CAUSE, NOMMÉE : sa taille de texte était
                   `text-[15px]`. Sous SEIZE pixels, Safari/iOS ZOOME la
@@ -1080,12 +1110,13 @@ export function BlocPortfolio({
             //  que rien n'est saisi, la capsule reste grise et
             //  éteinte ; dès deux caractères, elle s'allume —
             //  impossible de la croire bloquée.
-            //  §4 (nº 560) — « ROSE PLEIN » N'EST PLUS VRAI PARTOUT :
-            //  c'est encore la valeur PAR DÉFAUT (la page du doigt),
-            //  mais la fenêtre du web demande désormais deux gris.
-            //  La règle, elle, ne change pas — l'allumage se voit ;
-            //  seul ce qui le peint est dit par l'appelant (voir le
-            //  §4 posé sur `classeBouton`).
+            //  §1 (nº 561) — LE ROSE EST DE RETOUR AUX DEUX SURFACES
+            //  (la nº 560 l'avait remplacé par deux gris au web, et
+            //  cette passe le défait) : « rose plein » redevient vrai
+            //  partout. SEUL L'ÉTAT ÉTEINT DIFFÈRE désormais — gris
+            //  clair au web, un cran plus bas au doigt —, et c'est
+            //  l'appelant qui le dit (voir le §4 posé sur
+            //  `classeBouton`).
             /*  §2-a (nº 475) — LE MÊME RAYON QUE LE CHAMP QU'IL SUIT :
                 la capsule ronde (`rounded-full`) devient `rounded-lg`,
                 HUIT pixels — le rayon EXACT du champ de saisie
@@ -1851,13 +1882,67 @@ export function BlocPortfolio({
                    hors des bornes de cette passe ; je le signale.
                    ⚠️ TROIS RÉGLAGES DITS PAR L'APPELANT, UN SEUL
                    APPEL : la page du doigt n'en passe aucun et garde
-                   ses trois valeurs d'avant, au caractère près. */}
+                   ses trois valeurs d'avant, au caractère près.
+
+                   ██ §3 (nº 561) — LA BARRE REDESCEND D'UN CRAN ██
+                   LE DÉFAUT : à `haut`, elle touchait presque le champ
+                   qu'elle porte (`haut-clair`) — 1,21 entre les deux,
+                   on ne les distinguait plus. Elle passe à
+                   `eleve-clair`.
+                   CE QUE ÇA ÉCHANGE, ET C'EST UN ÉCHANGE, PAS UN GAIN
+                   PARTOUT :
+                    · avec le CHAMP : 1,21 → 1,48. C'était la demande ;
+                    · avec la FENÊTRE : 1,47 → 1,21. C'est le chiffre
+                      que la nº 560 avait jugé trop faible.
+                   POURQUOI ÇA DOIT SE LIRE AUTREMENT QU'À LA nº 560 :
+                   là-bas, la barre ET son contenu étaient ternes — le
+                   champ à 1,22 d'elle, le bouton fondu dedans (1,00).
+                   Rien ne la dessinait. Aujourd'hui son CONTENU saute
+                   aux yeux — champ et bouton à 1,48 —, et c'est lui
+                   qui dit où commence la barre. Une bande se voit par
+                   ce qu'elle porte autant que par sa teinte.
+                   ⚠️ IL N'Y AVAIT PAS D'AUTRE SOLUTION DANS L'ÉCHELLE,
+                   et je le dis : élargir l'écart barre ↔ champ en
+                   montant le CHAMP est impossible — `haut-clair` est
+                   le dernier cran. La barre était donc le seul des
+                   deux qui pouvait bouger. Descendre de DEUX crans
+                   (`trait`) donnerait 1,56 avec le champ mais 1,14
+                   avec la fenêtre : la barre y disparaîtrait pour de
+                   bon.
+
+                   ██ §1 (nº 561) — LE BOUTON REPREND SON ROSE ██
+                   Les deux gris de la nº 560 sont défaits sur consigne :
+                    · ALLUMÉ — `primaire`, comme avant la nº 560. Il
+                      tranche sur la barre à 3,26, et par la TEINTE
+                      autant que par la clarté ;
+                    · ÉTEINT — `haut-clair`, le gris clair que la
+                      nº 560 donnait à l'allumé : 1,48 sur la barre. Le
+                      bouton se voit au repos, ce qui était le défaut
+                      de la nº 560-§4a, et il ne peut plus être pris
+                      pour l'état prêt : celui-là est rose.
+                   ⚠️ LE MOT ÉTEINT PERD, ET JE LE SIGNALE PLUTÔT QUE
+                   DE LE RATTRAPER : `texte-doux` sur `haut-clair` rend
+                   3,35, contre 4,94 qu'il avait sur `eleve-clair`. Je
+                   le garde parce que c'est LUI qui dit « pas encore » —
+                   le passer au blanc plein (7,07) donnerait à un
+                   bouton désactivé l'air d'un bouton prêt. Un mot,
+                   `text-sombre-texte`, suffirait à l'inverser si tu
+                   préfères la lisibilité au signal.
+                   ⚠️ ET LE MOT ALLUMÉ RESTE BLANC PUR : le blanc rend
+                   3,58 sur le rose, et c'est le MAXIMUM disponible —
+                   le jeton `texte` du site (#F2F2F4) n'en donnerait
+                   que 3,21. Sans toucher au rose, le seul levier qui
+                   resterait est la GRAISSE : à 14 px, la norme ne
+                   compte un texte comme « grand » qu'à partir du gras
+                   plein, et 3,58 passerait alors son seuil. Je ne le
+                   fais pas — cela changerait le dessin du bouton, et
+                   son écriture est partagée avec la page du doigt. */}
               {bandeauStyleManquant(
-                "relative z-10 shrink-0 bg-sombre-haut px-4 py-3",
+                "relative z-10 shrink-0 bg-sombre-eleve-clair px-4 py-3",
                 "bg-sombre-haut-clair",
-                "bg-sombre-haut-clair text-sombre-texte " +
+                "bg-primaire text-white " +
                   "hover:opacity-90 active:opacity-90 " +
-                  "disabled:bg-sombre-eleve-clair " +
+                  "disabled:bg-sombre-haut-clair " +
                   "disabled:text-sombre-texte-doux"
               )}
             </div>
