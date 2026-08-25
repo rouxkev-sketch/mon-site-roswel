@@ -280,14 +280,19 @@ export function MenusSelection({
         ariaLabel="Filtrer"
         placeholder={libelleDuFiltre(entrees, choix, etroit)}
         libelleValeur={libelleDuFiltre(entrees, choix, etroit)}
-        /*  §5 (nº 301) — LA FEUILLE DU BAS DIT CE QU'ELLE FILTRE :
-             « Filtre de portfolios » sur les portfolios suivis,
-             « Filtre de photos » sur les favoris — les deux titres du
-             §1, au mot près. Le champ, lui, garde « Filtrer » : il est
-             court par nature, et la feuille qu'il ouvre le précise. */
-        titreFeuille={
-          surLesFavoris ? "Filtre de photos" : "Filtre de portfolios"
-        }
+        /*  ██ §3 (nº 578) — PLUS DE GRAND TITRE SUR CES FEUILLES ██
+             Elles portaient « Filtre de photos » / « Filtre de
+             portfolios » (nº 301) et l'icône de réglages (nº 262) : le
+             propriétaire les a fait retirer. On ne passe donc plus ni
+             `titreFeuille` ni `iconeTitreFeuille`, et la feuille
+             n'écrit rien — c'est sa règle depuis cette passe, pas un
+             repli caché.
+             ⚠️ LE TRAIT DE PRÉHENSION RESTE, avec son air : la bande
+             que le pouce attrape garde ses 44 px, et les 24 px qui
+             séparaient le trait du titre deviennent l'air au-dessus de
+             la première entrée.
+             ⚠️ LA FEUILLE DE `ChampMetier` (le produit artisans) GARDE
+             LE SIEN : elle passe toujours « Quel artisan ? ». */
         /*  §3 (nº 262) — SUR SMARTPHONE, LE CHAMP NE DIT PLUS LE
             STYLE : le mot « Filtrer », en blanc et en gras — la graisse
             et la taille du titre « Recherche » de la page du moteur
@@ -312,11 +317,6 @@ export function MenusSelection({
             <span className="text-base font-bold text-white">Filtrer</span>
           </>
         }
-        /*  §3 (nº 262) — la MÊME icône à gauche du titre de la
-            feuille, à la couleur du titre : le gris dans la barre dit
-            « ceci ouvre », ici elle dit « tu y es ». Une seule
-            écriture, deux couleurs. */
-        iconeTitreFeuille={<IconeReglages taille={20} classe="shrink-0" />}
         //  §5 (nº 258) — LA FLÈCHE PREND L'AIR DES MOTS DU BADGE
         //  (20 px, le `px-5` de l'écriture des fiches — aucune valeur
         //  neuve) : à 14 px du bord elle touchait presque la courbe de

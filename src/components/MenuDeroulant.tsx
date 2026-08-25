@@ -979,6 +979,51 @@ export function MenuDeroulant({
    */
   const titreEnLigne =
     !blocEntetes && !(entetesCollants && entetesDesSections.length <= 1);
+
+  /**
+   * ██ §2 (nº 578) — LE BLOC DES EN-TÊTES, UNE ÉCRITURE POUR DEUX BORDS ██
+   * ------------------------------------------------------------------
+   * Il était écrit en ligne dans le panneau du web (nº 572-574). La
+   * feuille du doigt le demande à son tour, mais EN BAS : les entrées
+   * défilent au-dessus, les deux titres restent collés au bas de la
+   * feuille. Le bloc est donc sorti ici, SANS CHANGER UN MOT de ce qu'il
+   * dessine, et il ne prend qu'une chose de son appelant : de quel côté
+   * il est posé.
+   *
+   * ⚠️ LE TRAIT SUIT LE BORD, ET C'EST TOUT CE QUI CHANGE. Au web le
+   * bloc est en haut, le trait le sépare de la liste par en dessous
+   * (`border-b`) ; au doigt il est en bas, le trait passe donc AU-DESSUS
+   * (`border-t`). Même jeton, même règle d'apparition, même épaisseur.
+   * ⚠️ L'AIR NE CHANGE PAS DE CÔTÉ, LUI, et ce n'est pas un oubli :
+   * les 8 px que le bloc rend (§1 nº 574) compensent le rembourrage
+   * ASYMÉTRIQUE DU BOUTON d'en-tête (`pt-3` contre `pb-1`), qui est le
+   * même où qu'on pose le bloc. `pt-1 pb-3` équilibre donc les deux
+   * côtés dans les deux cas.
+   * ⚠️ C'EST L'EXCEPTION À LA CHARTE DE LA nº 574 : elle interdit les
+   * contours, et le propriétaire a demandé ce trait explicitement après
+   * que je lui aie proposé de séparer par l'air seul. QU'UNE PASSE
+   * FUTURE NE LE RETIRE PAS en croyant réparer un oubli.
+   * ⚠️ LE BORD EXISTE TOUJOURS, IL CHANGE SEULEMENT DE COULEUR
+   * (`border-transparent` quand rien n'est déplié) : sans quoi le bloc
+   * grandirait d'un pixel à l'ouverture d'une section, et tout ce qu'il
+   * porte sauterait d'autant.
+   * ⚠️ LE RETRAIT LATÉRAL VIENT DE L'APPELANT : le panneau du web aligne
+   * ses titres sur ses options (`px-4`), la feuille sur les siennes
+   * (`px-3`). C'est la seule autre chose qui diffère.
+   */
+  function blocDesEntetes(retrait: string, enBas = false) {
+    return (
+      <div
+        className={`shrink-0 pt-1 pb-3 ${enBas ? "border-t" : "border-b"} ${
+          opaque ? "bg-sombre-eleve-clair" : "bg-sombre-carte"
+        } ${groupeDeplie ? "border-sombre-trait" : "border-transparent"}`}
+      >
+        {entetesDesSections.map((entete) => (
+          <div key={entete}>{enTeteSection(entete, `${retrait} pt-3 pb-1`)}</div>
+        ))}
+      </div>
+    );
+  }
   const [groupeDeplie, setGroupeDeplie] = useState<string | null>(groupeDuChoix);
   /** LA SOUS-SECTION OUVERTE (passe nº 113) — une seule à la fois, et
       elle repart elle aussi du choix courant à chaque ouverture : on
@@ -1504,17 +1549,7 @@ export function MenuDeroulant({
                COULEUR (`border-transparent` quand rien n'est déplié) :
                sans quoi le bloc grandirait d'un pixel à l'ouverture
                d'une section, et tout ce qu'il porte sauterait d'autant. */}
-          {blocEntetes && (
-            <div
-              className={`shrink-0 border-b pt-1 pb-3 ${
-                opaque ? "bg-sombre-eleve-clair" : "bg-sombre-carte"
-              } ${groupeDeplie ? "border-sombre-trait" : "border-transparent"}`}
-            >
-              {entetesDesSections.map((entete) => (
-                <div key={entete}>{enTeteSection(entete, "px-4 pt-3 pb-1")}</div>
-              ))}
-            </div>
-          )}
+          {blocEntetes && blocDesEntetes("px-4")}
           <ul
             ref={listeDeroulante}
             role="listbox"
@@ -1775,10 +1810,28 @@ export function MenuDeroulant({
                    titre, à la couleur du titre : dans la barre elle
                    était grise (« ceci ouvre »), ici elle dit
                    « tu y es ». Une seule écriture d'icône. */}
-              <h2 className="px-5 pb-3 text-lg font-bold text-left flex items-center gap-2.5">
-                {iconeTitreFeuille}
-                {titreFeuille ?? "Choisissez une option"}
-              </h2>
+              {/*  ██ §3 (nº 578) — PAS DE TITRE SANS TITRE DONNÉ ██
+                   La feuille écrivait « Choisissez une option » quand
+                   l'appelant n'en fournissait aucun. Le propriétaire ne
+                   veut plus de grand titre sur les feuilles de « Ma
+                   sélection » : elles ne passent donc plus de `titreFeuille`,
+                   et le repli part avec — un titre inventé au nom de
+                   quelqu'un qui n'en a pas demandé, c'est ce qu'on retire.
+                   ⚠️ LES AUTRES FEUILLES GARDENT LE LEUR : `ChampMetier`
+                   (le produit artisans) passe « Quel artisan ? », il
+                   s'affiche comme avant.
+                   ⚠️ L'AIR EST DÉJÀ JUSTE, ET RIEN N'EST À AJOUTER : les
+                   24 px qui séparaient le trait du titre (§1 nº 527)
+                   deviennent l'air au-dessus de la première entrée. La
+                   BANDE PRÉHENSIBLE, elle, garde ses 44 px — 16 au-dessus
+                   du trait, 4 de trait, 24 en dessous — et la mesure du
+                   pouce de la nº 261 reste tenue au pixel. */}
+              {titreFeuille && (
+                <h2 className="px-5 pb-3 text-lg font-bold text-left flex items-center gap-2.5">
+                  {iconeTitreFeuille}
+                  {titreFeuille}
+                </h2>
+              )}
             </div>
             <ul
               ref={listeDeroulante}
@@ -1792,8 +1845,11 @@ export function MenuDeroulant({
                 const choisi = value === valeur;
                 return (
                   <li key={cle}>
-                    {/* En-tête de section — étiquette, ou porte repliable */}
-                    {entete && enTeteSection(entete, "px-3 pt-3 pb-1")}
+                    {/* En-tête de section — étiquette, ou porte repliable.
+                        §1 (nº 578) — LA MÊME GARDE QU'AU WEB : le bloc du bas
+                        s'en charge quand il existe, et une section SEULE n'a
+                        pas de titre du tout (nº 577). Voir `titreEnLigne`. */}
+                    {entete && titreEnLigne && enTeteSection(entete, "px-3 pt-3 pb-1")}
                     {/* Porte de sous-section — à la place d'une option.
                         §3 (nº 525) — LA PUCE EST DÉSORMAIS SA MARQUE À
                         ELLE : les options ont perdu la leur, la porte
@@ -1961,6 +2017,23 @@ export function MenuDeroulant({
                 );
               })}
             </ul>
+            {/*  ██ §2 (nº 578) — LE BLOC DES EN-TÊTES, EN BAS ██
+                 Au web il coiffe la liste ; ICI IL LA CHAUSSE. Les
+                 entrées défilent AU-DESSUS, les deux titres restent
+                 collés au bas de la feuille — c'est là que le pouce les
+                 atteint sans traverser l'écran.
+                 LA MÉCANIQUE EST CELLE DE LA COLONNE, comme au web : la
+                 plaque est un `flex flex-col` plafonné (`max-h-[80vh]`),
+                 le bloc est `shrink-0`, et la liste — qui coupe déjà son
+                 débordement — se réduit d'autant. Rien à mesurer, rien à
+                 positionner.
+                 ⚠️ LE TRAIT PASSE AU-DESSUS (`border-t`) : c'est la
+                 seule chose que ce côté-ci change, et c'est
+                 `blocDesEntetes` qui la reçoit. Voir sa note.
+                 ⚠️ IL RESTE AU-DESSUS DE LA RÉSERVE DU BAS de la plaque
+                 (`pb-[max(1rem,env(safe-area-inset-bottom))]`) : la
+                 barre d'accueil du téléphone ne le recouvre donc jamais. */}
+            {blocEntetes && blocDesEntetes("px-3", true)}
           </div>
         </div>,
         document.body
