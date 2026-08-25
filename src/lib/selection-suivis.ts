@@ -3,7 +3,10 @@ import { modesOrdonnes, type ModeExerciceFiche } from "@/lib/modes-exercice";
 //  `ligneCarte` est celle des cartes de la mosaïque (« Lyon, France »,
 //  « Austin, TX, États-Unis »). Aucune seconde grammaire de lieu n'est
 //  écrite ici — c'est la règle de lib/adresse depuis toujours.
-import { ligneCarte } from "@/lib/adresse";
+//  §1 (nº 585) — ET LE NOM DU PAYS À PART, de la même source : c'est
+//  celle que `ligneCarte` emploie elle-même en interne, pas une
+//  seconde table.
+import { ligneCarte, nomPaysAffiche, type LieuAffichable } from "@/lib/adresse";
 import {
   libelleTypeFiche,
   natureDeLaFiche,
@@ -172,15 +175,15 @@ export function periodeDuGuest(mode: {
  * §3-e — L'ORDRE EST CELUI QU'IL A DÉCLARÉ : on parcourt `suivi.modes`
  * TEL QUEL. ⚠️ SURTOUT PAS `modesOrdonnes`, qui range par genre (à
  * domicile, en studio, en salon, guest) — c'était le bon classement
- * quand chaque mode avait sa ligne ; ici il choisirait à la place de
- * l'artiste QUELLE ville s'écrit en entier.
+ * quand chaque mode avait sa ligne ; ici il déciderait à la place de
+ * l'artiste QUELLE ville se lit en premier.
  *
  * §3-d — DÉDOUBLONNÉES SUR LA LIGNE RENDUE, et non sur le nom brut :
  * deux modes qui s'écrivent pareil à l'écran SONT la même ville pour
  * qui lit. C'est ce qui fait qu'un artiste qui reçoit chez lui ET
  * travaille en salon dans la même ville affiche « Artiste · Paris,
- * France » — sans « +1 ». C'est le cas le plus fréquent, il reste
- * court.
+ * France » — une seule fois, sans rien d'ajouté. C'est le cas le plus
+ * fréquent, il reste court.
  *
  * §3-f — UNE VILLE, JAMAIS UNE ADRESSE. On ne lit que `ville`,
  * `region`, `pays`, `code_pays` — ni rue ni numéro n'entrent dans
@@ -190,51 +193,169 @@ export function periodeDuGuest(mode: {
  *
  * ⚠️ UNE SESSION GUEST TERMINÉE NE COMPTE PAS. Elle ne dit plus où
  * l'artiste se trouve — c'est la règle du §2 de la nº 243, et elle
- * vaut ici comme elle valait ligne à ligne : compter une ville qu'il a
- * quittée gonflerait le « +N » d'un endroit où il n'est plus.
+ * vaut ici comme elle valait ligne à ligne : nommer une ville qu'il a
+ * quittée l'annoncerait à un endroit où il n'est plus.
+ *
+ * ⚠️ UN GUEST EN COURS, LUI, COMPTE COMME LES AUTRES (décision du
+ * propriétaire, nº 585) : un salon à Paris et un guest à Berlin
+ * s'écrivent « Paris, France · Berlin, Allemagne », sans que rien ne
+ * distingue le fixe du passage. La ligne dit OÙ ON LE TROUVE, pas à
+ * quel titre.
  */
-export function villesDuSuivi(
+
+/**
+ * ██ UN LIEU RETENU : SA LIGNE, ET SON PAYS À PART (nº 585) ██
+ * ------------------------------------------------------------------
+ * POURQUOI LES DEUX. La ligne est celle du site (`ligneCarte`) —
+ * « Lyon, France », « Austin, TX, États-Unis » —, et c'est elle qu'on
+ * écrit quand il n'y a qu'un lieu. Mais dès qu'il y en a plusieurs, la
+ * règle du propriétaire GROUPE PAR PAYS : il faut donc savoir lequel,
+ * et le nom du pays ne se devine pas dans une chaîne déjà composée.
+ * On le demande à la MÊME écriture que `ligneCarte` emploie en
+ * interne (`nomPaysAffiche`) — aucune seconde grammaire de lieu.
+ */
+type LieuDuSuivi = { ligne: string; pays: string };
+
+/**
+ * Le parcours des modes, une fois pour toutes : c'est lui qui décide
+ * QUELS lieux comptent, dans quel ordre, et sans doublon.
+ * ⚠️ `villesDuSuivi` (juste dessous) n'en garde que les lignes : sa
+ * signature ne change pas d'un caractère, ce qui la lit ne voit rien.
+ */
+function lieuxDuSuivi(
   suivi: TatoueurSuivi,
   aujourdhui = jourCivil()
-): string[] {
-  const villes: string[] = [];
-  const ajouter = (ligne: string) => {
-    if (ligne && !villes.includes(ligne)) villes.push(ligne);
+): LieuDuSuivi[] {
+  const lieux: LieuDuSuivi[] = [];
+  const ajouter = (lieu: LieuAffichable) => {
+    const ligne = ligneCarte(lieu);
+    if (!ligne || lieux.some((autre) => autre.ligne === ligne)) return;
+    lieux.push({ ligne, pays: nomPaysAffiche(lieu) });
   };
   for (const mode of suivi.modes) {
     if (mode.genre === "guest" && mode.fin_le && mode.fin_le < aujourdhui) {
       continue;
     }
-    ajouter(
-      ligneCarte({
-        ville: mode.ville ?? suivi.ville,
-        region: mode.region ?? suivi.region,
-        pays: mode.pays ?? suivi.pays,
-        code_pays: mode.code_pays ?? suivi.codePays,
-      })
-    );
+    ajouter({
+      ville: mode.ville ?? suivi.ville,
+      region: mode.region ?? suivi.region,
+      pays: mode.pays ?? suivi.pays,
+      code_pays: mode.code_pays ?? suivi.codePays,
+    });
   }
   //  Aucun mode (un salon, un studio — ou un artiste qui n'en a pas
   //  déclaré) : la fiche EST le lieu.
-  if (villes.length === 0) {
-    ajouter(
-      ligneCarte({
-        ville: suivi.ville,
-        region: suivi.region,
-        pays: suivi.pays,
-        code_pays: suivi.codePays,
-      })
-    );
+  if (lieux.length === 0) {
+    ajouter({
+      ville: suivi.ville,
+      region: suivi.region,
+      pays: suivi.pays,
+      code_pays: suivi.codePays,
+    });
   }
-  return villes;
+  return lieux;
+}
+
+export function villesDuSuivi(
+  suivi: TatoueurSuivi,
+  aujourdhui = jourCivil()
+): string[] {
+  return lieuxDuSuivi(suivi, aujourdhui).map((lieu) => lieu.ligne);
 }
 
 /**
- * LA LIGNE SOUS LE NOM — « Artiste · Paris, France +2 ».
+ * ██ COMBIEN DE LIEUX S'ÉCRIVENT, AU PLUS (nº 585) ██
  * ------------------------------------------------------------------
- * §3-b — LA PREMIÈRE VILLE EN ENTIER, et elle seule.
- * §3-c — LES AUTRES SONT COMPTÉES, après le pays : « +1 », « +2 ».
- *        Rien d'autre — pas de « et 2 autres », pas de liste tronquée.
+ * TROIS, et c'est le plafond que le site emploie déjà pour une
+ * énumération de la même famille — les styles d'une ligne d'équipe
+ * (`STYLES_EQUIPE_AFFICHES`, nº 313). Au-delà, la ligne d'un artiste
+ * devient un paragraphe, et elle vit sous un nom, dans une liste.
+ * CE QUI DÉPASSE N'EST PAS COMPTÉ, IL EST ÉLIDÉ : des points de
+ * suspension collés au dernier nom écrit. Le propriétaire ne veut
+ * plus lire un nombre (« +2 ») — il veut lire des villes.
+ */
+export const LIEUX_AFFICHES = 3;
+
+/**
+ * ██ LES LIEUX, ÉCRITS (nº 585) ██
+ * ==================================================================
+ * LA RÈGLE DU PROPRIÉTAIRE, mot pour mot :
+ *  · UN SEUL LIEU → sa ligne, telle quelle : « Paris, France ». Rien
+ *    ne change pour le cas le plus fréquent, division comprise
+ *    (« Austin, TX, États-Unis ») ;
+ *  · UN SEUL PAYS, plusieurs villes → les villes séparées par des
+ *    virgules, le pays UNE SEULE FOIS, après un point médian :
+ *    « Paris, Lyon · France » ;
+ *  · PLUSIEURS PAYS → chaque groupe porte son pays, et les groupes
+ *    sont séparés par un point médian : « Paris, France · Berlin,
+ *    Allemagne ». Un pays qui aurait plusieurs villes les garde
+ *    devant lui : « Paris, Lyon, France · Berlin, Allemagne » — la
+ *    forme à point médian du cas précédent serait ambiguë ici (on ne
+ *    saurait plus si « France » est un groupe ou un lieu de plus).
+ *
+ * L'ORDRE NE SE DÉCIDE PAS ICI : c'est celui des modes, donc celui que
+ * l'artiste a déclaré (§3-e ci-dessus). Les groupes de pays suivent le
+ * premier lieu qui les nomme. Trier alphabétiquement déplacerait son
+ * lieu principal, qu'il a mis en tête.
+ *
+ * ⚠️ JAMAIS DE SÉPARATEUR ORPHELIN (charte, nº 386) : un lieu sans
+ * pays connu s'écrit seul et ne se groupe avec personne ; un pays sans
+ * ville s'écrit seul aussi, sans virgule devant lui.
+ */
+function lieuxEcrits(lieux: LieuDuSuivi[]): string {
+  if (lieux.length === 0) return "";
+  if (lieux.length === 1) return lieux[0].ligne;
+
+  const retenus = lieux.slice(0, LIEUX_AFFICHES);
+  const groupes: Array<{ pays: string; sujets: string[] }> = [];
+  for (const lieu of retenus) {
+    const groupe = lieu.pays
+      ? groupes.find((autre) => autre.pays === lieu.pays)
+      : undefined;
+    if (groupe) groupe.sujets.push(sujetDuLieu(lieu));
+    else groupes.push({ pays: lieu.pays, sujets: [sujetDuLieu(lieu)] });
+  }
+  if (lieux.length > retenus.length) {
+    const dernier = groupes[groupes.length - 1];
+    const rang = dernier.sujets.length - 1;
+    dernier.sujets[rang] = `${dernier.sujets[rang]}…`;
+  }
+  const villes = (groupe: { sujets: string[] }) =>
+    groupe.sujets.filter(Boolean).join(", ");
+  if (groupes.length === 1) {
+    return [villes(groupes[0]), groupes[0].pays].filter(Boolean).join(" · ");
+  }
+  return groupes
+    .map((groupe) => [villes(groupe), groupe.pays].filter(Boolean).join(", "))
+    .join(" · ");
+}
+
+/**
+ * CE QUI SE LIT DEVANT LE PAYS — la ville, avec sa division quand le
+ * pays l'écrit. On le RETIRE de la ligne au lieu de le recomposer :
+ * c'est la garantie qu'aucune seconde grammaire ne s'installe ici.
+ * Un lieu qui n'est QUE son pays n'a rien devant lui ; un lieu sans
+ * pays connu est tout entier son propre sujet.
+ */
+function sujetDuLieu(lieu: LieuDuSuivi): string {
+  if (!lieu.pays) return lieu.ligne;
+  if (lieu.ligne === lieu.pays) return "";
+  const suffixe = `, ${lieu.pays}`;
+  return lieu.ligne.endsWith(suffixe)
+    ? lieu.ligne.slice(0, -suffixe.length)
+    : lieu.ligne;
+}
+
+/**
+ * LA LIGNE SOUS LE NOM — « Artiste · Paris, Lyon · France ».
+ * ------------------------------------------------------------------
+ * ██ §1 (nº 585) — ON LIT DES VILLES, PLUS UN NOMBRE ██
+ * §3-b et §3-c SONT ANNULÉS. La ligne écrivait la première ville en
+ * entier puis COMPTAIT les autres — « Paris, France +1 ». Le
+ * propriétaire l'a relevé : ce « +1 » ne dit pas ce qu'il compte, et
+ * qui lit ne peut pas le deviner. Les villes s'écrivent désormais
+ * toutes, groupées par pays ; la règle complète vit dans
+ * `lieuxEcrits`, avec ses trois cas et son plafond.
  * ⚠️ ELLE REND UNE CHAÎNE, PLUS UNE LISTE. Il y avait UNE LIGNE PAR
  * MODE (nº 247-§4), et le type `LigneInfoSuivi` qui allait avec, avec
  * sa date de guest et son drapeau « proche ». Tout cela part avec les
@@ -247,10 +368,7 @@ export function ligneDIdentite(
   aujourdhui = jourCivil()
 ): string {
   const type = libelleTypeFiche(suivi.typeFiche, suivi.etablissement);
-  const villes = villesDuSuivi(suivi, aujourdhui);
-  const premiere = villes[0] ?? "";
-  const autres = villes.length - 1;
-  const ou = premiere && autres > 0 ? `${premiere} +${autres}` : premiere;
+  const ou = lieuxEcrits(lieuxDuSuivi(suivi, aujourdhui));
   return [type, ou].filter(Boolean).join(" · ");
 }
 
