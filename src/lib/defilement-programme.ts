@@ -380,7 +380,9 @@ export function defilerEnDouceur(cible: number): void {
    * LA RÉSERVE : on garantit au document, le temps du mouvement, de
    * quoi poser la cible en haut de l'écran. Elle est relâchée à
    * l'arrivée — la page reprend alors sa vraie hauteur, sans avoir
-   * jamais sauté (même procédé que lib/bascule-verrouillee).
+   * jamais sauté. (C'était le procédé de la bascule de disposition de
+   * la nº 162 ; celle-ci a disparu à la nº 443, son module à la
+   * nº 603 — la réserve ci-dessous, elle, est bien vivante.)
    */
   const racine = document.documentElement;
   const reservePrecedente = racine.style.minHeight;

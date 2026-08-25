@@ -199,13 +199,14 @@ export function GrilleTatoueurs({
    * on voyait la page s'effondrer (docH 11874 → 3505 en une image). Le
    * fondu cachait le symptôme ; il n'empêchait pas la COURSE.
    *
-   * CE QUI SE PASSE MAINTENANT. Le bouton appelle `basculerSansSaut`
-   * (lib/bascule-verrouillee) : il pose le verrou À LA MAIN sur <html>
-   * — donc sans rendu, sans occasion de peindre — puis fait le
-   * changement en `flushSync`. React rend et joue CET effet DANS LA
-   * MÊME TÂCHE que le clic : la remise en place ci-dessous a lieu
-   * avant que le navigateur n'ait peint quoi que ce soit. Le verrou ne
-   * se lève qu'une fois la hauteur du document stabilisée.
+   * CE QUE FAISAIT LA nº 162, ET POURQUOI IL N'EN RESTE RIEN. Le
+   * bouton appelait alors `basculerSansSaut` : elle posait le verrou à
+   * la main sur <html> — sans rendu, donc sans occasion de peindre —
+   * puis faisait le changement en `flushSync`, dans la MÊME TÂCHE que
+   * le clic. La nº 443 a supprimé le bouton lui-même en ramenant les
+   * cartes à UNE SEULE mise en page : plus de bascule, plus de course
+   * à verrouiller. Le module est resté sans appelant jusqu'à sa
+   * suppression à la nº 603.
    *
    * CET EFFET RESTE LE FILET : une disposition qui changerait sans
    * passer par les boutons (restauration du magasin, autre onglet)

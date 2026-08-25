@@ -323,8 +323,9 @@ function CarteTatoueurNue({
   const cleDeLaCarte = `${tatoueur.carrousel?.cle ?? tatoueur.id}|${photoRecherche}`;
   /*  §1 (nº 445) — PLUS D'ÉTAT DE POSITION DANS LA CARTE : le
       carrousel parti, il n'y a plus de rang courant à tenir, ni de
-      mémoire de photo à semer d'une visite à l'autre
-      (lib/memoire-cartes n'est plus appelée d'ici). La photo est
+      mémoire de photo à semer d'une visite à l'autre (le module qui la
+      tenait, sans appelant depuis, a quitté le dépôt à la nº 603).
+      La photo est
       fixe : c'est celle que `photoPourStyle` choisit, comme la
       colonne 0 du défilé d'hier. */
   /**

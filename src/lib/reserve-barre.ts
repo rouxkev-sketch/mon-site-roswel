@@ -139,7 +139,9 @@ export const EVENEMENT_RANGEE = "roswel:rangee-a-rendre";
  * à sonde), aucun croisement, le volet ne s'ouvrait jamais.
  *
  * LA SURVIE : une variable de MODULE — le chemin le plus inerte qui
- * existe, le modèle exact de lib/memoire-cartes (nº 372) : aucune
+ * existe, le modèle qu'avait posé la mémoire des cartes (nº 372, dont
+ * le module a quitté le dépôt à la nº 603, sans appelant depuis la
+ * nº 445) : aucune
  * écriture d'adresse, aucune entrée d'historique, aucun stockage,
  * aucune requête ; elle vit tant que le document vit, et meurt avec
  * lui. Écrite à CHAQUE bascule réelle (le doigt, le haut de page, une

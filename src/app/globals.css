@@ -933,9 +933,11 @@ html[data-clavier="ouvert"] [data-entete-recherche] {
     (l'état relu dans le stockage à chaque rendu, et la bascule qui
     inversait). Un clic ne produit plus qu'un seul changement de
     hauteur, instantané — il n'y a plus d'image intermédiaire à cacher.
-    Ce qui reste de la mécanique (lib/bascule-verrouillee) ne cache
-    RIEN : elle note la carte du haut, fait le changement dans une
-    seule tâche, et repose la page tant que la hauteur bouge encore. */
+    Ce qui restait de la mécanique ne cachait RIEN : elle notait la
+    carte du haut, faisait le changement dans une seule tâche, et
+    reposait la page tant que la hauteur bougeait encore. La nº 443 a
+    supprimé la bascule elle-même (une seule mise en page de cartes),
+    et son module a quitté le dépôt à la nº 603. */
 
 /* Le fond de page reste BLANC PARTOUT (accueil, fiche, contact, etc.).
    Le gris très clair (--rw-fond-page) n'est PAS appliqué globalement :
