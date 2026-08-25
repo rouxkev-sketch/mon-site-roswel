@@ -198,16 +198,20 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
     "la ligne est composée des DEUX fonctions du site, pas d'une copie"
   );
   verif(
-    "…et le fichier n'écrit AUCUNE seconde grammaire de lieu : il appelle `ligneCarte`",
+    "…et le fichier n'écrit AUCUNE seconde grammaire de lieu : tout vient de lib/adresse",
     (sansNotes(lire("src/lib/selection-suivis.ts")).match(/ligneCarte\(/g) ?? [])
-      .length >= 2 &&
-      /import \{ ligneCarte \} from "@\/lib\/adresse"/.test(
+      .length >= 1 &&
+      /import \{[^}]*\bligneCarte\b[^}]*\} from "@\/lib\/adresse"/.test(
         lire("src/lib/selection-suivis.ts")
       ),
-    "`ligneCarte` importée et seule employée"
+    "`ligneCarte` importée de lib/adresse et employée"
   );
 
-  //  §3-c — « +N » ET RIEN D'AUTRE.
+  /*  §3-c — LES VILLES S'ÉCRIVENT, ON N'EN COMPTE PLUS AUCUNE.
+      ⚠️ CE TEST A ÉTÉ REPRIS (nº 586). Il exigeait « +2 » puis « +1 » —
+      la règle des nº 585 et 586 les a supprimés : on lit des villes, pas
+      un nombre. Les villes d'un même pays s'énumèrent par virgules, le
+      pays vient à la fin, et rien ne se compte. */
   const trois = ligneDIdentite(
     suivi("c", "artiste", "", [
       mode("salon", "Paris", null, "France", "FR"),
@@ -216,19 +220,32 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
     ])
   );
   verif(
-    "§3-c — LE COMPTE EST « +2 », après le pays, et rien d'autre",
-    trois.endsWith("France +2") && !/autres|villes|et /i.test(trois),
+    "§3-c — LES TROIS VILLES S'ÉCRIVENT, le pays une seule fois à la fin",
+    trois === "Artiste · Paris, Lyon, Nantes, France" && !/\+\d/.test(trois),
     `« ${trois} »`
   );
   verif(
-    "…et DEUX villes donnent « +1 »",
+    "…et DEUX villes s'écrivent toutes les deux, sans aucun nombre",
     ligneDIdentite(
       suivi("c2", "artiste", "", [
         mode("salon", "Paris", null, "France", "FR"),
         mode("salon", "Lyon", null, "France", "FR"),
       ])
-    ) === "Artiste · Paris, France +1",
-    "« +1 »"
+    ) === "Artiste · Paris, Lyon, France",
+    "« Paris, Lyon, France »"
+  );
+  /*  §1 (nº 586) — ET DEUX PAYS SE SÉPARENT PAR UNE BARRE VERTICALE,
+      jamais par le point médian : celui-ci ne sépare plus que le métier
+      de la localisation. */
+  verif(
+    "§1 (nº 586) — DEUX PAYS : une BARRE VERTICALE entre les groupes",
+    ligneDIdentite(
+      suivi("c3", "artiste", "", [
+        mode("salon", "Paris", null, "France", "FR"),
+        mode("salon", "Berlin", null, "Allemagne", "DE"),
+      ])
+    ) === "Artiste · Paris, France | Berlin, Allemagne",
+    "« Paris, France | Berlin, Allemagne »"
   );
 
   //  §3-d — LE DÉDOUBLONNAGE, éprouvé sur la LISTE DES VILLES.
@@ -254,9 +271,9 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
     mode("domicile", "Lyon", null, "France", "FR"),
   ]);
   verif(
-    "§3-e — L'ORDRE EST CELUI DE L'ARTISTE : la ville écrite est la PREMIÈRE DÉCLARÉE",
-    ligneDIdentite(declare) === "Artiste · Nantes, France +1",
-    `« ${ligneDIdentite(declare)} » (un classement par genre aurait dit « Lyon »)`
+    "§3-e — L'ORDRE EST CELUI DE L'ARTISTE : la PREMIÈRE DÉCLARÉE se lit en tête",
+    ligneDIdentite(declare) === "Artiste · Nantes, Lyon, France",
+    `« ${ligneDIdentite(declare)} » (un classement par genre aurait dit « Lyon » en tête)`
   );
   verif(
     "…et `modesOrdonnes` n'est PAS appelé pour construire cette ligne",
@@ -285,7 +302,7 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
     "plus aucun repli sur `intitule`"
   );
 
-  //  UNE SESSION GUEST TERMINÉE NE GONFLE PAS LE COMPTE.
+  //  UNE SESSION GUEST TERMINÉE N'AJOUTE AUCUN LIEU.
   const guestFini = suivi("g", "artiste", "", [
     mode("salon", "Paris", null, "France", "FR"),
     mode("guest", "Berlin", null, "Allemagne", "DE", {
@@ -296,7 +313,7 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
   verif(
     "UNE SESSION GUEST TERMINÉE NE COMPTE PAS — la règle du §2 de la nº 243 tient",
     ligneDIdentite(guestFini, "2026-08-16") === "Artiste · Paris, France",
-    `« ${ligneDIdentite(guestFini, "2026-08-16")} » (sans le « +1 » de Berlin)`
+    `« ${ligneDIdentite(guestFini, "2026-08-16")} » (Berlin n'y est pas)`
   );
   verif(
     "…mais une session À VENIR compte : c'est un endroit où il travaillera",
@@ -309,8 +326,8 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
         }),
       ]),
       "2026-08-16"
-    ) === "Artiste · Paris, France +1",
-    "« +1 »"
+    ) === "Artiste · Paris, France | Berlin, Allemagne",
+    "Berlin s'écrit, derrière la barre verticale"
   );
 }
 

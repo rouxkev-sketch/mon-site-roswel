@@ -553,9 +553,26 @@ export const CLASSES_LIGNE_CLIQUABLE =
  * rayon, la transition et les deux fonds partent, puisqu'ils n'ont plus
  * rien à dessiner. `group` reste : il sert aux enfants qui réagissent
  * au survol de la ligne.
+ *
+ * ██ §2 (nº 586) — LE ROND SE CENTRE SUR LE TEXTE, IL NE SE CALE PLUS
+ * EN HAUT ██
+ * L'alignement était `items-start`, hérité de la ligne encadrée
+ * ci-dessus. Il ne se voyait pas : le bloc de texte porte une hauteur
+ * minimale égale à celle du rond (52 px au doigt, 72 au web) et centre
+ * son contenu dedans — à une ou deux lignes, les deux hauteurs sont
+ * donc identiques et le haut vaut le centre. IL SE VOIT DÈS QUE LE
+ * TEXTE DÉPASSE : la nº 586 autorise la ligne de situation à passer
+ * sur deux lignes, le bloc devient alors plus haut que le rond, et
+ * caler en haut laisserait le rond décroché.
+ * ⚠️ CETTE CONSTANTE N'A QU'UN PORTEUR (voir juste au-dessus) : le
+ * changement ne touche que la ligne d'identité de « Ma sélection ».
+ * `CLASSES_LIGNE_CLIQUABLE`, elle, garde son `items-start`.
+ * ⚠️ UNE SEULE CLASSE D'ALIGNEMENT, REMPLACÉE — jamais deux posées
+ * l'une sur l'autre : entre `items-start` et `items-center`, ce n'est
+ * pas l'ordre de l'attribut qui déciderait, mais celui de la feuille.
  */
 export const CLASSES_LIGNE_CLIQUABLE_SANS_ENCADRE =
-  "group flex items-start gap-3.5";
+  "group flex items-center gap-3.5";
 
 /**
  * LE SOULIGNEMENT D'UN LIEN DE FICHE — UNE SEULE ÉCRITURE (nº 271-§2)

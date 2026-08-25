@@ -11,6 +11,9 @@ import {
   PhotoRonde,
 } from "@/components/BlocLieux";
 import { adresseDeLienInterne } from "@/components/ContenuFiche";
+//  §2 (nº 586) — LA CAPSULE « SUIVI » DE LA FICHE, telle quelle : le
+//  même composant, donc la même apparence et la même bascule.
+import { BoutonSuivre } from "@/components/BoutonSuivre";
 //  §1 (nº 515) — « ce qui est surligné est ce qui est copié »
 //  (nº 514) : la même écriture que les plaques de la fiche.
 import { garderLeTexteALaCopie } from "@/lib/copie-du-texte";
@@ -207,6 +210,34 @@ function BlocDUnSuivi({
 
   return (
     <div data-suivi={suivi.slug} className="flex flex-col">
+      {/*  ██ 1 · LA RANGÉE D'IDENTITÉ (nº 586) — LE LIEN, ET LA CAPSULE
+               À SON OPPOSÉ ██
+           ----------------------------------------------------------
+           POURQUOI UNE RANGÉE, ET PAS LA CAPSULE DANS LE LIEN : un
+           bouton ne peut pas vivre à l'intérieur d'un lien (le HTML
+           l'interdit, et le navigateur défait le nid en silence). La
+           ligne était UN SEUL lien, avatar et texte compris ; elle
+           devient donc une rangée qui porte les deux côte à côte.
+           ⚠️ L'ACQUIS nº 519 TIENT, PAR UN AUTRE MOYEN, ET C'EST À
+           DIRE : le lien ne court toujours pas jusqu'au bord de la
+           page. Là-bas il fallait deux classes pour le retenir, parce
+           que son parent était une COLONNE — et une colonne étire ses
+           enfants sur toute la largeur. Ici le parent est une RANGÉE :
+           un enfant de rangée prend la largeur de son contenu, sans
+           qu'on ait rien à écrire. La zone cliquable s'arrête donc au
+           dernier mot, exactement comme depuis la nº 519. Ce qui
+           s'étire, c'est la RANGÉE — elle n'est cliquable nulle part.
+           ⚠️ CE QUI REMPLACE LES DEUX CLASSES : la borne de largeur
+           devient une AUTORISATION DE RÉTRÉCIR (`min-w-0`), sans quoi
+           un enfant de rangée refuse de descendre sous la taille de
+           son contenu et le nom sortirait de l'écran au lieu de
+           s'abréger devant la capsule.
+           ⚠️ LA SÉLECTION ET LA COPIE DU NOM (nº 515, nº 516) NE SONT
+           PAS TOUCHÉES : les deux attributs restent sur le lien, et la
+           règle de glissement de globals.css vise l'attribut qui le
+           nomme (`data-ligne-suivi`) — ni l'un ni l'autre ne dépend de
+           qui est son parent. */}
+      <div className="flex items-center gap-3">
       {/* 1 · LA LIGNE D'IDENTITÉ — UN SEUL LIEN, pastille comprise. */}
       <Link
         /*  §4 (nº 329) — UN LIEN INTERNE : la fiche s'ouvre SANS
@@ -326,6 +357,12 @@ function BlocDUnSuivi({
              restent exactement où ils sont — c'est la BOÎTE du lien qui
              se rétrécit à droite, pas son contenu, qui était déjà calé
              à gauche.
+             ⛔ CES DEUX CLASSES ONT ÉTÉ REMPLACÉES À LA nº 586, et la
+             règle qu'elles servaient, elle, est intacte : le lien vit
+             désormais dans une RANGÉE (voir la note en tête du bloc),
+             où il prend la largeur de son contenu sans qu'on ait rien
+             à écrire. Il ne reste qu'à L'AUTORISER À RÉTRÉCIR pour que
+             le nom s'abrège devant la capsule.
              ⚠️ AUCUN FOND NI SURVOL À AJUSTER : cette ligne n'en porte
              plus depuis la nº 301 — c'est même la raison d'être de
              l'écriture qu'elle emploie. Il n'y a donc aucune plaque qui
@@ -333,8 +370,7 @@ function BlocDUnSuivi({
              ⚠️ LA SÉLECTION DU NOM (nº 515-516) N'EST PAS TOUCHÉE : les
              deux attributs et la règle de glissement visent le lien,
              qui reste le même — seule sa largeur change. */
-        className={`${CLASSES_LIGNE_CLIQUABLE_SANS_ENCADRE} lg:gap-5
-                    max-w-full self-start`}
+        className={`${CLASSES_LIGNE_CLIQUABLE_SANS_ENCADRE} lg:gap-5 min-w-0`}
       >
         <PhotoRonde
           source={suivi.photoProfil}
@@ -380,10 +416,21 @@ function BlocDUnSuivi({
                qui est aussi ce que le banc éprouve — le composant ne
                décide plus d'un seul mot.
                §1 (nº 323) — 16 px sur le web (15 avant), le doigt
-               garde ses 14. */}
+               garde ses 14.
+               ██ §2 (nº 586) — ELLE A DROIT À DEUX LIGNES ██
+               Elle en avait UNE, coupée net par des points de
+               suspension. C'était tenable quand elle ne disait qu'une
+               ville ; depuis la nº 585 elle peut en dire trois, dans
+               deux pays, et la capsule qui vient de s'installer à sa
+               droite lui prend encore de la largeur. DEUX LIGNES, ET
+               PAS PLUS : au-delà, le bloc dépasserait la bande de
+               vignettes qu'il coiffe.
+               ⚠️ LE NOM, LUI, GARDE SA LIGNE UNIQUE : il s'abrège
+               devant la capsule, il ne se replie pas. Un nom sur deux
+               lignes se lirait comme deux noms. */}
           <span
             data-info-suivi=""
-            className="truncate text-[14px] lg:text-[16px] leading-relaxed text-sombre-texte-doux"
+            className="line-clamp-2 text-[14px] lg:text-[16px] leading-relaxed text-sombre-texte-doux"
           >
             {identite}
           </span>
@@ -399,6 +446,33 @@ function BlocDUnSuivi({
           )}
         </span>
       </Link>
+      {/*  ██ §2 (nº 586) — LA CAPSULE « SUIVI », À L'OPPOSÉ DE L'AVATAR ██
+           ----------------------------------------------------------
+           C'EST CELLE DES FICHES, SANS UNE LIGNE DE PLUS : le même
+           composant, donc le même gris des plaques, le même
+           assombrissement au survol et à l'appui (nº 504, nº 524), le
+           même mot et la même bascule. Aucune apparence n'est
+           recopiée ici — c'est tout l'intérêt de l'appeler.
+           ⚠️ ELLE NAÎT « SUIVI » : on est dans la liste des portfolios
+           suivis, l'état de départ est connu du serveur. Le bouton
+           n'attend donc pas la liste des favoris pour parler (nº 506).
+           ⚠️ LA LIGNE NE DISPARAÎT PAS QUAND ON SE DÉSABONNE (décision
+           du propriétaire, nº 586) : seul le mot bascule, comme sur une
+           fiche. La liste vient du serveur et n'est pas refaite ; elle
+           se videra de cette ligne au prochain chargement. C'est aussi
+           ce qui laisse revenir en arrière d'un second appui, sans
+           avoir rien perdu de vue.
+           ⚠️ `ml-auto` LA POUSSE AU BORD, `shrink-0` l'empêche de se
+           faire écraser par un nom trop long : c'est le nom qui
+           s'abrège, jamais la capsule. */}
+      <div className="ml-auto shrink-0">
+        <BoutonSuivre
+          tatoueurId={suivi.id}
+          nomTatoueur={suivi.nom}
+          suiviAuDepart
+        />
+      </div>
+      </div>
 
       {/* 2 · §3 (nº 251) — PLUS AUCUN TITRE AU-DESSUS DES BANDES.
              « Vos coups de cœur », « Ses dernières réalisations », « Ses

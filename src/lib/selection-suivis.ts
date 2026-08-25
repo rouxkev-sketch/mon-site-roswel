@@ -277,21 +277,31 @@ export function villesDuSuivi(
 export const LIEUX_AFFICHES = 3;
 
 /**
- * ██ LES LIEUX, ÉCRITS (nº 585) ██
+ * ██ LES LIEUX, ÉCRITS (nº 585, forme reprise nº 586) ██
  * ==================================================================
  * LA RÈGLE DU PROPRIÉTAIRE, mot pour mot :
  *  · UN SEUL LIEU → sa ligne, telle quelle : « Paris, France ». Rien
  *    ne change pour le cas le plus fréquent, division comprise
  *    (« Austin, TX, États-Unis ») ;
- *  · UN SEUL PAYS, plusieurs villes → les villes séparées par des
- *    virgules, le pays UNE SEULE FOIS, après un point médian :
- *    « Paris, Lyon · France » ;
- *  · PLUSIEURS PAYS → chaque groupe porte son pays, et les groupes
- *    sont séparés par un point médian : « Paris, France · Berlin,
- *    Allemagne ». Un pays qui aurait plusieurs villes les garde
- *    devant lui : « Paris, Lyon, France · Berlin, Allemagne » — la
- *    forme à point médian du cas précédent serait ambiguë ici (on ne
- *    saurait plus si « France » est un groupe ou un lieu de plus).
+ *  · UN SEUL PAYS, plusieurs villes → les villes puis le pays,
+ *    SÉPARÉS PAR DES VIRGULES, sans rien d'autre : « Paris, Félines,
+ *    France » ;
+ *  · PLUSIEURS PAYS → chaque groupe s'écrit de cette même façon, et
+ *    les groupes sont séparés par UNE BARRE VERTICALE : « Paris,
+ *    Félines, France | Berlin, Allemagne ».
+ *
+ * ██ §1 (nº 586) — POURQUOI LA BARRE, ET PAS LE POINT MÉDIAN ██
+ * La nº 585 posait le pays après un point médian (« Paris, Lyon ·
+ * France ») et séparait les pays de la même façon. Le propriétaire l'a
+ * relevé : LE MÊME SIGNE SERVAIT À DEUX CHOSES à la fois — dire « et
+ * voilà le pays » et dire « et voilà un autre pays » —, si bien qu'on
+ * ne savait plus, à la lecture, si « France » fermait un groupe ou en
+ * ouvrait un. Le point médian retrouve donc son seul emploi de la
+ * ligne : séparer le métier de la localisation. Ce qui sépare les
+ * PAYS est un signe qui n'y sert à rien d'autre.
+ * CONSÉQUENCE HEUREUSE : les deux derniers cas s'écrivent maintenant
+ * de la MÊME façon — un groupe, c'est ses villes puis son pays — et
+ * il n'y a plus qu'une seule forme à composer au lieu de deux.
  *
  * L'ORDRE NE SE DÉCIDE PAS ICI : c'est celui des modes, donc celui que
  * l'artiste a déclaré (§3-e ci-dessus). Les groupes de pays suivent le
@@ -302,6 +312,8 @@ export const LIEUX_AFFICHES = 3;
  * pays connu s'écrit seul et ne se groupe avec personne ; un pays sans
  * ville s'écrit seul aussi, sans virgule devant lui.
  */
+const SEPARATEUR_DE_PAYS = " | ";
+
 function lieuxEcrits(lieux: LieuDuSuivi[]): string {
   if (lieux.length === 0) return "";
   if (lieux.length === 1) return lieux[0].ligne;
@@ -320,14 +332,13 @@ function lieuxEcrits(lieux: LieuDuSuivi[]): string {
     const rang = dernier.sujets.length - 1;
     dernier.sujets[rang] = `${dernier.sujets[rang]}…`;
   }
-  const villes = (groupe: { sujets: string[] }) =>
-    groupe.sujets.filter(Boolean).join(", ");
-  if (groupes.length === 1) {
-    return [villes(groupes[0]), groupes[0].pays].filter(Boolean).join(" · ");
-  }
   return groupes
-    .map((groupe) => [villes(groupe), groupe.pays].filter(Boolean).join(", "))
-    .join(" · ");
+    .map((groupe) =>
+      [groupe.sujets.filter(Boolean).join(", "), groupe.pays]
+        .filter(Boolean)
+        .join(", ")
+    )
+    .join(SEPARATEUR_DE_PAYS);
 }
 
 /**
@@ -347,7 +358,7 @@ function sujetDuLieu(lieu: LieuDuSuivi): string {
 }
 
 /**
- * LA LIGNE SOUS LE NOM — « Artiste · Paris, Lyon · France ».
+ * LA LIGNE SOUS LE NOM — « Artiste · Paris, Félines, France ».
  * ------------------------------------------------------------------
  * ██ §1 (nº 585) — ON LIT DES VILLES, PLUS UN NOMBRE ██
  * §3-b et §3-c SONT ANNULÉS. La ligne écrivait la première ville en
