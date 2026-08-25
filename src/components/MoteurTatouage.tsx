@@ -465,9 +465,9 @@ export function MoteurTatouage({
   /** Combien de fois le panneau de localité s'est refermé. Sa seule
       raison d'être : réveiller l'effet ci-dessous. */
   const [fermeturesDuLieu, setFermeturesDuLieu] = useState(0);
-  /** §4 (nº 567) — LA PRISE DU PIED SUR LE CHAMP : le champ y dépose
-      « refermer » et « vider l'écran » à chaque rendu, et les deux
-      boutons du pied les tirent. Voir `CommandesChampLocalisation`. */
+  /** §3 (nº 568, réduit nº 572) — LA PRISE SUR LE CHAMP : il y dépose
+      « refermer » à chaque rendu, et `choisirUnLieu` la tire quand le
+      lieu choisi n'ouvre aucun rayon. Voir `CommandesChampLocalisation`. */
   const commandesDuLieu = useRef<CommandesChampLocalisation | null>(null);
   useEffect(() => {
     if (fermeturesDuLieu === 0) return; // rien ne s'est encore refermé
@@ -538,48 +538,6 @@ export function MoteurTatouage({
     const apres = [...filtresEnAttente].sort().join(",");
     if (avant === apres) return;
     surChangement({ ...criteres, exclure: filtresEnAttente });
-  }
-
-  /**
-   * ██ §1 (nº 568, REPRIS nº 570) — « EFFACER » DANS LES FILTRES ██
-   * ------------------------------------------------------------------
-   * IL N'EFFACE QUE LES FILTRES, et c'est la règle posée à la nº 567 :
-   * un panneau efface ce qu'il porte, pas ce que porte le voisin. Le
-   * style, la ville et le rayon ne sont pas touchés — le pied du rayon
-   * s'en charge, chez lui.
-   * ⚠️ « TOUS LES FILTRES EFFACÉS » S'ÉCRIT `exclure: []` : la base ne
-   * connaît que les slugs ÉCARTÉS (voir `basculerBadge`), donc rien
-   * d'écarté = tous les badges allumés = aucun filtrage.
-   *
-   * ██ CE QUI CHANGE À LA nº 570 : IL NE FERME PLUS, ET IL NE CHERCHE
-   * PLUS ██
-   * La nº 568 refermait le panneau et annonçait dans la foulée. Le
-   * propriétaire veut voir les badges se rallumer SOUS SES YEUX et
-   * continuer à choisir. « Effacer » redevient donc ce que sont tous les
-   * autres gestes de ce panneau depuis la nº 364 : UNE ÉCRITURE DANS LE
-   * BROUILLON, rien de plus. Une seule ligne suffit — poser un brouillon
-   * VIDE.
-   *  · l'affichage lit le brouillon (voir le montage du panneau), donc
-   *    les badges se rallument tout de suite ;
-   *  · la recherche part quand on valide ou qu'on ferme, comme pour un
-   *    badge coché — même porte, même silence si rien n'a bougé ;
-   *  · ⚠️ UN TABLEAU VIDE EST UNE VALEUR, PAS UNE ABSENCE : `[]` est
-   *    « vrai » en JavaScript, donc la garde `if (!filtresEnAttente)` de
-   *    `fermerLesFiltres` NE L'AVALE PAS. C'est ce qui fait la
-   *    différence entre « on n'a rien touché » (`null`) et « on a tout
-   *    effacé » (`[]`), exactement comme l'enveloppe de la ville au §3.
-   *  · ⚠️ IL N'ANNULE PLUS LA NOTE DE RÉOUVERTURE (§2 nº 569) : cette
-   *    note n'est annulée que par une fermeture VOULUE, et effacer n'en
-   *    est plus une. Le panneau restant ouvert, il n'y a rien à
-   *    réarmer — mais s'il partait maintenant avec l'arbre, il
-   *    reviendrait, ce qui est la bonne réponse.
-   * ⚠️ LE PIED DU RAYON N'EST PAS CONCERNÉ : son « Effacer » efface tout
-   * et ferme (nº 567), et c'est voulu. Les deux pieds partagent
-   * `piedActions`, qui ne partage QUE LE DESSIN de la rangée — chaque
-   * panneau y branche ses deux gestes à lui.
-   */
-  function effacerLesFiltres() {
-    setFiltresEnAttente([]);
   }
 
   /*  LA VERSION FRAÎCHE DE LA FERMETURE, pour les écouteurs de
@@ -1248,54 +1206,6 @@ export function MoteurTatouage({
   const rayonAffiche = rayonEnAttente ?? criteres.rayonKm;
 
   /**
-   * ██ §4 (nº 567) — « VALIDER » : REFERMER, ET RIEN D'AUTRE ██
-   * ------------------------------------------------------------------
-   * Il n'annonce pas lui-même, et c'est ce qui garantit qu'on ne
-   * cherche pas deux fois : refermer réveille l'effet de fermeture
-   * (§3 nº 564-566), qui VIDE LES DEUX BROUILLONS AVANT d'annoncer.
-   * Le geste est donc rigoureusement celui d'un clic à l'extérieur —
-   * une recherche, une entrée d'historique — avec un bouton pour le
-   * dire. Et si rien n'a bougé, il ne relance rien, comme avant.
-   */
-  function validerLeRayon() {
-    commandesDuLieu.current?.fermerLePanneau();
-  }
-
-  /**
-   * ██ §4 (nº 567) — « EFFACER » : TOUTE LA RECHERCHE S'EN VA ██
-   * ------------------------------------------------------------------
-   * PLUS QUE LA CROIX DU CHAMP (nº 566), et le propriétaire l'a voulu
-   * ainsi : la croix garde le style, ce bouton-ci l'emporte avec le
-   * reste. La mosaïque redevient celle de l'accueil.
-   *
-   * L'ORDRE COMPTE, ET IL EST LE SEUL POSSIBLE :
-   *  1. les deux brouillons sont jetés — sans quoi la fermeture qui
-   *     suit les annoncerait par-dessus ce qu'on vient d'effacer ;
-   *  2. le champ se vide À L'ÉCRAN et se referme (il n'annonce rien) ;
-   *  3. le moteur annonce, une seule fois, la recherche remise à zéro.
-   * Tout tient dans un seul geste, donc une seule fournée : quand
-   * l'effet de fermeture se réveille, il trouve les brouillons vides et
-   * se tait. UNE recherche, UNE entrée d'historique.
-   *
-   * ⚠️ LE STYLE SE VIDE AUSSI À L'ÉCRAN, sans une ligne de plus : le
-   * champ de style est un menu COMMANDÉ par les critères
-   * (`valeurDuMenu`, `libelleChampStyleWeb`) — remettre `style` et
-   * `nature` à vide le rend à son fantôme.
-   * ⚠️ LES FILTRES NE SONT PAS TOUCHÉS (`exclure` est repris tel quel).
-   * Ils ont leur propre panneau, avec leur propre pied à venir : un
-   * panneau efface ce qu'il porte, pas ce que porte le voisin.
-   * ⚠️ `criteresComplets()` SANS ARGUMENT est LA remise à zéro du site —
-   * le seul endroit qui décide des défauts, rayon compris. On ne
-   * recopie aucune valeur ici.
-   */
-  function effacerLaRecherche() {
-    setLieuEnAttente(null);
-    setRayonEnAttente(null);
-    commandesDuLieu.current?.viderLAffichage();
-    surChangement({ ...criteresComplets(), exclure: criteres.exclure });
-  }
-
-  /**
    * ██ §3 (nº 568) — UN LIEU SANS RAYON N'A RIEN À FAIRE ATTENDRE ██
    * ==================================================================
    * LE DÉFAUT : choisir « France » n'ouvrait aucun pied — un pays n'a
@@ -1340,93 +1250,6 @@ export function MoteurTatouage({
       return;
     }
     setLieuEnAttente({ valeur: choisi });
-  }
-
-  /**
-   * ██ §4 (nº 567, PARTAGÉE nº 568) — LA RANGÉE « EFFACER / VALIDER » ██
-   * ==================================================================
-   * UNE SEULE ÉCRITURE POUR LES DEUX PANNEAUX DU WEB : le pied du rayon
-   * (nº 567) et le panneau des filtres (nº 568). Elle était écrite en
-   * ligne sous les pilules ; la nº 568 l'a sortie ici SANS CHANGER UN
-   * MOT de ce qu'elle dessine, pour ne pas en poser une troisième.
-   * Chaque panneau ne fournit que ses deux gestes.
-   *
-   * ⚠️ C'EST LE JUMEAU DE CELLE DU DOIGT, et les deux doivent être
-   * CHANGÉES ENSEMBLE. L'originale vit dans PageRechercheMobile (la
-   * rangée marquée `data-actions-recherche`) ; ses valeurs sont
-   * recopiées ici À LA MAIN, sur décision du propriétaire, parce
-   * qu'elle n'est PAS transportable telle quelle :
-   *  · elle porte le marqueur `data-actions-recherche`, qu'une règle de
-   *    globals.css cache dès qu'un `role="listbox"` existe dans le
-   *    document — or le panneau du rayon en contient un en permanence :
-   *    la rangée y serait invisible ;
-   *  · elle réserve `env(safe-area-inset-bottom)` pour la barre
-   *    d'accueil du téléphone, qui n'a pas d'objet dans un panneau
-   *    flottant.
-   *
-   * CE QUI EST REPRIS À L'IDENTIQUE : 15 px, demi-gras, gris doux pour
-   * « Effacer » (texte brut, jamais de capsule — c'est une action
-   * négative, nº 141-2C), capsule rose pleine et texte blanc pour
-   * « Valider ». CE QUI DIFFÈRE, ET SEULEMENT CELA :
-   *  · l'état de survol remplace l'état pressé (`hover` au lieu
-   *    d'`active`) — une souris survole, un doigt appuie ;
-   *  · §2 (nº 568) — LA CAPSULE EST PLUS PETITE ICI : 36 px de haut au
-   *    lieu de 44, et `px-4` (16 px) au lieu de `px-6` (24) — le
-   *    propriétaire la trouvait trop volumineuse au web. LE DOIGT GARDE
-   *    SES 44 px et son `px-6` : ce sont les valeurs d'une cible
-   *    tactile, et rien ne les remet en cause là-bas.
-   *    ⚠️ L'ARRONDI, LUI, NE PEUT PAS AUGMENTER : `rounded-full` EST le
-   *    maximum — un demi-cercle à chaque bout. Une capsule plus courte
-   *    reste une capsule parfaite ; elle paraît plus ronde parce que le
-   *    demi-cercle occupe une plus grande part de sa largeur, mais
-   *    aucune valeur ne peut aller au-delà. Rien à changer, donc.
-   *    ⚠️ 36 px RESTE UNE CIBLE CONFORTABLE À LA SOURIS (ces deux
-   *    panneaux sont web uniquement) : 15 px de texte plus 10 px d'air
-   *    en haut et en bas. « EFFACER » garde ses 44 px, qui fixent la
-   *    hauteur de la rangée — elle ne bouge donc pas non plus.
-   *
-   * ⚠️ `preventDefault` À L'APPUI, comme les pilules et comme la croix :
-   * dans le panneau du rayon, le champ garde ainsi le focus et le
-   * panneau ne se referme pas sous le bouton avant que son clic ne
-   * parte. Dans celui des filtres, où rien n'a le focus, c'est sans
-   * effet — d'où une seule écriture pour les deux.
-   */
-  function piedActions(surEffacer: () => void, surValider: () => void) {
-    return (
-      //  §1 (nº 569) — 28 px D'AIR AU-DESSUS au lieu de 20 (`pt-7` au
-      //  lieu de `pt-5`) : la rangée collait à ce qui la précède — les
-      //  pilules de rayon dans un panneau, la dernière rangée de badges
-      //  dans l'autre. L'échelle de 4 est respectée, et le changement
-      //  vaut POUR LES DEUX D'UN COUP puisque l'écriture est partagée
-      //  depuis la nº 568. Le doigt garde ses 20 px : sa rangée est
-      //  écrite ailleurs, et son fichier n'est pas touché.
-      <div className="flex items-center justify-between pt-7">
-        <button
-          type="button"
-          onPointerDown={(evenement) => {
-            if (evenement.pointerType === "mouse") evenement.preventDefault();
-          }}
-          onClick={surEffacer}
-          className="-ml-2 min-h-[44px] px-2 text-[15px] font-semibold
-                     text-sombre-texte-doux transition-colors
-                     hover:text-sombre-texte"
-        >
-          Effacer
-        </button>
-        <button
-          type="button"
-          onPointerDown={(evenement) => {
-            if (evenement.pointerType === "mouse") evenement.preventDefault();
-          }}
-          onClick={surValider}
-          className="min-h-9 rounded-full bg-primaire px-4 text-[15px]
-                     font-semibold text-white transition-colors
-                     hover:bg-primaire-fonce"
-        >
-          Valider
-        </button>
-      </div>
-    );
   }
 
   /** LES PILULES DE RAYON — posées dans le PANNEAU du champ de
@@ -1478,8 +1301,6 @@ export function MoteurTatouage({
           </BadgeCharte>
         ))}
       </GroupeBadges>
-
-      {piedActions(effacerLaRecherche, validerLeRayon)}
     </div>
   ) : undefined;
 
@@ -1618,13 +1439,15 @@ export function MoteurTatouage({
             //  propre texte) ; c'est la RECHERCHE qui attend la
             //  fermeture, comme le rayon depuis la nº 564.
             //  §3 (nº 568) — SAUF QUAND IL N'Y A RIEN À RÉGLER : voir
-            //  `choisirUnLieu` juste au-dessus de `piedActions`.
+            //  `choisirUnLieu`, plus haut.
             surChoix={choisirUnLieu}
             sansBordure
             compact
             piedPanneau={piedRayon}
             garderOuvertApresChoix
-            //  §4 (nº 567) — la prise des deux boutons du pied.
+            //  §3 (nº 568) — LA PRISE DONT `choisirUnLieu` A BESOIN :
+            //  un pays ou une région n'ouvre aucun rayon, il n'y a donc
+            //  rien à régler et le panneau doit se refermer seul.
             commandesDuChamp={commandesDuLieu}
             //  §3 (nº 564) — LA FERMETURE ANNONCE LE RAYON. Le champ
             //  sait quand son panneau se referme ; le moteur, non.
@@ -1852,36 +1675,6 @@ export function MoteurTatouage({
                 poserDansLePanneau,
                 true
               )}
-              {/*  §1 (nº 568) — LA MÊME RANGÉE QU'AU PIED DU RAYON, et
-                   c'est la MÊME ÉCRITURE (`piedActions`, plus haut) :
-                   ce panneau ne fournit que ses deux gestes.
-                   ⚠️ ELLE EST POSÉE ICI ET NON DANS `blocFiltres` :
-                   celui-ci est PARTAGÉ avec la page du doigt (nº 149-§6),
-                   qui a déjà sa propre rangée en bas de page. L'y mettre
-                   en aurait donné deux là-bas.
-                   ⚠️ « VALIDER » PASSE PAR LA FERMETURE ORDINAIRE
-                   (`fermerLesFiltres`, nº 364) : c'est elle qui annonce
-                   le brouillon, une fois, et qui se tait s'il n'a pas
-                   bougé. Le clic à l'extérieur et Échap appellent
-                   exactement la même — aucun geste ne peut donc chercher
-                   deux fois.
-                   ⚠️ « EFFACER » NE FERME PAS (nº 570) : il écrit un
-                   brouillon vide, les badges se rallument sous les yeux,
-                   et l'on continue à choisir. C'est le seul des deux
-                   pieds à se comporter ainsi — celui du rayon efface et
-                   ferme (nº 567). Les deux partagent le DESSIN de la
-                   rangée, jamais leurs gestes.
-                   ⚠️ CE PANNEAU EST DIMENSIONNÉ À SON CONTENU : il
-                   grandit de la hauteur de la rangée (44 px, la hauteur
-                   d'« EFFACER », plus l'air au-dessus — 28 px depuis le
-                   §1 nº 569, soit 72 px en tout).
-                   Il ne peut pas déborder pour autant — `MenuDeVerre`
-                   pose un plafond calculé et fait défiler son contenu
-                   (`overflow-y-auto`). Et le voile n'est pas concerné :
-                   ce panneau est à l'étage 75, le voile à 60, et ce que
-                   le voile épargne est LA RANGÉE DU MOTEUR, jamais le
-                   panneau. */}
-              {piedActions(effacerLesFiltres, fermerLesFiltres)}
             </MenuDeVerre>
           )}
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { gelerLeCorps } from "@/lib/gel-du-corps";
 //  §3 (nº 330) — L'ÉTAPE D'HISTORIQUE D'UNE SURFACE QUI COUVRE
 //  L'ÉCRAN : l'écriture unique des quatre surfaces du C-4.
@@ -819,6 +819,19 @@ export function MenuDeroulant({
     };
   });
 
+  /**
+   * §2 (nº 572) — LES NOMS DES SECTIONS, DANS L'ORDRE, UNE FOIS CHACUN.
+   * ------------------------------------------------------------------
+   * C'est la MÊME source que les en-têtes rendus dans la liste : le
+   * champ `entete` n'est posé que sur la première option d'une section
+   * (voir juste au-dessus), donc le filtrer donne exactement la suite
+   * des titres, dans leur ordre, sans doublon. AUCUN RÉORDONNANCEMENT :
+   * on lit ce que les options disent, on n'en décide rien.
+   */
+  const entetesDesSections = optionsAvecEntetes
+    .map(({ entete }) => entete)
+    .filter((entete): entete is string => Boolean(entete));
+
   /* ----------------------------------------------------------------
      LES CATÉGORIES REPLIABLES (`repliable`)
      ----------------------------------------------------------------
@@ -959,24 +972,19 @@ export function MenuDeroulant({
         `[data-sous-porte="${CSS.escape(sousGroupe)}"]`
       );
       if (!liste || !porte) return;
-      //  §1 (nº 571) — ET ON S'ARRÊTE SOUS L'EN-TÊTE COLLANT, pas
-      //  dessous lui. « Amener la ligne en haut de la liste » envoyait
-      //  « Cultures du monde » — et son trait rose (nº 525, nº 559) —
-      //  EXACTEMENT sous le titre de section resté en place : le geste
-      //  aurait paru mort, le défaut même que cette remontée corrigeait
-      //  à la nº 238. On retranche donc la hauteur de l'en-tête, LUE SUR
-      //  LE VRAI ÉLÉMENT (tous les en-têtes collants ont la même, c'est
-      //  le même bouton). Sans en-têtes collants il n'y en a aucun, la
-      //  hauteur vaut zéro, et le calcul est celui d'avant au pixel.
-      const enteteCollant = liste.querySelector<HTMLElement>(
-        "[data-entete-collant]"
-      );
+      //  §2 (nº 572) — ET IL N'Y A PLUS RIEN À RETRANCHER. La nº 571
+      //  ôtait ici la hauteur de l'en-tête COLLANT, qui vivait dans la
+      //  liste et se serait posé sur la ligne qu'on amène en haut. Les
+      //  en-têtes ont quitté la liste : ils forment un bloc au-dessus
+      //  d'elle. `liste.getBoundingClientRect().top` est donc DÉJÀ le
+      //  haut de la zone visible des styles, et « Cultures du monde » —
+      //  avec son trait rose (nº 525, nº 559) — s'y range en entier.
+      //  Le calcul redevient celui de la nº 238, au pixel.
       liste.scrollTo({
         top:
           liste.scrollTop +
           (porte.getBoundingClientRect().top -
-            liste.getBoundingClientRect().top) -
-          (enteteCollant?.offsetHeight ?? 0),
+            liste.getBoundingClientRect().top),
         behavior: "instant",
       });
     });
@@ -1299,6 +1307,50 @@ export function MenuDeroulant({
               : listeClassique
           }
         >
+          {/*  ██ §2 (nº 572) — LES DEUX EN-TÊTES, ENSEMBLE ET FIXES ██
+               ==========================================================
+               LA nº 571 LES AVAIT RENDUS COLLANTS DANS LA LISTE : l'un
+               remplaçait l'autre au défilement. Le propriétaire veut LES
+               DEUX visibles en permanence, l'un sous l'autre, et les
+               styles qui défilent dessous.
+               LE PROCÉDÉ, ET IL EST PLUS SIMPLE QUE `sticky` : le bloc
+               SORT de la liste et devient son frère du dessus. Le
+               panneau est déjà une colonne (`flex flex-col`) dont la
+               liste est l'élément élastique (`min-h-0 flex-1
+               overflow-y-auto`) : un bloc posé avant elle est fixe par
+               construction, et la liste prend ce qui reste.
+               ⚠️ AUCUN STYLE NE PEUT PASSER DERRIÈRE, et ce n'est pas le
+               fond qui l'empêche : la liste CLIPE son contenu (elle est
+               son propre conteneur de défilement), lequel ne peut donc
+               pas peindre hors de sa boîte. Le fond est posé quand même,
+               pour que le bloc reste juste si un jour on le déplace —
+               `fond` (#0B0F14) sous verre, où le panneau rend
+               rgb(9,15,23) : 1,00 de contraste, invisible à la jointure ;
+               `eleve` quand l'appelant passe `opaque`. Aucune couleur
+               nouvelle.
+               ⚠️ LE CHEVRON N'A RIEN DEMANDÉ : `enTeteSection` est repris
+               tel quel, et il porte déjà le procédé de rotation de la
+               maison — `transition-transform duration-200` plus
+               `rotate-180` quand la section est ouverte. Celui de la
+               section ouverte pointe donc vers le haut, l'autre vers le
+               bas, et il pivote au clic.
+               ⚠️ LA HAUTEUR DU PANNEAU NE BOUGE PAS : elle est plafonnée
+               par `usePlacementMenu`, et c'est la liste qui raccourcit
+               d'autant.
+               ⚠️ `py-1` COMME LA LISTE : le bloc reprend l'air que la
+               liste posait autour de ses en-têtes, pour que rien ne se
+               resserre. */}
+          {entetesCollants && entetesDesSections.length > 0 && (
+            <div
+              className={`shrink-0 py-1 ${
+                opaque ? "bg-sombre-eleve" : "bg-sombre-fond"
+              }`}
+            >
+              {entetesDesSections.map((entete) => (
+                <div key={entete}>{enTeteSection(entete, "px-4 pt-3 pb-1")}</div>
+              ))}
+            </div>
+          )}
           <ul
             ref={listeDeroulante}
             role="listbox"
@@ -1313,47 +1365,7 @@ export function MenuDeroulant({
             className="min-h-0 flex-1 overflow-y-auto overscroll-contain defilement-visible py-1"
           >
             {optionsAvecEntetes.map(({ option, cle, entete, sousEntete }) => (
-              <Fragment key={cle}>
-              {/*  §1 (nº 571) — L'EN-TÊTE COLLANT VIT DANS SON PROPRE
-                   `<li>`, ENFANT DIRECT DE LA LISTE QUI DÉFILE : c'est
-                   la condition pour qu'il puisse rester en haut (un
-                   élément collant ne dépasse jamais la boîte de son
-                   parent). Le `<li>` ne dessine rien — pas de marge, pas
-                   de fond à lui —, il ne fait qu'ouvrir la bonne boîte ;
-                   `role="presentation"` l'écarte de l'arbre des choix,
-                   où il n'est pas une option.
-                   ⚠️ LE FOND EST OBLIGATOIRE, sinon les styles défilent
-                   À TRAVERS le titre. Le jeton suit CE QUE LE PANNEAU
-                   REND VRAIMENT : sans `opaque` il est en verre
-                   (`data-verre-menu`), lequel, composé sur le fond de
-                   page, donne rgb(9,15,23) — le jeton `fond` (#0B0F14)
-                   en est à 1,00 de contraste, donc invisible à la
-                   jointure. Avec `opaque`, le panneau est un aplat
-                   `eleve` et l'en-tête le reprend tel quel. Aucune
-                   couleur nouvelle dans les deux cas.
-                   ⚠️ DEUX EN-TÊTES COLLANTS AU MÊME `top-0` : celui du
-                   bas monte et RECOUVRE celui du haut quand on l'atteint
-                   (il vient après dans le document, il peint donc
-                   par-dessus). On ne voit jamais deux titres à la fois,
-                   et redescendre redécouvre le premier.
-                   ⚠️ LA HAUTEUR DU PANNEAU NE BOUGE PAS : un élément
-                   collant reste dans le flux et garde sa place. */}
-              {entete && entetesCollants && (
-                <li
-                  role="presentation"
-                  //  §1 (nº 571) — LE MARQUEUR QUE LIT LA REMONTÉE D'UNE
-                  //  SOUS-PORTE, plus haut : elle en retranche la
-                  //  hauteur pour ne pas ranger la ligne ouverte SOUS ce
-                  //  titre-ci.
-                  data-entete-collant=""
-                  className={`sticky top-0 z-10 ${
-                    opaque ? "bg-sombre-eleve" : "bg-sombre-fond"
-                  }`}
-                >
-                  {enTeteSection(entete, "px-4 pt-3 pb-1")}
-                </li>
-              )}
-              <li>
+              <li key={cle}>
                 {/* En-tête de section — étiquette, ou porte repliable */}
                 {entete && !entetesCollants && enTeteSection(entete, "px-4 pt-3 pb-1")}
                 {/* Porte de sous-section — à la place d'une option */}
@@ -1455,7 +1467,6 @@ export function MenuDeroulant({
                 </button>
                 )}
               </li>
-              </Fragment>
             ))}
           </ul>
         </div>,

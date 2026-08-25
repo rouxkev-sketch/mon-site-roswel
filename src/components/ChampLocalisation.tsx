@@ -161,23 +161,25 @@ function repriseDue(cle: string): boolean {
 }
 
 /**
- * ██ §2 (nº 567) — CE QUE LE PIED PEUT DEMANDER AU CHAMP ██
+ * ██ §2 (nº 567, RÉDUIT nº 572) — CE QUE LE MOTEUR PEUT DEMANDER ██
  * ====================================================================
- * Deux commandes, et deux seulement. Elles existent parce que le pied
- * du panneau est fabriqué DEHORS (par le moteur) et affiché DEDANS : il
- * n'a aucune prise sur le champ sans elles.
- * ⚠️ AUCUNE DES DEUX N'ANNONCE DE RECHERCHE — c'est délibéré, et c'est
- * ce qui garde les nº 564-566 intacts : le moteur reste le seul à
- * parler, par son effet de fermeture.
+ * UNE SEULE COMMANDE. Elle existe parce que l'ouverture du panneau vit
+ * ICI, et que le moteur a un cas où il doit le refermer lui-même : un
+ * PAYS ou une RÉGION n'ouvre aucun rayon, il n'y a donc rien à régler
+ * et la recherche part seule (§3 nº 568).
+ * ⚠️ ELLE N'ANNONCE PAS — c'est délibéré, et c'est ce qui garde les
+ * nº 564-566 intacts : refermer suffit, la fermeture fait annoncer le
+ * brouillon une fois, et le moteur reste le seul à parler.
+ * ⚠️ LA SECONDE COMMANDE EST PARTIE À LA nº 572 (`viderLAffichage`) :
+ * elle ne servait qu'au bouton « EFFACER » du pied du rayon, retiré
+ * avec ce pied. La FONCTION du même nom reste, plus bas — c'est la
+ * croix du champ qui s'en sert.
  */
 export type CommandesChampLocalisation = {
   /** Referme le panneau EXACTEMENT comme un clic à l'extérieur (même
       corps, donc même restauration d'une saisie abandonnée), et rend la
       main. La fermeture fait annoncer le brouillon, une fois. */
   fermerLePanneau: () => void;
-  /** Vide le champ À L'ÉCRAN — texte, sélection, lieu retenu — et
-      referme. N'annonce rien : l'appelant dit ce qui part. */
-  viderLAffichage: () => void;
 };
 
 export function ChampLocalisation({
@@ -334,10 +336,10 @@ export function ChampLocalisation({
    * personne. Celui-ci ne parle qu'à la fermeture, et quelqu'un écoute.
    */
   surFermeturePanneau?: () => void;
-  /** §2 (nº 567) — LA PRISE DU PIED SUR LE CHAMP. Le champ y dépose ses
-      deux commandes à chaque rendu ; le moteur les tire depuis les
-      boutons qu'il a lui-même posés dans le panneau. Voir le dépôt plus
-      bas pour ce que chacune fait, et ce qu'elle ne fait pas. */
+  /** §2 (nº 567, réduit nº 572) — LA PRISE DU MOTEUR SUR CE CHAMP. Il y
+      dépose sa commande à chaque rendu ; le moteur la tire quand le lieu
+      choisi n'ouvre aucun rayon. Voir le dépôt plus bas pour ce qu'elle
+      fait, et ce qu'elle ne fait pas. */
   commandesDuChamp?: React.MutableRefObject<CommandesChampLocalisation | null>;
 }) {
   const [texte, setTexte] = useState(
@@ -555,10 +557,13 @@ export function ChampLocalisation({
       if (racine.current?.contains(cible)) return;
       if (panneau.current?.contains(cible)) return;
       //  §2 (nº 567) — LE CORPS DE CETTE FERMETURE A ÉTÉ EXTRAIT tel
-      //  quel dans `fermerLePanneau` (plus bas) : le bouton « Valider »
-      //  du pied doit refermer EXACTEMENT comme un clic ici, sans quoi
-      //  il oublierait la restauration d'une saisie abandonnée. Rien
-      //  n'a changé de ce que cette ligne faisait.
+      //  quel dans `fermerLePanneau` (plus bas), pour que le moteur
+      //  puisse refermer EXACTEMENT comme un clic ici — sans quoi il
+      //  oublierait la restauration d'une saisie abandonnée. Rien n'a
+      //  changé de ce que cette ligne faisait.
+      //  ⚠️ SON APPELANT A CHANGÉ À LA nº 572 : le bouton « Valider » du
+      //  pied est parti avec le pied ; c'est désormais le choix d'un
+      //  PAYS ou d'une RÉGION qui tire la commande (§3 nº 568).
       fermerLePanneau();
     }
     //  §2 (nº 564) — ÉCHAP REFERME, ET IL N'EXISTAIT PAS ICI.
@@ -667,22 +672,16 @@ export function ChampLocalisation({
   }, [texte]);
 
   /**
-   * §2 (nº 567) — LES DEUX COMMANDES QUE LE PIED PEUT TIRER.
+   * §2 (nº 567, RÉDUIT nº 572) — LA COMMANDE QUE LE MOTEUR PEUT TIRER.
    * ------------------------------------------------------------------
-   * LE PROBLÈME : le pied du panneau (les pilules de rayon, et depuis
-   * cette passe la rangée « EFFACER / VALIDER ») est FABRIQUÉ PAR LE
-   * MOTEUR et passé ici comme un contenu opaque. Il s'affiche donc dans
-   * le panneau sans rien pouvoir sur lui : ni le refermer, ni vider le
-   * champ. Or ses deux boutons ont besoin exactement de ça.
+   * LE PROBLÈME : l'ouverture du panneau vit ICI, et le moteur a un cas
+   * où il doit le refermer lui-même — un pays ou une région n'ouvre
+   * aucun rayon, il n'y a rien à régler (§3 nº 568).
    * LA PRISE : le même mécanisme que `actionValider` juste dessous — le
-   * champ DÉPOSE ses fonctions dans une référence que le parent tient.
-   * Déposées à CHAQUE rendu, elles voient donc toujours l'état frais.
-   * ⚠️ UNE SEULE RÉFÉRENCE POUR LES DEUX : elles naissent du même
-   * besoin et se lisent ensemble ; les séparer inviterait à n'en
-   * brancher qu'une.
-   * ⚠️ NI L'UNE NI L'AUTRE N'ANNONCE : la première referme (et c'est la
-   * fermeture qui fait annoncer le brouillon, §2 nº 564), la seconde ne
-   * fait que vider l'écran. Le moteur reste le seul à parler.
+   * champ DÉPOSE sa fonction dans une référence que le parent tient.
+   * Déposée à CHAQUE rendu, elle voit donc toujours l'état frais.
+   * ⚠️ ELLE N'ANNONCE PAS : elle referme, et c'est la fermeture qui fait
+   * annoncer le brouillon (§2 nº 564). Le moteur reste le seul à parler.
    */
   useEffect(() => {
     if (!commandesDuChamp) return;
@@ -690,10 +689,6 @@ export function ChampLocalisation({
       fermerLePanneau: () => {
         fermerLePanneau();
         champ.current?.blur(); // le geste est fini, le curseur s'en va
-      },
-      viderLAffichage: () => {
-        viderLAffichage();
-        champ.current?.blur();
       },
     };
     return () => {
