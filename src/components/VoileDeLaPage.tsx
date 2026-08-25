@@ -7,8 +7,15 @@ import {
   poserLeVoile,
   retirerLeVoile,
   sAbonnerAuVoile,
+  surfacesDuVoile,
   voilePose,
 } from "@/lib/voile-de-la-page";
+//  ██ MESURE (nº 562) — le carnet de la sonde `?sonde-bascule=1`.
+//  Il n'écrit RIEN sans elle (`noter` sort à sa première ligne) et
+//  n'emploie AUCUN état React : un relevé ne peut pas provoquer de
+//  rendu, donc pas déranger ce qu'il observe. Voir le bloc de mesure
+//  posé plus bas.
+import { noter } from "@/lib/journal-bascule";
 
 /**
  * ██ LE VOILE DE LA PAGE — §2 (nº 293), REFAIT §3 (nº 294) ██
@@ -104,7 +111,52 @@ export function VoileDeLaPage() {
   const [trous, setTrous] = useState<Rect[] | null>(null);
   const empreinte = useRef("");
 
-  useEffect(() => sAbonnerAuVoile(() => setActif(voilePose())), []);
+  /**
+   * ██ BLOC TEMPORAIRE — MESURE DU VOILE (nº 562) ██
+   * ==================================================================
+   * ⚠️ IL NE CORRIGE RIEN, ET IL PARTIRA. Le propriétaire relève qu'au
+   * web, en tapant une ville dans le champ de localité du moteur, LE
+   * VOILE CLIGNOTE À CHAQUE LETTRE. La lecture du code ne permet pas de
+   * trancher : le composant est monté UNE fois dans la mise en page, sa
+   * pose passe par un compte partagé, et ses trous ne se reposent que
+   * si leur empreinte change. Trois causes restent possibles, et une
+   * seule mesure les sépare.
+   *
+   * CE QUE LES LIGNES RÉPONDENT, DANS L'ORDRE DES QUESTIONS POSÉES :
+   *  1. « VOILE · posé / retiré » — la surface est-elle RETIRÉE puis
+   *     REPOSÉE à chaque frappe ? (le crochet, plus bas) ;
+   *  2. « VOILE · allumé / éteint » — le voile est-il DÉMONTÉ puis
+   *     REMONTÉ ? C'est ce que verrait l'œil comme un clignotement ;
+   *  3. « VOILE · trous » — l'empreinte change-t-elle, et les VALEURS
+   *     changent-elles réellement ? La ligne porte l'ancienne et la
+   *     nouvelle, côte à côte ;
+   *  4. « VOILE · ⚠️ PLUS AUCUN TROU » — le cas que je soupçonne le
+   *     plus : quand `trous` retombe à `null`, le voile ne peint plus
+   *     quatre pans autour de la barre mais UN SEUL RECTANGLE PLEIN
+   *     ÉCRAN (voir le rendu). La barre elle-même s'assombrit alors le
+   *     temps d'une image — un clignotement, exactement.
+   *
+   * ⚠️ AUCUNE LIGNE N'EST ÉCRITE SANS `?sonde-bascule=1`, et aucune
+   * n'est écrite à chaque image : la mesure des trous vit APRÈS la
+   * comparaison d'empreinte, là où le code ne passe que lorsqu'un
+   * nombre a bougé.
+   */
+  const actifPrecedent = useRef(false);
+
+  useEffect(
+    () =>
+      sAbonnerAuVoile(() => {
+        const pose = voilePose();
+        if (pose !== actifPrecedent.current) {
+          actifPrecedent.current = pose;
+          noter(
+            `VOILE · ${pose ? "allumé" : "ÉTEINT"} (surfaces ${surfacesDuVoile()})`
+          );
+        }
+        setActif(pose);
+      }),
+    []
+  );
 
   /**
    * LE TROU SE MESURE À CHAQUE IMAGE tant que le voile est posé : le
@@ -197,6 +249,25 @@ export function VoileDeLaPage() {
       }
       const signature = JSON.stringify(frais);
       if (signature === empreinte.current) return;
+      /*  ██ MESURE (nº 562) — ON NE PASSE ICI QUE SI UN NOMBRE A BOUGÉ.
+           Deux lignes, et elles se lisent seules :
+            · le cas grave d'abord — plus aucun trou, donc un pan plein
+              écran qui recouvre la barre ;
+            · sinon l'ancienne empreinte et la nouvelle, pour voir si
+              les valeurs changent VRAIMENT ou si seule leur écriture
+              a bougé.
+           `noter` ne coûte rien sans `?sonde-bascule=1`. */
+      if (!frais || frais.length === 0) {
+        noter(
+          `VOILE · ⚠️ PLUS AUCUN TROU (bloc épargné introuvable) — ` +
+            `pan PLEIN ÉCRAN ; avant : ${empreinte.current || "(rien)"}`
+        );
+      } else {
+        noter(
+          `VOILE · trous recalculés · avant ${empreinte.current || "(rien)"}` +
+            ` · après ${signature}`
+        );
+      }
       empreinte.current = signature;
       setTrous(frais);
     };
@@ -388,6 +459,14 @@ export function useVoileDeLaPage(
      * celui du moteur en sont). Faute d'encadré, le conteneur lui-même.
      * C'est ce qui garantit qu'on n'épargne JAMAIS un demi-bloc.
      */
+    /*  ██ MESURE (nº 562) — LA POSE ET LE RETRAIT DE LA SURFACE.
+         C'est la PREMIÈRE question : si ces deux lignes reviennent à
+         chaque lettre frappée, l'effet se rejoue — donc l'une de ses
+         deux dépendances change, et c'est là qu'il faudra chercher.
+         Si elles n'apparaissent qu'à l'ouverture et à la fermeture du
+         menu, la cause est ailleurs, et les lignes du composant la
+         diront. */
+    noter(`VOILE · posé par une surface (avant : ${surfacesDuVoile()})`);
     const jeton = poserLeVoile(() => {
       const surface = bloc?.current ?? null;
       if (!surface) return null;
@@ -404,6 +483,10 @@ export function useVoileDeLaPage(
         surface
       );
     });
-    return () => retirerLeVoile(jeton);
+    return () => {
+      //  ██ MESURE (nº 562) — le pendant du relevé ci-dessus.
+      noter(`VOILE · RETIRÉ par une surface (avant : ${surfacesDuVoile()})`);
+      retirerLeVoile(jeton);
+    };
   }, [ouvert, bloc]);
 }
