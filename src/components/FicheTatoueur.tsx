@@ -1093,7 +1093,16 @@ export function FicheTatoueur({
                        cliquable.
                        ⚠️ ET RIEN AU DOIGT : ce bloc est `mobile:hidden`,
                        comme le fanion juste au-dessus. Le doigt a les
-                       siens SOUS la photo (plus bas dans ce fichier). */}
+                       siens SOUS la photo (plus bas dans ce fichier).
+                       ██ ⚠️ CE N'EST PAS LE SEUL AFFICHAGE DU WEB
+                       (nº 599) : une fiche s'y regarde en PAGE PLEINE
+                       — celle-ci — ou en FENÊTRE SUPERPOSÉE, et c'est
+                       la fenêtre qu'ouvre un clic de carte. Elle monte
+                       son propre carrousel dans `FenetreFiche`, avec
+                       ses propres habillages : les points y sont
+                       écrits une seconde fois, à l'identique. Toucher
+                       l'un sans l'autre, c'est le défaut que la nº 599
+                       a fermé. */}
                   {photosDuCarrousel.length > 1 && (
                     <div className="mobile:hidden pointer-events-none absolute inset-x-0 bottom-3 z-[2] flex justify-center">
                       <PointsDuCarrousel
@@ -1220,13 +1229,24 @@ export function FicheTatoueur({
                dessus (règle nº 452). Les points prennent donc leur
                place dans le flux, entre la photo et la ligne du titre,
                centrés.
-               L'AIR, MESURÉ À L'ÉCRAN. La colonne écarte ses enfants
-               de 12 px (`gap-3`), et la ligne du titre en reprenait
-               quatre (`mobile:-mt-1`, §2 nº 453) : il y avait donc
-               8 px entre la photo et le titre. Ce bloc-ci s'intercale
-               avec le MÊME réglage — 8 px sous la photo, ses 6 px de
-               ronds, puis 8 px avant le titre. La zone sous la photo
-               s'allonge de 14 px, et de rien d'autre.
+               L'AIR, MESURÉ À L'ÉCRAN (repris nº 599). La colonne
+               écarte ses enfants de 12 px (`gap-3`), et la ligne du
+               titre en reprend quatre (§2 nº 453). LA nº 598 AVAIT
+               DONNÉ À CE BLOC-CI LA MÊME REPRISE, et c'est ce qui
+               collait les ronds à la photo : 8 px d'encre au-dessus
+               d'eux, 13 px en dessous. Les deux airs ne se
+               ressemblaient pas parce que la ligne du titre N'EST PAS
+               DE L'ENCRE — sa boîte fait 22,5 px pour une capitale de
+               12, soit cinq pixels de blanc de plomb au-dessus des
+               lettres, que l'œil compte comme de l'air (la leçon de la
+               nº 584 : on compare de l'encre, pas des boîtes).
+               CE BLOC NE REPREND DONC PLUS RIEN : les 12 px de la
+               colonne s'appliquent tels quels. Mesuré à l'écran après
+               correction — 12 px d'encre entre le bas de la photo et
+               les ronds, 13 px entre les ronds et les lettres du
+               titre, inchangés. La zone sous la photo s'allonge de
+               18 px par rapport à l'état d'avant la nº 598, et de rien
+               d'autre.
                ⚠️ LE POINT D'ÉQUERRE PHOTO/ÉCRAN DES nº 472-474 N'EST
                PAS TOUCHÉ : il se joue AU-DESSUS de la photo (la
                remontée qui la fait toucher la barre fixe,
@@ -1235,12 +1255,12 @@ export function FicheTatoueur({
                ⚠️ LA LIGNE DU TITRE NE BOUGE PAS D'UN PIXEL PAR
                RAPPORT À CE QUI LA SUIT : elle garde son écriture, ses
                deux icônes et son écart de 10 px. Elle descend de
-               14 px, avec tout ce qui est sous elle.
+               18 px, avec tout ce qui est sous elle.
                ⚠️ ET LE COMPTEUR RESTE (nº 483, nº 487) : il vit dans
                l'angle de la photo, il n'est pas concerné par cette
                ligne-ci. */}
           {rangeeSousLaPhoto && photosDuCarrousel.length > 1 && (
-            <div className="hidden mobile:flex justify-center mobile:-mt-1">
+            <div className="hidden mobile:flex justify-center">
               <PointsDuCarrousel
                 photos={photosDuCarrousel}
                 indice={indicePhoto}

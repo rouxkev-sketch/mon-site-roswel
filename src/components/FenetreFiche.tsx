@@ -10,7 +10,10 @@ import Link from "next/link";
 //  va-et-vient (ContenuFiche, nº 458-§2).
 import { libelleStyle } from "@/config/tatouage";
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
-import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
+import {
+  CarrouselPortfolio,
+  PointsDuCarrousel,
+} from "@/components/CarrouselPortfolio";
 import { ContenuFiche } from "@/components/ContenuFiche";
 import { SondePhoto } from "@/components/SondePhoto";
 import {
@@ -749,6 +752,36 @@ export function FenetreFiche({
                       //  (nº 210-§2, voir le commentaire jumeau dans
                       //  FicheTatoueur).
                       variante="fiche"
+                    />
+                  </div>
+                )}
+                {/*  ██ §1 (nº 599) — LES POINTS AUSSI, ET C'EST TOUTE
+                     LA CAUSE DU DÉFAUT ██
+                     ----------------------------------------------
+                     LA nº 598 a rebranché la frise dans `FicheTatoueur`
+                     seulement. Or le web a DEUX affichages d'une fiche,
+                     et celui qu'on voit en cliquant une carte est
+                     CELUI-CI : la fenêtre superposée monte SON PROPRE
+                     `CarrouselPortfolio` (juste au-dessus), avec pour
+                     seul enfant le fanion. La page pleine avait donc
+                     ses points, la fenêtre non — et comme la mosaïque
+                     n'ouvre jamais la page, on ne voyait rien.
+                     C'EST L'ÉCRITURE DE LA PAGE, MOT POUR MOT : même
+                     composant, même ancrage bas, même surimpression
+                     qui ne prend aucune place et n'intercepte aucun
+                     clic (seuls les ronds répondent).
+                     ⚠️ AUCUNE BASCULE D'APPAREIL ICI, contrairement à
+                     la page : cette fenêtre s'ouvre AUSSI au doigt
+                     (une fiche ouverte depuis une fiche, PileFiches),
+                     et ses habillages de photo — le fanion juste
+                     au-dessus — n'en ont jamais porté. Les points
+                     suivent le fanion, pas la page. */}
+                {photosDuStyleAffiche.length > 1 && (
+                  <div className="pointer-events-none absolute inset-x-0 bottom-3 z-[2] flex justify-center">
+                    <PointsDuCarrousel
+                      photos={photosDuStyleAffiche}
+                      indice={rang}
+                      surRang={setIndice}
                     />
                   </div>
                 )}
