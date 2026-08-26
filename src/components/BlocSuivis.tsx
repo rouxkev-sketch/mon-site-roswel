@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { GalerieQuiDefile } from "@/components/GalerieQuiDefile";
+//  §1 (nº 643) — l'écran vide partagé avec l'onglet Favoris.
+import { EcranVideSelection } from "@/components/EcranVideSelection";
 //  §4 (nº 462) — la mémoire de défilement des bandes (leçon nº 430),
 //  sous le préfixe réservé que la purge des fiches épargne.
 import { cleDeGalerie, PREFIXE_SELECTION } from "@/lib/memoire-galeries";
@@ -130,14 +132,25 @@ export function BlocSuivis({
   const liste = suivisAPlat(suivis);
 
   if (suivis.length === 0) {
+    /*  ██ §1 (nº 643) — LE MÊME ÉCRAN VIDE QUE LES FAVORIS ██
+        DEUX CHOSES CHANGENT, ET RIEN D'AUTRE :
+        · LES MOTS. « Suis un artiste » était faux — le site porte des
+          portfolios d'artistes, de SALONS et de STUDIOS, et
+          « portfolio » est le seul mot qui couvre les trois (c'est
+          déjà la règle du propriétaire, écrite à la nº 249 pour le
+          titre de cette page).
+        · LE BOUTON, QU'IL N'Y AVAIT PAS. Il n'est pas dessiné pour
+          l'occasion : c'est CELUI DES FAVORIS, déplacé dans
+          `EcranVideSelection` et monté par les deux onglets — même
+          boîte, même fond, même forme, même adresse (l'accueil, par
+          `LienAccueil`). Aucun second bouton n'existe.
+        ⚠️ LE REPÈRE `data-suivis-vide` SUIT (nº 412) : il est passé au
+        composant plutôt que perdu en chemin. */
     return (
-      <p
-        data-suivis-vide=""
-        className="mt-8 rounded-2xl bg-sombre-carte px-5 py-8 text-center
-                   text-[14.5px] leading-relaxed text-sombre-texte-doux"
-      >
-        Suis un artiste pour retrouver ici ce qu&apos;il publie.
-      </p>
+      <EcranVideSelection
+        marque="data-suivis-vide"
+        message="Suivez un portfolio pour le retrouver ici."
+      />
     );
   }
 

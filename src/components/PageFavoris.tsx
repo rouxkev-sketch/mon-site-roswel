@@ -48,8 +48,9 @@ import { ficheComplete } from "@/lib/fiche-complete";
 import { annoncerRepriseDuSite } from "@/lib/navigation-session";
 import type { PhotoFavorite, TatoueurSuivi } from "@/lib/favoris-serveur";
 import type { Tatoueur } from "@/lib/tatoueurs";
-//  §4 (nº 475) — le lien vers l'accueil qui déclare son départ.
-import { LienAccueil } from "@/components/LienAccueil";
+//  §1 (nº 643) — l'écran vide des DEUX onglets, écrit une seule fois
+//  (il porte le lien vers l'accueil qui déclare son départ, nº 475).
+import { EcranVideSelection } from "@/components/EcranVideSelection";
 
 /**
  * MA SÉLECTION — les photos gardées, et les tatoueurs suivis
@@ -633,29 +634,17 @@ export function PageFavoris({
       {!surLesFavoris ? null : photos.length === 0 ? (
         /* L'ÉTAT VIDE — il dit quoi faire, en une ligne, et ouvre la
            porte. Pas de dessin, pas de paragraphe. */
-        <div className="mt-8 rounded-2xl bg-sombre-carte px-5 py-8 text-center">
-          {/*  §3 (nº 642) — LE MOT SUIT LE DESSIN : le geste passe par
-               LE FANION depuis la nº 364 (`BoutonCoeurPhoto` monte
-               `IconeFanion`, et son infobulle dit « Enregistrer ») ;
-               cette phrase était restée au cœur. Elle est la SEULE du
-               produit à l'avoir gardé — l'inventaire est dans le
-               compte rendu de la passe. */}
-          <p className="text-[14.5px] leading-relaxed text-sombre-texte-doux">
-            Touche le fanion d&apos;une photo pour la retrouver ici.
-          </p>
-          {/*  §4 (nº 475) — IL VA EN AVANT, ET IL LE DÉCLARE : partir
-               explorer depuis « Ma sélection » vide n'est pas un
-               retour ; sans les deux déclarations (nº 429 et nº 446),
-               la chaîne de restitution pouvait rendre la place
-               mémorisée de l'accueil — le bas de la mosaïque. */}
-          <LienAccueil
-            className="mt-4 inline-flex min-h-[44px] items-center justify-center
-                       rounded-full bg-sombre-eleve px-6 text-[14.5px] font-semibold
-                       text-sombre-texte transition-colors hover:bg-sombre-eleve-clair"
-          >
-            Explorer les portfolios
-          </LienAccueil>
-        </div>
+        /*  ██ §1 (nº 643) — LA BOÎTE ET LE BOUTON ONT DÉMÉNAGÉ ██
+             Ils vivent désormais dans `EcranVideSelection`, monté ICI
+             et par l'onglet Portfolios (`BlocSuivis`) : le propriétaire
+             veut le même bouton des deux côtés, et une seule écriture
+             est la seule façon qu'ils ne divergent jamais. Rien n'est
+             redessiné — la boîte, ses airs et l'apparence du bouton
+             sont ceux de cet écran-ci, repris au caractère.
+             LE MESSAGE, LUI, EST DU PROPRIÉTAIRE : « Touche le fanion
+             d'une photo pour la retrouver ici » (nº 642) devient une
+             phrase qui décrit l'écran au lieu de dicter un geste. */
+        <EcranVideSelection message="Vos photos préférées apparaîtront ici." />
       ) : (
         <>
           {/*  ⚠️ LES DEUX FILTRES QUI VIVAIENT ICI SONT PARTIS
