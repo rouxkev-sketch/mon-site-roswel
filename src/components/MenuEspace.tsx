@@ -1000,8 +1000,11 @@ export function MenuEspace({
    * repli à 24 au doigt depuis la nº 461). La tuile vit sous cette
    * barre : elle en prend la mesure.
    * §5 — L'AIR DU HAUT ÉGALE CELUI DES CÔTÉS : les côtés valent 16 px
-   * (le `px-4` du contenu) et le haut n'en valait que 4. Au doigt, ce
-   * 4 px est juste — l'en-tête de la page pose déjà l'air au-dessus.
+   * (le `px-4` du contenu) et le haut n'en valait que 4. Ces 4 px se
+   * justifiaient tant que l'en-tête de la page posait l'air au-dessus
+   * du contenu ; DEPUIS LA nº 641 c'est la TÊTE qui vit dans cette
+   * barre, et l'air sous elle est redevenu un vrai écart à régler —
+   * voir `airHaut` du doigt.
    * §1-§2 — LES VALEURS DU WEB SONT CELLES D'AVANT LA nº 536, reprises
    * telles quelles : 22 px d'icône, 14,5 px de nom, 54 px de champ.
    * Rien n'est inventé ; on rend à la fenêtre ce qu'elle avait.
@@ -1021,7 +1024,22 @@ export function MenuEspace({
     pastille:
       "absolute -right-0.5 -top-0.5 min-w-[16px] h-4 px-1 rounded-full bg-primaire " +
       "text-[11px] font-bold text-white leading-4 text-center",
-    airHaut: "pt-1",
+    /*  ██ §5 (nº 641) — L'AIR SOUS LA PHOTO ÉGALE CELUI AU-DESSUS ██
+        AU-DESSUS : 24 px, le `pt-[max(24px,env(safe-area-inset-top))]`
+        de la barre (nº 149-§5). EN DESSOUS, il n'y avait que 8 px —
+        4 px de `pb-1` (le bas de la barre) plus 4 px de ce réglage.
+        LES SEIZE QUI MANQUAIENT VIENNENT ICI, ET NULLE PART AILLEURS :
+        4 + 20 = 24. Le `pb-1` de la barre est PARTAGÉ par les cinq
+        écrans plein écran — l'augmenter aurait écarté « Recherche »,
+        « Langue », « Notifications » et « Ajouter un style » du même
+        coup (piège nº 378/379). Ce réglage-ci n'appartient qu'à « Mon
+        compte ».
+        ⚠️ AVEC UNE ENCOCHE, LE HAUT GRANDIT ET PAS LE BAS : le `max()`
+        rend la zone sûre du téléphone, qui n'est pas de l'air mais du
+        terrain interdit. L'égalité est celle des 24 px nominaux.
+        ⚠️ ET LE CONTENU GLISSE SOUS LA BARRE QUAND ON DÉFILE : ces
+        20 px sont l'écart AU REPOS, page en haut. */
+    airHaut: "pt-5",
     //  §1 (nº 557) — LES 16 px DE LA PAGE, AU PIXEL PRÈS : c'est la
     //  valeur qui était écrite en dur dans le corps commun. Elle ne
     //  change pas, elle change seulement d'endroit.
@@ -1040,6 +1058,21 @@ export function MenuEspace({
     photoTete: "h-20 w-20",
     glypheTete: 42,
     airTete: "",
+    /*  ██ §6 (nº 641) — LE NOM ET L'ÉTAT GRANDISSENT, AU DOIGT SEUL ██
+        LES DEUX NOMBRES SONT RELEVÉS SUR LE SITE, PAS CHOISIS :
+        · le NOM prend 20 px, LE RANG DU TITRE DE PAGE — c'est
+          exactement la taille du `<h1>` que « Recherche », « Langue »,
+          « Notifications » et « Ajouter un style » posent au MÊME
+          endroit de la MÊME barre (`EnTetePleinEcran`, nº 149-§1). La
+          tête EST le titre de cette page-ci : elle en prend le corps.
+        · l'ÉTAT prend 15,5 px, LE RANG DU SOUS-TITRE AU DOIGT (nº 628,
+          `LigneResultats`). Le rapport nom / état passe de 0,81 à
+          0,775 : l'état reste la ligne secondaire, il ne rattrape pas
+          le nom.
+        ⚠️ LE WEB NE BOUGE PAS : 16 et 13 px, les valeurs de la nº 640.
+        La consigne ne vise que le doigt, et sa fenêtre est étroite. */
+    nomTete: "text-[20px]",
+    statutTete: "text-[15.5px]",
   };
   const REGLAGES_WEB = {
     ligne: reglageDeLigne("w-[22px]", 22, "text-[13.5px]"),
@@ -1079,6 +1112,10 @@ export function MenuEspace({
     photoTete: "h-16 w-16",
     glypheTete: 34,
     airTete: "mb-2 pr-8",
+    //  §6 (nº 641) — les tailles de la nº 640, inchangées : seul le
+    //  doigt grandit (voir la note du jeu du doigt).
+    nomTete: "text-[16px]",
+    statutTete: "text-[13px]",
   };
   type ReglagesDuCompte = typeof REGLAGES_DOIGT;
 
@@ -1147,7 +1184,9 @@ export function MenuEspace({
         </span>
       )}
       <div className="min-w-0 flex-1">
-        <h2 className="block truncate text-[16px] font-semibold leading-tight text-sombre-texte">
+        <h2
+          className={`block truncate font-semibold leading-tight text-sombre-texte ${reglages.nomTete}`}
+        >
           {fiche ? fiche.nom : "Mon compte"}
         </h2>
         {fiche && (
@@ -1156,7 +1195,9 @@ export function MenuEspace({
               aria-hidden="true"
               className={`h-1.5 w-1.5 shrink-0 rounded-full ${COULEUR_ETAT[etat]}`}
             />
-            <span className="text-[13px] leading-none text-sombre-texte-doux">
+            <span
+              className={`leading-none text-sombre-texte-doux ${reglages.statutTete}`}
+            >
               {LIBELLE_ETAT[etat]}
             </span>
           </span>

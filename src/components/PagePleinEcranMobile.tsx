@@ -84,8 +84,29 @@ export function EnTetePleinEcran({
   /*  Les gestes de droite. Le `-mr-2` de la croix opère à travers
       cette boîte (débord visible) : sa position est celle d'avant
       l'extraction, au pixel. */
+  /*  ██ §7 (nº 641) — LA CROIX EST À LA MÊME HAUTEUR SUR LES CINQ ██
+      ==================================================================
+      CE QUE J'AI TROUVÉ EN ALLANT VOIR : les cinq écrans montent CE
+      bouton-ci, au caractère près — il n'y a pas deux croix. Ce qui
+      diffère, c'est LA HAUTEUR DE LA RANGÉE QUI LA PORTE. Sur les
+      quatre écrans à titre, le `<h1>` fait une vingtaine de pixels et
+      c'est la croix elle-même (44 px) qui donne sa hauteur à la
+      rangée : centrée dans 44 px, elle commence donc à 24 px du haut
+      de l'écran. Sur « Mon compte » la rangée fait maintenant 80 px —
+      la hauteur de la photo — et `items-center` la posait 18 px plus
+      bas que sur les deux autres pages. Le propriétaire le voit.
+      LE REMÈDE, UNE CLASSE : les gestes se calent EN HAUT de leur
+      rangée. La boîte de 44 px repart alors de 24 px sur les cinq
+      écrans, et le dessin de 22 px avec elle.
+      ⚠️ LES QUATRE AUTRES NE BOUGENT PAS D'UN PIXEL, et c'est la
+      géométrie qui le dit : leur rangée fait EXACTEMENT la hauteur de
+      cette boîte (la double coche des notifications fait 36 px, moins
+      que la croix). Se caler en haut d'une rangée qu'on remplit déjà,
+      c'est ne pas bouger.
+      ⚠️ LE TITRE, LUI, RESTE CENTRÉ : `items-center` vit sur la
+      rangée, il n'est pas touché. */
   const gestes = (
-    <div className="ml-auto flex shrink-0 items-center">
+    <div className="ml-auto flex shrink-0 items-center self-start">
       {actions}
       <button
         type="button"
