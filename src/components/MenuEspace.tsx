@@ -683,9 +683,22 @@ export function MenuEspace({
           d'encadré plus les 12 px de la ligne —, une somme où sa
           LARGEUR n'entre pas. */
       boite: `flex ${largeurBoite} shrink-0 justify-center`,
+      /*  ██ §3 (nº 649) — LE ROSE DESCEND DU MOT À L'ICÔNE ██
+          « Ajouter un portfolio » était rose EN ENTIER : la ligne
+          portait `text-primaire` et l'icône en héritait (nº 532). Le
+          propriétaire garde le rose sur le DESSIN et rend le MOT à ses
+          voisines. La ligne prend donc `entree`, comme les autres, et
+          c'est CETTE boîte-ci qui porte la couleur — l'icône n'écrit
+          toujours rien elle-même, elle hérite, simplement d'un cran
+          plus bas.
+          ⚠️ UNE SEULE CLASSE DE COULEUR PAR ÉLÉMENT (règle nº 389) : le
+          mot tient la sienne de la ligne, le dessin de sa boîte ; elles
+          ne se superposent jamais.
+          ⚠️ `entreeAction` A DISPARU avec son dernier appelant : la
+          ligne d'action n'a plus de couleur de texte à elle. */
+      boiteAction: `flex ${largeurBoite} shrink-0 justify-center text-primaire`,
       taille,
       entree: `${geometrie} text-sombre-texte`,
-      entreeAction: `${geometrie} text-primaire`,
     };
   };
   type ReglageLigne = ReturnType<typeof reglageDeLigne>;
@@ -1308,7 +1321,7 @@ export function MenuEspace({
         >
           {fiche ? fiche.nom : "Mon compte"}
         </h2>
-        {fiche && (
+        {fiche ? (
           <span className="mt-1 flex items-center gap-1.5">
             <span
               aria-hidden="true"
@@ -1320,6 +1333,37 @@ export function MenuEspace({
               {LIBELLE_ETAT[etat]}
             </span>
           </span>
+        ) : (
+          /*  ██ §2 (nº 649) — LA SECONDE LIGNE D'UN PARTICULIER ██
+               ==========================================================
+               UN PROFESSIONNEL A DEUX LIGNES — son nom, puis son état
+               (nº 640) ; un particulier n'en avait qu'une. Il en a deux
+               à son tour : « Mon compte », puis « Modifier ».
+               LA PLACE ET LA TAILLE SONT CELLES DE L'ÉTAT, au caractère :
+               même `mt-1`, même `leading-none`, même gris doux, et la
+               même taille (`statutTete` — 15,5 px au doigt, 13 au web).
+               Rien n'est choisi ici ; tout est repris.
+               ⚠️ PAS DE PASTILLE, et c'est voulu : le point de couleur
+               dit un ÉTAT DE PUBLICATION (les six libellés de la
+               nº 640). « Modifier » n'est pas un état, c'est un geste.
+               ⚠️ ELLE NE MÈNE NULLE PART POUR L'INSTANT, et voici
+               comment elle ne paraît pas cassée : c'est un VRAI bouton
+               — il prend le focus au clavier, il s'éclaircit sous le
+               pointeur, il s'enfonce à l'appui —, mais il ne porte
+               AUCUN `onClick`. Un geste vide (`() => {}`) aurait été du
+               code mort à retirer ; l'absence de main, elle, se lit :
+               le jour où la fenêtre existera, elle s'accrochera ici en
+               une ligne. Ce qu'il ne fait pas, il ne le promet pas non
+               plus : ni flèche, ni chevron, aucune annonce de
+               destination. */
+          <button
+            type="button"
+            className={`mt-1 block leading-none text-sombre-texte-doux
+                       transition-colors hover:text-sombre-texte
+                       active:text-sombre-texte ${reglages.statutTete}`}
+          >
+            Modifier
+          </button>
         )}
       </div>
     </div>
@@ -1449,28 +1493,33 @@ export function MenuEspace({
              pas d'un caractère : c'est `demanderUneNouvelleFiche`,
              celui-là même que le plan du web appelle — avec sa garde
              « une saisie est en cours ».
-             ⚠️ SON ICÔNE ET SON TEXTE SONT ROSES (`primaire`, nº 466)
-             — un usage de charte, pas une dérive : c'est LA SEULE
-             ACTION de cette page, tout le reste y mène quelque part.
-             La ligne reprend LA GÉOMÉTRIE des entrées (même
-             hauteur, même retrait, même état enfoncé que ses
-             voisines) et n'en change QUE la couleur du texte —
-             `entreeAction`, plus haut : une classe de couleur
-             par élément, jamais deux empilées. */}
+             ⚠️ SON ICÔNE EST ROSE (`primaire`, nº 466) — un usage de
+             charte, pas une dérive : c'est LA SEULE ACTION de cette
+             page, tout le reste y mène quelque part.
+             §3 (nº 649) — SON TEXTE, LUI, NE L'EST PLUS : le
+             propriétaire l'a rendu à ses voisines. La ligne reprend
+             donc LA GÉOMÉTRIE des entrées ET leur couleur de texte
+             (`entree`) ; c'est la BOÎTE de l'icône qui porte le rose
+             (`boiteAction`, plus haut) — une classe de couleur par
+             élément, jamais deux empilées. */}
         <button
           type="button"
           onClick={demanderUneNouvelleFiche}
-          className={reglages.ligne.entreeAction}
+          //  §3 (nº 649) — le mot rejoint ses voisines : `entree`, la
+          //  même écriture que « Ma fiche » ou « Sécurité ». Le rose
+          //  reste, mais sur l'icône seule (voir `boiteAction`).
+          className={reglages.ligne.entree}
         >
           {/*  §1 (nº 533) — L'ICÔNE EST CELLE DE « MON PORTFOLIO »,
                OUVERTE EN HAUT À DROITE, avec un petit « + » dans
                l'ouverture (voir IconeAjouterPortfolio). Le lecteur
                reconnaît l'objet avant de lire le mot.
-               L'ICÔNE N'ÉCRIT AUCUNE COULEUR : elle hérite du rose de
-               sa ligne (nº 532). La boîte de largeur fixe, elle, est la
-               même que ses voisines — les libellés partent tous du même
-               pixel. */}
-          <span className={reglages.ligne.boite}>
+               L'ICÔNE N'ÉCRIT AUCUNE COULEUR : elle hérite du rose,
+               qui vient DE SA BOÎTE depuis la nº 649 (`boiteAction`) —
+               il venait de la ligne entière jusque-là (nº 532). La
+               boîte est pour le reste la même que ses voisines : les
+               libellés partent tous du même pixel. */}
+          <span className={reglages.ligne.boiteAction}>
             <IconeAjouterPortfolio taille={reglages.ligne.taille} />
           </span>
           <span className="flex-1">Ajouter un portfolio</span>

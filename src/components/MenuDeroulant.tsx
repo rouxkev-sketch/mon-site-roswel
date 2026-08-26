@@ -1509,10 +1509,25 @@ export function MenuDeroulant({
              c'est un de trop. Ailleurs — les portes de sous-section,
              les titres en ligne — il pivote comme avant (nº 572-574) :
              `chevronFixe` vaut faux par défaut. */}
-        {/*  §1 (nº 648) — LE ROSE DU CHEVRON, MAINTENANT QU'IL NE
-             L'HÉRITE PLUS DU TITRE. L'enveloppe est celle du chevron
-             des sous-sections, reprise telle quelle. */}
-        <span className="text-primaire">
+        {/*  §1 (nº 648, refait nº 649) — LE CHEVRON DIT L'ÉTAT, COMME
+             LE TRAIT. La nº 648 l'avait laissé rose en toutes
+             circonstances ; le propriétaire veut qu'il suive la MÊME
+             RÈGLE QUE LE SOULIGNEMENT — blanc au repos, rose quand la
+             section est ouverte.
+             ⚠️ UNE SEULE CONDITION POUR LES TROIS SIGNES : `groupeDeplie
+             === entete` commande déjà la graisse et le trait (voir
+             l'appelant du bloc). Le chevron la lit à son tour ; ils ne
+             peuvent pas se contredire.
+             ⚠️ LE BLANC N'EST PAS ÉCRIT : sans classe, le chevron hérite
+             de la couleur du titre — celle du bouton, blanche depuis la
+             nº 648. Une seule classe de couleur est donc posée, et
+             seulement quand il y en a une à poser (règle nº 389).
+             ⚠️ CE N'EST PAS `chevronFixe` : ce drapeau-là ne parle que
+             de la ROTATION (nº 632, le chevron du bloc ne pivote plus).
+             La couleur, elle, dit l'état dans tous les cas. */}
+        <span
+          className={groupeDeplie === entete ? "text-primaire" : undefined}
+        >
           {chevron(!chevronFixe && groupeDeplie === entete)}
         </span>
       </button>
