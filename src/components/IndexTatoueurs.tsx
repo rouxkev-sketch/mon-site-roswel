@@ -141,6 +141,42 @@ export function parametresDeRecherche(
   return parametres;
 }
 
+/**
+ * ██ §1 (nº 631) — LA SIGNATURE DES CRITÈRES D'UNE REQUÊTE ██
+ * ==================================================================
+ * Elle sert à UNE chose : comparer ce que L'ADRESSE demande à ce que le
+ * SERVEUR a servi. Trois précautions, et chacune compte :
+ *  · ON NE GARDE QUE LES CRITÈRES. La page, le mélange, la disposition,
+ *    le texte des cartes et les sondes ne décrivent pas une recherche
+ *    (c'est la liste `PARAMETRES_HORS_RECHERCHE` de `_accueil/rendu`,
+ *    vue de ce côté-ci) : « /?page=2 » demande la même chose que « / » ;
+ *  · ON TRIE. `parametresDeRecherche` écrit dans son ordre, une adresse
+ *    partagée peut porter le sien : deux écritures de la même recherche
+ *    doivent donner la même signature ;
+ *  · ON NE DÉCODE RIEN. Pas de `styleConnu`, pas de `lieuDepuisParametres`
+ *    — ces fonctions-là vivent du côté serveur du site, et les faire
+ *    entrer ici pour une comparaison serait payer très cher un test.
+ *    La conséquence est assumée et bornée plus bas : un style que le
+ *    catalogue refuse donne un désaccord PERMANENT, d'où le garde-fou
+ *    « une seule reprise par adresse ».
+ */
+const CLES_DE_CRITERE = [
+  "style", "nature", "exclure", "rayon",
+  //  Les clés qu'écrit `lieuVersParametres` (lib/geocodage).
+  "lieu", "zone", "lat", "lon", "niveau", "paysCode", "region", "ville",
+] as const;
+
+function signatureDesCriteres(recherche: string | URLSearchParams): string {
+  const source =
+    typeof recherche === "string" ? new URLSearchParams(recherche) : recherche;
+  const gardees: string[] = [];
+  for (const cle of CLES_DE_CRITERE) {
+    const valeur = source.get(cle);
+    if (valeur) gardees.push(`${cle}=${valeur}`);
+  }
+  return gardees.sort().join("&");
+}
+
 /** L'adresse complète d'une recherche.
     ⚠️ L'AFFICHAGE VOYAGE AVEC ELLE (nº 203-§1b) : la disposition et le
     texte des cartes vivent dans l'adresse — une nouvelle recherche ou
@@ -340,6 +376,11 @@ export function IndexTatoueurs({
       Ce sont EUX que la mosaïque illustre, toujours. */
   const criteresServis = criteresComplets(criteresInitiaux);
   const cleServie = parametresDeRecherche(criteresServis).toString();
+  /*  §1 (nº 631) — LA MÊME CLÉ, MISE EN FORME COMPARABLE : c'est elle
+      qu'on oppose à l'adresse du navigateur, juste en dessous. On la
+      calcule à partir de `cleServie` pour qu'il n'y ait qu'UNE écriture
+      des critères servis — jamais deux lectures des mêmes propriétés. */
+  const cleSignee = signatureDesCriteres(cleServie);
 
   /**
    * CE QUE LES CHAMPS DU MOTEUR AFFICHENT — et rien de plus.
@@ -355,6 +396,93 @@ export function IndexTatoueurs({
     setCleAffichee(cleServie);
     setCriteres(criteresServis);
   }
+
+  /**
+   * ██ §1 (nº 631) — QUAND LA PAGE SERVIE N'EST PAS CELLE DE L'ADRESSE ██
+   * ==================================================================
+   * LE DÉFAUT, ET IL EST MESURÉ. Journal du propriétaire, au web, en
+   * cliquant « Toutes les réalisations » depuis une page de résultats :
+   *
+   *   10545  ADRESSE pushState · va vers /?nature=tatouage · entrées 6 → 6
+   *   10549  ⚠️ DÉMONTAGE page (IndexTatoueurs)
+   *   10553  PAGE SERVIE · adresse /?nature=tatouage · servi style=""
+   *          nature="" · CATALOGUE 9 · premiers 0 · total 0
+   *
+   * L'adresse dit « toutes les réalisations » ; les propriétés disent
+   * l'accueil au repos, catalogue compris. Huit millisecondes entre la
+   * navigation et le rendu : AUCUNE REQUÊTE N'EST PARTIE.
+   *
+   * LA CAUSE, NOMMÉE. Le routeur de Next garde en mémoire l'arbre des
+   * pages qu'il a déjà rendues, et le nôtre est PRÉRENDU (`○ /`,
+   * régénéré toutes les 5 minutes — la borne posée à la nº 356, qui a
+   * réparé les éjections de retour sur Chrome iPhone). Une navigation
+   * CLIENTE qui ne change que la REQUÊTE reste sur le même chemin « / » :
+   * le routeur retrouve son entrée, la juge fraîche, et ressort l'arbre
+   * de l'accueil sans rien demander au serveur — donc sans jamais
+   * atteindre le jumeau `/accueil-recherche` que le proxy réserve aux
+   * adresses à requête. C'est le défaut relevé à la nº 595 (il y démontait
+   * déjà tout l'arbre, voir la note de PageFavoris) ; il n'y produisait
+   * qu'un CLIGNOTEMENT, parce que l'accueil prérendu était alors une
+   * mosaïque vide. Depuis que l'accueil porte un CATALOGUE DE STYLES
+   * (nº 621), cette copie est une page entière et crédible : plus rien
+   * ne signale l'erreur, et elle reste.
+   *
+   * POURQUOI CETTE VOIE-CI, ET PAS LES TROIS DE LA nº 595 :
+   *  1. DONNER À LA RECHERCHE UNE ADRESSE À ELLE — c'est la voie sûre,
+   *     mais elle rendrait `/accueil-recherche` visible dans la barre du
+   *     navigateur. C'EST UNE DÉCISION DU PROPRIÉTAIRE, pas la mienne :
+   *     elle n'est pas prise ici ;
+   *  2. RETIRER LE PRÉCHARGEMENT DU LIEN — écartée depuis : la mesure a
+   *     montré que le défaut vit sans le moindre survol ;
+   *  3. NE PLUS TOUT REDEMANDER — un chantier, pas une correction.
+   * LA QUATRIÈME, celle-ci : ON NE CHERCHE PLUS À EMPÊCHER LE ROUTEUR DE
+   * SE TROMPER, ON LUI DEMANDE LA VÉRITÉ QUAND IL S'EST TROMPÉ. La page
+   * compare la signature des critères de SON ADRESSE à celle des critères
+   * qu'on lui a SERVIS. Tant qu'elles s'accordent — c'est-à-dire toujours,
+   * hors ce défaut — il ne se passe rien du tout. Quand elles divergent,
+   * `router.refresh()` redemande la page courante AU SERVEUR : la
+   * documentation de Next dit qu'il refait la requête et ne consulte pas
+   * la mémoire du routeur. C'est exactement ce qui manque ici.
+   *
+   * ⚠️ IL NE PEUT PAS BOUCLER, et c'est le garde-fou qui le garantit,
+   * pas la chance : UNE SEULE REPRISE PAR ADRESSE. Un désaccord peut être
+   * LÉGITIME et donc permanent — un style que le catalogue ne connaît
+   * plus (`styleConnu` le refuse en silence : l'adresse dit « style=X »,
+   * le servi n'a plus que la nature), un vieux lien partagé, un `rayon`
+   * sans lieu. Dans ces cas-là on paie UNE requête de plus, une fois, et
+   * plus rien.
+   * ⚠️ IL NE TOUCHE NI L'HISTORIQUE NI LA POSITION : `refresh` ne pousse
+   * aucune entrée et ne défile pas — le retour (nº 329) et la mémoire de
+   * position ne le voient pas passer. Et il NE REMONTE PAS le composant :
+   * React garde l'état client, seules les propriétés servies changent.
+   * ⚠️ IL SOIGNE « VOIR PLUS » PAR LA MÊME PORTE : « /?page=2 » est le
+   * cas d'origine de la nº 595, et c'est le même désaccord — sauf que la
+   * page n'y est pas un critère, donc la signature ne bouge pas et rien
+   * ne se déclenche tant que la page servie est la bonne.
+   */
+  const adresseReprise = useRef<string | null>(null);
+  //  ⚠️ SANS LISTE DE DÉPENDANCES, ET C'EST VOULU : le défaut est
+  //  précisément que les PROPRIÉTÉS NE CHANGENT PAS quand l'adresse
+  //  change. Un effet qui n'écoute que les propriétés ne le verrait
+  //  jamais. Il tourne donc à chaque rendu — deux courtes chaînes à
+  //  comparer, et il sort à sa première ligne dans le cas normal.
+  useEffect(() => {
+    const demande = signatureDesCriteres(window.location.search);
+    if (demande === cleSignee) {
+      //  Tout est en ordre : on rouvre le droit à une reprise, pour que
+      //  le garde-fou vaille par ÉPISODE et non une fois pour toutes.
+      adresseReprise.current = null;
+      return;
+    }
+    const ici = window.location.pathname + window.location.search;
+    if (adresseReprise.current === ici) return;
+    adresseReprise.current = ici;
+    noter(
+      `⚠️ PAGE EN RETARD SUR L'ADRESSE · demandé « ${demande || "(rien)"} »` +
+        ` · servi « ${cleSignee || "(rien)"} » — on redemande au serveur`
+    );
+    router.refresh();
+  });
 
   //  ⚠️ LA SONDE DE LA BASCULE (nº 173) : le conteneur de page est-il
   //  démonté au clic ? (N'écrit que sous `?sonde-bascule=1`.)
