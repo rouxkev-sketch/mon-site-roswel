@@ -788,6 +788,66 @@ export function FenetreFiche({
               </CarrouselPortfolio>
             </div>
 
+            {/*  ██ §1 (nº 617) — LE TITRE REVIENT EN UNE COLONNE ██
+                 ==============================================================
+                 LA CAUSE DE SA DISPARITION, et elle est écrite dans le
+                 titre lui-même (plus bas, la garde `hidden lg:block`) :
+                 il est BORNÉ À LA DISPOSITION LARGE, délibérément. Il
+                 vit HORS DE LA FENÊTRE, posé sur le voile
+                 (`absolute top-full left-0`) : en deux colonnes il y a
+                 du vide sous la photo, en une colonne il n'y en a plus
+                 — la colonne de lecture commence là, et un texte hors
+                 flux se poserait PAR-DESSUS elle. La borne `lg:` était
+                 donc la seule façon de ne pas le voir chevaucher.
+                 ⚠️ CE N'EST PAS UNE COLONNE DISPARUE : le titre n'a
+                 jamais vécu dans la colonne de lecture. C'est bien la
+                 disposition large qui le porte, et elle seule.
+
+                 CE BLOC-CI EST L'AUTRE MOITIÉ, ET RIEN D'AUTRE : le
+                 MÊME texte (`titreDeLaGalerie`, l'écriture unique de
+                 `titreDeGalerie`), rendu DANS LE FLUX entre la photo et
+                 le va-et-vient. Aucune recomposition — les deux
+                 lectures ne peuvent pas diverger, c'est la même
+                 variable. C'est le motif que la nº 599 a posé pour les
+                 points de défilement : la fenêtre a ses propres
+                 habillages, le contenu n'est écrit qu'une fois.
+
+                 LES DEUX GARDES, ET CE QU'ELLES DISENT :
+                  · `lg:hidden` — en deux colonnes, le titre hors cadre
+                    règne seul, exactement où il est. La disposition
+                    large ne bouge pas d'un pixel : ce bloc n'existe pas
+                    pour elle (`display:none`), il n'entre donc dans
+                    aucun calcul de la rangée `lg:flex-row` ;
+                  · `mobile:hidden` — au doigt, rien de neuf : le titre
+                    y vit déjà sous la photo de tête (nº 376). C'est la
+                    consigne d'origine du propriétaire, celle que la
+                    seconde garde du titre large tient déjà.
+
+                 L'AIR, ET LE FOND :
+                  · AU-DESSUS, `pt-4` — SEIZE pixels entre le bas de la
+                    photo et le haut du texte ;
+                  · EN DESSOUS, rien n'est écrit ici : ce sont les VINGT
+                    pixels du rembourrage de la colonne de lecture
+                    (`p-5`, vingt-quatre au-delà de 640 px de fenêtre)
+                    qui séparent le titre du va-et-vient. La colonne
+                    n'est pas touchée — piège 378/379 ;
+                  · `bg-sombre-fond` et `px-5 sm:px-6` : LE fond et LE
+                    retrait de cette colonne, repris tels quels. Le bloc
+                    la prolonge vers le haut, sans couture visible et
+                    sans une seule couleur neuve — sans fond, on verrait
+                    le voile au travers.
+                 APPARENCE : `text-[16px] font-bold text-white`, les
+                 trois classes du titre large, mot pour mot. */}
+            {titreDeLaGalerie && (
+              <p
+                data-titre-fenetre-flux=""
+                className="lg:hidden mobile:hidden bg-sombre-fond px-5 sm:px-6 pt-4
+                           text-[16px] font-bold text-white"
+              >
+                {titreDeLaGalerie}
+              </p>
+            )}
+
             {/* ---- LE CONTENU — sous la photo en une colonne (il défile
                 avec la fenêtre), à sa droite en deux (il défile tout
                 seul). ⚠️ C'EST LE COMPOSANT DE LA PAGE : les deux onglets,
@@ -949,8 +1009,13 @@ export function FenetreFiche({
                ⚠️ WEB UNIQUEMENT, avec DEUX gardes qui disent deux choses
                différentes : `hidden lg:block` demande la largeur à deux
                colonnes (sous 1024 px la fenêtre est en UNE colonne et
-               défile — il n'y a pas d'espace sous elle), et
-               `mobile:hidden` écarte le doigt quelle que soit la
+               défile — il n'y a pas d'espace sous elle : ce texte-ci,
+               qui est HORS DU FLUX, se poserait par-dessus la colonne
+               de lecture. C'est CETTE borne que le propriétaire a vue
+               comme une disparition ; depuis la nº 617, l'autre moitié
+               de la largeur est tenue par un second rendu DANS le flux,
+               plus haut — même variable, même apparence, garde
+               inverse), et `mobile:hidden` écarte le doigt quelle que soit la
                largeur, parce que cette fenêtre s'ouvre AUSSI au doigt
                (nº 226-§5) et qu'au doigt le titre vit déjà sous la photo
                de tête (nº 376). Le propriétaire a demandé « rien de neuf
