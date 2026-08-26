@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { LANGUES_YOKOFOLIO } from "@/config/tatouage";
 import { ETATS_ROND_BARRE, IconeCroix, IconeMonde } from "@/components/Icones";
 import { FenetreDeVerre, MenuDeVerre } from "@/components/SurfaceDeVerre";
+//  §1 (nº 650) — l'alignement des menus ancrés aux boutons ronds de
+//  la barre, calculé là où vit la règle de placement.
+import { ALIGNEMENT_BOUTON_ROND_BARRE } from "@/components/placement-menu";
 import { useVoileDeLaPage } from "@/components/VoileDeLaPage";
 //  §4 (nº 465) — au doigt, l'écran devient une PAGE plein écran (le
 //  gabarit de la page de recherche), avec son étape d'historique.
@@ -465,6 +468,11 @@ export function SelecteurLangue({ hauteur = 40 }: { hauteur?: number }) {
           ancre={globe}
           refPanneau={plaque}
           largeur={290}
+          //  §1 (nº 650) — le même décalage que « Mon compte », pour la
+          //  même raison : ce globe est un bouton rond de 40 px, quand
+          //  les champs du moteur en font 46. Voir la note complète
+          //  chez MenuEspace, et la valeur dans placement-menu.
+          decalageHaut={ALIGNEMENT_BOUTON_ROND_BARRE}
           opaque
           alignement="droite"
           role="dialog"

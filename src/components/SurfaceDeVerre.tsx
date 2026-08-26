@@ -113,6 +113,7 @@ export function MenuDeVerre({
   refPanneau,
   largeur,
   alignement = "droite",
+  decalageHaut = 0,
   largeurAuContenu = false,
   opaque = false,
   className = "",
@@ -128,6 +129,21 @@ export function MenuDeVerre({
   largeur: number;
   /** Le bord du bouton sur lequel le menu s'aligne. */
   alignement?: "droite" | "gauche";
+  /**
+   * §1 (nº 650) — DE COMBIEN LE PANNEAU DESCEND SOUS SA PLACE
+   * NATURELLE. Le placement (usePlacementMenu) pose le haut du panneau
+   * au bas de l'ancre plus quatre pixels ; ce nombre-ci s'y ajoute,
+   * pour les seuls menus qui doivent s'aligner sur une AUTRE famille de
+   * déclencheurs. Le compte et les langues le demandent — leurs boutons
+   * ronds font 40 px quand les champs du moteur en font 46, et leurs
+   * panneaux partaient donc 3 px plus haut (voir
+   * `ALIGNEMENT_BOUTON_ROND_BARRE`, où la valeur est calculée).
+   * ⚠️ IL NE JOUE QUE VERS LE BAS : un menu qui s'ouvre VERS LE HAUT
+   * (place manquante dessous) garde son ancrage d'origine — il n'a plus
+   * de rangée de moteur à côté de quoi se ranger, et le descendre le
+   * ferait mordre son propre déclencheur.
+   */
+  decalageHaut?: number;
   /**
    * ██ §4-a (nº 473) — LA LARGEUR ÉPOUSE LE CONTENU ██
    * `largeur` devient alors un PLAFOND, plus une consigne : le panneau
@@ -229,7 +245,9 @@ export function MenuDeVerre({
         ...(cadre
           ? ouvreVersLeHaut
             ? { bottom: cadre.bas }
-            : { top: cadre.haut }
+            //  §1 (nº 650) — le décalage d'alignement, quand
+            //  l'appelant en demande un (voir `decalageHaut`).
+            : { top: cadre.haut + decalageHaut }
           : { top: 0 }),
         maxHeight: hauteurMax ? `${hauteurMax}px` : undefined,
         //  ⚠️ AUCUNE TRANSITION D'OPACITÉ, AUCUNE OPACITÉ PARTIELLE :

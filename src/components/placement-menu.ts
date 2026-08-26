@@ -61,6 +61,31 @@ const MARGE = 10;
 /** Le petit décrochage entre le bas du champ et le haut du menu. */
 const ECART = 4;
 
+/**
+ * ██ §1 (nº 650) — LES DEUX FAMILLES DE DÉCLENCHEURS DE LA BARRE ██
+ * ------------------------------------------------------------------
+ * LE DÉFAUT RELEVÉ, ET SA CAUSE MESURÉE : au web, la fenêtre « Mon
+ * compte » commence 3 px plus haut que celle des filtres ou du menu des
+ * styles. Le placement n'y est pour rien — il est PARTAGÉ, et il dit
+ * la même chose à tout le monde : « le haut du panneau tombe au bas de
+ * l'ancre, plus quatre pixels ». CE SONT LES ANCRES QUI DIFFÈRENT :
+ *  · les CHAMPS du moteur (style, localité, bouton des filtres) font
+ *    46 px de haut — mesuré 15 → 61 ;
+ *  · les BOUTONS RONDS de la barre (le compte, le globe des langues)
+ *    en font 40 — mesuré 18 → 58.
+ * Les deux familles sont centrées sur le MÊME axe (38 px) : c'est
+ * juste, et c'est ce qui aligne les dessins entre eux. Mais leurs BAS
+ * sont distants de (46 − 40) / 2 = TROIS pixels, et les panneaux
+ * héritent de cet écart.
+ * CETTE VALEUR EST DONC UNE DIFFÉRENCE, PAS UN CHOIX : elle se
+ * recalcule à partir des deux hauteurs, et si l'une d'elles changeait,
+ * c'est ici qu'il faudrait la suivre.
+ * ⚠️ ELLE NE S'APPLIQUE QU'AUX MENUS QUI LA DEMANDENT : un menu ancré
+ * ailleurs sur le site (une fiche, un formulaire) n'a aucune raison de
+ * se caler sur la rangée du moteur.
+ */
+export const ALIGNEMENT_BOUTON_ROND_BARRE = 3;
+
 /** En dessous de cette hauteur, un menu devient inutilisable. */
 const HAUTEUR_MINI = 140;
 

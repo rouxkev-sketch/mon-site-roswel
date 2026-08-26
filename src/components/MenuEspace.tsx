@@ -32,6 +32,9 @@ import { useUtilisateur } from "@/lib/use-utilisateur";
 import { EntreeLangue, FenetreLangue } from "@/components/SelecteurLangue";
 import { FenetreNotifications } from "@/components/FenetreNotifications";
 import { MenuDeVerre } from "@/components/SurfaceDeVerre";
+//  §1 (nº 650) — l'écart entre les deux familles de déclencheurs de la
+//  barre, calculé et expliqué là où vit la règle de placement.
+import { ALIGNEMENT_BOUTON_ROND_BARRE } from "@/components/placement-menu";
 //  §4 (nº 465) — au doigt, « Mon compte » est une PAGE plein écran (le
 //  gabarit de la page de recherche), plus une fenêtre centrée.
 import { PagePleinEcranMobile } from "@/components/PagePleinEcranMobile";
@@ -1821,6 +1824,23 @@ export function MenuEspace({
                 `airHaut` (et le `pb-5` du bas). Ils suivent la fenêtre
                 sans qu'on y touche. */
             largeur={334}
+            /*  ██ §1 (nº 650) — LE BORD HAUT REJOINT LES AUTRES ██
+                LA CAUSE, MESURÉE : le placement est PARTAGÉ et il ne
+                fait aucune exception — il pose le haut du panneau au
+                bas de l'ancre plus 4 px. Ce sont LES ANCRES qui
+                diffèrent : la zone du compte fait 40 px de haut (bas à
+                58), les champs du moteur en font 46 (bas à 61), tous
+                centrés sur le même axe. Trois pixels d'écart, hérités
+                tels quels par les panneaux — 62 contre 65.
+                LE DÉCALAGE LES RÉCONCILIE, et sa valeur n'est pas
+                choisie : c'est (46 − 40) / 2, écrite une fois dans le
+                module de placement.
+                ⚠️ LE GLOBE DES LANGUES EST DANS LE MÊME CAS, à la même
+                valeur, et il reçoit le même décalage : les deux boutons
+                ronds de la barre sont voisins — les aligner sur les
+                champs sans les aligner entre eux aurait été pire que le
+                défaut. */
+            decalageHaut={ALIGNEMENT_BOUTON_ROND_BARRE}
             //  §6 (nº 537) — cette fenêtre-ci n'est plus en verre : fond
             //  opaque. §1 (nº 542) — et ce fond monte d'un cran, du
             //  fond de page au jeton `carte` : c'est un ESSAI de teinte,
