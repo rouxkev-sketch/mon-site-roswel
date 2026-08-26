@@ -26,7 +26,8 @@ import {
 import { AucunResultat, type IssueAucunResultat } from "@/components/AucunResultat";
 import { EnTeteTatouage } from "@/components/EnTeteTatouage";
 import { GrilleTatoueurs } from "@/components/GrilleTatoueurs";
-import { noterDemontage, noterMontage } from "@/lib/journal-bascule";
+//  `noter` — TEMPORAIRE (nº 630), voir la mesure plus bas.
+import { noter, noterDemontage, noterMontage } from "@/lib/journal-bascule";
 //  §2 (nº 330) — L'ÉCRITURE UNIQUE DE « UNE LISTE NEUVE COMMENCE EN
 //  HAUT », partagée avec les filtres de « Ma sélection ».
 import {
@@ -361,6 +362,71 @@ export function IndexTatoueurs({
     noterMontage("page (IndexTatoueurs)");
     return () => noterDemontage("page (IndexTatoueurs)");
   }, []);
+
+  /* ==================================================================
+   * ██ TEMPORAIRE (nº 630) — L'ADRESSE ET LES PROPRIÉTÉS DISENT-ELLES
+   * LA MÊME CHOSE ? ██
+   * ==================================================================
+   * CE QU'ON CHERCHE. Deux défauts du moteur au web : « Toutes les
+   * réalisations » ramène le catalogue de styles ; un second choix
+   * affiche la page du précédent. Le propriétaire soupçonne UNE seule
+   * cause, et il a raison de le soupçonner : les deux se décrivent de
+   * la même façon — LA PAGE MONTRÉE N'EST PAS CELLE DE L'ADRESSE.
+   *
+   * CE QUE LA MESURE DE L'ATELIER A DÉJÀ ÉCARTÉ (relevé de la nº 630,
+   * pris au navigateur sur la compilation de production) :
+   *  · LE CLIC ÉCRIT LA BONNE ADRESSE — l'écriture d'historique tracée
+   *    dit `pushState → /?style=…&nature=tatouage`, jamais autre chose ;
+   *  · LE SERVEUR DÉCODE BIEN CETTE ADRESSE — « Toutes les
+   *    réalisations » sur `/?nature=tatouage`, le bon style sur
+   *    `/?style=…` ;
+   *  · CINQ CHOIX DE SUITE tombent tous juste ;
+   *  · L'ALLER-RETOUR DE LA FENÊTRE DE FICHE (le `pushState` brut de
+   *    GrilleTatoueurs, puis `history.back()`) ne dérègle rien.
+   * CE QUE L'ATELIER NE PEUT PAS AVOIR : la base est injoignable
+   * (`Host not in allowlist`), donc `catalogue` y est TOUJOURS VIDE et
+   * `surLeCatalogue` TOUJOURS FAUX. La condition même dont les deux
+   * symptômes parlent ne peut pas s'y produire. Corriger d'ici serait
+   * corriger à l'aveugle.
+   *
+   * LA MESURE, ET CE QU'ELLE TRANCHE. À chaque arrivée de page servie,
+   * on écrit CÔTE À CÔTE l'adresse du navigateur et ce que le serveur a
+   * mis dans les propriétés. Trois réponses possibles, trois causes
+   * différentes, et la ligne les sépare sans discussion :
+   *  a) adresse « /?nature=tatouage » avec « servi nature="" » et
+   *     « catalogue 31 » → LES PROPRIÉTÉS SONT EN RETARD SUR L'ADRESSE :
+   *     le routeur a ressorti un arbre déjà en cache (le défaut nommé à
+   *     la nº 595) ;
+   *  b) adresse et servi D'ACCORD, mais « catalogue 31 » quand même →
+   *     c'est le SERVEUR qui a joint un catalogue à une recherche : la
+   *     faute est dans `_accueil/rendu`, pas dans le routeur ;
+   *  c) adresse et servi d'accord, « catalogue 0 », et pourtant des
+   *     cartes de style à l'écran → RIEN N'A ÉTÉ REPEINT : React n'a pas
+   *     rendu, et la cause est un état bloqué, pas une donnée.
+   *  d) adresse « /?style=X&nature=tatouage » avec « servi style="" » et
+   *     « nature="tatouage" » → LE SLUG A ÉTÉ REFUSÉ. `styleConnu`
+   *     (config/tatouage) rend la chaîne vide pour tout style absent du
+   *     catalogue statique, SANS RIEN DIRE : il ne reste alors que la
+   *     nature, et la page s'intitule « Toutes les réalisations ». Ce
+   *     cas-là est reproduit dans l'atelier — un chargement direct de
+   *     `/?style=<slug inconnu>&nature=tatouage` rend exactement le
+   *     symptôme du second défaut.
+   * ON ÉCRIT AUSSI `premiers` ET `total` : le cas (b) se reconnaît à un
+   * total nul avec un catalogue plein.
+   *
+   * ⚠️ ELLE NE FAIT QUE LIRE, et seulement sous `?sonde-bascule=1` :
+   * `noter` sort à sa première ligne sans la sonde. Aucune décision du
+   * site ne dépend d'elle.
+   * ⚠️ ELLE PART À LA PASSE SUIVANTE, comme celles des nº 625 et 626.
+   */
+  useEffect(() => {
+    noter(
+      `PAGE SERVIE · adresse ${window.location.pathname}${window.location.search}` +
+        ` · servi style="${criteresServis.style}" nature="${criteresServis.nature}"` +
+        ` lieu=${criteresServis.lieu ? "oui" : "non"} exclure=${criteresServis.exclure.length}` +
+        ` · catalogue ${catalogue.length} · premiers ${premiers.length} · total ${total}`
+    );
+  }, [cleServie, catalogue.length, premiers.length, total, criteresServis]);
 
   /** LA RECHERCHE SERVIE EST RETENUE LE TEMPS DE LA VISITE (nº 209-§1)
       — pour que la loupe d'une FICHE ouvre le moteur avec les critères
