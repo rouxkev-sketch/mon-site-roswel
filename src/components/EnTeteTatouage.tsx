@@ -1071,11 +1071,28 @@ export function EnTeteTatouage({
                « Ma sélection » reste un appui — une navigation de
                document est UNE entrée d'historique. Le doigt ne change
                pas : `preventDefault` part avant toute navigation. */}
+          {/*  ██ §1 (nº 627) — `data-sans-navigation` : POURQUOI CE LIEN-CI
+               LE PORTE ██
+               AU DOIGT, CE LIEN NE NAVIGUE JAMAIS : le `preventDefault`
+               ci-dessous part à la première ligne et le menu de recherche
+               s'ouvre à la place. Or `SigneDeChargement` ne lit que le
+               `href` : il voyait « / », armait une attente vers l'accueil
+               — et cette attente ne se fermait JAMAIS, faute d'arrivée.
+               Douze secondes durant, tout clic vers « / » était alors
+               avalé (`preventDefault` + `stopPropagation`, règle 332-§1)
+               et la barre semblait morte. LA MARQUE LE DIT AU SIGNE :
+               ce lien ne mène nulle part, n'arme rien pour lui. Elle est
+               lue au même endroit que `data-signe-muet`, dans `surClic`.
+               ⚠️ AU WEB LE LIEN NAVIGUE VRAIMENT — mais vers l'accueil,
+               en navigation de DOCUMENT (le procédé du logo, §2
+               ci-dessous) : le signe n'y a jamais eu de rôle, la page
+               entière est remplacée. La marque ne lui retire donc rien. */}
           {/* eslint-disable-next-line @next/next/no-html-link-for-pages --
               un <a> natif PAR CHOIX : le procédé du logo (nº 429),
               repris à l'identique. */}
           <a
             href="/"
+            data-sans-navigation=""
             onClick={(evenement) => {
               if (document.documentElement.dataset.appareil === "mobile") {
                 evenement.preventDefault();

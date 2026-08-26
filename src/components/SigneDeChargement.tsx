@@ -257,6 +257,30 @@ function Signe() {
       const fenetreCible = lien.getAttribute("target");
       if (fenetreCible && fenetreCible !== "_self") return;
       if (lien.hasAttribute("download")) return;
+      /*  ██ §1 (nº 627) — UN LIEN QUI NE NAVIGUE PAS N'ARME RIEN ██
+          ------------------------------------------------------------
+          LE DÉFAUT QUE CETTE LIGNE FERME, mesuré par le propriétaire
+          (journal de la nº 626) : la loupe de la barre est un
+          `<a href="/">` dont le clic, AU DOIGT, est prévenu pour ouvrir
+          la page de recherche — aucune navigation n'a jamais lieu. On
+          armait pourtant une attente vers « / », et le contrôle de fin
+          de clic la gardait (il lit `defaultPrevented`, vrai ici, et
+          conclut « navigation douce »). L'attente vivait alors ses
+          DOUZE SECONDES, et pendant tout ce temps le re-clic du §4
+          avalait CHAQUE clic vers « / » — le logo comme la loupe. La
+          barre paraissait morte. Preuve dans le journal : un clic entré
+          en capture, aucune ligne en bulle — la propagation stoppée.
+          ⚠️ LA MARQUE SORT AVANT TOUT : ni attente, ni avalement, ni
+          trait. Un lien marqué est un lien dont on sait qu'il n'ira
+          nulle part ; il n'a donc rien à annoncer, et surtout rien à
+          empêcher. C'est le procédé de `data-signe-muet` (nº 452), lu
+          au MÊME endroit et sur les mêmes ancêtres — mais celle-là ne
+          tait que le trait, quand celle-ci retire le mécanisme entier.
+          ⚠️ ET RIEN D'AUTRE NE CHANGE : le garde-fou des douze
+          secondes, le nettoyage à l'arrivée, le non-armement des liens
+          natifs (nº 442) et l'avalement du re-clic (332-§1) restent
+          entiers pour toutes les VRAIES navigations. */
+      if (lien.closest("[data-sans-navigation]")) return;
       let adresseVisee: URL;
       try {
         adresseVisee = new URL(lien.href);
