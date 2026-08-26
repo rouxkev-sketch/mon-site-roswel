@@ -90,15 +90,16 @@ const FLECHE_ROSE = flecheImage(COULEURS.primaire);
 const ECRITURE_TITRE_GROUPE = "text-[13px] uppercase tracking-[0.08em]";
 /** La graisse d'un titre de groupe — celle de tout le site (nº 317). */
 const GRAISSE_TITRE_GROUPE = "font-bold";
-/** ⚠️ nº 628, REVUE À LA nº 629 — LA GRAISSE DU BLOC AU REPOS, et rien
-    d'autre : un titre dont la section est repliée.
-    LA nº 628 AVAIT MIS LE DEMI-GRAS (600) contre le gras (700) : le
-    propriétaire ne distingue pas les deux, et il a raison — cent
-    unités de graisse sur des capitales de 13 px, c'est une différence
-    de dessin que l'œil ne lit pas à cette taille. On descend donc de
-    DEUX crans d'un coup, jusqu'à la graisse NORMALE (400) : l'écart au
-    gras devient celui d'un texte courant à un titre, et il se voit. */
-const GRAISSE_TITRE_GROUPE_REPLIE = "font-normal";
+/** ⚠️ nº 628, PUIS nº 629, ET REVENUE À LA nº 632 — LA GRAISSE DU BLOC
+    AU REPOS, et rien d'autre : un titre dont la section est repliée.
+    LE DEMI-GRAS (600) de la nº 628 revient. La nº 629 l'avait descendu
+    à la graisse NORMALE parce que l'œil ne séparait pas 600 de 700 sur
+    des capitales de 13 px — c'était vrai, et la conclusion était
+    mauvaise : ce n'est pas à la GRAISSE de porter l'état. Elle le porte
+    désormais avec un TRAIT ROSE (voir `enTeteSection`), qui se voit
+    d'un coup d'œil ; la graisse ne fait plus qu'appuyer. Le titre
+    replié peut donc redevenir un vrai titre. */
+const GRAISSE_TITRE_GROUPE_REPLIE = "font-semibold";
 
 export type OptionMenu = {
   value: string;
@@ -1198,13 +1199,15 @@ export function MenuDeroulant({
           groupeDeplie ? "border-sombre-trait" : "border-transparent"
         }`}
       >
-        {/*  ██ §5 (nº 628, REVU nº 629) — LE BLOC DIT LEQUEL DES DEUX
-             EST OUVERT ██
-             La section dépliée prend le GRAS, l'autre reste en GRAISSE
-             NORMALE (c'était le demi-gras à la nº 628 : le propriétaire
-             ne voyait pas la différence, et l'écart 400 → 700 est le
-             double de celui-là). C'est la seule chose que ce bloc
-             gagne : ni
+        {/*  ██ §5 (nº 628, REVU nº 629, PUIS nº 632) — LE BLOC DIT
+             LEQUEL DES DEUX EST OUVERT ██
+             LA SECTION DÉPLIÉE PREND LE GRAS **ET UN TRAIT ROSE** ;
+             l'autre reste en demi-gras, sans trait. Deux passes ont
+             cherché à faire porter l'état par la seule graisse — 600
+             contre 700 à la nº 628, 400 contre 700 à la nº 629 — et
+             aucune n'a convaincu l'œil du propriétaire. Le trait, lui,
+             se voit sans qu'on ait à comparer. C'est ce que ce bloc
+             gagne, et rien d'autre : ni
              couleur, ni taille, ni chasse — le rose et les 13 px
              valent pour les deux titres, comme avant.
              ⚠️ RIEN NE PEUT SAUTER, ET CE N'EST PAS UNE ESPÉRANCE :
@@ -1221,19 +1224,24 @@ export function MenuDeroulant({
                 chevron est collé à droite — lui non plus ne bouge pas.
                 Si un titre était centré ou aligné à droite, il se
                 décalerait ; aucun des deux ne l'est.
-             ⚠️ LE CHEVRON N'EST PAS TOUCHÉ : il vit dans
-             `enTeteSection` et pivote toujours sur `groupeDeplie ===
-             entete` (nº 572-574) — c'est la MÊME condition qui décide
-             ici de la graisse. Les deux ne peuvent pas se contredire. */}
+             ⚠️ LE CHEVRON RESTE, MAIS IL NE PIVOTE PLUS ICI (nº 632) :
+             pointé vers le bas, ouvert comme fermé. Le propriétaire le
+             garde — il dit « ceci s'ouvre » — mais l'ÉTAT est dit par
+             le trait, et deux signes pour une même chose en font un de
+             trop. Ailleurs, il pivote comme depuis la nº 572-574. */}
         {entetesDesSections.map((entete) => (
           <div key={entete}>
-            {enTeteSection(
-              entete,
-              `${retrait} pt-3 pb-1`,
-              groupeDeplie === entete
-                ? GRAISSE_TITRE_GROUPE
-                : GRAISSE_TITRE_GROUPE_REPLIE
-            )}
+            {enTeteSection(entete, `${retrait} pt-3 pb-1`, {
+              graisse:
+                groupeDeplie === entete
+                  ? GRAISSE_TITRE_GROUPE
+                  : GRAISSE_TITRE_GROUPE_REPLIE,
+              //  §1 (nº 632) — LE TRAIT SUIT LA MÊME CONDITION QUE LA
+              //  GRAISSE, et c'est celle du chevron d'avant : les trois
+              //  ne peuvent pas se contredire, il n'y a qu'un seul test.
+              souligne: groupeDeplie === entete,
+              chevronFixe: true,
+            })}
           </div>
         ))}
       </div>
@@ -1398,13 +1406,20 @@ export function MenuDeroulant({
       ⚠️ LA TAILLE (13 px) EST SOUS CELLE DES ENTRÉES (16 px) : un
       titre de catégorie annonce, il ne se choisit pas — et rien ne
       doit le confondre avec une option. */
-  //  §5 (nº 628) — LA GRAISSE EST UN ARGUMENT, avec le gras du site
-  //  pour valeur par défaut : tous les appelants d'avant gardent donc
-  //  exactement ce qu'ils avaient. Seul le bloc de deux titres la passe.
+  /*  §5 (nº 628), ÉTENDU À LA nº 632 — CE QUE LE BLOC PEUT DEMANDER EN
+      PLUS, et rien de ce qu'il ne demande pas. Les trois réglages ont
+      leur valeur d'AVANT pour défaut : tous les appelants existants —
+      les titres en ligne des menus sans bloc — gardent donc exactement
+      ce qu'ils avaient, sans être touchés. Seul le bloc de deux titres
+      les passe. */
   function enTeteSection(
     entete: string,
     marge: string,
-    graisse: string = GRAISSE_TITRE_GROUPE
+    {
+      graisse = GRAISSE_TITRE_GROUPE,
+      souligne = false,
+      chevronFixe = false,
+    }: { graisse?: string; souligne?: boolean; chevronFixe?: boolean } = {}
   ) {
     const classes = `${marge} ${ECRITURE_TITRE_GROUPE} ${graisse} text-primaire`;
     //  §2 (nº 304) — À UN SEUL GROUPE, c'est une étiquette : aucune
@@ -1431,8 +1446,35 @@ export function MenuDeroulant({
         className={`${classes} flex w-full items-center justify-between gap-2
                    min-h-[44px] text-left transition-opacity hover:opacity-80`}
       >
-        {entete}
-        {chevron(groupeDeplie === entete)}
+        {/*  ██ §1 (nº 632) — LE TRAIT NE TIENT QU'AUX MOTS ██
+             C'est la leçon du §2 de la nº 290, à la lettre : la ligne
+             est une rangée `justify-between`, un soulignement posé sur
+             elle irait jusqu'au chevron. Il faut donc un `span` EN
+             LIGNE, qui ne fait que la largeur du texte.
+             ⚠️ ET C'EST UN SOULIGNEMENT, PAS UN CONTOUR : la même
+             écriture qu'aux nº 525 et nº 559 — rose de la charte lu au
+             jeton, épaisseur 1, décalage 4. Un `border-b` aurait
+             AJOUTÉ de la hauteur et fait sauter le titre à chaque
+             ouverture ; `text-decoration` ne touche à aucune boîte.
+             Rien ne peut donc bouger quand le trait apparaît. */}
+        <span
+          data-titre-souligne={souligne ? "" : undefined}
+          className={
+            souligne
+              ? "underline decoration-primaire decoration-1 underline-offset-4"
+              : undefined
+          }
+        >
+          {entete}
+        </span>
+        {/*  §1 (nº 632) — LE CHEVRON NE PIVOTE PLUS DANS LE BLOC, sur
+             consigne du propriétaire : il reste pointé vers le bas,
+             ouvert comme fermé, et il est CONSERVÉ. C'est le trait qui
+             dit l'état, désormais ; deux signes pour une même chose,
+             c'est un de trop. Ailleurs — les portes de sous-section,
+             les titres en ligne — il pivote comme avant (nº 572-574) :
+             `chevronFixe` vaut faux par défaut. */}
+        {chevron(!chevronFixe && groupeDeplie === entete)}
       </button>
     );
   }

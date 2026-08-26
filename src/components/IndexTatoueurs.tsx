@@ -369,8 +369,45 @@ export function IndexTatoueurs({
    * (passe nº 145-§2). Il ne s'affiche QUE pour un visiteur qui n'a pas
    * de compte : une fois connecté, on n'a plus rien à faire dans une
    * invitation à s'inscrire.
+   *
+   * ██ §2 (nº 632) — `pret` EST LU, ET C'EST TOUTE LA CORRECTION ██
+   * ------------------------------------------------------------------
+   * LE DÉFAUT : connecté, on rafraîchit l'accueil et le bandeau
+   * « Tu es tatoueur ? » paraît un instant avant de s'effacer.
+   * LA CAUSE, ET ELLE EST ÉCRITE NOIR SUR BLANC DANS LA NOTE DU BANDEAU
+   * LUI-MÊME, plus bas : « la réponse vient du serveur avec la page,
+   * l'appel n'apparaît donc jamais pour disparaître ensuite ». C'ÉTAIT
+   * VRAI — jusqu'à la nº 357, qui a rendu l'accueil PRÉRENDU. Une page
+   * préparée d'avance n'a AUCUNE REQUÊTE, donc aucun cookie, donc
+   * aucune session : le contexte servi y vaut « on ne sait rien »
+   * (`utilisateur: null`, `pret: false`). Or le bandeau ne regardait
+   * QUE `utilisateur` — il lisait « personne » là où il fallait lire
+   * « je ne sais pas encore », et s'affichait. La page hydratée lit
+   * alors le cookie du navigateur, trouve la session, et le retire.
+   * La note d'alors n'était pas fausse : elle a été rendue fausse.
+   *
+   * `useUtilisateur` DISTINGUE DÉJÀ LES TROIS ÉTATS — c'est
+   * exactement ce que `pret` dit, et onze écrans du site le lisent
+   * déjà. Il n'y avait rien à inventer : il manquait ici.
+   *
+   * ⚠️ CE QU'UN VISITEUR SANS COMPTE Y PERD, ET POURQUOI C'EST LE BON
+   * CHOIX : sur l'accueil prérendu, il attend UN RENDU — celui qui suit
+   * l'hydratation. Pas une requête réseau : la session se lit dans le
+   * cookie, de façon synchrone (voir lib/use-utilisateur). Sur toutes
+   * les autres pages, qui sont dynamiques, le serveur a déjà lu le
+   * cookie et le bandeau est dans le HTML d'origine — rien n'attend.
+   * Et ce bandeau vit TOUT EN BAS, après la mosaïque entière : au
+   * moment où il paraît, il est à des milliers de pixels sous l'œil.
+   * Une apparition que personne ne voit vaut mieux qu'une disparition
+   * que le propriétaire voit.
+   * ⚠️ AUCUN RISQUE D'ÉCART D'HYDRATATION : le premier rendu du
+   * navigateur lit le MÊME instantané que le serveur (`pret: false`),
+   * donc pas de bandeau des deux côtés. C'est le rendu SUIVANT qui
+   * tranche.
+   * ⚠️ ET L'ACCUEIL RESTE PRÉRENDU : on ne lit ni cookie ni en-tête au
+   * serveur — on se contente de ne rien affirmer tant qu'on ne sait pas.
    */
-  const { utilisateur } = useUtilisateur();
+  const { utilisateur, pret: sessionConnue } = useUtilisateur();
 
   /** LES CRITÈRES SERVIS — ceux de l'adresse, décodés par le serveur.
       Ce sont EUX que la mosaïque illustre, toujours. */
@@ -1261,10 +1298,17 @@ export function IndexTatoueurs({
             ⚠️ POUR LES VISITEURS SANS COMPTE, ET EUX SEULS (passe
             nº 145-§2). Un connecté a déjà franchi cette porte : lui
             redemander « Tu es tatoueur ? » en bas de chaque page
-            d'accueil ne lui apprend rien et le traite en inconnu. La
-            réponse vient du serveur avec la page, l'appel n'apparaît
-            donc jamais pour disparaître ensuite. */}
-        {!utilisateur && (
+            d'accueil ne lui apprend rien et le traite en inconnu.
+            ⚠️ ET SEULEMENT QUAND ON SAIT (nº 632). L'ancienne note
+            disait ici que « la réponse vient du serveur avec la page,
+            l'appel n'apparaît donc jamais pour disparaître ensuite » :
+            c'était vrai quand l'accueil était rendu à la demande, et la
+            nº 357 l'a rendu PRÉRENDU — une page préparée d'avance ne
+            connaît aucune session. `sessionConnue` distingue « personne
+            n'est connecté » de « je ne sais pas encore », et seul le
+            premier fait paraître le bandeau. Toute la raison est
+            écrite à la déclaration de `sessionConnue`, plus haut. */}
+        {sessionConnue && !utilisateur && (
         <section className="mt-14 rounded-2xl bg-sombre-carte px-5 py-8 text-center">
           <h2 className="text-[19px] font-bold tracking-tight text-sombre-texte">
             {TEXTES_TATOUAGE.titreAppelTatoueur}
