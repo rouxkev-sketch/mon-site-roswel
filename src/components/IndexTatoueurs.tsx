@@ -740,7 +740,20 @@ export function IndexTatoueurs({
               affiches.lieu.precision === "adresse")
               ? `${affiches.rayonKm} km`
               : "";
-          const compte = `${total} création${total > 1 ? "s" : ""}`;
+          /*  §2 (nº 624) — « PORTFOLIOS », PLUS « CRÉATIONS ». Ce
+              chiffre est le TOTAL des cartes que la recherche a
+              trouvées (`total`, c'est-à-dire des carrousels depuis la
+              nº 279) : il disait donc « créations » pour désigner des
+              portfolios. Le mot s'aligne sur celui des cartes de style
+              (nº 623) et sur celui du menu « Explorer » — un seul mot
+              pour une seule chose.
+              ⚠️ L'ACCORD TIENT AU SINGULIER : « 1 portfolio ».
+              ⚠️ ÉCRIT UNE SEULE FOIS, ICI : `LigneResultats` ne fait que
+              recevoir cette chaîne (ses mentions de « créations » sont
+              des exemples en commentaire). Le titre d'invitation de la
+              mosaïque, lui, garde ses mots (`TEXTES_TATOUAGE`) — il ne
+              porte aucun nombre. */
+          const compte = `${total} portfolio${total > 1 ? "s" : ""}`;
           if (!quoi && !lieu) {
             //  SANS RECHERCHE : l'invitation, et ce que le site est.
             //  §2 (nº 445) — ET L'AIR SOUS LA BARRE, AU DOIGT : la

@@ -85,15 +85,17 @@ export type StyleDuCatalogue = {
   slug: string;
   /** Le nom affiché (`libelleStyle`, l'écriture unique du site). */
   label: string;
-  /** LE COMPTE DU MENU : des artistes publiés distincts. */
-  artistes: number;
-  /** ██ §2 (nº 622) — CE CHAMP N'EST PLUS LU PAR PERSONNE ██
-      Il servait au relevé de la nº 620, dont la route temporaire est
-      partie avec cette passe. IL RESTE, ET C'EST UN CHOIX : il coûte
-      un `.length` sur une liste qu'on tient déjà en main, et il dit
-      d'un coup d'œil sur quoi le choix de la photo a porté. Le
-      supprimer ne rendrait pas une ligne de calcul. */
-  galeries: number;
+  /** ██ §1 (nº 624) — LE COMPTE : DES GALERIES, PLUS DES ARTISTES ██
+      C'est le nombre de CARTES que la recherche de ce style affichera
+      — l'unité de la mosaïque depuis la nº 279 (`cleDuCarrousel`). La
+      nº 620 comptait des artistes distincts, comme le menu
+      « Explorer » ; les deux chiffres se contredisaient dès qu'un
+      artiste avait deux galeries dans un style, et c'est le défaut que
+      cette passe ferme — partout à la fois.
+      ⚠️ CE CHAMP REMPLACE `artistes` ET `galeries` À LA FOIS : le
+      compte étant devenu le nombre de galeries, les deux disaient la
+      même chose. L'orphelin signalé à la nº 622 disparaît avec eux. */
+  portfolios: number;
   /** LA PHOTO RETENUE, ou `null` — mais un style sans photo n'entre
       pas dans la liste, ce cas ne peut donc pas s'y produire.
       ⚠️ §2 (nº 622) — SEULES `url` ET `miniature` SONT AFFICHÉES. Les
@@ -168,16 +170,14 @@ export async function catalogueDesStyles(): Promise<StyleDuCatalogue[]> {
     );
     if (photos.length === 0) return [];
 
-    /* ---- 3. LE COMPTE DU MENU : des artistes DISTINCTS par style ----
-       Le même dénombrement que `creations-par-style` — des ensembles
-       de fiches, jamais des additions : un artiste qui a déposé vingt
-       photos d'un style n'y entre qu'une fois. */
-    const artistesParStyle = new Map<string, Set<string>>();
-    for (const photo of photos) {
-      const vus = artistesParStyle.get(photo.style);
-      if (vus) vus.add(photo.tatoueur_id);
-      else artistesParStyle.set(photo.style, new Set([photo.tatoueur_id]));
-    }
+    /* ---- 3. LE COMPTE EST CELUI DES GALERIES (§1 nº 624) ----
+       IL N'Y A PLUS DE DÉNOMBREMENT SÉPARÉ : le compte d'un style EST
+       le nombre de ses galeries, c'est-à-dire `galeriesParStyle` plus
+       bas. La nº 620 comptait ici des `tatoueur_id` distincts — le
+       chiffre du menu — et il ne disait pas la même chose que la
+       mosaïque, qui affiche des carrousels (nº 279) : un artiste ayant
+       deux galeries dans un style annonçait « 1 » et montrait deux
+       cartes. On compte désormais ce qui s'affiche. */
 
     /* ---- 4. LES GALERIES, ET LEUR PREMIÈRE PHOTO ----
        Une galerie, c'est le trio style + catégorie + rendu d'UNE fiche
@@ -277,8 +277,9 @@ export async function catalogueDesStyles(): Promise<StyleDuCatalogue[]> {
       entrees.push({
         slug: style,
         label: libelleStyle(style),
-        artistes: artistesParStyle.get(style)?.size ?? 0,
-        galeries: galeries.length,
+        //  §1 (nº 624) — LE COMPTE EST LE NOMBRE DE GALERIES, donc le
+        //  nombre de cartes que la recherche de ce style affichera.
+        portfolios: galeries.length,
         photo: {
           id: meilleure.premiere.id,
           url: meilleure.premiere.url,
@@ -289,7 +290,7 @@ export async function catalogueDesStyles(): Promise<StyleDuCatalogue[]> {
       });
     }
     return entrees.sort(
-      (a, b) => b.artistes - a.artistes || a.label.localeCompare(b.label)
+      (a, b) => b.portfolios - a.portfolios || a.label.localeCompare(b.label)
     );
   } catch {
     //  Injoignable : pas de catalogue, et rien ne casse. La page qui

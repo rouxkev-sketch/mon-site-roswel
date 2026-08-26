@@ -7,8 +7,11 @@ import { useSyncExternalStore } from "react";
  * ===========================================================
  * (passe nº 216-§2, corrigée par la nº 217-§1)
  *
- * Le menu « Explorer » annonce, en face de chaque style, COMBIEN
- * D'ARTISTES on y trouvera — pas combien de photos existent. Les
+ * Le menu « Explorer » annonce, en face de chaque style, COMBIEN DE
+ * PORTFOLIOS on y trouvera — pas combien de photos existent, et pas
+ * non plus combien d'artistes : depuis la nº 624, un portfolio est UNE
+ * GALERIE, c'est-à-dire une carte de la mosaïque. Le chiffre annoncé
+ * et le nombre de vignettes qui suivront sont donc le même nombre. Les
  * nombres viennent de /api/yokofolio/creations-par-style.
  *
  * ⚠️ UN MAGASIN DE MODULE, PAS UN ÉTAT DE COMPOSANT. Le moteur de
@@ -29,11 +32,17 @@ import { useSyncExternalStore } from "react";
  *  · `comptes` — nature → style → nombre de PORTFOLIOS publiés ;
  *  · `totaux`  — nature → nombre de portfolios de la catégorie.
  *
- * ⚠️ `totaux` N'EST PAS LA SOMME DE `comptes` (nº 217-§1), et il ne
- * peut pas l'être : un artiste qui publie des flashs en aquarelle ET
- * en chicano compte dans les deux styles, mais il n'est qu'UN
- * portfolio dans « Tous les flashs ». Seul le serveur peut faire ce
- * décompte — il a les identifiants, le navigateur n'a que des nombres.
+ * ⚠️ `totaux` VIENT DU SERVEUR, ET C'EST CE QUI COMPTE : lui seul a les
+ * identifiants, le navigateur n'a que des nombres.
+ * ⚠️ §1 (nº 624) — LA RAISON HISTORIQUE DE CE CHAMP A CHANGÉ, ET LE
+ * CHAMP RESTE. Il était écrit ici que `totaux` NE POUVAIT PAS être la
+ * somme de `comptes` : un artiste publiant en aquarelle ET en chicano
+ * comptait dans les deux styles mais ne valait qu'un portfolio dans
+ * « Tous les flashs ». Depuis la nº 624, on compte des GALERIES, et une
+ * galerie n'appartient qu'à un style : la somme retombe juste. Le champ
+ * demeure — il est calculé au même endroit et au même passage que
+ * `comptes` (voir la route), et le supprimer ferait recalculer au
+ * navigateur ce que le serveur sait déjà.
  */
 export type ComptesCreations = {
   comptes: Record<string, Record<string, number>>;

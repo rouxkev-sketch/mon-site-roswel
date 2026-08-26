@@ -131,7 +131,11 @@ const ATTENTE_ADRESSE_MS = 2000;
  * « artistes » : le site compte aussi des salons et des studios
  * (`libelleTypeFiche`), et « portfolio » est le terme employé partout
  * ailleurs — jusque dans le menu « Explorer », dont ce chiffre est
- * exactement le même (des fiches publiées distinctes, nº 620).
+ * exactement le même.
+ * ⚠️ §1 (nº 624) — ET « LE MÊME » EST DEVENU VRAI AU SENS FORT : les
+ * deux comptent désormais DES GALERIES (`cleDuCarrousel`), donc des
+ * cartes affichées. La nº 620 comptait ici des fiches distinctes, et
+ * la carte annonçait « 1 » là où la recherche en montrait deux.
  * ⚠️ ÉCRIT UNE SEULE FOIS, pour les deux appareils : la ligne du web et
  * celle du doigt ne peuvent pas dire deux mots différents.
  */
@@ -224,7 +228,7 @@ export function CarteStyle({
             url={photo.miniature}
             urlPleine={photo.url}
             tailles={TAILLES_CARTE}
-            alt={`${style.label}, ${style.artistes} ${MOT_DU_COMPTE}`}
+            alt={`${style.label}, ${style.portfolios} ${MOT_DU_COMPTE}`}
             chargement={prioritaire ? "eager" : "lazy"}
             priorite={prioritaire ? "high" : undefined}
             classe="w-full h-full object-cover"
@@ -292,7 +296,7 @@ export function CarteStyle({
               className="font-normal text-sombre-texte-doux
                          mobile:hidden not-mobile:inline"
             >
-              {`${SEPARATEUR_GALERIE}${style.artistes} ${MOT_DU_COMPTE}`}
+              {`${SEPARATEUR_GALERIE}${style.portfolios} ${MOT_DU_COMPTE}`}
             </span>
           </p>
           {/*  LA SECONDE LIGNE DU DOIGT — un bloc à part, tronqué
@@ -305,7 +309,7 @@ export function CarteStyle({
                        mobile:block mobile:leading-[16px] mobile:text-[13px]
                        not-mobile:hidden"
           >
-            {`${style.artistes} ${MOT_DU_COMPTE}`}
+            {`${style.portfolios} ${MOT_DU_COMPTE}`}
           </p>
         </div>
       </Link>

@@ -63,7 +63,22 @@ export type Carrousel = Classable & {
 
 /** La clé d'un carrousel — unique sur tout le site, et STABLE : c'est
     elle qui sert de clé de rendu, de repère de position dans la
-    mosaïque, et de départage dans le classement. */
+    mosaïque, et de départage dans le classement.
+    ██ §1 (nº 624) — ET C'EST DÉSORMAIS L'UNITÉ DES COMPTES ██
+    LE DÉFAUT QU'ELLE FERME : la carte d'un style annonçait « 1
+    portfolio » et la recherche en affichait DEUX — le même artiste,
+    une galerie en couleur et une en noir et gris. Deux définitions se
+    contredisaient : les comptes dénombraient des TATOUEURS DISTINCTS,
+    la mosaïque affiche des CARROUSELS depuis la nº 279.
+    LA RÈGLE, MAINTENANT : ON COMPTE CE QUI S'AFFICHE, et cette
+    fonction-ci dit ce qui s'affiche. Compter des clés distinctes, c'est
+    compter des cartes — le chiffre annoncé et le nombre de vignettes ne
+    peuvent plus diverger, parce qu'ils sortent de la même écriture.
+    ⚠️ CONSÉQUENCE ACCEPTÉE PAR LE PROPRIÉTAIRE : un artiste qui a deux
+    galeries dans un style y compte pour deux. C'est ce que l'œil voit.
+    SES DEUX EMPLOIS DE DÉNOMBREMENT : le catalogue d'accueil
+    (lib/catalogue-styles) et les nombres du menu « Explorer »
+    (api/yokofolio/creations-par-style). */
 export function cleDuCarrousel(slug: string, photo: {
   style?: string;
   rendu: string | null;
