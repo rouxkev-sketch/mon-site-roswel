@@ -1505,6 +1505,12 @@ export function MoteurTatouage({
             sansBordure
             sombre
             repliable
+            //  §1 (nº 648) — LA FLÈCHE DE CE CHAMP-CI NE VIRE PLUS AU
+            //  ROSE À L'OUVERTURE. C'est le champ « Style » du moteur
+            //  principal, CÔTÉ WEB : le champ du doigt est un autre
+            //  appel, plus bas dans ce fichier, et il ne porte pas ce
+            //  drapeau — sa flèche reste rose, comme avant.
+            flecheFigee
             //  §2 (nº 290) — le trait rose sous « Cultures du monde » :
             //  le menu des styles du MOTEUR PRINCIPAL, côté web.
             familleSoulignee

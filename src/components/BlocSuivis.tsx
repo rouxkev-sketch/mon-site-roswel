@@ -7,7 +7,7 @@ import { EcranVideSelection } from "@/components/EcranVideSelection";
 //  §4 (nº 462) — la mémoire de défilement des bandes (leçon nº 430),
 //  sous le préfixe réservé que la purge des fiches épargne.
 import { cleDeGalerie, PREFIXE_SELECTION } from "@/lib/memoire-galeries";
-import { CADRE_PHOTO_PORTFOLIO } from "@/config/tatouage";
+import { CADRE_PHOTO_PORTFOLIO, FOND_RESERVE_PHOTO } from "@/config/tatouage";
 import {
   CLASSES_LIGNE_CLIQUABLE_SANS_ENCADRE,
   PhotoRonde,
@@ -675,8 +675,12 @@ function RangeeDeVignettes({
             //  là où il vit : `CADRE_PHOTO_PORTFOLIO`. Il réserve
             //  aussi la hauteur AVANT l'image (règle du §3, nº 226).
             className={`relative block ${CADRE_PHOTO_PORTFOLIO} overflow-hidden rounded-none
-                       bg-sombre-eleve transition-opacity active:opacity-75`}
+                       transition-opacity active:opacity-75`}
           >
+            {/*  §2 (nº 648) — la plaque d'attente, rentrée de 2 px,
+                 comme sur les cartes : le fond clair ne dépasse plus
+                 sous la vignette (config/tatouage). */}
+            <span aria-hidden="true" className={FOND_RESERVE_PHOTO} />
             {/* eslint-disable-next-line @next/next/no-img-element --
                 photo déposée par le tatoueur, servie telle quelle. */}
             <img
@@ -684,7 +688,8 @@ function RangeeDeVignettes({
               alt=""
               loading="lazy"
               decoding="async"
-              className="h-full w-full object-cover"
+              //  §2 (nº 648) — `relative` : au-dessus de la plaque.
+              className="relative h-full w-full object-cover"
             />
             {/*  §2 (nº 302) — PLUS AUCUN CŒUR SUR CES VIGNETTES,
                  web comme doigt. Le cœur de la nº 249 disait qu'une

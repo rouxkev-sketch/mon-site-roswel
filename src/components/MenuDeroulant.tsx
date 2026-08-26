@@ -232,6 +232,7 @@ export function MenuDeroulant({
   repliable = false,
   libelleValeur,
   positionFleche,
+  flecheFigee = false,
   champMobile,
   iconeTitreFeuille,
   enErreur,
@@ -331,6 +332,20 @@ export function MenuDeroulant({
       l'appelant peut donner plus d'air. Une position CSS
       (`background-position`), rien d'autre. */
   positionFleche?: string;
+  /**
+   * §1 (nº 648) — LA FLÈCHE DU CHAMP RESTE GRISE, MÊME OUVERTE.
+   * ------------------------------------------------------------------
+   * Le propriétaire ne veut plus la voir passer au rose quand on
+   * déploie le champ « Style » du moteur principal, AU WEB. Ce n'est
+   * pas la flèche des titres de bloc (un `<svg>` dans le bloc
+   * collant) : c'est l'image de fond du champ refermé, à sa droite.
+   * ⚠️ UN SEUL APPELANT LE POSE, et c'est ce qui borne la règle : le
+   * champ de style du moteur, côté web. Le champ du DOIGT est un autre
+   * appel du même composant (MoteurTatouage, dans la page plein
+   * écran) — il ne le passe pas, et sa flèche vire au rose comme
+   * avant.
+   */
+  flecheFigee?: boolean;
   /** Titre principal EN GRAS, affiché en tête de la liste — dans la
       feuille mobile ET dans le menu déroulant (structure identique sur
       tous les formats). */
@@ -1421,7 +1436,27 @@ export function MenuDeroulant({
       chevronFixe = false,
     }: { graisse?: string; souligne?: boolean; chevronFixe?: boolean } = {}
   ) {
-    const classes = `${marge} ${ECRITURE_TITRE_GROUPE} ${graisse} text-primaire`;
+    /*  ██ §1 (nº 648) — LE TITRE PASSE EN BLANC, LE ROSE RESTE AUX
+         SIGNES ██
+         ------------------------------------------------------------
+         Les deux titres du bloc étaient roses en entier — mots,
+         soulignement et chevron, tous à `text-primaire` par héritage.
+         Le propriétaire ne garde le rose que sur ce qui DIT UN ÉTAT :
+         le trait sous le titre ouvert (nº 632) et le chevron. Les MOTS,
+         eux, deviennent blancs — le blanc des titres du site.
+         ⚠️ LE SOULIGNEMENT NE DÉPEND PAS DE LA COULEUR DU TEXTE : il
+         est écrit `decoration-primaire` sur son propre `span` (plus
+         bas), il reste donc rose sans qu'on y touche.
+         ⚠️ LE CHEVRON, LUI, HÉRITAIT : il est désormais enveloppé de
+         `text-primaire` — la MÊME écriture que le chevron des
+         sous-sections, quelques lignes plus bas ; rien d'inventé.
+         ⚠️ LES GRAISSES NE BOUGENT PAS (nº 632) : gras pour la section
+         ouverte, demi-gras pour l'autre — elles arrivent par `graisse`.
+         ⚠️ CE TITRE SERT AUSSI EN LIGNE (les listes à un seul groupe,
+         les titres de section du panneau) : il devient blanc partout,
+         et c'est voulu — un même titre ne peut pas avoir deux couleurs
+         selon l'endroit où il est posé. */
+    const classes = `${marge} ${ECRITURE_TITRE_GROUPE} ${graisse} text-white`;
     //  §2 (nº 304) — À UN SEUL GROUPE, c'est une étiquette : aucune
     //  flèche, rien à toucher, et le contenu est déjà là.
     if (!portesDeGroupe) {
@@ -1474,7 +1509,12 @@ export function MenuDeroulant({
              c'est un de trop. Ailleurs — les portes de sous-section,
              les titres en ligne — il pivote comme avant (nº 572-574) :
              `chevronFixe` vaut faux par défaut. */}
-        {chevron(!chevronFixe && groupeDeplie === entete)}
+        {/*  §1 (nº 648) — LE ROSE DU CHEVRON, MAINTENANT QU'IL NE
+             L'HÉRITE PLUS DU TITRE. L'enveloppe est celle du chevron
+             des sous-sections, reprise telle quelle. */}
+        <span className="text-primaire">
+          {chevron(!chevronFixe && groupeDeplie === entete)}
+        </span>
       </button>
     );
   }
@@ -1689,7 +1729,17 @@ export function MenuDeroulant({
           champEnModeMobile
             ? undefined
             : {
-                backgroundImage: ouvert ? FLECHE_ROSE : FLECHE_GRISE,
+                //  §1 (nº 648) — LA FLÈCHE DU CHAMP, pas celle des
+                //  titres de bloc : ce sont deux dessins différents,
+                //  dans deux endroits différents. Celle-ci est une
+                //  IMAGE DE FOND posée à droite du champ refermé ;
+                //  celle-là est un `<svg>` dans le bloc collant. Le
+                //  propriétaire ne veut plus voir CELLE-CI virer au
+                //  rose à l'ouverture, et seulement sur le champ
+                //  « Style » du moteur principal au web — d'où le
+                //  drapeau, posé par ce seul appelant.
+                backgroundImage:
+                  ouvert && !flecheFigee ? FLECHE_ROSE : FLECHE_GRISE,
                 backgroundRepeat: "no-repeat",
                 backgroundPosition:
                   positionFleche ??

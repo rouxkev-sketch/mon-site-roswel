@@ -1991,6 +1991,39 @@ export const PORTRAIT_ROND = 320;
 export const CADRE_PHOTO_PORTFOLIO = "aspect-4/5";
 
 /**
+ * ██ §2 (nº 648) — LE RECTANGLE D'ATTENTE NE DÉPASSE PLUS ██
+ * ------------------------------------------------------------------
+ * LE DÉFAUT, ET SA CAUSE : le fond clair qui réserve la place pendant
+ * que la photo arrive était peint SUR LE CADRE lui-même. Or la hauteur
+ * du cadre est calculée par un RAPPORT (4/5) : elle tombe presque
+ * toujours sur une fraction de pixel — 250,4 px pour une carte de
+ * 200,32. Le navigateur peint le FOND sur cette hauteur fractionnaire
+ * et l'IMAGE sur une hauteur arrondie : il reste une lame de fond
+ * clair, en bas surtout, de l'ordre du pixel. C'est ce que le
+ * propriétaire voit.
+ * LE REMÈDE, FRANC ET DÉFINITIF (sa consigne) : le fond quitte le
+ * cadre pour une plaque à lui, RENTRÉE DE DEUX PIXELS sur tout le
+ * pourtour. Deux, et pas une fraction : l'écart d'arrondi ne dépasse
+ * jamais UN pixel physique, et deux pixels de CSS en valent au moins
+ * un quel que soit le zoom usuel (à 50 %, le plus petit des zooms
+ * courants, ils en font encore un). Chercher la fraction juste aurait
+ * demandé plusieurs passes pour un résultat qui changerait avec chaque
+ * zoom — c'est précisément ce que le propriétaire ne veut pas.
+ * ⚠️ LA RÉSERVE DE HAUTEUR (nº 226) N'EST PAS TOUCHÉE : c'est le CADRE
+ * qui la porte, par son rapport 4/5, et il ne bouge pas d'un pixel. La
+ * plaque ne fait que peindre à l'intérieur.
+ * ⚠️ LA PHOTO NON PLUS NE BOUGE PAS : elle remplit toujours le cadre
+ * entier. Elle passe simplement AU-DESSUS de la plaque — d'où le
+ * `relative` qu'elle reçoit chez ses trois porteurs : une image en flux
+ * passerait sinon SOUS un frère positionné.
+ * ⚠️ ET LE RECTANGLE RESTE BIEN VISIBLE pendant l'attente : deux
+ * pixels sur une carte qui en fait deux cents, c'est un centième de sa
+ * largeur.
+ */
+export const FOND_RESERVE_PHOTO =
+  "pointer-events-none absolute inset-[2px] bg-sombre-eleve";
+
+/**
  * §3 (nº 276) — L'ÉCRITURE DES TITRES DE SECTION, UNE SEULE FOIS
  * ------------------------------------------------------------------
  * Les capitales grises espacées de 13 px de la nº 223 : « STYLES »,

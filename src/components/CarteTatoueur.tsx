@@ -4,6 +4,7 @@ import { memo, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   CADRE_PHOTO_PORTFOLIO,
+  FOND_RESERVE_PHOTO,
   libelleStyle,
   libelleTypeFiche,
   //  nº 366 — les dimensions intrinsèques de la photo sont désormais
@@ -624,11 +625,15 @@ function CarteTatoueurNue({
         <div
           ref={cadrePhoto}
           className={`relative w-full ${CADRE_PHOTO_PORTFOLIO} overflow-hidden rounded-none
-                     bg-sombre-eleve
                      shadow-[0_2px_12px_rgba(0,0,0,0.35)]
                      transition-shadow duration-300
                      group-hover:shadow-[0_12px_34px_rgba(0,0,0,0.55)]`}
         >
+          {/*  §2 (nº 648) — LA PLAQUE D'ATTENTE, rentrée de 2 px : le
+               fond clair a quitté le cadre pour cesser de dépasser sous
+               la photo. Le pourquoi et le calcul sont écrits une seule
+               fois, avec la constante (config/tatouage). */}
+          <span aria-hidden="true" className={FOND_RESERVE_PHOTO} />
           {/*  ⚠️ LA SOURCE NE DÉPEND PAS DE LA DISPOSITION (nº 175-§5),
                ET CELA DOIT LE RESTER.
                ------------------------------------------------------
@@ -707,7 +712,10 @@ function CarteTatoueurNue({
             // mesurée par Google ne doit pas attendre le défilement.
             chargement={prioritaire ? "eager" : "lazy"}
             priorite={prioritaire ? "high" : undefined}
-            classe="w-full h-full object-cover"
+            //  §2 (nº 648) — `relative` : l'image passe AU-DESSUS de la
+            //  plaque d'attente (un élément en flux passerait sous un
+            //  frère positionné). Sa géométrie ne change pas d'un pixel.
+            classe="relative w-full h-full object-cover"
           />
         </div>
 

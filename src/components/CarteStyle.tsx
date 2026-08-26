@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CADRE_PHOTO_PORTFOLIO } from "@/config/tatouage";
+import { CADRE_PHOTO_PORTFOLIO, FOND_RESERVE_PHOTO } from "@/config/tatouage";
 import { NATURE_PAR_DEFAUT, SEPARATEUR_GALERIE } from "@/lib/photos-tatoueur";
 //  §2 (nº 635) — l'écriture unique de la copie (nº 514), reprise telle
 //  quelle de la carte de la mosaïque : voir la note sur le lien.
@@ -213,11 +213,14 @@ export function CarteStyle({
       >
         <div
           className={`relative w-full ${CADRE_PHOTO_PORTFOLIO} overflow-hidden rounded-none
-                     bg-sombre-eleve
                      shadow-[0_2px_12px_rgba(0,0,0,0.35)]
                      transition-shadow duration-300
                      group-hover:shadow-[0_12px_34px_rgba(0,0,0,0.55)]`}
         >
+          {/*  §2 (nº 648) — la même plaque d'attente que les cartes de
+               portfolio, à la même valeur : une seule écriture pour les
+               trois surfaces (config/tatouage). */}
+          <span aria-hidden="true" className={FOND_RESERVE_PHOTO} />
           {/*  ██ LE TEXTE DE REMPLACEMENT (lecteurs d'écran) ██
                La carte ne montre PAS un portfolio : elle montre un
                STYLE. Ce que le texte doit dire est donc ce que le lien
@@ -239,7 +242,8 @@ export function CarteStyle({
             alt={`${style.label}, ${style.portfolios} ${MOT_DU_COMPTE}`}
             chargement={prioritaire ? "eager" : "lazy"}
             priorite={prioritaire ? "high" : undefined}
-            classe="w-full h-full object-cover"
+            //  §2 (nº 648) — `relative` : au-dessus de la plaque.
+            classe="relative w-full h-full object-cover"
           />
         </div>
 
