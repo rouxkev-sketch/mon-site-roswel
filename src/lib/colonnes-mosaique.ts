@@ -15,8 +15,12 @@ import { CARTES_PAR_PAGE } from "@/config/tatouage";
  *
  * LA RÈGLE. La taille d'une page est un MULTIPLE du nombre de
  * colonnes : colonnes × 6. Six colonnes → 36, cinq → 30, quatre → 24,
- * trois → 18, deux → 12. La dernière rangée est alors toujours pleine,
- * à toutes les pages.
+ * trois → 18. La dernière rangée est alors toujours pleine, à toutes
+ * les pages.
+ * ⚠️ SAUF AU DOIGT, DEPUIS LA nº 613 : deux colonnes servent
+ * VINGT-QUATRE cartes et non douze — douze rangées au lieu de six. La
+ * règle du multiple tient (24 se range en deux colonnes) ; c'est le
+ * nombre de rangées qui change. Voir `taillePageDeColonnes`.
  *
  * ⚠️ LE NOMBRE DE COLONNES EST UNE QUESTION DE CSS, ET LE SERVEUR NE
  * VOIT PAS L'ÉCRAN. Les paliers ci-dessous sont EXACTEMENT ceux que la
@@ -106,12 +110,41 @@ export const COLONNES_MAXIMUM = PALIERS_COLONNES[0].colonnes;
     6 colonnes. */
 export const TAILLE_PAGE_REPLI = CARTES_PAR_PAGE;
 
+/**
+ * ██ §1 (nº 613) — VINGT-QUATRE CARTES AU DOIGT, ET PARTOUT AU DOIGT ██
+ * ==================================================================
+ * L'INCOHÉRENCE QUE LE PROPRIÉTAIRE A RELEVÉE, et c'en était bien une :
+ * la page d'ACCUEIL du doigt montrait vingt-quatre cartes — elle est
+ * prérendue, elle sert le repli — mais la première recherche, le
+ * premier filtre ou « Ma sélection » retombaient à DOUZE, parce que
+ * la règle de la nº 226 (colonnes × 6) donne 2 × 6 sur un téléphone.
+ * On voyait donc la moitié moins de portfolios dès qu'on cherchait
+ * quelque chose. Personne n'avait choisi cela : c'est une conséquence
+ * arithmétique que le repli masquait sur le seul écran d'arrivée.
+ *
+ * VINGT-QUATRE PARTOUT AU DOIGT, DONC — et la règle de la nº 226 tient
+ * toujours : 24 est un multiple de 2, la dernière rangée reste pleine
+ * à chaque page et à chaque « Voir plus ». Ce qui change n'est pas la
+ * règle, c'est le NOMBRE DE RANGÉES : douze au lieu de six.
+ *
+ * ⚠️ LE WEB NE BOUGE PAS D'UNE CARTE. La borne ne joue qu'au palier
+ * des DEUX colonnes ; trois, quatre et cinq gardent `colonnes × 6` —
+ * 18, 24 et 30. Un plancher général aurait aussi fait passer les trois
+ * colonnes de 18 à 24, ce que le propriétaire n'a pas demandé.
+ * ⚠️ ET CE N'EST PAS UNE BASCULE DE LARGEUR (règle nº 60) : on lit le
+ * nombre de COLONNES, que le script d'avant peinture a posé dans le
+ * cookie en interrogeant `matchMedia` — la question même que se pose
+ * la feuille de style. Aucun pixel n'est comparé ici.
+ */
+export const CARTES_PAR_PAGE_AU_DOIGT = 24;
+
 /** La taille d'une page pour un nombre de colonnes donné. */
 export function taillePageDeColonnes(colonnes: number): number {
   const bornees = Math.min(
     Math.max(Math.floor(colonnes), COLONNES_AU_DOIGT),
     COLONNES_MAXIMUM
   );
+  if (bornees === COLONNES_AU_DOIGT) return CARTES_PAR_PAGE_AU_DOIGT;
   return bornees * CARTES_PAR_COLONNE;
 }
 
