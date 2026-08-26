@@ -25,6 +25,7 @@ import {
 } from "@/lib/modes-exercice";
 import type { LieuTrouve } from "@/lib/geocodage/types";
 import {
+  NATURE_PAR_DEFAUT,
   natureCherchee,
   natureConnue,
   type PhotoTatoueur,
@@ -1656,6 +1657,41 @@ export async function listerTatoueurs(
  * coupe. L'accueil et les recherches suivent la même règle, comme la
  * fonction de base (migration nº 62).
  */
+/**
+ * ██ §1-§2 (nº 619) — « EST-CE L'ACCUEIL NU ? » ██
+ * ==================================================================
+ * LES DEUX RÈGLES DE LA nº 619 (réalisations seules, tours de styles)
+ * ne valent QUE là, et il fallait donc une définition qui ne se
+ * discute pas : L'ACCUEIL NU, C'EST « AUCUN CRITÈRE DE RECHERCHE ».
+ * Pas de style, pas de catégorie, aucun lieu d'aucun niveau, aucun
+ * interrupteur éteint. Dès qu'une seule de ces choses est demandée,
+ * c'est une RECHERCHE, et elle rend ce qu'on lui a demandé, dans
+ * l'ordre de sa note — flashs compris.
+ *
+ * ⚠️ « VOIR PLUS » RESTE L'ACCUEIL, et c'est voulu : il ne change que
+ * la LIMITE (le décalage reste à zéro, voir la note de l'accueil).
+ * Aucun critère n'apparaît, la page suivante suit donc les mêmes deux
+ * règles que la première — les tours se prolongent au lieu de repartir
+ * de zéro.
+ * ⚠️ NI LA PAGINATION NI LE MÉLANGE NE SONT DES CRITÈRES : `limite`,
+ * `decalage`, `jourMelange` et `photosMax` ne disent rien de ce qu'on
+ * cherche. Ils ne sont donc pas regardés ici — sans quoi la deuxième
+ * page d'accueil cesserait d'être l'accueil.
+ */
+function estLAccueilNu(filtres: FiltresTatoueurs): boolean {
+  return (
+    !styleConnu(filtres.style) &&
+    !natureCherchee(filtres.nature) &&
+    !filtres.slugVille &&
+    !filtres.villeNom &&
+    !filtres.region &&
+    !filtres.codePays &&
+    filtres.latitude === undefined &&
+    filtres.longitude === undefined &&
+    filtresConnus(filtres.exclure).length === 0
+  );
+}
+
 function pageDeResultats(
   ordonnees: Tatoueur[],
   filtres: FiltresTatoueurs,
@@ -1697,13 +1733,31 @@ function pageDeResultats(
   const styleVoulu = styleConnu(filtres.style);
   const natureVoulue = natureCherchee(filtres.nature);
   const renduVoulu = renduCherche(filtres.exclure);
+  /*  ██ §1 (nº 619) — L'ACCUEIL NE MONTRE QUE DES RÉALISATIONS ██
+      ------------------------------------------------------------------
+      LE FILTRE EST POSÉ ICI, avec les trois autres critères de
+      carrousel, et il n'y a pas d'autre endroit qui convienne : c'est
+      le seul point du site où la liste est faite de CARROUSELS et pas
+      encore coupée. Les deux chemins de lecture (la base et le repli)
+      y passent tous les deux.
+      ⚠️ LE CATALOGUE N'EST PAS TOUCHÉ, c'est un affichage : les flashs
+      restent lus, comptés, classés — ils sont seulement écartés de
+      CETTE liste-ci. Le menu « Explorer » (`?nature=flash`), une
+      recherche, une page de style, un filtre allumé : dès qu'un
+      critère existe, `estLAccueilNu` rend faux et la ligne ci-dessous
+      ne s'applique plus.
+      ⚠️ ET LE COMPTEUR SUIT TOUT SEUL : le total est `classes.length`,
+      calculé APRÈS ce filtre. Il annonce donc ce qu'on peut vraiment
+      faire défiler. */
+  const accueilNu = estLAccueilNu(filtres);
   const carrousels = carrouselsDesFiches(ordonnees, {
     populariteParFiche: clics,
   }).filter(
     (carrousel) =>
       (!styleVoulu || carrousel.style === styleVoulu) &&
       (!natureVoulue || carrousel.nature === natureVoulue) &&
-      (!renduVoulu || carrousel.rendu === renduVoulu)
+      (!renduVoulu || carrousel.rendu === renduVoulu) &&
+      (!accueilNu || carrousel.nature === NATURE_PAR_DEFAUT)
   );
   const classes = classerCarrousels(carrousels, {
     popularite: true,
@@ -1723,6 +1777,17 @@ function pageDeResultats(
     //  fonction de base n'a jamais eu ce paramètre : elle étale à
     //  fenêtre constante — ce chemin de secours fait pareil désormais.
     parPage: CARTES_PAR_PAGE,
+    /*  ██ §2 (nº 619) — LES TOURS DE STYLES, SUR L'ACCUEIL NU SEUL ██
+        Un style ne revient qu'après que tous les autres sont passés.
+        LA NOTE (popularité ÷ âge) N'EST PAS REMPLACÉE : elle décide de
+        l'ordre des styles — celui de leur meilleure carte ouvre le
+        premier tour — et de l'ordre des cartes à l'intérieur de chaque
+        style. Les tours ne font que redistribuer ce qu'elle a produit
+        (voir `enToursDeStyles`).
+        ⚠️ SUR LA LISTE ENTIÈRE, AVANT LA COUPE, comme tout le reste :
+        la liste servie reste un PRÉFIXE de l'ordre stable, donc
+        « Voir plus » PROLONGE les tours au lieu d'en rouvrir un. */
+    toursDeStyles: accueilNu,
   });
   return {
     ...reste,

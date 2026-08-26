@@ -207,6 +207,12 @@ export type OptionsClassement = {
   /** Au plus deux carrousels d'un même artiste par page. Allumée
       partout : c'est la variété, elle vaut sur toutes les listes. */
   varieteDesArtistes?: boolean;
+  /** §2 (nº 619) — LES TOURS DE STYLES : un style ne revient qu'après
+      que tous les autres sont passés. ÉTEINTE PARTOUT SAUF SUR
+      L'ACCUEIL NU — une recherche montre ce qu'on lui a demandé, dans
+      l'ordre de sa note, et n'a rien à alterner. Voir
+      `enToursDeStyles`. */
+  toursDeStyles?: boolean;
   /** La taille d'une page — l'étalement s'y rapporte. */
   parPage: number;
 };
@@ -218,8 +224,68 @@ export type Classable = {
   /** Une clé unique et STABLE : elle départage les égalités, pour que
       l'ordre ne dépende jamais du chemin qui a construit la liste. */
   cle: string;
+  /** §2 (nº 619) — LE STYLE, et il n'est lu QUE par les tours de
+      styles ci-dessous. Facultatif : une liste qui n'active pas les
+      tours n'a rien à fournir, et `Carrousel` le porte déjà. */
+  style?: string;
   signaux: SignauxClassement;
 };
+
+/**
+ * ██ §2 (nº 619) — LES TOURS DE STYLES ██
+ * ==================================================================
+ * LA RÈGLE DU PROPRIÉTAIRE, en une phrase : un style ne réapparaît
+ * que lorsque TOUS LES AUTRES ont été montrés une fois.
+ *
+ * COMMENT, ET C'EST TOUT : on range la liste DÉJÀ CLASSÉE en une file
+ * par style — chaque file garde l'ordre du classement — puis on
+ * distribue en prenant UNE carte de chaque file, tour après tour.
+ *
+ * CE QUE CELA PRÉSERVE, et c'est pourquoi ce n'est pas un second
+ * classement :
+ *  · L'ORDRE DES STYLES est celui de leur MEILLEURE carte. Les files
+ *    naissent dans l'ordre de la liste classée, et une table de ce
+ *    langage se parcourt dans l'ordre où on l'a remplie : le style de
+ *    la carte la mieux notée ouvre donc chaque tour ;
+ *  · L'ORDRE À L'INTÉRIEUR D'UN STYLE est intact — c'est le score qui
+ *    décide laquelle de ses cartes passe au premier tour.
+ * La note (popularité ÷ âge) décide donc de TOUT ; ces tours ne font
+ * que redistribuer ce qu'elle a produit.
+ *
+ * ⚠️ QUAND UN STYLE RESTE SEUL, SES CARTES S'ENCHAÎNENT, et c'est
+ * inévitable : il n'y a plus personne pour s'intercaler. La règle est
+ * tenue tant qu'un autre style a encore quelque chose à montrer.
+ * ⚠️ UNE CARTE SANS STYLE RENSEIGNÉ (une fiche d'avant la migration
+ * nº 31 sans style déclaré) forme sa propre file, la file « rien ».
+ * Elle s'espace comme les autres au lieu d'être collée à n'importe
+ * quel style — la seule réponse qui ne mélange pas deux choses.
+ * ⚠️ DÉTERMINISTE, comme l'étalement : aucune dépendance à l'heure,
+ * au nombre de cartes demandées, ni à la page regardée. Deux appels
+ * du même jour rendent le même ordre.
+ */
+export function enToursDeStyles<T extends Classable>(classes: T[]): T[] {
+  const parStyle = new Map<string, T[]>();
+  for (const element of classes) {
+    const style = element.style ?? "";
+    const file = parStyle.get(style);
+    if (file) file.push(element);
+    else parStyle.set(style, [element]);
+  }
+  //  Un seul style : il n'y a rien à alterner, on rend la liste telle
+  //  quelle plutôt que de la recopier case par case.
+  if (parStyle.size <= 1) return classes;
+  let files = [...parStyle.values()];
+  const tours: T[] = [];
+  while (files.length > 0) {
+    for (const file of files) {
+      //  Les files vides sont retirées à la fin de chaque tour : celle
+      //  qu'on visite ici a donc forcément une carte.
+      tours.push(file.shift() as T);
+    }
+    files = files.filter((file) => file.length > 0);
+  }
+  return tours;
+}
 
 /**
  * L'ÉTALEMENT PAR PAGE — « au plus deux par artiste » (§3.2)
@@ -302,6 +368,20 @@ export function classerCarrousels<T extends Classable>(
         a.element.cle.localeCompare(b.element.cle)
     )
     .map(({ element }) => element);
-  if (options.varieteDesArtistes === false) return classes;
-  return etalerParPage(classes, Math.max(options.parPage, 1));
+  /*  §2 (nº 619) — LES TOURS PASSENT ENTRE LE SCORE ET L'ÉTALEMENT, et
+      cet ordre-là est le bon :
+       · APRÈS le score, parce qu'ils ont besoin d'une liste classée —
+         c'est elle qui donne son rang à chaque style et à chaque carte
+         dans son style ;
+       · AVANT l'étalement, parce que l'étalement AFFECTE LES CARTES À
+         DES PAGES : le faire jouer en premier, puis tout redistribuer,
+         détruirait le « deux par artiste et par page » de la nº 279.
+      ⚠️ ET L'ÉTALEMENT GARDE LE DERNIER MOT, il faut le dire : une
+      carte qu'il repousse à la page suivante quitte son tour. Cela ne
+      peut arriver qu'à un artiste qui a plus de deux galeries dans la
+      même page — et ses galeries sont justement de styles différents,
+      donc les tours les avaient déjà écartées. */
+  const ordonnes = options.toursDeStyles ? enToursDeStyles(classes) : classes;
+  if (options.varieteDesArtistes === false) return ordonnes;
+  return etalerParPage(ordonnes, Math.max(options.parPage, 1));
 }
