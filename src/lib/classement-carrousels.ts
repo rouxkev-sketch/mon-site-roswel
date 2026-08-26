@@ -22,26 +22,41 @@
  * restent en tête pour toujours, rien de neuf ne remonte, et un
  * artiste qui publie ne voit aucun effet — alors il cesse de publier.
  *
- * LA FORMULE, celle des fils de contenu (Hacker News) :
+ * LA FORMULE, celle des fils de contenu (Hacker News), AVEC SA FAVEUR
+ * DE DÉPART (nº 636) :
  *
- *        score = (1 + popularité) / (âge_en_jours + 2) ^ 1,2
+ *    score = (1 + popularité) / (âge_en_jours + 2) ^ 1,1
+ *            × faveur_de_nouveauté(âge)
+ *            × facteur_de_proximité(distance)
  *
  *  · `+ 1` au numérateur : un carrousel tout neuf sans aucun cœur a
  *    quand même un score, sinon il ne remonterait jamais ;
  *  · `+ 2` au dénominateur : les premières heures ne valent pas une
  *    division par zéro — un carrousel du jour ne monte pas au ciel ;
- *  · l'exposant 1,2 : assez fort pour que six mois pèsent, assez doux
- *    pour qu'un très bon carrousel garde un reste d'avantage. À 1,5
- *    le passé était écrasé ; à 1,0 il ne bougeait pas assez.
+ *  · l'exposant, RAMENÉ DE 1,2 À 1,1 À LA nº 636 : voir sa note sur
+ *    `VIEILLISSEMENT`, plus bas.
+ *
+ * ██ L'ORDRE DES TROIS TERMES, ET POURQUOI IL EST CELUI-LÀ (nº 636) ██
+ * La FRACTION vient d'abord : c'est la VALEUR PROPRE du carrousel — ce
+ * qu'il vaut par ce qu'il a récolté et par le temps qui a passé. Les
+ * deux termes suivants sont des FAVEURS, et elles MULTIPLIENT au lieu
+ * de s'ajouter : une faveur met en valeur, elle ne fabrique pas de
+ * mérite. Un carrousel deux fois meilleur reste deux fois meilleur,
+ * qu'il soit neuf, proche, les deux ou ni l'un ni l'autre — ce qu'une
+ * addition aurait détruit (elle aurait donné le même bonus à tout le
+ * monde, donc tout écrasé vers le haut de la liste).
+ * ⚠️ ENTRE LES DEUX FAVEURS, L'ORDRE N'A AUCUNE IMPORTANCE : une
+ * multiplication est commutative. Ce qui compte, c'est qu'elles
+ * viennent toutes les deux APRÈS la fraction.
  *
  * EXEMPLE CHIFFRÉ, celui du propriétaire — « un carrousel de trois
  * jours avec dix cœurs doit pouvoir passer devant un carrousel de six
  * mois avec cinquante » (un cœur vaut 3 points) :
- *   · NEUF  : 10 cœurs = 30 points, 3 jours   → 31 / 5^1,2   ≈ 4,49
- *   · VIEUX : 50 cœurs = 150 points, 180 jours → 151 / 182^1,2 ≈ 0,29
- *   Le neuf passe devant, et de loin (≈ 15 fois). Il faudrait au vieux
- *   plus de 2 300 points — soit près de 800 cœurs — pour reprendre la
- *   tête. C'est exactement l'effet voulu.
+ *   · NEUF  : 10 cœurs = 30 points, 3 jours   → 31 / 5^1,1 × 1,29 ≈ 6,79
+ *   · VIEUX : 50 cœurs = 150 points, 180 jours → 151 / 182^1,1  ≈ 0,49
+ *   Le neuf passe devant, et de loin. C'est toujours l'effet voulu.
+ *   (Les nombres de ce fichier sont ceux que la fonction rend, pas des
+ *   ordres de grandeur : ils ont été relevés en l'exécutant.)
  *
  * ⚠️⚠️ LE PIÈGE DES MIGRATIONS Nº 61 ET Nº 63, À NE PAS RÉVEILLER.
  * Un score qui dépend du temps se recalcule à chaque requête : entre
@@ -94,11 +109,30 @@
  * ==================================================================
  * 3. LA PROXIMITÉ — un coup de pouce, jamais un filtre
  * ==================================================================
- * La dernière localité cherchée rapproche ce qui est près : un
- * multiplicateur borné entre 1 (loin, ou lieu inconnu) et 1,6 (sur
- * place). ON NE CACHE RIEN : un carrousel à 800 km reste dans la
- * liste, il passe simplement après. Sans localité, le facteur vaut 1
- * et le critère ne joue pas du tout.
+ * La localité cherchée rapproche ce qui est près : un multiplicateur
+ * borné entre 1 (loin, ou lieu inconnu) et 1,6 (sur place). ON NE CACHE
+ * RIEN : un carrousel à 800 km resterait dans la liste, il passerait
+ * simplement après. Sans localité, le facteur vaut 1 et le critère ne
+ * joue pas du tout.
+ *
+ * ⚠️⚠️ ET IL NE JOUE NULLE PART AUJOURD'HUI — LE DIRE PLUTÔT QUE DE
+ * LAISSER CROIRE (relevé nº 558, prouvé à la nº 636). Cette faveur est
+ * écrite, bornée, appelée à chaque score… et elle vaut 1 sur TOUTES les
+ * cartes du site, parce que PERSONNE NE FOURNIT JAMAIS DE DISTANCE :
+ *  · `carrouselsDesFiches` (lib/carrousels) sait lire une
+ *    `distanceParFiche`, mais aucun appelant ne la lui passe ;
+ *  · `carrouselsDeLaFiche` sait lire un `contexte.distanceKm` — même
+ *    chose, personne ne l'écrit ;
+ *  · la recherche CALCULE pourtant les distances (lib/tatoueurs,
+ *    `effective` — la distance au lieu le plus proche, rayon de
+ *    déplacement défalqué), mais elle ne s'en sert QUE pour trier les
+ *    fiches ; ce nombre ne survit pas à l'éclatement en carrousels.
+ * ALLUMER `proximite: true` NE CHANGERAIT DONC RIEN DU TOUT : le
+ * facteur resterait à 1. Ce qu'il faudrait, c'est porter la distance
+ * calculée jusqu'aux carrousels — un tuyau à poser dans trois fichiers,
+ * et le seul endroit du site où la règle « distance effective » est
+ * écrite devrait alors être extraite pour ne pas l'écrire deux fois.
+ * C'est une passe à part, et elle n'est PAS commencée ici.
  *
  * ==================================================================
  * 4. LA PERSONNALISATION — LA PLACE EST PRÊTE, ET VIDE (nº 279-§4)
@@ -152,8 +186,97 @@ export type SignauxClassement = {
   photos: number;
 };
 
-/** L'exposant du vieillissement — voir la note de tête. */
-const VIEILLISSEMENT = 1.2;
+/**
+ * ██ §2 (nº 636) — L'EXPOSANT DU VIEILLISSEMENT : 1,2 → 1,1 ██
+ * ==================================================================
+ * LE CONSTAT DU PROPRIÉTAIRE : un tatoueur ne met pas son portfolio à
+ * jour toutes les semaines — son rythme est TRIMESTRIEL. Le classement
+ * récompensait la fréquence de publication plus que la qualité : une
+ * galerie du jour, même vide, battait une galerie de six mois avec
+ * cinquante favoris (0,435 contre 0,293 — les nombres d'avant).
+ *
+ * POURQUOI 1,1 ET PAS AUTRE CHOSE. C'est LE MÉDIAN DE L'ÉVENTAIL QUE
+ * CE FICHIER A LUI-MÊME EXPLORÉ : sa note d'origine dit « à 1,5 le
+ * passé était écrasé ; à 1,0 il ne bougeait pas assez », et 1,2 avait
+ * été retenu. Le propriétaire ne veut ni l'actuel (1,2) ni le plus
+ * doux qu'on ait jugé tenable (1,0) : entre les deux, il n'y a qu'un
+ * cran, et c'est celui-ci.
+ *
+ * CE QUE CELA DONNE, LA FAVEUR DE DÉPART MISE À PART (un cœur = 3
+ * points ; « vide » = aucun favori) :
+ *
+ *   âge      vide           10 favoris      50 favoris
+ *   ------------------------------------------------------
+ *   7 j      0,089          2,77            —
+ *   30 j     0,022          0,685           —
+ *   90 j     0,0069         0,215           1,045
+ *   180 j    0,0033         0,101           0,493
+ *
+ * LE CAS QUE LE PROPRIÉTAIRE A NOMMÉ, RÉGLÉ : six mois avec cinquante
+ * favoris passe de 0,293 à 0,493, quand la galerie neuve et vide, elle,
+ * retombe à 0,089 dès sa semaine de grâce écoulée — la qualité est
+ * cinq fois et demie devant, là où elle perdait.
+ * ET LE RYTHME TRIMESTRIEL TIENT : trois mois avec dix favoris (0,215)
+ * dépasse une galerie d'une semaine sans favori (0,089) de 2,4 fois,
+ * contre 1,9 avant. Elle reste dans la course, exactement comme
+ * demandé.
+ *
+ * ⚠️ UN SEUL CHIFFRE, ET IL EST ICI : le revoir, c'est changer cette
+ * ligne. Aucune autre valeur du fichier n'en dépend.
+ */
+const VIEILLISSEMENT = 1.1;
+
+/**
+ * ██ §3 (nº 636) — LA PÉRIODE DE GRÂCE : SEPT JOURS, PUIS LA VÉRITÉ ██
+ * ==================================================================
+ * CE QU'ELLE RÉSOUT : une galerie neuve n'a encore RIEN récolté — pas
+ * un cœur, pas une consultation. Sans coup de pouce, elle naît au fond
+ * de la liste, personne ne la voit, donc elle ne récolte rien : le
+ * classement se referme sur lui-même. C'est le procédé de Reddit, de
+ * Product Hunt et de Behance — une chance au départ, puis la vraie
+ * valeur.
+ *
+ * ██ COMMENT, ET C'EST TOUT LE SOIN DE CE §3 : ELLE S'ÉTEINT EN
+ * DESCENDANT, ELLE NE TOMBE PAS ██
+ * Le propriétaire l'a demandé en toutes lettres : pas de chute brutale
+ * au huitième jour. Un bonus qui vaudrait « +50 % pendant sept jours,
+ * puis rien » ferait dégringoler la galerie d'un tiers de sa place du
+ * jour au lendemain, et cela se verrait.
+ * LA FAVEUR DÉCROÎT DONC LINÉAIREMENT, du premier jour au septième, et
+ * elle VAUT DÉJÀ ZÉRO quand elle expire :
+ *
+ *   jour 0 : ×1,50     jour 3 : ×1,29     jour 6 : ×1,07
+ *   jour 1 : ×1,43     jour 4 : ×1,21     jour 7 : ×1,00
+ *   jour 2 : ×1,36     jour 5 : ×1,14     au-delà : ×1,00
+ *
+ * Chaque jour retire le même septième de la faveur — environ 5 % de la
+ * note. Le passage du septième au huitième jour ne retire RIEN du tout :
+ * il n'y a plus rien à retirer. Il n'existe aucun décrochage.
+ *
+ * ⚠️ CE QUE LA GRÂCE FAIT, ET QU'IL FAUT ASSUMER : pendant ces sept
+ * jours, une galerie neuve et vide PEUT coiffer une bonne galerie
+ * ancienne (0,70 contre 0,49 pour six mois et cinquante favoris).
+ * C'EST EXACTEMENT CE QU'UNE PÉRIODE DE GRÂCE VEUT DIRE. Au septième
+ * jour elle retombe à 0,089, et l'ancienne est cinq fois et demie
+ * devant : la faveur a servi à la faire VOIR, pas à la faire gagner.
+ *
+ * ⚠️ ELLE NE PEUT PAS FAIRE BOUGER L'ORDRE EN COURS DE JOURNÉE — le
+ * piège des migrations nº 61 et nº 63, tenu comme le reste : elle lit
+ * `ageJours`, le même compte de JOURS ENTIERS ancré sur `jourCourant()`
+ * que la fraction. Toutes les requêtes d'une même journée voient la
+ * même faveur.
+ * ⚠️ DEUX CHIFFRES, ET ILS SE LISENT SEULS : la durée, et la hauteur.
+ * La hauteur (+50 %) est du même ordre que la seule autre faveur du
+ * site, la proximité (+60 % au plus) — pas un nombre de plus dans une
+ * échelle nouvelle.
+ */
+const JOURS_DE_GRACE = 7;
+const COUP_DE_POUCE_NEUF = 0.5;
+
+export function faveurDeNouveaute(ageJours: number): number {
+  const reste = 1 - Math.max(ageJours, 0) / JOURS_DE_GRACE;
+  return 1 + COUP_DE_POUCE_NEUF * Math.max(reste, 0);
+}
 
 /** LE COUP DE POUCE DE PROXIMITÉ, borné : ×1,6 sur place, ×1,3 à
     25 km, ×1,12 à 100 km, ×1 sans localité. Jamais un filtre. */
@@ -187,11 +310,17 @@ export function bonusPersonnel(signaux: {
   );
 }
 
-/** LE SCORE D'UN CARROUSEL — la formule de la note de tête. */
+/** LE SCORE D'UN CARROUSEL — la formule de la note de tête.
+    §3 (nº 636) — LA VALEUR PROPRE D'ABORD, LES DEUX FAVEURS ENSUITE :
+    voir « L'ORDRE DES TROIS TERMES » en tête de fichier. */
 export function scoreDuCarrousel(signaux: SignauxClassement): number {
   const popularite = Math.max(signaux.popularite, 0) + signaux.personnalisation;
   const frais = (1 + popularite) / Math.pow(signaux.ageJours + 2, VIEILLISSEMENT);
-  return frais * facteurDeProximite(signaux.distanceKm);
+  return (
+    frais *
+    faveurDeNouveaute(signaux.ageJours) *
+    facteurDeProximite(signaux.distanceKm)
+  );
 }
 
 /** CE QUE CHAQUE PAGE ACTIVE. Un critère éteint ne joue pas du tout —

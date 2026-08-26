@@ -60,6 +60,14 @@ import { lirePopularite } from "@/lib/tatoueurs";
  *    (popularité ÷ âge, la formule unique de `scoreDuCarrousel`,
  *    nº 283), puis la clé de la photo. Personne à zéro cœur n'est
  *    donc laissé sans ordre : voir la note du relevé plus bas.
+ *    ⚠️ CETTE NOTE A CHANGÉ À LA nº 636 (vieillissement adouci, faveur
+ *    de nouveauté de sept jours), ET LA CONSÉQUENCE EST DITE : entre
+ *    deux galeries À ÉGALITÉ DE CŒURS, une galerie de moins d'une
+ *    semaine peut désormais gagner la place de la photo là où elle la
+ *    perdait. C'est cohérent — une carte de style qui montre une
+ *    image fraîche n'est pas un défaut — et c'est le SEUL effet de la
+ *    nº 636 ici : L'ORDRE DES STYLES, lui, ne dépend pas de cette note
+ *    (portfolios, puis favoris du style, puis alphabet — nº 634).
  *
  * ⚠️ QUATRE LECTURES, ET AUCUNE MIGRATION :
  *   1. `tatoueurs` — les fiches en ligne (`publie = true`) ;
