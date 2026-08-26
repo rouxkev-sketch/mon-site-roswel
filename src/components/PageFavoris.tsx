@@ -634,8 +634,14 @@ export function PageFavoris({
         /* L'ÉTAT VIDE — il dit quoi faire, en une ligne, et ouvre la
            porte. Pas de dessin, pas de paragraphe. */
         <div className="mt-8 rounded-2xl bg-sombre-carte px-5 py-8 text-center">
+          {/*  §3 (nº 642) — LE MOT SUIT LE DESSIN : le geste passe par
+               LE FANION depuis la nº 364 (`BoutonCoeurPhoto` monte
+               `IconeFanion`, et son infobulle dit « Enregistrer ») ;
+               cette phrase était restée au cœur. Elle est la SEULE du
+               produit à l'avoir gardé — l'inventaire est dans le
+               compte rendu de la passe. */}
           <p className="text-[14.5px] leading-relaxed text-sombre-texte-doux">
-            Touche le cœur d&apos;une photo pour la retrouver ici.
+            Touche le fanion d&apos;une photo pour la retrouver ici.
           </p>
           {/*  §4 (nº 475) — IL VA EN AVANT, ET IL LE DÉCLARE : partir
                explorer depuis « Ma sélection » vide n'est pas un

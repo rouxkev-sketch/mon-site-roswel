@@ -208,12 +208,31 @@ export function MenuEspace({
    * s'actionne, et aucune marque de navigation n'est armée à tort.
    * ⚠️ CE QUI EST DEDANS N'EST PAS « À CÔTÉ » : le champ lui-même (qui
    * se referme par son propre geste) et les entrées de la liste (qui
-   * choisissent un portfolio) sont dans le conteneur, et passent.
-   * ⚠️ AU DOIGT SEULEMENT : le web n'a pas cette fermeture aujourd'hui,
-   * il ne l'a pas davantage demain.
+   * choisissent un portfolio) sont dans le conteneur, et passent — la
+   * liste est `absolute` DEDANS, jamais dans un portail.
+   *
+   * ██ §2 (nº 642) — LE WEB L'A MAINTENANT, ET IL NE L'AVAIT JAMAIS EU ██
+   * ------------------------------------------------------------------
+   * LA CAUSE DU RELEVÉ, NOMMÉE, ET CE N'EST PAS UN ACQUIS DÉFAIT :
+   * cette garde s'ouvrait sur `if (!auDoigt …) return;` depuis le jour
+   * de son écriture (nº 532-§7a), et la note qui la suivait le disait
+   * en toutes lettres — « au doigt seulement ». La nº 531 avait posé la
+   * fermeture au clic à côté pour LA PAGE DU DOIGT ; la fenêtre du web
+   * n'a jamais rien reçu. D'où les DEUX symptômes ensemble, qui n'en
+   * font qu'un : personne n'écoutait, donc le déroulant restait ouvert
+   * ET le clic suivait son cours normal jusqu'à ce qu'il touchait —
+   * « Déconnexion » comprise.
+   * CE QUI CHANGE : la borne d'appareil tombe. Le mécanisme, lui, n'est
+   * pas retouché d'une ligne — même écoute en capture sur `window`,
+   * même consommation, même exception pour le conteneur.
+   * ⚠️ UN CLIC HORS DE LA FENÊTRE : le `mousedown` qui referme « Mon
+   * compte » (l'écouteur plus bas) passe AVANT ce clic-ci et n'est pas
+   * touché ; le clic, lui, est avalé — la fenêtre se ferme, et rien ne
+   * s'actionne derrière. C'est la règle demandée, « ferme, et rien
+   * d'autre », appliquée au dehors comme au dedans.
    */
   useEffect(() => {
-    if (!auDoigt || !selecteurOuvert) return;
+    if (!selecteurOuvert) return;
     const avaler = (evenement: MouseEvent) => {
       const cible = evenement.target;
       if (cible instanceof Node && conteneurSelecteur.current?.contains(cible)) {
@@ -225,7 +244,7 @@ export function MenuEspace({
     };
     window.addEventListener("click", avaler, true);
     return () => window.removeEventListener("click", avaler, true);
-  }, [auDoigt, selecteurOuvert]);
+  }, [selecteurOuvert]);
   /**
    * §1 (nº 332) — ET SES LIENS CONSOMMENT CETTE ÉTAPE, ils ne
    * l'empilent pas.
@@ -479,9 +498,30 @@ export function MenuEspace({
       COMPTÉE (lib/verrou-defilement) : la dernière surface fermée
       libère le corps, jamais la première — et le nettoyage couvre
       tous les chemins de fermeture, navigation comprise. */
+  /*  ██ §1 (nº 642) — ET LE WEB LE POSE AUSSI, DÉSORMAIS ██
+      ------------------------------------------------------------------
+      LA CAUSE DU RELEVÉ, NOMMÉE : cet effet s'arrêtait net sur
+      `dataset.appareil !== "mobile"`. Le verrou n'existait donc QU'AU
+      DOIGT ; au web la page défilait derrière la fenêtre, et rien ne
+      l'en empêchait — ce n'était pas un verrou défait, c'en était
+      l'absence.
+      POURQUOI IL EN FAUT UN ICI ALORS QUE LA RÈGLE DE LA MAISON DIT
+      QU'UN MENU ANCRÉ NE VERROUILLE PAS (nº 469) : c'est la demande du
+      propriétaire, et c'est le même choix qu'à la nº 573 pour le menu
+      des styles — la règle vaut par défaut, elle cède quand il tranche.
+      ⚠️ AUCUN SAUT, NI À LA POSE NI AU RETRAIT : `globals.css` retire
+      toutes les barres de défilement (`scrollbar-width: none` et le
+      pseudo-élément WebKit à zéro) ; la barre du document mesure donc
+      zéro pixel, et `overflow: hidden` ne reprend aucune largeur. C'est
+      le constat mesuré des nº 560 et nº 573, pas une promesse neuve.
+      ⚠️ UNE AUTRE SURFACE OUVERTE EN MÊME TEMPS NE SE DÉBLOQUE PAS À
+      TORT : le verrou est COMPTÉ (nº 469) — « Notifications » et
+      « Langue » posent le leur, le corps ne redéfile qu'au dernier
+      retrait. Et fermer puis rouvrir ne laisse rien traîner : le
+      nettoyage de cet effet tourne sur tous les chemins de fermeture,
+      navigation comprise. */
   useEffect(() => {
     if (!ouvert) return;
-    if (document.documentElement.dataset.appareil !== "mobile") return;
     poserLeVerrouDeDefilement();
     return retirerLeVerrouDeDefilement;
   }, [ouvert]);

@@ -194,9 +194,26 @@ export function MenusSelection({
              couleur sur la ligne — mais elle ne tourne plus, et la
              transition qui l'accompagnait est partie avec la rotation
              (une transition sans rien à animer ne dit rien). */}
-        <span aria-hidden="true" className="shrink-0 text-sombre-texte-doux">
-          <IconeChevronBas taille={16} />
-        </span>
+        {/*  ██ §3 (nº 642) — ET IL SE TAIT QUAND IL N'OUVRE RIEN ██
+             CE N'EST PAS UNE RÈGLE NEUVE, c'est CELLE DE LA nº 576/577
+             appliquée au signe qui l'annonce : « sans aucune entrée,
+             pas de champ — un champ qui n'ouvre rien ment » (la note
+             du filtre, quelques lignes plus bas). Le menu se taisait
+             déjà (`filtre()` rend un `<span />` vide) ; le chevron,
+             lui, continuait de promettre un déroulé.
+             POURQUOI ÇA SE VOIT MAINTENANT, ET PAS AVANT : jusqu'à
+             cette passe la rangée n'existait pas du tout quand les
+             deux listes étaient vides (le raccourci de `BarreSelection`,
+             §3) — personne ne pouvait voir ce chevron-là. Le rendre
+             visible l'a découvert.
+             ⚠️ RIEN NE CHANGE DÈS QU'IL Y A DE QUOI FILTRER : une seule
+             entrée suffit à le ramener, à sa place, sans une classe de
+             différence. */}
+        {entrees.length > 0 && (
+          <span aria-hidden="true" className="shrink-0 text-sombre-texte-doux">
+            <IconeChevronBas taille={16} />
+          </span>
+        )}
       </span>
     );
   };

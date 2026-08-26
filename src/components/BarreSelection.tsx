@@ -34,11 +34,31 @@ export function BarreSelection({
   entreesFavoris: EntreeFiltre[];
   entreesSuivis: EntreeFiltre[];
 }) {
-  //  Aucune entrée nulle part : la rangée n'a rien à porter, la barre
-  //  redevient celle de n'importe quelle page (§3).
-  const vide = entreesFavoris.length === 0 && entreesSuivis.length === 0;
-  if (vide) return <EnTeteTatouage />;
-
+  /**
+   * ██ §3 (nº 642) — LA RANGÉE EXISTE MÊME QUAND TOUT EST VIDE ██
+   * ------------------------------------------------------------------
+   * CE QU'IL Y AVAIT ICI, ET LA CAUSE DU RELEVÉ : « aucune entrée nulle
+   * part » rendait `<EnTeteTatouage />` NU. Or une barre sans rangée
+   * n'est pas une barre vide — elle monte LE MOTEUR DE RECHERCHE (voir
+   * la branche `rangee ? … : <MoteurTatouage …>` d'EnTeteTatouage).
+   * C'est exactement ce que le propriétaire voit au web ; au doigt le
+   * moteur est caché sous 1024 px, d'où « il n'y a rien ».
+   * POURQUOI CE RACCOURCI EXISTAIT : à la nº 245, la rangée ne portait
+   * QUE les deux menus de filtre — sans entrée, elle n'avait vraiment
+   * rien à porter. LE VA-ET-VIENT « Favoris | Portfolios » L'A REJOINTE
+   * DEPUIS (nº 460 au doigt, nº 461 au web), et lui, il a toujours
+   * quelque chose à dire : il faut pouvoir passer sur Portfolios même
+   * sans un seul favori. Le raccourci n'a pas été défait par une
+   * passe — il a été dépassé par ce qu'on a mis dans la rangée.
+   * ⚠️ LES MENUS DE FILTRE NE REVIENNENT PAS POUR AUTANT (acquis
+   * nº 576/577) : `MenusSelection` rend un champ VIDE quand sa liste
+   * d'entrées l'est (`if (entrees.length === 0) return <span />;`) —
+   * la règle est chez lui, elle n'est pas écrite deux fois.
+   * ⚠️ ET LA LOUPE RETROUVE SA PAGE (acquis nº 247-§6) : une rangée
+   * libre fait monter l'hôte invisible du moteur ; sans elle, la page
+   * de recherche du doigt n'avait personne pour l'ouvrir depuis une
+   * sélection vide.
+   */
   return (
     <EnTeteTatouage
       //  §1 (nº 253) — LA RANGÉE EXISTE AUX DEUX LARGEURS : le
