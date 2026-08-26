@@ -36,6 +36,7 @@ import { IconeCroix } from "@/components/Icones";
 export function EnTetePleinEcran({
   icone,
   titre,
+  tete,
   surFermer,
   ariaLabelFermer = "Fermer",
   actions,
@@ -46,19 +47,29 @@ export function EnTetePleinEcran({
       ⚠️ FACULTATIVE DEPUIS LA nº 640, comme le titre : voir sa note. */
   icone?: React.ReactNode;
   /**
-   * ██ §1 (nº 640) — UN EN-TÊTE PEUT N'AVOIR QUE SA CROIX ██
+   * ██ §1 (nº 640, refait nº 641) — CE QUI TIENT LA GAUCHE DE LA BARRE ██
    * ------------------------------------------------------------------
-   * « Mon compte » n'a plus de titre du tout : sa tête — la photo, le
-   * nom et l'état — vit désormais DANS son contenu, pour être la même
-   * au doigt et au web. Il ne reste ici que le geste de fermeture.
-   * ⚠️ L'ABSENCE DE TITRE EST LE SIGNAL, et c'est délibéré : il n'y a
-   * pas de drapeau de plus à tenir d'accord avec lui. Un porteur qui
-   * donne un titre a le gabarit de la nº 465 ; celui qui n'en donne
-   * pas n'a que sa croix, à sa place habituelle.
-   * ⚠️ CE DRAPEAU REMPLACE `enTeteCentre` (nº 530), retiré à la nº 640
-   * avec toute sa branche : « Mon compte » était son unique appelant.
+   * QUATRE ÉCRANS donnent un `titre` : ils ont le gabarit de la nº 465,
+   * inchangé au caractère — le mot à 20 px gras, son icône devant.
+   * « MON COMPTE » NE DONNE PAS DE TITRE : il donne une `tete` — la
+   * photo, le nom et l'état, l'écriture unique de la nº 640. Elle avait
+   * été posée dans le CONTENU ; le propriétaire la veut DANS LA BARRE,
+   * sur la ligne de la croix, comme avant la nº 640 (nº 641-§4).
+   * ⚠️ CE N'EST PAS UN DRAPEAU DE PLUS : ce qu'un porteur donne dit
+   * tout seul ce qu'il veut, et les deux canaux s'excluent par nature —
+   * on ne peut pas tenir un titre et une tête d'accord, il n'y en a
+   * qu'un des deux.
+   * ⚠️ LA RANGÉE EST UNIQUE, et c'est ce qui remplace les deux branches
+   * de la nº 640 : les gestes portent `ml-auto`, donc la croix se colle
+   * à droite même si la gauche est vide. Avec deux enfants, `ml-auto`
+   * ne change RIEN à ce que `justify-between` faisait déjà — les quatre
+   * écrans à titre ne bougent pas d'un pixel.
    */
   titre?: string;
+  /** La tête riche de « Mon compte » (nº 641) — voir la note du titre.
+      Elle occupe toute la largeur laissée par les gestes, et peut donc
+      tronquer son nom (`min-w-0`). */
+  tete?: React.ReactNode;
   /** La croix : on referme sans rien appliquer. */
   surFermer: () => void;
   ariaLabelFermer?: string;
@@ -74,7 +85,7 @@ export function EnTetePleinEcran({
       cette boîte (débord visible) : sa position est celle d'avant
       l'extraction, au pixel. */
   const gestes = (
-    <div className="flex shrink-0 items-center">
+    <div className="ml-auto flex shrink-0 items-center">
       {actions}
       <button
         type="button"
@@ -94,22 +105,21 @@ export function EnTetePleinEcran({
       className="sticky top-0 z-10 bg-sombre-fond px-4 pb-1
                  pt-[max(24px,env(safe-area-inset-top))]"
     >
-      {titre ? (
-        <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4">
+        {tete ? (
+          /*  §4 (nº 641) — LA TÊTE PREND LA PLACE DU TITRE, PAS UNE
+              PLACE DE PLUS : même rangée, même écart aux gestes. Le
+              `min-w-0` est ce qui autorise le nom à se tronquer au
+              lieu de pousser la croix hors de la barre. */
+          <div className="min-w-0 flex-1">{tete}</div>
+        ) : titre ? (
           <h1 className="flex items-center gap-2.5 text-[20px] font-bold text-white">
             {icone}
             {titre}
           </h1>
-          {gestes}
-        </div>
-      ) : (
-        /*  §1 (nº 640) — SANS TITRE : la croix seule, à sa place. C'est
-            EXACTEMENT la rangée que la tête centrée de la nº 530 posait
-            au-dessus de son cœur — même boîte, même débord, même
-            ancrage à droite. Rien n'a été inventé pour ce cas : on a
-            gardé la moitié qui restait vraie. */
-        <div className="flex items-center justify-end">{gestes}</div>
-      )}
+        ) : null}
+        {gestes}
+      </div>
       {children}
     </div>
   );
@@ -132,6 +142,7 @@ export function EnTetePleinEcran({
 export function PagePleinEcranMobile({
   titre,
   icone,
+  tete,
   ariaLabel,
   surFermer,
   ariaLabelFermer,
@@ -140,10 +151,13 @@ export function PagePleinEcranMobile({
   classeCadre = "z-[70]",
   children,
 }: {
-  /** §1 (nº 640) — FACULTATIFS TOUS LES DEUX : sans titre, l'en-tête
-      n'est plus que la croix. Voir la note d'`EnTetePleinEcran`. */
+  /** §1 (nº 640) — FACULTATIFS TOUS LES DEUX : un porteur donne un
+      titre OU une tête (nº 641). Voir la note d'`EnTetePleinEcran`. */
   titre?: string;
   icone?: React.ReactNode;
+  /** §4 (nº 641) — LA TÊTE RICHE, À LA PLACE DU TITRE : simple
+      passe-plat vers l'en-tête, comme `titre` et `icone`. */
+  tete?: React.ReactNode;
   ariaLabel: string;
   surFermer: () => void;
   ariaLabelFermer?: string;
@@ -272,6 +286,7 @@ export function PagePleinEcranMobile({
       <EnTetePleinEcran
         icone={icone}
         titre={titre}
+        tete={tete}
         surFermer={surFermer}
         ariaLabelFermer={ariaLabelFermer}
         actions={actions}

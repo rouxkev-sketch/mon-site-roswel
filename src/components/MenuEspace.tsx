@@ -1026,6 +1026,20 @@ export function MenuEspace({
     //  valeur qui était écrite en dur dans le corps commun. Elle ne
     //  change pas, elle change seulement d'endroit.
     airCote: "px-4",
+    /*  ██ §4 (nº 641) — LA PHOTO DE LA TÊTE, 64 → 80 px AU DOIGT ██
+        Le propriétaire la voit trop petite depuis qu'elle a quitté le
+        centre de l'écran (nº 640) pour le bord gauche. Elle grandit
+        d'un quart. Le glyphe du repli suit le MÊME RAPPORT — 34 / 64 =
+        0,53, donc 42 dans un rond de 80 — pour que le cercle gris du
+        particulier reste dessiné comme avant, ni plus maigre ni plus
+        gras dans son rond.
+        ⚠️ RIEN À RÉSERVER À DROITE ICI (`airTete` vide) : au doigt la
+        croix vit DANS la rangée de la barre, elle ne passe au-dessus
+        de rien. Au web elle est dans l'angle, et c'est là que la
+        réserve se paie — voir le jeu du web. */
+    photoTete: "h-20 w-20",
+    glypheTete: 42,
+    airTete: "",
   };
   const REGLAGES_WEB = {
     ligne: reglageDeLigne("w-[22px]", 22, "text-[13.5px]"),
@@ -1043,6 +1057,28 @@ export function MenuEspace({
     //  tableau) : les quatre côtés de la fenêtre restent égaux.
     airHaut: "pt-5",
     airCote: "px-5",
+    /*  ██ §2 ET §4 (nº 641) — L'AIR ET LA RÉSERVE DE LA TÊTE, AU WEB ██
+        LA PHOTO NE BOUGE PAS ICI : 64 px, la valeur de la nº 640. Seul
+        le doigt grandit — c'est là que le propriétaire la trouve trop
+        petite.
+        `mb-2` — §2 : la rangée doit avoir LE MÊME AIR au-dessus et en
+        dessous. Au-dessus, c'est `airHaut`, 20 px. En dessous, la
+        colonne pose son `gap-3`, 12 px. Huit pixels manquaient : les
+        voici, et ILS NE TOUCHENT QUE LA TÊTE — toucher au `gap-3`
+        aurait écarté du même coup les tuiles, les encadrés et les
+        lignes (piège nº 378/379).
+        `pr-8` — §1 : la croix a quitté la rangée pour l'ANGLE de la
+        fenêtre, en surimpression. Son bord gauche retombe à 47 px du
+        bord de la fenêtre (11 px de retrait pour sa cible de 36), donc
+        à 27 px À L'INTÉRIEUR de la colonne du contenu, qui s'arrête à
+        20. Sans réserve, un nom long passerait DESSOUS. Trente-deux
+        pixels la couvrent avec cinq de reste, et le nom se tronque
+        avant de l'atteindre.
+        ⚠️ LA RÉSERVE NE VAUT QUE POUR LA TÊTE : les tuiles, les
+        encadrés et les lignes gardent toute la largeur. */
+    photoTete: "h-16 w-16",
+    glypheTete: 34,
+    airTete: "mb-2 pr-8",
   };
   type ReglagesDuCompte = typeof REGLAGES_DOIGT;
 
@@ -1075,33 +1111,39 @@ export function MenuEspace({
    * titre de page, pas une entrée de liste, et les deux surfaces la
    * partagent désormais.
    *
-   * ⚠️ LA CROIX EST UN PASSE-PLAT, et voici pourquoi elle ne vient pas
-   * du même endroit des deux côtés : au WEB la fenêtre n'a aucun autre
-   * habillage, sa croix rejoint donc la tête — une seule rangée, photo,
-   * texte, croix. AU DOIGT, la page plein écran garde son en-tête
-   * COLLANT (nº 465) : la croix y reste, seule sur sa rangée, et suit
-   * le défilement. Deux places, une seule tête — c'est la chrome de
-   * fermeture qui diffère, pas la tête.
-   * ⚠️ LA COMPENSATION DE −9 px DE LA CROIX DU WEB (nº 541) NE BOUGE
-   * PAS : elle vient de l'écart entre la cible de 36 px et le glyphe de
-   * 18 px, pas du titre qui l'accompagnait. Elle vit dans le même
-   * retrait latéral (`airCote`), donc le dessin retombe toujours à
-   * l'aplomb du bord droit des encadrés.
+   * ⚠️ UNE ÉCRITURE, DEUX ANCRAGES (nº 641 — c'était la croix qui
+   * différait à la nº 640, c'est désormais le POINT D'ATTACHE). Au WEB
+   * la tête ouvre le CONTENU de la fenêtre, et la croix la survole
+   * depuis l'angle. AU DOIGT elle vit DANS LA BARRE COLLANTE (nº 465),
+   * sur la ligne de la croix — la place qu'elle occupait avant la
+   * nº 640, et celle que le propriétaire redemande. La tête elle-même
+   * ne se dédouble pas : c'est cette fonction, aux deux endroits.
+   * ⚠️ LES DEUX SURFACES NE DIFFÈRENT QUE PAR TROIS RÉGLAGES —
+   * `photoTete`, `glypheTete`, `airTete` — tous portés par les jeux du
+   * haut, aucun nombre écrit ici.
    */
-  const enTeteDuCompte = (croix?: React.ReactNode) => (
-    <div data-tete-compte="" className="flex items-center gap-3">
+  const enTeteDuCompte = (reglages: ReglagesDuCompte) => (
+    <div
+      data-tete-compte=""
+      className={`flex items-center gap-3 ${reglages.airTete}`}
+    >
       {fiche?.photo_profil ? (
         <PhotoRonde
           source={fiche.photo_profil}
           nature="personne"
-          classeTaille="h-16 w-16"
+          classeTaille={reglages.photoTete}
         />
       ) : (
         //  §1 (nº 549) — le rond de repli, repris au caractère :
         //  `PhotoRonde` ne pose aucun glyphe pour `personne`, la
         //  géométrie est donc répétée une fois ici, et rien d'autre.
-        <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-sombre-eleve text-sombre-texte-doux">
-          <IconeSilhouette taille={34} />
+        //  §4 (nº 641) — le rond et son glyphe suivent la surface, au
+        //  même rapport : le cercle gris ne change ni de couleur, ni
+        //  de dessin, ni de règle d'apparition.
+        <span
+          className={`flex ${reglages.photoTete} shrink-0 items-center justify-center rounded-full bg-sombre-eleve text-sombre-texte-doux`}
+        >
+          <IconeSilhouette taille={reglages.glypheTete} />
         </span>
       )}
       <div className="min-w-0 flex-1">
@@ -1120,20 +1162,21 @@ export function MenuEspace({
           </span>
         )}
       </div>
-      {croix}
     </div>
   );
 
   const contenuDuCompte = (
     reglages: ReglagesDuCompte,
-    croix?: React.ReactNode
+    tete?: React.ReactNode
   ) => (
     <div className={`flex flex-col gap-3 ${reglages.airCote} ${reglages.airHaut}`}>
-      {/*  §1 (nº 640) — LA TÊTE, EN PREMIER ET POUR LES DEUX SURFACES.
-           Elle vit ICI, dans l'arbre partagé, et c'est ce qui garantit
-           qu'elle ne peut plus se dédoubler. L'air qui la sépare des
-           tuiles est le `gap-3` de cette colonne — aucun nombre neuf. */}
-      {enTeteDuCompte(croix)}
+      {/*  §4 (nº 641) — LA TÊTE N'ENTRE ICI QU'AU WEB. Au doigt elle est
+           remontée dans la barre collante, et ce paramètre reste vide :
+           le contenu commence alors droit sur les tuiles. L'air qui la
+           sépare d'elles vaut le `gap-3` de cette colonne PLUS le `mb-2`
+           que le jeu du web porte sur la tête — vingt pixels, soit
+           exactement l'air du haut (§2). */}
+      {tete}
       {/* ---------- LA RANGÉE DE TROIS ---------- */}
       {/*  §3 (nº 532) — DEUX TUILES, ET ELLES SE PARTAGENT TOUTE LA
            LARGEUR : « Ajouter » a rejoint l'encadré du portfolio, sa
@@ -1454,7 +1497,26 @@ export function MenuEspace({
             ouvert={ouvert}
             ancre={zone}
             refPanneau={plaqueWeb}
-            largeur={290}
+            /*  ██ §3 (nº 641) — LA FENÊTRE S'ÉLARGIT DE 15 % ██
+                290 × 1,15 = 333,5 ; la valeur retenue est 334, l'entier
+                juste au-dessus. Ce que ça déplace, et rien d'autre :
+                les deux tuiles passent de 119 à 141 px de large (334 −
+                40 de côtés − 12 d'écart, en deux), le déroulant des
+                portfolios et les lignes du bas s'étirent d'autant —
+                aucun ne porte de largeur à lui, ils suivent la
+                colonne ; la croix reste calée sur le bord DROIT, elle
+                ne bouge donc pas d'un pixel par rapport à lui.
+                ⚠️ AUCUN DÉBORDEMENT POSSIBLE, et ce n'est pas une
+                promesse mais un calcul déjà écrit : `MenuDeVerre` borne
+                la largeur à l'écran moins 2 × 16 px, puis ramène la
+                fenêtre dans les bords. Alignée à droite, elle s'étend
+                vers la GAUCHE : son bord droit reste sous celui du
+                bouton qui l'ouvre.
+                ⚠️ LES AIRS DE LA nº 557 NE DÉPENDENT PAS DE LA LARGEUR :
+                20 px sur les quatre côtés, portés par `airCote` et
+                `airHaut` (et le `pb-5` du bas). Ils suivent la fenêtre
+                sans qu'on y touche. */
+            largeur={334}
             //  §6 (nº 537) — cette fenêtre-ci n'est plus en verre : fond
             //  opaque. §1 (nº 542) — et ce fond monte d'un cran, du
             //  fond de page au jeton `carte` : c'est un ESSAI de teinte,
@@ -1474,32 +1536,31 @@ export function MenuEspace({
                  l'encadré du portfolio avec « Ajouter » en tête, celui
                  du compte — mêmes fonds, mêmes arrondis, mêmes airs.
                  ⚠️ CE QUI NE VIENT PAS AU WEB : le cœur de la marque et
-                 le titre centré. Ils appartiennent à l'EN-TÊTE de la
-                 page plein écran, pas au contenu — la fenêtre garde
-                 donc le sien sans qu'on ait rien à écarter.
-                 ⚠️ LES DEUX TUILES TIENNENT, mesuré : la fenêtre fait
-                 290 px, moins les 16 px de marge de chaque côté du
-                 contenu et les 12 px d'écart — 123 px par tuile, quand
-                 « Notifications » à 13 px en demande une bonne
-                 quatre-vingtaine. Aucun élargissement n'est nécessaire.
-                 ⚠️ LE CALCUL A CHANGÉ À LA nº 557, LA CONCLUSION NON :
-                 les côtés valent 20 px, donc 290 − 40 − 12 = 238, soit
-                 119 px par tuile (123 avant). La tuile porte son propre
-                 air de 8 px de chaque côté : il reste 103 px pour le
-                 mot, contre 107 avant — et « Notifications » en demande
-                 toujours la même quatre-vingtaine. Quatorze pixels de
-                 marge subsistent, et le filet de la nº 532
-                 (`[overflow-wrap:anywhere]` sur le mot, la grille qui
-                 étire les deux tuiles à la même hauteur) reste sous le
-                 tout : même à l'étroit, le mot se replie, il ne déborde
-                 jamais. La fenêtre ne s'élargit donc pas.
+                 le titre centré. Ils appartenaient à l'EN-TÊTE de la
+                 page plein écran, et ils ont quitté le dépôt à la
+                 nº 640 ; la tête commune les remplace sur les deux
+                 surfaces.
+                 ⚠️ LES DEUX TUILES TENAIENT DÉJÀ À L'ÉTROIT, et la
+                 nº 641 leur donne de l'air : la fenêtre passe de 290 à
+                 334 px (§3), donc 334 − 40 de côtés − 12 d'écart =
+                 282, soit 141 px par tuile au lieu de 119. La tuile
+                 porte son propre air de 8 px de chaque côté : il reste
+                 125 px pour le mot, contre 103 — et « Notifications »
+                 à 13 px en demande toujours la même quatre-vingtaine.
+                 Le filet de la nº 532 (`[overflow-wrap:anywhere]` sur
+                 le mot, la grille qui étire les deux tuiles à la même
+                 hauteur) reste sous le tout : même à l'étroit, le mot
+                 se replie, il ne déborde jamais.
                  ⚠️ LA RÉSERVE BASSE DE 72 px NE VIENT PAS NON PLUS :
                  elle tient la barre de Safari à distance (nº 533), et
                  une fenêtre posée sous un bouton n'a pas de barre de
                  navigateur sous elle. Le web garde l'air d'un encadré —
                  16 px jusqu'à la nº 556, VINGT depuis la nº 557, comme
                  les trois autres côtés. */}
-            <div className="pb-5">
+            {/*  §1 (nº 641) — `relative` : le repère de la croix de
+                 l'angle, et rien d'autre. Le `pb-5` de la nº 557 ne
+                 bouge pas. */}
+            <div className="relative pb-5">
               {/*  ██ §1 (nº 540) — LE TITRE DE LA FENÊTRE, AU WEB SEUL ██
                    ==========================================================
                    LA FENÊTRE N'AVAIT AUCUN EN-TÊTE : ni titre, ni croix —
@@ -1586,20 +1647,49 @@ export function MenuEspace({
                    18, jamais du titre. Elle vit dans le même retrait
                    latéral, donc son dessin retombe toujours à l'aplomb
                    du bord droit des encadrés. */}
-              {contenuDuCompte(
-                REGLAGES_WEB,
-                <button
-                  type="button"
-                  onClick={() => setOuvert(false)}
-                  aria-label="Fermer"
-                  className="-mr-[9px] w-9 h-9 shrink-0 flex items-center justify-center
-                             rounded-full text-sombre-texte-doux
-                             hover:text-sombre-texte hover:bg-sombre-eleve
-                             transition-colors"
-                >
-                  <IconeCroix taille={18} />
-                </button>
-              )}
+              {/*  ██ §1 (nº 641) — LA CROIX RETOURNE DANS L'ANGLE ██
+                   ==========================================================
+                   ELLE NE FAIT PLUS PARTIE DE LA RANGÉE de la tête : la
+                   nº 640 l'y avait mise, le propriétaire la veut dans
+                   l'ANGLE de la fenêtre, en surimpression. Elle sort donc
+                   du flux (`absolute`) et s'accroche aux deux bords du
+                   contenu — d'où le `relative` sur la boîte au-dessus.
+                   LES DEUX RETRAITS SONT CEUX DU CONTENU, PAS DES
+                   NOMBRES NEUFS : `right-5` et `top-5` valent les 20 px
+                   de la nº 557, ceux-là mêmes que `airCote` et `airHaut`
+                   posent sur la colonne.
+                   LA COMPENSATION DE −9 px (nº 541) OPÈRE MAINTENANT DANS
+                   LES DEUX SENS, et c'est la MÊME formule, pas une
+                   seconde : (36 − 18) / 2 = 9, l'écart entre la cible et
+                   son dessin. Horizontalement elle existait déjà ;
+                   verticalement elle devient nécessaire parce que la
+                   croix n'a plus de rangée pour la caler. Résultat : le
+                   dessin retombe PILE à 20 px du haut et à 20 px de la
+                   droite — l'aplomb du haut de la photo et celui du bord
+                   droit des encadrés.
+                   ⚠️ LA CIBLE NE RÉTRÉCIT PAS, ce sont ses 36 px qui se
+                   déplacent (la règle de la nº 483, mot pour mot).
+                   ⚠️ LE TEXTE NE PASSE PAS DESSOUS : la tête réserve
+                   32 px à sa droite (`airTete`, jeu du web) et le nom se
+                   tronque avant de l'atteindre. Le calcul est dans la
+                   note du réglage.
+                   ⚠️ ELLE SUIT LE CONTENU S'IL DÉFILE : la fenêtre a une
+                   hauteur maximale, et rien de collant. C'était déjà le
+                   cas quand elle vivait dans la rangée du titre
+                   (nº 541) — ce point ne change pas. */}
+              <button
+                type="button"
+                onClick={() => setOuvert(false)}
+                aria-label="Fermer"
+                className="absolute right-5 top-5 -mr-[9px] -mt-[9px]
+                           w-9 h-9 flex items-center justify-center
+                           rounded-full text-sombre-texte-doux
+                           hover:text-sombre-texte hover:bg-sombre-eleve
+                           transition-colors"
+              >
+                <IconeCroix taille={18} />
+              </button>
+              {contenuDuCompte(REGLAGES_WEB, enTeteDuCompte(REGLAGES_WEB))}
             </div>
           </MenuDeVerre>
 
@@ -1622,23 +1712,33 @@ export function MenuEspace({
           {/*  §1 (nº 530) — LE CONTENU DU DOIGT EST UN PLAN À LUI
                (`contenuMenuDoigt`), celui du web reste au web. La
                nº 640 n'y touche pas ; elle ne change que la tête. */}
-          {/*  ██ §1 (nº 640) — LA PAGE DU DOIGT N'A PLUS DE TÊTE À ELLE ██
-               CE QUI PART : le rond de 64 px CENTRÉ (nº 549) et le
-               titre « Mon compte » centré dessous (nº 530-534), avec le
-               drapeau `enTeteCentre` qui les portait — « Mon compte »
-               en était l'unique appelant, il quitte le dépôt avec toute
-               sa branche.
-               CE QUI RESTE : l'en-tête COLLANT et sa croix, à leur
-               place exacte (nº 465). Ne plus donner de titre suffit à
-               le dire — voir la note d'`EnTetePleinEcran`.
-               CE QUI ARRIVE : la tête commune, en tête du contenu, la
-               même qu'au web au pixel près.
-               ⚠️ LA PHOTO N'EST PAS PERDUE, ELLE A CHANGÉ DE PLACE : la
-               règle de la nº 549 — photo du portfolio affiché, sinon
-               silhouette — vit désormais dans `enTeteDuCompte`, une
-               fois pour les deux surfaces au lieu d'une par surface. */}
+          {/*  ██ §4 (nº 641) — LA TÊTE REMONTE DANS LA BARRE ██
+               CE QUI PART (nº 640) : le rond de 64 px CENTRÉ (nº 549) et
+               le titre « Mon compte » centré dessous (nº 530-534), avec
+               le drapeau `enTeteCentre`.
+               CE QUE LA nº 640 AVAIT FAIT, ET QUI NE TIENT PAS : elle
+               avait posé la tête dans le CONTENU, donc SOUS la barre du
+               haut. Le propriétaire la veut DANS la barre, sur la ligne
+               de la croix — photo à gauche, nom et état au milieu, croix
+               à droite, comme avant la nº 640.
+               COMMENT : la page reçoit la tête par `tete`, à la place du
+               `titre` que les quatre autres écrans donnent. C'est la
+               MÊME fonction qu'au web ; seuls trois réglages diffèrent
+               (photo 80 px au lieu de 64, glyphe 42 au lieu de 34,
+               aucune réserve à droite).
+               ⚠️ LA BARRE RESTE COLLANTE ET LE CONTENU DÉFILE DESSOUS :
+               rien n'est touché au gabarit de la nº 465 — ni le
+               `sticky top-0`, ni le fond opaque, ni les 24 px sous
+               l'encoche, ni le recalage sur `visualViewport` (nº 477).
+               La barre est simplement plus haute qu'avec un titre seul,
+               comme elle l'était avant la nº 640.
+               ⚠️ LA PHOTO SUIT TOUJOURS LA RÈGLE DE LA nº 549 — celle du
+               portfolio affiché, sinon le cercle gris à la silhouette —
+               et cette règle n'est écrite qu'une fois, dans
+               `enTeteDuCompte`. */}
           <PagePleinEcranMobile
             ariaLabel="Mon compte"
+            tete={enTeteDuCompte(REGLAGES_DOIGT)}
             surFermer={() => setOuvert(false)}
           >
             {/*  ██ §6 (nº 533) — LA RÉSERVE QUI TIENT LA BARRE DE
