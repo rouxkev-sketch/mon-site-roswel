@@ -149,6 +149,37 @@ export function taillePageDeColonnes(colonnes: number): number {
 }
 
 /**
+ * ██ §2 (nº 614) — LES PORTFOLIOS DE « MA SÉLECTION » ██
+ * ==================================================================
+ * Ils ne se rangent PAS en colonnes : un portfolio suivi occupe une
+ * ligne entière (BlocSuivis). Aucune question de rangée complète, donc
+ * aucune raison de suivre `colonnes × 6` — leur dépliement a sa propre
+ * valeur depuis la nº 597, et le propriétaire la relève AU DOIGT :
+ * vingt au lieu de douze, puis vingt de plus à chaque « Voir plus ».
+ * ⚠️ LE WEB RESTE À DOUZE, et c'est une proposition que j'assume : le
+ * propriétaire ne l'a pas tranché, douze est le comportement de la
+ * nº 597, et rien ne le met en défaut. Sur un écran d'ordinateur une
+ * ligne de portfolio est bien plus haute que large — douze en
+ * remplissent déjà plus d'un écran.
+ * ⚠️ LE REPLI EST CELUI DU WEB, à dessein : sans cookie on ne sait pas
+ * quel appareil regarde, et douze est ce que la page servait déjà.
+ * Une première visite ne change donc de rien. (Le cookie est posé dans
+ * le même souffle : le premier « Voir plus » est déjà au bon compte.)
+ */
+export const PORTFOLIOS_PAR_DEPLIEMENT = 12;
+export const PORTFOLIOS_PAR_DEPLIEMENT_AU_DOIGT = 20;
+
+/** Combien de portfolios suivis un dépliement montre, d'après le
+    cookie des colonnes (ou son absence). */
+export function taillePortfoliosServie(
+  valeurCookie: string | undefined | null
+): number {
+  return colonnesDuCookie(valeurCookie) === COLONNES_AU_DOIGT
+    ? PORTFOLIOS_PAR_DEPLIEMENT_AU_DOIGT
+    : PORTFOLIOS_PAR_DEPLIEMENT;
+}
+
+/**
  * LE COOKIE, RELU — et jamais cru sur parole : n'importe qui peut
  * écrire n'importe quoi dans un cookie. Une valeur hors des paliers
  * connus est refusée, et l'appelant retombe sur le repli.

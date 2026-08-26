@@ -15,7 +15,11 @@ import { comptesDesFavoris, comptesDesSuivis } from "@/lib/selection-suivis";
 import { cleCookieTexte, phototequeDuCookie } from "@/lib/vue-phototheque";
 //  §1 (nº 597) — la taille d'une page de favoris, au cookie des
 //  colonnes : la même écriture que l'accueil, jamais une seconde.
-import { COOKIE_COLONNES, taillePageServie } from "@/lib/colonnes-mosaique";
+import {
+  COOKIE_COLONNES,
+  taillePageServie,
+  taillePortfoliosServie,
+} from "@/lib/colonnes-mosaique";
 import { SURFACE_SELECTION } from "@/lib/surface-affichage";
 import { FournisseurAffichageServi } from "@/components/AffichageMosaique";
 
@@ -138,10 +142,18 @@ export default async function PageMesFavoris() {
       {/*  §1 (nº 253) — LA PAGE N'A PLUS BESOIN DES ENTRÉES : les deux
            menus sont retournés à la barre, seule à commander.
            La mise en page, elle, vient du fournisseur au-dessus. */}
+      {/*  §2 (nº 614) — LES DEUX TAILLES SORTENT DU MÊME COOKIE, lu une
+           seule fois plus haut : les FAVORIS suivent les colonnes
+           (nº 226), les PORTFOLIOS non — un portfolio prend toute la
+           ligne, et le propriétaire en veut vingt au doigt, douze au
+           web. Aucune lecture ajoutée : c'est le même magasin. */}
       <PageFavoris
         photos={photos}
         suivis={suivis}
         taillePage={taillePageServie(magasin.get(COOKIE_COLONNES)?.value)}
+        taillePortfolios={taillePortfoliosServie(
+          magasin.get(COOKIE_COLONNES)?.value
+        )}
       />
     </FournisseurAffichageServi>
   );

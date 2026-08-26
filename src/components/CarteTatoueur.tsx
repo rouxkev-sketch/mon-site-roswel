@@ -1151,7 +1151,7 @@ function CarteTatoueurNue({
             ligneLieuDeCarte(lieuDeLaCarte),
           ]
             .filter(Boolean)
-            .join(" : ")}
+            .join(": ")}
         </p>
         </div>
         </div>

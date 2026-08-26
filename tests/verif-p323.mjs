@@ -9,7 +9,7 @@
  *      valeur est revenue à 20 px. Le contrôle correspondant a été
  *      refait à l'envers plus bas, et la mesure complète vit dans
  *      `verif-p325.mjs`.
- * §3 — UNE SEULE GRAMMAIRE SOUS LE NOM : « LE TYPE : OÙ », pour un
+ * §3 — UNE SEULE GRAMMAIRE SOUS LE NOM : « LE TYPE: OÙ », pour un
  *      artiste comme pour un lieu, web et smartphone.
  *
  * ⚠️ COMMENT LES §1 ET §2 SONT MESURÉS, ET POURQUOI AINSI.
@@ -60,7 +60,7 @@ const SOURCE_NUE = sansNotes(SOURCE);
 /* ==================================================================
  * §3 — LA LIGNE SOUS LE NOM, EXÉCUTÉE SUR LES CINQ CAS
  * ================================================================== */
-titre("§3 — « LE TYPE : OÙ » : les cinq cas du propriétaire, exécutés");
+titre("§3 — « LE TYPE: OÙ » : les cinq cas du propriétaire, exécutés");
 
 /** Un mode d'exercice, réduit à ce que la ligne d'identité en lit. */
 const mode = (genre, ville, region, pays, codePays, extra = {}) => ({
@@ -102,7 +102,7 @@ const suivi = (nom, typeFiche, etablissement, modes, lieu = {}) => ({
       suivi("a1", "artiste", "", [
         mode("salon", "Paris", null, "France", "FR"),
       ]),
-      "Artiste : Paris, France",
+      "Artiste: Paris, France",
     ],
     [
       "…LE MÊME, avec DEUX MODES DANS LA MÊME VILLE — une seule ville (§3-d)",
@@ -110,7 +110,7 @@ const suivi = (nom, typeFiche, etablissement, modes, lieu = {}) => ({
         mode("domicile", "Paris", null, "France", "FR"),
         mode("salon", "Paris", null, "France", "FR"),
       ]),
-      "Artiste : Paris, France",
+      "Artiste: Paris, France",
     ],
     [
       "un ARTISTE dans TROIS villes — les trois s'écrivent (§3-c)",
@@ -119,14 +119,14 @@ const suivi = (nom, typeFiche, etablissement, modes, lieu = {}) => ({
         mode("salon", "Lyon", null, "France", "FR"),
         mode("guest", "Marseille", null, "France", "FR"),
       ]),
-      "Artiste : Lyon · Marseille · Paris, France",
+      "Artiste: Lyon · Marseille · Paris, France",
     ],
     [
       "un ARTISTE avec un ÉTAT — l'écriture internationale (§3-b)",
       suivi("a4", "artiste", "", [
         mode("salon", "Austin", "Texas", "États-Unis", "US"),
       ]),
-      "Artiste : Austin, TX, USA",
+      "Artiste: Austin, TX, USA",
     ],
     [
       "un SALON — inchangé",
@@ -136,7 +136,7 @@ const suivi = (nom, typeFiche, etablissement, modes, lieu = {}) => ({
         pays: "États-Unis",
         codePays: "US",
       }),
-      "Salon : Austin, TX, USA",
+      "Salon: Austin, TX, USA",
     ],
   ];
   for (const [nom, cas, attendu] of CAS) {
@@ -150,7 +150,7 @@ const suivi = (nom, typeFiche, etablissement, modes, lieu = {}) => ({
     "…et un STUDIO PRIVÉ dit « Studio », le mot des cartes",
     ligneDIdentite(
       suivi("p1", "salon", "prive", [], { ville: "Félines", pays: "France" })
-    ) === "Studio : Félines, France",
+    ) === "Studio: Félines, France",
     ligneDIdentite(
       suivi("p1", "salon", "prive", [], { ville: "Félines", pays: "France" })
     )
@@ -232,7 +232,7 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
   );
   verif(
     "§3-c — LES TROIS VILLES S'ÉCRIVENT, le pays une seule fois à la fin",
-    trois === "Artiste : Lyon · Nantes · Paris, France" && !/\+\d/.test(trois),
+    trois === "Artiste: Lyon · Nantes · Paris, France" && !/\+\d/.test(trois),
     `« ${trois} »`
   );
   verif(
@@ -242,7 +242,7 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
         mode("salon", "Paris", null, "France", "FR"),
         mode("salon", "Lyon", null, "France", "FR"),
       ])
-    ) === "Artiste : Lyon · Paris, France",
+    ) === "Artiste: Lyon · Paris, France",
     "« Lyon · Paris, France », rangé, derrière les deux points"
   );
   /*  §1 (nº 586) — ET DEUX PAYS SE SÉPARENT PAR UNE BARRE VERTICALE,
@@ -255,7 +255,7 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
         mode("salon", "Paris", null, "France", "FR"),
         mode("salon", "Berlin", null, "Allemagne", "DE"),
       ])
-    ) === "Artiste : Berlin, Allemagne | Paris, France",
+    ) === "Artiste: Berlin, Allemagne | Paris, France",
     "« Berlin, Allemagne | Paris, France » — l'Allemagne se range avant"
   );
 
@@ -289,7 +289,7 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
   ]);
   verif(
     "§3-e (nº 591) — L'ORDRE EST ALPHABÉTIQUE : ni la déclaration ni le genre ne le décident",
-    ligneDIdentite(declare) === "Artiste : Lyon · Nantes, France",
+    ligneDIdentite(declare) === "Artiste: Lyon · Nantes, France",
     `« ${ligneDIdentite(declare)} » (la déclaration disait « Nantes » en premier)`
   );
   /*  §1 (nº 591) — ET L'ALPHABET EST CELUI DU FRANÇAIS : un accent ne
@@ -304,7 +304,7 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
         mode("salon", "Évry", null, "France", "FR"),
         mode("salon", "avignon", null, "France", "FR"),
       ])
-    ) === "Artiste : avignon · Évry · Zurich, France",
+    ) === "Artiste: avignon · Évry · Zurich, France",
     "« avignon · Évry · Zurich »"
   );
   verif(
@@ -325,7 +325,7 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
   const rendu = ligneDIdentite(avecAdresse);
   verif(
     "§3-f — NI RUE NI NUMÉRO : une adresse posée sur le mode n'entre pas dans la ligne",
-    rendu === "Artiste : Paris, France" && !/\d|Rue|Chemin/.test(rendu),
+    rendu === "Artiste: Paris, France" && !/\d|Rue|Chemin/.test(rendu),
     `« ${rendu} »`
   );
   verif(
@@ -344,7 +344,7 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
   ]);
   verif(
     "UNE SESSION GUEST TERMINÉE NE COMPTE PAS — la règle du §2 de la nº 243 tient",
-    ligneDIdentite(guestFini, "2026-08-16") === "Artiste : Paris, France",
+    ligneDIdentite(guestFini, "2026-08-16") === "Artiste: Paris, France",
     `« ${ligneDIdentite(guestFini, "2026-08-16")} » (Berlin n'y est pas)`
   );
   verif(
@@ -358,7 +358,7 @@ titre("§3 — les détails qui comptent : a, b, c, d, e, f");
         }),
       ]),
       "2026-08-16"
-    ) === "Artiste : Berlin, Allemagne | Paris, France",
+    ) === "Artiste: Berlin, Allemagne | Paris, France",
     "Berlin s'écrit, derrière la barre verticale"
   );
 }

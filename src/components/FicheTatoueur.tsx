@@ -1125,7 +1125,7 @@ export function FicheTatoueur({
                  Titre                      [partage] [fanion]
                  ┌──────────────────────────────────────┐
                  │ [avatar]  Nom                      › │
-                 │           Artiste : Ville, Pays      │
+                 │           Artiste: Ville, Pays      │
                  └──────────────────────────────────────┘
                (la rangée est devenue une PLAQUE à la nº 502, et le
                 badge « Profil » un chevron.)
@@ -1388,7 +1388,7 @@ export function FicheTatoueur({
                     {tatoueur.nom}
                   </span>
                   {/*  §1 (nº 613) — DEUX POINTS, ET PLUS UNE PUCE :
-                       « Artiste : Lyon, France ». La règle définitive du
+                       « Artiste: Lyon, France ». La règle définitive du
                        propriétaire, celle des cartes (CarteTatoueur) et
                        des portfolios suivis (lib/selection-suivis) — les
                        trois endroits du site où un type de profil est
@@ -1409,7 +1409,7 @@ export function FicheTatoueur({
                       }),
                     ]
                       .filter(Boolean)
-                      .join(" : ")}
+                      .join(": ")}
                   </span>
                 </span>
                 {/*  §1 (nº 502) — LE CHEVRON REMPLACE LE BADGE

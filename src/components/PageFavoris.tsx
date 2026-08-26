@@ -101,13 +101,20 @@ import { LienAccueil } from "@/components/LienAccueil";
  * il n'y a donc aucune rangée à compléter, aucun multiple à respecter.
  * Les FAVORIS, eux, sont des cartes en grille : leur taille de page
  * suit les colonnes et vient du serveur (voir `taillePage`).
+ * ██ §2 (nº 614) — ET ELLE VIENT DU SERVEUR ELLE AUSSI, DÉSORMAIS.
+ * Le nombre n'est plus écrit ici : le propriétaire veut VINGT au doigt
+ * et douze au web, et cette page-ci ne peut pas savoir quel appareil
+ * la regarde — le serveur, lui, a le cookie des colonnes. La décision
+ * vit donc là où vivent déjà toutes les tailles de page
+ * (`taillePortfoliosServie`, lib/colonnes-mosaique), et non dans une
+ * constante de composant qu'il aurait fallu doubler.
  */
-const PORTFOLIOS_PAR_DEPLIEMENT = 12;
 
 export function PageFavoris({
   photos,
   suivis,
   taillePage,
+  taillePortfolios,
 }: {
   photos: PhotoFavorite[];
   suivis: TatoueurSuivi[];
@@ -115,6 +122,10 @@ export function PageFavoris({
       des colonnes par la page qui nous monte : un multiple du nombre
       de colonnes, pour que la dernière rangée reste pleine (nº 226). */
   taillePage: number;
+  /** §2 (nº 614) — combien de PORTFOLIOS un dépliement montre, décidé
+      au même cookie par la même page : vingt au doigt, douze au web.
+      Aucun multiple à respecter — un portfolio prend toute la ligne. */
+  taillePortfolios: number;
 }) {
   //  LE FILTRE VIENT DE L'ADRESSE — la même source que les menus de la
   //  barre, lue par le même magasin (nº 245-§3, nº 247-§2).
@@ -444,7 +455,7 @@ export function PageFavoris({
    * compte, puis le corrigerait — un clignotement pour rien.
    */
   const cleDuChoix = `${choix.menu}|${choix.nature}|${choix.style}|${choix.profil}`;
-  const parDepliement = surLesFavoris ? taillePage : PORTFOLIOS_PAR_DEPLIEMENT;
+  const parDepliement = surLesFavoris ? taillePage : taillePortfolios;
   const [affiches, setAffiches] = useState(parDepliement);
   const [choixDeplie, setChoixDeplie] = useState(cleDuChoix);
   if (choixDeplie !== cleDuChoix) {

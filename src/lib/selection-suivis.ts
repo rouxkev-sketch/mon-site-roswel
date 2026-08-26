@@ -143,14 +143,14 @@ export function periodeDuGuest(mode: {
  *
  * LA RÈGLE, EN DEUX SEGMENTS ET PAS UN DE PLUS :
  *
- *     LE TYPE : OÙ
+ *     LE TYPE: OÙ
  *
- *   · Artiste : Paris, France
- *   · Artiste : Austin, TX, USA
- *   · Artiste : Félines · Paris, France      (plusieurs villes, un pays)
- *   · Artiste : Berlin, Allemagne | Paris, France      (plusieurs pays)
- *   · Studio  : Félines, France
- *   · Salon   : Austin, TX, USA
+ *   · Artiste: Paris, France
+ *   · Artiste: Austin, TX, USA
+ *   · Artiste: Félines · Paris, France      (plusieurs villes, un pays)
+ *   · Artiste: Berlin, Allemagne | Paris, France      (plusieurs pays)
+ *   · Studio:  Félines, France
+ *   · Salon:   Austin, TX, USA
  *
  * ⚠️ LA FORME DU SECOND SEGMENT A ÉTÉ REPRISE SIX FOIS DEPUIS, et la
  * règle des DEUX SEGMENTS n'a pas bougé une seule : la nº 585 a
@@ -374,7 +374,7 @@ export const LIEUX_AFFICHES = 3;
  * ██ §1 (nº 613) — LES DEUX POINTS QUI ANNONCENT LE LIEU ██
  * ------------------------------------------------------------------
  * LA RÈGLE DÉFINITIVE DU PROPRIÉTAIRE, qui remplace celles des nº 585
- * à nº 591 : « Artiste : Paris, France ». Les deux points disent ce
+ * à nº 591 : « Artiste: Paris, France ». Les deux points disent ce
  * qu'aucune puce ne disait — que ce qui suit ÉNONCE le lieu de ce qui
  * précède. C'est une ponctuation de langue, pas un signe décoratif.
  * CE QUE LA PUCE FAISAIT (nº 589), et pourquoi elle part : elle était
@@ -393,7 +393,7 @@ export const LIEUX_AFFICHES = 3;
  * ont été alignées à cette passe. Ce sont les seuls endroits du site
  * où un type de profil est suivi de son lieu.
  */
-const APRES_LE_TYPE = " : ";
+const APRES_LE_TYPE = ": ";
 
 const SEPARATEUR_DE_PAYS = " | ";
 /**
@@ -522,7 +522,7 @@ function sujetDuLieu(lieu: LieuDuSuivi): string {
 }
 
 /**
- * LA LIGNE SOUS LE NOM — « Artiste : Félines · Paris, France ».
+ * LA LIGNE SOUS LE NOM — « Artiste: Félines · Paris, France ».
  * ------------------------------------------------------------------
  * ██ §1 (nº 585) — ON LIT DES VILLES, PLUS UN NOMBRE ██
  * §3-b et §3-c SONT ANNULÉS. La ligne écrivait la première ville en
