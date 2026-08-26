@@ -1136,13 +1136,22 @@ function CarteTatoueurNue({
                diraient mot pour mot la même chose. Un seul reste.
                ⚠️ LE SÉPARATEUR SUIT SA VALEUR : `filter(Boolean)`
                écarte ce qui manque avant de joindre — pas de type, pas
-               de lieu, et jamais une puce orpheline. */}
+               de lieu, et jamais une ponctuation orpheline.
+               ██ §1 (nº 613) — DEUX POINTS, ET PLUS UNE PUCE : « Salon :
+               Lyon, France ». C'est la règle définitive du propriétaire,
+               la même que celle des portfolios suivis de « Ma
+               sélection » (`APRES_LE_TYPE`, lib/selection-suivis) et
+               que celle de la rangée du profil de la fiche. Les deux
+               points ANNONCENT le lieu au lieu de le juxtaposer.
+               ⚠️ CETTE CARTE EST RENDUE PARTOUT — moteur, vitrines,
+               « Ma sélection » : le signe changé ici se voit sur les
+               trois d'un seul geste. */}
           {[
             libelleTypeFiche(tatoueur.type_fiche, tatoueur.etablissement),
             ligneLieuDeCarte(lieuDeLaCarte),
           ]
             .filter(Boolean)
-            .join(" • ")}
+            .join(" : ")}
         </p>
         </div>
         </div>

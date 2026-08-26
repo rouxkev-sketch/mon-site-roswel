@@ -1125,7 +1125,7 @@ export function FicheTatoueur({
                  Titre                      [partage] [fanion]
                  ┌──────────────────────────────────────┐
                  │ [avatar]  Nom                      › │
-                 │           Artiste • Ville, Pays      │
+                 │           Artiste : Ville, Pays      │
                  └──────────────────────────────────────┘
                (la rangée est devenue une PLAQUE à la nº 502, et le
                 badge « Profil » un chevron.)
@@ -1387,9 +1387,14 @@ export function FicheTatoueur({
                   <span className="block truncate text-[16px] font-semibold leading-tight text-sombre-texte">
                     {tatoueur.nom}
                   </span>
-                  {/*  La puce « • » : la seule ponctuation du site entre
-                       deux valeurs (nº 395). §1 (nº 455) : 14,5 px (13 à
-                       la nº 453), les 4 px d'air sous le nom restent. */}
+                  {/*  §1 (nº 613) — DEUX POINTS, ET PLUS UNE PUCE :
+                       « Artiste : Lyon, France ». La règle définitive du
+                       propriétaire, celle des cartes (CarteTatoueur) et
+                       des portfolios suivis (lib/selection-suivis) — les
+                       trois endroits du site où un type de profil est
+                       suivi de son lieu disent la même chose.
+                       §1 (nº 455) : 14,5 px (13 à la nº 453), les 4 px
+                       d'air sous le nom restent. */}
                   <span className="block truncate text-[14.5px] leading-tight text-sombre-texte-doux mt-1">
                     {[
                       libelleTypeFiche(
@@ -1404,7 +1409,7 @@ export function FicheTatoueur({
                       }),
                     ]
                       .filter(Boolean)
-                      .join(" • ")}
+                      .join(" : ")}
                   </span>
                 </span>
                 {/*  §1 (nº 502) — LE CHEVRON REMPLACE LE BADGE

@@ -143,14 +143,14 @@ export function periodeDuGuest(mode: {
  *
  * LA RÈGLE, EN DEUX SEGMENTS ET PAS UN DE PLUS :
  *
- *     LE TYPE • OÙ
+ *     LE TYPE : OÙ
  *
- *   · Artiste • Paris, France
- *   · Artiste • Austin, TX, USA
- *   · Artiste • Lyon · Paris · France        (plusieurs villes, un pays)
- *   · Artiste • Berlin, Allemagne | Paris, France      (plusieurs pays)
- *   · Studio  • Félines, France
- *   · Salon   • Austin, TX, USA
+ *   · Artiste : Paris, France
+ *   · Artiste : Austin, TX, USA
+ *   · Artiste : Félines · Paris, France      (plusieurs villes, un pays)
+ *   · Artiste : Berlin, Allemagne | Paris, France      (plusieurs pays)
+ *   · Studio  : Félines, France
+ *   · Salon   : Austin, TX, USA
  *
  * ⚠️ LA FORME DU SECOND SEGMENT A ÉTÉ REPRISE SIX FOIS DEPUIS, et la
  * règle des DEUX SEGMENTS n'a pas bougé une seule : la nº 585 a
@@ -318,10 +318,11 @@ export const LIEUX_AFFICHES = 3;
  *  · UNE SEULE VILLE DANS LE PAYS → une VIRGULE devant le pays :
  *    « Paris, France », « Austin, TX, USA » ;
  *  · PLUSIEURS VILLES DANS LE MÊME PAYS → un POINT MÉDIAN entre les
- *    villes, ET devant le pays : « Paris · Lyon · France »,
- *    « Austin, TX · Miami, FL · USA » ;
+ *    villes, puis une VIRGULE devant le pays (§1 nº 613, qui reprend
+ *    le point médian que la nº 590 posait là) : « Félines · Paris,
+ *    France », « Austin, TX · Miami, FL, USA » ;
  *  · PLUSIEURS PAYS → les groupes séparés par une BARRE VERTICALE :
- *    « Austin, TX · Miami, FL · USA | Paris, France ».
+ *    « Austin, TX · Miami, FL, USA | Paris, France ».
  *
  * ██ §1 (nº 590) — LA RÈGLE DÉFINITIVE, ET CE QU'ELLE REMPLACE ██
  * Elle annule la ponctuation des nº 585 à nº 589, essayée en cinq
@@ -361,7 +362,7 @@ export const LIEUX_AFFICHES = 3;
  * ⚠️ ET LA TRONCATURE COUPE APRÈS LE TRI : les trois lieux qui restent
  * sont donc les trois PREMIERS ALPHABÉTIQUEMENT, plus les trois
  * premiers déclarés. Un artiste qui exerce à Paris, Lyon, Nice et
- * Brest lira « Brest · Lyon · Nice… · France » — Paris passe derrière
+ * Brest lira « Brest · Lyon · Nice…, France » — Paris passe derrière
  * l'élision, alors qu'il était en tête de sa déclaration. C'est la
  * conséquence directe de ce qui est demandé, et elle est assumée.
  *
@@ -370,36 +371,45 @@ export const LIEUX_AFFICHES = 3;
  * ville s'écrit seul aussi, sans virgule devant lui.
  */
 /**
- * ██ §3-a (nº 589) — LA PUCE QUI SÉPARE LE MÉTIER DU LIEU ██
+ * ██ §1 (nº 613) — LES DEUX POINTS QUI ANNONCENT LE LIEU ██
  * ------------------------------------------------------------------
- * C'EST UN AUTRE CARACTÈRE, PAS UNE AUTRE TAILLE, et c'est la réponse
- * à la question du propriétaire. La ligne est UN SEUL TEXTE, dans un
- * seul élément : lui donner deux tailles demanderait de la découper en
- * morceaux, donc de rendre du balisage là où il n'y a qu'une chaîne —
- * et cette chaîne est aussi ce que le banc éprouve, ce qu'un lecteur
- * d'écran lit et ce qu'une copie emporte. La typographie a le signe
- * qu'il faut : la PUCE (U+2022), plus grosse et plus ronde que le
- * point médian (U+00B7) qu'on garde entre les villes et le pays. Deux
- * signes de tailles différentes, sans une ligne de style.
- * ⚠️ ET LES TROIS SÉPARATEURS DE LA LIGNE SE DISTINGUENT MAINTENANT
- * PAR EUX-MÊMES : la puce sépare le métier du lieu, le point médian le
- * lieu de son pays, la barre verticale deux pays. On lit la hiérarchie
- * sans rien savoir de la règle.
+ * LA RÈGLE DÉFINITIVE DU PROPRIÉTAIRE, qui remplace celles des nº 585
+ * à nº 591 : « Artiste : Paris, France ». Les deux points disent ce
+ * qu'aucune puce ne disait — que ce qui suit ÉNONCE le lieu de ce qui
+ * précède. C'est une ponctuation de langue, pas un signe décoratif.
+ * CE QUE LA PUCE FAISAIT (nº 589), et pourquoi elle part : elle était
+ * choisie pour sa TAILLE, plus grosse et plus ronde que le point
+ * médian des villes, afin que les trois séparateurs de la ligne se
+ * distinguent à l'œil. Le raisonnement tenait, mais il demandait au
+ * lecteur de connaître une hiérarchie de signes. Les deux points se
+ * lisent sans rien savoir.
+ * ⚠️ LA HIÉRARCHIE RESTE, ET ELLE EST PLUS CLAIRE : les deux points
+ * annoncent le lieu, la virgule mène au pays, le point médian
+ * énumère les villes d'un même pays, la barre verticale sépare deux
+ * pays.
+ * ⚠️ LA MÊME PONCTUATION SUR LES CARTES ET SUR LA FICHE : elles la
+ * composent chacune chez elles (CarteTatoueur, FicheTatoueur — leur
+ * lieu vient d'une autre écriture, `ligneLieuDeCarte`), et les trois
+ * ont été alignées à cette passe. Ce sont les seuls endroits du site
+ * où un type de profil est suivi de son lieu.
  */
-const APRES_LE_TYPE = " • ";
+const APRES_LE_TYPE = " : ";
 
 const SEPARATEUR_DE_PAYS = " | ";
 /**
- * Ce qui sépare DEUX VILLES d'un même pays, et ce qui annonce alors le
- * pays derrière elles (§1 nº 590) : le même point médian aux deux
- * places, parce qu'il dit une seule chose — « et aussi ».
- * ⚠️ IL NE SERT QUE LÀ. Une ville seule garde sa virgule ; c'est ce qui
- * fait qu'apercevoir un point médian suffit à savoir qu'il y en a
- * plusieurs.
+ * Ce qui sépare DEUX VILLES d'un même pays : le point médian, qui dit
+ * une seule chose — « et aussi ».
+ * ⚠️ §1 (nº 613) — IL NE SERT PLUS QU'ENTRE LES VILLES. La nº 590 le
+ * posait AUSSI devant le pays quand il y avait plusieurs villes ; le
+ * propriétaire l'a repris : le pays est désormais TOUJOURS annoncé par
+ * une virgule, qu'il y ait une ville ou six. Une énumération de villes
+ * reste une énumération, mais son pays se lit comme dans une adresse
+ * ordinaire — « Félines · Paris, France ».
  */
 const ENTRE_LES_VILLES = " · ";
 
-/** La ponctuation d'une adresse ordinaire — une ville, son pays. */
+/** La ponctuation qui mène au pays — celle d'une adresse ordinaire, et
+    désormais la seule (§1 nº 613). */
 const APRES_UNE_VILLE = ", ";
 
 /**
@@ -462,14 +472,17 @@ function lieuxEcrits(lieux: LieuDuSuivi[]): string {
   return groupes
     .map((groupe) => {
       const villes = groupe.sujets.filter(Boolean);
-      //  §1 (nº 590) — LE NOMBRE DE VILLES COMMANDE LA PONCTUATION, et
-      //  c'est toute la règle : une seule ville s'écrit comme une
-      //  adresse, plusieurs s'énumèrent. Le pays suit le signe de
-      //  l'énumération quand il y en a une, la virgule sinon.
-      const entreElles = villes.length > 1 ? ENTRE_LES_VILLES : APRES_UNE_VILLE;
+      /*  §1 (nº 613) — LE PAYS EST TOUJOURS ANNONCÉ PAR UNE VIRGULE,
+          et le nombre de villes n'y change plus rien. La nº 590 faisait
+          suivre le pays du signe de l'énumération quand il y en avait
+          une — « Félines · Paris · France » ; le propriétaire veut la
+          virgule dans tous les cas : « Félines · Paris, France ». Le
+          point médian ne sert donc plus qu'ENTRE les villes.
+          ⚠️ `filter(Boolean)` AVANT DE JOINDRE (charte, nº 386) : un
+          groupe sans pays ne produit aucune virgule orpheline. */
       return [villes.join(ENTRE_LES_VILLES), groupe.pays]
         .filter(Boolean)
-        .join(entreElles);
+        .join(APRES_UNE_VILLE);
     })
     .join(SEPARATEUR_DE_PAYS);
 }
@@ -488,8 +501,9 @@ function lieuxEcrits(lieux: LieuDuSuivi[]): string {
  * convention américaine — l'usage écrit « Austin, TX ». La confusion
  * qu'on cherchait à éviter disparaît d'elle-même puisque, à partir de
  * deux villes, ce sont les VILLES qui se séparent par un point médian
- * — « Austin, TX · Miami, FL · USA ». La virgule ne relie donc plus
- * jamais que ce qu'une adresse relie : une ville et sa précision.
+ * — « Austin, TX · Miami, FL, USA ». La virgule relie ce qu'une adresse
+ * relie : une ville et sa précision, puis le groupe et son pays
+ * (§1 nº 613).
  * ⚠️ CE QUI RESTE DE CETTE PASSE : `division` sur le lieu. Elle n'est
  * plus employée par cette fonction, mais elle dit ce que la ligne
  * contient et le type la porte ; la retirer demanderait de la
@@ -508,7 +522,7 @@ function sujetDuLieu(lieu: LieuDuSuivi): string {
 }
 
 /**
- * LA LIGNE SOUS LE NOM — « Artiste · Paris, Félines · France ».
+ * LA LIGNE SOUS LE NOM — « Artiste : Félines · Paris, France ».
  * ------------------------------------------------------------------
  * ██ §1 (nº 585) — ON LIT DES VILLES, PLUS UN NOMBRE ██
  * §3-b et §3-c SONT ANNULÉS. La ligne écrivait la première ville en
