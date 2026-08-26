@@ -625,9 +625,10 @@ export function FicheTatoueur({
        * ⚠️ CE QUE ÇA COÛTE : jusqu'à 3 px de largeur, qui partent dans la
        * marge du bas. Elle reste donc à un cheveu de celle du haut, et
        * TOUJOURS du bon côté — jamais un débordement.
-       * ⚠️ LE DOIGT N'EST PAS CONCERNÉ : la règle qui lit cette variable
-       * est sous `lg:`. Au doigt la photo est bord à bord, et elle le
-       * reste.
+       * ⚠️ LE DOIGT N'EST PAS CONCERNÉ : la règle qui lit cette
+       * variable est sous `not-mobile:` depuis la nº 616 (elle était
+       * sous `lg:`, et c'était la cause de la photo étirée en fenêtre
+       * étroite). Au doigt la photo est bord à bord, et elle le reste.
        */
       zone.style.setProperty(
         "--photo-largeur",
@@ -971,7 +972,47 @@ export function FicheTatoueur({
                 (ni hauteur, ni rembourrage, ni place du logo : c'est la
                 photo qui vient s'aligner), et le web n'est pas concerné
                 (variante du doigt). */
-            className={`lg:w-[var(--photo-largeur,calc((100vh_-_119px)*0.8))] max-w-full mobile:-mx-4 mobile:max-w-none ${
+            /*  ██ §1 (nº 616) — LA LARGEUR N'EST PLUS BORNÉE AU CRAN
+                `lg`, ELLE EST BORNÉE À L'APPAREIL ██
+                ------------------------------------------------------
+                LE DÉFAUT, ET SA CAUSE EXACTE. Cette largeur — le
+                contrat de la nº 290 : « la hauteur de la photo épouse
+                l'écran, la largeur en découle (× 0,8) » — était écrite
+                sous `lg:`, c'est-à-dire À PARTIR DE 1024 px DE FENÊTRE
+                (64 rem, le cran de série de Tailwind : `@theme` ne
+                redéfinit que `grille` et `grille5`). Un pixel en
+                dessous, la classe ne s'applique plus, ce bloc n'a PLUS
+                AUCUNE LARGEUR — il prend donc toute la colonne, et le
+                format 4/5 du carrousel étire sa hauteur d'autant. La
+                photo ne se déforme pas (le rapport est tenu par
+                `aspect-4/5`, cadre et colonne) : elle SAUTE d'un coup
+                à toute la largeur de la page, et devient bien plus
+                haute que l'écran. C'est cela, « elle n'est plus à son
+                format » — elle a cessé d'être calée sur la hauteur
+                visible.
+                LA BORNE EST DONC FAUSSE DEPUIS LE DÉBUT, et la règle
+                du site le dit déjà (globals.css, la note de la variante
+                `mobile:`) : « en web étroit, l'interface WEB s'adapte,
+                elle ne se déguise plus en smartphone ». Une largeur de
+                fenêtre ne décide de rien ici — c'est l'APPAREIL qui
+                décide (règle nº 60). `not-mobile:` est l'exacte
+                négation de la variante du doigt : le contrat vaut donc
+                sur TOUT le web, à toute largeur, et le doigt garde son
+                bord à bord (aucune largeur, `mobile:-mx-4`).
+                ⚠️ UNE SEULE CLASSE PAR PROPRIÉTÉ (piège nº 389) : la
+                largeur n'est écrite qu'ici, et `max-w-full` la borne
+                comme avant — sur une fenêtre plus étroite que la
+                largeur calculée, la photo tient dans la page au lieu
+                d'en sortir.
+                ⚠️ ET ELLE SE CENTRE, sur le web et seulement là : sous
+                1024 px la grille n'a plus qu'une colonne, une photo à
+                largeur fixe s'y collerait à gauche avec un trou à
+                droite. `self-center` agit sur l'axe transversal de la
+                colonne parente (`flex flex-col`), donc à l'horizontale.
+                AU-DESSUS DE 1024 px RIEN NE CHANGE : la colonne de la
+                grille est `auto`, la photo la remplit exactement, et se
+                centrer dans sa propre largeur ne déplace rien. */
+            className={`not-mobile:w-[var(--photo-largeur,calc((100vh_-_119px)*0.8))] not-mobile:self-center max-w-full mobile:-mx-4 mobile:max-w-none ${
               apercu ? "mobile:-mt-4" : "mobile:-mt-[15px]"
             }`}
           >
