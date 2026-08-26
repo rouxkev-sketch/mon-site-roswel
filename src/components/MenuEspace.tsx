@@ -3,8 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+//  §2 (nº 646) — `ETATS_ROND_BARRE` a quitté cet import avec le fond
+//  des deux boutons du compte. Il reste vivant ailleurs (la loupe, le
+//  fanion, le globe, le sélecteur de langue) : rien n'est supprimé du
+//  dépôt, ce menu ne l'emploie simplement plus.
 import {
-  ETATS_ROND_BARRE,
   IconeBouclierTrait,
   IconeChevronBas,
   IconeCloche,
@@ -1525,25 +1528,51 @@ export function MenuEspace({
    * gris, silhouette au MÊME RAPPORT (34 / 64 = 0,53, donc 15 dans un
    * rond de 28). Un particulier, un portfolio sans photo et un compte
    * d'avant cette passe montrent tous ce rond-là.
-   * ⚠️ CE QUE ÇA COÛTE À L'ALIGNEMENT DE LA nº 465, ET JE LE DIS : sa
-   * compensation `-mr-2` (8 px) était calculée pour un dessin de 24 px
-   * dans une boîte de 40. Un dessin de 28 laisse 6 px de vide, pas 8 :
-   * le rond dépasse donc la marge de DEUX pixels, à l'intérieur du
-   * rembourrage de la barre (16 px, 24 dès 640) — rien ne sort de
-   * l'écran, aucun défilement horizontal. Le corriger au pixel
-   * demanderait `-mr-1.5`, ce qui reculerait la loupe et le fanion de
-   * 2 px : la consigne dit que la barre ne bouge pas, c'est donc le
-   * débord qui est retenu.
+   * ██ §1 (nº 646) — LE DÉBORD DE 2 px EST FERMÉ ██
+   * ------------------------------------------------------------------
+   * CE QUE LA nº 645 AVAIT LAISSÉ, mesuré à l'écran avant et après : la
+   * compensation `-mr-2` (8 px) valait pour un dessin de 24 px dans une
+   * boîte de 40. Un avatar de 28 ne laisse que 6 px de vide, un de 32
+   * n'en laisse que 4 — le rond dépassait donc le bord droit du contenu
+   * (374 px au doigt, 1256 px au web sur les écrans mesurés) de deux
+   * pixels.
+   * LA COMPENSATION SUIT LE DESSIN, PAR APPAREIL : (40 − 28) / 2 = 6 au
+   * doigt, (40 − 32) / 2 = 4 au web. Le bord droit de l'avatar retombe
+   * alors PILE sur la marge, comme le glyphe de la nº 465.
+   * ⚠️ CE QUE ÇA DÉPLACE, ET JE LE CHIFFRE : la zone déborde moins,
+   * donc elle occupe plus de largeur — la loupe et le fanion reculent
+   * de 2 px au doigt, de 4 px au web (plus les 6 px d'air du §3). Leur
+   * taille, leur cible et leur écart mutuel (`gap-3`) ne changent pas ;
+   * c'est un glissement, pas une refonte, et il est arithmétique.
+   * ⚠️ L'AIR DU §3 EST UNE MARGE À GAUCHE DE LA ZONE, jamais un `gap`
+   * du nav : le `gap-3` est partagé par la loupe, le fanion et le globe
+   * (piège nº 378/379) — le toucher les aurait tous écartés.
    */
+  /*  §3 (nº 646) — LA TAILLE, UN JEU PAR APPAREIL. Le doigt garde ses
+      28 px (la nº 645, au pixel) ; le web passe à 32. La séparation est
+      celle des nº 537, nº 557 et nº 589 : deux variantes qui s'excluent,
+      AUCUNE classe de base — la règle nº 389. */
+  const TAILLE_AVATAR = "mobile:h-7 mobile:w-7 not-mobile:h-8 not-mobile:w-8";
   const avatarDeLaBarre = photoDuCompte ? (
     <PhotoRonde
       source={photoDuCompte}
       nature="personne"
-      classeTaille="h-7 w-7"
+      classeTaille={TAILLE_AVATAR}
     />
   ) : (
-    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-sombre-eleve text-sombre-texte-doux">
-      <IconeSilhouette taille={15} />
+    <span
+      className={`flex ${TAILLE_AVATAR} shrink-0 items-center justify-center rounded-full bg-sombre-eleve text-sombre-texte-doux`}
+    >
+      {/*  §3 (nº 646) — LE GLYPHE SUIT SON ROND, au rapport de la
+           nº 549 (34 / 64 = 0,53) : 15 dans 28 au doigt, 17 dans 32 au
+           web. L'attribut porte la valeur du DOIGT — inchangée depuis
+           la nº 645 — et la classe la remplace au web ; une classe bat
+           un attribut, et les deux ne peuvent pas se contredire
+           puisqu'il n'y en a qu'une par appareil. */}
+      <IconeSilhouette
+        taille={15}
+        classe="not-mobile:h-[17px] not-mobile:w-[17px]"
+      />
     </span>
   );
 
@@ -1553,14 +1582,22 @@ export function MenuEspace({
         (`hauteur`) affleure la marge de l'interface (le nav de la
         barre est ancré au bord de son `px-4 sm:px-6`), mais le GLYPHE
         de 24 px, centré dedans, s'arrête à (40 − 24) / 2 = 8 px du
-        bord de boîte — web comme doigt (les deux boutons ci-dessous
-        portent `taille={24}`). LE REMÈDE : `-mr-2` (8 px) sur cette
-        racine — la boîte déborde de 8 px dans le rembourrage de la
-        barre (16/24 px, elle y tient : aucun défilement horizontal),
-        le glyphe tombe sur la marge, la CIBLE reste 40 px. Le nav
-        étant ancré à droite, la loupe et le fanion glissent d'autant,
-        à écarts (`gap-3`) constants. */
-    <div ref={zone} className="-mr-2 relative flex items-center gap-1.5">
+        bord de boîte. LE REMÈDE : une marge droite négative de la
+        VALEUR DE CE VIDE sur cette racine — la boîte déborde d'autant
+        dans le rembourrage de la barre (16/24 px, elle y tient :
+        aucun défilement horizontal), le dessin tombe sur la marge, la
+        CIBLE reste 40 px. Le nav étant ancré à droite, la loupe et le
+        fanion glissent d'autant, à écarts (`gap-3`) constants.
+        §1 (nº 646) — ET LA VALEUR SUIT LE DESSIN, QUI A CHANGÉ DEUX
+        FOIS : la silhouette de 24 px est devenue l'avatar de la
+        nº 645 (28 px), puis celui-ci a grandi au web (32 px, §3). Le
+        vide vaut donc 6 px au doigt et 4 au web — d'où les deux
+        variantes, et plus un seul `-mr-2`. */
+    <div
+      ref={zone}
+      className="mobile:-mr-1.5 not-mobile:-mr-1 not-mobile:ml-1.5
+                 relative flex items-center gap-1.5"
+    >
       {/* ÉCRAN ÉTROIT : l'icône personnage, ROSE (connecté). */}
       <button
         type="button"
@@ -1576,9 +1613,12 @@ export function MenuEspace({
         //  §1 (nº 548) — LA MÊME BRANCHE, POUR LA MÊME RAISON : c'est ce
         //  bouton-ci dans son autre habillage, et il commande la MÊME
         //  surface. Voir la note complète sur le jumeau du web, plus bas.
+        /*  ██ §2 (nº 646) — PLUS DE CERCLE GRIS DERRIÈRE L'AVATAR ██
+             Le fond de survol et sa branche « ouvert » (nº 548)
+             quittent ce bouton : l'avatar EST déjà un rond, un second
+             rond derrière lui n'ajoutait rien. Voir la note complète
+             sur le jumeau du web, plus bas. */
         className={`sm:hidden flex shrink-0 items-center justify-center rounded-full
-                   transition-colors
-                   ${ouvert ? "bg-sombre-eleve" : ETATS_ROND_BARRE}
                    focus-visible:outline-2 focus-visible:outline-offset-2
                    focus-visible:outline-primaire`}
       >
@@ -1621,30 +1661,44 @@ export function MenuEspace({
              ⚠️ RIEN D'AUTRE NE CHANGE : ni la taille de l'icône, ni
              celle de la cible (40 px, en ligne juste au-dessus), ni la
              position, ni la couleur du survol. */
-        /*  ██ §1 (nº 548) — LE ROND RESTE TANT QUE LA FENÊTRE EST
-             OUVERTE ██
-             LE DÉFAUT : le rond gris ne venait que du SURVOL. Ouvrir la
-             fenêtre déplace le pointeur — le survol tombe, le rond avec
-             lui, et le bouton qui commande la fenêtre ouverte n'avait
-             plus l'air d'être enfoncé.
-             LE REMÈDE EST CELUI DU BOUTON DES FILTRES (nº 507,
-             MoteurTatouage), repris mot pour mot : OUVERT, le fond est
-             POSÉ ; FERMÉ, ce sont les états de survol et d'appui.
-             JAMAIS LES DEUX — un seul fond peint à la fois, c'est la
-             règle nº 389, et c'est pourquoi la branche est exclusive.
-             LA COULEUR N'EST PAS CHOISIE : `bg-sombre-eleve` EST le
-             jeton que `ETATS_ROND_BARRE` peint au survol. Ouvert et
-             survolé se ressemblent donc au pixel, comme demandé.
-             ⚠️ LE GLYPHE N'A PAS D'ÉTAT DE SURVOL À REPRENDRE : il est
-             ROSE en permanence (c'est l'état connecté qui le dit,
-             charte) — `ETATS_ROND_BARRE` ne touche que le fond. Il n'y
-             a donc rien de plus à poser.
-             ⚠️ RIEN D'AUTRE NE CHANGE : ni la taille de l'icône, ni
-             celle de la cible (40 px, en ligne plus haut), ni la
-             position. */
+        /*  ██ §1 (nº 548), ANNULÉ PAR LE §2 DE LA nº 646 ██
+             CE QU'ELLE AVAIT RÉGLÉ, et qui n'a plus d'objet : le rond
+             gris ne venait que du SURVOL ; ouvrir la fenêtre déplaçait
+             le pointeur, le survol tombait, et le bouton qui commandait
+             la fenêtre ouverte n'avait plus l'air d'être enfoncé. Elle
+             posait donc le fond tant que la fenêtre était ouverte.
+             CE QUI L'ANNULE : il n'y a plus de fond du tout sur ce
+             bouton (voir le §2 ci-dessous) — ni au survol, ni ouvert.
+             Le défaut qu'elle fermait ne peut plus se produire, faute
+             de survol à effacer. La note reste pour dire POURQUOI la
+             branche a existé, et pourquoi elle est partie. */
+        /*  ██ §2 (nº 646) — LE CERCLE GRIS S'EN VA, LES DEUX ÉTATS AVEC ██
+             ==========================================================
+             CE QUI PART : `ETATS_ROND_BARRE` (le fond au survol et à
+             l'appui) ET la branche « ouvert » de la nº 548. Le
+             propriétaire ne veut plus de rond gris derrière l'avatar,
+             au doigt comme au web : la photo est DÉJÀ un rond, un
+             second dessous ne dit rien de plus.
+             ⚠️ L'ACQUIS nº 548 TOMBE AVEC LUI, ET JE LE DIS PLUTÔT QUE
+             DE LE TAIRE : « le rond reste tant que la fenêtre est
+             ouverte » n'a plus d'objet — il n'y a plus de rond à tenir
+             posé. Ce que la nº 548 réparait (le survol qui s'efface
+             quand le pointeur part ouvrir la fenêtre) ne peut plus se
+             produire, faute de survol à effacer.
+             ⚠️ LE CERCLE GRIS DU PARTICULIER, LUI, RESTE — et il ne
+             faut pas confondre les deux. Celui qui part était peint par
+             LE BOUTON, comme un ÉTAT (survol, appui, fenêtre ouverte) ;
+             celui qui reste est peint par L'AVATAR lui-même, comme une
+             IDENTITÉ (le repli de la nº 549, quand il n'y a pas de
+             photo). Même jeton (`bg-sombre-eleve`), deux rôles, deux
+             éléments : l'un sur `<button>`, l'autre sur le `<span>` de
+             l'avatar, plus haut.
+             ⚠️ `transition-colors` PART AUSSI : plus aucune couleur ne
+             change sur ce bouton, une transition sans rien à animer ne
+             dit rien (la leçon de la nº 582 sur le chevron). Le contour
+             de mise au point (`focus-visible`) ne bouge pas : il n'est
+             pas un fond, et le clavier en a besoin. */
         className={`hidden sm:flex shrink-0 items-center justify-center rounded-full
-                   transition-colors
-                   ${ouvert ? "bg-sombre-eleve" : ETATS_ROND_BARRE}
                    focus-visible:outline-2 focus-visible:outline-offset-2
                    focus-visible:outline-primaire`}
       >
