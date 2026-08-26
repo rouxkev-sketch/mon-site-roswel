@@ -940,22 +940,40 @@ export function IndexTatoueurs({
         {/* LE TITRE DIT LA RECHERCHE (nº 140) — la pilule de la barre
             dit toujours « Recherche », c'est donc ICI que les critères
             se lisent.
-            LA RÈGLE, À JOUR (nº 508-§2) : le QUOI en titre (« Flashs ·
-            Réalisme », « Tous les flashs », « Réalisations ·
-            Blackwork ») et, quand aucune catégorie n'est choisie, le
-            titre GÉNÉRIQUE — un lieu n'est jamais un titre. Le lieu et
-            le rayon vivent TOUJOURS dans le sous-titre, derrière le
-            compte. Sans recherche du tout : le titre d'invitation de la
-            mosaïque, et une ligne muette à la place du sous-titre
-            (nº 507-§1). */}
+            LA RÈGLE, À JOUR (nº 508-§2, AFFINÉE nº 633) : le QUOI en
+            titre — LE NOM DU STYLE quand un style est choisi (« Anime &
+            Manga »), la catégorie entière quand il n'y en a pas
+            (« Toutes les réalisations », « Tous les flashs ») — et,
+            quand aucune catégorie n'est choisie, le titre GÉNÉRIQUE :
+            un lieu n'est jamais un titre. Le lieu et le rayon vivent
+            TOUJOURS dans le sous-titre, derrière le compte. Sans
+            recherche du tout : le titre d'invitation de la mosaïque, et
+            une ligne muette à la place du sous-titre (nº 507-§1). */}
         {(() => {
-          const quoi =
-            libelleExplorer(affiches.nature, affiches.style) ||
-            //  ⚠️ `libelleStyle` EN DIRECT (nº 321-§3) : cette ligne
-            //  passait par `libelleStyleChoisi`, mais elle est GARDÉE
-            //  par `affiches.style` — le cas vide n'y arrivait jamais.
-            //  Le mot « Tous les styles » a donc quitté le site.
-            (affiches.style ? libelleStyle(affiches.style) : "");
+          /*  ██ §1 (nº 633) — LE TITRE NE RÉPÈTE PLUS LA CATÉGORIE ██
+              ------------------------------------------------------------
+              CE QUI CHANGE : « Réalisations · Anime & Manga » devient
+              « Anime & Manga ». Le nom du style suffit — la catégorie
+              est déjà dite par le champ du moteur juste au-dessus, et
+              elle n'apprend rien de plus sur ce qu'on regarde.
+              ⚠️ `libelleExplorer` N'EST PAS TOUCHÉE, et c'est délibéré :
+              elle sert DEUX AUTRES surfaces où la mention doit rester —
+              le champ refermé du moteur (MoteurTatouage) et celui de
+              « Ma sélection » (MenusSelection). Là-bas, la ligne dit CE
+              QU'ON A RÉPONDU, dans l'ordre où on l'a répondu (voir sa
+              note) ; ici, elle dit CE QU'ON REGARDE. Deux rôles, deux
+              écritures — changer la fonction aurait emporté les trois.
+              On ne l'appelle donc plus que pour ce qu'elle seule sait :
+              le nom d'une catégorie ENTIÈRE.
+              ⚠️ LE REPLI DE LA nº 321-§3 DISPARAÎT SANS RIEN PERDRE : il
+              rattrapait le cas d'un style SANS catégorie (une adresse
+              bricolée, « /?style=anime-manga »), où `libelleExplorer`
+              rendait la chaîne vide. Ce cas passe désormais par le
+              chemin PRINCIPAL — le style d'abord — et rend le même mot
+              qu'avant. Une branche de moins, aucun cas de moins. */
+          const quoi = affiches.style
+            ? libelleStyle(affiches.style)
+            : libelleExplorer(affiches.nature, "");
           //  ⚠️ LE LIEU AU FORMAT INTERNATIONAL (nº 211-§1) — « Paris,
           //  France », « Austin, TX, États-Unis ». La règle vit dans
           //  lib/adresse (`ligneCarte`), celle-là même qui écrit la
