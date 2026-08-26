@@ -144,8 +144,13 @@ export type TatoueurSuivi = {
       portent les dates de guest (migration nº 21) et la ligne
       d'information. Aucune seconde source n'est créée. */
   modes: ModeExerciceFiche[];
-  /** SES PUBLICATIONS RÉCENTES — les plus récentes d'abord. Elles
-      servent aux trois photos du bloc (§4) et au compte du §5. */
+  /** SON PORTFOLIO — ce que la bande compose (nº 638) et ce que le
+      compte de nouveautés dénombre (§5).
+      ⚠️ LE NOM RESTE, LE CONTENU A CHANGÉ (nº 639) : ce ne sont plus
+      « les plus récentes » mais LE PORTFOLIO ENTIER de cet artiste,
+      dans L'ORDRE DE L'ARTISTE. La date ne choisit plus rien — c'est
+      tout le point de la nº 639. Le nom est conservé pour ne pas
+      éparpiller un renommage dans trois fichiers ; sa note fait foi. */
   recentes: PhotoDuSuivi[];
   /** LE COMPTE DE NOUVEAUTÉS (§5) — publications postérieures à la
       dernière visite de CETTE page. Zéro quand on ne sait pas. */
@@ -160,11 +165,85 @@ export type ContenuFavoris = {
 const VIDE: ContenuFavoris = { photos: [], suivis: [] };
 
 /**
- * COMBIEN DE PUBLICATIONS ON REGARDE EN ARRIÈRE. Une lecture bornée,
- * pour tous les suivis à la fois : au-delà, ni la bande de trois ni le
- * compte de nouveautés ne changeraient quoi que ce soit à l'écran.
+ * ██ §1 (nº 639) — UN QUOTA PAR PORTFOLIO, PLUS UN PLAFOND GLOBAL ██
+ * ==================================================================
+ * CE QUI EST ANNULÉ : `PUBLICATIONS_LUES = 400`, qui demandait LES 400
+ * PHOTOS LES PLUS RÉCENTES, tous suivis confondus. Deux défauts, et le
+ * second vidait la nº 638 de son sens :
+ *  · un tatoueur très actif mangeait la part des autres, qui n'avaient
+ *    alors AUCUNE bande (relevé nº 637) ;
+ *  · la coupe se faisait SUR LA DATE, donc AVANT le tri par favoris :
+ *    une photo ancienne et très aimée n'arrivait jamais jusqu'au tri.
+ *
+ * ██ POURQUOI ON NE DEMANDE PAS « LES 25 PLUS AIMÉES » ██
+ * Parce que la base ne peut pas les trier. Les favoris ne sont PAS dans
+ * `photos_tatoueur` : ils vivent dans la vue `coeurs_par_photo`, une
+ * table à part, clée par photo. Trier une lecture sur une colonne d'une
+ * autre table demanderait une jointure — donc une fonction en base,
+ * donc une migration, que cette passe s'interdit. La seule façon
+ * honnête de ne perdre AUCUNE photo aimée est donc de ne pas choisir du
+ * tout : ON LIT LE PORTFOLIO ENTIER.
+ *
+ * ██ CE NOMBRE N'EST DONC PAS UN CHOIX, C'EST UN FILET ██
+ * DEUX CENTS, et il ne sert qu'à deux choses : empêcher un portfolio
+ * pathologique de rapatrier des milliers de lignes, et ne pas dépendre
+ * du plafond de mille que la base applique en silence quand on ne dit
+ * rien. Un portfolio réel en compte SOIXANTE À CENT SOIXANTE (trois à
+ * huit galeries, vingt photos au plus chacune — `PLAFOND_GALERIE`) :
+ * deux cents couvre DIX galeries pleines, et n'est donc jamais atteint.
+ * ⚠️ ET SI JAMAIS IL L'ÉTAIT, LA COUPE NE SE FAIT PAS SUR LA DATE : la
+ * lecture est rangée par L'ORDRE DE L'ARTISTE (`ordre`), qui numérote
+ * les photos DANS chaque galerie. Toutes les galeries donnent donc leur
+ * première photo avant qu'aucune ne donne sa deuxième : ce qui tombe,
+ * ce sont les fonds de galerie, uniformément, et jamais un artiste
+ * entier.
  */
-const PUBLICATIONS_LUES = 400;
+const PHOTOS_PAR_PORTFOLIO = 200;
+
+/**
+ * ██ §1 (nº 639) — LA LECTURE DE TROP QU'ON PRÉFÈRE, ET POURQUOI ██
+ * ==================================================================
+ * UNE REQUÊTE PAR PORTFOLIO SUIVI, TOUTES LANCÉES ENSEMBLE. C'est la
+ * voie que le propriétaire a retenue à la nº 639, et elle est la seule
+ * qui GARANTISSE le quota : avec une lecture commune, si large
+ * soit-elle, il reste toujours un corpus assez gros pour qu'un dernier
+ * suivi tombe en dehors. Avec une requête chacun, personne ne peut plus
+ * être privé de bande par la faute d'un autre — c'est vrai par
+ * construction, pas par calibrage.
+ * ⚠️ CE QUE ÇA COÛTE, ET IL FAUT LE DIRE : le nombre d'ALLERS-RETOURS
+ * suit le nombre de suivis. Ils partent tous en même temps (`Promise.all`),
+ * donc l'attente reste celle du plus lent — mais la base, elle, en voit
+ * N. À l'échelle du site (quelques dizaines de suivis au plus), c'est
+ * le bon échange ; au-delà de la centaine, il faudra la fonction en
+ * base que cette passe a refusée.
+ * ⚠️ UNE FICHE QUI ÉCHOUE NE FAIT PERDRE QUE SA BANDE : chaque lecture
+ * est avalée séparément, les autres arrivent quand même.
+ * ⚠️ ET L'ORDRE EST TOTALEMENT DÉTERMINÉ : `ordre` puis `id`. Sans le
+ * second, deux photos de même rang seraient rendues dans un ordre que
+ * la base ne promet pas — et la bande pourrait changer sans raison
+ * d'une visite à l'autre.
+ */
+
+/**
+ * ██ §1 (nº 639) — LES FAVORIS : LA VUE ENTIÈRE, PAS UNE LISTE D'ID ██
+ * ==================================================================
+ * C'est la leçon de la nº 634, et elle devient obligatoire ici. La
+ * lecture d'avant demandait les favoris `.in("photo_id", …)` avec la
+ * liste des photos rapatriées. Elle tenait tant que cette liste faisait
+ * quatre cents lignes ; elle en fait maintenant plusieurs milliers, et
+ * PostgREST met cette liste DANS L'ADRESSE de la requête — quarante
+ * octets par identifiant. On aurait dépassé la longueur qu'un serveur
+ * accepte, la lecture aurait échoué EN SILENCE (l'erreur est avalée),
+ * tous les favoris seraient tombés à zéro, et le tri de la nº 638
+ * n'aurait plus rien trié.
+ * ON DEMANDE DONC LA VUE TELLE QUELLE : une adresse courte, une seule
+ * lecture, et un plafond écrit. Elle ne porte que les photos AIMÉES —
+ * une photo sans cœur n'y a pas de ligne —, donc elle est bien plus
+ * petite que la table des photos. Ce qui en revient et ne nous concerne
+ * pas n'est jamais consulté : on ne l'interroge que par les
+ * identifiants qu'on a déjà en main.
+ */
+const LIGNES_DE_COEURS = 50000;
 
 /**
  * TOUT CE QUE CE COMPTE A GARDÉ. Rendu VIDE — jamais en erreur — si
@@ -305,17 +384,24 @@ export async function lireLesFavoris(
         · LES MODES D'EXERCICE — ils portent les dates de guest
           (migration nº 21) et la ligne d'information. C'est la SEULE
           source : rien n'est recopié ailleurs ;
-        · LES PUBLICATIONS RÉCENTES de ces fiches — la bande de trois
-          photos, et le compte de nouveautés depuis la dernière visite.
-       ⚠️ TROIS LECTURES SIMPLES, JAMAIS UNE IMBRIQUÉE : la règle de la
-       maison, rappelée en tête de ce fichier. */
+        · LE PORTFOLIO de chacune — la bande de vignettes (nº 638) et le
+          compte de nouveautés depuis la dernière visite.
+       ⚠️ JAMAIS UNE LECTURE IMBRIQUÉE : la règle de la maison, rappelée
+       en tête de ce fichier. Elles sont désormais PLUS DE TROIS — une
+       par portfolio suivi (nº 639) —, mais chacune reste simple, et
+       elles partent toutes ensemble. */
     const suivisPresents = idsSuivis.filter((id) => parFiche.has(id));
     const [lignesModes, lignesRecentes, visite] = await Promise.all([
       suivisPresents.length > 0
         ? supabase.from("modes_exercice").select("*").in("tatoueur_id", suivisPresents)
         : Promise.resolve({ data: [], error: null }),
-      suivisPresents.length > 0
-        ? supabase
+      //  ██ §1 (nº 639) — UNE LECTURE PAR PORTFOLIO, TOUTES ENSEMBLE ██
+      //  Voir la note de `PHOTOS_PAR_PORTFOLIO`, plus haut : c'est la
+      //  seule forme qui GARANTISSE le quota, et la coupe éventuelle se
+      //  fait sur l'ordre de l'artiste, jamais sur la date.
+      Promise.all(
+        suivisPresents.map((id) =>
+          supabase
             .from("photos_tatoueur")
             .select(
               //  §1 (nº 302) — `ordre` EST LU ICI AUSSI : la galerie de
@@ -329,13 +415,19 @@ export async function lireLesFavoris(
               //  `garnirFiches` (lib/tatoueurs) — mais celle-ci NE LA
               //  DEMANDAIT MÊME PAS : la bande de « Ma sélection »
               //  montrait donc les photos en attente à tous ceux qui
-              //  suivent l'artiste. Relevé nº 637, fermé ici.
+              //  suivent l'artiste. Relevé nº 637, fermé à la nº 638.
+              //  ⚠️ ELLE EST FILTRÉE EN TYPESCRIPT, PAS ICI, et c'est
+              //  délibéré (nº 639) : sans la migration la colonne
+              //  n'existe pas, et un filtre serveur ferait échouer la
+              //  lecture ENTIÈRE au lieu de ne rien filtrer.
               "id, tatoueur_id, style, rendu, nature, url, miniature, cree_le, ordre, en_attente"
             )
-            .in("tatoueur_id", suivisPresents)
-            .order("cree_le", { ascending: false })
-            .limit(PUBLICATIONS_LUES)
-        : Promise.resolve({ data: [], error: null }),
+            .eq("tatoueur_id", id)
+            .order("ordre", { ascending: true })
+            .order("id", { ascending: true })
+            .limit(PHOTOS_PAR_PORTFOLIO)
+        )
+      ),
       lireLaDerniereVisite(utilisateurId),
     ]);
 
@@ -374,18 +466,22 @@ export async function lireLesFavoris(
      * passée, la lecture échoue et l'on répond zéro partout — la
      * galerie garde alors l'ordre de l'artiste, sans rien casser.
      */
-    const lignesBrutes = (lignesRecentes.error
-      ? []
-      : (lignesRecentes.data ?? [])) as unknown as LigneRecente[];
+    /*  §1 (nº 639) — LES N LECTURES SONT REMISES BOUT À BOUT ICI. Une
+        fiche dont la lecture a échoué ne fait perdre QUE sa bande : les
+        autres arrivent quand même. */
+    const lignesBrutes: LigneRecente[] = [];
+    for (const lecture of lignesRecentes) {
+      if (lecture.error) continue;
+      lignesBrutes.push(...((lecture.data ?? []) as unknown as LigneRecente[]));
+    }
     const jaimeParPhoto = new Map<string, number>();
     if (lignesBrutes.length > 0) {
+      //  §1 (nº 639) — LA VUE ENTIÈRE, ET NON PLUS UNE LISTE
+      //  D'IDENTIFIANTS : voir la note de `LIGNES_DE_COEURS`, plus haut.
       const comptes = await supabase
         .from("coeurs_par_photo")
         .select("photo_id, coeurs")
-        .in(
-          "photo_id",
-          lignesBrutes.map((ligne) => ligne.id)
-        );
+        .limit(LIGNES_DE_COEURS);
       for (const ligne of (comptes.error
         ? []
         : (comptes.data ?? [])) as unknown as {
