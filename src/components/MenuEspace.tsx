@@ -22,6 +22,10 @@ import {
 //  photo de profil du portfolio affiché, au doigt comme au web.
 //  Écriture unique du rond photo (nº 492).
 import { PhotoRonde } from "@/components/BlocLieux";
+//  §1 (nº 645) — l'avatar de la barre : lu dans la session, rangé par
+//  l'écriture unique de `lib/avatar-du-compte`.
+import { rangerLAvatarDuCompte } from "@/lib/avatar-du-compte";
+import { useUtilisateur } from "@/lib/use-utilisateur";
 import { EntreeLangue, FenetreLangue } from "@/components/SelecteurLangue";
 import { FenetreNotifications } from "@/components/FenetreNotifications";
 import { MenuDeVerre } from "@/components/SurfaceDeVerre";
@@ -273,6 +277,24 @@ export function MenuEspace({
 
   const fiche = ficheActive(fiches, idFiche);
   const etat: EtatFiche = etatDeLaFiche(fiche);
+  /**
+   * ██ §1 (nº 645) — L'AVATAR DE LA BARRE, LU DANS LA SESSION ██
+   * ------------------------------------------------------------------
+   * `photoDuCompte` vient de `user_metadata`, donc du COOKIE : elle est
+   * connue dès le premier rendu, serveur compris — aucune requête,
+   * aucun clignotement (la voie B de la nº 644, méthode nº 632).
+   * ⚠️ CE N'EST PAS `fiche?.photo_profil` QU'ON AFFICHE, et c'est tout
+   * le point : `fiches` est VIDE tant que le menu n'a pas été ouvert
+   * (acquis nº 142, jamais rouvert). La session, elle, sait déjà.
+   */
+  const { photo: photoDuCompte } = useUtilisateur();
+  /*  §1 (nº 645) — LE COMPTE A-T-IL ÉTÉ LU AU MOINS UNE FOIS ? Sans ce
+      drapeau, l'effet qui range la photo verrait `fiche` à `null` sur
+      une page où le menu n'a jamais été ouvert, et EFFACERAIT l'avatar
+      d'un professionnel à chaque chargement. Il ne devient vrai que sur
+      une lecture RÉUSSIE — la même prudence que la nº 142 sur la liste
+      qu'on ne vide pas. */
+  const [compteLu, setCompteLu] = useState(false);
   /*  §3-b (nº 472) — Y A-T-IL DE QUOI CHOISIR ? Un seul portfolio :
       pas de menu déroulant (il n'ouvrirait qu'une liste d'un nom) et
       pas de fond clair (il n'annonce plus un choix). Les deux
@@ -308,6 +330,10 @@ export function MenuEspace({
       setFiches(liste);
       // On recale le choix : la fiche mémorisée peut avoir disparu.
       setIdFiche((courant) => ficheActive(liste, courant)?.id ?? null);
+      //  §1 (nº 645) — À PARTIR D'ICI, ET SEULEMENT ICI, le menu sait
+      //  ce que le compte contient : l'effet qui range l'avatar peut
+      //  parler. Une lecture qui échoue n'arme rien (voir le `catch`).
+      setCompteLu(true);
     } catch {
       //  ⚠️ ON NE VIDE PAS LA LISTE (passe nº 142). Une lecture qui
       //  échoue — réseau coupé le temps d'un geste — faisait
@@ -325,6 +351,31 @@ export function MenuEspace({
       // Pas de nouvelles : le menu vit très bien sans.
     }
   }, [idUtilisateur]);
+
+  /**
+   * ██ §1 (nº 645) — LA PHOTO RANGÉE SUIT LA FICHE ACTIVE ██
+   * ------------------------------------------------------------------
+   * UN SEUL MÉCANISME POUR DEUX MOMENTS, et c'est délibéré : cet effet
+   * regarde la fiche active — celle que `ficheActive(fiches, idFiche)`
+   * désigne. Elle change à la LECTURE du compte (première ouverture du
+   * menu, rattrapage d'un compte d'avant cette passe, portfolio
+   * disparu) ET au CHOIX d'un autre portfolio dans le déroulant. Les
+   * deux passent ici ; il n'y a pas deux endroits à tenir d'accord.
+   * ⚠️ RIEN TANT QUE LE COMPTE N'A PAS ÉTÉ LU (`compteLu`) : voir la
+   * note du drapeau. Une fiche à `null` faute de lecture n'est pas un
+   * compte sans portfolio.
+   * ⚠️ ET RIEN QUAND LA VALEUR NE CHANGE PAS : la garde d'égalité vit
+   * dans `rangerLAvatarDuCompte` (leçon nº 111 — ne pas rejouer la
+   * session pour écrire ce qui y est déjà).
+   */
+  useEffect(() => {
+    if (!compteLu) return;
+    void rangerLAvatarDuCompte(
+      creerClientSupabaseNavigateur(),
+      fiche?.photo_profil ?? null,
+      photoDuCompte
+    );
+  }, [compteLu, fiche?.photo_profil, photoDuCompte]);
 
   /**
    * OUVRIR — ET N'OUVRIR QU'UNE FOIS LE CONTENU PRÊT (passe nº 142)
@@ -1454,6 +1505,48 @@ export function MenuEspace({
     </div>
   );
 
+  /**
+   * ██ §1 (nº 645) — L'AVATAR DE LA BARRE, 28 px DANS LA CIBLE DE 40 ██
+   * ==================================================================
+   * IL REMPLACE LE GLYPHE, IL NE S'AJOUTE PAS : la cible de 40 px, sa
+   * place, son fond de survol et sa branche « ouvert » (nº 548) sont
+   * exactement ceux d'avant. Seul CE QU'ELLE CONTIENT change — une
+   * silhouette rose de 24 px devient un rond de 28.
+   * L'ANNEAU PASSE DE 8 À 6 px de chaque côté : c'est ce qui reste du
+   * fond au survol autour de l'avatar. Il se voit toujours, moins
+   * large — et pour un compte SANS photo, le rond gris de repli et
+   * l'anneau portent le MÊME jeton (`bg-sombre-eleve`) : survolé,
+   * l'ensemble se lit comme un seul disque de 40 px. Aucune couleur
+   * nouvelle n'est employée pour autant.
+   * LE ROSE S'EN VA AVEC LE GLYPHE, et c'est accepté (consigne nº 645) :
+   * la photo dit qu'on est connecté mieux qu'une teinte. `text-primaire`
+   * quitte donc les deux boutons — il n'y a plus de trait à peindre.
+   * ⚠️ LE REPLI EST CELUI DE LA nº 549, à l'échelle de la barre : cercle
+   * gris, silhouette au MÊME RAPPORT (34 / 64 = 0,53, donc 15 dans un
+   * rond de 28). Un particulier, un portfolio sans photo et un compte
+   * d'avant cette passe montrent tous ce rond-là.
+   * ⚠️ CE QUE ÇA COÛTE À L'ALIGNEMENT DE LA nº 465, ET JE LE DIS : sa
+   * compensation `-mr-2` (8 px) était calculée pour un dessin de 24 px
+   * dans une boîte de 40. Un dessin de 28 laisse 6 px de vide, pas 8 :
+   * le rond dépasse donc la marge de DEUX pixels, à l'intérieur du
+   * rembourrage de la barre (16 px, 24 dès 640) — rien ne sort de
+   * l'écran, aucun défilement horizontal. Le corriger au pixel
+   * demanderait `-mr-1.5`, ce qui reculerait la loupe et le fanion de
+   * 2 px : la consigne dit que la barre ne bouge pas, c'est donc le
+   * débord qui est retenu.
+   */
+  const avatarDeLaBarre = photoDuCompte ? (
+    <PhotoRonde
+      source={photoDuCompte}
+      nature="personne"
+      classeTaille="h-7 w-7"
+    />
+  ) : (
+    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-sombre-eleve text-sombre-texte-doux">
+      <IconeSilhouette taille={15} />
+    </span>
+  );
+
   return (
     /*  ██ §2 (nº 465) — LE GLYPHE DU COMPTE SE CALE SUR LA MARGE ██
         CE QUI LE RENTRAIT, mesuré : la BOÎTE cliquable de 40 px
@@ -1484,14 +1577,15 @@ export function MenuEspace({
         //  bouton-ci dans son autre habillage, et il commande la MÊME
         //  surface. Voir la note complète sur le jumeau du web, plus bas.
         className={`sm:hidden flex shrink-0 items-center justify-center rounded-full
-                   text-primaire transition-colors
+                   transition-colors
                    ${ouvert ? "bg-sombre-eleve" : ETATS_ROND_BARRE}
                    focus-visible:outline-2 focus-visible:outline-offset-2
                    focus-visible:outline-primaire`}
       >
-        {/*  LA SILHOUETTE SEULE, rang 24 (nº 147-§5 et §6) — ROSE :
-             c'est l'état connecté, le rose le dit (charte). */}
-        <IconeSilhouette taille={24} />
+        {/*  §1 (nº 645) — L'AVATAR DU COMPTE, à la place de la
+             silhouette rose de rang 24 (nº 147-§5 et §6). Il est écrit
+             une fois, plus haut, et posé dans les deux habillages. */}
+        {avatarDeLaBarre}
       </button>
 
       {/* ÉCRAN LARGE (nº 147-§4) : LA CAPSULE « Mon espace » A
@@ -1549,12 +1643,14 @@ export function MenuEspace({
              celle de la cible (40 px, en ligne plus haut), ni la
              position. */
         className={`hidden sm:flex shrink-0 items-center justify-center rounded-full
-                   text-primaire transition-colors
+                   transition-colors
                    ${ouvert ? "bg-sombre-eleve" : ETATS_ROND_BARRE}
                    focus-visible:outline-2 focus-visible:outline-offset-2
                    focus-visible:outline-primaire`}
       >
-        <IconeSilhouette taille={24} classe="shrink-0" />
+        {/*  §1 (nº 645) — le même avatar qu'à l'écran étroit : une
+             écriture, deux habillages. */}
+        {avatarDeLaBarre}
       </button>
 
       {/* LE CONTENU DU MENU — écrit UNE FOIS, posé dans les deux

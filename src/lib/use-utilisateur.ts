@@ -3,6 +3,9 @@
 import { createContext, useContext, useSyncExternalStore } from "react";
 import type { User } from "@supabase/supabase-js";
 import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
+//  §1 (nº 645) — la photo du portfolio actif, rangée dans les mêmes
+//  métadonnées que le nom : une seule lecture, écrite là-bas.
+import { avatarDuCompte } from "@/lib/avatar-du-compte";
 import { noterAuJournal } from "@/lib/journal-de-bord";
 import { utilisateurDepuisCookies } from "@/lib/session-cookie";
 
@@ -154,5 +157,17 @@ export function useUtilisateur() {
     utilisateur?.email?.split("@")[0] ||
     "";
 
-  return { utilisateur, nom, pret };
+  /**
+   * §1 (nº 645) — LA PHOTO DU PORTFOLIO ACTIF, LUE COMME LE NOM.
+   * Elle vit dans les MÊMES métadonnées, donc dans le même cookie :
+   * elle arrive avec le premier rendu, serveur compris, et ne coûte
+   * aucune requête. La règle qui la range est chez `avatar-du-compte`.
+   * ⚠️ ELLE ENTRE DANS LA SIGNATURE, et c'est ce qu'on veut : la
+   * signature (plus haut) compare `user_metadata` en entier — changer
+   * de portfolio prévient donc les abonnés, exactement comme un
+   * changement de nom.
+   */
+  const photo = avatarDuCompte(utilisateur);
+
+  return { utilisateur, nom, photo, pret };
 }

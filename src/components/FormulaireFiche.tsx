@@ -89,6 +89,9 @@ import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
 import { redirectionDeGarde } from "@/lib/journal-de-bord";
 import { marquerTravailEnCours } from "@/lib/travail-en-cours";
 import { useUtilisateur } from "@/lib/use-utilisateur";
+//  §1 (nº 645) — l'avatar de la barre, rangé dans la session : une
+//  seule écriture, deux appelants (ici et le menu du compte).
+import { avatarDuCompte, rangerLAvatarDuCompte } from "@/lib/avatar-du-compte";
 import { MANQUE, texteErreur } from "@/lib/erreurs-formulaire";
 import { IconeAjouterPhoto } from "@/components/IconeAjouterPhoto";
 import { OngletsLigne } from "@/components/OngletsLigne";
@@ -2153,6 +2156,26 @@ export function FormulaireFiche() {
         // ENREGISTRÉ : il n'y a plus rien à perdre — le menu peut
         // ouvrir une création sans rien demander.
         marquerTravailEnCours(false);
+        /*  ██ §1 (nº 645) — L'AVATAR DE LA BARRE SUIT CE QU'ON VIENT
+             D'ÉCRIRE ██
+             LE MOMENT EST OBLIGATOIRE, ET VOICI POURQUOI : la barre
+             lit la photo dans la SESSION, et le menu ne la remet à
+             jour qu'à sa prochaine ouverture. Sans cette ligne, une
+             photo de profil déposée ici resterait invisible dans la
+             barre — ou pire, l'ancienne y resterait affichée.
+             ⚠️ ON ATTEND (`await`) : la page se recharge à la ligne
+             suivante, et la session doit être écrite AVANT — sinon la
+             course est perdue et l'écriture meurt avec le document.
+             ⚠️ LE PORTFOLIO QU'ON VIENT D'ENREGISTRER DEVIENT CELUI QUE
+             LA BARRE MONTRE. C'est la règle, et elle est simple à
+             tenir : « le portfolio actif » n'est mémorisé nulle part
+             ailleurs (constat de la nº 644) — cette photo EST le
+             témoin. */
+        await rangerLAvatarDuCompte(
+          supabase,
+          adresseProfil,
+          avatarDuCompte(utilisateur)
+        );
         //  §2 (nº 269) — MÊME RÈGLE À LA CRÉATION : `replace`, jamais
         //  `assign` — l'enregistrement ne laisse aucune entrée de
         //  formulaire de plus dans la pile (voir la note du cas
@@ -2443,6 +2466,15 @@ export function FormulaireFiche() {
       // Même retour que la création : l'espace rechargé, encadré
       // d'état en tête de formulaire — SUR LA MÊME FICHE.
       marquerTravailEnCours(false);
+      /*  §1 (nº 645) — LE MÊME RANGEMENT QU'À LA CRÉATION, pour la même
+           raison : la photo vient de changer en base, la session doit
+           la porter avant que la page ne reparte. Voir la note du cas
+           CRÉATION, plus haut. */
+      await rangerLAvatarDuCompte(
+        supabase,
+        adresseProfil,
+        avatarDuCompte(utilisateur)
+      );
       /*  §2 (nº 269) — LA CAUSE DU RETOUR QUI RAMÈNE AU FORMULAIRE.
           `location.assign` POUSSE une entrée d'historique : après un
           enregistrement, la pile contenait DEUX fois le formulaire —
