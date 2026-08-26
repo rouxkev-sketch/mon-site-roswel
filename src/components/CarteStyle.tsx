@@ -41,16 +41,15 @@ import type { StyleDuCatalogue } from "@/lib/catalogue-styles";
  * §1 (nº 621) — LE TEXTE SOUS LA CARTE, EN UNE SEULE LIGNE.
  * ------------------------------------------------------------------
  * Le nom du style à gauche, le nombre d'artistes à droite, en gris.
- * LA TYPOGRAPHIE EST CELLE DE LA LIGNE 1 DES CARTES (nº 480/481) :
- * graisse normale, 15 px, interligne 18, `text-sombre-texte` — le
- * blanc du site. Une seule différence, voulue : le nombre porte
- * `text-sombre-texte-doux`, LE gris des textes secondaires du site
- * (jeton de la nº 466). Aucune couleur neuve.
- * ⚠️ IDENTIQUE AU WEB ET AU DOIGT, comme demandé — donc PAS les deux
- * variantes de taille que la carte de recherche pose au doigt (14 px
- * en deux colonnes, 17 en pleine largeur). C'est la valeur du web,
- * 15 px, qui vaut partout ici. Une classe de moins, et rien qui
- * dépende de la disposition.
+ * LA TYPOGRAPHIE PART DE LA LIGNE 1 DES CARTES (nº 480/481) :
+ * `text-sombre-texte` — le blanc du site — pour le nom, et
+ * `text-sombre-texte-doux` — LE gris des textes secondaires (jeton de
+ * la nº 466) — pour le nombre. Aucune couleur neuve.
+ * ⚠️ LA nº 621 AVAIT POSÉ LA MÊME TAILLE PARTOUT (15 px, graisse
+ * normale) : LA nº 622 SÉPARE LES DEUX APPAREILS, sur consigne. Le
+ * doigt garde exactement cette valeur ; le web monte à 17 px et met le
+ * nom au demi-gras. Les deux jeux de classes sont écrits sur la ligne
+ * elle-même — voir la note qui les accompagne, plus bas.
  * ⚠️ L'AIR SOUS LA PHOTO ET LES MARGES LATÉRALES sont ceux de la carte
  * de recherche, repris au pixel : `pt-2 px-0.5 mobile:px-2` — huit
  * pixels sous l'image, deux de retrait au web, huit au doigt (la photo
@@ -122,18 +121,57 @@ export function CarteStyle({
           />
         </div>
 
+        {/*  ██ §1 (nº 622) — AU WEB, LA LIGNE GRANDIT ET LE NOM S'ÉPAISSIT ██
+             ------------------------------------------------------
+             CE QUE LE PROPRIÉTAIRE A DEMANDÉ : sur le web, la ligne
+             était trop petite. Le NOM passe au demi-gras — le gras des
+             cartes du site (nº 481 : « le nom prend le demi-gras »), et
+             non le `bold` que seul un titre de fiche porte — et LES
+             DEUX TEXTES montent de QUINZE à DIX-SEPT PIXELS, avec
+             l'interligne qui va avec (18 → 20). Aucune valeur neuve
+             dans l'échelle : ce sont exactement le corps et l'interligne
+             que la carte de recherche emploie déjà en pleine largeur.
+             LE CHIFFRE GARDE SA GRAISSE (normale) et son gris
+             (`texteDoux`, jeton nº 466) ; le nom garde sa couleur.
+             LE DOIGT NE BOUGE PAS : quinze pixels, interligne dix-huit,
+             graisse normale — ce que la nº 621 a posé.
+
+             ██ COMMENT LES DEUX SONT SÉPARÉS, ET POURQUOI PAS AUTREMENT ██
+             La règle du site (nº 537, nº 557, nº 589) veut que le DOIGT
+             soit le défaut et que le WEB écrive sa variante. Mais poser
+             une base et une variante `not-mobile:` mettrait DEUX
+             classes sur la même propriété, à spécificité ÉGALE
+             (`:where()` et `:not(:where())` valent zéro) : leur ordre
+             dans la FEUILLE trancherait, et c'est exactement le piège
+             nº 389.
+             D'OÙ CE CHOIX : AUCUNE CLASSE DE BASE, et DEUX VARIANTES
+             QUI S'EXCLUENT — `mobile:` exige `data-appareil="mobile"`,
+             `not-mobile:` l'interdit. Elles ne peuvent pas s'appliquer
+             au même élément, il n'y a donc RIEN à départager, quel que
+             soit l'ordre de la feuille.
+             ⚠️ ET SANS JAVASCRIPT, l'attribut manque : `mobile:` se
+             tait, `not-mobile:` s'applique — c'est l'interface WEB qui
+             s'affiche, « le meilleur défaut » que globals.css nomme.
+
+             ⚠️ UN NOM LONG NE POUSSE TOUJOURS RIEN : le nom se coupe
+             (`min-w-0 flex-1 truncate`), le chiffre ne rétrécit jamais
+             (`shrink-0`) et reste collé à droite. Les dix-sept pixels
+             ne changent rien à cette mécanique — elle ne dépend
+             d'aucune taille. */}
         <div className="pt-2 px-0.5 mobile:px-2 flex items-baseline gap-2">
           <p
             data-nom-du-style=""
-            className="min-w-0 flex-1 truncate font-normal leading-[18px]
-                       text-[15px] text-sombre-texte"
+            className="min-w-0 flex-1 truncate text-sombre-texte
+                       mobile:font-normal mobile:leading-[18px] mobile:text-[15px]
+                       not-mobile:font-semibold not-mobile:leading-[20px] not-mobile:text-[17px]"
           >
             {style.label}
           </p>
           <span
             data-compte-du-style=""
-            className="shrink-0 font-normal leading-[18px]
-                       text-[15px] text-sombre-texte-doux"
+            className="shrink-0 font-normal text-sombre-texte-doux
+                       mobile:leading-[18px] mobile:text-[15px]
+                       not-mobile:leading-[20px] not-mobile:text-[17px]"
           >
             {style.artistes}
           </span>

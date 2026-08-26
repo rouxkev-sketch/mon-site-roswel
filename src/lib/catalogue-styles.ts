@@ -15,12 +15,19 @@ import {
 import { lirePopularite } from "@/lib/tatoueurs";
 
 /**
- * ██ LE CATALOGUE DES STYLES — LA LECTURE SEULE (passe nº 620) ██
+ * ██ LE CATALOGUE DES STYLES — LA LECTURE (passe nº 620) ██
  * ==================================================================
- * PREMIÈRE DES TROIS PASSES DU CHANTIER « accueil = catalogue de
- * styles ». Ce module NE REND RIEN À L'ÉCRAN et n'est appelé par
- * aucune page : il prépare la donnée, et rien d'autre. C'est la
- * nº 621 qui l'affichera, la nº 622 qui fera le ménage.
+ * Le chantier « accueil = catalogue de styles » s'est fait en trois
+ * passes : la nº 620 a écrit cette lecture, la nº 621 l'a affichée
+ * (components/CarteStyle), la nº 622 a fait le ménage.
+ * ⚠️ CE MODULE EST DÉSORMAIS APPELÉ PAR L'ACCUEIL — la note d'origine
+ * disait « aucune page », c'était vrai le temps d'une passe (piège des
+ * commentaires, nº 472). Son unique appelant est
+ * `app/(tatouage)/_accueil/rendu`, et SEULEMENT quand aucun critère de
+ * recherche n'est posé.
+ * ⚠️ LA ROUTE DE RELEVÉ `api/yokofolio/catalogue-styles` A ÉTÉ RETIRÉE
+ * à la nº 622 : elle n'avait servi qu'à montrer au propriétaire ce que
+ * cette fonction produit, avant qu'on l'affiche.
  *
  * CE QU'IL REND, POUR CHAQUE STYLE DE RÉALISATION :
  *  · LE NOM du style (l'écriture unique, `libelleStyle`) ;
@@ -80,11 +87,20 @@ export type StyleDuCatalogue = {
   label: string;
   /** LE COMPTE DU MENU : des artistes publiés distincts. */
   artistes: number;
-  /** Combien de galeries de réalisation ce style porte — pour le
-      relevé ; la carte ne l'affiche pas. */
+  /** ██ §2 (nº 622) — CE CHAMP N'EST PLUS LU PAR PERSONNE ██
+      Il servait au relevé de la nº 620, dont la route temporaire est
+      partie avec cette passe. IL RESTE, ET C'EST UN CHOIX : il coûte
+      un `.length` sur une liste qu'on tient déjà en main, et il dit
+      d'un coup d'œil sur quoi le choix de la photo a porté. Le
+      supprimer ne rendrait pas une ligne de calcul. */
   galeries: number;
   /** LA PHOTO RETENUE, ou `null` — mais un style sans photo n'entre
-      pas dans la liste, ce cas ne peut donc pas s'y produire. */
+      pas dans la liste, ce cas ne peut donc pas s'y produire.
+      ⚠️ §2 (nº 622) — SEULES `url` ET `miniature` SONT AFFICHÉES. Les
+      trois autres ne sont plus lues depuis le retrait de la route de
+      relevé ; elles restent pour la même raison que `galeries` — elles
+      sont déjà calculées pour choisir la photo, et elles disent
+      POURQUOI c'est celle-là. */
   photo: {
     id: string;
     url: string;
