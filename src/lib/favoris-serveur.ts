@@ -321,7 +321,16 @@ export async function lireLesFavoris(
               //  §1 (nº 302) — `ordre` EST LU ICI AUSSI : la galerie de
               //  « Ma sélection » range chaque carrousel dans l'ordre
               //  de son auteur.
-              "id, tatoueur_id, style, rendu, nature, url, miniature, cree_le, ordre"
+              //  ██ §1 (nº 638) — ET `en_attente` AVEC LUI ██
+              //  C'est la colonne de la RÈGLE 6 DE LA nº 285 : une photo
+              //  qui vient d'arriver sur une fiche déjà validée « est
+              //  visible de son auteur, JAMAIS du public ». Deux
+              //  lectures du site la tenaient — la recherche en base, et
+              //  `garnirFiches` (lib/tatoueurs) — mais celle-ci NE LA
+              //  DEMANDAIT MÊME PAS : la bande de « Ma sélection »
+              //  montrait donc les photos en attente à tous ceux qui
+              //  suivent l'artiste. Relevé nº 637, fermé ici.
+              "id, tatoueur_id, style, rendu, nature, url, miniature, cree_le, ordre, en_attente"
             )
             .in("tatoueur_id", suivisPresents)
             .order("cree_le", { ascending: false })
@@ -348,6 +357,11 @@ export async function lireLesFavoris(
       miniature: string | null;
       cree_le: string;
       ordre?: number | null;
+      /** §1 (nº 638) — la colonne de la règle 6 (nº 285). FACULTATIVE :
+          sans la migration `yokofolio-photos-en-attente`, elle n'existe
+          pas, la base rend `undefined`, et le site se comporte comme
+          avant — exactement le repli de `garnirFiches`. */
+      en_attente?: boolean | null;
     };
     /**
      * §1 (nº 302), RÈGLE 5 — LES J'AIME DE CES PHOTOS, EN UNE LECTURE.
@@ -383,6 +397,15 @@ export async function lireLesFavoris(
     }
     const recentesParFiche = new Map<string, PhotoDuSuivi[]>();
     for (const ligne of lignesBrutes) {
+      //  ██ §1 (nº 638) — RÈGLE 6 DE LA nº 285, TENUE ICI AUSSI ██
+      //  Le test est écrit comme celui de `garnirFiches`
+      //  (lib/tatoueurs) : STRICTEMENT `=== true`, jamais « faux ou
+      //  absent ». Sans la migration la colonne n'existe pas, la valeur
+      //  est `undefined`, la photo est gardée, et rien ne change.
+      //  ⚠️ ET LE COMPTE DE NOUVEAUTÉS SUIT TOUT SEUL : il se calcule
+      //  plus bas sur cette même liste — une photo en attente ne peut
+      //  donc plus être annoncée comme une nouveauté avant d'exister.
+      if (ligne.en_attente === true) continue;
       const liste = recentesParFiche.get(ligne.tatoueur_id) ?? [];
       liste.push({
         id: ligne.id,

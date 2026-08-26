@@ -565,55 +565,123 @@ export type BandeDeTrois = {
 export const VIGNETTES_MAX = 20;
 
 /**
- * COMBIEN DE PHOTOS UN STYLE DOIT AVOIR POUR ENTRER DANS L'ALTERNANCE
- * (règle 4, nº 302-§1). En dessous, il n'y entre pas.
- */
-export const PHOTOS_POUR_ALTERNER = 8;
-
-/**
- * LES CINQ RÈGLES DE COMPOSITION (nº 302-§1)
+ * ██ LA COMPOSITION DE LA BANDE — REFAITE À LA nº 638 ██
  * ==================================================================
- * ⚠️ CE QUI EST ANNULÉ : la bande de la nº 243 montrait « vos coups de
- * cœur », à défaut les dernières réalisations, à défaut les derniers
- * flashs — trois cas exclusifs, dix photos, et une case « Voir plus ».
- * Tout cela est remplacé par les cinq règles ci-dessous. Le nom du
- * type est conservé pour ne pas éparpiller un renommage dans toute la
- * page ; ce qu'il contient, lui, est neuf.
+ * ⚠️ CE QUI EST ANNULÉ : les cinq règles de la nº 302, qui groupaient
+ * par STYLE seul, exigeaient huit photos pour entrer dans l'alternance
+ * (`PHOTOS_POUR_ALTERNER`, supprimée avec elles) et rangeaient les
+ * styles par leur photo la plus récente. Le propriétaire a tranché
+ * autrement à la nº 638 ; le reste de la nº 302 — un cœur = une photo,
+ * les vingt vignettes, l'ordre de l'artiste — ne bouge pas.
  *
  * RÈGLE 1 — QUE DES RÉALISATIONS, JAMAIS UN FLASH. Un flash est un
  * dessin proposé : il ne montre pas la main de l'artiste sur la peau.
+ * (Inchangée depuis la nº 302.)
  *
- * RÈGLE 2 — UN SEUL STYLE : ses photos. Et s'il est divisé entre
- * COULEUR et NOIR ET GRIS, on ALTERNE entre les deux — une couleur,
- * une noir et gris, et ainsi de suite. (Dans le modèle du site, un
- * style divisé par le rendu, ce sont deux carrousels : `cleDEnsemble`
- * le dit déjà, on ne réinvente rien.)
+ * RÈGLE 2 — UN GROUPE = UN STYLE **ET** UN RENDU. « Réalisme couleur »,
+ * « Réalisme noir » et « Réalisme noir et gris » sont TROIS groupes.
+ * ⚠️ AUCUNE DÉFINITION NEUVE : c'est `cleDEnsemble` (lib/photos-tatoueur),
+ * celle-là même qui définit un carrousel depuis la nº 278.
  *
- * RÈGLE 3 — PLUSIEURS STYLES : une photo du premier, une du deuxième,
- * et ainsi de suite, en boucle, jusqu'à vingt. Le tour de rôle vaut à
- * trois styles comme à dix.
+ * RÈGLE 3 — DANS CHAQUE GROUPE, LES PLUS AIMÉES D'ABORD, du plus grand
+ * nombre de favoris au plus petit ; celles qui n'en ont aucun suivent,
+ * DANS L'ORDRE VOULU PAR L'ARTISTE.
+ * ⚠️ LA DATE DE PUBLICATION NE CHOISIT PLUS RIEN (nº 638) : elle ne
+ * décide ni quelle photo, ni quel groupe, ni quel style passe devant.
  *
- * RÈGLE 4 — UN STYLE N'ENTRE DANS L'ALTERNANCE QUE S'IL COMPTE AU
- * MOINS HUIT PHOTOS. ⚠️ ET C'EST UNE RÈGLE D'ALTERNANCE, pas une
- * règle d'exclusion : si AUCUN style n'atteint huit, ils reviennent
- * tous — sans quoi la galerie d'un artiste qui débute serait vide, ce
- * qui n'est demandé nulle part.
+ * RÈGLE 4 — L'ALTERNANCE : une photo de chaque groupe, à tour de rôle,
+ * jusqu'à vingt. Il n'y a plus de seuil d'entrée : un groupe d'une
+ * seule photo alterne comme un groupe de vingt.
  *
- * RÈGLE 5 — LES J'AIME PASSENT DEVANT. Dans chaque style, les photos
- * qui ont reçu au moins un j'aime s'affichent d'abord, par nombre
- * DÉCROISSANT ; les autres suivent dans l'ordre de l'artiste.
- * L'alternance de la règle 3 n'est pas touchée : chaque style donne
- * simplement ses meilleures d'abord.
+ * RÈGLE 5 — ET LES GROUPES SONT ENTRELACÉS pour qu'un même style ne se
+ * répète pas deux fois de suite. Voir `entrelacerLesGroupes`.
  *
- * ⚠️ L'ORDRE DES STYLES est celui de leur photo la plus récente : la
- * lecture arrive déjà rangée par date décroissante (voir
- * `lireLesFavoris`), on prend donc l'ordre d'apparition. Aucun second
- * classement n'est écrit ici.
+ * RÈGLE 6 — UN SEUL GROUPE : ses vingt plus aimées, dans l'ordre. Rien
+ * à alterner — et rien à écrire pour ce cas, l'alternance sur une seule
+ * file rend exactement cela.
+ *
+ * ██ L'ORDRE NE BOUGE QU'À TROIS CONDITIONS, ET C'EST VOULU (nº 638) ██
+ * Un favori qui change, l'artiste qui réordonne sa galerie, une photo
+ * publiée ou retirée. RIEN D'AUTRE : ni l'heure, ni la date de
+ * publication, ni le chemin qui a construit la liste. C'est pourquoi
+ * l'ordre des styles et des rendus se décide sur LEUR MEILLEUR NOMBRE
+ * DE FAVORIS, et retombe à égalité sur l'alphabet de la clé du groupe —
+ * un départage qui ne dépend de rien.
  */
-//  ⚠️ LES FAVORIS DU VISITEUR NE COMMANDENT PLUS RIEN (nº 302), et le
-//  paramètre qui les portait est parti avec eux : la règle 5 parle des
-//  j'aime REÇUS par la photo, tous comptes confondus (`photo.jaime`),
-//  pas de ce que celui qui regarde a gardé.
+
+/** Un groupe de la bande : un style, un rendu, ses photos rangées. */
+type GroupeDeBande = {
+  /** La clé `cleDEnsemble` — style + catégorie + rendu (nº 278). */
+  cle: string;
+  /** Le slug du style, pour l'entrelacement de la règle 5. */
+  style: string;
+  /** Ses photos, les plus aimées d'abord (règle 3). */
+  photos: PhotoDuSuivi[];
+  /** Les favoris de sa meilleure photo — l'ordre des groupes. */
+  meilleur: number;
+};
+
+/**
+ * ██ §5 (nº 638) — L'ENTRELACEMENT : JAMAIS DEUX FOIS LE MÊME STYLE ██
+ * ==================================================================
+ * CE QU'ON VEUT, avec réalisme (3 rendus) + aquarelle + blackwork +
+ * dotwork :
+ *   Réalisme couleur · Aquarelle · Réalisme noir · Blackwork ·
+ *   Réalisme noir et gris · Dotwork
+ * et non « les trois réalismes, puis les trois autres ».
+ *
+ * COMMENT, EN DEUX TEMPS ET SANS RIEN DE SAVANT :
+ *  1. on range les STYLES du plus fourni en groupes au moins fourni —
+ *     celui qui risque de se répéter passe donc en premier ;
+ *  2. on distribue les groupes ainsi mis à plat DANS LES PLACES
+ *     PAIRES d'abord (0, 2, 4…), puis dans les impaires (1, 3, 5…).
+ * Le style le plus fourni occupe ainsi une place sur deux, et les
+ * autres viennent se glisser entre elles. Sur l'exemple ci-dessus :
+ * les trois réalismes prennent 0, 2 et 4 ; aquarelle, blackwork et
+ * dotwork prennent 1, 3 et 5 — mot pour mot ce qui est demandé.
+ *
+ * ⚠️ CE QU'IL SE PASSE QUAND UN STYLE PORTE PLUS DE LA MOITIÉ DES
+ * GROUPES, et il faut le dire : la répétition devient MATHÉMATIQUEMENT
+ * inévitable — trois rendus de réalisme et un seul autre style, ce sont
+ * quatre places pour trois réalismes, deux d'entre eux se toucheront
+ * quoi qu'on fasse. L'entrelacement la REPOUSSE, il ne la supprime pas,
+ * et il ne prétend pas être optimal dans ce cas-là : il rend
+ * « R · R · R · A » là où le mieux possible serait « R · A · R · R ».
+ * Un cas rare, un pixel de mieux à gagner, et une règle simple à garder.
+ * ⚠️ DÉTERMINISTE : aucune dépendance à l'heure ni au hasard. Deux
+ * visites sans changement rendent le même ordre.
+ */
+function entrelacerLesGroupes(groupes: GroupeDeBande[]): GroupeDeBande[] {
+  //  L'ORDRE DE RÉFÉRENCE : le meilleur favori d'abord, puis l'alphabet
+  //  de la clé — voir « L'ORDRE NE BOUGE QU'À TROIS CONDITIONS ».
+  const comparer = (a: GroupeDeBande, b: GroupeDeBande) =>
+    b.meilleur - a.meilleur || a.cle.localeCompare(b.cle);
+
+  const parStyle = new Map<string, GroupeDeBande[]>();
+  for (const groupe of [...groupes].sort(comparer)) {
+    const file = parStyle.get(groupe.style) ?? [];
+    file.push(groupe);
+    parStyle.set(groupe.style, file);
+  }
+  //  1. LES STYLES, DU PLUS FOURNI AU MOINS FOURNI.
+  const aplat = [...parStyle.values()]
+    .sort((a, b) => b.length - a.length || comparer(a[0], b[0]))
+    .flat();
+
+  //  2. LES PLACES PAIRES, PUIS LES IMPAIRES.
+  const places: GroupeDeBande[] = new Array(aplat.length);
+  let place = 0;
+  for (const groupe of aplat) {
+    places[place] = groupe;
+    place += 2;
+    if (place >= aplat.length) place = 1;
+  }
+  return places;
+}
+
+//  ⚠️ LES FAVORIS DU VISITEUR NE COMMANDENT RIEN (nº 302, tenu nº 638) :
+//  les règles parlent des favoris REÇUS par la photo, tous comptes
+//  confondus (`photo.jaime`), pas de ce que celui qui regarde a gardé.
 export function bandeDeTrois(suivi: TatoueurSuivi): BandeDeTrois {
   //  RÈGLE 1 — que des réalisations.
   const realisations = suivi.recentes.filter(
@@ -621,63 +689,45 @@ export function bandeDeTrois(suivi: TatoueurSuivi): BandeDeTrois {
   );
   if (realisations.length === 0) return { photos: [] };
 
-  //  LES STYLES, DANS L'ORDRE D'APPARITION (donc du plus récent).
-  const parStyle = new Map<string, PhotoDuSuivi[]>();
+  //  RÈGLE 2 — les groupes : style ET rendu, par `cleDEnsemble`.
+  const parGroupe = new Map<string, PhotoDuSuivi[]>();
   for (const photo of realisations) {
-    const liste = parStyle.get(photo.style) ?? [];
+    const cle = cleDEnsemble(photo);
+    const liste = parGroupe.get(cle) ?? [];
     liste.push(photo);
-    parStyle.set(photo.style, liste);
+    parGroupe.set(cle, liste);
   }
 
-  /** RÈGLE 5 — les plus aimées d'abord, puis l'ordre de l'artiste. */
-  const parJaimePuisArtiste = (photos: PhotoDuSuivi[]) =>
-    ordreDeLArtiste(photos)
+  //  RÈGLE 3 — les plus aimées d'abord, puis l'ordre de l'artiste.
+  const groupes: GroupeDeBande[] = [];
+  for (const [cle, photos] of parGroupe) {
+    const rangees = ordreDeLArtiste(photos)
       .map((photo, rang) => ({ photo, rang }))
       .sort((a, b) => b.photo.jaime - a.photo.jaime || a.rang - b.rang)
       .map(({ photo }) => photo);
-
-  /** Le tour de rôle : une de chaque file, en boucle, jusqu'au bout. */
-  const alterner = (files: PhotoDuSuivi[][]): PhotoDuSuivi[] => {
-    const sortie: PhotoDuSuivi[] = [];
-    const restes = files.map((file) => [...file]);
-    while (sortie.length < VIGNETTES_MAX && restes.some((f) => f.length > 0)) {
-      for (const file of restes) {
-        if (sortie.length >= VIGNETTES_MAX) break;
-        const photo = file.shift();
-        if (photo) sortie.push(photo);
-      }
-    }
-    return sortie;
-  };
-
-  //  RÈGLE 2 — un seul style : ses photos, et l'alternance des rendus
-  //  quand il en porte deux.
-  if (parStyle.size === 1) {
-    const photos = [...parStyle.values()][0];
-    const parRendu = new Map<string, PhotoDuSuivi[]>();
-    for (const photo of photos) {
-      const cle = cleDEnsemble(photo);
-      const liste = parRendu.get(cle) ?? [];
-      liste.push(photo);
-      parRendu.set(cle, liste);
-    }
-    return {
-      photos: alterner(
-        [...parRendu.values()].map((liste) => parJaimePuisArtiste(liste))
-      ),
-    };
+    groupes.push({
+      cle,
+      style: rangees[0].style,
+      photos: rangees,
+      meilleur: rangees[0].jaime,
+    });
   }
 
-  //  RÈGLE 4 — qui a le droit d'alterner. Personne n'atteint huit :
-  //  tout le monde revient (voir la note de la règle 4).
-  const assezFournis = [...parStyle.values()].filter(
-    (photos) => photos.length >= PHOTOS_POUR_ALTERNER
-  );
-  const retenus = assezFournis.length > 0 ? assezFournis : [...parStyle.values()];
-
-  //  RÈGLE 3 — un tour de rôle entre les styles retenus, la règle 5
-  //  décidant de l'ordre à l'intérieur de chacun.
-  return { photos: alterner(retenus.map((liste) => parJaimePuisArtiste(liste))) };
+  //  RÈGLES 4, 5 ET 6 — le tour de rôle sur les groupes entrelacés.
+  //  Un seul groupe : la boucle vide sa file dans l'ordre, ce qui EST
+  //  « les vingt plus aimées » — aucun cas particulier à écrire.
+  const files = entrelacerLesGroupes(groupes).map((groupe) => [
+    ...groupe.photos,
+  ]);
+  const photos: PhotoDuSuivi[] = [];
+  while (photos.length < VIGNETTES_MAX && files.some((f) => f.length > 0)) {
+    for (const file of files) {
+      if (photos.length >= VIGNETTES_MAX) break;
+      const photo = file.shift();
+      if (photo) photos.push(photo);
+    }
+  }
+  return { photos };
 }
 
 /* ==================================================================
