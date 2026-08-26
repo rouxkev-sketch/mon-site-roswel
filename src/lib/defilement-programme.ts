@@ -47,8 +47,10 @@ const MARQUEUR = "defilementProgramme";
 import { noter } from "@/lib/journal-bascule";
 //  §2 (nº 427) — le témoin du geste : la garde de position ne défend
 //  une pose que contre les mouvements qu'AUCUN doigt n'explique.
+//  §1 (nº 626) — `appareilTactile` n'est plus importé : la garde ne
+//  demande plus l'appareil (voir sa note). La fonction reste exportée
+//  par geste-toucher, où d'autres la lisent.
 import {
-  appareilTactile,
   auDebutDuGeste,
   gesteDeDefilementPlausible,
 } from "@/lib/geste-toucher";
@@ -135,10 +137,32 @@ export function defilerSansGeste(
  * garde se lève au premier début de geste : un doigt, une molette, une
  * touche de défilement.
  *
- * ⚠️ ELLE NE VIT QUE SUR ÉCRAN TACTILE : ailleurs, l'ascenseur défile
- * sans émettre le moindre événement de toucher — la garde y lirait un
- * recalage et collerait la page — et l'ancrage y est déjà coupé par le
- * CSS, que tous les moteurs sauf WebKit honorent.
+ * ██ §1 (nº 626) — ELLE VIT PARTOUT, ET LA BORNE TACTILE ÉTAIT FAUSSE ██
+ * ------------------------------------------------------------------
+ * CE QUI ÉTAIT ÉCRIT ICI : « elle ne vit que sur écran tactile —
+ * ailleurs, l'ascenseur défile sans émettre le moindre événement de
+ * toucher, la garde y lirait un recalage et collerait la page ; et
+ * l'ancrage y est déjà coupé par le CSS, que tous les moteurs sauf
+ * WebKit honorent ».
+ * LES DEUX MOITIÉS ONT CESSÉ D'ÊTRE VRAIES, ET LE RELEVÉ DU
+ * PROPRIÉTAIRE (Mac, 1665 px, nº 626) le prouve mot pour mot :
+ *     POSE DE DÉFILEMENT · vers 0 · par liste neuve, à son arrivée
+ *     rendu mosaïque · 16 cartes
+ *     RANGÉE · delta 972 px ignoré (mouvement du site)
+ *     ADRESSE pushState +1 image · cartes 16 · PAGE À 972
+ * — la même signature qu'à la nº 427 : notre pose, puis un saut SANS
+ * AUCUNE LIGNE POSE entre les deux. C'est l'ancre, et elle recale sur
+ * un ORDINATEUR : SAFARI SUR MAC EST WEBKIT. « Web » n'a jamais voulu
+ * dire « pas WebKit » — la borne supposait le contraire.
+ * ET L'ASCENSEUR N'EST PLUS UN DANGER : la nº 428 a ajouté `mousedown`
+ * aux sources de geste (voir lib/geste-toucher). Traîner l'ascenseur,
+ * cliquer, tourner la molette, presser une touche de défilement —
+ * chacun lève la garde AVANT que la page ne bouge. La phrase d'origine
+ * décrivait un module qui n'écoutait que les touchers ; il en écoute
+ * quatre depuis.
+ * ⚠️ ET LE PIRE CAS RESTE BORNÉ, comme avant : au-delà de douze
+ * recalages annulés, la garde cède (voir juste dessous) — se battre
+ * contre un mécanisme inconnu ferait pire que le laisser faire.
  * ⚠️ ELLE NE SE FIE PAS AU DRAPEAU ci-dessus : le relevé montre le
  * recalage tombant EN PLEIN DANS la fenêtre du drapeau (6 ms après le
  * rendu). Elle compare des POSITIONS : notre propre pose retombe
@@ -164,12 +188,13 @@ let veilleusePosee = false;
 
 /** ARMER LA GARDE sur `position`. Appelée par chaque pose instantanée
     de ce module, et par les deux poses brutes de PageRechercheMobile.
-    Sans écran tactile, ne fait rien (voir le bloc ci-dessus). */
+    §1 (nº 626) — SUR TOUS LES APPAREILS : la borne tactile est levée,
+    voir le bloc ci-dessus. */
 export function armerLaGardeDePosition(
   position: number,
   signature: string
 ): void {
-  if (typeof window === "undefined" || !appareilTactile()) return;
+  if (typeof window === "undefined") return;
   garde = {
     position: Math.round(position),
     signature,

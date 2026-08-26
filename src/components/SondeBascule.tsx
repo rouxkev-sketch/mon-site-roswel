@@ -330,6 +330,65 @@ function surveillerLesToucherssurLaBarre(): void {
     (evenement: MouseEvent) => regarder(evenement.clientX, evenement.clientY, "click"),
     { capture: true, passive: true }
   );
+  /*  ██ §2 (nº 626) — LE CLIC EST-IL ANNULÉ, ET PAR QUI ? ██
+      ------------------------------------------------------------------
+      CE QUE LA MESURE DE LA nº 625 A ÉCARTÉ : aucune couche ne recouvre
+      la barre — le toucher atteint bien `img ← a`, tout est
+      `pointer-events: auto`, aucun portail, `data-recherche` absent.
+      CE QU'ELLE N'A PAS DIT : ce qui se passe APRÈS. Le lien est
+      atteint, et rien ne part — aucun `pushState` derrière.
+      UN LIEN QUI NE NAVIGUE PAS EST UN LIEN DONT LE GESTE PAR DÉFAUT A
+      ÉTÉ PRÉVENU. On lit donc `defaultPrevented` DEUX FOIS : en
+      CAPTURE (avant tout gestionnaire du site) et en BULLE (après tous).
+       · faux puis VRAI  → quelqu'un a annulé entre les deux, et c'est
+         un gestionnaire du document — l'avaleur de clic fantôme du
+         glissement latéral, ou l'avalement du re-clic du signe de
+         chargement (règle 332-§1) ;
+       · VRAI dès la capture → l'annulation vient d'avant, donc du
+         navigateur lui-même ;
+       · faux puis faux → personne n'annule : le lien est atteint, non
+         prévenu, et ne navigue pas — la cause est alors dans le lien
+         (un `href` absent) ou dans le routeur.
+      ON DONNE AUSSI L'ÉTAT DU SIGNE DE CHARGEMENT : son attente est le
+      seul avaleur DURABLE du site (douze secondes), et elle n'avale que
+      les re-clics vers la MÊME destination — la ligne dira si la
+      destination visée est celle-là.
+      ⚠️ LES DEUX ÉCOUTEURS SONT PASSIFS : ils lisent, ils n'annulent
+      rien et ne peuvent rien débloquer par accident. */
+  const lireLeLien = (evenement: MouseEvent): string => {
+    const cible = evenement.target;
+    const lien =
+      cible instanceof Element ? cible.closest("a[href]") : null;
+    return lien instanceof HTMLAnchorElement
+      ? `lien "${lien.getAttribute("href") ?? "(sans href)"}"`
+      : "(aucun lien sous le clic)";
+  };
+  window.addEventListener(
+    "click",
+    (evenement: MouseEvent) => {
+      const barre = document.querySelector("header")?.getBoundingClientRect();
+      if (!barre || evenement.clientY > barre.bottom) return;
+      noter(
+        `CLIC BARRE · capture · annulé ${
+          evenement.defaultPrevented ? "OUI" : "non"
+        } · ${lireLeLien(evenement)} · ici ${adresseCourante()}`
+      );
+    },
+    { capture: true, passive: true }
+  );
+  window.addEventListener(
+    "click",
+    (evenement: MouseEvent) => {
+      const barre = document.querySelector("header")?.getBoundingClientRect();
+      if (!barre || evenement.clientY > barre.bottom) return;
+      noter(
+        `CLIC BARRE · bulle · annulé ${
+          evenement.defaultPrevented ? "OUI" : "non"
+        } · ${lireLeLien(evenement)}`
+      );
+    },
+    { passive: true }
+  );
 }
 
 let surveillanceApercuPosee = false;
