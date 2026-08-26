@@ -151,7 +151,19 @@ export function CarteStyle({
   if (!photo) return null;
   const adresse = `/?style=${style.slug}&nature=${NATURE_PAR_DEFAUT}`;
   return (
-    <article>
+    /*  §1 (nº 634) — LE TOTAL DES FAVORIS DU STYLE, POSÉ SANS ÊTRE
+        MONTRÉ. C'est le second critère de l'ordre des cartes
+        (lib/catalogue-styles), et il n'a AUCUN effet visible : aucune
+        classe, aucun pixel, rien à l'écran. Il est là pour que le
+        propriétaire puisse vérifier l'ordre de ses yeux — sur son
+        déploiement, avec l'inspecteur du navigateur, ou par un simple
+        « afficher la source ». La base étant injoignable depuis
+        l'atelier, c'est le seul moyen honnête de lui rendre la liste
+        qu'il demande.
+        ⚠️ CE N'EST PAS LE COMPTE DE LA PHOTO (`style.photo.coeurs`),
+        qui ne pèse que l'image affichée. Voir le grand bloc « DEUX
+        COMPTES » de lib/catalogue-styles. */
+    <article data-favoris-du-style={style.coeursDuStyle}>
       {/*  §2 (nº 621) — AU CLIC, LA RECHERCHE DE CE STYLE. C'est
            EXACTEMENT l'adresse que le menu « Explorer » produit (le
            couple nature + style, `valeurExplorer`) : la mosaïque

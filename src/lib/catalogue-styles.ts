@@ -50,9 +50,12 @@ import { lirePopularite } from "@/lib/tatoueurs";
  *  · UN STYLE SANS AUCUNE GALERIE N'APPARAÎT PAS. Un style déclaré
  *    mais jamais rempli n'a pas de photo à montrer — la même règle que
  *    le sélecteur d'une fiche (`stylesDuPortfolio`) ;
- *  · L'ORDRE : du compte le plus grand au plus petit. À COMPTE ÉGAL,
- *    L'ORDRE ALPHABÉTIQUE DU NOM — le seul départage qui ne dépende ni
- *    de l'heure, ni du chemin de lecture, ni du hasard ;
+ *  · L'ORDRE (nº 634) : du compte le plus grand au plus petit ; À
+ *    COMPTE ÉGAL, LE TOTAL DES FAVORIS DU STYLE, du plus grand au plus
+ *    petit ; et à égalité de favoris, L'ORDRE ALPHABÉTIQUE DU NOM —
+ *    le seul départage qui ne dépende ni de l'heure, ni du chemin de
+ *    lecture, ni du hasard, et le seul qui garantisse que deux
+ *    régénérations de l'accueil prérendu rangent les cartes pareil ;
  *  · À ÉGALITÉ DE CŒURS entre deux photos, LA NOTE DE LEUR GALERIE
  *    (popularité ÷ âge, la formule unique de `scoreDuCarrousel`,
  *    nº 283), puis la clé de la photo. Personne à zéro cœur n'est
@@ -67,8 +70,26 @@ import { lirePopularite } from "@/lib/tatoueurs";
  *      `favoris-serveur` — rien de neuf n'est demandé à la base ;
  *   4. `popularite_tatoueurs`, par `lirePopularite` — l'écriture
  *      unique du score, jamais recopiée.
- * Les lectures 3 et 4 ne servent QU'À CHOISIR LA PHOTO. La lecture 3
- * ne porte que sur les PREMIÈRES photos, jamais sur toute la galerie.
+ * La lecture 4 ne sert QU'À CHOISIR LA PHOTO.
+ *
+ * ██ ⚠️ DEUX COMPTES DE CŒURS DANS CETTE FONCTION, ET ILS NE DOIVENT
+ * JAMAIS ÊTRE CONFONDUS (nº 634) ██
+ * ------------------------------------------------------------------
+ * Ils sortent de LA MÊME lecture (la nº 3) et ne comptent PAS la même
+ * chose. Une passe future qui les mélangerait casserait l'un ou
+ * l'autre sans que rien ne le dise :
+ *  · LE CHOIX DE LA PHOTO ne regarde que LES PREMIÈRES PHOTOS des
+ *    galeries — c'est la règle 1 du carrousel (nº 278), et elle n'a pas
+ *    bougé : une carte ne montre que la photo de tête, il serait absurde
+ *    d'élire une image que personne ne verra ;
+ *  · LE DÉPARTAGE DES STYLES additionne LES CŒURS DE TOUTES LES PHOTOS
+ *    du style — c'est la popularité du STYLE qu'on pèse, pas celle
+ *    d'une image. Une galerie dont la deuxième photo fait tout le
+ *    succès compte pour ce qu'elle vaut.
+ * CE QUE LA nº 634 A CHANGÉ À LA LECTURE nº 3, ET RIEN D'AUTRE : elle
+ * ne demandait que les cœurs des PREMIÈRES photos (`.in(photo_id, …)`),
+ * elle rend maintenant la vue ENTIÈRE. Voir sa note, plus bas — c'est
+ * toujours UNE seule lecture, et elle est plus sûre qu'avant.
  *
  * ⚠️ ELLE NE LIT NI COOKIE NI EN-TÊTE, et c'est délibéré : l'accueil
  * est PRÉRENDU (`○ /`, nº 357), et la nº 621 devra pouvoir l'appeler
@@ -96,6 +117,19 @@ export type StyleDuCatalogue = {
       compte étant devenu le nombre de galeries, les deux disaient la
       même chose. L'orphelin signalé à la nº 622 disparaît avec eux. */
   portfolios: number;
+  /** ██ §1 (nº 634) — LE TOTAL DES FAVORIS DU STYLE ██
+      La somme des cœurs de TOUTES SES PHOTOS — pas seulement celles de
+      tête. C'est le SECOND critère de l'ordre, celui qui départage deux
+      styles à nombre de portfolios égal.
+      ⚠️ NE PAS LE CONFONDRE AVEC `photo.coeurs`, qui ne compte que la
+      photo affichée sur la carte : d'où le nom, choisi long exprès. Le
+      grand bloc en tête de fichier explique pourquoi les deux existent.
+      ⚠️ IL N'EST PAS AFFICHÉ. La carte n'en montre rien (le texte est
+      celui des nº 623 et nº 629) ; il voyage jusqu'à elle pour une
+      seule raison, dite à la nº 634 : le propriétaire doit pouvoir
+      vérifier l'ordre de ses yeux, et la carte le pose en attribut
+      (`data-favoris-du-style`) — aucun pixel n'en dépend. */
+  coeursDuStyle: number;
   /** LA PHOTO RETENUE, ou `null` — mais un style sans photo n'entre
       pas dans la liste, ce cas ne peut donc pas s'y produire.
       ⚠️ §2 (nº 622) — SEULES `url` ET `miniature` SONT AFFICHÉES. Les
@@ -237,21 +271,49 @@ export async function catalogueDesStyles(): Promise<StyleDuCatalogue[]> {
       else galeriesParStyle.set(premiere.style, [galerie]);
     }
 
-    /* ---- 6. LES CŒURS DES SEULES PREMIÈRES PHOTOS ----
+    /* ---- 6. LES CŒURS DE TOUTES LES PHOTOS ----
        ⚠️ UNE VUE, PAS LA TABLE : `favoris_photos` est privée (RLS de la
        migration nº 53) ; `coeurs_par_photo` n'en rend qu'un compte, qui
        ne nomme personne. Et elle peut ne pas exister : la lecture échoue
        alors, tout le monde est à zéro, et le départage par la note
-       prend le relais — l'ordre tient. */
-    const premieres = [...galeriesParStyle.values()]
-      .flat()
-      .map((galerie) => galerie.premiere.id);
+       prend le relais — l'ordre tient.
+
+       ██ §1 (nº 634) — LA VUE ENTIÈRE, ET NON PLUS UNE LISTE D'IDENTIFIANTS ██
+       ------------------------------------------------------------------
+       POURQUOI ÉLARGIR : le départage des styles a besoin des cœurs de
+       TOUTES les photos, pas seulement de celles de tête. Le choix de
+       la photo, lui, ne regarde toujours que les premières — il lit
+       simplement dans la même carte, qui est devenue plus grande (voir
+       le bloc « DEUX COMPTES » en tête de fichier).
+       POURQUOI SANS FILTRE, ET C'EST LE POINT DÉLICAT : la façon
+       évidente aurait été d'allonger le `.in("photo_id", …)` d'avant.
+       Elle nous aurait menés dans un mur. PostgREST met cette liste
+       DANS L'ADRESSE : un identifiant pèse une quarantaine d'octets, et
+       la liste passait déjà d'une par galerie à une par PHOTO — jusqu'à
+       vingt fois plus (`PLAFOND_GALERIE`). Quelques centaines de photos
+       suffisaient à dépasser la longueur d'adresse qu'un serveur
+       accepte, et la lecture aurait échoué EN SILENCE (l'erreur est
+       avalée trois lignes plus bas) : tous les styles à zéro cœur, et
+       un ordre qui redevient alphabétique sans que rien ne le dise. On
+       demande donc la vue TELLE QUELLE — une seule lecture, comme
+       avant, et une adresse courte.
+       ⚠️ ELLE NE PORTE QUE LES PHOTOS AIMÉES : une photo sans cœur n'y
+       a pas de ligne. La vue est donc bien plus petite que la table des
+       photos, et ce qui en revient et ne nous concerne pas (un flash,
+       une fiche dépubliée) n'est jamais lu — on ne consulte cette carte
+       que par les identifiants qu'on a déjà en main.
+       ⚠️ LE PLAFOND EST ÉCRIT, ET IL EST HAUT : sans lui, la base en
+       rendrait mille (le défaut de PostgREST) et le compte serait faux
+       sans prévenir. Si le site en dépasse un jour la valeur, c'est le
+       jour où ce catalogue devra demander une somme à la base plutôt
+       que de l'additionner ici — et la note le dit d'avance. */
+    const PLAFOND_LIGNES_COEURS = 50000;
     const coeursParPhoto = new Map<string, number>();
-    if (premieres.length > 0) {
+    {
       const comptes = await supabase
         .from("coeurs_par_photo")
         .select("photo_id, coeurs")
-        .in("photo_id", premieres);
+        .limit(PLAFOND_LIGNES_COEURS);
       for (const ligne of (comptes.error
         ? []
         : (comptes.data ?? [])) as unknown as Array<{
@@ -260,6 +322,22 @@ export async function catalogueDesStyles(): Promise<StyleDuCatalogue[]> {
       }>) {
         coeursParPhoto.set(ligne.photo_id, Number(ligne.coeurs ?? 0));
       }
+    }
+
+    /* ---- 6 bis. LE TOTAL DES FAVORIS PAR STYLE (§1 nº 634) ----
+       On additionne sur `photos` — la liste DÉJÀ filtrée : fiches en
+       ligne, réalisations seules, styles connus. Le total d'un style ne
+       peut donc contenir ni un flash, ni la photo d'une fiche retirée.
+       ⚠️ C'EST LE SECOND CRITÈRE DE L'ORDRE, ET RIEN D'AUTRE : aucune
+       carte ne l'affiche, aucun compte n'en dépend. */
+    const coeursParStyle = new Map<string, number>();
+    for (const photo of photos) {
+      const coeurs = coeursParPhoto.get(photo.id) ?? 0;
+      if (coeurs === 0) continue;
+      coeursParStyle.set(
+        photo.style,
+        (coeursParStyle.get(photo.style) ?? 0) + coeurs
+      );
     }
 
     /* ---- 7. UNE ENTRÉE PAR STYLE, PUIS L'ORDRE ---- */
@@ -280,6 +358,8 @@ export async function catalogueDesStyles(): Promise<StyleDuCatalogue[]> {
         //  §1 (nº 624) — LE COMPTE EST LE NOMBRE DE GALERIES, donc le
         //  nombre de cartes que la recherche de ce style affichera.
         portfolios: galeries.length,
+        //  §1 (nº 634) — le second critère de l'ordre, calculé au 6 bis.
+        coeursDuStyle: coeursParStyle.get(style) ?? 0,
         photo: {
           id: meilleure.premiere.id,
           url: meilleure.premiere.url,
@@ -289,8 +369,26 @@ export async function catalogueDesStyles(): Promise<StyleDuCatalogue[]> {
         },
       });
     }
+    /*  ██ §1 (nº 634) — TROIS CRITÈRES, DANS CET ORDRE ██
+        1. LE NOMBRE DE PORTFOLIOS, du plus grand au plus petit — le
+           premier critère n'a pas bougé depuis la nº 620 ;
+        2. À NOMBRE ÉGAL, LE TOTAL DES FAVORIS DU STYLE (nº 634) :
+           « Néo-japonais · 2 portfolios · 100 favoris » passe devant
+           « Anime & Manga · 2 portfolios · 99 favoris » ;
+        3. À FAVORIS ÉGAUX, L'ALPHABET — et il reste en DERNIER RECOURS
+           par nécessité, pas par habitude. Deux styles que les deux
+           premiers critères n'ont pas séparés sont vraiment
+           indiscernables ; il faut alors un ordre qui ne dépende ni de
+           l'heure, ni de l'ordre où la base a rendu ses lignes. Sans
+           lui, l'accueil — qui est PRÉRENDU et régénéré toutes les cinq
+           minutes — pourrait ranger ses cartes autrement d'une
+           régénération à l'autre, et le propriétaire verrait le
+           catalogue se remélanger tout seul. */
     return entrees.sort(
-      (a, b) => b.portfolios - a.portfolios || a.label.localeCompare(b.label)
+      (a, b) =>
+        b.portfolios - a.portfolios ||
+        b.coeursDuStyle - a.coeursDuStyle ||
+        a.label.localeCompare(b.label)
     );
   } catch {
     //  Injoignable : pas de catalogue, et rien ne casse. La page qui
