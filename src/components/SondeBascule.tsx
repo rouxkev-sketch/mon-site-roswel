@@ -162,6 +162,104 @@ function historiqueEtCriteres(): string {
   );
 }
 
+/* ==================================================================
+ * ██ TEMPORAIRE (nº 615) — MESURE DE L'APERÇU DU GLISSEMENT ██
+ * ==================================================================
+ * CE QU'ON CHERCHE. Au doigt : carte → fiche en vue photo → on défile
+ * jusqu'à une photo → on touche la rangée du profil → on revient d'un
+ * GLISSEMENT (bon) → on glisse UNE SECONDE FOIS vers la mosaïque et
+ * L'APERÇU DU GESTE MONTRE ENCORE LA FICHE, sur la photo où l'on
+ * s'était arrêté. La destination, elle, est juste.
+ *
+ * CE QUE LA LECTURE A DÉJÀ TRANCHÉ, ET QUI EXPLIQUE LA FORME DE CETTE
+ * MESURE :
+ *  · PENDANT le geste, AUCUN code du site ne tourne — le `popstate`
+ *    n'arrive qu'à la validation, et le glissement maison refuse
+ *    justement la bande de 24 px du bord (lib/glissement-lateral, §3).
+ *    L'image montrée pendant le geste est donc une RÉSERVE DU
+ *    NAVIGATEUR, constituée AVANT lui ;
+ *  · au second glissement, la fiche n'est PAS remontée et la mémoire de
+ *    la nº 604 n'est PAS relue : `lireRequeteDeLaPage` gèle la requête
+ *    dès que l'adresse n'est plus `/tatoueur/<slug>`
+ *    (lib/adresse-courante l.109-118), donc la clé ne bouge pas.
+ *
+ * RESTE LA SEULE QUESTION QU'AUCUNE LECTURE NE PEUT FERMER : À QUEL
+ * INSTANT LE NAVIGATEUR PREND L'IMAGE QU'IL GARDE POUR UNE ENTRÉE
+ * D'HISTORIQUE. Aucune API ne l'expose (c'est déjà écrit dans
+ * SondeRetour, §1 nº 362). ON MESURE DONC CE QUI LA DÉTERMINE : ce qui
+ * est PEINT à l'instant où l'adresse change, et à l'image d'après.
+ * Si la ligne « avant » d'un `pushState` qui QUITTE la mosaïque dit
+ * déjà « carrousel de fiche PRÉSENT », l'image rangée pour la mosaïque
+ * ne peut pas être la mosaïque, et la cause est nommée.
+ *
+ * ⚠️ ELLE NE FAIT QUE LIRE ET RELAYER. L'enveloppe appelle TOUJOURS
+ * l'implémentation d'origine (celle de Next, ou celle de
+ * lib/adresse-courante si elle est déjà en place) et rend sa valeur :
+ * rien n'est empêché, rien n'est remplacé. Elle n'est posée QUE si la
+ * sonde est armée, et elle ne se retire pas — c'est une sonde
+ * temporaire, elle part avec le fichier.
+ */
+function ceQuiEstPeint(): string {
+  const cartes = document.querySelectorAll("[data-carte]").length;
+  const affiche = document.querySelector('[data-carrousel="fiche"]');
+  const cadre = affiche?.querySelector('[data-role="cadre"]') ?? null;
+  const rang =
+    cadre instanceof HTMLElement && cadre.clientWidth > 0
+      ? Math.round(cadre.scrollLeft / cadre.clientWidth)
+      : null;
+  return (
+    `À L'ÉCRAN cartes ${cartes} · carrousel de fiche ${
+      affiche
+        ? `PRÉSENT rang ${rang ?? "?"} (défilement ${
+            cadre instanceof HTMLElement ? Math.round(cadre.scrollLeft) : "?"
+          })`
+        : "absent"
+    } · masque ${
+      getComputedStyle(document.documentElement).visibility === "hidden"
+        ? "OUI"
+        : "non"
+    } · page à ${Math.round(window.scrollY)}`
+  );
+}
+
+/** Les deux images qui suivent un changement d'adresse : c'est là que
+    le navigateur a le temps de photographier. */
+function auxImagesSuivantes(quoi: string): void {
+  requestAnimationFrame(() => {
+    noter(`${quoi} +1 image · ${ceQuiEstPeint()}`);
+    requestAnimationFrame(() => {
+      noter(`${quoi} +2 images · ${ceQuiEstPeint()}`);
+    });
+  });
+}
+
+let surveillanceApercuPosee = false;
+function surveillerLesEcrituresDAdresse(): void {
+  if (surveillanceApercuPosee || typeof window === "undefined") return;
+  surveillanceApercuPosee = true;
+  for (const nom of ["pushState", "replaceState"] as const) {
+    const original = window.history[nom];
+    if (typeof original !== "function") continue;
+    window.history[nom] = function (
+      this: History,
+      ...arguments_: Parameters<History["pushState"]>
+    ) {
+      const avant = adresseCourante();
+      const entrees = history.length;
+      //  AVANT L'APPEL : l'entrée qu'on s'apprête à quitter est encore
+      //  la courante, et l'écran est celui que le navigateur peut
+      //  ranger sous elle.
+      noter(`ADRESSE ${nom} · quitte ${avant} · ${ceQuiEstPeint()}`);
+      const retour = original.apply(this, arguments_);
+      noter(
+        `ADRESSE ${nom} · va vers ${adresseCourante()} · entrées ${entrees} → ${history.length}`
+      );
+      auxImagesSuivantes(`ADRESSE ${nom}`);
+      return retour;
+    };
+  }
+}
+
 export function SondeBascule() {
   const [armee, setArmee] = useState(false);
   //  ⚠️ REPLIÉE AU DÉPART (nº 183-§1) : une pastille, rien de plus. Le
@@ -172,6 +270,11 @@ export function SondeBascule() {
 
   useEffect(() => {
     if (!sondeBasculeArmee()) return;
+    //  ⚠️ TEMPORAIRE (nº 615) — POSÉE AU PLUS TÔT, dans cet effet-ci et
+    //  non dans celui d'en dessous : `armee` n'est vrai qu'une image
+    //  plus tard, et le premier changement d'adresse peut suivre de
+    //  près. Le journal, lui, enregistre dès maintenant.
+    surveillerLesEcrituresDAdresse();
     const image = requestAnimationFrame(() => setArmee(true));
     return () => cancelAnimationFrame(image);
   }, []);
@@ -236,10 +339,16 @@ export function SondeBascule() {
           window.scrollY
         )} · ${historiqueEtCriteres()}`
       );
+      //  ⚠️ TEMPORAIRE (nº 615) — CE QUI EST ENCORE PEINT À LA FIN DU
+      //  GESTE, puis aux deux images suivantes : c'est l'écart entre
+      //  ces trois lignes qui dit combien de temps la page quittée
+      //  reste à l'écran après le glissement.
+      noter(`POPSTATE · ${ceQuiEstPeint()}`);
+      auxImagesSuivantes("POPSTATE");
       window.setTimeout(
         () =>
           noter(
-            `POPSTATE +600 ms · défilement ${Math.round(window.scrollY)}`
+            `POPSTATE +600 ms · défilement ${Math.round(window.scrollY)} · ${ceQuiEstPeint()}`
           ),
         600
       );

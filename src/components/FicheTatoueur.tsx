@@ -31,6 +31,11 @@ import {
   photoDuCarrouselRetenue,
   retenirPhotoDuCarrousel,
 } from "@/lib/memoire-galeries";
+//  ⚠️ TEMPORAIRE (nº 615) — la sonde-journal de la bascule, celle qui
+//  traverse les pages. Sans `?sonde-bascule=1`, ces deux appels sortent
+//  à leur première ligne et ne coûtent rien. Pour les retirer : cet
+//  import et l'effet « MESURE DE L'APERÇU » plus bas.
+import { noterDemontage, noterMontage } from "@/lib/journal-bascule";
 import { BoutonPartageFiche } from "@/components/BoutonPartageFiche";
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
 import {
@@ -383,6 +388,30 @@ export function FicheTatoueur({
       avec l'onglet — le chemin le plus inerte qui existe, celui de la
       nº 459.
       ⚠️ NI EN APERÇU : « Ma fiche » n'est pas une visite. */
+  /*  ██ ⚠️ TEMPORAIRE (nº 615) — MESURE DE L'APERÇU DU GLISSEMENT ██
+      LA PISTE Nº 3 DU PROPRIÉTAIRE : « au second glissement, l'adresse
+      redevient celle de la mosaïque — la mémoire répond-elle quand
+      même ? ». Cette ligne le dit sans discussion : elle donne l'indice
+      SEMÉ au montage, ce que la mémoire avait à dire à cet instant, et
+      la clé exacte sous laquelle elle a répondu. Un montage de fiche
+      pendant le second glissement se verrait ici, daté.
+      ⚠️ DÉCLARÉ AVANT L'EFFET D'ÉCRITURE ci-dessous, et c'est
+      délibéré : les effets s'exécutent dans l'ordre de déclaration — la
+      mémoire est donc lue AVANT d'être réécrite par celui-là.
+      ⚠️ LA CLÉ NE CHANGE JAMAIS DANS UNE INSTANCE (elle est faite des
+      props, que la clé de remontage fige) : cet effet ne se rejoue pas,
+      et le compteur d'instances du journal reste juste. */
+  const departDuCarrousel = useRef(indicePhoto);
+  useEffect(() => {
+    noterMontage(
+      "fiche (FicheTatoueur)",
+      `indice semé ${departDuCarrousel.current} · mémoire ${
+        photoDuCarrouselRetenue(cleDuCarrousel) ?? "(vide)"
+      } · clé ${cleDuCarrousel}`
+    );
+    return () => noterDemontage("fiche (FicheTatoueur)");
+  }, [cleDuCarrousel]);
+
   useEffect(() => {
     if (apercu) return;
     if (document.documentElement.dataset.appareil !== "mobile") return;

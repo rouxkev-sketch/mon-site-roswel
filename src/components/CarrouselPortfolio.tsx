@@ -19,6 +19,13 @@ import {
   noterMontage,
   ressource,
 } from "@/lib/journal-carrousel";
+//  ⚠️ TEMPORAIRE (nº 615) — L'AUTRE JOURNAL, celui de la bascule : lui
+//  seul TRAVERSE LES PAGES (il se recopie dans la mémoire d'onglet), et
+//  la mesure de la nº 615 porte justement sur un enchaînement de
+//  plusieurs adresses. Sans `?sonde-bascule=1`, cet appel sort à sa
+//  première ligne et ne coûte rien. Pour le retirer : cet import et les
+//  deux appels `noterBascule` de la pose d'avant peinture.
+import { noter as noterBascule } from "@/lib/journal-bascule";
 
 /**
  * LE CARROUSEL DU PORTFOLIO — TOUTES les photos d'un ensemble
@@ -838,6 +845,22 @@ export function CarrouselPortfolio({
    * que personne n'avait demandé de déplacer.
    */
   useEffetAvantPeinture(() => {
+    /*  ⚠️ TEMPORAIRE (nº 615) — LA PISTE Nº 2 DU PROPRIÉTAIRE : « cette
+        pose, débornée des cartes à la nº 604, s'exécute-t-elle pendant
+        le glissement ? ». La ligne est datée par le journal ; la
+        comparer au POPSTATE le plus proche répond. Les CARTES sont
+        écartées (elles sont vingt-quatre par page, elles noieraient le
+        journal) — exactement la garde de `allerA`. */
+    if (varianteRef.current !== "carte") {
+      noterBascule(
+        `POSE AVANT PEINTURE · carrousel ${varianteRef.current} · indice ${indice} · ` +
+          `appareil ${
+            typeof document !== "undefined"
+              ? (document.documentElement.dataset.appareil ?? "(absent)")
+              : "(pas de document)"
+          }`
+      );
+    }
     if (typeof document !== "undefined") {
       if (document.documentElement.dataset.appareil !== "mobile") return;
     }
@@ -846,6 +869,13 @@ export function CarrouselPortfolio({
     const colonne = colonnes.current[indice];
     if (!zone || !colonne) return;
     zone.scrollLeft = colonne.offsetLeft;
+    if (varianteRef.current !== "carte") {
+      noterBascule(
+        `POSE AVANT PEINTURE · FAITE · défilement posé ${Math.round(
+          colonne.offsetLeft
+        )}`
+      );
+    }
     //  L'observateur ne doit pas croire à un geste, et l'effet
     //  d'au-dessus n'a plus rien à rattraper.
     dernierPose.current = indice;
