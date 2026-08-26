@@ -172,8 +172,44 @@ export function LigneResultats({
       <Titre className="text-[clamp(1.25rem,2.4vw,1.65rem)] mobile:text-[17px] font-bold leading-tight text-sombre-texte">
         {titre}
       </Titre>
+      {/*  ██ §1 (nº 628) — LE SOUS-TITRE : PLUS SERRÉ AU DOIGT, PLUS
+           GRAND AU WEB, ET LES DEUX SANS SE MARCHER DESSUS ██
+           ------------------------------------------------------------
+           CE QUI CHANGE, ET LES DEUX MESURES QUI LE DISENT (prises à
+           l'écran, EN ENCRE et non en boîtes — la leçon de la nº 584 :
+           haut de l'encre de la seconde ligne moins bas de l'encre de
+           la première, jambages compris) :
+            · AU DOIGT — l'air entre « Réalisations · Anime & Manga » et
+              « 2 portfolios » valait 13,75 px d'encre pour 6 px de
+              marge. La marge passe à 4 (`mt-1`), l'air d'encre à
+              11,75. Le corps ne bouge pas : 15,5 px, comme depuis la
+              nº 539 ;
+            · AU WEB — le sous-titre passe de 16 à 17 px. C'est le corps
+              que le site donne déjà à un texte de web (le nom d'une
+              carte de style, nº 621) : aucune valeur neuve. Le titre
+              au-dessus ne bouge pas d'un pixel (son `clamp` est
+              intact), l'écart de hiérarchie tombe de 1,65 à 1,55 —
+              la graisse et la couleur le tiennent toujours.
+           ⚠️ AUCUNE CLASSE DE BASE, DEUX VARIANTES QUI S'EXCLUENT, et
+           c'est tout le procédé (nº 616) : `mobile:` est le VRAI
+           appareil (nº 60), `not-mobile:` est son exact complément. Les
+           deux ne peuvent pas s'appliquer au même élément — donc AUCUN
+           conflit à départager par l'ordre de la feuille (piège 389),
+           là où l'échelle « corps de base + palier `sm:` » en laissait
+           un. (Et aucune classe n'est écrite en toutes lettres dans
+           cette note : Tailwind lit les commentaires — piège nº 472.)
+           ⚠️ CE QUE LE DOIGT PERD, ET C'EST DIT : le palier `sm:` qui
+           lui donnait 16 px EN PAYSAGE (un téléphone couché dépasse
+           640 px) n'existe plus — il garde 15,5 px dans les deux sens,
+           soit un demi-pixel de moins couché. Le portrait, lui, ne
+           bouge pas.
+           ⚠️ ET LA LIGNE RÉSERVÉE JUSTE EN DESSOUS PORTE LES MÊMES
+           CLASSES, À LA LETTRE (nº 301) : sans quoi la hauteur du bloc
+           changerait selon qu'il y a un sous-titre ou non, et la page
+           sauterait — c'est très exactement ce que ce mécanisme
+           empêche. */}
       {sousTitre ? (
-        <p className="mt-1.5 text-[15.5px] sm:text-[16px] text-sombre-texte-doux">
+        <p className="mobile:mt-1 not-mobile:mt-1.5 mobile:text-[15.5px] not-mobile:text-[17px] text-sombre-texte-doux">
           {sousTitre}
         </p>
       ) : (
@@ -188,7 +224,12 @@ export function LigneResultats({
           <p
             aria-hidden="true"
             data-degagement-reserve=""
-            className="mt-1.5 text-[15.5px] sm:text-[16px] text-sombre-texte-doux"
+            //  §1 (nº 628) — LES MÊMES CLASSES QUE LE SOUS-TITRE, mises
+            //  à jour avec lui : voir sa note juste au-dessus. Elles se
+            //  recopient, et c'est la faiblesse assumée du procédé
+            //  depuis la nº 301 — une divergence se verrait aussitôt,
+            //  puisque c'est la hauteur du bloc qui sauterait.
+            className="mobile:mt-1 not-mobile:mt-1.5 mobile:text-[15.5px] not-mobile:text-[17px] text-sombre-texte-doux"
           >
             &nbsp;
           </p>

@@ -62,8 +62,29 @@ const FLECHE_ROSE = flecheImage(COULEURS.primaire);
  * ⚠️ LA TAILLE (13 px) EST SOUS CELLE DES ENTRÉES (16 px) : un titre
  * annonce, il ne se choisit pas.
  */
-const ECRITURE_TITRE_GROUPE =
-  "text-[13px] font-bold uppercase tracking-[0.08em]";
+/*  ██ §5 (nº 628) — LA GRAISSE SORT DE L'ÉCRITURE, ET ELLE SEULE ██
+    ------------------------------------------------------------------
+    POURQUOI. Le BLOC DE DEUX TITRES (« Réalisations / Flashs » du
+    moteur, « Favoris / Portfolios » de Ma sélection) doit désormais
+    dire LEQUEL des deux est ouvert : demi-gras au repos, gras quand sa
+    section est dépliée. Tout le reste du site — les titres en ligne des
+    menus sans bloc, les sous-titres « ARTISTE » et « LIEU » — garde le
+    gras, sans exception.
+    ⚠️ ON NE POSE SURTOUT PAS UNE SECONDE CLASSE DE GRAISSE PAR-DESSUS
+    `font-bold` : deux classes pour une même propriété sur un même
+    élément se départagent à l'ORDRE DE LA FEUILLE, jamais à l'ordre où
+    on les écrit (piège 389). La graisse est donc RETIRÉE de l'écriture
+    commune et redonnée par chaque appelant — une seule classe de
+    graisse par élément, toujours.
+    ⚠️ LA GARANTIE DE LA nº 317 TIENT : les sous-titres lisent les mêmes
+    DEUX constantes que les titres, ils ne peuvent pas plus diverger
+    qu'avant. C'est la même écriture, coupée en deux morceaux nommés. */
+const ECRITURE_TITRE_GROUPE = "text-[13px] uppercase tracking-[0.08em]";
+/** La graisse d'un titre de groupe — celle de tout le site (nº 317). */
+const GRAISSE_TITRE_GROUPE = "font-bold";
+/** ⚠️ nº 628 — LA GRAISSE DU BLOC AU REPOS, et rien d'autre : un titre
+    dont la section est repliée. Un cran sous le gras, jamais deux. */
+const GRAISSE_TITRE_GROUPE_REPLIE = "font-semibold";
 
 export type OptionMenu = {
   value: string;
@@ -1163,8 +1184,39 @@ export function MenuDeroulant({
           groupeDeplie ? "border-sombre-trait" : "border-transparent"
         }`}
       >
+        {/*  ██ §5 (nº 628) — LE BLOC DIT LEQUEL DES DEUX EST OUVERT ██
+             La section dépliée prend le GRAS, l'autre reste en
+             DEMI-GRAS. C'est la seule chose que ce bloc gagne : ni
+             couleur, ni taille, ni chasse — le rose et les 13 px
+             valent pour les deux titres, comme avant.
+             ⚠️ RIEN NE PEUT SAUTER, ET CE N'EST PAS UNE ESPÉRANCE :
+              · EN HAUTEUR — chaque titre est un bouton à
+                `min-h-[44px]`, quand son contenu en mesure 35 (13 px
+                de texte, 12 + 4 de rembourrage). C'est le plancher qui
+                fixe la hauteur de la rangée, pas le texte : une
+                graisse plus lourde ne peut pas l'atteindre ;
+              · EN LARGEUR — le texte est le PREMIER élément d'une
+                rangée `justify-between` alignée à gauche
+                (`text-left`) : son bord gauche est celui du
+                rembourrage, il ne bouge pas. Ce qu'il gagne en chasse,
+                il le prend sur l'écart qui le sépare du chevron, et le
+                chevron est collé à droite — lui non plus ne bouge pas.
+                Si un titre était centré ou aligné à droite, il se
+                décalerait ; aucun des deux ne l'est.
+             ⚠️ LE CHEVRON N'EST PAS TOUCHÉ : il vit dans
+             `enTeteSection` et pivote toujours sur `groupeDeplie ===
+             entete` (nº 572-574) — c'est la MÊME condition qui décide
+             ici de la graisse. Les deux ne peuvent pas se contredire. */}
         {entetesDesSections.map((entete) => (
-          <div key={entete}>{enTeteSection(entete, `${retrait} pt-3 pb-1`)}</div>
+          <div key={entete}>
+            {enTeteSection(
+              entete,
+              `${retrait} pt-3 pb-1`,
+              groupeDeplie === entete
+                ? GRAISSE_TITRE_GROUPE
+                : GRAISSE_TITRE_GROUPE_REPLIE
+            )}
+          </div>
         ))}
       </div>
     );
@@ -1328,8 +1380,15 @@ export function MenuDeroulant({
       ⚠️ LA TAILLE (13 px) EST SOUS CELLE DES ENTRÉES (16 px) : un
       titre de catégorie annonce, il ne se choisit pas — et rien ne
       doit le confondre avec une option. */
-  function enTeteSection(entete: string, marge: string) {
-    const classes = `${marge} ${ECRITURE_TITRE_GROUPE} text-primaire`;
+  //  §5 (nº 628) — LA GRAISSE EST UN ARGUMENT, avec le gras du site
+  //  pour valeur par défaut : tous les appelants d'avant gardent donc
+  //  exactement ce qu'ils avaient. Seul le bloc de deux titres la passe.
+  function enTeteSection(
+    entete: string,
+    marge: string,
+    graisse: string = GRAISSE_TITRE_GROUPE
+  ) {
+    const classes = `${marge} ${ECRITURE_TITRE_GROUPE} ${graisse} text-primaire`;
     //  §2 (nº 304) — À UN SEUL GROUPE, c'est une étiquette : aucune
     //  flèche, rien à toucher, et le contenu est déjà là.
     if (!portesDeGroupe) {
@@ -1752,7 +1811,13 @@ export function MenuDeroulant({
                       aux portes, celui-ci n'en est pas une. */
                   (option.sousTitre
                     ? sousTitreDeSection(sousEntete, {
-                        classes: `${ECRITURE_TITRE_GROUPE} px-4 pt-3 pb-1 ${
+                        //  §5 (nº 628) — LA GRAISSE EST REDONNÉE ICI :
+                        //  elle a quitté `ECRITURE_TITRE_GROUPE` pour
+                        //  que le bloc de deux titres puisse en changer
+                        //  (voir sa note, en tête de fichier). CE
+                        //  SOUS-TITRE, LUI, NE CHANGE PAS — le gras du
+                        //  site, exactement comme avant.
+                        classes: `${ECRITURE_TITRE_GROUPE} ${GRAISSE_TITRE_GROUPE} px-4 pt-3 pb-1 ${
                           sombre ? "text-sombre-texte-doux" : "text-encre-douce"
                         }`,
                       })

@@ -753,7 +753,36 @@ export function IndexTatoueurs({
               des exemples en commentaire). Le titre d'invitation de la
               mosaïque, lui, garde ses mots (`TEXTES_TATOUAGE`) — il ne
               porte aucun nombre. */
-          const compte = `${total} portfolio${total > 1 ? "s" : ""}`;
+          /*  ██ §2 (nº 628) — LE COMPTE DIT CE QUE LA PAGE MONTRE, ET
+               L'ACCUEIL EN A UN LUI AUSSI ██
+               D'OÙ VIENT LE NOMBRE, ET C'EST LA QUESTION DU
+               PROPRIÉTAIRE : de la SOMME DU CATALOGUE DE STYLES
+               (nº 624), pas d'une lecture neuve. `catalogueDesStyles`
+               est déjà lue par l'accueil au repos (nº 621) et chaque
+               entrée porte son nombre de portfolios — celui-là même
+               qui s'écrit sous chaque carte. Le total annoncé est donc,
+               à la lettre, LA SOMME DE CE QUI EST À L'ÉCRAN. Aucune
+               requête de plus, aucun cookie, aucun en-tête : l'accueil
+               reste prérendu (`○ /`).
+               ⚠️ POURQUOI PAS `resultat.total`, le total de la
+               recherche à vide : sur l'accueil au catalogue, il vaut
+               ZÉRO par construction — le serveur n'envoie AUCUNE carte
+               de portfolio dans ce cas (nº 621), et c'est ce zéro qui
+               fait taire « Voir plus » et le compteur. Aller le
+               chercher demanderait de défaire cet accord ; la somme du
+               catalogue dit la même chose et se vérifie à l'œil.
+               ⚠️ L'ÉCART AVEC LA RECHERCHE EST CONNU ET ASSUMÉ (il est
+               écrit à la nº 624) : un portfolio dont le style n'est pas
+               catalogué produit bien une carte en recherche, mais
+               n'entre dans aucun style — il n'est donc pas dans cette
+               somme. Les deux nombres peuvent différer d'autant.
+               ⚠️ SANS CATALOGUE (une recherche, ou la base muette), la
+               valeur reste EXACTEMENT `total` : cette ligne ne change
+               rien pour les pages de résultats. */
+          const totalAffiche = surLeCatalogue
+            ? catalogue.reduce((somme, style) => somme + style.portfolios, 0)
+            : total;
+          const compte = `${totalAffiche} portfolio${totalAffiche > 1 ? "s" : ""}`;
           if (!quoi && !lieu) {
             //  SANS RECHERCHE : l'invitation, et ce que le site est.
             //  §2 (nº 445) — ET L'AIR SOUS LA BARRE, AU DOIGT : la
@@ -787,7 +816,28 @@ export function IndexTatoueurs({
                      au-dessus, même corps, même hauteur de ligne.
                      L'égalité est structurelle, pas approchée : aucun
                      nombre n'est écrit ici ni là-bas. */
-                sousTitre={null}
+                /*  ██ §2 (nº 628) — LE SOUS-TITRE REVIENT, ET C'EST LE
+                     COMPTE ██
+                     La nº 507 avait SUPPRIMÉ la signature « Le
+                     portfolio des tatouages et des tatoueurs » en
+                     GARDANT SON AIR (`degagementConstant`, une ligne
+                     muette aux mêmes classes). Cet air est donc encore
+                     là, à la hauteur exacte d'une ligne de sous-titre :
+                     le compte s'y pose SANS DÉPLACER UN SEUL PIXEL —
+                     ni le titre au-dessus, ni les cartes en dessous. Le
+                     mécanisme de la nº 301 n'a rien à faire de plus,
+                     c'est très précisément ce pour quoi il existe.
+                     ⚠️ ET LE DRAPEAU RESTE POSÉ, il n'est pas devenu
+                     inutile : quand le nombre vaut zéro — la base
+                     muette, un catalogue vide — on n'écrit pas
+                     « 0 portfolio », on rend la ligne muette et l'air
+                     tient tout seul, comme depuis la nº 507.
+                     ⚠️ RIEN AU DOIGT, et ce n'est pas un choix de plus :
+                     `masqueAuDoigt` (nº 444) retire le bloc ENTIER —
+                     titre et sous-titre — du vrai appareil tactile. Ce
+                     compte ne s'affiche donc qu'au web, sans qu'aucune
+                     classe ait eu à le dire. */
+                sousTitre={totalAffiche > 0 ? compte : null}
                 degagementConstant
                 //  §1 (nº 444) — AU DOIGT, CETTE PHRASE NE S'AFFICHE
                 //  PLUS : les cartes commencent tout de suite. Sur

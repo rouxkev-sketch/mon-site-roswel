@@ -74,7 +74,11 @@ import {
 //  (`RENDU_PAR_DEFAUT`, `ensembleDeLaPhoto`, `natureConnue`), et
 //  `pincementRecent` avec eux : ils ne servaient qu'à ouvrir la fenêtre
 //  de carrousel depuis la photo du haut.
-import { NATURE_PAR_DEFAUT, titreDeGalerie } from "@/lib/photos-tatoueur";
+import {
+  NATURE_PAR_DEFAUT,
+  partiesDeGalerie,
+  SEPARATEUR_GALERIE,
+} from "@/lib/photos-tatoueur";
 import type { Tatoueur } from "@/lib/tatoueurs";
 /*  §1 (nº 602) — DEUX AUTRES IMPORTS SONT PARTIS AVEC LA FENÊTRE DE
     CARROUSEL : `positionSousLeGel` (la position de la page dessous, que
@@ -422,8 +426,9 @@ export function FicheTatoueur({
    * §1 (nº 376) — LE TITRE DE LA GALERIE, sous la photo, AU DOIGT.
    * ------------------------------------------------------------------
    * LA MÊME CHAÎNE QUE LE PORTFOLIO, et c'est le point : elle est
-   * composée par `titreDeGalerie` (lib/photos-tatoueur), l'écriture
-   * unique que les titres de galerie du portfolio consomment aussi.
+   * composée par `partiesDeGalerie` (lib/photos-tatoueur, nº 628),
+   * l'écriture unique dont `titreDeGalerie` — que les titres de galerie
+   * du portfolio consomment — n'est que la mise bout à bout.
    * Rien n'est recomposé ici — les deux endroits ne peuvent pas dire
    * deux choses différentes de la même galerie.
    *
@@ -443,10 +448,22 @@ export function FicheTatoueur({
    * galerie ne contient qu'un style. `indicePhoto` n'entre pas dans ce
    * calcul, le titre ne se recalcule donc jamais quand on fait défiler.
    */
-  const titreDuCarrousel =
+  /*  ██ §2 (nº 628) — EN DEUX MORCEAUX, POUR QUE LE RENDU PERDE LE
+       GRAS ██
+       LE TITRE NE CHANGE NI DE MOTS NI DE PUCE : c'est toujours
+       l'écriture unique de `lib/photos-tatoueur`, mais lue par
+       `partiesDeGalerie` — LA SOURCE, dont `titreDeGalerie` n'est que
+       la mise bout à bout (nº 407). Rien n'est recomposé ici : la puce
+       et le mot du rendu restent écrits à un seul endroit.
+       ⚠️ LA GARDE EST LA MÊME, à la lettre : `partiesDeGalerie` rend
+       `null` quand le style n'a pas de libellé (elle sort avant
+       d'écrire quoi que ce soit), et la fiche sans photo est écartée
+       ici comme avant. `rangeeSousLaPhoto` lit donc exactement la même
+       vérité qu'avec la chaîne vide. */
+  const partiesDuTitre =
     photosDuCarrousel.length > 0
-      ? titreDeGalerie(groupeAffiche?.label, serieEffective?.rendu)
-      : "";
+      ? partiesDeGalerie(groupeAffiche?.label, serieEffective?.rendu)
+      : null;
 
   /** LA PHOTO SOUS LES YEUX — celle que le cœur enregistre. Elle suit
       le carrousel : changer de photo change ce qu'on enregistre, et le
@@ -478,7 +495,7 @@ export function FicheTatoueur({
    * fanion lui-même continue de juger sa photo côté navigateur).
    */
   const fanionSousLaPhoto = !apercu && Boolean(photoAffichee);
-  const rangeeSousLaPhoto = Boolean(titreDuCarrousel) || fanionSousLaPhoto;
+  const rangeeSousLaPhoto = Boolean(partiesDuTitre) || fanionSousLaPhoto;
   /*  §3 (nº 302) — LA GALERIE AFFICHÉE N'EST PLUS CALCULÉE ICI, et
       elle n'a plus de lecteur : elle ne servait qu'au cœur, pour
       enregistrer TOUT le carrousel d'un geste (nº 208-§6). Cette règle
@@ -1175,7 +1192,7 @@ export function FicheTatoueur({
             * une boîte souple refuse de rétrécir sous son contenu.)
             *
             * ET S'IL N'Y A RIEN À DIRE, IL N'Y A PAS DE LIGNE :
-            * `titreDuCarrousel` est vide quand la fiche n'a aucune
+            * `partiesDuTitre` est nul (nº 628) quand la fiche n'a aucune
             * photo, ou quand le style n'a pas de libellé — on ne rend
             * alors NI la balise, NI son `gap`, NI le `mobile:gap-5`.
             * Aucun blanc réservé à un texte absent.
@@ -1269,7 +1286,26 @@ export function FicheTatoueur({
                 className="flex-1 min-w-0 truncate text-[15px]
                            font-semibold text-sombre-texte"
               >
-                {titreDuCarrousel}
+                {partiesDuTitre?.style}
+                {/*  ██ §2 (nº 628) — « • NOIR ET GRIS » PERD LE GRAS ██
+                     LE NOM DU STYLE GARDE LE SIEN (le demi-gras de
+                     cette ligne, nº 458) ; ce qui suit la puce passe en
+                     graisse NORMALE. C'est la hiérarchie que la carte
+                     d'accueil porte depuis la nº 407 : le style se lit
+                     d'abord, le rendu le précise.
+                     ⚠️ DEUX ÉLÉMENTS, DEUX CLASSES — pas deux classes
+                     de graisse sur un même élément (piège 389) : le
+                     paragraphe reste demi-gras et ne connaît que sa
+                     classe, le morceau qui s'allège a la sienne.
+                     ⚠️ ET AUCUNE PUCE ORPHELINE : le séparateur est
+                     DANS la garde, il n'existe que lorsqu'il a un texte
+                     de chaque côté (la règle de `partiesDeGalerie`). */}
+                {partiesDuTitre?.rendu && (
+                  <span className="font-normal">
+                    {SEPARATEUR_GALERIE}
+                    {partiesDuTitre.rendu}
+                  </span>
+                )}
               </p>
               {/*  ██ §1-d (nº 483) — LE FANION SE CALE SUR LA MARGE ██
                    L'ÉCART, MESURÉ : la cible du fanion fait 48 px et son

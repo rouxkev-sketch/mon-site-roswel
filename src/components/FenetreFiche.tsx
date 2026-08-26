@@ -23,7 +23,11 @@ import {
   serieDeLOuverture,
   serieMontree,
 } from "@/lib/photo-tatoueur";
-import { NATURE_PAR_DEFAUT, titreDeGalerie } from "@/lib/photos-tatoueur";
+import {
+  NATURE_PAR_DEFAUT,
+  partiesDeGalerie,
+  SEPARATEUR_GALERIE,
+} from "@/lib/photos-tatoueur";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
@@ -352,12 +356,36 @@ export function FenetreFiche({
    *  · une galerie sans libellé exploitable → `titreDeGalerie` rend la
    *    chaîne vide par construction (elle sort avant d'écrire quoi que
    *    ce soit quand le style est vide).
-   * Dans les deux cas le rendu est gardé par `titreDeLaGalerie && (…)`
+   * Dans les deux cas le rendu est gardé par `partiesDuTitre && (…)`
    * plus bas : pas de ligne, pas d'espace, et JAMAIS une puce orpheline
    * — le séparateur n'existe que lorsqu'il a un texte de chaque côté.
    */
-  const titreDeLaGalerie =
-    n > 0 ? titreDeGalerie(groupeAffiche?.label, serieEffective?.rendu) : "";
+  /*  ██ §2 (nº 628) — EN DEUX MORCEAUX, POUR QUE LE RENDU PERDE LE
+       GRAS ██
+       MÊME LECTURE QU'AVANT, ET MÊMES MOTS : `partiesDeGalerie` est LA
+       SOURCE dont `titreDeGalerie` n'était que la mise bout à bout
+       (nº 407) — la puce et le mot du rendu restent écrits à un seul
+       endroit, et les deux rendus ci-dessous (le flux et le hors-cadre)
+       lisent toujours LA MÊME variable : ils ne peuvent pas diverger.
+       ⚠️ LES DEUX GARDES DE LA NOTE CI-DESSUS TIENNENT MOT POUR MOT :
+       une fiche sans publication est écartée par `n > 0`, une galerie
+       sans libellé par `partiesDeGalerie` elle-même, qui rend `null`.
+       Le `titreDeLaGalerie && (…)` d'alors devient un test de `null`,
+       et il dit exactement la même chose. */
+  const partiesDuTitre =
+    n > 0 ? partiesDeGalerie(groupeAffiche?.label, serieEffective?.rendu) : null;
+
+  /*  §2 (nº 628) — LE MORCEAU QUI S'ALLÈGE, ÉCRIT UNE FOIS POUR LES
+      DEUX RENDUS : le style garde le gras du paragraphe qui le porte,
+      « • Noir et gris » passe en graisse normale. Deux éléments, deux
+      classes — jamais deux graisses sur un même élément (piège 389).
+      La puce vit DANS la garde : aucune puce orpheline, jamais. */
+  const finDuTitre = partiesDuTitre?.rendu ? (
+    <span className="font-normal">
+      {SEPARATEUR_GALERIE}
+      {partiesDuTitre.rendu}
+    </span>
+  ) : null;
 
   const ouverte = tatoueur !== null;
 
@@ -804,8 +832,8 @@ export function FenetreFiche({
                  disposition large qui le porte, et elle seule.
 
                  CE BLOC-CI EST L'AUTRE MOITIÉ, ET RIEN D'AUTRE : le
-                 MÊME texte (`titreDeLaGalerie`, l'écriture unique de
-                 `titreDeGalerie`), rendu DANS LE FLUX entre la photo et
+                 MÊME texte (`partiesDuTitre`, l'écriture unique de
+                 `partiesDeGalerie` — nº 628), rendu DANS LE FLUX entre la photo et
                  le va-et-vient. Aucune recomposition — les deux
                  lectures ne peuvent pas diverger, c'est la même
                  variable. C'est le motif que la nº 599 a posé pour les
@@ -838,13 +866,14 @@ export function FenetreFiche({
                     le voile au travers.
                  APPARENCE : `text-[16px] font-bold text-white`, les
                  trois classes du titre large, mot pour mot. */}
-            {titreDeLaGalerie && (
+            {partiesDuTitre && (
               <p
                 data-titre-fenetre-flux=""
                 className="lg:hidden mobile:hidden bg-sombre-fond px-5 sm:px-6 pt-4
                            text-[16px] font-bold text-white"
               >
-                {titreDeLaGalerie}
+                {partiesDuTitre.style}
+                {finDuTitre}
               </p>
             )}
 
@@ -1031,7 +1060,7 @@ export function FenetreFiche({
                pixel, pour la raison dite juste au-dessus (ce texte est
                hors du flux, sa taille n'entre dans aucun calcul de
                centrage). Il gagne même 4 px de dégagement en bas. */}
-          {titreDeLaGalerie && (
+          {partiesDuTitre && (
             <p
               data-titre-fenetre=""
               //  §1 (nº 440) — même règle que le fil d'Ariane : sous une
@@ -1051,7 +1080,8 @@ export function FenetreFiche({
                            habillageEfface ? " invisible" : ""
                          }`}
             >
-              {titreDeLaGalerie}
+              {partiesDuTitre.style}
+              {finDuTitre}
             </p>
           )}
         </div>
