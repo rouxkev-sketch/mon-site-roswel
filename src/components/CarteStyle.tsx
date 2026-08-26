@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { CADRE_PHOTO_PORTFOLIO } from "@/config/tatouage";
 import { NATURE_PAR_DEFAUT, SEPARATEUR_GALERIE } from "@/lib/photos-tatoueur";
+//  §2 (nº 635) — l'écriture unique de la copie (nº 514), reprise telle
+//  quelle de la carte de la mosaïque : voir la note sur le lien.
+import { garderLeTexteALaCopie } from "@/lib/copie-du-texte";
 //  §1 (nº 625) — L'ÉCRITURE UNIQUE DE « UNE LISTE NEUVE COMMENCE EN
 //  HAUT » (nº 330/334) : elle arme au geste, la liste servie consomme.
 //  Voir la note de la remontée, plus bas.
@@ -175,6 +178,28 @@ export function CarteStyle({
            l'adresse ne dirait pas ce qu'elle montre. On l'écrit. */}
       <Link
         href={adresse}
+        //  ██ §2 (nº 635) — COPIER LE TEXTE, PAS L'ADRESSE ██
+        //  LE DÉFAUT : copier « Fine Line • 4 portfolios » posait
+        //  « [Fine Line • 4 portfolios](https://…/?style=fine-line…) »
+        //  dans le presse-papiers. LA CAUSE est celle de la nº 514 : la
+        //  carte entière est un lien, et quand une sélection y tient
+        //  tout entière, le navigateur écrit L'ADRESSE à la place du
+        //  texte. Il n'y a rien à corriger dans le site — il y a une
+        //  question à cesser de lui laisser ouverte.
+        //  LE REMÈDE EST CELUI DE LA nº 517, REPRIS SANS UNE LIGNE
+        //  NEUVE : les deux mêmes attributs que la carte de la mosaïque
+        //  (CarteTatoueur), et l'écriture unique `garderLeTexteALaCopie`
+        //  (lib/copie-du-texte). Aucun second mécanisme.
+        //  ⚠️ ET LE TROISIÈME MORCEAU, QUI NE SE VOIT PAS ICI : la règle
+        //  de glissement de globals.css (nº 516), posée sur l'attribut
+        //  qui NOMME ce lien. `data-lien-carte` est repris tel quel —
+        //  c'est un marqueur de style pur, que rien d'autre ne lit —
+        //  donc la feuille produite ne bouge pas d'un octet. Sans lui,
+        //  glisser sur le nom emporterait le lien au lieu de surligner,
+        //  et il n'y aurait jamais de sélection à copier.
+        data-lien-carte=""
+        draggable={false}
+        onCopy={garderLeTexteALaCopie}
         //  §1 (nº 625) — LA REMONTÉE, ARMÉE PAR LE GESTE et jouée par
         //  la liste qui arrive. L'adresse de destination lui est
         //  donnée : sans elle, la position de l'accueil qu'on quitte

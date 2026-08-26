@@ -1119,16 +1119,36 @@ export function IndexTatoueurs({
                le lieu occupait déjà la même place quand `quoi`
                existait.
                ⚠️ LES SÉPARATEURS SE FONT TOUJOURS PAR `filter(Boolean)`
-               (nº 386) : une donnée absente emporte sa puce — un style
-               seul rend « 16 créations », une région « 4 créations ·
-               Occitanie » sans rayon, jamais de point médian orphelin.
+               (nº 386) : une donnée absente emporte sa puce — une
+               région rend « 4 portfolios: Occitanie » sans rayon,
+               jamais de point médian orphelin.
                ⚠️ `affiches.lieu!.intitule` DISPARAÎT AVEC LA BRANCHE :
                il n'était atteint que par ce chemin, et son assertion
                non-nulle avec lui. */
+          /*  ██ §1 (nº 635) — DEUX POINTS COLLÉS APRÈS LE COMPTE ██
+              ------------------------------------------------------------
+              « 1 portfolio · Paris · 50 km » devient « 1 portfolio:
+              Paris · 50 km ». Le compte et le lieu ne sont pas de même
+              nature — l'un dit COMBIEN, l'autre dit OÙ : une puce les
+              mettait sur le même rang, les deux points annoncent. Entre
+              LA VILLE ET LE RAYON, qui disent tous deux le même OÙ, la
+              puce reste.
+              ⚠️ PAS D'ESPACE AVANT, UN APRÈS : c'est l'usage anglais, et
+              le site parlera anglais au lancement (acquis nº 614). En
+              français on aurait mis une espace fine avant ; ce n'est pas
+              la langue de ce texte.
+              ⚠️ AUCUNE PONCTUATION ORPHELINE, ET C'EST GARDÉ PAR
+              CONSTRUCTION (règle nº 386) : les deux points ne s'écrivent
+              QUE si le morceau de droite existe. Sans lieu, la ligne
+              n'est que le compte — et le compte, lui, ne peut jamais
+              être vide (« 0 portfolio » reste une phrase). Le rayon sans
+              lieu n'existe pas : il est gardé par `affiches.lieu` juste
+              au-dessus. */
+          const ou = [lieu, rayon].filter(Boolean).join(" · ");
           return (
             <LigneResultats
               titre={quoi || TEXTES_TATOUAGE.titreRechercheSansCategorie}
-              sousTitre={[compte, lieu, rayon].filter(Boolean).join(" · ")}
+              sousTitre={ou ? `${compte}: ${ou}` : compte}
             />
           );
         })()}
