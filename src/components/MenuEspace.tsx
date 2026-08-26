@@ -121,6 +121,31 @@ import {
  *    de la barre fixe ferait sinon d'elle le repère des « fixes ».
  */
 
+/**
+ * ██ §1 (nº 647) — L'EMPREINTE DE LA ZONE DU COMPTE, ÉCRITE UNE FOIS ██
+ * ==================================================================
+ * POURQUOI CETTE CONSTANTE EXISTE, ET C'EST UNE LEÇON PAYÉE DEUX FOIS.
+ * La barre garde une RÉSERVE NEUTRE (nº 439, EnTeteTatouage) qui prend
+ * la place de cette zone pendant la phase muette d'un connecté : sans
+ * elle, l'empreinte du DÉCONNECTÉ (la capsule « Se connecter ») tient
+ * la place jusqu'à l'hydratation, et le bloc central de la barre —
+ * centré par deux marges automatiques — se recale sous les yeux.
+ * LA RÉSERVE DOIT DONC VALOIR CETTE ZONE AU PIXEL. La nº 509 l'avait
+ * déjà rattrapée après la nº 465 ; sa note disait « si quelqu'un change
+ * le `-mr-2` de MenuEspace, c'est ici qu'il faut le suivre ». La nº 646
+ * l'a changé — deux variantes d'appareil au lieu d'un nombre — et ne
+ * l'a pas suivi : le décalage est revenu.
+ * LE REMÈDE EST LE SEUL QUI FERME LA PORTE : les deux endroits ne
+ * peuvent plus se contredire puisqu'ils lisent LA MÊME chaîne. Il n'y a
+ * plus rien à « suivre » à la main.
+ * ⚠️ CE QU'ELLE CONTIENT : les marges qui font l'EMPREINTE, jamais la
+ * boîte. La cible mesure 40 px des deux côtés (`HAUTEUR_ACTIONS`) ; ce
+ * sont ces marges qui disent ce qu'elle OCCUPE dans la rangée — 34 px
+ * au doigt (40 − 6), 42 px au web (40 − 4 + 6).
+ */
+export const EMPREINTE_ZONE_COMPTE =
+  "mobile:-mr-1.5 not-mobile:-mr-1 not-mobile:ml-1.5";
+
 export function MenuEspace({
   idUtilisateur,
   nom,
@@ -1595,8 +1620,7 @@ export function MenuEspace({
         variantes, et plus un seul `-mr-2`. */
     <div
       ref={zone}
-      className="mobile:-mr-1.5 not-mobile:-mr-1 not-mobile:ml-1.5
-                 relative flex items-center gap-1.5"
+      className={`${EMPREINTE_ZONE_COMPTE} relative flex items-center gap-1.5`}
     >
       {/* ÉCRAN ÉTROIT : l'icône personnage, ROSE (connecté). */}
       <button

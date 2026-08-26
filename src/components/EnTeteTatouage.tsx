@@ -34,7 +34,10 @@ import {
   IconeSilhouette,
 } from "@/components/Icones";
 import { LogoYokofolio } from "@/components/LogoYokofolio";
-import { MenuEspace } from "@/components/MenuEspace";
+//  §1 (nº 647) — l'empreinte de la zone du compte vient de LÀ où la
+//  zone est écrite : la réserve neutre plus bas la reprend telle
+//  quelle, elles ne peuvent plus diverger.
+import { EMPREINTE_ZONE_COMPTE, MenuEspace } from "@/components/MenuEspace";
 import { SelecteurLangue } from "@/components/SelecteurLangue";
 import {
   lireDejaConnecte,
@@ -1444,12 +1447,37 @@ export function EnTeteTatouage({
                 * ICI QU'IL FAUT LE SUIVRE. Les deux valeurs doivent
                 * rester égales : c'est tout ce qui tient la barre
                 * immobile pour un visiteur connecté.
+                *
+                * ██ §1 (nº 647) — L'AVERTISSEMENT CI-DESSUS N'A PAS SUFFI ██
+                * ------------------------------------------------------
+                * LA CAUSE DU RELEVÉ, NOMMÉE : la nº 646 a changé les
+                * marges de MenuEspace — un nombre unique (`-mr-2`)
+                * devenu deux variantes d'appareil, plus un air à gauche
+                * au web — et ne les a pas suivies ici. L'empreinte de
+                * la zone est passée de 32 px à 34 au doigt et 42 au
+                * web ; la réserve, elle, en gardait 32. Dix pixels
+                * d'écart au web, deux au doigt, rendus à
+                * l'hydratation : le bloc central repartait vers la
+                * droite en se recentrant. C'EST EXACTEMENT LE DÉFAUT
+                * DES nº 439 ET nº 509, revenu par la même porte.
+                * LE REMÈDE FERME LA PORTE, au lieu de rattraper une
+                * troisième fois : les marges sont désormais une
+                * CONSTANTE PARTAGÉE (`EMPREINTE_ZONE_COMPTE`, écrite
+                * dans MenuEspace, à côté de la zone qu'elle décrit).
+                * Les deux endroits lisent la même chaîne — ils ne
+                * peuvent plus se contredire, et il n'y a plus rien à
+                * suivre à la main.
+                * ⚠️ LA BOÎTE NE VIENT PAS DE LÀ : la cible fait
+                * toujours 40 × 40 (`HAUTEUR_ACTIONS`, ci-dessous). La
+                * constante ne porte QUE les marges — c'est-à-dire
+                * l'écart entre ce que la zone mesure et ce qu'elle
+                * occupe.
                 */}
               <span
                 aria-hidden="true"
                 data-reserve-compte=""
                 style={{ height: HAUTEUR_ACTIONS, width: HAUTEUR_ACTIONS }}
-                className="-mr-2 hidden shrink-0"
+                className={`${EMPREINTE_ZONE_COMPTE} hidden shrink-0`}
               />
             </>
           )}
