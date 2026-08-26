@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { CADRE_PHOTO_PORTFOLIO } from "@/config/tatouage";
-import { NATURE_PAR_DEFAUT } from "@/lib/photos-tatoueur";
+import { NATURE_PAR_DEFAUT, SEPARATEUR_GALERIE } from "@/lib/photos-tatoueur";
+import { souscrireAdresse } from "@/lib/adresse-courante";
+import { defilerSansGeste } from "@/lib/defilement-programme";
 import { PhotoDeCarte, TAILLES_CARTE } from "@/components/PhotoDeCarte";
 import { CLASSES_GRILLE_CARTES } from "@/components/GrilleTatoueurs";
 import type { StyleDuCatalogue } from "@/lib/catalogue-styles";
@@ -38,27 +42,127 @@ import type { StyleDuCatalogue } from "@/lib/catalogue-styles";
  */
 
 /**
- * §1 (nº 621) — LE TEXTE SOUS LA CARTE, EN UNE SEULE LIGNE.
+ * §1 (nº 621, refait nº 622 puis nº 623) — LE TEXTE SOUS LA CARTE.
  * ------------------------------------------------------------------
- * Le nom du style à gauche, le nombre d'artistes à droite, en gris.
- * LA TYPOGRAPHIE PART DE LA LIGNE 1 DES CARTES (nº 480/481) :
- * `text-sombre-texte` — le blanc du site — pour le nom, et
- * `text-sombre-texte-doux` — LE gris des textes secondaires (jeton de
- * la nº 466) — pour le nombre. Aucune couleur neuve.
- * ⚠️ LA nº 621 AVAIT POSÉ LA MÊME TAILLE PARTOUT (15 px, graisse
- * normale) : LA nº 622 SÉPARE LES DEUX APPAREILS, sur consigne. Le
- * doigt garde exactement cette valeur ; le web monte à 17 px et met le
- * nom au demi-gras. Les deux jeux de classes sont écrits sur la ligne
- * elle-même — voir la note qui les accompagne, plus bas.
+ * DEUX MISES EN PAGE, UNE PAR APPAREIL, ET LA CONSIGNE DU nº 623 :
+ *  · AU WEB, UNE SEULE LIGNE — « Réalisme • 12 portfolios ». Le nom en
+ *    demi-gras et blanc, le complément (la puce comprise) en graisse
+ *    NORMALE et en gris ;
+ *  · AU DOIGT, DEUX LIGNES — le nom en demi-gras au-dessus, le compte
+ *    en dessous, plus petit et gris. AUCUNE PUCE : c'est le retour à la
+ *    ligne qui sépare.
+ * LES TAILLES : web 17 px / interligne 20 pour les deux morceaux (la
+ * ligne du nº 622, inchangée) ; doigt 15 px / interligne 18 pour le
+ * nom (inchangé), et 13 px / interligne 16 pour le compte — le corps
+ * de la ligne de lieu des cartes, rien de neuf dans l'échelle.
+ * LES COULEURS viennent de la ligne 1 des cartes (nº 480/481) :
+ * `text-sombre-texte` pour le nom, `text-sombre-texte-doux` (le gris
+ * des textes secondaires, jeton nº 466) pour le compte. Aucune couleur
+ * neuve, et la PUCE est celle du site (`SEPARATEUR_GALERIE`,
+ * lib/photos-tatoueur) — aucune ponctuation inventée.
+ * ⚠️ LA GRAISSE NE DÉPEND PLUS DE L'APPAREIL : le nom est demi-gras des
+ * deux côtés depuis la nº 623 (le doigt l'était en graisse normale
+ * jusqu'à la nº 622). Une seule classe, sans variante — il n'y a rien
+ * à séparer quand les deux disent la même chose.
  * ⚠️ L'AIR SOUS LA PHOTO ET LES MARGES LATÉRALES sont ceux de la carte
  * de recherche, repris au pixel : `pt-2 px-0.5 mobile:px-2` — huit
  * pixels sous l'image, deux de retrait au web, huit au doigt (la photo
  * y touche les bords, le texte ne peut pas partir du même endroit).
- * ⚠️ UN NOM LONG NE POUSSE PAS LE NOMBRE : le nom se coupe
- * (`truncate` + `min-w-0`), le nombre ne rétrécit jamais
- * (`shrink-0`). La hauteur de la ligne est donc constante, et les
- * rangées de la grille restent régulières.
+ * ⚠️ UN NOM LONG NE DÉBORDE NI D'UN CÔTÉ NI DE L'AUTRE : chacune des
+ * deux lignes est un BLOC tronqué pour son propre compte (`truncate`).
+ * Au web, la ligne entière — nom et complément — se coupe d'un seul
+ * tenant par des points de suspension ; au doigt, le nom se coupe sans
+ * jamais pousser le compte, qui vit sur sa propre ligne.
+ * ⚠️ LA HAUTEUR RESTE RÉGULIÈRE : une ligne au web, DEUX au doigt,
+ * toujours — le compte existe pour chaque style (le catalogue n'y
+ * entre que s'il a une galerie, nº 620). Les rangées de la grille ne
+ * peuvent donc pas se décaler d'une carte à l'autre.
  */
+/**
+ * ██ §2 (nº 623) — LA RECHERCHE S'OUVRE EN HAUT ██
+ * ==================================================================
+ * LE DÉFAUT, ET SA CAUSE — NOMMÉE AVANT TOUTE CORRECTION. On défile
+ * l'accueil, on touche une carte de style : la page de résultats
+ * s'ouvrait DÉJÀ DESCENDUE, à la position où l'accueil se trouvait.
+ * `DefilementEnHaut` — le composant qui ouvre chaque page en haut —
+ * n'a qu'une dépendance : LE CHEMIN (`usePathname`). Or un lien de
+ * carte de style va de « / » à « /?style=… » : le chemin ne change
+ * pas, l'effet ne se rejoue pas, et PERSONNE ne pose la remontée.
+ * La remontée automatique du routeur, elle, ne suffit pas : le site
+ * déclare un défilement DOUX global (`scroll-behavior: smooth`,
+ * globals.css) — elle devient une animation, que le premier rendu de
+ * la nouvelle page interrompt. C'est écrit mot pour mot dans l'en-tête
+ * de `DefilementEnHaut` (« sans ce composant, les pages s'ouvraient
+ * légèrement descendues ») ; depuis un accueil très défilé,
+ * « légèrement » devient « pas du tout ».
+ *
+ * POURQUOI LA CORRECTION EST ICI, ET PAS DANS `DefilementEnHaut` :
+ * lui faire suivre la REQUÊTE le ferait remonter à CHAQUE changement
+ * de requête — donc au « Voir plus », qui porte justement
+ * `scroll={false}` et ne doit surtout pas remonter (nº 592), et à
+ * chaque changement de filtre. Le cœur de la navigation n'a pas à
+ * bouger pour un lien : c'est le lien qui pose sa remontée (piège
+ * 378/379).
+ *
+ * QUAND ON REMONTE, ET C'EST TOUT LE SOIN : PAS AU CLIC, MAIS À
+ * L'INSTANT OÙ L'ADRESSE EST COMMISE. C'est la leçon de la nº 361 :
+ * le navigateur prend sa PHOTO D'ADIEU au changement d'entrée
+ * d'historique ; remonter avant elle la ferait porter sur un accueil
+ * déjà sauté en haut — et le glissement de retour montrerait cette
+ * photo-là. On s'abonne donc à l'écriture d'adresse (l'écriture
+ * commune, lib/adresse-courante — l'événement part DANS le
+ * `pushState`, donc avant toute peinture), et l'on ne pose la
+ * remontée que si l'adresse arrivée est bien la nôtre.
+ * ⚠️ LE FILET EST UN DÉLAI, PAS DEUX IMAGES : le routeur peut mettre
+ * du temps à commettre une adresse qu'il doit d'abord rendre. Passé ce
+ * délai, l'écoute se retire — aucune ne survit à son geste.
+ * ⚠️ ET C'EST `defilerSansGeste` QUI POSE, jamais un `scrollTo` nu :
+ * l'écriture unique des poses du site (elle annonce le mouvement aux
+ * observateurs de geste et l'écrit au journal, nº 426).
+ * ⚠️ LE RETOUR N'EST PAS TOUCHÉ : rien n'est écrit dans la mémoire de
+ * position ni dans l'historique. Revenir sur l'accueil rend la place
+ * quittée, exactement comme avant (acquis nº 329).
+ */
+const ATTENTE_ADRESSE_MS = 2000;
+
+/**
+ * §1 (nº 623) — LE MOT QUI QUALIFIE LE CHIFFRE.
+ * « Réalisme 12 » ne disait rien. C'est « PORTFOLIOS », et pas
+ * « artistes » : le site compte aussi des salons et des studios
+ * (`libelleTypeFiche`), et « portfolio » est le terme employé partout
+ * ailleurs — jusque dans le menu « Explorer », dont ce chiffre est
+ * exactement le même (des fiches publiées distinctes, nº 620).
+ * ⚠️ ÉCRIT UNE SEULE FOIS, pour les deux appareils : la ligne du web et
+ * celle du doigt ne peuvent pas dire deux mots différents.
+ */
+const MOT_DU_COMPTE = "portfolios";
+
+function remonterQuandLAdresseArrive(cible: string): void {
+  if (typeof window === "undefined") return;
+  const ici = () => window.location.pathname + window.location.search;
+  const remonter = () => defilerSansGeste({ top: 0 }, "carte de style (nº 623)");
+  //  DÉJÀ SUR CETTE ADRESSE (on retouche la même carte) : rien à
+  //  attendre, et aucune photo d'adieu n'est en jeu.
+  if (ici() === cible) {
+    remonter();
+    return;
+  }
+  let fait = false;
+  let minuteur = 0;
+  let desabonner: () => void = () => {};
+  const retirer = () => {
+    desabonner();
+    window.clearTimeout(minuteur);
+  };
+  desabonner = souscrireAdresse(() => {
+    if (fait || ici() !== cible) return;
+    fait = true;
+    retirer();
+    remonter();
+  });
+  minuteur = window.setTimeout(retirer, ATTENTE_ADRESSE_MS);
+}
+
 export function CarteStyle({
   style,
   prioritaire,
@@ -71,6 +175,7 @@ export function CarteStyle({
 }) {
   const photo = style.photo;
   if (!photo) return null;
+  const adresse = `/?style=${style.slug}&nature=${NATURE_PAR_DEFAUT}`;
   return (
     <article>
       {/*  §2 (nº 621) — AU CLIC, LA RECHERCHE DE CE STYLE. C'est
@@ -83,7 +188,11 @@ export function CarteStyle({
            défaut (nº 272-§4) — le résultat serait le même, mais
            l'adresse ne dirait pas ce qu'elle montre. On l'écrit. */}
       <Link
-        href={`/?style=${style.slug}&nature=${NATURE_PAR_DEFAUT}`}
+        href={adresse}
+        //  §2 (nº 623) — LA REMONTÉE, ARMÉE AU CLIC ET POSÉE À LA
+        //  COMMISSION DE L'ADRESSE. Voir la note longue au-dessus du
+        //  composant : ni le chemin ni le routeur ne s'en chargent ici.
+        onClick={() => remonterQuandLAdresseArrive(adresse)}
         //  LE FOCUS SE VOIT SUR LA CARTE ENTIÈRE, l'écriture des
         //  cartes de la mosaïque : un contour posé À L'INTÉRIEUR du
         //  bord, donc sans un pixel de débord sur la gouttière.
@@ -100,9 +209,12 @@ export function CarteStyle({
           {/*  ██ LE TEXTE DE REMPLACEMENT (lecteurs d'écran) ██
                La carte ne montre PAS un portfolio : elle montre un
                STYLE. Ce que le texte doit dire est donc ce que le lien
-               promet — « Réalisme, 12 artistes » — et non le nom d'un
+               promet — « Réalisme, 12 portfolios » — et non le nom d'un
                artiste, qui n'est écrit nulle part ici et que la carte
                ne mène pas voir.
+               §1 (nº 623) — LE MÊME MOT QUE LA LIGNE VISIBLE
+               (`MOT_DU_COMPTE`) : ce qu'un lecteur d'écran entend est
+               ce que l'œil lit, au mot près.
                ⚠️ IL N'EST DONC PAS `legendeDeCarte` : cette écriture-là
                nomme un portfolio (nom, ville, style, rendu), et elle
                reste celle des cartes de recherche. Deux surfaces, deux
@@ -112,29 +224,30 @@ export function CarteStyle({
             url={photo.miniature}
             urlPleine={photo.url}
             tailles={TAILLES_CARTE}
-            alt={`${style.label}, ${style.artistes} artiste${
-              style.artistes > 1 ? "s" : ""
-            }`}
+            alt={`${style.label}, ${style.artistes} ${MOT_DU_COMPTE}`}
             chargement={prioritaire ? "eager" : "lazy"}
             priorite={prioritaire ? "high" : undefined}
             classe="w-full h-full object-cover"
           />
         </div>
 
-        {/*  ██ §1 (nº 622) — AU WEB, LA LIGNE GRANDIT ET LE NOM S'ÉPAISSIT ██
+        {/*  ██ §1 (nº 622, étendu nº 623) — LA LIGNE, APPAREIL PAR APPAREIL ██
              ------------------------------------------------------
-             CE QUE LE PROPRIÉTAIRE A DEMANDÉ : sur le web, la ligne
-             était trop petite. Le NOM passe au demi-gras — le gras des
-             cartes du site (nº 481 : « le nom prend le demi-gras »), et
-             non le `bold` que seul un titre de fiche porte — et LES
-             DEUX TEXTES montent de QUINZE à DIX-SEPT PIXELS, avec
-             l'interligne qui va avec (18 → 20). Aucune valeur neuve
-             dans l'échelle : ce sont exactement le corps et l'interligne
-             que la carte de recherche emploie déjà en pleine largeur.
-             LE CHIFFRE GARDE SA GRAISSE (normale) et son gris
+             CE QUE LA nº 622 A POSÉ, ET QUI TIENT : au web, le nom en
+             demi-gras — le gras des cartes du site (nº 481 : « le nom
+             prend le demi-gras »), non le `bold` que seul un titre de
+             fiche porte — et les deux textes à DIX-SEPT PIXELS,
+             interligne 20. Aucune valeur neuve dans l'échelle : c'est
+             le corps que la carte de recherche emploie déjà en pleine
+             largeur.
+             CE QUE LA nº 623 AJOUTE : le chiffre est QUALIFIÉ
+             (`MOT_DU_COMPTE`), la puce du site le sépare du nom AU WEB
+             SEULEMENT, et LE DOIGT PASSE À DEUX LIGNES — nom 15 px /
+             interligne 18, compte 13 px / interligne 16, sans puce.
+             Le nom prend le demi-gras au doigt AUSSI : c'est la seule
+             valeur que la nº 623 change de ce côté-là.
+             Le compte garde partout sa graisse NORMALE et son gris
              (`texteDoux`, jeton nº 466) ; le nom garde sa couleur.
-             LE DOIGT NE BOUGE PAS : quinze pixels, interligne dix-huit,
-             graisse normale — ce que la nº 621 a posé.
 
              ██ COMMENT LES DEUX SONT SÉPARÉS, ET POURQUOI PAS AUTREMENT ██
              La règle du site (nº 537, nº 557, nº 589) veut que le DOIGT
@@ -153,28 +266,47 @@ export function CarteStyle({
              tait, `not-mobile:` s'applique — c'est l'interface WEB qui
              s'affiche, « le meilleur défaut » que globals.css nomme.
 
-             ⚠️ UN NOM LONG NE POUSSE TOUJOURS RIEN : le nom se coupe
-             (`min-w-0 flex-1 truncate`), le chiffre ne rétrécit jamais
-             (`shrink-0`) et reste collé à droite. Les dix-sept pixels
-             ne changent rien à cette mécanique — elle ne dépend
-             d'aucune taille. */}
-        <div className="pt-2 px-0.5 mobile:px-2 flex items-baseline gap-2">
+             ⚠️ ET LA GRAISSE DU NOM N'A PLUS RIEN À SÉPARER depuis la
+             nº 623 : elle vaut la même chose des deux côtés, donc une
+             seule classe, sans variante. Deux variantes qui diraient la
+             même valeur ne diraient rien — elles donneraient juste deux
+             endroits où se tromper.
+             ⚠️ UN NOM LONG NE DÉBORDE PAS : chaque ligne est un BLOC
+             tronqué pour son propre compte. Au web, la coupe emporte le
+             nom ET son complément d'un seul tenant ; au doigt, le nom
+             se coupe seul, le compte vivant sur sa propre ligne. La
+             mécanique ne dépend d'aucune taille. */}
+        <div className="pt-2 px-0.5 mobile:px-2">
           <p
             data-nom-du-style=""
-            className="min-w-0 flex-1 truncate text-sombre-texte
-                       mobile:font-normal mobile:leading-[18px] mobile:text-[15px]
-                       not-mobile:font-semibold not-mobile:leading-[20px] not-mobile:text-[17px]"
-          >
-            {style.label}
-          </p>
-          <span
-            data-compte-du-style=""
-            className="shrink-0 font-normal text-sombre-texte-doux
+            className="truncate font-semibold text-sombre-texte
                        mobile:leading-[18px] mobile:text-[15px]
                        not-mobile:leading-[20px] not-mobile:text-[17px]"
           >
-            {style.artistes}
-          </span>
+            {style.label}
+            {/*  LE COMPLÉMENT DU WEB, DANS LA MÊME LIGNE : il hérite du
+                 corps et de l'interligne du nom, et n'écrit que ce qui
+                 le distingue — graisse normale et gris. */}
+            <span
+              data-compte-du-style="web"
+              className="font-normal text-sombre-texte-doux
+                         mobile:hidden not-mobile:inline"
+            >
+              {`${SEPARATEUR_GALERIE}${style.artistes} ${MOT_DU_COMPTE}`}
+            </span>
+          </p>
+          {/*  LA SECONDE LIGNE DU DOIGT — un bloc à part, tronqué
+               lui aussi : le nom au-dessus garde sa propre coupe, et la
+               hauteur de la carte reste la même d'une carte à l'autre
+               (deux lignes, toujours). */}
+          <p
+            data-compte-du-style="doigt"
+            className="truncate font-normal text-sombre-texte-doux
+                       mobile:block mobile:leading-[16px] mobile:text-[13px]
+                       not-mobile:hidden"
+          >
+            {`${style.artistes} ${MOT_DU_COMPTE}`}
+          </p>
         </div>
       </Link>
     </article>
