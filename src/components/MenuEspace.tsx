@@ -18,10 +18,9 @@ import {
   IconeSortie,
   IconeUtilisateur,
 } from "@/components/Icones";
-//  §1 (nº 531) — le cœur de la marque en tête de « Mon compte » au
-//  doigt : l'écriture unique de cette image, jamais son chemin.
-//  §1 (nº 549) — le rond de tête de la page du doigt : la photo de
-//  profil du portfolio affiché. Écriture unique du rond photo (nº 492).
+//  §1 (nº 549), DÉPLACÉ À LA nº 640 — le rond de la TÊTE COMMUNE : la
+//  photo de profil du portfolio affiché, au doigt comme au web.
+//  Écriture unique du rond photo (nº 492).
 import { PhotoRonde } from "@/components/BlocLieux";
 import { EntreeLangue, FenetreLangue } from "@/components/SelecteurLangue";
 import { FenetreNotifications } from "@/components/FenetreNotifications";
@@ -1047,8 +1046,94 @@ export function MenuEspace({
   };
   type ReglagesDuCompte = typeof REGLAGES_DOIGT;
 
-  const contenuDuCompte = (reglages: ReglagesDuCompte) => (
+  /**
+   * ██ §1 (nº 640) — LA TÊTE DE « MON COMPTE », UNE POUR LES DEUX ██
+   * ==================================================================
+   * CE QUI EXISTAIT, ET QUI PART : le doigt avait un cœur de marque
+   * puis une photo de 64 px CENTRÉS, surmontés d'un titre « Mon
+   * compte » centré (nº 530-535, puis nº 549) ; le web avait un
+   * `<h2>Mon compte</h2>` à gauche, sur sa propre rangée (nº 536-542).
+   * DEUX DESSINS POUR UNE MÊME PAGE. Il n'en reste qu'un.
+   *
+   * CE QU'ELLE DIT, ET RIEN DE PLUS :
+   *  · UN PARTICULIER — une seule ligne, « Mon compte » ;
+   *  · UN PROFESSIONNEL — son nom, puis son état sous lui.
+   * La photo est celle de son portfolio ; à défaut — un particulier, un
+   * portfolio sans photo, ou le moment où le site ne sait pas encore —
+   * c'est le rond gris à la silhouette. C'est la règle EXACTE de la
+   * nº 549, déplacée sans un mot de changé : `fiche` est
+   * `ficheActive(fiches, idFiche)`, donc la tête suit le déroulant, et
+   * l'état neutre reste la silhouette (règles 137/203 — on ne peint pas
+   * une photo qu'on n'a pas).
+   *
+   * ⚠️ L'ÉCRITURE DE L'ÉTAT EST CELLE DU SÉLECTEUR, REPRISE TELLE
+   * QUELLE : le nom demi-gras sur une ligne, puis la pastille de 6 px
+   * et le libellé gris sous lui. Les six libellés et les six couleurs
+   * viennent de `LIBELLE_ETAT` / `COULEUR_ETAT` (lib/fiches-compte) —
+   * la même écriture unique, aucune seconde. Seules les TAILLES sont
+   * fixées ici, à la valeur du doigt (16 px / 13 px) : la tête est un
+   * titre de page, pas une entrée de liste, et les deux surfaces la
+   * partagent désormais.
+   *
+   * ⚠️ LA CROIX EST UN PASSE-PLAT, et voici pourquoi elle ne vient pas
+   * du même endroit des deux côtés : au WEB la fenêtre n'a aucun autre
+   * habillage, sa croix rejoint donc la tête — une seule rangée, photo,
+   * texte, croix. AU DOIGT, la page plein écran garde son en-tête
+   * COLLANT (nº 465) : la croix y reste, seule sur sa rangée, et suit
+   * le défilement. Deux places, une seule tête — c'est la chrome de
+   * fermeture qui diffère, pas la tête.
+   * ⚠️ LA COMPENSATION DE −9 px DE LA CROIX DU WEB (nº 541) NE BOUGE
+   * PAS : elle vient de l'écart entre la cible de 36 px et le glyphe de
+   * 18 px, pas du titre qui l'accompagnait. Elle vit dans le même
+   * retrait latéral (`airCote`), donc le dessin retombe toujours à
+   * l'aplomb du bord droit des encadrés.
+   */
+  const enTeteDuCompte = (croix?: React.ReactNode) => (
+    <div data-tete-compte="" className="flex items-center gap-3">
+      {fiche?.photo_profil ? (
+        <PhotoRonde
+          source={fiche.photo_profil}
+          nature="personne"
+          classeTaille="h-16 w-16"
+        />
+      ) : (
+        //  §1 (nº 549) — le rond de repli, repris au caractère :
+        //  `PhotoRonde` ne pose aucun glyphe pour `personne`, la
+        //  géométrie est donc répétée une fois ici, et rien d'autre.
+        <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-sombre-eleve text-sombre-texte-doux">
+          <IconeSilhouette taille={34} />
+        </span>
+      )}
+      <div className="min-w-0 flex-1">
+        <h2 className="block truncate text-[16px] font-semibold leading-tight text-sombre-texte">
+          {fiche ? fiche.nom : "Mon compte"}
+        </h2>
+        {fiche && (
+          <span className="mt-1 flex items-center gap-1.5">
+            <span
+              aria-hidden="true"
+              className={`h-1.5 w-1.5 shrink-0 rounded-full ${COULEUR_ETAT[etat]}`}
+            />
+            <span className="text-[13px] leading-none text-sombre-texte-doux">
+              {LIBELLE_ETAT[etat]}
+            </span>
+          </span>
+        )}
+      </div>
+      {croix}
+    </div>
+  );
+
+  const contenuDuCompte = (
+    reglages: ReglagesDuCompte,
+    croix?: React.ReactNode
+  ) => (
     <div className={`flex flex-col gap-3 ${reglages.airCote} ${reglages.airHaut}`}>
+      {/*  §1 (nº 640) — LA TÊTE, EN PREMIER ET POUR LES DEUX SURFACES.
+           Elle vit ICI, dans l'arbre partagé, et c'est ce qui garantit
+           qu'elle ne peut plus se dédoubler. L'air qui la sépare des
+           tuiles est le `gap-3` de cette colonne — aucun nombre neuf. */}
+      {enTeteDuCompte(croix)}
       {/* ---------- LA RANGÉE DE TROIS ---------- */}
       {/*  §3 (nº 532) — DEUX TUILES, ET ELLES SE PARTAGENT TOUTE LA
            LARGEUR : « Ajouter » a rejoint l'encadré du portfolio, sa
@@ -1483,10 +1568,26 @@ export function MenuEspace({
                    rembourrage déplace la boîte du bouton ET le bord des
                    encadrés du même nombre : le dessin retombe au même
                    endroit relatif, quel que soit ce nombre. */}
-              <div className={`flex items-center gap-3 ${REGLAGES_WEB.airCote} ${REGLAGES_WEB.airHaut}`}>
-                <h2 className="flex-1 min-w-0 text-[17px] font-bold tracking-tight text-sombre-texte">
-                  Mon compte
-                </h2>
+              {/*  ██ §1 (nº 640) — LA RANGÉE DU TITRE A DISPARU ██
+                   Le `<h2>Mon compte</h2>` et sa rangée s'en vont : la
+                   tête commune les remplace, et la croix la rejoint —
+                   une seule rangée au lieu de deux. L'air du haut ne
+                   change pas de valeur, il change de porteur : c'est
+                   celui de `contenuDuCompte` (`airHaut`, 20 px depuis
+                   la nº 557) qui ouvre désormais la fenêtre.
+                   ⚠️ CE QUE LA nº 557 DISAIT DE `airHaut` — « il
+                   commande DEUX écarts, celui au-dessus du titre ET
+                   celui entre le titre et la première rangée » — n'a
+                   plus qu'un seul emploi : il n'y a plus de titre entre
+                   les deux. C'est un écart de moins, pas une valeur
+                   changée.
+                   ⚠️ LA CROIX GARDE SES −9 px (nº 541) : ils viennent
+                   de l'écart entre sa cible de 36 px et son glyphe de
+                   18, jamais du titre. Elle vit dans le même retrait
+                   latéral, donc son dessin retombe toujours à l'aplomb
+                   du bord droit des encadrés. */}
+              {contenuDuCompte(
+                REGLAGES_WEB,
                 <button
                   type="button"
                   onClick={() => setOuvert(false)}
@@ -1498,8 +1599,7 @@ export function MenuEspace({
                 >
                   <IconeCroix taille={18} />
                 </button>
-              </div>
-              {contenuDuCompte(REGLAGES_WEB)}
+              )}
             </div>
           </MenuDeVerre>
 
@@ -1519,73 +1619,26 @@ export function MenuEspace({
                « Notifications » s'ouvrent PAR-DESSUS (z-[85] contre
                z-[70] ici) pendant que cette page reste montée
                dessous : les refermer y fait retomber. */}
-          {/*  ██ §1 (nº 530) — L'EN-TÊTE CENTRÉE ██
-               `enTeteCentre` déplace l'icône et le titre au centre, la
-               croix ne bouge pas (voir EnTetePleinEcran). Les trois
-               autres porteurs du gabarit ne passent pas le drapeau et
-               gardent leur icône de 22 px à gauche du titre.
-               ⚠️ ET LE CONTENU CHANGE DE PLAN, LUI AUSSI : c'est
-               `contenuMenuDoigt` qui est posé ici, pas `contenuMenu` —
-               celui-ci reste au web, intact.
-               ██ §1 (nº 549) — ET CE N'EST PLUS LE CŒUR DE LA MARQUE ██
-               La nº 531 avait mis l'icône de marque à la place de la
-               silhouette de la nº 530, et la nº 532 l'avait portée à
-               64 px. Le propriétaire tranche autrement : ce rond doit
-               dire QUEL PORTFOLIO on regarde, pas quel site on visite.
-               Il montre donc la PHOTO DE PROFIL du portfolio affiché —
-               le détail est écrit sur la propriété `icone`, juste
-               dessous.
-               CE QUI NE BOUGE PAS D'UN PIXEL : la HAUTEUR de 64 px, le
-               centrage, le TITRE centré dessous et la CROIX en haut à
-               droite — la nº 530 tient, la nº 534 aussi. */}
+          {/*  §1 (nº 530) — LE CONTENU DU DOIGT EST UN PLAN À LUI
+               (`contenuMenuDoigt`), celui du web reste au web. La
+               nº 640 n'y touche pas ; elle ne change que la tête. */}
+          {/*  ██ §1 (nº 640) — LA PAGE DU DOIGT N'A PLUS DE TÊTE À ELLE ██
+               CE QUI PART : le rond de 64 px CENTRÉ (nº 549) et le
+               titre « Mon compte » centré dessous (nº 530-534), avec le
+               drapeau `enTeteCentre` qui les portait — « Mon compte »
+               en était l'unique appelant, il quitte le dépôt avec toute
+               sa branche.
+               CE QUI RESTE : l'en-tête COLLANT et sa croix, à leur
+               place exacte (nº 465). Ne plus donner de titre suffit à
+               le dire — voir la note d'`EnTetePleinEcran`.
+               CE QUI ARRIVE : la tête commune, en tête du contenu, la
+               même qu'au web au pixel près.
+               ⚠️ LA PHOTO N'EST PAS PERDUE, ELLE A CHANGÉ DE PLACE : la
+               règle de la nº 549 — photo du portfolio affiché, sinon
+               silhouette — vit désormais dans `enTeteDuCompte`, une
+               fois pour les deux surfaces au lieu d'une par surface. */}
           <PagePleinEcranMobile
-            titre="Mon compte"
-            /*  ██ §1 (nº 549) — LA PHOTO DU PORTFOLIO REMPLACE LE CŒUR ██
-                 ==========================================================
-                 CE QUE MONTRE LE ROND, DANS L'ORDRE : la PHOTO DE PROFIL
-                 du portfolio affiché quand il y en a une ; la SILHOUETTE
-                 du compte sinon. Une seule règle, qui couvre les trois
-                 cas — pas de portfolio, portfolio sans photo, et le
-                 moment où le site ne sait pas encore.
-                 IL SUIT LE DÉROULANT SANS RIEN DE PLUS : `fiche` est
-                 `ficheActive(fiches, idFiche)`, la fiche que le sélecteur
-                 désigne. Choisir un autre portfolio réécrit `idFiche` —
-                 le rond se repeint dans le même rendu, comme le nom et
-                 la pastille d'état qui le suivent déjà.
-                 LA PLACE EST RÉSERVÉE DÈS LE PREMIER RENDU : le rond
-                 porte sa taille en classes (64 px), et l'image vit
-                 DEDANS en débord caché. Rien ne saute quand elle arrive
-                 — c'est la même mécanique que les ronds des fiches.
-                 ⚠️ RÈGLES 137/203 — CE QU'ON VOIT AVANT DE SAVOIR : tant
-                 que les fiches ne sont pas lues, la liste est vide, donc
-                 `fiche` n'existe pas, donc c'est la SILHOUETTE qui
-                 s'affiche. C'est l'état NEUTRE du compte, jamais un état
-                 faux : on ne peint pas une photo qu'on n'a pas, et l'on
-                 n'annonce pas non plus « aucun portfolio ».
-                 ⚠️ POURQUOI LE ROND DE REPLI EST ÉCRIT ICI et non pris à
-                 `PhotoRonde` : ce composant (nº 492) ne pose AUCUN glyphe
-                 pour `personne` — il rend un rond vide. Lui en ajouter un
-                 toucherait une écriture partagée par les fiches, pour un
-                 besoin de « Mon compte » : la géométrie du rond est donc
-                 répétée une fois ici, et rien d'autre.
-                 ⚠️ LE WEB N'EST PAS CONCERNÉ : sa fenêtre n'a ni cœur ni
-                 titre centré depuis la nº 536 — cet en-tête-ci
-                 n'appartient qu'à la page du doigt. */
-            icone={
-              fiche?.photo_profil ? (
-                <PhotoRonde
-                  source={fiche.photo_profil}
-                  nature="personne"
-                  classeTaille="h-16 w-16"
-                />
-              ) : (
-                <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-sombre-eleve text-sombre-texte-doux">
-                  <IconeSilhouette taille={34} />
-                </span>
-              )
-            }
             ariaLabel="Mon compte"
-            enTeteCentre
             surFermer={() => setOuvert(false)}
           >
             {/*  ██ §6 (nº 533) — LA RÉSERVE QUI TIENT LA BARRE DE

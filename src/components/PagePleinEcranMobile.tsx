@@ -40,14 +40,25 @@ export function EnTetePleinEcran({
   ariaLabelFermer = "Fermer",
   actions,
   marqueRecherche = false,
-  enTeteCentre = false,
   children,
 }: {
   /** L'icône du titre — au rang 22, en blanc (celui de la loupe).
-      §1 (nº 530) — SAUF EN TÊTE CENTRÉE, où l'appelant l'agrandit :
-      c'est LUI qui fabrique l'élément, la taille lui appartient. */
-  icone: React.ReactNode;
-  titre: string;
+      ⚠️ FACULTATIVE DEPUIS LA nº 640, comme le titre : voir sa note. */
+  icone?: React.ReactNode;
+  /**
+   * ██ §1 (nº 640) — UN EN-TÊTE PEUT N'AVOIR QUE SA CROIX ██
+   * ------------------------------------------------------------------
+   * « Mon compte » n'a plus de titre du tout : sa tête — la photo, le
+   * nom et l'état — vit désormais DANS son contenu, pour être la même
+   * au doigt et au web. Il ne reste ici que le geste de fermeture.
+   * ⚠️ L'ABSENCE DE TITRE EST LE SIGNAL, et c'est délibéré : il n'y a
+   * pas de drapeau de plus à tenir d'accord avec lui. Un porteur qui
+   * donne un titre a le gabarit de la nº 465 ; celui qui n'en donne
+   * pas n'a que sa croix, à sa place habituelle.
+   * ⚠️ CE DRAPEAU REMPLACE `enTeteCentre` (nº 530), retiré à la nº 640
+   * avec toute sa branche : « Mon compte » était son unique appelant.
+   */
+  titre?: string;
   /** La croix : on referme sans rien appliquer. */
   surFermer: () => void;
   ariaLabelFermer?: string;
@@ -55,24 +66,6 @@ export function EnTetePleinEcran({
       notifications) — rien pour les autres porteurs. */
   actions?: React.ReactNode;
   marqueRecherche?: boolean;
-  /**
-   * ██ §1 (nº 530) — L'ICÔNE ET LE TITRE PASSENT AU CENTRE ██
-   * ------------------------------------------------------------------
-   * « Mon compte » veut son icône centrée en haut et son titre CENTRÉ
-   * DESSOUS ; les trois autres porteurs (Notifications, Langue,
-   * Ajouter un style) gardent le gabarit de la nº 465 — titre à
-   * gauche, icône à sa gauche, croix à droite.
-   * ⚠️ SUR DEMANDE, ET C'EST TOUT LE POINT : le drapeau est FAUX par
-   * défaut, un seul appelant le passe. Ce qui n'est pas demandé ne
-   * peut pas changer — ni marge, ni taille, ni collage, ni la croix.
-   * ⚠️ LA CROIX NE BOUGE PAS D'UN PIXEL dans les deux variantes :
-   * c'est LE MÊME bloc de gestes, rendu une seule fois plus bas et
-   * posé par les deux branches. Il n'y a pas deux croix à tenir
-   * d'accord.
-   * ⚠️ ET LE TITRE RESTE LE `h1` : il change de place, pas de rang —
-   * un lecteur d'écran lit la même page.
-   */
-  enTeteCentre?: boolean;
   /** Ce qui vit SOUS la ligne du titre, dans le bloc collant (la
       bascule Réalisation | Flash de la recherche). */
   children?: React.ReactNode;
@@ -101,42 +94,7 @@ export function EnTetePleinEcran({
       className="sticky top-0 z-10 bg-sombre-fond px-4 pb-1
                  pt-[max(24px,env(safe-area-inset-top))]"
     >
-      {enTeteCentre ? (
-        <>
-          {/*  §1 (nº 530) — LA CROIX SEULE SUR SA LIGNE, à sa place
-               d'avant : en haut à droite, même boîte, même débord. */}
-          <div className="flex items-center justify-end">{gestes}</div>
-          {/*  §1 (nº 530) — L'ICÔNE PUIS LE TITRE, centrés. 8 px les
-               séparent, 16 px sous le titre.
-               ██ §2 (nº 534) — LES DEUX AIRS SONT ÉGAUX ██
-               CE QUI ÉTAIT MESURÉ, DE PART ET D'AUTRE :
-                · SOUS LE TITRE, jusqu'à la première rangée : 16 px de
-                  ce bloc, 4 px de l'en-tête, 4 px du contenu — 24 px ;
-                · AU-DESSUS DU CŒUR : la réserve du haut (24 px, ou
-                  l'encoche quand elle est plus grande) PLUS ce qui
-                  restait de la rangée de la croix — 24 px de plus après
-                  la remontée de 20 px de la nº 533. Soit 48 px, le
-                  double.
-               ON ALIGNE LE HAUT SUR LE BAS, comme demandé : le bloc
-               centré remonte de TOUTE la rangée de la croix (44 px) au
-               lieu de 20. Il ne reste alors, au-dessus du cœur, que la
-               réserve du haut — 24 px, exactement l'air sous le titre.
-               ⚠️ LA CROIX NE BOUGE PAS D'UN PIXEL : elle est ancrée à
-               DROITE et le cœur est CENTRÉ — sur l'écran le plus étroit
-               du parc (320 px), le cœur occupe 132→188 px et la croix
-               276→320 : ils ne se croisent jamais, quelle que soit la
-               hauteur qu'ils partagent.
-               ⚠️ LA RÉSERVE D'ENCOCHE N'EST PAS TOUCHÉE : elle protège
-               ce qui se peint sous la barre d'état, et elle est partagée
-               par les quatre porteurs du gabarit. Sur un téléphone à
-               encoche, c'est elle qui décide de l'air du haut — ce n'est
-               pas de l'air, c'est la barre d'état. */}
-          <div className="-mt-11 flex flex-col items-center gap-2 pb-4">
-            {icone}
-            <h1 className="text-[20px] font-bold text-white">{titre}</h1>
-          </div>
-        </>
-      ) : (
+      {titre ? (
         <div className="flex items-center justify-between gap-4">
           <h1 className="flex items-center gap-2.5 text-[20px] font-bold text-white">
             {icone}
@@ -144,6 +102,13 @@ export function EnTetePleinEcran({
           </h1>
           {gestes}
         </div>
+      ) : (
+        /*  §1 (nº 640) — SANS TITRE : la croix seule, à sa place. C'est
+            EXACTEMENT la rangée que la tête centrée de la nº 530 posait
+            au-dessus de son cœur — même boîte, même débord, même
+            ancrage à droite. Rien n'a été inventé pour ce cas : on a
+            gardé la moitié qui restait vraie. */
+        <div className="flex items-center justify-end">{gestes}</div>
       )}
       {children}
     </div>
@@ -172,19 +137,17 @@ export function PagePleinEcranMobile({
   ariaLabelFermer,
   actions,
   sousLeTitre,
-  enTeteCentre = false,
   classeCadre = "z-[70]",
   children,
 }: {
-  titre: string;
-  icone: React.ReactNode;
+  /** §1 (nº 640) — FACULTATIFS TOUS LES DEUX : sans titre, l'en-tête
+      n'est plus que la croix. Voir la note d'`EnTetePleinEcran`. */
+  titre?: string;
+  icone?: React.ReactNode;
   ariaLabel: string;
   surFermer: () => void;
   ariaLabelFermer?: string;
   actions?: React.ReactNode;
-  /** §1 (nº 530) — le passe-plat vers l'en-tête : voir sa note. Faux
-      par défaut ; seul « Mon compte » le demande. */
-  enTeteCentre?: boolean;
   /** §2-b (nº 475) — CE QUI VIT SOUS LA LIGNE DU TITRE, DANS LE BLOC
       COLLANT : le canal existait déjà dans `EnTetePleinEcran` (les
       `children` — la bascule Réalisation | Flash de la recherche) ;
@@ -312,7 +275,6 @@ export function PagePleinEcranMobile({
         surFermer={surFermer}
         ariaLabelFermer={ariaLabelFermer}
         actions={actions}
-        enTeteCentre={enTeteCentre}
       >
         {sousLeTitre}
       </EnTetePleinEcran>
