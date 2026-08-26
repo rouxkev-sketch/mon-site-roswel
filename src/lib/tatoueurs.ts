@@ -583,7 +583,12 @@ function normaliser(ligne: Tatoueur): Tatoueur {
  * donne déjà un ordre sensé. Et si elle manque aussi : une carte vide,
  * et le classement redevient le tirage du jour, sans bruit.
  */
-async function lirePopularite(): Promise<Map<string, number>> {
+/*  §1 (nº 620) — EXPORTÉE, ET RIEN D'AUTRE NE CHANGE : le catalogue de
+    styles (lib/catalogue-styles) a besoin de la MÊME popularité pour
+    départager deux photos à égalité de cœurs. La recopier ailleurs
+    ferait cohabiter deux classements — exactement ce que la note
+    ci-dessus dit d'éviter. */
+export async function lirePopularite(): Promise<Map<string, number>> {
   try {
     const supabase = creerClientSupabaseAnonyme();
     const { data, error } = await supabase
