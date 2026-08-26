@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { CADRE_PHOTO_PORTFOLIO } from "@/config/tatouage";
 import { NATURE_PAR_DEFAUT, SEPARATEUR_GALERIE } from "@/lib/photos-tatoueur";
-import { souscrireAdresse } from "@/lib/adresse-courante";
-import { defilerSansGeste } from "@/lib/defilement-programme";
+//  §1 (nº 625) — L'ÉCRITURE UNIQUE DE « UNE LISTE NEUVE COMMENCE EN
+//  HAUT » (nº 330/334) : elle arme au geste, la liste servie consomme.
+//  Voir la note de la remontée, plus bas.
+import { ouvrirLaListeEnHaut } from "@/lib/liste-neuve";
 import { PhotoDeCarte, TAILLES_CARTE } from "@/components/PhotoDeCarte";
 import { CLASSES_GRILLE_CARTES } from "@/components/GrilleTatoueurs";
 import type { StyleDuCatalogue } from "@/lib/catalogue-styles";
@@ -79,51 +81,45 @@ import type { StyleDuCatalogue } from "@/lib/catalogue-styles";
  * peuvent donc pas se décaler d'une carte à l'autre.
  */
 /**
- * ██ §2 (nº 623) — LA RECHERCHE S'OUVRE EN HAUT ██
+ * ██ §2 (nº 623, REFAIT nº 625) — LA RECHERCHE S'OUVRE EN HAUT ██
  * ==================================================================
- * LE DÉFAUT, ET SA CAUSE — NOMMÉE AVANT TOUTE CORRECTION. On défile
- * l'accueil, on touche une carte de style : la page de résultats
- * s'ouvrait DÉJÀ DESCENDUE, à la position où l'accueil se trouvait.
- * `DefilementEnHaut` — le composant qui ouvre chaque page en haut —
- * n'a qu'une dépendance : LE CHEMIN (`usePathname`). Or un lien de
- * carte de style va de « / » à « /?style=… » : le chemin ne change
- * pas, l'effet ne se rejoue pas, et PERSONNE ne pose la remontée.
- * La remontée automatique du routeur, elle, ne suffit pas : le site
- * déclare un défilement DOUX global (`scroll-behavior: smooth`,
- * globals.css) — elle devient une animation, que le premier rendu de
- * la nouvelle page interrompt. C'est écrit mot pour mot dans l'en-tête
- * de `DefilementEnHaut` (« sans ce composant, les pages s'ouvraient
- * légèrement descendues ») ; depuis un accueil très défilé,
- * « légèrement » devient « pas du tout ».
+ * LE DÉFAUT, ET SA CAUSE. On défile l'accueil, on touche une carte de
+ * style : la page de résultats s'ouvrait DÉJÀ DESCENDUE.
+ * `DefilementEnHaut` n'a qu'une dépendance — LE CHEMIN
+ * (`usePathname`) ; un lien de carte va de « / » à « /?style=… », le
+ * chemin ne change pas, l'effet ne se rejoue pas. Et la remontée du
+ * routeur ne suffit pas : le site déclare un défilement DOUX global,
+ * elle devient une animation que le premier rendu interrompt.
  *
- * POURQUOI LA CORRECTION EST ICI, ET PAS DANS `DefilementEnHaut` :
- * lui faire suivre la REQUÊTE le ferait remonter à CHAQUE changement
- * de requête — donc au « Voir plus », qui porte justement
- * `scroll={false}` et ne doit surtout pas remonter (nº 592), et à
- * chaque changement de filtre. Le cœur de la navigation n'a pas à
- * bouger pour un lien : c'est le lien qui pose sa remontée (piège
- * 378/379).
+ * ██ CE QUE LA nº 625 CORRIGE DANS LA nº 623 ELLE-MÊME ██
+ * LA nº 623 A ÉCRIT UN SECOND MÉCANISME SANS LE VOIR. Le site avait
+ * DÉJÀ son écriture unique pour cela — `ouvrirLaListeEnHaut` /
+ * `laListeServieEstArrivee` (lib/liste-neuve, nº 330 et nº 334) —, et
+ * elle est plus juste sur trois points que ce qui avait été écrit ici :
+ *  · ELLE N'ARME PAS QUE LA REMONTÉE. Elle oublie la restitution en
+ *    attente, la position rangée pour l'adresse visée, la position du
+ *    gel, ET tue une restitution DÉJÀ LANCÉE (nº 424) — un retour
+ *    récent pouvait reposer sa vieille position par-dessus la liste
+ *    neuve, quelques secondes plus tard ;
+ *  · ELLE POSE AU BON INSTANT SANS RIEN GUETTER. La nº 623 s'abonnait
+ *    à l'écriture d'adresse avec un délai de deux secondes en filet ;
+ *    ici, c'est LA LISTE QUI ARRIVE qui consomme, dans un effet d'avant
+ *    peinture — aucune attente, aucun délai, et jamais sur la page
+ *    qu'on quitte (la leçon de la nº 361 sur la photo d'adieu est donc
+ *    tenue, comme avant) ;
+ *  · ELLE EST DÉJÀ CELLE DU MOTEUR ET DES FILTRES DE « Ma sélection ».
+ *    Trois surfaces, une écriture : elles ne peuvent plus diverger.
  *
- * QUAND ON REMONTE, ET C'EST TOUT LE SOIN : PAS AU CLIC, MAIS À
- * L'INSTANT OÙ L'ADRESSE EST COMMISE. C'est la leçon de la nº 361 :
- * le navigateur prend sa PHOTO D'ADIEU au changement d'entrée
- * d'historique ; remonter avant elle la ferait porter sur un accueil
- * déjà sauté en haut — et le glissement de retour montrerait cette
- * photo-là. On s'abonne donc à l'écriture d'adresse (l'écriture
- * commune, lib/adresse-courante — l'événement part DANS le
- * `pushState`, donc avant toute peinture), et l'on ne pose la
- * remontée que si l'adresse arrivée est bien la nôtre.
- * ⚠️ LE FILET EST UN DÉLAI, PAS DEUX IMAGES : le routeur peut mettre
- * du temps à commettre une adresse qu'il doit d'abord rendre. Passé ce
- * délai, l'écoute se retire — aucune ne survit à son geste.
- * ⚠️ ET C'EST `defilerSansGeste` QUI POSE, jamais un `scrollTo` nu :
- * l'écriture unique des poses du site (elle annonce le mouvement aux
- * observateurs de geste et l'écrit au journal, nº 426).
- * ⚠️ LE RETOUR N'EST PAS TOUCHÉ : rien n'est écrit dans la mémoire de
- * position ni dans l'historique. Revenir sur l'accueil rend la place
- * quittée, exactement comme avant (acquis nº 329).
+ * ⚠️ ON LUI DONNE L'ADRESSE DE LA LISTE QUI ARRIVE, et c'est essentiel
+ * (nº 333) : sans elle, elle effacerait la position mémorisée de
+ * L'ACCUEIL QU'ON QUITTE — on appelle avant de naviguer. Le retour
+ * rendrait alors zéro au lieu de la place quittée (acquis nº 329).
+ * ⚠️ CE QUI NE REMONTE PAS N'EST PAS TOUCHÉ : « Voir plus » n'arme
+ * rien (il porte `scroll={false}` et allonge la même liste, nº 592), et
+ * un RETOUR n'arme rien non plus — `laListeServieEstArrivee` ne
+ * consomme QUE ce qu'un geste a armé. La borne est là, et nulle part
+ * ailleurs : elle est dans le GESTE, jamais dans l'adresse.
  */
-const ATTENTE_ADRESSE_MS = 2000;
 
 /**
  * §1 (nº 623) — LE MOT QUI QUALIFIE LE CHIFFRE.
@@ -140,32 +136,6 @@ const ATTENTE_ADRESSE_MS = 2000;
  * celle du doigt ne peuvent pas dire deux mots différents.
  */
 const MOT_DU_COMPTE = "portfolios";
-
-function remonterQuandLAdresseArrive(cible: string): void {
-  if (typeof window === "undefined") return;
-  const ici = () => window.location.pathname + window.location.search;
-  const remonter = () => defilerSansGeste({ top: 0 }, "carte de style (nº 623)");
-  //  DÉJÀ SUR CETTE ADRESSE (on retouche la même carte) : rien à
-  //  attendre, et aucune photo d'adieu n'est en jeu.
-  if (ici() === cible) {
-    remonter();
-    return;
-  }
-  let fait = false;
-  let minuteur = 0;
-  let desabonner: () => void = () => {};
-  const retirer = () => {
-    desabonner();
-    window.clearTimeout(minuteur);
-  };
-  desabonner = souscrireAdresse(() => {
-    if (fait || ici() !== cible) return;
-    fait = true;
-    retirer();
-    remonter();
-  });
-  minuteur = window.setTimeout(retirer, ATTENTE_ADRESSE_MS);
-}
 
 export function CarteStyle({
   style,
@@ -193,10 +163,11 @@ export function CarteStyle({
            l'adresse ne dirait pas ce qu'elle montre. On l'écrit. */}
       <Link
         href={adresse}
-        //  §2 (nº 623) — LA REMONTÉE, ARMÉE AU CLIC ET POSÉE À LA
-        //  COMMISSION DE L'ADRESSE. Voir la note longue au-dessus du
-        //  composant : ni le chemin ni le routeur ne s'en chargent ici.
-        onClick={() => remonterQuandLAdresseArrive(adresse)}
+        //  §1 (nº 625) — LA REMONTÉE, ARMÉE PAR LE GESTE et jouée par
+        //  la liste qui arrive. L'adresse de destination lui est
+        //  donnée : sans elle, la position de l'accueil qu'on quitte
+        //  serait effacée (nº 333). Voir la note longue plus haut.
+        onClick={() => ouvrirLaListeEnHaut(adresse)}
         //  LE FOCUS SE VOIT SUR LA CARTE ENTIÈRE, l'écriture des
         //  cartes de la mosaïque : un contour posé À L'INTÉRIEUR du
         //  bord, donc sans un pixel de débord sur la gouttière.

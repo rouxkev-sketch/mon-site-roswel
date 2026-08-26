@@ -233,6 +233,105 @@ function auxImagesSuivantes(quoi: string): void {
   });
 }
 
+/* ==================================================================
+ * ██ TEMPORAIRE (nº 625) — QUI REÇOIT LE TOUCHER SUR LA BARRE ? ██
+ * ==================================================================
+ * CE QU'ON CHERCHE. Au doigt : on touche la loupe, le menu de
+ * recherche s'ouvre, on le REFERME SANS CHERCHER — et la barre fixe ne
+ * répond plus à rien : ni le logo, ni la loupe, ni le fanion.
+ *
+ * CE QUE LA LECTURE A ÉCARTÉ, ET POURQUOI LA MESURE EST NÉCESSAIRE :
+ *  · LE VOILE n'est pas en cause — `useVoileDeLaPage` sort à sa
+ *    première ligne au doigt (`data-appareil === "mobile"`) ;
+ *  · `data-recherche="ouverte"` resté posé n'est pas en cause non
+ *    plus : la règle qu'il déclenche (globals.css l.823) met TOUT le
+ *    site en `display: none` — l'écran serait blanc, pas inerte ;
+ *  · LE GEL DU CORPS resté armé figerait le défilement, ce que le
+ *    propriétaire n'a pas décrit.
+ * ET SURTOUT : LE LOGO EST UN LIEN ORDINAIRE. S'il ne répond plus,
+ * c'est que L'ÉVÉNEMENT N'ARRIVE PAS JUSQU'À LUI — donc qu'une couche
+ * s'interpose, ou que la barre a perdu ses touchers. Aucun état React
+ * ne peut faire ça à un lien.
+ *
+ * LA MESURE, ET C'EST LA SEULE QUI TRANCHE : à chaque toucher, on
+ * demande au navigateur QUEL ÉLÉMENT est sous le doigt
+ * (`elementFromPoint`) et on remonte sa lignée. Si c'est le bouton, le
+ * défaut est ailleurs (un état) ; si c'est autre chose, LA COUCHE SE
+ * NOMME — avec sa position, son rang d'empilement et ses touchers.
+ * On relève en plus les trois marqueurs que la lecture a cités, pour
+ * les écarter par le journal et non par le raisonnement.
+ *
+ * ⚠️ ELLE NE FAIT QUE LIRE, en phase de CAPTURE et en PASSIF : elle ne
+ * peut ni annuler un toucher, ni en empêcher un. Sans
+ * `?sonde-bascule=1`, `noter` sort à sa première ligne.
+ */
+function lignageDe(element: Element | null): string {
+  if (!element) return "(aucun élément)";
+  const noms: string[] = [];
+  let noeud: Element | null = element;
+  for (let rang = 0; noeud && rang < 4; rang += 1) {
+    const marques = [...noeud.attributes]
+      .filter((a) => a.name.startsWith("data-"))
+      .map((a) => (a.value ? `${a.name}="${a.value}"` : a.name))
+      .slice(0, 3)
+      .join(" ");
+    const style = noeud instanceof HTMLElement ? getComputedStyle(noeud) : null;
+    noms.push(
+      `${noeud.tagName.toLowerCase()}${marques ? `[${marques}]` : ""}` +
+        (style
+          ? ` {${style.position} z:${style.zIndex} pe:${style.pointerEvents}}`
+          : "")
+    );
+    noeud = noeud.parentElement;
+  }
+  return noms.join(" ← ");
+}
+
+function etatDesSurfaces(): string {
+  const racine = document.documentElement;
+  return (
+    `data-recherche="${racine.dataset.recherche ?? "(absent)"}" · ` +
+    `corps ${getComputedStyle(document.body).position} ` +
+    `(top ${document.body.style.top || "0"}) · ` +
+    `portails [data-page-recherche] ${
+      document.querySelectorAll("[data-page-recherche]").length
+    } · surfaces plein écran ${
+      document.querySelectorAll("[role='dialog'][aria-modal='true']").length
+    }`
+  );
+}
+
+let surveillanceToucherPosee = false;
+function surveillerLesToucherssurLaBarre(): void {
+  if (surveillanceToucherPosee || typeof window === "undefined") return;
+  surveillanceToucherPosee = true;
+  const regarder = (x: number, y: number, quoi: string) => {
+    const barre = document.querySelector("header");
+    const dansLaBarre = barre?.getBoundingClientRect();
+    //  ON NE NOTE QUE CE QUI TOMBE DANS LA BARRE : le reste de la page
+    //  n'est pas le sujet, et un journal noyé ne se lit pas.
+    if (!dansLaBarre || y > dansLaBarre.bottom) return;
+    noter(
+      `TOUCHER BARRE ${quoi} (${Math.round(x)},${Math.round(y)}) · ` +
+        `SOUS LE DOIGT : ${lignageDe(document.elementFromPoint(x, y))}`
+    );
+    noter(`TOUCHER BARRE ${quoi} · ${etatDesSurfaces()}`);
+  };
+  window.addEventListener(
+    "touchstart",
+    (evenement: TouchEvent) => {
+      const doigt = evenement.touches[0];
+      if (doigt) regarder(doigt.clientX, doigt.clientY, "touchstart");
+    },
+    { capture: true, passive: true }
+  );
+  window.addEventListener(
+    "click",
+    (evenement: MouseEvent) => regarder(evenement.clientX, evenement.clientY, "click"),
+    { capture: true, passive: true }
+  );
+}
+
 let surveillanceApercuPosee = false;
 function surveillerLesEcrituresDAdresse(): void {
   if (surveillanceApercuPosee || typeof window === "undefined") return;
@@ -275,6 +374,8 @@ export function SondeBascule() {
     //  plus tard, et le premier changement d'adresse peut suivre de
     //  près. Le journal, lui, enregistre dès maintenant.
     surveillerLesEcrituresDAdresse();
+    //  ⚠️ TEMPORAIRE (nº 625) — la mesure du toucher sur la barre.
+    surveillerLesToucherssurLaBarre();
     const image = requestAnimationFrame(() => setArmee(true));
     return () => cancelAnimationFrame(image);
   }, []);
