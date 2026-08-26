@@ -184,12 +184,16 @@ export function LigneResultats({
               marge. La marge passe à 4 (`mt-1`), l'air d'encre à
               11,75. Le corps ne bouge pas : 15,5 px, comme depuis la
               nº 539 ;
-            · AU WEB — le sous-titre passe de 16 à 17 px. C'est le corps
-              que le site donne déjà à un texte de web (le nom d'une
-              carte de style, nº 621) : aucune valeur neuve. Le titre
-              au-dessus ne bouge pas d'un pixel (son `clamp` est
-              intact), l'écart de hiérarchie tombe de 1,65 à 1,55 —
-              la graisse et la couleur le tiennent toujours.
+            · AU WEB — le sous-titre passe de 16 à VINGT px. La nº 628
+              l'avait monté à 17, et le propriétaire n'a rien vu : UN
+              pixel ne se voit pas, c'est le juste verdict de son œil.
+              VINGT, c'est le corps du TITRE au plancher de son `clamp`
+              (1,25rem) — la valeur haute de ce bloc, pas un nombre
+              choisi au jugé. Le titre, lui, ne bouge pas d'un pixel
+              (son `clamp` est intact, 26,4 px sur un écran large) :
+              l'écart de hiérarchie tombe de 1,65 à 1,32, et ce sont la
+              GRAISSE et la COULEUR qui le tiennent désormais — un gris
+              doux en graisse normale sous un blanc gras.
            ⚠️ AUCUNE CLASSE DE BASE, DEUX VARIANTES QUI S'EXCLUENT, et
            c'est tout le procédé (nº 616) : `mobile:` est le VRAI
            appareil (nº 60), `not-mobile:` est son exact complément. Les
@@ -209,7 +213,7 @@ export function LigneResultats({
            sauterait — c'est très exactement ce que ce mécanisme
            empêche. */}
       {sousTitre ? (
-        <p className="mobile:mt-1 not-mobile:mt-1.5 mobile:text-[15.5px] not-mobile:text-[17px] text-sombre-texte-doux">
+        <p className="mobile:mt-1 not-mobile:mt-1.5 mobile:text-[15.5px] not-mobile:text-[20px] text-sombre-texte-doux">
           {sousTitre}
         </p>
       ) : (
@@ -229,7 +233,7 @@ export function LigneResultats({
             //  recopient, et c'est la faiblesse assumée du procédé
             //  depuis la nº 301 — une divergence se verrait aussitôt,
             //  puisque c'est la hauteur du bloc qui sauterait.
-            className="mobile:mt-1 not-mobile:mt-1.5 mobile:text-[15.5px] not-mobile:text-[17px] text-sombre-texte-doux"
+            className="mobile:mt-1 not-mobile:mt-1.5 mobile:text-[15.5px] not-mobile:text-[20px] text-sombre-texte-doux"
           >
             &nbsp;
           </p>

@@ -66,10 +66,18 @@ const FLECHE_ROSE = flecheImage(COULEURS.primaire);
     ------------------------------------------------------------------
     POURQUOI. Le BLOC DE DEUX TITRES (« Réalisations / Flashs » du
     moteur, « Favoris / Portfolios » de Ma sélection) doit désormais
-    dire LEQUEL des deux est ouvert : demi-gras au repos, gras quand sa
+    dire LEQUEL des deux est ouvert : GRAISSE NORMALE au repos
+    (demi-gras jusqu'à la nº 629, illisible à 13 px), gras quand sa
     section est dépliée. Tout le reste du site — les titres en ligne des
     menus sans bloc, les sous-titres « ARTISTE » et « LIEU » — garde le
     gras, sans exception.
+    ⚠️ ET CE N'EST PAS UNE CONTRADICTION AVEC LA nº 317 (nº 629) : ce
+    qu'elle garantit, c'est qu'un SOUS-TITRE se lise comme le titre de
+    groupe qui le surplombe DANS LA MÊME LISTE — et ceux-là sont
+    toujours gras. Le bloc, lui, est une autre surface : ses deux titres
+    ne se comparent qu'entre eux, et leur graisse y porte un ÉTAT, pas
+    un rang. Un titre replié plus léger qu'« ARTISTE » ne se lit donc
+    jamais côte à côte avec lui.
     ⚠️ ON NE POSE SURTOUT PAS UNE SECONDE CLASSE DE GRAISSE PAR-DESSUS
     `font-bold` : deux classes pour une même propriété sur un même
     élément se départagent à l'ORDRE DE LA FEUILLE, jamais à l'ordre où
@@ -82,9 +90,15 @@ const FLECHE_ROSE = flecheImage(COULEURS.primaire);
 const ECRITURE_TITRE_GROUPE = "text-[13px] uppercase tracking-[0.08em]";
 /** La graisse d'un titre de groupe — celle de tout le site (nº 317). */
 const GRAISSE_TITRE_GROUPE = "font-bold";
-/** ⚠️ nº 628 — LA GRAISSE DU BLOC AU REPOS, et rien d'autre : un titre
-    dont la section est repliée. Un cran sous le gras, jamais deux. */
-const GRAISSE_TITRE_GROUPE_REPLIE = "font-semibold";
+/** ⚠️ nº 628, REVUE À LA nº 629 — LA GRAISSE DU BLOC AU REPOS, et rien
+    d'autre : un titre dont la section est repliée.
+    LA nº 628 AVAIT MIS LE DEMI-GRAS (600) contre le gras (700) : le
+    propriétaire ne distingue pas les deux, et il a raison — cent
+    unités de graisse sur des capitales de 13 px, c'est une différence
+    de dessin que l'œil ne lit pas à cette taille. On descend donc de
+    DEUX crans d'un coup, jusqu'à la graisse NORMALE (400) : l'écart au
+    gras devient celui d'un texte courant à un titre, et il se voit. */
+const GRAISSE_TITRE_GROUPE_REPLIE = "font-normal";
 
 export type OptionMenu = {
   value: string;
@@ -1184,9 +1198,13 @@ export function MenuDeroulant({
           groupeDeplie ? "border-sombre-trait" : "border-transparent"
         }`}
       >
-        {/*  ██ §5 (nº 628) — LE BLOC DIT LEQUEL DES DEUX EST OUVERT ██
-             La section dépliée prend le GRAS, l'autre reste en
-             DEMI-GRAS. C'est la seule chose que ce bloc gagne : ni
+        {/*  ██ §5 (nº 628, REVU nº 629) — LE BLOC DIT LEQUEL DES DEUX
+             EST OUVERT ██
+             La section dépliée prend le GRAS, l'autre reste en GRAISSE
+             NORMALE (c'était le demi-gras à la nº 628 : le propriétaire
+             ne voyait pas la différence, et l'écart 400 → 700 est le
+             double de celui-là). C'est la seule chose que ce bloc
+             gagne : ni
              couleur, ni taille, ni chasse — le rose et les 13 px
              valent pour les deux titres, comme avant.
              ⚠️ RIEN NE PEUT SAUTER, ET CE N'EST PAS UNE ESPÉRANCE :
