@@ -11,6 +11,11 @@ import {
 } from "react";
 import Link, { useLinkStatus } from "next/link";
 import { useRouter } from "next/navigation";
+//  §1 (nº 621) — la carte de style et sa grille. Le TYPE seul vient de
+//  la lecture serveur (`import type` : il s'efface à la compilation,
+//  rien du module de lecture n'entre dans le navigateur).
+import { GrilleStyles } from "@/components/CarteStyle";
+import type { StyleDuCatalogue } from "@/lib/catalogue-styles";
 import {
   LARGEUR_SITE,
   libelleStyle,
@@ -274,6 +279,7 @@ function LibelleVoirPlus() {
 
 export function IndexTatoueurs({
   premiers,
+  catalogue = [],
   criteresInitiaux,
   message,
   total,
@@ -284,6 +290,16 @@ export function IndexTatoueurs({
   /** LES CARTES DE CETTE ADRESSE — toutes celles qu'elle demande,
       pages cumulées comprises. C'est le SEUL contenu de la mosaïque. */
   premiers: Tatoueur[];
+  /** ██ §1 (nº 621) — LE CATALOGUE DE STYLES, quand la page en a un ██
+      L'ACCUEIL AU REPOS n'affiche plus une mosaïque de portfolios mais
+      UNE CARTE PAR STYLE (lib/catalogue-styles, lu à la nº 620). Le
+      serveur ne le fournit QUE là : une recherche, une page de style,
+      le jumeau avec des critères ne le reçoivent jamais, et cette
+      surface se comporte alors exactement comme avant.
+      ⚠️ VIDE PAR DÉFAUT, ET C'EST LA GARDE : aucun appelant existant
+      n'a à changer, et l'absence de catalogue vaut « la mosaïque,
+      comme toujours ». */
+  catalogue?: StyleDuCatalogue[];
   criteresInitiaux?: Partial<CritèresTatouage>;
   /** §4 (nº 278) — LE DRAPEAU `demonstration` NE VIENT PLUS JUSQU'ICI :
       il ne servait qu'à conditionner l'affichage du message, et ce
@@ -638,6 +654,26 @@ export function IndexTatoueurs({
       ceux que le doigt vient de poser. */
   const affiches = criteresServis;
 
+  /** ██ §1 (nº 621) — MONTRE-T-ON LE CATALOGUE DE STYLES ? ██
+      DEUX CONDITIONS, et les deux comptent :
+       · LE SERVEUR EN A FOURNI UN. Il ne le fait que sur l'accueil au
+         repos — une recherche n'en reçoit jamais ;
+       · AUCUN CRITÈRE N'EST AFFICHÉ. La surface est cliente : entre le
+         clic sur « Rechercher » et l'arrivée de la nouvelle page, ce
+         sont les critères AFFICHÉS qui disent où l'on en est. Sans
+         cette seconde condition, le catalogue resterait à l'écran
+         pendant la transition d'une recherche lancée depuis l'accueil.
+      ⚠️ LES QUATRE CRITÈRES, PAS TROIS : les interrupteurs éteints
+      (`exclure`) sont une recherche eux aussi — c'est la définition
+      qu'a posée `estLAccueilNu` à la nº 619, et les deux disent la
+      même chose de la même page. */
+  const surLeCatalogue =
+    catalogue.length > 0 &&
+    !affiches.style &&
+    !affiches.nature &&
+    !affiches.lieu &&
+    affiches.exclure.length === 0;
+
   /*  §1 (nº 480) — `aucuneRecherche` A ÉTÉ RETIRÉE, avec le gros
       relevé qui la documentait (nº 395). Elle ne servait qu'à une
       chose : décider si la première ligne des cartes portait le
@@ -806,9 +842,31 @@ export function IndexTatoueurs({
              monde entier, il n'y a plus rien à élargir — il ne reste
              que le titre. Ce qu'on propose quand il y a un lieu se
              décide dans `issuesDuVide`, juste au-dessus du composant. */}
-        {visibles.length === 0 && (
+        {!surLeCatalogue && visibles.length === 0 && (
           <AucunResultat issues={issuesDuVide(affiches, chercher)} />
         )}
+        {/*  ██ §1 (nº 621) — L'ACCUEIL AU REPOS MONTRE LE CATALOGUE ██
+             ------------------------------------------------------
+             UNE CARTE PAR STYLE, à la place de la mosaïque de
+             portfolios — et à cet endroit précis, pour que TOUT LE
+             RESTE de la page reste ce qu'il était : la barre et son
+             moteur au-dessus, le titre, le bloc de « Voir plus » en
+             dessous (la nº 622 décidera de son sort).
+             ⚠️ LES DEUX NE COEXISTENT PAS À L'ÉCRAN, ET AUCUNE CLASSE
+             N'A EU À LE DIRE : quand la page porte un catalogue, le
+             serveur ne lui envoie AUCUNE carte de portfolio (voir
+             _accueil/rendu). La mosaïque reste donc montée — la règle
+             de la nº 171, qui interdit de la démonter parce qu'elle
+             porte la fenêtre de fiche — mais elle n'a rien à peindre.
+             « Voir plus » et le compteur se taisent de la même façon,
+             sans qu'on y touche : c'est un total de zéro, pas une
+             condition de plus. Le vrai ménage est celui de la nº 622.
+             ⚠️ ET LA BASCULE NE SE PRODUIT QU'ENTRE DEUX PAGES :
+             lancer une recherche depuis l'accueil change d'adresse, et
+             la page suivante ne reçoit plus de catalogue. Rien ne
+             saute au chargement, rien ne se démonte en cours de
+             route. */}
+        {surLeCatalogue && <GrilleStyles styles={catalogue} />}
         {
           // La grille porte aussi la FENÊTRE de fiche (grand écran).
           //  ⚠️ ELLE N'EST JAMAIS DÉMONTÉE, ET C'EST LE POINT (nº 171) :
@@ -831,10 +889,11 @@ export function IndexTatoueurs({
             //  avant une photo QUI EN EST — plus de réalisation
             //  affichée quand on cherche des flashs.
             natureRecherche={affiches.nature}
-            //  §2 (nº 395) — LE RÉGLAGE EXPLICITE, décidé juste
-            //  au-dessus (`aucuneRecherche`) : c'est cette surface, et
-            //  elle seule, qui sait si l'on est sur l'accueil au repos
-            //  ou devant des résultats.
+            //  §1 (nº 621) — LA NOTE D'ICI CITAIT `aucuneRecherche`,
+            //  RETIRÉE À LA nº 480 : elle décrivait un réglage mort
+            //  (piège des commentaires, nº 472). Ce qui reste vrai est
+            //  la seule ligne ci-dessous — la grille s'estompe pendant
+            //  une transition de recherche.
             estompee={enTransition}
           />
         }

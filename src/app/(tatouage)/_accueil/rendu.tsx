@@ -13,6 +13,9 @@ import {
   styleConnu,
 } from "@/lib/tatoueurs";
 import { IndexTatoueurs } from "@/components/IndexTatoueurs";
+//  §1 (nº 621) — la lecture de la nº 620 : une carte par style, pour
+//  l'accueil au repos et lui seul (voir plus bas).
+import { catalogueDesStyles } from "@/lib/catalogue-styles";
 
 /**
  * L'ACCUEIL DE YOKOFOLIO
@@ -278,11 +281,38 @@ export async function RenduAccueil({
   const { resultat, style, nature, lieu, rayonKm, exclure, page, jourMelange } =
     await chargerAccueil(requeteNormalisee(params), taillePage);
 
+  /**
+   * ██ §1 (nº 621) — L'ACCUEIL AU REPOS SERT LE CATALOGUE DE STYLES ██
+   * ------------------------------------------------------------------
+   * QUAND, ET SEULEMENT QUAND : aucun critère de recherche. C'est la
+   * définition posée par `estLAccueilNu` à la nº 619, écrite ici sur
+   * les valeurs que cette page a déjà décodées — les deux disent la
+   * même chose de la même page.
+   * ⚠️ AUCUNE LECTURE INUTILE : `catalogueDesStyles` n'est appelée que
+   * dans ce cas. Une recherche, une page de style, le jumeau avec des
+   * critères ne la déclenchent jamais.
+   * ⚠️ ET L'ACCUEIL RESTE PRÉRENDU (`○ /`) : cette lecture ne touche ni
+   * cookie ni en-tête (c'est ce qui a été établi à la nº 620) — elle ne
+   * fait que parler à la base, exactement comme `chargerAccueil`
+   * au-dessus d'elle.
+   * ⚠️ ET LES CARTES DE PORTFOLIO NE SONT PAS SERVIES avec lui : la
+   * mosaïque reste montée (règle nº 171 — elle porte la fenêtre de
+   * fiche) mais n'a rien à peindre, et « Voir plus » comme le compteur
+   * se taisent d'eux-mêmes sur un total de zéro. Aucune classe, aucune
+   * condition de plus. C'est la nº 622 qui décidera de leur sort, et
+   * qui cessera alors de LIRE ces cartes pour rien.
+   */
+  const surLeCatalogue =
+    !style && !nature && !lieu && exclure.length === 0;
+  const catalogue = surLeCatalogue ? await catalogueDesStyles() : [];
+  const avecCatalogue = catalogue.length > 0;
+
   return (
     <div data-mosaique-nue={mosaiqueNue ? "" : undefined} style={{ display: "contents" }}>
     <IndexTatoueurs
-      premiers={resultat.tatoueurs}
-      total={resultat.total}
+      premiers={avecCatalogue ? [] : resultat.tatoueurs}
+      catalogue={catalogue}
+      total={avecCatalogue ? 0 : resultat.total}
       page={page}
       //  §2 (nº 425) — le jour du mélange de CE rendu : le lien
       //  « Voir plus » l'écrit dans l'adresse de pagination, pour que
