@@ -5,6 +5,7 @@ import { DELAI_SUPPRESSION_JOURS } from "@/config/tatouage";
 import {
   IconeCloche,
   IconeCocheListe,
+  IconeCoeur,
   IconeCroix,
   IconeDoubleCoche,
   IconeDrapeau,
@@ -150,6 +151,36 @@ const CATALOGUE: Record<
     teinte: NEUTRE,
     titre: "Style refusé",
     sousTitre: "Ta demande d'ajout de style n'a pas été acceptée.",
+  },
+  /*  ██ §1 (nº 663) — LE MESSAGE DE BIENVENUE ██
+      LES DEUX TEXTES SONT CEUX DU PROPRIÉTAIRE, au mot près — à la
+      graphie de la marque près (« YokoFolio », Y et F majuscules : sa
+      règle, nº 104).
+      ⚠️ LE TITRE EST ÉCRIT ICI EN TOUTES LETTRES, comme les dix autres
+      de ce catalogue, et ce n'est pas un oubli : `TITRE_NOTIFICATION`
+      vit dans `lib/notifications`, qui importe le CLIENT
+      D'ADMINISTRATION — sa clé de service n'a rien à faire dans le
+      programme du navigateur. Ce fichier n'en prend donc que les TYPES,
+      effacés à la compilation. C'est la règle de tout ce catalogue
+      depuis la nº 132, et la raison est écrite en tête de ce fichier :
+      l'affichage DÉRIVE DU GENRE, jamais de ce que la base a écrit.
+      LA TEINTE EST « NEUTRE », et c'est un choix de charte, pas un
+      goût : les trois couleurs disent quelque chose de précis — VERT
+      « c'est en ligne », ROUGE « il manque quelque chose », ROSE « une
+      décision est attendue ». Un accueil n'est aucun des trois : il
+      n'appelle AUCUN GESTE, ce qui est la définition même du neutre
+      dans ce catalogue.
+      L'ICÔNE EST LE CŒUR de la famille existante, celui des favoris —
+      la seule qui accueille plutôt qu'elle n'annonce. Le propriétaire
+      la reverra avec les autres au chantier suivant (consigne nº 663). */
+  bienvenue: {
+    icone: <IconeCoeur taille={18} />,
+    teinte: NEUTRE,
+    titre: "Bienvenue sur YokoFolio !",
+    sousTitre:
+      "Explore les styles et suis les tatoueurs qui t'inspirent — tes " +
+      "favoris te suivront partout. Tatoueur ? Ton portfolio t'attend : " +
+      "« Ajouter un portfolio ».",
   },
 };
 

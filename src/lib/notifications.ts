@@ -1,4 +1,7 @@
 import { creerClientSupabaseAdmin } from "@/lib/supabase/admin";
+//  §1 (nº 663) — la graphie officielle de la marque, écrite une seule
+//  fois (nº 104) : le message de bienvenue la lit, il ne la recopie pas.
+import { MARQUE_YOKOFOLIO } from "@/config/tatouage";
 
 /**
  * LES NOTIFICATIONS DU COMPTE — écrites par le SERVEUR seul
@@ -49,7 +52,18 @@ export type GenreNotification =
   //    Le genre existe pour que le CATALOGUE d'affichage soit complet
   //    (textes du brief nº 132) le jour où un point d'écriture naîtra.
   | "demande_style"
-  | "en_validation";
+  | "en_validation"
+  /*  ██ §1 (nº 663) — LE MESSAGE DE BIENVENUE ██
+      LA PREMIÈRE NOUVELLE DE TOUTE VIE DE COMPTE, et la seule qui ne
+      parle ni d'une fiche, ni du catalogue, ni d'une décision
+      d'administration : elle accueille. Un compte neuf ouvrait une
+      boîte VIDE — « Rien de neuf » sur un écran qu'on découvre.
+      ⚠️ ELLE EST UNE NOTIFICATION COMME LES AUTRES, et c'est la
+      consigne : une vraie ligne en base, qui RESTE dans la liste, que
+      les nouvelles recouvrent (l'ordre est `creee_le` décroissant :
+      étant la plus ancienne, elle finit en bas), et qui se marque
+      comme lue d'un toucher. Rien de spécial à l'affichage. */
+  | "bienvenue";
 /*  ⚠️ LES TROIS GENRES DE RATTACHEMENT ONT DISPARU (passe C) :
     « liaison », « liaison_validee », « liaison_refusee ». Un
     rattachement est désormais IMMÉDIAT — il n'y a plus rien à
@@ -105,7 +119,66 @@ export const TITRE_NOTIFICATION: Record<GenreNotification, string> = {
   style_refuse: "Style refusé",
   demande_style: "Demande de style",
   en_validation: "Fiche en cours de validation",
+  /*  §1 (nº 663) — LE MOT DU PROPRIÉTAIRE, à la graphie de la marque
+      près : « YokoFolio », Y et F majuscules (la règle nº 104, sa
+      décision). Il vient de la config, jamais recopié — le jour où la
+      marque changerait de nom, cette ligne suivrait. */
+  bienvenue: `Bienvenue sur ${MARQUE_YOKOFOLIO.nom} !`,
 };
+
+/**
+ * ██ §1 (nº 663) — POSER LA BIENVENUE, UNE FOIS PAR COMPTE ██
+ * ==================================================================
+ * OÙ ELLE EST POSÉE, ET POURQUOI PAS À L'INSCRIPTION. Les trois
+ * écrans d'inscription du site appellent `signUp` DEPUIS LE
+ * NAVIGATEUR (EcranAuthentification, AuthParticulier, AuthArtisan) :
+ * il n'existe aucun passage serveur au moment où le compte naît, et
+ * une notification ne s'écrit qu'avec la clé de service (voir l'en-tête
+ * de ce fichier). Y greffer un appel voudrait dire trois appels à
+ * tenir d'accord, et un compte créé autrement — un jour, par un lien
+ * de connexion — n'en aurait aucun.
+ * ELLE EST DONC POSÉE À LA PREMIÈRE LECTURE de la boîte de nouvelles,
+ * si elle n'y est pas déjà. Pour un compte neuf, c'est le premier
+ * instant où quelque chose peut être vu ; pour tous les autres, c'est
+ * une ligne de plus, une seule fois.
+ * ⚠️ CE QUE ÇA COÛTE, ET JE LE DIS : LES COMPTES DÉJÀ EXISTANTS la
+ * reçoivent eux aussi, à leur prochaine ouverture. C'est le prix de ne
+ * pas dépendre de l'instant de l'inscription — et c'est aussi ce qui
+ * permet au propriétaire de la voir sur son propre compte.
+ * ⚠️ LE DOUBLON EST POSSIBLE EN THÉORIE, et je le dis plutôt que de
+ * le taire : deux lectures rigoureusement simultanées du même compte
+ * verraient toutes deux une boîte sans bienvenue. Il faudrait un index
+ * unique en base pour l'exclure — donc une migration à passer. Le cas
+ * demande d'ouvrir la même boîte deux fois dans la même poignée de
+ * millisecondes ; la ligne en double se marquerait comme lue et
+ * s'effacerait de l'attention. On ne paie pas une migration pour ça.
+ */
+export async function poserLaBienvenue(
+  userId: string
+): Promise<Notification | null> {
+  try {
+    const admin = creerClientSupabaseAdmin();
+    const { data, error } = await admin
+      .from("notifications_compte")
+      .insert({
+        user_id: userId,
+        genre: "bienvenue" as GenreNotification,
+        titre: TITRE_NOTIFICATION.bienvenue,
+      })
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return (data as Notification) ?? null;
+  } catch (erreur) {
+    //  La même règle que `creerNotification` : jamais bloquant. Une
+    //  boîte de nouvelles s'affiche très bien sans son accueil.
+    console.warn(
+      "[notifications] bienvenue non écrite :",
+      erreur instanceof Error ? erreur.message : erreur
+    );
+    return null;
+  }
+}
 
 /**
  * POSER UNE NOTIFICATION. Rend `true` si elle a bien été écrite —
