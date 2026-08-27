@@ -96,6 +96,30 @@ export function ChampPhotoRonde({
     surRecadrage?.(Boolean(fichier));
   }
 
+  /**
+   * ██ §1 (nº 662) — « ANNULER » REMET TOUT À ZÉRO ██
+   * ------------------------------------------------------------------
+   * LE DÉFAUT DU PROPRIÉTAIRE : choisir une photo, arriver au
+   * recadreur, cliquer « Annuler », rouvrir — et retomber DIRECTEMENT
+   * sur le recadreur, avec l'ancienne photo.
+   * LA CAUSE, EN UNE LIGNE : l'image D'ORIGINE survivait à
+   * l'annulation. Le bouton lit `apercu` pour choisir sa route — une
+   * photo déjà posée mène à « Remplacer », donc à `rouvrirRecadreur`,
+   * qui rouvre sur cet original resté en mémoire. Rien n'était cassé :
+   * il manquait un oubli.
+   * LA RÈGLE, DÉSORMAIS : fermer le recadreur sans valider EFFACE
+   * l'original. La fois suivante repart du CHOIX DE LA PHOTO, ce que
+   * le propriétaire demande mot pour mot.
+   * ⚠️ CE QUE ÇA NE TOUCHE PAS : un cadrage VALIDÉ garde son original
+   * (voir `surValidation`, plus bas) — « Remplacer » peut donc encore
+   * reprendre le cadrage d'une photo qu'on vient d'accepter, sans la
+   * redemander. C'est l'usage pour lequel `rouvrirRecadreur` existe.
+   */
+  function annulerLeRecadrage() {
+    setOriginal(null);
+    poserRecadrage(null);
+  }
+
   function ouvrirChoixPhoto() {
     entreeFichier.current?.click();
   }
@@ -257,7 +281,7 @@ export function ChampPhotoRonde({
               });
               poserRecadrage(null);
             }}
-            surFermeture={() => poserRecadrage(null)}
+            surFermeture={annulerLeRecadrage}
           />,
           document.body
         )}

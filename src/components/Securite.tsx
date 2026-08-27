@@ -102,7 +102,21 @@ function Bloc({
   return (
     <section>
       <div className="px-4 sm:px-7">
-        <h2 className="text-[18px] font-semibold tracking-tight text-sombre-texte">
+        {/*  §4 (nº 662) — LE TITRE D'ENCADRÉ, UN CRAN PLUS PETIT AU
+             DOIGT. Le propriétaire le trouve « un peu trop grand » sur
+             le téléphone, où la fenêtre est étroite et où les titres se
+             suivent de près. 18 → 16 px : le rang du NOM de la tête de
+             « Mon compte » au web (nº 640), déjà employé — aucune
+             taille nouvelle.
+             ⚠️ DEUX VARIANTES QUI S'EXCLUENT, AUCUNE CLASSE DE BASE
+             (règle nº 389), et l'appareil se lit sur `data-appareil`,
+             jamais sur une largeur de fenêtre (règle nº 60).
+             ⚠️ LE WEB NE BOUGE PAS D'UN PIXEL : ses 18 px sont ceux
+             d'avant, écrits par la seconde variante. */}
+        <h2
+          className="mobile:text-[16px] not-mobile:text-[18px]
+                     font-semibold tracking-tight text-sombre-texte"
+        >
           {titre}
         </h2>
       </div>

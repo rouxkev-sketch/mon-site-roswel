@@ -7,8 +7,9 @@ import {
   ChampPhotoRonde,
   type PhotoCadree,
 } from "@/components/ChampsIdentite";
+//  §6 (nº 662) — `CLASSE_ENCADRE_FENETRE` n'est plus importé : l'encadré
+//  qui entourait la photo et le nom a disparu des DEUX surfaces.
 import {
-  CLASSE_ENCADRE_FENETRE,
   LARGEUR_FENETRE_BARRE,
   MenuDeVerre,
 } from "@/components/SurfaceDeVerre";
@@ -40,7 +41,7 @@ const BUCKET_PHOTOS = "photos-tatoueurs";
 /**
  * ██ §1 (nº 657) — « MODIFIER » : LE NOM ET LA PHOTO D'UN PARTICULIER ██
  * ==================================================================
- * CE QU'ELLE REMPLACE : la ligne « Modifier » de la tête de « Mon
+ * CE QU'ELLE REMPLACE : la ligne « Éditer » de la tête de « Mon
  * compte » (nº 649) était un VRAI bouton — focusable, qui s'éclaircit
  * sous le pointeur — mais sans `onClick` : « le jour où la fenêtre
  * existera, elle s'accrochera ici en une ligne », disait sa note. Ce
@@ -72,7 +73,7 @@ const BUCKET_PHOTOS = "photos-tatoueurs";
  * `yokofolio-fiches-tatoueurs.sql`, « depot dans son propre dossier »).
  *
  * ⚠️ ELLE NE S'ADRESSE QU'À UN PARTICULIER : la ligne qui l'ouvre
- * n'existe que pour un compte SANS portfolio (la branche « Modifier »
+ * n'existe que pour un compte SANS portfolio (la branche « Éditer »
  * de `enTeteDuCompte`, MenuEspace). Un compte avec portfolio garde son
  * nom et sa photo dans SA FICHE, et rien ne change pour lui.
  * ⚠️ ET L'EFFET QUI RECOPIE LA PHOTO DU PORTFOLIO SE TAIT POUR LUI :
@@ -217,26 +218,25 @@ export function FenetreIdentite({
     }
   }
 
-  /*  ██ §4 (nº 658) — L'ENCADRÉ TOMBE AU WEB, IL RESTE AU DOIGT ██
+  /*  ██ §6 (nº 662) — L'ENCADRÉ TOMBE DES DEUX CÔTÉS ██
       ==================================================================
-      LA CONSIGNE EST BORNÉE À UN APPAREIL : « au web seulement,
-      supprimer l'encadré qui entoure le champ du nom et la photo ; le
-      champ va bord à bord, de la marge gauche à la marge droite ; la
-      photo s'aligne à gauche, sur la même marge ».
+      LA nº 658 L'AVAIT RETIRÉ AU WEB SEULEMENT, et j'avais expliqué
+      pourquoi le doigt gardait le sien : « ce qui reste propre à chaque
+      plan, ce sont les boîtes ». Le propriétaire tranche autrement —
+      « au mobile : même apparence qu'au web » — et c'est plus simple :
+      un seul dessin pour les deux surfaces, plus de branche du tout.
       CE QUE ÇA DONNE, ET C'EST ARITHMÉTIQUE. La boîte posait
-      `p-4` — SEIZE pixels — À L'INTÉRIEUR des vingt de la colonne :
-      le champ commençait donc à 36 px du bord de la fenêtre et
-      s'arrêtait à 36 de l'autre, et le disque de la photo aussi. Sans
-      elle, les deux repartent des VINGT de la colonne, comme la
-      croix, le titre et le bouton. Le champ gagne 32 px de largeur.
-      ⚠️ LE DOIGT GARDE SA BOÎTE, et ce n'est pas une inconséquence :
-      c'est la règle de ces deux écrans depuis la nº 530 — « ce qui
-      reste propre à chaque plan, ce sont les boîtes, et elles seules ».
-      Là-bas, la page entière est faite d'encadrés (« Mon compte » sur
-      cet appareil), et un champ posé à nu sur le fond de page y
-      paraîtrait tombé d'ailleurs.
+      `p-4` — SEIZE pixels — À L'INTÉRIEUR de la colonne : le champ
+      commençait donc à 36 px du bord au web (20 + 16) et à 32 au doigt
+      (16 + 16), et le disque de la photo aussi. Sans elle, les deux
+      repartent de la marge de la colonne — vingt au web, seize au
+      doigt —, comme le titre et le bouton. Le champ gagne 32 px de
+      largeur de chaque côté.
       ⚠️ L'ÉCART ENTRE LA PHOTO ET LE CHAMP NE CHANGE PAS (`gap-4`,
       16 px) : seule la boîte autour s'en va.
+      ⚠️ ET `surface` NE SERT PLUS QU'À L'IDENTIFIANT DU CHAMP : les
+      deux habillages sont rendus ensemble (l'un caché), et deux
+      `id` identiques dans un même document seraient une faute.
 
       ██ §4 (nº 658) — « ENREGISTRER » N'EST PLUS ROSE, NI TOUT ROND ██
       ------------------------------------------------------------------
@@ -253,13 +253,7 @@ export function FenetreIdentite({
       15,5 px : la consigne ne vise que la forme et la couleur. */
   const contenu = (surface: "web" | "doigt") => (
     <>
-      <div
-        className={
-          surface === "doigt"
-            ? `flex flex-col gap-4 p-4 ${CLASSE_ENCADRE_FENETRE}`
-            : "flex flex-col gap-4"
-        }
-      >
+      <div className="flex flex-col gap-4">
         <ChampPhotoRonde
           apercu={apercu}
           surPhoto={photoCadree}
@@ -307,32 +301,59 @@ export function FenetreIdentite({
           opaque
           alignement="droite"
           role="dialog"
-          aria-label="Modifier mon compte"
+          aria-label="Éditer mon compte"
           data-source-composant="FenetreIdentite · fenêtre web"
           className="mobile:hidden"
         >
-          {/*  LA BARRE DU TITRE — celle de « Langue » et de
-               « Notifications », au caractère : 20 px sur les côtés, le
-               titre à 17 px gras, le trait d'un bord à l'autre, et la
-               croix compensée de −9 px — (36 − 18) / 2, l'écart entre
-               sa cible et son dessin (règle nº 483). */}
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-sombre-bordure/60">
-            <h2 className="flex-1 min-w-0 text-[17px] font-bold tracking-tight text-sombre-texte">
-              Modifier
-            </h2>
-            <button
-              type="button"
-              onClick={surFermeture}
-              aria-label="Fermer"
-              className="-mr-[9px] w-9 h-9 shrink-0 flex items-center justify-center
-                         rounded-full text-sombre-texte-doux
-                         hover:text-sombre-texte hover:bg-sombre-eleve
-                         transition-colors"
-            >
-              <IconeCroix taille={18} />
-            </button>
+          {/*  ██ §6 (nº 662) — LE TRAIT S'EN VA, LE TITRE DESCEND DANS
+               LA COLONNE ██
+               ==========================================================
+               EXACTEMENT CE QUE « LANGUE » A REÇU À LA nº 658, et pour
+               la même raison : le propriétaire ne veut pas de ce trait,
+               et veut le contenu plus haut. Le titre entre DANS la
+               colonne, comme la tête de « Mon compte », et c'est le
+               `gap-3` de la colonne qui l'en sépare.
+               L'AIR RÉCUPÉRÉ SE CHIFFRE : entre le mot et la photo il y
+               avait 16 px (le bas de la barre) plus 20 px (le haut de
+               la colonne) = TRENTE-SIX. Il y en a désormais 8 (`mb-2`)
+               plus 12 (`gap-3`) = VINGT — la règle de la tête de « Mon
+               compte » (nº 641-§2), qui veut l'air sous le titre égal à
+               l'air au-dessus. Le contenu remonte donc de SEIZE pixels.
+               ██ §3 (nº 662) — « ÉDITER », ET SON ICÔNE AU WEB ██
+               Le mot change (« Modifier » jusqu'ici) et la silhouette
+               vient se poser devant lui, « comme au mobile » : c'est
+               l'écriture des titres de ces fenêtres — rang 20, blanc à
+               80 %, 10 px d'écart au mot —, la même que la cloche de
+               « Notifications » et le globe de « Langue ».
+               ⚠️ LA CROIX NE BOUGE NI DE RANG NI DE PLACE : compensée
+               de −9 px, soit (36 − 18) / 2, l'écart entre sa cible et
+               son dessin (règle nº 483). Son glyphe reste à 20 px du
+               bord droit, et le titre à 20 px du gauche : les deux
+               vivent maintenant dans le `p-5` de la colonne au lieu du
+               `px-5` de la barre — le même nombre. */}
+          <div className="flex flex-col gap-3 p-5">
+            <div className="mb-2 flex items-center gap-2.5">
+              <IconeSilhouette
+                taille={20}
+                classe="shrink-0 text-sombre-texte/80"
+              />
+              <h2 className="flex-1 min-w-0 text-[17px] font-bold tracking-tight text-sombre-texte">
+                Éditer
+              </h2>
+              <button
+                type="button"
+                onClick={surFermeture}
+                aria-label="Fermer"
+                className="-mr-[9px] w-9 h-9 shrink-0 flex items-center justify-center
+                           rounded-full text-sombre-texte-doux
+                           hover:text-sombre-texte hover:bg-sombre-eleve
+                           transition-colors"
+              >
+                <IconeCroix taille={18} />
+              </button>
+            </div>
+            {contenu("web")}
           </div>
-          <div className="flex flex-col gap-3 p-5">{contenu("web")}</div>
         </MenuDeVerre>
       )}
 
@@ -342,9 +363,9 @@ export function FenetreIdentite({
            de 72 px (la barre translucide de Safari, nº 533-§6 — cette
            page finit elle aussi sur du gris). */}
       <PagePleinEcranMobile
-        titre="Modifier"
+        titre="Éditer"
         icone={<IconeSilhouette taille={22} classe="shrink-0 text-white" />}
-        ariaLabel="Modifier mon compte"
+        ariaLabel="Éditer mon compte"
         surFermer={surFermeture}
         classeCadre="z-[85]"
       >

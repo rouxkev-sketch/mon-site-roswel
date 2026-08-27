@@ -76,6 +76,9 @@ import { useAppareilMobile } from "@/lib/appareil";
 //  §4 (nº 330) — la consigne « pas de photo en haut » des liens
 //  internes, posée par l'écriture unique.
 import { avecConsigneDeLienInterne } from "@/components/ContenuFiche";
+//  §7 (nº 662) — la couleur des liens des fiches, écrite une seule
+//  fois depuis la nº 388 : la ligne « Éditer » la prend telle quelle.
+import { LIEN_QUI_SORT } from "@/components/lignes-profil";
 //  §3 (nº 330) — l'étape d'historique, écriture unique des quatre
 //  surfaces qui couvrent l'écran.
 import {
@@ -1388,14 +1391,28 @@ export function MenuEspace({
                ==========================================================
                UN PROFESSIONNEL A DEUX LIGNES — son nom, puis son état
                (nº 640) ; un particulier n'en avait qu'une. Il en a deux
-               à son tour : « Mon compte », puis « Modifier ».
+               à son tour : « Mon compte », puis « Éditer » (le mot de
+               la nº 662 ; « Modifier » jusque-là).
                LA PLACE ET LA TAILLE SONT CELLES DE L'ÉTAT, au caractère :
-               même `mt-1`, même `leading-none`, même gris doux, et la
-               même taille (`statutTete` — 15,5 px au doigt, 13 au web).
-               Rien n'est choisi ici ; tout est repris.
+               même `mt-1`, même `leading-none`, même taille
+               (`statutTete` — 15,5 px au doigt, 13 au web). Rien n'est
+               choisi ici ; tout est repris. SEULE LA COULEUR S'EN
+               SÉPARE DEPUIS LA nº 662 (voir le §7 plus bas) : l'état
+               d'un professionnel reste en gris doux, ce geste-ci passe
+               au bleu des liens.
                ⚠️ PAS DE PASTILLE, et c'est voulu : le point de couleur
                dit un ÉTAT DE PUBLICATION (les six libellés de la
-               nº 640). « Modifier » n'est pas un état, c'est un geste.
+               nº 640). « Éditer » n'est pas un état, c'est un geste.
+               ██ §7 (nº 662) — ET IL PREND LA COULEUR DES LIENS ██
+               Le propriétaire la veut EXACTEMENT celle des liens des
+               fiches — pas une teinte approchante. C'est donc
+               `LIEN_QUI_SORT` (components/lignes-profil), L'ÉCRITURE
+               UNIQUE de ces liens depuis la nº 388 : le bleu du jeton
+               `lien`, son éclaircissement au survol, et la transition,
+               d'un seul tenant. Aucune couleur n'est écrite ici.
+               ⚠️ LE GRIS DOUX ET SES DEUX SURVOLS S'EN VONT AVEC : une
+               seule classe de couleur par élément (règle nº 389), et
+               `LIEN_QUI_SORT` porte déjà la sienne et son survol.
                ⚠️ ELLE NE MENAIT NULLE PART À LA nº 649, et sa note
                annonçait ceci : « le jour où la fenêtre existera, elle
                s'accrochera ici en une ligne ». C'EST CETTE LIGNE-LÀ
@@ -1403,7 +1420,7 @@ export function MenuEspace({
                il a reçu sa main. Ce qu'il ne promettait pas, il ne le
                promet toujours pas : ni flèche, ni chevron.
                ⚠️ MÊME ENCHAÎNEMENT QUE « LANGUE » ET « NOTIFICATIONS »
-               (nº 465) : au WEB, ouvrir « Modifier » ferme « Mon
+               (nº 465) : au WEB, ouvrir « Éditer » ferme « Mon
                compte » — une seule surface flottante à la fois ; au
                DOIGT, « Mon compte » est une page opaque et RESTE
                ouvert dessous, la refermer y fait retomber. */
@@ -1413,11 +1430,9 @@ export function MenuEspace({
               if (!auDoigt) setOuvert(false);
               setIdentiteOuverte(true);
             }}
-            className={`mt-1 block leading-none text-sombre-texte-doux
-                       transition-colors hover:text-sombre-texte
-                       active:text-sombre-texte ${reglages.statutTete}`}
+            className={`mt-1 block leading-none ${LIEN_QUI_SORT} ${reglages.statutTete}`}
           >
-            Modifier
+            Éditer
           </button>
         )}
       </div>

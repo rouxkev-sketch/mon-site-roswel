@@ -55,7 +55,8 @@ import {
  * ⚠️ RIEN N'EST BRANCHÉ, ET C'EST VOULU. Seule une langue est active —
  * l'ANGLAIS depuis la nº 465 ; les autres sont grisées et NON
  * CLIQUABLES (`disabled`, et `aria-disabled` pour les lecteurs
- * d'écran) avec la mention « bientôt » — c'est elle qui explique, plus
+ * d'écran — posés SANS CONDITION depuis la nº 662, puisque seules les
+ * langues à venir passent par cette ligne) avec la mention « bientôt » — c'est elle qui explique, plus
  * aucune phrase au-dessus de la liste. La structure est prête : voir
  * LANGUES_YOKOFOLIO dans src/config/tatouage.ts.
  * §1 (nº 655) — LE TRI EN DEUX ENCADRÉS LIT CE MÊME DRAPEAU, et rien
@@ -99,34 +100,72 @@ function langueDuJour() {
  * ⚠️ UNE BOÎTE VIDE NE S'AFFICHE PAS : sans langue active, l'encadré
  * du haut n'existe pas — un cadre gris sans contenu se lirait comme un
  * défaut.
+ * §5 (nº 662) — ET L'ENCADRÉ DU HAUT EST DEVENU UN BOUTON, un par
+ * langue disponible : voir la note posée juste dessous, dans le corps.
  */
 function ListeDesLangues({ surChoix }: { surChoix: () => void }) {
   const disponibles = LANGUES_YOKOFOLIO.filter((langue) => langue.actif);
   const aVenir = LANGUES_YOKOFOLIO.filter((langue) => !langue.actif);
   return (
     <>
-      {disponibles.length > 0 && (
-        <div className={`p-2 ${CLASSE_ENCADRE_FENETRE}`}>
-          <ul className="flex flex-col gap-0.5">
-            {disponibles.map((langue) => (
-              <LigneDeLangue
-                key={langue.code}
-                langue={langue}
-                surChoix={surChoix}
-              />
-            ))}
-          </ul>
-        </div>
-      )}
+      {/*  ██ §5 (nº 662) — UNE LANGUE DISPONIBLE : SA BOÎTE EST SON
+           BOUTON ██
+           ==========================================================
+           LE DÉFAUT DU PROPRIÉTAIRE : au clic sur « English », une
+           BOÎTE CLAIRE apparaissait À L'INTÉRIEUR de l'encadré gris,
+           plus petite que lui. Il veut que ce soit TOUT L'ENCADRÉ qui
+           s'éclaircisse.
+           LA CAUSE : la ligne vivait DANS l'encadré, avec son propre
+           arrondi et son propre fond de survol — l'encadré, lui, ne
+           réagissait à rien.
+           LE REMÈDE EST LE MOTIF DU SITE, pas une exception : « une
+           tuile l'est en entier — elle ne porte qu'un seul geste, sa
+           boîte EST son bouton » (le motif des plaques cliquables,
+           nº 502, celui des tuiles de « Mon compte »). Le bouton PREND
+           donc la place de l'encadré.
+           ⚠️ AUCUN NOMBRE NE CHANGE, et c'est ce qui garde l'alignement
+           avec les langues du dessous : le bouton porte le `p-2` de
+           l'encadré, et son contenu le `px-3 min-h-[46px]` de la ligne
+           — 8 + 12 = VINGT pixels, exactement là où commence
+           « Español ». La hauteur reste 16 + 46 = 62.
+           ⚠️ UNE BOÎTE PAR LANGUE DISPONIBLE : aujourd'hui il n'y en a
+           qu'une, mais le jour où une deuxième s'ouvrira, chacune aura
+           la sienne — un encadré-bouton qui contiendrait deux
+           destinations ne saurait pas où aller.
+           ⚠️ ET PLUS AUCUN CONTOUR (charte) : `outline-none` retire le
+           liseré bleu que le navigateur du téléphone posait au toucher.
+           Le focus au CLAVIER, lui, reste visible — c'est l'écriture du
+           globe de la barre, reprise telle quelle. */}
+      {disponibles.map((langue) => (
+        <button
+          key={langue.code}
+          type="button"
+          lang={langue.code}
+          aria-current="true"
+          onClick={surChoix}
+          className={`w-full p-2 text-left ${CLASSE_ENCADRE_FENETRE}
+                     transition-colors hover:bg-sombre-eleve-clair
+                     active:bg-sombre-eleve-clair outline-none
+                     focus-visible:outline-2 focus-visible:outline-offset-2
+                     focus-visible:outline-primaire`}
+        >
+          <span
+            className="flex items-center gap-3 min-h-[46px] px-3
+                       text-[14.5px] font-semibold text-sombre-texte"
+          >
+            {/*  La puce ronde désigne la langue en cours — BLANCHE
+                 (nº 141-§5) : le rose est réservé aux accents forts, et
+                 une langue active n'en est pas un. */}
+            <span aria-hidden className="w-2 h-2 rounded-full shrink-0 bg-white" />
+            {langue.label}
+          </span>
+        </button>
+      ))}
       {aVenir.length > 0 && (
         <div className={`p-2 ${CLASSE_ENCADRE_FENETRE}`}>
           <ul className="flex flex-col gap-0.5">
             {aVenir.map((langue) => (
-              <LigneDeLangue
-                key={langue.code}
-                langue={langue}
-                surChoix={surChoix}
-              />
+              <LigneDeLangue key={langue.code} langue={langue} />
             ))}
           </ul>
         </div>
@@ -135,26 +174,25 @@ function ListeDesLangues({ surChoix }: { surChoix: () => void }) {
   );
 }
 
-/** UNE LIGNE DE LANGUE — l'écriture d'origine, reprise AU CARACTÈRE :
-    §1 (nº 655) ne fait que la sortir de la boucle pour que les deux
-    encadrés la posent chacun. Ni sa géométrie, ni ses couleurs, ni sa
-    puce, ni sa mention « bientôt » ne changent d'un signe. */
+/** UNE LANGUE À VENIR — l'écriture d'origine, reprise AU CARACTÈRE.
+    §5 (nº 662) — ELLE NE SERT PLUS QU'AUX LANGUES À VENIR : une langue
+    DISPONIBLE est désormais un encadré-bouton (voir juste au-dessus).
+    Le geste `surChoix` s'en va donc : rien ici n'est cliquable, et un
+    paramètre que personne ne peut atteindre est un piège pour la passe
+    suivante. Ni la géométrie, ni les couleurs, ni la puce, ni la
+    mention « bientôt » ne changent d'un signe. */
 function LigneDeLangue({
   langue,
-  surChoix,
 }: {
   langue: (typeof LANGUES_YOKOFOLIO)[number];
-  surChoix: () => void;
 }) {
   return (
     <li>
       <button
         type="button"
         lang={langue.code}
-        disabled={!langue.actif}
-        aria-disabled={!langue.actif}
-        aria-current={langue.actif ? "true" : undefined}
-        onClick={langue.actif ? surChoix : undefined}
+        disabled
+        aria-disabled
         //  Le voile translucide des lignes de menu (nº 237-§2) :
         //  sur une plaque de verre, un aplat ferait une boîte
         //  posée dessus.
