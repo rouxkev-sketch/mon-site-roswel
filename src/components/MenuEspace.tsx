@@ -37,9 +37,33 @@ import {
   nomAffiche,
   rangerLIdentiteAffichee,
 } from "@/lib/avatar-du-compte";
+import dynamic from "next/dynamic";
 import { useUtilisateur } from "@/lib/use-utilisateur";
 import { EntreeLangue, FenetreLangue } from "@/components/SelecteurLangue";
-import { FenetreNotifications } from "@/components/FenetreNotifications";
+
+/**
+ * ██ §1 (nº 685) — LA FENÊTRE DES NOUVELLES ARRIVE QUAND ON L'OUVRE ██
+ * ------------------------------------------------------------------
+ * Elle voyageait dans le morceau de programme commun — celui de 195 ko
+ * que TOUTE page connectée tire —, alors qu'elle ne s'affiche que si
+ * l'on touche la cloche. `next/dynamic` l'en sort.
+ * ⚠️ LE COMPTEUR NE DÉPEND PAS D'ELLE, et c'est ce qui rend la sortie
+ * sans danger : le point rose et le nombre de la cloche se lisent dans
+ * le MAGASIN (`lib/magasin-notifications`, nº 672), pas dans cette
+ * fenêtre. Ils restent donc justes dès l'arrivée sur la page, exactement
+ * comme la nº 664 l'exige — rien n'attend ce morceau-ci.
+ * ⚠️ CE QUE ÇA COÛTE : à la PREMIÈRE ouverture d'un document, le
+ * morceau doit arriver. Les suivantes sont immédiates.
+ * ⚠️ `ssr: false` : cette fenêtre n'existe qu'après un geste, il n'y a
+ * jamais de HTML à en tirer côté serveur.
+ */
+const FenetreNotifications = dynamic(
+  () =>
+    import("@/components/FenetreNotifications").then(
+      (m) => m.FenetreNotifications
+    ),
+  { ssr: false }
+);
 //  §1 (nº 657) — la fenêtre « Modifier », quatrième surface de la barre.
 import { FenetreIdentite } from "@/components/FenetreIdentite";
 import {

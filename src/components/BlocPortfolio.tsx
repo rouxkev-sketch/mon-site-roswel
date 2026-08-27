@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import dynamic from "next/dynamic";
 import {
   entreesExplorer,
   libelleStyle,
@@ -16,8 +17,16 @@ import {
   IconePlus,
 } from "@/components/Icones";
 import { IconeAjouterPhoto } from "@/components/IconeAjouterPhoto";
-import { RecadreurPhoto } from "@/components/RecadreurPhoto";
 import { estStyleMonochrome } from "@/config/tatouage";
+
+/*  §1 (nº 685) — LE RECADREUR, CHARGÉ AU DÉPÔT D'UNE PHOTO. La note
+    complète est dans `ChampsIdentite`, l'autre porteur : ce morceau de
+    programme voyageait sur toute page alors qu'il ne sert qu'ici et
+    là-bas, et seulement quand on dépose un fichier. */
+const RecadreurPhoto = dynamic(
+  () => import("@/components/RecadreurPhoto").then((m) => m.RecadreurPhoto),
+  { ssr: false }
+);
 import { texteErreur } from "@/lib/erreurs-formulaire";
 import { OngletsLigne } from "@/components/OngletsLigne";
 //  §4 (nº 474) — au doigt, la fenêtre des styles devient une PAGE

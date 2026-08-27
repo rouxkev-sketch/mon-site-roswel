@@ -2,13 +2,38 @@
 
 import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import dynamic from "next/dynamic";
 import { IconePlus } from "@/components/Icones";
 //  L'appareil photo au trait fin marqué d'un plus (nº 111) — l'image
 //  officielle du propriétaire, dans son composant à elle.
 import { IconeAjouterPhoto } from "@/components/IconeAjouterPhoto";
-import { RecadreurPhoto } from "@/components/RecadreurPhoto";
 import { CHAMP } from "@/components/champs-formulaire";
 import { sansRemplissageAuto } from "@/lib/champs-sans-remplissage";
+
+/**
+ * ██ §1 (nº 685) — LE RECADREUR ARRIVE QUAND ON RECADRE ██
+ * ------------------------------------------------------------------
+ * CE QUE MESURE LA nº 685 : les quatre pages connectées tirent ~1 600 ko
+ * de programme, dont un morceau de 195 ko qui porte ensemble le
+ * recadreur, la fenêtre des notifications, le moteur de recherche et le
+ * menu du compte — et ce morceau est chargé sur TOUTE page. Or on ne
+ * recadre une photo qu'en en déposant une : le recadreur voyageait donc
+ * avec des écrans qui ne le montreront jamais.
+ * `next/dynamic` le sort du morceau commun ; il n'est demandé qu'au
+ * moment où `recadrage` devient vrai, c'est-à-dire au dépôt du fichier.
+ * ⚠️ CE QUE ÇA COÛTE, ET JE LE DIS : au TOUT PREMIER recadrage d'un
+ * document, le morceau doit arriver — un délai bref avant que la
+ * fenêtre ne s'ouvre. Les suivants sont immédiats (le navigateur l'a).
+ * ⚠️ `ssr: false` PARCE QUE CE COMPOSANT NE SE REND QUE DANS UN
+ * NAVIGATEUR : il lit un `File`, mesure un canevas et pose un portail.
+ * Le rendre côté serveur n'aurait aucun sens, et l'y forcer coûterait
+ * du HTML pour rien.
+ */
+const RecadreurPhoto = dynamic(
+  () => import("@/components/RecadreurPhoto").then((m) => m.RecadreurPhoto),
+  { ssr: false }
+);
+
 
 /**
  * ██ §1 (nº 657) — DIRE QUI L'ON EST : LA PHOTO ET LE NOM ██
