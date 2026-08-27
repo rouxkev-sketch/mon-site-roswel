@@ -79,6 +79,58 @@ export const ETATS_ROND_BARRE =
 
 /* ============ Icônes du menu (trait fin) ============ */
 
+/**
+ * ██ §2 (nº 668) — LA MAIN QUI SALUE — le symbole de la bienvenue ██
+ * ==================================================================
+ * CE QU'ELLE REMPLACE. La nº 667 avait mis à cette place le FICHIER de
+ * la marque (`yokofolio-icone.png`, le cœur). Le propriétaire n'en veut
+ * pas, et la mesure lui donnait raison sur un point : une image ne peut
+ * pas hériter de la couleur de sa pastille — elle rendait 2,10:1 sur le
+ * gris, sous le minimum d'un signe. Un TRACÉ, lui, prend la couleur
+ * qu'on lui donne. Celui-ci est donc dessiné, comme les neuf autres.
+ *
+ * COMMENT ELLE EST FAITE, ET POURQUOI COMME ÇA :
+ *  · TROIS DOIGTS ET UN POUCE, pas quatre doigts. Essayé les deux :
+ *    à 18 px — la taille de la liste —, quatre doigts se touchent et la
+ *    main devient une tache. Trois restent séparés, et la main se lit
+ *    encore.
+ *  · PENCHÉE DE 18°, ce qui la distingue d'une main levée (« stop ») :
+ *    c'est l'inclinaison qui fait le salut.
+ *  · AGRANDIE DE 12 % puis RECENTRÉE au dixième de point : mesurée
+ *    trait compris, elle occupe 16,9 × 18,4 dans la boîte de 24 —
+ *    exactement l'encombrement de l'horloge (19) et de la coche de la
+ *    famille. Elle ne pèse ni plus ni moins que ses voisines.
+ * ⚠️ AUCUN TRAIT DE MOUVEMENT autour d'elle, et c'est délibéré : à
+ * 18 px, deux arcs de plus ne se lisent pas — ils salissent. L'emoji
+ * 👋 lui-même n'en a pas.
+ * ⚠️ LE `trait` EST CELUI DE LA FAMILLE, comme partout : rien n'est
+ * écrit en dur, la pastille décide (voir PastilleEvenement).
+ */
+export function IconeMainQuiSalue({
+  taille = 24,
+  classe = "",
+  trait = 1.8,
+}: ProprietesIcone) {
+  return (
+    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
+      <g
+        transform="translate(-0.2 -0.15) rotate(-18 12 13) translate(12 13) scale(1.12) translate(-12 -13)"
+        stroke="currentColor"
+        strokeWidth={trait}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        {/* L'AURICULAIRE, le plus court — il ferme la main à droite. */}
+        <path d="M16.9 11.2V6.2a1.5 1.5 0 0 0-3 0v1" />
+        {/* LE MAJEUR, le plus long — il descend jusque dans la paume. */}
+        <path d="M13.9 10.4V5.2a1.5 1.5 0 0 0-3 0v8.4" />
+        {/* LA PAUME, LE POIGNET ET LE POUCE, d'un seul tracé. */}
+        <path d="M16.9 8.8a1.5 1.5 0 0 1 3 0v5.2a6.6 6.6 0 0 1-6.6 6.6h-1.2c-2 0-3.4-.8-4.6-2l-2.7-2.7a1.5 1.5 0 0 1 2.1-2.1l2 1.8" />
+      </g>
+    </svg>
+  );
+}
+
 export function IconeCoeur({ taille = 24, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>

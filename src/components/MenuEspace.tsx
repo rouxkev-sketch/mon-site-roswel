@@ -161,15 +161,37 @@ export const EMPREINTE_ZONE_COMPTE =
   "mobile:-mr-1.5 not-mobile:-mr-1 not-mobile:ml-1.5";
 
 /**
- * §1 (nº 664) — LA MARQUE « LES NOUVELLES ONT ÉTÉ SEMÉES », par compte.
- * Elle vit dans `sessionStorage` : elle meurt avec l'onglet, ce qui est
- * exactement la durée voulue — une fois par visite, pas une par page.
+ * ██ §1-b (nº 668) — LA MARQUE « LES NOUVELLES ONT ÉTÉ SEMÉES » ██
+ * ==================================================================
+ * ELLE VIVAIT DANS `sessionStorage` (nº 664), ET C'ÉTAIT LE DÉFAUT.
+ * Le propriétaire l'a vu ainsi : au mobile, le point rose n'apparaît
+ * que si l'on ouvre « Mon compte » ; sur l'accueil, il disparaît.
+ *
+ * LA CAUSE, MESURÉE AU BANC (les deux appareils, même relevé) :
+ *   arrivée sur /            → point OUI · 1 appel · clé posée
+ *   document neuf (/contact) → point NON · 0 appel · clé encore là
+ *   retour de document sur / → point NON · 0 appel
+ * UNE GARDE NE DOIT PAS SURVIVRE À CE QU'ELLE GARDE. `sessionStorage`
+ * survit à un CHANGEMENT DE DOCUMENT ; la liste des nouvelles, elle,
+ * vit dans l'état de React et meurt avec lui. Sur un document neuf, la
+ * clé disait donc « déjà semé » alors qu'il n'y avait plus rien : plus
+ * aucune lecture, plus aucun compteur, plus de point. Et le site fait
+ * des navigations de DOCUMENT — le logo est un `<a>` natif (nº 429/468),
+ * c'est le chemin le plus courant pour revenir à l'accueil, et c'est
+ * exactement là que le propriétaire le perdait.
+ *
+ * LA MARQUE EST DONC UN ENSEMBLE DE MODULE : il naît et meurt avec le
+ * document, comme l'état qu'il protège. Une lecture par chargement de
+ * document, ZÉRO par navigation douce — ce que la nº 664 cherchait,
+ * sans le piège.
  * ⚠️ ELLE PORTE L'IDENTIFIANT DU COMPTE, et ce n'est pas décoratif :
  * deux comptes qui se succèdent dans le même onglet doivent semer
- * chacun le leur. Le préfixe est celui de tout ce que le site range
- * (`roswel:`), pour qu'un nettoyage sache quoi balayer.
+ * chacun le leur.
+ * ⚠️ UNE LECTURE QUI ÉCHOUE SE RETIRE DE L'ENSEMBLE : sans quoi un
+ * réseau coupé à la seconde du montage éteindrait le point pour tout
+ * le reste du document. On ne garde la marque que sur un succès.
  */
-const CLE_NOUVELLES_SEMEES = "roswel:nouvelles-semees:";
+const nouvellesSemees = new Set<string>();
 
 export function MenuEspace({
   idUtilisateur,
@@ -408,8 +430,14 @@ export function MenuEspace({
         notifications?: Notification[];
       } | null;
       setNotifications(donnees?.notifications ?? []);
+      //  §1-b (nº 668) — ELLE DIT SI ELLE A RÉUSSI : c'est le semeur du
+      //  montage qui le demande, pour ne pas garder une marque « déjà
+      //  lu » après un réseau coupé. L'ouverture du menu, elle, ignore
+      //  la réponse — elle relit à chaque fois de toute façon.
+      return reponse.ok;
     } catch {
       // Pas de nouvelles : le menu vit très bien sans.
+      return false;
     }
   }, []);
 
@@ -425,12 +453,11 @@ export function MenuEspace({
    * c'est poser la ligne dès que la page connectée s'affiche. Rien de
    * nouveau à écrire côté serveur, aucune route de plus, et les comptes
    * déjà créés sont servis par le même chemin.
-   * ⚠️ UNE FOIS PAR SESSION DE NAVIGATION, PAS UNE PAR PAGE. La clé est
-   * rangée dans `sessionStorage` sous l'identifiant du compte : rouvrir
-   * dix pages ne fait qu'une requête. Le `catch` LAISSE PASSER (une
-   * navigation privée qui refuse le rangement sème une fois par
-   * chargement, ce qui reste juste) — jamais l'inverse : un compteur
-   * faux serait pire qu'une requête de trop.
+   * ⚠️ UNE FOIS PAR DOCUMENT, PAS UNE PAR PAGE ni une par session : la
+   * marque vit dans un ensemble de module (voir `nouvellesSemees`, et
+   * la cause qu'elle corrige). Vingt navigations douces ne font qu'une
+   * requête ; un document neuf en refait une, et c'est nécessaire —
+   * l'état de React est reparti de zéro avec lui.
    * ⚠️ IL NE TOUCHE PAS AUX FICHES, ni à `compteLu`, ni à l'avatar : la
    * garde de la nº 142 reste entière (voir `lireLesNouvelles`).
    * ⚠️ LE MINUTEUR À ZÉRO N'EST PAS UN ORNEMENT : poser un état
@@ -439,15 +466,15 @@ export function MenuEspace({
    * blocs « Autre adresse » et « Équipe » — pas un second mécanisme.
    */
   useEffect(() => {
-    if (!idUtilisateur) return;
-    try {
-      const cle = `${CLE_NOUVELLES_SEMEES}${idUtilisateur}`;
-      if (sessionStorage.getItem(cle)) return;
-      sessionStorage.setItem(cle, "1");
-    } catch {
-      //  Rangement refusé : on sème quand même. Voir la note.
-    }
-    const minuteur = setTimeout(() => void lireLesNouvelles(), 0);
+    if (!idUtilisateur || nouvellesSemees.has(idUtilisateur)) return;
+    //  Posée AVANT la lecture : deux montages rapprochés du menu ne
+    //  doivent pas partir deux fois. Retirée si la lecture échoue.
+    nouvellesSemees.add(idUtilisateur);
+    const minuteur = setTimeout(() => {
+      void lireLesNouvelles().then((reussie) => {
+        if (!reussie) nouvellesSemees.delete(idUtilisateur);
+      });
+    }, 0);
     return () => clearTimeout(minuteur);
   }, [idUtilisateur, lireLesNouvelles]);
 
@@ -1880,11 +1907,27 @@ export function MenuEspace({
    * ⚠️ IL S'ÉTEINT TOUT SEUL : `nonLues` se recalcule de `notifications`,
    * que la fenêtre remet à jour quand on lit une nouvelle ou qu'on les
    * marque toutes (voir `onToutLu`, plus bas).
-   * ⚠️ IL NE DÉBORDE PAS DE LA BARRE, et c'est arithmétique : l'avatar
-   * (28 au doigt, 32 au web) est centré dans une cible de 40 — il reste
-   * 6 px de vide au doigt, 4 au web. Le point sort de 2 px du bord de
-   * l'avatar : il lui reste 4 px de marge au doigt, 2 au web. La zone
-   * du compte n'occupe donc pas un pixel de plus, et rien ne glisse.
+   * ██ §1-a (nº 668) — IL SE MET À CALIFOURCHON SUR LE CONTOUR ██
+   * ------------------------------------------------------------------
+   * LA nº 667 LE POSAIT DEHORS, collé au bord, et le propriétaire le
+   * voit ainsi : « à l'extérieur de l'avatar ». Il le veut À CHEVAL —
+   * moitié dedans, moitié dehors.
+   * LA CAUSE DU DÉFAUT EST GÉOMÉTRIQUE, et elle mérite un mot parce
+   * qu'elle n'est pas intuitive : `-top-0.5 -right-0.5` calait le point
+   * sur le COIN de la boîte carrée de l'avatar. Or l'avatar est un
+   * DISQUE : son coin haut droit est vide — le cercle passe bien plus
+   * bas, à l'intérieur. Un point posé au coin, même sans débord, tombe
+   * donc ENTIÈREMENT hors du dessin.
+   * LE REMÈDE, ET IL SE CALCULE : le contour du disque coupe la
+   * diagonale à 45°, donc à r × (1 − √2/2) ≈ 0,293 r du coin. Pour un
+   * avatar de 28 (r = 14) cela fait 4,1 px ; le point mesure 8 px, son
+   * centre est donc à 4 px de son propre coin. Les deux nombres
+   * coïncident à un dixième près : `top-0 right-0` — le point RANGÉ
+   * DANS le coin — pose son centre PILE sur le contour. Moitié sur
+   * l'avatar, moitié dehors, exactement la consigne.
+   * ⚠️ ET IL NE DÉBORDE PLUS DU TOUT : rangé dans la boîte de l'avatar,
+   * qui est elle-même centrée dans la cible de 40 px. La zone du compte
+   * n'occupe pas un pixel de plus qu'avant la nº 667.
    * ⚠️ AUCUNE COULEUR NOUVELLE : `bg-primaire`, le rose de la charte
    * (#FF2E6C depuis la nº 466) — celui que le propriétaire nomme.
    */
@@ -1896,7 +1939,7 @@ export function MenuEspace({
           aria-label={`${nonLues} nouvelle${nonLues > 1 ? "s" : ""} non lue${
             nonLues > 1 ? "s" : ""
           }`}
-          className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-primaire"
+          className="absolute top-0 right-0 h-2 w-2 rounded-full bg-primaire"
         />
       </span>
     ) : (

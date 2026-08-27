@@ -12,6 +12,7 @@ import {
   IconeEnveloppe,
   IconeHorloge,
   IconeHorsLigne,
+  IconeMainQuiSalue,
   type ComposantIcone,
 } from "@/components/Icones";
 //  §1 (nº 664) — la famille des pastilles d'événement : les deux
@@ -20,9 +21,6 @@ import {
   PastilleEvenement,
   type TonEvenement,
 } from "@/components/PastilleEvenement";
-//  §4 (nº 667) — le cœur de la marque, plié au contrat d'icône de la
-//  famille : c'est le FICHIER du propriétaire, affiché tel quel.
-import { IconeMarqueYokofolio } from "@/components/LogoYokofolio";
 //  §2 (nº 655) — la fenêtre du web rejoint la barre : le menu ancré,
 //  sa largeur et l'encadré des fenêtres de la barre, tous trois là où
 //  vit `MenuDeVerre`. `createPortal` part avec la plaque écrite à la
@@ -202,34 +200,48 @@ const CATALOGUE: Record<
       ligne », ROUGE « il manque quelque chose », ROSE « une décision est
       attendue ». Un accueil n'est aucun des trois : il n'appelle AUCUN
       GESTE, ce qui est la définition même de l'information.
-      ██ §4 (nº 667) — LE SYMBOLE EST L'ICÔNE DE LA MARQUE ██
-      Le cœur générique de la famille (nº 663) laisse la place au CŒUR DE
-      YOKOFOLIO, le fichier du propriétaire — `public/yokofolio-icone.png`,
-      affiché tel quel par `LogoYokofolio` (aucune retouche, aucune
-      variante : la règle d'AGENTS.md). C'est la seule notification qui
-      parle au nom du site lui-même ; elle porte donc sa marque.
-      ⚠️ ELLE N'HÉRITE PAS DE LA COULEUR, et c'est la limite d'un PNG :
-      les neuf autres symboles sont des tracés qui prennent le ton de
-      leur pastille (`currentColor`) ; celui-ci porte son rose de marque,
-      #E51859, quoi qu'il arrive. Mesuré sur la pastille « info »
-      (`sombre-haut`, #3E4650) : 2,10:1 — sous les 3:1 d'un signe. Le
-      compte rendu de la nº 667 le dit et propose ; le ton reste « info »
-      tant que le propriétaire n'a pas tranché.
+      ██ §2 (nº 668) — LE SYMBOLE EST UNE MAIN QUI SALUE ██
+      DEUX ESSAIS, DEUX REFUS, ET LE TROISIÈME EST LE BON. Le cœur
+      générique (nº 663) ne disait rien de particulier ; le FICHIER de
+      la marque (nº 667) ne pouvait pas hériter de la couleur de sa
+      pastille — une image ne le peut pas — et rendait 2,10:1 sur le
+      gris, sous le minimum d'un signe. La main est un TRACÉ de la
+      famille (voir `IconeMainQuiSalue`) : elle prend le ton du cercle
+      comme les neuf autres, et elle dit ce que la notification fait.
 
-      ██ §3 (nº 667) — LE TEXTE EN DEUX LIGNES ██
+      ██ §2 (nº 668) — ET LE TON PASSE AU ROSE ██
+      Le propriétaire l'appelle « attente/marque » : le rose ne dit plus
+      seulement « une décision est attendue », il dit AUSSI la voix du
+      site lui-même. C'est un élargissement de la règle de la nº 664, pas
+      une entorse — et il ne concerne QUE cette notification-ci, la seule
+      que YokoFolio écrive en son nom propre. Les trois autres tons
+      gardent leur sens au mot près.
+      ⚠️ CE QUE ÇA VAUT, MESURÉ : la main rose sur son voile rose rend
+      3,29:1 dans la liste et 3,82:1 dans une fenêtre — au-dessus des
+      3:1 d'un signe, là où l'image de la nº 667 était à 2,10.
+
+      ██ §3 (nº 668) — LE TEXTE, VERSION FINALE ██
       Les deux phrases du propriétaire, au mot près, séparées par un
       VRAI saut de ligne. Il tient dans la chaîne (`\n`) et non dans du
       JSX : ce catalogue est fait de chaînes, et une seule d'entre elles
       deviendrait un arbre. C'est `whitespace-pre-line` qui le rend
       visible, la classe que ce fichier emploie déjà pour le message de
-      l'administration — aucune classe nouvelle, aucun octet de plus. */
+      l'administration — aucune classe nouvelle, aucun octet de plus.
+      ⚠️ LES COMPTES QUI ONT REÇU L'ANCIENNE VERSION VOIENT LA NOUVELLE,
+      SANS AUCUNE MIGRATION, et ce n'est pas de la chance : c'est la
+      règle écrite en tête de ce fichier depuis la nº 132 — L'AFFICHAGE
+      DÉRIVE DU GENRE, jamais de ce que la base a écrit. La colonne
+      `titre` de la ligne déjà posée n'est qu'un repli pour un genre
+      inconnu ; le texte lu à l'écran vient d'ICI, et de nulle part
+      ailleurs. Changer ces deux lignes suffit — pour tout le monde, et
+      tout de suite. */
   bienvenue: {
-    symbole: IconeMarqueYokofolio,
-    ton: "info",
+    symbole: IconeMainQuiSalue,
+    ton: "attente",
     titre: `Bienvenue sur ${MARQUE_YOKOFOLIO.nom} !`,
     sousTitre:
-      "Explore les styles et suis les tatoueurs qui t'inspirent — tes " +
-      "favoris te suivront partout.\n" +
+      "Explore les styles, suis tes portfolios préférés et garde chaque " +
+      "photo qui t'inspire.\n" +
       "Tatoueur ? Ajoute ton portfolio et fais découvrir ton travail.",
   },
 };
