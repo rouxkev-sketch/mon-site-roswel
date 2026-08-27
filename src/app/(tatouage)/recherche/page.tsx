@@ -86,9 +86,41 @@ export const dynamic = "force-dynamic";
  *
  * ⚠️ IL VA AVEC `PREPARER_LA_RECHERCHE_A_LAVANCE = false` (nº 656), et
  * les deux ne font pas le même travail : celui-là interdit de remplir
- * la case À L'AVANCE, celui-ci interdit de la RELIRE APRÈS COUP. Il
- * fallait les deux pour que la phrase « la recherche ne se sert jamais
- * d'une copie » soit vraie de bout en bout.
+ * la case À L'AVANCE, celui-ci interdit de la RELIRE APRÈS COUP.
+ *
+ * ██ §1 (nº 669) — CE VERROU NE FERME QU'UNE PORTE SUR DEUX ██
+ * ------------------------------------------------------------------
+ * JE CORRIGE ICI CE QUE LA nº 665 AFFIRME AU-DESSUS, parce que c'est
+ * faux et que la phrase servirait de référence. Elle dit que ce réglage
+ * commande « combien de secondes le routeur du navigateur a le droit de
+ * garder les données de cette page ». Il n'en commande qu'UNE PARTIE.
+ * LE NAVIGATEUR TIENT DEUX RÉSERVES, ET ELLES N'OBÉISSENT PAS AU MÊME
+ * NOMBRE (vérifié dans le moteur, Next 16.2.10) :
+ *  · LA RÉSERVE DE RETOUR (« BFCache ») — c'est CELLE-CI que le réglage
+ *    commande : sa valeur arrive dans `computeDynamicStaleAt`
+ *    (client/components/segment-cache/bfcache.js), et nulle part
+ *    ailleurs. C'est aussi celle qu'un retour arrière lit EN IGNORANT
+ *    la durée (le `-1` cité plus haut) ;
+ *  · LA RÉSERVE DE SEGMENTS — celle qui range le contenu des pages —
+ *    prend la sienne AILLEURS, et elle a un PLANCHER :
+ *      `getStaleTimeMs = (s) => Math.max(s, 30) * 1000`
+ *    (client/components/segment-cache/cache.js). TRENTE SECONDES AU
+ *    MINIMUM, quoi que le serveur annonce — y compris zéro.
+ * ⚠️ ET NOS RÉPONSES N'ANNONCENT RIEN DU TOUT : mesuré au banc, une
+ * réponse de navigation de « /recherche » ne porte AUCUN en-tête
+ * `x-nextjs-stale-time` (l'accueil, lui, porte « 300 »). Sans en-tête,
+ * le moteur retombe sur `STATIC_STALETIME_MS`, soit CINQ MINUTES
+ * (`getStaleAtFromHeader`, même fichier).
+ * ⚠️ CE QUE ÇA NE PROUVE PAS, ET JE NE VEUX PAS QUE LA NOTE LE LAISSE
+ * CROIRE : la nº 669 a rejoué DOUZE FOIS le scénario complet du
+ * propriétaire au banc (accueil à cartes, clic style, clic fiche, deux
+ * retours, second clic style), sur les deux appareils et à six
+ * cadences, avec un serveur ralenti à 1,2 s — la page servie s'est
+ * accordée à l'adresse à chaque fois et la garde n'a jamais parlé. La
+ * brèche décrite ci-dessus EXISTE DANS LE MOTEUR ; elle n'a pas été
+ * prise sur le fait. Rien n'a donc été corrigé à la nº 669, et c'est
+ * délibéré (consigne du propriétaire : pas de correction sans
+ * reproduction).
  */
 export const unstable_dynamicStaleTime = 0;
 

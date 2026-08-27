@@ -99,5 +99,16 @@ export const ADRESSE_RECHERCHE = "/recherche";
  * écrit sur la page elle-même (app/(tatouage)/recherche/page.tsx), avec
  * le relevé du banc qui dit ce que ce verrou change et ce qu'il ne
  * change pas.
+ *
+ * ██ §3 (nº 669) — ET CE SECOND VERROU NE COUVRE QUE LA MOITIÉ ██
+ * ------------------------------------------------------------------
+ * Le réglage de la nº 665 commande la réserve DE RETOUR, pas la réserve
+ * DE SEGMENTS — laquelle a un plancher de trente secondes qu'aucun
+ * réglage n'abaisse. Le raisonnement complet, avec les endroits du
+ * moteur et les mesures, est écrit en tête de la page de recherche ; il
+ * n'est pas recopié ici pour qu'il n'y ait qu'UN endroit à tenir à jour.
+ * ⚠️ AUCUNE TROISIÈME CORRECTION N'A ÉTÉ POSÉE À LA nº 669 : le défaut
+ * n'a pas été reproduit au banc (douze rejeux du scénario complet), et
+ * la règle de la passe était de ne rien corriger à l'aveugle.
  */
 export const PREPARER_LA_RECHERCHE_A_LAVANCE = false;
