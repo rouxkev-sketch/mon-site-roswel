@@ -1730,32 +1730,22 @@ export const COULEURS_SOMBRE = {
    * et pour la famille des pastilles d'événement.
    */
   erreur: "#FF4D45",
-  /**
-   * ██ §3 (nº 672) — L'OR DE LA BIENVENUE, ET DE RIEN D'AUTRE ██
-   * ------------------------------------------------------------------
-   * POURQUOI IL EXISTE : le propriétaire veut une ÉTOILE DORÉE sur un
-   * cercle presque noir pour le message de bienvenue — le seul que
-   * YokoFolio écrive en son nom propre. Le doré n'existait nulle part
-   * dans la charte, et il refuse (à juste titre) qu'on l'écrive en dur
-   * dans un composant : c'est exactement la faute que la nº 664 a dû
-   * rattraper sur le vert #34D399.
-   * LA VALEUR, ET ELLE SE CALCULE COMME LES AUTRES : c'est l'AMBRE PUR
-   * — teinte 45°, saturation 100 %, valeur pleine. La méthode est celle
-   * de la nº 466 sur le rose et de la nº 664 sur le rouge : la teinte de
-   * la famille, la saturation portée à plein pour claquer sur une base
-   * sombre et froide. Aucune teinte n'est inventée à la main.
-   * ⚠️ CE QU'IL REND, MESURÉ : 11,6:1 sur le bleu nuit #0B0F14 — très
-   * au-dessus des 3:1 exigés d'un signe. C'est voulu : sur un cercle
-   * presque noir, l'étoile doit BRILLER, et le noir du cercle est ce qui
-   * le permet.
-   * ⚠️ SON EMPLOI EST STRICT, comme celui du vert et du rouge : le ton
-   * `marque` de la famille des pastilles (`components/PastilleEvenement`),
-   * et rien d'autre. Ce n'est pas un cinquième accent à distribuer — ni
-   * un texte, ni un bouton, ni une bordure.
-   * ⚠️ LES ARTISANS NE LE VOIENT PAS : il ne vit que dans le périmètre
-   * tatouage, comme les quatre jetons au-dessus.
-   */
-  or: "#FFBF00",
+  /*  ██ §3 (nº 672), SUPPRIMÉ PAR LE §4 (nº 674) — LE JETON `or` ██
+      ------------------------------------------------------------------
+      CE QU'IL ÉTAIT : l'ambre pur #FFBF00, créé à la nº 672 pour une
+      seule chose — l'étoile dorée du message de bienvenue. Le
+      propriétaire l'a jugé HORS CHARTE (« le doré ne convient pas ») et
+      l'étoile passe au ROSE de la charte.
+      POURQUOI IL DISPARAÎT ENTIÈREMENT, ET PAS SEULEMENT DE L'ÉTOILE :
+      il n'avait qu'un porteur, le ton `marque` de la famille des
+      pastilles. Sans lui, ce jeton ne serait plus qu'une couleur que
+      rien n'emploie — c'est-à-dire une couleur que quelqu'un finirait
+      par employer sans savoir pourquoi elle existe. Il part donc aussi
+      de lib/theme (`--rw-sombre-or`) et de globals.css
+      (`--color-sombre-or`) : la chaîne entière, ou rien.
+      ⚠️ LA CHARTE REVIENT DONC À SES QUATRE COULEURS DE SENS — rose,
+      vert, rouge, gris (nº 664) —, et c'est bien ainsi que le
+      propriétaire la veut. */
   /**
    * ██ §4 (nº 466) — LE ROSE DU PRODUIT TATOUAGE, RAVIVÉ ██
    * ------------------------------------------------------------------

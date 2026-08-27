@@ -11,8 +11,8 @@ import {
   IconeDrapeau,
   IconeEnveloppe,
   //  §3 (nº 672) — l'étoile de la bienvenue remplace la main qui salue
-  //  (nº 668), supprimée avec elle : le propriétaire la veut dorée sur
-  //  un cercle presque noir.
+  //  (nº 668), supprimée avec elle. §4 (nº 674) : elle est ROSE sur un
+  //  cercle gris, et non plus dorée sur un cercle presque noir.
   IconeEtoile,
   IconeHorloge,
   IconeHorsLigne,
@@ -211,20 +211,23 @@ const CATALOGUE: Record<
       gris, sous le minimum d'un signe ; la MAIN QUI SALUE (nº 668) était
       un tracé juste de la famille, mais ce n'est pas ce qu'il veut voir.
 
-      ██ §3 (nº 672) — UNE ÉTOILE DORÉE SUR UN CIEL PRESQUE NOIR ██
-      LE SYMBOLE est `IconeEtoile` — un pentagramme régulier tracé au
-      trait de la famille, comme les neuf autres (le calcul est écrit
-      chez l'icône). LE TON est `marque`, le cinquième de la famille, et
-      il est né pour cette ligne-ci : cercle au FOND DU SITE (#0B0F14),
-      étoile à l'OR (#FFBF00) — les deux couleurs que le propriétaire
-      nomme, toutes deux en jetons, aucune écrite ici.
-      ⚠️ LE ROSE REPREND SON SENS STRICT AVEC CE CHANGEMENT. La nº 668
-      l'avait élargi à « la voix du site » faute d'une couleur pour
-      cela ; il y en a une désormais. `attente` redevient ce que la
-      nº 664 en disait, et rien d'autre : une décision est attendue.
-      ⚠️ CE QUE ÇA VAUT, MESURÉ AU PIXEL RELU, aux deux tailles : l'étoile
-      rend 11,6:1 sur son cercle — très au-dessus des 3:1 d'un signe, là
-      où la main rose était à 3,29 et l'image de la nº 667 à 2,10.
+      ██ §3 (nº 672), CORRIGÉ PAR LE §4 (nº 674) — L'ÉTOILE, EN ROSE ██
+      LE SYMBOLE NE CHANGE PAS : `IconeEtoile`, un pentagramme régulier
+      tracé au trait de la famille comme les neuf autres (le calcul est
+      écrit chez l'icône).
+      LES COULEURS, ELLES, CHANGENT. La nº 672 l'avait faite DORÉE sur
+      un cercle presque noir ; le propriétaire juge le doré HORS CHARTE
+      et tranche : ÉTOILE ROSE (le primaire), CERCLE AU GRIS de la
+      famille « info ». C'est ce que porte le ton `marque`, dont le
+      jeton `or` — né pour l'étoile — disparaît avec le doré.
+      ⚠️ LE TON RESTE `marque`, ET NON `info`, pour une raison de
+      mécanique : `info` peint son symbole en BLANC, et le repeindre en
+      rose changerait les quatre autres écrans d'information. Le détail
+      est écrit chez `PastilleEvenement`.
+      ⚠️ CE QUE ÇA VAUT, MESURÉ : le rose sur le gris `haut` rend
+      2,67:1 — sous les 3:1 d'un signe, là où le doré rendait 11,63. Le
+      propriétaire le sait ; le chiffre et le remède éventuel (un cran
+      de gris plus bas, 3,93:1) sont notés chez `PastilleEvenement`.
 
       ██ §3 (nº 668) — LE TEXTE, VERSION FINALE ██
       Les deux phrases du propriétaire, au mot près, séparées par un
@@ -377,7 +380,16 @@ export function FenetreNotifications({
       n'importe quel test naïf.
       ⚠️ AU DOIGT, JAMAIS D'ÉCOUTEUR : la page couvre tout l'écran, et
       un appui sur son titre passerait pour un clic « à côté ». */
-  useVoileDeLaPage(Boolean(ancre), ancre);
+  /*  §2 (nº 674) — PLUS D'ÉPARGNE AUTOUR DE LA ZONE DU COMPTE : le trou
+      du voile est un RECTANGLE aux dimensions du bloc, et il produisait
+      le « carré plus clair » que le propriétaire relève au clic sur
+      l'avatar. Cette surface-ci part de la MÊME zone que « Mon compte »
+      (`ancre`), donc du même trou. La raison d'épargner ne vaut que
+      pour ce qu'on lit ou écrit pendant qu'une surface est ouverte ; ce
+      n'est pas le cas ici. Le raisonnement complet est chez MenuEspace.
+      ⚠️ `ancre` RESTE PASSÉE AILLEURS : c'est elle qui place le menu
+      sous le bouton. Seul le voile cesse de la lire. */
+  useVoileDeLaPage(Boolean(ancre));
   useEffect(() => {
     if (auDoigt || !ancre) return;
     function auPointeur(evenement: MouseEvent) {

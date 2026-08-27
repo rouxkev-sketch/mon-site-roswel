@@ -238,7 +238,36 @@ export function MenuEspace({
   //  §2 (nº 293), §3 (nº 294) — LA FENÊTRE DU COMPTE assombrit tout
   //  l'écran, et son déclencheur reste clair. Web uniquement : le
   //  crochet s'écarte de lui-même au doigt.
-  useVoileDeLaPage(ouvert, zone);
+  /**
+   * ██ §2 (nº 674) — PLUS DE TROU AUTOUR DE L'AVATAR ██
+   * ------------------------------------------------------------------
+   * LE DÉFAUT DU PROPRIÉTAIRE : « cliquer l'avatar de la barre dessine
+   * un carré plus clair que le fond autour de lui ». Il soupçonnait le
+   * focus du navigateur ; ce n'est pas lui — le contour de mise au
+   * point est rond (il suit le `rounded-full` du bouton) et rose.
+   * LA CAUSE EST LE VOILE DE LA PAGE, et elle se lit dans sa propre
+   * note (nº 294) : « le bloc qui contient l'élément ouvert RESTE
+   * CLAIR — sinon on ne lit plus ce qu'on écrit », et il l'épargne en
+   * PERÇANT un trou aux dimensions de sa boîte. Le bloc passé ici est
+   * `zone`, un conteneur en rangée SANS arrondi : le trou est donc un
+   * RECTANGLE de pleine lumière au milieu d'un écran assombri. C'est
+   * exactement le « carré plus clair » — il n'est pas dessiné, c'est
+   * le reste qui est peint autour.
+   * LE REMÈDE : ON N'ÉPARGNE PLUS RIEN. La raison d'épargner ne vaut
+   * que pour ce qu'on LIT ou ce qu'on ÉCRIT pendant que la surface est
+   * ouverte — l'encadré du moteur, où l'on tape une ville. Ici, le
+   * bloc n'est qu'un bouton rond : rien à lire, rien à écrire, et la
+   * fenêtre est ailleurs. Le voile redevient plein écran, uniforme,
+   * comme le prévoit déjà la signature du crochet (« Omis : rien n'est
+   * épargné »). Pas une ligne de mécanisme n'est touchée.
+   * ⚠️ CE QUE ÇA CHANGE POUR L'ŒIL : l'avatar s'assombrit avec tout le
+   * reste au lieu de rester en pleine lumière dans son rectangle. C'est
+   * la demande — « le fond reste inchangé au clic ».
+   * ⚠️ LE MOTEUR DE RECHERCHE NE BOUGE PAS D'UN PIXEL : il garde son
+   * épargne (`MoteurTatouage`, `ChampLocalisation`), et pour la bonne
+   * raison — on y saisit.
+   */
+  useVoileDeLaPage(ouvert);
   /**
    * §3 (nº 330) — LE RETOUR DU TÉLÉPHONE REFERME CE MENU.
    * ------------------------------------------------------------------
@@ -1378,6 +1407,12 @@ export function MenuEspace({
         petit. Voir le §1 posé sur la tuile pour la cause et le calcul. */
     pastille:
       "absolute -right-0.5 -top-0.5 min-w-[16px] h-4 px-1 rounded-full bg-primaire " +
+      //  §3 (nº 674) — LA DÉCOUPE : un anneau de la couleur du fond de
+      //  l'encadré qui porte la tuile (`bg-sombre-eleve`, l'écriture
+      //  unique CLASSE_ENCADRE_FENETRE). Voir la note posée sur le
+      //  point rose de la barre pour le POURQUOI d'un `ring` plutôt
+      //  que d'une bordure : il ne touche pas la géométrie.
+      "ring-2 ring-sombre-eleve " +
       "text-[11px] font-bold text-white leading-4 text-center",
     /*  ██ §5 (nº 641) — L'AIR SOUS LA PHOTO ÉGALE CELUI AU-DESSUS ██
         AU-DESSUS : 24 px, le `pt-[max(24px,env(safe-area-inset-top))]`
@@ -1440,6 +1475,10 @@ export function MenuEspace({
         nº 537. Voir le §1 posé sur la tuile. */
     pastille:
       "absolute -right-0.5 -top-0.5 min-w-[14px] h-[14px] px-1 rounded-full bg-primaire " +
+      //  §3 (nº 674) — la même découpe qu'au doigt, même anneau, même
+      //  jeton : les deux surfaces posent leur compteur sur le MÊME
+      //  encadré (`bg-sombre-eleve`).
+      "ring-2 ring-sombre-eleve " +
       "text-[10px] font-bold text-white leading-[14px] text-center",
     //  §1 (nº 557) — 16 → 20 px, et les côtés avec (voir la note du
     //  tableau) : les quatre côtés de la fenêtre restent égaux.
@@ -1959,6 +1998,27 @@ export function MenuEspace({
    * n'occupe pas un pixel de plus qu'avant la nº 667.
    * ⚠️ AUCUNE COULEUR NOUVELLE : `bg-primaire`, le rose de la charte
    * (#FF2E6C depuis la nº 466) — celui que le propriétaire nomme.
+   *
+   * ██ §3 (nº 674) — IL EST DÉCOUPÉ DANS LA PHOTO, PLUS POSÉ DESSUS ██
+   * ------------------------------------------------------------------
+   * CE QUE LE PROPRIÉTAIRE DEMANDE : « un contour de la couleur du fond
+   * du site autour d'elle, SANS changer son diamètre — effet découpe :
+   * elle ne touche plus la photo ».
+   * COMMENT, ET POURQUOI PAS UNE BORDURE : une `border` mange l'
+   * intérieur de la pastille (le rose passerait de 8 à 4 px) ou
+   * l'agrandit, selon le modèle de boîte. `ring-2` est un OMBRAGE
+   * (`box-shadow`) : il se peint À CÔTÉ du disque sans entrer dans sa
+   * géométrie. Le point reste donc à 8 px exactement, à la place
+   * calculée au §1-a, et gagne 2 px d'anneau tout autour.
+   * ⚠️ CE N'EST PAS UN CONTOUR AU SENS DE LA CHARTE, et c'est
+   * l'exception que le propriétaire assume : un anneau de la COULEUR DU
+   * FOND n'est pas un trait qu'on voit, c'est un vide. On ne dessine
+   * rien — on retire de la photo la couronne où le rose la touchait.
+   * ⚠️ LA COULEUR EST CELLE DU FOND DU SITE (`ring-sombre-fond`,
+   * #0B0F14), pas celle de la barre : la barre est en VERRE (elle
+   * laisse passer ce qui défile dessous) — un anneau à sa couleur
+   * n'existe pas, elle n'en a pas de fixe. Le fond du site est ce qui
+   * se rapproche le plus d'un vide, et c'est ce qu'il nomme.
    */
   const avatarDeLaBarre =
     nonLues > 0 ? (
@@ -1968,7 +2028,8 @@ export function MenuEspace({
           aria-label={`${nonLues} nouvelle${nonLues > 1 ? "s" : ""} non lue${
             nonLues > 1 ? "s" : ""
           }`}
-          className="absolute top-0 right-0 h-2 w-2 rounded-full bg-primaire"
+          className="absolute top-0 right-0 h-2 w-2 rounded-full bg-primaire
+                     ring-2 ring-sombre-fond"
         />
       </span>
     ) : (

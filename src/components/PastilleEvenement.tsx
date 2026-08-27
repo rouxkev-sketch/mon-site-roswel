@@ -72,35 +72,40 @@ import type { ComposantIcone } from "@/components/Icones";
  * symbole passe du texte doux au texte plein — c'est ce qui le rend
  * « net » sans lui donner de couleur.
  *
- * ██ §3 (nº 672) — UN CINQUIÈME TON : `marque`, LA VOIX DU SITE ██
+ * ██ §3 (nº 672), REFAIT PAR LE §4 (nº 674) — LE TON `marque` ██
  * ------------------------------------------------------------------
- * CE QUE C'EST, ET IL EST DEMANDÉ NOMMÉMENT : le cercle presque noir à
- * l'ÉTOILE DORÉE du message de bienvenue. Le propriétaire choisit les
- * deux couleurs — « fond du site #0B0F14, étoile dorée/ambre ».
- * POURQUOI UN TON, ET PAS UN CAS PARTICULIER ÉCRIT DANS LE CATALOGUE :
- * parce que c'est exactement ce que ce fichier existe pour empêcher. Un
- * cercle peint à la main dans `FenetreNotifications` serait le dixième
- * du relevé de la nº 663 — une écriture qui ne suivrait plus la famille.
- * Un ton de plus, c'est une ligne de plus dans la table, et le reste
- * (les deux tailles, le trait, la géométrie) est repris sans un mot.
- * ⚠️ IL NE CASSE PAS LA RÈGLE DES QUATRE SENS, IL LA PROLONGE. Les
- * quatre disent ce qu'IL FAUT COMPRENDRE d'un événement (attendre,
- * c'est fait, il manque quelque chose, on t'informe). Celui-ci ne dit
- * rien de l'événement : il dit QUI PARLE — YokoFolio en son nom propre.
- * C'est la suite directe du §2 de la nº 668, qui avait déjà élargi le
- * rose à « la voix du site » ; le propriétaire lui donne sa couleur à
- * lui, l'élargissement du rose est donc annulé et le rose reprend son
- * sens strict.
- * ⚠️ IL N'A QU'UN SEUL PORTEUR, et c'est ce qui le garde sûr : la
- * bienvenue. Aucun autre écran ne doit le prendre sans que le
- * propriétaire le demande.
- * ⚠️ SON CERCLE EST PLUS SOMBRE QUE CE QUI LE PORTE, ET C'EST UN CHOIX
- * ASSUMÉ — je le dis parce que la nº 664 reprochait exactement cela au
- * rose d'alors (« il faisait un trou »). La différence est que ce
- * n'était PAS voulu à la nº 664, et que ça l'est ici : un ciel de nuit
- * pour une étoile. Ce qui compte est le contraste de l'ÉTOILE sur son
- * cercle (11,6:1), pas celui du cercle sur la rangée (1,16:1 dans une
- * fenêtre, 1,25:1 sur une rangée non lue).
+ * CE QU'IL ÉTAIT À LA nº 672 : un cercle au FOND DU SITE (#0B0F14) et
+ * une étoile DORÉE, avec un jeton `or` créé pour elle. Le propriétaire
+ * l'a jugé HORS CHARTE et tranche : « l'étoile passe en ROSE
+ * (primaire), le cercle au GRIS de la famille info ».
+ * CE QU'IL DEVIENT : le gris de `info` (`bg-sombre-haut`, le barreau
+ * des empilements) et le ROSE de la charte. Aucune couleur nouvelle —
+ * les deux jetons existaient bien avant la nº 672.
+ *
+ * ⚠️ POURQUOI CE TON SURVIT ALORS QUE L'OR MEURT. Le propriétaire
+ * demande de retirer « ce qui ne sert plus » ; voici la réponse
+ * précise, cas par cas :
+ *  · LE JETON `or` EST SUPPRIMÉ, et de partout — config/tatouage,
+ *    lib/theme, globals.css. Il était né à la nº 672 pour cette seule
+ *    étoile ; plus aucun porteur, il meurt avec elle ;
+ *  · LE TON `marque`, LUI, RESTE NÉCESSAIRE, et ce n'est pas un
+ *    attachement : il est la SEULE combinaison « cercle gris + symbole
+ *    ROSE » de la famille. `info` peint son symbole en BLANC
+ *    (`text-sombre-texte`) ; lui donner du rose changerait les QUATRE
+ *    autres écrans d'information (demande de style, style refusé,
+ *    liste vide, la cloche du vide), ce que personne n'a demandé. Un
+ *    ton de plus est la façon la plus courte de ne toucher à rien.
+ * ⚠️ IL N'A TOUJOURS QU'UN SEUL PORTEUR : la bienvenue.
+ *
+ * ⚠️ CE QUE ÇA VAUT, MESURÉ, ET JE LE DIS PLUTÔT QUE DE LE TAIRE : le
+ * rose sur le gris `haut` rend 2,67:1 — SOUS les 3:1 qu'on exige d'un
+ * signe. Ce n'est pas une objection à la décision du propriétaire,
+ * c'est un fait qu'il doit connaître : le doré rendait 11,63:1, et le
+ * rose sur son propre voile (ton `attente`) rend 3,29:1. S'il veut un
+ * jour les 3:1 SANS quitter le gris, UN SEUL CRAN suffit — le même
+ * rose sur `bg-sombre-eleve` rend 3,93:1. Rien n'est changé de ma
+ * propre initiative : c'est le gris de `info` qui est demandé, c'est
+ * celui-là qui est posé.
  */
 export type TonEvenement =
   | "attente"
@@ -114,10 +119,10 @@ export const TON_PASTILLE: Record<TonEvenement, string> = {
   valide: "bg-sombre-succes/20 text-sombre-succes",
   probleme: "bg-sombre-erreur/20 text-sombre-erreur",
   info: "bg-sombre-haut text-sombre-texte",
-  //  §3 (nº 672) — PAS DE VOILE ICI NON PLUS, et pour l'autre raison :
-  //  le fond n'est pas une dilution de l'or, c'est le FOND DU SITE, à
-  //  plein. Les deux jetons sont ceux que le propriétaire nomme.
-  marque: "bg-sombre-fond text-sombre-or",
+  //  §4 (nº 674) — le gris de `info`, et le ROSE de la charte. Comme
+  //  `info`, il ne prend PAS de voile : un gris dilué sur un gris ne
+  //  fait pas un disque (voir la note des quatre tons ci-dessus).
+  marque: "bg-sombre-haut text-primaire",
 };
 
 /**

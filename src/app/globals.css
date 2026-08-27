@@ -115,11 +115,6 @@
       rendait que 2,4:1 sur son propre voile. Voir COULEURS_SOMBRE. */
   --color-sombre-succes: var(--rw-sombre-succes);
   --color-sombre-erreur: var(--rw-sombre-erreur);
-  /*  §3 (nº 672) — L'OR DE LA BIENVENUE : l'ambre pur (teinte 45°,
-      saturation 100 %), calculé comme le rose de la nº 466 et le rouge
-      de la nº 664. Il ne sert qu'au ton `marque` d'une pastille
-      d'événement — voir COULEURS_SOMBRE.or. */
-  --color-sombre-or: var(--rw-sombre-or);
   /*  §5 (nº 388) — le bleu des liens qui sortent du site, et son
       éclaircissement au survol. */
   --color-sombre-lien: var(--rw-sombre-lien);

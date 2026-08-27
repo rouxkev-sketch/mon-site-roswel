@@ -332,7 +332,16 @@ export function FenetreLangue({
       second : on lui donne l'ancre, il remonte au bloc qui la contient,
       pose le voile percé et l'enlève. Il sort de lui-même au doigt (la
       page plein écran est opaque, il n'y a rien à assombrir). */
-  useVoileDeLaPage(Boolean(ancre), ancre);
+  /*  §2 (nº 674) — PLUS D'ÉPARGNE AUTOUR DE LA ZONE DU COMPTE : le trou
+      du voile est un RECTANGLE aux dimensions du bloc, et il produisait
+      le « carré plus clair » que le propriétaire relève au clic sur
+      l'avatar. Cette surface-ci part de la MÊME zone que « Mon compte »
+      (`ancre`), donc du même trou. La raison d'épargner ne vaut que
+      pour ce qu'on lit ou écrit pendant qu'une surface est ouverte ; ce
+      n'est pas le cas ici. Le raisonnement complet est chez MenuEspace.
+      ⚠️ `ancre` RESTE PASSÉE AILLEURS : c'est elle qui place le menu
+      sous le bouton. Seul le voile cesse de la lire. */
+  useVoileDeLaPage(Boolean(ancre));
 
   //  Échap ferme, et la page ne défile plus derrière.
   //  §1 (nº 469) — le blocage passe par le VERROU COMPTÉ
