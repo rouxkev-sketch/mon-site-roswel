@@ -53,6 +53,20 @@ import { ADRESSE_RECHERCHE } from "@/lib/chemin-recherche";
  * ⚠️ IL N'EST PAS UNE SONDE : rien à armer, aucune adresse à taper. Il
  * tourne toujours, comme la boîte noire — un défaut se constate APRÈS
  * coup, et une trace qui attend qu'on l'arme ne sert à rien.
+ *
+ * ⚠️ ██ IL MENT SI L'ON TRUQUE L'HORLOGE (constaté à la nº 671) ██
+ * Pour rejouer une pause de trente minutes sans attendre trente
+ * minutes, le banc peut truquer le temps (`page.clock.install()` de
+ * Playwright, qui remplace `Date`, `performance.now` et les minuteurs).
+ * CE TÉMOIN N'Y SURVIT PAS, et il faut le savoir : il compare l'heure
+ * TRUQUÉE (`performance.now()`) aux horodatages des requêtes, que le
+ * navigateur, lui, continue de donner en temps RÉEL. Les deux ne sont
+ * plus sur la même échelle — il a annoncé « AUCUNE REQUÊTE » douze fois
+ * alors qu'une requête partait à chaque fois.
+ * LA RÈGLE POUR LES BANCS : sous horloge truquée, on lit le réseau du
+ * banc lui-même (`page.on("request")`), jamais cette ligne-ci. Dans un
+ * vrai navigateur — celui du propriétaire — aucune horloge n'est
+ * truquée et la ligne dit vrai ; c'est pour ELLE qu'elle est écrite.
  */
 
 /** Ce qu'on regarde AVANT l'arrivée : la navigation elle-même, requête
