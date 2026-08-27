@@ -16,6 +16,7 @@ import {
 } from "@/lib/chemin-recherche";
 //  §1 (nº 654) — la boîte noire de navigation (mesure temporaire).
 import { noterNavigation } from "@/lib/boite-noire";
+import { demanderLesComptes } from "@/lib/creations-par-style";
 //  §1 (nº 673) — le filet de la garde : l'adresse courante, lue PENDANT
 //  le rendu par le magasin de la nº 154 (les deux portes : `popstate` et
 //  `pushState`/`replaceState`), et le signe de chargement du site.
@@ -501,6 +502,29 @@ export function IndexTatoueurs({
     demarrerLeSigneManuel(CLE_SIGNE_PAGE_EN_RETARD);
     return () => finirLeSigneManuel(CLE_SIGNE_PAGE_EN_RETARD);
   }, [enRetardSurLAdresse]);
+
+  /**
+   * §1 (nº 683) — LES NOMBRES DU MENU DES STYLES, DEMANDÉS ICI.
+   * ------------------------------------------------------------------
+   * POURQUOI CETTE LIGNE EXISTE, ET POURQUOI ELLE EST *ICI*. La demande
+   * partait jusqu'à la nº 682 du premier rendu du moteur de recherche —
+   * donc de CHAQUE page du site, en-tête oblige. Le balayage nº 681 l'a
+   * relevée sur les trente mesures de page, y compris « mentions
+   * légales » et « nouveau mot de passe » : ~255 ms pour des écrans qui
+   * n'affichent aucune création.
+   * CE COMPOSANT EST LE BON ENDROIT parce qu'il est monté par
+   * `RenduAccueil`, et par lui seul : « / » et « /recherche », les deux
+   * pages bâties autour du menu des styles. Les nombres y sont donc
+   * prêts avant qu'on ouvre le menu — RIEN N'Y CHANGE. Partout
+   * ailleurs, c'est le menu lui-même qui les demande en s'ouvrant
+   * (MoteurTatouage, même passe).
+   * ⚠️ ELLE NE COÛTE PAS UNE REQUÊTE DE PLUS : le magasin ne demande
+   * qu'une fois par chargement de page (`demandeLancee`), et cette
+   * page-ci est justement celle qui la payait déjà.
+   */
+  useEffect(() => {
+    demanderLesComptes();
+  }, []);
 
   /**
    * CE QUE LES CHAMPS DU MOTEUR AFFICHENT — et rien de plus.

@@ -58,7 +58,45 @@ let comptes: ComptesCreations = VIDE;
 let demandeLancee = false;
 const abonnes = new Set<() => void>();
 
-/** La demande — lancée UNE fois, au premier abonnement. */
+/**
+ * ██ §1 (nº 683) — LA DEMANDE NE PART PLUS TOUTE SEULE ██
+ * ==================================================================
+ * CE QU'ELLE FAISAIT, ET CE QUE ÇA COÛTAIT. Elle était déclenchée par
+ * `sAbonner`, c'est-à-dire par le PREMIER RENDU du moteur de
+ * recherche — et le moteur vit dans l'en-tête de TOUTES les pages du
+ * produit. Le balayage nº 681 l'a relevée sur les TRENTE mesures de
+ * page, mentions légales, contact et « nouveau mot de passe »
+ * compris : ~255 ms de requête sur des écrans qui n'affichent aucune
+ * création, et c'est cette queue qui tenait toute page publique
+ * au-dessus de 540 ms quand son premier écran était à ~150.
+ *
+ * ⚠️ CE QUE CES NOMBRES SERVENT, ET IL FAUT LE DIRE PARCE QUE ÇA
+ * CHANGE LA RÉPONSE : ils ne garnissent RIEN sur la page. Leur seul
+ * porteur est le menu « Explorer » (MoteurTatouage), en face de chaque
+ * style. Aucune page ne les montre — pas même l'accueil.
+ *
+ * D'OÙ DEUX DÉCLENCHEURS EXPLICITES, ET PLUS AUCUN DÉCLENCHEMENT
+ * AUTOMATIQUE :
+ *  · LA MOSAÏQUE (`IndexTatoueurs`) les demande à son montage. Elle
+ *    n'est montée que par `RenduAccueil` — donc « / » et
+ *    « /recherche », les deux pages bâties autour du menu des styles.
+ *    Sur celles-là RIEN NE CHANGE : les nombres sont là avant qu'on
+ *    ouvre le menu, exactement comme avant ;
+ *  · LE MENU LUI-MÊME, à son ouverture. C'est le filet : sur une page
+ *    sans mosaïque, ouvrir « Explorer » déclenche la demande, et le
+ *    menu se remplit — un peu plus tard qu'avant, jamais jamais.
+ *
+ * ⚠️ ET LE MENU SUPPORTE DÉJÀ L'ATTENTE PAR CONSTRUCTION : tant que
+ * rien n'est arrivé, `comptesConnus` rend faux et AUCUN nombre n'est
+ * écrit (voir plus bas). Ce n'est pas une tolérance qu'on ajoute ici,
+ * c'est celle de la nº 216 — la même qui couvre déjà une base
+ * injoignable.
+ */
+export function demanderLesComptes(): void {
+  demander();
+}
+
+/** La demande — lancée UNE fois par chargement de page. */
 function demander() {
   if (demandeLancee || typeof window === "undefined") return;
   demandeLancee = true;
@@ -78,9 +116,12 @@ function demander() {
     });
 }
 
+/*  ⚠️ S'ABONNER NE DEMANDE PLUS RIEN (§1 nº 683). C'est ici que la
+    requête partait, et c'est tout le défaut : s'abonner, c'est se
+    rendre — or le moteur se rend sur chaque page du site. Lire les
+    nombres et les DEMANDER sont deux gestes distincts, désormais. */
 function sAbonner(prevenir: () => void) {
   abonnes.add(prevenir);
-  demander();
   return () => {
     abonnes.delete(prevenir);
   };

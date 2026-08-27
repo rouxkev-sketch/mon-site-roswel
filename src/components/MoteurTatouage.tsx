@@ -18,6 +18,7 @@ import {
   compteDeLaCategorie,
   compteDuStyle,
   comptesConnus,
+  demanderLesComptes,
   useComptesCreations,
 } from "@/lib/creations-par-style";
 import { ChampLocalisation } from "@/components/ChampLocalisation";
@@ -1121,6 +1122,21 @@ export function MoteurTatouage({
    */
   const comptes = useComptesCreations();
   const nombresSus = comptesConnus(comptes);
+  /**
+   * §1 (nº 683) — L'OUVERTURE DU MENU DEMANDE LES NOMBRES, AU WEB.
+   * ------------------------------------------------------------------
+   * ⚠️ UN HANDLER À PART, ET NON `surOuvertureExplorer` : celui-là
+   * RANGE LA PAGE au doigt (`remonterSansKeyboard` sur `blocExplorer`),
+   * et le brancher sur le menu du web y amènerait un mécanisme de
+   * position qui n'y a jamais été — exactement ce que les pièges
+   * nº 378/379 interdisent. Celui-ci ne fait qu'une chose.
+   * Le doigt, lui, arme depuis `surOuvertureExplorer`, qu'il portait
+   * déjà : deux chemins, un seul geste, et le magasin ne demande
+   * qu'une fois de toute façon.
+   */
+  const armerLesNombres = (ouvert: boolean) => {
+    if (ouvert) demanderLesComptes();
+  };
   /** Le nombre d'une entrée, ou rien tant qu'on ne sait pas. */
   const compteStyle = (nature: string, style: string) =>
     nombresSus ? compteDuStyle(comptes, nature, style) : undefined;
@@ -1278,6 +1294,10 @@ export function MoteurTatouage({
    */
   function surOuvertureExplorer(ouvert: boolean): void | Promise<void> {
     if (ouvert) {
+      //  §1 (nº 683) — LE FILET DES NOMBRES. Voir `armerLesNombres`
+      //  juste en dessous : posé AVANT la sortie anticipée, sinon une
+      //  ouverture sans bloc à ranger ne demanderait rien.
+      demanderLesComptes();
       const cible = blocExplorer.current;
       if (!cible) return;
       rangerExplorer.current?.();
@@ -1483,6 +1503,8 @@ export function MoteurTatouage({
             valeur={valeurDuMenu}
             surChangement={(valeur) => choisirDansExplorer(valeur, annoncer)}
             options={options}
+            //  §1 (nº 683) — les nombres se demandent à l'ouverture.
+            onOuvertureChange={armerLesNombres}
             //  §3 (nº 309) — LE CHAMP REFERMÉ NE DIT PLUS QUE LE STYLE.
             //  Il disait le COUPLE depuis la nº 110 (« Réalisations ·
             //  Acid-trad ») pour qu'on sache si l'on cherche des
