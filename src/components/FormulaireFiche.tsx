@@ -1426,8 +1426,42 @@ export function FormulaireFiche() {
           // adresse principale : rien n'est perdu à l'écran, et le
           // prochain enregistrement l'écrira dans le nouveau modèle.
           const lieuDeLaFiche = lieuDepuisFiche(source);
-          const modesLus = await chargerModes(supabase, String(ligne.id));
-          const studiosLus = await chargerStudios(supabase, String(ligne.id));
+          /*  ██ §1 (nº 678) — LES QUATRE LECTURES PARTENT ENSEMBLE ██
+              ==============================================================
+              CE QUI SE PASSAIT, MESURÉ AU BANC (doublure ralentie à 120 ms,
+              l'ordre de grandeur d'une base distante) : l'ouverture d'un
+              portfolio faisait SIX lectures À LA FILE, chacune attendant la
+              précédente — la liste des fiches, la fiche elle-même, les modes
+              d'exercice, les studios, l'équipe, le portfolio. Relevé des
+              départs : 447 ms, 1575 ms, 3701 ms… Six aller-retours en série,
+              c'est six fois la latence : une seconde au banc, DEUX À TROIS
+              SECONDES en production. C'est très exactement l'attente que le
+              propriétaire juge inacceptable.
+              CE QUI CHANGE : LES QUATRE DERNIÈRES NE DÉPENDENT QUE DE
+              `ligne.id`, que l'on tient déjà. Rien ne justifiait qu'elles
+              s'attendent — c'est l'ordre d'écriture qui les avait mises en
+              file, pas une dépendance. Elles partent donc ENSEMBLE :
+              quatre aller-retours deviennent UN.
+              ⚠️ LES DEUX PREMIÈRES RESTENT EN SÉRIE, et c'est nécessaire :
+              la fiche ne peut être lue qu'une fois qu'on sait LAQUELLE
+              (`ficheActive` la choisit dans la liste). On ne parallélise
+              pas une dépendance réelle — on ne supprime que les fausses.
+              ⚠️ L'ÉQUIPE N'EST TOUJOURS LUE QUE POUR UN SALON : la
+              condition est simplement passée DANS la promesse, au lieu
+              d'entourer un `await`. Un artiste ne fait donc toujours
+              aucune requête d'équipe.
+              ⚠️ RIEN NE CHANGE À CE QUI EST POSÉ À L'ÉCRAN, ni dans quel
+              ordre : les `set…` qui suivent lisent les mêmes valeurs, aux
+              mêmes endroits. Seul le MOMENT où elles arrivent change. */
+          const [modesLus, studiosLus, equipeLue, portfolioLu] =
+            await Promise.all([
+              chargerModes(supabase, String(ligne.id)),
+              chargerStudios(supabase, String(ligne.id)),
+              typeLu === "salon"
+                ? chargerEquipe(supabase, String(ligne.id))
+                : Promise.resolve([]),
+              chargerPortfolio(supabase, String(ligne.id)),
+            ]);
           //  ⚠️ ON RETIENT LES IDENTIFIANTS CHARGÉS (bug du « studio
           //  fantôme », passe nº 104) : c'est en les comparant à ceux
           //  encore à l'écran, au moment d'enregistrer, qu'on sait
@@ -1438,11 +1472,9 @@ export function FormulaireFiche() {
           idsStudiosCharges.current = studiosLus
             .map((studio) => studio.id)
             .filter((id): id is string => Boolean(id));
-          setEquipePublique(
-            typeLu === "salon"
-              ? await chargerEquipe(supabase, String(ligne.id))
-              : []
-          );
+          //  §1 (nº 678) — l'équipe est déjà là : elle est partie avec
+          //  les trois autres, plus haut.
+          setEquipePublique(equipeLue);
 
           if (typeLu === "artiste") {
             setModesExercice(
@@ -1474,7 +1506,11 @@ export function FormulaireFiche() {
           // fiche qui n'y a rien encore repart de `photos_styles` :
           // rien n'est perdu, et le prochain enregistrement l'écrira
           // dans le nouveau modèle.
-          const portfolioLu = await chargerPortfolio(supabase, String(ligne.id));
+          //  §1 (nº 678) — `portfolioLu` est déjà là, lui aussi : il est
+          //  parti dans la même vague que les modes, les studios et
+          //  l'équipe. La lecture qui vivait ici a disparu, pas son
+          //  résultat.
+
           //  CE QUI ÉTAIT EN BASE À L'OUVERTURE : à l'enregistrement,
           //  tout identifiant présent ici mais absent de l'écran a été
           //  RETIRÉ par la personne — et lui seul part de la base

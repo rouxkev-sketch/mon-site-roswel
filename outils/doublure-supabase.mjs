@@ -151,6 +151,19 @@ function repondre(req, res, u, brut) {
     setTimeout(() => envoyer(res, corps), delai);
     return;
   }
+  /*  ██ §1 (nº 678) — LE RALENTISSEUR GÉNÉRAL ██
+      La doublure répond en une milliseconde ; une vraie base répond en
+      cent et quelques (aller-retour réseau compris). Sans ce délai, on
+      ne peut PAS voir ce que la passe cherche : des lectures qui
+      s'attendent les unes les autres au lieu de partir ensemble. Douze
+      requêtes en série à 1 ms font 12 ms — invisible ; à 120 ms elles
+      font une seconde et demie, et le défaut saute aux yeux.
+        DELAI_BASE=120 npm run banc:doublure                          */
+  const delaiBase = Number(process.env.DELAI_BASE ?? 0);
+  if (delaiBase) {
+    setTimeout(() => envoyer(res, corps), delaiBase);
+    return;
+  }
   //  §1 (nº 673) — le ralentisseur du catalogue des styles ajoutés :
   //  c'est pendant CETTE attente que la page se rend, et c'est là que
   //  le style se perdait. Voir l'en-tête de ce fichier.
