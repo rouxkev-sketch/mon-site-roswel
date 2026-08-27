@@ -461,6 +461,140 @@ export function MenuEspace({
   );
 
   /**
+   * ██ §1 (nº 677) — PARTIR SANS MONTRER L'ARRIÈRE-PLAN ██
+   * ==================================================================
+   * LE DÉFAUT : depuis « Mon compte », un clic sur une entrée qui
+   * navigue montre TROIS écrans — la fenêtre se ferme, la page
+   * d'arrière-plan paraît une fraction de seconde, puis la destination
+   * arrive. La fermeture est instantanée ; la navigation demande un
+   * aller-retour au serveur. Ce n'est pas un défaut de rendu, c'est un
+   * ORDRE d'événements.
+   *
+   * ██ CE QUE LA nº 676 A RATÉ, ET POURQUOI — la leçon, écrite ██
+   * ------------------------------------------------------------------
+   * Elle avait la bonne idée (ne pas fermer : la navigation démonte la
+   * surface, qui disparaît donc à l'arrivée) et TROIS FAUTES, que le
+   * propriétaire a payées en production :
+   *  1. TROIS ENTRÉES SUR CINQ. « Sécurité » et « Sélection » n'avaient
+   *     pas été touchées — elles clignotaient toujours. Une correction
+   *     qui ne couvre pas son sujet ne corrige rien, elle rend le
+   *     défaut plus déroutant : il frappe une fois sur deux ;
+   *  2. AUCUN RETOUR AU CLIC. La fenêtre restait à l'écran, IDENTIQUE,
+   *     pendant une seconde. Rien ne disait que le geste avait été
+   *     pris. Le clignotement, au moins, prouvait qu'il se passait
+   *     quelque chose ; le remède donnait l'impression d'un site MORT.
+   *     C'est la faute la plus grave des trois, parce qu'elle en
+   *     provoque une autre :
+   *  3. LA FENÊTRE RESTAIT CLIQUABLE. Ne voyant rien venir, on tape à
+   *     nouveau — sur la même entrée ou sur sa voisine. Une SECONDE
+   *     navigation part, et c'est la dernière qui gagne : « Ajouter un
+   *     portfolio » servait « Mon portfolio ». Ce n'est pas un état
+   *     partagé qui déraille, c'est un second clic qu'on n'avait pas
+   *     interdit.
+   * LES TROIS SE TIENNENT : sans retour visuel, on reclique ; sans
+   * inertie, le reclic gagne. C'est pourquoi cette passe ne peut pas
+   * corriger le clignotement SEUL.
+   *
+   * ██ CE QUE CETTE PASSE POSE, ET DANS CET ORDRE ██
+   * ------------------------------------------------------------------
+   *  · LE VERROU EST UNE RÉFÉRENCE, PAS UN ÉTAT. Un état de React n'est
+   *    lisible qu'au rendu SUIVANT : deux clics à 30 ms d'intervalle
+   *    passeraient tous les deux. Une référence change à l'instant même
+   *    de l'appel — c'est la seule façon de garantir « un seul clic
+   *    pris en compte ». L'état, lui, sert à PEINDRE (la surbrillance
+   *    et l'inertie), et il n'a pas besoin d'être synchrone pour cela ;
+   *  · L'ENTRÉE CLIQUÉE PASSE EN SURBRILLANCE et Y RESTE. Aucun trait,
+   *    aucune barre de chargement — la consigne du propriétaire est
+   *    expresse. C'est l'éclaircissement que la ligne porte déjà sous
+   *    le doigt, simplement maintenu ;
+   *  · TOUTES LES ENTRÉES DEVIENNENT INERTES. La surface reste visible,
+   *    mais elle ne prend plus rien : `pointer-events-none` sur le
+   *    corps du menu. La croix, elle, reste vivante — c'est la seule
+   *    échappatoire, et l'interdire enfermerait quelqu'un dans une
+   *    fenêtre qui ne répond pas.
+   *
+   * ⚠️ DEUX CAS OÙ L'ON FERME TOUT DE SUITE, et il faut les deux :
+   *  · ON Y EST DÉJÀ. Naviguer vers l'adresse courante ne déclenche
+   *    rien : sans cette branche, la fenêtre resterait ouverte pour
+   *    toujours. Il n'y a alors aucun clignotement à craindre, puisque
+   *    aucune navigation n'a lieu ;
+   *  · LE FILET DE TEMPS. Une navigation peut ne jamais aboutir
+   *    (réseau coupé, serveur muet). Au bout de six secondes on ferme
+   *    ET on rend la main — mieux vaut la page d'avant qu'une fenêtre
+   *    morte. Six, et non trois comme à la nº 676 : une navigation
+   *    lente du site en prend une (mesuré nº 669), et un filet qui se
+   *    déclenche sur une navigation qui allait aboutir REFABRIQUE le
+   *    clignotement qu'on vient de supprimer.
+   *
+   * ⚠️ L'HISTORIQUE EST DÉJÀ ARMÉ POUR CE CAS, et ce n'est pas de la
+   * chance : le nettoyage de `useEtapeQuiSeReferme` porte la règle « LA
+   * NAVIGATION GAGNE TOUJOURS : on laisse l'étape en place » (nº 331),
+   * et sa marque est posée EN CAPTURE sur tout clic de lien — donc
+   * avant que React ne démonte quoi que ce soit. Le compte d'étapes ne
+   * bouge pas d'une unité, et le retour reste d'un seul appui.
+   * ⚠️ LE VERROU DE DÉFILEMENT NON PLUS : il est retiré par le
+   * nettoyage de son effet, qui tourne sur TOUS les chemins de
+   * fermeture, démontage compris (nº 469).
+   * ⚠️ LES DEUX APPAREILS, SANS BRANCHE (piège nº 60) : le web a le
+   * MÊME défaut — mesuré à l'état de la nº 675, les cinq entrées y
+   * traversent l'arrière-plan comme au doigt. Il reçoit donc la même
+   * correction, et pour la même raison.
+   */
+  const FILET_DE_FERMETURE_MS = 6000;
+  /** Le verrou SYNCHRONE : il ferme la porte à l'instant du clic. */
+  const departVerrouille = useRef(false);
+  /** Ce que l'écran montre : la clé de l'entrée partie, ou rien. */
+  const [entreeQuiPart, setEntreeQuiPart] = useState<string | null>(null);
+  const filetDeFermeture = useRef(0);
+  useEffect(
+    () => () => {
+      window.clearTimeout(filetDeFermeture.current);
+    },
+    []
+  );
+  /*  ⚠️ ON REPART D'UNE ARDOISE PROPRE À CHAQUE OUVERTURE : sans cela,
+      une fenêtre rouverte après un filet déclenché resterait inerte,
+      verrouillée par le départ précédent. */
+  useEffect(() => {
+    if (ouvert) return;
+    departVerrouille.current = false;
+    window.clearTimeout(filetDeFermeture.current);
+    const minuteur = setTimeout(() => setEntreeQuiPart(null), 0);
+    return () => clearTimeout(minuteur);
+  }, [ouvert]);
+
+  /**
+   * LE GESTE COMMUN DES CINQ ENTRÉES QUI NAVIGUENT — Mon portfolio,
+   * Modification, Sécurité, Sélection, Ajouter un portfolio.
+   * Rend `false` quand le clic doit être IGNORÉ (un départ est déjà en
+   * cours) : l'appelant s'arrête là.
+   */
+  const partirVers = useCallback((cle: string, destination: string) => {
+    if (departVerrouille.current) return false;
+    departVerrouille.current = true;
+    const ici = `${window.location.pathname}${window.location.search}`;
+    if (ici === destination) {
+      //  Aucune navigation n'aura lieu : on ferme, et l'on rouvre la
+      //  porte pour que la fenêtre reste utilisable si on la rouvre.
+      departVerrouille.current = false;
+      setOuvert(false);
+      return true;
+    }
+    setEntreeQuiPart(cle);
+    window.clearTimeout(filetDeFermeture.current);
+    filetDeFermeture.current = window.setTimeout(() => {
+      departVerrouille.current = false;
+      setEntreeQuiPart(null);
+      setOuvert(false);
+    }, FILET_DE_FERMETURE_MS);
+    return true;
+  }, []);
+
+  /** La classe d'une entrée : en surbrillance si c'est elle qui part. */
+  const classeEntree = (cle: string, reglage: { entree: string; entreePartie: string }) =>
+    entreeQuiPart === cle ? reglage.entreePartie : reglage.entree;
+
+  /**
    * ██ §1 (nº 664) — LES NOUVELLES SE LISENT SEULES, DÉSORMAIS ██
    * ------------------------------------------------------------------
    * POURQUOI CETTE MOITIÉ SE DÉTACHE DE `lireLeCompte`. La note de la
@@ -724,7 +858,15 @@ export function MenuEspace({
     //  le module ne peut pas l'armer tout seul au clic, elle le dit
     //  donc elle-même, par l'écriture commune.
     laSurfaceVaNaviguer();
-    setOuvert(false);
+    /*  §1 (nº 677) — LA MÊME RÈGLE QUE LES QUATRE LIENS : la fenêtre
+        reste jusqu'à l'arrivée, l'entrée s'allume, le menu devient
+        inerte. Un second clic est refusé net — c'est lui qui servait
+        « Mon portfolio » à la place de « Ajouter un portfolio » après
+        la nº 676.
+        ⚠️ LE DÉROULANT ET L'AVERTISSEMENT SE FERMENT, EUX, tout de
+        suite : ils vivent DANS la fenêtre qu'on garde, et les laisser
+        ouverts par-dessus une entrée allumée se verrait. */
+    if (!partirVers("ajouter", ADRESSE_NOUVELLE)) return;
     setSelecteurOuvert(false);
     setAvertirAvantCreation(false);
     const ici = `${window.location.pathname}${window.location.search}`;
@@ -906,10 +1048,23 @@ export function MenuEspace({
     taille: number,
     ecriture: string
   ) => {
-    const geometrie =
+    /*  §1 (nº 677) — LA GÉOMÉTRIE SANS SES ÉTATS, et c'est la règle
+        nº 389 appliquée à la lettre : une entrée PARTIE ne doit pas
+        porter `hover:` ni `active:` en plus de son fond, sinon le
+        survol du web ÉCLAIRCIRAIT MOINS (`/5` sous `/10`) que la
+        surbrillance qu'on vient de poser. Deux chaînes qui s'excluent,
+        jamais une classe empilée sur une autre. */
+    const socle =
       "flex w-full items-center gap-3 rounded-xl px-3 min-h-[46px] text-left " +
-      `${ecriture} font-semibold ` +
-      "hover:bg-white/5 active:bg-white/10 transition-colors";
+      `${ecriture} font-semibold transition-colors`;
+    const geometrie = `${socle} hover:bg-white/5 active:bg-white/10`;
+    /*  §1 (nº 677) — LA SURBRILLANCE D'ATTENTE : l'état ENFONCÉ de la
+        ligne (`bg-white/10`), posé en permanence. Ce n'est pas une
+        couleur neuve — c'est celle que le doigt voit déjà sous lui, et
+        c'est justement pour cela qu'elle se comprend sans qu'on
+        l'explique : le geste n'est pas fini, l'entrée est encore
+        enfoncée. */
+    const geometriePartie = `${socle} bg-white/10`;
     return {
       /*  LA BOÎTE DE LARGEUR FIXE tient l'alignement : sans elle, chaque
           dessin a sa propre chasse et les libellés partent d'un pixel
@@ -921,6 +1076,8 @@ export function MenuEspace({
       boite: `flex ${largeurBoite} shrink-0 justify-center`,
       taille,
       entree: `${geometrie} text-sombre-texte`,
+      //  §1 (nº 677) — la même ligne, en attente : voir `geometriePartie`.
+      entreePartie: `${geometriePartie} text-sombre-texte`,
       /**
        * ██ §2 (nº 667) — UNE LIGNE SEULE **EST** SON ENCADRÉ ██
        * ----------------------------------------------------------
@@ -1181,12 +1338,25 @@ export function MenuEspace({
       onClick={demanderUneNouvelleFiche}
       //  §3 (nº 649) — le mot rejoint ses voisines : `entree`, la
       //  même écriture que « Ma fiche » ou « Sécurité ».
-      className={
+      /*  §1 (nº 677) — LA SURBRILLANCE D'ATTENTE, dans ses DEUX
+          habillages : la ligne ordinaire, et la ligne SEULE qui est son
+          propre encadré (nº 667). Chacune prend son état enfoncé à
+          elle, posé en permanence et SANS ses variantes — deux chaînes
+          qui s'excluent (règle nº 389). */
+      /*  §1 (nº 677) — ET IL PORTE SON INERTIE LUI-MÊME. Les deux
+          `<nav>` la donnent à leurs enfants ; ce bouton-ci, quand il est
+          SEUL, EST son propre encadré (nº 667) et vit donc HORS des
+          deux. Sans cette classe, il resterait le seul élément
+          cliquable de la fenêtre — mesuré au banc, et corrigé là où le
+          défaut est : sur lui. */
+      className={`${
         seul
           ? `${reglage.ligne.entreeSeule} ${CLASSE_ENCADRE} ` +
-            "hover:bg-sombre-eleve-clair active:bg-sombre-eleve-clair"
-          : reglage.ligne.entree
-      }
+            (entreeQuiPart === "ajouter"
+              ? "bg-sombre-eleve-clair"
+              : "hover:bg-sombre-eleve-clair active:bg-sombre-eleve-clair")
+          : classeEntree("ajouter", reglage.ligne)
+      }${entreeQuiPart ? " pointer-events-none" : ""}`}
     >
       {/*  §1 (nº 533) — L'ICÔNE EST CELLE DE « MON PORTFOLIO »,
            OUVERTE EN HAUT À DROITE, avec un petit « + » dans
@@ -1207,7 +1377,18 @@ export function MenuEspace({
   /** LES DEUX ENTRÉES DU PORTFOLIO CHOISI — « Mon portfolio » d'abord
       (acquis nº 472-§3a), puis « Modification ». */
   const entreesDuPortfolio = (reglage: ReglageLigne) => (
-    <nav aria-label="Le portfolio choisi" className="flex flex-col gap-0.5">
+    /*  §1 (nº 677) — CE NAV-CI AUSSI DEVIENT INERTE, et il fallait le
+        mesurer pour s'en apercevoir : « Mon portfolio » et
+        « Modification » vivent dans le bloc DU PORTFOLIO, pas dans
+        celui du compte. Poser l'inertie sur un seul des deux, c'était
+        refaire la faute nº 1 de la nº 676 — couvrir une partie du
+        sujet. */
+    <nav
+      aria-label="Le portfolio choisi"
+      className={`flex flex-col gap-0.5${
+        entreeQuiPart ? " pointer-events-none" : ""
+      }`}
+    >
       {/*  ██ §3-a (nº 472) — « MON PORTFOLIO » PASSE EN PREMIER ██
            Les deux entrées sont ÉCHANGÉES, sur consigne : on
            regarde son portfolio avant de le modifier. Rien d'autre
@@ -1224,8 +1405,14 @@ export function MenuEspace({
       <Link
         href={avecConsigneDeLienInterne(versFiche("vue=apercu"))}
         replace={liensRemplacent}
-        onClick={() => setOuvert(false)}
-        className={reglage.entree}
+        //  §1 (nº 677) — la fenêtre reste jusqu'à l'arrivée, l'entrée
+        //  s'allume, le menu devient inerte. Voir `partirVers`.
+        onClick={(evenement) => {
+          if (!partirVers("portfolio", versFiche("vue=apercu"))) {
+            evenement.preventDefault();
+          }
+        }}
+        className={classeEntree("portfolio", reglage)}
       >
         <span className={`${reglage.boite} text-sombre-texte/80`}>
           <IconeUtilisateur taille={reglage.taille} />
@@ -1240,11 +1427,17 @@ export function MenuEspace({
       <Link
         href={versFiche()}
         replace={liensRemplacent}
-        onClick={() => {
-          setOuvert(false);
+        onClick={(evenement) => {
+          //  §1 (nº 677) — même règle que « Mon portfolio ». L'ÉVÉNEMENT
+          //  ne part que si le clic est retenu : sinon on préviendrait
+          //  deux fois le formulaire pour un seul geste.
+          if (!partirVers("modification", versFiche())) {
+            evenement.preventDefault();
+            return;
+          }
           window.dispatchEvent(new Event("yokofolio-modification-demandee"));
         }}
-        className={reglage.entree}
+        className={classeEntree("modification", reglage)}
       >
         <span className={`${reglage.boite} text-sombre-texte/80`}>
           <IconeReglages taille={reglage.taille} />
@@ -1266,7 +1459,17 @@ export function MenuEspace({
         une enveloppe, juste en dessous. Au doigt, c'est l'encadré
         qui donne la réserve. La géométrie du web ne bouge pas :
         mêmes 8 px, sur une boîte au lieu du nav. */
-    <nav aria-label="Mon compte" className="flex flex-col gap-0.5">
+    /*  §1 (nº 677) — LE MENU DEVIENT INERTE dès qu'une entrée est
+        partie : un seul clic est pris en compte, et c'est ce qui
+        empêche le second — celui qui servait la MAUVAISE PAGE après la
+        nº 676. La croix, elle, reste vivante : elle est dans l'en-tête
+        de la surface, pas dans ce conteneur. */
+    <nav
+      aria-label="Mon compte"
+      className={`flex flex-col gap-0.5${
+        entreeQuiPart ? " pointer-events-none" : ""
+      }`}
+    >
       {/* LA LANGUE — AU-DESSUS DE SÉCURITÉ (passe nº 137). Le globe
           a quitté la barre fixe, où le CŒUR des favoris a pris sa
           place une fois connecté : une barre de smartphone n'a pas
@@ -1296,8 +1499,14 @@ export function MenuEspace({
       <Link
         href="/devenir-tatoueur/securite"
         replace={liensRemplacent}
-        onClick={() => setOuvert(false)}
-        className={reglage.entree}
+        //  §1 (nº 677) — L'UNE DES DEUX QUE LA nº 676 AVAIT OUBLIÉES :
+        //  elle clignotait encore, et le propriétaire l'a vu.
+        onClick={(evenement) => {
+          if (!partirVers("securite", "/devenir-tatoueur/securite")) {
+            evenement.preventDefault();
+          }
+        }}
+        className={classeEntree("securite", reglage)}
       >
         <span className={`${reglage.boite} text-sombre-texte/80`}>
           {/* UN BOUCLIER, plus un cadenas (nº 129) : le cadenas dit
@@ -1369,9 +1578,16 @@ export function MenuEspace({
   /*  La tuile : sa boîte est son bouton. Le survol et l'appui
       reprennent l'écriture des plaques cliquables (nº 502) — une seule
       couleur de fond, remplacée, jamais empilée. */
+  /*  §1 (nº 677) — LA TUILE EN ATTENTE : son propre état enfoncé
+      (`bg-sombre-eleve-clair`), posé en permanence, et SANS ses
+      variantes — deux chaînes qui s'excluent (règle nº 389), pour que
+      le survol du web ne vienne pas repeindre par-dessus. */
   const CLASSE_TUILE =
     `flex flex-col items-center gap-2 px-2 py-4 ${CLASSE_ENCADRE} ` +
     "transition-colors hover:bg-sombre-eleve-clair active:bg-sombre-eleve-clair";
+  const CLASSE_TUILE_PARTIE =
+    `flex flex-col items-center gap-2 px-2 py-4 ${CLASSE_ENCADRE} ` +
+    "transition-colors bg-sombre-eleve-clair";
   const CLASSE_TUILE_ICONE = "flex justify-center text-sombre-texte/80";
   /*  ⚠️ `[overflow-wrap:anywhere]` : sur un écran très étroit
       (320 px), « Notifications » est plus long que sa tuile. Sans
@@ -1752,7 +1968,13 @@ export function MenuEspace({
            place logique (§2). La grille passe de trois colonnes à
            deux ; rien d'autre de la tuile ne change — icône centrée,
            mot dessous, boîte cliquable en entier. */}
-      <div className="grid grid-cols-2 gap-3">
+      {/*  §1 (nº 677) — la grille des tuiles devient inerte pour la
+           même raison que le menu ci-dessous : un seul clic compte. */}
+      <div
+        className={`grid grid-cols-2 gap-3${
+          entreeQuiPart ? " pointer-events-none" : ""
+        }`}
+      >
         <button
           type="button"
           onClick={ouvrirLesNotifications}
@@ -1819,8 +2041,18 @@ export function MenuEspace({
         <Link
           href="/mes-favoris"
           replace={liensRemplacent}
-          onClick={() => setOuvert(false)}
-          className={CLASSE_TUILE}
+          //  §1 (nº 677) — LA SECONDE OUBLIÉE DE LA nº 676. C'est une
+          //  TUILE, pas une ligne : sa surbrillance d'attente est celle
+          //  de son propre état enfoncé (`bg-sombre-eleve-clair`), pas
+          //  celle des lignes — deux dessins, deux éclaircissements.
+          onClick={(evenement) => {
+            if (!partirVers("selection", "/mes-favoris")) {
+              evenement.preventDefault();
+            }
+          }}
+          className={
+            entreeQuiPart === "selection" ? CLASSE_TUILE_PARTIE : CLASSE_TUILE
+          }
         >
           <span className={CLASSE_TUILE_ICONE}>
             <IconeFanion taille={reglages.tuileIcone} />
