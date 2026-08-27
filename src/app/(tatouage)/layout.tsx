@@ -52,6 +52,9 @@ import { BoiteNoireNavigation } from "@/components/BoiteNoireNavigation";
 import { SondeBoiteNoire } from "@/components/SondeBoiteNoire";
 //  §2 (nº 660) — le témoin des déplacements constatés de la page.
 import { ObservateurDeplacements } from "@/components/ObservateurDeplacements";
+//  §1 (nº 670) — le témoin des requêtes de page : il dit si le
+//  serveur a été interrogé, ou si la page vient d'une réserve.
+import { TemoinDesRequetes } from "@/components/TemoinDesRequetes";
 import { SondeBascule } from "@/components/SondeBascule";
 import { SondeCarrousel } from "@/components/SondeCarrousel";
 import { SondeCartes } from "@/components/SondeCartes";
@@ -332,9 +335,18 @@ export default async function MiseEnPageTatouage({
         les trois secondes qui suivent un changement d'adresse. Il
         n'affiche rien et ne déplace rien ; pour le retirer, cette
         ligne, son import et
-        src/components/ObservateurDeplacements.tsx. */}
+        src/components/ObservateurDeplacements.tsx.
+        §1 (nº 670) — ET LE TÉMOIN DES REQUÊTES, quatrième ligne : à
+        chaque arrivée sur « /recherche », il écrit si une requête de
+        page est partie au serveur — et combien. C'est le fait qui
+        manquait pour trancher entre « le serveur a mal répondu » et
+        « une réserve du navigateur a resservi une copie » (nº 669). Il
+        n'affiche rien, ne déplace rien, ne provoque aucune requête ;
+        pour le retirer, cette ligne, son import et
+        src/components/TemoinDesRequetes.tsx. */}
     <BoiteNoireNavigation />
     <ObservateurDeplacements />
+    <TemoinDesRequetes />
     <SondeBoiteNoire />
     <div
       // Marqueur du fond sombre — il double la règle CSS de

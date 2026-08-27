@@ -6,6 +6,7 @@
     "dev": "node outils/demarrer.mjs",
     "dev:brut": "next dev",
     "verifier-installation": "node outils/verifier-installation.mjs",
+    "banc:doublure": "node outils/doublure-supabase.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
