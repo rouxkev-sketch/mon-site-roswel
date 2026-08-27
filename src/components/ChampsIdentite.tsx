@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { IconePlus } from "@/components/Icones";
 //  L'appareil photo au trait fin marqué d'un plus (nº 111) — l'image
 //  officielle du propriétaire, dans son composant à elle.
@@ -127,7 +128,20 @@ export function ChampPhotoRonde({
       {/* LE LOGO — rond. Le CERCLE ne se dessine que VIDE (pointillés :
           « à remplir ») ou EN FAUTE (rouge) : une fois la photo posée,
           elle se suffit — le cercle qui l'entourait ne servait qu'à
-          indiquer l'emplacement (passe nº 112). */}
+          indiquer l'emplacement (passe nº 112).
+          ██ §4 (nº 658) — LES POINTILLÉS S'ÉCLAIRCISSENT, ET LE CHIFFRE
+          DIT POURQUOI ILS ÉTAIENT INVISIBLES : ils portaient
+          `sombre-bordure` (#2C323B) sur un disque `sombre-eleve`
+          (#262C34) — SIX points d'écart sur 255, par canal. On ne les
+          voyait qu'en les cherchant, exactement comme le propriétaire
+          le dit. Ils prennent `sombre-haut-clair` (#4A525D) : l'écart
+          passe à TRENTE-SIX, six fois plus. C'est le dernier barreau
+          gris de l'échelle de la nº 466 avant les gris de TEXTE — au
+          cran suivant (`texte-doux`, #A8A8B0) l'anneau crierait plus
+          fort que la photo qu'il attend.
+          ⚠️ AUCUNE COULEUR NOUVELLE : un jeton de l'échelle, déjà
+          employé ailleurs (le sélecteur ouvert de « Mon compte »).
+          ⚠️ LE ROUGE DE LA FAUTE NE BOUGE PAS : il dit autre chose. */}
       <div className="flex items-center gap-6">
         <span
           className={`flex h-[104px] w-[104px] shrink-0 items-center justify-center
@@ -136,7 +150,7 @@ export function ChampPhotoRonde({
                          ? "border-2 border-erreur"
                          : apercu
                            ? ""
-                           : "border-2 border-dashed border-sombre-bordure"
+                           : "border-2 border-dashed border-sombre-haut-clair"
                      }`}
         >
           {apercu ? (
@@ -197,25 +211,56 @@ export function ChampPhotoRonde({
         tabIndex={-1}
       />
 
-      {/* LE RECADREUR — la forme RONDE, et le cadrage validé rendu à
-          l'appelant sous la forme d'un fichier prêt à envoyer. */}
-      {recadrage && (
-        <RecadreurPhoto
-          key={`${recadrage.name}-${recadrage.lastModified}`}
-          fichier={recadrage}
-          forme="rond"
-          surValidation={(image) => {
-            surPhoto({
-              fichier: new File([image], `profil-${Date.now()}.jpg`, {
-                type: "image/jpeg",
-              }),
-              apercu: URL.createObjectURL(image),
-            });
-            poserRecadrage(null);
-          }}
-          surFermeture={() => poserRecadrage(null)}
-        />
-      )}
+      {/*  ██ §4 (nº 658) — LE RECADREUR EST MONTÉ DANS LE CORPS DU
+           DOCUMENT ██
+           ==========================================================
+           LE DÉFAUT RELEVÉ : au doigt, choisir une photo depuis la
+           fenêtre « Modifier » n'ouvrait pas le recadreur rond de la
+           création de portfolio. LA CAUSE, ET C'EST UNE LEÇON DÉJÀ
+           ÉCRITE DANS CE SITE (nº 238-§4, règle nº 2 de
+           `SurfaceDeVerre`) : le recadreur est `position: fixed`, et
+           il vivait À L'INTÉRIEUR de la surface qui l'ouvre — au web
+           un panneau `fixed` à défilement propre, au doigt une PAGE
+           `fixed` dont la hauteur et le haut sont RECALÉS à chaque
+           image sur `visualViewport` (nº 477). Un élément `fixed`
+           dans un conteneur qui défile et se recale n'est plus fixe
+           par rapport à l'écran : iOS le rattache au conteneur. Le
+           recadreur se retrouvait posé n'importe où, coupé, ou
+           dessous.
+           LE PORTAIL RÈGLE LES DEUX D'UN COUP : la fenêtre est montée
+           dans le CORPS du document, plus aucun ancêtre applicatif ne
+           peut la couper ni lui voler son repère.
+           ⚠️ LE FORMULAIRE DE PORTFOLIO NE CHANGE PAS D'UN PIXEL : il
+           monte ce champ dans le flux normal d'une page — le recadreur
+           y était DÉJÀ au niveau du document, le portail l'y laisse.
+           ⚠️ LES ÉVÉNEMENTS REMONTENT TOUJOURS L'ARBRE REACT (c'est la
+           règle des portails), donc jusqu'au `<form>` de ce
+           formulaire : vérifié avant de poser le portail, les CINQ
+           boutons du recadreur portent `type="button"` — aucun ne peut
+           envoyer la fiche.
+           ⚠️ `RecadreurPhoto` N'EST PAS TOUCHÉ : c'est son montage qui
+           déménage, pas son écriture. `BlocPortfolio`, qui le monte
+           lui aussi, garde exactement ce qu'il avait. */}
+      {recadrage &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <RecadreurPhoto
+            key={`${recadrage.name}-${recadrage.lastModified}`}
+            fichier={recadrage}
+            forme="rond"
+            surValidation={(image) => {
+              surPhoto({
+                fichier: new File([image], `profil-${Date.now()}.jpg`, {
+                  type: "image/jpeg",
+                }),
+                apercu: URL.createObjectURL(image),
+              });
+              poserRecadrage(null);
+            }}
+            surFermeture={() => poserRecadrage(null)}
+          />,
+          document.body
+        )}
     </>
   );
 }

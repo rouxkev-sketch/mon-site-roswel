@@ -382,49 +382,58 @@ export function FenetreLangue({
           data-source-composant="SelecteurLangue · fenêtre du compte"
           className="mobile:hidden"
         >
-          {/*  ██ LA BARRE DU TITRE NE CHANGE PAS DE FORME, ET C'EST
-               VOULU ██ La consigne dit « MÊME mécanisme, MÊME largeur »
-               — donc le PLACEMENT —, et « son CONTENU sur le modèle des
-               encadrés ». Le titre n'est ni l'un ni l'autre : il garde
-               son rang de 17 px gras et sa croix à l'opposé, comme
-               avant, et comme « Notifications » — les deux fenêtres
-               sœurs de la barre s'ouvrent maintenant à la même place et
-               à la même largeur : leur donner deux barres de titre
-               différentes se lirait comme un défaut.
-               DEUX NOMBRES SUIVENT LA NOUVELLE LARGEUR, ET RIEN
-               D'AUTRE :
-                · les côtés passent de 16 à 20 px, l'air des fenêtres de
-                  la barre depuis la nº 557 — le même que la colonne du
-                  contenu, juste dessous ;
-                · la croix prend la compensation de « Mon compte » :
-                  −9 px, soit (36 − 18) / 2, l'écart entre sa cible et
-                  son dessin. Son glyphe retombe alors PILE à 20 px du
-                  bord, à l'aplomb des encadrés. La cible ne rétrécit
-                  pas (règle nº 483).
-               ET LE TRAIT PREND LE JETON DE « NOTIFICATIONS »
-               (`sombre-bordure/60` au lieu d'un blanc à 10 %) : deux
-               écritures pour une même ligne, sur deux fenêtres
-               désormais voisines, auraient fini par diverger. */}
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-sombre-bordure/60">
-            <h2 className="flex-1 min-w-0 text-[17px] font-bold tracking-tight text-sombre-texte">
-              Langue
-            </h2>
-            <button
-              type="button"
-              onClick={surFermeture}
-              aria-label="Fermer"
-              className="-mr-[9px] w-9 h-9 shrink-0 flex items-center justify-center
-                         rounded-full text-sombre-texte-doux
-                         hover:text-sombre-texte hover:bg-sombre-eleve
-                         transition-colors"
-            >
-              <IconeCroix taille={18} />
-            </button>
-          </div>
-          {/*  LA COLONNE DU CONTENU — les réglages du web de « Mon
-               compte » : 20 px sur les quatre côtés (nº 557), 12 px
-               entre les boîtes (`gap-3`). */}
+          {/*  ██ §3 (nº 658) — LE TRAIT S'EN VA, LE TITRE DESCEND DANS
+               LA COLONNE ██
+               ==========================================================
+               CE QUE LA nº 655 AVAIT POSÉ : une BARRE de titre à part,
+               avec son trait d'un bord à l'autre — celle de
+               « Notifications », pour que les deux fenêtres sœurs se
+               ressemblent. Le propriétaire ne veut pas de ce trait ici,
+               et veut les encadrés PLUS HAUT.
+               CE QUI LE REMPLACE : la disposition de « Mon compte » —
+               le titre entre DANS la colonne du contenu, comme sa tête,
+               et c'est le `gap-3` de la colonne qui l'en sépare.
+               L'AIR RÉCUPÉRÉ SE CHIFFRE : entre le mot et le premier
+               encadré il y avait 16 px (le bas de la barre) plus 20 px
+               (le haut de la colonne) = TRENTE-SIX. Il y en a désormais
+               8 (`mb-2`) plus 12 (`gap-3`) = VINGT — la règle exacte de
+               la tête de « Mon compte » (nº 641-§2), qui veut l'air
+               sous le titre égal à l'air au-dessus. Les encadrés
+               remontent donc de SEIZE pixels.
+               ⚠️ LE TITRE ET LA CROIX NE CHANGENT NI DE RANG NI DE
+               PLACE : 17 px gras, croix à l'opposé, compensée de −9 px
+               — (36 − 18) / 2, l'écart entre sa cible et son dessin
+               (règle nº 483). Son glyphe reste à 20 px du bord droit,
+               à l'aplomb des encadrés, et le titre à 20 px du gauche :
+               les deux vivent maintenant dans le `p-5` de la colonne au
+               lieu du `px-5` de la barre — le même nombre.
+               ⚠️ « NOTIFICATIONS » GARDE SON TRAIT, et je le dis plutôt
+               que d'aligner de mon chef : la consigne ne vise que
+               « Langue ». Les deux fenêtres divergent donc d'un trait,
+               et c'est une décision, pas un oubli. */}
           <div className="flex flex-col gap-3 p-5">
+            {/*  LE GLOBE DEVANT LE TITRE (nº 658) — « dans le même
+                 style que les icônes de la fenêtre Mon compte » : rang
+                 20, blanc à 80 %, et 10 px d'écart au mot. C'est
+                 exactement la cloche de « Notifications », au
+                 caractère — un seul dessin de titre pour les deux. */}
+            <div className="mb-2 flex items-center gap-2.5">
+              <IconeMonde taille={20} classe="shrink-0 text-sombre-texte/80" />
+              <h2 className="flex-1 min-w-0 text-[17px] font-bold tracking-tight text-sombre-texte">
+                Langue
+              </h2>
+              <button
+                type="button"
+                onClick={surFermeture}
+                aria-label="Fermer"
+                className="-mr-[9px] w-9 h-9 shrink-0 flex items-center justify-center
+                           rounded-full text-sombre-texte-doux
+                           hover:text-sombre-texte hover:bg-sombre-eleve
+                           transition-colors"
+              >
+                <IconeCroix taille={18} />
+              </button>
+            </div>
             <ListeDesLangues surChoix={surFermeture} />
           </div>
         </MenuDeVerre>
@@ -670,11 +679,33 @@ export function SelecteurLangue({ hauteur = 40 }: { hauteur?: number }) {
           /*  §1 (nº 655) — `flex flex-col gap-3` S'AJOUTE, et rien
                d'autre : la liste rend désormais DEUX encadrés au lieu
                d'une liste plate, il leur faut l'écart de 12 px des
-               boîtes de « Mon compte ». Le rembourrage de 8 px ne bouge
-               pas d'un pixel, la largeur de 290 px non plus — ce menu-ci
-               n'était pas visé par la consigne. */
-          className="flex flex-col gap-3 px-2 py-2"
+               boîtes de « Mon compte ».
+               §3 (nº 658) — LE REMBOURRAGE PASSE DE 8 À 12 px, et c'est
+               le titre qui l'appelle : un mot à 17 px collé à 8 px du
+               bord se lirait comme un débordement. La largeur de 290 px,
+               elle, ne bouge toujours pas — ce menu-ci n'a jamais été
+               visé par les consignes de largeur. */
+          className="flex flex-col gap-3 p-3"
         >
+          {/*  ██ §3 (nº 658) — LE TITRE ET SON GLOBE, ICI AUSSI ██
+               Le propriétaire les veut sur les DEUX menus de langue :
+               celui du compte (plus haut dans ce fichier) et celui-ci,
+               le menu du VISITEUR NON CONNECTÉ. C'est la même rangée,
+               au caractère — même globe au rang 20 en blanc à 80 %,
+               même mot à 17 px gras, même écart de 10 px.
+               ⚠️ PAS DE CROIX ICI, et ce n'est pas un oubli : ce menu
+               n'en a jamais eu. Il se referme par Échap, par un clic à
+               côté ou par un choix — lui en poser une maintenant serait
+               un changement que personne n'a demandé.
+               ⚠️ NI `mb-2` NON PLUS : là-bas il rattrapait l'air du
+               haut d'une colonne à 20 px ; ici la colonne en a 12, et
+               le `gap-3` suffit à l'égaler. */}
+          <div className="flex items-center gap-2.5">
+            <IconeMonde taille={20} classe="shrink-0 text-sombre-texte/80" />
+            <h2 className="min-w-0 flex-1 text-[17px] font-bold tracking-tight text-sombre-texte">
+              Langue
+            </h2>
+          </div>
           <ListeDesLangues surChoix={fermer} />
         </MenuDeVerre>
       )}

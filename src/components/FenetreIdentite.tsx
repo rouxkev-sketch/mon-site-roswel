@@ -217,16 +217,49 @@ export function FenetreIdentite({
     }
   }
 
-  /*  LE CONTENU, ÉCRIT UNE FOIS pour les deux habillages : un encadré
-      (celui de « Mon compte », partagé) qui tient la photo et le nom,
-      le reproche s'il y en a un, puis le bouton d'enregistrement.
-      ⚠️ LE ROSE PLEIN EST POUR L'ACTION FINALE D'UNE SURFACE (charte
-      nº 217-§7) : c'est bien le cas ici — ce bouton conclut la
-      fenêtre. Son écriture est celle du bouton d'envoi du formulaire
-      de portfolio, reprise au caractère. */
+  /*  ██ §4 (nº 658) — L'ENCADRÉ TOMBE AU WEB, IL RESTE AU DOIGT ██
+      ==================================================================
+      LA CONSIGNE EST BORNÉE À UN APPAREIL : « au web seulement,
+      supprimer l'encadré qui entoure le champ du nom et la photo ; le
+      champ va bord à bord, de la marge gauche à la marge droite ; la
+      photo s'aligne à gauche, sur la même marge ».
+      CE QUE ÇA DONNE, ET C'EST ARITHMÉTIQUE. La boîte posait
+      `p-4` — SEIZE pixels — À L'INTÉRIEUR des vingt de la colonne :
+      le champ commençait donc à 36 px du bord de la fenêtre et
+      s'arrêtait à 36 de l'autre, et le disque de la photo aussi. Sans
+      elle, les deux repartent des VINGT de la colonne, comme la
+      croix, le titre et le bouton. Le champ gagne 32 px de largeur.
+      ⚠️ LE DOIGT GARDE SA BOÎTE, et ce n'est pas une inconséquence :
+      c'est la règle de ces deux écrans depuis la nº 530 — « ce qui
+      reste propre à chaque plan, ce sont les boîtes, et elles seules ».
+      Là-bas, la page entière est faite d'encadrés (« Mon compte » sur
+      cet appareil), et un champ posé à nu sur le fond de page y
+      paraîtrait tombé d'ailleurs.
+      ⚠️ L'ÉCART ENTRE LA PHOTO ET LE CHAMP NE CHANGE PAS (`gap-4`,
+      16 px) : seule la boîte autour s'en va.
+
+      ██ §4 (nº 658) — « ENREGISTRER » N'EST PLUS ROSE, NI TOUT ROND ██
+      ------------------------------------------------------------------
+      LE ROSE PLEIN EST L'ACTION FINALE D'UNE PAGE (charte nº 217-§7),
+      et la nº 657 l'avait pris pour cette raison. Le propriétaire le
+      veut NEUTRE : le bouton prend l'écriture des plaques cliquables
+      du site (nº 502) — `eleve` au repos, `eleve-clair` au survol ET
+      à l'appui, le texte en blanc de charte. C'est exactement ce que
+      portent les tuiles de « Mon compte ».
+      ET LES CÔTÉS RONDS DEVIENNENT DES ANGLES : `rounded-full` →
+      `rounded-xl`, le rayon des encadrés et des lignes de ces
+      fenêtres. Aucun rayon nouveau.
+      ⚠️ LA HAUTEUR NE BOUGE PAS (54 px), ni la graisse, ni le corps de
+      15,5 px : la consigne ne vise que la forme et la couleur. */
   const contenu = (surface: "web" | "doigt") => (
     <>
-      <div className={`flex flex-col gap-4 p-4 ${CLASSE_ENCADRE_FENETRE}`}>
+      <div
+        className={
+          surface === "doigt"
+            ? `flex flex-col gap-4 p-4 ${CLASSE_ENCADRE_FENETRE}`
+            : "flex flex-col gap-4"
+        }
+      >
         <ChampPhotoRonde
           apercu={apercu}
           surPhoto={photoCadree}
@@ -249,9 +282,10 @@ export function FenetreIdentite({
         type="button"
         onClick={enregistrer}
         disabled={enCours}
-        className="inline-flex items-center justify-center rounded-full
-                   min-h-[54px] bg-primaire hover:bg-primaire-fonce
-                   text-white font-semibold text-[15.5px] transition-colors
+        className="inline-flex items-center justify-center rounded-xl
+                   min-h-[54px] bg-sombre-eleve
+                   hover:bg-sombre-eleve-clair active:bg-sombre-eleve-clair
+                   text-sombre-texte font-semibold text-[15.5px] transition-colors
                    disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {enCours ? "Enregistrement…" : "Enregistrer"}

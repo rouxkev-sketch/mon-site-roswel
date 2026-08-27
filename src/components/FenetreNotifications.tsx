@@ -16,7 +16,6 @@ import {
 //  vit `MenuDeVerre`. `createPortal` part avec la plaque écrite à la
 //  main : le menu se porte lui-même dans le corps du document.
 import {
-  CLASSE_ENCADRE_FENETRE,
   LARGEUR_FENETRE_BARRE,
   MenuDeVerre,
 } from "@/components/SurfaceDeVerre";
@@ -326,67 +325,47 @@ export function FenetreNotifications({
       double coche « tout marquer » et le corps (l'état vide ou la
       liste) s'écrivent UNE fois ; la fenêtre du web et la page du
       doigt les posent chacune à sa place. */
+  /*  ██ §2 (nº 658) — LA DOUBLE COCHE, SEULE, SUR LES DEUX SURFACES ██
+      ------------------------------------------------------------------
+      CE QUI PART : le libellé « Tout marquer comme lu » qui
+      accompagnait le dessin À PARTIR DE 640 px de FENÊTRE
+      (`hidden sm:inline`). Le propriétaire veut « le dispositif de la
+      version mobile » des deux côtés — donc le signe seul. Ce que le
+      mot disait, l'`aria-label` et l'info-bulle le disent déjà : rien
+      n'est perdu pour un lecteur d'écran ni pour la souris.
+      ⚠️ ET UNE RÈGLE DE LARGEUR DISPARAÎT AVEC LUI (piège nº 60) : ce
+      `sm:` était le dernier de ce fichier. Le bouton ne dépend plus de
+      la taille de la fenêtre, seulement de ce qu'il est.
+      ⚠️ IL DISPARAÎT AVEC LA DERNIÈRE NON LUE (`restantes > 0`) : rien
+      à marquer, rien à montrer. */
   const boutonToutLu = restantes > 0 && (
-    //  « TOUT MARQUER COMME LU » — la DOUBLE COCHE, seule sur
-    //  écran étroit (le texte débordait), accompagnée du texte
-    //  dès 640 px. C'est le signe que font toutes les boîtes
-    //  de réception : il se découvre en explorant, il n'a pas
-    //  besoin de crier.
+    //  C'est le signe que font toutes les boîtes de réception : il se
+    //  découvre en explorant, il n'a pas besoin de crier.
     <button
       type="button"
       onClick={toutMarquer}
       aria-label="Tout marquer comme lu"
       title="Tout marquer comme lu"
-      className="flex h-9 shrink-0 items-center gap-1.5 rounded-full px-2
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full
                  text-sombre-texte-doux hover:text-primaire
                  transition-colors"
     >
       <IconeDoubleCoche taille={18} />
-      <span className="hidden sm:inline text-[13px] font-medium">
-        Tout marquer comme lu
-      </span>
     </button>
   );
 
-  /*  ██ §2 (nº 655) — L'ENCADRÉ DU BAS, AU WEB ██
-      ==================================================================
-      POURQUOI IL EXISTE, ET CE N'EST PAS UN GOÛT : la fenêtre passe de
-      520 px de large à 334 (la largeur de « Mon compte »). Sur la
-      rangée du titre il reste alors, une fois la cloche (20), les deux
-      écarts (24), la croix (36) et les côtés (40) retirés, DEUX CENT
-      QUATORZE pixels pour le mot « Notifications » ET le libellé « Tout
-      marquer comme lu ». Les deux ne tiennent pas ensemble : le geste
-      DESCEND, dans une boîte à lui, en bas — c'est « l'encadré du bas »
-      de la consigne, et c'est lui qui, avec la quantité de nouvelles,
-      donne sa hauteur à la fenêtre.
-      SA FORME EST CELLE DES TUILES DE « MON COMPTE » : sa boîte EST son
-      bouton (le motif des plaques cliquables, nº 502), sur l'encadré
-      partagé — un seul geste, une seule destination. Sa géométrie est
-      celle d'une ENTRÉE du même menu : 46 px de haut, 13,5 px
-      demi-gras, les mêmes fonds de survol et d'appui.
-      ⚠️ LE DOIGT NE LE PREND PAS, et c'est la règle de ce fichier
-      depuis la nº 530 : « ce qui reste propre à chaque plan, ce sont
-      les boîtes, et elles seules ». Là-bas la barre du titre est
-      COLLANTE et large : la double coche y reste à portée de pouce,
-      liste longue ou non. Le GESTE, lui, est écrit une seule fois
-      (`toutMarquer`) et les deux boîtes l'appellent.
-      ⚠️ IL DISPARAÎT AVEC LA DERNIÈRE NON LUE (`restantes > 0`), comme
-      la double coche : rien à marquer, rien à montrer. */
-  const encadreToutLu = restantes > 0 && (
-    <div className="px-5 pb-5">
-      <button
-        type="button"
-        onClick={toutMarquer}
-        className={`flex w-full items-center justify-center gap-2.5 min-h-[46px] px-3
-                   ${CLASSE_ENCADRE_FENETRE} text-[13.5px] font-semibold
-                   text-sombre-texte transition-colors
-                   hover:bg-sombre-eleve-clair active:bg-sombre-eleve-clair`}
-      >
-        <IconeDoubleCoche taille={18} />
-        Tout marquer comme lu
-      </button>
-    </div>
-  );
+  /*  ██ §2 (nº 658) — L'ENCADRÉ DU BAS EST SUPPRIMÉ ██
+      ------------------------------------------------------------------
+      LA nº 655 L'AVAIT POSÉ POUR UNE RAISON DE PLACE, et je l'avais
+      dite : à 334 px, la rangée du titre ne pouvait pas tenir le mot
+      « Notifications » ET le libellé « Tout marquer comme lu ». Le
+      propriétaire tranche autrement, et c'est plus simple : le LIBELLÉ
+      s'en va (voir la double coche ci-dessus), pas le geste. Le
+      dessin seul fait 36 px — il tient sans effort à côté de la croix,
+      comme au doigt.
+      CE QUE ÇA REND À LA FENÊTRE : ses 20 px de bas et ses 46 px de
+      bouton, soit 66 px de moins quand il reste des non-lues. La
+      hauteur suit toujours la quantité de nouvelles (nº 655). */
 
   /* LA LISTE — ou le vide, dit gentiment. */
   const corps =
@@ -547,8 +526,9 @@ export function FenetreNotifications({
                · les côtés passent à 20 px, l'air de « Mon compte »
                  depuis la nº 557 (le `sm:px-6` de 24 px ne valait que
                  dans la plaque de 520) ;
-               · LA DOUBLE COCHE QUITTE CETTE RANGÉE pour l'encadré du
-                 bas — elle n'y tient plus (le calcul est dans sa note).
+               · LA DOUBLE COCHE RESTE DANS CETTE RANGÉE (nº 658) : le
+                 dessin seul y tient — c'est son LIBELLÉ qui ne tenait
+                 pas, et il est parti.
               LA CROIX PREND LA COMPENSATION DE « MON COMPTE » : −9 px,
               soit (36 − 18) / 2, l'écart entre sa cible et son dessin.
               Son glyphe retombe alors PILE à 20 px du bord, à l'aplomb
@@ -560,6 +540,11 @@ export function FenetreNotifications({
             <h2 className="flex-1 min-w-0 text-[17px] font-bold tracking-tight text-sombre-texte">
               Notifications
             </h2>
+            {/*  §2 (nº 658) — LES DEUX PETITES COCHES À CÔTÉ DE LA
+                 CROIX, le dispositif de la version mobile : même
+                 bouton, même place, même écriture — c'est le MÊME
+                 objet (`boutonToutLu`), posé de part et d'autre. */}
+            {boutonToutLu}
             <button
               type="button"
               onClick={onFermer}
@@ -573,7 +558,6 @@ export function FenetreNotifications({
             </button>
           </div>
           {corps}
-          {encadreToutLu}
         </MenuDeVerre>
       )}
 

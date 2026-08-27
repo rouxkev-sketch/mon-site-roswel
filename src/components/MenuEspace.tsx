@@ -702,11 +702,22 @@ export function MenuEspace({
    * le dessin des tuiles, les fonds, les arrondis, l'ordre et
    * l'inventaire des entrées. Seuls des NOMBRES diffèrent.
    *
-   * §2 (nº 532) — LA GÉOMÉTRIE D'UN CÔTÉ, LA COULEUR DE L'AUTRE.
-   * « Ajouter un portfolio » est ROSE et reste une entrée en tout
-   * point identique aux autres : on sépare ce qui ne doit jamais
-   * varier de la seule chose qui varie — la couleur. Deux chaînes
-   * écrites en entier auraient fini par diverger.
+   * ██ §1 (nº 658) — « AJOUTER UN PORTFOLIO » N'A PLUS DE COULEUR À LUI ██
+   * ------------------------------------------------------------------
+   * L'HISTOIRE EN TROIS TEMPS, ET ELLE SE TERMINE ICI. La nº 532 avait
+   * peint la ligne ENTIÈRE en rose (`text-primaire`), parce que c'était
+   * la seule ACTION d'une page où tout le reste menait quelque part. La
+   * nº 649 a rendu LE MOT à ses voisines et gardé le rose sur le seul
+   * DESSIN, d'où `boiteAction`. Le propriétaire retire aussi celui-là
+   * (nº 658) : l'icône rejoint ses voisines, en blanc.
+   * `boiteAction` DISPARAÎT AVEC LE ROSE, et c'est le point : cette clé
+   * n'existait QUE pour porter cette couleur. Sans elle, la ligne monte
+   * exactement la même boîte que « Ma fiche » ou « Sécurité » — même
+   * largeur, même centrage, même `text-sombre-texte/80`. Il n'y a plus
+   * de cas particulier à tenir.
+   * ⚠️ LE BLANC EST CELUI DE SES VOISINES, à 80 % comme elles, et pas
+   * un blanc plein : une icône seule à 100 % au milieu de cinq à 80 %
+   * se lirait comme une erreur, pas comme une décision.
    */
   const reglageDeLigne = (
     largeurBoite: string,
@@ -726,20 +737,6 @@ export function MenuEspace({
           d'encadré plus les 12 px de la ligne —, une somme où sa
           LARGEUR n'entre pas. */
       boite: `flex ${largeurBoite} shrink-0 justify-center`,
-      /*  ██ §3 (nº 649) — LE ROSE DESCEND DU MOT À L'ICÔNE ██
-          « Ajouter un portfolio » était rose EN ENTIER : la ligne
-          portait `text-primaire` et l'icône en héritait (nº 532). Le
-          propriétaire garde le rose sur le DESSIN et rend le MOT à ses
-          voisines. La ligne prend donc `entree`, comme les autres, et
-          c'est CETTE boîte-ci qui porte la couleur — l'icône n'écrit
-          toujours rien elle-même, elle hérite, simplement d'un cran
-          plus bas.
-          ⚠️ UNE SEULE CLASSE DE COULEUR PAR ÉLÉMENT (règle nº 389) : le
-          mot tient la sienne de la ligne, le dessin de sa boîte ; elles
-          ne se superposent jamais.
-          ⚠️ `entreeAction` A DISPARU avec son dernier appelant : la
-          ligne d'action n'a plus de couleur de texte à elle. */
-      boiteAction: `flex ${largeurBoite} shrink-0 justify-center text-primaire`,
       taille,
       entree: `${geometrie} text-sombre-texte`,
     };
@@ -1551,33 +1548,29 @@ export function MenuEspace({
              pas d'un caractère : c'est `demanderUneNouvelleFiche`,
              celui-là même que le plan du web appelle — avec sa garde
              « une saisie est en cours ».
-             ⚠️ SON ICÔNE EST ROSE (`primaire`, nº 466) — un usage de
-             charte, pas une dérive : c'est LA SEULE ACTION de cette
-             page, tout le reste y mène quelque part.
-             §3 (nº 649) — SON TEXTE, LUI, NE L'EST PLUS : le
-             propriétaire l'a rendu à ses voisines. La ligne reprend
-             donc LA GÉOMÉTRIE des entrées ET leur couleur de texte
-             (`entree`) ; c'est la BOÎTE de l'icône qui porte le rose
-             (`boiteAction`, plus haut) — une classe de couleur par
-             élément, jamais deux empilées. */}
+             SON ROSE EST PARTI EN DEUX TEMPS : le TEXTE à la nº 649
+             (rendu à ses voisines), l'ICÔNE à la nº 658 — le
+             propriétaire annule la décision de la nº 650 et veut le
+             dessin en blanc, comme le mot. Cette ligne n'a donc plus
+             AUCUNE couleur à elle : elle est, au caractère près,
+             « Ma fiche » ou « Sécurité » avec un autre glyphe. */}
         <button
           type="button"
           onClick={demanderUneNouvelleFiche}
           //  §3 (nº 649) — le mot rejoint ses voisines : `entree`, la
-          //  même écriture que « Ma fiche » ou « Sécurité ». Le rose
-          //  reste, mais sur l'icône seule (voir `boiteAction`).
+          //  même écriture que « Ma fiche » ou « Sécurité ».
           className={reglages.ligne.entree}
         >
           {/*  §1 (nº 533) — L'ICÔNE EST CELLE DE « MON PORTFOLIO »,
                OUVERTE EN HAUT À DROITE, avec un petit « + » dans
                l'ouverture (voir IconeAjouterPortfolio). Le lecteur
                reconnaît l'objet avant de lire le mot.
-               L'ICÔNE N'ÉCRIT AUCUNE COULEUR : elle hérite du rose,
-               qui vient DE SA BOÎTE depuis la nº 649 (`boiteAction`) —
-               il venait de la ligne entière jusque-là (nº 532). La
-               boîte est pour le reste la même que ses voisines : les
-               libellés partent tous du même pixel. */}
-          <span className={reglages.ligne.boiteAction}>
+               §1 (nº 658) — ELLE N'ÉCRIT TOUJOURS AUCUNE COULEUR, elle
+               HÉRITE — et ce qu'elle hérite est désormais le blanc à
+               80 % de ses cinq voisines, posé par la même boîte
+               qu'elles (`boite`). Le rose de la nº 532/649 s'en va, et
+               `boiteAction` avec lui : il n'existait que pour lui. */}
+          <span className={`${reglages.ligne.boite} text-sombre-texte/80`}>
             <IconeAjouterPortfolio taille={reglages.ligne.taille} />
           </span>
           <span className="flex-1">Ajouter un portfolio</span>
