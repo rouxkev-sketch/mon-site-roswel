@@ -27,8 +27,59 @@ import type { SupabaseClient, User } from "@supabase/supabase-js";
  * module ne connaît que le geste d'écriture.
  */
 
+/**
+ * ██ §1 (nº 675) — LA RÈGLE DE L'IDENTITÉ AFFICHÉE ██
+ * ==================================================================
+ * LA RÈGLE, EN UNE PHRASE, ET ELLE VAUT POUR TOUTES LES SURFACES :
+ * L'IDENTITÉ AFFICHÉE SUIT LE PORTFOLIO S'IL EN EXISTE UN, LA PERSONNE
+ * SINON. « Il en existe un » comprend un portfolio DONT LA SUPPRESSION
+ * EST PROGRAMMÉE : pendant les trente jours il reste récupérable,
+ * modifiable et consultable — donc il compte.
+ *
+ * POURQUOI IL FAUT DEUX PAIRES DE CLÉS, ET NON UNE. Jusqu'ici, la
+ * photo du portfolio ÉCRASAIT celle de la personne dans la seule clé
+ * qui existait. Tant qu'on ne faisait qu'aller de la personne vers le
+ * portfolio, cela suffisait. Mais la règle demande le CHEMIN INVERSE —
+ * « suppression définitive au bout des trente jours : retour
+ * automatique à la photo et au nom du particulier ». Or on ne revient
+ * pas à ce qu'on a effacé. Il faut donc :
+ *  · CE QU'ON AFFICHE — `photo_compte` (qui existait) et `nom_affiche`
+ *    (nouveau) : la copie que la barre lit sans une seule requête ;
+ *  · CE QUE LA PERSONNE A SAISI — `photo_personne` (nouveau) et `nom`
+ *    (qui existait) : sa mémoire à elle, que rien n'écrase jamais.
+ * C'est ce second couple qui rend le retour possible, et il n'y a pas
+ * d'autre moyen : le portfolio purgé n'existe plus, la session est le
+ * seul endroit où l'identité de la personne peut survivre.
+ *
+ * ⚠️ `nom` NE CHANGE PAS DE SENS, ET C'EST DÉLIBÉRÉ : c'est la clé que
+ * Supabase porte depuis toujours et que `lib/use-utilisateur` lit déjà.
+ * Elle reste LA PERSONNE. On n'y met jamais le nom d'un portfolio —
+ * sans quoi le champ de la fenêtre « Éditer » proposerait un jour à
+ * quelqu'un de modifier le nom de son propre portfolio en croyant
+ * changer le sien.
+ * ⚠️ AUCUNE MIGRATION, ET AUCUN COMPTE CASSÉ : les deux clés neuves sont
+ * absentes des comptes d'avant cette passe. `identiteDeLaPersonne` se
+ * replie alors sur ce qui existe (`nom`, et la photo affichée faute de
+ * mieux) — voir sa note.
+ */
+
 /** La clé, écrite ICI et nulle part ailleurs. */
 export const CLE_AVATAR = "photo_compte";
+
+/**
+ * §1 (nº 675) — LE NOM AFFICHÉ, pendant du `photo_compte` ci-dessus :
+ * le nom du PORTFOLIO quand il y en a un, celui de la personne sinon.
+ * Il voyage dans le cookie comme la photo, et pour la même raison — la
+ * barre le lit sans une requête, dès le premier rendu.
+ */
+export const CLE_NOM_AFFICHE = "nom_affiche";
+
+/**
+ * §1 (nº 675) — LA PHOTO DE LA PERSONNE, sa mémoire à elle. Écrite par
+ * la seule fenêtre « Éditer », jamais par un portfolio. C'est elle
+ * qu'on restitue quand le dernier portfolio est purgé.
+ */
+export const CLE_PHOTO_PERSONNE = "photo_personne";
 
 /**
  * §1 (nº 657) — LA CLÉ DU NOM, celle que Supabase porte depuis
@@ -60,13 +111,53 @@ export function avatarDuCompte(utilisateur: User | null): string | null {
 }
 
 /**
- * RANGER LA PHOTO — et ne réveiller personne pour rien.
+ * §1 (nº 675) — LE NOM AFFICHÉ, tel qu'il est rangé. Repli sur le nom
+ * de la personne pour les comptes d'avant cette passe, qui ne portent
+ * pas encore la clé : leur identité affichée EST celle de la personne
+ * tant qu'un portfolio ne l'a pas remplacée.
+ */
+export function nomAffiche(utilisateur: User | null): string | null {
+  const valeur = utilisateur?.user_metadata?.[CLE_NOM_AFFICHE];
+  if (typeof valeur === "string" && valeur.trim()) return valeur.trim();
+  return nomDuCompte(utilisateur);
+}
+
+/**
+ * §1 (nº 675) — CE QUE LA PERSONNE A SAISI, et rien d'autre : le couple
+ * qu'on restitue quand le dernier portfolio disparaît.
+ * ⚠️ LE REPLI DE LA PHOTO EST NÉCESSAIRE, et il est prudent : un compte
+ * d'avant cette passe ne porte pas `photo_personne`. Si l'on rendait
+ * `null`, la purge de son portfolio effacerait une photo qu'il avait
+ * peut-être choisie lui-même. On se replie donc sur la photo AFFICHÉE —
+ * au pire elle vient du portfolio, et il la remplace en deux gestes
+ * dans « Éditer » ; au mieux c'est bien la sienne. Ne rien effacer
+ * qu'on n'est pas sûr de pouvoir rendre.
+ */
+export function identiteDeLaPersonne(utilisateur: User | null): {
+  photo: string | null;
+  nom: string | null;
+} {
+  const brute = utilisateur?.user_metadata?.[CLE_PHOTO_PERSONNE];
+  const photo =
+    typeof brute === "string" && brute.trim()
+      ? brute
+      : avatarDuCompte(utilisateur);
+  return { photo, nom: nomDuCompte(utilisateur) };
+}
+
+/**
+ * RANGER L'IDENTITÉ AFFICHÉE — et ne réveiller personne pour rien.
+ * (`rangerLAvatarDuCompte` jusqu'à la nº 674 : elle ne rangeait que la
+ * photo, et c'est justement ce qui manquait au nom — voir le §1 de la
+ * nº 675 en tête de fichier.)
  *
  * ⚠️ LA GARDE D'ÉGALITÉ EST LA PIÈCE MAÎTRESSE, et c'est la leçon de la
  * nº 111 : `updateUser` fait émettre `USER_UPDATED`, la signature de la
  * session change, et TOUT ce qui lit `useUtilisateur` se re-rend. Sans
  * cette garde, chaque ouverture de menu et chaque enregistrement
- * rejoueraient la session pour écrire la même valeur.
+ * rejoueraient la session pour écrire les mêmes valeurs. Elle porte
+ * désormais sur LES DEUX morceaux : on n'écrit que si l'un des deux
+ * diffère, et l'on écrit alors les deux ensemble — une seule secousse.
  *
  * ⚠️ SI L'ÉCRITURE ÉCHOUE (réseau coupé, jeton expiré), ON NE FAIT
  * RIEN : la session garde ce qu'elle portait, la barre garde ce qu'elle
@@ -74,18 +165,21 @@ export function avatarDuCompte(utilisateur: User | null): string | null {
  * personne était en train de faire. La valeur sera reprise au prochain
  * passage qui la trouve fausse (voir les appelants).
  */
-export async function rangerLAvatarDuCompte(
+export async function rangerLIdentiteAffichee(
   supabase: SupabaseClient,
-  photoVoulue: string | null | undefined,
-  photoRangee: string | null
+  voulue: { photo: string | null | undefined; nom: string | null | undefined },
+  rangee: { photo: string | null; nom: string | null }
 ): Promise<void> {
-  const voulue = photoVoulue?.trim() ? photoVoulue : null;
-  if (voulue === photoRangee) return;
+  const photo = voulue.photo?.trim() ? voulue.photo : null;
+  const nom = voulue.nom?.trim() ? voulue.nom.trim() : null;
+  if (photo === rangee.photo && nom === rangee.nom) return;
   try {
-    await supabase.auth.updateUser({ data: { [CLE_AVATAR]: voulue } });
+    await supabase.auth.updateUser({
+      data: { [CLE_AVATAR]: photo, [CLE_NOM_AFFICHE]: nom },
+    });
   } catch {
-    //  Voir la note ci-dessus : l'avatar n'est pas un geste, il ne
-    //  réclame rien à personne quand il ne peut pas s'écrire.
+    //  Voir la note ci-dessus : l'identité affichée n'est pas un geste,
+    //  elle ne réclame rien à personne quand elle ne peut pas s'écrire.
   }
 }
 
@@ -99,9 +193,9 @@ export async function rangerLAvatarDuCompte(
  * session et re-rendre tout ce qui lit `useUtilisateur` (la leçon
  * nº 111). Deux appels, ce serait deux secousses pour un seul geste.
  *
- * ⚠️ CE N'EST PAS `rangerLAvatarDuCompte`, ET LES DEUX NE SE
+ * ⚠️ CE N'EST PAS `rangerLIdentiteAffichee`, ET LES DEUX NE SE
  * MARCHENT PAS DESSUS : celui-là est un RATTRAPAGE silencieux (il
- * recopie la photo du portfolio actif, et se tait s'il échoue) ;
+ * recopie l'identité du portfolio actif, et se tait s'il échoue) ;
  * celui-ci est un GESTE de la personne — il rend son échec, et
  * l'appelant l'affiche.
  * ⚠️ `data` est FUSIONNÉ par Supabase dans `user_metadata` : les
@@ -110,15 +204,37 @@ export async function rangerLAvatarDuCompte(
  * ⚠️ AUCUNE ÉCRITURE EN BASE : ni table, ni ligne. L'identité d'un
  * particulier vit dans sa session, et voyage donc dans le cookie —
  * l'avatar de la barre l'a sans une requête (la voie B, nº 644-645).
+ *
+ * ██ §1 (nº 675) — IL ÉCRIT DEUX FOIS LA MÊME CHOSE, ET C'EST LE POINT ██
+ * ------------------------------------------------------------------
+ * QUATRE CLÉS EN UN APPEL, deux couples :
+ *  · LA MÉMOIRE DE LA PERSONNE (`nom`, `photo_personne`) — ce qu'elle
+ *    vient de saisir, que RIEN n'écrasera jamais. C'est elle qu'on lui
+ *    rendra le jour où son dernier portfolio sera purgé ;
+ *  · CE QU'ON AFFICHE (`nom_affiche`, `photo_compte`) — la même chose,
+ *    ici et maintenant.
+ * POURQUOI LES DEUX D'UN COUP, SANS SE DEMANDER S'IL Y A UN PORTFOLIO :
+ * parce que cette fenêtre N'EXISTE QUE POUR UN COMPTE SANS PORTFOLIO —
+ * la ligne « Éditer » qui l'ouvre ne s'affiche que là (MenuEspace, la
+ * seconde ligne de la tête). Il n'y a donc aucun portfolio dont
+ * l'identité pourrait être écrasée. Et si, par une porte qu'on
+ * n'imagine pas, il y en avait un : le rattrapage du menu remettrait
+ * l'identité du portfolio au premier compte lu.
  */
 export async function rangerLIdentiteDuCompte(
   supabase: SupabaseClient,
   identite: { nom: string; photo: string | null }
 ): Promise<void> {
+  const nom = identite.nom.trim() || null;
+  const photo = identite.photo?.trim() ? identite.photo : null;
   const { error } = await supabase.auth.updateUser({
     data: {
-      [CLE_NOM]: identite.nom.trim() || null,
-      [CLE_AVATAR]: identite.photo?.trim() ? identite.photo : null,
+      //  La mémoire de la personne — jamais écrasée par un portfolio.
+      [CLE_NOM]: nom,
+      [CLE_PHOTO_PERSONNE]: photo,
+      //  Ce qu'on affiche, à cet instant : la même chose.
+      [CLE_NOM_AFFICHE]: nom,
+      [CLE_AVATAR]: photo,
     },
   });
   if (error) throw error;

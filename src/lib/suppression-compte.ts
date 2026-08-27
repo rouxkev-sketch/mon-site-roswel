@@ -167,6 +167,68 @@ export async function suppressionEnCours(
  * intact le reste du dossier — les autres fiches du même compte y
  * vivent aussi.
  */
+/**
+ * ██ §1 (nº 675) — EFFACER UNE FICHE, ET SES PHOTOS AVEC ██
+ * ==================================================================
+ * CE QU'ELLE EST : le corps de la boucle de `purgerFichesEchues`,
+ * extrait tel quel — pas une ligne de comportement ne change. Elle
+ * existe parce qu'un SECOND appelant en a désormais besoin :
+ * l'administration, qui peut supprimer une demande de mise en ligne
+ * (un faux compte, un portfolio jamais validé — point 6 de la nº 675).
+ * L'ÉCRIRE DEUX FOIS AURAIT ÉTÉ LA FAUTE : deux effacements qui
+ * divergent, c'est un jour où l'un des deux oublie les photos et
+ * laisse des fichiers orphelins dans le stockage pour toujours.
+ *
+ * ⚠️ LES PHOTOS D'ABORD, LA LIGNE ENSUITE, et l'ordre compte : la ligne
+ * porte l'identifiant qui sert à retrouver les fichiers. Effacée
+ * d'abord, on ne saurait plus quoi nettoyer.
+ * ⚠️ UN DOSSIER DE STOCKAGE INTROUVABLE N'ARRÊTE RIEN : une fiche sans
+ * photo est un cas normal. Seule l'erreur sur LA LIGNE est fatale —
+ * c'est elle qui dit si la fiche existe encore.
+ */
+async function effacerUneFiche(
+  admin: ReturnType<typeof creerClientSupabaseAdmin>,
+  id: string,
+  userId: string | null
+): Promise<void> {
+  if (userId) {
+    try {
+      const { data: fichiers } = await admin.storage
+        .from(BUCKET_PHOTOS)
+        .list(userId);
+      const aEffacer = (fichiers ?? [])
+        .filter((f) => f.name.includes(id))
+        .map((f) => `${userId}/${f.name}`);
+      if (aEffacer.length > 0) {
+        await admin.storage.from(BUCKET_PHOTOS).remove(aEffacer);
+      }
+    } catch {
+      // Dossier introuvable : la suite reste valable.
+    }
+  }
+  const { error } = await admin.from("tatoueurs").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+/**
+ * §1 (nº 675) — LA MÊME SUPPRESSION, OUVERTE À L'ADMINISTRATION.
+ * Elle ne fait RIEN de plus que la purge des trente jours : mêmes
+ * photos effacées, même ligne supprimée, même écriture. Ce qui change
+ * est QUI la déclenche et QUAND — l'administration, tout de suite,
+ * pour une demande qui n'a jamais eu à exister.
+ * ⚠️ ELLE NE TOUCHE PAS AU COMPTE DE CONNEXION : supprimer un portfolio
+ * n'est pas supprimer quelqu'un. La personne garde son compte, ses
+ * favoris et ses suivis — et retrouve son identité de particulier au
+ * premier chargement qui suit (la règle de la nº 675, tenue par le
+ * rattrapage de MenuEspace).
+ */
+export async function supprimerLaFicheDefinitivement(
+  id: string,
+  userId: string | null
+): Promise<void> {
+  await effacerUneFiche(creerClientSupabaseAdmin(), id, userId);
+}
+
 export async function purgerFichesEchues(): Promise<{
   effacees: number;
   echecs: Array<{ id: string; raison: string }>;
@@ -182,26 +244,7 @@ export async function purgerFichesEchues(): Promise<{
 
   for (const ligne of data as Array<{ id: string; user_id: string | null }>) {
     try {
-      if (ligne.user_id) {
-        try {
-          const { data: fichiers } = await admin.storage
-            .from(BUCKET_PHOTOS)
-            .list(ligne.user_id);
-          const aEffacer = (fichiers ?? [])
-            .filter((f) => f.name.includes(ligne.id))
-            .map((f) => `${ligne.user_id}/${f.name}`);
-          if (aEffacer.length > 0) {
-            await admin.storage.from(BUCKET_PHOTOS).remove(aEffacer);
-          }
-        } catch {
-          // Dossier introuvable : la suite reste valable.
-        }
-      }
-      const { error: erreurLigne } = await admin
-        .from("tatoueurs")
-        .delete()
-        .eq("id", ligne.id);
-      if (erreurLigne) throw new Error(erreurLigne.message);
+      await effacerUneFiche(admin, ligne.id, ligne.user_id);
       effacees++;
     } catch (erreur) {
       echecs.push({

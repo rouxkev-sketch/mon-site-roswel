@@ -397,7 +397,9 @@ export function AdminYokofolio() {
     }
   }
 
-  async function decider(action: "valider" | "modifier" | "hors_ligne") {
+  async function decider(
+    action: "valider" | "modifier" | "hors_ligne" | "supprimer"
+  ) {
     if (!ficheOuverte || envoiDecision) return;
     setEnvoiDecision(true);
     try {
@@ -839,6 +841,49 @@ export function AdminYokofolio() {
                            hover:text-erreur transition-colors"
               >
                 Mettre le portfolio hors ligne
+              </button>
+
+              {/*  ██ §1 (nº 675) — SUPPRIMER LA DEMANDE ██
+                   ======================================================
+                   CE QU'ELLE EST, ET ELLE N'A PAS D'ÉQUIVALENT ICI : les
+                   trois décisions ci-dessus MODIFIENT le portfolio — la
+                   ligne reste, le tatoueur la garde. Celle-ci l'EFFACE,
+                   avec ses photos. Le propriétaire la demande pour un
+                   cas précis : un FAUX COMPTE, un portfolio qui n'aurait
+                   jamais dû être déposé.
+                   ELLE EST DONC LA DERNIÈRE, EN TEXTE BRUT ET EN ROUGE :
+                   la règle des actions négatives (aucune capsule), et sa
+                   place dit son poids. C'est la seule du site à porter
+                   le rouge AU REPOS — parce qu'elle est la seule qui
+                   détruise.
+                   ⚠️ ELLE DEMANDE CONFIRMATION, et c'est le seul endroit
+                   de cet écran qui le fasse : rien ne rattrape un
+                   effacement. Le `confirm` du navigateur est employé tel
+                   quel — une fenêtre de plus, pour un geste qui doit
+                   rester rare, serait du décor.
+                   ⚠️ LE COMPTE N'EST PAS TOUCHÉ : la personne garde son
+                   espace, ses favoris, ses suivis, et retrouve son
+                   identité de particulier au premier chargement (la
+                   règle de la nº 675). */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      "Supprimer définitivement ce portfolio et ses photos ? " +
+                        "Le compte de la personne n'est pas supprimé."
+                    )
+                  ) {
+                    void decider("supprimer");
+                  }
+                }}
+                disabled={envoiDecision}
+                className="inline-flex items-center justify-center px-2 min-h-[48px]
+                           text-[14.5px] font-semibold text-erreur
+                           hover:text-sombre-texte transition-colors
+                           disabled:opacity-60"
+              >
+                Supprimer la demande
               </button>
             </div>
 

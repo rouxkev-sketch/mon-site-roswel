@@ -95,7 +95,13 @@ import { marquerTravailEnCours } from "@/lib/travail-en-cours";
 import { useUtilisateur } from "@/lib/use-utilisateur";
 //  §1 (nº 645) — l'avatar de la barre, rangé dans la session : une
 //  seule écriture, deux appelants (ici et le menu du compte).
-import { avatarDuCompte, rangerLAvatarDuCompte } from "@/lib/avatar-du-compte";
+//  §1 (nº 675) — l'identité affichée (photo + nom), rangée en un seul
+//  appel : la règle et son écriture vivent chez `avatar-du-compte`.
+import {
+  avatarDuCompte,
+  nomAffiche,
+  rangerLIdentiteAffichee,
+} from "@/lib/avatar-du-compte";
 import { MANQUE, texteErreur } from "@/lib/erreurs-formulaire";
 import { OngletsLigne } from "@/components/OngletsLigne";
 import { slugFiche, slugifier } from "@/lib/slug";
@@ -2161,10 +2167,17 @@ export function FormulaireFiche() {
              tenir : « le portfolio actif » n'est mémorisé nulle part
              ailleurs (constat de la nº 644) — cette photo EST le
              témoin. */
-        await rangerLAvatarDuCompte(
+        /*  §1 (nº 675) — LE NOM PART AVEC LA PHOTO, désormais. La
+             règle du propriétaire dit « DÈS LA CRÉATION, la photo ET LE
+             NOM du portfolio prennent le dessus » — sans attendre la
+             validation. La photo le faisait déjà (nº 645) ; le nom, non,
+             et l'info-bulle de la barre continuait d'annoncer le nom du
+             particulier. Un seul appel pour les deux : deux écritures,
+             ce serait deux secousses de session pour un seul geste. */
+        await rangerLIdentiteAffichee(
           supabase,
-          adresseProfil,
-          avatarDuCompte(utilisateur)
+          { photo: adresseProfil, nom },
+          { photo: avatarDuCompte(utilisateur), nom: nomAffiche(utilisateur) }
         );
         //  §2 (nº 269) — MÊME RÈGLE À LA CRÉATION : `replace`, jamais
         //  `assign` — l'enregistrement ne laisse aucune entrée de
@@ -2460,10 +2473,13 @@ export function FormulaireFiche() {
            raison : la photo vient de changer en base, la session doit
            la porter avant que la page ne reparte. Voir la note du cas
            CRÉATION, plus haut. */
-      await rangerLAvatarDuCompte(
+      /*  §1 (nº 675) — le nom part avec la photo, ici comme à la
+           création : renommer son portfolio doit renommer ce que la
+           barre annonce. */
+      await rangerLIdentiteAffichee(
         supabase,
-        adresseProfil,
-        avatarDuCompte(utilisateur)
+        { photo: adresseProfil, nom },
+        { photo: avatarDuCompte(utilisateur), nom: nomAffiche(utilisateur) }
       );
       /*  §2 (nº 269) — LA CAUSE DU RETOUR QUI RAMÈNE AU FORMULAIRE.
           `location.assign` POUSSE une entrée d'historique : après un

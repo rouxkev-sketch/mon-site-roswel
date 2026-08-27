@@ -3,6 +3,9 @@ import { verifierAdmin } from "@/lib/admin-yokofolio";
 import { identifiantsAdmin } from "@/lib/fiches-admin";
 import { rafraichirPagesPubliques } from "@/lib/rafraichir";
 import { creerClientSupabaseAdmin } from "@/lib/supabase/admin";
+//  §1 (nº 675) — l'effacement d'une fiche, écrit une seule fois (le
+//  corps de la purge des trente jours). Voir lib/suppression-compte.
+import { supprimerLaFicheDefinitivement } from "@/lib/suppression-compte";
 import {
   creerNotification,
   proprietaireDeLaFiche,
@@ -310,7 +313,7 @@ export async function POST(requete: NextRequest) {
   const motifs = (corps?.motifs ?? []).slice(0, 10);
   const note = (corps?.note ?? "").trim().slice(0, 600);
 
-  if (!id || !["valider", "modifier", "hors_ligne"].includes(action)) {
+  if (!id || !["valider", "modifier", "hors_ligne", "supprimer"].includes(action)) {
     return NextResponse.json(
       { ok: false, message: "Demande incomplète." },
       { status: 400 }
@@ -325,6 +328,45 @@ export async function POST(requete: NextRequest) {
 
   try {
     const admin = creerClientSupabaseAdmin();
+
+    /*  ██ §1 (nº 675) — SUPPRIMER UNE DEMANDE DE MISE EN LIGNE ██
+        ==============================================================
+        CE QUE C'EST, ET POURQUOI ELLE SORT DU LOT. Les trois décisions
+        du dessous MODIFIENT une fiche : elles la publient, la renvoient
+        en correction, ou la retirent — la ligne reste, le tatoueur la
+        garde. Celle-ci l'EFFACE, elle, et ses photos avec. Elle est
+        faite pour ce que le propriétaire nomme : un FAUX COMPTE, un
+        portfolio qui n'aurait jamais dû être déposé.
+        ELLE SORT DONC AVANT le reste de la fonction, sans passer par la
+        mise à jour ni par la notification : il n'y a plus de ligne à
+        notifier, et prévenir un faux compte n'aurait aucun sens.
+        ⚠️ AUCUN DÉLAI, ET C'EST LA DEMANDE : « cette suppression ramène
+        IMMÉDIATEMENT la photo et le nom du particulier ». Les trente
+        jours de la suppression ordinaire protègent quelqu'un qui
+        pourrait se raviser ; ici c'est l'administration qui tranche
+        contre un abus, il n'y a rien à protéger.
+        ⚠️ LE COMPTE DE CONNEXION N'EST PAS TOUCHÉ : supprimer un
+        portfolio n'est pas supprimer quelqu'un. La personne garde son
+        compte, ses favoris, ses suivis — et retrouve son identité de
+        particulier au premier chargement (la règle de la nº 675, tenue
+        par le rattrapage de MenuEspace).
+        ⚠️ L'EFFACEMENT LUI-MÊME EST CELUI DE LA PURGE DES TRENTE JOURS,
+        au caractère : `supprimerLaFicheDefinitivement` est le corps
+        extrait de `purgerFichesEchues` (lib/suppression-compte). Deux
+        écritures auraient fini par diverger — et celle qui oublie les
+        photos laisse des fichiers orphelins pour toujours. */
+    if (action === "supprimer") {
+      const { data: ligne } = await admin
+        .from("tatoueurs")
+        .select("user_id")
+        .eq("id", id)
+        .maybeSingle();
+      await supprimerLaFicheDefinitivement(
+        id,
+        (ligne as { user_id?: string | null } | null)?.user_id ?? null
+      );
+      return NextResponse.json({ ok: true });
+    }
 
     let valeurs: Record<string, unknown>;
     if (action === "valider") {

@@ -29,7 +29,14 @@ import { PhotoRonde } from "@/components/BlocLieux";
 //  l'écriture unique de `lib/avatar-du-compte`.
 //  §1 (nº 657) — le nom du compte rejoint la photo : les deux
 //  morceaux de l'identité se lisent au même endroit.
-import { nomDuCompte, rangerLAvatarDuCompte } from "@/lib/avatar-du-compte";
+//  §1 (nº 675) — la règle de l'identité affichée : ce qu'on montre
+//  (photo + nom), la mémoire de la personne, et le rangement des deux
+//  morceaux en un seul appel. Tout est écrit là-bas.
+import {
+  identiteDeLaPersonne,
+  nomAffiche,
+  rangerLIdentiteAffichee,
+} from "@/lib/avatar-du-compte";
 import { useUtilisateur } from "@/lib/use-utilisateur";
 import { EntreeLangue, FenetreLangue } from "@/components/SelecteurLangue";
 import { FenetreNotifications } from "@/components/FenetreNotifications";
@@ -400,12 +407,26 @@ export function MenuEspace({
    * (acquis nº 142, jamais rouvert). La session, elle, sait déjà.
    */
   /*  §1 (nº 657) — LE NOM DU COMPTE ARRIVE PAR LE MÊME CHEMIN, et
-      c'est `nomDuCompte` qui le lit — PAS le `nom` de ce crochet, qui
-      se replie sur le début de l'adresse e-mail pour ne jamais rendre
-      une chaîne vide à une info-bulle. La tête a besoin de savoir si
-      un nom EXISTE : sans nom, elle écrit « Mon compte ». */
+      c'est `nomAffiche` qui le lit depuis la nº 675 — PAS le `nom` de
+      ce crochet, qui se replie sur le début de l'adresse e-mail pour ne
+      jamais rendre une chaîne vide à une info-bulle. La tête a besoin
+      de savoir si un nom EXISTE : sans nom, elle écrit « Mon compte ».
+      (Jusqu'à la nº 674 c'était `nomDuCompte`, qui ne connaît que la
+      personne — la tête ignorait donc le nom du portfolio tant que la
+      liste des fiches n'était pas lue.) */
   const { utilisateur, photo: photoDuCompte } = useUtilisateur();
-  const nomDuParticulier = nomDuCompte(utilisateur);
+  /*  §1 (nº 675) — LE NOM AFFICHÉ, pendant de `photoDuCompte` : celui
+      du PORTFOLIO quand il y en a un, celui de la personne sinon. Il
+      vit dans la session comme la photo, donc dans le cookie — la barre
+      l'a sans une requête. */
+  const nomAfficheDuCompte = nomAffiche(utilisateur);
+  /*  §1 (nº 675) — L'INFO-BULLE DES DEUX BOUTONS DE LA BARRE SUIT LA
+      MÊME RÈGLE. Elle disait le nom de la PERSONNE quoi qu'il arrive ;
+      elle dit désormais le nom AFFICHÉ — celui du portfolio tant qu'il
+      en existe un. Le `nom` reçu du parent reste le REPLI, et il est
+      nécessaire : lui seul se rabat sur le début de l'adresse e-mail,
+      pour ne jamais rendre une info-bulle vide (voir useUtilisateur). */
+  const nomDeLInfobulle = nomAfficheDuCompte || nom;
   /*  §1 (nº 645) — LE COMPTE A-T-IL ÉTÉ LU AU MOINS UNE FOIS ? Sans ce
       drapeau, l'effet qui range la photo verrait `fiche` à `null` sur
       une page où le menu n'a jamais été ouvert, et EFFACERAIT l'avatar
@@ -555,34 +576,57 @@ export function MenuEspace({
    * dans `rangerLAvatarDuCompte` (leçon nº 111 — ne pas rejouer la
    * session pour écrire ce qui y est déjà).
    *
-   * ██ §1 (nº 657) — ET RIEN DU TOUT SANS PORTFOLIO ██
+   * ██ §1 (nº 657), REMPLACÉ PAR LE §1 (nº 675) ██
    * ------------------------------------------------------------------
-   * LA CAUSE, ET ELLE AURAIT MORDU DÈS LA PREMIÈRE OUVERTURE : cet
-   * effet recopie la photo de la FICHE ACTIVE. Sans portfolio, la
-   * fiche active est `null`, donc la photo voulue aussi — il EFFAÇAIT
-   * l'avatar. C'était juste tant qu'un particulier n'en avait pas ; il
-   * en a un depuis cette passe (« Modifier »), et ouvrir « Mon
-   * compte » aurait suffi à le lui reprendre.
-   * LA RÈGLE, DÉSORMAIS, EN UNE PHRASE : l'avatar appartient au
-   * PORTFOLIO quand il y en a un, à la PERSONNE quand il n'y en a pas.
-   * Cet effet ne parle donc que du premier cas.
-   * ⚠️ CE QUE ÇA LAISSE, ET JE LE DIS : quelqu'un qui SUPPRIME son
-   * dernier portfolio garde la photo de ce portfolio comme avatar, au
-   * lieu de retomber sur le cercle gris. Il peut la remplacer par la
-   * fenêtre « Modifier », qui est justement là pour ça — et l'effacer
-   * d'office serait un geste qu'il n'a pas demandé.
-   * ⚠️ LES COMPTES AVEC PORTFOLIO NE CHANGENT PAS D'UN CARACTÈRE : la
-   * garde ne se ferme que sur une liste VIDE, lue après le drapeau
-   * `compteLu` — jamais sur une liste pas encore chargée.
+   * CE QUE LA nº 657 AVAIT POSÉ : cet effet s'arrêtait net sur une
+   * liste VIDE, pour ne pas effacer la photo d'un particulier qui n'a
+   * pas de portfolio. Sa note reconnaissait ce qu'elle laissait :
+   * « quelqu'un qui SUPPRIME son dernier portfolio garde la photo de ce
+   * portfolio ». LE PROPRIÉTAIRE REMPLACE CE COMPORTEMENT (nº 675,
+   * points 3 et 5) : après la suppression DÉFINITIVE, l'identité de la
+   * personne doit revenir TOUTE SEULE.
+   *
+   * LA RÈGLE ENTIÈRE, TENUE ICI ET EN UN SEUL ENDROIT :
+   * L'IDENTITÉ AFFICHÉE SUIT LE PORTFOLIO S'IL EN EXISTE UN, LA
+   * PERSONNE SINON. La garde sur la liste vide TOMBE, et c'est ce qui
+   * rend le retour possible : sans elle, l'effet ne parlait jamais du
+   * second cas.
+   * ⚠️ « IL EN EXISTE UN » COMPREND UN PORTFOLIO EN COURS DE
+   * SUPPRESSION, et ce n'est pas une tolérance : pendant les trente
+   * jours il reste récupérable, modifiable et consultable (point 3 du
+   * propriétaire). Rien de particulier n'est écrit pour cela —
+   * `chargerFichesDuCompte` liste les fiches SANS filtrer
+   * `supprime_le`, donc `fiches` n'est pas vide et la fiche active
+   * garde son identité. Le point 4 (annuler la suppression) suit sans
+   * qu'une ligne le prévoie : rien ne change parce que rien n'avait
+   * changé.
+   * ⚠️ CE QUI REVIENT AU BOUT DES TRENTE JOURS : `identiteDeLaPersonne`
+   * — sa photo et son nom saisis dans « Éditer ». Faute d'en avoir
+   * saisi, le repli est le cercle gris et « Mon compte », comme le
+   * propriétaire l'écrit.
+   * ⚠️ ET RIEN NE PEUT S'EFFACER PAR ACCIDENT : la lecture qui échoue
+   * n'arme pas `compteLu` (voir `lireLeCompte`), donc une liste vide
+   * FAUTE DE LECTURE n'est jamais prise pour un compte sans portfolio.
+   * C'est la même garde qu'avant, et elle est plus nécessaire que
+   * jamais maintenant que la branche « liste vide » agit.
    */
   useEffect(() => {
-    if (!compteLu || fiches.length === 0) return;
-    void rangerLAvatarDuCompte(
+    if (!compteLu) return;
+    const personne = identiteDeLaPersonne(utilisateur);
+    void rangerLIdentiteAffichee(
       creerClientSupabaseNavigateur(),
-      fiche?.photo_profil ?? null,
-      photoDuCompte
+      fiche
+        ? { photo: fiche.photo_profil, nom: fiche.nom }
+        : personne,
+      { photo: photoDuCompte, nom: nomAfficheDuCompte }
     );
-  }, [compteLu, fiches.length, fiche?.photo_profil, photoDuCompte]);
+  }, [
+    compteLu,
+    fiche,
+    utilisateur,
+    photoDuCompte,
+    nomAfficheDuCompte,
+  ]);
 
   /**
    * OUVRIR — ET N'OUVRIR QU'UNE FOIS LE CONTENU PRÊT (passe nº 142)
@@ -1615,7 +1659,15 @@ export function MenuEspace({
                ligne, et elle n'oblige à rien. Un PROFESSIONNEL, lui,
                garde le nom de sa fiche : la règle de la nº 640 n'est
                pas touchée. */}
-          {fiche ? fiche.nom : nomDuParticulier || "Mon compte"}
+          {/*  §1 (nº 675) — LE NOM SUIT LA MÊME RÈGLE QUE LA PHOTO,
+               et par le même chemin : la fiche quand elle est chargée,
+               le NOM AFFICHÉ de la session sinon. Ce second terme est
+               ce qui change à cette passe — il portait le nom de la
+               PERSONNE, il porte désormais celui du portfolio tant
+               qu'il en existe un. C'est ce qui rend la tête juste AVANT
+               même que la liste des fiches ne soit lue (la barre l'est
+               déjà depuis la nº 645). */}
+          {fiche ? fiche.nom : nomAfficheDuCompte || "Mon compte"}
         </h2>
         {fiche ? (
           <span className="mt-1 flex items-center gap-1.5">
@@ -2063,8 +2115,8 @@ export function MenuEspace({
         onClick={basculerLeMenu}
         aria-haspopup="dialog"
         aria-expanded={ouvert}
-        aria-label={`Mon espace — ${nom}`}
-        title={`Mon espace — ${nom}`}
+        aria-label={`Mon espace — ${nomDeLInfobulle}`}
+        title={`Mon espace — ${nomDeLInfobulle}`}
         style={{ height: hauteur, width: hauteur }}
         //  §2 (nº 547) — LE MÊME MOT, POUR LA MÊME RAISON : c'est ce
         //  bouton-ci dans son autre habillage, il portait le même
@@ -2101,8 +2153,8 @@ export function MenuEspace({
         onClick={basculerLeMenu}
         aria-haspopup="dialog"
         aria-expanded={ouvert}
-        aria-label={`Mon espace — ${nom}`}
-        title={`Mon espace — ${nom}`}
+        aria-label={`Mon espace — ${nomDeLInfobulle}`}
+        title={`Mon espace — ${nomDeLInfobulle}`}
         style={{ height: hauteur, width: hauteur }}
         /*  ██ §2 (nº 547) — POURQUOI LE SURVOL PARAISSAIT CARRÉ ██
              LA CAUSE : `shrink-0` MANQUAIT. La largeur de 40 px n'est
