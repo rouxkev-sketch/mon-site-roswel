@@ -1,9 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { LANGUES_YOKOFOLIO } from "@/config/tatouage";
 import { ETATS_ROND_BARRE, IconeCroix, IconeMonde } from "@/components/Icones";
-import { FenetreDeVerre, MenuDeVerre } from "@/components/SurfaceDeVerre";
+//  §1 (nº 655) — la largeur et l'encadré des fenêtres de la barre, là
+//  où vit `MenuDeVerre` : « Langue » prend ceux de « Mon compte ».
+//  `FenetreDeVerre` part avec la fenêtre centrée qu'elle habillait.
+import {
+  CLASSE_ENCADRE_FENETRE,
+  LARGEUR_FENETRE_BARRE,
+  MenuDeVerre,
+} from "@/components/SurfaceDeVerre";
 //  §1 (nº 650) — l'alignement des menus ancrés aux boutons ronds de
 //  la barre, calculé là où vit la règle de placement.
 import { ALIGNEMENT_BOUTON_ROND_BARRE } from "@/components/placement-menu";
@@ -34,116 +41,234 @@ import {
  *   son parent, qui se referme (§5 : une seule surface flottante à la
  *   fois). Tant que la fenêtre vivait DANS le menu, fermer le menu
  *   l'aurait emportée avec lui — impossible de faire l'un sans l'autre.
- * · `FenetreLangue` — la fenêtre superposée, montée par son APPELANT,
- *   donc survivant à la fermeture du menu. UNE seule écriture pour les
- *   deux appareils : c'est le défaut relevé par le propriétaire (la
- *   fenêtre des langues n'était en verre NI sur web NI sur mobile,
- *   alors que l'inventaire de la nº 236 l'annonçait convertie — elle
- *   n'avait tout simplement jamais été touchée).
- * · `SelecteurLangue` — le globe de la barre : la même fenêtre sur
+ * · `FenetreLangue` — l'ÉCRAN des langues, monté par son APPELANT, donc
+ *   survivant à la fermeture du menu. UNE seule écriture pour les deux
+ *   appareils : c'est le défaut relevé par le propriétaire (la fenêtre
+ *   des langues n'était en verre NI sur web NI sur mobile, alors que
+ *   l'inventaire de la nº 236 l'annonçait convertie — elle n'avait tout
+ *   simplement jamais été touchée).
+ *   §1 (nº 655) — AU WEB, CE N'EST PLUS UNE FENÊTRE CENTRÉE : c'est un
+ *   MENU ANCRÉ sous l'avatar, comme « Mon compte ». Voir sa note.
+ * · `SelecteurLangue` — le globe de la barre : le même écran sur
  *   mobile, un MENU DE VERRE ancré sous lui sur le web.
  *
- * ⚠️ RIEN N'EST BRANCHÉ, ET C'EST VOULU. Seul le français est actif ;
- * les autres langues sont grisées et NON CLIQUABLES (`disabled`, et
- * `aria-disabled` pour les lecteurs d'écran) avec la mention
- * « bientôt » — c'est elle qui explique, plus aucune phrase
- * au-dessus de la liste. La structure est prête : voir
+ * ⚠️ RIEN N'EST BRANCHÉ, ET C'EST VOULU. Seule une langue est active —
+ * l'ANGLAIS depuis la nº 465 ; les autres sont grisées et NON
+ * CLIQUABLES (`disabled`, et `aria-disabled` pour les lecteurs
+ * d'écran) avec la mention « bientôt » — c'est elle qui explique, plus
+ * aucune phrase au-dessus de la liste. La structure est prête : voir
  * LANGUES_YOKOFOLIO dans src/config/tatouage.ts.
+ * §1 (nº 655) — LE TRI EN DEUX ENCADRÉS LIT CE MÊME DRAPEAU, et rien
+ * d'autre : la disponible en haut, les à venir en dessous.
  *
  * QUEL HABILLAGE POUR QUEL APPAREIL : la détection C1
  * (`dataset.appareil`), jamais la largeur de fenêtre — un iPhone
  * tourné reste un téléphone. La question ne se pose qu'au clic
  * d'ouverture, côté navigateur : aucune discordance d'hydratation.
  *
- * FERMETURE : Échap partout ; un clic hors du menu (web) ; le voile ou
- * la croix (superposée).
+ * FERMETURE : Échap partout ; un clic hors du panneau (web) ; la croix,
+ * le retour du téléphone ou un choix (doigt).
  */
 
 function langueDuJour() {
   return LANGUES_YOKOFOLIO.find((langue) => langue.actif) ?? LANGUES_YOKOFOLIO[0];
 }
 
-/** LA LISTE — écrite UNE fois, posée dans les deux habillages. */
+/**
+ * ██ §1 (nº 655) — DEUX ENCADRÉS, SUR LE MODÈLE DE « MON COMPTE » ██
+ * ==================================================================
+ * LA CONSIGNE, MOT POUR MOT : « l'encadré du haut : la langue
+ * disponible — l'anglais ; l'encadré du dessous : toutes les langues
+ * bientôt disponibles ». La liste plate d'avant (sept lignes à la
+ * suite, la disponible en tête par le seul jeu de la couleur et de la
+ * graisse) devient donc DEUX BOÎTES, celles-là mêmes que « Mon
+ * compte » emploie depuis la nº 530 — `CLASSE_ENCADRE_FENETRE`, avec
+ * le `p-2` de son encadré du compte.
+ *
+ * ⚠️ LE PARTAGE EST FAIT, ET IL EST VOULU : c'est UNE écriture pour
+ * TROIS surfaces — la fenêtre du web (ancrée sous l'avatar depuis
+ * cette passe), la page du doigt, et le MENU DU GLOBE du visiteur non
+ * connecté. Ce dernier n'était pas visé par la consigne et change donc
+ * d'aspect avec les deux autres : le forker aurait donné deux menus de
+ * langue différents selon qu'on est connecté ou non — la raison écrite
+ * en toutes lettres à la nº 543-§2, et je ne la rouvre pas.
+ * ⚠️ RIEN N'EST DÉCIDÉ ICI SUR QUI EST DISPONIBLE : c'est le drapeau
+ * `actif` de `LANGUES_YOKOFOLIO` (config/tatouage) qui trie, et il dit
+ * ANGLAIS depuis la nº 465. Le jour où une deuxième langue s'ouvrira,
+ * elle montera d'elle-même dans l'encadré du haut.
+ * ⚠️ UNE BOÎTE VIDE NE S'AFFICHE PAS : sans langue active, l'encadré
+ * du haut n'existe pas — un cadre gris sans contenu se lirait comme un
+ * défaut.
+ */
 function ListeDesLangues({ surChoix }: { surChoix: () => void }) {
+  const disponibles = LANGUES_YOKOFOLIO.filter((langue) => langue.actif);
+  const aVenir = LANGUES_YOKOFOLIO.filter((langue) => !langue.actif);
   return (
-    <ul className="flex flex-col gap-0.5">
-      {LANGUES_YOKOFOLIO.map((langue) => (
-        <li key={langue.code}>
-          <button
-            type="button"
-            lang={langue.code}
-            disabled={!langue.actif}
-            aria-disabled={!langue.actif}
-            aria-current={langue.actif ? "true" : undefined}
-            onClick={langue.actif ? surChoix : undefined}
-            //  Le voile translucide des lignes de menu (nº 237-§2) :
-            //  sur une plaque de verre, un aplat ferait une boîte
-            //  posée dessus.
-            /*  §3-a (nº 312) — ANNULATION DE LA nº 311, SUR CONSIGNE :
-                 UNE LANGUE INDISPONIBLE DOIT SE LIRE SANS EFFORT.
-                 ------------------------------------------------------
-                 La nº 311 l'avait ASSOMBRIE (de /50 à /20) parce que
-                 la consigne disait « on ne voit pas qu'elles sont
-                 désactivées ». C'était l'inverse : le propriétaire
-                 trouvait le /50 DÉJÀ trop sombre pour être lu. On
-                 remonte donc franchement AU-DESSUS du point de
-                 départ — /85. Elle reste distincte d'une langue
-                 disponible, qui est en BLANC PLEIN et en gras
-                 (`text-sombre-texte`, #F2F2F4, `font-semibold`) :
-                 c'est la COULEUR et la GRAISSE qui séparent les deux,
-                 plus l'effacement.
-                 ⚠️ C'EST UNE OPACITÉ, PAS UNE COULEUR NOUVELLE : sur
-                 une plaque de verre, un gris plein ferait une tache
-                 posée dessus (la règle de la nº 237-§2). */
-            className={`w-full flex items-center gap-3 min-h-[46px] px-3 rounded-xl
-                        text-left text-[14.5px] transition-colors ${
-                          langue.actif
-                            ? "text-sombre-texte font-semibold hover:bg-white/5 active:bg-white/10"
-                            : "text-sombre-texte-doux/85 cursor-not-allowed"
-                        }`}
-          >
-            {/* La puce ronde désigne la langue en cours — le seul
-                repère, puisque aucune autre n'est cliquable. BLANCHE
-                (nº 141-§5) : le rose est réservé aux accents forts,
-                et une langue active n'en est pas un.
-                §3 (nº 241) — LES POINTS DES LANGUES À VENIR ÉCLAIRCIS :
-                `sombre-bordure` (#38383F) se perdait sur la plaque à
-                45 %. Blanc à 40 % — GRIS, toujours : une langue à
-                venir n'est ni une sélection (rose), ni un manque
-                (rouge), ni une mise en ligne (vert).
-                §3-b (nº 312) — ET IL REVIENT À 40 %, sa valeur d'avant
-                la nº 311 : celle-ci l'avait descendu à 15 % pour qu'il
-                suive un texte qu'on assombrissait, et le texte remonte.
-                La valeur de la nº 241 est donc rendue telle quelle. */}
-            <span
-              aria-hidden
-              className={`w-2 h-2 rounded-full shrink-0 ${
-                langue.actif ? "bg-white" : "bg-white/40"
-              }`}
-            />
-            {langue.label}
-            {!langue.actif && (
-              <span className="ml-auto text-[11.5px] uppercase tracking-wide">
-                bientôt
-              </span>
-            )}
-          </button>
-        </li>
-      ))}
-    </ul>
+    <>
+      {disponibles.length > 0 && (
+        <div className={`p-2 ${CLASSE_ENCADRE_FENETRE}`}>
+          <ul className="flex flex-col gap-0.5">
+            {disponibles.map((langue) => (
+              <LigneDeLangue
+                key={langue.code}
+                langue={langue}
+                surChoix={surChoix}
+              />
+            ))}
+          </ul>
+        </div>
+      )}
+      {aVenir.length > 0 && (
+        <div className={`p-2 ${CLASSE_ENCADRE_FENETRE}`}>
+          <ul className="flex flex-col gap-0.5">
+            {aVenir.map((langue) => (
+              <LigneDeLangue
+                key={langue.code}
+                langue={langue}
+                surChoix={surChoix}
+              />
+            ))}
+          </ul>
+        </div>
+      )}
+    </>
+  );
+}
+
+/** UNE LIGNE DE LANGUE — l'écriture d'origine, reprise AU CARACTÈRE :
+    §1 (nº 655) ne fait que la sortir de la boucle pour que les deux
+    encadrés la posent chacun. Ni sa géométrie, ni ses couleurs, ni sa
+    puce, ni sa mention « bientôt » ne changent d'un signe. */
+function LigneDeLangue({
+  langue,
+  surChoix,
+}: {
+  langue: (typeof LANGUES_YOKOFOLIO)[number];
+  surChoix: () => void;
+}) {
+  return (
+    <li>
+      <button
+        type="button"
+        lang={langue.code}
+        disabled={!langue.actif}
+        aria-disabled={!langue.actif}
+        aria-current={langue.actif ? "true" : undefined}
+        onClick={langue.actif ? surChoix : undefined}
+        //  Le voile translucide des lignes de menu (nº 237-§2) :
+        //  sur une plaque de verre, un aplat ferait une boîte
+        //  posée dessus.
+        /*  §3-a (nº 312) — ANNULATION DE LA nº 311, SUR CONSIGNE :
+             UNE LANGUE INDISPONIBLE DOIT SE LIRE SANS EFFORT.
+             ------------------------------------------------------
+             La nº 311 l'avait ASSOMBRIE (de /50 à /20) parce que
+             la consigne disait « on ne voit pas qu'elles sont
+             désactivées ». C'était l'inverse : le propriétaire
+             trouvait le /50 DÉJÀ trop sombre pour être lu. On
+             remonte donc franchement AU-DESSUS du point de
+             départ — /85. Elle reste distincte d'une langue
+             disponible, qui est en BLANC PLEIN et en gras
+             (`text-sombre-texte`, #F2F2F4, `font-semibold`) :
+             c'est la COULEUR et la GRAISSE qui séparent les deux,
+             plus l'effacement.
+             ⚠️ C'EST UNE OPACITÉ, PAS UNE COULEUR NOUVELLE : sur
+             une plaque de verre, un gris plein ferait une tache
+             posée dessus (la règle de la nº 237-§2). */
+        className={`w-full flex items-center gap-3 min-h-[46px] px-3 rounded-xl
+                    text-left text-[14.5px] transition-colors ${
+                      langue.actif
+                        ? "text-sombre-texte font-semibold hover:bg-white/5 active:bg-white/10"
+                        : "text-sombre-texte-doux/85 cursor-not-allowed"
+                    }`}
+      >
+        {/* La puce ronde désigne la langue en cours — le seul
+            repère, puisque aucune autre n'est cliquable. BLANCHE
+            (nº 141-§5) : le rose est réservé aux accents forts,
+            et une langue active n'en est pas un.
+            §3 (nº 241) — LES POINTS DES LANGUES À VENIR ÉCLAIRCIS :
+            `sombre-bordure` (#38383F) se perdait sur la plaque à
+            45 %. Blanc à 40 % — GRIS, toujours : une langue à
+            venir n'est ni une sélection (rose), ni un manque
+            (rouge), ni une mise en ligne (vert).
+            §3-b (nº 312) — ET IL REVIENT À 40 %, sa valeur d'avant
+            la nº 311 : celle-ci l'avait descendu à 15 % pour qu'il
+            suive un texte qu'on assombrissait, et le texte remonte.
+            La valeur de la nº 241 est donc rendue telle quelle. */}
+        <span
+          aria-hidden
+          className={`w-2 h-2 rounded-full shrink-0 ${
+            langue.actif ? "bg-white" : "bg-white/40"
+          }`}
+        />
+        {langue.label}
+        {!langue.actif && (
+          <span className="ml-auto text-[11.5px] uppercase tracking-wide">
+            bientôt
+          </span>
+        )}
+      </button>
+    </li>
   );
 }
 
 /**
- * LA FENÊTRE SUPERPOSÉE DES LANGUES — en VERRE (nº 238-§4).
- * Voile à 25 %, plaque sans la moindre opacité partielle, montée dans
- * le corps du document : les trois règles de `SurfaceDeVerre`, sans
- * une valeur recopiée.
- * ⚠️ `z-[85]` : elle s'ouvre depuis « Mon compte », elle passe donc
- * au-dessus de lui — même si, depuis le §5, le menu se referme.
+ * L'ÉCRAN DES LANGUES — DEUX HABILLAGES, UNE ÉCRITURE
+ * ==================================================================
+ * ██ §1 (nº 655) — AU WEB, ELLE QUITTE LE CENTRE POUR LA BARRE ██
+ * ------------------------------------------------------------------
+ * CE QUI EXISTAIT : une fenêtre CENTRÉE à l'écran (`FenetreDeVerre`,
+ * nº 238-§4 puis nº 543), posée sur un voile qui la refermait au clic.
+ * LA CONSIGNE : « elle doit se placer comme la fenêtre Mon compte
+ * (nº 650) : à droite de l'interface, sous l'avatar — MÊME mécanisme,
+ * MÊME largeur ».
+ * C'EST DONC LE MÊME `MenuDeVerre`, aux mêmes trois réglages que « Mon
+ * compte » : `LARGEUR_FENETRE_BARRE` (334 px), le décalage
+ * `ALIGNEMENT_BOUTON_ROND_BARRE` (3 px — la différence de hauteur
+ * entre les boutons ronds de la barre et les champs du moteur, nº 650)
+ * et le fond opaque au jeton `carte`. Aucun nombre n'est écrit ici.
+ *
+ * ⚠️ CE QUE LE VOILE DE `FenetreDeVerre` FAISAIT, ET QUI EST RENDU
+ * AUTREMENT — un menu ancré n'a pas de voile à lui :
+ *  · L'ASSOMBRISSEMENT passe au VOILE DE LA PAGE (nº 293/294), celui
+ *    que « Mon compte » et le menu du globe posent déjà : il épargne le
+ *    bloc qui a ouvert la surface, et il est PERCÉ, pas empilé ;
+ *  · LA FERMETURE AU CLIC À CÔTÉ devient un écouteur `mousedown`, la
+ *    même écriture qu'au menu du globe, plus bas dans ce fichier.
+ * Échap, la croix et le choix d'une langue referment comme avant : rien
+ * de ce côté-là n'a bougé.
+ *
+ * ⚠️ L'ANCRE EST FACULTATIVE, et c'est ce qui sépare les deux
+ * porteurs : « Mon compte » la donne (`zone`, la sienne) ; le globe de
+ * la barre ne la donne PAS — il ne monte cette écriture-ci que sur un
+ * VRAI TÉLÉPHONE, où c'est une page plein écran et où une ancre n'a
+ * aucun sens. Sans ancre, le menu du web n'est simplement pas rendu.
+ *
+ * ⚠️ AU DOIGT, RIEN NE CHANGE DE GABARIT (consigne nº 655-§3 : « suivre
+ * ce que fait déjà Mon compte sur cet appareil ») : la page plein écran
+ * de la nº 465 reste, avec son étape d'historique (C-4, nº 330). Le
+ * retour du téléphone la referme ; la croix, un choix ou Échap la
+ * REPRENNENT (lib/etape-refermable) — jamais deux entrées pour une
+ * navigation (nº 332-§1). Ouverte DEPUIS « Mon compte » resté ouvert
+ * dessous, son étape s'empile sur la sienne : on retombe sur « Mon
+ * compte » (la garde de rang, nº 465).
+ * SEUL SON CONTENU SUIT LES DEUX ENCADRÉS, puisque la liste est une
+ * écriture unique — et c'est précisément ce que « Mon compte » montre
+ * sur cet appareil.
  */
-export function FenetreLangue({ surFermeture }: { surFermeture: () => void }) {
+export function FenetreLangue({
+  ancre,
+  surFermeture,
+}: {
+  /** §1 (nº 655) — le bloc sous lequel le menu du WEB se pose. Absente :
+      pas de menu web (voir la note ci-dessus). */
+  ancre?: RefObject<HTMLElement | null>;
+  surFermeture: () => void;
+}) {
+  /** La page du doigt — le piège de focus s'y accroche là-bas. */
   const plaque = useRef<HTMLDivElement>(null);
+  /** Le panneau du web — le piège de focus ET le test « dedans » du
+      clic à côté (le menu vit dans le corps du document, nº 238-§4). */
+  const panneauWeb = useRef<HTMLDivElement>(null);
   /*  ██ §4 (nº 465) — AU DOIGT, C'EST UNE PAGE, PLUS UNE FENÊTRE ██
       L'écran « Langue » adopte le gabarit de la page de recherche du
       smartphone : le titre et son globe en haut à gauche, la croix à
@@ -163,6 +288,14 @@ export function FenetreLangue({ surFermeture }: { surFermeture: () => void }) {
   const auDoigt = useAppareilMobile();
   useEtapeQuiSeReferme(auDoigt, surFermeture);
 
+  /*  §1 (nº 655) — L'ASSOMBRISSEMENT DE LA PAGE, À LA PLACE DU VOILE
+      DE `FenetreDeVerre`. C'est le MÊME mécanisme que « Mon compte »
+      et que le menu du globe (`useVoileDeLaPage`, nº 293/294), pas un
+      second : on lui donne l'ancre, il remonte au bloc qui la contient,
+      pose le voile percé et l'enlève. Il sort de lui-même au doigt (la
+      page plein écran est opaque, il n'y a rien à assombrir). */
+  useVoileDeLaPage(Boolean(ancre), ancre);
+
   //  Échap ferme, et la page ne défile plus derrière.
   //  §1 (nº 469) — le blocage passe par le VERROU COMPTÉ
   //  (lib/verrou-defilement) : cette fenêtre s'EMPILE sur « Mon
@@ -180,10 +313,32 @@ export function FenetreLangue({ surFermeture }: { surFermeture: () => void }) {
     };
   }, [surFermeture]);
 
+  /*  ██ §1 (nº 655) — LE CLIC À CÔTÉ REFERME, AU WEB ██
+      Le voile de `FenetreDeVerre` s'en chargeait ; un menu ancré n'en a
+      pas. L'écriture est celle du menu du globe, plus bas dans ce
+      fichier — et le test porte sur LE PANNEAU, pas sur la zone : la
+      plaque est dans le corps du document (nº 238-§4), donc « hors de
+      l'ancre » pour n'importe quel test naïf.
+      ⚠️ AU DOIGT, JAMAIS : la page couvre tout l'écran, et un appui sur
+      son titre passerait pour un clic « à côté » — elle se refermerait
+      sous le doigt. */
+  useEffect(() => {
+    if (auDoigt || !ancre) return;
+    function auPointeur(evenement: MouseEvent) {
+      if (panneauWeb.current?.contains(evenement.target as Node)) return;
+      surFermeture();
+    }
+    document.addEventListener("mousedown", auPointeur);
+    return () => document.removeEventListener("mousedown", auPointeur);
+  }, [auDoigt, ancre, surFermeture]);
+
   //  Le focus ENTRE dans la fenêtre et y TOURNE EN ROND : sans ça, la
   //  tabulation partirait à l'aveugle dans la page derrière.
+  //  §1 (nº 655) — LA BOÎTE SUIT L'HABILLAGE VISIBLE : le panneau du
+  //  web, la page au doigt. Les deux sont rendus (aucune bifurcation
+  //  d'état, donc aucun éclair du mauvais habillage) ; un seul est vu.
   useEffect(() => {
-    const boite = plaque.current;
+    const boite = auDoigt ? plaque.current : panneauWeb.current;
     if (!boite) return;
     const focusables = () => [
       ...boite.querySelectorAll<HTMLElement>("button:not([disabled])"),
@@ -205,33 +360,52 @@ export function FenetreLangue({ surFermeture }: { surFermeture: () => void }) {
     }
     document.addEventListener("keydown", auTab);
     return () => document.removeEventListener("keydown", auTab);
-  }, []);
+  }, [auDoigt]);
 
   return (
     <>
-      {/*  LE WEB — la fenêtre de verre, inchangée (cachée au doigt). */}
-      <FenetreDeVerre
-        ariaLabel="Choisir la langue"
-        //  §3 (nº 240) — 45 % : elle s'ouvre au-dessus de la mosaïque,
-        //  et les cartes de flashs sont souvent blanches. §1 (nº 543) —
-        //  ce réglage est devenu sans objet, la fenêtre n'étant plus en
-        //  verre ; il reste écrit pour le jour où l'on y reviendrait.
-        dense
-        //  §1 (nº 543) — FOND OPAQUE au jeton `carte`, comme « Mon
-        //  compte » depuis la nº 542. NI SA PLACE NI SA TAILLE NE
-        //  CHANGENT : le cadre, la largeur et le rembourrage
-        //  ci-dessous sont ceux d'avant, au caractère près.
-        opaque
-        surFermeture={surFermeture}
-        largeur="max-w-[320px]"
-        rembourrage="p-0"
-        classeCadre="px-8 py-6 z-[85] mobile:hidden"
-        classePlaque="max-h-[min(88dvh,640px)] flex flex-col overflow-hidden"
-      >
-        {/*  La ref du piège de focus suit l'habillage VISIBLE : la
-             fenêtre au web, la page au doigt (juste en dessous). */}
-        <div ref={auDoigt ? undefined : plaque} className="flex min-h-0 flex-col">
-          <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/10">
+      {/*  ██ LE WEB — LE MENU ANCRÉ SOUS L'AVATAR (§1, nº 655) ██
+           Les réglages sont ceux de « Mon compte », repris tels quels
+           (MenuEspace) : largeur partagée, décalage d'alignement des
+           boutons ronds, fond opaque, alignement à droite. */}
+      {ancre && (
+        <MenuDeVerre
+          ouvert
+          ancre={ancre}
+          refPanneau={panneauWeb}
+          largeur={LARGEUR_FENETRE_BARRE}
+          decalageHaut={ALIGNEMENT_BOUTON_ROND_BARRE}
+          opaque
+          alignement="droite"
+          role="dialog"
+          aria-label="Choisir la langue"
+          data-source-composant="SelecteurLangue · fenêtre du compte"
+          className="mobile:hidden"
+        >
+          {/*  ██ LA BARRE DU TITRE NE CHANGE PAS DE FORME, ET C'EST
+               VOULU ██ La consigne dit « MÊME mécanisme, MÊME largeur »
+               — donc le PLACEMENT —, et « son CONTENU sur le modèle des
+               encadrés ». Le titre n'est ni l'un ni l'autre : il garde
+               son rang de 17 px gras et sa croix à l'opposé, comme
+               avant, et comme « Notifications » — les deux fenêtres
+               sœurs de la barre s'ouvrent maintenant à la même place et
+               à la même largeur : leur donner deux barres de titre
+               différentes se lirait comme un défaut.
+               DEUX NOMBRES SUIVENT LA NOUVELLE LARGEUR, ET RIEN
+               D'AUTRE :
+                · les côtés passent de 16 à 20 px, l'air des fenêtres de
+                  la barre depuis la nº 557 — le même que la colonne du
+                  contenu, juste dessous ;
+                · la croix prend la compensation de « Mon compte » :
+                  −9 px, soit (36 − 18) / 2, l'écart entre sa cible et
+                  son dessin. Son glyphe retombe alors PILE à 20 px du
+                  bord, à l'aplomb des encadrés. La cible ne rétrécit
+                  pas (règle nº 483).
+               ET LE TRAIT PREND LE JETON DE « NOTIFICATIONS »
+               (`sombre-bordure/60` au lieu d'un blanc à 10 %) : deux
+               écritures pour une même ligne, sur deux fenêtres
+               désormais voisines, auraient fini par diverger. */}
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-sombre-bordure/60">
             <h2 className="flex-1 min-w-0 text-[17px] font-bold tracking-tight text-sombre-texte">
               Langue
             </h2>
@@ -239,22 +413,36 @@ export function FenetreLangue({ surFermeture }: { surFermeture: () => void }) {
               type="button"
               onClick={surFermeture}
               aria-label="Fermer"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full
-                         text-sombre-texte-doux transition-colors hover:text-sombre-texte"
+              className="-mr-[9px] w-9 h-9 shrink-0 flex items-center justify-center
+                         rounded-full text-sombre-texte-doux
+                         hover:text-sombre-texte hover:bg-sombre-eleve
+                         transition-colors"
             >
               <IconeCroix taille={18} />
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto overscroll-contain px-2 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+          {/*  LA COLONNE DU CONTENU — les réglages du web de « Mon
+               compte » : 20 px sur les quatre côtés (nº 557), 12 px
+               entre les boîtes (`gap-3`). */}
+          <div className="flex flex-col gap-3 p-5">
             <ListeDesLangues surChoix={surFermeture} />
           </div>
-        </div>
-      </FenetreDeVerre>
+        </MenuDeVerre>
+      )}
 
       {/*  LE DOIGT — la page plein écran (§4, nº 465) : le globe au
            rang 22 en blanc (l'écriture de la loupe du titre de la
-           recherche), la liste telle quelle dessous — les mêmes
-           rembourrages que dans la fenêtre. */}
+           recherche), les deux encadrés dessous.
+           §1 (nº 655) — LES AIRS SONT CEUX DE « MON COMPTE » SUR CET
+           APPAREIL, et pas d'autres : `px-4` sur les côtés, `pt-5` en
+           haut, `gap-3` entre les boîtes (les réglages du doigt, chez
+           MenuEspace).
+           ⚠️ LA RÉSERVE BASSE PASSE À 72 px, ET C'EST LE PRIX DES
+           ENCADRÉS : la barre du bas de Safari est TRANSLUCIDE — tant
+           que cet écran montrait une liste sur le fond de page, elle ne
+           laissait voir que du bleu nuit ; elle montrerait désormais le
+           GRIS d'un encadré. C'est exactement le défaut de la nº 533-§6
+           et son remède, repris au caractère. */}
       <PagePleinEcranMobile
         titre="Langue"
         icone={<IconeMonde taille={22} classe="shrink-0 text-white" />}
@@ -263,8 +451,9 @@ export function FenetreLangue({ surFermeture }: { surFermeture: () => void }) {
         classeCadre="z-[85]"
       >
         <div
-          ref={auDoigt ? plaque : undefined}
-          className="grow px-2 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))]"
+          ref={plaque}
+          className="grow flex flex-col gap-3 px-4 pt-5
+                     pb-[max(4.5rem,env(safe-area-inset-bottom))]"
         >
           <ListeDesLangues surChoix={surFermeture} />
         </div>
@@ -478,7 +667,13 @@ export function SelecteurLangue({ hauteur = 40 }: { hauteur?: number }) {
           role="dialog"
           aria-label="Choisir la langue"
           data-source-composant="SelecteurLangue · menu web"
-          className="px-2 py-2"
+          /*  §1 (nº 655) — `flex flex-col gap-3` S'AJOUTE, et rien
+               d'autre : la liste rend désormais DEUX encadrés au lieu
+               d'une liste plate, il leur faut l'écart de 12 px des
+               boîtes de « Mon compte ». Le rembourrage de 8 px ne bouge
+               pas d'un pixel, la largeur de 290 px non plus — ce menu-ci
+               n'était pas visé par la consigne. */
+          className="flex flex-col gap-3 px-2 py-2"
         >
           <ListeDesLangues surChoix={fermer} />
         </MenuDeVerre>

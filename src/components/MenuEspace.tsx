@@ -31,7 +31,11 @@ import { rangerLAvatarDuCompte } from "@/lib/avatar-du-compte";
 import { useUtilisateur } from "@/lib/use-utilisateur";
 import { EntreeLangue, FenetreLangue } from "@/components/SelecteurLangue";
 import { FenetreNotifications } from "@/components/FenetreNotifications";
-import { MenuDeVerre } from "@/components/SurfaceDeVerre";
+import {
+  CLASSE_ENCADRE_FENETRE,
+  LARGEUR_FENETRE_BARRE,
+  MenuDeVerre,
+} from "@/components/SurfaceDeVerre";
 //  §1 (nº 650) — l'écart entre les deux familles de déclencheurs de la
 //  barre, calculé et expliqué là où vit la règle de placement.
 import { ALIGNEMENT_BOUTON_ROND_BARRE } from "@/components/placement-menu";
@@ -1072,7 +1076,11 @@ export function MenuEspace({
    * déroulant (`selecteurDePortfolio` rend `null`). Et le web garde le
    * fond clair au pixel, puisqu'il garde son plan.
    */
-  const CLASSE_ENCADRE = "rounded-xl bg-sombre-eleve";
+  /*  §1 (nº 655) — LA CLASSE A DÉMÉNAGÉ, PAS CHANGÉ : elle vit
+      désormais auprès de `MenuDeVerre` (SurfaceDeVerre), parce que
+      « Langue » et « Notifications » la partagent depuis cette passe.
+      Le nom local reste, et avec lui les vingt emplois ci-dessous. */
+  const CLASSE_ENCADRE = CLASSE_ENCADRE_FENETRE;
   /*  La tuile : sa boîte est son bouton. Le survol et l'appui
       reprennent l'écriture des plaques cliquables (nº 502) — une seule
       couleur de fond, remplacée, jamais empilée. */
@@ -1822,8 +1830,13 @@ export function MenuEspace({
                 ⚠️ LES AIRS DE LA nº 557 NE DÉPENDENT PAS DE LA LARGEUR :
                 20 px sur les quatre côtés, portés par `airCote` et
                 `airHaut` (et le `pb-5` du bas). Ils suivent la fenêtre
-                sans qu'on y touche. */
-            largeur={334}
+                sans qu'on y touche.
+                ⚠️ §1 (nº 655) — LE NOMBRE A DÉMÉNAGÉ, PAS CHANGÉ : il
+                est écrit auprès de `MenuDeVerre` (SurfaceDeVerre)
+                depuis que « Langue » et « Notifications » prennent la
+                même largeur, sur consigne. Trois copies d'un même
+                nombre auraient fini par diverger. */
+            largeur={LARGEUR_FENETRE_BARRE}
             /*  ██ §1 (nº 650) — LE BORD HAUT REJOINT LES AUTRES ██
                 LA CAUSE, MESURÉE : le placement est PARTAGÉ et il ne
                 fait aucune exception — il pose le haut du panneau au
@@ -2107,9 +2120,18 @@ export function MenuEspace({
 
       {/* LA FENÊTRE DES NOTIFICATIONS — au-dessus du menu, sur les
           deux appareils. Marquer une nouvelle comme lue met le
-          compteur à jour SUR-LE-CHAMP, sans attendre le serveur. */}
+          compteur à jour SUR-LE-CHAMP, sans attendre le serveur.
+          ██ §2 (nº 655) — ELLE REJOINT LA BARRE, AU WEB ██
+          Elle était CENTRÉE à l'écran, sous un voile ; elle se pose
+          désormais SOUS L'AVATAR, à droite, comme « Mon compte ». D'où
+          l'ancre : c'est `zone`, exactement celle que la fenêtre du
+          compte reçoit plus haut — jamais un des deux boutons, dont
+          l'un est toujours en `display: none` (voir la note du §
+          d'ouverture de ce fichier). Le doigt, lui, garde sa page
+          plein écran : l'ancre n'y sert à rien. */}
       {notificationsOuvertes && (
         <FenetreNotifications
+          ancre={zone}
           notifications={notifications}
           onFermer={() => setNotificationsOuvertes(false)}
           onLue={(id) =>
@@ -2135,8 +2157,19 @@ export function MenuEspace({
           l'ouvre (nº 238-§5) : la ligne vit dans le menu, la fenêtre
           lui survit. Ouvrir ferme « Mon compte » ; fermer rend la
           page, sans rien rouvrir. */}
+      {/*  ██ §1 (nº 655) — ELLE REJOINT LA BARRE, AU WEB ██
+           Même déménagement que « Notifications » juste au-dessus, et
+           la MÊME ancre : `zone`. La fenêtre centrée du web laisse la
+           place au menu ancré sous l'avatar ; le doigt ne bouge pas.
+           ⚠️ LE GLOBE DE LA BARRE (visiteur non connecté) MONTE LA
+           MÊME `FenetreLangue`, mais SANS ancre : il n'en a pas besoin
+           — il n'ouvre cette écriture-là que sur un vrai téléphone, où
+           c'est une page. */}
       {langueOuverte && (
-        <FenetreLangue surFermeture={() => setLangueOuverte(false)} />
+        <FenetreLangue
+          ancre={zone}
+          surFermeture={() => setLangueOuverte(false)}
+        />
       )}
 
       {/* ---------- « MODIFICATIONS NON ENREGISTRÉES » ----------

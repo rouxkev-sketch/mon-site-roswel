@@ -55,6 +55,35 @@ import type { RefObject } from "react";
 export const CLASSES_PLAQUE_VERRE = "rounded-2xl";
 
 /**
+ * ██ §1 (nº 655) — LA LARGEUR DES FENÊTRES DE LA BARRE ██
+ * ------------------------------------------------------------------
+ * D'OÙ VIENT LE NOMBRE, ET IL N'EST PAS NEUF : c'est celui de « Mon
+ * compte » depuis la nº 641 — 290 × 1,15 = 333,5, arrondi à l'entier
+ * du dessus. Il était écrit EN DUR chez `MenuEspace` ; « Langue » et
+ * « Notifications » le rejoignent à la nº 655, sur consigne (« même
+ * largeur que Mon compte »), et trois copies d'un même nombre auraient
+ * fini par diverger au premier réglage.
+ * ⚠️ IL NE VAUT QUE POUR LES FENÊTRES ANCRÉES À LA BARRE : le menu des
+ * styles, le panneau des filtres et le menu du globe ont leurs propres
+ * largeurs, réglées pour leur contenu.
+ */
+export const LARGEUR_FENETRE_BARRE = 334;
+
+/**
+ * ██ §1 (nº 655) — L'ENCADRÉ, LA BOÎTE DE BASE DE CES FENÊTRES ██
+ * ------------------------------------------------------------------
+ * C'est la classe que « Mon compte » emploie depuis la nº 530 pour
+ * TOUTES ses boîtes (le portfolio, le compte, les tuiles) — elle vivait
+ * dans le corps de `MenuEspace`. « Langue » prend la même à la nº 655
+ * (« son contenu sur le modèle des encadrés de Mon compte ») et
+ * « Notifications » aussi, pour son encadré du bas.
+ * ⚠️ UN SEUL CRAN AU-DESSUS DU FOND DE LA FENÊTRE : `eleve` sur
+ * `carte` — voir la note du drapeau `opaque`, plus bas, qui chiffre ce
+ * que l'écart vaut.
+ */
+export const CLASSE_ENCADRE_FENETRE = "rounded-xl bg-sombre-eleve";
+
+/**
  * UNE SURFACE DE VERRE ANCRÉE — un menu déroulant, un panneau de
  * suggestions. Pas de voile (la page reste vivante autour), pas de
  * portail imposé : l'appelant place la surface où il veut.

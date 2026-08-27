@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { DELAI_SUPPRESSION_JOURS } from "@/config/tatouage";
 import {
   IconeCloche,
@@ -12,6 +11,19 @@ import {
   IconeHorloge,
   IconeHorsLigne,
 } from "@/components/Icones";
+//  §2 (nº 655) — la fenêtre du web rejoint la barre : le menu ancré,
+//  sa largeur et l'encadré des fenêtres de la barre, tous trois là où
+//  vit `MenuDeVerre`. `createPortal` part avec la plaque écrite à la
+//  main : le menu se porte lui-même dans le corps du document.
+import {
+  CLASSE_ENCADRE_FENETRE,
+  LARGEUR_FENETRE_BARRE,
+  MenuDeVerre,
+} from "@/components/SurfaceDeVerre";
+//  §1 (nº 650) — l'alignement des menus ancrés aux boutons ronds de la
+//  barre, calculé là où vit la règle de placement.
+import { ALIGNEMENT_BOUTON_ROND_BARRE } from "@/components/placement-menu";
+import { useVoileDeLaPage } from "@/components/VoileDeLaPage";
 import type { GenreNotification, Notification } from "@/lib/notifications";
 //  §4 (nº 465) — au doigt, l'écran devient une PAGE plein écran (le
 //  gabarit de la page de recherche), avec son étape d'historique.
@@ -190,17 +202,33 @@ function ilYA(iso: string): string {
 }
 
 export function FenetreNotifications({
+  ancre,
   notifications,
   onFermer,
   onLue,
   onToutLu,
 }: {
+  /**
+   * ██ §2 (nº 655) — LE BLOC SOUS LEQUEL LE MENU DU WEB SE POSE ██
+   * ------------------------------------------------------------------
+   * LA CONSIGNE : « même emplacement, même largeur que Mon compte ».
+   * C'est donc la MÊME ancre que « Mon compte » reçoit (`zone`, chez
+   * MenuEspace) — jamais un des deux boutons de la barre, dont l'un est
+   * toujours en `display: none`, donc sans boîte à mesurer.
+   * ⚠️ FACULTATIVE : sans elle, le menu du web n'est pas rendu et seule
+   * la page du doigt reste. Aucun porteur n'est dans ce cas aujourd'hui ;
+   * la porte est ouverte pour le jour où un autre monterait cet écran.
+   */
+  ancre?: RefObject<HTMLElement | null>;
   notifications: Notification[];
   onFermer: () => void;
   /** Marque UNE nouvelle comme lue (le compteur suit). */
   onLue: (id: string) => void;
   onToutLu: () => void;
 }) {
+  /** §2 (nº 655) — le panneau du web : le test « dedans » du clic à
+      côté (le menu vit dans le corps du document, nº 238-§4). */
+  const panneauWeb = useRef<HTMLDivElement>(null);
   //  §1 (nº 469) — le blocage passe par le VERROU COMPTÉ
   //  (lib/verrou-defilement) : cette fenêtre s'EMPILE sur « Mon
   //  compte » au doigt (nº 465) — le « sauver puis rendre » d'avant
@@ -234,6 +262,33 @@ export function FenetreNotifications({
       « Mon compte » (la garde de rang nº 465, etape-refermable). */
   const auDoigt = useAppareilMobile();
   useEtapeQuiSeReferme(auDoigt, onFermer);
+
+  /*  ██ §2 (nº 655) — CE QUE LE VOILE DE LA PLAQUE FAISAIT, RENDU
+      AUTREMENT ██
+      La fenêtre centrée portait SON voile (un bouton noir à 25 % sur
+      tout l'écran) : il assombrissait la page ET refermait au clic. Un
+      menu ancré n'en a pas. Les deux services sont rendus par les
+      mécanismes que « Mon compte » emploie déjà, jamais par un second :
+       · l'ASSOMBRISSEMENT par le VOILE DE LA PAGE (nº 293/294), qui
+         épargne le bloc d'où la surface est partie et se perce au lieu
+         de s'empiler — il sort de lui-même au doigt ;
+       · la FERMETURE AU CLIC À CÔTÉ par un écouteur `mousedown`, la
+         même écriture qu'au menu du globe (SelecteurLangue).
+      ⚠️ LE TEST PORTE SUR LE PANNEAU, pas sur l'ancre : la plaque est
+      dans le corps du document, donc « hors de l'ancre » pour
+      n'importe quel test naïf.
+      ⚠️ AU DOIGT, JAMAIS D'ÉCOUTEUR : la page couvre tout l'écran, et
+      un appui sur son titre passerait pour un clic « à côté ». */
+  useVoileDeLaPage(Boolean(ancre), ancre);
+  useEffect(() => {
+    if (auDoigt || !ancre) return;
+    function auPointeur(evenement: MouseEvent) {
+      if (panneauWeb.current?.contains(evenement.target as Node)) return;
+      onFermer();
+    }
+    document.addEventListener("mousedown", auPointeur);
+    return () => document.removeEventListener("mousedown", auPointeur);
+  }, [auDoigt, ancre, onFermer]);
 
   async function marquer(id: string) {
     onLue(id);
@@ -293,6 +348,46 @@ export function FenetreNotifications({
     </button>
   );
 
+  /*  ██ §2 (nº 655) — L'ENCADRÉ DU BAS, AU WEB ██
+      ==================================================================
+      POURQUOI IL EXISTE, ET CE N'EST PAS UN GOÛT : la fenêtre passe de
+      520 px de large à 334 (la largeur de « Mon compte »). Sur la
+      rangée du titre il reste alors, une fois la cloche (20), les deux
+      écarts (24), la croix (36) et les côtés (40) retirés, DEUX CENT
+      QUATORZE pixels pour le mot « Notifications » ET le libellé « Tout
+      marquer comme lu ». Les deux ne tiennent pas ensemble : le geste
+      DESCEND, dans une boîte à lui, en bas — c'est « l'encadré du bas »
+      de la consigne, et c'est lui qui, avec la quantité de nouvelles,
+      donne sa hauteur à la fenêtre.
+      SA FORME EST CELLE DES TUILES DE « MON COMPTE » : sa boîte EST son
+      bouton (le motif des plaques cliquables, nº 502), sur l'encadré
+      partagé — un seul geste, une seule destination. Sa géométrie est
+      celle d'une ENTRÉE du même menu : 46 px de haut, 13,5 px
+      demi-gras, les mêmes fonds de survol et d'appui.
+      ⚠️ LE DOIGT NE LE PREND PAS, et c'est la règle de ce fichier
+      depuis la nº 530 : « ce qui reste propre à chaque plan, ce sont
+      les boîtes, et elles seules ». Là-bas la barre du titre est
+      COLLANTE et large : la double coche y reste à portée de pouce,
+      liste longue ou non. Le GESTE, lui, est écrit une seule fois
+      (`toutMarquer`) et les deux boîtes l'appellent.
+      ⚠️ IL DISPARAÎT AVEC LA DERNIÈRE NON LUE (`restantes > 0`), comme
+      la double coche : rien à marquer, rien à montrer. */
+  const encadreToutLu = restantes > 0 && (
+    <div className="px-5 pb-5">
+      <button
+        type="button"
+        onClick={toutMarquer}
+        className={`flex w-full items-center justify-center gap-2.5 min-h-[46px] px-3
+                   ${CLASSE_ENCADRE_FENETRE} text-[13.5px] font-semibold
+                   text-sombre-texte transition-colors
+                   hover:bg-sombre-eleve-clair active:bg-sombre-eleve-clair`}
+      >
+        <IconeDoubleCoche taille={18} />
+        Tout marquer comme lu
+      </button>
+    </div>
+  );
+
   /* LA LISTE — ou le vide, dit gentiment. */
   const corps =
     notifications.length === 0 ? (
@@ -319,7 +414,15 @@ export function FenetreNotifications({
             </p>
           </div>
         ) : (
-          <ul className="flex-1 overflow-y-auto overscroll-contain divide-y divide-sombre-bordure/50">
+          /*  §2 (nº 655) — LA LISTE NE DÉFILE PLUS D'ELLE-MÊME, et
+               elle n'a plus à le faire : au web c'est LE PANNEAU qui
+               défile (`MenuDeVerre` porte `overflow-y-auto` et se
+               plafonne à la place disponible sous l'ancre), au doigt
+               c'est la page. Le `flex-1` était, lui, déjà sans effet au
+               doigt — la liste y vit dans une boîte, pas dans une
+               colonne flexible. Rien ne se met à défiler ou à cesser de
+               défiler : le conteneur change, pas le comportement. */
+          <ul className="divide-y divide-sombre-bordure/50">
             {notifications.map((nouvelle) => {
               const nonLue = !nouvelle.lue_le;
               const fiche = CATALOGUE[nouvelle.genre];
@@ -333,7 +436,15 @@ export function FenetreNotifications({
                   <button
                     type="button"
                     onClick={() => nonLue && marquer(nouvelle.id)}
-                    className={`flex w-full items-start gap-3.5 px-4 sm:px-6 py-4 text-left
+                    /*  §2 (nº 655) — LE RETRAIT DE 24 px S'EN VA, ET IL
+                         N'AVAIT PLUS D'OBJET : il ne s'appliquait qu'à
+                         partir de 640 px de FENÊTRE (`sm:`), c'est-à-dire
+                         dans la plaque de 520 px qui n'existe plus. Dans
+                         un panneau de 334, il mangeait 48 px de largeur
+                         sur les 334. Restent les 16 px de toujours, sur
+                         les deux appareils — et une règle de LARGEUR de
+                         moins (piège nº 60). */
+                    className={`flex w-full items-start gap-3.5 px-4 py-4 text-left
                                transition-colors hover:bg-sombre-eleve/60 ${
                                  nonLue ? "bg-sombre-eleve/40" : ""
                                }`}
@@ -386,82 +497,84 @@ export function FenetreNotifications({
 
   return (
     <>
-      {/*  LE WEB — la fenêtre de verre, INCHANGÉE (cachée au doigt par
-           `mobile:hidden`, §4 nº 465). */}
-      {createPortal(
-        <div
+      {/*  ██ §2 (nº 655) — LE WEB : LA FENÊTRE REJOINT LA BARRE ██
+           ==========================================================
+           CE QUI EXISTAIT : une plaque de 520 px CENTRÉE à l'écran,
+           haute de 88 % de la vue (720 px au plus), écrite à la main
+           dans son propre portail, sur un voile noir à 25 %.
+           LA CONSIGNE : « même emplacement, même largeur que Mon
+           compte » — donc le même `MenuDeVerre`, aux mêmes réglages
+           que la fenêtre du compte : `LARGEUR_FENETRE_BARRE` (334 px),
+           le décalage `ALIGNEMENT_BOUTON_ROND_BARRE` (3 px, nº 650),
+           le fond opaque au jeton `carte`, l'alignement à droite.
+           Aucun nombre n'est écrit ici.
+           ET LA HAUTEUR S'ADAPTE, SANS QU'ON LA RÈGLE : un menu ancré
+           n'a pas de hauteur à lui — il prend celle de son contenu (la
+           barre du titre, les nouvelles, l'encadré du bas) et ne se
+           plafonne qu'à la place réellement disponible sous l'ancre
+           (`usePlacementMenu`, qui mesure le viewport VISUEL). Les
+           `max-h-[min(88dvh,720px)]` d'avant n'ont plus d'objet : ils
+           réservaient de la place vide quand il n'y avait rien à dire.
+           ⚠️ CE QUI PART AVEC LA PLAQUE ÉCRITE À LA MAIN : son portail
+           (`MenuDeVerre` porte le sien), son voile-bouton (voir la
+           note du voile de la page, plus haut), et les arrondis
+           `rounded-2xl sm:rounded-3xl` — le menu porte le sien.
+           ⚠️ CE QUI NE CHANGE PAS D'UN CARACTÈRE : le fond `carte` de
+           la nº 543, les rangées, leurs teintes par transparence, les
+           traits de séparation d'un bord à l'autre, l'état vide.
+           ⚠️ ET ELLE RESTE CACHÉE AU DOIGT par `mobile:hidden` (§4
+           nº 465) : aucune bifurcation d'état, donc aucun éclair du
+           mauvais habillage au montage. */}
+      {ancre && (
+        <MenuDeVerre
+          ouvert
+          ancre={ancre}
+          refPanneau={panneauWeb}
+          largeur={LARGEUR_FENETRE_BARRE}
+          decalageHaut={ALIGNEMENT_BOUTON_ROND_BARRE}
+          opaque
+          alignement="droite"
           role="dialog"
-          aria-modal="true"
           aria-label="Mes notifications"
-          className="mobile:hidden fixed inset-0 z-[85] flex items-center justify-center p-4"
+          data-source-composant="FenetreNotifications · fenêtre web"
+          className="mobile:hidden"
         >
-          <button
-            type="button"
-            aria-label="Fermer les notifications"
-            onClick={onFermer}
-            className="absolute inset-0 bg-black/25 cursor-default
-                       opacity-100 transition-opacity duration-200 starting:opacity-0"
-          />
-
-          {/* LE PANNEAU — un fond éclairci d'un cran sur le voile, sans
-              contour ni ombre : la grammaire des fenêtres depuis la
-              nº 130 (Sécurité, retour de suppression).
-              ██ §1 (nº 543) — LA PLAQUE N'EST PLUS EN VERRE ██
-              Cette fenêtre écrit sa plaque À LA MAIN, elle ne passe pas
-              par `FenetreDeVerre` : les deux attributs de verre sont
-              donc simplement retirés ici, et le jeton `carte` de la
-              nº 466 les remplace — la teinte de « Mon compte » depuis
-              la nº 542, que le propriétaire étend. `globals.css` n'est
-              pas touché (règle nº 172).
-              LES DEUX ATTRIBUTS QUI PARTENT : `data-verre-fenetre` (le
-              fond translucide, le flou et le LISERÉ) et
-              `data-verre-dense` (la teinte à 45 % de la nº 240-§3, qui
-              n'a plus d'objet sans verre).
-              ⚠️ RIEN D'AUTRE NE BOUGE : ni la largeur de 520 px, ni la
-              hauteur maximale, ni les arrondis, ni le voile au-dessus
-              — la fenêtre reste EXACTEMENT là où elle était.
-              ⚠️ CE QUE L'OPACITÉ COÛTE ICI, ET C'EST LA SEULE DES CINQ
-              SURFACES QUI PAIE : les rangées se teintent par
-              TRANSPARENCE (`eleve` à 40 % pour une non-lue, 60 % au
-              survol) et les traits de séparation aussi. Plus la plaque
-              est claire, moins ces voiles se voient : la non-lue tombe
-              de 1,11 à 1,06 d'écart avec son fond. Rien n'est retouché
-              pour compenser — le propriétaire juge sur pièce. */}
-          <div
-            className="relative w-full max-w-[520px] max-h-[min(88dvh,720px)]
-                       flex flex-col rounded-2xl sm:rounded-3xl
-                       bg-sombre-carte overflow-hidden"
-          >
-            {/* L'EN-TÊTE — la cloche, le titre, la double coche, la
-                croix. La ligne qui le sépare de la liste court d'un
-                bord à l'autre (charte), l'espace égal des deux côtés. */}
-            <div className="flex items-center gap-3 px-4 sm:px-6 py-4 border-b border-sombre-bordure/60">
-              {/* LA CLOCHE (nº 132) — elle dit d'un signe ce que la
-                  fenêtre contient, avant même le mot. */}
-              <IconeCloche
-                taille={20}
-                classe="shrink-0 text-sombre-texte/80"
-              />
-              <h2 className="flex-1 min-w-0 text-[17px] font-bold tracking-tight text-sombre-texte">
-                Notifications
-              </h2>
-              {boutonToutLu}
-              <button
-                type="button"
-                onClick={onFermer}
-                aria-label="Fermer"
-                className="-mr-1 w-9 h-9 shrink-0 flex items-center justify-center
-                           rounded-full text-sombre-texte-doux
-                           hover:text-sombre-texte hover:bg-sombre-eleve
-                           transition-colors"
-              >
-                <IconeCroix taille={18} />
-              </button>
-            </div>
-            {corps}
+          {/* L'EN-TÊTE — la cloche, le titre, la croix. La ligne qui le
+              sépare de la liste court d'un bord à l'autre (charte),
+              l'espace égal des deux côtés.
+              §2 (nº 655) — DEUX CHANGEMENTS, ET LES DEUX SONT DES
+              CONSÉQUENCES DE LA LARGEUR :
+               · les côtés passent à 20 px, l'air de « Mon compte »
+                 depuis la nº 557 (le `sm:px-6` de 24 px ne valait que
+                 dans la plaque de 520) ;
+               · LA DOUBLE COCHE QUITTE CETTE RANGÉE pour l'encadré du
+                 bas — elle n'y tient plus (le calcul est dans sa note).
+              LA CROIX PREND LA COMPENSATION DE « MON COMPTE » : −9 px,
+              soit (36 − 18) / 2, l'écart entre sa cible et son dessin.
+              Son glyphe retombe alors PILE à 20 px du bord, à l'aplomb
+              du contenu. La cible ne rétrécit pas (règle nº 483). */}
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-sombre-bordure/60">
+            {/* LA CLOCHE (nº 132) — elle dit d'un signe ce que la
+                fenêtre contient, avant même le mot. */}
+            <IconeCloche taille={20} classe="shrink-0 text-sombre-texte/80" />
+            <h2 className="flex-1 min-w-0 text-[17px] font-bold tracking-tight text-sombre-texte">
+              Notifications
+            </h2>
+            <button
+              type="button"
+              onClick={onFermer}
+              aria-label="Fermer"
+              className="-mr-[9px] w-9 h-9 shrink-0 flex items-center justify-center
+                         rounded-full text-sombre-texte-doux
+                         hover:text-sombre-texte hover:bg-sombre-eleve
+                         transition-colors"
+            >
+              <IconeCroix taille={18} />
+            </button>
           </div>
-        </div>,
-        document.body
+          {corps}
+          {encadreToutLu}
+        </MenuDeVerre>
       )}
 
       {/*  LE DOIGT — la page plein écran (§4, nº 465) : la cloche au
