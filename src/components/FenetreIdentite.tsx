@@ -154,16 +154,44 @@ export function FenetreIdentite({
       ⚠️ AU DOIGT, JAMAIS : la page couvre tout l'écran, et un appui sur
       son titre passerait pour un clic « à côté ».
       ⚠️ ET JAMAIS PENDANT UN ENREGISTREMENT : fermer sous une requête
-      en vol laisserait la personne sans savoir si son nom est parti. */
+      en vol laisserait la personne sans savoir si son nom est parti.
+
+      ██ §1 (nº 666) — NI PENDANT UN RECADRAGE, ET C'ÉTAIT LE DÉFAUT ██
+      ------------------------------------------------------------------
+      LE SYMPTÔME DU PROPRIÉTAIRE : au web, la photo s'affichait bien
+      dans le recadreur, et AU PREMIER CLIC pour la redimensionner tout
+      disparaissait.
+      LA CAUSE, ET ELLE TIENT EN UNE LIGNE : depuis la nº 658, le
+      recadreur est monté PAR PORTAIL dans le corps du document — c'est
+      ce qui l'a réparé au doigt, où un `fixed` enfermé dans une page
+      recalée se posait n'importe où. Mais un portail déplace le nœud
+      DU DOM tout en gardant sa place dans l'arbre REACT : ce test-ci
+      n'écoute pas React, il écoute le `mousedown` du DOCUMENT et
+      demande au panneau s'il CONTIENT la cible. Le recadreur n'est pas
+      dedans — il est frère du panneau, dans `document.body`. Chaque
+      clic sur le zoom, chaque prise pour recentrer, était donc lu comme
+      un clic « à côté » : cette fenêtre se fermait, emportant
+      `ChampPhotoRonde`, le portail et le recadrage en cours.
+      LE REMÈDE EST CELUI QUI EXISTE DÉJÀ À DEUX LIGNES D'ICI : la garde
+      `recadrageOuvert` que l'écoute d'Échap porte depuis la nº 657, et
+      pour exactement la même raison — quand le recadreur est là, il
+      possède l'écran, et cette fenêtre-ci se tait. Pas un second
+      mécanisme : le même, sur les deux écoutes.
+      ⚠️ ON NE PERD AUCUN GESTE : le recadreur est `fixed inset-0`, il
+      couvre tout. Tant qu'il est ouvert, il n'existe pas de « à côté »
+      où cliquer — le seul clic possible est sur lui.
+      ⚠️ ET LE COMPORTEMENT DE LA nº 662 EST INTACT : « Annuler » passe
+      toujours par `annulerLeRecadrage`, qui efface l'original. Rien de
+      cette passe ne touche à la fermeture du recadreur. */
   useEffect(() => {
-    if (auDoigt || !ancre || enCours) return;
+    if (auDoigt || !ancre || enCours || recadrageOuvert) return;
     function auPointeur(evenement: MouseEvent) {
       if (panneauWeb.current?.contains(evenement.target as Node)) return;
       surFermeture();
     }
     document.addEventListener("mousedown", auPointeur);
     return () => document.removeEventListener("mousedown", auPointeur);
-  }, [auDoigt, ancre, enCours, surFermeture]);
+  }, [auDoigt, ancre, enCours, recadrageOuvert, surFermeture]);
 
   /** La photo cadrée remplace l'aperçu — et libère le précédent s'il
       était local (une adresse `blob:` retient l'image en mémoire). */

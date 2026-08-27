@@ -422,11 +422,49 @@ export function RecadreurPhoto({
   }
 
   return (
+    /*  ██ §2 (nº 666) — LE RECADREUR PASSE AU-DESSUS DE TOUT CE QUI
+         PEUT L'OUVRIR ██
+         ==============================================================
+         LE SYMPTÔME DU PROPRIÉTAIRE : au doigt, choisir ou prendre une
+         photo depuis « Éditer », valider l'aperçu du téléphone — et
+         RIEN. On restait sur « Éditer », comme si le recadreur ne
+         s'ouvrait jamais.
+         LA CAUSE, ET IL S'OUVRAIT BEL ET BIEN : il était DERRIÈRE. Ce
+         cadre valait `z-[80]`, et il l'a toujours valu ; ce qui a
+         changé, c'est SA PLACE. Jusqu'à la nº 658 il était DESCENDANT
+         de la surface qui l'ouvre — dans son contexte d'empilement,
+         donc au-dessus d'elle quoi qu'il arrive. Depuis, un portail le
+         monte dans le corps du document (c'est ce qui l'a réparé au
+         doigt : un `fixed` enfermé dans une page recalée sur
+         `visualViewport` se pose n'importe où). Il y devient le FRÈRE
+         des pages plein écran des fenêtres de la barre — et
+         celles-là valent `z-[85]` (SelecteurLangue, FenetreIdentite,
+         FenetreNotifications). Quatre-vingts sous quatre-vingt-cinq :
+         il était peint dessous, invisible, et l'écran ne bougeait pas.
+         LA RÈGLE, DÉSORMAIS : le recadreur couvre TOUT CE QUI PEUT
+         L'OUVRIR. `z-[90]` — au-dessus des pages de la barre (85) et
+         des fenêtres superposées (80), sous la fenêtre d'envoi (95) et
+         sous le trait de chargement (96), qui doivent rester visibles
+         par-dessus n'importe quoi.
+         ⚠️ CE RANG N'EST PAS INVENTÉ : `GardeSaisie` (le « tu as des
+         modifications non enregistrées ») le porte déjà. La feuille ne
+         gagne donc pas un octet — vérifié, elle est identique à celle
+         de la nº 665. Et les deux ne peuvent pas se croiser : la garde
+         de saisie naît quand on cherche à QUITTER, or le recadreur
+         couvre l'écran — tant qu'il est là, aucun lien n'est cliquable.
+         ⚠️ POURQUOI CORRIGER ICI ET PAS CHEZ « ÉDITER » : baisser la
+         page à 80 la ferait passer sous « Mon compte », d'où elle
+         s'ouvre. C'est le recadreur qui a changé de niveau, c'est à lui
+         de dire le sien.
+         ⚠️ LE PORTFOLIO N'EST PAS TOUCHÉ : `BlocPortfolio` monte ce
+         composant dans le flux de sa page, sans portail — un rang plus
+         haut dans un contexte d'empilement où il était déjà seul ne
+         change rien à ce qu'on voit. */
     <div
       role="dialog"
       aria-modal="true"
       aria-label="Recadrer la photo"
-      className="fixed inset-0 z-[80] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[90] flex items-center justify-center p-4"
     >
       <div
         aria-hidden="true"
