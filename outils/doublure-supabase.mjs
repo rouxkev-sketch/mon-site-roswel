@@ -84,12 +84,53 @@ const STYLES = ["trash-polka", "realisme", "blackwork", "neo-japonais"];
 //  le lien « Voir plus » apparaisse : c'est LUI qui porte l'adresse
 //  « /recherche?nature=tatouage… » du relevé du propriétaire.
 const PAR_STYLE = 14;
+
+/**
+ * §1 (nº 681) — `SLUGS_UNIQUES=1` : UN SLUG PAR FICHE, POUR MESURER LA
+ * FICHE PUBLIQUE.
+ * ------------------------------------------------------------------
+ * LE DÉFAUT DE BANC QUE CE CRAN CORRIGE, et ce n'en est pas un du site.
+ * Les quatorze gabarits d'un style PARTAGENT leur slug (`demo-realisme`
+ * pour les quatorze). `/tatoueur/[slug]` lit UNE fiche : quatorze
+ * réponses pour une lecture unique, et la page rend 404. La fiche
+ * publique — la page la plus vue du produit — était donc la seule
+ * qu'on ne pouvait pas mesurer.
+ *
+ * ⚠️ ÉTEINT PAR DÉFAUT, ET C'EST TOUT L'INTÉRÊT. Le banc du bug des
+ * styles (nº 673) et celui de la cascade (nº 678) tournent sur les
+ * slugs partagés ; les changer sous eux invaliderait leurs relevés. Le
+ * cran ne s'allume que si on le demande :
+ *
+ *      SLUGS_UNIQUES=1 DELAI_BASE=120 npm run banc:doublure
+ *
+ * ⚠️ ET IL NE TOUCHE QUE LE SLUG : le compte de fiches, les styles, les
+ * photos et les villes ne bougent pas d'une ligne. La mosaïque déborde
+ * toujours, « Voir plus » apparaît toujours.
+ */
+const SLUGS_UNIQUES = process.env.SLUGS_UNIQUES === "1";
+
 const TATOUEURS = STYLES.flatMap((style, s) =>
   Array.from({ length: PAR_STYLE }, (_, k) => k).map((k) => {
     const i = `${s}-${k}`;
     return ({
-  id: `demo-${i}`, slug: `demo-${style}`, nom: `Atelier ${style}`,
+  id: `demo-${i}`,
+  slug: SLUGS_UNIQUES ? `demo-${style}-${k}` : `demo-${style}`,
+  nom: `Atelier ${style}`,
   publie: true, ville_nom: "Lyon", ville_code_postal: "69001",
+  /*  §1 (nº 681) — SANS `ville_slug`, `/tatouage/<style>/<ville>` rend
+      404 : `chargerStyleVille` ne retrouve aucune ville, et la page
+      « style + ville » était la seconde qu'on ne pouvait pas mesurer.
+      Le champ manquait au gabarit ; l'ajouter ne change rien à ce qui
+      existait — rien ne le lisait, faute qu'il existe.
+      ⚠️ ET IL SUIT LE MÊME CRAN, pour la même raison qu'au slug de
+      fiche : `lireVilleParSlug` fait un `.limit(1).maybeSingle()`, la
+      doublure IGNORE `limit`, et cinquante-six réponses pour une
+      lecture unique rendent `null`. Faire honorer `limit` à la
+      doublure serait plus propre EN THÉORIE et dangereux en pratique :
+      la mosaïque de l'accueil se lit avec une limite, et le banc du
+      bug des styles (nº 673) tourne dessus. On ne touche pas à ce qui
+      porte un relevé déjà rendu. */
+  ville_slug: SLUGS_UNIQUES ? `lyon-${s}-${k}` : "lyon",
   departement: "69", region: "Auvergne-Rhône-Alpes", pays: "FR",
   code_pays: "FR", latitude: 45.76, longitude: 4.83,
   type_fiche: "artiste", etablissement: null, mode_exercice: "studio",
