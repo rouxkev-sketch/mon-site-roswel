@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+//  §1 (nº 652) — le chemin de la recherche, écrit une seule fois.
+import { ADRESSE_RECHERCHE } from "@/lib/chemin-recherche";
 import { CADRE_PHOTO_PORTFOLIO, FOND_RESERVE_PHOTO } from "@/config/tatouage";
 import { NATURE_PAR_DEFAUT, SEPARATEUR_GALERIE } from "@/lib/photos-tatoueur";
 //  §2 (nº 635) — l'écriture unique de la copie (nº 514), reprise telle
@@ -152,7 +154,9 @@ export function CarteStyle({
 }) {
   const photo = style.photo;
   if (!photo) return null;
-  const adresse = `/?style=${style.slug}&nature=${NATURE_PAR_DEFAUT}`;
+  //  §1 (nº 652) — une carte de style ouvre LA RECHERCHE de ce style,
+  //  à son adresse. Le lien est le même qu'avant, au chemin près.
+  const adresse = `${ADRESSE_RECHERCHE}?style=${style.slug}&nature=${NATURE_PAR_DEFAUT}`;
   return (
     /*  §1 (nº 634) — LE TOTAL DES FAVORIS DU STYLE, POSÉ SANS ÊTRE
         MONTRÉ. C'est le second critère de l'ordre des cartes

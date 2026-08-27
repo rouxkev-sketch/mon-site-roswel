@@ -253,7 +253,7 @@ export async function metadonneesAccueil(
  * LE RENDU PARTAGÉ DE L'ACCUEIL (nº 357) — deux routes l'appellent :
  *  · `/` (page.tsx) — PRÉRENDUE, régénérée périodiquement : aucun
  *    accès aux cookies ni aux paramètres, tout arrive en propriétés ;
- *  · `/accueil-recherche` (jumeau dynamique) — atteinte par RÉÉCRITURE
+ *  · `/recherche` (jumeau dynamique) — atteinte par RÉÉCRITURE
  *    du proxy quand « / » porte une requête : elle lit cookies et
  *    paramètres comme avant. L'adresse du navigateur reste « / ».
  * L'ancienne note « l'accueil reste dynamique » (passe performance)

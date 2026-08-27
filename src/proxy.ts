@@ -1,4 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
+//  §1 (nº 652) — le chemin de la recherche, écrit une seule fois.
+import { ADRESSE_RECHERCHE } from "@/lib/chemin-recherche";
 import { NextResponse, type NextRequest } from "next/server";
 import { infosConnexionSupabase } from "@/lib/supabase/env";
 import { COOKIE_NU_TOTAL } from "@/lib/variantes-essai";
@@ -64,9 +66,15 @@ export async function proxy(request: NextRequest) {
   const versLeJumeauDeFiche = robotDApercu && ficheTaguee;
   const fabriquerReponse = () =>
     versLeJumeau
-      ? NextResponse.rewrite(
+      ? //  §1 (nº 652) — LE FILET DE L'ANCIENNE ADRESSE. La recherche
+        //  a son adresse à elle (`/recherche`) et les liens du site y
+        //  mènent directement ; cette réécriture, elle, RESTE — un
+        //  lien « /?style=… » déjà partagé, ou un signet, continue de
+        //  servir la même page, sans redirection ni erreur. Le chemin
+        //  est lu là où il est écrit une seule fois.
+        NextResponse.rewrite(
           new URL(
-            "/accueil-recherche" + request.nextUrl.search,
+            ADRESSE_RECHERCHE + request.nextUrl.search,
             request.url
           ),
           { request }

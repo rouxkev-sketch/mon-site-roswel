@@ -229,7 +229,7 @@ export function libelleLieu(criteres: CritèresTatouage): string {
  * RESTE, et il ne revient pas.
  *
  * LA CAUSE EST CONNUE ET DÉJÀ ÉCRITE (nº 508, et le §nº 364 juste sous
- * `filtresOuverts`) : « / » et « /accueil-recherche » sont DEUX
+ * `filtresOuverts`) : « / » et « /recherche » sont DEUX
  * SEGMENTS DE ROUTE, et la barre est montée PAR LA PAGE. Au premier
  * passage de l'un à l'autre, tout l'arbre est démonté puis remonté ;
  * `filtresOuverts` repart de `false`. Le brouillon de la nº 364 avait
@@ -370,7 +370,7 @@ export function MoteurTatouage({
    * Chaque badge appelait `annoncer` → `surChangement` → `chercher`
    * (EnTeteTatouage), c'est-à-dire `router.push("/?exclure=…")`. Or
    * DEPUIS LA nº 357, l'accueil nu est PRÉRENDU et l'accueil À REQUÊTE
-   * est servi par le jumeau `/accueil-recherche` (réécriture du proxy) :
+   * est servi par le jumeau `/recherche` (réécriture du proxy) :
    * ce sont DEUX ROUTES. Le premier badge quitte donc « / » pour le
    * jumeau — et comme la barre est rendue PAR LA PAGE (page → Rendu
    * Accueil → IndexTatoueurs → EnTeteTatouage → ce moteur), tout ce

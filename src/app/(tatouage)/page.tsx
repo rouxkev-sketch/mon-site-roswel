@@ -12,7 +12,7 @@ import { metadonneesAccueil, RenduAccueil } from "./_accueil/rendu";
  * différence suffisait à casser. Cette page est donc PRÉPARÉE
  * D'AVANCE : plus aucune lecture de cookies, d'en-têtes ni de
  * paramètres — tout ce qui variait par la requête vit désormais dans
- * le JUMEAU (accueil-recherche/page.tsx), que le proxy sert par
+ * le JUMEAU (recherche/page.tsx), que le proxy sert par
  * réécriture dès que « / » porte une requête.
  *
  * RÉGÉNÉRÉE PÉRIODIQUEMENT, ET NON FIGÉE À LA COMPILATION : le

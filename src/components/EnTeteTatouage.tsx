@@ -8,6 +8,8 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+//  §1 (nº 652) — le chemin de la recherche, écrit une seule fois.
+import { ADRESSE_RECHERCHE } from "@/lib/chemin-recherche";
 import {
   defilerSansGeste,
   estDefilementProgramme,
@@ -324,7 +326,12 @@ export function EnTeteTatouage({
       parametres.set("disposition", "une");
     if (lirePhototheque(SURFACE_RECHERCHE)) parametres.set("texte", "sans");
     const requete = parametres.toString();
-    router.push(requete ? `/?${requete}` : "/");
+    /*  §1 (nº 652) — CHERCHER MÈNE À « /recherche ». Sans un seul
+        critère, il n'y a rien à chercher : on retourne à l'accueil.
+        L'adresse visible change pendant la recherche — la décision du
+        propriétaire — et les liens déjà partagés « /?style=… » restent
+        servis, par la réécriture du proxy. */
+    router.push(requete ? `${ADRESSE_RECHERCHE}?${requete}` : "/");
   }
 
   /**

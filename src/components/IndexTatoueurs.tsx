@@ -9,6 +9,8 @@ import {
   useSyncExternalStore,
   useTransition,
 } from "react";
+//  §1 (nº 652) — le chemin de la recherche, écrit une seule fois.
+import { ADRESSE_RECHERCHE } from "@/lib/chemin-recherche";
 import Link, { useLinkStatus } from "next/link";
 import { useRouter } from "next/navigation";
 //  §1 (nº 621) — la carte de style et sa grille. Le TYPE seul vient de
@@ -200,7 +202,11 @@ function adresseDe(
   if (lireDisposition() === "une") parametres.set("disposition", "une");
   if (lirePhototheque()) parametres.set("texte", "sans");
   const requete = parametres.toString();
-  return requete ? `/?${requete}` : "/";
+  /*  §1 (nº 652) — LA RECHERCHE A SON ADRESSE : « /recherche ». Sans
+      un seul critère, il n'y a pas de recherche — c'est l'accueil, et
+      l'adresse reste « / ». Le partage d'un ancien lien « /?style=… »
+      continue de marcher : le proxy le réécrit vers cette page. */
+  return requete ? `${ADRESSE_RECHERCHE}?${requete}` : "/";
 }
 
 /** §1 (nº 425) — LA TAILLE DE PAGE DE CET ÉCRAN, lue UNE FOIS au
@@ -456,7 +462,7 @@ export function IndexTatoueurs({
    * CLIENTE qui ne change que la REQUÊTE reste sur le même chemin « / » :
    * le routeur retrouve son entrée, la juge fraîche, et ressort l'arbre
    * de l'accueil sans rien demander au serveur — donc sans jamais
-   * atteindre le jumeau `/accueil-recherche` que le proxy réserve aux
+   * atteindre le jumeau `/recherche` que le proxy réserve aux
    * adresses à requête. C'est le défaut relevé à la nº 595 (il y démontait
    * déjà tout l'arbre, voir la note de PageFavoris) ; il n'y produisait
    * qu'un CLIGNOTEMENT, parce que l'accueil prérendu était alors une
@@ -466,7 +472,7 @@ export function IndexTatoueurs({
    *
    * POURQUOI CETTE VOIE-CI, ET PAS LES TROIS DE LA nº 595 :
    *  1. DONNER À LA RECHERCHE UNE ADRESSE À ELLE — c'est la voie sûre,
-   *     mais elle rendrait `/accueil-recherche` visible dans la barre du
+   *     mais elle rendrait `/recherche` visible dans la barre du
    *     navigateur. C'EST UNE DÉCISION DU PROPRIÉTAIRE, pas la mienne :
    *     elle n'est pas prise ici ;
    *  2. RETIRER LE PRÉCHARGEMENT DU LIEN — écartée depuis : la mesure a

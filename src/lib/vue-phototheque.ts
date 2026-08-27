@@ -19,7 +19,7 @@
  * exige qu'un visiteur qui avait MÉMORISÉ « sans texte » retombe
  * proprement sur la mise en page standard :
  *  · `phototequeDuCookie` répond FAUX quoi que dise le cookie — le
- *    serveur (accueil-recherche/page.tsx, mes-favoris/page.tsx) rend
+ *    serveur (recherche/page.tsx, mes-favoris/page.tsx) rend
  *    donc TOUJOURS les cartes avec texte, vieux cookie ou pas ;
  *  · `lirePhototheque` répond FAUX — le navigateur dit la même chose
  *    que le serveur, aucun écart d'hydratation possible ;
