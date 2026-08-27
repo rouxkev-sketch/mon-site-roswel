@@ -9,6 +9,31 @@ import {
 } from "@/lib/navigation-session";
 import { rendreLaPlace, positionDejaPosee } from "@/lib/restitution-position";
 import { souscrireAdresse } from "@/lib/adresse-courante";
+//  §1 (nº 653) — le chemin de la recherche, écrit une seule fois
+//  (nº 652), et le journal des sondes.
+import { ADRESSE_RECHERCHE } from "@/lib/chemin-recherche";
+import { noter } from "@/lib/journal-bascule";
+
+/**
+ * ██ §1 (nº 653) — L'ACCUEIL ET LA RECHERCHE SONT UN MÊME ÉCRAN ██
+ * ==================================================================
+ * CE QUE LA nº 652 A CHANGÉ SOUS CE COMPOSANT. Jusque-là, lancer une
+ * recherche depuis l'accueil ne changeait PAS le chemin (« / » avec une
+ * requête en plus) : l'effet ci-dessous ne rejouait pas, et rien ne
+ * remontait la page. Depuis que la recherche a son adresse, le chemin
+ * change — et la remontée automatique s'est mise à jouer, dans les deux
+ * sens, sur un mouvement qui n'est pas un changement d'écran.
+ * LA RÈGLE DU PROPRIÉTAIRE : entre ces deux adresses-là, ON NE REMONTE
+ * PAS. La restitution de position garde la priorité — c'est elle qui
+ * sait où l'œil était, et elle passe après cette remontée-ci (voir le
+ * §3 de la nº 328, plus bas).
+ * ⚠️ CE N'EST PAS UNE EXCEPTION DE PLUS DANS LA CHAÎNE : c'est le
+ * constat que « / » et « /recherche » sont LA MÊME SURFACE — la
+ * mosaïque, avec ou sans critères. Deux chemins, un écran.
+ */
+function estLaMosaique(chemin: string | null): boolean {
+  return chemin === "/" || chemin === ADRESSE_RECHERCHE;
+}
 
 /**
  * ██ nº 361 — LA REMONTÉE ATTEND QUE L'ADRESSE SOIT COMMISE ██
@@ -129,6 +154,10 @@ const useEffetAvantPeinture =
 
 export function DefilementEnHaut() {
   const chemin = usePathname();
+  /** §1 (nº 653) — le chemin d'où l'on vient. `null` au tout premier
+      rendu : on arrive alors de l'extérieur, et la règle ci-dessus ne
+      s'applique pas. */
+  const cheminPrecedent = useRef<string | null>(null);
   // Vrai uniquement entre un retour/avant du navigateur et le rendu
   // de la page cible.
   const retourNavigateur = useRef(false);
@@ -147,6 +176,14 @@ export function DefilementEnHaut() {
   }, []);
 
   useEffetAvantPeinture(() => {
+    /*  §1 (nº 653) — LE CHEMIN D'OÙ L'ON VIENT, RELEVÉ AVANT TOUTE
+        DÉCISION ET SANS AUCUNE CONDITION. Il doit être noté même quand
+        les branches ci-dessous rendent la main plus tôt (une fiche, un
+        retour) : un relevé qui saute un tour désignerait l'avant-
+        dernier écran, et la règle de l'accueil-recherche se tromperait
+        de mouvement. */
+    const venaitDeLaMosaique = cheminPrecedent.current;
+    cheminPrecedent.current = chemin;
     /**
      * §3 (nº 328) — C-2 : LE CHEMIN DÉCIDE, ET LA DÉCISION EST PRISE
      * ICI, AVANT LA PEINTURE.
@@ -219,6 +256,14 @@ export function DefilementEnHaut() {
       return remonterALAdresseCommise(chemin);
     }
 
+    if (estLaMosaique(venaitDeLaMosaique) && estLaMosaique(chemin)) {
+      noter(
+        `DÉFILEMENT EN HAUT · évité · ${venaitDeLaMosaique} → ${chemin}` +
+          " (même écran : l'accueil et la recherche, nº 653)"
+      );
+      return;
+    }
+
     const versLAdresseDuRetour =
       retourNavigateur.current &&
       adresseRetour.current === chemin + window.location.search;
@@ -229,7 +274,13 @@ export function DefilementEnHaut() {
     //  pas. C'est LA branche du symptôme — le go(-2) de la garde de
     //  saisie atterrit sur l'accueil par un popstate, et sans la
     //  déclaration on s'effaçait ici devant la restitution.
-    if (versLAdresseDuRetour && !arriveeEnHautVoulue()) return;
+    if (versLAdresseDuRetour && !arriveeEnHautVoulue()) {
+      //  §1 (nº 653) — la sonde doit pouvoir distinguer « je me suis
+      //  effacé » de « je n'ai pas joué ». Sans cette ligne, l'absence
+      //  de remontée ne se lit nulle part.
+      noter(`DÉFILEMENT EN HAUT · effacé · retour vers ${chemin}`);
+      return;
+    }
     // ⚠️ ET LA MÊME RÈGLE QUE LA MÉMOIRE DE NAVIGATION, sans quoi les
     // deux se contredisent. Un document NÉ d'un retour, d'une avance ou
     // d'un rechargement (réouverture du navigateur comprise) n'a pas
@@ -243,10 +294,20 @@ export function DefilementEnHaut() {
     // type de navigation est pourtant « navigate » — c'est un
     // `location.replace`), remonter en haut ici ANNULERAIT tout le
     // travail fait au bon moment. Mesuré : la page repartait à zéro.
-    if (premiereFois && (arriveeQuiRestitue() || positionDejaPosee())) return;
+    if (premiereFois && (arriveeQuiRestitue() || positionDejaPosee())) {
+      //  §1 (nº 653) — même raison : on dit pourquoi on ne remonte pas.
+      noter(
+        `DÉFILEMENT EN HAUT · effacé · ${chemin} (document né d'un retour,` +
+          " ou position déjà posée avant peinture)"
+      );
+      return;
+    }
     // La fenêtre de fiche est ouverte (ou vient de changer l'adresse) :
     // la grille reste où elle est.
     if (document.documentElement.dataset.fenetreFiche) return;
+    //  §1 (nº 653) — LA REMONTÉE, ÉCRITE ELLE AUSSI : c'est la ligne
+    //  qui doit MANQUER quand on passe de l'accueil à la recherche.
+    noter(`DÉFILEMENT EN HAUT · remontée · ${chemin}`);
     //  nº 361 — après la photo d'adieu du navigateur (voir l'en-tête).
     return remonterALAdresseCommise(chemin);
   }, [chemin]);

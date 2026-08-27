@@ -341,8 +341,9 @@
  *    L'ACCUEIL NU EST PRÉRENDU (verdict nº 356 : le rendu dynamique
  *    est la cause signée des éjections). La mise en page du groupe et
  *    la racine ne lisent PLUS la requête ; le jumeau dynamique
- *    accueil-recherche est servi par RÉÉCRITURE du proxy dès que « / »
- *    porte une requête (l'adresse du navigateur reste « / ») ; le
+ *    la recherche (« /recherche » depuis la nº 652 ; jusque-là le jumeau
+ *    « accueil-recherche ») est servie par RÉÉCRITURE du proxy dès que
+ *    « / » porte une requête — le filet des liens déjà partagés ; le
  *    catalogue lit Supabase en ANONYME (lib/supabase/server) ; la
  *    barre s'amortit par `data-compte` posé avant peinture + garde CSS
  *    (promesse nº 203 tenue sans rendu dynamique) ; la page nue sert
@@ -514,6 +515,23 @@ export const PREFIXE_DEFILEMENT = "roswel:defilement:";
  * critères en font partie, les réglages de sonde n'en font pas partie
  * (voir lib/adresse-recherche, et la même logique en clair dans le
  * script d'avant peinture).
+ *
+ * ██ §3 (nº 653) — CE QUE LE DÉMÉNAGEMENT DE LA RECHERCHE Y CHANGE ██
+ * ------------------------------------------------------------------
+ * RIEN, et ce n'est pas une formule : la clé contient LE CHEMIN, parce
+ * que l'adresse canonique le contient. Depuis la nº 652, une recherche
+ * se range donc sous « roswel:defilement:/recherche?style=… » et
+ * l'accueil sous « roswel:defilement:/ ». DEUX CLÉS QUI NE PEUVENT PAS
+ * SE CONFONDRE — c'est exactement la garantie que la nº 184 cherchait,
+ * et le déménagement la renforce au lieu de l'entamer.
+ * ⚠️ CE QUI SE PERD, ET C'EST SANS CONSÉQUENCE : les positions écrites
+ * AVANT la nº 652 sous « /?style=… » ne seront plus retrouvées — leur
+ * clé n'existe plus. Elles s'effacent d'elles-mêmes (une position ne
+ * vit qu'une demi-heure) et le pire qu'elles coûtent est un retour en
+ * haut, une fois, sur une recherche d'avant la mise en ligne.
+ * ⚠️ ET LE SCRIPT D'AVANT PEINTURE FABRIQUE LA MÊME CLÉ, de la même
+ * façon (`location.pathname` + critères triés) : les deux ne peuvent
+ * pas se désaccorder sur ce point non plus.
  */
 function cleDePosition(url: string): string {
   return `${PREFIXE_DEFILEMENT}${adresseDeRecherche(url)}`;

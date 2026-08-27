@@ -2,6 +2,9 @@ import { COULEURS_SOMBRE } from "@/config/tatouage";
 //  §1 (nº 335) — LA RÈGLE DE LA CLÉ N'EST PLUS RECOPIÉE ICI : elle est
 //  fabriquée par le module qui la porte (lib/adresse-recherche).
 import { conditionDeReglagePourLeScript } from "@/lib/adresse-recherche";
+//  §2 (nº 653) — le chemin de la recherche (nº 652), lu là où il est
+//  écrit une seule fois : le script ne le recopie pas à la main.
+import { ADRESSE_RECHERCHE } from "@/lib/chemin-recherche";
 import {
   COOKIE_COLONNES,
   expressionColonnes,
@@ -336,8 +339,25 @@ else if(nav==="navigate"&&!derniereOnglet&&adresse==="/"&&visites&&visites.coura
    Alors seulement : l'adresse complète est rendue. Dans tout autre
    cas — et dans le doute — le filet NE RÉPARE PAS : un visiteur
    bloqué contre son gré est pire qu'un repli non réparé.
-   La ligne s'écrit au journal de la sonde : aucun repli muet. */
-else if(nav==="navigate"&&location.pathname==="/"&&!marqueRattrapage&&!departVouluFrais&&refDuSite&&derniereOnglet&&derniereOnglet.indexOf("/?")===0&&memoireOnglet.quand&&maintenant-memoireOnglet.quand<8000){
+   La ligne s'écrit au journal de la sonde : aucun repli muet.
+
+   ██ §2 (nº 653) — LES DEUX ADRESSES DE LA MOSAÏQUE ██
+   Depuis la nº 652, une recherche vit à « /recherche » et non plus
+   sous « / » avec une requête. LES DEUX TESTS DE CHEMIN S'ÉLARGISSENT,
+   et rien d'autre ne bouge :
+    · l'ARRIVÉE nue peut être « / » ou « /recherche » — le routeur peut
+      replier vers l'une comme vers l'autre ;
+    · la DERNIÈRE ADRESSE de l'onglet peut commencer par « /? » (la
+      forme d'avant, encore servie par le proxy) ou par « /recherche? »
+      (la forme d'aujourd'hui).
+   ⚠️ TOUTES LES AUTRES CONDITIONS RESTENT : navigation de document,
+   référent du site, aucune marque de rattrapage, aucun départ voulu,
+   moins de huit secondes, arrivée NUE et dernière adresse PLEINE. Le
+   filet ne répare pas plus souvent qu'avant — il reconnaît simplement
+   la recherche sous son nouveau nom.
+   ⚠️ LE CHEMIN EST LU LÀ OÙ IL EST ÉCRIT UNE SEULE FOIS
+   (lib/chemin-recherche) : le script ne le recopie pas à la main. */
+else if(nav==="navigate"&&(location.pathname==="/"||location.pathname===${JSON.stringify(ADRESSE_RECHERCHE)})&&!marqueRattrapage&&!departVouluFrais&&refDuSite&&derniereOnglet&&(derniereOnglet.indexOf("/?")===0||derniereOnglet.indexOf(${JSON.stringify(ADRESSE_RECHERCHE + "?")})===0)&&memoireOnglet.quand&&maintenant-memoireOnglet.quand<8000){
 var pn=new URLSearchParams(location.search);var nue=true;
 pn.forEach(function(v,n){if(!(${conditionDeReglagePourLeScript("n")}))nue=false});
 var pd=new URLSearchParams(derniereOnglet.slice(derniereOnglet.indexOf("?")+1));var pleine=false;
