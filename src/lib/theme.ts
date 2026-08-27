@@ -48,6 +48,12 @@ export function variablesCssCouleurs(): string {
     "--rw-sombre-haut-clair": COULEURS_SOMBRE.hautClair,
     "--rw-sombre-texte": COULEURS_SOMBRE.texte,
     "--rw-sombre-texte-doux": COULEURS_SOMBRE.texteDoux,
+    //  §2 (nº 664) — les deux couleurs de la famille des pastilles
+    //  d'événement : le vert de ce qui est validé (rapatrié du
+    //  catalogue des notifications, où il était écrit en dur) et le
+    //  rouge du problème, recalculé pour le fond sombre.
+    "--rw-sombre-succes": COULEURS_SOMBRE.succes,
+    "--rw-sombre-erreur": COULEURS_SOMBRE.erreur,
     //  §5 (nº 388) — le bleu des liens qui sortent du site.
     "--rw-sombre-lien": COULEURS_SOMBRE.lien,
     "--rw-sombre-lien-clair": COULEURS_SOMBRE.lienClair,

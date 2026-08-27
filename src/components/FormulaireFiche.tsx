@@ -82,6 +82,9 @@ import {
   IconeHorloge,
   IconeInstagram,
 } from "@/components/Icones";
+//  §1 (nº 664) — la pastille d'événement de la famille : les deux
+//  tailles, les quatre tons et l'épaisseur du trait, écrits une fois.
+import { PastilleEvenement } from "@/components/PastilleEvenement";
 import { Interrupteur } from "@/components/Interrupteur";
 import { useAppareilMobile } from "@/lib/appareil";
 import type { NatureEtablissement } from "@/config/tatouage";
@@ -2607,13 +2610,16 @@ export function FormulaireFiche() {
     return (
       <main className="flex-1 mx-auto w-full max-w-[640px] px-4 sm:px-6 pt-8 sm:pt-10 pb-24">
         <div className="rounded-xl bg-sombre-carte px-4 py-8 sm:px-7 sm:py-10 text-center">
-          <span
-            aria-hidden="true"
-            className="mx-auto flex h-14 w-14 items-center justify-center
-                       rounded-full bg-sombre-eleve text-sombre-texte-doux"
-          >
-            <IconeHorsLigne taille={24} />
-          </span>
+          {/*  §1 (nº 664) — LE TON PASSE AU ROUGE, comme les deux autres
+               écrans « hors ligne » du site (le bouton de mise hors
+               ligne, la page de rattachement) : un portfolio désactivé
+               est un retrait, pas une information neutre. Le gris qu'il
+               portait était le seul des trois à dire autre chose. */}
+          <PastilleEvenement
+            ton="probleme"
+            symbole={IconeHorsLigne}
+            classe="mx-auto"
+          />
           <h1 className="mt-5 text-[19px] font-bold tracking-tight text-sombre-texte">
             Portfolio désactivé
           </h1>
@@ -3811,18 +3817,28 @@ export function FormulaireFiche() {
                  L'icône suit ce qui est dit : une HORLOGE quand
                  quelque chose attend, une COCHE quand tout est déjà
                  en ligne — annoncer 24 h d'attente pour une bio
-                 corrigée serait faux (règle 2). */}
-            <span
-              aria-hidden="true"
-              className="mx-auto flex w-14 h-14 items-center justify-center
-                         rounded-full bg-primaire-voile text-primaire"
-            >
-              {!ficheChargee?.publie || horsLigne || photosEnRelecture ? (
-                <IconeHorloge taille={24} />
-              ) : (
-                <IconeCocheListe taille={24} />
-              )}
-            </span>
+                 corrigée serait faux (règle 2).
+                 ██ §1 (nº 664) — ET LA COULEUR SUIT L'ICÔNE, DÉSORMAIS ██
+                 LE DÉFAUT ÉTAIT ICI, et l'inventaire de la nº 663 l'a
+                 sorti : les DEUX voix étaient peintes en ROSE. Or le
+                 rose dit « une décision est attendue » — c'est vrai de
+                 l'horloge, c'est FAUX de la coche, qui annonce une
+                 fiche DÉJÀ en ligne. Le même écran disait donc « c'est
+                 fait » avec la couleur de « ça attend ». Chaque voix
+                 prend le ton de ce qu'elle dit. */}
+            {!ficheChargee?.publie || horsLigne || photosEnRelecture ? (
+              <PastilleEvenement
+                ton="attente"
+                symbole={IconeHorloge}
+                classe="mx-auto"
+              />
+            ) : (
+              <PastilleEvenement
+                ton="valide"
+                symbole={IconeCocheListe}
+                classe="mx-auto"
+              />
+            )}
             {!ficheChargee?.publie && !horsLigne ? (
               <>
                 <h2

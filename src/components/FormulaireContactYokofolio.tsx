@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { CONTACT_YOKOFOLIO } from "@/config/tatouage";
+import { IconeCocheListe } from "@/components/Icones";
+//  §1 (nº 664) — la pastille d'événement de la famille.
+import { PastilleEvenement } from "@/components/PastilleEvenement";
 
 /**
  * LE FORMULAIRE DE CONTACT DE YOKOFOLIO — /contact
@@ -103,13 +106,21 @@ export function FormulaireContactYokofolio() {
   if (envoye) {
     return (
       <div className="mt-10 text-center">
-        <span
-          aria-hidden="true"
-          className="mx-auto w-16 h-16 rounded-full bg-primaire-voile text-primaire
-                     flex items-center justify-center text-3xl"
-        >
-          ✓
-        </span>
+        {/*  ██ §3 (nº 664) — CE CERCLE N'ÉTAIT PAS UNE ICÔNE ██
+             C'était le CARACTÈRE « ✓ » posé dans un rond, en `text-3xl`.
+             Il ne suivait donc aucune décision de la famille — ni son
+             trait, ni sa taille, ni ses tons — et il changeait de dessin
+             avec la police de l'appareil. Le propriétaire demande la
+             vraie coche.
+             DEUX AUTRES CHOSES RENTRENT DANS LE RANG : le cercle faisait
+             64 px, la plus grande taille du site et la seule fois où
+             elle servait ; et le ton passe du rose au vert — le message
+             est PARTI, il n'attend aucune décision. */}
+        <PastilleEvenement
+          ton="valide"
+          symbole={IconeCocheListe}
+          classe="mx-auto"
+        />
         <h2 className="mt-5 text-[clamp(1.3rem,3vw,1.6rem)] font-bold text-sombre-texte">
           Message envoyé !
         </h2>

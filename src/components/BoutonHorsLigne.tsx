@@ -5,6 +5,8 @@ import { MOTIFS_MODERATION } from "@/config/tatouage";
 import { declarerDepartVouluVersLAccueil } from "@/lib/navigation-session";
 import { sansRemplissageAuto } from "@/lib/champs-sans-remplissage";
 import { IconeHorsLigne } from "@/components/Icones";
+//  §1 (nº 664) — la pastille d'événement de la famille.
+import { PastilleEvenement } from "@/components/PastilleEvenement";
 import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
 
 /**
@@ -154,13 +156,16 @@ export function BoutonHorsLigne({
             {fait ? (
               /* ---- C'EST FAIT ---- */
               <div className="text-center py-4">
-                <span
-                  aria-hidden="true"
-                  className="mx-auto w-14 h-14 rounded-full bg-erreur/15 text-erreur
-                             flex items-center justify-center"
-                >
-                  <IconeHorsLigne taille={24} />
-                </span>
+                {/*  §1 (nº 664) — la pastille de la famille : c'est CET
+                     écran qui donnait déjà le bon ton aux trois écrans
+                     « hors ligne » (le rouge du retrait) ; les deux
+                     autres le rejoignent. Le rouge, lui, est recalculé
+                     pour le fond sombre — voir COULEURS_SOMBRE. */}
+                <PastilleEvenement
+                  ton="probleme"
+                  symbole={IconeHorsLigne}
+                  classe="mx-auto"
+                />
                 <h2 className="mt-4 text-lg font-bold text-sombre-texte">
                   Fiche mise hors ligne
                 </h2>

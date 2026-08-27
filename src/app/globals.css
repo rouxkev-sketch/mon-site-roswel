@@ -106,6 +106,15 @@
   --color-sombre-haut-clair: var(--rw-sombre-haut-clair);
   --color-sombre-texte: var(--rw-sombre-texte);
   --color-sombre-texte-doux: var(--rw-sombre-texte-doux);
+  /*  §2 (nº 664) — LES DEUX COULEURS DE LA FAMILLE DES PASTILLES.
+      LE VERT n'existait que dans `FenetreNotifications`, écrit en dur
+      (#34D399) : c'était la seule couleur du produit tatouage à ne pas
+      venir de COULEURS_SOMBRE. Même valeur, un seul endroit.
+      LE ROUGE est celui du site RECALCULÉ pour le fond sombre : le
+      #D32E28 de `--color-erreur` est fait pour une page blanche et ne
+      rendait que 2,4:1 sur son propre voile. Voir COULEURS_SOMBRE. */
+  --color-sombre-succes: var(--rw-sombre-succes);
+  --color-sombre-erreur: var(--rw-sombre-erreur);
   /*  §5 (nº 388) — le bleu des liens qui sortent du site, et son
       éclaircissement au survol. */
   --color-sombre-lien: var(--rw-sombre-lien);

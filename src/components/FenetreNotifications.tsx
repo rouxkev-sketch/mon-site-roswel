@@ -6,12 +6,21 @@ import {
   IconeCloche,
   IconeCocheListe,
   IconeCoeur,
+  IconeCorbeille,
   IconeCroix,
   IconeDoubleCoche,
   IconeDrapeau,
+  IconeEnveloppe,
   IconeHorloge,
   IconeHorsLigne,
+  type ComposantIcone,
 } from "@/components/Icones";
+//  §1 (nº 664) — la famille des pastilles d'événement : les deux
+//  tailles, les quatre tons et l'épaisseur du trait, écrits une fois.
+import {
+  PastilleEvenement,
+  type TonEvenement,
+} from "@/components/PastilleEvenement";
 //  §2 (nº 655) — la fenêtre du web rejoint la barre : le menu ancré,
 //  sa largeur et l'encadré des fenêtres de la barre, tous trois là où
 //  vit `MenuDeVerre`. `createPortal` part avec la plaque écrite à la
@@ -69,86 +78,108 @@ import {
  * une nouvelle quand on la TOUCHE, et le compteur suit.
  */
 
-/*  LE CATALOGUE D'AFFICHAGE — pour chaque genre : l'icône, sa teinte,
-    le titre et le sous-titre. LES COULEURS SUIVENT LA CHARTE :
-     · VERT — réservé à « en ligne » et aux ajouts : fiche en ligne,
-       style accepté (il rejoint le catalogue), suppression annulée
-       (tout redevient vivant) ;
-     · ROUGE — le manque à corriger ou l'échéance grave : fiche hors
-       ligne, modifications demandées, suppressions programmées ;
-     · ROSE — l'attente d'une décision, comme la pastille « En
-       validation » du menu : fiche en cours de validation ;
-     · NEUTRE (fond élevé-clair, texte doux) — ce qui n'appelle aucun
-       geste : l'accusé de réception d'une demande, un style refusé
-       (ce n'est ni une erreur ni un manque — rien à corriger). */
-const VERT = "bg-[#34D399]/15 text-[#34D399]";
-const ROUGE = "bg-erreur/15 text-erreur";
-const ROSE = "bg-primaire-voile text-primaire";
-const NEUTRE = "bg-sombre-eleve-clair text-sombre-texte-doux";
+/*  ██ §1 (nº 664) — LE CATALOGUE NE PEINT PLUS, IL DÉSIGNE ██
+    ==================================================================
+    CE QUI A CHANGÉ ICI, ET C'EST TOUTE LA REFONTE. Ce catalogue portait
+    QUATRE constantes de couleur écrites à la main (VERT, ROUGE, ROSE,
+    NEUTRE) — dont un hexadécimal brut, #34D399, la seule couleur du
+    produit à ne pas venir de la charte. Elles sont parties chez
+    `PastilleEvenement`, avec les deux tailles et l'épaisseur du trait :
+    ce fichier ne dit plus QUELLE COULEUR, il dit QUEL SENS (`ton`), et
+    le sens est le même dans les neuf écrans de la famille.
+
+    ET L'ICÔNE EST DÉSORMAIS LE COMPOSANT, pas son rendu. Elle
+    s'écrivait `<IconeHorloge taille={18} />` : la taille y était figée,
+    donc ce catalogue ne pouvait servir qu'à la liste. En passant
+    `IconeHorloge` lui-même, la pastille choisit sa taille — c'est ce
+    qui permet aux mêmes symboles d'exister en 36 et en 56.
+
+    UN SYMBOLE PAR ÉVÉNEMENT (point 5 du propriétaire). Deux abus
+    relevés à la nº 663 disparaissent :
+     · L'HORLOGE DISAIT DEUX CHOSES OPPOSÉES — « on examine ta fiche »
+       (une attente ordinaire) et « ton compte sera supprimé dans
+       N jours » (une échéance grave). Elle ne garde que la première ;
+       les deux suppressions programmées passent à LA CORBEILLE, qui
+       dit ce dont il s'agit sans qu'on lise.
+     · LA COCHE SERVAIT QUATRE ÉVÉNEMENTS, dont un qui n'est pas un
+       succès : « ta demande de style a bien été reçue » n'est pas un
+       oui, c'est un accusé de réception. Elle passe à L'ENVELOPPE. La
+       coche garde les trois vrais succès (fiche en ligne, style
+       accepté, suppression annulée), comme le propriétaire l'écrit.
+    ⚠️ LE SYMBOLE « HORS LIGNE » N'EST PAS REDESSINÉ, et c'est un écart
+    assumé à la liste du propriétaire (il proposait un œil barré). Le
+    dessin actuel est un BOUTON D'ALIMENTATION, il est déjà employé dans
+    les CINQ écrans « hors ligne » du site, et il dit « éteint » — là où
+    un œil barré dirait « caché », ce qui est plus faible que la vérité :
+    la fiche n'est pas masquée, elle est retirée. */
+
+/*  LE CATALOGUE D'AFFICHAGE — pour chaque genre : le symbole, le ton,
+    le titre et le sous-titre. Le sens des quatre tons est écrit une
+    fois pour toutes dans `PastilleEvenement`. */
 
 const CATALOGUE: Record<
   GenreNotification,
-  { icone: React.ReactNode; teinte: string; titre: string; sousTitre: string }
+  { symbole: ComposantIcone; ton: TonEvenement; titre: string; sousTitre: string }
 > = {
   en_validation: {
-    icone: <IconeHorloge taille={18} />,
-    teinte: ROSE,
+    symbole: IconeHorloge,
+    ton: "attente",
     titre: "Fiche en cours de validation",
     sousTitre: "Ta fiche est en cours de vérification.",
   },
   validee: {
-    icone: <IconeCocheListe taille={18} />,
-    teinte: VERT,
+    symbole: IconeCocheListe,
+    ton: "valide",
     titre: "Fiche en ligne",
     sousTitre: "Ta fiche est maintenant visible sur YokoFolio.",
   },
   hors_ligne: {
-    icone: <IconeHorsLigne taille={18} />,
-    teinte: ROUGE,
+    symbole: IconeHorsLigne,
+    ton: "probleme",
     titre: "Fiche hors ligne",
     sousTitre:
       "Ta fiche est hors ligne. Modifie-la pour pouvoir la remettre en ligne.",
   },
   modifications: {
-    icone: <IconeDrapeau taille={18} />,
-    teinte: ROUGE,
+    symbole: IconeDrapeau,
+    ton: "probleme",
     titre: "Modifications demandées",
     sousTitre: "Modifie ta fiche pour la renvoyer en validation.",
   },
   suppression_fiche: {
-    icone: <IconeHorloge taille={18} />,
-    teinte: ROUGE,
+    symbole: IconeCorbeille,
+    ton: "probleme",
     titre: "Suppression de portfolio programmée",
     sousTitre: `Ta fiche est masquée. Elle sera définitivement supprimée dans ${DELAI_SUPPRESSION_JOURS} jours.`,
   },
   suppression_compte: {
-    icone: <IconeHorloge taille={18} />,
-    teinte: ROUGE,
+    symbole: IconeCorbeille,
+    ton: "probleme",
     titre: "Suppression du compte programmée",
     sousTitre: `Ton compte est masqué. Il sera définitivement supprimé dans ${DELAI_SUPPRESSION_JOURS} jours.`,
   },
   annulation: {
-    icone: <IconeCocheListe taille={18} />,
-    teinte: VERT,
+    symbole: IconeCocheListe,
+    ton: "valide",
     titre: "Suppression annulée",
     sousTitre: "La suppression est annulée : tout est rétabli.",
   },
   demande_style: {
-    icone: <IconeCocheListe taille={18} />,
-    teinte: NEUTRE,
+    symbole: IconeEnveloppe,
+    ton: "info",
     titre: "Demande de style",
     sousTitre: "Ta demande d'ajout de style a bien été reçue.",
   },
   style_ajoute: {
-    icone: <IconeCocheListe taille={18} />,
-    teinte: VERT,
+    symbole: IconeCocheListe,
+    ton: "valide",
     titre: "Style accepté",
     //  Le nom du style s'insère à l'affichage (voir `sousTitreDe`).
     sousTitre: 'Le style demandé "Réalisme" a été ajouté à YokoFolio.',
   },
   style_refuse: {
-    icone: <IconeCroix taille={18} />,
-    teinte: NEUTRE,
+    symbole: IconeCroix,
+    ton: "info",
     titre: "Style refusé",
     sousTitre: "Ta demande d'ajout de style n'a pas été acceptée.",
   },
@@ -164,18 +195,19 @@ const CATALOGUE: Record<
       effacés à la compilation. C'est la règle de tout ce catalogue
       depuis la nº 132, et la raison est écrite en tête de ce fichier :
       l'affichage DÉRIVE DU GENRE, jamais de ce que la base a écrit.
-      LA TEINTE EST « NEUTRE », et c'est un choix de charte, pas un
-      goût : les trois couleurs disent quelque chose de précis — VERT
-      « c'est en ligne », ROUGE « il manque quelque chose », ROSE « une
-      décision est attendue ». Un accueil n'est aucun des trois : il
-      n'appelle AUCUN GESTE, ce qui est la définition même du neutre
-      dans ce catalogue.
-      L'ICÔNE EST LE CŒUR de la famille existante, celui des favoris —
-      la seule qui accueille plutôt qu'elle n'annonce. Le propriétaire
-      la reverra avec les autres au chantier suivant (consigne nº 663). */
+      LE TON EST « INFO », et c'est un choix de charte, pas un goût :
+      les trois autres disent quelque chose de précis — VERT « c'est en
+      ligne », ROUGE « il manque quelque chose », ROSE « une décision est
+      attendue ». Un accueil n'est aucun des trois : il n'appelle AUCUN
+      GESTE, ce qui est la définition même de l'information.
+      LE SYMBOLE EST LE CŒUR de la famille existante, celui des favoris
+      — le seul qui accueille plutôt qu'il n'annonce. La nº 664 l'a
+      revu avec les autres et le CONFIRME : c'est aussi le seul de la
+      famille que le sous-titre nomme (« tes favoris te suivront
+      partout »). */
   bienvenue: {
-    icone: <IconeCoeur taille={18} />,
-    teinte: NEUTRE,
+    symbole: IconeCoeur,
+    ton: "info",
     titre: "Bienvenue sur YokoFolio !",
     sousTitre:
       "Explore les styles et suis les tatoueurs qui t'inspirent — tes " +
@@ -402,13 +434,11 @@ export function FenetreNotifications({
   const corps =
     notifications.length === 0 ? (
           <div className="px-6 py-14 text-center">
-            <span
-              aria-hidden="true"
-              className="mx-auto flex h-14 w-14 items-center justify-center
-                         rounded-full bg-sombre-eleve text-sombre-texte-doux"
-            >
-              <IconeCloche taille={24} />
-            </span>
+            {/*  §1 (nº 664) — la pastille de la famille, grande taille :
+                 la liste vide n'informe de rien d'autre que d'elle-même,
+                 donc le ton « info ». Elle dessinait son cercle à la
+                 main, un cran plus bas dans l'échelle (`eleve`). */}
+            <PastilleEvenement ton="info" symbole={IconeCloche} classe="mx-auto" />
             {/*  §1 (nº 539) — LE TITRE RESTE SEUL. La phrase qui le
                  suivait est supprimée, sur les deux appareils : c'est la
                  règle de charte des champs et des choix — aucune phrase
@@ -459,15 +489,19 @@ export function FenetreNotifications({
                                  nonLue ? "bg-sombre-eleve/40" : ""
                                }`}
                   >
-                    {/* L'ICÔNE — dans sa pastille teintée : le niveau
-                        au-dessus de la rangée, sans aucun trait. */}
-                    <span
-                      aria-hidden="true"
-                      className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center
-                                 rounded-full ${fiche?.teinte ?? NEUTRE}`}
-                    >
-                      {fiche?.icone ?? <IconeCloche taille={18} />}
-                    </span>
+                    {/*  LE SYMBOLE — dans sa pastille teintée : le niveau
+                         au-dessus de la rangée, sans aucun trait.
+                         §1 (nº 664) — petite taille (36 px). LE REPLI EST
+                         LA CLOCHE EN TON « INFO » : un genre que ce
+                         catalogue ne connaît pas est une nouvelle qu'on
+                         ne sait pas qualifier — surtout pas la peindre en
+                         rouge. */}
+                    <PastilleEvenement
+                      taille="liste"
+                      ton={fiche?.ton ?? "info"}
+                      symbole={fiche?.symbole ?? IconeCloche}
+                      classe="mt-0.5"
+                    />
                     <span className="min-w-0 flex-1">
                       {/* LE TITRE — et le point rose d'une non-lue. */}
                       <span className="flex items-center gap-2">

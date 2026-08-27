@@ -6,6 +6,8 @@ import Link from "next/link";
 import { ARRIVEE_APRES_CONNEXION, DELAI_SUPPRESSION_JOURS } from "@/config/tatouage";
 import { EcranAuthentification } from "@/components/EcranAuthentification";
 import { IconeHorsLigne, IconeLienExterne } from "@/components/Icones";
+//  §1 (nº 664) — la pastille d'événement de la famille.
+import { PastilleEvenement } from "@/components/PastilleEvenement";
 import { sansRemplissageAuto } from "@/lib/champs-sans-remplissage";
 import { LIBELLE_TYPE_FICHE, type EtatLigne, type TypeFiche } from "@/lib/demarchage";
 import { useUtilisateur } from "@/lib/use-utilisateur";
@@ -149,12 +151,17 @@ export function PageRattachement({
     return (
       <main className="flex-1 mx-auto w-full max-w-[560px] px-4 sm:px-6 pt-10 sm:pt-14 pb-24">
         <div className="rounded-xl bg-sombre-carte px-4 py-8 text-center sm:px-7">
-          <span
-            aria-hidden="true"
-            className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-sombre-eleve"
-          >
-            <IconeHorsLigne taille={24} classe="text-sombre-texte-doux" />
-          </span>
+          {/*  §1 (nº 664) — DEUX CHANGEMENTS ICI, ET LES DEUX VIENNENT
+               de l'inventaire de la nº 663 : le cercle faisait 48 px,
+               la seule fois de tout le site (les deux tailles de la
+               famille sont 36 et 56), et il était gris alors que les
+               deux autres écrans « hors ligne » disent le rouge du
+               retrait. */}
+          <PastilleEvenement
+            ton="probleme"
+            symbole={IconeHorsLigne}
+            classe="mx-auto"
+          />
           <h1 className="mt-4 text-[clamp(1.4rem,4vw,1.8rem)] font-bold text-sombre-texte">
             {plusieurs ? "Tes fiches sont retirées" : "Ta fiche est retirée"}
           </h1>

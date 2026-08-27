@@ -160,6 +160,17 @@ import {
 export const EMPREINTE_ZONE_COMPTE =
   "mobile:-mr-1.5 not-mobile:-mr-1 not-mobile:ml-1.5";
 
+/**
+ * §1 (nº 664) — LA MARQUE « LES NOUVELLES ONT ÉTÉ SEMÉES », par compte.
+ * Elle vit dans `sessionStorage` : elle meurt avec l'onglet, ce qui est
+ * exactement la durée voulue — une fois par visite, pas une par page.
+ * ⚠️ ELLE PORTE L'IDENTIFIANT DU COMPTE, et ce n'est pas décoratif :
+ * deux comptes qui se succèdent dans le même onglet doivent semer
+ * chacun le leur. Le préfixe est celui de tout ce que le site range
+ * (`roswel:`), pour qu'un nettoyage sache quoi balayer.
+ */
+const CLE_NOUVELLES_SEMEES = "roswel:nouvelles-semees:";
+
 export function MenuEspace({
   idUtilisateur,
   nom,
@@ -368,13 +379,83 @@ export function MenuEspace({
     [fiche]
   );
 
+  /**
+   * ██ §1 (nº 664) — LES NOUVELLES SE LISENT SEULES, DÉSORMAIS ██
+   * ------------------------------------------------------------------
+   * POURQUOI CETTE MOITIÉ SE DÉTACHE DE `lireLeCompte`. La note de la
+   * nº 142 juste dessous interdit de lire le compte AU MONTAGE, et elle
+   * a raison — mais elle vise DEUX choses qui ne coûtent pas la même :
+   *  · LES FICHES passent par le CLIENT SUPABASE DU NAVIGATEUR. C'est
+   *    lui qui rejoue la session hors de tout geste, et c'est LUI qui a
+   *    fait perdre la liste des favoris (le défaut mesuré à la nº 142) ;
+   *  · LES NOUVELLES sont un simple `fetch` vers notre propre route.
+   *    Aucun client Supabase n'est créé dans le navigateur : le cookie
+   *    part avec la requête, le SERVEUR l'ouvre. Le danger de la nº 142
+   *    ne la concerne pas.
+   * C'est cette distinction qui rend le §1 possible sans rien casser :
+   * on peut semer les nouvelles à l'arrivée, on ne peut toujours pas
+   * lire les fiches.
+   */
+  const lireLesNouvelles = useCallback(async () => {
+    try {
+      const reponse = await fetch("/api/tatoueur/notifications");
+      const donnees = (await reponse.json().catch(() => null)) as {
+        notifications?: Notification[];
+      } | null;
+      setNotifications(donnees?.notifications ?? []);
+    } catch {
+      // Pas de nouvelles : le menu vit très bien sans.
+    }
+  }, []);
+
+  /**
+   * ██ §1 (nº 664) — LE COMPTEUR EST JUSTE DÈS L'ARRIVÉE ██
+   * ------------------------------------------------------------------
+   * CE QUE LE PROPRIÉTAIRE DEMANDE : que la bienvenue soit POSÉE avant
+   * qu'on ouvre quoi que ce soit, pour que le compteur de la cloche
+   * n'attende pas un geste.
+   * CE QUE LE MÉCANISME EST — le plus simple possible, et surtout AUCUN
+   * MÉCANISME NEUF : c'est LA MÊME lecture que fait l'ouverture du menu.
+   * La route pose la bienvenue si elle manque (nº 663) ; l'appeler ici,
+   * c'est poser la ligne dès que la page connectée s'affiche. Rien de
+   * nouveau à écrire côté serveur, aucune route de plus, et les comptes
+   * déjà créés sont servis par le même chemin.
+   * ⚠️ UNE FOIS PAR SESSION DE NAVIGATION, PAS UNE PAR PAGE. La clé est
+   * rangée dans `sessionStorage` sous l'identifiant du compte : rouvrir
+   * dix pages ne fait qu'une requête. Le `catch` LAISSE PASSER (une
+   * navigation privée qui refuse le rangement sème une fois par
+   * chargement, ce qui reste juste) — jamais l'inverse : un compteur
+   * faux serait pire qu'une requête de trop.
+   * ⚠️ IL NE TOUCHE PAS AUX FICHES, ni à `compteLu`, ni à l'avatar : la
+   * garde de la nº 142 reste entière (voir `lireLesNouvelles`).
+   * ⚠️ LE MINUTEUR À ZÉRO N'EST PAS UN ORNEMENT : poser un état
+   * directement depuis un effet est refusé (react-hooks/set-state-in
+   * -effect), et c'est LE MÊME CONTOURNEMENT qu'emploient déjà les
+   * blocs « Autre adresse » et « Équipe » — pas un second mécanisme.
+   */
+  useEffect(() => {
+    if (!idUtilisateur) return;
+    try {
+      const cle = `${CLE_NOUVELLES_SEMEES}${idUtilisateur}`;
+      if (sessionStorage.getItem(cle)) return;
+      sessionStorage.setItem(cle, "1");
+    } catch {
+      //  Rangement refusé : on sème quand même. Voir la note.
+    }
+    const minuteur = setTimeout(() => void lireLesNouvelles(), 0);
+    return () => clearTimeout(minuteur);
+  }, [idUtilisateur, lireLesNouvelles]);
+
   /** LES FICHES ET LES NOUVELLES — une lecture, les deux ensemble.
       ⚠️ ELLE N'EST JAMAIS LANCÉE AU MONTAGE, et ce n'est pas un
       oubli : une lecture authentifiée sur CHAQUE page, pour un menu
       que la plupart des visites n'ouvrent jamais, coûte une requête à
       chaque affichage — et fait rejouer la session du client Supabase
       hors de tout geste (mesuré : la liste des favoris s'en trouvait
-      perdue). On lit quand on ouvre, et seulement là. */
+      perdue). On lit quand on ouvre, et seulement là.
+      §1 (nº 664) — CETTE NOTE NE VAUT PLUS QUE POUR LES FICHES : les
+      nouvelles, elles, sont semées à l'arrivée (voir juste au-dessus).
+      La raison de la distinction est écrite dans `lireLesNouvelles`. */
   const lireLeCompte = useCallback(async () => {
     try {
       const supabase = creerClientSupabaseNavigateur();
@@ -393,16 +474,8 @@ export function MenuEspace({
       //  garde ce qu'on montrait : seule une lecture RÉUSSIE change
       //  ce qui est à l'écran.
     }
-    try {
-      const reponse = await fetch("/api/tatoueur/notifications");
-      const donnees = (await reponse.json().catch(() => null)) as {
-        notifications?: Notification[];
-      } | null;
-      setNotifications(donnees?.notifications ?? []);
-    } catch {
-      // Pas de nouvelles : le menu vit très bien sans.
-    }
-  }, [idUtilisateur]);
+    await lireLesNouvelles();
+  }, [idUtilisateur, lireLesNouvelles]);
 
   /**
    * ██ §1 (nº 645) — LA PHOTO RANGÉE SUIT LA FICHE ACTIVE ██

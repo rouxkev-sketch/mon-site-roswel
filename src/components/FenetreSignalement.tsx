@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { MOTIFS_SIGNALEMENT } from "@/config/tatouage";
-import { IconeDrapeau } from "@/components/Icones";
+import { IconeCocheListe, IconeDrapeau } from "@/components/Icones";
+//  §1 (nº 664) — la pastille d'événement de la famille.
+import { PastilleEvenement } from "@/components/PastilleEvenement";
 
 /**
  * « SIGNALER CETTE FICHE » — le lien discret et sa fenêtre
@@ -125,13 +127,20 @@ export function FenetreSignalement({
             {envoye ? (
               /* ---- LE REMERCIEMENT ---- */
               <div className="text-center py-4">
-                <span
-                  aria-hidden="true"
-                  className="mx-auto w-14 h-14 rounded-full bg-primaire-voile text-primaire
-                             flex items-center justify-center text-2xl"
-                >
-                  ✓
-                </span>
+                {/*  ██ §3 (nº 664) — CE CERCLE N'ÉTAIT PAS UNE ICÔNE ██
+                     C'était le CARACTÈRE « ✓ » posé dans un rond, en
+                     `text-2xl`. Il ne suivait donc aucune décision de la
+                     famille — ni son trait, ni sa taille, ni ses tons —
+                     et il changeait de dessin avec la police de
+                     l'appareil. Le propriétaire demande la vraie coche.
+                     LE TON PASSE DU ROSE AU VERT : le rose dit « une
+                     décision est attendue », or ici rien n'attend de
+                     décision — le signalement est PARTI. */}
+                <PastilleEvenement
+                  ton="valide"
+                  symbole={IconeCocheListe}
+                  classe="mx-auto"
+                />
                 <h2 className="mt-4 text-lg font-bold text-sombre-texte">
                   Merci pour ton signalement
                 </h2>

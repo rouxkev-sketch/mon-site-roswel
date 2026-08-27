@@ -8,7 +8,41 @@
  *   vectoriel (nettes à toutes les tailles).
  */
 
-type ProprietesIcone = { taille?: number; classe?: string };
+import type { ReactElement } from "react";
+
+/**
+ * ██ §3 (nº 664) — `trait` : L'ÉPAISSEUR, QUAND ELLE DOIT ÊTRE TENUE ██
+ * ==================================================================
+ * TOUTES CES ICÔNES SONT DESSINÉES DANS UNE `viewBox` DE 24, avec un
+ * trait de 1,8 — c'est-à-dire 1,8 UNITÉ DE DESSIN, pas 1,8 pixel. Le
+ * navigateur met le dessin à l'échelle de `taille` : à 24 px le trait
+ * rend 1,8 px, à 18 px il n'en rend plus que 1,35. LA MÊME FAMILLE
+ * D'ICÔNES CHANGE DONC DE GRAISSE SELON SA TAILLE, et c'est ce que le
+ * propriétaire voit quand la même coche paraît plus maigre dans la
+ * liste des notifications que dans la fenêtre de validation.
+ * CE PARAMÈTRE EXISTE POUR CORRIGER ÇA, et pour rien d'autre : celui
+ * qui affiche une icône à une taille inhabituelle peut demander
+ * l'épaisseur en unités de dessin qui rendra le PIXEL qu'il veut
+ * (voir `traitPourTaille` dans PastilleEvenement.tsx).
+ * ⚠️ LE DÉFAUT RESTE 1,8, ET C'EST DÉLIBÉRÉ : les quelque cent
+ * emplois du site n'en passent aucun et ne bougent donc pas d'un
+ * cheveu. Seule la famille des pastilles d'événement s'en sert.
+ * ⚠️ IL N'EST BRANCHÉ QUE SUR LES NEUF ICÔNES DE CETTE FAMILLE
+ * (horloge, coche, hors ligne, drapeau, croix, cœur, cloche,
+ * corbeille, enveloppe) : les autres l'accepteraient sans effet, ce
+ * qui serait pire que de ne pas l'accepter du tout.
+ */
+export type ProprietesIcone = {
+  taille?: number;
+  classe?: string;
+  trait?: number;
+};
+
+/** Une icône de la famille : elle sait se dessiner à une taille et à
+    une épaisseur données. C'est ce que `PastilleEvenement` reçoit —
+    LE COMPOSANT, pas son rendu : la pastille est seule à décider de
+    la taille, et elle ne peut pas la décider sur du JSX déjà fait. */
+export type ComposantIcone = (proprietes: ProprietesIcone) => ReactElement;
 
 /**
  * §1 (nº 250) — LES ÉTATS DU ROND DES ICÔNES DE LA BARRE, écrits UNE
@@ -45,13 +79,14 @@ export const ETATS_ROND_BARRE =
 
 /* ============ Icônes du menu (trait fin) ============ */
 
-export function IconeCoeur({ taille = 24, classe = "" }: ProprietesIcone) {
+export function IconeCoeur({ taille = 24, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
       <path
         d="M12 20.5C7.5 17.2 3.5 13.9 3.5 9.9 3.5 7 5.7 5 8.2 5c1.6 0 3 .8 3.8 2.1C12.8 5.8 14.2 5 15.8 5c2.5 0 4.7 2 4.7 4.9 0 4-4 7.3-8.5 10.6Z"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth={trait}
+        strokeLinecap="round"
         strokeLinejoin="round"
       />
     </svg>
@@ -301,15 +336,15 @@ export function IconeCle({ taille = 20, classe = "" }: ProprietesIcone) {
 }
 
 /** L'horloge (ligne « X ans d'ancienneté » de la fiche) */
-export function IconeHorloge({ taille = 20, classe = "" }: ProprietesIcone) {
+export function IconeHorloge({ taille = 20, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
-      <circle cx="12" cy="12" r="8.7" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="12" cy="12" r="8.7" stroke="currentColor" strokeWidth={trait} />
       {/* Aiguilles : midi et environ 16 h 30 (comme le modèle) */}
       <path
         d="M12 6.6V12l3.4 2.7"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth={trait}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -318,13 +353,13 @@ export function IconeHorloge({ taille = 20, classe = "" }: ProprietesIcone) {
 }
 
 /** La coche fine des listes (communes couvertes, accordéon Zone) */
-export function IconeCocheListe({ taille = 16, classe = "" }: ProprietesIcone) {
+export function IconeCocheListe({ taille = 16, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
       <path
         d="m5.5 12.8 4.2 4.2 8.8-9.6"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth={trait}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -742,13 +777,13 @@ export function IconeMonde({ taille = 20, classe = "" }: ProprietesIcone) {
 }
 
 /** Petit drapeau (lien discret « Signaler cette fiche ») */
-export function IconeDrapeau({ taille = 16, classe = "" }: ProprietesIcone) {
+export function IconeDrapeau({ taille = 16, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
       <path
         d="M6 21V4.5m0 0.5c3-1.8 6 1.2 9-.5v8.5c-3 1.7-6-1.3-9 .5"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth={trait}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -780,7 +815,7 @@ export function IconeBulleMessage({ taille = 20, classe = "" }: ProprietesIcone)
 }
 
 /** Enveloppe — l'e-mail */
-export function IconeEnveloppe({ taille = 20, classe = "" }: ProprietesIcone) {
+export function IconeEnveloppe({ taille = 20, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
       <rect
@@ -790,12 +825,12 @@ export function IconeEnveloppe({ taille = 20, classe = "" }: ProprietesIcone) {
         height="13"
         rx="2.5"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth={trait}
       />
       <path
         d="m3.8 7.4 7.1 5.2c.65.48 1.55.48 2.2 0l7.1-5.2"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth={trait}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -878,13 +913,13 @@ export function IconeDoubleCoche({ taille = 20, classe = "" }: ProprietesIcone) 
   );
 }
 
-export function IconeCroix({ taille = 20, classe = "" }: ProprietesIcone) {
+export function IconeCroix({ taille = 20, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
       <path
         d="m6.5 6.5 11 11m0-11-11 11"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth={trait}
         strokeLinecap="round"
       />
     </svg>
@@ -966,14 +1001,14 @@ export function IconeUneColonne({ taille = 20, classe = "" }: ProprietesIcone) {
 
 /** Symbole d'interrupteur (cercle + trait) — « Mettre la fiche hors
     ligne », l'action d'administration posée près du signalement. */
-export function IconeHorsLigne({ taille = 16, classe = "" }: ProprietesIcone) {
+export function IconeHorsLigne({ taille = 16, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
-      <path d="M12 3.5v8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M12 3.5v8" stroke="currentColor" strokeWidth={trait} strokeLinecap="round" />
       <path
         d="M7.4 6.2a8 8 0 1 0 9.2 0"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth={trait}
         strokeLinecap="round"
       />
     </svg>
@@ -1070,7 +1105,7 @@ export function IconeFlecheAdresse({ taille = 14, classe = "" }: ProprietesIcone
  * pastille dessinée dedans : le compte des non lues est un élément à
  * part, posé À CÔTÉ du titre (voir MenuEspace).
  */
-export function IconeCloche({ taille = 20, classe = "" }: ProprietesIcone) {
+export function IconeCloche({ taille = 20, classe = "", trait = 1.8 }: ProprietesIcone) {
   /*  §1 (nº 535) — LA CLOCHE EST ENTIÈRE, ET ELLE LE RESTE.
       L'ÉCHANCRURE DES nº 533-534 EST ANNULÉE : le drapeau `ouverte`,
       les deux tracés et l'arc coupé sont supprimés, code compris. Ce
@@ -1084,14 +1119,14 @@ export function IconeCloche({ taille = 20, classe = "" }: ProprietesIcone) {
       <path
         d="M18 8.5a6 6 0 1 0-12 0c0 4.5-1.5 5.8-2 6.5h16c-.5-.7-2-2-2-6.5Z"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth={trait}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         d="M10 18.5a2 2 0 0 0 4 0"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth={trait}
         strokeLinecap="round"
       />
     </svg>
@@ -1113,13 +1148,13 @@ export function IconePlus({ taille = 18, classe = "" }: ProprietesIcone) {
 }
 
 /** LA CORBEILLE — les suppressions, dans la page Confidentialité. */
-export function IconeCorbeille({ taille = 20, classe = "" }: ProprietesIcone) {
+export function IconeCorbeille({ taille = 20, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
       <path
         d="M4 7h16M9.5 7V5.5A1.5 1.5 0 0 1 11 4h2a1.5 1.5 0 0 1 1.5 1.5V7m2 0-.6 11.1A2 2 0 0 1 13.9 20h-3.8a2 2 0 0 1-2-1.9L7.5 7"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth={trait}
         strokeLinecap="round"
         strokeLinejoin="round"
       />

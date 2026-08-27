@@ -1695,6 +1695,42 @@ export const COULEURS_SOMBRE = {
   lien: "#7FA9EE",
   lienClair: "#A8C6F6",
   /**
+   * ██ §4 (nº 664) — LE VERT DE CE QUI EST VALIDÉ ██
+   * ------------------------------------------------------------------
+   * IL EXISTAIT DÉJÀ, MAIS PAS COMME JETON : `#34D399` était écrit EN
+   * DUR dans le catalogue des notifications (`FenetreNotifications`),
+   * seule couleur du produit tatouage à ne pas venir d'ici. Une valeur
+   * écrite à un endroit est une valeur qui dérive : la nº 664 la
+   * rapatrie sans la changer d'un chiffre.
+   * ⚠️ IL N'EST PAS `COULEURS.succes` (le vert des artisans) : ce
+   * dernier est calculé pour un fond BLANC. Celui-ci vit sur le bleu
+   * nuit #0B0F14 et sur les gris de l'échelle — il rend 8,9:1 sur le
+   * fond de page, 5,4:1 sur son propre voile à 20 %.
+   * ⚠️ SON EMPLOI EST STRICT, comme celui du rose : VALIDÉ / RÉUSSI, et
+   * rien d'autre (fiche en ligne, style accepté, suppression annulée,
+   * message envoyé). Ni un ornement, ni un second accent.
+   */
+  succes: "#34D399",
+  /**
+   * ██ §5 (nº 664) — LE ROUGE DU PROBLÈME, RECALCULÉ POUR LE FOND ██
+   * ------------------------------------------------------------------
+   * LE ROUGE DU SITE (`COULEURS.erreur` #D32E28) EST CALCULÉ POUR UNE
+   * PAGE BLANCHE : c'est un rouge SOMBRE, et c'est ce qu'il faut sur
+   * du blanc. Posé sur le bleu nuit, puis sur son propre voile à 20 %,
+   * il ne rend plus que 2,4:1 — SOUS le minimum de 3:1 d'un symbole.
+   * C'était le vrai défaut derrière « les cercles sont délavés » : la
+   * moitié rouge de la famille l'était pour de bon.
+   * ⚠️ CE N'EST PAS UNE COULEUR INVENTÉE, c'est EXACTEMENT l'opération
+   * de la nº 466 sur le rose, appliquée au rouge : même famille de
+   * teinte (2°, celle du #D32E28), saturation portée à 100 %, valeur
+   * relevée pour une base sombre et froide. Il rend 5,9:1 sur le fond
+   * de page et 3,4:1 sur son voile.
+   * ⚠️ LES ARTISANS NE CHANGENT PAS : leurs pages lisent toujours
+   * `COULEURS.erreur`. Celui-ci ne vaut que dans le périmètre tatouage,
+   * et pour la famille des pastilles d'événement.
+   */
+  erreur: "#FF4D45",
+  /**
    * ██ §4 (nº 466) — LE ROSE DU PRODUIT TATOUAGE, RAVIVÉ ██
    * ------------------------------------------------------------------
    * Sur le bleu nuit #0B0F14, le #EE3D6F historique paraît délavé : sa
