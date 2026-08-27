@@ -27,10 +27,14 @@ import {
 import { PhotoRonde } from "@/components/BlocLieux";
 //  §1 (nº 645) — l'avatar de la barre : lu dans la session, rangé par
 //  l'écriture unique de `lib/avatar-du-compte`.
-import { rangerLAvatarDuCompte } from "@/lib/avatar-du-compte";
+//  §1 (nº 657) — le nom du compte rejoint la photo : les deux
+//  morceaux de l'identité se lisent au même endroit.
+import { nomDuCompte, rangerLAvatarDuCompte } from "@/lib/avatar-du-compte";
 import { useUtilisateur } from "@/lib/use-utilisateur";
 import { EntreeLangue, FenetreLangue } from "@/components/SelecteurLangue";
 import { FenetreNotifications } from "@/components/FenetreNotifications";
+//  §1 (nº 657) — la fenêtre « Modifier », quatrième surface de la barre.
+import { FenetreIdentite } from "@/components/FenetreIdentite";
 import {
   CLASSE_ENCADRE_FENETRE,
   LARGEUR_FENETRE_BARRE,
@@ -181,6 +185,10 @@ export function MenuEspace({
   /** La fenêtre des langues (nº 238-§5) : montée par le MENU, pas par
       sa ligne — elle survit donc à la fermeture du menu. */
   const [langueOuverte, setLangueOuverte] = useState(false);
+  /** §1 (nº 657) — LA FENÊTRE « MODIFIER » du particulier, montée comme
+      les deux précédentes : par le MENU, jamais par la ligne qui
+      l'ouvre — elle doit survivre à la fermeture de « Mon compte ». */
+  const [identiteOuverte, setIdentiteOuverte] = useState(false);
   /** L'avertissement « tu as une saisie en cours » — voir plus bas. */
   const [avertirAvantCreation, setAvertirAvantCreation] = useState(false);
   const zone = useRef<HTMLDivElement>(null);
@@ -322,7 +330,13 @@ export function MenuEspace({
    * le point : `fiches` est VIDE tant que le menu n'a pas été ouvert
    * (acquis nº 142, jamais rouvert). La session, elle, sait déjà.
    */
-  const { photo: photoDuCompte } = useUtilisateur();
+  /*  §1 (nº 657) — LE NOM DU COMPTE ARRIVE PAR LE MÊME CHEMIN, et
+      c'est `nomDuCompte` qui le lit — PAS le `nom` de ce crochet, qui
+      se replie sur le début de l'adresse e-mail pour ne jamais rendre
+      une chaîne vide à une info-bulle. La tête a besoin de savoir si
+      un nom EXISTE : sans nom, elle écrit « Mon compte ». */
+  const { utilisateur, photo: photoDuCompte } = useUtilisateur();
+  const nomDuParticulier = nomDuCompte(utilisateur);
   /*  §1 (nº 645) — LE COMPTE A-T-IL ÉTÉ LU AU MOINS UNE FOIS ? Sans ce
       drapeau, l'effet qui range la photo verrait `fiche` à `null` sur
       une page où le menu n'a jamais été ouvert, et EFFACERAIT l'avatar
@@ -402,15 +416,35 @@ export function MenuEspace({
    * ⚠️ ET RIEN QUAND LA VALEUR NE CHANGE PAS : la garde d'égalité vit
    * dans `rangerLAvatarDuCompte` (leçon nº 111 — ne pas rejouer la
    * session pour écrire ce qui y est déjà).
+   *
+   * ██ §1 (nº 657) — ET RIEN DU TOUT SANS PORTFOLIO ██
+   * ------------------------------------------------------------------
+   * LA CAUSE, ET ELLE AURAIT MORDU DÈS LA PREMIÈRE OUVERTURE : cet
+   * effet recopie la photo de la FICHE ACTIVE. Sans portfolio, la
+   * fiche active est `null`, donc la photo voulue aussi — il EFFAÇAIT
+   * l'avatar. C'était juste tant qu'un particulier n'en avait pas ; il
+   * en a un depuis cette passe (« Modifier »), et ouvrir « Mon
+   * compte » aurait suffi à le lui reprendre.
+   * LA RÈGLE, DÉSORMAIS, EN UNE PHRASE : l'avatar appartient au
+   * PORTFOLIO quand il y en a un, à la PERSONNE quand il n'y en a pas.
+   * Cet effet ne parle donc que du premier cas.
+   * ⚠️ CE QUE ÇA LAISSE, ET JE LE DIS : quelqu'un qui SUPPRIME son
+   * dernier portfolio garde la photo de ce portfolio comme avatar, au
+   * lieu de retomber sur le cercle gris. Il peut la remplacer par la
+   * fenêtre « Modifier », qui est justement là pour ça — et l'effacer
+   * d'office serait un geste qu'il n'a pas demandé.
+   * ⚠️ LES COMPTES AVEC PORTFOLIO NE CHANGENT PAS D'UN CARACTÈRE : la
+   * garde ne se ferme que sur une liste VIDE, lue après le drapeau
+   * `compteLu` — jamais sur une liste pas encore chargée.
    */
   useEffect(() => {
-    if (!compteLu) return;
+    if (!compteLu || fiches.length === 0) return;
     void rangerLAvatarDuCompte(
       creerClientSupabaseNavigateur(),
       fiche?.photo_profil ?? null,
       photoDuCompte
     );
-  }, [compteLu, fiche?.photo_profil, photoDuCompte]);
+  }, [compteLu, fiches.length, fiche?.photo_profil, photoDuCompte]);
 
   /**
    * OUVRIR — ET N'OUVRIR QU'UNE FOIS LE CONTENU PRÊT (passe nº 142)
@@ -552,7 +586,9 @@ export function MenuEspace({
       //  appartient alors à la surface du dessus (chacune a son propre
       //  écouteur) — sans cette garde, un seul Échap fermait les deux
       //  d'un coup.
-      if (notificationsOuvertes || langueOuverte) return;
+      //  §1 (nº 657) — « Modifier » est la TROISIÈME de ces surfaces,
+      //  et elle entre dans la même garde, pour la même raison.
+      if (notificationsOuvertes || langueOuverte || identiteOuverte) return;
       if (evenement.key === "Escape") setOuvert(false);
     }
     function auPointeur(evenement: MouseEvent) {
@@ -571,7 +607,7 @@ export function MenuEspace({
     };
     //  §4 (nº 465) — les deux états du dessus entrent dans les
     //  dépendances : la garde d'Échap ci-dessus les lit.
-  }, [ouvert, notificationsOuvertes, langueOuverte]);
+  }, [ouvert, notificationsOuvertes, langueOuverte, identiteOuverte]);
 
   /*  ██ §1 (nº 469) — LE VERROU DE DÉFILEMENT, COMPTÉ ET SÉPARÉ ██
       Il vivait DANS l'effet du clavier ci-dessus, en « sauver puis
@@ -1330,7 +1366,13 @@ export function MenuEspace({
         <h2
           className={`block truncate font-semibold leading-tight text-sombre-texte ${reglages.nomTete}`}
         >
-          {fiche ? fiche.nom : "Mon compte"}
+          {/*  §1 (nº 657) — UN PARTICULIER QUI S'EST NOMMÉ VOIT SON
+               NOM. Le repli « Mon compte » reste pour qui n'a rien
+               écrit — c'est la fenêtre « Modifier » qui remplit cette
+               ligne, et elle n'oblige à rien. Un PROFESSIONNEL, lui,
+               garde le nom de sa fiche : la règle de la nº 640 n'est
+               pas touchée. */}
+          {fiche ? fiche.nom : nomDuParticulier || "Mon compte"}
         </h2>
         {fiche ? (
           <span className="mt-1 flex items-center gap-1.5">
@@ -1357,18 +1399,23 @@ export function MenuEspace({
                ⚠️ PAS DE PASTILLE, et c'est voulu : le point de couleur
                dit un ÉTAT DE PUBLICATION (les six libellés de la
                nº 640). « Modifier » n'est pas un état, c'est un geste.
-               ⚠️ ELLE NE MÈNE NULLE PART POUR L'INSTANT, et voici
-               comment elle ne paraît pas cassée : c'est un VRAI bouton
-               — il prend le focus au clavier, il s'éclaircit sous le
-               pointeur, il s'enfonce à l'appui —, mais il ne porte
-               AUCUN `onClick`. Un geste vide (`() => {}`) aurait été du
-               code mort à retirer ; l'absence de main, elle, se lit :
-               le jour où la fenêtre existera, elle s'accrochera ici en
-               une ligne. Ce qu'il ne fait pas, il ne le promet pas non
-               plus : ni flèche, ni chevron, aucune annonce de
-               destination. */
+               ⚠️ ELLE NE MENAIT NULLE PART À LA nº 649, et sa note
+               annonçait ceci : « le jour où la fenêtre existera, elle
+               s'accrochera ici en une ligne ». C'EST CETTE LIGNE-LÀ
+               (§1, nº 657) — le bouton n'a pas changé d'un caractère,
+               il a reçu sa main. Ce qu'il ne promettait pas, il ne le
+               promet toujours pas : ni flèche, ni chevron.
+               ⚠️ MÊME ENCHAÎNEMENT QUE « LANGUE » ET « NOTIFICATIONS »
+               (nº 465) : au WEB, ouvrir « Modifier » ferme « Mon
+               compte » — une seule surface flottante à la fois ; au
+               DOIGT, « Mon compte » est une page opaque et RESTE
+               ouvert dessous, la refermer y fait retomber. */
           <button
             type="button"
+            onClick={() => {
+              if (!auDoigt) setOuvert(false);
+              setIdentiteOuverte(true);
+            }}
             className={`mt-1 block leading-none text-sombre-texte-doux
                        transition-colors hover:text-sombre-texte
                        active:text-sombre-texte ${reglages.statutTete}`}
@@ -2169,6 +2216,21 @@ export function MenuEspace({
         <FenetreLangue
           ancre={zone}
           surFermeture={() => setLangueOuverte(false)}
+        />
+      )}
+
+      {/*  ██ §1 (nº 657) — LA FENÊTRE « MODIFIER » DU PARTICULIER ██
+           Montée ICI comme les deux précédentes, et pour la même raison
+           (nº 238-§5) : la ligne qui l'ouvre vit dans la tête du menu,
+           la fenêtre doit lui survivre. Même ancre (`zone`), donc même
+           place et même largeur que « Mon compte » — la consigne.
+           ⚠️ SON CONTENU SE LIT DANS LA SESSION, pas ici : elle appelle
+           `useUtilisateur` elle-même (un magasin de module, aucune
+           requête). Ce menu n'a rien à lui passer. */}
+      {identiteOuverte && (
+        <FenetreIdentite
+          ancre={zone}
+          surFermeture={() => setIdentiteOuverte(false)}
         />
       )}
 

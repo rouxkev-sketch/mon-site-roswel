@@ -16,7 +16,6 @@ import {
   MOTIFS_MODERATION,
   type TypeFiche,
 } from "@/config/tatouage";
-import { CHAMP } from "@/components/champs-formulaire";
 import { longueurVisible } from "@/lib/emojis";
 import { BlocAutreAdresse } from "@/components/BlocAutreAdresse";
 import { BlocEquipeSalon } from "@/components/BlocEquipeSalon";
@@ -58,9 +57,13 @@ import { enregistrerPhotos } from "@/lib/enregistrer-photos";
 import { televerserPhotos } from "@/lib/televerser-photos";
 import { FenetreEnvoi } from "@/components/FenetreEnvoi";
 import { Patience, SqueletteFormulaire } from "@/components/Squelette";
-//  SANS_REMPLISSAGE_AUTO n'est plus étalé ici : les trois champs de
-//  liens sont passés dans ChampLienVerifie, qui le pose lui-même.
-import { sansRemplissageAuto } from "@/lib/champs-sans-remplissage";
+//  §1 (nº 657) — LA PHOTO RONDE ET LE CHAMP DU NOM, PARTAGÉS avec la
+//  fenêtre « Modifier » du particulier : le même code, pas une
+//  imitation (la consigne du propriétaire).
+import {
+  ChampNomIdentite,
+  ChampPhotoRonde,
+} from "@/components/ChampsIdentite";
 import { ChampBio } from "@/components/ChampBio";
 import { ChampLienVerifie } from "@/components/ChampLienVerifie";
 import {
@@ -78,10 +81,8 @@ import {
   IconeHorsLigne,
   IconeHorloge,
   IconeInstagram,
-  IconePlus,
 } from "@/components/Icones";
 import { Interrupteur } from "@/components/Interrupteur";
-import { RecadreurPhoto } from "@/components/RecadreurPhoto";
 import { useAppareilMobile } from "@/lib/appareil";
 import type { NatureEtablissement } from "@/config/tatouage";
 import { lieuDepuisFiche, type LieuTrouve } from "@/lib/geocodage";
@@ -93,7 +94,6 @@ import { useUtilisateur } from "@/lib/use-utilisateur";
 //  seule écriture, deux appelants (ici et le menu du compte).
 import { avatarDuCompte, rangerLAvatarDuCompte } from "@/lib/avatar-du-compte";
 import { MANQUE, texteErreur } from "@/lib/erreurs-formulaire";
-import { IconeAjouterPhoto } from "@/components/IconeAjouterPhoto";
 import { OngletsLigne } from "@/components/OngletsLigne";
 import { slugFiche, slugifier } from "@/lib/slug";
 import type { Tatoueur } from "@/lib/tatoueurs";
@@ -139,9 +139,11 @@ import {
 /** Le bucket des photos de fiche (créé par la migration SQL). */
 const BUCKET_PHOTOS = "photos-tatoueurs";
 
-/** La cible « photo de profil » du sélecteur de fichier et du
-    recadreur — les autres cibles sont des slugs de style. */
-const CIBLE_PROFIL = "__profil";
+/*  §1 (nº 657) — `CIBLE_PROFIL` A DISPARU AVEC LE RECADREUR : elle
+    distinguait la photo de profil des slugs de style dans un
+    sélecteur de fichier que les deux se partageaient. Ce partage a
+    cessé à la nº 118 ; la constante ne désignait plus qu'un seul cas.
+    La photo ronde a désormais son composant (ChampsIdentite). */
 
 /** Nettoie et valide un lien de réseau ; null = lien invalide. */
 function normaliserLien(
@@ -871,10 +873,14 @@ export function FormulaireFiche() {
       choix se ferme — et seule l'administration peut le rouvrir
       (migration nº 28, déclencheur `tatoueurs_verrou_exercice`). */
   const [exerciceConfirme, setExerciceConfirme] = useState(false);
-  /** LA PHOTO DE PROFIL (ronde) — obligatoire. */
+  /** LA PHOTO DE PROFIL (ronde) — obligatoire.
+      §1 (nº 657) — L'IMAGE D'ORIGINE N'EST PLUS ICI : elle a suivi le
+      recadreur et le sélecteur de fichier chez `ChampPhotoRonde`
+      (components/ChampsIdentite), qui tient tout le chemin de la
+      photo. Ce formulaire ne garde que ce qu'il ENVOIE — le fichier
+      cadré — et ce qu'il MONTRE — son aperçu. */
   const [photoProfil, setPhotoProfil] = useState<File | null>(null);
   const [apercuProfil, setApercuProfil] = useState<string>("");
-  const [originalProfil, setOriginalProfil] = useState<File | null>(null);
   const [bio, setBio] = useState("");
   /** LE PORTFOLIO — la galerie entière, photos taguées comprises.
       C'est LUI qui décide des styles de la fiche : `stylesChoisis`
@@ -890,14 +896,13 @@ export function FormulaireFiche() {
       ordre: photo.ordre,
     }))
   );
-  /** L'image D'ORIGINE de chaque style : « Remplacer » rouvre le
-      recadreur sur elle, pour reprendre le cadrage à volonté. */
-  /** Le recadreur ouvert : pour quel style — ou pour LA PHOTO DE
-      PROFIL (cible `CIBLE_PROFIL`), auquel cas le cadre est rond. */
-  const [recadrage, setRecadrage] = useState<{
-    cible: string;
-    fichier: File;
-  } | null>(null);
+  /*  §1 (nº 657) — LE RECADREUR N'EST PLUS MONTÉ ICI. Son état vivait
+      dans ce formulaire depuis la nº 112, avec une `cible` qui pouvait
+      désigner un style — mais les photos du portfolio ont leur propre
+      chemin depuis la nº 118 (BlocPortfolio), et cette cible ne valait
+      plus que `CIBLE_PROFIL` : elle est partie avec la photo ronde chez
+      `ChampPhotoRonde` (components/ChampsIdentite). Rien d'autre ne
+      l'employait ; vérifié avant de la déplacer. */
   const [instagram, setInstagram] = useState("");
   /*  §2 (nº 408) — LES DEMANDES PAR DM. Décoché par défaut : une fiche
        neuve n'annonce rien que son auteur n'ait choisi, et la colonne
@@ -1271,18 +1276,14 @@ export function FormulaireFiche() {
       window.removeEventListener("yokofolio-modification-demandee", surDemande);
   }, [vueApercuDemandee]);
 
-  // L'entrée du sélecteur de fichier, partagée par tous les styles ET
-  // par la photo de profil : on note POUR QUI elle a été ouverte.
-  const entreeFichier = useRef<HTMLInputElement>(null);
-  /** POUR QUI le sélecteur de fichier a été ouvert. Trois cas, et il
-      faut les trois : la photo de profil, une photo NEUVE dans un
-      style, ou le RECADRAGE d'une photo déjà déposée. */
-  const cibleEnAttente = useRef<
-    | { genre: "profil" }
-    | { genre: "nouvelle"; style: string }
-    | { genre: "recadrer"; cle: string }
-    | null
-  >(null);
+  /*  §1 (nº 657) — L'ENTRÉE DE FICHIER EST PARTIE AVEC LA PHOTO RONDE
+      (`ChampPhotoRonde`, components/ChampsIdentite), et le repère
+      « pour qui a-t-elle été ouverte » avec elle. Ce repère était DÉJÀ
+      MORT : il n'était qu'écrit, jamais relu — les trois cas qu'il
+      annonçait (profil, photo neuve d'un style, recadrage d'une photo
+      déposée) ont été séparés à la nº 118, quand le portfolio a pris
+      son propre chemin. Rien n'est perdu ; on retire ce qui ne servait
+      plus. */
 
   /* UN COMPTE, PLUSIEURS FICHES : au premier rendu, on charge LA
      FICHE CHOISIE — celle demandée dans l'adresse (?fiche=…), sinon la
@@ -1537,61 +1538,35 @@ export function FormulaireFiche() {
     };
   }, [pret, idUtilisateur, ficheDemandee]);
 
-  /** Ouvrir le sélecteur de fichier — la PHOTO DE PROFIL, désormais
-      seule à passer par ici : les photos du portfolio ont le leur,
-      dans le bloc Styles & Galerie (voir BlocPortfolio). */
-  function ouvrirChoixPhoto(cible: string) {
-    cibleEnAttente.current = { genre: "profil" };
-    void cible;
-    entreeFichier.current?.click();
+  /**
+   * §1 (nº 657) — CE QUE CE FORMULAIRE GARDE DE LA PHOTO RONDE : les
+   * DEUX gestes qui le concernent, et rien du chemin qui y mène.
+   * Ouvrir le sélecteur, refuser un format, garder l'image d'origine
+   * pour « Remplacer », monter le recadreur : tout cela vit désormais
+   * dans `ChampPhotoRonde` (components/ChampsIdentite), partagé avec la
+   * fenêtre « Modifier » du particulier. Ici il ne reste que ce qui est
+   * PROPRE à une fiche — marquer le travail comme modifié, ranger le
+   * fichier à envoyer, et porter le reproche dans la carte d'erreurs
+   * du formulaire, à l'endroit où sa validation le lit.
+   */
+  function photoRondeCadree(photo: { fichier: File; apercu: string }) {
+    marquerModifie();
+    setPhotoProfil(photo.fichier);
+    setApercuProfil((courant) => {
+      if (courant.startsWith("blob:")) URL.revokeObjectURL(courant);
+      return photo.apercu;
+    });
   }
 
-  function photoChoisie(evenement: React.ChangeEvent<HTMLInputElement>) {
-    const fichier = evenement.target.files?.[0];
-    evenement.target.value = ""; // le même fichier peut être rechoisi
-    if (!fichier) return;
-    // SEULS LES JPG ET PNG passent : tout autre format est refusé,
-    // avec un reproche clair — jamais d'échec silencieux au recadrage.
-    if (!["image/jpeg", "image/png"].includes(fichier.type)) {
-      setErreurs((courantes) => ({
-        ...courantes,
-        photoProfil:
-          "Seules les images JPG et PNG sont acceptées — ce fichier est d'un autre format.",
-      }));
-      return;
-    }
+  /** Le reproche du format refusé — posé, ou effacé quand un fichier
+      valable arrive. La carte d'erreurs reste celle du formulaire. */
+  function erreurPhotoRonde(message: string | null) {
     setErreurs((courantes) => {
+      if (message) return { ...courantes, photoProfil: message };
       const reste = { ...courantes };
       delete reste.photoProfil;
       return reste;
     });
-    setOriginalProfil(fichier);
-    setRecadrage({ cible: CIBLE_PROFIL, fichier });
-  }
-
-  /** Le cadrage validé — la pleine résolution et sa miniature (voir
-      RecadreurPhoto). Le profil n'utilise que la première. */
-  function cadrageValide(image: Blob) {
-    marquerModifie();
-    setPhotoProfil(
-      new File([image], `profil-${Date.now()}.jpg`, { type: "image/jpeg" })
-    );
-    setApercuProfil((courant) => {
-      if (courant.startsWith("blob:")) URL.revokeObjectURL(courant);
-      return URL.createObjectURL(image);
-    });
-    setRecadrage(null);
-  }
-
-  /** « Remplacer » : le recadreur rouvre sur l'image d'origine. */
-  function rouvrirRecadreur(cible: string) {
-    void cible;
-    cibleEnAttente.current = { genre: "profil" };
-    if (originalProfil) {
-      setRecadrage({ cible: CIBLE_PROFIL, fichier: originalProfil });
-    } else {
-      ouvrirChoixPhoto(CIBLE_PROFIL);
-    }
   }
 
   /** LA VALIDATION, règle par règle — chaque reproche dit PRÉCISÉMENT
@@ -3309,106 +3284,44 @@ export function FormulaireFiche() {
           titre={titreBloc("profil", typeFiche, etablissement)}
           id="section-profil"
         >
-          {/* LE LOGO — rond, OBLIGATOIRE. Le CERCLE ne se dessine que
-              VIDE (pointillés : « à remplir ») ou EN FAUTE (rouge) :
-              une fois la photo posée, elle se suffit — le cercle qui
-              l'entourait ne servait qu'à indiquer l'emplacement
-              (passe nº 112). */}
-          <div className="flex items-center gap-6">
-            <span
-              className={`flex h-[104px] w-[104px] shrink-0 items-center justify-center
-                         overflow-hidden rounded-full bg-sombre-eleve ${
-                           erreurs.photoProfil
-                             ? "border-2 border-erreur"
-                             : apercuProfil
-                               ? ""
-                               : "border-2 border-dashed border-sombre-bordure"
-                         }`}
-            >
-              {apercuProfil ? (
-                /* eslint-disable-next-line @next/next/no-img-element --
-                   aperçu local (URL d'objet) ou image déjà stockée. */
-                <img
-                  src={apercuProfil}
-                  alt="Ta photo de profil"
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                //  L'appareil photo dit « dépose ici » sans un mot
-                //  (passe nº 111). Petit : il indique, il ne remplit pas.
-                <IconeAjouterPhoto taille={28} />
-              )}
-            </span>
-            <button
-              type="button"
-              onClick={() =>
-                apercuProfil
-                  ? rouvrirRecadreur(CIBLE_PROFIL)
-                  : ouvrirChoixPhoto(CIBLE_PROFIL)
-              }
-              //  LE MÊME MOTIF QUE « Ajouter un style » (passe nº 119) :
-              //  un ROND « + » et le titre à sa droite — l'ancienne
-              //  capsule se lisait comme un bouton d'action alors que
-              //  c'est un geste d'AJOUT, exactement comme les styles.
-              //  Mêmes proportions, mêmes couleurs, même survol.
-              className="group flex w-fit items-center gap-3 text-left"
-            >
-              {/* ⚠️ LE MÊME SIGNAL AU DOIGT QU'À LA SOURIS (passe
-                  nº 121) — voir BlocPortfolio : `group-active` double
-                  `group-hover`, qui ne se déclenche pas au toucher. */}
-              <span
-                aria-hidden="true"
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full
-                           bg-sombre-eleve text-sombre-texte transition-colors
-                           group-hover:bg-sombre-eleve-clair
-                           group-active:bg-sombre-eleve-clair"
-              >
-                <IconePlus taille={18} />
-              </span>
-              <span
-                className="text-[14.5px] font-semibold text-sombre-texte
-                           transition-colors group-hover:text-sombre-texte
-                           group-active:text-sombre-texte"
-              >
-                {apercuProfil ? "Remplacer" : "Choisir la photo"}
-              </span>
-            </button>
-          </div>
+          {/* LE LOGO — rond, OBLIGATOIRE.
+              §1 (nº 657) — L'ÉCRITURE A DÉMÉNAGÉ, PAS CHANGÉ : le
+              cercle, son appareil photo, le rond « + » et son libellé,
+              le sélecteur de fichier et le recadreur vivent désormais
+              dans `ChampPhotoRonde` (components/ChampsIdentite), que
+              la fenêtre « Modifier » du particulier monte elle aussi —
+              la consigne du propriétaire est « le même code réutilisé ».
+              CE QUI RESTE ICI : l'OBLIGATION (le cercle rouge quand la
+              photo manque, décidée par la validation de ce formulaire)
+              et le reproche sous le cercle. */}
+          <ChampPhotoRonde
+            apercu={apercuProfil}
+            enFaute={Boolean(erreurs.photoProfil)}
+            surPhoto={photoRondeCadree}
+            surErreur={erreurPhotoRonde}
+          />
           {texteErreur(erreurs.photoProfil) && (
             <p className="text-[13px] text-erreur">
               {texteErreur(erreurs.photoProfil)}
             </p>
           )}
-          {/* L'ENTRÉE DE FICHIER, invisible — elle ne sert qu'à la
-              photo de profil : les photos du portfolio ont la leur. */}
-          <input
-            ref={entreeFichier}
-            type="file"
-            accept=".jpg,.jpeg,.png,image/jpeg,image/png"
-            onChange={photoChoisie}
-            className="hidden"
-            aria-hidden="true"
-            tabIndex={-1}
-          />
-
           {/* LE NOM — l'ancien titre d'encadré est l'indication du
               champ : « Ton nom d'artiste », « Nom du salon », « Nom du
-              studio » selon la fiche. */}
+              studio » selon la fiche.
+              §1 (nº 657) — LE CHAMP LUI-MÊME EST PARTAGÉ
+              (`ChampNomIdentite`, components/ChampsIdentite) avec la
+              fenêtre « Modifier » du particulier : mêmes attributs,
+              même classe `CHAMP` (nº 266), même garde-fou de
+              remplissage automatique. LES DEUX REPROCHES RESTENT ICI —
+              le manque, et le motif d'un refus de l'administration :
+              eux n'appartiennent qu'à une fiche. */}
           <div>
-            <input
+            <ChampNomIdentite
               id="fiche-nom"
-              type="text"
-              {...sansRemplissageAuto("fiche-nom")}
-              value={nom}
-              onChange={(e) => setNom(e.target.value)}
-              placeholder={indicationChamp("nom", typeFiche, etablissement)}
-              aria-label={indicationChamp("nom", typeFiche, etablissement)}
-              aria-invalid={Boolean(erreurs.nom)}
-              className={`${CHAMP} ${
-                erreurs.nom || motifsParChamp.nom
-                  ? "border-erreur"
-                  : "border-transparent"
-              }`}
+              valeur={nom}
+              surChangement={setNom}
+              indication={indicationChamp("nom", typeFiche, etablissement)}
+              enFaute={Boolean(erreurs.nom || motifsParChamp.nom)}
             />
             {texteErreur(erreurs.nom) && (
               <p className="mt-1.5 text-[13px] text-erreur">
@@ -3848,17 +3761,11 @@ export function FormulaireFiche() {
         <FenetreEnvoi faites={avancee.faites} total={avancee.total} />
       )}
 
-      {/* LE RECADREUR — monté à l'ouverture, démonté à la fermeture :
-          chaque photo repart d'un cadrage neuf. */}
-      {recadrage && (
-        <RecadreurPhoto
-          key={`${recadrage.cible}-${recadrage.fichier.name}-${recadrage.fichier.lastModified}`}
-          fichier={recadrage.fichier}
-          forme={recadrage.cible === CIBLE_PROFIL ? "rond" : "portrait"}
-          surValidation={cadrageValide}
-          surFermeture={() => setRecadrage(null)}
-        />
-      )}
+      {/*  §1 (nº 657) — LE RECADREUR N'EST PLUS MONTÉ ICI : il est
+           monté par `ChampPhotoRonde` (components/ChampsIdentite), qui
+           est le seul à savoir quand une photo attend d'être cadrée.
+           Il reste monté à l'ouverture et démonté à la fermeture, comme
+           avant — chaque photo repart d'un cadrage neuf. */}
 
       {/* ---------- LA FENÊTRE D'ANNONCE DE VALIDATION ----------
           Une vraie fenêtre, dans la grammaire des autres (voile
