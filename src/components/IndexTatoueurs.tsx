@@ -10,7 +10,10 @@ import {
   useTransition,
 } from "react";
 //  §1 (nº 652) — le chemin de la recherche, écrit une seule fois.
-import { ADRESSE_RECHERCHE } from "@/lib/chemin-recherche";
+import {
+  ADRESSE_RECHERCHE,
+  PREPARER_LA_RECHERCHE_A_LAVANCE,
+} from "@/lib/chemin-recherche";
 //  §1 (nº 654) — la boîte noire de navigation (mesure temporaire).
 import { noterNavigation } from "@/lib/boite-noire";
 import Link, { useLinkStatus } from "next/link";
@@ -783,25 +786,48 @@ export function IndexTatoueurs({
    * milieu de son geste de remontée, d'où les à-coups. Le deuxième
    * clic, servi juste après la pose, paraissait « réparer ».
    *
-   * LA CORRECTION : le bouton devient un `<Link prefetch>` vers la
-   * page suivante. `prefetch={true}` (doc Next : « The full route will
-   * be prefetched for both static and dynamic routes ») précharge la
-   * RÉPONSE ENTIÈRE dès que le lien ENTRE À L'ÉCRAN — c'est-à-dire
+   * LA CORRECTION D'ALORS : le bouton devient un `<Link prefetch>` vers
+   * la page suivante. `prefetch={true}` (doc Next : « The full route
+   * will be prefetched for both static and dynamic routes ») préchargeait
+   * la RÉPONSE ENTIÈRE dès que le lien ENTRAIT À L'ÉCRAN — c'est-à-dire
    * seulement pour qui est descendu jusqu'en bas, exactement celui qui
-   * va cliquer. Au clic, la réponse est déjà là : les cartes se posent
-   * IMMÉDIATEMENT, sous ses yeux, pendant qu'il est encore en bas — et
-   * plus rien ne se commet en retard pendant la remontée.
+   * va cliquer. Au clic, la réponse était déjà là.
+   *
+   * ██ §1 (nº 656) — CE PRÉCHARGEMENT EST RETIRÉ, ET C'ÉTAIT LUI ██
+   * ------------------------------------------------------------------
+   * CE QU'IL FAISAIT D'AUTRE, ET QUE LA nº 422 N'AVAIT PAS VU : il ne
+   * préparait pas « la page suivante », il remplissait LA CASE DU
+   * CHEMIN « /recherche ». Next range la page préparée d'une route
+   * dynamique sous le CHEMIN, pas sous les critères — et sur l'accueil,
+   * l'adresse de ce lien-ci se réduit à la nature
+   * (« /recherche?nature=tatouage&page=2&melange=… »), soit très
+   * exactement « Toutes les réalisations ». Cliquer ensuite une carte
+   * de style, qui mène au même chemin avec d'autres critères, servait
+   * cette copie-là. C'est le défaut aléatoire du propriétaire, relevé à
+   * la boîte noire (nº 654) le 27 août à 10:02.
+   * LE DÉFAUT DE LA nº 422 REVIENT DONC, ET JE LE DIS PLUTÔT QUE DE LE
+   * TAIRE : la requête de « Voir plus » ne partira de nouveau qu'au
+   * clic. Ce qui l'adoucit est déjà là et ne bouge pas — le libellé
+   * « Chargement… » (`useLinkStatus`, LibelleVoirPlus) et le
+   * `scroll={false}` : la page attend sur place au lieu de sauter.
+   * Une page lente vaut mieux qu'une page fausse.
+   * ⚠️ LA VALEUR N'EST PAS ÉCRITE ICI : elle vit auprès du chemin
+   * (`PREPARER_LA_RECHERCHE_A_LAVANCE`, lib/chemin-recherche), avec le
+   * relevé et la cause — un fabricant d'adresse de recherche ne peut
+   * pas la manquer.
    *
    * CE QUI NE CHANGE PAS : `replace` (la pagination ne pose JAMAIS
    * d'étape d'historique, nº 332-§1) ; `scroll={false}` (la page ne
    * bouge pas d'un pixel, nº 224-§3) ; l'adresse est la même
    * (`adresseDe`, disposition et texte compris, nº 203-§1b) ; la sonde
    * des cartes s'ouvre toujours AVANT la navigation (nº 224-§5).
-   * CE QUI CHANGE, ET C'EST DIT : la grille ne s'estompe plus pendant
-   * un « Voir plus » (l'estompe venait de la transition du bouton) —
-   * elle reste entière, les cartes s'ajoutent dessous ; l'estompe
-   * demeure pour les vraies recherches (`chercher`). Le libellé
-   * « Chargement… » demeure, par `useLinkStatus` (LibelleVoirPlus).
+   * CE QUI A CHANGÉ À LA nº 422, ET C'EST DIT : la grille ne s'estompe
+   * plus pendant un « Voir plus » (l'estompe venait de la transition du
+   * bouton) — elle reste entière, les cartes s'ajoutent dessous ;
+   * l'estompe demeure pour les vraies recherches (`chercher`). Le
+   * libellé « Chargement… » demeure, par `useLinkStatus`
+   * (LibelleVoirPlus) — et il redevient utile à la nº 656, puisque
+   * l'attente est de nouveau visible.
    */
 
   const visibles = premiers;
@@ -1273,7 +1299,12 @@ export function IndexTatoueurs({
               href={adresseDe(criteresServis, pageSuivante, jourMelange)}
               replace
               scroll={false}
-              prefetch={true}
+              //  §1 (nº 656) — PLUS DE PRÉPARATION À L'AVANCE : ce
+              //  lien-ci remplissait la case du chemin « /recherche »
+              //  avec « Toutes les réalisations », et la servait aux
+              //  cartes de style. La cause, le relevé et le prix sont
+              //  écrits en tête de ce bloc et dans lib/chemin-recherche.
+              prefetch={PREPARER_LA_RECHERCHE_A_LAVANCE}
               onClick={() => ouvrirReleveCartes()}
               /**
                * ██ §1 (nº 592) — TROIS FOIS PLUS LARGE, AU WEB SEUL ██

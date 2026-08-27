@@ -31,3 +31,52 @@
  * même chose qu'avant — aucune redirection, aucune erreur.
  */
 export const ADRESSE_RECHERCHE = "/recherche";
+
+/**
+ * ██ §1 (nº 656) — ON NE PRÉPARE JAMAIS LA RECHERCHE À L'AVANCE ██
+ * ==================================================================
+ * LE DÉFAUT, RELEVÉ PAR LE PROPRIÉTAIRE ET INSTRUIT À LA BOÎTE NOIRE
+ * (nº 654), le 27 août à 10:02 : un clic sur la carte « Néo-japonais »
+ * écrivait la BONNE demande —
+ *   CLIC LIEN · vers /recherche?style=neo-japonais&nature=tatouage
+ * — et servait pourtant « Toutes les réalisations », c'est-à-dire
+ * `nature=tatouage` SEUL. Personne n'avait réécrit l'adresse.
+ *
+ * LA CAUSE, ET ELLE EST DANS LE NAVIGATEUR, PAS DANS LE SITE. Next
+ * PRÉPARE À L'AVANCE (`prefetch`) les pages des liens qui entrent à
+ * l'écran. Pour une route DYNAMIQUE — « /recherche » en est une, le
+ * rapport de compilation l'écrit « ƒ » —, ce qu'il range n'est pas la
+ * page complète mais LE SEGMENT DE ROUTE, et ce segment se range SOUS
+ * LE CHEMIN, pas sous les critères. Deux liens qui mènent au MÊME
+ * chemin avec des critères DIFFÉRENTS partagent donc une seule case :
+ * le premier qui la remplit sert pour tous les autres.
+ *
+ * QUI REMPLISSAIT LA CASE, NOMMÉ : le lien « Voir plus » du bas de
+ * l'accueil (IndexTatoueurs). Sur l'accueil, les critères servis se
+ * réduisent à la nature — son adresse vaut donc
+ * « /recherche?nature=tatouage&page=2&melange=… », soit très
+ * exactement « Toutes les réalisations ». Il portait `prefetch={true}`
+ * depuis la nº 422, et préparait cette page dès qu'il entrait à
+ * l'écran. Les cartes de style sont un second émetteur du même genre :
+ * chacune prépare « /recherche », et la première arrivée décide pour
+ * ses voisines.
+ *
+ * LA RÈGLE, DÉSORMAIS : AUCUN lien menant à « /recherche » ne prépare
+ * sa page. Chaque clic part chercher la page fraîche, avec les
+ * critères exacts du lien cliqué. Elle est écrite ICI, à côté du
+ * chemin, pour qu'on ne puisse pas fabriquer une adresse de recherche
+ * sans lire la règle qui va avec.
+ *
+ * ⚠️ LE RESTE DU SITE NE RALENTIT PAS D'UNE MILLISECONDE : fiches,
+ * accueil, « Ma sélection », pages de style + ville gardent leur
+ * préparation à l'avance. On ne retire que ce qui était FAUX.
+ * ⚠️ CE QUE ÇA COÛTE, ET JE LE DIS PLUTÔT QUE DE LE TAIRE : « Voir
+ * plus » perd l'avance que la nº 422 lui avait donnée — sa requête ne
+ * partira de nouveau qu'au clic. Le libellé « Chargement… »
+ * (`useLinkStatus`) et le `scroll={false}` restent : la page ne bouge
+ * pas, elle attend. C'est le prix d'une page juste.
+ * ⚠️ LA GARDE « PAGE EN RETARD » DE LA nº 631 RESTE EN PLACE, et elle
+ * change de rôle : elle ne répare plus, elle TÉMOIGNE. Si elle cesse
+ * de se déclencher, la cause est bien supprimée.
+ */
+export const PREPARER_LA_RECHERCHE_A_LAVANCE = false;

@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 //  §1 (nº 652) — le chemin de la recherche, écrit une seule fois.
-import { ADRESSE_RECHERCHE } from "@/lib/chemin-recherche";
+import {
+  ADRESSE_RECHERCHE,
+  PREPARER_LA_RECHERCHE_A_LAVANCE,
+} from "@/lib/chemin-recherche";
 import { CADRE_PHOTO_PORTFOLIO, FOND_RESERVE_PHOTO } from "@/config/tatouage";
 import { NATURE_PAR_DEFAUT, SEPARATEUR_GALERIE } from "@/lib/photos-tatoueur";
 //  §2 (nº 635) — l'écriture unique de la copie (nº 514), reprise telle
@@ -182,6 +185,14 @@ export function CarteStyle({
            l'adresse ne dirait pas ce qu'elle montre. On l'écrit. */}
       <Link
         href={adresse}
+        //  ██ §1 (nº 656) — CETTE CARTE NE PRÉPARE PLUS SA PAGE ██
+        //  Toutes les cartes de l'accueil mènent au MÊME chemin
+        //  (« /recherche ») avec des critères différents, et Next range
+        //  la page préparée d'une route dynamique SOUS LE CHEMIN : la
+        //  première carte entrée à l'écran remplissait la case pour
+        //  toutes les autres. La règle et son relevé sont écrits une
+        //  fois, auprès du chemin (lib/chemin-recherche).
+        prefetch={PREPARER_LA_RECHERCHE_A_LAVANCE}
         //  ██ §2 (nº 635) — COPIER LE TEXTE, PAS L'ADRESSE ██
         //  LE DÉFAUT : copier « Fine Line • 4 portfolios » posait
         //  « [Fine Line • 4 portfolios](https://…/?style=fine-line…) »
