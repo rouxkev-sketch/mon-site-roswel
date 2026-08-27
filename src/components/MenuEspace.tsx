@@ -461,6 +461,70 @@ export function MenuEspace({
   );
 
   /**
+   * ██ §1 (nº 676) — ON NE FERME PLUS AVANT D'ÊTRE ARRIVÉ ██
+   * ==================================================================
+   * LE DÉFAUT, DÉCRIT PAR LE PROPRIÉTAIRE : depuis « Mon compte », un
+   * clic sur « Mon portfolio », « Modifier » ou « Ajouter un
+   * portfolio » montre TROIS écrans à la suite — la fenêtre se ferme,
+   * la page d'arrière-plan paraît une fraction de seconde, puis la
+   * destination arrive.
+   * LA CAUSE EST À LA LIGNE MÊME DU CLIC, et elle est simple : ces
+   * entrées appelaient `setOuvert(false)` DANS leur `onClick`. La
+   * fermeture est instantanée ; la navigation, elle, demande un
+   * aller-retour au serveur. Entre les deux, il ne reste rien à
+   * l'écran que la page qu'on était en train de quitter. Ce n'est pas
+   * un défaut de rendu : c'est un ORDRE d'événements.
+   *
+   * LE REMÈDE, ET IL NE POSE AUCUN MÉCANISME : on ne ferme pas. La
+   * barre fixe — donc ce menu — est rendue par LES PAGES (jamais par
+   * la mise en page, voir le §1 de la nº 672) : la navigation DÉMONTE
+   * cette surface. Elle disparaît donc d'elle-même, exactement à
+   * l'arrivée de la destination. Deux écrans au lieu de trois, sans un
+   * voile de plus ni une transition à écrire.
+   * ⚠️ L'HISTORIQUE EST DÉJÀ ARMÉ POUR CE CAS, et ce n'est pas de la
+   * chance : le nettoyage de `useEtapeQuiSeReferme` porte la règle
+   * « LA NAVIGATION GAGNE TOUJOURS : on laisse l'étape en place »
+   * (nº 331), et sa marque est posée EN CAPTURE sur tout clic de lien —
+   * donc avant même que React ne démonte quoi que ce soit. Le compte
+   * d'étapes ne bouge pas d'une unité.
+   * ⚠️ LE VERROU DE DÉFILEMENT NON PLUS : il est retiré par le
+   * nettoyage de son effet, qui tourne sur TOUS les chemins de
+   * fermeture, démontage compris (nº 469).
+   *
+   * ⚠️ DEUX CAS OÙ L'ON FERME QUAND MÊME, ET IL LES FAUT TOUS LES DEUX :
+   *  · ON Y EST DÉJÀ. Naviguer vers l'adresse courante ne déclenche
+   *    rien du tout : sans cette branche, la fenêtre resterait ouverte
+   *    pour toujours. On ferme donc sur-le-champ — et il n'y a aucun
+   *    clignotement à craindre, puisqu'il n'y a pas de navigation ;
+   *  · LE FILET DE TEMPS. Une navigation peut ne jamais aboutir
+   *    (réseau coupé, serveur muet). Au bout de trois secondes, on
+   *    ferme : mieux vaut voir la page d'avant qu'une fenêtre bloquée.
+   *    Trois secondes, parce qu'une navigation lente du site en prend
+   *    une (mesuré à la nº 669, serveur ralenti) — le filet ne doit
+   *    jamais se déclencher sur une navigation qui va aboutir.
+   *
+   * ⚠️ LES DEUX APPAREILS, SANS BRANCHE : au doigt, « Mon compte » est
+   * une page opaque et le défaut saute aux yeux ; au web c'est une
+   * fenêtre à voile, et le voile tombait aussi tôt — même défaut, plus
+   * discret, même correction. Aucun `auDoigt` ici (piège nº 60).
+   */
+  const FILET_FERMETURE_MS = 3000;
+  const filetDeFermeture = useRef(0);
+  useEffect(() => () => window.clearTimeout(filetDeFermeture.current), []);
+  const fermerQuandLaPageArrive = useCallback((destination: string) => {
+    const ici = `${window.location.pathname}${window.location.search}`;
+    if (ici === destination) {
+      setOuvert(false);
+      return;
+    }
+    window.clearTimeout(filetDeFermeture.current);
+    filetDeFermeture.current = window.setTimeout(
+      () => setOuvert(false),
+      FILET_FERMETURE_MS
+    );
+  }, []);
+
+  /**
    * ██ §1 (nº 664) — LES NOUVELLES SE LISENT SEULES, DÉSORMAIS ██
    * ------------------------------------------------------------------
    * POURQUOI CETTE MOITIÉ SE DÉTACHE DE `lireLeCompte`. La note de la
@@ -724,7 +788,16 @@ export function MenuEspace({
     //  le module ne peut pas l'armer tout seul au clic, elle le dit
     //  donc elle-même, par l'écriture commune.
     laSurfaceVaNaviguer();
-    setOuvert(false);
+    /*  §1 (nº 676) — LA FENÊTRE RESTE JUSQU'À L'ARRIVÉE, comme les deux
+        liens du menu : c'est le démontage par la navigation qui la
+        referme, et il n'y a plus d'écran d'arrière-plan entre les deux.
+        Le raisonnement complet est chez `fermerQuandLaPageArrive` ;
+        cette entrée-ci est un BOUTON, pas un lien, mais elle navigue de
+        la même façon et souffrait du même défaut.
+        ⚠️ LE DÉROULANT ET L'AVERTISSEMENT SE FERMENT, EUX, tout de
+        suite : ils vivent DANS la fenêtre qu'on garde, et les laisser
+        ouverts se verrait. */
+    fermerQuandLaPageArrive(ADRESSE_NOUVELLE);
     setSelecteurOuvert(false);
     setAvertirAvantCreation(false);
     const ici = `${window.location.pathname}${window.location.search}`;
@@ -1224,7 +1297,9 @@ export function MenuEspace({
       <Link
         href={avecConsigneDeLienInterne(versFiche("vue=apercu"))}
         replace={liensRemplacent}
-        onClick={() => setOuvert(false)}
+        //  §1 (nº 676) — la fenêtre reste jusqu'à l'arrivée : c'est le
+        //  démontage par la navigation qui la referme. Voir la note.
+        onClick={() => fermerQuandLaPageArrive(versFiche("vue=apercu"))}
         className={reglage.entree}
       >
         <span className={`${reglage.boite} text-sombre-texte/80`}>
@@ -1241,7 +1316,11 @@ export function MenuEspace({
         href={versFiche()}
         replace={liensRemplacent}
         onClick={() => {
-          setOuvert(false);
+          //  §1 (nº 676) — même règle que « Mon portfolio » juste
+          //  au-dessus. L'ÉVÉNEMENT, lui, part comme avant : c'est lui
+          //  qui prévient le formulaire déjà affiché, et c'est
+          //  précisément le cas « on y est déjà » où l'on ferme.
+          fermerQuandLaPageArrive(versFiche());
           window.dispatchEvent(new Event("yokofolio-modification-demandee"));
         }}
         className={reglage.entree}
