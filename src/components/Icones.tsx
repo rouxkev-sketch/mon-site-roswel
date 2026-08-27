@@ -80,53 +80,60 @@ export const ETATS_ROND_BARRE =
 /* ============ Icônes du menu (trait fin) ============ */
 
 /**
- * ██ §2 (nº 668) — LA MAIN QUI SALUE — le symbole de la bienvenue ██
+ * ██ §3 (nº 672) — L'ÉTOILE — le symbole de la bienvenue ██
  * ==================================================================
- * CE QU'ELLE REMPLACE. La nº 667 avait mis à cette place le FICHIER de
- * la marque (`yokofolio-icone.png`, le cœur). Le propriétaire n'en veut
- * pas, et la mesure lui donnait raison sur un point : une image ne peut
- * pas hériter de la couleur de sa pastille — elle rendait 2,10:1 sur le
- * gris, sous le minimum d'un signe. Un TRACÉ, lui, prend la couleur
- * qu'on lui donne. Celui-ci est donc dessiné, comme les neuf autres.
+ * TROISIÈME SYMBOLE À CETTE PLACE, ET LE PROPRIÉTAIRE TRANCHE. La
+ * nº 667 y avait mis le FICHIER de la marque (`yokofolio-icone.png`) —
+ * refusé, et la mesure lui donnait raison : une image ne peut pas
+ * hériter de la couleur de sa pastille, elle rendait 2,10:1. La nº 668 y
+ * a dessiné une MAIN QUI SALUE — refusée à son tour. Il demande une
+ * ÉTOILE, dorée sur un cercle presque noir. Le composant de la main est
+ * SUPPRIMÉ avec ce remplacement (elle n'avait qu'un appelant, et le code
+ * mort est la façon la plus sûre de faire revenir un dessin qu'on ne
+ * veut plus — la leçon de la nº 467 sur `IconeWorld`).
  *
- * COMMENT ELLE EST FAITE, ET POURQUOI COMME ÇA :
- *  · TROIS DOIGTS ET UN POUCE, pas quatre doigts. Essayé les deux :
- *    à 18 px — la taille de la liste —, quatre doigts se touchent et la
- *    main devient une tache. Trois restent séparés, et la main se lit
- *    encore.
- *  · PENCHÉE DE 18°, ce qui la distingue d'une main levée (« stop ») :
- *    c'est l'inclinaison qui fait le salut.
- *  · AGRANDIE DE 12 % puis RECENTRÉE au dixième de point : mesurée
- *    trait compris, elle occupe 16,9 × 18,4 dans la boîte de 24 —
- *    exactement l'encombrement de l'horloge (19) et de la coche de la
- *    famille. Elle ne pèse ni plus ni moins que ses voisines.
- * ⚠️ AUCUN TRAIT DE MOUVEMENT autour d'elle, et c'est délibéré : à
- * 18 px, deux arcs de plus ne se lisent pas — ils salissent. L'emoji
- * 👋 lui-même n'en a pas.
+ * COMMENT ELLE EST TRACÉE, ET TOUT SE CALCULE :
+ *  · UN PENTAGRAMME RÉGULIER, cinq branches. Les sommets extérieurs sont
+ *    sur un cercle de rayon 8,6 tous les 72°, la première pointe en
+ *    haut ; les cinq creux sont sur un cercle de rayon 3,285 —
+ *    8,6 × sin 18° / sin 126°, le rapport exact d'une étoile régulière.
+ *    Aucun point n'est placé à l'œil.
+ *  · CENTRÉE POUR L'ŒIL, PAS POUR LE COMPAS. Une étoile pointe en haut
+ *    descend moins bas (0,809 R) qu'elle ne monte (R) : centrer le
+ *    CERCLE la ferait paraître trop haute. Le centre est donc posé à
+ *    12,82 — la valeur qui met le MILIEU DU DESSIN sur celui de la
+ *    boîte. VÉRIFIÉ AU BANC (getBBox, trait compris) : 3,22 de marge en
+ *    haut, 3,22 en bas. Exactement centrée.
+ *  · ELLE PÈSE CE QUE PÈSENT SES VOISINES : le tracé mesure 16,36 ×
+ *    15,56 dans le repère de 24 ; trait compris, 18,36 × 17,56 à la
+ *    taille de la liste — là où la main faisait 16,9 × 18,4 et
+ *    l'horloge 19. Elle ne domine pas la famille.
+ * ⚠️ ELLE EST CREUSE, comme les neuf autres — un contour, jamais un
+ * aplat : c'est ce qui fait qu'elle porte le même trait qu'elles.
+ * ⚠️ LES JONCTIONS SONT ARRONDIES (`strokeLinejoin="round"`), ce qui est
+ * la demande « extrémités arrondies » appliquée à un tracé FERMÉ : il
+ * n'a pas d'extrémité, il n'a que des pointes. Elles s'émoussent donc
+ * exactement comme les bouts de la coche.
  * ⚠️ LE `trait` EST CELUI DE LA FAMILLE, comme partout : rien n'est
  * écrit en dur, la pastille décide (voir PastilleEvenement).
  */
-export function IconeMainQuiSalue({
+export function IconeEtoile({
   taille = 24,
   classe = "",
   trait = 1.8,
 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
-      <g
-        transform="translate(-0.2 -0.15) rotate(-18 12 13) translate(12 13) scale(1.12) translate(-12 -13)"
+      {/*  Pointe haute, puis creux et pointes en alternance dans le sens
+           des aiguilles d'une montre. */}
+      <path
+        d="M12 4.22 13.93 10.16 20.18 10.16 15.12 13.84 17.06 19.78
+           12 16.11 6.94 19.78 8.88 13.84 3.82 10.16 10.07 10.16 Z"
         stroke="currentColor"
         strokeWidth={trait}
         strokeLinecap="round"
         strokeLinejoin="round"
-      >
-        {/* L'AURICULAIRE, le plus court — il ferme la main à droite. */}
-        <path d="M16.9 11.2V6.2a1.5 1.5 0 0 0-3 0v1" />
-        {/* LE MAJEUR, le plus long — il descend jusque dans la paume. */}
-        <path d="M13.9 10.4V5.2a1.5 1.5 0 0 0-3 0v8.4" />
-        {/* LA PAUME, LE POIGNET ET LE POUCE, d'un seul tracé. */}
-        <path d="M16.9 8.8a1.5 1.5 0 0 1 3 0v5.2a6.6 6.6 0 0 1-6.6 6.6h-1.2c-2 0-3.4-.8-4.6-2l-2.7-2.7a1.5 1.5 0 0 1 2.1-2.1l2 1.8" />
-      </g>
+      />
     </svg>
   );
 }

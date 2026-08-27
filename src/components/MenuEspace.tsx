@@ -68,7 +68,17 @@ import {
   type EtatFiche,
   type FicheDuCompte,
 } from "@/lib/fiches-compte";
-import type { Notification } from "@/lib/notifications";
+//  §1 (nº 672) — les nouvelles vivent dans un MAGASIN DE MODULE, plus
+//  dans l'état de ce composant : la barre est démontée à chaque
+//  changement de route (elle est rendue par les pages, pas par la mise
+//  en page), et l'état partait avec elle. Voir le fichier.
+import {
+  lireLesNouvelles as lireLesNouvellesDuCompte,
+  marquerLue,
+  marquerToutLu,
+  semerLesNouvelles,
+  useNotifications,
+} from "@/lib/magasin-notifications";
 import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
 import { travailEnCours } from "@/lib/travail-en-cours";
 import { useVoileDeLaPage } from "@/components/VoileDeLaPage";
@@ -161,37 +171,28 @@ export const EMPREINTE_ZONE_COMPTE =
   "mobile:-mr-1.5 not-mobile:-mr-1 not-mobile:ml-1.5";
 
 /**
- * ██ §1-b (nº 668) — LA MARQUE « LES NOUVELLES ONT ÉTÉ SEMÉES » ██
+ * ██ §1-b (nº 668), REMPLACÉ PAR LE §1 DE LA nº 672 ██
  * ==================================================================
- * ELLE VIVAIT DANS `sessionStorage` (nº 664), ET C'ÉTAIT LE DÉFAUT.
- * Le propriétaire l'a vu ainsi : au mobile, le point rose n'apparaît
- * que si l'on ouvre « Mon compte » ; sur l'accueil, il disparaît.
- *
- * LA CAUSE, MESURÉE AU BANC (les deux appareils, même relevé) :
- *   arrivée sur /            → point OUI · 1 appel · clé posée
- *   document neuf (/contact) → point NON · 0 appel · clé encore là
- *   retour de document sur / → point NON · 0 appel
- * UNE GARDE NE DOIT PAS SURVIVRE À CE QU'ELLE GARDE. `sessionStorage`
- * survit à un CHANGEMENT DE DOCUMENT ; la liste des nouvelles, elle,
- * vit dans l'état de React et meurt avec lui. Sur un document neuf, la
- * clé disait donc « déjà semé » alors qu'il n'y avait plus rien : plus
- * aucune lecture, plus aucun compteur, plus de point. Et le site fait
- * des navigations de DOCUMENT — le logo est un `<a>` natif (nº 429/468),
- * c'est le chemin le plus courant pour revenir à l'accueil, et c'est
- * exactement là que le propriétaire le perdait.
- *
- * LA MARQUE EST DONC UN ENSEMBLE DE MODULE : il naît et meurt avec le
- * document, comme l'état qu'il protège. Une lecture par chargement de
- * document, ZÉRO par navigation douce — ce que la nº 664 cherchait,
- * sans le piège.
- * ⚠️ ELLE PORTE L'IDENTIFIANT DU COMPTE, et ce n'est pas décoratif :
- * deux comptes qui se succèdent dans le même onglet doivent semer
- * chacun le leur.
- * ⚠️ UNE LECTURE QUI ÉCHOUE SE RETIRE DE L'ENSEMBLE : sans quoi un
- * réseau coupé à la seconde du montage éteindrait le point pour tout
- * le reste du document. On ne garde la marque que sur un succès.
+ * CE QUI VIVAIT ICI : `const nouvellesSemees = new Set<string>()`, la
+ * marque « les nouvelles ont déjà été semées pour ce compte ». Elle
+ * avait remplacé un `sessionStorage` (nº 664) qui survivait à un
+ * changement de DOCUMENT, et la nº 668 avait énoncé la bonne règle —
+ * « une garde ne doit pas survivre à ce qu'elle garde » — en
+ * l'appliquant à la mauvaise durée de vie.
+ * POURQUOI ELLE S'EN VA. L'état qu'elle protégeait (`notifications`)
+ * ne mourait pas avec le document mais À CHAQUE CHANGEMENT DE ROUTE :
+ * la barre fixe est rendue par les PAGES, jamais par la mise en page —
+ * naviguer de « / » vers « /recherche » la démonte, l'état repart vide,
+ * et la marque, elle, restait. Plus de relecture, plus de compteur,
+ * plus de point rose : le défaut que le propriétaire relève au point 1
+ * de la nº 672.
+ * OÙ ELLE EST PASSÉE, ET POURQUOI IL N'Y A PLUS DE MARQUE DU TOUT : les
+ * nouvelles vivent dans un MAGASIN DE MODULE (`lib/magasin-
+ * notifications`), écrit comme celui de la session (nº 632). La garde
+ * n'y est plus une variable À CÔTÉ de l'état — elle EST l'état : « pour
+ * quel compte la liste que j'ai a-t-elle été chargée ? ». Deux choses
+ * qui n'en font plus qu'une ne peuvent plus se contredire.
  */
-const nouvellesSemees = new Set<string>();
 
 export function MenuEspace({
   idUtilisateur,
@@ -215,8 +216,11 @@ export function MenuEspace({
   const [fiches, setFiches] = useState<FicheDuCompte[]>([]);
   const [idFiche, setIdFiche] = useState<string | null>(null);
   const [selecteurOuvert, setSelecteurOuvert] = useState(false);
-  /** Les nouvelles du compte, et leur fenêtre. */
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  /** Les nouvelles du compte, et leur fenêtre.
+      §1 (nº 672) — LA LISTE NE VIT PLUS ICI : elle est lue dans le
+      magasin de module, qui survit au démontage de la barre. Cette
+      ligne-ci ne fait plus que s'y abonner. */
+  const notifications = useNotifications();
   const [notificationsOuvertes, setNotificationsOuvertes] = useState(false);
   /** La fenêtre des langues (nº 238-§5) : montée par le MENU, pas par
       sa ligne — elle survit donc à la fermeture du menu. */
@@ -423,23 +427,15 @@ export function MenuEspace({
    * on peut semer les nouvelles à l'arrivée, on ne peut toujours pas
    * lire les fiches.
    */
-  const lireLesNouvelles = useCallback(async () => {
-    try {
-      const reponse = await fetch("/api/tatoueur/notifications");
-      const donnees = (await reponse.json().catch(() => null)) as {
-        notifications?: Notification[];
-      } | null;
-      setNotifications(donnees?.notifications ?? []);
-      //  §1-b (nº 668) — ELLE DIT SI ELLE A RÉUSSI : c'est le semeur du
-      //  montage qui le demande, pour ne pas garder une marque « déjà
-      //  lu » après un réseau coupé. L'ouverture du menu, elle, ignore
-      //  la réponse — elle relit à chaque fois de toute façon.
-      return reponse.ok;
-    } catch {
-      // Pas de nouvelles : le menu vit très bien sans.
-      return false;
-    }
-  }, []);
+  /*  §1 (nº 672) — LE CORPS DE CETTE LECTURE A DÉMÉNAGÉ dans le
+      magasin (`lib/magasin-notifications`), avec la garde qui va avec.
+      Il n'en reste ici que le lien : l'ouverture du menu RELIT, quoi
+      qu'il arrive — c'est le seul moment où l'on demande au serveur ce
+      qu'il a de neuf. */
+  const lireLesNouvelles = useCallback(
+    () => lireLesNouvellesDuCompte(idUtilisateur),
+    [idUtilisateur]
+  );
 
   /**
    * ██ §1 (nº 664) — LE COMPTEUR EST JUSTE DÈS L'ARRIVÉE ██
@@ -453,30 +449,35 @@ export function MenuEspace({
    * c'est poser la ligne dès que la page connectée s'affiche. Rien de
    * nouveau à écrire côté serveur, aucune route de plus, et les comptes
    * déjà créés sont servis par le même chemin.
-   * ⚠️ UNE FOIS PAR DOCUMENT, PAS UNE PAR PAGE ni une par session : la
-   * marque vit dans un ensemble de module (voir `nouvellesSemees`, et
-   * la cause qu'elle corrige). Vingt navigations douces ne font qu'une
-   * requête ; un document neuf en refait une, et c'est nécessaire —
-   * l'état de React est reparti de zéro avec lui.
+   * ⚠️ UNE FOIS PAR COMPTE ET PAR DOCUMENT, PAS UNE PAR PAGE : la garde
+   * vit dans le magasin, et elle EST la liste (`lib/magasin-
+   * notifications`). Vingt navigations douces ne font qu'une requête ;
+   * un document neuf en refait une, et c'est nécessaire — le magasin
+   * est reparti de zéro avec lui.
    * ⚠️ IL NE TOUCHE PAS AUX FICHES, ni à `compteLu`, ni à l'avatar : la
    * garde de la nº 142 reste entière (voir `lireLesNouvelles`).
-   * ⚠️ LE MINUTEUR À ZÉRO N'EST PAS UN ORNEMENT : poser un état
-   * directement depuis un effet est refusé (react-hooks/set-state-in
-   * -effect), et c'est LE MÊME CONTOURNEMENT qu'emploient déjà les
-   * blocs « Autre adresse » et « Équipe » — pas un second mécanisme.
+   *
+   * ██ §1 (nº 672) — ET IL SURVIT DÉSORMAIS AU DÉMONTAGE DE LA BARRE ██
+   * ------------------------------------------------------------------
+   * CE QUI NE MARCHAIT PAS, ET LE PROPRIÉTAIRE LE VOYAIT DANS LA
+   * RECHERCHE : la barre fixe est rendue par les PAGES, jamais par la
+   * mise en page — un clic sur une carte de style change de route
+   * (« / » → « /recherche »), React démonte cette barre et en monte une
+   * neuve. L'état `notifications` repartait vide, l'ancienne marque de
+   * module disait « déjà semé », et le point rose s'éteignait pour tout
+   * le reste de la visite.
+   * CE QUI CHANGE : cet effet ne garde plus rien lui-même. Il DEMANDE le
+   * semis ; le magasin répond « je l'ai déjà pour ce compte » ou lit. Un
+   * remontage retrouve donc la liste intacte, et le point avec elle.
+   * ⚠️ LE MINUTEUR À ZÉRO S'EN VA AVEC L'ÉTAT LOCAL : il n'était là que
+   * pour contourner `react-hooks/set-state-in-effect` (le même
+   * contournement que les blocs « Autre adresse » et « Équipe »). Il n'y
+   * a plus d'état de composant à poser — un magasin externe prévient ses
+   * abonnés, ce que React attend de lui.
    */
   useEffect(() => {
-    if (!idUtilisateur || nouvellesSemees.has(idUtilisateur)) return;
-    //  Posée AVANT la lecture : deux montages rapprochés du menu ne
-    //  doivent pas partir deux fois. Retirée si la lecture échoue.
-    nouvellesSemees.add(idUtilisateur);
-    const minuteur = setTimeout(() => {
-      void lireLesNouvelles().then((reussie) => {
-        if (!reussie) nouvellesSemees.delete(idUtilisateur);
-      });
-    }, 0);
-    return () => clearTimeout(minuteur);
-  }, [idUtilisateur, lireLesNouvelles]);
+    semerLesNouvelles(idUtilisateur);
+  }, [idUtilisateur]);
 
   /** LES FICHES ET LES NOUVELLES — une lecture, les deux ensemble.
       ⚠️ ELLE N'EST JAMAIS LANCÉE AU MONTAGE, et ce n'est pas un
@@ -1513,14 +1514,42 @@ export function MenuEspace({
    * `photoTete`, `glypheTete`, `airTete` — tous portés par les jeux du
    * haut, aucun nombre écrit ici.
    */
+  /**
+   * ██ §2 (nº 672) — LA TÊTE MONTRE ENFIN L'AVATAR DU COMPTE ██
+   * ------------------------------------------------------------------
+   * LE DÉFAUT, RELEVÉ PAR LE PROPRIÉTAIRE : on enregistre une photo dans
+   * « Éditer », la BARRE FIXE la montre, et les deux FENÊTRES « Mon
+   * compte » — celle du web comme celle du doigt — gardent le rond gris
+   * à la silhouette.
+   * LA CAUSE EST À LA LIGNE SUIVANTE, ET ELLE SE LIT : cette tête ne
+   * regardait QUE `fiche?.photo_profil`, la photo du PORTFOLIO. Or
+   * « Éditer » n'existe que pour un compte SANS portfolio (voir la
+   * seconde ligne de cette tête) : sa photo n'a jamais de portfolio où
+   * se loger, et la tête n'avait donc rien à afficher. La barre, elle,
+   * lisait la session (`photoDuCompte`, nº 645) — d'où les deux surfaces
+   * qui se contredisaient.
+   * LA RÈGLE APPLIQUÉE EST CELLE QUE LA nº 657 A DÉJÀ ÉCRITE, mot pour
+   * mot : « l'avatar appartient au PORTFOLIO quand il y en a un, à la
+   * PERSONNE quand il n'y en a pas ». Elle n'était tenue qu'à un seul
+   * endroit — l'effet qui range la photo ; elle l'est maintenant aussi
+   * là où on la REGARDE.
+   * ⚠️ UN PROFESSIONNEL NE VOIT AUCUN CHANGEMENT : sa fiche a une photo,
+   * `fiche.photo_profil` gagne, et la tête montre ce qu'elle montrait —
+   * la règle de la nº 640 n'est pas touchée d'un pixel.
+   * ⚠️ LES QUATRE SURFACES LISENT DÉSORMAIS LA MÊME CHOSE : la barre du
+   * doigt, la barre du web, la fenêtre du doigt et la fenêtre du web.
+   * `photoDuCompte` vient du COOKIE de session — elle est connue dès le
+   * premier rendu, serveur compris, sans une seule requête.
+   */
+  const photoDeLaTete = fiche?.photo_profil ?? photoDuCompte;
   const enTeteDuCompte = (reglages: ReglagesDuCompte) => (
     <div
       data-tete-compte=""
       className={`flex items-center gap-3 ${reglages.airTete}`}
     >
-      {fiche?.photo_profil ? (
+      {photoDeLaTete ? (
         <PhotoRonde
-          source={fiche.photo_profil}
+          source={photoDeLaTete}
           nature="personne"
           classeTaille={reglages.photoTete}
         />
@@ -2419,22 +2448,13 @@ export function MenuEspace({
           ancre={zone}
           notifications={notifications}
           onFermer={() => setNotificationsOuvertes(false)}
-          onLue={(id) =>
-            setNotifications((liste) =>
-              liste.map((n) =>
-                n.id === id && !n.lue_le
-                  ? { ...n, lue_le: new Date().toISOString() }
-                  : n
-              )
-            )
-          }
-          onToutLu={() =>
-            setNotifications((liste) =>
-              liste.map((n) =>
-                n.lue_le ? n : { ...n, lue_le: new Date().toISOString() }
-              )
-            )
-          }
+          /*  §1 (nº 672) — LES DEUX GESTES SONT PASSÉS AU MAGASIN, au
+              caractère près : ils faisaient exactement cela sur l'état
+              local. Ce qui change n'est pas ce qu'ils font, c'est OÙ ils
+              le font — la liste survit maintenant au démontage de la
+              barre, donc le compteur aussi. */
+          onLue={marquerLue}
+          onToutLu={marquerToutLu}
         />
       )}
 

@@ -54,6 +54,9 @@ export function variablesCssCouleurs(): string {
     //  rouge du problème, recalculé pour le fond sombre.
     "--rw-sombre-succes": COULEURS_SOMBRE.succes,
     "--rw-sombre-erreur": COULEURS_SOMBRE.erreur,
+    //  §3 (nº 672) — la troisième de la famille : l'or de la bienvenue,
+    //  réservé au ton `marque` d'une pastille d'événement.
+    "--rw-sombre-or": COULEURS_SOMBRE.or,
     //  §5 (nº 388) — le bleu des liens qui sortent du site.
     "--rw-sombre-lien": COULEURS_SOMBRE.lien,
     "--rw-sombre-lien-clair": COULEURS_SOMBRE.lienClair,

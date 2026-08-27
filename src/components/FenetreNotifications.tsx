@@ -10,9 +10,12 @@ import {
   IconeDoubleCoche,
   IconeDrapeau,
   IconeEnveloppe,
+  //  §3 (nº 672) — l'étoile de la bienvenue remplace la main qui salue
+  //  (nº 668), supprimée avec elle : le propriétaire la veut dorée sur
+  //  un cercle presque noir.
+  IconeEtoile,
   IconeHorloge,
   IconeHorsLigne,
-  IconeMainQuiSalue,
   type ComposantIcone,
 } from "@/components/Icones";
 //  §1 (nº 664) — la famille des pastilles d'événement : les deux
@@ -200,25 +203,28 @@ const CATALOGUE: Record<
       ligne », ROUGE « il manque quelque chose », ROSE « une décision est
       attendue ». Un accueil n'est aucun des trois : il n'appelle AUCUN
       GESTE, ce qui est la définition même de l'information.
-      ██ §2 (nº 668) — LE SYMBOLE EST UNE MAIN QUI SALUE ██
-      DEUX ESSAIS, DEUX REFUS, ET LE TROISIÈME EST LE BON. Le cœur
+      ██ §2 (nº 668), REMPLACÉ PAR LE §3 DE LA nº 672 ██
+      TROIS ESSAIS, ET LE PROPRIÉTAIRE TRANCHE AU TROISIÈME. Le cœur
       générique (nº 663) ne disait rien de particulier ; le FICHIER de
       la marque (nº 667) ne pouvait pas hériter de la couleur de sa
       pastille — une image ne le peut pas — et rendait 2,10:1 sur le
-      gris, sous le minimum d'un signe. La main est un TRACÉ de la
-      famille (voir `IconeMainQuiSalue`) : elle prend le ton du cercle
-      comme les neuf autres, et elle dit ce que la notification fait.
+      gris, sous le minimum d'un signe ; la MAIN QUI SALUE (nº 668) était
+      un tracé juste de la famille, mais ce n'est pas ce qu'il veut voir.
 
-      ██ §2 (nº 668) — ET LE TON PASSE AU ROSE ██
-      Le propriétaire l'appelle « attente/marque » : le rose ne dit plus
-      seulement « une décision est attendue », il dit AUSSI la voix du
-      site lui-même. C'est un élargissement de la règle de la nº 664, pas
-      une entorse — et il ne concerne QUE cette notification-ci, la seule
-      que YokoFolio écrive en son nom propre. Les trois autres tons
-      gardent leur sens au mot près.
-      ⚠️ CE QUE ÇA VAUT, MESURÉ : la main rose sur son voile rose rend
-      3,29:1 dans la liste et 3,82:1 dans une fenêtre — au-dessus des
-      3:1 d'un signe, là où l'image de la nº 667 était à 2,10.
+      ██ §3 (nº 672) — UNE ÉTOILE DORÉE SUR UN CIEL PRESQUE NOIR ██
+      LE SYMBOLE est `IconeEtoile` — un pentagramme régulier tracé au
+      trait de la famille, comme les neuf autres (le calcul est écrit
+      chez l'icône). LE TON est `marque`, le cinquième de la famille, et
+      il est né pour cette ligne-ci : cercle au FOND DU SITE (#0B0F14),
+      étoile à l'OR (#FFBF00) — les deux couleurs que le propriétaire
+      nomme, toutes deux en jetons, aucune écrite ici.
+      ⚠️ LE ROSE REPREND SON SENS STRICT AVEC CE CHANGEMENT. La nº 668
+      l'avait élargi à « la voix du site » faute d'une couleur pour
+      cela ; il y en a une désormais. `attente` redevient ce que la
+      nº 664 en disait, et rien d'autre : une décision est attendue.
+      ⚠️ CE QUE ÇA VAUT, MESURÉ AU PIXEL RELU, aux deux tailles : l'étoile
+      rend 11,6:1 sur son cercle — très au-dessus des 3:1 d'un signe, là
+      où la main rose était à 3,29 et l'image de la nº 667 à 2,10.
 
       ██ §3 (nº 668) — LE TEXTE, VERSION FINALE ██
       Les deux phrases du propriétaire, au mot près, séparées par un
@@ -236,8 +242,8 @@ const CATALOGUE: Record<
       ailleurs. Changer ces deux lignes suffit — pour tout le monde, et
       tout de suite. */
   bienvenue: {
-    symbole: IconeMainQuiSalue,
-    ton: "attente",
+    symbole: IconeEtoile,
+    ton: "marque",
     titre: `Bienvenue sur ${MARQUE_YOKOFOLIO.nom} !`,
     sousTitre:
       "Explore les styles, suis tes portfolios préférés et garde chaque " +
@@ -635,8 +641,36 @@ export function FenetreNotifications({
               LA CROIX PREND LA COMPENSATION DE « MON COMPTE » : −9 px,
               soit (36 − 18) / 2, l'écart entre sa cible et son dessin.
               Son glyphe retombe alors PILE à 20 px du bord, à l'aplomb
-              du contenu. La cible ne rétrécit pas (règle nº 483). */}
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-sombre-bordure/60">
+              du contenu. La cible ne rétrécit pas (règle nº 483).
+              ██ §4 (nº 672) — ELLE EST COLLANTE, COMME AU DOIGT ██
+              LE DÉFAUT DU PROPRIÉTAIRE : « au mobile la barre de titre
+              est fixe, les notifications défilent derrière ; au web elle
+              remonte avec le défilement ». C'est exact, et la cause est
+              d'une ligne : au web, c'est LE PANNEAU ENTIER qui défile —
+              `MenuDeVerre` porte `overflow-y-auto` et se plafonne à la
+              place disponible sous l'ancre (nº 655). Cette rangée-ci
+              était donc dans ce qui défile, sans rien pour la retenir.
+              LE REMÈDE EST LE MÉCANISME DU DOIGT, REPRIS TEL QUEL :
+              `sticky top-0` plus un fond opaque — exactement ce que
+              porte l'en-tête de `PagePleinEcranMobile` depuis la nº 465
+              (`sticky top-0 z-10 bg-sombre-fond`). Aucun second
+              mécanisme, aucune mesure, aucun calcul de hauteur.
+              ⚠️ LE FOND EST CELUI DE CETTE FENÊTRE, PAS CELUI DE LA
+              PAGE : le panneau du compte est `opaque`, donc au jeton
+              `carte` (nº 542) — un `bg-sombre-fond` y ferait une bande
+              plus sombre que la fenêtre qui la porte. C'est le seul
+              nombre qui diffère du doigt, et il est dicté par la
+              surface.
+              ⚠️ RIEN NE BOUGE QUAND LA LISTE EST COURTE : sans
+              débordement, `sticky` n'a rien à retenir — la rangée reste
+              où elle est, au pixel.
+              ⚠️ LE RANG 10 EST LOCAL À CE PANNEAU (le sien est z-[75]) :
+              il ne monte au-dessus de rien d'autre que des rangées qui
+              passent dessous. */}
+          <div
+            className="sticky top-0 z-10 flex items-center gap-3 bg-sombre-carte
+                       px-5 py-4 border-b border-sombre-bordure/60"
+          >
             {/* LA CLOCHE (nº 132) — elle dit d'un signe ce que la
                 fenêtre contient, avant même le mot. */}
             <IconeCloche taille={20} classe="shrink-0 text-sombre-texte/80" />
