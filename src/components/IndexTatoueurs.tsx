@@ -11,6 +11,8 @@ import {
 } from "react";
 //  §1 (nº 652) — le chemin de la recherche, écrit une seule fois.
 import { ADRESSE_RECHERCHE } from "@/lib/chemin-recherche";
+//  §1 (nº 654) — la boîte noire de navigation (mesure temporaire).
+import { noterNavigation } from "@/lib/boite-noire";
 import Link, { useLinkStatus } from "next/link";
 import { useRouter } from "next/navigation";
 //  §1 (nº 621) — la carte de style et sa grille. Le TYPE seul vient de
@@ -520,10 +522,15 @@ export function IndexTatoueurs({
     const ici = window.location.pathname + window.location.search;
     if (adresseReprise.current === ici) return;
     adresseReprise.current = ici;
-    noter(
+    const dit =
       `⚠️ PAGE EN RETARD SUR L'ADRESSE · demandé « ${demande || "(rien)"} »` +
-        ` · servi « ${cleSignee || "(rien)"} » — on redemande au serveur`
-    );
+      ` · servi « ${cleSignee || "(rien)"} » — on redemande au serveur`;
+    noter(dit);
+    //  §1 (nº 654) — la boîte noire : cette garde est l'un des rares
+    //  endroits qui REDEMANDE une page ; si elle joue au mauvais
+    //  moment, la trace doit le montrer. Le comportement ne change
+    //  pas — le `refresh` ci-dessous est celui d'avant.
+    noterNavigation(dit);
     router.refresh();
   });
 

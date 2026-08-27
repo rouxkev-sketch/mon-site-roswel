@@ -5,6 +5,9 @@ import { conditionDeReglagePourLeScript } from "@/lib/adresse-recherche";
 //  §2 (nº 653) — le chemin de la recherche (nº 652), lu là où il est
 //  écrit une seule fois : le script ne le recopie pas à la main.
 import { ADRESSE_RECHERCHE } from "@/lib/chemin-recherche";
+//  §3 (nº 654) — la clé et la taille de la boîte noire, lues là où
+//  elles sont écrites : le script en recopie le GESTE, pas la valeur.
+import { CLE_BOITE_NOIRE, LIGNES_BOITE_NOIRE } from "@/lib/boite-noire";
 import {
   COOKIE_COLONNES,
   expressionColonnes,
@@ -283,6 +286,19 @@ try{${releveDuBasPourLeScript()}}catch(e){}
 try{
 var adresse=location.pathname+location.search;
 var nav=(performance.getEntriesByType("navigation")[0]||{}).type||"navigate";
+/* §3 (nº 654) — LA BOÎTE NOIRE, ÉCRITE À LA MAIN ICI. Ce script
+   s'exécute AVANT le moindre module : il ne peut pas appeler
+   lib/boite-noire. Il en recopie donc le geste — la MÊME clé, le MÊME
+   format ({h, texte}), la MÊME limite de cinquante lignes. Si l'un des
+   deux change, l'autre aussi.
+   ⚠️ ELLE N'OBSERVE QUE, et n'échoue jamais bruyamment : tout est
+   enveloppé, et une mémoire refusée laisse le script continuer. */
+var bn=function(txt){try{var br=sessionStorage.getItem(${JSON.stringify(CLE_BOITE_NOIRE)});
+var li=br?JSON.parse(br):[];if(!(li instanceof Array))li=[];
+li.push({h:Date.now(),texte:txt});
+if(li.length>${LIGNES_BOITE_NOIRE})li=li.slice(li.length-${LIGNES_BOITE_NOIRE});
+sessionStorage.setItem(${JSON.stringify(CLE_BOITE_NOIRE)},JSON.stringify(li))}catch(e){}};
+bn("SCRIPT AVANT PEINTURE · arrivée sur "+adresse+" · navigation « "+nav+" »");
 var jour=function(c,s){try{var b=s.getItem(c);return b?JSON.parse(b):null}catch(e){return null}};
 var maintenant=Date.now();
 var age=${AGE_MAXIMUM_MS};
@@ -362,12 +378,16 @@ var pn=new URLSearchParams(location.search);var nue=true;
 pn.forEach(function(v,n){if(!(${conditionDeReglagePourLeScript("n")}))nue=false});
 var pd=new URLSearchParams(derniereOnglet.slice(derniereOnglet.indexOf("?")+1));var pleine=false;
 pd.forEach(function(v,n){if(!(${conditionDeReglagePourLeScript("n")}))pleine=true});
+bn("FILET DE REPLI · testé · arrivée « "+adresse+" » "+(nue?"NUE":"avec critères")+
+" · dernière du même onglet « "+derniereOnglet+" » "+(pleine?"PLEINE":"nue")+
+" · âge "+(maintenant-memoireOnglet.quand)+" ms · conclusion : "+((nue&&pleine)?"RÉPARE":"ne répare pas"));
 if(nue&&pleine){vers=derniereOnglet;
 try{if(sessionStorage.getItem(${armeeSonde})==="1"){var jr=[];
 try{jr=JSON.parse(sessionStorage.getItem(${journalSonde})||"[]")}catch(e2){jr=[]}
 jr.push({t:0,texte:"⚠️ REPLI DOCUMENT RÉPARÉ · le routeur a rechargé sur "+adresse+" (navigation de document, les critères perdus en route) · l'adresse complète est rendue : "+vers});
 sessionStorage.setItem(${journalSonde},JSON.stringify(jr))}}catch(e3){}}}
 if(vers){
+bn("FILET DE REPLI · RÉÉCRIT L'ADRESSE · AVANT « "+adresse+" » · APRÈS « "+vers+" »");
 try{sessionStorage.setItem(${restaurer},vers)}catch(e){}
 r.style.visibility="hidden";
 setTimeout(function(){r.style.visibility=""},3000);

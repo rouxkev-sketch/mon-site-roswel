@@ -10,6 +10,8 @@ import {
 } from "react";
 //  §1 (nº 652) — le chemin de la recherche, écrit une seule fois.
 import { ADRESSE_RECHERCHE } from "@/lib/chemin-recherche";
+//  §1 (nº 654) — la boîte noire de navigation (mesure temporaire).
+import { noterNavigation } from "@/lib/boite-noire";
 import {
   defilerSansGeste,
   estDefilementProgramme,
@@ -331,7 +333,13 @@ export function EnTeteTatouage({
         L'adresse visible change pendant la recherche — la décision du
         propriétaire — et les liens déjà partagés « /?style=… » restent
         servis, par la réécriture du proxy. */
-    router.push(requete ? `${ADRESSE_RECHERCHE}?${requete}` : "/");
+    const destination = requete ? `${ADRESSE_RECHERCHE}?${requete}` : "/";
+    //  §1 (nº 654) — LA BOÎTE NOIRE : une navigation demandée par du
+    //  CODE n'est pas un clic, l'écoute globale ne la voit donc pas.
+    //  Elle se note là où elle est écrite. Rien du comportement ne
+    //  change : la ligne d'après est le `push` d'avant, à la lettre.
+    noterNavigation(`PUSH · EnTeteTatouage (recherche) · vers ${destination}`);
+    router.push(destination);
   }
 
   /**

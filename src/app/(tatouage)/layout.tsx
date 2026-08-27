@@ -46,6 +46,10 @@ import { VoileDeLaPage } from "@/components/VoileDeLaPage";
 import { SondeFiltres } from "@/components/SondeFiltres";
 import { SondeVerre } from "@/components/SondeVerre";
 import { SondeRetour } from "@/components/SondeRetour";
+//  §1 (nº 654) — la boîte noire de navigation : l'écoute permanente
+//  et sa lecture après coup.
+import { BoiteNoireNavigation } from "@/components/BoiteNoireNavigation";
+import { SondeBoiteNoire } from "@/components/SondeBoiteNoire";
 import { SondeBascule } from "@/components/SondeBascule";
 import { SondeCarrousel } from "@/components/SondeCarrousel";
 import { SondeCartes } from "@/components/SondeCartes";
@@ -307,6 +311,22 @@ export default async function MiseEnPageTatouage({
       secFetchDest={secFetchDest}
       enDeveloppement={process.env.NODE_ENV !== "production"}
     />
+    {/* ⚠️ TEMPORAIRE — LA BOÎTE NOIRE DE NAVIGATION (nº 654). Deux
+        composants, et ils ne se ressemblent pas :
+         · `BoiteNoireNavigation` ÉCOUTE, toujours et en silence — les
+           clics de liens et les changements d'adresse s'écrivent dans
+           lib/boite-noire (mémoire de session, cinquante lignes) ;
+         · `SondeBoiteNoire` AFFICHE, et seulement quand l'adresse
+           porte `?sonde-boite-noire=1` — après coup, sur la page où
+           le défaut vient de frapper.
+        Le défaut visé est ALÉATOIRE : une sonde qu'on arme avant ne
+        le voit jamais. C'est pourquoi la trace tourne d'elle-même.
+        Pour les retirer : ces deux lignes, leurs imports, les fichiers
+        src/components/BoiteNoireNavigation.tsx et
+        src/components/SondeBoiteNoire.tsx, le module
+        src/lib/boite-noire.ts, et les appels à `noterNavigation`. */}
+    <BoiteNoireNavigation />
+    <SondeBoiteNoire />
     <div
       // Marqueur du fond sombre — il double la règle CSS de
       // `globals.css`. La vraie garantie est le script plus bas, qui
