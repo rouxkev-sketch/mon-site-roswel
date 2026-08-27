@@ -78,9 +78,12 @@ import type { ComposantIcone } from "@/components/Icones";
  * une étoile DORÉE, avec un jeton `or` créé pour elle. Le propriétaire
  * l'a jugé HORS CHARTE et tranche : « l'étoile passe en ROSE
  * (primaire), le cercle au GRIS de la famille info ».
- * CE QU'IL DEVIENT : le gris de `info` (`bg-sombre-haut`, le barreau
- * des empilements) et le ROSE de la charte. Aucune couleur nouvelle —
- * les deux jetons existaient bien avant la nº 672.
+ * CE QU'IL EST DEVENU À LA nº 674 : le gris de `info` (`bg-sombre-haut`,
+ * le barreau des empilements) et le ROSE de la charte. Aucune couleur
+ * nouvelle — les deux jetons existaient bien avant la nº 672.
+ * CE QU'IL EST DEPUIS LA nº 680 : le même rose sur UN CRAN PLUS SOMBRE,
+ * `bg-sombre-eleve`. Voir la mesure au bas de cette note — c'est elle
+ * que le propriétaire a suivie.
  *
  * ⚠️ POURQUOI CE TON SURVIT ALORS QUE L'OR MEURT. Le propriétaire
  * demande de retirer « ce qui ne sert plus » ; voici la réponse
@@ -97,15 +100,17 @@ import type { ComposantIcone } from "@/components/Icones";
  *    ton de plus est la façon la plus courte de ne toucher à rien.
  * ⚠️ IL N'A TOUJOURS QU'UN SEUL PORTEUR : la bienvenue.
  *
- * ⚠️ CE QUE ÇA VAUT, MESURÉ, ET JE LE DIS PLUTÔT QUE DE LE TAIRE : le
- * rose sur le gris `haut` rend 2,67:1 — SOUS les 3:1 qu'on exige d'un
- * signe. Ce n'est pas une objection à la décision du propriétaire,
- * c'est un fait qu'il doit connaître : le doré rendait 11,63:1, et le
- * rose sur son propre voile (ton `attente`) rend 3,29:1. S'il veut un
- * jour les 3:1 SANS quitter le gris, UN SEUL CRAN suffit — le même
- * rose sur `bg-sombre-eleve` rend 3,93:1. Rien n'est changé de ma
- * propre initiative : c'est le gris de `info` qui est demandé, c'est
- * celui-là qui est posé.
+ * ⚠️ LA MESURE QUI A DÉCIDÉ DE CE TON, ET COMMENT ELLE A SERVI. À la
+ * nº 674 j'ai posé le gris de `info` comme demandé, en signalant que le
+ * rose n'y rendait que 2,67:1 — SOUS les 3:1 qu'on exige d'un signe — et
+ * qu'UN SEUL CRAN suffirait : `bg-sombre-eleve`, 3,93:1. Le propriétaire
+ * a tranché en ce sens (nº 676, annulée avec elle ; reprise nº 680).
+ * L'échelle complète, pour mémoire : doré 11,63:1 · rose sur son propre
+ * voile (ton `attente`) 3,29:1 · rose sur `eleve` 3,93:1 · rose sur
+ * `haut` 2,67:1.
+ * ⚠️ CE TON N'A QU'UN PORTEUR — la bienvenue — et c'est ce qui rend le
+ * cran sans danger : `info` garde `bg-sombre-haut`, donc les quatre
+ * autres écrans d'information ne bougent pas d'un pixel.
  */
 export type TonEvenement =
   | "attente"
@@ -119,10 +124,11 @@ export const TON_PASTILLE: Record<TonEvenement, string> = {
   valide: "bg-sombre-succes/20 text-sombre-succes",
   probleme: "bg-sombre-erreur/20 text-sombre-erreur",
   info: "bg-sombre-haut text-sombre-texte",
-  //  §4 (nº 674) — le gris de `info`, et le ROSE de la charte. Comme
-  //  `info`, il ne prend PAS de voile : un gris dilué sur un gris ne
-  //  fait pas un disque (voir la note des quatre tons ci-dessus).
-  marque: "bg-sombre-haut text-primaire",
+  //  §4 (nº 674), UN CRAN PLUS SOMBRE À LA nº 680 — le gris de la
+  //  famille grise, et le ROSE de la charte. Comme `info`, il ne prend
+  //  PAS de voile : un gris dilué sur un gris ne fait pas un disque
+  //  (voir la note des quatre tons ci-dessus).
+  marque: "bg-sombre-eleve text-primaire",
 };
 
 /**

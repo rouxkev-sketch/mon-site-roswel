@@ -535,10 +535,15 @@ export function MenuEspace({
    * ⚠️ LE VERROU DE DÉFILEMENT NON PLUS : il est retiré par le
    * nettoyage de son effet, qui tourne sur TOUS les chemins de
    * fermeture, démontage compris (nº 469).
-   * ⚠️ LES DEUX APPAREILS, SANS BRANCHE (piège nº 60) : le web a le
-   * MÊME défaut — mesuré à l'état de la nº 675, les cinq entrées y
-   * traversent l'arrière-plan comme au doigt. Il reçoit donc la même
-   * correction, et pour la même raison.
+   * ⚠️ LES DEUX APPAREILS AVAIENT LE MÊME DÉFAUT : mesuré à l'état de
+   * la nº 675, les cinq entrées traversent l'arrière-plan au web comme
+   * au doigt. Ils ont d'abord reçu la même correction.
+   * ⚠️ ILS N'ONT PLUS LA MÊME DEPUIS LA Nº 680, sur décision du
+   * propriétaire : au web la fenêtre se ferme AU CLIC, sans attendre
+   * l'arrivée ; au doigt tout ce qui précède reste en vigueur, mot pour
+   * mot. La branche est dans `partirVers`, elle lit `data-appareil`
+   * (piège nº 60), et le §2 qui la porte dit pourquoi les deux réponses
+   * diffèrent sans se contredire.
    */
   const FILET_DE_FERMETURE_MS = 6000;
   /** Le verrou SYNCHRONE : il ferme la porte à l'instant du clic. */
@@ -569,26 +574,62 @@ export function MenuEspace({
    * Rend `false` quand le clic doit être IGNORÉ (un départ est déjà en
    * cours) : l'appelant s'arrête là.
    */
-  const partirVers = useCallback((cle: string, destination: string) => {
-    if (departVerrouille.current) return false;
-    departVerrouille.current = true;
-    const ici = `${window.location.pathname}${window.location.search}`;
-    if (ici === destination) {
-      //  Aucune navigation n'aura lieu : on ferme, et l'on rouvre la
-      //  porte pour que la fenêtre reste utilisable si on la rouvre.
-      departVerrouille.current = false;
-      setOuvert(false);
+  const partirVers = useCallback(
+    (cle: string, destination: string) => {
+      if (departVerrouille.current) return false;
+      departVerrouille.current = true;
+      const ici = `${window.location.pathname}${window.location.search}`;
+      /*  ██ §2 (nº 680) — AU WEB, LA FENÊTRE PART AU CLIC ██
+          ------------------------------------------------------------
+          LA SEULE BRANCHE D'APPAREIL DE CE MÉCANISME, et c'est une
+          DÉCISION DU PROPRIÉTAIRE, pas une déduction : au web, cliquer
+          une entrée qui navigue ferme la fenêtre TOUT DE SUITE, sans
+          attendre l'arrivée. L'entête du §1 (nº 677) affirme « les deux
+          appareils, sans branche » — c'était vrai du DÉFAUT (les cinq
+          entrées traversaient l'arrière-plan des deux côtés), ce ne
+          l'est plus du REMÈDE, et cette ligne-ci prime désormais.
+
+          POURQUOI LES DEUX RÉPONSES DIFFÈRENT SANS SE CONTREDIRE : au
+          doigt, la fenêtre COUVRE L'ÉCRAN — la refermer avant l'arrivée
+          découvre la page d'avant, et c'est précisément le clignotement
+          que la nº 677 a supprimé ; il faut donc tenir la fenêtre et
+          montrer la surbrillance. Au web, elle est POSÉE SOUS LE BOUTON
+          et ne recouvre rien : la page reste sous les yeux pendant la
+          navigation, il n'y a aucun clignotement à craindre, et une
+          fenêtre qui s'attarde n'est plus un repère mais une gêne.
+
+          ⚠️ ET LE VERROU RESTE POSÉ : on ne le relève pas ici. C'est
+          l'effet d'ouverture qui le relèvera quand la fenêtre sera
+          effectivement fermée. Le relever tout de suite rouvrirait la
+          porte pendant l'image qui sépare le clic du rendu — deux clics
+          rapides passeraient tous les deux, et l'on retomberait sur la
+          faute nº 3 de la nº 676 : la dernière navigation gagne, et
+          « Ajouter un portfolio » sert « Mon portfolio ».
+
+          `auDoigt` lit `data-appareil` (piège nº 60) — jamais une
+          largeur. */
+      if (!auDoigt) {
+        setOuvert(false);
+        return true;
+      }
+      if (ici === destination) {
+        //  Aucune navigation n'aura lieu : on ferme, et l'on rouvre la
+        //  porte pour que la fenêtre reste utilisable si on la rouvre.
+        departVerrouille.current = false;
+        setOuvert(false);
+        return true;
+      }
+      setEntreeQuiPart(cle);
+      window.clearTimeout(filetDeFermeture.current);
+      filetDeFermeture.current = window.setTimeout(() => {
+        departVerrouille.current = false;
+        setEntreeQuiPart(null);
+        setOuvert(false);
+      }, FILET_DE_FERMETURE_MS);
       return true;
-    }
-    setEntreeQuiPart(cle);
-    window.clearTimeout(filetDeFermeture.current);
-    filetDeFermeture.current = window.setTimeout(() => {
-      departVerrouille.current = false;
-      setEntreeQuiPart(null);
-      setOuvert(false);
-    }, FILET_DE_FERMETURE_MS);
-    return true;
-  }, []);
+    },
+    [auDoigt]
+  );
 
   /** La classe d'une entrée : en surbrillance si c'est elle qui part. */
   const classeEntree = (cle: string, reglage: { entree: string; entreePartie: string }) =>
