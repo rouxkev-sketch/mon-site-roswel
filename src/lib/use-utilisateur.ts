@@ -202,6 +202,23 @@ function instantane(): EtatSession {
   return etat;
 }
 
+/**
+ * §1 (nº 684) — QUI EST CONNECTÉ, SANS S'ABONNER À RIEN.
+ * ------------------------------------------------------------------
+ * POURQUOI CETTE LECTURE SÈCHE EXISTE. Un magasin qui doit décider
+ * « faut-il demander cette liste au serveur ? » a besoin de savoir s'il
+ * y a un compte — mais il n'a pas besoin d'être PRÉVENU quand ça
+ * change : il pose la question une fois, au montage, et n'y revient
+ * pas. Passer par `useUtilisateur` l'obligerait à s'abonner, donc à
+ * vivre dans un composant — et à le faire vingt-quatre fois sur une
+ * mosaïque de vingt-quatre cœurs.
+ * ⚠️ ELLE REND LE MÊME INSTANTANÉ que le hook, à la même seconde : il
+ * n'y a qu'un état dans ce module, et `instantane()` est ce qui le lit.
+ */
+export function utilisateurConnu(): User | null {
+  return instantane().utilisateur;
+}
+
 export function useUtilisateur() {
   // Pendant le rendu SERVEUR et l'hydratation : la valeur que le
   // serveur a lue dans le cookie de la requête. Ensuite : le magasin.

@@ -160,8 +160,56 @@ const TABLES = {
   suggestions_style: STYLES_AJOUTES_DOUBLURE,
 };
 
+/**
+ * §2 (nº 684) — CE QU'ON INSÈRE, LA DOUBLURE LE GARDE.
+ * ------------------------------------------------------------------
+ * LE DÉFAUT DE BANC QUE CECI CORRIGE, et il faussait un chiffre publié.
+ * La doublure traitait un POST comme un GET : elle ne stockait rien.
+ * Or la route des notifications POSE LA BIENVENUE quand elle ne la
+ * trouve pas dans la liste (nº 663) — et comme la liste revenait
+ * toujours vide, elle la reposait À CHAQUE APPEL. Un aller-retour de
+ * plus, à chaque fois, sur une écriture qui en production n'a lieu
+ * QU'UNE FOIS dans la vie d'un compte. Mesuré : la route s'affichait à
+ * ~509 ms au lieu de ~390.
+ * ⚠️ ÇA NE SURVIT PAS AU REDÉMARRAGE, et c'est très bien : chaque
+ * lancement du banc repart d'une base propre, comme avant. On corrige
+ * la fidélité d'une SESSION de mesure, on n'invente pas une base.
+ */
+function ranger(table, brut) {
+  let lignes;
+  try {
+    lignes = JSON.parse(brut || "null");
+  } catch {
+    return [];
+  }
+  if (!lignes) return [];
+  const ajoutees = (Array.isArray(lignes) ? lignes : [lignes]).map((l, n) => ({
+    id: l.id ?? `insere-${table}-${Date.now()}-${n}`,
+    ...l,
+  }));
+  if (!TABLES[table]) TABLES[table] = [];
+  TABLES[table].push(...ajoutees);
+  return ajoutees;
+}
+
 function repondre(req, res, u, brut) {
   const table = u.pathname.replace(/^\/rest\/v1\//, "");
+  //  UNE ÉCRITURE : on range, et l'on rend ce qu'on vient de ranger —
+  //  c'est ce que PostgREST fait avec `.select()` après un `insert`.
+  if (req.method === "POST" && !table.startsWith("rpc/")) {
+    const ajoutees = ranger(table, brut);
+    console.log(
+      new Date().toISOString().slice(11, 19),
+      "POST", table, "← rangé", ajoutees.length
+    );
+    const delaiEcriture = Number(process.env.DELAI_BASE ?? 0);
+    if (delaiEcriture) {
+      setTimeout(() => envoyer(res, ajoutees), delaiEcriture);
+      return;
+    }
+    envoyer(res, ajoutees);
+    return;
+  }
   let corps = TABLES[table] ?? [];
   if (table === "rpc/rechercher_tatoueurs") {
     let params = {};

@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { utilisateurConnu } from "@/lib/use-utilisateur";
 
 /**
  * CE QU'ON GARDE — photos enregistrées et tatoueurs suivis
@@ -65,6 +66,52 @@ export function definir(genre: Genre, id: string, actif: boolean) {
 function lire(genre: Genre, id: string, defaut: boolean): boolean {
   const connu = etats[genre].get(id);
   return connu === undefined ? defaut : connu;
+}
+
+/**
+ * ██ §1 (nº 684) — LES ÉCRANS QUI N'ONT AUCUN CŒUR À ALLUMER ██
+ * ------------------------------------------------------------------
+ * CE QUI SE PASSAIT, ET CE QUE ÇA COÛTAIT. `ChargeurFavoris` est monté
+ * dans LA MISE EN PAGE : la liste des favoris partait donc sur CHAQUE
+ * page connectée du produit — Sécurité, Administration, l'éditeur de
+ * portfolio, « Après connexion » — qui sont des FORMULAIRES et n'ont
+ * pas un cœur à montrer. Le balayage nº 681 l'a mesurée à ~410 ms,
+ * dans le trio qui tenait ces pages au-dessus de 1 200 ms.
+ *
+ * ⚠️ POURQUOI UNE LISTE ÉCRITE À LA MAIN, ET NON UNE RÈGLE AUTOMATIQUE.
+ * J'ai d'abord posé la demande dans `useEtatFavori`, le hook que tout
+ * cœur appelle : élégant, et ça s'entretient tout seul. AU BANC, LA
+ * PREUVE N'EST PAS VENUE — l'appel partait bien sur une fiche publique,
+ * mais PAS sur la mosaïque ni sur « Ma sélection », et les fiches de
+ * démonstration de la doublure ne m'ont pas permis de dire si c'était
+ * la règle qui manquait son coup ou ces écrans-là qui n'ont pas de
+ * cœur. Une règle qu'on ne peut pas vérifier n'est pas une règle : le
+ * jour où elle rate, un favori s'affiche ÉTEINT, silencieusement.
+ * LA LISTE, ELLE, ÉCHOUE DU BON CÔTÉ. Ce qui n'y est pas garde
+ * EXACTEMENT le comportement d'avant. Une page ajoutée demain sera
+ * simplement aussi lente qu'aujourd'hui — jamais fausse. C'est le seul
+ * arbitrage acceptable quand on ne peut pas mesurer.
+ *
+ * LES QUATRE ÉCRANS, ET CE QU'ILS SONT : des formulaires et des
+ * tableaux de bord. Aucun n'affiche de photo enregistrable ni de
+ * tatoueur à suivre.
+ */
+const SANS_COEURS = [
+  "/devenir-tatoueur/securite",
+  "/devenir-tatoueur/fiche",
+  "/apres-connexion",
+  "/admin",
+];
+
+/** Cet écran a-t-il des cœurs à allumer ? */
+export function ecranAvecCoeurs(chemin: string): boolean {
+  return !SANS_COEURS.some((sans) => chemin === sans || chemin.startsWith(`${sans}/`));
+}
+
+/** La demande, avec sa garde de session : rien ne part sans compte. */
+export function demanderMesFavoris(): void {
+  if (!utilisateurConnu()) return;
+  chargerLesMiens();
 }
 
 /** L'ÉTAT D'UN OBJET, tel que tous ses boutons le voient. */
