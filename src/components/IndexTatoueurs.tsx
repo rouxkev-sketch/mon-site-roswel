@@ -16,6 +16,14 @@ import {
 } from "@/lib/chemin-recherche";
 //  §1 (nº 654) — la boîte noire de navigation (mesure temporaire).
 import { noterNavigation } from "@/lib/boite-noire";
+//  §1 (nº 673) — le filet de la garde : l'adresse courante, lue PENDANT
+//  le rendu par le magasin de la nº 154 (les deux portes : `popstate` et
+//  `pushState`/`replaceState`), et le signe de chargement du site.
+import { lireRequeteCourante, souscrireAdresse } from "@/lib/adresse-courante";
+import {
+  demarrerLeSigneManuel,
+  finirLeSigneManuel,
+} from "@/components/SigneDeChargement";
 import Link, { useLinkStatus } from "next/link";
 import { useRouter } from "next/navigation";
 //  §1 (nº 621) — la carte de style et sa grille. Le TYPE seul vient de
@@ -239,6 +247,11 @@ function tailleInconnueAuServeur(): null {
   return null;
 }
 
+/** §1 (nº 673) — la clé du signe de chargement pendant qu'on redemande
+    la bonne page. Nommée ici pour que l'effet qui l'allume et celui qui
+    l'éteint ne puissent pas se contredire. */
+const CLE_SIGNE_PAGE_EN_RETARD = "page-en-retard";
+
 /**
  * ██ §2 (nº 509) — LES ISSUES DU VIDE : TROIS PALIERS, ET ON N'EN SAUTE
  * AUCUN ██
@@ -431,6 +444,65 @@ export function IndexTatoueurs({
   const cleSignee = signatureDesCriteres(cleServie);
 
   /**
+   * ██ §1 (nº 673) — LA RÉPARATION NE SE VOIT PLUS ██
+   * ==================================================================
+   * CE QUE LE PROPRIÉTAIRE DEMANDE, ET C'EST LE FILET DE LA PASSE :
+   * « tant que la page servie ne correspond pas à l'adresse, afficher
+   * l'état de chargement — pas la mauvaise page — jusqu'à l'arrivée de
+   * la bonne ». La garde de la nº 631, juste dessous, REDEMANDAIT déjà
+   * la bonne page ; elle la laissait simplement voir en attendant.
+   * Le défaut a une cause, elle est nommée et corrigée à la source
+   * (§1 nº 673, `_accueil/rendu.tsx` : la page attend son catalogue).
+   * CE FILET NE LA REMPLACE PAS — il fait que le jour où un chemin
+   * oublié laisserait encore passer une page fausse, PERSONNE NE LA
+   * VERRAIT.
+   *
+   * POURQUOI ÇA SE DÉCIDE AU RENDU, ET PAS DANS UN EFFET. Un effet
+   * tourne APRÈS la peinture : la mauvaise page serait montrée, puis
+   * cachée — un clignotement, c'est-à-dire le défaut en plus court. On
+   * lit donc l'adresse PENDANT le rendu, par le magasin déjà écrit pour
+   * ça (`lib/adresse-courante`, nº 154) : il surveille les DEUX portes
+   * (le `popstate` du navigateur et les `pushState`/`replaceState` du
+   * code), donc le désaccord est connu au premier rendu qui suit la
+   * navigation, avant toute peinture.
+   * ⚠️ L'INSTANTANÉ SERVEUR EST `cleServie`, ET CE N'EST PAS UN DÉTAIL :
+   * au rendu serveur et à l'hydratation, on rend donc EXACTEMENT ce que
+   * le serveur a rendu — accord garanti, aucune erreur d'hydratation, et
+   * aucun écran vide sur une page qui va bien.
+   *
+   * ⚠️ POURQUOI `invisible` ET NON `hidden` : `visibility` garde la
+   * BOÎTE, donc la hauteur du document. La position restituée
+   * (nº 653, nº 661) ne voit rien passer, et la page ne saute pas quand
+   * la bonne arrive — deux acquis qu'un `display:none` aurait cassés.
+   * C'est une classe de plus sur une propriété que rien d'autre ne
+   * porte ici (règle nº 389) ; ni la largeur, ni les marges partagées,
+   * ni la grille ne sont touchées (pièges nº 378/379).
+   * ⚠️ LA BARRE, ELLE, RESTE VISIBLE : elle lit l'ADRESSE, pas ce qui a
+   * été servi — ses champs sont déjà justes. Seul le contenu servi se
+   * tait, et c'est exactement ce qui est faux.
+   */
+  const requeteCourante = useSyncExternalStore(
+    souscrireAdresse,
+    lireRequeteCourante,
+    () => cleServie
+  );
+  const enRetardSurLAdresse =
+    signatureDesCriteres(requeteCourante) !== cleSignee;
+
+  /*  §1 (nº 673) — ET LE SITE DIT QU'IL TRAVAILLE. Sans ce trait, une
+      page invisible serait une page BLANCHE : on aurait remplacé une
+      mauvaise réponse par aucune réponse. C'est le signe central du
+      site (`SigneDeChargement`, nº 441), commandé à la main comme le
+      fait déjà la première ouverture de « Mon compte » (nº 469/559) —
+      aucun second mécanisme, et son seuil de 200 ms reste le juge : une
+      reprise rapide ne montre rien du tout. */
+  useEffect(() => {
+    if (!enRetardSurLAdresse) return;
+    demarrerLeSigneManuel(CLE_SIGNE_PAGE_EN_RETARD);
+    return () => finirLeSigneManuel(CLE_SIGNE_PAGE_EN_RETARD);
+  }, [enRetardSurLAdresse]);
+
+  /**
    * CE QUE LES CHAMPS DU MOTEUR AFFICHENT — et rien de plus.
    * ⚠️ CE N'EST PAS UNE MÉMOIRE PARALLÈLE : cet état ne décide d'AUCUNE
    * carte. Il n'existe que pour que le champ réponde au doigt sans
@@ -507,6 +579,27 @@ export function IndexTatoueurs({
    * cas d'origine de la nº 595, et c'est le même désaccord — sauf que la
    * page n'y est pas un critère, donc la signature ne bouge pas et rien
    * ne se déclenche tant que la page servie est la bonne.
+   *
+   * ██ §1 (nº 673) — CE QU'IL DEVIENT, ET CE QU'IL RESTE ██
+   * ------------------------------------------------------------------
+   * IL NE CHANGE PAS D'UNE LIGNE, et c'est délibéré : il redemande la
+   * page comme depuis la nº 631, une fois par adresse, sans toucher à
+   * l'historique ni à la position.
+   * CE QUI CHANGE EST AUTOUR DE LUI, ET C'EST DEUX CHOSES :
+   *  · LA CAUSE EST CORRIGÉE À LA SOURCE. Le défaut n'était pas dans le
+   *    routeur du navigateur — quatre passes l'y ont cherché en vain
+   *    (nº 656, nº 665, nº 669, nº 671). Il était côté SERVEUR : un
+   *    style né d'une suggestion était JETÉ quand la page se rendait
+   *    avant que son catalogue ne soit chargé (§1 nº 673,
+   *    `_accueil/rendu.tsx`, avec la mesure qui le prend sur le fait) ;
+   *  · SA RÉPARATION NE SE VOIT PLUS (voir `enRetardSurLAdresse`, plus
+   *    haut) : le contenu faux ne se peint pas, le trait rose du site
+   *    dit qu'on travaille, et la bonne page prend la place sans que
+   *    personne ait vu l'autre.
+   * ⚠️ IL RESTE DONC UN TÉMOIN AUTANT QU'UN FILET : sa ligne à la boîte
+   * noire est ce qui dira si un chemin oublié existe encore. Le jour où
+   * elle cesse de paraître, la cause est bien morte — c'est le rôle que
+   * la nº 656 lui avait donné, et il ne change pas.
    */
   const adresseReprise = useRef<string | null>(null);
   //  ⚠️ SANS LISTE DE DÉPENDANCES, ET C'EST VOULU : le défaut est
@@ -973,8 +1066,16 @@ export function IndexTatoueurs({
         surRecherche={(suivants) => chercher(suivants)}
       />
 
+      {/*  §1 (nº 673) — `invisible` TANT QUE LE SERVI NE S'ACCORDE PAS À
+           L'ADRESSE : le contenu faux ne se peint pas, la boîte reste
+           (donc la hauteur, donc la position — nº 653/661), et le trait
+           rose du site dit qu'on travaille. La largeur, les marges
+           partagées et la grille ne sont pas touchées : c'est une classe
+           sur `visibility`, que rien d'autre ne porte ici. */}
       <main
-        className={`flex-1 mx-auto w-full ${LARGEUR_SITE} px-4 sm:px-6 pb-16`}
+        className={`flex-1 mx-auto w-full ${LARGEUR_SITE} px-4 sm:px-6 pb-16${
+          enRetardSurLAdresse ? " invisible" : ""
+        }`}
       >
         {/* LE TITRE DIT LA RECHERCHE (nº 140) — la pilule de la barre
             dit toujours « Recherche », c'est donc ICI que les critères

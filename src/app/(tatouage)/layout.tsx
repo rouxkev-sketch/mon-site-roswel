@@ -171,12 +171,32 @@ export default async function MiseEnPageTatouage({
   // le TÉLÉPHONE a réellement envoyé. C'est la seule façon de le savoir
   // — un `fetch` depuis la page en enverrait un autre.
   const secFetchDest = "(page prérendue — en-tête non relevé au serveur)";
-  //  LE CATALOGUE DES STYLES, RELU AVANT LE RENDU (passe nº 122).
-  //  Les styles nés d'une suggestion acceptée vivent en base ; ils sont
-  //  posés ici, dans le registre du fichier de réglages, AVANT que la
-  //  moindre page du groupe ne se rende — et transmis au navigateur
-  //  juste en dessous, pour qu'il dise la même chose. Jamais bloquant :
-  //  base injoignable, on garde les trente-huit du code.
+  /*  LE CATALOGUE DES STYLES, RELU AU RENDU (passe nº 122). Les styles
+      nés d'une suggestion acceptée vivent en base ; ils sont posés ici,
+      dans le registre du fichier de réglages, et transmis au navigateur
+      juste en dessous, pour qu'il dise la même chose. Jamais bloquant :
+      base injoignable, on garde les quarante et un du code.
+      ██ §1 (nº 673) — CETTE NOTE DISAIT UNE CHOSE FAUSSE, ET ELLE A
+      COÛTÉ QUATRE PASSES ██
+      ------------------------------------------------------------------
+      ELLE AFFIRMAIT : « posés ici AVANT que la moindre page du groupe ne
+      se rende ». C'EST FAUX, et c'est la cause du défaut des styles.
+      Dans l'App Router, une MISE EN PAGE et sa PAGE se rendent EN
+      PARALLÈLE — c'est même le principe : les segments sont des frères
+      dans l'arbre, rendus concurremment pour qu'aucun n'attende l'autre.
+      Rien ne garantit que ce `await` finisse avant que la page n'aille
+      lire le registre.
+      CE QUE ÇA DONNAIT : une page de recherche rendue pendant cette
+      lecture voyait un registre VIDE, n'y trouvait pas « neo-japonais »
+      (un style né d'une suggestion), le JETAIT, et servait « Toutes les
+      réalisations ». Intermittent par nature — il fallait une instance
+      froide ou une base lente.
+      CE QUI CHANGE ICI : rien. Cette ligne reste, et elle sert toujours
+      à DEUX choses (remplir le registre pour le reste de la mise en
+      page, et transmettre la liste au navigateur). C'est LA PAGE qui
+      attend désormais son catalogue elle-même — voir le §1 de la
+      nº 673 dans `_accueil/rendu.tsx`. Les deux appels ne font qu'une
+      requête : la fonction déduplique et met en cache. */
   const stylesAjoutes = await chargerStylesAjoutes();
 
   return (

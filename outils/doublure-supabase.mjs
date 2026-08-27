@@ -59,7 +59,27 @@
  */
 import { createServer } from "http";
 
-const STYLES = ["trash-polka", "realisme", "blackwork"];
+/**
+ * ██ §1 (nº 673) — UN STYLE AJOUTÉ, ET SON RALENTISSEUR ██
+ * ------------------------------------------------------------------
+ * POURQUOI IL EST LÀ. Le défaut des styles a une cause côté serveur, et
+ * elle tient à la DIFFÉRENCE entre deux sortes de styles :
+ *  · les QUARANTE ET UN DU CODE (config/tatouage) sont connus toujours ;
+ *  · ceux NÉS D'UNE SUGGESTION vivent en base, dans `suggestions_style`,
+ *    et sont posés dans un registre au début du rendu.
+ * « neo-japonais » — le style du relevé du propriétaire — est du SECOND
+ * genre : il n'est pas dans le code. Sans cette table, la doublure ne
+ * pouvait pas reproduire son cas.
+ * ⚠️ `DELAI_STYLES` OUVRE LA FENÊTRE : en production, la lecture de cette
+ * table part vers une base distante ; ici elle répond en une
+ * milliseconde. Le délai rétablit la durée réelle — c'est pendant elle
+ * que la page se rend, et c'est tout le sujet de la passe.
+ */
+const STYLES_AJOUTES_DOUBLURE = [
+  { slug: "neo-japonais", label: "Néo-japonais", famille: null, etat: "acceptee" },
+];
+
+const STYLES = ["trash-polka", "realisme", "blackwork", "neo-japonais"];
 //  ASSEZ DE MONDE pour que la mosaïque de l'accueil déborde et que
 //  le lien « Voir plus » apparaisse : c'est LUI qui porte l'adresse
 //  « /recherche?nature=tatouage… » du relevé du propriétaire.
@@ -91,7 +111,13 @@ const PHOTOS = TATOUEURS.flatMap((t) =>
     ordre: n, cree_le: "2026-01-01T00:00:00Z",
   }))
 );
-const TABLES = { tatoueurs: TATOUEURS, photos_tatoueur: PHOTOS };
+const TABLES = {
+  tatoueurs: TATOUEURS,
+  photos_tatoueur: PHOTOS,
+  //  §1 (nº 673) — les styles nés d'une suggestion, lus par
+  //  `lib/styles-ajoutes` au début du rendu de chaque page.
+  suggestions_style: STYLES_AJOUTES_DOUBLURE,
+};
 
 function repondre(req, res, u, brut) {
   const table = u.pathname.replace(/^\/rest\/v1\//, "");
@@ -123,6 +149,14 @@ function repondre(req, res, u, brut) {
   const delai = Number(process.env.DELAI_RPC ?? 0);
   if (delai && table === "rpc/rechercher_tatoueurs") {
     setTimeout(() => envoyer(res, corps), delai);
+    return;
+  }
+  //  §1 (nº 673) — le ralentisseur du catalogue des styles ajoutés :
+  //  c'est pendant CETTE attente que la page se rend, et c'est là que
+  //  le style se perdait. Voir l'en-tête de ce fichier.
+  const delaiStyles = Number(process.env.DELAI_STYLES ?? 0);
+  if (delaiStyles && table === "suggestions_style") {
+    setTimeout(() => envoyer(res, corps), delaiStyles);
     return;
   }
   envoyer(res, corps);

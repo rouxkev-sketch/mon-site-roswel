@@ -12,6 +12,14 @@ import {
   natureCherchee,
   styleConnu,
 } from "@/lib/tatoueurs";
+//  §1 (nº 673) — le catalogue des styles nés d'une suggestion : la
+//  page l'ATTEND désormais elle-même, au lieu de compter sur la mise en
+//  page (qui se rend EN PARALLÈLE d'elle). Voir `chargerAccueil`.
+//  ⚠️ CE FICHIER EST SERVEUR, et il faut qu'il le reste : `styles-
+//  ajoutes` importe le client d'ADMINISTRATION de Supabase. Il n'est
+//  importé que par les deux page.tsx — vérifié —, jamais par un
+//  composant client (la faute évitée de justesse à la nº 663).
+import { chargerStylesAjoutes } from "@/lib/styles-ajoutes";
 import { IndexTatoueurs } from "@/components/IndexTatoueurs";
 //  §1 (nº 621) — la lecture de la nº 620 : une carte par style, pour
 //  l'accueil au repos et lui seul (voir plus bas).
@@ -99,6 +107,48 @@ function pageDemandee(params: ParametresAccueil): number {
  * même recherche donneraient deux lectures.
  */
 const chargerAccueil = cache(async (requete: string, taillePage: number) => {
+  /*  ██ §1 (nº 673) — LA PAGE ATTEND LE CATALOGUE DONT ELLE DÉPEND ██
+      ==================================================================
+      LA CAUSE DU DÉFAUT DES STYLES, PRISE SUR LE FAIT ET NOMMÉE. Quatre
+      passes l'ont cherchée dans le navigateur (nº 656, nº 665, nº 669,
+      nº 671) ; elle était ici, à trois lignes plus bas.
+      CE QUI SE PASSAIT. `styleConnu` (juste dessous) JETTE un style
+      qu'il ne trouve pas au catalogue — c'est voulu, une adresse
+      bricolée à la main ne doit pas vider la page. Or le catalogue a
+      DEUX moitiés : les quarante et un styles du CODE, connus toujours,
+      et ceux NÉS D'UNE SUGGESTION, qui vivent en base et sont posés
+      dans un REGISTRE DE MODULE (config/tatouage) par la mise en page
+      du groupe. « Néo-japonais » — celui du relevé du propriétaire —
+      est du second genre.
+      LA MISE EN PAGE ET LA PAGE SE RENDENT EN PARALLÈLE. C'est le
+      principe de l'App Router, et la note de `layout.tsx` disait le
+      contraire (« AVANT que la moindre page du groupe ne se rende ») :
+      elle est corrigée là-bas. Quand la lecture de la base est plus
+      lente que le rendu de la page — instance FROIDE, minute de cache
+      écoulée, base lointaine —, la page lit un registre encore VIDE,
+      « neo-japonais » n'y est pas, le style est JETÉ. Il ne reste que
+      `nature=tatouage` : « Toutes les réalisations », l'ancienne page
+      d'accueil. La demande était juste, la réponse est fausse.
+      MESURÉ AU BANC (doublure nº 670 étendue, lecture des styles
+      ralentie à 900 ms) :
+        serveur FROID · ?style=neo-japonais → « Toutes les réalisations »
+        serveur CHAUD · ?style=neo-japonais → « Néo-japonais »
+        serveur froid · ?style=realisme     → « Réalisme » (style du code)
+      LE REMÈDE : la page ATTEND ce dont elle dépend, au lieu d'espérer
+      qu'un autre l'ait rempli pour elle. Une ligne, ici, avant la
+      première lecture du catalogue.
+      ⚠️ ELLE NE COÛTE AUCUNE REQUÊTE DE PLUS : `chargerStylesAjoutes`
+      porte son cache d'une minute ET sa déduplication (`enCours`) — si
+      la mise en page a déjà lancé la lecture, celle-ci attend la MÊME
+      promesse ; si elle l'a déjà finie, le cache répond sans réseau.
+      ⚠️ ELLE N'EST JAMAIS BLOQUANTE : la fonction avale ses propres
+      échecs et rend le catalogue d'origine. Base injoignable, on sert
+      les quarante et un styles du code, exactement comme avant.
+      ⚠️ CE N'EST PAS LE SEUL FILET : la garde de la nº 631 répare
+      désormais SANS RIEN MONTRER (voir IndexTatoueurs, §1 nº 673). Si
+      un chemin oublié laissait encore passer une page fausse, personne
+      ne la verrait. */
+  await chargerStylesAjoutes();
   const params = Object.fromEntries(
     new URLSearchParams(requete)
   ) as ParametresAccueil;
