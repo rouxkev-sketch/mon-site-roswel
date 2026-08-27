@@ -55,6 +55,9 @@ import { ObservateurDeplacements } from "@/components/ObservateurDeplacements";
 //  §1 (nº 670) — le témoin des requêtes de page : il dit si le
 //  serveur a été interrogé, ou si la page vient d'une réserve.
 import { TemoinDesRequetes } from "@/components/TemoinDesRequetes";
+//  §1 (nº 679) — la sonde de vitesse : `?sonde-vitesse=1`. Éteinte,
+//  elle rend `null` ET n'arme pas son module — pas un écouteur.
+import { SondeVitesse } from "@/components/SondeVitesse";
 import { SondeBascule } from "@/components/SondeBascule";
 import { SondeCarrousel } from "@/components/SondeCarrousel";
 import { SondeCartes } from "@/components/SondeCartes";
@@ -368,6 +371,11 @@ export default async function MiseEnPageTatouage({
     <ObservateurDeplacements />
     <TemoinDesRequetes />
     <SondeBoiteNoire />
+    {/*  §1 (nº 679) — LA SONDE DE VITESSE, à côté de la boîte noire et
+         pour la même raison qu'elle est ici : elle doit couvrir TOUTES
+         les pages du groupe, donc vivre dans la mise en page. Éteinte,
+         elle rend `null` avant tout et n'arme rien. */}
+    <SondeVitesse />
     <div
       // Marqueur du fond sombre — il double la règle CSS de
       // `globals.css`. La vraie garantie est le script plus bas, qui
