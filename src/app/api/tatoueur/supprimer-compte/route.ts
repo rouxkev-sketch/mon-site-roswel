@@ -47,7 +47,7 @@ export async function POST() {
   await creerNotification({
     userId: user.id,
     genre: "suppression_compte",
-    detail: `Le compte et TOUTES ses fiches sont retirés du public. Effacement définitif dans ${DELAI_SUPPRESSION_JOURS} jours — une simple reconnexion annule tout.`,
+    detail: `Le compte et TOUS ses portfolios sont retirés du public. Effacement définitif dans ${DELAI_SUPPRESSION_JOURS} jours — une simple reconnexion annule tout.`,
   });
 
   return NextResponse.json({

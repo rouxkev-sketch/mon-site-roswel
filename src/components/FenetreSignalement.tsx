@@ -98,14 +98,14 @@ export function FenetreSignalement({
                    text-sombre-texte-doux hover:text-primaire transition-colors"
       >
         <IconeDrapeau taille={16} classe="shrink-0" />
-        Signaler cette fiche
+        Signaler ce portfolio
       </button>
 
       {ouverte && (
         <div
           role="dialog"
           aria-modal="true"
-          aria-label={`Signaler la fiche de ${nom}`}
+          aria-label={`Signaler le portfolio de ${nom}`}
           className="fixed inset-0 z-[80] flex items-center justify-center p-5"
         >
           <div
@@ -162,7 +162,7 @@ export function FenetreSignalement({
               <>
                 <div className="flex items-start justify-between gap-4">
                   <h2 className="text-lg font-bold text-sombre-texte">
-                    Signaler cette fiche
+                    Signaler ce portfolio
                   </h2>
                   <button
                     type="button"

@@ -416,7 +416,7 @@ export function EcranAuthentification({
           Seul le texte diffère selon le cas. */}
       <p className="mt-2 text-center text-[15px] text-sombre-texte-doux">
         {enRattachement
-          ? "Tes fiches te seront rattachées aussitôt."
+          ? "Tes portfolios te seront rattachés aussitôt."
           : creer
             ? "Commence ton expérience YokoFolio."
             : "Connecte-toi pour retrouver ton compte."}

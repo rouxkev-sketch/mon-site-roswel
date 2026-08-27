@@ -222,7 +222,7 @@ export default async function PageFicheTatoueur({
   //  (La question est posée par la clé de service et ne rend qu'un oui
   //  ou un non : rien de la fiche ne sort de là.)
   if (!tatoueur && (await ficheExistanteNonPubliee(slug))) {
-    return <PageMessageSombre titre="Cette fiche n'est pas encore en ligne." pleinEcran={false} />;
+    return <PageMessageSombre titre="Ce portfolio n'est pas encore en ligne." pleinEcran={false} />;
   }
   if (!tatoueur) notFound();
 

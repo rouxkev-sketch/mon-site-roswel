@@ -63,7 +63,7 @@ export async function POST(requete: NextRequest) {
   const ligne = fiche as { id: string; nom: string; user_id: string } | null;
   if (!ligne || ligne.user_id !== user.id) {
     return NextResponse.json(
-      { ok: false, message: "Cette fiche n'est pas la tienne." },
+      { ok: false, message: "Ce portfolio n'est pas le tien." },
       { status: 403 }
     );
   }
@@ -100,7 +100,7 @@ export async function POST(requete: NextRequest) {
     ficheNom: ligne.nom,
     genre: annuler ? "annulation" : "suppression_fiche",
     detail: annuler
-      ? "La suppression est annulée : la fiche est rétablie telle qu'elle était."
+      ? "La suppression est annulée : le portfolio est rétabli tel qu'il était."
       : `La fiche est retirée du public. Elle sera définitivement supprimée dans ${DELAI_SUPPRESSION_JOURS} jours — la réactiver avant l\u2019échéance remet tout en place.`,
   });
 

@@ -81,13 +81,13 @@ export async function POST(requete: NextRequest) {
   const corps = (await requete.json().catch(() => ({}))) as CorpsDemande;
   if (!corps.artisteId || !corps.salonId) {
     return NextResponse.json(
-      { ok: false, message: "Il manque une des deux fiches." },
+      { ok: false, message: "Il manque un des deux portfolios." },
       { status: 400 }
     );
   }
   if (corps.artisteId === corps.salonId) {
     return NextResponse.json(
-      { ok: false, message: "Une fiche ne se rattache pas à elle-même." },
+      { ok: false, message: "Un portfolio ne se rattache pas à lui-même." },
       { status: 400 }
     );
   }
@@ -235,7 +235,7 @@ export async function POST(requete: NextRequest) {
       {
         ok: false,
         message: refusDePolitique
-          ? "Cette fiche ne t'appartient pas : le rattachement n'a pas été enregistré."
+          ? "Ce portfolio ne t'appartient pas : le rattachement n'a pas été enregistré."
           : "Le rattachement n'a pas pu être enregistré. Réessaie dans un instant.",
       },
       { status: refusDePolitique ? 403 : 500 }

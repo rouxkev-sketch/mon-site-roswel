@@ -1778,7 +1778,7 @@ export const TEXTES_TATOUAGE = {
   paragrapheAccueil:
     "Choisis un style, une ville, un rayon : yokofolio affiche les tatoueurs " +
     "qui travaillent dans ce style près de chez toi, et une image de leur " +
-    "travail pour ce style précis. Chaque fiche renvoie vers le portfolio " +
+    "travail pour ce style précis. Chaque résultat renvoie vers le portfolio " +
     "du tatoueur, sur Instagram et TikTok.",
   /** Le libellé au-dessus des champs, à droite de l'icône rose. */
   titreRecherche: "Chercher un tatoueur",
@@ -1923,13 +1923,13 @@ export const MOTIFS_MODERATION = [
     slug: "instagram-ne-correspond-pas",
     label: "Le compte Instagram ne correspond pas",
     champ: "instagram",
-    explication: "Ce compte Instagram ne correspond pas à la fiche.",
+    explication: "Ce compte Instagram ne correspond pas au portfolio.",
   },
   {
     slug: "tiktok-ne-correspond-pas",
     label: "Le compte TikTok ne correspond pas",
     champ: "tiktok",
-    explication: "Ce compte TikTok ne correspond pas à la fiche.",
+    explication: "Ce compte TikTok ne correspond pas au portfolio.",
   },
   {
     slug: "styles-non-conformes",
@@ -1942,14 +1942,14 @@ export const MOTIFS_MODERATION = [
     slug: "site-web-non-conforme",
     label: "Le site web ne correspond pas",
     champ: "site",
-    explication: "Ce site web ne correspond pas à la fiche.",
+    explication: "Ce site web ne correspond pas au portfolio.",
   },
   {
     slug: "page-de-liens-non-conforme",
     label: "Le Linktree / Beacons ne correspond pas",
     champ: "pageDeLiens",
     explication:
-      "Cette page de liens ne correspond pas à la fiche, ou ne s'ouvre pas.",
+      "Cette page de liens ne correspond pas au portfolio, ou ne s'ouvre pas.",
   },
   //  ⚠️ « formulaire-non-conforme » A ÉTÉ RETIRÉ à la passe nº 102,
   //  avec le champ « Formulaire de demande » lui-même. Un motif de
@@ -1966,7 +1966,7 @@ export const MOTIFS_SIGNALEMENT = [
   { slug: "usurpation", label: "Usurpation d'identité" },
   { slug: "contenu-inapproprie", label: "Contenu inapproprié" },
   { slug: "compte-ne-correspond-pas", label: "Le compte ne correspond pas" },
-  { slug: "fiche-en-double", label: "Fiche en double" },
+  { slug: "fiche-en-double", label: "Portfolio en double" },
   { slug: "autre", label: "Autre (préciser)" },
 ] as const;
 

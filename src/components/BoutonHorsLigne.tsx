@@ -125,14 +125,14 @@ export function BoutonHorsLigne({
                    text-erreur/80 hover:text-erreur transition-colors"
       >
         <IconeHorsLigne taille={16} classe="shrink-0" />
-        Mettre la fiche hors ligne
+        Mettre le portfolio hors ligne
       </button>
 
       {ouverte && (
         <div
           role="dialog"
           aria-modal="true"
-          aria-label={`Mettre la fiche de ${nom} hors ligne`}
+          aria-label={`Mettre le portfolio de ${nom} hors ligne`}
           className="fixed inset-0 z-[80] flex items-center justify-center p-5"
         >
           <div
@@ -167,12 +167,12 @@ export function BoutonHorsLigne({
                   classe="mx-auto"
                 />
                 <h2 className="mt-4 text-lg font-bold text-sombre-texte">
-                  Fiche mise hors ligne
+                  Portfolio mis hors ligne
                 </h2>
                 <p className="mt-2 text-[14px] leading-relaxed text-sombre-texte-doux">
-                  Elle a disparu de la recherche et des pages publiques.
+                  Il a disparu de la recherche et des pages publiques.
                   {" "}{nom} garde son espace : les motifs cochés y guident
-                  la correction, et la fiche repartira en validation.
+                  la correction, et le portfolio repartira en validation.
                 </p>
                 <button
                   type="button"
@@ -193,7 +193,7 @@ export function BoutonHorsLigne({
               <>
                 <div className="flex items-start justify-between gap-4">
                   <h2 className="text-lg font-bold text-sombre-texte">
-                    Mettre la fiche hors ligne
+                    Mettre le portfolio hors ligne
                   </h2>
                   <button
                     type="button"

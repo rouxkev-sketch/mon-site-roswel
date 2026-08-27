@@ -34,7 +34,7 @@ export async function POST() {
       userId: user.id,
       genre: "annulation",
       detail:
-        "Te reconnecter a annulé la suppression du compte : tes fiches sont rétablies telles qu'elles étaient.",
+        "Te reconnecter a annulé la suppression du compte : tes portfolios sont rétablis tels qu'ils étaient.",
     });
   }
   return NextResponse.json({ ok: true, reactive });

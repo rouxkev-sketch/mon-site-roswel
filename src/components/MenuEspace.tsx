@@ -363,6 +363,11 @@ export function MenuEspace({
       pas de fond clair (il n'annonce plus un choix). Les deux
       reviennent ensemble au DEUXIÈME portfolio. */
   const plusieursFiches = fiches.length > 1;
+  /*  §2 (nº 667) — L'ENCADRÉ DU PORTFOLIO N'A QU'UNE LIGNE quand le
+      compte n'a pas encore de portfolio : ni déroulant (il en faudrait
+      deux), ni les deux entrées qui en dépendent. C'est ce cas-là, et
+      lui seul, qui fond la ligne et l'encadré en un seul bouton. */
+  const sansPortfolio = fiches.length === 0;
   const nonLues = notifications.filter((n) => !n.lue_le).length;
 
   /** L'adresse d'une entrée qui travaille sur LA fiche choisie : elle
@@ -815,6 +820,33 @@ export function MenuEspace({
       boite: `flex ${largeurBoite} shrink-0 justify-center`,
       taille,
       entree: `${geometrie} text-sombre-texte`,
+      /**
+       * ██ §2 (nº 667) — UNE LIGNE SEULE **EST** SON ENCADRÉ ██
+       * ----------------------------------------------------------
+       * LE DÉFAUT DU PROPRIÉTAIRE : quand l'encadré du portfolio ne
+       * contient QUE « Ajouter un portfolio », le survol dessinait une
+       * BOÎTE CLAIRE À L'INTÉRIEUR, autour du seul texte — un rectangle
+       * flottant dans un rectangle. Il veut ce que « English » a reçu à
+       * la nº 662 : c'est TOUT l'encadré qui s'éclaircit.
+       * COMMENT, ET SANS DÉPLACER UN PIXEL. La ligne absorbe les deux
+       * rembourrages qui l'entouraient : l'encadré posait `px-2 py-3`
+       * (8 et 12), la ligne `px-3 min-h-[46px]` (12 et 46). La somme
+       * est exacte — 8 + 12 = 20 de côté (`px-5`), 12 + 46 + 12 = 70 de
+       * haut (`min-h-[70px]`). L'icône reste donc à 20 px du bord et la
+       * hauteur totale à 70, comme avant.
+       * ⚠️ ELLE N'ÉCRIT NI FOND NI ARRONDI : l'appelant lui donne
+       * `CLASSE_ENCADRE` (le `rounded-xl bg-sombre-eleve` partagé) plus
+       * les deux variantes d'éclaircissement. Une seule classe par
+       * propriété (règle nº 389) — ce qui interdisait de garder le
+       * `hover:bg-white/5` de la géométrie ordinaire, et c'est
+       * précisément ce qu'on veut supprimer.
+       * ⚠️ DÈS QU'IL Y A PLUSIEURS LIGNES, RIEN NE CHANGE : le
+       * comportement par ligne (`entree`, juste au-dessus) reste celui
+       * de toujours. La consigne est explicite là-dessus.
+       */
+      entreeSeule:
+        "flex w-full items-center gap-3 px-5 min-h-[70px] text-left " +
+        `${ecriture} font-semibold text-sombre-texte transition-colors`,
     };
   };
   type ReglageLigne = ReturnType<typeof reglageDeLigne>;
@@ -1027,6 +1059,49 @@ export function MenuEspace({
       )}
     </div>
     ) : null;
+
+  /**
+   * ██ §2 (nº 667) — « AJOUTER UN PORTFOLIO », ÉCRIT UNE SEULE FOIS ██
+   * ------------------------------------------------------------------
+   * IL SE MONTE DE DEUX FAÇONS, et une seule chose les sépare : la
+   * CLASSE de son bouton.
+   *  · DANS UN ENCADRÉ PARTAGÉ (un compte qui a déjà un portfolio) :
+   *    `entree` — la ligne ordinaire, avec son éclaircissement à elle,
+   *    comme « Mon portfolio » ou « Sécurité » ;
+   *  · SEUL (un compte qui n'en a pas) : `entreeSeule` + l'encadré et
+   *    ses deux variantes d'éclaircissement. Le bouton EST alors
+   *    l'encadré, et c'est toute la boîte qui s'éclaircit — la consigne.
+   * ⚠️ LE DESSIN, LE GESTE ET LE MOT SONT LES MÊMES DANS LES DEUX CAS :
+   * s'ils étaient écrits deux fois, ils finiraient par diverger.
+   */
+  const boutonAjouterUnPortfolio = (reglage: ReglagesDuCompte, seul: boolean) => (
+    <button
+      type="button"
+      onClick={demanderUneNouvelleFiche}
+      //  §3 (nº 649) — le mot rejoint ses voisines : `entree`, la
+      //  même écriture que « Ma fiche » ou « Sécurité ».
+      className={
+        seul
+          ? `${reglage.ligne.entreeSeule} ${CLASSE_ENCADRE} ` +
+            "hover:bg-sombre-eleve-clair active:bg-sombre-eleve-clair"
+          : reglage.ligne.entree
+      }
+    >
+      {/*  §1 (nº 533) — L'ICÔNE EST CELLE DE « MON PORTFOLIO »,
+           OUVERTE EN HAUT À DROITE, avec un petit « + » dans
+           l'ouverture (voir IconeAjouterPortfolio). Le lecteur
+           reconnaît l'objet avant de lire le mot.
+           §1 (nº 658) — ELLE N'ÉCRIT TOUJOURS AUCUNE COULEUR, elle
+           HÉRITE — et ce qu'elle hérite est désormais le blanc à
+           80 % de ses cinq voisines, posé par la même boîte
+           qu'elles (`boite`). Le rose de la nº 532/649 s'en va, et
+           `boiteAction` avec lui : il n'existait que pour lui. */}
+      <span className={`${reglage.ligne.boite} text-sombre-texte/80`}>
+        <IconeAjouterPortfolio taille={reglage.ligne.taille} />
+      </span>
+      <span className="flex-1">Ajouter un portfolio</span>
+    </button>
+  );
 
   /** LES DEUX ENTRÉES DU PORTFOLIO CHOISI — « Mon portfolio » d'abord
       (acquis nº 472-§3a), puis « Modification ». */
@@ -1629,7 +1704,20 @@ export function MenuEspace({
          * (8 px) — c'est elle qui, ajoutée aux 12 px que chaque ligne
          * porte déjà, pose les icônes à 20 px du bord.
          */}
-      <div className={`flex flex-col px-2 py-3 ${CLASSE_ENCADRE}`}>
+      {/*  ██ §2 (nº 667) — L'ENCADRÉ D'UNE SEULE LIGNE ██
+           Un compte SANS portfolio ne voit qu'« Ajouter un portfolio »
+           dans cet encadré : ni déroulant (il faut deux portfolios), ni
+           les deux entrées qui en dépendent. Ce cas-là — et lui seul —
+           fond la ligne et l'encadré en UN SEUL bouton, pour que le
+           survol éclaircisse toute la boîte au lieu d'y dessiner un
+           rectangle. Voir `entreeSeule` pour l'arithmétique des marges.
+           ⚠️ LE TEST EST CELUI QUI DÉCIDE DÉJÀ DU RESTE : `fiches.length`
+           gouverne les deux blocs du dessous. Pas une seconde
+           condition à tenir d'accord. */}
+      {sansPortfolio ? (
+        boutonAjouterUnPortfolio(reglages, true)
+      ) : (
+        <div className={`flex flex-col px-2 py-3 ${CLASSE_ENCADRE}`}>
         {/*  ██ §2 (nº 532) — « AJOUTER UN PORTFOLIO », EN TÊTE ██
              Il quitte la rangée de tuiles pour la PREMIÈRE LIGNE de
              cet encadré, au-dessus du déroulant. Son geste ne change
@@ -1641,28 +1729,11 @@ export function MenuEspace({
              propriétaire annule la décision de la nº 650 et veut le
              dessin en blanc, comme le mot. Cette ligne n'a donc plus
              AUCUNE couleur à elle : elle est, au caractère près,
-             « Ma fiche » ou « Sécurité » avec un autre glyphe. */}
-        <button
-          type="button"
-          onClick={demanderUneNouvelleFiche}
-          //  §3 (nº 649) — le mot rejoint ses voisines : `entree`, la
-          //  même écriture que « Ma fiche » ou « Sécurité ».
-          className={reglages.ligne.entree}
-        >
-          {/*  §1 (nº 533) — L'ICÔNE EST CELLE DE « MON PORTFOLIO »,
-               OUVERTE EN HAUT À DROITE, avec un petit « + » dans
-               l'ouverture (voir IconeAjouterPortfolio). Le lecteur
-               reconnaît l'objet avant de lire le mot.
-               §1 (nº 658) — ELLE N'ÉCRIT TOUJOURS AUCUNE COULEUR, elle
-               HÉRITE — et ce qu'elle hérite est désormais le blanc à
-               80 % de ses cinq voisines, posé par la même boîte
-               qu'elles (`boite`). Le rose de la nº 532/649 s'en va, et
-               `boiteAction` avec lui : il n'existait que pour lui. */}
-          <span className={`${reglages.ligne.boite} text-sombre-texte/80`}>
-            <IconeAjouterPortfolio taille={reglages.ligne.taille} />
-          </span>
-          <span className="flex-1">Ajouter un portfolio</span>
-        </button>
+             « Ma fiche » ou « Sécurité » avec un autre glyphe.
+             §2 (nº 667) — LE BOUTON EST ÉCRIT UNE SEULE FOIS, plus haut
+             (`boutonAjouterUnPortfolio`) : les deux branches montent le
+             MÊME, à une classe près. */}
+        {boutonAjouterUnPortfolio(reglages, false)}
         {/**
          * ██ §4 (nº 531) — LE DÉROULANT SE CALE SUR LES ICÔNES ██
          * ----------------------------------------------------------
@@ -1702,7 +1773,8 @@ export function MenuEspace({
           </div>
         )}
         {fiches.length > 0 && entreesDuPortfolio(reglages.ligne)}
-      </div>
+        </div>
+      )}
 
       {/*  ---------- L'ENCADRÉ DU COMPTE ----------
            §1 (nº 534) — « DÉCONNEXION » Y REVIENT : le §4 de la nº 533,
@@ -1766,7 +1838,7 @@ export function MenuEspace({
       celle des nº 537, nº 557 et nº 589 : deux variantes qui s'excluent,
       AUCUNE classe de base — la règle nº 389. */
   const TAILLE_AVATAR = "mobile:h-7 mobile:w-7 not-mobile:h-8 not-mobile:w-8";
-  const avatarDeLaBarre = photoDuCompte ? (
+  const dessinDeLAvatar = photoDuCompte ? (
     <PhotoRonde
       source={photoDuCompte}
       nature="personne"
@@ -1788,6 +1860,48 @@ export function MenuEspace({
       />
     </span>
   );
+
+  /**
+   * ██ §1 (nº 667) — LE POINT ROSE DES NOUVELLES NON LUES ██
+   * ------------------------------------------------------------------
+   * CE QU'IL RÉSOUT. Le compteur des non-lues vivait UNIQUEMENT sur la
+   * cloche, à l'intérieur de « Mon compte » : il fallait ouvrir le menu
+   * pour apprendre qu'on avait quelque chose à lire, et un compte neuf
+   * n'avait aucune raison de l'ouvrir. Le point se voit SANS RIEN
+   * OUVRIR — c'est le seul signe du site posé hors d'une surface.
+   * IL NE COMPTE PAS, ET C'EST VOULU (consigne du propriétaire) : le
+   * CHIFFRE reste sur la cloche, là où on peut agir. Ici on dit
+   * seulement « il y a quelque chose », et un chiffre de 8 px sur un
+   * avatar de 28 serait illisible de toute façon.
+   * ⚠️ IL EST JUSTE DÈS L'ARRIVÉE grâce au §1 de la nº 664 : les
+   * nouvelles sont semées au montage, une fois par session. Sans cette
+   * lecture-là, ce point serait resté éteint jusqu'à la première
+   * ouverture du menu — c'est-à-dire inutile.
+   * ⚠️ IL S'ÉTEINT TOUT SEUL : `nonLues` se recalcule de `notifications`,
+   * que la fenêtre remet à jour quand on lit une nouvelle ou qu'on les
+   * marque toutes (voir `onToutLu`, plus bas).
+   * ⚠️ IL NE DÉBORDE PAS DE LA BARRE, et c'est arithmétique : l'avatar
+   * (28 au doigt, 32 au web) est centré dans une cible de 40 — il reste
+   * 6 px de vide au doigt, 4 au web. Le point sort de 2 px du bord de
+   * l'avatar : il lui reste 4 px de marge au doigt, 2 au web. La zone
+   * du compte n'occupe donc pas un pixel de plus, et rien ne glisse.
+   * ⚠️ AUCUNE COULEUR NOUVELLE : `bg-primaire`, le rose de la charte
+   * (#FF2E6C depuis la nº 466) — celui que le propriétaire nomme.
+   */
+  const avatarDeLaBarre =
+    nonLues > 0 ? (
+      <span className="relative flex shrink-0">
+        {dessinDeLAvatar}
+        <span
+          aria-label={`${nonLues} nouvelle${nonLues > 1 ? "s" : ""} non lue${
+            nonLues > 1 ? "s" : ""
+          }`}
+          className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-primaire"
+        />
+      </span>
+    ) : (
+      dessinDeLAvatar
+    );
 
   return (
     /*  ██ §2 (nº 465) — LE GLYPHE DU COMPTE SE CALE SUR LA MARGE ██

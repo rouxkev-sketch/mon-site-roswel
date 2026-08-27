@@ -349,7 +349,7 @@ export function AdminDemarchage() {
       ) : aEnvoyer.length === 0 && groupes.length === 0 ? (
         <p className="mt-6 rounded-2xl bg-sombre-carte px-4 py-6 text-center
                       text-[14px] leading-relaxed text-sombre-texte-doux">
-          Aucune fiche créée depuis un compte administrateur.
+          Aucun portfolio créé depuis un compte administrateur.
         </p>
       ) : (
         <div className="mt-6 flex flex-col gap-5">

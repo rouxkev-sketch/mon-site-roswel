@@ -591,7 +591,7 @@ function CarteTatoueurNue({
         */}
       <Link
         href={adresseFiche}
-        aria-label={`Voir la fiche de ${tatoueur.nom}`}
+        aria-label={`Voir le portfolio de ${tatoueur.nom}`}
         data-lien-carte=""
         onClick={auClic}
         //  nº 361 — PAS DE SAUT DU ROUTEUR : sa remise à zéro part AVANT

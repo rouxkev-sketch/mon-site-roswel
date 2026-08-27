@@ -1156,7 +1156,7 @@ export function ContenuFiche({
     <p
       className={`${classes} rounded-xl border border-primaire/40 bg-primaire/10 px-4 py-3 text-sm text-sombre-texte`}
     >
-      Fiche de DÉMONSTRATION : ce tatoueur n&apos;existe pas, et
+      Portfolio de DÉMONSTRATION : ce tatoueur n&apos;existe pas, et
       l&apos;image est un aplat de couleur — aucune photo de tatouage
       n&apos;est publiée sans l&apos;accord de son auteur.
     </p>
@@ -2151,6 +2151,9 @@ export function ContenuFiche({
             }
             commune={villeAffichee(tatoueur.ville_nom)}
             marque={MARQUE_YOKOFOLIO.nom}
+            //  §5 (nº 667) — chez yokofolio on partage un PORTFOLIO ; le
+            //  bouton sert aussi les artisans, qui gardent « fiche ».
+            objet="portfolio"
           />
           <BoutonSuivre
             tatoueurId={tatoueur.id}

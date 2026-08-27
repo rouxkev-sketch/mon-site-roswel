@@ -493,7 +493,7 @@ export function FenetreFiche({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={`Fiche de ${tatoueur.nom}`}
+      aria-label={`Portfolio de ${tatoueur.nom}`}
       className="fixed inset-0 z-[60]
                  opacity-100 transition-opacity duration-200 starting:opacity-0"
     >
@@ -526,7 +526,7 @@ export function FenetreFiche({
       {/* LA CROIX — hors de la fenêtre, dans la zone ombrée. */}
       <button
         type="button"
-        aria-label="Fermer la fiche"
+        aria-label="Fermer le portfolio"
         onClick={surFermeture}
         className="absolute top-4 right-5 z-[2] w-11 h-11 flex items-center
                    justify-center text-white hover:text-primaire transition-colors"

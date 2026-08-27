@@ -42,7 +42,7 @@ export async function POST(requete: NextRequest) {
   const { id } = (await requete.json().catch(() => ({}))) as { id?: string };
   if (!id) {
     return NextResponse.json(
-      { ok: false, message: "Quelle fiche ?" },
+      { ok: false, message: "Quel portfolio ?" },
       { status: 400 }
     );
   }
@@ -70,7 +70,7 @@ export async function POST(requete: NextRequest) {
     if (error) throw new Error(error.message);
     if (!data) {
       return NextResponse.json(
-        { ok: false, message: "Cette fiche n'existe plus." },
+        { ok: false, message: "Ce portfolio n'existe plus." },
         { status: 404 }
       );
     }
@@ -83,7 +83,7 @@ export async function POST(requete: NextRequest) {
         ficheNom: proprietaire.nom,
         genre: "modifications",
         detail:
-          "Le premier bloc de ta fiche (artiste ou studio, et tes lieux " +
+          "Le premier bloc de ton portfolio (artiste ou studio, et tes lieux " +
           "d'exercice) a été rouvert par l'équipe : tu peux le corriger, " +
           "puis le confirmer de nouveau.",
       });

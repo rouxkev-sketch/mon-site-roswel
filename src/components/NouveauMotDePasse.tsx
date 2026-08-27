@@ -120,8 +120,8 @@ export function NouveauMotDePasse() {
           role="status"
           className="mt-8 rounded-xl border border-primaire/40 bg-primaire/10 px-4 py-3 text-sm text-sombre-texte"
         >
-          C&apos;est enregistré : ton mot de passe est changé. Direction ta
-          fiche…
+          C&apos;est enregistré : ton mot de passe est changé. Direction ton
+          portfolio…
         </p>
       ) : (
         <form onSubmit={enregistrer} noValidate className="mt-8 flex flex-col gap-4">

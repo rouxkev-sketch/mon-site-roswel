@@ -109,16 +109,16 @@ export const TITRE_NOTIFICATION: Record<GenreNotification, string> = {
   //  base pour les nouvelles lignes ; l'affichage, lui, dérive du
   //  GENRE (voir FenetreNotifications) pour que les anciennes lignes
   //  parlent aussi la nouvelle langue.
-  validee: "Fiche en ligne",
+  validee: "Portfolio en ligne",
   modifications: "Modifications demandées",
-  hors_ligne: "Fiche hors ligne",
+  hors_ligne: "Portfolio hors ligne",
   suppression_fiche: "Suppression de portfolio programmée",
   suppression_compte: "Suppression du compte programmée",
   annulation: "Suppression annulée",
   style_ajoute: "Style accepté",
   style_refuse: "Style refusé",
   demande_style: "Demande de style",
-  en_validation: "Fiche en cours de validation",
+  en_validation: "Portfolio en cours de validation",
   /*  §1 (nº 663) — LE MOT DU PROPRIÉTAIRE, à la graphie de la marque
       près : « YokoFolio », Y et F majuscules (la règle nº 104, sa
       décision). Il vient de la config, jamais recopié — le jour où la

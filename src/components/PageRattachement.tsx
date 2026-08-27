@@ -163,12 +163,12 @@ export function PageRattachement({
             classe="mx-auto"
           />
           <h1 className="mt-4 text-[clamp(1.4rem,4vw,1.8rem)] font-bold text-sombre-texte">
-            {plusieurs ? "Tes fiches sont retirées" : "Ta fiche est retirée"}
+            {plusieurs ? "Tes portfolios sont retirés" : "Ton portfolio est retiré"}
           </h1>
           <p className="mt-3 text-[14.5px] leading-relaxed text-sombre-texte-doux">
             {plusieurs
-              ? `Elles ne sont plus visibles du site. Elles seront définitivement supprimées dans ${DELAI_SUPPRESSION_JOURS} jours.`
-              : `Elle n'est plus visible du site. Elle sera définitivement supprimée dans ${DELAI_SUPPRESSION_JOURS} jours.`}
+              ? `Ils ne sont plus visibles du site. Ils seront définitivement supprimés dans ${DELAI_SUPPRESSION_JOURS} jours.`
+              : `Il n'est plus visible du site. Il sera définitivement supprimé dans ${DELAI_SUPPRESSION_JOURS} jours.`}
           </p>
           <button
             type="button"
@@ -182,8 +182,8 @@ export function PageRattachement({
             {enCours
               ? "Un instant…"
               : plusieurs
-                ? "Remettre mes fiches en ligne"
-                : "Remettre ma fiche en ligne"}
+                ? "Remettre mes portfolios en ligne"
+                : "Remettre mon portfolio en ligne"}
           </button>
           {erreur && (
             <p
@@ -396,14 +396,14 @@ function BlocSuppression({
                    text-[13.5px] font-semibold text-erreur/85 hover:text-erreur
                    transition-colors"
       >
-        {plusieurs ? "Supprimer mes fiches" : "Supprimer ma fiche"}
+        {plusieurs ? "Supprimer mes portfolios" : "Supprimer mon portfolio"}
       </button>
 
       {ouverte && (
         <div
           role="dialog"
           aria-modal="true"
-          aria-label={plusieurs ? "Supprimer mes fiches" : "Supprimer ma fiche"}
+          aria-label={plusieurs ? "Supprimer mes portfolios" : "Supprimer mon portfolio"}
           className="fixed inset-0 z-[80] flex items-center justify-center p-5"
         >
           <div
@@ -420,15 +420,15 @@ function BlocSuppression({
             className="relative w-full max-w-[440px] rounded-xl bg-sombre-carte p-6 sm:p-7 text-left"
           >
             <h2 className="text-lg font-bold text-sombre-texte">
-              {plusieurs ? "Supprimer mes fiches ?" : "Supprimer ma fiche ?"}
+              {plusieurs ? "Supprimer mes portfolios ?" : "Supprimer mon portfolio ?"}
             </h2>
             {/* LE MESSAGE EXACT — trois phrases, et pas une de plus :
                 ce qui se passe, l'échéance, la porte de retour. */}
             <p className="mt-2 text-[14px] leading-relaxed text-sombre-texte-doux">
-              {plusieurs ? "Tes fiches seront retirées" : "Ta fiche sera retirée"}{" "}
-              du site. {plusieurs ? "Elles seront" : "Elle sera"} définitivement
-              supprimée{plusieurs ? "s" : ""} dans {DELAI_SUPPRESSION_JOURS} jours.
-              Tu peux {plusieurs ? "les" : "la"} réactiver depuis ce lien avant ce
+              {plusieurs ? "Tes portfolios seront retirés" : "Ton portfolio sera retiré"}{" "}
+              du site. {plusieurs ? "Ils seront" : "Il sera"} définitivement
+              supprimé{plusieurs ? "s" : ""} dans {DELAI_SUPPRESSION_JOURS} jours.
+              Tu peux {plusieurs ? "les" : "le"} réactiver depuis ce lien avant ce
               délai.
             </p>
             <p className="mt-2 text-[14px] leading-relaxed text-sombre-texte-doux">

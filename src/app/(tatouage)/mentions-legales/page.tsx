@@ -182,7 +182,7 @@ export default function PageMentionsLegales() {
               existe, puis suppression.
             </p>
             <p>
-              Un TATOUEUR qui crée sa fiche fournit un nom, une ville, une
+              Un TATOUEUR qui crée son portfolio fournit un nom, une ville, une
               adresse e-mail, ses styles, ses images et ses liens vers ses
               réseaux. Ces informations servent uniquement à afficher sa fiche
               et à le contacter au sujet de celle-ci. Elles ne sont ni vendues,
@@ -190,8 +190,8 @@ export default function PageMentionsLegales() {
             </p>
             <p>
               Base légale : l&apos;exécution du service demandé (article 6.1.b
-              du RGPD) pour les informations de la fiche. Conservation : tant
-              que la fiche existe, puis suppression.
+              du RGPD) pour les informations du portfolio. Conservation : tant
+              que le portfolio existe, puis suppression.
             </p>
             {/*  §3-f (nº 322) — LA RELECTURE DES PHOTOS. Elle existe
                  (une fiche modifiée repasse en validation), et c'est un

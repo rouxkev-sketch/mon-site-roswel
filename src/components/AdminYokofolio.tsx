@@ -87,7 +87,7 @@ type Signalement = {
 };
 
 const SECTIONS = [
-  { cle: "fiches", libelle: "Fiches à valider" },
+  { cle: "fiches", libelle: "Portfolios à valider" },
   { cle: "signalements", libelle: "Signalements" },
   //  LES STYLES PROPOSÉS PAR LES TATOUEURS (passe nº 122). Accepter
   //  en ajoute un au catalogue du site ; refuser clôt la demande. Dans
@@ -445,7 +445,7 @@ export function AdminYokofolio() {
       const donnees = (await reponse.json()) as { ok: boolean; message?: string };
       if (!donnees.ok) throw new Error(donnees.message);
       setErreurFiches(
-        "Le premier bloc de cette fiche est rouvert : le tatoueur peut le corriger, puis le confirmer de nouveau."
+        "Le premier bloc de ce portfolio est rouvert : le tatoueur peut le corriger, puis le confirmer de nouveau."
       );
     } catch (e) {
       setErreurFiches(
@@ -577,7 +577,7 @@ export function AdminYokofolio() {
         {section === "fiches" && !ficheOuverte && (
           <>
             <h1 className="text-[22px] font-bold text-sombre-texte">
-              Fiches à valider
+              Portfolios à valider
             </h1>
             {erreurFiches && (
               <p className={`mt-4 ${ERREUR}`}>{erreurFiches}</p>
@@ -590,7 +590,7 @@ export function AdminYokofolio() {
               )}
               {fiches?.length === 0 && !erreurFiches && (
                 <p className="rounded-xl bg-sombre-carte px-4 py-5 text-sombre-texte-doux">
-                  Aucune fiche en attente — tout est à jour.
+                  Aucun portfolio en attente — tout est à jour.
                 </p>
               )}
               {fiches?.map((fiche) => (
@@ -624,12 +624,12 @@ export function AdminYokofolio() {
                          d'un interrupteur dans le démarchage. */}
                     {fiche.fiche_admin && (
                       <span className="rounded-full bg-sombre-eleve px-2.5 min-h-[24px] inline-flex items-center text-[12px] font-medium text-sombre-texte-doux">
-                        Fiche d&apos;administrateur
+                        Portfolio d&apos;administrateur
                       </span>
                     )}
                     {fiche.modification && (
                       <span className="rounded-full bg-primaire-voile px-2.5 min-h-[24px] inline-flex items-center text-[12px] font-medium text-sombre-texte">
-                        Modification d&apos;une fiche en ligne
+                        Modification d&apos;un portfolio en ligne
                       </span>
                     )}
                     <span className="text-[13px] font-semibold text-primaire">
@@ -672,7 +672,7 @@ export function AdminYokofolio() {
                 <p className="text-[13px] font-semibold text-sombre-texte">
                   Modification d&apos;une fiche déjà en ligne
                   {ficheOuverte.fiche_admin
-                    ? " (fiche d'administrateur)"
+                    ? " (portfolio d'administrateur)"
                     : ""}
                 </p>
                 {ficheOuverte.champs_modifies?.length ? (
@@ -785,7 +785,7 @@ export function AdminYokofolio() {
               >
                 {ficheOuverte.modification
                   ? "Valider — publier la modification"
-                  : "Valider — publier la fiche"}
+                  : "Valider — publier le portfolio"}
               </button>
               <button
                 type="button"
@@ -838,7 +838,7 @@ export function AdminYokofolio() {
                            text-[14.5px] font-semibold text-sombre-texte-doux
                            hover:text-erreur transition-colors"
               >
-                Mettre la fiche hors ligne
+                Mettre le portfolio hors ligne
               </button>
             </div>
 
@@ -850,7 +850,7 @@ export function AdminYokofolio() {
               <div className="mt-4 max-w-[560px] rounded-xl bg-sombre-carte p-5">
                 <p className="text-[14px] font-semibold text-sombre-texte">
                   {refusOuvert === "hors_ligne"
-                    ? "Pourquoi cette fiche quitte-t-elle le site ?"
+                    ? "Pourquoi ce portfolio quitte-t-il le site ?"
                     : "Pourquoi ?"}
                 </p>
                 <div className="mt-3 flex flex-col gap-1">
@@ -897,7 +897,7 @@ export function AdminYokofolio() {
                   {envoiDecision
                     ? "Envoi…"
                     : refusOuvert === "hors_ligne"
-                      ? "Retirer la fiche du site"
+                      ? "Retirer le portfolio du site"
                       : "Envoyer la demande"}
                 </button>
               </div>
@@ -1111,7 +1111,7 @@ export function AdminYokofolio() {
                                      underline underline-offset-2
                                      transition-colors hover:text-primaire"
                         >
-                          Voir sa fiche ↗
+                          Voir son portfolio ↗
                         </Link>
                       </p>
                     )}

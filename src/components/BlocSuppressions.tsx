@@ -273,7 +273,7 @@ export function BlocSuppressions() {
             photos comprises.
           </p>
           <p className="mt-2 text-[14px] leading-relaxed text-sombre-texte-doux">
-            Tu changes d&apos;avis&nbsp;? Annule ici, ou sur la fiche de ton
+            Tu changes d&apos;avis&nbsp;? Annule ici, ou depuis ton
             portfolio&nbsp;: la suppression s&apos;arrête d&apos;elle-même.
           </p>
           <p className="mt-2 text-[14px] leading-relaxed text-sombre-texte-doux">

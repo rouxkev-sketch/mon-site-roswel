@@ -172,7 +172,7 @@ export default async function PageFicheTatoueur({
   if (!tatoueur && (await ficheExistanteNonPubliee(slug))) {
     return (
       <>
-        <PageMessageSombre titre="Cette fiche n'est pas encore en ligne." pleinEcran={false} />
+        <PageMessageSombre titre="Ce portfolio n'est pas encore en ligne." pleinEcran={false} />
         {/* nº 359 — LE PONT DU PROPRIÉTAIRE : cette page préparée
             d'avance ne connaît pas la session ; si un compte est
             connecté sur ce navigateur, le pont l'emmène au jumeau

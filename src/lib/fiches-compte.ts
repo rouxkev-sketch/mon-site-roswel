@@ -93,7 +93,7 @@ export async function chargerFichesDuCompte(
   if (reponse.error || !Array.isArray(reponse.data)) return [];
   return (reponse.data as Array<Record<string, unknown>>).map((ligne) => ({
     id: String(ligne.id),
-    nom: String(ligne.nom ?? "Fiche sans nom"),
+    nom: String(ligne.nom ?? "Portfolio sans nom"),
     slug: (ligne.slug as string | null) ?? null,
     publie: Boolean(ligne.publie),
     statut: (ligne.statut as string | null) ?? null,

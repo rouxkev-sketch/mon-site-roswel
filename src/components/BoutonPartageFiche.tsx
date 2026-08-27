@@ -105,6 +105,7 @@ export function BoutonPartageFiche({
   metier,
   commune,
   marque = MARQUE.nom,
+  objet = "fiche",
   sombre = false,
   contour = false,
   tailleIcone = 22,
@@ -149,6 +150,20 @@ export function BoutonPartageFiche({
       des artisans ; yokofolio passe le sien — un site ne partage pas
       une fiche « sur » un produit qui n'est pas le sien. */
   marque?: string;
+  /**
+   * §5 (nº 667) — LE NOM DE LA CHOSE QU'ON PARTAGE, par produit.
+   * Ce bouton sert LES DEUX produits : chez les artisans on partage une
+   * FICHE, chez yokofolio un PORTFOLIO. Le propriétaire chasse le mot
+   * « fiche » des textes de yokofolio, et les artisans ne bougent pas —
+   * il fallait donc un paramètre, pas un remplacement.
+   * ⚠️ LE DÉFAUT EST « fiche » : les appelants artisans ne passent rien
+   * et ne changent pas d'un caractère. Seuls les deux appelants
+   * yokofolio (FicheTatoueur, ContenuFiche) passent « portfolio ».
+   * ⚠️ IL NE SERT QU'AUX LIBELLÉS LUS PAR QUELQU'UN (les `aria-label`
+   * et le titre de la fenêtre) : le message partagé, lui, ne nomme pas
+   * la chose — il cite le nom et le lien.
+   */
+  objet?: string;
   /** Habillage SOMBRE (yokofolio) : disque anthracite translucide qui
       tient aussi posé sur une photo — même famille que les boutons de
       la barre. Les fiches artisans ne passent jamais cette option. */
@@ -253,11 +268,16 @@ export function BoutonPartageFiche({
     }, 900);
   }
 
-  /** E-mail : objet et corps pré-remplis */
+  /** E-mail : sujet et corps pré-remplis.
+      §5 (nº 667) — LA VARIABLE S'APPELAIT `objet`, comme le paramètre
+      neuf de cette passe : deux `objet` dans le même fichier, l'un
+      masquant l'autre à l'intérieur de cette fonction. Elle prend le
+      nom que le protocole lui donne (`subject`) — aucun comportement
+      ne change, et plus personne ne peut confondre. */
   function ouvrirEmail() {
-    const objet = `${nomArtisan} sur ${marque}`;
+    const sujet = `${nomArtisan} sur ${marque}`;
     window.location.assign(
-      `mailto:?subject=${encodeURIComponent(objet)}&body=${encodeURIComponent(messagePartage())}`
+      `mailto:?subject=${encodeURIComponent(sujet)}&body=${encodeURIComponent(messagePartage())}`
     );
   }
 
@@ -391,7 +411,7 @@ export function BoutonPartageFiche({
 
   const fenetreSombre = fenetreSombreActive ? (
     <FenetreDeVerre
-      ariaLabel="Partager cette fiche"
+      ariaLabel={`Partager ce ${objet}`}
       surFermeture={fermerFenetre}
       largeur="max-w-[440px]"
       //  §1 (nº 544) — FOND OPAQUE au jeton `carte` : le drapeau de la
@@ -481,7 +501,7 @@ export function BoutonPartageFiche({
       <>
         <EnteteModale
           idTitre="titre-partage"
-          titre="Partager cette fiche"
+          titre={`Partager ce ${objet}`}
           surFermeture={fermerFenetre}
         />
 
@@ -529,7 +549,7 @@ export function BoutonPartageFiche({
           type="button"
           onClick={partager}
           aria-haspopup={avecFenetre ? "dialog" : undefined}
-          aria-label={`Partager la fiche de ${nomArtisan}`}
+          aria-label={`Partager le ${objet} de ${nomArtisan}`}
           //  §1-2 (nº 458) — l'icône nue sur le fond de la page : la
           //  cible tactile de 40 px (le gabarit du fanion des cartes),
           //  le trait au blanc du site, un bref enfoncement — aucun
@@ -561,7 +581,7 @@ export function BoutonPartageFiche({
           type="button"
           onClick={partager}
           aria-haspopup={avecFenetre ? "dialog" : undefined}
-          aria-label={`Partager la fiche de ${nomArtisan}`}
+          aria-label={`Partager le ${objet} de ${nomArtisan}`}
           className={`w-12 h-12 rounded-xl bg-fond flex items-center justify-center text-encre-douce hover:bg-fond-doux active:scale-95 transition ${
             sansContour ? "" : "border"
           }`}
@@ -598,7 +618,7 @@ export function BoutonPartageFiche({
         type="button"
         onClick={partager}
         aria-haspopup={avecFenetre ? "dialog" : undefined}
-        aria-label={`Partager la fiche de ${nomArtisan}`}
+        aria-label={`Partager le ${objet} de ${nomArtisan}`}
         className={
           contour
             ? "w-10 h-10 rounded-full border border-white bg-sombre-fond flex items-center justify-center text-white hover:border-primaire hover:text-primaire transition-colors"

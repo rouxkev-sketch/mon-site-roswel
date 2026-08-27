@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState, type RefObject } from "react";
-import { DELAI_SUPPRESSION_JOURS } from "@/config/tatouage";
+import { DELAI_SUPPRESSION_JOURS, MARQUE_YOKOFOLIO } from "@/config/tatouage";
 import {
   IconeCloche,
   IconeCocheListe,
-  IconeCoeur,
   IconeCorbeille,
   IconeCroix,
   IconeDoubleCoche,
@@ -21,6 +20,9 @@ import {
   PastilleEvenement,
   type TonEvenement,
 } from "@/components/PastilleEvenement";
+//  §4 (nº 667) — le cœur de la marque, plié au contrat d'icône de la
+//  famille : c'est le FICHIER du propriétaire, affiché tel quel.
+import { IconeMarqueYokofolio } from "@/components/LogoYokofolio";
 //  §2 (nº 655) — la fenêtre du web rejoint la barre : le menu ancré,
 //  sa largeur et l'encadré des fenêtres de la barre, tous trois là où
 //  vit `MenuDeVerre`. `createPortal` part avec la plaque écrite à la
@@ -124,33 +126,33 @@ const CATALOGUE: Record<
   en_validation: {
     symbole: IconeHorloge,
     ton: "attente",
-    titre: "Fiche en cours de validation",
-    sousTitre: "Ta fiche est en cours de vérification.",
+    titre: "Portfolio en cours de validation",
+    sousTitre: "Ton portfolio est en cours de vérification.",
   },
   validee: {
     symbole: IconeCocheListe,
     ton: "valide",
-    titre: "Fiche en ligne",
-    sousTitre: "Ta fiche est maintenant visible sur YokoFolio.",
+    titre: "Portfolio en ligne",
+    sousTitre: "Ton portfolio est maintenant visible sur YokoFolio.",
   },
   hors_ligne: {
     symbole: IconeHorsLigne,
     ton: "probleme",
-    titre: "Fiche hors ligne",
+    titre: "Portfolio hors ligne",
     sousTitre:
-      "Ta fiche est hors ligne. Modifie-la pour pouvoir la remettre en ligne.",
+      "Ton portfolio est hors ligne. Modifie-le pour pouvoir le remettre en ligne.",
   },
   modifications: {
     symbole: IconeDrapeau,
     ton: "probleme",
     titre: "Modifications demandées",
-    sousTitre: "Modifie ta fiche pour la renvoyer en validation.",
+    sousTitre: "Modifie ton portfolio pour le renvoyer en validation.",
   },
   suppression_fiche: {
     symbole: IconeCorbeille,
     ton: "probleme",
     titre: "Suppression de portfolio programmée",
-    sousTitre: `Ta fiche est masquée. Elle sera définitivement supprimée dans ${DELAI_SUPPRESSION_JOURS} jours.`,
+    sousTitre: `Ton portfolio est masqué. Il sera définitivement supprimé dans ${DELAI_SUPPRESSION_JOURS} jours.`,
   },
   suppression_compte: {
     symbole: IconeCorbeille,
@@ -200,19 +202,35 @@ const CATALOGUE: Record<
       ligne », ROUGE « il manque quelque chose », ROSE « une décision est
       attendue ». Un accueil n'est aucun des trois : il n'appelle AUCUN
       GESTE, ce qui est la définition même de l'information.
-      LE SYMBOLE EST LE CŒUR de la famille existante, celui des favoris
-      — le seul qui accueille plutôt qu'il n'annonce. La nº 664 l'a
-      revu avec les autres et le CONFIRME : c'est aussi le seul de la
-      famille que le sous-titre nomme (« tes favoris te suivront
-      partout »). */
+      ██ §4 (nº 667) — LE SYMBOLE EST L'ICÔNE DE LA MARQUE ██
+      Le cœur générique de la famille (nº 663) laisse la place au CŒUR DE
+      YOKOFOLIO, le fichier du propriétaire — `public/yokofolio-icone.png`,
+      affiché tel quel par `LogoYokofolio` (aucune retouche, aucune
+      variante : la règle d'AGENTS.md). C'est la seule notification qui
+      parle au nom du site lui-même ; elle porte donc sa marque.
+      ⚠️ ELLE N'HÉRITE PAS DE LA COULEUR, et c'est la limite d'un PNG :
+      les neuf autres symboles sont des tracés qui prennent le ton de
+      leur pastille (`currentColor`) ; celui-ci porte son rose de marque,
+      #E51859, quoi qu'il arrive. Mesuré sur la pastille « info »
+      (`sombre-haut`, #3E4650) : 2,10:1 — sous les 3:1 d'un signe. Le
+      compte rendu de la nº 667 le dit et propose ; le ton reste « info »
+      tant que le propriétaire n'a pas tranché.
+
+      ██ §3 (nº 667) — LE TEXTE EN DEUX LIGNES ██
+      Les deux phrases du propriétaire, au mot près, séparées par un
+      VRAI saut de ligne. Il tient dans la chaîne (`\n`) et non dans du
+      JSX : ce catalogue est fait de chaînes, et une seule d'entre elles
+      deviendrait un arbre. C'est `whitespace-pre-line` qui le rend
+      visible, la classe que ce fichier emploie déjà pour le message de
+      l'administration — aucune classe nouvelle, aucun octet de plus. */
   bienvenue: {
-    symbole: IconeCoeur,
+    symbole: IconeMarqueYokofolio,
     ton: "info",
-    titre: "Bienvenue sur YokoFolio !",
+    titre: `Bienvenue sur ${MARQUE_YOKOFOLIO.nom} !`,
     sousTitre:
       "Explore les styles et suis les tatoueurs qui t'inspirent — tes " +
-      "favoris te suivront partout. Tatoueur ? Ton portfolio t'attend : " +
-      "« Ajouter un portfolio ».",
+      "favoris te suivront partout.\n" +
+      "Tatoueur ? Ajoute ton portfolio et fais découvrir ton travail.",
   },
 };
 
@@ -517,7 +535,15 @@ export function FenetreNotifications({
                       </span>
                       {/* LE SOUS-TITRE — la phrase du catalogue, une
                           seule, jamais reformulée. */}
-                      <span className="mt-1 block text-[13.5px] leading-relaxed text-sombre-texte-doux">
+                      {/*  §3 (nº 667) — `whitespace-pre-line` : le seul
+                           sous-titre qui porte un saut de ligne est celui
+                           de la bienvenue, et sans cette classe le
+                           navigateur l'avalerait comme une espace. Elle
+                           ne change RIEN aux dix autres — ils n'ont pas
+                           de `\n` —, et c'est la classe que le message de
+                           l'administration emploie déjà six lignes plus
+                           bas : aucune classe nouvelle. */}
+                      <span className="mt-1 block whitespace-pre-line text-[13.5px] leading-relaxed text-sombre-texte-doux">
                         {sousTitreDe(nouvelle)}
                       </span>
                       {/* LE MESSAGE DE L'ADMINISTRATION — séparé du

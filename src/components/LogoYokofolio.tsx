@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { MARQUE_YOKOFOLIO } from "@/config/tatouage";
+import type { ProprietesIcone } from "@/components/Icones";
 
 /**
  * LE LOGO DE YOKOFOLIO
@@ -92,6 +93,45 @@ export function LogoYokofolio({
         objectFit: "contain",
         objectPosition: "left center",
       }}
+    />
+  );
+}
+
+/**
+ * ██ §4 (nº 667) — LE CŒUR DE LA MARQUE, EN SYMBOLE DE PASTILLE ██
+ * ==================================================================
+ * POURQUOI CE PETIT ENROBAGE EXISTE. La famille des pastilles
+ * d'événement (nº 664) attend un COMPOSANT D'ICÔNE : quelque chose qui
+ * sait se dessiner à la taille et à l'épaisseur qu'on lui donne. Les
+ * neuf symboles de la famille sont des tracés ; celui-ci est le FICHIER
+ * du propriétaire. Il se plie donc au même contrat, et rien de plus.
+ *
+ * ⚠️ L'IMAGE N'EST NI RETOUCHÉE, NI RECADRÉE, NI RÉGÉNÉRÉE (règle
+ * d'AGENTS.md) : c'est `LogoYokofolio` qui l'affiche, avec ses vraies
+ * dimensions déclarées (297 × 337 — elle n'est pas carrée). Seule sa
+ * HAUTEUR d'affichage change, et la largeur suit toute seule.
+ *
+ * ⚠️ IL IGNORE `trait`, ET C'EST NORMAL : un PNG n'a pas d'épaisseur de
+ * trait. Il ignore aussi la couleur de la pastille — les tracés
+ * héritent de `currentColor`, une image non. Le cœur garde son rose de
+ * marque (#E51859) sur tous les fonds. C'est la limite du procédé, elle
+ * est mesurée dans le compte rendu de la nº 667.
+ *
+ * ⚠️ `classe || undefined` ET NON `classe` : `LogoYokofolio` traite une
+ * classe fournie comme « l'appelant se charge de la taille » et retire
+ * alors la hauteur de son style. Une chaîne VIDE — le défaut du contrat
+ * d'icône — n'est pas nulle : elle passerait ce test et l'image
+ * s'afficherait sans hauteur.
+ */
+export function IconeMarqueYokofolio({
+  taille = 24,
+  classe = "",
+}: ProprietesIcone) {
+  return (
+    <LogoYokofolio
+      variante="icone"
+      hauteur={taille}
+      classe={classe || undefined}
     />
   );
 }

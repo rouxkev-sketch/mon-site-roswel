@@ -1356,6 +1356,7 @@ export function FicheTatoueur({
                     metier={stylePrincipal?.label}
                     commune={villeAffichee(tatoueur.ville_nom)}
                     marque={MARQUE_YOKOFOLIO.nom}
+                    objet="portfolio"
                   />
                 )}
                 {!apercu && photoAffichee && (

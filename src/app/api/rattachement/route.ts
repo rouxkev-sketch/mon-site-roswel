@@ -76,7 +76,7 @@ export async function POST(requete: NextRequest) {
         return NextResponse.json(
           {
             ok: false,
-            message: "Crée ton compte d'abord : c'est lui qui recevra les fiches.",
+            message: "Crée ton compte d'abord : c'est lui qui recevra les portfolios.",
           },
           { status: 401 }
         );
@@ -90,7 +90,7 @@ export async function POST(requete: NextRequest) {
         return NextResponse.json(
           {
             ok: false,
-            message: "Ces fiches ont déjà été récupérées par un autre compte.",
+            message: "Ces portfolios ont déjà été récupérés par un autre compte.",
           },
           { status: 409 }
         );
