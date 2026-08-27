@@ -1544,8 +1544,44 @@ export async function listerTatoueurs(
   //  supabase/yokofolio-recherche-sans-masquage.sql), et l'appel
   //  n'envoie plus rien : il n'y a plus de machine à réveiller.
 
-  // LE SCORE de popularité par fiche — il sert aux deux chemins.
-  const scores = await lirePopularite();
+  /**
+   * ██ §1 (nº 682) — LE SCORE PART AVEC LA RECHERCHE, PLUS AVANT ELLE ██
+   * ------------------------------------------------------------------
+   * CE QUI EST MESURÉ, ET C'EST LA SEULE RAISON DE CE CHANGEMENT. Le
+   * temps serveur de « /recherche » suit une droite : on l'a relevé à
+   * trois latences de base simulées (banc nº 681, doublure nº 670) —
+   *      latence   0 ms →   38 ms
+   *      latence 120 ms →  518 ms
+   *      latence 240 ms → 1000 ms
+   * La pente vaut 4,01 : QUATRE ALLERS-RETOURS EN SÉRIE, et seulement
+   * 38 ms de calcul. Le classement n'y est pour rien — le coût est
+   * dans l'ATTENTE, quatre fois de suite.
+   *
+   * LES QUATRE, DANS L'ORDRE : le catalogue des styles ajoutés
+   * (`chargerStylesAjoutes`, nº 673), CE SCORE-CI, la recherche en
+   * base, puis le lot des galeries. Or le score NE SERT À PERSONNE
+   * avant `pageDeResultats`, tout en bas : il lit une vue, la recherche
+   * ne lui demande rien, et rien de ce qu'elle renvoie ne le change.
+   * Il attendait pour rien.
+   *
+   * ON LE LANCE DONC SANS L'ATTENDRE, et on l'attend là où il sert. Les
+   * quatre allers-retours deviennent TROIS — le score et la recherche
+   * partent ensemble. C'est la leçon de la nº 678, appliquée cette fois
+   * du côté du serveur.
+   *
+   * ⚠️ LE CLASSEMENT NE BOUGE PAS D'UNE LIGNE, et ce n'est pas une
+   * espérance : `pageDeResultats` reçoit EXACTEMENT la même carte de
+   * scores, calculée par la même fonction, sur les mêmes données. Seul
+   * l'INSTANT du départ change, pas la valeur. Vérifié au banc en
+   * comparant l'ordre des résultats avant et après.
+   *
+   * ⚠️ ET ELLE NE PEUT PAS PARTIR EN FUMÉE : `lirePopularite` avale ses
+   * propres échecs et rend une carte vide (voir sa note). Une promesse
+   * lancée sans `await` immédiat n'a donc aucun rejet à laisser
+   * échapper — la condition sans laquelle ce genre de départ anticipé
+   * devient un piège.
+   */
+  const promesseScores = lirePopularite();
 
   /**
    * LE CHEMIN COURT — le FILTRE et la DISTANCE se font en base.
@@ -1569,15 +1605,18 @@ export async function listerTatoueurs(
     ville
   );
   if (enBase) {
-    return pageDeResultats(enBase.tatoueurs, filtres, scores, {
+    //  ⚠️ C'EST ICI QUE LE SCORE EST ATTENDU, et nulle part plus tôt
+    //  (§1 nº 682) : il est parti en même temps que la recherche, il
+    //  est donc déjà là — l'attente ne coûte rien.
+    return pageDeResultats(enBase.tatoueurs, filtres, await promesseScores, {
       demonstration: false,
       message: null,
       ville,
     });
   }
 
-  //  Le score est lu plus haut (`scores`) : il sert aux deux chemins.
-  const clics = scores;
+  //  Le score est lancé plus haut (§1 nº 682) : il sert aux deux chemins.
+  const clics = await promesseScores;
 
   try {
     const supabase = creerClientSupabaseAnonyme();
