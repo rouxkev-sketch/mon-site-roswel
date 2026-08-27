@@ -78,5 +78,26 @@ export const ADRESSE_RECHERCHE = "/recherche";
  * ⚠️ LA GARDE « PAGE EN RETARD » DE LA nº 631 RESTE EN PLACE, et elle
  * change de rôle : elle ne répare plus, elle TÉMOIGNE. Si elle cesse
  * de se déclencher, la cause est bien supprimée.
+ *
+ * ██ §2 (nº 665) — LE DIAGNOSTIC CI-DESSUS EST À MOITIÉ FAUX ██
+ * ------------------------------------------------------------------
+ * JE LE CORRIGE ICI PLUTÔT QUE DE LE LAISSER SERVIR DE RÉFÉRENCE. Le
+ * §1 affirme que le segment rangé « se range SOUS LE CHEMIN, pas sous
+ * les critères », et que deux liens vers le même chemin partagent une
+ * seule case. C'ÉTAIT VRAI DES VERSIONS PRÉCÉDENTES DE NEXT ; ça ne
+ * l'est plus de celle qu'emploie le site. Vérifié dans le moteur
+ * (client/components/segment-cache/vary-path.js) : « Unlike layouts, a
+ * page segment's vary path also includes the search string » — la clé
+ * de rangement d'un segment de PAGE contient la chaîne de requête.
+ * CE QUI RESTE VRAI DU §1, ET QUI JUSTIFIE LA RÈGLE : préparer à
+ * l'avance une page de résultats n'a de toute façon aucun sens — les
+ * critères sont innombrables, chaque préparation est une requête pour
+ * une page que personne ne demandera. La règle ne change pas ; c'est sa
+ * RAISON qui se corrige.
+ * OÙ EST LA SUITE : la nº 665 pose le second verrou, celui qui interdit
+ * de RELIRE la réserve après coup — `unstable_dynamicStaleTime = 0`,
+ * écrit sur la page elle-même (app/(tatouage)/recherche/page.tsx), avec
+ * le relevé du banc qui dit ce que ce verrou change et ce qu'il ne
+ * change pas.
  */
 export const PREPARER_LA_RECHERCHE_A_LAVANCE = false;

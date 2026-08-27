@@ -41,6 +41,57 @@ import {
  */
 export const dynamic = "force-dynamic";
 
+/**
+ * ██ §1 (nº 665) — CETTE PAGE N'EST JAMAIS GARDÉE EN RÉSERVE ██
+ * ==================================================================
+ * CE QUE C'EST. `unstable_dynamicStaleTime` est le réglage que Next 16
+ * prévoit POUR UNE PAGE — pas pour tout le site — et il dit une seule
+ * chose : COMBIEN DE SECONDES le routeur du navigateur a le droit de
+ * garder les données de cette page pour les resservir sans redemander.
+ * Zéro seconde : chaque navigation vers « /recherche » repart au
+ * serveur avec les critères exacts de l'adresse cliquée.
+ * (Le type l'exige entier et positif ou nul — build/segment-config.)
+ *
+ * ⚠️ CE N'EST PAS UNE RÉPARATION, C'EST UN VERROU, et je le dis plutôt
+ * que de le laisser croire. MESURÉ au banc sur la compilation de la
+ * nº 664, AVANT cette ligne : quatre navigations d'affilée vers
+ * « /recherche » avec des critères différents — dont deux vers des
+ * critères DÉJÀ VISITÉS — sont TOUTES reparties au serveur, la page
+ * servie s'accordait à l'adresse à chaque fois, et la garde « PAGE EN
+ * RETARD » ne s'est pas déclenchée une seule fois. La raison est dans
+ * le moteur : sans réglage, Next fixe la conservation des pages
+ * dynamiques à ZÉRO (`__NEXT_CLIENT_ROUTER_DYNAMIC_STALETIME`, valeur
+ * par défaut 0 — build/define-env.js), et la clé de rangement d'un
+ * segment de PAGE inclut la chaîne de requête (« a page segment's vary
+ * path also includes the search string » — segment-cache/vary-path.js).
+ * CE QUE LA LIGNE APPORTE, ET C'EST RÉEL : ce zéro-là est un DÉFAUT
+ * GLOBAL, pas une garantie. Le jour où quelqu'un règle
+ * `experimental.staleTimes.dynamic` dans next.config — le geste
+ * d'optimisation le plus banal qui soit —, TOUTES les pages dynamiques
+ * du site se mettent à se resservir de mémoire, et la recherche
+ * redevient fausse sans que personne n'ait touché à la recherche.
+ * Écrite ici, la règle voyage avec la page qu'elle protège.
+ *
+ * ⚠️ LES RETOURS NE SONT PAS CONCERNÉS, et ce n'est pas une opinion :
+ * une navigation arrière ou avant lit la réserve EN IGNORANT la durée
+ * de conservation. Le moteur passe `-1` au lieu de l'heure courante
+ * pour court-circuiter le contrôle de fraîcheur, et l'écrit en toutes
+ * lettres : « A back/forward navigation will disregard the stale time »
+ * (client/components/segment-cache/bfcache.js). La position restituée
+ * (nº 653, nº 661) ne voit donc rien passer.
+ *
+ * ⚠️ AUCUNE AUTRE PAGE N'EST RALENTIE : ce réglage est PAR PAGE (« Pages
+ * only — not allowed in layouts »). L'accueil, les fiches, les pages
+ * style + ville gardent leur réserve entière.
+ *
+ * ⚠️ IL VA AVEC `PREPARER_LA_RECHERCHE_A_LAVANCE = false` (nº 656), et
+ * les deux ne font pas le même travail : celui-là interdit de remplir
+ * la case À L'AVANCE, celui-ci interdit de la RELIRE APRÈS COUP. Il
+ * fallait les deux pour que la phrase « la recherche ne se sert jamais
+ * d'une copie » soit vraie de bout en bout.
+ */
+export const unstable_dynamicStaleTime = 0;
+
 /** La taille de page au cookie des colonnes (nº 226-§1) — la lecture
     qui vivait dans l'accueil quand il était dynamique. */
 async function taillePageDeLaRequete(): Promise<number> {
