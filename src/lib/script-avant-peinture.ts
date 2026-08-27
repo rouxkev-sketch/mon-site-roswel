@@ -394,11 +394,21 @@ setTimeout(function(){r.style.visibility=""},3000);
 location.replace(vers);
 return}
 
-/* 4. LA POSITION, RÉSERVE COMPRISE. */
+/* 4. LA POSITION, RÉSERVE COMPRISE.
+   ██ §1 (nº 660) — ET CHAQUE PAS S'ÉCRIT DANS LA BOÎTE NOIRE ██
+   Ce bloc-ci pose une position AVANT LA PREMIÈRE PEINTURE, donc avant
+   que le moindre composant ne soit monté : s'il agit, aucun journal de
+   React ne peut le voir. Il ne disait rien ; il dit désormais ce qu'il
+   lit et ce qu'il fait — la demande nommée, la clé canonique, la note
+   trouvée, et la pose. AUCUNE DÉCISION NE CHANGE : les appels « bn »
+   sont posés à côté des tests, sur les mêmes chemins.
+   ⚠️ PAS UN SEUL ACCENT GRAVE DANS CE TEXTE : nous sommes DANS un
+   littéral de gabarit, et un accent grave le fermerait net. */
 var demande=null;try{demande=sessionStorage.getItem(${restaurer})}catch(e){}
 var attendue=demande&&(demande==="1"||demande===adresse);
 if(attendue){try{sessionStorage.removeItem(${restaurer})}catch(e){}}
-if(nav==="navigate"&&!attendue)return;
+bn("SCRIPT · position · demande nommée « "+(demande||"aucune")+" » · attendue : "+(attendue?"OUI":"non")+" · navigation « "+nav+" »");
+if(nav==="navigate"&&!attendue){bn("SCRIPT · position · NE RESTITUE RIEN (navigation neuve sans demande)");return}
 /* ⚠️ LA CLÉ EST L'ADRESSE CANONIQUE DE LA RECHERCHE (nº 184-§2) :
    critères compris, réglages de sonde exclus, paramètres triés.
    §1 (nº 335) — LA CONDITION CI-DESSOUS EST FABRIQUÉE PAR
@@ -411,8 +421,10 @@ if(${conditionDeReglagePourLeScript('n')})p.delete(n)}
 p.sort();var q=p.toString();
 var cle=location.pathname+(q?"?"+q:"");
 var note=jour(${prefixe}+cle,localStorage);
-if(!note||!note.y||maintenant-(note.date||0)>agePosition)return;
+bn("SCRIPT · position · clé « "+cle+" » · note "+(note?("y="+note.y+", âge "+(maintenant-(note.date||0))+" ms"):"AUCUNE"));
+if(!note||!note.y||maintenant-(note.date||0)>agePosition){bn("SCRIPT · position · RIEN À POSER (note absente, nulle ou périmée)");return}
 r.dataset.positionPosee=String(note.y);
+bn("SCRIPT · position · POSE "+note.y+" avant la première peinture");
 /* §1 (nº 335) — LA RANGÉE NAÎT DANS L'ÉTAT OÙ ON L'A LAISSÉE. La
    place gardée porte les deux (lib/navigation-session) ; la barre
    lit cette marque à sa naissance (lib/reserve-barre). Sans elle,

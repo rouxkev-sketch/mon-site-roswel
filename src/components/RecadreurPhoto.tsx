@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+//  §1 (nº 660) — la trace permanente : ce défilement se signe.
+import { noterNavigation } from "@/lib/boite-noire";
 
 /**
  * LE RECADREUR DE PHOTO — le cadre des fiches, en direct
@@ -224,6 +226,10 @@ export function RecadreurPhoto({
       corps.left = "";
       corps.right = "";
       corps.width = "";
+      noterNavigation(
+        `SCROLLTO · RecadreurPhoto (fermeture) · vers ${positionPage} · ` +
+          `page à ${Math.round(window.scrollY)} avant`
+      );
       window.scrollTo({ top: positionPage, left: 0, behavior: "instant" });
     };
     //  Volontairement SANS dépendance : voir le commentaire ci-dessus.

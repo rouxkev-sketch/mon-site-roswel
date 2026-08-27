@@ -27,6 +27,14 @@ import {
 } from "@/lib/restitution-position";
 //  §2-§3 (nº 426) — le refus de réveil s'écrit au journal de la sonde.
 import { noter } from "@/lib/journal-bascule";
+/*  §1 (nº 660) — LA DÉCISION DE RESTITUTION S'ÉCRIT DANS LA TRACE
+    PERMANENTE. Ce composant décidait en silence : les trois signaux
+    qu'il lit (traversée, document restitué, demande explicite) et la
+    branche qu'il prend ne laissaient AUCUNE ligne. C'était le trou du
+    relevé du propriétaire — la remontée se voyait, la redescente non.
+    ⚠️ AUCUNE DÉCISION NE CHANGE : les lignes sont posées À CÔTÉ des
+    tests, jamais dedans, et rien n'est consommé pour les écrire. */
+import { noterNavigation } from "@/lib/boite-noire";
 import {
   lireRequeteCourante,
   lireRequeteServeur,
@@ -230,14 +238,23 @@ export function MemoireNavigation() {
         //  §2 (nº 426) — le réveil n'est légitime que COLLÉ au
         //  replaceState du routeur (nº 333-§2 : mesuré à ~20 ms).
         if (Date.now() - attente.quand < 400) {
+          //  §1 (nº 660) — le réveil ACCEPTÉ se dit lui aussi : c'est
+          //  lui qui rend la main à la restitution, une fois l'effet
+          //  déjà sorti. Sans cette ligne, la place revenait de nulle
+          //  part dans la trace.
+          noterNavigation(
+            `RÉVEIL ACCEPTÉ · popstate sur ${attente.url} · l'attente date ` +
+              `de ${Date.now() - attente.quand} ms · l'effet est rejoué`
+          );
           attenteDeTraversee.current = null;
           setReveils((n) => n + 1);
         } else {
-          noter(
+          const refus =
             `RÉVEIL REFUSÉ · popstate sur ${attente.url} · l'attente date ` +
-              `de ${Date.now() - attente.quand} ms (fermeture de surface ` +
-              `probable, pas la traversée du routeur)`
-          );
+            `de ${Date.now() - attente.quand} ms (fermeture de surface ` +
+            `probable, pas la traversée du routeur)`;
+          noter(refus);
+          noterNavigation(refus);
         }
       }
     };
@@ -553,7 +570,17 @@ export function MemoireNavigation() {
         pourquoi. Les vrais retours ne déclarent jamais rien : aucune
         restitution légitime (423, 426, 431, fermeture 438) ne passe
         par cette branche. */
+    /*  §1 (nº 660) — L'ÉTAT DES SIGNAUX, ÉCRIT AVANT LA DÉCISION. Les
+        quatre valeurs sont DÉJÀ calculées au-dessus (aucune lecture de
+        plus, aucune consommation) ; on ne fait que les dire. */
     const sortieConfirmee = arriveeEnHautVoulue();
+    noterNavigation(
+      `MÉMOIRE · ${url} · traversée ${vraieTraversee ? "OUI" : "non"} · ` +
+        `document restitué ${documentRestitue ? "OUI" : "non"} · ` +
+        `demande explicite ${restaurationDemandee ? "OUI" : "non"} · ` +
+        `arrivée en haut voulue ${sortieConfirmee ? "OUI" : "non"} · ` +
+        `page à ${Math.round(window.scrollY)}`
+    );
     consommerArriveeEnHaut();
     if (sortieConfirmee) {
       attenteDeTraversee.current = null;
@@ -569,6 +596,10 @@ export function MemoireNavigation() {
       //  §2 (nº 333) — ON SORT SANS AVOIR SERVI : on le NOTE. Si le
       //  `popstate` de cette même adresse arrive juste après (le
       //  routeur remet l'adresse avant lui, mesuré), il nous rappellera.
+      //  §1 (nº 660) — cette attente EST un poseur en puissance : elle
+      //  peut réveiller l'effet jusqu'à 400 ms plus tard et rendre une
+      //  place. Elle se dit donc, elle aussi.
+      noterNavigation(`MÉMOIRE · rien à servir · attente posée sur ${url}`);
       attenteDeTraversee.current = { url, quand: Date.now() };
       return;
     }

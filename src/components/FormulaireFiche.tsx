@@ -103,6 +103,8 @@ import {
   ficheActive,
   memoriserFiche,
 } from "@/lib/fiches-compte";
+//  §1 (nº 660) — la trace permanente : ce défilement se signe.
+import { noterNavigation } from "@/lib/boite-noire";
 
 /**
  * L'ESPACE TATOUEUR — le formulaire de fiche, et son menu
@@ -1144,6 +1146,9 @@ export function FormulaireFiche() {
       créer une de plus. Sans rien, on reprend la dernière retenue. */
   const ficheDemandee = parametres.get("fiche");
   useEffect(() => {
+    noterNavigation(
+      `SCROLLTO · FormulaireFiche · vers 0 · page à ${Math.round(window.scrollY)} avant`
+    );
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, [vueApercuDemandee]);
 
@@ -1269,7 +1274,10 @@ export function FormulaireFiche() {
       if (vueApercuDemandee) return;
       // ON REMONTE, ET C'EST TOUT. Rouvrir l'annonce ici était l'une
       // des trois portes par lesquelles elle revenait sans cesse.
-      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      noterNavigation(
+      `SCROLLTO · FormulaireFiche · vers 0 · page à ${Math.round(window.scrollY)} avant`
+    );
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     }
     window.addEventListener("yokofolio-modification-demandee", surDemande);
     return () =>
@@ -1733,6 +1741,10 @@ export function FormulaireFiche() {
     const poser = () => {
       const element = document.getElementById(premiere[1]);
       if (!element) return;
+      noterNavigation(
+        `SCROLLINTOVIEW · FormulaireFiche (champ en faute) · ` +
+          `page à ${Math.round(window.scrollY)} avant`
+      );
       element.scrollIntoView({ behavior: "smooth", block: "center" });
     };
     requestAnimationFrame(() => requestAnimationFrame(poser));

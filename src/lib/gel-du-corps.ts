@@ -4,6 +4,8 @@
 //  reposant (poserLaPosition → defilerSansGeste).
 import { desarmerLaGardeDePosition } from "@/lib/defilement-programme";
 import { poserLaPosition } from "@/lib/restitution-position";
+//  §1 (nº 660) — la trace permanente : ce déplacement se signe.
+import { noterNavigation } from "@/lib/boite-noire";
 
 /**
  * LE GEL DU CORPS — L'ÉCRITURE UNIQUE (extraite nº 259-§3)
@@ -123,6 +125,11 @@ export function gelerLeCorps(
     //  lui-même, la garde n'a plus rien à y défendre.
     desarmerLaGardeDePosition();
     positionRetenue = position;
+    //  §1 (nº 660) — LE GEL DÉPLACE LA PAGE, même s'il ne défile pas :
+    //  le corps passe en `position: fixed; top: -Ypx`, et `scrollY`
+    //  tombe à zéro. Sans cette ligne, la trace montrait une page à 0
+    //  sans que rien ne l'y ait mise.
+    noterNavigation(`GEL · le corps est figé · position retenue ${Math.round(position)}`);
     cheminDuGel = cheminAttendu ?? null;
     corps.position = "fixed";
     corps.top = `-${position}px`;
@@ -190,6 +197,9 @@ export function gelerLeCorps(
         appartient à la page qu'on a figée.
         ⚠️ UNE POSITION NULLE NE DÉCLENCHE RIEN, et c'est juste : le gel
         avait mis la page à zéro, elle y est encore. */
+    //  §1 (nº 660) — et le DÉGEL rend cette position : la pose qui suit
+    //  s'écrit dans `poserLaPosition`, celle-ci dit d'où elle vient.
+    noterNavigation(`DÉGEL · le corps est rendu · position à reposer ${positionRetenue}`);
     poserLaPosition(positionRetenue, undefined, "dégel d\u2019une surface");
   };
 }

@@ -50,6 +50,8 @@ import { SondeRetour } from "@/components/SondeRetour";
 //  et sa lecture après coup.
 import { BoiteNoireNavigation } from "@/components/BoiteNoireNavigation";
 import { SondeBoiteNoire } from "@/components/SondeBoiteNoire";
+//  §2 (nº 660) — le témoin des déplacements constatés de la page.
+import { ObservateurDeplacements } from "@/components/ObservateurDeplacements";
 import { SondeBascule } from "@/components/SondeBascule";
 import { SondeCarrousel } from "@/components/SondeCarrousel";
 import { SondeCartes } from "@/components/SondeCartes";
@@ -324,8 +326,15 @@ export default async function MiseEnPageTatouage({
         Pour les retirer : ces deux lignes, leurs imports, les fichiers
         src/components/BoiteNoireNavigation.tsx et
         src/components/SondeBoiteNoire.tsx, le module
-        src/lib/boite-noire.ts, et les appels à `noterNavigation`. */}
+        src/lib/boite-noire.ts, et les appels à `noterNavigation`.
+        §2 (nº 660) — ET LE TÉMOIN DES DÉPLACEMENTS, troisième ligne :
+        il ne demande rien à personne, il REGARDE la page bouger dans
+        les trois secondes qui suivent un changement d'adresse. Il
+        n'affiche rien et ne déplace rien ; pour le retirer, cette
+        ligne, son import et
+        src/components/ObservateurDeplacements.tsx. */}
     <BoiteNoireNavigation />
+    <ObservateurDeplacements />
     <SondeBoiteNoire />
     <div
       // Marqueur du fond sombre — il double la règle CSS de

@@ -30,4 +30,4 @@
  * ⚠️ À INCRÉMENTER À CHAQUE PASSE qui modifie le script d'avant
  * peinture. C'est ici, et nulle part ailleurs, que le numéro s'écrit.
  */
-export const MILLESIME_SCRIPT = "659";
+export const MILLESIME_SCRIPT = "660";

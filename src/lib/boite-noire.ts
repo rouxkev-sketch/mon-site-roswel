@@ -31,9 +31,23 @@
     `CLE_BOITE_NOIRE` employée dans lib/script-avant-peinture). */
 export const CLE_BOITE_NOIRE = "roswel:boite-noire";
 
-/** Le nombre de lignes gardées. Cinquante : de quoi couvrir la
-    poignée de pages qui précède un défaut, sans jamais peser. */
-export const LIGNES_BOITE_NOIRE = 50;
+/**
+ * Le nombre de lignes gardées.
+ * §1 (nº 660) — CINQUANTE NE SUFFISENT PLUS, ET C'EST LE PRIX DE LA
+ * PASSE. La nº 654 n'écrivait que les clics et les changements
+ * d'adresse : une poignée de lignes par page. Depuis cette passe,
+ * TOUT ce qui déplace la page se signe — les poses, la garde de
+ * position et ses recalages, la décision de restitution, les notes
+ * lues, le script d'avant peinture, et l'observateur des déplacements
+ * constatés. Une seule navigation peut en écrire une vingtaine ; à
+ * cinquante, le début du trajet — le clic — sortait de la boîte avant
+ * que le propriétaire ne la consulte, et c'est justement lui qu'il
+ * faut voir.
+ * DEUX CENTS : de quoi tenir plusieurs navigations complètes. Le coût
+ * reste celui d'une lecture et d'une écriture de `sessionStorage` par
+ * ÉVÉNEMENT, jamais par image — la règle de la nº 654 ne bouge pas.
+ */
+export const LIGNES_BOITE_NOIRE = 200;
 
 export type LigneBoiteNoire = {
   /** L'heure de l'événement, à la milliseconde. */

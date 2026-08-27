@@ -38,6 +38,8 @@ import { mecanismeCoupe } from "@/lib/variantes-essai";
 //  déclare, pour que le rattrapage du filet ne la prenne jamais pour
 //  un atterrissage accidentel au fond de la pile.
 import { annoncerRepriseDuSite } from "@/lib/navigation-session";
+//  §1 (nº 660) — la trace permanente : ce défilement se signe.
+import { noterNavigation } from "@/lib/boite-noire";
 
 /** UN PIXEL TRANSPARENT — ce qu'une image lointaine porte à la place
     de sa source (nº 224-§4). Une chaîne, aucune requête réseau. */
@@ -563,6 +565,14 @@ export function GrilleTatoueurs({
         window.history.replaceState(window.history.state, "", adressePropre);
       }
       if (!cible) return; // la fiche n'est plus dans ces résultats.
+      //  §1 (nº 660) — CE DÉFILEMENT SE SIGNE : il rend la position
+      //  notée avant un rechargement de fiche, et il agit APRÈS la
+      //  remontée d'arrivée. La ligne est posée à côté, l'appel ne
+      //  change pas.
+      noterNavigation(
+        `SCROLLTO · GrilleTatoueurs (réouverture ?fenetre) · vers ${defilement}` +
+          ` · page à ${Math.round(window.scrollY)} avant`
+      );
       window.scrollTo({ top: defilement, left: 0, behavior: "instant" });
       ouvrir(cible);
     }, 0);

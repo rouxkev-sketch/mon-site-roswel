@@ -1411,7 +1411,15 @@ export function IndexTatoueurs({
               chemin le plus exposé.) */}
           <Link
             onClick={() =>
-              window.scrollTo({ top: 0, left: 0, behavior: "instant" })
+              {
+                //  §1 (nº 660) — signé : c'est un geste de l'utilisateur,
+                //  mais il déplace la page et doit figurer dans la trace.
+                noterNavigation(
+                  `SCROLLTO · IndexTatoueurs (bouton remonter) · vers 0 · ` +
+                    `page à ${Math.round(window.scrollY)} avant`
+                );
+                window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+              }
             }
             href={`/devenir-tatoueur?suite=${encodeURIComponent(
               "/devenir-tatoueur/fiche?fiche=nouvelle"

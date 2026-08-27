@@ -17,6 +17,8 @@ import {
   type LieuTrouve,
 } from "@/lib/geocodage";
 import { ligneFiche, ligneMoteur } from "@/lib/adresse";
+//  §1 (nº 660) — la trace permanente : ce défilement se signe.
+import { noterNavigation } from "@/lib/boite-noire";
 
 /**
  * LE CHAMP DE LOCALISATION — un seul champ, le monde entier
@@ -629,6 +631,10 @@ export function ChampLocalisation({
   useEffect(() => {
     if (!remonterAuToucher || !listeOuverte) return;
     const image = requestAnimationFrame(() => {
+      noterNavigation(
+        `SCROLLINTOVIEW · ChampLocalisation (remontée du champ) · ` +
+          `page à ${Math.round(window.scrollY)} avant`
+      );
       champ.current?.scrollIntoView({ block: "start", behavior: "smooth" });
     });
     return () => cancelAnimationFrame(image);

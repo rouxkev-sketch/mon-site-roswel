@@ -45,6 +45,22 @@ const MARQUEUR = "defilementProgramme";
 //  rabotage relevé. Le journal est celui de la sonde (journal-bascule),
 //  il ne coûte rien désarmé.
 import { noter } from "@/lib/journal-bascule";
+/*  ██ §1 (nº 660) — LES MÊMES LIGNES, AUSSI DANS LA BOÎTE NOIRE ██
+    ==================================================================
+    POURQUOI ICI D'ABORD. Ce module est LE POINT DE PASSAGE OBLIGÉ de
+    tout défilement posé par le site (`defilerSansGeste`), de la garde
+    de position et de ses recalages annulés. Il écrivait déjà tout —
+    mais au journal de la SONDE (`noter`), qui se tait tant qu'on ne
+    l'a pas armée AVANT le défaut. Le propriétaire, lui, constate le
+    défaut APRÈS coup : il lui faut une trace qui tourne toujours.
+    ⚠️ AUCUNE DÉCISION NE CHANGE : chaque `noterNavigation` est posé À
+    CÔTÉ d'un `noter` existant, sur la même chaîne, dans la même
+    branche. C'est la règle de la nº 654, appliquée une seconde fois.
+    ⚠️ CE QUE ÇA COÛTE : une lecture et une écriture de
+    `sessionStorage` par POSE — jamais par image, jamais dans une
+    boucle d'animation (voir `defilerEnDouceur`, qui ne signe que son
+    arrivée). */
+import { noterNavigation } from "@/lib/boite-noire";
 //  §2 (nº 427) — le témoin du geste : la garde de position ne défend
 //  une pose que contre les mouvements qu'AUCUN doigt n'explique.
 //  §1 (nº 626) — `appareilTactile` n'est plus importé : la garde ne
@@ -93,16 +109,17 @@ export function defilerSansGeste(
       « instant » est synchrone, la position d'après l'appel est déjà
       la position rabotée si le document était trop court. */
   const obtenu = Math.round(window.scrollY);
-  if (cible !== null && Math.abs(obtenu - cible) > 1) {
-    noter(
-      `POSE DE DÉFILEMENT · vers ${cible} · par ${signature} · ` +
+  //  §1 (nº 660) — la même ligne aux deux journaux : la sonde (muette
+  //  désarmée) et la boîte noire (qui tourne toujours).
+  const dit =
+    cible !== null && Math.abs(obtenu - cible) > 1
+      ? `POSE DE DÉFILEMENT · vers ${cible} · par ${signature} · ` +
         `RABOTÉE à ${obtenu} (document ${Math.round(
           document.documentElement.scrollHeight
         )})`
-    );
-  } else {
-    noter(`POSE DE DÉFILEMENT · vers ${cible ?? "?"} · par ${signature}`);
-  }
+      : `POSE DE DÉFILEMENT · vers ${cible ?? "?"} · par ${signature}`;
+  noter(dit);
+  noterNavigation(dit);
   lever(FENETRE_MS);
   /*  §2 (nº 427) — LA POSE ARME LA GARDE : ce qui vient d'être posé
       sera TENU tant qu'aucun geste ne reprend la main (voir le bloc de
@@ -223,10 +240,11 @@ function poserLaVeilleuse(): void {
   //  (doigt posé, molette) ou n'aurait pas dû exister.
   auDebutDuGeste((source) => {
     if (!garde) return;
-    noter(
+    const dit =
       `GARDE DE POSITION · levée (geste : ${source}) · ` +
-        `elle tenait ${garde.position} pour « ${garde.signature} »`
-    );
+      `elle tenait ${garde.position} pour « ${garde.signature} »`;
+    noter(dit);
+    noterNavigation(dit);
     garde = null;
   });
   window.addEventListener("scroll", surDefilementSousGarde, {
@@ -251,19 +269,22 @@ function surDefilementSousGarde(): void {
   //  posé avant l'armement — l'abonnement au DÉBUT du geste ne l'a
   //  alors pas vu passer ; ce second chemin le couvre.)
   if (gesteDeDefilementPlausible()) {
-    noter(
+    const dit =
       `GARDE DE POSITION · levée (défilement porté par un geste) · ` +
-        `elle tenait ${g.position} pour « ${g.signature} »`
-    );
+      `elle tenait ${g.position} pour « ${g.signature} » · page à ${y}`;
+    noter(dit);
+    noterNavigation(dit);
     garde = null;
     return;
   }
   g.annulations += 1;
   if (g.annulations > RECALAGES_ANNULES_MAX) {
-    noter(
+    const dit =
       `GARDE DE POSITION · RENDUE (${RECALAGES_ANNULES_MAX} recalages ` +
-        `annulés sans geste — un mécanisme repose en boucle, je cède)`
-    );
+      `annulés sans geste — un mécanisme repose en boucle, je cède) · ` +
+      `la page part à ${y}, elle tenait ${g.position}`;
+    noter(dit);
+    noterNavigation(dit);
     garde = null;
     return;
   }
@@ -275,14 +296,15 @@ function surDefilementSousGarde(): void {
   document.documentElement.dataset[MARQUEUR] = "1";
   window.scrollTo({ top: g.position, left: 0, behavior: "instant" });
   const obtenu = Math.round(window.scrollY);
-  noter(
+  const dit =
     `RECALAGE D'ANCRE ANNULÉ · ${ecart > 0 ? "+" : ""}${ecart} px → ` +
-      `reposé à ${g.position}` +
-      (Math.abs(obtenu - g.position) > 1
-        ? ` (obtenu ${obtenu} : le document s'arrête là — la garde s'y range)`
-        : "") +
-      ` · garde de « ${g.signature} »`
-  );
+    `reposé à ${g.position}` +
+    (Math.abs(obtenu - g.position) > 1
+      ? ` (obtenu ${obtenu} : le document s'arrête là — la garde s'y range)`
+      : "") +
+    ` · garde de « ${g.signature} »`;
+  noter(dit);
+  noterNavigation(dit);
   if (Math.abs(obtenu - g.position) > 1) g.position = obtenu;
   lever(FENETRE_MS);
 }

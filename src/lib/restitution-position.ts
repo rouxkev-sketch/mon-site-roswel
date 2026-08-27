@@ -6,6 +6,10 @@ import {
   adresseDeRechercheCourante,
 } from "@/lib/adresse-recherche";
 import { noter } from "@/lib/journal-bascule";
+//  §1 (nº 660) — les mêmes lignes dans la trace permanente : la sonde
+//  se tait désarmée, la boîte noire tourne toujours (voir nº 654). Les
+//  lignes sont posées À CÔTÉ des décisions ; aucune ne change.
+import { noterNavigation } from "@/lib/boite-noire";
 import { lireLaPlace } from "@/lib/navigation-session";
 import { rendreLEtatDeRangee } from "@/lib/reserve-barre";
 //  §1 (nº 337) — « on ne pose une position que sur du contenu » :
@@ -103,19 +107,24 @@ export function poserLaPosition(
   const hauteur = Math.round(document.body.getBoundingClientRect().height);
   //  RIEN À RESTITUER : ON NE TOUCHE À RIEN (nº 185-b).
   if (position <= 0) {
-    noter(`POSE · demandée 0 · document ${hauteur} · ${raison} · AUCUN DÉPLACEMENT`);
+    const dit = `POSE · demandée 0 · document ${hauteur} · ${raison} · AUCUN DÉPLACEMENT`;
+    noter(dit);
+    noterNavigation(dit);
     return;
   }
   //  UNE POSITION APPARTIENT À SA RECHERCHE (nº 185-c).
   const adresse = adresseDeRechercheCourante();
   if (cle !== undefined && cle !== adresse) {
-    noter(
+    const refus =
       `POSE · demandée ${position} · document ${hauteur} · ${raison} · ` +
-        `REFUSÉE (clé « ${cle} » ≠ adresse « ${adresse} »)`
-    );
+      `REFUSÉE (clé « ${cle} » ≠ adresse « ${adresse} »)`;
+    noter(refus);
+    noterNavigation(refus);
     return;
   }
-  noter(`POSE · demandée ${position} · document ${hauteur} · ${raison} · POSÉE`);
+  const accord = `POSE · demandée ${position} · document ${hauteur} · ${raison} · POSÉE`;
+  noter(accord);
+  noterNavigation(accord);
   /**
    * §1 (nº 337) — ON ATTEND QUE LE CONTENU SOIT LÀ.
    * ------------------------------------------------------------------
@@ -224,6 +233,20 @@ export function annulerLaRestitutionEnCours() {
  */
 export function rendreLaPlace(url: string, raison = "(raison non dite)") {
   const place = lireLaPlace(url);
+  /*  §1 (nº 660) — CE QU'ON A LU, ET SOUS QUELLE CLÉ. C'est la
+      première des trois questions du propriétaire — « quand elle lit
+      une note, laquelle, quelle valeur, et si elle l'applique » : la
+      clé canonique, le contenu trouvé, et la raison de la lecture. La
+      DÉCISION qui suit s'écrit dans `poserLaPosition`, juste après ;
+      les deux lignes se lisent ensemble. */
+  noterNavigation(
+    `NOTE LUE · clé « ${adresseDeRecherche(url)} » · ` +
+      (place
+        ? `trouvée y=${place.y}${place.p === undefined ? "" : `, rangée ${place.p ? "repliée" : "dépliée"}`}, ` +
+          `âge ${Date.now() - place.date} ms`
+        : "AUCUNE") +
+      ` · ${raison}`
+  );
   if (!place) {
     //  Rien à rendre : on ne touche à rien, ni à la page ni à la barre.
     poserLaPosition(0, undefined, raison);
