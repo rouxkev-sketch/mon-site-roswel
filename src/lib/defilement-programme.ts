@@ -189,6 +189,38 @@ export function defilerSansGeste(
  * garde se tait.
  */
 const TOLERANCE_DE_GARDE_PX = 2;
+/**
+ * ██ §1 (nº 661) — LA GARDE NE PEUT PLUS DORMIR ██
+ * ==================================================================
+ * LE DÉFAUT, MESURÉ PAR LE PROPRIÉTAIRE (boîte noire, 27-08 12:42).
+ * Clic « Explorer les styles » depuis un document COURT (788 px) :
+ *   12:42:37.511  DÉFILEMENT EN HAUT · remontée · /
+ *   12:42:37.538  MÉMOIRE · page à 1002
+ * Vingt-sept millisecondes, mille deux pixels — et l'observateur des
+ * déplacements (nº 660) annonce « 0 déplacement ». La page a donc
+ * bougé SANS QU'AUCUN ÉVÉNEMENT `scroll` NE SOIT ÉMIS : c'est la
+ * signature d'un recalage appliqué PENDANT LA MISE EN PAGE, quand le
+ * document grandit (788 → 1790 en attrapant le contenu de l'accueil)
+ * — restauration native de l'entrée d'historique, ou ancrage.
+ * CE QUE ÇA DIT DE LA GARDE : elle était réveillée par le seul
+ * événement `scroll`. Sans événement, elle ne se réveillait jamais —
+ * elle tenait une position que personne ne venait lui contester, et
+ * la page partait quand même.
+ * LE REMÈDE, ET IL NE CHANGE AUCUNE DÉCISION : une VEILLE PAR IMAGE,
+ * bornée dans le temps, qui appelle EXACTEMENT le même juge
+ * (`surDefilementSousGarde`). Ni tolérance nouvelle, ni règle nouvelle
+ * — un second réveil pour un juge qui existait déjà.
+ * ⚠️ BORNÉE, ET COURTE : mille deux cents millisecondes après
+ * l'armement. C'est la fenêtre pendant laquelle un document grandit et
+ * pose ses images ; au-delà, l'événement `scroll` suffit — c'est lui
+ * qu'émet un vrai geste. Une veille perpétuelle ferait tourner une
+ * boucle d'images pour rien sur chaque page du site.
+ * ⚠️ CE QU'ELLE COÛTE AU REPOS : un `Math.round(window.scrollY)` par
+ * image pendant ces 1,2 s. Le juge sort à la première ligne quand
+ * l'écart tient dans la tolérance.
+ */
+const VEILLE_PAR_IMAGE_MS = 1200;
+let veilleParImage = 0;
 /** Au-delà, on cède : un mécanisme inconnu repose en boucle, et se
     battre contre lui ferait pire que le laisser faire. Chaque
     annulation s'écrit — le journal montrera qui c'était. */
@@ -219,6 +251,35 @@ export function armerLaGardeDePosition(
     annulations: 0,
   };
   poserLaVeilleuse();
+  //  §1 (nº 661) — L'ARMEMENT SE SIGNE, comme les recalages qu'il
+  //  annulera : le propriétaire doit pouvoir vérifier que la garde
+  //  était bien en place au moment où la page a bougé.
+  noterNavigation(
+    `GARDE DE POSITION · armée sur ${Math.round(position)} · ` +
+      `par « ${signature} » · page à ${Math.round(window.scrollY)}`
+  );
+  veillerParImage();
+}
+
+/**
+ * §1 (nº 661) — LA VEILLE PAR IMAGE, redémarrée à chaque armement.
+ * Elle ne juge rien : elle réveille le juge. Voir le bloc de
+ * `VEILLE_PAR_IMAGE_MS` pour la mesure qui l'a rendue nécessaire.
+ */
+function veillerParImage(): void {
+  cancelAnimationFrame(veilleParImage);
+  const limite = performance.now() + VEILLE_PAR_IMAGE_MS;
+  const regarder = () => {
+    //  Garde levée (un geste, un changement d'adresse) ou fenêtre
+    //  écoulée : la veille s'arrête d'elle-même.
+    if (!garde || performance.now() > limite) {
+      veilleParImage = 0;
+      return;
+    }
+    surDefilementSousGarde();
+    veilleParImage = requestAnimationFrame(regarder);
+  };
+  veilleParImage = requestAnimationFrame(regarder);
 }
 
 /** DÉSARMER LA GARDE — pour une surface qui déplace la page POUR

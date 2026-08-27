@@ -8,6 +8,9 @@ import {
   restaurationDemandeePour,
 } from "@/lib/navigation-session";
 import { rendreLaPlace, positionDejaPosee } from "@/lib/restitution-position";
+//  §1 (nº 661) — la garde de position : le mécanisme du site qui TIENT
+//  une pose tant qu'aucun geste ne reprend la main (nº 427/626).
+import { armerLaGardeDePosition } from "@/lib/defilement-programme";
 import { souscrireAdresse } from "@/lib/adresse-courante";
 //  §1 (nº 653) — le chemin de la recherche, écrit une seule fois
 //  (nº 652), et le journal des sondes.
@@ -70,9 +73,44 @@ function estLaMosaique(chemin: string | null): boolean {
  * ⚠️ ADRESSE DÉJÀ COMMISE (rechargement, routeur en avance) : la
  * remontée part tout de suite, exactement comme avant cette passe.
  */
-function remonterALAdresseCommise(chemin: string): (() => void) | undefined {
-  const remonter = () =>
+function remonterALAdresseCommise(
+  chemin: string,
+  /**
+   * ██ §1 (nº 661) — LE HAUT EST-IL GARANTI, OU SEULEMENT POSÉ ? ██
+   * ------------------------------------------------------------------
+   * LE DÉFAUT MESURÉ (boîte noire du propriétaire, 27-08 12:42) : la
+   * remontée joue à l'instant de la navigation, sur un document ENCORE
+   * COURT — 788 px depuis « Ma sélection » vide. Vingt-sept
+   * millisecondes plus tard, le contenu de l'accueil arrive, le
+   * document passe à 1790, et la page se retrouve à 1002 px SANS
+   * qu'aucun mécanisme du site n'ait signé de pose : c'est le
+   * navigateur qui recale (restauration native de l'entrée
+   * d'historique, ou ancrage). Poser le haut ne suffit pas ; il faut
+   * le TENIR le temps que le contenu arrive.
+   * QUAND ON LE GARANTIT : quand l'arrivée en haut a été DÉCLARÉE
+   * (nº 429 + nº 446) — c'est-à-dire sur un geste qui va EN AVANT, et
+   * jamais sur un retour. La distinction reste posée par le geste,
+   * jamais déduite de l'adresse (la règle du propriétaire, nº 330).
+   * AVEC QUOI : la GARDE DE POSITION (lib/defilement-programme,
+   * nº 427/626) — le mécanisme du site dont c'est déjà tout le
+   * travail : « après une pose du site, la position TIENT tant que
+   * l'utilisateur n'a pas repris la main ». Elle se lève au premier
+   * geste, meurt si l'adresse change, et cède au bout de douze
+   * recalages. Rien n'est inventé ici.
+   */
+  garantirLeHaut: boolean
+): (() => void) | undefined {
+  const remonter = () => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    //  §1 (nº 661) — LA GARDE EST ARMÉE ICI, ET PAS AVANT : à cet
+    //  instant l'adresse est commise (c'est toute la raison d'être de
+    //  cette fonction), donc la garde retient la BONNE page. Armée
+    //  plus tôt, elle aurait retenu celle qu'on quitte et serait morte
+    //  au changement d'adresse.
+    if (garantirLeHaut) {
+      armerLaGardeDePosition(0, "arrivée en haut voulue (nº 446)");
+    }
+  };
   if (window.location.pathname === chemin) {
     remonter();
     return undefined;
@@ -257,7 +295,9 @@ export function DefilementEnHaut() {
         return;
       }
       //  nº 361 — après la photo d'adieu du navigateur (voir l'en-tête).
-      return remonterALAdresseCommise(chemin);
+      //  §1 (nº 661) — une fiche s'ouvre en haut par nature (nº 191) :
+      //  aucune déclaration n'est en jeu, aucune garde à armer.
+      return remonterALAdresseCommise(chemin, false);
     }
 
     if (estLaMosaique(venaitDeLaMosaique) && estLaMosaique(chemin)) {
@@ -315,10 +355,19 @@ export function DefilementEnHaut() {
     if (document.documentElement.dataset.fenetreFiche) return;
     //  §1 (nº 653) — LA REMONTÉE, ÉCRITE ELLE AUSSI : c'est la ligne
     //  qui doit MANQUER quand on passe de l'accueil à la recherche.
-    noter(`DÉFILEMENT EN HAUT · remontée · ${chemin}`);
-    noterNavigation(`DÉFILEMENT EN HAUT · remontée · ${chemin}`);
+    /*  §1 (nº 661) — LA DÉCLARATION EST LUE, PAS CONSOMMÉE. C'est la
+        règle de la chaîne depuis la nº 446 : ce composant LIT,
+        `MemoireNavigation` — dernier de la chaîne — CONSOMME. Deux
+        consommateurs pour un jeton, ce serait une garantie perdue sur
+        deux. */
+    const voulue = arriveeEnHautVoulue();
+    const dit =
+      `DÉFILEMENT EN HAUT · remontée · ${chemin}` +
+      (voulue ? " · GARANTIE (arrivée en haut voulue)" : "");
+    noter(dit);
+    noterNavigation(dit);
     //  nº 361 — après la photo d'adieu du navigateur (voir l'en-tête).
-    return remonterALAdresseCommise(chemin);
+    return remonterALAdresseCommise(chemin, voulue);
   }, [chemin]);
 
   return null;
