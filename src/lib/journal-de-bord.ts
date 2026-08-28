@@ -42,7 +42,36 @@
  *
  * DISCRET : aucun rendu, aucun écouteur bloquant, et chaque écriture
  * est enveloppée — un journal ne casse JAMAIS ce qu'il observe.
+ *
+ * ██ §1 (nº 712) — ÉTEINT PAR DÉFAUT, ET LE COUPE-CIRCUIT RESTE ██
+ * ==================================================================
+ * CE QUI CHANGE : ce journal partait TOUJOURS, sans qu'on l'arme —
+ * mesuré au banc de la nº 712 : UN envoi au chargement et DEUX par
+ * navigation, sur chacune des trois pages d'échantillon (accueil,
+ * recherche, Ma sélection). Il est désormais dans le registre des
+ * sondes (`journal`, lib/sondes-armees), ÉTEINT par défaut :
+ *  · `noterAuJournal` ne part plus sur le réseau ;
+ *  · `demarrerJournal` n'enveloppe plus `history.pushState` /
+ *    `replaceState` et n'installe plus aucun écouteur — donc plus rien
+ *    à exécuter à chaque navigation du routeur.
+ *
+ * ⚠️ CE QUI NE CHANGE PAS, ET C'EST LE POINT DÉLICAT DE LA PASSE : ce
+ * module n'est pas qu'un témoin, il PORTE UNE PROTECTION —
+ * `redirectionDeGarde`, le coupe-circuit du ping-pong entre les deux
+ * gardes du compte (l'écran de connexion et l'espace), celui qui a
+ * arrêté la boucle qui DÉCONNECTAIT le compte du propriétaire
+ * (nº 272-§2). Cette protection reste ENTIÈRE, allumée comme éteinte :
+ * son compteur (`redirectionsGarde`) est alimenté DANS la fonction
+ * elle-même, jamais par les écouteurs, et son verrou (`CLE_ARRET`)
+ * vit en mémoire d'onglet. Seule l'ÉCRITURE de la trace se tait.
+ * ⚠️ CE QU'ON PERD EN ÉTEINT, dit franchement : les plafonds de
+ * SURVEILLANCE (navigations, rechargements, rendus par seconde) ne
+ * comptent plus — ils ne servaient qu'à consigner un emballement, pas
+ * à l'empêcher. Le seul plafond qui AGIT, celui des redirections de
+ * garde, ne dépend d'aucun d'eux.
  */
+
+import { sondeArmee } from "@/lib/sondes-armees";
 
 const ADRESSE_JOURNAL = "/api/dev/journal-de-bord";
 
@@ -104,6 +133,9 @@ export function noterAuJournal(
   details: Record<string, unknown> = {}
 ): void {
   if (typeof window === "undefined") return;
+  //  §1 (nº 712) — ÉTEINT, RIEN NE PART. La question se pose sur la
+  //  marque de `<html>` : une lecture d'attribut, aucun réseau.
+  if (!sondeArmee("journal")) return;
   try {
     const ligne = JSON.stringify({
       quand: new Date().toISOString(),
@@ -182,6 +214,9 @@ export function redirectionDeGarde(depuis: string, vers: string): boolean {
     d'ici, mais le journal, lui, saura le dire. */
 export function noterRendu(): void {
   if (typeof window === "undefined") return;
+  //  §1 (nº 712) — éteint, on ne compte même pas : ce compteur ne sert
+  //  qu'à CONSIGNER un emballement, il n'en empêche aucun.
+  if (!sondeArmee("journal")) return;
   recents(rendus, 1000).push(Date.now());
   if (rendus.length > PLAFOND_RENDUS_PAR_SECONDE && !emballementRendusDit) {
     emballementRendusDit = true;
@@ -200,6 +235,14 @@ export function noterRendu(): void {
  */
 export function demarrerJournal(): void {
   if (demarre || typeof window === "undefined") return;
+  /*  §1 (nº 712) — ÉTEINT, ON N'INSTALLE RIEN DU TOUT : ni l'enveloppe
+      sur `history.pushState` / `replaceState` (qui s'exécutait à
+      CHAQUE navigation du routeur), ni les écouteurs de `popstate`,
+      d'erreur et de promesse rejetée, ni le relevé des chargements.
+      ⚠️ ET ON NE MARQUE PAS `demarre` : si la sonde est allumée
+      ensuite au tableau de bord, le prochain chargement installe tout
+      normalement. */
+  if (!sondeArmee("journal")) return;
   demarre = true;
   try {
     //  LE CHARGEMENT COMPLET — et la boucle de RECHARGEMENTS, qui ne

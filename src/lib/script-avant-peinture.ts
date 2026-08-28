@@ -7,7 +7,12 @@ import { conditionDeReglagePourLeScript } from "@/lib/adresse-recherche";
 import { ADRESSE_RECHERCHE } from "@/lib/chemin-recherche";
 //  §3 (nº 654) — la clé et la taille de la boîte noire, lues là où
 //  elles sont écrites : le script en recopie le GESTE, pas la valeur.
-import { CLE_BOITE_NOIRE, LIGNES_BOITE_NOIRE } from "@/lib/boite-noire";
+//  §3 (nº 712) — AU NEUTRE, ET SURTOUT PAS DEPUIS `lib/boite-noire` :
+//  ce module-là porte « use client », et ce script-ci est fabriqué au
+//  SERVEUR — Next remplaçait alors ces deux constantes par des
+//  bouchons, et la trace partait sous la clé « undefined » (voir
+//  lib/cles-boite-noire, qui porte la mesure).
+import { CLE_BOITE_NOIRE, LIGNES_BOITE_NOIRE } from "@/lib/cles-boite-noire";
 import {
   COOKIE_COLONNES,
   expressionColonnes,
@@ -289,11 +294,22 @@ var nav=(performance.getEntriesByType("navigation")[0]||{}).type||"navigate";
 /* §3 (nº 654) — LA BOÎTE NOIRE, ÉCRITE À LA MAIN ICI. Ce script
    s'exécute AVANT le moindre module : il ne peut pas appeler
    lib/boite-noire. Il en recopie donc le geste — la MÊME clé, le MÊME
-   format ({h, texte}), la MÊME limite de cinquante lignes. Si l'un des
-   deux change, l'autre aussi.
+   format ({h, texte}), la MÊME limite de deux cents lignes. Si l'un
+   des deux change, l'autre aussi.
    ⚠️ ELLE N'OBSERVE QUE, et n'échoue jamais bruyamment : tout est
-   enveloppé, et une mémoire refusée laisse le script continuer. */
-var bn=function(txt){try{var br=sessionStorage.getItem(${JSON.stringify(CLE_BOITE_NOIRE)});
+   enveloppé, et une mémoire refusée laisse le script continuer.
+   ██ §1 (nº 712) — ET ELLE NE S'ÉVEILLE QUE SI ELLE EST ARMÉE. La
+   question se pose UNE fois, ici, sur la marque que l'armement vient
+   de poser quelques lignes plus haut (la marque des sondes) — pas un
+   accès au stockage de plus. Éteinte, la fonction sort à sa première
+   instruction : plus une seule lecture, analyse et réécriture de la
+   mémoire d'onglet sur le chemin de la première image, alors qu'il y
+   en avait une par ligne écrite (15 à 19 par page, mesuré nº 712).
+   ⚠️ ET PAS UN SEUL ACCENT GRAVE DANS CETTE NOTE, comme le rappelle
+   l'en-tête du fichier : nous sommes DANS un littéral de gabarit, et
+   un accent grave le fermerait net. */
+var bnArmee=(r.dataset[${JSON.stringify(MARQUE_SONDES)}]||"").indexOf("boite-noire")>=0;
+var bn=function(txt){if(!bnArmee)return;try{var br=sessionStorage.getItem(${JSON.stringify(CLE_BOITE_NOIRE)});
 var li=br?JSON.parse(br):[];if(!(li instanceof Array))li=[];
 li.push({h:Date.now(),texte:txt});
 if(li.length>${LIGNES_BOITE_NOIRE})li=li.slice(li.length-${LIGNES_BOITE_NOIRE});

@@ -38,8 +38,39 @@
  * lib/navigation-session).
  */
 
-/** Les trois sondes, nommées une fois. L'ordre n'a pas d'importance. */
-export const SONDES = ["historique", "retour", "clic"] as const;
+/**
+ * Les sondes du REGISTRE DURABLE, nommées une fois. L'ordre n'a pas
+ * d'importance.
+ *
+ * ██ §1 (nº 712) — DEUX TRACEURS ENTRENT DANS LE REGISTRE ██
+ * ------------------------------------------------------------------
+ * `journal` et `boite-noire` ne s'armaient PAS : ils tournaient
+ * TOUJOURS, et c'est ce que le propriétaire fait cesser à la nº 712.
+ *  · `journal` — le journal de bord (nº 272-§2) envoyait une ligne au
+ *    serveur (`/api/dev/journal-de-bord`) à CHAQUE chargement et à
+ *    chaque navigation : mesuré au banc de la nº 712, un envoi au
+ *    chargement et DEUX par navigation, sur les trois pages
+ *    d'échantillon. Éteint, il n'envoie plus rien ;
+ *  · `boite-noire` — le journal d'onglet (nº 654) lisait, analysait et
+ *    réécrivait jusqu'à 200 lignes de `sessionStorage` par événement de
+ *    navigation, y compris DANS LE SCRIPT D'AVANT PEINTURE, donc sur le
+ *    chemin de la première image (15 à 19 lignes écrites par page,
+ *    mesuré). Éteinte, elle n'écrit plus rien.
+ * ⚠️ CE QU'ÉTEINDRE LA BOÎTE NOIRE COÛTE, ET IL FAUT LE SAVOIR : elle
+ * était conçue pour tourner en permanence afin qu'un défaut ALÉATOIRE
+ * (le bug des styles, nº 654/673) laisse une trace SANS qu'on ait rien
+ * armé à l'avance. Éteinte, cette faculté-là disparaît : pour prendre
+ * un défaut rare sur le fait, il faut la rallumer AVANT et la laisser
+ * allumée. C'est le choix du propriétaire à la nº 712 — la vitesse
+ * d'abord — et il se défait d'un clic au tableau de bord.
+ */
+export const SONDES = [
+  "historique",
+  "retour",
+  "clic",
+  "journal",
+  "boite-noire",
+] as const;
 export type NomDeSonde = (typeof SONDES)[number];
 
 /** La mémoire LOCALE — elle survit à l'ouverture d'un onglet neuf, ce
@@ -118,13 +149,48 @@ function reconcilierAvecLAdresse(): void {
   if (manquantes.length > 0) poser([...deja, ...manquantes]);
 }
 
+/**
+ * ██ §2 (nº 712) — LE REPLI, QUAND IL N'Y A PAS DE MARQUE ██
+ * ==================================================================
+ * LE DÉFAUT QU'IL FERME, TROUVÉ AU BANC DE LA nº 712 : la marque est
+ * posée par le script d'avant peinture, et ce script ne vit que dans
+ * la mise en page du groupe « tatouage ». Sur une page qui n'en fait
+ * pas partie — le tableau de bord `/dev`, précisément — la marque
+ * n'existe PAS. La liste revenait donc VIDE alors que des sondes
+ * étaient bel et bien armées, et le tableau de bord, croyant partir
+ * de rien, EFFAÇAIT les autres sondes en en allumant une.
+ * LE REPLI : sans marque, on lit la mémoire durable — la source de
+ * vérité, celle que le script lui-même recopie.
+ * ⚠️ ET IL NE COÛTE RIEN SUR LE SITE, ce qui est tout le point : la
+ * lecture n'a lieu qu'UNE fois par page (elle est retenue ici), et
+ * seulement là où la marque manque. Sur les pages du site, la marque
+ * est posée avant la première peinture : on ne descend jamais
+ * jusqu'ici. `poser` remet ce souvenir à zéro, les deux ne peuvent
+ * pas se contredire.
+ */
+let repliRetenu: NomDeSonde[] | null = null;
+
+function repliDeLaMemoire(): NomDeSonde[] {
+  if (repliRetenu) return repliRetenu;
+  let gardees: NomDeSonde[] = [];
+  try {
+    const brut = localStorage.getItem(CLE_ARMEMENT) ?? "";
+    gardees = SONDES.filter((nom) => brut.split(" ").includes(nom));
+  } catch {
+    //  stockage refusé : rien n'est armé, et c'est la bonne réponse.
+  }
+  repliRetenu = gardees;
+  return gardees;
+}
+
 /** La liste des sondes armées, telle que la marque l'annonce — après
-    que l'adresse a eu son mot à dire. */
+    que l'adresse a eu son mot à dire, et à défaut de marque, telle que
+    la mémoire durable la garde (§2 nº 712). */
 export function sondesArmees(): NomDeSonde[] {
   if (typeof document === "undefined") return [];
   reconcilierAvecLAdresse();
   const marque = document.documentElement.dataset[MARQUE_SONDES];
-  if (!marque) return [];
+  if (!marque) return repliDeLaMemoire();
   return SONDES.filter((nom) => marque.split(" ").includes(nom));
 }
 
@@ -142,6 +208,8 @@ export function sondeArmee(nom: NomDeSonde): boolean {
     ne peuvent pas se contredire. */
 function poser(noms: NomDeSonde[]): void {
   const racine = document.documentElement;
+  //  §2 (nº 712) — le souvenir du repli est périmé : on vient d'écrire.
+  repliRetenu = null;
   if (noms.length === 0) {
     delete racine.dataset[MARQUE_SONDES];
     try {
@@ -165,6 +233,20 @@ export function armerLaSonde(nom: NomDeSonde): void {
   const deja = sondesArmees();
   if (deja.includes(nom)) return;
   poser([...deja, nom]);
+}
+
+/** ÉTEINDRE UNE SEULE SONDE — l'interrupteur du tableau de bord
+    (§1 nº 712). Les autres restent dans leur état, exactement comme
+    `armerLaSonde` de l'autre côté.
+    ⚠️ CE QUI EST DÉJÀ POSÉ RESTE POSÉ jusqu'au prochain chargement :
+    une enveloppe sur `history`, un écouteur. Le tableau de bord le
+    dit — c'est la même réserve que le bouton « DÉSARMER » des
+    panneaux depuis la nº 343. */
+export function eteindreLaSonde(nom: NomDeSonde): void {
+  if (typeof document === "undefined") return;
+  const deja = sondesArmees();
+  if (!deja.includes(nom)) return;
+  poser(deja.filter((autre) => autre !== nom));
 }
 
 /** TOUT DÉSARMER, d'un geste — c'est ce que fait le bouton

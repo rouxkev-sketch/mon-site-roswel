@@ -18,6 +18,9 @@ export default function robots(): MetadataRoute.Robots {
         "/favoris",
         "/artisan/espace",
         "/auth/",
+        //  §1 (nº 712) — le tableau de bord des sondes : un outil
+        //  d'atelier, pas une page du site.
+        "/dev",
       ],
     },
     sitemap: `${adresseDuSite()}/sitemap.xml`,

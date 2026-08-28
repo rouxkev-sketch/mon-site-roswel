@@ -9,9 +9,27 @@
  * L'ADRESSE ELLE-MÊME est fausse — quelque chose a réécrit la
  * destination en route. Une sonde qu'on arme AVANT ne sert à rien : au
  * moment où le défaut frappe, elle n'était pas armée.
- * D'OÙ LE RENVERSEMENT : ce journal-ci tourne TOUJOURS, en silence, et
- * ne s'affiche QUE si on le demande APRÈS COUP (`?sonde-boite-noire=1`).
- * Rien à rejouer, rien à prévoir — la trace est déjà là.
+ * D'OÙ LE RENVERSEMENT D'ALORS : ce journal-ci tournait TOUJOURS, en
+ * silence, et ne s'affichait QUE si on le demandait APRÈS COUP
+ * (`?sonde-boite-noire=1`). Rien à rejouer, rien à prévoir — la trace
+ * était déjà là.
+ *
+ * ██ §1 (nº 712) — ELLE NE TOURNE PLUS TOUJOURS, ET C'EST UN CHOIX ██
+ * ------------------------------------------------------------------
+ * CE QU'ELLE COÛTAIT VRAIMENT, mesuré au banc de la nº 712 : 15 à 19
+ * lignes écrites par page d'échantillon — et chaque ligne, c'est LIRE
+ * puis ANALYSER puis RÉÉCRIRE jusqu'à 200 entrées de `sessionStorage`.
+ * Le script d'avant peinture en écrit sa part AVANT LA PREMIÈRE IMAGE,
+ * donc sur le chemin critique du rendu.
+ * ELLE EST DONC ÉTEINTE PAR DÉFAUT, comme tout le reste (le tableau de
+ * bord, `/dev`). Éteinte : pas une lecture, pas une écriture, rien.
+ * ⚠️ ET ON PERD SA FACULTÉ PROPRE, il faut le dire clairement : celle
+ * de témoigner d'un défaut ALÉATOIRE qu'on n'avait pas prévu. Pour
+ * prendre un tel défaut sur le fait, il faut désormais l'ALLUMER
+ * D'ABORD, au tableau de bord, et la laisser allumée. C'est la
+ * contrepartie assumée de la vitesse (consigne du propriétaire,
+ * nº 712) ; l'armement, lui, est DURABLE — il survit à l'ouverture
+ * d'un onglet neuf (nº 343).
  *
  * CE QU'ELLE COÛTE, ET C'EST TOUT CE QU'ELLE COÛTE : une lecture et une
  * écriture de `sessionStorage` par ÉVÉNEMENT DE NAVIGATION — quelques
@@ -26,28 +44,18 @@
  * n'est envoyé nulle part.
  */
 
-/** La clé de rangement. Le script d'avant peinture écrit sous LA MÊME
-    (il ne peut pas importer ce module, il le recopie une fois — voir
-    `CLE_BOITE_NOIRE` employée dans lib/script-avant-peinture). */
-export const CLE_BOITE_NOIRE = "roswel:boite-noire";
+import { sondeArmee } from "@/lib/sondes-armees";
 
-/**
- * Le nombre de lignes gardées.
- * §1 (nº 660) — CINQUANTE NE SUFFISENT PLUS, ET C'EST LE PRIX DE LA
- * PASSE. La nº 654 n'écrivait que les clics et les changements
- * d'adresse : une poignée de lignes par page. Depuis cette passe,
- * TOUT ce qui déplace la page se signe — les poses, la garde de
- * position et ses recalages, la décision de restitution, les notes
- * lues, le script d'avant peinture, et l'observateur des déplacements
- * constatés. Une seule navigation peut en écrire une vingtaine ; à
- * cinquante, le début du trajet — le clic — sortait de la boîte avant
- * que le propriétaire ne la consulte, et c'est justement lui qu'il
- * faut voir.
- * DEUX CENTS : de quoi tenir plusieurs navigations complètes. Le coût
- * reste celui d'une lecture et d'une écriture de `sessionStorage` par
- * ÉVÉNEMENT, jamais par image — la règle de la nº 654 ne bouge pas.
- */
-export const LIGNES_BOITE_NOIRE = 200;
+/*  §3 (nº 712) — LES DEUX CONSTANTES VIENNENT D'UN FICHIER NEUTRE, et
+    elles sont RÉEXPORTÉES ici pour que rien ne change chez les
+    appelants. La raison est un défaut muet depuis la nº 654 : ce
+    module-ci porte « use client », et le script d'avant peinture, qui
+    est fabriqué au SERVEUR, en recevait des bouchons — il écrivait sa
+    trace sous la clé « undefined ». Tout est écrit dans
+    lib/cles-boite-noire. */
+export { CLE_BOITE_NOIRE, LIGNES_BOITE_NOIRE } from "@/lib/cles-boite-noire";
+
+import { CLE_BOITE_NOIRE, LIGNES_BOITE_NOIRE } from "@/lib/cles-boite-noire";
 
 export type LigneBoiteNoire = {
   /** L'heure de l'événement, à la milliseconde. */
@@ -74,6 +82,10 @@ function lireLeJournal(): LigneBoiteNoire[] {
  */
 export function noterNavigation(texte: string): void {
   if (typeof window === "undefined") return;
+  //  §1 (nº 712) — ÉTEINTE, ELLE NE TOUCHE À RIEN. La question se pose
+  //  sur la marque de `<html>` (posée par le script d'avant peinture) :
+  //  une lecture d'attribut, jamais un accès au stockage.
+  if (!sondeArmee("boite-noire")) return;
   try {
     const lignes = lireLeJournal();
     lignes.push({ h: Date.now(), texte });
