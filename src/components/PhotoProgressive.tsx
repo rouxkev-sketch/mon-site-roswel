@@ -81,7 +81,15 @@ export function PhotoProgressive({
       //  (voir config/tatouage). Elles ne bougent pas.
       width={PHOTO_PORTFOLIO.largeur}
       height={PHOTO_PORTFOLIO.hauteur}
-      className={classe}
+      /*  §1 (nº 709) — L'ALT NE SE PEINT PLUS DANS LE CADRE. Pendant
+          que la photo arrive (ou si elle manque), le navigateur écrit
+          le texte `alt` EN CLAIR sur le fond de réserve gris — mesuré
+          au banc nº 709 : « Réalisme, 14 portfolios », à moitié coupé
+          par le cadre, que le propriétaire prenait pour une fuite du
+          squelette. `text-transparent` rend ce texte invisible À
+          L'ÉCRAN seulement : l'attribut reste entier pour les
+          lecteurs d'écran et les moteurs. */
+      className={`text-transparent ${classe}`}
     />
   );
 }

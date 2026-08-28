@@ -215,9 +215,17 @@ function CarteGrise() {
       <div className={`${CADRE_PHOTO_PORTFOLIO} w-full bg-sombre-eleve`} />
       <div className="pt-2 px-0.5 mobile:px-2">
         <div className="h-4 sm:h-[18px] w-2/3 bg-sombre-eleve" />
-        <div className="mt-4 mobile:mt-1 flex items-center gap-2.5">
+        {/*  §3 (nº 709) — DEUX LIGNES à droite du rond, comme la
+             vraie carte (nom + sous-ligne empilés) ; au doigt la
+             vraie n'a qu'une ligne et pas de rond — la seconde barre
+             suit le rond (`mobile:hidden`). La rangée garde ses
+             40 px au web (`sm:h-10`) : le pied ne bouge pas. */}
+        <div className="mt-4 mobile:mt-1 flex items-center gap-2.5 sm:h-10">
           <span className="mobile:hidden h-10 w-10 shrink-0 rounded-full bg-sombre-eleve" />
-          <div className="h-4 w-1/2 sm:w-1/3 bg-sombre-eleve" />
+          <div className="min-w-0 flex-1 space-y-1">
+            <div className="h-4 w-1/2 bg-sombre-eleve" />
+            <div className="mobile:hidden h-3 w-1/3 bg-sombre-eleve" />
+          </div>
         </div>
       </div>
     </li>
@@ -253,8 +261,16 @@ function MosaiqueGrise({ avecTitre }: { avecTitre: boolean }) {
             grille commence après le seul espacement du rythme. */
         <div className="pt-6 sm:pt-8 mobile:pt-3" />
       )}
+      {/*  §2 (nº 709) — QUATRE CASES, PAS HUIT : un nombre modeste et
+           neutre, sur consigne du propriétaire — une recherche peut ne
+           rendre qu'une ou deux cartes, et huit cases grises faisaient
+           croire à des cartes fantômes sur l'image figée du
+           remplacement. (Les cases ne SURVIVENT jamais à l'arrivée :
+           le film du banc nº 709 le prouve, image par image — mais un
+           squelette ne doit pas promettre plus que le résultat
+           probable.) */}
       <ul className={CLASSES_GRILLE_CARTES}>
-        {Array.from({ length: 8 }, (_, rang) => (
+        {Array.from({ length: 4 }, (_, rang) => (
           <CarteGrise key={rang} />
         ))}
       </ul>

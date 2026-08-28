@@ -126,7 +126,10 @@ export function PhotoDeCarte({
         decoding="async"
         width={PHOTO_MINIATURE.largeur}
         height={PHOTO_MINIATURE.hauteur}
-        className={classe}
+        //  §1 (nº 709) — l'alt invisible à l'écran pendant le
+        //  chargement : la note complète est chez PhotoProgressive,
+        //  même défaut, même remède, les trois écritures ensemble.
+        className={`text-transparent ${classe ?? ""}`}
       />
     );
   }
@@ -144,7 +147,7 @@ export function PhotoDeCarte({
       quality={QUALITE_CARTE}
       loading={chargement}
       fetchPriority={priorite}
-      className={classe}
+      className={`text-transparent ${classe ?? ""}`}
     />
   );
 }
