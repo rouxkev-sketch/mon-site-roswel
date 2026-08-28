@@ -477,15 +477,81 @@ function repondre(req, res, u, brut) {
           : { name: tete, id: null }
       );
     }
+    /*  §1 (nº 692) — `limit` ET `offset` SONT HONORÉS. Le vrai
+        stockage plafonne ses listes (cent par défaut côté client) ;
+        sans ce plafond ici, la pagination de la nº 692 (R4) ne pouvait
+        pas être éprouvée — un dossier de cent cinquante fichiers
+        rentrait d'un coup, et le défaut restait invisible. */
+    let combien = corps.length;
+    let debut = 0;
+    try {
+      const demande = JSON.parse(brut || "{}");
+      if (Number.isFinite(demande.limit)) combien = Number(demande.limit);
+      if (Number.isFinite(demande.offset)) debut = Number(demande.offset);
+    } catch { /* corps vide */ }
+    const page = corps.slice(debut, debut + combien);
     console.log(
       new Date().toISOString().slice(11, 19),
-      "POST storage/list", prefixe || "(racine)", "→", corps.length
+      "POST storage/list", prefixe || "(racine)",
+      `→ ${page.length}/${corps.length}`
     );
     res.writeHead(200, {
       "content-type": "application/json",
       "access-control-allow-origin": "*",
     });
-    res.end(JSON.stringify(corps));
+    res.end(JSON.stringify(page));
+    return;
+  }
+
+  /*  ██ §1 (nº 692) — DÉPOSER ET EFFACER DES FICHIERS ██
+      ------------------------------------------------------------------
+      La doublure savait LISTER et SERVIR ; elle ne savait ni ranger ni
+      retirer. C'était juste assez pour la sauvegarde (nº 689), pas pour
+      éprouver un MÉNAGE : sans effacement réel, « les fichiers du
+      portfolio partent, ceux des autres restent » n'est pas une mesure,
+      c'est une espérance.
+      DEUX VERBES, comme la vraie API :
+       · `POST   /storage/v1/object/<seau>/<chemin>` dépose ;
+       · `DELETE /storage/v1/object/<seau>` avec `{ prefixes: [...] }`
+         retire, et rend CE QU'IL A VRAIMENT RETIRÉ — c'est cette
+         différence-là que le site compte comme « déjà absent ». */
+  if (u.pathname === `/storage/v1/object/${PANIER}` && req.method === "DELETE") {
+    let demandes = [];
+    try { demandes = JSON.parse(brut || "{}").prefixes ?? []; } catch { demandes = []; }
+    const retires = [];
+    for (const chemin of Array.isArray(demandes) ? demandes : []) {
+      const rang = FICHIERS_STOCKAGE.indexOf(chemin);
+      if (rang >= 0) {
+        FICHIERS_STOCKAGE.splice(rang, 1);
+        retires.push({ name: chemin });
+      }
+    }
+    console.log(
+      new Date().toISOString().slice(11, 19),
+      "DELETE storage ←", `${retires.length}/${(demandes ?? []).length}`,
+      "· reste", FICHIERS_STOCKAGE.length
+    );
+    res.writeHead(200, {
+      "content-type": "application/json",
+      "access-control-allow-origin": "*",
+    });
+    res.end(JSON.stringify(retires));
+    return;
+  }
+  if (
+    u.pathname.startsWith(`/storage/v1/object/${PANIER}/`) &&
+    (req.method === "POST" || req.method === "PUT")
+  ) {
+    const chemin = decodeURIComponent(
+      u.pathname.slice(`/storage/v1/object/${PANIER}/`.length)
+    );
+    if (!FICHIERS_STOCKAGE.includes(chemin)) FICHIERS_STOCKAGE.push(chemin);
+    console.log(
+      new Date().toISOString().slice(11, 19),
+      "POST storage ← rangé", chemin, "· total", FICHIERS_STOCKAGE.length
+    );
+    res.writeHead(200, { "content-type": "application/json" });
+    res.end(JSON.stringify({ Key: `${PANIER}/${chemin}` }));
     return;
   }
   if (u.pathname.startsWith(`/storage/v1/object/${PANIER}/`)) {
@@ -593,11 +659,19 @@ function repondre(req, res, u, brut) {
   } else {
     for (const [cle, val] of u.searchParams) {
       if (["select", "order", "limit", "offset"].includes(cle)) continue;
-      const m = /^(eq|in)\.(.*)$/.exec(val);
+      //  §2 (nº 692) — `neq` REJOINT `eq` ET `in`, et le banc l'a
+      //  réclamé : sans lui, un « tous les autres portfolios de cette
+      //  personne » rendait AUSSI celui qu'on supprimait, et le ménage
+      //  du stockage se croyait interdit d'effacer quoi que ce soit.
+      const m = /^(eq|neq|in)\.(.*)$/.exec(val);
       if (!m) continue;
-      if (m[1] === "eq") {
+      if (m[1] === "eq" || m[1] === "neq") {
         const attendu = m[2] === "true" ? true : m[2] === "false" ? false : m[2];
-        corps = corps.filter((l) => String(l[cle]) === String(attendu));
+        corps = corps.filter((l) =>
+          m[1] === "eq"
+            ? String(l[cle]) === String(attendu)
+            : String(l[cle]) !== String(attendu)
+        );
       } else {
         const liste = m[2].replace(/^\(|\)$/g, "").split(",").map((s) => s.replace(/^"|"$/g, ""));
         corps = corps.filter((l) => liste.includes(String(l[cle])));

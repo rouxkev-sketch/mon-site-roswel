@@ -1,5 +1,12 @@
 import { DELAI_SUPPRESSION_JOURS } from "@/config/tatouage";
 import { creerClientSupabaseAdmin } from "@/lib/supabase/admin";
+//  §1 (nº 692) — LE MÉNAGE DU STOCKAGE, écrit une seule fois pour les
+//  quatre chemins qui en ont besoin (voir lib/photos-stockage).
+import {
+  direLeMenage,
+  nettoyerLeStockageDUnCompte,
+  nettoyerLeStockageDUnPortfolio,
+} from "@/lib/photos-stockage";
 
 /**
  * LA SUPPRESSION DE COMPTE, EN TROIS TEMPS
@@ -36,8 +43,6 @@ import { creerClientSupabaseAdmin } from "@/lib/supabase/admin";
     même chiffre, forcément. (Ce fichier parle à la clé de service :
     il ne doit JAMAIS être importé par un composant du navigateur.) */
 export { DELAI_SUPPRESSION_JOURS };
-
-const BUCKET_PHOTOS = "photos-tatoueurs";
 
 /** Vrai quand l'erreur vient d'une table ou d'une colonne absente. */
 function structureAbsente(message: string): boolean {
@@ -162,10 +167,15 @@ export async function suppressionEnCours(
  * réellement effacées.
  *
  * ⚠️ LES PHOTOS SONT RANGÉES PAR COMPTE, pas par fiche
- * (photos-tatoueurs/<id du compte>/…) : on n'efface donc QUE les
- * fichiers dont le nom porte l'identifiant de la fiche, et on laisse
- * intact le reste du dossier — les autres fiches du même compte y
- * vivent aussi.
+ * (photos-tatoueurs/<id du compte>/…) : on laisse donc intact le reste
+ * du dossier — les autres fiches du même compte y vivent aussi.
+ * ⚠️ ET LA PHRASE QUI SUIVAIT ÉTAIT FAUSSE, ELLE A COÛTÉ TOUTES LES
+ * PHOTOS (nº 692) : elle disait « on n'efface que les fichiers dont le
+ * nom porte l'identifiant de la fiche ». Aucun nom ne le porte — ils
+ * s'appellent `<style>-<horodatage>-<rang>.jpg`. Le filtre ne retenait
+ * rien, et rien n'était jamais effacé. On efface désormais d'après les
+ * ADRESSES QUE LA BASE CONNAÎT (lib/photos-stockage), ce qui donne à la
+ * fois le bon périmètre et la bonne garantie.
  */
 /**
  * ██ §1 (nº 675) — EFFACER UNE FICHE, ET SES PHOTOS AVEC ██
@@ -191,21 +201,34 @@ async function effacerUneFiche(
   id: string,
   userId: string | null
 ): Promise<void> {
-  if (userId) {
-    try {
-      const { data: fichiers } = await admin.storage
-        .from(BUCKET_PHOTOS)
-        .list(userId);
-      const aEffacer = (fichiers ?? [])
-        .filter((f) => f.name.includes(id))
-        .map((f) => `${userId}/${f.name}`);
-      if (aEffacer.length > 0) {
-        await admin.storage.from(BUCKET_PHOTOS).remove(aEffacer);
-      }
-    } catch {
-      // Dossier introuvable : la suite reste valable.
-    }
+  /*  ██ §1 (nº 692) — LE MÉNAGE PART DES LIGNES, PLUS DES NOMS ██
+      ------------------------------------------------------------------
+      CE QUI ÉTAIT ÉCRIT ICI, ET CE QUE ÇA FAISAIT (audit nº 691, R1) :
+      on listait le dossier de la personne et l'on gardait les fichiers
+      « dont le nom contient l'identifiant du portfolio ». Or un fichier
+      s'appelle `<compte>/<style>-<horodatage>-<rang>.jpg` — il ne porte
+      JAMAIS cet identifiant. Le filtre ne retenait rien : PAS UNE SEULE
+      PHOTO n'a jamais été effacée, ni par la purge des trente jours, ni
+      par la suppression de l'administration. Prouvé au banc.
+      CE QUI LE REMPLACE : `nettoyerLeStockageDUnPortfolio`, qui efface
+      d'après les ADRESSES QUE LA BASE CONNAÎT (lib/photos-stockage).
+      ⚠️ IL N'A PLUS BESOIN DE `userId`, et c'est un progrès : les fiches
+      de démarchage n'en ont pas, et n'étaient donc même pas candidates
+      au ménage. Le paramètre reste — la purge du compte le passe — mais
+      la fonction ne s'en sert plus pour trouver les fichiers.
+      ⚠️ L'ORDRE EST LE CŒUR : ON LIT AVANT DE SUPPRIMER. Les lignes
+      effacées d'abord, plus rien ne dirait quels fichiers sont à elles.
+      ⚠️ ET LE MÉNAGE N'EMPÊCHE PAS LA SUPPRESSION : il ne lève jamais
+      (voir sa note). Seule l'erreur sur LA LIGNE est fatale — c'est
+      elle qui dit si la fiche existe encore. */
+  const menage = await nettoyerLeStockageDUnPortfolio(admin, id);
+  if (menage.echecs.length > 0) {
+    console.warn(
+      `[suppression] portfolio ${id} — ${direLeMenage(menage)} :`,
+      menage.echecs.slice(0, 5).map((e) => `${e.chemin} (${e.raison})`).join(" · ")
+    );
   }
+  void userId;
   const { error } = await admin.from("tatoueurs").delete().eq("id", id);
   if (error) throw new Error(error.message);
 }
@@ -278,18 +301,29 @@ export async function purgerComptesEchus(): Promise<{
 
   for (const ligne of data as Array<{ user_id: string }>) {
     try {
-      // 1. Les photos du compte (un dossier à son nom).
-      try {
-        const { data: fichiers } = await admin.storage
-          .from(BUCKET_PHOTOS)
-          .list(ligne.user_id);
-        if (fichiers && fichiers.length > 0) {
-          await admin.storage
-            .from(BUCKET_PHOTOS)
-            .remove(fichiers.map((f) => `${ligne.user_id}/${f.name}`));
-        }
-      } catch {
-        // Dossier introuvable : la suite reste valable.
+      /*  1. LES PHOTOS DU COMPTE — tout son dossier.
+          §1 (nº 692) — DEUX CHOSES CHANGENT ICI, ET UNE SEULE NE
+          CHANGE PAS :
+           · LA PAGINATION (audit nº 691, R4). `list()` était appelé
+             sans options : le client Supabase plafonne à CENT, et un
+             compte à plus de cent fichiers en gardait la queue pour
+             toujours. `listerToutLeDossier` pagine, et descend dans
+             les sous-dossiers.
+           · LE MÉNAGE NE LÈVE PLUS, il rend un compte rendu — un
+             fichier récalcitrant ne doit pas empêcher quelqu'un de
+             partir.
+          ⚠️ CE QUI NE CHANGE PAS, ET C'EST VOULU : ICI, ON BALAIE LE
+          DOSSIER. La règle « n'efface que ce que les lignes nomment »
+          vaut pour la suppression d'UN portfolio ; ici le COMPTE
+          ENTIER s'en va, le dossier porte son identifiant, tout ce
+          qu'il contient est à lui, et plus personne n'en veut rien.
+          C'est aussi la seule occasion de ramasser les orphelins des
+          fuites d'avant cette passe. */
+      const menage = await nettoyerLeStockageDUnCompte(admin, ligne.user_id);
+      if (menage.echecs.length > 0) {
+        console.warn(
+          `[purge] compte ${ligne.user_id} — ${direLeMenage(menage)}`
+        );
       }
 
       // 2. Le compte — la fiche suit en cascade.

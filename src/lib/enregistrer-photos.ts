@@ -1,4 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+//  §1 (nº 692) — le ménage du stockage, écrit une seule fois pour les
+//  quatre chemins qui en ont besoin (voir lib/photos-stockage).
+import {
+  cheminsDistincts,
+  direLeMenage,
+  effacerDesFichiers,
+} from "@/lib/photos-stockage";
 import { CONNEXIONS_SIMULTANEES, enPool } from "@/lib/televerser-photos";
 
 /**
@@ -96,11 +103,58 @@ export async function enregistrerPhotos(
       (id) => !photos.some((photo) => photo.id === id)
     );
     if (aSupprimer.length > 0) {
+      /*  ██ §1 (nº 692) — ET LE FICHIER PART AVEC LA LIGNE ██
+          ------------------------------------------------------------
+          CE QUE L'AUDIT nº 691 A TROUVÉ (R5) : la ligne partait, LE
+          FICHIER RESTAIT. Un portfolio remanié dix fois laissait dix
+          jeux de photos dans un seau public — des images que leur
+          auteur croyait supprimées.
+          ⚠️ ON LIT LES ADRESSES AVANT DE SUPPRIMER LES LIGNES, et
+          c'est tout le sujet : effacées d'abord, plus rien ne dirait
+          quels fichiers étaient à elles.
+          ⚠️ LES LIGNES D'ABORD, LES FICHIERS ENSUITE — l'ordre inverse
+          de la lecture, et c'est délibéré : si l'effacement échoue, il
+          reste un fichier de trop (invisible) ; dans l'autre sens il
+          resterait une ligne qui montre une image morte (visible).
+          ⚠️ LE MÉNAGE N'EMPÊCHE JAMAIS L'ENREGISTREMENT : il est hors
+          du chemin qui compte, et `effacerDesFichiers` ne lève pas.
+          La personne a le droit de supprimer une photo même si le
+          stockage boude.
+          ⚠️ ET C'EST BIEN LE NAVIGATEUR QUI EFFACE : la règle
+          « ménage dans son propre dossier » l'y autorise, sur son
+          dossier et lui seul (yokofolio-fiches-tatoueurs.sql). */
+      let aEffacer: string[] = [];
+      try {
+        const { data, error } = await supabase
+          .from("photos_tatoueur")
+          .select("url, miniature")
+          .eq("tatoueur_id", ficheId)
+          .in("id", aSupprimer);
+        if (!error) {
+          aEffacer = cheminsDistincts(
+            ((data ?? []) as Array<{ url?: string; miniature?: string | null }>)
+              .flatMap((photo) => [photo.url, photo.miniature])
+          );
+        }
+      } catch {
+        //  Adresses illisibles : on supprime quand même les lignes.
+        aEffacer = [];
+      }
+
       await supabase
         .from("photos_tatoueur")
         .delete()
         .eq("tatoueur_id", ficheId)
         .in("id", aSupprimer);
+
+      if (aEffacer.length > 0) {
+        const menage = await effacerDesFichiers(supabase, aEffacer);
+        if (menage.echecs.length > 0) {
+          console.warn(
+            `[photos] portfolio ${ficheId} — ${direLeMenage(menage)}`
+          );
+        }
+      }
     }
 
     // 2) CE QUI RESTE ET CE QUI ARRIVE — dans l'ordre de la galerie.
