@@ -173,8 +173,9 @@ repasse.
 
 ## Les fichiers qui ne sont PAS des migrations
 
-Deux fichiers du dossier ne portent aucun numéro : ce sont des OUTILS,
-à ouvrir le jour où l'on en a besoin, jamais à passer dans l'ordre.
+Quelques fichiers du dossier ne portent aucun numéro : ce sont des
+OUTILS, à ouvrir le jour où l'on en a besoin, jamais à passer dans
+l'ordre.
 
 - **`yokofolio-releve-fiches.sql`** — affiche, fiche par fiche, la
   valeur exacte des colonnes qui décident de la visibilité (`publie`,
@@ -190,6 +191,13 @@ Deux fichiers du dossier ne portent aucun numéro : ce sont des OUTILS,
 - **`yokofolio-retirer-un-style.sql`** — retire un style accepté du
   catalogue (chemin de secours : /admin le fait en un bouton depuis la
   passe nº 123).
+- **`yokofolio-bienvenue-unique.sql`** — *(passe nº 695)* **tu n'es pas
+  obligé de le lancer.** Le site retire tout seul les messages de
+  bienvenue en double, compte par compte, dès que chacun rouvre sa
+  boîte de nouvelles. Ce fichier ne sert qu'à nettoyer d'un coup les
+  comptes qui ne se reconnecteront peut-être jamais. Il affiche ce
+  qu'il va effacer AVANT de le faire, garde toujours la plus ancienne
+  bienvenue de chaque compte, et ne touche à aucune autre nouvelle.
 
 ---
 

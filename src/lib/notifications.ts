@@ -163,13 +163,65 @@ export const TITRE_NOTIFICATION: Record<GenreNotification, string> = {
  * reçoivent eux aussi, à leur prochaine ouverture. C'est le prix de ne
  * pas dépendre de l'instant de l'inscription — et c'est aussi ce qui
  * permet au propriétaire de la voir sur son propre compte.
- * ⚠️ LE DOUBLON EST POSSIBLE EN THÉORIE, et je le dis plutôt que de
- * le taire : deux lectures rigoureusement simultanées du même compte
- * verraient toutes deux une boîte sans bienvenue. Il faudrait un index
- * unique en base pour l'exclure — donc une migration à passer. Le cas
- * demande d'ouvrir la même boîte deux fois dans la même poignée de
- * millisecondes ; la ligne en double se marquerait comme lue et
- * s'effacerait de l'attention. On ne paie pas une migration pour ça.
+ *
+ * ██ §1 (nº 695) — LA GARDE EST UNE LECTURE QUI VISE ██
+ * ==================================================================
+ * CE QUE L'AUDIT nº 691 A TROUVÉ (R6, orange) : « si elle n'y est pas
+ * déjà » se lisait dans LES 50 DERNIÈRES nouvelles, la liste que la
+ * route venait de charger. Or la bienvenue est, par construction, LA
+ * PLUS ANCIENNE du compte. Passé cinquante nouvelles elle sort de la
+ * fenêtre — la garde ne la voit plus, et en repose une.
+ * ⚠️ LE RYTHME EXACT, MESURÉ AU BANC, ET IL N'EST PAS CELUI QU'ON
+ * CROIT : PAS une par lecture. Le doublon qui vient d'être posé est la
+ * ligne la plus RÉCENTE ; il tombe donc dans la fenêtre et la garde le
+ * voit — jusqu'à ce que cinquante nouvelles l'en chassent à son tour.
+ * La croissance est donc d'UNE BIENVENUE PAR CINQUANTE NOUVELLES, sans
+ * fin. Le banc de la passe le montre ligne à ligne : 60 nouvelles et
+ * dix ouvertures d'affilée n'en ajoutent qu'une ; cinq ouvertures
+ * espacées de cinquante nouvelles en ajoutent cinq.
+ * C'EST DONC LE COMPTE LE PLUS ACTIF QUI PAIE LE PLUS — celui du
+ * propriétaire, qui reçoit sans cesse. La nº 693 en a montré l'effet
+ * sans le nommer : sa route des nouvelles était la plus lente du site.
+ *
+ * LA GARDE NE REGARDE PLUS UNE FENÊTRE, ELLE VISE LA LIGNE : `genre =
+ * bienvenue` pour ce compte-ci, la plus ancienne d'abord. Deux lignes
+ * demandées, pas une, et c'est tout le §2 ci-dessous.
+ * ⚠️ CE QUE ÇA COÛTE, ET JE LE DIS AUSSI : une lecture de plus à chaque
+ * ouverture, là où la fenêtre servait de test gratuit. Elle porte sur
+ * l'index `(user_id, creee_le desc)` qui existe déjà (migration nº 25)
+ * et rend deux lignes minuscules. En face, on retire une ÉCRITURE par
+ * ouverture sur les comptes chargés. Le change est bon.
+ * ⚠️ ET LE DOUBLON SIMULTANÉ RESTE POSSIBLE, comme avant : deux
+ * lectures à la même milliseconde verraient toutes deux une base sans
+ * bienvenue. Il faudrait un index unique — donc une migration. Mais il
+ * n'a plus d'importance : le §2 ramasse le doublon à la lecture
+ * suivante, ce qui n'existait pas avant cette passe.
+ *
+ * ██ §2 (nº 695) — LES DOUBLONS DÉJÀ EN BASE SONT RETIRÉS AU PASSAGE ██
+ * ==================================================================
+ * Les comptes touchés en ont déjà un paquet — celui du propriétaire au
+ * premier chef, qui ouvre sa boîte plus que quiconque. Corriger la
+ * garde ne les efface pas : elle empêche seulement les suivants.
+ * LE CHOIX : le ménage se fait ICI, au passage, plutôt que par un SQL
+ * à coller dans la console. Trois raisons, dans cet ordre :
+ *  · il n'y a rien à lancer, rien à ne pas oublier — un compte se
+ *    répare tout seul la première fois qu'il ouvre sa boîte ;
+ *  · il ne coûte RIEN en régime normal : la lecture ci-dessus est déjà
+ *    faite, et l'effacement ne part que si elle rend DEUX lignes ;
+ *  · il vaut pour les comptes qu'on ne connaît pas — je n'ai aucune
+ *    liste des comptes touchés.
+ * (Le SQL équivalent est joint tout de même, pour les comptes qui ne
+ *  se reconnecteront jamais : supabase/yokofolio-bienvenue-unique.sql.)
+ * ⚠️ DEUX LIGNES DEMANDÉES, ET PAS UNE : `limit 1` suffirait à
+ * répondre « existe-t-elle ? », mais ne dirait pas « y en a-t-il en
+ * trop ? ». La deuxième ligne est ce qui rend le ménage gratuit.
+ * ⚠️ ON GARDE LA PLUS ANCIENNE — la vraie, celle du jour du compte —
+ * et l'ordre croissant la met en tête. Un seul effacement suffit quel
+ * que soit le nombre de doublons : il vise « toutes sauf elle ».
+ * ⚠️ LES TROIS VERROUS DE CET EFFACEMENT SONT ÉCRITS EXPRÈS. La clé de
+ * service passe outre la politique de sécurité : rien ne borne la
+ * requête à sa place. Le compte, le genre, et l'identifiant à épargner
+ * — les trois, ou l'on n'efface pas.
  */
 export async function poserLaBienvenue(
   userId: string
@@ -178,20 +230,50 @@ export async function poserLaBienvenue(
     const admin = creerClientSupabaseAdmin();
     const { data, error } = await admin
       .from("notifications_compte")
-      .insert({
-        user_id: userId,
-        genre: "bienvenue" as GenreNotification,
-        titre: TITRE_NOTIFICATION.bienvenue,
-      })
-      .select()
-      .single();
+      .select("id")
+      .eq("user_id", userId)
+      .eq("genre", "bienvenue" as GenreNotification)
+      .order("creee_le", { ascending: true })
+      .limit(2);
     if (error) throw new Error(error.message);
-    return (data as Notification) ?? null;
+    const dejaLa = (Array.isArray(data) ? data : []) as Array<{ id?: string }>;
+
+    //  AUCUNE : c'est le seul cas où l'on écrit.
+    if (dejaLa.length === 0) {
+      const { data: posee, error: erreurPose } = await admin
+        .from("notifications_compte")
+        .insert({
+          user_id: userId,
+          genre: "bienvenue" as GenreNotification,
+          titre: TITRE_NOTIFICATION.bienvenue,
+        })
+        .select()
+        .single();
+      if (erreurPose) throw new Error(erreurPose.message);
+      return (posee as Notification) ?? null;
+    }
+
+    //  DEUX : le compte traîne des doublons de l'ancienne garde.
+    const plusAncienne = dejaLa[0]?.id;
+    if (dejaLa.length > 1 && typeof plusAncienne === "string" && plusAncienne) {
+      const { error: erreurMenage } = await admin
+        .from("notifications_compte")
+        .delete()
+        .eq("user_id", userId)
+        .eq("genre", "bienvenue" as GenreNotification)
+        .neq("id", plusAncienne);
+      if (erreurMenage) throw new Error(erreurMenage.message);
+    }
+    //  ELLE EXISTE DÉJÀ : rien à rendre. Si elle est hors des cinquante
+    //  dernières, elle n'apparaît pas — et c'est juste : elle est la
+    //  plus ancienne d'un compte qui en a soixante.
+    return null;
   } catch (erreur) {
     //  La même règle que `creerNotification` : jamais bloquant. Une
-    //  boîte de nouvelles s'affiche très bien sans son accueil.
+    //  boîte de nouvelles s'affiche très bien sans son accueil — et un
+    //  ménage qui ne passe pas aujourd'hui repassera demain.
     console.warn(
-      "[notifications] bienvenue non écrite :",
+      "[notifications] bienvenue :",
       erreur instanceof Error ? erreur.message : erreur
     );
     return null;

@@ -53,9 +53,11 @@
  * (`tatoueurs`, `photos_tatoueur`) et la fonction de recherche
  * (`rpc/rechercher_tatoueurs`). Tout le reste rend une liste vide, ce
  * qui suffit au site. Pour ajouter une table : une entrée dans
- * `TABLES`, et c'est fini — les filtres `eq.` et `in.` sont déjà
- * honorés. Chaque requête est écrite dans le terminal avec le nombre de
- * lignes rendues : c'est ce journal qui dit ce qu'il manque.
+ * `TABLES`, et c'est fini — les filtres `eq.`, `neq.` et `in.` sont
+ * déjà honorés, EN LECTURE COMME EN SUPPRESSION (`order` et `limit`
+ * demandent le cran `TRI=1`, plus bas). Chaque requête est écrite dans
+ * le terminal avec le nombre de lignes rendues : c'est ce journal qui
+ * dit ce qu'il manque.
  */
 import { createServer } from "http";
 
@@ -183,6 +185,29 @@ const TABLE_MUETTE = process.env.TABLE_MUETTE ?? "";
  *      IGNORER_ID=1 npm run banc:doublure
  */
 const IGNORER_ID = process.env.IGNORER_ID === "1";
+
+/**
+ * ██ §1 (nº 695) — `TRI=1` : `order` EST HONORÉ, ET `limit` AVEC LUI ██
+ * ------------------------------------------------------------------
+ * LE MANQUE QUE L'AUDIT nº 691 A NOMMÉ : la doublure rendait TOUTE la
+ * table, dans l'ordre où les lignes avaient été rangées. Une route qui
+ * demande « les 50 plus récentes » recevait donc les 60 lignes du
+ * compte, la plus ancienne comprise — et un défaut qui ne se voit QUE
+ * lorsqu'une ligne tombe hors de la fenêtre devenait invisible.
+ * C'est le cas R6, celui de cette passe : la bienvenue est la plus
+ * ANCIENNE des nouvelles ; elle sort de la fenêtre passé cinquante, et
+ * la garde ne la voyait plus.
+ *
+ * ⚠️ LES DEUX VONT ENSEMBLE, ET C'EST LE POINT. Honorer `limit` sans
+ * `order`, ce serait couper cinquante lignes AU HASARD : le défaut se
+ * reproduirait parfois, pour la mauvaise raison. Une mesure qui dépend
+ * de l'ordre de rangement ne prouve rien.
+ * ⚠️ ET C'EST UN CRAN, comme la nº 690 : éteint, la doublure répond
+ * exactement comme avant, et aucun relevé déjà rendu n'est invalidé.
+ *
+ *      TRI=1 npm run banc:doublure
+ */
+const TRI = process.env.TRI === "1";
 
 /**
  * ██ §1 (nº 688) — LA DOUBLURE SAIT DÉSORMAIS DIRE QUI EST CONNECTÉ ██
@@ -620,8 +645,27 @@ function repondre(req, res, u, brut) {
       let vise = true;
       for (const [cle, val] of u.searchParams) {
         if (["select", "order", "limit", "offset"].includes(cle)) continue;
-        const m = /^eq\.(.*)$/.exec(val);
-        if (m && String(ligne[cle]) !== String(m[1])) vise = false;
+        /*  ██ §2 (nº 695) — `neq` ET `in` VALENT ICI AUSSI ██
+            LE PIÈGE, ET IL A DÉJÀ MORDU (nº 692, du côté des lectures) :
+            un filtre que la doublure ne SAIT PAS lire, elle l'ignore —
+            et une suppression qui ignore un filtre supprime PLUS LARGE
+            que demandé. Un « efface toutes les bienvenues SAUF la plus
+            ancienne » (`id=neq.…`) les effaçait donc TOUTES, et le banc
+            aurait prouvé le contraire de la vérité.
+            ⚠️ AUCUN RELEVÉ ANCIEN N'EN DÉPEND : les trois bancs qui
+            suppriment (nº 688, 692, 694) ne visent que par `eq`. Et un
+            banc ne peut de toute façon pas dépendre d'un effacement
+            TROP LARGE. Pas de cran, donc : c'est une correction. */
+        const m = /^(eq|neq|in)\.(.*)$/.exec(val);
+        if (!m) continue;
+        const valeur = String(ligne[cle]);
+        if (m[1] === "eq" && valeur !== String(m[2])) vise = false;
+        if (m[1] === "neq" && valeur === String(m[2])) vise = false;
+        if (m[1] === "in") {
+          const liste = m[2].replace(/^\(|\)$/g, "").split(",")
+            .map((s) => s.replace(/^"|"$/g, ""));
+          if (!liste.includes(valeur)) vise = false;
+        }
       }
       (vise ? parties : restantes).push(ligne);
     }
@@ -692,8 +736,32 @@ function repondre(req, res, u, brut) {
       LE PLAFOND, LUI, EST LE PIÈGE DE LA VRAIE BASE : PostgREST ne rend
       jamais plus de `max-rows` lignes, même si l'on en demande mille.
       C'est ce qui faisait rendre une copie tronquée pour complète. */
+  /*  §1 (nº 695) — LE TRI, AVANT LA COUPE. `order=creee_le.desc`, et
+      plusieurs colonnes séparées par des virgules comme le fait
+      PostgREST. On ne compare que des chaînes et des nombres : les
+      dates ISO se classent déjà bien en chaîne, et c'est tout ce dont
+      les bancs ont besoin. */
+  const tri = TRI ? (u.searchParams.get("order") ?? "") : "";
+  if (tri) {
+    const clefs = tri.split(",").map((bout) => {
+      const [colonne = "", ...options] = bout.trim().split(".");
+      return { colonne, sens: options.includes("asc") ? 1 : -1 };
+    });
+    corps = [...corps].sort((a, b) => {
+      for (const { colonne, sens } of clefs) {
+        const x = a[colonne], y = b[colonne];
+        if (x === y) continue;
+        //  Une valeur absente part au bout, dans les deux sens — c'est
+        //  le `nulls last` de PostgREST sur un tri descendant.
+        if (x == null) return 1;
+        if (y == null) return -1;
+        return (x < y ? -1 : 1) * sens;
+      }
+      return 0;
+    });
+  }
   const total = corps.length;
-  if (GRANDE_TABLE > 0 || PLAFOND > 0) {
+  if (GRANDE_TABLE > 0 || PLAFOND > 0 || TRI) {
     const debut = Number(u.searchParams.get("offset") ?? 0) || 0;
     let combien = Number(u.searchParams.get("limit") ?? corps.length) || corps.length;
     if (PLAFOND > 0) combien = Math.min(combien, PLAFOND);

@@ -73,8 +73,6 @@ export async function GET() {
       notification ne s'écrit qu'avec la clé de service — il n'y a
       aucun passage serveur au moment où le compte naît. Le raisonnement
       complet est en tête de `poserLaBienvenue` (lib/notifications).
-      LE TEST EST CELUI DE LA LISTE QU'ON VIENT DE LIRE : aucune requête
-      de plus pour savoir si elle est déjà là.
       ⚠️ ELLE EST AJOUTÉE EN FIN DE LISTE, et c'est sa vraie place : la
       liste arrive du plus récent au plus ancien, et cette nouvelle-ci
       est, par construction, la plus ancienne du compte. Les suivantes
@@ -82,11 +80,18 @@ export async function GET() {
       ⚠️ SI L'ÉCRITURE ÉCHOUE, ON N'AJOUTE RIEN : la boîte s'affiche
       comme avant. `poserLaBienvenue` ne lève jamais.
       ⚠️ ET LE PLAFOND DE CINQUANTE N'EST PAS TOUCHÉ : cinquante lignes
-      lues, plus au pire cette ligne-ci qui n'y était pas encore. */
-  if (!notifications.some((nouvelle) => nouvelle.genre === "bienvenue")) {
-    const bienvenue = await poserLaBienvenue(user.id);
-    if (bienvenue) notifications.push(bienvenue);
-  }
+      lues, plus au pire cette ligne-ci qui n'y était pas encore.
+
+      ██ §1 (nº 695) — LE TEST N'EST PLUS CELUI DE CETTE LISTE-CI ██
+      Il l'était, et c'était le défaut : cette liste est une FENÊTRE de
+      cinquante, et la bienvenue est la plus ANCIENNE du compte. Passé
+      cinquante nouvelles elle en sortait, et la route en reposait une à
+      chaque ouverture. La garde est descendue dans `poserLaBienvenue`,
+      qui vise la ligne au lieu de fouiller une fenêtre — et qui retire
+      au passage les doublons déjà en base. La route ne fait plus que
+      l'appeler, et n'ajoute que ce qu'elle vient réellement d'écrire. */
+  const bienvenue = await poserLaBienvenue(user.id);
+  if (bienvenue) notifications.push(bienvenue);
 
   // LES DEMANDES DE RATTACHEMENT SONT RELUES À LA SOURCE.
   // Une notification est une PHRASE FIGÉE, écrite le jour de la
