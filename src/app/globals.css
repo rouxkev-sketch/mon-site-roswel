@@ -1434,6 +1434,24 @@ html[data-compte="revenant"]
 html[data-compte="connecte"] [data-zone-compte][data-session="muette"] {
   visibility: hidden;
 }
+
+/*  ██ nº 708 — LA ZONE DROITE DU SQUELETTE SUIT L'ÉTAT DU COMPTE ██
+    Les squelettes de chargement (SquelettesDePage) rendent LES DEUX
+    variantes de la zone d'actions — celle du connecté (les ronds) et
+    celle du déconnecté (globe + bloc « Rejoindre ») — et c'est ICI
+    que la bonne s'affiche, d'après `data-compte`, posé sur <html> par
+    le script AVANT la première peinture (le mécanisme de l'amorti du
+    compte, nº 357, juste au-dessus). Un squelette est prérendu : il
+    ne peut pas lire la session lui-même — le CSS décide, comme pour
+    la vraie barre. `:not(…)` couvre « revenant », « nouveau » ET
+    l'attribut absent : dans le doute, on montre le déconnecté, ce que
+    la vraie barre fait aussi. */
+html[data-compte="connecte"] [data-squelette-deconnecte] {
+  display: none;
+}
+html:not([data-compte="connecte"]) [data-squelette-connecte] {
+  display: none;
+}
 /* nº 439 — L'EMPREINTE DE LA RÉSERVE ÉTAIT À LA MAUVAISE TAILLE POUR
    UN CONNECTÉ. Le `visibility: hidden` ci-dessus ne peint rien (la
    promesse nº 203 tient), mais il gardait l'empreinte du DÉCONNECTÉ :

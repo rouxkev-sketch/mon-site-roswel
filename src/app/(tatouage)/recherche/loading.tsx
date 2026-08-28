@@ -1,4 +1,4 @@
-import { SqueletteMosaique } from "@/components/SquelettesDePage";
+import { SqueletteRecherche } from "@/components/SquelettesDePage";
 
 /**
  * ██ §2 (nº 706) — LA RECHERCHE RÉPOND AU CLIC ██
@@ -14,5 +14,5 @@ import { SqueletteMosaique } from "@/components/SquelettesDePage";
  * dès la première peinture (nº 191). Éprouvé au banc de la passe.
  */
 export default function ChargementRecherche() {
-  return <SqueletteMosaique />;
+  return <SqueletteRecherche />;
 }

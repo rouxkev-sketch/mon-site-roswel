@@ -35,18 +35,36 @@ import { RESERVE_RANGEE } from "@/lib/reserve-barre";
  * même cadre de photo (config). Si la vraie barre bouge, le squelette
  * suit — c'est la règle des écritures uniques (piège nº 378).
  *
- * ⚠️ UNE SEULE SILHOUETTE POUR LES TROIS PAGES, et c'est un FAIT
- * mesuré, pas une paresse : la recherche, style + ville et « Ma
- * sélection » ont LA MÊME géométrie — barre (logo · bloc central
- * 680 × 52 · trois ronds), titre, mosaïque. Le bloc central gris
- * couvre aussi bien le moteur (recherche) que l'encadré des deux
- * menus (sélection) : mêmes coordonnées, même taille.
- * ⚠️ CE QUI RESTE APPROXIMATIF, ET C'EST DIT : la zone des trois
- * ronds suppose un visiteur CONNECTÉ (le cas du propriétaire — au
- * doigt c'est trois ronds dans tous les états) ; au web déconnecté,
- * la vraie barre montre « Se connecter » à leur place pendant la
- * demi-seconde du squelette. Un squelette est prérendu : il ne peut
- * pas lire la session.
+ * ██ §1 (nº 708) — LA BARRE, ÉTAT PAR ÉTAT, MESURÉE ██
+ * ------------------------------------------------------------------
+ * Le propriétaire a relevé les écarts restants ; tout a été RE-MESURÉ
+ * sur la vraie barre (banc nº 708, rectangles et rayons calculés),
+ * et le squelette suit désormais CHAQUE état :
+ *
+ *  · LE BLOC CENTRAL DE LA RECHERCHE n'est pas une pilule : au web,
+ *    c'est un CHAMP À ANGLES ARRONDIS (624 × 46, rayon 12) suivi du
+ *    ROND DU FILTRE (46 × 46) — 680 en tout ; au doigt, la pilule
+ *    pleine largeur (358 × 46, bords ronds), SANS rond de filtre
+ *    (les filtres vivent dans la page plein écran) ;
+ *  · CELUI DE « MA SÉLECTION » n'est PAS le moteur : c'est le
+ *    va-et-vient Favoris | Portfolios — une plaque à ANGLES ARRONDIS
+ *    (rayon 12, la robe `rounded-xl` d'EncadreDeuxChamps), sans rond
+ *    de filtre, aux DEUX appareils ;
+ *  · LA ZONE DROITE SUIT L'ÉTAT DU COMPTE, par le mécanisme que le
+ *    site possède depuis la nº 357 : `data-compte`, posé sur <html>
+ *    par le script AVANT la première peinture. CONNECTÉ — au web de
+ *    la recherche : fanion + avatar (2 ronds) ; partout ailleurs
+ *    (doigt, et « Ma sélection » au web) : loupe + fanion + avatar
+ *    (3 ronds). DÉCONNECTÉ — au web : le globe + le bloc large
+ *    « Rejoindre » (133 × 40, rayon 12) ; au doigt : loupe + globe +
+ *    le rond « Rejoindre » (3 ronds). Les deux variantes sont dans le
+ *    HTML, et deux règles de `globals.css` (nº 708) montrent la
+ *    bonne — aucune lecture, aucun effet : du CSS, comme l'amorti du
+ *    compte de la vraie barre ;
+ *  · « MA SÉLECTION » N'A NI TITRE NI SOUS-TITRE : sa grille commence
+ *    directement — les barres grises du titre étaient des fantômes.
+ * La fiche et l'éditeur n'ont pas de squelette (nº 706 : ils arrivent
+ * tout de suite), rien n'y change.
  * ⚠️ AUCUN ÉTAT, AUCUNE LECTURE, AUCUN EFFET : des `<div>` et des
  * classes. Un retour DOUX ne passe pas par ici (réserve du routeur,
  * bancs nº 706/707) ; une navigation AVANT arrive en haut.
@@ -71,12 +89,45 @@ import { RESERVE_RANGEE } from "@/lib/reserve-barre";
  */
 
 /** Le rond d'action de la barre : même gabarit que les icônes (40). */
-function RondGris() {
+function RondGris({ classe = "" }: { classe?: string }) {
   return (
     <span
       aria-hidden="true"
-      className="h-10 w-10 shrink-0 rounded-full bg-sombre-eleve"
+      className={`h-10 w-10 shrink-0 rounded-full bg-sombre-eleve ${classe}`}
     />
+  );
+}
+
+/**
+ * LA ZONE DROITE, DANS LES DEUX ÉTATS — les deux variantes sont
+ * rendues, et `globals.css` (nº 708) n'affiche que celle de l'état
+ * que le script a écrit dans `html[data-compte]` (nº 357). Mesures :
+ * connecté = ronds de 40 (loupe absente au web de la recherche —
+ * `lg:hidden`, la même règle que la vraie loupe, nº 150-§3) ;
+ * déconnecté = loupe (doigt), globe, puis « Rejoindre » : un rond au
+ * doigt, un bloc large 133 × 40 à angles arrondis au web.
+ */
+function ZoneDroite({ loupeAuWeb }: { loupeAuWeb: boolean }) {
+  return (
+    <div
+      className="order-2 lg:order-3 ml-auto lg:ml-0 lg:flex-none shrink-0
+                 flex items-center justify-end gap-3"
+    >
+      <span data-squelette-connecte="" className="contents">
+        <RondGris classe={loupeAuWeb ? "" : "lg:hidden"} />
+        <RondGris />
+        <RondGris />
+      </span>
+      <span data-squelette-deconnecte="" className="contents">
+        <RondGris classe="lg:hidden" />
+        <RondGris />
+        <RondGris classe="lg:hidden" />
+        <span
+          aria-hidden="true"
+          className="hidden lg:block h-10 w-[133px] shrink-0 rounded-[12px] bg-sombre-eleve"
+        />
+      </span>
+    </div>
   );
 }
 
@@ -91,7 +142,7 @@ function RondGris() {
  * `lib/reserve-barre`, écriture unique) qui tient la place du
  * document — sans lui, tout le squelette vivait caché sous la barre.
  */
-function BarreSquelette() {
+function BarreSquelette({ centre }: { centre: "recherche" | "selection" }) {
   return (
     <>
       <header className="sticky top-0 z-50 mobile:fixed mobile:inset-x-0 bg-sombre-fond">
@@ -107,20 +158,35 @@ function BarreSquelette() {
               />
             </div>
           </div>
-          <div
-            className="order-2 lg:order-3 ml-auto lg:ml-0 lg:flex-none shrink-0
-                       flex items-center justify-end gap-3"
-          >
-            <RondGris />
-            <RondGris />
-            <RondGris />
-          </div>
+          <ZoneDroite loupeAuWeb={centre === "selection"} />
           <div
             className="order-3 lg:order-2 basis-full lg:basis-[680px] lg:shrink
-                       lg:grow-0 lg:mx-auto min-w-0 flex justify-center
-                       max-lg:pt-3"
+                       lg:grow-0 lg:mx-auto min-w-0 max-lg:pt-3
+                       flex items-center lg:min-h-[52px]"
           >
-            <div className="h-[46px] lg:h-[52px] w-full max-w-[680px] rounded-full bg-sombre-eleve" />
+            {/*  `lg:min-h-[52px]` : la vraie enveloppe du moteur fait
+                 52 de haut au web (champ de 46 + son air) — c'est elle
+                 qui donne à la barre ses 76 px ; sans cette hauteur,
+                 le squelette faisait une barre de 72 et tout le corps
+                 remontait de 4 px (mesuré, banc nº 708). */}
+            {centre === "recherche" ? (
+              /*  Le moteur : champ à angles arrondis + rond du filtre
+                  au web ; pilule pleine largeur, sans filtre, au
+                  doigt. Cotes mesurées (624 + 10 + 46 = 680 · 46 de
+                  haut partout). */
+              <div className="flex items-center gap-[10px] w-full max-w-[680px] mx-auto">
+                <div className="h-[46px] flex-1 rounded-full lg:rounded-[12px] bg-sombre-eleve" />
+                <span
+                  aria-hidden="true"
+                  className="hidden lg:block h-[46px] w-[46px] shrink-0 rounded-full bg-sombre-eleve"
+                />
+              </div>
+            ) : (
+              /*  Le va-et-vient Favoris | Portfolios : UNE plaque à
+                  angles arrondis (la robe rounded-xl de son encadré),
+                  sans rond de filtre, aux deux appareils. */
+              <div className="h-[46px] w-full max-w-[680px] mx-auto rounded-[12px] bg-sombre-eleve" />
+            )}
           </div>
         </div>
       </header>
@@ -166,21 +232,27 @@ function CarteGrise() {
  * est couvert aux deux appareils sans fabriquer une page
  * artificiellement longue.
  */
-function MosaiqueGrise() {
+function MosaiqueGrise({ avecTitre }: { avecTitre: boolean }) {
   return (
     <main
       aria-busy="true"
       aria-label="Chargement de la page"
       className={`flex-1 mx-auto w-full ${LARGEUR_SITE} px-4 sm:px-6 pb-16 animate-pulse`}
     >
-      <div className={RYTHME_TITRE_RESULTATS}>
-        <div className="h-[21px] sm:h-[33px] w-44 bg-sombre-eleve" />
-        {/*  Le SOUS-TITRE (« N portfolios ») : la vraie ligne fait
-             23 px au doigt, 30 au web, 4-6 px sous le titre — sans
-             elle, la grille grise montait de 28-36 px et sautait à
-             l'arrivée (mesuré, nº 707). */}
-        <div className="mt-[4px] h-[23px] sm:mt-[6px] sm:h-[30px] w-28 bg-sombre-eleve" />
-      </div>
+      {avecTitre ? (
+        <div className={RYTHME_TITRE_RESULTATS}>
+          <div className="h-[21px] sm:h-[33px] w-44 bg-sombre-eleve" />
+          {/*  Le SOUS-TITRE (« N portfolios ») : la vraie ligne fait
+               23 px au doigt, 30 au web, 4-6 px sous le titre — sans
+               elle, la grille grise montait de 28-36 px et sautait à
+               l'arrivée (mesuré, nº 707). */}
+          <div className="mt-[4px] h-[23px] sm:mt-[6px] sm:h-[30px] w-28 bg-sombre-eleve" />
+        </div>
+      ) : (
+        /*  « Ma sélection » n'a ni titre ni sous-titre (nº 708) : la
+            grille commence après le seul espacement du rythme. */
+        <div className="pt-6 sm:pt-8 mobile:pt-3" />
+      )}
       <ul className={CLASSES_GRILLE_CARTES}>
         {Array.from({ length: 8 }, (_, rang) => (
           <CarteGrise key={rang} />
@@ -190,14 +262,24 @@ function MosaiqueGrise() {
   );
 }
 
-/** LA silhouette des trois pages à squelette (recherche, style +
-    ville, « Ma sélection ») — une seule, parce que leur géométrie est
-    UNE (voir l'en-tête du fichier). */
-export function SqueletteMosaique() {
+/** LA RECHERCHE (et la page style + ville, même famille) : moteur au
+    centre, titre et sous-titre, mosaïque. */
+export function SqueletteRecherche() {
   return (
     <>
-      <BarreSquelette />
-      <MosaiqueGrise />
+      <BarreSquelette centre="recherche" />
+      <MosaiqueGrise avecTitre />
+    </>
+  );
+}
+
+/** « MA SÉLECTION » : le va-et-vient au centre, PAS de titre, la même
+    mosaïque. */
+export function SqueletteSelection() {
+  return (
+    <>
+      <BarreSquelette centre="selection" />
+      <MosaiqueGrise avecTitre={false} />
     </>
   );
 }

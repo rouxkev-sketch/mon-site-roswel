@@ -1,4 +1,4 @@
-import { SqueletteMosaique } from "@/components/SquelettesDePage";
+import { SqueletteRecherche } from "@/components/SquelettesDePage";
 
 /**
  * §2 (nº 706) — LA PAGE STYLE + VILLE RÉPOND AU CLIC : même famille
@@ -6,5 +6,5 @@ import { SqueletteMosaique } from "@/components/SquelettesDePage";
  * `recherche/loading.tsx` et `SquelettesDePage`.
  */
 export default function ChargementStyleVille() {
-  return <SqueletteMosaique />;
+  return <SqueletteRecherche />;
 }
