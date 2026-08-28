@@ -35,6 +35,41 @@ import { GrilleTatoueurs } from "@/components/GrilleTatoueurs";
  */
 
 type Parametres = { style: string; ville: string };
+
+/**
+ * ██ §1 (nº 687) — CETTE PAGE NE PRÉPARE PLUS SES VOISINES ██
+ * ==================================================================
+ * CE QUE LE BALAYAGE nº 681 A TROUVÉ, et c'était la pire page du site :
+ * 6 322 ms. Sa requête la plus lente n'était pas une lecture de base —
+ * c'était UNE AUTRE PAGE style + ville, à ~760 ms, et il y en avait
+ * trois. La page préparait ses voisines.
+ *
+ * D'OÙ ELLES VIENNENT : le maillage « Autres styles à <ville> », plus
+ * bas. Il rend un lien PAR STYLE sauf le courant. Au banc, quatre
+ * styles font trois liens ; EN PRODUCTION, quarante et un styles en
+ * font QUARANTE. Chaque lien préparé est un rendu serveur complet
+ * d'une page qui interroge la base — quarante rendus pour un visiteur
+ * qui en regardera un, ou aucun.
+ *
+ * ⚠️ LES LIENS NE BOUGENT PAS D'UN CARACTÈRE. Ce sont toujours de
+ * vraies ancres, avec la même adresse et le même texte : cliquables,
+ * suivables, indexables. C'est TOUT le maillage interne de cette page,
+ * et c'est sa raison d'être — on ne touche pas à ce qui la fait
+ * exister. Seule la PRÉPARATION À L'AVANCE est coupée.
+ *
+ * ⚠️ MÊME RÈGLE QU'À LA nº 656, ET POUR LA MÊME RAISON : préparer une
+ * page que personne n'a demandée coûte un rendu serveur entier. Là-bas
+ * c'étaient les cartes de style vers « /recherche »
+ * (`PREPARER_LA_RECHERCHE_A_LAVANCE`), ici ce sont les styles voisins.
+ *
+ * ⚠️ LA PAGINATION GARDE SA PRÉPARATION, et c'est délibéré : deux liens
+ * au plus, vers la page suivante ou précédente du MÊME couple, que le
+ * visiteur qui fait défiler a toutes les chances de suivre. Deux
+ * préparations utiles ne se comparent pas à quarante inutiles.
+ */
+const PREPARER_LES_STYLES_VOISINS = false;
+
+
 type Recherche = Promise<{ page?: string }>;
 
 /* La lecture — partagée avec l'image de partage du même segment, pour
@@ -272,6 +307,8 @@ export default async function PageStyleVille({
               <li key={s.slug}>
                 <Link
                   href={`/tatouage/${s.slug}/${villeSlug}`}
+                  //  §1 (nº 687) — le lien reste, sa préparation part.
+                  prefetch={PREPARER_LES_STYLES_VOISINS}
                   className="inline-flex items-center rounded-full px-3.5 min-h-[34px]
                              border border-sombre-bordure bg-sombre-carte text-sm
                              text-sombre-texte-doux hover:border-primaire
