@@ -112,58 +112,34 @@ import {
  * nº 198, la fenêtre les garde groupés en haut à droite).
  */
 
-/** §3 (nº 329) — LE NOM DU PARAMÈTRE D'ONGLET, écrit une seule fois.
-    Absent = « Profil », l'onglet d'arrivée : une adresse nue reste
-    exactement ce qu'elle était avant cette passe. */
-export const PARAM_ONGLET = "onglet";
-
 /**
- * §4 (nº 329) — COMMENT ON EST ARRIVÉ SUR CETTE FICHE.
+ * §2 (nº 703) — LES QUATRE ÉCRITURES DE LA CONSIGNE ONT DÉMÉNAGÉ.
  * ------------------------------------------------------------------
- * `entree=lien` : par un LIEN INTERNE à un autre portfolio — équipe,
- * guest, salon, studio, adresse, rond de profil de « Ma sélection ».
- * La fiche s'ouvre alors SANS PHOTO EN HAUT : on commence par
- * Profil / Portfolio (point 6 de la règle de navigation).
- * Absent : arrivée par une CARTE ou un LIEN DE PARTAGE — la photo
- * est là, comme toujours.
- *
- * ⚠️ POURQUOI DANS L'ADRESSE, ALORS QUE LA nº 295 L'AVAIT MISE
- * AILLEURS EXPRÈS. Elle vivait dans le `sessionStorage`, pour qu'un
- * lien partagé ne l'emporte pas chez quelqu'un qui arrive de
- * l'extérieur. Mais cette mémoire SE CONSOMMAIT À LA PREMIÈRE
- * LECTURE : un retour la perdait, et la photo revenait. Le
- * propriétaire a tranché à la nº 329 — la consigne vit dans
- * l'adresse, comme l'onglet, pour que le retour ET le pas en avant
- * la retrouvent tout seuls. Le prix est connu et accepté : quelqu'un
- * qui copie une adresse portant `entree=lien` la partagera telle
- * quelle.
+ * `PARAM_ONGLET`, `PARAM_ENTREE`, `ENTREE_LIEN`,
+ * `avecConsigneDeLienInterne` et `adresseDeLienInterne` vivent
+ * désormais dans `lib/lien-interne` — avec leurs explications, mot
+ * pour mot. RIEN DE LA RÈGLE N'A CHANGÉ (nº 329-330) ; seul l'endroit
+ * a changé, et la raison est de POIDS, au sens propre : `MenuEspace`
+ * ne prenait ici que `avecConsigneDeLienInterne`, mais emportait avec
+ * elle CE FICHIER et tout ce qui pend derrière — jusqu'au client de la
+ * base, 62 Ko sur chaque page du site. Le détail est écrit là-bas.
+ * ⚠️ LA RÉEXPORTATION EST VOULUE, et elle doit rester : les appelants
+ * historiques (`FicheTatoueur`, `BlocLieux`, `BlocSuivis`) continuent
+ * d'écrire `from "@/components/ContenuFiche"` sans rien savoir du
+ * déménagement. Les NOUVEAUX appelants, eux, visent `lib/lien-interne`
+ * directement — c'est ce qui allège.
  */
-export const PARAM_ENTREE = "entree";
-export const ENTREE_LIEN = "lien";
+export {
+  PARAM_ONGLET,
+  PARAM_ENTREE,
+  ENTREE_LIEN,
+  avecConsigneDeLienInterne,
+  adresseDeLienInterne,
+} from "@/lib/lien-interne";
 
-/**
- * §4 (nº 330) — LA CONSIGNE, POSÉE SUR N'IMPORTE QUELLE ADRESSE.
- * ------------------------------------------------------------------
- * `adresseDeLienInterne` ne savait écrire que l'adresse PUBLIQUE d'un
- * portfolio (`/tatoueur/<slug>`). Or « Mon portfolio », dans le menu
- * « Mon espace », mène au portfolio par une AUTRE route — celle de
- * l'espace tatoueur, en aperçu (`/devenir-tatoueur/fiche?…&vue=apercu`).
- * C'est le même geste et la même attente : on arrive sur un portfolio
- * par un lien, la photo du haut ne monte pas.
- * L'ÉCRITURE RESTE UNIQUE — c'est celle-ci, et `adresseDeLienInterne`
- * n'est plus que son cas particulier. Aucun appelant n'écrit
- * « entree=lien » à la main.
- */
-export function avecConsigneDeLienInterne(adresse: string): string {
-  const separateur = adresse.includes("?") ? "&" : "?";
-  return `${adresse}${separateur}${PARAM_ENTREE}=${ENTREE_LIEN}`;
-}
-
-/** L'adresse d'un portfolio ouvert DEPUIS UN AUTRE PORTFOLIO. Écrite
-    une fois, employée par tous les liens internes. */
-export function adresseDeLienInterne(slug: string): string {
-  return avecConsigneDeLienInterne(`/tatoueur/${slug}`);
-}
+/*  Réexporter ne fait pas entrer le nom dans CE fichier : ce composant
+    lit lui-même l'onglet dans l'adresse, il lui faut donc l'import. */
+import { PARAM_ONGLET } from "@/lib/lien-interne";
 
 /**
  * ██ §1 ET §2 (nº 490) — UNE LIGNE DE CAPSULES : ALIGNÉE, ET REPLIÉE

@@ -2,7 +2,12 @@
 
 import { createContext, useContext, useSyncExternalStore } from "react";
 import type { User } from "@supabase/supabase-js";
-import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
+/*  §1 (nº 703) — LE TYPE VIENT DU MODULE, LA BIBLIOTHÈQUE N'EN VIENT
+    PLUS. `import type` est effacé à la compilation : il ne fait
+    entrer aucun octet dans la page. Le client, lui, arrive par
+    `clientSupabaseALaDemande` — voir la note de ce fichier-là. */
+import type { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
+import { clientSupabaseALaDemande } from "@/lib/supabase/client-a-la-demande";
 //  §1 (nº 645) — la photo du portfolio actif, rangée dans les mêmes
 //  métadonnées que le nom : une seule lecture, écrite là-bas.
 import { avatarDuCompte } from "@/lib/avatar-du-compte";
@@ -163,24 +168,76 @@ async function relireLIdentite(supabase: ReturnType<typeof creerClientSupabaseNa
   }
 }
 
-/** L'écoute Supabase — démarrée UNE fois, au premier abonnement. */
+/**
+ * L'écoute Supabase — démarrée UNE fois, au premier abonnement.
+ *
+ * ██ §1 (nº 703) — ELLE NE BLOQUE PLUS LE PREMIER AFFICHAGE ██
+ * ------------------------------------------------------------------
+ * CE QUI CHANGE : la bibliothèque du client arrive désormais par un
+ * `import()`, donc APRÈS un aller-retour réseau au lieu d'être déjà
+ * là. Cette fonction devient asynchrone, et c'est sans conséquence
+ * visible — parce qu'elle ne sert à RIEN de ce qui s'affiche tout de
+ * suite :
+ *  · l'identité du premier rendu vient du COOKIE (`instantane`, juste
+ *    en dessous), sans bibliothèque et sans attente — c'est l'acquis
+ *    nº 632, et il est intact ;
+ *  · `onAuthStateChange` ne sert qu'à SUIVRE un changement — une
+ *    connexion faite dans un autre onglet, une déconnexion. Le
+ *    remarquer un instant plus tard ne change rien pour personne ;
+ *  · `relireLIdentite` ne fait qu'AFFINER ce que le cookie a déjà dit,
+ *    et elle ne parle que si quelque chose a bougé (la garde nº 111).
+ * ⚠️ `ecouteLancee` EST POSÉ AVANT L'ATTENTE, et il le faut : deux
+ * abonnements dans le même tour de boucle — c'est le cas ordinaire,
+ * l'en-tête et le menu s'abonnent ensemble — lanceraient sinon deux
+ * écoutes et deux relectures.
+ * ⚠️ L'ÉCHEC RESTE MUET, comme avant : réglages absents, réseau coupé,
+ * bibliothèque non chargée — on retombe sur « personne », et le site
+ * fonctionne sans compte. Rien ne fige (règle nº 686/693).
+ */
 function demarrerEcoute() {
   if (ecouteLancee || typeof window === "undefined") return;
+  /**
+   * ██ §2 (nº 703) — PAS DE SESSION DANS LE COOKIE, PAS DE
+   * BIBLIOTHÈQUE ██
+   * ------------------------------------------------------------------
+   * MESURÉ AVANT D'ÉCRIRE CETTE LIGNE : sans elle, le §1 déplaçait la
+   * bibliothèque hors du premier paquet, mais elle partait quand même
+   * juste après — sur les mentions légales, sur « Contact », pour
+   * TOUT LE MONDE, connecté ou non. 62 Ko compressés pour un visiteur
+   * qui n'a pas de compte et ne lit rien.
+   * CE QUE CETTE LIGNE DIT : un visiteur SANS session n'a rien à
+   * écouter. `onAuthStateChange` ne sert qu'à SUIVRE un changement, et
+   * un changement ne peut venir que d'une connexion — laquelle se fait
+   * sur l'écran d'authentification, qui charge la bibliothèque lui-même
+   * et NAVIGUE ensuite. À l'arrivée, le cookie existe, et l'écoute
+   * démarre ici.
+   * ⚠️ `ecouteLancee` N'EST PAS POSÉ SUR CE CHEMIN, ET C'EST VOULU : le
+   * drapeau signifie « l'écoute tourne », pas « on a regardé une fois ».
+   * Chaque nouvel abonné relit donc le cookie — trois lignes de texte,
+   * aucun réseau — de sorte qu'une session apparue entre-temps ouvre
+   * l'écoute au premier composant qui se monte après elle.
+   * ⚠️ RIEN DE CE QUI S'AFFICHE N'EN DÉPEND : l'identité du premier
+   * rendu vient du cookie (`instantane`), et sans cookie il n'y a
+   * personne à afficher. Le site déconnecté est exactement le même.
+   */
+  if (!lireSessionDuCookie()) return;
   ecouteLancee = true;
-  try {
-    const supabase = creerClientSupabaseNavigateur();
-    supabase.auth.onAuthStateChange((_evenement, session) => {
-      poser(session?.user ?? null);
-    });
-    //  §1 (nº 674) — la relecture, ici et nulle part ailleurs : ce
-    //  bloc ne tourne QU'UNE FOIS par document (`ecouteLancee`), et
-    //  seulement si quelqu'un lit la session. Une page que personne ne
-    //  regarde connecté n'envoie rien.
-    if (lireSessionDuCookie()) void relireLIdentite(supabase);
-  } catch {
-    // Réglages Supabase absents : le site fonctionne sans compte.
-    poser(null);
-  }
+  void (async () => {
+    try {
+      const supabase = await clientSupabaseALaDemande();
+      supabase.auth.onAuthStateChange((_evenement, session) => {
+        poser(session?.user ?? null);
+      });
+      //  §1 (nº 674) — la relecture, ici et nulle part ailleurs : ce
+      //  bloc ne tourne QU'UNE FOIS par document (`ecouteLancee`), et
+      //  seulement si quelqu'un lit la session. Une page que personne ne
+      //  regarde connecté n'envoie rien.
+      if (lireSessionDuCookie()) void relireLIdentite(supabase);
+    } catch {
+      // Réglages Supabase absents : le site fonctionne sans compte.
+      poser(null);
+    }
+  })();
 }
 
 function sAbonner(prevenir: () => void) {

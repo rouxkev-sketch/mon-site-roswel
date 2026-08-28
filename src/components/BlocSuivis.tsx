@@ -12,7 +12,9 @@ import {
   CLASSES_LIGNE_CLIQUABLE_SANS_ENCADRE,
   PhotoRonde,
 } from "@/components/BlocLieux";
-import { adresseDeLienInterne } from "@/components/ContenuFiche";
+//  §2 (nº 703) — l'écriture unique, prise à la feuille : même cercle,
+//  même raison que dans `BlocLieux`.
+import { adresseDeLienInterne } from "@/lib/lien-interne";
 //  §2 (nº 586) — LA CAPSULE « SUIVI » DE LA FICHE, telle quelle : le
 //  même composant, donc la même apparence et la même bascule.
 import { BoutonSuivre } from "@/components/BoutonSuivre";

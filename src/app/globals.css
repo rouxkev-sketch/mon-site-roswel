@@ -1,5 +1,23 @@
 @import "tailwindcss";
 
+/*  ██ §5 (nº 703) — LES OUTILS D'ATELIER NE SONT PAS DU SITE ██
+    ------------------------------------------------------------------
+    CE QUI SE PASSAIT, ET C'EST MESURÉ. Tailwind lit TOUS les fichiers
+    du dossier pour y chercher des noms de classes. Les bancs de
+    `outils/` sont pleins de sélecteurs de test — `[role="dialog"]`,
+    `[role="listbox"]`, `[role="option"]`, tous suivis de `:visible`.
+    Tailwind les prenait pour des classes et FABRIQUAIT des règles à
+    partir d'eux : trois entrées mortes, dans la feuille servie à tout
+    le monde, qu'aucune balise du site ne portera jamais.
+    ⚠️ CE N'EST PAS UNE PASSE GRAPHIQUE : aucune règle du SITE ne
+    disparaît, aucune couleur ne bouge, pas un pixel. Seules s'en vont
+    des entrées nées d'une méprise — l'écart est écrit au caractère
+    près dans le compte rendu de la nº 703.
+    ⚠️ `outils/` NE PRODUIT AUCUN ÉCRAN : ni composant, ni page, ni
+    gabarit. Rien de ce qui s'y trouve ne peut avoir besoin d'une
+    classe. */
+@source not "../../outils";
+
 /*
  * Les couleurs ne sont PAS définies ici : elles viennent du fichier
  * de réglages central (src/config/roswel.ts) et sont injectées dans

@@ -24,7 +24,11 @@ import {
 //  §1 (nº 549), DÉPLACÉ À LA nº 640 — le rond de la TÊTE COMMUNE : la
 //  photo de profil du portfolio affiché, au doigt comme au web.
 //  Écriture unique du rond photo (nº 492).
-import { PhotoRonde } from "@/components/BlocLieux";
+//  §4 (nº 703) — LE ROND, PRIS À SON PROPRE FICHIER. Le viser dans
+//  `BlocLieux` faisait entrer ici la pile de fiches, la fenêtre de
+//  fiche et le contenu de fiche — et derrière eux le client de la
+//  base, sur chaque page du site. Voir `components/PhotoRonde`.
+import { PhotoRonde } from "@/components/PhotoRonde";
 //  §1 (nº 645) — l'avatar de la barre : lu dans la session, rangé par
 //  l'écriture unique de `lib/avatar-du-compte`.
 //  §1 (nº 657) — le nom du compte rejoint la photo : les deux
@@ -64,8 +68,29 @@ const FenetreNotifications = dynamic(
     ),
   { ssr: false }
 );
-//  §1 (nº 657) — la fenêtre « Modifier », quatrième surface de la barre.
-import { FenetreIdentite } from "@/components/FenetreIdentite";
+/**
+ * ██ §3 (nº 703) — LA FENÊTRE « MODIFIER » ARRIVE QUAND ON L'OUVRE ██
+ * ------------------------------------------------------------------
+ * §1 (nº 657) — la fenêtre « Modifier », quatrième surface de la barre.
+ * Elle sort du morceau commun EXACTEMENT comme la fenêtre des nouvelles
+ * à la nº 685, et pour une raison mesurée : elle lit et écrit dans la
+ * base, donc elle importait le client de la base, donc TOUTES LES PAGES
+ * du site le téléchargeaient — mentions légales comprises — pour une
+ * fenêtre qui ne s'affiche qu'après un clic sur « Modifier ».
+ * ⚠️ RIEN N'ATTEND CE MORCEAU AVANT LE GESTE : la fenêtre est montée
+ * derrière `identiteOuverte &&`, elle n'existe pas tant qu'on ne l'a
+ * pas ouverte. Le nom affiché, l'avatar et le point rose se lisent
+ * ailleurs (le cookie et le magasin) et ne bougent pas d'un instant.
+ * ⚠️ CE QUE ÇA COÛTE : à la PREMIÈRE ouverture, le morceau doit
+ * arriver. Les suivantes sont immédiates.
+ * ⚠️ `ssr: false` : cette fenêtre n'existe qu'après un geste, il n'y a
+ * jamais de HTML à en tirer côté serveur.
+ */
+const FenetreIdentite = dynamic(
+  () =>
+    import("@/components/FenetreIdentite").then((m) => m.FenetreIdentite),
+  { ssr: false }
+);
 import {
   CLASSE_ENCADRE_FENETRE,
   LARGEUR_FENETRE_BARRE,
@@ -110,13 +135,21 @@ import {
   semerLesNouvelles,
   useNotifications,
 } from "@/lib/magasin-notifications";
-import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
+//  §1 (nº 703) — le client de la base arrive À LA DEMANDE : ce
+//  composant vit dans le tronc, et son import direct pesait 62 Ko
+//  compressés sur toutes les pages (voir client-a-la-demande).
+import { clientSupabaseALaDemande } from "@/lib/supabase/client-a-la-demande";
 import { travailEnCours } from "@/lib/travail-en-cours";
 import { useVoileDeLaPage } from "@/components/VoileDeLaPage";
 import { useAppareilMobile } from "@/lib/appareil";
 //  §4 (nº 330) — la consigne « pas de photo en haut » des liens
 //  internes, posée par l'écriture unique.
-import { avecConsigneDeLienInterne } from "@/components/ContenuFiche";
+//  §2 (nº 703) — LA MÊME ÉCRITURE, PRISE À LA FEUILLE. Elle vivait
+//  dans `ContenuFiche` ; la réclamer là-bas faisait entrer LA FICHE
+//  ENTIÈRE dans le menu — donc dans l'en-tête, donc sur toutes les
+//  pages — et, derrière elle, le client de la base. Le déménagement
+//  et la mesure sont expliqués dans `lib/lien-interne`.
+import { avecConsigneDeLienInterne } from "@/lib/lien-interne";
 //  §7 (nº 662) — la couleur des liens des fiches, écrite une seule
 //  fois depuis la nº 388 : la ligne « Éditer » la prend telle quelle.
 import { LIEN_QUI_SORT } from "@/components/lignes-profil";
@@ -783,7 +816,7 @@ export function MenuEspace({
       La raison de la distinction est écrite dans `lireLesNouvelles`. */
   const lireLeCompte = useCallback(async () => {
     try {
-      const supabase = creerClientSupabaseNavigateur();
+      const supabase = await clientSupabaseALaDemande();
       const liste = await chargerFichesDuCompte(supabase, idUtilisateur);
       setFiches(liste);
       // On recale le choix : la fiche mémorisée peut avoir disparu.
@@ -883,12 +916,17 @@ export function MenuEspace({
   useEffect(() => {
     if (!compteLu) return;
     const personne = identiteDeLaPersonne(utilisateur);
-    void rangerLIdentiteAffichee(
-      creerClientSupabaseNavigateur(),
-      fiche
-        ? { photo: fiche.photo_profil, nom: fiche.nom }
-        : personne,
-      { photo: photoDuCompte, nom: nomAfficheDuCompte }
+    /*  §1 (nº 703) — le client arrive à la demande. Ce rattrapage
+        n'a AUCUNE urgence (il corrige un avatar) : l'attendre un
+        instant de plus ne se voit pas, et il ne bloque rien. */
+    void clientSupabaseALaDemande().then((supabase) =>
+      rangerLIdentiteAffichee(
+        supabase,
+        fiche
+          ? { photo: fiche.photo_profil, nom: fiche.nom }
+          : personne,
+        { photo: photoDuCompte, nom: nomAfficheDuCompte }
+      )
     );
   }, [
     compteLu,
@@ -1165,8 +1203,11 @@ export function MenuEspace({
       visiteur. Rien n'arrache le lecteur à ce qu'il regardait. */
   function deconnecter() {
     setOuvert(false);
-    creerClientSupabaseNavigateur()
-      .auth.signOut()
+    /*  §1 (nº 703) — le client arrive à la demande. La fenêtre s'est
+        DÉJÀ refermée à la ligne du dessus : la personne ne voit aucune
+        attente, et l'appel part derrière. */
+    void clientSupabaseALaDemande()
+      .then((supabase) => supabase.auth.signOut())
       .catch(() => {
         // Serveur injoignable : la session locale est déjà effacée.
       });

@@ -596,6 +596,56 @@ function repondre(req, res, u, brut) {
     return;
   }
 
+  /**
+   * §2 (nº 703) — OUVRIR UNE SESSION POUR DE VRAI.
+   * ------------------------------------------------------------------
+   * POURQUOI ELLE ARRIVE MAINTENANT. La nº 703 ne charge la
+   * bibliothèque du client QUE si un cookie de session existe. La
+   * question qui décide de cette écriture est donc : « après une
+   * connexion faite DANS le document, l'en-tête se met-il à jour ? »
+   * On ne peut y répondre qu'en se connectant réellement — d'où cette
+   * route, que la doublure ne connaissait pas.
+   * ⚠️ AUCUN MOT DE PASSE N'EST VÉRIFIÉ, et il ne faut pas s'en
+   * étonner : la doublure ne garde aucun compte. Elle rend une session
+   * bien formée pour l'adresse demandée, c'est tout ce que le banc a
+   * besoin d'éprouver. Elle ne sert JAMAIS en production.
+   */
+  if (u.pathname === "/auth/v1/token" && req.method === "POST") {
+    let courriel = "banc@yokofolio.test";
+    try { courriel = JSON.parse(brut || "{}").email ?? courriel; } catch { /* corps vide */ }
+    const identifiant = "eeee0000-0000-4000-8000-0000000ent03";
+    const b64u = (o) => Buffer.from(JSON.stringify(o)).toString("base64")
+      .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    const expire = Math.floor(Date.now() / 1000) + 3600;
+    const identite = { nom: "Kevin", nom_affiche: "Kevin" };
+    const personne = {
+      id: identifiant, aud: "authenticated", role: "authenticated",
+      email: courriel, app_metadata: { provider: "email", providers: ["email"] },
+      user_metadata: identite, created_at: new Date(0).toISOString(),
+    };
+    const jeton = [
+      b64u({ alg: "HS256", typ: "JWT" }),
+      b64u({ sub: identifiant, aud: "authenticated", role: "authenticated",
+        email: courriel, exp: expire, iat: Math.floor(Date.now() / 1000),
+        app_metadata: personne.app_metadata, user_metadata: identite }),
+      "signature-de-banc",
+    ].join(".");
+    console.log(
+      new Date().toISOString().slice(11, 19),
+      "POST auth/token →", courriel
+    );
+    res.writeHead(200, {
+      "content-type": "application/json",
+      "access-control-allow-origin": "*",
+    });
+    res.end(JSON.stringify({
+      access_token: jeton, token_type: "bearer", expires_in: 3600,
+      expires_at: expire, refresh_token: "rafraichissement-de-banc",
+      user: personne,
+    }));
+    return;
+  }
+
   //  §1 (nº 688) — QUI EST CONNECTÉ. Voir la note de `utilisateurDuJeton`.
   if (u.pathname === "/auth/v1/user") {
     const personne = utilisateurDuJeton(req);

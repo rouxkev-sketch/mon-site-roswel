@@ -133,6 +133,50 @@ consommateurs suivent.
   chargement. Les deux se voient au banc nº 693 (normal-693) et au
   banc des cœurs.
 
+#### FAIT À LA PASSE nº 703 — ET LA TECHNIQUE ANNONCÉE ICI ÉTAIT INSUFFISANTE
+
+Ce paragraphe disait « un seul fichier à changer ». **C'était faux, et
+la mesure l'a montré tout de suite** : après avoir converti
+`use-utilisateur` et `MenuEspace` en chargement à la demande, le
+morceau de la base partait TOUJOURS sur toutes les pages, au poids
+près. Le compilateur avait bien séparé le code — il ne servait plus
+depuis le fichier applicatif du tronc — mais le HTML le listait encore
+parmi ses scripts de page.
+
+**LA VRAIE CAUSE, lue dans le manifeste de compilation**
+(`page_client-reference-manifest.js`) : trois chaînes d'imports
+STATIQUES partaient de l'en-tête, monté sur chaque page.
+
+| Chaîne | Ce que le menu voulait vraiment |
+|---|---|
+| `MenuEspace → FenetreIdentite → supabase` | la fenêtre « Éditer », qui ne s'ouvre qu'au clic |
+| `MenuEspace → ContenuFiche → BoutonHorsLigne → supabase` | **une fonction de dix lignes** (`avecConsigneDeLienInterne`) |
+| `MenuEspace → BlocLieux → PileFiches → FenetreFiche → ContenuFiche → …` | **un rond de 52 px** (`PhotoRonde`) |
+
+Un import va chercher le FICHIER ENTIER : deux helpers minuscules
+suffisaient à faire voyager la fiche complète, et derrière elle le
+client de la base, sur les mentions légales. Le remède n'a rien de
+profond — sortir les deux helpers dans des feuilles
+(`lib/lien-interne`, `components/PhotoRonde`, réexportés depuis leur
+ancien logis pour ne rien casser) et passer la fenêtre « Éditer » en
+`next/dynamic`, exactement comme la fenêtre des nouvelles à la nº 685.
+
+**UN SECOND PALIER, mesuré après le premier :** la bibliothèque ne
+bloquait plus l'affichage, mais elle partait quand même juste après —
+`demarrerEcoute` la réclamait pour poser `onAuthStateChange`, connecté
+ou non. Une ligne de garde (« pas de cookie de session, pas de
+bibliothèque ») l'a supprimée pour tout visiteur SANS compte.
+
+**LE RÉSULTAT MESURÉ**, mentions légales : 342 → **237 Ko gzip
+(−105)**, 3G rapide 3,2 → 2,6 s. Les pages qui lisent vraiment gardent
+la bibliothèque (−1 à −14 Ko, le repaquetage). Position, retour,
+témoins : identiques à la référence, au pixel.
+
+**CE QUI RESTE, ET QUI N'EST PAS FAIT :** un visiteur CONNECTÉ sur une
+page qui ne lit rien reçoit encore les 62 Ko, après l'affichage, pour
+la seule relecture d'identité de la nº 674. S'en passer voudrait dire
+réécrire `getUser()` à la main — une passe à part, pas celle-ci.
+
 ### L4 · Le PANNEAU du moteur à la demande — ~35 à 45 Ko gzip, ~0,2 s en 3G
 
 Le fichier de 58 Ko gzip se découpe en deux : **la barre visible**
