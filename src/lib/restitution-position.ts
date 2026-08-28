@@ -37,9 +37,9 @@ import {
  *     que le défilement demandé ne soit pas raboté pendant que les
  *     images se posent ;
  *  2. POSER le défilement, une fois.
- * La réserve s'efface d'elle-même dès que le contenu réel l'atteint —
- * on mesure la hauteur du CORPS, que la réserve ne concerne pas — ou au
- * bout de cinq secondes.
+ * La réserve s'efface d'elle-même dès que le contenu réel la DÉPASSE
+ * (§1 nº 711 — strictement : voir `surveillerLaReserve`, la mesure
+ * d'origine se regardait elle-même), ou au bout de cinq secondes.
  *
  * ⚠️ POURQUOI SUR <html> ET PAS SUR LE CORPS : React rend <body>, et
  * tout ce qu'on y écrit avant l'hydratation devient un écart
@@ -60,13 +60,46 @@ const ATTENTE_MAX_MS = 5000;
 let arreter: (() => void) | null = null;
 
 /**
- * Garde la réserve tant que le contenu réel ne la remplit pas, puis
+ * Garde la réserve tant que le contenu réel ne la DÉPASSE pas, puis
  * l'efface. Sans elle, la page rétrécirait sous les pieds de
  * l'utilisateur.
+ *
+ * ██ §1 (nº 711) — LA MESURE SE REGARDAIT ELLE-MÊME, ET C'ÉTAIT TOUT
+ * LE « TÉMOIN B » ██
+ * ------------------------------------------------------------------
+ * L'ANCIEN TEST : « le CORPS ≥ la réserve » — écrit en croyant que la
+ * hauteur du corps ignore la réserve (elle est posée sur <html>). Or
+ * le corps porte `min-h-full` (layout.tsx) : il SUIT <html>, donc il
+ * SUIT LA RÉSERVE. Filmé image par image (banc nº 711) : le script
+ * d'avant-peinture pose réserve (1989) + défilement (1145) ; corps
+ * mesuré 1989 = la réserve elle-même ; le test se satisfait À LA
+ * PREMIÈRE IMAGE, la réserve part, le document retombe à la hauteur
+ * du squelette (1648) et le navigateur CLAMPE le défilement (804).
+ * Que le retour finisse juste ou faux dépendait alors d'une SECONDE
+ * course : `MemoireNavigation` ne repose la place que s'il lit le
+ * drapeau `positionPosee` DÉJÀ effacé (voir sa garde) — d'où le
+ * témoin B qui alternait, passe après passe.
+ * LE TEST D'AUJOURD'HUI : « le DOCUMENT DÉPASSE la réserve »,
+ * STRICTEMENT — tant que la réserve tient, le document ne peut pas
+ * faire PLUS qu'elle ; seul le vrai contenu arrivé peut la dépasser.
+ * La libération n'a donc plus rien à quoi se tromper, le défilement
+ * posé avant peinture ne bouge plus, et le drapeau tient jusqu'au
+ * vrai contenu — la seconde course se referme d'elle-même.
+ * ⚠️ LE CONTENU PLUS COURT QUE LA RÉSERVE (une recherche revenue
+ * avec moins de cartes) ne la dépasse jamais : c'est le rôle du
+ * délai de cinq secondes, INCHANGÉ — le filet d'origine.
  */
 function surveillerLaReserve(reserve: number) {
   arreter?.();
   const racine = document.documentElement;
+  /*  §1 (nº 711) — LA RÉSERVE VIVANTE, PAS LA RECALCULÉE : la reprise
+      du script (`reprendreLaReserveDuScript`) refait « position +
+      innerHeight » — or sur un téléphone, la barre d'adresse fait
+      varier `innerHeight` entre la pose du script et la reprise. Une
+      réserve recalculée PLUS PETITE que le `min-height` réellement
+      posé serait « dépassée » par lui : l'auto-satisfaction par une
+      autre porte. On borne sur ce que <html> porte VRAIMENT. */
+  reserve = Math.max(reserve, parseFloat(racine.style.minHeight) || 0);
   const limite = performance.now() + ATTENTE_MAX_MS;
   let image = 0;
   const liberer = () => {
@@ -75,9 +108,9 @@ function surveillerLaReserve(reserve: number) {
     arreter = null;
   };
   const surveiller = () => {
-    // La hauteur NATURELLE : celle du corps, que la réserve n'atteint pas.
+    //  §1 (nº 711) — le DÉPASSEMENT strict, seule preuve du contenu.
     if (
-      document.body.getBoundingClientRect().height >= reserve ||
+      document.documentElement.scrollHeight > reserve ||
       performance.now() > limite
     ) {
       liberer();

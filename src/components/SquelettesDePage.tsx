@@ -71,23 +71,21 @@ import { RESERVE_RANGEE } from "@/lib/reserve-barre";
  * classes. Un retour DOUX ne passe pas par ici (réserve du routeur,
  * bancs nº 706/707) ; une navigation AVANT arrive en haut.
  *
- * ⚠️ UN DÉFAUT CONNU RESTE OUVERT, ET IL EST DIT PLUTÔT QUE TU — LE
- * RETOUR PAR CHARGEMENT COMPLET (cache de va-et-vient manqué) vers
- * une mosaïque défilée : le script d'avant-peinture pose la place
- * (mesuré : 1145) ; pendant l'hydratation, le document passe par la
- * hauteur du squelette seul, plus courte que la place — le
- * navigateur CLAMPE le défilement (788 = squelette − écran) et ne
- * recorrige pas. Ce cas naît avec les squelettes (nº 706) ; les
- * retours DOUX — le chemin ordinaire — et le rechargement (témoin A)
- * sont INTACTS, au pixel. TROIS gardes locales ont été écrites,
- * MESURÉES au banc nº 707, et retirées : lire `scrollY` au montage
- * (la lecture force le recalcul qui clampe — 1 réussite sur 3), lire
- * la place mémorisée du site (vide sur ce chemin — 0 sur 5), retenir
- * la hauteur d'avant les mutations (`useInsertionEffect` — 2 sur 5).
- * Aucune ne FERME la fenêtre : la course se joue dans la libération
- * de la réserve (`restitution-position`, nº 653) — zone que cette
- * passe a interdiction de toucher. Le correctif est décrit dans le
- * compte rendu de la nº 707, pour une passe dédiée.
+ * ⚠️ LE DÉFAUT DU RETOUR PAR CHARGEMENT COMPLET (« témoin B », ouvert
+ * de la nº 706 à la nº 710) EST FERMÉ À LA nº 711, là où la nº 707
+ * l'avait situé : dans la LIBÉRATION de la réserve
+ * (`restitution-position` — zone alors interdite, ouverte par le
+ * propriétaire à la nº 711). La mesure de libération se regardait
+ * elle-même : le corps porte `min-h-full`, il SUIT la réserve posée
+ * sur <html> — le test « corps ≥ réserve » se satisfaisait à la
+ * première image, la réserve partait, le document retombait à la
+ * hauteur du squelette seul et le navigateur clampait le défilement
+ * (804 = squelette − écran). L'instruction complète, image par
+ * image, et le test corrigé (« le document DÉPASSE la réserve »,
+ * strictement) sont dans `restitution-position` (§1 nº 711). Les
+ * trois gardes locales essayées et retirées à la nº 707 restent
+ * retirées : c'était bien la source qu'il fallait corriger, pas des
+ * rustines ici.
  */
 
 /** Le rond d'action de la barre : même gabarit que les icônes (40). */

@@ -721,11 +721,37 @@ html[data-clair="3"] {
     peut plus les couvrir : si l'on efface quelque chose pendant une
     recomposition, ce sera la mosaïque, et elle seule.
     (Le voile de la nº 162 avait été supprimé à la nº 166 — cette règle
-    fait qu'il ne peut pas revenir par mégarde, ni depuis un parent.) */
+    fait qu'il ne peut pas revenir par mégarde, ni depuis un parent.)
+    ⚠️ UNE exception, une seule (nº 711) : le CHANTIER — la règle juste
+    en dessous. */
 [data-barre-fixe],
 [data-titre-mosaique] {
   opacity: 1 !important;
   visibility: visible !important;
+}
+
+/*  LE CHANTIER L'EMPORTE SUR LA GARANTIE, POUR LE TITRE (§1 nº 711)
+    -------------------------------------------------------------------
+    LE DÉFAUT, vu par le propriétaire (capture) et pris au banc :
+    pendant une navigation douce de même segment (nº 710), le main est
+    `invisible` et le corps du squelette se superpose — mais le TITRE
+    de l'ANCIENNE page restait peint (« Réalisme · 14 portfolios » sous
+    une recherche Blackwork), à demi transparent sous les barres
+    battantes du squelette (`animate-pulse` oscille entre 1 et 0,5).
+    LA CAUSE : la garantie nº 171, juste au-dessus, force
+    `visibility: visible` sur le bloc de titre — or la visibilité d'un
+    DESCENDANT rouvre ce que le parent a fermé ; c'est l'astuce même de
+    la superposition nº 710, retournée contre elle.
+    LA RÈGLE : sous un main en chantier (`aria-busy`, que seule la
+    garde nº 710 pose sur un `main` — vérifié : les deux autres
+    écritures sont le squelette de segment, qui ne contient pas de
+    titre nommé, et la grille, qui n'est pas un `main`), le titre cède.
+    Plus spécifique que la garantie à `!important` égal : elle gagne.
+    PARTOUT AILLEURS LA GARANTIE RESTE ENTIÈRE — les bascules
+    d'affichage (l'objet de la nº 171) ne posent jamais `aria-busy`.
+    Le squelette de titre, lui, ne porte pas l'attribut : il se peint. */
+main[aria-busy="true"] [data-titre-mosaique] {
+  visibility: hidden !important;
 }
 
 /*  LA MOSAÏQUE NE PEUT PLUS PASSER DEVANT LA BARRE (nº 193-§3)

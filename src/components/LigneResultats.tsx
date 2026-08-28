@@ -136,13 +136,17 @@ export function LigneResultats({
    * puisse l'effacer — elle ne dit rien de `display`, que cette
    * variante seule gouverne. Le bloc entier part : titre, sous-titre
    * et son rembourrage — aucun blanc résiduel au-dessus des cartes.
+   * (Depuis la nº 711, la garantie connaît UNE exception : le CHANTIER
+   * — sous `main[aria-busy]`, le titre cède au squelette ; voir la
+   * règle et sa note dans globals.css.)
    */
   masqueAuDoigt?: boolean;
 }) {
   const Titre = balise;
   return (
     //  ⚠️ NOMMÉ (nº 171) : la garantie de globals.css vise ce titre
-    //  pour qu'aucune bascule ne puisse l'effacer.
+    //  pour qu'aucune bascule ne puisse l'effacer. (Une exception,
+    //  nº 711 : pendant le CHANTIER, il cède au squelette.)
     <div
       data-titre-mosaique=""
       data-air-en-bas={airEnBas ? "" : undefined}
