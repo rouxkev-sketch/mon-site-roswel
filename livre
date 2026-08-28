@@ -1,0 +1,192 @@
+#!/bin/sh
+#
+#  ██ METTRE EN LIGNE, EN UNE SEULE COMMANDE (passe nº 697) ██
+#  ==================================================================
+#  CE QUE TU TAPES, dans le dossier où tu viens de télécharger le zip :
+#
+#        sh livre 698.zip
+#
+#  Et rien d'autre. Le script dézippe, remet ta clé secrète en place,
+#  et déploie en production.
+#
+#  ==================================================================
+#  POURQUOI CE SCRIPT EXISTE
+#  ------------------------------------------------------------------
+#  TA CLÉ SECRÈTE NE VOYAGE PLUS. Elle n'est plus dans les zips, elle
+#  n'est plus dans l'atelier où le code est écrit. Elle vit à UN SEUL
+#  endroit, sur ton Mac, et n'en bouge jamais :
+#
+#        ~/.yokofolio/env.local
+#
+#  Chaque livraison arrive donc avec un `.env.local` COMPLET SAUF cette
+#  ligne-là, laissée vide. Ce script la remplit, en recopiant ton
+#  fichier tel quel.
+#
+#  ⚠️ IL NE LIT JAMAIS CE FICHIER, ET NE L'AFFICHE JAMAIS. Il le copie
+#  d'un bloc et vérifie seulement qu'une clé s'y trouve — sans en
+#  montrer un seul caractère, ni à l'écran, ni dans un journal.
+#
+#  ==================================================================
+#  LA PREMIÈRE FOIS
+#  ------------------------------------------------------------------
+#  Tu n'as encore rien à ~/.yokofolio/env.local : le script te le dira
+#  et te donnera la commande exacte à copier. Une fois, dans ta vie.
+#
+#  ==================================================================
+#  ET LE SCRIPT LUI-MÊME ?
+#  ------------------------------------------------------------------
+#  Il voyage DANS chaque zip, comme `d`. Après avoir dézippé, il se
+#  remplace par la version qu'il vient de recevoir : tu gardes toujours
+#  le plus récent sans y penser. La toute première fois seulement, il
+#  faut le sortir d'un dossier dézippé et le poser à côté de tes zips.
+#
+set -e
+
+CLE_MAISON="$HOME/.yokofolio"
+CLE_FICHIER="$CLE_MAISON/env.local"
+ARCHIVE="$1"
+
+echo ""
+
+#  --------------------------------------------------------------
+#  1. LE ZIP — celui que tu as nommé.
+#  --------------------------------------------------------------
+if [ -z "$ARCHIVE" ]; then
+  echo "✖  Il manque le nom du zip."
+  echo ""
+  echo "   Tape par exemple :   sh livre 698.zip"
+  echo ""
+  exit 1
+fi
+if [ ! -f "$ARCHIVE" ]; then
+  echo "✖  Je ne trouve pas « $ARCHIVE » dans ce dossier."
+  echo ""
+  echo "   Vérifie le nom, et que tu es bien dans le dossier où le zip"
+  echo "   a été téléchargé (souvent ~/Downloads)."
+  echo ""
+  exit 1
+fi
+
+#  LE NUMÉRO DE LA VERSION = le nom du zip sans « .zip ». C'est aussi
+#  le nom du dossier qu'il contient (la règle des livraisons).
+VERSION=$(basename "$ARCHIVE" .zip)
+DOSSIER="$VERSION"
+
+#  --------------------------------------------------------------
+#  2. LE GARDE-FOU DE L'EXTRACTION.
+#  --------------------------------------------------------------
+#  UNE EXTRACTION A DÉJÀ ÉCRASÉ UN DOSSIER DE TRAVAIL, parce que le zip
+#  contenait un dossier racine portant le même nom que celui du Mac.
+#  On regarde donc CE QUE LE ZIP CONTIENT avant de l'ouvrir — les noms
+#  de fichiers seulement, rien de leur contenu.
+RACINES=$(unzip -Z1 "$ARCHIVE" | sed 's|/.*||' | sort -u)
+NOMBRE=$(printf '%s\n' "$RACINES" | grep -c .)
+if [ "$NOMBRE" != "1" ] || [ "$RACINES" != "$VERSION" ]; then
+  echo "✖  Ce zip ne ressemble pas à une livraison."
+  echo ""
+  echo "   Attendu : un seul dossier nommé « $VERSION »."
+  echo "   Trouvé  : $(printf '%s' "$RACINES" | tr '\n' ' ')"
+  echo ""
+  echo "   Je n'ouvre pas : un zip mal formé peut écraser un dossier."
+  echo ""
+  exit 1
+fi
+
+#  --------------------------------------------------------------
+#  3. TA CLÉ — première fois, ou clé absente.
+#  --------------------------------------------------------------
+if [ ! -f "$CLE_FICHIER" ]; then
+  mkdir -p "$CLE_MAISON"
+  chmod 700 "$CLE_MAISON"
+  echo "→  Première fois : je ne trouve pas encore ta clé."
+  echo ""
+  echo "   Elle doit vivre à un seul endroit, une fois pour toutes :"
+  echo ""
+  echo "       $CLE_FICHIER"
+  echo ""
+  echo "   Je viens de créer le dossier. Il te reste UNE chose à faire,"
+  echo "   une seule fois : copier ton .env.local actuel dedans."
+  echo ""
+  echo "   Si ton dossier de travail est sur le Bureau, c'est :"
+  echo ""
+  echo "       cp ~/Desktop/mon-site-roswel/.env.local $CLE_FICHIER"
+  echo ""
+  echo "   (remplace le chemin de gauche par celui de TON .env.local,"
+  echo "    celui qui contient ta clé secrète)"
+  echo ""
+  echo "   Puis relance :   sh livre $ARCHIVE"
+  echo ""
+  exit 1
+fi
+
+#  LA CLÉ EST-ELLE VRAIMENT DEDANS ? `grep -q` ne montre RIEN : il
+#  répond oui ou non, sans afficher la ligne trouvée. C'est la seule
+#  façon de vérifier sans regarder.
+if ! grep -q '^SUPABASE_SECRET_KEY=..*' "$CLE_FICHIER"; then
+  echo "✖  Ta clé secrète manque dans le fichier de référence."
+  echo ""
+  echo "   Le fichier existe :"
+  echo "       $CLE_FICHIER"
+  echo "   mais sa ligne SUPABASE_SECRET_KEY= est vide."
+  echo ""
+  echo "   Ouvre-le, colle ta clé juste après le signe égal (sans"
+  echo "   espace), enregistre, puis relance :"
+  echo ""
+  echo "       sh livre $ARCHIVE"
+  echo ""
+  echo "   (Je n'affiche jamais le contenu de ce fichier.)"
+  echo ""
+  exit 1
+fi
+
+#  --------------------------------------------------------------
+#  4. LE DÉZIPPAGE.
+#  --------------------------------------------------------------
+echo "→  Ouverture de $ARCHIVE…"
+#  `-o` écrase sans demander : relancer après une erreur doit marcher
+#  sans avoir à effacer quoi que ce soit à la main.
+#  `-q` reste silencieux : la liste des mille fichiers n'apprend rien.
+unzip -oq "$ARCHIVE"
+if [ ! -d "$DOSSIER" ]; then
+  echo "✖  Le dossier « $DOSSIER » n'est pas apparu. Extraction ratée."
+  echo ""
+  exit 1
+fi
+
+#  --------------------------------------------------------------
+#  5. TA CLÉ REPRISE SA PLACE.
+#  --------------------------------------------------------------
+#  On COPIE LE FICHIER ENTIER, tel quel — on n'en extrait pas la clé
+#  pour la recoller ailleurs : moins on touche, moins on casse, et
+#  aucune valeur ne transite par une variable du script.
+cp "$CLE_FICHIER" "$DOSSIER/.env.local"
+chmod 600 "$DOSSIER/.env.local"
+echo "→  Clé remise en place."
+echo ""
+
+#  --------------------------------------------------------------
+#  6. LE DÉPLOIEMENT — c'est `d` qui le fait, comme avant.
+#  --------------------------------------------------------------
+#  On se place DANS le dossier : `d` cherche `.vercel/project.json`
+#  à côté de lui, et le fabrique au premier passage.
+cd "$DOSSIER"
+sh d
+cd ..
+
+#  --------------------------------------------------------------
+#  7. LE SCRIPT SE MET À JOUR TOUT SEUL.
+#  --------------------------------------------------------------
+#  La livraison qu'on vient d'ouvrir contient sa propre version de ce
+#  script. On la garde, pour que la prochaine fois soit toujours la
+#  bonne — sans que tu aies rien à recopier.
+#  ⚠️ ON PASSE PAR UN FICHIER TEMPORAIRE PUIS `mv` : remplacer un
+#  script pendant qu'il tourne le corromprait ; un `mv` échange le
+#  fichier d'un bloc, et celui qui tourne finit tranquillement.
+if [ -f "$DOSSIER/livre" ] && ! cmp -s "$DOSSIER/livre" "$0"; then
+  cp "$DOSSIER/livre" "$0.neuf" && mv "$0.neuf" "$0"
+  echo "→  (le script « livre » a été mis à jour par cette livraison)"
+fi
+
+echo ""
+echo "✔  Version $VERSION en ligne"
+echo ""

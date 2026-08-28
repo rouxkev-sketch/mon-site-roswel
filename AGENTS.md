@@ -40,26 +40,61 @@ changé, sur ordre du propriétaire (après la passe nº 355) :
   jour ce fichier apparaît dans le clone, l'OUVRIR AVANT de l'inclure et
   vérifier qu'il ne porte qu'un `projectId` et un `orgId` : s'il contient un
   jeton ou une clé, NE PAS L'INCLURE ;
+- LE SCRIPT `livre` EST INCLUS DANS CHAQUE ZIP (règle du propriétaire,
+  passe nº 697), au même titre que `d`. C'est LUI que le propriétaire tape
+  désormais, et rien d'autre : `sh livre 698.zip` depuis le dossier de
+  téléchargement. Il dézippe, remet la clé secrète en place depuis
+  `~/.yokofolio/env.local`, lance `sh d`, et se met à jour tout seul à
+  partir de la livraison qu'il vient d'ouvrir. Le rendre exécutable avant
+  de zipper (`chmod +x livre`) ;
 - avant livraison, vérifier avec `unzip -l` que la racine est bien le numéro
   de la passe et que ni `node_modules`, ni `.next`, ni `.git`, ni le journal
-  `.ndjson` n'y figurent — et que les images de `public/` ET le script `d`
-  Y FIGURENT ;
+  `.ndjson` n'y figurent — et que les images de `public/`, le script `d` ET
+  le script `livre` Y FIGURENT ;
 - ne JAMAIS exclure `.env.local` du zip (voir « Inclure `.env.local` dans
   chaque livraison » ci-dessous) : il doit TOUJOURS être livré.
 
-# Inclure `.env.local` dans chaque livraison (règle permanente)
+# Inclure `.env.local` dans chaque livraison (règle mise à jour, passe nº 697)
 
-À CHAQUE livraison, le fichier `.env.local` DOIT être INCLUS dans le zip,
-exactement comme avant. Ne JAMAIS l'ajouter aux exclusions du `zip -x`, ne
-JAMAIS le remplacer par le seul `.env.local.example`.
+À CHAQUE livraison, le fichier `.env.local` DOIT être INCLUS dans le zip.
+Ne JAMAIS l'ajouter aux exclusions du `zip -x`, ne JAMAIS le remplacer par
+le seul `.env.local.example`.
 
-- c'est un choix explicite et éclairé du propriétaire : il préfère cette
-  commodité au risque de sécurité associé (ne pas avoir à recopier le
-  fichier à la main à chaque livraison) ;
+- CE QUI A CHANGÉ À LA nº 697, ET C'EST LE POINT : **la clé secrète n'y est
+  plus**. La ligne `SUPABASE_SECRET_KEY=` est livrée VIDE, précédée du
+  commentaire qui dit pourquoi. Toutes les autres variables restent, comme
+  avant. La clé a été régénérée et vit désormais à UN seul endroit, sur le
+  Mac du propriétaire : `~/.yokofolio/env.local`. Elle n'entre plus jamais
+  ni dans un zip, ni dans l'atelier ;
+- l'ANCIENNE justification (« il préfère cette commodité au risque de
+  sécurité associé ») ne vaut plus : le script `livre` supprime la
+  contrainte sans le risque — le propriétaire n'a toujours rien à recopier,
+  et la clé ne voyage plus ;
 - la règle vaut pour TOUTES les futures livraisons — aucune session ne doit
-  la remettre en cause « par prudence » ;
+  la remettre en cause dans un sens ou dans l'autre ;
 - après `unzip -l`, vérifier que `.env.local` figure bien dans le zip (en
-  plus de `.env.local.example`).
+  plus de `.env.local.example`), ET que sa ligne `SUPABASE_SECRET_KEY=` y
+  est vide (`unzip -p N.zip N/.env.local | grep -c '^SUPABASE_SECRET_KEY=$'`
+  doit rendre 1 — c'est la SEULE lecture autorisée de ce fichier, et elle
+  ne montre aucune valeur).
+
+# NE JAMAIS AFFICHER LE CONTENU DE `.env.local` (interdiction permanente, nº 697)
+
+Ne JAMAIS afficher, citer, recopier ni consigner le contenu de `.env.local`
+— ni dans la conversation, ni dans un compte rendu, ni dans un fichier, ni
+dans un journal, ni dans un message de commit. Cela vaut pour ce fichier et
+pour `~/.yokofolio/env.local`.
+
+- pas de `cat`, `head`, `tail`, `less`, ni de `Read` sur ces fichiers ;
+- pour connaître les NOMS des variables, lire `.env.local.example` (public,
+  dans le dépôt) — jamais le fichier réel ;
+- pour vérifier qu'une variable est remplie, employer `grep -c` ou
+  `grep -q`, qui répondent par un nombre ou par oui/non sans montrer la
+  ligne. Jamais `grep` tout court ;
+- pour modifier une ligne, opérer À L'AVEUGLE (`sed -i`, ou un script qui
+  écrit sans imprimer) et n'annoncer qu'un décompte ;
+- la règle vaut pour TOUTES les passes futures, sans exception et sans
+  qu'il soit besoin de la rappeler dans le prompt.
 
 # Livraisons SANS captures d'écran (règle permanente)
 
