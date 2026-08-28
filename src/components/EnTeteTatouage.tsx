@@ -1093,17 +1093,18 @@ export function EnTeteTatouage({
                LE PORTE ██
                AU DOIGT, CE LIEN NE NAVIGUE JAMAIS : le `preventDefault`
                ci-dessous part à la première ligne et le menu de recherche
-               s'ouvre à la place. Or `SigneDeChargement` ne lit que le
-               `href` : il voyait « / », armait une attente vers l'accueil
-               — et cette attente ne se fermait JAMAIS, faute d'arrivée.
-               Douze secondes durant, tout clic vers « / » était alors
-               avalé (`preventDefault` + `stopPropagation`, règle 332-§1)
-               et la barre semblait morte. LA MARQUE LE DIT AU SIGNE :
-               ce lien ne mène nulle part, n'arme rien pour lui. Elle est
-               lue au même endroit que `data-signe-muet`, dans `surClic`.
+               s'ouvre à la place. Or la garde des navigations (nº 441,
+               `GardeDesNavigations` depuis la nº 706) ne lit que le
+               `href` : elle voyait « / », armait une attente vers
+               l'accueil — et cette attente ne se fermait JAMAIS, faute
+               d'arrivée. Douze secondes durant, tout clic vers « / »
+               était alors avalé (`preventDefault` + `stopPropagation`,
+               règle 332-§1) et la barre semblait morte. LA MARQUE LE DIT
+               À LA GARDE : ce lien ne mène nulle part, n'arme rien pour
+               elle. Elle est lue dans `surClic`, avant toute attente.
                ⚠️ AU WEB LE LIEN NAVIGUE VRAIMENT — mais vers l'accueil,
                en navigation de DOCUMENT (le procédé du logo, §2
-               ci-dessous) : le signe n'y a jamais eu de rôle, la page
+               ci-dessous) : la garde n'y a jamais eu de rôle, la page
                entière est remplacée. La marque ne lui retire donc rien. */}
           {/* eslint-disable-next-line @next/next/no-html-link-for-pages --
               un <a> natif PAR CHOIX : le procédé du logo (nº 429),

@@ -107,12 +107,6 @@ import {
   poserLeVerrouDeDefilement,
   retirerLeVerrouDeDefilement,
 } from "@/lib/verrou-defilement";
-//  §3 (nº 469) — le trait de chargement, commandé à la main quand la
-//  PREMIÈRE ouverture de « Mon compte » attend sa lecture (nº 142).
-import {
-  demarrerLeSigneManuel,
-  finirLeSigneManuel,
-} from "@/components/SigneDeChargement";
 import { FenetreNonEnregistre } from "@/components/GardeSaisie";
 import {
   COULEUR_ETAT,
@@ -1011,42 +1005,19 @@ export function MenuEspace({
       return;
     }
     void (async () => {
-      /*  §3 (nº 469) — LE TRAIT ROSE PENDANT L'ATTENTE, AU DOIGT.
-          La PREMIÈRE ouverture attend sa lecture (nº 142) : pendant ce
-          temps, rien ne bouge à l'écran — exactement le défaut que le
-          signe central ferme pour les navigations (nº 441). Il est
-          COMMANDÉ ici à la main : même composant, même seuil de
-          200 ms — une ouverture rapide ne montre rien. Les ouvertures
-          suivantes sont immédiates (dejaLu) : aucun appel.
-          ██ §1 (nº 559) — ET AU WEB AUSSI, DÉSORMAIS ██
-          LE DÉFAUT ÉTAIT LE MÊME DES DEUX CÔTÉS : on clique sur la
-          silhouette, la lecture part, et RIEN ne bouge jusqu'à ce
-          qu'elle revienne — la fenêtre ne s'ouvre même pas, puisque
-          cette branche-ci attend `lireLeCompte` avant `setOuvert`. La
-          nº 469 n'avait armé le trait qu'au doigt ; la garde
-          `auDoigt` disparaît, et le web reçoit exactement le même
-          signe. AUCUN SECOND MÉCANISME N'EST ÉCRIT : c'est le signe
-          central du site (`SigneDeChargement`, nº 441), commandé à la
-          main par la même paire d'appels et la même clé.
-          ⚠️ OÙ IL SE VOIT : il n'est PAS dans la fenêtre. C'est le
-          trait de deux pixels posé en haut de l'ÉCRAN
-          (`fixed inset-x-0 top-0 z-[96]`, rendu une seule fois dans
-          la mise en page racine) — et son `z-[96]` le met au-dessus
-          des fenêtres superposées (80) : il se voit pendant que la
-          fenêtre s'ouvre par-dessous.
-          ⚠️ SEULE LA PREMIÈRE OUVERTURE L'ALLUME. Les suivantes
-          passent par `dejaLu` juste au-dessus : la fenêtre s'ouvre
-          sur-le-champ et se met à jour derrière sans jamais se vider
-          — un trait y clignoterait pour rien.
-          ⚠️ LE SEUIL DE 200 ms DU COMPOSANT RESTE LE JUGE : sur une
-          liaison rapide, la lecture revient avant, et le trait
-          n'apparaît jamais. On ne montre pas une attente qui n'a pas
-          eu lieu. */
-      demarrerLeSigneManuel("mon-compte");
+      /*  §3 (nº 469/559, trait retiré nº 706) — LA PREMIÈRE OUVERTURE
+          ATTEND SA LECTURE (nº 142), web et doigt : cette branche-ci
+          attend `lireLeCompte` avant `setOuvert`. Le trait rose qui
+          disait cette attente (commandé au signe central, nº 441) est
+          SUPPRIMÉ avec tous les traits du site — décision du
+          propriétaire, nº 706. L'attente elle-même ne change pas :
+          courte en temps normal (une lecture), bornée par le délai de
+          garde du client (nº 686) si la base se tait. Les ouvertures
+          suivantes passent par `dejaLu` juste au-dessus : immédiates,
+          mises à jour derrière sans jamais se vider. */
       await lireLeCompte();
       dejaLu.current = true;
       setOuvert(true);
-      finirLeSigneManuel("mon-compte");
     })();
   }, [ouvert, lireLeCompte]);
 

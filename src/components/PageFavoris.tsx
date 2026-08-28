@@ -672,13 +672,12 @@ export function PageFavoris({
                 d'ici s'y AJOUTAIT, et le bloc ne respectait plus les
                 marges de la page de recherche. Même écriture, même
                 rythme, plus rien d'ajouté. */
-            /*  §3 (nº 452) — `data-signe-muet` : ouvrir une image
-                depuis cette grille n'affiche JAMAIS le trait de
-                chargement rose — la marque d'exemption que
-                SigneDeChargement lit en remontant du lien cliqué
-                (l'attente reste armée : l'avalement du re-clic et le
-                nettoyage à l'arrivée ne changent pas). */
-            <ul data-signe-muet="" className={CLASSES_GRILLE_CARTES}>
+            /*  §3 (nº 452 → nº 706) — la marque `data-signe-muet`
+                taisait le trait de chargement sur ce chemin ; le
+                trait n'existe plus (nº 706), la marque est partie
+                avec. L'avalement du re-clic et le nettoyage à
+                l'arrivée (GardeDesNavigations) ne changent pas. */
+            <ul className={CLASSES_GRILLE_CARTES}>
               {/*  §1 (nº 597) — LA TRANCHE DÉPLIÉE, jamais la liste
                    entière. Les cartes déjà posées gardent leur clé,
                    donc leur place : le dépliement n'en retouche

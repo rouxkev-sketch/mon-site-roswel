@@ -1467,27 +1467,14 @@ html[data-compte="connecte"]
 }
 
 /* ==================================================================
-   nº 441 — LE SIGNE DE CHARGEMENT (SigneDeChargement)
+   nº 441 → nº 706 — LE SIGNE DE CHARGEMENT EST SUPPRIMÉ
    ==================================================================
-   Le fin trait rose en haut de l'écran pendant une navigation qui
-   dure (au-delà de 200 ms). Son avancée est ASYMPTOTIQUE : rapide au
-   départ, elle ralentit et ne prétend jamais finir — c'est l'arrivée
-   réelle de la page qui l'éteint (le composant se démonte). Pas de
-   boucle : « forwards » le laisse posé à 94 % tant que ça charge. */
-@keyframes signe-chargement {
-  0% {
-    transform: scaleX(0);
-  }
-  12% {
-    transform: scaleX(0.3);
-  }
-  40% {
-    transform: scaleX(0.65);
-  }
-  100% {
-    transform: scaleX(0.94);
-  }
-}
+   Le fin trait rose en haut de l'écran (et son @keyframes
+   « signe-chargement ») vivait ici. Le propriétaire a retiré TOUS les
+   traits de progression du site à la nº 706 : l'attente d'une page se
+   dit par les squelettes des `loading.tsx`, posés à la même passe. La
+   mécanique de navigation que le composant portait survit dans
+   `GardeDesNavigations` — sans un pixel. */
 
 /* ==================================================================
    nº 357 — LA GARDE DES RANGÉES DE L'ACCUEIL PRÉRENDU

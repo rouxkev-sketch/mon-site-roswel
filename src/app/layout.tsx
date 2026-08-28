@@ -7,7 +7,7 @@ import { variablesCssCouleurs } from "@/lib/theme";
 import { EnregistrementServiceWorker } from "@/components/EnregistrementServiceWorker";
 import { DefinitionsIcones } from "@/components/Icones";
 import { MemoireNavigation } from "@/components/MemoireNavigation";
-import { SigneDeChargement } from "@/components/SigneDeChargement";
+import { GardeDesNavigations } from "@/components/GardeDesNavigations";
 import "./globals.css";
 
 // Police du site (moderne et très lisible sur mobile)
@@ -139,11 +139,14 @@ export default function RootLayout({
         {children}
         {/* Journal de navigation (bouton retour de la fiche) */}
         <MemoireNavigation />
-        {/*  §1 (nº 441) — le signe de chargement des navigations qui
-            durent : un seul mécanisme, pour tout le site (il porte sa
+        {/*  §1 (nº 441, refondu nº 706) — la garde des navigations :
+            l'avalement du re-clic (332-§1) et l'exemption des liens
+            qui ne naviguent pas (nº 627). Le TRAIT de chargement
+            qu'elle portait est supprimé (nº 706) — l'attente se dit
+            désormais par les squelettes des pages. Elle porte sa
             propre frontière <Suspense> — le prérendu de « / » ne lui
-            doit rien). */}
-        <SigneDeChargement />
+            doit rien. */}
+        <GardeDesNavigations />
         {/* Active le mode "application installable" (PWA) */}
         <EnregistrementServiceWorker />
       </body>

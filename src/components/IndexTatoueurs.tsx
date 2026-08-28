@@ -19,12 +19,8 @@ import { noterNavigation } from "@/lib/boite-noire";
 import { demanderLesComptes } from "@/lib/creations-par-style";
 //  §1 (nº 673) — le filet de la garde : l'adresse courante, lue PENDANT
 //  le rendu par le magasin de la nº 154 (les deux portes : `popstate` et
-//  `pushState`/`replaceState`), et le signe de chargement du site.
+//  `pushState`/`replaceState`).
 import { lireRequeteCourante, souscrireAdresse } from "@/lib/adresse-courante";
-import {
-  demarrerLeSigneManuel,
-  finirLeSigneManuel,
-} from "@/components/SigneDeChargement";
 import Link, { useLinkStatus } from "next/link";
 import { useRouter } from "next/navigation";
 //  §1 (nº 621) — la carte de style et sa grille. Le TYPE seul vient de
@@ -247,11 +243,6 @@ function sourisMuette(): () => void {
 function tailleInconnueAuServeur(): null {
   return null;
 }
-
-/** §1 (nº 673) — la clé du signe de chargement pendant qu'on redemande
-    la bonne page. Nommée ici pour que l'effet qui l'allume et celui qui
-    l'éteint ne puissent pas se contredire. */
-const CLE_SIGNE_PAGE_EN_RETARD = "page-en-retard";
 
 /**
  * ██ §2 (nº 509) — LES ISSUES DU VIDE : TROIS PALIERS, ET ON N'EN SAUTE
@@ -490,18 +481,14 @@ export function IndexTatoueurs({
   const enRetardSurLAdresse =
     signatureDesCriteres(requeteCourante) !== cleSignee;
 
-  /*  §1 (nº 673) — ET LE SITE DIT QU'IL TRAVAILLE. Sans ce trait, une
-      page invisible serait une page BLANCHE : on aurait remplacé une
-      mauvaise réponse par aucune réponse. C'est le signe central du
-      site (`SigneDeChargement`, nº 441), commandé à la main comme le
-      fait déjà la première ouverture de « Mon compte » (nº 469/559) —
-      aucun second mécanisme, et son seuil de 200 ms reste le juge : une
-      reprise rapide ne montre rien du tout. */
-  useEffect(() => {
-    if (!enRetardSurLAdresse) return;
-    demarrerLeSigneManuel(CLE_SIGNE_PAGE_EN_RETARD);
-    return () => finirLeSigneManuel(CLE_SIGNE_PAGE_EN_RETARD);
-  }, [enRetardSurLAdresse]);
+  /*  §1 (nº 673, trait retiré nº 706) — la page en retard restait
+      dite par le trait rose du site ; le propriétaire a supprimé TOUS
+      les traits à la nº 706. La garde `invisible` ci-dessous, elle,
+      reste ENTIÈRE : le contenu faux ne se peint toujours pas, la
+      boîte tient la hauteur (donc la position — nº 653/661), et la
+      fenêtre se referme dès que le servi s'accorde à l'adresse —
+      quelques centaines de millisecondes, le temps que la bonne
+      réponse arrive. */
 
   /**
    * §1 (nº 683) — LES NOMBRES DU MENU DES STYLES, DEMANDÉS ICI.

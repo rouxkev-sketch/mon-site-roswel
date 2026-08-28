@@ -897,24 +897,12 @@ export function FenetreFiche({
                   glissant. `lg:overflow-x-clip` rogne au même pixel
                   sans créer de port de défilement. Rien de
                   géométrique : ni largeur, ni rembourrage, ni marge. */
-              /*  ██ §5 (nº 459) — `data-signe-muet` : DEPUIS UNE
-                  FENÊTRE SUPERPOSÉE, OUVRIR UNE FICHE PAR-DESSUS NE
-                  MONTRE PAS LE TRAIT ROSE ██
-                  La marque d'exemption de la nº 452, posée sur LA
-                  COLONNE DE CONTENU (le fil d'Ariane, hors d'elle,
-                  garde son trait) : un clic sur un profil, un studio,
-                  un salon ou un membre d'équipe EMPILE une fenêtre
-                  (PileFiches) — ce n'est pas un chargement de page,
-                  le trait mentait. L'attente reste armée (l'avalement
-                  du re-clic 332-§1 et le nettoyage à l'arrivée ne
-                  changent pas), seul l'affichage se tait.
-                  ⚠️ ASSUMÉ ET DIT : les badges de style de la fenêtre
-                  (qui NAVIGUENT vers la recherche en fermant la pile)
-                  vivent dans cette colonne — leur trait se tait
-                  aussi, sur ce chemin marginal. La PAGE de fiche,
-                  elle, n'est pas marquée : ses liens gardent le trait
-                  (au doigt, ils naviguent réellement). */
-              data-signe-muet=""
+              /*  §5 (nº 459 → nº 706) — la marque `data-signe-muet`
+                  taisait le trait sur les fiches EMPILÉES par-dessus
+                  celle-ci ; le trait n'existe plus (nº 706), la
+                  marque est partie avec. L'attente de la garde
+                  (avalement du re-clic 332-§1, nettoyage à l'arrivée)
+                  ne change pas. */
               /*  ██ §1 (nº 499) — LA COLONNE SUIT LA FENÊTRE ██
                   Elle passe elle aussi de `carte` au fond de la page.
                   ⚠️ ET SA VARIABLE AVEC : `--fond-colonne` est ce que
