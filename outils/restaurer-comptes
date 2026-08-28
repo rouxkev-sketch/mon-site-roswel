@@ -1,0 +1,51 @@
+#!/bin/sh
+#
+#  ██ RECRÉER LES COMPTES DEPUIS UNE SAUVEGARDE (passe nº 690) ██
+#  ==================================================================
+#  CE QUE TU TAPES, EN NOMMANT LA SAUVEGARDE :
+#
+#        sh outils/restaurer-comptes sauvegardes/2026-08-28
+#
+#  ⚠️ ON NE LE LANCE QUE SI LA BASE A ÉTÉ PERDUE. C'est le seul outil du
+#  projet qui ÉCRIVE dans la base. La sauvegarde, elle, reste en lecture
+#  seule stricte, et le restera.
+#
+#  ==================================================================
+#  LES QUATRE GARDE-FOUS
+#  ------------------------------------------------------------------
+#   1. IL NE DEVINE RIEN. Sans dossier de sauvegarde nommé sur la
+#      ligne de commande, il s'arrête. Il ne va pas « chercher la plus
+#      récente » tout seul.
+#   2. IL FAIT TAPER LE MOT. Rien ne part avant que tu aies écrit
+#      RESTAURER — comme pour supprimer un portfolio.
+#   3. IL NE TOUCHE JAMAIS UN COMPTE EXISTANT. Une adresse déjà connue
+#      de la base est IGNORÉE, et il le dit, ligne par ligne. Il ne
+#      modifie rien, il n'écrase rien, il ne supprime rien : il ne sait
+#      qu'AJOUTER ce qui manque.
+#   4. IL SE RELIT. À la fin, il redemande la liste des comptes à la
+#      base et vérifie que ceux qu'il vient de créer y sont.
+#
+#  ==================================================================
+#  CE QU'IL NE PEUT PAS FAIRE, ET IL FAUT LE SAVOIR
+#  ------------------------------------------------------------------
+#  LES MOTS DE PASSE NE SE RESTAURENT PAS. Supabase ne les rend à
+#  personne, même à l'administration — c'est une protection, pas un
+#  manque. Chaque personne devra cliquer « mot de passe oublié » et en
+#  choisir un nouveau. Préviens-les.
+#
+#  L'IDENTIFIANT, LUI, EST RECOPIÉ À L'IDENTIQUE, et c'est le point qui
+#  compte le plus : c'est lui qui relie une personne à ses portfolios.
+#  Si la base refusait de le fixer, le script te le dirait en toutes
+#  lettres plutôt que de créer un compte sans lien.
+#
+
+set -e
+
+DOSSIER=$(cd "$(dirname "$0")/.." && pwd)
+cd "$DOSSIER"
+
+#  §1 (nº 690) — le même contrôle de Node que la sauvegarde, écrit une
+#  seule fois à côté.
+. "$(dirname "$0")/verifier-node.sh"
+
+exec node outils/restaurer-comptes.mjs "$@"

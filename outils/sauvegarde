@@ -53,36 +53,9 @@ set -e
 DOSSIER=$(cd "$(dirname "$0")/.." && pwd)
 cd "$DOSSIER"
 
-#  --------------------------------------------------------------
-#  NODE EST-IL LÀ, ET ASSEZ RÉCENT ?
-#  Le script se sert de `fetch`, qui existe dans Node depuis la
-#  version 18. Le site lui-même en demande davantage — mais plutôt que
-#  de deviner, on vérifie, et on dit LA commande à taper.
-#  --------------------------------------------------------------
-if ! command -v node > /dev/null 2>&1; then
-  echo ""
-  echo "  ✖  Node n'est pas installé sur cette machine."
-  echo ""
-  echo "     La commande à taper (une seule fois) :"
-  echo ""
-  echo "         brew install node"
-  echo ""
-  echo "     Si « brew » est inconnu lui aussi, installe d'abord Homebrew :"
-  echo "         /bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
-  echo ""
-  exit 1
-fi
-
-VERSION=$(node -p "process.versions.node.split('.')[0]")
-if [ "$VERSION" -lt 18 ]; then
-  echo ""
-  echo "  ✖  Node $VERSION est trop ancien (il en faut au moins 18)."
-  echo ""
-  echo "     La commande à taper :"
-  echo ""
-  echo "         brew upgrade node"
-  echo ""
-  exit 1
-fi
+#  §1 (nº 690) — LE CONTRÔLE DE NODE EST ÉCRIT UNE SEULE FOIS, à côté
+#  (`verifier-node.sh`) : le second outil de la nº 690 s'en sert aussi,
+#  et deux copies d'un même contrôle finissent par diverger.
+. "$(dirname "$0")/verifier-node.sh"
 
 exec node outils/sauvegarde.mjs "$@"

@@ -7,6 +7,7 @@
     "dev:brut": "next dev",
     "verifier-installation": "node outils/verifier-installation.mjs",
     "sauvegarde": "node outils/sauvegarde.mjs",
+    "restaurer-comptes": "node outils/restaurer-comptes.mjs",
     "banc:doublure": "node outils/doublure-supabase.mjs",
     "build": "next build",
     "start": "next start",

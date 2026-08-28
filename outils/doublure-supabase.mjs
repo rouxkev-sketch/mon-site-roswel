@@ -142,6 +142,49 @@ const MUETTE = process.env.MUETTE === "1";
 const FAUX_TOTAL = process.env.FAUX_TOTAL === "1";
 
 /**
+ * ██ §1 (nº 690) — LES CONDITIONS DE LA VRAIE BASE, REPRODUITES ██
+ * ------------------------------------------------------------------
+ * POURQUOI ELLES MANQUAIENT. La sauvegarde de la nº 689 passait ici et
+ * SE FIGEAIT chez le propriétaire. La doublure n'avait rien de ce qui
+ * fait la différence entre trois petites tables et une vraie base :
+ * pas de grande table, pas de plafond de réponse, pas de table qui ne
+ * répond jamais. Trois crans, et l'outil peut être éprouvé pour de bon.
+ *
+ *   GRANDE_TABLE=5000   une table `communes` de 5 000 lignes, pour que
+ *                       la pagination existe vraiment ;
+ *   PLAFOND=500         le serveur ne rend jamais plus de 500 lignes,
+ *                       même si on en demande 1 000 — c'est le
+ *                       `max-rows` de PostgREST, et c'est le piège qui
+ *                       faisait rendre une copie tronquée pour
+ *                       complète ;
+ *   TABLE_MUETTE=x      la table `x` accepte la requête et ne répond
+ *                       JAMAIS. C'est le blocage lui-même.
+ *
+ *      GRANDE_TABLE=5000 PLAFOND=500 TABLE_MUETTE=communes \
+ *        npm run banc:doublure
+ *
+ * ⚠️ ÉTEINTS (le défaut), ces trois crans ne changent rien : la
+ * doublure répond exactement comme avant cette passe.
+ */
+const GRANDE_TABLE = Number(process.env.GRANDE_TABLE ?? 0);
+const PLAFOND = Number(process.env.PLAFOND ?? 0);
+const TABLE_MUETTE = process.env.TABLE_MUETTE ?? "";
+
+/**
+ * §2 (nº 690) — `IGNORER_ID=1` : LA BASE CRÉE LE COMPTE AVEC SON PROPRE
+ * IDENTIFIANT, pas celui qu'on lui donne.
+ * ------------------------------------------------------------------
+ * C'est le cas le plus DANGEREUX de la restauration des comptes, et le
+ * plus silencieux : le compte existe, la personne peut se connecter…
+ * et ne retrouve AUCUN de ses portfolios, parce que le lien passe par
+ * cet identifiant. L'outil doit le voir et le crier ; ce cran permet de
+ * vérifier qu'il le fait.
+ *
+ *      IGNORER_ID=1 npm run banc:doublure
+ */
+const IGNORER_ID = process.env.IGNORER_ID === "1";
+
+/**
  * ██ §1 (nº 688) — LA DOUBLURE SAIT DÉSORMAIS DIRE QUI EST CONNECTÉ ██
  * ------------------------------------------------------------------
  * CE QUI MANQUAIT, ET CE QUE ÇA EMPÊCHAIT DE MESURER : le banc forge un
@@ -244,9 +287,20 @@ const FICHIERS_STOCKAGE = [
   "11111111-1111-4111-8111-111111111111/fiche-a-refuser-realisme.svg",
 ];
 
+/*  §1 (nº 690) — LA GRANDE TABLE, quand on la demande. Cinq mille
+    lignes, c'est ce qu'il faut pour que la pagination existe pour de
+    bon (la doublure n'avait que des tables d'une page). */
+const COMMUNES = GRANDE_TABLE > 0
+  ? Array.from({ length: GRANDE_TABLE }, (_, n) => ({
+      id: `commune-${String(n).padStart(6, "0")}`,
+      nom: `Commune ${n}`, code_postal: String(10000 + (n % 89000)),
+    }))
+  : [];
+
 const TABLES = {
   tatoueurs: TATOUEURS,
   photos_tatoueur: PHOTOS,
+  ...(GRANDE_TABLE > 0 ? { communes: COMMUNES } : {}),
   //  §1 (nº 673) — les styles nés d'une suggestion, lus par
   //  `lib/styles-ajoutes` au début du rendu de chaque page.
   suggestions_style: STYLES_AJOUTES_DOUBLURE,
@@ -343,7 +397,51 @@ function repondre(req, res, u, brut) {
     return;
   }
   if (u.pathname === "/auth/v1/admin/users") {
-    console.log(new Date().toISOString().slice(11, 19), "GET auth/admin/users → 2");
+    /*  §2 (nº 690) — LA CRÉATION D'UN COMPTE, pour éprouver
+        `restaurer-comptes`. La vraie API refuse une adresse déjà prise
+        par un 422 ; on fait pareil, c'est ce que l'outil doit
+        rencontrer s'il s'y trompait. */
+    if (req.method === "POST") {
+      let demande = {};
+      try { demande = JSON.parse(brut || "{}"); } catch { demande = {}; }
+      const adresse = String(demande.email ?? "").trim().toLowerCase();
+      const deja = COMPTES_DOUBLURE.some(
+        (c) => String(c.email).toLowerCase() === adresse
+      );
+      if (!adresse || deja) {
+        console.log(
+          new Date().toISOString().slice(11, 19),
+          "POST auth/admin/users →", deja ? "422 (adresse prise)" : "422 (sans adresse)"
+        );
+        res.writeHead(422, { "content-type": "application/json" });
+        res.end(JSON.stringify({ message: "User already registered" }));
+        return;
+      }
+      const compte = {
+        //  Le cran `IGNORER_ID` fabrique le cas silencieux : la base
+        //  garde SON identifiant, pas celui qu'on lui donne.
+        id: IGNORER_ID || !demande.id
+          ? `neuf-${Date.now()}-${COMPTES_DOUBLURE.length}`
+          : String(demande.id),
+        email: demande.email,
+        created_at: new Date().toISOString(),
+        last_sign_in_at: null,
+        user_metadata: demande.user_metadata ?? {},
+        app_metadata: demande.app_metadata ?? {},
+      };
+      COMPTES_DOUBLURE.push(compte);
+      console.log(
+        new Date().toISOString().slice(11, 19),
+        "POST auth/admin/users ← créé", compte.email, compte.id
+      );
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify(compte));
+      return;
+    }
+    console.log(
+      new Date().toISOString().slice(11, 19),
+      "GET auth/admin/users →", COMPTES_DOUBLURE.length
+    );
     res.writeHead(200, {
       "content-type": "application/json",
       "access-control-allow-origin": "*",
@@ -431,6 +529,18 @@ function repondre(req, res, u, brut) {
 
   const table = u.pathname.replace(/^\/rest\/v1\//, "");
 
+  /*  §1 (nº 690) — LA TABLE QUI NE RÉPOND JAMAIS. On garde la requête
+      ouverte, sans rien écrire — comme `MUETTE`, mais pour UNE table.
+      C'est le blocage exact que le propriétaire a subi, réduit à ce
+      qu'il faut pour l'éprouver. */
+  if (TABLE_MUETTE && table === TABLE_MUETTE) {
+    console.log(
+      new Date().toISOString().slice(11, 19),
+      req.method, table, "→ (muette, aucune réponse)"
+    );
+    return;
+  }
+
   /*  §1 (nº 688) — UNE SUPPRESSION SUPPRIME POUR DE BON. Sans cela, une
       décision d'administration qui efface une fiche rendait 200 et la
       fiche restait : la relecture de l'écran la remontrait, et le banc
@@ -494,7 +604,38 @@ function repondre(req, res, u, brut) {
       }
     }
   }
-  console.log(new Date().toISOString().slice(11, 19), req.method, table, "→", corps.length);
+  /*  ██ §1 (nº 690) — `limit` ET `offset` SONT ENFIN HONORÉS ██
+      ------------------------------------------------------------------
+      ⚠️ LA nº 681 AVAIT ÉCARTÉ CETTE IDÉE, ET SA RAISON RESTE ENTIÈRE :
+      « faire honorer `limit` à la doublure serait plus propre EN
+      THÉORIE et dangereux en pratique » — la mosaïque de l'accueil se
+      lit avec une limite, et le banc du bug des styles tourne dessus.
+      CE QUI CHANGE, ET SEULEMENT ÇA : on n'honore ces deux paramètres
+      QUE SI UN CRAN DE CETTE PASSE EST ALLUMÉ (`GRANDE_TABLE` ou
+      `PLAFOND`). Éteints — c'est-à-dire pour tous les bancs déjà
+      rendus —, la doublure répond comme avant, entièrement, et aucun
+      relevé publié n'est invalidé.
+      LE PLAFOND, LUI, EST LE PIÈGE DE LA VRAIE BASE : PostgREST ne rend
+      jamais plus de `max-rows` lignes, même si l'on en demande mille.
+      C'est ce qui faisait rendre une copie tronquée pour complète. */
+  const total = corps.length;
+  if (GRANDE_TABLE > 0 || PLAFOND > 0) {
+    const debut = Number(u.searchParams.get("offset") ?? 0) || 0;
+    let combien = Number(u.searchParams.get("limit") ?? corps.length) || corps.length;
+    if (PLAFOND > 0) combien = Math.min(combien, PLAFOND);
+    corps = corps.slice(debut, debut + combien);
+    //  `Prefer: count=exact` → la base annonce le total, comme la vraie.
+    if ((req.headers.prefer ?? "").includes("count=exact")) {
+      res.setHeader(
+        "content-range",
+        `${debut}-${Math.max(debut + corps.length - 1, debut)}/${total}`
+      );
+    }
+  }
+  console.log(
+    new Date().toISOString().slice(11, 19), req.method, table, "→", corps.length,
+    total !== corps.length ? `(sur ${total})` : ""
+  );
   //  LE RALENTISSEUR : la recherche du propriétaire répond en ~1 s
   //  (base distante, requête géographique) ; ici en 10 ms. Ce délai
   //  rétablit la fenêtre de temps réelle — c'est elle qu'on soupçonne.

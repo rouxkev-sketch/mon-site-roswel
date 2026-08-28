@@ -1,6 +1,6 @@
 # Les sauvegardes de la base — mode d'emploi
 
-*(passe nº 689 — écrit pour Kevin, pas pour un développeur)*
+*(passes nº 689 et nº 690 — écrit pour Kevin, pas pour un développeur)*
 
 ---
 
@@ -49,6 +49,27 @@ S'il affiche `⚠` à la place, la sauvegarde existe quand même — il te
 dit juste ce qui n'a pas pu être copié, et pourquoi. Le détail complet
 est toujours dans `resume.json`, au fond du dossier.
 
+### Il avance sous tes yeux *(passe nº 690)*
+
+Pendant qu'il travaille, il écrit où il en est :
+
+```
+   7/40 · photos_tatoueur · 1840 lignes
+```
+
+Une vraie base prend des minutes — surtout les photos, téléchargées une
+par une. **Tant qu'une ligne bouge, tout va bien.** Si elle reste
+bloquée sur une table, tu sais laquelle, et tu peux me le dire.
+
+Et il ne peut plus rester bloqué indéfiniment : chaque lecture a un
+délai de garde (60 secondes par page, 30 par photo). Passé ce délai, il
+le dit, **passe à la suite**, et le résumé final liste ce qui a manqué.
+Si une table de ta base demande vraiment plus de temps :
+
+```
+DELAI_LECTURE=180 sh outils/sauvegarde
+```
+
 ### Ce qui n'est PAS sauvegardé, et pourquoi
 
 | | |
@@ -90,23 +111,60 @@ chaque fichier dit ce qu'il fait).
 C'est la première chose, avant les données : les portfolios pointent
 vers des comptes, et une base sans comptes les refusera.
 
-Dans Supabase → **Authentication** → **Users** → bouton **Add user**.
-Le fichier `comptes.json` de ta sauvegarde donne, pour chaque
-personne : son identifiant (`id`), son adresse (`email`), la date
-d'inscription.
+**Une commande, en nommant la sauvegarde** *(passe nº 690)* :
 
-⚠️ **L'identifiant doit être recopié à l'identique.** C'est lui qui
-relie une personne à ses portfolios. Supabase permet de le fixer à la
-création (champ *User UID*).
+```
+sh outils/restaurer-comptes sauvegardes/2026-08-28
+```
 
-⚠️ Les mots de passe ne se restaurent pas. Préviens les gens : ils
+Il te montre ce qu'il compte faire, puis te demande de **taper
+RESTAURER**. Tant que tu ne l'as pas tapé, rien n'est créé.
+
+```
+  Comptes du fichier : 58
+  Déjà en base       : 12  (ils ne seront pas touchés)
+  À créer            : 46
+
+  Tape RESTAURER pour créer ces 46 comptes :
+```
+
+Ce que tu dois voir à la fin :
+
+```
+    46 compte(s) créé(s)
+    12 ignoré(s) — déjà en base
+
+  ✔  Relu : tous les comptes créés sont bien en base.
+```
+
+**Ses quatre garde-fous**, pour que tu saches ce qu'il ne peut pas
+faire :
+
+| | |
+|---|---|
+| Il ne devine rien | Sans dossier nommé, il s'arrête. Il ne va pas « prendre la plus récente » tout seul. |
+| Il fait taper le mot | RESTAURER, comme pour supprimer un portfolio. |
+| Il ne touche **jamais** un compte existant | Une adresse déjà connue est ignorée, et il le dit ligne par ligne. Il ne sait qu'**ajouter** ce qui manque — il ne modifie, n'écrase et ne supprime rien. |
+| Il se relit | À la fin il redemande la liste à la base et vérifie que les comptes créés y sont. |
+
+Tu peux donc le relancer sans risque : la seconde fois, il dira
+« Rien à faire : tous ces comptes existent déjà ».
+
+⚠️ **Les mots de passe ne se restaurent pas.** Préviens les gens : ils
 cliquent sur « mot de passe oublié » et en choisissent un nouveau.
+C'est Supabase qui ne les rend à personne — une protection, pas un
+manque.
 
-> S'il y a beaucoup de comptes, dis-le-moi : je t'écris un petit
-> script qui les recrée un par un à partir de `comptes.json`. Je ne
-> l'ai pas fait d'avance parce qu'un outil qui CRÉE des comptes est un
-> outil dangereux à laisser traîner — et cette passe-ci devait rester
-> en lecture seule.
+⚠️ **Si tu vois « créé avec un AUTRE identifiant »**, arrête-toi et
+dis-le-moi. L'identifiant est ce qui relie une personne à ses
+portfolios : un compte recréé sous un autre numéro serait un étranger
+pour ses propres fiches. Le script le détecte et le nomme plutôt que de
+te laisser le découvrir plus tard.
+
+*(Faire cette étape à la main reste possible — Supabase →
+**Authentication** → **Users** → **Add user**, en recopiant l'`id` du
+fichier `comptes.json` dans le champ *User UID*. C'est simplement long
+dès qu'il y a plus de quelques comptes.)*
 
 ### Étape 3 — Remonter les DONNÉES
 
