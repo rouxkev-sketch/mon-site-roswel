@@ -38,6 +38,9 @@ import {
 import { AucunResultat, type IssueAucunResultat } from "@/components/AucunResultat";
 import { EnTeteTatouage } from "@/components/EnTeteTatouage";
 import { GrilleTatoueurs } from "@/components/GrilleTatoueurs";
+//  §1 (nº 710) — le corps du squelette (titre + grille grises), superposé
+//  à la mosaïque pendant une navigation douce de même segment.
+import { CorpsSquelette } from "@/components/SquelettesDePage";
 //  `noter` — TEMPORAIRE (nº 630), voir la mesure plus bas.
 import { noter, noterDemontage, noterMontage } from "@/lib/journal-bascule";
 //  §2 (nº 330) — L'ÉCRITURE UNIQUE DE « UNE LISTE NEUVE COMMENCE EN
@@ -376,8 +379,11 @@ export function IndexTatoueurs({
   affichage?: { disposition: DispositionGrille; phototheque: boolean };
 }) {
   const router = useRouter();
-  /** Une navigation du routeur est en cours : la mosaïque s'estompe,
-      exactement comme elle le faisait pendant une recherche. */
+  /** Une recherche est en vol (`chercher`, plus bas, pousse l'adresse
+      DANS cette transition) : le corps se couvre du squelette (§1
+      nº 710, `enChantier`). L'estompe de la grille que ce drapeau
+      pilotait jusqu'à la nº 709 est partie avec — inobservable sous
+      un corps invisible. */
   const [enTransition, demarrerTransition] = useTransition();
 
   /**
@@ -489,6 +495,38 @@ export function IndexTatoueurs({
       fenêtre se referme dès que le servi s'accorde à l'adresse —
       quelques centaines de millisecondes, le temps que la bonne
       réponse arrive. */
+
+  /**
+   * ██ §1 (nº 710) — LE CHANTIER : POURQUOI L'ÉCRAN RESTAIT FIGÉ ██
+   * ==================================================================
+   * LE DÉFAUT, dit par le propriétaire et PRIS SUR LE FAIT au banc
+   * (film nº 710, base lente) : depuis le menu déroulant du moteur,
+   * l'ancienne mosaïque reste PLEINEMENT visible ~2 s — pas de
+   * squelette, pas de page vide, pas même l'adresse qui change. RIEN.
+   * LA CAUSE TIENT EN TROIS PHRASES, et aucune n'est un bug :
+   *  · `loading.tsx` ne joue qu'au MONTAGE d'un segment — or
+   *    `/recherche?a` → `/recherche?b` reste dans le MÊME segment :
+   *    il n'y a aucun montage, donc jamais de squelette de segment ;
+   *  · `router.push` (App Router) ne touche à RIEN tout de suite : la
+   *    page est demandée au serveur DANS la transition React
+   *    (`demarrerTransition`, voir `chercher`), et tant que la réponse
+   *    n'est pas arrivée, l'ANCIEN arbre reste affiché tel quel —
+   *    l'adresse elle-même ne s'écrit qu'au COMMIT, avec la nouvelle
+   *    page. Toute l'attente se passe donc AVANT le moindre signe ;
+   *  · la garde nº 673 (juste au-dessus) ne s'ouvre qu'au DÉSACCORD
+   *    adresse ↔ servi, c'est-à-dire APRÈS une écriture d'adresse
+   *    (un `popstate`, ou un commit arrivé avec une page fausse) :
+   *    l'attente du moteur, qui PRÉCÈDE l'écriture, lui échappe.
+   * D'OÙ L'UNION, ET ELLE SUFFIT : `enTransition` couvre l'attente de
+   * la réponse (le figé du moteur), `enRetardSurLAdresse` couvre le
+   * désaccord une fois l'adresse écrite (retour entre deux recherches,
+   * page fausse) — pendant l'un ou l'autre, le corps du squelette se
+   * superpose à la mosaïque (voir le `<main>`, plus bas).
+   * ⚠️ « VOIR PLUS » N'Y PASSE PAS, et c'est voulu : c'est un
+   * `<Link prefetch>` (nº 422), pas un appel à `demarrerTransition` —
+   * la liste qu'on lit ne se couvre jamais d'un squelette (nº 224-§3).
+   */
+  const enChantier = enTransition || enRetardSurLAdresse;
 
   /**
    * §1 (nº 683) — LES NOMBRES DU MENU DES STYLES, DEMANDÉS ICI.
@@ -604,9 +642,10 @@ export function IndexTatoueurs({
    *    avant que son catalogue ne soit chargé (§1 nº 673,
    *    `_accueil/rendu.tsx`, avec la mesure qui le prend sur le fait) ;
    *  · SA RÉPARATION NE SE VOIT PLUS (voir `enRetardSurLAdresse`, plus
-   *    haut) : le contenu faux ne se peint pas, le trait rose du site
-   *    dit qu'on travaille, et la bonne page prend la place sans que
-   *    personne ait vu l'autre.
+   *    haut) : le contenu faux ne se peint pas, le corps du squelette
+   *    dit qu'on travaille (nº 710 — le trait rose d'origine est parti
+   *    à la nº 706), et la bonne page prend la place sans que personne
+   *    ait vu l'autre.
    * ⚠️ IL RESTE DONC UN TÉMOIN AUTANT QU'UN FILET : sa ligne à la boîte
    * noire est ce qui dira si un chemin oublié existe encore. Le jour où
    * elle cesse de paraître, la cause est bien morte — c'est le rôle que
@@ -1077,17 +1116,34 @@ export function IndexTatoueurs({
         surRecherche={(suivants) => chercher(suivants)}
       />
 
-      {/*  §1 (nº 673) — `invisible` TANT QUE LE SERVI NE S'ACCORDE PAS À
-           L'ADRESSE : le contenu faux ne se peint pas, la boîte reste
-           (donc la hauteur, donc la position — nº 653/661), et le trait
-           rose du site dit qu'on travaille. La largeur, les marges
-           partagées et la grille ne sont pas touchées : c'est une classe
-           sur `visibility`, que rien d'autre ne porte ici. */}
+      {/*  §1 (nº 673, élargi nº 710) — `invisible` TANT QUE LE CHANTIER
+           DURE : le contenu (faux, ou en passe d'être remplacé) ne se
+           peint pas, la boîte reste (donc la hauteur, donc la position —
+           nº 653/661), et le CORPS DU SQUELETTE, premier enfant,
+           rétablit sa propre visibilité par-dessus — `visible` : un
+           enfant peut rouvrir ce que `visibility` a fermé, c'est toute
+           l'astuce, et AUCUN mécanisme de navigation n'est touché. La
+           largeur, les marges partagées et la grille ne bougent pas ;
+           `relative` n'est posé qu'avec le chantier, pour ancrer la
+           superposition — une classe par propriété (nº 389). */}
       <main
+        aria-busy={enChantier || undefined}
         className={`flex-1 mx-auto w-full ${LARGEUR_SITE} px-4 sm:px-6 pb-16${
-          enRetardSurLAdresse ? " invisible" : ""
+          enChantier ? " relative invisible" : ""
         }`}
       >
+        {enChantier && (
+          /*  Le corps gris par-dessus la boîte : `top-0` le pose où le
+              vrai corps commence, et ses marges RECOPIENT le cadre du
+              main (`px-4 sm:px-6`) — `inset-x-0` s'ancre au bord de la
+              boîte, pas au bord du contenu, la copie est donc nommée
+              (piège nº 378) et le banc de silhouette la garde au
+              pixel. */
+          <CorpsSquelette
+            avecTitre
+            classe="visible absolute inset-x-0 top-0 px-4 sm:px-6"
+          />
+        )}
         {/* LE TITRE DIT LA RECHERCHE (nº 140) — la pilule de la barre
             dit toujours « Recherche », c'est donc ICI que les critères
             se lisent.
@@ -1372,12 +1428,13 @@ export function IndexTatoueurs({
             //  avant une photo QUI EN EST — plus de réalisation
             //  affichée quand on cherche des flashs.
             natureRecherche={affiches.nature}
-            //  §1 (nº 621) — LA NOTE D'ICI CITAIT `aucuneRecherche`,
-            //  RETIRÉE À LA nº 480 : elle décrivait un réglage mort
-            //  (piège des commentaires, nº 472). Ce qui reste vrai est
-            //  la seule ligne ci-dessous — la grille s'estompe pendant
-            //  une transition de recherche.
-            estompee={enTransition}
+            //  §1 (nº 710) — L'ESTOMPE `estompee={enTransition}` EST
+            //  PARTIE : pendant une transition de recherche, le main
+            //  entier est désormais `invisible` sous le corps du
+            //  squelette (`enChantier`, plus haut) — une grille à 60 %
+            //  d'opacité DANS une boîte invisible ne se voyait plus.
+            //  Un réglage inobservable est un réglage mort (la leçon
+            //  de `aucuneRecherche`, nº 480/621, piège nº 472).
           />
         }
 

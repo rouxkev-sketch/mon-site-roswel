@@ -52,9 +52,11 @@ import { RESERVE_RANGEE } from "@/lib/reserve-barre";
  *    de filtre, aux DEUX appareils ;
  *  · LA ZONE DROITE SUIT L'ÉTAT DU COMPTE, par le mécanisme que le
  *    site possède depuis la nº 357 : `data-compte`, posé sur <html>
- *    par le script AVANT la première peinture. CONNECTÉ — au web de
- *    la recherche : fanion + avatar (2 ronds) ; partout ailleurs
- *    (doigt, et « Ma sélection » au web) : loupe + fanion + avatar
+ *    par le script AVANT la première peinture. CONNECTÉ — recherche
+ *    (et accueil, même barre) : fanion + avatar (2 ronds) aux DEUX
+ *    appareils — CONSIGNE du propriétaire (nº 710), qui PRIME sur le
+ *    relevé d'atelier de la nº 708 (la session forgée du banc montrait
+ *    3 ronds au doigt) ; « Ma sélection » : loupe + fanion + avatar
  *    (3 ronds). DÉCONNECTÉ — au web : le globe + le bloc large
  *    « Rejoindre » (133 × 40, rayon 12) ; au doigt : loupe + globe +
  *    le rond « Rejoindre » (3 ronds). Les deux variantes sont dans le
@@ -101,20 +103,25 @@ function RondGris({ classe = "" }: { classe?: string }) {
 /**
  * LA ZONE DROITE, DANS LES DEUX ÉTATS — les deux variantes sont
  * rendues, et `globals.css` (nº 708) n'affiche que celle de l'état
- * que le script a écrit dans `html[data-compte]` (nº 357). Mesures :
- * connecté = ronds de 40 (loupe absente au web de la recherche —
- * `lg:hidden`, la même règle que la vraie loupe, nº 150-§3) ;
- * déconnecté = loupe (doigt), globe, puis « Rejoindre » : un rond au
- * doigt, un bloc large 133 × 40 à angles arrondis au web.
+ * que le script a écrit dans `html[data-compte]` (nº 357).
+ * CONNECTÉ (consigne nº 710) : la recherche montre fanion + avatar —
+ * DEUX ronds, aux deux appareils ; seule « Ma sélection » garde sa
+ * loupe devant (trois ronds). C'est la parole du propriétaire qui
+ * fait foi ici, PAS le relevé nº 708 (pris sur la session forgée du
+ * banc, qui voyait 3 ronds au doigt de la recherche) — s'ils ne
+ * disent pas la même chose, c'est la consigne qu'on dessine.
+ * DÉCONNECTÉ, inchangé (mesuré nº 708) : loupe (doigt), globe, puis
+ * « Rejoindre » — un rond au doigt, un bloc large 133 × 40 à angles
+ * arrondis au web.
  */
-function ZoneDroite({ loupeAuWeb }: { loupeAuWeb: boolean }) {
+function ZoneDroite({ avecLoupe }: { avecLoupe: boolean }) {
   return (
     <div
       className="order-2 lg:order-3 ml-auto lg:ml-0 lg:flex-none shrink-0
                  flex items-center justify-end gap-3"
     >
       <span data-squelette-connecte="" className="contents">
-        <RondGris classe={loupeAuWeb ? "" : "lg:hidden"} />
+        {avecLoupe && <RondGris />}
         <RondGris />
         <RondGris />
       </span>
@@ -158,7 +165,7 @@ function BarreSquelette({ centre }: { centre: "recherche" | "selection" }) {
               />
             </div>
           </div>
-          <ZoneDroite loupeAuWeb={centre === "selection"} />
+          <ZoneDroite avecLoupe={centre === "selection"} />
           <div
             className="order-3 lg:order-2 basis-full lg:basis-[680px] lg:shrink
                        lg:grow-0 lg:mx-auto min-w-0 max-lg:pt-3
@@ -233,20 +240,26 @@ function CarteGrise() {
 }
 
 /**
- * LE CORPS : le bloc de titre au rythme EXACT de `LigneResultats`
+ * LE CORPS SEUL — le bloc de titre au rythme EXACT de `LigneResultats`
  * (constante partagée, nº 707), la barre grise à la hauteur du vrai
  * titre (21 px au doigt, 33 au web — mesuré), puis la grille des
- * cartes — la vraie écriture de grille, huit emplacements : l'écran
- * est couvert aux deux appareils sans fabriquer une page
- * artificiellement longue.
+ * cartes, la vraie écriture de grille.
+ * ⚠️ EXPORTÉ SANS SON `<main>` (nº 710), ET C'EST LE POINT : la page
+ * de recherche le SUPERPOSE à sa propre mosaïque pendant une
+ * navigation douce de même segment (voir IndexTatoueurs, §1 nº 710) —
+ * le cadre de page, elle l'a déjà ; `classe` reçoit alors le
+ * positionnement de la superposition. Au montage d'un segment, c'est
+ * `MosaiqueGrise`, juste dessous, qui lui pose le cadre.
  */
-function MosaiqueGrise({ avecTitre }: { avecTitre: boolean }) {
+export function CorpsSquelette({
+  avecTitre,
+  classe = "",
+}: {
+  avecTitre: boolean;
+  classe?: string;
+}) {
   return (
-    <main
-      aria-busy="true"
-      aria-label="Chargement de la page"
-      className={`flex-1 mx-auto w-full ${LARGEUR_SITE} px-4 sm:px-6 pb-16 animate-pulse`}
-    >
+    <div className={`animate-pulse${classe ? ` ${classe}` : ""}`}>
       {avecTitre ? (
         <div className={RYTHME_TITRE_RESULTATS}>
           <div className="h-[21px] sm:h-[33px] w-44 bg-sombre-eleve" />
@@ -261,19 +274,34 @@ function MosaiqueGrise({ avecTitre }: { avecTitre: boolean }) {
             grille commence après le seul espacement du rythme. */
         <div className="pt-6 sm:pt-8 mobile:pt-3" />
       )}
-      {/*  §2 (nº 709) — QUATRE CASES, PAS HUIT : un nombre modeste et
-           neutre, sur consigne du propriétaire — une recherche peut ne
-           rendre qu'une ou deux cartes, et huit cases grises faisaient
-           croire à des cartes fantômes sur l'image figée du
-           remplacement. (Les cases ne SURVIVENT jamais à l'arrivée :
-           le film du banc nº 709 le prouve, image par image — mais un
-           squelette ne doit pas promettre plus que le résultat
-           probable.) */}
+      {/*  §2 (nº 710) — HUIT CASES, DE NOUVEAU : la nº 709 en avait
+           posé quatre, sur consigne d'alors ; le propriétaire a
+           RE-TRANCHÉ à la nº 710 — huit, l'écran couvert aux deux
+           appareils. (Les cases ne SURVIVENT jamais à l'arrivée : le
+           film du banc nº 709 le prouve, image par image — le
+           remplacement démonte le squelette entier.) */}
       <ul className={CLASSES_GRILLE_CARTES}>
-        {Array.from({ length: 4 }, (_, rang) => (
+        {Array.from({ length: 8 }, (_, rang) => (
           <CarteGrise key={rang} />
         ))}
       </ul>
+    </div>
+  );
+}
+
+/**
+ * LA MOSAÏQUE DU SEGMENT : le cadre de page de la vraie mosaïque
+ * (largeur, marges, `pb-16`) autour du corps. C'est elle que les
+ * `loading.tsx` montrent au montage d'un segment.
+ */
+function MosaiqueGrise({ avecTitre }: { avecTitre: boolean }) {
+  return (
+    <main
+      aria-busy="true"
+      aria-label="Chargement de la page"
+      className={`flex-1 mx-auto w-full ${LARGEUR_SITE} px-4 sm:px-6 pb-16`}
+    >
+      <CorpsSquelette avecTitre={avecTitre} />
     </main>
   );
 }
