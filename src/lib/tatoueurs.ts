@@ -876,6 +876,55 @@ export function estEnLigne(fiche: {
   );
 }
 
+/**
+ * ██ §1 (nº 694) — LA MÊME RÈGLE, POSÉE SUR UNE LECTURE ██
+ * ==================================================================
+ * CE QUE L'AUDIT nº 691 A TROUVÉ (R2, rouge) : « Ma sélection » et la
+ * bande des suivis filtraient `publie` TOUT SEUL, quand le reste du
+ * site filtre `estEnLigne` (juste au-dessus). Un portfolio en
+ * suppression différée reste `publie = true` pendant trente jours — il
+ * disparaissait donc du public et RESTAIT dans ces deux listes, avec sa
+ * carte, sa photo, et un lien qui menait à « Ce portfolio n'est pas
+ * encore en ligne » : un message faux, en plus d'un lien mort.
+ *
+ * POURQUOI CE N'ÉTAIT PAS QU'UN OUBLI : `estEnLigne` lit QUATRE
+ * colonnes, et une lecture qui n'en demande qu'une ne peut pas
+ * l'appliquer. Corriger endroit par endroit aurait voulu dire recopier
+ * cinq fois la même liste de colonnes et le même repli — donc cinq
+ * occasions de diverger. Cette fonction-ci est cette liste, ce repli et
+ * ce filtre, écrits UNE FOIS.
+ *
+ * ⚠️ LE REPLI EXISTE PARCE QUE DEUX COLONNES SONT RÉCENTES :
+ * `hors_ligne` et `statut` manquent sur une base à qui il manque une
+ * migration. On redemande alors sans elles, et `estEnLigne` se contente
+ * de ce qu'elle a (`publie` et `supprime_le`) — le site marche comme
+ * avant, jamais moins.
+ * ⚠️ ELLE NE LÈVE JAMAIS : une lecture qui échoue rend une liste vide.
+ * Une liste personnelle vide est désagréable ; une page en erreur l'est
+ * davantage.
+ */
+export const VERROUS_EN_LIGNE = "publie, supprime_le, hors_ligne, statut";
+const VERROUS_EN_LIGNE_SOBRES = "publie, supprime_le";
+
+export async function listeEnLigne<T>(
+  lire: (verrous: string) => PromiseLike<{
+    data: unknown;
+    error: { message: string } | null;
+  }>
+): Promise<T[]> {
+  let reponse;
+  try {
+    reponse = await lire(VERROUS_EN_LIGNE);
+    if (reponse.error) reponse = await lire(VERROUS_EN_LIGNE_SOBRES);
+  } catch {
+    return [];
+  }
+  if (reponse.error || !Array.isArray(reponse.data)) return [];
+  return (reponse.data as T[]).filter((ligne) =>
+    estEnLigne(ligne as Parameters<typeof estEnLigne>[0])
+  );
+}
+
 /** LE PROPRIÉTAIRE NE QUITTE JAMAIS LE SERVEUR. Il est lu pour
     masquer, puis retiré : les fiches partent vers le navigateur sans
     lui, exactement comme avant cette passe. */
@@ -1166,6 +1215,23 @@ export async function lireVilleParSlug(
 ): Promise<ResultatTatoueurs["ville"]> {
   try {
     const supabase = creerClientSupabaseAnonyme();
+    /*  §2 (nº 694) — CELLE-CI GARDE `publie` TOUT SEUL, ET C'EST UN
+        CHOIX, pas un oubli. La nº 694 a aligné sur `estEnLigne` toutes
+        les listes qui MONTRENT des portfolios ; ici on ne montre rien —
+        on cherche le POINT DE RÉFÉRENCE d'une page « style + ville »,
+        c'est-à-dire des coordonnées.
+        CE QU'ON GAGNERAIT À ALIGNER : rien. CE QU'ON PERDRAIT : une
+        ville dont les portfolios sont tous en suppression différée
+        rendrait « page introuvable » (404) au lieu d'une page qui dit
+        « Aucun tatoueur pour l'instant » — et qui porte déjà `noindex`
+        quand elle est vide (voir la page). Or ces portfolios peuvent
+        revenir dans les trente jours : un 404 dit « cette adresse
+        n'existe pas », ce qui serait faux. La page vide, elle, dit le
+        vrai.
+        ⚠️ AUCUN PORTFOLIO INVISIBLE NE PASSE PAR LÀ : la LISTE de la
+        page, elle, vient de `listerTatoueurs`, qui applique la règle
+        entière. Cette lecture-ci ne rend qu'un nom de ville et deux
+        coordonnées. */
     const { data } = await supabase
       .from("tatoueurs")
       .select("ville_nom, latitude, longitude")

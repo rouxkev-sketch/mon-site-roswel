@@ -13,6 +13,9 @@ import {
   scoreDuCarrousel,
 } from "@/lib/classement-carrousels";
 import { lirePopularite } from "@/lib/tatoueurs";
+//  §1 (nº 694) — la règle « en ligne » du site entier, posée sur une
+//  lecture. Une seule écriture (voir sa note dans lib/tatoueurs).
+import { listeEnLigne } from "@/lib/tatoueurs";
 
 /**
  * ██ LE CATALOGUE DES STYLES — LA LECTURE (passe nº 620) ██
@@ -181,13 +184,16 @@ export async function catalogueDesStyles(): Promise<StyleDuCatalogue[]> {
   try {
     const supabase = creerClientSupabaseAnonyme();
 
-    /* ---- 1. LES FICHES EN LIGNE — `publie = true`, comme partout ---- */
-    const { data: fiches } = await supabase
-      .from("tatoueurs")
-      .select("id, slug")
-      .eq("publie", true);
+    /* ---- 1. LES FICHES EN LIGNE ----
+       §1 (nº 694) — ET « EN LIGNE » VEUT DIRE `estEnLigne`, plus
+       `publie` tout seul : sans quoi les photos d'un portfolio en
+       suppression différée continuaient d'être comptées dans les
+       nombres affichés. Même écriture que partout (`listeEnLigne`). */
+    const fiches = await listeEnLigne<{ id: string; slug: string }>((verrous) =>
+      supabase.from("tatoueurs").select(`id, slug, ${verrous}`)
+    );
     const slugParFiche = new Map<string, string>();
-    for (const ligne of (fiches ?? []) as Array<{ id: string; slug: string }>) {
+    for (const ligne of fiches) {
       slugParFiche.set(ligne.id, ligne.slug);
     }
     if (slugParFiche.size === 0) return [];

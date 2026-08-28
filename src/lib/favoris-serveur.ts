@@ -1,6 +1,9 @@
 import { creerClientSupabaseServeur } from "@/lib/supabase/server";
 import { natureConnue } from "@/lib/photos-tatoueur";
 import { modesActifs, type ModeExerciceFiche } from "@/lib/modes-exercice";
+//  §1 (nº 694) — la règle « en ligne » du site entier, posée sur une
+//  lecture. Une seule écriture (voir sa note dans lib/tatoueurs).
+import { listeEnLigne } from "@/lib/tatoueurs";
 
 /**
  * CE QUE LA PAGE « MES FAVORIS » LIT — côté serveur
@@ -13,12 +16,18 @@ import { modesActifs, type ModeExerciceFiche } from "@/lib/modes-exercice";
  * politique la ferait taire sans un mot. Trois lectures se lisent, se
  * mesurent et se réparent une par une.
  *
- * ⚠️ ON N'AFFICHE QUE CE QUI EST ENCORE PUBLIÉ. Une fiche retirée du
+ * ⚠️ ON N'AFFICHE QUE CE QUI EST ENCORE EN LIGNE. Une fiche retirée du
  * site (hors ligne, suppression en cours, modération) disparaît des
  * favoris tant qu'elle n'est pas revenue — et REVIENT d'elle-même le
  * jour où elle est republiée : la ligne de favori, elle, n'a jamais
  * bougé. C'est exactement ce qu'on veut : ne rien perdre, ne rien
  * montrer qui ne soit pas public.
+ * ⚠️ ET CETTE PHRASE ÉTAIT UNE INTENTION, PAS UN FAIT, jusqu'à la
+ * nº 694 : la lecture ne filtrait que `publie`, si bien qu'une
+ * SUPPRESSION EN COURS — qui ne touche pas à `publie` — laissait la
+ * fiche ici pendant trente jours. Trois des quatre cas cités ci-dessus
+ * n'étaient donc pas tenus. Ils le sont : voir le §1 (nº 694) sur la
+ * lecture des fiches, plus bas.
  */
 
 /**
@@ -303,25 +312,6 @@ export async function lireLesFavoris(
     const brutes = (photos.error ? [] : (photos.data ?? [])) as unknown as
       LignePhoto[];
 
-    //  TOUTES LES FICHES CONCERNÉES — celles des photos ET celles
-    //  qu'on suit, en UNE lecture. Publiées seulement.
-    const idsFiches = [
-      ...new Set([...brutes.map((p) => p.tatoueur_id), ...idsSuivis]),
-    ];
-    const fiches =
-      idsFiches.length > 0
-        ? await supabase
-            .from("tatoueurs")
-            .select(
-              "id, nom, slug, ville_nom, region, pays, code_pays, photo_profil, " +
-                //  LE BADGE DE LA CARTE (passe nº 142) — les deux
-                //  colonnes que `libelleTypeFiche` croise.
-                "type_fiche, etablissement"
-            )
-            .in("id", idsFiches)
-            .eq("publie", true)
-        : { data: [], error: null };
-
     type LigneFiche = {
       id: string;
       nom: string;
@@ -334,11 +324,48 @@ export async function lireLesFavoris(
       type_fiche: string | null;
       etablissement: string | null;
     };
+
+    /*  TOUTES LES FICHES CONCERNÉES — celles des photos ET celles
+        qu'on suit, en UNE lecture.
+        ██ §1 (nº 694) — « EN LIGNE », PAS « PUBLIÉE » ██
+        ------------------------------------------------------------------
+        CE QUE L'AUDIT nº 691 A TROUVÉ (R2, rouge, prouvé au banc) :
+        cette lecture filtrait `publie` TOUT SEUL. Or une suppression
+        différée — d'un portfolio, ou d'un compte entier — n'écrit que
+        `supprime_le` et NE TOUCHE PAS à `publie` : c'est ce qui permet
+        de tout rendre plus tard exactement comme c'était. Pendant les
+        trente jours, le portfolio disparaissait donc du public
+        (`estEnLigne`, la règle de partout ailleurs) et RESTAIT ICI —
+        carte, photo, et un lien qui menait à « Ce portfolio n'est pas
+        encore en ligne ». Un message faux, en plus d'un lien mort.
+        LA MÊME RÈGLE PARTOUT, DÉSORMAIS : `listeEnLigne` demande les
+        quatre colonnes d'`estEnLigne` et filtre avec elle (voir sa note
+        dans lib/tatoueurs).
+        ⚠️ RIEN N'EST EFFACÉ, ET C'EST TOUT LE POINT : le favori et le
+        suivi RESTENT en base. Ils sont MASQUÉS le temps de la
+        suppression différée, et REVIENNENT si elle est annulée — la
+        cascade, elle, ne joue qu'à la purge (V3 de l'audit). */
+    const idsFiches = [
+      ...new Set([...brutes.map((p) => p.tatoueur_id), ...idsSuivis]),
+    ];
+    const lignesFiches =
+      idsFiches.length > 0
+        ? await listeEnLigne<LigneFiche>((verrous) =>
+            supabase
+              .from("tatoueurs")
+              .select(
+                "id, nom, slug, ville_nom, region, pays, code_pays, photo_profil, " +
+                  //  LE BADGE DE LA CARTE (passe nº 142) — les deux
+                  //  colonnes que `libelleTypeFiche` croise.
+                  "type_fiche, etablissement, " +
+                  verrous
+              )
+              .in("id", idsFiches)
+          )
+        : [];
+
     const parFiche = new Map<string, LigneFiche>();
-    for (const ligne of (fiches.error ? [] : (fiches.data ?? [])) as unknown as
-      LigneFiche[]) {
-      parFiche.set(ligne.id, ligne);
-    }
+    for (const ligne of lignesFiches) parFiche.set(ligne.id, ligne);
 
     /* ---- 3. REMISE DANS L'ORDRE DES FAVORIS ----
        ⚠️ C'EST `idsPhotos` QUI COMMANDE, pas la base : `in(...)` rend

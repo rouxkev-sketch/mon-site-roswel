@@ -5,6 +5,9 @@ import { natureConnue } from "@/lib/photos-tatoueur";
 //  clés de carrousel : le chiffre annoncé et le nombre de vignettes
 //  sortent désormais de la même fonction.
 import { cleDuCarrousel } from "@/lib/carrousels";
+//  §1 (nº 694) — la règle « en ligne » du site entier, posée sur une
+//  lecture. Une seule écriture (voir sa note dans lib/tatoueurs).
+import { listeEnLigne } from "@/lib/tatoueurs";
 
 /**
  * COMBIEN DE PORTFOLIOS PAR STYLE — le nombre du menu « Explorer »
@@ -63,12 +66,13 @@ export async function GET() {
     //  lui qu'attend `cleDuCarrousel`, l'écriture qui dit ce qu'est une
     //  carte de la mosaïque. Un champ de plus dans un `select` déjà
     //  fait ; aucune lecture ajoutée.
-    const { data: fiches } = await supabase
-      .from("tatoueurs")
-      .select("id, slug")
-      .eq("publie", true);
+    //  §1 (nº 694) — « en ligne », pas « publiée » : un portfolio en
+    //  suppression différée ne doit plus gonfler les nombres du menu.
+    const fiches = await listeEnLigne<{ id: string; slug: string }>((verrous) =>
+      supabase.from("tatoueurs").select(`id, slug, ${verrous}`)
+    );
     const slugParFiche = new Map<string, string>();
-    for (const ligne of (fiches ?? []) as Array<{ id: string; slug: string }>) {
+    for (const ligne of fiches) {
       slugParFiche.set(ligne.id, ligne.slug);
     }
     if (slugParFiche.size === 0) {

@@ -70,6 +70,18 @@ export async function GET(requete: Request) {
       )
       .eq("publie", true)
       .is("supprime_le", null)
+      /*  §1 (nº 694) — LES DEUX DERNIERS VERROUS D'`estEnLigne`. Cette
+          lecture en avait déjà deux sur quatre ; un portfolio MIS HORS
+          LIGNE ou REFUSÉ pouvait donc encore être proposé comme salon
+          ou comme artiste à rattacher. Ils sont posés ici plutôt que
+          par `listeEnLigne` : la requête porte déjà `ilike`, `order` et
+          `limit`, et l'on ne veut PAS ramener puis jeter — la limite
+          doit s'appliquer à ce qui est réellement offert.
+          ⚠️ ET UNE BASE SANS CES DEUX COLONNES ? Elles sont posées par
+          la migration nº 60, la même que `supprime_le` juste au-dessus :
+          une base qui a l'une a les autres. */
+      .not("hors_ligne", "is", true)
+      .not("statut", "eq", "refusee")
       // `ilike` : insensible à la casse, et le nom peut être n'importe
       // où dans l'intitulé (« encre » trouve « Maison Encre Noire »).
       .ilike("nom", `%${saisie}%`)

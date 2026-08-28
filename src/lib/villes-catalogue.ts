@@ -2,6 +2,9 @@ import { catalogueDemoAutorise } from "@/lib/catalogue-demonstration";
 import { creerClientSupabaseServeur } from "@/lib/supabase/server";
 import { TATOUEURS_DEMO } from "@/lib/tatoueurs-demo";
 import { lieuDepuisFiche, type LieuTrouve } from "@/lib/geocodage";
+//  §1 (nº 694) — la règle « en ligne » du site entier, posée sur une
+//  lecture. Une seule écriture (voir sa note dans lib/tatoueurs).
+import { listeEnLigne } from "@/lib/tatoueurs";
 
 /**
  * NOS PROPRES VILLES — LE FILET DU MOTEUR (passe nº 228-§1)
@@ -88,15 +91,23 @@ export async function villesDuCatalogue(
 
   try {
     const supabase = await creerClientSupabaseServeur();
-    const { data } = await supabase
-      .from("tatoueurs")
-      .select("ville_nom, region, pays, code_pays, latitude, longitude, lieu_id")
-      .eq("publie", true)
-      .ilike("ville_nom", `%${saisie.trim()}%`)
-      //  Large avant dédoublonnage : dix fiches d'une même ville ne
-      //  doivent pas manger la liste.
-      .limit(maximum * 8);
-    const lignes = (data ?? []) as LigneVille[];
+    /*  §1 (nº 694) — « EN LIGNE », PAS « PUBLIÉE ». Une ville qui
+        n'existait que par un portfolio en suppression différée était
+        encore proposée ici : on la choisissait, et la recherche ne
+        rendait rien. La même règle que partout, par la même écriture
+        (`listeEnLigne`, lib/tatoueurs). */
+    const lignes = await listeEnLigne<LigneVille>((verrous) =>
+      supabase
+        .from("tatoueurs")
+        .select(
+          "ville_nom, region, pays, code_pays, latitude, longitude, lieu_id, " +
+            verrous
+        )
+        .ilike("ville_nom", `%${saisie.trim()}%`)
+        //  Large avant dédoublonnage : dix fiches d'une même ville ne
+        //  doivent pas manger la liste.
+        .limit(maximum * 8)
+    );
     const lieux = sansDoublons(
       lignes.map(versLieu).filter((lieu): lieu is LieuTrouve => lieu !== null)
     );
