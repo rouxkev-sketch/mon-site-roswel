@@ -98,16 +98,38 @@ export async function televerserPhotos({
       //  LA PLEINE RÉSOLUTION ET LA MINIATURE PARTENT ENSEMBLE. La
       //  miniature refusée n'est toujours pas une erreur : on garde
       //  la pleine résolution — plus lourd, jamais cassé.
+      /*  ██ §1 (nº 699) — LE TYPE EST IMPOSÉ, PAS DEVINÉ ██
+          ==============================================================
+          CE QUE L'AUDIT nº 698 A TROUVÉ (orange) : sans cette option,
+          le stockage retient le type que LE NAVIGATEUR a annoncé —
+          c'est-à-dire celui du fichier choisi, donc celui que
+          l'utilisateur contrôle. Un fichier HTML renommé en `.jpg`
+          était rangé avec son type d'origine et RESSERVI COMME UNE
+          PAGE par le domaine du stockage : de quoi héberger une fausse
+          page de connexion sous une adresse d'apparence honnête.
+          `contentType` fixé, le stockage sert une image, quoi qu'on
+          lui ait donné. Le fichier n'y devient pas une image — il
+          cesse d'être exécutable.
+          ⚠️ CE N'EST PAS LA VÉRIFICATION SERVEUR DEMANDÉE, ET JE LE
+          DIS : l'envoi part du NAVIGATEUR VERS LE STOCKAGE, sans
+          passer par une route du site. Aucun code à nous ne voit le
+          fichier. Vérifier vraiment son contenu demanderait de faire
+          transiter tous les envois par le serveur — un chantier, pas
+          un verrou (voir le compte rendu de la passe). Ce qui est
+          fait ici ferme la conséquence ; la cause reste ouverte.
+          ⚠️ ET C'EST DÉJÀ DU JPEG : `compresserPhoto` réencode chaque
+          photo avant d'arriver ici (et, depuis cette passe, REFUSE ce
+          qu'elle ne sait pas lire au lieu de laisser passer
+          l'original). Le type déclaré dit donc le vrai. */
+      const COMME_UNE_IMAGE = { upsert: true, contentType: "image/jpeg" };
       const [pleine, mini] = await Promise.all([
         supabase.storage
           .from(bucket)
-          .upload(`${base}.jpg`, photo.fichier as File, { upsert: true }),
+          .upload(`${base}.jpg`, photo.fichier as File, COMME_UNE_IMAGE),
         photo.fichierMiniature
           ? supabase.storage
               .from(bucket)
-              .upload(`${base}-mini.jpg`, photo.fichierMiniature, {
-                upsert: true,
-              })
+              .upload(`${base}-mini.jpg`, photo.fichierMiniature, COMME_UNE_IMAGE)
           : Promise.resolve(null),
       ]);
       if (pleine.error) {

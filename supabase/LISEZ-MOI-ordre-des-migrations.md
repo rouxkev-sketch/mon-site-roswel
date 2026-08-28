@@ -219,3 +219,17 @@ sans conséquence, à n'importe quel moment.
 
 *Tableau produit à partir des fichiers eux-mêmes, analysés par
 l'analyseur syntaxique de PostgreSQL — pas à la main.*
+
+## Le fichier de sécurité de la passe nº 699
+
+- **`yokofolio-securite-699.sql`** — *(à passer quand tu veux, sans
+  ordre imposé, rejouable)*. Il ferme trois trous trouvés par l'audit
+  nº 698 : **les adresses et coordonnées de TOUS les portfolios**
+  (brouillons et supprimés compris) que trois vues laissaient lire à
+  n'importe quel visiteur ; **la suppression décidée par
+  l'administration** qu'un tatoueur pouvait annuler lui-même ; et les
+  règles des tables du produit artisans, justes mais qui ne nommaient
+  aucun rôle. **Il ne change rien à ce que le site affiche** — ce sont
+  des verrous. Ses blocs de vérification sont à la fin du fichier ;
+  le dernier (bloc E) se passe **avant ET après** pour voir la
+  différence.

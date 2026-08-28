@@ -21,6 +21,24 @@ const TABLES_ATTENDUES = [
 ] as const;
 
 export async function GET() {
+  /*  ██ §1 (nº 699) — FERMÉE EN LIGNE, COMME LES AUTRES OUTILS ██
+      CE QUE L'AUDIT nº 698 A MESURÉ (orange, nº 5 du top 5) : cette
+      route répondait 200 à n'importe qui, sans le moindre cookie. Et
+      ce qu'elle répond n'est pas anodin : elle NOMME sept tables et
+      donne, pour chacune, LE NOMBRE DE LIGNES qu'un visiteur peut
+      lire — plus les messages d'erreur bruts de la base. C'est
+      exactement l'outil qu'on voudrait pour savoir par où entrer :
+      un banc d'essai des règles d'accès, offert et gratuit.
+      LA CORRECTION EST CELLE DES TREIZE AUTRES OUTILS d'atelier
+      (`/api/admin/*`) : la même ligne, le même refus. Elle garde tout
+      son intérêt en local, où elle a été écrite pour servir. */
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json(
+      { ok: false, message: "Outil désactivé sur le site en ligne." },
+      { status: 403 }
+    );
+  }
+
   const resultats: Record<string, string> = {};
   let toutVaBien = true;
 
