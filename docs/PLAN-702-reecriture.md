@@ -177,7 +177,66 @@ page qui ne lit rien reçoit encore les 62 Ko, après l'affichage, pour
 la seule relecture d'identité de la nº 674. S'en passer voudrait dire
 réécrire `getUser()` à la main — une passe à part, pas celle-ci.
 
-### L4 · Le PANNEAU du moteur à la demande — ~35 à 45 Ko gzip, ~0,2 s en 3G
+### L4 · Le PANNEAU du moteur à la demande — ~~35 à 45 Ko gzip~~ **1 Ko : ABANDONNÉ À LA nº 704**
+
+> ## ⛔ L4 EST ANNULÉ. LE GAIN N'EXISTE PAS, ET LE PRIX EST LOURD.
+>
+> **CE QUI A ÉTÉ FAIT À LA nº 704** (cran 1, le plus prudent) : la page
+> de recherche du doigt (`PageRechercheMobile`) passée en
+> `next/dynamic`. Compilé, mesuré, puis **REMIS EN ARRIÈRE**.
+>
+> | | Avant | Après | |
+> |---|---|---|---|
+> | Poids, mentions légales | 237 Ko gz | 236 Ko gz | **−1 Ko** |
+> | Ouverture de la recherche au doigt | **70 ms** | **399–842 ms** | **×6 à ×12** |
+>
+> Un geste six fois plus lent — sur la recherche, le geste principal du
+> produit au téléphone — pour un kilo-octet. Et le prix mesuré ici est
+> le PLANCHER : l'atelier sert le morceau en local, une vraie liaison
+> ajouterait son propre aller-retour.
+>
+> **POURQUOI L'ESTIMATION DE CE PLAN ÉTAIT FAUSSE — la même erreur qu'aux
+> polyfills de la nº 701.** J'avais chiffré « ~2 000 lignes de
+> `MoteurTatouage` » en LIGNES DE FICHIER. Or ce dépôt est écrit en
+> français autant qu'en TypeScript : les commentaires ne partent jamais
+> chez le visiteur. Mesuré, commentaires ôtés :
+>
+> | Fichier | Brut | Code réel | Part utile |
+> |---|---|---|---|
+> | `MenuDeroulant` | 126 Ko | 26 Ko | 20 % |
+> | `MoteurTatouage` | 101 Ko | 26 Ko | 26 % |
+> | `EnTeteTatouage` | 83 Ko | 18 Ko | 22 % |
+> | `ChampLocalisation` | 64 Ko | 17 Ko | 27 % |
+> | `PageRechercheMobile` | 29 Ko | **8 Ko** | 26 % |
+> | **la famille entière** | **420 Ko** | **98 Ko** | **23 %** |
+>
+> Les 98 Ko de code deviennent ~30 Ko gzip une fois minifiés — pour
+> TOUTE la famille, panneau ET barre. Il n'y a jamais eu 35–45 Ko de
+> panneau à retirer.
+>
+> **ET CE QUI RESTE N'EST PAS DÉTACHABLE.** Au WEB, le champ replié EST
+> `MenuDeroulant` + `ChampLocalisation` : ces deux fichiers dessinent le
+> DÉCLENCHEUR lui-même, pas son panneau. Les différer, c'est différer la
+> barre. La seule frontière nette du moteur était la page du doigt —
+> celle qui vaut 1 Ko.
+>
+> **LES CRANS 2 ET 3 SONT DONC SANS OBJET** : ils ne font que déplacer le
+> moment du préchargement du même kilo-octet. Ne pas les ouvrir.
+>
+> **CE QUE LA nº 704 LAISSE D'UTILE :** `outils/banc-moteur-704.mjs`,
+> qui éprouve en trente secondes les trois choses les plus fragiles de
+> cette zone — l'ouverture de la recherche au doigt, « Explorer les
+> styles » → haut de l'accueil (nº 661), et le bug des styles (nº 673),
+> `neo-japonais` compris. Toutes vertes, aux deux appareils.
+>
+> **OÙ CHERCHER MAINTENANT, d'après la sonde du propriétaire :** le coût
+> n'est plus le téléchargement (2,6 s de « rendu » sur Ma sélection,
+> 4,1 s sur l'accueil, contre 236–420 Ko de JS). Le levier suivant est
+> le TRAVAIL DU NAVIGATEUR — nombre de nœuds, hydratation, images — pas
+> le poids des fichiers. C'est un autre plan que celui-ci.
+
+*(Texte d'origine conservé ci-dessous pour mémoire.)*
+
 
 Le fichier de 58 Ko gzip se découpe en deux : **la barre visible**
 (logo, champ replié, silhouette, langue — ce qui doit être là au
@@ -215,10 +274,10 @@ L4 s'est bien passé — même chantier, mêmes bancs — ou pas du tout.
 |---|---|---:|---|---|
 | L1 banc de référence | **702 ✅ fait** | 0 (il protège) | aucun | — |
 | ~~L2 polyfills~~ | **702 — annulé** | **0** (levier inexistant) | — | — |
-| L3 supabase différé | 703 | −62 Ko | moyen | normal-693 (menu, notifs, favoris, admin), cœurs, connexion |
-| L4 panneau du moteur, cran 1 | 704 | 0 | moyen | LE BANC COMPLET (dessous) |
-| L4 cran 2 (survol/toucher) | 704 | −35 à −45 Ko | élevé | idem |
-| L4 cran 3 (à l'ouverture) | 705 | (compris dans L4) | élevé | idem |
+| L3 supabase différé | **703 ✅ fait** | **−105 Ko** (mentions légales) | moyen | normal-693 (menu, notifs, favoris, admin), cœurs, connexion |
+| ~~L4 panneau du moteur, cran 1~~ | **704 — annulé** | **−1 Ko**, au prix d'un geste ×6 | — | banc nº 704 : tout vert |
+| ~~L4 cran 2 (survol/toucher)~~ | **sans objet** | **0** (le panneau ne pèse pas ce qu'on croyait) | — | — |
+| ~~L4 cran 3 (à l'ouverture)~~ | **sans objet** | **0** | — | — |
 | L5 corps du menu | 705 | −10 à −15 Ko | moyen | idem |
 
 **Le banc complet des étapes L4/L5** (les trois zones historiquement
