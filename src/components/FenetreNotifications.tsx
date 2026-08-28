@@ -186,6 +186,25 @@ const CATALOGUE: Record<
     titre: "Style refusé",
     sousTitre: "Ta demande d'ajout de style n'a pas été acceptée.",
   },
+  /*  ██ §3 (nº 688) — LA DEMANDE DE PORTFOLIO REFUSÉE ██
+      LES DEUX PHRASES SONT CELLES DU PROPRIÉTAIRE, au mot près. Le nom
+      du portfolio s'insère à l'affichage — il est lu dans `fiche_nom`,
+      la colonne qui SURVIT à l'effacement de la fiche (voir
+      `sousTitreDe`). Sans lui, la phrase se dit sans nom plutôt que
+      d'afficher un trou.
+      LA CROIX ET LE TON « INFO », comme « Style refusé » juste
+      au-dessus, et pour la même raison : c'est un REFUS, pas une chose
+      à réparer. `probleme` (le rouge) est réservé à ce qui appelle un
+      geste — corriger, remettre en ligne. Ici il n'y a rien à faire ;
+      la seconde phrase le dit même explicitement. */
+  demande_refusee: {
+    symbole: IconeCroix,
+    ton: "info",
+    titre: "Demande de portfolio refusée",
+    sousTitre:
+      "Ta demande n'a pas été retenue. Tu peux créer un nouveau " +
+      "portfolio quand tu le souhaites.",
+  },
   /*  ██ §1 (nº 663) — LE MESSAGE DE BIENVENUE ██
       LES DEUX TEXTES SONT CEUX DU PROPRIÉTAIRE, au mot près — à la
       graphie de la marque près (« YokoFolio », Y et F majuscules : sa
@@ -281,6 +300,20 @@ function sousTitreDe(nouvelle: Notification): string {
     return nom
       ? `Le style demandé "${nom}" a été ajouté à YokoFolio.`
       : "Le style demandé a été ajouté à YokoFolio.";
+  }
+  /*  §3 (nº 688) — LE NOM DU PORTFOLIO REFUSÉ, lu dans `fiche_nom`.
+      Il vient de LA LIGNE, pas du catalogue : la fiche est effacée au
+      moment où la nouvelle se lit, et `fiche_nom` est justement la
+      colonne faite pour lui survivre (le `on delete set null` porte sur
+      `fiche_id`, jamais sur elle).
+      ⚠️ SANS NOM, LA PHRASE SE DIT QUAND MÊME — celle du catalogue,
+      « Ta demande n'a pas été retenue ». On ne montre pas des
+      guillemets vides. */
+  if (nouvelle.genre === "demande_refusee" && nouvelle.fiche_nom) {
+    return (
+      `Ta demande pour « ${nouvelle.fiche_nom} » n'a pas été retenue. ` +
+      "Tu peux créer un nouveau portfolio quand tu le souhaites."
+    );
   }
   return fiche.sousTitre;
 }

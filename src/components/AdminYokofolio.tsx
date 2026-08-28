@@ -57,6 +57,13 @@ import type { Tatoueur } from "@/lib/tatoueurs";
 type FicheAdmin = Tatoueur & {
   statut?: string | null;
   cree_le?: string | null;
+  /** §2 (nº 688) — TOUTES les photos de la fiche, comptées une seule
+      fois chacune (galerie, photos de style, vignette, tableau
+      `photos`). C'est le nombre que la confirmation de suppression
+      annonce. Absent d'une réponse d'avant cette passe, ou d'une base
+      où la table des photos manque : la fenêtre le dit alors au lieu
+      d'inventer un chiffre. */
+  photos_total?: number;
   /** Vrai = ce sont des MODIFICATIONS d'une fiche déjà en ligne. */
   modification?: boolean;
   /** CE QUI A CHANGÉ — les champs du brouillon qui diffèrent de la
@@ -222,6 +229,45 @@ export function AdminYokofolio() {
     null | "modifier" | "hors_ligne"
   >(null);
   const [envoiDecision, setEnvoiDecision] = useState(false);
+  /**
+   * ██ §2 (nº 688) — LA SUPPRESSION SE TAPE, ELLE NE SE CLIQUE PLUS ██
+   * ------------------------------------------------------------------
+   * CE QUI EST ARRIVÉ, ET C'EST LA RAISON DE CETTE PASSE : le
+   * propriétaire a supprimé LA MAUVAISE DEMANDE. Un seul clic, un
+   * `window.confirm` qui ne nommait rien (« ce portfolio »), et une
+   * perte définitive — ni corbeille, ni délai, ni retour possible.
+   * TROIS CHOSES CHANGENT, et ce sont les trois qu'il a demandées :
+   *  · la fenêtre NOMME ce qui part — le nom du portfolio et son
+   *    nombre de photos, pour que deux lignes qui se ressemblent ne
+   *    puissent plus se confondre ;
+   *  · elle DIT que c'est immédiat et définitif, en toutes lettres ;
+   *  · elle EXIGE de taper SUPPRIMER. C'est l'usage des grands outils
+   *    pour l'irréversible, et c'est déjà celui du site : la même
+   *    fenêtre existe depuis longtemps pour retirer un style de son
+   *    propre portfolio (BlocPortfolio). On en reprend l'écriture au
+   *    caractère — mêmes classes, mêmes mots, même bouton — plutôt que
+   *    d'en dessiner une seconde qui finirait par diverger.
+   * ⚠️ ET LE DÉCOMPTE DES PHOTOS, LUI, REVIENT : la nº 110 l'avait
+   * retiré de la fenêtre du tatoueur (« la phrase faisait peur pour
+   * rien »). Ici il ne fait pas peur, il DÉSIGNE : celui qui supprime
+   * n'est pas celui qui a déposé, et le chiffre est le seul repère qui
+   * distingue deux demandes voisines. Les deux fenêtres ne poursuivent
+   * pas le même but ; c'est pourquoi elles ne disent pas la même chose.
+   *
+   * ⚠️ ET LA SUPPRESSION D'UN COMPTE ENTIER ? ELLE N'EXISTE PAS ICI —
+   * vérifié, puisque la consigne le demandait. L'administration ne
+   * supprime que des FICHES : la seule route qui efface un compte
+   * (`/api/compte/supprimer`) lit la session de l'appelant et efface
+   * SON compte à lui, jamais celui d'un autre. Le chemin par lequel une
+   * personne supprime le sien porte déjà les mêmes garde-fous, et
+   * davantage : il faut écrire SUPPRIMER (BlocSuppressions), et trente
+   * jours s'écoulent avant l'effacement réel. Il n'y a donc rien à
+   * poser de ce côté.
+   */
+  const [suppressionOuverte, setSuppressionOuverte] = useState(false);
+  const [saisieSuppression, setSaisieSuppression] = useState("");
+  const suppressionConfirmee =
+    saisieSuppression.trim().toLowerCase() === "supprimer";
   /* ---- Signalements ---- */
   const [signalements, setSignalements] = useState<Signalement[] | null>(null);
   const [erreurSignalements, setErreurSignalements] = useState<string | null>(
@@ -419,6 +465,12 @@ export function AdminYokofolio() {
       setRefusOuvert(null);
       setMotifsCoches([]);
       setNoteMotif("");
+      //  §2 (nº 688) — LA FENÊTRE DE SUPPRESSION SE REFERME AVEC LA
+      //  FICHE, et son mot est effacé : la prochaine suppression
+      //  redemandera de le taper. Un champ resté rempli aurait fait de
+      //  la seconde un simple clic — exactement ce qu'on retire.
+      setSuppressionOuverte(false);
+      setSaisieSuppression("");
       await chargerFiches();
     } catch (e) {
       setErreurFiches(
@@ -858,9 +910,19 @@ export function AdminYokofolio() {
                    détruise.
                    ⚠️ ELLE DEMANDE CONFIRMATION, et c'est le seul endroit
                    de cet écran qui le fasse : rien ne rattrape un
-                   effacement. Le `confirm` du navigateur est employé tel
-                   quel — une fenêtre de plus, pour un geste qui doit
-                   rester rare, serait du décor.
+                   effacement.
+                   ██ §2 (nº 688) — ET CE N'EST PLUS LE `confirm` DU
+                   NAVIGATEUR ██
+                   La note d'origine le jugeait suffisant — « une fenêtre
+                   de plus, pour un geste qui doit rester rare, serait du
+                   décor ». LE PROPRIÉTAIRE A SUPPRIMÉ LA MAUVAISE
+                   DEMANDE avec, et cette phrase est donc annulée : un
+                   `confirm` ne nomme rien, se valide d'un réflexe et se
+                   confond avec dix autres. La fenêtre du site le
+                   remplace — elle NOMME le portfolio et ses photos, DIT
+                   que c'est définitif, et fait TAPER le mot. La note du
+                   §2, en tête du composant, dit pourquoi c'est celle-là
+                   et pas une neuve.
                    ⚠️ LE COMPTE N'EST PAS TOUCHÉ : la personne garde son
                    espace, ses favoris, ses suivis, et retrouve son
                    identité de particulier au premier chargement (la
@@ -868,14 +930,8 @@ export function AdminYokofolio() {
               <button
                 type="button"
                 onClick={() => {
-                  if (
-                    window.confirm(
-                      "Supprimer définitivement ce portfolio et ses photos ? " +
-                        "Le compte de la personne n'est pas supprimé."
-                    )
-                  ) {
-                    void decider("supprimer");
-                  }
+                  setSaisieSuppression("");
+                  setSuppressionOuverte(true);
                 }}
                 disabled={envoiDecision}
                 className="inline-flex items-center justify-center px-2 min-h-[48px]
@@ -945,6 +1001,109 @@ export function AdminYokofolio() {
                       ? "Retirer le portfolio du site"
                       : "Envoyer la demande"}
                 </button>
+              </div>
+            )}
+
+            {/* ---------- §2 (nº 688) — LA FENÊTRE « TAPER SUPPRIMER »
+                 ----------
+                 L'ÉCRITURE EST CELLE DE BlocPortfolio, au caractère :
+                 mêmes classes, même champ, mêmes deux boutons, même
+                 voile cliquable pour annuler. Ce qui diffère est le
+                 TEXTE, et rien d'autre — c'est la consigne du
+                 propriétaire (nommer, avertir, faire taper).
+                 ⚠️ ELLE NE VIT QUE DANS CE BLOC, donc `ficheOuverte`
+                 n'est jamais nul ici : pas de garde à écrire, pas de
+                 fenêtre orpheline possible.
+                 ⚠️ PAS DE PORTAIL, ET C'EST VOULU : l'écran
+                 d'administration n'a ni barre fixe floutée ni racine
+                 d'arrière-plan — le `fixed inset-0` suffit, et un
+                 portail n'apporterait ici qu'une indirection. */}
+            {suppressionOuverte && (
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-label="Supprimer la demande"
+                className="fixed inset-0 z-[80] flex items-center justify-center p-4"
+              >
+                <button
+                  type="button"
+                  aria-label="Annuler"
+                  onClick={() => setSuppressionOuverte(false)}
+                  className="absolute inset-0 bg-black/25 cursor-default
+                             opacity-100 transition-opacity duration-200 starting:opacity-0"
+                />
+                <div
+                  className="relative w-full max-w-[380px] rounded-xl
+                             bg-sombre-carte p-5
+                             shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
+                >
+                  <h2 className="text-[17px] font-bold text-sombre-texte">
+                    Supprimer «&nbsp;{ficheOuverte.nom}&nbsp;»&nbsp;?
+                  </h2>
+                  {/*  CE QUI PART, NOMMÉ. Le nombre de photos vient du
+                       serveur (§2 nº 688, route des fiches) : il compte
+                       des ADRESSES DISTINCTES, galerie comprise.
+                       ⚠️ QUAND LE SERVEUR NE LE SAIT PAS — réponse
+                       d'avant cette passe, table des photos absente —
+                       on ne devine pas : la phrase le dit. */}
+                  <p className="mt-2 text-[13.5px] leading-relaxed text-sombre-texte-doux">
+                    {typeof ficheOuverte.photos_total === "number"
+                      ? `Ce portfolio et ses ${ficheOuverte.photos_total} photo${
+                          ficheOuverte.photos_total > 1 ? "s" : ""
+                        } seront effacés.`
+                      : "Ce portfolio et toutes ses photos seront effacés (nombre de photos inconnu)."}{" "}
+                    <span className="font-semibold text-erreur">
+                      Immédiat et définitif — aucune récupération possible.
+                    </span>{" "}
+                    Le compte de la personne, lui, n&apos;est pas supprimé.
+                  </p>
+                  <p className="mt-3 text-[13.5px] leading-relaxed text-sombre-texte-doux">
+                    Pour confirmer, tape{" "}
+                    <span className="font-bold text-erreur">SUPPRIMER</span>{" "}
+                    ci-dessous.
+                  </p>
+                  <input
+                    type="text"
+                    value={saisieSuppression}
+                    onChange={(evenement) =>
+                      setSaisieSuppression(evenement.target.value)
+                    }
+                    placeholder="SUPPRIMER"
+                    autoComplete="off"
+                    autoCapitalize="characters"
+                    spellCheck={false}
+                    aria-label="Tape SUPPRIMER pour confirmer"
+                    className="mt-4 w-full min-h-[48px] rounded-lg border border-transparent
+                               bg-sombre-eleve-clair px-4 text-base tracking-wide text-sombre-texte
+                               placeholder:text-sombre-texte-doux/50 outline-none
+                               transition-colors focus:bg-sombre-haut"
+                  />
+                  {/* RÈGLE DES BOUTONS (passe nº 112) : l'action porte
+                      une capsule à sa mesure, le retrait est un texte
+                      nu. */}
+                  <div className="mt-4 flex items-center justify-end gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setSuppressionOuverte(false)}
+                      className="px-2 min-h-[44px] text-[14px] font-semibold
+                                 text-sombre-texte-doux transition-colors
+                                 hover:text-sombre-texte"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!suppressionConfirmee || envoiDecision}
+                      onClick={() => void decider("supprimer")}
+                      className="inline-flex items-center rounded-full bg-erreur px-6
+                                 min-h-[46px] font-semibold text-white transition-opacity
+                                 hover:opacity-90 disabled:cursor-not-allowed
+                                 disabled:opacity-40"
+                    >
+                      Supprimer
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </>

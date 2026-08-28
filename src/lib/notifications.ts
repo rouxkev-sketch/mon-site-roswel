@@ -63,7 +63,23 @@ export type GenreNotification =
       les nouvelles recouvrent (l'ordre est `creee_le` décroissant :
       étant la plus ancienne, elle finit en bas), et qui se marque
       comme lue d'un toucher. Rien de spécial à l'affichage. */
-  | "bienvenue";
+  | "bienvenue"
+  /*  ██ §3 (nº 688) — LA DEMANDE DE PORTFOLIO REFUSÉE ██
+      Quand l'administration SUPPRIME une demande de mise en ligne
+      (nº 675), la personne n'apprenait rien : son portfolio
+      disparaissait de son espace sans un mot. La nº 675 l'assumait —
+      « prévenir un faux compte n'aurait aucun sens » —, et LE
+      PROPRIÉTAIRE TRANCHE AUTREMENT : le cas du faux compte est le
+      rare, celui de la demande refusée est le courant, et une
+      disparition muette est ce qui inquiète le plus.
+      ⚠️ AUCUNE MIGRATION N'EST NÉCESSAIRE : la colonne `genre` est un
+      `text` sans contrainte de valeur (voir yokofolio-notifications.sql).
+      Une base d'avant cette passe accepte donc la ligne telle quelle.
+      ⚠️ ET LA NOUVELLE SURVIT À LA FICHE : `fiche_id` est déclaré
+      `on delete set null`, `fiche_nom` garde le nom. C'est ce qui
+      permet d'écrire la nouvelle AVANT l'effacement — et il le faut,
+      sinon la clé étrangère refuserait une fiche déjà partie. */
+  | "demande_refusee";
 /*  ⚠️ LES TROIS GENRES DE RATTACHEMENT ONT DISPARU (passe C) :
     « liaison », « liaison_validee », « liaison_refusee ». Un
     rattachement est désormais IMMÉDIAT — il n'y a plus rien à
@@ -124,6 +140,8 @@ export const TITRE_NOTIFICATION: Record<GenreNotification, string> = {
       décision). Il vient de la config, jamais recopié — le jour où la
       marque changerait de nom, cette ligne suivrait. */
   bienvenue: `Bienvenue sur ${MARQUE_YOKOFOLIO.nom} !`,
+  //  §3 (nº 688) — le titre du propriétaire, au mot près.
+  demande_refusee: "Demande de portfolio refusée",
 };
 
 /**

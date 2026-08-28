@@ -248,6 +248,49 @@ export async function GET() {
       }
     }
 
+    /**
+     * ██ §2 (nº 688) — COMBIEN DE PHOTOS PARTIRAIENT AVEC LA FICHE ██
+     * ==================================================================
+     * POURQUOI CE NOMBRE EXISTE : la fenêtre de confirmation de la
+     * suppression le NOMME (« Portfolio X et ses 14 photos »). Le
+     * propriétaire a supprimé la mauvaise demande d'un seul clic ; un
+     * chiffre devant les yeux est ce qui distingue deux lignes qui se
+     * ressemblent.
+     * CE QU'IL COMPTE, EXACTEMENT — des ADRESSES DISTINCTES, jamais une
+     * somme de colonnes :
+     *  · la galerie (`photos_tatoueur`), qui est le vrai portfolio ;
+     *  · les photos de style (`photos_styles`), la vignette
+     *    (`photo_principale`) et le tableau `photos` de la ligne.
+     * Les quatre SE RECOUVRENT — `photos_styles` sert de relais quand la
+     * galerie est absente, et la vignette est l'une des autres. Un
+     * `Set` d'adresses est donc la seule façon de ne compter chaque
+     * image qu'une fois.
+     * ⚠️ CE QUE ÇA COÛTE, DIT FRANCHEMENT : UNE lecture de plus sur
+     * l'écran d'administration, bornée aux fiches de la file
+     * (`in(...)`) — jamais la table entière. Elle ne sert qu'à un
+     * chiffre : si elle échoue, on rend 0 et l'écran l'écrit
+     * (« nombre de photos inconnu ») plutôt que de mentir.
+     */
+    const adressesParFiche = new Map<string, Set<string>>();
+    try {
+      const { data: images } = await admin
+        .from("photos_tatoueur")
+        .select("tatoueur_id, url")
+        .in("tatoueur_id", [...dejaListees, ...manquantes]);
+      for (const ligne of (images ?? []) as Array<{
+        tatoueur_id: string;
+        url: string | null;
+      }>) {
+        if (!ligne.url) continue;
+        const lot = adressesParFiche.get(ligne.tatoueur_id) ?? new Set<string>();
+        lot.add(ligne.url);
+        adressesParFiche.set(ligne.tatoueur_id, lot);
+      }
+    } catch {
+      //  Table absente (migration pas passée) : le compte vaudra 0, et
+      //  l'écran dira qu'il ne sait pas.
+    }
+
     // La version que l'admin doit VOIR : la ligne, recouverte de son
     // brouillon s'il existe (c'est LUI qui attend la validation).
     const fiches = enAttente.map(
@@ -277,6 +320,26 @@ export async function GET() {
           //  elle, est en ligne et n'a rien à faire relire.
           photos_en_attente:
             photosEnAttenteParFiche.get(String(ligne.id)) ?? 0,
+          //  §2 (nº 688) — TOUTES ses photos, comptées une seule fois
+          //  chacune : c'est ce nombre que la confirmation de
+          //  suppression annonce. La note du §2, plus haut, dit ce qui
+          //  entre dedans et pourquoi c'est un `Set`.
+          //  ⚠️ ON PART DE LA LIGNE, PAS DU BROUILLON : ce qui serait
+          //  effacé, c'est ce qui EXISTE — un brouillon jamais publié ne
+          //  fabrique aucun fichier de plus.
+          photos_total: (() => {
+            const adresses = new Set(adressesParFiche.get(String(ligne.id)) ?? []);
+            for (const valeur of [
+              ligne.photo_principale as string | null,
+              ...((ligne.photos as string[] | null) ?? []),
+              ...Object.values(
+                (ligne.photos_styles as Record<string, string> | null) ?? {}
+              ),
+            ]) {
+              if (typeof valeur === "string" && valeur) adresses.add(valeur);
+            }
+            return adresses.size;
+          })(),
           compte: proprietaire ? (comptes.get(proprietaire) ?? null) : null,
         };
       }
@@ -338,8 +401,24 @@ export async function POST(requete: NextRequest) {
         faite pour ce que le propriétaire nomme : un FAUX COMPTE, un
         portfolio qui n'aurait jamais dû être déposé.
         ELLE SORT DONC AVANT le reste de la fonction, sans passer par la
-        mise à jour ni par la notification : il n'y a plus de ligne à
-        notifier, et prévenir un faux compte n'aurait aucun sens.
+        mise à jour.
+        ██ §3 (nº 688) — MAIS ELLE PRÉVIENT LA PERSONNE, DÉSORMAIS ██
+        LA nº 675 DISAIT : « il n'y a plus de ligne à notifier, et
+        prévenir un faux compte n'aurait aucun sens ». LE PROPRIÉTAIRE
+        TRANCHE AUTREMENT, et sa raison vaut mieux que la mienne : le
+        faux compte est le cas RARE, la demande refusée est le cas
+        COURANT, et voir son portfolio disparaître sans un mot est ce
+        qu'il y a de pire. La nouvelle est donc posée — famille nº 664,
+        genre `demande_refusee`, croix du refus.
+        ⚠️ ELLE EST ÉCRITE AVANT L'EFFACEMENT, ET L'ORDRE EST OBLIGÉ :
+        `notifications_compte.fiche_id` pointe vers `tatoueurs(id)`.
+        Après la suppression, la clé étrangère refuserait la ligne ;
+        avant, elle l'accepte, et le `on delete set null` la laisse
+        lisible — c'est `fiche_nom`, recopié ici, qui portera le nom.
+        ⚠️ ELLE NE PEUT PAS EMPÊCHER LA SUPPRESSION : `creerNotification`
+        avale ses propres échecs et rend `false` (voir sa note). Une
+        boîte de nouvelles indisponible ne doit pas bloquer une décision
+        de modération.
         ⚠️ AUCUN DÉLAI, ET C'EST LA DEMANDE : « cette suppression ramène
         IMMÉDIATEMENT la photo et le nom du particulier ». Les trente
         jours de la suppression ordinaire protègent quelqu'un qui
@@ -358,13 +437,22 @@ export async function POST(requete: NextRequest) {
     if (action === "supprimer") {
       const { data: ligne } = await admin
         .from("tatoueurs")
-        .select("user_id")
+        //  §3 (nº 688) — LE NOM AUSSI : c'est lui que la nouvelle
+        //  recopie, et il ne sera plus lisible dans une seconde.
+        .select("user_id, nom")
         .eq("id", id)
         .maybeSingle();
-      await supprimerLaFicheDefinitivement(
-        id,
-        (ligne as { user_id?: string | null } | null)?.user_id ?? null
-      );
+      const fiche = ligne as {
+        user_id?: string | null;
+        nom?: string | null;
+      } | null;
+      await creerNotification({
+        userId: fiche?.user_id,
+        ficheId: id,
+        ficheNom: fiche?.nom ?? null,
+        genre: "demande_refusee",
+      });
+      await supprimerLaFicheDefinitivement(id, fiche?.user_id ?? null);
       return NextResponse.json({ ok: true });
     }
 

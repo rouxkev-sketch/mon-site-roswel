@@ -124,6 +124,49 @@ const SLUGS_UNIQUES = process.env.SLUGS_UNIQUES === "1";
  */
 const MUETTE = process.env.MUETTE === "1";
 
+/**
+ * ██ §1 (nº 688) — LA DOUBLURE SAIT DÉSORMAIS DIRE QUI EST CONNECTÉ ██
+ * ------------------------------------------------------------------
+ * CE QUI MANQUAIT, ET CE QUE ÇA EMPÊCHAIT DE MESURER : le banc forge un
+ * cookie de session (scratchpad/session-forgee), et le NAVIGATEUR s'en
+ * contente — il lit la session dans le cookie. LE SERVEUR, lui, ne s'en
+ * contente pas : `verifierAdmin` appelle `supabase.auth.getUser()`, qui
+ * interroge `GET /auth/v1/user`. La doublure ne connaissait pas cette
+ * adresse : toute route d'administration répondait 401, et rien de ce
+ * qui se passe DERRIÈRE elle ne pouvait être éprouvé.
+ * CE QU'ELLE FAIT MAINTENANT : elle DÉCODE le jeton porté par
+ * l'en-tête `Authorization` et rend la personne qu'il désigne. Elle ne
+ * vérifie AUCUNE signature — c'est une doublure, pas un service
+ * d'authentification : le banc décide qui il est en forgeant son jeton,
+ * et c'est précisément ce qu'on veut pouvoir faire varier (un compte
+ * ordinaire, un compte administrateur).
+ * ⚠️ ELLE N'INVENTE PERSONNE : sans jeton lisible, elle rend 401 comme
+ * la vraie. Un banc qui oublie son cookie doit le voir.
+ */
+function utilisateurDuJeton(req) {
+  const entete = req.headers.authorization ?? "";
+  const jeton = entete.startsWith("Bearer ") ? entete.slice(7) : "";
+  const charge = jeton.split(".")[1];
+  if (!charge) return null;
+  try {
+    const json = JSON.parse(
+      Buffer.from(charge.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString()
+    );
+    if (!json.sub) return null;
+    return {
+      id: json.sub,
+      aud: json.aud ?? "authenticated",
+      role: json.role ?? "authenticated",
+      email: json.email ?? null,
+      app_metadata: json.app_metadata ?? {},
+      user_metadata: json.user_metadata ?? {},
+      created_at: new Date(0).toISOString(),
+    };
+  } catch {
+    return null;
+  }
+}
+
 const TATOUEURS = STYLES.flatMap((style, s) =>
   Array.from({ length: PAR_STYLE }, (_, k) => k).map((k) => {
     const i = `${s}-${k}`;
@@ -198,8 +241,18 @@ function ranger(table, brut) {
     return [];
   }
   if (!lignes) return [];
+  /*  §1 (nº 688) — LES DÉFAUTS DE COLONNE, comme la vraie base. La
+      table des nouvelles déclare `creee_le timestamptz default now()` ;
+      la doublure ne rangeait que ce qu'on lui donnait, et une
+      notification fraîchement écrite s'affichait « Invalid Date » au
+      banc. On cherche alors un défaut du site là où il n'y en a pas.
+      ⚠️ ON N'INVENTE QUE CE QUE LE SCHÉMA PROMET : une date d'écriture,
+      au moment de l'écriture. Rien d'autre. */
   const ajoutees = (Array.isArray(lignes) ? lignes : [lignes]).map((l, n) => ({
     id: l.id ?? `insere-${table}-${Date.now()}-${n}`,
+    ...(table === "notifications_compte" && !l.creee_le
+      ? { creee_le: new Date().toISOString() }
+      : {}),
     ...l,
   }));
   if (!TABLES[table]) TABLES[table] = [];
@@ -212,7 +265,75 @@ function repondre(req, res, u, brut) {
   //  écrire. Le client attendra jusqu'à SON propre délai de garde.
   if (MUETTE) return;
 
+  /*  §1 (nº 688) — LE PRÉ-VOL DU NAVIGATEUR. Une requête portant
+      `Authorization` ou `apikey` est « non simple » : le navigateur
+      envoie d'abord un OPTIONS, et refuse la vraie si la réponse ne
+      l'autorise pas. La doublure n'y répondait pas — ce qui passait
+      inaperçu tant que TOUTES ses réponses étaient des 200 permissifs.
+      Dès qu'une adresse a pu rendre autre chose (le 401 ci-dessous), le
+      défaut est sorti : « blocked by CORS policy », et le menu du compte
+      ne s'ouvrait plus au banc. */
+  if (req.method === "OPTIONS") {
+    res.writeHead(204, {
+      "access-control-allow-origin": "*",
+      "access-control-allow-methods": "GET, POST, PATCH, DELETE, OPTIONS",
+      "access-control-allow-headers": "*",
+      "access-control-max-age": "600",
+    });
+    res.end();
+    return;
+  }
+
+  //  §1 (nº 688) — QUI EST CONNECTÉ. Voir la note de `utilisateurDuJeton`.
+  if (u.pathname === "/auth/v1/user") {
+    const personne = utilisateurDuJeton(req);
+    console.log(
+      new Date().toISOString().slice(11, 19),
+      "GET auth/user →", personne?.email ?? "(aucun jeton)"
+    );
+    //  ⚠️ LE REFUS PORTE LES MÊMES EN-TÊTES QUE L'ACCEPTATION : sans
+    //  eux, le navigateur ne lit même pas le 401 — il annonce une
+    //  erreur de CORS, et l'on cherche la panne au mauvais endroit.
+    res.writeHead(personne ? 200 : 401, {
+      "content-type": "application/json",
+      "access-control-allow-origin": "*",
+    });
+    res.end(
+      JSON.stringify(
+        personne ?? { message: "invalid claim: missing sub claim" }
+      )
+    );
+    return;
+  }
+
   const table = u.pathname.replace(/^\/rest\/v1\//, "");
+
+  /*  §1 (nº 688) — UNE SUPPRESSION SUPPRIME POUR DE BON. Sans cela, une
+      décision d'administration qui efface une fiche rendait 200 et la
+      fiche restait : la relecture de l'écran la remontrait, et le banc
+      ne pouvait pas distinguer « effacé » de « ignoré ». On retire les
+      lignes que les filtres désignent, et l'on rend celles qu'on vient
+      de retirer — ce que fait PostgREST. */
+  if (req.method === "DELETE") {
+    const restantes = [];
+    const parties = [];
+    for (const ligne of TABLES[table] ?? []) {
+      let vise = true;
+      for (const [cle, val] of u.searchParams) {
+        if (["select", "order", "limit", "offset"].includes(cle)) continue;
+        const m = /^eq\.(.*)$/.exec(val);
+        if (m && String(ligne[cle]) !== String(m[1])) vise = false;
+      }
+      (vise ? parties : restantes).push(ligne);
+    }
+    if (TABLES[table]) TABLES[table] = restantes;
+    console.log(
+      new Date().toISOString().slice(11, 19),
+      "DELETE", table, "← retiré", parties.length
+    );
+    envoyer(res, parties);
+    return;
+  }
   //  UNE ÉCRITURE : on range, et l'on rend ce qu'on vient de ranger —
   //  c'est ce que PostgREST fait avec `.select()` après un `insert`.
   if (req.method === "POST" && !table.startsWith("rpc/")) {

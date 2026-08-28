@@ -263,9 +263,43 @@ export function MenuEspace({
   /** L'avertissement « tu as une saisie en cours » — voir plus bas. */
   const [avertirAvantCreation, setAvertirAvantCreation] = useState(false);
   const zone = useRef<HTMLDivElement>(null);
-  /*  §7-a (nº 532) — LE CONTENEUR DU DÉROULANT DE PORTFOLIO : ce qui
-      est DEDANS n'est pas « à côté ». Voir la garde de fermeture. */
-  const conteneurSelecteur = useRef<HTMLDivElement>(null);
+  /**
+   * ██ §1 (nº 688) — LE CONTENEUR DU DÉROULANT SE RECONNAÎT PAR UNE
+   * MARQUE, PLUS PAR UN `ref` ██
+   * ------------------------------------------------------------------
+   * CE QUI ÉTAIT ÉCRIT ICI, ET POURQUOI ÇA NE POUVAIT PAS MARCHER : un
+   * `useRef` unique — `conteneurSelecteur` — que la garde de fermeture
+   * (§7-a nº 532) interrogeait pour savoir si un clic était « dedans ».
+   * Or `contenuDuCompte` est monté DEUX FOIS quand le menu est ouvert :
+   * la fenêtre du web et la page du doigt sont TOUTES LES DEUX dans
+   * l'arbre, l'une masquée par la feuille (`mobile:hidden` /
+   * `hidden mobile:flex`). Le même objet `ref` recevait donc les deux
+   * conteneurs, et n'en gardait qu'UN — le dernier monté, celui du
+   * DOIGT.
+   * CE QUE ÇA DONNAIT AU WEB, mesuré au banc : le déroulant s'ouvrait,
+   * défilait, et cliquer une entrée NE FAISAIT RIEN. La garde ne
+   * reconnaissait pas le conteneur visible (elle tenait celui du doigt),
+   * avalait le clic en capture sur `window` — `stopPropagation` — et le
+   * bouton de l'entrée ne le voyait jamais. `memoriserFiche` ne
+   * s'écrivait pas : la preuve que `choisirFiche` n'avait pas tourné.
+   * AU DOIGT tout marchait, et c'est la même cause vue de l'autre côté.
+   * ⚠️ LA SUPPRESSION ADMIN N'Y EST POUR RIEN. Le banc a rejoué le cas
+   * exact du propriétaire — un portfolio supprimé, encore mémorisé dans
+   * le navigateur — et le résultat est identique au cas sain : le
+   * défaut est celui du web, pas celui de la suppression.
+   * LE REMÈDE : une MARQUE sur le conteneur (`data-selecteur-portfolio`),
+   * que la garde retrouve avec `closest`. Elle vaut pour les deux
+   * arbres à la fois, sans rien connaître de l'appareil (piège nº 60) —
+   * et il n'y a plus de « dernier monté » qui puisse gagner.
+   * ⚠️ LE NOM EST ÉCRIT UNE SEULE FOIS, et le sélecteur CSS est
+   * assemblé à partir de lui : deux écritures finiraient par diverger,
+   * et — piège de la nº 681 — un `[…]` écrit d'un tenant dans un
+   * fichier scanné peut faire naître une règle dans la feuille. Assemblé,
+   * il n'apparaît nulle part tel quel.
+   */
+  const NOM_MARQUE_SELECTEUR = "data-selecteur-portfolio";
+  const MARQUE_SELECTEUR = { [NOM_MARQUE_SELECTEUR]: "" };
+  const DANS_LE_SELECTEUR = `[${NOM_MARQUE_SELECTEUR}]`;
   //  §2 (nº 293), §3 (nº 294) — LA FENÊTRE DU COMPTE assombrit tout
   //  l'écran, et son déclencheur reste clair. Web uniquement : le
   //  crochet s'écarte de lui-même au doigt.
@@ -357,6 +391,12 @@ export function MenuEspace({
    * se referme par son propre geste) et les entrées de la liste (qui
    * choisissent un portfolio) sont dans le conteneur, et passent — la
    * liste est `absolute` DEDANS, jamais dans un portail.
+   * ⚠️ ET « LE CONTENEUR » EN VEUT DIRE DEUX (nº 688) : la phrase
+   * ci-dessus était juste, la MÉCANIQUE ne l'était pas. Il y a deux
+   * conteneurs dans le document — la fenêtre du web et la page du
+   * doigt —, le `ref` unique n'en retenait qu'un, et l'autre voyait
+   * ses entrées avalées. C'est une marque, désormais, et `closest` les
+   * reconnaît tous les deux. La note du §1 (nº 688) raconte la mesure.
    *
    * ██ §2 (nº 642) — LE WEB L'A MAINTENANT, ET IL NE L'AVAIT JAMAIS EU ██
    * ------------------------------------------------------------------
@@ -382,7 +422,10 @@ export function MenuEspace({
     if (!selecteurOuvert) return;
     const avaler = (evenement: MouseEvent) => {
       const cible = evenement.target;
-      if (cible instanceof Node && conteneurSelecteur.current?.contains(cible)) {
+      //  §1 (nº 688) — LA MARQUE, PAS UN `ref` : les DEUX conteneurs
+      //  (fenêtre du web et page du doigt) la portent, et `closest` les
+      //  reconnaît tous les deux. Voir la note du §1, plus haut.
+      if (cible instanceof Element && cible.closest(DANS_LE_SELECTEUR)) {
         return;
       }
       evenement.preventDefault();
@@ -391,7 +434,7 @@ export function MenuEspace({
     };
     window.addEventListener("click", avaler, true);
     return () => window.removeEventListener("click", avaler, true);
-  }, [selecteurOuvert]);
+  }, [selecteurOuvert, DANS_LE_SELECTEUR]);
   /**
    * §1 (nº 332) — ET SES LIENS CONSOMMENT CETTE ÉTAPE, ils ne
    * l'empilent pas.
@@ -1083,9 +1126,19 @@ export function MenuEspace({
    * séparent de nouveau — mais SUR LES SEULES VALEURS, jamais sur le
    * dessin. Un unique arbre (`contenuDuCompte`), deux jeux de nombres.
    * ⚠️ AUCUNE BRANCHE D'APPAREIL N'EST LUE NULLE PART : chaque surface
-   * ne se monte QUE sur son appareil (la fenêtre est `mobile:hidden`,
-   * la page `hidden mobile:flex`). Elle passe donc son jeu, et c'est
-   * tout — rien à interroger, rien qui puisse se tromper.
+   * passe son jeu, et c'est tout — rien à interroger, rien qui puisse
+   * se tromper.
+   * ⚠️ MAIS « NE SE MONTE QUE SUR SON APPAREIL » ÉTAIT FAUX, ET ÇA A
+   * COÛTÉ LE DÉROULANT DU WEB (nº 688). Cette note l'affirmait ; la
+   * vérité est que LES DEUX SURFACES SONT DANS L'ARBRE dès que le menu
+   * est ouvert, et que c'est la FEUILLE qui en cache une
+   * (`mobile:hidden`, `hidden mobile:flex`). Pour le DESSIN, la
+   * différence est nulle — d'où la note. Pour tout ce qui se compte ou
+   * se désigne, elle ne l'est pas : un `useRef` unique posé dans cet
+   * arbre reçoit DEUX éléments et n'en garde qu'un. C'est exactement ce
+   * qui est arrivé au conteneur du déroulant ; le §1 (nº 688) le
+   * raconte et le corrige. Toute écriture ajoutée ici doit tenir compte
+   * du DOUBLE MONTAGE.
    * ⚠️ CE QUI RESTE COMMUN, ET QUI DOIT LE RESTER : la géométrie d'une
    * entrée (hauteur de 46 px, retrait de 12 px, rayon, état enfoncé),
    * le dessin des tuiles, les fonds, les arrondis, l'ordre et
@@ -1263,7 +1316,8 @@ export function MenuEspace({
     sousTitre: string;
   }) =>
     plusieursFiches ? (
-    <div className="relative" ref={conteneurSelecteur}>
+    //  §1 (nº 688) — LA MARQUE que la garde de fermeture retrouve.
+    <div className="relative" {...MARQUE_SELECTEUR}>
       <button
         type="button"
         onClick={() => setSelecteurOuvert((v) => !v)}
