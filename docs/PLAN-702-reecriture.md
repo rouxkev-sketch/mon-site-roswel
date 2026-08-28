@@ -53,7 +53,7 @@ propres à chaque composant) :
 | react-dom | 221 Ko | 69 Ko | Le moteur d'affichage | Non — socle |
 | **supabase-js** | 240 Ko | **62 Ko** | Le client de la base, entier | **OUI — L3** |
 | **Barre + moteur + corps du menu** | 182 Ko | **58 Ko** | `EnTeteTatouage` + `MoteurTatouage` + le corps de `MenuEspace` + `SelecteurLangue` (un seul fichier compilé) | **OUI — L4/L5** |
-| **Polyfills (core-js)** | 109 Ko | **38 Ko** | Béquilles pour très vieux navigateurs | **OUI — L2** |
+| ~~Polyfills (core-js)~~ | 109 Ko | ~~38 Ko~~ **0** | Béquilles anciennes — **jamais téléchargées** (`noModule`) | **NON — corrigé nº 702** |
 | Noyau Next (rendu) | 134 Ko | 36 Ko | Prérendu, revalidation | Non — socle |
 | Écran recherche mobile + grilles + sondes | 102 Ko | 30 Ko | `PageRechercheMobile`, cartes, glissement, boîte noire | Non (§5) |
 | Routeur Next (2 fichiers) | 96 Ko | 21 Ko | Navigation | Non — socle |
@@ -97,17 +97,25 @@ poids réel par page, temps throttlé, liste des fichiers chargés. Elles
 tournent avant/après CHAQUE étape. Sans elles, aucun gain n'est
 prouvable et aucune régression n'est visible.
 
-### L2 · Les polyfills — 38 Ko gzip, ~0,2 s en 3G
+### ~~L2 · Les polyfills~~ — ANNULÉ À LA PASSE nº 702 : LE GAIN N'EXISTE PAS
 
-Un fichier de 109 Ko de béquilles pour navigateurs très anciens est
-chargé partout. **Étape 1 : diagnostiquer d'où il vient** (aucun
-`browserslist` dans le projet — c'est donc une dépendance ou un
-réglage par défaut qui le tire). **Étape 2 : le retirer ou le cibler**
-si le diagnostic confirme qu'il ne sert à rien sur les navigateurs
-visés. Ne touche NI la barre, NI la position, NI la recherche.
-- Risque : très faible (configuration, pas de code de page). Le seul
-  vrai risque : un iPhone ancien qui en dépendait — le banc « pages
-  publiques » sur WebKit le dirait, et le zip précédent restaure.
+**Ce levier était une erreur de ma part, mesurée et corrigée.** Le
+fichier de 109 Ko est bien produit, mais il est référencé avec
+l'attribut `noModule` : tout navigateur qui comprend les modules ES —
+c'est-à-dire tous depuis 2018 — **le saute purement et simplement**.
+Vérifié au banc : `noModule = true` dans le DOM, **zéro requête** sur
+Chromium bureau comme téléphone. Et aucune trace de `core-js`, de
+`regenerator` ni de `@babel/runtime` dans les fichiers réellement
+téléchargés.
+
+**D'où venait mon erreur :** à la nº 701, j'ai composé le tableau du
+tronc en lisant les balises `<script>` du HTML au lieu de regarder ce
+que le navigateur DEMANDE. Les 38 Ko n'ont jamais pesé sur personne.
+(Les mesures de temps de la nº 701, elles, venaient du navigateur :
+elles restent justes.)
+
+**Rien n'a été touché** — retirer ce fichier ne gagnerait rien à
+personne et retirerait le filet des très vieux navigateurs.
 
 ### L3 · supabase-js différé — 62 Ko gzip, ~0,3 s en 3G
 
@@ -161,8 +169,8 @@ L4 s'est bien passé — même chantier, mêmes bancs — ou pas du tout.
 
 | Étape | Passe | Gain gzip | Risque | Garde-fous à rejouer |
 |---|---|---:|---|---|
-| L1 banc de référence | 702 | 0 (il protège) | aucun | — |
-| L2 polyfills | 702 | −38 Ko | très faible | poids + fumée + pages publiques |
+| L1 banc de référence | **702 ✅ fait** | 0 (il protège) | aucun | — |
+| ~~L2 polyfills~~ | **702 — annulé** | **0** (levier inexistant) | — | — |
 | L3 supabase différé | 703 | −62 Ko | moyen | normal-693 (menu, notifs, favoris, admin), cœurs, connexion |
 | L4 panneau du moteur, cran 1 | 704 | 0 | moyen | LE BANC COMPLET (dessous) |
 | L4 cran 2 (survol/toucher) | 704 | −35 à −45 Ko | élevé | idem |
@@ -207,14 +215,24 @@ gardant l'essentiel du gain.
 
 ## 6 · LA RECOMMANDATION
 
-**Faire : L1 + L2 (une passe), puis L3 (une passe), puis L4 crans 1-2
-(une passe).** À ce point : **−135 à −145 Ko gzip sur ~355**, soit
-~40 % du programme en moins partout. Estimation honnête du temps :
+**Faire : L3 (une passe), puis L4 crans 1-2 (une passe).** L1 est
+posé, L2 n'existe pas. À ce point : **−97 à −107 Ko gzip sur ~355**,
+soit ~30 % du programme en moins partout. Estimation révisée :
 
-| Liaison | Aujourd'hui | Après L1-L4c2 |
+| Liaison | Aujourd'hui | Après L3 + L4c2 |
 |---|---|---|
-| 3G rapide | 3,3 s | **~2,2 à 2,4 s** |
-| 4G | 0,9 s | **~0,6 à 0,7 s** |
+| 3G rapide | 3,3 s | **~2,5 à 2,7 s** |
+| 4G | 0,8 s | **~0,6 à 0,7 s** |
+
+⚠️ **UN FAIT NOUVEAU, MESURÉ À LA nº 702, QUI CHANGE LE RISQUE DE L4 :
+la position n'est DÉJÀ PAS restaurée après un retour**, sur les trois
+parcours du banc. Les deux témoins prouvent que ce n'est ni le
+navigateur ni le banc (un rechargement et un aller-retour par
+chargement complet restaurent parfaitement) : la position se perd dans
+la NAVIGATION CLIENT du site. Conséquence pratique : **la référence de
+L4 n'est pas « la position marche, ne la casse pas », c'est « la
+position ne marche déjà pas — ne l'aggrave pas »**. À vérifier sur le
+vrai site avant d'aller plus loin (voir le compte rendu de la nº 702).
 
 **Décider ensuite, mesures en main** : L4 cran 3 + L5 (encore ~−20 à
 −25 Ko) seulement si les crans précédents n'ont RIEN cassé aux bancs

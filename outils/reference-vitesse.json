@@ -1,0 +1,114 @@
+{
+ "pose_le": "2026-08-28T14:03:52.898Z",
+ "poids": [
+  {
+   "nom": "accueil",
+   "fichiers": 23,
+   "brut": 1191,
+   "gz": 355
+  },
+  {
+   "nom": "recherche",
+   "fichiers": 23,
+   "brut": 1191,
+   "gz": 355
+  },
+  {
+   "nom": "fiche",
+   "fichiers": 24,
+   "brut": 1195,
+   "gz": 357
+  },
+  {
+   "nom": "ma-selection",
+   "fichiers": 30,
+   "brut": 1422,
+   "gz": 434
+  },
+  {
+   "nom": "editeur",
+   "fichiers": 25,
+   "brut": 1422,
+   "gz": 424
+  },
+  {
+   "nom": "mentions-legales",
+   "fichiers": 20,
+   "brut": 1162,
+   "gz": 342
+  }
+ ],
+ "temps": [
+  {
+   "nom": "4G · /",
+   "ms": 819
+  },
+  {
+   "nom": "4G · /mentions-legales",
+   "ms": 937
+  },
+  {
+   "nom": "3G rapide · /",
+   "ms": 3368
+  },
+  {
+   "nom": "3G rapide · /mentions-legales",
+   "ms": 3225
+  }
+ ],
+ "retour": [
+  {
+   "nom": "accueil → style → retour",
+   "aChange": true,
+   "arrivee": "/recherche?style=blackwork&nature=tatouage",
+   "positionAvant": 195,
+   "positionApres": 136,
+   "ecart": 59,
+   "rendu": false,
+   "hauteurAvant": 1169,
+   "hauteurApres": 1169,
+   "revenu": true,
+   "revenuSur": "/"
+  },
+  {
+   "nom": "mosaïque → fiche → retour",
+   "aChange": true,
+   "arrivee": "/tatoueur/demo-realisme-0?style=realisme&rendu=noir&nature=tatouage&photo=photo-demo-1-0-0",
+   "positionAvant": 1145,
+   "positionApres": 0,
+   "ecart": 1145,
+   "rendu": false,
+   "hauteurAvant": 2752,
+   "hauteurApres": 2752,
+   "revenu": true,
+   "revenuSur": "/recherche?style=realisme&nature=tatouage"
+  },
+  {
+   "nom": "style+ville → fiche → retour",
+   "aChange": true,
+   "arrivee": "/tatoueur/demo-trash-polka-0?style=trash-polka&rendu=noir&nature=tatouage&photo=photo-demo-0-0-0",
+   "positionAvant": 307,
+   "positionApres": 173,
+   "ecart": 134,
+   "rendu": false,
+   "hauteurAvant": 1356,
+   "hauteurApres": 1356,
+   "revenu": true,
+   "revenuSur": "/tatouage/trash-polka/lyon-0-0"
+  }
+ ],
+ "temoins": [
+  {
+   "nom": "A · rechargement",
+   "avant": 1145,
+   "apres": 1145,
+   "rendu": true
+  },
+  {
+   "nom": "B · aller/retour complet",
+   "avant": 1145,
+   "apres": 1145,
+   "rendu": true
+  }
+ ]
+}
