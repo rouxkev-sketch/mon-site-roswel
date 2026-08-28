@@ -130,6 +130,70 @@ function estIcone(url) {
  * C'est ce filtre qui empêche une 404 de mise en ligne de s'installer
  * pour des jours (le défaut B de l'en-tête).
  */
+
+/**
+ * ██ §1 (nº 686) — LE PROGRAMME SE SOIGNE TOUT SEUL ██
+ * ==================================================================
+ * CE QUI EST ARRIVÉ LE 27 AOÛT AU SOIR, et qui a coûté une soirée au
+ * propriétaire. Un incident passager a laissé ce service worker avec
+ * une version périmée en mémoire. Il l'a RESSERVIE même après la fin
+ * de l'incident : les fichiers du programme demandés par le HTML neuf
+ * répondaient 404, la page restait cassée, et un simple rechargement
+ * n'y changeait RIEN — c'est nous qui répondions, pas le réseau. Seule
+ * la suppression manuelle des données du site a réparé.
+ * ⚠️ UN VISITEUR NE FERA JAMAIS CELA. C'est la seule chose qui compte
+ * ici : une réparation qui exige d'ouvrir les réglages du navigateur
+ * n'est pas une réparation.
+ *
+ * LE SIGNAL, ET IL EST SANS AMBIGUÏTÉ : un fichier de `/_next/static/`
+ * qui répond 404. Ces noms portent une empreinte de contenu — ils ne
+ * changent JAMAIS de sens. Un 404 sur l'un d'eux ne veut dire qu'une
+ * chose : ce que nous gardons ne correspond plus à ce qui est en
+ * ligne. Il n'y a rien à interpréter, rien à supposer.
+ *
+ * LA RÉPONSE : on vide TOUS les caches et l'on se DÉSINSCRIT. Au
+ * rechargement suivant, plus personne ne s'interpose — le navigateur
+ * parle au serveur, prend le programme neuf, et le site repart. Un
+ * geste que le visiteur fait naturellement quand une page est cassée.
+ *
+ * ⚠️ UNE SEULE FOIS, ET SANS BLOQUER LA RÉPONSE EN COURS. Une page
+ * cassée demande vingt fichiers : sans ce verrou, vingt purges
+ * partiraient de front. Et la guérison ne s'intercale JAMAIS devant la
+ * réponse qu'on est en train de rendre — elle part à côté.
+ * ⚠️ CE QUE CE PROGRAMME GARDE VRAIMENT — et le dossier de reprise se
+ * trompe là-dessus. Il dit « rien n'est mis en cache » (nº 651) : c'est
+ * FAUX, et c'est même la cause de l'incident. La branche des fichiers
+ * STATIQUES est en CACHE D'ABORD (`cache.match` avant `fetch`) et RANGE
+ * tout ce qui répond 200 : `/_next/static/`, `/images/`, les scripts,
+ * les feuilles, les polices. Ce qui n'est PAS gardé : les routes
+ * `/api/` (jamais interceptées — elles portent des données
+ * personnelles), les navigations (jamais rangées), et les icônes de
+ * marque (réseau d'abord, cache en secours seulement).
+ * ⚠️ ON NE RECHARGE PAS À LA PLACE DU VISITEUR. Recharger sous les
+ * doigts de quelqu'un qui est peut-être en train d'écrire, c'est
+ * échanger une panne contre une perte. On se met en état de guérir ;
+ * c'est son geste qui achève.
+ */
+let guerisonLancee = false;
+
+function seSoigner() {
+  if (guerisonLancee) return;
+  guerisonLancee = true;
+  //  L'ordre compte : on vide AVANT de se désinscrire — une fois
+  //  désinscrit, plus rien ne garantit qu'on tourne assez longtemps.
+  caches
+    .keys()
+    .then((noms) => Promise.all(noms.map((nom) => caches.delete(nom))))
+    .catch(() => {})
+    .then(() => self.registration.unregister())
+    .catch(() => {});
+}
+
+/** Un fichier du PROGRAMME — ceux dont le nom porte une empreinte. */
+function estFichierDuProgramme(url) {
+  return url.pathname.startsWith("/_next/static/");
+}
+
 function peutEtreGardee(reponse) {
   return Boolean(
     reponse && reponse.status === 200 && reponse.type === "basic"
@@ -300,6 +364,12 @@ self.addEventListener("fetch", (event) => {
           cache.match(requete).then((enCache) => {
             if (enCache) return enCache;
             return fetch(requete).then((reponse) => {
+              /*  §1 (nº 686) — LE 404 QUI DIT QUE NOUS SOMMES PÉRIMÉS.
+                  Voir `seSoigner` : on purge et l'on se désinscrit, de
+                  sorte que le rechargement suivant reparte propre. */
+              if (reponse && reponse.status === 404 && estFichierDuProgramme(url)) {
+                seSoigner();
+              }
               /*  §1 (nº 479) — ON NE GARDE QUE CE QUI EST BON (défaut
                   B) : une 404 rendue pendant les secondes d'une mise en
                   ligne n'est plus mémorisée, donc plus resservie

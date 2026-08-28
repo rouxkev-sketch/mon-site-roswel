@@ -109,6 +109,21 @@ const PAR_STYLE = 14;
  */
 const SLUGS_UNIQUES = process.env.SLUGS_UNIQUES === "1";
 
+/**
+ * §1 (nº 686) — `MUETTE=1` : LA BASE QUI NE RÉPOND JAMAIS.
+ * ------------------------------------------------------------------
+ * C'est l'incident du 27 août, reproduit à volonté. La doublure ACCEPTE
+ * la connexion et ne répond PLUS — elle ne refuse pas, elle ne coupe
+ * pas : elle fait attendre. C'est exactement ce qui fige un site sans
+ * délai de garde, et c'est le seul moyen d'éprouver celui de la nº 686.
+ * ⚠️ ELLE NE FERME PAS LA SOCKET : une socket fermée rendrait une
+ * ERREUR, que les `try/catch` du site attrapent déjà depuis toujours.
+ * Ce qu'on veut reproduire, c'est le SILENCE.
+ *
+ *      MUETTE=1 npm run banc:doublure
+ */
+const MUETTE = process.env.MUETTE === "1";
+
 const TATOUEURS = STYLES.flatMap((style, s) =>
   Array.from({ length: PAR_STYLE }, (_, k) => k).map((k) => {
     const i = `${s}-${k}`;
@@ -193,6 +208,10 @@ function ranger(table, brut) {
 }
 
 function repondre(req, res, u, brut) {
+  //  §1 (nº 686) — LE SILENCE : on garde la requête ouverte, sans rien
+  //  écrire. Le client attendra jusqu'à SON propre délai de garde.
+  if (MUETTE) return;
+
   const table = u.pathname.replace(/^\/rest\/v1\//, "");
   //  UNE ÉCRITURE : on range, et l'on rend ce qu'on vient de ranger —
   //  c'est ce que PostgREST fait avec `.select()` après un `insert`.

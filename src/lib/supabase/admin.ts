@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { fetchAvecDelai } from "./delai";
 
 /**
  * Client Supabase ADMINISTRATEUR — réservé au code qui tourne sur
@@ -31,5 +32,10 @@ export function creerClientSupabaseAdmin() {
   return createClient(url, cleSecrete, {
     // Pas de session ici : ce client sert uniquement côté serveur.
     auth: { persistSession: false, autoRefreshToken: false },
+    //  §1 (nº 686) — le délai de garde, comme les trois autres clients.
+    //  Les routes d'administration lisent de gros ensembles ; si la base
+    //  se tait, elles doivent RENDRE UNE ERREUR, pas faire attendre
+    //  jusqu'au délai de la fonction. La note est dans `./delai`.
+    global: { fetch: fetchAvecDelai() },
   });
 }

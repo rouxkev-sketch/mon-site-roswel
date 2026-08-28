@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { infosConnexionSupabase } from "./env";
+import { fetchAvecDelai } from "./delai";
 
 /**
  * Client Supabase pour le SERVEUR (pages générées côté serveur,
@@ -14,6 +15,8 @@ export async function creerClientSupabaseServeur() {
   const magasinCookies = await cookies();
 
   return createServerClient(url, clePublishable, {
+    //  §1 (nº 686) — le délai de garde, voir `./delai`.
+    global: { fetch: fetchAvecDelai() },
     cookies: {
       getAll() {
         return magasinCookies.getAll();
@@ -50,6 +53,8 @@ export async function creerClientSupabaseServeur() {
 export function creerClientSupabaseAnonyme() {
   const { url, clePublishable } = infosConnexionSupabase();
   return createServerClient(url, clePublishable, {
+    //  §1 (nº 686) — le délai de garde, voir `./delai`.
+    global: { fetch: fetchAvecDelai() },
     cookies: {
       getAll() {
         return [];
