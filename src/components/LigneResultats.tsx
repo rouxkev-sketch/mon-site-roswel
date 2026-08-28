@@ -25,6 +25,16 @@
  *  titre et le lieu rejoint le sous-titre, derrière le compte. La
  *  règle vit dans IndexTatoueurs (`titreEtSousTitre`).
  */
+/**
+ * §1 (nº 707) — LE RYTHME DU BLOC DE TITRE, écrit UNE fois.
+ * Le squelette de chargement (`SquelettesDePage`) doit poser sa barre
+ * grise EXACTEMENT là où ce bloc pose le titre — sinon la page saute
+ * au remplissage. Plutôt que d'y recopier ces classes (et diverger à
+ * la première retouche, piège nº 378), elles vivent ici, et les deux
+ * écrans les lisent.
+ */
+export const RYTHME_TITRE_RESULTATS = "pt-6 pb-5 sm:pt-8 sm:pb-6 mobile:pt-3";
+
 export function LigneResultats({
   titre,
   sousTitre,
@@ -165,7 +175,7 @@ export function LigneResultats({
            ⚠️ LE SOUS-TITRE NE CHANGE PAS, sur consigne : il reste à
            15,5 px. L'écart de corps se resserre, mais la hiérarchie
            tient par la GRAISSE et par la COULEUR. */
-      className={`pt-6 pb-5 sm:pt-8 sm:pb-6 mobile:pt-3 ${
+      className={`${RYTHME_TITRE_RESULTATS} ${
         airEnBas ? "lg:pb-10" : ""
       }${masqueAuDoigt ? " mobile:hidden" : ""}`}
     >

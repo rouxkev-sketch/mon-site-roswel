@@ -1,4 +1,4 @@
-import { SqueletteSelection } from "@/components/SquelettesDePage";
+import { SqueletteMosaique } from "@/components/SquelettesDePage";
 
 /**
  * §2 (nº 706) — « MA SÉLECTION » RÉPOND AU CLIC : la page est
@@ -9,5 +9,5 @@ import { SqueletteSelection } from "@/components/SquelettesDePage";
  * même passe : le squelette le remplace.)
  */
 export default function ChargementSelection() {
-  return <SqueletteSelection />;
+  return <SqueletteMosaique />;
 }
