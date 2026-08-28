@@ -1,4 +1,7 @@
-import { DELAI_SUPPRESSION_JOURS } from "@/config/tatouage";
+import {
+  DELAI_SUPPRESSION_ADMIN_JOURS,
+  DELAI_SUPPRESSION_JOURS,
+} from "@/config/tatouage";
 import { creerClientSupabaseAdmin } from "@/lib/supabase/admin";
 //  §1 (nº 692) — LE MÉNAGE DU STOCKAGE, écrit une seule fois pour les
 //  quatre chemins qui en ont besoin (voir lib/photos-stockage).
@@ -42,7 +45,7 @@ import {
     l'écran de confirmation l'annonce, cette mécanique l'applique — le
     même chiffre, forcément. (Ce fichier parle à la clé de service :
     il ne doit JAMAIS être importé par un composant du navigateur.) */
-export { DELAI_SUPPRESSION_JOURS };
+export { DELAI_SUPPRESSION_ADMIN_JOURS, DELAI_SUPPRESSION_JOURS };
 
 /** Vrai quand l'erreur vient d'une table ou d'une colonne absente. */
 function structureAbsente(message: string): boolean {
@@ -55,10 +58,18 @@ function structureAbsente(message: string): boolean {
   );
 }
 
-/** L'échéance d'une demande faite maintenant. */
-export function echeanceSuppression(depuis = new Date()): Date {
+/*  L'échéance d'une demande faite maintenant.
+    §1 (nº 696) — LE NOMBRE DE JOURS EST DÉSORMAIS UN ARGUMENT, et
+    c'est tout ce qu'il a fallu pour que l'administration ait le sien
+    (sept, config/tatouage). Le tatoueur garde ses trente par défaut :
+    aucun appel existant ne change. Une seule écriture pour les deux
+    délais — deux calculs auraient fini par diverger d'un jour. */
+export function echeanceSuppression(
+  depuis = new Date(),
+  jours = DELAI_SUPPRESSION_JOURS
+): Date {
   const echeance = new Date(depuis);
-  echeance.setDate(echeance.getDate() + DELAI_SUPPRESSION_JOURS);
+  echeance.setDate(echeance.getDate() + jours);
   return echeance;
 }
 

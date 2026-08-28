@@ -638,7 +638,27 @@ function repondre(req, res, u, brut) {
       ne pouvait pas distinguer « effacé » de « ignoré ». On retire les
       lignes que les filtres désignent, et l'on rend celles qu'on vient
       de retirer — ce que fait PostgREST. */
-  if (req.method === "DELETE") {
+  /*  ██ §1 (nº 696) — LA DOUBLURE SAIT ENFIN MODIFIER ██
+      ------------------------------------------------------------------
+      CE QUI MANQUAIT, ET DEPUIS QUAND. La nº 694 l'avait noté sans le
+      corriger : « la doublure n'a pas de PATCH » — son banc retirait
+      donc la fiche et la reposait pour en changer l'état. Ça suffisait
+      tant qu'on ne mesurait que des LECTURES. La nº 696, elle, repose
+      tout entière sur un `update` : la suppression de l'administration
+      n'efface plus rien, elle POSE DEUX DATES. Sans PATCH, il n'y a
+      rien à prouver.
+      ⚠️ IL PARTAGE SES FILTRES AVEC `DELETE`, mot pour mot — la même
+      boucle, la même liste `eq`/`neq`/`in` (nº 695). Deux écritures
+      auraient divergé, et celle qui se trompe de filtre modifie des
+      lignes qu'on n'a pas visées : le pire des mensonges de banc.
+      ⚠️ ET IL REND LES LIGNES MODIFIÉES, comme PostgREST après
+      `.select()`. */
+  if (req.method === "PATCH" || req.method === "DELETE") {
+    const efface = req.method === "DELETE";
+    let modifications = {};
+    if (!efface) {
+      try { modifications = JSON.parse(brut || "{}"); } catch { /* corps vide */ }
+    }
     const restantes = [];
     const parties = [];
     for (const ligne of TABLES[table] ?? []) {
@@ -667,12 +687,17 @@ function repondre(req, res, u, brut) {
           if (!liste.includes(valeur)) vise = false;
         }
       }
+      /*  UN `PATCH` GARDE LA LIGNE, il la recouvre : les colonnes
+          nommées prennent leur nouvelle valeur, les autres ne bougent
+          pas. La ligne reste À SA PLACE dans la table — l'ordre de
+          rangement ne doit pas changer sous un banc qui compte. */
+      if (vise && !efface) Object.assign(ligne, modifications);
       (vise ? parties : restantes).push(ligne);
     }
-    if (TABLES[table]) TABLES[table] = restantes;
+    if (efface && TABLES[table]) TABLES[table] = restantes;
     console.log(
       new Date().toISOString().slice(11, 19),
-      "DELETE", table, "← retiré", parties.length
+      req.method, table, efface ? "← retiré" : "← modifié", parties.length
     );
     envoyer(res, parties);
     return;
@@ -694,6 +719,20 @@ function repondre(req, res, u, brut) {
     return;
   }
   let corps = TABLES[table] ?? [];
+  /*  ██ §2 (nº 696) — LA VUE `fiches_a_purger`, CALCULÉE ██
+      Ce n'est pas une table : c'est un `select` sur `tatoueurs` où
+      l'échéance est passée (migration nº 24). La doublure rendait donc
+      une liste vide, et la purge nocturne n'effaçait jamais rien au
+      banc — impossible de prouver le dernier temps de la nº 696.
+      ⚠️ ELLE EST RECALCULÉE À CHAQUE LECTURE, comme une vraie vue : on
+      pose une échéance dans le passé et elle apparaît, sans qu'on ait
+      rien d'autre à ranger. */
+  if (table === "fiches_a_purger") {
+    const maintenant = Date.now();
+    corps = (TABLES.tatoueurs ?? []).filter(
+      (l) => l.purge_le && Date.parse(l.purge_le) <= maintenant
+    );
+  }
   if (table === "rpc/rechercher_tatoueurs") {
     let params = {};
     try { params = JSON.parse(brut || "{}"); } catch { /* corps vide */ }
@@ -707,8 +746,35 @@ function repondre(req, res, u, brut) {
       //  réclamé : sans lui, un « tous les autres portfolios de cette
       //  personne » rendait AUSSI celui qu'on supprimait, et le ménage
       //  du stockage se croyait interdit d'effacer quoi que ce soit.
-      const m = /^(eq|neq|in)\.(.*)$/.exec(val);
+      /*  ██ §3 (nº 696) — `is` ET `not.` SONT HONORÉS À LEUR TOUR ██
+          LA MÊME LEÇON QUE LA nº 692, TROISIÈME FOIS : un filtre que la
+          doublure ne sait pas lire, elle l'ignore — et une lecture qui
+          ignore un filtre rend PLUS LARGE que demandé. « Les portfolios
+          dont l'échéance est posée » (`purge_le=not.is.null`) les
+          rendait TOUS : l'écran des suppressions en cours aurait
+          affiché le catalogue entier, et le banc l'aurait validé.
+          ⚠️ AUCUN RELEVÉ ANCIEN N'EN DÉPEND : là où ces filtres étaient
+          ignorés (nº 694, `.not("hors_ligne","is",true)`), le SITE
+          refiltrait derrière en JavaScript (`estEnLigne`) — le résultat
+          était déjà le bon, il l'est désormais pour la bonne raison.
+          Pas de cran : c'est une correction. */
+      const negation = /^not\.(.*)$/.exec(val);
+      const brutFiltre = negation ? negation[1] : val;
+      const estNul = /^is\.(.*)$/.exec(brutFiltre);
+      if (estNul) {
+        const attendu =
+          estNul[1] === "null" ? null : estNul[1] === "true" ? true : false;
+        corps = corps.filter((l) => {
+          const valeurLigne = l[cle] ?? null;
+          const egal = attendu === null ? valeurLigne === null : valeurLigne === attendu;
+          return negation ? !egal : egal;
+        });
+        continue;
+      }
+      const m = /^(eq|neq|in)\.(.*)$/.exec(brutFiltre);
       if (!m) continue;
+      //  `not.eq.x` vaut `neq.x` — PostgREST accepte les deux formes.
+      if (negation && m[1] === "eq") m[1] = "neq";
       if (m[1] === "eq" || m[1] === "neq") {
         const attendu = m[2] === "true" ? true : m[2] === "false" ? false : m[2];
         corps = corps.filter((l) =>

@@ -1520,6 +1520,27 @@ export const PHOTOS_LUES_PAR_FICHE = 500;
 export const DELAI_SUPPRESSION_JOURS = 30;
 
 /**
+ * ██ §1 (nº 696) — LE DÉLAI DE L'ADMINISTRATION : SEPT JOURS ██
+ * ==================================================================
+ * CE QUI CHANGE. Jusqu'ici la suppression d'un portfolio par
+ * l'administration était IMMÉDIATE et définitive (nº 675, confirmée
+ * par la nº 688) : un clic, et la ligne comme les photos partaient
+ * sans retour. Le propriétaire veut un filet — le sien, pas un autre.
+ * ⚠️ CE N'EST PAS UN SECOND MÉCANISME, et c'est le point. Les trente
+ * jours du tatoueur ne sont rien de plus que deux colonnes,
+ * `supprime_le` et `purge_le` (migration nº 24) : la fiche devient
+ * invisible à la première, elle est effacée à la seconde. Sept jours
+ * s'y écrivent exactement pareil — même colonnes, même vue
+ * `fiches_a_purger`, même purge nocturne, même nettoyage du stockage
+ * (nº 692). SEUL LE NOMBRE CHANGE. Aucune migration.
+ * ⚠️ ET C'EST L'ÉCART QUI DIT QUI A DEMANDÉ : sept jours d'un côté,
+ * trente de l'autre — l'écran d'administration lit `purge_le` moins
+ * `supprime_le` et sait de quelle suppression il parle, sans qu'on
+ * ait eu besoin d'ajouter une colonne pour le dire.
+ */
+export const DELAI_SUPPRESSION_ADMIN_JOURS = 7;
+
+/**
  * OÙ L'ON ARRIVE APRÈS S'ÊTRE CONNECTÉ
  * =====================================
  * ⚠️ LA RÈGLE A CHANGÉ À LA PASSE Nº 137, et elle REMPLACE celle de

@@ -79,7 +79,24 @@ export type GenreNotification =
       `on delete set null`, `fiche_nom` garde le nom. C'est ce qui
       permet d'écrire la nouvelle AVANT l'effacement — et il le faut,
       sinon la clé étrangère refuserait une fiche déjà partie. */
-  | "demande_refusee";
+  | "demande_refusee"
+  /*  ██ §1 (nº 696) — LES DEUX NOUVELLES DE LA SUPPRESSION ADMIN ██
+      LA nº 688 N'EN PRÉVOYAIT QU'UNE, et elle ne convenait qu'à un
+      cas : « Demande de portfolio refusée » parle d'une demande QUI
+      N'A JAMAIS ÉTÉ VALIDÉE. Dire cela à quelqu'un dont le portfolio
+      était EN LIGNE depuis des mois serait faux — sa demande, elle,
+      avait bien été retenue. Deux situations, deux phrases :
+       · `portfolio_retire`  — il était en ligne, l'administration l'a
+         retiré. Les mots sont ceux du propriétaire, au mot près ;
+       · `portfolio_retabli` — l'administration s'est ravisée dans les
+         sept jours. Elle ne RETIRE PAS la nouvelle précédente (une
+         parole du site ne s'efface pas : la personne l'a peut-être
+         déjà lue, et la faire disparaître serait pire que la laisser),
+         elle en pose une seconde qui dit le contraire — coche verte.
+      ⚠️ AUCUNE MIGRATION, pour la raison du §3 nº 688 : `genre` est un
+      `text` sans contrainte de valeur. */
+  | "portfolio_retire"
+  | "portfolio_retabli";
 /*  ⚠️ LES TROIS GENRES DE RATTACHEMENT ONT DISPARU (passe C) :
     « liaison », « liaison_validee », « liaison_refusee ». Un
     rattachement est désormais IMMÉDIAT — il n'y a plus rien à
@@ -142,6 +159,12 @@ export const TITRE_NOTIFICATION: Record<GenreNotification, string> = {
   bienvenue: `Bienvenue sur ${MARQUE_YOKOFOLIO.nom} !`,
   //  §3 (nº 688) — le titre du propriétaire, au mot près.
   demande_refusee: "Demande de portfolio refusée",
+  //  §1 (nº 696) — les deux titres du propriétaire, au mot près. Le
+  //  CORPS des deux phrases, lui, se dérive du genre au moment de
+  //  l'affichage (FenetreNotifications) : c'est ce qui fait qu'une
+  //  ligne écrite aujourd'hui restera lisible si la phrase change.
+  portfolio_retire: "Portfolio retiré",
+  portfolio_retabli: "Portfolio rétabli",
 };
 
 /**
@@ -296,7 +319,21 @@ export async function creerNotification(entree: {
   if (!entree.userId) return false;
   try {
     const admin = creerClientSupabaseAdmin();
-    const { error } = await admin.from("notifications_compte").insert({
+    /*  ██ §2 (nº 696) — L'ÉCRITURE A LE MÊME REPLI QUE LA LECTURE ██
+        ------------------------------------------------------------
+        L'ASYMÉTRIE QU'ON CORRIGE : la route qui LIT la boîte demande
+        `liaison_id`, et RELIT SANS ELLE si la colonne manque (elle
+        n'arrive qu'avec la migration nº 26). L'écriture, elle, la
+        nommait toujours — et une base à qui il manque cette migration
+        REJETTE ALORS LA LIGNE ENTIÈRE. Le `catch` du dessous avalait
+        le refus, la fonction rendait `false`, et personne ne
+        l'apprenait : la nouvelle n'existait pas, en silence.
+        ⚠️ CE N'EST PAS LA CAUSE PROUVÉE du relevé du propriétaire — le
+        banc, lui, écrit et rend la nouvelle de bout en bout (voir le
+        compte rendu de la passe). C'est un CHEMIN D'ÉCHEC MUET, réel,
+        que la lecture évitait déjà et que l'écriture ignorait. On le
+        ferme, et l'appelant apprend désormais ce qui s'est passé. */
+    const colonnes: Record<string, unknown> = {
       user_id: entree.userId,
       fiche_id: entree.ficheId ?? null,
       fiche_nom: entree.ficheNom ?? null,
@@ -304,8 +341,14 @@ export async function creerNotification(entree: {
       titre: TITRE_NOTIFICATION[entree.genre],
       detail: entree.detail ?? null,
       motifs: entree.motifs?.length ? entree.motifs : null,
-      liaison_id: entree.liaisonId ?? null,
-    });
+    };
+    let { error } = await admin
+      .from("notifications_compte")
+      .insert({ ...colonnes, liaison_id: entree.liaisonId ?? null });
+    //  SANS `liaison_id` : la ligne vaut mieux que rien. On ne perd que
+    //  le bouton d'une demande de rattachement — et il n'y en a plus
+    //  (les trois genres de liaison ont disparu, voir plus haut).
+    if (error) ({ error } = await admin.from("notifications_compte").insert(colonnes));
     if (error) throw new Error(error.message);
     return true;
   } catch (erreur) {

@@ -5,7 +5,14 @@ import { rafraichirPagesPubliques } from "@/lib/rafraichir";
 import { creerClientSupabaseAdmin } from "@/lib/supabase/admin";
 //  §1 (nº 675) — l'effacement d'une fiche, écrit une seule fois (le
 //  corps de la purge des trente jours). Voir lib/suppression-compte.
-import { supprimerLaFicheDefinitivement } from "@/lib/suppression-compte";
+//  §1 (nº 696) — il ne sert plus qu'à « purger maintenant » : la
+//  suppression admin ordinaire pose désormais une échéance à sept
+//  jours, avec le même calcul que les trente (`echeanceSuppression`).
+import {
+  DELAI_SUPPRESSION_ADMIN_JOURS,
+  echeanceSuppression,
+  supprimerLaFicheDefinitivement,
+} from "@/lib/suppression-compte";
 import {
   creerNotification,
   proprietaireDeLaFiche,
@@ -80,6 +87,25 @@ function champsModifies(
   return CHAMPS_LISIBLES.filter(
     ([cle]) => cle in brouillon && !memeChose(brouillon[cle], ligne[cle])
   ).map(([, libelle]) => libelle);
+}
+
+/*  §4 (nº 696) — COMBIEN DE JOURS ONT ÉTÉ ACCORDÉS. C'est l'écart
+    entre la demande et l'échéance qui dit QUI a supprimé : sept jours,
+    c'est l'administration ; trente, c'est le tatoueur lui-même. On
+    arrondit au jour le plus proche — les deux dates sont écrites à
+    quelques millisecondes d'intervalle, et une seconde de dérive ne
+    doit pas faire répondre « 6 ».
+    ⚠️ RIEN N'EST DEVINÉ SI L'UNE DES DEUX MANQUE : on rend `null`, et
+    l'écran dit simplement « suppression en cours » sans l'attribuer. */
+function joursEntreDeuxDates(
+  depuis: string | null,
+  jusqua: string | null
+): number | null {
+  if (!depuis || !jusqua) return null;
+  const debut = Date.parse(depuis);
+  const fin = Date.parse(jusqua);
+  if (!Number.isFinite(debut) || !Number.isFinite(fin)) return null;
+  return Math.round((fin - debut) / 86_400_000);
 }
 
 export async function GET() {
@@ -344,7 +370,51 @@ export async function GET() {
         };
       }
     );
-    return NextResponse.json({ ok: true, fiches });
+    /*  ██ §4 (nº 696) — « SUPPRESSIONS EN COURS » ██
+        ==============================================================
+        UNE SECONDE LISTE, ET ELLE NE PEUT PAS SORTIR DE LA PREMIÈRE :
+        celle du dessus ne ramène que ce qui ATTEND UNE DÉCISION
+        (`statut = en_attente`, ou une fiche d'avant la colonne). Un
+        portfolio en cours de suppression, lui, garde le statut qu'il
+        avait — un portfolio retiré alors qu'il était en ligne reste
+        `validee`. Il n'apparaissait donc nulle part, et les sept jours
+        se seraient écoulés sans que personne puisse revenir en
+        arrière. Le critère est `purge_le`, et lui seul.
+        ⚠️ LES DEUX DÉLAIS SONT DANS LA MÊME LISTE, distingués par
+        l'ÉCART entre les deux dates — sept jours ou trente. C'est ce
+        qui a permis de ne pas ajouter de colonne (voir
+        DELAI_SUPPRESSION_ADMIN_JOURS, config/tatouage) : l'écart EST
+        l'information, et il est déjà en base.
+        ⚠️ SANS LES COLONNES, PAS D'ÉCRAN, PAS DE PANNE : une base
+        d'avant la migration nº 24 fait échouer cette lecture ; on rend
+        alors une liste vide, et l'écran est celui d'avant la passe. */
+    const enSuppression = await admin
+      .from("tatoueurs")
+      .select("id, nom, slug, user_id, publie, statut, supprime_le, purge_le, photo_profil")
+      .not("purge_le", "is", null)
+      .order("purge_le", { ascending: true });
+    const suppressions = enSuppression.error
+      ? []
+      : ((enSuppression.data ?? []) as Array<Record<string, unknown>>).map(
+          (ligne) => {
+            const proprietaire = ligne.user_id as string | null;
+            return {
+              ...ligne,
+              //  L'ÉCART, EN JOURS ENTIERS : c'est lui qui nomme la
+              //  suppression. On arrondit — une seconde de dérive entre
+              //  les deux écritures ne doit pas changer la réponse.
+              jours_demandes: joursEntreDeuxDates(
+                ligne.supprime_le as string | null,
+                ligne.purge_le as string | null
+              ),
+              compte: proprietaire ? (comptes.get(proprietaire) ?? null) : null,
+              photos_total: new Set(
+                adressesParFiche.get(String(ligne.id)) ?? []
+              ).size,
+            };
+          }
+        );
+    return NextResponse.json({ ok: true, fiches, suppressions });
   } catch (e) {
     return NextResponse.json(
       {
@@ -376,7 +446,17 @@ export async function POST(requete: NextRequest) {
   const motifs = (corps?.motifs ?? []).slice(0, 10);
   const note = (corps?.note ?? "").trim().slice(0, 600);
 
-  if (!id || !["valider", "modifier", "hors_ligne", "supprimer"].includes(action)) {
+  //  §1 (nº 696) — deux actions de plus, celles de « Suppressions en
+  //  cours » : revenir en arrière, ou ne pas attendre les sept jours.
+  const ACTIONS = [
+    "valider",
+    "modifier",
+    "hors_ligne",
+    "supprimer",
+    "annuler_suppression",
+    "purger_maintenant",
+  ];
+  if (!id || !ACTIONS.includes(action)) {
     return NextResponse.json(
       { ok: false, message: "Demande incomplète." },
       { status: 400 }
@@ -419,40 +499,195 @@ export async function POST(requete: NextRequest) {
         avale ses propres échecs et rend `false` (voir sa note). Une
         boîte de nouvelles indisponible ne doit pas bloquer une décision
         de modération.
-        ⚠️ AUCUN DÉLAI, ET C'EST LA DEMANDE : « cette suppression ramène
-        IMMÉDIATEMENT la photo et le nom du particulier ». Les trente
-        jours de la suppression ordinaire protègent quelqu'un qui
-        pourrait se raviser ; ici c'est l'administration qui tranche
-        contre un abus, il n'y a rien à protéger.
         ⚠️ LE COMPTE DE CONNEXION N'EST PAS TOUCHÉ : supprimer un
         portfolio n'est pas supprimer quelqu'un. La personne garde son
         compte, ses favoris, ses suivis — et retrouve son identité de
         particulier au premier chargement (la règle de la nº 675, tenue
         par le rattrapage de MenuEspace).
-        ⚠️ L'EFFACEMENT LUI-MÊME EST CELUI DE LA PURGE DES TRENTE JOURS,
-        au caractère : `supprimerLaFicheDefinitivement` est le corps
-        extrait de `purgerFichesEchues` (lib/suppression-compte). Deux
-        écritures auraient fini par diverger — et celle qui oublie les
-        photos laisse des fichiers orphelins pour toujours. */
+
+        ██ §1 (nº 696) — ELLE N'EFFACE PLUS RIEN LE JOUR MÊME ██
+        ==============================================================
+        LA nº 675 ÉCRIVAIT LE CONTRAIRE, et je l'avais justifié : « ici
+        c'est l'administration qui tranche contre un abus, il n'y a
+        rien à protéger ». LE PROPRIÉTAIRE TRANCHE AUTREMENT, et il a
+        raison : ce qu'il y avait à protéger, c'est LUI — contre son
+        propre clic. Un faux compte peut attendre sept jours ; une
+        suppression faite par erreur, elle, ne se rattrape pas.
+        CE QUE ÇA DEVIENT : les deux colonnes des trente jours,
+        remplies avec sept (`echeanceSuppression(…, DELAI_…_ADMIN_…)`).
+        Rien d'autre. La fiche sort du public à la seconde même
+        (`estEnLigne` regarde `supprime_le`, nº 694), la purge nocturne
+        la ramassera à l'échéance, et le stockage sera nettoyé par le
+        même chemin qu'avant (nº 692) — sauf qu'il passe désormais par
+        `purgerFichesEchues`, pas par un appel direct.
+        ⚠️ L'ORDRE S'INVERSE, ET C'EST VOULU. La nº 688 écrivait la
+        nouvelle AVANT l'effacement, parce que la clé étrangère
+        `fiche_id` aurait refusé une fiche déjà partie. Plus rien ne
+        part : on écrit donc APRÈS, une fois l'échéance vraiment posée.
+        Annoncer un retrait qui n'a pas eu lieu serait pire que le
+        silence.
+        ⚠️ ET LA NOUVELLE N'EST PLUS TOUJOURS LA MÊME (§4 du brief) :
+        « Demande de portfolio refusée » ne convient qu'à une demande
+        JAMAIS validée. Un portfolio qui était en ligne reçoit
+        « Portfolio retiré ». C'est `publie`/`statut` qui départage.
+        ⚠️ ON DIT À L'ADMINISTRATION SI LA NOUVELLE EST PARTIE. C'est le
+        §1 du brief : une pose qui échoue le faisait en silence, et le
+        propriétaire ne l'a appris que des semaines plus tard, en
+        production. `creerNotification` avale toujours ses erreurs (une
+        boîte de nouvelles indisponible ne doit pas bloquer une
+        décision de modération) — mais elle rend `false`, et ce `false`
+        remonte maintenant jusqu'à l'écran. */
     if (action === "supprimer") {
       const { data: ligne } = await admin
         .from("tatoueurs")
         //  §3 (nº 688) — LE NOM AUSSI : c'est lui que la nouvelle
-        //  recopie, et il ne sera plus lisible dans une seconde.
-        .select("user_id, nom")
+        //  recopie, pour rester lisible après la purge.
+        //  §5 (nº 696) — ET LE SLUG : voir `rafraichirPagesPubliques`
+        //  plus bas. On le lit ICI, tant que la ligne est sous la main.
+        .select("user_id, nom, slug, publie, statut")
         .eq("id", id)
         .maybeSingle();
       const fiche = ligne as {
         user_id?: string | null;
         nom?: string | null;
+        slug?: string | null;
+        publie?: boolean | null;
+        statut?: string | null;
       } | null;
-      await creerNotification({
-        userId: fiche?.user_id,
+      if (!fiche) {
+        return NextResponse.json(
+          { ok: false, message: "Ce portfolio n'existe plus." },
+          { status: 404 }
+        );
+      }
+      const maintenant = new Date();
+      const purgeLe = echeanceSuppression(
+        maintenant,
+        DELAI_SUPPRESSION_ADMIN_JOURS
+      ).toISOString();
+      const { error } = await admin
+        .from("tatoueurs")
+        .update({ supprime_le: maintenant.toISOString(), purge_le: purgeLe })
+        .eq("id", id);
+      if (error) throw new Error(error.message);
+      /*  ██ §5 (nº 696) — « INVISIBLE IMMÉDIATEMENT » L'ÉTAIT MOINS
+          QU'ON NE LE CROYAIT ██
+          ==========================================================
+          CE QUE LE BANC A MONTRÉ, ET JE NE L'ATTENDAIS PAS : après la
+          suppression, `/tatoueur/<slug>` répondait encore 200 avec le
+          portfolio entier. La règle de visibilité était pourtant juste
+          (`estEnLigne` regarde `supprime_le`, nº 694) — c'est LE CACHE
+          qui parlait : cette page est PRÉRENDUE, avec une remise à
+          jour toutes les cinq minutes.
+          ⚠️ CE N'EST PAS UN DÉFAUT DE CETTE PASSE : la suppression
+          IMMÉDIATE d'avant (nº 675) sortait par le même `return`
+          anticipé, sans vider le cache — un portfolio effacé de la
+          base restait donc affiché jusqu'à cinq minutes. Personne ne
+          l'avait vu parce que personne n'avait mesuré la page publique
+          juste après.
+          LA CORRECTION est l'appel qui existait déjà pour les trois
+          autres décisions, quelques centaines de lignes plus bas : les
+          trois branches de la suppression l'appellent désormais aussi.
+          ⚠️ IL NE S'ATTEND PAS (pas de `await`) : vider un cache ne
+          doit pas retarder la réponse à l'administration. C'est
+          l'usage qu'en font déjà les autres décisions. */
+      rafraichirPagesPubliques(fiche.slug ?? null);
+
+      //  EN LIGNE, OU JAMAIS VALIDÉ ? Les deux phrases du propriétaire.
+      const etaitEnLigne = fiche.publie === true || fiche.statut === "validee";
+      const notifiee = await creerNotification({
+        userId: fiche.user_id,
         ficheId: id,
-        ficheNom: fiche?.nom ?? null,
-        genre: "demande_refusee",
+        ficheNom: fiche.nom ?? null,
+        genre: etaitEnLigne ? "portfolio_retire" : "demande_refusee",
       });
+      return NextResponse.json({
+        ok: true,
+        purgeLe,
+        notifiee,
+        //  LA NUANCE QUI COMPTE POUR L'ÉCRAN : une fiche de démarchage
+        //  n'a AUCUN propriétaire — il n'y a personne à prévenir, ce
+        //  n'est pas un échec. `creerNotification` rend `false` dans
+        //  les deux cas ; cette ligne les sépare.
+        sansProprietaire: !fiche.user_id,
+      });
+    }
+
+    /*  ██ §2 (nº 696) — REVENIR EN ARRIÈRE PENDANT LES SEPT JOURS ██
+        Les deux colonnes repassent à null, et RIEN D'AUTRE n'est
+        touché : c'est ce qui fait revenir le portfolio EXACTEMENT tel
+        qu'il était — publié ou non, brouillon compris. C'est déjà le
+        mot pour mot de l'annulation du tatoueur (nº 24) ; on ne fait
+        que l'ouvrir à l'administration.
+        ⚠️ LA NOUVELLE DU RETRAIT N'EST PAS EFFACÉE, et c'est la
+        consigne : une parole du site ne se reprend pas — la personne
+        l'a peut-être déjà lue. On en pose une SECONDE, qui dit que le
+        portfolio est rétabli. */
+    if (action === "annuler_suppression") {
+      const { data: ligne } = await admin
+        .from("tatoueurs")
+        .select("user_id, nom, slug, purge_le")
+        .eq("id", id)
+        .maybeSingle();
+      const fiche = ligne as {
+        user_id?: string | null;
+        nom?: string | null;
+        slug?: string | null;
+        purge_le?: string | null;
+      } | null;
+      if (!fiche) {
+        return NextResponse.json(
+          { ok: false, message: "Ce portfolio n'existe plus." },
+          { status: 404 }
+        );
+      }
+      const { error } = await admin
+        .from("tatoueurs")
+        .update({ supprime_le: null, purge_le: null })
+        .eq("id", id);
+      if (error) throw new Error(error.message);
+      //  §5 (nº 696) — le retour est aussi pressé que le départ : sans
+      //  ça, le portfolio rétabli resterait absent du public jusqu'à
+      //  cinq minutes. Voir la note de « supprimer ».
+      rafraichirPagesPubliques(fiche.slug ?? null);
+      const notifiee = await creerNotification({
+        userId: fiche.user_id,
+        ficheId: id,
+        ficheNom: fiche.nom ?? null,
+        genre: "portfolio_retabli",
+      });
+      return NextResponse.json({
+        ok: true,
+        notifiee,
+        sansProprietaire: !fiche.user_id,
+      });
+    }
+
+    /*  ██ §3 (nº 696) — NE PAS ATTENDRE L'ÉCHÉANCE ██
+        L'effacement d'avant cette passe, gardé intact et déplacé ici :
+        `supprimerLaFicheDefinitivement` est le corps extrait de
+        `purgerFichesEchues` (lib/suppression-compte) — mêmes photos du
+        stockage effacées (nº 692), même ligne supprimée. Deux
+        écritures auraient fini par diverger, et celle qui oublie les
+        photos laisse des fichiers orphelins pour toujours.
+        ⚠️ AUCUNE NOUVELLE ICI : la personne a déjà été prévenue le jour
+        de la demande. Lui redire la même chose sept jours plus tard —
+        ou le jour même si l'on abrège — n'apprendrait rien.
+        ⚠️ ET L'ÉCRAN EXIGE LE MOT TAPÉ pour celle-ci comme pour
+        l'autre : c'est bien elle qui ne se rattrape pas. */
+    if (action === "purger_maintenant") {
+      const { data: ligne } = await admin
+        .from("tatoueurs")
+        .select("user_id, slug")
+        .eq("id", id)
+        .maybeSingle();
+      const fiche = ligne as {
+        user_id?: string | null;
+        slug?: string | null;
+      } | null;
       await supprimerLaFicheDefinitivement(id, fiche?.user_id ?? null);
+      //  §5 (nº 696) — et la page prérendue s'en va avec la ligne.
+      rafraichirPagesPubliques(fiche?.slug ?? null);
       return NextResponse.json({ ok: true });
     }
 

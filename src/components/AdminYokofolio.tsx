@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
+  DELAI_SUPPRESSION_ADMIN_JOURS,
+  DELAI_SUPPRESSION_JOURS,
   libelleFiltre,
   libelleStyle,
   MARQUE_YOKOFOLIO,
@@ -56,6 +58,32 @@ import { lireDuServeur } from "@/lib/lecture-navigateur";
  * Une fiche d'administrateur revient donc ici DÈS QU'ELLE PORTE UN
  * BROUILLON — et rien d'autre n'a bougé.
  */
+
+/**
+ * §2 (nº 696) — UN PORTFOLIO EN COURS DE SUPPRESSION.
+ * ------------------------------------------------------------------
+ * ⚠️ CE N'EST PAS UN `FicheAdmin` : cette liste-là ne sert pas à
+ * décider, elle sert à surveiller un compte à rebours. Elle n'a donc
+ * besoin de presque rien — le nom, les deux dates, et de quoi dire de
+ * QUELLE suppression on parle.
+ * `jours_demandes` est l'ÉCART entre les deux dates, calculé par la
+ * route : sept, c'est l'administration ; trente, le tatoueur lui-même.
+ * Null quand l'une des deux manque — on ne devine pas.
+ */
+type FicheEnSuppression = {
+  id: string;
+  nom: string | null;
+  slug: string | null;
+  user_id: string | null;
+  publie: boolean | null;
+  statut: string | null;
+  supprime_le: string | null;
+  purge_le: string | null;
+  photo_profil: string | null;
+  jours_demandes: number | null;
+  compte: string | null;
+  photos_total: number;
+};
 
 type FicheAdmin = Tatoueur & {
   statut?: string | null;
@@ -205,6 +233,21 @@ export function AdminYokofolio() {
   /* ---- Fiches à valider ---- */
   const [fiches, setFiches] = useState<FicheAdmin[] | null>(null);
   const [ficheOuverte, setFicheOuverte] = useState<FicheAdmin | null>(null);
+  /*  ██ §2 (nº 696) — LES SUPPRESSIONS EN COURS ██
+      Elles ne pouvaient PAS sortir de la liste du dessus : celle-ci ne
+      ramène que ce qui attend une décision, et un portfolio en cours
+      de suppression garde le statut qu'il avait. Sans cette seconde
+      liste, les sept jours s'écoulaient sans que personne puisse
+      revenir en arrière — l'écran n'avait aucun endroit pour le dire.
+      `aPurger` porte la ligne dont on veut abréger le délai : c'est
+      elle qui ouvre la confirmation tapée, la même que la nº 688. */
+  const [suppressions, setSuppressions] = useState<FicheEnSuppression[] | null>(
+    null
+  );
+  const [aPurger, setAPurger] = useState<FicheEnSuppression | null>(null);
+  const [saisiePurge, setSaisiePurge] = useState("");
+  const purgeConfirmee = saisiePurge.trim().toLowerCase() === "supprimer";
+  const [envoiSuppression, setEnvoiSuppression] = useState(false);
   /**
    * §3 (nº 330) — LE RETOUR REFERME LA FICHE OUVERTE, il ne quitte pas
    * l'administration.
@@ -305,13 +348,20 @@ export function AdminYokofolio() {
       const donnees = (await reponse.json()) as {
         ok: boolean;
         fiches?: FicheAdmin[];
+        suppressions?: FicheEnSuppression[];
         message?: string;
       };
       if (!donnees.ok) throw new Error(donnees.message);
       setFiches(donnees.fiches ?? []);
+      //  §2 (nº 696) — LA MÊME LECTURE SERT LES DEUX LISTES : la route
+      //  rend les deux dans la même réponse, il n'y a donc aucune
+      //  requête de plus. Une base d'avant les colonnes rend un tableau
+      //  vide, et la section ne s'affiche simplement pas.
+      setSuppressions(donnees.suppressions ?? []);
       setErreurFiches(null);
     } catch (e) {
       setFiches([]);
+      setSuppressions([]);
       setErreurFiches(e instanceof Error ? e.message : "Lecture impossible.");
     }
   }, []);
@@ -462,7 +512,12 @@ export function AdminYokofolio() {
           note: noteMotif,
         }),
       });
-      const donnees = (await reponse.json()) as { ok: boolean; message?: string };
+      const donnees = (await reponse.json()) as {
+        ok: boolean;
+        message?: string;
+        notifiee?: boolean;
+        sansProprietaire?: boolean;
+      };
       if (!donnees.ok) throw new Error(donnees.message);
       setFicheOuverte(null);
       setRefusOuvert(null);
@@ -474,6 +529,27 @@ export function AdminYokofolio() {
       //  la seconde un simple clic — exactement ce qu'on retire.
       setSuppressionOuverte(false);
       setSaisieSuppression("");
+      /*  ██ §1 (nº 696) — L'ÉCRAN DIT SI LA PERSONNE A ÉTÉ PRÉVENUE ██
+          C'EST LE CŒUR DU PREMIER POINT DU BRIEF. La pose d'une
+          notification n'est pas bloquante — et c'est juste : une boîte
+          de nouvelles indisponible ne doit pas empêcher une décision
+          de modération. Mais jusqu'ici elle échouait EN SILENCE : le
+          propriétaire a supprimé une demande en production et n'a
+          appris que bien plus tard que personne n'avait rien reçu.
+          Un `false` n'est plus avalé : il s'écrit à l'écran, tout de
+          suite, et l'on sait quoi faire.
+          ⚠️ « AUCUN PROPRIÉTAIRE » N'EST PAS UN ÉCHEC : une fiche de
+          démarchage n'appartient à personne, il n'y a personne à
+          prévenir. La route sépare les deux cas ; l'écran aussi. */
+      if (action === "supprimer" && donnees.notifiee === false) {
+        setErreurFiches(
+          donnees.sansProprietaire
+            ? "Portfolio retiré. Personne n'a été prévenu : ce portfolio n'a pas de compte propriétaire."
+            : "Portfolio retiré, MAIS la notification n'a pas pu être posée — la personne n'a rien reçu."
+        );
+      } else {
+        setErreurFiches(null);
+      }
       await chargerFiches();
     } catch (e) {
       setErreurFiches(
@@ -481,6 +557,63 @@ export function AdminYokofolio() {
       );
     } finally {
       setEnvoiDecision(false);
+    }
+  }
+
+  /**
+   * ██ §2 (nº 696) — LES DEUX GESTES DE « SUPPRESSIONS EN COURS » ██
+   * ------------------------------------------------------------------
+   * `annuler_suppression` — le portfolio revient TEL QUEL : les deux
+   * colonnes repassent à null, rien d'autre n'est touché. Il est
+   * volontairement SANS confirmation : c'est le geste qui répare, pas
+   * celui qui casse. Le mot tapé est réservé à ce qui ne se rattrape
+   * pas.
+   * `purger_maintenant` — celui-là ne se rattrape pas, et il exige donc
+   * le même mot que la nº 688.
+   * ⚠️ ELLE NE PASSE PAS PAR `decider` : celle-là travaille sur la
+   * fiche OUVERTE et referme l'écran de validation derrière elle. Ici
+   * on agit sur une LIGNE DE LISTE, sans rien ouvrir. Une écriture de
+   * plus, mais qui ne partage rien avec l'autre — les mêler aurait
+   * demandé un argument de plus dans `decider` et deux branches à
+   * l'intérieur.
+   */
+  async function agirSurLaSuppression(
+    fiche: FicheEnSuppression,
+    action: "annuler_suppression" | "purger_maintenant"
+  ) {
+    if (envoiSuppression) return;
+    setEnvoiSuppression(true);
+    try {
+      const reponse = await fetch("/api/admin/yokofolio/fiches", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: fiche.id, action }),
+      });
+      const donnees = (await reponse.json()) as {
+        ok: boolean;
+        message?: string;
+        notifiee?: boolean;
+        sansProprietaire?: boolean;
+      };
+      if (!donnees.ok) throw new Error(donnees.message);
+      setAPurger(null);
+      setSaisiePurge("");
+      //  §1 (nº 696) — ON DIT SI LA NOUVELLE EST PARTIE. Le silence
+      //  d'une pose ratée est exactement ce que cette passe corrige.
+      setErreurFiches(
+        action === "annuler_suppression" && donnees.notifiee === false
+          ? donnees.sansProprietaire
+            ? "Portfolio rétabli. Personne n'a été prévenu : ce portfolio n'a pas de compte propriétaire."
+            : "Portfolio rétabli, MAIS la notification n'a pas pu être posée."
+          : null
+      );
+      await chargerFiches();
+    } catch (e) {
+      setErreurFiches(
+        e instanceof Error ? e.message : "L'action n'a pas abouti."
+      );
+    } finally {
+      setEnvoiSuppression(false);
     }
   }
 
@@ -696,6 +829,187 @@ export function AdminYokofolio() {
                 </button>
               ))}
             </div>
+
+            {/*  ██ §2 (nº 696) — SUPPRESSIONS EN COURS ██
+                 =====================================================
+                 ELLE NE S'AFFICHE QUE S'IL Y EN A. Un écran d'admin
+                 qui porte en permanence un titre suivi de « aucune »
+                 apprend qu'il ne se passe rien, à chaque visite : le
+                 vide n'a pas besoin d'être annoncé ici (la liste du
+                 dessus, elle, le dit — parce qu'on VIENT y voir).
+                 LES DEUX DÉLAIS SONT MÊLÉS ET DISTINGUÉS, comme
+                 demandé : c'est l'écart entre les deux dates qui les
+                 nomme, pas une colonne (voir la route).
+                 ⚠️ AUCUNE MESURE DE LARGEUR ICI (règle nº 60) : les
+                 deux boutons et l'étiquette sont dans une rangée qui
+                 REPLIE. Au doigt ils passent dessous d'eux-mêmes, sans
+                 qu'on ait eu à distinguer l'appareil. */}
+            {suppressions && suppressions.length > 0 && (
+              <>
+                <h2 className="mt-9 text-[17px] font-bold text-sombre-texte">
+                  Suppressions en cours
+                </h2>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-sombre-texte-doux">
+                  Ces portfolios sont déjà invisibles du public. Ils seront
+                  effacés — photos comprises — à leur échéance.
+                </p>
+                <div className="mt-4 flex flex-col gap-2.5">
+                  {suppressions.map((fiche) => (
+                    <div
+                      key={fiche.id}
+                      className="rounded-xl bg-sombre-carte px-5 py-4
+                                 flex flex-wrap items-center justify-between gap-x-4 gap-y-3"
+                    >
+                      <span className="min-w-0">
+                        <span className="block font-semibold text-sombre-texte truncate">
+                          {fiche.nom ?? "Portfolio sans nom"}
+                        </span>
+                        <span className="block text-[13px] text-sombre-texte-doux truncate">
+                          {fiche.purge_le
+                            ? `Effacé le ${dateCourte(fiche.purge_le)}`
+                            : "Échéance inconnue"}
+                          {fiche.photos_total > 0
+                            ? ` · ${fiche.photos_total} photo${
+                                fiche.photos_total > 1 ? "s" : ""
+                              }`
+                            : ""}
+                          {fiche.compte ? ` · ${fiche.compte}` : ""}
+                        </span>
+                      </span>
+                      <span className="shrink-0 flex flex-wrap items-center justify-end gap-2.5">
+                        {/*  QUI A DEMANDÉ — dit par l'écart des dates.
+                             Sans les deux dates, on ne l'attribue pas. */}
+                        <span className="rounded-full bg-sombre-eleve px-2.5 min-h-[24px] inline-flex items-center text-[12px] font-medium text-sombre-texte-doux">
+                          {fiche.jours_demandes === null
+                            ? "Suppression en cours"
+                            : fiche.jours_demandes <=
+                                DELAI_SUPPRESSION_ADMIN_JOURS
+                              ? `Administration · ${DELAI_SUPPRESSION_ADMIN_JOURS} jours`
+                              : `Le tatoueur · ${DELAI_SUPPRESSION_JOURS} jours`}
+                        </span>
+                        <button
+                          type="button"
+                          disabled={envoiSuppression}
+                          onClick={() =>
+                            void agirSurLaSuppression(
+                              fiche,
+                              "annuler_suppression"
+                            )
+                          }
+                          className="inline-flex items-center rounded-full bg-sombre-eleve-clair px-4
+                                     min-h-[40px] text-[14px] font-semibold text-sombre-texte
+                                     transition-opacity hover:opacity-90
+                                     disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          Annuler
+                        </button>
+                        <button
+                          type="button"
+                          disabled={envoiSuppression}
+                          onClick={() => {
+                            setAPurger(fiche);
+                            setSaisiePurge("");
+                          }}
+                          className="px-2 min-h-[40px] text-[14px] font-semibold
+                                     text-erreur transition-opacity hover:opacity-80
+                                     disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          Supprimer définitivement
+                        </button>
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/*  §2 (nº 696) — LA CONFIRMATION TAPÉE, celle de la nº 688
+                 au mot et au dessin près : c'est le MÊME geste
+                 irrattrapable, il mérite la même barrière. Seule la
+                 phrase change — ici, l'échéance n'est pas attendue. */}
+            {aPurger && (
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-label="Supprimer définitivement"
+                className="fixed inset-0 z-[80] flex items-center justify-center p-4"
+              >
+                <button
+                  type="button"
+                  aria-label="Annuler"
+                  onClick={() => setAPurger(null)}
+                  className="absolute inset-0 bg-black/25 cursor-default
+                             opacity-100 transition-opacity duration-200 starting:opacity-0"
+                />
+                <div
+                  className="relative w-full max-w-[380px] rounded-xl
+                             bg-sombre-carte p-5
+                             shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
+                >
+                  <h2 className="text-[17px] font-bold text-sombre-texte">
+                    Effacer «&nbsp;{aPurger.nom ?? "ce portfolio"}&nbsp;»
+                    maintenant&nbsp;?
+                  </h2>
+                  <p className="mt-2 text-[13.5px] leading-relaxed text-sombre-texte-doux">
+                    {aPurger.photos_total > 0
+                      ? `Ce portfolio et ses ${aPurger.photos_total} photo${
+                          aPurger.photos_total > 1 ? "s" : ""
+                        } seront effacés.`
+                      : "Ce portfolio sera effacé."}{" "}
+                    <span className="font-semibold text-erreur">
+                      Sans attendre l&apos;échéance — aucune récupération
+                      possible.
+                    </span>{" "}
+                    Le compte de la personne, lui, n&apos;est pas supprimé.
+                  </p>
+                  <p className="mt-3 text-[13.5px] leading-relaxed text-sombre-texte-doux">
+                    Pour confirmer, tape{" "}
+                    <span className="font-bold text-erreur">SUPPRIMER</span>{" "}
+                    ci-dessous.
+                  </p>
+                  <input
+                    type="text"
+                    value={saisiePurge}
+                    onChange={(evenement) =>
+                      setSaisiePurge(evenement.target.value)
+                    }
+                    placeholder="SUPPRIMER"
+                    autoComplete="off"
+                    autoCapitalize="characters"
+                    spellCheck={false}
+                    aria-label="Tape SUPPRIMER pour confirmer"
+                    className="mt-4 w-full min-h-[48px] rounded-lg border border-transparent
+                               bg-sombre-eleve-clair px-4 text-base tracking-wide text-sombre-texte
+                               placeholder:text-sombre-texte-doux/50 outline-none
+                               transition-colors focus:bg-sombre-haut"
+                  />
+                  <div className="mt-4 flex items-center justify-end gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setAPurger(null)}
+                      className="px-2 min-h-[44px] text-[14px] font-semibold
+                                 text-sombre-texte-doux transition-colors
+                                 hover:text-sombre-texte"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!purgeConfirmee || envoiSuppression}
+                      onClick={() =>
+                        void agirSurLaSuppression(aPurger, "purger_maintenant")
+                      }
+                      className="inline-flex items-center rounded-full bg-erreur px-6
+                                 min-h-[46px] font-semibold text-white transition-opacity
+                                 hover:opacity-90 disabled:cursor-not-allowed
+                                 disabled:opacity-40"
+                    >
+                      Supprimer
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
 
@@ -1049,6 +1363,15 @@ export function AdminYokofolio() {
                        ⚠️ QUAND LE SERVEUR NE LE SAIT PAS — réponse
                        d'avant cette passe, table des photos absente —
                        on ne devine pas : la phrase le dit. */}
+                  {/*  §1 (nº 696) — LA PHRASE A CHANGÉ AVEC LA RÈGLE.
+                       Elle disait « immédiat et définitif — aucune
+                       récupération possible », et c'était vrai
+                       jusqu'ici. La suppression est désormais DIFFÉRÉE
+                       de sept jours : dire l'ancien texte serait un
+                       mensonge, et un mensonge qui fait hésiter à
+                       cliquer. Ce qui reste immédiat, c'est la
+                       DISPARITION ; ce qui devient rattrapable, c'est
+                       l'effacement. */}
                   <p className="mt-2 text-[13.5px] leading-relaxed text-sombre-texte-doux">
                     {typeof ficheOuverte.photos_total === "number"
                       ? `Ce portfolio et ses ${ficheOuverte.photos_total} photo${
@@ -1056,7 +1379,9 @@ export function AdminYokofolio() {
                         } seront effacés.`
                       : "Ce portfolio et toutes ses photos seront effacés (nombre de photos inconnu)."}{" "}
                     <span className="font-semibold text-erreur">
-                      Immédiat et définitif — aucune récupération possible.
+                      Invisible immédiatement, effacé définitivement dans{" "}
+                      {DELAI_SUPPRESSION_ADMIN_JOURS} jours — annulable
+                      d&apos;ici là.
                     </span>{" "}
                     Le compte de la personne, lui, n&apos;est pas supprimé.
                   </p>

@@ -205,6 +205,36 @@ const CATALOGUE: Record<
       "Ta demande n'a pas été retenue. Tu peux créer un nouveau " +
       "portfolio quand tu le souhaites.",
   },
+  /*  ██ §1 (nº 696) — LE RETRAIT, ET LE RETOUR ██
+      DEUX GENRES, PARCE QUE DEUX SITUATIONS. « Demande de portfolio
+      refusée » (juste au-dessus) ne parle que d'une demande JAMAIS
+      validée ; la dire à quelqu'un dont le portfolio était en ligne
+      depuis des mois serait faux — sa demande, elle, avait bien été
+      retenue. C'est la route d'administration qui départage, sur
+      `publie`/`statut`.
+      LES DEUX PHRASES SONT CELLES DU PROPRIÉTAIRE, au mot près. Le nom
+      s'insère à l'affichage (voir `sousTitreDe`) ; sans lui, la phrase
+      se dit sans nom plutôt que d'afficher des guillemets vides.
+      LA CORBEILLE ET LE TON « PROBLÈME » pour le retrait : c'est la
+      même chose que « Suppression de portfolio programmée » vue du
+      dessus — le portfolio est masqué, et l'échéance court.
+      LA COCHE VERTE pour le retour, et c'est la consigne : le ton
+      `valide` est celui de « Portfolio en ligne ». Rien n'est plus
+      attendu de la personne. */
+  portfolio_retire: {
+    symbole: IconeCorbeille,
+    ton: "probleme",
+    titre: "Portfolio retiré",
+    sousTitre:
+      `Ton portfolio a été retiré de ${MARQUE_YOKOFOLIO.nom}. ` +
+      "Pour toute question, contacte-nous.",
+  },
+  portfolio_retabli: {
+    symbole: IconeDoubleCoche,
+    ton: "valide",
+    titre: "Portfolio rétabli",
+    sousTitre: "Ton portfolio a été rétabli.",
+  },
   /*  ██ §1 (nº 663) — LE MESSAGE DE BIENVENUE ██
       LES DEUX TEXTES SONT CEUX DU PROPRIÉTAIRE, au mot près — à la
       graphie de la marque près (« YokoFolio », Y et F majuscules : sa
@@ -314,6 +344,20 @@ function sousTitreDe(nouvelle: Notification): string {
       `Ta demande pour « ${nouvelle.fiche_nom} » n'a pas été retenue. ` +
       "Tu peux créer un nouveau portfolio quand tu le souhaites."
     );
+  }
+  /*  §1 (nº 696) — LES DEUX PHRASES DU PROPRIÉTAIRE, au mot près, et
+      pour la même raison que celle du dessus : le nom vient de LA
+      LIGNE (`fiche_nom`), pas du catalogue. Ici il survit même à la
+      purge des sept jours.
+      ⚠️ SANS NOM, LA PHRASE DU CATALOGUE — jamais de guillemets vides. */
+  if (nouvelle.genre === "portfolio_retire" && nouvelle.fiche_nom) {
+    return (
+      `Ton portfolio « ${nouvelle.fiche_nom} » a été retiré de ` +
+      `${MARQUE_YOKOFOLIO.nom}. Pour toute question, contacte-nous.`
+    );
+  }
+  if (nouvelle.genre === "portfolio_retabli" && nouvelle.fiche_nom) {
+    return `Ton portfolio « ${nouvelle.fiche_nom} » a été rétabli.`;
   }
   return fiche.sousTitre;
 }
