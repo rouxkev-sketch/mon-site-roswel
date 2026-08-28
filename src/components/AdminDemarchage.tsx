@@ -15,6 +15,9 @@ import {
   type EtatLigne,
   type TypeFiche,
 } from "@/lib/demarchage";
+//  §1 (nº 693) — le délai de garde des lectures du navigateur,
+//  écrit une seule fois (voir lib/lecture-navigateur).
+import { lireDuServeur } from "@/lib/lecture-navigateur";
 
 /**
  * LE TABLEAU DE DÉMARCHAGE — /admin
@@ -152,7 +155,7 @@ export function AdminDemarchage() {
   const charger = useCallback(async () => {
     setErreur(null);
     try {
-      const reponse = await fetch("/api/admin/yokofolio/demarchage");
+      const reponse = await lireDuServeur("/api/admin/yokofolio/demarchage");
       const donnees = (await reponse.json().catch(() => null)) as {
         ok?: boolean;
         message?: string;

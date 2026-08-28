@@ -8,6 +8,9 @@ import { IconeHorsLigne } from "@/components/Icones";
 //  §1 (nº 664) — la pastille d'événement de la famille.
 import { PastilleEvenement } from "@/components/PastilleEvenement";
 import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
+//  §1 (nº 693) — le délai de garde des lectures du navigateur,
+//  écrit une seule fois (voir lib/lecture-navigateur).
+import { lireDuServeur } from "@/lib/lecture-navigateur";
 
 /**
  * « METTRE LA FICHE HORS LIGNE » — l'action d'ADMINISTRATION des fiches
@@ -53,7 +56,9 @@ export function BoutonHorsLigne({
       try {
         const { data } = await creerClientSupabaseNavigateur().auth.getSession();
         if (!data.session || abandonne) return;
-        const reponse = await fetch("/api/admin/yokofolio/moi");
+        //  §1 (nº 693) — la dernière lecture du navigateur à
+        //  recevoir le délai de garde partagé.
+        const reponse = await lireDuServeur("/api/admin/yokofolio/moi");
         const donnees = (await reponse.json().catch(() => null)) as {
           admin?: boolean;
         } | null;

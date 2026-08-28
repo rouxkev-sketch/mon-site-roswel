@@ -7,6 +7,9 @@ import { useSyncExternalStore } from "react";
 //  la compilation ; un import de valeur ferait entrer la clé dans le
 //  paquet servi (la faute évitée de justesse à la nº 663).
 import type { Notification } from "@/lib/notifications";
+//  §1 (nº 693) — le délai de garde des lectures du navigateur,
+//  écrit une seule fois (voir lib/lecture-navigateur).
+import { lireDuServeur } from "@/lib/lecture-navigateur";
 
 /**
  * ██ §1 (nº 672) — LES NOUVELLES VIVENT DANS UN MAGASIN, PLUS DANS UN
@@ -107,7 +110,7 @@ function instantane(): Notification[] {
 export async function lireLesNouvelles(idUtilisateur: string): Promise<boolean> {
   if (!idUtilisateur) return false;
   try {
-    const reponse = await fetch(ROUTE);
+    const reponse = await lireDuServeur(ROUTE);
     if (!reponse.ok) return false;
     const donnees = (await reponse.json().catch(() => null)) as {
       notifications?: Notification[];

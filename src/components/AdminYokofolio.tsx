@@ -22,6 +22,9 @@ import { LogoYokofolio } from "@/components/LogoYokofolio";
 import { Patience, SqueletteLignes } from "@/components/Squelette";
 import { useUtilisateur } from "@/lib/use-utilisateur";
 import type { Tatoueur } from "@/lib/tatoueurs";
+//  §1 (nº 693) — le délai de garde des lectures du navigateur,
+//  écrit une seule fois (voir lib/lecture-navigateur).
+import { lireDuServeur } from "@/lib/lecture-navigateur";
 
 /**
  * L'ADMIN DE YOKOFOLIO — reparti de zéro
@@ -298,7 +301,7 @@ export function AdminYokofolio() {
 
   const chargerFiches = useCallback(async () => {
     try {
-      const reponse = await fetch("/api/admin/yokofolio/fiches");
+      const reponse = await lireDuServeur("/api/admin/yokofolio/fiches");
       const donnees = (await reponse.json()) as {
         ok: boolean;
         fiches?: FicheAdmin[];
@@ -315,7 +318,7 @@ export function AdminYokofolio() {
 
   const chargerSuggestions = useCallback(async () => {
     try {
-      const reponse = await fetch("/api/admin/yokofolio/suggestions-styles");
+      const reponse = await lireDuServeur("/api/admin/yokofolio/suggestions-styles");
       const donnees = (await reponse.json()) as {
         ok: boolean;
         suggestions?: SuggestionStyle[];
@@ -334,7 +337,7 @@ export function AdminYokofolio() {
 
   const chargerSignalements = useCallback(async () => {
     try {
-      const reponse = await fetch("/api/admin/yokofolio/signalements");
+      const reponse = await lireDuServeur("/api/admin/yokofolio/signalements");
       const donnees = (await reponse.json()) as {
         ok: boolean;
         signalements?: Signalement[];

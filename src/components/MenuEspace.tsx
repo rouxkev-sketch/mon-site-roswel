@@ -799,7 +799,35 @@ export function MenuEspace({
       //  garde ce qu'on montrait : seule une lecture RÉUSSIE change
       //  ce qui est à l'écran.
     }
-    await lireLesNouvelles();
+    /*  ██ §2 (nº 693) — LA PORTE NE SE TIENT PLUS POUR LE COMPTEUR ██
+        ------------------------------------------------------------------
+        CE QUI FIGEAIT LE SITE, ET C'EST CETTE LIGNE QUI LE FAISAIT.
+        L'ouverture de « Mon espace » ATTEND `lireLeCompte` avant de
+        montrer quoi que ce soit, et le trait de chargement du site est
+        allumé pendant ce temps. `lireLeCompte` attendait ICI la lecture
+        des nouvelles. Une réponse qui ne vient pas, et c'est un menu qui
+        ne s'ouvre JAMAIS sous un trait qui ne s'éteint jamais — « un
+        temps infini à charger », les mots du propriétaire.
+        MESURÉ AU BANC, cette lecture rendue muette, avant correction :
+        menu ouvert « JAMAIS » (butoir de quinze secondes) pour LES TROIS
+        PROFILS — administrateur, professionnel, particulier. Les quatre
+        autres lectures muettes, elles, laissaient le menu s'ouvrir en
+        moins de deux cents millisecondes.
+        CE QUI CHANGE : la lecture PART, on ne l'attend plus. Le menu
+        s'ouvre avec ce qu'il a ; le compteur arrive quand il arrive.
+        ⚠️ LE COMPTEUR NE PERD RIEN : les nouvelles vivent dans un
+        MAGASIN EXTERNE (`useNotifications` → `useSyncExternalStore`).
+        La lecture prévient ses abonnés en arrivant, ouverte ou pas —
+        c'est exactement ce pour quoi ce magasin a été écrit à la
+        nº 672. Rien n'est perdu, seule l'ATTENTE disparaît.
+        ⚠️ ET LA nº 664 TIENT TOUJOURS : « le compteur est juste dès
+        l'arrivée » est l'affaire de `semerLesNouvelles`, qui part au
+        montage de la barre — pas de cette ligne-ci.
+        ⚠️ LE DÉLAI DE GARDE (§1) RESTE NÉCESSAIRE : sans lui, la lecture
+        traînerait pour toujours en arrière-plan, et le magasin garderait
+        sa marque « en cours » — le compteur ne se remplirait jamais de
+        la visite. Les deux corrections se tiennent. */
+    void lireLesNouvelles();
   }, [idUtilisateur, lireLesNouvelles]);
 
   /**

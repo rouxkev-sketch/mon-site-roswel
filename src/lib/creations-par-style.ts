@@ -1,6 +1,9 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+//  §1 (nº 693) — le délai de garde des lectures du navigateur,
+//  écrit une seule fois (voir lib/lecture-navigateur).
+import { lireDuServeur } from "@/lib/lecture-navigateur";
 
 /**
  * COMBIEN DE PORTFOLIOS PAR STYLE — le magasin du navigateur
@@ -100,7 +103,7 @@ export function demanderLesComptes(): void {
 function demander() {
   if (demandeLancee || typeof window === "undefined") return;
   demandeLancee = true;
-  fetch("/api/yokofolio/creations-par-style")
+  lireDuServeur("/api/yokofolio/creations-par-style")
     .then((reponse) => (reponse.ok ? reponse.json() : null))
     .then((donnees) => {
       const recus = donnees?.comptes;

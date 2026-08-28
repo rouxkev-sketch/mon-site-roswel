@@ -2,6 +2,9 @@
 
 import { useSyncExternalStore } from "react";
 import { utilisateurConnu } from "@/lib/use-utilisateur";
+//  §1 (nº 693) — le délai de garde des lectures du navigateur,
+//  écrit une seule fois (voir lib/lecture-navigateur).
+import { lireDuServeur } from "@/lib/lecture-navigateur";
 
 /**
  * CE QU'ON GARDE — photos enregistrées et tatoueurs suivis
@@ -282,7 +285,7 @@ export function useListeFavorisConnue(): boolean {
 export function chargerLesMiens() {
   if (chargementLance) return;
   chargementLance = true;
-  fetch("/api/yokofolio/favoris/miens")
+  lireDuServeur("/api/yokofolio/favoris/miens")
     .then((reponse) => reponse.json())
     .then((donnees: { photos?: string[]; tatoueurs?: string[] } | null) => {
       for (const id of donnees?.photos ?? []) definir("photo", id, true);
