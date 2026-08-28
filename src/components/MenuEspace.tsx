@@ -898,6 +898,7 @@ export function MenuEspace({
     nomAfficheDuCompte,
   ]);
 
+
   /**
    * OUVRIR — ET N'OUVRIR QU'UNE FOIS LE CONTENU PRÊT (passe nº 142)
    * ================================================================
@@ -915,6 +916,49 @@ export function MenuEspace({
    * silencieuse le remet à jour derrière.
    */
   const dejaLu = useRef(false);
+
+  /**
+   * ██ §3 (nº 700) — L'EN-TÊTE NE GARDE PLUS UN PORTFOLIO DISPARU ██
+   * ==================================================================
+   * LE CAS, TROUVÉ PAR L'AUDIT nº 691 (R9) : un portfolio est purgé —
+   * à l'échéance, ou parce que l'administration a abrégé — et la barre
+   * continue d'afficher SA photo et SON nom. La session les porte
+   * (nº 675 : ils vivent dans le cookie, c'est ce qui évite le
+   * clignotement) ; le rattrapage qui les remet d'aplomb est juste
+   * au-dessus, et il n'a le droit de parler qu'une fois le compte lu.
+   * OR LE COMPTE N'EST LU QU'À L'OUVERTURE DU MENU. Tant que la
+   * personne ne clique pas sur la silhouette, elle voit l'avatar d'un
+   * portfolio qui n'existe plus — sur toutes les pages, indéfiniment.
+   * ON LIT DONC UNE FOIS, AU CHARGEMENT, ET EN SILENCE.
+   *
+   * ⚠️ SEULEMENT QUAND IL Y A QUELQUE CHOSE À DÉMENTIR. Si la session
+   * ne porte NI photo NI nom de portfolio, il n'y a rien de périmé à
+   * corriger : un particulier ne paie pas cette lecture. C'est la
+   * condition de la ligne ci-dessous, et elle vaut mieux qu'un
+   * « toujours » — la nº 693 a montré ce que coûtent les lectures
+   * qu'on ajoute sans y penser.
+   * ⚠️ ELLE N'ATTEND RIEN ET NE MONTRE RIEN : pas de `await`, pas de
+   * trait de chargement, aucun état d'ouverture touché. C'est
+   * exactement la leçon de la nº 693 — une lecture qui échoue ou qui
+   * traîne ne doit figer aucun écran. `lireLeCompte` avale déjà ses
+   * propres erreurs et ne vide jamais la liste.
+   * ⚠️ ET ELLE NE PART QU'UNE FOIS : `dejaLu` est le même verrou que
+   * celui de l'ouverture du menu — la première ouverture qui suit
+   * n'aura donc plus rien à attendre non plus, et sera immédiate.
+   */
+  useEffect(() => {
+    if (dejaLu.current) return;
+    if (!photoDuCompte && !nomAfficheDuCompte) return;
+    dejaLu.current = true;
+    /*  ⚠️ ELLE PART APRÈS LA PEINTURE, pas pendant. Lancée droit dans
+        le corps de l'effet, cette lecture range de l'état pendant le
+        rendu — React le déconseille, et l'atelier le refuse. Le
+        report d'un tour de boucle dit d'ailleurs le vrai : cette
+        lecture n'a AUCUNE urgence, elle corrige un avatar. Rien ne
+        doit l'attendre, surtout pas le premier affichage. */
+    const minuteur = setTimeout(() => void lireLeCompte(), 0);
+    return () => clearTimeout(minuteur);
+  }, [photoDuCompte, nomAfficheDuCompte, lireLeCompte]);
 
   const basculerLeMenu = useCallback(() => {
     if (ouvert) {

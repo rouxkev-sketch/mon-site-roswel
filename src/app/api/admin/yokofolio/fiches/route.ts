@@ -691,6 +691,59 @@ export async function POST(requete: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
+    /*  ██ §1 (nº 700) — ON NE DÉCIDE PAS SUR UN PORTFOLIO QUI S'EN VA ██
+        ==============================================================
+        LE CAS, TROUVÉ PAR L'AUDIT nº 691 (R7) : une suppression est en
+        cours (celle du tatoueur, trente jours, ou celle de
+        l'administration, sept) et une validation arrive. « Valider »
+        écrit `publie`, `statut` et `hors_ligne` — JAMAIS les deux dates
+        de la suppression. On obtenait donc un portfolio « validé » qui
+        reste invisible (`estEnLigne` regarde `supprime_le`, nº 694),
+        une nouvelle « Portfolio en ligne » qui ment à la personne, et
+        une purge qui l'effacera quand même à l'échéance.
+
+        DEUX CONDUITES POSSIBLES, ET J'AI CHOISI LA PLUS SÛRE.
+        LEVER LA SUPPRESSION en même temps que l'on valide serait
+        commode — un geste au lieu de deux. C'est aussi le plus
+        dangereux : quand c'est LE TATOUEUR qui a demandé la
+        suppression, l'administration ressusciterait son portfolio sans
+        le savoir ni le vouloir, contre une décision qui n'est pas la
+        sienne. Une modération ne doit jamais défaire en silence le
+        choix de quelqu'un d'autre.
+        ON REFUSE DONC, ET ON DIT POURQUOI. Le geste manquant existe
+        déjà : « Annuler » dans « Suppressions en cours » (nº 696). Deux
+        gestes explicites valent mieux qu'un implicite.
+        ⚠️ LES TROIS DÉCISIONS SONT CONCERNÉES, pas seulement la
+        validation : mettre hors ligne ou demander des modifications sur
+        un portfolio qui part n'a pas davantage de sens, et poserait la
+        même nouvelle trompeuse. Un seul contrôle, avant la branche.
+        ⚠️ ET L'ORDRE INVERSE VA DE SOI : supprimer un portfolio qui
+        attend une validation reste permis — c'est même le cas courant
+        (une demande qu'on refuse), et la nº 696 lui pose déjà la bonne
+        nouvelle. Rien à garder de ce côté-là. */
+    const { data: etat } = await admin
+      .from("tatoueurs")
+      .select("nom, supprime_le, purge_le")
+      .eq("id", id)
+      .maybeSingle();
+    const enPartance = etat as {
+      nom?: string | null;
+      supprime_le?: string | null;
+      purge_le?: string | null;
+    } | null;
+    if (enPartance?.supprime_le || enPartance?.purge_le) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message:
+            `« ${enPartance.nom ?? "Ce portfolio"} » est en cours de suppression : ` +
+            "aucune décision ne peut s'appliquer dessus. Annule d'abord la " +
+            "suppression dans « Suppressions en cours », puis reviens ici.",
+        },
+        { status: 409 }
+      );
+    }
+
     let valeurs: Record<string, unknown>;
     if (action === "valider") {
       // Le brouillon éventuel devient LA fiche publique.

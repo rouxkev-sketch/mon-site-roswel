@@ -90,6 +90,30 @@ export async function generateMetadata({
   const { slug } = await params;
   const { tatoueur, demonstration, privee } = await ficheVisible(slug);
   if (!tatoueur) {
+  /*  ██ §2 (nº 700) — L'ONGLET DISAIT LE CONTRAIRE DE LA PAGE ██
+      ==============================================================
+      LE CAS, TROUVÉ PAR L'AUDIT nº 691 (R13) : une adresse dont le
+      portfolio EXISTE mais n'est pas publié affiche « Ce portfolio
+      n'est pas encore en ligne » — c'est vrai — pendant que l'onglet
+      du navigateur, lui, annonce « Tatoueur introuvable » — c'est
+      faux. Deux phrases sur le même écran, qui se contredisent : la
+      personne ne sait pas laquelle croire, et celle qui ment est
+      justement la plus visible dans une liste d'onglets.
+      LA CAUSE EST UNE DISTINCTION FAITE À UN SEUL ENDROIT : le corps
+      de la page sépare « absent » de « pas encore publié » (voir plus
+      bas) ; le titre, lui, ne connaissait qu'un seul cas.
+      ⚠️ UNE LECTURE DE PLUS, ET SEULEMENT SUR CE CHEMIN-LÀ : la
+      question n'est posée que si la fiche publique est introuvable —
+      jamais sur une page qui s'affiche normalement. Elle ne rend
+      qu'un oui ou un non (clé de service) : rien de la fiche ne sort.
+      ⚠️ LE `noindex` NE BOUGE PAS : publié ou non, une page qui ne
+      montre pas de portfolio n'a rien à faire dans un moteur. */
+  if (await ficheExistanteNonPubliee(slug)) {
+    return {
+      title: "Portfolio pas encore en ligne",
+      robots: { index: false, follow: false },
+    };
+  }
     return { title: "Tatoueur introuvable", robots: { index: false, follow: false } };
   }
 

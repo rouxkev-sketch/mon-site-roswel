@@ -2381,10 +2381,17 @@ export function FormulaireFiche() {
         "motifs_moderation",
         "note_moderation",
       ];
+      /*  §1 (nº 700) — `select("id")` N'EST PAS DÉCORATIF ICI : c'est
+          lui qui fait rendre à la base LES LIGNES RÉELLEMENT TOUCHÉES.
+          Sans lui, une modification qui ne trouve aucune ligne rend
+          « aucune erreur » — et le formulaire annonçait « envoyé »
+          pour une écriture qui n'avait rien écrit (audit nº 691, R8).
+          Voir le contrôle après la boucle. */
       let modification = await supabase
         .from("tatoueurs")
         .update(maj)
-        .eq("id", ficheChargee.id);
+        .eq("id", ficheChargee.id)
+        .select("id");
       for (let essai = 0; essai < tolerees.length && modification.error; essai++) {
         const message = modification.error.message.toLowerCase();
         if (ficheChargee.publie && message.includes("brouillon")) {
@@ -2401,7 +2408,8 @@ export function FormulaireFiche() {
         modification = await supabase
           .from("tatoueurs")
           .update(maj)
-          .eq("id", ficheChargee.id);
+          .eq("id", ficheChargee.id)
+          .select("id");
       }
       /**
        * ██ §1 (nº 387) — QUAND LA BASE REFUSE LA BIO, LE DIRE OÙ IL
@@ -2454,6 +2462,33 @@ export function FormulaireFiche() {
         return;
       }
       if (modification.error) throw new Error(modification.error.message);
+      /*  ██ §1 (nº 700) — UNE ÉCRITURE QUI NE TOUCHE RIEN N'EST PAS UN
+          SUCCÈS ██
+          ==============================================================
+          LE CAS, TROUVÉ PAR L'AUDIT nº 691 (R8) : le portfolio est
+          effacé pendant qu'on l'édite — par l'administration qui abrège
+          les sept jours, ou par la purge d'un compte. L'enregistrement
+          vise alors une ligne qui n'existe plus. La base ne s'en émeut
+          pas : « modifie les lignes dont l'identifiant vaut X » où il
+          n'y en a aucune, ce n'est pas une erreur, c'est zéro ligne.
+          `modification.error` restait nul, et le formulaire annonçait
+          « envoyé » — le pire des retours, parce qu'il fait fermer
+          l'onglet en confiance sur un travail perdu.
+          ⚠️ CE N'EST PLUS LE CAS COURANT DEPUIS LA nº 696 : la
+          suppression de l'administration est différée de sept jours, la
+          ligne reste. Restent la purge à l'échéance, la suppression
+          définitive immédiate, et la suppression du compte — trois
+          chemins bien réels.
+          ⚠️ ET LE MESSAGE NOMME LA CAUSE PLUTÔT QUE L'ERREUR : « ce
+          portfolio n'existe plus » se comprend sans rien connaître de
+          la base ; il dit aussi, implicitement, que réessayer ne sert
+          à rien. */
+      if (Array.isArray(modification.data) && modification.data.length === 0) {
+        throw new Error(
+          "Ce portfolio n'existe plus : il a été supprimé pendant que tu le " +
+            "modifiais. Rien n'a été enregistré."
+        );
+      }
 
       // LES MODES ET LES STUDIOS sont écrits DIRECTEMENT, sans passer
       // par le brouillon : une adresse n'est pas un contenu à
