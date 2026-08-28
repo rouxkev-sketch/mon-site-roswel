@@ -252,6 +252,22 @@ export const EMPREINTE_ZONE_COMPTE =
  * qui n'en font plus qu'une ne peuvent plus se contredire.
  */
 
+/**
+ * ██ §2 (nº 713) — LE RATTRAPAGE DU PORTFOLIO DISPARU N'A LIEU QU'UNE
+ * ██ FOIS PAR DOCUMENT ██
+ * ==================================================================
+ * ICI, ET PAS DANS UN `useRef` : la barre est rendue par CHAQUE page
+ * (nº 672), donc un verrou de composant meurt à chaque navigation
+ * douce et laisse le rattrapage repartir sur toutes les pages. Cette
+ * marque-ci vit avec le DOCUMENT — la durée exacte de ce qu'elle
+ * garde. La mesure, la raison et ce qu'on y perd sont écrits sur
+ * l'effet lui-même (§3 nº 700, §2 nº 713).
+ * ⚠️ ELLE NE CONNAÎT PAS LE COMPTE, et n'en a pas besoin : un
+ * changement de compte passe par une reconnexion, donc par un
+ * document neuf.
+ */
+let rattrapageFait = false;
+
 export function MenuEspace({
   idUtilisateur,
   nom,
@@ -853,9 +869,27 @@ export function MenuEspace({
         ⚠️ LE DÉLAI DE GARDE (§1) RESTE NÉCESSAIRE : sans lui, la lecture
         traînerait pour toujours en arrière-plan, et le magasin garderait
         sa marque « en cours » — le compteur ne se remplirait jamais de
-        la visite. Les deux corrections se tiennent. */
-    void lireLesNouvelles();
-  }, [idUtilisateur, lireLesNouvelles]);
+        la visite. Les deux corrections se tiennent.
+
+        ██ §1 (nº 713) — ET CETTE LECTURE-LÀ N'EST PLUS ICI ██
+        ------------------------------------------------------------------
+        CE QUI SE PASSAIT, MESURÉ AU BANC (session d'un professionnel,
+        page « Ma sélection ») : DEUX appels à la route des nouvelles
+        au chargement, à un demi-seconde d'écart — le relevé du
+        propriétaire à la sonde de vitesse (568 ms + 485 ms) — puis
+        deux ou trois de plus au fil des navigations douces.
+        LA CAUSE, ET ELLE TIENT AU LIEU DE CETTE LIGNE : `lireLeCompte`
+        est appelée par TROIS chemins, et un seul veut des nouvelles
+        fraîches. L'ouverture du menu, oui — c'est le geste qui demande
+        « qu'y a-t-il de neuf ». Le RATTRAPAGE DU PORTFOLIO DISPARU
+        (§3 nº 700), non : il corrige un avatar, les nouvelles ne le
+        regardent pas — et comme il repart au montage de chaque barre,
+        il redemandait les nouvelles à chaque page.
+        LA LIGNE DÉMÉNAGE DONC CHEZ CELUI QUI LA VEUT : `basculerLeMenu`
+        (plus bas), les deux branches d'ouverture. Le semis de la
+        nº 664, lui, ne bouge pas — il reste la seule lecture du
+        chargement, et il est gardé par le magasin (nº 672). */
+  }, [idUtilisateur]);
 
   /**
    * ██ §1 (nº 645) — LA PHOTO RANGÉE SUIT LA FICHE ACTIVE ██
@@ -977,10 +1011,40 @@ export function MenuEspace({
    * ⚠️ ET ELLE NE PART QU'UNE FOIS : `dejaLu` est le même verrou que
    * celui de l'ouverture du menu — la première ouverture qui suit
    * n'aura donc plus rien à attendre non plus, et sera immédiate.
+   *
+   * ██ §2 (nº 713) — « UNE FOIS » VOULAIT DIRE « UNE FOIS PAR BARRE » ██
+   * ------------------------------------------------------------------
+   * LE DÉFAUT, MESURÉ : `dejaLu` est un `useRef`, il meurt avec le
+   * composant — or LA BARRE EST RENDUE PAR CHAQUE PAGE, jamais par la
+   * mise en page (c'est le constat de la nº 672). Chaque navigation
+   * douce démonte la barre et en monte une neuve : le verrou repartait
+   * à faux, et ce rattrapage relisait le compte à CHAQUE PAGE, pour
+   * corriger un avatar déjà corrigé.
+   * LA GARDE PASSE DONC AU MODULE — la durée de vie de ce qu'elle
+   * garde, et c'est la leçon de la nº 672 appliquée à l'endroit :
+   * ce rattrapage vaut pour LE DOCUMENT, pas pour une barre. Un
+   * chargement neuf le rejoue, comme il faut.
+   * ⚠️ POURQUOI C'EST SANS RISQUE, ET C'EST VÉRIFIÉ : la correction
+   * qu'il apporte est PERSISTANTE — `rangerLIdentiteAffichee` écrit
+   * dans la session (`updateUser`, lib/avatar-du-compte). Une fois le
+   * portfolio disparu démenti, la session ne le porte plus : les
+   * barres suivantes naissent justes, et la condition ci-dessous
+   * (« seulement quand il y a quelque chose à démentir ») devient même
+   * fausse. Il n'y a donc rien à rejouer d'une page à l'autre.
+   * ⚠️ CE QU'ON PERD, ET C'EST DIT : un portfolio purgé PENDANT la
+   * visite, entre deux navigations du même document, n'est plus
+   * démenti avant le prochain chargement complet. Le cas est rare
+   * (une purge tombe à l'échéance ou par l'administration), et il se
+   * répare tout seul au rechargement suivant.
+   * ⚠️ `dejaLu` (l'ouverture du menu) RESTE LOCAL, lui, et ce n'est pas
+   * une inconséquence : il garde l'état local `fiches`, qui meurt bien
+   * avec la barre. Le confondre avec celui-ci rouvrirait le défaut de
+   * la nº 559 — une fenêtre qui s'ouvre à moitié vide.
    */
   useEffect(() => {
-    if (dejaLu.current) return;
+    if (rattrapageFait) return;
     if (!photoDuCompte && !nomAfficheDuCompte) return;
+    rattrapageFait = true;
     dejaLu.current = true;
     /*  ⚠️ ELLE PART APRÈS LA PEINTURE, pas pendant. Lancée droit dans
         le corps de l'effet, cette lecture range de l'état pendant le
@@ -1002,6 +1066,11 @@ export function MenuEspace({
       //  à jour derrière sans jamais se vider.
       setOuvert(true);
       void lireLeCompte();
+      //  §1 (nº 713) — LES NOUVELLES SE RELISENT À L'OUVERTURE, ET
+      //  SEULEMENT LÀ : c'est le geste qui demande « quoi de neuf ».
+      //  Elle n'est pas attendue (leçon nº 693 : rien ne doit figer
+      //  l'ouverture) et le magasin prévient ses abonnés en arrivant.
+      void lireLesNouvelles();
       return;
     }
     void (async () => {
@@ -1015,11 +1084,15 @@ export function MenuEspace({
           garde du client (nº 686) si la base se tait. Les ouvertures
           suivantes passent par `dejaLu` juste au-dessus : immédiates,
           mises à jour derrière sans jamais se vider. */
+      //  §1 (nº 713) — les nouvelles PARTENT ici aussi, sans être
+      //  attendues : la fenêtre s'ouvre sur les fiches, le compteur se
+      //  met à jour par le magasin quand la réponse arrive.
+      void lireLesNouvelles();
       await lireLeCompte();
       dejaLu.current = true;
       setOuvert(true);
     })();
-  }, [ouvert, lireLeCompte]);
+  }, [ouvert, lireLeCompte, lireLesNouvelles]);
 
   /** Choisir une fiche : on la retient pour la prochaine fois. */
   function choisirFiche(id: string) {
