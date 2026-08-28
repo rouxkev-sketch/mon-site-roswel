@@ -1,0 +1,88 @@
+#!/bin/sh
+#
+#  ██ SAUVEGARDER LA BASE, EN UNE COMMANDE (passe nº 689) ██
+#  ==================================================================
+#  CE QUE TU TAPES, DANS LE DOSSIER DU PROJET, SUR TON MAC :
+#
+#        sh outils/sauvegarde
+#
+#  Et rien d'autre. Le résultat arrive dans un dossier daté :
+#
+#        sauvegardes/2026-08-28/
+#
+#  ⚠️ SUR TON MAC, PAS DANS L'ATELIER. L'atelier où ce code est écrit
+#  n'a AUCUN accès au réseau : il ne peut pas joindre Supabase. Le
+#  script y répondrait « base injoignable » et il aurait raison. C'est
+#  chez toi qu'il tourne, avec ton `.env.local`.
+#
+#  ==================================================================
+#  CE QU'IL SAUVEGARDE, ET CE QU'IL NE SAUVEGARDE PAS
+#  ------------------------------------------------------------------
+#  IL PREND :
+#   · TOUTES les tables de la base, avec leurs LIGNES (pas seulement
+#     la forme des tables) — celles de YokoFolio comme celles des
+#     artisans, puisqu'elles vivent dans la même base ;
+#   · LES COMPTES (adresses, dates d'inscription) — ils ne sont pas
+#     dans les tables ordinaires, ils vivent à part, chez Supabase ;
+#   · LES PHOTOS du stockage, fichier par fichier.
+#
+#  IL NE PREND PAS, et il faut le savoir :
+#   · les MOTS DE PASSE (Supabase ne les rend jamais, même à
+#     l'administration — c'est voulu, et c'est une bonne chose) ;
+#   · la FORME des tables (le schéma). Elle est déjà sauvegardée, et
+#     mieux que par une copie : les fichiers `supabase/*.sql` du dépôt
+#     la reconstruisent, et ils sont dans chaque zip de livraison.
+#
+#  Le LISEZMOI d'à côté (outils/LISEZMOI-sauvegardes.md) explique
+#  comment REMETTRE une sauvegarde en place, pas à pas.
+#
+#  ==================================================================
+#  LECTURE SEULE, STRICTEMENT
+#  ------------------------------------------------------------------
+#  Ce script ne modifie RIEN dans la base. Il ne fait que lire et
+#  écrire des fichiers chez toi. Tu peux le lancer autant de fois que
+#  tu veux : chaque lancement fabrique son propre dossier, et ne
+#  touche pas aux précédents.
+#
+
+set -e
+
+#  On se place dans le dossier du projet, quel que soit l'endroit d'où
+#  la commande est tapée (`sh outils/sauvegarde` depuis la racine, ou
+#  `sh sauvegarde` depuis outils/).
+DOSSIER=$(cd "$(dirname "$0")/.." && pwd)
+cd "$DOSSIER"
+
+#  --------------------------------------------------------------
+#  NODE EST-IL LÀ, ET ASSEZ RÉCENT ?
+#  Le script se sert de `fetch`, qui existe dans Node depuis la
+#  version 18. Le site lui-même en demande davantage — mais plutôt que
+#  de deviner, on vérifie, et on dit LA commande à taper.
+#  --------------------------------------------------------------
+if ! command -v node > /dev/null 2>&1; then
+  echo ""
+  echo "  ✖  Node n'est pas installé sur cette machine."
+  echo ""
+  echo "     La commande à taper (une seule fois) :"
+  echo ""
+  echo "         brew install node"
+  echo ""
+  echo "     Si « brew » est inconnu lui aussi, installe d'abord Homebrew :"
+  echo "         /bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+  echo ""
+  exit 1
+fi
+
+VERSION=$(node -p "process.versions.node.split('.')[0]")
+if [ "$VERSION" -lt 18 ]; then
+  echo ""
+  echo "  ✖  Node $VERSION est trop ancien (il en faut au moins 18)."
+  echo ""
+  echo "     La commande à taper :"
+  echo ""
+  echo "         brew upgrade node"
+  echo ""
+  exit 1
+fi
+
+exec node outils/sauvegarde.mjs "$@"

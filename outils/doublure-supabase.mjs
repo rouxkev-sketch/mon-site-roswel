@@ -125,6 +125,23 @@ const SLUGS_UNIQUES = process.env.SLUGS_UNIQUES === "1";
 const MUETTE = process.env.MUETTE === "1";
 
 /**
+ * §2 (nº 689) — `FAUX_TOTAL=1` : LA BASE ANNONCE PLUS QU'ELLE NE REND.
+ * ------------------------------------------------------------------
+ * L'outil de sauvegarde COMPARE ce qu'il a copié au total que la base
+ * annonce dans son en-tête `content-range`. Cette vérification-là ne
+ * vaut que si on l'a vue MORDRE : un contrôle jamais déclenché est un
+ * contrôle qu'on croit bon. Ce cran fait annoncer à la doublure un
+ * total faux (9 999) tout en rendant ses lignes habituelles — la
+ * sauvegarde doit alors lever une alerte, table par table.
+ *
+ *      FAUX_TOTAL=1 npm run banc:doublure
+ *
+ * ⚠️ IL NE SERT QU'À ÇA. Éteint (le défaut), la doublure n'envoie
+ * aucun `content-range`, exactement comme avant cette passe.
+ */
+const FAUX_TOTAL = process.env.FAUX_TOTAL === "1";
+
+/**
  * ██ §1 (nº 688) — LA DOUBLURE SAIT DÉSORMAIS DIRE QUI EST CONNECTÉ ██
  * ------------------------------------------------------------------
  * CE QUI MANQUAIT, ET CE QUE ÇA EMPÊCHAIT DE MESURER : le banc forge un
@@ -210,6 +227,23 @@ const PHOTOS = TATOUEURS.flatMap((t) =>
     ordre: n, cree_le: "2026-01-01T00:00:00Z",
   }))
 );
+/*  §1 (nº 689) — LE DÉCOR DE LA SAUVEGARDE : deux comptes, un panier,
+    trois fichiers. Rien de ceci n'est lu par le site (voir la note du
+    §1 nº 689 plus bas) ; c'est le minimum pour que l'outil de
+    sauvegarde ait quelque chose à copier au banc. */
+const COMPTES_DOUBLURE = [
+  { id: "00000000-0000-4000-8000-000000000001", email: "essai@yokofolio.test",
+    created_at: "2026-01-01T00:00:00Z", last_sign_in_at: "2026-08-01T00:00:00Z" },
+  { id: "11111111-1111-4111-8111-111111111111", email: "camille@yokofolio.test",
+    created_at: "2026-06-01T00:00:00Z", last_sign_in_at: null },
+];
+const PANIER = "photos-tatoueurs";
+const FICHIERS_STOCKAGE = [
+  "00000000-0000-4000-8000-000000000001/demo-0-0-realisme.svg",
+  "00000000-0000-4000-8000-000000000001/demo-0-0-blackwork.svg",
+  "11111111-1111-4111-8111-111111111111/fiche-a-refuser-realisme.svg",
+];
+
 const TABLES = {
   tatoueurs: TATOUEURS,
   photos_tatoueur: PHOTOS,
@@ -281,6 +315,95 @@ function repondre(req, res, u, brut) {
       "access-control-max-age": "600",
     });
     res.end();
+    return;
+  }
+
+  /*  ██ §1 (nº 689) — CE QU'IL FAUT POUR ÉPROUVER LA SAUVEGARDE ██
+      ------------------------------------------------------------------
+      L'outil `outils/sauvegarde` demande à la base TROIS choses que la
+      doublure ne savait pas dire. Elles sont ajoutées ici, au plus
+      simple, pour qu'un banc puisse le faire tourner en entier :
+       · LA LISTE DES TABLES. PostgREST publie à sa racine un document
+         qui décrit ce qu'il expose ; on en rend la seule partie que
+         l'outil lit — `paths`, une entrée par table.
+       · LES COMPTES (`/auth/v1/admin/users`) — deux comptes de
+         démonstration, assez pour vérifier que le fichier se remplit.
+       · LE STOCKAGE : un panier, trois fichiers, et leur contenu.
+      ⚠️ AUCUN DE CES TROIS N'EST LU PAR LE SITE. Ils n'existent que
+      pour le banc de la sauvegarde ; rien de ce qui tournait avant ne
+      les rencontre. */
+  if (u.pathname === "/rest/v1/" || u.pathname === "/rest/v1") {
+    const paths = {};
+    for (const nom of Object.keys(TABLES)) paths[`/${nom}`] = {};
+    res.writeHead(200, {
+      "content-type": "application/openapi+json",
+      "access-control-allow-origin": "*",
+    });
+    res.end(JSON.stringify({ swagger: "2.0", paths }));
+    return;
+  }
+  if (u.pathname === "/auth/v1/admin/users") {
+    console.log(new Date().toISOString().slice(11, 19), "GET auth/admin/users → 2");
+    res.writeHead(200, {
+      "content-type": "application/json",
+      "access-control-allow-origin": "*",
+    });
+    res.end(JSON.stringify({ users: COMPTES_DOUBLURE, aud: "authenticated" }));
+    return;
+  }
+  if (u.pathname === "/storage/v1/bucket") {
+    res.writeHead(200, {
+      "content-type": "application/json",
+      "access-control-allow-origin": "*",
+    });
+    res.end(JSON.stringify([{ id: PANIER, name: PANIER, public: true }]));
+    return;
+  }
+  if (u.pathname.startsWith(`/storage/v1/object/list/`)) {
+    let prefixe = "";
+    try { prefixe = JSON.parse(brut || "{}").prefix ?? ""; } catch { prefixe = ""; }
+    //  L'API rend UN NIVEAU à la fois : les fichiers du préfixe, et
+    //  les dossiers en dessous — ces derniers SANS identifiant.
+    const dedans = FICHIERS_STOCKAGE
+      .filter((c) => (prefixe ? c.startsWith(prefixe + "/") : true))
+      .map((c) => (prefixe ? c.slice(prefixe.length + 1) : c));
+    const vus = new Set();
+    const corps = [];
+    for (const reste of dedans) {
+      const [tete, ...suite] = reste.split("/");
+      if (vus.has(tete)) continue;
+      vus.add(tete);
+      corps.push(
+        suite.length === 0
+          ? { name: tete, id: `objet-${tete}`, metadata: { size: 32 } }
+          : { name: tete, id: null }
+      );
+    }
+    console.log(
+      new Date().toISOString().slice(11, 19),
+      "POST storage/list", prefixe || "(racine)", "→", corps.length
+    );
+    res.writeHead(200, {
+      "content-type": "application/json",
+      "access-control-allow-origin": "*",
+    });
+    res.end(JSON.stringify(corps));
+    return;
+  }
+  if (u.pathname.startsWith(`/storage/v1/object/${PANIER}/`)) {
+    const chemin = decodeURIComponent(
+      u.pathname.slice(`/storage/v1/object/${PANIER}/`.length)
+    );
+    if (!FICHIERS_STOCKAGE.includes(chemin)) {
+      res.writeHead(404, { "content-type": "application/json" });
+      res.end(JSON.stringify({ message: "Object not found" }));
+      return;
+    }
+    res.writeHead(200, {
+      "content-type": "image/svg+xml",
+      "access-control-allow-origin": "*",
+    });
+    res.end(`<svg xmlns="http://www.w3.org/2000/svg"><!-- ${chemin} --></svg>`);
     return;
   }
 
@@ -407,6 +530,11 @@ function envoyer(res, corps) {
   res.writeHead(200, {
     "content-type": "application/json",
     "access-control-allow-origin": "*",
+    //  §2 (nº 689) — voir la note de `FAUX_TOTAL`. Éteint, cet en-tête
+    //  n'existe pas et la doublure répond comme avant.
+    ...(FAUX_TOTAL && Array.isArray(corps)
+      ? { "content-range": `0-${Math.max(corps.length - 1, 0)}/9999` }
+      : {}),
   });
   res.end(JSON.stringify(corps));
 }

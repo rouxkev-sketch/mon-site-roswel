@@ -51,3 +51,10 @@ journal-*.txt
 # le journal de bord (nº 272-§2) — écrit par /api/dev/journal-de-bord,
 # à la racine : un relevé d'environnement, jamais un fichier du produit
 journal-de-bord*.ndjson
+
+# les sauvegardes de la base (nº 689) — écrites par `sh outils/sauvegarde`
+# sur le Mac du propriétaire. Elles contiennent des DONNÉES PERSONNELLES
+# (adresses, messages, comptes) : jamais dans l'historique, jamais dans
+# un zip de livraison. Elles restent chez lui, et il les recopie sur un
+# disque externe (voir outils/LISEZMOI-sauvegardes.md).
+/sauvegardes/
