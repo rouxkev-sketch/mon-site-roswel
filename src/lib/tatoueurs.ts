@@ -1212,7 +1212,25 @@ function pointDeReference(
  */
 export async function lireVilleParSlug(
   slug: string
-): Promise<ResultatTatoueurs["ville"]> {
+): Promise<{ ville: ResultatTatoueurs["ville"]; panne: boolean }> {
+  /**
+   * ██ §1 (nº 724) — « JE N'AI RIEN TROUVÉ » N'EST PAS « JE N'AI PAS PU
+   * LIRE » ██
+   * ------------------------------------------------------------------
+   * CE QUE CETTE FONCTION RENDAIT, ET LE DÉFAUT QUI EN DÉCOULAIT : un
+   * `null`, dans les DEUX cas — la ville n'existe pas, ou la base ne
+   * répond pas. L'appelant ne pouvait pas les distinguer, et la page
+   * « style + ville » concluait « page introuvable » pour une panne
+   * d'une heure. Google lit cela comme une adresse qui n'existe pas et
+   * retire la page de son index : un coût de référencement durable
+   * pour un incident passager, sur les pages FAITES pour lui.
+   * ⚠️ ET IL Y AVAIT DEUX PORTES, PAS UNE. Le `catch` en aplatissait
+   * une (une exception réseau) ; l'autre passait inaperçue —
+   * `maybeSingle()` ne LÈVE PAS sur une erreur de base, il la range
+   * dans `error`, que personne ne lisait. Une base qui répond « je
+   * refuse » donnait donc `data: null`, exactement comme une ville
+   * absente. On lit désormais les deux.
+   */
   try {
     const supabase = creerClientSupabaseAnonyme();
     /*  §2 (nº 694) — CELLE-CI GARDE `publie` TOUT SEUL, ET C'EST UN
@@ -1232,13 +1250,16 @@ export async function lireVilleParSlug(
         page, elle, vient de `listerTatoueurs`, qui applique la règle
         entière. Cette lecture-ci ne rend qu'un nom de ville et deux
         coordonnées. */
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("tatoueurs")
       .select("ville_nom, latitude, longitude")
       .eq("ville_slug", slug)
       .eq("publie", true)
       .limit(1)
       .maybeSingle();
+    //  §1 (nº 724) — LA SECONDE PORTE : une erreur rendue plutôt que
+    //  levée. Sans cette ligne, elle se confondait avec « rien trouvé ».
+    if (error) throw new Error(error.message);
     const ligne = data as {
       ville_nom?: string;
       latitude?: number;
@@ -1246,24 +1267,36 @@ export async function lireVilleParSlug(
     } | null;
     if (ligne && Number.isFinite(ligne.latitude) && Number.isFinite(ligne.longitude)) {
       return {
-        nom: nomVilleCourt(ligne.ville_nom ?? ""),
-        latitude: ligne.latitude as number,
-        longitude: ligne.longitude as number,
+        ville: {
+          nom: nomVilleCourt(ligne.ville_nom ?? ""),
+          latitude: ligne.latitude as number,
+          longitude: ligne.longitude as number,
+        },
+        panne: false,
       };
     }
+    //  Lecture réussie, aucune ligne : cette ville n'existe pas. C'est
+    //  un vrai « introuvable », et il doit le rester.
+    return { ville: null, panne: false };
   } catch {
-    // Base injoignable : on retombe sur les fiches de démonstration.
-  }
-  //  §4 (nº 278) — jamais en production (voir catalogue-demonstration).
-  if (!catalogueDemoAutorise()) return null;
-  const demo = TATOUEURS_DEMO.find((t) => t.ville_slug === slug);
-  return demo
-    ? {
-        nom: nomVilleCourt(demo.ville_nom),
-        latitude: demo.latitude,
-        longitude: demo.longitude,
+    //  Base injoignable ou refus : on ne sait RIEN de cette ville — et
+    //  c'est très différent de savoir qu'elle n'existe pas.
+    //  §4 (nº 278) — les fiches de démonstration, jamais en production.
+    if (catalogueDemoAutorise()) {
+      const demo = TATOUEURS_DEMO.find((t) => t.ville_slug === slug);
+      if (demo) {
+        return {
+          ville: {
+            nom: nomVilleCourt(demo.ville_nom),
+            latitude: demo.latitude,
+            longitude: demo.longitude,
+          },
+          panne: false,
+        };
       }
-    : null;
+    }
+    return { ville: null, panne: true };
+  }
 }
 
 /**

@@ -7,6 +7,9 @@ import {
   stylesAlphabetiques,
 } from "@/config/tatouage";
 import { AucunResultat } from "@/components/AucunResultat";
+//  §1 (nº 724) — le message d'indisponibilité du site, écrit une seule
+//  fois (nº 278) : la version dégradée de cette page le reprend tel quel.
+import { MESSAGE_INDISPONIBLE } from "@/lib/catalogue-demonstration";
 import { chargerStyleVille as charger } from "@/lib/style-ville";
 import { adresseDuSite } from "@/lib/site";
 //  ⚠️ `villeAffichee`, PAS `nomVilleCourt` (passe nº 114) : les
@@ -109,12 +112,22 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { style: styleSlug, ville: villeSlug } = await params;
   const page = pageDemandee((await searchParams).page);
-  const { style, ville, tatoueurs, demonstration, total } = await charger(
-    styleSlug,
-    villeSlug,
-    page
-  );
-  if (!style || !ville) return { title: "Page introuvable" };
+  const { style, ville, tatoueurs, demonstration, total, indisponible } =
+    await charger(styleSlug, villeSlug, page);
+  /*  §1 (nº 724) — LA PANNE A SON PROPRE TITRE, et surtout son propre
+      `robots`. Dire « Page introuvable » à un moteur pendant un
+      incident, c'est l'inviter à désindexer une page qui existe. On
+      annonce donc la page pour ce qu'elle est, et l'on demande de ne
+      PAS l'indexer LE TEMPS DE LA PANNE — `follow` reste, les liens
+      continuent d'être suivis. C'est le même couple que la page vide
+      juste en dessous : aucun mécanisme neuf. */
+  if (!style || (!ville && !indisponible)) return { title: "Page introuvable" };
+  if (!ville) {
+    return {
+      title: `Tatoueurs ${libelleStyle(style).toLowerCase()}`,
+      robots: { index: false, follow: true },
+    };
+  }
 
   const titre = `Tatoueurs ${libelleStyle(style).toLowerCase()} à ${villeAffichee(ville.nom)}`;
   const base = `${adresseDuSite()}/tatouage/${style}/${villeSlug}`;
@@ -158,12 +171,68 @@ export default async function PageStyleVille({
 }) {
   const { style: styleSlug, ville: villeSlug } = await params;
   const page = pageDemandee((await searchParams).page);
-  const { style, ville, tatoueurs, total } = await charger(
+  const { style, ville, tatoueurs, total, indisponible } = await charger(
     styleSlug,
     villeSlug,
     page
   );
-  if (!style || !ville) notFound();
+  /**
+   * ██ §1 (nº 724) — UNE PANNE N'EST PAS UNE PAGE QUI N'EXISTE PAS ██
+   * ------------------------------------------------------------------
+   * LE DÉFAUT, MESURÉ : base éteinte, cette page rendait le contenu
+   * « Page introuvable ». Ces pages-ci sont FAITES pour les moteurs de
+   * recherche ; leur dire « cette adresse n'existe pas » pendant un
+   * incident, c'est leur demander de la retirer de l'index — un coût
+   * durable pour une panne passagère.
+   * LA RÈGLE, DÉSORMAIS, ET ELLE TIENT EN DEUX LIGNES :
+   *  · le STYLE est inconnu, ou la ville n'existe PAS (lecture réussie,
+   *    aucune ligne) → « page introuvable », et c'est légitime ;
+   *  · la base N'A PAS RÉPONDU → on ne conclut rien. La page se rend
+   *    quand même — son titre, sa structure, son moteur — avec le
+   *    message d'indisponibilité que le site emploie partout ailleurs
+   *    (nº 278), et `noindex` le temps de l'incident (voir
+   *    `generateMetadata`).
+   * ⚠️ POURQUOI PAS UN 503, ET CE N'EST PAS UN OUBLI : dans cette
+   * version de Next, une PAGE ne peut pas choisir son code de réponse.
+   * Vérifié dans la documentation embarquée et dans l'API :
+   * `next/navigation` n'expose que `notFound` (404), `forbidden` (403),
+   * `unauthorized` (401) et les redirections — rien pour un 503. Le
+   * seul canal serait le proxy, qui ne sait pas ce que la base a
+   * répondu. On fait donc ce qui protège le mieux le référencement avec
+   * ce qui existe : ne PAS dire « ça n'existe pas », et retirer la page
+   * de l'index le temps de la panne — un `noindex` d'une heure se
+   * rattrape, une désindexation pour 404 se paie des semaines.
+   */
+  if (!style || (!ville && !indisponible)) notFound();
+
+  /*  §1 (nº 724) — LA VERSION DÉGRADÉE. La base n'a pas répondu : on
+      rend la page — sa barre, son titre, sa structure — et l'on dit
+      honnêtement ce qui se passe, avec le message que le site emploie
+      partout ailleurs (`MESSAGE_INDISPONIBLE`, nº 278). Aucune donnée
+      n'est inventée : ni nom de ville (on n'a que le morceau
+      d'adresse), ni compte, ni carte.
+      ⚠️ LE CADRE EST CELUI DE LA PAGE, RECOPIÉ NULLE PART : les mêmes
+      classes de `<main>` que la branche normale, juste en dessous —
+      largeur, marges et rythme partagés (piège nº 378).
+      ⚠️ LE MOTEUR N'EMPORTE QUE LE STYLE : sans lecture de ville, il
+      n'y a ni coordonnées ni nom à lui passer, et l'on n'en devine pas. */
+  if (!ville) {
+    return (
+      <>
+        <EnTeteTatouage criteresInitiaux={{ style }} />
+        <main className="flex-1 mx-auto w-full max-w-[1760px] px-4 sm:px-6 pt-8 pb-16">
+          <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1 mb-6">
+            <h1 className="text-[clamp(1.35rem,2.6vw,1.85rem)] font-bold leading-tight">
+              Tatoueurs {libelleStyle(style).toLowerCase()}
+            </h1>
+            <p className="text-[15px] text-sombre-texte-doux">
+              {MESSAGE_INDISPONIBLE}
+            </p>
+          </div>
+        </main>
+      </>
+    );
+  }
 
   const nomVille = villeAffichee(ville.nom);
   const libelle = libelleStyle(style);
