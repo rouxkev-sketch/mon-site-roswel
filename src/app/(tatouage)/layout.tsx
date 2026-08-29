@@ -36,6 +36,7 @@ import { ChargeurFavoris } from "@/components/ChargeurFavoris";
 import { FournisseurSession } from "@/components/FournisseurSession";
 import { FournisseurStyles } from "@/components/FournisseurStyles";
 import { JournalDeBord } from "@/components/JournalDeBord";
+import { GardeAvatars } from "@/components/GardeAvatars";
 import { GardeSaisie } from "@/components/GardeSaisie";
 import { RetourGaranti } from "@/components/RetourGaranti";
 import { scriptAvantPeinture } from "@/lib/script-avant-peinture";
@@ -430,6 +431,11 @@ export default async function MiseEnPageTatouage({
           barre fixe, pied de page — ouvre d'abord la fenêtre
           « Modifications non enregistrées ». Inerte partout ailleurs. */}
       <GardeSaisie />
+      {/* LA GARDE DES AVATARS (passe nº 739) : un avatar dont le
+          fichier n'arrive pas ENTIER n'est jamais laissé à l'écran en
+          moitié de photo — une reprise qui contourne les caches, sinon
+          le repli « sans photo ». N'affiche rien. */}
+      <GardeAvatars />
       <FournisseurSession utilisateur={utilisateur} pretServeur={false}>
         {/* LES CŒURS DÉJÀ POSÉS (passe nº 137) — une seule demande par
             page, qui allume d'un coup toute la mosaïque. Il n'affiche
