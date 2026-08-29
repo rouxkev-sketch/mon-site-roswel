@@ -2184,6 +2184,47 @@ export function ContenuFiche({
             //  ⚠️ ET ELLE SE FAIT APRÈS LE RENDU (nº 238-§1) : c'est le
             //  seul sélecteur qui change aussi la photo du haut, donc
             //  le repère lui-même. Voir `remonteeDemandee`.
+            /*  ██ §1 (nº 742) — AU DOIGT, PLUS DE REMONTÉE : ON NAVIGUE ██
+                ----------------------------------------------------------
+                LE DÉFAUT DIT PAR LE PROPRIÉTAIRE : toucher une photo au
+                fond d'une galerie fait « clignoter et se réinitialiser »
+                la page avant que la photo ne s'ouvre.
+                LA CAUSE, MESURÉE AU BANC (pile d'appels à l'appui) :
+                depuis la nº 455, `surSerieChoisie` NAVIGUE au doigt vers
+                la vue photo. Cette remontée-ci, écrite pour le web
+                (nº 236/238/239 — la vignette change la photo du haut,
+                donc la page se recale dessus), partait quand même : une
+                ANIMATION de trois cents millisecondes sur la page qu'on
+                est en train de QUITTER. Et pendant qu'elle glissait, la
+                vue photo retirait la colonne de lecture — le document
+                tombait de 5 579 à 933 px, l'animation était rabotée à
+                chaque palier, et l'on voyait la page descendre par
+                à-coups. Relevé : 763 → 699 → 89 px en six cents
+                millisecondes.
+                LE REMÈDE : au doigt, on ne demande plus rien. Il n'y a
+                pas de repère à rejoindre sur une page qu'on quitte ; la
+                vue photo s'ouvre en haut par la pose de FicheTatoueur
+                (§1 nº 742), à l'adresse commise.
+                ⚠️ LA CONDITION EST CELLE DE LA NAVIGATION, AU MOT PRÈS
+                — `!apercu && mobile`, la jumelle exacte de la branche de
+                `surSerieChoisie` (nº 455). Elle ne peut donc pas s'en
+                écarter : on ne saute la remontée que là où la vignette
+                EST PARTIE. Les deux autres cas la gardent, entière :
+                 · le WEB — la vignette n'y navigue pas, elle change la
+                   série sous la même adresse et la photo du haut avec :
+                   même repère, même durée, pas un pixel de changé ;
+                 · l'APERÇU au doigt (« Mon compte → Mon portfolio ») —
+                   il ne navigue pas non plus (la nº 455 l'exclut
+                   nommément), et la remontée y sert comme avant. Sans
+                   cette moitié de condition, je l'aurais tuée là-bas.
+                ⚠️ L'APPAREIL SE LIT AU GESTE (`data-appareil`), jamais à
+                une largeur — piège nº 60. */
+            if (
+              !apercu &&
+              document.documentElement.dataset.appareil === "mobile"
+            ) {
+              return;
+            }
             setRemonteeDemandee((tour) => tour + 1);
           }}
         />

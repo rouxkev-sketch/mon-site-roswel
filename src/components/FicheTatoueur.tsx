@@ -83,6 +83,10 @@ import type { Tatoueur } from "@/lib/tatoueurs";
 //  §1 (nº 718) — la variante d'avatar à servir : la règle de
 //  nommage et le repli vivent dans lib/avatar-variantes.
 import { AVATAR_PETIT, sourceAvatar } from "@/lib/avatar-variantes";
+//  §1 (nº 742) — l'abonnement aux changements d'adresse, l'écriture
+//  unique du site : la vue photo attend que l'adresse soit commise
+//  avant de poser la page en haut (voir `surSerieChoisie`).
+import { souscrireAdresse } from "@/lib/adresse-courante";
 /*  §1 (nº 602) — DEUX AUTRES IMPORTS SONT PARTIS AVEC LA FENÊTRE DE
     CARROUSEL : `positionSousLeGel` (la position de la page dessous, que
     la fenêtre gelait) et `annoncerRepriseDuSite` (sa fermeture passait
@@ -1778,10 +1782,16 @@ export function FicheTatoueur({
                   l'adresse que les CARTES écrivent (nº 371 — style,
                   rendu, nature, photo ; `URLSearchParams`, mêmes
                   paramètres, même page servie par le jumeau dynamique).
-                  UNE entrée d'historique (332-§1) ; l'arrivée se fait
-                  en haut (nº 446, DefilementEnHaut) ; le RETOUR rend le
+                  UNE entrée d'historique (332-§1) ; le RETOUR rend le
                   profil à sa position (mémoire de navigation) — comme
                   depuis une carte, parce que c'est le même chemin.
+                  ⚠️ CORRIGÉ À LA nº 742 : cette note disait « l'arrivée
+                  se fait en haut (nº 446, DefilementEnHaut) ». C'était
+                  FAUX, et mesuré comme tel — ce composant ne joue qu'au
+                  changement de CHEMIN, et ce geste n'en change pas. La
+                  page arrivait donc où le raccourcissement du document
+                  la laissait. C'est la pose du §1 (nº 742), plus bas,
+                  qui tient désormais cette promesse.
                   LA PHOTO TOUCHÉE (nº 314-§3d) voyage désormais par son
                   IDENTIFIANT : le rang touché est traduit dans la série
                   affichée (`serieMontree`, l'écriture unique nº 247) —
@@ -1810,11 +1820,89 @@ export function FicheTatoueur({
                 if (serie.nature) suite.set("nature", serie.nature);
                 if (photoTouchee?.cle) suite.set("photo", photoTouchee.cle);
                 const requete = suite.toString();
-                router.push(
-                  requete
-                    ? `/tatoueur/${tatoueur.slug}?${requete}`
-                    : `/tatoueur/${tatoueur.slug}`
-                );
+                /*  ██ §1 (nº 742) — LA PAGE EST POSÉE EN HAUT ICI, AU
+                    GESTE, ET VOICI POURQUOI ██
+                    ------------------------------------------------------
+                    LE DÉFAUT, DIT PAR LE PROPRIÉTAIRE : toucher une photo
+                    au fond d'une galerie fait « clignoter et se
+                    réinitialiser » la page AVANT que la photo ne s'ouvre.
+                    LA CAUSE, MESURÉE (nº 742, base ralentie) : cette
+                    navigation ne change PAS de chemin — seuls les
+                    paramètres bougent. Elle fait donc apparaître la VUE
+                    PHOTO, dont la feuille de style retire la colonne de
+                    lecture de l'affichage (nº 453) : le document PERD
+                    presque toute sa hauteur, en deux temps, à mesure que
+                    le contenu arrive. Relevé depuis 763 px de
+                    défilement : le document passe de 5 579 à 1 543 px
+                    (+131 ms) puis à 933 (+599 ms), et le navigateur
+                    RAMÈNE la page à chaque fois — 763 → 699 → 89. Ce
+                    glissement de six cents millisecondes EST le
+                    clignotement.
+                    ⚠️ CE N'EST PAS `DefilementEnHaut` : il ne joue qu'au
+                    changement de CHEMIN, et il n'a jamais été appelé sur
+                    ce geste. La note de la nº 455 qui promettait « l'
+                    arrivée se fait en haut (nº 446) » était donc fausse
+                    pour lui — elle est remise d'aplomb juste au-dessus.
+                    LE REMÈDE, ET IL TIENT EN UNE POSE : on met la page en
+                    haut AU GESTE, tant que le document est encore long.
+                    Zéro reste une position valable quel que soit ce qui
+                    suit : le raccourcissement ne trouve plus rien à
+                    ramener, et il n'y a plus qu'un seul mouvement — le
+                    même que sur tout autre départ du site (nº 446).
+                    ⚠️ ET LA POSE ATTEND QUE L'ADRESSE SOIT COMMISE —
+                    c'est la moitié la plus importante, et elle est
+                    MESURÉE. Posée à l'instant du geste, elle marchait :
+                    plus aucun glissement. Mais la mémoire de navigation
+                    écrit la position AU FIL DU DÉFILEMENT, pour
+                    l'adresse affichée : ce zéro était donc enregistré
+                    pour LA GALERIE qu'on quitte, et le retour la rendait
+                    en haut au lieu de 763 px (mesuré). On attend donc
+                    l'écriture d'adresse (`souscrireAdresse`, l'écriture
+                    unique du site) : le zéro tombe alors sur la VUE
+                    PHOTO — qui s'ouvre en haut, c'est sa règle — et la
+                    galerie garde la sienne. L'attente est courte devant
+                    le raccourcissement : l'adresse se commet vers 90 ms,
+                    le document ne perd sa hauteur qu'à 131 ms.
+                    ⚠️ NI GARDE DE POSITION NI DÉCLARATION D'ARRIVÉE EN
+                    HAUT, et ce n'est pas un oubli : les deux ont été
+                    essayées et MESURÉES inutiles une fois la remontée
+                    animée bornée (§1 nº 742 de ContenuFiche). La garde
+                    (nº 661) défend une pose contre les recalages du
+                    navigateur : la boîte noire n'en relève aucun ici, et
+                    zéro n'a de toute façon rien à défendre — aucun
+                    raccourcissement ne peut le déplacer. La déclaration
+                    (nº 429/446) empêche une restitution : personne n'en
+                    tente. Les garder aurait été du code mort.
+                    ⚠️ RIEN NE FUIT : l'abonnement se retire dès qu'il a
+                    servi, et un filet de deux secondes le retire même si
+                    l'adresse n'est jamais commise (navigation
+                    abandonnée) — on ne pose alors rien du tout, la page
+                    reste où elle est.
+                    ⚠️ AU DOIGT SEULEMENT : cette branche entière l'est
+                    déjà (`data-appareil`, lu au geste — piège nº 60). Le
+                    web ouvre sa galerie sans changer d'adresse, et ne
+                    passe jamais ici. */
+                const destination = requete
+                  ? `/tatoueur/${tatoueur.slug}?${requete}`
+                  : `/tatoueur/${tatoueur.slug}`;
+                let retirerLEcoute = () => {};
+                let posee = false;
+                const poserEnHautALArrivee = () => {
+                  if (posee) return;
+                  const ici =
+                    window.location.pathname + window.location.search;
+                  if (ici !== destination) return;
+                  posee = true;
+                  retirerLEcoute();
+                  window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+                };
+                const desabonner = souscrireAdresse(poserEnHautALArrivee);
+                const filet = window.setTimeout(() => retirerLEcoute(), 2000);
+                retirerLEcoute = () => {
+                  desabonner();
+                  window.clearTimeout(filet);
+                };
+                router.push(destination);
                 return;
               }
               setStyleAffiche(serie.style);
