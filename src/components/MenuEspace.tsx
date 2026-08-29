@@ -154,6 +154,10 @@ import {
   laSurfaceVaNaviguer,
   useEtapeQuiSeReferme,
 } from "@/lib/etape-refermable";
+//  §1 (nº 741) — l'abonnement aux changements d'adresse, l'écriture
+//  unique du site (elle enveloppe pushState/replaceState et écoute le
+//  retour) : c'est lui qui dit à la fenêtre que l'arrivée a eu lieu.
+import { souscrireAdresse } from "@/lib/adresse-courante";
 
 /**
  * LE MENU « MON ESPACE » — le compte du tatoueur, depuis la barre
@@ -661,6 +665,9 @@ export function MenuEspace({
   /** Ce que l'écran montre : la clé de l'entrée partie, ou rien. */
   const [entreeQuiPart, setEntreeQuiPart] = useState<string | null>(null);
   const filetDeFermeture = useRef(0);
+  /** §1 (nº 741) — L'ADRESSE COMPLÈTE au moment du départ : c'est en la
+      voyant changer qu'on sait que l'arrivée a eu lieu. */
+  const adresseDeDepart = useRef<string | null>(null);
   useEffect(
     () => () => {
       window.clearTimeout(filetDeFermeture.current);
@@ -729,6 +736,10 @@ export function MenuEspace({
         setOuvert(false);
         return true;
       }
+      //  §1 (nº 741) — l'adresse d'où l'on part, retenue AVANT tout :
+      //  c'est en la voyant changer que l'effet ci-dessous saura que
+      //  l'arrivée a eu lieu, et refermera la fenêtre.
+      adresseDeDepart.current = ici;
       setEntreeQuiPart(cle);
       window.clearTimeout(filetDeFermeture.current);
       filetDeFermeture.current = window.setTimeout(() => {
@@ -740,6 +751,73 @@ export function MenuEspace({
     },
     [auDoigt]
   );
+
+  /**
+   * ██ §1 (nº 741) — LA FENÊTRE SE FERME À L'ARRIVÉE, ET C'EST ÉCRIT ██
+   * ==================================================================
+   * LE DÉFAUT, DIT PAR LE PROPRIÉTAIRE (téléphone) : le premier onglet
+   * touché ouvre sa page normalement ; on rouvre « Mon compte », on
+   * touche un autre onglet — l'entrée s'allume, et PLUS RIEN pendant de
+   * longues secondes avant que la page ne paraisse.
+   *
+   * LA CAUSE, NOMMÉE ET PROUVÉE AU BANC (préalable nº 740) : jusqu'ici,
+   * AUCUN code ne fermait cette fenêtre à l'arrivée. Ce qui la fermait
+   * était un EFFET DE BORD — l'en-tête est monté par CHAQUE PAGE (et
+   * non par le layout), si bien que changer de page DÉMONTE ce
+   * composant, et son état « ouvert » meurt avec lui. La preuve tient
+   * en une marque posée sur l'élément du bouton : après un changement
+   * de page l'élément est NEUF (démonté, remonté) ; d'un onglet à
+   * l'autre du portfolio — même page, seule la fin de l'adresse change
+   * — c'est LE MÊME élément, rien n'a été démonté, et la fenêtre reste.
+   * Les trois entrées du portfolio (« Mon portfolio », « Modification »,
+   * « Ajouter un portfolio ») partagent la même page : d'où le figement,
+   * réservé à leurs enchaînements, jusqu'au filet de six secondes.
+   *
+   * LE REMÈDE : on ne s'en remet plus à un démontage, on ÉCOUTE
+   * L'ADRESSE — complète, la fin comprise (`souscrireAdresse`,
+   * l'écriture unique du site : elle enveloppe `pushState` et
+   * `replaceState`, et couvre le retour). Dès qu'elle diffère de celle
+   * du départ, l'arrivée a eu lieu : la fenêtre se ferme, le verrou se
+   * relève, le filet est annulé.
+   *
+   * ⚠️ LE CLIGNOTEMENT DE LA nº 677 N'EST PAS RÉOUVERT, ET C'EST MESURÉ,
+   * pas espéré. Au banc, sur une navigation qui CHANGE de page : le tap
+   * à 0 ms, l'adresse à +76 ms, la fermeture d'aujourd'hui (le
+   * démontage) à +83 ms — sept millisecondes plus tard. Fermer sur
+   * l'adresse, c'est donc fermer au même instant qu'aujourd'hui, à
+   * l'imperceptible près ; l'écran montre alors la page cible (son
+   * squelette d'abord, son contenu à +1,6 s ici), jamais la page
+   * quittée. La règle de la nº 677 — « la fenêtre tient jusqu'à
+   * l'arrivée » — est enfin tenue par du code plutôt que par un hasard
+   * d'architecture.
+   * ⚠️ LE FILET DE SIX SECONDES RESTE, en dernier recours seulement :
+   * si une navigation n'aboutit jamais (réseau coupé, page refusée),
+   * la fenêtre ne doit pas rester prisonnière. Il n'est plus le chemin
+   * normal — il ne l'était que par accident.
+   * ⚠️ AU WEB, RIEN NE CHANGE : `partirVers` y ferme la fenêtre à
+   * l'instant du clic (§2 nº 680) et ne pose jamais `entreeQuiPart` —
+   * cet effet n'y tourne donc pas. L'appareil se lit dans `auDoigt`,
+   * jamais dans une largeur (piège nº 60).
+   */
+  useEffect(() => {
+    if (!entreeQuiPart) return;
+    const depart = adresseDeDepart.current;
+    if (depart === null) return;
+    const fermerSiLArriveeAEuLieu = () => {
+      if (`${window.location.pathname}${window.location.search}` === depart) {
+        return;
+      }
+      window.clearTimeout(filetDeFermeture.current);
+      departVerrouille.current = false;
+      adresseDeDepart.current = null;
+      setEntreeQuiPart(null);
+      setOuvert(false);
+    };
+    //  L'adresse a pu changer AVANT que cet effet ne tourne : on
+    //  regarde une première fois, puis on écoute.
+    fermerSiLArriveeAEuLieu();
+    return souscrireAdresse(fermerSiLArriveeAEuLieu);
+  }, [entreeQuiPart]);
 
   /** La classe d'une entrée : en surbrillance si c'est elle qui part. */
   const classeEntree = (cle: string, reglage: { entree: string; entreePartie: string }) =>
