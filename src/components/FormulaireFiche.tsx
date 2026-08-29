@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+//  §1 (nº 733) — la lecture GELÉE des paramètres de cette page (le
+//  motif nº 360/732 ; la cause complète est racontée dans ce module).
+import { useParametresDeLaPageFiche } from "@/lib/parametres-page-fiche";
 //  §1 (nº 506) — la pile de fenêtres superposées enveloppe les DEUX
 //  vues : montée dans l'aperçu seul, elle se démontait elle-même en
 //  changeant l'adresse (voir sa note, plus bas).
@@ -1155,7 +1158,20 @@ export function FormulaireFiche() {
       espace » de la barre qui navigue entre « Modification » et « Ma
       fiche » — et un changement de vue REMONTE la page (même adresse,
       la remontée automatique de navigation ne joue pas ici). */
-  const parametres = useSearchParams();
+  /**
+   * §1 (nº 733) — LES PARAMÈTRES DE LA PAGE, GELÉS SOUS UNE FENÊTRE.
+   * ------------------------------------------------------------------
+   * La fenêtre superposée (pile nº 506) pousse `/tatoueur/<slug>`, une
+   * adresse SANS `?fiche=` ni `?vue=apercu` : lue BRUTE, elle faisait
+   * croire à un changement de fiche (l'effet de chargement rechargeait
+   * tout) et retombait la vue sur « modification ». La lecture GELÉE —
+   * l'écriture unique de `lib/parametres-page-fiche`, où la cause
+   * complète est racontée — rend, hors de cette page, les paramètres
+   * INCHANGÉS : même référence, donc ni rechargement ni bascule.
+   * `EspaceFiche` (la clé React du formulaire) lit LA MÊME : les deux
+   * lectures ne peuvent pas diverger.
+   */
+  const parametres = useParametresDeLaPageFiche();
   /** §1 (nº 506) — COMBIEN DE FENÊTRES SONT EMPILÉES PAR-DESSUS. La
       pile la remonte ; la vue s'en sert pour rester « aperçu » tant
       qu'une fiche est ouverte au-dessus (voir la note de `vue`). */

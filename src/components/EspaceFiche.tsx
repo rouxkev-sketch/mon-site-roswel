@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+//  §1 (nº 733) — la lecture GELÉE des paramètres de cette page : sous
+//  une fenêtre superposée (l'adresse est /tatoueur/…), la clé ne doit
+//  pas bouger — voir la cause complète dans lib/parametres-page-fiche.
+import { useParametresDeLaPageFiche } from "@/lib/parametres-page-fiche";
 import { FormulaireFiche } from "@/components/FormulaireFiche";
 
 /**
@@ -31,9 +34,18 @@ import { FormulaireFiche } from "@/components/FormulaireFiche";
  * cliquer « Ajouter une fiche » ne navigue nulle part — le menu envoie
  * alors l'événement `yokofolio-fiche-neuve`, et la génération
  * s'incrémente. Même effet, même remontage.
+ *
+ * ⚠️ §1 (nº 733) — LA CLÉ NE SUIT QUE LES ADRESSES DE LA PAGE. La
+ * fenêtre superposée (pile nº 506) pousse `/tatoueur/<slug>`, une
+ * adresse SANS `?fiche=` : lue brute, elle faisait retomber la clé
+ * sur « derniere » et DÉMONTAIT le formulaire — la fenêtre naissante
+ * avec, et le remplaçant montrait la modification (le défaut relevé
+ * par le propriétaire). La lecture gelée règle la question à la
+ * source ; « Ajouter une fiche » et le choix d'une autre fiche, qui
+ * naviguent SUR la page, remontent comme avant.
  */
 export function EspaceFiche() {
-  const parametres = useSearchParams();
+  const parametres = useParametresDeLaPageFiche();
   /** `nouvelle`, un identifiant, ou « la dernière retenue ». */
   const ficheDemandee = parametres.get("fiche") ?? "derniere";
   const [generation, setGeneration] = useState(0);
