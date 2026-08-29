@@ -1,10 +1,14 @@
 "use client";
 
+import { useEffect, useLayoutEffect } from "react";
 import { LogoYokofolio } from "@/components/LogoYokofolio";
 import { CADRE_PHOTO_PORTFOLIO, LARGEUR_SITE } from "@/config/tatouage";
 import { CLASSES_GRILLE_CARTES } from "@/components/GrilleTatoueurs";
 import { RYTHME_TITRE_RESULTATS } from "@/components/LigneResultats";
 import { RESERVE_RANGEE } from "@/lib/reserve-barre";
+//  §2 (nº 722) — la remontée armée par le geste se joue dès le montage
+//  du squelette de segment : voir le grand bloc de lib/liste-neuve.
+import { leSqueletteDeLaListeEstLa } from "@/lib/liste-neuve";
 
 /**
  * ██ §2 (nº 706, REFAIT nº 707) — LE SQUELETTE COLLE À LA VRAIE PAGE ██
@@ -67,9 +71,12 @@ import { RESERVE_RANGEE } from "@/lib/reserve-barre";
  *    directement — les barres grises du titre étaient des fantômes.
  * La fiche et l'éditeur n'ont pas de squelette (nº 706 : ils arrivent
  * tout de suite), rien n'y change.
- * ⚠️ AUCUN ÉTAT, AUCUNE LECTURE, AUCUN EFFET : des `<div>` et des
- * classes. Un retour DOUX ne passe pas par ici (réserve du routeur,
- * bancs nº 706/707) ; une navigation AVANT arrive en haut.
+ * ⚠️ AUCUN ÉTAT, AUCUNE LECTURE — des `<div>` et des classes, et UN
+ * SEUL effet depuis la nº 722 : au montage d'un squelette de segment,
+ * la remontée armée par le geste se joue (`leSqueletteDeLaListeEstLa`,
+ * lib/liste-neuve — le squelette démarre en haut, §2 nº 722). Un
+ * retour DOUX ne passe pas par ici (réserve du routeur, bancs
+ * nº 706/707) ; une navigation AVANT arrive en haut.
  *
  * ⚠️ LE DÉFAUT DU RETOUR PAR CHARGEMENT COMPLET (« témoin B », ouvert
  * de la nº 706 à la nº 710) EST FERMÉ À LA nº 711, là où la nº 707
@@ -214,9 +221,9 @@ function BarreSquelette({ centre }: { centre: "recherche" | "selection" }) {
     classes de la vraie carte (`pt-2 px-0.5 mobile:px-2`, rangée
     `gap-2.5`, rond caché au doigt par `mobile:` — le critère
     d'appareil de la vraie, jamais une largeur, piège nº 60). */
-function CarteGrise() {
+function CarteGrise({ classe = "" }: { classe?: string }) {
   return (
-    <li className="min-w-0 list-none">
+    <li className={`min-w-0 list-none${classe ? ` ${classe}` : ""}`}>
       <div className={`${CADRE_PHOTO_PORTFOLIO} w-full bg-sombre-eleve`} />
       <div className="pt-2 px-0.5 mobile:px-2">
         <div className="h-4 sm:h-[18px] w-2/3 bg-sombre-eleve" />
@@ -272,15 +279,27 @@ export function CorpsSquelette({
             grille commence après le seul espacement du rythme. */
         <div className="pt-6 sm:pt-8 mobile:pt-3" />
       )}
-      {/*  §2 (nº 710) — HUIT CASES, DE NOUVEAU : la nº 709 en avait
-           posé quatre, sur consigne d'alors ; le propriétaire a
-           RE-TRANCHÉ à la nº 710 — huit, l'écran couvert aux deux
-           appareils. (Les cases ne SURVIVENT jamais à l'arrivée : le
-           film du banc nº 709 le prouve, image par image — le
-           remplacement démonte le squelette entier.) */}
+      {/*  §1 (nº 722) — DES RANGÉES ENTIÈRES, À CHAQUE LARGEUR. La
+           nº 710 avait tranché HUIT cases ; le propriétaire RE-TRANCHE :
+           le squelette suit la règle de colonnes de la vraie grille et
+           REMPLIT l'écran — huit cases sur cinq colonnes, c'était une
+           rangée et demie, et du vide dessous.
+           LE COMPTE : DOUZE cases partout (6 rangées à 2 colonnes, 4 à
+           3, 3 à 4), QUINZE à cinq colonnes (3 rangées) — jamais de
+           rangée incomplète, et jamais six colonnes (plafond nº 473).
+           ⚠️ LA RÈGLE DE COLONNES N'EST PAS RECOPIÉE : la grille
+           ci-dessous EST `CLASSES_GRILLE_CARTES` (l'écriture unique),
+           et les trois cases de complément s'allument par LE MÊME
+           palier nommé qu'elle (`grille5:`, 1600 px — globals.css).
+           Les paliers 768/1280/1600 sont des largeurs À L'INTÉRIEUR du
+           monde web ; l'appareil, lui, reste dit par `data-appareil`
+           (piège nº 60) — les deux mécanismes ne se mélangent pas.
+           (Les cases ne SURVIVENT jamais à l'arrivée : le film du banc
+           nº 709 le prouve, image par image — le remplacement démonte
+           le squelette entier.) */}
       <ul className={CLASSES_GRILLE_CARTES}>
-        {Array.from({ length: 8 }, (_, rang) => (
-          <CarteGrise key={rang} />
+        {Array.from({ length: 15 }, (_, rang) => (
+          <CarteGrise key={rang} classe={rang >= 12 ? "hidden grille5:block" : ""} />
         ))}
       </ul>
     </div>
@@ -292,7 +311,22 @@ export function CorpsSquelette({
  * (largeur, marges, `pb-16`) autour du corps. C'est elle que les
  * `loading.tsx` montrent au montage d'un segment.
  */
+/** useLayoutEffect côté navigateur, useEffect côté serveur (silencieux) —
+    le motif de DefilementEnHaut, pour la même raison : jouer ENTRE la
+    pose du DOM et la peinture. */
+const useEffetAvantPeinture =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
 function MosaiqueGrise({ avecTitre }: { avecTitre: boolean }) {
+  /*  §2 (nº 722) — AVANT LA PEINTURE du squelette, la remontée armée
+      par le geste (carte de style, recherche) se joue : le squelette
+      démarre en haut, comme la page qu'il annonce. Un RETOUR n'arme
+      rien et ne passe pas par ici (réserve du routeur) : il ne peut
+      rien consommer. C'est le SEUL effet de ce fichier — l'en-tête de
+      la barre squelette reste, lui, sans état ni lecture. */
+  useEffetAvantPeinture(() => {
+    leSqueletteDeLaListeEstLa();
+  }, []);
   return (
     <main
       aria-busy="true"

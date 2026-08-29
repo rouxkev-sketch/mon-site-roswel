@@ -92,6 +92,9 @@ import { annulerLaRestitutionEnCours } from "@/lib/restitution-position";
  * l'adresse » — tient exactement comme avant.
  */
 let remonteeEnAttente = false;
+/** L'adresse pour laquelle la remontée attend — c'est elle qui permet
+    au squelette (nº 722) de savoir si l'adresse est DÉJÀ commise. */
+let cibleEnAttente = "";
 
 export function ouvrirLaListeEnHaut(
   /** L'adresse de la liste QUI VA S'AFFICHER, quand elle n'est pas
@@ -126,6 +129,53 @@ export function ouvrirLaListeEnHaut(
   }
   //  LA LISTE NEUVE EST AILLEURS : on n'y touche pas maintenant.
   remonteeEnAttente = true;
+  cibleEnAttente = cible;
+}
+
+/**
+ * ██ §2 (nº 722) — « LE SQUELETTE DE LA LISTE EST LÀ » ██
+ * ==================================================================
+ * LE DÉFAUT MESURÉ (banc de la passe) : accueil défilé → clic sur une
+ * carte de style → le squelette de `/recherche` s'affiche… À L'ANCIENNE
+ * HAUTEUR (26 relevés à y=136 sur ~2 s), et la remontée ne joue qu'à
+ * l'arrivée des cartes. La règle nº 334 — « la remontée est jouée à
+ * l'arrivée, pour ne pas se voir sur la page qu'on quitte » — date
+ * d'AVANT les squelettes (nº 706) : entre le clic et l'arrivée, c'était
+ * l'ANCIENNE page qui restait à l'écran, et la faire remonter sous les
+ * yeux était le défaut. Depuis les squelettes, il existe un TROISIÈME
+ * instant : le MONTAGE du squelette de segment — l'ancienne page est
+ * DÉMONTÉE, la nouvelle (grise) est là, et l'adresse est commise. À cet
+ * instant, remonter ne montre remonter PERSONNE : le squelette démarre
+ * en haut, comme la page qu'il annonce.
+ *
+ * ⚠️ SEULEMENT SI L'ADRESSE COMMISE EST LA CIBLE ARMÉE. Le routeur rend
+ * parfois AVANT de commettre (mesure nº 336) : remonter alors ferait
+ * écrire « 0 » par la mémoire de navigation SOUS L'ANCIENNE ADRESSE
+ * (son écriture part deux images après le défilement) — c'est-à-dire
+ * effacer la place que `ouvrirLaListeEnHaut` préserve exprès
+ * (nº 332-§2). Adresse pas encore là : on ne touche à rien, l'arrivée
+ * (`laListeServieEstArrivee`) jouera comme avant. Aucun cas ne perd la
+ * remontée, un seul la gagne plus tôt.
+ * ⚠️ ET TOUJOURS RIEN SANS GESTE : un RETOUR n'arme rien, et le
+ * squelette d'un retour (il n'y en a pas : la réserve du routeur sert
+ * les retours, nº 706) ne trouverait de toute façon rien à consommer.
+ * ⚠️ LA SUPERPOSITION MÊME SEGMENT (IndexTatoueurs, `enChantier`) NE
+ * L'APPELLE PAS, et c'est voulu : pendant `enTransition`, l'adresse est
+ * ENCORE l'ancienne (le commentaire de `enChantier` le mesure) — la
+ * garde ci-dessus refuserait, et l'arrivée reste le bon moment (nº 334).
+ * Au doigt, le gel repart déjà de zéro (geste 3) : le squelette y est
+ * en haut sans nous.
+ */
+export function leSqueletteDeLaListeEstLa(): void {
+  if (typeof window === "undefined") return;
+  if (!remonteeEnAttente) return;
+  const ici = window.location.pathname + window.location.search;
+  if (ici !== cibleEnAttente) return;
+  remonteeEnAttente = false;
+  defilerSansGeste(
+    { top: 0, left: 0 },
+    "liste neuve, dès son squelette (nº 722)"
+  );
 }
 
 /**

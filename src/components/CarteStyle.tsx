@@ -215,8 +215,10 @@ export function CarteStyle({
         data-lien-carte=""
         draggable={false}
         onCopy={garderLeTexteALaCopie}
-        //  §1 (nº 625) — LA REMONTÉE, ARMÉE PAR LE GESTE et jouée par
-        //  la liste qui arrive. L'adresse de destination lui est
+        //  §1 (nº 625) — LA REMONTÉE, ARMÉE PAR LE GESTE et jouée dès
+        //  le SQUELETTE de la liste (§2 nº 722 — avant, c'était à
+        //  l'arrivée des cartes : tout le temps du squelette restait à
+        //  l'ancienne hauteur). L'adresse de destination lui est
         //  donnée : sans elle, la position de l'accueil qu'on quitte
         //  serait effacée (nº 333). Voir la note longue plus haut.
         onClick={() => ouvrirLaListeEnHaut(adresse)}
