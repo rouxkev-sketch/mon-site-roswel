@@ -6,6 +6,9 @@ import { sansRemplissageAuto } from "@/lib/champs-sans-remplissage";
 import { ligneCarte } from "@/lib/adresse";
 import { useAppareilMobile } from "@/lib/appareil";
 import { armerLaRemontee } from "@/lib/remontee-champ";
+//  §1 (nº 718) — la variante d'avatar à servir : la règle de
+//  nommage et le repli vivent dans lib/avatar-variantes.
+import { AVATAR_PETIT, sourceAvatar } from "@/lib/avatar-variantes";
 
 /**
  * LA RECHERCHE INTERNE — « ton salon est-il déjà sur yokofolio ? »
@@ -263,7 +266,8 @@ export function RechercheFicheInscrite({
               /* eslint-disable-next-line @next/next/no-img-element --
                  photo déposée par la fiche, servie telle quelle. */
               <img
-                src={choisie.photo_profil}
+                //  §1 (nº 718) — la petite variante (rond de liste).
+                src={sourceAvatar(choisie.photo_profil, AVATAR_PETIT)}
                 alt=""
                 className="h-full w-full object-cover"
               />
@@ -515,7 +519,8 @@ export function RechercheFicheInscrite({
                         /* eslint-disable-next-line @next/next/no-img-element --
                            photo déposée par la fiche, servie telle quelle. */
                         <img
-                          src={fiche.photo_profil}
+                          //  §1 (nº 718) — la petite variante.
+                          src={sourceAvatar(fiche.photo_profil, AVATAR_PETIT)}
                           alt=""
                           className="h-full w-full object-cover"
                         />

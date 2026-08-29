@@ -5,6 +5,9 @@ import { RechercheFicheInscrite } from "@/components/RechercheFicheInscrite";
 import { IconeCroix } from "@/components/Icones";
 import { ligneCarte } from "@/lib/adresse";
 import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
+//  §1 (nº 718) — la variante d'avatar à servir : la règle de
+//  nommage et le repli vivent dans lib/avatar-variantes.
+import { AVATAR_PETIT, sourceAvatar } from "@/lib/avatar-variantes";
 
 /**
  * BLOC 12 — UNE AUTRE ADRESSE, QUI EST UNE AUTRE FICHE
@@ -306,7 +309,8 @@ export function BlocAutreAdresse({
                   /* eslint-disable-next-line @next/next/no-img-element --
                      photo déposée par la fiche, servie telle quelle. */
                   <img
-                    src={fiche.photo}
+                    //  §1 (nº 718) — la petite variante (rond de 40).
+                    src={sourceAvatar(fiche.photo, AVATAR_PETIT)}
                     alt=""
                     width={40}
                     height={40}

@@ -80,6 +80,9 @@ import {
   SEPARATEUR_GALERIE,
 } from "@/lib/photos-tatoueur";
 import type { Tatoueur } from "@/lib/tatoueurs";
+//  §1 (nº 718) — la variante d'avatar à servir : la règle de
+//  nommage et le repli vivent dans lib/avatar-variantes.
+import { AVATAR_PETIT, sourceAvatar } from "@/lib/avatar-variantes";
 /*  §1 (nº 602) — DEUX AUTRES IMPORTS SONT PARTIS AVEC LA FENÊTRE DE
     CARROUSEL : `positionSousLeGel` (la position de la page dessous, que
     la fenêtre gelait) et `annoncerRepriseDuSite` (sa fermeture passait
@@ -1449,7 +1452,8 @@ export function FicheTatoueur({
                     /* eslint-disable-next-line @next/next/no-img-element --
                        photo déposée par le tatoueur, servie telle quelle. */
                     <img
-                      src={tatoueur.photo_profil}
+                      //  §1 (nº 718) — la petite variante (rond de 40).
+                      src={sourceAvatar(tatoueur.photo_profil, AVATAR_PETIT)}
                       alt=""
                       decoding="async"
                       width={40}

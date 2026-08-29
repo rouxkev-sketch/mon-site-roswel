@@ -140,6 +140,9 @@ export {
 /*  Réexporter ne fait pas entrer le nom dans CE fichier : ce composant
     lit lui-même l'onglet dans l'adresse, il lui faut donc l'import. */
 import { PARAM_ONGLET } from "@/lib/lien-interne";
+//  §1 (nº 718) — la variante d'avatar à servir : la règle de
+//  nommage et le repli vivent dans lib/avatar-variantes.
+import { AVATAR_MOYEN, sourceAvatar } from "@/lib/avatar-variantes";
 
 /**
  * ██ §1 ET §2 (nº 490) — UNE LIGNE DE CAPSULES : ALIGNÉE, ET REPLIÉE
@@ -1113,7 +1116,11 @@ export function ContenuFiche({
         /* eslint-disable-next-line @next/next/no-img-element --
            photo déposée par le tatoueur, servie telle quelle. */
         <img
-          src={tatoueur.photo_profil}
+          //  §1 (nº 718) — la variante MOYENNE, et c'est le seul écran
+          //  qui la demande : ce rond monte à 92 px au web (audit
+          //  nº 717), là où tous les autres tiennent en 40. 320 le
+          //  couvre au double de la densité.
+          src={sourceAvatar(tatoueur.photo_profil, AVATAR_MOYEN)}
           alt={`Photo de ${tatoueur.nom}`}
           decoding="async"
           width={PORTRAIT_ROND}

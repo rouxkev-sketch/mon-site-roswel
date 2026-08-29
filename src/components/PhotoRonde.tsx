@@ -1,6 +1,9 @@
 "use client";
 
 import { ICONE_ADRESSE, PORTRAIT_ROND } from "@/config/tatouage";
+//  §1 (nº 718) — la variante d'avatar à servir : la règle de
+//  nommage et le repli vivent dans lib/avatar-variantes.
+import { AVATAR_PETIT, sourceAvatar } from "@/lib/avatar-variantes";
 
 /**
  * ██ §4 (nº 703) — LE ROND, SORTI DU BLOC DES LIEUX ██
@@ -107,7 +110,13 @@ export function PhotoRonde({
         /* eslint-disable-next-line @next/next/no-img-element --
            photo déposée par le tatoueur, servie telle quelle. */
         <img
-          src={source}
+          /*  §1 (nº 718) — LA PETITE VARIANTE, et elle suffit à TOUS les
+              appelants de ce rond : le plus grand d'entre eux est la
+              tête du menu (80 px) — 160 la couvre au double de la
+              densité. La barre (28-32 px) et les listes (52) sont très
+              en dessous. Une photo d'avant la nº 718 revient telle
+              quelle (repli de `sourceAvatar`). */
+          src={sourceAvatar(source, AVATAR_PETIT)}
           alt=""
           decoding="async"
           width={PORTRAIT_ROND}

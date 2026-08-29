@@ -9,6 +9,9 @@ import {
 } from "@/components/RechercheFicheInscrite";
 import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
 import { PORTRAIT_ROND } from "@/config/tatouage";
+//  §1 (nº 718) — la variante d'avatar à servir : la règle de
+//  nommage et le repli vivent dans lib/avatar-variantes.
+import { AVATAR_PETIT, sourceAvatar } from "@/lib/avatar-variantes";
 
 /**
  * L'ÉQUIPE, VUE DEPUIS LE FORMULAIRE DU SALON
@@ -383,7 +386,8 @@ export function BlocEquipeSalon({
                     /* eslint-disable-next-line @next/next/no-img-element --
                        photo déposée par la fiche, servie telle quelle. */
                     <img
-                      src={liaison.photo}
+                      //  §1 (nº 718) — la petite variante (rond de liste).
+                      src={sourceAvatar(liaison.photo, AVATAR_PETIT)}
                       alt=""
                       width={PORTRAIT_ROND}
                       height={PORTRAIT_ROND}

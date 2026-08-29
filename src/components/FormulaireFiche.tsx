@@ -114,6 +114,15 @@ import {
 } from "@/lib/fiches-compte";
 //  §1 (nº 660) — la trace permanente : ce défilement se signe.
 import { noterNavigation } from "@/lib/boite-noire";
+//  §1 (nº 718) — les deux variantes de l'avatar : leur nommage vit dans
+//  lib/avatar-variantes, leur fabrication dans la réduction du site.
+import {
+  AVATAR_MOYEN,
+  AVATAR_PETIT,
+  nomDeLaVariante,
+  nomDuFichierAvatar,
+} from "@/lib/avatar-variantes";
+import { compresserPhoto } from "@/lib/photo";
 
 /**
  * L'ESPACE TATOUEUR — le formulaire de fiche, et son menu
@@ -1899,13 +1908,53 @@ export function FormulaireFiche() {
       // après un échec plus loin ne la renverra pas.
       let adresseProfil = apercuProfil;
       if (photoProfil) {
-        const cheminProfil = `${utilisateur.id}/profil-${Date.now()}.jpg`;
-        const { error } = await supabase.storage
-          .from(BUCKET_PHOTOS)
-          .upload(cheminProfil, photoProfil, { upsert: true });
-        if (error) {
+        /*  ██ §1 (nº 718) — TROIS FICHIERS, PLUS UN SEUL ██
+            L'audit nº 717 a montré l'avatar servi en 800 × 800 pour un
+            rond de 40 px, dans sept écrans. On dépose donc, à côté de
+            l'original QUI RESTE ENTIER (consigne), deux variantes : la
+            petite pour les listes, la moyenne pour la fiche. C'est le
+            geste des photos de portfolio depuis la nº 366 — pleine
+            résolution ET miniature —, appliqué au rond.
+            ⚠️ LA RÉDUCTION EST CELLE DU SITE (`compresserPhoto`), pas
+            une seconde écriture du même calcul : même toile, même
+            qualité, mêmes garde-fous (piège nº 378).
+            ⚠️ LES TROIS PARTENT EN MÊME TEMPS, comme les photos de
+            galerie : trois requêtes en vol, pas trois attentes l'une
+            derrière l'autre.
+            ⚠️ ET LE NOM PORTE LA MARQUE (`avatar-…`, lib/avatar-
+            variantes) : c'est LUI qui dira aux écrans que les variantes
+            existent. Il n'est posé qu'ICI, après que les trois envois
+            ont réussi — une photo nommée `avatar-` a donc toujours ses
+            deux variantes. */
+        const nomOrigine = nomDuFichierAvatar(Date.now());
+        const cheminProfil = `${utilisateur.id}/${nomOrigine}`;
+        const [petite, moyenne] = await Promise.all([
+          compresserPhoto(photoProfil, AVATAR_PETIT),
+          compresserPhoto(photoProfil, AVATAR_MOYEN),
+        ]);
+        const envois = await Promise.all([
+          supabase.storage
+            .from(BUCKET_PHOTOS)
+            .upload(cheminProfil, photoProfil, { upsert: true }),
+          supabase.storage
+            .from(BUCKET_PHOTOS)
+            .upload(
+              `${utilisateur.id}/${nomDeLaVariante(nomOrigine, AVATAR_PETIT)}`,
+              petite,
+              { upsert: true, contentType: "image/jpeg" }
+            ),
+          supabase.storage
+            .from(BUCKET_PHOTOS)
+            .upload(
+              `${utilisateur.id}/${nomDeLaVariante(nomOrigine, AVATAR_MOYEN)}`,
+              moyenne,
+              { upsert: true, contentType: "image/jpeg" }
+            ),
+        ]);
+        const rate = envois.find((envoi) => envoi.error);
+        if (rate?.error) {
           throw new Error(
-            `Ta photo de profil n'a pas pu être envoyée (${error.message}).`
+            `Ta photo de profil n'a pas pu être envoyée (${rate.error.message}).`
           );
         }
         adresseProfil = supabase.storage

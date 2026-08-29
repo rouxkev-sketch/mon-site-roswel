@@ -46,6 +46,9 @@ import type { Tatoueur } from "@/lib/tatoueurs";
 //  fiche. Elle n'écrit RIEN sans `?sonde-bascule=1`.
 import { noter, sauvegarderMaintenant } from "@/lib/journal-bascule";
 import { mecanismeCoupe } from "@/lib/variantes-essai";
+//  §1 (nº 718) — la variante d'avatar à servir : la règle de
+//  nommage et le repli vivent dans lib/avatar-variantes.
+import { AVATAR_PETIT, sourceAvatar } from "@/lib/avatar-variantes";
 
 /**
  * LA CARTE D'UN TATOUEUR
@@ -1002,7 +1005,12 @@ function CarteTatoueurNue({
             /* eslint-disable-next-line @next/next/no-img-element --
                photo déposée par le tatoueur, servie telle quelle. */
             <img
-              src={tatoueur.photo_profil}
+              //  §1 (nº 718) — la PETITE variante : ce rond fait 40 px,
+              //  il n'a jamais eu besoin des 800 de l'original (audit
+              //  nº 717 : vingt fois trop grand, vingt-quatre fois par
+              //  grille). Une photo d'avant la nº 718 est rendue telle
+              //  quelle par `sourceAvatar` — aucun avatar ne disparaît.
+              src={sourceAvatar(tatoueur.photo_profil, AVATAR_PETIT)}
               alt=""
               loading="lazy"
               decoding="async"
