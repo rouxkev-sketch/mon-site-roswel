@@ -902,13 +902,25 @@ export function ContenuFiche({
     //  1 · LE DÉFILEMENT PROPRE AU CONTENU, s'il existe. On le cherche
     //  en remontant : ni la page ni la fenêtre n'ont à se nommer, et
     //  les deux enveloppes marchent sans rien changer chez elles.
+    //  ⚠️ §2 (nº 737) — LE PORT DE DÉFILEMENT SUFFIT, le débordement
+    //  n'est plus exigé. Le critère ajoutait `scrollHeight >
+    //  clientHeight` : depuis un onglet COURT (rien ne déborde), la
+    //  colonne du web n'était pas retenue et l'on tombait au chemin 2
+    //  — LA PAGE défilait (mesuré : recalée à 32 px de haut à chaque
+    //  bascule dès qu'on avait défilé davantage). Le défaut restait
+    //  invisible tant que la colonne COLLAIT (nº 737-§1 : la cible du
+    //  chemin 2 tombait toujours plus bas que la position, et il
+    //  rendait la main sans bouger) ; la colonne à hauteur constante
+    //  l'a découvert. Un élément à `overflow-y: auto` est le
+    //  défilement propre du contenu, qu'il déborde ou non : s'il ne
+    //  déborde pas, il n'y a RIEN à remettre à zéro — et rien d'autre
+    //  à faire. Le doigt ne passe jamais ici (sa colonne n'a pas ce
+    //  débordement, la boucle s'arrête avant le corps) : son chemin 2
+    //  est intact.
     let noeud: HTMLElement | null = rangee.parentElement;
     while (noeud && noeud !== document.body) {
       const vertical = getComputedStyle(noeud).overflowY;
-      if (
-        (vertical === "auto" || vertical === "scroll") &&
-        noeud.scrollHeight > noeud.clientHeight
-      ) {
+      if (vertical === "auto" || vertical === "scroll") {
         noeud.scrollTop = 0;
         return;
       }

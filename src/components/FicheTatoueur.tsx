@@ -1598,9 +1598,9 @@ export function FicheTatoueur({
             5-6 réseaux · 7-9 les trois sections · 10 signalement —
             chaque grand bloc détaché d'une ligne. PAS de fil
             d'Ariane : la lecture commence par le nom.
-            WEB : la colonne DÉFILE TOUTE SEULE (overflow-y-auto) dans
-            la même hauteur que la photo — même butée haute (79 + 20),
-            même hauteur maximale (100vh − 119) : la marge sous son
+            WEB : la colonne DÉFILE TOUTE SEULE (overflow-y-auto), À LA
+            HAUTEUR DE LA PHOTO — l'étirement de la grille la lui donne
+            (nº 737), et 100vh − 119 la borne : la marge sous son
             contenu, à bout de course, égale la marge sous la photo.
             ⚠️ SON FOND EST ÉCRIT (nº 207-§4) : les deux blocs qui ne
             défilent pas (la rangée du haut, le sélecteur de catégorie)
@@ -1700,9 +1700,47 @@ export function FicheTatoueur({
              photo mobile retire de l'affichage (globals.css — le HTML
              reste rendu, seul `display` bascule ; la vue profil et le
              web l'affichent comme toujours). */}
+        {/*  ██ §1 (nº 737) — LE SÉLECTEUR NE BOUGE PLUS À LA BASCULE ██
+             ------------------------------------------------------------
+             LE DÉFAUT, DIT PAR LE PROPRIÉTAIRE (web, pleine largeur) :
+             toucher Profil ↔ Portfolio faisait REMONTER la colonne de
+             quelques pixels — le bouton fuyait sous la souris.
+             LA CAUSE, MESURÉE AU BANC (±3 px page en haut, ±43 px
+             défilée de 40, ±112 à fond) : la colonne portait
+             `self-start`, sa hauteur suivait donc le CONTENU de
+             l'onglet. Or la course d'un `sticky` est la hauteur de la
+             cellule MOINS la sienne : onglet court (profil sans longue
+             bio, 356 px), 424 px de course — la colonne COLLAIT à
+             99 px ; onglet débordant (781 px, la borne), course nulle —
+             le collage lâchait et la colonne suivait la page. Deux
+             régimes, un saut à chaque bascule.
+             LE REMÈDE : l'étirement PAR DÉFAUT de la grille
+             (`self-start` retiré) — la colonne prend la hauteur de sa
+             cellule, celle de la photo, quel que soit l'onglet, et
+             `max-h` (100vh − 119) la borne comme avant. Hauteur
+             constante → position constante : le bouton ne bouge plus
+             d'un pixel, dans les deux sens, quel que soit le contenu.
+             C'est l'intention écrite en tête de ce bloc — « à la
+             hauteur de la photo » — enfin tenue à la lettre.
+             ⚠️ LE COLLANT ET SA BUTÉE DE 99 px PARTENT AVEC (le
+             `sticky` de cette colonne — leurs deux classes ne sont pas
+             nommées ici : le scanner de Tailwind lit AUSSI les
+             commentaires, et les écrire en toutes lettres regénérerait
+             leurs règles, fantômes, dans la feuille) : photo et
+             colonne partagent la même borne de hauteur, la course est
+             donc nulle PARTOUT — un collant sans course ne colle
+             jamais, c'est un mot mort, et il ne reste pas (la règle
+             « pas de code mort », nº 735). L'air sous un onglet court est le
+             fond de la colonne — l'anthracite de la page, rien à
+             l'œil.
+             ⚠️ CE QUI NE BOUGE PAS : le défilement INTERNE
+             (overflow-y-auto) et « chaque onglet s'ouvre à son début »
+             (nº 383, chemin 1) ; la grille et ses marges (pièges
+             378/379) ; la fenêtre superposée, qui écrit SA colonne
+             dans son fichier (FenetreFiche). */}
         <div
           data-colonne-lecture=""
-          className="lg:sticky lg:top-[99px] lg:self-start lg:max-h-[calc(100vh-119px)] lg:overflow-y-auto lg:overflow-x-clip lg:px-3 lg:-mx-3 min-w-0 flex flex-col bg-sombre-fond [--fond-colonne:var(--rw-sombre-fond)]"
+          className="lg:max-h-[calc(100vh-119px)] lg:overflow-y-auto lg:overflow-x-clip lg:px-3 lg:-mx-3 min-w-0 flex flex-col bg-sombre-fond [--fond-colonne:var(--rw-sombre-fond)]"
         >
           {/*  ⚠️ LE CONTENU DE LA FICHE VIT DANS UN SEUL COMPOSANT
                (nº 199) : cette page et la fenêtre superposée du web
