@@ -12,15 +12,20 @@ import {
 //  §1 (nº 652) — le chemin de la recherche, écrit une seule fois.
 import {
   ADRESSE_RECHERCHE,
+  estLaMosaique,
   PREPARER_LA_RECHERCHE_A_LAVANCE,
 } from "@/lib/chemin-recherche";
 //  §1 (nº 654) — la boîte noire de navigation (mesure temporaire).
 import { noterNavigation } from "@/lib/boite-noire";
 import { demanderLesComptes } from "@/lib/creations-par-style";
-//  §1 (nº 673) — le filet de la garde : l'adresse courante, lue PENDANT
-//  le rendu par le magasin de la nº 154 (les deux portes : `popstate` et
-//  `pushState`/`replaceState`).
-import { lireRequeteCourante, souscrireAdresse } from "@/lib/adresse-courante";
+//  §1 (nº 673, lecture gelée nº 732) — le filet de la garde : la
+//  requête DE LA MOSAÏQUE, lue PENDANT le rendu par le magasin de la
+//  nº 154 (les deux portes : `popstate` et `pushState`/`replaceState`),
+//  et GELÉE dès qu'une surface possède l'adresse (le motif nº 360).
+import {
+  lireRequeteDeLaMosaique,
+  souscrireAdresse,
+} from "@/lib/adresse-courante";
 import Link, { useLinkStatus } from "next/link";
 import { useRouter } from "next/navigation";
 //  §1 (nº 621) — la carte de style et sa grille. Le TYPE seul vient de
@@ -463,6 +468,31 @@ export function IndexTatoueurs({
    * (le `popstate` du navigateur et les `pushState`/`replaceState` du
    * code), donc le désaccord est connu au premier rendu qui suit la
    * navigation, avant toute peinture.
+   *
+   * ██ §1 (nº 732) — LA LECTURE EST GELÉE HORS DE LA MOSAÏQUE ██
+   * ------------------------------------------------------------------
+   * CE QUE LA nº 673 LISAIT ICI : l'adresse BRUTE (`lireRequeteCourante`),
+   * quelle qu'elle soit. Or une adresse peut appartenir à une SURFACE :
+   * la fenêtre de fiche pousse /tatoueur/nom par un pushState brut SANS
+   * quitter la mosaïque (GrilleTatoueurs, PileFiches). Lire là, c'était
+   * prendre l'adresse d'une fenêtre pour un désaccord de page — chaque
+   * ouverture re-rendait cette page, et le garde-fou de la nº 631 (plus
+   * bas), réveillé par ce rendu, redemandait la FICHE au serveur : elle
+   * remplaçait la mosaïque. C'est la cause, tracée au commit près, des
+   * trois symptômes de la nº 729 (enquête nº 731 : la nº 672 va bien,
+   * la nº 673 casse ; la même lecture débranchée, tout revit).
+   * LA RÈGLE, DÉSORMAIS — celle de la nº 360, qui existait déjà pour la
+   * page de fiche : tant que l'adresse est celle de la mosaïque
+   * (« / » ou « /recherche »), on lit ; dès qu'une surface la possède,
+   * on rend la valeur GELÉE — même chaîne, aucun rendu, donc aucun
+   * réveil. Le filet garde tout son métier sur SES adresses (un retour
+   * entre deux recherches, une page servie fausse) : seule l'adresse
+   * d'une fenêtre cesse de le concerner.
+   * ⚠️ `?? cleServie` : la lecture rend `null` tant que la mosaïque n'a
+   * jamais possédé l'adresse (premier rendu d'une navigation douce
+   * entrante — la mesure nº 336) ; on retombe alors sur les critères
+   * servis : accord, pas de voile — on ne juge pas ce qu'on n'a pas vu.
+   *
    * ⚠️ L'INSTANTANÉ SERVEUR EST `cleServie`, ET CE N'EST PAS UN DÉTAIL :
    * au rendu serveur et à l'hydratation, on rend donc EXACTEMENT ce que
    * le serveur a rendu — accord garanti, aucune erreur d'hydratation, et
@@ -479,13 +509,13 @@ export function IndexTatoueurs({
    * été servi — ses champs sont déjà justes. Seul le contenu servi se
    * tait, et c'est exactement ce qui est faux.
    */
-  const requeteCourante = useSyncExternalStore(
+  const requeteMosaique = useSyncExternalStore(
     souscrireAdresse,
-    lireRequeteCourante,
+    lireRequeteDeLaMosaique,
     () => cleServie
   );
   const enRetardSurLAdresse =
-    signatureDesCriteres(requeteCourante) !== cleSignee;
+    signatureDesCriteres(requeteMosaique ?? cleServie) !== cleSignee;
 
   /*  §1 (nº 673, trait retiré nº 706) — la page en retard restait
       dite par le trait rose du site ; le propriétaire a supprimé TOUS
@@ -650,6 +680,24 @@ export function IndexTatoueurs({
    * noire est ce qui dira si un chemin oublié existe encore. Le jour où
    * elle cesse de paraître, la cause est bien morte — c'est le rôle que
    * la nº 656 lui avait donné, et il ne change pas.
+   *
+   * ██ §1 (nº 732) — IL NE JUGE PLUS QUE LES ADRESSES DE LA MOSAÏQUE ██
+   * ------------------------------------------------------------------
+   * LA BORNE QUI MANQUAIT, et l'enquête nº 731 a montré ce qu'elle
+   * coûtait : quand la fenêtre de fiche possède l'adresse
+   * (/tatoueur/nom, pushState brut — la grille reste montée dessous),
+   * ce garde-fou comparait CETTE adresse-là à ses critères, la croyait
+   * fausse, et `router.refresh()` redemandait alors LA FICHE — qui
+   * remplaçait la mosaïque. La nº 630 l'avait mesuré inoffensif
+   * (« l'aller-retour de la fenêtre ne dérègle rien ») parce qu'alors
+   * RIEN ne re-rendait cette page pendant une fenêtre ; l'abonnement de
+   * la nº 673 (le filet, plus haut) a changé ça, et la lecture gelée de
+   * la nº 732 le re-change — cette borne est la seconde moitié de la
+   * même réparation : une adresse qui n'est pas celle de la mosaïque
+   * (« / » ou « /recherche ») n'est pas une page en retard, c'est une
+   * SURFACE ; on ne compare pas, on ne redemande rien, on ne consomme
+   * pas l'épisode (`adresseReprise` reste tel quel : au retour sur la
+   * mosaïque, le garde-fou rejoue à plein droit).
    */
   const adresseReprise = useRef<string | null>(null);
   //  ⚠️ SANS LISTE DE DÉPENDANCES, ET C'EST VOULU : le défaut est
@@ -658,6 +706,8 @@ export function IndexTatoueurs({
   //  jamais. Il tourne donc à chaque rendu — deux courtes chaînes à
   //  comparer, et il sort à sa première ligne dans le cas normal.
   useEffect(() => {
+    //  §1 (nº 732) — la borne : hors de la mosaïque, rien à juger.
+    if (!estLaMosaique(window.location.pathname)) return;
     const demande = signatureDesCriteres(window.location.search);
     if (demande === cleSignee) {
       //  Tout est en ordre : on rouvre le droit à une reprise, pour que

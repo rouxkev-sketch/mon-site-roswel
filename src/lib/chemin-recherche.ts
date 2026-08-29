@@ -112,3 +112,22 @@ export const ADRESSE_RECHERCHE = "/recherche";
  * la règle de la passe était de ne rien corriger à l'aveugle.
  */
 export const PREPARER_LA_RECHERCHE_A_LAVANCE = false;
+
+/**
+ * ██ §1 (nº 653, déménagée nº 732) — « / » ET « /recherche » SONT UN
+ * MÊME ÉCRAN ██
+ * ==================================================================
+ * LE CONSTAT DE LA nº 653, mot pour mot : ces deux adresses servent LA
+ * MÊME SURFACE — la mosaïque, avec ou sans critères. Deux chemins, un
+ * écran. La fonction vivait dans DefilementEnHaut (seul lecteur
+ * d'alors) ; la nº 732 lui donne un second lecteur — la lecture gelée
+ * de la mosaïque (lib/adresse-courante) — et elle déménage donc ICI,
+ * à côté du chemin qu'elle nomme : une définition d'écran ne
+ * s'écrit qu'une fois (la règle du projet), et ce fichier est déjà
+ * celui que tout le monde lit pour parler de la recherche.
+ * ⚠️ TOUJOURS AUCUN IMPORT dans ce fichier (voir l'en-tête) : la
+ * fonction ne lit que la constante du dessus.
+ */
+export function estLaMosaique(chemin: string | null): boolean {
+  return chemin === "/" || chemin === ADRESSE_RECHERCHE;
+}

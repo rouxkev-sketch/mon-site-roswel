@@ -1,5 +1,7 @@
 "use client";
 
+import { estLaMosaique } from "@/lib/chemin-recherche";
+
 /**
  * L'ADRESSE COURANTE, ET TOUS SES CHANGEMENTS
  * ============================================
@@ -115,6 +117,40 @@ export function lireRequeteDeLaPage(chemin: string): string | null {
     requeteGelee = window.location.search;
   }
   return requeteGelee;
+}
+
+/**
+ * LA REQUÊTE DE LA MOSAÏQUE — GELÉE DÈS QUE L'ADRESSE N'EST PLUS LA
+ * SIENNE (nº 732, sur le motif de la nº 360 juste au-dessus).
+ * ==================================================================
+ * POURQUOI UNE JUMELLE, ET PAS `lireRequeteDeLaPage`. La mémoire de la
+ * nº 360 appartient à LA PAGE DE FICHE (un seul lecteur à la fois,
+ * c'est écrit dans sa note) ; la mosaïque, qui vit sur DEUX chemins
+ * (« / » et « /recherche » — `estLaMosaique`, lib/chemin-recherche),
+ * a donc SA mémoire, et la même règle :
+ *  · tant que l'adresse est celle de la mosaïque, on lit et on
+ *    mémorise ;
+ *  · dès qu'une SURFACE possède l'adresse (la fenêtre de fiche pousse
+ *    /tatoueur/nom par un pushState brut), on rend la valeur
+ *    MÉMORISÉE, inchangée — donc AUCUN rendu chez l'abonné.
+ * C'EST TOUTE LA RÉPARATION DE LA nº 732 : la nº 673 lisait ici
+ * l'adresse BRUTE (`lireRequeteCourante`), et chaque ouverture de
+ * fenêtre re-rendait donc la page de recherche — dont le garde-fou de
+ * la nº 631, réveillé, prenait l'adresse de la fiche pour une page
+ * fausse et la redemandait au serveur : la fiche remplaçait la
+ * mosaïque (les trois symptômes de la nº 729, cause tracée au commit
+ * près par l'enquête nº 731).
+ * ⚠️ `null` = « la mosaïque n'a encore jamais possédé l'adresse » —
+ * même sémantique que la nº 360 ; le consommateur (IndexTatoueurs)
+ * retombe alors sur ses critères servis : on ne juge pas une page
+ * qu'on n'a pas vue à l'adresse.
+ */
+let requeteMosaiqueGelee: string | null = null;
+export function lireRequeteDeLaMosaique(): string | null {
+  if (estLaMosaique(window.location.pathname)) {
+    requeteMosaiqueGelee = window.location.search;
+  }
+  return requeteMosaiqueGelee;
 }
 
 /**

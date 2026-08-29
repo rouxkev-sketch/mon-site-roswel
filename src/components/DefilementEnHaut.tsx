@@ -14,7 +14,7 @@ import { armerLaGardeDePosition } from "@/lib/defilement-programme";
 import { souscrireAdresse } from "@/lib/adresse-courante";
 //  §1 (nº 653) — le chemin de la recherche, écrit une seule fois
 //  (nº 652), et le journal des sondes.
-import { ADRESSE_RECHERCHE } from "@/lib/chemin-recherche";
+import { estLaMosaique } from "@/lib/chemin-recherche";
 import { noter } from "@/lib/journal-bascule";
 //  §1 (nº 654) — la boîte noire : les mêmes décisions, écrites AUSSI
 //  dans la trace permanente. `noter` ne parle que sonde armée ;
@@ -34,13 +34,12 @@ import { noterNavigation } from "@/lib/boite-noire";
  * PAS. La restitution de position garde la priorité — c'est elle qui
  * sait où l'œil était, et elle passe après cette remontée-ci (voir le
  * §3 de la nº 328, plus bas).
- * ⚠️ CE N'EST PAS UNE EXCEPTION DE PLUS DANS LA CHAÎNE : c'est le
- * constat que « / » et « /recherche » sont LA MÊME SURFACE — la
- * mosaïque, avec ou sans critères. Deux chemins, un écran.
+ * ⚠️ LA DÉFINITION A DÉMÉNAGÉ (nº 732) : `estLaMosaique` vit dans
+ * lib/chemin-recherche, à côté du chemin qu'elle nomme — la lecture
+ * gelée de la mosaïque (lib/adresse-courante) la lit aussi désormais,
+ * et un écran ne se définit qu'une fois. Rien d'autre ne change : ce
+ * composant la consomme exactement comme avant.
  */
-function estLaMosaique(chemin: string | null): boolean {
-  return chemin === "/" || chemin === ADRESSE_RECHERCHE;
-}
 
 /**
  * ██ nº 361 — LA REMONTÉE ATTEND QUE L'ADRESSE SOIT COMMISE ██
