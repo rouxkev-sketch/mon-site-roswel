@@ -887,8 +887,10 @@ html[data-recherche="ouverte"] [data-fond="sombre"] {
     glissait exactement comme le reste (l'erreur de la nº 476, voir le
     commentaire nº 477 de PagePleinEcranMobile). Ici, rien à suivre :
     l'enveloppe est invisible, et tout ce que le glissement découvre est
-    le canevas <html>, peint #0B0F14 en dur avant la première image
-    (nº 357) — anthracite par construction.
+    le canevas <html> — une seule surface à peindre, quelle que soit la
+    hauteur du clavier. ⚠️ SA COULEUR N'EST PLUS CELLE DE LA PAGE : la
+    règle suivante (nº 736) la met à celle de la barre, et c'est là que
+    la raison est écrite.
     `visibility`, et non le `display: none` de la recherche ci-dessus :
     la recherche VEUT vider le document, pour qu'il défile pour elle
     seule ; ici le document doit garder sa hauteur et sa position de
@@ -898,6 +900,38 @@ html[data-recherche="ouverte"] [data-fond="sombre"] {
     page, qu'il ne faut surtout pas éteindre. */
 html[data-ajout-style="ouvert"] [data-fond="sombre"] {
   visibility: hidden;
+}
+
+/*  ET CE QUE LE TROU MONTRE EST LE GRIS DE LA BARRE, PAS LE NOIR DE LA
+    PAGE (nº 736).
+    -------------------------------------------------------------------
+    LE RELEVÉ DU PROPRIÉTAIRE : la nº 735 a bien fermé le trou — les
+    photos du portfolio ne reviennent plus —, mais la bande découverte
+    était NOIRE, celle du fond de page. Or cette bande est SOUS la barre
+    « Un style manque ? » : elle la prolonge, elle doit donc porter SA
+    couleur.
+    POURQUOI REPEINDRE LE CANEVAS SUFFIT, ET NE DÉBORDE PAS : la page
+    d'ajout est une surface OPAQUE à `bg-sombre-fond`
+    (PagePleinEcranMobile) — partout où elle couvre, le noir de la page
+    reste le noir de la page, et rien ne change au-dessus de la barre.
+    Le canevas ne se voit donc QUE dans le trou, et le trou est sous la
+    barre par construction. Aucune hauteur de clavier à suivre, aucune
+    géométrie : c'est la même promesse que la règle du dessus.
+    LA COULEUR EST CELLE DE LA BARRE, PAS UNE VOISINE CHOISIE À L'ŒIL :
+    le bandeau du doigt porte `bg-sombre-eleve` (BlocPortfolio), que
+    Tailwind sert depuis `--rw-sombre-eleve` — c'est ce jeton-là qui est
+    nommé ici, et pas une valeur recopiée. Le jour où la barre changera
+    de cran, la bande suivra sans deuxième écriture.
+    ⚠️ LE `!important` NE PASSE DEVANT AUCUNE AUTRE RÈGLE : il reprend
+    le STYLE EN LIGNE que le script d'avant-peinture écrit sur <html>
+    (nº 357, `r.style.backgroundColor`) pour garantir l'anthracite dès
+    la première image. Une déclaration en ligne bat toute règle
+    ordinaire — c'est le seul moyen de la reprendre, et seulement le
+    temps que la page d'ajout soit ouverte : le marqueur retiré, le
+    canevas retrouve la couleur du script, sans que rien ne la
+    réécrive. */
+html[data-ajout-style="ouvert"] {
+  background-color: var(--rw-sombre-eleve) !important;
 }
 
 /* L'AIR LAISSÉ AU-DESSUS D'UN CHAMP QUI REMONTE — EN CSS, PAS EN

@@ -822,10 +822,17 @@ export function BlocPortfolio({
       tant que la page d'ajout est ouverte, l'enveloppe du site
       (`[data-fond="sombre"]`) est INVISIBLE — le marqueur se pose ici,
       la règle vit dans globals.css. Quoi que le glissement découvre,
-      il ne peut plus montrer que le canevas <html>, peint #0B0F14 EN
-      DUR avant la première image (nº 357) : le trou est anthracite PAR
-      CONSTRUCTION, quelle que soit la hauteur du clavier ou de la
-      barre d'accessoires de Safari. Et `visibility` ne déplace RIEN :
+      il ne peut plus montrer que le canevas <html> : une seule surface
+      derrière tout, quelle que soit la hauteur du clavier ou de la
+      barre d'accessoires de Safari.
+      ⚠️ CE MARQUEUR PORTE DEUX RÈGLES DEPUIS LA nº 736, et les deux
+      vivent côte à côte dans globals.css : celle-ci, qui efface le
+      site derrière ; et celle qui donne au canevas LA COULEUR DE LA
+      BARRE (`--rw-sombre-eleve`) — la bande découverte est sous la
+      barre, elle la prolonge, elle ne peut donc pas être du noir de la
+      page. La surface d'ajout, elle, reste opaque à `bg-sombre-fond` :
+      rien ne change au-dessus de la barre.
+      Et `visibility` ne déplace RIEN :
       le document garde sa hauteur et sa position de lecture,
       retrouvées intactes à la fermeture — c'est pourquoi ce n'est PAS
       le `display: none` de la page de recherche
