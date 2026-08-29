@@ -122,6 +122,9 @@ import {
   nomDeLaVariante,
   nomDuFichierAvatar,
 } from "@/lib/avatar-variantes";
+//  §1 (nº 721) — la durée de validité des photos déposées : une seule
+//  écriture, dans lib/cache-photos, avec la raison qui la rend sûre.
+import { ENVOI_PHOTO, ENVOI_PHOTO_JPEG } from "@/lib/cache-photos";
 import { compresserPhoto } from "@/lib/photo";
 
 /**
@@ -1935,20 +1938,20 @@ export function FormulaireFiche() {
         const envois = await Promise.all([
           supabase.storage
             .from(BUCKET_PHOTOS)
-            .upload(cheminProfil, photoProfil, { upsert: true }),
+            .upload(cheminProfil, photoProfil, ENVOI_PHOTO),
           supabase.storage
             .from(BUCKET_PHOTOS)
             .upload(
               `${utilisateur.id}/${nomDeLaVariante(nomOrigine, AVATAR_PETIT)}`,
               petite,
-              { upsert: true, contentType: "image/jpeg" }
+              ENVOI_PHOTO_JPEG
             ),
           supabase.storage
             .from(BUCKET_PHOTOS)
             .upload(
               `${utilisateur.id}/${nomDeLaVariante(nomOrigine, AVATAR_MOYEN)}`,
               moyenne,
-              { upsert: true, contentType: "image/jpeg" }
+              ENVOI_PHOTO_JPEG
             ),
         ]);
         const rate = envois.find((envoi) => envoi.error);

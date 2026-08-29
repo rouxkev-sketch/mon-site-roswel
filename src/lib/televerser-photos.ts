@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PhotoEnSaisie } from "@/components/BlocPortfolio";
+//  §1 (nº 721) — les options d'envoi, durée de validité comprise.
+import { ENVOI_PHOTO_JPEG } from "@/lib/cache-photos";
 
 /**
  * LE TÉLÉVERSEMENT EN PARALLÈLE (passe nº 118)
@@ -120,16 +122,22 @@ export async function televerserPhotos({
           ⚠️ ET C'EST DÉJÀ DU JPEG : `compresserPhoto` réencode chaque
           photo avant d'arriver ici (et, depuis cette passe, REFUSE ce
           qu'elle ne sait pas lire au lieu de laisser passer
-          l'original). Le type déclaré dit donc le vrai. */
-      const COMME_UNE_IMAGE = { upsert: true, contentType: "image/jpeg" };
+          l'original). Le type déclaré dit donc le vrai.
+          ⚠️ §1 (nº 721) — CES OPTIONS ONT DÉMÉNAGÉ dans
+          `lib/cache-photos`, avec la DURÉE DE VALIDITÉ qui leur manquait.
+          Le type fixé n'a pas bougé d'un iota et garde sa raison d'être
+          ci-dessus ; ce qui s'ajoute, c'est `cacheControl` — sans lui, le
+          stockage répondait `no-cache` et chaque visite repayait chaque
+          photo. `base` porte l'instant du dépôt : le fichier est immuable,
+          un an ne peut donc pas montrer une image périmée. */
       const [pleine, mini] = await Promise.all([
         supabase.storage
           .from(bucket)
-          .upload(`${base}.jpg`, photo.fichier as File, COMME_UNE_IMAGE),
+          .upload(`${base}.jpg`, photo.fichier as File, ENVOI_PHOTO_JPEG),
         photo.fichierMiniature
           ? supabase.storage
               .from(bucket)
-              .upload(`${base}-mini.jpg`, photo.fichierMiniature, COMME_UNE_IMAGE)
+              .upload(`${base}-mini.jpg`, photo.fichierMiniature, ENVOI_PHOTO_JPEG)
           : Promise.resolve(null),
       ]);
       if (pleine.error) {

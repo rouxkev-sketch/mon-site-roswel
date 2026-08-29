@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { EXEMPLES_PRESENTATION, GEO, LIMITES } from "@/config/roswel";
 import { JOURS_SEMAINE, type HorairesSemaine } from "@/lib/horaires";
+import { CACHE_PHOTOS } from "@/lib/cache-photos";
 import { metiersDeLOffre, offreDesMetiers } from "@/lib/metiers";
 import { compresserPhoto } from "@/lib/photo";
 import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
@@ -168,7 +169,12 @@ export function FormulaireArtisan({
       const supabase = creerClientSupabaseNavigateur();
       const { error } = await supabase.storage
         .from("photos-artisans")
-        .upload(chemin, compressee, { contentType: "image/jpeg" });
+        //  §1 (nº 721) — la durée, et RIEN d'autre : cet envoi n'a jamais
+        //  eu `upsert`, on ne le lui ajoute pas au passage.
+        .upload(chemin, compressee, {
+          contentType: "image/jpeg",
+          cacheControl: CACHE_PHOTOS,
+        });
       if (error) throw new Error(error.message);
 
       const { data } = supabase.storage

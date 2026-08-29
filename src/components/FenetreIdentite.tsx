@@ -26,6 +26,9 @@ import {
   nomDuCompte,
   rangerLIdentiteDuCompte,
 } from "@/lib/avatar-du-compte";
+//  §1 (nº 721) — la durée de validité des photos déposées (écriture
+//  unique : lib/cache-photos).
+import { ENVOI_PHOTO } from "@/lib/cache-photos";
 import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
 import { useUtilisateur } from "@/lib/use-utilisateur";
 //  §1 (nº 469) — le verrou de défilement compté (surfaces empilées).
@@ -231,7 +234,7 @@ export function FenetreIdentite({
         const chemin = `${utilisateur.id}/profil-${Date.now()}.jpg`;
         const { error } = await supabase.storage
           .from(BUCKET_PHOTOS)
-          .upload(chemin, fichier, { upsert: true });
+          .upload(chemin, fichier, ENVOI_PHOTO);
         if (error) {
           throw new Error(
             `Ta photo n'a pas pu être envoyée (${error.message}).`

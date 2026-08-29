@@ -131,10 +131,22 @@ async function lireLesReglesDuSite() {
   };
   const marque = /PREFIXE_AVEC_VARIANTES\s*=\s*"([^"]+)"/.exec(source);
   if (!marque) throw new Error("le préfixe des variantes est introuvable");
+  /*  §1 (nº 721) — LA DURÉE DE VALIDITÉ, lue elle aussi chez le site
+      (`lib/cache-photos`), pour la même raison que le reste : une seule
+      écriture. Sans elle, le stockage répond « no-cache » et chaque
+      visite repaie chaque avatar — y compris ceux que CE script vient
+      de reprendre. */
+  const sourceCache = await readFile(
+    path.join(RACINE, "src", "lib", "cache-photos.ts"),
+    "utf8"
+  );
+  const duree = /CACHE_PHOTOS\s*=\s*"(\d+)"/.exec(sourceCache);
+  if (!duree) throw new Error("CACHE_PHOTOS introuvable dans lib/cache-photos");
   return {
     petit: nombre("AVATAR_PETIT"),
     moyen: nombre("AVATAR_MOYEN"),
     marque: marque[1],
+    duree: duree[1],
   };
 }
 
@@ -224,10 +236,17 @@ async function reprendreUnePhoto(fiche, outils) {
 
   //  d) LES TROIS ENVOIS. ⚠️ L'ORIGINAL PART TEL QUEL — le tampon
   //     téléchargé, pas une version recompressée (règle nº 356/467).
+  //     §1 (nº 721) — chaque envoi porte la durée de validité : c'est
+  //     l'en-tête `cache-control` de l'envoi que le stockage recopie
+  //     ensuite sur toutes ses réponses pour ce fichier.
   const envoyer = (chemin, corps) =>
     appeler(`/storage/v1/object/${SEAU}/${chemin}`, {
       method: "POST",
-      headers: { "Content-Type": "image/jpeg", "x-upsert": "true" },
+      headers: {
+        "Content-Type": "image/jpeg",
+        "x-upsert": "true",
+        "cache-control": `max-age=${regles.duree}`,
+      },
       body: corps,
     });
   const envois = await Promise.all([
@@ -287,7 +306,8 @@ async function main() {
   const regles = await lireLesReglesDuSite();
   console.log(
     `  règles lues chez le site : marque « ${regles.marque} », ` +
-      `variantes ${regles.petit} et ${regles.moyen}`
+      `variantes ${regles.petit} et ${regles.moyen}, ` +
+      `validité ${regles.duree} s`
   );
   console.log(
     REEL

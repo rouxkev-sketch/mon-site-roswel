@@ -191,6 +191,42 @@ const nextConfig: NextConfig = {
    * On vise donc les ADRESSES DE PAGES, nommément. Rien d'autre n'est
    * touché : `/_next/static/` garde son cache d'un an, les API et les
    * données du routeur gardent le leur.
+   *
+   * ██████████████████████████████████████████████████████████████████
+   * ██  §1 (nº 721) — DEUX AJOUTS, SUR MESURE DE L'AUDIT nº 720      ██
+   * ██████████████████████████████████████████████████████████████████
+   * A. `/recherche` MANQUAIT À LA LISTE, et ce n'était pas une
+   *    décision — c'est un OUBLI. La page est née à la nº 652, APRÈS que
+   *    cette liste a été écrite (nº 344-355), et personne n'est revenu
+   *    l'y inscrire ; son `force-dynamic` (le rendu serveur des
+   *    recherches, décision de la nº 652 qui ne bouge pas d'ici) lui
+   *    valait donc le défaut de Next, `no-store` compris. Elle en payait
+   *    le prix décrit dans tout le texte ci-dessus : cache de navigation
+   *    interdit, geste de retour qui reconstruit la page au lieu de la
+   *    restaurer.
+   *    ⚠️ CE QUE CE CHANGEMENT N'APPORTE PAS, mesuré et dit : pas de
+   *    « rien n'a changé » (304). Une page en `force-dynamic` part en
+   *    FLUX, sans ETag ni Last-Modified — faute de témoin, `no-cache`
+   *    oblige à retélécharger le corps entier, exactement comme avant.
+   *    Le gain de cette ligne est le CACHE DE NAVIGATION, pas les
+   *    octets.
+   *    (`/mes-favoris` est dans le même cas et n'est PAS traité ici :
+   *    une passe, un sujet — il est signalé, pas corrigé.)
+   * B. LES IMAGES DE `public/` N'AVAIENT AUCUNE DURÉE. Next les sert en
+   *    `public, max-age=0` : avec un ETag, le corps ne repart pas, mais
+   *    la permission de réutiliser SANS DEMANDER n'est jamais accordée —
+   *    un aller-retour par image et par visite, payé en latence.
+   *    ⚠️ UN JOUR, ET SURTOUT PAS `immutable`. Ces fichiers GARDENT LEUR
+   *    NOM quand leur contenu change (`yokofolio-icone.png` n'a pas
+   *    d'empreinte dedans) : `immutable` figerait l'ancienne image chez
+   *    tous les visiteurs le jour d'un remplacement, sans recours. C'est
+   *    exactement ce qui les distingue des photos déposées, dont le nom
+   *    porte l'instant du dépôt (voir `lib/cache-photos`).
+   *    ⚠️ UN SEUL SEGMENT, ET C'EST VOULU : le motif ne descend pas dans
+   *    les sous-dossiers, donc `/images-demo/…` garde l'`immutable` que
+   *    pose la route qui les fabrique. Et aucune extension de programme
+   *    n'y figure : `/sw.js` conserve son `max-age=0`, sans quoi une
+   *    mise en ligne ne serait plus vue.
    */
   async headers() {
     const cachePage = [
@@ -216,6 +252,7 @@ const nextConfig: NextConfig = {
     const temoinNuTotal = { type: "cookie" as const, key: "yf_nu_total" };
     const chemins = [
       "/",
+      "/recherche",
       "/tatoueur/:slug",
       "/tatouage/:style/:ville",
       "/devenir-tatoueur/:chemin*",
@@ -225,10 +262,24 @@ const nextConfig: NextConfig = {
       "/rendez-vous",
       "/favoris",
     ];
-    return chemins.flatMap((source) => [
-      { source, headers: cachePage, missing: [temoinNuTotal] },
-      { source, headers: cachePageEssai, has: [temoinNuTotal] },
-    ]);
+    /*  §1 (nº 721) — LES IMAGES DÉPOSÉES DANS `public/`. Un jour,
+        revalidable, JAMAIS `immutable` (la raison est en tête de cette
+        fonction). Le motif tient en UN SEGMENT — `[^/]+` refuse la
+        barre oblique — pour ne descendre dans aucun sous-dossier. */
+    const cacheImagePublique = [
+      { key: "Cache-Control", value: "public, max-age=86400, must-revalidate" },
+    ];
+    const imagesPubliques = {
+      source: "/:fichier([^/]+\\.(?:png|jpe?g|avif|webp|svg|gif|ico))",
+      headers: cacheImagePublique,
+    };
+    return [
+      ...chemins.flatMap((source) => [
+        { source, headers: cachePage, missing: [temoinNuTotal] },
+        { source, headers: cachePageEssai, has: [temoinNuTotal] },
+      ]),
+      imagesPubliques,
+    ];
   },
 };
 
