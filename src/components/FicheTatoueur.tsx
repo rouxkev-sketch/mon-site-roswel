@@ -596,7 +596,34 @@ export function FicheTatoueur({
    * donc la CONSIGNE qui décide, dans les deux modes, et rien d'autre :
    * un aperçu ouvert sans consigne garde sa photo, comme avant.
    */
-  const sansPhoto = entreeInitiale === ENTREE_LIEN;
+  const consigneLien = entreeInitiale === ENTREE_LIEN;
+  /**
+   * ██ §4 (nº 729) — LA RÈGLE 6 NE VAUT PLUS QU'AU DOIGT SUR LA PAGE
+   * PUBLIQUE ██
+   * ------------------------------------------------------------------
+   * LE DÉFAUT DU PROPRIÉTAIRE : clic droit → « ouvrir dans un nouvel
+   * onglet » sur un lien interne d'une fenêtre superposée — la page
+   * s'ouvre AMPUTÉE : pas de photo à gauche, la seule colonne de
+   * droite. La cause : le `href` de ces liens porte `?entree=lien`
+   * (règle 6 — « un lien interne n'affiche pas la photo EN HAUT »), et
+   * cette consigne retirait la colonne ENTIÈRE, aux deux appareils. Or
+   * la règle 6 décrit la vue du DOIGT (la photo « en haut ») ; en
+   * pleine page web à deux colonnes, la retirer ne donne pas une vue
+   * profil — elle donne une page cassée. Et un NOUVEL ONGLET est une
+   * arrivée de l'extérieur au sens de la règle nº 318 : la photo doit
+   * être là, comme sur un lien de partage.
+   * LA DÉCOUPE, DÉSORMAIS :
+   *  · APERÇU (« Mon portfolio » + consigne) : retrait entier, aux
+   *    deux appareils — la décision nº 330-§4 du propriétaire, intacte ;
+   *  · PAGE PUBLIQUE + consigne : la colonne est RENDUE, et cachée AU
+   *    DOIGT SEULEMENT par la bascule d'appareil (`mobile:hidden`,
+   *    data-appareil — piège nº 60, jamais une largeur). La règle 6
+   *    mobile est entière ; le web montre sa photo.
+   * ⚠️ LES FENÊTRES SUPERPOSÉES NE PASSENT PAS PAR ICI (elles montent
+   * ContenuFiche) : rien ne change pour elles.
+   */
+  const sansPhoto = apercu && consigneLien;
+  const photoCacheeAuDoigt = !apercu && consigneLien;
 
   const cadrePhoto = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -804,7 +831,13 @@ export function FicheTatoueur({
           tient. Aucune mécanique d'historique ne bouge : la coupe est
           un affichage, le retour et la restitution de position (423,
           438, 446) traversent les mêmes chemins qu'hier. */
-      data-vue-photo={!apercu && !sansPhoto ? "" : undefined}
+      //  §4 (nº 729) — `consigneLien` et non plus `sansPhoto` : la
+      //  valeur est LA MÊME qu'avant (l'ancien `sansPhoto` valait la
+      //  consigne), seule la découpe du retrait de photo a changé —
+      //  voir le bloc de `sansPhoto`. Au doigt avec consigne, la vue
+      //  reste PROFIL (pas de data-vue-photo), et la garde jumelle de
+      //  la nº 453 garde la colonne de lecture visible.
+      data-vue-photo={!apercu && !consigneLien ? "" : undefined}
       // En aperçu (« Ma fiche »), l'ESPACE fournit déjà le cadre
       // (largeur, marges latérales, marge du haut) : ne pas les
       // doubler — la photo mobile reste ainsi bord à bord et vient
@@ -875,16 +908,23 @@ export function FicheTatoueur({
         }`}
       >
         {/* ---------- La photo — calée dans la hauteur visible (web) ----------
-             §3 (nº 295) — SAUF QUAND LE LIEN A DIT « PAS DE PHOTO » :
-             la colonne entière disparaît, la page commence par Profil /
-             Portfolio. Le carrousel n'est même pas monté — aucune image
-             n'est demandée. */}
+             §3 (nº 295, DÉCOUPÉ nº 729) — QUAND LE LIEN A DIT « PAS DE
+             PHOTO » : en APERÇU la colonne entière disparaît (décision
+             nº 330-§4, les deux appareils) ; sur la PAGE PUBLIQUE elle
+             est rendue et cachée AU DOIGT seulement (`mobile:hidden`,
+             la bascule d'appareil) — la règle 6 vaut la vue du doigt,
+             pas la pleine page web, où la retirer amputait la page
+             (voir le bloc de `sansPhoto`). Au doigt caché, le
+             carrousel monté ne demande pas d'image visible ; au web,
+             la photo est celle de toujours. */}
         {!sansPhoto && (
         <div
           //  nº 359 — le nom de la colonne, pour la garde d'avant
           //  peinture de la fiche préparée d'avance (globals.css).
           data-photo-de-tete=""
-          className="flex flex-col gap-3 min-w-0"
+          className={`flex flex-col gap-3 min-w-0${
+            photoCacheeAuDoigt ? " mobile:hidden" : ""
+          }`}
         >
           {/*  §1 (nº 454) — LA PHOTO REMONTE EN TÊTE : la rangée du
                profil (nº 452, affinée nº 453) ne vit plus au-dessus de

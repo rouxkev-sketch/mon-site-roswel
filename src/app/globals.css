@@ -1569,7 +1569,18 @@ html[data-compte="connecte"]
 html[data-fiche-parametree] [data-photo-de-tete] {
   visibility: hidden;
 }
-html[data-entree-lien] [data-photo-de-tete] {
+/*  §4 (nº 729) — BORNÉE AU DOIGT, par l'appareil et jamais par une
+    largeur (piège nº 60). La règle 6 (« un lien interne n'affiche pas
+    la photo en haut ») décrit la vue MOBILE ; appliquée au web pleine
+    page — le seul chemin qui y mène est un nouvel onglet sur un lien
+    interne — elle amputait la page de sa colonne gauche, durablement :
+    le rendu final (FicheTatoueur, `sansPhoto`) retirait la colonne aux
+    deux appareils, et cette garde-ci peignait le même état avant lui.
+    Les DEUX écritures sont découpées ensemble à la nº 729 : au web, la
+    photo se peint d'emblée et reste ; au doigt, rien ne change — pas
+    même un instant de photo. L'APERÇU n'est pas concerné : il ne rend
+    aucune colonne du tout (le retrait y reste entier, nº 330-§4). */
+html[data-appareil="mobile"][data-entree-lien] [data-photo-de-tete] {
   display: none;
 }
 
