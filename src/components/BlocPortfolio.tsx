@@ -1976,6 +1976,57 @@ export function BlocPortfolio({
           pendant le défilement — rester en vue durant tout le
           parcours est sa raison d'être (nº 124) — et son rembourrage
           bas s'agrandit de la zone sûre du téléphone. ------- */}
+      {/*  ██ §1 (nº 734) — LE FOND DE SECOURS SOUS LA PAGE D'AJOUT ██
+           ==============================================================
+           LE DÉFAUT, DIT PAR LE PROPRIÉTAIRE (iPhone) : dans « Ajouter
+           un style », toucher le champ « Un style manque ? » ouvre le
+           clavier, qui remonte la page — et l'on aperçoit alors
+           L'ARRIÈRE-PLAN SOUS LA BARRE du bas. Il manque un
+           prolongement sous elle.
+           POURQUOI ÇA PEUT SE VOIR, ET POURQUOI CE CACHE EST POSÉ ICI.
+           La page d'ajout est la surface `fixed` de `PagePleinEcranMobile`
+           qui, depuis la nº 477, ÉPOUSE la zone réellement visible
+           (`visualViewport`, recalée à chaque image). Cette surface est
+           donc PLUS COURTE que l'écran dès que le clavier est ouvert :
+           tout ce qu'elle ne couvre plus — la bande que le clavier
+           occupe, et l'instant où il glisse — laisse voir ce qui vit
+           derrière. Et elle ne peut pas se couvrir elle-même : son
+           `overflow-y-auto` ROGNE ce que ses enfants peignent, une
+           ombre comme une boîte, exactement à son bord bas. Le cache
+           doit donc être DEHORS.
+           CE QUE C'EST, ET RIEN DE PLUS : une plaque inerte à la
+           couleur de la charte (`bg-sombre-fond`, #0B0F14), collée à
+           l'écran (`fixed inset-0`), qui vit et meurt AVEC la page
+           d'ajout (même condition, `fenetreStyles`). Elle prolonge donc
+           le fond sous la barre, quelle que soit la hauteur du clavier
+           et où que le décalage s'ouvre.
+           ⚠️ ELLE PASSE SOUS LA PAGE SANS UN RANG DE PLUS : MÊME
+           `z-[80]` que la surface, et écrite AVANT elle — à rang égal,
+           c'est l'ordre du document qui tranche (le motif de la pile
+           des fiches, nº 226-§5). Aucune valeur d'empilement nouvelle,
+           et donc aucune règle de plus dans la feuille.
+           ⚠️ AU DOIGT SEULEMENT, PAR `data-appareil` (`hidden
+           mobile:block`, la variante de globals.css) — jamais une
+           largeur d'écran (règle nº 60). Sur ordinateur, la page
+           d'ajout n'existe pas et cette plaque non plus.
+           ⚠️ ELLE NE TOUCHE À RIEN : `pointer-events-none` et
+           `aria-hidden` — elle ne prend aucun toucher, ne se lit pas,
+           n'entre dans aucun flux. Le clavier, la liste des styles,
+           l'envoi d'une suggestion et la fermeture ne la voient pas.
+           Clavier fermé, elle est entièrement recouverte par la
+           surface : il n'y a rien à voir, et rien n'a bougé. */}
+      {fenetreStyles &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            aria-hidden="true"
+            data-fond-sous-la-barre=""
+            className="hidden mobile:block fixed inset-0 z-[80]
+                       bg-sombre-fond pointer-events-none"
+          />,
+          document.body
+        )}
+
       {fenetreStyles && (
         <PagePleinEcranMobile
           titre="Ajouter un style"
