@@ -80,21 +80,22 @@ import { MARQUE_YOKOFOLIO } from "@/config/tatouage";
  *
  * LA SOLUTION, ET SON PRINCIPE : ne dépendre D'AUCUN service. Les
  * variantes sont des FICHIERS, posés à côté de l'original
- * (`yokofolio-logo-256.avif` et ses trois sœurs) — rien à calculer au
- * vol, rien à mettre en cache, rien qui puisse manquer. Leur chemin
- * contient « logo » : le service worker les traite donc comme des
- * logos, ce qui était l'intention depuis toujours.
+ * (`yokofolio-logo-256.webp` et sa sœur en 512 — la nº 723 a retiré
+ * les deux AVIF, voir plus bas) — rien à calculer au vol, rien à
+ * mettre en cache, rien qui puisse manquer. Leur chemin contient
+ * « logo » : le service worker les traite donc comme des logos, ce qui
+ * était l'intention depuis toujours.
  *
  * ⚠️ CE QUE LE REPLI COUVRE, ET CE QU'IL NE COUVRE PAS — MESURÉ, et
  * non supposé (c'est la leçon de la nº 715). Le `<img>` du fond porte
- * l'ORIGINAL, et il sert quand le navigateur NE SAIT LIRE NI l'AVIF NI
- * le WebP : `<picture>` choisit sa source sur le FORMAT annoncé.
- * IL NE COUVRE PAS le fichier absent : un navigateur qui sait lire
- * l'AVIF prend la source AVIF et n'en change plus, même si elle
- * échoue — vérifié au banc en coupant les deux variantes (le logo
- * reste alors vide). Ce n'est pas un trou comparable à celui de la
- * nº 715 : ces fichiers-ci sont des fichiers STATIQUES de `public/`,
- * mis en ligne exactement comme `yokofolio-logo.png` lui-même. S'ils
+ * l'ORIGINAL, et il sert quand le navigateur NE SAIT PAS LIRE le
+ * WebP : `<picture>` choisit sa source sur le FORMAT annoncé.
+ * IL NE COUVRE PAS le fichier absent : un navigateur qui sait lire le
+ * WebP prend cette source et n'en change plus, même si elle échoue —
+ * vérifié au banc de la nº 716 en coupant les variantes (le logo reste
+ * alors vide). Ce n'est pas un trou comparable à celui de la nº 715 :
+ * ces fichiers-ci sont des fichiers STATIQUES de `public/`, mis en
+ * ligne exactement comme `yokofolio-logo.png` lui-même. S'ils
  * manquaient, l'original manquerait aussi. Le risque de la nº 715
  * était d'une autre nature : un SERVICE qui devait répondre au vol.
  *
@@ -108,17 +109,49 @@ const NATIF_LOGO = { largeur: 1663, hauteur: 323 };
 const NATIF_ICONE = { largeur: 297, hauteur: 337 };
 
 /**
- * §1 (nº 716) — LES VARIANTES DU LOGO, ÉCRITES UNE FOIS.
+ * §1 (nº 716, REFAIT nº 723) — LES VARIANTES DU LOGO, ÉCRITES UNE FOIS.
  * Deux largeurs (l'écran ordinaire, puis le double pour les écrans à
- * haute densité), deux formats modernes. Le logo s'affiche entre 185 et
- * 247 px de large : 512 px couvre donc le double partout.
- * ⚠️ SEUL LE LOGO COMPLET EN A. L'icône (11 Ko) n'est pas le sujet de
- * cette passe et garde son chemin d'origine, inchangé.
+ * haute densité). Le logo s'affiche entre 185 et 247 px de large :
+ * 512 px couvre donc le double partout.
+ * ⚠️ SEUL LE LOGO COMPLET EN A. L'icône (11 Ko) n'est pas le sujet et
+ * garde son chemin d'origine, inchangé.
+ *
+ * ██ §1 (nº 723) — UN SEUL FORMAT, ET SANS PERTE ██
+ * ------------------------------------------------------------------
+ * LE DÉFAUT DU PROPRIÉTAIRE : « le grain se voit en ouvrant le fichier
+ * directement ». C'était vrai, et c'est MESURÉ (banc de la passe : on
+ * rend chaque variante à sa taille et on la compare à l'original réduit
+ * d'autant, sur les seuls pixels VISIBLES — le grain du fond
+ * transparent ne se voit pas, celui du glyphe si) :
+ *
+ *     ancien 256.webp  6 470 o   37,6 dB   pire écart 25/255
+ *     ancien 512.webp 14 690 o   39,2 dB   pire écart 46/255
+ *
+ * Un logo n'est pas une photo : c'est un APLAT à contours nets, le cas
+ * où la compression avec perte se voit le plus — chaque contour porte
+ * son halo.
+ *
+ * CE QUE LE BALAYAGE A MONTRÉ, ET IL RENVERSE LE CHOIX DE LA nº 716 :
+ * le WebP SANS PERTE est à la fois PLUS PROPRE ET PLUS PETIT que le
+ * WebP de qualité 95 — 7 156 o contre 8 222 o à 256 px, et un écart de
+ * ZÉRO au lieu de 24/255. Sur un aplat, la compression sans perte n'a
+ * presque rien à coder ; avec perte, elle invente du bruit là où il n'y
+ * a que deux teintes.
+ *
+ * ⚠️ ET L'AVIF EST RETIRÉ, C'EST LE POINT QUI COMPTE. `<picture>` sert
+ * la PREMIÈRE source que le navigateur sait lire : l'AVIF passait donc
+ * AVANT le WebP sur Chrome et Safari récents — garder un AVIF avec
+ * perte, c'eût été ne rien corriger pour la plupart des visiteurs. Or
+ * l'AVIF ne peut pas gagner ici : sans perte il pèse 23 056 o (256) et
+ * 53 224 o (512), soit trois fois le WebP sans perte ; avec perte il
+ * garde du grain. Un format qui n'est ni plus propre ni plus léger n'a
+ * pas de raison d'être servi en premier.
+ * ⚠️ AUCUNE COUVERTURE PERDUE : tout navigateur qui lit l'AVIF lit le
+ * WebP, plus ancien et plus répandu (Safari 14+, Chrome 32+,
+ * Firefox 65+). Et le `<img>` du fond porte toujours l'ORIGINAL en
+ * dernier recours, comme depuis la nº 716.
  */
-const VARIANTES_LOGO = [
-  { type: "image/avif", suffixe: "avif" },
-  { type: "image/webp", suffixe: "webp" },
-] as const;
+const VARIANTES_LOGO = [{ type: "image/webp", suffixe: "webp" }] as const;
 
 /** `/yokofolio-logo.png` → `/yokofolio-logo-256.avif`, etc. */
 function cheminVariante(suffixe: string, largeur: number): string {

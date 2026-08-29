@@ -4,7 +4,10 @@
  * Les photos de téléphone pèsent souvent plusieurs Mo : on les
  * réduit ici (1 200 px maximum, format JPEG) AVANT de les envoyer,
  * pour que le site reste rapide — exigence du cahier des charges.
+ * La QUALITÉ de cette réduction vit dans `lib/qualite-photo`, avec la
+ * mesure qui l'a fixée (§1 nº 723).
  */
+import { QUALITE_PHOTO } from "@/lib/qualite-photo";
 /**
  * ██ §1 (nº 699) — LE PLAFOND D'ENTRÉE ██
  * Vingt méga-octets : au-delà, aucune photo d'appareil ou de
@@ -17,7 +20,12 @@ export const TAILLE_MAX_PHOTO_OCTETS = 20 * 1024 * 1024;
 export async function compresserPhoto(
   fichier: File,
   coteMax = 1200,
-  qualite = 0.85
+  /*  §1 (nº 723) — LA QUALITÉ VIENT DE SON ÉCRITURE UNIQUE, où vit
+      aussi la mesure qui l'a fixée (lib/qualite-photo). Elle valait
+      0,85 en dur ici, et 85 en dur dans l'outil de reprise nº 719 :
+      deux copies alignées à la main, donc deux copies qui finissent
+      par diverger. */
+  qualite = QUALITE_PHOTO
 ): Promise<Blob> {
   /*  §1 (nº 699) — le plafond, avant toute lecture du contenu. */
   if (fichier.size > TAILLE_MAX_PHOTO_OCTETS) {

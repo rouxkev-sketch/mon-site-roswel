@@ -23,6 +23,10 @@
  * ⚠️ RELANÇABLE SANS DÉGÂT : une photo déjà marquée `avatar-` est
  * ignorée. Relancer dix fois de suite ne fait rien de plus que la
  * première.
+ * ⚠️ SAUF AVEC `--tout` (§1 nº 723) : la marque dit que les variantes
+ * EXISTENT, pas qu'elles sont bonnes. Quand la qualité de réduction du
+ * site change, il faut pouvoir repasser sur ce qui est déjà marqué —
+ * c'est ce que fait cette option, et elle ne lève que ce tri-là.
  * ⚠️ ESSAI À BLANC PAR DÉFAUT : sans `--reel`, il n'écrit rien nulle
  * part — il dit ce qu'il ferait, et s'arrête là.
  *
@@ -36,12 +40,15 @@
  * Chromium sur la machine du propriétaire pour une reprise unique.
  * CE QUI EST FAIT À LA PLACE, et pourquoi c'est fidèle : la réduction
  * passe par `sharp` — la bibliothèque que Next embarque déjà, donc
- * rien à installer — RÉGLÉE SUR LES MÊMES PARAMÈTRES : JPEG, qualité
- * 85, côté maximum, rapport d'aspect conservé. Ce sont exactement les
- * réglages de `compresserPhoto`. Et LES TAILLES NE SONT PAS RECOPIÉES :
- * elles sont LUES dans `src/lib/avatar-variantes.ts`, avec la marque de
- * nommage — si le site change ses valeurs, ce script les suit (règle
- * des écritures uniques, piège nº 378).
+ * rien à installer — RÉGLÉE SUR LES MÊMES PARAMÈTRES : JPEG, côté
+ * maximum, rapport d'aspect conservé, et la même QUALITÉ. Ce sont
+ * exactement les réglages de `compresserPhoto`. Et RIEN N'EST RECOPIÉ :
+ * les tailles et la marque de nommage sont LUES dans
+ * `src/lib/avatar-variantes.ts`, la durée de validité dans
+ * `lib/cache-photos` (nº 721), la qualité dans `lib/qualite-photo`
+ * (nº 723 — elle était encore écrite « 85 » en dur ici). Si le site
+ * change l'une de ces valeurs, ce script la suit (règle des écritures
+ * uniques, piège nº 378).
  * ⚠️ CE QUE CELA IMPLIQUE, HONNÊTEMENT : une variante reprise ici et
  * une variante déposée par le formulaire peuvent différer de quelques
  * octets — deux encodeurs JPEG ne sont jamais identiques au bit près.
@@ -72,6 +79,25 @@ const TABLE = "tatoueurs";
 const COLONNE = "photo_profil";
 
 const REEL = process.argv.includes("--reel");
+/**
+ * ██ §1 (nº 723) — REPRENDRE MÊME CE QUI EST DÉJÀ MARQUÉ ██
+ * ------------------------------------------------------------------
+ * POURQUOI CETTE OPTION EXISTE. La marque (`avatar-…`) veut dire « ces
+ * variantes existent » — elle ne dit RIEN de leur qualité. La nº 723
+ * monte la qualité de réduction pour effacer le grain : les avatars
+ * repris à la nº 719 portent donc la marque, mais l'ANCIENNE qualité,
+ * et le tri normal les écarterait pour toujours.
+ * `--tout` lève le seul tri de la marque, et rien d'autre : toutes les
+ * autres garanties tiennent — essai à blanc par défaut, l'original
+ * n'est jamais supprimé, la base n'est écrite qu'après les trois
+ * envois réussis, et une relance reste sans dégât (elle refabrique les
+ * mêmes fichiers sous un nom neuf).
+ * ⚠️ CE QU'ELLE COÛTE, ET IL FAUT LE DIRE : chaque photo reprise repart
+ * de l'ORIGINAL en ligne, qui est déjà un JPEG — la reprise ne peut pas
+ * rendre plus de détail qu'il n'en reste. Elle cesse d'en RETIRER, ce
+ * qui est tout l'objet de la passe.
+ */
+const TOUT = process.argv.includes("--tout");
 
 /* ==================================================================
  * 1 · LES ACCÈS — lus, jamais écrits
@@ -142,11 +168,26 @@ async function lireLesReglesDuSite() {
   );
   const duree = /CACHE_PHOTOS\s*=\s*"(\d+)"/.exec(sourceCache);
   if (!duree) throw new Error("CACHE_PHOTOS introuvable dans lib/cache-photos");
+  /*  §1 (nº 723) — LA QUALITÉ, lue chez le site elle aussi. Elle était
+      écrite « 85 » EN DUR ici, en face du 0,85 de `compresserPhoto` :
+      deux copies tenues alignées à la main. La nº 723 monte la qualité
+      pour effacer le grain de l'avatar — sans cette lecture, ce script
+      aurait continué à reprendre les photos à l'ancienne, et les
+      avatars repris n'auraient plus ressemblé aux avatars déposés. */
+  const sourceQualite = await readFile(
+    path.join(RACINE, "src", "lib", "qualite-photo.ts"),
+    "utf8"
+  );
+  const qualite = /QUALITE_PHOTO\s*=\s*([\d.]+)/.exec(sourceQualite);
+  if (!qualite) throw new Error("QUALITE_PHOTO introuvable dans lib/qualite-photo");
   return {
     petit: nombre("AVATAR_PETIT"),
     moyen: nombre("AVATAR_MOYEN"),
     marque: marque[1],
     duree: duree[1],
+    //  Le site travaille de 0 à 1 (`canvas.toBlob`), sharp de 0 à 100 :
+    //  même valeur, unité de l'outil.
+    qualite: Math.round(Number(qualite[1]) * 100),
   };
 }
 
@@ -192,11 +233,12 @@ async function reprendreUnePhoto(fiche, outils) {
   details.avant = original.length;
 
   //  b) LES DEUX VARIANTES. Mêmes réglages que la réduction du site :
-  //     JPEG, qualité 85, côté maximum, rapport conservé.
+  //     JPEG, côté maximum, rapport conservé — et la QUALITÉ lue chez
+  //     le site (§1 nº 723, lib/qualite-photo), jamais recopiée ici.
   const reduire = (cote) =>
     sharp(original)
       .resize({ width: cote, height: cote, fit: "inside", withoutEnlargement: true })
-      .jpeg({ quality: 85 })
+      .jpeg({ quality: regles.qualite })
       .toBuffer();
   let petite, moyenne;
   try {
@@ -307,12 +349,17 @@ async function main() {
   console.log(
     `  règles lues chez le site : marque « ${regles.marque} », ` +
       `variantes ${regles.petit} et ${regles.moyen}, ` +
-      `validité ${regles.duree} s`
+      `qualité ${regles.qualite}, validité ${regles.duree} s`
   );
   console.log(
     REEL
-      ? "  MODE RÉEL — les fichiers seront écrits et les fiches mises à jour.\n"
-      : "  ESSAI À BLANC — rien ne sera écrit. (Ajoute --reel pour agir.)\n"
+      ? "  MODE RÉEL — les fichiers seront écrits et les fiches mises à jour."
+      : "  ESSAI À BLANC — rien ne sera écrit. (Ajoute --reel pour agir.)"
+  );
+  console.log(
+    TOUT
+      ? "  --tout : les photos DÉJÀ marquées sont reprises elles aussi.\n"
+      : "  Les photos déjà marquées sont ignorées. (Ajoute --tout pour les reprendre.)\n"
   );
 
   const appeler = fabriquerLeFacteur(base, acces.SUPABASE_SECRET_KEY);
@@ -334,7 +381,10 @@ async function main() {
   const liste = await appeler(
     `/rest/v1/${TABLE}?select=id,nom,${COLONNE}` +
       `&${COLONNE}=not.is.null` +
-      `&${COLONNE}=not.like.*${regles.marque}*`
+      //  §1 (nº 723) — `--tout` reprend AUSSI les photos déjà marquées
+      //  (voir la constante TOUT) : le filtre de marque saute ici, et
+      //  le tri local ci-dessous s'efface avec lui.
+      (TOUT ? "" : `&${COLONNE}=not.like.*${regles.marque}*`)
   );
   if (!liste.ok) {
     console.error(`✖ Lecture de la base refusée (${liste.status}).`);
@@ -351,7 +401,9 @@ async function main() {
       ⚠️ LA MARQUE EST CELLE DU SITE, lue plus haut — pas une chaîne
       recopiée ici. */
   const rendues = (await liste.json()).filter((f) => f[COLONNE]);
-  const fiches = rendues.filter((f) => !String(f[COLONNE]).includes(regles.marque));
+  const fiches = TOUT
+    ? rendues
+    : rendues.filter((f) => !String(f[COLONNE]).includes(regles.marque));
   const dejaMarquees = rendues.length - fiches.length;
   if (fiches.length === 0) {
     //  ⚠️ ON NE COMPTE PAS LES IGNORÉES ICI, et ce n'est pas un oubli :
