@@ -49,6 +49,8 @@ import { mecanismeCoupe } from "@/lib/variantes-essai";
 //  §1 (nº 718) — la variante d'avatar à servir : la règle de
 //  nommage et le repli vivent dans lib/avatar-variantes.
 import { AVATAR_PETIT, sourceAvatar } from "@/lib/avatar-variantes";
+//  §2 (nº 725) — la balise de popularité, écrite une seule fois.
+import { signalerConsultation } from "@/lib/balise-popularite";
 
 /**
  * LA CARTE D'UN TATOUEUR
@@ -431,22 +433,13 @@ function CarteTatoueurNue({
     //  est la seule API de la chaîne du toucher — la couper dit si
     //  elle consomme l'activation que l'auto-réparation dépense.
     if (mecanismeCoupe("balise")) return;
-    try {
-      const corps = new Blob([JSON.stringify({ slug: tatoueur.slug })], {
-        type: "application/json",
-      });
-      if (!navigator.sendBeacon?.("/api/tatoueur/clic", corps)) {
-        fetch("/api/tatoueur/clic", {
-          method: "POST",
-          body: JSON.stringify({ slug: tatoueur.slug }),
-          headers: { "Content-Type": "application/json" },
-          keepalive: true,
-        }).catch(() => {});
-      }
-    } catch {
-      // Navigateur sans balise : le clic ne sera pas compté, c'est tout.
-    }
+    //  §2 (nº 725) — L'ENVOI EST L'ÉCRITURE UNIQUE, et elle tient le
+    //  verrou : ce clic-ci et le montage de la fiche (CompteurConsultation)
+    //  se rejoignent sur le même parcours et envoyaient DEUX requêtes
+    //  pour une seule consultation (lib/balise-popularite).
+    signalerConsultation(tatoueur.slug);
   }
+
 
   /** N'intercepte QUE le clic simple, sur les APPAREILS À SOURIS
       (toute largeur de fenêtre — la fenêtre superposée sait s'y
@@ -601,6 +594,30 @@ function CarteTatoueurNue({
         //  que le navigateur n'ait pris la photo d'adieu de la mosaïque.
         //  C'est DefilementEnHaut qui remonte, à l'adresse commise.
         scroll={false}
+        //  ██ §3 (nº 725) — ON NE PRÉCHARGE PAS TROIS FOIS LA MÊME FICHE ██
+        //  LE DÉFAUT, relevé par le propriétaire à la sonde Vitesse :
+        //  « lola-lyon » préchargé TROIS fois sur un seul écran de
+        //  résultats (307, 278 et 267 ms). LA CAUSE est écrite dans le
+        //  calcul d'adresse plus haut, et elle s'y annonce elle-même :
+        //  « le lien change de cible à mesure qu'on fait défiler »
+        //  (§2 nº 371, `?photo=`). Next tient BIEN une mémoire de
+        //  préchargement — il ne redemande jamais deux fois la même
+        //  adresse —, mais elle est indexée sur l'adresse ENTIÈRE :
+        //  « ?photo=A » et « ?photo=B » y sont deux pages, quand c'est
+        //  la même.
+        //  LE REMÈDE, ET IL NE COÛTE RIEN : on précharge tant que
+        //  l'adresse est STABLE — à l'arrivée, quand rien n'a encore
+        //  défilé, et c'est le seul moment qui compte pour la vitesse.
+        //  Dès qu'une photo est regardée, l'adresse n'est plus qu'un
+        //  état d'affichage : on cesse de la précharger, sans rien
+        //  perdre — la fiche est DÉJÀ préparée sous son chemin (la
+        //  leçon de la nº 656 : Next range la page d'une route
+        //  dynamique SOUS LE CHEMIN, les paramètres ne changent pas de
+        //  case).
+        //  ⚠️ RIEN D'AUTRE NE BOUGE : `?photo=` reste dans le lien, la
+        //  fiche s'ouvre toujours sur la photo regardée (nº 371), et le
+        //  clic droit comme le partage voient l'adresse complète.
+        prefetch={photoRegardee ? false : undefined}
         draggable={false}
         onCopy={garderLeTexteALaCopie}
         //  `flex flex-col` : le lien prend la place que les deux blocs

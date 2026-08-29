@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { signalerConsultation } from "@/lib/balise-popularite";
 
 /**
  * UNE FICHE OUVERTE EST UNE FICHE CONSULTÉE (passe nº 220-§1)
@@ -31,22 +32,10 @@ export function CompteurConsultation({ slug }: { slug: string }) {
   useEffect(() => {
     //  Un aperçu (« Ma fiche ») n'est pas une consultation : la page
     //  publique est la seule à poser ce composant.
-    try {
-      const corps = new Blob([JSON.stringify({ slug })], {
-        type: "application/json",
-      });
-      if (!navigator.sendBeacon?.("/api/tatoueur/clic", corps)) {
-        void fetch("/api/tatoueur/clic", {
-          method: "POST",
-          body: JSON.stringify({ slug }),
-          headers: { "Content-Type": "application/json" },
-          keepalive: true,
-        }).catch(() => {});
-      }
-    } catch {
-      // Navigateur sans balise : cette consultation ne sera pas
-      // comptée, et c'est tout.
-    }
+    //  §2 (nº 725) — L’ENVOI EST L’ÉCRITURE UNIQUE, et c’est elle qui
+    //  tient le verrou : la carte et cette page-ci se rejoignent sur le
+    //  même parcours, et n’envoyaient qu’un doublon (lib/balise-popularite).
+    signalerConsultation(slug);
   }, [slug]);
 
   return null;

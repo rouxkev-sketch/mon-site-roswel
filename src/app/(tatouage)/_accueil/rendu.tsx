@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { cache } from "react";
+//  §1 (nº 725) — la lecture partagée entre les métadonnées et la page
+//  (le `cache` de React ne les réunit pas : voir lib/memoire-courte).
+import { memoireCourte } from "@/lib/memoire-courte";
 import { adresseDuSite } from "@/lib/site";
 import { rayonRetenu, TEXTES_TATOUAGE } from "@/config/tatouage";
 import { lieuDepuisParametres } from "@/lib/geocodage";
@@ -102,11 +104,26 @@ function pageDemandee(params: ParametresAccueil): number {
  * LA LECTURE DE L'ACCUEIL, FAITE UNE SEULE FOIS PAR REQUÊTE.
  * Les métadonnées et le corps de page en ont besoin toutes les deux
  * (l'une pour savoir si l'on est en démonstration, l'autre pour les
- * cartes). `cache` est nourri d'une CHAÎNE — l'adresse remise à plat —
- * et non de l'objet des paramètres : deux objets différents pour la
- * même recherche donneraient deux lectures.
+ * cartes). La mémoire est nourrie d'une CHAÎNE — l'adresse remise à
+ * plat — et non de l'objet des paramètres : deux objets différents pour
+ * la même recherche donneraient deux lectures.
+ *
+ * ██ §1 (nº 725) — LE `cache` DE REACT NE TENAIT PAS SA PROMESSE ██
+ * ------------------------------------------------------------------
+ * CETTE NOTE DISAIT « faite une seule fois », et c'était FAUX — mesuré
+ * au journal de la doublure sur UN affichage de /recherche : DIX-HUIT
+ * requêtes envoyées à la base, plusieurs lignes en double ou en triple
+ * (`popularite_tatoueurs` ×3, `rpc/rechercher_tatoueurs` ×2,
+ * `tatoueurs` ×3, `photos_tatoueur` ×3). La cause est celle que la
+ * nº 724 a nommée sur les pages « style + ville » : dans cette version
+ * de Next, `generateMetadata` ne se rend pas dans la même portée que la
+ * page, et le `cache` de React ne réunit donc pas leurs lectures.
+ * LE REMÈDE EST CELUI DE LA nº 724, et c'est désormais une écriture
+ * unique : `lib/memoire-courte` — on mémorise la PROMESSE (les deux
+ * appels partent au même instant : une mémoire de résultats arriverait
+ * trop tard), quelques secondes, et jamais une promesse rejetée.
  */
-const chargerAccueil = cache(async (requete: string, taillePage: number) => {
+async function lireAccueil(requete: string, taillePage: number) {
   /*  ██ §1 (nº 673) — LA PAGE ATTEND LE CATALOGUE DONT ELLE DÉPEND ██
       ==================================================================
       LA CAUSE DU DÉFAUT DES STYLES, PRISE SUR LE FAIT ET NOMMÉE. Quatre
@@ -213,7 +230,27 @@ const chargerAccueil = cache(async (requete: string, taillePage: number) => {
     photosMax: PHOTOS_PAR_CARROUSEL,
   });
   return { resultat, style, nature, lieu, rayonKm, exclure, page, jourMelange };
-});
+}
+
+/*  §1 (nº 725) — LA LECTURE PARTAGÉE : deux appelants simultanés (les
+    métadonnées et la page) n'en déclenchent qu'une. La clé décrit la
+    lecture ENTIÈRE — l'adresse remise à plat ET la taille de page, qui
+    change le nombre de cartes lues. */
+const chargerAccueil = memoireCourte(
+  lireAccueil,
+  (requete: string, taillePage: number) => `${requete}|${taillePage}`,
+  //  ⚠️ UNE SECONDE, ET PAS DIX (le défaut de `memoireCourte`). Cette
+  //  page-ci n'a AUCUN cache par-dessus — elle est `force-dynamic`
+  //  (nº 652) — et la règle de l'accueil est écrite juste au-dessus :
+  //  « il doit montrer une fiche validée TOUT DE SUITE ». Le pont à
+  //  franchir ne dure que quelques millisecondes (les deux appels
+  //  partent ensemble) : une seconde le couvre cent fois, et deux
+  //  visiteurs ne peuvent pas se partager une liste vieillie.
+  //  Mesuré sans cette borne : cinq affichages d'affilée ne
+  //  déclenchaient plus qu'UNE lecture — la fiche validée entre-temps
+  //  aurait attendu dix secondes.
+  1_000
+);
 
 /** L'adresse remise à plat, toujours dans le même ordre : c'est la
     clé de lecture ci-dessus. */

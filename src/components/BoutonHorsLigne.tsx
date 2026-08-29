@@ -31,6 +31,39 @@ import { lireDuServeur } from "@/lib/lecture-navigateur";
  * champs en rouge, corrige, réenregistre — et la fiche repart en
  * validation.
  */
+/**
+ * ██ §4 (nº 725) — « SUIS-JE ADMINISTRATEUR ? » SE DEMANDE UNE FOIS ██
+ * ==================================================================
+ * LE DÉFAUT, relevé par le propriétaire à la sonde Vitesse : DEUX
+ * appels à `/api/admin/yokofolio/moi` sur un seul écran de fiche
+ * (377 ms et 336 ms). La cause est celle de la nº 713 : l'effet vit
+ * dans un COMPOSANT, et ce composant est monté plus d'une fois par
+ * document — la fiche pleine page et la fenêtre de fiche portent
+ * chacune leur `ContenuFiche`. Un verrou de composant meurt avec lui ;
+ * celui-ci vit avec le DOCUMENT, la durée exacte de ce qu'il garde.
+ * ⚠️ ON MÉMORISE LA PROMESSE, PAS LA RÉPONSE : les deux montages
+ * partent ensemble, une mémoire de réponses arriverait trop tard.
+ * ⚠️ UN ÉCHEC N'EST JAMAIS GARDÉ : la question se reposera au montage
+ * suivant plutôt que de rester fausse pour toute la visite.
+ * ⚠️ ET LE COMPTE NE CHANGE PAS SOUS NOS PIEDS : une reconnexion passe
+ * par un document neuf, donc par une mémoire neuve.
+ */
+let reponseAdmin: Promise<boolean> | null = null;
+
+function demanderSiAdmin(): Promise<boolean> {
+  if (reponseAdmin) return reponseAdmin;
+  reponseAdmin = (async () => {
+    const reponse = await lireDuServeur("/api/admin/yokofolio/moi");
+    const donnees = (await reponse.json().catch(() => null)) as {
+      admin?: boolean;
+    } | null;
+    return Boolean(donnees?.admin);
+  })();
+  reponseAdmin.catch(() => {
+    reponseAdmin = null;
+  });
+  return reponseAdmin;
+}
 export function BoutonHorsLigne({
   idFiche,
   nom,
@@ -58,11 +91,10 @@ export function BoutonHorsLigne({
         if (!data.session || abandonne) return;
         //  §1 (nº 693) — la dernière lecture du navigateur à
         //  recevoir le délai de garde partagé.
-        const reponse = await lireDuServeur("/api/admin/yokofolio/moi");
-        const donnees = (await reponse.json().catch(() => null)) as {
-          admin?: boolean;
-        } | null;
-        if (!abandonne && donnees?.admin) setAdmin(true);
+        //  §4 (nº 725) — ET UNE SEULE FOIS PAR DOCUMENT : voir
+        //  `demanderSiAdmin`, juste au-dessus.
+        const estAdmin = await demanderSiAdmin();
+        if (!abandonne && estAdmin) setAdmin(true);
       } catch {
         // Hors ligne ou API muette : pas d'action d'admin, c'est tout.
       }
