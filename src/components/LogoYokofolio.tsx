@@ -1,4 +1,4 @@
-import Image from "next/image";
+/* eslint-disable @next/next/no-img-element */
 import { MARQUE_YOKOFOLIO } from "@/config/tatouage";
 
 /**
@@ -52,49 +52,78 @@ import { MARQUE_YOKOFOLIO } from "@/config/tatouage";
  * ou n'importe quel lecteur d'images. Un rapport faux ne se voit pas
  * en régime établi : il ne se paie qu'au chargement, en un glissement.
  *
- * ██ §1 (nº 715) — LE LOGO PASSE PAR L'OPTIMISEUR, LE FICHIER NE BOUGE
- * ██ PAS D'UN OCTET ██
+ * ██ §1 (nº 716) — LE LOGO ALLÉGÉ, PAR DES FICHIERS, PAS PAR UN SERVICE
+ * ██ ██
  * ==================================================================
- * CE QUE L'AUDIT nº 714 A TROUVÉ, ET C'ÉTAIT SON LEVIER Nº 1 :
- * `yokofolio-logo.png` pèse 142 079 octets et partait TEL QUEL sur le
- * réseau, AVANT la première peinture, SUR CHAQUE PAGE — pour être
- * affiché entre 36 et 48 px de haut. Une balise `<img>` nue ne demande
- * rien à personne : le navigateur téléchargeait les 1663 × 323 pixels
- * d'origine pour en peindre 247 × 48.
+ * CE QUI S'EST PASSÉ À LA nº 715, ET IL FAUT LE DIRE EN PREMIER : le
+ * logo était passé par `next/image`, donc par l'optimiseur À LA VOLÉE
+ * (`/_next/image?url=…`). Au banc, tout allait — logo net, 139 Ko
+ * ramenés à 10. EN LIGNE, il ne s'est pas chargé du tout : carré
+ * cassé, sur toutes les pages. Le propriétaire est revenu à la nº 713.
  *
- * CE QUI CHANGE, ET RIEN D'AUTRE : c'est `next/image` qui sert l'image.
- * L'optimiseur fabrique À LA VOLÉE la variante de la taille demandée,
- * en AVIF (puis WebP en repli, puis l'original) — les formats sont
- * déjà déclarés dans `next.config.ts` depuis la nº 366, pour les
- * photos des cartes ; le logo emprunte le même chemin, il n'y a aucun
- * réglage neuf.
+ * CE QUE L'ENQUÊTE DE LA nº 716 A ÉTABLI, ET CE QU'ELLE N'A PAS PU
+ * ÉTABLIR — les deux comptent :
+ *  · LE BANC NE REPRODUIT PAS LE DÉFAUT. Service worker actif, cinq
+ *    chargements, quatre pages : le logo se charge à chaque fois,
+ *    aucune réponse en échec. La cause est donc PROPRE À LA
+ *    PRODUCTION, hors de portée de l'atelier ;
+ *  · UNE FRAGILITÉ EST NOMMÉE, ET ELLE EST RÉELLE : le service worker
+ *    reconnaît les logos par leur CHEMIN (`estIcone`, public/sw.js —
+ *    « icon | icone | logo »). Or `/_next/image?url=%2Fyokofolio-logo…`
+ *    porte le mot « logo » dans sa REQUÊTE, pas dans son chemin : le
+ *    logo perdait son traitement « le réseau, toujours » et tombait
+ *    dans la branche des fichiers ordinaires — dont le repli, quand le
+ *    réseau échoue, est une réponse VIDE (`status: 504`). Une réponse
+ *    vide sur une image, c'est exactement le carré cassé décrit.
+ *    Que ce soit LA cause ou seulement UNE cause, on ne le saura pas
+ *    d'ici : on cesse d'en dépendre.
  *
- * ⚠️ LE FICHIER D'ORIGINE N'EST NI TOUCHÉ, NI RECADRÉ, NI RECOMPRESSÉ,
- * NI REMPLACÉ (règle du propriétaire, nº 356/467) : il reste dans
- * `public/`, octet pour octet, et c'est LUI la source. L'optimiseur
- * n'en tire que des copies temporaires, en cache. Retirer ces lignes
- * rendrait exactement l'ancien comportement.
+ * LA SOLUTION, ET SON PRINCIPE : ne dépendre D'AUCUN service. Les
+ * variantes sont des FICHIERS, posés à côté de l'original
+ * (`yokofolio-logo-256.avif` et ses trois sœurs) — rien à calculer au
+ * vol, rien à mettre en cache, rien qui puisse manquer. Leur chemin
+ * contient « logo » : le service worker les traite donc comme des
+ * logos, ce qui était l'intention depuis toujours.
  *
- * ⚠️ LA NETTETÉ EST GARANTIE AUX DEUX DENSITÉS, et c'est la raison des
- * deux nombres `width`/`height` : à largeur FIXE (le cas ici — la
- * hauteur commande, la largeur suit), `next/image` fabrique un jeu
- * 1× / 2× à partir de `width`. À 48 px de haut, la largeur déclarée
- * vaut 247 : le navigateur reçoit donc 256 px sur un écran ordinaire
- * et 512 px sur un écran à haute densité (les deux paliers existent
- * déjà dans `imageSizes`). Un iPhone reçoit 512 px de large pour en
- * peindre 185 — plus du double, donc net, sans payer les 1663 px de
- * l'original.
+ * ⚠️ CE QUE LE REPLI COUVRE, ET CE QU'IL NE COUVRE PAS — MESURÉ, et
+ * non supposé (c'est la leçon de la nº 715). Le `<img>` du fond porte
+ * l'ORIGINAL, et il sert quand le navigateur NE SAIT LIRE NI l'AVIF NI
+ * le WebP : `<picture>` choisit sa source sur le FORMAT annoncé.
+ * IL NE COUVRE PAS le fichier absent : un navigateur qui sait lire
+ * l'AVIF prend la source AVIF et n'en change plus, même si elle
+ * échoue — vérifié au banc en coupant les deux variantes (le logo
+ * reste alors vide). Ce n'est pas un trou comparable à celui de la
+ * nº 715 : ces fichiers-ci sont des fichiers STATIQUES de `public/`,
+ * mis en ligne exactement comme `yokofolio-logo.png` lui-même. S'ils
+ * manquaient, l'original manquerait aussi. Le risque de la nº 715
+ * était d'une autre nature : un SERVICE qui devait répondre au vol.
  *
- * ⚠️ `loading="eager"` ET PAS `priority`, ET C'EST DÉLIBÉRÉ. Une
- * `<img>` nue charge sans attendre : `eager` garde EXACTEMENT ce
- * moment-là, pour que rien ne paraisse plus tard qu'avant. `priority`,
- * lui, aurait ajouté une demande de préchargement en tête du chemin
- * critique — l'inverse de ce que la nº 715 cherche.
+ * ⚠️ LE FICHIER D'ORIGINE N'EST NI TOUCHÉ, NI REMPLACÉ (règle nº
+ * 356/467) : 142 079 octets avant, 142 079 après — vérifié. Les
+ * variantes sont des fichiers EN PLUS, fabriqués une fois.
  */
 /** public/yokofolio-logo.png, mesuré : 1663 × 323. */
 const NATIF_LOGO = { largeur: 1663, hauteur: 323 };
 /** public/yokofolio-icone.png, mesuré : 297 × 337 — il n'est PAS carré. */
 const NATIF_ICONE = { largeur: 297, hauteur: 337 };
+
+/**
+ * §1 (nº 716) — LES VARIANTES DU LOGO, ÉCRITES UNE FOIS.
+ * Deux largeurs (l'écran ordinaire, puis le double pour les écrans à
+ * haute densité), deux formats modernes. Le logo s'affiche entre 185 et
+ * 247 px de large : 512 px couvre donc le double partout.
+ * ⚠️ SEUL LE LOGO COMPLET EN A. L'icône (11 Ko) n'est pas le sujet de
+ * cette passe et garde son chemin d'origine, inchangé.
+ */
+const VARIANTES_LOGO = [
+  { type: "image/avif", suffixe: "avif" },
+  { type: "image/webp", suffixe: "webp" },
+] as const;
+
+/** `/yokofolio-logo.png` → `/yokofolio-logo-256.avif`, etc. */
+function cheminVariante(suffixe: string, largeur: number): string {
+  return `${MARQUE_YOKOFOLIO.logo.replace(/\.png$/, "")}-${largeur}.${suffixe}`;
+}
 
 export function LogoYokofolio({
   hauteur = 32,
@@ -116,46 +145,62 @@ export function LogoYokofolio({
   //  garder un piège chargé pour le prochain appelant.
   const largeur = Math.round((hauteur * natif.largeur) / natif.hauteur);
 
-  return (
-    <Image
+  const image = (
+    <img
       src={icone ? MARQUE_YOKOFOLIO.icone : MARQUE_YOKOFOLIO.logo}
       alt={MARQUE_YOKOFOLIO.nom}
       width={largeur}
       height={hauteur}
-      //  §1 (nº 715) — le moment de chargement d'une `<img>` nue, gardé
-      //  tel quel : voir la note de l'en-tête (surtout pas `priority`).
-      loading="eager"
       // Non déplaçable : une image qui se laisse « traîner » avale les
       // clics légèrement glissés quand elle sert de lien (le logo).
       draggable={false}
       className={classe ?? "w-auto"}
       style={{
         height: classe ? undefined : hauteur,
-        /*  ██ §2 (nº 715) — LE RAPPORT D'ASPECT EST DÉCLARÉ, PLUS DÉDUIT
-            DE L'IMAGE REÇUE ██
-            LE DÉFAUT, MESURÉ À LA PASSE MÊME QUI L'A CRÉÉ : la largeur
-            suit la hauteur (`w-auto`), et le navigateur la calcule sur
-            le rapport de l'image QU'IL A REÇUE. Or l'optimiseur rend
-            des tailles ENTIÈRES : la variante de 256 px fait 256 × 50,
-            soit un rapport de 5,120 — quand le fichier d'origine
-            (1663 × 323) vaut 5,149. À 36 px de haut, cela fait 1,1 px
-            de largeur en moins ; le bloc central de la barre, centré
-            par deux marges automatiques, glissait donc d'un demi-pixel
-            (relevé : 331 → 330). C'est le mécanisme de la nº 507, en
-            beaucoup plus petit — et il n'y a aucune raison de le
-            laisser vivre.
-            LE REMÈDE : on DÉCLARE le rapport du fichier, celui des deux
-            constantes du haut. La largeur ne dépend plus de la variante
-            servie, quelle qu'elle soit — et si le propriétaire remplace
-            un jour le fichier, ce sont toujours ces deux mêmes nombres
-            qui commandent, à un seul endroit.
+        /*  §2 (nº 716) — LE RAPPORT D'ASPECT EST DÉCLARÉ, PLUS DÉDUIT DE
+            L'IMAGE REÇUE. Les variantes ont des tailles ENTIÈRES : la
+            256 fait 256 × 50, soit un rapport de 5,120 quand le fichier
+            d'origine (1663 × 323) vaut 5,149. La largeur suivant la
+            hauteur (`w-auto`), le logo perdait 1,1 px — et le bloc
+            central de la barre, centré par deux marges automatiques,
+            glissait d'un demi-pixel. C'est le mécanisme de la nº 507 en
+            miniature ; on le referme en déclarant le rapport DU FICHIER,
+            à partir des deux constantes ci-dessus.
             ⚠️ SANS EFFET QUAND L'APPELANT FIXE LES DEUX CÔTÉS (l'icône
-            dans un carré, par exemple) : `aspect-ratio` ne parle que
-            si une dimension vaut `auto`. Rien ne change pour eux. */
+            dans un carré) : `aspect-ratio` ne parle que si une dimension
+            vaut `auto`. */
         aspectRatio: `${natif.largeur} / ${natif.hauteur}`,
         objectFit: "contain",
         objectPosition: "left center",
       }}
     />
+  );
+
+  //  L'ICÔNE N'A PAS DE VARIANTE (voir VARIANTES_LOGO) : elle sort telle
+  //  quelle, exactement comme avant cette passe.
+  if (icone) return image;
+
+  /*  §1 (nº 716) — LE LOGO COMPLET : les formats modernes d'abord,
+      L'ORIGINAL EN DERNIER RECOURS. Le navigateur prend la première
+      source qu'il sait lire ; s'il n'en sait lire aucune — ou si les
+      fichiers manquent — c'est le `<img>` ci-dessus qui parle, avec le
+      fichier du propriétaire. Aucun scénario ne laisse le logo absent.
+      ⚠️ `display: contents` : l'enveloppe ne doit RIEN peser dans la
+      mise en page. Sans elle, `<picture>` s'intercalerait entre le lien
+      et l'image, et la barre — dont le centrage se joue au pixel
+      (nº 507) — n'a pas à connaître ce détail. La sélection de source,
+      elle, est faite par l'analyseur du document : le style n'y change
+      rien. */
+  return (
+    <picture style={{ display: "contents" }}>
+      {VARIANTES_LOGO.map(({ type, suffixe }) => (
+        <source
+          key={suffixe}
+          type={type}
+          srcSet={`${cheminVariante(suffixe, 256)} 1x, ${cheminVariante(suffixe, 512)} 2x`}
+        />
+      ))}
+      {image}
+    </picture>
   );
 }
