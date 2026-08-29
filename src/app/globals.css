@@ -877,6 +877,29 @@ html[data-recherche="ouverte"] [data-fond="sombre"] {
   display: none;
 }
 
+/*  LA PAGE « AJOUTER UN STYLE » (smartphone) CACHE LE SITE DERRIÈRE
+    ELLE (nº 735).
+    -------------------------------------------------------------------
+    Clavier ouvert, Safari iOS fait GLISSER le viewport de mise en page,
+    et tout `fixed` glisse avec lui : sur le vrai iPhone, une bande de
+    portfolio apparaissait entre la barre « Un style manque ? » et le
+    clavier — la plaque fixe que la nº 734 posait pour le boucher
+    glissait exactement comme le reste (l'erreur de la nº 476, voir le
+    commentaire nº 477 de PagePleinEcranMobile). Ici, rien à suivre :
+    l'enveloppe est invisible, et tout ce que le glissement découvre est
+    le canevas <html>, peint #0B0F14 en dur avant la première image
+    (nº 357) — anthracite par construction.
+    `visibility`, et non le `display: none` de la recherche ci-dessus :
+    la recherche VEUT vider le document, pour qu'il défile pour elle
+    seule ; ici le document doit garder sa hauteur et sa position de
+    lecture, retrouvées intactes en refermant la page d'ajout.
+    Le marqueur est posé par BlocPortfolio (§1 nº 735), au doigt
+    seulement — au web le même état ouvre une fenêtre PAR-DESSUS la
+    page, qu'il ne faut surtout pas éteindre. */
+html[data-ajout-style="ouvert"] [data-fond="sombre"] {
+  visibility: hidden;
+}
+
 /* L'AIR LAISSÉ AU-DESSUS D'UN CHAMP QUI REMONTE — EN CSS, PAS EN
    JAVASCRIPT.
    -------------------------------------------------------------------
