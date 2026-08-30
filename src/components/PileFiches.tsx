@@ -141,6 +141,61 @@ type EntreePile = {
   ouverture: number;
 };
 
+/**
+ * ██ §1 (nº 746) — L'OUVERTURE EN PRÉPARATION ██
+ * ==================================================================
+ * CE QUI SE PASSAIT, mesuré au banc sur base endormie (4 s par
+ * lecture) : un lien interne cliqué N'OUVRAIT RIEN pendant 10 à 25
+ * secondes — la pile attendait la fiche complète AVANT de montrer
+ * quoi que ce soit. Devant un lien muet, on re-clique : chaque clic
+ * relançait `ouvrir`, tous les appels s'accrochaient à la même
+ * demande, et sa résolution poussait D'UN COUP autant d'entrées
+ * d'historique et de fenêtres jumelles qu'il y avait eu de clics.
+ * C'est la pile qui « se fige » : des liens qui clignotent sans
+ * ouvrir, puis un historique encombré de doublons.
+ * LA RÈGLE, DÉSORMAIS : le clic ouvre TOUT DE SUITE une fenêtre
+ * d'attente (l'habillage neutre de la nº 745 — même écriture), SANS
+ * entrée d'historique : une préparation est un état d'affichage, pas
+ * une étape (règle 332-§1 : une entrée par ouverture RÉELLE). À
+ * l'arrivée de la fiche : l'entrée est poussée, la fenêtre réelle
+ * remplace l'attente — en un seul rendu. À l'échec : le lien fait son
+ * métier de lien (la page complète), comme avant.
+ * ⚠️ LA GARDE ANTI-DOUBLON EST LÀ : re-cliquer le MÊME lien pendant
+ * la préparation ne fait RIEN (elle est déjà en route) ; cliquer un
+ * AUTRE lien remplace la préparation, et la réponse de l'ancienne,
+ * quand elle arrive, est ignorée — le drapeau vit PAR PRÉPARATION
+ * (le slug fait foi), jamais en global.
+ * ⚠️ ELLE S'ANNULE D'UN GESTE : croix, voile ou Échap sur la fenêtre
+ * d'attente la referment SANS `history.back()` — rien n'a été poussé.
+ */
+type PreparationOuverture = {
+  slug: string;
+  adresse: string;
+  position: number;
+  ouverture: number;
+};
+
+/** La fiche « coquille » de la fenêtre d'attente : juste de quoi
+    monter l'enveloppe (la colonne montre l'habillage, jamais ces
+    champs vides). */
+function coquilleDAttente(slug: string): Tatoueur {
+  return {
+    id: `attente-${slug}`,
+    nom: "",
+    slug,
+    ville_nom: "",
+    ville_slug: "",
+    latitude: 0,
+    longitude: 0,
+    styles: [],
+    lien_instagram: "",
+    photo_principale: "",
+    photos_styles: {},
+    photos: [],
+    publie: true,
+  };
+}
+
 export function PileFiches({
   actif = true,
   voileDejaPose = false,
@@ -180,6 +235,14 @@ export function PileFiches({
 }) {
   const pathname = usePathname();
   const [pile, setPile] = useState<EntreePile[]>([]);
+  /** §1 (nº 746) — L'OUVERTURE EN PRÉPARATION (une seule à la fois :
+      la dernière demandée). L'état rend la fenêtre d'attente ; la
+      référence est la vérité que le `.then` consulte — un état lu
+      dans une fermeture serait figé au rendu du clic. */
+  const [preparation, setPreparation] = useState<PreparationOuverture | null>(
+    null
+  );
+  const preparationRef = useRef<PreparationOuverture | null>(null);
   const ouvertures = useRef(0);
   /** §5 (nº 328) — COMBIEN D'ENTRÉES CETTE PILE A POUSSÉES. Un
       COMPTEUR et non un drapeau : les fenêtres s'empilent, et
@@ -266,23 +329,48 @@ export function PileFiches({
   annoncer.current = surProfondeur;
 
   const ouvrir = useCallback<OuvertureFiche>((slug, adresse) => {
-    //  LA FICHE COMPLÈTE D'ABORD (le cache de lib/fiche-complete : au
-    //  survol du web elle est souvent déjà là) ; l'historique n'est
-    //  poussé QUE quand elle a répondu — jamais d'adresse changée pour
-    //  une fenêtre qui ne viendra pas.
+    /*  §1 (nº 746) — LA GARDE ANTI-RE-CLIC : cette fiche est déjà en
+        préparation, le clic n'a rien de plus à demander. C'est elle
+        qui empêchait N clics d'impatience de devenir N fenêtres
+        jumelles et N entrées d'historique à la résolution. */
+    if (preparationRef.current?.slug === slug) return;
+    /*  §1 (nº 746) — LA RÉACTION EST IMMÉDIATE : la fenêtre d'attente
+        se montre au clic (habillage nº 745), SANS entrée d'historique.
+        La position est capturée ICI, au geste — c'est elle que le gel
+        de la fenêtre (d'attente puis réelle) devra rendre. */
+    ouvertures.current += 1;
+    const preparation = {
+      slug,
+      adresse,
+      position: positionSousLeGel(),
+      ouverture: ouvertures.current,
+    };
+    preparationRef.current = preparation;
+    setPreparation(preparation);
+    //  LA FICHE COMPLÈTE (le cache de lib/fiche-complete : au survol
+    //  du web elle est souvent déjà là) ; l'historique n'est poussé
+    //  QUE quand elle a répondu — jamais d'adresse changée pour une
+    //  fenêtre qui ne viendra pas.
     void ficheComplete(slug).then((fiche) => {
+      /*  §1 (nº 746) — LA RÉPONSE D'UNE PRÉPARATION ABANDONNÉE SE
+          TAIT : refermée d'une croix, ou remplacée par un clic vers
+          une autre fiche. Le drapeau vit par préparation (le slug
+          fait foi), jamais en global — c'est ce qui interdit à la
+          réponse d'une fiche de parler pour une autre. */
+      if (preparationRef.current?.slug !== slug) return;
+      preparationRef.current = null;
       if (!fiche) {
         //  Base injoignable ou fiche partie : le lien fait son métier
         //  de lien — la page complète, comme avant cette passe.
         window.location.assign(adresse);
         return;
       }
-      //  La position que le gel rendra : celle du CORPS DÉJÀ GELÉ
-      //  quand une surface vit dessous (window.scrollY y vaut zéro),
-      //  celle de la page sinon. ⚠️ LA LECTURE VIT AVEC LE GEL
+      //  La position que le gel rendra : celle capturée AU CLIC (le
+      //  corps est gelé depuis par la fenêtre d'attente — la lecture
+      //  d'ici rendrait zéro). ⚠️ LA LECTURE VIT AVEC LE GEL
       //  (extraite nº 259-§3, lib/gel-du-corps) : deux endroits ne
       //  peuvent plus lire le corps de deux façons.
-      const position = positionSousLeGel();
+      const position = preparation.position;
       //  Le drapeau AVANT le pushState : DefilementEnHaut le lit au
       //  moment où l'adresse change (même règle que la mosaïque).
       document.documentElement.setAttribute("data-fenetre-fiche", "1");
@@ -324,18 +412,34 @@ export function PileFiches({
             : ""
         }`
       );
-      ouvertures.current += 1;
       entreesPoussees.current += 1;
       setPile((courante) => [
         ...courante,
-        { fiche, position, ouverture: ouvertures.current },
+        //  §1 (nº 746) — le numéro d'ouverture est celui de la
+        //  préparation : la fenêtre réelle CONTINUE la fenêtre
+        //  d'attente, elle n'en est pas une seconde.
+        { fiche, position, ouverture: preparation.ouverture },
       ]);
+      //  §1 (nº 746) — l'attente s'efface DANS LE MÊME geste que la
+      //  pile grandit : un seul rendu, la fenêtre réelle remplace la
+      //  fenêtre d'attente sans clignotement.
+      setPreparation(null);
       //  §2 (nº 589) — DANS LE MÊME GESTE : voir la note du compteur,
       //  plus haut. Les deux poseurs d'état partent ensemble, donc un
       //  seul rendu — l'enveloppe ne voit jamais l'adresse changée et
       //  la pile encore vide.
       annoncer.current?.(profondeurConnue.current + 1);
     });
+  }, []);
+
+  /** §1 (nº 746) — REFERMER LA FENÊTRE D'ATTENTE (croix, voile,
+      Échap) : rien n'a été poussé, il n'y a donc RIEN à consommer
+      dans l'historique — on efface la préparation, c'est tout. La
+      réponse en vol, quand elle arrivera, se taira (le drapeau ne
+      porte plus son slug). */
+  const annulerLaPreparation = useCallback(() => {
+    preparationRef.current = null;
+    setPreparation(null);
   }, []);
 
   /** Fermer = machine arrière : l'adresse recule d'un cran, et le
@@ -378,10 +482,34 @@ export function PileFiches({
           //  d'Ariane et son titre : toute fenêtre recouverte les
           //  efface, et les retrouve au rendu qui suit la fermeture
           //  de celle du dessus (la position dans la pile fait foi).
-          habillageEfface={rang !== visibles.length - 1}
+          //  §1 (nº 746) — et une ouverture en préparation EST le
+          //  sommet : tout ce qui vit dessous s'efface.
+          habillageEfface={
+            rang !== visibles.length - 1 || preparation !== null
+          }
           surFermeture={fermer}
         />
       ))}
+      {/*  §1 (nº 746) — LA FENÊTRE D'ATTENTE : montée AU CLIC, sans
+           entrée d'historique. La coquille ne montre rien d'elle-même
+           (la colonne est couverte par l'habillage nº 745, le cadre
+           photo reste sombre) ; la fenêtre réelle la remplace dans le
+           rendu où la fiche arrive. Sa croix ANNULE la préparation —
+           jamais de `history.back()`, rien n'a été poussé. */}
+      {preparation && (
+        <FenetreFiche
+          key={`attente-${preparation.slug}-${preparation.ouverture}`}
+          tatoueur={coquilleDAttente(preparation.slug)}
+          positionGrille={preparation.position}
+          avecVoile={visibles.length === 0 && !voileDejaPose}
+          contenuEnAttente
+          //  Le fil d'Ariane lit le nom de la fiche — la coquille n'en
+          //  a pas : « Accueil › (rien) » serait un fil menteur. On
+          //  l'efface le temps de l'attente, comme sous une pile.
+          habillageEfface
+          surFermeture={annulerLaPreparation}
+        />
+      )}
     </ContexteOuvertureFiche.Provider>
   );
 }
