@@ -9,20 +9,21 @@ import {
 } from "@/config/tatouage";
 import { BasculeDeuxChoix } from "@/components/BasculeDeuxChoix";
 import { ChampsPlageDates } from "@/components/CalendrierPlage";
-import { ChampLocalisation } from "@/components/ChampLocalisation";
-import { CHAMP } from "@/components/champs-formulaire";
 import { DeuxZonesLieu } from "@/components/DeuxZonesLieu";
-import { MenuDeroulant, type OptionMenu } from "@/components/MenuDeroulant";
-import { paysDuLieu, type LieuTrouve } from "@/lib/geocodage";
+//  nº 750 bis — L'ÉCRAN D'AJOUT D'UNE CONVENTION : fenêtre superposée
+//  au web, page plein écran au doigt — le gabarit d'« Ajouter un
+//  style ». C'est LUI qui porte le choix du pays, la liste, les dates
+//  et la demande aux administrateurs ; ce bloc-ci n'en reçoit que le
+//  résultat.
+import {
+  FenetreConventions,
+  type AjoutConvention,
+} from "@/components/FenetreConventions";
 //  nº 750 — LE CATALOGUE DES CONVENTIONS : la lecture née à la nº 749,
-//  et les trois règles pures qui la découpent (pays du menu,
-//  conventions d'un pays, localisation d'une convention).
+//  et la localisation d'une convention, recopiée dans la ligne de mode.
 import {
   chargerConventionsAcceptees,
-  conventionsDuPays,
   lieuDeLaConvention,
-  nomDuPays,
-  paysDesConventions,
   type ConventionAcceptee,
 } from "@/lib/conventions";
 import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
@@ -33,6 +34,7 @@ import {
   cleNeuve,
   modeVide,
   datesSuiventLeLieu,
+  periodeDeSession,
   //  §1 (nº 419) — « le lieu est-il renseigné ? », la condition
   //  d'affichage des dates d'une session guest.
   lieuRenseigne,
@@ -401,64 +403,17 @@ export function BlocModesExercice({
   }, [catalogueDemande]);
 
   /* ---------------------------------------------------------------
-     ██ nº 750 — « CONVENTION MISSING? LET US KNOW » ██
-     Le décalque de « Un style manque ? » (BlocPortfolio, nº 122), état
-     pour état : le texte saisi, l'envoi en cours, le refus éventuel,
-     la confirmation. DEUX champs ici — le nom et un message facultatif
-     — et le PAYS, qui vient du menu (conception nº 748-E).
-     ⚠️ UN SEUL PANNEAU À LA FOIS, désigné par la CLÉ DU MODE : deux
-     encadrés Convention peuvent coexister (« + Ajouter une
-     convention »), et une demande ouverte dans l'un n'a rien à faire
-     dans l'autre.
+     ██ nº 750 bis — L'ÉCRAN D'AJOUT D'UNE CONVENTION ██
+     Un seul état : la fenêtre est ouverte, ou non. TOUT le reste — le
+     pays regardé, la convention retenue, ses dates, et la demande aux
+     administrateurs — vit DANS `FenetreConventions`, avec son écran.
+     C'est ce qui garde ce bloc-ci lisible : il ne connaît que le
+     RÉSULTAT (une convention et deux dates), jamais la façon dont on y
+     arrive.
+     ⚠️ LES SIX ÉTATS DE LA DEMANDE ONT DÉMÉNAGÉ TELS QUELS (nº 750) :
+     ni le mécanisme, ni la route, ni les refus ne changent.
      --------------------------------------------------------------- */
-  const [demandeOuverte, setDemandeOuverte] = useState<string | null>(null);
-  /** LE PAYS CHOISI DANS LA DEMANDE — null tant que la personne n'en a
-      pas choisi un : c'est alors celui du menu qui vaut (le
-      « pré-rempli » de la conception nº 748-E). */
-  const [paysDemande, setPaysDemande] = useState<LieuTrouve | null>(null);
-  const [nomDemande, setNomDemande] = useState("");
-  const [messageDemande, setMessageDemande] = useState("");
-  const [envoiDemande, setEnvoiDemande] = useState(false);
-  const [refusDemande, setRefusDemande] = useState<string | null>(null);
-  const [demandeEnvoyee, setDemandeEnvoyee] = useState(false);
-
-  async function envoyerLaDemande(codePays: string) {
-    const propose = nomDemande.trim();
-    if (propose.length < 2 || !codePays || envoiDemande) return;
-    setEnvoiDemande(true);
-    setRefusDemande(null);
-    try {
-      const reponse = await fetch("/api/tatoueur/suggestion-convention", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          propose,
-          codePays,
-          message: messageDemande.trim() || null,
-          ficheId,
-        }),
-      });
-      const donnees = (await reponse.json()) as {
-        ok: boolean;
-        message?: string;
-      };
-      if (!donnees.ok) {
-        setRefusDemande(donnees.message ?? "L'envoi n'a pas abouti.");
-        return;
-      }
-      //  ENVOYÉ : les champs se vident, le panneau se referme, et une
-      //  ligne verte prend sa place — la demande attend l'examen de
-      //  l'administration, et le dit (le motif de la nº 122).
-      setNomDemande("");
-      setMessageDemande("");
-      setDemandeOuverte(null);
-      setDemandeEnvoyee(true);
-    } catch {
-      setRefusDemande("L'envoi n'a pas abouti. Réessaie.");
-    } finally {
-      setEnvoiDemande(false);
-    }
-  }
+  const [fenetreConventions, setFenetreConventions] = useState(false);
 
   /** LE MANQUE AMÈNE À L'ENDROIT EN CAUSE : si « Je confirme »
       désigne un mode d'un AUTRE onglet (ou d'un volet replié), on
@@ -954,310 +909,127 @@ export function BlocModesExercice({
   }
 
   /**
-   * ██ nº 750 — LE MODE CONVENTION : TROIS CHAMPS, DANS CET ORDRE ██
+   * ██ nº 750 bis — LE MODE CONVENTION : DES BADGES, PLUS DES MENUS ██
    * ==================================================================
-   * L'ordre est celui de la conception nº 748-B1, au champ près :
-   *  1. COUNTRY — un menu qui ne liste QUE les pays ayant au moins une
-   *     convention acceptée : on ne propose jamais un pays vide. Rien
-   *     n'est choisi au départ ;
-   *  2. CONVENTION — le second menu, qui N'APPARAÎT QU'UNE FOIS LE
-   *     PAYS CHOISI (« activé une fois le pays choisi ») : les
-   *     conventions de ce pays, par ordre alphabétique. Sous lui, la
-   *     ligne discrète “Convention missing? Let us know” ;
-   *  3. YOUR DATES THERE — le calendrier dessiné du site
-   *     (`ChampsPlageDates`, nº 116), les DEUX dates obligatoires. Ce
-   *     sont LES DATES DE L'ARTISTE, pas celles de la convention : il
-   *     peut n'y être qu'un jour sur sept. Pour des jours disjoints,
-   *     il ajoute une seconde ligne Convention sur la même convention
-   *     — le modèle multi-lignes existant, rien à inventer.
+   * CE QUE LA nº 750 AVAIT FAIT : deux menus déroulants posés à même le
+   * formulaire (pays, puis convention) et les dates dessous. Ça
+   * marchait ; ça ne ressemblait à rien d'autre dans le site.
+   * CE QUE LE PROPRIÉTAIRE VEUT, ET C'EST TOUT LE SUJET DE CETTE
+   * PASSE : LE MODÈLE DES STYLES. Un lien « + Ajouter une convention »
+   * ouvre un écran d'ajout — fenêtre superposée au web, page plein
+   * écran au doigt (`FenetreConventions`) — et chaque convention
+   * choisie revient ici en BADGE À CROIX, comme les styles reviennent
+   * en capsules dans le bloc du portfolio.
    *
-   * ⚠️ LES LIBELLÉS SONT EN ANGLAIS, et c'est la règle des NOUVEAUTÉS
-   * (conception nº 748-C) : le site passera à l'anglais au lancement ;
-   * les modes existants suivront avec le chantier de traduction, pas
-   * ici. Les MESSAGES D'ERREUR, eux, restent français comme tout le
-   * reste du formulaire — ils sont écrits dans lib/modes-exercice, avec
-   * ceux des trois autres genres.
-   *
-   * ⚠️ NI RECHERCHE DE PORTFOLIO NI SAISIE D'ADRESSE dans cet onglet :
-   * une convention n'est pas un lieu qu'on cherche, c'est une entrée de
-   * catalogue. Sa LOCALISATION est recopiée du catalogue au moment du
-   * choix (`lieuDeLaConvention`) et posée dans `lieu` — c'est elle qui
-   * situe le mode, dans le même champ que les trois autres genres.
-   *
-   * ⚠️ LA ROBE DES DEUX MENUS EST CELLE DES CHAMPS QUI LES ENTOURENT
-   * (`CHAMP`, components/champs-formulaire) : `rounded-xl`, 52 px,
-   * `bg-sombre-eleve-clair` au repos, `bg-sombre-haut` à l'ouverture.
-   * Aucune valeur inventée — celles du menu du booking (nº 552/407)
-   * ne conviendraient pas ici, ses voisins n'étant pas les mêmes.
+   * ⚠️ LE FOND NE CHANGE PAS D'UNE LIGNE : un badge EST une ligne de
+   * `modes_exercice` de genre `convention` — la même que la nº 750
+   * écrivait, avec sa localisation recopiée du catalogue, son
+   * `convention_id` et les dates de l'artiste. L'enregistrement, la
+   * relecture, la validation et l'expiration automatique sont ceux de
+   * la nº 750, intouchés.
+   * ⚠️ UN BADGE PAR AJOUT, ET PLUSIEURS BADGES POSSIBLES — y compris
+   * sur la MÊME convention à des dates disjointes (conception
+   * nº 748-B1). C'est le modèle multi-lignes des sessions guest,
+   * réemployé tel quel.
    */
-  function laConvention(mode: ModeEnSaisie) {
-    const enFaute = manquant(mode.cle, "convention");
-    const liste = catalogue ?? [];
-    const paysChoisi = mode.paysConvention ?? "";
-    const optionsPays: OptionMenu[] = paysDesConventions(liste).map(
-      (code) => ({ value: code, label: nomDuPays(code) })
-    );
-    const optionsConventions: OptionMenu[] = conventionsDuPays(
-      liste,
-      paysChoisi
-    ).map((convention) => ({ value: convention.id, label: convention.nom }));
-    //  LU, ET VIDE : aucune convention acceptée nulle part. On le dit —
-    //  un onglet muet laisserait croire à une panne.
-    const catalogueVide = catalogue !== null && liste.length === 0;
-    const demandeIci = demandeOuverte === mode.cle;
-    //  LE PAYS DE LA DEMANDE : celui du menu (« pré-rempli », nº 748-E),
-    //  remplacé par celui que la personne choisit dans le champ de
-    //  localité si elle en choisit un.
-    const paysDeLaDemande = (
-      paysDemande?.code_pays ??
-      paysChoisi ??
-      ""
-    ).toUpperCase();
-
+  function lesBadgesConventions(sessions: ModeEnSaisie[]) {
+    //  LES BADGES SONT LES MODES QUI PORTENT QUELQUE CHOSE : l'encadré
+    //  vierge que l'ouverture de l'onglet crée (`choisirOnglet`) n'est
+    //  pas une déclaration — il ne doit donc pas paraître en badge.
+    const poses = sessions.filter((session) => session.convention);
+    if (poses.length === 0) return null;
     return (
-      <div className="flex flex-col gap-5">
-        <MenuDeroulant
-          valeur={paysChoisi}
-          surChangement={(code) =>
-            modifier(mode.cle, {
-              paysConvention: code || null,
-              //  ⚠️ CHANGER DE PAYS LÂCHE LA CONVENTION RETENUE — elle
-              //  n'est pas dans la nouvelle liste — ET SON LIEU avec
-              //  elle, dans la MÊME écriture (la leçon de la nº 105 :
-              //  deux écritures séparées se perdent, React groupe les
-              //  états). LES DATES RESTENT : ce sont celles de
-              //  l'artiste, elles ne dépendent d'aucun pays.
-              convention: null,
-              lieu: null,
-            })
-          }
-          options={optionsPays}
-          ariaLabel="Country"
-          placeholder="Country"
-          sombre
-          opaque
-          fondRepos="bg-sombre-eleve-clair"
-          fondActif="bg-sombre-haut"
-          arrondi="rounded-xl"
-          hauteur="min-h-[52px]"
-        />
-
-        {catalogueVide && (
-          <p className="text-[13px] leading-relaxed text-sombre-texte-doux">
-            No convention has been added to the catalogue yet.
-          </p>
-        )}
-
-        {paysChoisi && (
-          <div>
-            <MenuDeroulant
-              valeur={mode.convention?.id ?? ""}
-              surChangement={(id) => {
-                const choisie = liste.find(
-                  (convention) => convention.id === id
-                );
-                modifier(mode.cle, {
-                  convention: choisie
-                    ? { id: choisie.id, nom: choisie.nom }
-                    : null,
-                  //  LA LOCALISATION, RECOPIÉE DU CATALOGUE — c'est
-                  //  elle qui situe le mode (voir l'en-tête).
-                  lieu: choisie ? lieuDeLaConvention(choisie) : null,
-                });
-              }}
-              options={optionsConventions}
-              ariaLabel="Convention"
-              placeholder="Convention"
-              //  ⚠️ LE NOM ENREGISTRÉ L'EMPORTE SUR LA LISTE : une
-              //  convention retirée du catalogue depuis (refusée,
-              //  effacée) laisserait le champ vide alors que la ligne,
-              //  elle, existe toujours. On affiche ce qui est
-              //  enregistré — c'est le rôle exact de `libelleValeur`.
-              libelleValeur={mode.convention?.nom || undefined}
-              sombre
-              opaque
-              fondRepos="bg-sombre-eleve-clair"
-              fondActif="bg-sombre-haut"
-              arrondi="rounded-xl"
-              hauteur="min-h-[52px]"
-              enErreur={enFaute}
-            />
-
-            {/* LA LIGNE DISCRÈTE — le motif de « Un style manque ? »
-                (nº 122) : un texte nu, sous le champ, qui ouvre la
-                demande. Jamais une capsule : ce n'est pas une action
-                du formulaire, c'est une porte de secours. */}
-            <button
-              type="button"
-              onClick={() => {
-                setRefusDemande(null);
-                setDemandeEnvoyee(false);
-                setDemandeOuverte(demandeIci ? null : mode.cle);
-              }}
-              className="mt-2 text-[13px] font-semibold text-sombre-texte-doux
-                         underline underline-offset-2 transition-colors
-                         hover:text-sombre-texte"
-            >
-              Convention missing? Let us know
-            </button>
-          </div>
-        )}
-
-        {demandeIci && laDemande(mode, paysDeLaDemande)}
-
-        {demandeEnvoyee && !demandeIci && (
-          <p className="text-[13px] leading-relaxed text-sombre-texte">
-            We&apos;ll review it shortly — you can save your portfolio and
-            come back.
-          </p>
-        )}
-
-        <div>
-          {/*  LE TITRE DU CHAMP — l'écriture des questions de champ du
-               formulaire (DeuxZonesLieu, nº 116) : blanche, 13,5 px,
-               demi-grasse. Il porte ici une distinction qui compte :
-               ce sont TES dates, pas celles de la convention. */}
-          <p className="text-[13.5px] font-semibold text-sombre-texte">
-            Your dates there
-          </p>
-          <div className="mt-3">{lesDates(mode)}</div>
-        </div>
-      </div>
+      <ul className="mt-2 flex flex-wrap gap-1.5">
+        {poses.map((session) => {
+          const periode = periodeDeSession(session.debut_le, session.fin_le);
+          const enFaute = modeEnManque(session.cle);
+          return (
+            <li key={session.cle}>
+              {/*  LE BADGE — la capsule des styles (BlocPortfolio,
+                   nº 552) : `rounded-full`, fond `eleve-clair`, texte
+                   blanc. Elle porte ICI une croix, parce qu'elle n'ouvre
+                   rien : elle dit ce qui est déclaré, et se retire.
+                   ⚠️ ELLE ROUGIT SI CE MODE-LÀ MANQUE DE QUELQUE CHOSE
+                   (une ligne d'avant cette passe, sans dates) : le
+                   cadre, jamais le mot — la règle nº 266. */}
+              <span
+                data-badge-convention={session.cle}
+                className={`inline-flex items-center gap-2 rounded-full border
+                           bg-sombre-eleve-clair py-1.5 pl-3.5 pr-1.5
+                           text-[13.5px] font-semibold text-sombre-texte ${
+                             enFaute ? "border-erreur" : "border-transparent"
+                           }`}
+              >
+                <span className="min-w-0">
+                  <span className="block truncate">
+                    {session.convention?.nom}
+                  </span>
+                  {periode && (
+                    <span className="block truncate text-[12.5px] font-normal text-sombre-texte-doux">
+                      {periode}
+                    </span>
+                  )}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => retirerLaConvention(session.cle)}
+                  aria-label={`Retirer ${session.convention?.nom ?? "cette convention"}`}
+                  title="Retirer"
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full
+                             text-sombre-texte-doux transition-colors
+                             hover:bg-sombre-haut hover:text-sombre-texte
+                             active:bg-sombre-haut active:text-sombre-texte"
+                >
+                  <IconeCroix taille={14} />
+                </button>
+              </span>
+            </li>
+          );
+        })}
+      </ul>
     );
   }
 
-  /**
-   * ██ nº 750 — LE PANNEAU DE DEMANDE, décalque de « Un style manque ? »
-   * ==================================================================
-   * TROIS CHAMPS, celui de la conception nº 748-E : le NOM de la
-   * convention, le PAYS (pré-rempli par le menu), et un MESSAGE
-   * facultatif. Le bouton s'allume quand le nom et le pays sont là —
-   * la règle d'activation visible de la nº 124.
-   *
-   * ⚠️ LE PAYS SE CHOISIT ICI AUSSI, ET LA CONCEPTION NE LE DISAIT PAS.
-   * Elle écrit « pays (pré-rempli par le menu) », ce qui suppose qu'un
-   * pays soit DÉJÀ dans le catalogue. Au lancement il est vide, et une
-   * convention dans un pays encore inconnu ne pourrait jamais être
-   * demandée : la porte de secours serait fermée à clé. Le champ de
-   * localité du site (Photon, celui des trois autres modes) donne donc
-   * le pays quand le menu ne peut pas — et le menu le pré-remplit quand
-   * il le peut, exactement comme la conception le demande. AUCUNE
-   * SOURCE NEUVE, aucune table de pays écrite à la main.
-   * ⚠️ ON N'EN GARDE QUE LE CODE PAYS : la VILLE et le POINT d'une
-   * convention sont posés par l'administration à l'acceptation
-   * (nº 748-E) — c'est elle qui tranche, pas le demandeur.
-   */
-  function laDemande(mode: ModeEnSaisie, codePays: string) {
-    const nomPays = codePays ? nomDuPays(codePays) : "";
-    const pretAEnvoyer = nomDemande.trim().length >= 2 && Boolean(codePays);
-    return (
-      <div className="rounded-xl bg-sombre-eleve p-4">
-        <div className="flex flex-col gap-3">
-          <input
-            type="text"
-            value={nomDemande}
-            maxLength={80}
-            onChange={(evenement) => {
-              setNomDemande(evenement.target.value);
-              setRefusDemande(null);
-            }}
-            onKeyDown={(evenement) => {
-              //  Entrée envoie — et `prevent`, parce que ce champ vit
-              //  DANS le formulaire de la fiche : sans lui, Entrée
-              //  l'enverrait (la leçon de la nº 122).
-              if (evenement.key !== "Enter") return;
-              evenement.preventDefault();
-              void envoyerLaDemande(codePays);
-            }}
-            placeholder="Convention name"
-            aria-label="Convention name"
-            aria-invalid={refusDemande ? true : undefined}
-            className={`${CHAMP} border-transparent`}
-          />
-          <div>
-            <ChampLocalisation
-              id={`mode-${mode.cle}-pays-demande`}
-              etiquette={null}
-              texteIndicatif="Country (or a city in it)"
-              lieuInitial={paysDemande}
-              surChoix={(lieu) => {
-                //  ON REMONTE AU PAYS : la personne peut taper une
-                //  ville, c'est le pays qu'on retient — et c'est le
-                //  pays que le champ affiche ensuite, pour qu'il n'y
-                //  ait rien à deviner. (`paysDuLieu` rend null quand le
-                //  lieu EST déjà un pays : on le garde alors tel quel.)
-                setPaysDemande(
-                  !lieu
-                    ? null
-                    : lieu.precision === "pays"
-                      ? lieu
-                      : (paysDuLieu(lieu) ?? lieu)
-                );
-                setRefusDemande(null);
-              }}
-              panneauDansLeFlux={surMobile}
-              opaque
-              remonterAuToucher={surMobile}
-              croixEffacement
-            />
-            {nomPays && (
-              <p className="mt-2 text-[13px] text-sombre-texte-doux">
-                Country: {nomPays}
-              </p>
-            )}
-          </div>
-          <input
-            type="text"
-            value={messageDemande}
-            maxLength={300}
-            onChange={(evenement) => setMessageDemande(evenement.target.value)}
-            onKeyDown={(evenement) => {
-              if (evenement.key !== "Enter") return;
-              evenement.preventDefault();
-              void envoyerLaDemande(codePays);
-            }}
-            placeholder="Anything to add? (optional)"
-            aria-label="Message (optional)"
-            className={`${CHAMP} border-transparent`}
-          />
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => void envoyerLaDemande(codePays)}
-              disabled={!pretAEnvoyer || envoiDemande}
-              //  ⚠️ L'ACTIVATION SE VOIT (nº 124) : tant que le nom ou
-              //  le pays manque, la capsule reste grise et éteinte.
-              className="h-11 rounded-lg bg-primaire px-5 text-[14px] font-semibold
-                         text-white transition-colors hover:opacity-90
-                         active:opacity-90 disabled:bg-sombre-eleve-clair
-                         disabled:text-sombre-texte-doux disabled:opacity-100
-                         disabled:hover:opacity-100"
-            >
-              {envoiDemande ? "Sending…" : "Send"}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setDemandeOuverte(null);
-                setRefusDemande(null);
-              }}
-              //  Annuler est une action de retrait : TEXTE BRUT, jamais
-              //  de capsule (règle nº 104).
-              className="px-2 min-h-[38px] text-[13.5px] font-semibold
-                         text-sombre-texte-doux transition-colors
-                         hover:text-sombre-texte"
-            >
-              Cancel
-            </button>
-          </div>
-          {refusDemande && (
-            <p role="alert" className="text-[13px] text-erreur">
-              {refusDemande}
-            </p>
-          )}
-        </div>
-      </div>
+  /** CE QUE LA FENÊTRE RAPPORTE — une convention et les dates de
+      l'artiste. On remplit l'encadré VIERGE s'il y en a un (celui que
+      l'ouverture de l'onglet a créé), sinon on en ajoute un : dans les
+      deux cas, une ligne de plus en base, jamais une de perdue. */
+  function ajouterLaConvention(ajout: AjoutConvention) {
+    const { convention, debut_le, fin_le } = ajout;
+    const rempli = {
+      convention: { id: convention.id, nom: convention.nom },
+      //  LA LOCALISATION, RECOPIÉE DU CATALOGUE : c'est elle qui situe
+      //  le mode (`lieuDeLaConvention`, lib/conventions — nº 750).
+      lieu: lieuDeLaConvention(convention),
+      paysConvention: convention.code_pays,
+      debut_le,
+      fin_le,
+    };
+    const vierge = modes.find(
+      (mode) => mode.genre === "convention" && !mode.convention
     );
+    if (vierge) {
+      surChangement(
+        modes.map((mode) =>
+          mode.cle === vierge.cle ? { ...mode, ...rempli } : mode
+        )
+      );
+    } else {
+      surChangement([
+        ...modes,
+        { ...modeVierge("convention"), ...rempli },
+      ]);
+    }
+    setFenetreConventions(false);
+  }
+
+  /** LA CROIX D'UN BADGE — elle retire la convention. Le dernier badge
+      retiré laisse un encadré VIERGE (même clé, identifiant lâché) :
+      c'est `fermerCeLieu`, la règle des quatre modes, réemployée sans
+      confirmation — un badge dit tout ce qu'il porte, il n'y a pas de
+      travail caché à protéger. */
+  function retirerLaConvention(cle: string) {
+    fermerCeLieu(cle);
   }
 
   /** LES CHAMPS D'UN LIEU — le rôle puis la localisation, ou la
@@ -1272,12 +1044,6 @@ export function BlocModesExercice({
       nº 413). Effacer le nom d'un lieu cache donc les dates ; le
       retaper les ramène telles quelles. */
   function lesChamps(session: ModeEnSaisie) {
-    //  ██ nº 750 — LA CONVENTION A SON PROPRE PANNEAU ██
-    //  Elle n'emprunte RIEN aux trois autres genres : ni rôle (on n'a
-    //  pas de place dans une convention), ni recherche de portfolio,
-    //  ni saisie d'adresse. Deux menus et des dates — voir
-    //  `laConvention`.
-    if (session.genre === "convention") return laConvention(session);
     const guest = session.genre === "guest";
     return (
       <div className="flex flex-col gap-5">
@@ -1471,7 +1237,15 @@ export function BlocModesExercice({
           //  rectangles du bloc des styles (nº 125).
           className="mt-3 opacity-100 transition-opacity duration-200 starting:opacity-0"
         >
-          {nombre <= 1 ? (
+          {/* ---------- LES CONVENTIONS : DES BADGES, PAS DES VOLETS
+              (nº 750 bis) ----------
+              Cet onglet ne rend NI encadré NI accordéon : ce qu'on y
+              déclare tient dans une capsule à croix, et le choix se
+              fait dans l'écran d'ajout (le bouton, plus bas). C'est le
+              modèle du bloc des styles, à l'identique. ------------- */}
+          {genreAffiche === "convention" ? (
+            lesBadgesConventions(sessionsAffichees)
+          ) : nombre <= 1 ? (
             /* ---------- UN SEUL LIEU : les champs, directement.
                 L'intertitre porte le nom du mode SANS numéro (« seul
                 de son type ») — et SANS CROIX (passe nº 125) : elle
@@ -1618,7 +1392,17 @@ export function BlocModesExercice({
               modes (passe nº 124). Le Guest garde son libellé. */}
           <button
             type="button"
-            onClick={() => ajouterUnLieu(genreAffiche)}
+            //  nº 750 bis — LA CONVENTION N'AJOUTE PAS UN ENCADRÉ,
+            //  ELLE OUVRE UN ÉCRAN. C'est le geste des styles :
+            //  « + Ajouter un style » ouvre une fenêtre, et ce qu'on y
+            //  choisit revient en capsule. Les trois autres modes
+            //  gardent leur encadré, au caractère près.
+            aria-haspopup={genreAffiche === "convention" ? "dialog" : undefined}
+            onClick={() =>
+              genreAffiche === "convention"
+                ? setFenetreConventions(true)
+                : ajouterUnLieu(genreAffiche)
+            }
             /*  ██ §2 (nº 419) — LA PALETTE DU FORMULAIRE, ICI AUSSI ██
                  CE QU'IL PORTAIT : `bg-sombre-eleve` au repos,
                  `bg-sombre-eleve-clair` au survol — la paire du MOTEUR
@@ -1646,6 +1430,24 @@ export function BlocModesExercice({
               : `+ Ajouter ${MOTS_AJOUT[genreAffiche]}`}
           </button>
         </div>
+      )}
+
+      {/* ---------- L'ÉCRAN D'AJOUT D'UNE CONVENTION (nº 750 bis) ----
+          Monté seulement quand il est ouvert — comme la fenêtre des
+          styles. Il porte SES DEUX SURFACES lui-même (fenêtre au web,
+          page plein écran au doigt) : rien ne se décide ici. */}
+      {fenetreConventions && (
+        <FenetreConventions
+          catalogue={catalogue}
+          dejaChoisies={
+            modes
+              .filter((mode) => mode.genre === "convention" && mode.convention)
+              .map((mode) => mode.convention?.id ?? "") as string[]
+          }
+          surAjout={ajouterLaConvention}
+          surFermer={() => setFenetreConventions(false)}
+          ficheId={ficheId}
+        />
       )}
 
       {/* CE QUI MANQUE — PLUS AUCUNE PHRASE, OU PRESQUE (passe
