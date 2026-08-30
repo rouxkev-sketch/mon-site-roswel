@@ -10,20 +10,20 @@ import {
 import { BasculeDeuxChoix } from "@/components/BasculeDeuxChoix";
 import { ChampsPlageDates } from "@/components/CalendrierPlage";
 import { DeuxZonesLieu } from "@/components/DeuxZonesLieu";
-//  nº 750 bis — L'ÉCRAN D'AJOUT D'UNE CONVENTION : fenêtre superposée
-//  au web, page plein écran au doigt — le gabarit d'« Ajouter un
-//  style ». C'est LUI qui porte le choix du pays, la liste, les dates
-//  et la demande aux administrateurs ; ce bloc-ci n'en reçoit que le
-//  résultat.
-import {
-  FenetreConventions,
-  type AjoutConvention,
-} from "@/components/FenetreConventions";
+import { MenuDeroulant, type OptionMenu } from "@/components/MenuDeroulant";
+//  nº 750 ter — L'ÉCRAN DE SÉLECTION D'UNE CONVENTION : fenêtre
+//  superposée au web, page plein écran au doigt. Il ne porte QUE la
+//  liste des conventions du pays et la demande aux administrateurs —
+//  le pays et les dates, eux, vivent dans le formulaire.
+import { FenetreConventions } from "@/components/FenetreConventions";
 //  nº 750 — LE CATALOGUE DES CONVENTIONS : la lecture née à la nº 749,
-//  et la localisation d'une convention, recopiée dans la ligne de mode.
+//  les pays du menu, le nom d'un pays, et la localisation d'une
+//  convention — recopiée dans la ligne de mode.
 import {
   chargerConventionsAcceptees,
   lieuDeLaConvention,
+  nomDuPays,
+  paysDesConventions,
   type ConventionAcceptee,
 } from "@/lib/conventions";
 import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
@@ -403,17 +403,20 @@ export function BlocModesExercice({
   }, [catalogueDemande]);
 
   /* ---------------------------------------------------------------
-     ██ nº 750 bis — L'ÉCRAN D'AJOUT D'UNE CONVENTION ██
-     Un seul état : la fenêtre est ouverte, ou non. TOUT le reste — le
-     pays regardé, la convention retenue, ses dates, et la demande aux
-     administrateurs — vit DANS `FenetreConventions`, avec son écran.
-     C'est ce qui garde ce bloc-ci lisible : il ne connaît que le
-     RÉSULTAT (une convention et deux dates), jamais la façon dont on y
-     arrive.
-     ⚠️ LES SIX ÉTATS DE LA DEMANDE ONT DÉMÉNAGÉ TELS QUELS (nº 750) :
-     ni le mécanisme, ni la route, ni les refus ne changent.
+     ██ nº 750 ter — L'ÉCRAN DE SÉLECTION D'UNE CONVENTION ██
+     Un seul état, et c'est LA CLÉ DE L'ENCADRÉ QUI L'A DEMANDÉ (null
+     quand rien n'est ouvert). Il en faut une : plusieurs encadrés de
+     convention coexistent — « + Ajouter une autre date » —, et ce que
+     l'écran rapporte doit revenir dans CELUI qui l'a ouvert, jamais
+     dans le premier venu.
+     ⚠️ LE PAYS ET LES DATES NE SONT PLUS DEDANS (nº 750 ter) : ils
+     vivent dans l'encadré, avec les autres modes. L'écran ne porte
+     plus que la LISTE et la demande aux administrateurs — dont les
+     six états, eux, n'ont pas bougé depuis la nº 750.
      --------------------------------------------------------------- */
-  const [fenetreConventions, setFenetreConventions] = useState(false);
+  const [fenetreConventions, setFenetreConventions] = useState<string | null>(
+    null
+  );
 
   /** LE MANQUE AMÈNE À L'ENDROIT EN CAUSE : si « Je confirme »
       désigne un mode d'un AUTRE onglet (ou d'un volet replié), on
@@ -909,127 +912,188 @@ export function BlocModesExercice({
   }
 
   /**
-   * ██ nº 750 bis — LE MODE CONVENTION : DES BADGES, PLUS DES MENUS ██
+   * ██ nº 750 ter — LE MODE CONVENTION, DANS LE FORMULAIRE ██
    * ==================================================================
-   * CE QUE LA nº 750 AVAIT FAIT : deux menus déroulants posés à même le
-   * formulaire (pays, puis convention) et les dates dessous. Ça
-   * marchait ; ça ne ressemblait à rien d'autre dans le site.
-   * CE QUE LE PROPRIÉTAIRE VEUT, ET C'EST TOUT LE SUJET DE CETTE
-   * PASSE : LE MODÈLE DES STYLES. Un lien « + Ajouter une convention »
-   * ouvre un écran d'ajout — fenêtre superposée au web, page plein
-   * écran au doigt (`FenetreConventions`) — et chaque convention
-   * choisie revient ici en BADGE À CROIX, comme les styles reviennent
-   * en capsules dans le bloc du portfolio.
+   * TROIS PASSES POUR TROUVER LA FORME, ET VOICI CELLE QUI RESTE.
+   * La nº 750 posait DEUX menus déroulants (pays, convention) et les
+   * dates dessous : le second menu se lisait mal. La nº 750 bis a tout
+   * déménagé dans un écran d'ajout : trop large — le mode entier
+   * quittait le formulaire. LA nº 750 ter GARDE LA STRUCTURE DES
+   * AUTRES MODES, celle d'un guest, et n'emprunte à l'écran d'ajout
+   * que ce qu'il fait mieux qu'un menu : LA LISTE.
    *
-   * ⚠️ LE FOND NE CHANGE PAS D'UNE LIGNE : un badge EST une ligne de
-   * `modes_exercice` de genre `convention` — la même que la nº 750
-   * écrivait, avec sa localisation recopiée du catalogue, son
-   * `convention_id` et les dates de l'artiste. L'enregistrement, la
-   * relecture, la validation et l'expiration automatique sont ceux de
-   * la nº 750, intouchés.
-   * ⚠️ UN BADGE PAR AJOUT, ET PLUSIEURS BADGES POSSIBLES — y compris
-   * sur la MÊME convention à des dates disjointes (conception
-   * nº 748-B1). C'est le modèle multi-lignes des sessions guest,
-   * réemployé tel quel.
+   * L'ORDRE, DANS L'ENCADRÉ :
+   *  1. COUNTRY — le menu des pays, POSÉ ICI, visible d'emblée (seuls
+   *     les pays qui ont une convention acceptée, règle nº 748-B1) ;
+   *  2. LE LIEN « + Ajouter la convention », qui n'apparaît qu'une
+   *     fois le pays choisi : il ouvre l'écran de sélection
+   *     (`FenetreConventions`) — fenêtre au web, page au doigt. Ce
+   *     qu'on y touche referme et revient ici en BADGE À CROIX ;
+   *  3. YOUR DATES THERE — les deux dates, DANS LE FORMULAIRE, sous le
+   *     badge, exactement comme les dates d'une session guest.
+   * Et « + Ajouter une autre date », en bas, ouvre un second encadré :
+   * autre pays si besoin, autre convention, autres dates — le modèle
+   * multi-lignes des guests, sans un mécanisme de plus.
+   *
+   * ⚠️ LE FOND N'A PAS BOUGÉ DEPUIS LA nº 750 : un encadré rempli EST
+   * une ligne de `modes_exercice` de genre `convention`, avec sa
+   * localisation recopiée du catalogue, son `convention_id` et les
+   * dates de l'artiste. Enregistrement, relecture, validation,
+   * expiration : intouchés.
    */
-  function lesBadgesConventions(sessions: ModeEnSaisie[]) {
-    //  LES BADGES SONT LES MODES QUI PORTENT QUELQUE CHOSE : l'encadré
-    //  vierge que l'ouverture de l'onglet crée (`choisirOnglet`) n'est
-    //  pas une déclaration — il ne doit donc pas paraître en badge.
-    const poses = sessions.filter((session) => session.convention);
-    if (poses.length === 0) return null;
+  function laConvention(mode: ModeEnSaisie) {
+    const enFaute = manquant(mode.cle, "convention");
+    const liste = catalogue ?? [];
+    const paysChoisi = mode.paysConvention ?? "";
+    const optionsPays: OptionMenu[] = paysDesConventions(liste).map((code) => ({
+      value: code,
+      label: nomDuPays(code),
+    }));
+    const catalogueVide = catalogue !== null && liste.length === 0;
+    const periode = periodeDeSession(mode.debut_le, mode.fin_le);
+
     return (
-      <ul className="mt-2 flex flex-wrap gap-1.5">
-        {poses.map((session) => {
-          const periode = periodeDeSession(session.debut_le, session.fin_le);
-          const enFaute = modeEnManque(session.cle);
-          return (
-            <li key={session.cle}>
-              {/*  LE BADGE — la capsule des styles (BlocPortfolio,
-                   nº 552) : `rounded-full`, fond `eleve-clair`, texte
-                   blanc. Elle porte ICI une croix, parce qu'elle n'ouvre
-                   rien : elle dit ce qui est déclaré, et se retire.
-                   ⚠️ ELLE ROUGIT SI CE MODE-LÀ MANQUE DE QUELQUE CHOSE
-                   (une ligne d'avant cette passe, sans dates) : le
-                   cadre, jamais le mot — la règle nº 266. */}
-              <span
-                data-badge-convention={session.cle}
-                className={`inline-flex items-center gap-2 rounded-full border
-                           bg-sombre-eleve-clair py-1.5 pl-3.5 pr-1.5
-                           text-[13.5px] font-semibold text-sombre-texte ${
-                             enFaute ? "border-erreur" : "border-transparent"
-                           }`}
+      <div className="flex flex-col gap-5">
+        <MenuDeroulant
+          valeur={paysChoisi}
+          surChangement={(code) =>
+            modifier(mode.cle, {
+              paysConvention: code || null,
+              //  ⚠️ CHANGER DE PAYS LÂCHE LA CONVENTION RETENUE — elle
+              //  n'est pas dans la nouvelle liste — ET SON LIEU avec
+              //  elle, dans la MÊME écriture (la leçon de la nº 105 :
+              //  deux écritures séparées se perdent, React groupe les
+              //  états). LES DATES RESTENT : ce sont celles de
+              //  l'artiste, elles ne dépendent d'aucun pays.
+              convention: null,
+              lieu: null,
+            })
+          }
+          options={optionsPays}
+          ariaLabel="Country"
+          placeholder="Country"
+          sombre
+          opaque
+          //  La robe des champs du formulaire (`CHAMP`) : ce menu vit
+          //  au milieu d'eux.
+          fondRepos="bg-sombre-eleve-clair"
+          fondActif="bg-sombre-haut"
+          arrondi="rounded-xl"
+          hauteur="min-h-[52px]"
+        />
+
+        {catalogueVide && (
+          <p className="text-[13px] leading-relaxed text-sombre-texte-doux">
+            No convention has been added to the catalogue yet.
+          </p>
+        )}
+
+        {paysChoisi &&
+          (mode.convention ? (
+            /*  LE BADGE À CROIX — la capsule des styles (BlocPortfolio,
+                nº 552) : `rounded-full`, fond `eleve-clair`, texte
+                blanc. Elle porte ici une croix, parce qu'elle n'ouvre
+                rien : elle dit ce qui est choisi, et se retire.
+                ⚠️ ELLE ROUGIT quand ce mode-là manque de quelque chose
+                (le cadre, jamais le mot — la règle nº 266). */
+            <span
+              data-badge-convention={mode.cle}
+              className={`inline-flex w-fit items-center gap-2 rounded-full border
+                         bg-sombre-eleve-clair py-1.5 pl-3.5 pr-1.5
+                         text-[13.5px] font-semibold text-sombre-texte ${
+                           enFaute ? "border-erreur" : "border-transparent"
+                         }`}
+            >
+              <span className="min-w-0 truncate">{mode.convention.nom}</span>
+              <button
+                type="button"
+                onClick={() => retirerLaConvention(mode.cle)}
+                aria-label={`Retirer ${mode.convention.nom}`}
+                title="Retirer"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full
+                           text-sombre-texte-doux transition-colors
+                           hover:bg-sombre-haut hover:text-sombre-texte
+                           active:bg-sombre-haut active:text-sombre-texte"
               >
-                <span className="min-w-0">
-                  <span className="block truncate">
-                    {session.convention?.nom}
-                  </span>
-                  {periode && (
-                    <span className="block truncate text-[12.5px] font-normal text-sombre-texte-doux">
-                      {periode}
-                    </span>
-                  )}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => retirerLaConvention(session.cle)}
-                  aria-label={`Retirer ${session.convention?.nom ?? "cette convention"}`}
-                  title="Retirer"
-                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full
-                             text-sombre-texte-doux transition-colors
-                             hover:bg-sombre-haut hover:text-sombre-texte
-                             active:bg-sombre-haut active:text-sombre-texte"
-                >
-                  <IconeCroix taille={14} />
-                </button>
-              </span>
-            </li>
-          );
-        })}
-      </ul>
+                <IconeCroix taille={14} />
+              </button>
+            </span>
+          ) : (
+            /*  LE LIEN D'OUVERTURE — le motif du bouton « + Ajouter »
+                de ce bloc (nº 419-§2) : la paire de fonds des champs,
+                texte blanc dans les deux états. Il n'apparaît qu'une
+                fois le pays choisi : sans pays, la liste n'aurait
+                aucun sujet. */
+            <button
+              type="button"
+              aria-haspopup="dialog"
+              onClick={() => setFenetreConventions(mode.cle)}
+              data-ouvre-conventions={mode.cle}
+              className={`w-fit rounded-full border bg-sombre-eleve-clair px-4 min-h-[40px]
+                         text-[13.5px] font-semibold text-sombre-texte
+                         transition-colors hover:bg-sombre-haut
+                         active:bg-sombre-haut ${
+                           enFaute ? "border-erreur" : "border-transparent"
+                         }`}
+            >
+              + Ajouter la convention
+            </button>
+          ))}
+
+        {/*  LES DATES — DANS LE FORMULAIRE, sous le badge, et seulement
+             une fois la convention choisie : sans elle, la question
+             « quand y seras-tu ? » n'a pas de sujet. C'est la règle
+             des dates d'un guest (nº 419), appliquée au même endroit
+             de l'encadré. */}
+        {mode.convention && (
+          <div>
+            <p className="text-[13.5px] font-semibold text-sombre-texte">
+              Your dates there
+            </p>
+            <div className="mt-3">{lesDates(mode)}</div>
+            {periode && (
+              <p className="mt-2 text-[13px] text-sombre-texte-doux">
+                {periode}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
     );
   }
 
-  /** CE QUE LA FENÊTRE RAPPORTE — une convention et les dates de
-      l'artiste. On remplit l'encadré VIERGE s'il y en a un (celui que
-      l'ouverture de l'onglet a créé), sinon on en ajoute un : dans les
-      deux cas, une ligne de plus en base, jamais une de perdue. */
-  function ajouterLaConvention(ajout: AjoutConvention) {
-    const { convention, debut_le, fin_le } = ajout;
-    const rempli = {
+  /** CE QUE L'ÉCRAN DE SÉLECTION RAPPORTE — une convention, pour
+      l'encadré qui l'a demandé. Les dates, elles, se saisissent
+      ensuite dans le formulaire. */
+  function choisirLaConvention(convention: ConventionAcceptee) {
+    const cle = fenetreConventions;
+    if (!cle) return;
+    modifier(cle, {
       convention: { id: convention.id, nom: convention.nom },
       //  LA LOCALISATION, RECOPIÉE DU CATALOGUE : c'est elle qui situe
       //  le mode (`lieuDeLaConvention`, lib/conventions — nº 750).
       lieu: lieuDeLaConvention(convention),
       paysConvention: convention.code_pays,
-      debut_le,
-      fin_le,
-    };
-    const vierge = modes.find(
-      (mode) => mode.genre === "convention" && !mode.convention
-    );
-    if (vierge) {
-      surChangement(
-        modes.map((mode) =>
-          mode.cle === vierge.cle ? { ...mode, ...rempli } : mode
-        )
-      );
-    } else {
-      surChangement([
-        ...modes,
-        { ...modeVierge("convention"), ...rempli },
-      ]);
-    }
-    setFenetreConventions(false);
+    });
+    setFenetreConventions(null);
   }
 
-  /** LA CROIX D'UN BADGE — elle retire la convention. Le dernier badge
-      retiré laisse un encadré VIERGE (même clé, identifiant lâché) :
-      c'est `fermerCeLieu`, la règle des quatre modes, réemployée sans
-      confirmation — un badge dit tout ce qu'il porte, il n'y a pas de
-      travail caché à protéger. */
+  /** LA CROIX DU BADGE — elle retire LA CONVENTION, pas l'encadré :
+      le pays reste, le menu est là, on en choisit une autre. Retirer
+      l'encadré entier, c'est la croix du volet (`laCroix`), comme pour
+      les trois autres modes.
+      ⚠️ LES DATES PARTENT AVEC ELLE : elles disaient « j'y serai ces
+      jours-là » — sans convention, elles ne disent plus rien, et les
+      laisser ferait rouvrir l'encadré sur des dates orphelines. C'est
+      la règle de `datesSuiventLeLieu` (nº 413), appliquée ici à la
+      main : ce mode-ci n'a pas de « lieu » au sens des trois autres. */
   function retirerLaConvention(cle: string) {
-    fermerCeLieu(cle);
+    modifier(cle, {
+      convention: null,
+      lieu: null,
+      debut_le: "",
+      fin_le: "",
+    });
   }
 
   /** LES CHAMPS D'UN LIEU — le rôle puis la localisation, ou la
@@ -1044,6 +1108,11 @@ export function BlocModesExercice({
       nº 413). Effacer le nom d'un lieu cache donc les dates ; le
       retaper les ramène telles quelles. */
   function lesChamps(session: ModeEnSaisie) {
+    //  ██ nº 750 ter — LA CONVENTION A SES PROPRES CHAMPS ██
+    //  Elle n'emprunte RIEN aux trois autres genres : ni rôle, ni
+    //  recherche de portfolio, ni saisie d'adresse. Un menu de pays,
+    //  un badge, des dates — voir `laConvention`.
+    if (session.genre === "convention") return laConvention(session);
     const guest = session.genre === "guest";
     return (
       <div className="flex flex-col gap-5">
@@ -1237,15 +1306,13 @@ export function BlocModesExercice({
           //  rectangles du bloc des styles (nº 125).
           className="mt-3 opacity-100 transition-opacity duration-200 starting:opacity-0"
         >
-          {/* ---------- LES CONVENTIONS : DES BADGES, PAS DES VOLETS
-              (nº 750 bis) ----------
-              Cet onglet ne rend NI encadré NI accordéon : ce qu'on y
-              déclare tient dans une capsule à croix, et le choix se
-              fait dans l'écran d'ajout (le bouton, plus bas). C'est le
-              modèle du bloc des styles, à l'identique. ------------- */}
-          {genreAffiche === "convention" ? (
-            lesBadgesConventions(sessionsAffichees)
-          ) : nombre <= 1 ? (
+          {/*  nº 750 ter — LES QUATRE MODES PARTAGENT DE NOUVEAU CE
+               RENDU. La nº 750 bis avait donné aux conventions un
+               rendu à part (des badges au lieu d'un encadré) ; le
+               propriétaire le juge trop large. Un encadré de
+               convention se lit et se remplit comme un guest — c'est
+               `lesChamps` qui sait ce qu'il contient. */}
+          {nombre <= 1 ? (
             /* ---------- UN SEUL LIEU : les champs, directement.
                 L'intertitre porte le nom du mode SANS numéro (« seul
                 de son type ») — et SANS CROIX (passe nº 125) : elle
@@ -1392,17 +1459,12 @@ export function BlocModesExercice({
               modes (passe nº 124). Le Guest garde son libellé. */}
           <button
             type="button"
-            //  nº 750 bis — LA CONVENTION N'AJOUTE PAS UN ENCADRÉ,
-            //  ELLE OUVRE UN ÉCRAN. C'est le geste des styles :
-            //  « + Ajouter un style » ouvre une fenêtre, et ce qu'on y
-            //  choisit revient en capsule. Les trois autres modes
-            //  gardent leur encadré, au caractère près.
-            aria-haspopup={genreAffiche === "convention" ? "dialog" : undefined}
-            onClick={() =>
-              genreAffiche === "convention"
-                ? setFenetreConventions(true)
-                : ajouterUnLieu(genreAffiche)
-            }
+            //  nº 750 ter — LA CONVENTION AJOUTE UN ENCADRÉ, COMME LES
+            //  TROIS AUTRES : la nº 750 bis lui avait fait ouvrir un
+            //  écran depuis ce bouton ; l'écran s'ouvre désormais
+            //  DEPUIS L'ENCADRÉ, une fois le pays choisi. Ce bouton
+            //  retrouve donc son seul et unique rôle.
+            onClick={() => ajouterUnLieu(genreAffiche)}
             /*  ██ §2 (nº 419) — LA PALETTE DU FORMULAIRE, ICI AUSSI ██
                  CE QU'IL PORTAIT : `bg-sombre-eleve` au repos,
                  `bg-sombre-eleve-clair` au survol — la paire du MOTEUR
@@ -1425,27 +1487,36 @@ export function BlocModesExercice({
                        transition-colors hover:bg-sombre-haut
                        active:bg-sombre-haut"
           >
-            {genreAffiche === "guest"
+            {/*  nº 750 ter — LA CONVENTION PREND LE MOT DU GUEST :
+                 ce qu'on ajoute est une PRÉSENCE de plus (une autre
+                 convention, d'autres dates), pas un lieu de plus. */}
+            {genreAffiche === "guest" || genreAffiche === "convention"
               ? "+ Ajouter une autre date"
               : `+ Ajouter ${MOTS_AJOUT[genreAffiche]}`}
           </button>
         </div>
       )}
 
-      {/* ---------- L'ÉCRAN D'AJOUT D'UNE CONVENTION (nº 750 bis) ----
-          Monté seulement quand il est ouvert — comme la fenêtre des
-          styles. Il porte SES DEUX SURFACES lui-même (fenêtre au web,
-          page plein écran au doigt) : rien ne se décide ici. */}
+      {/* ---------- L'ÉCRAN DE SÉLECTION D'UNE CONVENTION (nº 750 ter)
+          Monté seulement quand un encadré l'a demandé — comme la
+          fenêtre des styles. Il porte SES DEUX SURFACES lui-même
+          (fenêtre au web, page plein écran au doigt) ; il ne reçoit
+          d'ici que le PAYS de cet encadré-là, et n'en rapporte qu'une
+          convention. */}
       {fenetreConventions && (
         <FenetreConventions
           catalogue={catalogue}
+          codePays={
+            modes.find((mode) => mode.cle === fenetreConventions)
+              ?.paysConvention ?? ""
+          }
           dejaChoisies={
             modes
               .filter((mode) => mode.genre === "convention" && mode.convention)
               .map((mode) => mode.convention?.id ?? "") as string[]
           }
-          surAjout={ajouterLaConvention}
-          surFermer={() => setFenetreConventions(false)}
+          surChoix={choisirLaConvention}
+          surFermer={() => setFenetreConventions(null)}
           ficheId={ficheId}
         />
       )}

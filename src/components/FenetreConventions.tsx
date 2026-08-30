@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { ChampsPlageDates } from "@/components/CalendrierPlage";
 import { ChampLocalisation } from "@/components/ChampLocalisation";
 import { CHAMP } from "@/components/champs-formulaire";
 import {
@@ -10,14 +9,12 @@ import {
   IconeCroix,
   IconePlus,
 } from "@/components/Icones";
-import { MenuDeroulant, type OptionMenu } from "@/components/MenuDeroulant";
 import { PagePleinEcranMobile } from "@/components/PagePleinEcranMobile";
 import { TRAIT_SEPARATION_FOND } from "@/config/tatouage";
 import { useAppareilMobile } from "@/lib/appareil";
 import {
   conventionsDuPays,
   nomDuPays,
-  paysDesConventions,
   type ConventionAcceptee,
 } from "@/lib/conventions";
 import { useEtapeQuiSeReferme } from "@/lib/etape-refermable";
@@ -28,22 +25,29 @@ import {
 } from "@/lib/verrou-defilement";
 
 /**
- * ██ nº 750 bis — « ADD A CONVENTION » : L'ÉCRAN DES STYLES, REPRIS ██
+ * ██ nº 750 ter — « ADD A CONVENTION » : UN SÉLECTEUR, RIEN DE PLUS ██
  * ====================================================================
- * CE QUE LA nº 750 AVAIT FAIT, ET QUE LE PROPRIÉTAIRE NE VEUT PLUS :
- * deux menus déroulants posés à même le formulaire (pays, puis
- * convention), et les dates dessous. Ça marchait ; ça ne ressemblait à
- * rien d'autre dans le site.
- * CE QUE ÇA DEVIENT : le MÊME écran que « Ajouter un style » — une
- * FENÊTRE SUPERPOSÉE au web, une PAGE PLEIN ÉCRAN au doigt, un titre,
- * une liste qui défile, une barre fixe en bas. On y choisit UNE
- * convention et ses dates, et le formulaire reçoit un BADGE À CROIX.
+ * CE QUE LA nº 750 bis AVAIT FAIT, ET QUE LE PROPRIÉTAIRE A JUGÉ TROP
+ * LARGE : elle avait déménagé TOUT le mode Convention ici — le choix du
+ * pays, la liste, les dates de présence, la validation. Le formulaire
+ * n'en gardait qu'un badge.
+ * CE QUE CETTE FENÊTRE EST DÉSORMAIS : LE SEUL SÉLECTEUR DE LA
+ * CONVENTION. Le pays se choisit dans le FORMULAIRE (menu déroulant,
+ * comme à la nº 750), les DATES se saisissent dans le FORMULAIRE sous
+ * le badge (comme celles d'un guest) — et il ne reste ici que ce qu'un
+ * menu déroulant ne savait pas bien faire : une LISTE qui défile, avec
+ * la demande « Convention missing? » dans sa barre du bas.
+ * ⚠️ ON NE CHOISIT PLUS, ON DÉSIGNE : toucher une ligne referme
+ * l'écran et pose le badge. Il n'y a donc plus de bouton de
+ * validation — c'est le geste exact de « Ajouter un style ».
  *
+ * ⚠️ LE GABARIT NE CHANGE PAS D'UN PIXEL (acquis de la nº 750 bis) :
+ * fenêtre superposée au web, page plein écran au doigt, titre, liste
+ * défilante, barre fixe, et le marqueur de clavier des nº 735/736.
  * ⚠️ LE FOND NE CHANGE PAS D'UNE LIGNE, et c'est la consigne : la
  * base, l'enregistrement (`enregistrer-exercice`), la demande aux
  * administrateurs (`/api/tatoueur/suggestion-convention`) et
- * l'expiration automatique sont ceux de la nº 750. Cette passe est un
- * changement de PRÉSENTATION.
+ * l'expiration automatique sont ceux de la nº 750.
  *
  * ██ L'ÉCRITURE EST CELLE DE BlocPortfolio, RECOPIÉE AU MOTIF PRÈS ██
  * Les deux surfaces sont montées ENSEMBLE et chacune se cache par sa
@@ -57,18 +61,11 @@ import {
  * rien n'est choisi ici.
  */
 
-/** Ce que la fenêtre rend quand on valide : une convention, et LES
-    DATES DE L'ARTISTE (pas celles de la convention). */
-export type AjoutConvention = {
-  convention: ConventionAcceptee;
-  debut_le: string;
-  fin_le: string;
-};
-
 export function FenetreConventions({
   catalogue,
+  codePays,
   dejaChoisies,
-  surAjout,
+  surChoix,
   surFermer,
   //  LA DEMANDE — le mécanisme de la nº 750, déménagé ici sans une
   //  ligne de changement (voir `laBarre`).
@@ -76,24 +73,20 @@ export function FenetreConventions({
 }: {
   /** `null` = le catalogue n'est pas encore lu ; `[]` = lu et vide. */
   catalogue: ConventionAcceptee[] | null;
+  /** LE PAYS, CHOISI DANS LE FORMULAIRE (nº 750 ter) : cette fenêtre
+      ne montre que ses conventions, et ne le remet jamais en cause. */
+  codePays: string;
   /** Les identifiants déjà posés en badge : la liste les COCHE, sans
       les interdire — la conception nº 748-B1 autorise deux lignes sur
       la même convention (des jours disjoints). */
   dejaChoisies: string[];
-  surAjout: (ajout: AjoutConvention) => void;
+  /** UNE LIGNE TOUCHÉE, ET C'EST TOUT : l'appelant referme et pose le
+      badge. Les dates, elles, se saisissent dans le formulaire. */
+  surChoix: (convention: ConventionAcceptee) => void;
   surFermer: () => void;
   ficheId?: string | null;
 }) {
   const auDoigt = useAppareilMobile();
-
-  /* ---------------- LE CHOIX EN COURS ---------------- */
-  const [paysChoisi, setPaysChoisi] = useState("");
-  const [retenue, setRetenue] = useState<ConventionAcceptee | null>(null);
-  const [debut, setDebut] = useState("");
-  const [fin, setFin] = useState("");
-  /** Après une tentative d'ajout incomplète : les champs manquants
-      s'encadrent de rouge — la règle nº 111, sans un mot. */
-  const [ajoutTente, setAjoutTente] = useState(false);
 
   /* ---------------- LA DEMANDE (nº 750, déménagée) ---------------- */
   const [demandeOuverte, setDemandeOuverte] = useState(false);
@@ -105,18 +98,18 @@ export function FenetreConventions({
   const [demandeEnvoyee, setDemandeEnvoyee] = useState(false);
 
   const liste = catalogue ?? [];
-  const optionsPays: OptionMenu[] = paysDesConventions(liste).map((code) => ({
-    value: code,
-    label: nomDuPays(code),
-  }));
-  const duPays = paysChoisi ? conventionsDuPays(liste, paysChoisi) : [];
-  const catalogueVide = catalogue !== null && liste.length === 0;
-  //  LE PAYS DE LA DEMANDE : celui du menu (« pré-rempli », conception
-  //  nº 748-E), remplacé par celui que la personne choisit dans le
-  //  champ de localité si elle en choisit un.
+  const duPays = codePays ? conventionsDuPays(liste, codePays) : [];
+  //  LU, ET AUCUNE CONVENTION DANS CE PAYS : on le dit — une liste
+  //  muette laisserait croire à une panne. (Le menu du formulaire ne
+  //  propose que des pays qui en ont ; ce cas n'arrive que si le
+  //  catalogue change sous les pieds de la personne.)
+  const listeVide = catalogue !== null && duPays.length === 0;
+  //  LE PAYS DE LA DEMANDE : celui du formulaire (« pré-rempli »,
+  //  conception nº 748-E), remplacé par celui que la personne choisit
+  //  dans le champ de localité si elle en choisit un.
   const paysDeLaDemande = (
     paysDemande?.code_pays ??
-    paysChoisi ??
+    codePays ??
     ""
   ).toUpperCase();
 
@@ -176,12 +169,10 @@ export function FenetreConventions({
     };
   }, [auDoigt]);
 
-  /* ---------------- CE QU'ON AJOUTE ---------------- */
-  function ajouter() {
-    setAjoutTente(true);
-    if (!retenue || !debut || !fin || fin < debut) return;
-    surAjout({ convention: retenue, debut_le: debut, fin_le: fin });
-  }
+  /* ---------------- CE QU'ON DÉSIGNE ----------------
+     Toucher une ligne referme l'écran et rend la convention. Les DATES
+     ne sont plus ici : elles se saisissent dans le formulaire, sous le
+     badge (nº 750 ter) — comme celles d'une session guest. */
 
   async function envoyerLaDemande() {
     const propose = nomDemande.trim();
@@ -222,78 +213,14 @@ export function FenetreConventions({
      LE CONTENU, FABRIQUÉ UNE SEULE FOIS (le motif nº 474)
      ================================================================ */
 
-  /** LE HAUT DU CORPS : le menu des pays, puis — une fois une
-      convention retenue — ses dates et le bouton qui valide. */
-  const enTeteDuCorps = (
-    <div className="flex flex-col gap-4 px-5 pt-4 pb-2">
-      <MenuDeroulant
-        valeur={paysChoisi}
-        surChangement={(code) => {
-          setPaysChoisi(code);
-          //  CHANGER DE PAYS LÂCHE LA CONVENTION RETENUE : elle n'est
-          //  pas dans la nouvelle liste. Les dates restent — ce sont
-          //  celles de l'artiste, elles ne dépendent d'aucun pays.
-          setRetenue(null);
-        }}
-        options={optionsPays}
-        ariaLabel="Country"
-        placeholder="Country"
-        sombre
-        opaque
-        //  La robe des champs du formulaire (`CHAMP`), comme à la
-        //  nº 750 : ce menu vit au milieu d'eux.
-        fondRepos="bg-sombre-eleve-clair"
-        fondActif="bg-sombre-haut"
-        arrondi="rounded-xl"
-        hauteur="min-h-[52px]"
-      />
-
-      {catalogueVide && (
-        <p className="text-[13px] leading-relaxed text-sombre-texte-doux">
-          No convention has been added to the catalogue yet.
-        </p>
-      )}
-
-      {retenue && (
-        <div className="rounded-xl bg-sombre-eleve-clair p-4">
-          <p className="text-[13.5px] font-semibold text-sombre-texte">
-            {retenue.nom}
-          </p>
-          <p className="mt-1 text-[13px] text-sombre-texte-doux">
-            Your dates there
-          </p>
-          <div className="mt-3">
-            <ChampsPlageDates
-              prefixe="convention-fenetre"
-              debut={debut}
-              fin={fin}
-              surChangement={(d, f) => {
-                setDebut(d);
-                setFin(f);
-              }}
-              enFauteDebut={ajoutTente && (!debut || (Boolean(fin) && fin < debut))}
-              enFauteFin={ajoutTente && (!fin || (Boolean(debut) && fin < debut))}
-            />
-          </div>
-          <button
-            type="button"
-            onClick={ajouter}
-            disabled={!debut || !fin || fin < debut}
-            //  L'ACTIVATION SE VOIT (règle nº 124) : tant que les deux
-            //  dates manquent, la capsule reste grise et éteinte.
-            className="mt-4 h-11 w-full rounded-lg bg-primaire text-[14px]
-                       font-semibold text-white transition-colors
-                       hover:opacity-90 active:opacity-90
-                       disabled:bg-sombre-haut-clair
-                       disabled:text-sombre-texte-doux disabled:opacity-100
-                       disabled:hover:opacity-100"
-          >
-            Add this convention
-          </button>
-        </div>
-      )}
-    </div>
-  );
+  /** LE HAUT DU CORPS — il ne reste qu'une phrase, et seulement
+      quand il n'y a rien à lister. Le menu des pays et les dates ont
+      regagné le formulaire (nº 750 ter). */
+  const enTeteDuCorps = listeVide ? (
+    <p className="px-5 pt-4 pb-2 text-[13px] leading-relaxed text-sombre-texte-doux">
+      No convention listed for this country yet.
+    </p>
+  ) : null;
 
   /** LES LIGNES DE LA LISTE — le motif de `ligneDeStyle`
       (BlocPortfolio) : une rangée de 52 px, le libellé à gauche, une
@@ -305,21 +232,18 @@ export function FenetreConventions({
   const lesLignes = (survol = "hover:bg-sombre-eleve") =>
     duPays.map((convention) => {
       const deja = dejaChoisies.includes(convention.id);
-      const active = retenue?.id === convention.id;
       return (
         <li key={convention.id}>
           <button
             type="button"
-            onClick={() => {
-              setRetenue(convention);
-              setAjoutTente(false);
-            }}
-            aria-pressed={active}
+            //  nº 750 ter — UN SEUL GESTE : toucher la ligne DÉSIGNE la
+            //  convention, et l'appelant referme aussitôt. C'est le
+            //  geste d'« Ajouter un style », au caractère près : plus
+            //  de sélection à confirmer, plus de bouton de validation.
+            onClick={() => surChoix(convention)}
             className={`flex w-full items-center justify-between gap-3
                        px-5 min-h-[52px] text-left text-[15px]
-                       text-sombre-texte transition-colors ${
-                         active ? "bg-sombre-eleve-clair" : survol
-                       }`}
+                       text-sombre-texte transition-colors ${survol}`}
           >
             <span className="min-w-0">
               <span className="block truncate">{convention.nom}</span>
