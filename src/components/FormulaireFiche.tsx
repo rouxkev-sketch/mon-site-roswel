@@ -619,10 +619,47 @@ async function chargerModes(
         salons.set(salon.id, salon);
       }
     }
+    /*  ██ nº 752 — RECONNAÎTRE LE PARCOURS D'UN GUEST, ET REFORMER SES
+        ENCADRÉS ██
+        ------------------------------------------------------------------
+        LE PARCOURS SE LIT DANS LA FORME DE LA LIGNE, sans colonne de
+        plus (voir `sansLieu`, lib/modes-exercice) :
+         · une nature d'établissement, un salon lié ou un nom de lieu
+           → l'artiste a dit CHEZ QUI : parcours « Oui » ;
+         · rien de tout cela → il n'a dit qu'une VILLE : parcours
+           « Non ».
+        ⚠️ LE CAS RÉSIDUEL, ET IL EST DIT : un guest enregistré AVANT
+        la migration nº 41 (pas de nature) ET avant la nº 266 (pas de
+        nom) porte une adresse sans rien pour la qualifier. Il se
+        rouvre donc en « Non », sa ville en capsule. Rien n'est perdu —
+        ni son point, ni ses dates — et la personne peut repasser en
+        « Oui ». Les guests écrits depuis se relisent tous justes.
+        ET LES ENCADRÉS : les guests « Non » qui partagent LES MÊMES
+        DATES sont le même séjour en plusieurs villes — ils reforment
+        un seul encadré (`groupe`). Deux périodes distinctes restent
+        deux encadrés, comme « + Ajouter une autre date » les avait
+        faits.  */
+    const guestSansLieu = (ligne: ModeExerciceFiche) =>
+      ligne.genre === "guest" &&
+      !ligne.nature_lieu &&
+      !ligne.salon_id &&
+      !(ligne as unknown as { nom_lieu?: string | null }).nom_lieu;
+
+    const groupes = new Map<string, string>();
     return lignes.map((ligne) => {
       const salon = ligne.salon_id ? salons.get(ligne.salon_id) : undefined;
+      const sansLieu = guestSansLieu(ligne);
+      const cle = cleNeuve("mode");
+      let groupe: string | null = null;
+      if (sansLieu) {
+        const periode = `${ligne.debut_le ?? ""}|${ligne.fin_le ?? ""}`;
+        groupe = groupes.get(periode) ?? cle;
+        if (!groupes.has(periode)) groupes.set(periode, groupe);
+      }
       return {
-        cle: cleNeuve("mode"),
+        cle,
+        groupe,
+        sansLieu,
         id: ligne.id,
         genre: ligne.genre,
         // LE SOUS-CHOIX (migrations nº 33 et nº 44). Une fiche d'AVANT
@@ -653,8 +690,15 @@ async function chargerModes(
         //  dans un salon ». On rétablit ce sens plutôt que de rouvrir
         //  un formulaire incomplet — et plutôt que de bloquer « Je
         //  confirme » sur une base où la migration n'est pas passée.
-        natureLieu:
-          ligne.nature_lieu ?? (ligne.genre === "guest" ? "salon" : null),
+        //  ⚠️ nº 752 — LE REPLI « salon » NE VAUT PLUS QUE POUR LE
+        //  PARCOURS « Oui ». Un guest sans lieu n'a pas d'établissement
+        //  du tout : lui en inventer un le ferait repartir en base avec
+        //  une nature, et il se rouvrirait ensuite dans l'autre
+        //  parcours. Le repli reste entier là où il servait — un vieux
+        //  guest QUI A un lieu et pas de nature.
+        natureLieu: sansLieu
+          ? null
+          : (ligne.nature_lieu ?? (ligne.genre === "guest" ? "salon" : null)),
         rayonKm: ligne.rayon_km ?? null,
         /*  nº 751 — LE STATUT DU MODE « AUTRE », relu sur la ligne.
              Chaque zone porte le sien (elles portent toutes le même —

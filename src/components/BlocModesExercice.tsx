@@ -3,10 +3,9 @@
 import { useEffect, useState } from "react";
 import {
   ROLES_STUDIO,
-  //  nº 751 — LE MODE « AUTRE » : ses cinq statuts et les paliers de
-  //  son rayon. Les deux listes sont au catalogue depuis la nº 749 ;
-  //  cet écran est le premier à les lire.
-  RAYONS_DEPLACEMENT,
+  //  nº 751 — LES CINQ STATUTS DU MODE « AUTRE », au catalogue depuis
+  //  la nº 749. (Les paliers de rayon, eux, ne sont plus lus par aucun
+  //  écran depuis la nº 752 — voir la note du bloc « Autre ».)
   STATUTS_INDEPENDENT,
   type GenreMode,
   type NatureEtablissement,
@@ -43,12 +42,11 @@ import {
   modeVide,
   datesSuiventLeLieu,
   periodeDeSession,
-  //  §1 (nº 419) — « le lieu est-il renseigné ? », la condition
-  //  d'affichage des dates d'une session guest.
-  lieuRenseigne,
-  //  nº 751 — LE POINT MÉDIAN DES MENTIONS (« Austin, TX, USA • 50 km »),
-  //  écrit une seule fois avec ses espaces (nº 496).
-  SEPARATEUR_MENTION,
+  //  ⚠️ nº 752 — `lieuRenseigne` N'EST PLUS LU ICI : elle commandait
+  //  l'affichage des dates d'un guest, qui attendaient son lieu. Les
+  //  dates ouvrent désormais l'encadré (voir `leGuest`) — elles
+  //  n'attendent plus rien. La fonction reste dans la bibliothèque,
+  //  elle y porte encore la règle « le lieu est-il renseigné ? ».
   type ManqueBloc,
   type ModeEnSaisie,
 } from "@/lib/modes-exercice";
@@ -248,32 +246,13 @@ const GRILLE_SELECTEUR =
     bouton d'ajout (un seul bloc par artiste — décision du
     propriétaire ; ses zones s'ajoutent DANS le bloc, par le champ de
     ville). Le rendu du bouton la saute explicitement. */
-/**
- * ██ nº 751 — UN RAYON, AUTOUR DE QUOI ? ██
- * ------------------------------------------------------------------
- * AUTOUR D'UNE VILLE OU D'UNE ADRESSE, ET DE RIEN D'AUTRE. C'est la
- * règle posée à la nº 415 (point 4) et écrite dans le catalogue
- * (`RAYONS_DEPLACEMENT`) : « 50 km autour de la France » ne veut rien
- * dire. Une région ou un pays fait donc une zone SANS rayon —
- * parfaitement valide, et lue telle quelle par les vues
- * géographiques (`coalesce(m.rayon_km, 0)`, nº 749).
- * ⚠️ ÉCRITE ICI, ET INTERROGÉE DEUX FOIS : pour DEMANDER le rayon
- * (le champ de ville) et pour ne PAS l'exiger (`modeComplet`). Les
- * deux ne peuvent pas diverger.
- */
-function rayonAutourDe(lieu: LieuTrouve): boolean {
-  return lieu.precision === "ville" || lieu.precision === "adresse";
-}
-
-/** CE QUE PORTE UNE CAPSULE DE ZONE : « Austin, TX, USA • 50 km », ou
-    la seule ligne du lieu quand la zone n'a pas de rayon. Le point
-    médian et ses espaces viennent de `SEPARATEUR_MENTION` (nº 496) —
-    aucun appelant ne le recopie. */
-function libelleDeLaZone(zone: ModeEnSaisie): string {
-  const ligne = zone.lieu ? ligneMoteur(zone.lieu) : "";
-  if (!zone.rayonKm) return ligne;
-  return `${ligne}${SEPARATEUR_MENTION}${zone.rayonKm} km`;
-}
+/*  ⚠️ nº 752 — `rayonAutourDe` ET `libelleDeLaZone` ONT DISPARU AVEC LE
+    RAYON. La nº 751 demandait un palier après chaque ville du mode
+    « Autre » et l'écrivait dans la capsule (« Austin, TX, USA •
+    50 km ») ; le propriétaire l'a retiré : une zone est une ville, et
+    sa capsule ne porte plus que le lieu (`ligneMoteur`, dans
+    `lesCapsulesDeVilles`). `RAYONS_DEPLACEMENT` reste au catalogue —
+    plus aucun écran ne le lit.  */
 
 const MOTS_AJOUT: Record<Exclude<GenreMode, "guest">, string> = {
   prive: "un studio",
@@ -488,18 +467,20 @@ export function BlocModesExercice({
   );
 
   /* ---------------------------------------------------------------
-     ██ nº 751 — LA ZONE EN COURS D'AJOUT (mode « Autre ») ██
-     Une zone se pose en DEUX gestes : la ville, puis son rayon. Entre
-     les deux, la ville attend ici — elle n'est encore écrite nulle
-     part, et l'abandonner ne laisse aucune trace dans les modes.
-     ⚠️ `compteurZone` NE COMPTE RIEN : il ne sert qu'à faire RENAÎTRE
-     le champ de ville une fois la capsule posée. `ChampLocalisation`
-     lit son texte de départ AU MONTAGE (`useState(lieuInitial ? …)`) ;
-     sans clé neuve, le nom de la ville qu'on vient de ranger resterait
-     écrit dans le champ, et la suivante se taperait par-dessus.
+     ██ nº 752 — LE CHAMP DE VILLE SE VIDE APRÈS CHAQUE CAPSULE ██
+     `compteurVille` NE COMPTE RIEN : il ne sert qu'à faire RENAÎTRE le
+     champ une fois la capsule posée. `ChampLocalisation` lit son texte
+     de départ AU MONTAGE (`useState(lieuInitial ? …)`) ; sans clé
+     neuve, le nom de la ville qu'on vient de ranger resterait écrit
+     dans le champ, et la suivante se taperait par-dessus.
+     ⚠️ UN SEUL COMPTEUR POUR LES DEUX USAGES (zones du mode « Autre »,
+     villes d'un guest sans lieu) : ils ne sont jamais montés ensemble
+     — un onglet à la fois, un volet déplié à la fois.
+     (nº 751 — il s'appelait `compteurZone` et cohabitait avec une
+     « ville en attente de rayon » ; le rayon est parti à la nº 752, la
+     ville se range désormais d'un seul geste.)
      --------------------------------------------------------------- */
-  const [villeEnAttente, setVilleEnAttente] = useState<LieuTrouve | null>(null);
-  const [compteurZone, setCompteurZone] = useState(0);
+  const [compteurVille, setCompteurVille] = useState(0);
 
   /** LE MANQUE AMÈNE À L'ENDROIT EN CAUSE : si « Je confirme »
       désigne un mode d'un AUTRE onglet (ou d'un volet replié), on
@@ -543,8 +524,41 @@ export function BlocModesExercice({
     setCatalogueDemande(true);
   }
 
+  /* ================================================================
+   * ██ nº 752 — UN ENCADRÉ GUEST PEUT PORTER PLUSIEURS LIGNES ██
+   * ================================================================
+   * Le parcours « Non » (« je ne dis pas le lieu ») met PLUSIEURS
+   * VILLES dans un seul encadré, aux mêmes dates. Chaque ville est une
+   * ligne `modes_exercice` — une ligne = un point, la règle du site —,
+   * et ces lignes-là portent la même `groupe` (voir lib/modes-exercice).
+   * L'ÉCRAN, LUI, N'EN MONTRE QU'UNE : la première du groupe. Les
+   * autres n'ont ni volet, ni titre, ni croix — elles sont les capsules
+   * de celle-là. Tout le rendu du panneau (volets numérotés, croix,
+   * confirmation) continue donc de travailler sur des MODES, sans rien
+   * apprendre : il ne voit que les représentants.
+   * ================================================================ */
+  const groupeDe = (mode: ModeEnSaisie) => mode.groupe ?? mode.cle;
+
+  /** LES LIGNES DE CET ENCADRÉ-LÀ — lui compris, dans l'ordre. */
+  function lignesDuGroupe(mode: ModeEnSaisie): ModeEnSaisie[] {
+    const groupe = groupeDe(mode);
+    return modes.filter(
+      (autre) => autre.genre === mode.genre && groupeDe(autre) === groupe
+    );
+  }
+
   const sessionsAffichees = genreAffiche
-    ? modes.filter((mode) => mode.genre === genreAffiche)
+    ? modes.filter((mode) => {
+        if (mode.genre !== genreAffiche) return false;
+        //  UN SEUL REPRÉSENTANT PAR GROUPE : le premier rencontré.
+        const groupe = groupeDe(mode);
+        return (
+          modes.find(
+            (autre) =>
+              autre.genre === genreAffiche && groupeDe(autre) === groupe
+          ) === mode
+        );
+      })
     : [];
 
   function cleDuVoletOuvert(sessions: ModeEnSaisie[]): string | null {
@@ -565,15 +579,46 @@ export function BlocModesExercice({
   const tousLesManquesDuBloc: ManqueBloc[] =
     manques.length > 0 ? manques : manque ? [manque] : [];
 
+  /*  ⚠️ nº 752 — LE ROUGE SE LIT SUR TOUT L'ENCADRÉ, pas sur la seule
+      ligne qui le représente. Un guest à trois villes a trois lignes ;
+      c'est la deuxième qui peut manquer d'un point, et c'est le SEUL
+      encadré visible qui doit s'allumer. Les quatre autres genres n'ont
+      qu'une ligne par encadré : pour eux, ces deux fonctions répondent
+      exactement comme avant.  */
+  function clesDeLEncadre(cle: string): string[] {
+    const vise = modes.find((mode) => mode.cle === cle);
+    if (!vise) return [cle];
+    return lignesDuGroupe(vise).map((mode) => mode.cle);
+  }
+
   function manquant(cle: string, champ: ManqueBloc["champ"]): boolean {
+    const cles = clesDeLEncadre(cle);
     return tousLesManquesDuBloc.some(
-      (unManque) => unManque.cle === cle && unManque.champ === champ
+      (unManque) =>
+        unManque.cle !== null &&
+        cles.includes(unManque.cle) &&
+        unManque.champ === champ
     );
   }
 
-  /** CE MODE-LÀ manque-t-il de quelque chose ? (le badge, le titre) */
+  /** CET ENCADRÉ-LÀ manque-t-il de quelque chose ? (le badge, le titre) */
   function modeEnManque(cle: string): boolean {
-    return tousLesManquesDuBloc.some((unManque) => unManque.cle === cle);
+    const cles = clesDeLEncadre(cle);
+    return tousLesManquesDuBloc.some(
+      (unManque) => unManque.cle !== null && cles.includes(unManque.cle)
+    );
+  }
+
+  /** LA MÊME ÉCRITURE, SUR TOUTES LES LIGNES DE L'ENCADRÉ (nº 752).
+      Un seul `surChangement` : deux d'affilée se perdent — le second,
+      calculé sur l'état d'avant, écrase le premier (la leçon nº 105). */
+  function modifierLEncadre(cle: string, morceau: Partial<ModeEnSaisie>) {
+    const cles = new Set(clesDeLEncadre(cle));
+    surChangement(
+      modes.map((mode) =>
+        cles.has(mode.cle) ? { ...mode, ...morceau } : mode
+      )
+    );
   }
 
   function modifier(cle: string, morceau: Partial<ModeEnSaisie>) {
@@ -652,22 +697,36 @@ export function BlocModesExercice({
     const vise = modes.find((mode) => mode.cle === cle);
     if (!vise || !vise.genre) return;
     const genre = vise.genre as GenreMode;
+    /*  ⚠️ nº 752 — LA CROIX RETIRE L'ENCADRÉ ENTIER, ses villes
+        comprises. Un guest « sans lieu » à trois villes est trois
+        lignes ; n'en retirer qu'une laisserait deux orphelines,
+        invisibles (l'écran ne montre que le représentant) et pourtant
+        enregistrées. Pour les quatre autres genres, un encadré n'a
+        qu'une ligne : `duGroupe` vaut alors `[cle]` et rien ne change. */
+    const duGroupe = new Set(lignesDuGroupe(vise).map((mode) => mode.cle));
     const autres = modes.filter(
-      (mode) => mode.genre === genre && mode.cle !== cle
+      (mode) => mode.genre === genre && !duGroupe.has(mode.cle)
     );
     setASupprimer(null);
     if (autres.length === 0) {
+      //  LE DERNIER ENCADRÉ DU GENRE : on le VIDE au lieu de le
+      //  supprimer (l'onglet doit rester ouvert), et ses villes
+      //  surnuméraires s'en vont — il n'en reste qu'une, vierge.
+      let garde = false;
       surChangement(
-        modes.map((mode) =>
+        modes.flatMap((mode) => {
+          if (!duGroupe.has(mode.cle)) return [mode];
+          if (garde) return [];
+          garde = true;
           //  §2 (nº 267) — LA CROIX VIDE : ni rôle réinventé, ni
           //  identifiant gardé (voir `modeVierge`).
-          mode.cle === cle ? modeVierge(genre, mode.cle, mode.id, true) : mode
-        )
+          return [modeVierge(genre, mode.cle, mode.id, true)];
+        })
       );
       return;
     }
     setVoletOuvert(autres[autres.length - 1].cle);
-    surChangement(modes.filter((mode) => mode.cle !== cle));
+    surChangement(modes.filter((mode) => !duGroupe.has(mode.cle)));
     window.requestAnimationFrame(() => {
       const basMaximal = Math.max(
         0,
@@ -967,8 +1026,15 @@ export function BlocModesExercice({
       deux bornes fautives s'allument, et la phrase qui l'explique
       reste (elle apprend quelque chose — voir plus bas). */
   function lesDates(mode: ModeEnSaisie) {
+    //  ⚠️ nº 752 — LE MANQUE DE DATES PEUT PORTER LA CLÉ D'UNE AUTRE
+    //  LIGNE DE L'ENCADRÉ : un guest à trois villes en a trois, toutes
+    //  aux mêmes dates, et `premierManque` désigne la première venue.
+    //  Ce sont pourtant LES MÊMES champs à l'écran.
+    const clesIci = clesDeLEncadre(mode.cle);
     const champManque =
-      manque && manque.cle === mode.cle ? manque.champ : null;
+      manque && manque.cle !== null && clesIci.includes(manque.cle)
+        ? manque.champ
+        : null;
     //  nº 750 — `convention` REJOINT `lieu` DANS CETTE LISTE, et pour
     //  la même raison : c'est le champ qui PRÉCÈDE les dates dans son
     //  panneau. Quand il manque, les deux dates vides s'allument avec
@@ -985,8 +1051,15 @@ export function BlocModesExercice({
         prefixe={`mode-${mode.cle}`}
         debut={mode.debut_le}
         fin={mode.fin_le}
+        //  ⚠️ nº 752 — LES DATES S'ÉCRIVENT SUR TOUT L'ENCADRÉ, en une
+        //  seule fois : un guest à trois villes est trois lignes, et
+        //  elles décrivent LE MÊME SÉJOUR. Les écrire ligne par ligne
+        //  les ferait diverger — et la relecture, qui regroupe PAR LES
+        //  DATES, y verrait alors trois encadrés au lieu d'un.
+        //  Les quatre autres genres n'ont qu'une ligne par encadré :
+        //  pour eux, c'est exactement `modifier`.
         surChangement={(debut_le, fin_le) =>
-          modifier(mode.cle, { debut_le, fin_le })
+          modifierLEncadre(mode.cle, { debut_le, fin_le })
         }
         enFauteDebut={vise && (!mode.debut_le || desordre)}
         enFauteFin={vise && (!mode.fin_le || desordre)}
@@ -1157,19 +1230,19 @@ export function BlocModesExercice({
    *     nº 749). Obligatoire, un seul choix, la robe des champs du
    *     formulaire — celle du menu des pays de la nº 750 ter ;
    *  2. SERVICE AREA — les zones déjà posées en CAPSULES À CROIX, puis
-   *     le champ de ville. Choisir une ville fait apparaître les cinq
-   *     paliers de rayon (`RAYONS_DEPLACEMENT`) ; en toucher un pose la
-   *     capsule et vide le champ, prêt pour la suivante.
+   *     le champ de ville. Choisir une ville pose la capsule et vide le
+   *     champ, prêt pour la suivante.
    *
    * ⚠️ UN SEUL BLOC, SANS VOLETS NI BOUTON D'AJOUT — c'est la décision
    * du propriétaire, et le rendu du panneau la tient (voir plus bas).
    * Les zones sont bien N lignes en base ; ici, elles sont N capsules.
    *
-   * ⚠️ LE RAYON N'EST DEMANDÉ QU'AUTOUR D'UNE VILLE OU D'UNE ADRESSE
-   * (`rayonAutourDe`) : « 50 km autour de la France » ne veut rien
-   * dire — c'est la règle écrite dans `RAYONS_DEPLACEMENT` depuis la
-   * nº 415. Une région ou un pays pose donc sa capsule TOUT DE SUITE,
-   * sans rayon, et la zone reste parfaitement valide.
+   * ██ nº 752 — LE RAYON EST PARTI, ET C'ÉTAIT UNE ERREUR DE LA nº 751 ██
+   * Elle demandait un palier (10 · 25 · 50 · 100 · 200 km) après chaque
+   * ville, et l'écrivait en base. Le propriétaire l'a retiré aussitôt :
+   * une zone est UNE VILLE, pas un disque. Plus de paliers à l'écran,
+   * plus de rayon enregistré (voir enregistrer-exercice) — et la
+   * capsule ne porte plus que le lieu.
    */
   function leBlocAutre() {
     //  LE ROUGE DU BLOC : n'importe laquelle de ses lignes suffit à
@@ -1246,32 +1319,77 @@ export function BlocModesExercice({
             Service area
           </p>
 
-          {zonesPosees.length > 0 && (
-            /*  LES CAPSULES — le badge à croix des styles (nº 552),
-                celui-là même que porte une convention (nº 750 ter) :
-                `rounded-full`, fond `eleve-clair`, texte blanc. Elles
-                s'enroulent (`flex-wrap`) : trois zones tiennent à
-                320 px sans rien pousser hors du cadre. */
-            <div
-              data-zones-autre
-              className="mt-3 flex flex-wrap gap-2"
-            >
-              {zonesPosees.map((zone) => (
+          {lesCapsulesDeVilles({
+            villes: zonesPosees,
+            marqueur: "zone",
+            prefixe: "zone-autre",
+            enFaute: zoneEnFaute,
+            surAjout: ajouterUneZone,
+            surRetrait: retirerLaZone,
+          })}
+        </div>
+        </div>
+      </div>
+    );
+  }
+
+  /**
+   * ██ nº 752 — LES VILLES EN CAPSULES, ÉCRITES UNE SEULE FOIS ██
+   * ==================================================================
+   * DEUX ENDROITS S'EN SERVENT, et le propriétaire les veut identiques :
+   *  · les ZONES du mode « Autre » (nº 751, le rayon en moins) ;
+   *  · les VILLES d'un guest qui ne dit pas son lieu (le parcours
+   *    « Non »).
+   * Même geste, même dessin : le champ de ville du site, une capsule à
+   * croix par ville choisie, le champ qui se vide pour la suivante.
+   * L'écrire deux fois, c'est se condamner à les voir diverger.
+   *
+   * ⚠️ LA CLÉ DU CHAMP CHANGE À CHAQUE CAPSULE POSÉE : c'est ce qui le
+   * vide. `ChampLocalisation` lit son texte de départ AU MONTAGE ; sans
+   * clé neuve, le nom de la ville qu'on vient de ranger resterait
+   * écrit, et la suivante se taperait par-dessus.
+   */
+  function lesCapsulesDeVilles({
+    villes,
+    marqueur,
+    prefixe,
+    enFaute,
+    surAjout,
+    surRetrait,
+  }: {
+    villes: ModeEnSaisie[];
+    /** Le nom du marqueur de banc : `data-<marqueur>-ville`. */
+    marqueur: string;
+    prefixe: string;
+    enFaute: boolean;
+    surAjout: (lieu: LieuTrouve) => void;
+    surRetrait: (cle: string) => void;
+  }) {
+    return (
+      <>
+        {villes.length > 0 && (
+          /*  LES CAPSULES — le badge à croix des styles (nº 552),
+              celui-là même que porte une convention (nº 750 ter) :
+              `rounded-full`, fond `eleve-clair`, texte blanc. Elles
+              s'enroulent (`flex-wrap`) : trois villes tiennent à
+              320 px sans rien pousser hors du cadre. */
+          <div className="mt-3 flex flex-wrap gap-2">
+            {villes.map((ville) => {
+              const libelle = ville.lieu ? ligneMoteur(ville.lieu) : "";
+              return (
                 <span
-                  key={zone.cle}
-                  data-zone-autre={zone.cle}
+                  key={ville.cle}
+                  data-ville-capsule={`${marqueur}:${ville.cle}`}
                   className="inline-flex max-w-full items-center gap-2 rounded-full
                              border border-transparent bg-sombre-eleve-clair
                              py-1.5 pl-3.5 pr-1.5 text-[13.5px] font-semibold
                              text-sombre-texte"
                 >
-                  <span className="min-w-0 truncate">
-                    {libelleDeLaZone(zone)}
-                  </span>
+                  <span className="min-w-0 truncate">{libelle}</span>
                   <button
                     type="button"
-                    onClick={() => retirerLaZone(zone.cle)}
-                    aria-label={`Retirer ${libelleDeLaZone(zone)}`}
+                    onClick={() => surRetrait(ville.cle)}
+                    aria-label={`Retirer ${libelle}`}
                     title="Retirer"
                     className="flex h-7 w-7 shrink-0 items-center justify-center
                                rounded-full text-sombre-texte-doux
@@ -1282,74 +1400,28 @@ export function BlocModesExercice({
                     <IconeCroix taille={14} />
                   </button>
                 </span>
-              ))}
-            </div>
-          )}
-
-          {/*  LE CHAMP DE VILLE — celui du site, avec ses suggestions.
-               ⚠️ SA CLÉ CHANGE À CHAQUE CAPSULE POSÉE (`compteurZone`) :
-               c'est ce qui le vide, prêt pour la ville suivante. Voir
-               la note de l'état, plus haut. */}
-          <div className="mt-3">
-            <ChampLocalisation
-              key={`zone-autre-${compteurZone}`}
-              id="zone-autre"
-              etiquette={null}
-              texteIndicatif="Ville, ou adresse complète…"
-              surChoix={(lieu) => {
-                if (!lieu) {
-                  setVilleEnAttente(null);
-                  return;
-                }
-                //  UNE VILLE ATTEND SON RAYON ; un pays ou une région
-                //  n'en prend pas et se range aussitôt.
-                if (rayonAutourDe(lieu)) {
-                  setVilleEnAttente(lieu);
-                  return;
-                }
-                ajouterUneZone(lieu, null);
-              }}
-              panneauDansLeFlux={surMobile}
-              opaque
-              remonterAuToucher={surMobile}
-              croixEffacement
-              enErreur={zoneEnFaute}
-            />
+              );
+            })}
           </div>
-
-          {/*  LES PALIERS DE RAYON — ils n'apparaissent qu'entre la
-               ville et sa capsule. Le motif du bouton « + Ajouter » de
-               ce bloc (nº 419-§2) : la paire de fonds des champs, texte
-               blanc dans les deux états. Aucun n'est « actif » : on en
-               touche un, la capsule se pose, ils s'en vont. */}
-          {villeEnAttente && (
-            <div className="mt-3">
-              <p className="text-[13px] text-sombre-texte-doux">
-                Jusqu&apos;où te déplaces-tu autour de{" "}
-                {ligneMoteur(villeEnAttente)} ?
-              </p>
-              <div data-rayons-autre className="mt-2 flex flex-wrap gap-2">
-                {RAYONS_DEPLACEMENT.map((palier) => (
-                  <button
-                    key={palier}
-                    type="button"
-                    data-rayon-autre={palier}
-                    onClick={() => ajouterUneZone(villeEnAttente, palier)}
-                    className="rounded-full border border-transparent
-                               bg-sombre-eleve-clair px-4 min-h-[40px]
-                               text-[13.5px] font-semibold text-sombre-texte
-                               transition-colors hover:bg-sombre-haut
-                               active:bg-sombre-haut"
-                  >
-                    {palier} km
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+        )}
+        <div className="mt-3">
+          <ChampLocalisation
+            key={`${prefixe}-${compteurVille}`}
+            id={prefixe}
+            etiquette={null}
+            texteIndicatif="Ville, ou adresse complète…"
+            surChoix={(lieu) => {
+              if (!lieu) return;
+              surAjout(lieu);
+            }}
+            panneauDansLeFlux={surMobile}
+            opaque
+            remonterAuToucher={surMobile}
+            croixEffacement
+            enErreur={enFaute}
+          />
         </div>
-        </div>
-      </div>
+      </>
     );
   }
 
@@ -1440,13 +1512,13 @@ export function BlocModesExercice({
    * recopié dessus — c'est le schéma « une ligne par zone, le statut
    * répété ». Le rendu se chargera de le tenir à jour ensuite.
    */
-  function ajouterUneZone(lieu: LieuTrouve, rayonKm: number | null) {
+  function ajouterUneZone(lieu: LieuTrouve) {
     let pose = false;
     const suivants = modes.map((mode) => {
       if (pose) return mode;
       if (mode.genre !== "independent" || mode.lieu || mode.salon) return mode;
       pose = true;
-      return { ...mode, lieu, rayonKm };
+      return { ...mode, lieu };
     });
     surChangement(
       pose
@@ -1456,13 +1528,11 @@ export function BlocModesExercice({
             {
               ...modeVierge("independent"),
               lieu,
-              rayonKm,
               statut: statutIndependent || null,
             },
           ]
     );
-    setVilleEnAttente(null);
-    setCompteurZone((tour) => tour + 1);
+    setCompteurVille((tour) => tour + 1);
   }
 
   /**
@@ -1496,29 +1566,204 @@ export function BlocModesExercice({
     );
   }
 
-  /** LES CHAMPS D'UN LIEU — le rôle puis la localisation, ou la
-      localisation puis les dates pour une session guest.
-      ██ §1 (nº 419) — LES DATES N'APPARAISSENT QU'APRÈS LE LIEU ██
-      Elles étaient là d'emblée : on demandait QUAND avant de savoir
-      OÙ. Elles attendent désormais que le lieu soit RENSEIGNÉ — une
-      fiche retenue, ou une adresse ET son nom (`lieuRenseigne`,
-      lib/modes-exercice, qui porte la règle et l'explique).
-      ⚠️ SE CACHER N'EST PAS S'EFFACER : ce qui a été saisi reste en
-      mémoire tant que le lieu n'a pas DISPARU (`datesSuiventLeLieu`,
-      nº 413). Effacer le nom d'un lieu cache donc les dates ; le
-      retaper les ramène telles quelles. */
+  /* ================================================================
+   * ██ nº 752 — LA SESSION GUEST, REPRISE DANS L'AUTRE SENS ██
+   * ================================================================
+   * CE QU'ELLE ÉTAIT : le lieu d'abord (nature, recherche de
+   * portfolio, adresse, nom), les dates ensuite — et seulement une
+   * fois le lieu renseigné (§1 nº 419).
+   * CE QU'ELLE EST : LES DATES D'ABORD, puis une question —
+   * « Souhaitez-vous indiquer le lieu de ce guest ? » :
+   *  · OUI (la position d'ouverture) → le formulaire d'avant, TEL
+   *    QUEL. Rien n'y change : bascule Studio/Salon, recherche de
+   *    portfolio, « Pas de portfolio ? Ajoutez ses coordonnées », nom
+   *    du lieu. Seules les dates ont quitté la fin de l'encadré ;
+   *  · NON → UNE OU PLUSIEURS VILLES, en capsules à croix — le même
+   *    geste que les zones du mode « Autre » (`lesCapsulesDeVilles`),
+   *    et au moins une est exigée.
+   * POURQUOI CE SENS-LÀ : un artiste sait QUAND il part avant de
+   * savoir chez qui. Lui demander le lieu d'abord bloquait la saisie
+   * de ce qu'il connaît déjà — et interdisait de déclarer un séjour
+   * dont le lieu n'est pas encore arrêté.
+   * ⚠️ CHAQUE VILLE EST UNE LIGNE, toutes aux mêmes dates : écrire les
+   * dates les écrit donc SUR TOUT LE GROUPE, en une seule écriture
+   * (la leçon nº 105 — deux `surChangement` d'affilée se perdent).
+   * ================================================================ */
+  function leGuest(session: ModeEnSaisie) {
+    const lignes = lignesDuGroupe(session);
+    const villes = lignes.filter((ligne) => Boolean(ligne.lieu));
+    const villeEnFaute = manquant(session.cle, "ville");
+
+    return (
+      <div className="flex flex-col gap-5">
+        {/* ---------- 1. LES DATES, EN PREMIER ---------- */}
+        <div>
+          <p className="text-[13.5px] font-semibold text-sombre-texte">
+            Tes dates
+          </p>
+          <div className="mt-3">{lesDates(session)}</div>
+        </div>
+
+        {/* ---------- 2. LA QUESTION ---------- */}
+        <div>
+          {/*  LA QUESTION EST ÉCRITE, et pas seulement annoncée aux
+               lecteurs d'écran : `BasculeDeuxChoix` ne fait de son
+               étiquette qu'un `aria-label` (elle sert d'abord des
+               bascules dont les deux mots se suffisent — « Studio /
+               Salon »). Ici, les deux mots sont « Oui » et « Non » :
+               sans la question au-dessus, ils ne veulent rien dire.
+               La robe est celle des intertitres de champ du bloc
+               (« Your dates there », nº 750 ter). */}
+          <p className="text-[13.5px] font-semibold text-sombre-texte">
+            Souhaitez-vous indiquer le lieu de ce guest ?
+          </p>
+          {/*  LA BASCULE À DEUX POSITIONS du site (nº 100) : elle s'ouvre
+               sur « Oui », le parcours historique — c'est celui de tous
+               les guests déjà enregistrés, et de loin le plus fréquent.
+               ⚠️ BASCULER LÂCHE CE QUE L'AUTRE PARCOURS AVAIT POSÉ, dans
+               la MÊME écriture (la leçon nº 105) : passer à « Non » rend
+               les champs de lieu sans objet, passer à « Oui » rend les
+               villes sans objet. LES DATES, ELLES, RESTENT — elles ne
+               dépendent d'aucun des deux (voir `datesSuiventLeLieu`). */}
+          <div className="mt-3">
+            <BasculeDeuxChoix
+              etiquette="Souhaitez-vous indiquer le lieu de ce guest ?"
+              choix={[
+                { slug: "oui", label: "Oui" },
+                { slug: "non", label: "Non" },
+              ]}
+              valeur={session.sansLieu ? "non" : "oui"}
+              surChoix={(reponse) => basculerLeGuest(session, reponse === "non")}
+            />
+          </div>
+        </div>
+
+        {/* ---------- 3. L'UN OU L'AUTRE ---------- */}
+        {session.sansLieu ? (
+          <div>
+            <p className="text-[13.5px] font-semibold text-sombre-texte">
+              Dans quelle ville ?
+            </p>
+            {lesCapsulesDeVilles({
+              villes,
+              marqueur: "guest",
+              prefixe: `ville-guest-${session.cle}`,
+              enFaute: villeEnFaute,
+              surAjout: (lieu) => ajouterUneVilleDeGuest(session, lieu),
+              surRetrait: (cle) => retirerUneVilleDeGuest(session, cle),
+            })}
+          </div>
+        ) : (
+          leLieu(session)
+        )}
+      </div>
+    );
+  }
+
+  /** LA RÉPONSE À LA QUESTION — elle vaut pour TOUT l'encadré, et elle
+      lâche ce que l'autre parcours avait posé. */
+  function basculerLeGuest(session: ModeEnSaisie, sansLieu: boolean) {
+    const duGroupe = new Set(lignesDuGroupe(session).map((mode) => mode.cle));
+    let garde = false;
+    surChangement(
+      modes.flatMap((mode) => {
+        if (!duGroupe.has(mode.cle)) return [mode];
+        //  UNE SEULE LIGNE SURVIT au changement de parcours : les
+        //  villes surnuméraires n'ont plus d'objet sous « Oui », et
+        //  sous « Non » on repart d'un champ vide. Les DATES, elles,
+        //  sont recopiées telles quelles.
+        if (garde) return [];
+        garde = true;
+        return [
+          {
+            ...mode,
+            sansLieu,
+            //  REVENIR À « OUI » ROUVRE LA BASCULE SUR SA POSITION DE
+            //  NAISSANCE — « Studio », celle d'un guest neuf
+            //  (`modeVierge`). Reposer « salon » ici aurait fait deux
+            //  guests neufs différents selon le chemin pris.
+            natureLieu: sansLieu ? null : "prive",
+            salon: null,
+            lieu: null,
+            nomLieu: null,
+          },
+        ];
+      })
+    );
+  }
+
+  /** UNE VILLE DE PLUS DANS CET ENCADRÉ — la première remplit la ligne
+      encore vide (celle qu'ouvre la bascule), les suivantes ajoutent
+      une ligne au groupe, avec les mêmes dates. */
+  function ajouterUneVilleDeGuest(session: ModeEnSaisie, lieu: LieuTrouve) {
+    const lignes = lignesDuGroupe(session);
+    const libre = lignes.find((ligne) => !ligne.lieu && !ligne.salon);
+    if (libre) {
+      surChangement(
+        modes.map((mode) => (mode.cle === libre.cle ? { ...mode, lieu } : mode))
+      );
+      setCompteurVille((tour) => tour + 1);
+      return;
+    }
+    //  ELLE SE GLISSE JUSTE APRÈS LA DERNIÈRE DU GROUPE : l'ordre écrit
+    //  en base suit alors celui de l'écran, comme pour `ajouterUnLieu`.
+    const derniere = modes.lastIndexOf(lignes[lignes.length - 1]);
+    const suivants = [...modes];
+    suivants.splice(derniere + 1, 0, {
+      ...modeVierge("guest"),
+      groupe: groupeDe(session),
+      sansLieu: true,
+      natureLieu: null,
+      lieu,
+      debut_le: session.debut_le,
+      fin_le: session.fin_le,
+    });
+    surChangement(suivants);
+    setCompteurVille((tour) => tour + 1);
+  }
+
+  /** LA CROIX D'UNE CAPSULE — même règle que celle des zones du mode
+      « Autre » (nº 751) : la ligne s'en va s'il en reste, sinon elle se
+      VIDE pour que l'encadré — et ses dates — restent à l'écran. */
+  function retirerUneVilleDeGuest(session: ModeEnSaisie, cle: string) {
+    const villes = lignesDuGroupe(session).filter((ligne) => Boolean(ligne.lieu));
+    if (villes.length > 1) {
+      surChangement(modes.filter((mode) => mode.cle !== cle));
+      return;
+    }
+    surChangement(
+      modes.map((mode) =>
+        mode.cle === cle
+          ? {
+              ...modeVierge("guest", mode.cle, mode.id, true),
+              groupe: groupeDe(session),
+              sansLieu: true,
+              natureLieu: null,
+              //  LES DATES SURVIENT À LA VILLE : elles disent QUAND, pas
+              //  OÙ. Les reperdre obligerait à répondre deux fois.
+              debut_le: mode.debut_le,
+              fin_le: mode.fin_le,
+            }
+          : mode
+      )
+    );
+  }
+
+  /** LES CHAMPS D'UN LIEU — le rôle puis la localisation. */
   function lesChamps(session: ModeEnSaisie) {
     //  ██ nº 750 ter — LA CONVENTION A SES PROPRES CHAMPS ██
     //  Elle n'emprunte RIEN aux trois autres genres : ni rôle, ni
     //  recherche de portfolio, ni saisie d'adresse. Un menu de pays,
     //  un badge, des dates — voir `laConvention`.
     if (session.genre === "convention") return laConvention(session);
-    const guest = session.genre === "guest";
+    //  ██ nº 752 — LA SESSION GUEST A SON PROPRE ORDRE ██
+    //  Les dates ouvrent l'encadré, la question suit, et le lieu ne
+    //  vient qu'après — quand il vient. Voir `leGuest`.
+    if (session.genre === "guest") return leGuest(session);
     return (
       <div className="flex flex-col gap-5">
-        {!guest && leRole(session)}
+        {leRole(session)}
         {leLieu(session)}
-        {guest && lieuRenseigne(session) && lesDates(session)}
       </div>
     );
   }

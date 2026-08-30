@@ -1299,8 +1299,42 @@ export type ModeEnSaisie = {
       STUDIO PRIVÉ ? Rien à voir avec le genre du mode (toujours
       « guest ») : c'est la nature de l'ÉTABLISSEMENT visité, la même
       distinction que `etablissement` sur une fiche de lieu. Null tant
-      que le choix n'est pas fait — et le bloc 1 reste incomplet. */
+      que le choix n'est pas fait — et le bloc 1 reste incomplet.
+      ⚠️ nº 752 — NULL VEUT AUSSI DIRE « PAS DE LIEU » : c'est ce que
+      le parcours « Non » écrit en base, et c'est ainsi qu'on le relit
+      (voir `sansLieu`). */
   natureLieu?: "salon" | "prive" | null;
+  /**
+   * ██ GUEST seulement (nº 752) — « INDIQUES-TU LE LIEU ? » ██
+   * ------------------------------------------------------------------
+   * LA RÉPONSE À LA QUESTION QUI OUVRE L'ENCADRÉ, juste sous les dates.
+   *  · FAUX (« Oui », la position d'ouverture) — le parcours
+   *    historique, INCHANGÉ : nature du lieu, recherche de portfolio,
+   *    adresse à défaut, nom du lieu ;
+   *  · VRAI (« Non ») — l'artiste ne dit pas CHEZ QUI il sera, mais OÙ :
+   *    une ou plusieurs VILLES, en capsules. Chaque ville est alors une
+   *    ligne `modes_exercice` de genre guest, aux mêmes dates, sans
+   *    `nature_lieu` ni `nom_lieu` — c'est à cela qu'on la reconnaît à
+   *    la relecture.
+   * ⚠️ IL N'EST PAS EN BASE, et il n'a pas à y être : la forme des
+   * lignes le dit déjà. Un guest qui porte un salon lié ou un nom de
+   * lieu a répondu « Oui » ; un guest qui n'a qu'un point a répondu
+   * « Non » (voir `chargerModes`, FormulaireFiche).
+   */
+  sansLieu?: boolean;
+  /**
+   * ██ GUEST seulement (nº 752) — L'ENCADRÉ AUQUEL CETTE LIGNE APPARTIENT
+   * ------------------------------------------------------------------
+   * Le parcours « Non » met PLUSIEURS VILLES dans UN SEUL encadré, et
+   * chaque ville est une ligne à part (une ligne = un point, la règle
+   * du site depuis toujours). Il faut donc dire lesquelles vont
+   * ensemble : elles partagent cette clé.
+   * ⚠️ EN MÉMOIRE SEULEMENT, comme `cle` : la base n'en sait rien, et
+   * la relecture la reconstruit — les guests sans lieu qui partagent
+   * LES MÊMES DATES sont le même séjour, en plusieurs villes.
+   * Absente, le mode est seul dans son encadré (sa `cle` fait office).
+   */
+  groupe?: string | null;
   /** INDEPENDENT seulement — jusqu'où l'artiste se déplace autour de
       la ville choisie (10, 25, 50, 100 ou 200 km). Null ailleurs, et
       null tant qu'aucun rayon n'est choisi.
@@ -1585,6 +1619,11 @@ export function nomLieuRequis(mode: ModeEnSaisie): boolean {
   if (mode.genre !== "salon" && mode.genre !== "prive" && mode.genre !== "guest") {
     return false;
   }
+  //  nº 752 — UN GUEST QUI NE DIT PAS SON LIEU N'A PAS DE NOM À DONNER.
+  //  Il ne déclare qu'une VILLE : il n'y a pas d'enseigne derrière, et
+  //  la question « chez qui ? » n'a plus de sujet. C'est la même raison
+  //  que pour le mode « Autre » — l'artiste dit OÙ, pas CHEZ QUI.
+  if (mode.genre === "guest" && mode.sansLieu) return false;
   if (mode.salon) return false;
   return Boolean(mode.lieu);
 }
@@ -1694,15 +1733,29 @@ export function lieuRenseigne(mode: ModeEnSaisie): boolean {
  * de DeuxZonesLieu). Le chemin direct — chercher, puis retenir — est
  * donc toujours disponible, et c'est lui qui conserve les dates.
  */
+/*  ██ nº 752 — CETTE RÈGLE EST DÉSORMAIS SANS OBJET, ET C'EST LA
+    REFONTE DU GUEST QUI LA RETIRE ██
+    ------------------------------------------------------------------
+    ELLE AVAIT UN SENS TANT QUE LES DATES VENAIENT APRÈS LE LIEU : on
+    demandait OÙ, puis QUAND ; le lieu retiré, le « quand » ne disait
+    plus de quoi il parlait, et la nº 413 l'effaçait.
+    LE PARCOURS EST INVERSÉ DEPUIS LA nº 752 : les dates ouvrent
+    l'encadré, le lieu vient ensuite — ET IL EST FACULTATIF (la
+    question « Souhaitez-vous indiquer le lieu ? »). Les dates ne
+    dépendent donc plus de rien : un guest peut n'avoir aucun lieu et
+    rester complet.
+    ⚠️ ET LA GARDER FERAIT PIRE QUE RIEN : passer de « Oui » à « Non »
+    lâche le lieu — la règle effacerait alors les dates que la personne
+    vient de saisir, au moment précis où elle répond à la question
+    suivante. C'est un défaut, pas une protection.
+    La fonction reste (le formulaire l'appelle à chaque écriture) mais
+    ne touche plus à rien : une seule écriture à changer le jour où le
+    parcours rebougera.  */
 export function datesSuiventLeLieu(
-  avant: ModeEnSaisie,
+  _avant: ModeEnSaisie,
   apres: ModeEnSaisie
 ): ModeEnSaisie {
-  if (apres.genre !== "guest") return apres;
-  const avaitUnLieu = Boolean(avant.salon || avant.lieu);
-  const aUnLieu = Boolean(apres.salon || apres.lieu);
-  if (!avaitUnLieu || aUnLieu) return apres;
-  return { ...apres, debut_le: "", fin_le: "" };
+  return apres;
 }
 
 /** LES MODES QUI COMPTENT — ceux où quelque chose a été saisi. C'est
@@ -1720,9 +1773,20 @@ export function modeComplet(mode: ModeEnSaisie): boolean {
   if (!mode.genre) return false;
   // EN STUDIO SANS SOUS-CHOIX : la moitié de l'information manque.
   if (mode.genre === "salon" && !mode.role) return false;
-  //  GUEST SANS NATURE DE LIEU : même chose. Tant qu'on ne sait pas si
-  //  l'artiste est reçu par un SALON ou par un STUDIO PRIVÉ, les deux
-  //  champs qui suivent posent une question sans sujet.
+  /*  ██ GUEST (nº 752) — DEUX PARCOURS, DEUX RÈGLES ██
+      SANS LIEU (« Non ») : les DEUX DATES et UNE VILLE, rien d'autre.
+      Ni nature d'établissement, ni nom : l'artiste dit OÙ il sera, pas
+      chez qui. Chaque ville est une ligne, chacune se juge seule.
+      AVEC LIEU (« Oui ») : le parcours historique, inchangé — la
+      nature du lieu d'abord (sans elle, les champs qui suivent posent
+      une question sans sujet), puis le lieu, son nom si l'adresse est
+      saisie à la main, et les dates. */
+  if (mode.genre === "guest" && mode.sansLieu) {
+    if (!pointDuMode(mode)) return false;
+    return Boolean(
+      mode.debut_le && mode.fin_le && mode.fin_le >= mode.debut_le
+    );
+  }
   if (mode.genre === "guest" && !mode.natureLieu) return false;
   /*  ██ CONVENTION (nº 750) — DEUX RÉPONSES, ET ELLES SUFFISENT ██
       La convention retenue dans le menu, et LES DATES DE L'ARTISTE
@@ -1889,6 +1953,10 @@ export type ManqueBloc = {
     //  chercher un rouge sur des champs que cet onglet n'a pas.
     | "statut"
     | "zone"
+    //  nº 752 — LA VILLE D'UN GUEST SANS LIEU. Un champ à part, encore
+    //  une fois : ce parcours-là n'a ni recherche de portfolio ni
+    //  saisie d'adresse, seulement un champ de ville et des capsules.
+    | "ville"
     | "nomLieu"
     | "rayon"
     | "dates"
@@ -1968,6 +2036,33 @@ export function premierManque(
         champ: "role",
         message: "Précise si tu es fondateur ou résident du salon.",
       };
+    }
+    //  nº 752 — LA MÊME BRANCHE QUE `tousLesManques`, et à la même
+    //  place : les deux fonctions lisent la même règle, l'une s'arrête
+    //  au premier manque, l'autre les liste tous (§1 nº 267).
+    if (mode.genre === "guest" && mode.sansLieu) {
+      if (!(mode.debut_le && mode.fin_le)) {
+        return {
+          cle: mode.cle,
+          champ: "dates",
+          message: "Une session guest a besoin de ses deux dates.",
+        };
+      }
+      if (mode.fin_le < mode.debut_le) {
+        return {
+          cle: mode.cle,
+          champ: "dates",
+          message: "La date de fin précède la date de début.",
+        };
+      }
+      if (!pointDuMode(mode)) {
+        return {
+          cle: mode.cle,
+          champ: "ville",
+          message: "Ajoute au moins une ville pour ce guest.",
+        };
+      }
+      continue;
     }
     //  nº 750 — LA CONVENTION A SES DEUX MANQUES À ELLE, et ils
     //  passent AVANT le test de lieu commun : sans cette branche, un
@@ -2165,6 +2260,34 @@ export function tousLesManques(
         champ: "role",
         message: "Précise si tu es fondateur ou résident du salon.",
       });
+    }
+    //  nº 752 — LE GUEST SANS LIEU A SES DEUX MANQUES À LUI, et ils
+    //  passent AVANT les règles du parcours « Oui » : ce panneau-là
+    //  n'a ni bascule de nature, ni recherche de portfolio, ni nom de
+    //  lieu — les désigner ferait chercher un rouge sur des champs
+    //  qu'il n'a pas.
+    if (mode.genre === "guest" && mode.sansLieu) {
+      if (!(mode.debut_le && mode.fin_le)) {
+        manques.push({
+          cle: mode.cle,
+          champ: "dates",
+          message: "Une session guest a besoin de ses deux dates.",
+        });
+      } else if (mode.fin_le < mode.debut_le) {
+        manques.push({
+          cle: mode.cle,
+          champ: "dates",
+          message: "La date de fin précède la date de début.",
+        });
+      }
+      if (!pointDuMode(mode)) {
+        manques.push({
+          cle: mode.cle,
+          champ: "ville",
+          message: "Ajoute au moins une ville pour ce guest.",
+        });
+      }
+      continue;
     }
     if (mode.genre === "guest" && !mode.natureLieu) {
       manques.push({

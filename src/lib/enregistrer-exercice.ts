@@ -257,16 +257,18 @@ async function ecrireModes(
           : null,
       salon_id: mode.salon?.id ?? null,
       ...lieu,
-      //  ██ nº 751 — LE RAYON REVIT, ET IL EST À « AUTRE » ██
-      //  Il fut celui d'« à domicile », puis de « Disponible »
-      //  (nº 414-417) ; la nº 418 a supprimé ce mode et la colonne est
-      //  restée écrite à null. Le mode « Autre » l'écrit de nouveau :
-      //  UNE VALEUR PAR ZONE, celle de sa capsule.
-      //  ⚠️ NULL RESTE POSSIBLE SUR UNE LIGNE « Autre » : une région ou
-      //  un pays n'a pas de rayon (voir `rayonKm`). Les trois vues
-      //  géographiques le lisent déjà ainsi — `coalesce(m.rayon_km, 0)`
-      //  (nº 749) : sans rayon, la zone vaut son point seul.
-      rayon_km: mode.genre === "independent" ? (mode.rayonKm ?? null) : null,
+      //  ██ nº 752 — PLUS AUCUN RAYON N'EST ÉCRIT, ET C'EST UN RETOUR ██
+      //  La nº 751 en avait donné un aux zones du mode « Autre » ; le
+      //  propriétaire l'a retiré aussitôt : une zone est une VILLE, pas
+      //  un disque. La colonne reste en base (les vues la lisent par
+      //  `coalesce(m.rayon_km, 0)` — sans rayon, une zone vaut son
+      //  point seul) et redevient ce qu'elle était depuis la nº 418 :
+      //  toujours nulle.
+      //  ⚠️ LES LIGNES DÉJÀ ENREGISTRÉES AVEC UN RAYON le perdent au
+      //  prochain enregistrement de leur fiche, et c'est voulu : l'écran
+      //  ne sait plus l'afficher ni le choisir, le garder en base
+      //  ferait mentir la carte.
+      rayon_km: null,
       //  nº 751 — LE STATUT, propre au mode « Autre » et null partout
       //  ailleurs (la contrainte `modes_exercice_statut_connu` l'exige).
       //  ⚠️ IL EST RÉPÉTÉ SUR CHAQUE ZONE : chaque mode le porte déjà en
@@ -274,7 +276,14 @@ async function ecrireModes(
       //  n'y a donc rien à recopier ici.
       statut: mode.genre === "independent" ? (mode.statut ?? null) : null,
       //  LA NATURE DU LIEU VISITÉ n'a de sens que pour un guest.
-      nature_lieu: mode.genre === "guest" ? (mode.natureLieu ?? null) : null,
+      //  ⚠️ nº 752 — ET SEULEMENT POUR CELUI QUI DÉCLARE UN LIEU. Le
+      //  parcours « Non » ne dit pas chez qui, seulement dans quelle
+      //  ville : sa ligne part SANS nature — et c'est justement à cela
+      //  qu'on la reconnaît à la relecture (voir `sansLieu`).
+      nature_lieu:
+        mode.genre === "guest" && !mode.sansLieu
+          ? (mode.natureLieu ?? null)
+          : null,
       //  §1 (nº 266) — LE NOM DU LIEU SAISI À LA MAIN. Il n'a de sens
       //  que là où le champ existe (`nomLieuRequis` : un lieu qui a
       //  son portfolio porte déjà le sien) — ailleurs null, comme le
