@@ -40,6 +40,9 @@ import {
 import {
   blocExerciceComplet,
   cleNeuve,
+  //  nº 755 — « ce guest dit-il chez qui, ou seulement où ? » : la
+  //  règle de la nº 752, écrite une seule fois là-bas.
+  guestSansLieuDeclare,
   lieuDeReference,
   membreDepuisVue,
   modeComplet,
@@ -639,16 +642,15 @@ async function chargerModes(
         un seul encadré (`groupe`). Deux périodes distinctes restent
         deux encadrés, comme « + Ajouter une autre date » les avait
         faits.  */
-    const guestSansLieu = (ligne: ModeExerciceFiche) =>
-      ligne.genre === "guest" &&
-      !ligne.nature_lieu &&
-      !ligne.salon_id &&
-      !(ligne as unknown as { nom_lieu?: string | null }).nom_lieu;
-
+    //  ⚠️ nº 755 — LA RÈGLE A DÉMÉNAGÉ, elle n'est plus recopiée ici :
+    //  l'AFFICHAGE en a besoin lui aussi (la plaque d'un guest sans
+    //  lieu ne dit pas la même chose), et deux copies d'une règle
+    //  divergent toujours. Elle vit dans `guestSansLieuDeclare`
+    //  (lib/modes-exercice), avec son cas résiduel expliqué.
     const groupes = new Map<string, string>();
     return lignes.map((ligne) => {
       const salon = ligne.salon_id ? salons.get(ligne.salon_id) : undefined;
-      const sansLieu = guestSansLieu(ligne);
+      const sansLieu = guestSansLieuDeclare(ligne);
       const cle = cleNeuve("mode");
       let groupe: string | null = null;
       if (sansLieu) {

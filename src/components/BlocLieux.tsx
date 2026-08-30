@@ -79,13 +79,11 @@ import {
   type StudioFiche,
 } from "@/lib/modes-exercice";
 import { ligneFiche, ligneMaps, type LieuAffichable } from "@/lib/adresse";
-import {
-  ECRITURE_TITRE_SECTION,
-  //  nº 753 — le statut du mode « Autre », en toutes lettres : le mot
-  //  du catalogue (nº 749), jamais une chaîne recopiée.
-  libelleStatutIndependent,
-  profilDeLaFiche,
-} from "@/config/tatouage";
+//  nº 755 — `libelleStatutIndependent` N'EST PLUS LU ICI : le statut du
+//  mode « Autre » a quitté ce fichier avec la ligne de tête de groupe
+//  (nº 753-5). Il se compose désormais dans `lieuEnDeuxLignes`, qui lit
+//  le catalogue, et arrive ici tout écrit, sur la ligne du nom.
+import { ECRITURE_TITRE_SECTION, profilDeLaFiche } from "@/config/tatouage";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
@@ -1687,18 +1685,28 @@ function TroisLignesDuLieu({
   //  range dans cet ordre — type de lieu, puis ville — et c'est donc
   //  son DERNIER morceau qui nomme le lieu.
   /*  ██ nº 753 — SANS NOM, LA VILLE MONTE SUR LA LIGNE BLANCHE ██
-      LE CAS QUI L'EXIGE : les modes nés aux nº 750-752 n'ont pas
-      toujours de nom d'enseigne — une VILLE du mode « Autre », une
-      ville d'un guest qui n'a pas dit son lieu. `lieuEnDeuxLignes`
-      rend alors `nom` vide et laisse la ville en gris : la plaque
-      n'aurait plus de première ligne, et son unique information se
+      LE CAS : une plaque dont `lieuEnDeuxLignes` ne sait pas nommer le
+      lieu n'aurait plus de première ligne, et son unique information se
       lirait au second rang.
       LA RÈGLE EXISTE DÉJÀ, MOT POUR MOT, dans `troisLignesDuMode`
       (« NI FICHE NI NOM SAISI : l'adresse monte sur la ligne blanche,
       et il n'y a pas de troisième ligne ») — on l'applique ici, à la
       plaque, plutôt que d'en inventer une seconde.
       ⚠️ ET LA LIGNE GRISE DISPARAÎT AVEC ELLE : l'écrire deux fois
-      était tout le défaut que ce §3 avait corrigé. */
+      était tout le défaut que ce §3 avait corrigé.
+      ██ nº 755 — CE REPLI NE SERT PLUS LES DEUX MODES QUI L'AVAIENT
+      MOTIVÉ ██
+      La note citait ici la VILLE du mode « Autre » et celle d'un guest
+      qui n'a pas dit son lieu : c'était vrai à la nº 753, ça ne l'est
+      plus. Les deux ont désormais un NOM — le statut pour l'un, la
+      phrase « Location shared after booking » pour l'autre (nº 755,
+      `lieuEnDeuxLignes`) —, et leur ville RESTE donc en seconde ligne,
+      où elle est un lien bleu (nº 754). C'était tout le défaut relevé
+      par le propriétaire : « la ville est à tort en blanc gras à la
+      place du nom ».
+      ⚠️ LE REPLI RESTE, ET IL A ENCORE UN PORTEUR : le salon ou le
+      studio hors site dont l'artiste n'a pas saisi l'enseigne. Sans
+      lui, cette plaque-là n'aurait aucune première ligne. */
   const { nom: nomDuLieu, suite } = lieuEnDeuxLignes(mode);
   const villeSeule = suite.length > 0 ? suite[suite.length - 1] : "";
   const nom = nomDuLieu || villeSeule;
@@ -1909,36 +1917,30 @@ export function BlocProfilsArtiste({
         );
         const lie = plaqueMeneAUneFiche(mode);
         const colonne = <TroisLignesDuLieu mode={mode} sansLien={lie} />;
-        /*  ██ nº 753 — LE STATUT DU MODE « AUTRE », UNE SEULE FOIS ██
-             Il ne décrit pas une ville, il décrit L'ARTISTE : « On
-             break », « Guest spots only »… Il s'écrit donc EN TÊTE de
-             ses villes, sur la première d'entre elles, et jamais sur
-             les suivantes (décision du propriétaire, nº 753-5).
-             ⚠️ « LA PREMIÈRE » SE LIT SUR LA LISTE ORDONNÉE, pas sur
-             la ligne : `modes` est déjà trié, et le mode « Autre »
-             ferme la marche (RANG_DU_GENRE). Le statut ouvre donc bien
-             le groupe qu'il concerne.
-             ⚠️ LA ROBE EST CELLE D'UNE MENTION (`MentionAuDessus`),
-             pas un titre de section : c'est une ligne d'information
-             au-dessus de plaques, exactement comme « RÉSIDENT • Salon »
-             — aucune écriture neuve. */
-        const statut =
-          mode.genre === "independent"
-            ? libelleStatutIndependent(mode.statut)
-            : "";
-        const premierIndependent =
-          mode.genre === "independent" &&
-          modes.find((autre) => autre.genre === "independent") === mode;
+        /*  ██ nº 755 — LA LIGNE DE STATUT EN TÊTE DE GROUPE EST RETIRÉE ██
+             ------------------------------------------------------------
+             CE QU'IL Y AVAIT (nº 753-5) : le statut du mode « Autre »
+             (« On break », « Guest spots only »…) écrit UNE fois,
+             au-dessus de la première de ses villes, dans un paragraphe
+             à lui — `mb-3`, blanc, l'écriture des lignes de fiche.
+             POURQUOI IL PART, et le propriétaire l'a jugé à l'écran :
+              · IL FAISAIT DOUBLON — le statut est descendu DANS chaque
+                plaque à cette passe, sur la ligne du nom (voir
+                `lieuEnDeuxLignes`) : il se lisait deux fois ;
+              · IL NE RESSEMBLAIT À RIEN D'AUTRE — blanc quand tous les
+                surtitres du bloc sont gris, et 12 px d'air sous lui
+                quand la mention en pose 4 (`mb-1`). « L'air est trop
+                grand, et le style diffère », mot pour mot.
+             CE QUI LE REMPLACE, SANS RIEN INVENTER : la mention du
+             dessus, la même que partout — « INDEPENDENT » en capitales
+             grises, à quatre pixels de sa plaque (`MentionAuDessus`,
+             juste dessous). Une plaque par ville, chacune avec son
+             surtitre : c'est la structure des quatre autres modes.
+             ⚠️ RIEN NE SE PERD : le statut est sur la ligne du nom de
+             CHAQUE plaque, là où il distingue les villes les unes des
+             autres. */
         return (
           <li key={mode.id}>
-            {statut && premierIndependent && (
-              <p
-                data-statut-independent=""
-                className={`mb-3 ${ECRITURE_LIGNE_FICHE} text-sombre-texte`}
-              >
-                {statut}
-              </p>
-            )}
             {/*  §3 (nº 496) — « RÉSIDENT • Salon », au-dessus et dehors :
                  le MÊME dessin que sur un salon (`MentionAuDessus`), le
                  même séparateur, la même écriture. Seul le second

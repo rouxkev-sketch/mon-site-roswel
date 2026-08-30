@@ -2,6 +2,9 @@ import {
   genreMode,
   libelleRoleCourt,
   libelleRoleStudio,
+  //  nº 755 — le statut du mode « Autre » en toutes lettres : il monte
+  //  sur la ligne du NOM de sa plaque (voir `lieuEnDeuxLignes`).
+  libelleStatutIndependent,
   libelleStyle,
   type GenreMode,
   type RoleStudio,
@@ -356,23 +359,41 @@ export function membreDepuisVue(
 }
 
 /**
+ * ██ nº 755 — LE MOT DU GUEST, ÉCRIT UNE SEULE FOIS ██
+ * ==================================================================
+ * « GUEST SPOT », et non plus « GUEST » : le mot du métier, en anglais
+ * comme les libellés neufs des nº 749-752. Le propriétaire le veut
+ * PARTOUT — sur la plaque d'un lieu de la fiche d'un artiste comme sur
+ * la ligne d'un invité dans l'équipe d'un salon : ce sont deux
+ * surtitres du même objet, ils ne peuvent pas dire deux mots
+ * différents.
+ * ⚠️ D'OÙ LA CONSTANTE : ce mot avait DEUX écritures en dur
+ * (`roleDuMembre` ici, `lieuEnDeuxLignes` plus bas) — c'est ce qui
+ * l'aurait fait changer d'un seul côté. Les deux la lisent désormais.
+ * ⚠️ LES CAPITALES SE FONT EN CSS (`MentionAuDessus`, nº 493), jamais
+ * ici : le texte reste « Guest spot » dans le code, le navigateur le
+ * peint « GUEST SPOT ».
+ */
+export const LIBELLE_GUEST = "Guest spot";
+
+/**
  * LE RÔLE D'UN MEMBRE, EN UN MOT — « Fondateur », « Résident »,
- * « Guest » (nº 222-§4).
+ * « Guest spot » (nº 222-§4, mot revu à la nº 755).
  * Un invité est un invité : son rôle dans le lieu est sa session, pas
  * une place. Les autres portent celui de leur mode d'exercice, et à
  * défaut « Résident » — une liaison partie du salon ne pend à aucun
  * mode, donc à aucun rôle, et c'est bien un résident.
  */
 export function roleDuMembre(membre: MembreEquipe): string {
-  if (membre.genre === "guest") return "Guest";
+  if (membre.genre === "guest") return LIBELLE_GUEST;
   return libelleRoleCourt(membre.role) || libelleRoleCourt("resident");
 }
 
 /**
  * ██ §6 (nº 492) — LA LIGNE AU-DESSUS DE L'ENCADRÉ D'UN MEMBRE ██
  * ==================================================================
- * « Résident • Booking ouvert », « Guest • Booking ouvert · 12 mois
- * d'attente », « Fondateur » tout seul. Le STATUT d'abord — il est
+ * « Résident • Booking ouvert », « Guest spot • Booking ouvert · 12
+ * mois d'attente », « Fondateur » tout seul. Le STATUT d'abord — il est
  * toujours là —, puis l'état du carnet quand l'artiste l'a déclaré.
  *
  * LES DEUX SÉPARATEURS SONT DIFFÉRENTS, ET C'EST VOULU (consigne du
@@ -458,9 +479,10 @@ export function mentionDuMembre(membre: MembreEquipe): MentionEnDeuxMorceaux {
 /**
  * §3 (nº 496) — LA MENTION D'UN LIEU, SUR UNE FICHE D'ARTISTE.
  * ------------------------------------------------------------------
- * « FONDATEUR • Salon », « RÉSIDENT • Studio », « GUEST • Salon ».
+ * « FONDATEUR • Salon », « RÉSIDENT • Studio », « GUEST SPOT • Salon »
+ * (le mot du guest est celui de la nº 755, `LIBELLE_GUEST`).
  * Les DEUX morceaux existent déjà et ne sont pas réécrits ici : le
- * statut sort de `lieuEnDeuxLignes` (le rôle, « Guest » compris), le
+ * statut sort de `lieuEnDeuxLignes` (le rôle du guest compris), le
  * type de lieu de `typeDeLieuDuMode`. Cette fonction ne fait que les
  * ranger dans la forme commune.
  * ⚠️ AUCUN MOT N'EST INVENTÉ, et rien n'est deviné : un mode sans rôle
@@ -915,7 +937,8 @@ export function villeEtPaysDuMode(mode: ModeExerciceFiche): string {
  * Aucune ligne vide, aucune puce orpheline ne peut donc être écrite.
  *
  * ⚠️ LE RÔLE : « Résident », « Fondateur » — les mots du formulaire,
- * par `libelleRoleCourt` (nº 403) — ou « Guest » pour une session.
+ * par `libelleRoleCourt` (nº 403) — ou `LIBELLE_GUEST` pour une
+ * session (« Guest spot » depuis la nº 755).
  * Un invité est un invité : sa place dans le lieu EST sa session,
  * c'est la règle de `roleDuMembre` (nº 222-§4), reprise telle quelle.
  * ⚠️ LE TYPE DE LIEU : « Salon » ou « Studio », le vocabulaire de la
@@ -941,24 +964,53 @@ export function lieuEnDeuxLignes(mode: ModeExerciceFiche): {
   /** Ce qui suit, en gris — déjà purgé de ses vides. */
   suite: string[];
 } {
-  const nom = nomDuLieuDuMode(mode);
   /*  ██ nº 753 — LES DEUX NOUVEAUX MODES ONT LEUR MOT ██
       · CONVENTION — « Convention », le mot du genre : la plaque porte
         le NOM de la convention en blanc, la mention au-dessus dit de
         quoi il s'agit. Sans elle, une plaque nommée « Mondial du
         Tatouage » ne se distinguerait pas d'un salon ;
-      · AUTRE (`independent`) — RIEN, et c'est voulu : son STATUT
-        (« On break », « Available on request »…) s'écrit UNE FOIS en
-        tête de ses villes, pas sur chacune (décision du propriétaire,
-        nº 753-5). Répété sur trois plaques, il deviendrait du bruit. */
+      · AUTRE (`independent`) — la nº 753 ne lui donnait RIEN : son
+        statut s'écrivait une fois en tête de ses villes.
+      ██ nº 755 — LE SURTITRE POUR TOUS, ET LE STATUT DANS LA PLAQUE ██
+      Le propriétaire a jugé à l'écran : cette ligne de statut posée
+      au-dessus du groupe n'avait ni le gris ni l'espacement des autres
+      surtitres, et elle faisait DOUBLON dès que le statut redescendait
+      dans la plaque. « Autre » prend donc le dessin commun —
+      « INDEPENDENT » en surtitre, le STATUT sur la ligne du nom — et la
+      ligne de groupe disparaît (voir BlocLieux).
+      · GUEST — « Guest spot », et non plus « Guest » : le mot du
+        métier, en anglais comme les libellés neufs. Il vient de
+        `LIBELLE_GUEST`, la MÊME constante que la ligne d'un invité dans
+        l'équipe d'un salon (`roleDuMembre`) — deux écritures en dur
+        auraient divergé à la première retouche. Le surtitre s'écrit en
+        capitales tout seul (`MentionAuDessus`). */
   const role =
     mode.genre === "guest"
-      ? "Guest"
+      ? LIBELLE_GUEST
       : mode.genre === "convention"
         ? "Convention"
         : mode.genre === "independent"
-          ? ""
+          ? "Independent"
           : libelleRoleCourt(mode.role) || "";
+  /*  ██ nº 755 — LA LIGNE DU NOM, QUAND IL N'Y A PAS D'ENSEIGNE ██
+      DEUX MODES N'ONT PAS DE LIEU À NOMMER, et leur plaque restait donc
+      sans première ligne — la ville y remontait (nº 753), ce qui la
+      privait à la fois de son rang de nom ET de sa couleur de lien.
+      CE QU'ILS PORTENT MAINTENANT :
+       · AUTRE — LE STATUT (« Guest spots only », « On break »…) : c'est
+         ce que le visiteur cherche, et c'est ce qui distingue ces
+         plaques les unes des autres quand l'artiste a trois villes ;
+       · GUEST SANS LIEU — « Location shared after booking », la phrase
+         du propriétaire : l'artiste ne dit pas encore chez qui, et la
+         plaque le dit franchement au lieu de laisser un vide.
+      ⚠️ LA VILLE REDESCEND DONC EN SECONDE LIGNE dans les deux cas, où
+      elle est un LIEN (nº 754) : c'est sa place, et sa couleur le dit. */
+  const nom =
+    mode.genre === "independent"
+      ? libelleStatutIndependent(mode.statut)
+      : guestSansLieuDeclare(mode)
+        ? "Location shared after booking"
+        : nomDuLieuDuMode(mode);
   const suite = [typeDeLieuDuMode(mode), villeEtPaysDuMode(mode)]
     .map((morceau) => (morceau ?? "").trim())
     .filter(Boolean);
@@ -981,6 +1033,35 @@ export function lieuEnDeuxLignes(mode: ModeExerciceFiche): {
  */
 export function modeEstDate(mode: ModeExerciceFiche): boolean {
   return mode.genre === "guest" || mode.genre === "convention";
+}
+
+/**
+ * ██ nº 755 — CE GUEST DIT-IL CHEZ QUI, OU SEULEMENT OÙ ? ██
+ * ==================================================================
+ * LA RÈGLE, POSÉE À LA nº 752 ET ÉCRITE ICI DEPUIS LA nº 755 : le
+ * parcours d'un guest se lit dans la FORME de sa ligne, sans colonne
+ * de plus.
+ *  · une nature d'établissement, un salon lié ou un nom de lieu → il a
+ *    dit CHEZ QUI (le parcours « Oui ») ;
+ *  · rien de tout cela → il n'a dit qu'une VILLE (le parcours « Non »).
+ * ⚠️ ELLE VIVAIT EN DEUX EXEMPLAIRES : une copie locale dans
+ * `chargerModes` (FormulaireFiche, qui reconstitue `sansLieu`) et,
+ * depuis la nº 755, le besoin de l'AFFICHAGE — la plaque d'un tel
+ * guest ne dit pas la même chose que celle d'un guest reçu quelque
+ * part. Deux copies d'une règle finissent toujours par diverger : elle
+ * est donc écrite ici, et les deux la lisent.
+ * ⚠️ LE CAS RÉSIDUEL RESTE CELUI DE LA nº 752 : un guest enregistré
+ * avant les migrations nº 41 et nº 266 n'a rien qui qualifie son
+ * adresse ; il se lit « sans lieu ». Rien n'est perdu, et la personne
+ * peut le repasser en « Oui » depuis son formulaire.
+ */
+export function guestSansLieuDeclare(mode: ModeExerciceFiche): boolean {
+  return (
+    mode.genre === "guest" &&
+    !mode.nature_lieu &&
+    !mode.salon_id &&
+    !(mode.nom_lieu ?? "").trim()
+  );
 }
 
 /**
