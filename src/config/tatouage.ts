@@ -866,10 +866,46 @@ export const FILTRE_MODE_ACTIVITE = {
   //  plus. Le renommer casserait les liens déjà partagés sans rien
   //  apprendre à personne. C'est la règle des nº 402 et 403 : le
   //  libellé change, la valeur jamais.
+  //  ██ nº 757 — LA CINQUIÈME LISTE REJOINT LES QUATRE AUTRES ██
+  //  ==================================================================
+  //  ⚠️ ET ELLE NE CHANGE RIEN À L'ÉCRAN, IL FAUT LE DIRE D'ABORD.
+  //  Ce groupe est RETIRÉ DU VOLET DE FILTRES depuis la nº 444
+  //  (décision du propriétaire, voir SLUGS_FILTRES_RETIRES juste plus
+  //  bas) : aucun visiteur ne peut cocher ni décocher ces cases, et
+  //  `filtresConnus` écarte ses slugs de toute recherche — `p_modes`
+  //  part donc TOUJOURS à `null`. Les deux options ajoutées ici sont
+  //  inertes tant que le groupe ne revient pas à l'écran.
+  //  POURQUOI LES POSER QUAND MÊME : parce que la règle du site est
+  //  que LES LISTES ORDONNÉES BOUGENT ENSEMBLE (nº 403, redite dans
+  //  BlocModesExercice). Quatre d'entre elles portent les cinq genres
+  //  — le catalogue (GENRES_MODE, nº 749), le sélecteur du formulaire
+  //  (nº 751), l'ordre des profils d'une fiche (RANG_DU_GENRE, nº 753)
+  //  — et celle-ci en montrait trois. Une liste qui reste en arrière
+  //  est ce qui fait diverger le vocabulaire à la passe suivante.
+  //  ⚠️ LA RÈGLE 5 DE LA CONCEPTION nº 748-D EST DONC PÉRIMÉE, et
+  //  c'est nº 444 qui l'a périmée — une décision POSTÉRIEURE à elle.
+  //  Le jour où le propriétaire voudra rendre ce filtre au visiteur,
+  //  il n'y aura rien à écrire ici : les cinq cases l'attendent.
+  //  ⚠️ LES LIBELLÉS SONT CEUX DE `GENRES_MODE` (le catalogue), et pas
+  //  ceux du sélecteur du formulaire : celui-ci dit « Autre » à
+  //  l'ARTISTE qui choisit son mode (nº 751, décision du
+  //  propriétaire), tandis que le VISITEUR qui cherche lit
+  //  « INDEPENDENT » sur les fiches (nº 755). Un filtre parle au
+  //  visiteur : il dit le mot des fiches.
+  //  ⚠️ LES SLUGS NE BOUGENT PLUS JAMAIS une fois posés : ce sont les
+  //  clés du langage `exclure=`, qui voyage dans les liens partagés.
+  //  ⚠️ AUCUN SQL POUR LA RECHERCHE ELLE-MÊME : la fonction de base
+  //  compare les genres de façon générique (`m.genre = any(p_modes)`)
+  //  et les trois vues géographiques prennent TOUS les genres depuis
+  //  la nº 749 — un vrai PostgreSQL l'a prouvé à la nº 757, les cinq
+  //  modes sortent d'une recherche par ville sans une ligne de SQL de
+  //  plus.
   options: [
     { slug: "en-studio-prive", label: "Studio", genre: "prive" },
     { slug: "en-salon", label: "Salon", genre: "salon" },
     { slug: "en-guest", label: "Guest", genre: "guest" },
+    { slug: "en-convention", label: "Convention", genre: "convention" },
+    { slug: "independent", label: "Independent", genre: "independent" },
   ],
 } as const;
 

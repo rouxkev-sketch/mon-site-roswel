@@ -186,12 +186,21 @@ const LIBELLES_MODES: Record<GenreMode, string> = {
     L'ordre dicté par la conception nº 748-B : Studio · Salon · Guest ·
     Convention · Independent. Le cinquième (Independent) arrive avec
     son écran à la nº 751 ; l'ordre des profils d'une fiche
-    (RANG_DU_GENRE) à la nº 753, le filtre du moteur à la nº 754.
+    (RANG_DU_GENRE) à la nº 753, le filtre du moteur à la nº 757.
     ██ nº 751 — LE CINQUIÈME ENTRE À SON TOUR, SOUS LE MOT « AUTRE » ██
     Le sélecteur est complet : Studio · Salon · Guest · Convention ·
-    Autre. Les deux listes qui manquent encore à l'appel gardent leur
-    rendez-vous — RANG_DU_GENRE à la nº 753, FILTRE_MODE_ACTIVITE à la
-    nº 754. */
+    Autre.
+    ██ nº 757 — LES QUATRE LISTES SONT AU COMPLET ██
+    Le rendez-vous est tenu : RANG_DU_GENRE a pris les cinq à la
+    nº 753, et FILTRE_MODE_ACTIVITE (le filtre « Où il tatoue » du
+    moteur) à la nº 757. Aucune liste ne reste en arrière.
+    ⚠️ CE DERNIER EST INERTE, ET C'EST VOULU : son groupe a été RETIRÉ
+    DE L'ÉCRAN à la nº 444 (décision du propriétaire). On l'aligne pour
+    que les listes ne divergent pas, pas pour qu'il filtre quoi que ce
+    soit — la note de FILTRE_MODE_ACTIVITE le dit en entier.
+    ⚠️ SEUL LE MOT DIFFÈRE, ET C'EST VOULU : ici l'ARTISTE lit
+    « Autre » (sa décision, nº 751) ; le VISITEUR, lui, lit
+    « Independent » — sur les fiches (nº 755) comme dans le filtre. */
 const ORDRE_SELECTEUR: GenreMode[] = [
   "prive",
   "salon",
