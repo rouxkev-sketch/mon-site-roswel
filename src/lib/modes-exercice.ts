@@ -1290,9 +1290,10 @@ export type ModeEnSaisie = {
       ne pas détruire les liaisons validées à chaque enregistrement. */
   id?: string | null;
   /** LE GENRE, OU RIEN ENCORE. Depuis la refonte du bloc, un encadré
-      s'ouvre AVANT qu'on ait choisi : les quatre modes sont dans
-      l'encadré, pas dans un menu. Tant que rien n'est coché, le genre
-      est vide — et le bloc 1 n'est pas complet (voir `modeComplet`). */
+      s'ouvre AVANT qu'on ait choisi : les CINQ modes sont dans
+      l'encadré (nº 751 — ils étaient trois, puis quatre), pas dans un
+      menu. Tant que rien n'est coché, le genre est vide — et le bloc 1
+      n'est pas complet (voir `modeComplet`). */
   genre: GenreMode | "";
   /** GUEST seulement — le lieu qui l'accueille est-il un SALON ou un
       STUDIO PRIVÉ ? Rien à voir avec le genre du mode (toujours
@@ -1300,10 +1301,33 @@ export type ModeEnSaisie = {
       distinction que `etablissement` sur une fiche de lieu. Null tant
       que le choix n'est pas fait — et le bloc 1 reste incomplet. */
   natureLieu?: "salon" | "prive" | null;
-  /** DISPONIBLE seulement (nº 414) — jusqu'où l'artiste se déplace
-      autour de la ville choisie (10, 25, 50, 100 ou 200 km). Null
-      ailleurs, et null tant qu'aucun rayon n'est choisi. */
+  /** INDEPENDENT seulement — jusqu'où l'artiste se déplace autour de
+      la ville choisie (10, 25, 50, 100 ou 200 km). Null ailleurs, et
+      null tant qu'aucun rayon n'est choisi.
+      ⚠️ nº 751 — CE CHAMP REVIT. Il fut celui d'« à domicile », puis
+      de « Disponible » (nº 414) ; la nº 418 a supprimé ce mode et
+      plus rien ne l'écrivait. Le mode « Autre » le reprend TEL QUEL —
+      mêmes paliers (`RAYONS_DEPLACEMENT`), même colonne en base
+      (`rayon_km`), même lecture par les trois vues géographiques
+      (`case when m.genre in ('disponible','independent')`, nº 749).
+      ⚠️ NULL SUR UNE ZONE SANS RAYON : une région ou un pays n'en
+      prend pas — « 50 km autour de la France » ne veut rien dire
+      (la règle de `rayonRequis`, écrite dans RAYONS_DEPLACEMENT). */
   rayonKm?: number | null;
+  /**
+   * ██ INDEPENDENT seulement (nº 751) — LE STATUT DE L'ARTISTE ██
+   * ------------------------------------------------------------------
+   * Un des cinq slugs de `STATUTS_INDEPENDENT`, le premier champ du
+   * mode « Autre » et le seul qui ne soit pas un lieu.
+   * ⚠️ IL EST RÉPÉTÉ SUR CHAQUE ZONE, et c'est le schéma de la base :
+   * un artiste à trois zones a trois lignes `modes_exercice`, chacune
+   * portant le même statut (colonne `statut`, contrainte
+   * `modes_exercice_statut_connu` — nº 749). L'écran, lui, n'en
+   * montre qu'un : le bloc « Autre » est unique, le menu écrit sur
+   * toutes ses lignes en une seule écriture (voir BlocModesExercice).
+   * Null pour les quatre autres genres.
+   */
+  statut?: StatutIndependent | null;
   /**
    * ██ CONVENTION seulement (nº 750) — LE PAYS DU PREMIER MENU ██
    * ------------------------------------------------------------------
@@ -1493,11 +1517,15 @@ export function pointDuMode(mode: ModeEnSaisie): LieuTrouve | null {
  * gestes que personne n'a faits à la place de l'artiste :
  *  · `salon`    — une fiche YokoFolio retenue dans la recherche ;
  *  · `lieu`     — une ville ou une adresse choisie dans la liste ;
- *  · `debut_le`, `fin_le` — les dates d'une session guest ;
- *  · `rayonKm`  — le rayon du mode « Disponible » (nº 414 ; il fut
- *                 celui d'« à domicile » jusqu'à la nº 402, et resta
- *                 nul entre les deux). Un badge cliqué est une saisie ;
- *  · `nomLieu`  — le nom saisi à la main (§1, nº 266).
+ *  · `debut_le`, `fin_le` — les dates d'une session guest ou d'une
+ *                 convention (nº 750) ;
+ *  · `rayonKm`  — le rayon d'une zone du mode « Autre » (nº 751 ; il
+ *                 fut celui d'« à domicile », puis de « Disponible »
+ *                 nº 414, et resta nul entre la nº 418 et la nº 751).
+ *                 Une capsule cliquée est une saisie ;
+ *  · `nomLieu`  — le nom saisi à la main (§1, nº 266) ;
+ *  · `convention` — la convention retenue dans l'écran (nº 750) ;
+ *  · `statut`   — le statut du mode « Autre » (nº 751).
  *
  * CE QUI NE COMPTE PAS, ET C'EST TOUT LE SUJET : les valeurs que le
  * FORMULAIRE pose lui-même en ouvrant un encadré. Les compter ferait
@@ -1528,7 +1556,14 @@ export function modeVide(mode: ModeEnSaisie): boolean {
     //  ⚠️ LE PAYS, LUI, NE COMPTE PAS : il ne fait que filtrer la
     //  liste (voir `paysConvention`). C'est la règle du §4 nº 407 —
     //  ne comptent que les gestes qui DÉCLARENT quelque chose.
-    !mode.convention
+    !mode.convention &&
+    //  nº 751 — UN STATUT CHOISI EST UNE SAISIE. C'est une réponse à
+    //  une question posée, comme un rayon cliqué : l'encadré « Autre »
+    //  n'est plus vierge, il est INCOMPLET (il lui manque une zone), et
+    //  `premierManque` le dira. Le distinguer importe : sans cette
+    //  ligne, un artiste qui ne choisit QUE son statut verrait
+    //  « Enregistrer » passer, et sa ligne serait sautée en silence.
+    !mode.statut
   );
 }
 
@@ -1707,6 +1742,23 @@ export function modeComplet(mode: ModeEnSaisie): boolean {
       mode.debut_le && mode.fin_le && mode.fin_le >= mode.debut_le
     );
   }
+  /*  ██ « AUTRE » (nº 751) — DEUX RÉPONSES, ET ELLES SUFFISENT ██
+      LE STATUT (un des cinq, obligatoire) et LA ZONE (la ville
+      choisie, qui donne le point). Rien d'autre : ce mode n'a ni
+      établissement, ni nom de lieu, ni dates — l'artiste dit d'où il
+      rayonne, pas chez qui ni quand.
+      ⚠️ LE RAYON N'EST PAS EXIGÉ, et c'est voulu : il n'a de sens
+      qu'autour d'une VILLE ou d'une ADRESSE (`rayonRequis`) — une
+      région ou un pays en fait une zone sans rayon, parfaitement
+      valide. Exiger le rayon rendrait ces zones-là impossibles.
+      ⚠️ UNE LIGNE PAR ZONE, LE STATUT RÉPÉTÉ (voir `statut`) : chaque
+      ligne se juge donc seule, exactement comme les autres genres —
+      l'écran en montre une seule (le bloc « Autre » est unique), la
+      règle n'en sait rien et n'a pas à le savoir. */
+  if (mode.genre === "independent") {
+    if (!mode.statut) return false;
+    return Boolean(pointDuMode(mode));
+  }
   if (!pointDuMode(mode)) return false;
   //  §1 (nº 266) — LE NOM DU LIEU EST OBLIGATOIRE quand l'adresse est
   //  saisie à la main : sans lui, la fiche dit OÙ l'on travaille sans
@@ -1813,7 +1865,7 @@ export type ManqueBloc = {
   /**
    * §5 (nº 408) — `aucun-lieu` EST À PART, ET C'EST TOUT SON RÔLE.
    * ------------------------------------------------------------------
-   * Les sept autres valeurs DÉSIGNENT UN CHAMP : un encadré rougit,
+   * Les neuf autres valeurs DÉSIGNENT UN CHAMP : un encadré rougit,
    * la page y remonte. Celle-ci n'en désigne aucun — elle dit qu'il
    * n'y a RIEN à désigner, parce que rien n'a été commencé. Aucun
    * consommateur ne la reconnaît (ni `manque.champ === "genre"` du
@@ -1831,6 +1883,12 @@ export type ManqueBloc = {
     //  saisie d'adresse — désigner « lieu » ferait chercher un rouge
     //  sur des champs qui n'existent pas dans cet onglet.
     | "convention"
+    //  nº 751 — LES DEUX CHAMPS DU MODE « AUTRE », et pour la même
+    //  raison que `convention` : son panneau n'a NI recherche de
+    //  portfolio NI saisie d'adresse — désigner « lieu » ferait
+    //  chercher un rouge sur des champs que cet onglet n'a pas.
+    | "statut"
+    | "zone"
     | "nomLieu"
     | "rayon"
     | "dates"
@@ -1901,7 +1959,7 @@ export function premierManque(
       return {
         cle: mode.cle,
         champ: "genre",
-        message: "Choisis un mode d'activité parmi les quatre.",
+        message: "Choisis un mode d'activité parmi les cinq.",
       };
     }
     if (mode.genre === "salon" && !mode.role) {
@@ -1935,6 +1993,27 @@ export function premierManque(
           cle: mode.cle,
           champ: "dates",
           message: "La date de fin précède la date de début.",
+        };
+      }
+      continue;
+    }
+    //  nº 751 — LE MODE « AUTRE » A SES DEUX MANQUES À LUI, dans
+    //  l'ordre où l'écran pose les questions : le statut d'abord, la
+    //  zone ensuite. Ils passent AVANT le test de lieu commun, pour
+    //  la même raison que ceux de la convention.
+    if (mode.genre === "independent") {
+      if (!mode.statut) {
+        return {
+          cle: mode.cle,
+          champ: "statut",
+          message: "Choisis ton statut.",
+        };
+      }
+      if (!pointDuMode(mode)) {
+        return {
+          cle: mode.cle,
+          champ: "zone",
+          message: "Ajoute au moins une zone de déplacement.",
         };
       }
       continue;
@@ -2018,7 +2097,16 @@ export function premierManque(
  *  · GUEST           — la nature du lieu (studio ou salon), le lieu,
  *                      le nom du lieu si saisi à la main, et LES DEUX
  *                      DATES (début et fin, la fin jamais avant le
- *                      début).
+ *                      début) ;
+ *  · CONVENTION      — LA CONVENTION retenue dans l'écran (elle porte
+ *    (nº 750)          le point, recopié du catalogue) et LES DEUX
+ *                      DATES de l'artiste. Ni rôle, ni nom de lieu :
+ *                      son panneau n'a pas ces champs ;
+ *  · AUTRE           — LE STATUT (un des cinq) et LA ZONE (la ville
+ *    (nº 751)          choisie, qui porte le point). Le RAYON n'est
+ *                      pas exigé : il n'a de sens qu'autour d'une
+ *                      ville ou d'une adresse. Une ligne par zone, le
+ *                      statut répété sur chacune.
  * Et pour le bloc entier : le type de fiche, puis au moins un mode
  * choisi.
  */
@@ -2067,7 +2155,7 @@ export function tousLesManques(
       manques.push({
         cle: mode.cle,
         champ: "genre",
-        message: "Choisis un mode d'activité parmi les quatre.",
+        message: "Choisis un mode d'activité parmi les cinq.",
       });
       continue;
     }
@@ -2107,6 +2195,26 @@ export function tousLesManques(
           cle: mode.cle,
           champ: "dates",
           message: "La date de fin précède la date de début.",
+        });
+      }
+      continue;
+    }
+    //  nº 751 — LA MÊME BRANCHE QUE `premierManque`, et à la même
+    //  place : les deux fonctions lisent la même règle, l'une s'arrête
+    //  au premier manque, l'autre les liste tous (§1 nº 267).
+    if (mode.genre === "independent") {
+      if (!mode.statut) {
+        manques.push({
+          cle: mode.cle,
+          champ: "statut",
+          message: "Choisis ton statut.",
+        });
+      }
+      if (!pointDuMode(mode)) {
+        manques.push({
+          cle: mode.cle,
+          champ: "zone",
+          message: "Ajoute au moins une zone de déplacement.",
         });
       }
       continue;

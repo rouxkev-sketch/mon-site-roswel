@@ -3,12 +3,19 @@
 import { useEffect, useState } from "react";
 import {
   ROLES_STUDIO,
+  //  nº 751 — LE MODE « AUTRE » : ses cinq statuts et les paliers de
+  //  son rayon. Les deux listes sont au catalogue depuis la nº 749 ;
+  //  cet écran est le premier à les lire.
+  RAYONS_DEPLACEMENT,
+  STATUTS_INDEPENDENT,
   type GenreMode,
   type NatureEtablissement,
   type RoleStudio,
+  type StatutIndependent,
 } from "@/config/tatouage";
 import { BasculeDeuxChoix } from "@/components/BasculeDeuxChoix";
 import { ChampsPlageDates } from "@/components/CalendrierPlage";
+import { ChampLocalisation } from "@/components/ChampLocalisation";
 import { DeuxZonesLieu } from "@/components/DeuxZonesLieu";
 import { MenuDeroulant, type OptionMenu } from "@/components/MenuDeroulant";
 //  nº 750 ter — L'ÉCRAN DE SÉLECTION D'UNE CONVENTION : fenêtre
@@ -28,6 +35,7 @@ import {
 } from "@/lib/conventions";
 import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
 import { IconeChevronBas, IconeCroix } from "@/components/Icones";
+import type { LieuTrouve } from "@/lib/geocodage/types";
 import type { FicheInscrite } from "@/components/RechercheFicheInscrite";
 import { texteErreur } from "@/lib/erreurs-formulaire";
 import {
@@ -38,9 +46,16 @@ import {
   //  §1 (nº 419) — « le lieu est-il renseigné ? », la condition
   //  d'affichage des dates d'une session guest.
   lieuRenseigne,
+  //  nº 751 — LE POINT MÉDIAN DES MENTIONS (« Austin, TX, USA • 50 km »),
+  //  écrit une seule fois avec ses espaces (nº 496).
+  SEPARATEUR_MENTION,
   type ManqueBloc,
   type ModeEnSaisie,
 } from "@/lib/modes-exercice";
+//  nº 751 — LA LIGNE COURTE D'UN LIEU (« Austin, TX, USA »), celle de
+//  la barre du moteur : une capsule est étroite, et c'est la forme que
+//  le propriétaire a demandée.
+import { ligneMoteur } from "@/lib/adresse";
 
 /**
  * LES MODES D'ACTIVITÉ — LE SÉLECTEUR HORIZONTAL (passe nº 124)
@@ -145,12 +160,18 @@ const TITRE_INTERTITRE =
 //  onglets arrivent avec leurs formulaires (nº 750 et 751). Le Record
 //  exhaustif exige leurs libellés dès maintenant — valeurs mortes tant
 //  que ORDRE_SELECTEUR ne les liste pas.
+//  ██ nº 751 — LES CINQ SONT LÀ, ET LE CINQUIÈME S'APPELLE « AUTRE » ██
+//  Le catalogue le nomme `independent` (le slug, en base) et l'intitule
+//  « Independent » (GENRES_MODE.titre, pour la fiche publique) ; DANS
+//  LE SÉLECTEUR, le propriétaire veut « Autre » — le mot d'un artiste
+//  qui n'est ni en studio, ni en salon, ni de passage, ni en
+//  convention. Le slug ne bouge pas ; seul l'affichage parle sa langue.
 const LIBELLES_MODES: Record<GenreMode, string> = {
   prive: "Studio",
   salon: "Salon",
   guest: "Guest",
   convention: "Convention",
-  independent: "Independent",
+  independent: "Autre",
 };
 
 /** L'ORDRE DU SÉLECTEUR — celui que le propriétaire a dicté (nº 403,
@@ -167,12 +188,18 @@ const LIBELLES_MODES: Record<GenreMode, string> = {
     L'ordre dicté par la conception nº 748-B : Studio · Salon · Guest ·
     Convention · Independent. Le cinquième (Independent) arrive avec
     son écran à la nº 751 ; l'ordre des profils d'une fiche
-    (RANG_DU_GENRE) à la nº 753, le filtre du moteur à la nº 754. */
+    (RANG_DU_GENRE) à la nº 753, le filtre du moteur à la nº 754.
+    ██ nº 751 — LE CINQUIÈME ENTRE À SON TOUR, SOUS LE MOT « AUTRE » ██
+    Le sélecteur est complet : Studio · Salon · Guest · Convention ·
+    Autre. Les deux listes qui manquent encore à l'appel gardent leur
+    rendez-vous — RANG_DU_GENRE à la nº 753, FILTRE_MODE_ACTIVITE à la
+    nº 754. */
 const ORDRE_SELECTEUR: GenreMode[] = [
   "prive",
   "salon",
   "guest",
   "convention",
+  "independent",
 ];
 
 /**
@@ -191,12 +218,22 @@ const ORDRE_SELECTEUR: GenreMode[] = [
  * Tailwind lit des chaînes littérales, une classe calculée ne
  * produirait aucune règle. Le cinquième mode (nº 751) ajoutera sa
  * ligne ici.
+ * ██ nº 751 — CINQ MODES : TROIS COLONNES, ET LE CALCUL LE DIT ██
+ * Repris de la mesure ci-dessus : à 320 px, TROIS rectangles laissent
+ * ~90 px de texte utile (les quatre en laissaient ~64) — de quoi tenir
+ * « Convention », le plus long des cinq, qui en demande ~78. Deux
+ * lignes suffisent donc : Studio · Salon · Guest, puis Convention ·
+ * Autre. Cinq en deux colonnes en auraient réclamé TROIS, et laissé le
+ * dernier seul sur toute la largeur ; cinq en quatre ou cinq colonnes
+ * couperaient les mots. La coupure est éprouvée au banc à 320 px
+ * (aucun rectangle ne déborde, aucun mot ne passe à la ligne).
  */
 const COLONNES_SELECTEUR: Record<number, string> = {
   1: "grid-cols-1",
   2: "grid-cols-2",
   3: "grid-cols-3",
   4: "grid-cols-2",
+  5: "grid-cols-3",
 };
 const GRILLE_SELECTEUR =
   COLONNES_SELECTEUR[ORDRE_SELECTEUR.length] ?? "grid-cols-2";
@@ -205,7 +242,39 @@ const GRILLE_SELECTEUR =
     n'y figure pas : il garde « + Ajouter une autre date ».
     (nº 749 — les deux nouveautés reçoivent leur mot par exhaustivité
     du Record ; aucun bouton ne les affiche tant que leurs écrans
-    n'existent pas, et les nº 750-751 poseront les mots définitifs.) */
+    n'existent pas, et les nº 750-751 poseront les mots définitifs.)
+    ⚠️ nº 751 — L'ENTRÉE `independent` NE SERT PLUS À RIEN, et c'est le
+    Record exhaustif qui l'exige encore : le mode « Autre » N'A PAS de
+    bouton d'ajout (un seul bloc par artiste — décision du
+    propriétaire ; ses zones s'ajoutent DANS le bloc, par le champ de
+    ville). Le rendu du bouton la saute explicitement. */
+/**
+ * ██ nº 751 — UN RAYON, AUTOUR DE QUOI ? ██
+ * ------------------------------------------------------------------
+ * AUTOUR D'UNE VILLE OU D'UNE ADRESSE, ET DE RIEN D'AUTRE. C'est la
+ * règle posée à la nº 415 (point 4) et écrite dans le catalogue
+ * (`RAYONS_DEPLACEMENT`) : « 50 km autour de la France » ne veut rien
+ * dire. Une région ou un pays fait donc une zone SANS rayon —
+ * parfaitement valide, et lue telle quelle par les vues
+ * géographiques (`coalesce(m.rayon_km, 0)`, nº 749).
+ * ⚠️ ÉCRITE ICI, ET INTERROGÉE DEUX FOIS : pour DEMANDER le rayon
+ * (le champ de ville) et pour ne PAS l'exiger (`modeComplet`). Les
+ * deux ne peuvent pas diverger.
+ */
+function rayonAutourDe(lieu: LieuTrouve): boolean {
+  return lieu.precision === "ville" || lieu.precision === "adresse";
+}
+
+/** CE QUE PORTE UNE CAPSULE DE ZONE : « Austin, TX, USA • 50 km », ou
+    la seule ligne du lieu quand la zone n'a pas de rayon. Le point
+    médian et ses espaces viennent de `SEPARATEUR_MENTION` (nº 496) —
+    aucun appelant ne le recopie. */
+function libelleDeLaZone(zone: ModeEnSaisie): string {
+  const ligne = zone.lieu ? ligneMoteur(zone.lieu) : "";
+  if (!zone.rayonKm) return ligne;
+  return `${ligne}${SEPARATEUR_MENTION}${zone.rayonKm} km`;
+}
+
 const MOTS_AJOUT: Record<Exclude<GenreMode, "guest">, string> = {
   prive: "un studio",
   salon: "un salon",
@@ -417,6 +486,20 @@ export function BlocModesExercice({
   const [fenetreConventions, setFenetreConventions] = useState<string | null>(
     null
   );
+
+  /* ---------------------------------------------------------------
+     ██ nº 751 — LA ZONE EN COURS D'AJOUT (mode « Autre ») ██
+     Une zone se pose en DEUX gestes : la ville, puis son rayon. Entre
+     les deux, la ville attend ici — elle n'est encore écrite nulle
+     part, et l'abandonner ne laisse aucune trace dans les modes.
+     ⚠️ `compteurZone` NE COMPTE RIEN : il ne sert qu'à faire RENAÎTRE
+     le champ de ville une fois la capsule posée. `ChampLocalisation`
+     lit son texte de départ AU MONTAGE (`useState(lieuInitial ? …)`) ;
+     sans clé neuve, le nom de la ville qu'on vient de ranger resterait
+     écrit dans le champ, et la suivante se taperait par-dessus.
+     --------------------------------------------------------------- */
+  const [villeEnAttente, setVilleEnAttente] = useState<LieuTrouve | null>(null);
+  const [compteurZone, setCompteurZone] = useState(0);
 
   /** LE MANQUE AMÈNE À L'ENDROIT EN CAUSE : si « Je confirme »
       désigne un mode d'un AUTRE onglet (ou d'un volet replié), on
@@ -1062,6 +1145,214 @@ export function BlocModesExercice({
     );
   }
 
+  /**
+   * ██ nº 751 — LE BLOC « AUTRE » : LE STATUT, PUIS LES ZONES ██
+   * ==================================================================
+   * L'artiste qui n'est ni en studio, ni en salon, ni de passage, ni en
+   * convention : il dit CE QU'IL CHERCHE (le statut) et JUSQU'OÙ IL SE
+   * DÉPLACE (ses zones). Deux questions, dans cet ordre.
+   *
+   * L'ORDRE, DANS LE BLOC :
+   *  1. STATUS — le menu des cinq statuts (`STATUTS_INDEPENDENT`,
+   *     nº 749). Obligatoire, un seul choix, la robe des champs du
+   *     formulaire — celle du menu des pays de la nº 750 ter ;
+   *  2. SERVICE AREA — les zones déjà posées en CAPSULES À CROIX, puis
+   *     le champ de ville. Choisir une ville fait apparaître les cinq
+   *     paliers de rayon (`RAYONS_DEPLACEMENT`) ; en toucher un pose la
+   *     capsule et vide le champ, prêt pour la suivante.
+   *
+   * ⚠️ UN SEUL BLOC, SANS VOLETS NI BOUTON D'AJOUT — c'est la décision
+   * du propriétaire, et le rendu du panneau la tient (voir plus bas).
+   * Les zones sont bien N lignes en base ; ici, elles sont N capsules.
+   *
+   * ⚠️ LE RAYON N'EST DEMANDÉ QU'AUTOUR D'UNE VILLE OU D'UNE ADRESSE
+   * (`rayonAutourDe`) : « 50 km autour de la France » ne veut rien
+   * dire — c'est la règle écrite dans `RAYONS_DEPLACEMENT` depuis la
+   * nº 415. Une région ou un pays pose donc sa capsule TOUT DE SUITE,
+   * sans rayon, et la zone reste parfaitement valide.
+   */
+  function leBlocAutre() {
+    //  LE ROUGE DU BLOC : n'importe laquelle de ses lignes suffit à
+    //  l'allumer — l'écran n'en montre qu'un, il ne peut pas désigner
+    //  « la troisième ligne ».
+    const statutEnFaute = sessionsAffichees.some((mode) =>
+      manquant(mode.cle, "statut")
+    );
+    const zoneEnFaute = sessionsAffichees.some((mode) =>
+      manquant(mode.cle, "zone")
+    );
+    const optionsStatut: OptionMenu[] = STATUTS_INDEPENDENT.map((statut) => ({
+      value: statut.slug,
+      label: statut.label,
+    }));
+
+    return (
+      <div>
+        {/*  L'INTERTITRE — celui d'un mode seul de son type (le rendu
+             `nombre <= 1` des quatre autres), et il rougit à la même
+             règle (nº 266). SANS NUMÉRO ET SANS CROIX : ce bloc est
+             unique par construction, il n'y a rien à numéroter, et
+             c'est la croix d'une CAPSULE qui retire une zone.
+             ⚠️ SON MARQUEUR PORTE LA CLÉ DE LA PREMIÈRE LIGNE : c'est
+             elle que le manque désigne, et c'est par elle que la page
+             remonte jusqu'ici. */}
+        <div className="flex min-h-[36px] items-center">
+          <span
+            data-titre-volet={sessionsAffichees[0]?.cle}
+            data-titre-en-faute={
+              sessionsAffichees.some((mode) => modeEnManque(mode.cle))
+                ? ""
+                : undefined
+            }
+            className={`${TITRE_INTERTITRE}${
+              sessionsAffichees.some((mode) => modeEnManque(mode.cle))
+                ? " text-erreur"
+                : ""
+            }`}
+          >
+            {LIBELLES_MODES.independent}
+          </span>
+        </div>
+
+        <div className="mt-3 flex flex-col gap-5">
+        {/* ---------- 1. LE STATUT ---------- */}
+        <div>
+          <p className="text-[13.5px] font-semibold text-sombre-texte">
+            Status
+          </p>
+          <div className="mt-3">
+            <MenuDeroulant
+              valeur={statutIndependent}
+              surChangement={choisirLeStatut}
+              options={optionsStatut}
+              ariaLabel="Status"
+              placeholder="Status"
+              sombre
+              opaque
+              //  La robe des champs du formulaire (`CHAMP`) : ce menu
+              //  vit au milieu d'eux, comme celui des pays (nº 750 ter).
+              fondRepos="bg-sombre-eleve-clair"
+              fondActif="bg-sombre-haut"
+              arrondi="rounded-xl"
+              hauteur="min-h-[52px]"
+              enErreur={statutEnFaute}
+            />
+          </div>
+        </div>
+
+        {/* ---------- 2. LES ZONES ---------- */}
+        <div>
+          <p className="text-[13.5px] font-semibold text-sombre-texte">
+            Service area
+          </p>
+
+          {zonesPosees.length > 0 && (
+            /*  LES CAPSULES — le badge à croix des styles (nº 552),
+                celui-là même que porte une convention (nº 750 ter) :
+                `rounded-full`, fond `eleve-clair`, texte blanc. Elles
+                s'enroulent (`flex-wrap`) : trois zones tiennent à
+                320 px sans rien pousser hors du cadre. */
+            <div
+              data-zones-autre
+              className="mt-3 flex flex-wrap gap-2"
+            >
+              {zonesPosees.map((zone) => (
+                <span
+                  key={zone.cle}
+                  data-zone-autre={zone.cle}
+                  className="inline-flex max-w-full items-center gap-2 rounded-full
+                             border border-transparent bg-sombre-eleve-clair
+                             py-1.5 pl-3.5 pr-1.5 text-[13.5px] font-semibold
+                             text-sombre-texte"
+                >
+                  <span className="min-w-0 truncate">
+                    {libelleDeLaZone(zone)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => retirerLaZone(zone.cle)}
+                    aria-label={`Retirer ${libelleDeLaZone(zone)}`}
+                    title="Retirer"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center
+                               rounded-full text-sombre-texte-doux
+                               transition-colors hover:bg-sombre-haut
+                               hover:text-sombre-texte active:bg-sombre-haut
+                               active:text-sombre-texte"
+                  >
+                    <IconeCroix taille={14} />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/*  LE CHAMP DE VILLE — celui du site, avec ses suggestions.
+               ⚠️ SA CLÉ CHANGE À CHAQUE CAPSULE POSÉE (`compteurZone`) :
+               c'est ce qui le vide, prêt pour la ville suivante. Voir
+               la note de l'état, plus haut. */}
+          <div className="mt-3">
+            <ChampLocalisation
+              key={`zone-autre-${compteurZone}`}
+              id="zone-autre"
+              etiquette={null}
+              texteIndicatif="Ville, ou adresse complète…"
+              surChoix={(lieu) => {
+                if (!lieu) {
+                  setVilleEnAttente(null);
+                  return;
+                }
+                //  UNE VILLE ATTEND SON RAYON ; un pays ou une région
+                //  n'en prend pas et se range aussitôt.
+                if (rayonAutourDe(lieu)) {
+                  setVilleEnAttente(lieu);
+                  return;
+                }
+                ajouterUneZone(lieu, null);
+              }}
+              panneauDansLeFlux={surMobile}
+              opaque
+              remonterAuToucher={surMobile}
+              croixEffacement
+              enErreur={zoneEnFaute}
+            />
+          </div>
+
+          {/*  LES PALIERS DE RAYON — ils n'apparaissent qu'entre la
+               ville et sa capsule. Le motif du bouton « + Ajouter » de
+               ce bloc (nº 419-§2) : la paire de fonds des champs, texte
+               blanc dans les deux états. Aucun n'est « actif » : on en
+               touche un, la capsule se pose, ils s'en vont. */}
+          {villeEnAttente && (
+            <div className="mt-3">
+              <p className="text-[13px] text-sombre-texte-doux">
+                Jusqu&apos;où te déplaces-tu autour de{" "}
+                {ligneMoteur(villeEnAttente)} ?
+              </p>
+              <div data-rayons-autre className="mt-2 flex flex-wrap gap-2">
+                {RAYONS_DEPLACEMENT.map((palier) => (
+                  <button
+                    key={palier}
+                    type="button"
+                    data-rayon-autre={palier}
+                    onClick={() => ajouterUneZone(villeEnAttente, palier)}
+                    className="rounded-full border border-transparent
+                               bg-sombre-eleve-clair px-4 min-h-[40px]
+                               text-[13.5px] font-semibold text-sombre-texte
+                               transition-colors hover:bg-sombre-haut
+                               active:bg-sombre-haut"
+                  >
+                    {palier} km
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        </div>
+      </div>
+    );
+  }
+
   /** CE QUE L'ÉCRAN DE SÉLECTION RAPPORTE — une convention, pour
       l'encadré qui l'a demandé. Les dates, elles, se saisissent
       ensuite dans le formulaire. */
@@ -1096,6 +1387,115 @@ export function BlocModesExercice({
     });
   }
 
+  /* ================================================================
+   * ██ nº 751 — LE MODE « AUTRE » : UN BLOC À L'ÉCRAN, N LIGNES EN BASE
+   * ================================================================
+   * C'EST LA SEULE PARTICULARITÉ DE CE MODE, et elle vient du schéma
+   * (conception nº 748-A3, confirmée par le propriétaire) :
+   *  · EN BASE, une ligne `modes_exercice` PAR ZONE, chacune portant
+   *    son point, son rayon, ET LE MÊME STATUT recopié ;
+   *  · À L'ÉCRAN, UN SEUL BLOC — pas de volets numérotés, pas de
+   *    « + Ajouter un autre » : un artiste n'a qu'un statut, et ses
+   *    zones sont des capsules dans une même liste.
+   * Les trois fonctions ci-dessous font le pont, et TOUTES ÉCRIVENT EN
+   * UNE SEULE FOIS (la leçon nº 105 : deux `surChangement` d'affilée se
+   * perdent — le second, calculé sur l'état d'avant, écrase le
+   * premier). C'est aussi pourquoi elles n'appellent pas `modifier`,
+   * qui ne sait toucher qu'UN mode.
+   * ================================================================ */
+
+  /** LES ZONES DÉJÀ POSÉES — les modes « Autre » qui portent un point,
+      dans l'ordre de l'écran. Un encadré neuf (ouvert, sans ville) n'y
+      est pas : il n'a rien à montrer en capsule. */
+  const zonesPosees = modes.filter(
+    (mode) => mode.genre === "independent" && Boolean(mode.lieu)
+  );
+
+  /** LE STATUT DU BLOC — celui de la première ligne « Autre ». Elles
+      le portent toutes ; la lecture prend la première, exactement
+      comme la fiche publique le fera (nº 753). */
+  const statutIndependent: StatutIndependent | "" =
+    modes.find((mode) => mode.genre === "independent")?.statut ?? "";
+
+  /** LE MENU DU STATUT — il écrit sur TOUTES les lignes « Autre » à la
+      fois : c'est une seule réponse, répétée en base parce que la
+      colonne y vit sur la ligne (voir `statut`). */
+  function choisirLeStatut(slug: string) {
+    surChangement(
+      modes.map((mode) =>
+        mode.genre === "independent"
+          ? { ...mode, statut: (slug || null) as StatutIndependent | null }
+          : mode
+      )
+    );
+  }
+
+  /**
+   * UNE ZONE DE PLUS — la ville et son rayon, en une écriture.
+   * Elle REMPLIT D'ABORD l'encadré « Autre » qui n'a pas encore de
+   * ville (celui qu'ouvre l'onglet, ou celui que la croix vient de
+   * vider) : sans cela, une ligne fantôme sans point resterait
+   * derrière, et `premierManque` la désignerait à raison.
+   * Il n'en reste plus ? On ajoute un mode, avec LE STATUT DÉJÀ CHOISI
+   * recopié dessus — c'est le schéma « une ligne par zone, le statut
+   * répété ». Le rendu se chargera de le tenir à jour ensuite.
+   */
+  function ajouterUneZone(lieu: LieuTrouve, rayonKm: number | null) {
+    let pose = false;
+    const suivants = modes.map((mode) => {
+      if (pose) return mode;
+      if (mode.genre !== "independent" || mode.lieu || mode.salon) return mode;
+      pose = true;
+      return { ...mode, lieu, rayonKm };
+    });
+    surChangement(
+      pose
+        ? suivants
+        : [
+            ...suivants,
+            {
+              ...modeVierge("independent"),
+              lieu,
+              rayonKm,
+              statut: statutIndependent || null,
+            },
+          ]
+    );
+    setVilleEnAttente(null);
+    setCompteurZone((tour) => tour + 1);
+  }
+
+  /**
+   * LA CROIX D'UNE CAPSULE — elle retire CETTE zone-là.
+   * ⚠️ DEUX CAS, ET C'EST LA RÈGLE DE LA CROIX DU SITE (nº 122) :
+   *  · IL EN RESTE D'AUTRES → la ligne s'en va (son identifiant quitte
+   *    l'écran, l'enregistrement la supprimera en base) ;
+   *  · C'ÉTAIT LA DERNIÈRE → on la VIDE au lieu de la supprimer. Le
+   *    bloc doit rester ouvert : le statut y est encore, et le champ
+   *    de ville attend la prochaine. Un encadré vidé perd son
+   *    identifiant (`modeVierge(..., vide)`) — il ne partage plus la
+   *    ligne de personne.
+   */
+  function retirerLaZone(cle: string) {
+    if (zonesPosees.length > 1) {
+      surChangement(modes.filter((mode) => mode.cle !== cle));
+      return;
+    }
+    surChangement(
+      modes.map((mode) =>
+        mode.cle === cle
+          ? {
+              ...modeVierge("independent", mode.cle, mode.id, true),
+              //  LE STATUT SURVIT À LA ZONE : il ne parle pas d'elle,
+              //  il parle de l'artiste. Le reperdre obligerait à
+              //  répondre deux fois à la même question.
+              statut: mode.statut ?? null,
+            }
+          : mode
+      )
+    );
+  }
+
   /** LES CHAMPS D'UN LIEU — le rôle puis la localisation, ou la
       localisation puis les dates pour une session guest.
       ██ §1 (nº 419) — LES DATES N'APPARAISSENT QU'APRÈS LE LIEU ██
@@ -1126,7 +1526,7 @@ export function BlocModesExercice({
   /** LA LIGNE DE CONFIRMATION — elle remplace les champs du lieu que
       la croix vise, quand du travail se perdrait.
       ⚠️ UN SEUL MOT DEPUIS LA PASSE Nº 125 : « Supprimer ? », pour
-      les quatre modes — le même vocabulaire que la fenêtre d'une
+      les cinq modes — le même vocabulaire que la fenêtre d'une
       photo (nº 122). « Fermer » laissait croire qu'on repliait le
       volet, alors qu'on retire bel et bien le lieu. */
   function laConfirmation(session: ModeEnSaisie) {
@@ -1172,7 +1572,7 @@ export function BlocModesExercice({
       ⚠️ ELLE NE VIT PLUS QUE SUR LES VOLETS (passe nº 125) : un lieu
       SEUL de son type n'a plus de croix — elle n'apparaît qu'à
       partir de deux. Et elle dit « Supprimer ce lieu », le mot de sa
-      confirmation, pour les quatre modes. */
+      confirmation, pour les cinq modes. */
   function laCroix(session: ModeEnSaisie) {
     const libelle = "Supprimer ce lieu";
     return (
@@ -1241,7 +1641,7 @@ export function BlocModesExercice({
               mode-là est incomplet : c'est le CADRE qui le dit, jamais
               le mot ni le fond — le badge garde sa robe, son rose
               d'actif et sa lisibilité. On voit ainsi d'un coup d'œil
-              LEQUEL des quatre modes réclame quelque chose, même
+              LEQUEL des cinq modes réclame quelque chose, même
               onglet fermé : le manque désigné porte la clé d'un mode
               (`manque.cle`), et ce mode a son genre.
               ⚠️ RIEN N'EST INVENTÉ : `border-erreur` est l'encadré
@@ -1311,8 +1711,17 @@ export function BlocModesExercice({
                rendu à part (des badges au lieu d'un encadré) ; le
                propriétaire le juge trop large. Un encadré de
                convention se lit et se remplit comme un guest — c'est
-               `lesChamps` qui sait ce qu'il contient. */}
-          {nombre <= 1 ? (
+               `lesChamps` qui sait ce qu'il contient.
+               ██ nº 751 — « AUTRE » EST LE SEUL À NE PAS LE PARTAGER ██
+               Et ce n'est pas un caprice d'écran : ce mode n'a QU'UN
+               bloc par artiste (décision du propriétaire). Ses lignes
+               — une par zone — ne sont pas des « lieux » qu'on
+               empilerait en volets numérotés « Autre 2/3 » : ce sont
+               les capsules d'une même réponse. Le panneau saute donc
+               ici la liste ET le bouton d'ajout, et rend le bloc. */}
+          {genreAffiche === "independent" ? (
+            leBlocAutre()
+          ) : nombre <= 1 ? (
             /* ---------- UN SEUL LIEU : les champs, directement.
                 L'intertitre porte le nom du mode SANS numéro (« seul
                 de son type ») — et SANS CROIX (passe nº 125) : elle
@@ -1456,7 +1865,12 @@ export function BlocModesExercice({
 
           {/* ---------- UN LIEU DE PLUS — le motif capsule
               d'« Ajouter une autre date », étendu aux trois autres
-              modes (passe nº 124). Le Guest garde son libellé. */}
+              modes (passe nº 124). Le Guest garde son libellé.
+              ██ nº 751 — SAUF « AUTRE », QUI N'EN A PAS ██
+              Un seul bloc par artiste (décision du propriétaire) : ce
+              bouton en ouvrirait un second. Ses zones s'ajoutent DANS
+              le bloc, par le champ de ville — un geste, pas deux. */}
+          {genreAffiche !== "independent" && (
           <button
             type="button"
             //  nº 750 ter — LA CONVENTION AJOUTE UN ENCADRÉ, COMME LES
@@ -1494,6 +1908,7 @@ export function BlocModesExercice({
               ? "+ Ajouter une autre date"
               : `+ Ajouter ${MOTS_AJOUT[genreAffiche]}`}
           </button>
+          )}
         </div>
       )}
 

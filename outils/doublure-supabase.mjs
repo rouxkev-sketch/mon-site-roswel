@@ -901,6 +901,37 @@ function repondre(req, res, u, brut) {
         });
         continue;
       }
+      /*  ██ nº 751 — `ilike` (et `like`), ENFIN HONORÉS ██
+          ------------------------------------------------------------------
+          LE RELEVÉ, au banc du mode « Autre » : le champ de ville
+          proposait LYON quoi qu'on tape — « Paris », « Bordeaux »,
+          n'importe quoi. LA CAUSE ÉTAIT ICI, pas dans le site : le
+          catalogue de villes cherche `ilike '%Paris%'` puis coupe à 64
+          lignes ; la doublure ignorait le filtre, rendait les 64
+          premières fiches — toutes de Lyon, le décor en pose 68 — et le
+          site n'avait plus qu'elles à dédoublonner.
+          `%` vaut « n'importe quoi », `_` vaut « un caractère » : c'est
+          tout ce que PostgREST en attend. `ilike` ne regarde pas la
+          casse, `like` si. Le reste du motif est échappé — un point ou
+          une parenthèse dans un nom de ville ne doit pas devenir une
+          expression régulière. */
+      const motif = /^(ilike|like)\.(.*)$/.exec(brutFiltre);
+      if (motif) {
+        const regle = new RegExp(
+          "^" +
+            motif[2]
+              .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+              .replace(/%/g, ".*")
+              .replace(/_/g, ".") +
+            "$",
+          motif[1] === "ilike" ? "i" : ""
+        );
+        corps = corps.filter((l) => {
+          const va = regle.test(String(l[cle] ?? ""));
+          return negation ? !va : va;
+        });
+        continue;
+      }
       const m = /^(eq|neq|in)\.(.*)$/.exec(brutFiltre);
       if (!m) continue;
       //  `not.eq.x` vaut `neq.x` — PostgREST accepte les deux formes.

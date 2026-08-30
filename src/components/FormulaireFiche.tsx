@@ -18,6 +18,7 @@ import {
   libelleStyle,
   MOTIFS_MODERATION,
   type TypeFiche,
+  type StatutIndependent,
 } from "@/config/tatouage";
 import { longueurVisible } from "@/lib/emojis";
 import { BlocAutreAdresse } from "@/components/BlocAutreAdresse";
@@ -655,6 +656,17 @@ async function chargerModes(
         natureLieu:
           ligne.nature_lieu ?? (ligne.genre === "guest" ? "salon" : null),
         rayonKm: ligne.rayon_km ?? null,
+        /*  nº 751 — LE STATUT DU MODE « AUTRE », relu sur la ligne.
+             Chaque zone porte le sien (elles portent toutes le même —
+             voir `statut`), et le bloc affiche celui de la première.
+             ⚠️ RELU POUR LA MÊME RAISON QUE LE RAYON JUSTE AU-DESSUS :
+             le formulaire réenregistre TOUT ce qu'il a en mémoire ; non
+             relu, le statut repartirait à `null` au premier
+             « Enregistrer » — et l'artiste perdrait, en silence, la
+             seule réponse qui ne soit pas un lieu. */
+        statut:
+          (ligne as unknown as { statut?: StatutIndependent | null }).statut ??
+          null,
         //  §1 (nº 266) — LE NOM DU LIEU SAISI À LA MAIN, relu pour la
         //  même raison que les deux colonnes ci-dessus : non relu, il
         //  repartirait à `null` au premier enregistrement. Une ligne

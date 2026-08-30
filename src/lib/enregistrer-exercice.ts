@@ -52,10 +52,10 @@ const COLONNES_MIGRATION_33 = [
   "role",
   "horaires",
   "fuseau",
-  //  ⚠️ AJOUTÉE PAR LA nº 40 (rayon du mode « à domicile »). Plus
-  //  aucun mode ne l'écrit depuis la nº 418 ; la colonne reste, et la
-  //  tolérance avec elle — tant qu'elle manque, le reste part quand
-  //  même.
+  //  ⚠️ AJOUTÉE PAR LA nº 40 (rayon du mode « à domicile »). Restée
+  //  sans écrivain de la nº 418 à la nº 751 ; le mode « Autre » l'écrit
+  //  de nouveau, une valeur par zone. La tolérance ne change pas —
+  //  tant que la colonne manque, le reste part quand même.
   "rayon_km",
   //  ⚠️ AJOUTÉE PAR LA nº 41 (nature du lieu d'une session guest).
   "nature_lieu",
@@ -70,6 +70,11 @@ const COLONNES_MIGRATION_33 = [
   //  la convention, tous deux RECOPIÉS — seul le lien au catalogue
   //  manquerait sur une base où la migration n'est pas passée.
   "convention_id",
+  //  nº 751 — LE STATUT DU MODE « AUTRE » (colonne née avec
+  //  `yokofolio-conventions-et-independent.sql`, comme `convention_id`).
+  //  Même tolérance : sans elle, la ligne garde sa zone et son rayon —
+  //  seul le statut manquerait, et l'artiste le reposerait.
+  "statut",
 ] as const;
 
 function colonneNeuveAbsente(message: string): string | null {
@@ -252,11 +257,22 @@ async function ecrireModes(
           : null,
       salon_id: mode.salon?.id ?? null,
       ...lieu,
-      //  nº 418 — LE RAYON N'EXISTE PLUS : le seul mode qui en portait
-      //  un (nº 414-417, après « à domicile » jusqu'à la nº 402) est
-      //  supprimé du site. La colonne reste en base, toujours écrite à
-      //  null.
-      rayon_km: null,
+      //  ██ nº 751 — LE RAYON REVIT, ET IL EST À « AUTRE » ██
+      //  Il fut celui d'« à domicile », puis de « Disponible »
+      //  (nº 414-417) ; la nº 418 a supprimé ce mode et la colonne est
+      //  restée écrite à null. Le mode « Autre » l'écrit de nouveau :
+      //  UNE VALEUR PAR ZONE, celle de sa capsule.
+      //  ⚠️ NULL RESTE POSSIBLE SUR UNE LIGNE « Autre » : une région ou
+      //  un pays n'a pas de rayon (voir `rayonKm`). Les trois vues
+      //  géographiques le lisent déjà ainsi — `coalesce(m.rayon_km, 0)`
+      //  (nº 749) : sans rayon, la zone vaut son point seul.
+      rayon_km: mode.genre === "independent" ? (mode.rayonKm ?? null) : null,
+      //  nº 751 — LE STATUT, propre au mode « Autre » et null partout
+      //  ailleurs (la contrainte `modes_exercice_statut_connu` l'exige).
+      //  ⚠️ IL EST RÉPÉTÉ SUR CHAQUE ZONE : chaque mode le porte déjà en
+      //  mémoire (le menu écrit sur toutes les lignes en une fois), il
+      //  n'y a donc rien à recopier ici.
+      statut: mode.genre === "independent" ? (mode.statut ?? null) : null,
       //  LA NATURE DU LIEU VISITÉ n'a de sens que pour un guest.
       nature_lieu: mode.genre === "guest" ? (mode.natureLieu ?? null) : null,
       //  §1 (nº 266) — LE NOM DU LIEU SAISI À LA MAIN. Il n'a de sens
