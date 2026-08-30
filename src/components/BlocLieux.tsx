@@ -9,7 +9,14 @@ import { IconeChevronBas, IconeHorloge } from "@/components/Icones";
 //  §1 (nº 502) — l'écriture de la plaque, partagée : elle vivait ici
 //  sans être exportée, elle vit désormais dans un module qui ne dépend
 //  de rien (voir la note, plus bas, à la place qu'elle occupait).
-import { ENCADRE_MEMBRE, ENCADRE_MEMBRE_CLIQUABLE } from "@/components/plaque";
+import {
+  ENCADRE_MEMBRE,
+  ENCADRE_MEMBRE_CLIQUABLE,
+  //  nº 753 — la plaque SANS FICHE derrière : contour fin, pas de
+  //  fond, pas de chevron. Sa teinte et l'exception qu'elle fait à la
+  //  charte sont expliquées là-bas.
+  ENCADRE_PLAQUE_INFO,
+} from "@/components/plaque";
 //  §1 (nº 514) — « ce qui est surligné est ce qui est copié » :
 //  une seule écriture, pour tous les liens qui portent du texte.
 import { garderLeTexteALaCopie } from "@/lib/copie-du-texte";
@@ -61,13 +68,24 @@ import {
   //  la ligne du nom, et c'est `mentionDuMembre` qui l'appelle
   //  désormais, dans le module où il vit.
   lieuEnDeuxLignes,
+  //  nº 753 — les deux questions de la plaque d'un mode : « est-elle
+  //  datée ? » (le glyphe du rond, les dates) et « mène-t-elle à une
+  //  fiche ? » (l'habillage). Écrites une seule fois là-bas.
+  modeEstDate,
+  plaqueMeneAUneFiche,
   periodeDeSession,
   type MembreEquipe,
   type ModeExerciceFiche,
   type StudioFiche,
 } from "@/lib/modes-exercice";
 import { ligneFiche, ligneMaps, type LieuAffichable } from "@/lib/adresse";
-import { ECRITURE_TITRE_SECTION, profilDeLaFiche } from "@/config/tatouage";
+import {
+  ECRITURE_TITRE_SECTION,
+  //  nº 753 — le statut du mode « Autre », en toutes lettres : le mot
+  //  du catalogue (nº 749), jamais une chaîne recopiée.
+  libelleStatutIndependent,
+  profilDeLaFiche,
+} from "@/config/tatouage";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
@@ -1668,8 +1686,23 @@ function TroisLignesDuLieu({
   //  dans la mention du dessus (voir `mentionDuLieu`) ; `suite` les
   //  range dans cet ordre — type de lieu, puis ville — et c'est donc
   //  son DERNIER morceau qui nomme le lieu.
-  const { nom, suite } = lieuEnDeuxLignes(mode);
-  const adresse = suite.length > 0 ? suite[suite.length - 1] : "";
+  /*  ██ nº 753 — SANS NOM, LA VILLE MONTE SUR LA LIGNE BLANCHE ██
+      LE CAS QUI L'EXIGE : les modes nés aux nº 750-752 n'ont pas
+      toujours de nom d'enseigne — une VILLE du mode « Autre », une
+      ville d'un guest qui n'a pas dit son lieu. `lieuEnDeuxLignes`
+      rend alors `nom` vide et laisse la ville en gris : la plaque
+      n'aurait plus de première ligne, et son unique information se
+      lirait au second rang.
+      LA RÈGLE EXISTE DÉJÀ, MOT POUR MOT, dans `troisLignesDuMode`
+      (« NI FICHE NI NOM SAISI : l'adresse monte sur la ligne blanche,
+      et il n'y a pas de troisième ligne ») — on l'applique ici, à la
+      plaque, plutôt que d'en inventer une seconde.
+      ⚠️ ET LA LIGNE GRISE DISPARAÎT AVEC ELLE : l'écrire deux fois
+      était tout le défaut que ce §3 avait corrigé. */
+  const { nom: nomDuLieu, suite } = lieuEnDeuxLignes(mode);
+  const villeSeule = suite.length > 0 ? suite[suite.length - 1] : "";
+  const nom = nomDuLieu || villeSeule;
+  const adresse = nomDuLieu ? villeSeule : "";
   /**
    * §1 (nº 290) — LE LIEU QUE LE PLAN VA CHERCHER : les mêmes champs
    * que partout ailleurs (`LieuAffichable`), lus sur le mode.
@@ -1782,8 +1815,13 @@ function TroisLignesDuLieu({
       )}
       {/*  UN GUEST PORTE SES DATES EN BLANC, et c'est voulu : c'est
            l'information qui décide le visiteur à prendre rendez-vous
-           MAINTENANT — elle ne peut pas être un détail gris. */}
-      {mode.genre === "guest" && (
+           MAINTENANT — elle ne peut pas être un détail gris.
+           ⚠️ nº 753 — UNE CONVENTION LES PORTE AUSSI, et par le MÊME
+           composant : ce sont les dates DE L'ARTISTE, saisies dans les
+           mêmes champs et rangées dans les mêmes colonnes (nº 750).
+           `modeEstDate` porte la question, ici comme pour le glyphe du
+           rond — les deux ne peuvent pas se contredire. */}
+      {modeEstDate(mode) && (
         <DatesDeSession debut={mode.debut_le} fin={mode.fin_le} enBlanc />
       )}
     </div>
@@ -1832,16 +1870,48 @@ export function BlocProfilsArtiste({
         const pastille = (
           <PhotoRonde
             source={mode.salon_photo}
-            nature="lieu"
+            //  nº 753 — LE GLYPHE SUIT LA NATURE DU MODE : un
+            //  calendrier pour ce qui est daté (guest, convention), le
+            //  glyphe d'adresse pour ce qui dit un lieu. La règle vit
+            //  dans `modeEstDate` (lib/modes-exercice).
+            nature={modeEstDate(mode) ? "date" : "lieu"}
             //  §1 (nº 524) — le rond revient à sa valeur d'avant la
             //  nº 523 (voir plaque.ts).
             classeFond="bg-sombre-haut"
           />
         );
-        const lie = Boolean(mode.salon_slug && mode.salon_nom);
+        const lie = plaqueMeneAUneFiche(mode);
         const colonne = <TroisLignesDuLieu mode={mode} sansLien={lie} />;
+        /*  ██ nº 753 — LE STATUT DU MODE « AUTRE », UNE SEULE FOIS ██
+             Il ne décrit pas une ville, il décrit L'ARTISTE : « On
+             break », « Guest spots only »… Il s'écrit donc EN TÊTE de
+             ses villes, sur la première d'entre elles, et jamais sur
+             les suivantes (décision du propriétaire, nº 753-5).
+             ⚠️ « LA PREMIÈRE » SE LIT SUR LA LISTE ORDONNÉE, pas sur
+             la ligne : `modes` est déjà trié, et le mode « Autre »
+             ferme la marche (RANG_DU_GENRE). Le statut ouvre donc bien
+             le groupe qu'il concerne.
+             ⚠️ LA ROBE EST CELLE D'UNE MENTION (`MentionAuDessus`),
+             pas un titre de section : c'est une ligne d'information
+             au-dessus de plaques, exactement comme « RÉSIDENT • Salon »
+             — aucune écriture neuve. */
+        const statut =
+          mode.genre === "independent"
+            ? libelleStatutIndependent(mode.statut)
+            : "";
+        const premierIndependent =
+          mode.genre === "independent" &&
+          modes.find((autre) => autre.genre === "independent") === mode;
         return (
           <li key={mode.id}>
+            {statut && premierIndependent && (
+              <p
+                data-statut-independent=""
+                className={`mb-3 ${ECRITURE_LIGNE_FICHE} text-sombre-texte`}
+              >
+                {statut}
+              </p>
+            )}
             {/*  §3 (nº 496) — « RÉSIDENT • Salon », au-dessus et dehors :
                  le MÊME dessin que sur un salon (`MentionAuDessus`), le
                  même séparateur, la même écriture. Seul le second
@@ -1909,8 +1979,15 @@ export function BlocProfilsArtiste({
               /*  §2 (nº 496) — AUCUNE FICHE : la plaque reste (elle dit
                   « voici un lieu », pas « ça se clique »), mais sans
                   survol, sans appui, et SANS CHEVRON — on ne promet pas
-                  une page qui n'existe pas. */
-              <div className={ENCADRE_MEMBRE}>
+                  une page qui n'existe pas.
+                  ██ nº 753 — ET DÉSORMAIS SANS FOND, AVEC UN CONTOUR ██
+                  La règle « plaque-info » du propriétaire, écrite une
+                  seule fois dans `ENCADRE_PLAQUE_INFO` (components/
+                  plaque, où la teinte et l'exception à la charte sont
+                  expliquées). Elle vaut pour TOUTES les plaques sans
+                  fiche — les salons et studios hors site qui étaient
+                  déjà là, et les conventions et villes qui arrivent. */
+              <div data-plaque-info="" className={ENCADRE_PLAQUE_INFO}>
                 {pastille}
                 {colonne}
               </div>

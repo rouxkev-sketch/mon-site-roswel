@@ -455,6 +455,78 @@ export function IconeCalendrierCoche({ taille = 20, classe = "" }: ProprietesIco
 }
 
 /**
+ * ██ nº 753 — LE CALENDRIER NU, POUR LE ROND D'UNE PLAQUE DATÉE ██
+ * ==================================================================
+ * CE QU'IL DIT : « ceci a des dates » — une session guest sans lieu,
+ * une présence en convention. Il fait, sur le rond gris d'une
+ * plaque-info, ce que le glyphe `adresse.png` fait pour un lieu.
+ *
+ * POURQUOI IL EST DESSINÉ ICI, ET NON DÉPOSÉ DANS `public/` : le site
+ * DESSINE ses icônes dans le code depuis la nº 240-§1, et les images
+ * de `public/` sont des fichiers du propriétaire qu'aucune passe ne
+ * fabrique (règle nº 356). Un SVG au trait tient les deux règles à la
+ * fois, et il suit la couleur qu'on lui donne — le PNG d'adresse, lui,
+ * doit être éclairci par `invert` + opacité.
+ *
+ * L'ALLURE EST CELLE D'`adresse.png` : un trait fin, un contour, aucun
+ * aplat. ⚠️ CE N'EST PAS `IconeCalendrierCoche` (l'ancienneté d'une
+ * entreprise, plus haut) : celle-là porte un bandeau PLEIN et une
+ * coche — un dessin plus lourd, et qui dit autre chose. Ici, la grille
+ * du mois est suggérée par trois points, comme sur un calendrier
+ * qu'on regarde de loin.
+ */
+export function IconeCalendrier({
+  taille = 20,
+  classe = "",
+  trait = 1.8,
+}: ProprietesIcone) {
+  return (
+    <svg
+      width={taille}
+      height={taille}
+      viewBox="0 0 24 24"
+      fill="none"
+      className={classe}
+      aria-hidden
+    >
+      {/* Les deux anneaux, au-dessus du corps */}
+      <path
+        d="M8.5 2.6v2.4M15.5 2.6v2.4"
+        stroke="currentColor"
+        strokeWidth={trait}
+        strokeLinecap="round"
+      />
+      {/* Le corps, en contour */}
+      <rect
+        x="3.4"
+        y="4.4"
+        width="17.2"
+        height="17"
+        rx="3.2"
+        stroke="currentColor"
+        strokeWidth={trait}
+      />
+      {/* Le filet qui sépare l'en-tête du mois : un TRAIT, pas un
+          aplat — c'est ce qui garde l'icône au même poids visuel que
+          le glyphe d'adresse. */}
+      <path
+        d="M3.4 9.4h17.2"
+        stroke="currentColor"
+        strokeWidth={trait}
+        strokeLinecap="round"
+      />
+      {/* Trois jours, suggérés : la grille sans la dessiner. */}
+      <path
+        d="M8 13.6h.01M12 13.6h.01M16 13.6h.01M8 17.4h.01M12 17.4h.01"
+        stroke="currentColor"
+        strokeWidth={trait + 0.4}
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/**
  * FLÈCHE DIAGONALE (↗) des liens — du bas gauche vers l'angle haut
  * droit. Sa taille par défaut vaut `1em` : elle fait donc EXACTEMENT la
  * hauteur du texte du lien qui la porte, quelle que soit sa taille.

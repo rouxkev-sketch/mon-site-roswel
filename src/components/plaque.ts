@@ -96,3 +96,58 @@ export const ENCADRE_MEMBRE =
 export const ENCADRE_MEMBRE_CLIQUABLE =
   `group ${ENCADRE_MEMBRE} transition-colors ` +
   "hover:bg-sombre-eleve-clair active:bg-sombre-eleve-clair";
+
+/**
+ * ██ nº 753 — LA PLAQUE-INFO : CE QUI NE MÈNE NULLE PART ██
+ * ==================================================================
+ * LA RÈGLE, POSÉE PAR LE PROPRIÉTAIRE ET VALABLE PARTOUT : une plaque
+ * SANS FICHE derrière — un salon ou un studio saisi à la main, un
+ * guest hors site, et depuis cette passe les conventions et les villes
+ * du mode « Autre » — ne s'habille plus comme une plaque cliquable.
+ *  · PAS DE FOND — elle ne se détache pas, elle informe ;
+ *  · PAS DE CHEVRON — on ne promet pas une page qui n'existe pas
+ *    (c'était déjà la règle de la nº 496) ;
+ *  · UN CONTOUR FIN, et c'est la nouveauté.
+ *
+ * ⚠️ LE CONTOUR EST UNE EXCEPTION ASSUMÉE À LA CHARTE. « Aucun encadré,
+ * aucun contour » ouvre le bloc des lieux depuis la nº 222, et la
+ * règle reste entière PARTOUT AILLEURS. Ici, le contour n'est pas une
+ * décoration : c'est LE SIGNAL qui distingue l'information de
+ * l'action. Sans lui, deux plaques au même endroit — l'une qui
+ * s'ouvre, l'autre non — ne se distinguaient que par l'absence d'un
+ * chevron, à 16 px du bord droit.
+ *
+ * ⚠️ LA TEINTE — `sombre-haut` (#3E4650), ET AUCUNE VALEUR NEUVE :
+ * c'est EXACTEMENT la couleur du rond que porte cette plaque
+ * (`classeFond="bg-sombre-haut"`, nº 524). Le contour et le rond
+ * parlent donc d'une seule voix, et l'objet se lit d'un bloc. Sur le
+ * fond de page (#0B0F14) comme sous la fenêtre superposée, il se voit
+ * sans peser. LE PROPRIÉTAIRE TRANCHE À L'ŒIL : les deux voisins sont
+ * `sombre-trait` (#2F353E, un cran plus discret) et `sombre-haut-clair`
+ * (#4A525D, un cran plus marqué) — un seul mot à changer ici.
+ *
+ * ⚠️ L'AIR INTÉRIEUR RESTE `p-3` — LA RÈGLE DU §1 nº 497 EST TENUE :
+ * DOUZE pixels sur les quatre côtés, en une seule classe. Le contour
+ * s'ajoute PAR-DESSUS, et voici ce que ça donne, MESURÉ (banc nº 753,
+ * colonne de 340 px) :
+ *   · plaque cliquable — 76 px de haut, 12 px d'air ;
+ *   · plaque-info      — 78 px de haut, 13 px d'air.
+ * DEUX PIXELS DE PLUS, UN D'AIR OPTIQUE EN PLUS, et c'est le prix du
+ * trait : `border` s'ajoute au rembourrage, il ne le rogne pas.
+ * ⚠️ CE QUI COMPTE POUR L'ŒIL EST INTACT : la LARGEUR est la même
+ * (340 px des deux côtés) et les bords gauche et droit s'alignent au
+ * pixel — c'est ce qu'on lit dans une colonne. Les 32 px qui séparent
+ * deux plaques (`gap-8`) rendent les 2 px de hauteur invisibles.
+ * ⚠️ ON NE COMPENSE PAS en descendant le rembourrage à onze pixels :
+ * ce serait une valeur hors de l'échelle du site pour rattraper un
+ * pixel que personne ne voit, et la règle des quatre côtés égaux se
+ * lirait moins bien.
+ * ⚠️ ET LA VALEUR N'EST PAS ÉCRITE EN CLASSE, MÊME ICI : le scanner de
+ * Tailwind v4 LIT LES COMMENTAIRES. La première rédaction de cette
+ * note citait le rembourrage refusé sous sa forme de classe — la
+ * feuille a gagné une règle pour une classe que personne n'emploie
+ * (mesuré : +25 octets, +1 bloc). On nomme donc la valeur en toutes
+ * lettres, jamais en classe.
+ */
+export const ENCADRE_PLAQUE_INFO =
+  "flex items-start gap-3.5 rounded-xl border border-sombre-haut p-3";

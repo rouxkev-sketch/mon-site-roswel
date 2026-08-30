@@ -1,6 +1,9 @@
 "use client";
 
 import { ICONE_ADRESSE, PORTRAIT_ROND } from "@/config/tatouage";
+//  nº 753 — le calendrier des plaques datées (guest sans lieu,
+//  convention) : DESSINÉ, pas déposé (voir sa note dans Icones).
+import { IconeCalendrier } from "@/components/Icones";
 //  §1 (nº 718) — la variante d'avatar à servir : la règle de
 //  nommage et le repli vivent dans lib/avatar-variantes.
 import { AVATAR_PETIT, sourceAvatar } from "@/lib/avatar-variantes";
@@ -40,6 +43,12 @@ import { AVATAR_PETIT, sourceAvatar } from "@/lib/avatar-variantes";
  *  · UN LIEU sans photo (un salon saisi à la main, qui n'a pas de
  *    fiche sur yokofolio) → un rond gris uni portant le glyphe
  *    `adresse.png`, dans un gris NETTEMENT plus foncé que le rond ;
+ *  · UNE DATE (nº 753) — une session guest sans lieu, une présence en
+ *    convention → le MÊME rond, avec un CALENDRIER au trait
+ *    (`IconeCalendrier`). Ce n'est pas un lieu qu'on montre, c'est un
+ *    moment : le glyphe d'adresse y mentirait. Le calendrier est
+ *    DESSINÉ (nº 240-§1) et prend donc sa couleur directement, sans
+ *    le `invert` + opacité qu'exige le PNG ;
  *  · UNE PERSONNE sans photo → un rond gris uni, ET RIEN DEDANS : ni
  *    icône, ni lettre, ni texte. Une initiale sur un rond gris se lit
  *    comme un avatar bricolé ; le vide se lit comme une absence, ce
@@ -59,9 +68,10 @@ export function PhotoRonde({
   classeFond = "bg-sombre-eleve",
 }: {
   source: string | null | undefined;
-  /** « lieu » porte le glyphe d'adresse à défaut de photo ;
-      « personne » ne porte rien. */
-  nature: "lieu" | "personne";
+  /** « lieu » porte le glyphe d'adresse à défaut de photo ; « date »
+      (nº 753) porte le calendrier au trait ; « personne » ne porte
+      rien. */
+  nature: "lieu" | "date" | "personne";
   /**
    * ██ §2 (nº 492) — LE FOND DU ROND EST DEVENU UN PARAMÈTRE ██
    * ------------------------------------------------------------------
@@ -155,6 +165,26 @@ export function PhotoRonde({
           //  et sa taille suit celle du rond (nº 254-§3).
           className={`${classeGlyphe} invert opacity-40`}
         />
+      ) : nature === "date" ? (
+        /*  nº 753 — LE CALENDRIER, AU MÊME POIDS QUE LE GLYPHE
+            D'ADRESSE. Le PNG est un aplat noir qu'on éclaircit
+            (`invert opacity-40`) ; celui-ci est un tracé, il prend
+            donc la couleur du texte et la MÊME opacité — c'est ce qui
+            garantit que les deux ronds se lisent pareil, côte à côte
+            dans une même colonne.
+            ⚠️ LA BOÎTE EST CELLE DU GLYPHE (`classeGlyphe`) : les deux
+            icônes occupent exactement la même place dans le rond, et
+            l'échelle des porteurs (nº 254-§3) vaut pour les deux. */
+        <span
+          aria-hidden="true"
+          className={`flex ${classeGlyphe} items-center justify-center text-sombre-texte opacity-40`}
+        >
+          {/*  LA TAILLE VIENT DU `span`, pas du SVG : `h-full w-full`
+               étire le tracé au conteneur, dont la boîte est celle du
+               glyphe d'adresse. Le nombre passé n'est qu'un plancher —
+               les classes le remplacent. */}
+          <IconeCalendrier taille={28} classe="h-full w-full" trait={1.6} />
+        </span>
       ) : null}
     </span>
   );

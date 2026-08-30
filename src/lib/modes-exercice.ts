@@ -942,12 +942,60 @@ export function lieuEnDeuxLignes(mode: ModeExerciceFiche): {
   suite: string[];
 } {
   const nom = nomDuLieuDuMode(mode);
+  /*  ██ nº 753 — LES DEUX NOUVEAUX MODES ONT LEUR MOT ██
+      · CONVENTION — « Convention », le mot du genre : la plaque porte
+        le NOM de la convention en blanc, la mention au-dessus dit de
+        quoi il s'agit. Sans elle, une plaque nommée « Mondial du
+        Tatouage » ne se distinguerait pas d'un salon ;
+      · AUTRE (`independent`) — RIEN, et c'est voulu : son STATUT
+        (« On break », « Available on request »…) s'écrit UNE FOIS en
+        tête de ses villes, pas sur chacune (décision du propriétaire,
+        nº 753-5). Répété sur trois plaques, il deviendrait du bruit. */
   const role =
-    mode.genre === "guest" ? "Guest" : libelleRoleCourt(mode.role) || "";
+    mode.genre === "guest"
+      ? "Guest"
+      : mode.genre === "convention"
+        ? "Convention"
+        : mode.genre === "independent"
+          ? ""
+          : libelleRoleCourt(mode.role) || "";
   const suite = [typeDeLieuDuMode(mode), villeEtPaysDuMode(mode)]
     .map((morceau) => (morceau ?? "").trim())
     .filter(Boolean);
   return { nom, role, suite };
+}
+
+/**
+ * ██ nº 753 — CE MODE SE LIT-IL COMME UNE DATE, OU COMME UN LIEU ? ██
+ * ==================================================================
+ * C'est ce qui décide l'ICÔNE du rond d'une plaque sans fiche (la
+ * « plaque-info ») : un CALENDRIER pour ce qui est daté, le glyphe
+ * d'ADRESSE pour ce qui ne l'est pas (décision du propriétaire,
+ * nº 753-3).
+ *  · DATÉ — une session guest, une présence en convention : les deux
+ *    portent `debut_le`/`fin_le`, les deux expirent seules ;
+ *  · LIEU — un salon ou un studio saisi à la main, une ville du mode
+ *    « Autre » : ils disent OÙ, sans quand.
+ * ⚠️ ÉCRITE ICI, LUE PAR L'AFFICHAGE SEUL : elle ne décide d'aucune
+ * donnée, seulement d'un glyphe.
+ */
+export function modeEstDate(mode: ModeExerciceFiche): boolean {
+  return mode.genre === "guest" || mode.genre === "convention";
+}
+
+/**
+ * ██ nº 753 — CETTE PLAQUE MÈNE-T-ELLE QUELQUE PART ? ██
+ * ------------------------------------------------------------------
+ * OUI quand le lieu a SA FICHE sur le site : la plaque est un lien —
+ * fond, avatar, chevron (l'habillage de la nº 496, inchangé).
+ * NON dans tous les autres cas : c'est une PLAQUE-INFO — un contour
+ * fin, pas de fond, pas de chevron (règle du propriétaire, nº 753-2).
+ * ⚠️ UNE SEULE ÉCRITURE POUR LES DEUX QUESTIONS : « quel habillage ? »
+ * et « le nom est-il cliquable ? ». Deux règles finiraient par se
+ * contredire — c'est exactement ce que la nº 496 avait déjà noté.
+ */
+export function plaqueMeneAUneFiche(mode: ModeExerciceFiche): boolean {
+  return Boolean(mode.salon_slug && mode.salon_nom);
 }
 
 export function troisLignesDuMode(mode: ModeExerciceFiche): {
@@ -1042,6 +1090,12 @@ export function ligneDuMode(mode: ModeExerciceFiche): {
  * écran n'en écrit encore. Leur rang d'affichage sera décidé à la
  * fiche publique, nº 753 ; d'ici là un genre absent de cette table
  * tombe sur 9 — après les trois connus, jamais entre eux.)
+ * ██ nº 753 — LES CINQ SONT LÀ, DANS L'ORDRE DICTÉ ██
+ * Studio · Salon · Guest · Convention · Autre — le même que le
+ * sélecteur du formulaire (ORDRE_SELECTEUR, nº 751) et que le
+ * catalogue (GENRES_MODE). Les trois listes disent désormais la même
+ * chose ; le filtre du moteur (FILTRE_MODE_ACTIVITE) les rejoint à la
+ * nº 754.
  * Il vaut PARTOUT où plusieurs profils se suivent : le sous-titre du
  * nom, la liste des profils d'un artiste, et tout ce qui viendra. Un
  * ordre écrit une seule fois ne peut pas diverger d'un écran à
@@ -1052,6 +1106,8 @@ const RANG_DU_GENRE: Record<string, number> = {
   prive: 0,
   salon: 1,
   guest: 2,
+  convention: 3,
+  independent: 4,
 };
 
 export function modesOrdonnes(
@@ -1063,7 +1119,13 @@ export function modesOrdonnes(
       const ecart = (RANG_DU_GENRE[a.genre] ?? 9) - (RANG_DU_GENRE[b.genre] ?? 9);
       if (ecart !== 0) return ecart;
       //  Deux sessions guest : la plus proche d'abord.
-      if (a.genre === "guest" && b.genre === "guest") {
+      //  ⚠️ nº 753 — ET DEUX CONVENTIONS DE MÊME : elles sont datées
+      //  comme un guest (mêmes colonnes, même expiration), et la
+      //  prochaine est celle qui intéresse le visiteur.
+      if (
+        a.genre === b.genre &&
+        (a.genre === "guest" || a.genre === "convention")
+      ) {
         return (a.debut_le ?? "").localeCompare(b.debut_le ?? "");
       }
       return a.ordre - b.ordre;
