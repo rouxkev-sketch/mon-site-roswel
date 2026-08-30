@@ -118,6 +118,7 @@ export function FenetreFiche({
   positionGrille = 0,
   avecVoile = true,
   habillageEfface = false,
+  contenuEnAttente = false,
   surFermeture,
 }: {
   /** La fiche à montrer — null : fenêtre fermée. */
@@ -181,6 +182,22 @@ export function FenetreFiche({
    * touchée.
    */
   habillageEfface?: boolean;
+  /**
+   * ██ §1 (nº 745) — LA COLONNE ATTEND LA FICHE COMPLÈTE ██
+   * ------------------------------------------------------------------
+   * VRAI tant que la grille n'a que la fiche DE LA CARTE (celle du
+   * moteur — sans booking, sans DM, sans page de liens) : la colonne
+   * de droite montre alors l'HABILLAGE D'ATTENTE au lieu du contenu.
+   * Sans lui, la colonne peignait ces demi-informations puis se
+   * réarrangeait à l'arrivée de la complète — la case Booking
+   * s'insérait DEVANT Instagram, qui sautait de 180 px (filmé au
+   * banc, nº 745). La PHOTO, elle, ne dépend pas de ce drapeau : la
+   * galerie de la carte est déjà là (continuité nº 371).
+   * FAUX PAR DÉFAUT : la pile des fiches (PileFiches) ATTEND la
+   * complète avant d'ouvrir, et « voir mon profil » comme la page
+   * publique ont toujours la fiche entière — rien ne change pour eux.
+   */
+  contenuEnAttente?: boolean;
   /** Referme (la grille fait alors machine arrière dans l'historique). */
   surFermeture: () => void;
 }) {
@@ -920,6 +937,44 @@ export function FenetreFiche({
                   disent maintenant exactement la même chose. */
               className="w-full lg:w-[380px] shrink-0 lg:h-full lg:overflow-y-auto lg:overflow-x-clip p-5 sm:p-6 flex flex-col bg-sombre-fond [--fond-colonne:var(--rw-sombre-fond)]"
             >
+              {/*  ██ §1 (nº 745) — L'HABILLAGE D'ATTENTE DE LA COLONNE ██
+                   ----------------------------------------------------
+                   Tant que la fiche complète n'est pas arrivée
+                   (`contenuEnAttente`), la colonne ne montre RIEN du
+                   contenu réel : des formes NEUTRES — l'écriture des
+                   squelettes du site (nº 706 : `bg-sombre-eleve`, aucun
+                   état, aucune animation), SANS viser la silhouette
+                   exacte (le contenu d'un profil varie trop, décision
+                   du propriétaire). Le contenu se pose ensuite EN UNE
+                   FOIS : plus jamais une case qui s'insère devant une
+                   autre sous les yeux.
+                   ⚠️ LA COLONNE GARDE SES CLASSES : la géométrie de la
+                   fenêtre (largeur 380, rembourrages, fond) est la
+                   même pendant et après l'attente — rien ne bouge à la
+                   pose. */}
+              {contenuEnAttente ? (
+                <div aria-hidden data-attente-fiche="" className="flex flex-col">
+                  {/*  La rangée du sélecteur, puis l'identité, puis des
+                       lignes — des proportions d'ensemble, pas une
+                       copie. */}
+                  <div className="flex items-center gap-3">
+                    <span className="h-10 min-w-0 flex-1 rounded-xl bg-sombre-eleve" />
+                    <span className="h-10 w-10 shrink-0 rounded-full bg-sombre-eleve" />
+                  </div>
+                  <div className="mt-10 flex items-start gap-5">
+                    <span className="h-[92px] w-[92px] shrink-0 rounded-full bg-sombre-eleve" />
+                    <div className="flex min-h-[92px] min-w-0 flex-1 flex-col justify-center gap-2.5">
+                      <span className="h-5 w-2/3 rounded bg-sombre-eleve" />
+                      <span className="h-4 w-1/3 rounded bg-sombre-eleve" />
+                    </div>
+                  </div>
+                  <div className="mt-10 flex flex-col gap-3.5">
+                    <span className="h-4 w-1/2 rounded bg-sombre-eleve" />
+                    <span className="h-4 w-2/5 rounded bg-sombre-eleve" />
+                    <span className="h-4 w-3/5 rounded bg-sombre-eleve" />
+                  </div>
+                </div>
+              ) : (
               <ContenuFiche
                 tatoueur={tatoueur}
                 groupes={groupes}
@@ -955,6 +1010,7 @@ export function FenetreFiche({
                   //  ici.
                 }}
               />
+              )}
             </div>
           </div>
 

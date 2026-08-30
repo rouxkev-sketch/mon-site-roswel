@@ -210,6 +210,36 @@ const IGNORER_ID = process.env.IGNORER_ID === "1";
 const TRI = process.env.TRI === "1";
 
 /**
+ * ██ §1 (nº 745) — LA FICHE DU MOTEUR EST PARTIELLE, COMME EN VRAI ██
+ * ------------------------------------------------------------------
+ * CE QUE LA VRAIE BASE FAIT, ET QUE LA DOUBLURE NE FAISAIT PAS : la
+ * fonction `rechercher_tatoueurs` (supabase/yokofolio-classement-
+ * avant-la-coupe.sql) CONSTRUIT la fiche champ par champ — `booking`,
+ * `booking_mois` et `dm_instagram` n'y sont PAS. La doublure, elle,
+ * renvoyait la ligne ENTIÈRE : les cartes du banc connaissaient donc
+ * le booking, quand celles de la prod l'ignorent — et le
+ * réarrangement de la fenêtre superposée (la case Booking qui
+ * s'insère devant Instagram à l'arrivée de la fiche complète) était
+ * INVISIBLE au banc.
+ * ⚠️ C'EST UN CRAN, comme la nº 690 : éteint, la doublure répond
+ * exactement comme avant, aucun relevé déjà rendu n'est invalidé.
+ *
+ *      FICHE_PARTIELLE=1 npm run banc:doublure
+ */
+const FICHE_PARTIELLE = process.env.FICHE_PARTIELLE === "1";
+/** Les champs que la vraie fonction met dans `fiche` — la liste de
+    `jsonb_build_object`, recopiée de la fonction SQL. */
+const CHAMPS_FICHE_MOTEUR = [
+  "id", "nom", "slug", "ville_nom", "ville_slug", "latitude",
+  "longitude", "adresse", "code_postal", "region", "pays", "code_pays",
+  "lieu_id", "styles", "lien_instagram", "lien_tiktok", "lien_youtube",
+  "site_web", "bio", "type_fiche", "mode_exercice", "rayon_zone_km",
+  "villes", "photo_principale", "photo_profil", "photos",
+  "photos_styles", "filtres_technique", "filtres_composition",
+  "filtres_besoins", "ancien_slug", "publie", "galerie",
+];
+
+/**
  * ██ §1 (nº 688) — LA DOUBLURE SAIT DÉSORMAIS DIRE QUI EST CONNECTÉ ██
  * ------------------------------------------------------------------
  * CE QUI MANQUAIT, ET CE QUE ÇA EMPÊCHAIT DE MESURER : le banc forge un
@@ -787,8 +817,37 @@ function repondre(req, res, u, brut) {
     let params = {};
     try { params = JSON.parse(brut || "{}"); } catch { /* corps vide */ }
     const style = params.p_style;
+    /*  §1 (nº 745) — SOUS LE CRAN, LA RÉPONSE EST CELLE DE LA VRAIE
+        FONCTION : des lignes ENVELOPPÉES `{ fiche, distance_km,
+        total_resultats }`, et une fiche RÉDUITE aux champs qu'elle
+        construit (ni booking, ni dm_instagram). C'est ce qui fait
+        prendre au site son chemin de PRODUCTION (`rechercheEnBase`) :
+        à plat, il ne reconnaît rien et repart par le chemin de secours
+        — qui, lui, lit le booking, et cachait le réarrangement de la
+        fenêtre superposée. Éteint : à plat, comme avant. */
+    const photosMax = Number(params.p_photos_max ?? 0) || Infinity;
     corps = TATOUEURS.filter((l) => !style || l.styles.includes(style))
-      .map((l, _i, tous) => ({ ...l, total: tous.length, distance_km: null }));
+      .map((l, _i, tous) =>
+        FICHE_PARTIELLE
+          ? {
+              fiche: {
+                ...Object.fromEntries(
+                  CHAMPS_FICHE_MOTEUR.filter((champ) => champ in l).map(
+                    (champ) => [champ, l[champ]]
+                  )
+                ),
+                //  La vraie fonction JOINT les photos (`galerie`,
+                //  coalesce(g.photos)) : la doublure fait pareil,
+                //  bornée à `p_photos_max` comme elle.
+                galerie: (TABLES.photos_tatoueur ?? [])
+                  .filter((p) => p.tatoueur_id === l.id)
+                  .slice(0, photosMax),
+              },
+              distance_km: null,
+              total_resultats: tous.length,
+            }
+          : { ...l, total: tous.length, distance_km: null }
+      );
   } else {
     for (const [cle, val] of u.searchParams) {
       if (["select", "order", "limit", "offset"].includes(cle)) continue;

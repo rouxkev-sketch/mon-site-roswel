@@ -23,7 +23,7 @@ import {
   noterDemontage,
   noterMontage,
 } from "@/lib/journal-bascule";
-import { ficheComplete } from "@/lib/fiche-complete";
+import { ficheComplete, ficheCompleteImmediate } from "@/lib/fiche-complete";
 import {
   useDispositionGrille,
   useVuePhototheque,
@@ -343,6 +343,33 @@ export function GrilleTatoueurs({
   // fenêtre fige puis restitue. Capturée ici, AVANT le pushState —
   // après lui, le routeur peut déplacer brièvement le défilement.
   const [positionGrille, setPositionGrille] = useState(0);
+  /**
+   * ██ §1 (nº 745) — LA COLONNE ATTEND LA FICHE COMPLÈTE ██
+   * ------------------------------------------------------------------
+   * LE DÉFAUT, filmé au banc (base lente) : la fenêtre s'ouvrait avec
+   * la fiche DE LA CARTE — celle du moteur de recherche, qui ne
+   * construit ni `booking`, ni `dm_instagram`, ni la page de liens
+   * (voir `jsonb_build_object` de rechercher_tatoueurs). La colonne
+   * peignait donc « Instagram » en première case… puis la fiche
+   * complète arrivait (~1 s) et la case « Booking » S'INSÉRAIT DEVANT :
+   * Instagram sautait de x=871 à x=1051 sous les yeux — le
+   * réarrangement relevé par le propriétaire.
+   * LA RÈGLE, DÉSORMAIS : la colonne ne montre RIEN de la fiche
+   * partielle. Faux tant que la complète n'est pas là, ce drapeau fait
+   * afficher à la fenêtre son HABILLAGE D'ATTENTE (neutre — le contenu
+   * d'un profil varie trop pour un squelette fidèle, décision du
+   * propriétaire) ; tout se pose ensuite EN UNE FOIS.
+   * ⚠️ CACHE CHAUD (survol assez long, réouverture) : l'ouverture se
+   * fait DIRECTEMENT avec la complète (`ficheCompleteImmediate`), le
+   * drapeau naît vrai — aucun habillage ne clignote.
+   * ⚠️ LA PHOTO, ELLE, N'ATTEND PAS : la galerie de la carte est déjà
+   * là, c'est la continuité visuelle de la nº 371.
+   */
+  const [contenuPret, setContenuPret] = useState(true);
+  /** Le slug dont la colonne attend la fiche complète : une réponse
+      qui arrive pour une AUTRE fiche (fermée entre-temps, remplacée)
+      ne lève pas le drapeau de celle qui s'affiche. */
+  const slugEnAttente = useRef<string | null>(null);
 
   /** COMBIEN DE FICHES SONT EMPILÉES PAR-DESSUS la fenêtre de base
       (nº 226-§5) — remonté par PileFiches : un membre d'équipe ouvert
@@ -430,11 +457,33 @@ export function GrilleTatoueurs({
     );
     entreePoussee.current = true;
     setPhotoOuverte(photoRegardee);
+    /*  §1 (nº 745) — DÉJÀ EN CACHE ? L'ouverture est alors complète du
+        premier rendu : ni deux-temps, ni habillage d'attente. Le
+        carrousel de la CARTE est reporté (règle nº 279, ci-dessous). */
+    const dejaComplete = ficheCompleteImmediate(tatoueur.slug);
+    if (dejaComplete) {
+      slugEnAttente.current = null;
+      setFicheOuverte({ ...dejaComplete, carrousel: tatoueur.carrousel ?? null });
+      setContenuPret(true);
+      return;
+    }
+    slugEnAttente.current = tatoueur.slug;
     setFicheOuverte(tatoueur);
+    setContenuPret(false);
     // LE PORTFOLIO ENTIER ARRIVE JUSTE APRÈS — la fenêtre est déjà
     // ouverte, avec sa photo. On ne remplace la fiche que si c'est
     // toujours celle-là qui est affichée.
     void ficheComplete(tatoueur.slug).then((complete) => {
+      /*  §1 (nº 745) — LA COLONNE SE MONTRE dans les deux issues : la
+          complète est arrivée (elle se pose en une fois), ou la
+          demande a échoué (base injoignable — la fiche partielle vaut
+          mieux qu'une attente sans fin). Mais SEULEMENT si c'est
+          encore CETTE fiche que la fenêtre attend : la réponse d'une
+          fiche fermée entre-temps ne parle pas pour la suivante. */
+      if (slugEnAttente.current === tatoueur.slug) {
+        slugEnAttente.current = null;
+        setContenuPret(true);
+      }
       if (!complete) return;
       setFicheOuverte((courante) =>
         courante && courante.slug === complete.slug
@@ -769,6 +818,10 @@ export function GrilleTatoueurs({
         //  tant qu'elle n'est pas le sommet, et les retrouve quand la
         //  pile se vide (profondeurPile redescend à zéro).
         habillageEfface={profondeurPile > 0}
+        //  §1 (nº 745) — tant que la fiche complète n'est pas là, la
+        //  colonne montre l'habillage d'attente, jamais un contenu qui
+        //  se réarrangera (voir `contenuPret` plus haut).
+        contenuEnAttente={!contenuPret}
         surFermeture={fermer}
       />
     </PileFiches>

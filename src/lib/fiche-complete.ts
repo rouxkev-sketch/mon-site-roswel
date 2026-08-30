@@ -22,6 +22,17 @@ import type { Tatoueur } from "@/lib/tatoueurs";
 const fichesCompletes = new Map<string, Tatoueur>();
 const demandesEnCours = new Map<string, Promise<Tatoueur | null>>();
 
+/**
+ * §1 (nº 745) — LA LECTURE IMMÉDIATE DU CACHE, SANS PROMESSE.
+ * La fenêtre superposée veut savoir AU CLIC si la fiche complète est
+ * déjà là (survol assez long, réouverture) : si oui, elle s'ouvre
+ * directement complète — aucun habillage d'attente, aucun deux-temps.
+ * Une promesse, même déjà résolue, arrive toujours un rendu trop tard.
+ */
+export function ficheCompleteImmediate(slug: string): Tatoueur | null {
+  return fichesCompletes.get(slug) ?? null;
+}
+
 export function ficheComplete(slug: string): Promise<Tatoueur | null> {
   const deja = fichesCompletes.get(slug);
   if (deja) return Promise.resolve(deja);
