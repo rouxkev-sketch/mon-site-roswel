@@ -121,10 +121,18 @@ const TITRE_INTERTITRE =
 //  ██ nº 418 — LE QUATRIÈME MODE EST ABANDONNÉ ██
 //  Né à la nº 414, renommé deux fois, il est SUPPRIMÉ du site sur
 //  décision du propriétaire. Il ne reste que les trois d'avant.
+//  ██ nº 749 — LE CATALOGUE PASSE À CINQ, LE SÉLECTEUR RESTE À TROIS ██
+//  `convention` et `independent` existent en base et dans GENRES_MODE
+//  (les fondations), mais AUCUN écran ne les montre encore : leurs
+//  onglets arrivent avec leurs formulaires (nº 750 et 751). Le Record
+//  exhaustif exige leurs libellés dès maintenant — valeurs mortes tant
+//  que ORDRE_SELECTEUR ne les liste pas.
 const LIBELLES_MODES: Record<GenreMode, string> = {
   prive: "Studio",
   salon: "Salon",
   guest: "Guest",
+  convention: "Convention",
+  independent: "Independent",
 };
 
 /** L'ORDRE DU SÉLECTEUR — celui que le propriétaire a dicté (nº 403,
@@ -134,14 +142,24 @@ const LIBELLES_MODES: Record<GenreMode, string> = {
     ⚠️ CE N'EST PAS LE SEUL ENDROIT À TENIR CET ORDRE : le filtre de
     recherche (FILTRE_MODE_ACTIVITE), l'ordre des profils sur une
     fiche (RANG_DU_GENRE) et le catalogue (GENRES_MODE) disent la même
-    chose. Les quatre listes doivent bouger ensemble. */
+    chose. Les quatre listes doivent bouger ensemble.
+    (nº 749 — le catalogue a pris deux entrées d'avance, `convention`
+    et `independent`, SANS écran : ce sélecteur, le filtre et
+    RANG_DU_GENRE les gagneront avec leurs écrans — nº 750, 751, 754 —
+    dans l'ordre dicté Studio · Salon · Guest · Convention ·
+    Independent.) */
 const ORDRE_SELECTEUR: GenreMode[] = ["prive", "salon", "guest"];
 
 /** Le mot du bouton d'ajout — « + Ajouter un studio », etc. Le Guest
-    n'y figure pas : il garde « + Ajouter une autre date ». */
+    n'y figure pas : il garde « + Ajouter une autre date ».
+    (nº 749 — les deux nouveautés reçoivent leur mot par exhaustivité
+    du Record ; aucun bouton ne les affiche tant que leurs écrans
+    n'existent pas, et les nº 750-751 poseront les mots définitifs.) */
 const MOTS_AJOUT: Record<Exclude<GenreMode, "guest">, string> = {
   prive: "un studio",
   salon: "un salon",
+  convention: "une convention",
+  independent: "une zone",
 };
 
 /** Un mode neuf — sans genre : c'est le sélecteur qui pose la

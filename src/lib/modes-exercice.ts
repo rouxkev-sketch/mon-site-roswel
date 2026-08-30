@@ -5,6 +5,7 @@ import {
   libelleStyle,
   type GenreMode,
   type RoleStudio,
+  type StatutIndependent,
 } from "@/config/tatouage";
 import type { Plage, SemaineStudio } from "@/lib/horaires-studio";
 import type { LieuTrouve } from "@/lib/geocodage/types";
@@ -57,10 +58,25 @@ export type ModeExerciceFiche = {
       migration n'est pas passée, et le site doit continuer de lire
       les fiches sans elle. */
   nature_lieu?: "salon" | "prive" | null;
-  /** DISPONIBLE seulement (nº 414 ; colonne héritée du mode « à
-      domicile », migration nº 40) — le rayon de déplacement en
-      kilomètres. Facultatif pour la même raison. */
+  /** LE RAYON DE DÉPLACEMENT en kilomètres — une zone INDEPENDENT
+      (nº 749 ; colonne née pour « à domicile » nº 40, portée par
+      « Disponible » nº 414, jamais supprimée). Facultatif pour la
+      même raison que `nature_lieu`. */
   rayon_km?: number | null;
+  /** INDEPENDENT seulement (nº 749) — le statut de l'artiste, un des
+      cinq slugs de STATUTS_INDEPENDENT (la contrainte de base
+      `modes_exercice_statut_connu` y veille ; null pour les autres
+      genres). Répété sur chaque ligne de zone d'un même artiste —
+      la lecture prend la première. FACULTATIF : la colonne peut
+      manquer sur une base où la migration n'est pas passée, et le
+      site doit continuer de lire les fiches sans elle. */
+  statut?: StatutIndependent | null;
+  /** CONVENTION seulement (nº 749) — le lien vers le catalogue
+      (`conventions.id`), débranchable (`on delete set null`) : la
+      localisation de la convention est RECOPIÉE sur la ligne à
+      l'enregistrement, comme celle d'un salon lié — l'affichage ne
+      dépend d'aucune jointure. Facultatif pour la même raison. */
+  convention_id?: string | null;
   /** La fiche SALON liée, quand elle existe (recherche interne). */
   salon_id: string | null;
   /** Le nom et le slug du salon lié — recopiés à la lecture pour que
@@ -1021,6 +1037,11 @@ export function ligneDuMode(mode: ModeExerciceFiche): {
  * (« à domicile » : supprimé nº 402 ; le mode SANS LIEU, né à la
  * nº 414 et nommé « Independent » à la nº 416, est ABANDONNÉ par le
  * propriétaire — nº 418. Il ne reste que ces trois-là.)
+ * (nº 749 — le CATALOGUE repasse à cinq : `convention` et
+ * `independent` existent en base et dans GENRES_MODE, mais aucun
+ * écran n'en écrit encore. Leur rang d'affichage sera décidé à la
+ * fiche publique, nº 753 ; d'ici là un genre absent de cette table
+ * tombe sur 9 — après les trois connus, jamais entre eux.)
  * Il vaut PARTOUT où plusieurs profils se suivent : le sous-titre du
  * nom, la liste des profils d'un artiste, et tout ce qui viendra. Un
  * ordre écrit une seule fois ne peut pas diverger d'un écran à
@@ -1153,10 +1174,11 @@ export function pointsDeLaFiche(fiche: {
  * c'est le pire défaut d'une démonstration. Les deux se relisent donc
  * ensemble : toute règle changée d'un côté doit l'être de l'autre.
  *
- * `rayonKm` ne vaut QUE pour « Disponible » (nº 414 ; c'était « à
- * domicile » jusqu'à la nº 402) : c'est la distance que l'artiste
- * accepte de parcourir autour de ce point. Un lieu ordinaire est un
- * point ; un lieu « Disponible » est un DISQUE.
+ * `rayonKm` ne vaut QUE pour une ZONE DE DÉPLACEMENT — le genre
+ * `independent` (nº 749 ; la mécanique fut celle d'« à domicile »
+ * nº 40-402 puis de « Disponible » nº 414-418) : c'est la distance
+ * que l'artiste accepte de parcourir autour de ce point. Un lieu
+ * ordinaire est un point ; une zone est un DISQUE.
  */
 export type LieuDeFiche = {
   /** 0 = l'adresse de la fiche, 1 = un studio, 2 = un mode. Départage
@@ -1227,16 +1249,31 @@ export function lieuxDeLaFiche(fiche: {
       codePays: mode.code_pays,
       adresse: mode.adresse,
       codePostal: mode.code_postal,
-      //  nº 418 — PLUS AUCUN MODE N'EST UN DISQUE : le mode sans lieu
-      //  des nº 414-417, seul porteur d'un rayon depuis la disparition
-      //  d'« à domicile » (nº 402), est supprimé du site. La colonne
-      //  `rayon_km` reste en base, toujours écrite à null.
+      //  nº 418 avait remis tous les rayons à zéro (mode sans lieu
+      //  abandonné) ; nº 749 — UNE ZONE INDEPENDENT EST UN DISQUE :
+      //  son rayon est la distance que l'artiste accepte de parcourir
+      //  autour de la ville choisie.
       //  ⚠️ MÊME RÈGLE QUE LES VUES `lieux_tatoueur` / `zones_tatoueur`
-      //  en base (migration nº 418) : les deux chemins répondent pareil.
-      rayonKm: 0,
+      //  en base (yokofolio-conventions-et-independent.sql, nº 749) :
+      //  les deux chemins répondent pareil — voir `modeAvecRayon`.
+      rayonKm: modeAvecRayon(mode) ? (mode.rayon_km ?? 0) : 0,
     });
   }
   return lieux;
+}
+
+/**
+ * LES GENRES DONT LE LIEU EST UN DISQUE — le pendant exact du
+ * `case when m.genre in ('disponible', 'independent')` des trois vues
+ * géographiques (nº 749). `disponible` n'est plus dans `GenreMode`
+ * (l'entrée a quitté le catalogue à la nº 418) mais la base l'accepte
+ * toujours par prudence : on le lit donc ici aussi, par la même
+ * prudence — aucune ligne n'en existe, et si une réapparaissait, les
+ * deux chemins la liraient pareil.
+ */
+function modeAvecRayon(mode: ModeExerciceFiche): boolean {
+  const genre: string = mode.genre;
+  return genre === "independent" || genre === "disponible";
 }
 
 /* ================================================================

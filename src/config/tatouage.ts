@@ -1266,6 +1266,34 @@ export function aDesHoraires(
  * échouerait sur la contrainte jusqu'à son passage).
  * EN TÊTE de cette liste depuis la nº 415 : Independent · Studio ·
  * Salon · Guest — l'ordre dicté du sélecteur du formulaire.
+ * ██ nº 418 — LE MODE SANS LIEU EST ABANDONNÉ ██
+ * Son entrée a quitté cette liste (et sa tête de liste avec elle) :
+ * le site est revenu à Studio · Salon · Guest, et la contrainte de
+ * base à trois genres — les deux paragraphes ci-dessus sont l'histoire
+ * de l'aller-retour, pas l'état courant.
+ * ██ nº 749 — LE CATALOGUE PASSE À CINQ : convention, independent ██
+ * La base d'abord (yokofolio-conventions-et-independent.sql, collée
+ * avant ce déploiement — la règle de la nº 414) ; puis ce catalogue.
+ * DEUX ENTRÉES DE PLUS, ET AUCUN ÉCRAN NE CHANGE, c'est le contrat de
+ * la passe :
+ *  · le sélecteur du formulaire (ORDRE_SELECTEUR, BlocModesExercice),
+ *    le filtre « Artiste » (FILTRE_MODE_ACTIVITE) et l'ordre des
+ *    profils (RANG_DU_GENRE) sont des listes EXPLICITES — ils ne
+ *    montrent pas encore les nouveautés. Ils les gagneront aux passes
+ *    d'écran (750 formulaire Convention, 751 formulaire Independent,
+ *    754 moteur), dans l'ordre dicté : Studio · Salon · Guest ·
+ *    Convention · Independent ;
+ *  · les LIBELLÉS des nouveautés sont EN ANGLAIS (le site sera
+ *    anglais au lancement — conception nº 748-C ; les modes existants
+ *    passeront à l'anglais avec le chantier de traduction, pas ici) ;
+ *  · `independent` est un SLUG NEUF, pas la réutilisation de
+ *    `disponible` : le slug vaut la valeur en base et doit dire ce
+ *    qu'il est (la leçon nº 414, écrite plus haut). `disponible`
+ *    reste ACCEPTÉ par la contrainte et par les vues, par prudence.
+ * ⚠️ LES PHRASES des deux nouveautés sont des VALEURS DE GARDE :
+ * aucune ligne de ces genres n'existe encore, et la fiche publique de
+ * la nº 753 posera les tournures définitives (plaque Convention avec
+ * nom + dates, ligne de statut + zones Independent).
  */
 export const GENRES_MODE = [
   {
@@ -1293,6 +1321,25 @@ export const GENRES_MODE = [
     phrase: "En session Guest à",
     phraseLiee: "En Guest chez",
   },
+  //  nº 749 — LES DEUX NOUVEAUTÉS, EN QUEUE : l'ordre dicté est
+  //  Studio · Salon · Guest · Convention · Independent (conception
+  //  nº 748-B). Libellés en anglais, phrases = valeurs de garde
+  //  jusqu'à la fiche publique de la nº 753 (voir la chronique
+  //  ci-dessus) ; aucun écran ne les liste encore.
+  {
+    slug: "convention",
+    label: "Convention",
+    titre: "Convention",
+    phrase: "At a convention in",
+    phraseLiee: "At",
+  },
+  {
+    slug: "independent",
+    label: "Independent",
+    titre: "Independent",
+    phrase: "Service area:",
+    phraseLiee: "Service area:",
+  },
 ] as const;
 
 export type GenreMode = (typeof GENRES_MODE)[number]["slug"];
@@ -1309,6 +1356,41 @@ export type GenreMode = (typeof GENRES_MODE)[number]["slug"];
  * demande donc aucun, et le mode reste valide sans lui.
  */
 export const RAYONS_DEPLACEMENT = [10, 25, 50, 100, 200] as const;
+
+/**
+ * ██ nº 749 — LES CINQ STATUTS DU MODE « INDEPENDENT » ██
+ * ==================================================================
+ * Le premier champ du futur formulaire Independent (nº 751) et la
+ * première ligne de son bloc de lieux sur la fiche (nº 753) : un
+ * choix UNIQUE parmi cinq. Les SLUGS sont les valeurs écrites en base
+ * (`modes_exercice.statut`, contrainte `modes_exercice_statut_connu`
+ * — yokofolio-conventions-et-independent.sql) ; les LIBELLÉS sont les
+ * mots exacts de la conception nº 748-B2, en anglais.
+ * ⚠️ LE STATUT VIT SUR LA LIGNE DE MODE, pas sur la fiche : un artiste
+ * à trois zones a trois lignes qui le répètent — l'enregistrement les
+ * écrit ensemble, la lecture prend la première (conception nº 748-A3).
+ * ⚠️ « On break » NE CACHE PAS LA FICHE : elle reste dans les
+ * résultats, le statut s'affiche dessus (décision du propriétaire,
+ * avant la nº 749 — le moteur ne traite pas le statut).
+ */
+export const STATUTS_INDEPENDENT = [
+  { slug: "guest_spots_only", label: "Guest spots only" },
+  { slug: "conventions_only", label: "Conventions only" },
+  { slug: "guest_spots_and_conventions", label: "Guest spots & conventions" },
+  { slug: "on_break", label: "On break" },
+  { slug: "available_on_request", label: "Available on request" },
+] as const;
+
+export type StatutIndependent = (typeof STATUTS_INDEPENDENT)[number]["slug"];
+
+/** Le libellé d'un statut Independent — la chaîne vide s'il est
+    absent ou inconnu : on n'affiche jamais un mot qu'on ne sait pas
+    lire (la règle du booking d'équipe, nº 492). */
+export function libelleStatutIndependent(
+  slug: string | null | undefined
+): string {
+  return STATUTS_INDEPENDENT.find((s) => s.slug === slug)?.label ?? "";
+}
 
 /**
  * LE SOUS-CHOIX DU MODE « EN STUDIO » — fondateur ou résident.

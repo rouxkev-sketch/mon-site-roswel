@@ -220,6 +220,21 @@ sans conséquence, à n'importe quel moment.
 *Tableau produit à partir des fichiers eux-mêmes, analysés par
 l'analyseur syntaxique de PostgreSQL — pas à la main.*
 
+## Le fichier des nouveaux modes (passes nº 748-749)
+
+- **`yokofolio-conventions-et-independent.sql`** — *(à passer APRÈS
+  toutes les migrations numérotées ci-dessus ; collé le 30-08-2026
+  pour ses blocs 1 à 5 — passe nº 748 — puis en entier à la nº 749 ;
+  rejouable sans effet)*. Les fondations des modes **Convention** et
+  **Independent** : la contrainte de genre passe à six valeurs, la
+  table `conventions` (le catalogue ET les demandes, sur le modèle de
+  `suggestions_style`), les colonnes `statut` et `convention_id` sur
+  `modes_exercice`, et les trois vues géographiques apprennent le
+  rayon du genre `independent`. Il ne touche NI aux droits de lecture
+  (l'état des nº 699/726 est conservé et vérifié) NI aux données. Sa
+  vérification s'affiche toute seule à la fin du collage : huit
+  lignes, chacune avec sa valeur attendue.
+
 ## Le fichier de sécurité de la passe nº 699
 
 - **`yokofolio-securite-699.sql`** — *(à passer quand tu veux, sans
