@@ -755,17 +755,38 @@ function repondre(req, res, u, brut) {
             ⚠️ AUCUN RELEVÉ ANCIEN N'EN DÉPEND : les trois bancs qui
             suppriment (nº 688, 692, 694) ne visent que par `eq`. Et un
             banc ne peut de toute façon pas dépendre d'un effacement
-            TROP LARGE. Pas de cran, donc : c'est une correction. */
-        const m = /^(eq|neq|in)\.(.*)$/.exec(val);
+            TROP LARGE. Pas de cran, donc : c'est une correction.
+            ██ §1 (nº 750) — `not.` VAUT ICI AUSSI, ET C'ÉTAIT LE TROU ██
+            LA MÊME LEÇON, QUATRIÈME FOIS — et cette fois du côté des
+            ÉCRITURES, là où elle coûte le plus cher. La lecture honore
+            `not.` depuis la nº 696 ; la suppression, non. Or c'est
+            EXACTEMENT la forme du garde-fou qui protège les modes
+            d'exercice déjà enregistrés (`lib/enregistrer-exercice` :
+            « efface les lignes de cette fiche SAUF celles que l'écran
+            va réécrire », `.not("id", "in", …)`). Filtre ignoré =
+            suppression élargie : la doublure effaçait TOUS les modes de
+            la fiche, et le banc de la nº 750 accusait le site d'avoir
+            perdu un mode que le site avait, lui, correctement protégé.
+            ⚠️ AUCUN RELEVÉ ANCIEN N'EN DÉPEND : aucun banc antérieur
+            n'emploie `not.` en écriture (le seul appelant est
+            l'enregistrement des modes, éprouvé pour la première fois
+            ici). Pas de cran : c'est une correction. */
+        const negation = /^not\.(.*)$/.exec(val);
+        const brutFiltre = negation ? negation[1] : val;
+        const m = /^(eq|neq|in)\.(.*)$/.exec(brutFiltre);
         if (!m) continue;
         const valeur = String(ligne[cle]);
-        if (m[1] === "eq" && valeur !== String(m[2])) vise = false;
-        if (m[1] === "neq" && valeur === String(m[2])) vise = false;
+        let correspond = true;
+        if (m[1] === "eq") correspond = valeur === String(m[2]);
+        if (m[1] === "neq") correspond = valeur !== String(m[2]);
         if (m[1] === "in") {
           const liste = m[2].replace(/^\(|\)$/g, "").split(",")
             .map((s) => s.replace(/^"|"$/g, ""));
-          if (!liste.includes(valeur)) vise = false;
+          correspond = liste.includes(valeur);
         }
+        //  La négation retourne la réponse, elle ne change rien d'autre :
+        //  sans `not.`, le comportement est celui d'avant, au caractère.
+        if (negation ? correspond : !correspond) vise = false;
       }
       /*  UN `PATCH` GARDE LA LIGNE, il la recouvre : les colonnes
           nommées prennent leur nouvelle valeur, les autres ne bougent

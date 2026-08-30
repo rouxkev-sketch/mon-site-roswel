@@ -173,6 +173,15 @@ const CATALOGUE: Record<
     titre: "Demande de style",
     sousTitre: "Ta demande d'ajout de style a bien été reçue.",
   },
+  //  nº 750 — LE JUMEAU DE LA LIGNE AU-DESSUS : même icône, même ton,
+  //  mêmes mots à un nom près. Une demande de convention suit le
+  //  chemin d'une demande de style, de bout en bout.
+  demande_convention: {
+    symbole: IconeEnveloppe,
+    ton: "info",
+    titre: "Demande de convention",
+    sousTitre: "Ta demande d'ajout de convention a bien été reçue.",
+  },
   style_ajoute: {
     symbole: IconeCocheListe,
     ton: "valide",

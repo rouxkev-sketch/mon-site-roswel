@@ -64,6 +64,12 @@ const COLONNES_MIGRATION_33 = [
   //  quand même — aucune version du site n'exige une migration pour
   //  fonctionner.
   "nom_lieu",
+  //  nº 750 — LE LIEN VERS LE CATALOGUE DES CONVENTIONS (colonne née
+  //  avec `yokofolio-conventions-et-independent.sql`). Même tolérance,
+  //  et elle coûte peu : la ligne garde sa localisation et le NOM de
+  //  la convention, tous deux RECOPIÉS — seul le lien au catalogue
+  //  manquerait sur une base où la migration n'est pas passée.
+  "convention_id",
 ] as const;
 
 function colonneNeuveAbsente(message: string): string | null {
@@ -257,11 +263,35 @@ async function ecrireModes(
       //  que là où le champ existe (`nomLieuRequis` : un lieu qui a
       //  son portfolio porte déjà le sien) — ailleurs null, comme le
       //  rayon et la nature.
-      nom_lieu: nomLieuRequis(mode)
-        ? (mode.nomLieu ?? "").trim() || null
-        : null,
-      debut_le: mode.genre === "guest" ? mode.debut_le || null : null,
-      fin_le: mode.genre === "guest" ? mode.fin_le || null : null,
+      //  ⚠️ nº 750 — UNE CONVENTION Y ÉCRIT SON NOM, et c'est la même
+      //  idée qu'un salon lié : la localisation ET le nom sont
+      //  RECOPIÉS sur la ligne, pour qu'elle reste lisible même si la
+      //  convention quitte un jour le catalogue (`convention_id` est
+      //  `on delete set null`). C'est aussi ce qui donne son titre à
+      //  la plaque de la fiche publique sans une requête de plus.
+      nom_lieu:
+        mode.genre === "convention"
+          ? (mode.convention?.nom ?? "").trim() || null
+          : nomLieuRequis(mode)
+            ? (mode.nomLieu ?? "").trim() || null
+            : null,
+      //  nº 750 — LE LIEN VERS LE CATALOGUE : la seule colonne propre
+      //  au mode Convention. Null partout ailleurs.
+      convention_id:
+        mode.genre === "convention" ? (mode.convention?.id ?? null) : null,
+      //  ⚠️ nº 750 — LES DATES SONT CELLES DE L'ARTISTE, et elles
+      //  valent pour DEUX genres désormais : sa session guest, et sa
+      //  présence à une convention (il peut n'y être qu'un jour sur
+      //  sept — conception nº 748-B1). Mêmes colonnes, même expiration
+      //  automatique par `modes_exercice_actifs`.
+      debut_le:
+        mode.genre === "guest" || mode.genre === "convention"
+          ? mode.debut_le || null
+          : null,
+      fin_le:
+        mode.genre === "guest" || mode.genre === "convention"
+          ? mode.fin_le || null
+          : null,
       ordre: rang,
     };
 

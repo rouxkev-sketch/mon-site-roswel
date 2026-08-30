@@ -1304,6 +1304,31 @@ export type ModeEnSaisie = {
       autour de la ville choisie (10, 25, 50, 100 ou 200 km). Null
       ailleurs, et null tant qu'aucun rayon n'est choisi. */
   rayonKm?: number | null;
+  /**
+   * ██ CONVENTION seulement (nº 750) — LE PAYS DU PREMIER MENU ██
+   * ------------------------------------------------------------------
+   * Le code à deux lettres choisi dans « Country ». Il ne décrit RIEN
+   * de l'activité de l'artiste : il ne fait que filtrer la liste des
+   * conventions (conception nº 748-B1). C'est pourquoi il ne compte
+   * PAS comme une saisie (voir `modeVide`) — regarder les conventions
+   * d'un pays puis s'en aller ne déclare rien et ne bloque rien.
+   * Null tant qu'aucun pays n'est choisi.
+   */
+  paysConvention?: string | null;
+  /**
+   * ██ CONVENTION seulement (nº 750) — LA CONVENTION RETENUE ██
+   * ------------------------------------------------------------------
+   * L'identifiant du catalogue (`conventions.id`) et le NOM retenu.
+   * ⚠️ SA LOCALISATION N'EST PAS ICI, ET C'EST VOULU : choisir une
+   * convention pose aussi `lieu` (le point de la convention, recopié
+   * du catalogue — voir BlocModesExercice). Tout ce qui SITUE un mode
+   * passe donc par le même champ que les trois autres genres :
+   * `pointDuMode`, `colonnesDuLieu` et l'enregistrement n'ont pas une
+   * ligne à apprendre. Le NOM, lui, est recopié en base dans
+   * `nom_lieu` — la fiche reste lisible si la convention quitte un
+   * jour le catalogue (le motif de `salon_id`, nº 26).
+   */
+  convention?: { id: string; nom: string } | null;
   /** EN STUDIO seulement — fondateur ou résident, obligatoire. */
   role?: RoleStudio | null;
   /** QUELLE DES DEUX RÉPONSES a été choisie : le studio est déjà sur
@@ -1493,7 +1518,17 @@ export function modeVide(mode: ModeEnSaisie): boolean {
     mode.rayonKm == null &&
     //  §1 (nº 266) — un nom de lieu saisi est une saisie comme une
     //  autre : l'encadré n'est plus vierge.
-    !(mode.nomLieu ?? "").trim()
+    !(mode.nomLieu ?? "").trim() &&
+    //  nº 750 — UNE CONVENTION RETENUE EST UNE SAISIE. Elle pose
+    //  d'ordinaire `lieu` avec elle (le point du catalogue, testé
+    //  juste au-dessus) ; on la nomme quand même, pour qu'une
+    //  convention SANS coordonnées — une ligne du catalogue que
+    //  l'administration n'a pas située — ne fasse pas passer l'encadré
+    //  pour vierge : il serait sauté à l'enregistrement, en silence.
+    //  ⚠️ LE PAYS, LUI, NE COMPTE PAS : il ne fait que filtrer la
+    //  liste (voir `paysConvention`). C'est la règle du §4 nº 407 —
+    //  ne comptent que les gestes qui DÉCLARENT quelque chose.
+    !mode.convention
   );
 }
 
@@ -1654,6 +1689,24 @@ export function modeComplet(mode: ModeEnSaisie): boolean {
   //  l'artiste est reçu par un SALON ou par un STUDIO PRIVÉ, les deux
   //  champs qui suivent posent une question sans sujet.
   if (mode.genre === "guest" && !mode.natureLieu) return false;
+  /*  ██ CONVENTION (nº 750) — DEUX RÉPONSES, ET ELLES SUFFISENT ██
+      La convention retenue dans le menu, et LES DATES DE L'ARTISTE
+      (conception nº 748-B1 : « il peut n'être là qu'un jour sur
+      sept »). Le PAYS n'est pas une réponse : il ne fait que filtrer
+      la liste, et il est forcément choisi dès qu'une convention l'est.
+      ⚠️ LE POINT VIENT DE LA CONVENTION, recopié du catalogue dans
+      `lieu` au moment du choix — c'est donc le test commun à tous les
+      genres qui le vérifie, pas une règle à part. Une convention que
+      l'administration n'a pas située n'a pas de point : l'encadré
+      reste incomplet, et le dit, plutôt que de poser une fiche que
+      personne ne pourrait trouver sur une carte. */
+  if (mode.genre === "convention") {
+    if (!mode.convention) return false;
+    if (!pointDuMode(mode)) return false;
+    return Boolean(
+      mode.debut_le && mode.fin_le && mode.fin_le >= mode.debut_le
+    );
+  }
   if (!pointDuMode(mode)) return false;
   //  §1 (nº 266) — LE NOM DU LIEU EST OBLIGATOIRE quand l'adresse est
   //  saisie à la main : sans lui, la fiche dit OÙ l'on travaille sans
@@ -1773,6 +1826,11 @@ export type ManqueBloc = {
     | "genre"
     | "role"
     | "lieu"
+    //  nº 750 — LE MENU DES CONVENTIONS. Un champ à part, et pas
+    //  `lieu` : le panneau Convention n'a NI recherche de portfolio NI
+    //  saisie d'adresse — désigner « lieu » ferait chercher un rouge
+    //  sur des champs qui n'existent pas dans cet onglet.
+    | "convention"
     | "nomLieu"
     | "rayon"
     | "dates"
@@ -1852,6 +1910,34 @@ export function premierManque(
         champ: "role",
         message: "Précise si tu es fondateur ou résident du salon.",
       };
+    }
+    //  nº 750 — LA CONVENTION A SES DEUX MANQUES À ELLE, et ils
+    //  passent AVANT le test de lieu commun : sans cette branche, un
+    //  encadré Convention sans convention retenue serait désigné
+    //  « lieu » — un champ que son panneau n'a pas.
+    if (mode.genre === "convention") {
+      if (!mode.convention || !pointDuMode(mode)) {
+        return {
+          cle: mode.cle,
+          champ: "convention",
+          message: "Choisis la convention où tu seras.",
+        };
+      }
+      if (!(mode.debut_le && mode.fin_le)) {
+        return {
+          cle: mode.cle,
+          champ: "dates",
+          message: "Une convention a besoin de tes deux dates.",
+        };
+      }
+      if (mode.fin_le < mode.debut_le) {
+        return {
+          cle: mode.cle,
+          champ: "dates",
+          message: "La date de fin précède la date de début.",
+        };
+      }
+      continue;
     }
     if (!pointDuMode(mode)) {
       //  ⚠️ LES PHRASES-CONSIGNES ONT DISPARU (passe nº 116). Les deux
@@ -1998,6 +2084,32 @@ export function tousLesManques(
         champ: "genre",
         message: "Dis si le lieu qui t'accueille est un studio ou un salon.",
       });
+    }
+    //  nº 750 — LA MÊME BRANCHE QUE `premierManque`, et à la même
+    //  place : les deux fonctions lisent la même règle, l'une s'arrête
+    //  au premier manque, l'autre les liste tous (§1 nº 267).
+    if (mode.genre === "convention") {
+      if (!mode.convention || !pointDuMode(mode)) {
+        manques.push({
+          cle: mode.cle,
+          champ: "convention",
+          message: "Choisis la convention où tu seras.",
+        });
+      }
+      if (!(mode.debut_le && mode.fin_le)) {
+        manques.push({
+          cle: mode.cle,
+          champ: "dates",
+          message: "Une convention a besoin de tes deux dates.",
+        });
+      } else if (mode.fin_le < mode.debut_le) {
+        manques.push({
+          cle: mode.cle,
+          champ: "dates",
+          message: "La date de fin précède la date de début.",
+        });
+      }
+      continue;
     }
     if (!pointDuMode(mode)) {
       manques.push({

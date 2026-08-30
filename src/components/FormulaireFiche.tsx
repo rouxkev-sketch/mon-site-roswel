@@ -662,6 +662,32 @@ async function chargerModes(
         //  tolérée absente (voir enregistrer-exercice).
         nomLieu:
           (ligne as unknown as { nom_lieu?: string | null }).nom_lieu ?? null,
+        /*  ██ nº 750 — LA CONVENTION RETENUE, RELUE SUR LA LIGNE ██
+             Son identifiant vit dans `convention_id`, son NOM dans
+             `nom_lieu` — les deux recopiés à l'enregistrement (voir
+             enregistrer-exercice). AUCUNE LECTURE DU CATALOGUE ICI, et
+             c'est ce qui rend la relecture juste dans tous les cas :
+             une convention retirée du catalogue depuis (refusée,
+             effacée) garde son nom à l'écran au lieu de laisser un
+             menu vide sur une ligne pourtant enregistrée.
+             ⚠️ RELUE POUR LA MÊME RAISON QUE LES TROIS CHAMPS
+             AU-DESSUS : le formulaire réenregistre TOUT ce qu'il a en
+             mémoire. Non relue, la convention repartirait à `null` au
+             premier « Enregistrer » — et la ligne perdrait son lien au
+             catalogue en silence. */
+        convention: (ligne as unknown as { convention_id?: string | null })
+          .convention_id
+          ? {
+              id: (ligne as unknown as { convention_id: string })
+                .convention_id,
+              nom:
+                (ligne as unknown as { nom_lieu?: string | null }).nom_lieu ??
+                "",
+            }
+          : null,
+        //  Le pays du premier menu : celui de la ligne, recopié de la
+        //  convention. Il ne fait que rouvrir la liste au bon endroit.
+        paysConvention: ligne.code_pays ?? null,
         salon: salon
           ? {
               id: ligne.salon_id as string,
@@ -3282,6 +3308,11 @@ export function FormulaireFiche() {
                 enErreur={erreurs.mode ?? erreurs.lieu ?? null}
                 manque={manqueDesigne}
                 manques={manquesDesignes}
+                //  nº 750 — pour qu'une demande de convention parte
+                //  avec le nom du portfolio qui la fait (le motif de
+                //  « Un style manque ? »). Null pendant la création :
+                //  la demande part quand même.
+                ficheId={ficheChargee?.id ?? null}
               />
             </div>
           )}

@@ -53,6 +53,13 @@ export type GenreNotification =
   //    (textes du brief nº 132) le jour où un point d'écriture naîtra.
   | "demande_style"
   | "en_validation"
+  /*  nº 750 — L'ACCUSÉ DE RÉCEPTION D'UNE DEMANDE DE CONVENTION,
+      exactement au même titre que `demande_style` ci-dessus et pour la
+      même raison : la demande entre en file, la réponse viendra plus
+      tard, et rien ne doit arriver de nulle part.
+      ⚠️ AUCUNE MIGRATION, pour la raison du §3 nº 688 : `genre` est un
+      `text` sans contrainte de valeur (yokofolio-notifications.sql). */
+  | "demande_convention"
   /*  ██ §1 (nº 663) — LE MESSAGE DE BIENVENUE ██
       LA PREMIÈRE NOUVELLE DE TOUTE VIE DE COMPTE, et la seule qui ne
       parle ni d'une fiche, ni du catalogue, ni d'une décision
@@ -151,6 +158,8 @@ export const TITRE_NOTIFICATION: Record<GenreNotification, string> = {
   style_ajoute: "Style accepté",
   style_refuse: "Style refusé",
   demande_style: "Demande de style",
+  //  nº 750 — le titre suit celui des styles, au mot près.
+  demande_convention: "Demande de convention",
   en_validation: "Portfolio en cours de validation",
   /*  §1 (nº 663) — LE MOT DU PROPRIÉTAIRE, à la graphie de la marque
       près : « YokoFolio », Y et F majuscules (la règle nº 104, sa

@@ -23,6 +23,8 @@
  * dira « aucune convention » au lieu de casser une page.
  */
 
+import type { LieuTrouve } from "@/lib/geocodage/types";
+
 /** Ce que rend une lecture de liste — la forme commune aux clients
     Supabase du site (navigateur, serveur, admin). */
 type ReponseListe = {
@@ -161,4 +163,83 @@ export function conventionsDuPays(
     .filter((c) => c.code_pays === codePays)
     .slice()
     .sort((a, b) => a.nom.localeCompare(b.nom, "en"));
+}
+
+/**
+ * LE NOM D'UN PAYS, EN ANGLAIS — « FR » → « France », « US » →
+ * « United States », « JP » → « Japan ».
+ * ⚠️ AUCUNE TABLE ÉCRITE À LA MAIN, et c'est la méthode déjà en place
+ * dans le site (`nomFrancaisDuPays`, lib/geocodage) : `Intl.DisplayNames`
+ * porte les données de langue du système — les deux cents pays sans
+ * qu'on en recopie un seul.
+ * ⚠️ EN ANGLAIS, ET C'EST LA RÈGLE DE CE MODE (conception nº 748-C) :
+ * les libellés NOUVEAUX sont en anglais, le site le sera au lancement.
+ * ⚠️ UN CODE INCONNU REND LE CODE : `of()` fait déjà cela, et c'est le
+ * bon repli ici — une entrée de menu doit afficher quelque chose. Même
+ * chose si la fonction n'existe pas (environnement trop ancien) :
+ * jamais d'exception à l'affichage.
+ */
+let nomsDePays: Intl.DisplayNames | null | undefined;
+
+export function nomDuPays(code: string): string {
+  const propre = (code ?? "").trim().toUpperCase();
+  if (!propre) return "";
+  if (nomsDePays === undefined) {
+    try {
+      nomsDePays = new Intl.DisplayNames(["en"], { type: "region" });
+    } catch {
+      nomsDePays = null;
+    }
+  }
+  try {
+    return nomsDePays?.of(propre) || propre;
+  } catch {
+    return propre;
+  }
+}
+
+/**
+ * LA LOCALISATION D'UNE CONVENTION, DANS LA FORME D'UN LIEU (nº 750).
+ * ==================================================================
+ * C'est la pièce qui fait que le mode Convention n'a RIEN de spécial
+ * en aval : choisir une convention pose ce lieu dans le mode, et tout
+ * ce qui SITUE un mode — `pointDuMode`, `colonnesDuLieu`,
+ * l'enregistrement, la vue `zones_tatoueur` — continue de lire le même
+ * champ que pour les trois autres genres. C'est le motif du salon lié
+ * (« recopiée exprès », migration nº 26), appliqué au catalogue.
+ *
+ * ⚠️ SANS COORDONNÉES, PAS DE LIEU — et le mode restera incomplet
+ * plutôt que d'enregistrer une présence que personne ne pourra trouver
+ * sur une carte. Le cas ne devrait pas exister (l'administration pose
+ * la ville et le point à l'acceptation, conception nº 748-E) ; s'il
+ * survient, il se voit à l'écran au lieu de se taire.
+ */
+export function lieuDeLaConvention(
+  convention: ConventionAcceptee
+): LieuTrouve | null {
+  const { latitude, longitude } = convention;
+  if (latitude == null || longitude == null) return null;
+  const pays = nomDuPays(convention.code_pays);
+  return {
+    identifiant: `convention:${convention.id}`,
+    //  L'ÉTIQUETTE est la VILLE quand on la connaît — jamais le nom de
+    //  la convention : `intitule` sert de repli de ville à la lecture
+    //  publique (`villeDuMode`, nº 417), et y mettre « Mondial du
+    //  Tatouage » ferait écrire ce nom à la place d'une ville.
+    intitule: convention.ville ?? pays,
+    contexte: [convention.ville, convention.region, pays]
+      .filter(Boolean)
+      .join(", "),
+    //  ⚠️ PAS D'ADRESSE : une convention se dit par sa ville. Le hall
+    //  d'exposition n'a pas à figurer sur une fiche.
+    adresse: null,
+    ville: convention.ville,
+    code_postal: null,
+    region: convention.region,
+    pays,
+    code_pays: convention.code_pays,
+    latitude,
+    longitude,
+    precision: "ville",
+  };
 }
