@@ -195,6 +195,28 @@ const CATALOGUE: Record<
     titre: "Style refusé",
     sousTitre: "Ta demande d'ajout de style n'a pas été acceptée.",
   },
+  /*  ██ nº 756 — LES DEUX RÉPONSES À UNE DEMANDE DE CONVENTION ██
+      LES JUMELLES DES DEUX LIGNES AU-DESSUS : même icône, même ton,
+      mêmes mots à un nom près. Le nom de la convention s'insère à
+      l'affichage pour l'acceptation, exactement comme celui du style
+      (voir `sousTitreDe`) — il est lu dans la phrase que
+      l'administration a écrite, jamais dans une colonne de plus.
+      ⚠️ LE REFUS NE NOMME RIEN, comme « Style refusé » : la phrase se
+      suffit, et une demande refusée n'a pas de nom retenu à citer. */
+  convention_ajoutee: {
+    symbole: IconeCocheListe,
+    ton: "valide",
+    titre: "Convention acceptée",
+    //  Le nom de la convention s'insère à l'affichage (`sousTitreDe`).
+    sousTitre:
+      'La convention demandée "Mondial du Tatouage" a été ajoutée à YokoFolio.',
+  },
+  convention_refusee: {
+    symbole: IconeCroix,
+    ton: "info",
+    titre: "Convention refusée",
+    sousTitre: "Ta demande d'ajout de convention n'a pas été acceptée.",
+  },
   /*  ██ §3 (nº 688) — LA DEMANDE DE PORTFOLIO REFUSÉE ██
       LES DEUX PHRASES SONT CELLES DU PROPRIÉTAIRE, au mot près. Le nom
       du portfolio s'insère à l'affichage — il est lu dans `fiche_nom`,
@@ -313,9 +335,13 @@ const CATALOGUE: Record<
   },
 };
 
-/** LE NOM DU STYLE, extrait du détail écrit par l'administration
+/** LE NOM DEMANDÉ, extrait du détail écrit par l'administration
     (« Fine line » rejoint la liste des styles. / n'a pas été retenu.)
-    — la première paire de guillemets français de la première ligne. */
+    — la première paire de guillemets français de la première ligne.
+    ⚠️ nº 756 — LA MÊME EXTRACTION SERT AUX CONVENTIONS : leur phrase
+    d'annonce est écrite dans la même forme (api/admin/yokofolio/
+    demandes-convention), et une seconde fonction qui ferait la même
+    chose aurait divergé au premier changement de tournure. */
 function nomDuStyle(detail: string | null): string | null {
   const premiere = (detail ?? "").split("\n\n")[0] ?? "";
   return premiere.match(/«\s*([^»]+?)\s*»/)?.[1] ?? null;
@@ -339,6 +365,14 @@ function sousTitreDe(nouvelle: Notification): string {
     return nom
       ? `Le style demandé "${nom}" a été ajouté à YokoFolio.`
       : "Le style demandé a été ajouté à YokoFolio.";
+  }
+  //  nº 756 — la même phrase, un mot changé : c'est la seule
+  //  différence entre les deux nouvelles.
+  if (nouvelle.genre === "convention_ajoutee") {
+    const nom = nomDuStyle(nouvelle.detail);
+    return nom
+      ? `La convention demandée "${nom}" a été ajoutée à YokoFolio.`
+      : "La convention demandée a été ajoutée à YokoFolio.";
   }
   /*  §3 (nº 688) — LE NOM DU PORTFOLIO REFUSÉ, lu dans `fiche_nom`.
       Il vient de LA LIGNE, pas du catalogue : la fiche est effacée au
@@ -600,9 +634,14 @@ export function FenetreNotifications({
             {notifications.map((nouvelle) => {
               const nonLue = !nouvelle.lue_le;
               const fiche = CATALOGUE[nouvelle.genre];
+              //  nº 756 — LES QUATRE GENRES QUI PORTENT UN MOT DE
+              //  L'ADMINISTRATION : les deux des styles, et les deux
+              //  des conventions qui les décalquent.
               const admin =
                 nouvelle.genre === "style_ajoute" ||
-                nouvelle.genre === "style_refuse"
+                nouvelle.genre === "style_refuse" ||
+                nouvelle.genre === "convention_ajoutee" ||
+                nouvelle.genre === "convention_refusee"
                   ? messageAdmin(nouvelle.detail)
                   : null;
               return (

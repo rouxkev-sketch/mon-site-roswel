@@ -60,6 +60,18 @@ export type GenreNotification =
       ⚠️ AUCUNE MIGRATION, pour la raison du §3 nº 688 : `genre` est un
       `text` sans contrainte de valeur (yokofolio-notifications.sql). */
   | "demande_convention"
+  /*  ██ nº 756 — LA RÉPONSE À UNE DEMANDE DE CONVENTION ██
+      LES JUMEAUX DE `style_ajoute` / `style_refuse`, et le décalque
+      est voulu de bout en bout : une demande de convention suit le
+      chemin d'une demande de style — accusé de réception à l'envoi
+      (`demande_convention`, nº 750), puis la décision de
+      l'administration ici. Le message qu'elle ajoute, s'il y en a un,
+      voyage dans `detail`, séparé par une ligne vide — la même
+      convention d'écriture que les styles, lue par `messageAdmin`.
+      ⚠️ AUCUNE MIGRATION, pour la raison du §3 nº 688 : `genre` est un
+      `text` sans contrainte de valeur. */
+  | "convention_ajoutee"
+  | "convention_refusee"
   /*  ██ §1 (nº 663) — LE MESSAGE DE BIENVENUE ██
       LA PREMIÈRE NOUVELLE DE TOUTE VIE DE COMPTE, et la seule qui ne
       parle ni d'une fiche, ni du catalogue, ni d'une décision
@@ -160,6 +172,10 @@ export const TITRE_NOTIFICATION: Record<GenreNotification, string> = {
   demande_style: "Demande de style",
   //  nº 750 — le titre suit celui des styles, au mot près.
   demande_convention: "Demande de convention",
+  //  nº 756 — et les deux réponses aussi : « Style accepté » /
+  //  « Style refusé » dictent la forme, rien n'est inventé.
+  convention_ajoutee: "Convention acceptée",
+  convention_refusee: "Convention refusée",
   en_validation: "Portfolio en cours de validation",
   /*  §1 (nº 663) — LE MOT DU PROPRIÉTAIRE, à la graphie de la marque
       près : « YokoFolio », Y et F majuscules (la règle nº 104, sa

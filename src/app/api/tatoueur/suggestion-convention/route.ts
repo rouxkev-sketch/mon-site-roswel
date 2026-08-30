@@ -1,4 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+//  nº 756 — LES BORNES DU NOM VIENNENT DU CATALOGUE : l'administration
+//  corrige ce même nom à l'acceptation (api/admin/yokofolio/
+//  demandes-convention), et deux bornes recopiées auraient divergé.
+import {
+  NOM_CONVENTION_MAXIMUM,
+  NOM_CONVENTION_MINIMUM,
+} from "@/lib/conventions";
 import { slugifier } from "@/lib/slug";
 import { creerNotification } from "@/lib/notifications";
 import { creerClientSupabaseAdmin } from "@/lib/supabase/admin";
@@ -31,21 +38,20 @@ import { creerClientSupabaseServeur } from "@/lib/supabase/server";
  * ⚠️ AUCUN QUOTA, comme pour les styles depuis la nº 304 : rien ne
  * limite le nombre de demandes.
  *
- * ⚠️ L'ÉCRAN D'ADMINISTRATION QUI LES TRAITE N'EST PAS DE CETTE PASSE
- * (il est prévu à la nº 755). Une demande déposée aujourd'hui attend
- * donc en base, `etat = 'en_attente'` — et n'apparaît dans AUCUN menu
- * tant qu'elle n'est pas acceptée : la lecture du catalogue ne prend
- * que les lignes « acceptee » (lib/conventions).
+ * ⚠️ L'ÉCRAN D'ADMINISTRATION QUI LES TRAITE EST ARRIVÉ À LA nº 756
+ * (api/admin/yokofolio/demandes-convention, et la section
+ * « Suggestions » de l'admin). Une demande déposée attend en base,
+ * `etat = 'en_attente'` — et n'apparaît dans AUCUN menu tant qu'elle
+ * n'est pas acceptée : la lecture du catalogue ne prend que les lignes
+ * « acceptee » (lib/conventions).
  */
 
 /** Les deux issues rendues au navigateur, en plus de la réussite. */
 type Refus = "existe" | "doublon";
 
-/** Les bornes de saisie — un nom de convention est plus long qu'un nom
-    de style (40 à la nº 122) : « Empire State Tattoo Expo » en fait
-    déjà 24, et certains portent leur ville et leur millésime. */
-const NOM_MINIMUM = 2;
-const NOM_MAXIMUM = 80;
+/*  ⚠️ nº 756 — LES BORNES DU NOM ONT DÉMÉNAGÉ dans `lib/conventions`
+    (voir l'import) : l'écran d'administration les lit aussi. Le motif
+    de leur valeur est écrit là-bas, il n'est pas recopié ici. */
 const MESSAGE_MAXIMUM = 300;
 
 export async function POST(requete: NextRequest) {
@@ -73,11 +79,14 @@ export async function POST(requete: NextRequest) {
   } | null;
 
   const propose = (corps?.propose ?? "").trim().replace(/\s+/g, " ");
-  if (propose.length < NOM_MINIMUM || propose.length > NOM_MAXIMUM) {
+  if (
+    propose.length < NOM_CONVENTION_MINIMUM ||
+    propose.length > NOM_CONVENTION_MAXIMUM
+  ) {
     return NextResponse.json(
       {
         ok: false,
-        message: `Écris le nom de la convention (${NOM_MINIMUM} à ${NOM_MAXIMUM} caractères).`,
+        message: `Écris le nom de la convention (${NOM_CONVENTION_MINIMUM} à ${NOM_CONVENTION_MAXIMUM} caractères).`,
       },
       { status: 400 }
     );

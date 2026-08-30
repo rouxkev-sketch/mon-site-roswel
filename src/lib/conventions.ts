@@ -138,6 +138,23 @@ export async function chargerConventionsAcceptees(
 }
 
 /**
+ * ██ nº 756 — LES BORNES DU NOM, ÉCRITES UNE SEULE FOIS ██
+ * ==================================================================
+ * DEUX ÉCRANS ÉCRIVENT CE NOM, et ils doivent s'accorder au caractère :
+ *  · L'ARTISTE le propose (« Convention missing? Let us know », nº 750) ;
+ *  · L'ADMINISTRATION le CORRIGE à l'acceptation (nº 756) — c'est elle
+ *    qui tranche du libellé du catalogue.
+ * Deux bornes recopiées auraient fini par diverger : une demande
+ * acceptable côté artiste, refusée côté administration, sans que rien
+ * ne le dise. Elles vivent donc ici, avec le reste du catalogue.
+ * ⚠️ PLUS LONG QU'UN NOM DE STYLE (40 à la nº 122), et c'est le motif
+ * de la nº 750 : « Empire State Tattoo Expo » fait déjà 24 caractères,
+ * et certaines conventions portent leur ville et leur millésime.
+ */
+export const NOM_CONVENTION_MINIMUM = 2;
+export const NOM_CONVENTION_MAXIMUM = 80;
+
+/**
  * LES PAYS DU MENU — ceux qui ont AU MOINS une convention acceptée
  * (règle nº 748-B1 : on ne propose jamais un pays vide), en codes à
  * deux lettres, sans doublon, de A à Z.

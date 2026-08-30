@@ -20,6 +20,22 @@ import { useEtapeDansLAdresse } from "@/lib/etape-dans-adresse";
 //  surfaces qui couvrent l'écran.
 import { useEtapeQuiSeReferme } from "@/lib/etape-refermable";
 import { AdminDemarchage } from "@/components/AdminDemarchage";
+//  ██ nº 756 — LE CHAMP DE LOCALITÉ DU SITE, tel quel ██
+//  C'est LUI qui pose la ville d'une convention à l'acceptation : le
+//  même champ que le formulaire du tatoueur, qui rend un lieu ENTIER
+//  (ville, région, pays, coordonnées). Rien n'est dessiné pour l'admin
+//  — un second champ de localité aurait fini par ne plus dire la même
+//  chose que celui des artistes.
+import { ChampLocalisation } from "@/components/ChampLocalisation";
+//  nº 756 — le nom du pays d'une demande, en toutes lettres
+//  (« FR » → « France ») et les bornes du nom retenu : la lecture du
+//  catalogue, jamais une table ni des chiffres recopiés ici.
+import {
+  NOM_CONVENTION_MAXIMUM,
+  NOM_CONVENTION_MINIMUM,
+  nomDuPays,
+} from "@/lib/conventions";
+import type { LieuTrouve } from "@/lib/geocodage/types";
 import { LogoYokofolio } from "@/components/LogoYokofolio";
 import { Patience, SqueletteLignes } from "@/components/Squelette";
 import { useUtilisateur } from "@/lib/use-utilisateur";
@@ -130,7 +146,14 @@ const SECTIONS = [
   //  LES STYLES PROPOSÉS PAR LES TATOUEURS (passe nº 122). Accepter
   //  en ajoute un au catalogue du site ; refuser clôt la demande. Dans
   //  les deux cas, le tatoueur est prévenu.
-  { cle: "styles", libelle: "Suggestions de styles" },
+  //  ██ nº 756 — LES CONVENTIONS ARRIVENT DANS LA MÊME SECTION ██
+  //  Décision du propriétaire : « le MÊME espace admin que les demandes
+  //  de style ». Une seule liste, la plus récente en tête, et chaque
+  //  ligne de convention porte son intitulé pour qu'on ne les confonde
+  //  pas. LA CLÉ NE CHANGE PAS (`styles`) : elle vit dans l'adresse
+  //  (`?section=styles`), et un lien déjà en circulation doit continuer
+  //  d'ouvrir cet écran.
+  { cle: "styles", libelle: "Suggestions" },
   //  LE DÉMARCHAGE (passe nº 135) — il REMPLACE « Mes fiches
   //  d'essai ». L'interrupteur n'a pas disparu : il vit désormais dans
   //  le tableau, où il ne sert plus à « voir sa fiche le temps d'un
@@ -158,6 +181,54 @@ type SuggestionStyle = {
   traite_le: string | null;
 };
 
+/**
+ * ██ nº 756 — UNE DEMANDE DE CONVENTION, telle que la sert l'API ██
+ * ==================================================================
+ * LA JUMELLE DE `SuggestionStyle` ci-dessus, et les écarts sont ceux
+ * de la table (`conventions`, migration nº 748) :
+ *  · `nom` remplace `label` — le nom retenu par l'administration ;
+ *  · `code_pays` et la LOCALISATION (ville, région, point) remplacent
+ *    la famille : une convention se pose quelque part, elle ne se
+ *    range pas dans un tiroir ;
+ *  · `propose_par` remplace `user_id` — mais la route le traduit déjà
+ *    en `courriel` et `fiche_slug`, comme pour les styles : l'écran
+ *    n'a qu'un vocabulaire à connaître.
+ */
+type DemandeConvention = {
+  id: string;
+  propose: string;
+  etat: "en_attente" | "acceptee" | "refusee";
+  nom: string | null;
+  slug: string | null;
+  code_pays: string;
+  ville: string | null;
+  region: string | null;
+  message: string | null;
+  fiche_nom: string | null;
+  fiche_slug: string | null;
+  courriel: string | null;
+  cree_le: string;
+  traite_le: string | null;
+};
+
+/**
+ * nº 756 — LES DEUX GENRES DE DEMANDE, DANS UNE SEULE LISTE.
+ * L'écran les affiche ensemble, la plus récente en tête ; c'est ce
+ * champ qui dit, à chaque ligne, laquelle des deux formes rendre.
+ * ⚠️ LE TRI EST FAIT ICI, EN MÉMOIRE, et pas par une requête commune :
+ * ce sont DEUX TABLES (`suggestions_style`, `conventions`) et deux
+ * routes — les fondre côté serveur aurait demandé une vue, pour un
+ * écran qui n'a besoin que de les poser l'une sous l'autre.
+ */
+type LigneDemande =
+  | { genre: "style"; cle: string; date: string; style: SuggestionStyle }
+  | {
+      genre: "convention";
+      cle: string;
+      date: string;
+      convention: DemandeConvention;
+    };
+
 /** LE BROUILLON DE DÉCISION — ce que l'administration est en train
     d'écrire sur une demande, avant de le confirmer. */
 type BrouillonDecision = {
@@ -168,6 +239,24 @@ type BrouillonDecision = {
   label: string;
   /** null = la liste principale ; sinon le slug de la famille. */
   famille: string | null;
+  message: string;
+};
+
+/**
+ * nº 756 — LE BROUILLON D'UNE DÉCISION DE CONVENTION.
+ * Le même objet que ci-dessus, à un champ près : le RANGEMENT (une
+ * famille de styles) devient une LOCALISATION — celle que le champ de
+ * localité du site rapporte, entière (ville, région, pays, point).
+ * ⚠️ `null` TANT QU'AUCUNE VILLE N'EST CHOISIE, et c'est ce qui garde
+ * le bouton « Ajouter la convention » éteint : sans coordonnées, la
+ * convention entrerait au catalogue sans pouvoir situer personne (la
+ * règle est dite dans la route, qui la revérifie).
+ */
+type BrouillonConvention = {
+  id: string;
+  decision: "accepter" | "refuser";
+  nom: string;
+  lieu: LieuTrouve | null;
   message: string;
 };
 
@@ -339,6 +428,27 @@ export function AdminYokofolio() {
   /** LE STYLE DONT LE RETRAIT EST DEMANDÉ (passe nº 123) — sa ligne
       montre alors la confirmation, à la place du bouton. */
   const [aRetirer, setARetirer] = useState<string | null>(null);
+  /* ---- nº 756 — Demandes de convention, dans la même section ----
+     DEUX LISTES, UN SEUL ÉCRAN : les deux routes sont distinctes (deux
+     tables), la vue les fond et les trie par date. L'erreur, elle, est
+     COMMUNE (`erreurSuggestions`) : c'est une seule bande de message
+     en haut de la section, et deux bandes superposées n'auraient rien
+     dit de plus. */
+  const [conventions, setConventions] = useState<DemandeConvention[] | null>(
+    null
+  );
+  /** La demande de convention en cours de décision. Elle a SON
+      brouillon, distinct de celui des styles : les deux ne s'ouvrent
+      jamais ensemble (une seule ligne ouverte à la fois), mais ils ne
+      portent pas les mêmes champs — les mêler aurait demandé un objet
+      qui ment à moitié dans les deux cas. */
+  const [brouillonConvention, setBrouillonConvention] =
+    useState<BrouillonConvention | null>(null);
+  /*  ⚠️ LA CLÉ DU CHAMP DE LOCALITÉ, et c'est le motif de la nº 751 :
+      `ChampLocalisation` lit son texte de départ AU MONTAGE. Sans clé
+      neuve à chaque ouverture de panneau, la ville choisie sur une
+      demande resterait écrite dans le champ de la suivante. */
+  const [compteurLocalite, setCompteurLocalite] = useState(0);
 
   const admin = pret && estCourrielAdmin(utilisateur?.email);
 
@@ -385,6 +495,32 @@ export function AdminYokofolio() {
     }
   }, []);
 
+  /*  nº 756 — LA SECONDE LECTURE DE LA MÊME SECTION. Écrite à part de
+      `chargerSuggestions` parce que ce sont deux routes ; posée dans le
+      MÊME effet, pour que l'ouverture de la section n'ait qu'un
+      déclencheur. Une base d'avant la migration des conventions rend
+      une erreur : la liste retombe à vide, la bande de message le dit,
+      et les styles s'affichent quand même. */
+  const chargerConventions = useCallback(async () => {
+    try {
+      const reponse = await lireDuServeur(
+        "/api/admin/yokofolio/demandes-convention"
+      );
+      const donnees = (await reponse.json()) as {
+        ok: boolean;
+        demandes?: DemandeConvention[];
+        message?: string;
+      };
+      if (!donnees.ok) throw new Error(donnees.message);
+      setConventions(donnees.demandes ?? []);
+    } catch (e) {
+      setConventions([]);
+      setErreurSuggestions(
+        e instanceof Error ? e.message : "Lecture impossible."
+      );
+    }
+  }, []);
+
   const chargerSignalements = useCallback(async () => {
     try {
       const reponse = await lireDuServeur("/api/admin/yokofolio/signalements");
@@ -415,6 +551,10 @@ export function AdminYokofolio() {
         chargerSignalements();
       }
       if (section === "styles" && suggestions === null) chargerSuggestions();
+      //  nº 756 — la seconde liste de la même section, au même
+      //  déclencheur : les deux se rechargent aussi de la même façon
+      //  après une décision (remise à `null`).
+      if (section === "styles" && conventions === null) chargerConventions();
       //  ⚠️ LE DÉMARCHAGE SE CHARGE TOUT SEUL (passe nº 135) : son
       //  écran est un composant à part (AdminDemarchage), qui lit ce
       //  qu'il lui faut à son ouverture. Rien à réveiller d'ici.
@@ -426,9 +566,11 @@ export function AdminYokofolio() {
     fiches,
     signalements,
     suggestions,
+    conventions,
     chargerFiches,
     chargerSignalements,
     chargerSuggestions,
+    chargerConventions,
   ]);
 
   /** RETIRER UN STYLE DÉJÀ ACCEPTÉ (passe nº 123).
@@ -494,6 +636,127 @@ export function AdminYokofolio() {
     } finally {
       setEnvoiSuggestion(false);
     }
+  }
+
+  /**
+   * nº 756 — TRANCHER UNE DEMANDE DE CONVENTION.
+   * Le même geste que ci-dessus, à la charge utile près : le NOM
+   * retenu et la LOCALISATION au lieu du nom et de la famille.
+   * ⚠️ LE LIEU PART TEL QUE LE CHAMP L'A RENDU, réduit aux colonnes que
+   * la table porte — la route revérifie tout de son côté (coordonnées
+   * présentes, pays lisible, couple slug+pays libre) : ce qu'un
+   * navigateur envoie n'engage jamais la base.
+   * ⚠️ LES DEUX LISTES SE RELISENT, et pas seulement celle des
+   * conventions : une acceptation ne touche pas aux styles, mais les
+   * remettre à `null` toutes les deux est l'écriture la plus simple
+   * qui ne puisse pas mentir — et l'effet ne relance que ce qui est
+   * `null`.
+   */
+  async function deciderConvention() {
+    if (!brouillonConvention || envoiSuggestion) return;
+    setEnvoiSuggestion(true);
+    setErreurSuggestions(null);
+    try {
+      const lieu = brouillonConvention.lieu;
+      const reponse = await fetch(
+        "/api/admin/yokofolio/demandes-convention",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: brouillonConvention.id,
+            decision: brouillonConvention.decision,
+            nom: brouillonConvention.nom,
+            lieu: lieu
+              ? {
+                  ville: lieu.ville,
+                  region: lieu.region,
+                  code_pays: lieu.code_pays,
+                  latitude: lieu.latitude,
+                  longitude: lieu.longitude,
+                }
+              : null,
+            message: brouillonConvention.message,
+          }),
+        }
+      );
+      const donnees = (await reponse.json()) as {
+        ok: boolean;
+        message?: string;
+      };
+      if (!donnees.ok) throw new Error(donnees.message);
+      setBrouillonConvention(null);
+      setConventions(null); // relecture : la ligne montre la décision
+    } catch (e) {
+      setErreurSuggestions(
+        e instanceof Error ? e.message : "La décision n'a pas abouti."
+      );
+    } finally {
+      setEnvoiSuggestion(false);
+    }
+  }
+
+  /**
+   * ██ nº 756 — LES DEUX GENRES DE DEMANDE, DANS UNE SEULE LISTE ██
+   * ==================================================================
+   * Styles et conventions arrivent dans le même écran (consigne
+   * nº 756-1), la plus récente en tête, sans distinction de rang :
+   * l'administration traite ce qui arrive, pas une table plutôt qu'une
+   * autre.
+   * ⚠️ `null` TANT QUE L'UNE DES DEUX MANQUE — c'est ce qui garde le
+   * squelette à l'écran jusqu'au bout, au lieu d'une liste qui
+   * s'allongerait sous l'œil quand la seconde lecture rentre.
+   * ⚠️ LE TRI SE FAIT SUR LA CHAÎNE ISO de `cree_le`, telle que la base
+   * la rend : elle se compare comme un texte, dans le bon ordre, sans
+   * fabriquer deux `Date` par ligne à chaque rendu.
+   * ⚠️ UNE DATE MANQUANTE NE CASSE PAS L'ÉCRAN, et le banc l'a exigé :
+   * les deux tables déclarent `cree_le not null`, mais une ligne
+   * ancienne ou bricolée qui n'en porterait pas faisait tomber le tri
+   * — et avec lui TOUTE la page, y compris les demandes qui allaient
+   * bien. Sans date, la ligne va en fin de liste ; on ne perd jamais la
+   * vue pour une colonne vide.
+   * ⚠️ LA CLÉ PORTE AUSSI LE RANG, pour la même raison : deux lignes
+   * sans identifiant lisible se partageraient sinon la même clé React.
+   */
+  const lignesDemandes: LigneDemande[] | null =
+    suggestions === null || conventions === null
+      ? null
+      : [
+          ...suggestions.map(
+            (style, rang): LigneDemande => ({
+              genre: "style",
+              cle: `style-${style.id}-${rang}`,
+              date: style.cree_le ?? "",
+              style,
+            })
+          ),
+          ...conventions.map(
+            (convention, rang): LigneDemande => ({
+              genre: "convention",
+              cle: `convention-${convention.id}-${rang}`,
+              date: convention.cree_le ?? "",
+              convention,
+            })
+          ),
+        ].sort((a, b) => b.date.localeCompare(a.date));
+
+  /** nº 756 — OUVRIR LE PANNEAU D'UNE DEMANDE DE CONVENTION. Écrit une
+      fois : les deux boutons (Accepter, Refuser) n'en changent que la
+      décision, et tous deux referment celui des styles — une seule
+      ligne ouverte à la fois, la règle de la nº 122. */
+  function ouvrirLaConvention(
+    demande: DemandeConvention,
+    decision: "accepter" | "refuser"
+  ) {
+    setBrouillon(null);
+    setCompteurLocalite((n) => n + 1);
+    setBrouillonConvention({
+      id: demande.id,
+      decision,
+      nom: demande.propose,
+      lieu: null,
+      message: "",
+    });
   }
 
   async function decider(
@@ -1585,28 +1848,295 @@ export function AdminYokofolio() {
         {section === "styles" && (
           <>
             <h1 className="text-[22px] font-bold text-sombre-texte">
-              Suggestions de styles
+              Suggestions
             </h1>
             {erreurSuggestions && (
               <p className={`mt-4 ${ERREUR}`}>{erreurSuggestions}</p>
             )}
             <div className="mt-5 flex flex-col gap-2.5">
-              {suggestions === null && (
+              {/*  nº 756 — L'ATTENTE COUVRE LES DEUX LECTURES : tant que
+                   l'une des deux listes manque, on montre le squelette
+                   plutôt qu'une demi-liste qui s'allongerait sous
+                   l'œil. */}
+              {lignesDemandes === null && (
                 <Patience>
                   <SqueletteLignes nombre={3} />
                 </Patience>
               )}
-              {suggestions?.length === 0 && !erreurSuggestions && (
+              {lignesDemandes?.length === 0 && !erreurSuggestions && (
                 <p className="rounded-xl bg-sombre-carte px-4 py-5 text-sombre-texte-doux">
                   Aucune suggestion pour l&apos;instant.
                 </p>
               )}
-              {suggestions?.map((demande) => {
+              {lignesDemandes?.map((ligne) => {
+                /*  ██ nº 756 — LA LIGNE D'UNE DEMANDE DE CONVENTION ██
+                     ------------------------------------------------------
+                     LE DÉCALQUE DE LA LIGNE DE STYLE juste dessous, et
+                     les écarts sont ceux de l'objet :
+                      · UN INTITULÉ « Convention » ouvre la ligne — c'est
+                        ce qui distingue les deux genres dans une liste
+                        qui les mêle (consigne nº 756-1) ;
+                      · LE PAYS de la demande s'affiche en toutes lettres,
+                        à côté du demandeur : c'est la première chose à
+                        vérifier avant d'accepter ;
+                      · LE MESSAGE se lit DANS LES DEUX ÉTATS — celui du
+                        demandeur tant que la demande attend, celui de
+                        l'administration une fois tranchée (la colonne
+                        est la même, et la décision l'écrase : c'est le
+                        comportement des styles, repris tel quel) ;
+                      · ACCEPTER exige une VILLE, posée par le champ de
+                        localité du site. */
+                if (ligne.genre === "convention") {
+                  const demande = ligne.convention;
+                  const enAttente = demande.etat === "en_attente";
+                  const ouvert = brouillonConvention?.id === demande.id;
+                  const brouillonOuvert = ouvert ? brouillonConvention : null;
+                  return (
+                    <article
+                      key={ligne.cle}
+                      data-demande-convention=""
+                      className={`rounded-xl px-5 py-4 ${
+                        enAttente
+                          ? "bg-sombre-carte"
+                          : "bg-sombre-carte/50 opacity-80"
+                      }`}
+                    >
+                      {/*  L'INTITULÉ DE LA LIGNE — l'écriture des
+                           étiquettes de cet écran, aucune valeur
+                           graphique n'est inventée ici. */}
+                      <p className="text-[12.5px] font-semibold uppercase tracking-wide text-sombre-texte-doux">
+                        Convention
+                      </p>
+                      <div className="mt-1 flex flex-wrap items-baseline justify-between gap-3">
+                        <p className="text-[17px] font-bold text-sombre-texte [overflow-wrap:anywhere]">
+                          {demande.propose}
+                        </p>
+                        <p className="text-[12.5px] text-sombre-texte-doux">
+                          {dateCourte(demande.cree_le)}
+                        </p>
+                      </div>
+                      <p className="mt-1 text-[13px] text-sombre-texte-doux [overflow-wrap:anywhere]">
+                        {[
+                          nomDuPays(demande.code_pays),
+                          demande.courriel ?? "compte supprimé",
+                          demande.fiche_nom,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                      {demande.fiche_slug && (
+                        <p className="mt-1">
+                          <Link
+                            href={`/tatoueur/${demande.fiche_slug}`}
+                            target="_blank"
+                            className="text-[13px] font-semibold text-sombre-texte
+                                       underline underline-offset-2
+                                       transition-colors hover:text-primaire"
+                          >
+                            Voir son portfolio ↗
+                          </Link>
+                        </p>
+                      )}
+                      {/*  SON MESSAGE, tant que la demande attend : c'est
+                           là qu'il dit où et quand, et il disparaîtrait
+                           de l'écran une fois la décision prise (la
+                           colonne porte alors le mot de
+                           l'administration). */}
+                      {enAttente && demande.message && (
+                        <p className="mt-3 rounded-lg bg-sombre-eleve px-3.5 py-2.5 text-[13.5px] leading-relaxed text-sombre-texte whitespace-pre-line [overflow-wrap:anywhere]">
+                          <span className="block text-[11.5px] font-semibold uppercase tracking-wide text-sombre-texte-doux">
+                            Son message
+                          </span>
+                          {demande.message}
+                        </p>
+                      )}
+
+                      {/* CE QUI A DÉJÀ ÉTÉ DÉCIDÉ */}
+                      {!enAttente && (
+                        <div className="mt-3">
+                          <span
+                            className={`inline-flex items-center rounded-full px-2.5 min-h-[24px]
+                                        text-[12.5px] font-medium ${
+                                          demande.etat === "acceptee"
+                                            ? "bg-[#34D399]/15 text-[#34D399]"
+                                            : "bg-erreur/15 text-erreur"
+                                        }`}
+                          >
+                            {demande.etat === "acceptee"
+                              ? `Ajoutée — ${demande.nom}`
+                              : "Refusée"}
+                          </span>
+                          {demande.etat === "acceptee" && (
+                            <span className="ml-2 text-[12.5px] text-sombre-texte-doux">
+                              {[
+                                demande.ville,
+                                demande.region,
+                                nomDuPays(demande.code_pays),
+                              ]
+                                .filter(Boolean)
+                                .join(", ")}
+                            </span>
+                          )}
+                          {demande.message && (
+                            <p className="mt-2 text-[13.5px] leading-relaxed text-sombre-texte whitespace-pre-line [overflow-wrap:anywhere]">
+                              {demande.message}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* LES DEUX PORTES — ouvertes seulement en attente */}
+                      {enAttente && !ouvert && (
+                        <div className="mt-4 flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              ouvrirLaConvention(demande, "accepter")
+                            }
+                            className="min-h-[40px] rounded-full bg-sombre-eleve px-4
+                                       text-[14px] font-semibold text-sombre-texte
+                                       transition-colors hover:bg-sombre-eleve-clair"
+                          >
+                            Accepter
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              ouvrirLaConvention(demande, "refuser")
+                            }
+                            //  Refuser : action négative — texte brut,
+                            //  jamais de capsule (règle des boutons).
+                            className="px-2 min-h-[40px] text-[14px] font-semibold
+                                       text-erreur transition-opacity hover:opacity-75"
+                          >
+                            Refuser
+                          </button>
+                        </div>
+                      )}
+
+                      {/* LE PANNEAU DE DÉCISION */}
+                      {brouillonOuvert && (
+                        <div className="mt-4 flex flex-col gap-3">
+                          {brouillonOuvert.decision === "accepter" && (
+                            <>
+                              <label className="flex flex-col gap-1.5">
+                                <span className="text-[12.5px] font-semibold uppercase tracking-wide text-sombre-texte-doux">
+                                  Nom de la convention
+                                </span>
+                                <input
+                                  type="text"
+                                  value={brouillonOuvert.nom}
+                                  maxLength={NOM_CONVENTION_MAXIMUM}
+                                  onChange={(e) =>
+                                    setBrouillonConvention({
+                                      ...brouillonOuvert,
+                                      nom: e.target.value,
+                                    })
+                                  }
+                                  className={`min-h-[48px] text-[15px] ${CHAMP}`}
+                                />
+                              </label>
+                              <div className="flex flex-col gap-1.5">
+                                <span className="text-[12.5px] font-semibold uppercase tracking-wide text-sombre-texte-doux">
+                                  Où elle a lieu
+                                </span>
+                                {/*  ⚠️ LE CHAMP DE LOCALITÉ DU SITE, tel
+                                     quel : il rend un lieu ENTIER — ville,
+                                     région, pays, coordonnées —, et c'est
+                                     lui qui garantit qu'une convention
+                                     acceptée sait situer les artistes qui
+                                     la choisiront.
+                                     ⚠️ SA CLÉ CHANGE À CHAQUE OUVERTURE
+                                     (`compteurLocalite`) : il lit son
+                                     texte de départ AU MONTAGE, et sans
+                                     clé neuve la ville d'une demande
+                                     précédente resterait écrite dedans
+                                     (le motif de la nº 751). */}
+                                <ChampLocalisation
+                                  key={`convention-${compteurLocalite}`}
+                                  id={`convention-lieu-${demande.id}`}
+                                  etiquette={null}
+                                  texteIndicatif="Ville de la convention…"
+                                  surChoix={(lieu) =>
+                                    setBrouillonConvention({
+                                      ...brouillonOuvert,
+                                      lieu,
+                                    })
+                                  }
+                                  croixEffacement
+                                />
+                              </div>
+                            </>
+                          )}
+                          <label className="flex flex-col gap-1.5">
+                            <span className="text-[12.5px] font-semibold uppercase tracking-wide text-sombre-texte-doux">
+                              Message au tatoueur (facultatif)
+                            </span>
+                            <textarea
+                              value={brouillonOuvert.message}
+                              rows={3}
+                              maxLength={600}
+                              onChange={(e) =>
+                                setBrouillonConvention({
+                                  ...brouillonOuvert,
+                                  message: e.target.value,
+                                })
+                              }
+                              className={`py-2.5 text-[14px] leading-relaxed ${CHAMP}`}
+                            />
+                          </label>
+                          <div className="flex flex-wrap items-center justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setBrouillonConvention(null)}
+                              className="px-2 min-h-[40px] text-[14px] font-semibold
+                                         text-sombre-texte-doux transition-colors
+                                         hover:text-sombre-texte"
+                            >
+                              Annuler
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => void deciderConvention()}
+                              //  ⚠️ ACCEPTER EXIGE LES DEUX : un nom
+                              //  lisible ET une ville choisie dans la
+                              //  liste. Sans coordonnées, la convention
+                              //  entrerait au catalogue sans savoir situer
+                              //  personne — la route le redit de son côté.
+                              disabled={
+                                envoiSuggestion ||
+                                (brouillonOuvert.decision === "accepter" &&
+                                  (brouillonOuvert.nom.trim().length <
+                                    NOM_CONVENTION_MINIMUM ||
+                                    !brouillonOuvert.lieu))
+                              }
+                              className={
+                                brouillonOuvert.decision === "accepter"
+                                  ? `min-h-[40px] rounded-full bg-primaire px-5 text-[14px]
+                                     font-semibold text-white transition-opacity
+                                     hover:opacity-90 disabled:opacity-40`
+                                  : `px-2 min-h-[40px] text-[14px] font-semibold text-erreur
+                                     transition-opacity hover:opacity-75 disabled:opacity-40`
+                              }
+                            >
+                              {envoiSuggestion
+                                ? "Envoi…"
+                                : brouillonOuvert.decision === "accepter"
+                                  ? "Ajouter la convention"
+                                  : "Refuser la demande"}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </article>
+                  );
+                }
+                const demande = ligne.style;
                 const enAttente = demande.etat === "en_attente";
                 const ouvert = brouillon?.id === demande.id;
                 return (
                   <article
-                    key={demande.id}
+                    key={ligne.cle}
                     className={`rounded-xl px-5 py-4 ${
                       enAttente
                         ? "bg-sombre-carte"
@@ -1737,15 +2267,19 @@ export function AdminYokofolio() {
                       <div className="mt-4 flex flex-wrap items-center gap-2">
                         <button
                           type="button"
-                          onClick={() =>
+                          //  nº 756 — refermer l'autre panneau : styles
+                          //  et conventions partagent la liste, une
+                          //  seule ligne s'ouvre à la fois.
+                          onClick={() => {
+                            setBrouillonConvention(null);
                             setBrouillon({
                               id: demande.id,
                               decision: "accepter",
                               label: demande.propose,
                               famille: null,
                               message: "",
-                            })
-                          }
+                            });
+                          }}
                           className="min-h-[40px] rounded-full bg-sombre-eleve px-4
                                      text-[14px] font-semibold text-sombre-texte
                                      transition-colors hover:bg-sombre-eleve-clair"
@@ -1754,15 +2288,16 @@ export function AdminYokofolio() {
                         </button>
                         <button
                           type="button"
-                          onClick={() =>
+                          onClick={() => {
+                            setBrouillonConvention(null);
                             setBrouillon({
                               id: demande.id,
                               decision: "refuser",
                               label: demande.propose,
                               famille: null,
                               message: "",
-                            })
-                          }
+                            });
+                          }}
                           //  Refuser : action négative — texte brut,
                           //  jamais de capsule (règle des boutons).
                           className="px-2 min-h-[40px] text-[14px] font-semibold

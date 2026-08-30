@@ -538,7 +538,13 @@ function repondre(req, res, u, brut) {
   if (req.method === "OPTIONS") {
     res.writeHead(204, {
       "access-control-allow-origin": "*",
-      "access-control-allow-methods": "GET, POST, PATCH, DELETE, OPTIONS",
+      //  ⚠️ nº 756 — `PUT` REJOINT LA LISTE. Le client du navigateur
+      //  rafraîchit la session par un `PUT /auth/v1/user`
+      //  (`auth.updateUser`) : la méthode manquait, le navigateur
+      //  refusait la requête pour CORS, et la page recevait un
+      //  « Failed to fetch » sans rapport avec ce qu'on éprouvait.
+      //  Défaut d'outil, comme `ilike` à la nº 751.
+      "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
       "access-control-allow-headers": "*",
       "access-control-max-age": "600",
     });
@@ -568,6 +574,39 @@ function repondre(req, res, u, brut) {
       "access-control-allow-origin": "*",
     });
     res.end(JSON.stringify({ swagger: "2.0", paths }));
+    return;
+  }
+  /*  ██ nº 756 — UN COMPTE PAR SON IDENTIFIANT ██
+      -------------------------------------------------------------
+      DÉFAUT D'OUTIL, PAS DU SITE. Les écrans d'administration relisent
+      l'adresse de courriel du demandeur (`auth.admin.getUserById`,
+      styles nº 122 et conventions nº 756) : c'est un
+      `GET /auth/v1/admin/users/<id>`, que la doublure ne connaissait
+      pas — elle ne savait rendre que LA LISTE. La requête tombait donc
+      sur le 404 générique, et la ligne s'affichait « compte supprimé »
+      alors que le compte existe.
+      ⚠️ UN COMPTE INCONNU REND 404 AVEC UN CORPS VIDE, comme la vraie
+      API : c'est ce que le site doit savoir traverser — il n'affiche
+      alors pas d'adresse, sans casser la liste.
+      ⚠️ LE COMPTE DE BANC EST AJOUTÉ À LA VOLÉE : les bancs se
+      connectent avec l'identifiant qu'ils veulent (le jeton est
+      fabriqué), et la liste ci-dessus n'en connaît que deux. Rendre
+      l'adresse d'administration pour tout identifiant inconnu ferait
+      mentir la doublure ; on rend donc 404, et les bancs qui ont
+      besoin d'un courriel posent le compte eux-mêmes (POST sur la
+      liste). */
+  if (u.pathname.startsWith("/auth/v1/admin/users/")) {
+    const cherche = decodeURIComponent(u.pathname.split("/").pop() ?? "");
+    const compte = COMPTES_DOUBLURE.find((c) => String(c.id) === cherche);
+    console.log(
+      new Date().toISOString().slice(11, 19),
+      "GET auth/admin/users/<id> →", compte ? compte.email : "404"
+    );
+    res.writeHead(compte ? 200 : 404, {
+      "content-type": "application/json",
+      "access-control-allow-origin": "*",
+    });
+    res.end(JSON.stringify(compte ? { ...compte, aud: "authenticated" } : {}));
     return;
   }
   if (u.pathname === "/auth/v1/admin/users") {
