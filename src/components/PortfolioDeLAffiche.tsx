@@ -214,6 +214,145 @@ function seriesDeLaCategorie(
 }
 
 /**
+ * ██ §1 (nº 747) — CES DEUX-LÀ VIVENT AU MODULE, ET C'EST LE SUJET DE
+ * LA PASSE ██
+ * ==================================================================
+ * `TeteDeGalerie` ÉTAIT DÉFINIE DANS LE CORPS DE `PanneauPortfolio`,
+ * et elle y était MONTÉE comme composant (`<TeteDeGalerie …/>`). Une
+ * fonction déclarée dans un rendu est une fonction NEUVE à chaque
+ * rendu : React y voit un composant d'un AUTRE TYPE, et il ne
+ * re-rend pas — il DÉTRUIT tout le sous-arbre et le RECRÉE. Chaque
+ * clic de vignette (qui change l'état de la fiche, donc re-rend ce
+ * panneau) rebâtissait donc TOUTES les galeries de la page.
+ * CE QUE ÇA DONNAIT, MESURÉ AU BANC : sur trois galeries, ZÉRO
+ * survivait à un clic — d'où le clignotement de toutes les lignes,
+ * les photos redemandées, et le défilement de la galerie touchée
+ * remis à zéro (1134 px → 0, compteur « 9/20 » → « 2/20 »).
+ * DÉSORMAIS : le composant a une identité stable, React re-rend les
+ * galeries sans les démonter — les rangées gardent leur nœud, donc
+ * leurs images et leur défilement.
+ * ⚠️ RIEN D'AUTRE NE CHANGE : mêmes props, même sortie, même
+ * compteur par galerie (son état vit dans CE composant, un par
+ * galerie — c'est pourquoi il en faut un, la règle des crochets
+ * interdisant un état dans une boucle).
+ * ⚠️ LA MÉMOIRE DU DOIGT (nº 459) RESTE : elle sert le VRAI
+ * démontage — quitter la fiche pour la vue photo, puis revenir.
+ * `casesDe` et `surtitre`, eux, sont APPELÉS (jamais montés) : une
+ * fonction appelée rend des éléments, elle ne crée aucun type.
+ */
+/**
+ * §2 (nº 375, DÉPLACÉ AU MODULE PAR LA nº 747) — LE SURTITRE D'UNE
+ * GALERIE — « RÉALISATIONS » ou « FLASHS », écrit une fois pour les
+ * deux appareils.
+ * ------------------------------------------------------------------
+ * MÊME ÉCRITURE QU'HIER, AU CHEVEU : `ECRITURE_TITRE_SECTION`, la
+ * classe que portait le `<h2>` — mêmes capitales, même gris, mêmes
+ * 13 px, même graisse, même espacement de lettres. On ne la recopie
+ * pas, on la consomme ; il n'y a donc rien à faire diverger.
+ * L'ÉLÉMENT CHANGE (`<p>` et non `<h2>`) et c'est voulu : ce n'est
+ * plus le titre d'une section, c'est la catégorie de la galerie qui
+ * suit, répétée autant de fois qu'il y a de galeries. Un `<h2>`
+ * répété cinq fois avec le même texte mentirait au plan du document
+ * et aux lecteurs d'écran.
+ * ⚠️ AUCUNE MARGE : le surtitre est collé au titre de sa galerie —
+ * c'est ce qui les fait lire comme un seul bloc, et c'est ce qui
+ * garantit qu'aucun espace neuf n'entre dans le portfolio.
+ */
+function surtitre(titre: string) {
+  return (
+    <p data-surtitre-galerie="" className={ECRITURE_TITRE_SECTION}>
+      {titre}
+    </p>
+  );
+}
+
+/**
+ * ██ §1 (nº 521) — LA TÊTE D'UNE GALERIE, AVEC SON COMPTEUR ██
+ * ==================================================================
+ * CE QU'ELLE POSE : la nature (« Réalisation »), puis la ligne du
+ * style — et, À L'OPPOSÉ de celle-ci, le rang de la photo vue sur le
+ * total : « 1/20 ». Enfin la galerie elle-même, que l'appelant
+ * fournit : les deux affichages (doigt et web) gardent chacun leurs
+ * réglages de débord, d'écart et de chevron, qui ne se ressemblent
+ * pas.
+ * ⚠️ POURQUOI UN COMPOSANT ET NON TROIS LIGNES DANS LA BOUCLE : le
+ * rang est un ÉTAT, et il en faut un PAR galerie. Dans une boucle, un
+ * état ne peut pas se déclarer — c'est la règle des crochets. Le
+ * composant est donc la forme, pas un choix de style.
+ * ⚠️ LE COMPTEUR NE POUSSE JAMAIS LE STYLE : c'est le TITRE qui cède
+ * (il prend la place restante et s'abrège), le compteur garde la
+ * sienne. Un style long s'écrit donc avec des points de suspension,
+ * et le nombre reste lisible et entier.
+ * ⚠️ LES CHIFFRES ONT TOUS LA MÊME LARGEUR (`tabular-nums`, le
+ * procédé du compteur de carrousel) : passer de « 9/20 » à « 10/20 »
+ * ne fait pas frémir la ligne.
+ * ⚠️ IL N'EST JAMAIS VIDE : le rang part de zéro, et l'affichage
+ * ajoute un.
+ * ⚠️ §2 (nº 522) — CE QU'IL COMPTE EST LA DERNIÈRE VIGNETTE VUE, plus
+ * la première. Une galerie de 19 photos qui en montre deux ouvre donc
+ * sur « 2/19 » — deux photos SONT vues — et finit sur « 19/19 ». Avec
+ * la première, elle disait « 1/19 » puis se bloquait à « 18/19 », la
+ * dernière photo restant à l'écran sans être comptée : la première
+ * visible ne peut pas dépasser l'avant-dernière quand deux tiennent
+ * côte à côte. Le pourquoi complet vit dans GalerieQuiDefile.
+ * ⚠️ CE N'EST PAS LE COMPTEUR DE LA VUE PHOTO (nº 483/487), et les
+ * deux restent séparés à dessein : celui-là est une PASTILLE POSÉE
+ * SUR L'IMAGE, avec son fond et son placement dans l'angle ; celui-ci
+ * est du TEXTE NU au bout d'une ligne de titre. Ils ne partagent ni
+ * habillage ni support — les réunir demanderait de paramétrer les
+ * deux, pour ne mettre en commun qu'une barre oblique.
+ */
+function TeteDeGalerie({
+  nature,
+  titre,
+  total,
+  galerie,
+}: {
+  nature: string;
+  titre: string;
+  total: number;
+  galerie: (surRang: (rang: number) => void) => React.ReactNode;
+}) {
+  const [rang, setRang] = useState(0);
+  return (
+    <>
+      {surtitre(nature)}
+      {/*  `items-baseline` : le nombre s'assoit sur la même ligne
+           d'écriture que le style, quelle que soit la casse. */}
+      <div className="flex items-baseline gap-3">
+        {/*  LE TITRE, AU-DESSUS DE SA GALERIE — l'écriture des noms
+             de style de la grille (15 px, `medium`, blanche),
+             reprise telle quelle. `min-w-0` : sans lui, un titre
+             long refuserait de s'abréger et pousserait le compteur
+             hors de la colonne. */}
+        <p
+          data-titre-galerie=""
+          className="min-w-0 flex-1 truncate text-[15px] font-medium text-sombre-texte"
+        >
+          {titre}
+        </p>
+        {/*  LE COMPTEUR — 15 px comme la ligne qu'il accompagne, le
+             GRIS des textes secondaires (le jeton de la nº 466), et
+             la graisse NORMALE : il accompagne le style, il ne le
+             concurrence pas. */}
+        {/*  §1 (nº 522) — UN CRAN PLUS PETIT : 15 → 14 px. Il
+             accompagne la ligne du style, il ne la double pas — et
+             c'est la valeur que la ligne d'information d'une carte
+             porte déjà (nº 480), pas un nombre neuf. Le gris, la
+             graisse et la place ne bougent pas. */}
+        <p
+          data-compteur-galerie=""
+          className="shrink-0 text-[14px] font-normal tabular-nums text-sombre-texte-doux"
+        >
+          {rang + 1}/{total}
+        </p>
+      </div>
+      {galerie(setRang)}
+    </>
+  );
+}
+
+/**
  * LE PANNEAU « PORTFOLIO » — UNE SUITE DE GALERIES, sans plus aucun
  * sélecteur (nº 276-§3) ni aucun titre de section (nº 375-§2). Chaque
  * galerie porte sa catégorie en surtitre.
@@ -382,115 +521,6 @@ export function PanneauPortfolio({
         </button>
       </li>
     ));
-
-  /**
-   * §2 (nº 375) — LE SURTITRE D'UNE GALERIE — « RÉALISATIONS » ou
-   * « FLASHS », écrit une fois pour les deux appareils.
-   * ------------------------------------------------------------------
-   * MÊME ÉCRITURE QU'HIER, AU CHEVEU : `ECRITURE_TITRE_SECTION`, la
-   * classe que portait le `<h2>` — mêmes capitales, même gris, mêmes
-   * 13 px, même graisse, même espacement de lettres. On ne la recopie
-   * pas, on la consomme ; il n'y a donc rien à faire diverger.
-   * L'ÉLÉMENT CHANGE (`<p>` et non `<h2>`) et c'est voulu : ce n'est
-   * plus le titre d'une section, c'est la catégorie de la galerie qui
-   * suit, répétée autant de fois qu'il y a de galeries. Un `<h2>`
-   * répété cinq fois avec le même texte mentirait au plan du document
-   * et aux lecteurs d'écran.
-   * ⚠️ AUCUNE MARGE : le surtitre est collé au titre de sa galerie —
-   * c'est ce qui les fait lire comme un seul bloc, et c'est ce qui
-   * garantit qu'aucun espace neuf n'entre dans le portfolio.
-   */
-  const surtitre = (titre: string) => (
-    <p data-surtitre-galerie="" className={ECRITURE_TITRE_SECTION}>
-      {titre}
-    </p>
-  );
-
-  /**
-   * ██ §1 (nº 521) — LA TÊTE D'UNE GALERIE, AVEC SON COMPTEUR ██
-   * ==================================================================
-   * CE QU'ELLE POSE : la nature (« Réalisation »), puis la ligne du
-   * style — et, À L'OPPOSÉ de celle-ci, le rang de la photo vue sur le
-   * total : « 1/20 ». Enfin la galerie elle-même, que l'appelant
-   * fournit : les deux affichages (doigt et web) gardent chacun leurs
-   * réglages de débord, d'écart et de chevron, qui ne se ressemblent
-   * pas.
-   * ⚠️ POURQUOI UN COMPOSANT ET NON TROIS LIGNES DANS LA BOUCLE : le
-   * rang est un ÉTAT, et il en faut un PAR galerie. Dans une boucle, un
-   * état ne peut pas se déclarer — c'est la règle des crochets. Le
-   * composant est donc la forme, pas un choix de style.
-   * ⚠️ LE COMPTEUR NE POUSSE JAMAIS LE STYLE : c'est le TITRE qui cède
-   * (il prend la place restante et s'abrège), le compteur garde la
-   * sienne. Un style long s'écrit donc avec des points de suspension,
-   * et le nombre reste lisible et entier.
-   * ⚠️ LES CHIFFRES ONT TOUS LA MÊME LARGEUR (`tabular-nums`, le
-   * procédé du compteur de carrousel) : passer de « 9/20 » à « 10/20 »
-   * ne fait pas frémir la ligne.
-   * ⚠️ IL N'EST JAMAIS VIDE : le rang part de zéro, et l'affichage
-   * ajoute un.
-   * ⚠️ §2 (nº 522) — CE QU'IL COMPTE EST LA DERNIÈRE VIGNETTE VUE, plus
-   * la première. Une galerie de 19 photos qui en montre deux ouvre donc
-   * sur « 2/19 » — deux photos SONT vues — et finit sur « 19/19 ». Avec
-   * la première, elle disait « 1/19 » puis se bloquait à « 18/19 », la
-   * dernière photo restant à l'écran sans être comptée : la première
-   * visible ne peut pas dépasser l'avant-dernière quand deux tiennent
-   * côte à côte. Le pourquoi complet vit dans GalerieQuiDefile.
-   * ⚠️ CE N'EST PAS LE COMPTEUR DE LA VUE PHOTO (nº 483/487), et les
-   * deux restent séparés à dessein : celui-là est une PASTILLE POSÉE
-   * SUR L'IMAGE, avec son fond et son placement dans l'angle ; celui-ci
-   * est du TEXTE NU au bout d'une ligne de titre. Ils ne partagent ni
-   * habillage ni support — les réunir demanderait de paramétrer les
-   * deux, pour ne mettre en commun qu'une barre oblique.
-   */
-  const TeteDeGalerie = ({
-    nature,
-    titre,
-    total,
-    galerie,
-  }: {
-    nature: string;
-    titre: string;
-    total: number;
-    galerie: (surRang: (rang: number) => void) => React.ReactNode;
-  }) => {
-    const [rang, setRang] = useState(0);
-    return (
-      <>
-        {surtitre(nature)}
-        {/*  `items-baseline` : le nombre s'assoit sur la même ligne
-             d'écriture que le style, quelle que soit la casse. */}
-        <div className="flex items-baseline gap-3">
-          {/*  LE TITRE, AU-DESSUS DE SA GALERIE — l'écriture des noms
-               de style de la grille (15 px, `medium`, blanche),
-               reprise telle quelle. `min-w-0` : sans lui, un titre
-               long refuserait de s'abréger et pousserait le compteur
-               hors de la colonne. */}
-          <p
-            data-titre-galerie=""
-            className="min-w-0 flex-1 truncate text-[15px] font-medium text-sombre-texte"
-          >
-            {titre}
-          </p>
-          {/*  LE COMPTEUR — 15 px comme la ligne qu'il accompagne, le
-               GRIS des textes secondaires (le jeton de la nº 466), et
-               la graisse NORMALE : il accompagne le style, il ne le
-               concurrence pas. */}
-          {/*  §1 (nº 522) — UN CRAN PLUS PETIT : 15 → 14 px. Il
-               accompagne la ligne du style, il ne la double pas — et
-               c'est la valeur que la ligne d'information d'une carte
-               porte déjà (nº 480), pas un nombre neuf. Le gris, la
-               graisse et la place ne bougent pas. */}
-          <p
-            data-compteur-galerie=""
-            className="shrink-0 text-[14px] font-normal tabular-nums text-sombre-texte-doux"
-          >
-            {rang + 1}/{total}
-          </p>
-        </div>
-        {galerie(setRang)}
-      </>
-    );
-  };
 
   return (
     /*  §2 (nº 375) — LE RYTHME, ET CE QU'IL DEVIENT.
