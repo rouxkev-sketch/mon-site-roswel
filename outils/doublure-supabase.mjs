@@ -376,6 +376,125 @@ const TABLES = {
  * lancement du banc repart d'une base propre, comme avant. On corrige
  * la fidélité d'une SESSION de mesure, on n'invente pas une base.
  */
+/*  ██ nº 754 — LES CONTRAINTES DE LA VRAIE BASE, ENFIN APPLIQUÉES ██
+    ====================================================================
+    CE QUE LA nº 754 A COÛTÉ, ET C'EST TOUTE LA RAISON DE CE BLOC : un
+    mode « Convention » ne s'enregistrait pas EN PRODUCTION — la
+    contrainte `modes_exercice_dates_coherentes`, écrite à la migration
+    nº 26, n'accepte des dates que pour le genre 'guest' ; une ligne
+    'convention' datée était refusée par PostgreSQL. Les bancs des
+    passes 750 à 753 étaient TOUS VERTS sur ce parcours : la doublure
+    range ce qu'on lui donne, sans jamais rien vérifier. Le défaut ne
+    pouvait pas s'y voir.
+    CE QUE FAIT CE BLOC : il refuse, comme la vraie base, ce que les
+    contraintes du dépôt refusent. Une doublure trop gentille valide
+    des passes qui casseront en production ; c'est la leçon la plus
+    chère de cette passe.
+    ⚠️ ON NE RECOPIE QUE CE QUI EST ÉCRIT DANS `supabase/*.sql`, et le
+    commentaire nomme le fichier : une contrainte inventée ici ferait
+    échouer des bancs pour une règle qui n'existe nulle part.
+    ⚠️ LE MESSAGE IMITE POSTGREST : « new row ... violates check
+    constraint "..." ». C'est ce que le site lit et affiche.  */
+const CONTRAINTES = {
+  //  yokofolio-modes-et-liaisons.sql (nº 26), élargie par la nº 749
+  //  (genres) puis la nº 754 (dates).
+  modes_exercice: [
+    {
+      nom: "modes_exercice_genre_connu",
+      tenue: (l) =>
+        ["salon", "guest", "prive", "disponible", "convention", "independent"]
+          .includes(l.genre),
+    },
+    {
+      //  ⚠️ LA CONTRAINTE DU DÉFAUT DE LA nº 754. Elle est écrite ici
+      //  DANS SON ÉTAT CORRIGÉ (`yokofolio-dates-convention.sql`) : le
+      //  banc éprouve donc la base telle qu'elle sera une fois le SQL
+      //  collé. Avec l'ancienne, la ligne 'convention' est refusée —
+      //  c'est exactement ce que le propriétaire a vécu.
+      nom: "modes_exercice_dates_coherentes",
+      tenue: (l) => {
+        /*  ⚠️ LE CRAN `CONTRAINTE_DATES=ancienne` REJOUE LA BASE D'AVANT
+            LE CORRECTIF — celle de la migration nº 26, où SEUL 'guest'
+            porte des dates. C'est la base que le propriétaire avait
+            sous les yeux quand sa convention a disparu, et c'est ce
+            cran qui permet de le PROUVER au banc plutôt que de le
+            raconter. Éteint (le défaut), la doublure applique la règle
+            corrigée de `yokofolio-dates-convention.sql`. */
+        const genresDates =
+          process.env.CONTRAINTE_DATES === "ancienne"
+            ? ["guest"]
+            : ["guest", "convention"];
+        if (genresDates.includes(l.genre)) {
+          return Boolean(l.debut_le && l.fin_le && l.fin_le >= l.debut_le);
+        }
+        return l.debut_le == null && l.fin_le == null;
+      },
+    },
+    {
+      nom: "modes_exercice_situe",
+      tenue: (l) =>
+        l.salon_id != null || (l.latitude != null && l.longitude != null),
+    },
+    {
+      //  yokofolio-role-studio-prive.sql
+      nom: "modes_exercice_role_coherent",
+      tenue: (l) =>
+        (l.genre === "salon" && l.role != null) ||
+        l.genre === "prive" ||
+        l.role == null,
+    },
+    {
+      //  yokofolio-nature-lieu-guest.sql
+      nom: "modes_exercice_nature_connue",
+      tenue: (l) => l.nature_lieu == null || ["salon", "prive"].includes(l.nature_lieu),
+    },
+    {
+      //  yokofolio-conventions-et-independent.sql (nº 749)
+      nom: "modes_exercice_statut_connu",
+      tenue: (l) =>
+        l.statut == null ||
+        [
+          "guest_spots_only",
+          "conventions_only",
+          "guest_spots_and_conventions",
+          "on_break",
+          "available_on_request",
+        ].includes(l.statut),
+    },
+  ],
+  //  yokofolio-conventions-et-independent.sql (nº 749) : `propose` et
+  //  `code_pays` sont NOT NULL dès la demande — le propriétaire l'a
+  //  rappelé à la nº 754, et la doublure l'ignorait.
+  conventions: [
+    {
+      nom: "conventions_propose_non_nul",
+      tenue: (l) => typeof l.propose === "string" && l.propose.trim() !== "",
+    },
+    {
+      nom: "conventions_code_pays",
+      tenue: (l) => typeof l.code_pays === "string" && /^[A-Z]{2}$/.test(l.code_pays),
+    },
+  ],
+};
+
+/** Ce que la vraie base refuserait — le nom de la contrainte, ou null.
+    ⚠️ SEULES LES TABLES CONNUES SONT VÉRIFIÉES : ailleurs, la doublure
+    range comme avant, et aucun banc déjà rendu ne change. */
+function contrainteViolee(table, ligne) {
+  const regles = CONTRAINTES[table];
+  if (!regles) return null;
+  for (const regle of regles) {
+    let tenue = false;
+    try {
+      tenue = regle.tenue(ligne);
+    } catch {
+      tenue = true; //  une règle qui jette ne doit pas bloquer un banc.
+    }
+    if (!tenue) return regle.nom;
+  }
+  return null;
+}
+
 function ranger(table, brut) {
   let lignes;
   try {
@@ -806,6 +925,43 @@ function repondre(req, res, u, brut) {
   //  UNE ÉCRITURE : on range, et l'on rend ce qu'on vient de ranger —
   //  c'est ce que PostgREST fait avec `.select()` après un `insert`.
   if (req.method === "POST" && !table.startsWith("rpc/")) {
+    /*  nº 754 — LA VÉRIFICATION AVANT LE RANGEMENT : une ligne que la
+        vraie base refuserait ne doit pas entrer ici non plus. On répond
+        comme PostgREST — code 400, message qui NOMME la contrainte —
+        pour que le site prenne exactement le chemin de production. */
+    const refus = (() => {
+      let lignes;
+      try {
+        lignes = JSON.parse(brut || "null");
+      } catch {
+        return null;
+      }
+      if (!lignes) return null;
+      for (const ligne of Array.isArray(lignes) ? lignes : [lignes]) {
+        const nom = contrainteViolee(table, ligne);
+        if (nom) return nom;
+      }
+      return null;
+    })();
+    if (refus) {
+      console.log(
+        new Date().toISOString().slice(11, 19),
+        "POST", table, "✖ REFUSÉ par", refus
+      );
+      //  Les mêmes en-têtes que `envoyer` — le navigateur du banc lit
+      //  cette réponse depuis une autre origine.
+      res.writeHead(400, {
+        "content-type": "application/json",
+        "access-control-allow-origin": "*",
+      });
+      res.end(
+        JSON.stringify({
+          code: "23514",
+          message: `new row for relation "${table}" violates check constraint "${refus}"`,
+        })
+      );
+      return;
+    }
     const ajoutees = ranger(table, brut);
     console.log(
       new Date().toISOString().slice(11, 19),

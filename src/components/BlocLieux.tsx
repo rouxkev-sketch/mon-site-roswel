@@ -1808,9 +1808,36 @@ function TroisLignesDuLieu({
            comme avant (pas de `<a>` dans un `<a>`).
            ⚠️ PLUS DE PUCE ICI : il n'y a plus qu'un morceau à écrire,
            donc plus rien à séparer. */}
+      {/*  ██ nº 754 — CETTE LIGNE EST UN LIEN : ELLE EN PREND LA COULEUR ██
+           ------------------------------------------------------------------
+           CE QU'ELLE ÉTAIT : grise (`sombre-texte-doux`), alors qu'elle
+           ouvre le plan depuis la nº 290 — la fenêtre de verre au doigt,
+           Google Maps au web. Rien ne le disait : une ligne grise au
+           milieu d'autres lignes grises.
+           CE QU'ELLE EST : LE BLEU DES LIENS QUI SORTENT DU SITE
+           (`LIEN_QUI_SORT`), celui de l'adresse sur une fiche de salon
+           ou de studio — la même écriture, à quelques centaines de
+           lignes d'ici. Le propriétaire veut les deux pareilles ; elles
+           lisent donc la même constante, et aucune valeur n'est
+           recopiée.
+           ⚠️ AUCUN TRAIT AU SURVOL (`soulignement=""`), pour la raison
+           déjà écrite à la nº 389 : le bleu dit la destination, et il
+           s'éclaircit au survol. C'est le comportement de l'adresse
+           d'une fiche de lieu, repris tel quel.
+           ⚠️ ET LA COULEUR N'EST PAS SUR LE PARAGRAPHE, mais sur le
+           TEXTE DU LIEN : quand la plaque entière est déjà un lien vers
+           la fiche du lieu, `sansLien` neutralise celui-ci et la ligne
+           redevient du texte — qui ne doit pas être bleu, puisqu'il ne
+           mène plus nulle part. Une seule classe de couleur par
+           élément, jamais deux (le piège nº 389). */}
       {adresse && (
-        <p className="mt-0.5 text-[15px] leading-snug text-sombre-texte-doux [overflow-wrap:anywhere]">
-          <LienAdresse texte={adresse} lieu={lieu} classeTexte="" />
+        <p className="mt-0.5 text-[15px] leading-snug [overflow-wrap:anywhere]">
+          <LienAdresse
+            texte={adresse}
+            lieu={lieu}
+            classeTexte={lieu ? LIEN_QUI_SORT : "text-sombre-texte-doux"}
+            soulignement=""
+          />
         </p>
       )}
       {/*  UN GUEST PORTE SES DATES EN BLANC, et c'est voulu : c'est

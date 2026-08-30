@@ -2,7 +2,10 @@ import { fuseauDuLieu, semaineVersBase } from "@/lib/horaires-studio";
 import {
   colonnesDuLieu,
   modeVide,
-  nomLieuRequis,
+  //  nº 754 — « ce mode porte-t-il un nom d'enseigne ? », la moitié
+  //  STABLE de `nomLieuRequis` : c'est elle que l'écriture lit, pour
+  //  qu'un nom déjà saisi ne reparte pas à `null` (voir sa note).
+  nomPorteParLeMode,
   type ModeEnSaisie,
   type StudioEnSaisie,
 } from "@/lib/modes-exercice";
@@ -151,10 +154,26 @@ export async function enregistrerExercice(
       await supabase.from("modes_exercice").delete().eq("tatoueur_id", ficheId);
     }
   } catch (erreur) {
-    console.warn(
-      "[exercice] non écrit :",
-      erreur instanceof Error ? erreur.message : String(erreur)
-    );
+    /*  ██ nº 754 — L'ÉCHEC SE DIT, IL NE SE TAIT PLUS ██
+        ------------------------------------------------------------------
+        CE QU'IL Y AVAIT : un `console.warn`, et rien de plus. La
+        fonction rendait un résultat vide comme si tout s'était bien
+        passé, et le formulaire affichait « enregistré ».
+        CE QUE ÇA A COÛTÉ, ET C'EST LE RELEVÉ DE LA nº 754 : un mode
+        Convention refusé par la base (la contrainte des dates, voir
+        `yokofolio-dates-convention.sql`) disparaissait EN SILENCE. Le
+        propriétaire l'a vécu deux fois : aucune erreur, tout semblait
+        normal, et sa convention n'était nulle part.
+        ⚠️ UN ENREGISTREMENT QUI N'ABOUTIT PAS DOIT LE DIRE. Le
+        formulaire sait déjà quoi en faire : son `catch` affiche
+        « L'envoi n'a pas abouti : … Réessaie — rien n'a été perdu »
+        (FormulaireFiche). On lui rend donc l'erreur, avec le message
+        de la base, qui nomme la contrainte en cause.
+        ⚠️ ET C'EST VRAI DES STUDIOS AUSSI : ce `try` les couvrait
+        également, avec le même silence. */
+    throw erreur instanceof Error
+      ? erreur
+      : new Error(String(erreur));
   }
   return ecrits;
 }
@@ -294,10 +313,27 @@ async function ecrireModes(
       //  convention quitte un jour le catalogue (`convention_id` est
       //  `on delete set null`). C'est aussi ce qui donne son titre à
       //  la plaque de la fiche publique sans une requête de plus.
+      /*  ⚠️ nº 754 — LE NOM SAISI NE SE PERD PLUS PAR RICOCHET ██
+          CE QU'IL Y AVAIT : `nomLieuRequis(mode) ? … : null`. Cette
+          question-là contient « une adresse a-t-elle été CHOISIE ? »
+          (`Boolean(mode.lieu)`) — elle sert à AFFICHER le champ et à
+          l'EXIGER, ce qui est juste. Mais à L'ÉCRITURE, elle avait un
+          effet de bord : que `mode.lieu` vienne à manquer une seconde
+          — une ligne relue sans coordonnées, un lieu momentanément
+          lâché — et le nom déjà enregistré repartait à `null`. Un nom
+          saisi disparaissait alors de la plaque, sans que personne
+          l'ait retiré.
+          CE QUE C'EST DEVENU : on écrit le nom dès que le mode est
+          d'un genre QUI EN PORTE UN (`nomPorteParLeMode`) — les trois
+          mêmes genres, le même refus quand une fiche du site donne
+          déjà son nom. Ce qui disparaît, c'est la seule condition qui
+          n'avait rien à faire ici : la présence de l'adresse.
+          ⚠️ EFFACER RESTE POSSIBLE, et par le seul chemin qui le doit :
+          vider le champ à l'écran écrit une chaîne vide, donc `null`. */
       nom_lieu:
         mode.genre === "convention"
           ? (mode.convention?.nom ?? "").trim() || null
-          : nomLieuRequis(mode)
+          : nomPorteParLeMode(mode)
             ? (mode.nomLieu ?? "").trim() || null
             : null,
       //  nº 750 — LE LIEN VERS LE CATALOGUE : la seule colonne propre

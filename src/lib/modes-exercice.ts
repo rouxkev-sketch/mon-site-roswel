@@ -1678,6 +1678,32 @@ export function modeVide(mode: ModeEnSaisie): boolean {
  * désigner — les trois ne peuvent pas diverger.
  */
 export function nomLieuRequis(mode: ModeEnSaisie): boolean {
+  //  ⚠️ nº 754 — LES DEUX PREMIÈRES CONDITIONS VIVENT MAINTENANT DANS
+  //  `nomPorteParLeMode`, juste dessous : elles répondent à une autre
+  //  question — « ce mode porte-t-il un nom d'enseigne ? » —, et
+  //  l'écriture en base a besoin de celle-là seule (voir sa note).
+  if (!nomPorteParLeMode(mode)) return false;
+  return Boolean(mode.lieu);
+}
+
+/**
+ * ██ nº 754 — CE MODE PORTE-T-IL UN NOM D'ENSEIGNE ? ██
+ * ------------------------------------------------------------------
+ * LA MOITIÉ STABLE DE `nomLieuRequis`, ISOLÉE — et ce n'est pas un
+ * découpage de confort : les deux questions n'ont pas la même durée.
+ *  · CELLE-CI décrit le mode lui-même : un salon, un studio ou un
+ *    guest QUI DIT CHEZ QUI il est reçu, et dont le lieu n'a pas sa
+ *    fiche sur le site (elle porterait alors son propre nom). Elle ne
+ *    change pas tant que le genre ne change pas ;
+ *  · `nomLieuRequis` y ajoute « … ET une adresse a été choisie », ce
+ *    qui décide de MONTRER le champ et de l'EXIGER. Cette part-là
+ *    varie au fil de la saisie.
+ * ⚠️ L'ÉCRITURE EN BASE LIT CELLE-CI, ET C'EST TOUT LE SUJET DE LA
+ * nº 754 : lire l'autre faisait repartir à `null` un nom déjà
+ * enregistré dès que l'adresse manquait un instant (voir
+ * enregistrer-exercice). Un nom saisi ne disparaît que si on le vide.
+ */
+export function nomPorteParLeMode(mode: ModeEnSaisie): boolean {
   if (mode.genre !== "salon" && mode.genre !== "prive" && mode.genre !== "guest") {
     return false;
   }
@@ -1686,8 +1712,7 @@ export function nomLieuRequis(mode: ModeEnSaisie): boolean {
   //  la question « chez qui ? » n'a plus de sujet. C'est la même raison
   //  que pour le mode « Autre » — l'artiste dit OÙ, pas CHEZ QUI.
   if (mode.genre === "guest" && mode.sansLieu) return false;
-  if (mode.salon) return false;
-  return Boolean(mode.lieu);
+  return !mode.salon;
 }
 
 /**
