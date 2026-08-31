@@ -2205,6 +2205,30 @@ export const PORTRAIT_ROND = 320;
 export const CADRE_PHOTO_PORTFOLIO = "aspect-4/5";
 
 /**
+ * ██ §2 (nº 776) — LA LARGEUR DE LA PHOTO D'UNE FICHE PLEINE PAGE,
+ * ÉCRITE UNE SEULE FOIS ██
+ * ------------------------------------------------------------------
+ * LA RÈGLE QU'ELLE PORTE (le contrat de la nº 290, borné à l'appareil
+ * par la nº 616) : sur le web, la photo de tête épouse la HAUTEUR
+ * visible de l'écran — sa largeur en découle (× 0,8, le format 4:5) —
+ * et se centre dans sa colonne ; `max-w-full` la retient dans la page
+ * quand la fenêtre est plus étroite que ce calcul. La page MESURE
+ * ensuite ce qui entoure vraiment la photo et affine par la variable
+ * `--photo-largeur` (l'effet de FicheTatoueur) ; le `calc` n'est que le
+ * REPLI du tout premier rendu. Au doigt, aucune largeur : la photo est
+ * bord à bord (les classes `mobile:` restent écrites dans la page).
+ * ⚠️ POURQUOI UNE CONSTANTE : la silhouette d'attente de cette page
+ * (SqueletteFiche, nº 776) doit dessiner LA MÊME géométrie — celle de
+ * la nº 772 posait une moitié de page (880 px sur un grand écran) là
+ * où la vraie photo en fait ~620 : tout sautait à l'arrivée. Recopier
+ * les classes, c'était diverger à la prochaine retouche (piège
+ * nº 378) : la page et sa silhouette consomment désormais LA MÊME
+ * écriture, comme la grille des cartes (`CLASSES_GRILLE_CARTES`).
+ */
+export const LARGEUR_PHOTO_FICHE =
+  "not-mobile:w-[var(--photo-largeur,calc((100vh_-_119px)*0.8))] not-mobile:self-center max-w-full";
+
+/**
  * ██ §2 (nº 648) — LE RECTANGLE D'ATTENTE NE DÉPASSE PLUS ██
  * ------------------------------------------------------------------
  * LE DÉFAUT, ET SA CAUSE : le fond clair qui réserve la place pendant

@@ -1,6 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+//  §2 (nº 776) — la géométrie de la fiche est CONSOMMÉE, jamais
+//  recopiée : la largeur de la photo de tête et le cadre 4:5 sont les
+//  écritures uniques de la vraie page (piège nº 378).
+import {
+  CADRE_PHOTO_PORTFOLIO,
+  LARGEUR_PHOTO_FICHE,
+} from "@/config/tatouage";
+import { observerLargeurPhotoFiche } from "@/lib/mesure-photo-fiche";
 
 /**
  * LA FIN DE L'ÉCRAN « Un instant… » (passe nº 118)
@@ -68,10 +76,9 @@ export function SqueletteFormulaire() {
 }
 
 /**
- * LA SILHOUETTE D'UNE FICHE (nº 772) — la rangée du profil (le rond,
- * deux lignes), puis la photo et sa colonne de lecture, côte à côte au
- * web, empilées au doigt : les blocs de la vraie fiche, aux bons
- * endroits.
+ * LA SILHOUETTE D'UNE FICHE (nº 772, GÉOMÉTRIE REFAITE nº 776) — la
+ * photo de tête et sa colonne de lecture, aux dimensions de la vraie
+ * page.
  * POURQUOI ELLE EXISTE : « Mon portfolio » (le compte) mène à la page
  * du formulaire avec `?vue=apercu` — la MÊME page que « Modification »,
  * seule la vue diffère. Pendant le chargement, l'écran montrait donc
@@ -79,26 +86,68 @@ export function SqueletteFormulaire() {
  * une fiche pleine largeur la remplaçait : on annonçait une page qui
  * n'était pas celle qui venait. La silhouette doit dessiner ce qui va
  * apparaître (la règle de SquelettePage, juste en dessous).
+ *
+ * ██ §2 (nº 776) — ELLE PREND LES DIMENSIONS DE LA VRAIE PAGE ██
+ * ------------------------------------------------------------------
+ * LE DÉFAUT, RELEVÉ PAR LE PROPRIÉTAIRE : la version nº 772 posait
+ * DEUX MOITIÉS DE PAGE (`lg:w-1/2`) — sur un écran large, une photo de
+ * ~850 px là où la vraie en fait ~620 : « beaucoup trop large », et
+ * tout sautait à l'arrivée du contenu. La vraie page ne partage pas la
+ * largeur : elle borne la photo par la HAUTEUR de l'écran et fixe la
+ * colonne de lecture à 340 px, le tout centré.
+ * DÉSORMAIS LA SILHOUETTE CONSOMME LES ÉCRITURES DE LA VRAIE PAGE,
+ * jamais des copies :
+ *  · LA GRILLE — `lg:grid-cols-[auto_340px] lg:justify-center`,
+ *    `gap-8 lg:gap-10` : les classes de la rangée de FicheTatoueur,
+ *    340 étant LA largeur de colonne choisie par le propriétaire
+ *    (nº 300) ;
+ *  · LE CADRE — `LARGEUR_PHOTO_FICHE` (config/tatouage, l'écriture
+ *    unique posée à cette passe) + `CADRE_PHOTO_PORTFOLIO`, et LA
+ *    MESURE DE LA VRAIE PAGE (`observerLargeurPhotoFiche`,
+ *    lib/mesure-photo-fiche — extraite à cette passe) : la silhouette
+ *    pose la même `--photo-largeur` que la page qui vient, donc la
+ *    même largeur même quand la barre passe en deux rangées (fenêtre
+ *    étroite : 25 px d'écart au banc avec le seul repli CSS) ou qu'un
+ *    bandeau vit au-dessus.
+ * LA RANGÉE DU PROFIL (rond + deux lignes) NE VIT PLUS QU'AU DOIGT :
+ * la vraie page web n'a RIEN au-dessus de la grille — ce bloc y était
+ * un fantôme (la règle nº 707 : rien qui ne soit dans la page qui
+ * vient). Au doigt, rien ne change : mêmes blocs, même ordre, mêmes
+ * espacements qu'à la nº 772.
  */
 export function SqueletteFiche() {
+  const cadre = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const zone = cadre.current;
+    if (!zone) return;
+    return observerLargeurPhotoFiche(zone);
+  }, []);
   return (
     <div role="status" aria-label="Chargement" className="animate-pulse">
-      <div className="flex items-center gap-4">
+      <div className="hidden mobile:flex items-center gap-4">
         <div className="h-16 w-16 shrink-0 rounded-full bg-sombre-carte" />
         <div className="flex-1">
           <div className="h-5 w-1/4 rounded-full bg-sombre-carte" />
           <div className="mt-2.5 h-4 w-1/6 rounded-full bg-sombre-carte" />
         </div>
       </div>
-      <div className="mt-6 flex flex-col gap-8 lg:flex-row">
-        {/*  Le cadre de la photo — la moitié de la page au web, comme
-             la vraie. `aspect-[4/5]` : le portrait des portfolios. */}
-        <div className="w-full lg:w-1/2">
-          <div className="aspect-[4/5] w-full rounded-2xl bg-sombre-carte" />
+      {/*  La rangée de la vraie page : piste photo à sa largeur réelle,
+           colonne de lecture de 340 px, l'ensemble centré. La marge du
+           haut n'existe qu'au doigt, sous la rangée du profil — au web
+           la vraie grille est le premier bloc de la page. */}
+      <div className="mobile:mt-6 grid gap-8 lg:gap-10 lg:grid-cols-[auto_340px] lg:justify-center">
+        {/*  Le cadre de la photo — la géométrie de la vraie : bornée
+             par la hauteur visible au web (largeur = hauteur × 0,8, le
+             4:5), pleine largeur au doigt. */}
+        <div className="flex flex-col min-w-0">
+          <div
+            ref={cadre}
+            className={`${LARGEUR_PHOTO_FICHE} ${CADRE_PHOTO_PORTFOLIO} rounded-2xl bg-sombre-carte`}
+          />
         </div>
         {/*  La colonne de lecture : la ligne du titre, puis des
              lignes de texte qui s'amenuisent. */}
-        <div className="w-full lg:w-1/2">
+        <div className="w-full min-w-0">
           <div className="h-6 w-1/2 rounded-full bg-sombre-carte" />
           <div className="mt-6 flex flex-col gap-3">
             <div className="h-4 w-full rounded-full bg-sombre-carte" />

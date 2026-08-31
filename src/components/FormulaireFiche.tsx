@@ -2843,7 +2843,14 @@ export function FormulaireFiche() {
    */
   if (etape === "verification") {
     return vueApercuDemandee ? (
-      <main className="flex-1 mx-auto w-full max-w-[1760px] px-4 sm:px-6 pt-4 lg:pt-5 pb-16 lg:pb-5">
+      //  §2 (nº 776) — `data-racine-fiche` : la silhouette mesure sa
+      //  largeur de photo comme la vraie page (lib/mesure-photo-fiche),
+      //  et cette mesure lit la marge du bas sur la racine — ce main
+      //  porte les mêmes `pb-16 lg:pb-5` que la racine de la fiche.
+      <main
+        data-racine-fiche=""
+        className="flex-1 mx-auto w-full max-w-[1760px] px-4 sm:px-6 pt-4 lg:pt-5 pb-16 lg:pb-5"
+      >
         <Patience>
           <SqueletteFiche />
         </Patience>

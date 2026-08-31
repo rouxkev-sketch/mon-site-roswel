@@ -119,6 +119,7 @@ export function FenetreFiche({
   avecVoile = true,
   habillageEfface = false,
   contenuEnAttente = false,
+  entreeAnimee = true,
   surFermeture,
 }: {
   /** La fiche à montrer — null : fenêtre fermée. */
@@ -198,6 +199,37 @@ export function FenetreFiche({
    * publique ont toujours la fiche entière — rien ne change pour eux.
    */
   contenuEnAttente?: boolean;
+  /**
+   * ██ §1 (nº 776) — L'ANIMATION D'ENTRÉE NE SE REJOUE PAS ██
+   * ------------------------------------------------------------------
+   * LE DÉFAUT, VU EN PRODUCTION À CHAQUE EMPILEMENT (c'est le
+   * symptôme C de la nº 772, que la sonde d'alors ne pouvait pas voir :
+   * elle lisait le DOM, et le DOM a toujours été juste) : en ouvrant
+   * une fiche par-dessus une autre, le squelette d'attente joue, PUIS
+   * LA PHOTO DE LA FENÊTRE D'EN DESSOUS apparaît un instant avant les
+   * bonnes données.
+   * LA CAUSE, MESURÉE AU PIXEL (banc nº 776, opacité relevée à ~30 ms
+   * de maille) : l'enveloppe porte l'animation d'entrée du site —
+   * 200 ms d'opacité 0 → 1 (`starting:`), et la boîte un zoom
+   * 0,97 → 1. Or la fenêtre RÉELLE qui remplace la fenêtre d'attente
+   * (nº 746 : deux éléments, deux clés) est un élément NEUF : elle
+   * REJOUE l'entrée depuis zéro. Pendant ces 200 ms elle est
+   * transparente — et ce qu'on voit au travers, c'est la fenêtre du
+   * dessous, sa photo au premier chef (les fenêtres sont toutes
+   * centrées au même endroit). Relevé : opacité 0,02 → 0,24 → 0,65 →
+   * 0,86 → 1 pendant que le cadre photo montre la photo de la fiche
+   * d'en dessous.
+   * LA RÈGLE : une fenêtre réelle issue d'une PRÉPARATION (la pile,
+   * nº 746) CONTINUE la fenêtre d'attente — qui a déjà joué l'entrée
+   * au clic. Elle monte donc SANS animation d'entrée : opaque et à sa
+   * taille dès sa première peinture, elle couvre le dessous dans le
+   * même instant où l'attente s'efface. FAUX ici, VRAI partout
+   * ailleurs : l'ouverture au clic (grille, « Ma sélection », la
+   * fenêtre d'attente elle-même) garde son fondu — c'est le geste
+   * d'ouvrir qui s'anime, jamais le remplacement d'un état d'attente
+   * par le contenu arrivé.
+   */
+  entreeAnimee?: boolean;
   /** Referme (la grille fait alors machine arrière dans l'historique). */
   surFermeture: () => void;
 }) {
@@ -511,8 +543,15 @@ export function FenetreFiche({
       role="dialog"
       aria-modal="true"
       aria-label={`Portfolio de ${tatoueur.nom}`}
-      className="fixed inset-0 z-[60]
-                 opacity-100 transition-opacity duration-200 starting:opacity-0"
+      /*  §1 (nº 776) — le fondu d'entrée ne se joue qu'à une OUVERTURE :
+          une fenêtre réelle qui remplace une fenêtre d'attente monte
+          opaque, sans classes d'animation — sans quoi elle rejouait
+          l'entrée et laissait voir 200 ms la fenêtre du dessous. */
+      className={`fixed inset-0 z-[60]${
+        entreeAnimee
+          ? " opacity-100 transition-opacity duration-200 starting:opacity-0"
+          : ""
+      }`}
     >
       {/*  LE VOILE : la grille reste visible derrière ; un clic referme.
            §2 (nº 320) — MAIS UN SEUL VOILE POUR TOUTE LA PILE.
@@ -687,14 +726,21 @@ export function FenetreFiche({
                son `lg:h-full`. */}
           <div
             ref={fenetreRef}
-            className="pointer-events-auto flex flex-col lg:flex-row
+            /*  §1 (nº 776) — le zoom d'entrée suit la même règle que le
+                fondu de l'enveloppe : jamais rejoué au remplacement de
+                la fenêtre d'attente (à 0,97, les bords découvraient la
+                fenêtre du dessous le temps de la transition). */
+            className={`pointer-events-auto flex flex-col lg:flex-row
                        w-full lg:w-auto min-h-0
                        lg:h-[min(88vh,940px,calc((100vw-476px)*1.25))]
                        lg:max-w-[min(1200px,calc(100vw-96px))]
                        overflow-y-auto lg:overflow-hidden overscroll-contain
                        rounded-b-lg rounded-t-none lg:rounded-none lg:rounded-r-lg
-                       shadow-[0_24px_80px_rgba(0,0,0,0.6)]
-                       scale-100 transition-transform duration-200 starting:scale-[0.97]"
+                       shadow-[0_24px_80px_rgba(0,0,0,0.6)]${
+                         entreeAnimee
+                           ? " scale-100 transition-transform duration-200 starting:scale-[0.97]"
+                           : ""
+                       }`}
           >
             {/* ---- LA PHOTO : collée aux bords — haut, gauche et bas en
                 deux colonnes ; haut, gauche et droite en une seule. La

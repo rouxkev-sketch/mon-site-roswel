@@ -14,6 +14,10 @@ import { useRouter } from "next/navigation";
     mémoire de navigation, « Ma sélection », le moteur, la sonde de
     retour) : c'est ce fichier-ci qui cesse de la lire. */
 import {
+  //  §2 (nº 776) — la largeur de la photo de tête (web) est une
+  //  écriture unique : la silhouette d'attente (SqueletteFiche) dessine
+  //  la même géométrie qu'ici, sans recopie.
+  LARGEUR_PHOTO_FICHE,
   libelleStyle,
   //  §1 (nº 451) — le mot « Artiste / Salon / Studio » de la ligne
   //  grise, la MÊME écriture que le sous-titre des cartes (nº 211-§2).
@@ -23,6 +27,9 @@ import {
 //  §1 (nº 451) — le lieu de la ligne grise : l'écriture du sous-titre
 //  MOBILE des cartes (nº 212-§6), jamais recomposée ici.
 import { ligneCarteMobile, villeAffichee } from "@/lib/adresse";
+//  §2 (nº 776) — la mesure de la photo de tête, partagée avec la
+//  silhouette d'attente (voir lib/mesure-photo-fiche).
+import { observerLargeurPhotoFiche } from "@/lib/mesure-photo-fiche";
 //  §1 (nº 604) — la mémoire de la nº 459, celle des galeries du
 //  Portfolio : le carrousel de l'affiche y range sa photo sous son
 //  propre préfixe. Aucune seconde mémoire n'est écrite.
@@ -533,39 +540,14 @@ export function FicheTatoueur({
   const router = useRouter();
 
   /**
-   * §3 (nº 290) — LA PHOTO ÉPOUSE LA HAUTEUR VISIBLE : ON LA MESURE,
-   * ON NE LA DEVINE PLUS
-   * ==================================================================
-   * CE QUI ÉTAIT ÉCRIT : `calc((100vh − 119px) × 0,8)`. Ces 119 px
-   * étaient une SOMME DEVINÉE — 79 de barre fixe, 20 de marge en
-   * haut, 20 en bas — posée il y a plusieurs passes. Deux choses la
-   * rendent fausse : la barre ne mesure pas 79 px (relevé ici : 76),
-   * et surtout, en APERÇU (« Mon portfolio » du menu Mon compte), la
-   * fiche est posée DANS l'espace tatoueur, qui a son propre bandeau
-   * au-dessus : la photo commence bien plus bas, la constante réserve
-   * bien trop peu, et le cadre calcule donc une largeur trop grande —
-   * il s'élargit et déborde par le bas, en mangeant la marge.
-   *
-   * LA VOIE PRISE : MESURER CE QUI ENTOURE VRAIMENT LA PHOTO — pas
-   * une nouvelle constante, aucune. Deux nombres, tous deux lus :
-   *   · LE HAUT — la position du haut de la photo dans le document.
-   *     Elle contient TOUT ce qui vit au-dessus (barre, bandeau de
-   *     l'espace, marge du haut), quel qu'il soit et quoi qu'il
-   *     devienne ;
-   *   · LE BAS — la marge du bas, DÉJÀ ÉCRITE sur la racine de la
-   *     fiche (`lg:pb-5`, la jumelle de `lg:pt-5`) : on la LIT sur
-   *     l'élément, on ne la réécrit pas.
-   * La hauteur libre est la différence, et la largeur en découle
-   * (× 0,8, le format 4:5). Somme garantie : haut + photo + bas =
-   * hauteur de l'écran, exactement.
-   *
-   * ⚠️ AUCUNE BOUCLE POSSIBLE : le haut de la photo ne dépend pas de
-   * sa propre taille (elle ouvre sa colonne, et les deux colonnes de
-   * la grille partagent la même rangée). On ne l'observe donc jamais
-   * elle-même — seulement la fenêtre et ce qui la précède.
-   * ⚠️ AVANT LA MESURE (le tout premier rendu, avant l'hydratation),
-   * la feuille de style retombe sur l'ancien calcul : rien ne change
-   * pour cet instant-là, et la valeur juste arrive dans la foulée.
+   * §3 (nº 290, EXTRAITE nº 776) — LA PHOTO ÉPOUSE LA HAUTEUR
+   * VISIBLE : ON LA MESURE, ON NE LA DEVINE PLUS. La mesure entière —
+   * son histoire (nº 290, nº 293) et ses raisons — vit désormais dans
+   * `lib/mesure-photo-fiche` : la silhouette d'attente de cette page
+   * (SqueletteFiche) doit poser LA MÊME largeur, et deux copies
+   * auraient divergé (piège nº 378). Rien d'autre n'a changé : même
+   * cadre, même variable `--photo-largeur`, même repli d'avant
+   * l'hydratation dans la feuille de style.
    */
   /**
    * §4 (nº 329) — LA CONSIGNE D'ARRIVÉE VIT DANS L'ADRESSE.
@@ -633,79 +615,8 @@ export function FicheTatoueur({
   useEffect(() => {
     const zone = cadrePhoto.current;
     if (!zone) return;
-    const racine = zone.closest("[data-racine-fiche]");
-    let posee = -1;
-    const mesurer = () => {
-      if (!zone.isConnected) return;
-      //  LA POSITION AU REPOS : `rect.top` seul suivrait le
-      //  défilement ; la somme avec le défilement courant, non.
-      const haut =
-        zone.getBoundingClientRect().top +
-        (document.scrollingElement?.scrollTop ?? 0);
-      const basEcrit = racine
-        ? parseFloat(getComputedStyle(racine).paddingBottom) || 0
-        : 0;
-      const libre = window.innerHeight - haut - basEcrit;
-      //  Une fenêtre plus courte que ce qui surmonte la photo : on ne
-      //  pose rien, l'ancien calcul reste — jamais de largeur nulle.
-      if (!(libre > 0)) return;
-      if (Math.abs(libre - posee) < 0.5) return;
-      posee = libre;
-      zone.style.setProperty("--photo-hauteur-libre", `${libre}px`);
-      /**
-       * §1 (nº 293) — LA LARGEUR TOMBE SUR UN MULTIPLE DE 4, ET VOICI
-       * POURQUOI CE NOMBRE-LÀ.
-       * ----------------------------------------------------------------
-       * CE QUI ÉCHAPPAIT À L'ARRONDI : l'ENVELOPPE. `round(down,100%,1px)`
-       * (nº 280) est écrit sur le CADRE et sur lui seul ; l'enveloppe,
-       * elle, prenait `libre × 0,8` tel quel — 565,594 px au relevé du
-       * propriétaire. Le cadre tombait donc à 565, et il restait 0,594 px
-       * d'enveloppe À DROITE du cadre, sur toute la hauteur : une bande
-       * du fond de la carte, pile là où il voit « une marge verticale ».
-       * ET LA HAUTEUR N'ÉTAIT PAS ENTIÈRE NON PLUS : 565 × 1,25 = 706,25.
-       * Le bord du bas tombait donc entre deux pixels — à densité 2,
-       * c'est un demi-pixel d'écran, et c'est le liseré du haut et du bas.
-       *
-       * LE NOMBRE 4 N'EST PAS CHOISI À L'ŒIL, IL EST DÉDUIT : le format
-       * est 4/5, donc la hauteur vaut largeur × 1,25. Une largeur entière
-       * ne suffit pas — il faut qu'elle soit MULTIPLE DE 4 pour que
-       * × 1,25 retombe sur un entier (4k × 1,25 = 5k). Alors tout tombe
-       * juste ENSEMBLE : l'enveloppe, le cadre (dont l'arrondi de la
-       * nº 280 n'a plus rien à retirer), chaque colonne (100 % du cadre),
-       * les positions d'arrêt du défilement (k × largeur) et la hauteur.
-       * ⚠️ CE QUE ÇA COÛTE : jusqu'à 3 px de largeur, qui partent dans la
-       * marge du bas. Elle reste donc à un cheveu de celle du haut, et
-       * TOUJOURS du bon côté — jamais un débordement.
-       * ⚠️ LE DOIGT N'EST PAS CONCERNÉ : la règle qui lit cette
-       * variable est sous `not-mobile:` depuis la nº 616 (elle était
-       * sous `lg:`, et c'était la cause de la photo étirée en fenêtre
-       * étroite). Au doigt la photo est bord à bord, et elle le reste.
-       */
-      zone.style.setProperty(
-        "--photo-largeur",
-        `${Math.floor((libre * 0.8) / 4) * 4}px`
-      );
-    };
-    mesurer();
-    //  UNE SECONDE MESURE À LA TRAME SUIVANTE : la première tombe
-    //  parfois avant que les polices ne soient posées, et la barre
-    //  fixe change alors de hauteur d'un cheveu.
-    const trame = requestAnimationFrame(mesurer);
-    window.addEventListener("resize", mesurer);
-    //  LA BARRE FIXE peut changer de hauteur sans que la fenêtre
-    //  bouge : on la regarde, ELLE — jamais la photo, ni aucun de ses
-    //  parents (leur hauteur dépend de la sienne : ce serait une
-    //  boucle).
-    const barre = document.querySelector("header");
-    const observateur = new ResizeObserver(mesurer);
-    if (barre) observateur.observe(barre);
-    return () => {
-      cancelAnimationFrame(trame);
-      window.removeEventListener("resize", mesurer);
-      observateur.disconnect();
-    };
+    return observerLargeurPhotoFiche(zone);
   }, []);
-
   /*  ██ §2 (nº 455) — `ouvrirLaFenetreCarrousel` EST SUPPRIMÉE, CODE
       COMPRIS.
       ------------------------------------------------------------------
@@ -1076,7 +987,11 @@ export function FicheTatoueur({
                 AU-DESSUS DE 1024 px RIEN NE CHANGE : la colonne de la
                 grille est `auto`, la photo la remplit exactement, et se
                 centrer dans sa propre largeur ne déplace rien. */
-            className={`not-mobile:w-[var(--photo-largeur,calc((100vh_-_119px)*0.8))] not-mobile:self-center max-w-full mobile:-mx-4 mobile:max-w-none ${
+            /*  §2 (nº 776) — les trois classes de la largeur web vivent
+                dans LARGEUR_PHOTO_FICHE (config/tatouage), partagées
+                avec la silhouette d'attente. Mêmes classes qu'avant, au
+                caractère près — seul le foyer change. */
+            className={`${LARGEUR_PHOTO_FICHE} mobile:-mx-4 mobile:max-w-none ${
               apercu ? "mobile:-mt-4" : "mobile:-mt-[15px]"
             }`}
           >

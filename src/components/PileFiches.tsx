@@ -487,6 +487,12 @@ export function PileFiches({
           habillageEfface={
             rang !== visibles.length - 1 || preparation !== null
           }
+          //  §1 (nº 776) — une fenêtre réelle de cette pile CONTINUE
+          //  la fenêtre d'attente qui l'a précédée (toute ouverture
+          //  passe par la préparation, nº 746) : l'entrée s'est déjà
+          //  animée au clic. La rejouer rendait la fenêtre transparente
+          //  200 ms — et l'on voyait la photo de la fiche du dessous.
+          entreeAnimee={false}
           surFermeture={fermer}
         />
       ))}
