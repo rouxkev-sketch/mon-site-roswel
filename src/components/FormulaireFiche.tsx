@@ -63,7 +63,11 @@ import {
 import { enregistrerPhotos } from "@/lib/enregistrer-photos";
 import { televerserPhotos } from "@/lib/televerser-photos";
 import { FenetreEnvoi } from "@/components/FenetreEnvoi";
-import { Patience, SqueletteFormulaire } from "@/components/Squelette";
+import {
+  Patience,
+  SqueletteFiche,
+  SqueletteFormulaire,
+} from "@/components/Squelette";
 //  §1 (nº 657) — LA PHOTO RONDE ET LE CHAMP DU NOM, PARTAGÉS avec la
 //  fenêtre « Modifier » du particulier : le même code, pas une
 //  imitation (la consigne du propriétaire).
@@ -2820,9 +2824,31 @@ export function FormulaireFiche() {
   /* ---------- LA FICHE SE CHARGE (compte connecté) ----------
      PLUS D'« Un instant… » (passe nº 118) : rien pendant les 300
      premières millisecondes — un chargement rapide ne montre AUCUN
-     écran d'attente — puis la silhouette du formulaire qui vient. */
+     écran d'attente — puis la silhouette de la page qui vient. */
+  /**
+   * ██ §2 (nº 772) — LA SILHOUETTE SUIT LA VUE DEMANDÉE ██
+   * ------------------------------------------------------------------
+   * LE DÉFAUT, MESURÉ AU BANC (+564 ms) : « Mon portfolio » mène ICI
+   * avec `?vue=apercu` — la même page que « Modification », seule la
+   * vue change. Pendant ce chargement s'affichait TOUJOURS la
+   * silhouette du FORMULAIRE : étroite, trois cartes à faux champs —
+   * puis l'aperçu pleine largeur la remplaçait. On annonçait une page
+   * qui n'était pas celle qui venait.
+   * DÉSORMAIS l'adresse tranche, comme elle tranche la vue elle-même
+   * (`vueApercuDemandee`, la lecture GELÉE de la nº 733) : `?vue=apercu`
+   * dessine une FICHE (SqueletteFiche, pleine largeur — le conteneur
+   * est celui de la fiche publique, nº 290) ; sans lui, le formulaire,
+   * comme avant. Rien d'autre ne bouge : même Patience de 300 ms, même
+   * étape, mêmes suites.
+   */
   if (etape === "verification") {
-    return (
+    return vueApercuDemandee ? (
+      <main className="flex-1 mx-auto w-full max-w-[1760px] px-4 sm:px-6 pt-4 lg:pt-5 pb-16 lg:pb-5">
+        <Patience>
+          <SqueletteFiche />
+        </Patience>
+      </main>
+    ) : (
       <main className="flex-1 mx-auto w-full max-w-[640px] px-4 sm:px-6 pt-10 pb-24">
         <Patience>
           <SqueletteFormulaire />

@@ -67,6 +67,52 @@ export function SqueletteFormulaire() {
   );
 }
 
+/**
+ * LA SILHOUETTE D'UNE FICHE (nº 772) — la rangée du profil (le rond,
+ * deux lignes), puis la photo et sa colonne de lecture, côte à côte au
+ * web, empilées au doigt : les blocs de la vraie fiche, aux bons
+ * endroits.
+ * POURQUOI ELLE EXISTE : « Mon portfolio » (le compte) mène à la page
+ * du formulaire avec `?vue=apercu` — la MÊME page que « Modification »,
+ * seule la vue diffère. Pendant le chargement, l'écran montrait donc
+ * LA SILHOUETTE DU FORMULAIRE, étroite, avec ses faux champs — puis
+ * une fiche pleine largeur la remplaçait : on annonçait une page qui
+ * n'était pas celle qui venait. La silhouette doit dessiner ce qui va
+ * apparaître (la règle de SquelettePage, juste en dessous).
+ */
+export function SqueletteFiche() {
+  return (
+    <div role="status" aria-label="Chargement" className="animate-pulse">
+      <div className="flex items-center gap-4">
+        <div className="h-16 w-16 shrink-0 rounded-full bg-sombre-carte" />
+        <div className="flex-1">
+          <div className="h-5 w-1/4 rounded-full bg-sombre-carte" />
+          <div className="mt-2.5 h-4 w-1/6 rounded-full bg-sombre-carte" />
+        </div>
+      </div>
+      <div className="mt-6 flex flex-col gap-8 lg:flex-row">
+        {/*  Le cadre de la photo — la moitié de la page au web, comme
+             la vraie. `aspect-[4/5]` : le portrait des portfolios. */}
+        <div className="w-full lg:w-1/2">
+          <div className="aspect-[4/5] w-full rounded-2xl bg-sombre-carte" />
+        </div>
+        {/*  La colonne de lecture : la ligne du titre, puis des
+             lignes de texte qui s'amenuisent. */}
+        <div className="w-full lg:w-1/2">
+          <div className="h-6 w-1/2 rounded-full bg-sombre-carte" />
+          <div className="mt-6 flex flex-col gap-3">
+            <div className="h-4 w-full rounded-full bg-sombre-carte" />
+            <div className="h-4 w-5/6 rounded-full bg-sombre-carte" />
+            <div className="h-4 w-2/3 rounded-full bg-sombre-carte" />
+          </div>
+          <div className="mt-8 h-[60px] rounded-2xl bg-sombre-carte" />
+          <div className="mt-3 h-[60px] rounded-2xl bg-sombre-carte" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /** LA SILHOUETTE D'UNE PAGE DE RÉGLAGES (Sécurité) — le titre, puis
     des blocs à la grammaire du formulaire (nº 130) : le titre de bloc
     AU-DESSUS de sa carte, aligné sur le texte, et la carte en dessous.

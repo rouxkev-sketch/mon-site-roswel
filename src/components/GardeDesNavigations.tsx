@@ -69,8 +69,13 @@ function Garde() {
   const pathname = usePathname();
   const parametres = useSearchParams();
 
-  /** La navigation en route : sa destination, son départ. */
-  const attente = useRef<{ adresse: string; depuis: number } | null>(null);
+  /** La navigation en route : sa destination, son CHEMIN seul (voir
+      l'extinction, nº 772), son départ. */
+  const attente = useRef<{
+    adresse: string;
+    chemin: string;
+    depuis: number;
+  } | null>(null);
   /** La dernière adresse que React a COMMISE — c'est elle qui permet
       de reconnaître une traversée qui n'a rien à charger (le cran du
       filet : même adresse avant et après). */
@@ -81,17 +86,57 @@ function Garde() {
   useEffect(() => {
     const ici = window.location.pathname + window.location.search;
     adresseCommise.current = ici;
-    /*  Une autre destination a été cliquée pendant l'attente : la
-        première arrive, la seconde est encore en route — l'attente
-        reste pour elle. */
-    if (attente.current && attente.current.adresse !== ici) return;
+    /**
+     * ██ §1 (nº 772) — L'EXTINCTION SE JUGE AU CHEMIN, PLUS À LA
+     * REQUÊTE ██
+     * ------------------------------------------------------------------
+     * LE DÉFAUT, MESURÉ AU BANC (mouchards dans cette garde) : ouvrir
+     * un membre d'équipe en fenêtre superposée, la refermer, RE-cliquer
+     * le même membre — rien, pendant douze secondes. Ligne à ligne :
+     *   clic armé vers /tatoueur/nom?entree=lien       ← le href (nº 329)
+     *   ARRIVÉE ici=/tatoueur/nom                      ← la pile a commis
+     *                                                    SANS ?entree=lien
+     *   AVALÉ clic vers /tatoueur/nom?entree=lien      ← le re-clic meurt
+     * La pile des fiches ne transporte QUE `selection` (nº 587) : la
+     * consigne `entree=lien` du href n'est jamais commise. Comparée à
+     * l'ADRESSE COMPLÈTE, l'arrivée ne correspondait donc jamais, et
+     * l'attente restait armée — un fantôme de douze secondes dont
+     * l'avalement du §4 mangeait le clic suivant. Même sort pour le
+     * re-clic d'une CARTE de la mosaïque : la fenêtre de base réécrit
+     * la requête (`?photo=…`) après coup.
+     * LA RÈGLE, DÉSORMAIS : une arrivée sur le MÊME CHEMIN vaut
+     * aboutissement. Les requêtes d'un même chemin sont des VARIANTES
+     * D'AFFICHAGE (la photo regardée, `entree=lien`, `selection`),
+     * jamais des destinations distinctes une fois la page là.
+     * ⚠️ L'AVALEMENT DU §4, LUI, COMPARE TOUJOURS L'ADRESSE COMPLÈTE :
+     * deux recherches du même chemin (`/recherche?style=…`) restent
+     * deux destinations — on n'avale que le VRAI re-clic, à
+     * l'identique. Seule l'extinction s'assouplit.
+     * ⚠️ CE QU'ON ACCEPTE EN ÉCHANGE, ET C'EST MINCE : deux liens de
+     * même chemin cliqués coup sur coup (l'un arrive, l'autre encore
+     * en route), l'arrivée du premier éteint aussi l'attente du
+     * second — son re-clic d'impatience ne serait plus avalé. Un
+     * doublon d'historique POSSIBLE dans cette fenêtre-là, contre une
+     * interface FIGÉE douze secondes à chaque réouverture : le
+     * propriétaire a constaté le second, jamais le premier.
+     */
+    if (
+      attente.current &&
+      attente.current.adresse !== ici &&
+      attente.current.chemin !== window.location.pathname
+    ) {
+      return;
+    }
     attente.current = null;
     window.clearTimeout(minuteurLimite.current);
   }, [pathname, parametres]);
 
   useEffect(() => {
-    const demarrer = (adresse: string) => {
-      attente.current = { adresse, depuis: Date.now() };
+    /*  §1 (nº 772) — le chemin voyage avec l'adresse : c'est lui que
+        l'extinction compare quand la requête commise diverge du href
+        (la pile des fiches, la fenêtre de base — voir l'arrivée). */
+    const demarrer = (adresse: string, chemin: string) => {
+      attente.current = { adresse, chemin, depuis: Date.now() };
       window.clearTimeout(minuteurLimite.current);
       minuteurLimite.current = window.setTimeout(() => {
         attente.current = null;
@@ -173,7 +218,7 @@ function Garde() {
       }
       //  L'armement reste SYNCHRONE (l'avalement du re-clic de la 441
       //  ne perd pas une milliseconde)…
-      demarrer(adresse);
+      demarrer(adresse, adresseVisee.pathname);
       //  §1 (nº 442) — …mais à la FIN du clic, on lit qui a pris la
       //  navigation. Le Link de Next et les cartes préviennent le
       //  geste par défaut : navigation douce, l'attente est à nous.
@@ -197,7 +242,7 @@ function Garde() {
       //  même garde-fou que les clics.
       const ici = window.location.pathname + window.location.search;
       if (ici === adresseCommise.current) return;
-      demarrer(ici);
+      demarrer(ici, window.location.pathname);
     };
 
     //  §1 (nº 442) — LE DÉCHARGEMENT ÉTEINT TOUT : une navigation
