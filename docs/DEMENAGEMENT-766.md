@@ -66,25 +66,25 @@ un fichier de comptes, et les photos.
 
 ### 1a — lire la vraie base
 
-> **L'essai de cinq secondes.** Je n'ai pas l'éditeur de Supabase sous
-> la main : je ne peux pas éprouver mes fichiers là où ils tournent.
-> Avant de coller les trois cents lignes, colle **cette seule ligne**
-> dans l'ancien projet :
+> **Si le gros fichier échoue, il y a une voie de secours.**
+> `supabase/766-blocs-un-par-un.sql` contient les **quinze mêmes
+> morceaux, séparés**. Dans l'éditeur de Supabase, **le texte
+> sélectionné à la souris est le seul exécuté** : colle le fichier, puis
+> sélectionne un bloc, lance, recommence.
 >
-> ```sql
-> select count(*) from pg_class c
->   join pg_namespace n on n.oid = c.relnamespace
->   where n.nspname = 'public';
-> ```
+> Deux issues :
+> - **un bloc fâche** → dis-moi son numéro et son message. C'est tout
+>   ce dont j'ai besoin pour corriger ;
+> - **aucun ne fâche** → télécharge un CSV par bloc (**le 99 compris**,
+>   sans lui les vues seraient mal rangées) et donne-les tous d'un coup,
+>   dans n'importe quel ordre :
 >
-> Elle doit rendre **un nombre**. Si oui, le gros fichier passera. Si
-> elle échoue, envoie-moi l'erreur.
+>   ```
+>   sh outils/assembler-schema b0.csv b1.csv … b13.csv b99.csv
+>   ```
 >
-> *(La version précédente désignait le schéma par le raccourci
-> `'public'::regnamespace`. Il passe sur un PostgreSQL ordinaire —
-> éprouvé — mais l'éditeur de Supabase le lit autrement et cherchait
-> une **table** nommée « public », d'où `42P01`. Le raccourci a
-> disparu des deux fichiers SQL.)*
+>   Il les remet dans l'ordre lui-même. Vérifié au banc : les deux voies
+>   rendent le **même fichier, octet pour octet**.
 
 Dans supabase.com, **ANCIEN** projet (Irlande) ▸ **SQL Editor** ▸ colle
 d'un bloc et lance :

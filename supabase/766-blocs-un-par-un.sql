@@ -1,6 +1,6 @@
 -- ============================================================
 --  nº 766 quater — LIRE LE SCHÉMA RÉEL DE L'ANCIEN PROJET
---  À coller dans l'éditeur SQL de l'ANCIEN projet (Irlande).
+--  Les quinze morceaux, à essayer UN PAR UN.
 -- ============================================================
 --  POURQUOI CE FICHIER EXISTE. Le premier schéma livré était bâti en
 --  REJOUANT LES MIGRATIONS DU DÉPÔT. Erreur : le dépôt n'est pas le
@@ -44,45 +44,59 @@
 -- ============================================================
 --
 -- ============================================================
---  CE QUE TU EN FAIS, DANS L'ORDRE
+--  COMMENT S'EN SERVIR
 --  ------------------------------------------------------------
---   1. Colle tout ce fichier dans l'éditeur SQL de l'ANCIEN projet,
---      et lance (« Run »).
---   2. Sous le résultat, bouton « Download CSV ».
---   3. Sur ton Mac, dans le dossier du projet :
+--  Dans l'éditeur SQL de Supabase, SI TU SÉLECTIONNES DU TEXTE À LA
+--  SOURIS, seul le texte sélectionné est exécuté. C'est ce qui rend
+--  ce fichier utile.
 --
---          sh outils/assembler-schema ~/Downloads/resultat.csv
+--   1. Colle tout ce fichier dans l'éditeur (ne lance pas encore).
+--   2. Sélectionne le BLOC 0 en entier, du `select` jusqu'au dernier
+--      caractère avant le trait suivant, et lance.
+--   3. Recommence bloc par bloc, jusqu'au BLOC 99 compris.
+--   4. DIS-MOI LE NUMÉRO DU PREMIER BLOC QUI ÉCHOUE, et son message.
+--      C'est tout ce dont j'ai besoin.
 --
---      Il écrit `supabase/yokofolio-schema-reel.sql`.
---   4. C'est CE fichier-là que tu colles dans le NOUVEAU projet (vide).
---   5. Vérifie avec `supabase/766-empreinte-schema.sql`, collé dans
---      CHACUN des deux projets : les deux empreintes doivent être
---      identiques.
+--  Si AUCUN ne fâche : ils rendent ensemble exactement ce que rend le
+--  gros fichier — vérifié au banc, octet pour octet. Tu peux alors
+--  télécharger un CSV par bloc et les donner TOUS à l'assembleur (le
+--  99 compris : sans lui, les vues seraient mal rangées), dans
+--  n'importe quel ordre :
 --
---  SI CE FICHIER ÉCHOUE ENCORE : passe à
---  `supabase/766-blocs-un-par-un.sql` et dis-moi quel bloc fâche.
+--      sh outils/assembler-schema bloc0.csv bloc1.csv bloc2.csv …
+--
+--  L'assembleur les remet dans l'ordre tout seul.
 -- ============================================================
 
+-- ============================================================
+--  BLOC 0 · les deux réglages d'entrée
+-- ============================================================
 select bloc, rang, texte as instruction from (
-
---  ── BLOC 0 · les deux réglages d'entrée
 select 0 as bloc, 0 as rang, 'set check_function_bodies = false;' as texte
 union all
 select 0, 1, 'set search_path = public;'
+) bloc_0
+order by bloc, rang;
 
-union all
 
---  ── BLOC 1 · les fonctions
+-- ============================================================
+--  BLOC 1 · les fonctions
+-- ============================================================
+select bloc, rang, texte as instruction from (
 select 1 as bloc, row_number() over (order by p.proname) as rang,
        pg_get_functiondef(p.oid) || ';' as texte
 from pg_proc p
 join pg_namespace n on n.oid = p.pronamespace
 where n.nspname = 'public'
   and p.prokind in ('f', 'p')
+) bloc_1
+order by bloc, rang;
 
-union all
 
---  ── BLOC 2 · les séquences autonomes
+-- ============================================================
+--  BLOC 2 · les séquences autonomes
+-- ============================================================
+select bloc, rang, texte as instruction from (
 select 2 as bloc, row_number() over (order by q.relname) as rang,
        'create sequence if not exists public.' || quote_ident(q.relname) || ';' as texte
 from pg_class q
@@ -100,10 +114,14 @@ where n.nspname = 'public'
         join pg_namespace n2 on n2.oid = c2.relnamespace
         where c2.relname = 'pg_class' and n2.nspname = 'pg_catalog')
       and a.attidentity <> '')
+) bloc_2
+order by bloc, rang;
 
-union all
 
---  ── BLOC 3 · les tables et leurs colonnes
+-- ============================================================
+--  BLOC 3 · les tables et leurs colonnes
+-- ============================================================
+select bloc, rang, texte as instruction from (
 select 3 as bloc, row_number() over (order by c.relname) as rang,
        'create table public.' || quote_ident(c.relname) || ' (' || chr(10)
        || (select string_agg(
@@ -128,10 +146,14 @@ from pg_class c
 join pg_namespace n on n.oid = c.relnamespace
 where n.nspname = 'public'
   and c.relkind = 'r'
+) bloc_3
+order by bloc, rang;
 
-union all
 
---  ── BLOC 4 · les séquences rattachées à leur colonne
+-- ============================================================
+--  BLOC 4 · les séquences rattachées à leur colonne
+-- ============================================================
+select bloc, rang, texte as instruction from (
 select 4 as bloc, row_number() over (order by q.relname) as rang,
        'alter sequence public.' || quote_ident(q.relname)
        || ' owned by public.' || quote_ident(tc.relname)
@@ -147,10 +169,14 @@ where n.nspname = 'public'
     select c2.oid from pg_class c2
     join pg_namespace n2 on n2.oid = c2.relnamespace
     where c2.relname = 'pg_class' and n2.nspname = 'pg_catalog')
+) bloc_4
+order by bloc, rang;
 
-union all
 
---  ── BLOC 5 · clés primaires, unicités, vérifications
+-- ============================================================
+--  BLOC 5 · clés primaires, unicités, vérifications
+-- ============================================================
+select bloc, rang, texte as instruction from (
 select 5 as bloc, row_number() over (order by c.relname, con.conname) as rang,
        'alter table public.' || quote_ident(c.relname)
        || ' add constraint ' || quote_ident(con.conname) || ' '
@@ -161,10 +187,14 @@ join pg_namespace n on n.oid = c.relnamespace
 where n.nspname = 'public'
   and c.relkind = 'r'
   and con.contype in ('p', 'u', 'c')
+) bloc_5
+order by bloc, rang;
 
-union all
 
---  ── BLOC 6 · les clés étrangères
+-- ============================================================
+--  BLOC 6 · les clés étrangères
+-- ============================================================
+select bloc, rang, texte as instruction from (
 select 6 as bloc, row_number() over (order by c.relname, con.conname) as rang,
        'alter table public.' || quote_ident(c.relname)
        || ' add constraint ' || quote_ident(con.conname) || ' '
@@ -175,10 +205,14 @@ join pg_namespace n on n.oid = c.relnamespace
 where n.nspname = 'public'
   and c.relkind = 'r'
   and con.contype = 'f'
+) bloc_6
+order by bloc, rang;
 
-union all
 
---  ── BLOC 7 · les index hors contraintes
+-- ============================================================
+--  BLOC 7 · les index hors contraintes
+-- ============================================================
+select bloc, rang, texte as instruction from (
 select 7 as bloc, row_number() over (order by ic.relname) as rang,
        pg_get_indexdef(i.indexrelid) || ';' as texte
 from pg_index i
@@ -188,10 +222,14 @@ join pg_namespace n on n.oid = c.relnamespace
 where n.nspname = 'public'
   and c.relkind = 'r'
   and not exists (select 1 from pg_constraint con where con.conindid = i.indexrelid)
+) bloc_7
+order by bloc, rang;
 
-union all
 
---  ── BLOC 8 · les vues (leur rang est leur numero interne, voir le bloc 99)
+-- ============================================================
+--  BLOC 8 · les vues (leur rang est leur numero interne, voir le bloc 99)
+-- ============================================================
+select bloc, rang, texte as instruction from (
 select 8 as bloc, v.oid::bigint as rang,
        case when v.relkind = 'm'
             then 'create materialized view public.' || quote_ident(v.relname) || ' as ' || chr(10)
@@ -201,10 +239,14 @@ from pg_class v
 join pg_namespace n on n.oid = v.relnamespace
 where n.nspname = 'public'
   and v.relkind in ('v', 'm')
+) bloc_8
+order by bloc, rang;
 
-union all
 
---  ── BLOC 9 · les déclencheurs
+-- ============================================================
+--  BLOC 9 · les déclencheurs
+-- ============================================================
+select bloc, rang, texte as instruction from (
 select 9 as bloc, row_number() over (order by tg.tgname) as rang,
        pg_get_triggerdef(tg.oid) || ';' as texte
 from pg_trigger tg
@@ -213,10 +255,14 @@ join pg_namespace n on n.oid = c.relnamespace
 where n.nspname = 'public'
   and c.relkind = 'r'
   and not tg.tgisinternal
+) bloc_9
+order by bloc, rang;
 
-union all
 
---  ── BLOC 10 · allumer la sécurité par ligne
+-- ============================================================
+--  BLOC 10 · allumer la sécurité par ligne
+-- ============================================================
+select bloc, rang, texte as instruction from (
 select 10 as bloc, row_number() over (order by c.relname) as rang,
        'alter table public.' || quote_ident(c.relname)
        || ' enable row level security;' as texte
@@ -225,10 +271,14 @@ join pg_namespace n on n.oid = c.relnamespace
 where n.nspname = 'public'
   and c.relkind = 'r'
   and c.relrowsecurity
+) bloc_10
+order by bloc, rang;
 
-union all
 
---  ── BLOC 11 · les règles de sécurité
+-- ============================================================
+--  BLOC 11 · les règles de sécurité
+-- ============================================================
+select bloc, rang, texte as instruction from (
 select 11 as bloc, row_number() over (order by c.relname, pol.polname) as rang,
        'create policy ' || quote_ident(pol.polname)
        || ' on public.' || quote_ident(c.relname)
@@ -250,10 +300,14 @@ join pg_class c on c.oid = pol.polrelid
 join pg_namespace n on n.oid = c.relnamespace
 where n.nspname = 'public'
   and c.relkind = 'r'
+) bloc_11
+order by bloc, rang;
 
-union all
 
---  ── BLOC 12 · les droits sur les tables
+-- ============================================================
+--  BLOC 12 · les droits sur les tables
+-- ============================================================
+select bloc, rang, texte as instruction from (
 select 12 as bloc, row_number() over (order by g.table_name, g.grantee) as rang,
        'grant ' || string_agg(lower(g.privilege_type), ', ' order by g.privilege_type)
        || ' on table public.' || quote_ident(g.table_name)
@@ -262,10 +316,14 @@ from information_schema.role_table_grants g
 where g.table_schema = 'public'
   and g.grantee in ('anon', 'authenticated', 'service_role')
 group by g.table_name, g.grantee
+) bloc_12
+order by bloc, rang;
 
-union all
 
---  ── BLOC 13 · les droits sur les séquences
+-- ============================================================
+--  BLOC 13 · les droits sur les séquences
+-- ============================================================
+select bloc, rang, texte as instruction from (
 select 13 as bloc, row_number() over (order by u.object_name, u.grantee) as rang,
        'grant ' || string_agg(lower(u.privilege_type), ', ' order by u.privilege_type)
        || ' on sequence public.' || quote_ident(u.object_name)
@@ -275,10 +333,14 @@ where u.object_schema = 'public'
   and u.object_type = 'SEQUENCE'
   and u.grantee in ('anon', 'authenticated', 'service_role')
 group by u.object_name, u.grantee
+) bloc_13
+order by bloc, rang;
 
-union all
 
---  ── BLOC 99 · LES LIENS ENTRE VUES - ce bloc ne produit aucun SQL
+-- ============================================================
+--  BLOC 99 · LES LIENS ENTRE VUES - ce bloc ne produit aucun SQL
+-- ============================================================
+select bloc, rang, texte as instruction from (
 select 99 as bloc, row_number() over (order by f.oid, m.oid) as rang,
        f.oid::text || '|' || m.oid::text as texte
 from pg_depend d
@@ -293,6 +355,7 @@ where nf.nspname = 'public'
   and m.relkind in ('v', 'm')
   and f.oid <> m.oid
 group by f.oid, m.oid
-
-) tout_le_schema
+) bloc_99
 order by bloc, rang;
+
+

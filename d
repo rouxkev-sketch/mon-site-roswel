@@ -49,7 +49,11 @@
 #
 set -e
 
-EQUIPE="mon-site-roswel"
+#  L'ÉQUIPE VERCEL. Elle s'appelait « mon-site-roswel », du nom de
+#  l'ancien projet ; Kevin l'a renommée « yokofolio-team » (nº 766
+#  quater). Ce nom-là est celui de l'ÉQUIPE, pas du projet : les deux
+#  se ressemblent, ne les confonds pas.
+EQUIPE="yokofolio-team"
 PROJET="yokofolio"
 
 echo ""
