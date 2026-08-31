@@ -12,11 +12,12 @@
  * à la nº 760, leur fichier de réglages `config/roswel.ts` à la
  * nº 761. Il ne reste qu'un site.
  *
- * ⚠️ LE ROSE EST ICI, ET NULLE PART AILLEURS (nº 761). Il venait de
- * `roswel.ts` ; `COULEURS_SOMBRE.primaire` est désormais sa seule
- * source — y compris pour les deux endroits que le CSS n'atteint pas,
- * la flèche et le point des menus déroulants. Le jour où yokofolio
- * prendra un autre rose, une seule ligne changera — ici.
+ * ⚠️ LA COULEUR PRIMAIRE EST ICI, ET NULLE PART AILLEURS (nº 761).
+ * Elle venait de `roswel.ts` ; `COULEURS_SOMBRE.primaire` est désormais
+ * sa seule source — y compris pour les deux endroits que le CSS
+ * n'atteint pas, la flèche et le point des menus déroulants. La nº 762
+ * l'a vérifié en pratique : le passage du rose au ROUGE n'a demandé
+ * qu'une ligne ici, plus les deux nuances qui s'en déduisent.
  */
 
 /**
@@ -1730,7 +1731,11 @@ export const BIO_MAXIMUM = 150;
  * Contrastes vérifiés sur le fond #0B0F14 :
  *  - texte principal #F2F2F4 → 17,1:1 (AAA)
  *  - texte discret  #A8A8B0 → 8,1:1  (AAA pour le petit texte)
- *  - rose #FF2E6C           → 5,4:1  (AA, et AAA en gras 18 px+)
+ *  - ROUGE #E11144          → 4,0:1  (nº 762) — voir l'avertissement
+ *    posé sur `primaire` plus bas : ce rouge est plus SOMBRE que le
+ *    rose qu'il remplace (5,4:1), il ne suffit donc plus au PETIT
+ *    texte. En aplat, il fait mieux : le blanc dessus passe de 3,6:1
+ *    à 4,8:1.
  * Aucun gris plus sombre que #A8A8B0 ne doit servir à du texte.
  */
 export const COULEURS_SOMBRE = {
@@ -1889,36 +1894,44 @@ export const COULEURS_SOMBRE = {
       vert, rouge, gris (nº 664) —, et c'est bien ainsi que le
       propriétaire la veut. */
   /**
-   * ██ §4 (nº 466) — LE ROSE DU PRODUIT TATOUAGE, RAVIVÉ ██
+   * ██ §1 (nº 762) — LA PRIMAIRE PASSE DU ROSE AU ROUGE ██
    * ------------------------------------------------------------------
-   * Sur le bleu nuit #0B0F14, le #EE3D6F historique paraît délavé : sa
-   * saturation (84 %) se perd sur une base plus sombre et plus froide.
-   * LES TROIS VALEURS CI-DESSOUS LE REMPLACENT, pour CE produit seul :
-   *  · `primaire` #FF2E6C — même famille (teinte ~342°, celle du
-   *    #EE3D6F), saturation portée à 100 % : le canal rouge à plein,
-   *    c'est lui qui fait claquer l'accent sur une base froide.
-   *    Contraste 5,4:1 sur #0B0F14 (l'ancien faisait 4,9:1 sur
-   *    l'ancien fond) ;
-   *  · `primaireFonce` #E51C59 — l'appui/survol des boutons roses,
-   *    le même écart sous `primaire` que #D42A5C sous #EE3D6F ;
-   *  · `primaireVoile` #291320 — le fond d'un badge sélectionné : le
-   *    même surcroît de rose que #381E29 portait sur l'anthracite,
-   *    reposé sur la nouvelle base — le mot rose s'y détache plus
-   *    franchement qu'avant.
+   * DÉCISION DU PROPRIÉTAIRE : #FF2E6C (rose) devient #E11144 (rouge),
+   * partout où la primaire est lue. Les deux nuances qui l'accompagnent
+   * SE DÉDUISENT de la base — elles ne sont pas choisies à l'œil, et
+   * c'est ce qui permettra de recommencer sans rien casser :
+   *  · `primaire` #E11144 — teinte 345°, saturation 86 %, luminosité
+   *    47 %. ⚠️ IL EST PLUS SOMBRE QUE LE ROSE (59 %), et cela se paie
+   *    d'un côté et se gagne de l'autre : en TEXTE sur le fond, le
+   *    contraste tombe de 5,4:1 à 4,0:1 — assez pour du gros ou du
+   *    gras, plus pour du petit texte ; en APLAT, le blanc posé dessus
+   *    monte de 3,6:1 à 4,8:1, donc les boutons y gagnent ;
+   *  · `primaireFonce` #B80E38 — l'appui/survol : la base assombrie de
+   *    8,6 points de luminosité, EXACTEMENT l'écart que #E51C59 avait
+   *    avait sous le rose d’avant ;
+   *  · `primaireVoile` #270F1A — le fond d'un badge sélectionné :
+   *    12,9 % de la primaire posée sur le fond #0B0F14. Cette
+   *    proportion n'est pas inventée — elle a été RETROUVÉE dans
+   *    l'ancien #291320, dont les trois canaux la donnent à 1,3 point
+   *    près (12,3 / 12,9 / 13,6 %).
+   * (§4 nº 466, remplacé : ce rose avait lui-même remplacé le
+   * rose historique de Roswel, délavé sur le bleu nuit.)
    * ⚠️ LA SURCHARGE RESTE, MÊME SANS LES ARTISANS (nº 761). La couche
-   * CLAIRE garde son propre rose (src/config/charte.ts) ; celui-ci ne
-   * la remplace que DANS LE PÉRIMÈTRE TATOUAGE, par la surcharge des
+   * CLAIRE a ses propres nuances (src/config/charte.ts) — elles ont
+   * suivi le même passage au rouge à la nº 762, mais elles se
+   * déclinent d'une base plus claire ; celles d'ici ne les remplacent
+   * que DANS LE PÉRIMÈTRE TATOUAGE, par la surcharge des
    * variables `--rw-primaire*` que pose app/(tatouage)/layout.tsx —
    * c'est-à-dire partout sauf sur les deux pages sans groupe (la page
    * introuvable, le tableau de bord des sondes) — les classes
    * (`bg-primaire`, `text-primaire`…) restent les mêmes partout, seul
    * ce qu'elles valent change selon le produit. AUCUN usage nouveau :
-   * le rose reste réservé au badge sélectionné, au bouton d'action
+   * la primaire reste réservée au badge sélectionné, au bouton d'action
    * finale, à la ligne du sélecteur actif et à l'état d'une fiche.
    */
-  primaire: "#FF2E6C",
-  primaireFonce: "#E51C59",
-  primaireVoile: "#291320",
+  primaire: "#E11144",
+  primaireFonce: "#B80E38",
+  primaireVoile: "#270F1A",
 };
 
 /** Les textes du site, au même endroit que le reste. */

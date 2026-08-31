@@ -20,17 +20,19 @@
  * fichier-ci ne porte que la couche CLAIRE, celle qui reste sous
  * l'autre.
  *
- * ⚠️ LE ROSE `primaire` CI-DESSOUS EST L'ANCIEN, ET C'EST VOULU. Sur
- * toutes les pages du groupe (tatouage) — c'est-à-dire le site entier
- * ou presque — `src/app/(tatouage)/layout.tsx` SURCHARGE les trois
- * variables `--rw-primaire*` avec le rose de la charte sombre
- * (#FF2E6C, nº 466). Celui d'ici n'apparaît donc que sur les deux
- * pages qui ne sont dans aucun groupe : la page introuvable et le
- * tableau de bord des sondes. MESURÉ, pas supposé (banc nº 761) :
- *   · /recherche et /tatoueur/…  → --rw-primaire = #FF2E6C
- *   · page introuvable            → --rw-primaire = #EE3D6F
- * Le changer ferait changer l'aspect de ces deux pages : c'est une
- * décision du propriétaire, pas un ménage. Elle lui a été posée.
+ * ⚠️ LA PRIMAIRE EST DEVENUE LE ROUGE (nº 762), ICI AUSSI. À la nº 761
+ * cette couche gardait encore l'ancien rose de Roswel : la
+ * question a été posée au propriétaire, il a tranché en demandant la
+ * couleur du site entière au rouge #E11144. Les deux couches partent
+ * donc désormais de LA MÊME couleur, et leurs nuances proches (survol,
+ * voile) sont les mêmes valeurs — ce n'est pas un copier-coller
+ * distrait, c'est la conséquence d'une base commune.
+ * ⚠️ CE QUE CETTE COUCHE PEINT ENCORE, malgré tout : sur les pages du
+ * groupe (tatouage) — le site entier ou presque —
+ * `src/app/(tatouage)/layout.tsx` SURCHARGE les trois variables
+ * `--rw-primaire*`. Les valeurs d'ici ne s'affichent donc que sur les
+ * deux pages qui ne sont dans aucun groupe : la page introuvable et le
+ * tableau de bord des sondes.
  *
  * ⚠️ CE QUI A ÉTÉ ÉLAGUÉ AU PASSAGE — six couleurs que plus personne
  * ne lisait : les trois fonds de carte sélectionnée du mode deux
@@ -50,15 +52,27 @@
  * absence propre.
  */
 export const CHARTE_CLAIRE = {
-  //  — Le rose (voir l'avertissement de tête : surchargé partout) —
-  primaire: "#EE3D6F",
-  primaireVoile: "#381E29",
-  primaireFonce: "#D42A5C",
-  primaireClair: "#FFEBF1",
+  /*  — LA PRIMAIRE (voir l'avertissement de tête : surchargée partout
+      sauf sur deux pages) —
+      nº 762 : le rose historique passe au rouge #E11144. Les deux nuances
+      proches sont celles de la charte sombre, puisque la base est la
+      même : survol = la base assombrie de 8,6 points de luminosité ;
+      voile = 12,9 % de la primaire posée sur le fond sombre.
+      `primaireClair`, lui, appartient à cette couche seule : c'est
+      6,7 % de la primaire posée sur du BLANC — la proportion retrouvée
+      dans l'ancien #FFEBF1. */
+  primaire: "#E11144",
+  primaireVoile: "#270F1A",
+  primaireFonce: "#B80E38",
+  primaireClair: "#FDEFF3",
 
-  //  — Dégradé (haut → bas) : plus aucune classe ne l'emploie —
-  degradeDebut: "#FB7BA2",
-  degradeFin: "#EC3A6E",
+  /*  — Dégradé (haut → bas) : plus aucune classe ne l'emploie, mais
+      globals.css le cite, donc il reste défini (voir l'avertissement de
+      tête). nº 762 — décliné du rouge par la même méthode : le début
+      est 52 % de la primaire sur du blanc, la fin est la primaire à
+      un point de luminosité près. */
+  degradeDebut: "#EF839E",
+  degradeFin: "#DC1143",
 
   //  — Fonds et textes —
   /** Fond principal. Sert aussi de couleur de barre du navigateur sur
@@ -77,7 +91,8 @@ export const CHARTE_CLAIRE = {
   flecheMenus: "#9AA1AC",
 
   //  — Pastilles et contours —
-  pastilleExcellence: "#EE3D6F",
+  /** Elle valait la primaire, et elle la vaut toujours (nº 762). */
+  pastilleExcellence: "#E11144",
   pastilleRecommande: "#1D9BF0",
   /** Contour fin, lisible sur blanc. Lu aussi par globals.css (les
       barres de défilement fines). */

@@ -198,14 +198,14 @@ export function SondeClic() {
         gap: 6,
         padding: 8,
         borderRadius: 12,
-        border: "2px solid #EE3D6F",
+        border: "2px solid #E11144",
         background: "rgba(0,0,0,0.92)",
         color: "#EEE",
         font: "11px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <strong style={{ flex: 1, color: "#EE3D6F", fontSize: 12 }}>
+        <strong style={{ flex: 1, color: "#E11144", fontSize: 12 }}>
           CLIC — {touchers.length} toucher(s)
         </strong>
         {/*  §4 (nº 343) — DÉSARMER SANS TAPER D'ADRESSE. L'armement

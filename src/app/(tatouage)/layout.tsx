@@ -399,7 +399,8 @@ export default async function MiseEnPageTatouage({
       {/*  ██ §4 (nº 466) — LE ROSE RAVIVÉ, POUR CE PRODUIT SEUL ██
            Les trois variables `--rw-primaire*` sont SURCHARGÉES ici
            avec les valeurs de la charte tatouage (COULEURS_SOMBRE —
-           #FF2E6C sur le bleu nuit, voir la note du jeton). Le
+           le rouge #E11144 sur le bleu nuit depuis la nº 762, voir la
+           note du jeton). Le
            `:root` du <head> (variables-couleurs, layout racine) garde
            les valeurs de la couche claire (config/charte.ts, nº 761) :
            ce <style> venant APRÈS dans le document, il gagne à

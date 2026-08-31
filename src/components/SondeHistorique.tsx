@@ -106,14 +106,14 @@ export function SondeHistorique() {
         gap: 6,
         padding: 8,
         borderRadius: 12,
-        border: "2px solid #EE3D6F",
+        border: "2px solid #E11144",
         background: "rgba(0,0,0,0.92)",
         color: "#EEE",
         font: "11px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <strong style={{ flex: 1, color: "#EE3D6F", fontSize: 12 }}>
+        <strong style={{ flex: 1, color: "#E11144", fontSize: 12 }}>
           HISTORIQUE — {lignes.length} ligne(s) · pile{" "}
           {typeof window === "undefined" ? "?" : window.history.length}
         </strong>
@@ -196,6 +196,6 @@ function couleurDe(quoi: string): string {
   if (quoi.startsWith("POSÉE")) return "#8FE28F";
   if (quoi.startsWith("REMPLACÉE")) return "#FFD37A";
   if (quoi.startsWith("REPRISE")) return "#FF9A9A";
-  if (quoi.startsWith("DÉPART")) return "#EE3D6F";
+  if (quoi.startsWith("DÉPART")) return "#E11144";
   return "#CFCFD6";
 }

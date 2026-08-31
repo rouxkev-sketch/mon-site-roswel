@@ -2634,8 +2634,10 @@ export function MenuEspace({
    * ⚠️ ET IL NE DÉBORDE PLUS DU TOUT : rangé dans la boîte de l'avatar,
    * qui est elle-même centrée dans la cible de 40 px. La zone du compte
    * n'occupe pas un pixel de plus qu'avant la nº 667.
-   * ⚠️ AUCUNE COULEUR NOUVELLE : `bg-primaire`, le rose de la charte
-   * (#FF2E6C depuis la nº 466) — celui que le propriétaire nomme.
+   * ⚠️ AUCUNE COULEUR NOUVELLE : `bg-primaire`, la couleur de la
+   * charte — celle que le propriétaire nomme. Elle est passée du rose
+   * au ROUGE #E11144 à la nº 762 ; la pastille a suivi sans qu'on y
+   * touche, puisqu'elle lit le jeton.
    *
    * ██ §3 (nº 674) — IL EST DÉCOUPÉ DANS LA PHOTO, PLUS POSÉ DESSUS ██
    * ------------------------------------------------------------------

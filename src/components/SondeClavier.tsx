@@ -402,9 +402,9 @@ export function SondeClavier() {
             zIndex: 2147483000,
             pointerEvents: "none",
             font: "600 11px/1.2 system-ui, sans-serif",
-            color: enCours ? "#fff" : "#EE3D6F",
-            background: enCours ? "#EE3D6F" : "rgba(0,0,0,.55)",
-            border: "1px solid #EE3D6F",
+            color: enCours ? "#fff" : "#E11144",
+            background: enCours ? "#E11144" : "rgba(0,0,0,.55)",
+            border: "1px solid #E11144",
             borderRadius: 999,
             padding: "3px 8px",
           }}

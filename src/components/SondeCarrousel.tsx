@@ -212,7 +212,7 @@ export function SondeCarrousel() {
         //  Trois niveaux de lecture : ce qui alerte, ce qui structure,
         //  le reste.
         texte.style.cssText = /⚠️|DÉMONTAGE|ABSENT/.test(ligne.texte)
-          ? "color:#EE3D6F;font-weight:700;word-break:break-word;white-space:pre-wrap"
+          ? "color:#E11144;font-weight:700;word-break:break-word;white-space:pre-wrap"
           : /═══|⏹ ARRÊT|SÉLECTEUR|VIGNETTE|SÉRIE/.test(ligne.texte)
             ? "color:#8FE28F;word-break:break-word;white-space:pre-wrap"
             : "color:#FFF;word-break:break-word;white-space:pre-wrap";
@@ -251,7 +251,7 @@ export function SondeCarrousel() {
         bottom: "max(6px, env(safe-area-inset-bottom))",
         zIndex: 2147483647,
         background: "#000000",
-        border: "2px solid #EE3D6F",
+        border: "2px solid #E11144",
         borderRadius: 12,
         padding: "8px 10px 10px",
         font: "12px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace",
@@ -265,7 +265,7 @@ export function SondeCarrousel() {
       }}
     >
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <span style={{ color: "#EE3D6F", fontWeight: 700, flex: 1 }}>
+        <span style={{ color: "#E11144", fontWeight: 700, flex: 1 }}>
           JOURNAL CARROUSEL
         </span>
         <BoutonReplier surToucher={basculer} />

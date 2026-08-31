@@ -385,7 +385,7 @@ export function SondeVerre() {
         bottom: "max(8px, env(safe-area-inset-bottom))",
         zIndex: 2147483647,
         background: "#000000",
-        border: "2px solid #EE3D6F",
+        border: "2px solid #E11144",
         borderRadius: 12,
         padding: "10px 12px",
         font: "13px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace",
@@ -402,7 +402,7 @@ export function SondeVerre() {
           marginBottom: 6,
         }}
       >
-        <span style={{ color: "#EE3D6F", fontWeight: 700 }}>
+        <span style={{ color: "#E11144", fontWeight: 700 }}>
           SONDE VERRE · ?sonde-verre=1
         </span>
         <BoutonReplier surToucher={basculer} />

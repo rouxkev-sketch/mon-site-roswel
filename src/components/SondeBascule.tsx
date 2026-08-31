@@ -458,7 +458,7 @@ export function SondeBascule() {
         t.textContent = `${ligne.t}`;
         const texte = document.createElement("span");
         texte.style.cssText = /DÉMONTAGE|MONTAGE/.test(ligne.texte)
-          ? "color:#EE3D6F;font-weight:700;word-break:break-word"
+          ? "color:#E11144;font-weight:700;word-break:break-word"
           : "color:#FFF;word-break:break-word";
         texte.textContent = ligne.texte;
         div.append(t, texte);
@@ -491,7 +491,7 @@ export function SondeBascule() {
         //  barre fixe (z-50) ni un panneau (z-80).
         zIndex: 2147483647,
         background: "#000000",
-        border: "2px solid #EE3D6F",
+        border: "2px solid #E11144",
         borderRadius: 12,
         padding: "8px 10px 10px",
         font: "12px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace",
@@ -508,7 +508,7 @@ export function SondeBascule() {
            toute sa largeur et ses 44 px de haut — le pouce ne peut pas
            les manquer. */}
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <span style={{ color: "#EE3D6F", fontWeight: 700, flex: 1 }}>
+        <span style={{ color: "#E11144", fontWeight: 700, flex: 1 }}>
           JOURNAL BASCULE
         </span>
         <BoutonReplier surToucher={basculer} />

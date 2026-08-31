@@ -50,8 +50,9 @@ const TAILLE_POINT = "w-1.5 h-1.5";
     l'adresse du fond, la couleur écrite en clair dedans. Le CSS ne
     peut donc rien pour elles : la surcharge rose du groupe (tatouage)
     (`--rw-primaire`, nº 466) ne les atteint pas, et la flèche ouverte
-    restait au vieux #EE3D6F pendant que tout le reste de l'écran était
-    à #FF2E6C. Elle prend maintenant le rose de la charte, à sa source.
+    restait au vieux rose de Roswel pendant que tout le reste de
+    l'écran avait déjà changé. Elle prend maintenant la couleur de la
+    charte à sa source — le ROUGE #E11144 depuis la nº 762.
     ⚠️ ON NE LA VOIT PAS PARTOUT : le champ « Style » du moteur pose
     `flecheFigee` (nº 648, demande du propriétaire) et reste gris même
     ouvert. Les six autres menus — éditeur de fiche, modes d'exercice,
@@ -1587,7 +1588,7 @@ export function MenuDeroulant({
             className={`${TAILLE_POINT} rounded-full shrink-0`}
             //  nº 761 — LE MÊME DÉFAUT QUE LA FLÈCHE, à trois lignes de
             //  là : ce point était peint en JavaScript avec le rose de
-            //  Roswel (#EE3D6F), que la surcharge CSS du groupe
+            //  Roswel, que la surcharge CSS du groupe
             //  (tatouage) ne pouvait pas atteindre. Il prend le rose de
             //  la charte, comme tout ce qui l'entoure.
             style={{ backgroundColor: COULEURS_SOMBRE.primaire }}
@@ -1668,7 +1669,7 @@ export function MenuDeroulant({
             className={`${TAILLE_POINT} rounded-full shrink-0`}
             //  nº 761 — LE MÊME DÉFAUT QUE LA FLÈCHE, à trois lignes de
             //  là : ce point était peint en JavaScript avec le rose de
-            //  Roswel (#EE3D6F), que la surcharge CSS du groupe
+            //  Roswel, que la surcharge CSS du groupe
             //  (tatouage) ne pouvait pas atteindre. Il prend le rose de
             //  la charte, comme tout ce qui l'entoure.
             style={{ backgroundColor: COULEURS_SOMBRE.primaire }}
@@ -1680,9 +1681,9 @@ export function MenuDeroulant({
              porter le soulignement (il barrerait la ligne entière,
              chevron compris). C'est un second `span`, EN LIGNE, qui
              le reçoit — la largeur du texte, et rien de plus.
-             ⚠️ `decoration-primaire` : le rose de la charte
-             (`#FF2E6C` depuis la nº 466), lu au jeton — jamais
-             recopié. */}
+             ⚠️ `decoration-primaire` : la couleur de la charte (le
+             rouge #E11144 depuis la nº 762), lue au jeton — jamais
+             recopiée. */}
         <span className="flex-1">
           <span
             data-porte-soulignee={souligne ? "" : undefined}

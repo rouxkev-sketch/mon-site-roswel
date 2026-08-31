@@ -1276,9 +1276,9 @@ export function EnTeteTatouage({
                    Le propriétaire renverse la robe : le fond gris et le
                    texte rose deviennent un fond ROSE et un texte BLANC,
                    et l'icône s'en va. Ce qu'il porte désormais :
-                    · AU REPOS, le fond ET le contour valent le ROSE DU
-                      SITE (`bg-primaire border-primaire`, `#FF2E6C`
-                      depuis la nº 466) —
+                    · AU REPOS, le fond ET le contour valent LA COULEUR
+                      DU SITE (`bg-primaire border-primaire`, le rouge
+                      #E11144 depuis la nº 762) —
                       le jeton de la charte, celui du bouton « Créer mon
                       compte » de la fenêtre d'invitation (nº 396-397),
                       lui-même repris de « qui-sommes-nous ». Aucune

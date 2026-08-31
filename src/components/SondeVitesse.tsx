@@ -54,7 +54,7 @@ import {
  */
 
 /** Les couleurs de la sonde : celles de ses dix sœurs. */
-const ROSE = "#EE3D6F";
+const ACCENT = "#E11144";
 const GRIS = "#9AA1AC";
 
 /**
@@ -87,15 +87,15 @@ const GRIS = "#9AA1AC";
 const CLE_ARMEE = "sonde-vitesse";
 
 /**
- * LES TROIS VERDICTS DE LA LIGNE BASE, et leur couleur. Le ROSE ne
- * signale que le seul cas où il y a un gain à prendre — des lectures
- * accolées, une latence chacune (nº 678). Le vert dit « rien à faire
- * ici », le gris « ce n'est pas une cascade ». Peindre les trois en
- * rose ferait crier la sonde à chaque page.
+ * LES TROIS VERDICTS DE LA LIGNE BASE, et leur couleur. La couleur
+ * d’accent ne signale que le seul cas où il y a un gain à prendre —
+ * des lectures accolées, une latence chacune (nº 678). Le vert dit
+ * « rien à faire ici », le gris « ce n'est pas une cascade ». Peindre
+ * les trois à l'accent ferait crier la sonde à chaque page.
  */
 const VERDICTS = {
   parallele: { mot: " → EN PARALLÈLE (déjà groupées)", couleur: "#34D399" },
-  serie: { mot: " → EN SÉRIE (elles s'attendent)", couleur: ROSE },
+  serie: { mot: " → EN SÉRIE (elles s'attendent)", couleur: ACCENT },
   espacees: { mot: " → espacées (pas une cascade)", couleur: GRIS },
 } as const;
 
@@ -179,7 +179,7 @@ export function SondeVitesse() {
         bottom: "max(6px, env(safe-area-inset-bottom))",
         zIndex: 2147483647,
         background: "#000000",
-        border: `2px solid ${ROSE}`,
+        border: `2px solid ${ACCENT}`,
         borderRadius: 12,
         padding: "8px 10px 10px",
         font: "12px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace",
@@ -191,7 +191,7 @@ export function SondeVitesse() {
       }}
     >
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <span style={{ color: ROSE, fontWeight: 700, flex: 1 }}>
+        <span style={{ color: ACCENT, fontWeight: 700, flex: 1 }}>
           VITESSE · {mesures.length} navigation
           {mesures.length > 1 ? "s" : ""}
         </span>
@@ -216,7 +216,7 @@ export function SondeVitesse() {
                    70 ms · attente réseau 83 + rendu 5 », où 83 + 5 fait
                    88 — le TOTAL, pas les 70. Une décomposition posée
                    sous le mauvais nombre est un chiffre faux. */}
-              <p style={{ margin: "0 0 2px", color: ROSE, fontWeight: 700 }}>
+              <p style={{ margin: "0 0 2px", color: ACCENT, fontWeight: 700 }}>
                 TOTAL {mesure.total} ms
                 {mesure.attente !== null ? (
                   <span style={{ color: "#FFFFFF", fontWeight: 400 }}>
@@ -305,7 +305,7 @@ export function SondeVitesse() {
             viderLesMesures();
             setDemandee(false);
           }}
-          style={{ ...CADRE_BOUTON, flex: 1, color: ROSE }}
+          style={{ ...CADRE_BOUTON, flex: 1, color: ACCENT }}
         >
           Éteindre
         </button>

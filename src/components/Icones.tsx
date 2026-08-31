@@ -738,9 +738,18 @@ export function DefinitionsIcones() {
             fois dans la liste mobile (md:hidden) et dans le bloc desktop ;
             un `<defs id="rw-bouclier">` en double faisait référencer la
             définition MASQUÉE, que WebKit ne peint pas → bouclier invisible. */}
+        {/*  nº 762 — LES DEUX ARRÊTS SUIVENT LA CHARTE. Ils portaient
+            le dégradé rose de Roswel écrit en dur (#FB7BA2 → #EC3A6E) ;
+            ils prennent les deux valeurs déclinées du rouge, celles de
+            `CHARTE_CLAIRE.degradeDebut` / `degradeFin`.
+            ⚠️ CETTE ICÔNE N'EST MONTÉE NULLE PART aujourd'hui : son
+            module (« Entreprise vérifiée ») appartenait au produit
+            artisans, parti à la nº 760. Elle est mise d'accord avec la
+            charte plutôt que laissée en arrière — mais personne ne la
+            voit, et son sort se décidera à part. */}
         <linearGradient id="rw-bouclier" x1="14" y1="4" x2="34" y2="44" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#FB7BA2" />
-          <stop offset="1" stopColor="#EC3A6E" />
+          <stop offset="0" stopColor="#EF839E" />
+          <stop offset="1" stopColor="#DC1143" />
         </linearGradient>
       </defs>
     </svg>

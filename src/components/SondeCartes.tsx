@@ -107,7 +107,7 @@ export function SondeCartes() {
         t.textContent = `${ligne.t}`;
         const texte = document.createElement("span");
         texte.style.cssText = /écart (?!0 )/.test(ligne.texte)
-          ? "color:#EE3D6F;font-weight:700;word-break:break-word"
+          ? "color:#E11144;font-weight:700;word-break:break-word"
           : /═══|▶/.test(ligne.texte)
             ? "color:#8FE28F;word-break:break-word"
             : "color:#FFF;word-break:break-word";
@@ -144,7 +144,7 @@ export function SondeCartes() {
         bottom: "max(6px, env(safe-area-inset-bottom))",
         zIndex: 2147483647,
         background: "#000000",
-        border: "2px solid #EE3D6F",
+        border: "2px solid #E11144",
         borderRadius: 12,
         padding: "8px 10px 10px",
         font: "12px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace",
@@ -156,7 +156,7 @@ export function SondeCartes() {
       }}
     >
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <span style={{ color: "#EE3D6F", fontWeight: 700, flex: 1 }}>
+        <span style={{ color: "#E11144", fontWeight: 700, flex: 1 }}>
           JOURNAL CARTES
         </span>
         <BoutonReplier surToucher={basculer} />

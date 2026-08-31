@@ -479,7 +479,7 @@ export function SondeNavigation() {
     padding: "0 10px",
     borderRadius: 999,
     border: actif ? "none" : "1px solid #666",
-    background: actif ? "#EE3D6F" : "transparent",
+    background: actif ? "#E11144" : "transparent",
     color: actif ? "#fff" : "#ddd",
     font: "600 12px system-ui, sans-serif",
   });
@@ -504,14 +504,14 @@ export function SondeNavigation() {
             alignItems: "center",
             flexWrap: "wrap",
             background: "rgba(0,0,0,.82)",
-            border: "1px solid #EE3D6F",
+            border: "1px solid #E11144",
             borderRadius: 12,
             padding: 6,
             font: "12px system-ui, sans-serif",
             color: "#eee",
           }}
         >
-          <span style={{ fontWeight: 700, color: enCours ? "#EE3D6F" : "#eee" }}>
+          <span style={{ fontWeight: 700, color: enCours ? "#E11144" : "#eee" }}>
             {enCours ? "enregistrement…" : `sonde (${combien})`}
           </span>
           <button type="button" style={bouton(mesure === "retour")} onClick={() => { setMesure("retour"); vider(); }}>

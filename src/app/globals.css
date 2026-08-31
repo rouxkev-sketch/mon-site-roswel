@@ -565,10 +565,14 @@ html[data-appareil="mobile"] [data-barre-fixe] {
     capsule blanche : on voit la page floutée par la plaque à travers
     les deux. */
 [data-verre-action] {
-  /*  §4 (nº 466) — le rose ravivé du produit (255,46,108 = #FF2E6C,
-      voir COULEURS_SOMBRE.primaire), même opacité de 40 %. En dur par
-      la règle du verre (aucun `var()` dans ces blocs — nº 172). */
-  background-color: rgba(255, 46, 108, 0.4);
+  /*  §1 (nº 762) — LA PRIMAIRE EST PASSÉE AU ROUGE (225,17,68 =
+      #E11144, voir COULEURS_SOMBRE.primaire), même opacité de 40 %.
+      ⚠️ C'EST LA SEULE VALEUR DE LA CHARTE ÉCRITE EN DUR DANS CETTE
+      FEUILLE, et ce n'est pas un oubli : la règle du verre interdit
+      `var()` dans ces blocs (nº 172). Elle se recopie donc à la main
+      à chaque changement de charte — c'est le prix de la règle, et
+      c'est pour cela qu'elle est signalée ici. */
+  background-color: rgba(225, 17, 68, 0.4);
 }
 
 /*  ⚠️ LA LUMIÈRE DU VERRE (nº 242) A ÉTÉ RETIRÉE PAR LA nº 244-§1 :
@@ -1364,11 +1368,21 @@ body:has(main.accueil-large) {
   border-radius: 9999px;
   background: var(--rw-primaire);
 }
+/*  §2 (nº 762) — LE HALO DE FOCUS DU CURSEUR ÉTAIT RESTÉ AU ROSE DE
+    ROSWEL. Il valait `rgb(238 61 111 / 0.35)` — la couleur d'AVANT
+    celle d'avant : la nº 466 avait changé la primaire sans voir ces
+    deux lignes, écrites en `rgb()` séparé par des espaces, que les
+    recherches sur « #EE3D6F » ne trouvaient pas. Il vaut désormais le
+    rouge de la charte, à 35 % comme avant.
+    ⚠️ EN DUR, ET C'EST LA SECONDE VALEUR DE CHARTE DE CETTE FEUILLE
+    (avec le verre de l'action finale) : un `box-shadow` translucide
+    ne se compose pas depuis une variable sans `color-mix`, qu'on ne
+    veut pas ici. Elle se recopie donc à la main — d'où cette note. */
 .curseur-sombre:focus-visible::-webkit-slider-thumb {
-  box-shadow: 0 0 0 4px rgb(238 61 111 / 0.35);
+  box-shadow: 0 0 0 4px rgb(225 17 68 / 0.35);
 }
 .curseur-sombre:focus-visible::-moz-range-thumb {
-  box-shadow: 0 0 0 4px rgb(238 61 111 / 0.35);
+  box-shadow: 0 0 0 4px rgb(225 17 68 / 0.35);
 }
 
 /* ------------------------------------------------------------------

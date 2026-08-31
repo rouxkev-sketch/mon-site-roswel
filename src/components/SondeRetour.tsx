@@ -1389,7 +1389,7 @@ export function SondeRetour({
           left: 8,
           bottom: 8,
           zIndex: 2147483647,
-          background: "#EE3D6F",
+          background: "#E11144",
           color: "#fff",
           border: "none",
           borderRadius: 999,
@@ -1417,7 +1417,7 @@ export function SondeRetour({
         flexDirection: "column",
         gap: 8,
         background: "#0B0F14",
-        border: "1px solid #EE3D6F",
+        border: "1px solid #E11144",
         borderRadius: 12,
         padding: 12,
         color: "#fff",
@@ -1445,7 +1445,7 @@ export function SondeRetour({
           font: "11px/1.4 ui-monospace, monospace",
         }}
       />
-      {copie && <span style={{ color: "#EE3D6F" }}>{copie}</span>}
+      {copie && <span style={{ color: "#E11144" }}>{copie}</span>}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-start" }}>
         <BoutonReplier surToucher={() => setOuvert(false)} />
         <BoutonCopierJournal texte={() => texte} />
@@ -1484,7 +1484,7 @@ export function SondeRetour({
             }
             setArretee(true);
           }}
-          style={{ ...styleBouton, background: "#EE3D6F", borderColor: "#EE3D6F" }}
+          style={{ ...styleBouton, background: "#E11144", borderColor: "#E11144" }}
         >
           DÉSARMER (les trois sondes)
         </button>

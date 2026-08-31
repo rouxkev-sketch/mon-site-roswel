@@ -68,7 +68,7 @@ export function SondeBoiteNoire() {
         bottom: "max(6px, env(safe-area-inset-bottom))",
         zIndex: 2147483647,
         background: "#000000",
-        border: "2px solid #EE3D6F",
+        border: "2px solid #E11144",
         borderRadius: 12,
         padding: "8px 10px 10px",
         font: "12px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace",
@@ -80,7 +80,7 @@ export function SondeBoiteNoire() {
       }}
     >
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <span style={{ color: "#EE3D6F", fontWeight: 700, flex: 1 }}>
+        <span style={{ color: "#E11144", fontWeight: 700, flex: 1 }}>
           BOÎTE NOIRE · {lignes.length} ligne{lignes.length > 1 ? "s" : ""}
         </span>
         <BoutonReplier surToucher={basculer} />

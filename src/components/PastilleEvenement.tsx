@@ -50,10 +50,10 @@ import type { ComposantIcone } from "@/components/Icones";
  * ⚠️ POURQUOI ILS SONT PLUS FRANCS QU'AVANT (le point 4 du propriétaire).
  * DEUX CAUSES SE CUMULAIENT, et aucune n'était le « /15 » qu'on
  * accusait :
- * 1) LE ROSE N'ÉTAIT PAS UN VOILE DE ROSE. Il s'écrivait
- *    `bg-primaire-voile` — #291320, une couleur OPAQUE plus SOMBRE que
- *    le fond des fenêtres (#262C34). Le cercle ne se voyait donc pas :
- *    il faisait un trou. Il devient un vrai voile du rose primaire.
+ * 1) LA PRIMAIRE N'ÉTAIT PAS UN VOILE DE PRIMAIRE. Elle s'écrivait
+ *    `bg-primaire-voile` — une couleur OPAQUE plus SOMBRE que le fond
+ *    des fenêtres (#262C34). Le cercle ne se voyait donc pas : il
+ *    faisait un trou. Il devient un vrai voile de la primaire.
  * 2) LE ROUGE ÉTAIT CELUI DES PAGES BLANCHES (#D32E28) : 2,4:1 sur son
  *    propre voile, sous le minimum d'un symbole. Il est recalculé pour
  *    le fond sombre (voir COULEURS_SOMBRE.erreur).
