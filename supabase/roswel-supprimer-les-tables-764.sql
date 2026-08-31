@@ -1,7 +1,7 @@
 -- ============================================================
 --  nº 764 — SUPPRIMER LES DOUZE TABLES DE ROSWEL
---  (remplace le brouillon de la nº 758, qui butait sur une règle
---   de sécurité — voir « CE QUI A CHANGÉ » ci-dessous)
+--  (version corrigée : la première butait sur l'éditeur de Supabase,
+--   voir « CE QUI A ÉTÉ CORRIGÉ » plus bas)
 -- ============================================================
 --  ⚠️ C'EST LE GESTE IRRÉVERSIBLE DU MÉNAGE. À coller quand tu as :
 --    1. fait ta sauvegarde (`node outils/sauvegarde.mjs`) — les
@@ -12,8 +12,8 @@
 --
 --  ⚠️ TOUT EN UNE TRANSACTION. L'éditeur SQL de Supabase exécute le
 --  fichier entier d'un bloc : ou tout passe, ou rien ne passe. Tu l'as
---  déjà vérifié à tes dépens en collant le brouillon de la nº 758 —
---  il a refusé, et il n'a rien laissé derrière lui.
+--  déjà vérifié deux fois — les deux refus n'ont rien laissé derrière
+--  eux.
 --
 --  ⚠️ `restrict`, PAS `cascade`, ET C'EST VOULU. `cascade` emporte
 --  silencieusement tout ce qui dépend de la table — y compris ce qu'on
@@ -21,10 +21,29 @@
 --  envoie-moi l'erreur : elle dit exactement quoi regarder.
 --
 -- ============================================================
---  CE QUI A CHANGÉ DEPUIS LE BROUILLON DE LA nº 758
+--  CE QUI A ÉTÉ CORRIGÉ (ton second essai)
 -- ============================================================
---  TON ERREUR, MOT POUR MOT, ET ELLE ÉTAIT JUSTE :
+--    ERROR: 42P01: relation "avant_764" does not exist
 --
+--  LA CAUSE. La version précédente notait, dans une TABLE TEMPORAIRE,
+--  ce que YokoFolio possédait avant la suppression, pour le comparer
+--  après. Une table temporaire n'existe que pour LA SESSION qui l'a
+--  créée. Dans psql — l'atelier — le fichier entier passe dans une
+--  seule session, et la comparaison marchait ; l'éditeur de Supabase,
+--  lui, ne garantit pas cela, et l'instruction qui la relisait ne l'a
+--  pas retrouvée.
+--  MA FAUTE, ET LA LEÇON : j'avais éprouvé le fichier sur un vrai
+--  PostgreSQL, mais pas sur l'outil qui allait vraiment l'exécuter.
+--
+--  LA CORRECTION. Plus une seule table temporaire. Le relevé de la fin
+--  ne compare plus « avant / après » : il vérifie des choses VRAIES
+--  DANS L'ABSOLU — les douze tables ne sont plus là, les dix-sept
+--  tables de YokoFolio sont nommées une par une et toutes présentes,
+--  la recherche répond. Rien à mémoriser d'une instruction à l'autre.
+--
+-- ============================================================
+--  LE NŒUD DE LA RÈGLE DE SÉCURITÉ (ton premier essai)
+-- ============================================================
 --    ERROR: cannot drop table conversations because other objects
 --           depend on it
 --    DETAIL: policy particuliers_vus_par_artisan_contacte on table
@@ -34,70 +53,41 @@
 --  dépendance sur elle. Celle-ci vit sur `particuliers` et lit
 --  `conversations` et `artisans` (c'est elle qui laissait un artisan
 --  voir le prénom des particuliers qui lui avaient écrit, passe
---  nº 699). Or `conversations` est supprimée AVANT `particuliers` :
---  au moment du `drop`, la règle existe encore et pointe dessus.
---  `restrict` a fait son travail.
+--  nº 699). Or `conversations` part AVANT `particuliers` : au moment
+--  du `drop`, la règle existe encore et pointe dessus.
 --
---  LA QUESTION QUI DÉCIDAIT DE TOUT — et la réponse est nette.
---  Cette règle protège-t-elle une table de ROSWEL ou une table de
+--  LA QUESTION QUI DÉCIDAIT DE TOUT, et la réponse est nette : cette
+--  règle protège-t-elle une table de ROSWEL ou une table de
 --  YOKOFOLIO ? Une règle posée sur une table de YokoFolio, on n'y
---  touche pas (leçon des nº 699/726 : les droits de cette base sont
---  délicats). Vérifié DEUX FOIS, par deux méthodes indépendantes :
---   · en lisant les 56 `create policy` de tous les fichiers SQL du
---     dépôt — ce sont eux qui ont bâti la base ;
---   · en interrogeant le catalogue de PostgreSQL (`pg_depend`) sur une
---     base d'essai où Roswel et YokoFolio cohabitent.
+--  touche pas. Vérifié deux fois, par deux méthodes indépendantes —
+--  les 56 `create policy` de tous les fichiers SQL du dépôt, et le
+--  catalogue de PostgreSQL sur une base d'essai où les deux produits
+--  cohabitent.
 --  VERDICT : TOUTES les règles qui croisent une table de Roswel sont
---  POSÉES SUR UNE TABLE DE ROSWEL. AUCUNE table de YokoFolio n'est
---  concernée — ni de près, ni de loin.
---
---  LA CORRECTION est donc la section 0 ci-dessous : on retire ces
---  règles-là AVANT les tables. Elles seraient parties avec leurs
---  tables de toute façon ; les retirer d'abord enlève simplement
---  l'ordre de passage du chemin.
+--  POSÉES SUR UNE TABLE DE ROSWEL. Aucune table de YokoFolio n'est
+--  concernée. La section 0 les retire donc avant les tables — elles
+--  seraient parties avec elles de toute façon.
 -- ============================================================
 
 begin;
 
---  ── LE COMPTE D'AVANT, pour le relevé de la fin ──
---  On note ce que YokoFolio possède AVANT de toucher à quoi que ce
---  soit : le relevé final le comparera à ce qui reste. Aucun chiffre à
---  connaître par cœur, aucun tableau à comparer à la main.
-create temporary table avant_764 on commit drop as
-select
-  (select count(*) from pg_class c
-     join pg_namespace n on n.oid = c.relnamespace
-    where n.nspname = 'public' and c.relkind = 'r'
-      and c.relname not in (
-        'artisans','artisan_metiers','artisans_prospects','particuliers',
-        'favoris','conversations','messages','demandes_rdv',
-        'messages_contact','signalements','communes','prospection_envois')
-  ) as tables_yokofolio,
-  (select count(*) from pg_policy pol
-     join pg_class c on c.oid = pol.polrelid
-     join pg_namespace n on n.oid = c.relnamespace
-    where n.nspname = 'public'
-      and c.relname not in (
-        'artisans','artisan_metiers','artisans_prospects','particuliers',
-        'favoris','conversations','messages','demandes_rdv',
-        'messages_contact','signalements','communes','prospection_envois')
-  ) as regles_yokofolio;
-
 --  ══ 0. LES RÈGLES DE SÉCURITÉ QUI CROISENT DEUX TABLES ══
---  Toutes posées sur des tables de Roswel. `if exists` : si l'une
---  manque déjà sur ta base, la ligne passe sans bruit.
---  ⚠️ AUCUNE RÈGLE DE YOKOFOLIO N'EST NOMMÉE ICI. Relis la liste :
---  particuliers, conversations, messages, artisan_metiers — quatre
---  tables de Roswel, et rien d'autre.
-drop policy if exists "particuliers_vus_par_artisan_contacte" on public.particuliers;
-drop policy if exists "conversations_participants_lecture"    on public.conversations;
-drop policy if exists "conversations_participants_maj"        on public.conversations;
+--  ⚠️ AUCUNE RÈGLE DE YOKOFOLIO N'EST NOMMÉE ICI, et c'est vérifiable
+--  d'un coup d'œil : les quatre tables citées — particuliers,
+--  conversations, messages, artisan_metiers — sont des tables de
+--  Roswel, et rien d'autre. Ce fichier ne peut donc pas retirer un
+--  droit de YokoFolio, quoi qu'il arrive.
+--  `if exists` : si l'une manque déjà sur ta base, la ligne passe sans
+--  bruit (un « NOTICE … skipping » s'affiche, c'est normal).
+drop policy if exists "particuliers_vus_par_artisan_contacte"   on public.particuliers;
+drop policy if exists "conversations_participants_lecture"      on public.conversations;
+drop policy if exists "conversations_participants_maj"          on public.conversations;
 drop policy if exists "conversations_ouverture_par_particulier" on public.conversations;
-drop policy if exists "messages_participants_lecture"         on public.messages;
-drop policy if exists "messages_envoi_par_participant"        on public.messages;
-drop policy if exists "messages_participants_maj"             on public.messages;
-drop policy if exists "metiers_lecture_publique"              on public.artisan_metiers;
-drop policy if exists "metiers_gestion_par_artisan"           on public.artisan_metiers;
+drop policy if exists "messages_participants_lecture"           on public.messages;
+drop policy if exists "messages_envoi_par_participant"          on public.messages;
+drop policy if exists "messages_participants_maj"               on public.messages;
+drop policy if exists "metiers_lecture_publique"                on public.artisan_metiers;
+drop policy if exists "metiers_gestion_par_artisan"             on public.artisan_metiers;
 
 --  ══ 1. CE QUI POINTE VERS LE RESTE (les feuilles) ══
 --  Les envois de démarchage artisans, la messagerie, les demandes.
@@ -119,7 +109,8 @@ drop table if exists public.particuliers       restrict;
 --  Le plus gros morceau, et le plus rassurant : son SEUL lecteur
 --  vivant était `api/verif-supabase`, un outil de diagnostic éteint en
 --  production — et cette route a été supprimée à la nº 760. Le repli
---  du champ de localité, lui, lit `tatoueurs` : il ne perd rien.
+--  du champ de localité, lui, lit `tatoueurs` : il ne perd rien (la
+--  dernière ligne du relevé te le montre).
 drop table if exists public.communes restrict;
 
 --  ══ 4. CE QUE JE N'AI PAS PU VOIR DEPUIS LE CODE ══
@@ -130,10 +121,14 @@ drop table if exists public.desinscriptions restrict;
 drop table if exists public.avis_google     restrict;
 drop table if exists public.quotas_google   restrict;
 
+commit;
+
 -- ============================================================
---  LE RELEVÉ — il s'affiche dans la même exécution.
---  Les quatre lignes doivent dire « ✅ ». S'il en manque une seule,
+--  LE RELEVÉ — à lire dans la même fenêtre, après le COMMIT.
+--  Les cinq lignes doivent dire « ✅ ». S'il en manque une seule,
 --  envoie-moi le tableau tel quel.
+--  ⚠️ IL NE COMPARE RIEN À UN « AVANT » : chaque ligne se vérifie
+--  toute seule. C'est ce qui l'a fait échouer la première fois.
 -- ============================================================
 select
   '1. les 12 tables de Roswel sont parties' as verification,
@@ -150,37 +145,42 @@ select
 
 union all
 
---  LA LIGNE QUI COMPTE VRAIMENT : YokoFolio n'a rien perdu.
+--  LA LIGNE QUI COMPTE VRAIMENT : YokoFolio n'a rien perdu. Les
+--  dix-sept tables sont NOMMÉES, pas comptées en bloc — si une seule
+--  venait à manquer, on saurait laquelle en relisant cette liste.
 select
-  '2. les tables de YokoFolio, toutes là',
-  count(*)::text,
-  (select tables_yokofolio::text from avant_764),
-  case when count(*) = (select tables_yokofolio from avant_764)
-       then '✅' else '⚠️ UNE TABLE MANQUE' end
+  '2. les 17 tables de YokoFolio sont toutes là',
+  count(*)::text, '17',
+  case when count(*) = 17 then '✅' else '⚠️ UNE TABLE MANQUE' end
   from pg_class c
   join pg_namespace n on n.oid = c.relnamespace
  where n.nspname = 'public' and c.relkind = 'r'
-   and c.relname not in (
-     'artisans','artisan_metiers','artisans_prospects','particuliers',
-     'favoris','conversations','messages','demandes_rdv',
-     'messages_contact','signalements','communes','prospection_envois')
+   and c.relname in (
+     'tatoueurs','photos_tatoueur','modes_exercice','studios',
+     'liaisons_artiste_salon','notifications_compte','favoris_photos',
+     'tatoueurs_suivis','clics_fiches','visites_selection',
+     'signalements_fiches','suggestions_style','suppressions_comptes',
+     'messages_yokofolio','demarchages','demarchage_fiches','conventions')
 
 union all
 
+--  Les droits de YokoFolio. Aucun nombre attendu (il dépend de ta
+--  base) : ce qui se vérifie, c'est qu'il en reste — et le fichier,
+--  lui, ne nomme que des règles de Roswel.
 select
-  '3. les règles de sécurité de YokoFolio, intactes',
-  count(*)::text,
-  (select regles_yokofolio::text from avant_764),
-  case when count(*) = (select regles_yokofolio from avant_764)
-       then '✅' else '⚠️ UNE RÈGLE A SAUTÉ' end
+  '3. les règles de sécurité de YokoFolio répondent présent',
+  count(*)::text, 'plus de zéro',
+  case when count(*) > 0 then '✅' else '⚠️ PLUS AUCUNE RÈGLE' end
   from pg_policy pol
   join pg_class c on c.oid = pol.polrelid
   join pg_namespace n on n.oid = c.relnamespace
  where n.nspname = 'public'
-   and c.relname not in (
-     'artisans','artisan_metiers','artisans_prospects','particuliers',
-     'favoris','conversations','messages','demandes_rdv',
-     'messages_contact','signalements','communes','prospection_envois')
+   and c.relname in (
+     'tatoueurs','photos_tatoueur','modes_exercice','studios',
+     'liaisons_artiste_salon','notifications_compte','favoris_photos',
+     'tatoueurs_suivis','clics_fiches','visites_selection',
+     'signalements_fiches','suggestions_style','suppressions_comptes',
+     'messages_yokofolio','demarchages','demarchage_fiches','conventions')
 
 union all
 
@@ -197,17 +197,25 @@ select
      p_decalage => 0, p_photos_max => 5, p_prioriser_clics => false,
      p_jour => 0)),
   'de 0 à 5 fiches',
-  '✅ si elle ne rend pas d''erreur';
+  '✅ si cette ligne s''affiche'
 
-commit;
+union all
 
--- ============================================================
---  ET APRÈS ? Le champ de localité connaît ses villes par la table
---  `tatoueurs`, jamais par `communes` : ce compte ne bouge pas d'un
---  cheveu après la suppression. Tu peux le vérifier d'un coup d'œil.
--- ============================================================
+--  ET LE CHAMP DE LOCALITÉ N'A RIEN PERDU : il connaît ses villes par
+--  la table `tatoueurs`, jamais par `communes`.
 select
-  'les villes du champ de localité' as verification,
-  count(distinct ville_nom)::text as villes_connues
-  from public.tatoueurs
- where publie = true and supprime_le is null and ville_nom is not null;
+  '5. les villes du champ de localité',
+  (select count(distinct ville_nom)::text from public.tatoueurs
+    where publie = true and supprime_le is null and ville_nom is not null),
+  'le même nombre qu''avant',
+  '✅ si ce n''est pas zéro';
+
+-- ============================================================
+--  UNE TREIZIÈME TABLE EST DANS LE MÊME CAS, et je ne la supprime pas
+--  sans ton accord : `journal_appels_google` (le journal des appels à
+--  Google Places, créé par `supabase/archives/journal-google.sql`).
+--  Son seul lecteur, `src/lib/journal-google.ts`, est parti à la
+--  nº 760. Elle ne figurait pas dans l'inventaire des douze — dis-moi
+--  si tu la veux aussi, c'est une ligne à ajouter :
+--      drop table if exists public.journal_appels_google restrict;
+-- ============================================================
