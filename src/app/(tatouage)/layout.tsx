@@ -12,15 +12,14 @@
  * habillage commun à ces pages-là, sans toucher aux autres produits.
  *
  * L'en-tête et le pied de page BLANCS du produit artisans ne peuvent
- * PLUS atteindre ces adresses (passe nº 145-§1) : ils ne vivent plus
- * dans la mise en page racine — donc partout par défaut, à retirer
- * ensuite d'une liste d'adresses — mais dans celle de LEUR groupe,
- * src/app/(artisans)/layout.tsx. Une page de yokofolio ne peut plus
- * les porter par oubli.
+ * PLUS atteindre ces adresses (passe nº 145-§1) : ils étaient d'abord
+ * descendus de la mise en page racine — où ils s'appliquaient partout
+ * par défaut — dans celle de LEUR groupe, puis ce groupe entier a été
+ * SUPPRIMÉ à la passe nº 760.
  *
- * ⚠️ AUCUN LIEN VERS UN AUTRE PRODUIT. Les fichiers des artisans et de
- * l'agence restent dans le code, mais aucune page de yokofolio ne les
- * affiche ni n'y renvoie : yokofolio est une marque à part entière.
+ * ⚠️ IL N'Y A PLUS D'AUTRE PRODUIT DANS CE CODE (nº 760). Les fichiers
+ * des artisans et de l'agence n'y sont plus ; leurs adresses rendent
+ * la page introuvable. Yokofolio est seul.
  */
 
 import type { Metadata, Viewport } from "next";

@@ -6,11 +6,11 @@ import { AdminYokofolio } from "@/components/AdminYokofolio";
  * /ADMIN — L'ADMINISTRATION DE YOKOFOLIO
  * =======================================
  * REPARTIE DE ZÉRO : l'ancien parcours d'administration des artisans
- * (Roswel) est DÉBRANCHÉ — ses fichiers vivent dans
- * src/archives-artisans/admin, plus aucune adresse ne les sert. Cette
- * page-ci est la seule chose que /admin affiche : l'interface
- * yokofolio (fiches à valider, signalements), réservée aux comptes
- * de COURRIELS_ADMIN (src/config/tatouage.ts).
+ * (Roswel) a d'abord été DÉBRANCHÉ, puis SUPPRIMÉ à la passe nº 760 —
+ * il n'en reste aucun fichier. Cette page-ci est la seule chose que
+ * /admin affiche : l'interface yokofolio (fiches à valider,
+ * signalements), réservée aux comptes de COURRIELS_ADMIN
+ * (src/config/tatouage.ts).
  *
  * `noindex` : une porte d'administration n'a rien à faire dans Google.
  */

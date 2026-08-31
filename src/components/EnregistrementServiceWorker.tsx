@@ -7,7 +7,7 @@ import { MILLESIME_SCRIPT } from "@/lib/millesime-script";
 
 /**
  * Active le "service worker" : un petit programme que le navigateur
- * garde en mémoire pour que Roswel se charge plus vite et reste
+ * garde en mémoire pour que le site se charge plus vite et reste
  * consultable même avec une connexion instable (c'est ce qui rend
  * le site installable comme une application).
  *

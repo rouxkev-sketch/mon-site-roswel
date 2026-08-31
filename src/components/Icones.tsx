@@ -167,9 +167,8 @@ export function IconeCoeur({ taille = 24, classe = "", trait = 1.8 }: Proprietes
  * sélection. Un seul appelant le choisit pour tout YOKOFOLIO —
  * `BoutonCoeurPhoto` (cartes, fiches, fenêtres, « Ma sélection ») ;
  * personne ne redessine ce tracé ailleurs.
- * ⚠️ LE PRODUIT ARTISANS N'EST PAS CONCERNÉ : son en-tête
- * (components/EnTete) et son bouton (BoutonFavoriCarte) gardent leur
- * cœur — c'est l'autre produit, on n'y touche pas.
+ * (Le produit artisans n'était pas concerné : son en-tête et son
+ * bouton de favori gardaient leur cœur. Il est parti à la nº 760.)
  *
  * Dessiné comme les autres : trait de 1.8, viewBox de 24, angles
  * arrondis — un rectangle ouvert en bas, échancré en V.
@@ -1213,8 +1212,9 @@ export function IconeReglages({ taille = 19, classe = "" }: ProprietesIcone) {
  * LA FLÈCHE DE L'ADRESSE (fiches yokofolio) — la diagonale type
  * Apple, VERSION LONGUE : le trait part vraiment du bas gauche
  * (5,19) jusqu'à la pointe haut droit (19,5), tête équilibrée.
- * Toujours rose, toujours visible. (LienFleche, côté artisans, garde
- * sa propre diagonale plus courte : IconeFlecheDiagonale.)
+ * Toujours rose, toujours visible. (`LienFleche`, côté artisans,
+ * avait sa propre diagonale plus courte — `IconeFlecheDiagonale` ;
+ * il est parti à la nº 760.)
  */
 export function IconeFlecheAdresse({ taille = 14, classe = "" }: ProprietesIcone) {
   return (

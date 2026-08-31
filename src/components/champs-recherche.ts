@@ -1,9 +1,12 @@
 /**
  * STYLES PARTAGÉS DES MENUS DÉROULANTS DE LA RECHERCHE
  * ----------------------------------------------------
- * Le menu « Catégorie d'artisan » (ChampMetier) et le menu des villes
- * (ChampVille) ouvrent EXACTEMENT le même panneau déroulant : mêmes
- * bordures, arrondis, ombre, marges, options. Un seul endroit à
+ * ⚠️ SES DEUX PREMIERS APPELANTS N'EXISTENT PLUS (nº 760) : le menu
+ * « Catégorie d'artisan » (ChampMetier) et le menu des villes
+ * (ChampVille) du produit artisans ouvraient EXACTEMENT le même
+ * panneau déroulant : mêmes bordures, arrondis, ombre, marges,
+ * options. Ces styles servent aujourd'hui aux menus de yokofolio, et
+ * la raison d'être du fichier n'a pas changé : un seul endroit à
  * modifier pour garder les deux rigoureusement identiques.
  */
 

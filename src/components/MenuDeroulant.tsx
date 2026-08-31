@@ -2124,9 +2124,10 @@ export function MenuDeroulant({
                  ⚠️ `globals.css` N'EST PAS TOUCHÉ (règle nº 172) : on
                  POSE ou on RETIRE l'attribut, on ne réécrit pas la
                  règle. C'est la méthode de la nº 579, dans l'autre sens.
-                 ⚠️ LA BRANCHE CLAIRE NE BOUGE PAS (`bg-fond shadow-2xl`)
-                 et c'est elle que prend la feuille du produit ARTISANS
-                 (`ChampMetier` ne passe pas `sombre`).
+                 ⚠️ LA BRANCHE CLAIRE NE BOUGE PAS (`bg-fond shadow-2xl`).
+                 C'était celle du produit ARTISANS (`ChampMetier` ne
+                 passait pas `sombre`), parti à la nº 760 : plus aucun
+                 appelant ne la prend aujourd'hui.
                  ⚠️ `opaque` GARDE SON DERNIER MOT (nº 552) : un appelant
                  qui le passe veut un aplat, quel que soit l'état. */
             /*  §1 (nº 581) — LA RÉSERVE DU BAS N'EST PLUS ICI QUAND LE
@@ -2207,9 +2208,9 @@ export function MenuDeroulant({
                    sélection » : elles ne passent donc plus de `titreFeuille`,
                    et le repli part avec — un titre inventé au nom de
                    quelqu'un qui n'en a pas demandé, c'est ce qu'on retire.
-                   ⚠️ LES AUTRES FEUILLES GARDENT LE LEUR : `ChampMetier`
-                   (le produit artisans) passe « Quel artisan ? », il
-                   s'affiche comme avant.
+                   (`ChampMetier`, côté artisans, passait « Quel
+                   artisan ? » et gardait donc le sien ; il est parti
+                   avec son produit à la nº 760.)
                    ⚠️ L'AIR EST DÉJÀ JUSTE, ET RIEN N'EST À AJOUTER : les
                    24 px qui séparaient le trait du titre (§1 nº 527)
                    deviennent l'air au-dessus de la première entrée. La

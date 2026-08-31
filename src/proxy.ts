@@ -25,9 +25,9 @@ export async function proxy(request: NextRequest) {
   // ⚠️ PLUS D'EN-TÊTE D'ADRESSE À POSER (passe nº 145-§1). Le proxy en
   // ajoutait un (`x-chemin`) pour que la mise en page RACINE sache sur
   // quelle page elle travaillait, et décide d'afficher ou non
-  // l'habillage du produit artisans. Cet habillage est descendu dans
-  // src/app/(artisans)/layout.tsx : il n'atteint plus que les pages de
-  // ce groupe, et personne n'a plus besoin de connaître l'adresse.
+  // l'habillage du produit artisans. Cet habillage était descendu dans
+  // le groupe (artisans), parti à la passe nº 760 : il n'y a plus
+  // qu'un site, et personne n'a plus besoin de connaître l'adresse.
   /*  nº 354 — LE NU TOTAL SE DÉCIDE AU SERVEUR, et c'est ici que le
       cookie se pose : la mise en page ne reçoit pas les paramètres
       d'adresse, le proxy si. `?variante=nu-total` pose le cookie SUR

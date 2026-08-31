@@ -14,9 +14,12 @@ export default function robots(): MetadataRoute.Robots {
       disallow: [
         "/admin/",
         "/api/",
-        "/compte",
-        "/favoris",
-        "/artisan/espace",
+        //  ⚠️ TROIS ADRESSES SONT PARTIES D'ICI (passe nº 760) :
+        //  « /compte », « /favoris » et « /artisan/espace » étaient les
+        //  espaces privés du produit ARTISANS, supprimé à cette passe.
+        //  Interdire une adresse qui n'existe plus n'est pas neutre :
+        //  c'est une consigne qui ment aux robots, et la prochaine
+        //  personne qui lit ce fichier y cherche une page absente.
         "/auth/",
         //  §1 (nº 712) — le tableau de bord des sondes : un outil
         //  d'atelier, pas une page du site.

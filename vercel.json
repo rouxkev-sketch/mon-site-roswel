@@ -2,14 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
     {
-      "path": "/api/cron/avis-google",
-      "schedule": "0 4 * * *"
-    },
-    {
-      "path": "/api/cron/prospection",
-      "schedule": "0 7 * * *"
-    },
-    {
       "path": "/api/cron/purge-comptes",
       "schedule": "30 3 * * *"
     }

@@ -78,8 +78,9 @@ export const viewport: Viewport = {
  * pages de yokofolio — et trois adresses nées après cette liste
  * (/mes-favoris, /apres-connexion, /rejoindre/<jeton>) n'y figuraient
  * pas : elles affichaient la barre fixe de l'ancien produit. L'habillage
- * est descendu dans src/app/(artisans)/layout.tsx, où il ne peut plus
- * atteindre que les pages de ce groupe.
+ * est descendu dans la mise en page du groupe (artisans) — groupe
+ * SUPPRIMÉ à la passe nº 760, avec cet habillage. La racine ne porte
+ * donc plus rien, et il n'y a plus qu'un habillage à poser.
  */
 export default function RootLayout({
   children,
@@ -131,11 +132,11 @@ export default function RootLayout({
         {/* Dégradés SVG partagés (icône Instagram…), définis une
             seule fois hors de tout sous-arbre masqué */}
         <DefinitionsIcones />
-        {/* CHAQUE PRODUIT POSE SON PROPRE HABILLAGE, dans la mise en
-            page de SON groupe : (artisans) l'en-tête blanc et le pied
-            complet, (tatouage) le fond sombre et son pied discret,
-            (agence) sa barre de site vitrine. La racine, elle,
-            n'impose plus rien à personne. */}
+        {/* L'HABILLAGE SE POSE DANS LA MISE EN PAGE DU GROUPE, jamais
+            ici : (tatouage) porte le fond sombre et son pied discret.
+            Les deux autres groupes — (artisans) et (agence) — ont été
+            supprimés à la passe nº 760. La racine, elle, n'impose
+            rien à personne. */}
         {children}
         {/* Journal de navigation (bouton retour de la fiche) */}
         <MemoireNavigation />

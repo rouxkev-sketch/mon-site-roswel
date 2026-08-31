@@ -14,8 +14,9 @@ export const revalidate = 86400;
  * produits du dossier (/agence, /artisans, /devenir-artisan, les
  * fiches d'artisans, les pages métier + ville) : le plan de yokofolio
  * parlait donc surtout d'autre chose que de yokofolio. Ces produits
- * restent en ligne à leurs adresses ; ils ne sont simplement plus
- * déclarés ici.
+ * ONT ÉTÉ SUPPRIMÉS à la passe nº 760 — leurs adresses rendent
+ * désormais la page introuvable du site. Ce plan-ci n'a pas bougé
+ * pour autant : il ne les déclarait déjà plus.
  *
  * CE QU'IL LISTE, ET RIEN D'AUTRE :
  *  - l'accueil, « Qui sommes-nous », « Contact », les mentions légales ;

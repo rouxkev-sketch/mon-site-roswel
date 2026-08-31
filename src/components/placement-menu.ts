@@ -51,8 +51,9 @@ import { useLayoutEffect, useState, type RefObject } from "react";
  * l'ouverture, le temps que l'animation du clavier d'iOS se termine.
  *
  * UN SEUL endroit pour cette logique, partagé par le menu des styles
- * (MenuDeroulant), la liste des villes (ChampVille) et le champ de
- * localisation mondial (ChampLocalisation).
+ * (MenuDeroulant) et le champ de localisation mondial
+ * (ChampLocalisation). La liste des villes du produit artisans
+ * (ChampVille) la partageait aussi, jusqu'à sa suppression (nº 760).
  */
 
 /** Respiration entre le menu et le bord de l'écran. */

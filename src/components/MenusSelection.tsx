@@ -298,8 +298,8 @@ export function MenusSelection({
              que le pouce attrape garde ses 44 px, et les 24 px qui
              séparaient le trait du titre deviennent l'air au-dessus de
              la première entrée.
-             ⚠️ LA FEUILLE DE `ChampMetier` (le produit artisans) GARDE
-             LE SIEN : elle passe toujours « Quel artisan ? ». */
+             (La feuille de `ChampMetier`, côté artisans, gardait le
+             sien — « Quel artisan ? » ; elle est partie à la nº 760.) */
         /*  §3 (nº 262) — SUR SMARTPHONE, LE CHAMP NE DIT PLUS LE
             STYLE : le mot « Filtrer », en blanc et en gras — la graisse
             et la taille du titre « Recherche » de la page du moteur
