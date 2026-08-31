@@ -1,0 +1,50 @@
+#!/bin/sh
+#
+#  ██ COPIER LES PHOTOS VERS LE NOUVEAU PROJET (passe nº 766) ██
+#  ==================================================================
+#  CE QUE TU TAPES, DANS LE DOSSIER DU PROJET, SUR TON MAC :
+#
+#    CIBLE_URL='https://xxxxx.supabase.co' \
+#    CIBLE_SECRET_KEY='la clé secrète du NOUVEAU projet' \
+#      sh outils/demenager-photos
+#
+#  Il compte les fichiers des deux côtés et te dit ce qui manque, sans
+#  rien copier. Quand le compte te va :
+#
+#    CIBLE_URL='…' CIBLE_SECRET_KEY='…' \
+#      sh outils/demenager-photos --reel
+#
+#  ⚠️ SUR TON MAC, PAS DANS L'ATELIER (aucun accès au réseau là-bas).
+#
+#  ==================================================================
+#  AVANT DE LE LANCER : LE SEAU DOIT EXISTER DANS LE NOUVEAU PROJET
+#  ------------------------------------------------------------------
+#  Dans supabase.com, projet « yokofolio-us » ▸ Storage ▸ New bucket :
+#    · nom     : photos-tatoueurs   (au caractère près)
+#    · Public bucket : OUI — les photos des portfolios s'affichent
+#      pour tout le monde, sans jeton ; c'est ainsi dans l'ancien
+#      projet, et le site construit ses adresses en le supposant.
+#  Sans ce seau, le script dira « HTTP 404 » sur chaque fichier.
+#
+#  ==================================================================
+#  CE QU'IL FAIT, ET CE QU'IL NE FERA JAMAIS
+#  ------------------------------------------------------------------
+#  Il liste les deux côtés, et ne copie QUE ce qui manque dans le
+#  nouveau. Un fichier déjà présent n'est jamais réécrit : il est
+#  compté « déjà en place » et laissé tel quel.
+#  Dans l'ancien projet, il ne fait que LIRE. Il n'efface rien, nulle
+#  part. Relancé après une coupure, il reprend là où il en était —
+#  sans doublon.
+#
+#  ⚠️ C'EST LE PLUS LONG DES QUATRE. Les photos passent une par une ;
+#  compte plusieurs minutes. Si ça coupe, relance : rien n'est perdu.
+#
+
+set -e
+
+DOSSIER=$(cd "$(dirname "$0")/.." && pwd)
+cd "$DOSSIER"
+
+. "$(dirname "$0")/verifier-node.sh"
+
+exec node outils/demenager-photos.mjs "$@"
