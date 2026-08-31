@@ -44,7 +44,7 @@ import { estLaMosaique } from "@/lib/chemin-recherche";
  * déjà armé son propre `pushState`, et c'est lui qu'on appelle.
  */
 
-const EVENEMENT = "roswel:adresse-changee";
+const EVENEMENT = "yokofolio:adresse-changee";
 
 let surveillancePosee = false;
 

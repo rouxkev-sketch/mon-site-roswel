@@ -87,7 +87,7 @@ function journalEnTexte(): string {
  */
 
 /** Où la position d'une adresse est rangée — lib/navigation-session. */
-const PREFIXE_DEFILEMENT = "roswel:defilement:";
+const PREFIXE_DEFILEMENT = "yokofolio:defilement:";
 function adresseCourante(): string {
   return window.location.pathname + window.location.search;
 }

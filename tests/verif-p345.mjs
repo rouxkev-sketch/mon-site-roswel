@@ -69,7 +69,7 @@ const { nav, ctx } = await ouvrirLeNavigateur(
 const ETAT = () => ({
   pile: history.length,
   referent: document.referrer,
-  bas: JSON.parse(sessionStorage.getItem("roswel:bas-de-la-pile") ?? "null"),
+  bas: JSON.parse(sessionStorage.getItem("yokofolio:bas-de-la-pile") ?? "null"),
   filet: Boolean(history.state?.retourReconstruit),
   ou: location.pathname,
 });
@@ -339,13 +339,13 @@ verif(
   //  ⚠️ ON DÉSARME D'ABORD : l'armement de la sonde du §4 est DURABLE
   //  depuis la nº 343 (mémoire locale), il survit à l'onglet.
   await p.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
-  await p.evaluate(() => localStorage.removeItem("roswel:sondes-armees"));
+  await p.evaluate(() => localStorage.removeItem("yokofolio:sondes-armees"));
   await p.goto("about:blank");
   await p.goto(`${BASE}/`, { waitUntil: "networkidle" });
   await p.waitForTimeout(2000);
   const propre = await p.evaluate(() => ({
     marque: document.documentElement.dataset.sondes ?? "(aucune)",
-    bas: sessionStorage.getItem("roswel:bas-de-la-pile"),
+    bas: sessionStorage.getItem("yokofolio:bas-de-la-pile"),
   }));
   verif(
     "sondes désarmées : aucune marque, et le relevé du bas tient en une ligne",

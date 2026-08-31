@@ -38,7 +38,7 @@ import { annulerLaRestitutionEnCours } from "@/lib/restitution-position";
  *     ⚠️ DE LA LISTE QUI ARRIVE, ET SURTOUT PAS DE CELLE QU'ON QUITTE.
  *     C'est le §2 de la nº 332… et le défaut que la nº 330 avait
  *     introduit sans le voir. MESURÉ : sur l'accueil descendu à 900 px,
- *     une recherche validée effaçait `roswel:defilement:/` — l'adresse
+ *     une recherche validée effaçait `yokofolio:defilement:/` — l'adresse
  *     courante AU MOMENT DU GESTE est encore celle de l'accueil, pas
  *     celle des résultats. Le retour rendait donc 0 au lieu de 900.
  *     `poserSelection` (un filtre) écrit son adresse AVANT d'appeler :

@@ -122,7 +122,7 @@ export const MARQUE_IMMEDIATE = "rangeeImmediate";
 /** L'événement par lequel le retour prévient la barre, quand celle-ci
     est déjà née (retour en navigation de client : la barre n'est pas
     remontée, elle ne relira jamais la marque toute seule). */
-export const EVENEMENT_RANGEE = "roswel:rangee-a-rendre";
+export const EVENEMENT_RANGEE = "yokofolio:rangee-a-rendre";
 
 /**
  * ██ §1 (nº 430) — L'ÉTAT DU VOLET SURVIT AU REMONTAGE ██

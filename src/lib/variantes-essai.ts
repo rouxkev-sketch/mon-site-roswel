@@ -77,7 +77,7 @@ export type Mecanisme =
   | "nettoyages"
   | "balise";
 
-export const CLE_VARIANTE = "roswel:variante-essai";
+export const CLE_VARIANTE = "yokofolio:variante-essai";
 /** La marque posée sur <html> par le script d'avant peinture :
     `data-variante`. Tout le site lit ELLE — disponible dès la
     première ligne, aucun accès au stockage par lecture. */

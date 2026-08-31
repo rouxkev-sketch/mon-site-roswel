@@ -9,8 +9,22 @@
  * Rappel du cahier des charges : ces emails n'embarquent jamais le
  * contenu des messages ni l'adresse email de l'autre partie.
  */
+import { MARQUE_YOKOFOLIO } from "@/config/tatouage";
 
-const EXPEDITEUR = process.env.RESEND_EXPEDITEUR ?? "Roswel <onboarding@resend.dev>";
+/**
+ * ██ nº 761 — LES COURRIELS PARTAIENT SIGNÉS « ROSWEL » ██
+ * Ce repli disait `Roswel <onboarding@resend.dev>`, et il s'appliquait
+ * VRAIMENT : `RESEND_EXPEDITEUR` est vide. Chaque notification envoyée
+ * par YokoFolio arrivait donc dans une boîte au nom de l'ancien
+ * produit. Trouvé en cherchant les derniers restes de Roswel dans le
+ * code — c'était le seul qui sortait du site.
+ * ⚠️ L'ADRESSE NE CHANGE PAS : `onboarding@resend.dev` est l'expéditeur
+ * d'essai de Resend, le seul qui fonctionne sans domaine vérifié. Seul
+ * le NOM affiché change. Le jour où un domaine sera vérifié, c'est
+ * `RESEND_EXPEDITEUR` qu'on remplira — pas cette ligne.
+ */
+const EXPEDITEUR =
+  process.env.RESEND_EXPEDITEUR ?? `${MARQUE_YOKOFOLIO.nom} <onboarding@resend.dev>`;
 
 /** Adresse publique du site, pour construire les liens des emails.
     Réexportée depuis src/lib/site.ts : UNE SEULE source pour tout le

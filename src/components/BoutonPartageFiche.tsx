@@ -26,7 +26,8 @@ import {
 //  ⚠️ CE N'ÉTAIT PAS LE DERNIER LECTEUR, contrairement à ce que
 //  l'inventaire nº 758 laissait croire : `app/layout.tsx`,
 //  `lib/theme.ts` (toute la palette `--rw-*`) et `MenuDeroulant` y
-//  puisent encore. Les déplacer est une passe à part.
+//  puisaient encore. Ils ont déménagé dans `config/charte.ts` à la
+//  nº 761, et `config/roswel.ts` a été supprimé avec eux.
 import { MARQUE_YOKOFOLIO } from "@/config/tatouage";
 
 /**
@@ -218,7 +219,7 @@ export function BoutonPartageFiche({
   const declencheur = useRef<HTMLButtonElement>(null);
 
   /** L'URL PUBLIQUE de la fiche : le chemin résolu sur l'origine du
-      site (https://roswel.fr/artisan/…), sinon la page courante. */
+      site (https://…/tatoueur/nom), sinon la page courante. */
   function urlFiche() {
     return cheminFiche
       ? new URL(cheminFiche, window.location.origin).href

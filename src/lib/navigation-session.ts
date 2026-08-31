@@ -421,7 +421,7 @@ import { adresseDeRecherche } from "@/lib/adresse-recherche";
 //  §1 (nº 335) — la règle du « cran » du retour, écrite une seule fois.
 import { rangeeReplieeMaintenant } from "@/lib/reserve-barre";
 
-export const CLE_JOURNAL = "roswel:pages-visitees";
+export const CLE_JOURNAL = "yokofolio:pages-visitees";
 const CLE = CLE_JOURNAL;
 
 /** Douze heures × 2 : au-delà, le journal est considéré périmé */
@@ -503,7 +503,7 @@ export function lirePageCourante(): string | null {
  * POSITIONS DE DÉFILEMENT (persistantes, par adresse)
  * ------------------------------------------------------------ */
 
-export const PREFIXE_DEFILEMENT = "roswel:defilement:";
+export const PREFIXE_DEFILEMENT = "yokofolio:defilement:";
 
 /**
  * ⚠️ UNE POSITION APPARTIENT À UNE RECHERCHE PRÉCISE (nº 184-§2).
@@ -520,8 +520,8 @@ export const PREFIXE_DEFILEMENT = "roswel:defilement:";
  * ------------------------------------------------------------------
  * RIEN, et ce n'est pas une formule : la clé contient LE CHEMIN, parce
  * que l'adresse canonique le contient. Depuis la nº 652, une recherche
- * se range donc sous « roswel:defilement:/recherche?style=… » et
- * l'accueil sous « roswel:defilement:/ ». DEUX CLÉS QUI NE PEUVENT PAS
+ * se range donc sous « yokofolio:defilement:/recherche?style=… » et
+ * l'accueil sous « yokofolio:defilement:/ ». DEUX CLÉS QUI NE PEUVENT PAS
  * SE CONFONDRE — c'est exactement la garantie que la nº 184 cherchait,
  * et le déménagement la renforce au lieu de l'entamer.
  * ⚠️ CE QUI SE PERD, ET C'EST SANS CONSÉQUENCE : les positions écrites
@@ -687,7 +687,7 @@ export function purgerDefilementsAnciens() {
  * il faut RECONSTRUIRE le retour au lieu de la rejoindre.
  */
 
-export const CLE_ONGLET = "roswel:onglet";
+export const CLE_ONGLET = "yokofolio:onglet";
 
 /** §2 (nº 428) — LA MARQUE DU RATTRAPAGE DU FILET : posée par
     RetourGaranti juste avant son `location.replace("/")`, lue et
@@ -696,7 +696,7 @@ export const CLE_ONGLET = "roswel:onglet";
     ce départ VOULU vers l'accueil nu pour un repli de navigation qui
     a perdu ses critères, et renverrait l'utilisateur là d'où le
     rattrapage venait précisément de le tirer. */
-export const CLE_RATTRAPAGE_FILET = "roswel:rattrapage-filet";
+export const CLE_RATTRAPAGE_FILET = "yokofolio:rattrapage-filet";
 
 /**
  * §1 (nº 429) — « DÉPART VOULU VERS L'ACCUEIL » : L'INTENTION DÉCLARÉE
@@ -716,7 +716,7 @@ export const CLE_RATTRAPAGE_FILET = "roswel:rattrapage-filet";
  * filet), et une navigation douce qui n'a pas déchargé le document la
  * laisse expirer sans effet.
  */
-export const CLE_DEPART_VOULU = "roswel:depart-voulu-accueil";
+export const CLE_DEPART_VOULU = "yokofolio:depart-voulu-accueil";
 
 /** À appeler au CLIC de tout lien interne qui mène à l'accueil nu
     (le logo de la barre en tête). Un simple horodatage de session —
@@ -979,7 +979,7 @@ export function consommerTraversee(): boolean {
  * à la page d'arrivée de restaurer quand même la position.
  */
 
-export const CLE_RESTAURER = "roswel:restaurer-position";
+export const CLE_RESTAURER = "yokofolio:restaurer-position";
 
 /** Sans adresse : demande « libre », consommée par la PROCHAINE page
     (le bouton retour reconstruit). Avec adresse : demande RÉSERVÉE à

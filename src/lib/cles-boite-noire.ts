@@ -33,7 +33,7 @@
  */
 
 /** La clé de rangement de la trace, dans la mémoire de l'onglet. */
-export const CLE_BOITE_NOIRE = "roswel:boite-noire";
+export const CLE_BOITE_NOIRE = "yokofolio:boite-noire";
 
 /**
  * Le nombre de lignes gardées.

@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
-import { COULEURS } from "@/config/roswel";
+import { CHARTE_CLAIRE } from "@/config/charte";
 import { MARQUE_YOKOFOLIO, TEXTES_TATOUAGE } from "@/config/tatouage";
 import { adresseDuSite } from "@/lib/site";
 import { variablesCssCouleurs } from "@/lib/theme";
@@ -59,9 +59,17 @@ export const metadata: Metadata = {
   },
 };
 
-// Réglages d'affichage mobile (couleur de la barre du navigateur)
+/*  Réglages d'affichage mobile (couleur de la barre du navigateur).
+    ⚠️ CE BLANC N'EST PRESQUE JAMAIS CELUI QU'ON VOIT : le groupe
+    (tatouage) déclare le sien (`COULEURS_SOMBRE.fond`, le bleu nuit),
+    et il gagne sur toutes ses pages. Il ne reste donc que les deux
+    pages sans groupe — la page introuvable et le tableau de bord des
+    sondes. Mesuré à la nº 761 : barre BLANCHE sur la page introuvable,
+    qui est pourtant sombre. C'est un reste du produit artisans, laissé
+    tel quel parce que le changer changerait l'aspect du site — la
+    question est posée au propriétaire. */
 export const viewport: Viewport = {
-  themeColor: COULEURS.fond,
+  themeColor: CHARTE_CLAIRE.fond,
   width: "device-width",
   initialScale: 1,
 };

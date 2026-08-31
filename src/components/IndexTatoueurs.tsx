@@ -880,7 +880,7 @@ export function IndexTatoueurs({
         LE DÉFAUT, MESURÉ : sans elle, `ouvrirLaListeEnHaut` effaçait la
         position mémorisée de L'ADRESSE COURANTE — c'est-à-dire de
         L'ACCUEIL QU'ON QUITTE, puisqu'on appelle AVANT de naviguer.
-        Relevé : `roswel:defilement:/` valait 900 avant la recherche, la
+        Relevé : `yokofolio:defilement:/` valait 900 avant la recherche, la
         mémoire était VIDE après, et le retour rendait 0. Le propriétaire
         l'a vu sur son iPhone à la nº 333 (« j'arrive bien sur l'accueil,
         mais pas là où j'étais ») : ce n'était pas l'historique, c'était

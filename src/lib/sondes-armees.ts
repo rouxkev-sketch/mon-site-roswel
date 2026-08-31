@@ -76,7 +76,7 @@ export type NomDeSonde = (typeof SONDES)[number];
 /** La mémoire LOCALE — elle survit à l'ouverture d'un onglet neuf, ce
     que la mémoire d'onglet ne fait pas. C'est toute la raison d'être
     de cette passe. */
-export const CLE_ARMEMENT = "roswel:sondes-armees";
+export const CLE_ARMEMENT = "yokofolio:sondes-armees";
 
 /** La marque posée sur `<html>` par le script d'avant peinture. Tout
     le site lit ELLE, jamais la mémoire : elle est disponible dès la

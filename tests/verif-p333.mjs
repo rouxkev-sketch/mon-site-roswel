@@ -200,7 +200,7 @@ titre("§2 — au retour depuis des résultats, l'accueil retrouve sa place");
   await p2.waitForTimeout(900);
   const quittee = await p2.evaluate(() => Math.round(window.scrollY));
   const memoireAvant = await p2.evaluate(() =>
-    localStorage.getItem("roswel:defilement:/")
+    localStorage.getItem("yokofolio:defilement:/")
   );
   const jouee = await unecherche(p2, "Blackwork");
   if (!jouee || quittee < 100) {
@@ -211,7 +211,7 @@ titre("§2 — au retour depuis des résultats, l'accueil retrouve sa place");
     );
   } else {
     const memoireApres = await p2.evaluate(() =>
-      localStorage.getItem("roswel:defilement:/")
+      localStorage.getItem("yokofolio:defilement:/")
     );
     verif(
       "LA MÉMOIRE DE L'ACCUEIL SURVIT À LA RECHERCHE",

@@ -401,13 +401,15 @@ export default async function MiseEnPageTatouage({
            avec les valeurs de la charte tatouage (COULEURS_SOMBRE —
            #FF2E6C sur le bleu nuit, voir la note du jeton). Le
            `:root` du <head> (variables-couleurs, layout racine) garde
-           les valeurs de roswel.ts : ce <style> venant APRÈS dans le
-           document, il gagne à spécificité égale — mais UNIQUEMENT sur
-           les pages qui rendent ce layout. Les pages artisans ne le
-           rendent pas : leur rose ne bouge pas d'un cheveu. Rendu par
-           le serveur, avant tout contenu : aucun éclair de l'ancienne
-           couleur (nº 439). `primaire-clair` n'est pas surchargé — il
-           ne sert que des fonds clairs, hors de ce produit. */}
+           les valeurs de la couche claire (config/charte.ts, nº 761) :
+           ce <style> venant APRÈS dans le document, il gagne à
+           spécificité égale — mais UNIQUEMENT sur les pages qui rendent
+           ce layout. ⚠️ IL RESTE DEUX PAGES SANS GROUPE — la page
+           introuvable et le tableau de bord des sondes : elles gardent
+           le rose clair, mesuré à la nº 761. Rendu par le serveur,
+           avant tout contenu : aucun éclair de l'ancienne couleur
+           (nº 439). `primaire-clair` n'est pas surchargé — il ne sert
+           que des fonds clairs, hors de ce produit. */}
       <style
         id="rose-tatouage"
         dangerouslySetInnerHTML={{

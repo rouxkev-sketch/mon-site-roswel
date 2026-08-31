@@ -38,7 +38,7 @@ for (const largeur of [320, 390, 430, 768, 1024, 1366, 1440]) {
   console.log(`\n=== ${largeur}px ===`);
   const ctx = await navigateur.newContext({ viewport: { width: largeur, height: 900 } });
   await ctx.addInitScript(() => {
-    try { localStorage.setItem("roswel:cookies-info-vue", "oui"); } catch {}
+    try { localStorage.setItem("yokofolio:cookies-info-vue", "oui"); } catch {}
   });
   const page = await ctx.newPage();
   await page.route("**/rest/v1/**", (r) => r.fulfill({ json: [] }));

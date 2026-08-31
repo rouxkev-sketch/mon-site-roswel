@@ -341,7 +341,7 @@ titre("§4 — le journal de la pile, lisible et recopiable au téléphone");
   });
   await page4.waitForTimeout(1000);
   const releve = await page4.evaluate(() => {
-    const brut = sessionStorage.getItem("roswel:journal-historique");
+    const brut = sessionStorage.getItem("yokofolio:journal-historique");
     return brut ? JSON.parse(brut) : [];
   });
   verif(

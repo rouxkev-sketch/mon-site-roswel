@@ -194,11 +194,11 @@ var r=document.documentElement;
    FIABLES (première image peinte, pageshow, événement de changement
    du média) et remet mémoire et attribut à jour : un vrai changement
    d'appareil (souris branchée sur tablette) est suivi, jamais figé. */
-var appMemo=null;try{appMemo=sessionStorage.getItem("roswel:appareil")}catch(e){}
+var appMemo=null;try{appMemo=sessionStorage.getItem("yokofolio:appareil")}catch(e){}
 var appMedia=matchMedia("(pointer: coarse)");
 r.dataset.appareil=(appMemo==="mobile"||appMemo==="web")?appMemo:(appMedia.matches?"mobile":"web");
 var appFixer=function(){var v=matchMedia("(pointer: coarse)").matches?"mobile":"web";
-r.dataset.appareil=v;try{sessionStorage.setItem("roswel:appareil",v)}catch(e){}};
+r.dataset.appareil=v;try{sessionStorage.setItem("yokofolio:appareil",v)}catch(e){}};
 requestAnimationFrame(appFixer);
 addEventListener("pageshow",appFixer);
 try{appMedia.addEventListener("change",appFixer)}catch(e){}

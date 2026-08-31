@@ -12,7 +12,8 @@ import {
 //  L'ÉCRAN : l'écriture unique des quatre surfaces du C-4.
 import { useEtapeQuiSeReferme } from "@/lib/etape-refermable";
 import { createPortal } from "react-dom";
-import { COULEURS } from "@/config/roswel";
+import { CHARTE_CLAIRE } from "@/config/charte";
+import { COULEURS_SOMBRE } from "@/config/tatouage";
 import {
   OPTION_LISTE,
   PANNEAU_LISTE_FLOTTANT,
@@ -44,8 +45,19 @@ const flecheImage = (couleur: string) =>
     supprimés — voir la note du rendu d'une entrée, plus bas. */
 const TAILLE_POINT = "w-1.5 h-1.5";
 
-const FLECHE_GRISE = flecheImage(COULEURS.flecheMenus);
-const FLECHE_ROSE = flecheImage(COULEURS.primaire);
+/*  ██ nº 761 — LA FLÈCHE OUVERTE PRENAIT LE ROSE DE ROSWEL ██
+    Ces deux images sont dessinées EN JAVASCRIPT — un SVG encodé dans
+    l'adresse du fond, la couleur écrite en clair dedans. Le CSS ne
+    peut donc rien pour elles : la surcharge rose du groupe (tatouage)
+    (`--rw-primaire`, nº 466) ne les atteint pas, et la flèche ouverte
+    restait au vieux #EE3D6F pendant que tout le reste de l'écran était
+    à #FF2E6C. Elle prend maintenant le rose de la charte, à sa source.
+    ⚠️ ON NE LA VOIT PAS PARTOUT : le champ « Style » du moteur pose
+    `flecheFigee` (nº 648, demande du propriétaire) et reste gris même
+    ouvert. Les six autres menus — éditeur de fiche, modes d'exercice,
+    Ma sélection, second menu du moteur — sont ceux qui rosissent. */
+const FLECHE_GRISE = flecheImage(CHARTE_CLAIRE.flecheMenus);
+const FLECHE_ROSE = flecheImage(COULEURS_SOMBRE.primaire);
 
 /**
  * §2-b (nº 317) — L'ÉCRITURE D'UN TITRE DE GROUPE, EXTRAITE.
@@ -1573,7 +1585,12 @@ export function MenuDeroulant({
           <span
             data-point-option=""
             className={`${TAILLE_POINT} rounded-full shrink-0`}
-            style={{ backgroundColor: COULEURS.primaire }}
+            //  nº 761 — LE MÊME DÉFAUT QUE LA FLÈCHE, à trois lignes de
+            //  là : ce point était peint en JavaScript avec le rose de
+            //  Roswel (#EE3D6F), que la surcharge CSS du groupe
+            //  (tatouage) ne pouvait pas atteindre. Il prend le rose de
+            //  la charte, comme tout ce qui l'entoure.
+            style={{ backgroundColor: COULEURS_SOMBRE.primaire }}
             aria-hidden
           />
         )}
@@ -1649,7 +1666,12 @@ export function MenuDeroulant({
           <span
             data-point-option=""
             className={`${TAILLE_POINT} rounded-full shrink-0`}
-            style={{ backgroundColor: COULEURS.primaire }}
+            //  nº 761 — LE MÊME DÉFAUT QUE LA FLÈCHE, à trois lignes de
+            //  là : ce point était peint en JavaScript avec le rose de
+            //  Roswel (#EE3D6F), que la surcharge CSS du groupe
+            //  (tatouage) ne pouvait pas atteindre. Il prend le rose de
+            //  la charte, comme tout ce qui l'entoure.
+            style={{ backgroundColor: COULEURS_SOMBRE.primaire }}
             aria-hidden
           />
         )}

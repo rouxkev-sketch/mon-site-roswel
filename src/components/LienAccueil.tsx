@@ -59,7 +59,7 @@ const ADRESSE_ACCUEIL = "/";
  * `DefilementEnHaut` remonte, `MemoireNavigation` s'abstient de
  * restituer. Ce sont deux CONSIGNES, adressées à deux composants, et
  * valables trois et huit secondes. Elles ne touchent PAS à la place
- * mémorisée de l'accueil : `roswel:defilement:/` reste écrite, et
+ * mémorisée de l'accueil : `yokofolio:defilement:/` reste écrite, et
  * n'importe quel autre chemin de restitution peut encore la relire —
  * le script d'avant peinture sur une navigation qualifiée « retour »,
  * une demande nommée, un réveil de traversée. Une consigne qui expire

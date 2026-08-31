@@ -1,36 +1,41 @@
-import { COULEURS } from "@/config/roswel";
+import { CHARTE_CLAIRE } from "@/config/charte";
 import { COULEURS_SOMBRE } from "@/config/tatouage";
 
 /**
- * Transforme les couleurs du fichier de réglages central en
- * "variables CSS" comprises par le navigateur.
+ * Transforme les couleurs des deux chartes en "variables CSS"
+ * comprises par le navigateur.
  *
- * Grâce à ça, les couleurs ne sont écrites qu'à UN seul endroit
- * (src/config/roswel.ts) : ce fichier fait juste le pont entre
- * les réglages et l'affichage. Il n'y a rien à modifier ici.
+ * Grâce à ça, chaque couleur n'est écrite qu'à UN seul endroit — la
+ * couche claire dans `src/config/charte.ts`, la couche sombre dans
+ * `src/config/tatouage.ts` : ce fichier fait juste le pont entre les
+ * réglages et l'affichage. Il n'y a rien à modifier ici.
+ *
+ * (nº 761 — la couche claire venait de `src/config/roswel.ts`, le
+ * fichier de réglages du produit artisans, supprimé à cette passe.
+ * Aucune valeur n'a bougé au déménagement.)
  */
 export function variablesCssCouleurs(): string {
   const variables = {
-    "--rw-primaire": COULEURS.primaire,
-    "--rw-primaire-fonce": COULEURS.primaireFonce,
-    "--rw-primaire-clair": COULEURS.primaireClair,
-    "--rw-primaire-voile": COULEURS.primaireVoile,
-    "--rw-degrade-debut": COULEURS.degradeDebut,
-    "--rw-degrade-fin": COULEURS.degradeFin,
-    "--rw-fond": COULEURS.fond,
-    "--rw-fond-doux": COULEURS.fondDoux,
-    "--rw-fond-page": COULEURS.fondPage,
-    "--rw-bordure-carte-claire": COULEURS.bordureCarteClaire,
-    "--rw-bordure-carte": COULEURS.bordureCarte,
-    "--rw-encre": COULEURS.encre,
-    "--rw-encre-douce": COULEURS.encreDouce,
-    "--rw-bordure": COULEURS.bordure,
-    "--rw-bordure-champ": COULEURS.bordureChamp,
-    "--rw-pastille-excellence": COULEURS.pastilleExcellence,
-    "--rw-pastille-recommande": COULEURS.pastilleRecommande,
-    "--rw-succes": COULEURS.succes,
-    "--rw-alerte": COULEURS.alerte,
-    "--rw-erreur": COULEURS.erreur,
+    "--rw-primaire": CHARTE_CLAIRE.primaire,
+    "--rw-primaire-fonce": CHARTE_CLAIRE.primaireFonce,
+    "--rw-primaire-clair": CHARTE_CLAIRE.primaireClair,
+    "--rw-primaire-voile": CHARTE_CLAIRE.primaireVoile,
+    "--rw-degrade-debut": CHARTE_CLAIRE.degradeDebut,
+    "--rw-degrade-fin": CHARTE_CLAIRE.degradeFin,
+    "--rw-fond": CHARTE_CLAIRE.fond,
+    "--rw-fond-doux": CHARTE_CLAIRE.fondDoux,
+    "--rw-fond-page": CHARTE_CLAIRE.fondPage,
+    "--rw-bordure-carte-claire": CHARTE_CLAIRE.bordureCarteClaire,
+    "--rw-bordure-carte": CHARTE_CLAIRE.bordureCarte,
+    "--rw-encre": CHARTE_CLAIRE.encre,
+    "--rw-encre-douce": CHARTE_CLAIRE.encreDouce,
+    "--rw-bordure": CHARTE_CLAIRE.bordure,
+    "--rw-bordure-champ": CHARTE_CLAIRE.bordureChamp,
+    "--rw-pastille-excellence": CHARTE_CLAIRE.pastilleExcellence,
+    "--rw-pastille-recommande": CHARTE_CLAIRE.pastilleRecommande,
+    "--rw-succes": CHARTE_CLAIRE.succes,
+    "--rw-alerte": CHARTE_CLAIRE.alerte,
+    "--rw-erreur": CHARTE_CLAIRE.erreur,
 
     // Le fond sombre du produit TATOUAGE. Ces variables existent sur
     // toutes les pages, mais ne sont utilisées que par les classes

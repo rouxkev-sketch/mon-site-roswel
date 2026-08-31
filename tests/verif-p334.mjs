@@ -36,9 +36,9 @@ const { nav, ctx } = await ouvrirLeNavigateur(
 const memoire = (p) =>
   p.evaluate(() =>
     Object.keys(localStorage)
-      .filter((k) => k.startsWith("roswel:defilement:"))
+      .filter((k) => k.startsWith("yokofolio:defilement:"))
       .sort()
-      .map((k) => `${k.replace("roswel:defilement:", "")} = ${JSON.parse(localStorage.getItem(k)).y}`)
+      .map((k) => `${k.replace("yokofolio:defilement:", "")} = ${JSON.parse(localStorage.getItem(k)).y}`)
   );
 
 /** Ouvre la page de recherche et choisit un style, SANS valider. */

@@ -81,7 +81,7 @@ export type LigneHistorique = {
   pile: number;
 };
 
-export const CLE_JOURNAL = "roswel:journal-historique";
+export const CLE_JOURNAL = "yokofolio:journal-historique";
 const CLE = CLE_JOURNAL;
 /** Au-delà, on jette les plus anciennes : un onglet longtemps ouvert ne
     doit pas remplir la mémoire de l'onglet. */
@@ -421,7 +421,7 @@ let desarmer: (() => void) | null = null;
 
 /** La marque que le script d'avant peinture pose sur `window` quand il
     a DÉJÀ enveloppé `history`. Nommée ici, écrite là-bas. */
-export const MARQUE_AMORCE = "__roswelJournalAmorce";
+export const MARQUE_AMORCE = "__yokofolioJournalAmorce";
 
 export function armerLeJournalDHistorique(): () => void {
   if (typeof window === "undefined") return () => {};

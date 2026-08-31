@@ -1076,7 +1076,7 @@ export function SondeRetour({
             qu'une position existait, et l'on ne pouvait pas savoir si
             le masque de la nº 337 avait une raison de se poser. */
         const brut = localStorage.getItem(
-          `roswel:defilement:${adresseDeRecherche(adresse)}`
+          `yokofolio:defilement:${adresseDeRecherche(adresse)}`
         );
         return brut ? (JSON.parse(brut) as { y: number }).y : null;
       } catch {

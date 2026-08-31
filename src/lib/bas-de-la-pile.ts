@@ -84,7 +84,7 @@
 
 /** Le relevé du bas de la pile, une fois par ONGLET (sessionStorage) :
     il ne doit ni survivre à l'onglet, ni le suivre ailleurs. */
-export const CLE_BAS = "roswel:bas-de-la-pile";
+export const CLE_BAS = "yokofolio:bas-de-la-pile";
 
 export type BasDeLaPile = {
   /** `history.length` à notre arrivée dans cet onglet, relevé AVANT
@@ -331,7 +331,7 @@ export function ligneDeDecision(decision: string): string {
  * le même prix que le relevé du bas, et pour la même raison.
  */
 
-export const CLE_VERDICT = "roswel:verdict-du-filet";
+export const CLE_VERDICT = "yokofolio:verdict-du-filet";
 
 export type VerdictDuFilet = {
   /** La ligne complète, telle que le filet l'a formulée. */

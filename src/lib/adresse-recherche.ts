@@ -5,7 +5,7 @@
  *
  * LE DÉFAUT RELEVÉ SUR L'IPHONE DU PROPRIÉTAIRE :
  *
- *     ÉTAT position · roswel:defilement:/ · TROUVÉ y=10965 · 985 s
+ *     ÉTAT position · yokofolio:defilement:/ · TROUVÉ y=10965 · 985 s
  *     ÉTAT mosaïque · TROUVÉ 20 fiches · page 1
  *     RETOUR demandée 10965 · document 12086 puis 1338 · atteinte 132
  *

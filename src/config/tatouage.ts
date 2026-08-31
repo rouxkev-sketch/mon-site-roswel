@@ -5,15 +5,18 @@
  * langues, les styles proposés, les rayons de recherche, les textes et
  * les couleurs du fond sombre.
  *
- * POURQUOI UN FICHIER À PART, et pas dans roswel.ts ? Parce que
- * YOKOFOLIO EST UN PRODUIT À PART ENTIÈRE, avec sa propre identité. Les
- * fichiers des autres produits (artisans, agence) restent dans le code
- * — ils ne sont ni supprimés, ni modifiés — mais AUCUNE page de
- * yokofolio ne doit les afficher ni y renvoyer.
+ * POURQUOI UN FICHIER À PART ? Parce que YOKOFOLIO EST UN PRODUIT À
+ * PART ENTIÈRE, avec sa propre identité. Il a d'abord fallu le tenir
+ * à l'écart des réglages des autres produits (artisans, agence) ;
+ * ceux-ci ont depuis été supprimés du code — les pages et les routes
+ * à la nº 760, leur fichier de réglages `config/roswel.ts` à la
+ * nº 761. Il ne reste qu'un site.
  *
- * Le rose vient encore de roswel.ts (`COULEURS.primaire`) : c'est la
- * couleur, pas la marque. Le jour où yokofolio prendra un autre rose,
- * une seule ligne changera — ici.
+ * ⚠️ LE ROSE EST ICI, ET NULLE PART AILLEURS (nº 761). Il venait de
+ * `roswel.ts` ; `COULEURS_SOMBRE.primaire` est désormais sa seule
+ * source — y compris pour les deux endroits que le CSS n'atteint pas,
+ * la flèche et le point des menus déroulants. Le jour où yokofolio
+ * prendra un autre rose, une seule ligne changera — ici.
  */
 
 /**
@@ -1902,10 +1905,12 @@ export const COULEURS_SOMBRE = {
    *    même surcroît de rose que #381E29 portait sur l'anthracite,
    *    reposé sur la nouvelle base — le mot rose s'y détache plus
    *    franchement qu'avant.
-   * ⚠️ LES ARTISANS NE CHANGENT PAS : leurs pages lisent toujours les
-   * valeurs de src/config/roswel.ts. Celles-ci ne les remplacent que
-   * DANS LE PÉRIMÈTRE TATOUAGE, par la surcharge des variables
-   * `--rw-primaire*` que pose app/(tatouage)/layout.tsx — les classes
+   * ⚠️ LA SURCHARGE RESTE, MÊME SANS LES ARTISANS (nº 761). La couche
+   * CLAIRE garde son propre rose (src/config/charte.ts) ; celui-ci ne
+   * la remplace que DANS LE PÉRIMÈTRE TATOUAGE, par la surcharge des
+   * variables `--rw-primaire*` que pose app/(tatouage)/layout.tsx —
+   * c'est-à-dire partout sauf sur les deux pages sans groupe (la page
+   * introuvable, le tableau de bord des sondes) — les classes
    * (`bg-primaire`, `text-primaire`…) restent les mêmes partout, seul
    * ce qu'elles valent change selon le produit. AUCUN usage nouveau :
    * le rose reste réservé au badge sélectionné, au bouton d'action

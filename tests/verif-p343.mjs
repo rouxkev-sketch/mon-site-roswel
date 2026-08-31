@@ -97,14 +97,14 @@ const { nav, ctx } = await ouvrirLeNavigateur(
 /** Ce qu'un onglet voit de l'armement, et ce que le site a écrit. */
 const ETAT = () => ({
   marque: document.documentElement.dataset.sondes ?? "(aucune)",
-  armement: localStorage.getItem("roswel:sondes-armees"),
-  journal: JSON.parse(localStorage.getItem("roswel:journal-historique") ?? "[]")
+  armement: localStorage.getItem("yokofolio:sondes-armees"),
+  journal: JSON.parse(localStorage.getItem("yokofolio:journal-historique") ?? "[]")
     .length,
   //  ⚠️ ON NE TESTE PAS « `pushState` est-il natif ? » : le routeur de
   //  Next l'enveloppe LUI AUSSI, sur toutes les pages, armées ou non
   //  (mesuré). Le seul témoin de NOTRE enveloppe est la marque que
   //  l'amorce pose sur `window`.
-  enveloppe: Boolean(window.__roswelJournalAmorce),
+  enveloppe: Boolean(window.__yokofolioJournalAmorce),
 });
 
 titre("§3 — désarmées, les sondes ne coûtent rien");
@@ -166,7 +166,7 @@ titre("§2 — armé une fois, il survit à un onglet neuf");
   //  LA PREMIÈRE LIGNE DE CE DOCUMENT VIENT DU SCRIPT, pas de React.
   const premiere = await q.evaluate(() => {
     const l = JSON.parse(
-      localStorage.getItem("roswel:journal-historique") ?? "[]"
+      localStorage.getItem("yokofolio:journal-historique") ?? "[]"
     );
     const i = l.map((x) => x.quoi).lastIndexOf("DOCUMENT OUVERT (avant peinture)");
     return i >= 0 ? l[i].qui : "(absente)";
@@ -180,7 +180,7 @@ titre("§2 — armé une fois, il survit à un onglet neuf");
   //  ON DÉSARME, comme le bouton le fait.
   await q.evaluate(() => {
     delete document.documentElement.dataset.sondes;
-    localStorage.removeItem("roswel:sondes-armees");
+    localStorage.removeItem("yokofolio:sondes-armees");
   });
   const r = await ctx.newPage();
   await r.goto(`${BASE}/`, { waitUntil: "networkidle" });
