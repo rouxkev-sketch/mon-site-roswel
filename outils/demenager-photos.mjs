@@ -230,16 +230,41 @@ async function principal() {
 
   let copies = 0;
   const soucis = [];
+  //  L'ARRÊT SUR PANNE FRANCHE (nº 766 bis). Un seau qui n'existe pas
+  //  fait échouer TOUS les fichiers de la même façon : dérouler cinq
+  //  mille refus identiques n'apprend rien de plus que les dix
+  //  premiers, et ça prend une heure. Dix échecs D'AFFILÉE et on
+  //  s'arrête. Un échec isolé au milieu de réussites, lui, n'arrête
+  //  rien : c'est un fichier abîmé, pas une panne.
+  let deSuite = 0;
+  let franche = false;
   for (const chemin of manquants) {
     const echec = await copierUnFichier(lire, ecrire, chemin);
-    if (echec) soucis.push(`${chemin} — ${echec}`);
-    else copies += 1;
+    if (echec) {
+      soucis.push(`${chemin} — ${echec}`);
+      deSuite += 1;
+      if (deSuite >= 10) {
+        franche = true;
+        break;
+      }
+    } else {
+      copies += 1;
+      deSuite = 0;
+    }
     if ((copies + soucis.length) % 25 === 0) {
       console.log(`     … ${copies + soucis.length}/${manquants.length}`);
     }
   }
   console.log();
   console.log(`  ── copiés : ${copies} · en échec : ${soucis.length}`);
+  if (franche) {
+    console.log();
+    console.log("  ⛔  ARRÊTÉ : dix échecs d'affilée, c'est une panne franche et");
+    console.log("     non une suite de fichiers abîmés. Les deux causes :");
+    console.log(`     · le seau « ${SEAU} » n'existe pas encore dans le nouveau`);
+    console.log("       projet (Storage ▸ New bucket, coché « Public ») ;");
+    console.log("     · la clé secrète employée n'est pas celle du bon projet.");
+  }
   if (soucis.length > 0) {
     console.log();
     console.log("  ⚠️  CE QUI N'EST PAS PASSÉ (les vingt premiers) :");

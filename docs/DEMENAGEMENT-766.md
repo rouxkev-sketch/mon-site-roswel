@@ -19,7 +19,7 @@ l'ancien projet Supabase (Irlande) au nouveau, `yokofolio-us`
 
 | | quoi | par quel moyen |
 |---|---|---|
-| 1 | la **forme** (tables, vues, fonctions, droits) | un fichier SQL à coller |
+| 1 | la **forme** (tables, vues, fonctions, droits) | lue dans la vraie base, puis collée |
 | 2 | les **comptes** | `sh outils/restaurer-comptes` |
 | 3 | les **lignes** (fiches, photos en base, conventions…) | `sh outils/demenager-donnees` |
 | 4 | les **photos** (les fichiers) | `sh outils/demenager-photos` |
@@ -48,38 +48,68 @@ un fichier de comptes, et les photos.
 
 ## Étape 1 — la forme, dans le nouveau projet
 
+> ### Ce qui a raté la première fois, et pourquoi
+>
+> Le premier schéma livré était bâti en **rejouant les migrations du
+> dépôt**. Il a échoué au moment de copier les lignes :
+> *« Could not find the `filtres_motif` column of `tatoueurs` »*.
+>
+> **La cause :** le dépôt n'est pas le miroir de la base. Des colonnes
+> ont été ajoutées à la main, directement dans Supabase, sans jamais
+> passer par une migration — `filtres_motif` n'existe nulle part dans
+> le dépôt. Un schéma tiré du dépôt ne peut décrire que l'idée que le
+> dépôt se fait de la base.
+>
+> **La correction :** on lit désormais **la vraie base**. C'est elle
+> qui fait foi, et elle seule. Le schéma se fabrique en trois gestes,
+> ci-dessous, et il se refera de la même façon si la base rebouge.
+
+### 1a — lire la vraie base
+
+Dans supabase.com, **ANCIEN** projet (Irlande) ▸ **SQL Editor** ▸ colle
+d'un bloc et lance :
+
+```
+supabase/766-lire-le-schema-reel.sql
+```
+
+Il ne fait que **lire** : aucun `CREATE`, aucun `ALTER`, aucune donnée
+touchée, aucune clé regardée. Tu peux le lancer sur la production sans
+crainte.
+
+Sous le résultat : bouton **« Download CSV »**.
+
+### 1b — en faire un fichier SQL
+
+Sur ton Mac, dans le dossier du projet :
+
+```
+sh outils/assembler-schema ~/Downloads/le-fichier.csv
+```
+
+Il écrit `supabase/yokofolio-schema-reel.sql`.
+
+### 1c — le poser dans le nouveau projet
+
 Dans supabase.com, projet **yokofolio-us** ▸ **SQL Editor** ▸ colle
-d'un bloc le fichier :
+d'un bloc `supabase/yokofolio-schema-reel.sql`.
 
-```
-supabase/yokofolio-schema-complet-766.sql
-```
+Il ne contient **aucune donnée**, aucun compte, aucune photo : rien que
+la forme.
 
-Il pose **17 tables, 11 vues, 9 fonctions, 30 règles de sécurité,
-2 déclencheurs et 25 droits**. Il ne contient aucune donnée.
+**Vérification — l'empreinte.** C'est le contrôle qui manquait la
+première fois, et c'est le plus important du document. Colle
+`supabase/766-empreinte-schema.sql` dans **chacun des deux projets**,
+et compare les deux résultats.
 
-> **D'où il vient.** Il n'est pas écrit à la main : les migrations du
-> dépôt ont été rejouées sur un PostgreSQL 16 neuf, puis l'état obtenu
-> a été relevé par `pg_dump`. Il décrit donc ce que les migrations
-> **produisent**, pas ce qu'on croit qu'elles produisent. Il a été
-> rejoué une seconde fois sur une base vierge pour vérifier qu'il
-> passe d'un bloc.
+La dernière ligne, **▓ EMPREINTE**, résume tout : une seule chaîne de
+32 caractères. **Si les deux empreintes sont identiques, les deux
+schémas le sont** — colonne par colonne, type par type, règle par
+règle. Si elles diffèrent, les lignes au-dessus disent quelle table
+n'est pas d'accord.
 
-**Vérification —** colle ceci juste après, dans la même fenêtre :
-
-```sql
-select
-  (select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace
-    where n.nspname='public' and c.relkind='r') as tables,
-  (select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace
-    where n.nspname='public' and c.relkind='v') as vues,
-  (select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace
-    where n.nspname='public') as fonctions,
-  (select count(*) from pg_policy) as regles;
-```
-
-Attendu : **17 · 11 · 9 · 30**. Si un nombre diffère, arrête-toi et
-envoie-le-moi.
+**Ne passe pas à l'étape 2 tant que les deux empreintes diffèrent.**
+Envoie-moi les deux résultats.
 
 ---
 
@@ -143,6 +173,24 @@ Il sert les tables **dans l'ordre des dépendances** (les fiches avant
 les photos, les conventions avant les modes d'exercice) et il est
 **rejouable** : une ligne déjà écrite est remplacée, jamais dupliquée.
 Si ça coupe, relance.
+
+> **Il s'arrête à la première erreur.** Les treize dernières tables
+> s'appuient sur les premières : si `tatoueurs` échoue, tout le reste
+> échouerait aussi, et treize messages pour une seule cause n'aident
+> personne. Il s'arrête donc net, nomme la cause, et marque les
+> suivantes « pas tentée ». Corrige, relance.
+> *(Pour voir tous les problèmes d'un coup malgré tout : ajoute
+> `--continuer`.)*
+
+> **Les trois tables numérotées par la base.** `clics_fiches`,
+> `messages_yokofolio` et `signalements_fiches` ont un `id` que
+> PostgreSQL se réserve : il refuse qu'on lui en impose la valeur. Le
+> script le voit dans le refus, retire la colonne et laisse la nouvelle
+> base numéroter — tu verras passer la ligne
+> `↺ … « id » est numéroté par la base : on le laisse faire`.
+> Les numéros ne seront pas les mêmes des deux côtés. **Ce n'est pas
+> grave :** aucune autre table ne pointe vers ces `id`. Rien ne se
+> délie.
 
 **Vérification —** dans le nouveau projet ▸ **Table Editor**, ouvre
 `tatoueurs` et `photos_tatoueur` : le compte de lignes doit être celui

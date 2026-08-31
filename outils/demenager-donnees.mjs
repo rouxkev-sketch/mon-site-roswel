@@ -18,11 +18,18 @@
 //  ⚠️ AUCUNE CLÉ N'EST AFFICHÉE, ni écrite dans un fichier, ni
 //  consignée. Le script ne montre jamais que les ADRESSES des projets,
 //  et encore, sans leur jeton.
+//
+//  ⚠️ IL S'ARRÊTE À LA PREMIÈRE ERREUR (nº 766 bis). La première
+//  version enchaînait : `tatoueurs` échouait, et les treize tables qui
+//  en dépendent échouaient à leur tour — treize messages pour UN seul
+//  vrai problème. Désormais il s'arrête net et nomme la cause. Pour
+//  voir tous les problèmes d'un coup malgré tout : `--continuer`.
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 const RACINE = process.cwd();
 const REEL = process.argv.includes("--reel");
+const CONTINUER = process.argv.includes("--continuer");
 const TAILLE_PAGE = 1000;
 const LOT_ECRITURE = 200;
 const DELAI_MS = Math.max(10_000, Number(process.env.DELAI_LECTURE ?? 60) * 1000);
@@ -177,20 +184,48 @@ async function lireTout(appeler, table) {
    nettoyer.
    ================================================================== */
 
-async function ecrireUnLot(appeler, table, lot) {
+async function ecrireUnLot(appeler, table, lot, aOter) {
+  //  Les colonnes qu'on retire du chargement : voir `colonneAutomatique`
+  //  juste dessous. Retirer une colonne du JSON, c'est demander à la
+  //  base de la remplir elle-même.
+  const charge = aOter.size
+    ? lot.map((ligne) => {
+        const copie = { ...ligne };
+        for (const colonne of aOter) delete copie[colonne];
+        return copie;
+      })
+    : lot;
   const reponse = await appeler(`/rest/v1/${table}`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
       Prefer: "resolution=merge-duplicates,return=minimal",
     },
-    body: JSON.stringify(lot),
+    body: JSON.stringify(charge),
   });
   if (!reponse.ok) {
     const message = await reponse.text().catch(() => "");
     return `HTTP ${reponse.status} ${message.slice(0, 200)}`;
   }
   return null;
+}
+
+/** LES IDENTIFIANTS QUE LA BASE SE RÉSERVE (nº 766 bis).
+    Trois tables — `clics_fiches`, `messages_yokofolio`,
+    `signalements_fiches` — ont un `id` déclaré GENERATED ALWAYS :
+    PostgreSQL REFUSE qu'on lui en impose la valeur, et répond « Use
+    OVERRIDING SYSTEM VALUE to override ». PostgREST n'offre pas ce
+    tour-là ; la bonne réponse est donc de NE PAS envoyer la colonne et
+    de laisser la nouvelle base numéroter elle-même.
+    Les numéros ne seront pas les mêmes des deux côtés — et ce n'est
+    pas grave : AUCUNE clé étrangère ne pointe vers ces trois `id`
+    (relevé du graphe, nº 766). Rien ne se perd, rien ne se délie.
+    On ne devine pas la liste : on lit le nom de la colonne DANS le
+    refus, ce qui marche aussi pour une table qu'on n'aurait pas vue
+    venir. */
+function colonneAutomatique(echec) {
+  if (!/OVERRIDING SYSTEM VALUE|428C9|identity column/i.test(echec)) return null;
+  return echec.match(/column \\?"([^"\\]+)\\?"/)?.[1] ?? "id";
 }
 
 /* ==================================================================
@@ -240,11 +275,21 @@ async function principal() {
   let totalEcrit = 0;
   const soucis = [];
 
+  //  L'ARRÊT NET. Dès qu'une table échoue, on cesse : les suivantes
+  //  s'appuient sur elle, et treize messages d'erreur pour une seule
+  //  cause n'aident personne.
+  let arrete = false;
+
   for (const table of ORDRE) {
+    if (arrete) {
+      console.log(`  ·  ${table.padEnd(24)} pas tentée (arrêt plus haut)`);
+      continue;
+    }
     const { lignes, erreur } = await lireTout(lire, table);
     if (erreur) {
       soucis.push(`${table} : lecture impossible — ${erreur}`);
       console.log(`  ✖  ${table.padEnd(24)} lecture impossible — ${erreur}`);
+      if (!CONTINUER) arrete = true;
       continue;
     }
     totalLu += lignes.length;
@@ -258,10 +303,23 @@ async function principal() {
     }
     let ecrites = 0;
     let echec = null;
+    //  Les colonnes que cette table nous a fait retirer. L'ensemble se
+    //  garde d'un lot à l'autre : on n'apprend la leçon qu'une fois.
+    const aOter = new Set();
     for (let i = 0; i < lignes.length && !echec; i += LOT_ECRITURE) {
       const lot = lignes.slice(i, i + LOT_ECRITURE);
       try {
-        echec = await ecrireUnLot(ecrire, table, lot);
+        echec = await ecrireUnLot(ecrire, table, lot, aOter);
+        //  Refus d'un identifiant imposé : on retire la colonne et on
+        //  REFAIT le même lot, une fois.
+        const automatique = echec && colonneAutomatique(echec);
+        if (automatique && !aOter.has(automatique)) {
+          aOter.add(automatique);
+          console.log(
+            `  ↺  ${table.padEnd(24)} « ${automatique} » est numéroté par la base : on le laisse faire`
+          );
+          echec = await ecrireUnLot(ecrire, table, lot, aOter);
+        }
       } catch (erreurEcriture) {
         echec = raisonLisible(erreurEcriture);
       }
@@ -271,6 +329,7 @@ async function principal() {
     if (echec) {
       soucis.push(`${table} : ${echec}`);
       console.log(`  ✖  ${table.padEnd(24)} ${ecrites}/${lignes.length} écrite(s) — ${echec}`);
+      if (!CONTINUER) arrete = true;
     } else {
       console.log(`  ✔  ${table.padEnd(24)} ${String(ecrites).padStart(6)} ligne(s) écrite(s)`);
     }
@@ -280,13 +339,27 @@ async function principal() {
   console.log(`  ── lues : ${totalLu} · écrites : ${REEL ? totalEcrit : 0}`);
   if (soucis.length > 0) {
     console.log();
-    console.log("  ⚠️  CE QUI N'EST PAS PASSÉ :");
+    console.log(
+      arrete ? "  ⚠️  ARRÊTÉ À LA PREMIÈRE ERREUR :" : "  ⚠️  CE QUI N'EST PAS PASSÉ :"
+    );
     for (const s of soucis) console.log(`     · ${s}`);
     console.log();
-    console.log("     La cause la plus fréquente : un COMPTE qui n'existe pas");
-    console.log("     encore dans le nouveau projet. Passe d'abord");
-    console.log("     `sh outils/restaurer-comptes`, puis relance celui-ci —");
-    console.log("     il est rejouable, rien ne sera écrit en double.");
+    console.log("     LES DEUX CAUSES HABITUELLES, DANS L'ORDRE :");
+    console.log("     1. une COLONNE que le nouveau projet n'a pas (« Could not");
+    console.log("        find the '…' column ») — le schéma posé là-bas n'est");
+    console.log("        pas celui de l'ancien projet. Refais-le depuis la VRAIE");
+    console.log("        base : supabase/766-lire-le-schema-reel.sql, puis");
+    console.log("        `sh outils/assembler-schema`. Compare ensuite les deux");
+    console.log("        projets avec supabase/766-empreinte-schema.sql ;");
+    console.log("     2. un COMPTE qui n'existe pas encore là-bas. Passe");
+    console.log("        `sh outils/restaurer-comptes` avant celui-ci.");
+    console.log();
+    console.log("     Dans les deux cas : corrige, puis relance. Ce script est");
+    console.log("     rejouable, rien ne sera écrit en double.");
+    if (arrete) {
+      console.log();
+      console.log("     (Pour voir tous les problèmes d'un coup : --continuer.)");
+    }
   } else if (!REEL) {
     console.log();
     console.log("  Pour agir : ajoute --reel à la fin de la commande.");

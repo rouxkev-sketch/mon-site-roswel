@@ -32,14 +32,29 @@
 #  ==================================================================
 #  L'ORDRE DES OPÉRATIONS — celui-ci n'est pas le premier
 #  ------------------------------------------------------------------
-#   1. le SCHÉMA collé dans le nouveau projet
-#      (supabase/yokofolio-schema-complet-766.sql) ;
-#   2. les COMPTES recréés (`sh outils/restaurer-comptes`) — sans eux,
+#   1. le SCHÉMA, LU DANS LA VRAIE BASE puis collé dans le nouveau
+#      projet : `supabase/766-lire-le-schema-reel.sql` dans l'ancien,
+#      « Download CSV », puis `sh outils/assembler-schema le.csv`, et
+#      on colle le `supabase/yokofolio-schema-reel.sql` obtenu ;
+#   2. l'EMPREINTE des deux projets comparée
+#      (`supabase/766-empreinte-schema.sql` collé dans chacun) : tant
+#      qu'elles diffèrent, ce script échouera. C'est ce contrôle-là qui
+#      manquait à la première tentative ;
+#   3. les COMPTES recréés (`sh outils/restaurer-comptes`) — sans eux,
 #      la moitié des lignes sera refusée : elles pointent vers un
 #      compte ;
-#   3. CE SCRIPT, pour les lignes ;
-#   4. les PHOTOS (`sh outils/demenager-photos`).
+#   4. CE SCRIPT, pour les lignes ;
+#   5. les PHOTOS (`sh outils/demenager-photos`).
 #  Tout est écrit pas à pas dans docs/DEMENAGEMENT-766.md.
+#
+#  ==================================================================
+#  IL S'ARRÊTE À LA PREMIÈRE ERREUR
+#  ------------------------------------------------------------------
+#  Les treize dernières tables s'appuient sur les premières : si
+#  `tatoueurs` échoue, tout le reste échouerait aussi. Il s'arrête donc
+#  net et nomme la cause, plutôt que de dérouler treize messages pour
+#  un seul vrai problème.
+#  Pour tout voir d'un coup malgré tout : ajoute `--continuer`.
 #
 #  ==================================================================
 #  CE QU'IL NE FAIT JAMAIS
