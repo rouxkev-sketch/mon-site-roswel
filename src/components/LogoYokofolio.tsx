@@ -6,12 +6,14 @@ import { MARQUE_YOKOFOLIO } from "@/config/tatouage";
  * ===================
  * DEUX FICHIERS, DÉPOSÉS À LA MAIN par le propriétaire, affichés tels
  * quels : le code ne les fabrique pas, ne les retouche pas, ne les
- * recadre pas — exactement la règle des logos de Roswel (AGENTS.md).
+ * recadre pas. C'est LA règle des images du propriétaire (AGENTS.md),
+ * et elle vaut pour toutes.
  *  - public/yokofolio-logo.png  : le logo complet (cœur + nom) ;
  *  - public/yokofolio-icone.png : le cœur seul.
  *
- * Composant à part, et non une variante de Logo.tsx : celui-ci sert
- * les autres produits, il ne doit pas changer.
+ * (Il fut un composant à part pour ne pas toucher à `Logo.tsx`, qui
+ * servait les autres produits ; celui-là est parti à la nº 760. Ce
+ * fichier-ci est désormais le seul logo du site.)
  *
  * `hauteur` est la hauteur d'affichage en pixels ; la largeur suit
  * (`w-auto`). Les attributs width/height réservent la place dès le

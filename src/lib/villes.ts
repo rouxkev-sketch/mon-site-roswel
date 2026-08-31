@@ -22,35 +22,19 @@ export function nomVilleCourt(nom: string): string {
   return nom.replace(/\s+arrondissement$/i, "").trim();
 }
 
-/**
- * Abrège « Saint » / « Sainte » quand la place manque :
- *   « Saint-Priest »        → « St-Priest »
- *   « Sainte-Foy-lès-Lyon » → « Ste-Foy-lès-Lyon »
- * Utilisé UNIQUEMENT en dernier recours, quand le nom complet ne tient
- * pas dans la largeur disponible (cartes sur écrans étroits) : mieux
- * vaut « St-Priest » en entier que « Sain… » tronqué.
- */
-export function abregerSaint(nom: string): string {
-  return nom
-    .replace(/\bSainte[-\s]/gi, "Ste-")
-    .replace(/\bSaint[-\s]/gi, "St-");
-}
-
-/** Le format unique d'affichage : « Nom (code postal) » */
-export function formatVille(nom: string, codePostal?: string | null): string {
-  const court = nomVilleCourt(nom);
-  return codePostal ? `${court} (${codePostal})` : court;
-}
-
-/**
- * Années entières d'existence d'une entreprise, à partir de sa date
- * de création renvoyée par l'annuaire officiel (API Sirene) lors de
- * la vérification du SIREN. Recalculé à chaque affichage : jamais
- * saisi à la main.
- */
-export function anneesExistence(dateCreation: string): number {
-  const annees =
-    (Date.now() - new Date(dateCreation).getTime()) /
-    (365.25 * 24 * 3600 * 1000);
-  return Math.max(0, Math.floor(annees));
-}
+/*  ██ nº 765 — TROIS FONCTIONS SONT PARTIES D'ICI ██
+    Ce module en portait quatre ; il n'en reste qu'une. Les trois
+    autres ne servaient QUE le produit artisans, supprimé aux passes
+    nº 759 à 764, et plus personne ne les nommait — vérifié dans tout
+    le dépôt, code, outils et bancs compris : une seule occurrence
+    chacune, leur propre définition.
+     · `abregerSaint`   — « Saint-Priest » → « St-Priest », le dernier
+       recours des cartes d'artisans sur écrans étroits ;
+     · `formatVille`    — « Nom (code postal) », leur format
+       d'affichage ;
+     · `anneesExistence` — l'ancienneté d'une entreprise d'après sa
+       date de création à l'annuaire Sirene, lue à la vérification du
+       SIREN. Rien de tout cela n'existe plus.
+    ⚠️ CE QUI RESTE, `nomVilleCourt`, N'EST PAS DU MÊME ORDRE : c'est
+    la normalisation de ce qu'on ENREGISTRE, lue par le géocodage et
+    par le catalogue des tatoueurs. Elle vit. */

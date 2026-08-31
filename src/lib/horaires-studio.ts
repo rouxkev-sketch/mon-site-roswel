@@ -6,10 +6,11 @@
  * « fermé ». Le formulaire, la fiche pleine page et la fenêtre
  * superposée lisent tous ces fonctions — jamais leur propre version.
  *
- * ⚠️ À NE PAS CONFONDRE AVEC `lib/horaires.ts`, qui appartient au
- * produit ARTISANS (roswel) : un autre format, d'autres règles, une
- * autre fiche. Les deux vivent côte à côte sans se connaître, et
- * c'est très bien ainsi.
+ * (Il a longtemps eu un homonyme, `lib/horaires.ts`, qui servait le
+ * produit ARTISANS — un autre format, d'autres règles, une autre
+ * fiche. Les deux ont vécu côte à côte sans se connaître ; l'autre
+ * est parti à la nº 760. Il ne reste que celui-ci, et plus aucune
+ * confusion possible.)
  *
  * RÉSERVÉ AUX STUDIOS. Un artiste n'a pas d'horaires d'ouverture au
  * public : il reçoit sur rendez-vous. Le module n'existe donc pas sur

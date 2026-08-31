@@ -11,7 +11,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  * identifiant. Le filtre ne retenait donc rien, et pas une seule photo
  * n'était effacée :
  *   R1  ni à la purge des trente jours, ni à la suppression admin ;
- *   R3  ni quand un compte partait par l'écran des artisans ;
+ *   R3  ni quand un compte partait par l'écran des artisans (écran
+ *       supprimé depuis, nº 760 — la fuite, elle, était réelle) ;
  *   R5  ni quand quelqu'un retirait une photo de son portfolio.
  *   R4  et là où un ménage avait lieu, `list()` s'arrêtait à cent.
  *
@@ -33,8 +34,12 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  * d'elle serait une personne qui ne peut pas partir.
  */
 
-/** Le seau des photos du produit YokoFolio. */
-export const BUCKET_PHOTOS = "photos-tatoueurs";
+/*  Le seau des photos du produit YokoFolio.
+    ⚠️ PLUS EXPORTÉ DEPUIS LA nº 765, comme les trois fonctions
+    marquées plus bas : rien hors de ce fichier ne les nommait. Elles
+    restent là — elles travaillent, mais pour les fonctions d'à côté,
+    pas pour le dehors. */
+const BUCKET_PHOTOS = "photos-tatoueurs";
 
 /** Le plafond du client Supabase pour `list()` — vérifié à l'audit
     nº 691 dans le paquet installé (`DEFAULT_SEARCH_OPTIONS.limit`).
@@ -71,7 +76,7 @@ const VIDE: CompteRenduDuMenage = { effaces: 0, introuvables: 0, echecs: [] };
  * (`/images-demo/…`), une adresse d'un AUTRE seau, une chaîne vide
  * rendent `null`. On n'efface que ce qu'on a reconnu.
  */
-export function cheminDansLeSeau(
+function cheminDansLeSeau(
   adresse: unknown,
   seau: string = BUCKET_PHOTOS
 ): string | null {
@@ -150,7 +155,7 @@ function adressesDeLaFiche(
  * ancienne fuite ne sera pas ramassé ici — c'est le prix de ne jamais
  * effacer ce qu'on n'a pas reconnu.
  */
-export async function fichiersDUnPortfolio(
+async function fichiersDUnPortfolio(
   client: SupabaseClient,
   ficheId: string,
   seau: string = BUCKET_PHOTOS
@@ -310,7 +315,7 @@ export async function nettoyerLeStockageDUnPortfolio(
  * d'un niveau, et les dossiers SANS identifiant. Un seul niveau
  * laisserait tout ce qui est rangé plus bas.
  */
-export async function listerToutLeDossier(
+async function listerToutLeDossier(
   client: SupabaseClient,
   dossier: string,
   seau: string = BUCKET_PHOTOS

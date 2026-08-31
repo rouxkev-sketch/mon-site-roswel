@@ -26,9 +26,10 @@
  * Le nom s'écrit « yokofolio », TOUJOURS en minuscules : c'est le nom,
  * pas une phrase à capitaliser.
  *
- * LE LOGO est un fichier déposé à la main par le propriétaire, comme
- * les logos de Roswel : le code ne le fabrique pas, ne le retouche
- * pas, ne le recadre pas. Il l'affiche tel quel. S'il manque du clone,
+ * LE LOGO est un fichier déposé à la main par le propriétaire : le
+ * code ne le fabrique pas, ne le retouche pas, ne le recadre pas
+ * (règle des images, AGENTS.md). Il l'affiche tel quel. S'il manque du
+ * clone,
  * l'image ne s'affiche pas — c'est normal, et ce n'est pas une
  * régression.
  *

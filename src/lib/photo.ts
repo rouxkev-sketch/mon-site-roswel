@@ -14,8 +14,12 @@ import { QUALITE_PHOTO } from "@/lib/qualite-photo";
  * téléphone n'est concernée, et l'on refuse AVANT de décoder. Décoder
  * pour savoir si c'est trop gros, c'est déjà avoir tout chargé en
  * mémoire — sur un téléphone, l'onglet se ferme tout seul.
+ * ⚠️ PLUS EXPORTÉE DEPUIS LA nº 765 : personne ne la lisait hors de ce
+ * fichier, et le seul endroit qui refuse une photo trop lourde est
+ * `compresserPhoto`, juste en dessous. Une constante exportée que nul
+ * n'importe, c'est une invitation à en faire une seconde copie.
  */
-export const TAILLE_MAX_PHOTO_OCTETS = 20 * 1024 * 1024;
+const TAILLE_MAX_PHOTO_OCTETS = 20 * 1024 * 1024;
 
 export async function compresserPhoto(
   fichier: File,
