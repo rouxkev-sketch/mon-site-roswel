@@ -53,8 +53,12 @@ export const MARQUE_YOKOFOLIO = {
    * donc même après avoir changé le fichier. Le « ?v= » lui donne une
    * adresse neuve : le navigateur est obligé d'aller la rechercher.
    * À incrémenter le jour où l'icône change de dessin.
+   * nº 763 — 3 → 4 : le propriétaire a fourni un cœur ROUGE. Sans ce
+   * changement, l'onglet garderait le cœur rose des visiteurs déjà
+   * venus, et personne ne le verrait ici (le banc part d'un navigateur
+   * neuf, qui n'a rien en mémoire).
    */
-  iconeOnglet: "/yokofolio-icone.png?v=3",
+  iconeOnglet: "/yokofolio-icone.png?v=4",
 };
 
 /**

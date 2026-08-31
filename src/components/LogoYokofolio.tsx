@@ -24,10 +24,10 @@ import { MARQUE_YOKOFOLIO } from "@/config/tatouage";
  * fichiers, ils les DÉCLARENT : c'est d'eux que le navigateur tire le
  * rapport d'aspect tant que l'image n'est pas décodée, et donc la
  * place qu'il lui réserve. Ils étaient FAUX : `RATIO_LOGO` valait 4,
- * quand le fichier du propriétaire mesure 1663 × 323 — un rapport de
- * 5,149. À 48 px de haut (`lg:h-12`), la barre réservait donc 192 px
- * au logo, puis lui en donnait 247 dès l'image décodée : 55 px de plus
- * du côté GAUCHE.
+ * quand le fichier du propriétaire mesurait alors 1663 × 323 — un
+ * rapport de 5,149. À 48 px de haut (`lg:h-12`), la barre réservait
+ * donc 192 px au logo, puis lui en donnait 247 dès l'image décodée :
+ * 55 px de plus du côté GAUCHE.
  * CE QUE 55 PX DE PLUS À GAUCHE FONT AU MILIEU : le bloc de recherche
  * est centré par DEUX MARGES AUTOMATIQUES (`lg:mx-auto`, EnTeteTatouage)
  * qui se partagent l'espace libre à égalité. Un côté qui grandit de 55
@@ -99,22 +99,35 @@ import { MARQUE_YOKOFOLIO } from "@/config/tatouage";
  * manquaient, l'original manquerait aussi. Le risque de la nº 715
  * était d'une autre nature : un SERVICE qui devait répondre au vol.
  *
- * ⚠️ LE FICHIER D'ORIGINE N'EST NI TOUCHÉ, NI REMPLACÉ (règle nº
- * 356/467) : 142 079 octets avant, 142 079 après — vérifié. Les
- * variantes sont des fichiers EN PLUS, fabriqués une fois.
+ * ⚠️ LA FABRICATION DES VARIANTES NE TOUCHE PAS L'ORIGINAL (règle
+ * nº 356/467) : elles sont des fichiers EN PLUS, dérivés de lui.
+ * ⚠️ ET ELLES SE REFONT QUAND IL CHANGE — c'est le piège de la nº 763 :
+ * le propriétaire a fourni un logo neuf (rouge), les deux WebP ont été
+ * refabriqués DEPUIS LUI et vérifiés sans perte (écart 0/255 avec
+ * l'original réduit d'autant). Des variantes oubliées auraient montré
+ * l'ancien logo dès que `<picture>` prend le WebP — c'est-à-dire
+ * presque toujours.
  */
-/** public/yokofolio-logo.png, mesuré : 1663 × 323. */
-const NATIF_LOGO = { largeur: 1663, hauteur: 323 };
-/** public/yokofolio-icone.png, mesuré : 297 × 337 — il n'est PAS carré. */
-const NATIF_ICONE = { largeur: 297, hauteur: 337 };
+/*  ██ nº 763 — LES DEUX FICHIERS ONT CHANGÉ, CES NOMBRES AUSSI ██
+    Le propriétaire a fourni un logo et une icône refaits en rouge. Ces
+    constantes ne DÉCRIVENT pas les fichiers, elles les DÉCLARENT (voir
+    §4 nº 507 en tête) : les laisser sur les anciennes mesures aurait
+    déformé le logo au premier rendu, avant décodage. Elles sont
+    RELEVÉES sur les nouveaux fichiers, jamais recopiées d'un ancien.
+      logo   1663 × 323 → 1663 × 324   (1 px de plus en hauteur)
+      icône   297 × 337 →  285 × 324   (12 px plus étroite, 13 plus basse) */
+/** public/yokofolio-logo.png, mesuré : 1663 × 324. */
+const NATIF_LOGO = { largeur: 1663, hauteur: 324 };
+/** public/yokofolio-icone.png, mesuré : 285 × 324 — il n'est PAS carré. */
+const NATIF_ICONE = { largeur: 285, hauteur: 324 };
 
 /**
  * §1 (nº 716, REFAIT nº 723) — LES VARIANTES DU LOGO, ÉCRITES UNE FOIS.
  * Deux largeurs (l'écran ordinaire, puis le double pour les écrans à
  * haute densité). Le logo s'affiche entre 185 et 247 px de large :
  * 512 px couvre donc le double partout.
- * ⚠️ SEUL LE LOGO COMPLET EN A. L'icône (11 Ko) n'est pas le sujet et
- * garde son chemin d'origine, inchangé.
+ * ⚠️ SEUL LE LOGO COMPLET EN A. L'icône (4,6 Ko depuis la nº 763)
+ * n'est pas le sujet et garde son chemin d'origine, inchangé.
  *
  * ██ §1 (nº 723) — UN SEUL FORMAT, ET SANS PERTE ██
  * ------------------------------------------------------------------
@@ -172,10 +185,11 @@ export function LogoYokofolio({
   const natif = icone ? NATIF_ICONE : NATIF_LOGO;
   //  §4 (nº 507) — LA LARGEUR DÉCLARÉE SUIT LE FICHIER, PAS UNE
   //  APPROXIMATION. L'icône était déclarée CARRÉE (`largeur = hauteur`)
-  //  alors qu'elle mesure 297 × 337 : ses deux appelants la bornent par
-  //  des classes carrées, `object-contain` la range dedans et rien ne
-  //  saute — mais le nombre était faux, et il n'y a aucune raison de
-  //  garder un piège chargé pour le prochain appelant.
+  //  alors qu'elle ne l'est pas (285 × 324 depuis la nº 763) : ses deux
+  //  appelants la bornent par des classes carrées, `object-contain` la
+  //  range dedans et rien ne saute — mais le nombre était faux, et il
+  //  n'y a aucune raison de garder un piège chargé pour le prochain
+  //  appelant.
   const largeur = Math.round((hauteur * natif.largeur) / natif.hauteur);
 
   const image = (
@@ -193,7 +207,7 @@ export function LogoYokofolio({
         /*  §2 (nº 716) — LE RAPPORT D'ASPECT EST DÉCLARÉ, PLUS DÉDUIT DE
             L'IMAGE REÇUE. Les variantes ont des tailles ENTIÈRES : la
             256 fait 256 × 50, soit un rapport de 5,120 quand le fichier
-            d'origine (1663 × 323) vaut 5,149. La largeur suivant la
+            d'origine (1663 × 324) vaut 5,133. La largeur suivant la
             hauteur (`w-auto`), le logo perdait 1,1 px — et le bloc
             central de la barre, centré par deux marges automatiques,
             glissait d'un demi-pixel. C'est le mécanisme de la nº 507 en
