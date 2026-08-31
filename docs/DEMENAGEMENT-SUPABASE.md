@@ -344,8 +344,34 @@ diff ~/Desktop/demenagement/forme-ancien.txt ~/Desktop/demenagement/forme-nouvea
 
 - **`IDENTIQUES` s'affiche** → les deux schémas sont les mêmes, colonne
   par colonne, droit par droit. Continue.
-- **Des lignes s'affichent** → arrête-toi et envoie-les-moi. Ce sont
-  elles qui disent ce qui manque.
+- **Des lignes s'affichent** → regarde le paragraphe ci-dessous avant de
+  t'inquiéter.
+
+> ### Deux écarts de DROITS sont attendus, et ils se comblent
+>
+> Le `DROP SCHEMA` de l'étape 3 emporte deux choses que la restauration
+> ne remet pas toutes :
+>
+> - **l'USAGE du schéma pour tout le monde** — d'où un
+>   `REVOKE USAGE ON SCHEMA "public" FROM PUBLIC` côté nouveau, et le
+>   changement de propriétaire du schéma ;
+> - **les droits par défaut** (« quand tel rôle crée une table ici,
+>   donne-la d'office à anon/authenticated/service_role »). Ils vivent
+>   dans un catalogue indexé par schéma : supprimer le schéma les
+>   efface. Ceux du rôle `postgres` repassent avec le fichier ; ceux de
+>   `supabase_admin` sont refusés, parce qu'on ne peut poser les droits
+>   par défaut d'un rôle dont on n'est pas membre.
+>
+> **Ce n'est pas grave et rien n'est perdu** : les 17 tables ont bien
+> reçu leurs droits (c'est ce qui fait marcher le site), et les tables
+> que tu créeras ensuite dépendent des droits par défaut de `postgres`,
+> qui sont intacts.
+>
+> **Pour combler :** `supabase/combler-ecarts-de-droits.sql`, bloc par
+> bloc. Tout y est expliqué, y compris ce qui sera refusé et pourquoi.
+>
+> Tout autre écart — une colonne, une vue, une règle — n'est PAS
+> attendu : arrête-toi et envoie-le-moi.
 
 > Le `grep -v` écarte trois sortes de lignes sans intérêt : les
 > commentaires, les lignes vides, et deux lignes techniques que
