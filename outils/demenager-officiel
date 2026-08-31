@@ -337,6 +337,118 @@ case "$ETAPE" in
     ;;
 
   # ================================================================
+  #  LES MOTS DE PASSE — les empreintes, sans toucher aux comptes
+  # ================================================================
+  mots-de-passe)
+    verifier_les_outils
+    demander_les_acces
+    mkdir -p "$TRAVAIL"
+    echo
+    echo "  ██ LES MOTS DE PASSE ██"
+    echo
+
+    #  ── L'ÉTAT DES DEUX CÔTÉS, avant de rien faire.
+    SRC_TOTAL=$(psql "$ANCIEN" -Atc "select count(*) from auth.users")
+    SRC_AVEC=$(psql "$ANCIEN" -Atc "select count(*) from auth.users where encrypted_password is not null")
+    CIB_TOTAL=$(psql "$NOUVEAU" -Atc "select count(*) from auth.users")
+    CIB_SANS=$(psql "$NOUVEAU" -Atc "select count(*) from auth.users where encrypted_password is null")
+    echo "  ancien  : $SRC_TOTAL compte(s), dont $SRC_AVEC avec un mot de passe"
+    echo "  nouveau : $CIB_TOTAL compte(s), dont $CIB_SANS sans mot de passe"
+    echo
+
+    #  ⚠️ LE GARDE-FOU QUI COMPTE. Les comptes doivent DÉJÀ être là,
+    #  posés par `restaurer-comptes` : c'est lui qui crée aussi la
+    #  ligne d'identité que Supabase attend, et qui recopie les
+    #  identifiants à l'identique. Ce script-ci ne fait qu'AJOUTER
+    #  l'empreinte du mot de passe sur des comptes existants.
+    if [ "$CIB_TOTAL" = "0" ]; then
+      echo "  ⛔  ARRÊT. Le nouveau projet n'a AUCUN compte."
+      echo
+      echo "     Passe d'abord l'étape 4 du guide :"
+      echo "       NEXT_PUBLIC_SUPABASE_URL='https://xxxxx.supabase.co' \\"
+      echo "       SUPABASE_SECRET_KEY='la clé secrète du NOUVEAU projet' \\"
+      echo "         sh outils/restaurer-comptes sauvegardes/AAAA-MM-JJ"
+      echo
+      echo "     Puis reviens ici. Cette commande-ci n'ajoute que"
+      echo "     l'empreinte du mot de passe sur des comptes DÉJÀ posés :"
+      echo "     elle n'en crée aucun, et n'en supprime aucun."
+      exit 1
+    fi
+
+    #  ── L'EXTRACTION. Deux colonnes, rien d'autre : l'identifiant et
+    #  l'empreinte. Le fichier ne sort jamais du Mac, et il est effacé
+    #  à la fin.
+    echo "  1/3  lecture des empreintes dans l'ancien projet…"
+    psql "$ANCIEN" --csv --quiet \
+      -c "select id, encrypted_password from auth.users where encrypted_password is not null" \
+      > "$TRAVAIL/empreintes.csv"
+    echo "       $(($(wc -l < "$TRAVAIL/empreintes.csv") - 1)) empreinte(s) lue(s)"
+
+    if [ "$REEL" != "oui" ]; then
+      echo "  2/3  essai à blanc : on regarde ce qui correspondrait…"
+    else
+      echo "  2/3  pose des empreintes…"
+    fi
+
+    #  ⚠️ AUCUNE SUPPRESSION, JAMAIS. Une seule écriture : un UPDATE
+    #  qui remplit `encrypted_password` là où l'identifiant concorde.
+    #  C'est vital : `tatoueurs.user_id` référence `auth.users(id)` en
+    #  ON DELETE CASCADE — supprimer un compte EFFACERAIT sa fiche et
+    #  ses photos. Mesuré au banc : 1 fiche et 2 photos perdues sur un
+    #  simple `delete from auth.users`.
+    #  En essai à blanc, la transaction est ANNULÉE : les comptes sont
+    #  lus, rien n'est gardé.
+    ( cd "$TRAVAIL" && psql "$NOUVEAU" --quiet --variable ON_ERROR_STOP=1 <<FINSQL
+begin;
+create temporary table empreintes_arrivee (id uuid primary key, encrypted_password text);
+\copy empreintes_arrivee from 'empreintes.csv' with (format csv, header true)
+update auth.users u
+   set encrypted_password = e.encrypted_password
+  from empreintes_arrivee e
+ where u.id = e.id;
+select '       comptes concernés          : ' || count(*)
+  from auth.users u join empreintes_arrivee e on e.id = u.id;
+select '       empreintes sans compte ici : ' || count(*)
+  from empreintes_arrivee e left join auth.users u on u.id = e.id
+ where u.id is null;
+select '       comptes restant sans mot de passe : ' || count(*)
+  from auth.users where encrypted_password is null;
+$( [ "$REEL" = "oui" ] && echo "commit;" || echo "rollback;" )
+FINSQL
+    ) 2>&1 | grep -v '^$' | sed 's/^ *?column? *$//' | grep -vE '^-+$|^\(1 row\)$'
+
+    if [ "$REEL" != "oui" ]; then
+      rm -f "$TRAVAIL/empreintes.csv"
+      echo
+      echo "  ESSAI À BLANC — rien n'a été écrit, le fichier est effacé."
+      echo "  Pour agir :  sh outils/demenager-officiel mots-de-passe --reel"
+      echo
+      exit 0
+    fi
+
+    #  ── LE CONTRÔLE : la même empreinte des deux côtés, sans jamais
+    #  en montrer une seule (on compare un condensé).
+    echo "  3/3  contrôle…"
+    SIG_A=$(psql "$ANCIEN"  -Atc "select md5(string_agg(id::text || coalesce(encrypted_password,''), '~' order by id)) from auth.users where encrypted_password is not null")
+    SIG_N=$(psql "$NOUVEAU" -Atc "select md5(string_agg(id::text || coalesce(encrypted_password,''), '~' order by id)) from auth.users where encrypted_password is not null")
+    rm -f "$TRAVAIL/empreintes.csv"
+    echo
+    if [ "$SIG_A" = "$SIG_N" ]; then
+      echo "  ✔  LES MOTS DE PASSE SONT PASSÉS, à l'identique."
+    else
+      echo "  ⚠️  Les deux côtés ne concordent pas encore."
+      echo "     Le plus souvent : des comptes de l'ancien projet n'ont"
+      echo "     pas été recréés dans le nouveau (relance"
+      echo "     `sh outils/restaurer-comptes`, puis cette commande)."
+    fi
+    echo "     (Le fichier d'empreintes a été effacé.)"
+    echo
+    echo "  ESSAIE UNE VRAIE CONNEXION sur le site avant de crier"
+    echo "  victoire : c'est la seule preuve qui vaille."
+    echo
+    ;;
+
+  # ================================================================
   *)
     echo
     echo "  ██ DÉMÉNAGER LA BASE — les quatre étapes ██"
@@ -344,11 +456,13 @@ case "$ETAPE" in
     echo "     sh outils/demenager-officiel verifier"
     echo "     sh outils/demenager-officiel schema --reel"
     echo "     … puis les COMPTES : sh outils/restaurer-comptes …"
+    echo "     sh outils/demenager-officiel mots-de-passe --reel"
     echo "     sh outils/demenager-officiel donnees --reel"
     echo "     sh outils/demenager-officiel comparer"
     echo "     … puis les PHOTOS : sh outils/demenager-photos --reel"
     echo
-    echo "  Sans --reel, « schema » et « donnees » ne font que lire."
+    echo "  Sans --reel, « schema », « donnees » et « mots-de-passe »"
+    echo "  ne font que lire."
     echo "  Tout est expliqué dans docs/DEMENAGEMENT-SUPABASE.md."
     echo
     exit 1

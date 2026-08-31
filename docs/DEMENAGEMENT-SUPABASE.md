@@ -33,13 +33,14 @@ les mêmes commandes que ce document, avec les garde-fous en place :
 sh outils/demenager-officiel verifier
 sh outils/demenager-officiel schema --reel
    … puis les COMPTES (étape 4) …
+sh outils/demenager-officiel mots-de-passe --reel
 sh outils/demenager-officiel donnees --reel
 sh outils/demenager-officiel comparer
    … puis les PHOTOS (étape 7) …
 ```
 
-Sans `--reel`, `schema` et `donnees` **ne font que lire** : ils
-prennent la copie, comptent, et n'écrivent rien.
+Sans `--reel`, `schema`, `donnees` et `mots-de-passe` **ne font que
+lire** : ils prennent la copie, comptent, et n'écrivent rien.
 
 Il faut quand même **l'étape 0** (installer les outils) et **l'étape 1**
 (les deux chaînes de connexion) avant la première commande.
@@ -55,7 +56,7 @@ Il faut quand même **l'étape 0** (installer les outils) et **l'étape 1**
 | | quoi | outil |
 |---|---|---|
 | 1 | la **forme** (tables, vues, fonctions, droits, règles) | `pg_dump` + `psql` |
-| 2 | les **comptes** | `sh outils/restaurer-comptes` |
+| 2 | les **comptes** et leurs **mots de passe** | `restaurer-comptes` puis `demenager-officiel mots-de-passe` |
 | 3 | les **données** (toutes les lignes) | `pg_dump` + `psql` |
 | 4 | les **photos** (les fichiers) | `sh outils/demenager-photos` |
 | 5 | les **réglages** du projet | à la main, écran par écran |
@@ -264,27 +265,71 @@ temps de la commande. Il te fera taper `RESTAURER`.
 - `SUPABASE_SECRET_KEY` → yokofolio-us ▸ Settings ▸ **API Keys** ▸ la
   clé **secrète** (service_role)
 
-> ### Les mots de passe ne déménagent pas — et c'est important
->
-> Supabase ne rend le mot de passe de personne, pas même à
-> l'administration. C'est une protection, pas un manque. Les comptes
-> sont donc recréés avec **leur adresse et leur identifiant** —
-> l'identifiant étant ce qui relie une personne à ses portfolios — mais
-> **sans mot de passe**.
->
-> **Conséquence :** chaque personne devra cliquer « mot de passe
-> oublié » à sa première connexion. Avec les quelques comptes d'essai
-> d'aujourd'hui, c'est une minute de travail. **Préviens-les avant la
-> bascule.**
->
-> *(Maintenant que `pg_dump` est en place, il existe une autre voie :
-> copier aussi la table des comptes, ce qui emporterait les empreintes
-> de mots de passe. Elle touche à des tables internes de Supabase et je
-> ne peux pas l'éprouver depuis l'atelier. Dis-le-moi si tu la veux, on
-> la prépare pour de bon plutôt qu'à l'aveugle.)*
+Cette commande recrée les comptes avec **leur adresse et leur
+identifiant** — l'identifiant étant ce qui relie une personne à ses
+portfolios — et la ligne d'identité que Supabase attend. Elle ne pose
+pas encore les mots de passe : c'est l'étape suivante.
 
 **Vérification —** nouveau projet ▸ **Authentication** ▸ **Users** : le
 même nombre de comptes que dans l'ancien, avec les mêmes adresses.
+
+---
+
+## Étape 4 bis — les mots de passe
+
+**Personne n'aura à cliquer « mot de passe oublié ».** On copie les
+**empreintes** des mots de passe : chacun se reconnecte avec le sien,
+comme avant.
+
+D'abord à blanc — il lit, il compte, il n'écrit rien :
+
+```
+sh outils/demenager-officiel mots-de-passe
+```
+
+Puis, quand les nombres te vont :
+
+```
+sh outils/demenager-officiel mots-de-passe --reel
+```
+
+> ### ⚠️ POURQUOI ON NE SUPPRIME JAMAIS LES COMPTES DU NOUVEAU PROJET
+>
+> La méthode naïve serait de vider `auth.users` et de tout réimporter.
+> **Elle détruirait tes portfolios.** `tatoueurs.user_id` référence
+> `auth.users(id)` en **`ON DELETE CASCADE`** : supprimer un compte
+> efface sa fiche, et les photos de la fiche avec.
+> Mesuré au banc, sur une copie : `delete from auth.users` → **1 fiche
+> et 2 photos perdues**, en une commande.
+>
+> Cette commande-ci ne supprime donc **rien**. Elle a une seule
+> écriture : elle remplit le mot de passe des comptes **déjà en place**,
+> reconnus par leur identifiant. C'est pourquoi l'étape 4 vient avant :
+> sans comptes, elle s'arrête et te le dit.
+
+**Ce qu'elle fait, dans l'ordre :**
+
+1. elle compte les comptes des deux côtés et te le montre ;
+2. elle lit les empreintes de l'ancien projet dans un fichier
+   temporaire, sur ton Bureau ;
+3. elle les pose sur les comptes du nouveau, par leur identifiant ;
+4. elle compare un **condensé** des deux côtés — jamais une empreinte
+   à l'écran — et te dit s'ils concordent ;
+5. **elle efface le fichier**, dans tous les cas.
+
+> **Le fichier temporaire.** Il contient les empreintes — pas les mots
+> de passe en clair (Supabase ne les a pas non plus), mais de quoi
+> tenter des attaques hors ligne. Il ne va **jamais** dans le dépôt ni
+> dans un zip, et la commande l'efface d'elle-même. Si une commande
+> échoue en route, vérifie qu'il a bien disparu de
+> `~/Desktop/demenagement/`.
+
+**Vérification, la seule qui vaille :** connecte-toi sur le site avec un
+vrai compte et son vrai mot de passe.
+
+> *Si un jour tu refais le déménagement de zéro, l'ordre officiel de
+> Supabase est plus simple : les comptes AVANT les données. Ici on
+> rattrape après coup, parce que les données sont déjà en place.*
 
 ---
 
@@ -509,9 +554,11 @@ Sur le site en ligne, après le redéploiement :
    apparaissent, avec leurs villes.
 2. **Une fiche** — ouvre-en une : le portfolio s'affiche, les photos se
    chargent (c'est l'étape 7 qui se vérifie ici).
-3. **La connexion** — connecte-toi. Si c'est un compte déménagé, passe
-   par « mot de passe oublié » : le courriel doit arriver, et le lien
-   doit ramener sur le site (c'est le réglage 8 « URL Configuration »).
+3. **La connexion** — connecte-toi avec un compte déménagé et **son
+   mot de passe habituel** : c'est l'étape 4 bis qui se vérifie ici, et
+   c'est la seule preuve qui vaille. Essaie aussi « mot de passe
+   oublié » une fois : le courriel doit arriver et son lien ramener sur
+   le site (c'est le réglage 8, « URL Configuration »).
 4. **Le formulaire** — ouvre ton portfolio, change un mot, enregistre,
    recharge : le changement tient.
 5. **Une photo** — ajoute une photo, recharge : elle est là. C'est
@@ -551,7 +598,6 @@ défait pas.
 
 ## Ce qui ne déménage pas, et qu'il faut savoir
 
-- **les mots de passe** — voir l'étape 4 ;
 - **les identifiants des fournisseurs de connexion** (Google, etc.) —
   à recoller, voir l'étape 8 ;
 - **les gabarits de courriels** modifiés — à recopier ;
