@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { COULEURS } from "@/config/roswel";
+import { COULEURS, MARQUE } from "@/config/roswel";
 import type { ArtisanResultat } from "@/lib/recherche-artisans";
 import { libelleMetiersArtisan } from "@/lib/metiers";
 import { lienTelephone, lienWhatsApp } from "@/lib/contact";
@@ -567,6 +567,9 @@ export function CarteArtisan({
             cheminFiche={lienFiche}
             variante="carte"
             couleurContour={couleurBordure}
+            //  nº 759 — la marque se dit ICI depuis que le défaut du
+            //  composant est celui de YokoFolio (voir sa note).
+            marque={MARQUE.nom}
             avecFenetre
             metier={libelleMetier || undefined}
             commune={villeIntervention || undefined}

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { COULEURS } from "@/config/roswel";
+import { COULEURS, MARQUE } from "@/config/roswel";
 import type { ArtisanComplet } from "@/lib/fiche-artisan";
 import { lienAvisGoogle, lienTelephone, lienWhatsApp } from "@/lib/contact";
 import { anneesExistence, nomVilleCourt } from "@/lib/villes";
@@ -294,6 +294,9 @@ export function FicheArtisan({
             variante="carte"
             sansContour
             bulleEnDessous
+            //  nº 759 — voir la note du composant : son défaut est
+            //  désormais la marque de YokoFolio.
+            marque={MARQUE.nom}
           />
         </div>
       </div>
@@ -968,6 +971,7 @@ export function FicheArtisan({
               nomArtisan={artisan.nom_affiche}
               variante="carte"
               sansContour
+              marque={MARQUE.nom}
               // LA FENÊTRE DE PARTAGE, ici seulement : ce bloc n'existe
               // qu'à partir de 560 px. L'exemplaire du bandeau
               // téléphone (plus haut, < 560 px) ne la reçoit pas — son

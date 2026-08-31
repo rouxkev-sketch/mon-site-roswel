@@ -18,7 +18,16 @@ import {
   IconePartageIOS,
   IconeWhatsApp,
 } from "@/components/Icones";
-import { COULEURS, MARQUE } from "@/config/roswel";
+//  ██ nº 759 — LE FIL DU PARTAGE VERS ROSWEL EST COUPÉ ██
+//  Ce bouton prenait dans `config/roswel` deux valeurs par défaut : le
+//  nom de marque et une couleur de contour. Le nom vient désormais de
+//  la marque du site ; la couleur, elle, ne concerne que la variante
+//  « carte » et vit juste en dessous.
+//  ⚠️ CE N'ÉTAIT PAS LE DERNIER LECTEUR, contrairement à ce que
+//  l'inventaire nº 758 laissait croire : `app/layout.tsx`,
+//  `lib/theme.ts` (toute la palette `--rw-*`) et `MenuDeroulant` y
+//  puisent encore. Les déplacer est une passe à part.
+import { MARQUE_YOKOFOLIO } from "@/config/tatouage";
 
 /**
  * VRAI APPAREIL MOBILE ?
@@ -94,17 +103,35 @@ function surAppareilMobile(): boolean {
  */
 export const LARGEUR_FENETRE_PARTAGE = 560;
 
+/**
+ * ██ nº 759 — LE FILET DE LA VARIANTE « CARTE » ██
+ * ==================================================================
+ * LA VALEUR N'A PAS CHANGÉ D'UN CHIFFRE : c'est le gris que ce bouton
+ * portait depuis toujours (`COULEURS.bordureCarte`, config/roswel), un
+ * filet fin lisible sur un fond blanc.
+ * ⚠️ YOKOFOLIO NE LE PEINT JAMAIS, et c'est ce qui permet de le poser
+ * ici sans discuter sa teinte : seule la variante « carte » le lit
+ * (voir le `style` de son bouton, plus bas), et les deux appelants de
+ * YokoFolio — la vue photo et la rangée du profil — emploient la
+ * variante « icone », une flèche nue sans contour ni disque.
+ * ⚠️ IL EST DONC ÉCRIT ICI, ET NON DANS LA CHARTE DE YOKOFOLIO : ce
+ * serait y faire entrer une couleur claire que le site sombre
+ * n'emploie nulle part. Il partira avec la variante « carte », quand
+ * les écrans artisans s'en iront (passe B du plan nº 758).
+ */
+const FILET_CARTE = "#C9CCD4";
+
 export function BoutonPartageFiche({
   nomArtisan,
   cheminFiche,
   variante = "fiche",
-  couleurContour = COULEURS.bordureCarte,
+  couleurContour = FILET_CARTE,
   sansContour = false,
   bulleEnDessous = false,
   avecFenetre = false,
   metier,
   commune,
-  marque = MARQUE.nom,
+  marque = MARQUE_YOKOFOLIO.nom,
   objet = "fiche",
   sombre = false,
   contour = false,
@@ -146,9 +173,16 @@ export function BoutonPartageFiche({
       pré-rempli du SMS et de l'e-mail. */
   metier?: string;
   commune?: string;
-  /** LE NOM DE MARQUE cité dans le message partagé. Par défaut celui
-      des artisans ; yokofolio passe le sien — un site ne partage pas
-      une fiche « sur » un produit qui n'est pas le sien. */
+  /** LE NOM DE MARQUE cité dans le message partagé.
+      ██ nº 759 — LE DÉFAUT A CHANGÉ DE CAMP, ET IL CORRIGEAIT UN
+      DÉFAUT VISIBLE ██
+      Il valait « Roswel ». Or la VUE PHOTO de YokoFolio (FicheTatoueur,
+      celle du téléphone) ne passait rien : partager un portfolio depuis
+      cet écran envoyait « … sur Roswel ». Le défaut n'était pas dans
+      l'appelant — c'était le défaut du composant qui parlait pour lui.
+      Le défaut est désormais celui du site qui reste ; les écrans
+      artisans, eux, passent le leur en toutes lettres tant qu'ils
+      existent (passe B du plan nº 758). */
   marque?: string;
   /**
    * §5 (nº 667) — LE NOM DE LA CHOSE QU'ON PARTAGE, par produit.
