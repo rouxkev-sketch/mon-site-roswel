@@ -24,6 +24,32 @@ officiels de PostgreSQL** : `pg_dump` et `psql`.
 
 ---
 
+## La voie courte : quatre commandes
+
+Si tu ne veux pas lire le reste, `outils/demenager-officiel` enchaîne
+les mêmes commandes que ce document, avec les garde-fous en place :
+
+```
+sh outils/demenager-officiel verifier
+sh outils/demenager-officiel schema --reel
+   … puis les COMPTES (étape 4) …
+sh outils/demenager-officiel donnees --reel
+sh outils/demenager-officiel comparer
+   … puis les PHOTOS (étape 7) …
+```
+
+Sans `--reel`, `schema` et `donnees` **ne font que lire** : ils
+prennent la copie, comptent, et n'écrivent rien.
+
+Il faut quand même **l'étape 0** (installer les outils) et **l'étape 1**
+(les deux chaînes de connexion) avant la première commande.
+
+> **Le reste de ce document donne les commandes une par une**, telles
+> que le script les lance. Sers-t'en si tu veux comprendre ce qui se
+> passe, ou si une étape coince et qu'il faut la reprendre à la main.
+
+---
+
 ## Ce qui déménage, et par quel moyen
 
 | | quoi | outil |

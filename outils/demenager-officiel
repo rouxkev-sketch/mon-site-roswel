@@ -1,0 +1,356 @@
+#!/bin/sh
+#
+#  ██ DÉMÉNAGER LA BASE AVEC LES OUTILS OFFICIELS (passe nº 771) ██
+#  ==================================================================
+#  CE QUE TU TAPES, DANS LE DOSSIER DU PROJET, SUR TON MAC — quatre
+#  commandes, dans cet ordre, et rien d'autre :
+#
+#      sh outils/demenager-officiel verifier
+#      sh outils/demenager-officiel schema --reel
+#      … puis les COMPTES (voir plus bas) …
+#      sh outils/demenager-officiel donnees --reel
+#      sh outils/demenager-officiel comparer
+#
+#  Sans `--reel`, `schema` et `donnees` ne font QUE la lecture : ils
+#  prennent la copie et te disent ce qu'ils poseraient. Rien n'est
+#  écrit.
+#
+#  ⚠️ SUR TON MAC, PAS DANS L'ATELIER : l'atelier n'a aucun accès au
+#  réseau, il ne peut joindre ni l'un ni l'autre des projets.
+#
+#  ==================================================================
+#  AVANT LA PREMIÈRE COMMANDE : LES DEUX CHAÎNES DE CONNEXION
+#  ------------------------------------------------------------------
+#  Dans supabase.com, POUR CHACUN DES DEUX PROJETS : bouton
+#  « Connect » en haut de la page ▸ onglet « Session pooler ».
+#  (Pas le « Transaction pooler » : il ne sait pas faire tourner
+#  pg_dump. Pas la « Direct connection » non plus : elle ne répond
+#  qu'en IPv6.)
+#
+#  Puis, UNE FOIS pour toute la fenêtre de terminal :
+#
+#      printf 'ANCIEN : '; stty -echo; read ANCIEN; stty echo; echo
+#      printf 'NOUVEAU : '; stty -echo; read NOUVEAU; stty echo; echo
+#      export ANCIEN NOUVEAU
+#
+#  Rien ne s'affiche, rien n'entre dans l'historique. Si tu oublies,
+#  ce script te les demandera de la même façon.
+#
+#  ⚠️ CE SCRIPT N'AFFICHE JAMAIS UNE CHAÎNE DE CONNEXION, ni ne
+#  l'écrit dans un fichier. Il ne montre que le NOM DE MACHINE des
+#  projets, jamais l'utilisateur ni le mot de passe.
+#
+#  ==================================================================
+#  L'ORDRE, ET POURQUOI LES COMPTES SONT AU MILIEU
+#  ------------------------------------------------------------------
+#   1. `verifier`  — les outils, les deux connexions, et surtout : le
+#                    nouveau projet est-il VIDE ;
+#   2. `schema`    — la forme des tables ;
+#   3. LES COMPTES, à part, avec l'outil qui sait le faire :
+#
+#        NEXT_PUBLIC_SUPABASE_URL='https://xxxxx.supabase.co' \
+#        SUPABASE_SECRET_KEY='la clé secrète du NOUVEAU projet' \
+#          sh outils/restaurer-comptes sauvegardes/AAAA-MM-JJ
+#
+#      Avant les données : la moitié des lignes désigne un compte.
+#   4. `donnees`   — toutes les lignes ;
+#   5. `comparer`  — les deux formes doivent être identiques ;
+#   6. LES PHOTOS, à part elles aussi (elles ne sont pas dans la
+#      base, pg_dump ne les voit pas) :
+#
+#        CIBLE_URL='…' CIBLE_SECRET_KEY='…' \
+#          sh outils/demenager-photos --reel
+#
+#  Tout est écrit pas à pas dans docs/DEMENAGEMENT-SUPABASE.md.
+#
+#  ==================================================================
+#  CE QU'IL NE FAIT JAMAIS
+#  ------------------------------------------------------------------
+#  Il n'écrit RIEN dans l'ancien projet : pg_dump ne sait que lire.
+#  Et il refuse de poser quoi que ce soit dans le nouveau tant que
+#  celui-ci n'est pas vide — voir l'avertissement de `schema`.
+#
+
+set -e
+
+DOSSIER=$(cd "$(dirname "$0")/.." && pwd)
+cd "$DOSSIER"
+
+ETAPE="${1:-}"
+REEL=non
+for argument in "$@"; do
+  [ "$argument" = "--reel" ] && REEL=oui
+done
+
+#  Où atterrissent les copies. JAMAIS dans le dépôt : elles
+#  contiennent toutes les données du site.
+TRAVAIL="${TRAVAIL_DEMENAGEMENT:-$HOME/Desktop/demenagement}"
+
+#  ── Le nom de machine d'une chaîne de connexion, et rien de plus.
+#  Tout ce qui précède le « @ » est l'utilisateur et le mot de passe :
+#  on le jette avant d'afficher quoi que ce soit.
+#  Le `.*@` est GOURMAND À DESSEIN : il coupe jusqu'au DERNIER « @ ».
+#  Un mot de passe a le droit de contenir un « @ », et couper au
+#  premier en laisserait passer un morceau à l'écran.
+hote() {
+  LU=""
+  case "$1" in
+    *@*) LU=$(printf '%s' "$1" | sed -e 's|^.*@||' -e 's|[/?].*$||') ;;
+  esac
+  #  Si rien de lisible n'en sort, on ne montre RIEN plutôt que de
+  #  risquer d'afficher un morceau de la chaîne.
+  if [ -z "$LU" ]; then printf '(nom de machine non lisible)'; else printf '%s' "$LU"; fi
+}
+
+demander_les_acces() {
+  if [ -z "${ANCIEN:-}" ]; then
+    printf 'Chaine de connexion de l ANCIEN projet : '
+    stty -echo 2>/dev/null || true
+    read ANCIEN
+    stty echo 2>/dev/null || true
+    printf '\n'
+  fi
+  if [ -z "${NOUVEAU:-}" ]; then
+    printf 'Chaine de connexion du NOUVEAU projet : '
+    stty -echo 2>/dev/null || true
+    read NOUVEAU
+    stty echo 2>/dev/null || true
+    printf '\n'
+  fi
+  if [ -z "$ANCIEN" ] || [ -z "$NOUVEAU" ]; then
+    echo "  ✖  Il manque une des deux chaînes de connexion."
+    exit 1
+  fi
+  if [ "$ANCIEN" = "$NOUVEAU" ]; then
+    echo "  ✖  Les deux chaînes sont IDENTIQUES : ce serait le même"
+    echo "     projet des deux côtés. Rien à faire."
+    exit 1
+  fi
+}
+
+verifier_les_outils() {
+  if ! command -v pg_dump >/dev/null 2>&1 || ! command -v psql >/dev/null 2>&1; then
+    echo "  ✖  pg_dump ou psql est introuvable."
+    echo
+    echo "     Installe-les, puis rouvre le terminal :"
+    echo "       brew install postgresql@17"
+    echo "       echo 'export PATH=\"'\"\$(brew --prefix postgresql@17)\"'/bin:\$PATH\"' >> ~/.zprofile"
+    exit 1
+  fi
+}
+
+#  ── LE GARDE-FOU. Combien d'objets vivent déjà dans le schéma
+#  `public` du nouveau projet ? Sur un projet neuf : zéro.
+compter_la_cible() {
+  psql "$NOUVEAU" -Atc "select count(*) from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relkind in ('r','v','m')"
+}
+
+case "$ETAPE" in
+
+  # ================================================================
+  verifier)
+    verifier_les_outils
+    demander_les_acces
+    echo
+    echo "  ██ VÉRIFICATIONS AVANT DE COMMENCER ██"
+    echo
+    echo "  outils   : $(pg_dump --version | head -1)"
+    echo "  ancien   : $(hote "$ANCIEN")"
+    echo "  nouveau  : $(hote "$NOUVEAU")"
+    echo
+    echo -n "  connexion à l'ancien  : "
+    psql "$ANCIEN" -Atc 'select version()' | cut -c1-40
+    echo -n "  connexion au nouveau  : "
+    psql "$NOUVEAU" -Atc 'select version()' | cut -c1-40
+    echo
+    RESTE=$(compter_la_cible)
+    echo "  objets déjà dans le schéma public du NOUVEAU projet : $RESTE"
+    if [ "$RESTE" = "0" ]; then
+      echo
+      echo "  ✔  Le nouveau projet est vierge. Tu peux continuer :"
+      echo "       sh outils/demenager-officiel schema --reel"
+    else
+      echo
+      echo "  ⚠️  IL N'EST PAS VIDE. Deux explications :"
+      echo "     · tu t'es trompé de projet ;"
+      echo "     · une tentative précédente a laissé des choses."
+      echo "     N'ÉCRASE RIEN. Dis-le-moi, on regarde ensemble."
+    fi
+    echo
+    echo "  ⚠️  La version de pg_dump doit être AU MOINS celle des"
+    echo "     serveurs ci-dessus. Sinon, il refusera de travailler."
+    echo
+    ;;
+
+  # ================================================================
+  schema)
+    verifier_les_outils
+    demander_les_acces
+    mkdir -p "$TRAVAIL"
+    echo
+    echo "  ██ LA FORME DES TABLES ██"
+    echo "     depuis : $(hote "$ANCIEN")"
+    echo "     vers   : $(hote "$NOUVEAU")"
+    echo
+
+    echo "  1/3  copie de la forme depuis l'ancien projet…"
+    pg_dump "$ANCIEN" \
+      --schema=public \
+      --schema-only \
+      --no-owner \
+      --clean --if-exists \
+      --quote-all-identifiers \
+      -f "$TRAVAIL/schema.sql"
+    echo "       écrit : $TRAVAIL/schema.sql ($(wc -l < "$TRAVAIL/schema.sql" | tr -d ' ') lignes)"
+
+    RESTE=$(compter_la_cible)
+    echo "  2/3  objets déjà présents dans la cible : $RESTE"
+    if [ "$RESTE" != "0" ]; then
+      echo
+      echo "  ⛔  ARRÊT. Le schéma public du nouveau projet n'est PAS vide."
+      echo
+      echo "     Ce fichier, s'il était posé, SUPPRIMERAIT tout ce qui s'y"
+      echo "     trouve avant de le remplacer. Ce n'est pas une supposition :"
+      echo "     c'est ce que fait « --clean », vérifié au banc."
+      echo "     On ne le pose donc pas. Dis-moi ce que contient ce projet."
+      exit 1
+    fi
+
+    if [ "$REEL" != "oui" ]; then
+      echo
+      echo "  ESSAI À BLANC — rien n'a été posé."
+      echo "  La copie est prise et la cible est vide : tout est prêt."
+      echo "  Pour agir :  sh outils/demenager-officiel schema --reel"
+      echo
+      exit 0
+    fi
+
+    echo "  3/3  pose dans le nouveau projet…"
+    psql "$NOUVEAU" \
+      --single-transaction \
+      --variable ON_ERROR_STOP=1 \
+      --quiet \
+      --output=/dev/null \
+      --file "$TRAVAIL/schema.sql"
+    #  Recréer le schéma `public` lui fait perdre un droit que les
+    #  schémas d'origine possèdent. Sans cette ligne, les deux projets
+    #  diffèrent, et `comparer` le dirait. Relevé au banc.
+    psql "$NOUVEAU" --quiet --output=/dev/null -c 'GRANT USAGE ON SCHEMA "public" TO PUBLIC;'
+    echo
+    echo "  ✔  Forme posée."
+    echo
+    echo "  LA SUITE, ET DANS CET ORDRE : les COMPTES d'abord, sinon la"
+    echo "  moitié des lignes sera refusée."
+    echo
+    echo "     NEXT_PUBLIC_SUPABASE_URL='https://xxxxx.supabase.co' \\"
+    echo "     SUPABASE_SECRET_KEY='la clé secrète du NOUVEAU projet' \\"
+    echo "       sh outils/restaurer-comptes sauvegardes/AAAA-MM-JJ"
+    echo
+    echo "  Puis :  sh outils/demenager-officiel donnees --reel"
+    echo
+    ;;
+
+  # ================================================================
+  donnees)
+    verifier_les_outils
+    demander_les_acces
+    mkdir -p "$TRAVAIL"
+    echo
+    echo "  ██ LES LIGNES ██"
+    echo "     depuis : $(hote "$ANCIEN")"
+    echo "     vers   : $(hote "$NOUVEAU")"
+    echo
+
+    echo "  1/2  copie des lignes depuis l'ancien projet…"
+    pg_dump "$ANCIEN" \
+      --schema=public \
+      --data-only \
+      --no-owner \
+      --quote-all-identifiers \
+      -f "$TRAVAIL/donnees.sql"
+    echo "       écrit : $TRAVAIL/donnees.sql ($(wc -l < "$TRAVAIL/donnees.sql" | tr -d ' ') lignes)"
+
+    if [ "$REEL" != "oui" ]; then
+      echo
+      echo "  ESSAI À BLANC — rien n'a été écrit."
+      echo "  Pour agir :  sh outils/demenager-officiel donnees --reel"
+      echo
+      exit 0
+    fi
+
+    echo "  2/2  pose dans le nouveau projet…"
+    #  `session_replication_role = replica` met en sommeil, le temps du
+    #  chargement, les vérifications entre tables : l'ordre des lignes
+    #  cesse d'avoir de l'importance. Elles reprennent seules à la fin,
+    #  ce réglage ne valant que pour cette connexion.
+    psql "$NOUVEAU" \
+      --single-transaction \
+      --variable ON_ERROR_STOP=1 \
+      --quiet \
+      --output=/dev/null \
+      --command 'SET session_replication_role = replica' \
+      --file "$TRAVAIL/donnees.sql"
+    echo
+    echo "  ✔  Lignes posées."
+    echo "  Vérifie :  sh outils/demenager-officiel comparer"
+    echo
+    ;;
+
+  # ================================================================
+  comparer)
+    verifier_les_outils
+    demander_les_acces
+    mkdir -p "$TRAVAIL"
+    echo
+    echo "  ██ LES DEUX PROJETS SE RESSEMBLENT-ILS ? ██"
+    echo
+    #  On demande à pg_dump de DÉCRIRE chaque projet, puis on compare
+    #  les deux descriptions. Le `grep -v` écarte trois sortes de
+    #  lignes sans intérêt : les commentaires, les lignes vides, et
+    #  deux lignes techniques que pg_dump change à chaque exécution.
+    for cote in ancien nouveau; do
+      if [ "$cote" = "ancien" ]; then CHAINE="$ANCIEN"; else CHAINE="$NOUVEAU"; fi
+      pg_dump "$CHAINE" --schema=public --schema-only --no-owner --quote-all-identifiers \
+        | grep -vE '^\\(un)?restrict|^--|^$' > "$TRAVAIL/forme-$cote.txt"
+    done
+
+    if diff "$TRAVAIL/forme-ancien.txt" "$TRAVAIL/forme-nouveau.txt" > "$TRAVAIL/ecart.txt"; then
+      echo "  ✔  FORMES IDENTIQUES ($(wc -l < "$TRAVAIL/forme-ancien.txt" | tr -d ' ') lignes de part et d'autre)."
+    else
+      echo "  ✖  ELLES DIFFÈRENT. Les premières lignes d'écart :"
+      echo
+      head -20 "$TRAVAIL/ecart.txt" | sed 's/^/     /'
+      echo
+      echo "     Le détail complet : $TRAVAIL/ecart.txt"
+      echo "     Envoie-le-moi — ne continue pas."
+    fi
+
+    echo
+    echo "  Les comptes de lignes :"
+    for table in tatoueurs photos_tatoueur conventions; do
+      A=$(psql "$ANCIEN"  -Atc "select count(*) from public.$table" 2>/dev/null || echo "?")
+      N=$(psql "$NOUVEAU" -Atc "select count(*) from public.$table" 2>/dev/null || echo "?")
+      if [ "$A" = "$N" ]; then MARQUE="✔"; else MARQUE="✖"; fi
+      printf '     %s  %-20s ancien %-8s nouveau %s\n' "$MARQUE" "$table" "$A" "$N"
+    done
+    echo
+    ;;
+
+  # ================================================================
+  *)
+    echo
+    echo "  ██ DÉMÉNAGER LA BASE — les quatre étapes ██"
+    echo
+    echo "     sh outils/demenager-officiel verifier"
+    echo "     sh outils/demenager-officiel schema --reel"
+    echo "     … puis les COMPTES : sh outils/restaurer-comptes …"
+    echo "     sh outils/demenager-officiel donnees --reel"
+    echo "     sh outils/demenager-officiel comparer"
+    echo "     … puis les PHOTOS : sh outils/demenager-photos --reel"
+    echo
+    echo "  Sans --reel, « schema » et « donnees » ne font que lire."
+    echo "  Tout est expliqué dans docs/DEMENAGEMENT-SUPABASE.md."
+    echo
+    exit 1
+    ;;
+esac
