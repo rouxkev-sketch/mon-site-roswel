@@ -1,5 +1,5 @@
 -- ============================================================
---  nº 766 bis — L'EMPREINTE D'UN SCHÉMA
+--  nº 766 ter — L'EMPREINTE D'UN SCHÉMA
 --  À coller dans CHACUN des deux projets, et à comparer.
 -- ============================================================
 --  À QUOI ÇA SERT. Après avoir posé le schéma dans le nouveau projet,
@@ -20,9 +20,22 @@
 --  ⚠️ NE T'INQUIÈTE PAS d'une différence sur `journal_migrations` ou
 --  toute table de service que le nouveau projet n'aurait pas : ce qui
 --  compte, ce sont les 17 tables du produit.
+--
+--  ⚠️ COMME LE LECTEUR DE SCHÉMA (nº 766 ter), ce fichier n'emploie
+--  aucun raccourci `::regnamespace` ni `::regclass` : l'éditeur de
+--  Supabase les lit autrement et cherchait une table nommée
+--  « public ». Les schémas sont désignés par des jointures écrites en
+--  toutes lettres.
 -- ============================================================
 
 with
+
+--  ── LE SCHÉMA QU'ON LIT, nommé une seule fois.
+schema_lu as (
+  select n.oid
+  from pg_namespace n
+  where n.nspname = 'public'
+),
 
 --  ── LA FORME DE CHAQUE TABLE : nom de colonne, type exact, « pas
 --     vide », valeur par défaut, caractère automatique. C'est là que
@@ -38,10 +51,10 @@ formes as (
       ' | ' order by a.attnum
     ) as detail
   from pg_class c
+  join schema_lu s on s.oid = c.relnamespace
   join pg_attribute a on a.attrelid = c.oid
   left join pg_attrdef d on d.adrelid = a.attrelid and d.adnum = a.attnum
   where c.relkind = 'r'
-    and c.relnamespace = 'public'::regnamespace
     and a.attnum > 0
     and not a.attisdropped
   group by c.relname
@@ -51,26 +64,34 @@ formes as (
 --     sans qu'on ait besoin d'en lire le détail.
 comptes as (
   select 'vues' as quoi, count(*)::text as combien
-  from pg_class where relkind in ('v', 'm') and relnamespace = 'public'::regnamespace
+  from pg_class c join schema_lu s on s.oid = c.relnamespace
+  where c.relkind in ('v', 'm')
   union all
   select 'fonctions', count(*)::text
-  from pg_proc where pronamespace = 'public'::regnamespace and prokind in ('f', 'p')
+  from pg_proc p join schema_lu s on s.oid = p.pronamespace
+  where p.prokind in ('f', 'p')
   union all
   select 'règles RLS', count(*)::text
-  from pg_policy pol join pg_class c on c.oid = pol.polrelid
-  where c.relnamespace = 'public'::regnamespace
+  from pg_policy pol
+  join pg_class c on c.oid = pol.polrelid
+  join schema_lu s on s.oid = c.relnamespace
   union all
   select 'déclencheurs', count(*)::text
-  from pg_trigger tg join pg_class c on c.oid = tg.tgrelid
-  where c.relnamespace = 'public'::regnamespace and not tg.tgisinternal
+  from pg_trigger tg
+  join pg_class c on c.oid = tg.tgrelid
+  join schema_lu s on s.oid = c.relnamespace
+  where not tg.tgisinternal
   union all
   select 'index', count(*)::text
-  from pg_index i join pg_class c on c.oid = i.indrelid
-  where c.relnamespace = 'public'::regnamespace
+  from pg_index i
+  join pg_class c on c.oid = i.indrelid
+  join schema_lu s on s.oid = c.relnamespace
   union all
   select 'clés étrangères', count(*)::text
-  from pg_constraint con join pg_class c on c.oid = con.conrelid
-  where c.relnamespace = 'public'::regnamespace and con.contype = 'f'
+  from pg_constraint con
+  join pg_class c on c.oid = con.conrelid
+  join schema_lu s on s.oid = c.relnamespace
+  where con.contype = 'f'
 ),
 
 tout_ as (

@@ -66,6 +66,26 @@ un fichier de comptes, et les photos.
 
 ### 1a — lire la vraie base
 
+> **L'essai de cinq secondes.** Je n'ai pas l'éditeur de Supabase sous
+> la main : je ne peux pas éprouver mes fichiers là où ils tournent.
+> Avant de coller les trois cents lignes, colle **cette seule ligne**
+> dans l'ancien projet :
+>
+> ```sql
+> select count(*) from pg_class c
+>   join pg_namespace n on n.oid = c.relnamespace
+>   where n.nspname = 'public';
+> ```
+>
+> Elle doit rendre **un nombre**. Si oui, le gros fichier passera. Si
+> elle échoue, envoie-moi l'erreur.
+>
+> *(La version précédente désignait le schéma par le raccourci
+> `'public'::regnamespace`. Il passe sur un PostgreSQL ordinaire —
+> éprouvé — mais l'éditeur de Supabase le lit autrement et cherchait
+> une **table** nommée « public », d'où `42P01`. Le raccourci a
+> disparu des deux fichiers SQL.)*
+
 Dans supabase.com, **ANCIEN** projet (Irlande) ▸ **SQL Editor** ▸ colle
 d'un bloc et lance :
 

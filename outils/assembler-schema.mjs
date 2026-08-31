@@ -115,11 +115,17 @@ async function principal() {
   //  La première ligne est l'en-tête. On y cherche les deux colonnes
   //  par leur NOM : si Supabase les rend dans l'autre sens un jour,
   //  ça marche quand même.
+  //  La colonne du texte s'appelle « instruction » depuis la nº 766
+  //  ter ; on accepte encore « sql », son ancien nom, pour qu'un CSV
+  //  exporté avant la correction reste assemblable.
   const entete = lignes[0].map((c) => c.trim().toLowerCase());
   const colOrdre = entete.indexOf("ordre");
-  const colSql = entete.indexOf("sql");
+  const colSql = entete.indexOf("instruction") !== -1
+    ? entete.indexOf("instruction")
+    : entete.indexOf("sql");
   if (colOrdre === -1 || colSql === -1) {
-    console.log("  ✖  Ce CSV n'a pas les colonnes attendues « ordre » et « sql ».");
+    console.log("  ✖  Ce CSV n'a pas les colonnes attendues « ordre » et");
+    console.log("     « instruction ».");
     console.log(`     Colonnes trouvées : ${entete.join(", ") || "(aucune)"}`);
     console.log("     C'est sans doute le résultat d'une AUTRE requête.");
     process.exit(1);

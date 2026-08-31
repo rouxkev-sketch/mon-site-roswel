@@ -1,5 +1,5 @@
 -- ============================================================
---  nº 766 bis — LIRE LE SCHÉMA RÉEL DE L'ANCIEN PROJET
+--  nº 766 ter — LIRE LE SCHÉMA RÉEL DE L'ANCIEN PROJET
 --  À coller dans l'éditeur SQL de l'ANCIEN projet (Irlande).
 -- ============================================================
 --  POURQUOI CE FICHIER EXISTE. Le premier schéma livré était bâti en
@@ -19,6 +19,37 @@
 --  ⚠️ IL NE LIT AUCUNE DONNÉE ET AUCUNE CLÉ. Il ne regarde que la
 --  FORME des tables (noms de colonnes, types, règles), jamais leur
 --  contenu.
+--
+-- ============================================================
+--  CE QUI A CHANGÉ À LA nº 766 ter, ET POURQUOI
+--  ------------------------------------------------------------
+--  La version précédente échouait dans l'éditeur de Supabase :
+--      ERROR: 42P01: relation "public" does not exist
+--  Elle employait le raccourci `'public'::regnamespace` pour désigner
+--  le schéma. Ce raccourci passe sur un PostgreSQL ordinaire — il a
+--  été éprouvé ici — mais l'éditeur de Supabase le lit autrement, et
+--  cherche alors une TABLE nommée « public », qui n'existe pas.
+--  Le raccourci a donc disparu : plus aucun `::regnamespace` ni
+--  `::regclass` dans ce fichier. Les schémas et les catalogues sont
+--  désignés par des jointures écrites en toutes lettres, qui ne
+--  peuvent se lire que d'une seule façon.
+--
+-- ============================================================
+--  L'ESSAI DE CINQ SECONDES, AVANT DE COLLER LE RESTE
+--  ------------------------------------------------------------
+--  Je n'ai pas l'éditeur de Supabase sous la main : je ne peux donc
+--  pas éprouver ce fichier là où il tourne. Plutôt que de te faire
+--  coller trois cents lignes pour rien, colle D'ABORD cette
+--  seule ligne, qui emploie exactement la construction corrigée :
+--
+--      select count(*) from pg_class c
+--        join pg_namespace n on n.oid = c.relnamespace
+--        where n.nspname = 'public';
+--
+--  Elle doit rendre UN NOMBRE (le nombre de tables, vues et index du
+--  schéma public — quelques dizaines). Si elle le rend, le gros
+--  fichier passera. Si elle échoue, envoie-moi l'erreur : c'est que
+--  l'éditeur bute sur autre chose, et je saurai quoi.
 --
 -- ============================================================
 --  CE QUE TU EN FAIS, DANS L'ORDRE
@@ -43,17 +74,41 @@
 --  une vue peut en lire une autre, il faut donc les ranger.
 with recursive
 
+--  ── LE SCHÉMA QU'ON LIT, nommé une seule fois. Tout le reste s'y
+--     rattache par une jointure ordinaire. C'est la disparition du
+--     raccourci `::regnamespace` qui a coûté la passe précédente.
+schema_lu as (
+  select n.oid
+  from pg_namespace n
+  where n.nspname = 'public'
+),
+
+--  ── LES DEUX CATALOGUES qu'on doit désigner par leur numéro, eux
+--     aussi en toutes lettres plutôt que par `::regclass`.
+cat_classe as (
+  select c.oid
+  from pg_class c
+  join pg_namespace n on n.oid = c.relnamespace
+  where c.relname = 'pg_class' and n.nspname = 'pg_catalog'
+),
+cat_reecriture as (
+  select c.oid
+  from pg_class c
+  join pg_namespace n on n.oid = c.relnamespace
+  where c.relname = 'pg_rewrite' and n.nspname = 'pg_catalog'
+),
+
 --  ── Les tables ordinaires du schéma public, et rien d'autre.
 tables_ as (
   select c.oid, c.relname
   from pg_class c
+  join schema_lu s on s.oid = c.relnamespace
   where c.relkind = 'r'
-    and c.relnamespace = 'public'::regnamespace
 ),
 
 --  ── LES COLONNES, avec tout ce qui les définit : le type exact, le
 --     « pas vide », la valeur par défaut, et — le point qui nous a
---     coûté cette passe — les colonnes AUTOMATIQUES (identity) et
+--     coûté une passe — les colonnes AUTOMATIQUES (identity) et
 --     CALCULÉES (generated).
 colonnes as (
   select
@@ -85,14 +140,14 @@ colonnes as (
 sequences_ as (
   select c.oid, c.relname
   from pg_class c
+  join schema_lu s on s.oid = c.relnamespace
   where c.relkind = 'S'
-    and c.relnamespace = 'public'::regnamespace
     and not exists (
       select 1
       from pg_depend dep
+      join cat_classe cc on cc.oid = dep.classid
       join pg_attribute a on a.attrelid = dep.refobjid and a.attnum = dep.refobjsubid
       where dep.objid = c.oid
-        and dep.classid = 'pg_class'::regclass
         and dep.deptype = 'i'
         and a.attidentity <> ''
     )
@@ -104,21 +159,21 @@ sequences_ as (
 liens_vues as (
   select distinct fille.oid as vue, mere.oid as socle
   from pg_depend d
+  join cat_reecriture cr on cr.oid = d.classid
   join pg_rewrite r on r.oid = d.objid
   join pg_class fille on fille.oid = r.ev_class
   join pg_class mere on mere.oid = d.refobjid
-  where d.classid = 'pg_rewrite'::regclass
-    and fille.relkind in ('v', 'm')
+  join schema_lu sf on sf.oid = fille.relnamespace
+  join schema_lu sm on sm.oid = mere.relnamespace
+  where fille.relkind in ('v', 'm')
     and mere.relkind in ('v', 'm')
     and fille.oid <> mere.oid
-    and fille.relnamespace = 'public'::regnamespace
-    and mere.relnamespace = 'public'::regnamespace
 ),
 profondeur as (
   select c.oid, 0 as n
   from pg_class c
+  join schema_lu s on s.oid = c.relnamespace
   where c.relkind in ('v', 'm')
-    and c.relnamespace = 'public'::regnamespace
     and not exists (select 1 from liens_vues l where l.vue = c.oid)
   union all
   select l.vue, p.n + 1
@@ -128,9 +183,9 @@ profondeur as (
 vues as (
   select c.oid, c.relname, c.relkind, coalesce(max(p.n), 0) as etage
   from pg_class c
+  join schema_lu s on s.oid = c.relnamespace
   left join profondeur p on p.oid = c.oid
   where c.relkind in ('v', 'm')
-    and c.relnamespace = 'public'::regnamespace
   group by c.oid, c.relname, c.relkind
 ),
 
@@ -142,7 +197,7 @@ morceaux as (
   --  0 · les réglages d'entrée. `check_function_bodies = false`
   --  autorise une fonction à nommer une table pas encore créée : sans
   --  lui, rien ne passe.
-  select 0 as bloc, 0 as rang, 'set check_function_bodies = false;' as sql
+  select 0 as bloc, 0 as rang, 'set check_function_bodies = false;' as texte
   union all
   select 0, 1, 'set search_path = public;'
 
@@ -151,14 +206,14 @@ morceaux as (
   select 1, row_number() over (order by p.proname),
          pg_get_functiondef(p.oid) || ';'
   from pg_proc p
-  where p.pronamespace = 'public'::regnamespace
-    and p.prokind in ('f', 'p')
+  join schema_lu s on s.oid = p.pronamespace
+  where p.prokind in ('f', 'p')
 
   --  2 · LES SÉQUENCES autonomes.
   union all
-  select 2, row_number() over (order by s.relname),
-         'create sequence if not exists public.' || quote_ident(s.relname) || ';'
-  from sequences_ s
+  select 2, row_number() over (order by q.relname),
+         'create sequence if not exists public.' || quote_ident(q.relname) || ';'
+  from sequences_ q
 
   --  3 · LES TABLES, colonnes seules — aucune contrainte encore.
   union all
@@ -171,11 +226,12 @@ morceaux as (
 
   --  4 · les séquences rattachées à leur colonne.
   union all
-  select 4, row_number() over (order by s.relname),
-         'alter sequence public.' || quote_ident(s.relname)
+  select 4, row_number() over (order by q.relname),
+         'alter sequence public.' || quote_ident(q.relname)
          || ' owned by public.' || quote_ident(tc.relname) || '.' || quote_ident(a.attname) || ';'
-  from sequences_ s
-  join pg_depend dep on dep.objid = s.oid and dep.classid = 'pg_class'::regclass and dep.deptype = 'a'
+  from sequences_ q
+  join pg_depend dep on dep.objid = q.oid and dep.deptype = 'a'
+  join cat_classe cc on cc.oid = dep.classid
   join pg_class tc on tc.oid = dep.refobjid
   join pg_attribute a on a.attrelid = dep.refobjid and a.attnum = dep.refobjsubid
 
@@ -202,10 +258,11 @@ morceaux as (
 
   --  7 · les index qui ne servent pas déjà une contrainte.
   union all
-  select 7, row_number() over (order by i.indexrelid::regclass::text),
+  select 7, row_number() over (order by ic.relname),
          pg_get_indexdef(i.indexrelid) || ';'
   from pg_index i
   join tables_ t on t.oid = i.indrelid
+  join pg_class ic on ic.oid = i.indexrelid
   where not exists (select 1 from pg_constraint con where con.conindid = i.indexrelid)
 
   --  8 · LES VUES, de la moins emboîtée à la plus emboîtée.
@@ -282,6 +339,6 @@ morceaux as (
 
 select
   row_number() over (order by bloc, rang) as ordre,
-  sql
+  texte as instruction
 from morceaux
 order by bloc, rang;
