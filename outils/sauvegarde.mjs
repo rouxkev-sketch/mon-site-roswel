@@ -164,10 +164,17 @@ const TABLES_DE_SECOURS = [
   "tatoueurs_suivis", "clics_fiches", "visites_selection",
   "signalements_fiches", "suggestions_style", "suppressions_comptes",
   "messages_yokofolio", "demarchages", "demarchage_fiches",
-  //  Le produit artisans, dans la même base
-  "artisans", "artisan_metiers", "artisans_prospects", "particuliers",
-  "favoris", "demandes_rdv", "messages_contact", "signalements",
-  "communes", "prospection_envois",
+  //  ⚠️ LES DIX TABLES DU PRODUIT ARTISANS ONT QUITTÉ CE FILET
+  //  (nº 764) : `artisans`, `artisan_metiers`, `artisans_prospects`,
+  //  `particuliers`, `favoris`, `demandes_rdv`, `messages_contact`,
+  //  `signalements`, `communes`, `prospection_envois`. Elles sont
+  //  supprimées de la base par
+  //  `supabase/roswel-supprimer-les-tables-764.sql` ; les nommer ici
+  //  ne ferait plus qu'ajouter dix lignes d'erreur au compte rendu.
+  //  ⚠️ ET CELA NE CHANGE RIEN À CE QUE LA SAUVEGARDE EMPORTE tant
+  //  qu'elles existent : cette liste n'est que le FILET. La vraie
+  //  vient de la base elle-même (voir juste au-dessus), et elle, elle
+  //  les voit tant qu'elles sont là.
 ];
 
 async function listerLesTables(appeler) {

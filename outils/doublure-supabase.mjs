@@ -152,8 +152,11 @@ const FAUX_TOTAL = process.env.FAUX_TOTAL === "1";
  * pas de grande table, pas de plafond de réponse, pas de table qui ne
  * répond jamais. Trois crans, et l'outil peut être éprouvé pour de bon.
  *
- *   GRANDE_TABLE=5000   une table `communes` de 5 000 lignes, pour que
- *                       la pagination existe vraiment ;
+ *   GRANDE_TABLE=5000   une table `grande_table` de 5 000 lignes, pour
+ *                       que la pagination existe vraiment. (nº 764 —
+ *                       elle s'appelait `communes` ; cette table-là a
+ *                       été supprimée de la vraie base, et un décor de
+ *                       banc n'a aucune raison d'en porter le nom.)
  *   PLAFOND=500         le serveur ne rend jamais plus de 500 lignes,
  *                       même si on en demande 1 000 — c'est le
  *                       `max-rows` de PostgREST, et c'est le piège qui
@@ -162,7 +165,7 @@ const FAUX_TOTAL = process.env.FAUX_TOTAL === "1";
  *   TABLE_MUETTE=x      la table `x` accepte la requête et ne répond
  *                       JAMAIS. C'est le blocage lui-même.
  *
- *      GRANDE_TABLE=5000 PLAFOND=500 TABLE_MUETTE=communes \
+ *      GRANDE_TABLE=5000 PLAFOND=500 TABLE_MUETTE=grande_table \
  *        npm run banc:doublure
  *
  * ⚠️ ÉTEINTS (le défaut), ces trois crans ne changent rien : la
@@ -345,7 +348,7 @@ const FICHIERS_STOCKAGE = [
 /*  §1 (nº 690) — LA GRANDE TABLE, quand on la demande. Cinq mille
     lignes, c'est ce qu'il faut pour que la pagination existe pour de
     bon (la doublure n'avait que des tables d'une page). */
-const COMMUNES = GRANDE_TABLE > 0
+const GRANDE = GRANDE_TABLE > 0
   ? Array.from({ length: GRANDE_TABLE }, (_, n) => ({
       id: `commune-${String(n).padStart(6, "0")}`,
       nom: `Commune ${n}`, code_postal: String(10000 + (n % 89000)),
@@ -355,7 +358,7 @@ const COMMUNES = GRANDE_TABLE > 0
 const TABLES = {
   tatoueurs: TATOUEURS,
   photos_tatoueur: PHOTOS,
-  ...(GRANDE_TABLE > 0 ? { communes: COMMUNES } : {}),
+  ...(GRANDE_TABLE > 0 ? { grande_table: GRANDE } : {}),
   //  §1 (nº 673) — les styles nés d'une suggestion, lus par
   //  `lib/styles-ajoutes` au début du rendu de chaque page.
   suggestions_style: STYLES_AJOUTES_DOUBLURE,
