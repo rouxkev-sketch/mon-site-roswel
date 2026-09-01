@@ -226,8 +226,10 @@
  *  · nº 336 — LA FENÊTRE NE SE ROUVRE PLUS PAR-DESSUS LA PAGE OÙ L'ON
  *    ARRIVE (§1, point 12 ci-dessous) ; l'ancre `#profil` reste dans
  *    l'adresse, et le « une seule fois » passe dans l'étape
- *    d'historique (§1) ; le service worker laisse les retours au
- *    navigateur, qui a déjà sa copie de la page (§2).
+ *    d'historique (§1) ; les retours sont laissés au navigateur, qui a
+ *    déjà sa copie de la page (§2 — c'était alors une consigne au
+ *    service worker ; il est retiré à la nº 791, la copie du navigateur
+ *    demeure).
  *  · nº 344 — CE QUI VARIE CÔTÉ SERVEUR, MESURÉ : le HTML servi est
  *    identique au caractère près pour un iPhone et pour un ordinateur ;
  *    les deux seules variations réelles sont l'appareil (page du
@@ -386,8 +388,8 @@
  * clos depuis. Il ne reste, du registre d'armement, que le JOURNAL DE
  * BORD, et deux sondes d'affichage armées par l'adresse : la VITESSE
  * et la NAVIGATION. Elles ne visent aucun défaut : ce sont des
- * instruments de mesure, et les passes suivantes (service worker,
- * préchargements) s'en serviront. Le tableau de bord qui les allume
+ * instruments de mesure, et les passes suivantes (les préchargements)
+ * s'en serviront. Le tableau de bord qui les allume
  * (`/dev`) est désormais réservé au compte admin.
  * ██████████████████████████████████████████████████████████████████
  */

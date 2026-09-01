@@ -37,9 +37,9 @@ import { boucleDAttentePourLeScript } from "@/lib/pose-sur-contenu";
 //  copie à la main ici.
 import { armementPourLeScript } from "@/lib/sondes-armees";
 //  §1 (nº 495) — le millésime ne s'écrit plus ici : il vit dans sa
-//  propre constante, que l'enregistrement du service worker lit AUSSI
-//  — au lieu de le relire sur <html>, ce qui était la cause du cycle
-//  de réinstallation (voir lib/millesime-script).
+//  propre constante (lib/millesime-script). Il était AUSSI lu par
+//  l'enregistrement du service worker, qui est parti à la nº 791 ; ce
+//  script est désormais son seul écrivain, et son seul lecteur.
 import { MILLESIME_SCRIPT } from "@/lib/millesime-script";
 //  §1 (nº 345) — « y a-t-il une VRAIE page derrière moi ? ». La règle
 //  est écrite une fois (lib/bas-de-la-pile) et rend son relevé TOUT

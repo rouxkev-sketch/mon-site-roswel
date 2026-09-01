@@ -152,8 +152,13 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // Le proxy s'exécute partout SAUF sur les fichiers statiques
-  // (images, icônes, service worker…), inutiles à traiter.
+  // (images, carte d'identité de l'application, pierre tombale du
+  // service worker), inutiles à traiter.
+  //  §4 (nº 791) — DEUX NOMS DE MOINS : `offline.html` est supprimée
+  //  (seul le service worker la servait) et `icons/` n'a jamais existé
+  //  dans ce dépôt. `sw.js` reste : le fichier vit encore, en pierre
+  //  tombale.
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|sw.js|offline.html|manifest.webmanifest|icons/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sw.js|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

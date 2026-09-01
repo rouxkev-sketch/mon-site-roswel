@@ -207,8 +207,7 @@ export default async function MiseEnPageTatouage({
         soldée. Le rapport de la passe dit qui part et pourquoi.
         IL EN RESTE DEUX, et pour la même raison toutes les deux :
         elles ne visent aucun défaut, ce sont des INSTRUMENTS DE MESURE
-        que les passes suivantes (service worker, préchargements) vont
-        employer. Elles n'affichent rien tant qu'on ne les arme pas. */}
+        que les passes suivantes (les préchargements) vont employer. Elles n'affichent rien tant qu'on ne les arme pas. */}
     {/* ⚠️ LA SONDE DE NAVIGATION (`?sonde-nav=1`). Elle MESURE chez le
         propriétaire (retour arrière, barre fixe, remontée des champs)
         et ne corrige rien. HORS de l'enveloppe `data-fond`, comme la

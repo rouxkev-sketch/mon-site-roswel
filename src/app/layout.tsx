@@ -4,7 +4,8 @@ import { CHARTE_CLAIRE } from "@/config/charte";
 import { MARQUE_YOKOFOLIO, TEXTES_TATOUAGE } from "@/config/tatouage";
 import { adresseDuSite } from "@/lib/site";
 import { variablesCssCouleurs } from "@/lib/theme";
-import { EnregistrementServiceWorker } from "@/components/EnregistrementServiceWorker";
+import { DesinscriptionServiceWorker } from "@/components/DesinscriptionServiceWorker";
+import { FiletDeReparation } from "@/components/FiletDeReparation";
 import { DefinitionsIcones } from "@/components/Icones";
 import { MemoireNavigation } from "@/components/MemoireNavigation";
 import { GardeDesNavigations } from "@/components/GardeDesNavigations";
@@ -156,8 +157,19 @@ export default function RootLayout({
             propre frontière <Suspense> — le prérendu de « / » ne lui
             doit rien. */}
         <GardeDesNavigations />
-        {/* Active le mode "application installable" (PWA) */}
-        <EnregistrementServiceWorker />
+        {/*  §1 (nº 791) — LE SERVICE WORKER EST RETIRÉ (enquête nº 738).
+            Ces deux composants n'affichent rien :
+             · le premier RETIRE le programme d'arrière-plan que les
+               navigateurs des visiteurs ont encore, et vide ses caches.
+               Il est TEMPORAIRE : ne plus enregistrer ne désinstalle
+               rien, il faut désinscrire — voir son fichier ;
+             · le second est LE FILET DE RÉPARATION (nº 546), et il n'a
+               jamais dépendu du service worker : il rattrape un
+               document ancien qui réclame des morceaux de programme
+               d'une mise en ligne périmée. C'est LUI la protection des
+               mises en ligne côté visiteur, et il reste. */}
+        <DesinscriptionServiceWorker />
+        <FiletDeReparation />
       </body>
     </html>
   );

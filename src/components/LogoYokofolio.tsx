@@ -69,24 +69,22 @@ import { MARQUE_YOKOFOLIO } from "@/config/tatouage";
  *    chargements, quatre pages : le logo se charge à chaque fois,
  *    aucune réponse en échec. La cause est donc PROPRE À LA
  *    PRODUCTION, hors de portée de l'atelier ;
- *  · UNE FRAGILITÉ EST NOMMÉE, ET ELLE EST RÉELLE : le service worker
- *    reconnaît les logos par leur CHEMIN (`estIcone`, public/sw.js —
- *    « icon | icone | logo »). Or `/_next/image?url=%2Fyokofolio-logo…`
- *    porte le mot « logo » dans sa REQUÊTE, pas dans son chemin : le
- *    logo perdait son traitement « le réseau, toujours » et tombait
- *    dans la branche des fichiers ordinaires — dont le repli, quand le
- *    réseau échoue, est une réponse VIDE (`status: 504`). Une réponse
- *    vide sur une image, c'est exactement le carré cassé décrit.
- *    Que ce soit LA cause ou seulement UNE cause, on ne le saura pas
- *    d'ici : on cesse d'en dépendre.
+ *  · UNE FRAGILITÉ AVAIT ÉTÉ NOMMÉE, et elle tenait au service worker :
+ *    il reconnaissait les logos par leur CHEMIN, or
+ *    `/_next/image?url=%2Fyokofolio-logo…` porte le mot « logo » dans
+ *    sa REQUÊTE, pas dans son chemin. Le logo tombait donc dans la
+ *    branche des fichiers ordinaires, dont le repli, réseau en échec,
+ *    était une réponse VIDE — exactement le carré cassé décrit.
+ *    ⚠️ CETTE FRAGILITÉ-LÀ N'EXISTE PLUS : le service worker est retiré
+ *    à la nº 791. La solution ci-dessous, elle, RESTE — elle valait par
+ *    elle-même (ne dépendre d'aucun service), et c'est pour cela
+ *    qu'elle survit à la disparition de la cause soupçonnée.
  *
  * LA SOLUTION, ET SON PRINCIPE : ne dépendre D'AUCUN service. Les
  * variantes sont des FICHIERS, posés à côté de l'original
  * (`yokofolio-logo-256.webp` et sa sœur en 512 — la nº 723 a retiré
  * les deux AVIF, voir plus bas) — rien à calculer au vol, rien à
- * mettre en cache, rien qui puisse manquer. Leur chemin contient
- * « logo » : le service worker les traite donc comme des logos, ce qui
- * était l'intention depuis toujours.
+ * mettre en cache, rien qui puisse manquer.
  *
  * ⚠️ CE QUE LE REPLI COUVRE, ET CE QU'IL NE COUVRE PAS — MESURÉ, et
  * non supposé (c'est la leçon de la nº 715). Le `<img>` du fond porte

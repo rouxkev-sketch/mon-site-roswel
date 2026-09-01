@@ -1,33 +1,63 @@
 /**
- * ██ LE MILLÉSIME DU SCRIPT — UNE CONSTANTE, PLUS UNE LECTURE ██
+ * ██ LE MILLÉSIME DU SCRIPT D'AVANT PEINTURE ██
  * ==================================================================
- * (§B nº 347 pour le millésime lui-même ; §1 nº 495 pour ce fichier.)
+ * (§B nº 347 pour le millésime lui-même ; §1 nº 495 pour ce fichier ;
+ *  §6 nº 791 pour ce qu'il fait, et ne fait pas, aujourd'hui.)
  *
- * POURQUOI CE FICHIER EXISTE, ET C'EST TOUT LE POINT DE LA PASSE.
- * Le millésime était écrit à UN endroit — dans le texte du script
- * d'avant peinture — et RELU sur `<html>` par l'enregistrement du
- * service worker (`document.documentElement.dataset.versionScript`).
- * Cette relecture est une bombe à retardement : elle suppose que le
- * script a DÉJÀ tourné au moment où l'effet React s'exécute. Sur une
- * page STREAMÉE, c'est faux — l'effet peut lire `<html>` avant que
- * l'analyseur n'ait atteint le script, qui vit plus bas dans le
- * document. La lecture rend alors `undefined`, le repli `"0"` entre
- * dans l'ADRESSE du service worker, et le navigateur croit à un
- * programme neuf : il réinstalle, purge tous les caches, prend la
- * main, et la page se recharge. Au chargement suivant le millésime est
- * lisible, l'adresse redevient celle d'avant — et tout recommence.
+ * À QUOI IL SERT, EN UNE PHRASE : dire QUELLE VERSION du script
+ * d'avant peinture a réellement peint la page qu'on a sous les yeux.
+ * Le script l'écrit sur `<html>` (`data-version-script`) avant la
+ * première image. On lit ce numéro dans l'inspecteur du navigateur :
+ * s'il est ABSENT, ou plus VIEUX que la mise en ligne, alors la page
+ * servie est PÉRIMÉE — un cache la retient — et aucun des blocs
+ * récents du script n'y a jamais tourné.
  *
- * LA RÈGLE, DÉSORMAIS : le millésime est une CONSTANTE DE COMPILATION.
- * Le script l'écrit, le service worker la lit ICI. Les deux ne peuvent
- * plus se contredire, et plus rien ne dépend de l'ordre d'arrivée des
- * morceaux du document.
+ * POURQUOI IL EXISTE : deux passes de suite, des blocs du script ont
+ * semblé ne jamais s'exécuter sur le téléphone du propriétaire alors
+ * qu'ils s'exécutent à l'atelier. Ce numéro tranche la question sans
+ * discussion, au lieu de la laisser ouverte une passe de plus.
  *
- * ⚠️ CE FICHIER NE DÉPEND DE RIEN, et c'est délibéré : il est importé
- * par un composant CLIENT (l'enregistrement du service worker) autant
- * que par le script du serveur. Une seule constante, aucun import —
- * la leçon de `lignes-profil.ts`.
+ * ██ §6 (nº 791) — CE QU'IL EST, ET CE QU'IL N'EST PAS ██
+ * ------------------------------------------------------------------
+ * IL FAUT LE DIRE NET, parce que la confusion a coûté cher : le
+ * millésime est un TÉMOIN, pas un mécanisme. Il ne renouvelle rien, il
+ * ne purge rien, il ne répare rien. Il constate.
  *
- * ⚠️ À INCRÉMENTER À CHAQUE PASSE qui modifie le script d'avant
- * peinture. C'est ici, et nulle part ailleurs, que le numéro s'écrit.
+ * CE QUI RENOUVELLE VRAIMENT LES FICHIERS À CHAQUE MISE EN LIGNE, et
+ * cela n'a jamais dépendu ni du millésime ni du service worker : Next
+ * met une empreinte du CONTENU dans le nom de chacun de ses fichiers
+ * (`/_next/static/chunks/…`). Une mise en ligne change les contenus,
+ * donc les noms, donc les adresses — et une adresse neuve n'a rien à
+ * resservir de vieux. C'est vrai avec ou sans programme d'arrière-plan.
+ *
+ * CE QUI PROTÈGE LE VISITEUR quand sa page, elle, est restée vieille :
+ * le FILET DE RÉPARATION (`components/FiletDeReparation`, nº 546). Un
+ * document ancien réclame un morceau qui n'existe plus sous ce nom ; le
+ * filet l'entend, vide ce qu'il peut et recharge UNE fois. Lui non plus
+ * n'a jamais dépendu du service worker.
+ *
+ * ⚠️ CE QUI A CHANGÉ POUR LUI À LA nº 791, et rien d'autre : le
+ * millésime avait un SECOND lecteur, l'enregistrement du service
+ * worker, qui le mettait dans le nom du cache (`yokofolio-<empreinte>-
+ * <millésime>`) pour qu'on lise d'un coup d'œil la version servie. Ce
+ * lecteur est parti avec le service worker (enquête nº 738). Le
+ * millésime garde son premier rôle, entier : la marque sur `<html>`.
+ * L'ancien piège qui justifiait ce fichier — la lecture de `<html>`
+ * depuis un effet React, qui rendait `undefined` sur une page streamée
+ * et relançait le service worker en boucle — n'a plus d'objet : il n'y
+ * a plus de service worker à relancer. La règle qui en est née, elle,
+ * reste bonne et vaut pour tout : une CONSTANTE DE COMPILATION ne peut
+ * pas manquer, là où une lecture du DOM dépend de l'ordre d'arrivée
+ * des morceaux du document.
+ *
+ * ⚠️ CE FICHIER NE DÉPEND DE RIEN, et c'est délibéré : il est lu par du
+ * code serveur (le script) comme il pourrait l'être par du code client.
+ * Une seule constante, aucun import — la leçon de `lignes-profil.ts`.
+ *
+ * ⚠️ À INCRÉMENTER À CHAQUE PASSE QUI MODIFIE LE TEXTE DU SCRIPT
+ * D'AVANT PEINTURE — le texte, pas le fichier : un commentaire de
+ * TypeScript hors du gabarit ne change pas un octet de ce qui est
+ * servi, et faire bouger le numéro pour rien ferait mentir le témoin.
+ * C'est ici, et nulle part ailleurs, que le numéro s'écrit.
  */
 export const MILLESIME_SCRIPT = "790";

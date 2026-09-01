@@ -13,9 +13,10 @@ import { useEffect } from "react";
  * route » — le symptôme précède donc les variantes de la nº 718.
  *
  * CE QUE LA LECTURE ÉTABLIT. Un avatar est un `<img>` DIRECT vers le
- * stockage (huit points de rendu, tous par `sourceAvatar`) : ni
- * l'optimiseur d'images, ni le service worker (autre domaine, jamais
- * intercepté) ne s'interposent. Quand le téléchargement s'interrompt
+ * stockage (huit points de rendu, tous par `sourceAvatar`) :
+ * l'optimiseur d'images ne s'interpose pas (et le service worker, qui
+ * ne les interceptait déjà pas — autre domaine —, est retiré à la
+ * nº 791). Quand le téléchargement s'interrompt
  * en route, le navigateur PEINT LES LIGNES REÇUES — une moitié — et
  * aucun des huit points n'avait le moindre recours. Et depuis la
  * nº 721, ces fichiers voyagent avec une permission de cache d'UN AN

@@ -1,3 +1,10 @@
+/*  ██ ARCHIVE — CE BANC NE PEUT PLUS TOURNER TEL QUEL (nº 791) ██
+    Il lit `public/sw.js` pour y vérifier le comportement du service
+    worker. Ce programme est retiré à la nº 791 (enquête nº 738) : le
+    fichier existe encore, mais il ne contient plus qu'une pierre
+    tombale qui se désinstalle. Le fichier est GARDÉ parce qu'il est le
+    compte rendu écrit de sa passe. Ne pas le lancer sans l'avoir
+    d'abord relu. */
 /**
  * BANC DE LA PASSE Nº 336 — LIVRAISON RAPIDE
  * ==================================================================

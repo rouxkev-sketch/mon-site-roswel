@@ -70,21 +70,14 @@ const nextConfig: NextConfig = {
     imageSizes: [32, 48, 64, 96, 128, 256, 384, 512],
   },
 
-  /**
-   * L'EMPREINTE DE LA COMPILATION
-   * ------------------------------
-   * Ce fichier est évalué UNE FOIS, au moment de compiler : l'horodatage
-   * est donc figé pour toute la durée de vie de cette version du site.
-   * Il sert à une seule chose, mais elle est importante : donner au
-   * service worker une adresse NEUVE à chaque mise en ligne
-   * (`/sw.js?v=…`). Un service worker neuf, c'est un cache neuf, et
-   * l'effacement de tous les précédents — sans avoir à penser à
-   * incrémenter un numéro à la main, ce qui finit toujours par être
-   * oublié.
-   */
-  env: {
-    NEXT_PUBLIC_VERSION_SITE: String(Date.now()),
-  },
+  /*  §2 (nº 791) — L'EMPREINTE DE COMPILATION EST RETIRÉE. Elle ne
+      servait qu'à donner au service worker une adresse neuve à chaque
+      mise en ligne (`/sw.js?v=<horodatage>`). Le service worker est
+      parti (enquête nº 738) : plus personne ne la lisait. Le
+      RENOUVELLEMENT des fichiers à chaque mise en ligne, lui, ne
+      dépendait pas d'elle — c'est Next qui met une empreinte de
+      CONTENU dans le nom de chacun de ses fichiers (`/_next/static/…`),
+      et une adresse neuve n'a rien à resservir de vieux. */
 
   /**
    * LES ADRESSES QUI ONT DÉMÉNAGÉ
@@ -225,8 +218,10 @@ const nextConfig: NextConfig = {
    *    ⚠️ UN SEUL SEGMENT, ET C'EST VOULU : le motif ne descend pas dans
    *    les sous-dossiers, donc `/images-demo/…` garde l'`immutable` que
    *    pose la route qui les fabrique. Et aucune extension de programme
-   *    n'y figure : `/sw.js` conserve son `max-age=0`, sans quoi une
-   *    mise en ligne ne serait plus vue.
+   *    n'y figure : `/sw.js` garde son en-tête à lui (§3 nº 791,
+   *    plus bas) — c'est la pierre tombale du service worker, et un
+   *    navigateur qui la trouverait périmée garderait l'ancien
+   *    programme.
    */
   async headers() {
     const cachePage = [
@@ -268,9 +263,26 @@ const nextConfig: NextConfig = {
       source: "/:fichier([^/]+\\.(?:png|jpe?g|avif|webp|svg|gif|ico))",
       headers: cacheImagePublique,
     };
+    /*  ██ §3 (nº 791) — LA PIERRE TOMBALE DOIT TOUJOURS ÊTRE FRAÎCHE ██
+        ------------------------------------------------------------------
+        `/sw.js` ne met plus rien en cache : il ne sert qu'à DÉSINSTALLER
+        le service worker que les visiteurs d'avant la nº 791 ont encore
+        (voir le fichier). Or c'est le navigateur qui décide de le
+        revérifier, et s'il rendait sa propre copie de l'ANCIEN
+        programme, la désinstallation n'arriverait jamais.
+        `no-store` ferme cette porte : le fichier est redemandé au
+        serveur à chaque vérification, sans exception. Les navigateurs
+        récents contournent déjà leur cache pour ce fichier-là ; cet
+        en-tête le dit aussi aux anciens, et aux relais entre les deux.
+        ⚠️ IL RESTE TANT QUE LA PIERRE TOMBALE RESTE, et part avec elle. */
+    const pierreTombale = {
+      source: "/sw.js",
+      headers: [{ key: "Cache-Control", value: "no-store, max-age=0" }],
+    };
     return [
       ...chemins.map((source) => ({ source, headers: cachePage })),
       imagesPubliques,
+      pierreTombale,
     ];
   },
 };
