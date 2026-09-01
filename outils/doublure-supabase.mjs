@@ -346,7 +346,14 @@ let compteurDeSessions = 0;
 function sessionDeBanc({ identifiant, courriel, metaApp }) {
   const b64u = (o) => Buffer.from(JSON.stringify(o)).toString("base64")
     .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-  const expire = Math.floor(Date.now() / 1000) + 3600;
+  /*  §1 (nº 792) — LA DURÉE DU JETON D'ACCÈS, RÉGLABLE. En vrai elle
+      vaut une heure : impossible d'éprouver « je rouvre le navigateur
+      le lendemain » sans attendre une heure. `DUREE_JETON=5` la met à
+      cinq secondes, et le banc reproduit alors en une minute ce que le
+      propriétaire vit chaque matin — un jeton d'accès MORT, et le seul
+      jeton de reprise pour rattraper la session. */
+  const duree = Number(process.env.DUREE_JETON || 3600);
+  const expire = Math.floor(Date.now() / 1000) + duree;
   const identite = { nom: "Kevin", nom_affiche: "Kevin" };
   const restants = fournisseursDe(identifiant, metaApp);
   const metaAJour = { ...metaApp, provider: restants[0] ?? null, providers: restants };
@@ -369,7 +376,7 @@ function sessionDeBanc({ identifiant, courriel, metaApp }) {
   const reprise = `rafraichissement-de-banc-${++compteurDeSessions}`;
   SESSIONS.set(reprise, { identifiant, courriel, metaApp });
   return {
-    access_token: jeton, token_type: "bearer", expires_in: 3600,
+    access_token: jeton, token_type: "bearer", expires_in: duree,
     expires_at: expire, refresh_token: reprise, user: personne,
   };
 }
