@@ -793,27 +793,6 @@ export function IconeInstagram({
 }
 
 /**
- * APPLE — la pomme, remplie (`currentColor`). Sert au bouton
- * « Continuer avec Apple » de la page de connexion ; monochrome comme
- * les autres icônes de connexion, pour que les trois boutons pèsent
- * pareil.
- */
-export function IconeApple({ taille = 20, classe = "" }: ProprietesIcone) {
-  return (
-    <svg
-      width={taille}
-      height={taille}
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={classe}
-      aria-hidden
-    >
-      <path d="M12.9 6.2c.8-1 1.4-2.3 1.2-3.7-1.2.1-2.6.8-3.4 1.8-.8.9-1.4 2.3-1.2 3.6 1.3.1 2.6-.7 3.4-1.7Zm2.7 6.6c0-2.2 1.8-3.3 1.9-3.3-1-1.5-2.6-1.7-3.2-1.7-1.4-.1-2.7.8-3.4.8-.7 0-1.8-.8-3-.8-1.5 0-2.9.9-3.7 2.3-1.6 2.7-.4 6.8 1.1 9 .8 1.1 1.7 2.3 2.9 2.2 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.8-2.2.9-1.3 1.2-2.5 1.3-2.6-.1-.1-2.7-1.1-2.7-3.7Z" />
-    </svg>
-  );
-}
-
-/**
  * TIKTOK — la note de musique, dessinée d'un seul tracé.
  * Monochrome (`currentColor`) : posée sur une photo à côté
  * d'Instagram, elle prend la couleur du bouton qui la porte.
@@ -977,12 +956,13 @@ export function IconeEnveloppe({ taille = 20, classe = "", trait = 1.8 }: Propri
   );
 }
 
-/** Facebook — le « f » dans son cadre, tracé au même trait que le
-    reste : ni aplat bleu, ni logo officiel. */
 /** LE « f » DE FACEBOOK, SEUL (nº 141-§9) : le glyphe nu, en plein —
-    l'encadré arrondi qui l'entourait datait. Même langage que les
-    logos Google et Apple des boutons voisins : la marque, rien
-    autour. */
+    l'encadré arrondi qui l'entourait datait. La marque, rien autour.
+    ⚠️ IL NE SERT PLUS À SE CONNECTER (nº 783) : le bouton « Continuer
+    avec Facebook » a été retiré, et sa note parlait encore des « logos
+    Google et Apple des boutons voisins » — deux boutons dont l'un
+    n'existe plus. CE QU'IL SERT AUJOURD'HUI, ET RIEN D'AUTRE :
+    PARTAGER une fiche (`BoutonPartageFiche`, ligne « Facebook »). */
 export function IconeFacebook({ taille = 20, classe = "" }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" className={classe} aria-hidden>

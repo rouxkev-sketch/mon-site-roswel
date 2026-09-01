@@ -3,18 +3,59 @@ import { creerClientSupabaseServeur } from "@/lib/supabase/server";
 import { ARRIVEE_APRES_CONNEXION } from "@/config/tatouage";
 
 /**
- * RETOUR DE CONNEXION (Google, Facebook, Apple…)
- * ----------------------------------------------
+ * RETOUR DE CONNEXION (Google, et les liens d'e-mail)
+ * ----------------------------------------------------
  * Quand quelqu'un se connecte via un fournisseur externe,
  * celui-ci le renvoie ici avec un code temporaire. On échange
  * ce code contre une vraie session, puis on redirige vers la
  * page d'origine.
  *
+ * ⚠️ CETTE LIGNE DISAIT « Google, Facebook, Apple… » (corrigé nº 783) :
+ * les deux derniers n'ont jamais rien renvoyé ici — ils n'étaient que
+ * des boutons annoncés — et ils sont retirés. Le seul fournisseur
+ * externe du site est Google. Ce chemin sert AUSSI aux liens d'e-mail
+ * (confirmation d'adresse, mot de passe oublié), qui portent le même
+ * code.
+ *
  * Cette adresse (/auth/callback) est à déclarer dans Supabase :
  * voir docs/CONFIGURATION-SUPABASE.md.
  */
+/**
+ * ██ §1 (nº 783) — L'ORIGINE OÙ L'ON RENVOIE ██
+ * ------------------------------------------------------------------
+ * LE DÉFAUT, MESURÉ AU BANC : `new URL(request.url).origin` ne rend pas
+ * l'adresse par laquelle le visiteur est arrivé — il rend celle que le
+ * serveur croit avoir. Une demande faite sur `127.0.0.1:3000` en
+ * ressort en `localhost:3000` ; en ligne, une demande faite sur
+ * `yokofolio.com` peut en ressortir avec l'adresse interne du
+ * déploiement.
+ * CE QUE ÇA COÛTERAIT, ET CE N'EST PAS UN DÉTAIL : le cookie de session
+ * vient d'être posé sur le domaine d'ARRIVÉE. Renvoyer vers un autre
+ * domaine, c'est le laisser derrière — le visiteur reviendrait sur un
+ * site qui ne le connaît pas, sa connexion pourtant réussie. C'est très
+ * exactement le genre de panne que la nº 775 a coûté.
+ * LA RÈGLE : on lit l'hôte que le proxy annonce (`x-forwarded-host`,
+ * posé par Vercel), sinon celui de la demande (`host`), et l'on ne
+ * retombe sur l'URL qu'en dernier recours.
+ * ⚠️ AUCUNE PORTE OUVERTE : on ne compose jamais qu'un CHEMIN INTERNE
+ * derrière cette origine (voir `suite`, filtrée à l'entrée du site) —
+ * jamais une adresse reçue telle quelle.
+ */
+function origineReelle(request: Request): string {
+  const entetes = request.headers;
+  const hote = entetes.get("x-forwarded-host") ?? entetes.get("host");
+  if (!hote) return new URL(request.url).origin;
+  const protocole =
+    entetes.get("x-forwarded-proto") ??
+    (hote.startsWith("localhost") || hote.startsWith("127.0.0.1")
+      ? "http"
+      : "https");
+  return `${protocole}://${hote}`;
+}
+
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
+  const origin = origineReelle(request);
   const code = searchParams.get("code");
   //  Page vers laquelle revenir après connexion. LE DÉFAUT EST
   //  L'AIGUILLAGE (passe nº 137, il remplace la règle de la nº 131) :

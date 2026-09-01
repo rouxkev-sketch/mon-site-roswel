@@ -65,6 +65,23 @@ function signature(utilisateur: User | null): string {
     utilisateur.id,
     utilisateur.email ?? "",
     utilisateur.user_metadata ?? null,
+    /*  ██ §3 (nº 783) — LES MOYENS DE SE CONNECTER EN FONT PARTIE ██
+        LE DÉFAUT, MESURÉ AU BANC : on délie Google depuis la page
+        Sécurité, le retrait se fait vraiment (Supabase le confirme, le
+        cookie est réécrit)… et l'écran continue d'afficher « Délier ».
+        Il ne se corrigeait qu'au rechargement.
+        LA CAUSE, ET ELLE EST ICI : cette signature décide si une
+        session neuve a quelque chose à raconter. Elle ne regardait que
+        l'identité (qui, quelle adresse, quel nom) — pas les moyens
+        d'ENTRER. Deux sessions identiques à ce détail près étaient donc
+        « les mêmes », et personne n'était prévenu.
+        ⚠️ ON N'AJOUTE QUE `providers`, pas tout `app_metadata` : le
+        reste peut bouger sans que rien à l'écran n'en dépende, et
+        réveiller la page pour rien, c'est ce que la garde nº 111
+        empêche (elle protège les photos en cours de dépôt). La liste
+        est triée — l'ordre n'est pas une information. */
+    [...(((utilisateur.app_metadata as { providers?: unknown })?.providers ??
+      []) as string[])].sort(),
   ]);
 }
 

@@ -5,11 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ARRIVEE_APRES_CONNEXION } from "@/config/tatouage";
 import { redirectionDeGarde } from "@/lib/journal-de-bord";
-import {
-  IconeApple,
-  IconeFacebook,
-  IconeGoogle,
-} from "@/components/Icones";
+import { IconeGoogle } from "@/components/Icones";
+//  §1 (nº 783) — le flux Google, écrit une seule fois pour toutes les
+//  surfaces (voir lib/connexion-google).
+import { connexionAvecGoogle } from "@/lib/connexion-google";
 import { JaugeMotDePasse } from "@/components/JaugeMotDePasse";
 import { OngletsLigne } from "@/components/OngletsLigne";
 import { lireDejaConnecte, souscrireStockage } from "@/lib/deja-connecte";
@@ -34,28 +33,27 @@ import { useUtilisateur } from "@/lib/use-utilisateur";
  *  · les champs portent l'intitulé EN EUX (placeholder, label pour
  *    les lecteurs d'écran) et leur focus ÉCLAIRCIT LE FOND — jamais
  *    de halo, jamais de rose ;
- *  · les fournisseurs prennent la robe grisée de la page Sécurité
- *    (fond élevé, pastille « bientôt » élevée-claire, zéro trait) ;
+ *  · le bouton Google prend le fond élevé de la page Sécurité, sans
+ *    un trait — et depuis la nº 783 il s'éclaircit au survol, comme
+ *    tout ce qui se touche ;
  *  · l'action finale reste LA capsule pleine rose pleine largeur.
  * RIEN NE CHANGE DANS CE QUE LES GESTES DÉCLENCHENT.
  *
- * L'ORDRE DES MOYENS : les fournisseurs (Google, Facebook, Apple)
- * D'ABORD — c'est le premier réflexe aujourd'hui — puis « ou », puis
- * l'e-mail. Le même ordre dans les deux modes.
+ * L'ORDRE DES MOYENS : GOOGLE D'ABORD — c'est le premier réflexe
+ * aujourd'hui — puis « ou », puis l'e-mail. Le même ordre dans les
+ * deux modes.
  *
  * L'E-MAIL SUFFIT À CRÉER LE COMPTE : pas de champ nom ici — le nom
  * viendra avec la fiche. Le mot de passe se saisit DEUX fois, avec
  * une jauge de force (8 caractères au minimum, bloquant) et la liste
  * des exigences cochées en direct.
  *
- * CE QUI FONCTIONNE : l'e-mail + mot de passe, par Supabase Auth.
- * CE QUI ATTEND : les trois fournisseurs — chacun exige des clés
- * créées chez lui puis déclarées dans Supabase ; boutons présents,
- * désactivés, annoncés « bientôt ». Le jour venu : activer le
- * fournisseur dans Supabase (Authentication → Providers) puis
- * remplacer `disabled` par
- * `supabase.auth.signInWithOAuth({ provider, options: { redirectTo } })`
- * — la route /auth/callback attend déjà ce retour.
+ * CE QUI FONCTIONNE, ET C'EST TOUT CE QU'IL Y A (nº 783) : l'e-mail
+ * + mot de passe, et GOOGLE. Les deux mènent au même endroit et
+ * donnent le même compte ; rien n'attend plus, rien n'est promis.
+ * FACEBOOK ET APPLE ONT ÉTÉ RETIRÉS — boutons, icônes et code —
+ * sur décision du propriétaire : un « bientôt » qui dure n'est pas
+ * une annonce, c'est un décor.
  */
 
 type Mode = "creer" | "connexion";
@@ -201,6 +199,8 @@ export function EcranAuthentification({
   /** « Mot de passe oublié ? » — proposé APRÈS un échec de connexion,
       pas avant : tant qu'on n'a pas buté, le lien n'est que du bruit. */
   const [lienMotDePasseOublie, setLienMotDePasseOublie] = useState(false);
+  /** §1 (nº 783) — le temps que le navigateur parte chez Google. */
+  const [googleEnCours, setGoogleEnCours] = useState(false);
 
   const creer = mode === "creer";
   const force = evaluerMotDePasse(motDePasse);
@@ -450,38 +450,46 @@ export function EcranAuthentification({
         </div>
       )}
 
-      {/* ---------- LES FOURNISSEURS D'ABORD — annoncés, pas promis.
-          LA ROBE DE LA PAGE SÉCURITÉ (nº 134) : fond élevé sans un
-          trait, pastille « bientôt » un cran plus claire — les deux
-          écrans disent la même chose avec les mêmes mots. ---------- */}
+      {/* ---------- GOOGLE, D'ABORD — ET IL FAIT, IL N'ANNONCE PLUS.
+          ██ §1 (nº 783) — LE BOUTON EST BRANCHÉ ██
+          Il portait la robe grisée et la pastille « bientôt » depuis
+          la nº 134 ; l'app Google existe désormais, le fournisseur est
+          activé dans le projet, et l'adresse de retour est déclarée
+          des deux côtés. Le bouton prend donc la robe des vrais
+          boutons du site — pleine opacité, pointeur, appuyable.
+          ⚠️ FACEBOOK ET APPLE SONT PARTIS, code et icônes compris
+          (décision de Kevin, nº 783) : plus aucun « bientôt » ne reste
+          sur ce site. Le jour où l'un d'eux reviendrait, ce serait une
+          décision neuve, pas une promesse à honorer.
+          ⚠️ L'ARRIVÉE EST LA MÊME QUE POUR L'E-MAIL : `arrivee`, plus
+          haut — le chemin passé au crible, ou l'aiguillage commun. Un
+          compte Google ne suit aucun parcours particulier. ---------- */}
       <div className="mt-7 flex flex-col gap-3">
-        {(
-          [
-            ["Google", <IconeGoogle key="g" taille={20} />],
-            ["Facebook", <IconeFacebook key="f" taille={20} />],
-            ["Apple", <IconeApple key="a" taille={20} />],
-          ] as const
-        ).map(([fournisseur, icone]) => (
-          <button
-            key={fournisseur}
-            type="button"
-            disabled
-            aria-disabled="true"
-            title={`La connexion ${fournisseur} arrive bientôt`}
-            className="flex items-center gap-3 rounded-lg bg-sombre-eleve
-                       min-h-[54px] px-4 text-left text-[14.5px] text-sombre-texte
-                       opacity-55 cursor-not-allowed"
-          >
-            <span className="shrink-0">{icone}</span>
-            Continuer avec {fournisseur}
-            <span
-              className="ml-auto rounded-full bg-sombre-eleve-clair px-2.5 py-0.5
-                         text-[11px] uppercase tracking-wide text-sombre-texte-doux"
-            >
-              bientôt
-            </span>
-          </button>
-        ))}
+        <button
+          type="button"
+          onClick={async () => {
+            setErreurs({});
+            setGoogleEnCours(true);
+            const souci = await connexionAvecGoogle(arrivee);
+            //  Sans erreur, le navigateur PART : on laisse le bouton
+            //  en attente, il disparaîtra avec la page. Avec erreur, on
+            //  le rend et l'on dit pourquoi.
+            if (souci) {
+              setGoogleEnCours(false);
+              setErreurs({ general: souci });
+            }
+          }}
+          disabled={googleEnCours || enCours}
+          className="flex items-center gap-3 rounded-lg bg-sombre-eleve
+                     min-h-[54px] px-4 text-left text-[14.5px] text-sombre-texte
+                     transition-colors hover:bg-sombre-eleve-clair
+                     disabled:opacity-55 disabled:cursor-not-allowed"
+        >
+          <span className="shrink-0">
+            <IconeGoogle taille={20} />
+          </span>
+          {googleEnCours ? "Un instant…" : "Continuer avec Google"}
+        </button>
       </div>
 
       {/* « ou » — LE MOT ENTRE DEUX FILETS (passe nº 142). Ils avaient

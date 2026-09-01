@@ -271,18 +271,107 @@ function utilisateurDuJeton(req) {
       Buffer.from(charge.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString()
     );
     if (!json.sub) return null;
+    const metaApp = json.app_metadata ?? {};
+    //  §3 (nº 783) — CE QUE LE JETON DIT N'EST PLUS FORCÉMENT VRAI : un
+    //  fournisseur délié depuis l'émission du jeton doit avoir disparu
+    //  de la réponse, sinon l'écran continuerait de l'annoncer.
+    const restants = fournisseursDe(json.sub, metaApp);
     return {
       id: json.sub,
       aud: json.aud ?? "authenticated",
       role: json.role ?? "authenticated",
       email: json.email ?? null,
-      app_metadata: json.app_metadata ?? {},
+      app_metadata: { ...metaApp, provider: restants[0] ?? null, providers: restants },
+      //  §3 (nº 783) — LA LISTE DES IDENTITÉS, que `getUserIdentities`
+      //  lit pour savoir quoi délier (elle passe par `getUser`).
+      identities: identitesDe(json.sub, json.email ?? null, metaApp),
       user_metadata: json.user_metadata ?? {},
       created_at: new Date(0).toISOString(),
     };
   } catch {
     return null;
   }
+}
+
+/**
+ * ██ §3 (nº 783) — LES IDENTITÉS D'UN COMPTE, ET CE QU'ON LEUR RETIRE ██
+ * ------------------------------------------------------------------
+ * Chez le vrai Supabase, `app_metadata.providers` et la liste
+ * `identities` disent la même chose vue de deux côtés ; c'est la
+ * SECONDE que `unlinkIdentity` réclame, parce qu'elle seule porte un
+ * `identity_id`. La doublure la fabrique donc à partir de la première.
+ * ⚠️ ET ELLE SE SOUVIENT DES RETRAITS (`DELIEES`), sans quoi le banc ne
+ * pourrait pas éprouver ce qui compte : que le moyen d'entrée a
+ * VRAIMENT disparu, et que l'écran le dit au rafraîchissement.
+ */
+const DELIEES = new Set();          //  « <id compte>|<fournisseur> »
+const cleDeliee = (compte, fournisseur) => `${compte}|${fournisseur}`;
+
+function fournisseursDe(compte, metaApp) {
+  const bruts = Array.isArray(metaApp?.providers)
+    ? metaApp.providers
+    : metaApp?.provider
+      ? [metaApp.provider]
+      : [];
+  return bruts.filter((f) => !DELIEES.has(cleDeliee(compte, f)));
+}
+
+function identitesDe(compte, courriel, metaApp) {
+  return fournisseursDe(compte, metaApp).map((fournisseur) => ({
+    identity_id: `${compte}-${fournisseur}`,
+    id: compte,
+    user_id: compte,
+    provider: fournisseur,
+    identity_data: { email: courriel, sub: compte },
+    created_at: new Date(0).toISOString(),
+    updated_at: new Date(0).toISOString(),
+  }));
+}
+
+/**
+ * ██ §3 (nº 783) — UNE SESSION DE BANC, ÉCRITE UNE SEULE FOIS ██
+ * ------------------------------------------------------------------
+ * Deux chemins la réclament — l'ouverture (échange du code, mot de
+ * passe) et la reprise (`grant_type=refresh_token`, ce que déclenche
+ * `delierGoogle`). Ils rendaient deux objets écrits séparément : le
+ * jour où l'un des deux oublie un champ, la panne se cherche dans le
+ * site. Une seule écriture, comme partout ailleurs (piège nº 378).
+ * ⚠️ LE JETON DE REPRISE EST UNIQUE, et il le faut : c'est la clé du
+ * carnet `SESSIONS`. Un jeton constant ferait se confondre deux
+ * comptes ouverts dans deux onglets du même banc.
+ */
+const SESSIONS = new Map();
+let compteurDeSessions = 0;
+
+function sessionDeBanc({ identifiant, courriel, metaApp }) {
+  const b64u = (o) => Buffer.from(JSON.stringify(o)).toString("base64")
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const expire = Math.floor(Date.now() / 1000) + 3600;
+  const identite = { nom: "Kevin", nom_affiche: "Kevin" };
+  const restants = fournisseursDe(identifiant, metaApp);
+  const metaAJour = { ...metaApp, provider: restants[0] ?? null, providers: restants };
+  const personne = {
+    id: identifiant, aud: "authenticated", role: "authenticated",
+    email: courriel,
+    //  §1 (nº 783) — le fournisseur dit la vérité : c'est lui que la
+    //  page Sécurité lit pour savoir si ce compte a un mot de passe.
+    app_metadata: metaAJour,
+    identities: identitesDe(identifiant, courriel, metaApp),
+    user_metadata: identite, created_at: new Date(0).toISOString(),
+  };
+  const jeton = [
+    b64u({ alg: "HS256", typ: "JWT" }),
+    b64u({ sub: identifiant, aud: "authenticated", role: "authenticated",
+      email: courriel, exp: expire, iat: Math.floor(Date.now() / 1000),
+      app_metadata: metaAJour, user_metadata: identite }),
+    "signature-de-banc",
+  ].join(".");
+  const reprise = `rafraichissement-de-banc-${++compteurDeSessions}`;
+  SESSIONS.set(reprise, { identifiant, courriel, metaApp });
+  return {
+    access_token: jeton, token_type: "bearer", expires_in: 3600,
+    expires_at: expire, refresh_token: reprise, user: personne,
+  };
 }
 
 const TATOUEURS = STYLES.flatMap((style, s) =>
@@ -801,26 +890,108 @@ function repondre(req, res, u, brut) {
    * bien formée pour l'adresse demandée, c'est tout ce que le banc a
    * besoin d'éprouver. Elle ne sert JAMAIS en production.
    */
+  /**
+   * ██ §1 (nº 783) — LE DÉPART CHEZ GOOGLE ██
+   * ------------------------------------------------------------------
+   * C'est ici que le client Supabase envoie le navigateur quand on
+   * touche « Continuer avec Google » : le vrai service redirige alors
+   * vers Google, qui redirige vers le service, qui redirige ENFIN vers
+   * le site avec un code.
+   * LA DOUBLURE COUPE AU PLUS COURT — elle renvoie directement à
+   * l'adresse demandée (`redirect_to`) avec un code : ce que le banc
+   * doit éprouver, c'est CE QUE LE SITE FAIT DU RETOUR, pas le voyage
+   * chez Google.
+   * ⚠️ ELLE VÉRIFIE QUAND MÊME LE FOURNISSEUR ET L'ADRESSE : un
+   * `provider` inconnu ou un `redirect_to` manquant sont refusés, comme
+   * chez le vrai — sans quoi le banc validerait un appel qui échouerait
+   * en vrai.
+   */
+  if (u.pathname === "/auth/v1/authorize") {
+    const fournisseur = u.searchParams.get("provider");
+    const retour = u.searchParams.get("redirect_to");
+    if (fournisseur !== "google" || !retour) {
+      res.writeHead(400, { "content-type": "application/json" });
+      res.end(JSON.stringify({ error: "provider is not enabled" }));
+      return;
+    }
+    //  Le code porte le CAS À JOUER, pour que la sonde puisse demander
+    //  un compte neuf ou un compte déjà connu (voir /auth/v1/token).
+    const cas = process.env.GOOGLE_COMPTE === "existant" ? "existant" : "neuf";
+    const separateur = retour.includes("?") ? "&" : "?";
+    const vers = `${retour}${separateur}code=code-google-${cas}`;
+    console.log(
+      new Date().toISOString().slice(11, 19),
+      "GET auth/authorize google →", cas
+    );
+    res.writeHead(302, { location: vers });
+    res.end();
+    return;
+  }
+
   if (u.pathname === "/auth/v1/token" && req.method === "POST") {
     let courriel = "banc@yokofolio.test";
-    try { courriel = JSON.parse(brut || "{}").email ?? courriel; } catch { /* corps vide */ }
-    const identifiant = "eeee0000-0000-4000-8000-0000000ent03";
-    const b64u = (o) => Buffer.from(JSON.stringify(o)).toString("base64")
-      .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-    const expire = Math.floor(Date.now() / 1000) + 3600;
-    const identite = { nom: "Kevin", nom_affiche: "Kevin" };
-    const personne = {
-      id: identifiant, aud: "authenticated", role: "authenticated",
-      email: courriel, app_metadata: { provider: "email", providers: ["email"] },
-      user_metadata: identite, created_at: new Date(0).toISOString(),
-    };
-    const jeton = [
-      b64u({ alg: "HS256", typ: "JWT" }),
-      b64u({ sub: identifiant, aud: "authenticated", role: "authenticated",
-        email: courriel, exp: expire, iat: Math.floor(Date.now() / 1000),
-        app_metadata: personne.app_metadata, user_metadata: identite }),
-      "signature-de-banc",
-    ].join(".");
+    let codeRecu = "";
+    let jetonDeReprise = "";
+    try {
+      const corps = JSON.parse(brut || "{}");
+      courriel = corps.email ?? courriel;
+      codeRecu = corps.auth_code ?? corps.code ?? "";
+      jetonDeReprise = corps.refresh_token ?? "";
+    } catch { /* corps vide */ }
+    /*  §3 (nº 783) — LE RENOUVELLEMENT DE SESSION. `delierGoogle`
+        l'appelle juste après avoir retiré une identité, et c'est LUI
+        qui réécrit le cookie : sans lui, l'écran continuerait d'annoncer
+        Google. La doublure doit donc rendre LA MÊME PERSONNE qu'à
+        l'ouverture — d'où le carnet `SESSIONS` — avec ses fournisseurs
+        RECALCULÉS (le délié en moins).
+        ⚠️ SANS CE BRANCHEMENT, un renouvellement retombait sur les
+        valeurs par défaut du bloc suivant : le compte Google devenait
+        un compte e-mail au premier rafraîchissement. */
+    if (u.searchParams.get("grant_type") === "refresh_token") {
+      const connu = SESSIONS.get(jetonDeReprise);
+      if (!connu) {
+        res.writeHead(400, {
+          "content-type": "application/json",
+          "access-control-allow-origin": "*",
+        });
+        res.end(JSON.stringify({ error: "invalid_grant", error_description: "Invalid Refresh Token" }));
+        return;
+      }
+      console.log(
+        new Date().toISOString().slice(11, 19),
+        "POST auth/token (reprise) →", connu.courriel,
+        fournisseursDe(connu.identifiant, connu.metaApp).join("+") || "(aucun)"
+      );
+      res.writeHead(200, {
+        "content-type": "application/json",
+        "access-control-allow-origin": "*",
+      });
+      res.end(JSON.stringify(sessionDeBanc(connu)));
+      return;
+    }
+    /*  §1 (nº 783) — L'ÉCHANGE DU CODE APRÈS GOOGLE. Le client
+        l'appelle avec `grant_type=pkce` et le code reçu ; la session
+        rendue doit alors porter GOOGLE comme fournisseur, sans quoi le
+        banc ne pourrait pas distinguer les deux chemins d'entrée.
+        · « neuf »     — un compte que le site n'a jamais vu ;
+        · « existant » — celui du décor, qui revient se connecter. */
+    const parGoogle =
+      u.searchParams.get("grant_type") === "pkce" ||
+      codeRecu.startsWith("code-google-");
+    const googleNeuf = codeRecu.endsWith("-neuf");
+    if (parGoogle) courriel = googleNeuf ? "neuf@gmail.test" : "banc@yokofolio.test";
+    const identifiant = parGoogle && googleNeuf
+      ? "eeee0000-0000-4000-8000-00000goog999"
+      : "eeee0000-0000-4000-8000-0000000ent03";
+    /*  §3 (nº 783) — LE COMPTE MIXTE, celui qui a LES DEUX moyens
+        d'entrer. C'est le seul sur lequel « Délier » a le droit
+        d'apparaître, donc le seul qui permette de l'éprouver.
+        Il s'ouvre par `GOOGLE_COMPTE=mixte`. */
+    const metaApp = parGoogle
+      ? process.env.GOOGLE_COMPTE === "mixte"
+        ? { provider: "google", providers: ["google", "email"] }
+        : { provider: "google", providers: ["google"] }
+      : { provider: "email", providers: ["email"] };
     console.log(
       new Date().toISOString().slice(11, 19),
       "POST auth/token →", courriel
@@ -829,11 +1000,92 @@ function repondre(req, res, u, brut) {
       "content-type": "application/json",
       "access-control-allow-origin": "*",
     });
-    res.end(JSON.stringify({
-      access_token: jeton, token_type: "bearer", expires_in: 3600,
-      expires_at: expire, refresh_token: "rafraichissement-de-banc",
-      user: personne,
-    }));
+    res.end(JSON.stringify(sessionDeBanc({ identifiant, courriel, metaApp })));
+    return;
+  }
+
+  /**
+   * ██ §3 (nº 783) — LIER UNE IDENTITÉ (départ) ██
+   * ------------------------------------------------------------------
+   * `linkIdentity` ne redirige pas elle-même : elle DEMANDE l'adresse
+   * ici, en JSON, puis le navigateur s'y rend. On rend donc l'adresse
+   * de notre propre `/authorize`, qui joue le rôle de Google.
+   * ⚠️ ELLE EXIGE UNE SESSION, comme la vraie : lier, c'est ajouter à
+   * un compte — sans compte, il n'y a rien à quoi ajouter.
+   */
+  if (u.pathname === "/auth/v1/user/identities/authorize") {
+    const personne = utilisateurDuJeton(req);
+    if (!personne) {
+      res.writeHead(401, {
+        "content-type": "application/json",
+        "access-control-allow-origin": "*",
+      });
+      res.end(JSON.stringify({ message: "invalid claim: missing sub claim" }));
+      return;
+    }
+    const retour = u.searchParams.get("redirect_to") ?? "";
+    const adresse =
+      `http://127.0.0.1:3222/auth/v1/authorize` +
+      `?provider=${encodeURIComponent(u.searchParams.get("provider") ?? "")}` +
+      `&redirect_to=${encodeURIComponent(retour)}`;
+    console.log(
+      new Date().toISOString().slice(11, 19),
+      "GET auth/identities/authorize →", u.searchParams.get("provider")
+    );
+    res.writeHead(200, {
+      "content-type": "application/json",
+      "access-control-allow-origin": "*",
+    });
+    res.end(JSON.stringify({ url: adresse }));
+    return;
+  }
+
+  /**
+   * ██ §3 (nº 783) — DÉLIER UNE IDENTITÉ ██
+   * ------------------------------------------------------------------
+   * ⚠️ ELLE REFUSE LA DERNIÈRE, comme la vraie — et c'est le refus le
+   * plus important du lot : un compte sans identité n'a plus de porte.
+   * Le message est celui de Supabase, en anglais : le site doit savoir
+   * le traduire (voir `traduire`, lib/connexion-google).
+   */
+  if (u.pathname.startsWith("/auth/v1/user/identities/") && req.method === "DELETE") {
+    const personne = utilisateurDuJeton(req);
+    if (!personne) {
+      res.writeHead(401, {
+        "content-type": "application/json",
+        "access-control-allow-origin": "*",
+      });
+      res.end(JSON.stringify({ message: "invalid claim: missing sub claim" }));
+      return;
+    }
+    const vise = decodeURIComponent(u.pathname.split("/").pop() ?? "");
+    const cible = (personne.identities ?? []).find((une) => une.identity_id === vise);
+    if (!cible) {
+      res.writeHead(404, {
+        "content-type": "application/json",
+        "access-control-allow-origin": "*",
+      });
+      res.end(JSON.stringify({ message: "Identity not found" }));
+      return;
+    }
+    if ((personne.identities ?? []).length <= 1) {
+      res.writeHead(422, {
+        "content-type": "application/json",
+        "access-control-allow-origin": "*",
+      });
+      res.end(JSON.stringify({ message: "User must have at least 1 identity after unlinking" }));
+      return;
+    }
+    DELIEES.add(cleDeliee(personne.id, cible.provider));
+    console.log(
+      new Date().toISOString().slice(11, 19),
+      "DELETE auth/identities →", cible.provider, "retiré"
+    );
+    res.writeHead(200, {
+      "content-type": "application/json",
+      "access-control-allow-origin": "*",
+    });
+    res.end("{}");
     return;
   }
 

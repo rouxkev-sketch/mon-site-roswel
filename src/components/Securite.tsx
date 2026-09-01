@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  IconeApple,
   IconeBouclierTrait,
   IconeEnveloppe,
-  IconeFacebook,
   IconeGoogle,
 } from "@/components/Icones";
+//  §1/§3 (nº 783) — le flux Google, écrit une seule fois
+//  (lib/connexion-google). Ici on LIE et on DÉLIE : ce ne sont pas les
+//  appels de la connexion, et la note de ce fichier-là dit pourquoi.
+import { delierGoogle, lierGoogle } from "@/lib/connexion-google";
 import {
   evaluerMotDePasse,
   LONGUEUR_MINIMALE,
@@ -43,9 +45,13 @@ import { useUtilisateur } from "@/lib/use-utilisateur";
  *     (`<JaugeMotDePasse>`, règle dans lib/mot-de-passe). Se tromper
  *     d'ancien mot de passe fait apparaître « Mot de passe oublié » :
  *     c'est précisément le moment où l'on en a besoin.
- *  3. MÉTHODE DE CONNEXION — l'e-mail, actif, avec l'adresse en cours ;
- *     Google, Facebook et Apple annoncés « bientôt », grisés, exactement
- *     comme sur l'écran d'inscription.
+ *  3. MÉTHODE DE CONNEXION — ce que CE compte emploie vraiment
+ *     (nº 783) : l'e-mail (« actif » seulement s'il a un mot de passe)
+ *     et Google, qu'on LIE et qu'on DÉLIE d'ici. Facebook et Apple ont
+ *     été retirés, code compris : plus aucun « bientôt » sur ce site.
+ *     ⚠️ ON NE PEUT PAS DÉLIER SON DERNIER MOYEN D'ENTRER — ni ici, ni
+ *     dans lib/connexion-google, qui refuse aussi. Sans mot de passe,
+ *     retirer Google fermerait le compte à clé.
  *  4. LES SUPPRESSIONS — supprimer UNE fiche, ou LE compte, tout en bas
  *     (voir BlocSuppressions).
  *
@@ -146,6 +152,14 @@ export function Securite() {
   const [confirmationMdp, setConfirmationMdp] = useState("");
   const [mdpVisible, setMdpVisible] = useState(false);
   const [messageMdp, setMessageMdp] = useState<string | null>(null);
+  /** §1/§3 (nº 783) — le départ vers Google, le retrait, et ce que
+      l'un ou l'autre aurait à dire. Deux attentes séparées : les deux
+      boutons ne sont jamais montrés ensemble, mais mélanger leurs
+      états ferait écrire « Un instant… » au mauvais endroit le jour où
+      ils le seraient. */
+  const [googleEnCours, setGoogleEnCours] = useState(false);
+  const [delierEnCours, setDelierEnCours] = useState(false);
+  const [erreurGoogle, setErreurGoogle] = useState<string | null>(null);
   const [erreurMdp, setErreurMdp] = useState<string | null>(null);
   const [mdpEnCours, setMdpEnCours] = useState(false);
   /** « MOT DE PASSE OUBLIÉ » — proposé APRÈS s'être trompé d'ancien mot
@@ -154,6 +168,24 @@ export function Securite() {
   const [lienOubli, setLienOubli] = useState(false);
 
   const force = evaluerMotDePasse(nouveauMdp);
+
+  /**
+   * ██ §2 (nº 783) — CE QUE CE COMPTE EMPLOIE POUR SE CONNECTER ██
+   * ------------------------------------------------------------------
+   * Supabase inscrit dans le compte la liste de ses moyens d'entrée
+   * (`app_metadata.providers`) : `email` quand il y a un mot de passe,
+   * `google` quand Google est lié — et les deux quand les deux le sont.
+   * ⚠️ POURQUOI ON LA LIT PLUTÔT QUE DE LA DEVINER : un compte créé par
+   * Google N'A PAS DE MOT DE PASSE. Lui demander « ton mot de passe
+   * actuel » pour en changer, c'est lui demander l'impossible — le bloc
+   * du dessus s'adapte donc, et propose d'en AJOUTER un (ce qui lui
+   * ouvre la connexion par e-mail, sans rien lui retirer).
+   */
+  const fournisseurs = ((
+    utilisateur?.app_metadata as { providers?: unknown } | undefined
+  )?.providers ?? []) as string[];
+  const googleDejaLie = fournisseurs.includes("google");
+  const aUnMotDePasse = fournisseurs.includes("email");
 
   async function changerEmail(evenement: React.FormEvent) {
     evenement.preventDefault();
@@ -197,7 +229,10 @@ export function Securite() {
     setMessageMdp(null);
     setErreurMdp(null);
     setLienOubli(false);
-    if (ancienMdp.length === 0) {
+    //  §2 (nº 783) — L'ANCIEN N'EST EXIGÉ QUE S'IL EXISTE. Un compte
+    //  entré par Google n'en a pas : le lui demander serait lui barrer
+    //  la route pour de bon.
+    if (aUnMotDePasse && ancienMdp.length === 0) {
       setErreurMdp("Ton mot de passe actuel est nécessaire.");
       return;
     }
@@ -216,10 +251,16 @@ export function Securite() {
       // au serveur avant d'écrire quoi que ce soit. Sans cela,
       // n'importe qui trouvant une session ouverte pourrait changer
       // le mot de passe et prendre le compte.
-      const { error: verification } = await supabase.auth.signInWithPassword({
-        email: utilisateur?.email ?? "",
-        password: ancienMdp,
-      });
+      //  §2 (nº 783) — SAUF QUAND IL N'Y EN A PAS : on ne peut pas
+      //  vérifier ce qui n'existe pas. La session ouverte fait alors
+      //  foi, comme pour tout premier mot de passe — c'est ce que fait
+      //  aussi le parcours « mot de passe oublié ».
+      const { error: verification } = aUnMotDePasse
+        ? await supabase.auth.signInWithPassword({
+            email: utilisateur?.email ?? "",
+            password: ancienMdp,
+          })
+        : { error: null };
       if (verification) {
         setErreurMdp("Ton mot de passe actuel n'est pas le bon.");
         // C'EST ICI QUE LA PORTE DE SECOURS S'OUVRE (nº 129) : on ne
@@ -233,7 +274,11 @@ export function Securite() {
         password: nouveauMdp,
       });
       if (error) throw error;
-      setMessageMdp("C'est fait : ton mot de passe a été changé.");
+      setMessageMdp(
+        aUnMotDePasse
+          ? "C'est fait : ton mot de passe a été changé."
+          : "C'est fait : tu peux désormais te connecter avec ton e-mail et ce mot de passe, ou avec Google."
+      );
       setAncienMdp("");
       setNouveauMdp("");
       setConfirmationMdp("");
@@ -377,14 +422,20 @@ export function Securite() {
           </form>
         </Bloc>
 
-        {/* ---------- 2 · CHANGER DE MOT DE PASSE ---------- */}
-        <Bloc titre="Changer de mot de passe">
+        {/* ---------- 2 · LE MOT DE PASSE ----------
+             §2 (nº 783) — LE TITRE DIT CE QU'ON PEUT FAIRE : un compte
+             venu de Google n'a pas de mot de passe ; on ne lui propose
+             donc pas d'en « changer », mais d'en AJOUTER un. */}
+        <Bloc titre={aUnMotDePasse ? "Changer de mot de passe" : "Ajouter un mot de passe"}>
           <form
             onSubmit={changerMotDePasse}
             noValidate
             className="flex flex-col gap-4"
           >
-            <div>
+            {/*  §2 (nº 783) — PAS DE MOT DE PASSE ACTUEL À DEMANDER
+                 quand le compte n'en a jamais eu (entré par Google) :
+                 le champ n'est pas grisé, il n'existe pas. */}
+            <div className={aUnMotDePasse ? "" : "hidden"}>
               <label htmlFor="securite-ancien" className="sr-only">
                 Mot de passe actuel
               </label>
@@ -492,60 +543,134 @@ export function Securite() {
               tout le reste de la page — et que les lignes du bloc
               « Supprimer », qui ont exactement leur hauteur. */}
           <ul className="flex flex-col gap-4">
-            {/* L'E-MAIL — le seul actif : un BADGE SÉLECTIONNÉ, donc
-                le rose dilué — sans contour, le fond suffit. */}
+            {/* ██ §3 (nº 783) — L'E-MAIL DIT LA VÉRITÉ, LUI AUSSI ██
+                CE QUI ÉTAIT FAUX, ET LE BANC L'A MONTRÉ : cette ligne
+                était écrite « actif » EN DUR. Un compte entré par
+                Google — qui n'a pas de mot de passe — lisait donc
+                « E-mail et mot de passe · actif » et pouvait croire
+                qu'il lui suffisait de retenir son adresse pour rentrer.
+                Elle se règle désormais sur `aUnMotDePasse`, comme le
+                bloc du dessus. */}
             <li
-              className="flex items-center gap-3 rounded-lg
-                         bg-primaire/10 px-4 min-h-[54px]"
+              className={`flex items-center gap-3 rounded-lg px-4 min-h-[54px] ${
+                aUnMotDePasse ? "bg-primaire/10" : "bg-sombre-eleve"
+              }`}
             >
-              <IconeBouclierTrait taille={20} classe="shrink-0 text-primaire" />
+              <IconeBouclierTrait
+                taille={20}
+                classe={
+                  aUnMotDePasse
+                    ? "shrink-0 text-primaire"
+                    : "shrink-0 text-sombre-texte-doux"
+                }
+              />
               <span className="min-w-0 flex-1">
                 <span className="block text-[14.5px] font-semibold text-sombre-texte">
                   E-mail et mot de passe
                 </span>
                 <span className="block truncate text-[12.5px] text-sombre-texte-doux">
-                  {utilisateur?.email ?? "—"}
+                  {aUnMotDePasse
+                    ? utilisateur?.email ?? "—"
+                    : "Pas encore de mot de passe"}
                 </span>
               </span>
-              <span className="shrink-0 rounded-full bg-primaire px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white">
-                actif
-              </span>
+              {aUnMotDePasse && (
+                <span className="shrink-0 rounded-full bg-primaire px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white">
+                  actif
+                </span>
+              )}
             </li>
 
-            {/* LES TROIS FOURNISSEURS — annoncés, pas promis : la même
-                robe grisée et la même mention « bientôt » que sur
-                l'écran d'inscription. */}
-            {(
-              [
-                ["Google", <IconeGoogle key="g" taille={20} />],
-                ["Facebook", <IconeFacebook key="f" taille={20} />],
-                ["Apple", <IconeApple key="a" taille={20} />],
-              ] as const
-            ).map(([fournisseur, icone]) => (
-              <li key={fournisseur}>
+            {/* ██ §3 (nº 783) — GOOGLE : LIER, DÉLIER ██
+                CE QUI VIVAIT ICI : trois fournisseurs grisés, annoncés
+                « bientôt ». Facebook et Apple sont retirés (décision de
+                Kevin) et Google fonctionne — cette liste ne dit donc
+                plus une intention, elle dit L'ÉTAT DU COMPTE, et elle
+                le CHANGE.
+                · Google LIÉ      → ligne active, plus « Délier » ;
+                · Google PAS LIÉ  → un bouton qui le lie.
+                ⚠️ « DÉLIER » NE S'AFFICHE PAS S'IL EST LE SEUL MOYEN
+                D'ENTRER : sans mot de passe, s'en séparer, c'est perdre
+                le compte. On dit alors quoi faire d'abord, au lieu de
+                montrer un bouton qui refuserait.
+                ⚠️ LE BOUTON DE LIAISON N'APPELLE PAS LA CONNEXION — il
+                appelle `lierGoogle` (voir la note de ce fichier-là) :
+                se connecter et lier ne sont pas le même geste, et les
+                confondre ferait changer de compte. */}
+            {googleDejaLie ? (
+              <li
+                className="flex flex-wrap items-center gap-x-3 gap-y-2
+                           rounded-lg bg-primaire/10 px-4 py-2.5 min-h-[54px]"
+              >
+                <span className="shrink-0">
+                  <IconeGoogle taille={20} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[14.5px] font-semibold text-sombre-texte">
+                    Google
+                  </span>
+                  <span className="block truncate text-[12.5px] text-sombre-texte-doux">
+                    {aUnMotDePasse
+                      ? utilisateur?.email ?? "—"
+                      : "Ton seul moyen de te connecter"}
+                  </span>
+                </span>
+                {aUnMotDePasse ? (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setErreurGoogle(null);
+                      setDelierEnCours(true);
+                      const souci = await delierGoogle();
+                      setDelierEnCours(false);
+                      if (souci) setErreurGoogle(souci);
+                    }}
+                    disabled={delierEnCours}
+                    className="shrink-0 rounded-full bg-sombre-eleve-clair px-4 min-h-[38px]
+                               text-[13px] font-semibold text-sombre-texte
+                               hover:text-primaire
+                               transition-colors disabled:opacity-50"
+                  >
+                    {delierEnCours ? "Un instant…" : "Délier"}
+                  </button>
+                ) : (
+                  <span className="shrink-0 rounded-full bg-primaire px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white">
+                    actif
+                  </span>
+                )}
+              </li>
+            ) : (
+              <li>
                 <button
                   type="button"
-                  disabled
-                  aria-disabled="true"
-                  title={`La connexion ${fournisseur} arrive bientôt`}
+                  onClick={async () => {
+                    setErreurGoogle(null);
+                    setGoogleEnCours(true);
+                    const souci = await lierGoogle();
+                    if (souci) {
+                      setGoogleEnCours(false);
+                      setErreurGoogle(souci);
+                    }
+                  }}
+                  disabled={googleEnCours}
                   className="flex w-full items-center gap-3 rounded-lg
                              bg-sombre-eleve px-4 min-h-[54px] text-left
-                             text-[14.5px] text-sombre-texte opacity-55
-                             cursor-not-allowed"
+                             text-[14.5px] text-sombre-texte transition-colors
+                             hover:bg-sombre-eleve-clair
+                             disabled:opacity-55 disabled:cursor-not-allowed"
                 >
-                  <span className="shrink-0">{icone}</span>
-                  Continuer avec {fournisseur}
-                  {/* La pastille : le niveau AU-DESSUS de sa ligne —
-                      fond élevé-clair, aucun trait. */}
-                  <span
-                    className="ml-auto rounded-full bg-sombre-eleve-clair px-2.5 py-0.5
-                               text-[11px] uppercase tracking-wide text-sombre-texte-doux"
-                  >
-                    bientôt
+                  <span className="shrink-0">
+                    <IconeGoogle taille={20} />
                   </span>
+                  {googleEnCours ? "Un instant…" : "Lier mon compte Google"}
                 </button>
               </li>
-            ))}
+            )}
+            {erreurGoogle && (
+              <li>
+                <p className={ERREUR}>{erreurGoogle}</p>
+              </li>
+            )}
           </ul>
         </Bloc>
 
