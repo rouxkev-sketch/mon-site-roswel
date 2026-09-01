@@ -1,3 +1,5 @@
+import { photoDuBord } from "@/lib/photos-du-bord";
+
 /**
  * ██ §1 (nº 718) — LES VARIANTES DE L'AVATAR, EN UN SEUL ENDROIT ██
  * ==================================================================
@@ -69,6 +71,14 @@ export function sourceAvatar(
   cote: number = AVATAR_PETIT
 ): string {
   if (!adresse) return "";
-  if (!adresse.includes(PREFIXE_AVEC_VARIANTES)) return adresse;
-  return nomDeLaVariante(adresse, cote);
+  //  §1 (nº 782) — L'ADRESSE PASSE PAR NOTRE PORTE. C'est ici, et pas
+  //  dans les cinq écrans qui appellent cette fonction, parce que
+  //  c'est ici qu'ils prennent tous leur adresse d'avatar : une seule
+  //  ligne les sert tous (piège nº 378). Voir `lib/photos-du-bord`
+  //  pour la raison — le stockage refuse de laisser garder ses
+  //  réponses, notre porte, elle, l'autorise.
+  const variante = adresse.includes(PREFIXE_AVEC_VARIANTES)
+    ? nomDeLaVariante(adresse, cote)
+    : adresse;
+  return photoDuBord(variante);
 }

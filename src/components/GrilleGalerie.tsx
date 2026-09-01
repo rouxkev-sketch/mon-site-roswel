@@ -3,6 +3,7 @@
 import { CADRE_PHOTO_PORTFOLIO } from "@/config/tatouage";
 
 import { useEffect, useRef } from "react";
+import { photoDuBord } from "@/lib/photos-du-bord";
 
 /**
  * LA MOSAÏQUE RÉORDONNABLE — le glisser-déposer de la galerie
@@ -443,7 +444,8 @@ export function GrilleGalerie({
             {/* eslint-disable-next-line @next/next/no-img-element --
                 aperçu local ou image déjà servie. */}
             <img
-              src={tuile.src}
+              //  §1 (nº 782) — par notre porte : voir lib/photos-du-bord.
+              src={photoDuBord(tuile.src)}
               alt=""
               loading="lazy"
               decoding="async"

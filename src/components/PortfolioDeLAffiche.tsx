@@ -23,6 +23,7 @@ import {
   GalerieQuiDefile,
 } from "@/components/GalerieQuiDefile";
 import type { PhotoGalerie, StyleGalerie } from "@/lib/photo-tatoueur";
+import { photoDuBord } from "@/lib/photos-du-bord";
 
 /**
  * L'AFFICHE EN DEUX ONGLETS — « Profil » et « Portfolio »
@@ -510,7 +511,8 @@ export function PanneauPortfolio({
                 photo déposée par le tatoueur, servie telle quelle
                 (la règle des vignettes). */}
             <img
-              src={photo.miniature}
+              //  §1 (nº 782) — par notre porte : voir lib/photos-du-bord.
+              src={photoDuBord(photo.miniature)}
               alt={`${serie.label} — ${nomTatoueur}`}
               loading="lazy"
               decoding="async"

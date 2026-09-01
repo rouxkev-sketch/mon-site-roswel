@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { PHOTO_MINIATURE, PHOTO_PORTFOLIO } from "@/config/tatouage";
+import { photoDuBord } from "@/lib/photos-du-bord";
 
 /**
  * ██ LA PHOTO D'UNE CARTE — nº 366 ██
@@ -119,7 +120,9 @@ export function PhotoDeCarte({
          image de démonstration (SVG) ou fiche d'avant le portfolio
          catalogué : servie telle quelle, comme avant la nº 366. */
       <img
-        src={url}
+        //  §1 (nº 782) — le repli passe par notre porte lui aussi
+        //  (les SVG de démonstration en sortent inchangés).
+        src={photoDuBord(url)}
         alt={alt}
         loading={chargement}
         fetchPriority={priorite}

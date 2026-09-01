@@ -28,6 +28,7 @@ import {
   ligneDIdentite,
 } from "@/lib/selection-suivis";
 import type { TatoueurSuivi } from "@/lib/favoris-serveur";
+import { photoDuBord } from "@/lib/photos-du-bord";
 
 /**
  * LES ARTISTES SUIVIS, DANS « MA SÉLECTION » (nº 243, revu nº 245)
@@ -687,7 +688,8 @@ function RangeeDeVignettes({
             {/* eslint-disable-next-line @next/next/no-img-element --
                 photo déposée par le tatoueur, servie telle quelle. */}
             <img
-              src={photo.miniature}
+              //  §1 (nº 782) — par notre porte : voir lib/photos-du-bord.
+              src={photoDuBord(photo.miniature)}
               alt=""
               loading="lazy"
               decoding="async"

@@ -1,6 +1,11 @@
 "use client";
 
 import { PHOTO_PORTFOLIO } from "@/config/tatouage";
+//  §1 (nº 782) — la photo est demandée à NOTRE porte, qui pose la
+//  consigne de cache que le stockage refuse de servir (voir
+//  lib/photos-du-bord). Les octets, eux, sont les mêmes : rien ne
+//  change à l'œil, et la règle nº 280 tient.
+import { photoDuBord } from "@/lib/photos-du-bord";
 
 /**
  * ██ UNE PHOTO ARRIVE EN UNE SEULE FOIS (nº 280-§1) ██
@@ -71,7 +76,7 @@ export function PhotoProgressive({
        image déjà découpée et servie telle quelle (stockage ou SVG de
        démonstration) : rien à optimiser au vol. */
     <img
-      src={url}
+      src={photoDuBord(url)}
       alt={alt}
       draggable={false}
       loading={tout_de_suite ? "eager" : "lazy"}

@@ -261,6 +261,25 @@ self.addEventListener("fetch", (event) => {
       navigations : la branche 1 ci-dessous ne range JAMAIS une page.) */
   if (url.pathname.startsWith("/api/")) return;
 
+  /*  §1 (nº 782) — LES PHOTOS NE PASSENT PAS PAR NOUS NON PLUS.
+      Depuis cette passe, une photo de portfolio est demandée à notre
+      propre site (`/photos/…`) au lieu du stockage : elle est donc, du
+      point de vue de ce fichier, une image DE MÊME ORIGINE — et la
+      branche « statiques » plus bas garde toute image de même origine,
+      en cache d'abord.
+      POURQUOI IL NE FAUT PAS : ce cache-ci est VIDÉ À CHAQUE MISE EN
+      LIGNE. Y ranger mille photos de portfolio, ce serait les
+      retélécharger toutes à chaque déploiement — et gonfler le stockage
+      de l'appareil pour rien. C'est très exactement le défaut que la
+      première version de ce fichier avait (voir la note du haut :
+      « gardait pour toujours toute image déjà vue »).
+      CE QUI LES GARDE, ET MIEUX QUE NOUS : leur propre consigne. La
+      route leur pose `immutable` pour un an — le navigateur les range
+      dans SON cache, qu'aucune mise en ligne ne vide, et Vercel les
+      tient à son bord pour tout le monde. On se retire, et tout le
+      monde y gagne. */
+  if (url.pathname.startsWith("/photos/")) return;
+
   // 0) ICÔNES ET LOGOS : le réseau, TOUJOURS — jamais de copie gardée.
   //    Le cache (où seul le logo yokofolio est rangé, à l'installation)
   //    ne répond qu'en secours, quand la connexion est coupée.
