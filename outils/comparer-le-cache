@@ -1,0 +1,68 @@
+#!/bin/sh
+#
+#  ██ LE MÊME GESTE, DANS LES DEUX PROJETS (passe nº 781) ██
+#  ==================================================================
+#  CE QUE TU TAPES, DANS LE DOSSIER DU PROJET, SUR TON MAC :
+#
+#    AUTRE_URL='https://<ancien-projet>.supabase.co' \
+#    AUTRE_SECRET_KEY='la clé secrète de l ANCIEN projet' \
+#      sh outils/comparer-le-cache
+#
+#  Sans ces deux variables, il ne relève que le projet courant — c'est
+#  utile aussi, mais la comparaison est ce qui démontre.
+#
+#  ⚠️ SUR TON MAC, PAS DANS L'ATELIER (aucun accès au réseau là-bas).
+#
+#  ==================================================================
+#  POURQUOI CET OUTIL
+#  ------------------------------------------------------------------
+#  On sait maintenant, mesures à l'appui :
+#
+#    · le service RANGE bien la consigne (la métadonnée dit
+#      « max-age=31536000 ») ;
+#    · mais il SERT « no-cache » — même sur un fichier tout neuf,
+#      effacé puis redéposé.
+#
+#  Donc ce ne sont ni les photos, ni la façon de les envoyer. Reste le
+#  service lui-même. Pour le démontrer plutôt que l'affirmer, il faut
+#  le MÊME geste des deux côtés : un fichier d'essai de quelques
+#  octets, déposé avec la même consigne dans l'ancien projet et dans
+#  le nouveau, puis relu.
+#
+#  Si l'ancien projet sert la consigne et le nouveau non, la
+#  démonstration est faite en deux lignes — et c'est ce qu'un support
+#  peut lire sans discuter.
+#
+#  ==================================================================
+#  CE QU'IL FAIT, ET CE QU'IL NE FERA JAMAIS
+#  ------------------------------------------------------------------
+#  Il relève, pour chaque projet :
+#    · la version du service Storage ;
+#    · les réglages du seau (aucun n'est une consigne de cache — le
+#      service n'en propose pas ; on le relève pour écarter cette
+#      piste par la preuve) ;
+#    · puis il dépose UN fichier d'essai dans `essai-cache/`, lit ce
+#      que le service répond, et L'EFFACE.
+#
+#  ⚠️ AUCUNE PHOTO DU PORTFOLIO N'EST TOUCHÉE. Ni lue, ni réécrite, ni
+#  effacée. Le seul fichier écrit est le témoin, et il repart.
+#
+#  ⚠️ AUCUNE CLÉ AFFICHÉE : seules les adresses des projets le sont.
+#
+#  ==================================================================
+#  ET APRÈS ?
+#  ------------------------------------------------------------------
+#  Le message à envoyer au support Supabase est déjà écrit :
+#  `docs/SUPPORT-SUPABASE-cache.md`. Il ne te reste qu'à y recopier les
+#  lignes que cet outil produit (elles sont aussi dans
+#  `comparer-le-cache.txt`).
+#
+
+set -e
+
+DOSSIER=$(cd "$(dirname "$0")/.." && pwd)
+cd "$DOSSIER"
+
+. "$(dirname "$0")/verifier-node.sh"
+
+exec node outils/comparer-le-cache.mjs "$@"

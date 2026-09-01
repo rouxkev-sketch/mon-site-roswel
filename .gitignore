@@ -69,3 +69,6 @@ journal-de-bord*.ndjson
 #  Le journal du diagnostic de cache (nº 779) — même raison que
 #  celui de la reprise, juste au-dessus.
 /diagnostic-cache.txt
+
+#  Le journal du comparateur de cache (nº 781).
+/comparer-le-cache.txt
