@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+//  §B9 (nº 788) — l'œil partagé (voir erreurs-formulaire).
+import { BoutonOeil, PLACE_DE_L_OEIL } from "@/components/erreurs-formulaire";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
@@ -141,21 +143,17 @@ export function NouveauMotDePasse() {
                 onChange={(e) => setMotDePasse(e.target.value)}
                 aria-invalid={Boolean(erreurs.motDePasse)}
                 placeholder={`${LONGUEUR_MINIMALE} caractères au minimum`}
-                style={{ paddingRight: 88 }}
+                style={{ paddingRight: PLACE_DE_L_OEIL }}
                 className={`${CHAMP} ${
                   erreurs.motDePasse ? "border-erreur" : "border-sombre-bordure"
                 }`}
               />
-              <button
-                type="button"
-                onClick={() => setVisible((v) => !v)}
-                aria-pressed={visible}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-3 py-1.5
-                           text-[13px] font-medium text-sombre-texte-doux
-                           hover:text-sombre-texte transition-colors"
-              >
-                {visible ? "Masquer" : "Afficher"}
-              </button>
+              {/*  §B9 (nº 788) — LE MÊME ŒIL QUE PARTOUT AILLEURS. La
+                   consigne dit « partout où ce mécanisme existe » : cette
+                   page est l'aboutissement de « Mot de passe oublié ? »,
+                   à deux clics de la connexion. La laisser au mot aurait
+                   fait une incohérence qu'on rencontre en une minute. */}
+              <BoutonOeil visible={visible} surBascule={() => setVisible((v) => !v)} />
             </div>
             {erreurs.motDePasse && (
               <p className="mt-1.5 text-[13px] text-erreur">

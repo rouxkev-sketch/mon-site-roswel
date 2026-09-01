@@ -22,6 +22,15 @@ import { BlocSuppressions } from "@/components/BlocSuppressions";
 //  seule fois et partagées avec le bloc des suppressions.
 import { EtatActif, PastilleAction } from "@/components/Pastille";
 import { JaugeMotDePasse } from "@/components/JaugeMotDePasse";
+//  §A (nº 788) — le standard des erreurs et l'œil, partagés avec les
+//  écrans de connexion et de création (voir erreurs-formulaire).
+import {
+  AIR_AVANT_BOUTON,
+  BoutonOeil,
+  MessageErreur,
+  PLACE_DE_L_OEIL,
+  bordureChamp,
+} from "@/components/erreurs-formulaire";
 import { Patience, SquelettePage } from "@/components/Squelette";
 import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
 import { useUtilisateur } from "@/lib/use-utilisateur";
@@ -85,9 +94,22 @@ import { useUtilisateur } from "@/lib/use-utilisateur";
     ⚠️ `border` seul laisse la couleur à `currentColor` (le preflight
     de Tailwind v4 ne la pose pas), donc un liseré clair d'un pixel.
     Le formulaire l'écrit aussi, champ par champ (`border-transparent`
-    ou `border-erreur`). Le focus n'est qu'un fond plus clair. */
+    ou `border-erreur`). Le focus n'est qu'un fond plus clair.
+
+    ⚠️ §A1 (nº 788) — `border-transparent` A QUITTÉ CETTE CONSTANTE, et
+    c'est le piège nº 389 pris sur le fait. Il y vivait comme classe de
+    BASE ; en lui ajoutant `border-erreur` derrière, on obtenait deux
+    classes de même propriété et de même poids — c'est alors l'ordre
+    dans la FEUILLE qui tranche, pas celui qu'on écrit dans l'attribut.
+    Le banc l'a montré net : le message d'erreur paraissait, le contour
+    restait transparent.
+    LA COULEUR SE POSE DONC CHAMP PAR CHAMP, par `bordureChamp(…)` —
+    exactement ce que la note ci-dessus annonçait, et ce que fait
+    l'écran de connexion depuis toujours. ⚠️ TOUT CHAMP QUI EMPLOIE
+    CETTE CONSTANTE DOIT L'APPELER : `border` seul laisserait la couleur
+    à `currentColor`, donc un liseré clair bien visible. */
 const CHAMP =
-  "w-full min-h-[52px] rounded-lg border border-transparent bg-sombre-eleve-clair " +
+  "w-full min-h-[52px] rounded-lg border bg-sombre-eleve-clair " +
   "px-4 text-base text-sombre-texte placeholder:text-sombre-texte-doux " +
   "outline-none transition-colors focus:bg-sombre-haut";
 
@@ -97,9 +119,11 @@ const CHAMP =
 const MESSAGE =
   "rounded-lg bg-sombre-eleve px-4 py-3 text-[13.5px] leading-relaxed text-sombre-texte";
 
-/** L'ERREUR — la seule exception de la charte : l'encadré rouge. */
-const ERREUR =
-  "rounded-lg border border-erreur/50 bg-erreur/10 px-4 py-3 text-[13px] leading-relaxed text-sombre-texte";
+/*  §A3 (nº 788) — LE PAVÉ ROUGE A DISPARU DE CETTE PAGE. Une constante
+    `ERREUR` vivait ici — un encadré à fond plein, posé au bas de chaque
+    bloc. Le standard est désormais celui du formulaire de portfolio :
+    contour rouge sur le champ, message rouge dessous (voir
+    erreurs-formulaire). La constante est partie avec son emploi. */
 
 /**
  * ██ §1 (nº 786) — LES DEUX LIGNES DE MÉTHODE, ET LEUR AIR ██
@@ -163,7 +187,12 @@ const ICONE_METHODE =
  * deux boutons qui finissent par ne plus se ressembler.
  */
 const BOUTON_DE_BLOC =
-  "self-end inline-flex items-center justify-center rounded-full " +
+  //  §B10 (nº 788) — L'AIR AU-DESSUS. Le propriétaire a trouvé le
+  //  bouton « Changer mon adresse » collé à son champ : le `gap-4` du
+  //  formulaire (16 px) ne suffisait pas à le détacher de la pile.
+  //  `AIR_AVANT_BOUTON` porte l'écart à 28 px — la même mesure que les
+  //  boutons de connexion et de création (§B8), écrite une seule fois.
+  `${AIR_AVANT_BOUTON} self-end inline-flex items-center justify-center rounded-full ` +
   "px-5 min-h-[40px] text-[14px] font-semibold transition-colors " +
   "disabled:opacity-60 disabled:cursor-not-allowed";
 
@@ -241,7 +270,16 @@ export function Securite() {
   const [googleEnCours, setGoogleEnCours] = useState(false);
   const [delierEnCours, setDelierEnCours] = useState(false);
   const [erreurGoogle, setErreurGoogle] = useState<string | null>(null);
-  const [erreurMdp, setErreurMdp] = useState<string | null>(null);
+  /**
+   * ██ §A (nº 788) — CHAQUE REPROCHE SOUS SON CHAMP ██
+   * ------------------------------------------------------------------
+   * Une seule chaîne suffisait tant que l'erreur s'affichait dans un
+   * pavé au bas du bloc : peu importait à QUI elle s'adressait. Le
+   * standard demandé la met sous le champ fautif — il faut donc savoir
+   * lequel. D'où ce carnet, dont les clés sont les champs :
+   * `ancien`, `nouveau`, `confirmation`.
+   */
+  const [erreursMdp, setErreursMdp] = useState<Record<string, string>>({});
   const [mdpEnCours, setMdpEnCours] = useState(false);
   /** « MOT DE PASSE OUBLIÉ » — proposé APRÈS s'être trompé d'ancien mot
       de passe, jamais avant. Tant qu'on n'a pas buté, c'est du bruit ;
@@ -305,24 +343,39 @@ export function Securite() {
     }
   }
 
+  /**
+   * §A4 (nº 788) — CORRIGER, C'EST EFFACER LE REPROCHE. Le contour
+   * rouge et son message tenaient jusqu'au prochain envoi : on réparait
+   * le champ sous un reproche qui ne valait plus. Voir la note jumelle
+   * de `EcranAuthentification`.
+   */
+  function oublierMdp(champ: string) {
+    setErreursMdp((avant) => {
+      if (!avant[champ]) return avant;
+      const apres = { ...avant };
+      delete apres[champ];
+      return apres;
+    });
+  }
+
   async function changerMotDePasse(evenement: React.FormEvent) {
     evenement.preventDefault();
     setMessageMdp(null);
-    setErreurMdp(null);
+    setErreursMdp({});
     setLienOubli(false);
     //  §2 (nº 783) — L'ANCIEN N'EST EXIGÉ QUE S'IL EXISTE. Un compte
     //  entré par Google n'en a pas : le lui demander serait lui barrer
     //  la route pour de bon.
     if (aUnMotDePasse && ancienMdp.length === 0) {
-      setErreurMdp("Ton mot de passe actuel est nécessaire.");
+      setErreursMdp({ ancien: "Ton mot de passe actuel est nécessaire." });
       return;
     }
     if (force.niveau === 0) {
-      setErreurMdp(`${LONGUEUR_MINIMALE} caractères au minimum.`);
+      setErreursMdp({ nouveau: `${LONGUEUR_MINIMALE} caractères au minimum.` });
       return;
     }
     if (nouveauMdp !== confirmationMdp) {
-      setErreurMdp("Les deux nouveaux mots de passe ne correspondent pas.");
+      setErreursMdp({ confirmation: "Les deux nouveaux mots de passe ne correspondent pas." });
       return;
     }
     setMdpEnCours(true);
@@ -343,7 +396,7 @@ export function Securite() {
           })
         : { error: null };
       if (verification) {
-        setErreurMdp("Ton mot de passe actuel n'est pas le bon.");
+        setErreursMdp({ ancien: "Ton mot de passe actuel n'est pas le bon." });
         // C'EST ICI QUE LA PORTE DE SECOURS S'OUVRE (nº 129) : on ne
         // se souvient plus de son mot de passe, on ne peut donc pas en
         // choisir un nouveau. Le lien mène au parcours déjà en place —
@@ -364,7 +417,7 @@ export function Securite() {
       setNouveauMdp("");
       setConfirmationMdp("");
     } catch (erreur) {
-      setErreurMdp(messageErreurAuth(erreur));
+      setErreursMdp({ confirmation: messageErreurAuth(erreur) });
     } finally {
       setMdpEnCours(false);
     }
@@ -378,7 +431,7 @@ export function Securite() {
     const adresse = utilisateur?.email ?? "";
     if (!adresse) return;
     setMdpEnCours(true);
-    setErreurMdp(null);
+    setErreursMdp({});
     try {
       const supabase = creerClientSupabaseNavigateur();
       const { error } = await supabase.auth.resetPasswordForEmail(adresse, {
@@ -390,7 +443,7 @@ export function Securite() {
         `Un e-mail vient de partir vers ${adresse} : ouvre-le et suis le lien pour choisir un nouveau mot de passe. Pense au dossier indésirable.`
       );
     } catch (erreur) {
-      setErreurMdp(messageErreurAuth(erreur));
+      setErreursMdp({ confirmation: messageErreurAuth(erreur) });
     } finally {
       setMdpEnCours(false);
     }
@@ -506,16 +559,20 @@ export function Securite() {
                 type="email"
                 autoComplete="email"
                 value={nouvelEmail}
-                onChange={(e) => setNouvelEmail(e.target.value)}
+                onChange={(e) => {
+                  setNouvelEmail(e.target.value);
+                  //  §A4 (nº 788) — corriger, c'est effacer le reproche.
+                  if (erreurEmail) setErreurEmail(null);
+                }}
+                aria-invalid={Boolean(erreurEmail)}
                 placeholder="Nouvelle adresse"
-                className={CHAMP}
+                className={`${CHAMP} ${bordureChamp(Boolean(erreurEmail))}`}
               />
+              {/*  §A1-A2 (nº 788) — le contour rouge sur le champ, le
+                   message dessous. Il s'affichait dans un pavé à fond
+                   rouge, sous le champ mais détaché de lui. */}
+              {erreurEmail && <MessageErreur>{erreurEmail}</MessageErreur>}
             </div>
-            {erreurEmail && (
-              <p role="alert" className={ERREUR}>
-                {erreurEmail}
-              </p>
-            )}
             {messageEmail && <p className={MESSAGE}>{messageEmail}</p>}
             {/* LA CAPSULE DU FORMULAIRE (nº 116) : naturelle tant que
                 le champ est vide, ROSE dès qu'il y a quelque chose à
@@ -552,30 +609,43 @@ export function Securite() {
               <label htmlFor="securite-ancien" className="sr-only">
                 Mot de passe actuel
               </label>
-              <input
-                id="securite-ancien"
-                type={mdpVisible ? "text" : "password"}
-                autoComplete="current-password"
-                value={ancienMdp}
-                onChange={(e) => setAncienMdp(e.target.value)}
-                placeholder="Mot de passe actuel"
-                className={CHAMP}
-              />
+              {/*  `relative` : il tient l'œil, posé contre le bord droit. */}
+              <div className="relative">
+                <input
+                  id="securite-ancien"
+                  type={mdpVisible ? "text" : "password"}
+                  autoComplete="current-password"
+                  value={ancienMdp}
+                  onChange={(e) => { setAncienMdp(e.target.value); oublierMdp("ancien"); }}
+                  aria-invalid={Boolean(erreursMdp.ancien)}
+                  placeholder="Mot de passe actuel"
+                  style={{ paddingRight: PLACE_DE_L_OEIL }}
+                  className={`${CHAMP} ${bordureChamp(Boolean(erreursMdp.ancien))}`}
+                />
+                <BoutonOeil visible={mdpVisible} surBascule={() => setMdpVisible((v) => !v)} />
+              </div>
+              {erreursMdp.ancien && <MessageErreur>{erreursMdp.ancien}</MessageErreur>}
             </div>
 
             <div>
               <label htmlFor="securite-nouveau" className="sr-only">
                 Nouveau mot de passe
               </label>
-              <input
-                id="securite-nouveau"
-                type={mdpVisible ? "text" : "password"}
-                autoComplete="new-password"
-                value={nouveauMdp}
-                onChange={(e) => setNouveauMdp(e.target.value)}
-                placeholder="Nouveau mot de passe"
-                className={CHAMP}
-              />
+              <div className="relative">
+                <input
+                  id="securite-nouveau"
+                  type={mdpVisible ? "text" : "password"}
+                  autoComplete="new-password"
+                  value={nouveauMdp}
+                  onChange={(e) => { setNouveauMdp(e.target.value); oublierMdp("nouveau"); }}
+                  aria-invalid={Boolean(erreursMdp.nouveau)}
+                  placeholder="Nouveau mot de passe"
+                  style={{ paddingRight: PLACE_DE_L_OEIL }}
+                  className={`${CHAMP} ${bordureChamp(Boolean(erreursMdp.nouveau))}`}
+                />
+                <BoutonOeil visible={mdpVisible} surBascule={() => setMdpVisible((v) => !v)} />
+              </div>
+              {erreursMdp.nouveau && <MessageErreur>{erreursMdp.nouveau}</MessageErreur>}
               {/* LA JAUGE — le composant de la création de compte, tel
                   quel : critères cochés en direct (nº 129). */}
               <JaugeMotDePasse motDePasse={nouveauMdp} />
@@ -585,32 +655,32 @@ export function Securite() {
               <label htmlFor="securite-confirmation" className="sr-only">
                 Retaper le nouveau mot de passe
               </label>
-              <input
-                id="securite-confirmation"
-                type={mdpVisible ? "text" : "password"}
-                autoComplete="new-password"
-                value={confirmationMdp}
-                onChange={(e) => setConfirmationMdp(e.target.value)}
-                placeholder="Retaper le nouveau mot de passe"
-                className={CHAMP}
-              />
+              <div className="relative">
+                <input
+                  id="securite-confirmation"
+                  type={mdpVisible ? "text" : "password"}
+                  autoComplete="new-password"
+                  value={confirmationMdp}
+                  onChange={(e) => { setConfirmationMdp(e.target.value); oublierMdp("confirmation"); }}
+                  aria-invalid={Boolean(erreursMdp.confirmation)}
+                  placeholder="Retaper le nouveau mot de passe"
+                  style={{ paddingRight: PLACE_DE_L_OEIL }}
+                  className={`${CHAMP} ${bordureChamp(Boolean(erreursMdp.confirmation))}`}
+                />
+                <BoutonOeil visible={mdpVisible} surBascule={() => setMdpVisible((v) => !v)} />
+              </div>
+              {/*  §A5 (nº 788) — les échecs du serveur, qui ne visent
+                   aucun champ en particulier, se posent ici : sous le
+                   DERNIER champ du formulaire. */}
+              {erreursMdp.confirmation && <MessageErreur>{erreursMdp.confirmation}</MessageErreur>}
             </div>
 
-            <label className="flex items-center gap-2 text-[13.5px] text-sombre-texte-doux">
-              <input
-                type="checkbox"
-                checked={mdpVisible}
-                onChange={(e) => setMdpVisible(e.target.checked)}
-                className="accent-primaire"
-              />
-              Afficher les mots de passe
-            </label>
-
-            {erreurMdp && (
-              <p role="alert" className={ERREUR}>
-                {erreurMdp}
-              </p>
-            )}
+            {/*  §B9 (nº 788) — LA CASE À COCHER A DISPARU. « Afficher
+                 les mots de passe » vivait ici, sous les trois champs :
+                 une ligne de plus dans le formulaire pour un réglage
+                 qui appartient aux champs eux-mêmes. Chacun porte
+                 désormais son œil, et tous trois basculent ensemble —
+                 c'est exactement ce que faisait la case. */}
             {/* LA PORTE DE SECOURS — visible seulement après s'être
                 trompé d'ancien mot de passe. Bouton en TEXTE BRUT :
                 c'est une issue, pas l'action de ce bloc. */}
@@ -763,7 +833,7 @@ export function Securite() {
             )}
             {erreurGoogle && (
               <li>
-                <p className={ERREUR}>{erreurGoogle}</p>
+                <MessageErreur>{erreurGoogle}</MessageErreur>
               </li>
             )}
           </ul>

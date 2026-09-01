@@ -965,6 +965,56 @@ export function IconeArobase({ taille = 20, classe = "", trait = 1.8 }: Propriet
   );
 }
 
+/**
+ * ██ L'ŒIL, ET L'ŒIL BARRÉ (passe nº 788) ██
+ * ------------------------------------------------------------------
+ * Ils remplacent les mots « Afficher » / « Masquer » au bout des
+ * champs de mot de passe. Un mot dans un champ se lit comme une partie
+ * de sa valeur ; un œil ne se confond avec rien, et il tient dans la
+ * largeur d'une icône au lieu de huit caractères.
+ * ⚠️ LE BARRÉ DIT L'ÉTAT ACTUEL, pas ce qu'on va faire : quand le mot
+ * de passe est EN CLAIR, l'œil est barré — c'est ce que l'on peut
+ * couper. C'est la convention la plus répandue, et l'inverse fait
+ * hésiter tout le monde.
+ * Même trait (1.8) et même viewBox que leurs voisines.
+ */
+export function IconeOeil({ taille = 20, classe = "", trait = 1.8 }: ProprietesIcone) {
+  return (
+    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
+      <path
+        d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"
+        stroke="currentColor"
+        strokeWidth={trait}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="12" r="3.2" stroke="currentColor" strokeWidth={trait} />
+    </svg>
+  );
+}
+
+export function IconeOeilBarre({ taille = 20, classe = "", trait = 1.8 }: ProprietesIcone) {
+  return (
+    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
+      <path
+        d="M2.5 12S6 5.5 12 5.5c1.6 0 3 .47 4.2 1.15M21.5 12s-1.2 2.2-3.4 3.9M9.2 18.2c.9.2 1.8.3 2.8.3"
+        stroke="currentColor"
+        strokeWidth={trait}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M9.7 9.7a3.2 3.2 0 0 0 4.6 4.6"
+        stroke="currentColor"
+        strokeWidth={trait}
+        strokeLinecap="round"
+      />
+      {/*  LA BARRE — d'un coin à l'autre, c'est elle qui dit « coupé ». */}
+      <path d="M4 4 20 20" stroke="currentColor" strokeWidth={trait} strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function IconeEnveloppe({ taille = 20, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>

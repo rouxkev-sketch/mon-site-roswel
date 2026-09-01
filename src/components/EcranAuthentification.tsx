@@ -10,6 +10,15 @@ import { IconeGoogle } from "@/components/Icones";
 //  surfaces (voir lib/connexion-google).
 import { connexionAvecGoogle } from "@/lib/connexion-google";
 import { JaugeMotDePasse } from "@/components/JaugeMotDePasse";
+//  §A (nº 788) — le standard des erreurs et l'œil, écrits une seule
+//  fois et partagés par les trois pages (voir erreurs-formulaire).
+import {
+  AIR_AVANT_BOUTON,
+  BoutonOeil,
+  MessageErreur,
+  PLACE_DE_L_OEIL,
+  bordureChamp,
+} from "@/components/erreurs-formulaire";
 import { OngletsLigne } from "@/components/OngletsLigne";
 import { lireDejaConnecte, souscrireStockage } from "@/lib/deja-connecte";
 import { ContexteDejaConnecteServeur } from "@/components/FournisseurSession";
@@ -99,9 +108,13 @@ const CHAMP =
 const MESSAGE =
   "rounded-lg bg-sombre-eleve px-4 py-3 text-[13.5px] leading-relaxed text-sombre-texte";
 
-/** L'ERREUR — la seule exception de la charte : l'encadré rouge. */
-const ERREUR =
-  "rounded-lg border border-erreur/50 bg-erreur/10 px-4 py-3 text-[13px] leading-relaxed text-sombre-texte";
+/*  §A3 (nº 788) — LE PAVÉ ROUGE A DISPARU DE CET ÉCRAN. Une constante
+    `ERREUR` vivait ici : `border-erreur/50 bg-erreur/10`, un encadré à
+    fond plein posé EN BAS du formulaire. Il disait « 8 caractères
+    minimum » avec l'objet le plus voyant de la page, et loin du champ
+    qu'il accusait. Le standard est désormais celui du formulaire de
+    portfolio : contour rouge sur le champ, message rouge dessous
+    (voir erreurs-formulaire). La constante est partie avec son emploi. */
 
 export function EcranAuthentification({
   rattachement,
@@ -219,6 +232,28 @@ export function EcranAuthentification({
     setErreurs({});
     setInfo(null);
     setLienMotDePasseOublie(false);
+  }
+
+  /**
+   * ██ §A4 (nº 788) — CORRIGER, C'EST EFFACER LE REPROCHE ██
+   * ------------------------------------------------------------------
+   * L'erreur restait affichée tant qu'on n'avait pas renvoyé le
+   * formulaire : on réparait le champ, le contour rouge et le message
+   * tenaient bon. Une erreur qui survit à sa réparation apprend à ne
+   * plus lire les erreurs.
+   * ⚠️ ELLE EMPORTE AUSSI L'ERREUR GÉNÉRALE (`general`) : « identifiants
+   * incorrects » ne veut plus rien dire dès qu'on retouche l'un des
+   * deux. Et le lien « Mot de passe oublié ? » reste, lui — il est
+   * visible depuis la nº 788-§B7, il n'a plus rien à voir avec l'échec.
+   */
+  function oublier(champ: string) {
+    setErreurs((avant) => {
+      if (!avant[champ] && !avant.general) return avant;
+      const apres = { ...avant };
+      delete apres[champ];
+      delete apres.general;
+      return apres;
+    });
   }
 
   /** La validation AVANT l'envoi : chaque reproche sous son champ. */
@@ -476,7 +511,7 @@ export function EcranAuthentification({
             //  le rend et l'on dit pourquoi.
             if (souci) {
               setGoogleEnCours(false);
-              setErreurs({ general: souci });
+              setErreurs({ google: souci });
             }
           }}
           disabled={googleEnCours || enCours}
@@ -490,6 +525,12 @@ export function EcranAuthentification({
           </span>
           {googleEnCours ? "Un instant…" : "Continuer avec Google"}
         </button>
+        {/*  §A2 (nº 788) — SOUS SON BOUTON, PAS AILLEURS. Cette erreur
+             partageait la clé `general` avec celles du formulaire ;
+             depuis que `general` se pose sous le dernier champ saisi,
+             elle serait apparue à l'autre bout de l'écran, sous des
+             champs qu'elle ne concerne pas. */}
+        {erreurs.google && <MessageErreur>{erreurs.google}</MessageErreur>}
       </div>
 
       {/* « ou » — LE MOT ENTRE DEUX FILETS (passe nº 142). Ils avaient
@@ -526,15 +567,13 @@ export function EcranAuthentification({
             type="email"
             autoComplete="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => { setEmail(e.target.value); oublier("email"); }}
             aria-invalid={Boolean(erreurs.email)}
             placeholder="Adresse e-mail"
-            className={`${CHAMP} ${
-              erreurs.email ? "border-erreur" : "border-transparent"
-            }`}
+            className={`${CHAMP} ${bordureChamp(Boolean(erreurs.email))}`}
           />
           {erreurs.email && (
-            <p className="mt-1.5 text-[13px] text-erreur">{erreurs.email}</p>
+            <MessageErreur>{erreurs.email}</MessageErreur>
           )}
         </div>
 
@@ -548,33 +587,50 @@ export function EcranAuthentification({
               type={motDePasseVisible ? "text" : "password"}
               autoComplete={creer ? "new-password" : "current-password"}
               value={motDePasse}
-              onChange={(e) => setMotDePasse(e.target.value)}
+              onChange={(e) => { setMotDePasse(e.target.value); oublier("motDePasse"); }}
               aria-invalid={Boolean(erreurs.motDePasse)}
               placeholder="Mot de passe"
-              style={{ paddingRight: 88 }}
-              className={`${CHAMP} ${
-                erreurs.motDePasse ? "border-erreur" : "border-transparent"
-              }`}
+              style={{ paddingRight: PLACE_DE_L_OEIL }}
+              className={`${CHAMP} ${bordureChamp(Boolean(erreurs.motDePasse))}`}
             />
-            <button
-              type="button"
-              onClick={() => setMotDePasseVisible((v) => !v)}
-              aria-pressed={motDePasseVisible}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-3 py-1.5
-                         text-[13px] font-medium text-sombre-texte-doux
-                         hover:text-sombre-texte transition-colors"
-            >
-              {motDePasseVisible ? "Masquer" : "Afficher"}
-            </button>
+            {/*  §B9 (nº 788) — L'ŒIL À LA PLACE DU MOT. « Afficher »
+                 puis « Masquer » vivaient là, dans le champ : deux mots
+                 de longueurs différentes, qu'on pouvait lire comme une
+                 partie de la saisie, et qui obligeaient à réserver
+                 88 px à droite. L'icône en demande 48. */}
+            <BoutonOeil
+              visible={motDePasseVisible}
+              surBascule={() => setMotDePasseVisible((v) => !v)}
+            />
           </div>
           {erreurs.motDePasse && (
-            <p className="mt-1.5 text-[13px] text-erreur">{erreurs.motDePasse}</p>
+            <MessageErreur>{erreurs.motDePasse}</MessageErreur>
           )}
 
-          {/* « MOT DE PASSE OUBLIÉ ? » — connexion uniquement, et
-              seulement APRÈS un échec : discret, aligné à droite sous
-              le champ, il envoie l'e-mail de réinitialisation. */}
-          {!creer && lienMotDePasseOublie && (
+          {/* ██ §A5 (nº 788) — L'ERREUR GÉNÉRALE SOUS LE DERNIER CHAMP
+              QU'ELLE CONCERNE ██
+              « Identifiants incorrects » ne vise pas un champ mais LA
+              PAIRE : elle se pose donc sous le second, celui qu'on
+              vient de quitter. Elle s'affichait auparavant tout en bas
+              du formulaire, dans un pavé à fond rouge — loin de ce
+              qu'elle accusait, et plus voyante que le bouton d'envoi.
+              ⚠️ À LA CONNEXION SEULEMENT : à la création, le dernier
+              champ est la confirmation, et le message la suit
+              là-bas. */}
+          {!creer && erreurs.general && (
+            <MessageErreur>{erreurs.general}</MessageErreur>
+          )}
+
+          {/* ██ §B7 (nº 788) — « MOT DE PASSE OUBLIÉ ? », TOUJOURS LÀ ██
+              CE QUI VIVAIT ICI : il n'apparaissait qu'APRÈS un échec —
+              « tant qu'on n'a pas buté, le lien n'est que du bruit ».
+              Le propriétaire a tranché l'inverse, et il a raison : on
+              sait qu'on a oublié son mot de passe AVANT de le taper
+              faux, pas après. Le faire surgir à l'échec, c'est le
+              cacher précisément à qui le cherchait.
+              Connexion uniquement — on n'oublie pas un mot de passe
+              qu'on est en train de choisir. */}
+          {!creer && (
             <p className="mt-2 text-right">
               <button
                 type="button"
@@ -601,30 +657,35 @@ export function EcranAuthentification({
             <label htmlFor="auth-mdp-confirmation" className="sr-only">
               Retaper le mot de passe
             </label>
+            {/*  `relative` : c'est lui qui tient l'œil, posé en absolu
+                 contre le bord droit du champ. */}
+            <div className="relative">
             <input
               id="auth-mdp-confirmation"
               type={motDePasseVisible ? "text" : "password"}
               autoComplete="new-password"
               value={confirmation}
-              onChange={(e) => setConfirmation(e.target.value)}
+              onChange={(e) => { setConfirmation(e.target.value); oublier("confirmation"); }}
               aria-invalid={Boolean(erreurs.confirmation)}
               placeholder="Retaper le mot de passe"
-              className={`${CHAMP} ${
-                erreurs.confirmation ? "border-erreur" : "border-transparent"
-              }`}
+              style={{ paddingRight: PLACE_DE_L_OEIL }}
+              className={`${CHAMP} ${bordureChamp(Boolean(erreurs.confirmation))}`}
             />
+            {/*  §B9 (nº 788) — le même œil que le champ du dessus, sur
+                 le même état : les deux se dévoilent ensemble, comme
+                 avant. */}
+            <BoutonOeil
+              visible={motDePasseVisible}
+              surBascule={() => setMotDePasseVisible((v) => !v)}
+            />
+            </div>
             {erreurs.confirmation && (
-              <p className="mt-1.5 text-[13px] text-erreur">
-                {erreurs.confirmation}
-              </p>
+              <MessageErreur>{erreurs.confirmation}</MessageErreur>
             )}
+            {/*  §A5 (nº 788) — à la création, c'est ICI que le dernier
+                 champ finit : l'erreur générale s'y pose. */}
+            {erreurs.general && <MessageErreur>{erreurs.general}</MessageErreur>}
           </div>
-        )}
-
-        {erreurs.general && (
-          <p role="alert" className={ERREUR}>
-            {erreurs.general}
-          </p>
         )}
         {/* L'INFORMATION SUR FOND ÉLEVÉ (nº 134) — plus d'encadré
             rose : une confirmation est une information, pas un accent
@@ -635,13 +696,19 @@ export function EcranAuthentification({
           </p>
         )}
 
+        {/*  §B8 (nº 788) — L'AIR AU-DESSUS DU BOUTON. Il portait `mt-1`
+             (4 px) qui, ajouté au `gap-4` du formulaire, ne faisait que
+             20 px : le bouton semblait faire partie de la pile de
+             champs. `AIR_AVANT_BOUTON` porte le total à 28 px, soit les
+             1,75 fois demandées — la mesure vit dans
+             erreurs-formulaire, avec les autres. */}
         <button
           type="submit"
           disabled={enCours || (creer && force.niveau === 0 && motDePasse.length > 0)}
-          className="mt-1 inline-flex items-center justify-center rounded-full
+          className={`${AIR_AVANT_BOUTON} inline-flex items-center justify-center rounded-full
                      min-h-[52px] bg-primaire hover:bg-primaire-fonce
                      text-white font-semibold transition-colors
-                     disabled:opacity-60 disabled:cursor-not-allowed"
+                     disabled:opacity-60 disabled:cursor-not-allowed`}
         >
           {enCours
             ? "Un instant…"
@@ -651,6 +718,12 @@ export function EcranAuthentification({
         </button>
       </form>
 
+      {/*  ██ §B6 (nº 788) — ELLE NE PARLE QU'À QUI CRÉE UN COMPTE ██
+           Elle s'affichait AUSSI sous « Me connecter », où elle
+           annonçait à quelqu'un qui a déjà un compte les conditions
+           d'une création qu'il ne fait pas. Le propriétaire l'a vue ;
+           elle reste à la création, mot pour mot. */}
+      {creer && (
       <p className="mt-8 text-center text-[13px] leading-relaxed text-sombre-texte-doux">
         En créant un compte, tu acceptes les{" "}
         <Link href="/mentions-legales" className="text-primaire hover:underline">
@@ -658,6 +731,7 @@ export function EcranAuthentification({
         </Link>
         . Ton adresse ne sert qu&apos;à ton compte — jamais à de la publicité.
       </p>
+      )}
     </main>
   );
 }
