@@ -242,7 +242,49 @@ function demarrerEcoute() {
   void (async () => {
     try {
       const supabase = await clientSupabaseALaDemande();
+      /**
+       * ██ §1 (nº 795) — UN SILENCE N'EST PAS UNE DÉCONNEXION ██
+       * ------------------------------------------------------------
+       * LE DÉFAUT DU PROPRIÉTAIRE : un onglet laissé OUVERT SANS
+       * ACTIVITÉ trente à soixante minutes finissait déconnecté, sans
+       * que personne n'ait rien demandé.
+       *
+       * LA CAUSE, ET ELLE TIENT EN UNE LIGNE — CELLE-CI. Elle posait
+       * `null` pour TOUTE émission sans session, sans distinguer :
+       *  · un vrai départ (on a cliqué « Se déconnecter ») ;
+       *  · un renouvellement qui n'a PAS ABOUTI. Et il n'aboutit pas
+       *    dans deux situations parfaitement ordinaires : le navigateur
+       *    GÈLE les minuteries d'un onglet caché, si bien que le jeton
+       *    d'accès (une heure) meurt sans avoir été renouvelé ; et un
+       *    portable qui sort de veille réveille l'onglet AVANT que le
+       *    Wi-Fi ne soit revenu, si bien que la première tentative de
+       *    renouvellement échoue faute de réseau.
+       * Dans les deux cas la SESSION N'EST PAS PERDUE — le jeton de
+       * reprise est intact dans le cookie, valable des semaines — mais
+       * l'écran annonçait « Se connecter ».
+       *
+       * LA RÈGLE, DÉSORMAIS : on ne vide l'écran que si LE COOKIE EST
+       * PARTI. Le cookie est le seul juge qui ne dépende ni du réseau,
+       * ni d'une minuterie, ni de l'ordre des événements — il se lit
+       * sur place, en trois lignes de texte (`lireSessionDuCookie`,
+       * l'écriture unique de ce module depuis la nº 632).
+       *  · le cookie a disparu  → c'est un vrai départ : on vide ;
+       *  · le cookie est encore là → c'est un renouvellement en échec :
+       *    ON NE TOUCHE À RIEN. La tentative suivante de Supabase (au
+       *    retour sur l'onglet, au retour du réseau, ou à son prochain
+       *    battement) réussira, et rendra la session à jour sans que
+       *    l'utilisateur ait rien vu.
+       *
+       * ⚠️ UNE VRAIE DÉCONNEXION MARCHE TOUJOURS, et c'est la seule
+       * chose qu'il fallait ne pas casser : `signOut()` EFFACE LE
+       * COOKIE avant d'annoncer le départ (le cookie EST le stockage de
+       * la session, @supabase/ssr). Le juge lit donc « plus personne »,
+       * et l'écran se vide comme avant.
+       * ⚠️ ET RIEN N'EST INVENTÉ ICI : aucune minuterie, aucun nouvel
+       * écouteur, aucune requête. On ne fait que refuser de conclure
+       * trop vite. */
       supabase.auth.onAuthStateChange((_evenement, session) => {
+        if (!session && lireSessionDuCookie()) return;
         poser(session?.user ?? null);
       });
       //  §1 (nº 674) — la relecture, ici et nulle part ailleurs : ce
