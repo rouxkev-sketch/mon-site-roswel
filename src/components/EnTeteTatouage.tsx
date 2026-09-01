@@ -1180,6 +1180,14 @@ export function EnTeteTatouage({
                 href="/devenir-tatoueur"
                 aria-label={libelleDeconnecte}
                 title={libelleDeconnecte}
+                /*  §2 (nº 793) — PAS DE PRÉCHARGEMENT. Les DEUX accès
+                    déconnectés (l'icône au doigt, la capsule au web)
+                    mènent à la MÊME page et vivent tous deux dans le
+                    document — l'un caché par la mise en page. Ils la
+                    préchargeaient donc DEUX FOIS, sur chaque page du
+                    site. C'est une page où l'on va délibérément, une
+                    fois : elle se charge très bien au clic. */
+                prefetch={false}
                 //  §1 (nº 439) — un ACCÈS DÉCONNECTÉ au compte : pendant
                 //  la phase muette d'un CONNECTÉ, il s'efface au profit
                 //  de la réserve neutre (voir data-reserve-compte).
@@ -1304,6 +1312,9 @@ export function EnTeteTatouage({
                 href="/devenir-tatoueur"
                 aria-label={libelleDeconnecte}
                 data-bouton-connexion=""
+                /*  §2 (nº 793) — PAS DE PRÉCHARGEMENT : voir la note du
+                    jumeau au doigt, quelques lignes plus haut. */
+                prefetch={false}
                 //  §1 (nº 439) — l'autre ACCÈS DÉCONNECTÉ (le badge du
                 //  web) : même effacement pendant la phase muette d'un
                 //  connecté — c'est LUI qui faisait la différence de

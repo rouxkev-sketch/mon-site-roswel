@@ -333,20 +333,37 @@ export default async function MiseEnPageTatouage({
                        text-[13px] text-sombre-texte-doux
                        sm:ml-auto sm:justify-end sm:gap-x-6 sm:gap-y-2"
           >
+            {/*  ██ §1 (nº 793) — LE PIED DE PAGE NE PRÉCHARGE PLUS ██
+                 ------------------------------------------------------
+                 MESURÉ AVANT DE TOUCHER À QUOI QUE CE SOIT : sur CHAQUE
+                 page du site, ces trois liens partaient chercher leur
+                 page à l'avance — et pas une fois, quatre à six fois
+                 chacun. Quatorze requêtes par page vue, pour trois
+                 pages où personne ne va en cherchant un tatoueur.
+                 C'était la moitié du gaspillage relevé à l'enquête
+                 nº 740 (« le pied de page ~4 »).
+                 ⚠️ CE QU'ON PERD, ET C'EST TOUT : un aller-retour de
+                 réseau au clic, sur trois pages qu'on ouvre une fois
+                 dans sa vie. Le lien fonctionne exactement pareil.
+                 ⚠️ LE PRÉCHARGEMENT DES CARTES N'EST PAS CONCERNÉ : lui
+                 est vital (nº 744), et il ne se règle pas ici. */}
             <Link
               href="/qui-sommes-nous"
+              prefetch={false}
               className="hover:text-sombre-texte transition-colors"
             >
               Qui sommes-nous
             </Link>
             <Link
               href="/contact"
+              prefetch={false}
               className="hover:text-sombre-texte transition-colors"
             >
               Contact
             </Link>
             <Link
               href="/mentions-legales"
+              prefetch={false}
               className="hover:text-sombre-texte transition-colors"
             >
               Mentions légales
