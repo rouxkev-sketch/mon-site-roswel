@@ -682,9 +682,14 @@ export function IconeLoupe({ taille = 20, classe = "" }: ProprietesIcone) {
  * OPTIQUE que l'icône Instagram à dimension égale : les deux logos
  * s'alignent harmonieusement partout (cartes, fiche, accueil).
  */
-export function IconeGoogle({ taille = 40 }: ProprietesIcone) {
+/*  §1 (nº 785) — ELLE ACCEPTE UNE CLASSE, comme toutes ses voisines.
+    Sans elle, impossible de lui donner la taille de l'appareil : les
+    `width`/`height` du SVG sont des attributs, et seule une règle CSS
+    peut les remplacer. La couleur, elle, ne se pilote pas — les quatre
+    teintes de Google sont écrites dans le dessin, c'est sa marque. */
+export function IconeGoogle({ taille = 40, classe = "" }: ProprietesIcone) {
   return (
-    <svg width={taille} height={taille} viewBox="-4 -4 56 56" aria-hidden>
+    <svg width={taille} height={taille} viewBox="-4 -4 56 56" className={classe} aria-hidden>
       <path
         fill="#EA4335"
         d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"

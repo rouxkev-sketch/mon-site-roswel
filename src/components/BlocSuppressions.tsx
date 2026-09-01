@@ -10,6 +10,9 @@ import {
 } from "@/lib/fiches-compte";
 import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
 import { Patience, SqueletteLignes } from "@/components/Squelette";
+//  §1 (nº 785) — la pastille de bout de ligne, partagée avec la page
+//  « Sécurité » : le propriétaire les veut identiques.
+import { PastilleAction } from "@/components/Pastille";
 
 /**
  * LES SUPPRESSIONS — en bas de la page Sécurité
@@ -163,31 +166,45 @@ export function BlocSuppressions() {
           {enSuppression.map((fiche) => (
             <div
               key={fiche.id}
-              className="flex flex-wrap items-center gap-x-4 gap-y-2
-                         rounded-lg bg-sombre-eleve px-4 py-2.5 min-h-[54px]"
+              /*  §1 (nº 785) — LE MÊME AIR QU'AILLEURS : `pl-4 pr-2`,
+                  pour que les huit pixels qui restent au-dessus et en
+                  dessous de la pastille se retrouvent aussi à sa droite.
+                  Voir la note de `Pastille`, où les trois nombres qui se
+                  tiennent (54, 38, 8) sont expliqués, et celle de
+                  `LIGNE_METHODE` (Securite) pour le retrait vertical et
+                  le `flex-wrap` qui sont partis d'ici pour la même
+                  raison : ils cassaient l'égalité des trois airs. */
+              className="flex items-center gap-x-4
+                         rounded-lg bg-sombre-eleve pl-4 pr-2 min-h-[54px]"
             >
               <span className="min-w-0 flex-1">
-                <span className="block text-[14px] font-semibold text-sombre-texte">
+                <span className="block truncate text-[14px] font-semibold text-sombre-texte">
                   {fiche.nom}
                 </span>
+                {/*  §1 (nº 785) — « Suppression le … », plus
+                     « Suppression DÉFINITIVE le … » (consigne). Le mot
+                     alourdissait une ligne qui porte déjà sa date, et
+                     ce qu'il ajoutait — que c'est sans retour — est
+                     précisément ce que le bouton d'à côté dément tant
+                     qu'il est là. */}
                 <span className="block text-[12.5px] text-sombre-texte-doux">
-                  Suppression définitive le{" "}
+                  Suppression le{" "}
                   {new Date(fiche.purge_le as string).toLocaleDateString(
                     "fr-FR"
                   )}
                 </span>
               </span>
-              <button
-                type="button"
+              {/*  §1 (nº 785) — « Annuler », plus « Annuler la
+                   suppression » : la ligne dit déjà de quoi il s'agit.
+                   Le titre le redit à qui survole, et aux lecteurs
+                   d'écran, pour qui ce mot voyage parfois seul. */}
+              <PastilleAction
                 disabled={enCours}
                 onClick={() => demanderSuppressionFiche(fiche.id, true)}
-                className="rounded-full bg-sombre-eleve-clair px-4 min-h-[38px]
-                           text-[13px] font-semibold text-sombre-texte
-                           hover:text-primaire
-                           transition-colors disabled:opacity-50"
+                titre={`Annuler la suppression de « ${fiche.nom} »`}
               >
-                Annuler la suppression
-              </button>
+                Annuler
+              </PastilleAction>
             </div>
           ))}
         </div>

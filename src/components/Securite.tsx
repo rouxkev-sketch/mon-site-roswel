@@ -18,6 +18,9 @@ import {
   messageErreurAuth,
 } from "@/lib/mot-de-passe";
 import { BlocSuppressions } from "@/components/BlocSuppressions";
+//  §1 (nº 785) — les deux pastilles de bout de ligne, écrites une
+//  seule fois et partagées avec le bloc des suppressions.
+import { PastilleAction, PastilleEtat } from "@/components/Pastille";
 import { JaugeMotDePasse } from "@/components/JaugeMotDePasse";
 import { Patience, SquelettePage } from "@/components/Squelette";
 import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
@@ -54,8 +57,10 @@ import { useUtilisateur } from "@/lib/use-utilisateur";
  *     dans lib/connexion-google, qui refuse aussi. Sans mot de passe,
  *     retirer Google fermerait le compte à clé.
  *     ⚠️ AUCUNE TEINTE D'ÉTAT DANS CE BLOC (nº 784) : les encadrés ont
- *     le fond de tous les autres, actifs ou non, et « actif » comme
- *     « Délier » portent LA MÊME pastille (`PASTILLE_METHODE`).
+ *     le fond de tous les autres, actifs ou non.
+ *     ⚠️ « ACTIF » N'EST PAS UN BOUTON (nº 785) : même géométrie que
+ *     « Délier », mais fond blanc et aucun survol — un état, pas un
+ *     geste. Les deux vivent dans `components/Pastille`.
  *  4. LES SUPPRESSIONS — supprimer UNE fiche, ou LE compte, tout en bas
  *     (voir BlocSuppressions).
  *
@@ -96,25 +101,49 @@ const ERREUR =
   "rounded-lg border border-erreur/50 bg-erreur/10 px-4 py-3 text-[13px] leading-relaxed text-sombre-texte";
 
 /**
- * ██ §1 (nº 784) — LA PASTILLE DES MÉTHODES DE CONNEXION ██
+ * ██ §1 (nº 785) — LES DEUX LIGNES DE MÉTHODE, ET LEUR AIR ██
  * ==================================================================
- * « ACTIF » ET « DÉLIER » N'EN FONT PLUS QU'UNE, sur consigne : même
- * forme, même hauteur, même couleur. Ce qui les sépare, c'est ce
- * qu'elles disent — pas leur allure.
- * CE QUI VIVAIT ICI, ET QUI DÉSÉQUILIBRAIT LA LIGNE : « Actif » était
- * une petite pastille ROSE de 11 px, « Délier » un bouton gris de
- * 38 px de haut. Deux objets de tailles et de couleurs différentes
- * pour deux mentions de même rang, sur deux lignes voisines.
- * LA FORME RETENUE EST CELLE D'« ACTIF », LA COULEUR CELLE DE
- * « DÉLIER » (le gris élevé) — plus aucun rose dans ce bloc.
- * ⚠️ UNE SEULE ÉCRITURE POUR LES DEUX (piège nº 378) : c'est la seule
- * façon qu'elles restent identiques. Le bouton y ajoute ce qui
- * appartient à un bouton — le survol et l'état désactivé — et rien
- * d'autre.
+ * `pl-4` à gauche comme partout ailleurs sur la page (l'icône reste
+ * alignée sur les autres blocs), mais `pr-2` À DROITE : 8 px, soit
+ * exactement ce qui reste au-dessus et en dessous d'une pastille de
+ * 38 px dans une ligne de 54. Les trois côtés à l'identique, sur
+ * consigne — voir la note de `Pastille`, où les deux nombres vivent.
+ * ⚠️ CES TROIS VALEURS SE TIENNENT (54, 38, 8) : en changer une seule
+ * défait l'accord.
+ * ⚠️ AUCUN RETRAIT VERTICAL, ET C'EST LE POINT QUE LE BANC A CORRIGÉ :
+ * la ligne Google en portait un (`py-2`), hérité du temps où sa
+ * pastille était plus petite qu'elle. Son texte à deux étages fait
+ * 40,5 px — plus que les 38 de la pastille : les 8 px de retrait
+ * s'ajoutaient donc à cette hauteur-là au lieu de disparaître sous le
+ * `min-h`, la ligne montait à 56,5 px, et la pastille se retrouvait à
+ * 9,2 px du haut pour 8 à droite. Sans retrait, la hauteur est celle
+ * du `min-h` (54) et les trois airs valent 8.
+ * ⚠️ ET PAS DE `flex-wrap` NON PLUS : une pastille qui passe à la ligne
+ * n'a plus d'air du tout en bas. Le texte se comprime (`min-w-0
+ * flex-1`, `truncate`), ce qui est le bon arbitrage — un nom coupé se
+ * relit ailleurs, un alignement cassé se voit tout de suite.
+ * ⚠️ LES DEUX LIGNES LA PARTAGENT (piège nº 378) : e-mail et Google
+ * doivent rester au pixel l'une de l'autre.
  */
-const PASTILLE_METHODE =
-  "shrink-0 rounded-full bg-sombre-eleve-clair px-2.5 py-0.5 " +
-  "text-[11px] font-semibold uppercase tracking-wide text-sombre-texte";
+const LIGNE_METHODE =
+  "flex items-center gap-3 rounded-lg bg-sombre-eleve pl-4 pr-2 min-h-[54px]";
+
+/**
+ * ██ §1 (nº 785) — LA TAILLE DES ICÔNES DE MÉTHODE ██
+ * ------------------------------------------------------------------
+ * CELLES DE LA FENÊTRE « MON COMPTE », sur consigne : 26 px au doigt,
+ * 22 px au web (`REGLAGES_DOIGT` / `REGLAGES_WEB`, MenuEspace). Elles
+ * n'en faisaient que 20, les mêmes des deux côtés.
+ * ⚠️ L'APPAREIL SE LIT SUR `data-appareil`, JAMAIS SUR UNE LARGEUR
+ * (règle nº 60) : d'où les deux variantes `mobile:` / `not-mobile:`,
+ * qui s'excluent et n'ont pas de classe de base (règle nº 389).
+ * ⚠️ POURQUOI EN CSS ET PAS PAR L'ATTRIBUT `taille` : un attribut ne
+ * connaît pas l'appareil. Les `width`/`height` d'un SVG sont des
+ * attributs de présentation — la moindre règle CSS les remplace, et
+ * c'est ce qu'on fait ici.
+ */
+const ICONE_METHODE =
+  "shrink-0 mobile:w-[26px] mobile:h-[26px] not-mobile:w-[22px] not-mobile:h-[22px]";
 
 /** Un bloc de la page — la grammaire de `Section` du formulaire
     (nº 125 web, nº 128 partout) : le TITRE VIT AU-DESSUS de
@@ -584,10 +613,13 @@ export function Securite() {
                 autres encadrés de la page, actives ou non ; ce qui
                 change d'une ligne à l'autre se lit dans son texte et
                 dans sa pastille. */}
-            <li className="flex items-center gap-3 rounded-lg bg-sombre-eleve px-4 min-h-[54px]">
+            <li className={LIGNE_METHODE}>
               {/* §1 (nº 784) — le @ remplace le bouclier : cette ligne
-                  parle d'une ADRESSE, pas de la page qui la contient. */}
-              <IconeArobase taille={20} classe="shrink-0 text-sombre-texte-doux" />
+                  parle d'une ADRESSE, pas de la page qui la contient.
+                  §1 (nº 785) — et il porte le BLANC CASSÉ des icônes de
+                  « Mon compte » (`text-sombre-texte/80`), plus le gris
+                  doux qui le faisait passer pour éteint. */}
+              <IconeArobase taille={22} classe={`${ICONE_METHODE} text-sombre-texte/80`} />
               <span className="min-w-0 flex-1">
                 <span className="block text-[14.5px] font-semibold text-sombre-texte">
                   E-mail et mot de passe
@@ -598,7 +630,7 @@ export function Securite() {
                     : "Pas encore de mot de passe"}
                 </span>
               </span>
-              {aUnMotDePasse && <span className={PASTILLE_METHODE}>actif</span>}
+              {aUnMotDePasse && <PastilleEtat>actif</PastilleEtat>}
             </li>
 
             {/* ██ §3 (nº 783) — GOOGLE : LIER, DÉLIER ██
@@ -618,13 +650,8 @@ export function Securite() {
                 se connecter et lier ne sont pas le même geste, et les
                 confondre ferait changer de compte. */}
             {googleDejaLie ? (
-              <li
-                className="flex flex-wrap items-center gap-x-3 gap-y-2
-                           rounded-lg bg-sombre-eleve px-4 py-2.5 min-h-[54px]"
-              >
-                <span className="shrink-0">
-                  <IconeGoogle taille={20} />
-                </span>
+              <li className={LIGNE_METHODE}>
+                <IconeGoogle taille={22} classe={ICONE_METHODE} />
                 <span className="min-w-0 flex-1">
                   <span className="block text-[14.5px] font-semibold text-sombre-texte">
                     Google
@@ -636,8 +663,7 @@ export function Securite() {
                   </span>
                 </span>
                 {aUnMotDePasse ? (
-                  <button
-                    type="button"
+                  <PastilleAction
                     onClick={async () => {
                       setErreurGoogle(null);
                       setDelierEnCours(true);
@@ -646,12 +672,11 @@ export function Securite() {
                       if (souci) setErreurGoogle(souci);
                     }}
                     disabled={delierEnCours}
-                    className={`${PASTILLE_METHODE} transition-colors hover:text-primaire disabled:opacity-50`}
                   >
                     {delierEnCours ? "Un instant…" : "Délier"}
-                  </button>
+                  </PastilleAction>
                 ) : (
-                  <span className={PASTILLE_METHODE}>actif</span>
+                  <PastilleEtat>actif</PastilleEtat>
                 )}
               </li>
             ) : (
@@ -674,9 +699,7 @@ export function Securite() {
                              hover:bg-sombre-eleve-clair
                              disabled:opacity-55 disabled:cursor-not-allowed"
                 >
-                  <span className="shrink-0">
-                    <IconeGoogle taille={20} />
-                  </span>
+                  <IconeGoogle taille={22} classe={ICONE_METHODE} />
                   {googleEnCours ? "Un instant…" : "Lier mon compte Google"}
                 </button>
               </li>
