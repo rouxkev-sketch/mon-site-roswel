@@ -45,6 +45,37 @@ import { PastilleAction, TEXTE_BOUT_DE_LIGNE } from "@/components/Pastille";
  * un geste irréversible : le mot « Supprimer » des boutons, et la
  * fenêtre de confirmation.
  */
+/**
+ * ██ LE SURTITRE D'UN GROUPE (passe nº 789) ██
+ * ==================================================================
+ * La zone « Supprimer » empilait jusqu'à trois sortes d'encadrés sans
+ * rien pour les distinguer : ceux qui s'effacent, ceux qu'on peut
+ * effacer, et le compte. Trois natures, une seule pile.
+ * TROIS SURTITRES les séparent désormais — « EN COURS », « PORTFOLIO »,
+ * « COMPTE » —, gris, en majuscules, calés à gauche au-dessus de leur
+ * groupe.
+ *
+ * ⚠️ UN SEUL PAR GROUPE, quel qu'en soit le contenu : « PORTFOLIO »
+ * coiffe la pile entière, même à cinq portfolios. Ce n'est pas une
+ * étiquette de ligne, c'est un nom de section.
+ * ⚠️ UN GROUPE VIDE N'EN PORTE PAS. Ils apparaissent et disparaissent
+ * avec ce qu'ils annoncent : lancer la suppression du dernier
+ * portfolio fait passer « PORTFOLIO » à « EN COURS », et l'annuler
+ * fait l'inverse.
+ * ⚠️ UNE SEULE ÉCRITURE (piège nº 378) : trois copies d'un même
+ * surtitre finiraient par ne plus se ressembler.
+ */
+function Surtitre({ children }: { children: React.ReactNode }) {
+  return (
+    <h3
+      className="mb-2 px-1 text-[12px] font-semibold uppercase
+                 tracking-[0.08em] text-sombre-texte-doux"
+    >
+      {children}
+    </h3>
+  );
+}
+
 export function BlocSuppressions() {
   const { fiches, recharger, chargement } = useFichesDuCompte();
 
@@ -150,18 +181,30 @@ export function BlocSuppressions() {
           Supprimer
         </h2>
       </div>
-      {/* UNE SEULE COLONNE, UN SEUL ÉCART (passe nº 134) : 16 px entre
-          chaque ligne — exactement la marge qui sépare deux champs du
-          bloc « Changer de mot de passe » (gap-4). Les intertitres
-          « Supprimer un portfolio » et « Supprimer le compte » ont
-          disparu : chaque ligne porte son nom, le titre du bloc suffit. */}
-      <div className="mt-3 flex flex-col gap-4 bg-sombre-carte rounded-xl px-4 py-6 sm:px-7 sm:py-7">
+      {/* UN ÉCART DE LIGNE, UN ÉCART DE SECTION (passe nº 134, revu
+          nº 789). Les lignes d'un même groupe gardent leurs 16 px —
+          la marge qui sépare deux champs du bloc « Changer de mot de
+          passe ». Mais LES GROUPES, eux, prennent 32 px : c'est la
+          consigne du propriétaire, « un surtitre ne doit jamais être
+          collé à l'encadré du groupe précédent ».
+          ⚠️ LE RAPPORT EST CE QUI COMPTE, ET IL EST DE QUATRE POUR UN :
+          32 px au-dessus d'un surtitre, 8 px entre lui et son encadré
+          (le `mb-2` de `Surtitre`). Un titre doit toucher ce qu'il
+          nomme et se détacher de ce qui précède ; l'inverse le
+          rattacherait au groupe du dessus.
+          Les intertitres en phrase (« Supprimer un portfolio »,
+          « Supprimer le compte ») avaient disparu à la nº 134 ; ce qui
+          revient n'est pas eux — ce sont des noms de section, en un
+          mot, gris et discrets. */}
+      <div className="mt-3 flex flex-col gap-8 bg-sombre-carte rounded-xl px-4 py-6 sm:px-7 sm:py-7">
 
       {/* ---------- LES SUPPRESSIONS EN COURS ----------
           En tête, parce que c'est ce qui presse : le délai court.
           SEULES LIGNES À DEUX ÉTAGES : la date de l'effacement
           définitif est une information qu'on ne peut pas taire. */}
       {enSuppression.length > 0 && (
+        <section>
+          <Surtitre>En cours</Surtitre>
         <div className="flex flex-col gap-4">
           {enSuppression.map((fiche) => (
             <div
@@ -215,6 +258,7 @@ export function BlocSuppressions() {
             </div>
           ))}
         </div>
+        </section>
       )}
 
       {/* ---------- LES PORTFOLIOS QU'ON PEUT ENCORE SUPPRIMER ----------
@@ -229,14 +273,28 @@ export function BlocSuppressions() {
       {chargement ? (
         //  La silhouette des lignes qui viennent (passe nº 118) —
         //  `eleve` : on est DANS une carte, le ton monte d'un cran.
+        //  ⚠️ SANS SURTITRE (nº 789) : on ne nomme pas un groupe dont
+        //  on ignore encore le contenu.
         <Patience>
           <SqueletteLignes nombre={2} ton="eleve" />
         </Patience>
       ) : encoreSupprimables.length === 0 ? (
-        <p className="text-[13px] text-sombre-texte-doux">
-          Aucun portfolio à supprimer.
-        </p>
+        /*  ██ §1 (nº 789) — LE GROUPE VIDE NE PORTE PAS SON NOM ██
+            Consigne : « un groupe vide n'affiche pas son titre ».
+            ⚠️ ET LA PHRASE NE SURVIT QUE SI ELLE EST VRAIE : « Aucun
+            portfolio à supprimer » ne vaut que lorsqu'il n'y en a
+            AUCUN, nulle part. S'il y en a un et qu'il est justement en
+            train de s'effacer — il est juste au-dessus, sous « EN
+            COURS » —, la phrase dirait le contraire de ce que l'écran
+            montre. Elle disparaît alors avec son groupe. */
+        enSuppression.length === 0 && (
+          <p className="text-[13px] text-sombre-texte-doux">
+            Aucun portfolio à supprimer.
+          </p>
+        )
       ) : (
+        <section>
+          <Surtitre>Portfolio</Surtitre>
         <ul className="flex flex-col gap-4">
           {encoreSupprimables.map((fiche) => (
             <li
@@ -280,6 +338,7 @@ export function BlocSuppressions() {
             </li>
           ))}
         </ul>
+        </section>
       )}
 
       {/* ---------- LE COMPTE — LA MÊME LIGNE QUE LES PORTFOLIOS ----
@@ -287,6 +346,12 @@ export function BlocSuppressions() {
           « Supprimer » à l'opposé. Les deux phrases d'explication ont
           disparu — ce qui se passe (le délai, l'annulation) se lit
           dans la fenêtre de confirmation, au moment où ça compte. */}
+      <section>
+        {/*  §1 (nº 789) — CELUI-CI NE DISPARAÎT JAMAIS : il n'y a qu'un
+             compte, et il est toujours là. Les deux autres surtitres
+             vont et viennent avec leur contenu ; celui-ci est le seul
+             qui ne dépende de rien. */}
+        <Surtitre>Compte</Surtitre>
       <div
         className="flex items-center gap-x-4
                    rounded-lg bg-sombre-eleve pl-4 pr-0 min-h-[54px]"
@@ -307,7 +372,13 @@ export function BlocSuppressions() {
           Supprimer
         </button>
       </div>
+      </section>
 
+      {/*  §A3 (nº 788) — CE PAVÉ ROUGE-CI RESTE, ET C'EST VOULU : il ne
+           reproche rien à un champ, il annonce qu'une OPÉRATION a
+           échoué (le serveur n'a pas répondu, la suppression n'a pas
+           abouti). Le standard de la nº 788 vise les erreurs de SAISIE,
+           qui ont un champ à désigner ; celle-ci n'en a aucun. */}
       {erreur && (
         <p
           role="alert"
