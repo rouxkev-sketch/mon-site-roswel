@@ -991,6 +991,15 @@ function repondre(req, res, u, brut) {
       codeRecu.startsWith("code-google-");
     const googleNeuf = codeRecu.endsWith("-neuf");
     if (parGoogle) courriel = googleNeuf ? "neuf@gmail.test" : "banc@yokofolio.test";
+    /*  §1 (nº 790) — LE COMPTE ADMIN, POUR ÉPROUVER LE VERROU DE /dev.
+        `COURRIEL_GOOGLE=<adresse>` fait entrer la doublure sous CETTE
+        adresse-là. C'est le seul moyen d'ouvrir une session dont
+        `estCourrielAdmin` dit oui : la liste des administrateurs est
+        une constante du code (config/tatouage), pas une variable
+        d'environnement. Sans ce réglage, rien ne change. */
+    if (parGoogle && process.env.COURRIEL_GOOGLE) {
+      courriel = process.env.COURRIEL_GOOGLE;
+    }
     const identifiant = parGoogle && googleNeuf
       ? "eeee0000-0000-4000-8000-00000goog999"
       : "eeee0000-0000-4000-8000-0000000ent03";

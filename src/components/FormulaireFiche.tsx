@@ -117,14 +117,12 @@ import { MANQUE, texteErreur } from "@/lib/erreurs-formulaire";
 import { OngletsLigne } from "@/components/OngletsLigne";
 import { slugFiche, slugifier } from "@/lib/slug";
 import type { Tatoueur } from "@/lib/tatoueurs";
-import { mecanismeCoupe } from "@/lib/variantes-essai";
 import {
   chargerFichesDuCompte,
   ficheActive,
   memoriserFiche,
 } from "@/lib/fiches-compte";
 //  §1 (nº 660) — la trace permanente : ce défilement se signe.
-import { noterNavigation } from "@/lib/boite-noire";
 //  §1 (nº 718) — les deux variantes de l'avatar : leur nommage vit dans
 //  lib/avatar-variantes, leur fabrication dans la réduction du site.
 import {
@@ -1271,9 +1269,6 @@ export function FormulaireFiche() {
       créer une de plus. Sans rien, on reprend la dernière retenue. */
   const ficheDemandee = parametres.get("fiche");
   useEffect(() => {
-    noterNavigation(
-      `SCROLLTO · FormulaireFiche · vers 0 · page à ${Math.round(window.scrollY)} avant`
-    );
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, [vueApercuDemandee]);
 
@@ -1345,9 +1340,7 @@ export function FormulaireFiche() {
     //  passage les marques que le site pose dans l'étape (le filet
     //  `retourReconstruit`, l'étape d'une surface refermable), et
     //  le retour ne savait plus où il en était.
-    if (!mecanismeCoupe("nettoyages")) {
-      window.history.replaceState(window.history.state, "", propre.toString());
-    }
+    window.history.replaceState(window.history.state, "", propre.toString());
     setPhotosEnRelecture(photosDemandees);
     setAnnonceValidation(true);
   }, [annonceDemandee, photosDemandees, vueApercuDemandee]);
@@ -1399,9 +1392,6 @@ export function FormulaireFiche() {
       if (vueApercuDemandee) return;
       // ON REMONTE, ET C'EST TOUT. Rouvrir l'annonce ici était l'une
       // des trois portes par lesquelles elle revenait sans cesse.
-      noterNavigation(
-      `SCROLLTO · FormulaireFiche · vers 0 · page à ${Math.round(window.scrollY)} avant`
-    );
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     }
     window.addEventListener("yokofolio-modification-demandee", surDemande);
@@ -1902,10 +1892,6 @@ export function FormulaireFiche() {
     const poser = () => {
       const element = document.getElementById(premiere[1]);
       if (!element) return;
-      noterNavigation(
-        `SCROLLINTOVIEW · FormulaireFiche (champ en faute) · ` +
-          `page à ${Math.round(window.scrollY)} avant`
-      );
       element.scrollIntoView({ behavior: "smooth", block: "center" });
     };
     requestAnimationFrame(() => requestAnimationFrame(poser));

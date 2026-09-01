@@ -40,30 +40,11 @@ import { GardeSaisie } from "@/components/GardeSaisie";
 import { RetourGaranti } from "@/components/RetourGaranti";
 import { scriptAvantPeinture } from "@/lib/script-avant-peinture";
 import { chargerStylesAjoutes } from "@/lib/styles-ajoutes";
-import { SondeClavier } from "@/components/SondeClavier";
 import { SondeNavigation } from "@/components/SondeNavigation";
 import { VoileDeLaPage } from "@/components/VoileDeLaPage";
-import { SondeFiltres } from "@/components/SondeFiltres";
-import { SondeVerre } from "@/components/SondeVerre";
-import { SondeRetour } from "@/components/SondeRetour";
-//  §1 (nº 654) — la boîte noire de navigation : l'écoute permanente
-//  et sa lecture après coup.
-import { BoiteNoireNavigation } from "@/components/BoiteNoireNavigation";
-import { SondeBoiteNoire } from "@/components/SondeBoiteNoire";
-//  §2 (nº 660) — le témoin des déplacements constatés de la page.
-import { ObservateurDeplacements } from "@/components/ObservateurDeplacements";
-//  §1 (nº 670) — le témoin des requêtes de page : il dit si le
-//  serveur a été interrogé, ou si la page vient d'une réserve.
-import { TemoinDesRequetes } from "@/components/TemoinDesRequetes";
 //  §1 (nº 679) — la sonde de vitesse : `?sonde-vitesse=1`. Éteinte,
 //  elle rend `null` ET n'arme pas son module — pas un écouteur.
 import { SondeVitesse } from "@/components/SondeVitesse";
-import { SondeBascule } from "@/components/SondeBascule";
-import { SondeCarrousel } from "@/components/SondeCarrousel";
-import { SondeCartes } from "@/components/SondeCartes";
-import { SondeRemontee } from "@/components/SondeRemontee";
-import { SondeHistorique } from "@/components/SondeHistorique";
-import { SondeClic } from "@/components/SondeClic";
 import { COMPTES_YOKOFOLIO } from "@/config/tatouage";
 
 /**
@@ -156,24 +137,15 @@ export default async function MiseEnPageTatouage({
          script d'avant peinture + la garde CSS (`data-compte`,
          globals.css) — aucun état faux peint, promesse nº 203 tenue
          autrement (voir EnTeteTatouage et FournisseurSession) ;
-       · `sec-fetch-dest` (sonde du retour) — plus relevable sans
-         en-têtes : la sonde reçoit la mention, composant inchangé ;
-       · LE NU TOTAL (nº 354) — sa force serveur (retrait des
-         composants au rendu) est retirée avec ce prérendu ; sa marque
-         cliente reste (script d'avant peinture → data-variante), les
-         portes des mécanismes continuent de couper. Le banc a rendu
-         son verdict ; s'il refaut un jour une épreuve serveur, elle
-         sera refaite ciblée. */
+       · `sec-fetch-dest` (sonde du retour) et LE NU TOTAL (nº 354)
+         — deux instruments de banc, tous deux retirés à la nº 790 :
+         leur verdict est rendu. */
   const utilisateur = null;
   // LE DRAPEAU « DÉJÀ CONNECTÉ SUR CE NAVIGATEUR » (nº 203-§1a) — un
   // cookie, donc lisible ICI : le bouton « Se connecter » de la barre
   // est juste dès le HTML, sans correction après l'hydratation.
 
 
-  // ⚠️ POUR LA SONDE DU RETOUR, ET SEULEMENT POUR ELLE : l'en-tête que
-  // le TÉLÉPHONE a réellement envoyé. C'est la seule façon de le savoir
-  // — un `fetch` depuis la page en enverrait un autre.
-  const secFetchDest = "(page prérendue — en-tête non relevé au serveur)";
   /*  LE CATALOGUE DES STYLES, RELU AU RENDU (passe nº 122). Les styles
       nés d'une suggestion acceptée vivent en base ; ils sont posés ici,
       dans le registre du fichier de réglages, et transmis au navigateur
@@ -204,31 +176,18 @@ export default async function MiseEnPageTatouage({
 
   return (
     <>
-    {/* ⚠️ TEMPORAIRE — LA SONDE DE MESURE SUR VRAI IPHONE.
-        Elle ne s'arme QUE si l'adresse porte `?sonde=1` ; sinon elle
-        rend `null` et ne pose aucun écouteur. C'est le SEUL point de
-        branchement : pour la retirer, supprimer cette ligne, son
-        import, et le fichier src/components/SondeClavier.tsx.
-        ⚠️ ELLE EST HORS DE L'ENVELOPPE `data-fond`, ET C'EST VOULU :
-        quand la page de recherche est ouverte, cette enveloppe quitte
-        le flux (voir globals.css) — la sonde y aurait disparu au
-        moment précis où l'on veut la lire. */}
-    <SondeClavier />
     {/* LE JOURNAL DE BORD (nº 272-§2) — PERMANENT, lui : le témoin
         qui survit à l'écran noir. Il note côté serveur (fichier
-        journal-de-bord.ndjson, en développement — voir la route) les
-        chargements, navigations, erreurs et bascules de session, au
-        fil de l'eau ; et son coupe-circuit arrête les boucles de
-        redirection au lieu de laisser le site clignoter jusqu'à
-        mourir. Aucun rendu, aucun effet sur le site. */}
+        journal-de-bord.ndjson — voir la route, désormais réservée au
+        compte admin) les chargements, navigations, erreurs et bascules
+        de session, au fil de l'eau ; et son coupe-circuit arrête les
+        boucles de redirection au lieu de laisser le site clignoter
+        jusqu'à mourir. Aucun rendu, aucun effet sur le site.
+        ⚠️ IL RESTE APRÈS LE MÉNAGE DE LA nº 790, et c'est délibéré : il
+        ne vise AUCUN défaut précis (il enregistre tout ce qui arrive),
+        et il est le SEUL à dire ce que le serveur voyait au même
+        instant. Il s'allume au tableau de bord `/dev`. */}
     <JournalDeBord />
-    {/* ⚠️ TEMPORAIRE — LA SONDE DE NAVIGATION (`?sonde-nav=1`). Elle
-        MESURE chez le propriétaire (retour arrière, barre fixe,
-        remontée des champs) et ne corrige rien. Pour la retirer :
-        cette ligne, son import, et le fichier
-        src/components/SondeNavigation.tsx.
-        HORS de l'enveloppe `data-fond`, comme les autres sondes : la
-        page de recherche la ferait disparaître au moment de lire. */}
     {/*  §2 (nº 293) — LE VOILE DE LA PAGE. Monté une seule fois pour
         tout le site tatouage : il ne rend rien tant qu'aucune fenêtre
         ni aucun menu ne l'a demandé, et il vit dans un PORTAIL au
@@ -236,145 +195,30 @@ export default async function MiseEnPageTatouage({
         leur ancêtre (le piège du nº 234).
         HORS de l'enveloppe `data-fond`, comme les sondes. */}
     <VoileDeLaPage />
+    {/* ██ §3 (nº 790) — CE QUI VIVAIT ICI, ET QUI EST PARTI ██
+        ------------------------------------------------------------
+        Douze sondes se montaient à cet endroit, chacune posée pour UN
+        défaut précis, et chacune ayant rendu son verdict depuis :
+        clavier (734-736), filtres (167), verre (169), bascule (173),
+        carrousel (218), cartes (224), remontée (330), historique
+        (331), clic (335), retour, boîte noire et ses deux témoins
+        (654-670). Leur liste « CHANTIERS OUVERTS — À RETIRER AVANT LA
+        MISE EN LIGNE » vivait dans lib/navigation-session ; elle est
+        soldée. Le rapport de la passe dit qui part et pourquoi.
+        IL EN RESTE DEUX, et pour la même raison toutes les deux :
+        elles ne visent aucun défaut, ce sont des INSTRUMENTS DE MESURE
+        que les passes suivantes (service worker, préchargements) vont
+        employer. Elles n'affichent rien tant qu'on ne les arme pas. */}
+    {/* ⚠️ LA SONDE DE NAVIGATION (`?sonde-nav=1`). Elle MESURE chez le
+        propriétaire (retour arrière, barre fixe, remontée des champs)
+        et ne corrige rien. HORS de l'enveloppe `data-fond`, comme la
+        sonde de vitesse : la page de recherche la ferait disparaître
+        au moment de lire. */}
     <SondeNavigation />
-    {/* ⚠️ TEMPORAIRE — LA SONDE DES FILTRES (`?sonde-filtres=1`). Elle
-        mesure le panneau réellement ouvert chez le propriétaire (marges
-        gauche, haute à l'encre, basse) et DIT QUEL FICHIER le rend.
-        Pour la retirer : cette ligne, son import, et le fichier
-        src/components/SondeFiltres.tsx. */}
-    <SondeFiltres />
-    {/* ⚠️ TEMPORAIRE — LA SONDE DU VERRE (`?sonde-verre=1`). Elle dit
-        pourquoi le flou de la barre est annulé chez le propriétaire :
-        elle déroule la chaîne des parents et signale ce qui isole.
-        Pour la retirer : cette ligne, son import, et le fichier
-        src/components/SondeVerre.tsx. */}
-    <SondeVerre />
-    {/* ⚠️ TEMPORAIRE — LA SONDE-JOURNAL DE LA BASCULE
-        (`?sonde-bascule=1`, nº 173). Elle ENREGISTRE, elle ne corrige
-        rien : les clics sur les deux boutons de bascule, les
-        changements de fenêtre et de viewport visuel, la détection
-        d'appareil, et surtout les MONTAGES/DÉMONTAGES de la mosaïque et
-        de son conteneur de page, avec un compteur d'instances. Aucun
-        état React : le journal vit dans lib/journal-bascule et s'écrit
-        directement dans le nœud — il ne peut pas déranger ce qu'il
-        observe. Pour la retirer : cette ligne, son import, le fichier
-        src/components/SondeBascule.tsx, le module
-        src/lib/journal-bascule.ts et les appels à `noter…`.
-        HORS de l'enveloppe `data-fond`, comme les autres sondes. */}
-    <SondeBascule />
-    {/* ⚠️ TEMPORAIRE — LA SONDE DU CARROUSEL ET DU PORTFOLIO
-        (`?sonde-carrousel=1`, nº 218-§1). Deux défauts ont résisté aux
-        passes 210, 214, 216 et 217 — le scintillement en fin de
-        défilement, et le portfolio qui se détraque en enchaînant les
-        sélecteurs. Elle ENREGISTRE et ne corrige rien : séries
-        demandées et reçues, montages/démontages du carrousel et du
-        zoom avec compteur d'instances, observateurs et écouteurs
-        actifs, poses d'indice avec leur origine, état du conteneur,
-        photos chargées ou vides, et tout ce qui apparaît ou disparaît
-        dans les 300 ms suivant l'arrêt d'une photo. Aucun état React :
-        le journal vit dans lib/journal-carrousel et s'écrit directement
-        dans le nœud — il ne peut pas déranger ce qu'il observe. Pour la
-        retirer : cette ligne, son import, le fichier
-        src/components/SondeCarrousel.tsx, le module
-        src/lib/journal-carrousel.ts et les appels qui le nomment
-        (CarrouselPortfolio, ZoomPincement, ContenuFiche).
-        HORS de l'enveloppe `data-fond`, comme les autres sondes. */}
-    <SondeCarrousel />
-    {/* ⚠️ TEMPORAIRE — LA SONDE DES CARTES (`?sonde-cartes=1`,
-        nº 224-§5). Elle relève, à chaque « Voir plus de portfolios » :
-        `scrollY` avant / après / après 1 s, le nombre de cartes
-        montées, de nœuds du document, d'images portant un `src` réel,
-        d'observateurs vivants, et la mémoire du tas quand le
-        navigateur la donne. Elle mesure, elle ne corrige rien : les
-        deux défauts qu'elle éclaire — la page qui bouge, l'onglet que
-        Chrome iOS tue vers 92 cartes — ne se produisent que sur le
-        téléphone du propriétaire. Aucun état React : le journal vit
-        dans lib/journal-cartes et s'écrit directement dans le nœud.
-        Pour la retirer : cette ligne, son import, le fichier
-        src/components/SondeCartes.tsx, le module
-        src/lib/journal-cartes.ts et les appels qui le nomment. */}
-    <SondeCartes />
-    {/* ⚠️ TEMPORAIRE — LA SONDE DE LA REMONTÉE (`?sonde-remontee=1`,
-        nº 330-§1). Elle expose au banc les VRAIES fonctions du gel et
-        de l'écriture unique « une liste neuve commence en haut », pour
-        que la correction se prouve EN VIVANT sur une page publique —
-        le seul panneau du bas du site vit derrière une session. Elle
-        n'affiche rien et ne modifie rien.
-        Pour la retirer : cette ligne, son import, le fichier
-        src/components/SondeRemontee.tsx, et sa mention au bandeau des
-        chantiers ouverts (src/lib/navigation-session.ts). */}
-    <SondeRemontee />
-    {/* ⚠️ TEMPORAIRE — LE JOURNAL DE L'HISTORIQUE (`?sonde-historique=1`,
-        nº 331-§4). Il note, dans l'ordre et EN TRAVERSANT LES PAGES,
-        chaque entrée posée, remplacée ou reprise, avec son adresse, son
-        origine et la profondeur de la pile — et se recopie d'un geste.
-        Il n'ajoute aucune entrée, ne gèle rien, ne défile pas et
-        n'entoure la page d'aucun conteneur.
-        Pour le retirer : cette ligne, son import, le fichier
-        src/components/SondeHistorique.tsx, le module
-        src/lib/journal-historique.ts, et sa mention au bandeau des
-        chantiers ouverts (src/lib/navigation-session.ts). */}
-    <SondeHistorique />
-    {/* ⚠️ TEMPORAIRE — LA SONDE DU CLIC (`?sonde-clic=1`, nº 335-§3).
-        Elle dit QUEL ÉLÉMENT reçoit réellement un toucher, avec toute
-        la pile empilée à ce point, le lien trouvé s'il y en a un, et
-        si l'événement est arrivé jusqu'au document ou s'il a été
-        arrêté en route. Elle n'annule rien et ne retarde rien.
-        Pour la retirer : cette ligne, son import, le fichier
-        src/components/SondeClic.tsx, et sa mention au bandeau des
-        chantiers ouverts (src/lib/navigation-session.ts). */}
-    <SondeClic />
-    {/* ⚠️ L'ÉCOUTEUR GLOBAL DE REMONTÉE EST SUPPRIMÉ (nº 162-§1). La
-        règle de la nº 155-§1 — « TOUS les champs du site remontent » —
-        est annulée : la remontée ne sert qu'à dégager de la place SOUS
-        un champ POUR SA LISTE DE SUGGESTIONS. Un champ sans liste n'en
-        a aucun besoin, et le navigateur fait déjà le nécessaire, en
-        plus discret. Les trois champs à liste l'arment eux-mêmes
-        (ChampLocalisation, RechercheFicheInscrite). */}
-    {/* ⚠️ TEMPORAIRE — LA SONDE DU RETOUR (`?sonde-retour=1`). Elle
-        mesure le cache de navigation sur le vrai iPhone et ne corrige
-        rien. Pour la retirer : cette ligne, son import, et le fichier
-        src/components/SondeRetour.tsx. */}
-    <SondeRetour
-      secFetchDest={secFetchDest}
-      enDeveloppement={process.env.NODE_ENV !== "production"}
-    />
-    {/* ⚠️ TEMPORAIRE — LA BOÎTE NOIRE DE NAVIGATION (nº 654). Deux
-        composants, et ils ne se ressemblent pas :
-         · `BoiteNoireNavigation` ÉCOUTE, toujours et en silence — les
-           clics de liens et les changements d'adresse s'écrivent dans
-           lib/boite-noire (mémoire de session, cinquante lignes) ;
-         · `SondeBoiteNoire` AFFICHE, et seulement quand l'adresse
-           porte `?sonde-boite-noire=1` — après coup, sur la page où
-           le défaut vient de frapper.
-        Le défaut visé est ALÉATOIRE : une sonde qu'on arme avant ne
-        le voit jamais. C'est pourquoi la trace tourne d'elle-même.
-        Pour les retirer : ces deux lignes, leurs imports, les fichiers
-        src/components/BoiteNoireNavigation.tsx et
-        src/components/SondeBoiteNoire.tsx, le module
-        src/lib/boite-noire.ts, et les appels à `noterNavigation`.
-        §2 (nº 660) — ET LE TÉMOIN DES DÉPLACEMENTS, troisième ligne :
-        il ne demande rien à personne, il REGARDE la page bouger dans
-        les trois secondes qui suivent un changement d'adresse. Il
-        n'affiche rien et ne déplace rien ; pour le retirer, cette
-        ligne, son import et
-        src/components/ObservateurDeplacements.tsx.
-        §1 (nº 670) — ET LE TÉMOIN DES REQUÊTES, quatrième ligne : à
-        chaque arrivée sur « /recherche », il écrit si une requête de
-        page est partie au serveur — et combien. C'est le fait qui
-        manquait pour trancher entre « le serveur a mal répondu » et
-        « une réserve du navigateur a resservi une copie » (nº 669). Il
-        n'affiche rien, ne déplace rien, ne provoque aucune requête ;
-        pour le retirer, cette ligne, son import et
-        src/components/TemoinDesRequetes.tsx. */}
-    <BoiteNoireNavigation />
-    <ObservateurDeplacements />
-    <TemoinDesRequetes />
-    <SondeBoiteNoire />
-    {/*  §1 (nº 679) — LA SONDE DE VITESSE, à côté de la boîte noire et
-         pour la même raison qu'elle est ici : elle doit couvrir TOUTES
-         les pages du groupe, donc vivre dans la mise en page. Éteinte,
-         elle rend `null` avant tout et n'arme rien. */}
+    {/*  §1 (nº 679) — LA SONDE DE VITESSE (`?sonde-vitesse=1`), ici
+         pour la même raison : elle doit couvrir TOUTES les pages du
+         groupe, donc vivre dans la mise en page. Éteinte, elle rend
+         `null` avant tout et n'arme rien. */}
     <SondeVitesse />
     <div
       // Marqueur du fond sombre — il double la règle CSS de

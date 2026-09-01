@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useRef } from "react";
 import Link from "next/link";
 import {
   CADRE_PHOTO_PORTFOLIO,
@@ -33,19 +33,7 @@ import { pincementRecent, usePincement } from "@/components/ZoomPincement";
 //  §1 (nº 517) — « ce qui est surligné est ce qui est copié »
 //  (nº 514) : la carte devient un lien qui CONTIENT son texte.
 import { garderLeTexteALaCopie } from "@/lib/copie-du-texte";
-//  ⚠️ TEMPORAIRE (nº 219-§1) — la sonde du carrousel compte les
-//  cartes vivantes : c'est la ligne qui dit si naviguer dans un
-//  portfolio reconstruit la mosaïque. Sans `?sonde-carrousel=1`,
-//  ces appels ne coûtent rien.
-import {
-  noterDemontage as noterDemontageCarte,
-  noterMontage as noterMontageCarte,
-} from "@/lib/journal-carrousel";
 import type { Tatoueur } from "@/lib/tatoueurs";
-//  ⚠️ TEMPORAIRE (nº 175-§6) — la sonde-journal note l'ouverture d'une
-//  fiche. Elle n'écrit RIEN sans `?sonde-bascule=1`.
-import { noter, sauvegarderMaintenant } from "@/lib/journal-bascule";
-import { mecanismeCoupe } from "@/lib/variantes-essai";
 //  §1 (nº 718) — la variante d'avatar à servir : la règle de
 //  nommage et le repli vivent dans lib/avatar-variantes.
 import { AVATAR_PETIT, sourceAvatar } from "@/lib/avatar-variantes";
@@ -319,14 +307,6 @@ function CarteTatoueurNue({
     styleDeLaCarte ? libelleStyle(styleDeLaCarte) : "",
     photoEnregistrable?.style ? photoEnregistrable.rendu : null
   );
-  /**
-   * §2 (nº 372) — LA CLÉ DE CETTE CARTE, pour la mémoire des photos.
-   * La même que celle de la mosaïque (`carrousel.cle`, sinon
-   * l'identifiant de la fiche — deux galeries d'un même artiste sont
-   * deux cartes), plus la photo que « Ma sélection » désigne : sur
-   * cette page, une même fiche peut avoir plusieurs cartes.
-   */
-  const cleDeLaCarte = `${tatoueur.carrousel?.cle ?? tatoueur.id}|${photoRecherche}`;
   /*  §1 (nº 445) — PLUS D'ÉTAT DE POSITION DANS LA CARTE : le
       carrousel parti, il n'y a plus de rang courant à tenir, ni de
       mémoire de photo à semer d'une visite à l'autre (le module qui la
@@ -373,19 +353,7 @@ function CarteTatoueurNue({
   const gestesPincement = usePincement({
     ecoute: zoneCarte,
     cible: cadrePhoto,
-    //  Les zooms des CARTES se comptent à part de celui de la fiche
-    //  (nº 219-§1) : le relevé doit pouvoir dire « zéro montage de
-    //  carte » quand on navigue dans un portfolio.
-    nom: "zoom (carte)",
   });
-
-  /*  SONDE (nº 219-§1) — LA CARTE EST-ELLE REMONTÉE ? Le relevé de la
-      nº 218 montrait vingt-quatre montages en bloc à chaque changement
-      de sélecteur : c'est ce compteur qui doit rester à plat. */
-  useEffect(() => {
-    noterMontageCarte("carte");
-    return () => noterDemontageCarte("carte");
-  }, []);
 
   /** L'ADRESSE DE LA FICHE — elle EMPORTE le style cherché (?style=…) :
       la fiche ouvre alors son carrousel sur la photo de CE style, la
@@ -429,10 +397,6 @@ function CarteTatoueurNue({
       sans retarder la navigation, et survit même au départ de la
       page. Jamais bloquant, jamais d'erreur visible. */
   function signalerClic() {
-    //  nº 353 — porte du banc (FAMILLE 2 du complément) : la balise
-    //  est la seule API de la chaîne du toucher — la couper dit si
-    //  elle consomme l'activation que l'auto-réparation dépense.
-    if (mecanismeCoupe("balise")) return;
     //  §2 (nº 725) — L'ENVOI EST L'ÉCRITURE UNIQUE, et elle tient le
     //  verrou : ce clic-ci et le montage de la fiche (CompteurConsultation)
     //  se rejoignent sur le même parcours et envoyaient DEUX requêtes
@@ -453,17 +417,6 @@ function CarteTatoueurNue({
       return;
     }
     signalerClic();
-    //  ⚠️ TEMPORAIRE (nº 175-§6) — LA SONDE-JOURNAL. On note QUELLE
-    //  fiche on ouvre et D'OÙ on part : sans la position de départ,
-    //  aucun retour ne peut être jugé. N'écrit rien sans
-    //  `?sonde-bascule=1`.
-    noter(
-      `OUVERTURE FICHE ${tatoueur.slug} · défilement ${Math.round(
-        window.scrollY
-      )} · depuis ${window.location.pathname}${window.location.search}`
-    );
-    //  Le journal part avec nous : la page suivante le relira.
-    sauvegarderMaintenant();
     // Nouvel onglet, clic du milieu… : on ne touche à rien.
     if (evenement.metaKey || evenement.ctrlKey || evenement.shiftKey || evenement.altKey) return;
 

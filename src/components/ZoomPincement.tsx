@@ -1,13 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-//  ⚠️ TEMPORAIRE (nº 218-§1) — la sonde du carrousel. Sans
-//  `?sonde-carrousel=1`, ces appels ne coûtent rien.
-import {
-  noterDemontage,
-  noterMontage,
-  ressource,
-} from "@/lib/journal-carrousel";
 
 /**
  * LE ZOOM AU PINCEMENT — deux doigts, comme sur Instagram
@@ -72,7 +65,6 @@ export function usePincement({
   cible,
   surPincement,
   arme = true,
-  nom = "zoom",
   sortirDuCadre = false,
 }: {
   /** L'élément qui REÇOIT les doigts (les gestionnaires retournés y
@@ -101,9 +93,6 @@ export function usePincement({
    * acquis sont gardés.
    */
   arme?: boolean;
-  /** Le nom porté au journal de la sonde — « zoom (carte) » compte à
-      part de « zoom (fiche) » (nº 219-§1). */
-  nom?: string;
   /**
    * §1 (nº 276) — SORTIR LA PHOTO DE SON CADRE DE DÉFILEMENT.
    * ------------------------------------------------------------------
@@ -182,12 +171,8 @@ export function usePincement({
     });
     //  SONDE (nº 218-§1) : un zoom armé = un écouteur `touchmove` NON
     //  PASSIF de plus. Le compteur dit d'un coup d'œil s'il en reste.
-    noterMontage(nom);
-    ressource("écouteur touchmove (non passif)", 1);
     return () => {
       element.removeEventListener("touchmove", bloquerDefilement);
-      ressource("écouteur touchmove (non passif)", -1);
-      noterDemontage(nom, actif.current ? "⚠️ PENDANT UN PINCEMENT" : "");
       /**
        * ⚠️ UN PINCEMENT NE SURVIT PAS AU DÉSARMEMENT (nº 217-§4)
        * ----------------------------------------------------------------
@@ -432,7 +417,6 @@ export function ZoomPincement({
   classe = "",
   surPincement,
   arme = true,
-  nom = "zoom",
   sortirDuCadre = false,
 }: {
   children: React.ReactNode;
@@ -448,7 +432,6 @@ export function ZoomPincement({
    * de l'immobilisation : le scintillement.
    */
   arme?: boolean;
-  nom?: string;
   /** §1 (nº 276) — voir `usePincement` : la photo du carrousel de la
       fiche sort de son cadre de défilement le temps du geste. */
   sortirDuCadre?: boolean;
@@ -459,7 +442,6 @@ export function ZoomPincement({
     cible: cadre,
     surPincement,
     arme,
-    nom,
     sortirDuCadre,
   });
 

@@ -10,10 +10,6 @@ import {
 //  sur Ma sélection à la nº 526 : c'est LE MÊME module, second
 //  branchement (une fiche n'a pas de boîte à lui donner).
 import { useGlissementLateralSurLaPage } from "@/lib/glissement-lateral";
-//  ⚠️ TEMPORAIRE (nº 218-§1) — la sonde du carrousel : elle veut
-//  savoir CE QUI A ÉTÉ DEMANDÉ (style, catégorie, rendu) juste avant
-//  ce que le carrousel reçoit. Sans `?sonde-carrousel=1`, ne coûte rien.
-import { noter as noterSonde } from "@/lib/journal-carrousel";
 import {
   //  §1 (nº 386) — `ARRONDI_ETIQUETTE` et `ECRITURE_TITRE_SECTION`
   //  sont partis avec la section « Pratique » : plus une seule
@@ -77,7 +73,6 @@ import {
 //  lit l'ordre des modes : voir `aDesLieuxAMontrer`, plus bas.
 import { modesOrdonnes } from "@/lib/modes-exercice";
 import type { Tatoueur } from "@/lib/tatoueurs";
-import { mecanismeCoupe } from "@/lib/variantes-essai";
 //  §2 (nº 377) — la hauteur de la barre du logo et le nom de la
 //  variable qui la porte jusqu'à la classe : une seule écriture, dans
 //  le module qui la détient déjà.
@@ -740,7 +735,6 @@ export function ContenuFiche({
 
   function remonterSousLaBarre() {
     if (document.documentElement.dataset.appareil !== "mobile") return;
-    noterSonde("REMONTÉE demandée (mobile)");
     const cible = positionSousLaPhoto();
     if (cible === null) return;
     //  Départ progressif, arrivée amortie, aucun rebond (§5b).
@@ -775,7 +769,6 @@ export function ContenuFiche({
       //  `positionSousLaPhoto` rend la position ABSOLUE à viser : si
       //  elle vaut encore la position courante, il n'y a rien à faire.
       if (cible === null || Math.abs(cible - window.scrollY) < 0.5) return;
-      noterSonde(`REMONTÉE recalée · ${window.scrollY} → ${cible}`);
       window.scrollTo({ top: cible, left: 0, behavior: "instant" });
       //  ⚠️ 520 ms : la durée du mouvement (400) et une marge. Plus
       //  court, on corrigerait EN COURS de route.
@@ -800,7 +793,6 @@ export function ContenuFiche({
    */
   function remonterEnHautDeLaPhoto() {
     if (document.documentElement.dataset.appareil !== "mobile") return;
-    noterSonde("REMONTÉE EN HAUT DE LA PHOTO (vignette)");
     //  On vise le HAUT de la photo, lu sur l'enveloppe — jamais un
     //  zéro écrit en dur : si quoi que ce soit vient un jour au-dessus
     //  d'elle, le repère suit sans qu'on ait à y revenir.
@@ -963,7 +955,6 @@ export function ContenuFiche({
    * preuve, à l'écran, que le mécanisme est bien parti.
    */
   function choisirOnglet(suivant: OngletAffiche) {
-    noterSonde(`SÉLECTEUR onglet → « ${suivant} »`);
     setOnglet(suivant);
     if (adresseALui && typeof window !== "undefined") {
       const p = new URLSearchParams(window.location.search);
@@ -1087,9 +1078,6 @@ export function ContenuFiche({
     //  DÉJÀ JOUÉ SUR CETTE ÉTAPE : un rechargement ou un retour ne
     //  rejoue rien. (L'état d'historique survit aux deux.)
     if (etape.profilJoue) return;
-    //  nº 353 — porte du banc : sans la marque, l'ancre peut rejouer
-    //  aux retours ; c'est le prix assumé de la variante.
-    if (mecanismeCoupe("profil")) return;
     //  ⚠️ DEUX ARGUMENTS, PAS TROIS : sans adresse, `replaceState`
     //  garde celle qui est là — ancre comprise. C'est tout le point.
     window.history.replaceState({ ...etape, profilJoue: true }, "");
@@ -2166,10 +2154,6 @@ export function ContenuFiche({
           //  défilement des galeries du doigt (et sa purge d'arrivée).
           slugTatoueur={tatoueur.slug}
           surSerie={(serie) => {
-            noterSonde(
-              `VIGNETTE demandée · style « ${serie.style} » · catégorie ` +
-                `« ${serie.nature} » · rendu « ${serie.rendu} »`
-            );
             surSerieChoisie(serie);
             //  §1 (nº 236) — UNE VIGNETTE DE STYLE CHANGE LES PHOTOS
             //  D'EN DESSOUS : la page remonte. Même mouvement, même

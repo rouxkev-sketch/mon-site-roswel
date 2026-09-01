@@ -267,13 +267,7 @@ export function GroupeBadges({
       >
         {titre}
       </p>
-      {/*  ⚠️ TEMPORAIRE (nº 610) — `data-rangee-badges` : c'est par cet
-           attribut, et rien d'autre, que la mesure du panneau des
-           filtres TROUVE la rangée. Le même procédé que le marqueur du
-           carrousel (nº 218-§1). Un attribut n'est ni une classe ni une
-           mise en page : rien ne bouge d'un pixel. Il part avec la
-           mesure. */}
-      <div data-rangee-badges="" className="mt-2.5 flex flex-wrap gap-2">
+      <div className="mt-2.5 flex flex-wrap gap-2">
         {children}
       </div>
     </div>

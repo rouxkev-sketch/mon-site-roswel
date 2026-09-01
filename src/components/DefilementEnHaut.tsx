@@ -15,11 +15,9 @@ import { souscrireAdresse } from "@/lib/adresse-courante";
 //  §1 (nº 653) — le chemin de la recherche, écrit une seule fois
 //  (nº 652), et le journal des sondes.
 import { estLaMosaique } from "@/lib/chemin-recherche";
-import { noter } from "@/lib/journal-bascule";
 //  §1 (nº 654) — la boîte noire : les mêmes décisions, écrites AUSSI
 //  dans la trace permanente. `noter` ne parle que sonde armée ;
 //  `noterNavigation` parle toujours. Aucune décision ne change.
-import { noterNavigation } from "@/lib/boite-noire";
 
 /**
  * ██ §1 (nº 653) — L'ACCUEIL ET LA RECHERCHE SONT UN MÊME ÉCRAN ██
@@ -300,11 +298,6 @@ export function DefilementEnHaut() {
     }
 
     if (estLaMosaique(venaitDeLaMosaique) && estLaMosaique(chemin)) {
-      const dit =
-        `DÉFILEMENT EN HAUT · évité · ${venaitDeLaMosaique} → ${chemin}` +
-        " (même écran : l'accueil et la recherche, nº 653)";
-      noter(dit);
-      noterNavigation(dit);
       return;
     }
 
@@ -322,9 +315,6 @@ export function DefilementEnHaut() {
       //  §1 (nº 653) — la sonde doit pouvoir distinguer « je me suis
       //  effacé » de « je n'ai pas joué ». Sans cette ligne, l'absence
       //  de remontée ne se lit nulle part.
-      const dit = `DÉFILEMENT EN HAUT · effacé · retour vers ${chemin}`;
-      noter(dit);
-      noterNavigation(dit);
       return;
     }
     // ⚠️ ET LA MÊME RÈGLE QUE LA MÉMOIRE DE NAVIGATION, sans quoi les
@@ -342,11 +332,6 @@ export function DefilementEnHaut() {
     // travail fait au bon moment. Mesuré : la page repartait à zéro.
     if (premiereFois && (arriveeQuiRestitue() || positionDejaPosee())) {
       //  §1 (nº 653) — même raison : on dit pourquoi on ne remonte pas.
-      const dit =
-        `DÉFILEMENT EN HAUT · effacé · ${chemin} (document né d'un retour,` +
-        " ou position déjà posée avant peinture)";
-      noter(dit);
-      noterNavigation(dit);
       return;
     }
     // La fenêtre de fiche est ouverte (ou vient de changer l'adresse) :
@@ -360,11 +345,6 @@ export function DefilementEnHaut() {
         consommateurs pour un jeton, ce serait une garantie perdue sur
         deux. */
     const voulue = arriveeEnHautVoulue();
-    const dit =
-      `DÉFILEMENT EN HAUT · remontée · ${chemin}` +
-      (voulue ? " · GARANTIE (arrivée en haut voulue)" : "");
-    noter(dit);
-    noterNavigation(dit);
     //  nº 361 — après la photo d'adieu du navigateur (voir l'en-tête).
     return remonterALAdresseCommise(chemin, voulue);
   }, [chemin]);

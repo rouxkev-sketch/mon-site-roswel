@@ -7,25 +7,6 @@ import { PhotoDeCarte, TAILLES_CARTE } from "@/components/PhotoDeCarte";
 import { ZoomPincement } from "@/components/ZoomPincement";
 import { CADRE_PHOTO_PORTFOLIO } from "@/config/tatouage";
 import type { PhotoGalerie } from "@/lib/photo-tatoueur";
-//  ⚠️ TEMPORAIRE (nº 218-§1) — la sonde du carrousel. Sans
-//  `?sonde-carrousel=1`, chacun de ces appels sort à sa première ligne
-//  et ne coûte rien. Pour la retirer : ces imports et les appels
-//  `noter…` / `ressource` ci-dessous.
-import {
-  inventaire,
-  noter,
-  noterArret,
-  noterDemontage,
-  noterMontage,
-  ressource,
-} from "@/lib/journal-carrousel";
-//  ⚠️ TEMPORAIRE (nº 615) — L'AUTRE JOURNAL, celui de la bascule : lui
-//  seul TRAVERSE LES PAGES (il se recopie dans la mémoire d'onglet), et
-//  la mesure de la nº 615 porte justement sur un enchaînement de
-//  plusieurs adresses. Sans `?sonde-bascule=1`, cet appel sort à sa
-//  première ligne et ne coûte rien. Pour le retirer : cet import et les
-//  deux appels `noterBascule` de la pose d'avant peinture.
-import { noter as noterBascule } from "@/lib/journal-bascule";
 
 /**
  * LE CARROUSEL DU PORTFOLIO — TOUTES les photos d'un ensemble
@@ -257,16 +238,6 @@ export function CarrouselPortfolio({
 }) {
   const n = photos.length;
   const surCarte = variante === "carte";
-
-  /* ---- SONDE (nº 218-§1) : ce carrousel vit-il, et depuis quand ? ---
-     Le compteur d'instances est la ligne que le propriétaire veut voir :
-     si un carrousel de fiche reste à deux, ou si le nombre grimpe en
-     enchaînant les sélecteurs, la cause du blocage est là. */
-  useEffect(() => {
-    if (surCarte) return;
-    noterMontage("carrousel");
-    return () => noterDemontage("carrousel");
-  }, [surCarte]);
 
   /**
    * §5 (nº 211) — LE CHARGEMENT DIFFÉRÉ DES CARTES, ET SA FIN (nº 368)
@@ -660,10 +631,6 @@ export function CarrouselPortfolio({
         carrousel reçoit RÉELLEMENT, en face de ce que la fiche croyait
         demander : c'est là qu'on verra « aucune photo affichée ». */
     if (!surCarte) {
-      noter(
-        `SÉRIE reçue · ${n} photo(s) · « ${styleLabel} » · cadre ` +
-          `${zone ? "présent" : "ABSENT"} │ ${inventaire()}`
-      );
     }
     if (!zone || n <= 1) return;
     /*  §2 (nº 308) — UNE NOUVELLE SÉRIE S'OUVRE SUR LA PHOTO DEMANDÉE,
@@ -712,8 +679,7 @@ export function CarrouselPortfolio({
           //  travers de l'élan du doigt — et l'on voyait passer la
           //  tranche d'une image.
           dernierPose.current = rang;
-          if (!surCarte) noter(`INDICE → ${rang} · origine DOIGT (défilement)`);
-          surChangement(rang);
+          if (!surCarte)           surChangement(rang);
         }
       },
       { root: zone, threshold: 0.6 }
@@ -721,7 +687,6 @@ export function CarrouselPortfolio({
     for (const colonne of colonnes.current) {
       if (colonne) observateur.observe(colonne);
     }
-    ressource("observateur intersection", 1);
 
     /*  SONDE (nº 218-§1) — L'ARRÊT DU DÉFILEMENT. C'est le repère des
         300 ms : la sonde note ensuite tout ce qui apparaît ou disparaît
@@ -733,27 +698,13 @@ export function CarrouselPortfolio({
       window.clearTimeout(silence);
       silence = window.setTimeout(() => {
         if (surCarte) return;
-        const images = zone.querySelectorAll("img");
-        let chargees = 0;
-        for (const image of images) {
-          if (image.complete && image.naturalWidth > 0) chargees += 1;
-        }
-        noterArret(
-          `scrollLeft ${Math.round(zone.scrollLeft)} · overflow ` +
-            `${getComputedStyle(zone).overflowX} · largeur ${zone.clientWidth} · ` +
-            `colonnes montées ${zone.children.length} · images ${images.length} ` +
-            `(chargées ${chargees}, vides ${images.length - chargees})`
-        );
       }, 120);
     };
     zone.addEventListener("scroll", auDefilement, { passive: true });
-    ressource("écouteur scroll", 1);
 
     return () => {
       observateur.disconnect();
-      ressource("observateur intersection", -1);
       zone.removeEventListener("scroll", auDefilement);
-      ressource("écouteur scroll", -1);
       window.clearTimeout(silence);
     };
     //  ⚠️ `indice` N'EST PAS DANS CETTE LISTE, ET NE DOIT PAS Y ÊTRE :
@@ -768,22 +719,9 @@ export function CarrouselPortfolio({
    * `offsetLeft` est la position que LE NAVIGATEUR a donnée à cette
    * colonne : on ne la calcule pas, on la lit.
    */
-  /*  ⚠️ LA VARIANTE, DANS UNE RÉFÉRENCE (nº 218-§1) : `allerA` est
-      appelée depuis un effet, et une fonction qui lit une VALEUR du
-      rendu en devient une dépendance. Une référence, non — et la
-      variante d'un carrousel ne change jamais de sa vie. La sonde ne
-      modifie donc pas les dépendances de l'effet qu'elle observe. */
-  const varianteRef = useRef(variante);
-  function allerA(rang: number, doux: boolean, origine = "code") {
+  function allerA(rang: number, doux: boolean) {
     const zone = cadre.current;
     const colonne = colonnes.current[rang];
-    if (varianteRef.current !== "carte") {
-      noter(
-        `INDICE → ${rang} · origine ${origine.toUpperCase()} · ` +
-          `cadre ${zone ? "présent" : "ABSENT"} · colonne ` +
-          `${colonne ? "présente" : "ABSENTE"}`
-      );
-    }
     if (!zone || !colonne) return;
     zone.scrollTo({
       left: colonne.offsetLeft,
@@ -805,7 +743,7 @@ export function CarrouselPortfolio({
     const colonne = colonnes.current[indice];
     if (!zone || !colonne) return;
     if (Math.abs(zone.scrollLeft - colonne.offsetLeft) > 1) {
-      allerA(indice, false, "code (fiche)");
+      allerA(indice, false);
     }
     dernierPose.current = indice;
   }, [indice, n]);
@@ -845,22 +783,6 @@ export function CarrouselPortfolio({
    * que personne n'avait demandé de déplacer.
    */
   useEffetAvantPeinture(() => {
-    /*  ⚠️ TEMPORAIRE (nº 615) — LA PISTE Nº 2 DU PROPRIÉTAIRE : « cette
-        pose, débornée des cartes à la nº 604, s'exécute-t-elle pendant
-        le glissement ? ». La ligne est datée par le journal ; la
-        comparer au POPSTATE le plus proche répond. Les CARTES sont
-        écartées (elles sont vingt-quatre par page, elles noieraient le
-        journal) — exactement la garde de `allerA`. */
-    if (varianteRef.current !== "carte") {
-      noterBascule(
-        `POSE AVANT PEINTURE · carrousel ${varianteRef.current} · indice ${indice} · ` +
-          `appareil ${
-            typeof document !== "undefined"
-              ? (document.documentElement.dataset.appareil ?? "(absent)")
-              : "(pas de document)"
-          }`
-      );
-    }
     if (typeof document !== "undefined") {
       if (document.documentElement.dataset.appareil !== "mobile") return;
     }
@@ -869,13 +791,6 @@ export function CarrouselPortfolio({
     const colonne = colonnes.current[indice];
     if (!zone || !colonne) return;
     zone.scrollLeft = colonne.offsetLeft;
-    if (varianteRef.current !== "carte") {
-      noterBascule(
-        `POSE AVANT PEINTURE · FAITE · défilement posé ${Math.round(
-          colonne.offsetLeft
-        )}`
-      );
-    }
     //  L'observateur ne doit pas croire à un geste, et l'effet
     //  d'au-dessus n'a plus rien à rattraper.
     dernierPose.current = indice;
@@ -888,7 +803,7 @@ export function CarrouselPortfolio({
   function aller(sens: 1 | -1) {
     const cible = indice + sens;
     if (cible < 0 || cible >= n) return;
-    allerA(cible, true, "flèche");
+    allerA(cible, true);
   }
 
   /**
@@ -1596,7 +1511,6 @@ export function CarrouselPortfolio({
                 <ZoomPincement
                   surPincement={surPincement}
                   arme={rang === indice}
-                  nom="zoom (fiche)"
                   //  §1 (nº 276) — le cadre du carrousel est un
                   //  conteneur de défilement : il rogne. La photo en
                   //  sort le temps du geste (voir usePincement).

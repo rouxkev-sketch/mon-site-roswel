@@ -26,7 +26,6 @@ import {
   reprendreLaReserveDuScript,
 } from "@/lib/restitution-position";
 //  §2-§3 (nº 426) — le refus de réveil s'écrit au journal de la sonde.
-import { noter } from "@/lib/journal-bascule";
 /*  §1 (nº 660) — LA DÉCISION DE RESTITUTION S'ÉCRIT DANS LA TRACE
     PERMANENTE. Ce composant décidait en silence : les trois signaux
     qu'il lit (traversée, document restitué, demande explicite) et la
@@ -34,7 +33,6 @@ import { noter } from "@/lib/journal-bascule";
     relevé du propriétaire — la remontée se voyait, la redescente non.
     ⚠️ AUCUNE DÉCISION NE CHANGE : les lignes sont posées À CÔTÉ des
     tests, jamais dedans, et rien n'est consommé pour les écrire. */
-import { noterNavigation } from "@/lib/boite-noire";
 import {
   lireRequeteCourante,
   lireRequeteServeur,
@@ -196,10 +194,6 @@ export function MemoireNavigation() {
   const [reveils, setReveils] = useState(0);
 
   useEffect(() => {
-    //  nº 357 — LE NU TOTAL (nº 354) se décide ici, côté client : la
-    //  racine est prérendue et ne lit plus le cookie. Une lecture,
-    //  rien d'autre, et le composant se tait.
-    if (document.cookie.indexOf("yf_nu_total=1") >= 0) return;
     /*  nº 363 — PLUS RIEN N'EST POSÉ ICI. Ces trois lignes coupaient la
         restauration native (« manual »), depuis la nº 143 et pour une
         vraie raison : elle s'applique pendant que l'ancienne page est
@@ -242,19 +236,9 @@ export function MemoireNavigation() {
           //  lui qui rend la main à la restitution, une fois l'effet
           //  déjà sorti. Sans cette ligne, la place revenait de nulle
           //  part dans la trace.
-          noterNavigation(
-            `RÉVEIL ACCEPTÉ · popstate sur ${attente.url} · l'attente date ` +
-              `de ${Date.now() - attente.quand} ms · l'effet est rejoué`
-          );
           attenteDeTraversee.current = null;
           setReveils((n) => n + 1);
         } else {
-          const refus =
-            `RÉVEIL REFUSÉ · popstate sur ${attente.url} · l'attente date ` +
-            `de ${Date.now() - attente.quand} ms (fermeture de surface ` +
-            `probable, pas la traversée du routeur)`;
-          noter(refus);
-          noterNavigation(refus);
         }
       }
     };
@@ -574,13 +558,6 @@ export function MemoireNavigation() {
         quatre valeurs sont DÉJÀ calculées au-dessus (aucune lecture de
         plus, aucune consommation) ; on ne fait que les dire. */
     const sortieConfirmee = arriveeEnHautVoulue();
-    noterNavigation(
-      `MÉMOIRE · ${url} · traversée ${vraieTraversee ? "OUI" : "non"} · ` +
-        `document restitué ${documentRestitue ? "OUI" : "non"} · ` +
-        `demande explicite ${restaurationDemandee ? "OUI" : "non"} · ` +
-        `arrivée en haut voulue ${sortieConfirmee ? "OUI" : "non"} · ` +
-        `page à ${Math.round(window.scrollY)}`
-    );
     consommerArriveeEnHaut();
     if (sortieConfirmee) {
       attenteDeTraversee.current = null;
@@ -599,7 +576,6 @@ export function MemoireNavigation() {
       //  §1 (nº 660) — cette attente EST un poseur en puissance : elle
       //  peut réveiller l'effet jusqu'à 400 ms plus tard et rendre une
       //  place. Elle se dit donc, elle aussi.
-      noterNavigation(`MÉMOIRE · rien à servir · attente posée sur ${url}`);
       attenteDeTraversee.current = { url, quand: Date.now() };
       return;
     }

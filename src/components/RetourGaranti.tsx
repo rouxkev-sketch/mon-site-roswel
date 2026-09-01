@@ -4,15 +4,8 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import {
   aucunePageDuSiteDerriere,
-  deposerLeVerdict,
-  ligneDeDecision,
-  marquerLeVerdictVerse,
   unePageEtrangereEstDerriere,
 } from "@/lib/bas-de-la-pile";
-import {
-  noterDansLeJournal,
-  tracesAvantPeinture,
-} from "@/lib/journal-historique";
 //  §2 (nº 428) — la marque qui dit au filet de réparation du script
 //  d'avant-peinture : « ce départ vers l'accueil nu est VOULU ».
 //  §1 (nº 438) — et la déclaration inverse, pour les REPRISES : une
@@ -22,7 +15,6 @@ import {
   CLE_RATTRAPAGE_FILET,
   laRepriseVientDuSite,
 } from "@/lib/navigation-session";
-import { mecanismeCoupe } from "@/lib/variantes-essai";
 
 /**
  * ON NE SORT JAMAIS DU SITE PAR UN RETOUR — LE FILET
@@ -123,34 +115,18 @@ import { mecanismeCoupe } from "@/lib/variantes-essai";
 const MARQUE = "retourReconstruit";
 
 /**
- * §1 (nº 346) — LE VOYANT : UNE LIGNE, À L'ARRIVÉE, QUI DIT QUI A DÉCIDÉ.
+ * §2 (nº 790) — LE VOYANT DU FILET EST PARTI AVEC SON JOURNAL.
  * ------------------------------------------------------------------
- * Quatre passes ont été dépensées à DEVINER pourquoi le filet ne
- * s'armait pas, faute de cette ligne. Elle porte la profondeur de pile,
- * le référent EXACT, d'où vient la mesure, et LAQUELLE des deux
- * questions a fermé la porte.
- *
- * Le type d'événement est un type EXISTANT — « ARRIVÉE SUR LA PAGE » —
- * à la demande du propriétaire : aucune sonde n'a de nouveau
- * vocabulaire à apprendre.
- *
- * §A (nº 347) — LA DÉCISION EST D'ABORD DÉPOSÉE, ENSUITE PROPOSÉE AU
- * JOURNAL. À la nº 346 elle n'était qu'écrite : si le journal n'était
- * pas là pour l'entendre, elle disparaissait sans trace, et le
- * propriétaire a perdu un tour à le constater. Désormais le dépôt
- * (lib/bas-de-la-pile) survit, le journal le verse à son ouverture, et
- * son silence même devient une ligne (« aucune décision du filet
- * reçue », journal-historique). La ligne porte AUSSI les traces
- * d'avant peinture — le millésime du script servi en tête — pour
- * démasquer une page périmée sortie d'un cache (branche B).
+ * Il écrivait, à chaque arrivée, QUI avait décidé et POURQUOI : la
+ * profondeur de pile, le référent exact, laquelle des deux questions
+ * avait fermé la porte. Il n'avait qu'un lecteur — le journal de
+ * l'historique (`?sonde-historique=1`, nº 331) — et ce journal est
+ * retiré au grand ménage d'avant mise en ligne : son défaut (les
+ * retours qui expulsaient du site) est clos depuis la nº 363.
+ * ⚠️ LE FILET LUI-MÊME NE CHANGE PAS D'UNE LIGNE : les quatre
+ * décisions ci-dessous (renoncer, armer, rattraper) se prennent
+ * exactement comme avant. Seule leur mise par écrit disparaît.
  */
-function dire(decision: string): void {
-  const ligne = `${ligneDeDecision(decision)} · ${tracesAvantPeinture()}`;
-  deposerLeVerdict(ligne);
-  if (noterDansLeJournal("ARRIVÉE SUR LA PAGE", ligne)) {
-    marquerLeVerdictVerse();
-  }
-}
 
 /**
  * §4 (nº 352) — CE QUI VAUT POUR LE DOCUMENT, PAS POUR LA PAGE.
@@ -176,9 +152,6 @@ export function RetourGaranti() {
   const chemin = usePathname();
 
   useEffect(() => {
-    //  nº 353 — LA PORTE DU BANC : `?variante=nu` ou `sans-filet`
-    //  coupe le filet entier — ni écouteurs, ni cran, ni lignes.
-    if (mecanismeCoupe("filet")) return;
     let aNous = true;
     let ecoutePose = false;
     /*  §1 (nº 423) — L'ADRESSE À LAQUELLE LE CRAN A ÉTÉ POSÉ. C'est
@@ -242,10 +215,6 @@ export function RetourGaranti() {
           visiteur. Les retours du NAVIGATEUR ne déclarent rien : le
           rattrapage reste entier pour ses vrais cas. */
       if (laRepriseVientDuSite()) {
-        noterDansLeJournal(
-          "RATTRAPAGE DU FILET",
-          "RETENU — reprise déclenchée par le site lui-même (une surface se referme) : fermeture voulue, pas un atterrissage"
-        );
         return;
       }
       /*  ⚠️ ON NE BOUGE QUE SI LE RETOUR NOUS A DÉPASSÉS PAR LE BAS.
@@ -255,26 +224,14 @@ export function RetourGaranti() {
           cette garde, refermer un panneau enverrait à l'accueil. */
       const ici = window.history.state as Record<string, unknown> | null;
       if (ici?.[MARQUE]) {
-        noterDansLeJournal(
-          "RATTRAPAGE DU FILET",
-          "RETENU — l'entrée porte la marque (le cran, ou une surface qui l'a recopiée)"
-        );
         return;
       }
       /*  §1 (nº 423) — LA GARDE D'ADRESSE, voir le bloc ci-dessus. */
       const adresseIci = window.location.pathname + window.location.search;
       if (adresseDuCran !== null && adresseIci !== adresseDuCran) {
-        noterDansLeJournal(
-          "RATTRAPAGE DU FILET",
-          `RETENU — atterri sur ${adresseIci}, une entrée réelle du site au-dessus du cran (posé à ${adresseDuCran} ; le routeur ne recopie pas la marque)`
-        );
         return;
       }
       aNous = false;
-      noterDansLeJournal(
-        "RATTRAPAGE DU FILET",
-        `DÉCLENCHÉ — atterri sous le cran (${adresseIci}, sans marque) : plus rien du site derrière, cap sur l'accueil`
-      );
       /*  ⚠️ `location.replace` ET NON le routeur de Next. Mesuré à la
           nº 190 : une navigation du routeur lancée DEPUIS un `popstate`
           ne part pas — le routeur est occupé à traiter la traversée
@@ -302,7 +259,6 @@ export function RetourGaranti() {
       //  elle-même) : on n'en pose pas une seconde.
       const etat = window.history.state as Record<string, unknown> | null;
       if (etat?.[MARQUE]) {
-        dire("RENONCE — étape déjà posée");
         return;
       }
       /*  ██ §2 (nº 438) — PAS DE CRAN PAR-DESSUS L'ÉTAPE D'UNE SURFACE ██
@@ -334,23 +290,17 @@ export function RetourGaranti() {
         Boolean(etat?.fenetreFiche) ||
         Boolean(etat?.fenetreCarrousel)
       ) {
-        dire(
-          "RENONCE — l'étape d'une surface est au sommet (son retour la referme : une page du site vit dessous, par construction)"
-        );
         return;
       }
       //  §1 (nº 345) — LES DEUX MOITIÉS DE LA QUESTION (lib/bas-de-la-pile).
       //  Une page DU SITE derrière : le navigateur fait son travail.
       if (!aucunePageDuSiteDerriere()) {
-        dire("RENONCE — une page du site est derrière");
         return;
       }
       //  LA BORNE : il est arrivé d'ailleurs, son retour doit l'y rendre.
       if (unePageEtrangereEstDerriere()) {
-        dire("RENONCE — une page étrangère est derrière");
         return;
       }
-      dire("ARMÉ");
       /*  §1 (nº 423) — l'adresse du cran, relevée à l'instant de la
           pose : le pushState à deux arguments garde l'adresse courante,
           c'est donc elle que le cran (et l'entrée d'arrivée dessous)
@@ -450,9 +400,6 @@ export function RetourGaranti() {
             que le cran était posé depuis l'accueil — elle mentait. */
         if (!cranPoseDansCeDocument && !attenteDejaDiteDansCeDocument) {
           attenteDejaDiteDansCeDocument = true;
-          dire(
-            "EN ATTENTE — le premier geste était un défilement, le cran attend un appui franc"
-          );
         }
         return;
       }

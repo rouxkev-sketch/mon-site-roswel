@@ -35,10 +35,6 @@ import {
   IconeReglages,
 } from "@/components/Icones";
 import { BadgeCharte, GroupeBadges } from "@/components/BadgesCharte";
-//  TEMPORAIRE (nº 610) — le journal de la sonde bascule, où la mesure
-//  des airs du panneau écrit ses lignes. `noter` ne fait STRICTEMENT
-//  rien sans `?sonde-bascule=1`.
-import { noter, sondeBasculeArmee } from "@/lib/journal-bascule";
 import { MenuDeVerre } from "@/components/SurfaceDeVerre";
 import { EncadreDeuxChamps } from "@/components/EncadreBarre";
 import { GLISSADE_MS, remonterSansClavier } from "@/lib/remontee-champ";
@@ -508,102 +504,7 @@ export function MoteurTatouage({
       connaître, sans quoi toucher un badge referme le panneau. */
   const plaqueFiltres = useRef<HTMLDivElement>(null);
 
-  /**
-   * ██ TEMPORAIRE (nº 610) — LA MESURE DES AIRS DU PANNEAU ██
-   * ==================================================================
-   * ELLE NE CORRIGE RIEN, ELLE RELÈVE. À la nº 609 j'ai mesuré 24,00 px
-   * à gauche et 24,23 px à droite sur un BANC, et conclu que la rangée
-   * TECHNIQUE était calée. La capture du propriétaire dit le contraire.
-   * Le banc ne reproduit donc pas le panneau réel, et il n'y a qu'une
-   * façon de savoir en quoi : mesurer LE VRAI PANNEAU, sur son écran.
-   *
-   * CE QU'ELLE RELÈVE, une ligne par valeur : la largeur du panneau,
-   * son rembourrage intérieur des deux côtés, puis pour chaque rangée
-   * l'air à gauche du premier badge, l'air à droite du dernier et la
-   * largeur totale de la rangée — et enfin chaque badge, son libellé,
-   * son état et sa largeur.
-   *
-   * ⚠️ AUCUN ÉTAT REACT (la méthode de la nº 562) : le relevé écrit
-   * dans le journal de module de la sonde bascule, jamais dans un état.
-   * Il ne provoque donc aucun rendu et ne peut pas déranger ce qu'il
-   * observe.
-   * ⚠️ RIEN SANS `?sonde-bascule=1` : `noter` sort immédiatement quand
-   * la sonde n'est pas armée, et l'on ne mesure même pas avant de
-   * l'avoir demandé.
-   * ⚠️ DEUX RELEVÉS, PAS UNE BOUCLE : un à l'ouverture, un par
-   * changement de badge — et rien entre les deux.
-   * ⚠️ 260 ms D'ATTENTE, ET C'EST DÉLIBÉRÉ : la coche de la nº 606
-   * s'ouvre en 200 ms. Mesurer plus tôt relèverait une largeur de
-   * badge INTERMÉDIAIRE, c'est-à-dire un chiffre faux.
-   *
-   * POUR LA RETIRER : supprimer ce bloc, l'effet qui l'appelle juste
-   * dessous, et l'attribut `data-rangee-badges` de BadgesCharte.
-   */
-  function releverLesAirsDuPanneau(quand: string): void {
-    if (!sondeBasculeArmee()) return;
-    const plaque = plaqueFiltres.current;
-    if (!plaque) return;
-    const px = (valeur: number) => `${valeur.toFixed(1)} px`;
-    const boite = plaque.getBoundingClientRect();
-    const robe = getComputedStyle(plaque);
-    noter(`▓ PANNEAU DES FILTRES — ${quand}`);
-    noter(`   largeur du panneau : ${px(boite.width)}`);
-    noter(
-      `   rembourrage intérieur : ${robe.paddingLeft} à gauche, ` +
-        `${robe.paddingRight} à droite`
-    );
-    const rangees = plaque.querySelectorAll<HTMLElement>(
-      "[data-rangee-badges]"
-    );
-    for (const rangee of rangees) {
-      const titre = (
-        rangee.previousElementSibling?.textContent ?? "(sans titre)"
-      ).trim();
-      const badges = Array.from(rangee.querySelectorAll("button"));
-      if (badges.length === 0) continue;
-      const premier = badges[0].getBoundingClientRect();
-      const dernier = badges[badges.length - 1].getBoundingClientRect();
-      noter(`   ── rangée « ${titre} », ${badges.length} badges`);
-      noter(`      air à gauche du premier badge : ${px(premier.left - boite.left)}`);
-      noter(`      air à droite du dernier badge : ${px(boite.right - dernier.right)}`);
-      noter(`      largeur totale de la rangée : ${px(dernier.right - premier.left)}`);
-      noter(`      hauteur de la rangée : ${px(rangee.getBoundingClientRect().height)}`);
-      for (const badge of badges) {
-        const allume = badge.getAttribute("aria-pressed") === "true";
-        noter(
-          `      badge « ${(badge.textContent ?? "").trim()} » ` +
-            `${allume ? "allumé" : "éteint"} — ${px(badge.getBoundingClientRect().width)}`
-        );
-      }
-    }
-  }
-
-  /*  TEMPORAIRE (nº 610) — QUAND LE RELEVÉ SE DÉCLENCHE : une fois à
-      l'ouverture du panneau, une fois après chaque changement de
-      badge. La fermeture remet le compteur à zéro pour que la
-      prochaine ouverture soit bien annoncée comme telle. */
-  const releveDejaFait = useRef(false);
-  useEffect(() => {
-    if (!filtresOuverts) {
-      releveDejaFait.current = false;
-      return;
-    }
-    const premier = !releveDejaFait.current;
-    releveDejaFait.current = true;
-    const minuteur = window.setTimeout(
-      () =>
-        releverLesAirsDuPanneau(
-          premier ? "à l'ouverture" : "après un changement de badge"
-        ),
-      260
-    );
-    return () => window.clearTimeout(minuteur);
-    //  `releverLesAirsDuPanneau` est recréée à chaque rendu et ne lit
-    //  que des références : la mettre en dépendance relancerait le
-    //  minuteur pour rien.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtresOuverts, filtresEnAttente]);
-
+  
   /*  nº 443 — LES DEUX RÉGLAGES DE MISE EN PAGE SONT SUPPRIMÉS : plus
       de disposition (une/deux colonnes) ni de vue photothèque (« sans
       texte ») — donc plus rien à lire ici. Les ronds de bascule des

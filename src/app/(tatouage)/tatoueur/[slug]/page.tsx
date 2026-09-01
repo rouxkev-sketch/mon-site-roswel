@@ -17,7 +17,6 @@ import { PontApercuFiche } from "@/components/PontApercuFiche";
 import { JsonLd } from "@/components/JsonLd";
 import { RetourFenetreFiche } from "@/components/RetourFenetreFiche";
 import { CompteurConsultation } from "@/components/CompteurConsultation";
-import { SondeCadre } from "@/components/SondeCadre";
 
 /**
  * LA FICHE D'UN TATOUEUR — une page par tatoueur
@@ -233,7 +232,6 @@ export default async function PageFicheTatoueur({
            sinon) et ne touche à rien d'autre : elle mesure et affiche.
            Elle vit sur CETTE page — celle d'une fiche de partage —,
            là où le propriétaire voit la bande à gauche du cadre. */}
-      <SondeCadre />
       {/*  nº 359 — les tags de l'adresse sont lus PAR LE NAVIGATEUR :
            même adresse, mêmes règles (5 et 6), seul le lecteur change.
            Le bouton « Suivre » naît neutre — la charge des favoris le

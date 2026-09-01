@@ -17,10 +17,6 @@ import { MILLESIME_SCRIPT } from "@/lib/millesime-script";
  */
 export function EnregistrementServiceWorker() {
   useEffect(() => {
-        //  nº 357 — LE NU TOTAL (nº 354) se décide ici, côté client : la
-    //  racine est prérendue et ne lit plus le cookie. Une lecture,
-    //  rien d'autre, et le composant se tait.
-    if (document.cookie.indexOf("yf_nu_total=1") >= 0) return;
     if (!("serviceWorker" in navigator)) return;
 
     if (process.env.NODE_ENV === "production") {
@@ -188,7 +184,6 @@ export function EnregistrementServiceWorker() {
    */
   useEffect(() => {
     if (process.env.NODE_ENV !== "production") return;
-    if (document.cookie.indexOf("yf_nu_total=1") >= 0) return;
 
     const CLE_REPARATION = "yf:reparation-version";
     let dejaRepare = false;

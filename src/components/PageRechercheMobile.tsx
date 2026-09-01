@@ -1,6 +1,5 @@
 "use client";
 
-import { noter } from "@/lib/journal-bascule";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 //  §2 (nº 427) — la garde de position : l'OUVERTURE la désarme (cette
@@ -26,7 +25,6 @@ import {
   type VueRecherche,
 } from "@/lib/recherche-mobile";
 //  §1 (nº 660) — la trace permanente : ce défilement se signe.
-import { noterNavigation } from "@/lib/boite-noire";
 
 /**
  * LA PAGE DE RECHERCHE PLEIN ÉCRAN (smartphone)
@@ -258,11 +256,6 @@ export function PageRechercheMobile({
       //  la garde n'a plus rien à y défendre.
       desarmerLaGardeDePosition();
       //  §3 (nº 426) — la pose s'écrit (aucun poseur anonyme).
-      noter("POSE DE DÉFILEMENT · vers 0 · par PageRechercheMobile (ouverture)");
-      noterNavigation(
-        `SCROLLTO · PageRechercheMobile (ouverture) · vers 0 · ` +
-          `page à ${Math.round(window.scrollY)} avant`
-      );
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     });
 
@@ -340,14 +333,6 @@ export function PageRechercheMobile({
         position d'AVANT l'ouverture, rendue au site pendant la
         glissade de sortie (nº 334-§1). */
     const place = lireDefilementResultats();
-    noter(
-      `POSE DE DÉFILEMENT · vers ${Math.round(place)} · ` +
-        "par PageRechercheMobile (sortie — la place d'avant l'ouverture)"
-    );
-    noterNavigation(
-      `SCROLLTO · PageRechercheMobile (sortie) · vers ${Math.round(place)} · ` +
-        `page à ${Math.round(window.scrollY)} avant`
-    );
     window.scrollTo({
       top: place,
       left: 0,

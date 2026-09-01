@@ -1,3 +1,10 @@
+/*  ██ ARCHIVE — CE BANC NE PEUT PLUS TOURNER TEL QUEL (nº 790) ██
+    Il lit un fichier de sonde retiré au grand ménage d'avant mise en
+    ligne : l'instrument qu'il éprouvait n'existe plus. Le fichier est
+    GARDÉ parce qu'il est le compte rendu écrit de sa passe — la preuve
+    de ce qui a été mesuré, et comment. Ne pas le lancer sans l'avoir
+    d'abord relu : ce qu'il vérifie du SITE reste vrai, ce qu'il
+    vérifie de la SONDE ne l'est plus. */
 /**
  * BANC DE LA PASSE Nº 281
  * ==================================================================

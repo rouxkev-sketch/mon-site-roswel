@@ -1,5 +1,5 @@
 /*  ⚠️ PAS DE DIRECTIVE « use client » ICI, ET C'EST VOULU — la même
-    raison qu'à lib/journal-historique : le script d'avant peinture est
+    raison qu'au journal de l'historique : le script d'avant peinture est
     fabriqué PAR LE SERVEUR, et il a besoin de `releveDuBasPourLeScript`.
     Avec la directive, Next refuse l'appel. */
 /**
@@ -288,115 +288,23 @@ export function rienDeVraiDerriere(): boolean {
   return aucunePageDuSiteDerriere() && !unePageEtrangereEstDerriere();
 }
 
-/**
- * LA LIGNE UNIQUE QUI DIT CE QUI A DÉCIDÉ (nº 346).
- * ------------------------------------------------------------------
- * Demandée par le propriétaire : la profondeur de pile, le référent
- * EXACT, et laquelle des deux questions a fait renoncer le filet. Une
- * seule ligne, à l'arrivée, pour qu'une hypothèse fausse se voie en une
- * lecture au lieu d'un tour perdu.
- */
-export function ligneDeDecision(decision: string): string {
-  const bas = lireLeBasDeLaPile();
-  const referent = typeof document === "undefined" ? "" : document.referrer;
-  return (
-    `FILET ${decision} · pile ${window.history.length}` +
-    ` · profondeur d'arrivée ${bas ? bas.profondeur : "(aucune)"}` +
-    ` [${bas ? bas.origine : "aucune mesure"}]` +
-    ` · référent «${referent}»` +
-    ` · étrangère derrière : ${bas?.etranger ? "OUI" : "non"}`
-  );
-}
-
 /* ==================================================================
- * §A (nº 347) — LE VERDICT DU FILET EST GARDÉ, PAS SEULEMENT ÉCRIT
+ * §3 (nº 790) — LA LIGNE DE DÉCISION ET LE DÉPÔT DU VERDICT SONT
+ * PARTIS AVEC LEUR LECTEUR
  * ==================================================================
- * LE DÉFAUT QUE CE BLOC CORRIGE. À la nº 346, la décision du filet
- * n'était écrite qu'au moment où elle se prenait : si le journal
- * n'était pas là pour l'entendre — ou si le code du filet ne tournait
- * pas du tout, ce que le relevé en ligne n'a pas permis d'exclure —,
- * elle était INVISIBLE, et le propriétaire a perdu un tour à le
- * constater. Règle nouvelle : UNE DÉCISION DU FILET NE PEUT PLUS ÊTRE
- * INVISIBLE.
- *
- * COMMENT : la décision est DÉPOSÉE dans la mémoire d'onglet, en plus
- * d'être proposée au journal. Le journal, à SON ouverture, verse tout
- * verdict déposé qu'il n'a pas encore entendu — et s'il n'en reçoit
- * aucun, il l'écrit AUSSI (voir journal-historique) : le silence
- * lui-même devient une ligne lisible.
- *
- * ⚠️ CE DÉPÔT EST UNE ÉCRITURE DU SITE, pas une sonde : une par
- * décision, ~200 octets, dans la mémoire de l'onglet. C'est le prix
- * pour que le verdict survive à un journal qui s'ouvre plus tard —
- * le même prix que le relevé du bas, et pour la même raison.
+ * CE QUI VIVAIT ICI, ET POURQUOI CE N'EST PLUS UTILE. Le filet écrivait
+ * à chaque arrivée une ligne disant qui avait décidé (`ligneDeDecision`,
+ * nº 346), et la DÉPOSAIT en mémoire d'onglet (`deposerLeVerdict`,
+ * nº 347) pour qu'elle survive à un journal ouvert plus tard. Ce
+ * journal — celui de l'historique, `?sonde-historique=1` — est retiré
+ * au grand ménage de la nº 790 : plus personne ne lisait le dépôt, qui
+ * n'était donc plus qu'une écriture de session par navigation.
+ * ⚠️ CE QUI RESTE, ET C'EST LE VRAI MÉCANISME : le RELEVÉ DU BAS DE LA
+ * PILE (`releveDuBasPourLeScript`, plus bas) — « y a-t-il une vraie
+ * page derrière moi ? » —, que le script d'avant peinture exécute et
+ * dont le filet se sert pour décider. Lui n'a jamais été une sonde.
  */
 
-export const CLE_VERDICT = "yokofolio:verdict-du-filet";
-
-export type VerdictDuFilet = {
-  /** La ligne complète, telle que le filet l'a formulée. */
-  texte: string;
-  /** L'adresse où la décision s'est prise. */
-  ou: string;
-  /** L'instant du dépôt — c'est lui qui distingue « une décision est
-      arrivée pour CE document » d'un reste de la page d'avant. */
-  quand: number;
-  /** Le journal l'a-t-il déjà entendue ? (pas de double ligne) */
-  verse: boolean;
-};
-
-export function deposerLeVerdict(texte: string): void {
-  if (typeof window === "undefined") return;
-  try {
-    const verdict: VerdictDuFilet = {
-      texte,
-      ou: location.pathname,
-      quand: Date.now(),
-      verse: false,
-    };
-    sessionStorage.setItem(CLE_VERDICT, JSON.stringify(verdict));
-  } catch {
-    // stockage refusé : le verdict ne vivra que s'il est écrit tout de suite
-  }
-}
-
-export function lireLeVerdict(): VerdictDuFilet | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const brut = sessionStorage.getItem(CLE_VERDICT);
-    if (!brut) return null;
-    const lu = JSON.parse(brut) as Partial<VerdictDuFilet>;
-    if (typeof lu?.texte !== "string" || typeof lu?.quand !== "number") {
-      return null;
-    }
-    return {
-      texte: lu.texte,
-      ou: typeof lu.ou === "string" ? lu.ou : "(adresse inconnue)",
-      quand: lu.quand,
-      verse: Boolean(lu.verse),
-    };
-  } catch {
-    return null;
-  }
-}
-
-export function marquerLeVerdictVerse(): void {
-  const verdict = lireLeVerdict();
-  if (!verdict) return;
-  try {
-    sessionStorage.setItem(
-      CLE_VERDICT,
-      JSON.stringify({ ...verdict, verse: true })
-    );
-  } catch {
-    // au pire, le journal versera la même ligne deux fois : lisible quand même
-  }
-}
-
-/*  ⚠️ LES COMPOSANTS DE SONDE NE SONT PAS TOUCHÉS (consigne des
-    nº 345 à 347) : `?sonde-historique=1` et `?sonde-retour=1`
-    fonctionnent exactement comme avant. Tout ce qui précède est écrit
-    par LE SITE dans le journal EXISTANT, via journal-historique. */
 
 /* ==================================================================
  * CE QUE LE SCRIPT D'AVANT PEINTURE EXÉCUTE

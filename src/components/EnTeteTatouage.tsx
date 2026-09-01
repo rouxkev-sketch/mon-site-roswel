@@ -11,7 +11,6 @@ import {
 //  §1 (nº 652) — le chemin de la recherche, écrit une seule fois.
 import { ADRESSE_RECHERCHE } from "@/lib/chemin-recherche";
 //  §1 (nº 654) — la boîte noire de navigation (mesure temporaire).
-import { noterNavigation } from "@/lib/boite-noire";
 import {
   defilerSansGeste,
   estDefilementProgramme,
@@ -23,7 +22,6 @@ import {
   gesteDeDefilementPlausible,
 } from "@/lib/geste-toucher";
 //  §3 (nº 426) — les bascules de la rangée s'écrivent au journal.
-import { noter } from "@/lib/journal-bascule";
 //  §1 (nº 429) — le clic du logo déclare son intention : « départ voulu
 //  vers l'accueil » — le filet de réparation du repli s'abstient.
 import { declarerDepartVouluVersLAccueil } from "@/lib/navigation-session";
@@ -338,7 +336,6 @@ export function EnTeteTatouage({
     //  CODE n'est pas un clic, l'écoute globale ne la voit donc pas.
     //  Elle se note là où elle est écrite. Rien du comportement ne
     //  change : la ligne d'après est le `push` d'avant, à la lettre.
-    noterNavigation(`PUSH · EnTeteTatouage (recherche) · vers ${destination}`);
     router.push(destination);
   }
 
@@ -544,19 +541,11 @@ export function EnTeteTatouage({
     //  est idempotent, React ne redessine pas pour la même valeur. La
     //  seule vérité est l'état React — un doigt et un défilement ne
     //  peuvent donc plus se contredire.
-    //  §3 (nº 426) — CHAQUE BASCULE S'ÉCRIT, avec sa cause : le miroir
-    //  ci-dessous ne sert qu'à ne noter que les VRAIS changements (pas
-    //  une ligne par événement de défilement).
-    let replieMiroir: boolean | null = null;
-    const poserReplie = (valeur: boolean, cause = "(cause non dite)") => {
+    const poserReplie = (valeur: boolean) => {
       //  §1 (nº 430) — chaque bascule réelle nourrit la mémoire de
       //  module : c'est elle qui fera renaître la rangée dans le bon
       //  état au prochain remontage (croisement accueil-nu ↔ jumeau).
       memoriserEtatDeRangee(valeur);
-      if (replieMiroir !== valeur) {
-        replieMiroir = valeur;
-        noter(`RANGÉE ${valeur ? "REPLIÉE" : "DÉPLIÉE"} · ${cause}`);
-      }
       setMoteurReplie(valeur);
     };
     /**
@@ -584,25 +573,20 @@ export function EnTeteTatouage({
         accueil-nu ↔ jumeau : « Voir plus », première recherche) trouve
         ici l'état vécu et le reprend — l'initialisation paresseuse du
         `useState` l'a déjà rendu au premier rendu, ce bloc aligne le
-        miroir et ÉCRIT LA LECTURE au journal, comme le propriétaire
-        l'a demandé. Sur un document NEUF, la mémoire est vide : la
+        Sur un document NEUF, la mémoire est vide : la
         marque du script d'avant-peinture décide, comme depuis la
         nº 335 (le repli réparé de la nº 428 passe par elle). */
     const souvenir = etatDeRangeeMemorise();
     if (souvenir !== null) {
-      replieMiroir = souvenir;
-      noter(
-        `RANGÉE RENDUE · ${souvenir ? "repliée" : "dépliée"} · mémoire de module (remontage)`
-      );
       setMoteurReplie(souvenir);
     } else {
       const naissance = rangeeNaitRepliee();
       if (naissance !== null)
-        poserReplie(naissance, "naissance (marque du script)");
+        poserReplie(naissance);
     }
     const auRetourDUnePlace = (evenement: Event) => {
       const detail = (evenement as CustomEvent<{ repliee?: boolean }>).detail;
-      poserReplie(Boolean(detail?.repliee), "restitution (événement de rangée)");
+      poserReplie(Boolean(detail?.repliee));
     };
     window.addEventListener(EVENEMENT_RANGEE, auRetourDUnePlace);
     const lire = () => {
@@ -625,15 +609,12 @@ export function EnTeteTatouage({
         //  cartes) n'est pas un geste ; les gros deltas s'écrivent,
         //  pour que le relevé montre ce qui a été ignoré.
         if (Math.abs(delta) > 24) {
-          noter(
-            `RANGÉE · delta ${Math.round(delta)} px ignoré (mouvement du site)`
-          );
         }
         cumulDuGeste.current = 0;
         return;
       }
       if (y < 64) {
-        poserReplie(false, "haut de page (moins de 64 px)");
+        poserReplie(false);
         cumulDuGeste.current = 0;
         return;
       }
@@ -657,9 +638,6 @@ export function EnTeteTatouage({
           mouvement — c'est un invariant d'écran, pas un comptage de
           geste. */
       if (appareilTactile() && !gesteDeDefilementPlausible()) {
-        noter(
-          `RANGÉE · delta ${Math.round(delta)} px écarté (sans toucher — recalage du navigateur)`
-        );
         cumulDuGeste.current = 0;
         return;
       }
@@ -669,9 +647,9 @@ export function EnTeteTatouage({
       cumulDuGeste.current =
         Math.sign(delta) === Math.sign(cumul) ? cumul + delta : delta;
       if (cumulDuGeste.current > 24) {
-        poserReplie(true, `geste vers le bas (cumul ${Math.round(cumulDuGeste.current)} px)`);
+        poserReplie(true);
       } else if (cumulDuGeste.current < -12) {
-        poserReplie(false, `geste vers le haut (cumul ${Math.round(cumulDuGeste.current)} px)`);
+        poserReplie(false);
       }
     };
     lire();

@@ -42,35 +42,31 @@
  * Les sondes du REGISTRE DURABLE, nommées une fois. L'ordre n'a pas
  * d'importance.
  *
- * ██ §1 (nº 712) — DEUX TRACEURS ENTRENT DANS LE REGISTRE ██
+ * ██ §1 (nº 712) — UN TRACEUR ENTRE DANS LE REGISTRE ██
  * ------------------------------------------------------------------
- * `journal` et `boite-noire` ne s'armaient PAS : ils tournaient
- * TOUJOURS, et c'est ce que le propriétaire fait cesser à la nº 712.
- *  · `journal` — le journal de bord (nº 272-§2) envoyait une ligne au
- *    serveur (`/api/dev/journal-de-bord`) à CHAQUE chargement et à
- *    chaque navigation : mesuré au banc de la nº 712, un envoi au
- *    chargement et DEUX par navigation, sur les trois pages
- *    d'échantillon. Éteint, il n'envoie plus rien ;
- *  · `boite-noire` — le journal d'onglet (nº 654) lisait, analysait et
- *    réécrivait jusqu'à 200 lignes de `sessionStorage` par événement de
- *    navigation, y compris DANS LE SCRIPT D'AVANT PEINTURE, donc sur le
- *    chemin de la première image (15 à 19 lignes écrites par page,
- *    mesuré). Éteinte, elle n'écrit plus rien.
- * ⚠️ CE QU'ÉTEINDRE LA BOÎTE NOIRE COÛTE, ET IL FAUT LE SAVOIR : elle
- * était conçue pour tourner en permanence afin qu'un défaut ALÉATOIRE
- * (le bug des styles, nº 654/673) laisse une trace SANS qu'on ait rien
- * armé à l'avance. Éteinte, cette faculté-là disparaît : pour prendre
- * un défaut rare sur le fait, il faut la rallumer AVANT et la laisser
- * allumée. C'est le choix du propriétaire à la nº 712 — la vitesse
- * d'abord — et il se défait d'un clic au tableau de bord.
+ * `journal` ne s'armait PAS : il tournait TOUJOURS, et c'est ce que le
+ * propriétaire fait cesser à la nº 712. Le journal de bord (nº 272-§2)
+ * envoyait une ligne au serveur (`/api/dev/journal-de-bord`) à CHAQUE
+ * chargement et à chaque navigation : mesuré au banc de la nº 712, un
+ * envoi au chargement et DEUX par navigation, sur les trois pages
+ * d'échantillon. Éteint, il n'envoie plus rien.
+ *
+ * ██ §2 (nº 790) — CE QUI EST SORTI DU REGISTRE, ET POURQUOI ██
+ * ------------------------------------------------------------------
+ * Le grand ménage d'avant mise en ligne a retiré quatre des cinq
+ * sondes qui vivaient ici — `boite-noire`, `historique`, `retour`,
+ * `clic` — parce que le défaut de chacune est clos depuis longtemps
+ * (voir le rapport de la passe). Il ne reste que le JOURNAL DE BORD,
+ * qui ne vise aucun défaut précis : il enregistre les chargements, les
+ * navigations, les erreurs et les bascules de session, et c'est le
+ * seul témoin qui dise ce que le SERVEUR voyait au même instant.
+ * ⚠️ UN ARMEMENT PÉRIMÉ SE NETTOIE TOUT SEUL : la mémoire locale d'un
+ * navigateur peut encore porter « boite-noire » ou « clic » dans la
+ * liste ; toute lecture passe par `SONDES.filter(…)`, donc un nom qui
+ * n'est plus au registre est simplement ignoré, puis effacé à la
+ * première écriture. Rien à purger à la main.
  */
-export const SONDES = [
-  "historique",
-  "retour",
-  "clic",
-  "journal",
-  "boite-noire",
-] as const;
+export const SONDES = ["journal"] as const;
 export type NomDeSonde = (typeof SONDES)[number];
 
 /** La mémoire LOCALE — elle survit à l'ouverture d'un onglet neuf, ce

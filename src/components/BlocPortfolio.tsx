@@ -755,8 +755,6 @@ export function BlocPortfolio({
         d'un style, suggestion envoyée, Échap, démontage) : le
         nettoyage les couvre tous, et le compteur rend le corps au
         dernier retrait — le défilement REVIENT à la fermeture.
-        `?sonde-bascule=1` en journalise la preuve : « verrou
-        posé (1) » à l'ouverture, « verrou retiré (0) » après.
 
       ██ §5 (nº 560) — ET LE WEB LE POSE AUSSI, DÉSORMAIS ██
       LE DÉFAUT : la fenêtre ouverte, la page continuait de défiler

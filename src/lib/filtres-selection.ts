@@ -16,7 +16,6 @@ import { ouvrirLaListeEnHaut } from "@/lib/liste-neuve";
 //  filtre, c'est changer d'adresse. Le module commun le sait, et laisse
 //  alors l'étape du panneau — celle qui porte le filtre.
 import { laSurfaceVaNaviguer } from "@/lib/etape-refermable";
-import { mecanismeCoupe } from "@/lib/variantes-essai";
 
 /**
  * LES DEUX MENUS DE « MA SÉLECTION » — L'ADRESSE EST LA VÉRITÉ
@@ -175,13 +174,11 @@ export function poserSelection(menu: MenuSelection, valeur: string): void {
       ⚠️ SUR LE WEB, où le menu ne pose aucune étape, la marque ne
       trouve rien à retenir : elle est sans effet. Rien ne change. */
   laSurfaceVaNaviguer();
-  if (!mecanismeCoupe("nettoyages")) {
-    window.history.replaceState(
-      window.history.state,
-      "",
-      window.location.pathname + (requete ? `?${requete}` : "")
-    );
-  }
+  window.history.replaceState(
+    window.history.state,
+    "",
+    window.location.pathname + (requete ? `?${requete}` : "")
+  );
   /*  §5 (nº 329) — UNE LISTE FILTRÉE COMMENCE EN HAUT.
       ------------------------------------------------------------------
       LE DÉFAUT : on descend dans « Ma sélection », on ouvre le menu, on

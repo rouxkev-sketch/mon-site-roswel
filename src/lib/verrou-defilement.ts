@@ -1,9 +1,5 @@
 "use client";
 
-//  Le journal de la sonde (?sonde-bascule=1) : chaque pose et chaque
-//  retrait s'écrivent avec le compte courant — désarmé, ne coûte rien.
-import { noter } from "@/lib/journal-bascule";
-
 /**
  * ██ §1 (nº 469) — LE VERROU DE DÉFILEMENT DU CORPS, COMPTÉ ██
  * ==================================================================
@@ -55,7 +51,6 @@ export function poserLeVerrouDeDefilement(): void {
   if (typeof document === "undefined") return;
   compte += 1;
   if (compte === 1) document.body.style.overflow = "hidden";
-  noter(`VERROU DE DÉFILEMENT · posé (compte ${compte})`);
 }
 
 /** À la fermeture — le nettoyage d'effet de la surface, quel que soit
@@ -63,10 +58,8 @@ export function poserLeVerrouDeDefilement(): void {
 export function retirerLeVerrouDeDefilement(): void {
   if (typeof document === "undefined") return;
   if (compte === 0) {
-    noter("VERROU DE DÉFILEMENT · retrait SANS pose (compte déjà 0) — rien à faire");
     return;
   }
   compte -= 1;
   if (compte === 0) document.body.style.overflow = "";
-  noter(`VERROU DE DÉFILEMENT · retiré (compte ${compte})`);
 }

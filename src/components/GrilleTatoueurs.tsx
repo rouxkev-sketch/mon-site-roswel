@@ -18,28 +18,17 @@ import {
   type ContexteFenetreFiche,
 } from "@/components/RetourFenetreFiche";
 import { reposerLaCarteDuHaut } from "@/lib/carte-du-haut";
-import {
-  noter,
-  noterDemontage,
-  noterMontage,
-} from "@/lib/journal-bascule";
 import { ficheComplete, ficheCompleteImmediate } from "@/lib/fiche-complete";
 import {
   useDispositionGrille,
   useVuePhototheque,
 } from "@/components/AffichageMosaique";
 import type { Tatoueur } from "@/lib/tatoueurs";
-//  ⚠️ TEMPORAIRE (nº 224-§5) — la sonde des cartes compte les
-//  observateurs vivants. Sans `?sonde-cartes=1`, ces appels ne coûtent
-//  rien.
-import { observateurMort, observateurNe } from "@/lib/journal-cartes";
-import { mecanismeCoupe } from "@/lib/variantes-essai";
 //  §1 (nº 438) — la fermeture passe par history.back() : elle se
 //  déclare, pour que le rattrapage du filet ne la prenne jamais pour
 //  un atterrissage accidentel au fond de la pile.
 import { annoncerRepriseDuSite } from "@/lib/navigation-session";
 //  §1 (nº 660) — la trace permanente : ce défilement se signe.
-import { noterNavigation } from "@/lib/boite-noire";
 
 /** UN PIXEL TRANSPARENT — ce qu'une image lointaine porte à la place
     de sa source (nº 224-§4). Une chaîne, aucune requête réseau. */
@@ -217,19 +206,8 @@ export function GrilleTatoueurs({
    * ⚠️ JAMAIS AU PREMIER RENDU : une mosaïque qui bougerait à chaque
    * arrivée serait un défaut, pas une correction.
    */
-  //  ⚠️ LA SONDE DE LA BASCULE (nº 173) — elle n'écrit QUE si
-  //  l'adresse porte `?sonde-bascule=1` ; sinon ces appels ne coûtent
-  //  rien. C'est la ligne la plus attendue du journal : un démontage
-  //  de la mosaïque après un clic désignerait la cause.
-  useEffect(() => {
-    noterMontage("mosaïque (GrilleTatoueurs)");
-    return () => noterDemontage("mosaïque (GrilleTatoueurs)");
-  }, []);
   //  Sans tableau de dépendances : à CHAQUE rendu.
   useEffect(() => {
-    noter(
-      `rendu mosaïque · ${tatoueurs.length} cartes · disposition ${disposition} · photothèque ${phototheque ? "oui" : "non"}`
-    );
   });
 
   /**
@@ -291,13 +269,11 @@ export function GrilleTatoueurs({
       //  franchement loin, et on recharge bien avant que ça revienne.
       { root: null, rootMargin: "200% 0px" }
     );
-    observateurNe();
     for (const carte of grille.querySelectorAll("[data-carte]")) {
       observateur.observe(carte);
     }
     return () => {
       observateur.disconnect();
-      observateurMort();
     };
     //  LA LISTE DES CARTES CHANGE À CHAQUE « VOIR PLUS » : l'observateur
     //  est refait, jamais empilé (le nettoyage passe avant).
@@ -610,18 +586,12 @@ export function GrilleTatoueurs({
       //  passage les marques que le site pose dans l'étape (le filet
       //  `retourReconstruit`, l'étape d'une surface refermable), et
       //  le retour ne savait plus où il en était.
-      if (!mecanismeCoupe("nettoyages")) {
-        window.history.replaceState(window.history.state, "", adressePropre);
-      }
+      window.history.replaceState(window.history.state, "", adressePropre);
       if (!cible) return; // la fiche n'est plus dans ces résultats.
       //  §1 (nº 660) — CE DÉFILEMENT SE SIGNE : il rend la position
       //  notée avant un rechargement de fiche, et il agit APRÈS la
       //  remontée d'arrivée. La ligne est posée à côté, l'appel ne
       //  change pas.
-      noterNavigation(
-        `SCROLLTO · GrilleTatoueurs (réouverture ?fenetre) · vers ${defilement}` +
-          ` · page à ${Math.round(window.scrollY)} avant`
-      );
       window.scrollTo({ top: defilement, left: 0, behavior: "instant" });
       ouvrir(cible);
     }, 0);

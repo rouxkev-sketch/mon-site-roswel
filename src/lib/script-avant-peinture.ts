@@ -5,14 +5,6 @@ import { conditionDeReglagePourLeScript } from "@/lib/adresse-recherche";
 //  §2 (nº 653) — le chemin de la recherche (nº 652), lu là où il est
 //  écrit une seule fois : le script ne le recopie pas à la main.
 import { ADRESSE_RECHERCHE } from "@/lib/chemin-recherche";
-//  §3 (nº 654) — la clé et la taille de la boîte noire, lues là où
-//  elles sont écrites : le script en recopie le GESTE, pas la valeur.
-//  §3 (nº 712) — AU NEUTRE, ET SURTOUT PAS DEPUIS `lib/boite-noire` :
-//  ce module-là porte « use client », et ce script-ci est fabriqué au
-//  SERVEUR — Next remplaçait alors ces deux constantes par des
-//  bouchons, et la trace partait sous la clé « undefined » (voir
-//  lib/cles-boite-noire, qui porte la mesure).
-import { CLE_BOITE_NOIRE, LIGNES_BOITE_NOIRE } from "@/lib/cles-boite-noire";
 import {
   COOKIE_COLONNES,
   expressionColonnes,
@@ -28,16 +20,6 @@ import {
   CLE_RESTAURER,
   PREFIXE_DEFILEMENT,
 } from "@/lib/navigation-session";
-//  §2 (nº 428) — le filet de réparation du repli écrit sa ligne au
-//  journal de la SONDE (sonde-bascule) : mêmes clés, même format —
-//  aucune copie de la règle ici. ⚠️ Les clés viennent du module NU
-//  (lib/cles-sonde-bascule), pas de journal-bascule : « use client »
-//  n'expose au serveur que des références opaques, et l'interpolation
-//  rendait « undefined » (mesuré sur le HTML prérendu de cette passe).
-import {
-  CLE_ARMEE as CLE_ARMEE_SONDE,
-  CLE_JOURNAL as CLE_JOURNAL_SONDE,
-} from "@/lib/cles-sonde-bascule";
 //  §1 (nº 335) — la marque « nais avec la rangée repliée », écrite une
 //  seule fois (lib/reserve-barre) et lue par la barre à sa naissance.
 import {
@@ -53,20 +35,16 @@ import { boucleDAttentePourLeScript } from "@/lib/pose-sur-contenu";
 //  l'historique qui commence avant tout code d'application. Les deux
 //  textes sont FABRIQUÉS par les modules qui portent la règle : aucune
 //  copie à la main ici.
-import { armementPourLeScript, MARQUE_SONDES } from "@/lib/sondes-armees";
+import { armementPourLeScript } from "@/lib/sondes-armees";
 //  §1 (nº 495) — le millésime ne s'écrit plus ici : il vit dans sa
 //  propre constante, que l'enregistrement du service worker lit AUSSI
 //  — au lieu de le relire sur <html>, ce qui était la cause du cycle
 //  de réinstallation (voir lib/millesime-script).
 import { MILLESIME_SCRIPT } from "@/lib/millesime-script";
-import { amorceDuJournalPourLeScript } from "@/lib/journal-historique";
 //  §1 (nº 345) — « y a-t-il une VRAIE page derrière moi ? ». La règle
 //  est écrite une fois (lib/bas-de-la-pile) et rend son relevé TOUT
 //  FAIT : aucune copie à la main ici non plus.
 import { releveDuBasPourLeScript } from "@/lib/bas-de-la-pile";
-//  nº 353 — le banc d'épreuve par variantes : le texte est fabriqué
-//  par le module qui porte la règle (lib/variantes-essai).
-import { variantePourLeScript } from "@/lib/variantes-essai";
 
 /**
  * TOUT CE QUI DOIT ÊTRE DÉCIDÉ AVANT LA PREMIÈRE PEINTURE
@@ -168,8 +146,6 @@ export function scriptAvantPeinture(): string {
   const fond = JSON.stringify(COULEURS_SOMBRE.fond);
   //  §2 (nº 428) — le filet de réparation du repli de navigation.
   const rattrapage = JSON.stringify(CLE_RATTRAPAGE_FILET);
-  const armeeSonde = JSON.stringify(CLE_ARMEE_SONDE);
-  const journalSonde = JSON.stringify(CLE_JOURNAL_SONDE);
   //  §1 (nº 429) — la déclaration « départ voulu vers l'accueil ».
   const intention = JSON.stringify(CLE_DEPART_VOULU);
 
@@ -234,7 +210,6 @@ if(qf&&/[?&](style|rendu|nature|photo|studio|entree)=/.test(qf)){r.dataset.fiche
 if(/[?&]entree=lien(&|$)/.test(qf))r.dataset.entreeLien="1";}}}catch(e){}
 try{var ck=document.cookie;
 r.dataset.compte=/(^|; )sb-[^=]*-auth-token/.test(ck)?"connecte":(ck.indexOf("yf_deja_connecte=1")>=0?"revenant":"nouveau");
-if(ck.indexOf("yf_nu_total=1")>=0)r.dataset.variante="nu-total";
 }catch(e){}
 /* 0. LE NOMBRE DE COLONNES, POUR LA PROCHAINE RÉPONSE DU SERVEUR
    (nº 226-§1). La politique du cookie — validité, portée, samesite —
@@ -273,13 +248,11 @@ try{history.scrollRestoration="auto"}catch(e){}
    ⚠️ DÉSARMÉ, CE BLOC NE FAIT QU'UNE LECTURE : aucune écriture, aucun
    attribut, aucun écouteur. */
 try{${armementPourLeScript()}}catch(e){}
-/* nº 353 — LA VARIANTE D'ESSAI, lue au plus tôt : chaque porte du
-   site lit la marque qu'elle pose. Sans variante : une lecture. */
-try{${variantePourLeScript()}}catch(e){}
-/* §2 (nº 343) — ET LE JOURNAL DE L'HISTORIQUE COMMENCE ICI. Armé
-   seulement : les toutes premières entrées de la pile — celles qui
-   expulsent du site — sont enregistrées avant que React n'existe. */
-try{if((r.dataset[${JSON.stringify(MARQUE_SONDES)}]||"").indexOf("historique")>=0){${amorceDuJournalPourLeScript()}}}catch(e){}
+/* §2 (nº 790) — LE JOURNAL DE L'HISTORIQUE NE COMMENCE PLUS ICI : il
+   est retire avec les autres sondes au verdict rendu. Il enveloppait
+   history.pushState et history.replaceState des la premiere ligne,
+   avant que React n'existe, pour prendre les entrees qui expulsaient
+   du site (nº 331) ; ce defaut est clos depuis la nº 363. */
 /* §1 (nº 345) — LA PROFONDEUR DE LA PILE À NOTRE ARRIVÉE, et le
    référent qui va avec. C'est ce que le filet du retour compare pour
    savoir s'il y a une VRAIE page derrière (lib/bas-de-la-pile).
@@ -291,30 +264,18 @@ try{${releveDuBasPourLeScript()}}catch(e){}
 try{
 var adresse=location.pathname+location.search;
 var nav=(performance.getEntriesByType("navigation")[0]||{}).type||"navigate";
-/* §3 (nº 654) — LA BOÎTE NOIRE, ÉCRITE À LA MAIN ICI. Ce script
-   s'exécute AVANT le moindre module : il ne peut pas appeler
-   lib/boite-noire. Il en recopie donc le geste — la MÊME clé, le MÊME
-   format ({h, texte}), la MÊME limite de deux cents lignes. Si l'un
-   des deux change, l'autre aussi.
-   ⚠️ ELLE N'OBSERVE QUE, et n'échoue jamais bruyamment : tout est
-   enveloppé, et une mémoire refusée laisse le script continuer.
-   ██ §1 (nº 712) — ET ELLE NE S'ÉVEILLE QUE SI ELLE EST ARMÉE. La
-   question se pose UNE fois, ici, sur la marque que l'armement vient
-   de poser quelques lignes plus haut (la marque des sondes) — pas un
-   accès au stockage de plus. Éteinte, la fonction sort à sa première
-   instruction : plus une seule lecture, analyse et réécriture de la
-   mémoire d'onglet sur le chemin de la première image, alors qu'il y
-   en avait une par ligne écrite (15 à 19 par page, mesuré nº 712).
+/* §2 (nº 790) — LA BOÎTE NOIRE N'EST PLUS ÉCRITE ICI. Ce script en
+   recopiait le geste à la main (la meme cle, le meme format, la meme
+   limite de deux cents lignes) parce qu'il s'execute avant le moindre
+   module et ne pouvait pas appeler lib/boite-noire. Les huit lignes
+   qu'il ecrivait, et la fonction qui les ecrivait, sont parties avec
+   elle : le defaut qu'elle guettait (le bug des styles, nº 654/673)
+   n'a plus ete revu depuis la nº 744. Le chemin de la premiere image
+   n'a donc plus RIEN a faire pour une trace — meme desarmee, la
+   lecture de la marque restait a payer.
    ⚠️ ET PAS UN SEUL ACCENT GRAVE DANS CETTE NOTE, comme le rappelle
-   l'en-tête du fichier : nous sommes DANS un littéral de gabarit, et
+   l'en-tete du fichier : nous sommes DANS un litteral de gabarit, et
    un accent grave le fermerait net. */
-var bnArmee=(r.dataset[${JSON.stringify(MARQUE_SONDES)}]||"").indexOf("boite-noire")>=0;
-var bn=function(txt){if(!bnArmee)return;try{var br=sessionStorage.getItem(${JSON.stringify(CLE_BOITE_NOIRE)});
-var li=br?JSON.parse(br):[];if(!(li instanceof Array))li=[];
-li.push({h:Date.now(),texte:txt});
-if(li.length>${LIGNES_BOITE_NOIRE})li=li.slice(li.length-${LIGNES_BOITE_NOIRE});
-sessionStorage.setItem(${JSON.stringify(CLE_BOITE_NOIRE)},JSON.stringify(li))}catch(e){}};
-bn("SCRIPT AVANT PEINTURE · arrivée sur "+adresse+" · navigation « "+nav+" »");
 var jour=function(c,s){try{var b=s.getItem(c);return b?JSON.parse(b):null}catch(e){return null}};
 var maintenant=Date.now();
 var age=${AGE_MAXIMUM_MS};
@@ -394,16 +355,12 @@ var pn=new URLSearchParams(location.search);var nue=true;
 pn.forEach(function(v,n){if(!(${conditionDeReglagePourLeScript("n")}))nue=false});
 var pd=new URLSearchParams(derniereOnglet.slice(derniereOnglet.indexOf("?")+1));var pleine=false;
 pd.forEach(function(v,n){if(!(${conditionDeReglagePourLeScript("n")}))pleine=true});
-bn("FILET DE REPLI · testé · arrivée « "+adresse+" » "+(nue?"NUE":"avec critères")+
-" · dernière du même onglet « "+derniereOnglet+" » "+(pleine?"PLEINE":"nue")+
-" · âge "+(maintenant-memoireOnglet.quand)+" ms · conclusion : "+((nue&&pleine)?"RÉPARE":"ne répare pas"));
-if(nue&&pleine){vers=derniereOnglet;
-try{if(sessionStorage.getItem(${armeeSonde})==="1"){var jr=[];
-try{jr=JSON.parse(sessionStorage.getItem(${journalSonde})||"[]")}catch(e2){jr=[]}
-jr.push({t:0,texte:"⚠️ REPLI DOCUMENT RÉPARÉ · le routeur a rechargé sur "+adresse+" (navigation de document, les critères perdus en route) · l'adresse complète est rendue : "+vers});
-sessionStorage.setItem(${journalSonde},JSON.stringify(jr))}}catch(e3){}}}
+/* §4 (nº 790) — LE FILET REPARE, IL NE SIGNE PLUS. La ligne
+   « REPLI DOCUMENT REPARE » partait au journal de la sonde bascule
+   (nº 428) ; cette sonde est retiree au grand menage. La REPARATION,
+   elle, ne change pas d'une virgule : c'est la ligne ci-dessous. */
+if(nue&&pleine){vers=derniereOnglet}}
 if(vers){
-bn("FILET DE REPLI · RÉÉCRIT L'ADRESSE · AVANT « "+adresse+" » · APRÈS « "+vers+" »");
 try{sessionStorage.setItem(${restaurer},vers)}catch(e){}
 r.style.visibility="hidden";
 setTimeout(function(){r.style.visibility=""},3000);
@@ -423,8 +380,7 @@ return}
 var demande=null;try{demande=sessionStorage.getItem(${restaurer})}catch(e){}
 var attendue=demande&&(demande==="1"||demande===adresse);
 if(attendue){try{sessionStorage.removeItem(${restaurer})}catch(e){}}
-bn("SCRIPT · position · demande nommée « "+(demande||"aucune")+" » · attendue : "+(attendue?"OUI":"non")+" · navigation « "+nav+" »");
-if(nav==="navigate"&&!attendue){bn("SCRIPT · position · NE RESTITUE RIEN (navigation neuve sans demande)");return}
+if(nav==="navigate"&&!attendue){return}
 /* ⚠️ LA CLÉ EST L'ADRESSE CANONIQUE DE LA RECHERCHE (nº 184-§2) :
    critères compris, réglages de sonde exclus, paramètres triés.
    §1 (nº 335) — LA CONDITION CI-DESSOUS EST FABRIQUÉE PAR
@@ -437,10 +393,8 @@ if(${conditionDeReglagePourLeScript('n')})p.delete(n)}
 p.sort();var q=p.toString();
 var cle=location.pathname+(q?"?"+q:"");
 var note=jour(${prefixe}+cle,localStorage);
-bn("SCRIPT · position · clé « "+cle+" » · note "+(note?("y="+note.y+", âge "+(maintenant-(note.date||0))+" ms"):"AUCUNE"));
-if(!note||!note.y||maintenant-(note.date||0)>agePosition){bn("SCRIPT · position · RIEN À POSER (note absente, nulle ou périmée)");return}
+if(!note||!note.y||maintenant-(note.date||0)>agePosition){return}
 r.dataset.positionPosee=String(note.y);
-bn("SCRIPT · position · POSE "+note.y+" avant la première peinture");
 /* §1 (nº 335) — LA RANGÉE NAÎT DANS L'ÉTAT OÙ ON L'A LAISSÉE. La
    place gardée porte les deux (lib/navigation-session) ; la barre
    lit cette marque à sa naissance (lib/reserve-barre). Sans elle,

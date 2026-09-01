@@ -157,7 +157,7 @@ export function SondeVitesse() {
     return (
       <PastilleSonde
         /*  §1 (nº 679) — « T » COMME TEMPS, ET NON « V ». La lettre « V »
-            est déjà celle de la sonde du VERRE (SondeVerre) : deux
+            est déjà celle de la sonde du VERRE (retirée nº 790) : deux
             pastilles identiques dans le même coin, c'est une pastille
             qu'on ouvre au hasard. Les prises : B, C, F, H, K, M, N, V. */
         lettre="T"

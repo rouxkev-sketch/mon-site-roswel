@@ -279,7 +279,7 @@
  *    était LE ROUTEUR recopiant l'état marqué de l'étape (mesure
  *    nº 333 : « +16 ms replaceState → / (le routeur de Next) ») ; pour
  *    une REMPLACÉE, une marque ne désigne l'appelant que si elle est
- *    NEUVE (`quiRemplace`, journal-historique).
+ *    NEUVE (`quiRemplace` — journal de l'historique, retiré nº 790).
  *  · nº 350 — LA RÈGLE DES ÉJECTIONS EST TROUVÉE, sourcée par le
  *    propriétaire : Chrome 127 / iOS 17.5+ SAUTE au retour les entrées
  *    créées SANS interaction (anti-piège, crédit ~10 s). LE CRAN DU
@@ -321,22 +321,12 @@
  *    fiche est corrigée (§4 : elle ne sort que si aucun cran n'est posé
  *    dans le document, une seule fois — drapeaux à l'échelle du
  *    module, RetourGaranti).
- *  · nº 353 — LE BANC D'ÉPREUVE PAR VARIANTES (lib/variantes-essai,
- *    TEMPORAIRE) : l'argument du propriétaire — les sites Next
- *    ordinaires ont un retour fiable sur Chrome iPhone, le juge punit
- *    LE NÔTRE — impose de couper nos écritures d'historique une par
- *    une (`?variante=nu`, `sans-filet`, `sans-surfaces`,
- *    `sans-consommation`, `sans-fenetres`, `sans-profil`,
- *    `sans-nettoyages`, `sans-balise` ; `normal` désarme). Portes dans
- *    RetourGaranti, etape-refermable, FicheTatoueur, ContenuFiche,
- *    GrilleTatoueurs, FormulaireFiche, disposition-grille,
- *    filtres-selection, vue-phototheque, CarteTatoueur. La variante
- *    active est écrite dans le journal à chaque arrivée. Sans
- *    paramètre : rien ne change. Doc officielle intégrée (complément
- *    nº 353) : les étapes sans activation sont « sautables », chaque
- *    geste RÉPARE toutes les étapes du document, sauf activation
- *    CONSOMMÉE — d'où `sans-balise`, la seule API de la chaîne du
- *    toucher (sendBeacon).
+ *  · nº 353 — LE BANC D'ÉPREUVE PAR VARIANTES (`?variante=nu`,
+ *    `sans-filet`, `sans-surfaces`…) coupait nos écritures
+ *    d'historique une par une, pour que le téléphone du propriétaire
+ *    nomme le coupable des éjections. Il l'a nommé au point suivant :
+ *    le banc, ses huit portes, son cookie du proxy et son bloc du
+ *    script d'avant peinture sont retirés à la nº 790.
  *  · nº 357 — ÉTAPE 1 DU CHANTIER DES PAGES PRÉPARÉES D'AVANCE :
  *    L'ACCUEIL NU EST PRÉRENDU (verdict nº 356 : le rendu dynamique
  *    est la cause signée des éjections). La mise en page du groupe et
@@ -388,32 +378,17 @@
  *  · IL RESTE : la moitié du C-6 sans objet — voir le point 5.
  *
  * ------------------------------------------------------------------
- * CHANTIERS OUVERTS — À RETIRER AVANT LA MISE EN LIGNE :
- *  · L'ARMEMENT DES SONDES (nº 343) — src/lib/sondes-armees.ts, son
- *    bloc dans le script d'avant peinture, et le bouton `BoutonDesarmer`
- *    (OutilsSonde). ⚠️ LES TROIS SONDES S'ARMENT DÉSORMAIS PAR LUI, ET
- *    DURABLEMENT : la mémoire LOCALE, lue avant toute ligne
- *    d'application, parce que le défaut poursuivi ne se produit qu'à
- *    l'adresse NUE — une sonde armée par l'adresse le fait disparaître.
- *    Désarmées, elles ne coûtent qu'une lecture de la mémoire locale :
- *    aucune écriture, aucun écouteur, aucune enveloppe (banc p343).
- *  · `?sonde-remontee=1` (nº 330-§1) — src/components/SondeRemontee.tsx,
- *    sa ligne et son import dans app/(tatouage)/layout.tsx. Elle
- *    expose au banc les vraies fonctions du gel et de la remontée,
- *    parce que le seul panneau du bas du site vit derrière une session
- *    que le conteneur d'épreuve ne sait pas signer.
- *  · `?sonde-clic=1` (nº 335-§3) — src/components/SondeClic.tsx, sa
- *    ligne et son import dans app/(tatouage)/layout.tsx. Elle dit quel
- *    élément reçoit réellement un toucher, et si l'événement a été
- *    arrêté en route : c'est l'instrument du rond de profil qui ne
- *    répond pas dans la fenêtre partagée.
- *  · `?sonde-historique=1` (nº 331-§4) — src/components/SondeHistorique.tsx,
- *    src/lib/journal-historique.ts, sa ligne et son import dans
- *    app/(tatouage)/layout.tsx. Elle tient le journal de TOUT ce qui
- *    arrive à la pile d'historique, en traversant les pages, et le
- *    recopie en texte : c'est l'instrument du relevé demandé au §3 de
- *    la nº 331, et le seul moyen de voir l'accumulation qui fait
- *    retomber sur l'accueil.
+ * CHANTIERS OUVERTS — SOLDÉS À LA nº 790.
+ * Cette liste énumérait ce qu'il fallait retirer AVANT la mise en
+ * ligne : l'armement des sondes et trois instruments (remontée, clic,
+ * historique). Le grand ménage de la nº 790 les a tous retirés, avec
+ * neuf autres sondes et la boîte noire — chacune posée pour un défaut
+ * clos depuis. Il ne reste, du registre d'armement, que le JOURNAL DE
+ * BORD, et deux sondes d'affichage armées par l'adresse : la VITESSE
+ * et la NAVIGATION. Elles ne visent aucun défaut : ce sont des
+ * instruments de mesure, et les passes suivantes (service worker,
+ * préchargements) s'en serviront. Le tableau de bord qui les allume
+ * (`/dev`) est désormais réservé au compte admin.
  * ██████████████████████████████████████████████████████████████████
  */
 

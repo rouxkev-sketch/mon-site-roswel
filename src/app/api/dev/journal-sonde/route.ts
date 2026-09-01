@@ -14,14 +14,19 @@
  *
  *     journal-<sonde>-<AAAA-MM-JJ-HHhMM-SS>.txt
  *
- * ⚠️ DÉVELOPPEMENT SEULEMENT. En production, elle répond 404 comme si
- * elle n'existait pas : rien ne s'écrit sur un serveur en ligne, et
- * personne ne peut y déposer quoi que ce soit.
+ * ██ §1 (nº 790) — LE VERROU ADMIN, À LA PLACE DU VERROU D'AMBIANCE ██
+ * ------------------------------------------------------------------
+ * ELLE RÉPONDAIT INTROUVABLE EN PRODUCTION, et ouvrait son disque à
+ * QUICONQUE en développement. C'est désormais le COMPTE qui décide,
+ * comme pour la page `/dev` et comme pour /admin — `verifierAdmin()`,
+ * la session lue dans les cookies. Le refus est un 404 : la même
+ * réponse que pour une adresse qui n'existe pas, connecté ou non.
  */
 
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
+import { verifierAdmin } from "@/lib/admin-yokofolio";
 
 //  Elle écrit un fichier : il lui faut Node, et aucune mise en cache.
 export const runtime = "nodejs";
@@ -55,7 +60,8 @@ function horodatage(): string {
 }
 
 export async function POST(requete: Request) {
-  if (process.env.NODE_ENV === "production") {
+  //  §1 (nº 790) — le verrou admin, avant toute lecture du corps.
+  if (await verifierAdmin()) {
     return NextResponse.json({ erreur: "introuvable" }, { status: 404 });
   }
 

@@ -235,21 +235,16 @@ const nextConfig: NextConfig = {
         value: "private, no-cache, max-age=0, must-revalidate",
       },
     ];
-    /*  nº 355 — L'ÉPREUVE DES EN-TÊTES. Le code entier a été innocenté
-        (nu-total éjecte encore ; nextjs.org — même moteur, même
-        hébergeur — tient) : restent NOS EN-TÊTES et le domaine. Quand
-        le cookie du nu total est posé (lib/variantes-essai), les pages
-        sont servies avec L'EN-TÊTE D'UN SITE ORDINAIRE — `public,
-        max-age=0, must-revalidate` : toujours revalidé (aucune page
-        personnalisée ne peut être resservie périmée), mais sans
-        `private` ni `no-cache`, les deux jetons qui nous séparent d'un
-        site vierge. Un seul essai tranche : nu-total éjectait AVEC les
-        en-têtes de la nº 344, le même nu-total tourne désormais SANS.
-        Sans le cookie : rien ne change. */
-    const cachePageEssai = [
-      { key: "Cache-Control", value: "public, max-age=0, must-revalidate" },
-    ];
-    const temoinNuTotal = { type: "cookie" as const, key: "yf_nu_total" };
+    /*  §5 (nº 790) — L'ÉPREUVE DES EN-TÊTES EST TERMINÉE. La nº 355
+        servait les pages avec l'en-tête d'un site ORDINAIRE (`public,
+        max-age=0, must-revalidate`, sans `private` ni `no-cache`) dès
+        que le cookie du « nu total » était posé, pour savoir si NOS
+        en-têtes expliquaient les éjections de retour. Ils ne les
+        expliquaient pas : la cause a été nommée à la nº 350 (Chrome
+        iOS saute les entrées créées sans interaction). Le banc par
+        variantes est retiré, son cookie avec — et cette seconde règle
+        d'en-tête, qui n'avait que lui pour la déclencher, aussi. Les
+        pages n'ont plus qu'un en-tête, celui du site. */
     const chemins = [
       "/",
       "/recherche",
@@ -274,10 +269,7 @@ const nextConfig: NextConfig = {
       headers: cacheImagePublique,
     };
     return [
-      ...chemins.flatMap((source) => [
-        { source, headers: cachePage, missing: [temoinNuTotal] },
-        { source, headers: cachePageEssai, has: [temoinNuTotal] },
-      ]),
+      ...chemins.map((source) => ({ source, headers: cachePage })),
       imagesPubliques,
     ];
   },

@@ -20,7 +20,8 @@ import {
  * Un banc qui ne reproduit pas le terrain ne prouve rien — il rassure.
  *
  * Ce fichier renverse la méthode, comme la sonde du clavier
- * (SondeClavier) l'avait fait après dix passes à l'aveugle : il
+ * (la sonde du clavier, retirée nº 790) l'avait fait après dix
+ * passes à l'aveugle : il
  * enregistre ce qui se passe VRAIMENT sur l'appareil du propriétaire,
  * et rend un texte à recopier d'un geste.
  *

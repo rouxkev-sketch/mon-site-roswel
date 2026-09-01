@@ -59,7 +59,6 @@
  * état naître.
  */
 
-import { noter } from "@/lib/journal-bascule";
 
 /**
  * LES DEUX HAUTEURS DE LA RÉSERVE, ÉCRITES ICI ET NULLE PART AILLEURS.
@@ -195,11 +194,7 @@ export function rangeeReplieeMaintenant(): boolean | null {
  * vide sa file avant la peinture suivante, la réserve et le défilement
  * changent donc pour le même rendu.
  */
-export function rendreLEtatDeRangee(
-  repliee: boolean | null | undefined,
-  /** §3 (nº 426) — qui rend cet état (écrit au journal de la sonde). */
-  raison = "(raison non dite)"
-) {
+export function rendreLEtatDeRangee(repliee: boolean | null | undefined) {
   if (typeof document === "undefined") return;
   if (repliee === null || repliee === undefined) return;
   const racine = document.documentElement;
@@ -215,9 +210,6 @@ export function rendreLEtatDeRangee(
   } else {
     delete racine.dataset[MARQUE_RANGEE];
   }
-  noter(
-    `RANGÉE RENDUE · ${repliee ? "repliée" : "dépliée"} · ${raison}`
-  );
   window.dispatchEvent(
     new CustomEvent(EVENEMENT_RANGEE, { detail: { repliee } })
   );

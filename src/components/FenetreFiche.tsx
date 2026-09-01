@@ -15,7 +15,6 @@ import {
   PointsDuCarrousel,
 } from "@/components/CarrouselPortfolio";
 import { ContenuFiche } from "@/components/ContenuFiche";
-import { SondePhoto } from "@/components/SondePhoto";
 import {
   galerieParStyles,
   ouvertureGalerie,
@@ -756,12 +755,6 @@ export function FenetreFiche({
                  est devenu un cheveu plus étroit et plus court qu'elle
                  — et ce cheveu montrait le noir. Sans fond, il n'y a
                  plus rien à montrer. */}
-            {/*  §1 (nº 294) — LA SONDE RELÈVE AUSSI ICI. Le liseré se
-                 voit dans cette fenêtre comme sur la page : elle doit
-                 pouvoir y prendre ses nombres. Elle ne rend rien sans
-                 `?sonde-photo=1`, et une seule sonde s'affiche à la
-                 fois — la plus récente, donc celle-ci. */}
-            <SondePhoto />
             {/*  ██ §2 (nº 500) — LA BOÎTE DE LA PHOTO NE PEINT PLUS ██
                  ==============================================================
                  ELLE PORTAIT `bg-black`, un noir plus sombre que le

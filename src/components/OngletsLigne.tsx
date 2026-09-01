@@ -165,9 +165,6 @@ export function OngletsLigne({
       <div className="relative h-[3px]" aria-hidden="true">
         {avecLigneGrise && (
           <span
-            //  §5 (nº 462) — la ligne se NOMME : la mesure de la
-            //  sonde-retour la retrouve pour dire qui la coupe.
-            data-ligne-grise=""
             className={`absolute inset-x-0 bottom-0 h-px ${TRAIT_SEPARATION_FOND} ${classeLigne}`}
           />
         )}

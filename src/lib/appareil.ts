@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 //  ⚠️ TEMPORAIRE (nº 173) — la sonde-journal enregistre la valeur de ce
 //  crochet à chaque changement. Elle n'écrit RIEN sans `?sonde-bascule=1`.
-import { noter } from "@/lib/journal-bascule";
 
 /**
  * SUIS-JE SUR UN VRAI MOBILE ?
@@ -79,11 +78,6 @@ export function useAppareilMobile(): boolean {
   useEffect(() => {
     if (connue.current === mobile) return;
     connue.current = mobile;
-    noter(
-      `CROCHET useAppareilMobile = ${mobile} · largeur ${window.innerWidth} · ` +
-        `data-appareil="${document.documentElement.dataset.appareil ?? "(absent)"}" · ` +
-        `critère pointer:coarse — aucun seuil de largeur`
-    );
   }, [mobile]);
   return mobile;
 }

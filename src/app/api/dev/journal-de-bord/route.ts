@@ -14,10 +14,20 @@
  * drame : savoir si, au moment du clignotement, le serveur voyait
  * encore une session.
  *
- * ⚠️ DÉVELOPPEMENT SEULEMENT, comme la route des sondes — sauf si le
- * propriétaire pose `JOURNAL_DE_BORD=1` dans son environnement pour
- * instrumenter une version en ligne. Sans cela, un serveur public ne
- * laisse personne écrire sur son disque.
+ * ██ §1 (nº 790) — LE VERROU ADMIN, À LA PLACE DU VERROU D'AMBIANCE ██
+ * ------------------------------------------------------------------
+ * ELLE RÉPONDAIT INTROUVABLE EN PRODUCTION, et ouvrait son disque à
+ * QUICONQUE en développement — sauf si le propriétaire posait
+ * `JOURNAL_DE_BORD=1` pour instrumenter une version en ligne, ce qui
+ * la rouvrait alors à tout le monde, en ligne. Les deux réglages
+ * partent : c'est désormais le COMPTE qui décide, comme pour la page
+ * `/dev` et comme pour /admin — `verifierAdmin()`, la session lue dans
+ * les cookies. Le propriétaire garde donc ce qu'il voulait (écrire un
+ * journal depuis une version en ligne) sans que personne d'autre ne
+ * l'obtienne, et l'atelier n'a plus de porte ouverte par défaut.
+ *
+ * ⚠️ REFUS = INTROUVABLE : la même réponse que pour une adresse qui
+ * n'existe pas, connecté ou non. Une route d'atelier ne s'annonce pas.
  * ⚠️ ET JAMAIS UNE ERREUR VERS LE NAVIGATEUR : le journal observe le
  * site, il ne doit pas pouvoir le perturber — une écriture qui rate
  * répond « ok » quand même.
@@ -26,6 +36,7 @@
 import { appendFile, rename, stat } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
+import { verifierAdmin } from "@/lib/admin-yokofolio";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,10 +50,8 @@ const TAILLE_ROTATION = 2 * 1024 * 1024;
 const FICHIER = "journal-de-bord.ndjson";
 
 export async function POST(requete: Request) {
-  if (
-    process.env.NODE_ENV === "production" &&
-    process.env.JOURNAL_DE_BORD !== "1"
-  ) {
+  //  §1 (nº 790) — le verrou admin, avant toute lecture du corps.
+  if (await verifierAdmin()) {
     return NextResponse.json({ erreur: "introuvable" }, { status: 404 });
   }
 

@@ -5,7 +5,6 @@ import { useEffect, useRef } from "react";
 //  se déclare, pour que le rattrapage du filet ne la prenne jamais
 //  pour un atterrissage accidentel au fond de la pile.
 import { annoncerRepriseDuSite } from "@/lib/navigation-session";
-import { mecanismeCoupe } from "@/lib/variantes-essai";
 
 /**
  * UNE SURFACE QUI COUVRE L'ÉCRAN POSE UNE ÉTAPE, ET LE RETOUR LA REFERME
@@ -173,9 +172,6 @@ export function laSurfaceVaNaviguer(): void {
  */
 export function laNavigationRemplaceLEtape(): boolean {
   if (typeof window === "undefined") return false;
-  //  nº 353 — porte du banc : sans consommation, la navigation pousse
-  //  normalement, comme sur un site Next ordinaire.
-  if (mecanismeCoupe("consommation")) return false;
   const etat = window.history.state as Record<string, unknown> | null;
   return etat?.[CLE] !== undefined;
 }
@@ -193,10 +189,6 @@ export function useEtapeQuiSeReferme(
   }, [fermer]);
 
   useEffect(() => {
-    //  nº 353 — porte du banc : surfaces sans étape d'historique. Elles
-    //  s'ouvrent et se ferment par leur croix ; le retour ne les
-    //  referme plus — c'est le comportement d'un site Next ordinaire.
-    if (mecanismeCoupe("surfaces")) return;
     if (!ouverte) return;
     let rang: number;
     const dejaLa =

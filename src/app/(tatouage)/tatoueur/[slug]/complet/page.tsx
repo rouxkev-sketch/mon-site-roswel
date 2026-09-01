@@ -22,7 +22,6 @@ import { FicheTatoueur } from "@/components/FicheTatoueur";
 import { JsonLd } from "@/components/JsonLd";
 import { RetourFenetreFiche } from "@/components/RetourFenetreFiche";
 import { CompteurConsultation } from "@/components/CompteurConsultation";
-import { SondeCadre } from "@/components/SondeCadre";
 
 /*  ██ nº 359 — LE JUMEAU COMPLET DE LA FICHE ██
     PERSONNE NE TAPE CETTE ADRESSE. Deux chemins y mènent :
@@ -283,7 +282,6 @@ export default async function PageFicheTatoueur({
            sinon) et ne touche à rien d'autre : elle mesure et affiche.
            Elle vit sur CETTE page — celle d'une fiche de partage —,
            là où le propriétaire voit la bande à gauche du cadre. */}
-      <SondeCadre />
       <FicheTatoueur
         studioCourant={studio ?? null}
         tatoueur={tatoueur}
