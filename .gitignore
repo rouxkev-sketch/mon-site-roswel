@@ -58,3 +58,10 @@ journal-de-bord*.ndjson
 # un zip de livraison. Elles restent chez lui, et il les recopie sur un
 # disque externe (voir outils/LISEZMOI-sauvegardes.md).
 /sauvegardes/
+
+#  Le journal de `outils/reprendre-le-cache` (nº 778) : il est écrit
+#  au fil de l'eau dans le dossier du propriétaire pour qu'un compte
+#  rendu survive à une fenêtre de terminal fermée. C'est une trace de
+#  travail, pas un fichier du projet — elle ne rentre ni dans
+#  l'historique, ni dans un zip.
+/reprise-du-cache.txt

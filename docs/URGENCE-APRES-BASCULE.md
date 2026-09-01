@@ -158,6 +158,27 @@ renommé, aucune adresse ne change, **aucun SQL à passer après**. Une
 photo déjà bonne n'est pas touchée — relancé, il ne reprend que ce qui
 reste. Pour le second seau : `SEAU_PHOTOS=photos-artisans`.
 
+### Ce que la nº 778 a corrigé dans cet outil
+
+Sa première version **restait muette plusieurs minutes** : elle
+demandait la consigne photo par photo — 1150 allers-retours vers les
+États-Unis — sans rien afficher. Elle travaillait, mais rien ne le
+disait. Trois choses ont changé :
+
+- **la consigne se lit dans la liste du seau**, qui la porte déjà : le
+  constat passe de quelques minutes à quelques secondes ;
+- **l'outil dit où il en est** — la lecture tous les 200 fichiers, la
+  reprise toutes les 25 photos avec l'heure, réussites et échecs
+  comptés à part (l'ancien « 1150/1150 » mélangeait les deux) ;
+- **tout s'écrit aussi dans `reprise-du-cache.txt`**, au fil de l'eau :
+  une fenêtre de terminal fermée ne fait plus perdre le compte rendu.
+
+Et surtout : **il éprouve son geste sur UNE photo avant de dérouler**.
+Il la renvoie, relit sa consigne, et ne continue que si elle a
+réellement changé — sinon il essaie l'autre façon d'écrire, et s'arrête
+net si aucune ne prend. Renvoyer 1150 photos sans effet n'est plus
+possible.
+
 > Après coup, le réseau de diffusion peut encore servir quelques
 > minutes ses réponses d'avant : c'est normal. Pour regarder toi-même :
 > `curl -sI "<adresse d'une photo>" | grep -i cache-control`

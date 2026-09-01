@@ -14,6 +14,24 @@
 #  ⚠️ SUR TON MAC, PAS DANS L'ATELIER (aucun accès au réseau là-bas).
 #
 #  ==================================================================
+#  IL DIT OÙ IL EN EST, ET IL GARDE TOUT (nº 778)
+#  ------------------------------------------------------------------
+#  À la première version, il restait muet plusieurs minutes : il
+#  demandait la consigne PHOTO PAR PHOTO, mille cent cinquante fois,
+#  sans rien afficher. Il travaillait — mais rien ne le disait.
+#  Maintenant : la lecture du seau s'annonce tous les deux cents
+#  fichiers, la reprise toutes les vingt-cinq photos avec l'heure, les
+#  réussites et les échecs comptés à part.
+#
+#  ET TOUT S'ÉCRIT AUSSI DANS UN FICHIER, au fil de l'eau :
+#
+#    reprise-du-cache.txt   (à la racine du projet)
+#
+#  Si la fenêtre du terminal se ferme pendant qu'il travaille — ce qui
+#  t'est arrivé —, le compte rendu est là. Tu peux le relire, ou me
+#  l'envoyer.
+#
+#  ==================================================================
 #  LE DÉFAUT QU'IL RÉPARE
 #  ------------------------------------------------------------------
 #  Les 1150 photos copiées vers le projet américain étaient servies

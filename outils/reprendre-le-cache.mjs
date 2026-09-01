@@ -15,7 +15,7 @@
 //
 //  ⚠️ AUCUNE CLÉ AFFICHÉE : le script ne montre que l'adresse du
 //  projet, jamais son jeton.
-import { readFile } from "node:fs/promises";
+import { appendFile, readFile } from "node:fs/promises";
 import path from "node:path";
 import {
   dureeCachePhotos,
@@ -24,6 +24,34 @@ import {
 
 const RACINE = process.cwd();
 const REEL = process.argv.includes("--reel");
+
+/**
+ * ██ §1 (nº 778) — TOUT CE QUI S'AFFICHE S'ÉCRIT AUSSI SUR LE DISQUE ██
+ * ------------------------------------------------------------------
+ * LE RELEVÉ DU PROPRIÉTAIRE : « le --reel a affiché 1150/1150 puis plus
+ * rien — session Mac fermée pendant le bilan ». Le compte rendu final
+ * est parti avec la fenêtre, et il ne restait aucune trace de ce qui
+ * avait été fait. Chaque ligne va donc AUSSI dans un fichier, écrite au
+ * fil de l'eau : la fenêtre peut se fermer, le journal reste.
+ * ⚠️ IL NE CONTIENT AUCUNE CLÉ : les mêmes lignes que l'écran, qui n'en
+ * montrent jamais (règle du projet).
+ */
+const JOURNAL = path.join(RACINE, "reprise-du-cache.txt");
+let journalOuvert = true;
+async function dire(ligne = "") {
+  console.log(ligne);
+  if (!journalOuvert) return;
+  try {
+    await appendFile(JOURNAL, `${ligne}\n`);
+  } catch {
+    //  Dossier en lecture seule : on n'insiste pas, et on ne le redit
+    //  pas à chaque ligne — l'écran, lui, continue.
+    journalOuvert = false;
+  }
+}
+/** L'heure, pour que le journal dise AUSSI quand c'est arrivé. */
+const horodate = () =>
+  new Date().toLocaleTimeString("fr-FR", { hour12: false });
 const TAILLE_PAGE = 1000;
 const DELAI_MS = Math.max(10_000, Number(process.env.DELAI_LECTURE ?? 60) * 1000);
 const DELAI_FICHIER_MS = Math.max(5_000, Number(process.env.DELAI_FICHIER ?? 30) * 1000);
@@ -110,10 +138,41 @@ function raisonLisible(erreur) {
   return texte.slice(0, 120);
 }
 
-/** Les objets d'un seau, dossier par dossier — la descente de
-    `demenager-photos` et de la sauvegarde (nº 689) : l'API rend les
-    fichiers d'un niveau, et les dossiers en entrées SANS identifiant. */
-async function listerLesObjets(appeler, prefixe = "") {
+/**
+ * Les objets d'un seau, dossier par dossier — la descente de
+ * `demenager-photos` et de la sauvegarde (nº 689) : l'API rend les
+ * fichiers d'un niveau, et les dossiers en entrées SANS identifiant.
+ *
+ * ██ §2 (nº 778) — LE LISTING RAPPORTE DÉJÀ LA CONSIGNE ██
+ * ------------------------------------------------------------------
+ * CE QUI SE PASSAIT, ET C'EST LA CAUSE DU SILENCE : le constat de la
+ * nº 777 demandait la consigne PHOTO PAR PHOTO (`/object/info`, puis
+ * `HEAD` en repli). Mille cent cinquante allers-retours depuis un Mac
+ * européen vers un projet américain — plusieurs minutes pendant
+ * lesquelles rien ne s'affichait. L'outil n'était pas bloqué : il
+ * travaillait sans le dire.
+ * CE QUE ÇA IGNORAIT : chaque entrée du listing porte ses métadonnées —
+ * `metadata.cacheControl` et `metadata.mimetype` (les types du client
+ * officiel les déclarent : `FileMetadata`). La consigne des mille cent
+ * cinquante photos tient donc dans les quelques requêtes de la
+ * descente, et le constat devient immédiat.
+ * ⚠️ ET SI LE SERVICE NE LES SERT PAS (entrée sans `metadata`) : on
+ * garde le repli d'avant, photo par photo — mais on le DIT, et on
+ * affiche l'avancement (voir `lireLaConsigne` et le constat).
+ */
+/*  ⚠️ LE COMPTEUR EST PARTAGÉ, PAS LOCAL. Première écriture de cette
+    passe : il comptait `trouves.length`, la liste du NIVEAU courant —
+    or la descente est récursive, un dossier par appel. Dans un seau
+    rangé par fiche (dix photos par dossier), ce nombre ne dépassait
+    jamais dix : le seuil d'annonce n'était jamais atteint, et la
+    descente restait muette. Mesuré au banc sur 1150 photos, corrigé
+    ici : le total vit dans un objet que tous les appels partagent. */
+async function listerLesObjets(
+  appeler,
+  prefixe = "",
+  avancement = null,
+  compte = { vues: 0 }
+) {
   const trouves = [];
   for (let depart = 0; ; depart += TAILLE_PAGE) {
     let reponse;
@@ -136,8 +195,21 @@ async function listerLesObjets(appeler, prefixe = "") {
     if (!Array.isArray(lot) || lot.length === 0) break;
     for (const entree of lot) {
       const chemin = prefixe ? `${prefixe}/${entree.name}` : entree.name;
-      if (entree.id) trouves.push(chemin);
-      else trouves.push(...(await listerLesObjets(appeler, chemin)));
+      if (entree.id) {
+        trouves.push({
+          chemin,
+          //  La consigne telle que le service la garde — `undefined`
+          //  quand ce listing-ci ne porte pas de métadonnées.
+          consigne: entree.metadata?.cacheControl,
+          type: entree.metadata?.mimetype,
+        });
+        compte.vues += 1;
+        await avancement?.(compte.vues);
+      } else {
+        trouves.push(
+          ...(await listerLesObjets(appeler, chemin, avancement, compte))
+        );
+      }
     }
     if (lot.length < TAILLE_PAGE) break;
   }
@@ -204,31 +276,58 @@ async function lireLaConsigne(appeler, chemin, etat) {
  * Aucun point d'entrée ne les modifie seules — `copy` et `move` les
  * recopient telles quelles (c'est déjà écrit dans `lib/cache-photos`
  * depuis la nº 721). Reposer la consigne, c'est donc RENVOYER le
- * fichier : on le lit, on le réécrit à SON chemin, avec l'en-tête.
- * ⚠️ `PUT` ET NON `POST` : c'est la mise à jour d'un objet existant —
- * le geste que le client officiel appelle `update()`. Le contenu
- * renvoyé est celui qu'on vient de lire, octet pour octet : la photo
- * n'est ni recompressée, ni redimensionnée, ni renommée.
+ * fichier : on le lit, on le réécrit à SON chemin, avec l'en-tête. Le
+ * contenu renvoyé est celui qu'on vient de lire, octet pour octet : la
+ * photo n'est ni recompressée, ni redimensionnée, ni renommée.
+ *
+ * ██ §3 (nº 778) — DEUX GESTES POSSIBLES, ET C'EST LE SERVICE QUI
+ * TRANCHE ██
+ * ------------------------------------------------------------------
+ * LE RELEVÉ DU PROPRIÉTAIRE : après un `--reel` allé jusqu'à
+ * « 1150/1150 », les photos répondaient TOUJOURS `no-cache`. Renvoyer
+ * un fichier peut donc, chez lui, ne pas reposer la consigne.
+ * DEUX ÉCRITURES EXISTENT, et elles ne sont pas équivalentes partout :
+ *  · `PUT` — la mise à jour, ce que le client officiel appelle
+ *    `update()` ; c'est ce que la nº 777 employait ;
+ *  · `POST` + `x-upsert: true` — le dépôt qui écrase, celui que
+ *    `reprendre-avatars` emploie depuis la nº 719.
+ * JE NE PEUX PAS TRANCHER D'ICI lequel le service retient : l'atelier
+ * n'a pas accès au vrai projet. L'outil ne devine donc plus — il
+ * ESSAIE sur UNE photo et RELIT le résultat (voir `eprouverLeGeste`).
+ * Celui qui prend est employé pour les autres ; si aucun ne prend, on
+ * s'arrête net au lieu de renvoyer mille photos pour rien.
  */
-async function reprendreUnePhoto(appeler, chemin, enTete, typeConnu) {
+async function lireLesOctets(appeler, chemin) {
   let source;
   try {
     source = await appeler(`/storage/v1/object/${SEAU}/${encoder(chemin)}`, {
       delai: DELAI_FICHIER_MS,
     });
   } catch (erreur) {
-    return `lecture : ${raisonLisible(erreur)}`;
+    return { echec: `lecture : ${raisonLisible(erreur)}` };
   }
-  if (!source.ok) return `lecture : HTTP ${source.status}`;
-  const octets = Buffer.from(await source.arrayBuffer());
-  //  Le type est celui que le service annonce — on ne le devine pas.
-  const type =
-    source.headers.get("content-type") ?? typeConnu ?? "application/octet-stream";
+  if (!source.ok) return { echec: `lecture : HTTP ${source.status}` };
+  return {
+    octets: Buffer.from(await source.arrayBuffer()),
+    //  Le type est celui que le service annonce — on ne le devine pas.
+    type: source.headers.get("content-type"),
+  };
+}
+
+async function reprendreUnePhoto(appeler, chemin, enTete, geste, typeConnu) {
+  const { octets, type, echec } = await lireLesOctets(appeler, chemin);
+  if (echec) return echec;
+  const enTetes = {
+    "content-type": type ?? typeConnu ?? "application/octet-stream",
+    "cache-control": enTete,
+  };
+  //  Le dépôt qui écrase se déclare ; la mise à jour n'en a pas besoin.
+  if (geste === "POST") enTetes["x-upsert"] = "true";
   let reponse;
   try {
     reponse = await appeler(`/storage/v1/object/${SEAU}/${encoder(chemin)}`, {
-      method: "PUT",
-      headers: { "content-type": type, "cache-control": enTete },
+      method: geste,
+      headers: enTetes,
       body: octets,
       delai: DELAI_FICHIER_MS,
     });
@@ -240,6 +339,47 @@ async function reprendreUnePhoto(appeler, chemin, enTete, typeConnu) {
     return `écriture : HTTP ${reponse.status} ${message.slice(0, 120)}`;
   }
   return null;
+}
+
+/**
+ * §3 (nº 778) — LA PHOTO TÉMOIN. On reprend UNE photo, on relit sa
+ * consigne à la source (jamais par l'adresse publique : le réseau de
+ * diffusion pourrait rendre sa copie d'avant), et l'on ne déroule que
+ * si elle a bien changé. Rend le geste qui marche, ou `null`.
+ */
+async function eprouverLeGeste(appeler, temoin, enTete, voulues, etat) {
+  //  ⚠️ DEUX ÉCHECS QUI NE SE SOIGNENT PAS PAREIL, et le compte rendu
+  //  doit les distinguer : un envoi REFUSÉ (droits, seau, réseau) n'a
+  //  rien à voir avec un envoi ACCEPTÉ dont la consigne ne prend pas
+  //  (un réglage du service). Dire l'un pour l'autre enverrait chercher
+  //  au mauvais endroit.
+  const refus = [];
+  for (const geste of ["PUT", "POST"]) {
+    await dire(`     essai du geste ${geste} sur « ${temoin.chemin} »…`);
+    const echec = await reprendreUnePhoto(
+      appeler,
+      temoin.chemin,
+      enTete,
+      geste,
+      temoin.type
+    );
+    if (echec) {
+      await dire(`     ${geste} : refusé — ${echec}`);
+      refus.push(`${geste} — ${echec}`);
+      continue;
+    }
+    const { consigne } = await lireLaConsigne(appeler, temoin.chemin, etat);
+    if (secondesDeLaConsigne(consigne) === voulues) {
+      await dire(`     ${geste} : la photo répond maintenant « ${consigne} » ✔`);
+      return { geste };
+    }
+    await dire(
+      `     ${geste} : envoyé sans erreur, mais la photo répond toujours ` +
+        `« ${consigne ?? "(aucune)"} »`
+    );
+  }
+  //  Refusés des DEUX côtés : c'est l'accès, pas la consigne.
+  return { geste: null, refus: refus.length === 2 ? refus : null };
 }
 
 async function principal() {
@@ -258,79 +398,147 @@ async function principal() {
   const voulues = Number(duree);
   const appeler = fabriquerLeFacteur(url, cle);
 
-  console.log();
-  console.log("  ██ LA CONSIGNE DE CACHE DES PHOTOS ██");
-  console.log(`     projet : ${nomDuProjet(url)}   (lu dans ${dit})`);
-  console.log(`     seau   : ${SEAU}`);
-  console.log(`     visée  : ${enTete}  (lue chez le site — lib/cache-photos)`);
-  console.log(
+  await dire();
+  await dire("  ██ LA CONSIGNE DE CACHE DES PHOTOS ██");
+  await dire(`     projet : ${nomDuProjet(url)}   (lu dans ${dit})`);
+  await dire(`     seau   : ${SEAU}`);
+  await dire(`     visée  : ${enTete}  (lue chez le site — lib/cache-photos)`);
+  await dire(
     REEL
       ? "     MODE RÉEL — les photos mal réglées seront renvoyées."
       : "     ESSAI À BLANC — rien ne sera écrit. (Ajoute --reel pour agir.)"
   );
-  console.log();
+  await dire(`     journal : ${path.basename(JOURNAL)}  (tout s'y écrit aussi)`);
+  await dire();
 
-  const chemins = await listerLesObjets(appeler);
-  if (chemins.length === 0) {
-    console.log("  ⚠️  Aucun fichier lu. Deux causes possibles : le seau ne");
-    console.log(`     s'appelle pas « ${SEAU} », ou la clé secrète employée`);
-    console.log("     n'est pas celle de ce projet.");
-    console.log("     (Le nom du seau se change avec SEAU_PHOTOS=…)");
-    console.log();
+  //  §1 (nº 778) — LA DESCENTE PARLE. Elle prend quelques secondes sur
+  //  un millier de photos, et le propriétaire doit voir qu'elle avance.
+  await dire(`  [${horodate()}] lecture du seau…`);
+  let derniereAnnonce = 0;
+  const photos = await listerLesObjets(appeler, "", async (combien) => {
+    if (combien - derniereAnnonce < 200) return;
+    derniereAnnonce = combien;
+    await dire(`     … ${combien} photos vues`);
+  });
+  if (photos.length === 0) {
+    await dire("  ⚠️  Aucun fichier lu. Deux causes possibles : le seau ne");
+    await dire(`     s'appelle pas « ${SEAU} », ou la clé secrète employée`);
+    await dire("     n'est pas celle de ce projet.");
+    await dire("     (Le nom du seau se change avec SEAU_PHOTOS=…)");
+    await dire();
     return;
   }
+  await dire(`  [${horodate()}] ${photos.length} photos dans le seau.`);
 
-  //  ---- LE CONSTAT : la consigne de chacune, sans rien écrire ----
+  //  ---- LE CONSTAT ----
+  //  §2 (nº 778) — LA CONSIGNE VIENT DU LISTING, sans une requête de
+  //  plus. Le repli photo par photo ne sert QUE si ce service-ci ne
+  //  sert pas les métadonnées — et il s'annonce, avec son avancement.
   const etat = { sansInfo: false };
+  const sansMetadonnees = photos.filter((p) => p.consigne === undefined);
+  if (sansMetadonnees.length > 0) {
+    await dire(
+      `  [${horodate()}] ce service ne donne pas la consigne dans sa liste :` +
+        ` il faut la demander photo par photo (${sansMetadonnees.length}).`
+    );
+    let faites = 0;
+    for (const photo of sansMetadonnees) {
+      const lu = await lireLaConsigne(appeler, photo.chemin, etat);
+      photo.consigne = lu.echec ? null : lu.consigne;
+      photo.type = photo.type ?? lu.type;
+      photo.illisible = lu.echec;
+      faites += 1;
+      if (faites % 100 === 0) {
+        await dire(`     … ${faites}/${sansMetadonnees.length} demandées`);
+      }
+    }
+  }
+
   const aReprendre = [];
   const dejaBonnes = [];
   const illisibles = [];
   const parConsigne = new Map();
-  for (const chemin of chemins) {
-    const { consigne, type, echec } = await lireLaConsigne(appeler, chemin, etat);
-    if (echec) {
-      illisibles.push(`${chemin} — ${echec}`);
+  for (const photo of photos) {
+    if (photo.illisible) {
+      illisibles.push(`${photo.chemin} — ${photo.illisible}`);
       continue;
     }
-    const vue = consigne ?? "(aucune)";
+    const vue = photo.consigne ?? "(aucune)";
     parConsigne.set(vue, (parConsigne.get(vue) ?? 0) + 1);
-    if (secondesDeLaConsigne(consigne) === voulues) dejaBonnes.push(chemin);
-    else aReprendre.push({ chemin, type });
+    if (secondesDeLaConsigne(photo.consigne) === voulues) dejaBonnes.push(photo);
+    else aReprendre.push(photo);
   }
 
-  console.log(`  photos du seau : ${chemins.length}`);
+  await dire();
   for (const [consigne, combien] of [...parConsigne].sort((a, b) => b[1] - a[1])) {
-    console.log(`     · ${String(combien).padStart(5)}  en « ${consigne} »`);
+    await dire(`     · ${String(combien).padStart(5)}  en « ${consigne} »`);
   }
-  if (etat.sansInfo) {
-    console.log("     (ce service n'a pas /object/info : lecture par HEAD)");
-  }
-  console.log();
-  console.log(`  déjà bonnes  : ${dejaBonnes.length}`);
-  console.log(`  à reprendre  : ${aReprendre.length}`);
-  if (illisibles.length > 0) console.log(`  illisibles   : ${illisibles.length}`);
-  console.log();
+  await dire();
+  await dire(`  déjà bonnes  : ${dejaBonnes.length}`);
+  await dire(`  à reprendre  : ${aReprendre.length}`);
+  if (illisibles.length > 0) await dire(`  illisibles   : ${illisibles.length}`);
+  await dire();
 
   if (aReprendre.length === 0) {
-    console.log("  ✔  Rien à faire : toutes les photos portent déjà la consigne.");
-    console.log();
+    await dire("  ✔  Rien à faire : toutes les photos portent déjà la consigne.");
+    await dire();
     return;
   }
   if (!REEL) {
-    for (const { chemin } of aReprendre.slice(0, 10)) console.log(`     · ${chemin}`);
+    for (const { chemin } of aReprendre.slice(0, 10)) await dire(`     · ${chemin}`);
     if (aReprendre.length > 10) {
-      console.log(`     … et ${aReprendre.length - 10} autre(s)`);
+      await dire(`     … et ${aReprendre.length - 10} autre(s)`);
     }
-    console.log();
-    console.log("  Pour agir : ajoute --reel à la fin de la commande.");
-    console.log("  (Chaque photo est relue puis renvoyée à SON chemin, telle");
-    console.log("   quelle : rien n'est recompressé, rien n'est renommé.)");
-    console.log();
+    await dire();
+    await dire("  Pour agir : ajoute --reel à la fin de la commande.");
+    await dire("  (Chaque photo est relue puis renvoyée à SON chemin, telle");
+    await dire("   quelle : rien n'est recompressé, rien n'est renommé.)");
+    await dire();
     return;
   }
 
+  //  ---- LE GESTE QUI MARCHE, ÉPROUVÉ SUR UNE SEULE PHOTO (§3) ----
+  await dire(`  [${horodate()}] on éprouve d'abord sur UNE photo :`);
+  const { geste, refus } = await eprouverLeGeste(
+    appeler,
+    aReprendre[0],
+    enTete,
+    voulues,
+    etat
+  );
+  if (!geste) {
+    await dire();
+    if (refus) {
+      //  L'ENVOI EST REFUSÉ : c'est l'accès, et rien d'autre.
+      await dire("  ⛔  ARRÊTÉ : le service REFUSE d'écrire cette photo.");
+      for (const r of refus) await dire(`     · ${r}`);
+      await dire("     Les deux causes : la clé employée n'a pas le droit");
+      await dire(`     d'écrire, ou le seau « ${SEAU} » n'est pas celui-là.`);
+      await dire("     (La clé secrète du projet : Settings ▸ API ▸ service_role.)");
+    } else {
+      //  L'ENVOI PASSE, MAIS LA CONSIGNE NE PREND PAS : c'est un
+      //  réglage du service, et renvoyer le reste n'y changerait rien.
+      await dire("  ⛔  ARRÊTÉ AVANT D'ALLER PLUS LOIN : le service accepte les");
+      await dire("     envois mais ne retient pas la consigne. Renvoyer les");
+      await dire(`     ${aReprendre.length - 1} autres photos n'y changerait rien.`);
+      await dire("     C'est un réglage du service, pas du fichier : regarde");
+      await dire("     dans Supabase ▸ Storage ▸ Settings si une consigne de");
+      await dire("     cache est imposée au seau, et envoie-moi ces lignes.");
+    }
+    await dire();
+    await dire(`     (Tout est aussi dans ${path.basename(JOURNAL)}.)`);
+    await dire();
+    return;
+  }
+  const restantes = aReprendre.slice(1);
+  await dire();
+  await dire(
+    `  [${horodate()}] reprise des ${restantes.length} autres en ${geste} —` +
+      " une ligne tous les 25."
+  );
+
   //  ---- LA REPRISE ----
-  let reprises = 0;
+  let reprises = 1; // la photo témoin est déjà faite
   const soucis = [];
   //  L'ARRÊT SUR PANNE FRANCHE (nº 766 bis) : dix échecs D'AFFILÉE,
   //  c'est une panne — une clé sans droit d'écriture, un seau parti —
@@ -338,8 +546,10 @@ async function principal() {
   //  réussites n'arrête rien.
   let deSuite = 0;
   let franche = false;
-  for (const { chemin, type } of aReprendre) {
-    const echec = await reprendreUnePhoto(appeler, chemin, enTete, type);
+  let faites = 0;
+  for (const { chemin, type } of restantes) {
+    const echec = await reprendreUnePhoto(appeler, chemin, enTete, geste, type);
+    faites += 1;
     if (echec) {
       soucis.push(`${chemin} — ${echec}`);
       deSuite += 1;
@@ -351,54 +561,64 @@ async function principal() {
       reprises += 1;
       deSuite = 0;
     }
-    if ((reprises + soucis.length) % 25 === 0) {
-      console.log(`     … ${reprises + soucis.length}/${aReprendre.length}`);
+    //  §1 (nº 778) — LA PROGRESSION DIT LES DEUX NOMBRES. « 1150/1150 »
+    //  mélangeait réussites et échecs : on ne savait pas ce qu'on
+    //  lisait. Désormais chacun a sa colonne, et l'heure est là.
+    if (faites % 25 === 0) {
+      await dire(
+        `     [${horodate()}] ${faites}/${restantes.length} · reprises ` +
+          `${reprises} · échecs ${soucis.length}`
+      );
     }
   }
 
-  //  ---- LE CONTRÔLE : on relit ce qu'on vient d'écrire ----
-  let confirmees = 0;
-  const recalcitrantes = [];
-  for (const { chemin } of aReprendre) {
-    const { consigne } = await lireLaConsigne(appeler, chemin, etat);
-    if (secondesDeLaConsigne(consigne) === voulues) confirmees += 1;
-    else recalcitrantes.push(`${chemin} — ${consigne ?? "(aucune)"}`);
-  }
+  //  ---- LE CONTRÔLE : une relecture du seau, pas mille ----
+  //  §2 (nº 778) — c'est ce bilan-là qui restait muet dix minutes après
+  //  « 1150/1150 », et que le propriétaire a perdu en fermant sa
+  //  session. Il tient maintenant dans la descente du listing.
+  await dire();
+  await dire(`  [${horodate()}] contrôle : on relit le seau…`);
+  const apres = await listerLesObjets(appeler);
+  const bonnesApres = apres.filter(
+    (p) => secondesDeLaConsigne(p.consigne) === voulues
+  ).length;
+  const inconnues = apres.filter((p) => p.consigne === undefined).length;
 
-  console.log();
-  console.log(`  ── reprises : ${reprises} · en échec : ${soucis.length}`);
-  console.log(`  ── contrôle : ${confirmees}/${aReprendre.length} portent la consigne`);
+  await dire();
+  await dire(`  ── reprises : ${reprises} · en échec : ${soucis.length}`);
+  if (inconnues === 0) {
+    await dire(
+      `  ── contrôle : ${bonnesApres}/${apres.length} photos du seau portent` +
+        " la consigne"
+    );
+  }
   if (franche) {
-    console.log();
-    console.log("  ⛔  ARRÊTÉ : dix échecs d'affilée, c'est une panne franche.");
-    console.log("     Les deux causes : la clé employée n'a pas le droit");
-    console.log(`     d'écrire, ou le seau « ${SEAU} » n'est pas celui-là.`);
+    await dire();
+    await dire("  ⛔  ARRÊTÉ : dix échecs d'affilée, c'est une panne franche.");
+    await dire("     Les deux causes : la clé employée n'a pas le droit");
+    await dire(`     d'écrire, ou le seau « ${SEAU} » n'est pas celui-là.`);
   }
   if (soucis.length > 0) {
-    console.log();
-    console.log("  ⚠️  CE QUI N'EST PAS PASSÉ (les vingt premiers) :");
-    for (const s of soucis.slice(0, 20)) console.log(`     · ${s}`);
-    console.log();
-    console.log("     Relance la commande : elle ne reprend que ce qui reste.");
+    await dire();
+    await dire("  ⚠️  CE QUI N'EST PAS PASSÉ (les vingt premiers) :");
+    for (const s of soucis.slice(0, 20)) await dire(`     · ${s}`);
+    await dire();
+    await dire("     Relance la commande : elle ne reprend que ce qui reste.");
   }
-  if (recalcitrantes.length > 0 && soucis.length === 0) {
-    console.log();
-    console.log("  ⚠️  RENVOYÉES SANS EFFET (les dix premières) — le service");
-    console.log("     n'a pas retenu la consigne :");
-    for (const r of recalcitrantes.slice(0, 10)) console.log(`     · ${r}`);
-  }
-  console.log();
-  if (confirmees === aReprendre.length && soucis.length === 0) {
-    console.log("  ✔  Toutes les photos du seau portent maintenant la consigne.");
-    console.log("     Le réseau de diffusion peut encore servir quelques");
-    console.log("     minutes ses réponses d'avant : c'est normal, et ça passe");
-    console.log("     tout seul. Pour vérifier depuis ton Mac :");
-    console.log("       curl -sI \"<adresse d'une photo>\" | grep -i cache-control");
-    console.log();
+  await dire();
+  if (bonnesApres === apres.length && soucis.length === 0) {
+    await dire("  ✔  Toutes les photos du seau portent maintenant la consigne.");
+    await dire("     Le réseau de diffusion peut encore servir quelques");
+    await dire("     minutes ses réponses d'avant : c'est normal, et ça passe");
+    await dire("     tout seul. Pour vérifier depuis ton Mac :");
+    await dire("       curl -sI \"<adresse d'une photo>\" | grep -i cache-control");
+    await dire();
   }
 }
 
-principal().catch((erreur) => {
-  console.log(`  ✖  ${raisonLisible(erreur)}`);
+principal().catch(async (erreur) => {
+  //  §1 (nº 778) — même une panne s'écrit dans le journal : c'est
+  //  souvent la ligne qu'on cherche après coup.
+  await dire(`  ✖  ${raisonLisible(erreur)}`);
   process.exit(1);
 });
