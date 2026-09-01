@@ -59,11 +59,25 @@ export function JaugeMotDePasse({ motDePasse }: { motDePasse: string }) {
               critere.ok ? "text-sombre-texte" : "text-sombre-texte-doux"
             }`}
           >
+            {/*  ██ §1 (nº 787) — LA CASE COCHÉE SE VOIT, ENFIN ██
+                 LE DÉFAUT DU PROPRIÉTAIRE : « les cases cochées sont
+                 roses et ne se voient pas ». LA CAUSE EST UN ROSE SUR
+                 UN ROSE — la coche portait `text-primaire` (le rouge de
+                 la marque) sur `bg-primaire-voile`, sa propre version
+                 diluée. Deux tons du même rouge, l'un sur l'autre : le
+                 ✓ s'effaçait dans son fond, et de loin la case n'était
+                 qu'une tache rose.
+                 LE REMÈDE RÈGLE LES DEUX MOITIÉS DE LA PHRASE : fond
+                 BLANC (plus de tache rose) et coche de la couleur du
+                 fond du site (plus de coche invisible). C'est aussi
+                 l'usage : une case cochée se remplit.
+                 ⚠️ LA CASE NON COCHÉE NE BOUGE PAS : son gris sur gris
+                 est voulu — elle ne doit pas s'annoncer. */}
             <span
               aria-hidden="true"
               className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] ${
                 critere.ok
-                  ? "bg-primaire-voile text-primaire"
+                  ? "bg-white text-sombre-fond"
                   : "bg-sombre-eleve text-sombre-texte-doux"
               }`}
             >

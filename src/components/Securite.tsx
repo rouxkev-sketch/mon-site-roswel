@@ -430,17 +430,37 @@ export function Securite() {
           menu « Mon espace » — la page se reconnaît d'où on l'a
           ouverte. Même gris à 80 % que les icônes du menu.
 
-          ██ §4 (nº 786) — IL FAIT LA HAUTEUR DE LA MAJUSCULE ██
-          LE DÉFAUT : 24 px en dur sous un titre qui, lui, respire
-          (`clamp`, de 24 à 30 px selon la fenêtre). L'icône était donc
-          juste sur un seul écran et trop petite partout ailleurs.
-          COMMENT ON LA CALE SANS DEVINER, ET C'EST EXACT AU PIXEL :
+          ██ §4 (nº 786, CORRIGÉ nº 787) — IL FAIT LA HAUTEUR DE LA
+          MAJUSCULE ██
+          LE DÉFAUT DE DÉPART : 24 px en dur sous un titre qui, lui,
+          respire (`clamp`, de 24 à 30 px selon la fenêtre). L'icône
+          était donc juste sur un seul écran et trop petite partout
+          ailleurs.
+          COMMENT ON LA CALE SANS DEVINER :
            · `1cap` est la HAUTEUR DE MAJUSCULE de la police en cours —
-             pas une approximation, la vraie mesure lue dans la fonte.
-             L'icône fait donc exactement la hauteur du « S » ;
-           · `items-baseline` pose son BAS sur la ligne de base du
-             texte, c'est-à-dire sur le pied de ce « S ». Bas commun,
-             hauteur commune : le haut coïncide forcément.
+             pas une approximation, la vraie mesure lue dans la fonte ;
+           · `items-baseline` pose le BAS DE LA BOÎTE sur la ligne de
+             base du texte, c'est-à-dire sur le pied du « S ».
+
+          ⚠️ ET POURQUOI ELLE RESTAIT TROP PETITE MALGRÉ ÇA (nº 787) —
+          C'EST LA VRAIE CAUSE, ET ELLE VAUT D'ÊTRE DITE : la nº 786
+          mesurait LA BOÎTE du dessin, pas LE DESSIN. Or le bouclier ne
+          remplit pas son cadre : dans un `viewBox` de 24, son tracé va
+          de 1,6 à 23,3 (trait compris) et laisse du vide en haut et en
+          bas. MESURÉ AU BANC : il n'occupe que 83 % de sa boîte — une
+          boîte de 21,6 px ne donnait qu'un bouclier de 17,9 px là où la
+          majuscule en fait 23. Il manquait 5,1 px, soit un cinquième.
+          Ma mesure était juste et portait sur la mauvaise chose.
+          LES DEUX NOMBRES CI-DESSOUS SORTENT DE CETTE MESURE, pas d'un
+          réglage à l'œil, et ils valent pour les deux appareils :
+           · 1,205 cap de boîte — c'est 1 / 0,83, ce qu'il faut pour que
+             le DESSIN, lui, fasse une majuscule ;
+           · 0,084 cap de descente — le vide sous le tracé (7 % de la
+             boîte) que `items-baseline` laisserait autrement entre le
+             pied du bouclier et la ligne de base. `translate` ne
+             déplace que le rendu : rien ne bouge dans la mise en page.
+          ⚠️ ON NE RETOUCHE PAS L'ICÔNE ELLE-MÊME : elle est partagée
+          avec le menu « Mon espace », où ce cadrage convient.
           ⚠️ ON NE PASSE PLUS PAR `taille` : cet attribut ne connaît ni
           la police ni sa taille du moment. Les `width`/`height` d'un
           SVG cèdent devant une règle CSS — c'est ce qui rend la chose
@@ -448,7 +468,7 @@ export function Securite() {
       <h1 className="flex items-baseline gap-2.5 text-[clamp(1.5rem,4vw,1.9rem)] font-bold text-sombre-texte">
         <IconeBouclierTrait
           taille={24}
-          classe="shrink-0 h-[1cap] w-[1cap] text-sombre-texte/80"
+          classe="shrink-0 h-[1.205cap] w-[1.205cap] translate-y-[0.084cap] text-sombre-texte/80"
         />
         Sécurité
       </h1>

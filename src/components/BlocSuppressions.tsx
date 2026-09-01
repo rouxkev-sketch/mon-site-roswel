@@ -12,7 +12,7 @@ import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
 import { Patience, SqueletteLignes } from "@/components/Squelette";
 //  §1 (nº 785) — la pastille de bout de ligne, partagée avec la page
 //  « Sécurité » : le propriétaire les veut identiques.
-import { PastilleAction } from "@/components/Pastille";
+import { PastilleAction, TEXTE_BOUT_DE_LIGNE } from "@/components/Pastille";
 
 /**
  * LES SUPPRESSIONS — en bas de la page Sécurité
@@ -168,8 +168,9 @@ export function BlocSuppressions() {
               key={fiche.id}
               /*  §1 (nº 786) — L'AIR DE RÉFÉRENCE DES QUATRE CÔTÉS :
                   `px-4`, soit les 16 px qui séparent le bord gauche du
-                  texte. La pastille faisant 22 px dans une ligne de 54,
-                  il en reste autant en haut et en bas. Voir la note de
+                  texte. La pastille faisant 28 px dans une ligne de 54
+                  (nº 787), il reste 13 px en haut et en bas — l'air
+                  droit tient, le vertical se recalcule. Voir la note de
                   `Pastille`, où ces trois nombres vivent, et celle de
                   `LIGNE_METHODE` (Securite) pour le retrait vertical et
                   le `flex-wrap` partis d'ici à la nº 785 : ils cassaient
@@ -256,8 +257,8 @@ export function BlocSuppressions() {
                   setErreur(null);
                   setFicheAConfirmer(fiche);
                 }}
-                className="shrink-0 rounded-full px-4 min-h-[38px] text-[13px] font-semibold
-                           text-erreur/85 hover:text-erreur transition-colors"
+                className={`shrink-0 rounded-full px-4 min-h-[38px] ${TEXTE_BOUT_DE_LIGNE}
+                           text-erreur/85 hover:text-erreur transition-colors`}
               >
                 Supprimer
               </button>
@@ -300,8 +301,8 @@ export function BlocSuppressions() {
             setErreur(null);
             setCompteAConfirmer(true);
           }}
-          className="shrink-0 rounded-full px-4 min-h-[38px] text-[13px] font-semibold
-                     text-erreur/85 hover:text-erreur transition-colors"
+          className={`shrink-0 rounded-full px-4 min-h-[38px] ${TEXTE_BOUT_DE_LIGNE}
+                     text-erreur/85 hover:text-erreur transition-colors`}
         >
           Supprimer
         </button>

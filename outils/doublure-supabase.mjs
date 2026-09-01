@@ -914,9 +914,20 @@ function repondre(req, res, u, brut) {
       res.end(JSON.stringify({ error: "provider is not enabled" }));
       return;
     }
-    //  Le code porte le CAS À JOUER, pour que la sonde puisse demander
-    //  un compte neuf ou un compte déjà connu (voir /auth/v1/token).
-    const cas = process.env.GOOGLE_COMPTE === "existant" ? "existant" : "neuf";
+    /*  Le code porte le CAS À JOUER, pour que la sonde puisse demander
+        un compte neuf ou un compte déjà connu (voir /auth/v1/token).
+        ⚠️ « MIXTE » EST UN COMPTE EXISTANT (corrigé nº 787), et il ne
+        peut pas être autre chose : un compte qui a DÉJÀ un mot de passe
+        en plus de Google est, par définition, un compte que le site
+        connaît. Il rendait jusqu'ici l'identifiant du compte NEUF —
+        celui qui ne possède rien —, si bien qu'un banc lancé en
+        `mixte` trouvait la liste des portfolios vide et ne pouvait pas
+        éprouver le bloc « Supprimer ». */
+    const cas =
+      process.env.GOOGLE_COMPTE === "existant" ||
+      process.env.GOOGLE_COMPTE === "mixte"
+        ? "existant"
+        : "neuf";
     const separateur = retour.includes("?") ? "&" : "?";
     const vers = `${retour}${separateur}code=code-google-${cas}`;
     console.log(

@@ -25,16 +25,50 @@
  * le bord GAUCHE d'un champ du début de son texte — 16 px, le `px-4`
  * de toutes ces lignes — doit se retrouver À L'IDENTIQUE en haut, en
  * bas et à droite de ce qui termine la ligne.
- * CE QUE ÇA IMPOSE, ET CE N'EST PAS UN CHOIX : les lignes font 54 px
- * de haut. Seize en haut, seize en bas, il reste VINGT-DEUX pour la
- * pastille. C'est ce nombre-là qui la rend « plus petite », comme
- * demandé — il n'a pas été choisi, il a été déduit.
- * ⚠️ LES TROIS VALEURS SE TIENNENT (54, 22, 16). En changer une seule
- * défait l'accord ; les trois vivent ici et nulle part ailleurs.
+ * CE QU'ELLE VAUT ENCORE APRÈS LA nº 787, ET CE QU'ELLE A PERDU :
+ *  · À DROITE, elle tient toujours — 16 px, sur consigne expresse ;
+ *  · EN HAUT ET EN BAS, elle ne peut plus. La pastille est passée à
+ *    28 px (voir `HAUTEUR_PASTILLE`), il ne reste donc que 13 px de
+ *    part et d'autre dans une ligne de 54. Seul un badge de 22 px
+ *    rendait les quatre airs égaux, et le propriétaire l'a jugé trop
+ *    petit. Entre les deux, il a choisi la taille.
+ * ⚠️ CES NOMBRES SE TIENNENT (54, 28, 16). En changer un seul déplace
+ * les autres ; ils vivent ici et nulle part ailleurs.
  */
 export const AIR_DE_REFERENCE = 16;
 export const HAUTEUR_LIGNE = 54;
-export const HAUTEUR_PASTILLE = HAUTEUR_LIGNE - 2 * AIR_DE_REFERENCE;  //  22
+
+/**
+ * ██ LA HAUTEUR DE PASTILLE (nº 787) — LE JUSTE MILIEU ██
+ * ------------------------------------------------------------------
+ * DEUX ESSAIS, DEUX REFUS : 38 px à la nº 785 (« trop grand »), 22 à
+ * la nº 786 (« trop petit »). Le propriétaire a demandé le milieu ;
+ * 28 px, à deux pixels près, c'est exactement lui.
+ * ⚠️ CE QUE ÇA COÛTE, ET IL L'A TRANCHÉ LUI-MÊME : les quatre airs ne
+ * peuvent plus être égaux. Vingt-huit dans cinquante-quatre laissent
+ * TREIZE au-dessus et en dessous, contre SEIZE à droite — c'est
+ * arithmétique, et seul un badge de 22 px les rendait tous égaux. Sa
+ * consigne est explicite : « l'air vertical se recalcule, l'air droit
+ * reste 16 px ».
+ */
+export const HAUTEUR_PASTILLE = 28;
+
+/**
+ * ██ LA TAILLE DE TEXTE DES BOUTS DE LIGNE (nº 787) ██
+ * ------------------------------------------------------------------
+ * UNE SEULE, POUR LES QUATRE : « Actif », « Délier », « Annuler » et
+ * « Supprimer ». Elles avaient dérivé sans que personne le décide —
+ * 13 px pour deux d'entre elles, 12 pour les deux autres, selon la
+ * passe où chacune avait été touchée. Un écart d'un pixel ne se nomme
+ * pas, mais il se voit : sur une même colonne, deux mots de rang égal
+ * n'avaient pas le même poids.
+ * 13 px, c'est la valeur MAJORITAIRE — on ramène les deux qui ont
+ * glissé, on ne déplace pas les deux autres.
+ * ⚠️ ELLE EST EXPORTÉE parce que `BlocSuppressions` en a besoin pour
+ * son bouton « Supprimer », qui n'est pas une pastille (pas de fond) et
+ * ne peut donc pas passer par les composants ci-dessous.
+ */
+export const TEXTE_BOUT_DE_LIGNE = "text-[13px] font-semibold";
 
 /**
  * UN GESTE — « Délier », « Annuler ».
@@ -66,11 +100,11 @@ export function PastilleAction({
       onClick={onClick}
       disabled={disabled}
       title={titre}
-      className="shrink-0 inline-flex items-center justify-center rounded-md
-                 px-2.5 min-h-[22px] text-[12px] font-semibold
-                 bg-sombre-eleve-clair text-sombre-texte
-                 transition-colors hover:bg-sombre-haut
-                 disabled:opacity-50 disabled:cursor-not-allowed"
+      className={`shrink-0 inline-flex items-center justify-center rounded-md
+                  px-3 min-h-[28px] ${TEXTE_BOUT_DE_LIGNE}
+                  bg-sombre-eleve-clair text-sombre-texte
+                  transition-colors hover:bg-sombre-haut
+                  disabled:opacity-50 disabled:cursor-not-allowed`}
     >
       {children}
     </button>
@@ -92,7 +126,7 @@ export function PastilleAction({
  */
 export function EtatActif() {
   return (
-    <span className="shrink-0 inline-flex items-center gap-2 text-[13px] font-semibold text-sombre-texte">
+    <span className={`shrink-0 inline-flex items-center gap-2 ${TEXTE_BOUT_DE_LIGNE} text-sombre-texte`}>
       <span
         aria-hidden
         className="block h-2 w-2 rounded-full bg-sombre-succes"
