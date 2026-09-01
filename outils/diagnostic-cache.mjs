@@ -111,66 +111,103 @@ function raisonLisible(erreur) {
 }
 
 /**
- * ██ LES TROIS LECTURES, ET POURQUOI IL EN FAUT TROIS ██
+ * ██ §1 (nº 780) — QUELLE PORTE DIT LA VÉRITÉ ██
  * ------------------------------------------------------------------
- * 1. L'EN-TÊTE SERVI PAR LA VOIE PUBLIQUE — c'est CE QUE REÇOIT LE
- *    NAVIGATEUR, donc la seule mesure qui décide. Une requête unique
- *    (un paramètre neuf à chaque fois) pour que le réseau de diffusion
- *    ne puisse pas répondre par une copie d'avant ; `cf-cache-status`
- *    est relevé pour le prouver.
- * 2. L'EN-TÊTE SERVI PAR LA VOIE AUTHENTIFIÉE — la même page, sans le
- *    réseau de diffusion : si 1 et 2 diffèrent, c'est le cache du
- *    bord, et non le fichier.
- * 3. LA MÉTADONNÉE QUE L'API RAPPORTE (`/object/info`) — celle que
- *    montre aussi la liste du seau. C'est celle que la nº 778 prenait
- *    pour argent comptant ; on la garde pour MONTRER l'écart, jamais
- *    pour conclure.
+ * CE QUI S'EST PASSÉ À LA nº 779, ET C'EST MA TROISIÈME MESURE FAUSSE
+ * D'AFFILÉE : le diagnostic lisait l'adresse PUBLIQUE en lui ajoutant
+ * un paramètre neuf (`?diagnostic=<instant>`), en croyant qu'un
+ * paramètre inédit obligerait le réseau de diffusion à redemander le
+ * fichier à l'origine. IL NE L'OBLIGE PAS : ce réseau-là ne met pas la
+ * requête dans sa clé de cache. La réponse est donc revenue de son
+ * cache — `cf-cache-status: HIT` était écrit noir sur blanc dans mon
+ * propre relevé — avec une consigne qui datait d'on ne sait quand, et
+ * j'en ai conclu que tout allait bien. Une minute plus tard, le
+ * propriétaire tombait sur un `MISS` : l'origine, elle, répondait
+ * `no-cache`.
+ * ⚠️ LES DEUX OUTILS NE SE CONTREDISAIENT PAS : `reprendre-le-cache`
+ * lit par la voie AUTHENTIFIÉE, que ce réseau ne met jamais en cache
+ * (une réponse porteuse d'un jeton n'est pas partageable), et il
+ * disait déjà « en-tête inchangé ». C'est le diagnostic qui se
+ * trompait de porte.
+ *
+ * LA RÈGLE, DÉSORMAIS :
+ *  · LA MESURE QUI DÉCIDE est la voie AUTHENTIFIÉE. Elle traverse le
+ *    bord sans s'y arrêter : ce qu'elle rend vient du service ;
+ *  · LA VOIE PUBLIQUE reste affichée — c'est ce que reçoit vraiment un
+ *    visiteur — mais elle NE CONCLUT JAMAIS tant que le bord dit avoir
+ *    répondu de son cache. Le mot `HIT` disqualifie la lecture, et on
+ *    l'écrit en toutes lettres au lieu de la prendre pour une preuve ;
+ *  · LA MÉTADONNÉE de l'API est montrée pour l'écart qu'elle révèle
+ *    (nº 779), jamais pour conclure.
  */
-async function troisLectures(appeler, chemin) {
+const LECTURE_FRAICHE = /^(MISS|EXPIRED|DYNAMIC|BYPASS|REVALIDATED)$/i;
+
+async function mesurer(appeler, chemin) {
   const marque = `diagnostic=${Date.now()}`;
-  const lecture = { servi: null, cf: null, authentifie: null, metadonnee: null };
+  const lu = {
+    origine: null,
+    publique: null,
+    bord: "(non dit)",
+    metadonnee: null,
+    age: null,
+  };
+  //  1 · L'ORIGINE — la voie authentifiée, jamais mise en cache.
   try {
-    const publique = await appeler(
-      `/storage/v1/object/public/${SEAU}/${encoder(chemin)}?${marque}`,
-      { method: "GET", sansJeton: true }
-    );
-    lecture.servi = publique.headers.get("cache-control");
-    lecture.cf =
-      publique.headers.get("cf-cache-status") ??
-      publique.headers.get("x-cache") ??
-      "(non dit)";
-    lecture.statut = publique.status;
-  } catch (erreur) {
-    lecture.servi = `(illisible : ${raisonLisible(erreur)})`;
-  }
-  try {
-    const authentifiee = await appeler(
+    const reponse = await appeler(
       `/storage/v1/object/${SEAU}/${encoder(chemin)}?${marque}`,
       { method: "HEAD" }
     );
-    lecture.authentifie = authentifiee.headers.get("cache-control");
-  } catch {
-    lecture.authentifie = "(illisible)";
+    lu.origine = reponse.ok
+      ? reponse.headers.get("cache-control")
+      : `(HTTP ${reponse.status})`;
+  } catch (erreur) {
+    lu.origine = `(illisible : ${raisonLisible(erreur)})`;
   }
+  //  2 · LA PORTE PUBLIQUE — témoin, et rien de plus.
+  try {
+    const reponse = await appeler(
+      `/storage/v1/object/public/${SEAU}/${encoder(chemin)}?${marque}`,
+      { method: "GET", sansJeton: true }
+    );
+    lu.publique = reponse.headers.get("cache-control");
+    lu.bord =
+      reponse.headers.get("cf-cache-status") ??
+      reponse.headers.get("x-cache") ??
+      "(non dit)";
+    lu.age = reponse.headers.get("age");
+  } catch (erreur) {
+    lu.publique = `(illisible : ${raisonLisible(erreur)})`;
+  }
+  //  3 · LA MÉTADONNÉE rangée en base.
   try {
     const info = await appeler(`/storage/v1/object/info/${SEAU}/${encoder(chemin)}`);
     if (info.ok) {
       const m = await info.json().catch(() => ({}));
-      lecture.metadonnee = m.cacheControl ?? m.cache_control ?? null;
+      lu.metadonnee = m.cacheControl ?? m.cache_control ?? null;
     }
   } catch {
     /*  Ce service n'a pas ce point d'entrée : ce n'est pas grave ici. */
   }
-  return lecture;
+  return lu;
 }
 
 async function rendreCompte(appeler, chemin, voulues, titre) {
-  const l = await troisLectures(appeler, chemin);
-  await dire(`     · en-tête SERVI (public)  : ${l.servi ?? "(aucun)"}   [${l.cf}]`);
-  await dire(`     · en-tête servi (à la clé) : ${l.authentifie ?? "(aucun)"}`);
-  await dire(`     · métadonnée de l'API      : ${l.metadonnee ?? "(aucune)"}`);
-  const bon = secondesDeLaConsigne(l.servi) === voulues;
-  await dire(`     ${bon ? "✔" : "✖"} ${titre} — ${bon ? "L'EN-TÊTE SERVI EST BON" : "l'en-tête servi n'a pas changé"}`);
+  const l = await mesurer(appeler, chemin);
+  const fraiche = LECTURE_FRAICHE.test(String(l.bord));
+  await dire(`     · ORIGINE (à la clé)  : ${l.origine ?? "(aucun)"}      ← la mesure`);
+  await dire(
+    `     · porte publique      : ${l.publique ?? "(aucun)"}   [${l.bord}` +
+      `${l.age ? `, âge ${l.age} s` : ""}]` +
+      (fraiche ? "" : "  ⚠️ réponse du cache du bord — ne prouve rien")
+  );
+  await dire(`     · métadonnée de l'API : ${l.metadonnee ?? "(aucune)"}`);
+  //  ⚠️ LE VERDICT NE TIENT QU'À L'ORIGINE (§1 nº 780).
+  const bon = secondesDeLaConsigne(l.origine) === voulues;
+  await dire(
+    `     ${bon ? "✔" : "✖"} ${titre} — ${
+      bon ? "L'ORIGINE SERT LA BONNE CONSIGNE" : "l'origine sert toujours l'ancienne"
+    }`
+  );
   return bon;
 }
 
@@ -357,6 +394,38 @@ async function principal() {
   }
   await dire();
 
+  //  ── 4 · EFFACER PUIS REDÉPOSER ──
+  //  Le dernier recours : un objet NEUF, jamais un objet mis à jour.
+  //  Si même celui-là est servi en `no-cache`, alors la consigne ne
+  //  vient pas du dépôt du tout, et c'est un réglage du service.
+  //  ⚠️ CET ESSAI SE FAIT SUR LA COPIE, JAMAIS SUR L'ORIGINAL : on
+  //  n'efface une photo du portfolio sous aucun prétexte.
+  await dire("  ── ESSAI : EFFACER puis REDÉPOSER (sur la copie seulement) ──");
+  try {
+    const efface = await appeler(`/storage/v1/object/${SEAU}`, {
+      method: "DELETE",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ prefixes: [copie] }),
+    });
+    await dire(`     effacement : HTTP ${efface.status}`);
+    const formulaire = new FormData();
+    formulaire.append("cacheControl", String(duree));
+    formulaire.append("", new Blob([octets], { type }), copie.split("/").pop());
+    const depot = await appeler(`/storage/v1/object/${SEAU}/${encoder(copie)}`, {
+      method: "POST",
+      body: formulaire,
+    });
+    await dire(`     dépôt neuf : HTTP ${depot.status}`);
+    essais.push([
+      "effacer + redéposer",
+      await rendreCompte(appeler, copie, voulues, "dépôt neuf"),
+    ]);
+  } catch (erreur) {
+    await dire(`     ${raisonLisible(erreur)}`);
+    essais.push(["effacer + redéposer", false]);
+  }
+  await dire();
+
   //  ---- LE VERDICT ----
   await dire("  ══ CE QUI MARCHE, ET CE QUI NE MARCHE PAS ══");
   for (const [nom, bon] of essais) {
@@ -369,11 +438,31 @@ async function principal() {
     await dire("     Envoie-moi ces lignes : je règle l'outil de reprise");
     await dire("     sur cette méthode-là, et les 1150 photos suivront.");
   } else {
-    await dire("  ➜  AUCUNE des méthodes ne change l'en-tête servi.");
+    await dire("  ➜  AUCUNE des méthodes ne change ce que sert l'origine.");
     await dire("     Ce n'est alors pas le fichier, mais un réglage du");
     await dire("     service (seau ou projet). Envoie-moi ces lignes :");
     await dire("     elles disent exactement ce qui a été essayé.");
   }
+
+  //  §2 (nº 780) — LA COMMANDE DE CONTRÔLE, PRÊTE À COLLER. Le
+  //  propriétaire l'a demandée : une seule commande, qui interroge
+  //  L'ORIGINE (donc pas le cache du bord) et n'affiche AUCUNE clé —
+  //  elle la lit dans `.env.local` sans jamais l'imprimer.
+  await dire();
+  await dire("  ══ POUR VÉRIFIER TOI-MÊME, À COLLER TEL QUEL ══");
+  await dire("  (une seule commande ; elle n'affiche jamais ta clé)");
+  await dire();
+  await dire("  CLE=$(grep '^SUPABASE_SECRET_KEY=' .env.local | cut -d= -f2-) \\");
+  await dire("  ; URL=$(grep '^NEXT_PUBLIC_SUPABASE_URL=' .env.local | cut -d= -f2-) \\");
+  await dire(`  ; curl -sSI -H "apikey: $CLE" -H "Authorization: Bearer $CLE" \\`);
+  await dire(`      "$URL/storage/v1/object/${SEAU}/${chemin}" \\`);
+  await dire("    | grep -iE 'cache-control|content-type|etag|last-modified'");
+  await dire();
+  await dire("  ⚠️ C'est l'adresse SANS « /public/ » : celle-là interroge le");
+  await dire("     service lui-même. L'adresse publique, elle, peut te");
+  await dire("     répondre depuis le cache du bord (`cf-cache-status: HIT`)");
+  await dire("     et te montrer une consigne qui n'est plus celle du");
+  await dire("     fichier — c'est exactement ce qui m'a trompé.");
   await dire();
   await dire(`  (Tout est aussi dans ${path.basename(JOURNAL)}.)`);
   await dire();

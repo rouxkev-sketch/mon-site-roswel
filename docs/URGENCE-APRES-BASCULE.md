@@ -185,6 +185,37 @@ Et il y a **deux façons d'écrire**, qui ne se valent pas :
 `reprendre-le-cache` essaie donc la voie du formulaire **en premier**,
 et vérifie sur une photo avant de dérouler.
 
+### Deux portes, et une seule dit la vérité (nº 780)
+
+Une photo peut répondre **deux choses différentes selon qui répond** :
+
+| `cf-cache-status` | Qui a répondu | Ce que ça vaut |
+|---|---|---|
+| `HIT` | le réseau de diffusion, **de mémoire** | ce qu'il a gardé — **pas** l'état du fichier |
+| `MISS` | il est allé à la source | **la vérité** |
+
+Le diagnostic de la nº 779 lisait l'adresse publique en croyant qu'un
+paramètre neuf (`?diagnostic=…`) forcerait la source. **Il ne la force
+pas** : ce réseau ne met pas la requête dans sa clé. Il a donc lu une
+copie gardée, annoncé « tout va bien », et le `curl` du propriétaire —
+tombé sur un `MISS` — a dit `no-cache` une minute plus tard.
+
+**Depuis la nº 780, la mesure qui décide est l'adresse SANS
+`/public/`**, celle qui porte la clé : ces réponses-là ne sont jamais
+gardées au bord. C'est déjà ce que lisait `reprendre-le-cache` — les
+deux outils ne se contredisaient pas, l'un se trompait de porte.
+
+**Pour vérifier soi-même** (n'affiche aucune clé, la lit dans
+`.env.local`) :
+
+```
+CLE=$(grep '^SUPABASE_SECRET_KEY=' .env.local | cut -d= -f2-) \
+; URL=$(grep '^NEXT_PUBLIC_SUPABASE_URL=' .env.local | cut -d= -f2-) \
+; curl -sSI -H "apikey: $CLE" -H "Authorization: Bearer $CLE" \
+    "$URL/storage/v1/object/photos-tatoueurs/CHEMIN/DE/LA/PHOTO.jpg" \
+  | grep -iE 'cache-control|content-type|etag|last-modified'
+```
+
 > **Si le doute revient** : `sh outils/diagnostic-cache --reel` essaie
 > les quatre façons d'écrire sur **une seule** photo et dit laquelle
 > agit sur l'en-tête servi. Il lit l'en-tête par l'adresse publique

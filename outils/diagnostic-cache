@@ -42,13 +42,34 @@
 #    4. copie avec remplacement des métadonnées (elle écrit dans
 #       `diagnostic-cache/…`, l'original n'est pas touché)
 #
-#  Il lit l'en-tête de DEUX façons — par l'adresse publique, avec un
-#  paramètre neuf pour que le réseau de diffusion ne réponde pas par
-#  une vieille copie, et par la voie authentifiée, qui ne passe pas
-#  par lui — et il montre AUSSI la métadonnée de l'API, pour que
-#  l'écart entre les deux se voie.
+#  ==================================================================
+#  QUELLE PORTE DIT LA VÉRITÉ (nº 780)
+#  ------------------------------------------------------------------
+#  Tu as vu mon diagnostic annoncer « max-age=31536000 [HIT] » sur une
+#  photo dont ton curl, une minute plus tard, disait « no-cache »
+#  [MISS]. Les deux lectures étaient justes — elles ne parlaient pas
+#  au même interlocuteur :
 #
-#  À la fin, il dit quelle méthode a marché.
+#    · HIT  = c'est le réseau de diffusion qui a répondu, de mémoire.
+#             Il te montre ce qu'il a gardé, pas l'état du fichier.
+#    · MISS = il est allé chercher à la source. Là, c'est la vérité.
+#
+#  Je croyais contourner sa mémoire en ajoutant un paramètre neuf à
+#  l'adresse. C'était faux : il ne met pas la requête dans sa clé, et
+#  m'a resservi sa copie. J'ai conclu là-dessus — c'est ma faute.
+#
+#  DÉSORMAIS, LA MESURE QUI DÉCIDE EST L'ADRESSE SANS « /public/ »,
+#  celle qui porte ta clé : le réseau de diffusion ne garde jamais ces
+#  réponses-là. L'adresse publique reste affichée — c'est ce que voit
+#  un visiteur — mais dès qu'elle répond HIT, le diagnostic écrit
+#  « ne prouve rien » au lieu d'en tirer une conclusion.
+#
+#  ⚠️ CE POURQUOI reprendre-le-cache DISAIT AUTRE CHOSE : lui lisait
+#  déjà par la voie authentifiée. Les deux outils ne se contredisaient
+#  pas ; l'un des deux se trompait de porte.
+#
+#  À la fin, il dit quelle méthode a marché — et il t'imprime LA
+#  COMMANDE CURL à coller pour vérifier toi-même, chemin déjà rempli.
 #
 #  ⚠️ ENVOIE-MOI SON COMPTE RENDU. Il s'écrit aussi dans
 #  `diagnostic-cache.txt`, à la racine du projet.
