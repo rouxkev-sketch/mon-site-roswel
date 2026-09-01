@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  IconeArobase,
   IconeBouclierTrait,
   IconeEnveloppe,
   IconeGoogle,
@@ -52,6 +53,9 @@ import { useUtilisateur } from "@/lib/use-utilisateur";
  *     ⚠️ ON NE PEUT PAS DÉLIER SON DERNIER MOYEN D'ENTRER — ni ici, ni
  *     dans lib/connexion-google, qui refuse aussi. Sans mot de passe,
  *     retirer Google fermerait le compte à clé.
+ *     ⚠️ AUCUNE TEINTE D'ÉTAT DANS CE BLOC (nº 784) : les encadrés ont
+ *     le fond de tous les autres, actifs ou non, et « actif » comme
+ *     « Délier » portent LA MÊME pastille (`PASTILLE_METHODE`).
  *  4. LES SUPPRESSIONS — supprimer UNE fiche, ou LE compte, tout en bas
  *     (voir BlocSuppressions).
  *
@@ -90,6 +94,27 @@ const MESSAGE =
 /** L'ERREUR — la seule exception de la charte : l'encadré rouge. */
 const ERREUR =
   "rounded-lg border border-erreur/50 bg-erreur/10 px-4 py-3 text-[13px] leading-relaxed text-sombre-texte";
+
+/**
+ * ██ §1 (nº 784) — LA PASTILLE DES MÉTHODES DE CONNEXION ██
+ * ==================================================================
+ * « ACTIF » ET « DÉLIER » N'EN FONT PLUS QU'UNE, sur consigne : même
+ * forme, même hauteur, même couleur. Ce qui les sépare, c'est ce
+ * qu'elles disent — pas leur allure.
+ * CE QUI VIVAIT ICI, ET QUI DÉSÉQUILIBRAIT LA LIGNE : « Actif » était
+ * une petite pastille ROSE de 11 px, « Délier » un bouton gris de
+ * 38 px de haut. Deux objets de tailles et de couleurs différentes
+ * pour deux mentions de même rang, sur deux lignes voisines.
+ * LA FORME RETENUE EST CELLE D'« ACTIF », LA COULEUR CELLE DE
+ * « DÉLIER » (le gris élevé) — plus aucun rose dans ce bloc.
+ * ⚠️ UNE SEULE ÉCRITURE POUR LES DEUX (piège nº 378) : c'est la seule
+ * façon qu'elles restent identiques. Le bouton y ajoute ce qui
+ * appartient à un bouton — le survol et l'état désactivé — et rien
+ * d'autre.
+ */
+const PASTILLE_METHODE =
+  "shrink-0 rounded-full bg-sombre-eleve-clair px-2.5 py-0.5 " +
+  "text-[11px] font-semibold uppercase tracking-wide text-sombre-texte";
 
 /** Un bloc de la page — la grammaire de `Section` du formulaire
     (nº 125 web, nº 128 partout) : le TITRE VIT AU-DESSUS de
@@ -551,19 +576,18 @@ export function Securite() {
                 qu'il lui suffisait de retenir son adresse pour rentrer.
                 Elle se règle désormais sur `aUnMotDePasse`, comme le
                 bloc du dessus. */}
-            <li
-              className={`flex items-center gap-3 rounded-lg px-4 min-h-[54px] ${
-                aUnMotDePasse ? "bg-primaire/10" : "bg-sombre-eleve"
-              }`}
-            >
-              <IconeBouclierTrait
-                taille={20}
-                classe={
-                  aUnMotDePasse
-                    ? "shrink-0 text-primaire"
-                    : "shrink-0 text-sombre-texte-doux"
-                }
-              />
+            {/* ██ §1 (nº 784) — L'ENCADRÉ NE SE TEINT PLUS ██
+                CE QUI VIVAIT ICI : un fond rose dilué (`bg-primaire/10`)
+                quand la méthode était active. Le rose du site désigne
+                un CHOIX (badge sélectionné, bouton final, sélecteur) —
+                pas un état de fait. Ces lignes prennent le fond des
+                autres encadrés de la page, actives ou non ; ce qui
+                change d'une ligne à l'autre se lit dans son texte et
+                dans sa pastille. */}
+            <li className="flex items-center gap-3 rounded-lg bg-sombre-eleve px-4 min-h-[54px]">
+              {/* §1 (nº 784) — le @ remplace le bouclier : cette ligne
+                  parle d'une ADRESSE, pas de la page qui la contient. */}
+              <IconeArobase taille={20} classe="shrink-0 text-sombre-texte-doux" />
               <span className="min-w-0 flex-1">
                 <span className="block text-[14.5px] font-semibold text-sombre-texte">
                   E-mail et mot de passe
@@ -574,11 +598,7 @@ export function Securite() {
                     : "Pas encore de mot de passe"}
                 </span>
               </span>
-              {aUnMotDePasse && (
-                <span className="shrink-0 rounded-full bg-primaire px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white">
-                  actif
-                </span>
-              )}
+              {aUnMotDePasse && <span className={PASTILLE_METHODE}>actif</span>}
             </li>
 
             {/* ██ §3 (nº 783) — GOOGLE : LIER, DÉLIER ██
@@ -600,7 +620,7 @@ export function Securite() {
             {googleDejaLie ? (
               <li
                 className="flex flex-wrap items-center gap-x-3 gap-y-2
-                           rounded-lg bg-primaire/10 px-4 py-2.5 min-h-[54px]"
+                           rounded-lg bg-sombre-eleve px-4 py-2.5 min-h-[54px]"
               >
                 <span className="shrink-0">
                   <IconeGoogle taille={20} />
@@ -626,17 +646,12 @@ export function Securite() {
                       if (souci) setErreurGoogle(souci);
                     }}
                     disabled={delierEnCours}
-                    className="shrink-0 rounded-full bg-sombre-eleve-clair px-4 min-h-[38px]
-                               text-[13px] font-semibold text-sombre-texte
-                               hover:text-primaire
-                               transition-colors disabled:opacity-50"
+                    className={`${PASTILLE_METHODE} transition-colors hover:text-primaire disabled:opacity-50`}
                   >
                     {delierEnCours ? "Un instant…" : "Délier"}
                   </button>
                 ) : (
-                  <span className="shrink-0 rounded-full bg-primaire px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white">
-                    actif
-                  </span>
+                  <span className={PASTILLE_METHODE}>actif</span>
                 )}
               </li>
             ) : (

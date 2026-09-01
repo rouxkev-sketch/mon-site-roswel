@@ -55,7 +55,26 @@ export function BlocSuppressions() {
   const [erreur, setErreur] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState("");
 
+  /**
+   * ██ §2 (nº 784) — UN PORTFOLIO, UNE SEULE MENTION ██
+   * ------------------------------------------------------------------
+   * LE DÉFAUT DU PROPRIÉTAIRE : une fiche dont la suppression est
+   * lancée apparaissait DEUX FOIS — en tête dans son encadré
+   * « Suppression définitive le … · Annuler la suppression », et de
+   * nouveau plus bas dans la liste des portfolios, avec un bouton
+   * « Supprimer » grisé. La seconde ligne ne servait à rien : elle ne
+   * disait rien de plus, et son bouton refusait le seul geste qu'il
+   * proposait.
+   * LA RÈGLE : les deux listes se partagent les fiches au lieu de se
+   * les disputer — en haut celles qui s'effacent, en bas celles qu'on
+   * PEUT encore effacer. Annuler rend la fiche à la seconde, puisque
+   * `purge_le` redevient vide.
+   * ⚠️ UNE SEULE SOURCE (piège nº 379) : les deux sortent du même
+   * `fiches`, par le même critère lu dans les deux sens. Rien ne peut
+   * tomber entre les deux, ni figurer dans les deux.
+   */
   const enSuppression = fiches.filter((f) => f.purge_le);
+  const encoreSupprimables = fiches.filter((f) => !f.purge_le);
 
   async function demanderSuppressionFiche(id: string, annuler: boolean) {
     setEnCours(true);
@@ -174,25 +193,28 @@ export function BlocSuppressions() {
         </div>
       )}
 
-      {/* ---------- LES PORTFOLIOS, UN PAR LIGNE ----------
+      {/* ---------- LES PORTFOLIOS QU'ON PEUT ENCORE SUPPRIMER ----------
           LE NOM, ET RIEN D'AUTRE (nº 134) : la pastille et l'état
           (« En validation », « En ligne ») encombraient une ligne dont
           le seul enjeu est DE QUEL portfolio on parle — l'état se lit
           dans le menu « Mon espace ». Chaque ligne prend la hauteur
-          des champs du bloc « Méthode de connexion » (54 px). */}
+          des champs du bloc « Méthode de connexion » (54 px).
+          §2 (nº 784) — CEUX DONT LA SUPPRESSION EST LANCÉE N'Y SONT
+          PLUS : ils vivent dans l'encadré du dessus, qui dit leur date
+          et porte leur annulation. Voir la note de `enSuppression`. */}
       {chargement ? (
         //  La silhouette des lignes qui viennent (passe nº 118) —
         //  `eleve` : on est DANS une carte, le ton monte d'un cran.
         <Patience>
           <SqueletteLignes nombre={2} ton="eleve" />
         </Patience>
-      ) : fiches.length === 0 ? (
+      ) : encoreSupprimables.length === 0 ? (
         <p className="text-[13px] text-sombre-texte-doux">
           Aucun portfolio à supprimer.
         </p>
       ) : (
         <ul className="flex flex-col gap-4">
-          {fiches.map((fiche) => (
+          {encoreSupprimables.map((fiche) => (
             <li
               key={fiche.id}
               className="flex items-center gap-x-4
@@ -201,16 +223,18 @@ export function BlocSuppressions() {
               <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-sombre-texte">
                 {fiche.nom}
               </span>
+              {/*  §2 (nº 784) — PLUS DE `disabled` ICI : il ne servait
+                   qu'aux fiches en cours de suppression, qui ne sont
+                   plus dans cette liste. Le garder aurait laissé
+                   croire à un cas qui ne peut plus se produire. */}
               <button
                 type="button"
-                disabled={Boolean(fiche.purge_le)}
                 onClick={() => {
                   setErreur(null);
                   setFicheAConfirmer(fiche);
                 }}
                 className="shrink-0 rounded-full px-4 min-h-[38px] text-[13px] font-semibold
-                           text-erreur/85 hover:text-erreur transition-colors
-                           disabled:opacity-40 disabled:cursor-not-allowed"
+                           text-erreur/85 hover:text-erreur transition-colors"
               >
                 Supprimer
               </button>

@@ -933,6 +933,33 @@ export function IconeBulleMessage({ taille = 20, classe = "" }: ProprietesIcone)
 }
 
 /** Enveloppe — l'e-mail */
+/**
+ * L'ARROBASE (passe nº 784) — le signe de l'adresse e-mail.
+ * ------------------------------------------------------------------
+ * ELLE REMPLACE LE BOUCLIER sur la ligne « E-mail et mot de passe » de
+ * la page Sécurité, sur consigne : le bouclier disait « sécurité »,
+ * c'est-à-dire le titre de la page, pas CE dont la ligne parle. Le @
+ * dit une adresse, et personne n'a besoin qu'on le lui explique.
+ * ⚠️ LE BOUCLIER N'EST PAS SUPPRIMÉ : il sert toujours à l'en-tête de
+ * la page et à l'entrée « Sécurité » du menu « Mon espace ».
+ * Même trait (1.8) et même viewBox que ses voisines : un rond au
+ * centre, et l'anneau ouvert en bas à droite qui l'entoure.
+ */
+export function IconeArobase({ taille = 20, classe = "", trait = 1.8 }: ProprietesIcone) {
+  return (
+    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
+      <circle cx="12" cy="11.9" r="3.3" stroke="currentColor" strokeWidth={trait} />
+      <path
+        d="M15.3 8.6v4.8c0 1.3 1 2.2 2.3 2.2 1.6 0 2.7-1.4 2.7-3.6a8.3 8.3 0 1 0-3.4 6.7"
+        stroke="currentColor"
+        strokeWidth={trait}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function IconeEnveloppe({ taille = 20, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
