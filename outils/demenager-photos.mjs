@@ -17,6 +17,9 @@
 //  projets, jamais leurs jetons.
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+//  §1 (nº 777) — LA DURÉE DE VALIDITÉ, lue chez le site : voir la
+//  raison longue dans ce module et dans `copierUnFichier` plus bas.
+import { enTeteCachePhotos } from "./duree-cache-photos.mjs";
 
 const RACINE = process.cwd();
 const REEL = process.argv.includes("--reel");
@@ -138,8 +141,29 @@ async function listerLesObjets(appeler, seau, prefixe = "") {
 
 /** LE SEUL GESTE D'ÉCRITURE. `x-upsert: false` : si le fichier existe
     déjà dans le nouveau projet, le serveur REFUSE et on passe au
-    suivant. C'est voulu — on ne réécrit jamais par-dessus. */
-async function copierUnFichier(lire, ecrire, chemin) {
+    suivant. C'est voulu — on ne réécrit jamais par-dessus.
+    ██ §1 (nº 777) — L'ENVOI PORTE LA CONSIGNE DE CACHE ██
+    ------------------------------------------------------------------
+    CE QUI SE PASSAIT, ET LE PROPRIÉTAIRE L'A RELEVÉ SUR LES 1150
+    PHOTOS COPIÉES : elles étaient servies en `cache-control:
+    no-cache`. Le déménagement copiait bien le CONTENU, mais pas la
+    consigne de la nº 721 — et une consigne ne se copie pas toute
+    seule : elle n'est pas dans le fichier, elle est dans les
+    métadonnées de l'objet, posées AU DÉPÔT par l'en-tête de l'envoi.
+    Sans cet en-tête, le service pose son défaut, `no-cache`.
+    CE QUE ÇA COÛTAIT : `no-cache` ne veut pas dire « garde-la une
+    heure », mais « ne réutilise jamais sans me redemander d'abord ».
+    Le réseau de diffusion revalidait donc chaque photo auprès de
+    l'origine — désormais aux États-Unis : la distance se payait à
+    chaque affichage, sur toutes les photos de toutes les grilles.
+    ⚠️ LA VALEUR N'EST PAS ÉCRITE ICI (piège nº 378) : elle est LUE
+    chez le site (`lib/cache-photos` via `duree-cache-photos.mjs`),
+    comme la reprise des avatars le fait depuis la nº 721.
+    ⚠️ ET LES PHOTOS DÉJÀ COPIÉES ? Ce script ne réécrit jamais un
+    fichier en place — c'est sa règle, et elle ne change pas. Pour
+    reprendre la consigne d'un seau déjà rempli, il y a l'outil de la
+    même passe : `sh outils/reprendre-le-cache`. */
+async function copierUnFichier(lire, ecrire, chemin, cache) {
   let source;
   try {
     source = await lire(`/storage/v1/object/${SEAU}/${encoder(chemin)}`, {
@@ -155,7 +179,12 @@ async function copierUnFichier(lire, ecrire, chemin) {
   try {
     reponse = await ecrire(`/storage/v1/object/${SEAU}/${encoder(chemin)}`, {
       method: "POST",
-      headers: { "content-type": type, "x-upsert": "false" },
+      headers: {
+        "content-type": type,
+        "x-upsert": "false",
+        //  §1 (nº 777) — la consigne, sur l'envoi (voir la note).
+        "cache-control": cache,
+      },
       body: Buffer.from(octets),
       delai: DELAI_FICHIER_MS,
     });
@@ -189,12 +218,15 @@ async function principal() {
 
   const lire = fabriquerLeFacteur(source.url, source.cle);
   const ecrire = fabriquerLeFacteur(cible.url, cible.cle);
+  //  §1 (nº 777) — la consigne de cache que portera chaque envoi.
+  const cache = await enTeteCachePhotos(RACINE);
 
   console.log();
   console.log("  ██ DÉMÉNAGEMENT DES PHOTOS ██");
   console.log(`     seau   : ${SEAU}`);
   console.log(`     depuis : ${nomDuProjet(source.url)}`);
   console.log(`     vers   : ${nomDuProjet(cible.url)}`);
+  console.log(`     cache  : ${cache} (posé sur chaque copie — nº 777)`);
   console.log(
     REEL
       ? "     MODE RÉEL — les fichiers manquants seront copiés."
@@ -239,7 +271,7 @@ async function principal() {
   let deSuite = 0;
   let franche = false;
   for (const chemin of manquants) {
-    const echec = await copierUnFichier(lire, ecrire, chemin);
+    const echec = await copierUnFichier(lire, ecrire, chemin, cache);
     if (echec) {
       soucis.push(`${chemin} — ${echec}`);
       deSuite += 1;

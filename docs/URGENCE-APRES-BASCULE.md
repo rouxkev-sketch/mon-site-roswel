@@ -122,6 +122,51 @@ reconnecter.
 
 ---
 
+---
+
+## Défaut 3 — les photos repartent aux États-Unis à chaque affichage
+
+**Passe nº 777.** Une fois les images revenues, il restait ceci : les
+1150 photos copiées étaient servies en `cache-control: no-cache`.
+
+### La cause
+
+`no-cache` ne veut pas dire « garde-la une heure » : il veut dire **« ne
+la réutilise jamais sans me redemander d'abord »**. Le réseau de
+diffusion de Supabase, qui a des machines partout dans le monde, devait
+donc revalider **chaque photo auprès de l'origine, à chaque
+affichage** — et l'origine est maintenant américaine. La distance se
+payait sur toutes les photos, de toutes les grilles.
+
+Cette consigne n'est pas **dans** le fichier : elle est dans ses
+métadonnées, posées au moment du dépôt. `demenager-photos` copiait les
+octets sans la poser, et le service mettait alors son réglage par
+défaut. Le site, lui, la pose depuis la nº 721 (`lib/cache-photos`,
+un an) : ce sont **les photos déménagées, et elles seules**, qui sont
+concernées.
+
+### La réparation — une commande, aucun déploiement
+
+```
+sh outils/reprendre-le-cache          # à blanc : il compte
+sh outils/reprendre-le-cache --reel   # il renvoie ce qui est mal réglé
+```
+
+Il relit chaque photo mal réglée et la renvoie **à son propre chemin**,
+avec les octets qu'il vient d'en lire : rien n'est recompressé ni
+renommé, aucune adresse ne change, **aucun SQL à passer après**. Une
+photo déjà bonne n'est pas touchée — relancé, il ne reprend que ce qui
+reste. Pour le second seau : `SEAU_PHOTOS=photos-artisans`.
+
+> Après coup, le réseau de diffusion peut encore servir quelques
+> minutes ses réponses d'avant : c'est normal. Pour regarder toi-même :
+> `curl -sI "<adresse d'une photo>" | grep -i cache-control`
+
+Et pour les prochaines fois : `demenager-photos` pose désormais la
+consigne sur chaque copie — une bascule future arrivera d'aplomb.
+
+---
+
 ## L'ordre à suivre
 
 1. **Le SQL des photos** (bloc 1, puis 2, puis 1 à nouveau) — le site
@@ -129,3 +174,6 @@ reconnecter.
 2. **Le second seau**, si le bloc 1 en montre.
 3. **Déployer** cette version — la barre redevient juste.
 4. Contrôler : une fiche avec ses photos, puis une connexion.
+5. **`sh outils/reprendre-le-cache --reel`** — les photos cessent de
+   repartir aux États-Unis à chaque affichage (défaut 3, sans
+   déploiement lui non plus).

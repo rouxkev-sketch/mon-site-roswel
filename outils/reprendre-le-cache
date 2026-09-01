@@ -1,0 +1,72 @@
+#!/bin/sh
+#
+#  ██ REMETTRE LE CACHE DES PHOTOS D'APLOMB (passe nº 777) ██
+#  ==================================================================
+#  CE QUE TU TAPES, DANS LE DOSSIER DU PROJET, SUR TON MAC :
+#
+#    sh outils/reprendre-le-cache
+#
+#  Il lit la consigne de chaque photo du seau et te dit combien sont
+#  mal réglées, SANS RIEN ÉCRIRE. Quand le compte te va :
+#
+#    sh outils/reprendre-le-cache --reel
+#
+#  ⚠️ SUR TON MAC, PAS DANS L'ATELIER (aucun accès au réseau là-bas).
+#
+#  ==================================================================
+#  LE DÉFAUT QU'IL RÉPARE
+#  ------------------------------------------------------------------
+#  Les 1150 photos copiées vers le projet américain étaient servies
+#  avec la consigne « no-cache ». Ce n'est pas « garde-la une heure » :
+#  c'est « ne la réutilise JAMAIS sans me redemander d'abord ». Le
+#  réseau de diffusion (le CDN, qui a des machines partout dans le
+#  monde) devait donc redemander chaque photo à l'origine — désormais
+#  aux États-Unis — à chaque affichage. La distance se payait sur
+#  toutes les photos, de toutes les grilles, pour tout le monde.
+#
+#  LA CAUSE : cette consigne n'est pas DANS le fichier. Elle est dans
+#  ses métadonnées, posées au moment du dépôt. `demenager-photos`
+#  copiait les octets sans la poser — le service mettait alors son
+#  réglage par défaut. (Il la pose depuis la même passe : les
+#  prochaines copies arriveront bonnes.)
+#
+#  ==================================================================
+#  CE QU'IL FAIT, ET CE QU'IL NE FERA JAMAIS
+#  ------------------------------------------------------------------
+#  Il relit chaque photo mal réglée et la renvoie À SON PROPRE CHEMIN,
+#  avec les octets qu'il vient d'en lire et la bonne consigne. C'est le
+#  seul moyen : le service ne sait pas changer cette consigne sans le
+#  fichier.
+#    · rien n'est recompressé, redimensionné ni renommé ;
+#    · aucune adresse ne change — il n'y a AUCUN SQL à passer après ;
+#    · une photo déjà bien réglée n'est pas touchée : relancé, il ne
+#      reprend que ce qui reste, et ne coûte rien s'il n'y a rien.
+#  Il n'efface jamais rien, nulle part.
+#
+#  ⚠️ LE PROJET VISÉ est celui de ton `.env.local` — celui que le site
+#  sert aujourd'hui. Pour en viser un autre :
+#
+#    CIBLE_URL='https://xxxxx.supabase.co' \
+#    CIBLE_SECRET_KEY='la clé secrète de ce projet' \
+#      sh outils/reprendre-le-cache
+#
+#  ⚠️ LE SECOND SEAU (`photos-artisans`, s'il te reste des photos
+#  dedans) se reprend avec :
+#
+#    SEAU_PHOTOS=photos-artisans sh outils/reprendre-le-cache
+#
+#  ⚠️ APRÈS COUP, le réseau de diffusion peut encore servir quelques
+#  minutes les réponses qu'il avait déjà. C'est normal et ça passe tout
+#  seul. Pour regarder toi-même ce qu'une photo répond :
+#
+#    curl -sI "<adresse d'une photo>" | grep -i cache-control
+#
+
+set -e
+
+DOSSIER=$(cd "$(dirname "$0")/.." && pwd)
+cd "$DOSSIER"
+
+. "$(dirname "$0")/verifier-node.sh"
+
+exec node outils/reprendre-le-cache.mjs "$@"

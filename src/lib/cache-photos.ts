@@ -28,14 +28,26 @@
  * ne reçoivent pour cette raison qu'un jour, revalidable — jamais
  * `immutable`.
  *
- * ⚠️ CE RÉGLAGE NE VAUT QUE POUR LES PHOTOS DÉPOSÉES APRÈS LA nº 721.
- * La consigne est écrite dans les métadonnées de l'objet AU MOMENT DE
- * L'ENVOI : les photos déjà en ligne gardent la leur, et l'API du
- * stockage n'offre AUCUN moyen de la changer sans réenvoyer le fichier
- * (`copy` et `move` recopient les métadonnées telles quelles). Pour les
- * avatars, la reprise nº 719 (`outils/reprendre-avatars.mjs`) réenvoie
- * de toute façon chaque photo : depuis la nº 721, ses envois portent
- * cette durée — la lancer règle donc aussi la consigne.
+ * ⚠️ LA CONSIGNE EST ÉCRITE AU MOMENT DE L'ENVOI, dans les métadonnées
+ * de l'objet — jamais dans le fichier. Une photo déjà en ligne garde
+ * donc la sienne, et l'API du stockage n'offre AUCUN moyen de la
+ * changer sans réenvoyer le fichier (`copy` et `move` recopient les
+ * métadonnées telles quelles). Deux outils réenvoient, et règlent donc
+ * la consigne au passage :
+ *  · `outils/reprendre-avatars` (nº 719) — les avatars, qu'il refait
+ *    de toute façon ; ses envois portent cette durée depuis la nº 721 ;
+ *  · `outils/reprendre-le-cache` (nº 777) — TOUT un seau, et rien
+ *    d'autre : il relit chaque photo mal réglée et la renvoie à son
+ *    propre chemin, telle quelle. Il ne touche pas à celles qui sont
+ *    déjà bonnes.
+ *
+ * ⚠️ ET UNE COPIE ENTRE PROJETS NE TRANSPORTE PAS CETTE CONSIGNE
+ * (relevé du propriétaire, nº 777) : les 1150 photos déménagées vers
+ * le projet américain sont arrivées au défaut du service, `no-cache`,
+ * parce que `demenager-photos` copiait les octets sans poser
+ * l'en-tête. Il le pose depuis la nº 777 — et cet en-tête, comme tout
+ * ce qui touche à cette durée dans les outils, la LIT ici même
+ * (`outils/duree-cache-photos.mjs`).
  *
  * ⚠️ UNE SEULE ÉCRITURE, ET C'EST DÉLIBÉRÉ (piège nº 378). Sept envois
  * dans quatre fichiers, plus l'outil de reprise : si la valeur vivait à

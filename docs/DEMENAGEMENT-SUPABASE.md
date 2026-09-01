@@ -467,6 +467,29 @@ CIBLE_URL='…' CIBLE_SECRET_KEY='…' \
 > minutes. Il s'arrête tout seul au bout de dix échecs d'affilée — c'est
 > le signe que le seau n'existe pas ou que la clé n'est pas la bonne.
 
+### La consigne de cache voyage avec les photos (nº 777)
+
+Chaque copie porte désormais la durée de validité du site
+(`max-age=31536000`, un an — `lib/cache-photos`). Ce n'est pas un
+détail de confort : sans elle, le service pose son défaut, `no-cache`,
+qui veut dire « ne réutilise jamais sans me redemander d'abord ». Le
+réseau de diffusion redemande alors **chaque photo à l'origine, à
+chaque affichage** — et l'origine est maintenant aux États-Unis.
+
+> **Si tes photos sont déjà copiées** (c'était le cas de la première
+> bascule : 1150 fichiers passés avant cette correction), elles portent
+> encore `no-cache`. Une commande les reprend, sans rien déplacer :
+>
+> ```
+> sh outils/reprendre-le-cache          # à blanc : il compte
+> sh outils/reprendre-le-cache --reel   # il renvoie ce qui est mal réglé
+> ```
+>
+> Il relit chaque photo mal réglée et la renvoie **à son propre
+> chemin** : rien n'est recompressé ni renommé, aucune adresse ne
+> change, **aucun SQL à passer après**. Une photo déjà bonne n'est pas
+> touchée. Pour le second seau : `SEAU_PHOTOS=photos-artisans`.
+
 ---
 
 ## Étape 8 — les réglages, écran par écran
