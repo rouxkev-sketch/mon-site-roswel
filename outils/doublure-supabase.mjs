@@ -342,6 +342,10 @@ function identitesDe(compte, courriel, metaApp) {
  */
 const SESSIONS = new Map();
 let compteurDeSessions = 0;
+/*  §2 (nº 796) — le carnet des jetons DÉJÀ SERVIS, et le cran qui les
+    refuse une seconde fois. Voir la note à la route /auth/v1/token. */
+const JETONS_CONSOMMES = new Set();
+const USAGE_UNIQUE = process.env.USAGE_UNIQUE === "1";
 
 function sessionDeBanc({ identifiant, courriel, metaApp }) {
   const b64u = (o) => Buffer.from(JSON.stringify(o)).toString("base64")
@@ -966,15 +970,61 @@ function repondre(req, res, u, brut) {
         valeurs par défaut du bloc suivant : le compte Google devenait
         un compte e-mail au premier rafraîchissement. */
     if (u.searchParams.get("grant_type") === "refresh_token") {
+      /*  ██ §1 (nº 796) — QUI DEMANDE, ET AVEC QUEL JETON ██
+          ------------------------------------------------------------
+          Les deux clients de `@supabase/ssr` se nomment eux-mêmes dans
+          l'en-tête `X-Client-Info` : « createBrowserClient » pour le
+          navigateur, « createServerClient » pour le proxy. C'est la
+          SEULE façon d'attribuer un renouvellement à l'un ou à l'autre
+          — les requêtes du proxy partent de Node, sans rien d'autre
+          qui les distingue. Le journal en porte la trace, une ligne
+          par appel, préfixée pour être comptée sans ambiguïté. */
+      const quiDemande =
+        /createBrowserClient/.test(req.headers["x-client-info"] ?? "")
+          ? "navigateur"
+          : "serveur---";
       const connu = SESSIONS.get(jetonDeReprise);
-      if (!connu) {
+      /*  ██ §2 (nº 796) — LE JETON DE REPRISE EST À USAGE UNIQUE ██
+          ------------------------------------------------------------
+          C'EST LE COMPORTEMENT RÉEL DE SUPABASE, et il est écrit noir
+          sur blanc dans la documentation de la bibliothèque qu'emploie
+          le site (node_modules/@supabase/ssr/README.md, « Concurrent
+          requests with the same expired session ») :
+             « Supabase refresh tokens are single-use. If two requests
+               arrive simultaneously with the same expired session
+               cookie […] both will attempt a token refresh. The second
+               request's refresh will fail because the token was
+               already consumed by the first. »
+          La doublure, elle, acceptait le même jeton indéfiniment : un
+          banc monté dessus aurait déclaré « tout va bien » sur un
+          Supabase QUI N'EXISTE PAS. On modélise donc l'usage unique —
+          sous un cran, pour ne rien changer aux bancs des autres
+          passes qui n'en ont pas besoin.
+          ⚠️ CE N'EST PAS UNE SIMULATION APPROXIMATIVE : le vrai
+          serveur tolère une brève FENÊTRE DE RÉUTILISATION (quelques
+          secondes, réglage du projet) pendant laquelle il rend le même
+          enfant. Au-delà, le jeton est refusé. `USAGE_UNIQUE=1` est
+          donc le cas le PLUS SÉVÈRE, celui d'une fenêtre nulle. */
+      const dejaServi = JETONS_CONSOMMES.has(jetonDeReprise);
+      const refuse = USAGE_UNIQUE && dejaServi;
+      console.log(
+        `⟨REPRISE⟩ ${Date.now()} ${quiDemande} ${jetonDeReprise || "(aucun)"} ` +
+          `${!connu ? "INCONNU" : refuse ? "REFUSÉ-DÉJÀ-SERVI" : "servi"}`
+      );
+      if (!connu || refuse) {
         res.writeHead(400, {
           "content-type": "application/json",
           "access-control-allow-origin": "*",
         });
-        res.end(JSON.stringify({ error: "invalid_grant", error_description: "Invalid Refresh Token" }));
+        res.end(JSON.stringify(
+          refuse
+            ? { error: "invalid_grant", error_code: "refresh_token_already_used",
+                error_description: "Invalid Refresh Token: Already Used" }
+            : { error: "invalid_grant", error_description: "Invalid Refresh Token" }
+        ));
         return;
       }
+      JETONS_CONSOMMES.add(jetonDeReprise);
       console.log(
         new Date().toISOString().slice(11, 19),
         "POST auth/token (reprise) →", connu.courriel,

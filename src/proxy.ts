@@ -3,6 +3,8 @@ import { createServerClient } from "@supabase/ssr";
 import { ADRESSE_RECHERCHE } from "@/lib/chemin-recherche";
 import { NextResponse, type NextRequest } from "next/server";
 import { infosConnexionSupabase } from "@/lib/supabase/env";
+//  §1 (nº 796) — la règle des effacements, écrite une seule fois.
+import { estUnEffacementPur } from "@/lib/supabase/effacement-de-session";
 
 /**
  * PROXY (exécuté avant chaque page)
@@ -92,6 +94,13 @@ export async function proxy(request: NextRequest) {
         return request.cookies.getAll();
       },
       setAll(cookiesAPoser) {
+        /*  §1 (nº 796) — CE PROXY POSE LA SESSION, IL NE L'EFFACE
+            JAMAIS. La règle, le défaut qu'elle corrige et ses cinq
+            maillons sont écrits UNE SEULE FOIS, dans le module importé
+            en tête de fichier (`lib/supabase/effacement-de-session`) :
+            les deux écrivains de cookies du serveur l'appliquent, et un
+            seul texte en répond. */
+        if (estUnEffacementPur(cookiesAPoser)) return;
         cookiesAPoser.forEach(({ name, value }) =>
           request.cookies.set(name, value)
         );
