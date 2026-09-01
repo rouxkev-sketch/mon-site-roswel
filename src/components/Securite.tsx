@@ -20,7 +20,7 @@ import {
 import { BlocSuppressions } from "@/components/BlocSuppressions";
 //  §1 (nº 785) — les deux pastilles de bout de ligne, écrites une
 //  seule fois et partagées avec le bloc des suppressions.
-import { PastilleAction, PastilleEtat } from "@/components/Pastille";
+import { EtatActif, PastilleAction } from "@/components/Pastille";
 import { JaugeMotDePasse } from "@/components/JaugeMotDePasse";
 import { Patience, SquelettePage } from "@/components/Squelette";
 import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
@@ -58,9 +58,10 @@ import { useUtilisateur } from "@/lib/use-utilisateur";
  *     retirer Google fermerait le compte à clé.
  *     ⚠️ AUCUNE TEINTE D'ÉTAT DANS CE BLOC (nº 784) : les encadrés ont
  *     le fond de tous les autres, actifs ou non.
- *     ⚠️ « ACTIF » N'EST PAS UN BOUTON (nº 785) : même géométrie que
- *     « Délier », mais fond blanc et aucun survol — un état, pas un
- *     geste. Les deux vivent dans `components/Pastille`.
+ *     ⚠️ « ACTIF » N'EST PLUS UN OBJET DU TOUT (nº 786) : un point vert
+ *     et un mot, sans fond ni encadré. Il avait la forme d'un bouton
+ *     (nº 785), on pouvait le croire cliquable ; un état ne se touche
+ *     pas. Lui et « Délier » vivent dans `components/Pastille`.
  *  4. LES SUPPRESSIONS — supprimer UNE fiche, ou LE compte, tout en bas
  *     (voir BlocSuppressions).
  *
@@ -101,23 +102,22 @@ const ERREUR =
   "rounded-lg border border-erreur/50 bg-erreur/10 px-4 py-3 text-[13px] leading-relaxed text-sombre-texte";
 
 /**
- * ██ §1 (nº 785) — LES DEUX LIGNES DE MÉTHODE, ET LEUR AIR ██
+ * ██ §1 (nº 786) — LES DEUX LIGNES DE MÉTHODE, ET LEUR AIR ██
  * ==================================================================
- * `pl-4` à gauche comme partout ailleurs sur la page (l'icône reste
- * alignée sur les autres blocs), mais `pr-2` À DROITE : 8 px, soit
- * exactement ce qui reste au-dessus et en dessous d'une pastille de
- * 38 px dans une ligne de 54. Les trois côtés à l'identique, sur
- * consigne — voir la note de `Pastille`, où les deux nombres vivent.
- * ⚠️ CES TROIS VALEURS SE TIENNENT (54, 38, 8) : en changer une seule
- * défait l'accord.
- * ⚠️ AUCUN RETRAIT VERTICAL, ET C'EST LE POINT QUE LE BANC A CORRIGÉ :
- * la ligne Google en portait un (`py-2`), hérité du temps où sa
- * pastille était plus petite qu'elle. Son texte à deux étages fait
- * 40,5 px — plus que les 38 de la pastille : les 8 px de retrait
- * s'ajoutaient donc à cette hauteur-là au lieu de disparaître sous le
- * `min-h`, la ligne montait à 56,5 px, et la pastille se retrouvait à
- * 9,2 px du haut pour 8 à droite. Sans retrait, la hauteur est celle
- * du `min-h` (54) et les trois airs valent 8.
+ * `px-4` DES DEUX CÔTÉS — 16 px, l'AIR DE RÉFÉRENCE de la nº 786 (voir
+ * la note de `Pastille`, où les trois nombres vivent). Celui qu'on lit
+ * à gauche entre le bord et l'icône se retrouve à droite du bout de
+ * ligne ; et comme la ligne fait 54 px et la pastille 22, il se
+ * retrouve aussi au-dessus et en dessous. Un seul nombre, quatre côtés.
+ * ⚠️ CE `px-4` VAUT MIEUX QUE LE `pl-4 pr-2` DE LA nº 785 : ce dernier
+ * suivait une pastille de 38 px, qui imposait 8 px de reste. La
+ * pastille ayant rapetissé, c'est le retrait qui grandit — les deux se
+ * répondent, et l'accord ne tient que si l'on change les deux ensemble.
+ * ⚠️ AUCUN RETRAIT VERTICAL, ET C'EST CE QUE LE BANC DE LA nº 785 A
+ * CORRIGÉ : la ligne Google en portait un (`py-2`). Son texte à deux
+ * étages fait 40,5 px, plus haut que la pastille : les 8 px s'ajoutaient
+ * à cette hauteur-là au lieu de disparaître sous le `min-h`, la ligne
+ * montait à 56,5 px, et l'air du haut ne valait plus celui de droite.
  * ⚠️ ET PAS DE `flex-wrap` NON PLUS : une pastille qui passe à la ligne
  * n'a plus d'air du tout en bas. Le texte se comprime (`min-w-0
  * flex-1`, `truncate`), ce qui est le bon arbitrage — un nom coupé se
@@ -126,7 +126,7 @@ const ERREUR =
  * doivent rester au pixel l'une de l'autre.
  */
 const LIGNE_METHODE =
-  "flex items-center gap-3 rounded-lg bg-sombre-eleve pl-4 pr-2 min-h-[54px]";
+  "flex items-center gap-3 rounded-lg bg-sombre-eleve px-4 min-h-[54px]";
 
 /**
  * ██ §1 (nº 785) — LA TAILLE DES ICÔNES DE MÉTHODE ██
@@ -144,6 +144,33 @@ const LIGNE_METHODE =
  */
 const ICONE_METHODE =
   "shrink-0 mobile:w-[26px] mobile:h-[26px] not-mobile:w-[22px] not-mobile:h-[22px]";
+
+/**
+ * ██ §5 (nº 786) — LE BOUTON QUI VALIDE UN BLOC ██
+ * ==================================================================
+ * CE QUE LE PROPRIÉTAIRE A DEMANDÉ : plus compact, et À DROITE.
+ *  · `self-end` — il était à gauche (`self-start`). Un bouton qui
+ *    conclut un formulaire se met du côté où le regard finit sa
+ *    ligne ; à gauche, il avait l'air d'ouvrir quelque chose ;
+ *  · 40 px de haut au lieu de 48, 20 px de retrait au lieu de 28,
+ *    14 px de texte au lieu de 15. Il occupait la largeur d'un champ
+ *    pour dire un seul mot.
+ * ⚠️ CE QUI NE BOUGE PAS, ET C'EST LA CONSIGNE : la règle de couleur.
+ * Gris tant qu'il n'y a rien à envoyer, ROUGE dès que la saisie
+ * commence — voir les deux appels, qui n'ont pas la même condition.
+ * ⚠️ UNE SEULE ÉCRITURE POUR LES DEUX (piège nº 378) : e-mail et mot
+ * de passe portaient la même chaîne, recopiée. Deux copies, ce sont
+ * deux boutons qui finissent par ne plus se ressembler.
+ */
+const BOUTON_DE_BLOC =
+  "self-end inline-flex items-center justify-center rounded-full " +
+  "px-5 min-h-[40px] text-[14px] font-semibold transition-colors " +
+  "disabled:opacity-60 disabled:cursor-not-allowed";
+
+/** Les deux robes du bouton ci-dessus — allumée, éteinte. */
+const BOUTON_ALLUME =
+  "bg-primaire hover:bg-primaire-fonce active:bg-primaire-fonce text-white";
+const BOUTON_ETEINT = "bg-sombre-eleve text-sombre-texte-doux";
 
 /** Un bloc de la page — la grammaire de `Section` du formulaire
     (nº 125 web, nº 128 partout) : le TITRE VIT AU-DESSUS de
@@ -401,11 +428,27 @@ export function Securite() {
           contenu des blocs, qu'on voit juste en dessous (nº 129).
           LE BOUCLIER À SA GAUCHE (nº 134) : la même icône que dans le
           menu « Mon espace » — la page se reconnaît d'où on l'a
-          ouverte. Même gris à 80 % que les icônes du menu. */}
-      <h1 className="flex items-center gap-2.5 text-[clamp(1.5rem,4vw,1.9rem)] font-bold text-sombre-texte">
+          ouverte. Même gris à 80 % que les icônes du menu.
+
+          ██ §4 (nº 786) — IL FAIT LA HAUTEUR DE LA MAJUSCULE ██
+          LE DÉFAUT : 24 px en dur sous un titre qui, lui, respire
+          (`clamp`, de 24 à 30 px selon la fenêtre). L'icône était donc
+          juste sur un seul écran et trop petite partout ailleurs.
+          COMMENT ON LA CALE SANS DEVINER, ET C'EST EXACT AU PIXEL :
+           · `1cap` est la HAUTEUR DE MAJUSCULE de la police en cours —
+             pas une approximation, la vraie mesure lue dans la fonte.
+             L'icône fait donc exactement la hauteur du « S » ;
+           · `items-baseline` pose son BAS sur la ligne de base du
+             texte, c'est-à-dire sur le pied de ce « S ». Bas commun,
+             hauteur commune : le haut coïncide forcément.
+          ⚠️ ON NE PASSE PLUS PAR `taille` : cet attribut ne connaît ni
+          la police ni sa taille du moment. Les `width`/`height` d'un
+          SVG cèdent devant une règle CSS — c'est ce qui rend la chose
+          possible. */}
+      <h1 className="flex items-baseline gap-2.5 text-[clamp(1.5rem,4vw,1.9rem)] font-bold text-sombre-texte">
         <IconeBouclierTrait
           taille={24}
-          classe="shrink-0 text-sombre-texte/80"
+          classe="shrink-0 h-[1cap] w-[1cap] text-sombre-texte/80"
         />
         Sécurité
       </h1>
@@ -463,13 +506,9 @@ export function Securite() {
             <button
               type="submit"
               disabled={emailEnCours}
-              className={`self-start inline-flex items-center justify-center rounded-full
-                         px-7 min-h-[48px] text-[15px] font-semibold transition-colors
-                         disabled:opacity-60 disabled:cursor-not-allowed ${
-                           nouvelEmail.trim().length > 0
-                             ? "bg-primaire hover:bg-primaire-fonce active:bg-primaire-fonce text-white"
-                             : "bg-sombre-eleve text-sombre-texte-doux"
-                         }`}
+              className={`${BOUTON_DE_BLOC} ${
+                nouvelEmail.trim().length > 0 ? BOUTON_ALLUME : BOUTON_ETEINT
+              }`}
             >
               {emailEnCours ? "Envoi…" : "Changer mon adresse"}
             </button>
@@ -576,15 +615,13 @@ export function Securite() {
             <button
               type="submit"
               disabled={mdpEnCours}
-              className={`self-start inline-flex items-center justify-center rounded-full
-                         px-7 min-h-[48px] text-[15px] font-semibold transition-colors
-                         disabled:opacity-60 disabled:cursor-not-allowed ${
-                           ancienMdp.length > 0 &&
-                           nouveauMdp.length > 0 &&
-                           confirmationMdp.length > 0
-                             ? "bg-primaire hover:bg-primaire-fonce active:bg-primaire-fonce text-white"
-                             : "bg-sombre-eleve text-sombre-texte-doux"
-                         }`}
+              className={`${BOUTON_DE_BLOC} ${
+                ancienMdp.length > 0 &&
+                nouveauMdp.length > 0 &&
+                confirmationMdp.length > 0
+                  ? BOUTON_ALLUME
+                  : BOUTON_ETEINT
+              }`}
             >
               {mdpEnCours ? "Un instant…" : "Changer mon mot de passe"}
             </button>
@@ -630,7 +667,7 @@ export function Securite() {
                     : "Pas encore de mot de passe"}
                 </span>
               </span>
-              {aUnMotDePasse && <PastilleEtat>actif</PastilleEtat>}
+              {aUnMotDePasse && <EtatActif />}
             </li>
 
             {/* ██ §3 (nº 783) — GOOGLE : LIER, DÉLIER ██
@@ -676,7 +713,7 @@ export function Securite() {
                     {delierEnCours ? "Un instant…" : "Délier"}
                   </PastilleAction>
                 ) : (
-                  <PastilleEtat>actif</PastilleEtat>
+                  <EtatActif />
                 )}
               </li>
             ) : (

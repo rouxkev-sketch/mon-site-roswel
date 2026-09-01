@@ -166,16 +166,22 @@ export function BlocSuppressions() {
           {enSuppression.map((fiche) => (
             <div
               key={fiche.id}
-              /*  §1 (nº 785) — LE MÊME AIR QU'AILLEURS : `pl-4 pr-2`,
-                  pour que les huit pixels qui restent au-dessus et en
-                  dessous de la pastille se retrouvent aussi à sa droite.
-                  Voir la note de `Pastille`, où les trois nombres qui se
-                  tiennent (54, 38, 8) sont expliqués, et celle de
+              /*  §1 (nº 786) — L'AIR DE RÉFÉRENCE DES QUATRE CÔTÉS :
+                  `px-4`, soit les 16 px qui séparent le bord gauche du
+                  texte. La pastille faisant 22 px dans une ligne de 54,
+                  il en reste autant en haut et en bas. Voir la note de
+                  `Pastille`, où ces trois nombres vivent, et celle de
                   `LIGNE_METHODE` (Securite) pour le retrait vertical et
-                  le `flex-wrap` qui sont partis d'ici pour la même
-                  raison : ils cassaient l'égalité des trois airs. */
+                  le `flex-wrap` partis d'ici à la nº 785 : ils cassaient
+                  l'égalité des airs.
+                  ⚠️ ELLE GARDE SON `pr-4`, contrairement aux lignes de
+                  la liste juste en dessous : ce qui la termine est une
+                  pastille À FOND, dont on VOIT le bord. C'est ce bord
+                  qu'on aligne. Les lignes de la liste, elles, finissent
+                  par un bouton sans fond dont on ne voit que le texte —
+                  d'où leur `pr-0`, expliqué là-bas. */
               className="flex items-center gap-x-4
-                         rounded-lg bg-sombre-eleve pl-4 pr-2 min-h-[54px]"
+                         rounded-lg bg-sombre-eleve px-4 min-h-[54px]"
             >
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[14px] font-semibold text-sombre-texte">
@@ -235,7 +241,7 @@ export function BlocSuppressions() {
             <li
               key={fiche.id}
               className="flex items-center gap-x-4
-                         rounded-lg bg-sombre-eleve px-4 min-h-[54px]"
+                         rounded-lg bg-sombre-eleve pl-4 pr-0 min-h-[54px]"
             >
               <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-sombre-texte">
                 {fiche.nom}
@@ -255,6 +261,21 @@ export function BlocSuppressions() {
               >
                 Supprimer
               </button>
+              {/*  ⚠️ SON RETRAIT DROIT EST CELUI DE LA LIGNE (nº 786).
+                   LE DÉFAUT DU PROPRIÉTAIRE : « trop d'air à leur
+                   droite ». La ligne posait 16 px, le bouton 16 de
+                   plus — le mot « Supprimer » finissait à 32 px du
+                   bord quand le nom, à gauche, en avait 16.
+                   LA RÈGLE, ET ELLE NE VAUT QUE POUR UN BOUTON SANS
+                   FOND : c'est la ligne qui renonce à son `pr` (elle
+                   passe à `pr-0`) et le bouton qui garde le sien. Le
+                   TEXTE se retrouve donc à 16 px, et la zone où le
+                   doigt peut appuyer va jusqu'au bord — on gagne de la
+                   cible au lieu d'en perdre.
+                   ⚠️ CE N'EST PAS CE QU'ON FAIT AILLEURS, ET C'EST
+                   VOULU : une pastille à FOND (« Délier », « Annuler »)
+                   se voit, donc c'est son bord à elle qu'on aligne, et
+                   la ligne garde son `px-4`. */}
             </li>
           ))}
         </ul>
@@ -267,7 +288,7 @@ export function BlocSuppressions() {
           dans la fenêtre de confirmation, au moment où ça compte. */}
       <div
         className="flex items-center gap-x-4
-                   rounded-lg bg-sombre-eleve px-4 min-h-[54px]"
+                   rounded-lg bg-sombre-eleve pl-4 pr-0 min-h-[54px]"
       >
         <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-sombre-texte">
           Supprimer le compte

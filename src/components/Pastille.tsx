@@ -1,43 +1,51 @@
 "use client";
 
 /**
- * ██ LES PASTILLES DE BOUT DE LIGNE (passe nº 785) ██
+ * ██ LES BOUTS DE LIGNE DE LA PAGE « SÉCURITÉ » (nº 785, refait nº 786) ██
  * ==================================================================
- * Les lignes de la page « Sécurité » se terminent toutes par la même
- * chose : un petit rectangle qui dit un ÉTAT (« actif ») ou qui offre
- * un GESTE (« Délier », « Annuler »). Ils ont la même géométrie, et
- * c'est tout ce qu'ils ont en commun — leurs couleurs disent
- * précisément ce qui les sépare.
+ * Les lignes de cette page se terminent par deux choses, et il ne faut
+ * surtout pas les confondre :
+ *  · un ÉTAT — « Actif ». Ce n'est pas un objet, c'est un constat ;
+ *  · un GESTE — « Délier », « Annuler ». Là, on peut appuyer.
+ *
+ * CE QUE LA nº 786 CHANGE, ET POURQUOI : jusqu'ici les deux avaient la
+ * même forme, celle d'un bouton. Un état qui ressemble à un bouton se
+ * fait toucher, et ne répond pas. Ils n'ont plus rien en commun.
  *
  * ⚠️ UNE SEULE ÉCRITURE POUR DEUX FICHIERS (piège nº 378) : `Securite`
  * et `BlocSuppressions` s'en servent tous les deux, et le propriétaire
  * les veut identiques. Tant qu'ils vivaient chacun dans leur coin, ils
- * dérivaient — c'est ce que la nº 784 avait déjà dû rattraper une
- * première fois, dans un seul fichier.
- *
- * LA GÉOMÉTRIE, ET D'OÙ VIENNENT SES CHIFFRES :
- *  · ANGLES DROITS, sur consigne (nº 785). Ils étaient ronds ;
- *  · 38 px de haut, 13 px de texte — LES MESURES DU BOUTON « Annuler
- *    la suppression » d'avant cette passe. Rien n'est inventé : c'est
- *    la référence que le propriétaire a nommée ;
- *  · CE 38 N'EST PAS LIBRE. Les lignes font 54 px de haut ; il reste
- *    donc 8 px au-dessus et 8 en dessous. Les encadrés portent un
- *    `pr-2` (8 px) pour que l'air à DROITE vaille exactement les deux
- *    autres — les trois côtés à l'identique, c'est la consigne. Changer
- *    l'un des deux nombres sans l'autre casse cet accord.
+ * dérivaient — la nº 784 puis la nº 785 ont dû les rattraper.
  */
-const FORME =
-  "shrink-0 inline-flex items-center justify-center " +
-  "px-4 min-h-[38px] text-[13px] font-semibold";
+
+/**
+ * ██ L'AIR DE RÉFÉRENCE (nº 786) ██
+ * ------------------------------------------------------------------
+ * LA RÈGLE DU PROPRIÉTAIRE, ET ELLE EST GÉOMÉTRIQUE : l'air qui sépare
+ * le bord GAUCHE d'un champ du début de son texte — 16 px, le `px-4`
+ * de toutes ces lignes — doit se retrouver À L'IDENTIQUE en haut, en
+ * bas et à droite de ce qui termine la ligne.
+ * CE QUE ÇA IMPOSE, ET CE N'EST PAS UN CHOIX : les lignes font 54 px
+ * de haut. Seize en haut, seize en bas, il reste VINGT-DEUX pour la
+ * pastille. C'est ce nombre-là qui la rend « plus petite », comme
+ * demandé — il n'a pas été choisi, il a été déduit.
+ * ⚠️ LES TROIS VALEURS SE TIENNENT (54, 22, 16). En changer une seule
+ * défait l'accord ; les trois vivent ici et nulle part ailleurs.
+ */
+export const AIR_DE_REFERENCE = 16;
+export const HAUTEUR_LIGNE = 54;
+export const HAUTEUR_PASTILLE = HAUTEUR_LIGNE - 2 * AIR_DE_REFERENCE;  //  22
 
 /**
  * UN GESTE — « Délier », « Annuler ».
- * ⚠️ LE SURVOL CHANGE LE FOND, PAS LE TEXTE (nº 785) : il faisait
- * l'inverse, et il le faisait en ROUGE — la couleur que ce site
- * réserve à ce qu'on ne peut pas défaire. Annuler une suppression
- * n'est pas un geste dangereux ; le lui peindre était un contresens.
- * Le fond monte d'un cran sur l'échelle des gris (`eleveClair` →
- * `haut`), celui-là même qu'emploie un champ qui prend le focus.
+ * · ANGLES ARRONDIS (nº 786) : ils étaient droits depuis la 785, le
+ *   propriétaire les veut adoucis. `rounded-md` — 6 px, l'arrondi le
+ *   plus discret de l'échelle, celui qui convient à 22 px de haut ;
+ * · LE SURVOL CHANGE LE FOND, PAS LE TEXTE (acquis nº 785, conservé) :
+ *   il faisait l'inverse, et en ROUGE — la couleur que ce site réserve
+ *   à ce qu'on ne peut pas défaire. Le fond monte d'un cran sur
+ *   l'échelle des gris (`eleveClair` → `haut`), celui-là même
+ *   qu'emploie un champ qui prend le focus.
  */
 export function PastilleAction({
   children,
@@ -58,9 +66,11 @@ export function PastilleAction({
       onClick={onClick}
       disabled={disabled}
       title={titre}
-      className={`${FORME} bg-sombre-eleve-clair text-sombre-texte
-                  transition-colors hover:bg-sombre-haut
-                  disabled:opacity-50 disabled:cursor-not-allowed`}
+      className="shrink-0 inline-flex items-center justify-center rounded-md
+                 px-2.5 min-h-[22px] text-[12px] font-semibold
+                 bg-sombre-eleve-clair text-sombre-texte
+                 transition-colors hover:bg-sombre-haut
+                 disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {children}
     </button>
@@ -68,15 +78,26 @@ export function PastilleAction({
 }
 
 /**
- * UN ÉTAT — « actif ».
- * ⚠️ CE N'EST PAS UN BOUTON, ET ÇA NE DOIT PLUS Y RESSEMBLER (nº 785) :
- * il portait le gris et le survol de la pastille d'à côté, si bien
- * qu'on pouvait le croire cliquable et attendre qu'il fasse quelque
- * chose. Fond BLANC, texte de la couleur du fond du site : le
- * contraire d'un bouton de cette page, et aucun survol.
+ * ██ UN ÉTAT — « Actif » (nº 786) ██
+ * ------------------------------------------------------------------
+ * UN POINT VERT ET UN MOT, rien d'autre : pas de fond, pas d'encadré,
+ * rien qui puisse passer pour un bouton. C'est la façon dont les
+ * interfaces disent « ça marche » depuis longtemps, et elle a
+ * l'avantage de ne rien promettre.
+ * CE QU'ELLE REMPLACE : une pastille blanche à coins droits (nº 785),
+ * qui avait exactement l'allure du bouton d'à côté. Le propriétaire
+ * l'a dit : ce n'est pas un lien d'action, c'est un indicatif.
+ * ⚠️ LE POINT N'EST PAS LU À VOIX HAUTE (`aria-hidden`) : il redit ce
+ * que le mot dit déjà, et une couleur ne se prononce pas.
  */
-export function PastilleEtat({ children }: { children: React.ReactNode }) {
+export function EtatActif() {
   return (
-    <span className={`${FORME} bg-white text-sombre-fond`}>{children}</span>
+    <span className="shrink-0 inline-flex items-center gap-2 text-[13px] font-semibold text-sombre-texte">
+      <span
+        aria-hidden
+        className="block h-2 w-2 rounded-full bg-sombre-succes"
+      />
+      Actif
+    </span>
   );
 }
