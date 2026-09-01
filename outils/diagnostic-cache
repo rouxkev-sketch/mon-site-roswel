@@ -1,0 +1,68 @@
+#!/bin/sh
+#
+#  ██ QUELLE MÉTHODE CHANGE VRAIMENT L'EN-TÊTE SERVI ? (passe nº 779) ██
+#  ==================================================================
+#  CE QUE TU TAPES, DANS LE DOSSIER DU PROJET, SUR TON MAC :
+#
+#    sh outils/diagnostic-cache             (il regarde, sans écrire)
+#    sh outils/diagnostic-cache --reel      (il fait les essais)
+#
+#  ⚠️ IL NE TOUCHE QU'UNE SEULE PHOTO. Pas mille : UNE. Il la nomme
+#  avant de commencer. Pour en choisir une autre :
+#
+#    PHOTO='dossier/fichier.jpg' sh outils/diagnostic-cache --reel
+#
+#  ==================================================================
+#  POURQUOI CET OUTIL EXISTE
+#  ------------------------------------------------------------------
+#  Deux fois de suite, un outil a réussi chez moi et échoué chez toi.
+#  La raison, trouvée en lisant le code du service Supabase :
+#
+#    · LA LISTE DU SEAU montre une consigne rangée en base ;
+#    · L'EN-TÊTE SERVI au navigateur vient d'AILLEURS — de l'objet
+#      dans le stockage lui-même.
+#
+#  Les deux peuvent se contredire, et c'est exactement ce que tu as
+#  relevé : la liste disait « max-age=31536000 » pendant que le
+#  serveur répondait « no-cache ». Mon contrôle regardait la liste :
+#  il disait donc « c'est bon » alors que rien n'avait changé pour le
+#  navigateur.
+#
+#  ==================================================================
+#  CE QU'IL FAIT
+#  ------------------------------------------------------------------
+#  Sur cette seule photo, il essaie l'une après l'autre les quatre
+#  façons d'écrire que le service accepte, et APRÈS CHACUNE il lit
+#  l'en-tête réellement servi :
+#
+#    1. dépôt binaire en POST      (ce que faisait l'outil de reprise)
+#    2. dépôt binaire en PUT
+#    3. dépôt multipart            (la voie du site — celle qui donne
+#                                   des photos bien réglées)
+#    4. copie avec remplacement des métadonnées (elle écrit dans
+#       `diagnostic-cache/…`, l'original n'est pas touché)
+#
+#  Il lit l'en-tête de DEUX façons — par l'adresse publique, avec un
+#  paramètre neuf pour que le réseau de diffusion ne réponde pas par
+#  une vieille copie, et par la voie authentifiée, qui ne passe pas
+#  par lui — et il montre AUSSI la métadonnée de l'API, pour que
+#  l'écart entre les deux se voie.
+#
+#  À la fin, il dit quelle méthode a marché.
+#
+#  ⚠️ ENVOIE-MOI SON COMPTE RENDU. Il s'écrit aussi dans
+#  `diagnostic-cache.txt`, à la racine du projet.
+#
+#  ⚠️ LE PROJET VISÉ est celui de ton `.env.local`. Pour en viser un
+#  autre : CIBLE_URL='https://…' CIBLE_SECRET_KEY='…'
+#  Le seau se change avec SEAU_PHOTOS=…
+#
+
+set -e
+
+DOSSIER=$(cd "$(dirname "$0")/.." && pwd)
+cd "$DOSSIER"
+
+. "$(dirname "$0")/verifier-node.sh"
+
+exec node outils/diagnostic-cache.mjs "$@"

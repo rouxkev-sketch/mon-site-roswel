@@ -158,6 +158,41 @@ renommé, aucune adresse ne change, **aucun SQL à passer après**. Une
 photo déjà bonne n'est pas touchée — relancé, il ne reprend que ce qui
 reste. Pour le second seau : `SEAU_PHOTOS=photos-artisans`.
 
+### Ce que la nº 779 a trouvé, et pourquoi deux passes s'étaient trompées
+
+**Le service range la consigne à deux endroits, et ils peuvent se
+contredire** (lu dans le code de Supabase Storage) :
+
+| Ce qu'on regarde | D'où ça vient | Ce que ça vaut |
+|---|---|---|
+| La liste du seau, `/object/info` | la ligne rangée **en base** | ce n'est **pas** ce que reçoit le navigateur |
+| L'en-tête `cache-control` de la réponse | l'objet **dans le stockage** | **c'est lui qui décide** |
+
+La nº 778 contrôlait la première colonne. Elle a donc annoncé
+« 1150/1150 » alors que le serveur répondait toujours `no-cache` —
+un compte juste sur la mauvaise mesure. **Depuis la nº 779, l'outil ne
+juge que sur l'en-tête servi.**
+
+Et il y a **deux façons d'écrire**, qui ne se valent pas :
+
+- **en binaire**, la consigne voyage dans un en-tête `cache-control` —
+  c'est ce que faisaient les outils, et sur le vrai service cela change
+  la ligne en base **sans** changer l'en-tête servi ;
+- **en formulaire**, elle voyage dans un champ `cacheControl` — c'est
+  la voie du **site**, et les photos déposées par le site sont bien
+  réglées.
+
+`reprendre-le-cache` essaie donc la voie du formulaire **en premier**,
+et vérifie sur une photo avant de dérouler.
+
+> **Si le doute revient** : `sh outils/diagnostic-cache --reel` essaie
+> les quatre façons d'écrire sur **une seule** photo et dit laquelle
+> agit sur l'en-tête servi. Il lit l'en-tête par l'adresse publique
+> (avec un paramètre neuf, pour que le réseau de diffusion ne réponde
+> pas par une vieille copie) **et** par la voie authentifiée, et montre
+> à côté la métadonnée de l'API — l'écart entre les deux se voit alors
+> d'un coup d'œil.
+
 ### Ce que la nº 778 a corrigé dans cet outil
 
 Sa première version **restait muette plusieurs minutes** : elle

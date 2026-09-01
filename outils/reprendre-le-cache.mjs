@@ -158,7 +158,7 @@ function raisonLisible(erreur) {
  * descente, et le constat devient immédiat.
  * ⚠️ ET SI LE SERVICE NE LES SERT PAS (entrée sans `metadata`) : on
  * garde le repli d'avant, photo par photo — mais on le DIT, et on
- * affiche l'avancement (voir `lireLaConsigne` et le constat).
+ * affiche l'avancement (voir le constat, §1 nº 779).
  */
 /*  ⚠️ LE COMPTEUR EST PARTAGÉ, PAS LOCAL. Première écriture de cette
     passe : il comptait `trouves.length`, la liste du NIVEAU courant —
@@ -231,40 +231,41 @@ async function listerLesObjets(
  * réponse mise en cache AVANT la reprise — on relèverait alors
  * l'ancienne consigne et l'on croirait la reprise ratée.
  */
-async function lireLaConsigne(appeler, chemin, etat) {
-  if (!etat.sansInfo) {
-    try {
-      const reponse = await appeler(
-        `/storage/v1/object/info/${SEAU}/${encoder(chemin)}`,
-        { delai: DELAI_FICHIER_MS }
-      );
-      if (reponse.ok) {
-        const metadonnees = await reponse.json().catch(() => ({}));
-        //  Le service parle serpent (`cache_control`), le client
-        //  officiel chamelle (`cacheControl`) : on accepte les deux.
-        return {
-          consigne:
-            metadonnees.cacheControl ?? metadonnees.cache_control ?? null,
-          type: metadonnees.contentType ?? metadonnees.content_type ?? null,
-        };
-      }
-      if (reponse.status === 404) etat.sansInfo = true;
-    } catch {
-      etat.sansInfo = true;
-    }
-  }
+/**
+ * ██ §1 (nº 779) — L'EN-TÊTE SERVI, ET RIEN D'AUTRE ██
+ * ------------------------------------------------------------------
+ * CE QUE LA nº 778 A PRIS POUR UNE PREUVE, ET QUI N'EN ÉTAIT PAS : la
+ * consigne rapportée par l'API (la liste du seau, `/object/info`).
+ * Sur le vrai service, elle a dit « max-age=31536000 » pour les 1150
+ * photos pendant que le serveur répondait « no-cache » au navigateur.
+ * LA RAISON, LUE DANS LE CODE DU SERVICE : la liste montre ce qui est
+ * rangé EN BASE (`storage.objects.metadata`), tandis que la réponse
+ * servie porte la consigne DE L'OBJET DANS LE STOCKAGE — celle que le
+ * moteur de rendu recopie depuis ce que le stockage lui rend. Deux
+ * sources, qui peuvent se contredire.
+ * LA RÈGLE, DÉSORMAIS : on ne juge QUE sur l'en-tête servi. C'est lui
+ * que reçoit le navigateur, c'est lui qui décide si la photo repart à
+ * l'origine à chaque affichage. Un `HEAD` par la voie authentifiée le
+ * donne sans le corps, et sans passer par le réseau de diffusion —
+ * donc sans risque de lire une copie d'avant.
+ * ⚠️ CE QUE ÇA COÛTE : une requête par photo, là où la liste seule en
+ * coûtait une par millier. C'est le prix de la vérité, et la nº 778
+ * avait choisi la vitesse — au point de mesurer autre chose. Le
+ * constat annonce donc sa durée et affiche son avancement.
+ */
+async function lireLEnTeteServi(appeler, chemin) {
   try {
     const reponse = await appeler(`/storage/v1/object/${SEAU}/${encoder(chemin)}`, {
       method: "HEAD",
       delai: DELAI_FICHIER_MS,
     });
-    if (!reponse.ok) return { consigne: null, type: null, echec: `HTTP ${reponse.status}` };
+    if (!reponse.ok) return { consigne: null, echec: `HTTP ${reponse.status}` };
     return {
       consigne: reponse.headers.get("cache-control"),
       type: reponse.headers.get("content-type"),
     };
   } catch (erreur) {
-    return { consigne: null, type: null, echec: raisonLisible(erreur) };
+    return { consigne: null, echec: raisonLisible(erreur) };
   }
 }
 
@@ -317,20 +318,45 @@ async function lireLesOctets(appeler, chemin) {
 async function reprendreUnePhoto(appeler, chemin, enTete, geste, typeConnu) {
   const { octets, type, echec } = await lireLesOctets(appeler, chemin);
   if (echec) return echec;
-  const enTetes = {
-    "content-type": type ?? typeConnu ?? "application/octet-stream",
-    "cache-control": enTete,
-  };
-  //  Le dépôt qui écrase se déclare ; la mise à jour n'en a pas besoin.
-  if (geste === "POST") enTetes["x-upsert"] = "true";
+  const typeReel = type ?? typeConnu ?? "application/octet-stream";
   let reponse;
   try {
-    reponse = await appeler(`/storage/v1/object/${SEAU}/${encoder(chemin)}`, {
-      method: geste,
-      headers: enTetes,
-      body: octets,
-      delai: DELAI_FICHIER_MS,
-    });
+    if (geste === "MULTIPART") {
+      /*  §2 (nº 779) — LA VOIE DU SITE. Le service a DEUX façons de
+          lire la consigne (lu dans son code) : sur un dépôt binaire il
+          prend l'en-tête `cache-control` ; sur un dépôt en formulaire
+          il prend le CHAMP `cacheControl`, en secondes, dont il fait
+          lui-même `max-age=<N>`. C'est cette seconde voie qu'emploie
+          le client officiel depuis un navigateur — donc le site — et
+          les photos déposées par le site sont bien réglées, quand
+          celles que nos outils ont envoyées en binaire ne le sont pas.
+          Le nom de champ VIDE pour le fichier est celui du client
+          officiel : le service prend le premier fichier du formulaire,
+          quel qu'en soit le nom. */
+      const formulaire = new FormData();
+      formulaire.append("cacheControl", enTete.replace(/^max-age=/, ""));
+      formulaire.append(
+        "",
+        new Blob([octets], { type: typeReel }),
+        chemin.split("/").pop()
+      );
+      reponse = await appeler(`/storage/v1/object/${SEAU}/${encoder(chemin)}`, {
+        method: "POST",
+        headers: { "x-upsert": "true" },
+        body: formulaire,
+        delai: DELAI_FICHIER_MS,
+      });
+    } else {
+      const enTetes = { "content-type": typeReel, "cache-control": enTete };
+      //  Le dépôt qui écrase se déclare ; la mise à jour n'en a pas besoin.
+      if (geste === "POST") enTetes["x-upsert"] = "true";
+      reponse = await appeler(`/storage/v1/object/${SEAU}/${encoder(chemin)}`, {
+        method: geste,
+        headers: enTetes,
+        body: octets,
+        delai: DELAI_FICHIER_MS,
+      });
+    }
   } catch (erreur) {
     return `écriture : ${raisonLisible(erreur)}`;
   }
@@ -347,14 +373,19 @@ async function reprendreUnePhoto(appeler, chemin, enTete, geste, typeConnu) {
  * diffusion pourrait rendre sa copie d'avant), et l'on ne déroule que
  * si elle a bien changé. Rend le geste qui marche, ou `null`.
  */
-async function eprouverLeGeste(appeler, temoin, enTete, voulues, etat) {
+async function eprouverLeGeste(appeler, temoin, enTete, voulues) {
   //  ⚠️ DEUX ÉCHECS QUI NE SE SOIGNENT PAS PAREIL, et le compte rendu
   //  doit les distinguer : un envoi REFUSÉ (droits, seau, réseau) n'a
   //  rien à voir avec un envoi ACCEPTÉ dont la consigne ne prend pas
   //  (un réglage du service). Dire l'un pour l'autre enverrait chercher
   //  au mauvais endroit.
   const refus = [];
-  for (const geste of ["PUT", "POST"]) {
+  //  §2 (nº 779) — LE FORMULAIRE EN PREMIER : c'est la voie du site, la
+  //  seule dont on ait la preuve qu'elle donne des photos bien servies
+  //  (celles que le site a déposées le sont). Les deux voies binaires
+  //  restent essayées derrière — sur le vrai service, elles changent la
+  //  fiche rangée en base sans changer l'en-tête servi.
+  for (const geste of ["MULTIPART", "PUT", "POST"]) {
     await dire(`     essai du geste ${geste} sur « ${temoin.chemin} »…`);
     const echec = await reprendreUnePhoto(
       appeler,
@@ -368,7 +399,10 @@ async function eprouverLeGeste(appeler, temoin, enTete, voulues, etat) {
       refus.push(`${geste} — ${echec}`);
       continue;
     }
-    const { consigne } = await lireLaConsigne(appeler, temoin.chemin, etat);
+    //  §1 (nº 779) — on relit L'EN-TÊTE SERVI, jamais la métadonnée :
+    //  c'est cette confusion-là qui a fait croire à la nº 778 que
+    //  1150 photos étaient réglées alors qu'aucune ne l'était.
+    const { consigne } = await lireLEnTeteServi(appeler, temoin.chemin);
     if (secondesDeLaConsigne(consigne) === voulues) {
       await dire(`     ${geste} : la photo répond maintenant « ${consigne} » ✔`);
       return { geste };
@@ -431,26 +465,25 @@ async function principal() {
   await dire(`  [${horodate()}] ${photos.length} photos dans le seau.`);
 
   //  ---- LE CONSTAT ----
-  //  §2 (nº 778) — LA CONSIGNE VIENT DU LISTING, sans une requête de
-  //  plus. Le repli photo par photo ne sert QUE si ce service-ci ne
-  //  sert pas les métadonnées — et il s'annonce, avec son avancement.
-  const etat = { sansInfo: false };
-  const sansMetadonnees = photos.filter((p) => p.consigne === undefined);
-  if (sansMetadonnees.length > 0) {
-    await dire(
-      `  [${horodate()}] ce service ne donne pas la consigne dans sa liste :` +
-        ` il faut la demander photo par photo (${sansMetadonnees.length}).`
-    );
-    let faites = 0;
-    for (const photo of sansMetadonnees) {
-      const lu = await lireLaConsigne(appeler, photo.chemin, etat);
-      photo.consigne = lu.echec ? null : lu.consigne;
-      photo.type = photo.type ?? lu.type;
-      photo.illisible = lu.echec;
-      faites += 1;
-      if (faites % 100 === 0) {
-        await dire(`     … ${faites}/${sansMetadonnees.length} demandées`);
-      }
+  //  §1 (nº 779) — CHAQUE PHOTO EST INTERROGÉE, et c'est assumé : seul
+  //  l'en-tête SERVI dit la vérité (voir la note de `lireLEnTeteServi`).
+  //  La liste du seau, elle, ne sert plus qu'à savoir QUELLES photos
+  //  existent.
+  await dire(
+    `  [${horodate()}] on demande à chaque photo l'en-tête qu'elle SERT` +
+      ` (${photos.length} lectures — compte environ ${Math.ceil(
+        (photos.length * 0.35) / 60
+      )} min).`
+  );
+  let lues = 0;
+  for (const photo of photos) {
+    const lu = await lireLEnTeteServi(appeler, photo.chemin);
+    photo.consigne = lu.echec ? null : lu.consigne;
+    photo.type = lu.type ?? photo.type;
+    photo.illisible = lu.echec;
+    lues += 1;
+    if (lues % 100 === 0) {
+      await dire(`     [${horodate()}] … ${lues}/${photos.length} lues`);
     }
   }
 
@@ -503,8 +536,7 @@ async function principal() {
     appeler,
     aReprendre[0],
     enTete,
-    voulues,
-    etat
+    voulues
   );
   if (!geste) {
     await dire();
@@ -519,11 +551,14 @@ async function principal() {
       //  L'ENVOI PASSE, MAIS LA CONSIGNE NE PREND PAS : c'est un
       //  réglage du service, et renvoyer le reste n'y changerait rien.
       await dire("  ⛔  ARRÊTÉ AVANT D'ALLER PLUS LOIN : le service accepte les");
-      await dire("     envois mais ne retient pas la consigne. Renvoyer les");
-      await dire(`     ${aReprendre.length - 1} autres photos n'y changerait rien.`);
-      await dire("     C'est un réglage du service, pas du fichier : regarde");
-      await dire("     dans Supabase ▸ Storage ▸ Settings si une consigne de");
-      await dire("     cache est imposée au seau, et envoie-moi ces lignes.");
+      await dire("     envois, mais l'en-tête qu'il SERT ne change pas.");
+      await dire(`     Renvoyer les ${aReprendre.length - 1} autres photos n'y`);
+      await dire("     changerait rien — c'est ce qui s'est passé la fois");
+      await dire("     d'avant, sur 987 photos.");
+      await dire();
+      await dire("     ➜  LANCE LE DIAGNOSTIC : il essaie les autres façons");
+      await dire("        d'écrire sur UNE SEULE photo, et dit laquelle agit :");
+      await dire("          sh outils/diagnostic-cache --reel");
     }
     await dire();
     await dire(`     (Tout est aussi dans ${path.basename(JOURNAL)}.)`);
@@ -572,25 +607,44 @@ async function principal() {
     }
   }
 
-  //  ---- LE CONTRÔLE : une relecture du seau, pas mille ----
-  //  §2 (nº 778) — c'est ce bilan-là qui restait muet dix minutes après
-  //  « 1150/1150 », et que le propriétaire a perdu en fermant sa
-  //  session. Il tient maintenant dans la descente du listing.
+  //  ---- LE CONTRÔLE : sur l'EN-TÊTE SERVI, par sondage ----
+  //  §1 (nº 779) — la nº 778 relisait la LISTE du seau : rapide, mais
+  //  elle ne dit pas ce que le navigateur reçoit. On relit donc de
+  //  vrais en-têtes servis — sur un échantillon réparti, pour que le
+  //  contrôle reste court, et l'on dit que c'en est un.
   await dire();
-  await dire(`  [${horodate()}] contrôle : on relit le seau…`);
-  const apres = await listerLesObjets(appeler);
-  const bonnesApres = apres.filter(
-    (p) => secondesDeLaConsigne(p.consigne) === voulues
-  ).length;
-  const inconnues = apres.filter((p) => p.consigne === undefined).length;
+  const echantillon = [];
+  const pas = Math.max(1, Math.floor(aReprendre.length / 20));
+  for (let rang = 0; rang < aReprendre.length; rang += pas) {
+    echantillon.push(aReprendre[rang]);
+  }
+  await dire(
+    `  [${horodate()}] contrôle : on relit l'en-tête servi de ` +
+      `${echantillon.length} photos prises au fil de la liste…`
+  );
+  let bonnesApres = 0;
+  const restees = [];
+  for (const { chemin } of echantillon) {
+    const { consigne } = await lireLEnTeteServi(appeler, chemin);
+    if (secondesDeLaConsigne(consigne) === voulues) bonnesApres += 1;
+    else restees.push(`${chemin} — ${consigne ?? "(aucune)"}`);
+  }
 
   await dire();
   await dire(`  ── reprises : ${reprises} · en échec : ${soucis.length}`);
-  if (inconnues === 0) {
-    await dire(
-      `  ── contrôle : ${bonnesApres}/${apres.length} photos du seau portent` +
-        " la consigne"
-    );
+  await dire(
+    `  ── contrôle : ${bonnesApres}/${echantillon.length} photos sondées` +
+      " servent la bonne consigne"
+  );
+  if (restees.length > 0) {
+    await dire();
+    await dire("  ⚠️  CELLES QUI SERVENT ENCORE L'ANCIENNE CONSIGNE :");
+    for (const r of restees.slice(0, 10)) await dire(`     · ${r}`);
+    await dire();
+    await dire("     L'envoi a été accepté, mais le service ne change pas");
+    await dire("     l'en-tête qu'il sert. Lance le diagnostic — il essaie");
+    await dire("     les autres façons d'écrire sur UNE seule photo :");
+    await dire("       sh outils/diagnostic-cache --reel");
   }
   if (franche) {
     await dire();
@@ -606,8 +660,8 @@ async function principal() {
     await dire("     Relance la commande : elle ne reprend que ce qui reste.");
   }
   await dire();
-  if (bonnesApres === apres.length && soucis.length === 0) {
-    await dire("  ✔  Toutes les photos du seau portent maintenant la consigne.");
+  if (bonnesApres === echantillon.length && soucis.length === 0) {
+    await dire("  ✔  Toutes les photos sondées servent maintenant la consigne.");
     await dire("     Le réseau de diffusion peut encore servir quelques");
     await dire("     minutes ses réponses d'avant : c'est normal, et ça passe");
     await dire("     tout seul. Pour vérifier depuis ton Mac :");

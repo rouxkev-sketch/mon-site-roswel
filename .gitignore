@@ -65,3 +65,7 @@ journal-de-bord*.ndjson
 #  travail, pas un fichier du projet — elle ne rentre ni dans
 #  l'historique, ni dans un zip.
 /reprise-du-cache.txt
+
+#  Le journal du diagnostic de cache (nº 779) — même raison que
+#  celui de la reprise, juste au-dessus.
+/diagnostic-cache.txt
