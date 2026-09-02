@@ -1499,10 +1499,25 @@ function repondre(req, res, u, brut) {
         });
         continue;
       }
-      const m = /^(eq|neq|in)\.(.*)$/.exec(brutFiltre);
+      const m = /^(eq|neq|in|cs)\.(.*)$/.exec(brutFiltre);
       if (!m) continue;
       //  `not.eq.x` vaut `neq.x` — PostgREST accepte les deux formes.
       if (negation && m[1] === "eq") m[1] = "neq";
+      /*  nº 807 — `cs` (« contient », `styles=cs.{realisme}`) EST HONORÉ
+          en lecture : c'est le filtre que la route de renommage emploie
+          pour COMPTER les portfolios qui portent une limace. Ignoré, la
+          doublure rendait tout le catalogue et le compte n'était jamais
+          nul — la branche « la limace suit le nom » restait improuvable. */
+      if (m[1] === "cs") {
+        const attendus = m[2].replace(/^\{|\}$/g, "").split(",")
+          .map((s) => s.replace(/^"|"$/g, "")).filter(Boolean);
+        corps = corps.filter((l) => {
+          const contient = Array.isArray(l[cle]) &&
+            attendus.every((a) => l[cle].map(String).includes(a));
+          return negation ? !contient : contient;
+        });
+        continue;
+      }
       if (m[1] === "eq" || m[1] === "neq") {
         const attendu = m[2] === "true" ? true : m[2] === "false" ? false : m[2];
         corps = corps.filter((l) =>

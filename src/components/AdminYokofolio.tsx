@@ -462,6 +462,11 @@ export function AdminYokofolio() {
   /** LE STYLE DONT LE RETRAIT EST DEMANDÉ (passe nº 123) — sa ligne
       montre alors la confirmation, à la place du bouton. */
   const [aRetirer, setARetirer] = useState<string | null>(null);
+  /** LE STYLE EN COURS DE RENOMMAGE (passe nº 807) — sa ligne montre
+      le champ du nom à la place des deux boutons ; et ce que la route
+      a répondu au dernier renommage (la limace a suivi, ou pas). */
+  const [aRenommer, setARenommer] = useState<{ id: string; label: string } | null>(null);
+  const [ditRenommage, setDitRenommage] = useState<string | null>(null);
   /* ---- nº 756 — Demandes de convention, dans la même section ----
      DEUX LISTES, UN SEUL ÉCRAN : les deux routes sont distinctes (deux
      tables), la vue les fond et les trie par date. L'erreur, elle, est
@@ -693,6 +698,49 @@ export function AdminYokofolio() {
     } catch (e) {
       setErreurSuggestions(
         e instanceof Error ? e.message : "Removal failed."
+      );
+    } finally {
+      setEnvoiSuggestion(false);
+    }
+  }
+
+  /** RENOMMER UN STYLE ACCEPTÉ (passe nº 807) — le libellé, et la
+      limace seulement si aucun portfolio ne la porte : c'est la route
+      qui compte et qui tranche, l'écran répète sa réponse. */
+  async function renommerLeStyle() {
+    if (!aRenommer || envoiSuggestion) return;
+    setEnvoiSuggestion(true);
+    setErreurSuggestions(null);
+    setDitRenommage(null);
+    try {
+      const reponse = await fetch("/api/admin/yokofolio/suggestions-styles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: aRenommer.id,
+          decision: "renommer",
+          label: aRenommer.label,
+        }),
+      });
+      const donnees = (await reponse.json()) as {
+        ok: boolean;
+        message?: string;
+        label?: string;
+        slug?: string;
+        slugConserve?: boolean;
+        references?: number;
+      };
+      if (!donnees.ok) throw new Error(donnees.message);
+      setDitRenommage(
+        donnees.slugConserve
+          ? `Renamed to "${donnees.label}". The URL stays /${donnees.slug}: ${donnees.references} portfolio(s) or photo(s) use it.`
+          : `Renamed to "${donnees.label}" (/${donnees.slug}).`
+      );
+      setARenommer(null);
+      setSuggestions(null); // relecture : la ligne montre son nouveau nom
+    } catch (e) {
+      setErreurSuggestions(
+        e instanceof Error ? e.message : "Renaming failed."
       );
     } finally {
       setEnvoiSuggestion(false);
@@ -2051,6 +2099,14 @@ export function AdminYokofolio() {
             {erreurSuggestions && (
               <p className={`mt-4 ${ERREUR}`}>{erreurSuggestions}</p>
             )}
+            {/*  nº 807 — CE QUE LE DERNIER RENOMMAGE A FAIT : la limace a
+                 suivi le nom, ou elle est restée parce que des portfolios
+                 la portent. Une bande d'information, pas une erreur. */}
+            {ditRenommage && (
+              <p className="mt-4 rounded-xl bg-[#34D399]/15 px-4 py-3 text-[13.5px] leading-relaxed text-[#34D399]">
+                {ditRenommage}
+              </p>
+            )}
             <div className="mt-5 flex flex-col gap-2.5">
               {/*  nº 756 — L'ATTENTE COUVRE LES DEUX LECTURES : tant que
                    l'une des deux listes manque, on montre le squelette
@@ -2418,7 +2474,68 @@ export function AdminYokofolio() {
                             qui détruit — et une confirmation, parce
                             qu'un style retiré disparaît des portfolios
                             qui l'affichaient. */}
+                        {/* ⚠️ RENOMMER UN STYLE ACCEPTÉ (passe nº 807).
+                            Le champ prend la place des deux boutons ;
+                            la limace ne suit le nom que si aucun
+                            portfolio ne la porte — c'est la route qui
+                            compte, et sa réponse s'affiche en tête de
+                            section (`ditRenommage`). */}
+                        {/*  ⚠️ `aRenommer !== null` EN TOUTES LETTRES : avec
+                             `aRenommer?.id === demande.id`, une ligne SANS
+                             identifiant (undefined === undefined) ouvrait le
+                             champ sur un brouillon nul — la page entière
+                             tombait (« Cannot read properties of null »),
+                             vu au banc sur un style de doublure. */}
                         {demande.etat === "acceptee" &&
+                          aRenommer !== null &&
+                          aRenommer.id === demande.id && (
+                          <div className="mt-3 flex flex-col gap-2">
+                            <label className="flex flex-col gap-1.5">
+                              <span className="text-[12.5px] font-semibold uppercase tracking-wide text-sombre-texte-doux">
+                                Style name
+                              </span>
+                              <input
+                                type="text"
+                                value={aRenommer.label}
+                                maxLength={40}
+                                aria-label="New style name"
+                                onChange={(e) =>
+                                  setARenommer({ id: demande.id, label: e.target.value })
+                                }
+                                className={`min-h-[48px] text-[15px] ${CHAMP}`}
+                              />
+                            </label>
+                            <p className="text-[12.5px] text-sombre-texte-doux">
+                              URL: /{demande.slug} — it follows the name only if no
+                              portfolio or photo uses this style yet.
+                            </p>
+                            <div className="flex flex-wrap items-center justify-end gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setARenommer(null)}
+                                className="px-2 min-h-[40px] text-[14px] font-semibold
+                                           text-sombre-texte-doux transition-colors
+                                           hover:text-sombre-texte"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => void renommerLeStyle()}
+                                disabled={
+                                  envoiSuggestion || aRenommer.label.trim().length < 2
+                                }
+                                className="min-h-[40px] rounded-full bg-primaire px-5 text-[14px]
+                                           font-semibold text-white transition-opacity
+                                           hover:opacity-90 disabled:opacity-40"
+                              >
+                                {envoiSuggestion ? "Saving…" : "Save the name"}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                        {demande.etat === "acceptee" &&
+                          (aRenommer === null || aRenommer.id !== demande.id) &&
                           (aRetirer === demande.id ? (
                             <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                               <p className="text-[13.5px] font-semibold text-sombre-texte">
@@ -2447,15 +2564,30 @@ export function AdminYokofolio() {
                               </div>
                             </div>
                           ) : (
-                            <button
-                              type="button"
-                              onClick={() => setARetirer(demande.id)}
-                              className="mt-3 px-2 min-h-[38px] -ml-2 text-[13.5px]
-                                         font-semibold text-erreur transition-opacity
-                                         hover:opacity-75"
-                            >
-                              Remove the style
-                            </button>
+                            <div className="mt-3 flex flex-wrap items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setARetirer(null);
+                                  setDitRenommage(null);
+                                  setARenommer({ id: demande.id, label: demande.label ?? "" });
+                                }}
+                                className="min-h-[38px] rounded-full bg-sombre-eleve px-4
+                                           text-[13.5px] font-semibold text-sombre-texte
+                                           transition-colors hover:bg-sombre-eleve-clair"
+                              >
+                                Rename
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setARetirer(demande.id)}
+                                className="px-2 min-h-[38px] text-[13.5px]
+                                           font-semibold text-erreur transition-opacity
+                                           hover:opacity-75"
+                              >
+                                Remove the style
+                              </button>
+                            </div>
                           ))}
                       </div>
                     )}

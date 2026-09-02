@@ -154,7 +154,8 @@ message.
 | les sondes (/dev) | **Dev probes**, **Speed**, **Navigation probe**, **Logbook** ; « ON / off », « TURN ALL OFF » ; « network wait + render », « first screen », « until the network goes quiet » | décision du propriétaire : /dev et les instruments en anglais aussi — leurs exceptions au recenseur sont retirées |
 | les étiquettes `data-source-composant` | « MenuEspace · web window », « EnTeteTatouage · fixed bar (header) », « MoteurTatouage · web filter panel »… | |
 | les journaux et réponses des routes admin | « Couldn't load (has migration … been applied?): … », « Incomplete request. », « This request has already been decided. », « Malformed token. » | même ton que le reste du serveur (805) |
-| dates de l'admin | `en-US` : **Aug 20, 26** (jour, mois abrégé, année sur deux chiffres — le format qu'avait `fr-FR`) | |
+| dates de l'admin | `en-US` : **Aug 20, 12:00 AM** (jour, mois abrégé, heure — le format qu'avait `fr-FR`) | |
+| renommer un style accepté (admin, nº 807) | **Rename** · **Save the name** · « Renamed to "…" (/…). » · « The URL stays /… : N portfolio(s) or photo(s) use it. » | la limace ne suit le nom que si rien ne la porte — docs/SQL-807-STYLES-AJOUTES.md pour le reste |
 | tris alphabétiques | `localeCompare(…, "en")`, `Intl.Collator("en")` | PortfolioDeLAffiche, BlocPortfolio, config (familles), lib/modes-exercice, lib/selection-suivis |
 
 ## 3 · Le ton

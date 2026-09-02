@@ -36,6 +36,29 @@ import { creerClientSupabaseAdmin } from "@/lib/supabase/admin";
     notification et dans un courriel court. */
 const MESSAGE_MAXIMUM = 600;
 
+/**
+ * ██ nº 807 — LA COLLISION SE CHERCHE AUSSI PAR LE NOM ██
+ * ------------------------------------------------------------------
+ * Le garde-fou ne comparait que les LIMACES : « Néo-traditionnel »
+ * (→ neo-traditionnel) était refusé, mais « Neo-traditional »
+ * (→ neo-traditional) passait — une autre limace, le MÊME style. C'est
+ * exactement le doublon que le propriétaire a trouvé en base. On
+ * compare donc la limace du nom proposé à la limace de chaque style
+ * ET à la limace de son libellé : « Realism » heurte le style
+ * `realisme` parce que son libellé, mis en limace, donne `realism`.
+ * Rend le style heurté, ou null. Appelé à l'acceptation et au
+ * renommage — même règle aux deux portes.
+ */
+function collisionDansLeCatalogue(
+  slugNeuf: string
+): { slug: string; label: string } | null {
+  return (
+    catalogueStyles().find(
+      (style) => style.slug === slugNeuf || slugifier(style.label) === slugNeuf
+    ) ?? null
+  );
+}
+
 export async function GET() {
   const refus = await verifierAdmin();
   if (refus) {
@@ -160,13 +183,13 @@ export async function POST(requete: NextRequest) {
 
   const corps = (await requete.json().catch(() => null)) as {
     id?: string;
-    decision?: "accepter" | "refuser" | "retirer";
+    decision?: "accepter" | "refuser" | "retirer" | "renommer";
     label?: string;
     famille?: string | null;
     message?: string;
   } | null;
 
-  const DECISIONS = ["accepter", "refuser", "retirer"] as const;
+  const DECISIONS = ["accepter", "refuser", "retirer", "renommer"] as const;
   if (!corps?.id || !DECISIONS.includes(corps.decision as never)) {
     return NextResponse.json(
       { ok: false, message: "Incomplete request." },
@@ -226,6 +249,132 @@ export async function POST(requete: NextRequest) {
           message: `Removal failed: ${
             e instanceof Error ? e.message : String(e)
           }`,
+        },
+        { status: 500 }
+      );
+    }
+  }
+
+  /* ================================================================
+   * RENOMMER UN STYLE DÉJÀ ACCEPTÉ (passe nº 807)
+   * ================================================================
+   * Le manque que le propriétaire a vu : l'écran savait AJOUTER un
+   * style et le RETIRER, jamais corriger son nom — deux libellés
+   * français acceptés avant la traduction ne pouvaient se réparer
+   * qu'en SQL. Comme le retrait, c'est une CORRECTION, pas une
+   * décision : ligne acceptée seulement, ni message, ni notification,
+   * ni courriel au tatoueur.
+   * ⚠️ LA LIMACE NE SUIT LE NOM QUE SI C'EST SANS RISQUE, et « sans
+   * risque » se MESURE, il ne se devine pas : elle est écrite dans les
+   * portfolios (`tatoueurs.styles`, et la clé de `photos_styles` qui
+   * va avec) et sur chaque photo (`photos_tatoueur.style`), et elle
+   * fait l'adresse publique /tatouage/<limace>/<ville>. On compte donc
+   * ce qui la porte : ZÉRO → la limace est recalculée du nouveau nom
+   * (après le même contrôle de collision qu'à l'acceptation) ; SINON
+   * elle reste, seul le libellé change, et la réponse dit combien de
+   * portfolios et de photos l'ont retenue. Déplacer une limace portée
+   * par des fiches, c'est la fusion de docs/SQL-807-STYLES-AJOUTES.md :
+   * une requête relue à la main, jamais un clic.
+   * `photos_styles` n'est pas compté à part : sa clé n'existe que pour
+   * un style déjà présent dans `styles` (le formulaire écrit les deux
+   * ensemble). */
+  if (corps.decision === "renommer") {
+    const label = (corps.label ?? "").trim().replace(/\s+/g, " ");
+    if (label.length < 2 || label.length > 40) {
+      return NextResponse.json(
+        { ok: false, message: "The style name must be 2 to 40 characters." },
+        { status: 400 }
+      );
+    }
+    const slugNeuf = slugifier(label);
+    if (!slugNeuf) {
+      return NextResponse.json(
+        { ok: false, message: "This name doesn't make a valid URL." },
+        { status: 400 }
+      );
+    }
+    try {
+      const admin = creerClientSupabaseAdmin();
+      const { data: ligne, error: erreurLecture } = await admin
+        .from("suggestions_style")
+        .select("id, etat, label, slug")
+        .eq("id", corps.id)
+        .maybeSingle();
+      if (erreurLecture) throw new Error(erreurLecture.message);
+      const style = ligne as {
+        id: string;
+        etat: string;
+        label: string | null;
+        slug: string | null;
+      } | null;
+      if (!style || style.etat !== "acceptee" || !style.slug) {
+        return NextResponse.json(
+          {
+            ok: false,
+            message: "This style is no longer on the list — nothing to rename.",
+          },
+          { status: 409 }
+        );
+      }
+      const ancien = style.slug;
+      let slug = ancien;
+      let references = 0;
+      if (slugNeuf !== ancien) {
+        const [fiches, photos] = await Promise.all([
+          admin.from("tatoueurs").select("id").contains("styles", [ancien]).limit(1000),
+          admin.from("photos_tatoueur").select("id").eq("style", ancien).limit(1000),
+        ]);
+        if (fiches.error) throw new Error(fiches.error.message);
+        if (photos.error) throw new Error(photos.error.message);
+        references = (fiches.data?.length ?? 0) + (photos.data?.length ?? 0);
+        if (references === 0) {
+          await chargerStylesAjoutes();
+          const collision = collisionDansLeCatalogue(slugNeuf);
+          if (collision) {
+            return NextResponse.json(
+              {
+                ok: false,
+                message: `"${collision.label}" already exists (/${collision.slug}). Pick another name.`,
+              },
+              { status: 409 }
+            );
+          }
+          slug = slugNeuf;
+        }
+      }
+      const { data: ecrit, error: erreurEcriture } = await admin
+        .from("suggestions_style")
+        .update({ label, slug })
+        .eq("id", style.id)
+        //  ⚠️ SEULEMENT SI ELLE EST ENCORE ACCEPTÉE — même garde que le
+        //  retrait : deux onglets ne peuvent pas se contredire.
+        .eq("etat", "acceptee")
+        .select("id");
+      if (erreurEcriture) throw new Error(erreurEcriture.message);
+      if (!ecrit || ecrit.length === 0) {
+        return NextResponse.json(
+          {
+            ok: false,
+            message: "This style is no longer on the list — nothing to rename.",
+          },
+          { status: 409 }
+        );
+      }
+      //  Le catalogue vient de changer : la prochaine page le relit
+      //  sans attendre la minute de cache.
+      oublierStylesAjoutes();
+      return NextResponse.json({
+        ok: true,
+        label,
+        slug,
+        slugConserve: slug === ancien && slugNeuf !== ancien,
+        references,
+      });
+    } catch (e) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: `Renaming failed: ${e instanceof Error ? e.message : String(e)}`,
         },
         { status: 500 }
       );
@@ -306,13 +455,15 @@ export async function POST(requete: NextRequest) {
       //  pourrait accepter « Fine-line » à côté de « Fine Line » — deux
       //  entrées, une seule adresse, et la page style + ville qui ne
       //  sait plus laquelle servir.
+      //  nº 807 — ET LE NOM AUSSI (voir `collisionDansLeCatalogue`) :
+      //  « Neo-traditional » ne passe plus à côté de `neo-traditionnel`.
       await chargerStylesAjoutes();
-      const collision = catalogueStyles().find((style) => style.slug === slug);
+      const collision = collisionDansLeCatalogue(slug);
       if (collision) {
         return NextResponse.json(
           {
             ok: false,
-            message: `"${collision.label}" already has this URL (${slug}). Pick another name.`,
+            message: `"${collision.label}" already exists (/${collision.slug}). Pick another name.`,
           },
           { status: 409 }
         );
