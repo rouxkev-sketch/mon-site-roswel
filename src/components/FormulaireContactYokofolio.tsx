@@ -32,8 +32,9 @@ import { CompteurDeCaracteres } from "@/components/CompteurDeCaracteres";
  * au-dessus des champs, les arrondis de 12 px, le rond de
  * confirmation, l'aération. C'est la CHARTE qui ne s'impose plus
  * d'office, pas la page qui devient un terrain vague.
- * ⚠️ ET /qui-sommes-nous RESTE SOUS L'EXCEPTION : le propriétaire n'a
- * levé que celle-ci. Sa note à elle est intacte.
+ * ⚠️ ET /about (« /qui-sommes-nous » jusqu'à la nº 811) RESTE SOUS
+ * L'EXCEPTION : le propriétaire n'a levé que celle-ci. Sa note à elle
+ * est intacte.
  *
  * CE QUE LA nº 800 A CHANGÉ, sur ses trois demandes, ET RIEN D'AUTRE :
  *  1. LE FOCUS DES CHAMPS. Il devenait ROUGE — un contour `primaire`

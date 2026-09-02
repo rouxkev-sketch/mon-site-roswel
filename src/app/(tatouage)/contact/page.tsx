@@ -19,7 +19,8 @@ import { FormulaireContactYokofolio } from "@/components/FormulaireContactYokofo
  * PROPRIÉTAIRE À LA PASSE Nº 320 APRÈS AVOIR VU LE RÉSULTAT DE LEUR
  * PASSAGE À LA CHARTE. AUCUNE PASSE FUTURE NE DOIT LES Y RAMENER.
  *
- * (« ces deux pages » : celle-ci et /qui-sommes-nous.)
+ * (« ces deux pages » : celle-ci et /about — « /qui-sommes-nous »
+ * jusqu'à la nº 811.)
  *
  * CE QUE CELA COUVRE ICI, NOMMÉMENT — pour qu'aucune relecture de
  * charte ne les prenne pour des oublis : le grand titre en
@@ -31,7 +32,11 @@ import { FormulaireContactYokofolio } from "@/components/FormulaireContactYokofo
  *
  * CE QUI EST GARDÉ DE LA nº 319, ET SEULEMENT CELA : les deux libellés
  * « Nom » et « E-mail », qui restent DANS leur champ — voir
- * FormulaireContactYokofolio. (Côté /qui-sommes-nous : son texte.)
+ * FormulaireContactYokofolio. (Côté /about : son texte.)
+ *
+ * ⚠️ nº 811 — LE RIDEAU DE CHARGEMENT : `loading.tsx` à côté de ce
+ * fichier (RideauDePageTexte), comme les pages de mosaïque depuis la
+ * nº 706 — sans squelette, c'est une page de texte.
  */
 
 export const metadata: Metadata = {

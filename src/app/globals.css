@@ -1541,6 +1541,23 @@ html[data-compte="connecte"] [data-zone-compte][data-session="muette"] {
   visibility: hidden;
 }
 
+/*  ██ nº 811 — LE BOUTON « CREATE YOUR PORTFOLIO » DE LA PAGE ABOUT ██
+    Réservé à qui n'a JAMAIS eu de compte (BoutonCreerPortfolio). La
+    page est prérendue : tant que la session n'est pas connue, le
+    bouton est « muet » et c'est ICI que se décide s'il est peint,
+    d'après `data-compte` — le mécanisme de l'amorti du compte, juste
+    au-dessus. Caché par défaut ; montré pour « nouveau » seulement.
+    « revenant » et « connecte » ne le voient jamais paraître : après
+    l'hydratation, le composant ne le rend plus du tout pour eux.
+    `inline-flex` est la valeur de sa classe (la page la passe) : la
+    règle la rend, elle n'en invente pas une autre. */
+[data-bouton-creer-portfolio][data-session="muette"] {
+  display: none;
+}
+html[data-compte="nouveau"] [data-bouton-creer-portfolio][data-session="muette"] {
+  display: inline-flex;
+}
+
 /*  ██ nº 708 — LA ZONE DROITE DU SQUELETTE SUIT L'ÉTAT DU COMPTE ██
     Les squelettes de chargement (SquelettesDePage) rendent LES DEUX
     variantes de la zone d'actions — celle du connecté (les ronds) et

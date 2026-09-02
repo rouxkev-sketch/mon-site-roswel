@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { MARQUE_YOKOFOLIO } from "@/config/tatouage";
 import { adresseDuSite } from "@/lib/site";
+//  nº 811 — l'adresse de cette page, écrite une seule fois.
+import { CHEMIN_LEGAL } from "@/lib/chemins-editoriaux";
 import { EnTeteTatouage } from "@/components/EnTeteTatouage";
 //  §4 (nº 475) — le lien vers l'accueil qui déclare son départ.
 import { LienAccueil } from "@/components/LienAccueil";
@@ -8,8 +10,10 @@ import { LienAccueil } from "@/components/LienAccueil";
 /**
  * LA PAGE LÉGALE DE YOKOFOLIO — « Legal Notice »
  * ==============================================
- * Adresse : /mentions-legales (l'adresse n'a pas bougé à la nº 804 :
- * les adresses du site sont un sujet à part, voir le rapport).
+ * Adresse : /legal (nº 811 — « /mentions-legales » jusque-là ;
+ * l'ancienne adresse redirige, définitivement, voir next.config et
+ * lib/chemins-editoriaux). Le rideau de chargement : `loading.tsx` à
+ * côté, comme les pages de mosaïque (nº 706) — sans squelette.
  *
  * ██ RÉÉCRITE EN ANGLAIS ET ADAPTÉE AUX ÉTATS-UNIS (nº 804) ██
  * ==================================================================
@@ -73,7 +77,7 @@ const HÉBERGEURS = [
 export const metadata: Metadata = {
   title: "Legal Notice",
   description: `Who publishes ${MARQUE_YOKOFOLIO.nom}, who hosts it, and what happens to the information that goes through it.`,
-  alternates: { canonical: `${adresseDuSite()}/mentions-legales` },
+  alternates: { canonical: `${adresseDuSite()}${CHEMIN_LEGAL}` },
 };
 
 /** Une section : titre net, texte lisible, marges généreuses. */

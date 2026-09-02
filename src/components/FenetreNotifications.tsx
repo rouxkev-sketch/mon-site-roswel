@@ -313,6 +313,12 @@ const CATALOGUE: Record<
       sur rond gris, partout. Le ton `marque` reste le nom de cet
       événement ; sa robe est celle des autres (voir `PastilleEvenement`,
       nº 809). Ce qui précède est l'histoire de ses couleurs.
+      ██ nº 811 — LA RÈGLE D'UNITÉ EST ANNULÉE, L'ÉTOILE SEULE LA GARDE ██
+      Les autres pastilles retrouvent leurs couleurs (coche verte,
+      horloge rose, corbeille rouge) ; la bienvenue reste ÉTOILE BLANCHE
+      SUR ROND GRIS, comme l'enveloppe — c'est la seule correction de
+      couleur que le propriétaire conserve de la nº 809. Et l'étoile
+      elle-même est REDESSINÉE (Icones.tsx, nº 811), plus pleine.
 
       ██ §3 (nº 668) — LE TEXTE, VERSION FINALE ██
       Les deux phrases du propriétaire, au mot près, séparées par un

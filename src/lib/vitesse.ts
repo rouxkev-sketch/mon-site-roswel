@@ -139,7 +139,8 @@ function nomCourt(url: string): string {
     if (adresse.searchParams.has("_rsc")) {
       /*  ⚠️ PRÉCHARGEMENT OU VRAIE PAGE ? Next demande le même genre de
           réponse pour les deux, et le banc a sorti « page ·
-          /mentions-legales » au milieu du relevé d'un portfolio : de
+          /legal » (« /mentions-legales » jusqu'à la nº 811) au milieu
+          du relevé d'un portfolio : de
           quoi croire que le portfolio charge les mentions légales. Il
           n'en est rien — c'est le pied de page qui prend de l'avance
           sur ses liens. Le départage tient en une comparaison : si le

@@ -116,6 +116,16 @@ export const ETATS_ROND_BARRE =
  * exactement comme les bouts de la coche.
  * ⚠️ LE `trait` EST CELUI DE LA FAMILLE, comme partout : rien n'est
  * écrit en dur, la pastille décide (voir PastilleEvenement).
+ *
+ * ██ nº 811 — REDESSINÉE, AVEC LES NEUF AUTRES SYMBOLES DES PASTILLES ██
+ * Le propriétaire redemande les dix dessins de la famille d'un seul
+ * trait, le mien. L'étoile reste une étoile régulière à cinq branches
+ * (pointe en haut, creux calculés, jamais placés à l'œil), mais PLUS
+ * PLEINE : le rapport des rayons passe de 0,382 (le pentagramme
+ * exact, aux branches effilées) à 0,42 — les creux remontent, les
+ * branches s'élargissent, l'étoile se lit d'un coup dans un rond de
+ * 36 px. Rayon extérieur 8,4 ; centre posé à 12,8 pour que le MILIEU
+ * DU DESSIN (4,4 → 19,6) tombe sur celui de la boîte : 12,0 exactement.
  */
 export function IconeEtoile({
   taille = 24,
@@ -125,10 +135,10 @@ export function IconeEtoile({
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
       {/*  Pointe haute, puis creux et pointes en alternance dans le sens
-           des aiguilles d'une montre. */}
+           des aiguilles d'une montre (R = 8,4 · r = 3,528 · centre 12,8). */}
       <path
-        d="M12 4.22 13.93 10.16 20.18 10.16 15.12 13.84 17.06 19.78
-           12 16.11 6.94 19.78 8.88 13.84 3.82 10.16 10.07 10.16 Z"
+        d="M12 4.4 14.07 9.95 19.99 10.2 15.36 13.89 16.94 19.6
+           12 16.33 7.06 19.6 8.64 13.89 4.01 10.2 9.93 9.95Z"
         stroke="currentColor"
         strokeWidth={trait}
         strokeLinecap="round"
@@ -394,13 +404,17 @@ export function IconeCle({ taille = 20, classe = "" }: ProprietesIcone) {
 }
 
 /** L'horloge (ligne « X ans d'ancienneté » de la fiche) */
+/*  ██ nº 811 — L'HORLOGE, REDESSINÉE (la famille des pastilles) ██
+    Un cadran de rayon 8,25 — un souffle d'air de plus dans le rond de
+    36 px que le 8,7 d'avant — et deux aiguilles d'un seul trait, de
+    midi au centre puis vers quatre heures (l'angle qui se lit le mieux
+    comme « en attente ») ; extrémités rondes, jonction ronde. */
 export function IconeHorloge({ taille = 20, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
-      <circle cx="12" cy="12" r="8.7" stroke="currentColor" strokeWidth={trait} />
-      {/* Aiguilles : midi et environ 16 h 30 (comme le modèle) */}
+      <circle cx="12" cy="12" r="8.25" stroke="currentColor" strokeWidth={trait} />
       <path
-        d="M12 6.6V12l3.4 2.7"
+        d="M12 7.25V12l3.25 1.95"
         stroke="currentColor"
         strokeWidth={trait}
         strokeLinecap="round"
@@ -410,12 +424,19 @@ export function IconeHorloge({ taille = 20, classe = "", trait = 1.8 }: Propriet
   );
 }
 
-/** La coche fine des listes (communes couvertes, accordéon Zone) */
+/** La coche fine des listes (communes couvertes, accordéon Zone) —
+    et le symbole du SUCCÈS dans les pastilles (notifications, Contact,
+    Signalement, badges cochés).
+    ██ nº 811 — REDESSINÉE : un trait court qui descend (4,75 → 9,5),
+    un trait long qui monte jusqu'au coin haut droit (19,25 · 7,25) —
+    la coche s'ouvre davantage et pèse plus dans un rond que l'ancienne,
+    dont la pointe droite s'arrêtait plus bas. Extrémités et jonction
+    rondes, comme toute la famille. */
 export function IconeCocheListe({ taille = 16, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
       <path
-        d="m5.5 12.8 4.2 4.2 8.8-9.6"
+        d="M4.75 12.25 9.5 17 19.25 7.25"
         stroke="currentColor"
         strokeWidth={trait}
         strokeLinecap="round"
@@ -900,11 +921,16 @@ export function IconeMonde({ taille = 20, classe = "" }: ProprietesIcone) {
 }
 
 /** Petit drapeau (lien discret « Signaler cette fiche ») */
+/*  ██ nº 811 — LE DRAPEAU, REDESSINÉ (« modifications demandées ») ██
+    Une hampe droite (6,25 · de 4 à 20,75) et une flamme ondulée en
+    deux vagues symétriques, du haut de la hampe à 19,75 — le tissu se
+    referme sur la hampe à 13,75. L'ancienne flamme était plus étroite
+    et sa vague, tordue vers le bas. Extrémités rondes. */
 export function IconeDrapeau({ taille = 16, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
       <path
-        d="M6 21V4.5m0 0.5c3-1.8 6 1.2 9-.5v8.5c-3 1.7-6-1.3-9 .5"
+        d="M6.25 20.75V4m0 1.5c2.25-1.4 4.5-1.4 6.75 0s4.5 1.4 6.75 0v8.25c-2.25 1.4-4.5 1.4-6.75 0s-4.5-1.4-6.75 0"
         stroke="currentColor"
         strokeWidth={trait}
         strokeLinecap="round"
@@ -1015,20 +1041,27 @@ export function IconeOeilBarre({ taille = 20, classe = "", trait = 1.8 }: Propri
   );
 }
 
+/*  ██ nº 811 — L'ENVELOPPE, REDESSINÉE (« demande reçue », le modèle
+    gris de la famille) ██
+    Un corps de 17,5 × 12,5 aux coins de 2,75, et un rabat dont les
+    deux pans partent des bords (4,25 · 19,75) pour se rejoindre au
+    centre par un arc court, à 12,9 — la pointe du rabat est arrondie
+    au lieu d'être cassée. L'ancienne était plus large et son rabat
+    partait de sous les coins. */
 export function IconeEnveloppe({ taille = 20, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
       <rect
-        x="3"
-        y="5.5"
-        width="18"
-        height="13"
-        rx="2.5"
+        x="3.25"
+        y="5.75"
+        width="17.5"
+        height="12.5"
+        rx="2.75"
         stroke="currentColor"
         strokeWidth={trait}
       />
       <path
-        d="m3.8 7.4 7.1 5.2c.65.48 1.55.48 2.2 0l7.1-5.2"
+        d="M4.25 8.25 10.7 12.9a2.2 2.2 0 0 0 2.6 0l6.45-4.65"
         stroke="currentColor"
         strokeWidth={trait}
         strokeLinecap="round"
@@ -1093,20 +1126,28 @@ export function IconeCadenas({ taille = 20, classe = "" }: ProprietesIcone) {
     notifications, passe nº 132). Deux coches décalées, le signe
     universel de la lecture groupée — même trait 1.8 que les autres
     icônes maison. */
-export function IconeDoubleCoche({ taille = 20, classe = "" }: ProprietesIcone) {
+/*  ██ nº 811 — LA DOUBLE COCHE, REDESSINÉE (« portfolio rétabli ») ██
+    Deux coches de la même ouverture que la coche simple redessinée à
+    cette passe, décalées de 6,25 : la seconde ne montre que son trait
+    long et un court départ, comme un écho de la première. ⚠️ ELLE
+    ACCEPTE ENFIN `trait` : elle vit dans une pastille (le catalogue
+    des notifications) et y rendait un trait figé à 1,8 unité — plus
+    maigre que ses voisines à 18 px, la maigreur que la nº 664 avait
+    corrigée pour les neuf autres. */
+export function IconeDoubleCoche({ taille = 20, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
       <path
-        d="m2.5 12.6 4 4 7.4-8.2"
+        d="M2.75 12.75 7.25 17.25 15 8.75"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth={trait}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
-        d="m12.1 15.2 1.6 1.4 7.4-8.2"
+        d="M11.75 16 13.25 17.25 21.25 8.75"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth={trait}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -1114,11 +1155,16 @@ export function IconeDoubleCoche({ taille = 20, classe = "" }: ProprietesIcone) 
   );
 }
 
+/*  ██ nº 811 — LA CROIX, REDESSINÉE (« refusé ») ██
+    Deux traits de 7 à 17 : une croix un peu plus ramassée que
+    l'ancienne (6,5 → 17,5), qui laisse plus d'air dans le rond sans
+    perdre de présence — c'est le symbole le plus dense de la famille,
+    il n'a pas besoin de toucher les bords. Extrémités rondes. */
 export function IconeCroix({ taille = 20, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
       <path
-        d="m6.5 6.5 11 11m0-11-11 11"
+        d="M7 7l10 10M17 7 7 17"
         stroke="currentColor"
         strokeWidth={trait}
         strokeLinecap="round"
@@ -1202,12 +1248,18 @@ export function IconeUneColonne({ taille = 20, classe = "" }: ProprietesIcone) {
 
 /** Symbole d'interrupteur (cercle + trait) — « Mettre la fiche hors
     ligne », l'action d'administration posée près du signalement. */
+/*  ██ nº 811 — LE HORS-LIGNE, REDESSINÉ (le symbole « marche/arrêt ») ██
+    Un arc de rayon 7,5 centré à 12,18 (il descend jusqu'à 19,7),
+    ouvert en haut entre 7,05 et 16,95, et le trait vertical qui tombe
+    de 4 à 11,75 dans l'ouverture. L'ancien arc était plus large (8) et
+    coupait plus haut ; celui-ci laisse l'ouverture nette et le trait
+    bien centré. Extrémités rondes. */
 export function IconeHorsLigne({ taille = 16, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
-      <path d="M12 3.5v8" stroke="currentColor" strokeWidth={trait} strokeLinecap="round" />
+      <path d="M12 4v7.75" stroke="currentColor" strokeWidth={trait} strokeLinecap="round" />
       <path
-        d="M7.4 6.2a8 8 0 1 0 9.2 0"
+        d="M7.05 6.55A7.5 7.5 0 1 0 16.95 6.55"
         stroke="currentColor"
         strokeWidth={trait}
         strokeLinecap="round"
@@ -1316,17 +1368,24 @@ export function IconeCloche({ taille = 20, classe = "", trait = 1.8 }: Propriete
       battant. Le compteur des notifications redevient une PASTILLE
       posée par-dessus (voir MenuEspace) : cette icône ne sait plus
       rien de lui, comme avant. */
+  /*  ██ nº 811 — REDESSINÉE, avec les neuf autres symboles des
+      pastilles. Un dôme de rayon 4,25 (de 7,75 à 16,25), des flancs
+      droits jusqu'à 10,85 puis les deux épaules qui s'évasent vers le
+      rebord (5,85 → 18,15) — une cloche plus svelte que l'ancienne, dont
+      le dôme de rayon 6 remplissait tout le rond. Le battant est un arc
+      de rayon 1,75 sous le rebord. Jonctions rondes, un seul tracé fermé
+      pour le corps, comme avant. */
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
       <path
-        d="M18 8.5a6 6 0 1 0-12 0c0 4.5-1.5 5.8-2 6.5h16c-.5-.7-2-2-2-6.5Z"
+        d="M12 4.25a4.25 4.25 0 0 0-4.25 4.25v2.35c0 2.35-.9 3.8-1.9 5.05h12.3c-1-1.25-1.9-2.7-1.9-5.05V8.5A4.25 4.25 0 0 0 12 4.25Z"
         stroke="currentColor"
         strokeWidth={trait}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
-        d="M10 18.5a2 2 0 0 0 4 0"
+        d="M10.25 18.4a1.75 1.75 0 0 0 3.5 0"
         stroke="currentColor"
         strokeWidth={trait}
         strokeLinecap="round"
@@ -1349,16 +1408,36 @@ export function IconePlus({ taille = 18, classe = "" }: ProprietesIcone) {
   );
 }
 
-/** LA CORBEILLE — les suppressions, dans la page Confidentialité. */
+/** LA CORBEILLE — les suppressions (page Sécurité, notifications
+    « suppression programmée », « portfolio retiré »).
+    ██ nº 811 — REDESSINÉE : un couvercle de 4,5 à 19,5, une poignée
+    aux coins ronds, un corps qui s'affine vers le bas (6,25 → 17,75 en
+    haut, arrondi de 1,9 aux pieds) et DEUX RAINURES verticales qui
+    n'y étaient pas — c'est elles qui font lire « corbeille » d'un coup
+    dans un rond de 36 px, là où l'ancien seau nu ressemblait à un
+    gobelet. Quatre tracés, extrémités et jonctions rondes. */
 export function IconeCorbeille({ taille = 20, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
       <path
-        d="M4 7h16M9.5 7V5.5A1.5 1.5 0 0 1 11 4h2a1.5 1.5 0 0 1 1.5 1.5V7m2 0-.6 11.1A2 2 0 0 1 13.9 20h-3.8a2 2 0 0 1-2-1.9L7.5 7"
+        d="M4.5 7h15M9.5 7V5.5A1.5 1.5 0 0 1 11 4h2a1.5 1.5 0 0 1 1.5 1.5V7"
         stroke="currentColor"
         strokeWidth={trait}
         strokeLinecap="round"
         strokeLinejoin="round"
+      />
+      <path
+        d="M6.25 7l.85 11.2A1.9 1.9 0 0 0 9 20h6a1.9 1.9 0 0 0 1.9-1.8L17.75 7"
+        stroke="currentColor"
+        strokeWidth={trait}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M10.25 10.5v6.25M13.75 10.5v6.25"
+        stroke="currentColor"
+        strokeWidth={trait}
+        strokeLinecap="round"
       />
     </svg>
   );

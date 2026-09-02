@@ -1,47 +1,49 @@
 "use client";
 
 import Link from "next/link";
-import { ARRIVEE_SANS_PORTFOLIO } from "@/config/tatouage";
+import { useSyncExternalStore } from "react";
+import { lireDejaConnecte, souscrireStockage } from "@/lib/deja-connecte";
 import { useUtilisateur } from "@/lib/use-utilisateur";
 
 /**
- * LE BOUTON « CRÉE TON PORTFOLIO » — SA DESTINATION SUIT LE VISITEUR
+ * LE BOUTON « CREATE YOUR PORTFOLIO » — RÉSERVÉ À QUI N'A JAMAIS EU DE COMPTE
  * ==================================================================
- * (§3, passe nº 324)
+ * ██ nº 811 — LA RÈGLE DU PROPRIÉTAIRE ██
+ * Au bas de la page About, deux boutons : « Find your style » et
+ * celui-ci. Le second ne s'adresse qu'aux visiteurs qui n'ont JAMAIS
+ * eu de compte ici — ceux qui lisent « Join » dans la barre. Un
+ * REVENANT (compte existant, session fermée, il lit « Log in ») connaît
+ * déjà la porte ; un CONNECTÉ l'a franchie. Pour ces deux-là, il ne
+ * reste qu'un bouton, « Find your style ».
  *
- * Il menait toujours au même endroit, `/devenir-tatoueur`. Pour
- * quelqu'un de DÉJÀ CONNECTÉ, c'était lui proposer de créer le compte
- * qu'il a — un cul-de-sac poli. Désormais :
+ * MÊME DÉTECTION QUE JOIN / LOG IN (nº 809), ET SANS CLIGNOTEMENT :
+ *  · AVANT L'HYDRATATION, la page est prérendue et ne connaît aucune
+ *    session : le bouton est dans le HTML, marqué « muet »
+ *    (`data-session="muette"`), et c'est le CSS (globals.css, nº 811)
+ *    qui décide d'après `html[data-compte]`, posé par le script
+ *    d'avant peinture : « nouveau » → il se montre dès le premier
+ *    pixel ; « revenant » ou « connecte » → il n'est jamais peint ;
+ *  · APRÈS, ce composant lit les deux mêmes signaux que la barre — la
+ *    session (`useUtilisateur`) et le drapeau « déjà connecté ici »
+ *    (`lib/deja-connecte`, le cookie que le script lit lui aussi) — et
+ *    ne rend RIEN pour un revenant ou un connecté. Les deux moitiés
+ *    lisent les mêmes cookies : elles ne peuvent pas se contredire.
+ * ⚠️ POURQUOI `pret` COMMANDE : tant que la session n'est pas connue,
+ * le bouton reste dans l'arbre, « muet » — c'est le CSS qui parle. Dès
+ * qu'elle l'est, c'est le composant. Un revenant ne voit donc jamais
+ * le bouton paraître pour disparaître (règle nº 203 : aucun état faux
+ * peint).
  *
- *  · PAS DE COMPTE → `/devenir-tatoueur`, la page de compte. Elle
- *    s'ouvre d'elle-même sur « Créer mon compte » : son onglet par
- *    défaut DÉRIVE du drapeau « déjà venu », qui n'est pas posé chez
- *    un nouveau venu (voir EcranAuthentification). On ne force donc
- *    rien par l'adresse — c'est le comportement du site, pas un
- *    réglage de plus.
- *  · CONNECTÉ → `ARRIVEE_SANS_PORTFOLIO`, c'est-à-dire « Ma
- *    sélection ». ⚠️ LA CONSTANTE, PAS LE CHEMIN ÉCRIT À LA MAIN :
- *    c'est déjà elle qui décide où l'on retombe après une connexion
- *    (voir config/tatouage). Deuxième écriture = deux endroits à
- *    corriger le jour où « Ma sélection » déménage.
+ * CE QU'IL ÉTAIT AVANT (nº 324) : toujours affiché, sa DESTINATION
+ * suivait le visiteur (connecté → « Ma sélection », sinon la page de
+ * compte). Le cas connecté n'existe plus : le bouton mène à la page de
+ * compte, qui s'ouvre d'elle-même sur « Sign up » pour un nouveau
+ * venu (le drapeau « déjà venu » n'étant pas posé — voir
+ * EcranAuthentification). Aucun paramètre d'adresse à forcer.
  *
- * ⚠️ LE TROISIÈME CAS, celui que la consigne ne nomme pas : un compte
- * qui EXISTE mais dont la session est fermée. Il tombe avec les
- * déconnectés sur `/devenir-tatoueur` — et là, le drapeau « déjà
- * venu » ÉTANT posé, la page s'ouvre sur « Me connecter ». C'est ce
- * qu'il faut : on ne propose pas de créer un compte à qui en a un.
- *
- * ⚠️ POURQUOI UN COMPOSANT CLIENT, ET POURQUOI ÇA NE CLIGNOTE PAS.
- * L'état de connexion ne peut se lire qu'à l'exécution. `useUtilisateur`
- * est fait pour ça SANS bascule visible : le serveur lit le cookie de
- * session et le passe par contexte, donc le HTML envoyé porte DÉJÀ la
- * bonne destination — rien à corriger à l'hydratation (voir la note
- * de lib/use-utilisateur). Le lien reste un vrai `<Link>` : un clic du
- * milieu ouvre un onglet, comme partout ailleurs.
- *
- * ⚠️ SON APPARENCE NE VIENT PAS D'ICI. Les classes sont passées par la
- * page — le §3 de la nº 324 ne touche QUE la destination, et le bouton
- * gris posé au §5 de la nº 321 garde son habit au pixel.
+ * ⚠️ SON APPARENCE NE VIENT PAS D'ICI : les classes sont passées par la
+ * page, comme depuis la nº 321. Le lien reste un vrai `<Link>` : un clic
+ * du milieu ouvre un onglet, comme partout ailleurs.
  */
 export function BoutonCreerPortfolio({
   className,
@@ -50,18 +52,23 @@ export function BoutonCreerPortfolio({
   className?: string;
   children: React.ReactNode;
 }) {
-  const { utilisateur } = useUtilisateur();
-  const destination = utilisateur
-    ? ARRIVEE_SANS_PORTFOLIO
-    : "/devenir-tatoueur";
+  const { utilisateur, pret } = useUtilisateur();
+  //  `false` au serveur et à l'hydratation : le drapeau ne se lit que
+  //  dans le navigateur — et pendant ce temps, c'est le CSS qui décide.
+  const dejaConnecte = useSyncExternalStore(
+    souscrireStockage,
+    lireDejaConnecte,
+    () => false
+  );
+  if (pret && (utilisateur || dejaConnecte)) return null;
 
   return (
     <Link
-      href={destination}
-      //  Le banc lit ces deux marqueurs : ils disent CE QUE LE BOUTON A
-      //  DÉCIDÉ, sans qu'on ait à ouvrir une session pour le voir.
+      href="/devenir-tatoueur"
+      //  Le banc lit ces marqueurs : `data-session` dit qui décide
+      //  (le CSS tant que « muette », le composant ensuite).
       data-bouton-creer-portfolio=""
-      data-connecte={utilisateur ? "" : undefined}
+      data-session={pret ? "prete" : "muette"}
       className={className}
     >
       {children}

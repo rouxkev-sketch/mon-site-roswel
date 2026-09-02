@@ -442,7 +442,8 @@ function domaine(chemin) {
   if (/admin|Admin/.test(chemin)) return "F · espace admin";
   if (/^src\/lib\/email\.ts$/.test(chemin)) return "D · courriels";
   if (/^src\/app\/api\//.test(chemin)) return "E · code serveur (API)";
-  if (/^src\/app\/\(tatouage\)\/(qui-sommes-nous|contact|mentions-legales)/.test(chemin))
+  //  nº 811 — les dossiers s'appellent `about`, `contact`, `legal`.
+  if (/^src\/app\/\(tatouage\)\/(about|contact|legal)\//.test(chemin))
     return "C · pages éditoriales";
   if (/^src\/app\/(manifest|sitemap|robots|not-found|icon|opengraph)/.test(chemin))
     return "G · manifeste, 404, métadonnées";

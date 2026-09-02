@@ -1,4 +1,13 @@
 import type { NextConfig } from "next";
+//  nº 811 — les adresses des pages éditoriales, écrites une seule
+//  fois. Chemin RELATIF : ce fichier est chargé par Node avant toute
+//  compilation, hors des alias `@/`. Le module n'importe rien.
+import {
+  ANCIENS_CHEMINS_EDITORIAUX,
+  CHEMIN_ABOUT,
+  CHEMIN_CONTACT,
+  CHEMIN_LEGAL,
+} from "./src/lib/chemins-editoriaux";
 
 // Domaine autorisé pour les photos : celui de notre stockage Supabase
 // (déduit de l'adresse du projet dans .env.local)
@@ -133,6 +142,24 @@ const nextConfig: NextConfig = {
         destination: "/tatouage/neo-realisme/:ville",
         statusCode: 301,
       },
+      //  ---- nº 811 — LES PAGES ÉDITORIALES PARLENT ANGLAIS ----
+      //  « /qui-sommes-nous » → « /about », « /mentions-legales » →
+      //  « /legal » (décision du propriétaire ; « /contact » ne bouge
+      //  pas). Les anciennes adresses vivaient dans le pied de page de
+      //  CHAQUE page, dans la console Google (règles et
+      //  confidentialité de l'écran de consentement) et dans des liens
+      //  partagés : elles redirigent, définitivement, en 301 — la
+      //  forme que le propriétaire a demandée en toutes lettres pour
+      //  les pages servies en GET (voir la note au-dessus).
+      //  ⚠️ LES CHEMINS SONT LUS CHEZ `lib/chemins-editoriaux`, jamais
+      //  recopiés : la même constante sert le pied de page, le plan du
+      //  site, les adresses canoniques et la liste des en-têtes plus
+      //  bas.
+      ...ANCIENS_CHEMINS_EDITORIAUX.map(({ ancien, nouveau }) => ({
+        source: ancien,
+        destination: nouveau,
+        statusCode: 301,
+      })),
     ];
   },
 
@@ -246,9 +273,10 @@ const nextConfig: NextConfig = {
       "/tatoueur/:slug",
       "/tatouage/:style/:ville",
       "/devenir-tatoueur/:chemin*",
-      "/qui-sommes-nous",
-      "/contact",
-      "/mentions-legales",
+      //  nº 811 — les trois pages éditoriales, par leurs constantes.
+      CHEMIN_ABOUT,
+      CHEMIN_CONTACT,
+      CHEMIN_LEGAL,
       "/rendez-vous",
       "/favoris",
     ];

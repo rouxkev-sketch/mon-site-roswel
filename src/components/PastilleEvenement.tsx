@@ -120,37 +120,32 @@ export type TonEvenement =
   | "marque";
 
 /**
- * ██ nº 809 — UNE SEULE ROBE POUR TOUTES LES PASTILLES ██
+ * ██ nº 811 — LES QUATRE COULEURS REVIENNENT, L'ÉTOILE RESTE GRISE ██
  * ------------------------------------------------------------------
- * LA RÈGLE DU PROPRIÉTAIRE : les ronds à symbole du site, faits passe
- * après passe, étaient inégaux — étoile rose, coche verte, horloge
- * rose, corbeille rouge. Ils prennent tous LA MÊME ROBE, celle de
- * l'enveloppe des demandes (le ton `info`) : SYMBOLE BLANC (le blanc
- * cassé du site, `text-sombre-texte`) sur ROND GRIS (`bg-sombre-haut`,
- * le barreau des empilements) — 8,55:1, mesuré à la nº 664, le plus
- * franc des cinq.
- * ⚠️ LE VERT DU SUCCÈS PART AUSSI, et c'est un choix dit et assumé :
- * une couleur ne parle que dans une échelle (vert « c'est fait »,
- * rouge « il manque », rose « on attend »). L'échelle disparaissant, un
- * vert seul ne dirait plus « réussite », il dirait « celui-là est
- * différent ». La COCHE dit le succès, l'HORLOGE l'attente, la
- * CORBEILLE le retrait : le symbole porte le sens, la robe est une.
- * ⚠️ LES CINQ TONS RESTENT DANS LE CODE, à dessein : chaque écran dit
- * toujours CE QU'IL ANNONCE (`valide`, `probleme`…), et recolorer une
- * famille un jour se fera ici, sur une ligne — les appelants n'ont pas
- * à savoir que les cinq robes sont aujourd'hui la même.
- * ⚠️ LES NOTES QUI PRÉCÈDENT (voiles à 20 %, contrastes du rose et du
- * rouge, l'or puis le rose de l'étoile) sont L'HISTOIRE de ces tons ;
- * elles restent pour dire d'où l'on vient, pas ce qui est peint.
+ * LA nº 809 AVAIT MIS LES CINQ TONS DANS LA MÊME ROBE (symbole blanc
+ * sur rond gris, « la règle d'unité »). C'ÉTAIT UNE ERREUR DE
+ * CONSIGNE, le propriétaire le dit à la nº 811 : chaque pastille
+ * RETROUVE SA COULEUR D'ORIGINE — la coche du succès VERTE
+ * (notifications, Contact, Signalement), l'horloge d'attente ROSE, la
+ * corbeille et le hors-ligne ROUGES, l'enveloppe GRISE. L'échelle des
+ * couleurs (vert « c'est fait », rouge « il manque », rose « on
+ * attend », gris « on t'informe ») reparle, exactement comme la
+ * nº 664 l'avait écrite plus haut : voiles à 20 %, contrastes mesurés.
+ * ⚠️ LA SEULE CORRECTION DE COULEUR CONSERVÉE : LA BIENVENUE. L'étoile
+ * n'est plus rose sur `sombre-eleve` (nº 680) : elle est BLANCHE sur
+ * le GRIS de l'enveloppe — le ton `marque` porte désormais la robe de
+ * `info`. Il reste un ton à part (un seul porteur, la bienvenue) pour
+ * que ce choix se lise ici, et se défasse ici, sans toucher aux quatre
+ * écrans d'information.
+ * ⚠️ LES DIX SYMBOLES SONT REDESSINÉS À LA MÊME PASSE (Icones.tsx) :
+ * ce fichier n'en dessine aucun, il ne fait que les habiller.
  */
-const ROBE_UNIQUE = "bg-sombre-haut text-sombre-texte";
-
 export const TON_PASTILLE: Record<TonEvenement, string> = {
-  attente: ROBE_UNIQUE,
-  valide: ROBE_UNIQUE,
-  probleme: ROBE_UNIQUE,
-  info: ROBE_UNIQUE,
-  marque: ROBE_UNIQUE,
+  attente: "bg-primaire/20 text-primaire",
+  valide: "bg-sombre-succes/20 text-sombre-succes",
+  probleme: "bg-sombre-erreur/20 text-sombre-erreur",
+  info: "bg-sombre-haut text-sombre-texte",
+  marque: "bg-sombre-haut text-sombre-texte",
 };
 
 /**

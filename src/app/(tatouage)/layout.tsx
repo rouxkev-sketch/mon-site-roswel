@@ -23,7 +23,6 @@
  */
 
 import type { Metadata, Viewport } from "next";
-import Link from "next/link";
 import {
   COULEURS_SOMBRE,
   MARQUE_YOKOFOLIO,
@@ -31,6 +30,7 @@ import {
 } from "@/config/tatouage";
 import { DefilementEnHaut } from "@/components/DefilementEnHaut";
 import { IconeDuLien } from "@/components/IconeReseau";
+import { LienAuGeste } from "@/components/LienAuGeste";
 import { ChargeurFavoris } from "@/components/ChargeurFavoris";
 import { FournisseurSession } from "@/components/FournisseurSession";
 import { FournisseurStyles } from "@/components/FournisseurStyles";
@@ -48,6 +48,12 @@ import { VoileDeLaPage } from "@/components/VoileDeLaPage";
 //  elle rend `null` ET n'arme pas son module — pas un écouteur.
 import { SondeVitesse } from "@/components/SondeVitesse";
 import { COMPTES_YOKOFOLIO } from "@/config/tatouage";
+//  nº 811 — les adresses des trois pages éditoriales, écrites une fois.
+import {
+  CHEMIN_ABOUT,
+  CHEMIN_CONTACT,
+  CHEMIN_LEGAL,
+} from "@/lib/chemins-editoriaux";
 
 /**
  * L'ICÔNE D'ONGLET — le CŒUR SEUL (public/yokofolio-icone.png).
@@ -362,28 +368,38 @@ export default async function MiseEnPageTatouage({
                  réseau au clic, sur trois pages qu'on ouvre une fois
                  dans sa vie. Le lien fonctionne exactement pareil.
                  ⚠️ LE PRÉCHARGEMENT DES CARTES N'EST PAS CONCERNÉ : lui
-                 est vital (nº 744), et il ne se règle pas ici. */}
-            <Link
-              href="/qui-sommes-nous"
-              prefetch={false}
+                 est vital (nº 744), et il ne se règle pas ici.
+                 ██ nº 811 — LE GESTE PRÉCHARGE, LE CLIC TIRE LE RIDEAU ██
+                 La règle de la nº 793 tient : rien n'est demandé à
+                 l'entrée dans la vue (mesuré : 0 requête). Mais ces
+                 trois pages ont reçu leur rideau (`loading.tsx`,
+                 nº 811), et un rideau ne peut tomber que si le routeur
+                 tient déjà la page — sinon elle paraît d'un coup au
+                 bout de l'aller-retour, écran figé pendant ce temps
+                 (mesuré). `LienAuGeste` : au survol ou au focus
+                 clavier, la page se met en réserve (trois requêtes,
+                 une fois) et paraît au clic sans attendre ; au doigt,
+                 où rien ne précède le clic, le rideau est tiré AU CLIC
+                 par-dessus la page (le même que le `loading.tsx`),
+                 jusqu'à l'arrivée. */}
+            <LienAuGeste
+              href={CHEMIN_ABOUT}
               className="hover:text-sombre-texte transition-colors"
             >
               About
-            </Link>
-            <Link
-              href="/contact"
-              prefetch={false}
+            </LienAuGeste>
+            <LienAuGeste
+              href={CHEMIN_CONTACT}
               className="hover:text-sombre-texte transition-colors"
             >
               Contact
-            </Link>
-            <Link
-              href="/mentions-legales"
-              prefetch={false}
+            </LienAuGeste>
+            <LienAuGeste
+              href={CHEMIN_LEGAL}
               className="hover:text-sombre-texte transition-colors"
             >
               Legal
-            </Link>
+            </LienAuGeste>
             {/* LE COMPTE INSTAGRAM DU SITE — dernier de la ligne.
                 Nouvel onglet : on quitte le site, on ne l'abandonne
                 pas. `noreferrer` va avec `_blank` — la page ouverte ne

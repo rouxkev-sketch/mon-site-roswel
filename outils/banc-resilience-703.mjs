@@ -66,7 +66,7 @@ const APPAREILS = [
 const nav = await chromium.launch({ executablePath: NAVIGATEUR });
 
 for (const { nom: appareil, ...options } of APPAREILS) {
-  for (const chemin of ["/mentions-legales", "/contact"]) {
+  for (const chemin of ["/legal", "/contact"]) {
     const ctx = await nav.newContext(options);
     await ctx.addCookies([cookieSession()]);
     /*  LA COUPURE : tout ce que LE NAVIGATEUR envoie vers la base

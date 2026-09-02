@@ -168,6 +168,14 @@ message.
 | la ligne grise d'une suggestion | **« TX, USA »**, **« 75011 Paris, France »** — la règle nº 114 (`contexteSuggestion`), pour le géocodeur ET le filet | plus jamais « Texas, États-Unis » ni « Paris, Île-de-France, France » |
 | une VILLE, une RUE | **inchangées** : « Paris », « Munich », « Rue Trousseau » sont des noms | `ville_slug` fait l'adresse publique `/tatouage/<style>/<ville>` — pas de réécriture sans redirection |
 
+### Ajouts de la 811 (pastilles, boutons d'entrée, adresses, rideau)
+
+| Français | Anglais | Note |
+|---|---|---|
+| /qui-sommes-nous · /mentions-legales (adresses) | **/about** · **/legal** — /contact inchangé | décision de Kevin (811) ; les anciennes adresses redirigent en 301 ; les constantes vivent dans `lib/chemins-editoriaux` |
+| Lier mon compte Google (Sécurité, Google pas lié) | **Link** (lien d'action bleu, à droite) · sous-titre **Not linked** · info-bulle « Link your Google account to log in with it » | même composant que **Unlink** (`PastilleAction`) |
+| le rideau de chargement (About, Legal, Contact) | `aria-label="Loading page"` — la même étiquette que les squelettes | `RideauDePageTexte`, pas de squelette |
+
 ## 3 · Le ton
 
 - **Anglais américain, décontracté** : le « you » direct, phrases
@@ -202,12 +210,15 @@ message.
 
 ## 5 · Ce qui n'est PAS traduit, et pourquoi
 
-- **Les adresses (routes)** : `/devenir-tatoueur`, `/qui-sommes-nous`,
-  `/mentions-legales`, `/mes-favoris`, `/rejoindre`, `/tatouage/…`,
-  `/tatoueur/…` restent en français. Ce ne sont pas des textes : ce sont
-  des liens, des redirections, des adresses canoniques, des images de
-  partage, des bancs. C'est un sujet à part, à décider par Kevin (une
-  passe « adresses »).
+- **Les adresses (routes)** : `/devenir-tatoueur`, `/mes-favoris`,
+  `/rejoindre`, `/recherche`, `/tatouage/…`, `/tatoueur/…` restent en
+  français. Ce ne sont pas des textes : ce sont des liens, des
+  redirections, des adresses canoniques, des images de partage, des
+  bancs. C'est un sujet à part, à décider par Kevin (une passe
+  « adresses »). **Depuis la nº 811, les trois pages éditoriales sont
+  en anglais** : `/about` (ex `/qui-sommes-nous`), `/legal` (ex
+  `/mentions-legales`), `/contact` (inchangé) — les anciennes adresses
+  redirigent en 301 (lib/chemins-editoriaux, next.config).
 - **Les limaces** (`fine-line`, `tatouage`, `salon`, `prive`…) : des
   clés, en base et dans les adresses.
 - **Les noms propres** : YokoFolio, Instagram, TikTok, Google, Vercel,

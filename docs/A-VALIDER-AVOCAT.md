@@ -1,6 +1,6 @@
 # À valider par un juriste — page légale de YokoFolio (passe nº 804)
 
-La page `/mentions-legales` (« Legal Notice ») a été traduite en anglais et
+La page `/legal` (« Legal Notice » ; adresse `/mentions-legales` jusqu’à la nº 811, qui redirige) a été traduite en anglais et
 adaptée **raisonnablement** au marché américain (Austin, Texas) : les
 références franco-françaises ont été retirées, les faits ont été gardés.
 **Rien n'a été inventé** — pas d'entité américaine, pas de clause de droit

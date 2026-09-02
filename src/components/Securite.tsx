@@ -807,9 +807,29 @@ export function Securite() {
                 )}
               </li>
             ) : (
-              <li>
-                <button
-                  type="button"
+              /*  ██ nº 811 — GOOGLE PAS LIÉ : LA MÊME LIGNE, ET UN LIEN
+                  D'ACTION « Link » ██
+                  CE QUI VIVAIT ICI : un BOUTON pleine largeur, « Link my
+                  Google account », dont seul le survol de l'encadré
+                  changeait — rien ne disait où appuyer. Le propriétaire
+                  veut ce que les autres lignes ont : le lien d'action
+                  BLEU, à droite (« Unlink » au-dessus, « Cancel » du bloc
+                  des suppressions, nº 803). La ligne prend donc la robe
+                  de ses voisines (`LIGNE_METHODE`, même icône, même
+                  titre, un sous-titre qui dit l'état) et `PastilleAction`
+                  porte le geste — c'est LE MÊME composant que « Unlink »,
+                  donc la même couleur et la même place au pixel. */
+              <li className={LIGNE_METHODE}>
+                <IconeGoogle taille={22} classe={ICONE_METHODE} />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[14.5px] font-semibold text-sombre-texte">
+                    Google
+                  </span>
+                  <span className="block truncate text-[12.5px] text-sombre-texte-doux">
+                    Not linked
+                  </span>
+                </span>
+                <PastilleAction
                   onClick={async () => {
                     setErreurGoogle(null);
                     setGoogleEnCours(true);
@@ -820,15 +840,10 @@ export function Securite() {
                     }
                   }}
                   disabled={googleEnCours}
-                  className="flex w-full items-center gap-3 rounded-lg
-                             bg-sombre-eleve px-4 min-h-[54px] text-left
-                             text-[14.5px] text-sombre-texte transition-colors
-                             hover:bg-sombre-eleve-clair
-                             disabled:opacity-55 disabled:cursor-not-allowed"
+                  titre="Link your Google account to log in with it"
                 >
-                  <IconeGoogle taille={22} classe={ICONE_METHODE} />
-                  {googleEnCours ? "One moment…" : "Link my Google account"}
-                </button>
+                  {googleEnCours ? "One moment…" : "Link"}
+                </PastilleAction>
               </li>
             )}
             {erreurGoogle && (

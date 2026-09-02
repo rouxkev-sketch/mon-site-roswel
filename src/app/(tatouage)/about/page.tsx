@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { MARQUE_YOKOFOLIO, TEXTES_TATOUAGE } from "@/config/tatouage";
 import { adresseDuSite } from "@/lib/site";
+//  nº 811 — l'adresse de cette page, écrite une seule fois.
+import { CHEMIN_ABOUT } from "@/lib/chemins-editoriaux";
 import { BoutonCreerPortfolio } from "@/components/BoutonCreerPortfolio";
 import { EnTeteTatouage } from "@/components/EnTeteTatouage";
 import { LogoYokofolio } from "@/components/LogoYokofolio";
@@ -10,8 +12,10 @@ import { LienAccueil } from "@/components/LienAccueil";
 /**
  * QUI SOMMES-NOUS — « About »
  * ===========================
- * Adresse : /qui-sommes-nous (l'adresse n'a pas bougé à la nº 804 : les
- * adresses du site sont un sujet à part, voir le rapport de la passe).
+ * Adresse : /about (nº 811 — « /qui-sommes-nous » jusque-là ; l'ancienne
+ * adresse redirige, définitivement, voir next.config et
+ * lib/chemins-editoriaux). Le rideau de chargement : `loading.tsx` à
+ * côté, comme les pages de mosaïque (nº 706) — sans squelette.
  *
  * ⚠️⚠️ EXCEPTION DE MISE EN PAGE — LA RÈGLE, ET ELLE FAIT AUTORITÉ ICI
  * ==================================================================
@@ -72,7 +76,7 @@ export const metadata: Metadata = {
   description:
     `Why ${MARQUE_YOKOFOLIO.nom} exists: find a tattoo artist by style ` +
     "and city, and see their work in that exact style.",
-  alternates: { canonical: `${adresseDuSite()}/qui-sommes-nous` },
+  alternates: { canonical: `${adresseDuSite()}${CHEMIN_ABOUT}` },
 };
 
 /** Une section : un titre net, du texte aéré. */
@@ -218,9 +222,16 @@ export default function PageQuiSommesNous() {
                AUCUN CONTOUR : fond `sombre-eleve`, texte blanc,
                `sombre-haut` au survol. Le rouge reste au bouton d'à
                côté, qui porte l'action finale.
-               §3 (nº 324) — SA DESTINATION SUIT LE VISITEUR : pas de
-               compte → la page de compte ; déjà connecté → « My
-               favorites ». La règle vit dans `BoutonCreerPortfolio`.
+               ██ nº 811 — IL NE S'ADRESSE QU'À QUI N'A JAMAIS EU DE
+               COMPTE (règle du propriétaire) : les DEUX boutons pour
+               un nouveau venu ; UN SEUL — « Find your style » — pour
+               un compte existant, connecté OU revenant. La détection
+               est celle de Join / Log in (nº 809), sans clignotement :
+               CSS d'après `html[data-compte]` avant l'hydratation, les
+               mêmes cookies après. La règle vit dans
+               `BoutonCreerPortfolio` (la destination « Ma sélection »
+               du connecté, nº 324, n'a plus d'objet : il ne le voit
+               plus).
                ⚠️ LES CLASSES ET LE LIBELLÉ SONT PASSÉS TELS QUELS AU
                COMPOSANT, qui n'en décide aucun ; le libellé vient de
                la config (`lienCreerPortfolio`), traduit avec elle. */}

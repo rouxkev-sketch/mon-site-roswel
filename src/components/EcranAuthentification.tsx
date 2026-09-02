@@ -21,6 +21,8 @@ import {
 } from "@/components/erreurs-formulaire";
 import { OngletsLigne } from "@/components/OngletsLigne";
 import { lireDejaConnecte, souscrireStockage } from "@/lib/deja-connecte";
+//  nº 811 — l'adresse de la page légale, écrite une seule fois.
+import { CHEMIN_LEGAL } from "@/lib/chemins-editoriaux";
 import { ContexteDejaConnecteServeur } from "@/components/FournisseurSession";
 import { suiteSure } from "@/lib/favoris-yokofolio";
 import { LONGUEUR_MINIMALE, evaluerMotDePasse } from "@/lib/mot-de-passe";
@@ -702,11 +704,25 @@ export function EcranAuthentification({
              champs. `AIR_AVANT_BOUTON` porte le total à 28 px, soit les
              1,75 fois demandées — la mesure vit dans
              erreurs-formulaire, avec les autres. */}
+        {/*  ██ nº 811 — LE BOUTON PREND LA MESURE DE « Send message » ██
+             Il faisait 52 px de haut, sans taille de texte déclarée
+             (donc 16 px), et s'étirait sur toute la largeur aux deux
+             appareils. Le propriétaire veut ce que la page Contact a
+             depuis la nº 800 : au WEB, compact — 40 px, 14 px — et
+             collé à DROITE ; au DOIGT, pleine largeur, 40/14 aussi.
+             MÊME ÉCRITURE QUE LÀ-BAS : `self-end` retire l'étirement
+             et l'aligne à droite (le bouton ne fait plus que son texte
+             plus `px-5`), `mobile:w-full` lui rend la largeur au doigt
+             — deux propriétés différentes, aucun conflit (piège
+             nº 389), et l'appareil se lit par `mobile:`, jamais par
+             une largeur d'écran (piège nº 60). `AIR_AVANT_BOUTON`
+             (§B8) reste : l'air au-dessus ne change pas. */}
         <button
           type="submit"
           disabled={enCours || (creer && force.niveau === 0 && motDePasse.length > 0)}
-          className={`${AIR_AVANT_BOUTON} inline-flex items-center justify-center rounded-full
-                     min-h-[52px] bg-primaire hover:bg-primaire-fonce
+          className={`${AIR_AVANT_BOUTON} inline-flex items-center justify-center self-end
+                     mobile:w-full rounded-full px-5 min-h-[40px] text-[14px]
+                     bg-primaire hover:bg-primaire-fonce
                      text-white font-semibold transition-colors
                      disabled:opacity-60 disabled:cursor-not-allowed`}
         >
@@ -726,7 +742,7 @@ export function EcranAuthentification({
       {creer && (
       <p className="mt-8 text-center text-[13px] leading-relaxed text-sombre-texte-doux">
         By creating an account, you accept the{" "}
-        <Link href="/mentions-legales" className="text-primaire hover:underline">
+        <Link href={CHEMIN_LEGAL} className="text-primaire hover:underline">
           site rules
         </Link>
         . Your email is only used for your account — never for ads.

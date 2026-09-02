@@ -722,3 +722,43 @@ remplacer** le français par l'anglais, sans mécanique à deux langues.
   portfolio, du studio et du mode, laisse la ville, laisse la ligne
   incohérente, laisse « Paris » ; une relance ne réécrit rien. 732, 746,
   747 : verts.
+
+## 15 · Ce que la 811 a fait pour la langue (les adresses éditoriales)
+
+- **Deux adresses passent en anglais**, sur décision de Kevin :
+  `/qui-sommes-nous` → `/about`, `/mentions-legales` → `/legal` ;
+  `/contact` ne bouge pas. Les anciennes redirigent en **301**
+  (next.config, depuis `lib/chemins-editoriaux` — une seule écriture
+  pour le pied de page, le plan du site, les adresses canoniques, le
+  lien « site rules » de la création de compte et la liste des en-têtes
+  de cache). Les outils de banc (`outils/balayage-vitesse`,
+  `banc-vitesse`, `banc-resilience-703`, `banc-supabase-differe`,
+  `reference-vitesse.json`) et le recenseur (le lot « C · pages
+  éditoriales » reconnaît les nouveaux dossiers) suivent.
+- **Les autres adresses restent françaises** (voir §5 du lexique) —
+  la liste, avec une proposition anglaise pour la passe dédiée :
+  `/devenir-tatoueur` → `/account` (la page du compte : Sign up / Log
+  in) ; `/devenir-tatoueur/securite` → `/account/security` ;
+  `/devenir-tatoueur/nouveau-mot-de-passe` → `/account/new-password` ;
+  `/devenir-tatoueur/fiche` → `/account/portfolio` (l'éditeur) ;
+  `/mes-favoris` → `/my-selection` (l'écran s'appelle « My selection ») ;
+  `/rejoindre/<jeton>` → `/join/<token>` (le rattachement par lien) ;
+  `/apres-connexion` → `/after-login` ; `/recherche` → `/search` ;
+  `/tatouage/<style>/<ville>` → `/tattoo/<style>/<city>` ;
+  `/tatoueur/<slug>` → `/artist/<slug>` (et `/complet` → `/full`) ;
+  `/admin` et `/dev` sont déjà neutres. ⚠️ `/tatouage/…` et
+  `/tatoueur/…` sont les adresses INDEXÉES et PARTAGÉES du site (fiches,
+  pages de ville, images de partage, redirection `ancien_slug`) : leur
+  déménagement demande des redirections par motif et une relecture du
+  proxy, du plan du site et des liens internes — une passe à part
+  entière, pas un renommage de dossier.
+- **Deux textes d'interface nouveaux**, en anglais : « Not linked » et
+  « Link » (page Sécurité, ligne Google), avec l'info-bulle « Link your
+  Google account to log in with it ». Le rideau des pages de texte porte
+  l'étiquette des squelettes, « Loading page ».
+- **Un reste français relevé, non touché** (hors sujet de la passe) :
+  `EcranAuthentification.tsx` dit « Connecte-toi » comme titre du mode
+  connexion EN RATTACHEMENT — un état que l'écran de rattachement ne
+  propose plus (il n'ouvre que la création), donc jamais peint, mais le
+  mot est là. Le recenseur ne l'a pas vu : c'est la seconde branche d'un
+  ternaire de JSX. À corriger à la prochaine passe de textes.

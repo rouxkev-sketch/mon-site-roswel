@@ -88,7 +88,7 @@ const PAGES = [
   //  (les cœurs de la mosaïque écrivent en base). Les deux autres ne
   //  lisent RIEN : elles ne doivent la charger que si un compte est
   //  ouvert — et, à terme, plus du tout.
-  { nom: "mentions-legales", chemin: "/mentions-legales", litLaBase: false },
+  { nom: "legal", chemin: "/legal", litLaBase: false },
   { nom: "contact", chemin: "/contact", litLaBase: false },
   { nom: "recherche", chemin: "/recherche?style=realisme&nature=tatouage", litLaBase: true },
 ];

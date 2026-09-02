@@ -32,7 +32,7 @@
    "gz": 424
   },
   {
-   "nom": "mentions-legales",
+   "nom": "legal",
    "fichiers": 20,
    "brut": 1162,
    "gz": 342
@@ -44,7 +44,7 @@
    "ms": 819
   },
   {
-   "nom": "4G · /mentions-legales",
+   "nom": "4G · /legal",
    "ms": 937
   },
   {
@@ -52,7 +52,7 @@
    "ms": 3368
   },
   {
-   "nom": "3G rapide · /mentions-legales",
+   "nom": "3G rapide · /legal",
    "ms": 3225
   }
  ],

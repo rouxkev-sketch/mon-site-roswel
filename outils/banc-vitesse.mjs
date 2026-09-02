@@ -127,7 +127,7 @@ const PAGES = [
   { nom: "fiche", chemin: "/tatoueur/demo-trash-polka-0" },
   { nom: "ma-selection", chemin: "/mes-favoris", compte: true },
   { nom: "editeur", chemin: "/devenir-tatoueur/fiche", compte: true },
-  { nom: "mentions-legales", chemin: "/mentions-legales" },
+  { nom: "legal", chemin: "/legal" },
 ];
 
 /*  LES DEUX LIAISONS DU PLAN nº 701, aux profils de Lighthouse. Le
@@ -186,7 +186,7 @@ async function mesurerLePoids(nav) {
 async function mesurerLeTemps(nav) {
   const releve = [];
   for (const liaison of LIAISONS) {
-    for (const chemin of ["/", "/mentions-legales"]) {
+    for (const chemin of ["/", "/legal"]) {
       const ctx = await nav.newContext(TELEPHONE);
       const onglet = await ctx.newPage();
       const cdp = await ctx.newCDPSession(onglet);

@@ -3,6 +3,12 @@ import { adresseDuSite } from "@/lib/email";
 import { creerClientSupabaseServeur } from "@/lib/supabase/server";
 import { estEnLigne, styleConnu } from "@/lib/tatoueurs";
 import { chargerStylesAjoutes } from "@/lib/styles-ajoutes";
+//  nº 811 — les adresses des trois pages éditoriales, écrites une fois.
+import {
+  CHEMIN_ABOUT,
+  CHEMIN_CONTACT,
+  CHEMIN_LEGAL,
+} from "@/lib/chemins-editoriaux";
 
 // Le plan du site est reconstruit au plus une fois par jour
 export const revalidate = 86400;
@@ -57,19 +63,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const pages: MetadataRoute.Sitemap = [
     { url: base, lastModified: aujourdhui, changeFrequency: "daily", priority: 1 },
     {
-      url: `${base}/qui-sommes-nous`,
+      url: `${base}${CHEMIN_ABOUT}`,
       lastModified: aujourdhui,
       changeFrequency: "monthly",
       priority: 0.4,
     },
     {
-      url: `${base}/contact`,
+      url: `${base}${CHEMIN_CONTACT}`,
       lastModified: aujourdhui,
       changeFrequency: "monthly",
       priority: 0.4,
     },
     {
-      url: `${base}/mentions-legales`,
+      url: `${base}${CHEMIN_LEGAL}`,
       lastModified: aujourdhui,
       changeFrequency: "yearly",
       priority: 0.3,

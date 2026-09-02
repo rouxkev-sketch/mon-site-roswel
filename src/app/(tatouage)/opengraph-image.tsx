@@ -15,7 +15,7 @@ import {
  * fabrique pas la sienne prend celle-ci. Elle couvre donc, sans une
  * ligne de plus :
  *  · l'ACCUEIL (/) ;
- *  · les PAGES FIXES — qui-sommes-nous, contact, mentions légales :
+ *  · les PAGES FIXES — about, contact, legal (nº 811) :
  *    la marque suffit, elles n'ont rien de particulier à montrer ;
  *  · et TOUT LE RESTE (devenir tatoueur, espace, admin…), qui n'a
  *    aucune raison de se retrouver dans une conversation, mais qui ne
