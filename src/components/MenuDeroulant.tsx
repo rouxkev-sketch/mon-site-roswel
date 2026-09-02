@@ -1804,7 +1804,7 @@ export function MenuDeroulant({
           //  et son mot), aligné comme le titre de la page du moteur.
           <span className="flex items-center gap-2.5">{champMobile}</span>
         ) : (
-          (libelleChoisi ?? placeholder ?? "Choisir…")
+          (libelleChoisi ?? placeholder ?? "Choose…")
         )}
       </button>
 

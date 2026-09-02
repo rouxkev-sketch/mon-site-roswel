@@ -65,7 +65,6 @@ import {
 import type { Tatoueur } from "@/lib/tatoueurs";
 import { lieuVersParametres, paysDuLieu } from "@/lib/geocodage";
 import { ligneCarte, nomPaysAffiche } from "@/lib/adresse";
-import { paysAvecPreposition } from "@/lib/preposition-pays";
 import { useUtilisateur } from "@/lib/use-utilisateur";
 import { ContexteAffichageServi } from "@/components/AffichageMosaique";
 import {
@@ -300,7 +299,7 @@ function issuesDuVide(
   const suivant = rayonSuivant(affiches.rayonKm);
   if (rayonApplicable(lieu) && suivant !== null) {
     issues.push({
-      libelle: `Élargir à ${suivant} km`,
+      libelle: `Expand to ${suivant}`,
       surClic: () => chercher({ ...affiches, rayonKm: suivant }),
     });
   }
@@ -308,14 +307,14 @@ function issuesDuVide(
   const pays = paysDuLieu(lieu);
   if (pays) {
     issues.push({
-      libelle: `Chercher ${paysAvecPreposition(nomPaysAffiche(pays), pays.code_pays)}`,
+      libelle: `Search all of ${nomPaysAffiche(pays)}`,
       surClic: () => chercher({ ...affiches, lieu: pays }),
     });
     return issues;
   }
 
   issues.push({
-    libelle: "Partout dans le monde",
+    libelle: "Anywhere",
     surClic: () => chercher({ ...affiches, lieu: null }),
   });
   return issues;
@@ -327,7 +326,7 @@ function issuesDuVide(
     même message que portait l'ancien bouton pendant sa transition. */
 function LibelleVoirPlus() {
   const { pending } = useLinkStatus();
-  return pending ? "Chargement…" : "Voir plus";
+  return pending ? "Loading…" : "See more";
 }
 
 export function IndexTatoueurs({

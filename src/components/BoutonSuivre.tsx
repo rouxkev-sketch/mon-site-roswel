@@ -161,7 +161,7 @@ export function BoutonSuivre({
       onClick={basculer}
       aria-pressed={suivi}
       aria-label={
-        suivi ? `Ne plus suivre ${nomTatoueur}` : `Suivre ${nomTatoueur}`
+        suivi ? `Unfollow ${nomTatoueur}` : `Follow ${nomTatoueur}`
       }
       /*  §3 (nº 231, retouché nº 233) — LE BADGE PÈSE AUTANT QUE LES
           MOTS D'EN FACE, ni plus ni moins : le rose avance
@@ -381,13 +381,13 @@ export function BoutonSuivre({
         <span
           className={`col-start-1 row-start-1${etatConnu ? "" : " invisible"}`}
         >
-          {suivi ? "Suivi" : "Suivre"}
+          {suivi ? "Following" : "Follow"}
         </span>
         <span aria-hidden="true" className="col-start-1 row-start-1 invisible">
-          Suivre
+          Follow
         </span>
         <span aria-hidden="true" className="col-start-1 row-start-1 invisible">
-          Suivi
+          Following
         </span>
       </span>
     </button>

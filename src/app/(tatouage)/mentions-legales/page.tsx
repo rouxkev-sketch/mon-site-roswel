@@ -6,24 +6,49 @@ import { EnTeteTatouage } from "@/components/EnTeteTatouage";
 import { LienAccueil } from "@/components/LienAccueil";
 
 /**
- * LES MENTIONS LÉGALES DE YOKOFOLIO
- * =================================
- * Adresse : /mentions-legales
+ * LA PAGE LÉGALE DE YOKOFOLIO — « Legal Notice »
+ * ==============================================
+ * Adresse : /mentions-legales (l'adresse n'a pas bougé à la nº 804 :
+ * les adresses du site sont un sujet à part, voir le rapport).
  *
- * Obligatoires en France dès la mise en ligne (LCEN, article 6-III).
- * Elles décrivent un site SANS MODÈLE ÉCONOMIQUE : rien n'est vendu,
- * aucune commission n'est prise, aucune publicité n'est affichée.
+ * ██ RÉÉCRITE EN ANGLAIS ET ADAPTÉE AUX ÉTATS-UNIS (nº 804) ██
+ * ==================================================================
+ * Le site devient anglais (marché : Austin, Texas). Cette page est
+ * TRADUITE et ADAPTÉE « raisonnablement » — la consigne du
+ * propriétaire — et tout ce qui mérite un juriste est LISTÉ dans
+ * docs/A-VALIDER-AVOCAT.md, pas tranché ici.
  *
- * ⚠️ L'ADRESSE PERSONNELLE N'EST PAS PUBLIÉE, et c'est légal : une
- * personne physique qui édite un site à titre NON PROFESSIONNEL peut
- * n'en donner que le nom, le prénom et l'hébergeur (article 6-III-2 de
- * la LCEN), à condition d'avoir communiqué son identité complète à
- * l'hébergeur. C'est écrit noir sur blanc plus bas.
+ * CE QUI A ÉTÉ RETIRÉ, parce que franco-français ou propre à l'Union
+ * européenne, et que la page ne s'adresse plus à ce public :
+ *  · la référence à la loi LCEN (article 6-III-2) qui justifiait de
+ *    ne pas publier l'adresse d'un éditeur particulier — l'idée
+ *    (identité remise aux hébergeurs, non publiée) RESTE, sans le
+ *    numéro d'article ;
+ *  · la section « Directeur de la publication », notion française sans
+ *    équivalent utile ici ;
+ *  · les articles du RGPD (6.1.b), l'article 82 de la loi Informatique
+ *    et Libertés, la réclamation à la CNIL, et le paragraphe sur le
+ *    « transfert hors de l'Union européenne » ;
+ *  · SIREN et TVA intracommunautaire dans la clause de mise à jour.
  *
- * Le jour où une société est créée : dénomination, forme juridique,
- * capital, siège, SIREN et TVA deviennent obligatoires. Tout est
- * regroupé dans un seul objet, ÉDITEUR, pour n'avoir qu'un endroit à
- * reprendre.
+ * CE QUI RESTE, ET C'EST LE FOND : qui publie, qui héberge, ce qui est
+ * collecté et pourquoi, combien de temps, comment on supprime son
+ * compte, à qui appartiennent les photos, les liens sortants. Rien
+ * n'est vendu, aucune publicité, aucune donnée revendue — ce sont des
+ * FAITS sur le site, ils ne changent pas avec la langue.
+ *
+ * ⚠️ AUCUN FAIT NOUVEAU N'EST INVENTÉ : pas d'entité américaine, pas
+ * de « designated agent » DMCA, pas de clause de droit applicable —
+ * ce sont précisément les points remis au juriste. La page dit ce que
+ * le site fait, et rien qu'elle ne puisse tenir.
+ *
+ * ⚠️ LA BASE EST HÉBERGÉE AUX ÉTATS-UNIS depuis la nº 766 (projet
+ * Supabase « USA Est ») : l'adresse de Supabase Inc. (Singapour) est
+ * celle de la société, pas celle du serveur. La page dit les deux.
+ *
+ * Le jour où une société est créée : dénomination, forme, siège et
+ * numéro d'enregistrement deviennent nécessaires. Tout est regroupé
+ * dans un seul objet, ÉDITEUR, pour n'avoir qu'un endroit à reprendre.
  */
 
 const ÉDITEUR = {
@@ -33,21 +58,21 @@ const ÉDITEUR = {
 const HÉBERGEURS = [
   {
     nom: "Vercel Inc.",
-    role: "hébergement du site",
-    adresse: "440 N Barranca Ave #4133, Covina, CA 91723, États-Unis",
+    role: "website hosting",
+    adresse: "440 N Barranca Ave #4133, Covina, CA 91723, United States",
     site: "https://vercel.com",
   },
   {
     nom: "Supabase Inc.",
-    role: "hébergement de la base de données",
-    adresse: "970 Toa Payoh North #07-04, Singapour 318992",
+    role: "database hosting (servers located in the United States)",
+    adresse: "970 Toa Payoh North #07-04, Singapore 318992",
     site: "https://supabase.com",
   },
 ];
 
 export const metadata: Metadata = {
-  title: "Mentions légales",
-  description: `Éditeur, hébergement et traitement des données du site ${MARQUE_YOKOFOLIO.nom}.`,
+  title: "Legal Notice",
+  description: `Who publishes ${MARQUE_YOKOFOLIO.nom}, who hosts it, and what happens to the information that goes through it.`,
   alternates: { canonical: `${adresseDuSite()}/mentions-legales` },
 };
 
@@ -78,21 +103,22 @@ export default function PageMentionsLegales() {
 
       <main className="flex-1 mx-auto w-full max-w-[760px] px-4 sm:px-6 pt-10 pb-20">
         <h1 className="text-[clamp(1.8rem,4.5vw,2.4rem)] font-bold leading-tight text-sombre-texte">
-          Mentions légales
+          Legal Notice
         </h1>
         <p className="mt-3 text-[15px] text-sombre-texte-doux">
-          Qui édite {MARQUE_YOKOFOLIO.nom}, qui l&apos;héberge, et ce que
-          deviennent les informations qui y passent.
+          Who publishes {MARQUE_YOKOFOLIO.nom}, who hosts it, and what
+          happens to the information that goes through it.
         </p>
 
         <div className="mt-10 flex flex-col gap-7">
-          <Section titre="Éditeur du site">
+          <Section titre="Publisher">
             <p>
               <strong className="text-sombre-texte">
-                Site édité à titre personnel et non professionnel.
+                This site is published by an individual, on a personal,
+                non-commercial basis.
               </strong>
               <br />
-              Contact :{" "}
+              Contact:{" "}
               <a
                 href={`mailto:${ÉDITEUR.contact}`}
                 className="text-primaire hover:underline"
@@ -102,26 +128,19 @@ export default function PageMentionsLegales() {
             </p>
             <p>
               {MARQUE_YOKOFOLIO.nom}{" "}
-              est édité SANS MODÈLE ÉCONOMIQUE : le site ne vend rien, ne
-              prend aucune commission, n&apos;affiche aucune publicité et ne
-              revend aucune donnée.
+              is published WITHOUT A BUSINESS MODEL: the site sells nothing,
+              takes no commission, shows no advertising and sells no data.
             </p>
             <p>
-              Conformément à l&apos;article 6-III-2 de la loi n° 2004-575 du
-              21 juin 2004 pour la confiance dans l&apos;économie numérique,
-              l&apos;éditeur a transmis ses éléments d&apos;identification
-              personnelle à l&apos;hébergeur. Ces éléments ne sont donc pas
-              publiés sur le site ; ils sont communiqués sur réquisition de
-              l&apos;autorité judiciaire.
+              The publisher&apos;s full identity has been provided to the
+              hosting providers below. It is not published on the site; it
+              will be disclosed upon a lawful request from a competent
+              authority.
             </p>
           </Section>
 
-          <Section titre="Directeur de la publication">
-            <p>L&apos;éditeur du site.</p>
-          </Section>
-
-          <Section titre="Hébergement">
-            <p>Le site et ses données sont hébergés par :</p>
+          <Section titre="Hosting">
+            <p>The site and its data are hosted by:</p>
             <ul className="flex flex-col gap-3">
               {HÉBERGEURS.map((h) => (
                 <li key={h.nom}>
@@ -141,225 +160,166 @@ export default function PageMentionsLegales() {
                 </li>
               ))}
             </ul>
-            {/*  §3-e (nº 322) — LE TRANSFERT HORS D'EUROPE, DIT EN
-                 TOUTES LETTRES. Les deux adresses ci-dessus le
-                 montraient déjà (Californie, Singapour), mais une
-                 adresse n'est pas une information sur le TRAITEMENT :
-                 le RGPD demande que le transfert hors UE soit annoncé
-                 pour lui-même. */}
-            <p>
-              Ces deux hébergeurs sont établis hors de l&apos;Union
-              européenne : les données du site sont donc traitées aux
-              États-Unis et à Singapour.
-            </p>
+            <p>The site&apos;s data is processed in the United States.</p>
           </Section>
 
-          <Section titre="Données personnelles">
+          <Section titre="Personal information">
             <p>
-              Un visiteur qui se contente de chercher un tatoueur ne crée aucun
-              compte et ne donne aucune information : {MARQUE_YOKOFOLIO.nom} ne
-              lui demande rien.
+              A visitor who simply searches for a tattoo artist creates no
+              account and provides no information: {MARQUE_YOKOFOLIO.nom}{" "}
+              asks for nothing.
             </p>
-            {/*  §3-a (nº 322) — LE COMPTE VISITEUR. C'ÉTAIT LE MANQUE LE
-                 PLUS IMPORTANT DE CETTE PAGE : le paragraphe ci-dessus
-                 affirmait qu'un visiteur ne crée aucun compte, et ce
-                 n'est plus vrai depuis « Ma sélection ». Les trois
-                 données nommées ici sont EXACTEMENT les trois tables du
-                 site — `tatoueurs_suivis`, `favoris_photos` et
-                 `visites_selection` — et toutes trois disparaissent
-                 avec le compte (`on delete cascade` sur `auth.users`),
-                 ce qui est précisément ce que la dernière phrase
-                 promet. */}
+            {/*  LE COMPTE VISITEUR (nº 322). Les trois données nommées ici
+                 sont EXACTEMENT les trois tables du site —
+                 `tatoueurs_suivis`, `favoris_photos` et
+                 `visites_selection` — et toutes trois disparaissent avec
+                 le compte (`on delete cascade` sur `auth.users`), ce qui
+                 est précisément ce que la dernière phrase promet. */}
             <p>
-              Un VISITEUR qui veut garder une sélection crée un compte avec une
-              adresse e-mail. Le site conserve alors les portfolios qu&apos;il
-              suit, les photos qu&apos;il a mises en favori, et la date de sa
-              dernière visite — uniquement pour lui afficher sa sélection et
-              lui signaler ce qui est nouveau depuis son dernier passage. Rien
-              de cela n&apos;est vendu, cédé, ni utilisé à des fins
-              publicitaires. Base légale : l&apos;exécution du service demandé
-              (article 6.1.b du RGPD). Conservation : tant que le compte
-              existe, puis suppression.
+              A VISITOR who wants to keep a selection creates an account with
+              an email address. The site then stores the portfolios they
+              follow, the photos they saved, and the date of their last
+              visit — only to show them their favorites and flag what is new
+              since their last visit. None of this is sold, shared, or used
+              for advertising. Retention: as long as the account exists,
+              then deletion.
             </p>
             <p>
-              Un TATOUEUR qui crée son portfolio fournit un nom, une ville, une
-              adresse e-mail, ses styles, ses images et ses liens vers ses
-              réseaux. Ces informations servent uniquement à afficher sa fiche
-              et à le contacter au sujet de celle-ci. Elles ne sont ni vendues,
-              ni cédées, ni utilisées à des fins publicitaires.
+              A TATTOO ARTIST who creates a portfolio provides a name, a
+              city, an email address, their styles, their images and links
+              to their social accounts. This information is used only to
+              display the portfolio and to contact them about it. It is
+              neither sold, nor shared, nor used for advertising. Retention:
+              as long as the portfolio exists, then deletion.
+            </p>
+            {/*  LA RELECTURE DES PHOTOS (nº 322). Elle existe (une fiche
+                 modifiée repasse en validation), et c'est un ACCÈS de
+                 l'éditeur aux images déposées : une page qui dit ce que
+                 deviennent les informations doit le dire. */}
+            <p>
+              Photos submitted to a portfolio are reviewed before they are
+              published. The publisher therefore has access to them, for
+              that sole purpose.
             </p>
             <p>
-              Base légale : l&apos;exécution du service demandé (article 6.1.b
-              du RGPD) pour les informations du portfolio. Conservation : tant
-              que le portfolio existe, puis suppression.
-            </p>
-            {/*  §3-f (nº 322) — LA RELECTURE DES PHOTOS. Elle existe
-                 (une fiche modifiée repasse en validation), et c'est un
-                 ACCÈS de l'éditeur aux images déposées : une page qui
-                 dit ce que deviennent les informations doit le dire.
-                 Elle est posée juste après la fiche, dont elle parle,
-                 et avant le formulaire de contact, qui est un autre
-                 traitement. */}
-            <p>
-              Les photos déposées sur un portfolio sont relues avant
-              d&apos;être publiées. L&apos;éditeur du site y a donc accès, à
-              cette seule fin.
-            </p>
-            {/*  §3-d (nº 322) — LE FORMULAIRE DE CONTACT : trois champs,
-                 une seule raison d'être. Il ne relevait d'aucun des
-                 paragraphes précédents — ni fiche, ni sélection — d'où
-                 son paragraphe à lui. */}
-            <p>
-              Le formulaire de contact recueille un nom, une adresse e-mail et
-              un message. Ils servent uniquement à répondre, et ne sont
-              conservés que le temps nécessaire à cet échange.
+              The contact form collects a name, an email address and a
+              message. They are used only to reply, and kept only as long as
+              needed for that exchange.
             </p>
             <p>
               <strong className="text-sombre-texte">
-                Droit d&apos;accès, de rectification et de SUPPRESSION.
+                Access, correction and DELETION.
               </strong>{" "}
-              {/*  §3-b (nº 322) — LA SUPPRESSION SE FAIT DEPUIS LE
-                   COMPTE, ET ELLE PASSE EN PREMIER. La page n'offrait
-                   qu'une voie, l'e-mail — c'était sous-estimer ce que
-                   le site sait faire : l'écran Sécurité
-                   (`BlocSuppressions`) supprime une fiche ou le compte
-                   entier, sans demander à personne, et il est ouvert à
-                   TOUT compte connecté, visiteur compris. La voie de
-                   l'e-mail RESTE, juste après : elle sert à qui ne
-                   peut plus se connecter. */}
-              Un compte peut être supprimé à tout moment par son titulaire,
-              DIRECTEMENT DEPUIS SON COMPTE, sans avoir à le demander à
-              personne. Un tatoueur peut demander à tout moment la correction
-              ou la
-              suppression complète de sa fiche et de son compte, par simple
-              e-mail à{" "}
+              {/*  LA SUPPRESSION SE FAIT DEPUIS LE COMPTE, ET ELLE PASSE EN
+                   PREMIER (nº 322) : l'écran Sécurité (`BlocSuppressions`)
+                   supprime une fiche ou le compte entier, sans demander à
+                   personne, et il est ouvert à TOUT compte connecté,
+                   visiteur compris. La voie de l'e-mail RESTE, juste
+                   après : elle sert à qui ne peut plus se connecter. */}
+              An account can be deleted at any time by its owner, DIRECTLY
+              FROM THE ACCOUNT, without asking anyone. A tattoo artist can
+              also request, at any time, the correction or the complete
+              deletion of their portfolio and account, by simply emailing{" "}
               <a
                 href={`mailto:${ÉDITEUR.contact}`}
                 className="text-primaire hover:underline"
               >
                 {ÉDITEUR.contact}
               </a>
-              . La suppression est effectuée sans condition et sans délai
-              inutile. Il dispose aussi d&apos;un droit d&apos;opposition, de
-              limitation et de portabilité, et peut adresser une réclamation à
-              la CNIL (
-              <a
-                href="https://www.cnil.fr"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primaire hover:underline"
-              >
-                cnil.fr
-              </a>
-              ).
+              . Deletion is carried out without conditions and without undue
+              delay. Anyone can also ask what information the site holds
+              about them, and have it corrected.
             </p>
           </Section>
 
           <Section titre="Cookies">
             <p>
               {MARQUE_YOKOFOLIO.nom}{" "}
-              ne dépose AUCUN cookie publicitaire et n&apos;utilise aucun outil
-              de mesure d&apos;audience qui suivrait les visiteurs d&apos;un
-              site à l&apos;autre.
+              sets NO advertising cookies and uses no analytics tool that
+              would track visitors from one site to another.
             </p>
             <p>
-              Seuls sont utilisés les cookies strictement nécessaires au
-              fonctionnement du site : ils maintiennent la session d&apos;un
-              tatoueur connecté à son espace. Ceux-là sont dispensés de
-              consentement (article 82 de la loi Informatique et Libertés).
-              Naviguer sans compte n&apos;en dépose aucun.
+              Only the cookies strictly necessary for the site to work are
+              used: they keep a logged-in user&apos;s session open. Browsing
+              without an account sets none.
             </p>
           </Section>
 
-          <Section titre="Les photos appartiennent aux tatoueurs">
+          <Section titre="The photos belong to the tattoo artists">
             <p>
-              Chaque image publiée sur une fiche reste la PROPRIÉTÉ ENTIÈRE du
-              tatoueur qui l&apos;a déposée. {MARQUE_YOKOFOLIO.nom}{" "}
-              ne revendique aucun droit sur ces images : le site les affiche
-              pour présenter le travail de leur auteur, et pour rien
-              d&apos;autre.
+              Every image published on a portfolio remains the FULL PROPERTY
+              of the tattoo artist who submitted it. {MARQUE_YOKOFOLIO.nom}{" "}
+              claims no rights over these images: the site displays them to
+              present their author&apos;s work, and for nothing else.
             </p>
             <p>
-              En déposant une image, un tatoueur déclare en être l&apos;auteur
-              ou disposer des droits nécessaires, et autorise son affichage sur
-              le site. Cette autorisation cesse dès la suppression de la fiche.
+              By submitting an image, a tattoo artist declares that they are
+              its author or hold the necessary rights, and authorizes its
+              display on the site. This authorization ends as soon as the
+              portfolio is deleted.
             </p>
             <p>
-              Reproduire ces images ailleurs sans l&apos;accord de leur auteur
-              est une contrefaçon. Toute personne qui constate la publication
-              d&apos;une image sans autorisation peut écrire à{" "}
+              Reproducing these images elsewhere without their author&apos;s
+              consent is copyright infringement. Anyone who notices an image
+              published without authorization can write to{" "}
               <a
                 href={`mailto:${ÉDITEUR.contact}`}
                 className="text-primaire hover:underline"
               >
                 {ÉDITEUR.contact}
-              </a>{" "}
-              : elle sera retirée.
+              </a>
+              : it will be taken down.
             </p>
             <p>
-              Le nom {MARQUE_YOKOFOLIO.nom}, son logo et le code du site
-              restent, eux, la propriété de l&apos;éditeur.
+              The name {MARQUE_YOKOFOLIO.nom}, its logo and the site&apos;s
+              code remain the property of the publisher.
             </p>
           </Section>
 
-          <Section titre="Liens vers Instagram et TikTok">
+          <Section titre="Links to Instagram and TikTok">
             <p>
               {/*  ⚠️ LE `{" "}` APRÈS LE NOM DE MARQUE : sans lui, on
                    lisait « yokofolion'en est ni l'éditeur ». Voir
                    BlocSuppressions pour la règle. */}
-              Les fiches renvoient vers les comptes des tatoueurs sur des sites
-              tiers. {MARQUE_YOKOFOLIO.nom}{" "}
-              n&apos;en est ni l&apos;éditeur ni
-              le responsable : une fois le lien suivi, ce sont les conditions et
-              la politique de confidentialité de ces plateformes qui
-              s&apos;appliquent.
+              Portfolios link to the artists&apos; accounts on third-party
+              sites. {MARQUE_YOKOFOLIO.nom}{" "}
+              neither publishes nor is responsible for them: once you follow
+              a link, the terms and privacy policy of those platforms apply.
             </p>
           </Section>
 
-          <Section titre="Mise à jour">
+          <Section titre="Updates">
             <p>
-              Ces mentions décrivent un site édité par un particulier, à titre
-              non professionnel. Si une société est créée pour porter{" "}
-              {MARQUE_YOKOFOLIO.nom}, elles seront mises à jour en conséquence
-              (dénomination, forme juridique, capital, siège social, numéro
-              SIREN et TVA intracommunautaire).
+              This notice describes a site published by an individual, on a
+              non-commercial basis. If a company is created to operate{" "}
+              {MARQUE_YOKOFOLIO.nom}, it will be updated accordingly (company
+              name, legal form, registered office, registration number).
             </p>
           </Section>
         </div>
 
-        {/*  §3-g (nº 322) — LA DATE DE DERNIÈRE MISE À JOUR.
-             ------------------------------------------------------------
-             Elle ferme le CONTENU, avant le lien de retour, qui est de la
-             navigation et non du texte légal.
-             ⚠️ AUCUNE VALEUR NOUVELLE : l'écriture est mot pour mot celle
-             du chapô de cette page (`text-[15px] text-sombre-texte-doux`),
-             et la marge celle qui sépare déjà le chapô de la pile de
-             sections (`mt-10`). La page ne gagne pas un jeton, pas une
-             taille, pas une couleur — c'est la consigne de la nº 322. */}
+        {/*  LA DATE DE DERNIÈRE MISE À JOUR (nº 322). Elle ferme le
+             CONTENU, avant le lien de retour, qui est de la navigation et
+             non du texte légal. Même écriture que le chapô, même marge
+             que la pile de sections : la page ne gagne aucun jeton.
+             ⚠️ ELLE CHANGE À LA nº 804 : le contenu a changé de fond
+             (adaptation américaine), la date le dit. */}
         <p className="mt-10 text-[15px] text-sombre-texte-doux">
-          Dernière mise à jour : 16 août 2026
+          Last updated: September 2, 2026
         </p>
 
         {/*  §4 (nº 475) — LE DÉPART VERS L'ACCUEIL SE DÉCLARE : ce
-             bouton finit le parcours et va EN AVANT ; sans les deux
-             déclarations (nº 429 et nº 446), l'arrivée pouvait rendre
-             la place mémorisée de l'accueil — le bas. La page reste
-             serveur, seul le lien est client. */}
-        {/*  §2 (nº 799) — LES MESURES DE LA nº 788, COMME LES DEUX
-             CAPSULES DE « QUI SOMMES-NOUS » À LA nº 798. Cette
-             capsule-ci était à 48 px et NE DÉCLARAIT AUCUNE TAILLE DE
-             TEXTE : elle héritait donc celle du corps, 16 px. Elle
-             passe à 40 px et 14 px.
-             ⚠️ RIEN D'AUTRE NE CHANGE : ni `px-6`, ni le contour, ni
-             le survol qui le fait virer au rose. Le propriétaire a
-             demandé la hauteur et la typo. */}
+             bouton finit le parcours et va EN AVANT. La page reste
+             serveur, seul le lien est client.
+             §2 (nº 799) — LES MESURES DE LA nº 788 : 40 px et 14 px,
+             comme les capsules de « Qui sommes-nous ». */}
         <LienAccueil
           className="mt-12 inline-flex items-center justify-center rounded-full
                      px-6 min-h-[40px] text-[14px] border border-sombre-bordure
                      text-sombre-texte hover:border-primaire hover:text-primaire
                      transition-colors"
         >
-          Retour à l&apos;accueil
+          Back to home
         </LienAccueil>
       </main>
     </>

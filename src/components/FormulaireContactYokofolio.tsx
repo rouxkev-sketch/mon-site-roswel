@@ -131,14 +131,14 @@ import { CompteurDeCaracteres } from "@/components/CompteurDeCaracteres";
  */
 const FAUTES: Record<string, (valeur: string) => string | null> = {
   nom: (v) =>
-    v.trim().length < 2 ? "Ton nom (ou un pseudo) est nécessaire." : null,
+    v.trim().length < 2 ? "Your name (or a handle) is required." : null,
   email: (v) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim())
       ? null
-      : "Cette adresse e-mail n'a pas l'air complète.",
+      : "This email address doesn't look complete.",
   message: (v) =>
     v.trim().length < CONTACT_YOKOFOLIO.messageMin
-      ? `Ton message doit faire au moins ${CONTACT_YOKOFOLIO.messageMin} caractères.`
+      ? `Your message must be at least ${CONTACT_YOKOFOLIO.messageMin} characters.`
       : null,
 };
 
@@ -227,7 +227,7 @@ export function FormulaireContactYokofolio({
         message?: string;
       } | null;
       if (!reponse.ok || !donnees?.ok) {
-        throw new Error(donnees?.message ?? "L'envoi n'a pas abouti.");
+        throw new Error(donnees?.message ?? "Sending failed.");
       }
       setEnvoye(true);
     } catch (erreur) {
@@ -235,7 +235,7 @@ export function FormulaireContactYokofolio({
         general:
           erreur instanceof Error
             ? erreur.message
-            : "L'envoi n'a pas abouti. Réessaie dans un instant.",
+            : "Sending failed. Try again in a moment.",
       });
     } finally {
       setEnCours(false);
@@ -267,12 +267,12 @@ export function FormulaireContactYokofolio({
           classe="mx-auto"
         />
         <h2 className="mt-5 text-[clamp(1.3rem,3vw,1.6rem)] font-bold text-sombre-texte">
-          Message envoyé !
+          Message sent!
         </h2>
         <p className="mt-3 text-sombre-texte-doux leading-relaxed">
-          Merci de nous avoir écrit — on te répond à{" "}
-          <strong className="text-sombre-texte">{email.trim()}</strong>, en
-          général sous 48 heures.
+          Thanks for writing — we&apos;ll reply to{" "}
+          <strong className="text-sombre-texte">{email.trim()}</strong>, usually
+          within 48 hours.
         </p>
         {/*  §3 (nº 802) — REPARTIR SANS RECHARGER LA PAGE. Sans ce
              bouton, écrire un second message demandait de recharger
@@ -291,7 +291,7 @@ export function FormulaireContactYokofolio({
                      hover:bg-sombre-haut text-white font-semibold
                      transition-colors"
         >
-          Envoyer un autre message
+          Send another message
         </button>
       </div>
     );
@@ -306,7 +306,7 @@ export function FormulaireContactYokofolio({
             htmlFor="contact-nom"
             className="block text-sm font-medium text-sombre-texte mb-1.5"
           >
-            Ton nom
+            Your name
           </label>
           <input
             id="contact-nom"
@@ -318,7 +318,7 @@ export function FormulaireContactYokofolio({
               oublierSiCorrige("nom", e.target.value);
             }}
             //  §1 (nº 320) — GARDÉ DE LA nº 319 : « Nom », dans le champ.
-            placeholder="Nom"
+            placeholder="Name"
             aria-invalid={Boolean(erreurs.nom)}
             className={`${CHAMP} ${erreurs.nom ? "border-erreur" : "border-sombre-bordure"}`}
           />
@@ -332,7 +332,7 @@ export function FormulaireContactYokofolio({
             htmlFor="contact-email"
             className="block text-sm font-medium text-sombre-texte mb-1.5"
           >
-            Ton adresse e-mail
+            Your email address
           </label>
           <input
             id="contact-email"
@@ -344,7 +344,7 @@ export function FormulaireContactYokofolio({
               oublierSiCorrige("email", e.target.value);
             }}
             //  §1 (nº 320) — GARDÉ DE LA nº 319 : « E-mail », dans le champ.
-            placeholder="E-mail"
+            placeholder="Email"
             aria-invalid={Boolean(erreurs.email)}
             className={`${CHAMP} ${erreurs.email ? "border-erreur" : "border-sombre-bordure"}`}
           />
@@ -358,7 +358,7 @@ export function FormulaireContactYokofolio({
             htmlFor="contact-message"
             className="block text-sm font-medium text-sombre-texte mb-1.5"
           >
-            Ton message
+            Your message
           </label>
           {/*  §2 (nº 800) — LE COMPTEUR VIT DANS LE CHAMP, comme celui
                de la bio : il faut donc un parent positionné, et le
@@ -375,7 +375,7 @@ export function FormulaireContactYokofolio({
               rows={6}
               maxLength={CONTACT_YOKOFOLIO.messageMax}
               aria-describedby="contact-message-compteur"
-              placeholder="Une question, une idée, un problème — on lit tout."
+              placeholder="A question, an idea, a problem — we read everything."
               aria-invalid={Boolean(erreurs.message)}
               //  §1 (nº 800) — LE MÊME CHAMP QUE PARTOUT, plus ce qu'une
               //  zone de texte demande en propre : ses marges hautes et
@@ -440,7 +440,7 @@ export function FormulaireContactYokofolio({
                      text-white font-semibold transition-colors
                      disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {enCours ? "Envoi en cours…" : "Envoyer le message"}
+          {enCours ? "Sending…" : "Send message"}
           </button>
       </form>
     </>

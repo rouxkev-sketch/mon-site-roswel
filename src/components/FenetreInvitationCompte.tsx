@@ -36,8 +36,8 @@ export type GesteInvite = "photo" | "tatoueur";
  * ailleurs.
  */
 const PHRASES: Record<GesteInvite, string> = {
-  photo: "Envie de retrouver cette photo ?",
-  tatoueur: "Envie de suivre ce portfolio ?",
+  photo: "Want to find this photo again?",
+  tatoueur: "Want to follow this portfolio?",
 };
 
 export function FenetreInvitationCompte({
@@ -162,7 +162,7 @@ export function FenetreInvitationCompte({
                    focus-visible:outline-2 focus-visible:outline-offset-2
                    focus-visible:outline-primaire"
       >
-        Créer mon compte
+        Sign up
       </button>
 
       {/*  3. LE LIEN DISCRET — blanc comme le reste depuis la nº 397 ;
@@ -231,7 +231,7 @@ export function FenetreInvitationCompte({
                    text-sombre-texte transition-colors
                    hover:bg-white/5 active:bg-white/10"
       >
-        Déjà inscrit ? Se connecter
+        Already have an account? Log in
       </button>
     </FenetreDeVerre>
   );

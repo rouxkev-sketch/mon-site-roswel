@@ -12,7 +12,7 @@ import { EspaceFiche } from "@/components/EspaceFiche";
  * fiche, on ne cherche pas.
  */
 export const metadata: Metadata = {
-  title: "Créer mon portfolio",
+  title: "Create my portfolio",
   robots: { index: false, follow: false },
 };
 

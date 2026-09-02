@@ -198,7 +198,7 @@ export function rayonApplicable(lieu: LieuTrouve | null): boolean {
 /** Le rayon écrit à la suite du lieu — rien quand il ne s'applique
     pas (une région, un pays se cherchent en entier). */
 export function suffixeRayon(criteres: CritèresTatouage): string {
-  return rayonApplicable(criteres.lieu) ? ` · ${criteres.rayonKm} km` : "";
+  return rayonApplicable(criteres.lieu) ? ` · ${criteres.rayonKm}` : "";
 }
 
 /**
@@ -973,7 +973,7 @@ export function MoteurTatouage({
            de 16 à 24 px au-dessus de « RENDU ». */}
       {groupeDeBadges(
         parGroupe.get("rendu")!,
-        "Rendu",
+        "Ink",
         valeurs,
         poser,
         surPanneau,
@@ -1302,7 +1302,7 @@ export function MoteurTatouage({
            critère, comme ARTISTE, LIEU, TECHNIQUE et RENDU, dans la
            même casse et le même style (le composant s'en charge). La
            ville, elle, est déjà écrite juste au-dessus, dans le champ. */}
-      <GroupeBadges titre="Rayon" idTitre={`${id}-rayon-titre`}>
+      <GroupeBadges titre="Distance" idTitre={`${id}-rayon-titre`}>
         {RAYONS_TATOUAGE.map((palier) => (
           <BadgeCharte
             key={palier}
@@ -1321,7 +1321,7 @@ export function MoteurTatouage({
               setRayonEnAttente(palier);
             }}
           >
-            {palier} km
+            {palier}
           </BadgeCharte>
         ))}
       </GroupeBadges>
@@ -1352,7 +1352,7 @@ export function MoteurTatouage({
           htmlFor={`${id}-rayon`}
           className="w-[46px] shrink-0 text-sombre-texte-doux"
         >
-          Rayon
+          Distance
         </label>
         <input
           id={`${id}-rayon`}
@@ -1362,8 +1362,8 @@ export function MoteurTatouage({
           step={1}
           value={index}
           disabled={!actif}
-          aria-valuetext={`${valeurs.rayonKm} kilomètres`}
-          title={actif ? undefined : "Choisir une ville pour régler le rayon"}
+          aria-valuetext={`${valeurs.rayonKm}`}
+          title={actif ? undefined : "Pick a city to set the distance"}
           onChange={(evenement) => {
             poser({
               rayonKm: RAYONS_TATOUAGE[Number(evenement.target.value)],
@@ -1379,7 +1379,7 @@ export function MoteurTatouage({
             actif ? "text-primaire" : "text-sombre-texte-doux"
           }`}
         >
-          {valeurs.rayonKm} km
+          {valeurs.rayonKm}
         </output>
     </div>
     );
@@ -1561,8 +1561,8 @@ export function MoteurTatouage({
               setFiltresOuverts(true);
             }}
             aria-expanded={filtresOuverts}
-            aria-label="Filtres"
-            title="Filtres"
+            aria-label="Filters"
+            title="Filters"
             /*  ██ §2 (nº 470) — LE CERCLE GRIS EST SUPPRIMÉ, L'ICÔNE
                 PREND L'ÉCHELLE DE LA BARRE ██
                 CE QU'IL PORTAIT, ET QUI PART : le fond de
@@ -1803,8 +1803,8 @@ export function MoteurTatouage({
           aria-expanded={pageOuverte}
           aria-label={
             rechercheVierge
-              ? "Rechercher un tatoueur"
-              : `Rechercher — ${libelleQuoi || "tout"}, ${libelleOu}`
+              ? "Find a tattoo artist"
+              : `Search — ${libelleQuoi || "everything"}, ${libelleOu}`
           }
           //  ⚠️ FOND GOUVERNÉ PAR `[data-clair-barre]` (nº 174-§1) : sur
           //  des photos qui défilent, `eleve` se noyait. Le même cran

@@ -59,7 +59,7 @@ export function Patience({
     comme les vrais : carte, ligne de titre, deux champs. */
 export function SqueletteFormulaire() {
   return (
-    <div role="status" aria-label="Chargement" className="animate-pulse">
+    <div role="status" aria-label="Loading" className="animate-pulse">
       <div className="h-7 w-2/3 rounded-full bg-sombre-carte" />
       <div className="mt-3 h-4 w-1/2 rounded-full bg-sombre-carte" />
       <div className="mt-8 flex flex-col gap-5">
@@ -123,7 +123,7 @@ export function SqueletteFiche() {
     return observerLargeurPhotoFiche(zone);
   }, []);
   return (
-    <div role="status" aria-label="Chargement" className="animate-pulse">
+    <div role="status" aria-label="Loading" className="animate-pulse">
       <div className="hidden mobile:flex items-center gap-4">
         <div className="h-16 w-16 shrink-0 rounded-full bg-sombre-carte" />
         <div className="flex-1">
@@ -169,7 +169,7 @@ export function SqueletteFiche() {
     « saute » à l'arrivée. */
 export function SquelettePage() {
   return (
-    <div role="status" aria-label="Chargement" className="animate-pulse">
+    <div role="status" aria-label="Loading" className="animate-pulse">
       <div className="h-7 w-1/2 rounded-full bg-sombre-carte" />
       <div className="mt-10 sm:mt-8 flex flex-col gap-8 sm:gap-6">
         {[0, 1, 2].map((rang) => (
@@ -200,7 +200,7 @@ export function SqueletteLignes({
   return (
     <div
       role="status"
-      aria-label="Chargement"
+      aria-label="Loading"
       className="flex flex-col gap-2.5 animate-pulse"
     >
       {Array.from({ length: nombre }, (_, rang) => (

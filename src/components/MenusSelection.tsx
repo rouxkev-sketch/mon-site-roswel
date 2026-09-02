@@ -284,7 +284,7 @@ export function MenusSelection({
           poserSelection(choix.menu, suivante === valeur ? "" : suivante)
         }
         options={entrees}
-        ariaLabel="Filtrer"
+        ariaLabel="Filter"
         placeholder={libelleDuFiltre(entrees, choix, etroit)}
         libelleValeur={libelleDuFiltre(entrees, choix, etroit)}
         /*  ██ §3 (nº 578) — PLUS DE GRAND TITRE SUR CES FEUILLES ██
@@ -441,7 +441,7 @@ export function MenusSelection({
               options={[
                 {
                   cle: MENU_FAVORIS,
-                  label: motDuVaEtVient("Favoris", MENU_FAVORIS),
+                  label: motDuVaEtVient("Favorites", MENU_FAVORIS),
                 },
                 {
                   cle: MENU_SUIVIS,
@@ -456,7 +456,7 @@ export function MenusSelection({
                 }
                 poserSelection(cle as MenuSelection, "");
               }}
-              ariaLabel="Favoris ou suivis"
+              ariaLabel="Favorites or following"
               classeOnglet="px-1 min-h-[43px]"
               /*  ██ §2 (nº 515) — LE MOT MONTE D'UN CRAN, AU WEB SEUL ██
                    Le propriétaire trouvait le va-et-vient trop

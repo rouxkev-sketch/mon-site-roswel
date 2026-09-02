@@ -65,7 +65,7 @@ export function AucunResultat({
 }) {
   return (
     <div className="py-14 flex flex-col items-center gap-5 text-center">
-      <p className="text-[19px] font-semibold text-white">Aucun résultat</p>
+      <p className="text-[19px] font-semibold text-white">No results</p>
       {issues.length > 0 && (
         //  CÔTE À CÔTE, centrées. `flex-wrap` : sur un écran très
         //  étroit, la seconde passe dessous plutôt que de déborder.

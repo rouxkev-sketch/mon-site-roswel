@@ -34,7 +34,7 @@ export function FenetreEnvoi({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Envoi du portfolio"
+      aria-label="Submitting portfolio"
       className="fixed inset-0 z-[95] flex items-center justify-center px-6 py-6"
     >
       <div aria-hidden="true" className="absolute inset-0 bg-black/25
@@ -56,8 +56,8 @@ export function FenetreEnvoi({
           className="text-[15px] font-semibold text-sombre-texte"
         >
           {enTeleversement
-            ? `Photos envoyées : ${faites}/${total}`
-            : "Enregistrement du portfolio…"}
+            ? `Photos uploaded: ${faites}/${total}`
+            : "Saving portfolio…"}
         </p>
         <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-sombre-eleve">
           <div
@@ -68,7 +68,7 @@ export function FenetreEnvoi({
           />
         </div>
         <p className="mt-3 text-[13px] text-sombre-texte-doux">
-          Garde la page ouverte, ça ne prend qu&apos;un instant.
+          Keep the page open, it only takes a moment.
         </p>
       </div>
     </div>,

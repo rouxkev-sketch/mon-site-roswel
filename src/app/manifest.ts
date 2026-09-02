@@ -41,7 +41,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: `${MARQUE_YOKOFOLIO.nom} — ${MARQUE_YOKOFOLIO.slogan}`,
     short_name: MARQUE_YOKOFOLIO.nom,
     description: TEXTES_TATOUAGE.descriptionSite,
-    lang: "fr",
+    lang: "en",
     start_url: "/",
     scope: "/",
     display: "standalone", // plein écran, sans la barre du navigateur

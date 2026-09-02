@@ -76,11 +76,11 @@ export function FenetreSignalement({
         ok?: boolean;
       } | null;
       if (!reponse.ok || !donnees?.ok) {
-        throw new Error("L'envoi n'a pas abouti.");
+        throw new Error("Sending failed.");
       }
       setEnvoye(true);
     } catch {
-      setErreur("L'envoi n'a pas abouti. Réessaie dans un instant.");
+      setErreur("Sending failed. Try again in a moment.");
     } finally {
       setEnvoiEnCours(false);
     }
@@ -98,14 +98,14 @@ export function FenetreSignalement({
                    text-sombre-texte-doux hover:text-primaire transition-colors"
       >
         <IconeDrapeau taille={16} classe="shrink-0" />
-        Signaler ce portfolio
+        Report this portfolio
       </button>
 
       {ouverte && (
         <div
           role="dialog"
           aria-modal="true"
-          aria-label={`Signaler le portfolio de ${nom}`}
+          aria-label={`Report ${nom}'s portfolio`}
           className="fixed inset-0 z-[80] flex items-center justify-center p-5"
         >
           <div
@@ -142,11 +142,11 @@ export function FenetreSignalement({
                   classe="mx-auto"
                 />
                 <h2 className="mt-4 text-lg font-bold text-sombre-texte">
-                  Merci pour ton signalement
+                  Thanks for your report
                 </h2>
                 <p className="mt-2 text-[14px] leading-relaxed text-sombre-texte-doux">
-                  Il sera examiné rapidement. Rien d&apos;autre à faire de ton
-                  côté.
+                  We&apos;ll look into it quickly. Nothing else to do on your
+                  end.
                 </p>
                 <button
                   type="button"
@@ -155,19 +155,19 @@ export function FenetreSignalement({
                              px-6 min-h-[46px] bg-primaire hover:bg-primaire-fonce
                              text-white font-semibold transition-colors"
                 >
-                  Fermer
+                  Close
                 </button>
               </div>
             ) : (
               <>
                 <div className="flex items-start justify-between gap-4">
                   <h2 className="text-lg font-bold text-sombre-texte">
-                    Signaler ce portfolio
+                    Report this portfolio
                   </h2>
                   <button
                     type="button"
                     onClick={() => setOuverte(false)}
-                    aria-label="Fermer"
+                    aria-label="Close"
                     className="-mr-1 -mt-1 w-9 h-9 flex items-center justify-center
                                rounded-full text-sombre-texte-doux
                                hover:text-sombre-texte hover:bg-sombre-eleve
@@ -179,8 +179,8 @@ export function FenetreSignalement({
                   </button>
                 </div>
                 <p className="mt-1 text-[13.5px] text-sombre-texte-doux">
-                  Coche ce qui pose problème — aucune donnée personnelle
-                  n&apos;est demandée.
+                  Check what&apos;s wrong — no personal information
+                  is requested.
                 </p>
 
                 <div className="mt-4 flex flex-col gap-1">
@@ -207,8 +207,8 @@ export function FenetreSignalement({
                     onChange={(e) => setDetails(e.target.value)}
                     rows={3}
                     maxLength={600}
-                    placeholder="Explique en quelques mots…"
-                    aria-label="Préciser le signalement"
+                    placeholder="Explain in a few words…"
+                    aria-label="Report details"
                     className="mt-3 w-full rounded-xl border border-sombre-bordure
                                bg-sombre-eleve px-4 py-3 text-[14.5px] text-sombre-texte
                                placeholder:text-sombre-texte-doux outline-none resize-y
@@ -231,7 +231,7 @@ export function FenetreSignalement({
                              text-white font-semibold transition-colors
                              disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {envoiEnCours ? "Envoi…" : "Envoyer le signalement"}
+                  {envoiEnCours ? "Sending…" : "Send report"}
                 </button>
               </>
             )}

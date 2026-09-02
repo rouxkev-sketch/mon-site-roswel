@@ -204,7 +204,7 @@ function LigneEtiquetee({
     <div className="[overflow-wrap:anywhere]">
       <p className={ECRITURE_TITRE_SECTION}>{etiquette}</p>
       <p className="mt-1.5 text-[15px] font-medium leading-snug text-sombre-texte">
-        {valeur || "non renseignée"}
+        {valeur || "not provided"}
       </p>
     </div>
   );
@@ -1090,7 +1090,7 @@ function FenetreAdresse({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Adresse du lieu"
+      aria-label="Place address"
       className="fixed inset-0 z-[80] flex items-center justify-center p-6"
     >
       {/*  LE VOILE — un appui à côté de la fenêtre referme. Sa couleur
@@ -1099,7 +1099,7 @@ function FenetreAdresse({
            porte le fondu d'ouverture. */}
       <button
         type="button"
-        aria-label="Fermer"
+        aria-label="Close"
         onClick={surFermeture}
         className="absolute inset-0 bg-black/25
                    opacity-100 transition-opacity duration-200 starting:opacity-0"
@@ -1144,7 +1144,7 @@ function FenetreAdresse({
           className="flex min-h-[48px] w-full items-center justify-center
                      rounded-full text-[15px] font-semibold text-sombre-texte"
         >
-          {copie ? "Adresse copiée" : "Copier l'adresse"}
+          {copie ? "Address copied" : "Copy address"}
         </button>
 
         {/*  L'ACTION FINALE — la seule capsule rose de la fenêtre, en
@@ -1165,7 +1165,7 @@ function FenetreAdresse({
           className="mt-3 flex min-h-[48px] w-full items-center justify-center
                      rounded-full text-[15px] font-semibold text-white"
         >
-          Ouvrir dans Google Maps
+          Open in Google Maps
         </a>
       </div>
     </div>
@@ -1297,7 +1297,7 @@ function LienAdresse({
  * même lien Google Maps.
  */
 function AdresseCliquable({
-  etiquette = "Adresse",
+  etiquette = "Address",
   adresse,
   lieu,
   pastille,
@@ -1563,8 +1563,8 @@ export function BlocAdressesFiche({
       : "salon";
   const etiquetteAutres =
     autres.length > 1
-      ? `Autres adresses du ${typeDuLieu}`
-      : `Autre adresse du ${typeDuLieu}`;
+      ? `Other ${typeDuLieu === "salon" ? "shop" : "studio"} addresses`
+      : `Other ${typeDuLieu === "salon" ? "shop" : "studio"} address`;
 
   /**
    * §3 (nº 226) — L'EMPILEMENT REMPLACE LE VA-ET-VIENT.

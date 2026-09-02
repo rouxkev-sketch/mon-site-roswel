@@ -65,7 +65,7 @@ export function RechercheFicheInscrite({
   surChoix,
   id,
   exclure,
-  libelleExclu = "Déjà rattaché",
+  libelleExclu = "Already linked",
   messageVide,
   enErreur = false,
 }: {
@@ -289,8 +289,8 @@ export function RechercheFicheInscrite({
           </span>
           <button
             type="button"
-            aria-label="Retirer ce choix"
-            title="Retirer ce choix"
+            aria-label="Remove this choice"
+            title="Remove this choice"
             onClick={() => {
               surChoix(null);
               setTexte("");
@@ -378,8 +378,8 @@ export function RechercheFicheInscrite({
         {texte.length > 0 && (
           <button
             type="button"
-            aria-label="Vider la recherche"
-            title="Vider la recherche"
+            aria-label="Clear search"
+            title="Clear search"
             onClick={() => {
               setTexte("");
               setResultats([]);
@@ -460,11 +460,11 @@ export function RechercheFicheInscrite({
             //  sert qu'aux cas non nommés.
             <p className="px-4 py-3 text-[13px] leading-relaxed text-sombre-texte-doux">
               {cherche
-                ? "Recherche en cours…"
+                ? "Searching…"
                 : (messageVide ??
                   (type === "salon"
-                    ? "Aucun studio / salon trouvé"
-                    : "Aucun artiste trouvé"))}
+                    ? "No studio / shop found"
+                    : "No artist found"))}
             </p>
           ) : (
             <ul>

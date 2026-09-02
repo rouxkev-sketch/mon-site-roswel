@@ -312,11 +312,11 @@ export function Securite() {
     setErreurEmail(null);
     const propre = nouvelEmail.trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(propre)) {
-      setErreurEmail("Cette adresse e-mail n'a pas l'air complète.");
+      setErreurEmail("This email address doesn't look complete.");
       return;
     }
     if (propre.toLowerCase() === (utilisateur?.email ?? "").toLowerCase()) {
-      setErreurEmail("C'est déjà ton adresse actuelle.");
+      setErreurEmail("That's already your current email.");
       return;
     }
     setEmailEnCours(true);
@@ -333,7 +333,7 @@ export function Securite() {
       );
       if (error) throw error;
       setMessageEmail(
-        `Un e-mail de confirmation vient de partir vers ${propre} : ouvre-le pour valider le changement. Ton adresse actuelle reste valable jusque-là.`
+        `A confirmation email is on its way to ${propre}: open it to confirm the change. Your current email stays valid until then.`
       );
       setNouvelEmail("");
     } catch (erreur) {
@@ -367,15 +367,15 @@ export function Securite() {
     //  entré par Google n'en a pas : le lui demander serait lui barrer
     //  la route pour de bon.
     if (aUnMotDePasse && ancienMdp.length === 0) {
-      setErreursMdp({ ancien: "Ton mot de passe actuel est nécessaire." });
+      setErreursMdp({ ancien: "Your current password is required." });
       return;
     }
     if (force.niveau === 0) {
-      setErreursMdp({ nouveau: `${LONGUEUR_MINIMALE} caractères au minimum.` });
+      setErreursMdp({ nouveau: `At least ${LONGUEUR_MINIMALE} characters.` });
       return;
     }
     if (nouveauMdp !== confirmationMdp) {
-      setErreursMdp({ confirmation: "Les deux nouveaux mots de passe ne correspondent pas." });
+      setErreursMdp({ confirmation: "The two new passwords don't match." });
       return;
     }
     setMdpEnCours(true);
@@ -396,7 +396,7 @@ export function Securite() {
           })
         : { error: null };
       if (verification) {
-        setErreursMdp({ ancien: "Ton mot de passe actuel n'est pas le bon." });
+        setErreursMdp({ ancien: "Your current password is wrong." });
         // C'EST ICI QUE LA PORTE DE SECOURS S'OUVRE (nº 129) : on ne
         // se souvient plus de son mot de passe, on ne peut donc pas en
         // choisir un nouveau. Le lien mène au parcours déjà en place —
@@ -410,8 +410,8 @@ export function Securite() {
       if (error) throw error;
       setMessageMdp(
         aUnMotDePasse
-          ? "C'est fait : ton mot de passe a été changé."
-          : "C'est fait : tu peux désormais te connecter avec ton e-mail et ce mot de passe, ou avec Google."
+          ? "Done: your password has been changed."
+          : "Done: you can now log in with your email and this password, or with Google."
       );
       setAncienMdp("");
       setNouveauMdp("");
@@ -440,7 +440,7 @@ export function Securite() {
       if (error) throw error;
       setLienOubli(false);
       setMessageMdp(
-        `Un e-mail vient de partir vers ${adresse} : ouvre-le et suis le lien pour choisir un nouveau mot de passe. Pense au dossier indésirable.`
+        `An email is on its way to ${adresse}: open it and follow the link to choose a new password. Check your spam folder too.`
       );
     } catch (erreur) {
       setErreursMdp({ confirmation: messageErreurAuth(erreur) });
@@ -523,7 +523,7 @@ export function Securite() {
           taille={24}
           classe="shrink-0 h-[1.205cap] w-[1.205cap] translate-y-[0.084cap] text-sombre-texte/80"
         />
-        Sécurité
+        Security
       </h1>
 
       {/* LE MÊME RYTHME QUE LE FORMULAIRE (nº 130) : 32 px entre les
@@ -539,7 +539,7 @@ export function Securite() {
               {utilisateur?.email ?? "—"}
             </span>
             <span className="shrink-0 text-[12px] uppercase tracking-wide text-sombre-texte-doux">
-              actuelle
+              current
             </span>
           </div>
 
@@ -552,7 +552,7 @@ export function Securite() {
                 d'écran, qui n'entendent pas un texte d'indication. */}
             <div>
               <label htmlFor="securite-email" className="sr-only">
-                Nouvelle adresse
+                New email
               </label>
               <input
                 id="securite-email"
@@ -565,7 +565,7 @@ export function Securite() {
                   if (erreurEmail) setErreurEmail(null);
                 }}
                 aria-invalid={Boolean(erreurEmail)}
-                placeholder="Nouvelle adresse"
+                placeholder="New email"
                 className={`${CHAMP} ${bordureChamp(Boolean(erreurEmail))}`}
               />
               {/*  §A1-A2 (nº 788) — le contour rouge sur le champ, le
@@ -587,7 +587,7 @@ export function Securite() {
                 nouvelEmail.trim().length > 0 ? BOUTON_ALLUME : BOUTON_ETEINT
               }`}
             >
-              {emailEnCours ? "Envoi…" : "Changer mon adresse"}
+              {emailEnCours ? "Sending…" : "Change my email"}
             </button>
           </form>
         </Bloc>
@@ -596,7 +596,7 @@ export function Securite() {
              §2 (nº 783) — LE TITRE DIT CE QU'ON PEUT FAIRE : un compte
              venu de Google n'a pas de mot de passe ; on ne lui propose
              donc pas d'en « changer », mais d'en AJOUTER un. */}
-        <Bloc titre={aUnMotDePasse ? "Changer de mot de passe" : "Ajouter un mot de passe"}>
+        <Bloc titre={aUnMotDePasse ? "Change password" : "Add a password"}>
           <form
             onSubmit={changerMotDePasse}
             noValidate
@@ -607,7 +607,7 @@ export function Securite() {
                  le champ n'est pas grisé, il n'existe pas. */}
             <div className={aUnMotDePasse ? "" : "hidden"}>
               <label htmlFor="securite-ancien" className="sr-only">
-                Mot de passe actuel
+                Current password
               </label>
               {/*  `relative` : il tient l'œil, posé contre le bord droit. */}
               <div className="relative">
@@ -618,7 +618,7 @@ export function Securite() {
                   value={ancienMdp}
                   onChange={(e) => { setAncienMdp(e.target.value); oublierMdp("ancien"); }}
                   aria-invalid={Boolean(erreursMdp.ancien)}
-                  placeholder="Mot de passe actuel"
+                  placeholder="Current password"
                   style={{ paddingRight: PLACE_DE_L_OEIL }}
                   className={`${CHAMP} ${bordureChamp(Boolean(erreursMdp.ancien))}`}
                 />
@@ -629,7 +629,7 @@ export function Securite() {
 
             <div>
               <label htmlFor="securite-nouveau" className="sr-only">
-                Nouveau mot de passe
+                New password
               </label>
               <div className="relative">
                 <input
@@ -639,7 +639,7 @@ export function Securite() {
                   value={nouveauMdp}
                   onChange={(e) => { setNouveauMdp(e.target.value); oublierMdp("nouveau"); }}
                   aria-invalid={Boolean(erreursMdp.nouveau)}
-                  placeholder="Nouveau mot de passe"
+                  placeholder="New password"
                   style={{ paddingRight: PLACE_DE_L_OEIL }}
                   className={`${CHAMP} ${bordureChamp(Boolean(erreursMdp.nouveau))}`}
                 />
@@ -653,7 +653,7 @@ export function Securite() {
 
             <div>
               <label htmlFor="securite-confirmation" className="sr-only">
-                Retaper le nouveau mot de passe
+                Retype the new password
               </label>
               <div className="relative">
                 <input
@@ -663,7 +663,7 @@ export function Securite() {
                   value={confirmationMdp}
                   onChange={(e) => { setConfirmationMdp(e.target.value); oublierMdp("confirmation"); }}
                   aria-invalid={Boolean(erreursMdp.confirmation)}
-                  placeholder="Retaper le nouveau mot de passe"
+                  placeholder="Retype the new password"
                   style={{ paddingRight: PLACE_DE_L_OEIL }}
                   className={`${CHAMP} ${bordureChamp(Boolean(erreursMdp.confirmation))}`}
                 />
@@ -694,7 +694,7 @@ export function Securite() {
                              underline-offset-4 hover:text-primaire
                              transition-colors disabled:opacity-60"
                 >
-                  Mot de passe oublié ?
+                  Forgot your password?
                 </button>
               </p>
             )}
@@ -713,13 +713,13 @@ export function Securite() {
                   : BOUTON_ETEINT
               }`}
             >
-              {mdpEnCours ? "Un instant…" : "Changer mon mot de passe"}
+              {mdpEnCours ? "One moment…" : "Change my password"}
             </button>
           </form>
         </Bloc>
 
         {/* ---------- 3 · MÉTHODE DE CONNEXION ---------- */}
-        <Bloc titre="Méthode de connexion">
+        <Bloc titre="Login method">
           {/* GAP-4 (nº 134) : les lignes respirent du même écart que
               tout le reste de la page — et que les lignes du bloc
               « Supprimer », qui ont exactement leur hauteur. */}
@@ -749,12 +749,12 @@ export function Securite() {
               <IconeArobase taille={22} classe={`${ICONE_METHODE} text-sombre-texte/80`} />
               <span className="min-w-0 flex-1">
                 <span className="block text-[14.5px] font-semibold text-sombre-texte">
-                  E-mail et mot de passe
+                  Email and password
                 </span>
                 <span className="block truncate text-[12.5px] text-sombre-texte-doux">
                   {aUnMotDePasse
                     ? utilisateur?.email ?? "—"
-                    : "Pas encore de mot de passe"}
+                    : "No password yet"}
                 </span>
               </span>
               {aUnMotDePasse && <EtatActif />}
@@ -786,7 +786,7 @@ export function Securite() {
                   <span className="block truncate text-[12.5px] text-sombre-texte-doux">
                     {aUnMotDePasse
                       ? utilisateur?.email ?? "—"
-                      : "Ton seul moyen de te connecter"}
+                      : "Your only way to log in"}
                   </span>
                 </span>
                 {aUnMotDePasse ? (
@@ -800,7 +800,7 @@ export function Securite() {
                     }}
                     disabled={delierEnCours}
                   >
-                    {delierEnCours ? "Un instant…" : "Délier"}
+                    {delierEnCours ? "One moment…" : "Unlink"}
                   </PastilleAction>
                 ) : (
                   <EtatActif />
@@ -827,7 +827,7 @@ export function Securite() {
                              disabled:opacity-55 disabled:cursor-not-allowed"
                 >
                   <IconeGoogle taille={22} classe={ICONE_METHODE} />
-                  {googleEnCours ? "Un instant…" : "Lier mon compte Google"}
+                  {googleEnCours ? "One moment…" : "Link my Google account"}
                 </button>
               </li>
             )}

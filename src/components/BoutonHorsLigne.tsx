@@ -138,11 +138,11 @@ export function BoutonHorsLigne({
         message?: string;
       } | null;
       if (!reponse.ok || !donnees?.ok) {
-        throw new Error(donnees?.message ?? "La mise hors ligne a échoué.");
+        throw new Error(donnees?.message ?? "Taking it offline failed.");
       }
       setFait(true);
     } catch (e) {
-      setErreur(e instanceof Error ? e.message : "La mise hors ligne a échoué.");
+      setErreur(e instanceof Error ? e.message : "Taking it offline failed.");
     } finally {
       setEnvoiEnCours(false);
     }
@@ -162,14 +162,14 @@ export function BoutonHorsLigne({
                    text-erreur/80 hover:text-erreur transition-colors"
       >
         <IconeHorsLigne taille={16} classe="shrink-0" />
-        Mettre le portfolio hors ligne
+        Take the portfolio offline
       </button>
 
       {ouverte && (
         <div
           role="dialog"
           aria-modal="true"
-          aria-label={`Mettre le portfolio de ${nom} hors ligne`}
+          aria-label={`Take ${nom}'s portfolio offline`}
           className="fixed inset-0 z-[80] flex items-center justify-center p-5"
         >
           <div
@@ -204,12 +204,12 @@ export function BoutonHorsLigne({
                   classe="mx-auto"
                 />
                 <h2 className="mt-4 text-lg font-bold text-sombre-texte">
-                  Portfolio mis hors ligne
+                  Portfolio taken offline
                 </h2>
                 <p className="mt-2 text-[14px] leading-relaxed text-sombre-texte-doux">
-                  Il a disparu de la recherche et des pages publiques.
-                  {" "}{nom} garde son espace : les motifs cochés y guident
-                  la correction, et le portfolio repartira en validation.
+                  It&apos;s gone from search and public pages.
+                  {" "}{nom} keeps their account: the checked reasons will guide
+                  the fix, and the portfolio will go back under review.
                 </p>
                 <button
                   type="button"
@@ -223,19 +223,19 @@ export function BoutonHorsLigne({
                              px-6 min-h-[46px] bg-primaire hover:bg-primaire-fonce
                              text-white font-semibold transition-colors"
                 >
-                  Compris
+                  Got it
                 </button>
               </div>
             ) : (
               <>
                 <div className="flex items-start justify-between gap-4">
                   <h2 className="text-lg font-bold text-sombre-texte">
-                    Mettre le portfolio hors ligne
+                    Take the portfolio offline
                   </h2>
                   <button
                     type="button"
                     onClick={() => setOuverte(false)}
-                    aria-label="Fermer"
+                    aria-label="Close"
                     className="-mr-1 -mt-1 w-9 h-9 flex items-center justify-center
                                rounded-full text-sombre-texte-doux
                                hover:text-sombre-texte hover:bg-sombre-eleve
@@ -247,10 +247,10 @@ export function BoutonHorsLigne({
                   </button>
                 </div>
                 <p className="mt-1 text-[13.5px] leading-relaxed text-sombre-texte-doux">
-                  La fiche de {nom} disparaîtra de la recherche et des
-                  pages publiques. Son compte reste actif : les motifs
-                  cochés s&apos;afficheront en rouge dans son formulaire,
-                  pour qu&apos;il corrige.
+                  {nom}&apos;s portfolio will disappear from search and
+                  public pages. Their account stays active: the checked
+                  reasons will show in red in their form,
+                  so they can fix them.
                 </p>
 
                 <div className="mt-4 flex flex-col gap-1">
@@ -279,10 +279,10 @@ export function BoutonHorsLigne({
                   maxLength={600}
                   placeholder={
                     autreCoche
-                      ? "Précise le motif (obligatoire)…"
-                      : "Note pour le tatoueur (facultatif)…"
+                      ? "Specify the reason (required)…"
+                      : "Note for the artist (optional)…"
                   }
-                  aria-label="Note pour le tatoueur"
+                  aria-label="Note for the artist"
                   className="mt-3 w-full rounded-xl border border-sombre-bordure
                              bg-sombre-eleve px-4 py-3 text-[14.5px] text-sombre-texte
                              placeholder:text-sombre-texte-doux outline-none resize-y
@@ -304,7 +304,7 @@ export function BoutonHorsLigne({
                              text-white font-semibold transition-opacity
                              disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {envoiEnCours ? "Mise hors ligne…" : "Mettre hors ligne"}
+                  {envoiEnCours ? "Taking offline…" : "Take offline"}
                 </button>
               </>
             )}

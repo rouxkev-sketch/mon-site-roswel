@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   openGraph: {
     siteName: MARQUE_YOKOFOLIO.nom,
     type: "website",
-    locale: "fr_FR",
+    locale: "en_US",
   },
   // Réglages pour l'écran d'accueil des iPhone (mode application)
   appleWebApp: {
@@ -118,7 +118,7 @@ export default function RootLayout({
     // à Next de repasser en défilement immédiat LE TEMPS de ses
     // navigations, comme avant ; les ancres gardent leur douceur.
     <html
-      lang="fr"
+      lang="en"
       className={`${geistSans.variable} h-full antialiased`}
       data-scroll-behavior="smooth"
       suppressHydrationWarning

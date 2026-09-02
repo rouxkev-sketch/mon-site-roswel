@@ -171,7 +171,7 @@ export function EtatActif() {
         aria-hidden
         className="block h-2 w-2 rounded-full bg-sombre-succes"
       />
-      Actif
+      Active
     </span>
   );
 }

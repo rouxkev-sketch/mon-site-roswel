@@ -50,7 +50,7 @@ export function ChampBio({
   valeur,
   surChangement,
   indication,
-  nomAccessible = "Ta bio",
+  nomAccessible = "Your bio",
   ancre,
   enFaute = false,
 }: {
@@ -139,7 +139,7 @@ export function ChampBio({
           aria-describedby={`${id}-compteur`}
           placeholder={
             indication ??
-            "Ton univers, ta façon de travailler, ce qu'on trouve dans ton studio…"
+            "Your world, how you work, what people find at your studio…"
           }
           //  ⚠️ PLUS DE CONTOUR (passe nº 112) : le fond suffit — et
           //  au focus il s'éclaircit légèrement, sans trait rose

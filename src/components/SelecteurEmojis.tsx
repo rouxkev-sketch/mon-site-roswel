@@ -54,7 +54,7 @@ export function SelecteurEmojis({
       key={emoji + mots}
       type="button"
       onClick={() => surInsertion(emoji)}
-      aria-label={`Insérer ${emoji}`}
+      aria-label={`Insert ${emoji}`}
       title={mots}
       className="w-8 h-8 flex items-center justify-center rounded-lg
                  text-[17px] leading-none hover:bg-sombre-eleve
@@ -74,8 +74,8 @@ export function SelecteurEmojis({
         }}
         aria-expanded={ouvert}
         aria-haspopup="true"
-        aria-label="Ajouter un émoji"
-        title="Ajouter un émoji"
+        aria-label="Add an emoji"
+        title="Add an emoji"
         className={`w-8 h-8 flex items-center justify-center rounded-full
                    transition-colors ${
                      ouvert
@@ -89,7 +89,7 @@ export function SelecteurEmojis({
       {ouvert && (
         <div
           role="dialog"
-          aria-label="Choisir un émoji"
+          aria-label="Choose an emoji"
           className="absolute right-0 top-full mt-2 z-30 w-[324px]
                      rounded-2xl bg-sombre-carte border border-sombre-bordure
                      shadow-[0_12px_40px_rgba(0,0,0,0.5)] overflow-hidden"
@@ -103,8 +103,8 @@ export function SelecteurEmojis({
                 {...sansRemplissageAuto("recherche-emoji")}
                 value={recherche}
                 onChange={(e) => setRecherche(e.target.value)}
-                placeholder="Chercher (rose, dragon, skull…)"
-                aria-label="Chercher un émoji"
+                placeholder="Search (rose, dragon, skull…)"
+                aria-label="Search emojis"
                 className="w-full min-h-[36px] bg-transparent text-[13.5px]
                            text-sombre-texte placeholder:text-sombre-texte-doux
                            outline-none"
@@ -120,7 +120,7 @@ export function SelecteurEmojis({
                 </div>
               ) : (
                 <p className="px-1 py-3 text-[13px] text-sombre-texte-doux">
-                  Rien trouvé — essaie un autre mot.
+                  Nothing found — try another word.
                 </p>
               )
             ) : (

@@ -186,8 +186,8 @@ export type CommandesChampLocalisation = {
 export function ChampLocalisation({
   surChoix,
   lieuInitial = null,
-  etiquette = "Localisation",
-  texteIndicatif = "Ville, ou adresse complète…",
+  etiquette = "Location",
+  texteIndicatif = "City, or full address…",
   id = "champ-localisation",
   sansBordure = false,
   robeDeMenu = false,
@@ -655,7 +655,7 @@ export function ChampLocalisation({
         //  ⚠️ LA LISTE PRÉCÉDENTE RESTE (nº 230-§1) : même en panne, on
         //  ne vide pas — le message s'affiche AVEC ce qu'on avait.
         setMessage(
-          "Impossible de charger les suggestions pour le moment — réessaie dans un instant."
+          "Can't load suggestions right now — try again in a moment."
         );
         setListeOuverte(true);
         return;
@@ -663,7 +663,7 @@ export function ChampLocalisation({
       setSuggestions(reponse.lieux);
       setMessage(
         reponse.lieux.length === 0
-          ? "Aucun lieu ne correspond à cette recherche."
+          ? "No place matches this search."
           : null
       );
       setListeOuverte(true);
@@ -992,7 +992,7 @@ export function ChampLocalisation({
     <>
           <ul
             role="listbox"
-            aria-label="Lieux proposés"
+            aria-label="Suggested places"
             // C'est la LISTE qui défile dans le plafond de hauteur du
             // panneau : elle ne passe JAMAIS sous le clavier.
             className="min-h-0 flex-1 overflow-y-auto overscroll-contain defilement-visible"
@@ -1094,7 +1094,7 @@ export function ChampLocalisation({
         // diffère selon le contexte (page de recherche ou formulaire)
         // sans une ligne de JavaScript.
         data-remonte-au-toucher={remonterAuToucher ? "" : undefined}
-        aria-label={etiquette ?? "Localisation"}
+        aria-label={etiquette ?? "Location"}
         aria-invalid={enErreur || undefined}
         placeholder={texteIndicatif}
         value={
@@ -1208,8 +1208,8 @@ export function ChampLocalisation({
       {croixVisible && !chargement && (
         <button
           type="button"
-          aria-label="Effacer le lieu — chercher partout"
-          title="Effacer le lieu"
+          aria-label="Clear the place — search anywhere"
+          title="Clear the place"
           onPointerDown={(evenement) => {
             if (evenement.pointerType === "mouse") evenement.preventDefault();
           }}

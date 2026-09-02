@@ -60,7 +60,7 @@ export function EcranVideSelection({
                    rounded-full bg-sombre-eleve px-6 text-[14.5px] font-semibold
                    text-sombre-texte transition-colors hover:bg-sombre-eleve-clair"
       >
-        Explorer les styles
+        Explore styles
       </LienAccueil>
     </div>
   );

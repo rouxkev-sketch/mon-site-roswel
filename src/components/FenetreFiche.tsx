@@ -541,7 +541,7 @@ export function FenetreFiche({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={`Portfolio de ${tatoueur.nom}`}
+      aria-label={`${tatoueur.nom}'s portfolio`}
       /*  §1 (nº 776) — le fondu d'entrée ne se joue qu'à une OUVERTURE :
           une fenêtre réelle qui remplace une fenêtre d'attente monte
           opaque, sans classes d'animation — sans quoi elle rejouait
@@ -581,7 +581,7 @@ export function FenetreFiche({
       {/* LA CROIX — hors de la fenêtre, dans la zone ombrée. */}
       <button
         type="button"
-        aria-label="Fermer le portfolio"
+        aria-label="Close portfolio"
         onClick={surFermeture}
         className="absolute top-4 right-5 z-[2] w-11 h-11 flex items-center
                    justify-center text-white hover:text-primaire transition-colors"
@@ -619,7 +619,7 @@ export function FenetreFiche({
               segment courant plus clair que les précédents — jamais de
               rose. */}
           <nav
-            aria-label="Fil d'Ariane"
+            aria-label="Breadcrumb"
             //  §1 (nº 440) — sous une autre fiche, le fil s'efface
             //  (visibilité seule : même place, même style, zéro clic).
             className={`pointer-events-auto absolute bottom-full left-0 mb-2 w-max max-w-full${
@@ -637,7 +637,7 @@ export function FenetreFiche({
                   onClick={() => declarerDepartVouluVersLAccueil()}
                   className="hover:text-white transition-colors"
                 >
-                  Accueil
+                  Home
                 </Link>
               </li>
               {stylePrincipal && (

@@ -79,18 +79,18 @@ function messageErreur(erreur: unknown): string {
   const brut =
     erreur instanceof Error ? erreur.message.toLowerCase() : String(erreur);
   if (brut.includes("invalid login credentials"))
-    return "E-mail ou mot de passe incorrect.";
+    return "Incorrect email or password.";
   if (brut.includes("email not confirmed"))
-    return "Ton adresse n'est pas encore confirmée : ouvre l'e-mail qui t'a été envoyé.";
+    return "Your email isn't confirmed yet: open the email we sent you.";
   if (brut.includes("already registered"))
-    return "Un compte existe déjà avec cette adresse. Connecte-toi.";
+    return "An account already exists with this email. Log in.";
   if (brut.includes("password should be"))
-    return `Le mot de passe doit faire au moins ${LONGUEUR_MINIMALE} caractères.`;
+    return `Your password must be at least ${LONGUEUR_MINIMALE} characters.`;
   if (brut.includes("rate limit") || brut.includes("too many"))
-    return "Trop d'essais d'affilée. Attends quelques minutes, puis réessaie.";
+    return "Too many attempts in a row. Wait a few minutes, then try again.";
   if (brut.includes("fetch") || brut.includes("network"))
-    return "Impossible de joindre le serveur. Vérifie ta connexion, puis réessaie.";
-  return "Quelque chose n'a pas marché. Réessaie.";
+    return "Can't reach the server. Check your connection, then try again.";
+  return "Something went wrong. Try again.";
 }
 
 /*  LE CHAMP — la copie exacte de celui du formulaire et de Sécurité :
@@ -260,17 +260,17 @@ export function EcranAuthentification({
   function valider(): boolean {
     const trouvees: Record<string, string> = {};
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) {
-      trouvees.email = "Cette adresse e-mail n'a pas l'air complète.";
+      trouvees.email = "This email address doesn't look complete.";
     }
     if (creer) {
       if (motDePasse.length < LONGUEUR_MINIMALE) {
-        trouvees.motDePasse = `${LONGUEUR_MINIMALE} caractères au minimum.`;
+        trouvees.motDePasse = `At least ${LONGUEUR_MINIMALE} characters.`;
       }
       if (!trouvees.motDePasse && confirmation !== motDePasse) {
-        trouvees.confirmation = "Les deux mots de passe ne correspondent pas.";
+        trouvees.confirmation = "The two passwords don't match.";
       }
     } else if (motDePasse.length === 0) {
-      trouvees.motDePasse = "Ton mot de passe est nécessaire.";
+      trouvees.motDePasse = "Your password is required.";
     }
     setErreurs(trouvees);
     return Object.keys(trouvees).length === 0;
@@ -303,13 +303,13 @@ export function EcranAuthentification({
         // dit quand même à la personne — c'est SON adresse.
         if (data.user && (data.user.identities?.length ?? 1) === 0) {
           setErreurs({
-            general: "Un compte existe déjà avec cette adresse. Connecte-toi.",
+            general: "An account already exists with this email. Log in.",
           });
           return;
         }
         if (!data.session) {
           setInfo(
-            `Ton compte est créé. Un e-mail de confirmation vient de partir vers ${email.trim()} — ouvre-le pour activer le compte.`
+            `Your account is created. A confirmation email is on its way to ${email.trim()} — open it to activate your account.`
           );
         } else {
           // Session immédiate (confirmation désactivée) : la MÊME
@@ -359,7 +359,7 @@ export function EcranAuthentification({
       nouveau mot de passe. Il faut d'abord une adresse dans le champ. */
   async function demanderReinitialisation() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) {
-      setErreurs({ email: "Écris d'abord ton adresse e-mail ci-dessus." });
+      setErreurs({ email: "Enter your email address above first." });
       return;
     }
     setEnCours(true);
@@ -375,7 +375,7 @@ export function EcranAuthentification({
       if (error) throw error;
       setLienMotDePasseOublie(false);
       setInfo(
-        `Un e-mail vient de partir vers ${email.trim()} : ouvre-le et suis le lien pour choisir un nouveau mot de passe. Pense au dossier indésirable.`
+        `An email is on its way to ${email.trim()}: open it and follow the link to choose a new password. Check your spam folder too.`
       );
     } catch (erreur) {
       setErreurs({ general: messageErreur(erreur) });
@@ -431,11 +431,11 @@ export function EcranAuthentification({
       <h1 className="text-[clamp(1.6rem,4.5vw,2.1rem)] font-bold leading-tight text-sombre-texte text-center">
         {enRattachement
           ? creer
-            ? "Crée ton compte"
+            ? "Create your account"
             : "Connecte-toi"
           : creer
-            ? "Crée ton compte"
-            : "Content de te revoir"}
+            ? "Create your account"
+            : "Welcome back"}
       </h1>
       {/* LE SOUS-TITRE — UN SEUL ÉLÉMENT POUR LES TROIS CAS
           (passe nº 179-§2)
@@ -451,10 +451,10 @@ export function EcranAuthentification({
           Seul le texte diffère selon le cas. */}
       <p className="mt-2 text-center text-[15px] text-sombre-texte-doux">
         {enRattachement
-          ? "Tes portfolios te seront rattachés aussitôt."
+          ? "Your portfolios will be linked to you right away."
           : creer
-            ? "Commence ton expérience YokoFolio."
-            : "Connecte-toi pour retrouver ton compte."}
+            ? "Get started on YokoFolio."
+            : "Log in to get back to your account."}
       </p>
 
       {/* ⚠️ LE SÉLECTEUR DISPARAÎT EN RATTACHEMENT (passe nº 135) —
@@ -474,10 +474,10 @@ export function EcranAuthentification({
       {!enRattachement && (
         <div className="mt-7">
           <OngletsLigne
-            ariaLabel="Créer mon compte ou me connecter"
+            ariaLabel="Sign up or log in"
             options={[
-              { cle: "creer", label: "Créer mon compte" },
-              { cle: "connexion", label: "Me connecter" },
+              { cle: "creer", label: "Sign up" },
+              { cle: "connexion", label: "Log in" },
             ]}
             cleActive={mode}
             surChoix={(cle) => basculer(cle as Mode)}
@@ -523,7 +523,7 @@ export function EcranAuthentification({
           <span className="shrink-0">
             <IconeGoogle taille={20} />
           </span>
-          {googleEnCours ? "Un instant…" : "Continuer avec Google"}
+          {googleEnCours ? "One moment…" : "Continue with Google"}
         </button>
         {/*  §A2 (nº 788) — SOUS SON BOUTON, PAS AILLEURS. Cette erreur
              partageait la clé `general` avec celles du formulaire ;
@@ -548,7 +548,7 @@ export function EcranAuthentification({
         aria-hidden="true"
       >
         <span className="h-px flex-1 bg-sombre-bordure" />
-        ou
+        or
         <span className="h-px flex-1 bg-sombre-bordure" />
       </div>
 
@@ -560,7 +560,7 @@ export function EcranAuthentification({
       <form onSubmit={soumettre} noValidate className="mt-6 flex flex-col gap-4">
         <div>
           <label htmlFor="auth-email" className="sr-only">
-            Adresse e-mail
+            Email address
           </label>
           <input
             id="auth-email"
@@ -569,7 +569,7 @@ export function EcranAuthentification({
             value={email}
             onChange={(e) => { setEmail(e.target.value); oublier("email"); }}
             aria-invalid={Boolean(erreurs.email)}
-            placeholder="Adresse e-mail"
+            placeholder="Email address"
             className={`${CHAMP} ${bordureChamp(Boolean(erreurs.email))}`}
           />
           {erreurs.email && (
@@ -579,7 +579,7 @@ export function EcranAuthentification({
 
         <div>
           <label htmlFor="auth-mdp" className="sr-only">
-            Mot de passe
+            Password
           </label>
           <div className="relative">
             <input
@@ -589,7 +589,7 @@ export function EcranAuthentification({
               value={motDePasse}
               onChange={(e) => { setMotDePasse(e.target.value); oublier("motDePasse"); }}
               aria-invalid={Boolean(erreurs.motDePasse)}
-              placeholder="Mot de passe"
+              placeholder="Password"
               style={{ paddingRight: PLACE_DE_L_OEIL }}
               className={`${CHAMP} ${bordureChamp(Boolean(erreurs.motDePasse))}`}
             />
@@ -640,7 +640,7 @@ export function EcranAuthentification({
                            underline-offset-4 hover:text-primaire
                            transition-colors disabled:opacity-60"
               >
-                Mot de passe oublié ?
+                Forgot your password?
               </button>
             </p>
           )}
@@ -655,7 +655,7 @@ export function EcranAuthentification({
         {creer && (
           <div>
             <label htmlFor="auth-mdp-confirmation" className="sr-only">
-              Retaper le mot de passe
+              Retype your password
             </label>
             {/*  `relative` : c'est lui qui tient l'œil, posé en absolu
                  contre le bord droit du champ. */}
@@ -667,7 +667,7 @@ export function EcranAuthentification({
               value={confirmation}
               onChange={(e) => { setConfirmation(e.target.value); oublier("confirmation"); }}
               aria-invalid={Boolean(erreurs.confirmation)}
-              placeholder="Retaper le mot de passe"
+              placeholder="Retype your password"
               style={{ paddingRight: PLACE_DE_L_OEIL }}
               className={`${CHAMP} ${bordureChamp(Boolean(erreurs.confirmation))}`}
             />
@@ -711,10 +711,10 @@ export function EcranAuthentification({
                      disabled:opacity-60 disabled:cursor-not-allowed`}
         >
           {enCours
-            ? "Un instant…"
+            ? "One moment…"
             : creer
-              ? "Créer mon compte"
-              : "Me connecter"}
+              ? "Sign up"
+              : "Log in"}
         </button>
       </form>
 
@@ -725,11 +725,11 @@ export function EcranAuthentification({
            elle reste à la création, mot pour mot. */}
       {creer && (
       <p className="mt-8 text-center text-[13px] leading-relaxed text-sombre-texte-doux">
-        En créant un compte, tu acceptes les{" "}
+        By creating an account, you accept the{" "}
         <Link href="/mentions-legales" className="text-primaire hover:underline">
-          règles du site
+          site rules
         </Link>
-        . Ton adresse ne sert qu&apos;à ton compte — jamais à de la publicité.
+        . Your email is only used for your account — never for ads.
       </p>
       )}
     </main>

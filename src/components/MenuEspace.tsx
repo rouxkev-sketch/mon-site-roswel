@@ -1581,7 +1581,7 @@ export function MenuEspace({
       >
         <span className="min-w-0 flex-1">
           <span className={`block truncate font-semibold text-sombre-texte leading-tight ${reglages.titre}`}>
-            {fiche ? fiche.nom : "Aucun portfolio"}
+            {fiche ? fiche.nom : "No portfolio"}
           </span>
           <span className="mt-1 flex items-center gap-1.5">
             <span
@@ -1724,7 +1724,7 @@ export function MenuEspace({
       <span className={`${reglage.ligne.boite} text-sombre-texte/80`}>
         <IconeAjouterPortfolio taille={reglage.ligne.taille} />
       </span>
-      <span className="flex-1">Ajouter un portfolio</span>
+      <span className="flex-1">Add a portfolio</span>
     </button>
   );
 
@@ -1738,7 +1738,7 @@ export function MenuEspace({
         refaire la faute nº 1 de la nº 676 — couvrir une partie du
         sujet. */
     <nav
-      aria-label="Le portfolio choisi"
+      aria-label="Selected portfolio"
       className={`flex flex-col gap-0.5${
         entreeQuiPart ? " pointer-events-none" : ""
       }`}
@@ -1771,7 +1771,7 @@ export function MenuEspace({
         <span className={`${reglage.boite} text-sombre-texte/80`}>
           <IconeUtilisateur taille={reglage.taille} />
         </span>
-        Mon portfolio
+        My portfolio
       </Link>
 
       {/* Le formulaire, en haut de page. L'ÉVÉNEMENT prévient le
@@ -1796,7 +1796,7 @@ export function MenuEspace({
         <span className={`${reglage.boite} text-sombre-texte/80`}>
           <IconeReglages taille={reglage.taille} />
         </span>
-        Modification
+        Edit
       </Link>
     </nav>
   );
@@ -1819,7 +1819,7 @@ export function MenuEspace({
         nº 676. La croix, elle, reste vivante : elle est dans l'en-tête
         de la surface, pas dans ce conteneur. */
     <nav
-      aria-label="Mon compte"
+      aria-label="My account"
       className={`flex flex-col gap-0.5${
         entreeQuiPart ? " pointer-events-none" : ""
       }`}
@@ -1868,14 +1868,14 @@ export function MenuEspace({
               c'est bien de cela qu'il s'agit ici. */}
           <IconeBouclierTrait taille={reglage.taille} />
         </span>
-        Sécurité
+        Security
       </Link>
 
       <button type="button" onClick={deconnecter} className={reglage.entree}>
         <span className={`${reglage.boite} text-sombre-texte/80`}>
           <IconeSortie taille={reglage.taille} />
         </span>
-        Déconnexion
+        Log out
       </button>
     </nav>
   );
@@ -2237,7 +2237,7 @@ export function MenuEspace({
                qu'il en existe un. C'est ce qui rend la tête juste AVANT
                même que la liste des fiches ne soit lue (la barre l'est
                déjà depuis la nº 645). */}
-          {fiche ? fiche.nom : nomAfficheDuCompte || "Mon compte"}
+          {fiche ? fiche.nom : nomAfficheDuCompte || "My account"}
         </h2>
         {fiche ? (
           <span className="mt-1 flex items-center gap-1.5">
@@ -2297,7 +2297,7 @@ export function MenuEspace({
             }}
             className={`mt-1 block leading-none ${LIEN_QUI_SORT} ${reglages.statutTete}`}
           >
-            Éditer
+            Edit
           </button>
         )}
       </div>
@@ -2382,7 +2382,7 @@ export function MenuEspace({
             <IconeCloche taille={reglages.tuileIcone} />
             {nonLues > 0 && (
               <span
-                aria-label={`${nonLues} non lue${nonLues > 1 ? "s" : ""}`}
+                aria-label={`${nonLues} unread`}
                 className={reglages.pastille}
               >
                 {nonLues > 99 ? "99+" : nonLues}
@@ -2411,7 +2411,7 @@ export function MenuEspace({
           <span className={CLASSE_TUILE_ICONE}>
             <IconeFanion taille={reglages.tuileIcone} />
           </span>
-          <span className={CLASSE_TUILE_MOT}>Sélection</span>
+          <span className={CLASSE_TUILE_MOT}>Favorites</span>
         </Link>
 
       </div>
@@ -2665,9 +2665,7 @@ export function MenuEspace({
       <span className="relative flex shrink-0">
         {dessinDeLAvatar}
         <span
-          aria-label={`${nonLues} nouvelle${nonLues > 1 ? "s" : ""} non lue${
-            nonLues > 1 ? "s" : ""
-          }`}
+          aria-label={`${nonLues} new unread`}
           className="absolute top-0 right-0 h-2 w-2 rounded-full bg-primaire
                      ring-2 ring-sombre-fond"
         />
@@ -2703,8 +2701,8 @@ export function MenuEspace({
         onClick={basculerLeMenu}
         aria-haspopup="dialog"
         aria-expanded={ouvert}
-        aria-label={`Mon espace — ${nomDeLInfobulle}`}
-        title={`Mon espace — ${nomDeLInfobulle}`}
+        aria-label={`My account — ${nomDeLInfobulle}`}
+        title={`My account — ${nomDeLInfobulle}`}
         style={{ height: hauteur, width: hauteur }}
         //  §2 (nº 547) — LE MÊME MOT, POUR LA MÊME RAISON : c'est ce
         //  bouton-ci dans son autre habillage, il portait le même
@@ -2741,8 +2739,8 @@ export function MenuEspace({
         onClick={basculerLeMenu}
         aria-haspopup="dialog"
         aria-expanded={ouvert}
-        aria-label={`Mon espace — ${nomDeLInfobulle}`}
-        title={`Mon espace — ${nomDeLInfobulle}`}
+        aria-label={`My account — ${nomDeLInfobulle}`}
+        title={`My account — ${nomDeLInfobulle}`}
         style={{ height: hauteur, width: hauteur }}
         /*  ██ §2 (nº 547) — POURQUOI LE SURVOL PARAISSAIT CARRÉ ██
              LA CAUSE : `shrink-0` MANQUAIT. La largeur de 40 px n'est
@@ -2876,7 +2874,7 @@ export function MenuEspace({
             opaque
             alignement="droite"
             role="dialog"
-            aria-label="Mon espace"
+            aria-label="My account"
             data-source-composant="MenuEspace · fenêtre web"
             className="mobile:hidden"
           >
@@ -3032,7 +3030,7 @@ export function MenuEspace({
               <button
                 type="button"
                 onClick={() => setOuvert(false)}
-                aria-label="Fermer"
+                aria-label="Close"
                 className="absolute right-5 top-5 -mr-[9px] -mt-[9px]
                            w-9 h-9 flex items-center justify-center
                            rounded-full text-sombre-texte-doux
@@ -3089,7 +3087,7 @@ export function MenuEspace({
                et cette règle n'est écrite qu'une fois, dans
                `enTeteDuCompte`. */}
           <PagePleinEcranMobile
-            ariaLabel="Mon compte"
+            ariaLabel="My account"
             tete={enTeteDuCompte(REGLAGES_DOIGT)}
             surFermer={() => setOuvert(false)}
           >

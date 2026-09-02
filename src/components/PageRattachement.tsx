@@ -83,7 +83,7 @@ export function PageRattachement({
         message?: string;
       } | null;
       if (!reponse.ok || !donnees?.ok) {
-        throw new Error(donnees?.message ?? "L'opération n'a pas abouti.");
+        throw new Error(donnees?.message ?? "The operation failed.");
       }
     },
     [jeton]
@@ -105,7 +105,7 @@ export function PageRattachement({
           setErreur(null);
         } catch (e) {
           setErreur(
-            e instanceof Error ? e.message : "Le rattachement n'a pas abouti."
+            e instanceof Error ? e.message : "Linking failed."
           );
         } finally {
           setEnCours(false);
@@ -116,7 +116,7 @@ export function PageRattachement({
   }, [pret, utilisateur, rattache, retire, appeler]);
 
   async function supprimer() {
-    if (motDeConfirmation.trim().toUpperCase() !== "SUPPRIMER") return;
+    if (motDeConfirmation.trim().toUpperCase() !== "DELETE") return;
     setEnCours(true);
     setErreur(null);
     try {
@@ -125,7 +125,7 @@ export function PageRattachement({
       setFenetreSuppression(false);
       setMotDeConfirmation("");
     } catch (e) {
-      setErreur(e instanceof Error ? e.message : "La suppression n'a pas abouti.");
+      setErreur(e instanceof Error ? e.message : "Deletion failed.");
     } finally {
       setEnCours(false);
     }
@@ -138,7 +138,7 @@ export function PageRattachement({
       await appeler("reactiver");
       setRetire(false);
     } catch (e) {
-      setErreur(e instanceof Error ? e.message : "La réactivation n'a pas abouti.");
+      setErreur(e instanceof Error ? e.message : "Reactivation failed.");
     } finally {
       setEnCours(false);
     }
@@ -163,12 +163,12 @@ export function PageRattachement({
             classe="mx-auto"
           />
           <h1 className="mt-4 text-[clamp(1.4rem,4vw,1.8rem)] font-bold text-sombre-texte">
-            {plusieurs ? "Tes portfolios sont retirés" : "Ton portfolio est retiré"}
+            {plusieurs ? "Your portfolios are removed" : "Your portfolio is removed"}
           </h1>
           <p className="mt-3 text-[14.5px] leading-relaxed text-sombre-texte-doux">
             {plusieurs
-              ? `Ils ne sont plus visibles du site. Ils seront définitivement supprimés dans ${DELAI_SUPPRESSION_JOURS} jours.`
-              : `Il n'est plus visible du site. Il sera définitivement supprimé dans ${DELAI_SUPPRESSION_JOURS} jours.`}
+              ? `They're no longer visible on the site. They'll be permanently deleted in ${DELAI_SUPPRESSION_JOURS} days.`
+              : `It's no longer visible on the site. It'll be permanently deleted in ${DELAI_SUPPRESSION_JOURS} days.`}
           </p>
           <button
             type="button"
@@ -180,10 +180,10 @@ export function PageRattachement({
                        disabled:opacity-60"
           >
             {enCours
-              ? "Un instant…"
+              ? "One moment…"
               : plusieurs
-                ? "Remettre mes portfolios en ligne"
-                : "Remettre mon portfolio en ligne"}
+                ? "Put my portfolios back online"
+                : "Put my portfolio back online"}
           </button>
           {erreur && (
             <p
@@ -206,7 +206,7 @@ export function PageRattachement({
     return (
       <main className="flex-1 mx-auto w-full max-w-[560px] px-4 sm:px-6 pt-10 sm:pt-14 pb-24">
         <h1 className="text-center text-[clamp(1.5rem,4.5vw,2rem)] font-bold text-sombre-texte">
-          {plusieurs ? "Tes portfolios sont à toi" : "Ton portfolio est à toi"}
+          {plusieurs ? "Your portfolios are yours" : "Your portfolio is yours"}
         </h1>
 
         <ListeDesFiches fiches={fiches} classe="mt-7" />
@@ -217,7 +217,7 @@ export function PageRattachement({
                      min-h-[52px] bg-primaire hover:bg-primaire-fonce
                      text-[15px] font-semibold text-white transition-colors"
         >
-          Ouvrir mon espace
+          Open my account
         </Link>
 
         <BlocSuppression
@@ -251,20 +251,20 @@ export function PageRattachement({
       <main className="flex-1 mx-auto w-full max-w-[440px] px-5 sm:px-6 pt-10 sm:pt-14 pb-0">
         <h1 className="text-center text-[clamp(1.5rem,4.5vw,2rem)] font-bold leading-tight text-sombre-texte">
           {plusieurs
-            ? "Tes portfolios sont prêts"
-            : "Ton portfolio est prêt"}
+            ? "Your portfolios are ready"
+            : "Your portfolio is ready"}
         </h1>
         <p className="mt-2 text-center text-[15px] leading-relaxed text-sombre-texte-doux">
           {plusieurs
-            ? "Crée ton compte pour en prendre la main."
-            : "Crée ton compte pour en prendre la main."}
+            ? "Create your account to claim them."
+            : "Create your account to claim it."}
         </p>
 
         <ListeDesFiches fiches={fiches} classe="mt-7" />
 
         {enCours && (
           <p className="mt-5 text-center text-[13.5px] text-sombre-texte-doux">
-            Un instant…
+            One moment…
           </p>
         )}
         {erreur && (
@@ -350,7 +350,7 @@ function ListeDesFiches({
                          bg-sombre-eleve px-4 min-h-[38px] text-[13px] font-semibold
                          text-sombre-texte hover:bg-sombre-eleve-clair transition-colors"
             >
-              Voir
+              View
               <IconeLienExterne taille={14} />
             </Link>
           )}
@@ -396,14 +396,14 @@ function BlocSuppression({
                    text-[13.5px] font-semibold text-erreur/85 hover:text-erreur
                    transition-colors"
       >
-        {plusieurs ? "Supprimer mes portfolios" : "Supprimer mon portfolio"}
+        {plusieurs ? "Delete my portfolios" : "Delete my portfolio"}
       </button>
 
       {ouverte && (
         <div
           role="dialog"
           aria-modal="true"
-          aria-label={plusieurs ? "Supprimer mes portfolios" : "Supprimer mon portfolio"}
+          aria-label={plusieurs ? "Delete my portfolios" : "Delete my portfolio"}
           className="fixed inset-0 z-[80] flex items-center justify-center p-5"
         >
           <div
@@ -420,28 +420,28 @@ function BlocSuppression({
             className="relative w-full max-w-[440px] rounded-xl bg-sombre-carte p-6 sm:p-7 text-left"
           >
             <h2 className="text-lg font-bold text-sombre-texte">
-              {plusieurs ? "Supprimer mes portfolios ?" : "Supprimer mon portfolio ?"}
+              {plusieurs ? "Delete my portfolios?" : "Delete my portfolio?"}
             </h2>
             {/* LE MESSAGE EXACT — trois phrases, et pas une de plus :
                 ce qui se passe, l'échéance, la porte de retour. */}
             <p className="mt-2 text-[14px] leading-relaxed text-sombre-texte-doux">
-              {plusieurs ? "Tes portfolios seront retirés" : "Ton portfolio sera retiré"}{" "}
-              du site. {plusieurs ? "Ils seront" : "Il sera"} définitivement
-              supprimé{plusieurs ? "s" : ""} dans {DELAI_SUPPRESSION_JOURS} jours.
-              Tu peux {plusieurs ? "les" : "le"} réactiver depuis ce lien avant ce
-              délai.
+              {plusieurs ? "Your portfolios will be removed" : "Your portfolio will be removed"}{" "}
+              from the site. {plusieurs ? "They'll be" : "It'll be"} permanently
+              deleted in {DELAI_SUPPRESSION_JOURS} days.
+              You can reactivate {plusieurs ? "them" : "it"} from this link before
+              then.
             </p>
             <p className="mt-2 text-[14px] leading-relaxed text-sombre-texte-doux">
-              Saisis <strong className="text-sombre-texte">SUPPRIMER</strong> pour
-              confirmer.
+              Type <strong className="text-sombre-texte">DELETE</strong> to
+              confirm.
             </p>
             <input
               type="text"
               {...sansRemplissageAuto("confirmation-rattachement")}
               value={mot}
               onChange={(e) => onMot(e.target.value)}
-              placeholder="SUPPRIMER"
-              aria-label="Écris SUPPRIMER pour confirmer"
+              placeholder="DELETE"
+              aria-label="Type DELETE to confirm"
               className="mt-4 w-full min-h-[48px] rounded-lg border border-transparent
                          bg-sombre-eleve-clair px-4 text-base text-sombre-texte
                          placeholder:text-sombre-texte-doux outline-none
@@ -450,13 +450,13 @@ function BlocSuppression({
             <button
               type="button"
               onClick={onSupprimer}
-              disabled={enCours || mot.trim().toUpperCase() !== "SUPPRIMER"}
+              disabled={enCours || mot.trim().toUpperCase() !== "DELETE"}
               className="mt-6 inline-flex w-full items-center justify-center
                          min-h-[50px] rounded-full bg-erreur text-white
                          font-semibold transition-opacity
                          disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {enCours ? "Un instant…" : "Supprimer"}
+              {enCours ? "One moment…" : "Delete"}
             </button>
             <button
               type="button"
@@ -465,7 +465,7 @@ function BlocSuppression({
                          min-h-[44px] text-[14px] text-sombre-texte-doux
                          hover:text-sombre-texte transition-colors"
             >
-              Annuler
+              Cancel
             </button>
           </div>
         </div>

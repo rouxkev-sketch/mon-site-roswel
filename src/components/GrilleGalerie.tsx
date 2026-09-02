@@ -432,7 +432,7 @@ export function GrilleGalerie({
         <li key={tuile.cle} className="relative">
           <button
             type="button"
-            aria-label={`${tuile.etiquette} — appui long (ou glisser) pour déplacer, toucher pour ouvrir`}
+            aria-label={`${tuile.etiquette} — long-press (or drag) to move, tap to open`}
             //  ⚠️ ANGLES DROITS ET AUCUN CONTOUR (passe nº 110) : une
             //  mosaïque de photos se lit mieux en aplat continu. Les
             //  arrondis et les filets découpaient chaque vignette en

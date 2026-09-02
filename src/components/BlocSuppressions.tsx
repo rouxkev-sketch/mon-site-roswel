@@ -124,20 +124,20 @@ export function BlocSuppressions() {
         message?: string;
       } | null;
       if (!reponse.ok || !donnees?.ok) {
-        throw new Error(donnees?.message ?? "L'opération n'a pas abouti.");
+        throw new Error(donnees?.message ?? "The operation failed.");
       }
       setFicheAConfirmer(null);
       setConfirmation("");
       await recharger();
     } catch (e) {
-      setErreur(e instanceof Error ? e.message : "L'opération n'a pas abouti.");
+      setErreur(e instanceof Error ? e.message : "The operation failed.");
     } finally {
       setEnCours(false);
     }
   }
 
   async function supprimerLeCompte() {
-    if (confirmation.trim().toUpperCase() !== "SUPPRIMER") return;
+    if (confirmation.trim().toUpperCase() !== "DELETE") return;
     setEnCours(true);
     setErreur(null);
     try {
@@ -149,7 +149,7 @@ export function BlocSuppressions() {
         message?: string;
       } | null;
       if (!reponse.ok || !donnees?.ok) {
-        throw new Error(donnees?.message ?? "La suppression n'a pas abouti.");
+        throw new Error(donnees?.message ?? "Deletion failed.");
       }
       try {
         await creerClientSupabaseNavigateur().auth.signOut();
@@ -163,7 +163,7 @@ export function BlocSuppressions() {
       window.location.assign("/");
     } catch (e) {
       setErreur(
-        e instanceof Error ? e.message : "La suppression n'a pas abouti."
+        e instanceof Error ? e.message : "Deletion failed."
       );
     } finally {
       setEnCours(false);
@@ -178,7 +178,7 @@ export function BlocSuppressions() {
           grammaire de Section (formulaire, nº 125/128). */}
       <div className="px-4 sm:px-7">
         <h2 className="text-[18px] font-semibold tracking-tight text-sombre-texte">
-          Supprimer
+          Delete
         </h2>
       </div>
       {/* UN ÉCART DE LIGNE, UN ÉCART DE SECTION (passe nº 134, revu
@@ -204,7 +204,7 @@ export function BlocSuppressions() {
           définitif est une information qu'on ne peut pas taire. */}
       {enSuppression.length > 0 && (
         <section>
-          <Surtitre>En cours</Surtitre>
+          <Surtitre>In progress</Surtitre>
         <div className="flex flex-col gap-4">
           {enSuppression.map((fiche) => (
             <div
@@ -243,9 +243,9 @@ export function BlocSuppressions() {
                      précisément ce que le bouton d'à côté dément tant
                      qu'il est là. */}
                 <span className="block text-[12.5px] text-sombre-texte-doux">
-                  Suppression le{" "}
+                  Deletion on{" "}
                   {new Date(fiche.purge_le as string).toLocaleDateString(
-                    "fr-FR"
+                    "en-US"
                   )}
                 </span>
               </span>
@@ -256,9 +256,9 @@ export function BlocSuppressions() {
               <PastilleAction
                 disabled={enCours}
                 onClick={() => demanderSuppressionFiche(fiche.id, true)}
-                titre={`Annuler la suppression de « ${fiche.nom} »`}
+                titre={`Cancel the deletion of "${fiche.nom}"`}
               >
-                Annuler
+                Cancel
               </PastilleAction>
             </div>
           ))}
@@ -294,7 +294,7 @@ export function BlocSuppressions() {
             montre. Elle disparaît alors avec son groupe. */
         enSuppression.length === 0 && (
           <p className="text-[13px] text-sombre-texte-doux">
-            Aucun portfolio à supprimer.
+            No portfolio to delete.
           </p>
         )
       ) : (
@@ -323,7 +323,7 @@ export function BlocSuppressions() {
                 className={`shrink-0 rounded-full px-4 min-h-[38px] ${TEXTE_BOUT_DE_LIGNE}
                            text-erreur/85 hover:text-erreur transition-colors`}
               >
-                Supprimer
+                Delete
               </button>
               {/*  ⚠️ SON RETRAIT DROIT EST CELUI DE LA LIGNE (nº 786).
                    LE DÉFAUT DU PROPRIÉTAIRE : « trop d'air à leur
@@ -364,7 +364,7 @@ export function BlocSuppressions() {
                    rounded-lg bg-sombre-eleve pl-4 pr-0 min-h-[54px]"
       >
         <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-sombre-texte">
-          Supprimer le compte
+          Delete account
         </span>
         <button
           type="button"
@@ -376,7 +376,7 @@ export function BlocSuppressions() {
           className={`shrink-0 rounded-full px-4 min-h-[38px] ${TEXTE_BOUT_DE_LIGNE}
                      text-erreur/85 hover:text-erreur transition-colors`}
         >
-          Supprimer
+          Delete
         </button>
       </div>
       </section>
@@ -400,7 +400,7 @@ export function BlocSuppressions() {
       {/* ---------- LA CONFIRMATION D'UNE FICHE ---------- */}
       {ficheAConfirmer && (
         <FenetreConfirmation
-          titre={`Supprimer « ${ficheAConfirmer.nom} » ?`}
+          titre={`Delete "${ficheAConfirmer.nom}"?`}
           onFermer={() => setFicheAConfirmer(null)}
         >
           {/*  ⚠️ « OU SUR LA FICHE DE TON PORTFOLIO » — PLUS « modifie
@@ -409,16 +409,16 @@ export function BlocSuppressions() {
                « Réactiver mon portfolio », qui attend sur la fiche
                désactivée (voir FormulaireFiche). */}
           <p className="mt-2 text-[14px] leading-relaxed text-sombre-texte-doux">
-            Le portfolio disparaît du public tout de suite, et sera
-            définitivement supprimé dans {DELAI_SUPPRESSION_JOURS} jours —
-            photos comprises.
+            The portfolio disappears from public view right away, and will be
+            permanently deleted in {DELAI_SUPPRESSION_JOURS} days —
+            photos included.
           </p>
           <p className="mt-2 text-[14px] leading-relaxed text-sombre-texte-doux">
-            Tu changes d&apos;avis&nbsp;? Annule ici, ou depuis ton
-            portfolio&nbsp;: la suppression s&apos;arrête d&apos;elle-même.
+            Changed your mind? Cancel here, or from your
+            portfolio: the deletion stops by itself.
           </p>
           <p className="mt-2 text-[14px] leading-relaxed text-sombre-texte-doux">
-            Ton compte et tes autres portfolios ne bougent pas.
+            Your account and your other portfolios don&apos;t change.
           </p>
           {/* LA RÈGLE POSITIF/NÉGATIF (nº 130, comme la fenêtre de
               retour) : l'action de la fenêtre en CAPSULE PLEINE
@@ -435,7 +435,7 @@ export function BlocSuppressions() {
                        min-h-[50px] rounded-full bg-erreur text-white
                        font-semibold transition-opacity disabled:opacity-40"
           >
-            {enCours ? "Un instant…" : "Supprimer le portfolio"}
+            {enCours ? "One moment…" : "Delete portfolio"}
           </button>
           <button
             type="button"
@@ -444,7 +444,7 @@ export function BlocSuppressions() {
                        min-h-[44px] text-[14px] text-sombre-texte-doux
                        hover:text-sombre-texte transition-colors"
           >
-            Annuler
+            Cancel
           </button>
         </FenetreConfirmation>
       )}
@@ -452,30 +452,30 @@ export function BlocSuppressions() {
       {/* ---------- LA CONFIRMATION DU COMPTE — écrire SUPPRIMER ---- */}
       {compteAConfirmer && (
         <FenetreConfirmation
-          titre="Supprimer ton compte ?"
+          titre="Delete your account?"
           onFermer={() => setCompteAConfirmer(false)}
         >
           {/* TROIS PHRASES COURTES (nº 129) : ce qui se passe, comment
               revenir en arrière, ce qu'il faut taper. Le MÉCANISME ne
               change pas — il faut toujours écrire SUPPRIMER. */}
           <p className="mt-2 text-[14px] leading-relaxed text-sombre-texte-doux">
-            Ton compte et tes portfolios seront masqués immédiatement, puis
-            supprimés définitivement dans {DELAI_SUPPRESSION_JOURS} jours.
+            Your account and portfolios will be hidden immediately, then
+            permanently deleted in {DELAI_SUPPRESSION_JOURS} days.
           </p>
           <p className="mt-2 text-[14px] leading-relaxed text-sombre-texte-doux">
-            Tu peux annuler en te reconnectant avant ce délai.
+            You can cancel by logging back in before then.
           </p>
           <p className="mt-2 text-[14px] leading-relaxed text-sombre-texte-doux">
-            Saisis <strong className="text-sombre-texte">SUPPRIMER</strong> pour
-            confirmer.
+            Type <strong className="text-sombre-texte">DELETE</strong> to
+            confirm.
           </p>
           <input
             type="text"
             {...sansRemplissageAuto("confirmation-suppression")}
             value={confirmation}
             onChange={(e) => setConfirmation(e.target.value)}
-            placeholder="SUPPRIMER"
-            aria-label="Écris SUPPRIMER pour confirmer"
+            placeholder="DELETE"
+            aria-label="Type DELETE to confirm"
             className="mt-4 w-full min-h-[48px] rounded-lg border border-transparent
                        bg-sombre-eleve-clair px-4 text-base text-sombre-texte
                        placeholder:text-sombre-texte-doux outline-none
@@ -485,14 +485,14 @@ export function BlocSuppressions() {
             type="button"
             onClick={supprimerLeCompte}
             disabled={
-              enCours || confirmation.trim().toUpperCase() !== "SUPPRIMER"
+              enCours || confirmation.trim().toUpperCase() !== "DELETE"
             }
             className="mt-6 inline-flex w-full items-center justify-center
                        min-h-[50px] rounded-full bg-erreur text-white
                        font-semibold transition-opacity
                        disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {enCours ? "Un instant…" : "Supprimer"}
+            {enCours ? "One moment…" : "Delete"}
           </button>
           <button
             type="button"
@@ -501,7 +501,7 @@ export function BlocSuppressions() {
                        min-h-[44px] text-[14px] text-sombre-texte-doux
                        hover:text-sombre-texte transition-colors"
           >
-            Annuler
+            Cancel
           </button>
         </FenetreConfirmation>
       )}

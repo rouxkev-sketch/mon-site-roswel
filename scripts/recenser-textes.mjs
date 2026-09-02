@@ -38,11 +38,123 @@
     ne distingue pas une chaîne AFFICHÉE d'une chaîne seulement
     journalisée. Les natures « attribut », « métadonnée » et « texte
     JSX » sont sûres ; « littéral » demande un œil.
+
+    ██ nº 804 — LE MODE « --francais » : LE BANC DE LA TRADUCTION ██
+    ==================================================================
+    USAGE :  node scripts/recenser-textes.mjs --francais --perimetre=A,B,C,G
+    Le recensement de la nº 797 comptait TOUT ce qui a la forme d'un
+    texte d'écran, anglais compris (le site en avait déjà : « Choose a
+    style »). Pour prouver qu'une passe de traduction n'a RIEN laissé,
+    il faut l'inverse : ne retenir que ce qui ressemble à du FRANÇAIS,
+    et le lister. Sortie 0 si la liste est vide (hors exceptions
+    déclarées ci-dessous), 1 sinon.
+    CE QUI CHANGE DANS CE MODE, ET SEULEMENT DANS CE MODE — le compte
+    de la nº 797 ne bouge pas :
+      · la moisson JSX est plus fine : un texte coupé par une accolade
+        (« Regarde le cœur {…} du logo ») est lu MORCEAU PAR MORCEAU,
+        là où la moisson d'origine l'ignorait tout entier ;
+      · un texte est « français » s'il porte un accent, ou un mot-outil
+        français entier (le, la, les, des, une, et, ou, pour, avec…) ;
+      · les EXCEPTIONS sont déclarées, avec leur raison, pas cachées.
 */
 import { readFileSync, writeFileSync } from "node:fs";
 import { execSync } from "node:child_process";
 
 const RACINE = process.cwd();
+const ARGUMENTS = process.argv.slice(2);
+const MODE_FRANCAIS = ARGUMENTS.includes("--francais");
+const PERIMETRE = (ARGUMENTS.find((a) => a.startsWith("--perimetre=")) ?? "")
+  .replace("--perimetre=", "")
+  .split(",")
+  .filter(Boolean);
+
+/*  ██ LES EXCEPTIONS DU MODE FRANÇAIS (nº 804) ██
+    Chacune dit POURQUOI. Une exception sans raison est un texte oublié
+    qui se cache. */
+const EXCEPTIONS = [
+  {
+    fichier: /^src\/components\/(SondeNavigation|SondeVitesse|TableauDeBordDesSondes|OutilsSonde|BoutonEnvoyerJournal|MemoireNavigation|DefilementEnHaut)\.tsx$/,
+    raison: "instrument interne : ne s'affiche qu'armé depuis /dev (verrouillé admin), lot de la nº 806",
+  },
+  {
+    texte: /^[A-Z][A-Za-z]+ (· |\()/,
+    raison: "étiquette de source d'un composant (data-source-composant, motif de défilement) : lue par les sondes, jamais affichée",
+  },
+  {
+    texte: /^rafraîchissement de la page courante \(icône\)$/,
+    raison: "motif de défilement programmé, lu par la sonde de navigation, jamais affiché",
+  },
+];
+
+const ACCENTS_FRANCAIS = /[éèêëàâçùûôîïœÉÈÊËÀÂÇÙÛÔÎÏŒ]/;
+const MOTS_OUTILS_FRANCAIS = new Set([
+  "le", "les", "des", "une", "un", "du", "et", "ou", "pour", "avec", "sur",
+  "dans", "ce", "cette", "ces", "cet", "ta", "tes", "mon", "ma", "mes",
+  "votre", "vos", "notre", "nos", "sont", "pas", "ne", "qui", "que", "quoi",
+  "au", "aux", "chez", "tout", "tous", "toute", "toutes", "rien", "aucun",
+  "aucune", "encore", "depuis", "vers", "entre", "sous", "puis", "donc",
+  "alors", "enfin", "bien", "mais", "comme", "oui", "ici", "moins", "trop",
+  "peu", "beaucoup", "autre", "autres", "aussi", "ainsi", "toujours",
+  "jamais", "souvent", "maintenant", "avant", "pendant", "contre", "selon",
+  "parmi", "afin", "lorsque", "tandis", "ni", "soit", "voici", "merci",
+  "bonjour", "je", "tu", "il", "ils", "elle", "elles", "nous", "vous", "lui",
+  "leur", "leurs", "ses", "sa", "celui", "celle", "ceux", "quel", "quelle",
+  "quels", "quelles", "quand", "comment", "pourquoi", "parce", "car", "en",
+  "être", "avoir", "fait", "faire", "peut", "peux", "doit", "dois", "suis",
+  "sera", "seront", "cliquer", "choisir", "envoyer", "ajouter", "supprimer",
+  "modifier", "enregistrer", "fermer", "ouvrir", "voir", "chercher",
+  "rechercher", "trouver", "retirer", "annuler", "valider", "continuer",
+  "suivre", "suivi", "compris", "envoi", "retour", "accueil", "connexion",
+  "recherche", "chargement", "lecture", "nouveau", "nouvelle", "mois",
+  "jour", "jours", "heures", "semaine", "ville", "pays", "nom", "tatoueur",
+  "tatoueurs", "tatouage", "rendu", "mot", "passe", "se", "te",
+]);
+/*  ⚠️ N'Y FIGURENT PAS, PARCE QU'ILS SONT AUSSI ANGLAIS : « la », « on »,
+    « a », « son », « ton », « est », « plus », « sans », « photo »,
+    « portfolio », « message », « instant », « me », « non ». Un texte
+    français qui ne tiendrait que par eux est trop court pour tromper
+    l'œil ; et l'accent, lui, ne ment jamais. */
+
+function estFrancais(texte) {
+  if (/sans-serif/.test(texte)) return false;
+  //  Les trous de gabarit et les chemins ne sont pas du texte : on lit
+  //  ce qu'il reste une fois qu'ils sont ôtés.
+  const lisible = texte
+    .replace(/\$\{[^}]*\}/g, " ")
+    .replace(/\S+\/\S+|\S+\.\S+/g, " ");
+  if (ACCENTS_FRANCAIS.test(lisible)) return true;
+  const mots = lisible.toLowerCase().match(/[a-zà-ü']+/g) ?? [];
+  return mots.some((m) => MOTS_OUTILS_FRANCAIS.has(m));
+}
+
+function estUneException(chemin, texte) {
+  return EXCEPTIONS.find(
+    (e) => (!e.fichier || e.fichier.test(chemin)) && (!e.texte || e.texte.test(texte))
+  );
+}
+
+/** Le texte JSX lu morceau par morceau : on retire les accolades (un
+    niveau d'imbrication suffit à ce dépôt) et l'on garde les bouts. */
+function morceauxJsx(segment) {
+  const morceaux = [];
+  let profondeur = 0;
+  let courant = "";
+  for (const c of segment) {
+    if (c === "{") {
+      if (profondeur === 0 && courant.trim()) morceaux.push(courant);
+      courant = "";
+      profondeur++;
+      continue;
+    }
+    if (c === "}") {
+      profondeur = Math.max(0, profondeur - 1);
+      continue;
+    }
+    if (profondeur === 0) courant += c;
+  }
+  if (courant.trim()) morceaux.push(courant);
+  return morceaux;
+}
 
 
 /*  ██ 1 · ÔTER LES COMMENTAIRES, SANS ABÎMER LES CHAÎNES ██ */
@@ -67,9 +179,54 @@ function sansCommentaires(source) {
       const guillemet = c;
       dehors += c;
       i++;
+      /*  nº 804 — DANS UN GABARIT, LES TROUS `${…}` SONT DU CODE : ils
+          peuvent porter des commentaires (« ${ // pourquoi … } »), que
+          le premier jet recopiait comme du texte. On les ôte comme
+          ailleurs, en suivant la profondeur des accolades. */
+      let profondeurTrou = 0;
       while (i < n) {
         if (source[i] === "\\") {
           dehors += source[i] + (source[i + 1] ?? "");
+          i += 2;
+          continue;
+        }
+        if (guillemet === "`" && profondeurTrou > 0) {
+          if (source[i] === "/" && source[i + 1] === "/") {
+            while (i < n && source[i] !== "\n") i++;
+            continue;
+          }
+          if (source[i] === "/" && source[i + 1] === "*") {
+            i += 2;
+            while (i < n && !(source[i] === "*" && source[i + 1] === "/")) i++;
+            i += 2;
+            continue;
+          }
+          if (source[i] === '"' || source[i] === "'") {
+            //  une chaîne dans le trou : recopiée telle quelle
+            const g = source[i];
+            dehors += source[i];
+            i++;
+            while (i < n && source[i] !== g) {
+              if (source[i] === "\\") {
+                dehors += source[i];
+                i++;
+              }
+              dehors += source[i];
+              i++;
+            }
+            dehors += source[i] ?? "";
+            i++;
+            continue;
+          }
+          if (source[i] === "{") profondeurTrou++;
+          if (source[i] === "}") profondeurTrou--;
+          dehors += source[i];
+          i++;
+          continue;
+        }
+        if (guillemet === "`" && source[i] === "$" && source[i + 1] === "{") {
+          profondeurTrou = 1;
+          dehors += "${";
           i += 2;
           continue;
         }
@@ -174,7 +331,16 @@ function moissonner(source) {
   const parTexte = new Map();
   const ajouter = (brut, nature) => {
     const t = brut.replace(/\s+/g, " ").trim();
-    if (!t || estTechnique(t) || !ressembleAUnTexteDEcran(t)) return;
+    /*  nº 804, mode français : un texte qui COMMENCE PAR UN SIGNE
+        (« + Ajouter … ») n'a pas la forme d'une phrase pour la règle
+        d'origine, qui le laissait passer — c'est ainsi que
+        « + Ajouter a tattoo shop » a survécu au premier banc. Ici, un
+        signe suivi d'un mot suffit à mériter la lecture — et RIEN DE
+        PLUS LARGE : le premier élargissement (« un mot de trois
+        lettres ») ramenait 35 bouts de code pris pour du texte. */
+    const aLaFormeDUnTexte =
+      ressembleAUnTexteDEcran(t) || (MODE_FRANCAIS && /^[+\-–—•·*]\s+[A-Za-zÀ-ü]{3,}/.test(t));
+    if (!t || estTechnique(t) || !aLaFormeDUnTexte) return;
     const deja = parTexte.get(t);
     if (deja && NATURES.indexOf(deja) <= NATURES.indexOf(nature)) return;
     parTexte.set(t, nature);
@@ -189,6 +355,13 @@ function moissonner(source) {
   //  Le texte JSX : entre une balise fermante et la suivante.
   for (const m of propre.matchAll(/>([^<>{}]{3,})</g)) {
     ajouter(m[1], "texte JSX");
+  }
+  //  nº 804, mode français seulement : le texte JSX coupé par des
+  //  accolades, lu morceau par morceau.
+  if (MODE_FRANCAIS) {
+    for (const m of propre.matchAll(/>([^<>]*\{[^<>]*)</g)) {
+      for (const morceau of morceauxJsx(m[1])) ajouter(morceau, "texte JSX");
+    }
   }
   /*  Les littéraux. UN GABARIT RESTE ENTIER : ses trous gardent leur
       `${…}`, et il compte pour UN texte — c'est bien une seule phrase
@@ -231,9 +404,39 @@ const fichiers = execSync(
 
 const parFichier = [];
 for (const chemin of fichiers) {
-  const trouvailles = moissonner(readFileSync(`${RACINE}/${chemin}`, "utf8"));
+  const d = domaine(chemin);
+  if (PERIMETRE.length && !PERIMETRE.includes(d[0])) continue;
+  let trouvailles = moissonner(readFileSync(`${RACINE}/${chemin}`, "utf8"));
+  if (MODE_FRANCAIS) trouvailles = trouvailles.filter((t) => estFrancais(t.texte));
   if (trouvailles.length === 0) continue;
-  parFichier.push({ chemin, domaine: domaine(chemin), trouvailles });
+  parFichier.push({ chemin, domaine: d, trouvailles });
+}
+
+/* ══════════ LE BANC DE LA TRADUCTION (nº 804) ══════════ */
+if (MODE_FRANCAIS) {
+  let restes = 0;
+  let exceptes = 0;
+  for (const f of parFichier) {
+    const lignes = [];
+    for (const t of f.trouvailles) {
+      const exception = estUneException(f.chemin, t.texte);
+      if (exception) {
+        exceptes++;
+        continue;
+      }
+      restes++;
+      lignes.push(`      [${t.nature[0]}] ${t.texte}`);
+    }
+    if (lignes.length) {
+      console.log(`\n   ${f.chemin}`);
+      for (const l of lignes) console.log(l);
+    }
+  }
+  console.log(
+    `\n── périmètre ${PERIMETRE.join("+") || "entier"} · textes français restants : ${restes} · exceptions déclarées : ${exceptes}`
+  );
+  console.log(restes === 0 ? "── PLUS AUCUN TEXTE FRANÇAIS ✔" : "── IL EN RESTE ✖");
+  process.exit(restes === 0 ? 0 : 1);
 }
 parFichier.sort(
   (a, b) => a.domaine.localeCompare(b.domaine) || b.trouvailles.length - a.trouvailles.length

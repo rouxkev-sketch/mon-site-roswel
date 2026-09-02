@@ -43,9 +43,9 @@ export function NouveauMotDePasse() {
     evenement.preventDefault();
     const trouvees: Record<string, string> = {};
     if (motDePasse.length < LONGUEUR_MINIMALE) {
-      trouvees.motDePasse = `${LONGUEUR_MINIMALE} caractères au minimum.`;
+      trouvees.motDePasse = `At least ${LONGUEUR_MINIMALE} characters.`;
     } else if (confirmation !== motDePasse) {
-      trouvees.confirmation = "Les deux mots de passe ne correspondent pas.";
+      trouvees.confirmation = "The two passwords don't match.";
     }
     setErreurs(trouvees);
     if (Object.keys(trouvees).length > 0) return;
@@ -67,10 +67,10 @@ export function NouveauMotDePasse() {
         erreur instanceof Error ? erreur.message.toLowerCase() : "";
       setErreurs({
         general: brut.includes("should be different")
-          ? "Ce mot de passe est identique à l'ancien — choisis-en un nouveau."
+          ? "This password is the same as the old one — choose a new one."
           : brut.includes("password should be")
-            ? `Le mot de passe doit faire au moins ${LONGUEUR_MINIMALE} caractères.`
-            : "L'enregistrement n'a pas abouti. Réessaie.",
+            ? `Your password must be at least ${LONGUEUR_MINIMALE} characters.`
+            : "Saving failed. Try again.",
       });
     } finally {
       setEnCours(false);
@@ -87,12 +87,12 @@ export function NouveauMotDePasse() {
     return (
       <main className="flex-1 mx-auto w-full max-w-[440px] px-5 sm:px-6 pt-12 sm:pt-16 pb-24 text-center">
         <h1 className="text-[clamp(1.5rem,4vw,1.9rem)] font-bold text-sombre-texte">
-          Ce lien n&apos;est plus valide
+          This link is no longer valid
         </h1>
         <p className="mt-3 text-sombre-texte-doux leading-relaxed">
-          Il a expiré, ou il a déjà servi. Redemande un e-mail depuis la
-          page de connexion (« Mot de passe oublié ? ») — ça ne prend
-          qu&apos;une minute.
+          It expired, or it was already used. Request a new email from the
+          login page (&quot;Forgot your password?&quot;) — it only takes
+          a minute.
         </p>
         <Link
           href="/devenir-tatoueur"
@@ -100,7 +100,7 @@ export function NouveauMotDePasse() {
                      px-7 min-h-[52px] bg-primaire hover:bg-primaire-fonce
                      text-white font-semibold transition-colors"
         >
-          Retour à la connexion
+          Back to login
         </Link>
       </main>
     );
@@ -110,11 +110,11 @@ export function NouveauMotDePasse() {
   return (
     <main className="flex-1 mx-auto w-full max-w-[440px] px-5 sm:px-6 pt-12 sm:pt-16 pb-24">
       <h1 className="text-[clamp(1.5rem,4vw,1.9rem)] font-bold text-sombre-texte text-center">
-        Choisis ton nouveau mot de passe
+        Choose your new password
       </h1>
       <p className="mt-2 text-center text-[15px] text-sombre-texte-doux">
-        {LONGUEUR_MINIMALE} caractères au minimum — et cette fois, un que
-        tu retiendras.
+        At least {LONGUEUR_MINIMALE} characters — and this time, one
+        you&apos;ll remember.
       </p>
 
       {fait ? (
@@ -122,7 +122,7 @@ export function NouveauMotDePasse() {
           role="status"
           className="mt-8 rounded-xl border border-primaire/40 bg-primaire/10 px-4 py-3 text-sm text-sombre-texte"
         >
-          C&apos;est enregistré : ton mot de passe est changé. Direction ton
+          Saved: your password is changed. Heading to your
           portfolio…
         </p>
       ) : (
@@ -132,7 +132,7 @@ export function NouveauMotDePasse() {
               htmlFor="nouveau-mdp"
               className="block text-sm font-medium text-sombre-texte mb-1.5"
             >
-              Nouveau mot de passe
+              New password
             </label>
             <div className="relative">
               <input
@@ -142,7 +142,7 @@ export function NouveauMotDePasse() {
                 value={motDePasse}
                 onChange={(e) => setMotDePasse(e.target.value)}
                 aria-invalid={Boolean(erreurs.motDePasse)}
-                placeholder={`${LONGUEUR_MINIMALE} caractères au minimum`}
+                placeholder={`At least ${LONGUEUR_MINIMALE} characters`}
                 style={{ paddingRight: PLACE_DE_L_OEIL }}
                 className={`${CHAMP} ${
                   erreurs.motDePasse ? "border-erreur" : "border-sombre-bordure"
@@ -167,7 +167,7 @@ export function NouveauMotDePasse() {
               htmlFor="nouveau-mdp-confirmation"
               className="block text-sm font-medium text-sombre-texte mb-1.5"
             >
-              Confirme le mot de passe
+              Confirm the password
             </label>
             <input
               id="nouveau-mdp-confirmation"
@@ -176,7 +176,7 @@ export function NouveauMotDePasse() {
               value={confirmation}
               onChange={(e) => setConfirmation(e.target.value)}
               aria-invalid={Boolean(erreurs.confirmation)}
-              placeholder="Le même, une seconde fois"
+              placeholder="The same one, once more"
               className={`${CHAMP} ${
                 erreurs.confirmation ? "border-erreur" : "border-sombre-bordure"
               }`}
@@ -205,7 +205,7 @@ export function NouveauMotDePasse() {
                        text-white font-semibold transition-colors
                        disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {enCours ? "Un instant…" : "Enregistrer le mot de passe"}
+            {enCours ? "One moment…" : "Save password"}
           </button>
         </form>
       )}

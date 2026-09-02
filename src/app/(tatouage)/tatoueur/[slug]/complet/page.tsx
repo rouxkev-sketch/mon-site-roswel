@@ -109,11 +109,11 @@ export async function generateMetadata({
       montre pas de portfolio n'a rien à faire dans un moteur. */
   if (await ficheExistanteNonPubliee(slug)) {
     return {
-      title: "Portfolio pas encore en ligne",
+      title: "Portfolio not online yet",
       robots: { index: false, follow: false },
     };
   }
-    return { title: "Tatoueur introuvable", robots: { index: false, follow: false } };
+    return { title: "Tattoo artist not found", robots: { index: false, follow: false } };
   }
 
   /**
@@ -149,7 +149,7 @@ export async function generateMetadata({
             width: 1200,
             height: 630,
             alt:
-              `Portfolio de ${tatoueur.nom} à ${tatoueur.ville_nom}` +
+              `${tatoueur.nom}'s portfolio in ${tatoueur.ville_nom}` +
               (styleCarrousel ? ` — ${libelleStyle(styleCarrousel)}` : "") +
               " · yokofolio",
           },
@@ -159,11 +159,11 @@ export async function generateMetadata({
 
   const styles = tatoueur.styles.map(libelleStyle).join(", ");
   return {
-    title: `${tatoueur.nom} — tatoueur à ${tatoueur.ville_nom}`,
+    title: `${tatoueur.nom} — tattoo artist in ${tatoueur.ville_nom}`,
     description:
-      `${tatoueur.nom}, tatoueur à ${tatoueur.ville_nom}` +
+      `${tatoueur.nom}, tattoo artist in ${tatoueur.ville_nom}` +
       (styles ? ` — ${styles}.` : ".") +
-      " Portfolio Instagram et styles pratiqués.",
+      " Instagram portfolio and styles.",
     ...(imageDuCarrousel
       ? { openGraph: imageDuCarrousel, twitter: imageDuCarrousel }
       : {}),
@@ -245,7 +245,7 @@ export default async function PageFicheTatoueur({
   //  (La question est posée par la clé de service et ne rend qu'un oui
   //  ou un non : rien de la fiche ne sort de là.)
   if (!tatoueur && (await ficheExistanteNonPubliee(slug))) {
-    return <PageMessageSombre titre="Ce portfolio n'est pas encore en ligne." pleinEcran={false} />;
+    return <PageMessageSombre titre="This portfolio isn't online yet." pleinEcran={false} />;
   }
   if (!tatoueur) notFound();
 
@@ -324,7 +324,7 @@ export default async function PageFicheTatoueur({
             name: tatoueur.nom,
             ...(tatoueur.type_fiche === "salon"
               ? {}
-              : { jobTitle: "Tatoueur" }),
+              : { jobTitle: "Tattoo artist" }),
             url: `${adresseDuSite()}/tatoueur/${tatoueur.slug}`,
             ...(tatoueur.photo_profil
               ? { image: `${adresseDuSite()}${tatoueur.photo_profil}` }
@@ -374,7 +374,7 @@ export default async function PageFicheTatoueur({
             {
               "@type": "ListItem",
               position: 1,
-              name: "Accueil",
+              name: "Home",
               item: adresseDuSite(),
             },
             ...(stylePrincipal

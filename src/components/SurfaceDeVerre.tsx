@@ -366,7 +366,7 @@ export function FenetreDeVerre({
       {surFermeture ? (
         <button
           type="button"
-          aria-label="Fermer"
+          aria-label="Close"
           onClick={surFermeture}
           className="absolute inset-0 bg-black/25
                      opacity-100 transition-opacity duration-200 starting:opacity-0"

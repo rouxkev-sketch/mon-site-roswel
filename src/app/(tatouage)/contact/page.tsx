@@ -36,7 +36,7 @@ import { FormulaireContactYokofolio } from "@/components/FormulaireContactYokofo
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: `Une question, une idée, un problème ? Écris à l'équipe ${MARQUE_YOKOFOLIO.nom}.`,
+  description: `A question, an idea, a problem? Write to the ${MARQUE_YOKOFOLIO.nom} team.`,
   alternates: { canonical: `${adresseDuSite()}/contact` },
 };
 
@@ -58,11 +58,11 @@ export default function PageContactTatouage() {
              recherche comme pour le premier regard. */}
         <FormulaireContactYokofolio>
           <h1 className="text-[clamp(1.6rem,4.5vw,2.1rem)] font-bold leading-tight text-sombre-texte">
-            Écris-nous
+            Get in touch
           </h1>
           <p className="mt-2 text-[15px] text-sombre-texte-doux leading-relaxed">
-            Une question, une idée, un problème&nbsp;? On lit tout, et on
-            répond vite.
+            A question, an idea, a problem? We read everything, and we
+            answer fast.
           </p>
         </FormulaireContactYokofolio>
       </main>

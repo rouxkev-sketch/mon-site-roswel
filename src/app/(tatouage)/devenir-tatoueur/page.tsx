@@ -15,7 +15,7 @@ import { EcranAuthentification } from "@/components/EcranAuthentification";
  */
 
 export const metadata: Metadata = {
-  title: "Mon compte",
+  title: "My account",
   robots: { index: false, follow: true },
 };
 

@@ -241,7 +241,7 @@ function LigneDeLangue({
         {langue.label}
         {!langue.actif && (
           <span className="ml-auto text-[11.5px] uppercase tracking-wide">
-            bientôt
+            coming soon
           </span>
         )}
       </button>
@@ -425,7 +425,7 @@ export function FenetreLangue({
           opaque
           alignement="droite"
           role="dialog"
-          aria-label="Choisir la langue"
+          aria-label="Choose language"
           data-source-composant="SelecteurLangue · fenêtre du compte"
           className="mobile:hidden"
         >
@@ -467,12 +467,12 @@ export function FenetreLangue({
             <div className="mb-2 flex items-center gap-2.5">
               <IconeMonde taille={20} classe="shrink-0 text-sombre-texte/80" />
               <h2 className="flex-1 min-w-0 text-[17px] font-bold tracking-tight text-sombre-texte">
-                Langue
+                Language
               </h2>
               <button
                 type="button"
                 onClick={surFermeture}
-                aria-label="Fermer"
+                aria-label="Close"
                 className="-mr-[9px] w-9 h-9 shrink-0 flex items-center justify-center
                            rounded-full text-sombre-texte-doux
                            hover:text-sombre-texte hover:bg-sombre-eleve
@@ -500,9 +500,9 @@ export function FenetreLangue({
            GRIS d'un encadré. C'est exactement le défaut de la nº 533-§6
            et son remède, repris au caractère. */}
       <PagePleinEcranMobile
-        titre="Langue"
+        titre="Language"
         icone={<IconeMonde taille={22} classe="shrink-0 text-white" />}
-        ariaLabel="Choisir la langue"
+        ariaLabel="Choose language"
         surFermer={surFermeture}
         classeCadre="z-[85]"
       >
@@ -650,8 +650,8 @@ export function SelecteurLangue({ hauteur = 40 }: { hauteur?: number }) {
         onClick={ouvrir}
         aria-haspopup="dialog"
         aria-expanded={ouvert}
-        aria-label={`Langue : ${langueActive.label}`}
-        title={`Langue : ${langueActive.label}`}
+        aria-label={`Language: ${langueActive.label}`}
+        title={`Language: ${langueActive.label}`}
         // MÊME HAUTEUR que le bouton rose à sa droite : la barre garde
         // une seule ligne d'appui, sans décalage d'un pixel.
         style={{ height: hauteur, width: hauteur }}
@@ -721,7 +721,7 @@ export function SelecteurLangue({ hauteur = 40 }: { hauteur?: number }) {
           opaque
           alignement="droite"
           role="dialog"
-          aria-label="Choisir la langue"
+          aria-label="Choose language"
           data-source-composant="SelecteurLangue · menu web"
           /*  §1 (nº 655) — `flex flex-col gap-3` S'AJOUTE, et rien
                d'autre : la liste rend désormais DEUX encadrés au lieu
@@ -750,7 +750,7 @@ export function SelecteurLangue({ hauteur = 40 }: { hauteur?: number }) {
           <div className="flex items-center gap-2.5">
             <IconeMonde taille={20} classe="shrink-0 text-sombre-texte/80" />
             <h2 className="min-w-0 flex-1 text-[17px] font-bold tracking-tight text-sombre-texte">
-              Langue
+              Language
             </h2>
           </div>
           <ListeDesLangues surChoix={fermer} />

@@ -165,11 +165,11 @@ const TITRE_INTERTITRE =
 //  qui n'est ni en studio, ni en salon, ni de passage, ni en
 //  convention. Le slug ne bouge pas ; seul l'affichage parle sa langue.
 const LIBELLES_MODES: Record<GenreMode, string> = {
-  prive: "Studio",
-  salon: "Salon",
-  guest: "Guest",
+  prive: "Private Studio",
+  salon: "Tattoo Shop",
+  guest: "Guest Spot",
   convention: "Convention",
-  independent: "Autre",
+  independent: "Independent",
 };
 
 /** L'ORDRE DU SÉLECTEUR — celui que le propriétaire a dicté (nº 403,
@@ -264,10 +264,10 @@ const GRILLE_SELECTEUR =
     plus aucun écran ne le lit.  */
 
 const MOTS_AJOUT: Record<Exclude<GenreMode, "guest">, string> = {
-  prive: "un studio",
-  salon: "un salon",
-  convention: "une convention",
-  independent: "une zone",
+  prive: "a private studio",
+  salon: "a tattoo shop",
+  convention: "a convention",
+  independent: "a service area",
 };
 
 /** Un mode neuf — sans genre : c'est le sélecteur qui pose la
@@ -789,7 +789,7 @@ export function BlocModesExercice({
     return (
       <div className="opacity-100 transition-opacity duration-200 starting:opacity-0">
         <BasculeDeuxChoix
-          etiquette="Ton rôle dans ce lieu"
+          etiquette="Your role there"
           choix={[
             { slug: ROLES_STUDIO[0].slug as RoleStudio, label: ROLES_STUDIO[0].choix },
             { slug: ROLES_STUDIO[1].slug as RoleStudio, label: ROLES_STUDIO[1].choix },
@@ -831,8 +831,8 @@ export function BlocModesExercice({
     //  son PORTFOLIO — c'est cela qu'on cherche dans le champ juste
     //  en dessous.
     const question = prive
-      ? "Le studio a-t-il son portfolio sur YokoFolio ?"
-      : "Le salon a-t-il son portfolio sur YokoFolio ?";
+      ? "Does the studio have a portfolio on YokoFolio?"
+      : "Does the shop have a portfolio on YokoFolio?";
 
     return (
       <div>
@@ -859,10 +859,10 @@ export function BlocModesExercice({
                 bloc 1 et les fiches publiques, où « Studio privé »
                 qualifie le LIEU et garde tout son sens. */}
             <BasculeDeuxChoix
-              etiquette="La nature du lieu qui t'accueille"
+              etiquette="What kind of place hosts you"
               choix={[
-                { slug: "prive" as NatureEtablissement, label: "Studio" },
-                { slug: "salon" as NatureEtablissement, label: "Salon" },
+                { slug: "prive" as NatureEtablissement, label: "Private Studio" },
+                { slug: "salon" as NatureEtablissement, label: "Tattoo Shop" },
               ]}
               valeur={(mode.natureLieu ?? "salon") as NatureEtablissement}
               surChoix={(natureLieu) =>
@@ -917,8 +917,8 @@ export function BlocModesExercice({
                genre nomme donc ce qu'il n'a pas trouvé. */
           messageVide={
             (guest ? (mode.natureLieu ?? "salon") : mode.genre) === "prive"
-              ? "Aucun studio trouvé"
-              : "Aucun salon trouvé"
+              ? "No studio found"
+              : "No shop found"
           }
           //  LES DEUX CHAMPS SE PRÉSENTENT SEULS : ce qu'ils attendent
           //  est écrit DEDANS, plus au-dessus.
@@ -927,7 +927,7 @@ export function BlocModesExercice({
           //  intérieur qui suit la nature du lieu : une ville suffit à
           //  un studio, un salon veut son adresse complète (c'est la
           //  règle d'`adresseSuffisante`, écrite ici en mots).
-          indicationInscrit="Recherche"
+          indicationInscrit="Search"
           /*  §3 (nº 418) — LA QUESTION DE LA ZONE D'ADRESSE. Elle
                demandait « Où se trouve-t-il ? » depuis la nº 266 ; le
                propriétaire lui préfère une phrase qui dit à QUOI SERT
@@ -938,15 +938,15 @@ export function BlocModesExercice({
                les trois modes (Studio, Salon, Guest) — la branche
                unique de `leLieu`. Une ligne suffit donc à les servir
                tous les trois. */
-          titreAdresse="Pas de portfolio ? Ajoutez ses coordonnées."
+          titreAdresse="No portfolio? Add its details."
           indicationManuel={
-            prive ? "Ville ou adresse complète" : "Adresse complète"
+            prive ? "City or full address" : "Full address"
           }
           //  §1 (nº 266) — LE NOM DU LIEU QUI N'EST PAS SUR YOKOFOLIO :
           //  il n'apparaît qu'une fois l'adresse choisie, son libellé
           //  vit DEDANS, et il disparaît avec l'adresse dès que le
           //  portfolio du lieu est trouvé par la recherche.
-          libelleNomLieu={prive ? "Nom du studio" : "Nom du salon"}
+          libelleNomLieu={prive ? "Studio name" : "Shop name"}
           nomLieu={mode.nomLieu ?? ""}
           surNomLieu={(nomLieu) => modifier(mode.cle, { nomLieu })}
           nomLieuEnErreur={manquant(mode.cle, "nomLieu")}
@@ -1149,7 +1149,7 @@ export function BlocModesExercice({
 
         {catalogueVide && (
           <p className="text-[13px] leading-relaxed text-sombre-texte-doux">
-            No convention has been added to the catalogue yet.
+            No convention has been added to the catalog yet.
           </p>
         )}
 
@@ -1173,8 +1173,8 @@ export function BlocModesExercice({
               <button
                 type="button"
                 onClick={() => retirerLaConvention(mode.cle)}
-                aria-label={`Retirer ${mode.convention.nom}`}
-                title="Retirer"
+                aria-label={`Remove ${mode.convention.nom}`}
+                title="Remove"
                 className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full
                            text-sombre-texte-doux transition-colors
                            hover:bg-sombre-haut hover:text-sombre-texte
@@ -1201,7 +1201,7 @@ export function BlocModesExercice({
                            enFaute ? "border-erreur" : "border-transparent"
                          }`}
             >
-              + Ajouter la convention
+              + Add the convention
             </button>
           ))}
 
@@ -1398,8 +1398,8 @@ export function BlocModesExercice({
                   <button
                     type="button"
                     onClick={() => surRetrait(ville.cle)}
-                    aria-label={`Retirer ${libelle}`}
-                    title="Retirer"
+                    aria-label={`Remove ${libelle}`}
+                    title="Remove"
                     className="flex h-7 w-7 shrink-0 items-center justify-center
                                rounded-full text-sombre-texte-doux
                                transition-colors hover:bg-sombre-haut
@@ -1418,7 +1418,7 @@ export function BlocModesExercice({
             key={`${prefixe}-${compteurVille}`}
             id={prefixe}
             etiquette={null}
-            texteIndicatif="Ville, ou adresse complète…"
+            texteIndicatif="City, or full address…"
             surChoix={(lieu) => {
               if (!lieu) return;
               surAjout(lieu);
@@ -1608,7 +1608,7 @@ export function BlocModesExercice({
         {/* ---------- 1. LES DATES, EN PREMIER ---------- */}
         <div>
           <p className="text-[13.5px] font-semibold text-sombre-texte">
-            Tes dates
+            Your dates
           </p>
           <div className="mt-3">{lesDates(session)}</div>
         </div>
@@ -1624,7 +1624,7 @@ export function BlocModesExercice({
                La robe est celle des intertitres de champ du bloc
                (« Your dates there », nº 750 ter). */}
           <p className="text-[13.5px] font-semibold text-sombre-texte">
-            Souhaitez-vous indiquer le lieu de ce guest ?
+            Want to say where this guest spot is?
           </p>
           {/*  LA BASCULE À DEUX POSITIONS du site (nº 100) : elle s'ouvre
                sur « Oui », le parcours historique — c'est celui de tous
@@ -1636,10 +1636,10 @@ export function BlocModesExercice({
                dépendent d'aucun des deux (voir `datesSuiventLeLieu`). */}
           <div className="mt-3">
             <BasculeDeuxChoix
-              etiquette="Souhaitez-vous indiquer le lieu de ce guest ?"
+              etiquette="Want to say where this guest spot is?"
               choix={[
-                { slug: "oui", label: "Oui" },
-                { slug: "non", label: "Non" },
+                { slug: "oui", label: "Yes" },
+                { slug: "non", label: "No" },
               ]}
               valeur={session.sansLieu ? "non" : "oui"}
               surChoix={(reponse) => basculerLeGuest(session, reponse === "non")}
@@ -1651,7 +1651,7 @@ export function BlocModesExercice({
         {session.sansLieu ? (
           <div>
             <p className="text-[13.5px] font-semibold text-sombre-texte">
-              Dans quelle ville ?
+              Which city?
             </p>
             {lesCapsulesDeVilles({
               villes,
@@ -1787,7 +1787,7 @@ export function BlocModesExercice({
     return (
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-[14.5px] font-semibold text-sombre-texte">
-          Supprimer ?
+          Delete?
         </p>
         <div className="flex shrink-0 items-center gap-2">
           <button
@@ -1799,7 +1799,7 @@ export function BlocModesExercice({
                        text-sombre-texte-doux transition-colors
                        hover:text-sombre-texte"
           >
-            Annuler
+            Cancel
           </button>
           <button
             type="button"
@@ -1814,7 +1814,7 @@ export function BlocModesExercice({
             className="px-2 min-h-[38px] text-[13.5px] font-semibold
                        text-erreur transition-colors hover:opacity-75"
           >
-            Supprimer
+            Delete
           </button>
         </div>
       </div>
@@ -1828,7 +1828,7 @@ export function BlocModesExercice({
       partir de deux. Et elle dit « Supprimer ce lieu », le mot de sa
       confirmation, pour les cinq modes. */
   function laCroix(session: ModeEnSaisie) {
-    const libelle = "Supprimer ce lieu";
+    const libelle = "Delete this place";
     return (
       <button
         type="button"
@@ -1880,7 +1880,7 @@ export function BlocModesExercice({
           L'ARIA NE BOUGE PAS : radiogroup + radio/aria-checked. */}
       <div
         role="radiogroup"
-        aria-label="Le mode d'activité"
+        aria-label="How you work"
         //  nº 750 — la grille suit le NOMBRE de modes (voir
         //  COLONNES_SELECTEUR) : trois tenaient sur une ligne, quatre
         //  se rangent en deux lignes de deux.
@@ -2159,8 +2159,8 @@ export function BlocModesExercice({
                  ce qu'on ajoute est une PRÉSENCE de plus (une autre
                  convention, d'autres dates), pas un lieu de plus. */}
             {genreAffiche === "guest" || genreAffiche === "convention"
-              ? "+ Ajouter une autre date"
-              : `+ Ajouter ${MOTS_AJOUT[genreAffiche]}`}
+              ? "+ Add another date"
+              : `+ Add ${MOTS_AJOUT[genreAffiche]}`}
           </button>
           )}
         </div>

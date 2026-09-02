@@ -152,7 +152,7 @@ export function BlocSuivis({
     return (
       <EcranVideSelection
         marque="data-suivis-vide"
-        message="Suivez un portfolio pour le retrouver ici."
+        message="Follow a portfolio to find it here."
       />
     );
   }

@@ -43,7 +43,7 @@ export const MARQUE_YOKOFOLIO = {
   //  graphie officielle de la marque À L'ÉCRAN. Les identifiants
   //  techniques (chemins, clés, slugs, adresses) restent en minuscules.
   nom: "YokoFolio",
-  slogan: "Les portfolios des tatoueurs, par style",
+  slogan: "Tattoo portfolios, by style",
   logo: "/yokofolio-logo.png",
   /** Le CŒUR SEUL, carré : onglet du navigateur et écran d'accueil. */
   icone: "/yokofolio-icone.png",
@@ -1947,19 +1947,19 @@ export const TEXTES_TATOUAGE = {
    * recherche lisent en premier, et celle qui doit répondre à ce que
    * les gens tapent (« tatoueur réalisme Lyon »).
    */
-  titreAccueil: "Trouve ton tatoueur, par style et par ville",
+  titreAccueil: "Find your tattoo artist, by style and city",
   /**
    * Le vrai texte de la page, sous le titre. Un moteur de recherche ne
    * sait rien faire de trois champs de formulaire : il lui faut des
    * phrases. Celles-ci décrivent honnêtement ce que fait le site.
    */
   paragrapheAccueil:
-    "Choisis un style, une ville, un rayon : yokofolio affiche les tatoueurs " +
-    "qui travaillent dans ce style près de chez toi, et une image de leur " +
-    "travail pour ce style précis. Chaque résultat renvoie vers le portfolio " +
-    "du tatoueur, sur Instagram et TikTok.",
+    "Pick a style, a city and a distance: yokofolio shows the tattoo artists " +
+    "working in that style near you, and a picture of their work in that " +
+    "exact style. Every result links to the artist's portfolio " +
+    "on Instagram and TikTok.",
   /** Le libellé au-dessus des champs, à droite de l'icône rose. */
-  titreRecherche: "Chercher un tatoueur",
+  titreRecherche: "Find a tattoo artist",
   /**
    * LE BOUTON D'APPEL de la barre fixe.
    * ⚠️ « REJOINDRE », ET PLUS « Montrer mon travail » (passe nº 137).
@@ -1973,7 +1973,7 @@ export const TEXTES_TATOUAGE = {
    * s'adresse à quelqu'un qui a vu ce que le site fait.
    * Une fois CONNECTÉ, le bouton affiche « Mon espace » à la place.
    */
-  lienInscription: "Rejoindre",
+  lienInscription: "Join",
   /**
    * §5 (nº 321) — LE BOUTON DE « QUI SOMMES-NOUS », ET LUI SEUL.
    * ------------------------------------------------------------------
@@ -1985,7 +1985,7 @@ export const TEXTES_TATOUAGE = {
    * portfolio et à qui il sert. Deux endroits, deux publics, deux mots :
    * c'est pourquoi il y a DEUX clés et non une seule partagée.
    */
-  lienCreerPortfolio: "Crée ton portfolio",
+  lienCreerPortfolio: "Create your portfolio",
   /** LE TITRE AU-DESSUS DE LA MOSAÏQUE, sans recherche (nº 211-§1) —
       une INVITATION adressée au visiteur, et non plus la description
       d'un écran (« Explorer toutes les créations »).
@@ -2022,12 +2022,12 @@ export const TEXTES_TATOUAGE = {
    * lui-même à la nº 508.
    * ⚠️ SANS POINT FINAL, comme tous les titres du site.
    */
-  titreRechercheSansCategorie: "Toutes les réalisations",
+  titreRechercheSansCategorie: "All tattoos",
   /** L'APPEL AUX TATOUEURS — en bas de l'accueil, après la mosaïque.
       Pas dans la barre fixe : elle n'a pas la place, et quatre
       visiteurs sur cinq arrivent par le téléphone. */
-  titreAppelTatoueur: "Tu es tatoueur ?",
-  boutonAppelTatoueur: "Créer mon portfolio",
+  titreAppelTatoueur: "Are you a tattoo artist?",
+  boutonAppelTatoueur: "Create my portfolio",
   /**
    * LA LOCALITÉ PAR DÉFAUT, quand aucun lieu n'est choisi.
    * « Partout », et plus « Toute la France » : depuis la refonte de la
@@ -2037,15 +2037,15 @@ export const TEXTES_TATOUAGE = {
    * du champ VIDE, celui où l'on revient par la croix d'effacement
    * (web) ou par le bouton « Effacer » (smartphone).
    */
-  partoutLabel: "Partout",
+  partoutLabel: "Anywhere",
   /** Le libellé fantôme du champ de localité. */
   //  nº 444 — le fantôme du champ de localité, en anglais (texte
   //  exact demandé par le proprietaire). Web et mobile le partagent :
   //  c est le meme champ, il porte donc le meme mot.
   ouLabel: "Enter city or country",
   descriptionSite:
-    "Compare les portfolios des tatoueurs par style et par ville : " +
-    "réalisme, fine line, old school, japonais, blackwork et bien d'autres.",
+    "Compare tattoo artists' portfolios by style and city: " +
+    "realism, fine line, old school, Japanese, blackwork and many more.",
 };
 
 /**

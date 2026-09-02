@@ -123,8 +123,8 @@ function CroixDeChamp({
   return (
     <button
       type="button"
-      aria-label={`Effacer ${quoi}`}
-      title="Effacer"
+      aria-label={`Clear ${quoi}`}
+      title="Clear"
       onPointerDown={(evenement) => evenement.preventDefault()}
       onClick={surEffacement}
       className="absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8
@@ -266,7 +266,7 @@ export function LienLibre({
         <span aria-hidden="true" className="shrink-0">
           <IconePlus taille={16} />
         </span>
-        Ajouter un lien
+        Add a link
       </button>
     );
   }
@@ -313,7 +313,7 @@ export function LienLibre({
           surChangement({ ...valeur, etat: "edition" });
         }}
         title={valeur.url}
-        aria-label={`Modifier le lien ${valeur.titre} — ${valeur.url}`}
+        aria-label={`Edit the link ${valeur.titre} — ${valeur.url}`}
         /*  ██ §2 (nº 409) — LA COULEUR REJOINT CELLE DES CHAMPS ██
              CE QU'IL PORTAIT : `bg-sombre-eleve` (#33333A) au repos et
              `bg-sombre-eleve-clair` (#3F3F47) au survol — l'écriture
@@ -371,7 +371,7 @@ export function LienLibre({
           onFocus={() => setChampEnSaisie("url")}
           onBlur={() => setChampEnSaisie(null)}
           placeholder="URL"
-          aria-label="L'adresse du lien"
+          aria-label="Link address"
           aria-invalid={fauteUrl}
           className={`${CHAMP} ${
             fauteUrl ? "border-erreur" : "border-transparent"
@@ -403,12 +403,12 @@ export function LienLibre({
                         text-[12.5px] font-semibold text-erreur
                         transition-[right] ${croixSurUrl ? "right-11" : "right-4"}`}
           >
-            Lien non valide
+            Invalid link
           </span>
         )}
         {champEnSaisie === "url" && valeur.url !== "" && (
           <CroixDeChamp
-            quoi="l'adresse du lien"
+            quoi="the link address"
             surEffacement={() => poserChamp({ url: "" })}
           />
         )}
@@ -446,8 +446,8 @@ export function LienLibre({
           onFocus={() => setChampEnSaisie("titre")}
           onBlur={() => setChampEnSaisie(null)}
           maxLength={TITRE_LIEN_MAXIMUM}
-          placeholder="Titre"
-          aria-label={`Le titre du lien (${TITRE_LIEN_MAXIMUM} caractères au plus)`}
+          placeholder="Title"
+          aria-label={`Link title (${TITRE_LIEN_MAXIMUM} characters max)`}
           aria-describedby={`${id}-compteur`}
           aria-invalid={fauteTitre}
           className={`${CHAMP} ${croixSurTitre ? "pr-20" : "pr-16"} ${
@@ -465,7 +465,7 @@ export function LienLibre({
         </p>
         {champEnSaisie === "titre" && valeur.titre !== "" && (
           <CroixDeChamp
-            quoi="le titre du lien"
+            quoi="the link title"
             surEffacement={() => poserChamp({ titre: "" })}
           />
         )}
@@ -481,7 +481,7 @@ export function LienLibre({
                      text-sombre-texte transition-colors
                      hover:bg-sombre-eleve-clair"
         >
-          Ajouter
+          Add
         </button>
         {/*  §4 (nº 405) — `annuler`, ET PLUS `retirerLeLien` : rouvrir
              un lien enregistré puis annuler REMET ce lien, au lieu de
@@ -494,7 +494,7 @@ export function LienLibre({
                      text-sombre-texte-doux transition-colors
                      hover:text-sombre-texte"
         >
-          Annuler
+          Cancel
         </button>
       </div>
     </div>
@@ -512,6 +512,6 @@ export function erreurDuLienLibre(lien: LienLibreSaisie): string | null {
   const titreVide = !lien.titre.trim();
   if (urlVide && titreVide) return null;
   if (urlVide || titreVide) return MANQUE;
-  if (normaliserUrlLibre(lien.url) === null) return "Lien non valide";
+  if (normaliserUrlLibre(lien.url) === null) return "Invalid link";
   return null;
 }

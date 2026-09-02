@@ -48,7 +48,7 @@ export const metadata: Metadata = {
   //  de la page. L'ADRESSE, elle, ne change pas : /mes-favoris reste
   //  /mes-favoris, pour ne casser aucun lien déjà partagé ni aucune
   //  redirection après connexion.
-  title: "Ma sélection",
+  title: "My favorites",
   robots: { index: false, follow: false },
 };
 

@@ -13,7 +13,7 @@ import { NouveauMotDePasse } from "@/components/NouveauMotDePasse";
  */
 
 export const metadata: Metadata = {
-  title: "Nouveau mot de passe",
+  title: "New password",
   robots: { index: false, follow: true },
 };
 

@@ -75,15 +75,15 @@ const ETATS: Record<
   //  anciennes qu'une base non migrée porterait encore — la nº 39 les
   //  bascule en « validee ».
   demande: {
-    mot: "Dans l'équipe",
+    mot: "On the team",
     classe: "border-[#34D399]/40 bg-[#34D399]/10 text-[#34D399]",
   },
   validee: {
-    mot: "Dans l'équipe",
+    mot: "On the team",
     classe: "border-[#34D399]/40 bg-[#34D399]/10 text-[#34D399]",
   },
   refusee: {
-    mot: "Refusée",
+    mot: "Declined",
     classe: "border-erreur/40 bg-erreur/10 text-erreur",
   },
 };
@@ -144,7 +144,7 @@ export async function chargerEquipeDuSalon(
         artiste_id: ligne.artiste_id,
         statut: ligne.statut,
         origine: ligne.origine,
-        nom: fiche?.nom ?? "Portfolio retiré",
+        nom: fiche?.nom ?? "Portfolio removed",
         slug: fiche?.slug ?? null,
         photo: fiche?.photo_profil ?? fiche?.photo_principale ?? null,
         ville: ligneCarte({
@@ -266,14 +266,14 @@ export function BlocEquipeSalon({
       if (!donnees?.ok) {
         setMessage(
           donnees?.message ??
-            "Le rattachement n'a pas pu être enregistré — réessaie."
+            "The link couldn't be saved — try again."
         );
       }
       //  ⚠️ AUCUN MESSAGE QUAND ÇA MARCHE (passe nº 103). L'artiste
       //  apparaît dans la liste juste en dessous : c'est LA
       //  confirmation, une phrase par-dessus ne ferait que la redire.
     } catch {
-      setMessage("Réseau indisponible : le rattachement n'est pas enregistré.");
+      setMessage("Network unavailable: the link wasn't saved.");
     } finally {
       setEnCours(false);
       relire();
@@ -302,10 +302,10 @@ export function BlocEquipeSalon({
         message?: string;
       } | null;
       if (!donnees?.ok) {
-        setMessage(donnees?.message ?? "Le retrait n'a pas abouti.");
+        setMessage(donnees?.message ?? "Removal failed.");
       }
     } catch {
-      setMessage("Réseau indisponible : le retrait n'est pas parti.");
+      setMessage("Network unavailable: the removal didn't go through.");
     } finally {
       setEnCours(false);
       relire();
@@ -325,11 +325,11 @@ export function BlocEquipeSalon({
       <RechercheFicheInscrite
         id="equipe-recherche-artiste"
         type="artiste"
-        etiquette="Ton équipe est-elle sur YokoFolio ?"
+        etiquette="Is your team on YokoFolio?"
         // PAS DE LOUPE DANS LE FANTÔME : le champ en dessine déjà une,
         // vraie, à sa gauche (RechercheFicheInscrite). Les deux se
         // suivaient à trois pixels l'une de l'autre.
-        texteIndicatif="Recherche un artiste"
+        texteIndicatif="Search for an artist"
         choisie={null}
         surChoix={(fiche) => {
           if (fiche) void inviter(fiche);
@@ -342,8 +342,8 @@ export function BlocEquipeSalon({
         //  affichait les six caractères, « déjà dans lu2019équipe ».
         //  Deux listes qui font le même geste portent maintenant le
         //  même mot, et il n'a aucune apostrophe à échapper.
-        libelleExclu="Déjà rattaché"
-        messageVide="Aucun artiste trouvé"
+        libelleExclu="Already linked"
+        messageVide="No artist found"
       />
 
       {/* LE MESSAGE NE PORTE PLUS QUE DES ERREURS (passe nº 103) : une
@@ -361,7 +361,7 @@ export function BlocEquipeSalon({
           l'avatar rond structure assez. */}
       {chargement && ficheId ? (
         <p className="text-[13px] text-sombre-texte-doux">
-          Lecture de ton équipe…
+          Loading your team…
         </p>
       ) : toutes.length === 0 ? (
         /* ⚠️ PLUS DE PAVÉ « Personne pour l'instant… » (passe nº 101).
@@ -442,7 +442,7 @@ export function BlocEquipeSalon({
                   type="button"
                   onClick={() => retirer(liaison)}
                   disabled={enCours}
-                  aria-label={`Retirer ${liaison.nom} de l'équipe`}
+                  aria-label={`Remove ${liaison.nom} from the team`}
                   className="grid h-11 w-11 shrink-0 place-items-center rounded-full
                              text-sombre-texte-doux transition-colors
                              hover:text-sombre-texte

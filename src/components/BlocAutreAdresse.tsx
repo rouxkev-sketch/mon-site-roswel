@@ -212,7 +212,7 @@ export function BlocAutreAdresse({
     if (!donnees?.ok) {
       setMessage(
         donnees?.message ??
-          "Le rattachement n'a pas pu être enregistré. Réessaie."
+          "The link couldn't be saved. Try again."
       );
       return;
     }
@@ -248,13 +248,13 @@ export function BlocAutreAdresse({
         //  « privé » retiré (le mode s'appelle « En studio » depuis la
         //  passe nº 105), et une VRAIE question — « est-il sur… » —
         //  comme partout ailleurs dans le formulaire.
-        etiquette="Ton studio / salon est-il sur YokoFolio ?"
+        etiquette="Is your studio / shop on YokoFolio?"
         //  ⚠️ « Recherche un nom » (passe nº 108) : le titre juste
         //  au-dessus dit DÉJÀ ce qu'on cherche — un studio, un salon.
         //  Le fantôme du champ n'a plus qu'à dire COMMENT le chercher,
         //  et le redire deux fois à deux centimètres d'écart était du
         //  bruit.
-        texteIndicatif="Recherche un nom"
+        texteIndicatif="Search a name"
         choisie={null}
         surChoix={(fiche) => {
           if (fiche)
@@ -267,10 +267,10 @@ export function BlocAutreAdresse({
         }}
         //  NI SOI-MÊME, NI CE QUI EST DÉJÀ RATTACHÉ.
         exclure={[ficheId ?? "", ...toutes.map((l) => l.ficheId)].filter(Boolean)}
-        libelleExclu="Déjà rattaché"
+        libelleExclu="Already linked"
         //  LES DEUX NATURES DE LIEU sont acceptées ici — on rattache
         //  une autre adresse, salon ou studio (passe nº 121).
-        messageVide="Aucun studio / salon trouvé"
+        messageVide="No studio / shop found"
       />
 
       {/* LE MESSAGE NE PORTE PLUS QUE DES ERREURS (passe nº 103). */}
@@ -281,7 +281,7 @@ export function BlocAutreAdresse({
       )}
 
       {chargement && ficheId ? (
-        <p className="text-[13px] text-sombre-texte-doux">Lecture…</p>
+        <p className="text-[13px] text-sombre-texte-doux">Loading…</p>
       ) : toutes.length === 0 ? (
         /* ⚠️ PLUS DE PAVÉ « Aucune autre adresse pour l'instant… »
            (passe nº 101). Trois lignes en pointillés pour dire qu'il
@@ -335,7 +335,7 @@ export function BlocAutreAdresse({
               <button
                 type="button"
                 onClick={() => void detacher(fiche.liaisonId)}
-                aria-label={`Détacher ${fiche.nom}`}
+                aria-label={`Unlink ${fiche.nom}`}
                 className="grid h-11 w-11 place-items-center rounded-full
                            text-sombre-texte-doux transition-colors
                            hover:text-sombre-texte"

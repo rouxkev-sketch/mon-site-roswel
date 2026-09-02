@@ -229,10 +229,10 @@ export function BoutonPartageFiche({
   /** Le message pré-rempli du SMS et de l'e-mail : nom, métier,
       commune et lien — dans cet ordre. */
   function messagePartage() {
-    const qualite = [metier, commune ? `à ${commune}` : null]
+    const qualite = [metier, commune ? `in ${commune}` : null]
       .filter(Boolean)
       .join(" ");
-    return `${nomArtisan}${qualite ? ` — ${qualite}` : ""} sur ${marque} : ${urlFiche()}`;
+    return `${nomArtisan}${qualite ? ` — ${qualite}` : ""} on ${marque}: ${urlFiche()}`;
   }
 
   /** Copie un texte dans le presse-papiers (lien ou message) */
@@ -299,7 +299,7 @@ export function BoutonPartageFiche({
       document.removeEventListener("visibilitychange", marquer);
       if (partie) return;
       await copierTexte(texte);
-      setRetour("Message copié");
+      setRetour("Message copied");
     }, 900);
   }
 
@@ -336,8 +336,8 @@ export function BoutonPartageFiche({
 
     const url = urlFiche();
     const donnees = {
-      title: `${nomArtisan} sur ${marque}`,
-      text: `Découvrez ${nomArtisan} sur ${marque}`,
+      title: `${nomArtisan} on ${marque}`,
+      text: `Check out ${nomArtisan} on ${marque}`,
       url,
     };
 
@@ -373,12 +373,12 @@ export function BoutonPartageFiche({
   const actionsPartage = [
     {
       cle: "lien",
-      libelle: "Copier le lien",
-      court: "Copier",
+      libelle: "Copy link",
+      court: "Copy",
       icone: <IconeLien taille={20} />,
       action: async () => {
         await copierTexte(urlFiche());
-        setRetour("Lien copié");
+        setRetour("Link copied");
       },
     },
     {
@@ -390,7 +390,7 @@ export function BoutonPartageFiche({
         ouvrirOnglet(`https://wa.me/?text=${encodeURIComponent(messagePartage())}`),
     },
     { cle: "sms", libelle: "SMS", court: "SMS", icone: <IconeBulleMessage taille={20} />, action: ouvrirSms },
-    { cle: "email", libelle: "E-mail", court: "E-mail", icone: <IconeEnveloppe taille={20} />, action: ouvrirEmail },
+    { cle: "email", libelle: "Email", court: "Email", icone: <IconeEnveloppe taille={20} />, action: ouvrirEmail },
     {
       cle: "facebook",
       libelle: "Facebook",
@@ -446,7 +446,7 @@ export function BoutonPartageFiche({
 
   const fenetreSombre = fenetreSombreActive ? (
     <FenetreDeVerre
-      ariaLabel={`Partager ce ${objet}`}
+      ariaLabel={`Share this ${objet}`}
       surFermeture={fermerFenetre}
       largeur="max-w-[440px]"
       //  §1 (nº 544) — FOND OPAQUE au jeton `carte` : le drapeau de la
@@ -516,7 +516,7 @@ export function BoutonPartageFiche({
           className="shrink-0 rounded-lg px-4 min-h-[36px] text-[13px]
                      font-semibold text-sombre-texte"
         >
-          {copieChamp ? "Copié !" : "Copier"}
+          {copieChamp ? "Copied!" : "Copy"}
         </button>
       </div>
     </FenetreDeVerre>
@@ -536,7 +536,7 @@ export function BoutonPartageFiche({
       <>
         <EnteteModale
           idTitre="titre-partage"
-          titre={`Partager ce ${objet}`}
+          titre={`Share this ${objet}`}
           surFermeture={fermerFenetre}
         />
 
@@ -584,7 +584,7 @@ export function BoutonPartageFiche({
           type="button"
           onClick={partager}
           aria-haspopup={avecFenetre ? "dialog" : undefined}
-          aria-label={`Partager le ${objet} de ${nomArtisan}`}
+          aria-label={`Share ${nomArtisan}'s ${objet}`}
           //  §1-2 (nº 458) — l'icône nue sur le fond de la page : la
           //  cible tactile de 40 px (le gabarit du fanion des cartes),
           //  le trait au blanc du site, un bref enfoncement — aucun
@@ -599,7 +599,7 @@ export function BoutonPartageFiche({
             role="status"
             className="absolute top-11 right-0 whitespace-nowrap rounded-full bg-encre text-white text-xs font-medium px-3 py-1.5 shadow-lg z-20"
           >
-            Lien copié !
+            Link copied!
           </span>
         )}
         {fenetre}
@@ -616,7 +616,7 @@ export function BoutonPartageFiche({
           type="button"
           onClick={partager}
           aria-haspopup={avecFenetre ? "dialog" : undefined}
-          aria-label={`Partager le ${objet} de ${nomArtisan}`}
+          aria-label={`Share ${nomArtisan}'s ${objet}`}
           className={`w-12 h-12 rounded-xl bg-fond flex items-center justify-center text-encre-douce hover:bg-fond-doux active:scale-95 transition ${
             sansContour ? "" : "border"
           }`}
@@ -632,7 +632,7 @@ export function BoutonPartageFiche({
               bulleEnDessous ? "top-full mt-2" : "bottom-full mb-2"
             }`}
           >
-            Lien copié !
+            Link copied!
           </span>
         )}
         {fenetre}
@@ -653,7 +653,7 @@ export function BoutonPartageFiche({
         type="button"
         onClick={partager}
         aria-haspopup={avecFenetre ? "dialog" : undefined}
-        aria-label={`Partager le ${objet} de ${nomArtisan}`}
+        aria-label={`Share ${nomArtisan}'s ${objet}`}
         className={
           contour
             ? "w-10 h-10 rounded-full border border-white bg-sombre-fond flex items-center justify-center text-white hover:border-primaire hover:text-primaire transition-colors"
@@ -670,7 +670,7 @@ export function BoutonPartageFiche({
           role="status"
           className="absolute top-12 right-0 whitespace-nowrap rounded-full bg-encre text-white text-xs font-medium px-3 py-1.5 shadow-lg"
         >
-          Lien copié !
+          Link copied!
         </span>
       )}
       {fenetre}

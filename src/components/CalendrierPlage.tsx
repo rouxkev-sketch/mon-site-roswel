@@ -41,14 +41,14 @@ import { IconeChevronBas } from "@/components/Icones";
  */
 
 /** « 15 juil. 2026 » — la date telle que le champ l'affiche. */
-const FORMAT_COURT = new Intl.DateTimeFormat("fr-FR", {
+const FORMAT_COURT = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
   month: "short",
   year: "numeric",
 });
 
 /** « mardi 15 juillet 2026 » — pour les lecteurs d'écran. */
-const FORMAT_LONG = new Intl.DateTimeFormat("fr-FR", {
+const FORMAT_LONG = new Intl.DateTimeFormat("en-US", {
   weekday: "long",
   day: "numeric",
   month: "long",
@@ -56,7 +56,7 @@ const FORMAT_LONG = new Intl.DateTimeFormat("fr-FR", {
 });
 
 /** « juillet 2026 » — l'en-tête du mois affiché. */
-const FORMAT_MOIS = new Intl.DateTimeFormat("fr-FR", {
+const FORMAT_MOIS = new Intl.DateTimeFormat("en-US", {
   month: "long",
   year: "numeric",
 });
@@ -246,7 +246,7 @@ export function ChampsPlageDates({
             onClick={() => ouvrirLeChamp(cible)}
             aria-expanded={ouvert === cible}
             aria-label={
-              cible === "debut" ? "Date de début de la session" : "Date de fin de la session"
+              cible === "debut" ? "Session start date" : "Session end date"
             }
             className={classesDuChamp(cible, enFaute)}
           >
@@ -281,7 +281,7 @@ export function ChampsPlageDates({
             <button
               type="button"
               onClick={() => changerDeMois(-1)}
-              aria-label="Mois précédent"
+              aria-label="Previous month"
               className="flex h-9 w-9 items-center justify-center rounded-full
                          text-sombre-texte-doux transition-colors
                          hover:bg-sombre-haut hover:text-sombre-texte"
@@ -294,7 +294,7 @@ export function ChampsPlageDates({
             <button
               type="button"
               onClick={() => changerDeMois(1)}
-              aria-label="Mois suivant"
+              aria-label="Next month"
               className="flex h-9 w-9 items-center justify-center rounded-full
                          text-sombre-texte-doux transition-colors
                          hover:bg-sombre-haut hover:text-sombre-texte"

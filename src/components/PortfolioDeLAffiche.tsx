@@ -89,7 +89,7 @@ export type SerieChoisie = {
 };
 
 const ONGLETS: Array<{ cle: OngletAffiche; label: string }> = [
-  { cle: "profil", label: "Profil" },
+  { cle: "profil", label: "Profile" },
   { cle: "portfolio", label: "Portfolio" },
 ];
 
@@ -157,7 +157,7 @@ export function SelecteurOngletAffiche({
       //  Les clés sont celles de `ONGLETS`, donc des `OngletAffiche` :
       //  le composant partagé, lui, parle en chaînes.
       surChoix={(cle) => surChoix(cle as OngletAffiche)}
-      ariaLabel="Profil ou portfolio"
+      ariaLabel="Profile or portfolio"
       classeOnglet="px-5 min-h-[44px]"
       avecLigneGrise={false}
     />
@@ -419,7 +419,7 @@ export function PanneauPortfolio({
         icône. */
     return (
       <p className="mt-10 text-center text-[16px] font-semibold text-sombre-texte-doux">
-        Aucune publication
+        No posts yet
       </p>
     );
   }

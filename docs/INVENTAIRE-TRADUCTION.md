@@ -504,3 +504,32 @@ vérifier que le compte des fichiers traités correspond au tableau du
 
 Les bancs à garder verts, à chaque passe : **732**, **746**, **747**,
 plus une lecture d'écran sur les pages touchées.
+
+---
+
+## 11 · Ce que la 804 a fait (traduction 1/3 : le site public)
+
+La première passe de traduction a été la **nº 804** (les numéros 798-800
+prévus ici ont servi à d'autres sujets). Kevin a tranché **A —
+remplacer** le français par l'anglais, sans mécanique à deux langues.
+
+- **Traduit** : les lots **A + B + C + G** du §4 (composants, pages et
+  gabarits, pages éditoriales, manifeste et 404), plus les dix phrases
+  d'interface de `config/tatouage.ts` que ces écrans affichent par leur
+  nom (`TEXTES_TATOUAGE`, `slogan`) — le catalogue des styles et les
+  motifs, eux, restent pour la 806.
+- **Le banc** : `node scripts/recenser-textes.mjs --francais
+  --perimetre=A,B,C,G` — un mode nouveau du recenseur, qui ne retient
+  que ce qui ressemble à du français et liste ses exceptions avec leur
+  raison. Résultat : **0 texte français**, 66 exceptions déclarées
+  (instruments internes de /dev, étiquettes lues par les sondes).
+- **Les émojis** : générateur relancé sur `en/` (1914 émojis, 9
+  catégories aux titres anglais).
+- **Le lexique** : `docs/LEXIQUE-ANGLAIS.md`, à suivre en 805-806.
+- **Non traduit, par décision** : les adresses (routes), les limaces,
+  les noms propres, les instruments internes, les commentaires du code.
+- **Reste français sur le site public jusqu'aux 805-806** : ce qui vient
+  de lib et de config — libellés des styles, des rendus et des natures,
+  des modes d'exercice sur les profils publics (« Résident », « Au
+  studio »), jours de la semaine, critères de mot de passe, noms de
+  pays, message de site indisponible, courriels et messages d'API.

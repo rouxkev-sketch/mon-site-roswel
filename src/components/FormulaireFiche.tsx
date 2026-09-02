@@ -200,9 +200,9 @@ const FORME_INSTAGRAM = /^https:\/\/(www\.)?instagram\.com\/[A-Za-z0-9._]{2,}\/?
  * `tatoueurs.booking` (migration supabase/yokofolio-booking.sql).
  */
 const OPTIONS_BOOKING: OptionMenu[] = [
-  { value: "ouvert", label: "Booking ouvert" },
-  { value: "delai", label: "Booking délai d'attente" },
-  { value: "ferme", label: "Booking fermé" },
+  { value: "ouvert", label: "Books open" },
+  { value: "delai", label: "Waitlist" },
+  { value: "ferme", label: "Books closed" },
 ];
 
 /** Sur « délai d'attente » SEULEMENT, le champ se divise : le second
@@ -300,7 +300,7 @@ const NOMS_BLOCS: Record<
   //  suis » — c'est un PROFIL, qu'on soit artiste, studio ou salon.
   //  Les anciens titres (« Ton nom d'artiste », « Logo du salon »…)
   //  vivent désormais DANS les champs (INDICATIONS_CHAMPS).
-  profil: { artiste: "Profil", salon: "Profil", prive: "Profil" },
+  profil: { artiste: "Profile", salon: "Profile", prive: "Profile" },
   //  §3 (nº 536) — « Yoko Portfolio » DEVIENT « Portfolio » : la marque
   //  est déjà écrite en haut de l'écran, un titre de bloc n'a pas à la
   //  répéter. C'est le seul endroit du site où ces deux mots étaient
@@ -311,22 +311,22 @@ const NOMS_BLOCS: Record<
     prive: "Portfolio",
   },
   specificites: {
-    artiste: "Spécificités",
-    salon: "Spécificités",
-    prive: "Spécificités",
+    artiste: "Details",
+    salon: "Details",
+    prive: "Details",
   },
   /** N'EXISTE QUE POUR UN SALON — la colonne « artiste » reste
       remplie pour que le type tienne, elle n'est jamais affichée.
       ⚠️ RENOMMÉ « Horaires » (passe nº 116, point 14) : le bloc ne
       contient que des heures d'ouverture, « d'ouverture » ne disait
       rien de plus. */
-  horaires: { artiste: "", salon: "Horaires", prive: "" },
+  horaires: { artiste: "", salon: "Hours", prive: "" },
   //  ÉQUIPE + AUTRE ADRESSE, sous un seul mot : ce que le lieu
   //  ORGANISE autour de lui — qui y travaille, où il est aussi.
   organisation: {
-    artiste: "Organisation",
-    salon: "Organisation",
-    prive: "Organisation",
+    artiste: "How you work",
+    salon: "Organization",
+    prive: "Organization",
   },
 };
 
@@ -341,14 +341,14 @@ const INDICATIONS_CHAMPS: Record<
   { artiste: string; salon: string; prive: string }
 > = {
   nom: {
-    artiste: "Ton nom d'artiste",
-    salon: "Nom du salon",
-    prive: "Nom du studio",
+    artiste: "Your artist name",
+    salon: "Shop name",
+    prive: "Studio name",
   },
   bio: {
-    artiste: "Ta présentation",
-    salon: "À propos du salon",
-    prive: "À propos du studio",
+    artiste: "About you",
+    salon: "About the shop",
+    prive: "About the studio",
   },
 };
 
@@ -372,10 +372,10 @@ function indicationChamp(
  */
 function sousTitreSpecificites(groupe: string, type: TypeFiche | null): string {
   if (groupe === "technique") {
-    return type === "salon" ? "Techniques proposées" : "Techniques maîtrisées";
+    return type === "salon" ? "Techniques offered" : "Your techniques";
   }
-  if (groupe === "composition") return "Types de projets";
-  return "Besoins particuliers";
+  if (groupe === "composition") return "Project types";
+  return "Special needs";
 }
 
 /** Le numéro affiché devant le titre — la position dans la liste,
@@ -1752,7 +1752,7 @@ export function FormulaireFiche() {
     // premier choisi — on ne reproche jamais les deux à la fois.
     if (!typeFiche) {
       trouvees.type =
-        "Dis-nous d'abord si ce portfolio est celui d'un artiste ou d'un studio.";
+        "First, tell us if this portfolio is for an artist or a studio.";
     } else if (!blocUnComplet) {
       // LA MÊME RÈGLE QUE « Je confirme » — et le même SILENCE (passe
       // nº 116) : le manque est MUET, ce sont les champs du bloc 1
@@ -1818,7 +1818,7 @@ export function FormulaireFiche() {
     } else if (lienInstagram === null) {
       //  ⚠️ MENTION COURTE (passe nº 112) : elle s'affiche DANS le
       //  champ, à droite — plus de phrase d'exemple sous le champ.
-      trouvees.instagram = "Instagram non valide";
+      trouvees.instagram = "Invalid Instagram";
     }
     //  ⚠️ PLUS DE VALIDATION YOUTUBE (passe nº 101). Le champ a
     //  disparu de l'écran : refuser l'enregistrement à cause de lui
@@ -2047,7 +2047,7 @@ export function FormulaireFiche() {
         const rate = envois.find((envoi) => envoi.error);
         if (rate?.error) {
           throw new Error(
-            `Ta photo de profil n'a pas pu être envoyée (${rate.error.message}).`
+            `Your profile photo couldn't be uploaded (${rate.error.message}).`
           );
         }
         adresseProfil = supabase.storage
@@ -2538,7 +2538,7 @@ export function FormulaireFiche() {
         const message = modification.error.message.toLowerCase();
         if (ficheChargee.publie && message.includes("brouillon")) {
           throw new Error(
-            "La base n'est pas prête pour les modifications d'un portfolio en ligne (migration supabase/yokofolio-fiche-brouillon.sql)."
+            "The database isn't ready for edits to an online portfolio yet (migration supabase/yokofolio-fiche-brouillon.sql)."
           );
         }
         const enCause = tolerees.find(
@@ -2594,11 +2594,11 @@ export function FormulaireFiche() {
         setErreurs((courantes) => ({
           ...courantes,
           bio:
-            "Ta base de données refuse encore les biographies de moins de " +
-            "80 caractères. Rien n'a été enregistré. Deux façons de s'en " +
-            "sortir : écrire une présentation un peu plus longue, ou " +
-            "passer une fois la migration " +
-            "supabase/yokofolio-bio-sans-minimum.sql dans Supabase.",
+            "Your database still rejects bios shorter than " +
+            "80 characters. Nothing was saved. Two ways out: " +
+            "write a slightly longer bio, or " +
+            "run the migration " +
+            "supabase/yokofolio-bio-sans-minimum.sql once in Supabase.",
         }));
         defilerVersErreur({ bio: "1" });
         return;
@@ -2627,8 +2627,8 @@ export function FormulaireFiche() {
           à rien. */
       if (Array.isArray(modification.data) && modification.data.length === 0) {
         throw new Error(
-          "Ce portfolio n'existe plus : il a été supprimé pendant que tu le " +
-            "modifiais. Rien n'a été enregistré."
+          "This portfolio no longer exists: it was deleted while you were " +
+            "editing it. Nothing was saved."
         );
       }
 
@@ -2731,9 +2731,9 @@ export function FormulaireFiche() {
       setAvancee(null);
       setErreurs((courantes) => ({
         ...courantes,
-        general: `L'envoi n'a pas abouti : ${
+        general: `Sending failed: ${
           erreur instanceof Error ? erreur.message : String(erreur)
-        } Réessaie — rien n'a été perdu.`,
+        } Try again — nothing was lost.`,
       }));
     } finally {
       setEnvoiEnCours(false);
@@ -2763,12 +2763,12 @@ export function FormulaireFiche() {
         message?: string;
       } | null;
       if (!reponse.ok || !donnees?.ok) {
-        throw new Error(donnees?.message ?? "La réactivation n'a pas abouti.");
+        throw new Error(donnees?.message ?? "Reactivation failed.");
       }
       window.location.reload();
     } catch (erreur) {
       setErreurReactivation(
-        erreur instanceof Error ? erreur.message : "La réactivation n'a pas abouti."
+        erreur instanceof Error ? erreur.message : "Reactivation failed."
       );
       setReactivation(false);
     }
@@ -2879,10 +2879,10 @@ export function FormulaireFiche() {
             classe="mx-auto"
           />
           <h1 className="mt-5 text-[19px] font-bold tracking-tight text-sombre-texte">
-            Portfolio désactivé
+            Portfolio deactivated
           </h1>
           <p className="mt-2.5 text-[14.5px] leading-relaxed text-sombre-texte-doux">
-            Ton portfolio est actuellement désactivé.
+            Your portfolio is currently deactivated.
           </p>
           {erreurReactivation && (
             <p
@@ -2903,7 +2903,7 @@ export function FormulaireFiche() {
                        text-white font-semibold transition-colors
                        disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {reactivation ? "Un instant…" : "Réactiver mon portfolio"}
+            {reactivation ? "One moment…" : "Reactivate my portfolio"}
           </button>
         </div>
       </main>
@@ -3122,13 +3122,13 @@ export function FormulaireFiche() {
           <div className="mb-6 rounded-xl border border-erreur/50 bg-erreur/10 px-5 py-4">
             <p className="text-[14.5px] font-semibold text-sombre-texte">
               {horsLigne
-                ? "Ton portfolio a été mis hors ligne."
-                : "La relecture demande des corrections."}
+                ? "Your portfolio has been taken offline."
+                : "The review asks for changes."}
             </p>
             <p className="mt-1 text-[14px] text-sombre-texte-doux leading-relaxed">
-              Les points à revoir sont signalés en rouge ci-dessous —
-              corrige-les, puis réenregistre : ton portfolio repartira
-              en validation.
+              The points to fix are marked in red below —
+              fix them, then save again: your portfolio will go back
+              under review.
             </p>
             {motifsGeneraux.length > 0 && (
               <ul className="mt-2 list-disc pl-5 text-[14px] text-sombre-texte leading-relaxed">
@@ -3158,14 +3158,14 @@ export function FormulaireFiche() {
             présent (« Tu peux ajouter… »), reste vraie dans les deux
             cas. */}
         <h1 className="text-[clamp(1.6rem,4vw,2.1rem)] font-bold tracking-tight text-sombre-texte">
-          {modification ? "Modifier mon portfolio" : "Créer mon portfolio"}
+          {modification ? "Edit my portfolio" : "Create my portfolio"}
         </h1>
         {/* LE SOUS-TITRE, MIS EN VALEUR (passe nº 104) : il rassure —
             il mérite mieux qu'une ligne grise. Corps monté à 16 px,
             blanc doux, la marque en rose. */}
         <p className="mt-3 text-[16px] leading-relaxed text-sombre-texte">
-          Tu peux ajouter d&apos;autres portfolios depuis ton compte{" "}
-          <span className="font-semibold text-primaire">YokoFolio</span>.
+          You can add more portfolios from your{" "}
+          <span className="font-semibold text-primaire">YokoFolio</span> account.
         </p>
       </div>
 
@@ -3181,13 +3181,13 @@ export function FormulaireFiche() {
         <div className="mx-auto w-full max-w-[640px] mb-5 rounded-xl border border-erreur/50 bg-erreur/10 px-5 py-4">
           <p className="text-[14.5px] font-semibold text-sombre-texte">
             {horsLigne
-              ? "Ton portfolio a été mis hors ligne."
-              : "Ta dernière modification n'a pas été validée."}
+              ? "Your portfolio has been taken offline."
+              : "Your last edit wasn't approved."}
           </p>
           <p className="mt-1 text-[14px] text-sombre-texte-doux leading-relaxed">
-            Ouvre «&nbsp;Modification&nbsp;» : les points à corriger y
-            sont signalés en rouge. Réenregistre, et ton portfolio
-            repartira en validation.
+            Open &quot;Edit&quot;: the points to fix are marked in red
+            there. Save again, and your portfolio will go back
+            under review.
           </p>
         </div>
       )}
@@ -3231,8 +3231,8 @@ export function FormulaireFiche() {
           />
         ) : (
           <p className="mx-auto w-full max-w-[640px] py-6 text-sombre-texte-doux">
-            L&apos;aperçu n&apos;a pas pu être chargé — réessaie en
-            rouvrant l&apos;espace.
+            The preview couldn&apos;t be loaded — try again by
+            reopening your account.
           </p>
         ))}
 
@@ -3269,7 +3269,7 @@ export function FormulaireFiche() {
             une liste de villes. */}
         <Section
           numero="1"
-          titre="Qui es-tu ?"
+          titre="Who are you?"
           id="section-exercice"
         >
           {/* ⚠️ LA PHRASE « Commence par créer un premier portfolio… »
@@ -3293,7 +3293,7 @@ export function FormulaireFiche() {
               bloc confirmé le sélecteur SE FIGE — la base refuse de
               toute façon le changement (migration nº 28). */}
           <OngletsLigne
-            ariaLabel="Type de portfolio"
+            ariaLabel="Portfolio type"
             fige={exerciceConfirme}
             options={CHOIX_PROFIL.map((entree) => ({
               cle: entree.slug,
@@ -3521,7 +3521,7 @@ export function FormulaireFiche() {
                            : "bg-sombre-eleve text-sombre-texte-doux"
                        }`}
           >
-            Je confirme mon choix
+            Confirm my choice
           </button>
           {/*  LA PHRASE — le message du manque lui-même, jamais une
                chaîne recopiée : si le mot change dans
@@ -3660,8 +3660,8 @@ export function FormulaireFiche() {
                     setBooking(valeur);
                   }}
                   options={OPTIONS_BOOKING}
-                  ariaLabel="L'état de ton booking"
-                  placeholder="Booking"
+                  ariaLabel="Your books status"
+                  placeholder="Books"
                   sombre
                   //  §2 (nº 552) — LE PANNEAU OUVERT SANS VERRE : le
                   //  verre des menus compose rgb(9,15,23) sur le fond
@@ -3694,8 +3694,8 @@ export function FormulaireFiche() {
                       setBookingMois(valeur);
                     }}
                     options={OPTIONS_BOOKING_MOIS}
-                    ariaLabel="Le délai d'attente, en mois"
-                    placeholder="Mois"
+                    ariaLabel="Waitlist, in months"
+                    placeholder="Months"
                     sombre
                     //  §2 (nº 552) — le même panneau que son voisin :
                     //  les deux s'ouvrent côte à côte, ils ne peuvent
@@ -3755,7 +3755,7 @@ export function FormulaireFiche() {
                   }}
                   className="w-4 h-4 accent-(--rw-primaire)"
                 />
-                J&apos;accepte les demandes par DM Instagram.
+                I take requests by Instagram DM.
               </label>
             )}
             {/*  §2 (nº 387) — LE CHAMP TIKTOK EST SUPPRIMÉ, sur
@@ -4010,10 +4010,10 @@ export function FormulaireFiche() {
                      disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {envoiEnCours
-            ? "Envoi en cours…"
+            ? "Sending…"
             : modification
-              ? "Enregistrer mes modifications"
-              : "Envoyer mon portfolio pour vérification"}
+              ? "Save changes"
+              : "Submit my portfolio for review"}
         </button>
           </>
         )}
@@ -4108,11 +4108,11 @@ export function FormulaireFiche() {
                   id="titre-annonce-validation"
                   className="mt-5 text-[19px] font-bold text-sombre-texte leading-snug"
                 >
-                  Merci&nbsp;!
+                  Thanks!
                 </h2>
                 <p className="mt-2.5 text-[14.5px] leading-relaxed text-sombre-texte-doux">
-                  On vérifie ton portfolio&nbsp;: il sera en ligne sous
-                  24&nbsp;h.
+                  We&apos;re reviewing your portfolio: it&apos;ll be online
+                  within 24&nbsp;hours.
                 </p>
               </>
             ) : photosEnRelecture ? (
@@ -4126,10 +4126,10 @@ export function FormulaireFiche() {
                   id="titre-annonce-validation"
                   className="mt-5 text-[19px] font-bold text-sombre-texte leading-snug"
                 >
-                  Nouvelles photos envoyées
+                  New photos submitted
                 </h2>
                 <p className="mt-2.5 text-[14.5px] leading-relaxed text-sombre-texte-doux">
-                  Relues et en ligne sous 24&nbsp;h.
+                  Reviewed and online within 24&nbsp;hours.
                 </p>
               </>
             ) : (
@@ -4146,10 +4146,10 @@ export function FormulaireFiche() {
                   id="titre-annonce-validation"
                   className="mt-5 text-[19px] font-bold text-sombre-texte leading-snug"
                 >
-                  C&apos;est enregistré
+                  Saved
                 </h2>
                 <p className="mt-2.5 text-[14.5px] leading-relaxed text-sombre-texte-doux">
-                  Ton portfolio est à jour et en ligne.
+                  Your portfolio is up to date and online.
                 </p>
               </>
             )}
@@ -4165,7 +4165,7 @@ export function FormulaireFiche() {
                          hover:bg-primaire-fonce active:bg-primaire-fonce
                          text-white font-semibold transition-colors"
             >
-              Compris
+              Got it
             </button>
           </div>
         </div>

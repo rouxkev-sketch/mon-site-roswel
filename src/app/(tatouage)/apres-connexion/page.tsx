@@ -35,7 +35,7 @@ import { creerClientSupabaseServeur } from "@/lib/supabase/server";
  * rien afficher (voir /auth/callback).
  */
 export const metadata: Metadata = {
-  title: "Un instant…",
+  title: "One moment…",
   robots: { index: false, follow: false },
 };
 

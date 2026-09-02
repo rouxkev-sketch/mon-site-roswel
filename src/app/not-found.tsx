@@ -20,11 +20,11 @@ import { PageMessageSombre } from "@/components/PageMessageSombre";
  * erreur d'adresse.
  */
 export const metadata: Metadata = {
-  title: "Page introuvable",
+  title: "Page not found",
   //  Une page d'erreur n'a rien à faire dans un moteur de recherche.
   robots: { index: false, follow: false },
 };
 
 export default function PageIntrouvable() {
-  return <PageMessageSombre titre="Cette page n'existe pas." />;
+  return <PageMessageSombre titre="This page doesn't exist." />;
 }

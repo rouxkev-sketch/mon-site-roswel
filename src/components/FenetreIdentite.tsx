@@ -237,7 +237,7 @@ export function FenetreIdentite({
           .upload(chemin, fichier, ENVOI_PHOTO);
         if (error) {
           throw new Error(
-            `Ta photo n'a pas pu être envoyée (${error.message}).`
+            `Your photo couldn't be uploaded (${error.message}).`
           );
         }
         adresse = supabase.storage.from(BUCKET_PHOTOS).getPublicUrl(chemin).data
@@ -252,7 +252,7 @@ export function FenetreIdentite({
       setErreur(
         souci instanceof Error
           ? souci.message
-          : "L'enregistrement n'a pas abouti. Réessaie dans un instant."
+          : "Saving failed. Try again in a moment."
       );
       setEnCours(false);
     }
@@ -304,7 +304,7 @@ export function FenetreIdentite({
           id={`identite-nom-${surface}`}
           valeur={nom}
           surChangement={setNom}
-          indication="Ton nom"
+          indication="Your name"
         />
       </div>
       {erreur && (
@@ -322,7 +322,7 @@ export function FenetreIdentite({
                    text-sombre-texte font-semibold text-[15.5px] transition-colors
                    disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        {enCours ? "Enregistrement…" : "Enregistrer"}
+        {enCours ? "Saving…" : "Save"}
       </button>
     </>
   );
@@ -341,7 +341,7 @@ export function FenetreIdentite({
           opaque
           alignement="droite"
           role="dialog"
-          aria-label="Éditer mon compte"
+          aria-label="Edit my account"
           data-source-composant="FenetreIdentite · fenêtre web"
           className="mobile:hidden"
         >
@@ -378,12 +378,12 @@ export function FenetreIdentite({
                 classe="shrink-0 text-sombre-texte/80"
               />
               <h2 className="flex-1 min-w-0 text-[17px] font-bold tracking-tight text-sombre-texte">
-                Éditer
+                Edit
               </h2>
               <button
                 type="button"
                 onClick={surFermeture}
-                aria-label="Fermer"
+                aria-label="Close"
                 className="-mr-[9px] w-9 h-9 shrink-0 flex items-center justify-center
                            rounded-full text-sombre-texte-doux
                            hover:text-sombre-texte hover:bg-sombre-eleve
@@ -403,9 +403,9 @@ export function FenetreIdentite({
            de 72 px (la barre translucide de Safari, nº 533-§6 — cette
            page finit elle aussi sur du gris). */}
       <PagePleinEcranMobile
-        titre="Éditer"
+        titre="Edit"
         icone={<IconeSilhouette taille={22} classe="shrink-0 text-white" />}
-        ariaLabel="Éditer mon compte"
+        ariaLabel="Edit my account"
         surFermer={surFermeture}
         classeCadre="z-[85]"
       >

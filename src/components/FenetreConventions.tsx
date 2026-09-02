@@ -195,7 +195,7 @@ export function FenetreConventions({
         message?: string;
       };
       if (!donnees.ok) {
-        setRefusDemande(donnees.message ?? "L'envoi n'a pas abouti.");
+        setRefusDemande(donnees.message ?? "Sending failed.");
         return;
       }
       setNomDemande("");
@@ -203,7 +203,7 @@ export function FenetreConventions({
       setDemandeOuverte(false);
       setDemandeEnvoyee(true);
     } catch {
-      setRefusDemande("L'envoi n'a pas abouti. Réessaie.");
+      setRefusDemande("Sending failed. Try again.");
     } finally {
       setEnvoiDemande(false);
     }
@@ -417,7 +417,7 @@ export function FenetreConventions({
           >
             <button
               type="button"
-              aria-label="Fermer"
+              aria-label="Close"
               onClick={surFermer}
               className="absolute inset-0 bg-black/25 cursor-default
                          opacity-100 transition-opacity duration-200 starting:opacity-0"
@@ -435,7 +435,7 @@ export function FenetreConventions({
                 <button
                   type="button"
                   onClick={surFermer}
-                  aria-label="Fermer"
+                  aria-label="Close"
                   className="flex h-9 w-9 items-center justify-center rounded-full
                              text-sombre-texte-doux transition-colors
                              hover:bg-sombre-eleve-clair hover:text-sombre-texte"
@@ -448,7 +448,7 @@ export function FenetreConventions({
                            defilement-visible pb-2"
               >
                 {enTeteDuCorps}
-                <ul aria-label="Les conventions du pays">
+                <ul aria-label="Conventions in this country">
                   {/*  Le survol du cran au-dessus : la plaque est à
                        `eleve`, où l'ancien survol ne se verrait plus
                        (la mesure de la nº 559). */}
@@ -482,7 +482,7 @@ export function FenetreConventions({
       >
         <div className="grow">
           {enTeteDuCorps}
-          <ul aria-label="Les conventions du pays" className="pb-2">
+          <ul aria-label="Conventions in this country" className="pb-2">
             {/*  La page du doigt garde le survol par défaut : son fond
                  est celui de la page, rien ne s'y confond. */}
             {lesLignes()}

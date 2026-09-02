@@ -286,7 +286,7 @@ export function BlocPortfolio({
         message?: string;
       };
       if (!donnees.ok) {
-        setRefusSuggestion(donnees.message ?? "L'envoi n'a pas abouti.");
+        setRefusSuggestion(donnees.message ?? "Sending failed.");
         return;
       }
       //  ENVOYÉ : le champ se vide, la fenêtre des styles se referme,
@@ -296,7 +296,7 @@ export function BlocPortfolio({
       setFenetreStyles(false);
       setSuggestionEnvoyee(true);
     } catch {
-      setRefusSuggestion("L'envoi n'a pas abouti. Réessaie.");
+      setRefusSuggestion("Sending failed. Try again.");
     } finally {
       setEnvoiSuggestion(false);
     }
@@ -470,7 +470,7 @@ export function BlocPortfolio({
     const valides = fichiers.filter((fichier) => FORMATS_PHOTO.has(fichier.type));
     if (valides.length === 0) {
       setErreurFichier(
-        "Seules les images JPG et PNG sont acceptées — ces fichiers sont d'un autre format."
+        "Only JPG and PNG images are accepted — these files are another format."
       );
       return;
     }
@@ -519,7 +519,7 @@ export function BlocPortfolio({
       le DIT maintenant, et la série passe à la suivante. */
   function photoIllisible() {
     setErreurFichier(
-      "Cette photo n'a pas pu être ouverte — ce navigateur ne reconnaît pas son format."
+      "This photo couldn't be opened — this browser doesn't recognize its format."
     );
     if (serie && serie.rang + 1 < serie.fichiers.length) {
       setSerie({ ...serie, rang: serie.rang + 1 });
@@ -553,7 +553,7 @@ export function BlocPortfolio({
       });
     } catch {
       setErreurFichier(
-        "Cette photo n'a pas pu être rouverte — vérifie ta connexion et réessaie."
+        "This photo couldn't be reopened — check your connection and try again."
       );
     }
   }
@@ -851,7 +851,7 @@ export function BlocPortfolio({
 
   /** « supprimer », tapé dans n'importe quelle casse, confirme. */
   const suppressionConfirmee =
-    saisieSuppression.trim().toLowerCase() === "supprimer";
+    saisieSuppression.trim().toLowerCase() === "delete";
 
   const galerieOuverte = styleActif
     ? duTriplet(styleActif, renduActif, natureActive)
@@ -1009,7 +1009,7 @@ export function BlocPortfolio({
             />
           </button>
           {depliee && (
-            <ul aria-label={`Les styles — ${entree.label}`}>
+            <ul aria-label={`Styles — ${entree.label}`}>
               {entree.styles.map((style) => ligneDeStyle(style, true, survol))}
             </ul>
           )}
@@ -1096,8 +1096,8 @@ export function BlocPortfolio({
                 evenement.preventDefault();
                 void envoyerLaSuggestion();
               }}
-              placeholder={"Un style manque ?"}
-              aria-label="Le style à suggérer"
+              placeholder={"Missing a style?"}
+              aria-label="Style to suggest"
               aria-invalid={refusSuggestion ? true : undefined}
               //  Le bandeau est déjà un cran plus clair : le
               //  champ monte d'un niveau avec lui, et le focus
@@ -1138,8 +1138,8 @@ export function BlocPortfolio({
             {suggestion && (
               <button
                 type="button"
-                aria-label="Effacer la suggestion"
-                title="Effacer la suggestion"
+                aria-label="Clear suggestion"
+                title="Clear suggestion"
                 onPointerDown={(evenement) => {
                   if (evenement.pointerType === "mouse") {
                     evenement.preventDefault();
@@ -1191,7 +1191,7 @@ export function BlocPortfolio({
                        disabled:opacity-100 disabled:hover:opacity-100
                        ${classeBouton}`}
           >
-            {envoiSuggestion ? "Envoi…" : "Envoyer"}
+            {envoiSuggestion ? "Sending…" : "Send"}
           </button>
         </div>
         {/* LE SEUL TEXTE SOUS LE CHAMP EST UN REFUS — jamais
@@ -1249,7 +1249,7 @@ export function BlocPortfolio({
                      text-sombre-texte transition-colors
                      group-hover:text-sombre-texte group-active:text-sombre-texte"
         >
-          Ajouter un style &amp; des photos
+          Add a style &amp; photos
         </span>
       </button>
 
@@ -1391,8 +1391,8 @@ export function BlocPortfolio({
             <button
               type="button"
               onClick={() => croixDuStyle(styleActif)}
-              aria-label={`Retirer le style ${libelleStyle(styleActif)}`}
-              title={`Retirer le style ${libelleStyle(styleActif)}`}
+              aria-label={`Remove the style ${libelleStyle(styleActif)}`}
+              title={`Remove the style ${libelleStyle(styleActif)}`}
               className="flex h-9 w-9 items-center justify-center rounded-full
                          text-sombre-texte-doux opacity-60 transition-opacity
                          hover:opacity-100 focus-visible:opacity-100"
@@ -1436,7 +1436,7 @@ export function BlocPortfolio({
               `basculerStyle`). */}
           <div className="mt-0">
             <OngletsLigne
-              ariaLabel={`Nature — ${libelleStyle(styleActif)}`}
+              ariaLabel={`Type — ${libelleStyle(styleActif)}`}
               options={NATURES_PHOTO.map((nature) => ({
                 cle: nature.slug,
                 label: nature.label,
@@ -1647,7 +1647,7 @@ export function BlocPortfolio({
                     <button
                       type="button"
                       onClick={ouvrirLeSelecteur}
-                      aria-label={`Ajouter une photo — ${libelleStyle(styleActif)}, ${libelleRendu(renduActif)}, ${libelleNature(natureActive)}`}
+                      aria-label={`Add a photo — ${libelleStyle(styleActif)}, ${libelleRendu(renduActif)}, ${libelleNature(natureActive)}`}
                       //  ANGLES DROITS, et le pointillé reste : il dit
                       //  « ici, il n'y a pas encore de photo » — un
                       //  signal, pas une structure (règle nº 112).
@@ -1763,12 +1763,12 @@ export function BlocPortfolio({
           <div
             role="dialog"
             aria-modal="true"
-            aria-label="Ajouter un style"
+            aria-label="Add a style"
             className="mobile:hidden fixed inset-0 z-[80] flex items-center justify-center p-4"
           >
             <button
               type="button"
-              aria-label="Fermer"
+              aria-label="Close"
               onClick={fermerFenetreStyles}
               className="absolute inset-0 bg-black/25 cursor-default
                    opacity-100 transition-opacity duration-200 starting:opacity-0"
@@ -1866,12 +1866,12 @@ export function BlocPortfolio({
                    neuf n'est ajouté nulle part. */}
               <div className="flex items-center justify-between border-b border-sombre-haut pl-5 pr-3 pt-3 pb-3">
                 <h2 className="text-[16px] font-bold text-sombre-texte">
-                  Ajouter un style
+                  Add a style
                 </h2>
                 <button
                   type="button"
                   onClick={fermerFenetreStyles}
-                  aria-label="Fermer"
+                  aria-label="Close"
                   //  §2 (nº 559) — le survol de la croix suit la plaque
                   //  passée à `eleve` : à `eleve` il aurait disparu.
                   className="flex h-9 w-9 items-center justify-center rounded-full
@@ -1882,7 +1882,7 @@ export function BlocPortfolio({
                 </button>
               </div>
               <ul
-                aria-label="Les styles, de A à Z"
+                aria-label="Styles, A to Z"
                 className="min-h-0 flex-1 overflow-y-auto overscroll-contain
                            defilement-visible pb-2"
               >
@@ -2026,9 +2026,9 @@ export function BlocPortfolio({
           bas s'agrandit de la zone sûre du téléphone. ------- */}
       {fenetreStyles && (
         <PagePleinEcranMobile
-          titre="Ajouter un style"
+          titre="Add a style"
           icone={<IconePlus taille={22} classe="shrink-0 text-white" />}
-          ariaLabel="Ajouter un style"
+          ariaLabel="Add a style"
           surFermer={fermerFenetreStyles}
           classeCadre="z-[80]"
           /*  §2-b (nº 475) — LA LIGNE DE SÉPARATION SOUS LE TITRE.
@@ -2085,7 +2085,7 @@ export function BlocPortfolio({
                téléphone et Échap referment l'écran comme avant — ce
                garde ne vit que sur la liste. */}
           <ul
-            aria-label="Les styles, de A à Z"
+            aria-label="Styles, A to Z"
             className="grow pt-2 pb-2"
             onPointerDownCapture={() => {
               const auClavier = document.activeElement;
@@ -2126,12 +2126,12 @@ export function BlocPortfolio({
           <div
             role="dialog"
             aria-modal="true"
-            aria-label="Demande envoyée"
+            aria-label="Request sent"
             className="fixed inset-0 z-[80] flex items-center justify-center p-4"
           >
             <button
               type="button"
-              aria-label="Fermer"
+              aria-label="Close"
               onClick={() => setSuggestionEnvoyee(false)}
               className="absolute inset-0 bg-black/25 cursor-default
                    opacity-100 transition-opacity duration-200 starting:opacity-0"
@@ -2147,11 +2147,11 @@ export function BlocPortfolio({
                          shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
             >
               <h2 className="text-[17px] font-bold text-sombre-texte">
-                Demande envoyée
+                Request sent
               </h2>
               <p className="mt-2 text-[14px] leading-relaxed text-sombre-texte-doux">
-                Elle sera examinée sous 24&nbsp;h. Tu seras averti dans tes
-                notifications.
+                It&apos;ll be reviewed within 24&nbsp;hours. You&apos;ll get a
+                notification.
               </p>
               <button
                 type="button"
@@ -2160,7 +2160,7 @@ export function BlocPortfolio({
                            text-[15px] font-semibold text-white
                            transition-opacity hover:opacity-90 active:opacity-90"
               >
-                Fermer
+                Close
               </button>
             </div>
           </div>,
@@ -2177,12 +2177,12 @@ export function BlocPortfolio({
           <div
             role="dialog"
             aria-modal="true"
-            aria-label={`Retirer le style ${libelleStyle(aRetirer)}`}
+            aria-label={`Remove the style ${libelleStyle(aRetirer)}`}
             className="fixed inset-0 z-[80] flex items-center justify-center p-4"
           >
             <button
               type="button"
-              aria-label="Annuler"
+              aria-label="Cancel"
               onClick={() => setARetirer(null)}
               className="absolute inset-0 bg-black/25 cursor-default
                    opacity-100 transition-opacity duration-200 starting:opacity-0"
@@ -2198,26 +2198,26 @@ export function BlocPortfolio({
                          shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
             >
               <h2 className="text-[17px] font-bold text-sombre-texte">
-                Retirer «&nbsp;{libelleStyle(aRetirer)}&nbsp;»&nbsp;?
+                Remove &quot;{libelleStyle(aRetirer)}&quot;?
               </h2>
               {/* ⚠️ PLUS DE DÉCOMPTE DES PHOTOS PERDUES (passe nº 110).
                   « Ses 14 photos seront perdues, définitivement » : la
                   phrase faisait peur pour rien — le mot à taper suffit
                   déjà, et personne ne tape SUPPRIMER par accident. */}
               <p className="mt-2 text-[13.5px] leading-relaxed text-sombre-texte-doux">
-                Pour confirmer, tape{" "}
-                <span className="font-bold text-erreur">SUPPRIMER</span>{" "}
-                ci-dessous.
+                To confirm, type{" "}
+                <span className="font-bold text-erreur">DELETE</span>{" "}
+                below.
               </p>
               <input
                 type="text"
                 value={saisieSuppression}
                 onChange={(evenement) => setSaisieSuppression(evenement.target.value)}
-                placeholder="SUPPRIMER"
+                placeholder="DELETE"
                 autoComplete="off"
                 autoCapitalize="characters"
                 spellCheck={false}
-                aria-label="Tape SUPPRIMER pour confirmer"
+                aria-label="Type DELETE to confirm"
                 className="mt-4 w-full min-h-[48px] rounded-lg border border-transparent
                            bg-sombre-eleve-clair px-4 text-base tracking-wide text-sombre-texte
                            placeholder:text-sombre-texte-doux/50 outline-none
@@ -2233,7 +2233,7 @@ export function BlocPortfolio({
                              text-sombre-texte-doux transition-colors
                              hover:text-sombre-texte"
                 >
-                  Annuler
+                  Cancel
                 </button>
                 <button
                   type="button"
@@ -2244,7 +2244,7 @@ export function BlocPortfolio({
                              hover:opacity-90 disabled:cursor-not-allowed
                              disabled:opacity-40"
                 >
-                  Supprimer
+                  Delete
                 </button>
               </div>
             </div>

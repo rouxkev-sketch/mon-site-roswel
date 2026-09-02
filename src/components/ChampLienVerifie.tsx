@@ -136,7 +136,7 @@ export function ChampLienVerifie({
   const formeRefusee = Boolean(texteErreur(erreur)) || etat.genre === "faux";
   //  « Linktree / Beacons non valide » serait un mot-valise : la
   //  mention garde le premier nom, celui que tout le monde emploie.
-  const mentionCourte = `${indication.split(" /")[0]} non valide`;
+  const mentionCourte = `Invalid ${indication.split(" /")[0]}`;
   const identifiantAffiche = reconnu && !enEdition;
   /**
    * §4 (nº 270) — LA COCHE CÈDE LA PLACE À UNE CROIX QUAND ON ENTRE
@@ -235,8 +235,8 @@ export function ChampLienVerifie({
         {croixEffacer && (
           <button
             type="button"
-            aria-label={`Effacer le lien ${indication}`}
-            title="Effacer"
+            aria-label={`Clear the ${indication} link`}
+            title="Clear"
             onPointerDown={(evenement) => evenement.preventDefault()}
             onClick={() => surChangement("")}
             className="absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8

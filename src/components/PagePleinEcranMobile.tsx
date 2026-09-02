@@ -38,7 +38,7 @@ export function EnTetePleinEcran({
   titre,
   tete,
   surFermer,
-  ariaLabelFermer = "Fermer",
+  ariaLabelFermer = "Close",
   actions,
   marqueRecherche = false,
   children,

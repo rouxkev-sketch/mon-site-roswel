@@ -88,7 +88,7 @@ export function BoutonOeil({
       type="button"
       onClick={surBascule}
       aria-pressed={visible}
-      aria-label={visible ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+      aria-label={visible ? "Hide password" : "Show password"}
       className="absolute right-1 top-1/2 -translate-y-1/2 inline-flex
                  h-11 w-11 items-center justify-center rounded-lg
                  text-sombre-texte-doux hover:text-sombre-texte

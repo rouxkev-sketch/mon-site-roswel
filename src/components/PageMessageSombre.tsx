@@ -31,7 +31,7 @@ import { LienAccueil } from "@/components/LienAccueil";
  */
 export function PageMessageSombre({
   titre,
-  libelleRetour = "Retour à l'accueil",
+  libelleRetour = "Back to home",
   pleinEcran = true,
 }: {
   titre: string;

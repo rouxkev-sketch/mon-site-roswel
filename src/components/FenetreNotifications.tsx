@@ -127,51 +127,51 @@ const CATALOGUE: Record<
   en_validation: {
     symbole: IconeHorloge,
     ton: "attente",
-    titre: "Portfolio en cours de validation",
-    sousTitre: "Ton portfolio est en cours de vérification.",
+    titre: "Portfolio under review",
+    sousTitre: "Your portfolio is being reviewed.",
   },
   validee: {
     symbole: IconeCocheListe,
     ton: "valide",
-    titre: "Portfolio en ligne",
-    sousTitre: "Ton portfolio est maintenant visible sur YokoFolio.",
+    titre: "Portfolio online",
+    sousTitre: "Your portfolio is now visible on YokoFolio.",
   },
   hors_ligne: {
     symbole: IconeHorsLigne,
     ton: "probleme",
-    titre: "Portfolio hors ligne",
+    titre: "Portfolio offline",
     sousTitre:
-      "Ton portfolio est hors ligne. Modifie-le pour pouvoir le remettre en ligne.",
+      "Your portfolio is offline. Edit it to put it back online.",
   },
   modifications: {
     symbole: IconeDrapeau,
     ton: "probleme",
-    titre: "Modifications demandées",
-    sousTitre: "Modifie ton portfolio pour le renvoyer en validation.",
+    titre: "Changes requested",
+    sousTitre: "Edit your portfolio to send it back for review.",
   },
   suppression_fiche: {
     symbole: IconeCorbeille,
     ton: "probleme",
-    titre: "Suppression de portfolio programmée",
-    sousTitre: `Ton portfolio est masqué. Il sera définitivement supprimé dans ${DELAI_SUPPRESSION_JOURS} jours.`,
+    titre: "Portfolio deletion scheduled",
+    sousTitre: `Your portfolio is hidden. It will be permanently deleted in ${DELAI_SUPPRESSION_JOURS} days.`,
   },
   suppression_compte: {
     symbole: IconeCorbeille,
     ton: "probleme",
-    titre: "Suppression du compte programmée",
-    sousTitre: `Ton compte est masqué. Il sera définitivement supprimé dans ${DELAI_SUPPRESSION_JOURS} jours.`,
+    titre: "Account deletion scheduled",
+    sousTitre: `Your account is hidden. It will be permanently deleted in ${DELAI_SUPPRESSION_JOURS} days.`,
   },
   annulation: {
     symbole: IconeCocheListe,
     ton: "valide",
-    titre: "Suppression annulée",
-    sousTitre: "La suppression est annulée : tout est rétabli.",
+    titre: "Deletion canceled",
+    sousTitre: "The deletion is canceled: everything is restored.",
   },
   demande_style: {
     symbole: IconeEnveloppe,
     ton: "info",
-    titre: "Demande de style",
-    sousTitre: "Ta demande d'ajout de style a bien été reçue.",
+    titre: "Style request",
+    sousTitre: "Your style request was received.",
   },
   //  nº 750 — LE JUMEAU DE LA LIGNE AU-DESSUS : même icône, même ton,
   //  mêmes mots à un nom près. Une demande de convention suit le
@@ -179,21 +179,21 @@ const CATALOGUE: Record<
   demande_convention: {
     symbole: IconeEnveloppe,
     ton: "info",
-    titre: "Demande de convention",
-    sousTitre: "Ta demande d'ajout de convention a bien été reçue.",
+    titre: "Convention request",
+    sousTitre: "Your convention request was received.",
   },
   style_ajoute: {
     symbole: IconeCocheListe,
     ton: "valide",
-    titre: "Style accepté",
+    titre: "Style added",
     //  Le nom du style s'insère à l'affichage (voir `sousTitreDe`).
-    sousTitre: 'Le style demandé "Réalisme" a été ajouté à YokoFolio.',
+    sousTitre: 'The requested style "Realism" was added to YokoFolio.',
   },
   style_refuse: {
     symbole: IconeCroix,
     ton: "info",
-    titre: "Style refusé",
-    sousTitre: "Ta demande d'ajout de style n'a pas été acceptée.",
+    titre: "Style declined",
+    sousTitre: "Your style request wasn't accepted.",
   },
   /*  ██ nº 756 — LES DEUX RÉPONSES À UNE DEMANDE DE CONVENTION ██
       LES JUMELLES DES DEUX LIGNES AU-DESSUS : même icône, même ton,
@@ -206,16 +206,16 @@ const CATALOGUE: Record<
   convention_ajoutee: {
     symbole: IconeCocheListe,
     ton: "valide",
-    titre: "Convention acceptée",
+    titre: "Convention added",
     //  Le nom de la convention s'insère à l'affichage (`sousTitreDe`).
     sousTitre:
-      'La convention demandée "Mondial du Tatouage" a été ajoutée à YokoFolio.',
+      "The requested convention was added to YokoFolio.",
   },
   convention_refusee: {
     symbole: IconeCroix,
     ton: "info",
-    titre: "Convention refusée",
-    sousTitre: "Ta demande d'ajout de convention n'a pas été acceptée.",
+    titre: "Convention declined",
+    sousTitre: "Your convention request wasn't accepted.",
   },
   /*  ██ §3 (nº 688) — LA DEMANDE DE PORTFOLIO REFUSÉE ██
       LES DEUX PHRASES SONT CELLES DU PROPRIÉTAIRE, au mot près. Le nom
@@ -231,10 +231,10 @@ const CATALOGUE: Record<
   demande_refusee: {
     symbole: IconeCroix,
     ton: "info",
-    titre: "Demande de portfolio refusée",
+    titre: "Portfolio request declined",
     sousTitre:
-      "Ta demande n'a pas été retenue. Tu peux créer un nouveau " +
-      "portfolio quand tu le souhaites.",
+      "Your request wasn't accepted. You can create a new " +
+      "portfolio whenever you like.",
   },
   /*  ██ §1 (nº 696) — LE RETRAIT, ET LE RETOUR ██
       DEUX GENRES, PARCE QUE DEUX SITUATIONS. « Demande de portfolio
@@ -255,16 +255,16 @@ const CATALOGUE: Record<
   portfolio_retire: {
     symbole: IconeCorbeille,
     ton: "probleme",
-    titre: "Portfolio retiré",
+    titre: "Portfolio removed",
     sousTitre:
-      `Ton portfolio a été retiré de ${MARQUE_YOKOFOLIO.nom}. ` +
-      "Pour toute question, contacte-nous.",
+      `Your portfolio was removed from ${MARQUE_YOKOFOLIO.nom}. ` +
+      "Questions? Contact us.",
   },
   portfolio_retabli: {
     symbole: IconeDoubleCoche,
     ton: "valide",
-    titre: "Portfolio rétabli",
-    sousTitre: "Ton portfolio a été rétabli.",
+    titre: "Portfolio restored",
+    sousTitre: "Your portfolio has been restored.",
   },
   /*  ██ §1 (nº 663) — LE MESSAGE DE BIENVENUE ██
       LES DEUX TEXTES SONT CEUX DU PROPRIÉTAIRE, au mot près — à la
@@ -327,11 +327,11 @@ const CATALOGUE: Record<
   bienvenue: {
     symbole: IconeEtoile,
     ton: "marque",
-    titre: `Bienvenue sur ${MARQUE_YOKOFOLIO.nom} !`,
+    titre: `Welcome to ${MARQUE_YOKOFOLIO.nom}!`,
     sousTitre:
-      "Explore les styles, suis tes portfolios préférés et garde chaque " +
-      "photo qui t'inspire.\n" +
-      "Tatoueur ? Ajoute ton portfolio et fais découvrir ton travail.",
+      "Explore styles, follow your favorite portfolios and save every " +
+      "photo that inspires you.\n" +
+      "Tattoo artist? Add your portfolio and get your work discovered.",
   },
 };
 
@@ -363,16 +363,16 @@ function sousTitreDe(nouvelle: Notification): string {
   if (nouvelle.genre === "style_ajoute") {
     const nom = nomDuStyle(nouvelle.detail);
     return nom
-      ? `Le style demandé "${nom}" a été ajouté à YokoFolio.`
-      : "Le style demandé a été ajouté à YokoFolio.";
+      ? `The requested style "${nom}" was added to YokoFolio.`
+      : "The requested style was added to YokoFolio.";
   }
   //  nº 756 — la même phrase, un mot changé : c'est la seule
   //  différence entre les deux nouvelles.
   if (nouvelle.genre === "convention_ajoutee") {
     const nom = nomDuStyle(nouvelle.detail);
     return nom
-      ? `La convention demandée "${nom}" a été ajoutée à YokoFolio.`
-      : "La convention demandée a été ajoutée à YokoFolio.";
+      ? `The requested convention "${nom}" was added to YokoFolio.`
+      : "The requested convention was added to YokoFolio.";
   }
   /*  §3 (nº 688) — LE NOM DU PORTFOLIO REFUSÉ, lu dans `fiche_nom`.
       Il vient de LA LIGNE, pas du catalogue : la fiche est effacée au
@@ -384,8 +384,8 @@ function sousTitreDe(nouvelle: Notification): string {
       guillemets vides. */
   if (nouvelle.genre === "demande_refusee" && nouvelle.fiche_nom) {
     return (
-      `Ta demande pour « ${nouvelle.fiche_nom} » n'a pas été retenue. ` +
-      "Tu peux créer un nouveau portfolio quand tu le souhaites."
+      `Your request for "${nouvelle.fiche_nom}" wasn't accepted. ` +
+      "You can create a new portfolio whenever you like."
     );
   }
   /*  §1 (nº 696) — LES DEUX PHRASES DU PROPRIÉTAIRE, au mot près, et
@@ -395,12 +395,12 @@ function sousTitreDe(nouvelle: Notification): string {
       ⚠️ SANS NOM, LA PHRASE DU CATALOGUE — jamais de guillemets vides. */
   if (nouvelle.genre === "portfolio_retire" && nouvelle.fiche_nom) {
     return (
-      `Ton portfolio « ${nouvelle.fiche_nom} » a été retiré de ` +
-      `${MARQUE_YOKOFOLIO.nom}. Pour toute question, contacte-nous.`
+      `Your portfolio "${nouvelle.fiche_nom}" was removed from ` +
+      `${MARQUE_YOKOFOLIO.nom}. Questions? Contact us.`
     );
   }
   if (nouvelle.genre === "portfolio_retabli" && nouvelle.fiche_nom) {
-    return `Ton portfolio « ${nouvelle.fiche_nom} » a été rétabli.`;
+    return `Your portfolio "${nouvelle.fiche_nom}" has been restored.`;
   }
   return fiche.sousTitre;
 }
@@ -412,14 +412,14 @@ function ilYA(iso: string): string {
     0,
     Math.round((Date.now() - new Date(iso).getTime()) / 1000)
   );
-  if (secondes < 90) return "à l'instant";
+  if (secondes < 90) return "just now";
   const minutes = Math.round(secondes / 60);
-  if (minutes < 60) return `il y a ${minutes} min`;
+  if (minutes < 60) return `${minutes} min ago`;
   const heures = Math.round(minutes / 60);
-  if (heures < 24) return `il y a ${heures} h`;
+  if (heures < 24) return `${heures} h ago`;
   const jours = Math.round(heures / 24);
-  if (jours < 31) return `il y a ${jours} jour${jours > 1 ? "s" : ""}`;
-  return new Date(iso).toLocaleDateString("fr-FR");
+  if (jours < 31) return `${jours} day${jours > 1 ? "s" : ""} ago`;
+  return new Date(iso).toLocaleDateString("en-US");
 }
 
 export function FenetreNotifications({
@@ -575,8 +575,8 @@ export function FenetreNotifications({
     <button
       type="button"
       onClick={toutMarquer}
-      aria-label="Tout marquer comme lu"
-      title="Tout marquer comme lu"
+      aria-label="Mark all as read"
+      title="Mark all as read"
       className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full
                  text-sombre-texte-doux hover:text-primaire
                  transition-colors"
@@ -618,7 +618,7 @@ export function FenetreNotifications({
                  exactement comme avant, simplement plus court d'une
                  ligne. Rien n'est ajouté, rien n'est retiré. */}
             <p className="mt-4 text-[15px] font-semibold text-sombre-texte">
-              Rien de neuf
+              Nothing new
             </p>
           </div>
         ) : (
@@ -683,7 +683,7 @@ export function FenetreNotifications({
                         </span>
                         {nonLue && (
                           <span
-                            aria-label="Non lue"
+                            aria-label="Unread"
                             className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-primaire"
                           />
                         )}
@@ -760,7 +760,7 @@ export function FenetreNotifications({
           opaque
           alignement="droite"
           role="dialog"
-          aria-label="Mes notifications"
+          aria-label="My notifications"
           data-source-composant="FenetreNotifications · fenêtre web"
           className="mobile:hidden"
         >
@@ -822,7 +822,7 @@ export function FenetreNotifications({
             <button
               type="button"
               onClick={onFermer}
-              aria-label="Fermer"
+              aria-label="Close"
               className="-mr-[9px] w-9 h-9 shrink-0 flex items-center justify-center
                          rounded-full text-sombre-texte-doux
                          hover:text-sombre-texte hover:bg-sombre-eleve
@@ -842,9 +842,9 @@ export function FenetreNotifications({
       <PagePleinEcranMobile
         titre="Notifications"
         icone={<IconeCloche taille={22} classe="shrink-0 text-white" />}
-        ariaLabel="Mes notifications"
+        ariaLabel="My notifications"
         surFermer={onFermer}
-        ariaLabelFermer="Fermer les notifications"
+        ariaLabelFermer="Close notifications"
         actions={boutonToutLu}
         classeCadre="z-[85]"
       >

@@ -541,7 +541,7 @@ function LigneDeCapsules({
                        text-sombre-texte transition-colors hover:bg-sombre-haut
                        active:bg-sombre-haut"
           >
-            {deplie ? "Réduire" : `+${restant}`}
+            {deplie ? "Less" : `+${restant}`}
             <span
               aria-hidden="true"
               className={`shrink-0 transition-transform duration-200 ${
@@ -1121,7 +1121,7 @@ export function ContenuFiche({
           //  nº 717), là où tous les autres tiennent en 40. 320 le
           //  couvre au double de la densité.
           src={sourceAvatar(tatoueur.photo_profil, AVATAR_MOYEN)}
-          alt={`Photo de ${tatoueur.nom}`}
+          alt={`Photo of ${tatoueur.nom}`}
           decoding="async"
           width={PORTRAIT_ROND}
           height={PORTRAIT_ROND}
@@ -1139,9 +1139,9 @@ export function ContenuFiche({
     <p
       className={`${classes} rounded-xl border border-primaire/40 bg-primaire/10 px-4 py-3 text-sm text-sombre-texte`}
     >
-      Portfolio de DÉMONSTRATION : ce tatoueur n&apos;existe pas, et
-      l&apos;image est un aplat de couleur — aucune photo de tatouage
-      n&apos;est publiée sans l&apos;accord de son auteur.
+      DEMO portfolio: this tattoo artist doesn&apos;t exist, and
+      the image is a flat color — no tattoo photo
+      is published without its author&apos;s consent.
     </p>
   );
 
@@ -1334,13 +1334,13 @@ export function ContenuFiche({
        « Attente : ? mois ». */
   const libelleBooking =
     tatoueur.booking === "ouvert" || tatoueur.booking === "delai"
-      ? "Booking ouvert"
+      ? "Books open"
       : tatoueur.booking === "ferme"
-        ? "Booking fermé"
+        ? "Books closed"
         : null;
   const attenteBooking =
     tatoueur.booking === "delai" && tatoueur.booking_mois
-      ? `Attente : ${tatoueur.booking_mois} mois`
+      ? `${tatoueur.booking_mois}-month wait`
       : null;
   //  ⚠️ UN « delai » SANS MOIS SE TAIT, comme avant la nº 408 : sans
   //  chiffre, la première ligne dirait « Booking ouvert » là où

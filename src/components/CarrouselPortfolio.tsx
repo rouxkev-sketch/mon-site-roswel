@@ -949,7 +949,7 @@ export function CarrouselPortfolio({
   /** Le texte de remplacement d'une photo : le style, et sa légende
       quand elle est taguée (« Avant-bras · Couleur »). */
   const texteDe = (photo: PhotoGalerie) =>
-    `Portfolio de ${nomTatoueur} — ${styleLabel}${
+    `${nomTatoueur}'s portfolio — ${styleLabel}${
       photo.legende ? ` · ${photo.legende}` : ""
     }`;
 
@@ -1072,8 +1072,8 @@ export function CarrouselPortfolio({
   const fleche = (sens: 1 | -1) => (
     <button
       type="button"
-      aria-label={sens === 1 ? "Photo suivante" : "Photo précédente"}
-      data-role={sens === 1 ? "flèche droite" : "flèche gauche"}
+      aria-label={sens === 1 ? "Next photo" : "Previous photo"}
+      data-role={sens === 1 ? "right arrow" : "left arrow"}
       //  §4 (nº 368) — ⚠️ LES DEUX GARDES : sur une carte, le bouton
       //  est posé au-dessus du lien étiré ; sans elles, un clic
       //  ouvrirait la fiche EN PLUS de faire défiler.
@@ -1190,7 +1190,7 @@ export function CarrouselPortfolio({
     <div
       role="region"
       aria-roledescription="carrousel"
-      aria-label={`Portfolio de ${nomTatoueur} — ${styleLabel}`}
+      aria-label={`${nomTatoueur}'s portfolio — ${styleLabel}`}
       /*  ⚠️ TEMPORAIRE (nº 218-§1) : c'est par cet attribut que la sonde
           TROUVE le carrousel — elle n'en connaît rien d'autre. */
       data-carrousel={variante}
@@ -1624,7 +1624,7 @@ export function PointsDuCarrousel({
             >
               <button
                 type="button"
-                aria-label={`Voir la photo ${rang + 1} sur ${n}`}
+                aria-label={`View photo ${rang + 1} of ${n}`}
                 aria-current={rang === indice ? "true" : undefined}
                 onClick={() => surRang(rang)}
                 tabIndex={taille === 0 ? -1 : 0}

@@ -196,7 +196,7 @@ export function EnteteModale({
       <button
         type="button"
         onClick={surFermeture}
-        aria-label="Fermer"
+        aria-label="Close"
         className="-mr-2 -mt-2 w-10 h-10 shrink-0 rounded-full flex items-center justify-center text-encre-douce hover:bg-fond-doux transition-colors"
       >
         <IconeCroix taille={18} />

@@ -22,7 +22,7 @@ import { lireDemarchageParJeton } from "@/lib/demarchage-serveur";
  */
 
 export const metadata: Metadata = {
-  title: "Récupérer mon portfolio",
+  title: "Claim my portfolio",
   robots: { index: false, follow: false },
 };
 

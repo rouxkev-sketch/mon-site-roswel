@@ -8,7 +8,8 @@
  * d'Unicode, rangé dans SES catégories officielles.
  *
  * COMMENT : ce script lit `emojibase-data` (les données Unicode
- * publiées, en français : libellés et mots-clés traduits) et écrit
+ * publiées — EN ANGLAIS depuis la nº 804, le site l'étant devenu :
+ * libellés et mots-clés de recherche) et écrit
  * `src/lib/emojis-donnees.ts`. Il tourne À LA DEMANDE, jamais au
  * build ni à l'exécution :
  *
@@ -32,21 +33,22 @@ const RACINE = new URL("..", import.meta.url).pathname;
 const lireJson = (chemin) =>
   JSON.parse(readFileSync(`${RACINE}node_modules/emojibase-data/${chemin}`, "utf8"));
 
-const emojis = lireJson("fr/compact.json");
-const messages = lireJson("fr/messages.json");
+const emojis = lireJson("en/compact.json");
+const messages = lireJson("en/messages.json");
 
 /** LES CATÉGORIES OFFICIELLES, dans l'ordre d'Unicode — et leurs noms
-    tels que le propriétaire les a demandés. */
+    tels que le propriétaire les a demandés, en anglais depuis la
+    nº 804 (les limaces, elles, ne bougent pas : ce sont des clés). */
 const CATEGORIES = [
-  ["smileys-emotion", "visages", "Visages et émotions"],
-  ["people-body", "personnes", "Personnes"],
-  ["animals-nature", "animaux", "Animaux et nature"],
-  ["food-drink", "nourriture", "Nourriture"],
-  ["travel-places", "voyages", "Voyages et lieux"],
-  ["activities", "activites", "Activités"],
-  ["objects", "objets", "Objets"],
-  ["symbols", "symboles", "Symboles"],
-  ["flags", "drapeaux", "Drapeaux"],
+  ["smileys-emotion", "visages", "Smileys & emotion"],
+  ["people-body", "personnes", "People"],
+  ["animals-nature", "animaux", "Animals & nature"],
+  ["food-drink", "nourriture", "Food & drink"],
+  ["travel-places", "voyages", "Travel & places"],
+  ["activities", "activites", "Activities"],
+  ["objects", "objets", "Objects"],
+  ["symbols", "symboles", "Symbols"],
+  ["flags", "drapeaux", "Flags"],
 ];
 
 const numeroDuGroupe = new Map(
@@ -92,9 +94,9 @@ const fichier = `/**
  *     npm install --no-save emojibase-data
  *     node scripts/engendrer-emojis.mjs
  *
- * SOURCE : emojibase-data (les données Unicode publiées), en FRANÇAIS
- * — les libellés et les mots-clés de recherche sont ceux d'Unicode,
- * traduits, jamais inventés ici.
+ * SOURCE : emojibase-data (les données Unicode publiées), en ANGLAIS
+ * depuis la nº 804 — les libellés et les mots-clés de recherche sont
+ * ceux d'Unicode, jamais inventés ici.
  * CONTENU : ${total} émojis, rangés dans les ${CATEGORIES.length} catégories officielles.
  * ÉCARTÉS : le groupe « component » (teintes seules) et les variantes
  * de teinte de peau — voir scripts/engendrer-emojis.mjs.

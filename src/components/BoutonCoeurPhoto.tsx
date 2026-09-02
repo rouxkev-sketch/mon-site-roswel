@@ -196,10 +196,10 @@ export function BoutonCoeurPhoto({
       //  fixe, le signe du rangement, ici comme là-bas.
       aria-label={
         enregistree
-          ? "Retirer cette photo de ma sélection"
-          : "Enregistrer cette photo"
+          ? "Remove this photo from my favorites"
+          : "Save this photo"
       }
-      title={enregistree ? "Enregistrée" : "Enregistrer"}
+      title={enregistree ? "Saved" : "Save"}
       //  ⚠️ `relative z-10` — ET LES DEUX MOTS COMPTENT. La carte est
       //  un LIEN ÉTIRÉ (`after:absolute after:inset-0`) qui recouvre
       //  toute la vignette. `z-10` seul ne sert à RIEN sur un élément

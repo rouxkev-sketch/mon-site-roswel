@@ -199,7 +199,7 @@ export function BlocHorairesStudio({
                 {ferme ? (
                   <div className="flex min-h-[38px] flex-wrap items-center gap-x-3 gap-y-2">
                     <span className="text-[14px] text-sombre-texte-doux">
-                      Fermé
+                      Closed
                     </span>
                     <button
                       type="button"
@@ -213,7 +213,7 @@ export function BlocHorairesStudio({
                                  text-[13px] font-semibold text-sombre-texte
                                  transition-colors hover:bg-sombre-haut"
                     >
-                      + Ajouter des horaires
+                      + Add hours
                     </button>
                   </div>
                 ) : (
@@ -227,7 +227,7 @@ export function BlocHorairesStudio({
                       >
                         <input
                           type="time"
-                          aria-label={`${jour.label} — ouverture ${rang + 1}`}
+                          aria-label={`${jour.label} — opens ${rang + 1}`}
                           id={`${prefixe}-${jour.index}-${rang}-debut`}
                           value={plage.debut}
                           onChange={(evenement) =>
@@ -242,7 +242,7 @@ export function BlocHorairesStudio({
                         </span>
                         <input
                           type="time"
-                          aria-label={`${jour.label} — fermeture ${rang + 1}`}
+                          aria-label={`${jour.label} — closes ${rang + 1}`}
                           id={`${prefixe}-${jour.index}-${rang}-fin`}
                           value={plage.fin}
                           min={plage.debut || undefined}
@@ -256,7 +256,7 @@ export function BlocHorairesStudio({
                         <button
                           type="button"
                           onClick={() => retirerPlage(jour.index, rang)}
-                          aria-label={`Retirer ce créneau du ${jour.label.toLowerCase()}`}
+                          aria-label={`Remove this ${jour.label} slot`}
                           className="ml-auto flex h-9 w-9 shrink-0 items-center
                                      justify-center rounded-full text-sombre-texte-doux
                                      transition-colors hover:text-erreur"
@@ -296,7 +296,7 @@ export function BlocHorairesStudio({
                                      transition-colors hover:bg-sombre-haut
                                      sm:px-3 sm:text-[12.5px]"
                         >
-                          + Coupure du midi
+                          + Lunch break
                         </button>
                       )}
                       <button
@@ -313,8 +313,8 @@ export function BlocHorairesStudio({
                             « Copier sur les autres jours » disait la
                             mécanique ; celui-ci dit le geste. */}
                         {copieFaite === jour.index
-                          ? "✓ Horaires dupliqués"
-                          : "Dupliquer les horaires"}
+                          ? "✓ Hours copied"
+                          : "Copy hours"}
                       </button>
                     </div>
                   </>

@@ -471,7 +471,7 @@ export function GalerieQuiDefile({
   const bandeau = (sens: 1 | -1) => (
     <button
       type="button"
-      aria-label={sens === 1 ? "Vignettes suivantes" : "Vignettes précédentes"}
+      aria-label={sens === 1 ? "Next thumbnails" : "Previous thumbnails"}
       data-bandeau-defilement={sens === 1 ? "droite" : "gauche"}
       onClick={() => defiler(sens)}
       className={`hidden pointer-fine:flex invisible group-hover:visible

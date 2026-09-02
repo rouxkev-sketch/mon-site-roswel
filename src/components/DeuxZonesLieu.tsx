@@ -94,7 +94,7 @@ function PastilleRetenu() {
                  px-2 py-0.5 align-middle text-[11px] font-semibold
                  uppercase tracking-wide text-primaire"
     >
-      Retenu
+      Selected
     </span>
   );
 }
@@ -129,8 +129,8 @@ export function DeuxZonesLieu({
   messageVide,
   /** CE QU'ON LIT DANS LES CHAMPS. Les deux zones servent au salon
       comme au studio privé : les mots changent, la mécanique non. */
-  indicationInscrit = "Recherche par nom",
-  indicationManuel = "Je tape son adresse",
+  indicationInscrit = "Search by name",
+  indicationManuel = "I'll type its address",
   /** §1 (nº 266) — LE TITRE DE LA ZONE D'ADRESSE (« Où se trouve-t-il
       ? »), au-dessus du champ comme la recherche a le sien. Il ne
       rougit jamais — ce sont les champs qui s'encadrent (règle de la
@@ -326,8 +326,8 @@ export function DeuxZonesLieu({
               {nomLieu.trim().length > 0 && (
                 <button
                   type="button"
-                  aria-label="Effacer le nom"
-                  title="Effacer le nom"
+                  aria-label="Clear the name"
+                  title="Clear the name"
                   onPointerDown={(evenement) => {
                     if (evenement.pointerType === "mouse") {
                       evenement.preventDefault();
@@ -380,7 +380,7 @@ export function ZoneLieuSeule({
   surLieu,
   surMobile,
   enErreur = false,
-  indication = "Je tape mon adresse, ou ma ville",
+  indication = "I'll type my address, or my city",
   souscrit,
 }: {
   prefixe: string;

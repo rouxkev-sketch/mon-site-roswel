@@ -15,7 +15,7 @@ import { Securite } from "@/components/Securite";
  * compte, on ne cherche pas.
  */
 export const metadata: Metadata = {
-  title: "Sécurité",
+  title: "Security",
   robots: { index: false, follow: false },
 };
 

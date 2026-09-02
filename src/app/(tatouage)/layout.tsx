@@ -74,7 +74,7 @@ export const metadata: Metadata = {
   openGraph: {
     siteName: MARQUE_YOKOFOLIO.nom,
     type: "website",
-    locale: "fr_FR",
+    locale: "en_US",
   },
   /**
    * LA GRANDE CARTE DE PARTAGE — et non plus la petite vignette
@@ -344,7 +344,7 @@ export default async function MiseEnPageTatouage({
               sont obligatoires et doivent être joignables de n'importe
               quelle page. */}
           <nav
-            aria-label="Liens du pied de page"
+            aria-label="Footer links"
             className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3
                        text-[13px] text-sombre-texte-doux
                        sm:ml-auto sm:justify-end sm:gap-x-6 sm:gap-y-2"
@@ -368,7 +368,7 @@ export default async function MiseEnPageTatouage({
               prefetch={false}
               className="hover:text-sombre-texte transition-colors"
             >
-              Qui sommes-nous
+              About
             </Link>
             <Link
               href="/contact"
@@ -382,7 +382,7 @@ export default async function MiseEnPageTatouage({
               prefetch={false}
               className="hover:text-sombre-texte transition-colors"
             >
-              Mentions légales
+              Legal
             </Link>
             {/* LE COMPTE INSTAGRAM DU SITE — dernier de la ligne.
                 Nouvel onglet : on quitte le site, on ne l'abandonne

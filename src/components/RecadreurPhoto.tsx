@@ -458,7 +458,7 @@ export function RecadreurPhoto({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Recadrer la photo"
+      aria-label="Crop the photo"
       className="fixed inset-0 z-[90] flex items-center justify-center p-4"
     >
       <div
@@ -486,7 +486,7 @@ export function RecadreurPhoto({
               espacées restent le registre des INTERTITRES (13-14 px,
               gris doux), pas celui d'un titre de fenêtre à 17 px. */}
           <h2 className="text-[17px] font-bold tracking-tight text-sombre-texte">
-            {rond ? "Photo de profil" : "Nouvelle publication"}
+            {rond ? "Profile photo" : "New post"}
           </h2>
           {/* LE COMPTEUR DE SÉRIE — où l'on en est, d'un coup d'œil :
               la fenêtre enchaîne les photos sans revenir à la grille. */}
@@ -583,7 +583,7 @@ export function RecadreurPhoto({
                 suffisent, et la question tient sans serrer les deux
                 réponses qui la suivent sur la même ligne. */}
             <p className="min-w-0 text-[14px] font-semibold text-sombre-texte">
-              Supprimer&nbsp;?
+              Delete?
             </p>
             <div className="flex shrink-0 items-center gap-3">
               <button
@@ -593,7 +593,7 @@ export function RecadreurPhoto({
                            text-sombre-texte-doux transition-colors
                            hover:text-sombre-texte"
               >
-                Annuler
+                Cancel
               </button>
               <button
                 type="button"
@@ -601,7 +601,7 @@ export function RecadreurPhoto({
                 className="px-2 min-h-[44px] text-[14px] font-semibold
                            text-erreur transition-colors hover:opacity-75"
               >
-                Supprimer
+                Delete
               </button>
             </div>
           </div>
@@ -625,7 +625,7 @@ export function RecadreurPhoto({
                 className="px-2 min-h-[44px] text-[14px] font-semibold
                            text-erreur transition-colors hover:opacity-75"
               >
-                Supprimer
+                Delete
               </button>
             ) : (
               //  Sans suppression possible (une photo qu'on dépose),
@@ -641,7 +641,7 @@ export function RecadreurPhoto({
                            text-sombre-texte-doux transition-colors
                            hover:text-sombre-texte"
               >
-                Annuler
+                Cancel
               </button>
               <button
                 type="button"
@@ -651,7 +651,7 @@ export function RecadreurPhoto({
                            min-h-[46px] text-white font-semibold transition-colors
                            hover:bg-primaire-fonce disabled:opacity-60"
               >
-                Valider
+                Done
               </button>
             </div>
           </div>

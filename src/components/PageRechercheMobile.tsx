@@ -403,7 +403,7 @@ export function PageRechercheMobile({
       data-page-recherche=""
       role="dialog"
       aria-modal="true"
-      aria-label="Rechercher un tatoueur"
+      aria-label="Find a tattoo artist"
       ref={conteneur}
       style={
         enGlissade
@@ -481,9 +481,9 @@ export function PageRechercheMobile({
       <EnTetePleinEcran
         marqueRecherche
         icone={<IconeLoupe taille={22} classe="shrink-0 text-white" />}
-        titre="Recherche"
+        titre="Search"
         surFermer={() => fermer(false)}
-        ariaLabelFermer="Fermer la recherche"
+        ariaLabelFermer="Close search"
       >
         {/*  ⚠️ PLEINE LARGEUR (nº 149-§3) : le max-w-[260px] arrêtait
              la ligne du sélecteur avant le bord droit des champs — la
@@ -498,11 +498,11 @@ export function PageRechercheMobile({
                catalogue — c'est l'onglet qui porte la nature de la
                recherche validée. */}
           <OngletsLigne
-            ariaLabel="Réalisation ou flash"
+            ariaLabel="Tattoo or flash"
             cleActive={vue}
             surChoix={(cle) => surVue(cle as VueRecherche)}
             options={[
-              { cle: "tatouage", label: "Réalisation" },
+              { cle: "tatouage", label: "Tattoo" },
               { cle: "flash", label: "Flash" },
             ]}
           />
@@ -566,7 +566,7 @@ export function PageRechercheMobile({
                      text-sombre-texte-doux active:text-sombre-texte
                      transition-colors"
         >
-          Effacer
+          Clear
         </button>
         <button
           type="button"
@@ -575,7 +575,7 @@ export function PageRechercheMobile({
                      bg-primaire active:bg-primaire-fonce text-white
                      transition-colors"
         >
-          Valider
+          Search
         </button>
       </div>
     </div>,

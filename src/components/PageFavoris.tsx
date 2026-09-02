@@ -502,7 +502,7 @@ export function PageFavoris({
                        text-sombre-texte transition-colors
                        hover:bg-sombre-haut"
           >
-            Voir plus
+            See more
           </button>
           <p className="text-[13px] text-sombre-texte-doux">
             {montres} sur {total}
@@ -644,7 +644,7 @@ export function PageFavoris({
              LE MESSAGE, LUI, EST DU PROPRIÉTAIRE : « Touche le fanion
              d'une photo pour la retrouver ici » (nº 642) devient une
              phrase qui décrit l'écran au lieu de dicter un geste. */
-        <EcranVideSelection message="Vos photos préférées apparaîtront ici." />
+        <EcranVideSelection message="Your favorite photos will show up here." />
       ) : (
         <>
           {/*  ⚠️ LES DEUX FILTRES QUI VIVAIENT ICI SONT PARTIS
@@ -655,7 +655,7 @@ export function PageFavoris({
           {/* ---------- LES PHOTOS, EN CARTES ---------- */}
           {ensemblesVisibles.length === 0 ? (
             <p className="mt-8 rounded-2xl bg-sombre-carte px-4 py-6 text-center text-[14px] text-sombre-texte-doux">
-              Rien d&apos;enregistré dans ce style.
+              Nothing saved in this style.
             </p>
           ) : (
             /*  ⚠️ LA GRILLE DE LA MOSAÏQUE, L'ÉCRITURE MÊME (nº 249-§4).

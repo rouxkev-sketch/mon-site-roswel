@@ -385,7 +385,7 @@ export function EnTeteTatouage({
       d'invitation pour les autres. Le même libellé sert d'info-bulle à
       l'icône du smartphone. (Connecté, c'est MenuEspace qui joue.) */
   const libelleDeconnecte = dejaConnecte
-    ? "Se connecter"
+    ? "Log in"
     : TEXTES_TATOUAGE.lienInscription;
 
   /**
@@ -761,7 +761,7 @@ export function EnTeteTatouage({
               <Link> a déjà avalé ce clic en silence, deux fois. */}
           <a
             href="/"
-            aria-label={`Accueil ${MARQUE_YOKOFOLIO.nom}`}
+            aria-label={`${MARQUE_YOKOFOLIO.nom} home`}
             draggable={false}
             /*  §1 (nº 429) — L'INTENTION EST DÉCLARÉE AVANT DE PARTIR :
                 ce lien est un <a> NATIF (voulu, voir ci-dessus), chaque
@@ -992,7 +992,7 @@ export function EnTeteTatouage({
               dès le premier pixel. Aucun état faux peint, jamais. */
           data-zone-compte=""
           data-session={pret ? "prete" : "muette"}
-          aria-label="Langue et compte"
+          aria-label="Language and account"
           //  gap-3 (nº 141-§7) : le cœur — ou le globe — respirait mal
           //  contre « Mon espace ».
           //  ⚠️ ANCRÉ AU BORD DROIT (nº 169-§4) : ce sont les marges
@@ -1098,8 +1098,8 @@ export function EnTeteTatouage({
               }
               declarerDepartVouluVersLAccueil();
             }}
-            aria-label="Rechercher"
-            title="Rechercher"
+            aria-label="Search"
+            title="Search"
             aria-hidden={!loupeVisible || undefined}
             tabIndex={loupeVisible ? 0 : -1}
             style={{ height: HAUTEUR_ACTIONS, width: HAUTEUR_ACTIONS }}
@@ -1132,8 +1132,8 @@ export function EnTeteTatouage({
           {connecte && utilisateur ? (
             <Link
               href="/mes-favoris"
-              aria-label="Ma sélection"
-              title="Ma sélection"
+              aria-label="My favorites"
+              title="My favorites"
               //  §6 (nº 247) — L'ICÔNE DE LA PAGE COURANTE RAFRAÎCHIT.
               //  Un <Link> vers l'adresse où l'on est déjà ne fait
               //  RIEN : le routeur constate qu'il n'y a nulle part où
@@ -1356,7 +1356,7 @@ export function EnTeteTatouage({
                   ) : (
                     <>
                       <span className="col-start-1 row-start-1 etat-revenant">
-                        Se connecter
+                        Log in
                       </span>
                       <span className="col-start-1 row-start-1 etat-nouveau">
                         {TEXTES_TATOUAGE.lienInscription}
@@ -1364,7 +1364,7 @@ export function EnTeteTatouage({
                     </>
                   )}
                   <span aria-hidden="true" className="col-start-1 row-start-1 invisible">
-                    Se connecter
+                    Log in
                   </span>
                   <span aria-hidden="true" className="col-start-1 row-start-1 invisible">
                     {TEXTES_TATOUAGE.lienInscription}

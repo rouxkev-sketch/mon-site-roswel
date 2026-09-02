@@ -17,6 +17,15 @@
     gabarit. Rien de ce qui s'y trouve ne peut avoir besoin d'une
     classe. */
 @source not "../../outils";
+/*  nº 804 — LA BIBLIOTHÈQUE D'ÉMOJIS N'EST PAS UNE SOURCE DE CLASSES.
+    Tailwind lit tous les fichiers du projet à la recherche de noms de
+    classes. Passée en anglais, la liste des mots-clés des émojis
+    (« jar … container », « input latin lowercase », « bust in
+    silhouette … shadow ») lui a fait engendrer trois utilitaires que
+    personne n'emploie — `.container` (et ses cinq paliers), `.lowercase`,
+    `.shadow` : +626 octets, +15 règles, mesurés avant/après. Ce fichier
+    ne contient que des données : on le retire de la lecture. */
+@source not "../lib/emojis-donnees.ts";
 
 /*
  * Les couleurs ne sont PAS définies ici : elles viennent du fichier

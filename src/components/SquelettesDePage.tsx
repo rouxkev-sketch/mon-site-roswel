@@ -330,7 +330,7 @@ function MosaiqueGrise({ avecTitre }: { avecTitre: boolean }) {
   return (
     <main
       aria-busy="true"
-      aria-label="Chargement de la page"
+      aria-label="Loading page"
       className={`flex-1 mx-auto w-full ${LARGEUR_SITE} px-4 sm:px-6 pb-16`}
     >
       <CorpsSquelette avecTitre={avecTitre} />

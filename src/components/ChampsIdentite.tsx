@@ -73,7 +73,7 @@ export type PhotoCadree = { fichier: File; apercu: string };
 /** Le reproche d'un format refusé, écrit UNE fois : les deux écrans
     disent le même mot. */
 const FORMAT_REFUSE =
-  "Seules les images JPG et PNG sont acceptées — ce fichier est d'un autre format.";
+  "Only JPG and PNG images are accepted — this file is another format.";
 
 export function ChampPhotoRonde({
   apercu,
@@ -207,7 +207,7 @@ export function ChampPhotoRonde({
                aperçu local (URL d'objet) ou image déjà stockée. */
             <img
               src={apercu}
-              alt="Ta photo de profil"
+              alt="Your profile photo"
               className="h-full w-full object-cover"
             />
           ) : (
@@ -243,7 +243,7 @@ export function ChampPhotoRonde({
                        transition-colors group-hover:text-sombre-texte
                        group-active:text-sombre-texte"
           >
-            {apercu ? "Remplacer" : "Choisir la photo"}
+            {apercu ? "Replace" : "Choose a photo"}
           </span>
         </button>
       </div>

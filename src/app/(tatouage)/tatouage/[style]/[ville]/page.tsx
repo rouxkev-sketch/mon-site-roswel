@@ -121,15 +121,15 @@ export async function generateMetadata({
       PAS l'indexer LE TEMPS DE LA PANNE — `follow` reste, les liens
       continuent d'être suivis. C'est le même couple que la page vide
       juste en dessous : aucun mécanisme neuf. */
-  if (!style || (!ville && !indisponible)) return { title: "Page introuvable" };
+  if (!style || (!ville && !indisponible)) return { title: "Page not found" };
   if (!ville) {
     return {
-      title: `Tatoueurs ${libelleStyle(style).toLowerCase()}`,
+      title: `${libelleStyle(style)} tattoo artists`,
       robots: { index: false, follow: true },
     };
   }
 
-  const titre = `Tatoueurs ${libelleStyle(style).toLowerCase()} à ${villeAffichee(ville.nom)}`;
+  const titre = `${libelleStyle(style)} tattoo artists in ${villeAffichee(ville.nom)}`;
   const base = `${adresseDuSite()}/tatouage/${style}/${villeSlug}`;
   const dernierePage = Math.max(Math.ceil(total / CARTES_PAR_PAGE), 1);
   const adressePage = (n: number) => (n <= 1 ? base : `${base}?page=${n}`);
@@ -138,8 +138,8 @@ export async function generateMetadata({
     // pas se présenter aux moteurs sous le même titre.
     title: page > 1 ? `${titre} — page ${page}` : titre,
     description:
-      `${titre} : compare les portfolios Instagram des tatoueurs ` +
-      `spécialisés en ${libelleStyle(style).toLowerCase()}.`,
+      `${titre}: compare the Instagram portfolios of tattoo artists ` +
+      `specializing in ${libelleStyle(style).toLowerCase()}.`,
     alternates: {
       // CHAQUE PAGE EST SA PROPRE ADRESSE CANONIQUE — surtout pas la
       // page 1 : Google ne verrait plus jamais les suivantes.
@@ -223,7 +223,7 @@ export default async function PageStyleVille({
         <main className="flex-1 mx-auto w-full max-w-[1760px] px-4 sm:px-6 pt-8 pb-16">
           <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1 mb-6">
             <h1 className="text-[clamp(1.35rem,2.6vw,1.85rem)] font-bold leading-tight">
-              Tatoueurs {libelleStyle(style).toLowerCase()}
+              {libelleStyle(style)} tattoo artists
             </h1>
             <p className="text-[15px] text-sombre-texte-doux">
               {MESSAGE_INDISPONIBLE}
@@ -269,13 +269,13 @@ export default async function PageStyleVille({
       <main className="flex-1 mx-auto w-full max-w-[1760px] px-4 sm:px-6 pt-8 pb-16">
         <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1 mb-6">
           <h1 className="text-[clamp(1.35rem,2.6vw,1.85rem)] font-bold leading-tight">
-            Tatoueurs {libelle.toLowerCase()} à {nomVille}
+            {libelle} tattoo artists in {nomVille}
           </h1>
           <p className="text-[15px] text-sombre-texte-doux">
             {total === 0
-              ? "Aucun tatoueur pour l'instant."
-              : `${total} portfolio${total > 1 ? "s" : ""} à comparer.`}
-            {dernierePage > 1 ? ` Page ${page} sur ${dernierePage}.` : ""}
+              ? "No tattoo artists yet."
+              : `${total} portfolio${total > 1 ? "s" : ""} to compare.`}
+            {dernierePage > 1 ? ` Page ${page} of ${dernierePage}.` : ""}
           </p>
         </div>
 
@@ -313,7 +313,7 @@ export default async function PageStyleVille({
               un pays à partir d'un nom de commune. */
           <AucunResultat
             issues={[
-              { libelle: "Partout dans le monde", href: `/?style=${style}` },
+              { libelle: "Anywhere", href: `/?style=${style}` },
             ]}
           />
         ) : (
@@ -331,7 +331,7 @@ export default async function PageStyleVille({
             son lien canonique. */}
         {dernierePage > 1 && (
           <nav
-            aria-label="Pages de résultats"
+            aria-label="Result pages"
             className="mt-10 flex flex-wrap items-center justify-center gap-3"
           >
             {page > 1 && (
@@ -342,11 +342,11 @@ export default async function PageStyleVille({
                            border border-sombre-bordure bg-sombre-carte text-sm
                            hover:border-primaire hover:text-primaire transition-colors"
               >
-                ← Page précédente
+                ← Previous page
               </Link>
             )}
             <span className="text-sm text-sombre-texte-doux">
-              Page {page} sur {dernierePage}
+              Page {page} of {dernierePage}
             </span>
             {page < dernierePage && (
               <Link
@@ -356,7 +356,7 @@ export default async function PageStyleVille({
                            border border-sombre-bordure bg-sombre-carte text-sm
                            hover:border-primaire hover:text-primaire transition-colors"
               >
-                Page suivante →
+                Next page →
               </Link>
             )}
           </nav>
@@ -365,9 +365,9 @@ export default async function PageStyleVille({
         {/* Le maillage interne : les autres styles de la même ville.
             C'est ce qui fait découvrir les pages voisines, aux
             visiteurs comme aux moteurs. */}
-        <nav aria-label="Autres styles" className="mt-12">
+        <nav aria-label="Other styles" className="mt-12">
           <h2 className="text-sm font-semibold text-sombre-texte-doux mb-3">
-            Autres styles à {nomVille}
+            Other styles in {nomVille}
           </h2>
           <ul className="flex flex-wrap gap-2">
             {stylesAlphabetiques()

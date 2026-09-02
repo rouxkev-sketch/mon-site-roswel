@@ -103,7 +103,7 @@ export function BlocStudios({
               {aSupprimer === studio.cle ? (
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <p className="text-[14.5px] font-semibold text-sombre-texte">
-                    Supprimer ce studio&nbsp;?
+                    Delete this studio?
                   </p>
                   <div className="flex shrink-0 items-center gap-2">
                     <button
@@ -116,7 +116,7 @@ export function BlocStudios({
                                  text-sombre-texte-doux transition-colors
                                  hover:text-sombre-texte"
                     >
-                      Annuler
+                      Cancel
                     </button>
                     <button
                       type="button"
@@ -126,7 +126,7 @@ export function BlocStudios({
                       className="px-2 min-h-[38px] text-[13.5px] font-semibold
                                  text-erreur transition-colors hover:opacity-75"
                     >
-                      Supprimer
+                      Delete
                     </button>
                   </div>
                 </div>
@@ -143,7 +143,7 @@ export function BlocStudios({
                 <button
                   type="button"
                   onClick={() => setAsupprimer(studio.cle)}
-                  aria-label={`Supprimer le studio ${rang + 1}`}
+                  aria-label={`Delete studio ${rang + 1}`}
                   className="absolute right-2.5 top-2.5 z-10 flex h-9 w-9 items-center
                              justify-center rounded-full text-sombre-texte-doux
                              opacity-40 transition-opacity hover:opacity-100
@@ -178,7 +178,7 @@ export function BlocStudios({
                       htmlFor={`studio-nom-${studio.cle}`}
                       className="mb-1.5 block text-sm font-medium text-sombre-texte"
                     >
-                      Le nom de ce studio
+                      Studio name
                     </label>
                     <input
                       id={`studio-nom-${studio.cle}`}
@@ -189,7 +189,7 @@ export function BlocStudios({
                       // d'adresses du téléphone par-dessus la page.
                       {...sansRemplissageAuto(`studio-nom-${studio.cle}`)}
                       value={studio.nom}
-                      placeholder="Croix-Rousse, Marais…"
+                      placeholder="East Austin, South Congress…"
                       onChange={(evenement) =>
                         modifier(studio.cle, { nom: evenement.target.value })
                       }
@@ -216,8 +216,8 @@ export function BlocStudios({
                 {!principal && (
                   <DeuxZonesLieu
                     prefixe={`studio-${studio.cle}`}
-                    titreInscrit="Ce studio est sur le site"
-                    titreManuel="Ce studio n'est pas sur le site"
+                    titreInscrit="This studio is on the site"
+                    titreManuel="This studio isn't on the site"
                     /*  §3 (nº 267) — LA RECHERCHE EST BORNÉE À LA
                         NATURE DU LIEU, et c'est ICI qu'elle ne l'était
                         pas : ce bloc appelait `DeuxZonesLieu` sans
@@ -235,8 +235,8 @@ export function BlocStudios({
                     }
                     messageVide={
                       etablissement === "prive"
-                        ? "Aucun studio trouvé"
-                        : "Aucun salon trouvé"
+                        ? "No studio found"
+                        : "No shop found"
                     }
                     ficheChoisie={studio.fiche ?? null}
                     surFiche={(fiche) =>
@@ -301,7 +301,7 @@ export function BlocStudios({
                       qui doit sa rue. La consigne précise, elle, reste
                       dans le fantôme du champ. */}
                   <p className="mb-2 text-[13.5px] font-semibold text-sombre-texte">
-                    Où es-tu&nbsp;?
+                    Where are you?
                   </p>
                   <ChampLocalisation
                     // ⚠️ LA CLÉ PORTE LA NATURE DE L'ÉTABLISSEMENT, ET
@@ -325,8 +325,8 @@ export function BlocStudios({
                     // champs. Le texte seul dit ce qu'il faut faire.
                     texteIndicatif={
                     etablissement === "prive"
-                      ? "Ville ou adresse complète"
-                      : "Adresse complète"
+                      ? "City or full address"
+                      : "Full address"
                   }
                     lieuInitial={studio.lieu}
                     surChoix={(lieu) => modifier(studio.cle, { lieu })}
