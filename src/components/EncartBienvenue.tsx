@@ -1,11 +1,5 @@
-"use client";
-
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { MARQUE_YOKOFOLIO, TEXTES_TATOUAGE } from "@/config/tatouage";
-import { useUtilisateur } from "@/lib/use-utilisateur";
-import { clientSupabaseALaDemande } from "@/lib/supabase/client-a-la-demande";
-import { doitMontrerLaBienvenue, marquerLaBienvenueVue } from "@/lib/bienvenue";
 //  §4 (nº 475) — le lien vers l'accueil qui déclare son départ.
 import { LienAccueil } from "@/components/LienAccueil";
 
@@ -14,77 +8,70 @@ import { LienAccueil } from "@/components/LienAccueil";
  * ==================================================================
  * OÙ, ET POURQUOI LÀ. Un compte neuf arrive sur « Ma sélection »
  * (ARRIVEE_SANS_PORTFOLIO — la seule arrivée, nº 313), c'est-à-dire
- * sur ses favoris VIDES : la page ne disait rien. L'encart est posé en
- * tête de cette page, DANS la page — pas une page de plus, pas une
- * fenêtre par-dessus :
+ * sur ses favoris VIDES : la page ne disait rien. L'encart est posé
+ * DANS cette page — pas une page de plus, pas une fenêtre par-dessus :
  *  · une PAGE DÉDIÉE ajouterait une étape entre la validation et le
  *    site (le « tunnel » que le propriétaire refuse), et un retour
  *    arrière y ramènerait ;
  *  · une FENÊTRE interrompt — il faut la fermer avant de voir la page,
  *    et au doigt elle couvre tout ;
  *  · l'ENCART, lui, remplit l'écran vide avec ce qu'il manquait, se lit
- *    sans geste, et la page reste la page. Il s'ignore d'un
- *    défilement, et il ne revient pas.
- * La forme est celle de l'écran vide de la sélection (la boîte
- * `rounded-2xl bg-sombre-carte`, nº 643) et les deux gestes sont ceux
- * de la page About (nº 798) — le rouge pour « Find your style », le
- * gris pour « Create your portfolio » — aux mêmes mesures (40 px,
- * 14 px). Le mot du second bouton vient de la config
- * (`lienCreerPortfolio`), comme partout.
+ *    sans geste, et la page reste la page.
  *
- * UNE SEULE FOIS : la décision est prise UNE FOIS, dès que la session
- * est connue, d'après le drapeau (lib/bienvenue, qui dit la règle et
- * le cas Google) ; l'encart marque ensuite le compte (« vue ») — la
- * session est réémise, mais l'encart, lui, ne relit pas sa décision :
- * il reste jusqu'au prochain passage, où il ne sera plus là. Un compte
- * d'avant la nº 817 ne le voit jamais.
+ * ██ nº 818 — LA GÉOMÉTRIE D'ABOUT, ET PLUS AUCUNE BOÎTE ██
+ * ------------------------------------------------------------------
+ * LA nº 817 en faisait une BANNIÈRE pleine largeur dans un encadré
+ * clair (`rounded-2xl bg-sombre-carte`) — « daté », dit le
+ * propriétaire. L'encart reprend désormais la géométrie de la page
+ * About (nº 798-804), au chiffre près :
+ *  · un BLOC CENTRÉ ÉTROIT — `max-w-[720px]`, la colonne d'About —
+ *    posé sur le fond de la page, sans fond ni contour ;
+ *  · le TITRE FORT d'About (`clamp(2rem, 5.5vw, 2.9rem)`, gras,
+ *    interligne 1.1, équilibré par `text-balance`) ;
+ *  · le TEXTE d'About (17 px au doigt, 19 px au web, interligne 1.7,
+ *    gris doux), court : trois phrases ;
+ *  · les DEUX BOUTONS d'About dessous, aux mesures de la nº 788 (40 px,
+ *    14 px) — le rouge pour « Find your style », le gris pour « Create
+ *    your portfolio » (le mot vient de la config, `lienCreerPortfolio`,
+ *    comme partout). Empilés au doigt, côte à côte au web, et CENTRÉS
+ *    comme le bloc qu'ils concluent (About les aligne à gauche sous ses
+ *    sections ; ici tout est centré, les boutons suivent).
+ * L'AIR : rien au-dessus que celui de la page (`data-air-sous-barre`)
+ * plus 32 px au doigt (`mobile:pt-8`) / 56 px au web (`not-mobile:`
+ * quatorze unités) — de sorte que le titre tombe à peu près où celui
+ * d'About tombe sous sa barre (48 / 64 px). Deux variantes qui
+ * s'excluent par appareil (pièges nº 389 et nº 60).
+ * ⚠️ LES NOMS DE CLASSES NE S'ÉCRIVENT PAS NUS DANS LES NOTES : le
+ * moteur CSS lit aussi les commentaires, et un utilitaire cité sans
+ * son préfixe entre dans la feuille pour rien (mesuré à la nº 818).
  *
- * ⚠️ QUAND LA SESSION EST CONNUE, ET C'EST LE POINT. « Ma sélection »
- * est dynamique, mais l'habillage ne lit la session au serveur que si
- * le cookie « déjà connecté » est là (nº 809, layout) — un compte qui
- * vient de confirmer son adresse arrive SANS lui : le HTML servi ne
- * connaît personne, et la session n'est lue qu'au premier rendu du
- * navigateur (lib/use-utilisateur, `pret`). La décision attend donc
- * `pret` : au serveur quand il sait (l'encart est alors dans le HTML,
- * sans clignotement), sinon au premier rendu client — un état ajusté
- * pendant le rendu, le motif React pour suivre une valeur reçue.
+ * ⚠️ IL NE DÉCIDE PLUS RIEN (nº 818) : c'est « Ma sélection » qui
+ * sait s'il doit se montrer (`useBienvenue`, lib/bienvenue) et qui le
+ * monte À LA PLACE de l'état vide — jamais les deux (la règle du
+ * propriétaire). Ce fichier n'est que le dessin.
  */
 export function EncartBienvenue() {
-  const { utilisateur, pret } = useUtilisateur();
-  const [afficher, setAfficher] = useState<boolean | null>(() =>
-    utilisateur ? doitMontrerLaBienvenue(utilisateur) : null
-  );
-  if (afficher === null && pret) setAfficher(doitMontrerLaBienvenue(utilisateur));
-
-  useEffect(() => {
-    if (!afficher) return;
-    void clientSupabaseALaDemande().then(marquerLaBienvenueVue);
-  }, [afficher]);
-
-  if (!afficher) return null;
-
   return (
     <section
       aria-label="Welcome"
       data-bienvenue=""
-      className="mb-6 rounded-2xl bg-sombre-carte mobile:px-5 not-mobile:px-8 mobile:py-7 not-mobile:py-8"
+      className="mx-auto w-full max-w-[720px] text-center mobile:pt-8 not-mobile:pt-14 pb-8"
     >
-      <h2 className="text-[clamp(1.35rem,3vw,1.8rem)] font-bold leading-tight text-sombre-texte">
+      <h2 className="text-[clamp(2rem,5.5vw,2.9rem)] font-bold leading-[1.1] text-sombre-texte text-balance">
         Welcome to {MARQUE_YOKOFOLIO.nom}
       </h2>
-      <p className="mt-3 text-[15px] leading-relaxed text-sombre-texte-doux">
+      <p className="mt-6 mobile:text-[17px] not-mobile:text-[19px] leading-[1.7] text-sombre-texte-doux text-pretty">
         Here, you find tattoo artists by style — not by feed. Pick a style,
         a city and a distance, and explore portfolios that show exactly
         that work.
       </p>
-      <p className="mt-2 text-[15px] leading-relaxed text-sombre-texte-doux">
+      <p className="mt-3 mobile:text-[17px] not-mobile:text-[19px] leading-[1.7] text-sombre-texte-doux text-pretty">
         A tattoo artist? Build your own portfolio and get discovered.
       </p>
       {/*  Les deux gestes de la page About, dans le même moule : le
            rouge mène au catalogue de styles (EN AVANT, déclaré), le
-           gris au formulaire de création. Empilés au doigt, côte à
-           côte au web — deux variantes qui s'excluent (piège nº 389). */}
-      <div className="mt-6 flex mobile:flex-col not-mobile:flex-row gap-3">
+           gris au formulaire de création. */}
+      <div className="mt-10 flex mobile:flex-col not-mobile:flex-row justify-center gap-3">
         <LienAccueil
           className="inline-flex items-center justify-center rounded-full
                      px-7 min-h-[40px] text-[14px] bg-primaire

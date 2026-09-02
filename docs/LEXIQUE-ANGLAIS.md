@@ -208,6 +208,14 @@ message.
 | le pied de tous les courriels | **YokoFolio · yokofolio.com** (le domaine lié au site) ; version texte signée **— YokoFolio** | |
 | les trois gabarits Supabase | sujets et textes de la 805 conservés ; boutons **Confirm my email** · **Choose a new password** · **Confirm this change** | `docs/GABARITS-SUPABASE-HTML.md`, à coller |
 
+### Ajouts de la 818 (l'accueil des nouveaux, corrections)
+
+| Français | Anglais | Note |
+|---|---|---|
+| l'écran de confirmation d'inscription (remplace le formulaire) | titre **Check your inbox** · **We sent a confirmation link to <adresse>. Open it to activate your account.** · **Nothing there? Check your spam folder.** | `EcranAuthentification`, l'ancien « Your account is created… » (encadré sous le formulaire) est parti |
+| la bienvenue | textes de la 817 inchangés, à la géométrie d'About | `EncartBienvenue` |
+| les états vides de « Ma sélection » | **Your favorite photos will show up here.** · **Follow a portfolio to find it here.** · bouton **Explore styles** (inchangés) | sans boîte depuis la 818, 16 px couleur texte |
+
 ## 3 · Le ton
 
 - **Anglais américain, décontracté** : le « you » direct, phrases

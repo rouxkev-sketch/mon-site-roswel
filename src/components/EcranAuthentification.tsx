@@ -5,11 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ARRIVEE_APRES_CONNEXION } from "@/config/tatouage";
 import { redirectionDeGarde } from "@/lib/journal-de-bord";
-import { IconeGoogle } from "@/components/Icones";
+import { IconeEnveloppe, IconeGoogle } from "@/components/Icones";
 //  §1 (nº 783) — le flux Google, écrit une seule fois pour toutes les
 //  surfaces (voir lib/connexion-google).
 import { connexionAvecGoogle } from "@/lib/connexion-google";
 import { JaugeMotDePasse } from "@/components/JaugeMotDePasse";
+//  nº 818 — la pastille de l'écran de confirmation (celle de Contact).
+import { PastilleEvenement } from "@/components/PastilleEvenement";
 //  §A (nº 788) — le standard des erreurs et l'œil, écrits une seule
 //  fois et partagés par les trois pages (voir erreurs-formulaire).
 import {
@@ -213,6 +215,11 @@ export function EcranAuthentification({
   /** Erreurs par champ (validation) + erreur générale (serveur). */
   const [erreurs, setErreurs] = useState<Record<string, string>>({});
   const [info, setInfo] = useState<string | null>(null);
+  /** nº 818 — L'ADRESSE INSCRITE, quand le compte vient d'être créé et
+      attend sa confirmation : l'écran de confirmation remplace alors
+      le formulaire entier (voir plus bas). `null` tant qu'on n'y est
+      pas. */
+  const [inscrit, setInscrit] = useState<string | null>(null);
   /** « Mot de passe oublié ? » — proposé APRÈS un échec de connexion,
       pas avant : tant qu'on n'a pas buté, le lien n'est que du bruit. */
   const [lienMotDePasseOublie, setLienMotDePasseOublie] = useState(false);
@@ -319,9 +326,10 @@ export function EcranAuthentification({
           return;
         }
         if (!data.session) {
-          setInfo(
-            `Your account is created. A confirmation email is on its way to ${email.trim()} — open it to activate your account.`
-          );
+          /*  nº 818 — PLUS UN ENCADRÉ SOUS LE FORMULAIRE : l'adresse
+              inscrite fait basculer tout l'écran sur la confirmation
+              (« Check your inbox »), comme le succès de Contact. */
+          setInscrit(email.trim());
         } else {
           // Session immédiate (confirmation désactivée) : la MÊME
           // adresse d'arrivée que partout ailleurs. Un compte neuf
@@ -437,6 +445,46 @@ export function EcranAuthentification({
   }
 
   /* ---------- DÉCONNECTÉ : les deux modes ---------- */
+  /*  ██ nº 818 — LE COMPTE CRÉÉ, L'ÉCRAN DE CONFIRMATION REMPLACE LE
+      FORMULAIRE ENTIER ██
+      LE DÉFAUT DU PROPRIÉTAIRE : « Your account is created… »
+      s'affichait dans un encadré SOUS le formulaire, champs et boutons
+      toujours là — comme si rien ne s'était passé. Le standard, et
+      celui de l'écran de succès de Contact (FormulaireContactYokofolio,
+      nº 664/802) : la pastille, un titre, l'adresse en gras, un texte
+      court — et plus rien d'autre : ni titre de page, ni onglets, ni
+      Google, ni conditions. Même cadre (`max-w-[440px]`), même pastille
+      (`PastilleEvenement`, ton « info » : c'est une information, pas un
+      accent — la règle de la nº 134), l'enveloppe de la famille
+      d'icônes. Le titre est le `h1` de l'écran, puisqu'il le remplace.
+      ⚠️ LE MESSAGE DU MOT DE PASSE OUBLIÉ (« An email is on its way… »)
+      N'EST PAS TOUCHÉ : il s'adresse à un compte qui existe, sous le
+      formulaire de connexion — ce n'est pas ce sujet. */
+  if (inscrit) {
+    return (
+      <main className="flex-1 mx-auto w-full max-w-[440px] px-5 sm:px-6 pt-10 sm:pt-14 pb-24">
+        <div data-inscrit="" className="mt-10 text-center">
+          <PastilleEvenement
+            ton="info"
+            symbole={IconeEnveloppe}
+            classe="mx-auto"
+          />
+          <h1 className="mt-5 text-[clamp(1.3rem,3vw,1.6rem)] font-bold text-sombre-texte">
+            Check your inbox
+          </h1>
+          <p role="status" className="mt-3 text-sombre-texte-doux leading-relaxed">
+            We sent a confirmation link to{" "}
+            <strong className="text-sombre-texte">{inscrit}</strong>. Open it
+            to activate your account.
+          </p>
+          <p className="mt-3 text-[13px] text-sombre-texte-doux">
+            Nothing there? Check your spam folder.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="flex-1 mx-auto w-full max-w-[440px] px-5 sm:px-6 pt-10 sm:pt-14 pb-24">
       <h1 className="text-[clamp(1.6rem,4.5vw,2.1rem)] font-bold leading-tight text-sombre-texte text-center">

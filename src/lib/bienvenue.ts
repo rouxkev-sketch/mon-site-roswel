@@ -1,6 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
+import { useUtilisateur } from "@/lib/use-utilisateur";
+import { clientSupabaseALaDemande } from "@/lib/supabase/client-a-la-demande";
 
 /**
  * ██ nº 817 — LA BIENVENUE, UNE SEULE FOIS ██
@@ -67,4 +70,51 @@ export async function marquerLaBienvenueVue(
   } catch {
     //  Réseau muet : l'encart reviendra au prochain passage, une fois.
   }
+}
+
+/**
+ * ██ nº 818 — LA DÉCISION EST PRISE PAR LA PAGE, PAS PAR L'ENCART ██
+ * ==================================================================
+ * LE DOUBLON DE LA nº 817 : l'encart décidait seul de se montrer, et
+ * la page dessous ne le savait pas — l'état vide (« Your favorite
+ * photos will show up here ») restait SOUS la bienvenue. La décision
+ * remonte ici, dans un hook que « Ma sélection » appelle : la page
+ * sait, et elle monte la bienvenue OU l'état vide — jamais les deux.
+ * La bienvenue disparue (prochain passage), l'état vide reprend sa
+ * place tant que la page est vide.
+ *
+ * QUAND LA SESSION EST CONNUE, ET C'EST LE POINT (nº 817). « Ma
+ * sélection » est dynamique, mais l'habillage ne lit la session au
+ * serveur que si le cookie « déjà connecté » est là (nº 809, layout) —
+ * un compte qui vient de confirmer son adresse arrive SANS lui : le
+ * HTML servi ne connaît personne, et la session n'est lue qu'au
+ * premier rendu du navigateur (lib/use-utilisateur, `pret`). La
+ * décision attend donc `pret` : au serveur quand il sait, sinon au
+ * premier rendu client — un état ajusté pendant le rendu, le motif
+ * React pour suivre une valeur reçue.
+ *
+ * UNE SEULE FOIS : la décision est prise UNE FOIS par passage, et le
+ * compte est marqué « vue » aussitôt — la session est réémise, mais
+ * l'état, lui, ne relit pas sa décision : la bienvenue reste jusqu'au
+ * prochain passage, où elle ne sera plus là.
+ * ⚠️ MARQUÉ AU PREMIER PASSAGE, MONTRÉ OU NON : la page ne montre la
+ * bienvenue que sur ses favoris vides (c'est l'état vide qu'elle
+ * remplace). Un compte neuf qui aurait déjà gardé une photo avant de
+ * venir ici n'a plus besoin qu'on lui explique le site — on ne lui
+ * ressortira pas la bienvenue un mois plus tard, le jour où sa
+ * sélection se vide. « Premier passage » veut dire premier passage.
+ */
+export function useBienvenue(): boolean {
+  const { utilisateur, pret } = useUtilisateur();
+  const [afficher, setAfficher] = useState<boolean | null>(() =>
+    utilisateur ? doitMontrerLaBienvenue(utilisateur) : null
+  );
+  if (afficher === null && pret) setAfficher(doitMontrerLaBienvenue(utilisateur));
+
+  useEffect(() => {
+    if (!afficher) return;
+    void clientSupabaseALaDemande().then(marquerLaBienvenueVue);
+  }, [afficher]);
+
+  return afficher === true;
 }

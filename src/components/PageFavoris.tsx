@@ -53,6 +53,7 @@ import type { Tatoueur } from "@/lib/tatoueurs";
 import { EcranVideSelection } from "@/components/EcranVideSelection";
 //  nº 817 — l'encart « Welcome », une seule fois, pour un compte neuf.
 import { EncartBienvenue } from "@/components/EncartBienvenue";
+import { useBienvenue } from "@/lib/bienvenue";
 
 /**
  * MA SÉLECTION — les photos gardées, et les tatoueurs suivis
@@ -143,6 +144,11 @@ export function PageFavoris({
       (adresse sans paramètre), c'est « Mes favoris » : les favoris
       seuls, aucun suivi. */
   const surLesFavoris = choix.menu === MENU_FAVORIS;
+  /*  nº 818 — LA BIENVENUE DU PREMIER PASSAGE : la page décide (voir
+      `useBienvenue`), et elle la monte À LA PLACE de l'état vide des
+      favoris — jamais les deux (règle du propriétaire). Marquée « vue »
+      dès ce passage : un compte d'avant ne la voit jamais. */
+  const bienvenue = useBienvenue();
   /**
    * ██ §2 (nº 526) — UN GLISSEMENT HORIZONTAL CHANGE D'ONGLET ██
    * ------------------------------------------------------------------
@@ -628,11 +634,6 @@ export function PageFavoris({
            séparateur, jamais sur un conteneur partagé. */}
       <div aria-hidden data-air-sous-barre className="h-3.5 lg:h-8" />
 
-      {/*  nº 817 — LA BIENVENUE DU PREMIER PASSAGE : en tête de la page
-           d'arrivée, une seule fois, jamais pour un compte d'avant.
-           Elle décide seule de se montrer (voir EncartBienvenue). */}
-      <EncartBienvenue />
-
       {/* ---------- LES PHOTOS GARDÉES ----------
            §2 (nº 247) — LES DEUX MENUS SONT EXCLUSIFS : cette section
            n'existe que si « Mes favoris » mène la recherche. Choisir
@@ -650,8 +651,15 @@ export function PageFavoris({
              sont ceux de cet écran-ci, repris au caractère.
              LE MESSAGE, LUI, EST DU PROPRIÉTAIRE : « Touche le fanion
              d'une photo pour la retrouver ici » (nº 642) devient une
-             phrase qui décrit l'écran au lieu de dicter un geste. */
-        <EcranVideSelection message="Your favorite photos will show up here." />
+             phrase qui décrit l'écran au lieu de dicter un geste.
+             nº 818 — LA BIENVENUE PREND SA PLACE tant qu'elle se
+             montre (premier passage) ; disparue, l'état vide revient
+             tant que la page est vide. Jamais les deux. */
+        bienvenue ? (
+          <EncartBienvenue />
+        ) : (
+          <EcranVideSelection message="Your favorite photos will show up here." />
+        )
       ) : (
         <>
           {/*  ⚠️ LES DEUX FILTRES QUI VIVAIENT ICI SONT PARTIS

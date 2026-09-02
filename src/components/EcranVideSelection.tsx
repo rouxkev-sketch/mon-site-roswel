@@ -15,10 +15,28 @@ import { LienAccueil } from "@/components/LienAccueil";
  * écrans montent désormais CETTE écriture-ci, et il n'y a plus qu'un
  * seul endroit où le bouton est décrit.
  *
- * ⚠️ RIEN N'EST REDESSINÉ, et c'est la règle de la passe : la boîte,
- * ses airs, son fond, le gris du texte et l'apparence du bouton sont
- * REPRIS AU CARACTÈRE de l'écran des favoris. Seuls les MOTS changent,
- * et ils viennent de l'appelant.
+ * (À la nº 643, rien n'était redessiné : la boîte, ses airs, son fond
+ * et le bouton étaient repris au caractère de l'écran des favoris.
+ * Seuls les MOTS changent, et ils viennent de l'appelant — cela reste.)
+ *
+ * ██ nº 818 — PLUS DE BOÎTE : LE TEXTE NU, CENTRÉ, LE BOUTON DESSOUS ██
+ * ------------------------------------------------------------------
+ * Le grand encadré clair (`rounded-2xl bg-sombre-carte px-5 py-8`) est
+ * parti, décision du propriétaire : une phrase centrée sur le fond de
+ * la page, et la capsule grise en dessous. LA TYPO EST REVUE À LA
+ * CHARTE : la phrase est le seul contenu de la page, elle passe donc
+ * dans la couleur du TEXTE (`sombre-texte`, plus le gris doux des
+ * mentions secondaires) et à 16 px — la taille de base des paragraphes
+ * du site (l'écran de succès de Contact), et plus 14,5 px, une mesure
+ * qui n'existait nulle part ailleurs. L'air au-dessus est celui de la
+ * bienvenue qu'elle remplace (32 px au doigt, `mobile:mt-8` ; 56 px au
+ * web, `not-mobile:` quatorze unités — deux variantes qui s'excluent,
+ * pièges nº 389 et nº 60), pour que l'un tombe où l'autre tombait.
+ * (Les classes ne sont pas citées nues : le moteur CSS lit aussi les
+ * notes, nº 818.)
+ * ⚠️ QUI DÉCIDE ENTRE LES DEUX : « Ma sélection » (PageFavoris), qui
+ * monte la bienvenue OU cet écran, jamais les deux (nº 818,
+ * `useBienvenue`).
  *
  * ⚠️ OÙ MÈNE LE BOUTON : à l'ACCUEIL, et par `LienAccueil` — le lien
  * qui déclare une navigation EN AVANT (nº 429 + nº 446), pour arriver
@@ -41,9 +59,9 @@ export function EcranVideSelection({
   return (
     <div
       {...(marque ? { [marque]: "" } : {})}
-      className="mt-8 rounded-2xl bg-sombre-carte px-5 py-8 text-center"
+      className="mobile:mt-8 not-mobile:mt-14 text-center"
     >
-      <p className="text-[14.5px] leading-relaxed text-sombre-texte-doux">
+      <p className="text-[16px] leading-relaxed text-sombre-texte">
         {message}
       </p>
       {/*  §4 (nº 475) — IL VA EN AVANT, ET IL LE DÉCLARE : partir
@@ -55,10 +73,16 @@ export function EcranVideSelection({
            était devenu faux. L'accueil montre un CATALOGUE DE STYLES
            depuis les nº 620-624 ; le bouton dit donc ce qu'on y
            trouve. L'adresse, elle, ne change pas. */}
+      {/*  nº 818 — LA CAPSULE GRISE D'ABOUT, aux mesures de la nº 788
+           (40 px, 14 px, texte blanc, `sombre-haut` au survol) : le
+           bouton qui suit un texte nu est celui qui suit le texte
+           d'About et celui de la bienvenue. Plus de 44 / 14,5 à part. */}
       <LienAccueil
-        className="mt-4 inline-flex min-h-[44px] items-center justify-center
-                   rounded-full bg-sombre-eleve px-6 text-[14.5px] font-semibold
-                   text-sombre-texte transition-colors hover:bg-sombre-eleve-clair"
+        className="mt-5 inline-flex items-center justify-center rounded-full
+                   px-7 min-h-[40px] text-[14px] bg-sombre-eleve
+                   hover:bg-sombre-haut text-white font-semibold
+                   transition-colors focus-visible:outline-2
+                   focus-visible:outline-offset-2 focus-visible:outline-primaire"
       >
         Explore styles
       </LienAccueil>
