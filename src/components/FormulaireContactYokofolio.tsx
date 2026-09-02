@@ -71,7 +71,52 @@ import { CompteurDeCaracteres } from "@/components/CompteurDeCaracteres";
  * bouge pas.
  */
 
-export function FormulaireContactYokofolio() {
+/**
+ * ██ §1 (nº 802) — LES RÈGLES DE VALIDITÉ, ÉCRITES UNE SEULE FOIS ██
+ * ==================================================================
+ * Elles vivaient DANS `envoyer()`, et nulle part ailleurs. C'est
+ * pourquoi la nº 800 a raté la moitié de la règle nº 788 : une erreur
+ * ne peut s'effacer À LA CORRECTION que si l'on sait, à chaque frappe,
+ * si le champ est redevenu bon — et cette question n'avait pas de
+ * réponse hors du moment de l'envoi.
+ * Elles sortent donc ici. `envoyer()` les emploie pour décider de
+ * partir ; chaque `onChange` les emploie pour décider d'oublier. Deux
+ * moments, UNE règle : elles ne peuvent plus se contredire.
+ *
+ * ⚠️ ET L'ERREUR NE PART PAS À LA PREMIÈRE FRAPPE, elle part quand le
+ * champ DEVIENT BON — c'est la demande du propriétaire, au mot près :
+ * « le message : l'erreur part au 20ᵉ caractère exactement ». Effacer
+ * le reproche dès qu'on touche au champ, alors qu'il reste fautif,
+ * serait mentir une seconde fois.
+ * ⚠️ LE COMPTE SE FAIT SUR LE TEXTE ÉBARBÉ (`trim`), comme à l'envoi :
+ * vingt espaces ne sont pas vingt caractères, et le seuil doit tomber
+ * au même endroit des deux côtés.
+ */
+const FAUTES: Record<string, (valeur: string) => string | null> = {
+  nom: (v) =>
+    v.trim().length < 2 ? "Ton nom (ou un pseudo) est nécessaire." : null,
+  email: (v) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim())
+      ? null
+      : "Cette adresse e-mail n'a pas l'air complète.",
+  message: (v) =>
+    v.trim().length < CONTACT_YOKOFOLIO.messageMin
+      ? `Ton message doit faire au moins ${CONTACT_YOKOFOLIO.messageMin} caractères.`
+      : null,
+};
+
+export function FormulaireContactYokofolio({
+  children,
+}: {
+  /*  §2 (nº 802) — LE TITRE DE LA PAGE PASSE PAR ICI. Il vit toujours
+      dans `/contact/page.tsx`, qui est un composant SERVEUR : le texte
+      part donc dans le HTML de la première réponse, comme avant, et
+      les moteurs de recherche le lisent. Mais c'est CE composant qui
+      décide de le montrer — parce que lui seul sait si le message est
+      parti. Le titre « Écris-nous » au-dessus d'une confirmation
+      d'envoi n'avait plus de sens. */
+  children?: React.ReactNode;
+}) {
   const [nom, setNom] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -79,17 +124,52 @@ export function FormulaireContactYokofolio() {
   const [enCours, setEnCours] = useState(false);
   const [envoye, setEnvoye] = useState(false);
 
+  /**
+   * ██ §1 (nº 802) — OUBLIER LE REPROCHE QUAND IL N'EST PLUS MÉRITÉ ██
+   * C'est la moitié de la règle nº 788 que la nº 800 n'a pas apportée
+   * ici : « une erreur qui survit à sa réparation apprend à ne plus
+   * lire les erreurs ». On répare le champ, le contour rouge et la
+   * phrase tenaient bon jusqu'au prochain envoi.
+   * ⚠️ ON N'EFFACE QUE SI LE CHAMP EST REDEVENU BON — la règle est
+   * celle de `FAUTES`, la même qu'à l'envoi. Rien n'est réévalué pour
+   * les autres champs : corriger le nom ne fait pas taire le reproche
+   * fait au message.
+   * ⚠️ ET L'ERREUR GÉNÉRALE PART AVEC (comme à la nº 788) : « l'envoi
+   * n'a pas abouti » ne veut plus rien dire dès qu'on retouche quelque
+   * chose. On la garde tant que rien n'a bougé, on la retire dès qu'on
+   * agit.
+   */
+  function oublierSiCorrige(champ: string, valeur: string) {
+    setErreurs((avant) => {
+      if (!avant[champ] && !avant.general) return avant;
+      const apres = { ...avant };
+      if (avant[champ] && !FAUTES[champ](valeur)) delete apres[champ];
+      delete apres.general;
+      return apres;
+    });
+  }
+
+  /**
+   * §3 (nº 802) — REPARTIR D'UNE PAGE BLANCHE. Le bouton « Envoyer un
+   * autre message » ne recharge pas la page : il remet simplement le
+   * formulaire dans l'état où on l'a trouvé. Tout est remis, y compris
+   * les erreurs — sans quoi un reproche d'avant l'envoi ressusciterait
+   * sur un formulaire vide.
+   */
+  function recommencer() {
+    setNom("");
+    setEmail("");
+    setMessage("");
+    setErreurs({});
+    setEnvoye(false);
+  }
+
   async function envoyer(evenement: React.FormEvent) {
     evenement.preventDefault();
     const trouvees: Record<string, string> = {};
-    if (nom.trim().length < 2) {
-      trouvees.nom = "Ton nom (ou un pseudo) est nécessaire.";
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) {
-      trouvees.email = "Cette adresse e-mail n'a pas l'air complète.";
-    }
-    if (message.trim().length < CONTACT_YOKOFOLIO.messageMin) {
-      trouvees.message = `Ton message doit faire au moins ${CONTACT_YOKOFOLIO.messageMin} caractères.`;
+    for (const [champ, valeur] of Object.entries({ nom, email, message })) {
+      const faute = FAUTES[champ](valeur);
+      if (faute) trouvees[champ] = faute;
     }
     setErreurs(trouvees);
     if (Object.keys(trouvees).length > 0) return;
@@ -126,6 +206,11 @@ export function FormulaireContactYokofolio() {
   }
 
   /* ---------- LA CONFIRMATION ---------- */
+  /*  §2 (nº 802) — L'ÉCRAN DE SUCCÈS EST SEUL. Le titre de la page
+      (« Écris-nous — Une question, une idée… ») restait au-dessus de
+      la confirmation : on venait d'écrire, et l'écran continuait de
+      nous inviter à écrire. Il arrive maintenant par `children`, et
+      cette porte-ci le laisse dehors. */
   if (envoye) {
     return (
       <div className="mt-10 text-center">
@@ -152,144 +237,175 @@ export function FormulaireContactYokofolio() {
           <strong className="text-sombre-texte">{email.trim()}</strong>, en
           général sous 48 heures.
         </p>
+        {/*  §3 (nº 802) — REPARTIR SANS RECHARGER LA PAGE. Sans ce
+             bouton, écrire un second message demandait de recharger
+             /contact — un geste que rien n'annonçait.
+             ⚠️ IL EST DE SECOND RANG, et c'est voulu : le rose est
+             réservé à l'action finale (la charte), et ici l'action
+             finale est FAITE. Fond `sombre-eleve`, comme le second
+             bouton de « Qui sommes-nous ».
+             ⚠️ AUX MESURES DE LA nº 788 : 40 px de haut, 14 px de
+             texte, comme le bouton d'envoi depuis la nº 800. */}
+        <button
+          type="button"
+          onClick={recommencer}
+          className="mt-7 inline-flex items-center justify-center rounded-full
+                     px-5 min-h-[40px] text-[14px] bg-sombre-eleve
+                     hover:bg-sombre-haut text-white font-semibold
+                     transition-colors"
+        >
+          Envoyer un autre message
+        </button>
       </div>
     );
   }
 
   return (
-    <form onSubmit={envoyer} noValidate className="mt-8 flex flex-col gap-4">
-      <div>
-        <label
-          htmlFor="contact-nom"
-          className="block text-sm font-medium text-sombre-texte mb-1.5"
-        >
-          Ton nom
-        </label>
-        <input
-          id="contact-nom"
-          type="text"
-          autoComplete="name"
-          value={nom}
-          onChange={(e) => setNom(e.target.value)}
-          //  §1 (nº 320) — GARDÉ DE LA nº 319 : « Nom », dans le champ.
-          placeholder="Nom"
-          aria-invalid={Boolean(erreurs.nom)}
-          className={`${CHAMP} ${erreurs.nom ? "border-erreur" : "border-sombre-bordure"}`}
-        />
-        {erreurs.nom && (
-          <p className="mt-1.5 text-[13px] text-erreur">{erreurs.nom}</p>
-        )}
-      </div>
-
-      <div>
-        <label
-          htmlFor="contact-email"
-          className="block text-sm font-medium text-sombre-texte mb-1.5"
-        >
-          Ton adresse e-mail
-        </label>
-        <input
-          id="contact-email"
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          //  §1 (nº 320) — GARDÉ DE LA nº 319 : « E-mail », dans le champ.
-          placeholder="E-mail"
-          aria-invalid={Boolean(erreurs.email)}
-          className={`${CHAMP} ${erreurs.email ? "border-erreur" : "border-sombre-bordure"}`}
-        />
-        {erreurs.email && (
-          <p className="mt-1.5 text-[13px] text-erreur">{erreurs.email}</p>
-        )}
-      </div>
-
-      <div>
-        <label
-          htmlFor="contact-message"
-          className="block text-sm font-medium text-sombre-texte mb-1.5"
-        >
-          Ton message
-        </label>
-        {/*  §2 (nº 800) — LE COMPTEUR VIT DANS LE CHAMP, comme celui
-             de la bio : il faut donc un parent positionné, et le
-             `pb-8` qui lui réserve sa ligne — sans quoi la dernière
-             ligne tapée passerait dessous. */}
-        <div className="relative">
-          <textarea
-            id="contact-message"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            rows={6}
-            maxLength={CONTACT_YOKOFOLIO.messageMax}
-            aria-describedby="contact-message-compteur"
-            placeholder="Une question, une idée, un problème — on lit tout."
-            aria-invalid={Boolean(erreurs.message)}
-            //  §1 (nº 800) — LE MÊME CHAMP QUE PARTOUT, plus ce qu'une
-            //  zone de texte demande en propre : ses marges hautes et
-            //  basses, son interligne, sa poignée de redimensionnement
-            //  et la place du compteur. Aucune de ces classes n'entre
-            //  en conflit avec celles de `CHAMP` (piège nº 389) : elle
-            //  n'y touche à aucune des propriétés déjà posées.
-            className={`${CHAMP} block py-3 pb-8 leading-relaxed resize-y ${
-              erreurs.message ? "border-erreur" : "border-sombre-bordure"
-            }`}
+    <>
+      {children}
+      <form onSubmit={envoyer} noValidate className="mt-8 flex flex-col gap-4">
+        <div>
+          <label
+            htmlFor="contact-nom"
+            className="block text-sm font-medium text-sombre-texte mb-1.5"
+          >
+            Ton nom
+          </label>
+          <input
+            id="contact-nom"
+            type="text"
+            autoComplete="name"
+            value={nom}
+            onChange={(e) => {
+              setNom(e.target.value);
+              oublierSiCorrige("nom", e.target.value);
+            }}
+            //  §1 (nº 320) — GARDÉ DE LA nº 319 : « Nom », dans le champ.
+            placeholder="Nom"
+            aria-invalid={Boolean(erreurs.nom)}
+            className={`${CHAMP} ${erreurs.nom ? "border-erreur" : "border-sombre-bordure"}`}
           />
-          <CompteurDeCaracteres
-            id="contact-message-compteur"
-            valeur={message}
-            maximum={CONTACT_YOKOFOLIO.messageMax}
-          />
+          {erreurs.nom && (
+            <p className="mt-1.5 text-[13px] text-erreur">{erreurs.nom}</p>
+          )}
         </div>
-        {erreurs.message && (
-          <p className="mt-1.5 text-[13px] text-erreur">{erreurs.message}</p>
+
+        <div>
+          <label
+            htmlFor="contact-email"
+            className="block text-sm font-medium text-sombre-texte mb-1.5"
+          >
+            Ton adresse e-mail
+          </label>
+          <input
+            id="contact-email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              oublierSiCorrige("email", e.target.value);
+            }}
+            //  §1 (nº 320) — GARDÉ DE LA nº 319 : « E-mail », dans le champ.
+            placeholder="E-mail"
+            aria-invalid={Boolean(erreurs.email)}
+            className={`${CHAMP} ${erreurs.email ? "border-erreur" : "border-sombre-bordure"}`}
+          />
+          {erreurs.email && (
+            <p className="mt-1.5 text-[13px] text-erreur">{erreurs.email}</p>
+          )}
+        </div>
+
+        <div>
+          <label
+            htmlFor="contact-message"
+            className="block text-sm font-medium text-sombre-texte mb-1.5"
+          >
+            Ton message
+          </label>
+          {/*  §2 (nº 800) — LE COMPTEUR VIT DANS LE CHAMP, comme celui
+               de la bio : il faut donc un parent positionné, et le
+               `pb-8` qui lui réserve sa ligne — sans quoi la dernière
+               ligne tapée passerait dessous. */}
+          <div className="relative">
+            <textarea
+              id="contact-message"
+              value={message}
+              onChange={(e) => {
+                setMessage(e.target.value);
+                oublierSiCorrige("message", e.target.value);
+              }}
+              rows={6}
+              maxLength={CONTACT_YOKOFOLIO.messageMax}
+              aria-describedby="contact-message-compteur"
+              placeholder="Une question, une idée, un problème — on lit tout."
+              aria-invalid={Boolean(erreurs.message)}
+              //  §1 (nº 800) — LE MÊME CHAMP QUE PARTOUT, plus ce qu'une
+              //  zone de texte demande en propre : ses marges hautes et
+              //  basses, son interligne, sa poignée de redimensionnement
+              //  et la place du compteur. Aucune de ces classes n'entre
+              //  en conflit avec celles de `CHAMP` (piège nº 389) : elle
+              //  n'y touche à aucune des propriétés déjà posées.
+              className={`${CHAMP} block py-3 pb-8 leading-relaxed resize-y ${
+                erreurs.message ? "border-erreur" : "border-sombre-bordure"
+              }`}
+            />
+            <CompteurDeCaracteres
+              id="contact-message-compteur"
+              valeur={message}
+              maximum={CONTACT_YOKOFOLIO.messageMax}
+            />
+          </div>
+          {erreurs.message && (
+            <p className="mt-1.5 text-[13px] text-erreur">{erreurs.message}</p>
+          )}
+        </div>
+
+        {erreurs.general && (
+          <p
+            role="alert"
+            className="rounded-xl border border-erreur/50 bg-erreur/10 px-4 py-3 text-sm text-sombre-texte"
+          >
+            {erreurs.general}
+          </p>
         )}
-      </div>
 
-      {erreurs.general && (
-        <p
-          role="alert"
-          className="rounded-xl border border-erreur/50 bg-erreur/10 px-4 py-3 text-sm text-sombre-texte"
+        {/*  ██ §3 (nº 800) — LE BOUTON D'ENVOI ██
+             Il faisait 52 px de haut, ne déclarait aucune taille de
+             texte (donc 16 px), et s'étirait sur TOUTE la largeur des
+             deux côtés — un enfant d'une colonne `flex` s'étire par
+             défaut. Le propriétaire veut :
+               · au WEB   — compact, 40/14, collé à DROITE ;
+               · au DOIGT — pleine largeur, 40/14 lui aussi.
+
+             COMMENT C'EST ÉCRIT, ET POURQUOI AINSI :
+              · `self-end` retire l'étirement et colle le bouton à
+                droite. Au web, il ne fait donc que la largeur de son
+                texte plus `px-5` — la mesure des capsules de la nº 788 ;
+              · `mobile:w-full` lui rend toute la largeur au doigt. Le
+                `self-end` ne le gêne pas : un élément déjà large comme
+                son parent n'a plus où s'aligner.
+             ⚠️ DEUX CLASSES, DEUX PROPRIÉTÉS DIFFÉRENTES, AUCUN CONFLIT
+             (piège nº 389) : `self-end` parle d'alignement, `w-full`
+             parle de largeur. On aurait pu écrire `w-auto` en base et
+             `mobile:w-full` par-dessus — deux fois la même propriété,
+             départagées par l'ordre de la feuille et non par ce qu'on
+             écrit ici. On ne parie pas là-dessus.
+             ⚠️ ET L'APPAREIL SE LIT PAR `mobile:`, jamais par une
+             largeur d'écran (piège nº 60) : la variante est adossée à
+             `data-appareil`, posé avant la première peinture. */}
+        <button
+          type="submit"
+          disabled={enCours}
+          className="mt-1 inline-flex items-center justify-center self-end
+                     mobile:w-full rounded-full px-5 min-h-[40px] text-[14px]
+                     bg-primaire hover:bg-primaire-fonce
+                     text-white font-semibold transition-colors
+                     disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {erreurs.general}
-        </p>
-      )}
-
-      {/*  ██ §3 (nº 800) — LE BOUTON D'ENVOI ██
-           Il faisait 52 px de haut, ne déclarait aucune taille de
-           texte (donc 16 px), et s'étirait sur TOUTE la largeur des
-           deux côtés — un enfant d'une colonne `flex` s'étire par
-           défaut. Le propriétaire veut :
-             · au WEB   — compact, 40/14, collé à DROITE ;
-             · au DOIGT — pleine largeur, 40/14 lui aussi.
-
-           COMMENT C'EST ÉCRIT, ET POURQUOI AINSI :
-            · `self-end` retire l'étirement et colle le bouton à
-              droite. Au web, il ne fait donc que la largeur de son
-              texte plus `px-5` — la mesure des capsules de la nº 788 ;
-            · `mobile:w-full` lui rend toute la largeur au doigt. Le
-              `self-end` ne le gêne pas : un élément déjà large comme
-              son parent n'a plus où s'aligner.
-           ⚠️ DEUX CLASSES, DEUX PROPRIÉTÉS DIFFÉRENTES, AUCUN CONFLIT
-           (piège nº 389) : `self-end` parle d'alignement, `w-full`
-           parle de largeur. On aurait pu écrire `w-auto` en base et
-           `mobile:w-full` par-dessus — deux fois la même propriété,
-           départagées par l'ordre de la feuille et non par ce qu'on
-           écrit ici. On ne parie pas là-dessus.
-           ⚠️ ET L'APPAREIL SE LIT PAR `mobile:`, jamais par une
-           largeur d'écran (piège nº 60) : la variante est adossée à
-           `data-appareil`, posé avant la première peinture. */}
-      <button
-        type="submit"
-        disabled={enCours}
-        className="mt-1 inline-flex items-center justify-center self-end
-                   mobile:w-full rounded-full px-5 min-h-[40px] text-[14px]
-                   bg-primaire hover:bg-primaire-fonce
-                   text-white font-semibold transition-colors
-                   disabled:opacity-60 disabled:cursor-not-allowed"
-      >
-        {enCours ? "Envoi en cours…" : "Envoyer le message"}
-      </button>
-    </form>
+          {enCours ? "Envoi en cours…" : "Envoyer le message"}
+          </button>
+      </form>
+    </>
   );
 }

@@ -45,14 +45,26 @@ export default function PageContactTatouage() {
     <>
       <EnTeteTatouage />
       <main className="flex-1 mx-auto w-full max-w-[560px] px-5 sm:px-6 pt-10 sm:pt-14 pb-24">
-        <h1 className="text-[clamp(1.6rem,4.5vw,2.1rem)] font-bold leading-tight text-sombre-texte">
-          Écris-nous
-        </h1>
-        <p className="mt-2 text-[15px] text-sombre-texte-doux leading-relaxed">
-          Une question, une idée, un problème&nbsp;? On lit tout, et on
-          répond vite.
-        </p>
-        <FormulaireContactYokofolio />
+        {/*  ██ §2 (nº 802) — LE TITRE PASSE DANS LE FORMULAIRE ██
+             Il restait affiché AU-DESSUS de la confirmation d'envoi :
+             on venait d'écrire, et l'écran continuait de nous inviter
+             à écrire. Il est maintenant remis au formulaire, qui le
+             montre tant que le message n'est pas parti et le laisse
+             dehors ensuite — lui seul sait où l'on en est.
+             ⚠️ LE TEXTE N'A PAS BOUGÉ D'UNE VIRGULE, ni ses classes :
+             il est simplement passé en `children`. Et il reste écrit
+             ICI, dans un composant SERVEUR — il part donc toujours
+             dans le HTML de la première réponse, pour les moteurs de
+             recherche comme pour le premier regard. */}
+        <FormulaireContactYokofolio>
+          <h1 className="text-[clamp(1.6rem,4.5vw,2.1rem)] font-bold leading-tight text-sombre-texte">
+            Écris-nous
+          </h1>
+          <p className="mt-2 text-[15px] text-sombre-texte-doux leading-relaxed">
+            Une question, une idée, un problème&nbsp;? On lit tout, et on
+            répond vite.
+          </p>
+        </FormulaireContactYokofolio>
       </main>
     </>
   );
