@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { catalogueStyles, FAMILLES_STYLES } from "@/config/tatouage";
 import { verifierAdmin } from "@/lib/admin-yokofolio";
 import { adresseDuSite, envoyerEmail } from "@/lib/email";
+//  nº 817 — l'habillage des courriels du site, écrit une fois.
+import { habillerCourriel } from "@/lib/courriel-habille";
 import { creerNotification } from "@/lib/notifications";
 import { rafraichirToutLeSite } from "@/lib/rafraichir";
 import { slugifier } from "@/lib/slug";
@@ -555,20 +557,26 @@ async function envoyerCourriel(
     if (!destinataire) return;
 
     const sujet = accepte ? "Style added" : "Style declined";
-    const corps = [
-      accepte
-        ? `Good news: "${nomDuStyle}" is now on YokoFolio's style list.`
-        : `"${nomDuStyle}" wasn't accepted.`,
-      message,
-      accepte
-        ? `To add it to your portfolio, open it and check it under "Add a style & photos":\n${adresseDuSite()}/devenir-tatoueur/fiche`
-        : "",
-      "— YokoFolio",
-    ]
-      .filter(Boolean)
-      .join("\n\n");
+    /*  nº 817 — LE COURRIEL HABILLÉ (lib/courriel-habille) : les mêmes
+        phrases qu'avant, dans la charte du site ; le lien vers le
+        portfolio devient le bouton rouge. Le texte nu part à côté. */
+    const courriel = habillerCourriel({
+      titre: sujet,
+      paragraphes: [
+        accepte
+          ? `Good news: "${nomDuStyle}" is now on YokoFolio's style list.`
+          : `"${nomDuStyle}" wasn't accepted.`,
+        message,
+        accepte
+          ? 'To add it to your portfolio, open it and check it under "Add a style & photos".'
+          : "",
+      ].filter(Boolean),
+      action: accepte
+        ? { libelle: "Open my portfolio", url: `${adresseDuSite()}/devenir-tatoueur/fiche` }
+        : null,
+    });
 
-    await envoyerEmail(destinataire, sujet, corps);
+    await envoyerEmail(destinataire, sujet, courriel.texte, courriel.html);
   } catch (erreur) {
     console.warn(
       "[style suggestion] email not sent:",

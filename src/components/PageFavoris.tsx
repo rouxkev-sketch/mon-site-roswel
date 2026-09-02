@@ -51,6 +51,8 @@ import type { Tatoueur } from "@/lib/tatoueurs";
 //  §1 (nº 643) — l'écran vide des DEUX onglets, écrit une seule fois
 //  (il porte le lien vers l'accueil qui déclare son départ, nº 475).
 import { EcranVideSelection } from "@/components/EcranVideSelection";
+//  nº 817 — l'encart « Welcome », une seule fois, pour un compte neuf.
+import { EncartBienvenue } from "@/components/EncartBienvenue";
 
 /**
  * MA SÉLECTION — les photos gardées, et les tatoueurs suivis
@@ -625,6 +627,11 @@ export function PageFavoris({
            d'air des têtes de page, rien d'inventé. Posé sur CE
            séparateur, jamais sur un conteneur partagé. */}
       <div aria-hidden data-air-sous-barre className="h-3.5 lg:h-8" />
+
+      {/*  nº 817 — LA BIENVENUE DU PREMIER PASSAGE : en tête de la page
+           d'arrivée, une seule fois, jamais pour un compte d'avant.
+           Elle décide seule de se montrer (voir EncartBienvenue). */}
+      <EncartBienvenue />
 
       {/* ---------- LES PHOTOS GARDÉES ----------
            §2 (nº 247) — LES DEUX MENUS SONT EXCLUSIFS : cette section

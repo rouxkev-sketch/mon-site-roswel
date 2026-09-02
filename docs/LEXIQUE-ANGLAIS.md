@@ -197,6 +197,17 @@ message.
 | « Terminé » (fenêtre des miles, PC) | **Done** · info-bulle **Close and search** | `PastilleAction`, le bleu de Unlink |
 | le surtitre « Compte » (Sécurité, zone Supprimer) | **Account** | resté en français jusqu'à la 815 (un mot seul, invisible au recenseur) |
 
+### Ajouts de la 817 (l'accueil des nouveaux : e-mails habillés + bienvenue)
+
+| Français | Anglais | Note |
+|---|---|---|
+| l'encart du premier passage (« Ma sélection ») | titre **Welcome to YokoFolio** · **Here, you find tattoo artists by style — not by feed. Pick a style, a city and a distance, and explore portfolios that show exactly that work.** · **A tattoo artist? Build your own portfolio and get discovered.** | `EncartBienvenue`, une seule fois par compte |
+| ses deux gestes | **Find your style** (rouge, vers l'accueil) · **Create your portfolio** (gris, `lienCreerPortfolio`) | les boutons de la page About, aux mêmes mesures |
+| le courriel de contact reçu par l'admin | sujet **[YokoFolio · Contact] <nom>** (inchangé) · titre **New message from the contact form** · **Name:** / **Email:** · bouton **Reply to <nom>** (`mailto:`) | `habillerCourriel`, lib/courriel-habille |
+| les courriels aux artistes (style, convention) | titres = sujets de la 805 · phrase d'accepté **Good news: "…" is now on YokoFolio's style list.** / **…convention list.** · phrase de refus **"…" wasn't accepted.** (textes de la 805, inchangés) · consigne **To add it to your portfolio, open it and check it under "Add a style & photos".** / **…pick it in the "Convention" tab.** · bouton **Open my portfolio** (accepté seulement) | un seul gabarit HTML pour les cinq courriels |
+| le pied de tous les courriels | **YokoFolio · yokofolio.com** (le domaine lié au site) ; version texte signée **— YokoFolio** | |
+| les trois gabarits Supabase | sujets et textes de la 805 conservés ; boutons **Confirm my email** · **Choose a new password** · **Confirm this change** | `docs/GABARITS-SUPABASE-HTML.md`, à coller |
+
 ## 3 · Le ton
 
 - **Anglais américain, décontracté** : le « you » direct, phrases

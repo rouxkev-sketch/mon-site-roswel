@@ -1,0 +1,233 @@
+# Les trois gabarits d'e-mails Supabase, habillés — passe nº 817
+
+Ces trois e-mails ne sont **pas dans le dépôt** : Supabase les envoie à
+notre place, et leurs gabarits vivent dans son tableau de bord
+(**Authentication → Email Templates**). Kevin les colle à la main, un par
+un — le **Subject** dans le champ du sujet, le **Body** dans le corps
+(mode source / HTML).
+
+Les textes sont ceux de la nº 805 (docs/GABARITS-SUPABASE-EN.md), au mot
+près. Ce qui change : l'habillage — le logo YokoFolio, le bouton d'action
+dans le rouge du site, un pied de page sobre — le même que celui des cinq
+e-mails que le site envoie lui-même (`src/lib/courriel-habille.ts`). Si
+l'un des deux change un jour, l'autre doit suivre.
+
+## Ce qu'il faut savoir en collant
+
+- **Les variables entre accolades doubles sont celles de Supabase**, à
+  garder telles quelles et à leur place :
+  `{{ .ConfirmationURL }}` (le lien du bouton), `{{ .SiteURL }}` (l'adresse
+  du site, réglée dans *Authentication → URL Configuration* — elle sert au
+  logo et au pied de page), `{{ .Email }}` / `{{ .NewEmail }}` (les
+  adresses, gabarit 3 seulement).
+- **Le logo est chargé depuis le site** (`{{ .SiteURL }}/yokofolio-logo.png`,
+  le fichier officiel de `public/`) : un e-mail n'embarque pas d'image.
+  Tant que *Site URL* vaut `https://yokofolio.com`, le logo s'affiche.
+- **HTML d'e-mail robuste** : des tables, des styles en ligne, les
+  attributs `bgcolor`/`width`, un bouton « à l'épreuve des balles », un
+  commentaire conditionnel pour Outlook. Aucune feuille de style, aucune
+  police chargée. Fond sombre (le logo est blanc sur transparent).
+- **Le nom d'expéditeur** et l'adresse d'envoi se règlent ailleurs
+  (*Authentication → SMTP Settings*) : ils ne sont pas dans le gabarit.
+- Une fois collés, **rejouer les trois parcours** (inscription, mot de
+  passe oublié, changement d'adresse) sur un compte d'essai et lire les
+  trois e-mails reçus dans Gmail et dans Outlook : c'est la seule
+  vérification possible.
+
+---
+
+## 1 · Confirm signup — déclenché par l'inscription par mot de passe
+
+**Subject**
+
+```
+Confirm your YokoFolio account
+```
+
+**Body (HTML)**
+
+```html
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="supported-color-schemes" content="dark">
+  <title>Confirm your YokoFolio account</title>
+</head>
+<body style="margin:0;padding:0;background-color:#0B0F14;" bgcolor="#0B0F14">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#0B0F14" style="background-color:#0B0F14;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <!--[if mso]><table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;margin:0 auto;">
+          <tr>
+            <td align="left" style="padding:0 4px 24px 4px;">
+              <a href="{{ .SiteURL }}" style="text-decoration:none;">
+                <img src="{{ .SiteURL }}/yokofolio-logo.png" width="170" alt="YokoFolio" style="display:block;border:0;outline:none;width:170px;height:auto;">
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td bgcolor="#1A1F26" style="background-color:#1A1F26;border-radius:16px;padding:32px 28px;">
+              <h1 style="margin:0 0 18px 0;font-family:Arial, Helvetica, sans-serif;font-size:22px;line-height:28px;font-weight:bold;color:#F2F2F4;">Welcome to YokoFolio!</h1>
+              <p style="margin:0 0 14px 0;font-family:Arial, Helvetica, sans-serif;font-size:15px;line-height:23px;color:#F2F2F4;">One last step: confirm your email address to activate your account.</p>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0 4px 0;">
+                <tr>
+                  <td bgcolor="#E11144" style="background-color:#E11144;border-radius:999px;">
+                    <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:13px 28px;font-family:Arial, Helvetica, sans-serif;font-size:14px;line-height:18px;font-weight:bold;color:#FFFFFF;text-decoration:none;border-radius:999px;">Confirm my email</a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:16px 0 0 0;font-family:Arial, Helvetica, sans-serif;font-size:13px;line-height:20px;color:#A8A8B0;">If you didn't create an account on YokoFolio, you can ignore this email &mdash; nothing will happen.</p>
+            </td>
+          </tr>
+          <tr>
+            <td align="left" style="padding:20px 4px 0 4px;font-family:Arial, Helvetica, sans-serif;font-size:12.5px;line-height:18px;color:#A8A8B0;">
+              YokoFolio &middot; <a href="{{ .SiteURL }}" style="color:#A8A8B0;text-decoration:none;">yokofolio.com</a>
+            </td>
+          </tr>
+        </table>
+        <!--[if mso]></td></tr></table><![endif]-->
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+```
+
+---
+
+## 2 · Reset password — déclenché par « Forgot your password? » (page de
+connexion et page Sécurité)
+
+**Subject**
+
+```
+Reset your YokoFolio password
+```
+
+**Body (HTML)**
+
+```html
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="supported-color-schemes" content="dark">
+  <title>Reset your YokoFolio password</title>
+</head>
+<body style="margin:0;padding:0;background-color:#0B0F14;" bgcolor="#0B0F14">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#0B0F14" style="background-color:#0B0F14;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <!--[if mso]><table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;margin:0 auto;">
+          <tr>
+            <td align="left" style="padding:0 4px 24px 4px;">
+              <a href="{{ .SiteURL }}" style="text-decoration:none;">
+                <img src="{{ .SiteURL }}/yokofolio-logo.png" width="170" alt="YokoFolio" style="display:block;border:0;outline:none;width:170px;height:auto;">
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td bgcolor="#1A1F26" style="background-color:#1A1F26;border-radius:16px;padding:32px 28px;">
+              <h1 style="margin:0 0 18px 0;font-family:Arial, Helvetica, sans-serif;font-size:22px;line-height:28px;font-weight:bold;color:#F2F2F4;">Forgot your password?</h1>
+              <p style="margin:0 0 14px 0;font-family:Arial, Helvetica, sans-serif;font-size:15px;line-height:23px;color:#F2F2F4;">Follow this link to choose a new one. It only takes a minute.</p>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0 4px 0;">
+                <tr>
+                  <td bgcolor="#E11144" style="background-color:#E11144;border-radius:999px;">
+                    <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:13px 28px;font-family:Arial, Helvetica, sans-serif;font-size:14px;line-height:18px;font-weight:bold;color:#FFFFFF;text-decoration:none;border-radius:999px;">Choose a new password</a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:16px 0 0 0;font-family:Arial, Helvetica, sans-serif;font-size:13px;line-height:20px;color:#A8A8B0;">If you didn't ask for this, you can ignore this email &mdash; your password stays as it is.</p>
+            </td>
+          </tr>
+          <tr>
+            <td align="left" style="padding:20px 4px 0 4px;font-family:Arial, Helvetica, sans-serif;font-size:12.5px;line-height:18px;color:#A8A8B0;">
+              YokoFolio &middot; <a href="{{ .SiteURL }}" style="color:#A8A8B0;text-decoration:none;">yokofolio.com</a>
+            </td>
+          </tr>
+        </table>
+        <!--[if mso]></td></tr></table><![endif]-->
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+```
+
+---
+
+## 3 · Change email address — déclenché par « Change my email » (page
+Sécurité)
+
+**Subject**
+
+```
+Confirm your new email address
+```
+
+**Body (HTML)**
+
+```html
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="supported-color-schemes" content="dark">
+  <title>Confirm your new email address</title>
+</head>
+<body style="margin:0;padding:0;background-color:#0B0F14;" bgcolor="#0B0F14">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#0B0F14" style="background-color:#0B0F14;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <!--[if mso]><table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;margin:0 auto;">
+          <tr>
+            <td align="left" style="padding:0 4px 24px 4px;">
+              <a href="{{ .SiteURL }}" style="text-decoration:none;">
+                <img src="{{ .SiteURL }}/yokofolio-logo.png" width="170" alt="YokoFolio" style="display:block;border:0;outline:none;width:170px;height:auto;">
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td bgcolor="#1A1F26" style="background-color:#1A1F26;border-radius:16px;padding:32px 28px;">
+              <h1 style="margin:0 0 18px 0;font-family:Arial, Helvetica, sans-serif;font-size:22px;line-height:28px;font-weight:bold;color:#F2F2F4;">Confirm your new email</h1>
+              <p style="margin:0 0 14px 0;font-family:Arial, Helvetica, sans-serif;font-size:15px;line-height:23px;color:#F2F2F4;">You asked to change the email address of your YokoFolio account from {{ .Email }} to {{ .NewEmail }}.</p>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0 4px 0;">
+                <tr>
+                  <td bgcolor="#E11144" style="background-color:#E11144;border-radius:999px;">
+                    <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:13px 28px;font-family:Arial, Helvetica, sans-serif;font-size:14px;line-height:18px;font-weight:bold;color:#FFFFFF;text-decoration:none;border-radius:999px;">Confirm this change</a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:16px 0 0 0;font-family:Arial, Helvetica, sans-serif;font-size:13px;line-height:20px;color:#A8A8B0;">Until you confirm, your current address stays valid. If you didn't ask for this, ignore this email.</p>
+            </td>
+          </tr>
+          <tr>
+            <td align="left" style="padding:20px 4px 0 4px;font-family:Arial, Helvetica, sans-serif;font-size:12.5px;line-height:18px;color:#A8A8B0;">
+              YokoFolio &middot; <a href="{{ .SiteURL }}" style="color:#A8A8B0;text-decoration:none;">yokofolio.com</a>
+            </td>
+          </tr>
+        </table>
+        <!--[if mso]></td></tr></table><![endif]-->
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+```
+
+---
+
+**Magic Link, Invite user, Reauthentication** ne sont pas utilisés par le
+site (inventaire nº 797, §5b) : rien à y faire. Les liens pointent vers
+`/auth/callback`, puis vers la page prévue par le site : ne pas modifier
+`{{ .ConfirmationURL }}`.

@@ -1,5 +1,11 @@
 # Les trois gabarits d'e-mails Supabase, en anglais — passe nº 805
 
+> **Remplacé à la nº 817** : les trois gabarits à coller sont désormais
+> ceux de `docs/GABARITS-SUPABASE-HTML.md` — mêmes sujets, mêmes textes,
+> mais habillés à la charte (logo, bouton rouge, pied de page). Ce
+> document reste pour la lettre des textes, décidée ici ; il ne se colle
+> plus tel quel.
+
 Ces trois e-mails ne sont **pas dans le dépôt** : Supabase les envoie à
 notre place, et leurs gabarits vivent dans son tableau de bord
 (**Authentication → Email Templates**). Kevin les colle à la main, un par

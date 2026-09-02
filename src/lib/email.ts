@@ -48,7 +48,22 @@ export type OptionsEmail = {
    * indésirable » — et c'est le domaine entier qui trinque.
    */
   desinscription?: string;
+  /**
+   * nº 817 — LA VERSION HABILLÉE du courriel (lib/courriel-habille).
+   * Elle part À CÔTÉ du texte, jamais à sa place : Resend envoie les
+   * deux, et le client de messagerie choisit. Sans elle, le courriel
+   * part en texte nu, comme avant.
+   */
+  html?: string;
 };
+
+/**
+ * nº 817 — L'ADRESSE DE L'API RESEND, ÉCRITE UNE FOIS. `RESEND_API_URL`
+ * ne sert qu'aux bancs (une doublure locale qui garde ce qu'on lui
+ * envoie) : en production la variable n'existe pas, et c'est Resend.
+ */
+const ADRESSE_API_RESEND =
+  process.env.RESEND_API_URL ?? "https://api.resend.com/emails";
 
 /**
  * L'ENVOI DÉTAILLÉ : le résultat ET l'identifiant Resend.
@@ -83,7 +98,7 @@ export async function envoyerEmailDetaille(
   }
 
   try {
-    const reponse = await fetch("https://api.resend.com/emails", {
+    const reponse = await fetch(ADRESSE_API_RESEND, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${cle}`,
@@ -94,6 +109,7 @@ export async function envoyerEmailDetaille(
         to: destinataire,
         subject: sujet,
         text: texte,
+        ...(options.html ? { html: options.html } : {}),
         ...(Object.keys(entetes).length > 0 ? { headers: entetes } : {}),
       }),
     });
@@ -113,12 +129,16 @@ export async function envoyerEmailDetaille(
  * L'envoi simple, tel qu'il a toujours été : les notifications du
  * site (validation d'une fiche, message de contact…) n'ont que faire
  * de l'identifiant Resend.
+ * nº 817 — `html`, facultatif : la version habillée, à côté du texte.
  */
 export async function envoyerEmail(
   destinataire: string,
   sujet: string,
-  texte: string
+  texte: string,
+  html?: string
 ): Promise<ResultatEnvoiEmail> {
-  const { resultat } = await envoyerEmailDetaille(destinataire, sujet, texte);
+  const { resultat } = await envoyerEmailDetaille(destinataire, sujet, texte, {
+    html,
+  });
   return resultat;
 }

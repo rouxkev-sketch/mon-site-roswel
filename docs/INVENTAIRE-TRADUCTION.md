@@ -557,7 +557,8 @@ remplacer** le français par l'anglais, sans mécanique à deux langues.
   semaine. Restent pour la 806 : les tris (`localeCompare("fr")`,
   `Intl.Collator("fr")`) et les dates de l'admin.
 - **Les gabarits Supabase** (§5b) : `docs/GABARITS-SUPABASE-EN.md`, à
-  coller à la main.
+  coller à la main — remplacés à la nº 817 par leur version habillée,
+  `docs/GABARITS-SUPABASE-HTML.md` (mêmes textes).
 - **Le banc** : `--francais --perimetre=D,E,J` → **0 texte français**,
   162 exceptions déclarées (données Unicode, fiches de démonstration,
   tables de reconnaissance des pays et régions, sondes). Deux défauts

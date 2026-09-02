@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { CONTACT_YOKOFOLIO, MARQUE_YOKOFOLIO } from "@/config/tatouage";
 import { envoyerEmail } from "@/lib/email";
+//  nº 817 — l'habillage des courriels du site, écrit une fois.
+import { habillerCourriel } from "@/lib/courriel-habille";
 import { creerClientSupabaseAdmin } from "@/lib/supabase/admin";
 
 /**
@@ -84,11 +86,20 @@ export async function POST(requete: NextRequest) {
 
   const destinataire = process.env.CONTACT_EMAIL;
   if (destinataire) {
+    /*  nº 817 — LE COURRIEL HABILLÉ (lib/courriel-habille) : le même
+        contenu qu'avant, dans la charte du site ; le bouton répond à
+        l'expéditeur. Le texte nu part à côté, pour les clients qui ne
+        lisent pas le HTML. */
+    const courriel = habillerCourriel({
+      titre: "New message from the contact form",
+      paragraphes: [`Name: ${nom}`, `Email: ${email}`, message],
+      action: { libelle: `Reply to ${nom}`, url: `mailto:${email}` },
+    });
     await envoyerEmail(
       destinataire,
       `[${MARQUE_YOKOFOLIO.nom} · Contact] ${nom}`,
-      `New message from the ${MARQUE_YOKOFOLIO.nom} contact form.\n\n` +
-        `Name: ${nom}\nEmail: ${email}\n\nMessage:\n${message}\n`
+      courriel.texte,
+      courriel.html
     );
   } else {
     console.log(

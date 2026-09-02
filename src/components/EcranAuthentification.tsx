@@ -23,6 +23,8 @@ import { OngletsLigne } from "@/components/OngletsLigne";
 import { lireDejaConnecte, souscrireStockage } from "@/lib/deja-connecte";
 //  nº 811/814 — l'adresse des conditions d'utilisation, écrite une fois.
 import { CHEMIN_TERMS } from "@/lib/chemins-editoriaux";
+//  nº 817 — le drapeau de bienvenue, posé à la naissance du compte.
+import { BIENVENUE_A_MONTRER, CLE_BIENVENUE } from "@/lib/bienvenue";
 import { ContexteDejaConnecteServeur } from "@/components/FournisseurSession";
 import { suiteSure } from "@/lib/favoris-yokofolio";
 import { LONGUEUR_MINIMALE, evaluerMotDePasse } from "@/lib/mot-de-passe";
@@ -297,6 +299,13 @@ export function EcranAuthentification({
             emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(
               arrivee
             )}`,
+            /*  nº 817 — LE COMPTE NAÎT AVEC SON DRAPEAU DE BIENVENUE :
+                l'encart « Welcome » de « Ma sélection » se montrera à
+                son premier passage, une fois — qu'il confirme son
+                adresse tout de suite ou un mois plus tard (voir
+                lib/bienvenue). Un compte d'avant cette passe n'a pas
+                le drapeau : il ne le verra jamais. */
+            data: { [CLE_BIENVENUE]: BIENVENUE_A_MONTRER },
           },
         });
         if (error) throw error;

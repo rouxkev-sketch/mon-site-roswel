@@ -5,6 +5,8 @@ import {
   NOM_CONVENTION_MINIMUM,
 } from "@/lib/conventions";
 import { adresseDuSite, envoyerEmail } from "@/lib/email";
+//  nº 817 — l'habillage des courriels du site, écrit une fois.
+import { habillerCourriel } from "@/lib/courriel-habille";
 import { creerNotification } from "@/lib/notifications";
 import { slugifier } from "@/lib/slug";
 import { creerClientSupabaseAdmin } from "@/lib/supabase/admin";
@@ -440,20 +442,26 @@ async function envoyerCourriel(
     if (!destinataire) return;
 
     const sujet = accepte ? "Convention added" : "Convention declined";
-    const corps = [
-      accepte
-        ? `Good news: "${nomDeLaConvention}" is now on YokoFolio's convention list.`
-        : `"${nomDeLaConvention}" wasn't accepted.`,
-      message,
-      accepte
-        ? `To add it to your portfolio, open it and pick it in the "Convention" tab:\n${adresseDuSite()}/devenir-tatoueur/fiche`
-        : "",
-      "— YokoFolio",
-    ]
-      .filter(Boolean)
-      .join("\n\n");
+    /*  nº 817 — LE COURRIEL HABILLÉ (lib/courriel-habille) : les mêmes
+        phrases qu'avant, dans la charte du site ; le lien vers le
+        portfolio devient le bouton rouge. Le texte nu part à côté. */
+    const courriel = habillerCourriel({
+      titre: sujet,
+      paragraphes: [
+        accepte
+          ? `Good news: "${nomDeLaConvention}" is now on YokoFolio's convention list.`
+          : `"${nomDeLaConvention}" wasn't accepted.`,
+        message,
+        accepte
+          ? 'To add it to your portfolio, open it and pick it in the "Convention" tab.'
+          : "",
+      ].filter(Boolean),
+      action: accepte
+        ? { libelle: "Open my portfolio", url: `${adresseDuSite()}/devenir-tatoueur/fiche` }
+        : null,
+    });
 
-    await envoyerEmail(destinataire, sujet, corps);
+    await envoyerEmail(destinataire, sujet, courriel.texte, courriel.html);
   } catch (erreur) {
     console.warn(
       "[convention request] email not sent:",
