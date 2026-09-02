@@ -176,6 +176,20 @@ message.
 | Lier mon compte Google (Sécurité, Google pas lié) | **Link** (lien d'action bleu, à droite) · sous-titre **Not linked** · info-bulle « Link your Google account to log in with it » | même composant que **Unlink** (`PastilleAction`) |
 | le rideau de chargement (About, Legal, Contact) | `aria-label="Loading page"` — la même étiquette que les squelettes | `RideauDePageTexte`, pas de squelette |
 
+### Ajouts de la 814 (conformité américaine : Terms of Use + DMCA)
+
+| Français | Anglais | Note |
+|---|---|---|
+| les conditions d'utilisation (page, titre, lien du pied de page) | **Terms of Use** · adresse **/terms** · pied de page **Terms** | page née en anglais (nº 814) ; constante `CHEMIN_TERMS` |
+| « les règles du site » (création de compte) | **« By creating an account, you accept the Terms of Use. »** — le lien nomme le document | menait à /legal sous « site rules » (nº 788) ; mène à /terms |
+| la notice légale, ses ancres | **Legal Notice** · `/legal#privacy` (**Personal information (privacy policy)**) · `/legal#dmca` (**Copyright and DMCA**) | `SectionLegale` porte l'`id` |
+| l'agent désigné, la notification, la contre-notification, le retrait | **designated agent** · **notice** (« Sending a notice ») · **counter-notification** · **taken down / made inaccessible** · **repeat infringers** (« An account that infringes repeatedly is closed ») | 17 U.S.C. § 512 ; le numéro d'enregistrement s'écrit **Registration DMCA-1079752** |
+| « tel quel », sans garantie · limite de responsabilité · indemnisation · droit applicable | **"as is" and "as available"** · **No warranty** · **Limitation of liability** · « you agree to cover the resulting costs, including reasonable attorney's fees » · **Governing law and disputes** | les usages américains, dans le ton du site |
+| les portfolios créés par l'administration | **Portfolios created by YokoFolio** · **claim it** · **have it removed** — « taken down immediately, no questions asked » | décision de Kevin (814) |
+| ne vend pas, ne partage pas (vie privée) | **does not sell personal information and does not share it for advertising** · **Do Not Track** · **Global Privacy Control** | les mots du CCPA |
+| les enfants (COPPA) | **Children.** « not meant for children under 13 » | |
+| les sous-traitants | **Who processes it.** Vercel · Supabase · Resend · Google | des noms propres, inchangés |
+
 ## 3 · Le ton
 
 - **Anglais américain, décontracté** : le « you » direct, phrases
@@ -218,7 +232,8 @@ message.
   « adresses »). **Depuis la nº 811, les trois pages éditoriales sont
   en anglais** : `/about` (ex `/qui-sommes-nous`), `/legal` (ex
   `/mentions-legales`), `/contact` (inchangé) — les anciennes adresses
-  redirigent en 301 (lib/chemins-editoriaux, next.config).
+  redirigent en 301 (lib/chemins-editoriaux, next.config). **La
+  quatrième, `/terms` (nº 814), naît en anglais.**
 - **Les limaces** (`fine-line`, `tatouage`, `salon`, `prive`…) : des
   clés, en base et dans les adresses.
 - **Les noms propres** : YokoFolio, Instagram, TikTok, Google, Vercel,

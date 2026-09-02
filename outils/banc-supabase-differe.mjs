@@ -89,6 +89,7 @@ const PAGES = [
   //  lisent RIEN : elles ne doivent la charger que si un compte est
   //  ouvert — et, à terme, plus du tout.
   { nom: "legal", chemin: "/legal", litLaBase: false },
+  { nom: "terms", chemin: "/terms", litLaBase: false },
   { nom: "contact", chemin: "/contact", litLaBase: false },
   { nom: "recherche", chemin: "/recherche?style=realisme&nature=tatouage", litLaBase: true },
 ];

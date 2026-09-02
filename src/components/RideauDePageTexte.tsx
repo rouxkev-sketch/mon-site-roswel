@@ -3,6 +3,7 @@ import { EnTeteTatouage } from "@/components/EnTeteTatouage";
 /**
  * ██ nº 811 — LE RIDEAU DES PAGES DE TEXTE (About, Legal, Contact) ██
  * ==================================================================
+ * (Et « Terms », née à la nº 814, qui le rend aussi.)
  * LE DÉFAUT, RELEVÉ PAR LE PROPRIÉTAIRE : ces trois pages, héritées
  * de la nº 320, n'avaient pas de `loading.tsx` — la page restait FIGÉE
  * au clic tant que la suivante n'était pas arrivée, alors que tout le

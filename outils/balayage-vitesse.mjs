@@ -136,6 +136,7 @@ const PAGES = [
   { nom: "Contact",                chemin: "/contact",                                  session: false },
   { nom: "About",                  chemin: "/about",                                    session: false },
   { nom: "Legal",                  chemin: "/legal",                                    session: false },
+  { nom: "Terms",                  chemin: "/terms",                                    session: false },
   { nom: "Nouveau mot de passe",   chemin: "/devenir-tatoueur/nouveau-mot-de-passe",    session: false },
   { nom: "Éditeur de portfolio",   chemin: "/devenir-tatoueur/fiche?fiche=demo-0-0",    session: true },
   { nom: "Éditeur — création",     chemin: "/devenir-tatoueur/fiche?fiche=nouvelle",    session: true },

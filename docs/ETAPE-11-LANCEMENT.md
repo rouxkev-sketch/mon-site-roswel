@@ -53,7 +53,7 @@ métier/ville existantes, pour le plan du site.)
   Roswel n'utilise que des cookies essentiels (connexion), pas de
   traçage. Si un jour tu ajoutes un outil de mesure d'audience, il
   faudra le transformer en vrai choix accepter/refuser.
-- **Pages légales** : /legal (nº 811 : l’adresse était /mentions-legales ; /cgu et /confidentialite n’existent plus)
+- **Pages légales** : /legal (nº 811 : l’adresse était /mentions-legales ; /cgu et /confidentialite n’existent plus) et /terms (nº 814 : les Terms of Use, avec la section DMCA et la politique de confidentialité dans /legal — ce qu’un juriste doit encore lire : docs/A-VALIDER-AVOCAT.md)
   (liens au pied de l'accueil). ⚠️ Cherche « [À compléter] » dans ces
   pages : nom de l'éditeur, adresse, email de contact, date. Et fais
   relire par un professionnel avant l'ouverture au public.

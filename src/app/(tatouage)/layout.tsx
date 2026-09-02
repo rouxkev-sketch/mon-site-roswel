@@ -48,11 +48,12 @@ import { VoileDeLaPage } from "@/components/VoileDeLaPage";
 //  elle rend `null` ET n'arme pas son module — pas un écouteur.
 import { SondeVitesse } from "@/components/SondeVitesse";
 import { COMPTES_YOKOFOLIO } from "@/config/tatouage";
-//  nº 811 — les adresses des trois pages éditoriales, écrites une fois.
+//  nº 811/814 — les adresses des pages éditoriales, écrites une fois.
 import {
   CHEMIN_ABOUT,
   CHEMIN_CONTACT,
   CHEMIN_LEGAL,
+  CHEMIN_TERMS,
 } from "@/lib/chemins-editoriaux";
 
 /**
@@ -399,6 +400,15 @@ export default async function MiseEnPageTatouage({
               className="hover:text-sombre-texte transition-colors"
             >
               Legal
+            </LienAuGeste>
+            {/*  nº 814 — LES CONDITIONS D'UTILISATION (Terms of Use),
+                 quatrième page éditoriale : même lien, même règle de
+                 préchargement, même rideau. */}
+            <LienAuGeste
+              href={CHEMIN_TERMS}
+              className="hover:text-sombre-texte transition-colors"
+            >
+              Terms
             </LienAuGeste>
             {/* LE COMPTE INSTAGRAM DU SITE — dernier de la ligne.
                 Nouvel onglet : on quitte le site, on ne l'abandonne

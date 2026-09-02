@@ -25,10 +25,19 @@
  * console Google (l'écran de consentement OAuth : règles et
  * confidentialité) pointe dessus, et des liens ont pu être partagés.
  * Une adresse déplacée n'est jamais laissée en page introuvable.
+ *
+ * ██ nº 814 — UNE QUATRIÈME PAGE : « /terms » (Terms of Use) ██
+ * Les conditions d'utilisation, séparées de la page légale comme
+ * l'usage américain le veut (docs/A-VALIDER-AVOCAT.md, point 3). Même
+ * régime que les trois autres : pied de page, plan du site, adresse
+ * canonique, en-têtes de cache, lien « Terms of Use » de la création
+ * de compte — tous lisent la constante. Pas d'ancienne adresse : la
+ * page naît ici.
  */
 export const CHEMIN_ABOUT = "/about";
 export const CHEMIN_CONTACT = "/contact";
 export const CHEMIN_LEGAL = "/legal";
+export const CHEMIN_TERMS = "/terms";
 
 /** Les anciennes adresses (nº 320 → nº 810) et où elles mènent. */
 export const ANCIENS_CHEMINS_EDITORIAUX: ReadonlyArray<{

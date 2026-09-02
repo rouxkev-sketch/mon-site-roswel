@@ -7,6 +7,7 @@ import {
   CHEMIN_ABOUT,
   CHEMIN_CONTACT,
   CHEMIN_LEGAL,
+  CHEMIN_TERMS,
 } from "./src/lib/chemins-editoriaux";
 
 // Domaine autorisé pour les photos : celui de notre stockage Supabase
@@ -273,10 +274,11 @@ const nextConfig: NextConfig = {
       "/tatoueur/:slug",
       "/tatouage/:style/:ville",
       "/devenir-tatoueur/:chemin*",
-      //  nº 811 — les trois pages éditoriales, par leurs constantes.
+      //  nº 811/814 — les quatre pages éditoriales, par leurs constantes.
       CHEMIN_ABOUT,
       CHEMIN_CONTACT,
       CHEMIN_LEGAL,
+      CHEMIN_TERMS,
       "/rendez-vous",
       "/favoris",
     ];

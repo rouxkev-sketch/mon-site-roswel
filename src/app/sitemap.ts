@@ -3,11 +3,12 @@ import { adresseDuSite } from "@/lib/email";
 import { creerClientSupabaseServeur } from "@/lib/supabase/server";
 import { estEnLigne, styleConnu } from "@/lib/tatoueurs";
 import { chargerStylesAjoutes } from "@/lib/styles-ajoutes";
-//  nº 811 — les adresses des trois pages éditoriales, écrites une fois.
+//  nº 811/814 — les adresses des pages éditoriales, écrites une fois.
 import {
   CHEMIN_ABOUT,
   CHEMIN_CONTACT,
   CHEMIN_LEGAL,
+  CHEMIN_TERMS,
 } from "@/lib/chemins-editoriaux";
 
 // Le plan du site est reconstruit au plus une fois par jour
@@ -76,6 +77,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     {
       url: `${base}${CHEMIN_LEGAL}`,
+      lastModified: aujourdhui,
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    //  nº 814 — les conditions d'utilisation, même régime que /legal.
+    {
+      url: `${base}${CHEMIN_TERMS}`,
       lastModified: aujourdhui,
       changeFrequency: "yearly",
       priority: 0.3,

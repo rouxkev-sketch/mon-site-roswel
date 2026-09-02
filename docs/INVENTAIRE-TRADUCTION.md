@@ -752,6 +752,22 @@ remplacer** le français par l'anglais, sans mécanique à deux langues.
   déménagement demande des redirections par motif et une relecture du
   proxy, du plan du site et des liens internes — une passe à part
   entière, pas un renommage de dossier.
+
+## 16 · Ce que la 814 a fait pour la langue (Terms of Use, DMCA)
+
+- **Une quatrième page éditoriale, `/terms` (« Terms of Use »)**, née
+  en anglais — le recenseur la classe avec les trois autres (« C · pages
+  éditoriales », regex `(about|contact|legal|terms)`), résultat : 0
+  texte français. Le pied de page dit **Terms** ; la création de compte
+  dit **« you accept the Terms of Use »** (le lien menait à /legal sous
+  « site rules »).
+- **La page légale** gagne deux sections et deux ancres : **Copyright
+  and DMCA** (`#dmca`, l'agent enregistré DMCA-1079752, notification,
+  retrait, contre-notification) et **Terms of Use** (renvoi) ; la
+  section vie privée s'intitule **Personal information (privacy
+  policy)** (`#privacy`) et reçoit trois paragraphes (sous-traitants,
+  droits, enfants). Les mots sont ceux du lexique (§ « Ajouts de la
+  814 »). Ce qu'un juriste doit encore lire : docs/A-VALIDER-AVOCAT.md.
 - **Deux textes d'interface nouveaux**, en anglais : « Not linked » et
   « Link » (page Sécurité, ligne Google), avec l'info-bulle « Link your
   Google account to log in with it ». Le rideau des pages de texte porte

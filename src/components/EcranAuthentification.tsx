@@ -21,8 +21,8 @@ import {
 } from "@/components/erreurs-formulaire";
 import { OngletsLigne } from "@/components/OngletsLigne";
 import { lireDejaConnecte, souscrireStockage } from "@/lib/deja-connecte";
-//  nº 811 — l'adresse de la page légale, écrite une seule fois.
-import { CHEMIN_LEGAL } from "@/lib/chemins-editoriaux";
+//  nº 811/814 — l'adresse des conditions d'utilisation, écrite une fois.
+import { CHEMIN_TERMS } from "@/lib/chemins-editoriaux";
 import { ContexteDejaConnecteServeur } from "@/components/FournisseurSession";
 import { suiteSure } from "@/lib/favoris-yokofolio";
 import { LONGUEUR_MINIMALE, evaluerMotDePasse } from "@/lib/mot-de-passe";
@@ -743,12 +743,16 @@ export function EcranAuthentification({
            Elle s'affichait AUSSI sous « Me connecter », où elle
            annonçait à quelqu'un qui a déjà un compte les conditions
            d'une création qu'il ne fait pas. Le propriétaire l'a vue ;
-           elle reste à la création, mot pour mot. */}
+           elle reste à la création, mot pour mot.
+           ██ nº 814 — LE LIEN MÈNE AUX TERMS OF USE (/terms), et les
+           nomme : « site rules » menait à la page légale, qui n'était
+           pas un contrat. Un compte se crée en acceptant un document
+           qui a un nom — c'est ce que l'usage américain attend. */}
       {creer && (
       <p className="mt-8 text-center text-[13px] leading-relaxed text-sombre-texte-doux">
         By creating an account, you accept the{" "}
-        <Link href={CHEMIN_LEGAL} className="text-primaire hover:underline">
-          site rules
+        <Link href={CHEMIN_TERMS} className="text-primaire hover:underline">
+          Terms of Use
         </Link>
         . Your email is only used for your account — never for ads.
       </p>
