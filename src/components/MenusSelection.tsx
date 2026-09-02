@@ -348,6 +348,8 @@ export function MenusSelection({
         familleSoulignee
         //  §2 (nº 293) — la page s'assombrit derrière ce menu, en WEB :
         //  au doigt cette page ouvre sa feuille, et le crochet s'écarte.
+        //  nº 812 — plus d'assombrissement : le voile est transparent
+        //  et ne fait plus que recevoir le clic à côté.
         avecVoile
         //  §2 (nº 460/461) — le second appui du va-et-vient commande
         //  l'ouverture ; la feuille du doigt reste décollée des bords.

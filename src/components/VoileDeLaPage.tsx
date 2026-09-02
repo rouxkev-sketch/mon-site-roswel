@@ -54,15 +54,27 @@ import {
  */
 
 /**
- * L'ASSOMBRISSEMENT — 28 %.
- * ⚠️ IL MONTE DEPUIS LES 18 % DE LA nº 293, et le nombre suit le
- * changement de place : sous la barre, le voile se cumulait au flou
- * de la plaque, qui assombrissait déjà ; au-dessus, il agit seul sur
- * une barre restée à pleine lumière. À 18 % elle aurait à peine
- * bougé. 28 % pose une ombre franche sans noircir — le panneau ouvert
- * reste, de loin, la chose la plus claire de l'écran.
+ * ██ nº 812 — PLUS AUCUN ASSOMBRISSEMENT : LE VOILE EST INVISIBLE ██
+ * ==================================================================
+ * LE PROPRIÉTAIRE NE VEUT PLUS D'OMBRE derrière aucune surface du
+ * web — fenêtre des langues, « Mon compte », notifications, filtres,
+ * menus du moteur (style, localité), menus déroulants de « Ma
+ * sélection » : les sept passent par ce voile, et par lui seul (les
+ * fenêtres de dialogue, elles, ont leur propre fond et ne sont pas
+ * concernées). L'ombre part ; LE VOILE, LUI, RESTE — transparent.
+ * POURQUOI IL RESTE : c'est lui qui reçoit le clic « à côté ». Un clic
+ * sur un pan tombe hors de toute surface ouverte, et les fermetures au
+ * clic extérieur qui existent déjà s'en chargent (voir plus haut) —
+ * sans que ce clic n'atteigne ce qui vit dessous : on ne ferme pas un
+ * menu ET on n'ouvre pas la carte qui était derrière d'un même geste.
+ * Les trous restent aussi : le bloc épargné (la rangée du moteur,
+ * l'encadré de « Ma sélection ») continue de recevoir ses clics.
+ * Rien d'autre ne change : mêmes pans, mêmes coins, même étage, même
+ * mesure à chaque image — seule la couleur est partie.
+ * (Historique : 18 % à la nº 293, 28 % à la nº 294 — « une ombre
+ * franche sans noircir ». Supprimée à la nº 812, sur consigne.)
  */
-const NOIRCEUR = "rgba(0, 0, 0, 0.28)";
+const NOIRCEUR = "transparent";
 
 /** Au-dessus de la barre (50) et des fenêtres de fiche, sous les
     plaques des menus (80) : elles doivent rester claires. */

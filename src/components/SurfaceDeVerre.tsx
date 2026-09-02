@@ -219,6 +219,9 @@ export function MenuDeVerre({
    * elle. Ce voile ne change pas ; la teinte lui AJOUTE un second
    * moyen, elle ne le remplace pas. Toujours aucune bordure, aucune
    * ombre — la charte est tenue.
+   * nº 812 — le voile ne s'assombrit plus (transparent, sur consigne) :
+   * la teinte est désormais le SEUL moyen par lequel la fenêtre se
+   * détache. Rien d'autre n'est retouché ici.
    * ⚠️ SUR DEMANDE, ET C'EST TOUT LE POINT : le drapeau est FAUX par
    * défaut. Les deux autres menus de verre du site (les langues, le
    * panneau des filtres du moteur) ne le passent pas et gardent leur

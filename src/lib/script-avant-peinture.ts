@@ -304,11 +304,15 @@ var marqueRattrapage=null;
 try{marqueRattrapage=sessionStorage.getItem(${rattrapage});if(marqueRattrapage)sessionStorage.removeItem(${rattrapage})}catch(e){}
 /* §1 (nº 429) — LA DÉCLARATION D'INTENTION, posée au clic par tout
    lien interne du site vers l'accueil nu (le logo en tête — un <a>
-   NATIF : chaque clic est une navigation de document, et le filet la
-   prenait pour un repli : « le logo ne ramène plus à l'accueil »,
-   relevé nº 429). Consommée ici, une fois, fraîche huit secondes —
-   une navigation douce qui n'a pas déchargé le document la laisse
-   simplement expirer. */
+   NATIF jusqu'à la nº 812 : chaque clic était une navigation de
+   document, et le filet la prenait pour un repli : « le logo ne
+   ramène plus à l'accueil », relevé nº 429). Consommée ici, une fois,
+   fraîche huit secondes — une navigation douce qui n'a pas déchargé
+   le document la laisse simplement expirer.
+   nº 812 — le logo est devenu un <Link> (LienAccueil) : son clic est
+   une navigation douce, la déclaration expire donc sans être lue ici ;
+   elle reste utile au repli du routeur en navigation de document
+   (nº 428/430), qui la trouve fraîche. */
 var intentionAccueil=null;
 try{intentionAccueil=sessionStorage.getItem(${intention});if(intentionAccueil)sessionStorage.removeItem(${intention})}catch(e){}
 var departVouluFrais=Boolean(intentionAccueil)&&maintenant-(Number(intentionAccueil)||0)<8000;

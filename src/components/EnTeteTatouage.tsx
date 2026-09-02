@@ -25,6 +25,8 @@ import {
 //  §1 (nº 429) — le clic du logo déclare son intention : « départ voulu
 //  vers l'accueil » — le filet de réparation du repli s'abstient.
 import { declarerDepartVouluVersLAccueil } from "@/lib/navigation-session";
+//  nº 812 — le logo navigue en douceur, par le lien d'accueil commun.
+import { LienAccueil } from "@/components/LienAccueil";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { lieuVersParametres } from "@/lib/geocodage";
@@ -747,32 +749,37 @@ export function EnTeteTatouage({
           //  avant que la barre ne casse (nº 154-§4).
           className="min-w-0 basis-0 grow shrink order-1 lg:flex-none lg:basis-auto"
         >
-          {/* LE LOGO RAMÈNE À L'ACCUEIL — un lien NATIF, exprès. La
-              navigation douce de Next a déjà avalé ce clic deux fois
-              (page du compte, puis page de création de fiche) : ici,
-              c'est le NAVIGATEUR qui navigue, rien ne peut s'interposer
-              — et le curseur main est garanti. `draggable=false` :
-              une image de lien se laisse « traîner » par défaut, et un
-              clic légèrement glissé partait en glisser-déposer muet au
-              lieu de naviguer. Le lien épouse le logo (`w-fit`) : pas
-              de zone cliquable invisible sur la moitié de la barre. */}
-          {/* eslint-disable-next-line @next/next/no-html-link-for-pages --
-              c'est un <a> natif PAR CHOIX : la navigation douce de
-              <Link> a déjà avalé ce clic en silence, deux fois. */}
-          <a
-            href="/"
-            aria-label={`${MARQUE_YOKOFOLIO.nom} home`}
+          {/*  ██ nº 812 — LE LOGO NAVIGUE EN DOUCEUR, COMME TOUT LE SITE ██
+               ------------------------------------------------------
+               CE QU'IL ÉTAIT : un <a> NATIF, exprès — « la navigation
+               douce de Next a déjà avalé ce clic deux fois (page du
+               compte, puis page de création de fiche) ». Chaque clic
+               était donc un CHARGEMENT COMPLET de « / ».
+               CE QUE ÇA COÛTAIT, relevé par le propriétaire : sur
+               Chrome mobile, le bandeau « traduire cette page ? »
+               revenait À CHAQUE CLIC DU LOGO — et jamais au retour
+               arrière. C'est le chargement complet qui le fait : Chrome
+               refait sa détection de langue sur chaque document neuf,
+               jamais sur une navigation douce. Le seul lien du site qui
+               rechargeait le document était donc le seul à rappeler le
+               bandeau.
+               CE QUI REMPLACE L'ANCIEN CHOIX : `LienAccueil` (nº 475) —
+               un vrai `<Link>` vers l'accueil, qui pose les trois
+               déclarations déjà en usage partout ailleurs (départ voulu
+               vers l'accueil, arrivée en haut, place de l'accueil
+               oubliée — nº 429, 446, 659) ; il ramène « Explorer les
+               styles » depuis « Ma sélection » sans défaut mesuré
+               depuis la nº 659. Les deux « clics avalés » d'autrefois
+               datent d'avant la garde des navigations (nº 441) et la
+               garde de saisie (qui intercepte TOUT lien, natif ou non,
+               en capture) : le banc de la nº 812 vérifie le clic du
+               logo depuis six pages, dont celles du compte et de la
+               fiche — aucune navigation avalée, aucun rechargement.
+               `draggable={false}` et `w-fit` sont conservés (voir la
+               note de LienAccueil) ; le curseur main vient du lien. */}
+          <LienAccueil
+            ariaLabel={`${MARQUE_YOKOFOLIO.nom} home`}
             draggable={false}
-            /*  §1 (nº 429) — L'INTENTION EST DÉCLARÉE AVANT DE PARTIR :
-                ce lien est un <a> NATIF (voulu, voir ci-dessus), chaque
-                clic est donc une navigation de document vers « / » nu.
-                Sans cette note de session, le filet de réparation du
-                repli (script d'avant-peinture) prenait ce départ VOULU
-                pour un repli du routeur et renvoyait l'utilisateur vers
-                la recherche qu'il venait de quitter — « le logo ne
-                ramène plus à l'accueil » (relevé nº 429). Aucun frein :
-                la navigation part exactement comme avant. */
-            onClick={() => declarerDepartVouluVersLAccueil()}
             className="block w-fit cursor-pointer rounded-lg
                        focus-visible:outline-2 focus-visible:outline-offset-4
                        focus-visible:outline-primaire"
@@ -788,7 +795,7 @@ export function EnTeteTatouage({
               hauteur={48}
               classe="h-9 sm:h-11 lg:h-12 w-auto max-w-full object-contain object-left"
             />
-          </a>
+          </LienAccueil>
         </div>
 
         {/* LE MOTEUR, CENTRÉ. Il passe sous la barre en dessous de
@@ -1348,8 +1355,17 @@ export function EnTeteTatouage({
                     20 px, ni les couleurs, ni la place, ni les deux
                     libellés superposés qui réservent la largeur
                     (nº 203-§1a) — le bloc central de la barre ne peut
-                    toujours pas être poussé. */
-                className="hidden sm:flex h-9 self-center rounded-xl px-4 items-center
+                    toujours pas être poussé.
+                    ██ nº 812 — LE RAYON REDESCEND À 8 px (`rounded-lg`) ██
+                    Sur 36 px de haut, les 12 px de la nº 536 faisaient
+                    une pilule presque demi-ronde, que le propriétaire
+                    trouve datée. Il veut des coins adoucis, 6 à 8 px,
+                    « comme les capsules du site » — c'est le rayon des
+                    badges et du bouton « Suivre » (nº 535), celui-là
+                    même que la nº 536 avait écarté. Rien d'autre ne
+                    change : ni la hauteur, ni le rembourrage, ni les
+                    couleurs. */
+                className="hidden sm:flex h-9 self-center rounded-lg px-4 items-center
                            bg-primaire border-2 border-primaire
                            hover:bg-primaire-fonce hover:border-primaire-fonce
                            text-sombre-texte

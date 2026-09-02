@@ -22,8 +22,15 @@ import type { ReactElement } from "react";
  * liste des notifications que dans la fenêtre de validation.
  * CE PARAMÈTRE EXISTE POUR CORRIGER ÇA, et pour rien d'autre : celui
  * qui affiche une icône à une taille inhabituelle peut demander
- * l'épaisseur en unités de dessin qui rendra le PIXEL qu'il veut
- * (voir `traitPourTaille` dans PastilleEvenement.tsx).
+ * l'épaisseur en unités de dessin qui rendra le PIXEL qu'il veut.
+ * ██ nº 812 — MAIS LA FAMILLE DES PASTILLES NE S'EN SERT PLUS AINSI ██
+ * La règle de trois de la nº 809 (`traitPourTaille`, le même pixel aux
+ * deux tailles) rendait GRAS le dessin de 18 px de la liste : le
+ * propriétaire exige des traits fins, 1,5 à 2 unités comme toutes les
+ * icônes historiques. Les pastilles passent désormais UNE valeur fixe,
+ * `TRAIT_FAMILLE` = 1,5 unité (PastilleEvenement.tsx), et l'écran la
+ * met à l'échelle comme pour le reste du site. Le paramètre reste : il
+ * porte cette valeur, et rien ne l'empêche de porter une autre.
  * ⚠️ LE DÉFAUT RESTE 1,8, ET C'EST DÉLIBÉRÉ : les quelque cent
  * emplois du site n'en passent aucun et ne bougent donc pas d'un
  * cheveu. Seule la famille des pastilles d'événement s'en sert.
@@ -135,10 +142,12 @@ export function IconeEtoile({
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
       {/*  Pointe haute, puis creux et pointes en alternance dans le sens
-           des aiguilles d'une montre (R = 8,4 · r = 3,528 · centre 12,8). */}
+           des aiguilles d'une montre. nº 812 — un cran plus petite et
+           plus aérée pour un trait fin (R = 8 · r = 3,4 · centre 12,5) :
+           la nº 811 (R = 8,4 · r = 3,528) touchait presque le rond. */}
       <path
-        d="M12 4.4 14.07 9.95 19.99 10.2 15.36 13.89 16.94 19.6
-           12 16.33 7.06 19.6 8.64 13.89 4.01 10.2 9.93 9.95Z"
+        d="M12 4.5 14 9.75 19.61 10.03 15.23 13.55 16.7 18.97
+           12 15.9 7.3 18.97 8.77 13.55 4.39 10.03 10 9.75Z"
         stroke="currentColor"
         strokeWidth={trait}
         strokeLinecap="round"
@@ -412,9 +421,11 @@ export function IconeCle({ taille = 20, classe = "" }: ProprietesIcone) {
 export function IconeHorloge({ taille = 20, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
-      <circle cx="12" cy="12" r="8.25" stroke="currentColor" strokeWidth={trait} />
+      {/*  nº 812 — cadran de rayon 8 (8,25 à la nº 811), aiguilles un
+           peu plus courtes : de l'air pour un trait fin. */}
+      <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth={trait} />
       <path
-        d="M12 7.25V12l3.25 1.95"
+        d="M12 7.5V12l3 1.8"
         stroke="currentColor"
         strokeWidth={trait}
         strokeLinecap="round"
@@ -435,8 +446,10 @@ export function IconeHorloge({ taille = 20, classe = "", trait = 1.8 }: Propriet
 export function IconeCocheListe({ taille = 16, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
+      {/*  nº 812 — un quart d'unité de retrait à chaque bout : la coche
+           reste ouverte, mais ne touche plus les bords à trait fin. */}
       <path
-        d="M4.75 12.25 9.5 17 19.25 7.25"
+        d="M5 12.5 9.5 17 19 7.5"
         stroke="currentColor"
         strokeWidth={trait}
         strokeLinecap="round"
@@ -929,8 +942,10 @@ export function IconeMonde({ taille = 20, classe = "" }: ProprietesIcone) {
 export function IconeDrapeau({ taille = 16, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
+      {/*  nº 812 — hampe de 4,25 à 20,5, flamme de 5,75 à 13,75 sur
+           13,2 de large : un quart d'unité de retrait tout autour. */}
       <path
-        d="M6.25 20.75V4m0 1.5c2.25-1.4 4.5-1.4 6.75 0s4.5 1.4 6.75 0v8.25c-2.25 1.4-4.5 1.4-6.75 0s-4.5-1.4-6.75 0"
+        d="M6.5 20.5V4.25m0 1.5c2.2-1.35 4.4-1.35 6.6 0s4.4 1.35 6.6 0v8c-2.2 1.35-4.4 1.35-6.6 0s-4.4-1.35-6.6 0"
         stroke="currentColor"
         strokeWidth={trait}
         strokeLinecap="round"
@@ -1051,17 +1066,20 @@ export function IconeOeilBarre({ taille = 20, classe = "", trait = 1.8 }: Propri
 export function IconeEnveloppe({ taille = 20, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
+      {/*  nº 812 — corps de 16,5 × 12 (17,5 × 12,5 à la nº 811), coins
+           de 2,5, rabat resserré d'autant : plus d'air autour d'un
+           trait fin. */}
       <rect
-        x="3.25"
-        y="5.75"
-        width="17.5"
-        height="12.5"
-        rx="2.75"
+        x="3.75"
+        y="6"
+        width="16.5"
+        height="12"
+        rx="2.5"
         stroke="currentColor"
         strokeWidth={trait}
       />
       <path
-        d="M4.25 8.25 10.7 12.9a2.2 2.2 0 0 0 2.6 0l6.45-4.65"
+        d="M4.75 8.5 10.85 12.9a2 2 0 0 0 2.3 0l6.1-4.4"
         stroke="currentColor"
         strokeWidth={trait}
         strokeLinecap="round"
@@ -1137,15 +1155,18 @@ export function IconeCadenas({ taille = 20, classe = "" }: ProprietesIcone) {
 export function IconeDoubleCoche({ taille = 20, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
+      {/*  nº 812 — les deux coches reprennent l'ouverture de la coche
+           simple redessinée à cette passe, un quart d'unité en retrait
+           des bords. */}
       <path
-        d="M2.75 12.75 7.25 17.25 15 8.75"
+        d="M3 12.75 7.25 17 14.75 9"
         stroke="currentColor"
         strokeWidth={trait}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
-        d="M11.75 16 13.25 17.25 21.25 8.75"
+        d="M11.75 15.75 13.25 17 21 9"
         stroke="currentColor"
         strokeWidth={trait}
         strokeLinecap="round"
@@ -1163,8 +1184,10 @@ export function IconeDoubleCoche({ taille = 20, classe = "", trait = 1.8 }: Prop
 export function IconeCroix({ taille = 20, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
+      {/*  nº 812 — deux traits de 7,25 à 16,75 : un quart d'unité plus
+           ramassée encore, pour le trait fin. */}
       <path
-        d="M7 7l10 10M17 7 7 17"
+        d="M7.25 7.25l9.5 9.5M16.75 7.25l-9.5 9.5"
         stroke="currentColor"
         strokeWidth={trait}
         strokeLinecap="round"
@@ -1257,9 +1280,12 @@ export function IconeUneColonne({ taille = 20, classe = "" }: ProprietesIcone) {
 export function IconeHorsLigne({ taille = 16, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
-      <path d="M12 4v7.75" stroke="currentColor" strokeWidth={trait} strokeLinecap="round" />
+      {/*  nº 812 — arc de rayon 7,25 centré à 12,25 (7,5 à la nº 811),
+           trait de 4,25 à 11,75 : la même ouverture, un peu plus
+           d'air pour le trait fin. */}
+      <path d="M12 4.25v7.5" stroke="currentColor" strokeWidth={trait} strokeLinecap="round" />
       <path
-        d="M7.05 6.55A7.5 7.5 0 1 0 16.95 6.55"
+        d="M7.24 6.78A7.25 7.25 0 1 0 16.76 6.78"
         stroke="currentColor"
         strokeWidth={trait}
         strokeLinecap="round"
@@ -1377,15 +1403,19 @@ export function IconeCloche({ taille = 20, classe = "", trait = 1.8 }: Propriete
       pour le corps, comme avant. */
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
+      {/*  nº 812 — dôme de rayon 4 (4,25 à la nº 811), flancs jusqu'à
+           11, épaules qui s'évasent de 6,25 à 17,75 au rebord (15,75),
+           battant de rayon 1,6 : une cloche plus svelte encore, pour
+           un trait fin. */}
       <path
-        d="M12 4.25a4.25 4.25 0 0 0-4.25 4.25v2.35c0 2.35-.9 3.8-1.9 5.05h12.3c-1-1.25-1.9-2.7-1.9-5.05V8.5A4.25 4.25 0 0 0 12 4.25Z"
+        d="M12 4.75a4 4 0 0 0-4 4v2.25c0 2.25-.85 3.6-1.75 4.75h11.5c-.9-1.15-1.75-2.5-1.75-4.75V8.75a4 4 0 0 0-4-4Z"
         stroke="currentColor"
         strokeWidth={trait}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
-        d="M10.25 18.4a1.75 1.75 0 0 0 3.5 0"
+        d="M10.4 18.4a1.6 1.6 0 0 0 3.2 0"
         stroke="currentColor"
         strokeWidth={trait}
         strokeLinecap="round"
@@ -1419,22 +1449,26 @@ export function IconePlus({ taille = 18, classe = "" }: ProprietesIcone) {
 export function IconeCorbeille({ taille = 20, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
+      {/*  nº 812 — couvercle de 5 à 19, poignée de 9,75 à 14,25, corps
+           de 6,5 à 17,5 qui s'affine jusqu'à 19,75, rainures de 10,75
+           à 16,5 : un quart d'unité de retrait partout, pour le trait
+           fin. Quatre tracés, comme à la nº 811. */}
       <path
-        d="M4.5 7h15M9.5 7V5.5A1.5 1.5 0 0 1 11 4h2a1.5 1.5 0 0 1 1.5 1.5V7"
+        d="M5 7.25h14M9.75 7.25V5.75A1.5 1.5 0 0 1 11.25 4.25h1.5a1.5 1.5 0 0 1 1.5 1.5v1.5"
         stroke="currentColor"
         strokeWidth={trait}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
-        d="M6.25 7l.85 11.2A1.9 1.9 0 0 0 9 20h6a1.9 1.9 0 0 0 1.9-1.8L17.75 7"
+        d="M6.5 7.25l.8 10.75A1.8 1.8 0 0 0 9.1 19.75h5.8a1.8 1.8 0 0 0 1.8-1.75L17.5 7.25"
         stroke="currentColor"
         strokeWidth={trait}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
-        d="M10.25 10.5v6.25M13.75 10.5v6.25"
+        d="M10.4 10.75v5.75M13.6 10.75v5.75"
         stroke="currentColor"
         strokeWidth={trait}
         strokeLinecap="round"

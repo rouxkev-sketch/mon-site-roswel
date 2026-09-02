@@ -458,13 +458,22 @@ export function FenetreLangue({
                que d'aligner de mon chef : la consigne ne vise que
                « Langue ». Les deux fenêtres divergent donc d'un trait,
                et c'est une décision, pas un oubli. */}
-          <div className="flex flex-col gap-3 p-5">
+          {/*  ██ nº 812 — DE L'AIR AUTOUR DU TITRE ██
+               Le propriétaire trouvait tout serré : « Language »
+               collait au bord haut et à l'encadré. Mesuré avant : 20 px
+               au-dessus (le `p-5`) et 20 px en dessous (`mb-2` + le
+               `gap-3`). Désormais 24 et 24 — les mêmes que le menu du
+               visiteur, plus bas : le haut de la colonne passe à
+               `pt-6`, le titre prend `mb-3` (12) devant le `gap-3`
+               (12). Les côtés et le bas ne bougent pas (`px-5 pb-5`) ;
+               le titre et la croix gardent rang et place. */}
+          <div className="flex flex-col gap-3 px-5 pt-6 pb-5">
             {/*  LE GLOBE DEVANT LE TITRE (nº 658) — « dans le même
                  style que les icônes de la fenêtre Mon compte » : rang
                  20, blanc à 80 %, et 10 px d'écart au mot. C'est
                  exactement la cloche de « Notifications », au
                  caractère — un seul dessin de titre pour les deux. */}
-            <div className="mb-2 flex items-center gap-2.5">
+            <div className="mb-3 flex items-center gap-2.5">
               <IconeMonde taille={20} classe="shrink-0 text-sombre-texte/80" />
               <h2 className="flex-1 min-w-0 text-[17px] font-bold tracking-tight text-sombre-texte">
                 Language
@@ -732,7 +741,15 @@ export function SelecteurLangue({ hauteur = 40 }: { hauteur?: number }) {
                bord se lirait comme un débordement. La largeur de 290 px,
                elle, ne bouge toujours pas — ce menu-ci n'a jamais été
                visé par les consignes de largeur. */
-          className="flex flex-col gap-3 p-3"
+          /*  ██ nº 812 — DE L'AIR AUTOUR DU TITRE ██
+               Le propriétaire trouvait tout serré : « Language » collait
+               au bord haut et à l'encadré — 12 px de chaque côté (le
+               `p-3` et le `gap-3`). Désormais 24 et 24 : `pt-6` en haut
+               de la colonne, `mb-3` sous la rangée du titre (12, plus le
+               `gap-3`). Les côtés et le bas gardent leurs 12 px ; la
+               largeur de 290 ne bouge pas. Le menu du compte (plus haut)
+               reçoit les mêmes 24 / 24. */
+          className="flex flex-col gap-3 px-3 pt-6 pb-3"
         >
           {/*  ██ §3 (nº 658) — LE TITRE ET SON GLOBE, ICI AUSSI ██
                Le propriétaire les veut sur les DEUX menus de langue :
@@ -744,10 +761,9 @@ export function SelecteurLangue({ hauteur = 40 }: { hauteur?: number }) {
                n'en a jamais eu. Il se referme par Échap, par un clic à
                côté ou par un choix — lui en poser une maintenant serait
                un changement que personne n'a demandé.
-               ⚠️ NI `mb-2` NON PLUS : là-bas il rattrapait l'air du
-               haut d'une colonne à 20 px ; ici la colonne en a 12, et
-               le `gap-3` suffit à l'égaler. */}
-          <div className="flex items-center gap-2.5">
+               (Le `mb-3` est arrivé à la nº 812 : l'air sous le titre,
+               voir la note de la colonne.) */}
+          <div className="mb-3 flex items-center gap-2.5">
             <IconeMonde taille={20} classe="shrink-0 text-sombre-texte/80" />
             <h2 className="min-w-0 flex-1 text-[17px] font-bold tracking-tight text-sombre-texte">
               Language

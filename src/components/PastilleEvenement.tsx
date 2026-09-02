@@ -172,22 +172,26 @@ export const GEOMETRIE_PASTILLE: Record<
 };
 
 /**
- * L'ÉPAISSEUR DU TRAIT DE LA FAMILLE, EN PIXELS RENDUS À L'ÉCRAN.
- * ⚠️ CE N'EST PAS LA VALEUR QU'ON PASSE À `strokeWidth` : les icônes
- * sont dessinées dans une `viewBox` de 24 et mises à l'échelle. Un
- * `strokeWidth` de 1,8 rend 1,8 px à 24 px de large, mais seulement
- * 1,35 px à 18 px — c'est pourquoi la même coche paraissait plus maigre
- * dans la liste que dans une fenêtre. `traitPourTaille` fait la règle
- * de trois pour que le trait rende LA MÊME ÉPAISSEUR aux deux tailles,
- * ce que le propriétaire demande au point 6.
- * LA VALEUR : 1,5 px. Plus fin que le 1,8 des grandes icônes d'avant
- * (« traits FINS », point 6) et plus franc que le 1,35 des petites.
+ * L'ÉPAISSEUR DU TRAIT DE LA FAMILLE — EN UNITÉS DU DESSIN, COMME
+ * TOUTES LES ICÔNES DU SITE.
+ * ██ nº 812 — LA RÈGLE DE TROIS DE LA nº 809 EST ANNULÉE ██
+ * La nº 809 faisait rendre le trait à la MÊME épaisseur d'écran aux
+ * deux tailles (1,5 px, par `traitPourTaille` : 2 unités à 18 px, 1,5
+ * à 24). Résultat, vu par le propriétaire : dans la liste, un trait de
+ * 2 unités sur un dessin de 18 px paraît GRAS — plus lourd, à taille
+ * égale, que n'importe quelle icône historique du site, qui porte 1,8
+ * unité quelle que soit sa taille. Il exige des TRAITS FINS, la règle
+ * posée dès la conception des icônes (1,5 à 2 unités), et cohérents
+ * avec les icônes historiques.
+ * LA VALEUR : 1,5 UNITÉ, aux deux tailles — le bas de la fourchette de
+ * la charte, le plus fin qu'elle autorise. Rendu : 1,125 px dans la
+ * liste (18 px), 1,5 px dans une fenêtre (24 px). La famille suit
+ * désormais la même loi que le reste du site : une épaisseur de dessin
+ * fixe, et l'écran la met à l'échelle avec le symbole. (Le « même
+ * pixel aux deux tailles » de la nº 664/809 cède devant cette règle :
+ * c'est une décision du propriétaire, pas un oubli.)
  */
 export const TRAIT_FAMILLE = 1.5;
-
-export function traitPourTaille(taille: number): number {
-  return (TRAIT_FAMILLE * 24) / taille;
-}
 
 /**
  * LE SYMBOLE ARRIVE EN COMPOSANT, PAS EN JSX DÉJÀ FAIT — et c'est ce
@@ -215,7 +219,7 @@ export function PastilleEvenement({
       className={`flex shrink-0 items-center justify-center rounded-full
                   ${boite} ${TON_PASTILLE[ton]} ${classe}`}
     >
-      <Symbole taille={symbole} trait={traitPourTaille(symbole)} />
+      <Symbole taille={symbole} trait={TRAIT_FAMILLE} />
     </span>
   );
 }

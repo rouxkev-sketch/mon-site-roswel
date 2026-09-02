@@ -497,6 +497,8 @@ export function MoteurTatouage({
   //  §2 (nº 293), §3 (nº 294) — LA FENÊTRE DES FILTRES assombrit tout
   //  l'écran, et le bloc qui la porte reste clair. Web uniquement (le
   //  crochet s'en assure).
+  //  nº 812 — plus AUCUN assombrissement : le voile est transparent
+  //  (VoileDeLaPage). Il reste posé pour recevoir le clic à côté.
   useVoileDeLaPage(filtresOuverts, zoneFiltres);
   /** Le bouton rond — le menu de verre se pose sous LUI (nº 238-§3). */
   const boutonFiltres = useRef<HTMLButtonElement>(null);
@@ -1304,12 +1306,22 @@ export function MoteurTatouage({
            critère, comme ARTISTE, LIEU, TECHNIQUE et RENDU, dans la
            même casse et le même style (le composant s'en charge). La
            ville, elle, est déjà écrite juste au-dessus, dans le champ. */}
-      <GroupeBadges titre="Distance" idTitre={`${id}-rayon-titre`} compact>
+      {/*  ██ nº 812 — LES MESURES D'AVANT LA nº 809, « mi » COMPRIS ██
+           La nº 809 avait COMPACTÉ ces cinq pilules (30 px, 12 px,
+           `px-1.5`, 4 px d'écart) pour faire tenir « 5 mi … 100 mi »
+           sur UNE rangée dans la largeur du champ. Le propriétaire y
+           voit une régression de mise en page : typo, airs et écarts
+           d'avant étaient bons, et les pilules s'y affichaient sur
+           DEUX LIGNES — c'était normal et voulu. La disposition
+           d'origine revient exactement : la taille des filtres, sans
+           variante, la rangée qui passe à la ligne (`flex-wrap` du
+           groupe, comme les filtres), et « mi » à la place de « km »
+           dans chaque pilule. Le panneau ne change pas de largeur. */}
+      <GroupeBadges titre="Distance" idTitre={`${id}-rayon-titre`}>
         {RAYONS_TATOUAGE.map((palier) => (
           <BadgeCharte
             key={palier}
             actif={palier === rayonAffiche}
-            compact
             //  ⚠️ SUR PANNEAU (nº 179-§1) : la fenêtre du rayon a pris
             //  le fond du panneau des filtres (`eleve`). Ce qui est
             //  POSÉ dessus grimpe d'autant — exactement la règle de la
@@ -1442,6 +1454,8 @@ export function MoteurTatouage({
             //  le menu des styles du MOTEUR PRINCIPAL, côté web.
             familleSoulignee
             //  §2 (nº 293) — la page s'assombrit derrière ce menu (web).
+            //  nº 812 — plus d'assombrissement : le voile est transparent
+            //  et ne fait plus que recevoir le clic à côté.
             avecVoile
             //  §1 (nº 571) — « Réalisations » et « Flash » restent en
             //  haut du panneau pendant que leurs styles défilent. ICI

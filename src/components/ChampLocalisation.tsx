@@ -444,6 +444,8 @@ export function ChampLocalisation({
   //  (l'encadré style + localité du moteur, pas la seule moitié
   //  droite). Seulement CELUI DU MOTEUR : le champ vit aussi dans le
   //  formulaire de fiche, qui n'a rien demandé.
+  //  nº 812 — plus AUCUN assombrissement : le voile est transparent
+  //  (VoileDeLaPage). Il reste posé pour recevoir le clic à côté.
   useVoileDeLaPage(pourLeMoteur && listeOuverte, racine);
   /**
    * ██ §1 (nº 564) — LE VOILE SE POSE AU CLIC, PLUS À LA LISTE ██

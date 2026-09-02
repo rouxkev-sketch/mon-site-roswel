@@ -85,7 +85,6 @@ export function BadgeCharte({
   surPanneau = false,
   onClick,
   onPointerDown,
-  compact = false,
   children,
 }: {
   actif: boolean;
@@ -94,13 +93,6 @@ export function BadgeCharte({
   /** Le rayon s'en sert : `preventDefault` garde le focus au champ,
       donc le panneau ouvert — on ajuste plusieurs fois de suite. */
   onPointerDown?: (evenement: PointerEvent<HTMLButtonElement>) => void;
-  /** nº 809 — LA TAILLE COMPACTE, pour les pilules de distance du
-      panneau de localité (272 px de large) : « 5 mi … 100 mi » y
-      tiennent sur UNE rangée à 12 px, six pixels de rembourrage et
-      trente de haut — mesuré : 250 px avec la coche allumée, contre
-      386 à la taille des filtres. Même robe, même coche, même ourlet
-      tactile ; seules la typo et les airs changent. */
-  compact?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -135,14 +127,15 @@ export function BadgeCharte({
           l'ourlet `before:`) et robes ne bougent pas d'un pixel.
           §2 (nº 449) — les angles arrondis (8 px, `rounded-lg`)
           restent, partout : page mobile, panneau web, rayon. */
+      /*  nº 812 — UNE SEULE TAILLE, DE NOUVEAU. La variante `compact`
+          de la nº 809 (30 px, 12 px, `px-1.5`, pour les pilules de
+          distance) est retirée : le propriétaire veut leurs mesures
+          d'origine — celles-ci, les seules — et leurs deux lignes. */
       className={`relative inline-flex items-center justify-center
-                 rounded-lg font-semibold transition-colors
+                 rounded-lg px-4 min-h-[38px] text-[13.5px]
+                 font-semibold transition-colors
                  before:absolute before:-inset-y-[3px] before:inset-x-0
-                 before:content-[''] ${
-                   compact
-                     ? "px-1.5 min-h-[30px] text-[12px]"
-                     : "px-4 min-h-[38px] text-[13.5px]"
-                 } ${robeDuBadge(actif, surPanneau)}`}
+                 before:content-[''] ${robeDuBadge(actif, surPanneau)}`}
     >
       {/*  ██ §1 (nº 606) — LA COCHE, ET ELLE SEULE QUAND C'EST ALLUMÉ ██
            ----------------------------------------------------------
@@ -255,14 +248,10 @@ export function GroupeBadges({
   titre,
   idTitre,
   classe = "",
-  compact = false,
   children,
 }: {
   titre: ReactNode;
   idTitre: string;
-  /** nº 809 — l'air entre badges compacts (4 px au lieu de 8) : la
-      rangée des cinq pilules de distance, voir `BadgeCharte`. */
-  compact?: boolean;
   /** §1 (nº 448) — un habillage PONCTUEL du groupe, passé par
       l'appelant (l'air mobile au-dessus de « Rendu ») : jamais une
       couleur, jamais une structure — une respiration. */
@@ -282,7 +271,7 @@ export function GroupeBadges({
       >
         {titre}
       </p>
-      <div className={`mt-2.5 flex flex-wrap ${compact ? "gap-1" : "gap-2"}`}>
+      <div className="mt-2.5 flex flex-wrap gap-2">
         {children}
       </div>
     </div>

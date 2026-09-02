@@ -499,7 +499,9 @@ export function FenetreNotifications({
       AUTREMENT ██
       La fenêtre centrée portait SON voile (un bouton noir à 25 % sur
       tout l'écran) : il assombrissait la page ET refermait au clic. Un
-      menu ancré n'en a pas. Les deux services sont rendus par les
+      menu ancré n'en a pas. (nº 812 — le voile de la page ne s'assombrit
+      plus : transparent, il ne rend plus que le second service, le clic
+      à côté qui referme.) Les deux services sont rendus par les
       mécanismes que « Mon compte » emploie déjà, jamais par un second :
        · l'ASSOMBRISSEMENT par le VOILE DE LA PAGE (nº 293/294), qui
          épargne le bloc d'où la surface est partie et se perce au lieu

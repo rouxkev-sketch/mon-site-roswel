@@ -350,6 +350,8 @@ export function MenuEspace({
   //  §2 (nº 293), §3 (nº 294) — LA FENÊTRE DU COMPTE assombrit tout
   //  l'écran, et son déclencheur reste clair. Web uniquement : le
   //  crochet s'écarte de lui-même au doigt.
+  //  nº 812 — plus AUCUN assombrissement : le voile est transparent
+  //  (VoileDeLaPage). Il reste posé pour recevoir le clic à côté.
   /**
    * ██ §2 (nº 674) — PLUS DE TROU AUTOUR DE L'AVATAR ██
    * ------------------------------------------------------------------

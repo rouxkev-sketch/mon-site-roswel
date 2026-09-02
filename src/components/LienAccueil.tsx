@@ -93,16 +93,23 @@ export function LienAccueil({
   children,
   className,
   ariaLabel,
+  draggable,
 }: {
   children: React.ReactNode;
   className?: string;
   ariaLabel?: string;
+  /** nº 812 — le logo de la barre passe par ici et garde son
+      `draggable={false}` (une image de lien se laisse « traîner » par
+      défaut, et un clic légèrement glissé partait en glisser-déposer
+      muet au lieu de naviguer). Omis : le défaut du navigateur. */
+  draggable?: boolean;
 }) {
   return (
     <Link
       href={ADRESSE_ACCUEIL}
       aria-label={ariaLabel}
       className={className}
+      draggable={draggable}
       onClick={() => {
         declarerDepartVouluVersLAccueil();
         declarerArriveeEnHaut();

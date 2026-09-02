@@ -297,7 +297,22 @@ export function DefilementEnHaut() {
       return remonterALAdresseCommise(chemin, false);
     }
 
-    if (estLaMosaique(venaitDeLaMosaique) && estLaMosaique(chemin)) {
+    /*  ██ nº 812 — SAUF SI L'ARRIVÉE EN HAUT EST DÉCLARÉE ██
+        La règle du propriétaire (en-tête) vaut pour le MOUVEMENT
+        accueil ↔ recherche, qui n'est pas un changement d'écran. Le
+        LOGO, lui, est un « retour à l'accueil » voulu : jusqu'à cette
+        passe il rechargeait le document (arrivée en haut par nature) ;
+        devenu un lien doux (LienAccueil), il pose la déclaration
+        d'arrivée en haut (nº 446) — que cette branche ignorait, en
+        rendant la main avant de la lire. Mesuré au doigt, depuis la
+        recherche défilée à 400 : l'accueil arrivait à 282 (le bas de
+        la page). Une déclaration EXPLICITE l'emporte donc ici ; sans
+        déclaration, rien ne change : on ne remonte pas. */
+    if (
+      estLaMosaique(venaitDeLaMosaique) &&
+      estLaMosaique(chemin) &&
+      !arriveeEnHautVoulue()
+    ) {
       return;
     }
 
