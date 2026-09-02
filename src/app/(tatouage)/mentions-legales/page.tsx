@@ -345,9 +345,17 @@ export default function PageMentionsLegales() {
              déclarations (nº 429 et nº 446), l'arrivée pouvait rendre
              la place mémorisée de l'accueil — le bas. La page reste
              serveur, seul le lien est client. */}
+        {/*  §2 (nº 799) — LES MESURES DE LA nº 788, COMME LES DEUX
+             CAPSULES DE « QUI SOMMES-NOUS » À LA nº 798. Cette
+             capsule-ci était à 48 px et NE DÉCLARAIT AUCUNE TAILLE DE
+             TEXTE : elle héritait donc celle du corps, 16 px. Elle
+             passe à 40 px et 14 px.
+             ⚠️ RIEN D'AUTRE NE CHANGE : ni `px-6`, ni le contour, ni
+             le survol qui le fait virer au rose. Le propriétaire a
+             demandé la hauteur et la typo. */}
         <LienAccueil
           className="mt-12 inline-flex items-center justify-center rounded-full
-                     px-6 min-h-[48px] border border-sombre-bordure
+                     px-6 min-h-[40px] text-[14px] border border-sombre-bordure
                      text-sombre-texte hover:border-primaire hover:text-primaire
                      transition-colors"
         >

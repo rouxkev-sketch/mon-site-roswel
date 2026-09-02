@@ -37,6 +37,8 @@ import { FournisseurStyles } from "@/components/FournisseurStyles";
 import { JournalDeBord } from "@/components/JournalDeBord";
 import { GardeAvatars } from "@/components/GardeAvatars";
 import { GardeSaisie } from "@/components/GardeSaisie";
+//  §1 (nº 799) — la copie rend du texte, sur TOUT le site.
+import { CopieTexteNu } from "@/components/CopieTexteNu";
 import { RetourGaranti } from "@/components/RetourGaranti";
 import { scriptAvantPeinture } from "@/lib/script-avant-peinture";
 import { chargerStylesAjoutes } from "@/lib/styles-ajoutes";
@@ -219,6 +221,20 @@ export default async function MiseEnPageTatouage({
          groupe, donc vivre dans la mise en page. Éteinte, elle rend
          `null` avant tout et n'arme rien. */}
     <SondeVitesse />
+    {/*  ██ §1 (nº 799) — LA COPIE REND DU TEXTE, PARTOUT ██
+         La nº 798 a posé ce garde sur la seule page « Qui sommes-nous ».
+         Or le défaut n'a jamais été à elle : le fond sombre est posé
+         sur l'enveloppe du site juste en dessous, et c'est LUI que le
+         navigateur recopiait dans le presse-papiers, avec la taille
+         des titres. Le propriétaire l'a revu sur « Mentions légales » ;
+         il l'aurait vu sur n'importe quelle page.
+         Il monte donc ICI, à la racine du groupe : une seule écriture
+         pour tout le site (piège nº 378), et l'exception des champs de
+         saisie vaut du même coup partout — un copier-coller depuis un
+         champ garde le comportement du navigateur.
+         ⚠️ IL NE REND RIEN et n'ajoute aucune règle de style : la
+         feuille CSS ne bouge pas. La note complète est chez lui. */}
+    <CopieTexteNu />
     <div
       // Marqueur du fond sombre — il double la règle CSS de
       // `globals.css`. La vraie garantie est le script plus bas, qui

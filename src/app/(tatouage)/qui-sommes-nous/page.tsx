@@ -6,8 +6,6 @@ import { EnTeteTatouage } from "@/components/EnTeteTatouage";
 import { LogoYokofolio } from "@/components/LogoYokofolio";
 //  §4 (nº 475) — le lien vers l'accueil qui déclare son départ.
 import { LienAccueil } from "@/components/LienAccueil";
-//  §1 (nº 798) — un copier-coller qui rend du texte, pas du décor.
-import { CopieTexteNu } from "@/components/CopieTexteNu";
 
 /**
  * QUI SOMMES-NOUS
@@ -114,14 +112,11 @@ export default function PageQuiSommesNous() {
   return (
     <>
       <EnTeteTatouage />
-      {/*  §1 (nº 798) — CETTE PAGE EST FAITE POUR ÊTRE LUE, DONC POUR
-           ÊTRE COPIÉE. Sans ce garde, le presse-papiers emportait le
-           fond du site et la taille des titres : le collage arrivait
-           surligné d'anthracite, en 46 px. Le composant ne rend rien
-           et ne change aucune mesure — la note complète est chez lui.
-           La page reste un composant serveur : seul ce garde est
-           client, comme `LienAccueil` juste en dessous. */}
-      <CopieTexteNu />
+      {/*  §1 (nº 799) — LE GARDE DE COPIE A DÉMÉNAGÉ. La nº 798 le
+           montait ici, sur cette seule page ; il vit désormais dans
+           l'habillage du groupe (src/app/(tatouage)/layout.tsx), donc
+           sur tout le site — le défaut n'avait jamais été propre à
+           cette page. Une seule écriture, un seul endroit. */}
 
       <main className="flex-1 mx-auto w-full max-w-[720px] px-5 sm:px-6 pt-12 sm:pt-16 pb-24">
         {/* L'ILLUSTRATION : le cœur du site, en grand. C'est le seul

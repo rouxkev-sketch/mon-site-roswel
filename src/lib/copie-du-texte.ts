@@ -40,12 +40,45 @@
  * ⚠️ CE FICHIER NE DÉPEND DE RIEN, comme `millesime-script` : il est
  * importé par des composants CLIENT, et une seule écriture sert tous
  * les liens qui portent du texte à copier.
+ *
+ * ██ §1 (nº 799) — LA MÊME RÈGLE SERT MAINTENANT TOUT LE SITE ██
+ * ------------------------------------------------------------------
+ * La nº 798 a trouvé un SECOND défaut de copie, sans rapport avec
+ * celui de la nº 514 : le presse-papiers recevait aussi une version
+ * HABILLÉE du texte (`text/html`), où le navigateur avait recopié le
+ * fond sombre du site et la taille des titres — d'où un collage
+ * surligné d'anthracite, en 46 px.
+ * ET LE REMÈDE EST LE MÊME, AU MOT PRÈS : poser soi-même le texte nu,
+ * et rien d'autre. En posant `text/plain` et en empêchant le
+ * navigateur d'agir, on ne lui laisse plus déposer AUCUNE version
+ * habillée. La nº 798 avait réécrit cette logique dans un composant à
+ * elle : c'était le piège nº 378, deux écritures pour une seule règle.
+ * Elle est revenue ici, et `CopieTexteNu` — le garde monté à la racine
+ * du site — ne fait plus qu'APPELER cette fonction.
+ * ⚠️ LES `onCopy` POSÉS ÉLÉMENT PAR ÉLÉMENT (CarteTatoueur, BlocLieux,
+ * CarteStyle, BlocSuivis) DEVIENNENT REDONDANTS avec le garde global,
+ * mais ils ne nuisent pas : ils appliquent la même règle, une fraction
+ * de milliseconde plus tôt, et posent la même valeur. On ne les touche
+ * pas dans cette passe — les retirer se mesure et se vérifie, ça ne se
+ * fait pas en passant.
  */
-import type { ClipboardEvent } from "react";
 
-export function garderLeTexteALaCopie(evenement: ClipboardEvent) {
+/** Ce dont la règle a besoin, et rien de plus. Deux mondes appellent
+    cette fonction et leurs types diffèrent : l'événement de React
+    (par `onCopy`) et celui du DOM (par `addEventListener`). Tous deux
+    portent ces deux membres — c'est la seule chose qui compte. */
+type EvenementDeCopie = {
+  clipboardData: Pick<DataTransfer, "setData"> | null;
+  preventDefault(): void;
+};
+
+export function garderLeTexteALaCopie(evenement: EvenementDeCopie) {
   const vu = window.getSelection()?.toString() ?? "";
   if (!vu) return;
+  //  Pas de presse-papiers sur l'événement : rien à faire, et surtout
+  //  pas de `preventDefault` — on ne bloque pas une copie qu'on ne
+  //  saurait pas remplacer.
+  if (!evenement.clipboardData) return;
   evenement.clipboardData.setData("text/plain", vu);
   evenement.preventDefault();
 }
