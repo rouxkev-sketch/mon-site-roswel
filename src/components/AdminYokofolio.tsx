@@ -140,8 +140,38 @@ type Signalement = {
   cree_le: string;
 };
 
+/**
+ * ██ UN MESSAGE DU FORMULAIRE DE CONTACT (nº 801) ██
+ * L'API n'en sert que ces cinq colonnes — l'IP reste en base et n'en
+ * sort jamais (voir api/admin/yokofolio/messages).
+ * ⚠️ `traite` EST LE « LU ». La colonne existe depuis la création de
+ * la table et ne servait à rien ; l'écran l'appelle « lu », ce que le
+ * propriétaire a demandé. On ne renomme pas une colonne pour un mot.
+ */
+type MessageContact = {
+  id: number;
+  nom: string;
+  email: string;
+  message: string;
+  traite: boolean;
+  cree_le: string;
+};
+
+/** §1 (nº 801) — L'HABIT DE LA PASTILLE DE COMPTEUR DES MENUS, écrit
+    une seule fois : les signalements et les messages la portent, et
+    toute section future la portera aussi. */
+const PASTILLE_COMPTEUR =
+  "ml-2 inline-flex items-center justify-center rounded-full bg-primaire " +
+  "px-2 min-h-[20px] text-[11.5px] text-white";
+
 const SECTIONS = [
   { cle: "fiches", libelle: "Portfolios à valider" },
+  //  ██ nº 801 — LES MESSAGES DU FORMULAIRE DE CONTACT ██
+  //  Ils arrivaient en base sans que personne ne puisse les lire : le
+  //  seul chemin vers eux était un courriel envoyé à `CONTACT_EMAIL`.
+  //  Un envoi qui échoue, une boîte mal rangée, et le message
+  //  n'existait plus pour personne. Il a maintenant son écran.
+  { cle: "messages", libelle: "Messages" },
   { cle: "signalements", libelle: "Signalements" },
   //  LES STYLES PROPOSÉS PAR LES TATOUEURS (passe nº 122). Accepter
   //  en ajoute un au catalogue du site ; refuser clôt la demande. Dans
@@ -403,6 +433,10 @@ export function AdminYokofolio() {
   const [saisieSuppression, setSaisieSuppression] = useState("");
   const suppressionConfirmee =
     saisieSuppression.trim().toLowerCase() === "supprimer";
+  /* ---- Messages du formulaire de contact (nº 801) ---- */
+  const [messages, setMessages] = useState<MessageContact[] | null>(null);
+  const [erreurMessages, setErreurMessages] = useState<string | null>(null);
+
   /* ---- Signalements ---- */
   const [signalements, setSignalements] = useState<Signalement[] | null>(null);
   const [erreurSignalements, setErreurSignalements] = useState<string | null>(
@@ -521,6 +555,64 @@ export function AdminYokofolio() {
     }
   }, []);
 
+  /*  §1 (nº 801) — LA LECTURE DES MESSAGES, sur le patron exact de
+      `chargerSignalements` juste en dessous : même forme de réponse,
+      même traitement de l'échec, même remise à zéro de l'erreur en cas
+      de succès. Deux listes voisines qui se liraient différemment
+      finiraient par se comporter différemment. */
+  const chargerMessages = useCallback(async () => {
+    try {
+      const reponse = await fetch("/api/admin/yokofolio/messages");
+      const donnees = (await reponse.json()) as {
+        ok?: boolean;
+        messages?: MessageContact[];
+        message?: string;
+      };
+      if (!reponse.ok || !donnees.ok) throw new Error(donnees.message);
+      setMessages(donnees.messages ?? []);
+      setErreurMessages(null);
+    } catch (e) {
+      setMessages([]);
+      setErreurMessages(
+        e instanceof Error ? e.message : "Lecture des messages impossible."
+      );
+    }
+  }, []);
+
+  /*  §1 (nº 801) — LU / NON LU. On pose l'état DANS LA FOULÉE, sans
+      attendre le serveur : la bascule d'un booléen ne se discute pas,
+      et faire clignoter la liste à chaque clic serait pire que le mal.
+      Si le serveur refuse, on remet la valeur d'avant ET on le dit —
+      on ne laisse jamais l'écran mentir sur ce qui est enregistré. */
+  const basculerLuMessage = useCallback(
+    async (id: number, lu: boolean) => {
+      setMessages((liste) =>
+        liste?.map((m) => (m.id === id ? { ...m, traite: lu } : m)) ?? liste
+      );
+      try {
+        const reponse = await fetch("/api/admin/yokofolio/messages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, lu }),
+        });
+        const donnees = (await reponse.json().catch(() => null)) as {
+          ok?: boolean;
+          message?: string;
+        } | null;
+        if (!reponse.ok || !donnees?.ok) throw new Error(donnees?.message);
+        setErreurMessages(null);
+      } catch (e) {
+        setMessages((liste) =>
+          liste?.map((m) => (m.id === id ? { ...m, traite: !lu } : m)) ?? liste
+        );
+        setErreurMessages(
+          e instanceof Error ? e.message : "L'enregistrement n'a pas abouti."
+        );
+      }
+    },
+    []
+  );
+
   const chargerSignalements = useCallback(async () => {
     try {
       const reponse = await lireDuServeur("/api/admin/yokofolio/signalements");
@@ -547,6 +639,7 @@ export function AdminYokofolio() {
     // section A → B → A ne relance rien d'inutile.
     const minuteur = window.setTimeout(() => {
       if (section === "fiches" && fiches === null) chargerFiches();
+      if (section === "messages" && messages === null) chargerMessages();
       if (section === "signalements" && signalements === null) {
         chargerSignalements();
       }
@@ -564,10 +657,12 @@ export function AdminYokofolio() {
     admin,
     section,
     fiches,
+    messages,
     signalements,
     suggestions,
     conventions,
     chargerFiches,
+    chargerMessages,
     chargerSignalements,
     chargerSuggestions,
     chargerConventions,
@@ -1016,8 +1111,20 @@ export function AdminYokofolio() {
               {entree.libelle}
               {entree.cle === "signalements" &&
                 (signalements?.filter((s) => !s.traite).length ?? 0) > 0 && (
-                  <span className="ml-2 inline-flex items-center justify-center rounded-full bg-primaire px-2 min-h-[20px] text-[11.5px] text-white">
+                  <span className={PASTILLE_COMPTEUR}>
                     {signalements!.filter((s) => !s.traite).length}
+                  </span>
+                )}
+              {/*  §1 (nº 801) — LE BADGE DES MESSAGES NON LUS, dans
+                   l'habit exact de celui des signalements : c'est la
+                   MÊME écriture, sortie dans `PASTILLE_COMPTEUR` pour
+                   qu'aucune des deux ne dérive de l'autre (piège
+                   nº 378). Il ne paraît qu'à partir de un — un « 0 »
+                   permanent ferait du compteur le sujet du menu. */}
+              {entree.cle === "messages" &&
+                (messages?.filter((m) => !m.traite).length ?? 0) > 0 && (
+                  <span className={PASTILLE_COMPTEUR}>
+                    {messages!.filter((m) => !m.traite).length}
                   </span>
                 )}
             </button>
@@ -1697,6 +1804,98 @@ export function AdminYokofolio() {
                 </div>
               </div>
             )}
+          </>
+        )}
+
+        {/*  ██ §1 (nº 801) — L'ÉCRAN DES MESSAGES ██
+             Le patron est celui des signalements juste en dessous :
+             même titre, même bande d'erreur, même habillage d'attente,
+             même phrase quand la liste est vide, même carte. Deux
+             listes voisines qui se dessineraient différemment
+             donneraient deux admins dans un seul.
+             ⚠️ L'ORDRE EST CELUI DU TEMPS, du plus récent au plus
+             ancien, et il ne bouge pas à la lecture : marquer un
+             message lu le ferait changer de place si l'on triait par
+             état, et l'œil perdrait ce qu'il vient de lire. C'est la
+             PASTILLE qui dit le non-lu, pas le rang. */}
+        {section === "messages" && (
+          <>
+            <h1 className="text-[22px] font-bold text-sombre-texte">
+              Messages
+            </h1>
+            {erreurMessages && (
+              <p className={`mt-4 ${ERREUR}`}>{erreurMessages}</p>
+            )}
+            <div className="mt-5 flex flex-col gap-2.5">
+              {messages === null && (
+                <Patience>
+                  <SqueletteLignes nombre={3} />
+                </Patience>
+              )}
+              {messages?.length === 0 && !erreurMessages && (
+                <p className="rounded-xl bg-sombre-carte px-4 py-5 text-sombre-texte-doux">
+                  Aucun message pour l&apos;instant.
+                </p>
+              )}
+              {messages?.map((m) => (
+                <article
+                  key={m.id}
+                  //  L'ÉTAT SE VOIT AVANT DE SE LIRE : un message lu
+                  //  s'efface (fond atténué, opacité), comme un
+                  //  signalement archivé. Le non-lu garde le fond
+                  //  plein — c'est lui qui doit attirer l'œil.
+                  className={`rounded-xl px-5 py-4 ${
+                    m.traite ? "bg-sombre-carte/50 opacity-70" : "bg-sombre-carte"
+                  }`}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="min-w-0 font-semibold text-sombre-texte [overflow-wrap:anywhere]">
+                      {/*  LA PASTILLE DU NON-LU : un point, pas un mot.
+                           Elle se double du `title` pour qui survole et
+                           d'un texte lu par les lecteurs d'écran — une
+                           couleur seule n'est pas une information. */}
+                      {!m.traite && (
+                        <span
+                          aria-hidden="true"
+                          title="Non lu"
+                          className="mr-2 inline-block h-[8px] w-[8px] rounded-full bg-primaire align-middle"
+                        />
+                      )}
+                      {!m.traite && <span className="sr-only">Non lu — </span>}
+                      {m.nom}
+                    </p>
+                    <p className="text-[12.5px] text-sombre-texte-doux">
+                      {dateCourte(m.cree_le)}
+                    </p>
+                  </div>
+                  {/*  L'ADRESSE EST CLIQUABLE : répondre est la seule
+                       chose qu'on fait d'un message, et l'écrire à la
+                       main depuis un écran est une occasion de faute. */}
+                  <p className="mt-1 text-[13.5px] [overflow-wrap:anywhere]">
+                    <a
+                      href={`mailto:${m.email}`}
+                      className="text-sombre-texte-doux hover:text-primaire transition-colors"
+                    >
+                      {m.email}
+                    </a>
+                  </p>
+                  <p className="mt-2.5 text-[14px] leading-relaxed text-sombre-texte whitespace-pre-line [overflow-wrap:anywhere]">
+                    {m.message}
+                  </p>
+                  <div className="mt-3 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => basculerLuMessage(m.id, !m.traite)}
+                      className="rounded-full px-4 min-h-[34px] text-[13px] font-semibold
+                                 text-sombre-texte-doux hover:text-sombre-texte
+                                 hover:bg-sombre-eleve transition-colors"
+                    >
+                      {m.traite ? "Marquer non lu" : "Marquer lu"}
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
           </>
         )}
 
