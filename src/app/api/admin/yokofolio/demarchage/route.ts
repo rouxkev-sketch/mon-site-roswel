@@ -60,7 +60,7 @@ import {
  */
 
 const SANS_MIGRATION =
-  "La migration nº 52 (yokofolio-demarchage.sql) n'est pas passée : les tables du démarchage n'existent pas encore.";
+  "Migration no. 52 (yokofolio-demarchage.sql) hasn't been applied: the outreach tables don't exist yet.";
 
 function tableAbsente(message: string): boolean {
   const texte = message.toLowerCase();
@@ -103,7 +103,7 @@ const CHAMPS_FICHE =
 function fichePourEcran(f: LigneFiche) {
   return {
     id: f.id,
-    nom: f.nom ?? "(sans nom)",
+    nom: f.nom ?? "(unnamed)",
     slug: f.slug,
     ville: f.ville_nom,
     type: typeDeLaFiche(f),
@@ -280,7 +280,7 @@ export async function GET() {
     return NextResponse.json(
       {
         ok: false,
-        message: e instanceof Error ? e.message : "Lecture impossible.",
+        message: e instanceof Error ? e.message : "Couldn't load.",
       },
       { status: 500 }
     );
@@ -305,7 +305,7 @@ export async function POST(requete: NextRequest) {
     const demandees = Array.isArray(corps.fiches) ? corps.fiches : [];
     if (demandees.length === 0) {
       return NextResponse.json(
-        { ok: false, message: "Aucune fiche cochée." },
+        { ok: false, message: "No portfolio checked." },
         { status: 400 }
       );
     }
@@ -327,7 +327,7 @@ export async function POST(requete: NextRequest) {
     const fiches = (lecture.data ?? []) as unknown as LigneFiche[];
     if (fiches.length !== demandees.length) {
       return NextResponse.json(
-        { ok: false, message: "Une des fiches est introuvable." },
+        { ok: false, message: "One of the portfolios can't be found." },
         { status: 404 }
       );
     }
@@ -339,7 +339,7 @@ export async function POST(requete: NextRequest) {
         {
           ok: false,
           message:
-            "Le démarchage ne concerne QUE les fiches d'un compte administrateur.",
+            "Outreach is ONLY for portfolios of an admin account.",
         },
         { status: 403 }
       );
@@ -366,7 +366,7 @@ export async function POST(requete: NextRequest) {
         {
           ok: false,
           message:
-            "Une de ces fiches a déjà été démarchée : elle porte déjà un lien.",
+            "One of these portfolios was already reached out to: it already has a link.",
         },
         { status: 409 }
       );
@@ -384,7 +384,7 @@ export async function POST(requete: NextRequest) {
     const repris = typeof corps.jeton === "string" ? corps.jeton : "";
     if (!enApercu && repris && !JETON_ATTENDU.test(repris)) {
       return NextResponse.json(
-        { ok: false, message: "Jeton mal formé." },
+        { ok: false, message: "Malformed token." },
         { status: 400 }
       );
     }
@@ -432,7 +432,7 @@ export async function POST(requete: NextRequest) {
       .maybeSingle();
     if (creation.error) throw new Error(creation.error.message);
     const envoi = creation.data as unknown as LigneEnvoi | null;
-    if (!envoi) throw new Error("L'envoi n'a pas pu être créé.");
+    if (!envoi) throw new Error("The send couldn't be created.");
 
     const rattachement = await admin.from("demarchage_fiches").insert(
       demandees.map((id) => ({ demarchage_id: envoi.id, tatoueur_id: id }))
@@ -463,7 +463,7 @@ export async function POST(requete: NextRequest) {
     return NextResponse.json(
       {
         ok: false,
-        message: e instanceof Error ? e.message : "Création impossible.",
+        message: e instanceof Error ? e.message : "Couldn't create.",
       },
       { status: 500 }
     );
@@ -506,7 +506,7 @@ export async function DELETE(requete: NextRequest) {
     const id = typeof corps.id === "string" ? corps.id.trim() : "";
     if (!id) {
       return NextResponse.json(
-        { ok: false, message: "Envoi non désigné." },
+        { ok: false, message: "No send specified." },
         { status: 400 }
       );
     }
@@ -529,7 +529,7 @@ export async function DELETE(requete: NextRequest) {
     const envoi = lecture.data as unknown as LigneEnvoi | null;
     if (!envoi) {
       return NextResponse.json(
-        { ok: false, message: "Cet envoi n'existe plus." },
+        { ok: false, message: "This send no longer exists." },
         { status: 404 }
       );
     }
@@ -538,7 +538,7 @@ export async function DELETE(requete: NextRequest) {
         {
           ok: false,
           message:
-            "Cet envoi a déjà été suivi d'un geste du tatoueur : il ne s'annule plus.",
+            "The artist already acted on this send: it can't be canceled anymore.",
         },
         { status: 409 }
       );
@@ -552,7 +552,7 @@ export async function DELETE(requete: NextRequest) {
     return NextResponse.json(
       {
         ok: false,
-        message: e instanceof Error ? e.message : "Annulation impossible.",
+        message: e instanceof Error ? e.message : "Couldn't cancel.",
       },
       { status: 500 }
     );

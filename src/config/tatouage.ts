@@ -159,9 +159,9 @@ export const LANGUES_YOKOFOLIO = [
  * barre d'adresse, ni à un copier-coller, ni à un clavier français.
  */
 export const STYLES_TATOUAGE = [
-  { slug: "realisme", label: "Réalisme", couleur: "#3C4650" },
+  { slug: "realisme", label: "Realism", couleur: "#3C4650" },
   { slug: "fine-line", label: "Fine Line", couleur: "#6E5B7B" },
-  { slug: "minimaliste", label: "Minimaliste", couleur: "#4A4A55" },
+  { slug: "minimaliste", label: "Minimalist", couleur: "#4A4A55" },
   /**
    * ██ §2 (nº 400) — L'ÉTIQUETTE « MONOCHROME » ██
    * Un style ENTIÈREMENT NOIR : lui demander « noir et gris ou
@@ -176,8 +176,8 @@ export const STYLES_TATOUAGE = [
    */
   { slug: "blackwork", label: "Blackwork", couleur: "#26262B", monochrome: true },
   { slug: "dotwork", label: "Dotwork", couleur: "#4E4A42" },
-  { slug: "geometrique", label: "Géométrique", couleur: "#3B5B7A" },
-  { slug: "ornemental", label: "Ornemental", couleur: "#6B5540" },
+  { slug: "geometrique", label: "Geometric", couleur: "#3B5B7A" },
+  { slug: "ornemental", label: "Ornamental", couleur: "#6B5540" },
   { slug: "old-school", label: "Old School", couleur: "#A2402F" },
   /**
    * ██ §1 (nº 401) — LE LIBELLÉ PASSE EN FRANÇAIS ██
@@ -194,13 +194,13 @@ export const STYLES_TATOUAGE = [
    * formulaire, titres de galerie, fiches, cartes, vitrines et données
    * structurées suivent sans être touchés.
    */
-  { slug: "neo-traditionnel", label: "Néo-traditionnel", couleur: "#7A3A55" },
+  { slug: "neo-traditionnel", label: "Neo-traditional", couleur: "#7A3A55" },
   { slug: "new-school", label: "New School", couleur: "#8A5A2E" },
   //  §1 (nº 291) — IL FIGURE AUSSI DANS « Cultures du monde », SANS
   //  quitter le premier niveau (voir `aussi`, plus bas). Un seul
   //  style, un seul slug, un seul jeu de photos : il se montre à deux
   //  endroits, il ne se compte jamais deux fois.
-  { slug: "japonais", label: "Japonais · Irezumi", couleur: "#1F4E5F" },
+  { slug: "japonais", label: "Japanese · Irezumi", couleur: "#1F4E5F" },
   //  §1 (nº 291) — CHICANO NE BOUGE PAS : premier niveau, à sa lettre.
   { slug: "chicano", label: "Chicano", couleur: "#57544B" },
   //  §1 (nº 291) — DÉPLACÉ dans « Cultures du monde » : il quitte le
@@ -208,16 +208,16 @@ export const STYLES_TATOUAGE = [
   //  fiches qui le portent ne bougent pas — une famille est un
   //  RANGEMENT, jamais une donnée.
   { slug: "tribal", label: "Tribal", couleur: "#3E3E36" },
-  { slug: "aquarelle", label: "Aquarelle", couleur: "#4C6470" },
-  { slug: "illustratif", label: "Illustratif", couleur: "#705E48" },
+  { slug: "aquarelle", label: "Watercolor", couleur: "#4C6470" },
+  { slug: "illustratif", label: "Illustrative", couleur: "#705E48" },
   { slug: "anime-manga", label: "Anime & Manga", couleur: "#6E4A62" },
-  { slug: "abstrait", label: "Abstrait", couleur: "#565066" },
+  { slug: "abstrait", label: "Abstract", couleur: "#565066" },
   { slug: "trash-polka", label: "Trash Polka", couleur: "#77303A" },
-  { slug: "biomecanique", label: "Biomécanique", couleur: "#44575B" },
+  { slug: "biomecanique", label: "Biomechanical", couleur: "#44575B" },
   //  ⚠️ SCINDÉ DE « Biomécanique / Organique » (nº 230-§2) : deux
   //  styles distincts. Le slug historique reste à « Biomécanique »
   //  (un slug publié ne change pas), « Organique » en reçoit un neuf.
-  { slug: "organique", label: "Organique", couleur: "#4B5F52" },
+  { slug: "organique", label: "Organic", couleur: "#4B5F52" },
   { slug: "ignorant-style", label: "Ignorant Style", couleur: "#54505B" },
   { slug: "cyber-tribal", label: "Cyber-tribal", couleur: "#474077" },
   //  ⚠️ SCINDÉ DE « Cyber-tribal / Cyberpunk » (nº 230-§2), même
@@ -236,22 +236,22 @@ export const STYLES_TATOUAGE = [
   //  jamais les fusionner : la Biomécanique met du MÉTAL sous la peau,
   //  le Bio-organique de la CHAIR, de l'os, du tendon. Deux styles,
   //  deux publics.
-  { slug: "bio-mecha", label: "Bio-organique", couleur: "#4A4550" },
+  { slug: "bio-mecha", label: "Bio-organic", couleur: "#4A4550" },
   { slug: "chrome", label: "Chrome", couleur: "#5A6068" },
   { slug: "cyber-sigilism", label: "Cyber-sigilism", couleur: "#3E3A5C" },
-  { slug: "gravure", label: "Gravure", couleur: "#4E4740" },
+  { slug: "gravure", label: "Engraving", couleur: "#4E4740" },
   { slug: "one-line", label: "One Line", couleur: "#5B5560" },
   { slug: "suminagashi", label: "Suminagashi", couleur: "#2F4A57" },
   //  ---- LES NEUF DE LA FAMILLE `cultures-du-monde` ----
   //  Ce sont des styles À PART ENTIÈRE : cherchables, portant chacun sa
   //  page style + ville. Seul leur RANGEMENT diffère (voir plus bas).
-  { slug: "berbere", label: "Berbère", couleur: "#6B4A38" },
-  { slug: "celtique", label: "Celtique", couleur: "#3D5A46" },
-  { slug: "copte", label: "Copte", couleur: "#5B4638" },
+  { slug: "berbere", label: "Berber", couleur: "#6B4A38" },
+  { slug: "celtique", label: "Celtic", couleur: "#3D5A46" },
+  { slug: "copte", label: "Coptic", couleur: "#5B4638" },
   { slug: "maori", label: "Maori", couleur: "#2E3B38" },
-  { slug: "nordique", label: "Nordique", couleur: "#3A4756" },
+  { slug: "nordique", label: "Nordic", couleur: "#3A4756" },
   { slug: "pa-tutiki", label: "Pā Tūtiki", couleur: "#33403C" },
-  { slug: "polynesien", label: "Polynésien", couleur: "#2C3C42" },
+  { slug: "polynesien", label: "Polynesian", couleur: "#2C3C42" },
   { slug: "sicanje", label: "Sicanje", couleur: "#4A3F4A" },
   { slug: "yoruba", label: "Yoruba", couleur: "#6A5230" },
 ] as const;
@@ -404,7 +404,7 @@ export function styleConnu(slug: string | undefined): string {
  * (« Bio-mecha » avant « Biomécanique »).
  */
 function parLibelle(a: { label: string }, b: { label: string }): number {
-  return a.label.localeCompare(b.label, "fr");
+  return a.label.localeCompare(b.label, "en");
 }
 
 /**
@@ -433,7 +433,7 @@ export const FAMILLES_STYLES = [
     //  qu'à un seul endroit, `suggestions_style.famille` : voir la
     //  migration nº 67, qui le renomme et refait sa contrainte.
     slug: "cultures-du-monde",
-    label: "Cultures du monde",
+    label: "World cultures",
     //  CEUX QUI VIVENT ICI, ET NULLE PART AILLEURS : ils quittent le
     //  premier niveau du menu et ne se lisent que dans la famille.
     //  (nº 291 — « Tribal » les rejoint.)
@@ -630,8 +630,8 @@ export function entreesExplorer(): EntreeExplorer[] {
 //  et ce qu'on regarde alors, c'est ce que le tatoueur a RÉALISÉ —
 //  par opposition au flash, qui n'est pas encore fait.
 export const CATEGORIES_EXPLORER = [
-  { nature: "tatouage", titre: "Réalisations", tous: "Toutes les réalisations" },
-  { nature: "flash", titre: "Flashs", tous: "Tous les flashs" },
+  { nature: "tatouage", titre: "Tattoos", tous: "All tattoos" },
+  { nature: "flash", titre: "Flash", tous: "All flash" },
 ] as const;
 
 /** « flash » + « realisme » → « flash:realisme ». Sans style : la
@@ -706,9 +706,9 @@ export const FILTRES_TATOUAGE = [
     // mais celui qui cherche, lui, a un PROJET. Le nom du groupe le
     // dit désormais. La clé `composition` ne bouge pas : c'est le nom
     // de la colonne (`filtres_composition`).
-    titre: "Types de projets",
+    titre: "Project types",
     options: [
-      { slug: "petit-tatouage", label: "Petit tatouage" },
+      { slug: "petit-tatouage", label: "Small tattoo" },
       //  ⚠️ « FLASH » A QUITTÉ CE GROUPE À LA PASSE Nº 110, et il n'y
       //  reviendra pas. Une case cochée annonçait des flashs sans
       //  qu'on puisse en voir un seul — or un flash est un DESSIN :
@@ -722,7 +722,7 @@ export const FILTRES_TATOUAGE = [
         // ici ni sous la case du formulaire : la liste des formats
         // (sleeve, dos, torse…) alourdissait sans rien apprendre.
         slug: "sleeve",
-        label: "Grandes pièces",
+        label: "Large pieces",
       },
       // LE BODYSUIT RESSORT DE « GRANDES PIÈCES ».
       // ⚠️ ET IL NE PEUT PAS ÊTRE RÉTABLI SUR LES FICHES EXISTANTES.
@@ -747,10 +747,10 @@ export const FILTRES_TATOUAGE = [
     // ⚠️ LES SLUGS SONT EN ANGLAIS, comme les tags de photos : le
     // site sera traduit, et une clé française deviendrait un boulet.
     groupe: "besoins",
-    titre: "Besoins",
+    titre: "Needs",
     options: [
-      { slug: "cover", label: "Cover" },
-      { slug: "scar", label: "Cicatrice" },
+      { slug: "cover", label: "Cover-up" },
+      { slug: "scar", label: "Scars" },
     ],
   },
 ] as const;
@@ -768,7 +768,7 @@ export const FILTRE_TYPE_FICHE = {
   //  quel LIEU on cherche — un studio, un salon. C'est le même groupe
   //  technique qu'avant (le type de la fiche), présenté par sa moitié
   //  « établissements ».
-  titre: "Lieu",
+  titre: "Place",
   options: [
     //  ⚠️ « ARTISTES » N'A PLUS DE BADGE (nº 149-§6) : le groupe
     //  « Artiste » (les modes d'exercice) parle déjà pour eux. Le slug
@@ -776,15 +776,15 @@ export const FILTRE_TYPE_FICHE = {
     //  adresses partagées le portent, la base le connaît) — mais
     //  l'écran ne le montre plus : il reste sélectionné en
     //  permanence, et le moteur raisonne sur les badges VISIBLES.
-    { slug: "artiste", label: "Artistes", cachee: true },
+    { slug: "artiste", label: "Artists", cachee: true },
     // LA FICHE DE LIEU dont `etablissement = 'prive'` (migration
     // nº 37). Slug distinct de `prive` (le genre de mode) : deux
     // groupes ne peuvent pas partager un slug, tous voyagent dans le
     // même `exclure=`.
-    { slug: "studio-prive", label: "Studio" },
+    { slug: "studio-prive", label: "Private Studio" },
     // ⚠️ LE SLUG RESTE « salon » : c'est une CLÉ TECHNIQUE, écrite en
     // base et dans les adresses de recherche depuis le premier jour.
-    { slug: "salon", label: "Salon" },
+    { slug: "salon", label: "Tattoo Shop" },
   ],
 } as const;
 
@@ -827,7 +827,7 @@ export const FILTRE_MODE_ACTIVITE = {
   //  liste unique des filtres — comment travaille l'artiste qu'on
   //  cherche. (Un salon n'a pas de mode : ce groupe ne concerne que
   //  les fiches d'artiste, voir plus haut.)
-  titre: "Artiste",
+  titre: "Artist",
   //  L'ORDRE ET LES LIBELLÉS DU BRIEF nº 149-§6 : « À domicile ·
   //  En studio · En salon · Guest ». Les SLUGS et les GENRES, eux, ne
   //  bougent pas d'une lettre : ce sont les clés du langage `exclure=`
@@ -910,9 +910,9 @@ export const FILTRE_MODE_ACTIVITE = {
   //  modes sortent d'une recherche par ville sans une ligne de SQL de
   //  plus.
   options: [
-    { slug: "en-studio-prive", label: "Studio", genre: "prive" },
-    { slug: "en-salon", label: "Salon", genre: "salon" },
-    { slug: "en-guest", label: "Guest", genre: "guest" },
+    { slug: "en-studio-prive", label: "Private Studio", genre: "prive" },
+    { slug: "en-salon", label: "Tattoo Shop", genre: "salon" },
+    { slug: "en-guest", label: "Guest Spot", genre: "guest" },
     { slug: "en-convention", label: "Convention", genre: "convention" },
     { slug: "independent", label: "Independent", genre: "independent" },
   ],
@@ -966,11 +966,11 @@ export function profilDeLaFiche(
  */
 export const FILTRE_RENDU = {
   groupe: "rendu",
-  titre: "Rendu",
+  titre: "Ink",
   options: [
-    { slug: "black", label: "Noir" },
-    { slug: "black_and_grey", label: "Noir et gris" },
-    { slug: "color", label: "Couleur" },
+    { slug: "black", label: "Black" },
+    { slug: "black_and_grey", label: "Black & gray" },
+    { slug: "color", label: "Color" },
   ],
 } as const;
 
@@ -1108,15 +1108,15 @@ export function groupeDuFiltre(slug: string): GroupeFiltre | null {
 export const TYPES_FICHE = [
   {
     slug: "artiste",
-    label: "Artiste",
-    resume: "Je tatoue en mon nom",
+    label: "Artist",
+    resume: "I tattoo under my own name",
   },
   {
     slug: "salon",
     // Le second choix ouvre un sous-choix (Salon / Studio privé),
     // exactement comme « Artiste » ouvre ses modes d'activité.
-    label: "Salon / Studio privé",
-    resume: "Un lieu, une équipe",
+    label: "Tattoo Shop / Private Studio",
+    resume: "One place, one team",
   },
 ] as const;
 
@@ -1143,14 +1143,14 @@ export type TypeFiche = (typeof TYPES_FICHE)[number]["slug"];
 //  Le slug `studio-prive` et le couple type/établissement, eux, ne
 //  bougent pas : rien ne change en base ni dans les adresses.
 export const CHOIX_PROFIL = [
-  { slug: "artiste", label: "Artiste", typeFiche: "artiste", etablissement: "salon" },
+  { slug: "artiste", label: "Artist", typeFiche: "artiste", etablissement: "salon" },
   {
     slug: "studio-prive",
-    label: "Studio",
+    label: "Private Studio",
     typeFiche: "salon",
     etablissement: "prive",
   },
-  { slug: "salon", label: "Salon", typeFiche: "salon", etablissement: "salon" },
+  { slug: "salon", label: "Tattoo Shop", typeFiche: "salon", etablissement: "salon" },
 ] as const;
 
 /**
@@ -1173,13 +1173,13 @@ export const CHOIX_PROFIL = [
 export const NATURES_ETABLISSEMENT = [
   {
     slug: "salon",
-    label: "Salon",
-    resume: "J'accueille du public",
+    label: "Tattoo Shop",
+    resume: "Open to the public",
   },
   {
     slug: "prive",
-    label: "Studio privé",
-    resume: "Je reçois sur rendez-vous",
+    label: "Private Studio",
+    resume: "By appointment only",
   },
 ] as const;
 
@@ -1343,28 +1343,28 @@ export function aDesHoraires(
 export const GENRES_MODE = [
   {
     slug: "prive",
-    label: "Studio",
-    titre: "Studio",
-    phrase: "Studio privé / Secteur :",
-    phraseLiee: "Studio privé / Secteur :",
+    label: "Private Studio",
+    titre: "Private Studio",
+    phrase: "Private Studio / Area:",
+    phraseLiee: "Private Studio / Area:",
   },
   {
     slug: "salon",
     /** Ce qu'on lit sous le nom, sur la fiche publique. */
-    label: "Salon",
+    label: "Tattoo Shop",
     /** Ce qu'on lit dans le sélecteur du formulaire. */
-    titre: "Salon",
+    titre: "Tattoo Shop",
     /** Ce qui précède l'adresse quand aucun studio inscrit n'est lié. */
-    phrase: "Artiste en studio fixe",
+    phrase: "Resident artist",
     /** Ce qui précède le nom du studio quand il est lié. */
-    phraseLiee: "Résident chez",
+    phraseLiee: "Resident at",
   },
   {
     slug: "guest",
-    label: "Guest",
-    titre: "Guest",
-    phrase: "En session Guest à",
-    phraseLiee: "En Guest chez",
+    label: "Guest Spot",
+    titre: "Guest Spot",
+    phrase: "Guest spot in",
+    phraseLiee: "Guest spot at",
   },
   //  nº 749 — LES DEUX NOUVEAUTÉS, EN QUEUE : l'ordre dicté est
   //  Studio · Salon · Guest · Convention · Independent (conception
@@ -1399,6 +1399,13 @@ export type GenreMode = (typeof GENRES_MODE)[number]["slug"];
  * n'affiche les badges que sur une précision « ville » ou « adresse »,
  * `rayonRequis` n'exige le rayon que là — un État ou un pays n'en
  * demande donc aucun, et le mode reste valide sans lui.
+ * ⚠️ nº 806 — CES PALIERS-CI RESTENT EN KILOMÈTRES, et ce n'est pas un
+ * oubli : ce sont les valeurs que la contrainte de base accepte
+ * (`modes_exercice.rayon_km in (10, 25, 50, 100, 200)`, migration
+ * nº 40), et plus AUCUN écran ne les propose (le propriétaire a retiré
+ * le rayon des zones Independent : une zone est une ville, voir
+ * BlocModesExercice). Les passer en miles exigerait un SQL pour rien.
+ * Les rayons de RECHERCHE, eux, sont en miles : `RAYONS_TATOUAGE`.
  */
 export const RAYONS_DEPLACEMENT = [10, 25, 50, 100, 200] as const;
 
@@ -1475,8 +1482,8 @@ export function libelleStatutIndependent(
  * « résident ».
  */
 export const ROLES_STUDIO = [
-  { slug: "resident", label: "Résident", choix: "Résident" },
-  { slug: "fondateur", label: "Fondateur", choix: "Fondateur" },
+  { slug: "resident", label: "Resident", choix: "Resident" },
+  { slug: "fondateur", label: "Founder", choix: "Founder" },
 ] as const;
 
 export type RoleStudio = (typeof ROLES_STUDIO)[number]["slug"];
@@ -1536,27 +1543,32 @@ export function libelleTypeFiche(
 }
 
 /**
- * LES RAYONS DE RECHERCHE, en kilomètres.
- * Des paliers FIXES plutôt qu'un curseur libre : « 27 km » n'a aucun
+ * LES RAYONS DE RECHERCHE, EN MILES (nº 806 — décision du propriétaire :
+ * de vrais miles, affichés « mi », plus aucune référence européenne).
+ * Des paliers FIXES plutôt qu'un curseur libre : « 27 mi » n'a aucun
  * sens pour la personne qui cherche, et multiplierait les adresses
- * indexables pour rien.
+ * indexables pour rien. Ils étaient 10/25/50/100/200 km jusqu'à la
+ * nº 805 ; 5/10/25/50/100 mi couvrent la même échelle (8 à 161 km).
  *
- * LE PREMIER PALIER EST DIX KILOMÈTRES. Le palier « 0 km » — la ville
- * choisie sans ses alentours — a existé un temps ; il est retiré. Une
+ * LE PREMIER PALIER EST CINQ MILES. Le palier « 0 » — la ville choisie
+ * sans ses alentours — a existé un temps ; il est retiré. Une
  * recherche de tatoueur ne s'arrête pas au panneau d'entrée d'une
- * commune : chercher « Lyon » sans Villeurbanne ni Vénissieux ne rend
+ * ville : chercher « Austin » sans Round Rock ni Pflugerville ne rend
  * service à personne, et laissait des recherches vides là où il y
  * avait vingt tatoueurs à dix minutes.
+ * ⚠️ LA BASE, ELLE, RESTE EN KILOMÈTRES (`p_rayon_km`, `yf_distance_km`,
+ * `modes_exercice.rayon_km`) : la conversion se fait à la frontière,
+ * dans lib/tatoueurs (`milesEnKm`, lib/geo). Aucun SQL n'a bougé.
  * MÊMES PALIERS SUR WEB ET SUR SMARTPHONE : les pilules du panneau et
  * le curseur de la fenêtre lisent la même liste.
  */
-export const RAYONS_TATOUAGE = [10, 25, 50, 100, 200];
+export const RAYONS_TATOUAGE = [5, 10, 25, 50, 100];
 
 /** Le plus petit rayon possible — le premier palier. */
 export const RAYON_TATOUAGE_MINIMUM = RAYONS_TATOUAGE[0];
 
 /** Le rayon proposé par défaut dès qu'une ville est choisie. */
-export const RAYON_TATOUAGE_DEFAUT = 50;
+export const RAYON_TATOUAGE_DEFAUT = 25;
 
 /**
  * LE RAYON RETENU, quoi qu'on lui donne.
@@ -1565,9 +1577,9 @@ export const RAYON_TATOUAGE_DEFAUT = 50;
  * au premier palier plutôt que de leur rendre un mode qui n'existe
  * plus. Une valeur absurde (vide, texte, négative) repart du défaut.
  */
-export function rayonRetenu(km: number): number {
-  if (!Number.isFinite(km) || km <= 0) return RAYON_TATOUAGE_DEFAUT;
-  return Math.max(RAYON_TATOUAGE_MINIMUM, km);
+export function rayonRetenu(mi: number): number {
+  if (!Number.isFinite(mi) || mi <= 0) return RAYON_TATOUAGE_DEFAUT;
+  return Math.max(RAYON_TATOUAGE_MINIMUM, mi);
 }
 
 /**
@@ -1580,8 +1592,8 @@ export function rayonRetenu(km: number): number {
  * `null` au dernier palier : l'appelant n'affiche alors pas le bouton,
  * plutôt que d'en proposer un qui ne ferait rien.
  */
-export function rayonSuivant(km: number): number | null {
-  return RAYONS_TATOUAGE.find((palier) => palier > km) ?? null;
+export function rayonSuivant(mi: number): number | null {
+  return RAYONS_TATOUAGE.find((palier) => palier > mi) ?? null;
 }
 
 /** Combien de cartes la grille affiche au plus, en une fois. */
@@ -2073,67 +2085,67 @@ export const COURRIELS_ADMIN = ["rouxkev@gmail.com"];
 export const MOTIFS_MODERATION = [
   {
     slug: "photo-non-conforme",
-    label: "Photo non conforme",
+    label: "Photo not allowed",
     champ: "photos",
     explication:
-      "Une photo ne convient pas : remplace-la, puis réenregistre.",
+      "One photo doesn't work: replace it, then save again.",
   },
   {
     slug: "bio-inappropriee",
-    label: "Bio inappropriée",
+    label: "Inappropriate bio",
     champ: "bio",
-    explication: "La bio ne convient pas : reformule-la.",
+    explication: "Your bio doesn't work: rewrite it.",
   },
   {
     slug: "nom-incorrect",
-    label: "Nom incorrect",
+    label: "Incorrect name",
     champ: "nom",
-    explication: "Ce nom ne convient pas : corrige-le.",
+    explication: "This name doesn't work: fix it.",
   },
   {
     slug: "adresse-incorrecte",
-    label: "Adresse incorrecte",
+    label: "Incorrect address",
     champ: "adresse",
     explication:
-      "L'adresse ne correspond pas : vérifie le numéro, la rue et la ville.",
+      "The address doesn't match: check the number, street and city.",
   },
   {
     slug: "instagram-ne-correspond-pas",
-    label: "Le compte Instagram ne correspond pas",
+    label: "Instagram account doesn't match",
     champ: "instagram",
-    explication: "Ce compte Instagram ne correspond pas au portfolio.",
+    explication: "This Instagram account doesn't match the portfolio.",
   },
   {
     slug: "tiktok-ne-correspond-pas",
-    label: "Le compte TikTok ne correspond pas",
+    label: "TikTok account doesn't match",
     champ: "tiktok",
-    explication: "Ce compte TikTok ne correspond pas au portfolio.",
+    explication: "This TikTok account doesn't match the portfolio.",
   },
   {
     slug: "styles-non-conformes",
-    label: "Styles déclarés non conformes",
+    label: "Styles don't match the photos",
     champ: "styles",
     explication:
-      "Les styles déclarés ne correspondent pas aux photos montrées.",
+      "The styles you picked don't match the photos shown.",
   },
   {
     slug: "site-web-non-conforme",
-    label: "Le site web ne correspond pas",
+    label: "Website doesn't match",
     champ: "site",
-    explication: "Ce site web ne correspond pas au portfolio.",
+    explication: "This website doesn't match the portfolio.",
   },
   {
     slug: "page-de-liens-non-conforme",
-    label: "Le Linktree / Beacons ne correspond pas",
+    label: "Linktree / Beacons doesn't match",
     champ: "pageDeLiens",
     explication:
-      "Cette page de liens ne correspond pas au portfolio, ou ne s'ouvre pas.",
+      "This link page doesn't match the portfolio, or doesn't open.",
   },
   //  ⚠️ « formulaire-non-conforme » A ÉTÉ RETIRÉ à la passe nº 102,
   //  avec le champ « Formulaire de demande » lui-même. Un motif de
   //  refus qui désigne un champ inexistant encadre du vide : la fiche
   //  serait renvoyée en correction sans que rien ne soit corrigeable.
-  { slug: "autre", label: "Autre (préciser)", champ: null, explication: null },
+  { slug: "autre", label: "Other (explain)", champ: null, explication: null },
 ] as const;
 
 /**
@@ -2141,11 +2153,11 @@ export const MOTIFS_MODERATION = [
  * (fenêtre « Signaler cette fiche »), sans aucune donnée personnelle.
  */
 export const MOTIFS_SIGNALEMENT = [
-  { slug: "usurpation", label: "Usurpation d'identité" },
-  { slug: "contenu-inapproprie", label: "Contenu inapproprié" },
-  { slug: "compte-ne-correspond-pas", label: "Le compte ne correspond pas" },
-  { slug: "fiche-en-double", label: "Portfolio en double" },
-  { slug: "autre", label: "Autre (préciser)" },
+  { slug: "usurpation", label: "Impersonation" },
+  { slug: "contenu-inapproprie", label: "Inappropriate content" },
+  { slug: "compte-ne-correspond-pas", label: "Account doesn't match" },
+  { slug: "fiche-en-double", label: "Duplicate portfolio" },
+  { slug: "autre", label: "Other (explain)" },
 ] as const;
 
 /**

@@ -1285,7 +1285,15 @@ function repondre(req, res, u, brut) {
       if (vise && !efface) Object.assign(ligne, modifications);
       (vise ? parties : restantes).push(ligne);
     }
-    if (efface && TABLES[table]) TABLES[table] = restantes;
+    /*  nº 806 — L'EFFACEMENT SE FAIT SUR PLACE, jamais en remplaçant le
+        tableau : `TABLES.tatoueurs` EST la constante `TATOUEURS` que lit
+        `rpc/rechercher_tatoueurs` (et `PHOTOS` de même). Un `TABLES[table]
+        = restantes` posait un tableau NEUF sous la clé, et le moteur
+        continuait de lire l'ancien — une fiche effacée sortait encore
+        des recherches, et une fiche rangée ensuite n'y entrait pas. Le
+        banc des miles l'a vu : sa fiche d'un passage précédent revenait
+        sous son vieux nom. */
+    if (efface && TABLES[table]) TABLES[table].splice(0, TABLES[table].length, ...restantes);
     console.log(
       new Date().toISOString().slice(11, 19),
       req.method, table, efface ? "← retiré" : "← modifié", parties.length
@@ -1374,7 +1382,39 @@ function repondre(req, res, u, brut) {
         — qui, lui, lit le booking, et cachait le réarrangement de la
         fenêtre superposée. Éteint : à plat, comme avant. */
     const photosMax = Number(params.p_photos_max ?? 0) || Infinity;
+    /*  ██ nº 806 — LE RAYON EST HONORÉ (cran `RAYON=1`) ██
+        La vraie fonction ne rend, autour d'un point, que les fiches à
+        `yf_distance_km(...) <= p_rayon_km` (yokofolio-carrousels-jamais-
+        coupes.sql, branche `z.rayon_km = 0` — la doublure ne connaît
+        que l'adresse de la fiche, pas ses zones). Jusqu'ici elle
+        rendait TOUT, distance nulle : impossible de prouver qu'un
+        rayon de 25 mi trouve ce qu'il doit — c'est le banc de la
+        nº 806 (les miles). Sous le cran, même formule de Haversine que
+        `public.yf_distance_km` (rayon terrestre 6 371 km), même
+        `distance_km` rendue ; hors cran, rien ne change pour les
+        anciens bancs. */
+    const RAYON_HONORE = process.env.RAYON === "1";
+    const lat = Number(params.p_latitude);
+    const lon = Number(params.p_longitude);
+    const rayonKm = Number(params.p_rayon_km ?? 0);
+    const autourDUnPoint =
+      RAYON_HONORE && Number.isFinite(lat) && Number.isFinite(lon) && rayonKm > 0;
+    const haversineKm = (lat1, lon1, lat2, lon2) => {
+      const r = (d) => (d * Math.PI) / 180;
+      const a =
+        Math.sin(r(lat2 - lat1) / 2) ** 2 +
+        Math.cos(r(lat1)) * Math.cos(r(lat2)) * Math.sin(r(lon2 - lon1) / 2) ** 2;
+      return 2 * 6371 * Math.asin(Math.sqrt(a));
+    };
+    const distanceDe = (l) =>
+      autourDUnPoint && Number.isFinite(Number(l.latitude)) && Number.isFinite(Number(l.longitude))
+        ? haversineKm(lat, lon, Number(l.latitude), Number(l.longitude))
+        : null;
+    if (autourDUnPoint) {
+      console.log(`[doublure] rechercher_tatoueurs · p_rayon_km=${rayonKm} autour de ${lat},${lon}`);
+    }
     corps = TATOUEURS.filter((l) => !style || l.styles.includes(style))
+      .filter((l) => !autourDUnPoint || (distanceDe(l) ?? Infinity) <= rayonKm)
       .map((l, _i, tous) =>
         FICHE_PARTIELLE
           ? {
@@ -1391,10 +1431,10 @@ function repondre(req, res, u, brut) {
                   .filter((p) => p.tatoueur_id === l.id)
                   .slice(0, photosMax),
               },
-              distance_km: null,
+              distance_km: distanceDe(l),
               total_resultats: tous.length,
             }
-          : { ...l, total: tous.length, distance_km: null }
+          : { ...l, total: tous.length, distance_km: distanceDe(l) }
       );
   } else {
     for (const [cle, val] of u.searchParams) {

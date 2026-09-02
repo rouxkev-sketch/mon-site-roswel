@@ -68,7 +68,7 @@ export function PastilleSonde({
     <button
       type="button"
       onClick={surToucher}
-      aria-label={`Ouvrir ${titre}`}
+      aria-label={`Open ${titre}`}
       title={titre}
       style={{
         position: "fixed",
@@ -101,8 +101,8 @@ export function BoutonReplier({ surToucher }: { surToucher: () => void }) {
     <button
       type="button"
       onClick={surToucher}
-      aria-label="Replier la sonde"
-      title="Replier"
+      aria-label="Collapse the probe"
+      title="Collapse"
       style={{
         minWidth: 44,
         minHeight: 44,
@@ -182,7 +182,7 @@ export function BoutonCopierJournal({
     try {
       if (window.isSecureContext && navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(contenu);
-        setDit("✅ copié (presse-papier direct)");
+        setDit("✅ copied (clipboard API)");
         return;
       }
     } catch {
@@ -190,12 +190,12 @@ export function BoutonCopierJournal({
     }
     //  (b) LA MÉTHODE ANCIENNE.
     if (copierParLAncienneMethode(contenu)) {
-      setDit("✅ copié (méthode ancienne)");
+      setDit("✅ copied (legacy method)");
       return;
     }
     //  (c) À LA MAIN.
     setALaMain(contenu);
-    setDit("⚠️ à copier à la main — appuie sur Copier");
+    setDit("⚠️ copy by hand — press Copy");
     //  Tout sélectionner, pour qu'il n'y ait plus qu'à appuyer.
     requestAnimationFrame(() => {
       const zone = champ.current;
@@ -230,7 +230,7 @@ export function BoutonCopierJournal({
           whiteSpace: "nowrap",
         }}
       >
-        COPIER
+        COPY
       </button>
       {dit !== "" && (
         <span
@@ -247,7 +247,7 @@ export function BoutonCopierJournal({
           ref={champ}
           readOnly
           value={aLaMain}
-          aria-label="Relevé à copier"
+          aria-label="Report to copy"
           style={{
             width: "100%",
             minHeight: 90,

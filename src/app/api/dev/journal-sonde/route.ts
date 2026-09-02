@@ -72,7 +72,7 @@ export async function POST(requete: Request) {
 
   const texte = typeof corps?.texte === "string" ? corps.texte : "";
   if (texte.trim() === "") {
-    return NextResponse.json({ erreur: "journal vide" }, { status: 400 });
+    return NextResponse.json({ erreur: "empty log" }, { status: 400 });
   }
 
   const sonde = nomDeSondeSur(corps?.sonde);
@@ -82,15 +82,15 @@ export async function POST(requete: Request) {
   const chemin = path.join(process.cwd(), path.basename(fichier));
 
   const entete =
-    `# Relevé de la sonde « ${sonde} »\n` +
-    `# Écrit le ${new Date().toLocaleString("fr-FR")}\n` +
-    `# ${texte.split("\n").length} lignes\n\n`;
+    `# Probe report "${sonde}"\n` +
+    `# Written ${new Date().toLocaleString("en-US")}\n` +
+    `# ${texte.split("\n").length} lines\n\n`;
 
   try {
     await writeFile(chemin, entete + texte.slice(0, TAILLE_MAXIMUM), "utf8");
   } catch (erreur) {
     return NextResponse.json(
-      { erreur: erreur instanceof Error ? erreur.message : "écriture refusée" },
+      { erreur: erreur instanceof Error ? erreur.message : "write refused" },
       { status: 500 }
     );
   }

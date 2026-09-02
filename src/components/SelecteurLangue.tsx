@@ -426,7 +426,7 @@ export function FenetreLangue({
           alignement="droite"
           role="dialog"
           aria-label="Choose language"
-          data-source-composant="SelecteurLangue · fenêtre du compte"
+          data-source-composant="SelecteurLangue · account window"
           className="mobile:hidden"
         >
           {/*  ██ §3 (nº 658) — LE TRAIT S'EN VA, LE TITRE DESCEND DANS
@@ -722,7 +722,7 @@ export function SelecteurLangue({ hauteur = 40 }: { hauteur?: number }) {
           alignement="droite"
           role="dialog"
           aria-label="Choose language"
-          data-source-composant="SelecteurLangue · menu web"
+          data-source-composant="SelecteurLangue · web menu"
           /*  §1 (nº 655) — `flex flex-col gap-3` S'AJOUTE, et rien
                d'autre : la liste rend désormais DEUX encadrés au lieu
                d'une liste plate, il leur faut l'écart de 12 px des

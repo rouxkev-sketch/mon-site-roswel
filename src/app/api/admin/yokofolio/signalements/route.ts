@@ -34,7 +34,7 @@ export async function GET() {
     return NextResponse.json(
       {
         ok: false,
-        message: `Lecture impossible (migration supabase/yokofolio-signalements.sql passée ?) : ${e instanceof Error ? e.message : String(e)}`,
+        message: `Couldn't load (has migration supabase/yokofolio-signalements.sql been applied?): ${e instanceof Error ? e.message : String(e)}`,
       },
       { status: 500 }
     );
@@ -55,7 +55,7 @@ export async function POST(requete: NextRequest) {
   } | null;
   if (!corps?.id) {
     return NextResponse.json(
-      { ok: false, message: "Demande incomplète." },
+      { ok: false, message: "Incomplete request." },
       { status: 400 }
     );
   }
@@ -76,7 +76,7 @@ export async function POST(requete: NextRequest) {
         error.message.toLowerCase().includes("note")
       ) {
         throw new Error(
-          "La colonne de note n'existe pas encore (migration supabase/yokofolio-signalement-note.sql)."
+          "The note column doesn't exist yet (migration supabase/yokofolio-signalement-note.sql)."
         );
       }
       throw new Error(error.message);
@@ -86,7 +86,7 @@ export async function POST(requete: NextRequest) {
     return NextResponse.json(
       {
         ok: false,
-        message: `L'enregistrement n'a pas abouti : ${e instanceof Error ? e.message : String(e)}`,
+        message: `Saving failed: ${e instanceof Error ? e.message : String(e)}`,
       },
       { status: 500 }
     );

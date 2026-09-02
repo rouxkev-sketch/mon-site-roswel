@@ -55,26 +55,26 @@ import {
  * styles réordonnés SONT une modification à relire.
  */
 const CHAMPS_LISIBLES: Array<[string, string]> = [
-  ["nom", "Nom"],
+  ["nom", "Name"],
   ["bio", "Bio"],
   ["styles", "Styles"],
-  ["ville_nom", "Ville"],
-  ["adresse", "Adresse"],
-  ["code_postal", "Code postal"],
-  ["photo_profil", "Photo de profil"],
-  ["photo_principale", "Photo principale"],
+  ["ville_nom", "City"],
+  ["adresse", "Address"],
+  ["code_postal", "ZIP code"],
+  ["photo_profil", "Profile photo"],
+  ["photo_principale", "Main photo"],
   ["photos_styles", "Photos"],
   ["lien_instagram", "Instagram"],
   ["lien_tiktok", "TikTok"],
-  ["site_web", "Site web"],
-  ["site_web_titre", "Titre du site"],
-  ["page_de_liens", "Second lien"],
-  ["page_de_liens_titre", "Titre du second lien"],
+  ["site_web", "Website"],
+  ["site_web_titre", "Website title"],
+  ["page_de_liens", "Second link"],
+  ["page_de_liens_titre", "Second link title"],
   ["filtres_technique", "Technique"],
   ["filtres_composition", "Composition"],
-  ["filtres_besoins", "Besoins"],
-  ["type_fiche", "Type de fiche"],
-  ["etablissement", "Établissement"],
+  ["filtres_besoins", "Needs"],
+  ["type_fiche", "Portfolio type"],
+  ["etablissement", "Business type"],
 ];
 
 function champsModifies(
@@ -419,7 +419,7 @@ export async function GET() {
     return NextResponse.json(
       {
         ok: false,
-        message: `Lecture impossible : ${e instanceof Error ? e.message : String(e)}`,
+        message: `Couldn't load: ${e instanceof Error ? e.message : String(e)}`,
       },
       { status: 500 }
     );
@@ -458,13 +458,13 @@ export async function POST(requete: NextRequest) {
   ];
   if (!id || !ACTIONS.includes(action)) {
     return NextResponse.json(
-      { ok: false, message: "Demande incomplète." },
+      { ok: false, message: "Incomplete request." },
       { status: 400 }
     );
   }
   if (["modifier", "hors_ligne"].includes(action) && motifs.length === 0) {
     return NextResponse.json(
-      { ok: false, message: "Coche au moins un motif." },
+      { ok: false, message: "Check at least one reason." },
       { status: 400 }
     );
   }
@@ -556,7 +556,7 @@ export async function POST(requete: NextRequest) {
       } | null;
       if (!fiche) {
         return NextResponse.json(
-          { ok: false, message: "Ce portfolio n'existe plus." },
+          { ok: false, message: "This portfolio no longer exists." },
           { status: 404 }
         );
       }
@@ -637,7 +637,7 @@ export async function POST(requete: NextRequest) {
       } | null;
       if (!fiche) {
         return NextResponse.json(
-          { ok: false, message: "Ce portfolio n'existe plus." },
+          { ok: false, message: "This portfolio no longer exists." },
           { status: 404 }
         );
       }
@@ -736,9 +736,9 @@ export async function POST(requete: NextRequest) {
         {
           ok: false,
           message:
-            `« ${enPartance.nom ?? "Ce portfolio"} » est en cours de suppression : ` +
-            "aucune décision ne peut s'appliquer dessus. Annule d'abord la " +
-            "suppression dans « Suppressions en cours », puis reviens ici.",
+            `"${enPartance.nom ?? "This portfolio"}" is being deleted: ` +
+            "no decision can apply to it. Cancel the deletion under " +
+            "\"Deletions in progress\" first, then come back here.",
         },
         { status: 409 }
       );
@@ -881,7 +881,7 @@ export async function POST(requete: NextRequest) {
     return NextResponse.json(
       {
         ok: false,
-        message: `La décision n'a pas été enregistrée : ${e instanceof Error ? e.message : String(e)}`,
+        message: `The decision wasn't saved: ${e instanceof Error ? e.message : String(e)}`,
       },
       { status: 500 }
     );

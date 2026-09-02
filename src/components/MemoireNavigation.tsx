@@ -564,7 +564,7 @@ export function MemoireNavigation() {
       poserLaPosition(
         0,
         undefined,
-        "sortie confirmée — l'arrivée en haut est voulue (nº 446)"
+        "exit confirmed — arriving at the top is intended (no. 446)"
       );
       return;
     }
@@ -598,10 +598,10 @@ export function MemoireNavigation() {
     rendreLaPlace(
       url,
       vraieTraversee
-        ? "retour ou avance (popstate)"
+        ? "back or forward (popstate)"
         : documentRestitue
-          ? "document restitué (rechargement ou retour de document)"
-          : "demande explicite (retour reconstruit)"
+          ? "document restored (reload or document return)"
+          : "explicit request (rebuilt return)"
     );
   }, [pathname, requete, reveils]);
 

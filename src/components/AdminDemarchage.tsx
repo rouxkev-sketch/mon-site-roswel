@@ -87,7 +87,7 @@ const ERREUR =
 function dateCourte(iso: string | null | undefined): string {
   if (!iso) return "—";
   try {
-    return new Date(iso).toLocaleDateString("fr-FR", {
+    return new Date(iso).toLocaleDateString("en-US", {
       day: "numeric",
       month: "short",
       year: "2-digit",
@@ -163,13 +163,13 @@ export function AdminDemarchage() {
         groupes?: Groupe[];
       } | null;
       if (!reponse.ok || !donnees?.ok) {
-        throw new Error(donnees?.message ?? "Lecture impossible.");
+        throw new Error(donnees?.message ?? "Couldn't load.");
       }
       setAEnvoyer(donnees.aEnvoyer ?? []);
       setGroupes(donnees.groupes ?? []);
     } catch (e) {
       setAEnvoyer([]);
-      setErreur(e instanceof Error ? e.message : "Lecture impossible.");
+      setErreur(e instanceof Error ? e.message : "Couldn't load.");
     }
   }, []);
 
@@ -196,11 +196,11 @@ export function AdminDemarchage() {
         message?: string;
       } | null;
       if (!reponse.ok || !donnees?.ok) {
-        throw new Error(donnees?.message ?? "Enregistrement impossible.");
+        throw new Error(donnees?.message ?? "Couldn't save.");
       }
       await charger();
     } catch (e) {
-      setErreur(e instanceof Error ? e.message : "Enregistrement impossible.");
+      setErreur(e instanceof Error ? e.message : "Couldn't save.");
     } finally {
       setEnCours(null);
     }
@@ -221,11 +221,11 @@ export function AdminDemarchage() {
         message?: string;
       } | null;
       if (!reponse.ok || !donnees?.ok) {
-        throw new Error(donnees?.message ?? "Restauration impossible.");
+        throw new Error(donnees?.message ?? "Couldn't restore.");
       }
       await charger();
     } catch (e) {
-      setErreur(e instanceof Error ? e.message : "Restauration impossible.");
+      setErreur(e instanceof Error ? e.message : "Couldn't restore.");
     } finally {
       setEnCours(null);
     }
@@ -251,11 +251,11 @@ export function AdminDemarchage() {
         groupe?: Groupe;
       } | null;
       if (!reponse.ok || !donnees?.ok || !donnees.groupe) {
-        throw new Error(donnees?.message ?? "Composition impossible.");
+        throw new Error(donnees?.message ?? "Couldn't compose.");
       }
       setOuvert(donnees.groupe);
     } catch (e) {
-      setErreur(e instanceof Error ? e.message : "Composition impossible.");
+      setErreur(e instanceof Error ? e.message : "Couldn't compose.");
     } finally {
       setEnCours(null);
     }
@@ -279,7 +279,7 @@ export function AdminDemarchage() {
       groupe?: Groupe;
     } | null;
     if (!reponse.ok || !donnees?.ok) {
-      throw new Error(donnees?.message ?? "Validation impossible.");
+      throw new Error(donnees?.message ?? "Couldn't confirm.");
     }
     setCochees([]);
     setOuvert(null);
@@ -307,11 +307,11 @@ export function AdminDemarchage() {
         message?: string;
       } | null;
       if (!reponse.ok || !donnees?.ok) {
-        throw new Error(donnees?.message ?? "Annulation impossible.");
+        throw new Error(donnees?.message ?? "Couldn't cancel.");
       }
       await charger();
     } catch (e) {
-      setErreur(e instanceof Error ? e.message : "Annulation impossible.");
+      setErreur(e instanceof Error ? e.message : "Couldn't cancel.");
     } finally {
       setEnCours(null);
     }
@@ -335,7 +335,7 @@ export function AdminDemarchage() {
 
   return (
     <>
-      <h1 className="text-[22px] font-bold text-sombre-texte">Démarchage</h1>
+      <h1 className="text-[22px] font-bold text-sombre-texte">Outreach</h1>
 
       {erreur && (
         <p role="status" className={`mt-4 ${ERREUR}`}>
@@ -352,7 +352,7 @@ export function AdminDemarchage() {
       ) : aEnvoyer.length === 0 && groupes.length === 0 ? (
         <p className="mt-6 rounded-2xl bg-sombre-carte px-4 py-6 text-center
                       text-[14px] leading-relaxed text-sombre-texte-doux">
-          Aucun portfolio créé depuis un compte administrateur.
+          No portfolio created from an admin account.
         </p>
       ) : (
         <div className="mt-6 flex flex-col gap-5">
@@ -367,12 +367,12 @@ export function AdminDemarchage() {
           <div className="max-w-[360px]">
             <OngletsLigne
               options={[
-                { cle: "a_envoyer", label: "À envoyer" },
-                { cle: "envoye", label: "Envoyé" },
+                { cle: "a_envoyer", label: "To send" },
+                { cle: "envoye", label: "Sent" },
               ]}
               cleActive={vue}
               surChoix={(cle) => setVue(cle as Vue)}
-              ariaLabel="À envoyer ou envoyés"
+              ariaLabel="To send or sent"
             />
           </div>
 
@@ -382,7 +382,7 @@ export function AdminDemarchage() {
               {aEnvoyer.length === 0 ? (
                 <p className="rounded-2xl bg-sombre-carte px-4 py-6 text-center
                               text-[14px] text-sombre-texte-doux">
-                  Rien à envoyer.
+                  Nothing to send.
                 </p>
               ) : (
               <>
@@ -411,10 +411,10 @@ export function AdminDemarchage() {
                              }`}
                 >
                   {enCours === "selection"
-                    ? "Un instant…"
+                    ? "One moment…"
                     : cochees.length > 1
-                      ? `Générer le message (${cochees.length} fiches)`
-                      : "Générer le message"}
+                      ? `Write the message (${cochees.length} portfolios)`
+                      : "Write the message"}
                 </button>
               </div>
 
@@ -447,7 +447,7 @@ export function AdminDemarchage() {
                                 : liste.filter((id) => id !== fiche.id)
                             )
                           }
-                          aria-label={`Démarcher ${fiche.nom}`}
+                          aria-label={`Reach out to ${fiche.nom}`}
                           className="h-[18px] w-[18px] shrink-0 accent-primaire"
                         />
                         <Vignette fiche={fiche} />
@@ -465,7 +465,7 @@ export function AdminDemarchage() {
                       <Interrupteur
                         actif={fiche.enLigne}
                         occupe={enCours === fiche.id}
-                        libelle={`Rendre publique la fiche ${fiche.nom}`}
+                        libelle={`Make ${fiche.nom} public`}
                         onBascule={() => void basculer(fiche)}
                       />
 
@@ -482,7 +482,7 @@ export function AdminDemarchage() {
 
               {/* LE COMPTE, EN BAS À DROITE — sous ce qu'il compte. */}
               <p className="mt-3 px-1 text-right text-[13px] text-sombre-texte-doux">
-                {enLigneCount} en ligne sur {aEnvoyer.length}
+                {enLigneCount} online out of {aEnvoyer.length}
               </p>
               </>
               )}
@@ -495,7 +495,7 @@ export function AdminDemarchage() {
               {groupes.length === 0 ? (
                 <p className="rounded-2xl bg-sombre-carte px-4 py-6 text-center
                               text-[14px] text-sombre-texte-doux">
-                  Aucun envoi.
+                  Nothing sent yet.
                 </p>
               ) : (
               <ul className="flex flex-col gap-2">
@@ -520,7 +520,7 @@ export function AdminDemarchage() {
                                 {fiche.nom}
                                 {fiche.retiree && (
                                   <span className="ml-2 text-[12px] font-normal text-erreur">
-                                    retirée
+                                    removed
                                   </span>
                                 )}
                               </span>
@@ -554,7 +554,7 @@ export function AdminDemarchage() {
                                            hover:bg-sombre-eleve-clair transition-colors
                                            disabled:opacity-50"
                               >
-                                {enCours === fiche.id ? "…" : "Restaurer"}
+                                {enCours === fiche.id ? "…" : "Restore"}
                               </button>
                             )}
                           </li>
@@ -579,7 +579,7 @@ export function AdminDemarchage() {
                                    px-4 min-h-[38px] text-[13px] font-semibold text-sombre-texte
                                    hover:bg-sombre-eleve-clair transition-colors"
                       >
-                        Voir le message
+                        See the message
                       </button>
                       <code className="min-w-0 flex-1 truncate text-[12px] text-sombre-texte-doux">
                         {groupe.lien}
@@ -602,7 +602,7 @@ export function AdminDemarchage() {
                       (aAnnuler === groupe.id ? (
                         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                           <p className="text-[13.5px] font-semibold text-sombre-texte">
-                            Annuler cet envoi&nbsp;?
+                            Cancel this send?
                           </p>
                           <div className="flex shrink-0 items-center gap-2">
                             <button
@@ -612,7 +612,7 @@ export function AdminDemarchage() {
                                          text-sombre-texte-doux transition-colors
                                          hover:text-sombre-texte"
                             >
-                              Non
+                              No
                             </button>
                             <button
                               type="button"
@@ -625,7 +625,7 @@ export function AdminDemarchage() {
                                          text-erreur transition-opacity
                                          hover:opacity-75 disabled:opacity-40"
                             >
-                              {enCours === groupe.id ? "Annulation…" : "Annuler l'envoi"}
+                              {enCours === groupe.id ? "Canceling…" : "Cancel the send"}
                             </button>
                           </div>
                         </div>
@@ -637,7 +637,7 @@ export function AdminDemarchage() {
                                      text-sombre-texte-doux transition-colors
                                      hover:text-erreur"
                         >
-                          Annuler l&apos;envoi
+                          Cancel the send
                         </button>
                       ))}
 
@@ -645,8 +645,8 @@ export function AdminDemarchage() {
                     {groupe.etat !== "envoye" && (
                       <p className="mt-2 text-[12px] text-sombre-texte-doux">
                         {groupe.etat === "compte_cree"
-                          ? `Cette entrée disparaît du tableau ${JOURS_APRES_RATTACHEMENT} jours après le rattachement.`
-                          : `Suppression définitive ${JOURS_APRES_SUPPRESSION} jours après le retrait.`}
+                          ? `This entry leaves the board ${JOURS_APRES_RATTACHEMENT} days after linking.`
+                          : `Permanently deleted ${JOURS_APRES_SUPPRESSION} days after removal.`}
                       </p>
                     )}
                   </li>
@@ -701,7 +701,7 @@ function Interrupteur({
         />
       </span>
       <span className={actif ? "text-sombre-texte" : ""}>
-        {occupe ? "…" : "En ligne"}
+        {occupe ? "…" : "Online"}
       </span>
     </button>
   );
@@ -738,7 +738,7 @@ function EcranMessage({
     try {
       await onValider(groupe);
     } catch (e) {
-      setErreur(e instanceof Error ? e.message : "Validation impossible.");
+      setErreur(e instanceof Error ? e.message : "Couldn't confirm.");
       setEnvoiEnCours(false);
     }
   }
@@ -763,7 +763,7 @@ function EcranMessage({
           « Valider l'envoi ». Deux retours à deux endroits, dont l'un
           au-dessus du titre, laissaient croire qu'ils ne faisaient pas
           la même chose. */}
-      <h1 className="text-[22px] font-bold text-sombre-texte">Le message</h1>
+      <h1 className="text-[22px] font-bold text-sombre-texte">The message</h1>
 
       {/* LES FICHES DE L'ENVOI — de quoi on parle, en tête. */}
       <ul className="mt-4 flex flex-col gap-2">
@@ -783,7 +783,7 @@ function EcranMessage({
                 className="shrink-0 inline-flex items-center gap-1.5 text-[12.5px]
                            text-sombre-texte-doux hover:text-primaire transition-colors"
               >
-                Voir
+                View
                 <IconeLienExterne taille={14} />
               </Link>
             )}
@@ -798,7 +798,7 @@ function EcranMessage({
         value={texte}
         onChange={(e) => setTexte(e.target.value)}
         rows={16}
-        aria-label="Message de démarchage"
+        aria-label="Outreach message"
         className="mt-5 w-full rounded-2xl border border-transparent bg-sombre-carte
                    px-4 py-4 text-[14px] leading-relaxed text-sombre-texte
                    outline-none transition-colors focus:bg-sombre-eleve
@@ -825,7 +825,7 @@ function EcranMessage({
                      text-sombre-texte-doux transition-colors
                      hover:text-sombre-texte"
         >
-          Retour
+          Back
         </button>
 
         <button
@@ -836,7 +836,7 @@ function EcranMessage({
                      text-[14.5px] font-semibold text-sombre-texte transition-colors"
         >
           <IconeCocheListe taille={18} />
-          {copie ? "Copié" : "Copier le message"}
+          {copie ? "Copied" : "Copy the message"}
         </button>
 
         {onValider && (
@@ -849,13 +849,13 @@ function EcranMessage({
                        text-[15px] font-semibold text-white transition-colors
                        disabled:opacity-60 sm:flex-none sm:px-8"
           >
-            {envoiEnCours ? "Un instant…" : "Valider l'envoi"}
+            {envoiEnCours ? "One moment…" : "Confirm the send"}
           </button>
         )}
       </div>
 
       <p className="mt-4 text-[12.5px] text-sombre-texte-doux">
-        Lien de rattachement&nbsp;: <code>{groupe.lien}</code>
+        Claim link: <code>{groupe.lien}</code>
       </p>
     </>
   );

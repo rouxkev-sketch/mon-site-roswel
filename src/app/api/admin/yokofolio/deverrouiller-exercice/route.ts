@@ -42,7 +42,7 @@ export async function POST(requete: NextRequest) {
   const { id } = (await requete.json().catch(() => ({}))) as { id?: string };
   if (!id) {
     return NextResponse.json(
-      { ok: false, message: "Quel portfolio ?" },
+      { ok: false, message: "Which portfolio?" },
       { status: 400 }
     );
   }
@@ -61,7 +61,7 @@ export async function POST(requete: NextRequest) {
       .update({
         exercice_verrouille: false,
         exercice_debloque_le: new Date().toISOString(),
-        exercice_debloque_par: user?.email ?? "administration",
+        exercice_debloque_par: user?.email ?? "admin",
       })
       .eq("id", id)
       .select("id, nom")
@@ -70,7 +70,7 @@ export async function POST(requete: NextRequest) {
     if (error) throw new Error(error.message);
     if (!data) {
       return NextResponse.json(
-        { ok: false, message: "Ce portfolio n'existe plus." },
+        { ok: false, message: "This portfolio no longer exists." },
         { status: 404 }
       );
     }
@@ -83,9 +83,9 @@ export async function POST(requete: NextRequest) {
         ficheNom: proprietaire.nom,
         genre: "modifications",
         detail:
-          "Le premier bloc de ton portfolio (artiste ou studio, et tes lieux " +
-          "d'exercice) a été rouvert par l'équipe : tu peux le corriger, " +
-          "puis le confirmer de nouveau.",
+          "The first block of your portfolio (artist or studio, and where " +
+          "you work) was reopened by the team: you can fix it, " +
+          "then confirm it again.",
       });
     }
 
@@ -94,7 +94,7 @@ export async function POST(requete: NextRequest) {
     return NextResponse.json(
       {
         ok: false,
-        message: `Le déblocage n'a pas abouti : ${
+        message: `Unlocking failed: ${
           erreur instanceof Error ? erreur.message : String(erreur)
         }`,
       },

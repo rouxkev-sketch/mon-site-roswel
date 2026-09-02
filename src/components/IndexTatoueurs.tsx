@@ -146,7 +146,7 @@ export function parametresDeRecherche(
     )) {
       parametres.set(cle, valeur);
     }
-    parametres.set("rayon", String(criteres.rayonKm));
+    parametres.set("rayon", String(criteres.rayonMi));
   }
   if (page > 1) parametres.set("page", String(page));
   return parametres;
@@ -296,11 +296,11 @@ function issuesDuVide(
 
   const issues: IssueAucunResultat[] = [];
 
-  const suivant = rayonSuivant(affiches.rayonKm);
+  const suivant = rayonSuivant(affiches.rayonMi);
   if (rayonApplicable(lieu) && suivant !== null) {
     issues.push({
-      libelle: `Expand to ${suivant}`,
-      surClic: () => chercher({ ...affiches, rayonKm: suivant }),
+      libelle: `Expand to ${suivant} mi`,
+      surClic: () => chercher({ ...affiches, rayonMi: suivant }),
     });
   }
 
@@ -1151,13 +1151,13 @@ export function IndexTatoueurs({
           //  pas deux.
           const lieu = affiches.lieu ? ligneCarte(affiches.lieu) : "";
           //  LE RAYON, seulement quand il veut dire quelque chose : on
-          //  cherche « à 50 km de Paris », jamais « à 50 km de la
-          //  France ».
+          //  cherche « 25 mi around Austin », jamais « 25 mi around
+          //  Texas » (en miles depuis la nº 806).
           const rayon =
             affiches.lieu &&
             (affiches.lieu.precision === "ville" ||
               affiches.lieu.precision === "adresse")
-              ? `${affiches.rayonKm} km`
+              ? `${affiches.rayonMi} mi`
               : "";
           /*  §2 (nº 624) — « PORTFOLIOS », PLUS « CRÉATIONS ». Ce
               chiffre est le TOTAL des cartes que la recherche a

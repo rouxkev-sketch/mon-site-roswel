@@ -183,7 +183,7 @@ const RELEVE_AU_CHARGEMENT: BasDeLaPile | null =
     : {
         profondeur: window.history.length,
         etranger: referentEtranger(),
-        origine: "secours (chargement du module)",
+        origine: "fallback (module load)",
         ne: NAISSANCE,
       };
 
@@ -238,7 +238,7 @@ export function lireLeBasDeLaPile(): BasDeLaPile | null {
           //  §B (nº 347) — le relevé porte désormais SA SIGNATURE. Une
           //  écriture d'une passe d'avant en est dépourvue : on le dit,
           //  plutôt que de le déguiser en l'une des deux vraies.
-          origine: lu.origine ?? "(écriture d'avant la nº 347)",
+          origine: lu.origine ?? "(written before no. 347)",
           ne: typeof lu.ne === "number" ? lu.ne : undefined,
         };
       }
@@ -347,6 +347,6 @@ var brut=null;try{brut=JSON.parse(sessionStorage.getItem(${cle})||"null")}catch(
 if(brut&&(t!=="navigate"||brut.ne===ne))return;
 var e=false;
 try{e=!!document.referrer&&new URL(document.referrer).origin!==location.origin}catch(x){}
-sessionStorage.setItem(${cle},JSON.stringify({profondeur:history.length,etranger:e,origine:"avant peinture",ne:ne}));
+sessionStorage.setItem(${cle},JSON.stringify({profondeur:history.length,etranger:e,origine:"before paint",ne:ne}));
 })()`;
 }

@@ -75,9 +75,9 @@ const DURABLES: {
 }[] = [
   {
     nom: "journal",
-    titre: "Journal de bord",
-    quoi: "Envoie chaque chargement, navigation, erreur et bascule de session au serveur (journal-de-bord.ndjson). Le coupe-circuit des redirections, lui, veille toujours.",
-    cout: "1 envoi au chargement + 2 par navigation",
+    titre: "Logbook",
+    quoi: "Sends every load, navigation, error and session switch to the server (journal-de-bord.ndjson). The redirect circuit breaker stays on watch regardless.",
+    cout: "1 send on load + 2 per navigation",
   },
 ];
 
@@ -89,8 +89,8 @@ const DURABLES: {
  * remontée, verre, clavier) sont retirées avec leur défaut, clos.
  */
 const PAR_ADRESSE: { parametre: string; titre: string; quoi: string }[] = [
-  { parametre: "sonde-vitesse", titre: "Vitesse", quoi: "Le temps de chargement, les cascades de lectures, ce qui attend quoi. C'est ELLE qui dit si le site va plus vite." },
-  { parametre: "sonde-nav", titre: "Navigation", quoi: "Le détail de chaque navigation du routeur." },
+  { parametre: "sonde-vitesse", titre: "Speed", quoi: "Load time, read waterfalls, what waits on what. THIS is the one that says whether the site got faster." },
+  { parametre: "sonde-nav", titre: "Navigation", quoi: "The detail of every router navigation." },
 ];
 
 const FOND = "#0B0F14";
@@ -186,11 +186,11 @@ export default function TableauDeBordDesSondes() {
     >
       <div style={{ maxWidth: 720, margin: "0 auto" }}>
         <h1 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 4px" }}>
-          Sondes de développement
+          Dev probes
         </h1>
         <p style={{ color: DOUX, margin: "0 0 20px" }}>
-          Toutes éteintes par défaut depuis la passe nº 712. Le site que tu
-          vois sans rien allumer ici est le site que voient tes visiteurs.
+          All off by default since pass no. 712. The site you see
+          without turning anything on here is the site your visitors see.
         </p>
 
         <div
@@ -201,10 +201,8 @@ export default function TableauDeBordDesSondes() {
         >
           <strong style={{ color: armees.length > 0 ? VIF : DOUX }}>
             {armees.length === 0
-              ? "Tout est éteint."
-              : `${armees.length} sonde${armees.length > 1 ? "s" : ""} allumée${
-                  armees.length > 1 ? "s" : ""
-                } : ${armees.join(", ")}`}
+              ? "Everything is off."
+              : `${armees.length} probe${armees.length > 1 ? "s" : ""} on: ${armees.join(", ")}`}
           </strong>
           {armees.length > 0 && (
             <button
@@ -223,18 +221,18 @@ export default function TableauDeBordDesSondes() {
                 cursor: "pointer",
               }}
             >
-              TOUT ÉTEINDRE
+              TURN ALL OFF
             </button>
           )}
         </div>
 
         <h2 style={{ fontSize: 17, fontWeight: 700, margin: "24px 0 8px" }}>
-          Interrupteurs
+          Switches
         </h2>
         <p style={{ color: DOUX, margin: "0 0 12px" }}>
-          Un clic suffit, et ça tient d&apos;une page à l&apos;autre — même
-          dans un onglet neuf. Ce qui est déjà installé sur une page ouverte
-          ne s&apos;en va qu&apos;à son prochain chargement.
+          One click is enough, and it sticks from page to page — even
+          in a new tab. What&apos;s already installed on an open page
+          only goes away on its next load.
         </p>
         {DURABLES.map((sonde) => {
           const allumee = armees.includes(sonde.nom);
@@ -265,28 +263,28 @@ export default function TableauDeBordDesSondes() {
                     cursor: "pointer",
                   }}
                 >
-                  {allumee ? "ALLUMÉE" : "éteinte"}
+                  {allumee ? "ON" : "off"}
                 </button>
               </div>
               <p style={{ color: DOUX, margin: "8px 0 0" }}>{sonde.quoi}</p>
               <p style={{ color: DOUX, margin: "4px 0 0", fontSize: 13 }}>
-                Coût quand elle est allumée : {sonde.cout}.
+                Cost while on: {sonde.cout}.
               </p>
             </div>
           );
         })}
 
         <h2 style={{ fontSize: 17, fontWeight: 700, margin: "24px 0 8px" }}>
-          Sondes d&apos;affichage
+          Display probes
         </h2>
         <p style={{ color: DOUX, margin: "0 0 12px" }}>
-          Celles-ci s&apos;ouvrent avec la page qu&apos;elles observent : dis
-          quelle page, puis clique la sonde. Elle s&apos;affiche dans un
-          onglet neuf ; ferme-le et elle est partie.
+          These open with the page they watch: say
+          which page, then click the probe. It shows up in a
+          new tab; close it and it&apos;s gone.
         </p>
         <label style={{ display: "block", marginBottom: 12 }}>
           <span style={{ color: DOUX, display: "block", marginBottom: 4 }}>
-            La page à observer
+            Page to watch
           </span>
           <input
             value={adresse}
@@ -328,10 +326,10 @@ export default function TableauDeBordDesSondes() {
         </div>
 
         <p style={{ color: DOUX, marginTop: 24, fontSize: 13 }}>
-          Pour vérifier qu&apos;il ne part plus rien : ouvre le site sans
-          rien allumer ici, puis regarde la sonde « Vitesse » — aucune ligne
-          « /api/dev/… » ne doit y figurer. (Le journal des réseaux du
-          navigateur le dit aussi, filtré sur « dev ».)
+          To check nothing is sent anymore: open the site without
+          turning anything on here, then look at the &quot;Speed&quot; probe — no
+          &quot;/api/dev/…&quot; line should show up. (The browser&apos;s network
+          log says it too, filtered on &quot;dev&quot;.)
         </p>
       </div>
     </main>

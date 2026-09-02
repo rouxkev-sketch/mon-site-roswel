@@ -140,7 +140,7 @@ export async function GET() {
     return NextResponse.json(
       {
         ok: false,
-        message: `Lecture impossible (migration supabase/yokofolio-suggestions-styles.sql passée ?) : ${
+        message: `Couldn't load (has migration supabase/yokofolio-suggestions-styles.sql been applied?): ${
           e instanceof Error ? e.message : String(e)
         }`,
       },
@@ -169,7 +169,7 @@ export async function POST(requete: NextRequest) {
   const DECISIONS = ["accepter", "refuser", "retirer"] as const;
   if (!corps?.id || !DECISIONS.includes(corps.decision as never)) {
     return NextResponse.json(
-      { ok: false, message: "Demande incomplète." },
+      { ok: false, message: "Incomplete request." },
       { status: 400 }
     );
   }
@@ -210,7 +210,7 @@ export async function POST(requete: NextRequest) {
         return NextResponse.json(
           {
             ok: false,
-            message: "Ce style n'est plus dans la liste — rien à retirer.",
+            message: "This style is no longer on the list — nothing to remove.",
           },
           { status: 409 }
         );
@@ -223,7 +223,7 @@ export async function POST(requete: NextRequest) {
       return NextResponse.json(
         {
           ok: false,
-          message: `Le retrait n'a pas abouti : ${
+          message: `Removal failed: ${
             e instanceof Error ? e.message : String(e)
           }`,
         },
@@ -254,13 +254,13 @@ export async function POST(requete: NextRequest) {
     } | null;
     if (!demande) {
       return NextResponse.json(
-        { ok: false, message: "Cette demande n'existe plus." },
+        { ok: false, message: "This request no longer exists." },
         { status: 404 }
       );
     }
     if (demande.etat !== "en_attente") {
       return NextResponse.json(
-        { ok: false, message: "Cette demande a déjà été tranchée." },
+        { ok: false, message: "This request has already been decided." },
         { status: 409 }
       );
     }
@@ -276,14 +276,14 @@ export async function POST(requete: NextRequest) {
       label = (corps.label ?? demande.propose).trim().replace(/\s+/g, " ");
       if (label.length < 2 || label.length > 40) {
         return NextResponse.json(
-          { ok: false, message: "Le nom du style doit faire 2 à 40 caractères." },
+          { ok: false, message: "The style name must be 2 to 40 characters." },
           { status: 400 }
         );
       }
       slug = slugifier(label);
       if (!slug) {
         return NextResponse.json(
-          { ok: false, message: "Ce nom ne donne aucune adresse valable." },
+          { ok: false, message: "This name doesn't make a valid URL." },
           { status: 400 }
         );
       }
@@ -295,7 +295,7 @@ export async function POST(requete: NextRequest) {
         !FAMILLES_STYLES.some((f) => f.slug === famille)
       ) {
         return NextResponse.json(
-          { ok: false, message: "Ce rangement n'existe pas." },
+          { ok: false, message: "This category doesn't exist." },
           { status: 400 }
         );
       }
@@ -312,7 +312,7 @@ export async function POST(requete: NextRequest) {
         return NextResponse.json(
           {
             ok: false,
-            message: `« ${collision.label} » occupe déjà cette adresse (${slug}). Choisis un autre nom.`,
+            message: `"${collision.label}" already has this URL (${slug}). Pick another name.`,
           },
           { status: 409 }
         );
@@ -355,8 +355,8 @@ export async function POST(requete: NextRequest) {
       //  qui ne nomme pas son sujet ne sert à rien.
       detail: [
         accepte
-          ? `« ${nomDitAuTatoueur} » rejoint la liste des styles.`
-          : `« ${nomDitAuTatoueur} » n'a pas été retenu.`,
+          ? `"${nomDitAuTatoueur}" is now on the style list.`
+          : `"${nomDitAuTatoueur}" wasn't added.`,
         message,
       ]
         .filter(Boolean)
@@ -370,7 +370,7 @@ export async function POST(requete: NextRequest) {
     return NextResponse.json(
       {
         ok: false,
-        message: `La décision n'a pas pu être enregistrée : ${
+        message: `The decision couldn't be saved: ${
           e instanceof Error ? e.message : String(e)
         }`,
       },

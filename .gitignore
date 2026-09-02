@@ -72,3 +72,13 @@ journal-de-bord*.ndjson
 
 #  Le journal du comparateur de cache (nº 781).
 /comparer-le-cache.txt
+
+#  La sortie du recenseur de textes (nº 797, scripts/recenser-textes.mjs)
+#  — une SORTIE, jamais un fichier du projet. ⚠️ nº 806 : Tailwind lit
+#  tous les fichiers non ignorés du dépôt (CE FICHIER-CI compris — d'où
+#  l'absence, dans cette note, des deux mots en cause), et ce JSON porte
+#  les mots-clés des émojis que la nº 804 avait précisément écartés de la
+#  feuille CSS (`@source not`) : sa seule présence à la racine engendrait
+#  14 règles mortes au bâti d'atelier. Ignoré, il ne rentre ni dans
+#  l'historique, ni dans la feuille.
+/recensement-textes.json

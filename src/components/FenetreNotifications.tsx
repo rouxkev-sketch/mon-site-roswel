@@ -761,7 +761,7 @@ export function FenetreNotifications({
           alignement="droite"
           role="dialog"
           aria-label="My notifications"
-          data-source-composant="FenetreNotifications · fenêtre web"
+          data-source-composant="FenetreNotifications · web window"
           className="mobile:hidden"
         >
           {/* L'EN-TÊTE — la cloche, le titre, la croix. La ligne qui le

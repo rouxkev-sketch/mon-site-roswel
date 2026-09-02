@@ -183,7 +183,7 @@ export async function GET() {
     return NextResponse.json(
       {
         ok: false,
-        message: `Lecture impossible (migration supabase/yokofolio-conventions-et-independent.sql passée ?) : ${
+        message: `Couldn't load (has migration supabase/yokofolio-conventions-et-independent.sql been applied?): ${
           e instanceof Error ? e.message : String(e)
         }`,
       },
@@ -212,7 +212,7 @@ export async function POST(requete: NextRequest) {
   const DECISIONS = ["accepter", "refuser"] as const;
   if (!corps?.id || !DECISIONS.includes(corps.decision as never)) {
     return NextResponse.json(
-      { ok: false, message: "Demande incomplète." },
+      { ok: false, message: "Incomplete request." },
       { status: 400 }
     );
   }
@@ -240,13 +240,13 @@ export async function POST(requete: NextRequest) {
     } | null;
     if (!demande) {
       return NextResponse.json(
-        { ok: false, message: "Cette demande n'existe plus." },
+        { ok: false, message: "This request no longer exists." },
         { status: 404 }
       );
     }
     if (demande.etat !== "en_attente") {
       return NextResponse.json(
-        { ok: false, message: "Cette demande a déjà été tranchée." },
+        { ok: false, message: "This request has already been decided." },
         { status: 409 }
       );
     }
@@ -272,7 +272,7 @@ export async function POST(requete: NextRequest) {
         return NextResponse.json(
           {
             ok: false,
-            message: `Le nom de la convention doit faire ${NOM_CONVENTION_MINIMUM} à ${NOM_CONVENTION_MAXIMUM} caractères.`,
+            message: `The convention name must be ${NOM_CONVENTION_MINIMUM} to ${NOM_CONVENTION_MAXIMUM} characters.`,
           },
           { status: 400 }
         );
@@ -280,7 +280,7 @@ export async function POST(requete: NextRequest) {
       slug = slugifier(nom);
       if (!slug) {
         return NextResponse.json(
-          { ok: false, message: "Ce nom ne contient aucune lettre." },
+          { ok: false, message: "This name has no letters." },
           { status: 400 }
         );
       }
@@ -295,7 +295,7 @@ export async function POST(requete: NextRequest) {
           {
             ok: false,
             message:
-              "Choisis la ville de la convention dans la liste — c'est elle qui donne ses coordonnées.",
+              "Pick the convention city from the list — that's what gives its coordinates.",
           },
           { status: 400 }
         );
@@ -309,7 +309,7 @@ export async function POST(requete: NextRequest) {
       if (/^[A-Z]{2}$/.test(paysDuLieu)) codePays = paysDuLieu;
       if (!/^[A-Z]{2}$/.test(codePays)) {
         return NextResponse.json(
-          { ok: false, message: "Le pays de cette convention est illisible." },
+          { ok: false, message: "This convention's country is unreadable." },
           { status: 400 }
         );
       }
@@ -340,7 +340,7 @@ export async function POST(requete: NextRequest) {
         return NextResponse.json(
           {
             ok: false,
-            message: `« ${collision.nom ?? slug} » occupe déjà cette place dans ce pays. Choisis un autre nom.`,
+            message: `"${collision.nom ?? slug}" already has this spot in this country. Pick another name.`,
           },
           { status: 409 }
         );
@@ -389,8 +389,8 @@ export async function POST(requete: NextRequest) {
       //  de l'administration après la ligne vide (`messageAdmin`).
       detail: [
         accepte
-          ? `« ${nomDitAuTatoueur} » rejoint la liste des conventions.`
-          : `« ${nomDitAuTatoueur} » n'a pas été retenue.`,
+          ? `"${nomDitAuTatoueur}" is now on the convention list.`
+          : `"${nomDitAuTatoueur}" wasn't added.`,
         message,
       ]
         .filter(Boolean)
@@ -410,7 +410,7 @@ export async function POST(requete: NextRequest) {
     return NextResponse.json(
       {
         ok: false,
-        message: `La décision n'a pas pu être enregistrée : ${
+        message: `The decision couldn't be saved: ${
           e instanceof Error ? e.message : String(e)
         }`,
       },

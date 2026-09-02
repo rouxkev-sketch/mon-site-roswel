@@ -185,14 +185,14 @@ async function lireAccueil(requete: string, taillePage: number) {
   //  style : une adresse bricolée à la main ne doit pas vider la page.
   const nature = natureCherchee(params.nature);
   const lieu = lieuDepuisParametres(params);
-  const rayonKm = rayonRetenu(Number(params.rayon));
+  const rayonMi = rayonRetenu(Number(params.rayon));
   const exclure = filtresConnus(
     (params.exclure ?? "").split(",").filter(Boolean)
   );
   const resultat = await listerTatoueurs({
     style,
     nature,
-    ...criteresDeLieu(lieu, rayonKm),
+    ...criteresDeLieu(lieu, rayonMi),
     exclure,
     //  ⚠️ LA TAILLE DE PAGE EST UN MULTIPLE DU NOMBRE DE COLONNES
     //  (nº 226-§1) : `colonnes × 6`, lu dans le cookie posé avant la
@@ -229,7 +229,7 @@ async function lireAccueil(requete: string, taillePage: number) {
     //  et les suivantes au premier geste (nº 211-§5).
     photosMax: PHOTOS_PAR_CARROUSEL,
   });
-  return { resultat, style, nature, lieu, rayonKm, exclure, page, jourMelange };
+  return { resultat, style, nature, lieu, rayonMi, exclure, page, jourMelange };
 }
 
 /*  §1 (nº 725) — LA LECTURE PARTAGÉE : deux appelants simultanés (les
@@ -365,7 +365,7 @@ export async function RenduAccueil({
   // La MÊME lecture que les métadonnées : le lieu est décodé de
   // l'adresse, le rayon ramené à un palier connu, les interrupteurs
   // éteints validés — voir `chargerAccueil`.
-  const { resultat, style, nature, lieu, rayonKm, exclure, page, jourMelange } =
+  const { resultat, style, nature, lieu, rayonMi, exclure, page, jourMelange } =
     await chargerAccueil(requeteNormalisee(params), taillePage);
 
   /**
@@ -406,7 +406,7 @@ export async function RenduAccueil({
       //  la page suivante prolonge exactement cet ordre-ci.
       jourMelange={jourMelange}
       message={resultat.message}
-      criteresInitiaux={{ style, nature, rayonKm, exclure, lieu }}
+      criteresInitiaux={{ style, nature, rayonMi, exclure, lieu }}
       //  L'AFFICHAGE DEMANDÉ PAR L'ADRESSE (nº 203-§1b) — décodé ici,
       //  comme les critères : le HTML rendu est le bon du premier coup.
       //  §2 (nº 257) — … ET LA MISE EN PAGE MÉMORISÉE quand l'adresse

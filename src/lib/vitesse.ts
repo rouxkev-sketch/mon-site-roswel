@@ -148,7 +148,7 @@ function nomCourt(url: string): string {
       const ici = window.location.pathname;
       return adresse.pathname === ici
         ? `page · ${adresse.pathname}`
-        : `préchargement · ${adresse.pathname}`;
+        : `prefetch · ${adresse.pathname}`;
     }
     if (adresse.pathname.startsWith("/api/")) return `api · ${adresse.pathname}`;
     if (adresse.pathname.includes("/_next/static/")) return "programme";
@@ -221,7 +221,7 @@ function requetesDe(debut: number, fin: number) {
   }));
   if (programme.length > 0) {
     lignes.push({
-      nom: `programme · ${programme.length} fichier${programme.length > 1 ? "s" : ""}`,
+      nom: `program · ${programme.length} file${programme.length > 1 ? "s" : ""}`,
       duree: Math.round(Math.max(...programme.map((e) => e.duration))),
       serveur: null,
     });
@@ -482,39 +482,39 @@ export function sAbonnerALaVitesse(rappel: () => void): () => void {
 
 /** Le verdict en toutes lettres, pour le relevé copié. */
 const MOT_DU_VERDICT: Record<string, string> = {
-  parallele: " → EN PARALLÈLE (déjà groupées)",
-  serie: " → EN SÉRIE (elles s'attendent)",
-  espacees: " → espacées (pas une cascade)",
+  parallele: " → IN PARALLEL (already grouped)",
+  serie: " → IN SERIES (waiting on each other)",
+  espacees: " → spaced out (not a waterfall)",
   aucun: "",
 };
 
 /** LE RELEVÉ, en texte — c'est ce que le bouton « Copier » envoie. */
 export function releveDeVitesse(): string {
-  if (mesures.length === 0) return "(aucune mesure)";
+  if (mesures.length === 0) return "(no measures)";
   return mesures
     .map((m) => {
       const tete =
         `${m.genre.toUpperCase()} · ${m.adresse}\n` +
         `  TOTAL ${m.total} ms` +
         (m.attente !== null
-          ? ` = attente réseau ${m.attente} + rendu ${m.rendu}`
+          ? ` = network wait ${m.attente} + render ${m.rendu}`
           : "") +
-        (m.enCours ? " (en cours…)" : " (jusqu'au silence du réseau)") +
-        `\n  PREMIER ÉCRAN ${m.premierEcran} ms` +
+        (m.enCours ? " (in progress…)" : " (until the network goes quiet)") +
+        `\n  FIRST SCREEN ${m.premierEcran} ms` +
         (m.reseau !== null
-          ? ` = réseau ${m.reseau} + serveur ${m.serveur} + rendu ${m.rendu}`
+          ? ` = network ${m.reseau} + server ${m.serveur} + render ${m.rendu}`
           : "");
       const base = m.base
         ? [
-            `  BASE ${m.base.nombre} lecture${m.base.nombre > 1 ? "s" : ""} · ` +
-              `${m.base.cumul} ms cumulés sur ${m.base.etendue} ms` +
+            `  DB ${m.base.nombre} read${m.base.nombre > 1 ? "s" : ""} · ` +
+              `${m.base.cumul} ms total over ${m.base.etendue} ms` +
               MOT_DU_VERDICT[m.base.verdict ?? "aucun"],
           ]
         : [];
       const lignes = m.requetes.map(
         (r) =>
           `    ${String(r.duree).padStart(5)} ms  ${r.nom}` +
-          (r.serveur !== null ? `  [serveur ${r.serveur} ms]` : "")
+          (r.serveur !== null ? `  [server ${r.serveur} ms]` : "")
       );
       return [tete, ...base, ...lignes].join("\n");
     })

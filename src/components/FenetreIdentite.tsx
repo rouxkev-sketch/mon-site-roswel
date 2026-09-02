@@ -342,7 +342,7 @@ export function FenetreIdentite({
           alignement="droite"
           role="dialog"
           aria-label="Edit my account"
-          data-source-composant="FenetreIdentite · fenêtre web"
+          data-source-composant="FenetreIdentite · web window"
           className="mobile:hidden"
         >
           {/*  ██ §6 (nº 662) — LE TRAIT S'EN VA, LE TITRE DESCEND DANS

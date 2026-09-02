@@ -156,7 +156,7 @@ if (typeof window !== "undefined") {
         departX = premier.clientX;
         departY = premier.clientY;
       }
-      annoncerLeDebut("doigt posé");
+      annoncerLeDebut("finger down");
     },
     { capture: true, passive: true }
   );
@@ -222,7 +222,7 @@ if (typeof window !== "undefined") {
     (evenement: KeyboardEvent) => {
       if (!TOUCHES_DE_DEFILEMENT.has(evenement.key)) return;
       armerLaLancee();
-      annoncerLeDebut("touche de défilement");
+      annoncerLeDebut("scroll key");
     },
     { capture: true, passive: true }
   );

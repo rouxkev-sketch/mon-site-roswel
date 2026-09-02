@@ -165,14 +165,14 @@ const PASTILLE_COMPTEUR =
   "px-2 min-h-[20px] text-[11.5px] text-white";
 
 const SECTIONS = [
-  { cle: "fiches", libelle: "Portfolios à valider" },
+  { cle: "fiches", libelle: "Portfolios to review" },
   //  ██ nº 801 — LES MESSAGES DU FORMULAIRE DE CONTACT ██
   //  Ils arrivaient en base sans que personne ne puisse les lire : le
   //  seul chemin vers eux était un courriel envoyé à `CONTACT_EMAIL`.
   //  Un envoi qui échoue, une boîte mal rangée, et le message
   //  n'existait plus pour personne. Il a maintenant son écran.
   { cle: "messages", libelle: "Messages" },
-  { cle: "signalements", libelle: "Signalements" },
+  { cle: "signalements", libelle: "Reports" },
   //  LES STYLES PROPOSÉS PAR LES TATOUEURS (passe nº 122). Accepter
   //  en ajoute un au catalogue du site ; refuser clôt la demande. Dans
   //  les deux cas, le tatoueur est prévenu.
@@ -190,7 +190,7 @@ const SECTIONS = [
   //  test » mais à LA METTRE EN LIGNE — une fiche d'administrateur ne
   //  passe pas par la validation POUR EXISTER. Ses MODIFICATIONS, si
   //  (passe nº 152) : elles reviennent dans « Fiches à valider ».
-  { cle: "demarchage", libelle: "Démarchage" },
+  { cle: "demarchage", libelle: "Outreach" },
 ] as const;
 
 /** UNE SUGGESTION DE STYLE, telle que la sert l'API. */
@@ -315,7 +315,7 @@ const ERREUR =
 function dateCourte(iso: string | null | undefined): string {
   if (!iso) return "";
   try {
-    return new Date(iso).toLocaleDateString("fr-FR", {
+    return new Date(iso).toLocaleDateString("en-US", {
       day: "numeric",
       month: "short",
       hour: "2-digit",
@@ -365,7 +365,7 @@ export function AdminYokofolio() {
   );
   const [aPurger, setAPurger] = useState<FicheEnSuppression | null>(null);
   const [saisiePurge, setSaisiePurge] = useState("");
-  const purgeConfirmee = saisiePurge.trim().toLowerCase() === "supprimer";
+  const purgeConfirmee = saisiePurge.trim().toLowerCase() === "delete";
   const [envoiSuppression, setEnvoiSuppression] = useState(false);
   /**
    * §3 (nº 330) — LE RETOUR REFERME LA FICHE OUVERTE, il ne quitte pas
@@ -432,7 +432,7 @@ export function AdminYokofolio() {
   const [suppressionOuverte, setSuppressionOuverte] = useState(false);
   const [saisieSuppression, setSaisieSuppression] = useState("");
   const suppressionConfirmee =
-    saisieSuppression.trim().toLowerCase() === "supprimer";
+    saisieSuppression.trim().toLowerCase() === "delete";
   /* ---- Messages du formulaire de contact (nº 801) ---- */
   const [messages, setMessages] = useState<MessageContact[] | null>(null);
   const [erreurMessages, setErreurMessages] = useState<string | null>(null);
@@ -506,7 +506,7 @@ export function AdminYokofolio() {
     } catch (e) {
       setFiches([]);
       setSuppressions([]);
-      setErreurFiches(e instanceof Error ? e.message : "Lecture impossible.");
+      setErreurFiches(e instanceof Error ? e.message : "Couldn't load.");
     }
   }, []);
 
@@ -524,7 +524,7 @@ export function AdminYokofolio() {
     } catch (e) {
       setSuggestions([]);
       setErreurSuggestions(
-        e instanceof Error ? e.message : "Lecture impossible."
+        e instanceof Error ? e.message : "Couldn't load."
       );
     }
   }, []);
@@ -550,7 +550,7 @@ export function AdminYokofolio() {
     } catch (e) {
       setConventions([]);
       setErreurSuggestions(
-        e instanceof Error ? e.message : "Lecture impossible."
+        e instanceof Error ? e.message : "Couldn't load."
       );
     }
   }, []);
@@ -574,7 +574,7 @@ export function AdminYokofolio() {
     } catch (e) {
       setMessages([]);
       setErreurMessages(
-        e instanceof Error ? e.message : "Lecture des messages impossible."
+        e instanceof Error ? e.message : "Couldn't load messages."
       );
     }
   }, []);
@@ -606,7 +606,7 @@ export function AdminYokofolio() {
           liste?.map((m) => (m.id === id ? { ...m, traite: !lu } : m)) ?? liste
         );
         setErreurMessages(
-          e instanceof Error ? e.message : "L'enregistrement n'a pas abouti."
+          e instanceof Error ? e.message : "Saving failed."
         );
       }
     },
@@ -627,7 +627,7 @@ export function AdminYokofolio() {
     } catch (e) {
       setSignalements([]);
       setErreurSignalements(
-        e instanceof Error ? e.message : "Lecture impossible."
+        e instanceof Error ? e.message : "Couldn't load."
       );
     }
   }, []);
@@ -692,7 +692,7 @@ export function AdminYokofolio() {
       setSuggestions(null); // relecture : la ligne montre son nouvel état
     } catch (e) {
       setErreurSuggestions(
-        e instanceof Error ? e.message : "Le retrait n'a pas abouti."
+        e instanceof Error ? e.message : "Removal failed."
       );
     } finally {
       setEnvoiSuggestion(false);
@@ -726,7 +726,7 @@ export function AdminYokofolio() {
       setSuggestions(null); // relecture : la liste montre la décision
     } catch (e) {
       setErreurSuggestions(
-        e instanceof Error ? e.message : "La décision n'a pas abouti."
+        e instanceof Error ? e.message : "The decision failed."
       );
     } finally {
       setEnvoiSuggestion(false);
@@ -784,7 +784,7 @@ export function AdminYokofolio() {
       setConventions(null); // relecture : la ligne montre la décision
     } catch (e) {
       setErreurSuggestions(
-        e instanceof Error ? e.message : "La décision n'a pas abouti."
+        e instanceof Error ? e.message : "The decision failed."
       );
     } finally {
       setEnvoiSuggestion(false);
@@ -902,8 +902,8 @@ export function AdminYokofolio() {
       if (action === "supprimer" && donnees.notifiee === false) {
         setErreurFiches(
           donnees.sansProprietaire
-            ? "Portfolio retiré. Personne n'a été prévenu : ce portfolio n'a pas de compte propriétaire."
-            : "Portfolio retiré, MAIS la notification n'a pas pu être posée — la personne n'a rien reçu."
+            ? "Portfolio removed. Nobody was notified: this portfolio has no owner account."
+            : "Portfolio removed, BUT the notification couldn't be posted — the person got nothing."
         );
       } else {
         setErreurFiches(null);
@@ -911,7 +911,7 @@ export function AdminYokofolio() {
       await chargerFiches();
     } catch (e) {
       setErreurFiches(
-        e instanceof Error ? e.message : "La décision n'a pas été enregistrée."
+        e instanceof Error ? e.message : "The decision wasn't saved."
       );
     } finally {
       setEnvoiDecision(false);
@@ -961,14 +961,14 @@ export function AdminYokofolio() {
       setErreurFiches(
         action === "annuler_suppression" && donnees.notifiee === false
           ? donnees.sansProprietaire
-            ? "Portfolio rétabli. Personne n'a été prévenu : ce portfolio n'a pas de compte propriétaire."
-            : "Portfolio rétabli, MAIS la notification n'a pas pu être posée."
+            ? "Portfolio restored. Nobody was notified: this portfolio has no owner account."
+            : "Portfolio restored, BUT the notification couldn't be posted."
           : null
       );
       await chargerFiches();
     } catch (e) {
       setErreurFiches(
-        e instanceof Error ? e.message : "L'action n'a pas abouti."
+        e instanceof Error ? e.message : "The action failed."
       );
     } finally {
       setEnvoiSuppression(false);
@@ -993,11 +993,11 @@ export function AdminYokofolio() {
       const donnees = (await reponse.json()) as { ok: boolean; message?: string };
       if (!donnees.ok) throw new Error(donnees.message);
       setErreurFiches(
-        "Le premier bloc de ce portfolio est rouvert : le tatoueur peut le corriger, puis le confirmer de nouveau."
+        "The first block of this portfolio is reopened: the artist can fix it, then confirm it again."
       );
     } catch (e) {
       setErreurFiches(
-        e instanceof Error ? e.message : "Le déblocage n'a pas abouti."
+        e instanceof Error ? e.message : "Unlocking failed."
       );
     } finally {
       setEnvoiDecision(false);
@@ -1018,7 +1018,7 @@ export function AdminYokofolio() {
       await chargerSignalements();
     } catch (e) {
       setErreurSignalements(
-        e instanceof Error ? e.message : "La note n'a pas été enregistrée."
+        e instanceof Error ? e.message : "The note wasn't saved."
       );
     }
   }
@@ -1046,12 +1046,12 @@ export function AdminYokofolio() {
     return (
       <main className="flex-1 mx-auto w-full max-w-[440px] px-5 pt-16 pb-24 text-center">
         <h1 className="text-[clamp(1.5rem,4vw,1.9rem)] font-bold text-sombre-texte">
-          Espace réservé
+          Restricted area
         </h1>
         <p className="mt-3 text-sombre-texte-doux leading-relaxed">
           {utilisateur
-            ? "Ce compte n'est pas administrateur de yokofolio."
-            : "Connecte-toi avec un compte administrateur pour ouvrir cette page."}
+            ? "This account isn't a YokoFolio admin."
+            : "Log in with an admin account to open this page."}
         </p>
         <Link
           href={utilisateur ? "/" : "/devenir-tatoueur"}
@@ -1059,7 +1059,7 @@ export function AdminYokofolio() {
                      px-7 min-h-[52px] bg-primaire hover:bg-primaire-fonce
                      text-white font-semibold transition-colors"
         >
-          {utilisateur ? "Retour à l'accueil" : "Me connecter"}
+          {utilisateur ? "Back to home" : "Log in"}
         </Link>
       </main>
     );
@@ -1092,7 +1092,7 @@ export function AdminYokofolio() {
             ligne ; en colonne (≥ 1024 px) le repli n'a plus lieu
             d'être, d'où `lg:flex-nowrap`. */}
         <nav
-          aria-label="Sections de l'admin"
+          aria-label="Admin sections"
           className="mt-4 flex flex-wrap lg:flex-col lg:flex-nowrap gap-1.5"
         >
           {SECTIONS.map((entree) => (
@@ -1137,7 +1137,7 @@ export function AdminYokofolio() {
         {section === "fiches" && !ficheOuverte && (
           <>
             <h1 className="text-[22px] font-bold text-sombre-texte">
-              Portfolios à valider
+              Portfolios to review
             </h1>
             {erreurFiches && (
               <p className={`mt-4 ${ERREUR}`}>{erreurFiches}</p>
@@ -1150,7 +1150,7 @@ export function AdminYokofolio() {
               )}
               {fiches?.length === 0 && !erreurFiches && (
                 <p className="rounded-xl bg-sombre-carte px-4 py-5 text-sombre-texte-doux">
-                  Aucun portfolio en attente — tout est à jour.
+                  No portfolio waiting — all caught up.
                 </p>
               )}
               {fiches?.map((fiche) => (
@@ -1174,7 +1174,7 @@ export function AdminYokofolio() {
                     <span className="block text-[13px] text-sombre-texte-doux truncate">
                       {fiche.ville_nom} · {fiche.styles.length} style
                       {fiche.styles.length > 1 ? "s" : ""}
-                      {fiche.cree_le ? ` · reçue le ${dateCourte(fiche.cree_le)}` : ""}
+                      {fiche.cree_le ? ` · received ${dateCourte(fiche.cree_le)}` : ""}
                     </span>
                   </span>
                   <span className="shrink-0 flex flex-wrap items-center justify-end gap-2.5">
@@ -1184,16 +1184,16 @@ export function AdminYokofolio() {
                          d'un interrupteur dans le démarchage. */}
                     {fiche.fiche_admin && (
                       <span className="rounded-full bg-sombre-eleve px-2.5 min-h-[24px] inline-flex items-center text-[12px] font-medium text-sombre-texte-doux">
-                        Portfolio d&apos;administrateur
+                        Admin portfolio
                       </span>
                     )}
                     {fiche.modification && (
                       <span className="rounded-full bg-primaire-voile px-2.5 min-h-[24px] inline-flex items-center text-[12px] font-medium text-sombre-texte">
-                        Modification d&apos;un portfolio en ligne
+                        Edit of a live portfolio
                       </span>
                     )}
                     <span className="text-[13px] font-semibold text-primaire">
-                      Vérifier →
+                      Review →
                     </span>
                   </span>
                 </button>
@@ -1217,11 +1217,11 @@ export function AdminYokofolio() {
             {suppressions && suppressions.length > 0 && (
               <>
                 <h2 className="mt-9 text-[17px] font-bold text-sombre-texte">
-                  Suppressions en cours
+                  Deletions in progress
                 </h2>
                 <p className="mt-1.5 text-[13px] leading-relaxed text-sombre-texte-doux">
-                  Ces portfolios sont déjà invisibles du public. Ils seront
-                  effacés — photos comprises — à leur échéance.
+                  These portfolios are already hidden from the public. They&apos;ll be
+                  erased — photos included — when their deadline comes.
                 </p>
                 <div className="mt-4 flex flex-col gap-2.5">
                   {suppressions.map((fiche) => (
@@ -1232,12 +1232,12 @@ export function AdminYokofolio() {
                     >
                       <span className="min-w-0">
                         <span className="block font-semibold text-sombre-texte truncate">
-                          {fiche.nom ?? "Portfolio sans nom"}
+                          {fiche.nom ?? "Untitled portfolio"}
                         </span>
                         <span className="block text-[13px] text-sombre-texte-doux truncate">
                           {fiche.purge_le
-                            ? `Effacé le ${dateCourte(fiche.purge_le)}`
-                            : "Échéance inconnue"}
+                            ? `Scheduled for ${dateCourte(fiche.purge_le)}`
+                            : "No deadline known"}
                           {fiche.photos_total > 0
                             ? ` · ${fiche.photos_total} photo${
                                 fiche.photos_total > 1 ? "s" : ""
@@ -1251,11 +1251,11 @@ export function AdminYokofolio() {
                              Sans les deux dates, on ne l'attribue pas. */}
                         <span className="rounded-full bg-sombre-eleve px-2.5 min-h-[24px] inline-flex items-center text-[12px] font-medium text-sombre-texte-doux">
                           {fiche.jours_demandes === null
-                            ? "Suppression en cours"
+                            ? "Deletion in progress"
                             : fiche.jours_demandes <=
                                 DELAI_SUPPRESSION_ADMIN_JOURS
-                              ? `Administration · ${DELAI_SUPPRESSION_ADMIN_JOURS} jours`
-                              : `Le tatoueur · ${DELAI_SUPPRESSION_JOURS} jours`}
+                              ? `Admin · ${DELAI_SUPPRESSION_ADMIN_JOURS} days`
+                              : `The artist · ${DELAI_SUPPRESSION_JOURS} days`}
                         </span>
                         <button
                           type="button"
@@ -1271,7 +1271,7 @@ export function AdminYokofolio() {
                                      transition-opacity hover:opacity-90
                                      disabled:cursor-not-allowed disabled:opacity-40"
                         >
-                          Annuler
+                          Cancel
                         </button>
                         <button
                           type="button"
@@ -1284,7 +1284,7 @@ export function AdminYokofolio() {
                                      text-erreur transition-opacity hover:opacity-80
                                      disabled:cursor-not-allowed disabled:opacity-40"
                         >
-                          Supprimer définitivement
+                          Delete permanently
                         </button>
                       </span>
                     </div>
@@ -1301,12 +1301,12 @@ export function AdminYokofolio() {
               <div
                 role="dialog"
                 aria-modal="true"
-                aria-label="Supprimer définitivement"
+                aria-label="Delete permanently"
                 className="fixed inset-0 z-[80] flex items-center justify-center p-4"
               >
                 <button
                   type="button"
-                  aria-label="Annuler"
+                  aria-label="Cancel"
                   onClick={() => setAPurger(null)}
                   className="absolute inset-0 bg-black/25 cursor-default
                              opacity-100 transition-opacity duration-200 starting:opacity-0"
@@ -1317,25 +1317,24 @@ export function AdminYokofolio() {
                              shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
                 >
                   <h2 className="text-[17px] font-bold text-sombre-texte">
-                    Effacer «&nbsp;{aPurger.nom ?? "ce portfolio"}&nbsp;»
-                    maintenant&nbsp;?
+                    Erase &quot;{aPurger.nom ?? "this portfolio"}&quot; now?
                   </h2>
                   <p className="mt-2 text-[13.5px] leading-relaxed text-sombre-texte-doux">
                     {aPurger.photos_total > 0
-                      ? `Ce portfolio et ses ${aPurger.photos_total} photo${
+                      ? `This portfolio and its ${aPurger.photos_total} photo${
                           aPurger.photos_total > 1 ? "s" : ""
-                        } seront effacés.`
-                      : "Ce portfolio sera effacé."}{" "}
+                        } will be erased.`
+                      : "This portfolio will be erased."}{" "}
                     <span className="font-semibold text-erreur">
-                      Sans attendre l&apos;échéance — aucune récupération
-                      possible.
+                      Without waiting for the deadline — no way to
+                      recover it.
                     </span>{" "}
-                    Le compte de la personne, lui, n&apos;est pas supprimé.
+                    The person&apos;s account itself is not deleted.
                   </p>
                   <p className="mt-3 text-[13.5px] leading-relaxed text-sombre-texte-doux">
-                    Pour confirmer, tape{" "}
-                    <span className="font-bold text-erreur">SUPPRIMER</span>{" "}
-                    ci-dessous.
+                    To confirm, type{" "}
+                    <span className="font-bold text-erreur">DELETE</span>{" "}
+                    below.
                   </p>
                   <input
                     type="text"
@@ -1343,11 +1342,11 @@ export function AdminYokofolio() {
                     onChange={(evenement) =>
                       setSaisiePurge(evenement.target.value)
                     }
-                    placeholder="SUPPRIMER"
+                    placeholder="DELETE"
                     autoComplete="off"
                     autoCapitalize="characters"
                     spellCheck={false}
-                    aria-label="Tape SUPPRIMER pour confirmer"
+                    aria-label="Type DELETE to confirm"
                     className="mt-4 w-full min-h-[48px] rounded-lg border border-transparent
                                bg-sombre-eleve-clair px-4 text-base tracking-wide text-sombre-texte
                                placeholder:text-sombre-texte-doux/50 outline-none
@@ -1361,7 +1360,7 @@ export function AdminYokofolio() {
                                  text-sombre-texte-doux transition-colors
                                  hover:text-sombre-texte"
                     >
-                      Annuler
+                      Cancel
                     </button>
                     <button
                       type="button"
@@ -1374,7 +1373,7 @@ export function AdminYokofolio() {
                                  hover:opacity-90 disabled:cursor-not-allowed
                                  disabled:opacity-40"
                     >
-                      Supprimer
+                      Delete
                     </button>
                   </div>
                 </div>
@@ -1390,7 +1389,7 @@ export function AdminYokofolio() {
               onClick={() => setFicheOuverte(null)}
               className="text-[13.5px] text-sombre-texte-doux hover:text-primaire transition-colors"
             >
-              ← Retour à la liste
+              ← Back to the list
             </button>
             <h1 className="mt-2 text-[22px] font-bold text-sombre-texte">
               {ficheOuverte.nom}
@@ -1411,9 +1410,9 @@ export function AdminYokofolio() {
             {ficheOuverte.modification && (
               <div className="mt-3 rounded-xl bg-sombre-carte px-4 py-3">
                 <p className="text-[13px] font-semibold text-sombre-texte">
-                  Modification d&apos;une fiche déjà en ligne
+                  Edit of a portfolio already live
                   {ficheOuverte.fiche_admin
-                    ? " (portfolio d'administrateur)"
+                    ? " (admin portfolio)"
                     : ""}
                 </p>
                 {ficheOuverte.champs_modifies?.length ? (
@@ -1430,15 +1429,15 @@ export function AdminYokofolio() {
                   </ul>
                 ) : (
                   <p className="mt-1 text-[13px] text-sombre-texte-doux">
-                    Aucun champ public ne diffère — la modification porte
-                    sur des éléments écrits directement (photos, modes
-                    d&apos;exercice, adresses).
+                    No public field differs — the edit touches things
+                    written directly (photos, work modes,
+                    addresses).
                   </p>
                 )}
                 <p className="mt-2 text-[13px] leading-relaxed text-sombre-texte-doux">
-                  La version publique n&apos;a pas bougé : elle attend
-                  cette décision. « Valider » la remplace par ce qui est
-                  affiché ci-dessous.
+                  The public version hasn&apos;t changed: it&apos;s waiting for
+                  this decision. &quot;Approve&quot; replaces it with what&apos;s
+                  shown below.
                 </p>
               </div>
             )}
@@ -1455,7 +1454,7 @@ export function AdminYokofolio() {
               )}
               {ficheOuverte.site_web && (
                 <a href={ficheOuverte.site_web} target="_blank" rel="noopener noreferrer" className="text-primaire hover:underline underline-offset-4">
-                  Site web ↗
+                  Website ↗
                 </a>
               )}
             </div>
@@ -1495,7 +1494,7 @@ export function AdminYokofolio() {
                         Supabase Storage), affichées telles quelles. */}
                     <img
                       src={url}
-                      alt={`Photo du style ${libelleStyle(slug)}`}
+                      alt={`${libelleStyle(slug)} style photo`}
                       className="w-full aspect-[4/5] object-cover rounded-lg"
                     />
                     <figcaption className="mt-1 text-[12.5px] text-sombre-texte-doux">
@@ -1525,8 +1524,8 @@ export function AdminYokofolio() {
                            transition-colors disabled:opacity-60"
               >
                 {ficheOuverte.modification
-                  ? "Valider — publier la modification"
-                  : "Valider — publier le portfolio"}
+                  ? "Approve — publish the edit"
+                  : "Approve — publish the portfolio"}
               </button>
               <button
                 type="button"
@@ -1540,7 +1539,7 @@ export function AdminYokofolio() {
                            bg-sombre-eleve text-sombre-texte
                            hover:bg-sombre-eleve-clair transition-colors"
               >
-                Demander des modifications
+                Request changes
               </button>
 
               {/* ROUVRIR LE BLOC 1 — la seule action qui défait un
@@ -1557,7 +1556,7 @@ export function AdminYokofolio() {
                            hover:bg-sombre-eleve-clair
                            transition-colors disabled:opacity-60"
               >
-                Rouvrir le premier bloc (artiste / studio)
+                Reopen the first block (artist / studio)
               </button>
 
               {/*  METTRE HORS LIGNE — la sanction. Elle DÉPUBLIE la
@@ -1579,7 +1578,7 @@ export function AdminYokofolio() {
                            text-[14.5px] font-semibold text-sombre-texte-doux
                            hover:text-erreur transition-colors"
               >
-                Mettre le portfolio hors ligne
+                Take the portfolio offline
               </button>
 
               {/*  ██ §1 (nº 675) — SUPPRIMER LA DEMANDE ██
@@ -1626,7 +1625,7 @@ export function AdminYokofolio() {
                            hover:text-sombre-texte transition-colors
                            disabled:opacity-60"
               >
-                Supprimer la demande
+                Delete the request
               </button>
             </div>
 
@@ -1638,8 +1637,8 @@ export function AdminYokofolio() {
               <div className="mt-4 max-w-[560px] rounded-xl bg-sombre-carte p-5">
                 <p className="text-[14px] font-semibold text-sombre-texte">
                   {refusOuvert === "hors_ligne"
-                    ? "Pourquoi ce portfolio quitte-t-il le site ?"
-                    : "Pourquoi ?"}
+                    ? "Why is this portfolio leaving the site?"
+                    : "Why?"}
                 </p>
                 <div className="mt-3 flex flex-col gap-1">
                   {MOTIFS_MODERATION.map((motif) => (
@@ -1669,8 +1668,8 @@ export function AdminYokofolio() {
                     onChange={(e) => setNoteMotif(e.target.value)}
                     rows={3}
                     maxLength={600}
-                    placeholder="Précise en quelques mots…"
-                    aria-label="Préciser le motif"
+                    placeholder="A few words…"
+                    aria-label="Explain the reason"
                     className={`mt-3 py-3 text-[14.5px] resize-y ${CHAMP}`}
                   />
                 )}
@@ -1683,10 +1682,10 @@ export function AdminYokofolio() {
                              disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {envoiDecision
-                    ? "Envoi…"
+                    ? "Sending…"
                     : refusOuvert === "hors_ligne"
-                      ? "Retirer le portfolio du site"
-                      : "Envoyer la demande"}
+                      ? "Remove the portfolio from the site"
+                      : "Send the request"}
                 </button>
               </div>
             )}
@@ -1709,12 +1708,12 @@ export function AdminYokofolio() {
               <div
                 role="dialog"
                 aria-modal="true"
-                aria-label="Supprimer la demande"
+                aria-label="Delete the request"
                 className="fixed inset-0 z-[80] flex items-center justify-center p-4"
               >
                 <button
                   type="button"
-                  aria-label="Annuler"
+                  aria-label="Cancel"
                   onClick={() => setSuppressionOuverte(false)}
                   className="absolute inset-0 bg-black/25 cursor-default
                              opacity-100 transition-opacity duration-200 starting:opacity-0"
@@ -1725,7 +1724,7 @@ export function AdminYokofolio() {
                              shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
                 >
                   <h2 className="text-[17px] font-bold text-sombre-texte">
-                    Supprimer «&nbsp;{ficheOuverte.nom}&nbsp;»&nbsp;?
+                    Delete &quot;{ficheOuverte.nom}&quot;?
                   </h2>
                   {/*  CE QUI PART, NOMMÉ. Le nombre de photos vient du
                        serveur (§2 nº 688, route des fiches) : il compte
@@ -1744,21 +1743,21 @@ export function AdminYokofolio() {
                        l'effacement. */}
                   <p className="mt-2 text-[13.5px] leading-relaxed text-sombre-texte-doux">
                     {typeof ficheOuverte.photos_total === "number"
-                      ? `Ce portfolio et ses ${ficheOuverte.photos_total} photo${
+                      ? `This portfolio and its ${ficheOuverte.photos_total} photo${
                           ficheOuverte.photos_total > 1 ? "s" : ""
-                        } seront effacés.`
-                      : "Ce portfolio et toutes ses photos seront effacés (nombre de photos inconnu)."}{" "}
+                        } will be erased.`
+                      : "This portfolio and all its photos will be erased (photo count unknown)."}{" "}
                     <span className="font-semibold text-erreur">
-                      Invisible immédiatement, effacé définitivement dans{" "}
-                      {DELAI_SUPPRESSION_ADMIN_JOURS} jours — annulable
-                      d&apos;ici là.
+                      Hidden right away, permanently erased in{" "}
+                      {DELAI_SUPPRESSION_ADMIN_JOURS} days — can be undone
+                      until then.
                     </span>{" "}
-                    Le compte de la personne, lui, n&apos;est pas supprimé.
+                    The person&apos;s account itself is not deleted.
                   </p>
                   <p className="mt-3 text-[13.5px] leading-relaxed text-sombre-texte-doux">
-                    Pour confirmer, tape{" "}
-                    <span className="font-bold text-erreur">SUPPRIMER</span>{" "}
-                    ci-dessous.
+                    To confirm, type{" "}
+                    <span className="font-bold text-erreur">DELETE</span>{" "}
+                    below.
                   </p>
                   <input
                     type="text"
@@ -1766,11 +1765,11 @@ export function AdminYokofolio() {
                     onChange={(evenement) =>
                       setSaisieSuppression(evenement.target.value)
                     }
-                    placeholder="SUPPRIMER"
+                    placeholder="DELETE"
                     autoComplete="off"
                     autoCapitalize="characters"
                     spellCheck={false}
-                    aria-label="Tape SUPPRIMER pour confirmer"
+                    aria-label="Type DELETE to confirm"
                     className="mt-4 w-full min-h-[48px] rounded-lg border border-transparent
                                bg-sombre-eleve-clair px-4 text-base tracking-wide text-sombre-texte
                                placeholder:text-sombre-texte-doux/50 outline-none
@@ -1787,7 +1786,7 @@ export function AdminYokofolio() {
                                  text-sombre-texte-doux transition-colors
                                  hover:text-sombre-texte"
                     >
-                      Annuler
+                      Cancel
                     </button>
                     <button
                       type="button"
@@ -1798,7 +1797,7 @@ export function AdminYokofolio() {
                                  hover:opacity-90 disabled:cursor-not-allowed
                                  disabled:opacity-40"
                     >
-                      Supprimer
+                      Delete
                     </button>
                   </div>
                 </div>
@@ -1834,7 +1833,7 @@ export function AdminYokofolio() {
               )}
               {messages?.length === 0 && !erreurMessages && (
                 <p className="rounded-xl bg-sombre-carte px-4 py-5 text-sombre-texte-doux">
-                  Aucun message pour l&apos;instant.
+                  No messages yet.
                 </p>
               )}
               {messages?.map((m) => (
@@ -1857,7 +1856,7 @@ export function AdminYokofolio() {
                       {!m.traite && (
                         <span
                           aria-hidden="true"
-                          title="Non lu"
+                          title="Unread"
                           className="mr-2 inline-block h-[8px] w-[8px] rounded-full bg-primaire align-middle"
                         />
                       )}
@@ -1890,7 +1889,7 @@ export function AdminYokofolio() {
                                  text-sombre-texte-doux hover:text-sombre-texte
                                  hover:bg-sombre-eleve transition-colors"
                     >
-                      {m.traite ? "Marquer non lu" : "Marquer lu"}
+                      {m.traite ? "Mark unread" : "Mark read"}
                     </button>
                   </div>
                 </article>
@@ -1902,7 +1901,7 @@ export function AdminYokofolio() {
         {section === "signalements" && (
           <>
             <h1 className="text-[22px] font-bold text-sombre-texte">
-              Signalements
+              Reports
             </h1>
             {erreurSignalements && (
               <p className={`mt-4 ${ERREUR}`}>{erreurSignalements}</p>
@@ -1915,7 +1914,7 @@ export function AdminYokofolio() {
               )}
               {signalements?.length === 0 && !erreurSignalements && (
                 <p className="rounded-xl bg-sombre-carte px-4 py-5 text-sombre-texte-doux">
-                  Aucun signalement — tant mieux.
+                  No reports — good news.
                 </p>
               )}
               {signalements?.map((s) => (
@@ -1939,7 +1938,7 @@ export function AdminYokofolio() {
                     </p>
                     <p className="text-[12.5px] text-sombre-texte-doux">
                       {dateCourte(s.cree_le)}
-                      {s.traite ? " · archivé" : ""}
+                      {s.traite ? " · archived" : ""}
                     </p>
                   </div>
                   <ul className="mt-2 flex flex-wrap gap-1.5">
@@ -1978,8 +1977,8 @@ export function AdminYokofolio() {
                         }
                         rows={3}
                         maxLength={600}
-                        placeholder="Ce que tu as constaté, ce que tu as fait…"
-                        aria-label="Note de traitement"
+                        placeholder="What you found, what you did…"
+                        aria-label="Handling note"
                         className={`py-2.5 text-[14px] resize-y ${CHAMP}`}
                       />
                       <div className="mt-2 flex gap-3">
@@ -1989,14 +1988,14 @@ export function AdminYokofolio() {
                           className="rounded-full bg-sombre-eleve hover:bg-sombre-eleve-clair px-4 min-h-[36px]
                                      text-[13.5px] font-semibold text-sombre-texte transition-colors"
                         >
-                          Enregistrer la note
+                          Save the note
                         </button>
                         <button
                           type="button"
                           onClick={() => setNoteEnCours(null)}
                           className="text-[13.5px] text-sombre-texte-doux hover:text-sombre-texte transition-colors"
                         >
-                          Annuler
+                          Cancel
                         </button>
                       </div>
                     </div>
@@ -2010,7 +2009,7 @@ export function AdminYokofolio() {
                         className="text-[13.5px] font-semibold text-sombre-texte-doux
                                    hover:text-primaire transition-colors"
                       >
-                        {s.note ? "Modifier la note" : "Ajouter une note"}
+                        {s.note ? "Edit the note" : "Add a note"}
                       </button>
                       {!s.traite && (
                         <button
@@ -2019,7 +2018,7 @@ export function AdminYokofolio() {
                           className="text-[13.5px] font-semibold text-sombre-texte-doux
                                      hover:text-primaire transition-colors"
                         >
-                          Archiver ce signalement
+                          Archive this report
                         </button>
                       )}
                     </div>
@@ -2064,7 +2063,7 @@ export function AdminYokofolio() {
               )}
               {lignesDemandes?.length === 0 && !erreurSuggestions && (
                 <p className="rounded-xl bg-sombre-carte px-4 py-5 text-sombre-texte-doux">
-                  Aucune suggestion pour l&apos;instant.
+                  No suggestions yet.
                 </p>
               )}
               {lignesDemandes?.map((ligne) => {
@@ -2117,7 +2116,7 @@ export function AdminYokofolio() {
                       <p className="mt-1 text-[13px] text-sombre-texte-doux [overflow-wrap:anywhere]">
                         {[
                           nomDuPays(demande.code_pays),
-                          demande.courriel ?? "compte supprimé",
+                          demande.courriel ?? "deleted account",
                           demande.fiche_nom,
                         ]
                           .filter(Boolean)
@@ -2132,7 +2131,7 @@ export function AdminYokofolio() {
                                        underline underline-offset-2
                                        transition-colors hover:text-primaire"
                           >
-                            Voir son portfolio ↗
+                            See their portfolio ↗
                           </Link>
                         </p>
                       )}
@@ -2144,7 +2143,7 @@ export function AdminYokofolio() {
                       {enAttente && demande.message && (
                         <p className="mt-3 rounded-lg bg-sombre-eleve px-3.5 py-2.5 text-[13.5px] leading-relaxed text-sombre-texte whitespace-pre-line [overflow-wrap:anywhere]">
                           <span className="block text-[11.5px] font-semibold uppercase tracking-wide text-sombre-texte-doux">
-                            Son message
+                            Their message
                           </span>
                           {demande.message}
                         </p>
@@ -2162,8 +2161,8 @@ export function AdminYokofolio() {
                                         }`}
                           >
                             {demande.etat === "acceptee"
-                              ? `Ajoutée — ${demande.nom}`
-                              : "Refusée"}
+                              ? `Added — ${demande.nom}`
+                              : "Declined"}
                           </span>
                           {demande.etat === "acceptee" && (
                             <span className="ml-2 text-[12.5px] text-sombre-texte-doux">
@@ -2196,7 +2195,7 @@ export function AdminYokofolio() {
                                        text-[14px] font-semibold text-sombre-texte
                                        transition-colors hover:bg-sombre-eleve-clair"
                           >
-                            Accepter
+                            Accept
                           </button>
                           <button
                             type="button"
@@ -2208,7 +2207,7 @@ export function AdminYokofolio() {
                             className="px-2 min-h-[40px] text-[14px] font-semibold
                                        text-erreur transition-opacity hover:opacity-75"
                           >
-                            Refuser
+                            Decline
                           </button>
                         </div>
                       )}
@@ -2220,7 +2219,7 @@ export function AdminYokofolio() {
                             <>
                               <label className="flex flex-col gap-1.5">
                                 <span className="text-[12.5px] font-semibold uppercase tracking-wide text-sombre-texte-doux">
-                                  Nom de la convention
+                                  Convention name
                                 </span>
                                 <input
                                   type="text"
@@ -2237,7 +2236,7 @@ export function AdminYokofolio() {
                               </label>
                               <div className="flex flex-col gap-1.5">
                                 <span className="text-[12.5px] font-semibold uppercase tracking-wide text-sombre-texte-doux">
-                                  Où elle a lieu
+                                  Where it takes place
                                 </span>
                                 {/*  ⚠️ LE CHAMP DE LOCALITÉ DU SITE, tel
                                      quel : il rend un lieu ENTIER — ville,
@@ -2255,7 +2254,7 @@ export function AdminYokofolio() {
                                   key={`convention-${compteurLocalite}`}
                                   id={`convention-lieu-${demande.id}`}
                                   etiquette={null}
-                                  texteIndicatif="Ville de la convention…"
+                                  texteIndicatif="Convention city…"
                                   surChoix={(lieu) =>
                                     setBrouillonConvention({
                                       ...brouillonOuvert,
@@ -2269,7 +2268,7 @@ export function AdminYokofolio() {
                           )}
                           <label className="flex flex-col gap-1.5">
                             <span className="text-[12.5px] font-semibold uppercase tracking-wide text-sombre-texte-doux">
-                              Message au tatoueur (facultatif)
+                              Message to the artist (optional)
                             </span>
                             <textarea
                               value={brouillonOuvert.message}
@@ -2292,7 +2291,7 @@ export function AdminYokofolio() {
                                          text-sombre-texte-doux transition-colors
                                          hover:text-sombre-texte"
                             >
-                              Annuler
+                              Cancel
                             </button>
                             <button
                               type="button"
@@ -2319,10 +2318,10 @@ export function AdminYokofolio() {
                               }
                             >
                               {envoiSuggestion
-                                ? "Envoi…"
+                                ? "Sending…"
                                 : brouillonOuvert.decision === "accepter"
-                                  ? "Ajouter la convention"
-                                  : "Refuser la demande"}
+                                  ? "Add the convention"
+                                  : "Decline the request"}
                             </button>
                           </div>
                         </div>
@@ -2352,7 +2351,7 @@ export function AdminYokofolio() {
                       </p>
                     </div>
                     <p className="mt-1 text-[13px] text-sombre-texte-doux [overflow-wrap:anywhere]">
-                      {[demande.courriel ?? "compte supprimé", demande.fiche_nom]
+                      {[demande.courriel ?? "deleted account", demande.fiche_nom]
                         .filter(Boolean)
                         .join(" · ")}
                     </p>
@@ -2372,7 +2371,7 @@ export function AdminYokofolio() {
                                      underline underline-offset-2
                                      transition-colors hover:text-primaire"
                         >
-                          Voir son portfolio ↗
+                          See their portfolio ↗
                         </Link>
                       </p>
                     )}
@@ -2389,8 +2388,8 @@ export function AdminYokofolio() {
                                       }`}
                         >
                           {demande.etat === "acceptee"
-                            ? `Ajouté — ${demande.label} (/${demande.slug})`
-                            : "Refusé"}
+                            ? `Added — ${demande.label} (/${demande.slug})`
+                            : "Declined"}
                         </span>
                         {demande.famille && (
                           //  LE NOM DE LA FAMILLE, LU À SA SOURCE
@@ -2423,7 +2422,7 @@ export function AdminYokofolio() {
                           (aRetirer === demande.id ? (
                             <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                               <p className="text-[13.5px] font-semibold text-sombre-texte">
-                                Retirer ce style de la liste&nbsp;?
+                                Remove this style from the list?
                               </p>
                               <div className="flex shrink-0 items-center gap-2">
                                 <button
@@ -2433,7 +2432,7 @@ export function AdminYokofolio() {
                                              text-sombre-texte-doux transition-colors
                                              hover:text-sombre-texte"
                                 >
-                                  Annuler
+                                  Cancel
                                 </button>
                                 <button
                                   type="button"
@@ -2443,7 +2442,7 @@ export function AdminYokofolio() {
                                              text-erreur transition-opacity
                                              hover:opacity-75 disabled:opacity-40"
                                 >
-                                  {envoiSuggestion ? "Retrait…" : "Retirer"}
+                                  {envoiSuggestion ? "Removing…" : "Remove"}
                                 </button>
                               </div>
                             </div>
@@ -2455,7 +2454,7 @@ export function AdminYokofolio() {
                                          font-semibold text-erreur transition-opacity
                                          hover:opacity-75"
                             >
-                              Retirer le style
+                              Remove the style
                             </button>
                           ))}
                       </div>
@@ -2483,7 +2482,7 @@ export function AdminYokofolio() {
                                      text-[14px] font-semibold text-sombre-texte
                                      transition-colors hover:bg-sombre-eleve-clair"
                         >
-                          Accepter
+                          Accept
                         </button>
                         <button
                           type="button"
@@ -2502,7 +2501,7 @@ export function AdminYokofolio() {
                           className="px-2 min-h-[40px] text-[14px] font-semibold
                                      text-erreur transition-opacity hover:opacity-75"
                         >
-                          Refuser
+                          Decline
                         </button>
                       </div>
                     )}
@@ -2514,7 +2513,7 @@ export function AdminYokofolio() {
                           <>
                             <label className="flex flex-col gap-1.5">
                               <span className="text-[12.5px] font-semibold uppercase tracking-wide text-sombre-texte-doux">
-                                Nom du style
+                                Style name
                               </span>
                               <input
                                 type="text"
@@ -2531,11 +2530,11 @@ export function AdminYokofolio() {
                             </label>
                             <div className="flex flex-col gap-1.5">
                               <span className="text-[12.5px] font-semibold uppercase tracking-wide text-sombre-texte-doux">
-                                Où le ranger
+                                Where to file it
                               </span>
                               <div
                                 role="radiogroup"
-                                aria-label="Où ranger le style"
+                                aria-label="Where to file the style"
                                 className="flex flex-wrap gap-2"
                               >
                                 {/*  ⚠️ LES FAMILLES VIENNENT DE LEUR
@@ -2550,7 +2549,7 @@ export function AdminYokofolio() {
                                      demande plus de toucher cet
                                      écran. */}
                                 {[
-                                  { valeur: null, libelle: "Liste principale" },
+                                  { valeur: null, libelle: "Main list" },
                                   ...famillesStyles().map((famille) => ({
                                     valeur: famille.slug as string | null,
                                     libelle: famille.label,
@@ -2589,7 +2588,7 @@ export function AdminYokofolio() {
                         )}
                         <label className="flex flex-col gap-1.5">
                           <span className="text-[12.5px] font-semibold uppercase tracking-wide text-sombre-texte-doux">
-                            Message au tatoueur (facultatif)
+                            Message to the artist (optional)
                           </span>
                           <textarea
                             value={brouillon.message}
@@ -2612,7 +2611,7 @@ export function AdminYokofolio() {
                                        text-sombre-texte-doux transition-colors
                                        hover:text-sombre-texte"
                           >
-                            Annuler
+                            Cancel
                           </button>
                           <button
                             type="button"
@@ -2635,10 +2634,10 @@ export function AdminYokofolio() {
                             }
                           >
                             {envoiSuggestion
-                              ? "Envoi…"
+                              ? "Sending…"
                               : brouillon.decision === "accepter"
-                                ? "Ajouter le style"
-                                : "Refuser la demande"}
+                                ? "Add the style"
+                                : "Decline the request"}
                           </button>
                         </div>
                       </div>

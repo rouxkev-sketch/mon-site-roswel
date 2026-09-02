@@ -62,7 +62,7 @@ export async function GET() {
     return NextResponse.json(
       {
         ok: false,
-        message: `Lecture impossible (migration supabase/yokofolio-contact.sql passée ?) : ${e instanceof Error ? e.message : String(e)}`,
+        message: `Couldn't load (has migration supabase/yokofolio-contact.sql been applied?): ${e instanceof Error ? e.message : String(e)}`,
       },
       { status: 500 }
     );
@@ -87,7 +87,7 @@ export async function POST(requete: NextRequest) {
       vérité — une valeur fausse est une valeur. */
   if (corps?.id === undefined || typeof corps.lu !== "boolean") {
     return NextResponse.json(
-      { ok: false, message: "Demande incomplète." },
+      { ok: false, message: "Incomplete request." },
       { status: 400 }
     );
   }
@@ -103,7 +103,7 @@ export async function POST(requete: NextRequest) {
     return NextResponse.json(
       {
         ok: false,
-        message: `L'enregistrement n'a pas abouti : ${e instanceof Error ? e.message : String(e)}`,
+        message: `Saving failed: ${e instanceof Error ? e.message : String(e)}`,
       },
       { status: 500 }
     );

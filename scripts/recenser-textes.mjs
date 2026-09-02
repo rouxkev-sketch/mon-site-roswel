@@ -2,7 +2,9 @@
     ==================================================================
     USAGE :  node scripts/recenser-textes.mjs
     Il écrit le détail dans `recensement-textes.json` (à la racine,
-    une SORTIE : ne pas la committer) et le bilan à l'écran.
+    une SORTIE : ne pas la committer — ignoré par git depuis la nº 806,
+    parce que Tailwind lisait ce JSON et en tirait des règles mortes,
+    voir .gitignore) et le bilan à l'écran.
     Le document qu'il alimente : docs/INVENTAIRE-TRADUCTION.md.
 
     ON COMPTE, ON NE TRADUIT RIEN.
@@ -70,20 +72,18 @@ const PERIMETRE = (ARGUMENTS.find((a) => a.startsWith("--perimetre=")) ?? "")
 
 /*  ██ LES EXCEPTIONS DU MODE FRANÇAIS (nº 804) ██
     Chacune dit POURQUOI. Une exception sans raison est un texte oublié
-    qui se cache. */
+    qui se cache.
+    ⚠️ nº 806 — LES INSTRUMENTS NE SONT PLUS DES EXCEPTIONS : les sondes
+    (SondeNavigation, SondeVitesse, TableauDeBordDesSondes, OutilsSonde,
+    BoutonEnvoyerJournal, MemoireNavigation, DefilementEnHaut), les
+    signatures des modules de défilement (lib/bas-de-la-pile,
+    carte-du-haut, defilement-programme, gel-du-corps, geste-toucher,
+    glissement-lateral, liste-neuve, remontee-champ, vitesse) et les
+    étiquettes `data-source-composant` sont traduits (décision du
+    propriétaire : l'admin et /dev en anglais aussi). Leurs quatre
+    exceptions sont retirées ; il n'en reste que quatre, toutes sur des
+    DONNÉES, jamais sur de l'interface. */
 const EXCEPTIONS = [
-  {
-    fichier: /^src\/components\/(SondeNavigation|SondeVitesse|TableauDeBordDesSondes|OutilsSonde|BoutonEnvoyerJournal|MemoireNavigation|DefilementEnHaut)\.tsx$/,
-    raison: "instrument interne : ne s'affiche qu'armé depuis /dev (verrouillé admin), lot de la nº 806",
-  },
-  {
-    texte: /^[A-Z][A-Za-z]+ (· |\()/,
-    raison: "étiquette de source d'un composant (data-source-composant, motif de défilement) : lue par les sondes, jamais affichée",
-  },
-  {
-    texte: /^rafraîchissement de la page courante \(icône\)$/,
-    raison: "motif de défilement programmé, lu par la sonde de navigation, jamais affiché",
-  },
   /*  ── nº 805 : le périmètre D + E + J ── */
   {
     fichier: /^scripts\/engendrer-emojis\.mjs$/,
@@ -100,10 +100,6 @@ const EXCEPTIONS = [
   {
     fichier: /^src\/lib\/adresse\.ts$/,
     raison: "tables de RECONNAISSANCE : les noms français (Californie, Québec, Brésil, République française…) servent à reconnaître ce que rend le géocodeur ou ce que porte une vieille fiche, jamais à l'afficher — ce qui s'affiche est la colonne de droite, anglaise depuis la nº 805 (USA, UK, Germany, TX, QC)",
-  },
-  {
-    fichier: /^src\/lib\/(bas-de-la-pile|carte-du-haut|defilement-programme|gel-du-corps|geste-toucher|glissement-lateral|liste-neuve|remontee-champ|vitesse|journal-de-bord)\.ts$/,
-    raison: "signatures et motifs lus par les sondes de navigation et de vitesse (/dev, verrouillé admin), jamais affichés — même famille que les instruments de la nº 804",
   },
 ];
 
@@ -386,7 +382,7 @@ const CLES_DE_METADONNEES =
     premier jet). */
 const NATURES = ["attribut", "métadonnée", "texte JSX", "littéral"];
 
-function moissonner(source) {
+function moissonner(source, chemin = "") {
   const propre = sansCommentaires(source);
   const parTexte = new Map();
   const ajouter = (brut, nature) => {
@@ -413,12 +409,18 @@ function moissonner(source) {
     ajouter(m[2] ?? m[3] ?? m[4] ?? "", "métadonnée");
   }
   //  Le texte JSX : entre une balise fermante et la suivante.
-  for (const m of propre.matchAll(/>([^<>{}]{3,})</g)) {
+  //  nº 806 — DANS LES SEULS FICHIERS `.tsx` : un `.ts` ne peut pas
+  //  porter de JSX, et « (quand) => Date.now() - quand < FENETRE » (lib/
+  //  journal-de-bord) se lisait comme un texte entre deux balises. Le
+  //  défaut dormait derrière l'exception « modules-sondes » retirée
+  //  cette passe.
+  const peutPorterDuJsx = chemin.endsWith(".tsx");
+  for (const m of peutPorterDuJsx ? propre.matchAll(/>([^<>{}]{3,})</g) : []) {
     ajouter(m[1], "texte JSX");
   }
   //  nº 804, mode français seulement : le texte JSX coupé par des
   //  accolades, lu morceau par morceau.
-  if (MODE_FRANCAIS) {
+  if (MODE_FRANCAIS && peutPorterDuJsx) {
     for (const m of propre.matchAll(/>([^<>]*\{[^<>]*)</g)) {
       for (const morceau of morceauxJsx(m[1])) ajouter(morceau, "texte JSX");
     }
@@ -466,7 +468,7 @@ const parFichier = [];
 for (const chemin of fichiers) {
   const d = domaine(chemin);
   if (PERIMETRE.length && !PERIMETRE.includes(d[0])) continue;
-  let trouvailles = moissonner(readFileSync(`${RACINE}/${chemin}`, "utf8"));
+  let trouvailles = moissonner(readFileSync(`${RACINE}/${chemin}`, "utf8"), chemin);
   if (MODE_FRANCAIS) trouvailles = trouvailles.filter((t) => estFrancais(t.texte));
   if (trouvailles.length === 0) continue;
   parFichier.push({ chemin, domaine: d, trouvailles });

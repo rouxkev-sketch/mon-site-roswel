@@ -41,7 +41,7 @@ import { creerClientSupabaseAdmin } from "@/lib/supabase/admin";
  */
 
 const SANS_MIGRATION =
-  "La migration nº 43 (yokofolio-fiche-admin-publique.sql) n'est pas passée : la colonne admin_publique n'existe pas encore.";
+  "Migration no. 43 (yokofolio-fiche-admin-publique.sql) hasn't been applied: the admin_publique column doesn't exist yet.";
 
 function colonneAbsente(message: string): boolean {
   const texte = message.toLowerCase();
@@ -78,10 +78,10 @@ function contrainteRefusee(message: string): string | null {
     message
   );
   if (!forme) return null;
-  const nom = forme[3] ? ` « ${forme[3]} »` : "";
+  const nom = forme[3] ? ` "${forme[3]}"` : "";
   return (
-    `La base a REFUSÉ la valeur : contrainte${nom} (${forme[2]}). ` +
-    `Message d'origine : ${message}`
+    `The database REFUSED the value: constraint${nom} (${forme[2]}). ` +
+    `Original message: ${message}`
   );
 }
 
@@ -102,7 +102,7 @@ export async function POST(requete: NextRequest) {
     };
     if (!corps.id) {
       return NextResponse.json(
-        { ok: false, message: "Requête incomplète." },
+        { ok: false, message: "Incomplete request." },
         { status: 400 }
       );
     }
@@ -126,7 +126,7 @@ export async function POST(requete: NextRequest) {
     } | null;
     if (!ligne) {
       return NextResponse.json(
-        { ok: false, message: "Fiche introuvable." },
+        { ok: false, message: "Portfolio not found." },
         { status: 404 }
       );
     }
@@ -136,7 +136,7 @@ export async function POST(requete: NextRequest) {
         {
           ok: false,
           message:
-            "Cet écran ne pilote QUE les fiches d'un compte administrateur.",
+            "This screen ONLY drives portfolios of an admin account.",
         },
         { status: 403 }
       );
@@ -168,7 +168,7 @@ export async function POST(requete: NextRequest) {
     //  ---------- L'INTERRUPTEUR ----------
     if (typeof corps.publique !== "boolean") {
       return NextResponse.json(
-        { ok: false, message: "Requête incomplète." },
+        { ok: false, message: "Incomplete request." },
         { status: 400 }
       );
     }
@@ -252,7 +252,7 @@ export async function POST(requete: NextRequest) {
     return NextResponse.json(
       {
         ok: false,
-        message: e instanceof Error ? e.message : "Enregistrement impossible.",
+        message: e instanceof Error ? e.message : "Couldn't save.",
       },
       { status: 500 }
     );

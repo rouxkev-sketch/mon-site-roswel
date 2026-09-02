@@ -131,7 +131,7 @@ function poserLaPageSurLaCarte(visee: string | null): boolean {
     top: Math.max(0, window.scrollY + boite.top - repere),
     left: 0,
   },
-    "carte du haut (changement de disposition)"
+    "top card (layout change)"
   );
   return true;
 }

@@ -18,7 +18,7 @@ message.
 | Guest | **Guest Spot** | |
 | Autre (mode d'exercice) | **Independent** | comme les plaques INDEPENDENT des profils |
 | Convention | **Convention** | |
-| distance / rayon | **Distance**, un nombre **sans unité** | jamais « in miles » : l'unité est implicite aux États-Unis. « Distance: 25 », « Expand to 50 » |
+| distance / rayon | **Distance**, en **miles**, affichés « **mi** » (nº 806) | la règle « sans unité » de la 804 est remplacée par la décision de la 806 : de VRAIS miles (5 · 10 · 25 · 50 · 100 mi, défaut 25), affichés « 25 mi » — jamais « in miles » en toutes lettres. Web : titre de groupe **DISTANCE (MI)**, pilules numériques ; mobile : curseur « 25 mi » ; champ « Austin, TX · 25 mi » ; « Expand to 50 mi » |
 
 ---
 
@@ -125,7 +125,37 @@ message.
 | les courriels aux artistes | sujet **Convention added** / **Convention declined** / **Style added** / **Style declined** ; signature **— YokoFolio** | |
 | le message de démarchage | « Hey ${nom} 👋 … It's free, no strings attached. » | même structure, même lien |
 | les réponses d'API | même ton que l'écran : « Log in first. », « Incomplete request. », « This portfolio isn't yours. » | |
-| les journaux serveur | anglais aussi (« [liaison] write refused ») — sauf les sondes, qui restent en français (exceptions déclarées) | |
+| les journaux serveur | anglais aussi (« [liaison] write refused ») — les sondes ont suivi à la nº 806 | |
+
+### Ajouts de la 806 (styles, admin, /dev, miles)
+
+| Français | Anglais | Note |
+|---|---|---|
+| les STYLES du catalogue | les noms **standards du métier**, en Title Case comme les entrées déjà anglaises : **Realism**, **Minimalist**, **Geometric**, **Ornamental**, **Neo-traditional**, **Japanese · Irezumi**, **Watercolor**, **Illustrative**, **Abstract**, **Biomechanical**, **Organic**, **Bio-organic**, **Engraving**, **Berber**, **Celtic**, **Coptic**, **Nordic**, **Polynesian** | les limaces (`realisme`, `neo-traditionnel`, `japonais`…) ne bougent pas : elles sont en base (`tatoueurs.styles`, `photos_tatoueur.style`) et dans les adresses `/tatouage/<limace>/<ville>` |
+| Cultures du monde (famille) | **World cultures** | |
+| Réalisations / Flashs (Explorer) | **Tattoos** / **Flash** ; « All tattoos » / « All flash » | |
+| Types de projets · Petit tatouage · Grandes pièces | **Project types** · **Small tattoo** · **Large pieces** | |
+| Besoins · Cover · Cicatrice | **Needs** · **Cover-up** · **Scars** | |
+| Lieu (groupe de filtres) · Artistes | **Place** · **Artists** | |
+| Studio / Salon / Guest (filtres, choix de profil, genres de mode) | **Private Studio** / **Tattoo Shop** / **Guest Spot** | la décision de Kevin (§1), appliquée aux libellés de config |
+| Rendu · Noir · Noir et gris · Couleur | **Ink** · **Black** · **Black & gray** · **Color** | **gray**, orthographe américaine (Kevin, 806 : « Black and gray ») — la valeur de lib/photos-tatoueur suit (« Black & grey » → « Black & gray ») |
+| Je tatoue en mon nom · Un lieu, une équipe | **I tattoo under my own name** · **One place, one team** | |
+| J'accueille du public · Je reçois sur rendez-vous | **Open to the public** · **By appointment only** | |
+| Studio privé / Secteur : · Artiste en studio fixe · Résident chez · En session Guest à · En Guest chez | **Private Studio / Area:** · **Resident artist** · **Resident at** · **Guest spot in** · **Guest spot at** | les phrases des lignes de mode (lib/modes-exercice) |
+| Résident · Fondateur (rôles) | **Resident** · **Founder** | Kevin, 806 |
+| les MOTIFS de modération (admin → artiste) | **Photo not allowed** · **Inappropriate bio** · **Incorrect name** · **Incorrect address** · **Instagram / TikTok account doesn't match** · **Styles don't match the photos** · **Website doesn't match** · **Linktree / Beacons doesn't match** · **Other (explain)** | leurs explications : « One photo doesn't work: replace it, then save again. » … |
+| les MOTIFS de signalement | **Impersonation** · **Inappropriate content** · **Account doesn't match** · **Duplicate portfolio** · **Other (explain)** | |
+| Portfolios à valider · Signalements · Démarchage (sections admin) | **Portfolios to review** · **Reports** · **Outreach** | |
+| Valider — publier · Demander des modifications · Mettre hors ligne · Retirer du site | **Approve — publish…** · **Request changes** · **Take the portfolio offline** · **Remove the portfolio from the site** | |
+| Suppressions en cours · Effacer maintenant · Supprimer définitivement | **Deletions in progress** · **Erase … now?** · **Delete permanently** | le mot à taper devient **DELETE**, comme côté public (la comparaison du code a suivi) |
+| Ajouté(e) — … / Refusé(e) (suggestions) | **Added — …** / **Declined** | |
+| Marquer lu / non lu · Archiver ce signalement · Ajouter une note | **Mark read** / **Mark unread** · **Archive this report** · **Add a note** | |
+| À envoyer · Envoyé · Générer le message · Valider l'envoi · Lien de rattachement | **To send** · **Sent** · **Write the message** · **Confirm the send** · **Claim link** | |
+| les sondes (/dev) | **Dev probes**, **Speed**, **Navigation probe**, **Logbook** ; « ON / off », « TURN ALL OFF » ; « network wait + render », « first screen », « until the network goes quiet » | décision du propriétaire : /dev et les instruments en anglais aussi — leurs exceptions au recenseur sont retirées |
+| les étiquettes `data-source-composant` | « MenuEspace · web window », « EnTeteTatouage · fixed bar (header) », « MoteurTatouage · web filter panel »… | |
+| les journaux et réponses des routes admin | « Couldn't load (has migration … been applied?): … », « Incomplete request. », « This request has already been decided. », « Malformed token. » | même ton que le reste du serveur (805) |
+| dates de l'admin | `en-US` : **Aug 20, 26** (jour, mois abrégé, année sur deux chiffres — le format qu'avait `fr-FR`) | |
+| tris alphabétiques | `localeCompare(…, "en")`, `Intl.Collator("en")` | PortfolioDeLAffiche, BlocPortfolio, config (familles), lib/modes-exercice, lib/selection-suivis |
 
 ## 3 · Le ton
 
@@ -151,8 +181,9 @@ message.
   la page About garde SON tiret collé (« portfolio—the core »), tel quel.
 - **Dates** : `en-US` (les `toLocaleDateString` et `Intl.DateTimeFormat`
   du périmètre sont passés de `fr-FR` à `en-US` : notifications,
-  suppressions, calendrier des sessions). Ceux qui restent en `fr-FR`
-  vivent en lib/admin : lot de la 806 (§7 de l'inventaire).
+  suppressions, calendrier des sessions). Les derniers `fr-FR` (les
+  dates de l'admin, le relevé d'une sonde) sont passés en `en-US` à la
+  nº 806 ; les tris (`localeCompare`, `Intl.Collator`) en `en`.
 - **`lang="en"`** sur `<html>`, `locale: "en_US"` pour Open Graph,
   `lang: "en"` dans le manifeste.
 
@@ -170,9 +201,10 @@ message.
   clés, en base et dans les adresses.
 - **Les noms propres** : YokoFolio, Instagram, TikTok, Google, Vercel,
   Supabase, les noms de conventions.
-- **Les instruments internes** (`SondeNavigation`, `SondeVitesse`,
-  `TableauDeBordDesSondes`, `OutilsSonde`, `BoutonEnvoyerJournal`,
-  `MemoireNavigation`, `DefilementEnHaut`) et les étiquettes
-  `data-source-composant` : lus par les sondes depuis /dev, jamais
-  affichés à un visiteur — lot de la 806, déclarés en exception du banc.
 - **Les commentaires du code** restent en français : ils sont pour Kevin.
+- **Les données de banc et de reconnaissance** (`lib/tatoueurs-demo`,
+  `lib/emojis-donnees`, les tables de `lib/adresse`, le script
+  `engendrer-emojis`) : les quatre seules exceptions du recenseur depuis
+  la nº 806 — des DONNÉES, jamais de l'interface. Les instruments
+  (sondes, /dev) et les étiquettes `data-source-composant` ne sont plus
+  des exceptions : ils sont traduits.

@@ -197,6 +197,6 @@ export function gelerLeCorps(
         avait mis la page à zéro, elle y est encore. */
     //  §1 (nº 660) — et le DÉGEL rend cette position : la pose qui suit
     //  s'écrit dans `poserLaPosition`, celle-ci dit d'où elle vient.
-    poserLaPosition(positionRetenue, undefined, "dégel d\u2019une surface");
+    poserLaPosition(positionRetenue, undefined, "unfreezing a surface");
   };
 }

@@ -315,7 +315,7 @@ export function EnTeteTatouage({
       )) {
         parametres.set(cle, valeur);
       }
-      parametres.set("rayon", String(suivants.rayonKm));
+      parametres.set("rayon", String(suivants.rayonMi));
     }
     //  L'AFFICHAGE VOYAGE AVEC LA RECHERCHE (nº 203-§1b) : chercher
     //  depuis une fiche ne remet pas la mosaïque au défaut.
@@ -377,7 +377,7 @@ export function EnTeteTatouage({
     if (evenement.metaKey || evenement.ctrlKey || evenement.shiftKey) return;
     if (window.location.pathname !== chemin) return;
     evenement.preventDefault();
-    defilerSansGeste({ top: 0 }, "rafraîchissement de la page courante (icône)");
+    defilerSansGeste({ top: 0 }, "refresh of the current page (icon)");
     router.refresh();
   };
 
@@ -686,7 +686,7 @@ export function EnTeteTatouage({
       //  ⚠️ D'OÙ VIENT CE FOND (nº 169-§2) : la sonde du verre lit ces
       //  deux attributs dans le DOM et les affiche.
       data-source-fichier="src/components/EnTeteTatouage.tsx"
-      data-source-composant="EnTeteTatouage · barre fixe (header)"
+      data-source-composant="EnTeteTatouage · fixed bar (header)"
       //  ⚠️ LE FLOU ET LA TEINTE VIVENT DANS globals.css (nº 169-§3b) :
       //  ils sont réglables par l'adresse, donc portés par des
       //  variables — une classe Tailwind ne saurait pas les lire.

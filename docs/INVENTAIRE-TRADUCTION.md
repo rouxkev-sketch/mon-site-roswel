@@ -567,3 +567,87 @@ remplacer** le français par l'anglais, sans mécanique à deux langues.
 - **Reste français jusqu'à la 806** : `config/tatouage.ts` (styles,
   motifs, rôles Fondateur/Résident, genres de mode « En salon »/« Au
   studio », filtres), l'espace admin et ses API, `/dev`.
+
+## 13 · Ce que la 806 a fait (traduction 3/3 : styles, admin, /dev, miles)
+
+- **Traduit** : les lots **F + H + I** — `config/tatouage.ts` (les
+  styles du catalogue aux noms standards du métier, les familles, les
+  filtres, les types de fiche, les genres de mode et leurs phrases, les
+  rôles Founder/Resident, les motifs de modération et de signalement),
+  l'espace admin entier (`AdminYokofolio`, `AdminDemarchage`, la page
+  `/admin`, les huit routes `api/admin/yokofolio/*`, `lib/admin-yokofolio`,
+  `lib/supabase/admin`), `/dev` et sa route `journal-sonde`, ET — décision
+  du propriétaire — tous les instruments (les sept sondes, les dix
+  modules de défilement, les étiquettes `data-source-composant`) : leurs
+  exceptions au recenseur sont retirées. Le lexique : §2 « Ajouts de la
+  806 » de `docs/LEXIQUE-ANGLAIS.md`.
+- **Les styles et la base** (§6 vérifié) : le catalogue vit en code
+  (`STYLES_TATOUAGE`) ; la base et les adresses ne portent que les
+  LIMACES (`tatoueurs.styles`, `photos_tatoueur.style`,
+  `/tatouage/<limace>/<ville>`), qui ne bougent pas — **aucun SQL**. Les
+  styles nés d'une suggestion (`suggestions_style.label`) sont saisis
+  par les artistes eux-mêmes, en anglais sur la base US : rien à
+  réécrire non plus. La limace française d'un style (`realisme`,
+  `neo-traditionnel`) reste visible dans les adresses — le sujet
+  « adresses » de la 804 (§5 du lexique), à trancher à part.
+- **Les miles** : `RAYONS_TATOUAGE = [5, 10, 25, 50, 100]` (miles,
+  défaut 25 — c'était 10…200 km, défaut 50), le critère `rayonKm` devient
+  `rayonMi` de bout en bout (moteur, index, en-tête, page d'accueil,
+  `lib/tatoueurs`), et la conversion `milesEnKm` (lib/geo, 1,609344)
+  n'intervient qu'aux DEUX frontières où un rayon quitte le site :
+  l'appel `rechercher_tatoueurs` (`p_rayon_km`) et la Haversine du
+  chemin de secours. La base reste en kilomètres (`yf_distance_km`,
+  `modes_exercice.rayon_km` et sa contrainte nº 40) : aucun SQL. Les
+  paliers `RAYONS_DEPLACEMENT` (zones Independent) restent en km parce
+  que ce sont les valeurs de la contrainte et qu'aucun écran ne les
+  propose plus (note posée dans la config). Affichage : « Austin, TX ·
+  25 mi » dans le champ, « … · 25 mi » au pied de liste, « Expand to
+  50 mi », curseur mobile « 25 mi » (aria-valuetext compris) ; le
+  panneau web dit l'unité dans son titre (« DISTANCE (MI) », pilules
+  numériques) parce que « 5 mi · 10 mi · … · 100 mi » débordait sur deux
+  rangées dans les 272 px du panneau. Un lien partagé d'avant la 806
+  (`?rayon=50`) est relu en miles : 50 mi au lieu de 50 km — plus large,
+  jamais vide.
+- **Les mécanismes** (§7 soldé) : `localeCompare(…, "en")` ×4 (config,
+  PortfolioDeLAffiche, BlocPortfolio, lib/modes-exercice),
+  `Intl.Collator("en")` (lib/selection-suivis), les dates de l'admin
+  et du relevé de sonde en `en-US`. Restent en `"fr"` sans effet visible
+  et hors sujet : `toLocaleLowerCase("fr")` (normalisation de saisie) et
+  `Intl.Segmenter("fr")` (découpe des émojis en graphèmes) — deux
+  fonctions insensibles à la langue pour l'alphabet latin.
+- **Le script d'avant peinture** : son texte émis change (le marqueur
+  `origine:"avant peinture"` de lib/bas-de-la-pile devient `"before
+  paint"`) → millésime **806**.
+- **Le banc** :
+  · recenseur, périmètre ENTIER : **0 texte français**, 4 exceptions
+    (emojis-donnees, tatoueurs-demo, adresse.ts, engendrer-emojis — des
+    données). Un défaut d'instrument corrigé : la moisson de « texte
+    JSX » lisait `(quand) => Date.now() - quand < FENETRE_MS` d'un
+    fichier `.ts` comme un texte entre deux balises ; elle ne lit plus
+    que les `.tsx` ;
+  · les miles, MESURÉS (`miles-806.mjs`) : deux fiches semées à 30 km
+    (18,6 mi) et 50 km (31 mi) plein est d'Austin, la doublure honorant
+    le rayon (nouveau cran `RAYON=1`, même Haversine que la base) —
+    25 mi trouve la première et pas la seconde, la base a reçu
+    `p_rayon_km = 40.2336`, 10 mi ne trouve rien et propose « Expand to
+    25 mi », 50 mi trouve les deux ; champ, pied de liste, pilules,
+    curseur mobile relevés ;
+  · l'admin (`admin-806.mjs`) : les cinq sections sans un mot de
+    français dans leur interface, validation (motifs en anglais,
+    « Send the request » → statut `modifications`), suppression en cours
+    (« Scheduled for Sep 9, 12:16 PM », « Admin · 7 days »), suggestion
+    acceptée (« Added — … (/…) »), convention refusée (« Declined »),
+    message « Mark read » → « Mark unread », signalement
+    (« Impersonation », « Archive this report » → « · archived »),
+    Outreach ;
+  · 732 (web), 746 (web), 747 (doigt) : verts.
+- **La feuille CSS** : un piège de mesure trouvé et fermé — Tailwind lit
+  tous les fichiers non ignorés du dépôt (les `.md` de `docs/` et le
+  `.gitignore` compris), et la sortie du recenseur
+  (`recensement-textes.json`, à la racine) lui apportait deux mots-clés
+  d'émojis qui sont aussi des noms d'utilitaires (ceux-là mêmes que la
+  nº 804 avait écartés par `@source not`) : 14 règles mortes au bâti
+  d'atelier, invisibles chez le propriétaire (le zip l'exclut). Le
+  fichier est désormais dans `.gitignore` — et les deux mots ne sont
+  écrits nulle part, pas même ici : les nommer dans une note suffirait
+  à faire renaître leurs règles.

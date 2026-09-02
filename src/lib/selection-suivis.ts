@@ -433,7 +433,7 @@ const APRES_UNE_VILLE = ", ";
  * et la ligne paraîtrait mal classée à qui la lit. Ce que l'œil
  * compare, c'est ce que l'œil voit.
  */
-const ALPHABET = new Intl.Collator("fr", { sensitivity: "base" });
+const ALPHABET = new Intl.Collator("en", { sensitivity: "base" });
 
 function lieuxEcrits(lieux: LieuDuSuivi[]): string {
   if (lieux.length === 0) return "";

@@ -24,3 +24,21 @@ export function distanceKm(
     Math.cos(radians(lat1)) * Math.cos(radians(lat2)) * Math.sin(dLon / 2) ** 2;
   return 2 * rayonTerre * Math.asin(Math.sqrt(a));
 }
+
+/**
+ * ██ nº 806 — LES MILES À L'ÉCRAN, LES KILOMÈTRES EN BASE ██
+ * ------------------------------------------------------------
+ * Le site parle en miles (paliers `RAYONS_TATOUAGE`, adresse
+ * `?rayon=25`, affichage « 25 mi ») ; la base, elle, ne connaît que
+ * le kilomètre : `yf_distance_km`, `p_rayon_km`, `modes_exercice.
+ * rayon_km` (contrainte nº 40). AUCUN SQL n'a changé : la conversion
+ * se fait ICI, à la frontière, aux deux seuls endroits où un rayon
+ * quitte le site pour la base (`rechercheEnBase`) ou rejoint la
+ * formule de Haversine du chemin de secours (`filtrer`). Le mile
+ * international : 1 609,344 m exactement.
+ */
+export const KM_PAR_MILE = 1.609344;
+
+export function milesEnKm(miles: number): number {
+  return miles * KM_PAR_MILE;
+}

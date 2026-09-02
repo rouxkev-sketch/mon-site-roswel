@@ -309,7 +309,7 @@ export function remonterSansClavier(cible: HTMLElement): () => void {
     cancelAnimationFrame(image);
     //  §2 (nº 448) — l'écriture unique : marge rendue, glissade vers
     //  la position d'origine, espace replié après elle.
-    rendreLaPlaceDOrigine(depart, espace, "remontée du champ à suggestions");
+    rendreLaPlaceDOrigine(depart, espace, "suggestion field lift");
   };
 }
 
@@ -387,7 +387,7 @@ function ouvrirUneRemontee(cible: HTMLElement): Session {
     rendreLaPlaceDOrigine(
       depart,
       espace,
-      "remontée du champ à suggestions (retour du clavier)"
+      "suggestion field lift (keyboard back)"
     );
     minuteur = window.setTimeout(ranger, GLISSADE_MS + REPLI_ESPACE_MS + 60);
   }

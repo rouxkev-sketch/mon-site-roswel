@@ -40,7 +40,7 @@ import { verifierAdmin } from "@/lib/admin-yokofolio";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Sondes de développement",
+  title: "Dev probes",
   //  Un outil d'atelier n'a rien à faire dans un moteur de recherche.
   robots: { index: false, follow: false },
 };

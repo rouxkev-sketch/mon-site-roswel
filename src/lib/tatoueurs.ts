@@ -12,7 +12,7 @@ import {
   filtresVivants,
   styleConnu,
 } from "@/config/tatouage";
-import { distanceKm } from "@/lib/geo";
+import { distanceKm, milesEnKm } from "@/lib/geo";
 import {
   membresActifs,
   membreDepuisVue,
@@ -287,9 +287,11 @@ export type FiltresTatoueurs = {
   /** Le nom de la ville du lieu — critère de la recherche SANS rayon
       (rayon à zéro : la commune choisie, pas un cercle vide). */
   villeNom?: string;
-  /** Rayon en km autour du point. ZÉRO = la ville seule, sans
-      extension aux alentours. Ignoré aux niveaux région et pays. */
-  rayonKm?: number;
+  /** Rayon en MILES autour du point (nº 806 : le site parle en miles,
+      la base en km — `milesEnKm` convertit à la frontière, voir
+      lib/geo). ZÉRO = la ville seule, sans extension aux alentours.
+      Ignoré aux niveaux région et pays. */
+  rayonMi?: number;
   /** LES INTERRUPTEURS ÉTEINTS par la personne qui cherche : des
       slugs de FILTRES_TATOUAGE à EXCLURE. Vide = tout allumé = aucun
       filtrage (voir passeLesFiltres pour la règle exacte). */
@@ -357,7 +359,7 @@ type CriteresDeLieu = Pick<
   | "codePays"
   | "region"
   | "villeNom"
-  | "rayonKm"
+  | "rayonMi"
 >;
 
 /**
@@ -375,7 +377,7 @@ type CriteresDeLieu = Pick<
  */
 export function criteresDeLieu(
   lieu: LieuTrouve | null | undefined,
-  rayonKm: number
+  rayonMi: number
 ): CriteresDeLieu {
   if (!lieu) return {};
   const autourDUnPoint =
@@ -391,7 +393,7 @@ export function criteresDeLieu(
     // Autour d'un POINT, le rayon est toujours d'au moins un palier
     // (voir `rayonRetenu`) ; sur une région ou un pays, il n'a pas
     // d'objet : zéro veut alors dire « la zone entière ».
-    rayonKm: autourDUnPoint ? rayonRetenu(rayonKm) : 0,
+    rayonMi: autourDUnPoint ? rayonRetenu(rayonMi) : 0,
   };
 }
 
@@ -1047,7 +1049,7 @@ function filtrer(
   } else if (ville) {
     // AUTOUR D'UN POINT — la même fonction de distance que les
     // artisans (src/lib/geo.ts) : un seul calcul dans tout le projet.
-    const rayon = filtres.rayonKm ?? 0;
+    const rayon = milesEnKm(filtres.rayonMi ?? 0);
     // UNE FICHE A AUTANT DE LIEUX QUE D'ADRESSES : l'enseigne qui
     // tient Lyon ET Paris doit sortir dans les deux recherches, et
     // l'artiste en guest à Paris en septembre aussi. On retient donc
@@ -2034,7 +2036,7 @@ async function rechercheEnBase(
       p_niveau: filtres.niveau ?? null,
       p_latitude: ville?.latitude ?? null,
       p_longitude: ville?.longitude ?? null,
-      p_rayon_km: filtres.rayonKm ?? 0,
+      p_rayon_km: milesEnKm(filtres.rayonMi ?? 0),
       p_ville_nom: filtres.villeNom ?? null,
       p_ville_slug: filtres.slugVille ?? null,
       p_code_pays: filtres.codePays ?? null,

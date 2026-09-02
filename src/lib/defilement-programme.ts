@@ -100,7 +100,7 @@ export function defilerSansGeste(
   /** §3 (nº 426) — QUI POSE. Chaque pose écrit sa ligne au journal :
       plus aucun poseur anonyme. Les appelants se nomment ; un appel
       sans signature s'écrit « (non signé) » — c'est déjà un indice. */
-  signature = "(non signé)"
+  signature = "(unsigned)"
 ): void {
   if (typeof window === "undefined") return;
   document.documentElement.dataset[MARQUEUR] = "1";
@@ -468,7 +468,7 @@ export function defilerEnDouceur(cible: number): void {
     finirAnimation = relacher;
     requestAnimationFrame(relacher);
     lever(FENETRE_MS);
-    armerLaGardeDePosition(cible, "défilement en douceur");
+    armerLaGardeDePosition(cible, "smooth scroll");
     return;
   }
 
@@ -526,7 +526,7 @@ export function defilerEnDouceur(cible: number): void {
     //  §2 (nº 427) — arrivé au bout du trajet, ce qui est posé se
     //  défend comme toute pose. (Une interruption par un geste, elle,
     //  n'arme rien : le doigt a la main.)
-    armerLaGardeDePosition(cible, "défilement en douceur");
+    armerLaGardeDePosition(cible, "smooth scroll");
   };
   animationEnCours = requestAnimationFrame(avancer);
 }

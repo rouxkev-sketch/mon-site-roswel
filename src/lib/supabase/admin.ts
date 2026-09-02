@@ -16,16 +16,16 @@ export function creerClientSupabaseAdmin() {
 
   if (!url) {
     throw new Error(
-      "Il manque NEXT_PUBLIC_SUPABASE_URL dans le fichier .env.local."
+      "NEXT_PUBLIC_SUPABASE_URL is missing from .env.local."
     );
   }
 
   if (!cleSecrete) {
     throw new Error(
-      "La clé secrète Supabase n'est pas renseignée. Ouvrir le fichier " +
-        ".env.local et compléter la ligne SUPABASE_SECRET_KEY= avec la clé " +
-        "« secret » (Supabase → Project Settings → API Keys). Puis arrêter " +
-        "et relancer `npm run dev` pour qu'elle soit prise en compte."
+      "The Supabase secret key isn't set. Open the " +
+        ".env.local file and fill in the SUPABASE_SECRET_KEY= line with the " +
+        "\"secret\" key (Supabase → Project Settings → API Keys). Then stop " +
+        "and restart `npm run dev` so it's picked up."
     );
   }
 

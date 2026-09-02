@@ -105,7 +105,7 @@ function remonterALAdresseCommise(
     //  plus tôt, elle aurait retenu celle qu'on quitte et serait morte
     //  au changement d'adresse.
     if (garantirLeHaut) {
-      armerLaGardeDePosition(0, "arrivée en haut voulue (nº 446)");
+      armerLaGardeDePosition(0, "arrival at the top intended (no. 446)");
     }
   };
   if (window.location.pathname === chemin) {

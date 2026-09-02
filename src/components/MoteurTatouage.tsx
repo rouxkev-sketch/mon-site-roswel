@@ -127,9 +127,10 @@ export type CritèresTatouage = {
       décide du mode de recherche. Null = aucun lieu = PARTOUT, le
       monde entier. */
   lieu: LieuTrouve | null;
-  /** Le rayon autour d'une ville ou d'une adresse. ZÉRO est une vraie
+  /** Le rayon autour d'une ville ou d'une adresse, EN MILES (nº 806 ;
+      la base reste en km, lib/tatoueurs convertit). ZÉRO est une vraie
       valeur : la ville seule. Sans objet pour une région, un pays. */
-  rayonKm: number;
+  rayonMi: number;
   /** Les INTERRUPTEURS ÉTEINTS (« ce que je ne veux pas voir ») —
       slugs de FILTRES_TATOUAGE, tous groupes confondus. Vide = tout
       allumé = aucun filtrage. */
@@ -144,7 +145,7 @@ export function criteresComplets(
     style: partiels?.style ?? "",
     nature: partiels?.nature ?? "",
     lieu: partiels?.lieu ?? null,
-    rayonKm: partiels?.rayonKm ?? RAYON_TATOUAGE_DEFAUT,
+    rayonMi: partiels?.rayonMi ?? RAYON_TATOUAGE_DEFAUT,
     //  nº 444 — LA GARDE DES VIEUX LIENS, côté navigateur : les slugs
     //  des deux groupes retirés de l'écran (ARTISTE, LIEU) sont
     //  écartés ici, à la porte unique des critères. Un lien
@@ -198,7 +199,7 @@ export function rayonApplicable(lieu: LieuTrouve | null): boolean {
 /** Le rayon écrit à la suite du lieu — rien quand il ne s'applique
     pas (une région, un pays se cherchent en entier). */
 export function suffixeRayon(criteres: CritèresTatouage): string {
-  return rayonApplicable(criteres.lieu) ? ` · ${criteres.rayonKm}` : "";
+  return rayonApplicable(criteres.lieu) ? ` · ${criteres.rayonMi} mi` : "";
 }
 
 /**
@@ -476,15 +477,15 @@ export function MoteurTatouage({
     const lieu = lieuEnAttente ? lieuEnAttente.valeur : criteres.lieu;
     //  Un rayon ne compte que s'il tourne autour d'un point : sinon on
     //  garde celui d'avant, qui redeviendra utile à la prochaine ville.
-    const rayonKm = rayonApplicable(lieu)
-      ? (rayonEnAttente ?? criteres.rayonKm)
-      : criteres.rayonKm;
+    const rayonMi = rayonApplicable(lieu)
+      ? (rayonEnAttente ?? criteres.rayonMi)
+      : criteres.rayonMi;
     setLieuEnAttente(null);
     setRayonEnAttente(null);
     const memeVille =
       (lieu?.identifiant ?? null) === (criteres.lieu?.identifiant ?? null);
-    if (memeVille && rayonKm === criteres.rayonKm) return; // rien n'a changé
-    surChangement({ ...criteres, lieu, rayonKm });
+    if (memeVille && rayonMi === criteres.rayonMi) return; // rien n'a changé
+    surChangement({ ...criteres, lieu, rayonMi });
     //  LA FERMETURE SEULE DÉCLENCHE : `criteres` et les deux brouillons
     //  sont lus au moment où l'effet part, et ils sont frais par
     //  construction (voir « pourquoi un compteur » ci-dessus). Les
@@ -1225,7 +1226,7 @@ export function MoteurTatouage({
       rayons SUR-LE-CHAMP, alors même que la recherche, elle, attend. */
   const lieuAffiche = lieuEnAttente ? lieuEnAttente.valeur : criteres.lieu;
   const rayonActif = rayonApplicable(lieuAffiche);
-  const rayonAffiche = rayonEnAttente ?? criteres.rayonKm;
+  const rayonAffiche = rayonEnAttente ?? criteres.rayonMi;
 
   /**
    * ██ §3 (nº 568) — UN LIEU SANS RAYON N'A RIEN À FAIRE ATTENDRE ██
@@ -1277,7 +1278,8 @@ export function MoteurTatouage({
   /** LES PILULES DE RAYON — posées dans le PANNEAU du champ de
       localisation (web), sous les suggestions, dès qu'une ville ou une
       adresse est choisie. Un palier par pilule, l'actif en rose, à
-      partir de DIX kilomètres. `onPointerDown` + `preventDefault` : le
+      partir de CINQ miles (nº 806 — « 5 mi »). `onPointerDown` +
+      `preventDefault` : le
       champ garde le focus, le panneau reste ouvert — on peut ajuster
       plusieurs fois. */
   const piedRayon = rayonActif ? (
@@ -1302,7 +1304,7 @@ export function MoteurTatouage({
            critère, comme ARTISTE, LIEU, TECHNIQUE et RENDU, dans la
            même casse et le même style (le composant s'en charge). La
            ville, elle, est déjà écrite juste au-dessus, dans le champ. */}
-      <GroupeBadges titre="Distance" idTitre={`${id}-rayon-titre`}>
+      <GroupeBadges titre="Distance (mi)" idTitre={`${id}-rayon-titre`}>
         {RAYONS_TATOUAGE.map((palier) => (
           <BadgeCharte
             key={palier}
@@ -1332,8 +1334,9 @@ export function MoteurTatouage({
       TOUJOURS présent, grisé et hors d'usage tant que le lieu choisi
       n'est pas un point (aucun lieu, une région, un pays). La piste
       prend la largeur restante : aucun écran n'est trop étroit.
-      SON MINIMUM EST DIX KILOMÈTRES : le curseur démarre au premier
-      palier, exactement comme la première pilule du web.
+      SON MINIMUM EST CINQ MILES (nº 806) : le curseur démarre au
+      premier palier, exactement comme la première pilule du web ; la
+      valeur s'affiche suivie de « mi ».
       Il travaille sur le BROUILLON de la fenêtre : bouger le curseur
       ne relance rien tant que « Valider » n'a pas été pressé. */
   const curseurRayon = (
@@ -1341,7 +1344,7 @@ export function MoteurTatouage({
     poser: (suivant: Partial<CritèresTatouage>) => void
   ) => {
     const actif = rayonApplicable(valeurs.lieu);
-    const index = Math.max(0, RAYONS_TATOUAGE.indexOf(valeurs.rayonKm));
+    const index = Math.max(0, RAYONS_TATOUAGE.indexOf(valeurs.rayonMi));
     return (
     <div
       className={`flex items-center gap-3 text-[13px] transition-opacity ${
@@ -1362,11 +1365,11 @@ export function MoteurTatouage({
           step={1}
           value={index}
           disabled={!actif}
-          aria-valuetext={`${valeurs.rayonKm}`}
+          aria-valuetext={`${valeurs.rayonMi} mi`}
           title={actif ? undefined : "Pick a city to set the distance"}
           onChange={(evenement) => {
             poser({
-              rayonKm: RAYONS_TATOUAGE[Number(evenement.target.value)],
+              rayonMi: RAYONS_TATOUAGE[Number(evenement.target.value)],
             });
           }}
           className={`curseur-sombre flex-1 min-w-0 ${
@@ -1379,7 +1382,7 @@ export function MoteurTatouage({
             actif ? "text-primaire" : "text-sombre-texte-doux"
           }`}
         >
-          {valeurs.rayonKm}
+          {valeurs.rayonMi} mi
         </output>
     </div>
     );
@@ -1468,7 +1471,7 @@ export function MoteurTatouage({
             suffixeLieu={suffixeRayon({
               ...criteres,
               lieu: lieuAffiche,
-              rayonKm: rayonAffiche,
+              rayonMi: rayonAffiche,
             })}
             //  §3 (nº 565) — LA VILLE VA AU BROUILLON, ELLE AUSSI. Le
             //  champ continue d'afficher ce qu'on a choisi (il tient son
@@ -1756,7 +1759,7 @@ export function MoteurTatouage({
               alignement="droite"
               data-panneau-filtres=""
               data-source-fichier="src/components/MoteurTatouage.tsx"
-              data-source-composant="MoteurTatouage · panneau web des filtres"
+              data-source-composant="MoteurTatouage · web filter panel"
               className="px-6 pb-6 pt-[19px]"
             >
               {/*  nº 364 — LE PANNEAU LIT SON BROUILLON, et n'annonce

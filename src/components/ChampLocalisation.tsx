@@ -257,7 +257,7 @@ export function ChampLocalisation({
       quelqu'un dans un formulaire. */
   viderSiAbandon?: boolean;
   /** Ajouté À L'AFFICHAGE après le lieu choisi (le moteur y met le
-      rayon : « · 50 km »). Purement visuel. */
+      rayon : « · 25 mi »). Purement visuel. */
   suffixeLieu?: string;
   /** Posé en BAS du panneau (le moteur y met le rayon). Le panneau
       s'ouvre dès le toucher quand ce contenu existe. */

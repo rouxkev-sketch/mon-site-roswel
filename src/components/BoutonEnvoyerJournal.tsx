@@ -32,13 +32,13 @@ export function BoutonEnvoyerJournal({
   /** Dans les sondes dont les boutons occupent toute la ligne. */
   pleineLargeur?: boolean;
 }) {
-  const [etat, setEtat] = useState<"repos" | "envoi" | "fait" | "raté">(
-    "repos"
+  const [etat, setEtat] = useState<"idle" | "sending" | "done" | "failed">(
+    "idle"
   );
   const [dit, setDit] = useState("");
 
   async function envoyer() {
-    setEtat("envoi");
+    setEtat("sending");
     setDit("");
     try {
       const reponse = await fetch("/api/dev/journal-sonde", {
@@ -51,15 +51,15 @@ export function BoutonEnvoyerJournal({
         erreur?: string;
       } | null;
       if (!reponse.ok) {
-        setEtat("raté");
-        setDit(donnees?.erreur ?? `refus ${reponse.status}`);
+        setEtat("failed");
+        setDit(donnees?.erreur ?? `refused ${reponse.status}`);
         return;
       }
-      setEtat("fait");
-      setDit(donnees?.fichier ?? "écrit");
+      setEtat("done");
+      setDit(donnees?.fichier ?? "written");
     } catch (erreur) {
-      setEtat("raté");
-      setDit(erreur instanceof Error ? erreur.message : "envoi impossible");
+      setEtat("failed");
+      setDit(erreur instanceof Error ? erreur.message : "couldn't send");
     }
   }
 
@@ -89,17 +89,17 @@ export function BoutonEnvoyerJournal({
           whiteSpace: "nowrap",
         }}
       >
-        {etat === "envoi" ? "ENVOI…" : "ENVOYER"}
+        {etat === "sending" ? "SENDING…" : "SEND"}
       </button>
       {dit !== "" && (
         <span
           style={{
             font: "11px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace",
-            color: etat === "raté" ? "#FF8A8A" : "#9AA0A6",
+            color: etat === "failed" ? "#FF8A8A" : "#9AA0A6",
             wordBreak: "break-all",
           }}
         >
-          {etat === "raté" ? `échec : ${dit}` : dit}
+          {etat === "failed" ? `failed: ${dit}` : dit}
         </span>
       )}
     </span>

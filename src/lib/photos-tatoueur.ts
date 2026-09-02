@@ -82,7 +82,7 @@ import { libelleStyle } from "@/config/tatouage";
     `rendusDuPortfolio`) le lisent tous ici. */
 export const RENDUS_PHOTO = [
   { slug: "black", label: "Black" },
-  { slug: "black_and_grey", label: "Black & grey" },
+  { slug: "black_and_grey", label: "Black & gray" },
   { slug: "color", label: "Color" },
 ] as const;
 

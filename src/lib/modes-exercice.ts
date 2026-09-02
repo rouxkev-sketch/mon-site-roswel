@@ -553,7 +553,7 @@ export function equipeOrdonnee(
   const rang = (membre: MembreEquipe) =>
     membre.genre === "guest" ? 2 : membre.role === "fondateur" ? 0 : 1;
   const parNom = (a: MembreEquipe, b: MembreEquipe) =>
-    a.nom.localeCompare(b.nom, "fr");
+    a.nom.localeCompare(b.nom, "en");
   return membresActifs(equipe)
     .slice()
     .sort((a, b) => {

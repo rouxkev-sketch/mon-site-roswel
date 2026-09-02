@@ -164,7 +164,7 @@ type Geste = {
   doigt: number;
   x: number;
   y: number;
-  axe: "indécis" | "horizontal";
+  axe: "undecided" | "horizontal";
 };
 
 /*  CE QU'ON LIT D'UN DOIGT, ET RIEN DE PLUS. Le type le dit à la
@@ -237,7 +237,7 @@ function nouveauSuiveur(rappel: () => (sens: SensGlissement) => void) {
       //  §2 — le départ est-il dans une rangée qui défile ?
       if (partDUneZoneQuiDefile(depart, borne)) return;
 
-      geste = { doigt: doigt.identifier, x, y: doigt.clientY, axe: "indécis" };
+      geste = { doigt: doigt.identifier, x, y: doigt.clientY, axe: "undecided" };
     },
 
     bouge(doigts: number, doigt: Doigt | undefined) {
@@ -250,7 +250,7 @@ function nouveauSuiveur(rappel: () => (sens: SensGlissement) => void) {
       const dx = doigt.clientX - geste.x;
       const dy = doigt.clientY - geste.y;
 
-      if (geste.axe === "indécis") {
+      if (geste.axe === "undecided") {
         //  Tant qu'on n'a pas bougé assez, on ne décide rien.
         if (Math.abs(dx) < TOLERANCE && Math.abs(dy) < TOLERANCE) return;
         if (Math.abs(dy) >= Math.abs(dx)) {

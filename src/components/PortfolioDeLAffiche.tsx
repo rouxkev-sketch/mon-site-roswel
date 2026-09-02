@@ -195,7 +195,7 @@ function seriesDeLaCategorie(
   const series: SeriePubliee[] = [];
   const parLabel = groupes
     .slice()
-    .sort((a, b) => a.label.localeCompare(b.label, "fr"));
+    .sort((a, b) => a.label.localeCompare(b.label, "en"));
   for (const groupe of parLabel) {
     for (const rendu of RENDUS_PHOTO) {
       const photos = groupe.photos.filter(

@@ -94,9 +94,9 @@ const CLE_ARMEE = "sonde-vitesse";
  * les trois à l'accent ferait crier la sonde à chaque page.
  */
 const VERDICTS = {
-  parallele: { mot: " → EN PARALLÈLE (déjà groupées)", couleur: "#34D399" },
-  serie: { mot: " → EN SÉRIE (elles s'attendent)", couleur: ACCENT },
-  espacees: { mot: " → espacées (pas une cascade)", couleur: GRIS },
+  parallele: { mot: " → IN PARALLEL (already grouped)", couleur: "#34D399" },
+  serie: { mot: " → IN SERIES (waiting on each other)", couleur: ACCENT },
+  espacees: { mot: " → spaced out (not a waterfall)", couleur: GRIS },
 } as const;
 
 /** Le cadre des deux boutons du bas. 44 px : la cible au doigt. */
@@ -161,7 +161,7 @@ export function SondeVitesse() {
             pastilles identiques dans le même coin, c'est une pastille
             qu'on ouvre au hasard. Les prises : B, C, F, H, K, M, N, V. */
         lettre="T"
-        titre="Vitesse"
+        titre="Speed"
         surToucher={basculer}
         bas={120}
       />
@@ -171,7 +171,7 @@ export function SondeVitesse() {
   return (
     <div
       role="dialog"
-      aria-label="Sonde de vitesse"
+      aria-label="Speed probe"
       style={{
         position: "fixed",
         left: 6,
@@ -192,7 +192,7 @@ export function SondeVitesse() {
     >
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <span style={{ color: ACCENT, fontWeight: 700, flex: 1 }}>
-          VITESSE · {mesures.length} navigation
+          SPEED · {mesures.length} navigation
           {mesures.length > 1 ? "s" : ""}
         </span>
         <BoutonReplier surToucher={basculer} />
@@ -201,8 +201,8 @@ export function SondeVitesse() {
       <div style={{ overflowY: "auto", flex: 1 }}>
         {mesures.length === 0 ? (
           <p style={{ margin: 0, opacity: 0.7 }}>
-            Mesure en cours… Navigue dans le site : chaque page mesurée
-            s&apos;ajoute ici.
+            Measuring… Browse the site: each measured page
+            shows up here.
           </p>
         ) : (
           mesures.map((mesure, rang) => (
@@ -221,13 +221,13 @@ export function SondeVitesse() {
                 {mesure.attente !== null ? (
                   <span style={{ color: "#FFFFFF", fontWeight: 400 }}>
                     {" "}
-                    = attente réseau {mesure.attente} + rendu {mesure.rendu}
+                    = network wait {mesure.attente} + render {mesure.rendu}
                   </span>
                 ) : null}
                 <span style={{ color: GRIS, fontWeight: 400 }}>
                   {mesure.enCours
-                    ? " en cours…"
-                    : " jusqu'au silence du réseau"}
+                    ? " in progress…"
+                    : " until the network goes quiet"}
                 </span>
               </p>
               {/*  LE PREMIER ÉCRAN, ET POURQUOI IL EST À PART : une page
@@ -237,12 +237,12 @@ export function SondeVitesse() {
                    C'est LUI que la décomposition du navigateur explique,
                    et à lui qu'elle s'additionne — pas au total. */}
               <p style={{ margin: "0 0 2px" }}>
-                <span style={{ color: GRIS }}>premier écran</span>{" "}
+                <span style={{ color: GRIS }}>first screen</span>{" "}
                 {mesure.premierEcran} ms
                 {mesure.reseau !== null ? (
                   <>
                     {" "}
-                    = réseau {mesure.reseau} + serveur {mesure.serveur} + rendu{" "}
+                    = network {mesure.reseau} + server {mesure.serveur} + render{" "}
                     {mesure.rendu}
                   </>
                 ) : null}
@@ -254,7 +254,7 @@ export function SondeVitesse() {
                 <p style={{ margin: "0 0 2px" }}>
                   <span style={{ color: GRIS }}>BASE</span> {mesure.base.nombre}{" "}
                   lecture{mesure.base.nombre > 1 ? "s" : ""} · {mesure.base.cumul}{" "}
-                  ms cumulés sur {mesure.base.etendue} ms
+                  ms total over {mesure.base.etendue} ms
                   {mesure.base.verdict === null ? null : (
                     <span
                       style={{
@@ -276,7 +276,7 @@ export function SondeVitesse() {
                     {String(requete.duree).padStart(5)} ms
                   </span>{" "}
                   {requete.nom}
-                  {requete.serveur !== null ? ` [serveur ${requete.serveur}]` : ""}
+                  {requete.serveur !== null ? ` [server ${requete.serveur}]` : ""}
                 </p>
               ))}
             </div>
@@ -291,7 +291,7 @@ export function SondeVitesse() {
           onClick={viderLesMesures}
           style={{ ...CADRE_BOUTON, flex: 1 }}
         >
-          Vider les mesures
+          Clear measures
         </button>
         {/*  ÉTEINDRE : la contrepartie de la clé d'onglet du §2. Sans ce
              bouton, une sonde armée ne se quitterait qu'en fermant
@@ -307,7 +307,7 @@ export function SondeVitesse() {
           }}
           style={{ ...CADRE_BOUTON, flex: 1, color: ACCENT }}
         >
-          Éteindre
+          Turn off
         </button>
       </div>
     </div>

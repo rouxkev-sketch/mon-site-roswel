@@ -332,7 +332,7 @@ export function BlocPortfolio({
     ...new Set([...photos.map((photo) => photo.style), ...stylesAjoutes]),
   ]
     .map((slug) => ({ slug, label: libelleStyle(slug) }))
-    .sort((a, b) => a.label.localeCompare(b.label, "fr"));
+    .sort((a, b) => a.label.localeCompare(b.label, "en"));
 
   /** LE PREMIER BADGE EST TOUJOURS OUVERT (passe nº 117, point 6).
       À la RÉOUVERTURE d'un portfolio, les badges arrivaient tous

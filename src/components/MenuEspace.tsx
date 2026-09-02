@@ -2875,7 +2875,7 @@ export function MenuEspace({
             alignement="droite"
             role="dialog"
             aria-label="My account"
-            data-source-composant="MenuEspace · fenêtre web"
+            data-source-composant="MenuEspace · web window"
             className="mobile:hidden"
           >
             {/*  ██ §4 (nº 536) — LA FENÊTRE DU WEB PREND LA

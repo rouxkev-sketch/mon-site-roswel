@@ -168,8 +168,8 @@ export function SondeNavigation() {
    * ================================================================ */
   const construire = useCallback((): string => {
     const entete = [
-      `SONDE NAVIGATION — mesure « ${mesureCourante.current} »`,
-      `appareil : ${document.documentElement.dataset.appareil ?? "?"} · écran ${window.innerWidth}×${window.innerHeight}`,
+      `NAVIGATION PROBE — measure "${mesureCourante.current}"`,
+      `device: ${document.documentElement.dataset.appareil ?? "?"} · screen ${window.innerWidth}×${window.innerHeight}`,
       `navigateur : ${navigator.userAgent}`,
       `adresse : ${adresse()}`,
       `history.length : ${history.length}`,
@@ -178,7 +178,7 @@ export function SondeNavigation() {
 
     const evenements = journal.current.length
       ? [
-          "── ÉVÉNEMENTS ──",
+          "── EVENTS ──",
           ...journal.current.map((l) => `[${String(l.t).padStart(5)} ms] ${l.texte}`),
           "",
         ]
@@ -203,7 +203,7 @@ export function SondeNavigation() {
       //  coller dans une conversation.
       const pas = images.current.length > 70 ? 2 : 1;
       film = [
-        "── FILM (une ligne par image) ──",
+        "── FILM (one line per frame) ──",
         ligne(colonnes),
         ...images.current
           .filter((_, i) => i % pas === 0)
@@ -226,7 +226,7 @@ export function SondeNavigation() {
   useEffect(() => {
     if (!armee || mesure !== "retour") return;
     mesureCourante.current = "retour";
-    noter(`— départ · adresse ${adresse()} · history.length ${history.length}`);
+    noter(`— start · address ${adresse()} · history.length ${history.length}`);
 
     const originaux: Partial<Record<"pushState" | "replaceState", History["pushState"]>> = {};
 
@@ -245,10 +245,10 @@ export function SondeNavigation() {
         journal.current.push({
           t: maintenant(depart.current),
           texte:
-            `${nom.toUpperCase()} · url demandée « ${String(arguments_[2] ?? "(aucune)")} »\n` +
-            `    avant : ${avantAdresse} (length ${avantLongueur})\n` +
-            `    après : ${adresse()} (length ${history.length})\n` +
-            `    appelé par : ${qui}`,
+            `${nom.toUpperCase()} · requested url "${String(arguments_[2] ?? "(none)")}"\n` +
+            `    before: ${avantAdresse} (length ${avantLongueur})\n` +
+            `    after: ${adresse()} (length ${history.length})\n` +
+            `    called by: ${qui}`,
         });
         setCombien(journal.current.length);
         return retour;
@@ -263,13 +263,13 @@ export function SondeNavigation() {
         etat = "(illisible)";
       }
       noter(
-        `POPSTATE · adresse ${adresse()} (length ${history.length})\n` +
+        `POPSTATE · address ${adresse()} (length ${history.length})\n` +
           `    state : ${etat}`
       );
     };
     //  `pagehide` dit qu'on QUITTE le document : c'est ce qui se
     //  passe quand le retour sort du site (vers Google).
-    const auDepart = () => noter("PAGEHIDE · le document est quitté");
+    const auDepart = () => noter("PAGEHIDE · leaving the document");
 
     window.addEventListener("popstate", auRetour, { passive: true });
     window.addEventListener("pagehide", auDepart, { passive: true });
@@ -322,10 +322,10 @@ export function SondeNavigation() {
             ? Math.round(rangee.getBoundingClientRect().height)
             : null,
           rangeeRepliee:
-            rangee?.getAttribute("aria-hidden") === "true" ? "oui" : "non",
+            rangee?.getAttribute("aria-hidden") === "true" ? "yes" : "no",
           rangeeOpacite: rangee ? getComputedStyle(rangee).opacity : "—",
           progr:
-            document.documentElement.dataset.defilementProgramme ? "OUI" : "non",
+            document.documentElement.dataset.defilementProgramme ? "YES" : "no",
           docH: document.documentElement.scrollHeight,
         });
       } else {
@@ -346,12 +346,12 @@ export function SondeNavigation() {
           //  L'ESPACE DE REMONTÉE (nº 159-§3) : présent ? c'est lui
           //  qui donne au document de quoi défiler.
           espace: document.querySelector("[data-espace-remontee]")
-            ? "OUI"
-            : "non",
+            ? "YES"
+            : "no",
           //  LA BARRE FIXE EST-ELLE SORTIE DE L'ÉCRAN (nº 160-§3) ?
           //  C'est cet attribut qui fait passer la marge de 76 px à
           //  12 px — la colonne « marge » d'à côté le confirme.
-          clavier: document.documentElement.dataset.clavier ? "OUI" : "non",
+          clavier: document.documentElement.dataset.clavier ? "YES" : "no",
         });
       }
     };
@@ -362,7 +362,7 @@ export function SondeNavigation() {
       cancelAnimationFrame(image);
       window.clearTimeout(minuteur);
       setEnCours(false);
-      noter(`— fin du film (${images.current.length} images)`);
+      noter(`— end of film (${images.current.length} frames)`);
       setRapport(construire());
     };
 
@@ -379,7 +379,7 @@ export function SondeNavigation() {
       cible = element;
       yPrecedent = window.scrollY;
       setEnCours(true);
-      noter(`— déclencheur : ${quoi}`);
+      noter(`— trigger: ${quoi}`);
       relever();
       image = requestAnimationFrame(boucle);
       minuteur = window.setTimeout(arreter, DUREE_FILM_MS);
@@ -400,7 +400,7 @@ export function SondeNavigation() {
       ) {
         return;
       }
-      demarrer(`clic sur « ${nom} »`, null);
+      demarrer(`click on "${nom}"`, null);
     };
 
     /* --- LE DÉCLENCHEUR « CHAMP » : le toucher d'une saisie --- */
@@ -410,7 +410,7 @@ export function SondeNavigation() {
       if (!(element instanceof HTMLElement)) return;
       if (!element.matches("input, textarea")) return;
       demarrer(
-        `champ « ${element.getAttribute("aria-label") ?? element.getAttribute("name") ?? element.tagName.toLowerCase()} »`,
+        `field "${element.getAttribute("aria-label") ?? element.getAttribute("name") ?? element.tagName.toLowerCase()}"`,
         element
       );
     };
@@ -423,8 +423,8 @@ export function SondeNavigation() {
       yPrecedent = y;
       journal.current.push({
         t: maintenant(depart.current),
-        texte: `SCROLL · y ${Math.round(y)} · delta ${delta > 0 ? "+" : ""}${delta} · programmé : ${
-          document.documentElement.dataset.defilementProgramme ? "OUI" : "non"
+        texte: `SCROLL · y ${Math.round(y)} · delta ${delta > 0 ? "+" : ""}${delta} · programmatic: ${
+          document.documentElement.dataset.defilementProgramme ? "YES" : "no"
         }`,
       });
     };
@@ -438,13 +438,13 @@ export function SondeNavigation() {
         const decrire =
           this instanceof HTMLElement
             ? `${this.tagName.toLowerCase()}${this.getAttribute("name") ? `[name=${this.getAttribute("name")}]` : ""}`
-            : "(élément)";
+            : "(element)";
         journal.current.push({
           t: maintenant(depart.current),
           texte:
-            `SCROLLINTOVIEW · sur ${decrire} · arguments ${JSON.stringify(arguments_[0] ?? null)}\n` +
-            `    marge appliquée : ${margeLue(this)}\n` +
-            `    appelé par : ${origine()}`,
+            `SCROLLINTOVIEW · on ${decrire} · arguments ${JSON.stringify(arguments_[0] ?? null)}\n` +
+            `    margin applied: ${margeLue(this)}\n` +
+            `    called by: ${origine()}`,
         });
       }
       //  ⚠️ TOUJOURS L'ORIGINALE, sans rien changer.
@@ -493,7 +493,7 @@ export function SondeNavigation() {
       {!rapport && (
         <div
           role="group"
-          aria-label="Sonde de navigation"
+          aria-label="Navigation probe"
           style={{
             position: "fixed",
             left: 6,
@@ -513,40 +513,40 @@ export function SondeNavigation() {
           }}
         >
           <span style={{ fontWeight: 700, color: enCours ? "#E11144" : "#eee" }}>
-            {enCours ? "enregistrement…" : `sonde (${combien})`}
+            {enCours ? "recording…" : `probe (${combien})`}
           </span>
           <button type="button" style={bouton(mesure === "retour")} onClick={() => { setMesure("retour"); vider(); }}>
-            Retour
+            Back
           </button>
           <button type="button" style={bouton(mesure === "barre")} onClick={() => { setMesure("barre"); vider(); }}>
-            Barre
+            Bar
           </button>
           <button type="button" style={bouton(mesure === "champ")} onClick={() => { setMesure("champ"); vider(); }}>
-            Champ
+            Field
           </button>
           <button type="button" style={bouton(false)} onClick={vider}>
-            Effacer
+            Clear
           </button>
           <button
             type="button"
             style={{ ...bouton(true), marginLeft: "auto" }}
             onClick={() => setRapport(construire())}
           >
-            Voir le rapport
+            See the report
           </button>
         </div>
       )}
 
       {/*  REPLIÉE : une pastille, et rien d'autre à l'écran. */}
       {rapport && repliee && (
-        <PastilleSonde lettre="N" titre="Sonde navigation" surToucher={basculer} bas={164} />
+        <PastilleSonde lettre="N" titre="Navigation probe" surToucher={basculer} bas={164} />
       )}
 
       {/* LE RAPPORT — la moitié basse, avec « Copier ». */}
       {rapport && !repliee && (
         <div
           role="dialog"
-          aria-label="Rapport de la sonde de navigation"
+          aria-label="Navigation probe report"
           style={{
             position: "fixed",
             //  ⚠️ LA MOITIÉ BASSE, jamais tout l'écran (nº 183-§1).
@@ -565,7 +565,7 @@ export function SondeNavigation() {
         >
           <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
             <p style={{ margin: 0, fontWeight: 700, fontSize: 15, flex: 1 }}>
-              Rapport — mesure « {mesureCourante.current} »
+              Report — measure &quot;{mesureCourante.current}&quot;
             </p>
             <BoutonReplier surToucher={basculer} />
           </div>
@@ -593,7 +593,7 @@ export function SondeNavigation() {
                 font: "600 15px system-ui, sans-serif",
               }}
             >
-              Fermer
+              Close
             </button>
             <button
               type="button"
@@ -608,7 +608,7 @@ export function SondeNavigation() {
                 font: "600 15px system-ui, sans-serif",
               }}
             >
-              Nouvelle mesure
+              New measure
             </button>
           </div>
           {copie && (

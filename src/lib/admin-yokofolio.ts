@@ -28,12 +28,12 @@ export async function verifierAdmin(): Promise<
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return { statut: 401, message: "Connecte-toi pour ouvrir l'admin." };
+    return { statut: 401, message: "Log in to open the admin." };
   }
   if (!estCourrielAdmin(user.email)) {
     return {
       statut: 403,
-      message: "Ce compte n'est pas administrateur de yokofolio.",
+      message: "This account isn't a YokoFolio admin.",
     };
   }
   return null;
