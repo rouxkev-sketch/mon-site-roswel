@@ -1321,7 +1321,16 @@ export function EnTeteTatouage({
                 //  largeur (capsule px-5, ≈ 137 px, contre un rond de
                 //  40 px après l'hydratation).
                 data-acces-compte=""
-                style={{ height: HAUTEUR_ACTIONS }}
+                /*  ██ nº 809 — LA CAPSULE SE COMPACTE : 36 px, PLUS 40 ██
+                    Le propriétaire la trouvait aussi haute que le champ
+                    de recherche. Elle ne prend plus la hauteur des
+                    actions de la barre (`HAUTEUR_ACTIONS`, 40 — les
+                    ronds du globe et de la loupe la gardent) mais celle
+                    des capsules compactes du site (36 px, `h-9`, seize
+                    pixels de rembourrage), centrée dans la rangée de 40
+                    (`self-center`). Texte 14 px inchangé ; la rangée,
+                    elle, ne bouge pas d'un pixel. Même mesure que la
+                    capsule du bandeau d'appel aux tatoueurs. */
                 /*  ██ §2 (nº 535) — LA CAPSULE PREND DES ANGLES ██
                     Ses bords étaient TOUT RONDS ; ils deviennent des
                     ANGLES ARRONDIS.
@@ -1340,7 +1349,7 @@ export function EnTeteTatouage({
                     libellés superposés qui réservent la largeur
                     (nº 203-§1a) — le bloc central de la barre ne peut
                     toujours pas être poussé. */
-                className="hidden sm:flex rounded-xl px-5 items-center
+                className="hidden sm:flex h-9 self-center rounded-xl px-4 items-center
                            bg-primaire border-2 border-primaire
                            hover:bg-primaire-fonce hover:border-primaire-fonce
                            text-sombre-texte

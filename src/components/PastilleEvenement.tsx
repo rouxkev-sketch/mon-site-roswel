@@ -119,16 +119,38 @@ export type TonEvenement =
   | "info"
   | "marque";
 
+/**
+ * ██ nº 809 — UNE SEULE ROBE POUR TOUTES LES PASTILLES ██
+ * ------------------------------------------------------------------
+ * LA RÈGLE DU PROPRIÉTAIRE : les ronds à symbole du site, faits passe
+ * après passe, étaient inégaux — étoile rose, coche verte, horloge
+ * rose, corbeille rouge. Ils prennent tous LA MÊME ROBE, celle de
+ * l'enveloppe des demandes (le ton `info`) : SYMBOLE BLANC (le blanc
+ * cassé du site, `text-sombre-texte`) sur ROND GRIS (`bg-sombre-haut`,
+ * le barreau des empilements) — 8,55:1, mesuré à la nº 664, le plus
+ * franc des cinq.
+ * ⚠️ LE VERT DU SUCCÈS PART AUSSI, et c'est un choix dit et assumé :
+ * une couleur ne parle que dans une échelle (vert « c'est fait »,
+ * rouge « il manque », rose « on attend »). L'échelle disparaissant, un
+ * vert seul ne dirait plus « réussite », il dirait « celui-là est
+ * différent ». La COCHE dit le succès, l'HORLOGE l'attente, la
+ * CORBEILLE le retrait : le symbole porte le sens, la robe est une.
+ * ⚠️ LES CINQ TONS RESTENT DANS LE CODE, à dessein : chaque écran dit
+ * toujours CE QU'IL ANNONCE (`valide`, `probleme`…), et recolorer une
+ * famille un jour se fera ici, sur une ligne — les appelants n'ont pas
+ * à savoir que les cinq robes sont aujourd'hui la même.
+ * ⚠️ LES NOTES QUI PRÉCÈDENT (voiles à 20 %, contrastes du rose et du
+ * rouge, l'or puis le rose de l'étoile) sont L'HISTOIRE de ces tons ;
+ * elles restent pour dire d'où l'on vient, pas ce qui est peint.
+ */
+const ROBE_UNIQUE = "bg-sombre-haut text-sombre-texte";
+
 export const TON_PASTILLE: Record<TonEvenement, string> = {
-  attente: "bg-primaire/20 text-primaire",
-  valide: "bg-sombre-succes/20 text-sombre-succes",
-  probleme: "bg-sombre-erreur/20 text-sombre-erreur",
-  info: "bg-sombre-haut text-sombre-texte",
-  //  §4 (nº 674), UN CRAN PLUS SOMBRE À LA nº 680 — le gris de la
-  //  famille grise, et le ROSE de la charte. Comme `info`, il ne prend
-  //  PAS de voile : un gris dilué sur un gris ne fait pas un disque
-  //  (voir la note des quatre tons ci-dessus).
-  marque: "bg-sombre-eleve text-primaire",
+  attente: ROBE_UNIQUE,
+  valide: ROBE_UNIQUE,
+  probleme: ROBE_UNIQUE,
+  info: ROBE_UNIQUE,
+  marque: ROBE_UNIQUE,
 };
 
 /**

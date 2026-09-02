@@ -1304,11 +1304,12 @@ export function MoteurTatouage({
            critère, comme ARTISTE, LIEU, TECHNIQUE et RENDU, dans la
            même casse et le même style (le composant s'en charge). La
            ville, elle, est déjà écrite juste au-dessus, dans le champ. */}
-      <GroupeBadges titre="Distance (mi)" idTitre={`${id}-rayon-titre`}>
+      <GroupeBadges titre="Distance" idTitre={`${id}-rayon-titre`} compact>
         {RAYONS_TATOUAGE.map((palier) => (
           <BadgeCharte
             key={palier}
             actif={palier === rayonAffiche}
+            compact
             //  ⚠️ SUR PANNEAU (nº 179-§1) : la fenêtre du rayon a pris
             //  le fond du panneau des filtres (`eleve`). Ce qui est
             //  POSÉ dessus grimpe d'autant — exactement la règle de la
@@ -1323,7 +1324,7 @@ export function MoteurTatouage({
               setRayonEnAttente(palier);
             }}
           >
-            {palier}
+            {palier} mi
           </BadgeCharte>
         ))}
       </GroupeBadges>

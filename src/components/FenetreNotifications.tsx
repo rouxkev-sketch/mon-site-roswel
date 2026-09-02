@@ -308,6 +308,11 @@ const CATALOGUE: Record<
       2,67:1 — sous les 3:1 d'un signe, là où le doré rendait 11,63. Le
       propriétaire le sait ; le chiffre et le remède éventuel (un cran
       de gris plus bas, 3,93:1) sont notés chez `PastilleEvenement`.
+      ██ §5 (nº 809) — L'ÉTOILE PASSE AU BLANC, COMME TOUTES LES
+      PASTILLES ██ Règle d'unité du propriétaire : symbole blanc cassé
+      sur rond gris, partout. Le ton `marque` reste le nom de cet
+      événement ; sa robe est celle des autres (voir `PastilleEvenement`,
+      nº 809). Ce qui précède est l'histoire de ses couleurs.
 
       ██ §3 (nº 668) — LE TEXTE, VERSION FINALE ██
       Les deux phrases du propriétaire, au mot près, séparées par un

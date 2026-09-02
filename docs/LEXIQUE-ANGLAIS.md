@@ -132,7 +132,8 @@ message.
 | Français | Anglais | Note |
 |---|---|---|
 | les STYLES du catalogue | les noms **standards du métier**, en Title Case comme les entrées déjà anglaises : **Realism**, **Minimalist**, **Geometric**, **Ornamental**, **Neo-traditional**, **Japanese · Irezumi**, **Watercolor**, **Illustrative**, **Abstract**, **Biomechanical**, **Organic**, **Bio-organic**, **Engraving**, **Berber**, **Celtic**, **Coptic**, **Nordic**, **Polynesian** | les limaces (`realisme`, `neo-traditionnel`, `japonais`…) ne bougent pas : elles sont en base (`tatoueurs.styles`, `photos_tatoueur.style`) et dans les adresses `/tatouage/<limace>/<ville>` |
-| Cultures du monde (famille) | **World cultures** | |
+| Cultures du monde (famille) | **World Cultures** | Title Case comme les styles (Kevin, 809) |
+| Maori (style) | **Māori** | le macron, graphie courante en anglais (Kevin, 809) ; la limace reste `maori` |
 | Réalisations / Flashs (Explorer) | **Tattoos** / **Flash** ; « All tattoos » / « All flash » | |
 | Types de projets · Petit tatouage · Grandes pièces | **Project types** · **Small tattoo** · **Large pieces** | |
 | Besoins · Cover · Cicatrice | **Needs** · **Cover-up** · **Scars** | |

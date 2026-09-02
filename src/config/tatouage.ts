@@ -248,7 +248,7 @@ export const STYLES_TATOUAGE = [
   { slug: "berbere", label: "Berber", couleur: "#6B4A38" },
   { slug: "celtique", label: "Celtic", couleur: "#3D5A46" },
   { slug: "copte", label: "Coptic", couleur: "#5B4638" },
-  { slug: "maori", label: "Maori", couleur: "#2E3B38" },
+  { slug: "maori", label: "Māori", couleur: "#2E3B38" },
   { slug: "nordique", label: "Nordic", couleur: "#3A4756" },
   { slug: "pa-tutiki", label: "Pā Tūtiki", couleur: "#33403C" },
   { slug: "polynesien", label: "Polynesian", couleur: "#2C3C42" },
@@ -433,7 +433,7 @@ export const FAMILLES_STYLES = [
     //  qu'à un seul endroit, `suggestions_style.famille` : voir la
     //  migration nº 67, qui le renomme et refait sa contrainte.
     slug: "cultures-du-monde",
-    label: "World cultures",
+    label: "World Cultures",
     //  CEUX QUI VIVENT ICI, ET NULLE PART AILLEURS : ils quittent le
     //  premier niveau du menu et ne se lisent que dans la famille.
     //  (nº 291 — « Tribal » les rejoint.)

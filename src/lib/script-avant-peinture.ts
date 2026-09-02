@@ -45,6 +45,15 @@ import { MILLESIME_SCRIPT } from "@/lib/millesime-script";
 //  est écrite une fois (lib/bas-de-la-pile) et rend son relevé TOUT
 //  FAIT : aucune copie à la main ici non plus.
 import { releveDuBasPourLeScript } from "@/lib/bas-de-la-pile";
+/*  ██ nº 809 — LE NOM DU COOKIE « DÉJÀ CONNECTÉ » VIENT DE SA SOURCE ██
+    Le script testait `yf_deja_connecte=1`, un nom que plus personne
+    n'écrivait : lib/deja-connecte pose `yokofolio-deja-connecte=1`.
+    `data-compte` ne valait donc JAMAIS « revenant » — un visiteur qui a
+    un compte voyait « Join » au premier pixel, puis « Log in » après
+    l'hydratation : le clignotement relevé par le propriétaire. Le nom
+    est désormais LU chez celui qui l'écrit ; les deux ne peuvent plus
+    diverger. */
+import { COOKIE_DEJA_CONNECTE } from "@/lib/deja-connecte";
 
 /**
  * TOUT CE QUI DOIT ÊTRE DÉCIDÉ AVANT LA PREMIÈRE PEINTURE
@@ -209,7 +218,7 @@ try{if(/^\\/tatoueur\\/[^\\/]+$/.test(location.pathname)){var qf=location.search
 if(qf&&/[?&](style|rendu|nature|photo|studio|entree)=/.test(qf)){r.dataset.ficheParametree="1";
 if(/[?&]entree=lien(&|$)/.test(qf))r.dataset.entreeLien="1";}}}catch(e){}
 try{var ck=document.cookie;
-r.dataset.compte=/(^|; )sb-[^=]*-auth-token/.test(ck)?"connecte":(ck.indexOf("yf_deja_connecte=1")>=0?"revenant":"nouveau");
+r.dataset.compte=/(^|; )sb-[^=]*-auth-token/.test(ck)?"connecte":(ck.indexOf(${JSON.stringify(`${COOKIE_DEJA_CONNECTE}=1`)})>=0?"revenant":"nouveau");
 }catch(e){}
 /* 0. LE NOMBRE DE COLONNES, POUR LA PROCHAINE RÉPONSE DU SERVEUR
    (nº 226-§1). La politique du cookie — validité, portée, samesite —

@@ -66,6 +66,7 @@ import type { Tatoueur } from "@/lib/tatoueurs";
 import { lieuVersParametres, paysDuLieu } from "@/lib/geocodage";
 import { ligneCarte, nomPaysAffiche } from "@/lib/adresse";
 import { useUtilisateur } from "@/lib/use-utilisateur";
+import { lireDejaConnecte, souscrireStockage } from "@/lib/deja-connecte";
 import { ContexteAffichageServi } from "@/components/AffichageMosaique";
 import {
   lireDisposition,
@@ -426,6 +427,16 @@ export function IndexTatoueurs({
    * serveur — on se contente de ne rien affirmer tant qu'on ne sait pas.
    */
   const { utilisateur, pret: sessionConnue } = useUtilisateur();
+  /** nº 809 — « a déjà eu un compte » (le cookie de la barre) : le
+      bandeau d'appel aux tatoueurs ne se montre qu'à ceux qui ne l'ont
+      jamais eu. Lu après l'hydratation seulement (`false` au serveur),
+      comme `sessionConnue` : le bandeau n'apparaît jamais pour
+      disparaître. */
+  const dejaConnecte = useSyncExternalStore(
+    souscrireStockage,
+    lireDejaConnecte,
+    () => false
+  );
 
   /** LES CRITÈRES SERVIS — ceux de l'adresse, décodés par le serveur.
       Ce sont EUX que la mosaïque illustre, toujours. */
@@ -1521,7 +1532,13 @@ export function IndexTatoueurs({
             n'est connecté » de « je ne sais pas encore », et seul le
             premier fait paraître le bandeau. Toute la raison est
             écrite à la déclaration de `sessionConnue`, plus haut. */}
-        {sessionConnue && !utilisateur && (
+        {/*  ⚠️ nº 809 — ET SEULEMENT POUR QUI N'A JAMAIS EU DE COMPTE (règle
+             du propriétaire) : le bandeau s'adresse à ceux qui lisent
+             « Join » dans la barre. Un revenant (« Log in ») connaît déjà
+             la porte ; un connecté l'a franchie. Le drapeau est celui de
+             la barre (lib/deja-connecte), lu de la même façon. La capsule
+             prend aussi la mesure compacte des boutons de barre (36 px). */}
+        {sessionConnue && !utilisateur && !dejaConnecte && (
         <section className="mt-14 rounded-2xl bg-sombre-carte px-5 py-8 text-center">
           <h2 className="text-[19px] font-bold tracking-tight text-sombre-texte">
             {TEXTES_TATOUAGE.titreAppelTatoueur}
@@ -1551,8 +1568,8 @@ export function IndexTatoueurs({
             href={`/devenir-tatoueur?suite=${encodeURIComponent(
               "/devenir-tatoueur/fiche?fiche=nouvelle"
             )}`}
-            className="mt-4 inline-flex min-h-[48px] items-center justify-center
-                       rounded-full bg-primaire px-7 text-[15px] font-semibold
+            className="mt-4 inline-flex min-h-9 items-center justify-center
+                       rounded-full bg-primaire px-5 text-[14px] font-semibold
                        text-white transition-colors hover:bg-primaire-fonce
                        focus-visible:outline-2 focus-visible:outline-offset-2
                        focus-visible:outline-primaire"
