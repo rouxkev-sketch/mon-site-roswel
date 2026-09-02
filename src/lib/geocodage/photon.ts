@@ -17,10 +17,19 @@ import type { LieuTrouve, PrecisionLieu } from "@/lib/geocodage/types";
  * ce découpage. Le jour où nous hébergeons NOTRE Photon, seule
  * l'adresse ci-dessous change (variable d'environnement prévue).
  *
- * `lang=fr` : Photon renvoie les noms traduits quand OpenStreetMap les
- * porte — « États-Unis », « Allemagne »… Les noms de lieux, eux,
- * restent dans leur langue (c'est bien : « München » se cherche aussi
- * bien que « Munich », les deux ramènent la même ville).
+ * `lang=en` (nº 805 ; c'était `fr`) : Photon renvoie les noms traduits
+ * quand OpenStreetMap les porte — « United States », « Germany »,
+ * « Munich », « Bavaria »… Les noms de RUES, eux, restent dans leur
+ * langue : « Rue Trousseau » est le nom de la rue, il ne se traduit pas
+ * (et « München » se cherche aussi bien que « Munich », les deux
+ * ramènent la même ville).
+ * ⚠️ nº 810 — CE FICHIER EST LE SEUL APPEL AU GÉOCODEUR, et il n'y a
+ * qu'une route pour l'atteindre (`/api/lieux`, servie par le serveur) :
+ * le moteur de recherche ET le formulaire de portfolio (fiche, studios,
+ * modes) passent tous par ce même chemin. Une suggestion en français
+ * ne peut donc venir que de deux endroits : d'ici (un nom que
+ * OpenStreetMap ne connaît pas en anglais), ou du FILET de la route —
+ * nos propres villes, relues en base (lib/villes-catalogue).
  */
 
 /** L'adresse du service — surchargeable le jour d'un Photon à nous. */

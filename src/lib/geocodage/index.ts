@@ -1,4 +1,7 @@
 import { chercherChezNous } from "@/lib/geocodage/notre-serveur";
+//  nº 810 — la ligne grise d'un lieu relu en base suit la règle
+//  d'adresse du site (voir `lieuDepuisFiche`).
+import { contexteSuggestion } from "@/lib/adresse";
 import type {
   FournisseurGeocodage,
   LieuTrouve,
@@ -155,28 +158,45 @@ export function lieuDepuisFiche(
   const adresse = texte("adresse");
   const ville = texte("ville_nom");
   const region = texte("region");
-  const pays = texte("pays");
+  const codePays = texte("code_pays")?.toUpperCase() ?? null;
+  /*  ██ nº 810 — LE PAYS SE DIT EN ANGLAIS, D'APRÈS SON CODE ██
+      LE DÉFAUT, RELEVÉ PAR LE PROPRIÉTAIRE : le champ de lieu suggérait
+      encore du français. Le géocodeur, lui, parle anglais depuis la
+      nº 805 — mais quand il ne répond pas, la route `/api/lieux` sert
+      NOS villes, relues en base par cette fonction, et les fiches
+      écrites avant la nº 805 y portent « États-Unis », « Allemagne ».
+      Le nom du pays se déduit donc du code ISO (`Intl.DisplayNames`,
+      « en » — la même source que `paysDuLieu`), et la colonne `pays`
+      n'est lue qu'à défaut de code. Une fiche rouverte dans le
+      formulaire repart avec ce nom anglais, et l'écrit à
+      l'enregistrement : la base se corrige au fil des passages ; le
+      reste est dans docs/SQL-810-LOCALITES.md. */
+  const pays = (codePays ? nomDuPays(codePays) : "") || texte("pays");
+  const codePostal = texte("code_postal");
   const latitude = nombre("latitude");
   const longitude = nombre("longitude");
   const intitule = adresse ?? ville;
   if (!intitule) return null;
 
-  const contexteMorceaux = [
-    ville && ville !== intitule ? ville : null,
-    region,
-    pays,
-  ].filter(Boolean) as string[];
-
   return {
     identifiant: texte("lieu_id") ?? `fiche:${intitule}`,
     intitule,
-    contexte: contexteMorceaux.join(", "),
+    /*  nº 810 — LA LIGNE GRISE SUIT LA RÈGLE D'ADRESSE DU SITE
+        (`contexteSuggestion`, lib/adresse, nº 114), comme les
+        suggestions du géocodeur : « TX, USA » sous « Austin », « Paris,
+        France » sans la région. Elle recollait ici ville, région et
+        pays bruts (« Texas, États-Unis », « Paris, Île-de-France,
+        France ») — une deuxième écriture de l'adresse, en français. */
+    contexte: contexteSuggestion(
+      { code_postal: codePostal, ville, region, pays, code_pays: codePays },
+      intitule
+    ),
     adresse,
     ville,
-    code_postal: texte("code_postal"),
+    code_postal: codePostal,
     region,
     pays,
-    code_pays: texte("code_pays"),
+    code_pays: codePays,
     latitude: Number.isFinite(latitude) ? latitude : 0,
     longitude: Number.isFinite(longitude) ? longitude : 0,
     precision: adresse ? "adresse" : "ville",
@@ -230,7 +250,8 @@ export function lieuDepuisFiche(
  * LE REMÈDE : LE CODE ISO SUFFIT, ET LE NOM S'EN DÉDUIT. On garde
  * `lieu.pays` quand il est là — un lieu frais, sorti du géocodeur, le
  * porte, et c'est le mot exact que le champ affiche — et on retombe
- * sinon sur le nom français du code (`Intl.DisplayNames`).
+ * sinon sur le nom ANGLAIS du code (`Intl.DisplayNames`, « en » depuis
+ * la nº 805 ; c'était le nom français).
  * ⚠️ AUCUNE ADRESSE NE CHANGE, et c'est délibéré : ajouter le nom du
  * pays aux paramètres aurait allongé toutes les adresses ET laissé
  * sans badge les liens DÉJÀ partagés, qui ne le porteraient pas. En
@@ -239,8 +260,9 @@ export function lieuDepuisFiche(
  */
 
 /**
- * LE NOM FRANÇAIS D'UN CODE PAYS — « FR » → « France », « US » →
- * « États-Unis », « JP » → « Japon ».
+ * LE NOM ANGLAIS D'UN CODE PAYS — « FR » → « France », « US » →
+ * « United States », « JP » → « Japan » (en anglais depuis la nº 805 ;
+ * la nº 810 corrige cette note, qui disait encore le français).
  * ⚠️ AUCUNE TABLE ÉCRITE À LA MAIN : `Intl.DisplayNames` porte les
  * données de langue du système (les mêmes que celles de l'écriture des
  * dates), donc les deux cents pays sans qu'on en recopie un seul. La

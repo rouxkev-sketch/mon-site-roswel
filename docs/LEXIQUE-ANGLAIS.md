@@ -159,6 +159,15 @@ message.
 | renommer un style accepté (admin, nº 807) | **Rename** · **Save the name** · « Renamed to "…" (/…). » · « The URL stays /… : N portfolio(s) or photo(s) use it. » | la limace ne suit le nom que si rien ne la porte — docs/SQL-807-STYLES-AJOUTES.md pour le reste |
 | tris alphabétiques | `localeCompare(…, "en")`, `Intl.Collator("en")` | PortfolioDeLAffiche, BlocPortfolio, config (familles), lib/modes-exercice, lib/selection-suivis |
 
+### Ajouts de la 810 (les localités)
+
+| Français | Anglais | Note |
+|---|---|---|
+| le PAYS d'un lieu (colonne `pays`, suggestions du filet, badge « Search in … ») | le nom anglais **déduit du code ISO** (`Intl.DisplayNames`, « en ») : **United States**, **Germany** — affiché court par `nomPaysAffiche` : **USA**, **Germany** | `lieuDepuisFiche` (lib/geocodage) ; la base se réécrit par docs/SQL-810-LOCALITES.md ou `outils/relire-les-lieux-en-anglais.mjs` |
+| la RÉGION d'un lieu (colonne `region`) | le nom **tel qu'OpenStreetMap l'écrit en anglais** : **California**, **Bavaria**, **Brittany** ; « Texas », « Île-de-France » ne changent pas | c'est le mot que compare la recherche par région (`yf_normaliser`) — la réécriture en base rend les fiches d'avant la 805 à cette recherche |
+| la ligne grise d'une suggestion | **« TX, USA »**, **« 75011 Paris, France »** — la règle nº 114 (`contexteSuggestion`), pour le géocodeur ET le filet | plus jamais « Texas, États-Unis » ni « Paris, Île-de-France, France » |
+| une VILLE, une RUE | **inchangées** : « Paris », « Munich », « Rue Trousseau » sont des noms | `ville_slug` fait l'adresse publique `/tatouage/<style>/<ville>` — pas de réécriture sans redirection |
+
 ## 3 · Le ton
 
 - **Anglais américain, décontracté** : le « you » direct, phrases

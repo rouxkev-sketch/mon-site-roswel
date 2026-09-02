@@ -25,6 +25,20 @@ import { listeEnLigne } from "@/lib/tatoueurs";
  * lorsqu'il ne répond pas.
  *
  * ⚠️ CÔTÉ SERVEUR UNIQUEMENT : il lit la base avec le client serveur.
+ *
+ * ⚠️ nº 810 — LE FILET PARLE LA LANGUE DU SITE. Il relit des fiches dont
+ * certaines ont été écrites AVANT la nº 805, avec un nom de pays
+ * français (« États-Unis »), et sa ligne grise recollait ville, région
+ * et pays bruts (« Texas, États-Unis ») — c'est l'une des deux sources
+ * possibles du français relevé par le propriétaire (l'autre : un nom
+ * qu'OpenStreetMap ne connaît pas en anglais). `lieuDepuisFiche`
+ * (lib/geocodage) dit désormais le pays en anglais d'après son code, et
+ * compose la ligne grise par la règle d'adresse du site (lib/adresse) :
+ * « TX, USA » sous « Austin », « Paris, France » sans la région. La
+ * RÉGION, elle, reste telle qu'en base (« Californie » d'une fiche
+ * d'avant la nº 805 s'affiche « CA », mais ne répond plus à une
+ * recherche « California ») : docs/SQL-810-LOCALITES.md et
+ * outils/relire-les-lieux-en-anglais.mjs la réécrivent.
  */
 
 /** La casse et les accents ne comptent pas : « LYON » trouve « Lyon »,

@@ -651,3 +651,74 @@ remplacer** le français par l'anglais, sans mécanique à deux langues.
   fichier est désormais dans `.gitignore` — et les deux mots ne sont
   écrits nulle part, pas même ici : les nommer dans une note suffirait
   à faire renaître leurs règles.
+
+## 14 · Ce que la 810 a fait (les localités : suggestions et base)
+
+- **Le relevé du propriétaire** : le champ de ville/pays (création de
+  portfolio ET moteur) suggérait encore du français, et les adresses
+  déjà en base sont françaises (« 44 Rue Trousseau, Paris, France »).
+- **Le chemin des suggestions, établi** : le navigateur ne parle qu'à
+  NOTRE route `/api/lieux` (lib/geocodage/notre-serveur, nº 228), le
+  moteur et les trois champs du formulaire (fiche, studios, modes)
+  passant par le même `chercherLieux`. La route appelle Photon avec
+  `lang=en` (photon.ts, le SEUL appel au géocodeur du dépôt — vérifié
+  dans src, outils, scripts) et, s'il ne répond pas en 4,5 s, sert le
+  FILET : nos villes relues en base (lib/villes-catalogue), pendant
+  30 s à chaque panne. **Deux sources de français, donc** : un nom
+  qu'OpenStreetMap ne connaît pas en anglais (une rue française EST
+  française), et le filet, qui recollait ville, région et pays BRUTS
+  d'une fiche d'avant la 805 (« Texas, États-Unis », « Paris,
+  Île-de-France, France ») — sans la règle d'adresse ni la traduction
+  du pays. Le géocodeur public n'est pas joignable depuis l'atelier
+  (réseau fermé) : le `lang=en` est prouvé chez un faux Photon, pas chez
+  le vrai. Pour le constater chez toi : ouvrir
+  `https://<le site>/api/lieux?q=austin` et lire `source`
+  (« geocodeur » ou « catalogue ») et `contexte`.
+- **Corrigé** : `lieuDepuisFiche` (lib/geocodage) dit le pays en
+  anglais d'après son code ISO (`Intl.DisplayNames`, « en » — la source
+  de `paysDuLieu`) et compose la ligne grise par `contexteSuggestion`
+  (lib/adresse, nº 114) : « TX, USA » sous « Austin », « France » sous
+  « Paris ». Une fiche rouverte dans le formulaire repart avec ce nom
+  anglais et l'écrit à l'enregistrement. Quatre notes devenues fausses
+  depuis la 805 (« lang=fr », « nom français du code », « géocodeur
+  interrogé en français », « nom français sinon ») mises à jour
+  (piège 472).
+- **La base, inventoriée** (docs/SQL-810-LOCALITES.md) : trois tables
+  portent un lieu à plat — `tatoueurs` (`adresse`, `code_postal`,
+  `ville_nom`, `ville_slug`, `region`, `pays`, `code_pays`, `lieu_id`,
+  point), `studios` et `modes_exercice` (`intitule`, `adresse`,
+  `code_postal`, `ville`, `region`, `pays`, `code_pays`, `lieu_id`,
+  point) — plus `conventions` (`ville`, `region`, `code_pays`, point ;
+  le pays se déduit du code). Ce qui est français par ERREUR D'ÉPOQUE :
+  `pays` (« États-Unis ») et `region` quand le français a son mot
+  (« Californie », « Bavière »). Ce qui l'est par NATURE : une rue, une
+  ville françaises. **Réécrire `region` compte pour la recherche** : la
+  fonction `rechercher_tatoueurs` compare le nom normalisé
+  (`yf_normaliser`), et « Californie » ne répond plus à « California »
+  que le champ propose depuis la 805. `pays` n'est que d'affichage (la
+  recherche par pays lit le code). **Jamais réécrits** : `ville_nom`
+  (`ville_slug` = adresse publique `/tatouage/<style>/<ville>`, sans
+  redirection), `adresse`, `code_postal`, `lieu_id`, les points,
+  `slug`, `tatoueurs.villes` (héritage).
+- **Deux voies, livrées, relançables** : A · le SQL (pays d'après le
+  code ISO, régions par table d'exonymes français → nom anglais tel
+  qu'OpenStreetMap l'écrit — les variantes de lib/adresse plus l'Europe
+  courante, transactions, comptes-rendus) ; B · le script
+  `outils/relire-les-lieux-en-anglais.mjs` : pour chaque ligne qui a un
+  point, `/reverse?lat&lon&lang=en` chez le géocodeur, et `region` +
+  `pays` réécrits dans ses mots exacts (`code_pays` posé s'il manque),
+  essai à blanc par défaut, `--reel` pour agir, une requête par seconde,
+  ligne ignorée quand le point n'est pas dans le pays qu'elle dit. Le
+  SQL est collé par Kevin, le script lancé par Kevin : rien n'a été
+  exécuté sur la vraie base.
+- **Le banc** (`localites-810.mjs`, faux Photon sur 3777 bâti dans le
+  serveur par `NEXT_PUBLIC_PHOTON_URL`) : la route appelle le géocodeur
+  en `lang=en` et rend « Austin / TX, USA » ; le champ du moteur (web)
+  propose la même ligne ; Photon muet → le filet répond en 4,5 s, une
+  fiche « Los Angeles / Californie / États-Unis » se lit « Los Angeles /
+  CA, USA », pays « United States », « Munich / Bavière / Allemagne » →
+  « Munich / Germany » ; le script à blanc liste les réécritures sans
+  rien écrire (vérifié en base), `--reel` réécrit region et pays du
+  portfolio, du studio et du mode, laisse la ville, laisse la ligne
+  incohérente, laisse « Paris » ; une relance ne réécrit rien. 732, 746,
+  747 : verts.

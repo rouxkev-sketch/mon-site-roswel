@@ -62,7 +62,9 @@
  * `ligneCarte`, qui le traite explicitement.
  *
  * LE NOM DU PAYS VIENT DES DONNÉES — le géocodeur est interrogé en
- * français — mais il passe par DEUX TABLES, et deux seulement :
+ * ANGLAIS depuis la nº 805 (`lang=en`, photon.ts), et les fiches
+ * écrites avant portent encore des noms français — mais il passe par
+ * DEUX TABLES, et deux seulement :
  *  · RACCOURCIS_PAYS coupe les formes officielles interminables
  *    (« États-Unis d'Amérique » → « USA » depuis la nº 590, « Royaume-Uni
  *    de Grande-Bretagne et d'Irlande du Nord » → « Royaume-Uni ») ;
@@ -566,7 +568,8 @@ for (const [complet, court] of [
  * « UK », « UAE », « NZ » le sont ; « ALL » pour l'Allemagne ou
  * « ESP » pour l'Espagne ne le sont pas — ce sont des codes de
  * fédérations sportives, personne n'écrit une adresse comme ça. Tous
- * les autres pays gardent leur nom français.
+ * les autres pays gardent leur nom court anglais (celui que rend
+ * `nomPaysAffiche` depuis la nº 805).
  *
  * ⚠️ « AUSTRALIA » N'EST PAS UNE ABRÉVIATION mais la forme
  * internationale du nom, demandée telle quelle : c'est ainsi que le
@@ -607,7 +610,7 @@ export function nomPaysAffiche(lieu: LieuAffichable): string {
 }
 
 /** LE NOM DU PAYS DANS LA BARRE DE RECHERCHE — abrégé quand une forme
-    internationale existe, le nom français sinon. */
+    internationale existe, le nom court anglais sinon. */
 export function nomPaysMoteur(lieu: LieuAffichable): string {
   const affiche = nomPaysAffiche(lieu);
   if (!affiche) return "";

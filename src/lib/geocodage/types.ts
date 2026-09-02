@@ -35,8 +35,11 @@ export type LieuTrouve = {
   /** Ce qui est écrit en GRAS dans la suggestion et dans le champ :
       « 10 Rue de la Paix », « Springfield », « Lyon 1er ». */
   intitule: string;
-  /** Ce qui lève l'ambiguïté, sous l'intitulé : « Paris, Île-de-France,
-      France », « Illinois, États-Unis ». Vide si le lieu se suffit. */
+  /** Ce qui lève l'ambiguïté, sous l'intitulé : « 75011 Paris, France »,
+      « IL, USA » — composé par `contexteSuggestion` (lib/adresse, la
+      règle nº 114 : code postal + ville, le code de l'État seulement
+      pour les pays qui l'écrivent, puis le pays en anglais). Vide si le
+      lieu se suffit. */
   contexte: string;
   /** Numéro et rue, quand la personne a choisi une adresse complète. */
   adresse: string | null;
