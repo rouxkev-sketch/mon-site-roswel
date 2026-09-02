@@ -6,6 +6,8 @@ import { EnTeteTatouage } from "@/components/EnTeteTatouage";
 import { LogoYokofolio } from "@/components/LogoYokofolio";
 //  §4 (nº 475) — le lien vers l'accueil qui déclare son départ.
 import { LienAccueil } from "@/components/LienAccueil";
+//  §1 (nº 798) — un copier-coller qui rend du texte, pas du décor.
+import { CopieTexteNu } from "@/components/CopieTexteNu";
 
 /**
  * QUI SOMMES-NOUS
@@ -112,6 +114,14 @@ export default function PageQuiSommesNous() {
   return (
     <>
       <EnTeteTatouage />
+      {/*  §1 (nº 798) — CETTE PAGE EST FAITE POUR ÊTRE LUE, DONC POUR
+           ÊTRE COPIÉE. Sans ce garde, le presse-papiers emportait le
+           fond du site et la taille des titres : le collage arrivait
+           surligné d'anthracite, en 46 px. Le composant ne rend rien
+           et ne change aucune mesure — la note complète est chez lui.
+           La page reste un composant serveur : seul ce garde est
+           client, comme `LienAccueil` juste en dessous. */}
+      <CopieTexteNu />
 
       <main className="flex-1 mx-auto w-full max-w-[720px] px-5 sm:px-6 pt-12 sm:pt-16 pb-24">
         {/* L'ILLUSTRATION : le cœur du site, en grand. C'est le seul
@@ -234,9 +244,20 @@ export default function PageQuiSommesNous() {
                place mémorisée de l'accueil (le bas de la mosaïque).
                La page reste un composant serveur — seul le lien est
                client (LienAccueil, nº 429 + nº 446). */}
+          {/*  §2 (nº 798) — LES MESURES DE LA nº 788, ET RIEN D'AUTRE.
+               Ces deux capsules étaient les dernières du site à porter
+               l'ancienne taille : 54 px de haut, et aucune taille de
+               texte déclarée — donc celle du corps, 16 px. Les boutons
+               de la page Sécurité ont été ramenés à 40 px et 14 px à
+               la nº 788 ; ceux-ci les rejoignent, au pixel près.
+               ⚠️ RIEN D'AUTRE NE CHANGE, et surtout pas `px-7` : la
+               couleur, le survol, la destination, le libellé et
+               l'espacement latéral restent tels quels. Le propriétaire
+               a demandé la hauteur et la typo, pas une refonte. */}
           <LienAccueil
             className="inline-flex items-center justify-center rounded-full
-                       px-7 min-h-[54px] bg-primaire hover:bg-primaire-fonce
+                       px-7 min-h-[40px] text-[14px] bg-primaire
+                       hover:bg-primaire-fonce
                        text-white font-semibold transition-colors
                        focus-visible:outline-2 focus-visible:outline-offset-2
                        focus-visible:outline-primaire"
@@ -272,12 +293,19 @@ export default function PageQuiSommesNous() {
                sélection ». La règle vit dans `BoutonCreerPortfolio`,
                parce qu'elle demande de savoir qui regarde — ce que
                seule l'exécution sait.
-               ⚠️ L'HABIT NE CHANGE PAS D'UN PIXEL : les classes du §5
-               de la nº 321 sont passées telles quelles au composant,
-               qui n'en décide aucune. Le libellé non plus. */}
+               ⚠️ LES CLASSES SONT PASSÉES TELLES QUELLES AU COMPOSANT,
+               qui n'en décide aucune, et le libellé non plus.
+               ⚠️ ET L'HABIT A BOUGÉ UNE FOIS DEPUIS, à la nº 798 :
+               hauteur 54 → 40 px, taille de texte déclarée à 14 px,
+               pour rejoindre les capsules de la page Sécurité. Le
+               reste — couleurs, survol, marges latérales — n'a pas
+               changé. (La note qui vivait ici disait « pas d'un
+               pixel » : c'était vrai jusqu'à la nº 798, ça ne l'est
+               plus, et une note fausse est pire qu'aucune note.) */}
           <BoutonCreerPortfolio
             className="inline-flex items-center justify-center rounded-full
-                       px-7 min-h-[54px] bg-sombre-eleve hover:bg-sombre-haut
+                       px-7 min-h-[40px] text-[14px] bg-sombre-eleve
+                       hover:bg-sombre-haut
                        text-white font-semibold transition-colors
                        focus-visible:outline-2 focus-visible:outline-offset-2
                        focus-visible:outline-primaire"
