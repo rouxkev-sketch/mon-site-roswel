@@ -54,6 +54,9 @@ import { releveDuBasPourLeScript } from "@/lib/bas-de-la-pile";
     est désormais LU chez celui qui l'écrit ; les deux ne peuvent plus
     diverger. */
 import { COOKIE_DEJA_CONNECTE } from "@/lib/deja-connecte";
+//  nº 819 — le squelette-mémoire de « Ma sélection » : la lecture est
+//  écrite là-bas, livrée ici sous forme de texte (le motif des colonnes).
+import { blocMemoireSelectionPourLeScript } from "@/lib/memoire-selection";
 
 /**
  * TOUT CE QUI DOIT ÊTRE DÉCIDÉ AVANT LA PREMIÈRE PEINTURE
@@ -220,6 +223,14 @@ if(/[?&]entree=lien(&|$)/.test(qf))r.dataset.entreeLien="1";}}}catch(e){}
 try{var ck=document.cookie;
 r.dataset.compte=/(^|; )sb-[^=]*-auth-token/.test(ck)?"connecte":(ck.indexOf(${JSON.stringify(`${COOKIE_DEJA_CONNECTE}=1`)})>=0?"revenant":"nouveau");
 }catch(e){}
+/* nº 819 — LE SQUELETTE-MÉMOIRE DE « MA SÉLECTION » : sur cette page,
+   l'habillage d'attente montre des cartes grises SEULEMENT si ce compte
+   en avait à sa dernière visite (mémoire locale, compte du cookie de
+   session, onglet de l'adresse) — sinon le calme, aucune promesse. La
+   lecture est écrite dans lib/memoire-selection ; la garde CSS lit
+   html[data-selection-memoire] (globals.css). Même mécanique que
+   data-compte juste au-dessus : posé AVANT la première peinture. */
+${blocMemoireSelectionPourLeScript()}
 /* 0. LE NOMBRE DE COLONNES, POUR LA PROCHAINE RÉPONSE DU SERVEUR
    (nº 226-§1). La politique du cookie — validité, portée, samesite —
    est écrite UNE fois (SUFFIXE_COOKIE_AFFICHAGE, lib/colonnes-

@@ -1,5 +1,9 @@
 "use client";
 
+//  nº 819 — le paramètre des courriels de suppression (`?reactiver=…`),
+//  gardé en `suite` quand il faut d'abord se connecter.
+import { PARAM_REACTIVER } from "@/lib/reactivation";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -456,7 +460,21 @@ export function Securite() {
      qu'il fallait un compte, et un bouton qui n'allait qu'à un seul
      endroit. On y va directement. */
   useEffect(() => {
-    if (pret && !utilisateur) router.replace("/devenir-tatoueur");
+    if (pret && !utilisateur) {
+      /*  nº 819 — LE BOUTON D'UN COURRIEL DE SUPPRESSION SURVIT À LA
+          CONNEXION : un compte qui vient de demander sa suppression est
+          déconnecté (BlocSuppressions) ; son courriel le ramène ici
+          avec `?reactiver=…`. Sans `suite`, la connexion l'aurait
+          déposé sur « Ma sélection », et le paramètre — donc le geste
+          — était perdu. Avec le paramètre, et seulement avec lui, on
+          garde l'adresse entière en `suite` (rien ne change pour les
+          autres visites déconnectées de cette page). */
+      const recherche = window.location.search;
+      const suite = recherche.includes(`${PARAM_REACTIVER}=`)
+        ? `?suite=${encodeURIComponent(window.location.pathname + recherche)}`
+        : "";
+      router.replace(`/devenir-tatoueur${suite}`);
+    }
   }, [pret, utilisateur, router]);
 
   if (pret && !utilisateur) {

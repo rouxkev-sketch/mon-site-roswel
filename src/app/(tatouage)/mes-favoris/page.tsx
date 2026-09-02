@@ -5,6 +5,9 @@ import { creerClientSupabaseServeur } from "@/lib/supabase/server";
 import { lireLesFavoris } from "@/lib/favoris-serveur";
 import { BarreSelection } from "@/components/BarreSelection";
 import { PageFavoris } from "@/components/PageFavoris";
+//  nº 819 — la bienvenue se décide ICI, au serveur, qui connaît le
+//  compte : le HTML porte le bon bloc, rien d'autre n'est jamais peint.
+import { doitMontrerLaBienvenue } from "@/lib/bienvenue-regle";
 import {
   entreesDesStyles,
   entreesDuFiltre,
@@ -150,6 +153,8 @@ export default async function PageMesFavoris() {
       <PageFavoris
         photos={photos}
         suivis={suivis}
+        bienvenue={doitMontrerLaBienvenue(user)}
+        compte={user.id}
         taillePage={taillePageServie(magasin.get(COOKIE_COLONNES)?.value)}
         taillePortfolios={taillePortfoliosServie(
           magasin.get(COOKIE_COLONNES)?.value

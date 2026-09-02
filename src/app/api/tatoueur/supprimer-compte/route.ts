@@ -5,6 +5,9 @@ import {
   demanderSuppression,
 } from "@/lib/suppression-compte";
 import { creerNotification } from "@/lib/notifications";
+//  nº 819 — le courriel « compte en cours de suppression » : la date,
+//  le bouton « Reactivate my account » (lib/courriels-suppression).
+import { envoyerCourrielSuppressionCompte } from "@/lib/courriels-suppression";
 
 /**
  * SUPPRESSION DU COMPTE TATOUEUR (RGPD) — DIFFÉRÉE DE 30 JOURS
@@ -44,6 +47,12 @@ export async function POST() {
 
   // La trace, pour la retrouver au retour : se reconnecter annule
   // tout, encore faut-il savoir qu'une suppression courait.
+  //  nº 819 — LE COURRIEL PART APRÈS L'ÉCRITURE, et ne la bloque jamais
+  //  (il ne lève rien). Sans adresse connue, pas de courriel : la
+  //  notification, elle, reste.
+  if (user.email) {
+    await envoyerCourrielSuppressionCompte(user.email, resultat.purgeLe);
+  }
   await creerNotification({
     userId: user.id,
     genre: "suppression_compte",

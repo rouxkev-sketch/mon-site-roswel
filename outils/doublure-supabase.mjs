@@ -174,6 +174,15 @@ const FAUX_TOTAL = process.env.FAUX_TOTAL === "1";
 const GRANDE_TABLE = Number(process.env.GRANDE_TABLE ?? 0);
 const PLAFOND = Number(process.env.PLAFOND ?? 0);
 const TABLE_MUETTE = process.env.TABLE_MUETTE ?? "";
+/*  nº 819 — LA LECTURE DU COMPTE QUI TRAÎNE, POUR UN SEUL COMPTE. Le
+    banc du squelette-mémoire doit VOIR l'habillage d'attente de « Ma
+    sélection » : la page interroge `GET /auth/v1/user` avant de rendre,
+    et la doublure répond en une milliseconde — le squelette n'a pas le
+    temps d'exister. `DELAI_UTILISATEUR_POUR=<id>` retarde CETTE réponse
+    de `DELAI_UTILISATEUR_MS` millisecondes pour ce compte-là seulement ;
+    les autres comptes (et les autres bancs) ne sentent rien. */
+const DELAI_UTILISATEUR_POUR = process.env.DELAI_UTILISATEUR_POUR ?? "";
+const DELAI_UTILISATEUR_MS = Number(process.env.DELAI_UTILISATEUR_MS ?? 0);
 
 /**
  * §2 (nº 690) — `IGNORER_ID=1` : LA BASE CRÉE LE COMPTE AVEC SON PROPRE
@@ -286,7 +295,12 @@ function utilisateurDuJeton(req) {
       //  lit pour savoir quoi délier (elle passe par `getUser`).
       identities: identitesDe(json.sub, json.email ?? null, metaApp),
       user_metadata: json.user_metadata ?? {},
-      created_at: new Date(0).toISOString(),
+      //  nº 819 — LA DATE DE NAISSANCE PEUT VENIR DU JETON DE BANC : la
+      //  règle de la bienvenue (lib/bienvenue-regle) tient un compte
+      //  Google pour neuf s'il est né depuis moins de quinze minutes,
+      //  et c'est le serveur qui la lit désormais. Un vrai jeton n'a pas
+      //  cette réclamation ; sans elle, l'origine des temps, comme avant.
+      created_at: json.created_at ?? new Date(0).toISOString(),
     };
   } catch {
     return null;
@@ -1176,15 +1190,25 @@ function repondre(req, res, u, brut) {
     //  ⚠️ LE REFUS PORTE LES MÊMES EN-TÊTES QUE L'ACCEPTATION : sans
     //  eux, le navigateur ne lit même pas le 401 — il annonce une
     //  erreur de CORS, et l'on cherche la panne au mauvais endroit.
-    res.writeHead(personne ? 200 : 401, {
-      "content-type": "application/json",
-      "access-control-allow-origin": "*",
-    });
-    res.end(
-      JSON.stringify(
-        personne ?? { message: "invalid claim: missing sub claim" }
-      )
-    );
+    const repondre = () => {
+      res.writeHead(personne ? 200 : 401, {
+        "content-type": "application/json",
+        "access-control-allow-origin": "*",
+      });
+      res.end(
+        JSON.stringify(
+          personne ?? { message: "invalid claim: missing sub claim" }
+        )
+      );
+    };
+    //  nº 819 — la réponse qui traîne, pour le seul compte du banc du
+    //  squelette-mémoire (voir DELAI_UTILISATEUR_POUR).
+    const attente =
+      personne && DELAI_UTILISATEUR_POUR && personne.id === DELAI_UTILISATEUR_POUR
+        ? DELAI_UTILISATEUR_MS
+        : 0;
+    if (attente > 0) setTimeout(repondre, attente);
+    else repondre();
     return;
   }
 

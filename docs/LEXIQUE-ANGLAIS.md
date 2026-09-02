@@ -216,6 +216,14 @@ message.
 | la bienvenue | textes de la 817 inchangés, à la géométrie d'About | `EncartBienvenue` |
 | les états vides de « Ma sélection » | **Your favorite photos will show up here.** · **Follow a portfolio to find it here.** · bouton **Explore styles** (inchangés) | sans boîte depuis la 818, 16 px couleur texte |
 
+### Ajouts de la 819 (chargements de Ma sélection + e-mails de suppression)
+
+| Français | Anglais | Note |
+|---|---|---|
+| le courriel « compte en cours de suppression » | sujet **Your YokoFolio account will be deleted on <date>** · titre **Account deletion in progress** · **You asked to delete your account. It is hidden from the site right now, portfolios included, and it will be permanently deleted on <date> — photos included.** · **Changed your mind? You have 30 days. Reactivate your account and everything comes back as it was. Simply logging back in cancels the deletion too.** · bouton **Reactivate my account** · note **If you do nothing, the deletion goes ahead on that date.** | `lib/courriels-suppression`, gabarit de la 817 ; la date en toutes lettres (« October 2, 2026 ») |
+| le courriel « portfolio en cours de suppression » | sujet **Your portfolio "<nom>" will be deleted on <date>** · titre **Portfolio deletion in progress** · **You asked to delete "<nom>". It is hidden from the site right now, and it will be permanently deleted on <date> — photos included.** · **Changed your mind? You have 30 days. Reactivate it and everything comes back as it was. Your account and your other portfolios don't change.** · bouton **Reactivate my portfolio** | même écriture que le précédent |
+| la page Sécurité, après le lien d'un courriel | **Deletion canceled: your account and your portfolios are back as they were.** · **Your account is active — the deletion is canceled.** · **Deletion canceled: your portfolio is back as it was.** · erreur **Reactivation failed. Try again.** | `BlocSuppressions`, `?reactiver=…` |
+
 ## 3 · Le ton
 
 - **Anglais américain, décontracté** : le « you » direct, phrases

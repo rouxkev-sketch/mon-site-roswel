@@ -2,6 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { DELAI_SUPPRESSION_JOURS } from "@/config/tatouage";
+//  nº 819 — le bouton des courriels de suppression (`?reactiver=…`).
+import {
+  CHEMIN_SECURITE,
+  PARAM_REACTIVER,
+  REACTIVER_COMPTE,
+} from "@/lib/reactivation";
 import { declarerDepartVouluVersLAccueil } from "@/lib/navigation-session";
 import { sansRemplissageAuto } from "@/lib/champs-sans-remplissage";
 import {
@@ -88,6 +94,10 @@ export function BlocSuppressions() {
   const [enCours, setEnCours] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState("");
+  /** nº 819 — ce qu'une réactivation venue d'un courriel a fait : une
+      information sur fond élevé (la règle de la page, nº 134), pas un
+      accent. `null` tant qu'aucun lien n'a été suivi. */
+  const [message, setMessage] = useState<string | null>(null);
 
   /**
    * ██ §2 (nº 784) — UN PORTFOLIO, UNE SEULE MENTION ██
@@ -110,31 +120,90 @@ export function BlocSuppressions() {
   const enSuppression = fiches.filter((f) => f.purge_le);
   const encoreSupprimables = fiches.filter((f) => !f.purge_le);
 
-  async function demanderSuppressionFiche(id: string, annuler: boolean) {
-    setEnCours(true);
-    setErreur(null);
-    try {
-      const reponse = await fetch("/api/tatoueur/supprimer-fiche", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, annuler }),
-      });
-      const donnees = (await reponse.json().catch(() => null)) as {
-        ok?: boolean;
-        message?: string;
-      } | null;
-      if (!reponse.ok || !donnees?.ok) {
-        throw new Error(donnees?.message ?? "The operation failed.");
+  /*  nº 819 — MÉMORISÉE (`useCallback`) ET ELLE DIT SI ELLE A ABOUTI :
+      l'effet du lien de réactivation, plus bas, l'appelle une fois au
+      montage et a besoin d'une référence stable et d'une réponse. Le
+      corps, lui, ne change pas. */
+  const demanderSuppressionFiche = useCallback(
+    async (id: string, annuler: boolean): Promise<boolean> => {
+      setEnCours(true);
+      setErreur(null);
+      try {
+        const reponse = await fetch("/api/tatoueur/supprimer-fiche", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, annuler }),
+        });
+        const donnees = (await reponse.json().catch(() => null)) as {
+          ok?: boolean;
+          message?: string;
+        } | null;
+        if (!reponse.ok || !donnees?.ok) {
+          throw new Error(donnees?.message ?? "The operation failed.");
+        }
+        setFicheAConfirmer(null);
+        setConfirmation("");
+        await recharger();
+        return true;
+      } catch (e) {
+        setErreur(e instanceof Error ? e.message : "The operation failed.");
+        return false;
+      } finally {
+        setEnCours(false);
       }
-      setFicheAConfirmer(null);
-      setConfirmation("");
-      await recharger();
-    } catch (e) {
-      setErreur(e instanceof Error ? e.message : "The operation failed.");
-    } finally {
-      setEnCours(false);
-    }
-  }
+    },
+    [recharger]
+  );
+
+  /*  ██ nº 819 — LE BOUTON DES COURRIELS DE SUPPRESSION ██
+      « Reactivate my account » / « Reactivate my portfolio » mènent ICI
+      avec `?reactiver=compte` ou `?reactiver=<identifiant>`
+      (lib/reactivation). On joue l'annulation EXISTANTE — la route de
+      réactivation du compte (celle de la reconnexion, nº 313), ou la
+      suppression de portfolio jouée à l'envers (`annuler: true`, comme
+      « Cancel » ci-dessous) — puis on EFFACE le paramètre de l'adresse
+      (`replaceState`, que le routeur suit) : un rechargement ne rejoue
+      rien. Une seule fois, au montage ; la fonction est stable. */
+  useEffect(() => {
+    const cible = new URLSearchParams(window.location.search).get(
+      PARAM_REACTIVER
+    );
+    if (!cible) return;
+    window.history.replaceState(window.history.state, "", CHEMIN_SECURITE);
+    void (async () => {
+      if (cible !== REACTIVER_COMPTE) {
+        if (await demanderSuppressionFiche(cible, true)) {
+          setMessage("Deletion canceled: your portfolio is back as it was.");
+        }
+        return;
+      }
+      setEnCours(true);
+      setErreur(null);
+      try {
+        const reponse = await fetch("/api/tatoueur/reactiver", {
+          method: "POST",
+        });
+        const donnees = (await reponse.json().catch(() => null)) as {
+          ok?: boolean;
+          reactive?: boolean;
+        } | null;
+        if (!reponse.ok || !donnees?.ok) {
+          throw new Error("Reactivation failed. Try again.");
+        }
+        setMessage(
+          donnees.reactive
+            ? "Deletion canceled: your account and your portfolios are back as they were."
+            : "Your account is active — the deletion is canceled."
+        );
+      } catch (e) {
+        setErreur(
+          e instanceof Error ? e.message : "Reactivation failed. Try again."
+        );
+      } finally {
+        setEnCours(false);
+      }
+    })();
+  }, [demanderSuppressionFiche]);
 
   async function supprimerLeCompte() {
     if (confirmation.trim().toUpperCase() !== "DELETE") return;
@@ -387,6 +456,19 @@ export function BlocSuppressions() {
            échoué (le serveur n'a pas répondu, la suppression n'a pas
            abouti). Le standard de la nº 788 vise les erreurs de SAISIE,
            qui ont un champ à désigner ; celle-ci n'en a aucun. */}
+      {/*  nº 819 — ce que le lien d'un courriel de suppression a fait :
+           une information sur fond élevé (la règle de la page Sécurité,
+           nº 134 / nº 788 — mêmes classes que son `MESSAGE`, qu'on ne
+           peut pas importer d'ici sans boucler). */}
+      {message && (
+        <p
+          role="status"
+          className="rounded-lg bg-sombre-eleve px-4 py-3 text-[13.5px]
+                     leading-relaxed text-sombre-texte"
+        >
+          {message}
+        </p>
+      )}
       {erreur && (
         <p
           role="alert"

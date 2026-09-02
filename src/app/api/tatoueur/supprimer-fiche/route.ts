@@ -4,6 +4,9 @@ import { creerClientSupabaseServeur } from "@/lib/supabase/server";
 import { creerClientSupabaseAdmin } from "@/lib/supabase/admin";
 import { echeanceSuppression } from "@/lib/suppression-compte";
 import { creerNotification } from "@/lib/notifications";
+//  nº 819 — le courriel « portfolio en cours de suppression » : le nom,
+//  la date, le bouton « Reactivate my portfolio » (lib/courriels-suppression).
+import { envoyerCourrielSuppressionPortfolio } from "@/lib/courriels-suppression";
 
 /**
  * SUPPRIMER UNE FICHE — SANS TOUCHER AU COMPTE
@@ -94,6 +97,17 @@ export async function POST(requete: NextRequest) {
 
   // LA TRACE DANS LES NOTIFICATIONS — la personne doit retrouver
   // l'échéance (ou son annulation) ailleurs que dans un écran fugace.
+  //  nº 819 — LE COURRIEL PART APRÈS L'ÉCRITURE, pour une demande de
+  //  suppression seulement (une annulation ne l'appelle pas), et ne la
+  //  bloque jamais. Sans adresse connue, la notification seule.
+  if (!annuler && purgeLe && user.email) {
+    await envoyerCourrielSuppressionPortfolio(
+      user.email,
+      ligne.nom,
+      ligne.id,
+      purgeLe
+    );
+  }
   await creerNotification({
     userId: user.id,
     ficheId: ligne.id,

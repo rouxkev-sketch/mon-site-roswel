@@ -54,6 +54,9 @@ import { EcranVideSelection } from "@/components/EcranVideSelection";
 //  nº 817 — l'encart « Welcome », une seule fois, pour un compte neuf.
 import { EncartBienvenue } from "@/components/EncartBienvenue";
 import { useBienvenue } from "@/lib/bienvenue";
+//  nº 819 — la mémoire du squelette : ce que ce compte avait, noté
+//  pour la prochaine visite (lib/memoire-selection).
+import { ecrireMemoireSelection } from "@/lib/memoire-selection";
 
 /**
  * MA SÉLECTION — les photos gardées, et les tatoueurs suivis
@@ -119,9 +122,19 @@ export function PageFavoris({
   suivis,
   taillePage,
   taillePortfolios,
+  bienvenue,
+  compte,
 }: {
   photos: PhotoFavorite[];
   suivis: TatoueurSuivi[];
+  /** nº 819 — la bienvenue du premier passage, DÉCIDÉE AU SERVEUR par
+      la page qui nous monte (lib/bienvenue-regle) : le HTML porte le
+      bon bloc, et rien d'autre n'est jamais peint (le clignotement de
+      l'état vide sous la bienvenue, point 1 du propriétaire). */
+  bienvenue: boolean;
+  /** nº 819 — l'identifiant du compte, pour la mémoire du squelette
+      (lib/memoire-selection) : une mémoire vaut pour UN compte. */
+  compte: string;
   /** §1 (nº 597) — la taille d'une page de FAVORIS, décidée au cookie
       des colonnes par la page qui nous monte : un multiple du nombre
       de colonnes, pour que la dernière rangée reste pleine (nº 226). */
@@ -144,11 +157,22 @@ export function PageFavoris({
       (adresse sans paramètre), c'est « Mes favoris » : les favoris
       seuls, aucun suivi. */
   const surLesFavoris = choix.menu === MENU_FAVORIS;
-  /*  nº 818 — LA BIENVENUE DU PREMIER PASSAGE : la page décide (voir
-      `useBienvenue`), et elle la monte À LA PLACE de l'état vide des
-      favoris — jamais les deux (règle du propriétaire). Marquée « vue »
-      dès ce passage : un compte d'avant ne la voit jamais. */
-  const bienvenue = useBienvenue();
+  /*  nº 818 — LA BIENVENUE DU PREMIER PASSAGE : la page la monte À LA
+      PLACE de l'état vide des favoris — jamais les deux (règle du
+      propriétaire). Marquée « vue » dès ce passage : un compte d'avant
+      ne la voit jamais.
+      nº 819 — LA DÉCISION ARRIVE DU SERVEUR, déjà prise (`bienvenue`,
+      lib/bienvenue-regle) ; `useBienvenue` la tient pour la vie de la
+      page et marque le compte. Plus rien ne se décide à l'hydratation :
+      le premier rendu est le bon, au serveur comme au navigateur. */
+  const montrerLaBienvenue = useBienvenue(bienvenue);
+  /*  nº 819 — LA MÉMOIRE DU SQUELETTE : ce que ce compte avait — des
+      favoris, des portfolios — noté pour la prochaine visite, où
+      l'habillage d'attente promettra des cartes seulement s'il y en
+      avait (lib/memoire-selection, SquelettesDePage). */
+  useEffect(() => {
+    ecrireMemoireSelection(compte, photos.length > 0, suivis.length > 0);
+  }, [compte, photos.length, suivis.length]);
   /**
    * ██ §2 (nº 526) — UN GLISSEMENT HORIZONTAL CHANGE D'ONGLET ██
    * ------------------------------------------------------------------
@@ -655,7 +679,7 @@ export function PageFavoris({
              nº 818 — LA BIENVENUE PREND SA PLACE tant qu'elle se
              montre (premier passage) ; disparue, l'état vide revient
              tant que la page est vide. Jamais les deux. */
-        bienvenue ? (
+        montrerLaBienvenue ? (
           <EncartBienvenue />
         ) : (
           <EcranVideSelection message="Your favorite photos will show up here." />

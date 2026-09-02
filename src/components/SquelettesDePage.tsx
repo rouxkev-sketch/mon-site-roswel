@@ -9,6 +9,11 @@ import { RESERVE_RANGEE } from "@/lib/reserve-barre";
 //  §2 (nº 722) — la remontée armée par le geste se joue dès le montage
 //  du squelette de segment : voir le grand bloc de lib/liste-neuve.
 import { leSqueletteDeLaListeEstLa } from "@/lib/liste-neuve";
+//  nº 819 — le squelette-mémoire de « Ma sélection » : cartes grises
+//  seulement si ce compte en avait (lib/memoire-selection), posé avant
+//  la peinture du squelette quand la navigation est douce.
+import { poserMemoireSelection } from "@/lib/memoire-selection";
+import { utilisateurConnu } from "@/lib/use-utilisateur";
 
 /**
  * ██ §2 (nº 706, REFAIT nº 707) — LE SQUELETTE COLLE À LA VRAIE PAGE ██
@@ -259,9 +264,16 @@ function CarteGrise({ classe = "" }: { classe?: string }) {
 export function CorpsSquelette({
   avecTitre,
   classe = "",
+  selection = false,
 }: {
   avecTitre: boolean;
   classe?: string;
+  /** nº 819 — « Ma sélection » : la grille grise porte alors le repère
+      `data-squelette-cartes`, que la garde CSS n'affiche que si ce
+      compte avait des cartes (lib/memoire-selection). Les autres
+      squelettes (recherche, index) promettent toujours des cartes :
+      une liste publique n'est jamais vide. */
+  selection?: boolean;
 }) {
   return (
     <div className={`animate-pulse${classe ? ` ${classe}` : ""}`}>
@@ -297,7 +309,10 @@ export function CorpsSquelette({
            (Les cases ne SURVIVENT jamais à l'arrivée : le film du banc
            nº 709 le prouve, image par image — le remplacement démonte
            le squelette entier.) */}
-      <ul className={CLASSES_GRILLE_CARTES}>
+      <ul
+        {...(selection ? { "data-squelette-cartes": "" } : {})}
+        className={CLASSES_GRILLE_CARTES}
+      >
         {Array.from({ length: 15 }, (_, rang) => (
           <CarteGrise key={rang} classe={rang >= 12 ? "hidden grille5:block" : ""} />
         ))}
@@ -317,7 +332,13 @@ export function CorpsSquelette({
 const useEffetAvantPeinture =
   typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
-function MosaiqueGrise({ avecTitre }: { avecTitre: boolean }) {
+function MosaiqueGrise({
+  avecTitre,
+  selection = false,
+}: {
+  avecTitre: boolean;
+  selection?: boolean;
+}) {
   /*  §2 (nº 722) — AVANT LA PEINTURE du squelette, la remontée armée
       par le geste (carte de style, recherche) se joue : le squelette
       démarre en haut, comme la page qu'il annonce. Un RETOUR n'arme
@@ -326,14 +347,22 @@ function MosaiqueGrise({ avecTitre }: { avecTitre: boolean }) {
       la barre squelette reste, lui, sans état ni lecture. */
   useEffetAvantPeinture(() => {
     leSqueletteDeLaListeEstLa();
-  }, []);
+    /*  nº 819 — LA MÉMOIRE DE « MA SÉLECTION », AVANT LA PEINTURE DU
+        SQUELETTE. Au chargement complet, le script d'avant peinture a
+        déjà posé `html[data-selection-memoire]` ; à une navigation
+        DOUCE, ce script ne rejoue pas — c'est ici, dans le même
+        instant d'avant peinture, que l'attribut est posé pour l'adresse
+        qu'on vient d'ouvrir (onglet compris). Le compte vient du
+        magasin de session, sans abonnement (`utilisateurConnu`). */
+    if (selection) poserMemoireSelection(utilisateurConnu()?.id ?? null);
+  }, [selection]);
   return (
     <main
       aria-busy="true"
       aria-label="Loading page"
       className={`flex-1 mx-auto w-full ${LARGEUR_SITE} px-4 sm:px-6 pb-16`}
     >
-      <CorpsSquelette avecTitre={avecTitre} />
+      <CorpsSquelette avecTitre={avecTitre} selection={selection} />
     </main>
   );
 }
@@ -355,7 +384,7 @@ export function SqueletteSelection() {
   return (
     <>
       <BarreSquelette centre="selection" />
-      <MosaiqueGrise avecTitre={false} />
+      <MosaiqueGrise avecTitre={false} selection />
     </>
   );
 }

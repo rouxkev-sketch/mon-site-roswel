@@ -1575,6 +1575,20 @@ html[data-compte="connecte"] [data-squelette-deconnecte] {
 html:not([data-compte="connecte"]) [data-squelette-connecte] {
   display: none;
 }
+/* nº 819 — LE SQUELETTE-MÉMOIRE DE « MA SÉLECTION ». La grille grise de
+   l'habillage d'attente (SquelettesDePage, `data-squelette-cartes`) ne
+   se montre que si le navigateur SE SOUVIENT que ce compte avait des
+   favoris (ou des portfolios, selon l'onglet) à sa dernière visite —
+   `html[data-selection-memoire="cartes"]`, posé AVANT la première
+   peinture par le script d'avant peinture (chargement complet) ou par
+   le squelette lui-même (navigation douce), d'après lib/memoire-
+   selection. Sans mémoire, mémoire d'un autre compte, ou compte qui
+   n'avait rien : le calme — la barre, le fond, aucune promesse de
+   cartes. `:not(…)` couvre « calme » ET l'attribut absent : dans le
+   doute, rien n'est promis. */
+html:not([data-selection-memoire="cartes"]) [data-squelette-cartes] {
+  display: none;
+}
 /* nº 439 — L'EMPREINTE DE LA RÉSERVE ÉTAIT À LA MAUVAISE TAILLE POUR
    UN CONNECTÉ. Le `visibility: hidden` ci-dessus ne peint rien (la
    promesse nº 203 tient), mais il gardait l'empreinte du DÉCONNECTÉ :
