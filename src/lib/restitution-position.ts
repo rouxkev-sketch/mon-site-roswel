@@ -37,7 +37,8 @@ import {
  *  2. POSER le défilement, une fois.
  * La réserve s'efface d'elle-même dès que le contenu réel la DÉPASSE
  * (§1 nº 711 — strictement : voir `surveillerLaReserve`, la mesure
- * d'origine se regardait elle-même), ou au bout de cinq secondes.
+ * d'origine se regardait elle-même), ou au bout de cinq secondes —
+ * OU DÈS QUE LA PAGE EST QUITTÉE (nº 813, voir `pageQuittee`).
  *
  * ⚠️ POURQUOI SUR <html> ET PAS SUR LE CORPS : React rend <body>, et
  * tout ce qu'on y écrit avant l'hydratation devient un écart
@@ -56,6 +57,11 @@ const ATTENTE_MAX_MS = 5000;
 
 /** La surveillance en cours, pour ne jamais en laisser traîner deux. */
 let arreter: (() => void) | null = null;
+/** nº 813 — le chemin pour lequel la réserve en cours a été posée, et
+    celui de l'attente de contenu en cours (`null` : rien en cours).
+    C'est ce que `libererSiPageQuittee` compare au chemin courant. */
+let cheminDeLaReserve: string | null = null;
+let cheminDeLAttente: string | null = null;
 
 /**
  * Garde la réserve tant que le contenu réel ne la DÉPASSE pas, puis
@@ -87,9 +93,43 @@ let arreter: (() => void) | null = null;
  * avec moins de cartes) ne la dépasse jamais : c'est le rôle du
  * délai de cinq secondes, INCHANGÉ — le filet d'origine.
  */
+/**
+ * ██ nº 813 — UNE RÉSERVE APPARTIENT À SA PAGE ██
+ * ==================================================================
+ * LE DÉFAUT DU PROPRIÉTAIRE, ENFIN NOMMÉ : « sur la page de connexion,
+ * venant de l'accueil après un aller-retour, les titres sous les
+ * cartes de l'accueil apparaissent COUPÉS DE MOITIÉ, partie basse
+ * seule, et disparaissent au bout de 2-3 secondes ».
+ * CE QUI SE PASSAIT, mesuré au banc (nº 813) : le retour sur l'accueil
+ * rend sa place — réserve `min-height` de 1126 px sur <html>, position
+ * posée. Le contenu de l'accueil ne DÉPASSE pas cette réserve (nº 711,
+ * strictement), elle attend donc son délai de cinq secondes. Si l'on
+ * quitte l'accueil pendant ce temps — l'accès au compte, deux secondes
+ * après le retour —, la réserve SUIT sur la page de connexion : son
+ * document fait 1126 px pour 968 px de contenu, jusqu'à ce que le délai
+ * tombe (relevé : `min-height` retiré 2,5 s après l'arrivée). Sous le
+ * bord bas du contenu, le navigateur du téléphone garde alors ses
+ * tuiles de l'accueil — coupées à ce bord, d'où « la partie basse
+ * seule » — jusqu'au retrait de la réserve, qui rétrécit le document
+ * et force la repeinte. La nº 812 avait cherché une superposition de
+ * pages : il n'y en a pas, c'est une hauteur qui traîne.
+ * LA RÈGLE : une réserve, comme une attente de contenu, appartient à
+ * la page pour laquelle elle a été posée. Dès que le chemin change,
+ * elle est libérée sur-le-champ — sans attendre ni le dépassement ni
+ * le délai. `ouvrirLaListeEnHaut` (nº 424) faisait déjà ce ménage pour
+ * une recherche neuve ; ceci le fait pour TOUTE page quittée.
+ * ⚠️ LE CHEMIN, PAS LA RECHERCHE : changer de critères sur la même page
+ * reste l'affaire de la nº 424 ; ici on ne regarde que `pathname`.
+ */
+function pageQuittee(cheminPose: string): boolean {
+  return window.location.pathname !== cheminPose;
+}
+
 function surveillerLaReserve(reserve: number) {
   arreter?.();
   const racine = document.documentElement;
+  const cheminPose = window.location.pathname;
+  cheminDeLaReserve = cheminPose;
   /*  §1 (nº 711) — LA RÉSERVE VIVANTE, PAS LA RECALCULÉE : la reprise
       du script (`reprendreLaReserveDuScript`) refait « position +
       innerHeight » — or sur un téléphone, la barre d'adresse fait
@@ -104,10 +144,13 @@ function surveillerLaReserve(reserve: number) {
     racine.style.minHeight = "";
     delete racine.dataset.positionPosee;
     arreter = null;
+    cheminDeLaReserve = null;
   };
   const surveiller = () => {
     //  §1 (nº 711) — le DÉPASSEMENT strict, seule preuve du contenu.
+    //  nº 813 — et la page quittée libère tout de suite.
     if (
+      pageQuittee(cheminPose) ||
       document.documentElement.scrollHeight > reserve ||
       performance.now() > limite
     ) {
@@ -179,12 +222,15 @@ let attenteEnCours: (() => void) | null = null;
 function attendreLeContenu(position: number, poser: () => void) {
   attenteEnCours?.();
   const racine = document.documentElement;
+  const cheminPose = window.location.pathname;
+  cheminDeLAttente = cheminPose;
   const limite = performance.now() + ATTENTE_CONTENU_MS;
   let image = 0;
   const demasquer = () => {
     racine.style.visibility = "";
     delete racine.dataset[MARQUE_ATTENTE];
     attenteEnCours = null;
+    cheminDeLAttente = null;
   };
   //  LE CAS LE PLUS FRÉQUENT, ET IL NE COÛTE RIEN : le contenu est déjà
   //  là. On ne masque même pas.
@@ -193,6 +239,12 @@ function attendreLeContenu(position: number, poser: () => void) {
     return;
   }
   const essayer = () => {
+    //  nº 813 — la page quittée : on démasque et l'on ne pose RIEN,
+    //  une position de l'ancienne page n'a rien à faire sur la neuve.
+    if (pageQuittee(cheminPose)) {
+      demasquer();
+      return;
+    }
     if (contenuAtteint(position) || performance.now() > limite) {
       poser();
       demasquer();
@@ -230,6 +282,26 @@ function attendreLeContenu(position: number, poser: () => void) {
 export function annulerLaRestitutionEnCours() {
   attenteEnCours?.();
   arreter?.();
+}
+
+/**
+ * nº 813 — LIBÉRER TOUT DE SUITE CE QUI APPARTIENT À UNE PAGE QUITTÉE.
+ * Les deux boucles se retirent d'elles-mêmes dès qu'elles voient le
+ * chemin changer (`pageQuittee`), mais elles ne regardent qu'à l'image
+ * suivante : au web, mesuré, la réserve de l'accueil vivait encore UNE
+ * image sur la connexion. `DefilementEnHaut` appelle ceci dans son
+ * effet d'avant peinture, au changement de chemin : rien de l'ancienne
+ * page ne passe la première image de la nouvelle. Une restitution
+ * posée POUR la page courante n'est pas touchée — c'est ce qui rend
+ * l'appel sûr quel que soit l'ordre des effets.
+ */
+export function libererSiPageQuittee() {
+  if (cheminDeLAttente !== null && pageQuittee(cheminDeLAttente)) {
+    attenteEnCours?.();
+  }
+  if (cheminDeLaReserve !== null && pageQuittee(cheminDeLaReserve)) {
+    arreter?.();
+  }
 }
 
 /**

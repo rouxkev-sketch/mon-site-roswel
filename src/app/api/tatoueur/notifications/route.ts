@@ -110,11 +110,24 @@ export async function GET() {
   //  quoi taire le bouton d'une demande déjà tranchée ailleurs. Les
   //  rattachements sont désormais immédiats : il n'y a plus de demande,
   //  donc plus de bouton, donc plus rien à relire.
-  return NextResponse.json({
-    ok: true,
-    notifications,
-    nonLues: notifications.filter((n) => !n.lue_le).length,
-  });
+  /*  ██ nº 813 — LES NON LUES SE COMPTENT EN BASE, PAS DANS LA FENÊTRE ██
+      Le compteur de la cloche vaut « 99+ » au-delà de 99 (MenuEspace) —
+      mais il comptait les non lues de CETTE liste, une fenêtre de
+      cinquante : il ne pouvait jamais dépasser 50, et « 99+ » ne
+      s'affichait jamais. Mesuré au banc : 101 non lues → « 50 ». Le
+      total vient désormais d'un COMPTE en base (`count: "exact"`,
+      sans lignes), borné par rien. Si ce compte échoue, on rend celui
+      de la fenêtre, comme avant — jamais moins que ce qu'on montre. */
+  const nonLuesDeLaFenetre = notifications.filter((n) => !n.lue_le).length;
+  const compte = await supabase
+    .from("notifications_compte")
+    .select("id", { count: "exact", head: true })
+    .is("lue_le", null);
+  const nonLues =
+    compte.error || compte.count === null
+      ? nonLuesDeLaFenetre
+      : Math.max(compte.count, nonLuesDeLaFenetre);
+  return NextResponse.json({ ok: true, notifications, nonLues });
 }
 
 export async function POST(requete: NextRequest) {

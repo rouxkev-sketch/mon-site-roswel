@@ -128,6 +128,7 @@ import {
   marquerToutLu,
   semerLesNouvelles,
   useNotifications,
+  useNonLues,
 } from "@/lib/magasin-notifications";
 //  §1 (nº 703) — le client de la base arrive À LA DEMANDE : ce
 //  composant vit dans le tronc, et son import direct pesait 62 Ko
@@ -560,7 +561,10 @@ export function MenuEspace({
       deux), ni les deux entrées qui en dépendent. C'est ce cas-là, et
       lui seul, qui fond la ligne et l'encadré en un seul bouton. */
   const sansPortfolio = fiches.length === 0;
-  const nonLues = notifications.filter((n) => !n.lue_le).length;
+  /*  nº 813 — le TOTAL des non lues, compté en base (magasin-
+      notifications) : compter la liste, c'était compter une fenêtre de
+      cinquante, et « 99+ » ne pouvait jamais s'afficher. */
+  const nonLues = useNonLues();
 
   /** L'adresse d'une entrée qui travaille sur LA fiche choisie : elle
       emporte son identifiant, pour que le formulaire et l'aperçu
@@ -1330,8 +1334,18 @@ export function MenuEspace({
     /*  §1 (nº 703) — le client arrive à la demande. La fenêtre s'est
         DÉJÀ refermée à la ligne du dessus : la personne ne voit aucune
         attente, et l'appel part derrière. */
+    /*  ██ nº 813 — LA DÉCONNEXION EST LOCALE À L'APPAREIL ██
+        Relevé du propriétaire : se déconnecter sur le téléphone
+        déconnectait AUSSI l'ordinateur. La cause est dans la
+        bibliothèque Supabase, et elle est écrite dans sa documentation :
+        `signOut()` sans argument a la portée `global` — il révoque
+        TOUTES les sessions du compte, sur tous les appareils, et c'est
+        l'inverse de ce que font les autres bibliothèques. La portée
+        `local` ne ferme que CETTE session ; les autres appareils
+        gardent la leur. Aucun réglage du tableau de bord Supabase
+        n'entre en jeu : la portée est celle de l'appel. */
     void clientSupabaseALaDemande()
-      .then((supabase) => supabase.auth.signOut())
+      .then((supabase) => supabase.auth.signOut({ scope: "local" }))
       .catch(() => {
         // Serveur injoignable : la session locale est déjà effacée.
       });
@@ -2094,7 +2108,15 @@ export function MenuEspace({
       //  §3 (nº 674) — la même découpe qu'au doigt, même anneau, même
       //  jeton : les deux surfaces posent leur compteur sur le MÊME
       //  encadré (`bg-sombre-eleve`).
-      "ring-2 ring-sombre-eleve " +
+      //  ██ nº 813 — L'ANNEAU SUIT LE SURVOL ██ Au web, la tuile
+      //  s'éclaircit au survol et à l'appui (`bg-sombre-eleve-clair`),
+      //  mais l'anneau gardait le gris du repos : un cercle FONCÉ
+      //  apparaissait autour de la pastille (relevé du propriétaire).
+      //  La tuile est un `group` ; l'anneau prend la teinte du survol
+      //  et de l'appui avec elle — la découpe reste invisible dans les
+      //  trois états. Le doigt n'a pas de survol : sa pastille ne
+      //  change pas.
+      "ring-2 ring-sombre-eleve group-hover:ring-sombre-eleve-clair group-active:ring-sombre-eleve-clair " +
       "text-[10px] font-bold text-white leading-[14px] text-center",
     //  §1 (nº 557) — 16 → 20 px, et les côtés avec (voir la note du
     //  tableau) : les quatre côtés de la fenêtre restent égaux.
@@ -2334,7 +2356,9 @@ export function MenuEspace({
         <button
           type="button"
           onClick={ouvrirLesNotifications}
-          className={CLASSE_TUILE}
+          //  nº 813 — `group` : l'anneau de la pastille suit le survol
+          //  de la tuile (voir REGLAGES_WEB.pastille).
+          className={`group ${CLASSE_TUILE}`}
         >
           {/*  ██ §1 (nº 538) — POURQUOI LA PASTILLE TOMBAIT À CÔTÉ DE LA
                CLOCHE, ET NON DESSUS ██
@@ -2612,9 +2636,10 @@ export function MenuEspace({
    * nouvelles sont semées au montage, une fois par session. Sans cette
    * lecture-là, ce point serait resté éteint jusqu'à la première
    * ouverture du menu — c'est-à-dire inutile.
-   * ⚠️ IL S'ÉTEINT TOUT SEUL : `nonLues` se recalcule de `notifications`,
-   * que la fenêtre remet à jour quand on lit une nouvelle ou qu'on les
-   * marque toutes (voir `onToutLu`, plus bas).
+   * ⚠️ IL S'ÉTEINT TOUT SEUL : `nonLues` vient du magasin (nº 813 : le
+   * total compté en base, qui suit les gestes de lecture — une nouvelle
+   * lue, toutes marquées — sans attendre le réseau ; voir `onToutLu`,
+   * plus bas).
    * ██ §1-a (nº 668) — IL SE MET À CALIFOURCHON SUR LE CONTOUR ██
    * ------------------------------------------------------------------
    * LA nº 667 LE POSAIT DEHORS, collé au bord, et le propriétaire le

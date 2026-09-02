@@ -7,7 +7,11 @@ import {
   arriveeQuiRestitue,
   restaurationDemandeePour,
 } from "@/lib/navigation-session";
-import { rendreLaPlace, positionDejaPosee } from "@/lib/restitution-position";
+import {
+  rendreLaPlace,
+  positionDejaPosee,
+  libererSiPageQuittee,
+} from "@/lib/restitution-position";
 //  §1 (nº 661) — la garde de position : le mécanisme du site qui TIENT
 //  une pose tant qu'aucun geste ne reprend la main (nº 427/626).
 import { armerLaGardeDePosition } from "@/lib/defilement-programme";
@@ -223,6 +227,13 @@ export function DefilementEnHaut() {
         de mouvement. */
     const venaitDeLaMosaique = cheminPrecedent.current;
     cheminPrecedent.current = chemin;
+    /*  nº 813 — RIEN DE L'ANCIENNE PAGE NE PASSE LA PREMIÈRE IMAGE :
+        la réserve de hauteur et l'attente de contenu posées pour la
+        page qu'on quitte sont libérées ICI, avant la peinture — la
+        cause des « titres coupés de moitié » sur la connexion (voir
+        `pageQuittee`, lib/restitution-position). Sans effet sur une
+        restitution posée pour la page courante. */
+    libererSiPageQuittee();
     /**
      * §3 (nº 328) — C-2 : LE CHEMIN DÉCIDE, ET LA DÉCISION EST PRISE
      * ICI, AVANT LA PEINTURE.

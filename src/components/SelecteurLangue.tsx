@@ -602,9 +602,23 @@ export function SelecteurLangue({ hauteur = 40 }: { hauteur?: number }) {
     setOuvert(true);
   }
 
+  /*  ██ nº 813 — AU DOIGT, LE FOCUS NE REVIENT PAS SUR LE GLOBE ██
+      Relevé du propriétaire : après ouverture puis fermeture de la
+      fenêtre Langue au téléphone, un CERCLE VERT restait autour de
+      l'icône. Mesuré au banc : la fermeture ne laisse qu'UN SEUL état
+      derrière elle — le focus, rendu au globe par la ligne ci-dessous.
+      Un bouton rond qui reçoit le focus par script porte alors l'anneau
+      de focus de son navigateur ; celui du téléphone ne connaît pas
+      `:focus-visible` comme Chromium, il peint son propre anneau, à SA
+      couleur — le vert vu. Rendre le focus est un geste pour le
+      CLAVIER (on reprend là où l'on était) ; sous le doigt il n'y a
+      rien à reprendre, seulement un anneau à laisser. On ne le rend
+      donc qu'au web ; l'appareil se lit comme partout (règle nº 60). */
   function fermer() {
     setOuvert(false);
-    globe.current?.focus();
+    if (document.documentElement.dataset.appareil !== "mobile") {
+      globe.current?.focus();
+    }
   }
 
   /**

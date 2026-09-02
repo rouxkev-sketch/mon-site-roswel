@@ -861,7 +861,13 @@ export function FenetreNotifications({
         actions={boutonToutLu}
         classeCadre="z-[85]"
       >
-        <div className="grow pb-[max(1rem,env(safe-area-inset-bottom))]">
+        {/*  ██ nº 813 — L'AIR SOUS LE TITRE, CELUI DE LA PAGE LANGUE ██
+             Le corps partait au ras de la barre de titre (aucun air
+             en haut : seuls les 4 px du `pb-1` de la barre). La page
+             Langue, elle, porte `pt-5` sous son titre (nº 655, « les
+             airs de Mon compte sur cet appareil ») : le même `pt-5`
+             ici, et rien d'autre — le bas garde sa réserve. */}
+        <div className="grow pt-5 pb-[max(1rem,env(safe-area-inset-bottom))]">
           {corps}
         </div>
       </PagePleinEcranMobile>

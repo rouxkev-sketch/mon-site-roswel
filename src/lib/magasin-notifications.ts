@@ -75,6 +75,9 @@ const ROUTE = "/api/tatoueur/notifications";
 const VIDE: Notification[] = [];
 
 let liste: Notification[] = VIDE;
+/** nº 813 — le total des non lues compté EN BASE (la route), `null`
+    tant qu'aucune lecture n'a répondu : la liste seule fait alors foi. */
+let nonLuesEnBase: number | null = null;
 /** POUR QUI cette liste a été chargée — et c'est la garde elle-même.
     `null` : rien n'a jamais été lu dans ce document. */
 let compteLu: string | null = null;
@@ -114,8 +117,13 @@ export async function lireLesNouvelles(idUtilisateur: string): Promise<boolean> 
     if (!reponse.ok) return false;
     const donnees = (await reponse.json().catch(() => null)) as {
       notifications?: Notification[];
+      nonLues?: number;
     } | null;
     liste = donnees?.notifications ?? VIDE;
+    //  nº 813 — le TOTAL des non lues, compté en base par la route ;
+    //  la liste n'en est qu'une fenêtre de cinquante.
+    nonLuesEnBase =
+      typeof donnees?.nonLues === "number" ? donnees.nonLues : null;
     compteLu = idUtilisateur;
     prevenir();
     return true;
@@ -164,6 +172,8 @@ export function marquerLue(id: string): void {
   //  Rien n'a changé (elle était déjà lue) : on ne réveille personne.
   if (suivante.every((nouvelle, rang) => nouvelle === liste[rang])) return;
   liste = suivante;
+  //  nº 813 — une de moins au total, sans repasser par le serveur.
+  if (nonLuesEnBase !== null) nonLuesEnBase = Math.max(0, nonLuesEnBase - 1);
   prevenir();
 }
 
@@ -174,6 +184,8 @@ export function marquerToutLu(): void {
   liste = liste.map((nouvelle) =>
     nouvelle.lue_le ? nouvelle : { ...nouvelle, lue_le: maintenant }
   );
+  //  nº 813 — tout lu : plus rien à compter en base non plus.
+  nonLuesEnBase = 0;
   prevenir();
 }
 
@@ -186,4 +198,19 @@ export function marquerToutLu(): void {
  */
 export function useNotifications(): Notification[] {
   return useSyncExternalStore(sAbonner, instantane, () => VIDE);
+}
+
+/**
+ * nº 813 — LE NOMBRE DE NON LUES, celui que la cloche affiche : le
+ * total compté en base par la route quand on l'a, sinon les non lues
+ * de la fenêtre (la seule chose qu'on sache avant la première réponse).
+ * Zéro au serveur, comme la liste vide au-dessus. Ce nombre suit les
+ * gestes de lecture (`marquerLue`, `marquerToutLu`) sans attendre le
+ * réseau — le point s'éteint sous le doigt, comme avant.
+ */
+function nonLuesInstantane(): number {
+  return nonLuesEnBase ?? liste.filter((nouvelle) => !nouvelle.lue_le).length;
+}
+export function useNonLues(): number {
+  return useSyncExternalStore(sAbonner, nonLuesInstantane, () => 0);
 }
