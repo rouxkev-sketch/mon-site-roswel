@@ -12,6 +12,11 @@
  * même forme, celle d'un bouton. Un état qui ressemble à un bouton se
  * fait toucher, et ne répond pas. Ils n'ont plus rien en commun.
  *
+ * ⚠️ ET À LA nº 803, LE GESTE A PERDU SA PASTILLE : le propriétaire
+ * l'a voulu en LIEN TEXTE BLEU, sans fond ni contour ni angles. Le nom
+ * `PastilleAction` ment donc désormais ; il est gardé exprès, deux
+ * fichiers l'appellent. Voir sa note, plus bas.
+ *
  * ⚠️ UNE SEULE ÉCRITURE POUR DEUX FICHIERS (piège nº 378) : `Securite`
  * et `BlocSuppressions` s'en servent tous les deux, et le propriétaire
  * les veut identiques. Tant qu'ils vivaient chacun dans leur coin, ils
@@ -34,6 +39,16 @@
  *    petit. Entre les deux, il a choisi la taille.
  * ⚠️ CES NOMBRES SE TIENNENT (54, 28, 16). En changer un seul déplace
  * les autres ; ils vivent ici et nulle part ailleurs.
+ *
+ * ⚠️ CONSTAT DE LA nº 803, ET IL VAUT POUR LES TROIS CONSTANTES DE CE
+ * FICHIER : AUCUNE N'EST IMPORTÉE NULLE PART. Les mesures qu'elles
+ * portent sont écrites en dur dans les classes (`min-h-[54px]`,
+ * `px-4`…). Elles ne sont donc pas la SOURCE de ces nombres — elles en
+ * sont la MÉMOIRE, et le raisonnement qui les a fixés. C'était déjà
+ * vrai avant cette passe ; on ne les retire pas, parce que ce
+ * raisonnement se perdrait avec elles, et parce que ce n'est pas le
+ * sujet d'aujourd'hui. Mais qu'on ne s'y trompe pas : changer un de
+ * ces nombres ici ne change RIEN à l'écran.
  */
 export const AIR_DE_REFERENCE = 16;
 export const HAUTEUR_LIGNE = 54;
@@ -50,6 +65,12 @@ export const HAUTEUR_LIGNE = 54;
  * arithmétique, et seul un badge de 22 px les rendait tous égaux. Sa
  * consigne est explicite : « l'air vertical se recalcule, l'air droit
  * reste 16 px ».
+ *
+ * ⚠️ CETTE HAUTEUR N'A PLUS D'OBJET DEPUIS LA nº 803 : le geste n'est
+ * plus une pastille, c'est un lien texte — il n'a plus ni fond ni
+ * hauteur propre. Le nombre reste écrit ici comme mémoire des deux
+ * essais refusés (38 px « trop grand », 22 px « trop petit ») ; il ne
+ * décrit plus rien de visible.
  */
 export const HAUTEUR_PASTILLE = 28;
 
@@ -71,15 +92,35 @@ export const HAUTEUR_PASTILLE = 28;
 export const TEXTE_BOUT_DE_LIGNE = "text-[13px] font-semibold";
 
 /**
- * UN GESTE — « Délier », « Annuler ».
- * · ANGLES ARRONDIS (nº 786) : ils étaient droits depuis la 785, le
- *   propriétaire les veut adoucis. `rounded-md` — 6 px, l'arrondi le
- *   plus discret de l'échelle, celui qui convient à 22 px de haut ;
- * · LE SURVOL CHANGE LE FOND, PAS LE TEXTE (acquis nº 785, conservé) :
- *   il faisait l'inverse, et en ROUGE — la couleur que ce site réserve
- *   à ce qu'on ne peut pas défaire. Le fond monte d'un cran sur
- *   l'échelle des gris (`eleveClair` → `haut`), celui-là même
- *   qu'emploie un champ qui prend le focus.
+ * ██ UN GESTE — « Délier », « Lier », « Annuler » (nº 803) ██
+ * ==================================================================
+ * ⚠️ CE N'EST PLUS UNE PASTILLE, ET LE NOM MENT DÉSORMAIS. Il est
+ * gardé exprès : deux fichiers l'appellent, et renommer une écriture
+ * partagée pour un mot est le genre de changement qui coûte plus qu'il
+ * ne rapporte. La note vaut mieux que le renommage.
+ *
+ * CE QUE LE PROPRIÉTAIRE A DÉCIDÉ À LA nº 803, et rien de plus : plus
+ * de capsule du tout — ni fond, ni contour, ni angles. LE MOT SEUL, EN
+ * BLEU, celui des liens du profil (`sombre-lien`, #7FA9EE, posé à la
+ * nº 388). C'est un GESTE qu'on propose, pas un objet qu'on pose.
+ *
+ * CE QUI NE CHANGE PAS, et c'est ce qui les tient ensemble : la TAILLE
+ * et la GRAISSE restent celles des quatre bouts de ligne
+ * (`TEXTE_BOUT_DE_LIGNE`, 13 px), et la place reste la même — en fin
+ * de ligne, donc à droite, comme « Actif » et « Supprimer ».
+ *
+ * ⚠️ CE QUI DISPARAÎT AVEC LA CAPSULE : `rounded-md`, `px-3`,
+ * `min-h-[28px]` et le fond `sombre-eleve-clair`. Le survol ne peut
+ * donc plus changer le fond — il éclaircit le texte, comme TOUS les
+ * liens du site (`sombre-lien-clair`).
+ * ⚠️ MAIS LA CIBLE DE TOUCHE RESTE PRENABLE AU DOIGT. Treize pixels de
+ * haut ne se visent pas avec un pouce. `py-2 -my-2` ajoute huit pixels
+ * de zone sensible au-dessus et en dessous, PUIS les reprend en marge
+ * négative : la cible fait 36 px — mesurée, pas estimée : 20 px de
+ * hauteur de ligne plus les deux fois huit — et la ligne ne bouge pas
+ * d'un pixel. Rien ne se voit, tout se touche. (Deux propriétés
+ * différentes, padding et marge : aucun conflit de classes, piège
+ * nº 389.)
  */
 export function PastilleAction({
   children,
@@ -100,10 +141,9 @@ export function PastilleAction({
       onClick={onClick}
       disabled={disabled}
       title={titre}
-      className={`shrink-0 inline-flex items-center justify-center rounded-md
-                  px-3 min-h-[28px] ${TEXTE_BOUT_DE_LIGNE}
-                  bg-sombre-eleve-clair text-sombre-texte
-                  transition-colors hover:bg-sombre-haut
+      className={`shrink-0 inline-flex items-center justify-center
+                  py-2 -my-2 ${TEXTE_BOUT_DE_LIGNE}
+                  text-sombre-lien transition-colors hover:text-sombre-lien-clair
                   disabled:opacity-50 disabled:cursor-not-allowed`}
     >
       {children}

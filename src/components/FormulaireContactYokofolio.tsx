@@ -69,6 +69,43 @@ import { CompteurDeCaracteres } from "@/components/CompteurDeCaracteres";
  * propriétaire n'a demandé que le mot DANS le champ. Le troisième
  * champ (message) n'était pas visé : sa phrase indicative d'avant ne
  * bouge pas.
+ *
+ * ██ §2 (nº 803) — LE PIXEL BLANC : CHERCHÉ, PAS TROUVÉ ██
+ * ==================================================================
+ * ⚠️ CETTE NOTE EXISTE POUR QU'ON NE REFASSE PAS CE TRAVAIL À VIDE.
+ * LE RELEVÉ DU PROPRIÉTAIRE : on clique « Envoyer » avec des champs
+ * oubliés, et un ou des pixels blancs paraissent AU CÔTÉ GAUCHE du
+ * formulaire ; ils s'en vont au changement d'onglet, reviennent à la
+ * frappe et à l'envoi.
+ *
+ * CE QUI A ÉTÉ MESURÉ, et non supposé :
+ *  · TOUS les fonds, contours, `::before`, `::after` et `::marker` de
+ *    la bande gauche, dans les trois états — rien d'opaque, rien de
+ *    contourné, aucun pseudo-élément ;
+ *  · LES PIXELS EUX-MÊMES, capturés puis relus un par un : 0 pixel
+ *    plus clair que le fond, dans CINQ états (repos, envoi à vide,
+ *    frappe, onglet au second plan, retour), en densité 1 ET 2, au
+ *    web (bande de 80 px) comme au doigt (40 px), seuil abaissé
+ *    jusqu'à 40 sur 255 — le fond, lui, vaut 14 ;
+ *  · QUI PORTE LE FOCUS après un envoi à vide : le bouton, et rien
+ *    d'autre. Aucun `focus()` programmé dans cette page, aucun
+ *    élément éditable, aucun élément filiforme dans le formulaire.
+ *
+ * DONC : CE N'EST PAS LE SITE QUI PEINT CE POINT, en tout cas pas sous
+ * Chromium. Et le comportement décrit — ça part quand l'onglet passe
+ * au second plan, ça revient à la frappe — est celui d'un CURSEUR DE
+ * SAISIE, pas d'un élément de page : un élément de page ne s'éteint
+ * pas parce qu'on regarde ailleurs.
+ * LA PISTE À ÉPROUVER, quand le propriétaire dira son navigateur : la
+ * NAVIGATION AU CURSEUR (« caret browsing », touche F7 sur Windows,
+ * ⌥⌘F7 sur Mac). Elle pose un curseur clignotant dans du texte NON
+ * éditable, en tête de contenu — donc à gauche —, et il s'éteint quand
+ * la fenêtre perd le focus. Un seul appui de touche l'allume par
+ * mégarde. Aucun WebKit n'est installé au banc : Safari n'a pas pu
+ * être éprouvé.
+ * ⚠️ ET L'ON N'A RIEN « CORRIGÉ » AU HASARD : masquer un curseur
+ * (`caret-color: transparent`) pour faire taire un symptôme non
+ * reproduit aurait cassé la saisie de qui en a besoin.
  */
 
 /**

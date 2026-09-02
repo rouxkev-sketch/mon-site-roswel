@@ -219,11 +219,16 @@ export function BlocSuppressions() {
                   le `flex-wrap` partis d'ici à la nº 785 : ils cassaient
                   l'égalité des airs.
                   ⚠️ ELLE GARDE SON `pr-4`, contrairement aux lignes de
-                  la liste juste en dessous : ce qui la termine est une
-                  pastille À FOND, dont on VOIT le bord. C'est ce bord
-                  qu'on aligne. Les lignes de la liste, elles, finissent
-                  par un bouton sans fond dont on ne voit que le texte —
-                  d'où leur `pr-0`, expliqué là-bas. */
+                  la liste juste en dessous — et depuis la nº 803 CE
+                  N'EST PLUS POUR LA MÊME RAISON. « Annuler » était une
+                  pastille à fond, dont on voyait le bord : c'était ce
+                  bord-là qu'on alignait. Le propriétaire en a fait un
+                  LIEN TEXTE, sans fond ni retrait horizontal — c'est
+                  donc le `pr-4` de la ligne, et lui seul, qui pose le
+                  mot à 16 px du bord. Les lignes de la liste arrivent
+                  au même endroit par l'autre chemin (`pr-0` sur la
+                  ligne, `px-4` sur le bouton, expliqué là-bas) : les
+                  deux listes s'alignent, ce qui est le but. */
               className="flex items-center gap-x-4
                          rounded-lg bg-sombre-eleve px-4 min-h-[54px]"
             >
@@ -331,10 +336,12 @@ export function BlocSuppressions() {
                    TEXTE se retrouve donc à 16 px, et la zone où le
                    doigt peut appuyer va jusqu'au bord — on gagne de la
                    cible au lieu d'en perdre.
-                   ⚠️ CE N'EST PAS CE QU'ON FAIT AILLEURS, ET C'EST
-                   VOULU : une pastille à FOND (« Délier », « Annuler »)
-                   se voit, donc c'est son bord à elle qu'on aligne, et
-                   la ligne garde son `px-4`. */}
+                   ⚠️ L'AUTRE LISTE Y ARRIVE AUTREMENT (revu nº 803) :
+                   « Annuler » n'a AUCUN retrait horizontal, et c'est
+                   le `pr-4` de sa ligne qui le pose à 16 px. Chemin
+                   inverse, même bord — c'est ce bord commun qui compte,
+                   pas la recette. (Avant la nº 803 « Annuler » était
+                   une pastille à fond : on alignait son bord visible.) */}
             </li>
           ))}
         </ul>
