@@ -5,6 +5,10 @@ import { CONTACT_YOKOFOLIO } from "@/config/tatouage";
 import { IconeCocheListe } from "@/components/Icones";
 //  §1 (nº 664) — la pastille d'événement de la famille.
 import { PastilleEvenement } from "@/components/PastilleEvenement";
+//  §1 (nº 800) — LE champ standard du site, écrit une seule fois.
+import { CHAMP } from "@/components/champs-formulaire";
+//  §2 (nº 800) — le compteur du portfolio, partagé.
+import { CompteurDeCaracteres } from "@/components/CompteurDeCaracteres";
 
 /**
  * LE FORMULAIRE DE CONTACT DE YOKOFOLIO — /contact
@@ -14,23 +18,47 @@ import { PastilleEvenement } from "@/components/PastilleEvenement";
  * transmission e-mail à l'exploitant via le service existant), puis
  * un écran de confirmation. Charte sombre du site, sobre.
  *
- * ⚠️⚠️ EXCEPTION DE MISE EN PAGE — LA RÈGLE, ET ELLE FAIT AUTORITÉ ICI
+ * ⚠️⚠️ L'EXCEPTION DE LA nº 320 EST LEVÉE POUR CETTE PAGE (nº 800)
  * ==================================================================
- * CES DEUX PAGES ONT LEUR PROPRE MISE EN PAGE, PLUS LIBRE QUE LA
- * CHARTE DU RESTE DU SITE. C'EST UNE EXCEPTION ASSUMÉE, DÉCIDÉE PAR LE
- * PROPRIÉTAIRE À LA PASSE Nº 320 APRÈS AVOIR VU LE RÉSULTAT DE LEUR
- * PASSAGE À LA CHARTE. AUCUNE PASSE FUTURE NE DOIT LES Y RAMENER.
+ * CE QU'ELLE DISAIT, ET IL FAUT LE SAVOIR POUR LIRE LA SUITE : à la
+ * nº 320, le propriétaire avait vu le résultat du passage de /contact
+ * et /qui-sommes-nous à la charte du site, ne l'avait pas aimé, et
+ * avait écrit ici « AUCUNE PASSE FUTURE NE DOIT LES Y RAMENER ».
  *
- * (« ces deux pages » : /contact — dont ce formulaire — et
- * /qui-sommes-nous.)
+ * ⚠️ LE PROPRIÉTAIRE A LEVÉ CETTE CONSIGNE POUR /contact À LA nº 800,
+ * nommément et de sa main. LA PAGE REDEVIENT MODIFIABLE. Ce qui reste
+ * entier, et qu'aucune passe ne touche de sa propre initiative : SA
+ * MISE EN PAGE GÉNÉRALE — les grandes typographies, les libellés
+ * au-dessus des champs, les arrondis de 12 px, le rond de
+ * confirmation, l'aération. C'est la CHARTE qui ne s'impose plus
+ * d'office, pas la page qui devient un terrain vague.
+ * ⚠️ ET /qui-sommes-nous RESTE SOUS L'EXCEPTION : le propriétaire n'a
+ * levé que celle-ci. Sa note à elle est intacte.
  *
- * SONT DONC VOULUS ICI, et ne sont PAS des oublis de charte :
+ * CE QUE LA nº 800 A CHANGÉ, sur ses trois demandes, ET RIEN D'AUTRE :
+ *  1. LE FOCUS DES CHAMPS. Il devenait ROUGE — un contour `primaire`
+ *     et son halo. Le propriétaire n'en veut plus : les champs
+ *     adoptent le comportement de TOUS les autres champs du site, un
+ *     simple ÉCLAIRCISSEMENT du fond, sans trait coloré. Et ils ne le
+ *     recopient pas : ils emploient `CHAMP` (components/
+ *     champs-formulaire), la seule écriture d'un champ de ce site.
+ *     Le CONTOUR AU REPOS, lui, reste — c'est l'appelant qui le pose
+ *     (`border-sombre-bordure`), comme avant.
+ *     ⚠️ LE FOND AU REPOS MONTE D'UN CRAN par la même occasion
+ *     (`sombre-eleve` → `sombre-eleve-clair`) : c'est la valeur de la
+ *     constante partagée, celle de tous les autres champs depuis la
+ *     nº 388. Adopter le standard, c'est l'adopter entier.
+ *  2. LE COMPTEUR de caractères du message, celui du portfolio, à
+ *     l'identique — et pour de bon : les deux champs emploient le
+ *     MÊME composant (`CompteurDeCaracteres`).
+ *  3. LE BOUTON D'ENVOI : 40 px de haut, 14 px de texte. Compact et
+ *     collé à DROITE au web ; pleine largeur au doigt.
+ *
+ * RESTENT VOULUS ICI, et ne sont PAS des oublis de charte :
  *  · les CONTOURS des champs (`border-sombre-bordure`) ;
- *  · le FOCUS ROSE et son halo (`focus:border-primaire`,
- *    `focus:ring-2 focus:ring-primaire/25`) ;
  *  · les ARRONDIS DE 12 px (`rounded-xl`) sur des champs ;
  *  · les LIBELLÉS AU-DESSUS des champs ;
- *  · le ROND ROSE de l'écran de confirmation.
+ *  · le ROND de l'écran de confirmation.
  * La nº 319 les avait tous retirés : c'est ANNULÉ.
  *
  * ⚠️ SAUF DEUX MOTS, GARDÉS DE LA nº 319 SUR CONSIGNE : le champ du
@@ -42,11 +70,6 @@ import { PastilleEvenement } from "@/components/PastilleEvenement";
  * champ (message) n'était pas visé : sa phrase indicative d'avant ne
  * bouge pas.
  */
-
-const CHAMP =
-  "w-full min-h-[52px] rounded-xl border bg-sombre-eleve px-4 text-base " +
-  "text-sombre-texte placeholder:text-sombre-texte-doux outline-none " +
-  "transition-colors focus:border-primaire focus:ring-2 focus:ring-primaire/25";
 
 export function FormulaireContactYokofolio() {
   const [nom, setNom] = useState("");
@@ -188,21 +211,36 @@ export function FormulaireContactYokofolio() {
         >
           Ton message
         </label>
-        <textarea
-          id="contact-message"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          rows={6}
-          maxLength={CONTACT_YOKOFOLIO.messageMax}
-          placeholder="Une question, une idée, un problème — on lit tout."
-          aria-invalid={Boolean(erreurs.message)}
-          className={`w-full rounded-xl border bg-sombre-eleve px-4 py-3 text-base
-                     leading-relaxed text-sombre-texte outline-none resize-y
-                     placeholder:text-sombre-texte-doux transition-colors
-                     focus:border-primaire focus:ring-2 focus:ring-primaire/25 ${
-                       erreurs.message ? "border-erreur" : "border-sombre-bordure"
-                     }`}
-        />
+        {/*  §2 (nº 800) — LE COMPTEUR VIT DANS LE CHAMP, comme celui
+             de la bio : il faut donc un parent positionné, et le
+             `pb-8` qui lui réserve sa ligne — sans quoi la dernière
+             ligne tapée passerait dessous. */}
+        <div className="relative">
+          <textarea
+            id="contact-message"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            rows={6}
+            maxLength={CONTACT_YOKOFOLIO.messageMax}
+            aria-describedby="contact-message-compteur"
+            placeholder="Une question, une idée, un problème — on lit tout."
+            aria-invalid={Boolean(erreurs.message)}
+            //  §1 (nº 800) — LE MÊME CHAMP QUE PARTOUT, plus ce qu'une
+            //  zone de texte demande en propre : ses marges hautes et
+            //  basses, son interligne, sa poignée de redimensionnement
+            //  et la place du compteur. Aucune de ces classes n'entre
+            //  en conflit avec celles de `CHAMP` (piège nº 389) : elle
+            //  n'y touche à aucune des propriétés déjà posées.
+            className={`${CHAMP} block py-3 pb-8 leading-relaxed resize-y ${
+              erreurs.message ? "border-erreur" : "border-sombre-bordure"
+            }`}
+          />
+          <CompteurDeCaracteres
+            id="contact-message-compteur"
+            valeur={message}
+            maximum={CONTACT_YOKOFOLIO.messageMax}
+          />
+        </div>
         {erreurs.message && (
           <p className="mt-1.5 text-[13px] text-erreur">{erreurs.message}</p>
         )}
@@ -217,11 +255,36 @@ export function FormulaireContactYokofolio() {
         </p>
       )}
 
+      {/*  ██ §3 (nº 800) — LE BOUTON D'ENVOI ██
+           Il faisait 52 px de haut, ne déclarait aucune taille de
+           texte (donc 16 px), et s'étirait sur TOUTE la largeur des
+           deux côtés — un enfant d'une colonne `flex` s'étire par
+           défaut. Le propriétaire veut :
+             · au WEB   — compact, 40/14, collé à DROITE ;
+             · au DOIGT — pleine largeur, 40/14 lui aussi.
+
+           COMMENT C'EST ÉCRIT, ET POURQUOI AINSI :
+            · `self-end` retire l'étirement et colle le bouton à
+              droite. Au web, il ne fait donc que la largeur de son
+              texte plus `px-5` — la mesure des capsules de la nº 788 ;
+            · `mobile:w-full` lui rend toute la largeur au doigt. Le
+              `self-end` ne le gêne pas : un élément déjà large comme
+              son parent n'a plus où s'aligner.
+           ⚠️ DEUX CLASSES, DEUX PROPRIÉTÉS DIFFÉRENTES, AUCUN CONFLIT
+           (piège nº 389) : `self-end` parle d'alignement, `w-full`
+           parle de largeur. On aurait pu écrire `w-auto` en base et
+           `mobile:w-full` par-dessus — deux fois la même propriété,
+           départagées par l'ordre de la feuille et non par ce qu'on
+           écrit ici. On ne parie pas là-dessus.
+           ⚠️ ET L'APPAREIL SE LIT PAR `mobile:`, jamais par une
+           largeur d'écran (piège nº 60) : la variante est adossée à
+           `data-appareil`, posé avant la première peinture. */}
       <button
         type="submit"
         disabled={enCours}
-        className="mt-1 inline-flex items-center justify-center rounded-full
-                   min-h-[52px] bg-primaire hover:bg-primaire-fonce
+        className="mt-1 inline-flex items-center justify-center self-end
+                   mobile:w-full rounded-full px-5 min-h-[40px] text-[14px]
+                   bg-primaire hover:bg-primaire-fonce
                    text-white font-semibold transition-colors
                    disabled:opacity-60 disabled:cursor-not-allowed"
       >

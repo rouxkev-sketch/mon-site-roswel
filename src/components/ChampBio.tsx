@@ -5,6 +5,9 @@ import { BIO_MAXIMUM } from "@/config/tatouage";
 import { longueurVisible, tronquerVisible } from "@/lib/emojis";
 import { sansRemplissageAuto } from "@/lib/champs-sans-remplissage";
 import { SelecteurEmojis } from "@/components/SelecteurEmojis";
+//  §1 (nº 800) — le compteur, écrit une seule fois et partagé avec le
+//  message de /contact.
+import { CompteurDeCaracteres } from "@/components/CompteurDeCaracteres";
 
 /**
  * LE CHAMP BIO — la présentation libre du tatoueur, avec son compteur
@@ -68,13 +71,11 @@ export function ChampBio({
 }) {
   const id = useId();
   const zone = useRef<HTMLTextAreaElement>(null);
-  /*  §4 (nº 267) — LE COMPTE SE FAIT SUR CE QUE L'ŒIL VOIT. `length`
-      comptait des unités techniques : un cœur de couleur en valait
-      deux, un drapeau quatre — une bio de dix émojis était refusée
-      bien avant les 150 annoncés, sans explication possible. On compte
-      des GRAPHÈMES (voir `longueurVisible`). */
-  const longueur = longueurVisible(valeur);
-  const depasse = longueur > BIO_MAXIMUM;
+  /*  §1 (nº 800) — LE COMPTE ET SON AFFICHAGE ONT DÉMÉNAGÉ dans
+      `CompteurDeCaracteres`, tels quels : le décompte en GRAPHÈMES
+      (§4, nº 267), le vrai nombre même au-delà du plafond, le rouge du
+      dépassement. Ils y sont désormais partagés avec le message de
+      /contact — « identiques » ne se promet pas, il s'organise. */
 
   /** Insère un émoji là où est le curseur, et rend la main au champ,
       curseur bien placé.
@@ -157,22 +158,11 @@ export function ChampBio({
         {/* LE COMPTEUR — en bas à droite, DANS le champ (passe
             nº 112) : le décompte vers le plafond appartient à la zone
             où l'on tape, pas à la page. */}
-        <p
+        <CompteurDeCaracteres
           id={`${id}-compteur`}
-          role="status"
-          //  LE VRAI NOMBRE, TOUJOURS. Le rouge du dépassement reste
-          //  écrit (passe nº 119) : la saisie ne peut plus l'atteindre
-          //  depuis la nº 123, mais une valeur relue d'ailleurs le
-          //  pourrait — et mieux vaut qu'elle se voie.
-          className={`pointer-events-none absolute bottom-2.5 right-3.5
-                     text-[12.5px] tabular-nums ${
-                       depasse
-                         ? "font-semibold text-erreur"
-                         : "text-sombre-texte-doux"
-                     }`}
-        >
-          {longueur}/{BIO_MAXIMUM}
-        </p>
+          valeur={valeur}
+          maximum={BIO_MAXIMUM}
+        />
         <div className="absolute right-2 top-2">
           <SelecteurEmojis surInsertion={insererEmoji} />
         </div>

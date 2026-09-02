@@ -19,16 +19,28 @@ import { LienAccueil } from "@/components/LienAccueil";
  * PROPRIÉTAIRE À LA PASSE Nº 320 APRÈS AVOIR VU LE RÉSULTAT DE LEUR
  * PASSAGE À LA CHARTE. AUCUNE PASSE FUTURE NE DOIT LES Y RAMENER.
  *
- * (« ces deux pages » : celle-ci et /contact, formulaire compris.)
+ * ⚠️ « CES DEUX PAGES » N'EN FAIT PLUS QU'UNE : CELLE-CI. Le
+ * propriétaire a LEVÉ l'exception pour /contact à la nº 800, de sa
+ * main et nommément, pour y refaire le focus des champs, le compteur
+ * du message et le bouton d'envoi. Sa mise en page générale y reste
+ * sienne — voir la note en tête de FormulaireContactYokofolio, qui
+ * dit exactement ce qui a été levé et ce qui ne l'est pas.
+ * L'exception ci-dessus vaut donc pour CETTE page, entière.
  *
- * CE QUE CELA COUVRE, NOMMÉMENT — pour qu'aucune relecture de charte
- * ne les prenne pour des oublis : les GRANDES TYPOGRAPHIES (le titre
- * en `clamp(2rem…2.9rem)`, le chapô à 17–19 px, les titres de section
- * à `clamp(1.35rem…1.8rem)`), le TEXTE CENTRÉ de l'ouverture, les
- * marges généreuses propres à la page, et — côté /contact — les
- * contours des champs, le focus rose, les arrondis de 12 px, les
- * libellés AU-DESSUS des champs et le rond rose de confirmation.
+ * CE QUE CELA COUVRE ICI, NOMMÉMENT — pour qu'aucune relecture de
+ * charte ne les prenne pour des oublis : les GRANDES TYPOGRAPHIES (le
+ * titre en `clamp(2rem…2.9rem)`, le chapô à 17–19 px, les titres de
+ * section à `clamp(1.35rem…1.8rem)`), le TEXTE CENTRÉ de l'ouverture
+ * et les marges généreuses propres à la page.
  * La nº 319 avait tout ramené aux jetons du site : c'est ANNULÉ.
+ *
+ * ⚠️ CE QUI ÉTAIT ÉCRIT ICI POUR /contact N'Y EST PLUS, et c'est la
+ * nº 800 : cette phrase citait « le focus rose » et « le rond rose de
+ * confirmation » de l'autre page. Le focus rose a été RETIRÉ à la
+ * demande du propriétaire, et le rond n'est plus rose depuis la
+ * nº 664 (il est vert). Une note qui décrit ce qui n'existe plus est
+ * pire qu'aucune note : ce qui vaut pour /contact se lit désormais
+ * chez elle, en tête de FormulaireContactYokofolio.
  *
  * LE TEXTE CI-DESSOUS EST DE LA MAIN DU PROPRIÉTAIRE, AU MOT PRÈS —
  * aucune passe ne le réécrit de sa propre initiative. Il a été posé à
