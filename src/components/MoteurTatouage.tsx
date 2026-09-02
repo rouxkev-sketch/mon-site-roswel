@@ -35,6 +35,9 @@ import {
   IconeReglages,
 } from "@/components/Icones";
 import { BadgeCharte, GroupeBadges } from "@/components/BadgesCharte";
+//  nº 815 — « Done » sous les pilules de rayon : le lien d'action du
+//  site (celui de « Unlink » / « Link »).
+import { PastilleAction } from "@/components/Pastille";
 import { MenuDeVerre } from "@/components/SurfaceDeVerre";
 import { EncadreDeuxChamps } from "@/components/EncadreBarre";
 import { GLISSADE_MS, remonterSansClavier } from "@/lib/remontee-champ";
@@ -1340,6 +1343,30 @@ export function MoteurTatouage({
           </BadgeCharte>
         ))}
       </GroupeBadges>
+      {/*  ██ nº 815 — « Done », EN BAS À DROITE DE LA FENÊTRE ██
+           Le propriétaire veut un geste explicite pour refermer la
+           fenêtre du rayon (PC) et lancer la recherche — en plus
+           d'Entrée (ChampLocalisation) et du clic dehors. C'est LE
+           COMPOSANT de « Unlink » / « Link » (`PastilleAction`, le bleu
+           des liens d'action, 13 px, survol éclairci) — pas de rouge,
+           pas de capsule : un lien d'action, comme les siens.
+           Il tire la commande du champ (`fermerLePanneau`, nº 567) :
+           refermer EXACTEMENT comme un clic dehors — la fermeture fait
+           annoncer le brouillon (ville + rayon) une fois, et la
+           recherche part. `onPointerDown` + `preventDefault` : le champ
+           garde le focus jusqu'au clic, comme sur les pilules ; le
+           garde-fou du panneau (400 ms) ne compte pas ici, puisque
+           c'est la commande qui referme, pas le blur.
+           16 px sous les pilules (`mt-4`), calé à droite (`ml-auto`),
+           dans les marges du bloc (`px-5 pb-5`). */}
+      <div className="mt-4 flex justify-end">
+        <PastilleAction
+          onClick={() => commandesDuLieu.current?.fermerLePanneau()}
+          titre="Close and search"
+        >
+          Done
+        </PastilleAction>
+      </div>
     </div>
   ) : undefined;
 

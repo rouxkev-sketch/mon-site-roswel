@@ -110,6 +110,7 @@ import { useUtilisateur } from "@/lib/use-utilisateur";
 //  appel : la règle et son écriture vivent chez `avatar-du-compte`.
 import {
   avatarDuCompte,
+  ficheActiveRangee,
   nomAffiche,
   rangerLIdentiteAffichee,
 } from "@/lib/avatar-du-compte";
@@ -2352,10 +2353,17 @@ export function FormulaireFiche() {
              et l'info-bulle de la barre continuait d'annoncer le nom du
              particulier. Un seul appel pour les deux : deux écritures,
              ce serait deux secousses de session pour un seul geste. */
+        /*  nº 815 — le portfolio créé devient le portfolio ACTIF du
+             compte, dans le même appel (la mémoire du choix est celle
+             de la session désormais — lib/avatar-du-compte). */
         await rangerLIdentiteAffichee(
           supabase,
-          { photo: adresseProfil, nom },
-          { photo: avatarDuCompte(utilisateur), nom: nomAffiche(utilisateur) }
+          { photo: adresseProfil, nom, fiche: creee },
+          {
+            photo: avatarDuCompte(utilisateur),
+            nom: nomAffiche(utilisateur),
+            fiche: ficheActiveRangee(utilisateur),
+          }
         );
         //  §2 (nº 269) — MÊME RÈGLE À LA CRÉATION : `replace`, jamais
         //  `assign` — l'enregistrement ne laisse aucune entrée de
@@ -2689,10 +2697,16 @@ export function FormulaireFiche() {
       /*  §1 (nº 675) — le nom part avec la photo, ici comme à la
            création : renommer son portfolio doit renommer ce que la
            barre annonce. */
+      /*  nº 815 — le portfolio enregistré est le portfolio ACTIF du
+           compte, dans le même appel (voir le cas CRÉATION). */
       await rangerLIdentiteAffichee(
         supabase,
-        { photo: adresseProfil, nom },
-        { photo: avatarDuCompte(utilisateur), nom: nomAffiche(utilisateur) }
+        { photo: adresseProfil, nom, fiche: String(ficheChargee.id) },
+        {
+          photo: avatarDuCompte(utilisateur),
+          nom: nomAffiche(utilisateur),
+          fiche: ficheActiveRangee(utilisateur),
+        }
       );
       /*  §2 (nº 269) — LA CAUSE DU RETOUR QUI RAMÈNE AU FORMULAIRE.
           `location.assign` POUSSE une entrée d'historique : après un

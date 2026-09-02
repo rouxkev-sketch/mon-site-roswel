@@ -8,8 +8,9 @@ import { EnTeteTatouage } from "@/components/EnTeteTatouage";
 import { LienAccueil } from "@/components/LienAccueil";
 //  nº 811 — le lien qui précharge au geste et tire le rideau au clic.
 import { LienAuGeste } from "@/components/LienAuGeste";
-//  nº 814 — la section des pages de texte légal, partagée avec /terms.
-import { SectionLegale } from "@/components/SectionLegale";
+//  nº 814 — la section des pages de texte légal, partagée avec /terms ;
+//  nº 815 — et la robe de leurs liens.
+import { CLASSE_LIEN_LEGAL, SectionLegale } from "@/components/SectionLegale";
 
 /**
  * LA PAGE LÉGALE DE YOKOFOLIO — « Legal Notice »
@@ -123,8 +124,9 @@ export const metadata: Metadata = {
 /*  nº 814 — la section (titre net, texte lisible, marges généreuses)
     vit dans `SectionLegale`, partagée avec « Terms of Use ». */
 
-/** Un lien interne de la page : la robe des liens du texte légal. */
-const CLASSE_LIEN = "text-primaire hover:underline";
+/** Un lien de la page : la robe des liens du texte légal — le BLEU
+    des liens d'action depuis la nº 815 (voir `SectionLegale`). */
+const CLASSE_LIEN = CLASSE_LIEN_LEGAL;
 
 export default function PageMentionsLegales() {
   return (

@@ -286,17 +286,15 @@ export function BlocSuppressions() {
       ) : encoreSupprimables.length === 0 ? (
         /*  ██ §1 (nº 789) — LE GROUPE VIDE NE PORTE PAS SON NOM ██
             Consigne : « un groupe vide n'affiche pas son titre ».
-            ⚠️ ET LA PHRASE NE SURVIT QUE SI ELLE EST VRAIE : « Aucun
-            portfolio à supprimer » ne vaut que lorsqu'il n'y en a
-            AUCUN, nulle part. S'il y en a un et qu'il est justement en
-            train de s'effacer — il est juste au-dessus, sous « EN
-            COURS » —, la phrase dirait le contraire de ce que l'écran
-            montre. Elle disparaît alors avec son groupe. */
-        enSuppression.length === 0 && (
-          <p className="text-[13px] text-sombre-texte-doux">
-            No portfolio to delete.
-          </p>
-        )
+            ██ nº 815 — ET IL NE DIT PLUS RIEN DU TOUT ██
+            La phrase « No portfolio to delete. » (nº 789) s'affichait
+            à un PARTICULIER — un compte qui n'a jamais eu de
+            portfolio — comme le constat d'un manque. Décision du
+            propriétaire : rien. La zone « Delete » d'un particulier
+            commence directement par le surtitre ACCOUNT et l'encadré
+            « Delete account ». (La phrase s'effaçait déjà quand le
+            dernier portfolio était en cours de suppression.) */
+        null
       ) : (
         <section>
           <Surtitre>Portfolio</Surtitre>
@@ -358,7 +356,10 @@ export function BlocSuppressions() {
              compte, et il est toujours là. Les deux autres surtitres
              vont et viennent avec leur contenu ; celui-ci est le seul
              qui ne dépende de rien. */}
-        <Surtitre>Compte</Surtitre>
+        {/*  nº 815 — « Account », plus « Compte » : le seul mot
+             français resté à l'écran dans cette zone (un mot seul,
+             invisible au recenseur). Relevé en corrigeant le point 6. */}
+        <Surtitre>Account</Surtitre>
       <div
         className="flex items-center gap-x-4
                    rounded-lg bg-sombre-eleve pl-4 pr-0 min-h-[54px]"

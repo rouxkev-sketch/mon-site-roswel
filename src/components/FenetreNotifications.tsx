@@ -860,14 +860,27 @@ export function FenetreNotifications({
         ariaLabelFermer="Close notifications"
         actions={boutonToutLu}
         classeCadre="z-[85]"
+        /*  ██ nº 813 — L'AIR SOUS LE TITRE, CELUI DE LA PAGE LANGUE ██
+            Le corps partait au ras de la barre de titre (aucun air en
+            haut : seuls les 4 px du `pb-1` de la barre). La page
+            Langue porte `pt-5` sous son titre (nº 655) : 20 px ici
+            aussi.
+            ██ nº 815 — ET CET AIR APPARTIENT À LA BARRE, PAS AU CORPS ██
+            LE DÉFAUT DU PROPRIÉTAIRE : « au défilement, la partie sous
+            le titre se rétracte légèrement avant de se bloquer ». La
+            nº 813 avait posé les 20 px en `pt-5` SUR LE CORPS, qui
+            défile : les vingt premiers pixels du défilement mangeaient
+            cet air (le premier rang montait jusqu'au titre), puis
+            seulement la liste passait sous la barre collante. Le bloc
+            collant (`EnTetePleinEcran`, `sticky top-0`) ne bougeait
+            pas — c'est l'air sous lui qui fondait. L'air vit désormais
+            DANS le bloc collant (`sousLeTitre`, le canal de la nº 475) :
+            16 px, plus les 4 px du `pb-1` de la barre = les mêmes
+            20 px à l'œil, mais fixes — la liste passe dessous dès le
+            premier pixel de défilement. Le corps n'a plus de `pt`. */
+        sousLeTitre={<div aria-hidden="true" className="h-4" />}
       >
-        {/*  ██ nº 813 — L'AIR SOUS LE TITRE, CELUI DE LA PAGE LANGUE ██
-             Le corps partait au ras de la barre de titre (aucun air
-             en haut : seuls les 4 px du `pb-1` de la barre). La page
-             Langue, elle, porte `pt-5` sous son titre (nº 655, « les
-             airs de Mon compte sur cet appareil ») : le même `pt-5`
-             ici, et rien d'autre — le bas garde sa réserve. */}
-        <div className="grow pt-5 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="grow pb-[max(1rem,env(safe-area-inset-bottom))]">
           {corps}
         </div>
       </PagePleinEcranMobile>

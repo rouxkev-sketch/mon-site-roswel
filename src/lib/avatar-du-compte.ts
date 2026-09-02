@@ -103,6 +103,46 @@ export function nomDuCompte(utilisateur: User | null): string | null {
   return typeof valeur === "string" && valeur.trim() ? valeur.trim() : null;
 }
 
+/**
+ * ██ nº 815 — LE PORTFOLIO ACTIF VOYAGE AVEC L'IDENTITÉ QU'IL DONNE ██
+ * ==================================================================
+ * LE DÉFAUT DU PROPRIÉTAIRE : « avec plusieurs portfolios, une mauvaise
+ * photo d'avatar apparaît un instant avant la bonne (celle du portfolio
+ * sélectionné à la dernière session) ».
+ * LA CAUSE, NOMMÉE : l'identité affichée (`photo_compte`, `nom_affiche`)
+ * est UNE PAR COMPTE — elle vit dans la session, donc dans le cookie de
+ * chaque appareil — mais le CHOIX du portfolio actif était UN PAR
+ * APPAREIL (`localStorage`, lib/fiches-compte). Deux appareils (le
+ * téléphone, l'ordinateur) qui n'ont pas retenu le même portfolio se
+ * corrigent l'un l'autre à chaque chargement : le HTML peint la photo
+ * que la session porte (celle écrite par l'AUTRE appareil), puis le
+ * rattrapage du menu (MenuEspace, nº 700) lit la mémoire locale, y voit
+ * un autre portfolio, et réécrit la session — la « bonne » photo
+ * remplace la « mauvaise ». Retour sur l'autre appareil : le même
+ * échange, dans l'autre sens. Un seul appareil ne peut pas produire ce
+ * défaut (mesuré : cookie et mémoire y sont toujours d'accord).
+ * LE REMÈDE : LE CHOIX EST RANGÉ AVEC L'IDENTITÉ, au même endroit et
+ * dans le même appel (`fiche_active`, ci-dessous). La mémoire du
+ * portfolio actif est désormais celle du COMPTE (lib/fiches-compte lit
+ * la session d'abord, le navigateur ensuite pour les comptes d'avant
+ * cette passe) : les deux appareils lisent la même valeur, le
+ * rattrapage n'a plus rien à contredire, et il n'écrit plus rien au
+ * chargement. La photo peinte par le HTML EST la bonne — directement.
+ * ⚠️ CE QUI RESTE, ET JE LE DIS : un portfolio choisi sur un appareil
+ * n'est connu de l'autre qu'à la relecture de l'identité (nº 674,
+ * `getUser` au chargement) ou au renouvellement de son jeton — la
+ * première page ouverte là-bas APRÈS ce choix peint encore l'ancienne
+ * photo une fraction de seconde, puis se corrige, une fois. Ce n'est
+ * plus un ping-pong à chaque chargement.
+ */
+export const CLE_FICHE_ACTIVE = "fiche_active";
+
+/** Le portfolio actif tel que la session le porte (nº 815), ou rien. */
+export function ficheActiveRangee(utilisateur: User | null): string | null {
+  const valeur = utilisateur?.user_metadata?.[CLE_FICHE_ACTIVE];
+  return typeof valeur === "string" && valeur ? valeur : null;
+}
+
 /** Ce que la session porte aujourd'hui — une adresse d'image, ou rien.
     Une chaîne vide vaut « rien » : le cercle gris prend la place. */
 export function avatarDuCompte(utilisateur: User | null): string | null {
@@ -167,15 +207,31 @@ export function identiteDeLaPersonne(utilisateur: User | null): {
  */
 export async function rangerLIdentiteAffichee(
   supabase: SupabaseClient,
-  voulue: { photo: string | null | undefined; nom: string | null | undefined },
-  rangee: { photo: string | null; nom: string | null }
+  /*  nº 815 — `fiche` : LE PORTFOLIO QUI DONNE CETTE IDENTITÉ (son
+      identifiant), `null` quand c'est la personne. Rangé dans le même
+      appel que la photo et le nom, comparé avec eux : un appelant qui
+      ne le connaît pas (`undefined`) laisse celui qui est rangé. */
+  voulue: {
+    photo: string | null | undefined;
+    nom: string | null | undefined;
+    fiche?: string | null;
+  },
+  rangee: { photo: string | null; nom: string | null; fiche?: string | null }
 ): Promise<void> {
   const photo = voulue.photo?.trim() ? voulue.photo : null;
   const nom = voulue.nom?.trim() ? voulue.nom.trim() : null;
-  if (photo === rangee.photo && nom === rangee.nom) return;
+  const ficheRangee = rangee.fiche ?? null;
+  const fiche = voulue.fiche === undefined ? ficheRangee : voulue.fiche;
+  if (photo === rangee.photo && nom === rangee.nom && fiche === ficheRangee) {
+    return;
+  }
   try {
     await supabase.auth.updateUser({
-      data: { [CLE_AVATAR]: photo, [CLE_NOM_AFFICHE]: nom },
+      data: {
+        [CLE_AVATAR]: photo,
+        [CLE_NOM_AFFICHE]: nom,
+        [CLE_FICHE_ACTIVE]: fiche,
+      },
     });
   } catch {
     //  Voir la note ci-dessus : l'identité affichée n'est pas un geste,

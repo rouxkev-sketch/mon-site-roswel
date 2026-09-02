@@ -1,7 +1,7 @@
 "use client";
 
 import Link, { useLinkStatus } from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { RideauDePageTexte } from "@/components/RideauDePageTexte";
 
@@ -53,23 +53,74 @@ import { RideauDePageTexte } from "@/components/RideauDePageTexte";
  * clics pour qu'aucun n'atteigne ni la page dessous ni ce lien.
  * ⚠️ RESTE UN VRAI `<Link>` : clic du milieu, nouvel onglet, `href`
  * lisible par les robots — rien ne change pour eux.
+ *
+ * ██ nº 815 — LES ACCÈS AU COMPTE DE LA BARRE PASSENT PAR ICI, ET LA
+ * PAGE QU'ON QUITTE S'EFFACE SOUS LE RIDEAU ██
+ * ==================================================================
+ * LE DÉFAUT DU PROPRIÉTAIRE, POUR LA TROISIÈME FOIS (nº 812, 813,
+ * 815) : sur son iPhone, en passant de l'accueil à la page de
+ * connexion, des MORCEAUX DES LÉGENDES DE CARTES de l'accueil
+ * (« 28 portfolios »…) restent visibles, coupés, au milieu et en bas
+ * de la page de connexion. La nº 813 a tué une cause réelle et mesurée
+ * (la réserve de hauteur qui suivait la navigation) ; le banc de la
+ * nº 815, rejoué sur le parcours exact (accueil défilé → accès au
+ * compte), ne trouve plus RIEN dans le DOM de la connexion : aucune
+ * légende, aucune réserve, position 0 dès la première image, document
+ * à sa hauteur. Ce qui reste n'est donc pas dans le document : c'est
+ * dans ce que WebKit GARDE PEINT. iOS peint par tuiles et ne
+ * re-rasterise que ce qui a changé ; au basculement, l'ancienne page
+ * est retirée d'un coup et la nouvelle, plus courte, laisse des zones
+ * vides — et des morceaux de l'ancienne peinture (les légendes, sans
+ * leurs images, qui vivaient dans d'autres couches) y survivent le
+ * temps que WebKit repeigne. (WebKit n'est pas installable dans
+ * l'atelier — dépôt bloqué ; Chromium ne montre pas l'artefact.)
+ * CE QUI CHANGE, ET POURQUOI C'EST SÛR QUEL QUE SOIT LE DÉTAIL :
+ *  · les deux accès au compte de la barre (l'icône du doigt, la
+ *    capsule du web) deviennent ce lien : au clic, le rideau se tire
+ *    (la page de connexion répond au clic, comme About/Legal/Contact
+ *    depuis la nº 811 — elle ne répondait pas : rien ne bougeait le
+ *    temps de l'aller-retour) ;
+ *  · ET, TANT QUE LE RIDEAU EST TIRÉ, LA PAGE QU'ON QUITTE S'EFFACE
+ *    (`html[data-rideau-tire]` → `main` et `footer` en
+ *    `visibility: hidden`, globals.css). Elle est déjà couverte, rien
+ *    ne se voit ; mais le navigateur, lui, REPEINT ses tuiles avec le
+ *    fond nu AVANT le basculement — quand la nouvelle page arrive, ce
+ *    que WebKit pourrait garder est un fond, pas des légendes. La page
+ *    d'arrivée ne peut plus rien montrer de l'ancienne, puisqu'il ne
+ *    reste rien d'elle à montrer.
+ * ⚠️ AVANT LA PEINTURE, DANS LES DEUX SENS : l'attribut est posé et
+ * retiré dans un effet de mise en page — retiré pendant le commit qui
+ * démonte ce lien avec l'ancienne barre, donc avant la première image
+ * de la nouvelle page. Une navigation abandonnée le retire de même
+ * (le rideau part, l'attribut avec).
+ * ⚠️ LES AUTRES ATTRIBUTS DU LIEN (`aria-label`, `title`, `style`,
+ * `data-…`) passent tels quels au `<Link>` : c'est ce qui permet aux
+ * accès au compte de garder leurs étiquettes, leurs boîtes et leurs
+ * marqueurs (l'amorti du compte, nº 357/439, lit `data-acces-compte`).
  */
 const DELAI_AVANT_RIDEAU_MS = 120;
+
+type AttributsDuLien = Omit<
+  React.ComponentProps<typeof Link>,
+  "href" | "prefetch" | "onPointerEnter" | "onFocus" | "className" | "children"
+>;
 
 export function LienAuGeste({
   href,
   className,
   children,
+  ...reste
 }: {
   href: string;
   className?: string;
   children: React.ReactNode;
-}) {
+} & AttributsDuLien) {
   const [vise, setVise] = useState(false);
   const viser = () => setVise(true);
 
   return (
     <Link
+      {...reste}
       href={href}
       prefetch={vise ? null : false}
       onPointerEnter={(e) => {
@@ -114,6 +165,14 @@ function RideauAuClic() {
     );
     return () => clearTimeout(minuterie);
   }, [pending]);
+
+  //  nº 815 — la page qu'on quitte s'efface sous le rideau (voir la
+  //  note du fichier) : posé et retiré AVANT la peinture.
+  useLayoutEffect(() => {
+    if (!visible) return;
+    document.documentElement.setAttribute("data-rideau-tire", "");
+    return () => document.documentElement.removeAttribute("data-rideau-tire");
+  }, [visible]);
 
   if (!visible) return null;
 

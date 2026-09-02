@@ -14,6 +14,18 @@
  * consentement Google puisse pointer une section.
  * `scroll-mt-24` : la barre fixe du site ne couvre pas le titre visé.
  */
+
+/**
+ * ██ nº 815 — LES LIENS DES PAGES LÉGALES SONT BLEUS ██
+ * Ils étaient au rouge de la marque (`text-primaire`), que le
+ * propriétaire trouve vif ; ils prennent LE BLEU DES LIENS D'ACTION DU
+ * SITE — `sombre-lien`, celui de « Unlink » / « Link » (`PastilleAction`,
+ * nº 803/811) — et son survol (`sombre-lien-clair`), plus le soulignement
+ * au survol qu'ils avaient déjà. Une seule écriture pour /legal et
+ * /terms (liens internes, ancres, adresses e-mail).
+ */
+export const CLASSE_LIEN_LEGAL =
+  "text-sombre-lien hover:text-sombre-lien-clair hover:underline transition-colors";
 export function SectionLegale({
   titre,
   id,

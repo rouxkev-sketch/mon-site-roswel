@@ -13,8 +13,9 @@ import { LienAccueil } from "@/components/LienAccueil";
 //  nº 811 — le lien qui précharge au geste et tire le rideau au clic
 //  (les liens internes d'une page de texte ne préchargent pas à la vue).
 import { LienAuGeste } from "@/components/LienAuGeste";
-//  nº 814 — la section des pages de texte légal, partagée avec /legal.
-import { SectionLegale } from "@/components/SectionLegale";
+//  nº 814 — la section des pages de texte légal, partagée avec /legal ;
+//  nº 815 — et la robe de leurs liens (le bleu des liens d'action).
+import { CLASSE_LIEN_LEGAL, SectionLegale } from "@/components/SectionLegale";
 
 /**
  * LES CONDITIONS D'UTILISATION DE YOKOFOLIO — « Terms of Use »
@@ -78,8 +79,9 @@ export const metadata: Metadata = {
   alternates: { canonical: `${adresseDuSite()}${CHEMIN_TERMS}` },
 };
 
-/** Un lien interne de la page : la robe des liens du texte légal. */
-const CLASSE_LIEN = "text-primaire hover:underline";
+/** Un lien interne de la page : la robe des liens du texte légal — le
+    BLEU des liens d'action depuis la nº 815 (voir `SectionLegale`). */
+const CLASSE_LIEN = CLASSE_LIEN_LEGAL;
 
 export default function PageConditionsUtilisation() {
   return (

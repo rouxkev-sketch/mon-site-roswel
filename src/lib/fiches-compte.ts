@@ -1,6 +1,10 @@
 "use client";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+//  nº 815 — la mémoire du portfolio actif est celle du compte : lue
+//  dans la session (sans s'abonner à rien, nº 684).
+import { utilisateurConnu } from "@/lib/use-utilisateur";
+import { ficheActiveRangee } from "@/lib/avatar-du-compte";
 
 /**
  * LES FICHES D'UN COMPTE — un compte, PLUSIEURS fiches
@@ -154,8 +158,23 @@ export const COULEUR_ETAT: Record<EtatFiche, string> = {
 
 const CLE_MEMOIRE = "yokofolio-fiche-active";
 
-/** L'identifiant retenu la dernière fois, s'il y en a un. */
+/**
+ * L'identifiant retenu la dernière fois, s'il y en a un.
+ * ██ nº 815 — LA SESSION D'ABORD, LE NAVIGATEUR ENSUITE ██
+ * La mémoire du portfolio actif est celle du COMPTE, rangée dans la
+ * session avec l'identité qu'il donne (`fiche_active`, lib/avatar-du-
+ * compte — la note de ce fichier-là dit le défaut : deux appareils, deux
+ * mémoires, une seule identité, et l'avatar qui change d'un appareil à
+ * l'autre à chaque chargement). Le navigateur ne sert plus que de
+ * repli — les comptes d'avant cette passe, qui ne portent pas encore la
+ * clé : leur premier choix, ou le premier rattrapage du menu, l'écrit.
+ * ⚠️ `memoriserFiche` continue d'écrire le navigateur : c'est le seul
+ * geste synchrone possible, et la session suit par l'écriture de
+ * l'identité (MenuEspace, FormulaireFiche), qui porte l'identifiant.
+ */
 export function ficheMemorisee(): string | null {
+  const rangee = ficheActiveRangee(utilisateurConnu());
+  if (rangee) return rangee;
   try {
     return window.localStorage.getItem(CLE_MEMOIRE);
   } catch {

@@ -577,6 +577,27 @@ export function ChampLocalisation({
     //  juste en dessous — qui referme, restaure et annonce. Un chemin
     //  de sortie de plus, aucune règle de plus.
     function auClavier(evenement: KeyboardEvent) {
+      /*  ██ nº 815 — ENTRÉE VALIDE LA FENÊTRE DU RAYON ██
+          LE DÉFAUT DU PROPRIÉTAIRE (PC) : la ville choisie, les pilules
+          de distance affichées, la touche Entrée ne faisait RIEN — seul
+          un clic dehors (ou Échap) refermait et lançait la recherche.
+          Entrée prend le MÊME chemin de sortie qu'Échap : rendre la
+          main au champ, ce qui referme, restaure une saisie abandonnée
+          et fait annoncer le brouillon (lieu + rayon) UNE fois — la
+          recherche part, exactement comme au clic dehors.
+          ⚠️ SEULEMENT QUAND LE PIED (le rayon) EST À L'ÉCRAN : une
+          liste de suggestions sans ville choisie n'est pas validée par
+          Entrée — la touche n'y choisit rien, comme avant. Et seulement
+          si le champ a le focus : Entrée ailleurs dans la page ne
+          regarde pas ce panneau. */
+      if (evenement.key === "Enter") {
+        if (!piedPanneau || document.activeElement !== champ.current) return;
+        evenement.preventDefault();
+        interactionPanneau.current = false;
+        champ.current?.blur();
+        setListeOuverte(false);
+        return;
+      }
       if (evenement.key !== "Escape") return;
       //  ⚠️ ÉCHAP EST UN DÉPART VOULU : le garde-fou du panneau (400 ms
       //  après un appui DEDANS — une pilule de rayon, par exemple) fait

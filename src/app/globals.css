@@ -1608,6 +1608,54 @@ html[data-compte="connecte"]
 }
 
 /* ==================================================================
+   nº 815 — LE SQUELETTE DE LA ZONE PENDANT LA PHASE MUETTE D'UN CONNECTÉ
+   ==================================================================
+   LE DÉFAUT DU PROPRIÉTAIRE : « à chaque navigation, la zone haut
+   droite (avatar, fanion, loupe) reste vide puis surgit d'un coup ».
+   MESURÉ (banc zone-815) : les navigations douces la montrent dès la
+   première image ; ce sont les CHARGEMENTS COMPLETS (accueil prérendu,
+   F5, rechargement après un enregistrement, loupe du web) qui la
+   cachent — le `visibility: hidden` de la nº 357, ci-dessus — jusqu'à
+   l'hydratation (230-250 ms au banc, davantage sur un téléphone).
+   « Ne rien peindre de faux » (nº 203) devient « peindre le squelette
+   de ce qui vient » : les trois boîtes qui existent DÉJÀ dans la zone
+   — la loupe, le globe (qui tient la place du fanion) et la réserve
+   (qui tient celle du rond « Mon espace ») — se peignent en RONDS
+   GRIS, le dessin exact des squelettes de page (SquelettesDePage,
+   `RondGris` : 40 px, `bg-sombre-eleve`). Leurs glyphes restent cachés.
+   Pas un pixel de largeur en plus : ce sont les boîtes de la nº 439,
+   habillées. La règle d'opacité de la loupe reste la sienne (invisible
+   sur l'accueil déplié, comme la vraie). Dès que la session est prête,
+   ces règles ne jouent plus : la barre est exactement celle d'avant. */
+html[data-compte="connecte"]
+  [data-zone-compte][data-session="muette"]
+  :is([data-loupe-barre], [data-globe-barre], [data-reserve-compte]) {
+  visibility: visible;
+  background-color: var(--color-sombre-eleve);
+  border-radius: 9999px;
+}
+html[data-compte="connecte"]
+  [data-zone-compte][data-session="muette"]
+  :is([data-loupe-barre], [data-globe-barre]) > * {
+  visibility: hidden;
+}
+
+/* ==================================================================
+   nº 815 — LA PAGE QU'ON QUITTE S'EFFACE SOUS LE RIDEAU TIRÉ AU CLIC
+   ==================================================================
+   `LienAuGeste` pose `data-rideau-tire` sur <html> tant que son rideau
+   (nº 811) couvre l'écran — la note de ce composant dit pourquoi : les
+   morceaux de légendes de l'accueil que l'iPhone garde peints sur la
+   page de connexion (nº 812/813/815). Sous le rideau, rien ne se voit ;
+   mais le navigateur repeint ainsi ses tuiles avec le fond nu AVANT le
+   basculement, et l'ancienne page ne laisse plus rien à garder. Posé
+   et retiré avant la peinture ; la barre du rideau n'est ni `main` ni
+   `footer`, elle n'est pas touchée. */
+html[data-rideau-tire] :is(main, footer) {
+  visibility: hidden;
+}
+
+/* ==================================================================
    nº 441 → nº 706 — LE SIGNE DE CHARGEMENT EST SUPPRIMÉ
    ==================================================================
    Le fin trait rose en haut de l'écran (et son @keyframes

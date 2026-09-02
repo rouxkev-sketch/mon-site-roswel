@@ -675,6 +675,11 @@ export function SelecteurLangue({ hauteur = 40 }: { hauteur?: number }) {
         aria-expanded={ouvert}
         aria-label={`Language: ${langueActive.label}`}
         title={`Language: ${langueActive.label}`}
+        //  nº 815 — LE GLOBE TIENT LA PLACE DU FANION pendant la phase
+        //  muette d'un connecté (le HTML prérendu ne connaît pas la
+        //  session) : globals.css l'habille alors en rond gris — le
+        //  squelette de la zone, sans un pixel de largeur en plus.
+        data-globe-barre=""
         // MÊME HAUTEUR que le bouton rose à sa droite : la barre garde
         // une seule ligne d'appui, sans décalage d'un pixel.
         style={{ height: hauteur, width: hauteur }}

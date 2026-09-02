@@ -43,6 +43,8 @@ import { LogoYokofolio } from "@/components/LogoYokofolio";
 //  quelle, elles ne peuvent plus diverger.
 import { EMPREINTE_ZONE_COMPTE, MenuEspace } from "@/components/MenuEspace";
 import { SelecteurLangue } from "@/components/SelecteurLangue";
+//  nº 815 — les accès au compte tirent le rideau au clic (nº 811).
+import { LienAuGeste } from "@/components/LienAuGeste";
 import {
   lireDejaConnecte,
   marquerDejaConnecte,
@@ -1107,6 +1109,10 @@ export function EnTeteTatouage({
             }}
             aria-label="Search"
             title="Search"
+            //  nº 815 — pendant la phase muette d'un connecté, la loupe
+            //  se peint en rond gris (le squelette de la zone,
+            //  globals.css) ; sa règle d'opacité reste la sienne.
+            data-loupe-barre=""
             aria-hidden={!loupeVisible || undefined}
             tabIndex={loupeVisible ? 0 : -1}
             style={{ height: HAUTEUR_ACTIONS, width: HAUTEUR_ACTIONS }}
@@ -1183,7 +1189,15 @@ export function EnTeteTatouage({
               {/* SMARTPHONE : l'icône personnage, HABILLÉE COMME LE
                   GLOBE (grise, même gabarit, même survol) — elle mène
                   à la connexion. */}
-              <Link
+              {/*  ██ nº 815 — LES DEUX ACCÈS AU COMPTE TIRENT LE RIDEAU ██
+                   `LienAuGeste` (nº 811) à la place du `<Link>` nu : au
+                   clic, la page de connexion RÉPOND (le rideau des pages
+                   de texte, jusqu'à l'arrivée) et la page qu'on quitte
+                   s'efface dessous — c'est la correction des « morceaux
+                   de titres de l'accueil » sur la connexion (la note de
+                   LienAuGeste dit la cause). La règle nº 793 tient : rien
+                   n'est préchargé à la vue ; au survol (web), une fois. */}
+              <LienAuGeste
                 href="/devenir-tatoueur"
                 aria-label={libelleDeconnecte}
                 title={libelleDeconnecte}
@@ -1193,8 +1207,9 @@ export function EnTeteTatouage({
                     document — l'un caché par la mise en page. Ils la
                     préchargeaient donc DEUX FOIS, sur chaque page du
                     site. C'est une page où l'on va délibérément, une
-                    fois : elle se charge très bien au clic. */
-                prefetch={false}
+                    fois : elle se charge très bien au clic.
+                    nº 815 — `prefetch={false}` est désormais la règle
+                    de `LienAuGeste` lui-même (jusqu'au premier geste). */
                 //  §1 (nº 439) — un ACCÈS DÉCONNECTÉ au compte : pendant
                 //  la phase muette d'un CONNECTÉ, il s'efface au profit
                 //  de la réserve neutre (voir data-reserve-compte).
@@ -1232,7 +1247,7 @@ export function EnTeteTatouage({
               >
                 {/*  LA SILHOUETTE SEULE, rang 24 (nº 147-§5 et §6). */}
                 <IconeSilhouette taille={28} classe="mobile:h-6 mobile:w-6" />
-              </Link>
+              </LienAuGeste>
 
               {/* WEB : le badge de connexion. Jamais venu, il invite ;
                   déjà venu, « Se connecter ».
@@ -1315,13 +1330,13 @@ export function EnTeteTatouage({
                    ⚠️ WEB UNIQUEMENT (`hidden sm:flex`) : au doigt, c'est
                    la silhouette ronde ci-dessus qui mène à la connexion,
                    et elle ne change pas. */}
-              <Link
+              <LienAuGeste
                 href="/devenir-tatoueur"
                 aria-label={libelleDeconnecte}
                 data-bouton-connexion=""
                 /*  §2 (nº 793) — PAS DE PRÉCHARGEMENT : voir la note du
-                    jumeau au doigt, quelques lignes plus haut. */
-                prefetch={false}
+                    jumeau au doigt, quelques lignes plus haut (nº 815 :
+                    la règle de `LienAuGeste`). */
                 //  §1 (nº 439) — l'autre ACCÈS DÉCONNECTÉ (le badge du
                 //  web) : même effacement pendant la phase muette d'un
                 //  connecté — c'est LUI qui faisait la différence de
@@ -1395,7 +1410,7 @@ export function EnTeteTatouage({
                     {TEXTES_TATOUAGE.lienInscription}
                   </span>
                 </span>
-              </Link>
+              </LienAuGeste>
 
               {/**
                 * ██ §1 (nº 439) — LA RÉSERVE DU COMPTE CONNECTÉ ██
@@ -1503,11 +1518,32 @@ export function EnTeteTatouage({
                 * l'écart entre ce que la zone mesure et ce qu'elle
                 * occupe.
                 */}
+              {/*  ██ nº 815 — LA RÉSERVE N'EST PLUS VIDE : C'EST UN ROND GRIS ██
+                   LE DÉFAUT DU PROPRIÉTAIRE : « à chaque navigation, la
+                   zone haut droite reste vide puis surgit d'un coup ».
+                   MESURÉ (banc zone-815, connecté) : les navigations
+                   DOUCES montrent la zone dès la première image ; ce sont
+                   les CHARGEMENTS COMPLETS — l'accueil prérendu, un F5,
+                   le rechargement après un enregistrement, la loupe du
+                   web — qui la cachent pendant la phase muette
+                   (`visibility: hidden`, nº 357) jusqu'à l'hydratation :
+                   230-250 ms au banc, bien plus sur un téléphone. La
+                   règle nº 203 (« aucun état faux peint ») est tenue
+                   AUTREMENT : pendant cette phase, pour un connecté, la
+                   zone montre LE SQUELETTE de ce qui vient — trois ronds
+                   gris (loupe, globe-devenu-fanion, cette réserve), le
+                   dessin exact des squelettes de page (SquelettesDePage,
+                   `RondGris`), à la place même des trois boutons. Pas un
+                   pixel de largeur en plus : les boîtes sont celles qui
+                   existaient. Le CSS fait tout (globals.css, bloc
+                   nº 357/439/815) ; ici la réserve ne fait que porter sa
+                   robe de rond. Hors phase muette-connectée : `hidden`,
+                   comme avant. */}
               <span
                 aria-hidden="true"
                 data-reserve-compte=""
                 style={{ height: HAUTEUR_ACTIONS, width: HAUTEUR_ACTIONS }}
-                className={`${EMPREINTE_ZONE_COMPTE} hidden shrink-0`}
+                className={`${EMPREINTE_ZONE_COMPTE} hidden shrink-0 rounded-full`}
               />
             </>
           )}

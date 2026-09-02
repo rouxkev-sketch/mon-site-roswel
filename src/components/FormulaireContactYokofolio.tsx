@@ -431,12 +431,18 @@ export function FormulaireContactYokofolio({
              écrit ici. On ne parie pas là-dessus.
              ⚠️ ET L'APPAREIL SE LIT PAR `mobile:`, jamais par une
              largeur d'écran (piège nº 60) : la variante est adossée à
-             `data-appareil`, posé avant la première peinture. */}
+             `data-appareil`, posé avant la première peinture.
+             ██ nº 815 — LA HAUTEUR DES BOUTONS D'ENTRÉE (nº 812) ██
+             Le propriétaire trouve « Send message » trop bas au doigt
+             (« anorexique ») : la même correction que Sign up / Log in
+             à la nº 812 — 48 px au doigt, 44 au web, pleine largeur au
+             doigt (déjà le cas). Deux variantes qui s'excluent, aucune
+             classe de base (piège nº 389) ; le texte reste à 14 px. */}
         <button
           type="submit"
           disabled={enCours}
           className="mt-1 inline-flex items-center justify-center self-end
-                     mobile:w-full rounded-full px-5 min-h-[40px] text-[14px]
+                     mobile:w-full rounded-full px-5 not-mobile:min-h-[44px] mobile:min-h-[48px] text-[14px]
                      bg-primaire hover:bg-primaire-fonce
                      text-white font-semibold transition-colors
                      disabled:opacity-60 disabled:cursor-not-allowed"

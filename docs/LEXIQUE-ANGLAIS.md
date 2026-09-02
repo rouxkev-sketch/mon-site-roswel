@@ -190,6 +190,13 @@ message.
 | les enfants (COPPA) | **Children.** « not meant for children under 13 » | |
 | les sous-traitants | **Who processes it.** Vercel · Supabase · Resend · Google | des noms propres, inchangés |
 
+### Ajouts de la 815 (huit corrections)
+
+| Français | Anglais | Note |
+|---|---|---|
+| « Terminé » (fenêtre des miles, PC) | **Done** · info-bulle **Close and search** | `PastilleAction`, le bleu de Unlink |
+| le surtitre « Compte » (Sécurité, zone Supprimer) | **Account** | resté en français jusqu'à la 815 (un mot seul, invisible au recenseur) |
+
 ## 3 · Le ton
 
 - **Anglais américain, décontracté** : le « you » direct, phrases

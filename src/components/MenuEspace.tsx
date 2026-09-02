@@ -37,6 +37,7 @@ import { PhotoRonde } from "@/components/PhotoRonde";
 //  (photo + nom), la mémoire de la personne, et le rangement des deux
 //  morceaux en un seul appel. Tout est écrit là-bas.
 import {
+  ficheActiveRangee,
   identiteDeLaPersonne,
   nomAffiche,
   rangerLIdentiteAffichee,
@@ -1031,13 +1032,22 @@ export function MenuEspace({
     /*  §1 (nº 703) — le client arrive à la demande. Ce rattrapage
         n'a AUCUNE urgence (il corrige un avatar) : l'attendre un
         instant de plus ne se voit pas, et il ne bloque rien. */
+    /*  nº 815 — LE PORTFOLIO ACTIF PART AVEC SON IDENTITÉ (`fiche`) :
+        c'est ce qui fait de la mémoire du choix une mémoire du COMPTE
+        (lib/avatar-du-compte, la note de la nº 815). Rien n'est écrit
+        quand la session porte déjà les trois valeurs — c'est le cas
+        ordinaire au chargement, désormais sur TOUS les appareils. */
     void clientSupabaseALaDemande().then((supabase) =>
       rangerLIdentiteAffichee(
         supabase,
         fiche
-          ? { photo: fiche.photo_profil, nom: fiche.nom }
-          : personne,
-        { photo: photoDuCompte, nom: nomAfficheDuCompte }
+          ? { photo: fiche.photo_profil, nom: fiche.nom, fiche: fiche.id }
+          : { ...personne, fiche: null },
+        {
+          photo: photoDuCompte,
+          nom: nomAfficheDuCompte,
+          fiche: ficheActiveRangee(utilisateur),
+        }
       )
     );
   }, [
