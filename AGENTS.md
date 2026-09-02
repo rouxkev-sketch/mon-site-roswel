@@ -158,3 +158,27 @@ Le code référence les logos roswel uniquement par leurs deux chemins
 `LogoIcone` / `LogoComplet` dans `src/components/Logo.tsx`, favicon dans
 `src/app/layout.tsx`, icônes PWA dans `src/app/manifest.ts`, page
 `public/offline.html`.
+
+# Traductions et corrections de textes : LES DONNÉES EN BASE EN FONT PARTIE (règle du propriétaire, passe nº 808)
+
+Après la traduction 3/3 (nº 806), deux styles acceptés depuis l'admin
+sont restés en français À L'ÉCRAN parce que leurs libellés vivent en
+base (`suggestions_style.label`), pas dans le code — et le propriétaire
+l'a découvert lui-même. Cela ne doit JAMAIS se reproduire :
+
+- toute passe de traduction ou de correction de textes recense
+  D'OFFICE ce qui s'affiche depuis la base : `suggestions_style.label`
+  (les styles acceptés), et tout autre texte saisi par l'administration
+  ou par les artistes que l'écran montre tel quel ;
+- le SQL de relecture ET de correction est LIVRÉ AVEC LA PASSE, dans
+  un document `docs/SQL-<nº>-….md` (modèle : `docs/SQL-807-STYLES-
+  AJOUTES.md`) — jamais exécuté par la passe, toujours collé à la main
+  par le propriétaire ; le compte rendu le nomme ;
+- le compte rendu dit en clair « ces textes vivent en base, voici le
+  SQL » — pas « rien à réécrire » sans avoir lu ce que la base peut
+  contenir ;
+- et quand la base change, le site ne suit pas seul : la liste des
+  styles est cuite dans les pages mises en cache (voir
+  `rafraichirToutLeSite`, `src/lib/rafraichir.ts`). Un geste depuis
+  l'admin invalide tout ; une écriture SQL attend la revalidation (cinq
+  minutes) — le document SQL le dit, le compte rendu aussi.

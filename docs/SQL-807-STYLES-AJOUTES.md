@@ -12,9 +12,16 @@ nom montré) et `slug` (la limace : elle est écrite dans
 chaque `photos_tatoueur.style`, et elle fait l'adresse publique
 `/tatouage/<limace>/<ville>`).
 
-Le site relit cette table au plus une minute après une écriture SQL
-(cache de `lib/styles-ajoutes`) — ou tout de suite après un geste
-d'administration sur l'écran des suggestions.
+**Quand le site suit-il ?** (corrigé à la nº 808, après le relevé de
+Kevin.) Un geste sur l'écran d'administration des suggestions
+(accepter, refuser, retirer, renommer) est visible **tout de suite** :
+la route invalide toutes les pages du site. Une écriture SQL directe,
+elle, ne prévient personne : la liste des styles est cuite dans les
+pages mises en cache, revalidées toutes les **cinq minutes** (et la
+première visite après l'échéance reçoit encore l'ancienne page pendant
+que la neuve se prépare — compter deux chargements). Pour forcer sans
+attendre : ouvrir l'admin → Suggestions → **Rename** sur n'importe quel
+style accepté et enregistrer, même sans changer le nom.
 
 ---
 

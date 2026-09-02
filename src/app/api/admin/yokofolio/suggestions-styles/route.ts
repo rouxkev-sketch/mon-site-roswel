@@ -3,6 +3,7 @@ import { catalogueStyles, FAMILLES_STYLES } from "@/config/tatouage";
 import { verifierAdmin } from "@/lib/admin-yokofolio";
 import { adresseDuSite, envoyerEmail } from "@/lib/email";
 import { creerNotification } from "@/lib/notifications";
+import { rafraichirToutLeSite } from "@/lib/rafraichir";
 import { slugifier } from "@/lib/slug";
 import {
   chargerStylesAjoutes,
@@ -241,6 +242,7 @@ export async function POST(requete: NextRequest) {
       //  Le catalogue vient de rétrécir : la prochaine page doit le
       //  relire sans attendre la minute de cache.
       oublierStylesAjoutes();
+    rafraichirToutLeSite();
       return NextResponse.json({ ok: true });
     } catch (e) {
       return NextResponse.json(
@@ -363,6 +365,7 @@ export async function POST(requete: NextRequest) {
       //  Le catalogue vient de changer : la prochaine page le relit
       //  sans attendre la minute de cache.
       oublierStylesAjoutes();
+      rafraichirToutLeSite();
       return NextResponse.json({
         ok: true,
         label,
@@ -491,6 +494,7 @@ export async function POST(requete: NextRequest) {
     //  Le catalogue vient de changer : la prochaine page doit le relire
     //  sans attendre la minute de cache.
     oublierStylesAjoutes();
+      rafraichirToutLeSite();
 
     /* ---- LA RÉPONSE AU TATOUEUR — deux canaux, jamais bloquants ---- */
     const accepte = corps.decision === "accepter";

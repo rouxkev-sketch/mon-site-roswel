@@ -51,3 +51,36 @@ export function rafraichirPagesPubliques(slug?: string | null): void {
     }
   }
 }
+
+/**
+ * ██ nº 808 — TOUT LE SITE, D'UN COUP : quand LE CATALOGUE change ██
+ * ------------------------------------------------------------------
+ * LA CAUSE, vue par le propriétaire : un style renommé en base
+ * (« Néo-réalisme » → « Neo-realism ») restait en français à l'écran
+ * des minutes durant, navigation privée comprise. Ce n'était pas la
+ * minute de lib/styles-ajoutes : c'est le CACHE DE ROUTE. La mise en
+ * page du groupe tatouage lit la liste des styles et la sérialise pour
+ * le navigateur (FournisseurStyles) ; elle est donc CUITE dans chaque
+ * page mise en cache — l'accueil, les pages style + ville et les
+ * portfolios sont revalidés toutes les cinq minutes (`revalidate =
+ * 300`), les pages sans revalidation (légales, À propos) le sont au
+ * prochain déploiement seulement. La minute du registre est DERRIÈRE
+ * ce cache : elle ne compte que quand une page se recuit.
+ * LE REMÈDE : après toute décision sur le catalogue (style accepté,
+ * refusé, retiré, renommé), on invalide la MISE EN PAGE racine — tout
+ * ce qui est dessous se recuit à la prochaine visite. C'est large, et
+ * c'est voulu : le catalogue est dans TOUTES les pages, et il change
+ * quelques fois par an.
+ * ⚠️ UNE ÉCRITURE SQL DIRECTE NE PASSE PAS PAR ICI : elle attend la
+ * revalidation des pages (cinq minutes, et la première visite après
+ * l'échéance reçoit encore l'ancienne page pendant que la neuve se
+ * cuit). Pour forcer : renommer le style depuis l'admin, même à
+ * l'identique (docs/SQL-807-STYLES-AJOUTES.md).
+ */
+export function rafraichirToutLeSite(): void {
+  try {
+    revalidatePath("/", "layout");
+  } catch {
+    //  Hors d'un rendu Next (un banc, un script) : rien à invalider.
+  }
+}
